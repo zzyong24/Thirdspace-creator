@@ -8,6 +8,7 @@ import {
   UnsupportedOperationError,
 } from "./execution.errors";
 import type { ExecutionService } from "./execution.service";
+import {WORKBENCH_OP_IDS} from "./workbench-public.transport";
 import type {
   PersistentTaskKind,
   PersistentTaskService,
@@ -15,6 +16,7 @@ import type {
 } from "./persistent-task.service";
 
 export const EXECUTION_OP_IDS = [
+  ...WORKBENCH_OP_IDS,
   "execution.tasks.create",
   "execution.tasks.list",
   "execution.tasks.get",
@@ -100,7 +102,12 @@ export function createExecutionTransport(
           return { data: rows, meta: { requestId, page, pageSize, total } };
         }
         case "execution.tasks.get": {
-          const task = await service.get(ctx, p.taskId ?? "");
+          let task;
+          try { task = await service.get(ctx, p.taskId ?? ""); }
+          catch(error){
+            if(!(error instanceof OwnershipError)||!persistentServiceFactory)throw error;
+            task=await persistentServiceFactory().get(ctx,p.taskId??"");
+          }
           return { data: task, meta: { requestId } };
         }
         case "execution.tasks.confirm": {

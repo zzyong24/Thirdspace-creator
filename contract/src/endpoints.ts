@@ -14,6 +14,7 @@ import { reviewGateOperations } from "./operations/review-gate";
 import { learningsOperations } from "./operations/learnings";
 import { aiOperations } from "./operations/ai";
 // [T-255a] 执行层(脑手分离):execution.tasks 5 op(存储复用 ai_tasks,taskType `exec.*`)。
+import { workbenchOperations } from "./operations/workbench";
 import { executionOperations } from "./operations/execution";
 import { searchOperations } from "./operations/search";
 import { notificationsOperations } from "./operations/notifications";
@@ -105,6 +106,7 @@ export const ENDPOINTS = {
   ...aiOperations,
   // [T-255a] 执行层任务(create/list/get/confirm/discard)。
   ...executionOperations,
+  ...workbenchOperations,
   // T-482 内容雷达：分类/来源/内容/运行/转化/迁移与 Project 来源引用。
   ...intelligenceOperations,
   ...searchOperations,

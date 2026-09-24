@@ -1,0 +1,29 @@
+✔ 关键链路质量门必须保留安全降级与完整回归规则 (4.888291ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 95.841084
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+
+
+ Test Files  1 passed (1)
+      Tests  12 passed (12)
+   Start at  20:31:07
+   Duration  2.82s (transform 1.46s, setup 104ms, import 2.18s, tests 21ms, environment 346ms)
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+
+ Test Files  2 passed (2)
+      Tests  105 passed (105)
+   Start at  20:31:10
+   Duration  1.23s (transform 928ms, setup 0ms, import 1.44s, tests 150ms, environment 0ms)
+
+(node:17028) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)

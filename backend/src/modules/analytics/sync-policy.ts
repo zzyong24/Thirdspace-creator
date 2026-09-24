@@ -7,6 +7,6 @@ export function syncIntervalMs(publishedAt:string|null|undefined,now:string):num
 }
 export function isSyncDue(row:{publishedAt?:string|null;lastSucceededAt?:string|null;retryAt?:string|null},now:string):boolean{
  const at=Date.parse(now);
- if(row.retryAt&&Date.parse(row.retryAt)>at)return false;
+ if(row.retryAt&&Number.isFinite(Date.parse(row.retryAt)))return Date.parse(row.retryAt)<=at;
  return !row.lastSucceededAt||!Number.isFinite(Date.parse(row.lastSucceededAt))||Date.parse(row.lastSucceededAt)>at||at-Date.parse(row.lastSucceededAt)>=syncIntervalMs(row.publishedAt,now);
 }

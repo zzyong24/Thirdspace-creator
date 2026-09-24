@@ -21,7 +21,7 @@ project:
   work_branch: "main"                    # 2026-07-05(T-145 核查): 实现已全部合并入 main;原 feat/service-contract 已并,manifest 以 main 为准
   current_stage: "4-build"               # 3.9.0 v3 五阶段映射；具体切片仍由 BACKLOG 唯一排序
   frontier: "4-build"                    # 既有产品持续 BUILD，SHIP 仍受真实安装版/生产 E2E 门约束
-  updated_at: "2026-08-11"
+  updated_at: "2026-09-21"
   notes: >
     RECONCILED 2026-06-22. The pipeline has advanced FAR past the 2026-06-20 ratification snapshot the
     stage rows used to show: service contract (@creatoros/contract v0.4.0, 65 tests), FE mock+HTTP seam,
@@ -89,7 +89,7 @@ stages:
       - existing: "orchestrator/GATE-T767-BUILD.md (同版本重审同步与改稿后重新盲预测证据)"
       - existing: "docs/superpowers/specs/2026-08-11-creatoros-meta-skill.md (T-770 PASS[REV:74f673ffb555])"
       - existing: "orchestrator/GATE-T770-BUILD.md (低误触发元 Skill、真实模型 15/15 与聚焦门禁证据)"
-    notes: "当前真实阶段；切片状态和顺序以 BACKLOG.md 为唯一真相。T-726 与 T-730 均已完成各自业务实现与真实页面验收，但共享工作区 watched_paths 仍存在并行任务漂移，保持 draft 且不伪造 strict receipt。"
+    notes: "当前真实阶段；切片状态和顺序以 BACKLOG.md 为唯一真相。T-916 已修复历史 SPEC review receipt 漂移并通过 reviewctl 审计，但更广泛的工程对账任务仍在进行；BUILD 保持 draft，不把回执修复冒充发布完成。"
 
   "5-ship":
     status: "draft"
@@ -825,3 +825,15 @@ open_items:
     owner: "user+agent"
     revisit_trigger: "Before release: user authorizes a real New API model call, or explicitly accepts the external E2E risk."
     status: "open"
+
+# T-1003 局部规格不改变全局历史阶段结论。
+agent_workbench_change:
+  task_id: T-1003
+  spec: docs/features/t1003-agent-workbench.md
+  status: passed
+  gate_status: pass
+  review: docs/features/t1003-agent-workbench.review.md
+  implementation_status: not-started
+  acceptance_status: not-started
+  global_reconcile: "fail: 233 existing errors; docs/verification/t1003-reconcile.log; T-916 tracks governance drift"
+  notes: "用户已确认多步执行与NomiFun迁移方向；本轮仅SPEC和任务拆分，独立规格评审PASS（hash回执见review文件），不是实现验收通过。"

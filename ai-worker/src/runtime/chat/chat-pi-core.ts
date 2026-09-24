@@ -2,10 +2,11 @@ import { readdir, stat } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import type { AssistantMessage, AssistantMessageEventStream } from "@earendil-works/pi-ai";
+import type { PiResultContent } from "../../capabilities/result-pages";
 
 interface PiTool {
   name:string; label:string; description:string; parameters:Record<string,unknown>;
-  execute(id:string,args:unknown):Promise<{content:Array<{type:"text";text:string}>;details?:unknown}>;
+  execute(id:string,args:unknown):Promise<{content:PiResultContent[];details?:unknown}>;
 }
 export interface ChatPiAgent {
   prompt(text:string):Promise<void>;

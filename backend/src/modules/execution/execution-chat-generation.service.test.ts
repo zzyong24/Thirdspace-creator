@@ -2,7 +2,7 @@ import type {ChatHostContext} from "../ai/chat-host-context";
 import {createServer} from "node:http";
 import {beforeAll,afterAll,it,expect,vi} from "vitest";
 import {z} from "zod";
-import {createDb,type Db} from "@creatoros/backend";
+import {createDb,eq,executionTasks,type Db} from "@creatoros/backend";
 import {createAiService} from "../ai/ai.service";
 import {createChatTurnSubmissionService} from "../ai/chat-turn-submission.service";
 import {createPersistentTaskService} from "./persistent-task.service";
@@ -234,7 +234,11 @@ it("坏结构回执和 Worker 自报候选均不能伪造成完成",async()=>{
  const second=await next(f,[{inputDigest:row.inputDigest,status:"settled",providerResult:row.providerResult}]);
  const fallback=await f.service.reserve(f.ref,second);await f.service.start(f.ref,{callId:fallback.callId});
  await f.service.settle(f.ref,{callId:fallback.callId,...success,providerResult:{...success.providerResult,content:[{type:"text",text:"仍然不是有效对象"}]}});
- expect(await f.service.complete(f.ref,{callId:f.parent.callId})).toMatchObject({status:"error",sideEffect:"none",error:{code:"no_evidence"}});
+ const fallbackRow=(await f.ledger.inspect(f.ref)).calls.find(call=>call.id===fallback.callId)!;
+ const third=await next(f,[{inputDigest:row.inputDigest,status:"settled",providerResult:row.providerResult},{inputDigest:fallbackRow.inputDigest,status:"settled",providerResult:fallbackRow.providerResult}]);
+ const finalRepair=await f.service.reserve(f.ref,third);await f.service.start(f.ref,{callId:finalRepair.callId});
+ await f.service.settle(f.ref,{callId:finalRepair.callId,...success,providerResult:{...success.providerResult,content:[{type:"text",text:"最终仍然不是有效对象"}]}});
+ expect(await f.service.complete(f.ref,{callId:f.parent.callId})).toMatchObject({status:"error",sideEffect:"none",error:{code:"transient",retryable:true,recovery:"在当前 Agent loop 中调整生成策略并继续原任务"}});
  expect((await f.ledger.inspect(f.ref)).calls.find(call=>call.id===f.parent.callId)).toMatchObject({status:"settled"});
 });
 it("准备后取消不能启动子模型，跨任务父调用不能取凭据",async()=>{
@@ -246,7 +250,9 @@ it("准备后取消不能启动子模型，跨任务父调用不能取凭据",as
 it("真实 SDK 请求经共享端口结算，重建节点零额外 HTTP 调用",async()=>{
  const bodies:unknown[]=[],server=createServer(async(req,res)=>{
   let body="";for await(const chunk of req)body+=chunk.toString();bodies.push(JSON.parse(body));
-  res.writeHead(200,{"content-type":"application/json"});res.end(JSON.stringify({id:"fixture",object:"chat.completion",created:1,model:"fixture",choices:[{index:0,message:{role:"assistant",content:'{"oneLiner":"HTTP 原候选"}'},finish_reason:"stop"}],usage:{prompt_tokens:4,completion_tokens:3,total_tokens:7}}));
+  const base={id:"fixture",object:"chat.completion.chunk",created:1,model:"fixture"};
+  res.writeHead(200,{"content-type":"text/event-stream"});
+  res.end(`data: ${JSON.stringify({...base,choices:[{index:0,delta:{role:"assistant",content:'{"oneLiner":"HTTP 原候选"}'},finish_reason:null}]})}\n\ndata: ${JSON.stringify({...base,choices:[{index:0,delta:{},finish_reason:"stop"}],usage:{prompt_tokens:4,completion_tokens:3,total_tokens:7}})}\n\ndata: [DONE]\n\n`);
  });
  await new Promise<void>(resolve=>server.listen(0,"127.0.0.1",resolve));
  try{
@@ -275,6 +281,17 @@ it("并发预留同请求只产生一个子调用，鉴权恢复后沿原逻辑�
  const retry=await f.service.reserve(f.ref,{...request,retryOfCallId:a.callId});expect(retry.callId).not.toBe(a.callId);
  await f.service.start(f.ref,{callId:retry.callId});await f.service.settle(f.ref,{callId:retry.callId,...success});
  expect((await f.service.complete(f.ref,{callId:f.parent.callId})).status).toBe("ok");expect(f.prepareGeneration).toHaveBeenCalledTimes(1);
+});
+it("模型断流废弃当前子调用后沿原任务恢复，不要求用户重新发起",async()=>{
+ const f=await fixture(),request=await next(f),first=await f.service.reserve(f.ref,request);
+ await f.service.start(f.ref,{callId:first.callId});await f.service.settle(f.ref,{callId:first.callId,status:"superseded"});
+ expect((await f.service.fail(f.ref,{callId:f.parent.callId,outcome:"retry_wait",errorCode:"MODEL_STREAM_INTERRUPTED"})).status).toBe("retry_wait");
+ await db.update(executionTasks).set({retryAt:"2026-09-06T09:59:59.000Z"}).where(eq(executionTasks.id,f.task.executionTaskId));
+ const claim=(await f.tasks.claimTask({taskId:f.task.executionTaskId,workerId:"worker"}))!;
+ f.ref={...f.ref,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken};await f.service.restore(f.ref,{callId:f.parent.callId});
+ expect(await f.service.prepare(f.ref,{callId:f.parent.callId})).toMatchObject({retryOfCallId:first.callId,retryOperationKey:request.operationKey});
+ const retry=await f.service.reserve(f.ref,{...request,retryOfCallId:first.callId});await f.service.start(f.ref,{callId:retry.callId});await f.service.settle(f.ref,{callId:retry.callId,...success});
+ expect((await f.service.complete(f.ref,{callId:f.parent.callId})).status).toBe("ok");
 });
 it("成功前缀后的修复拒绝已挂起，丢 ACK 的 unknown 不污染父工具且能恢复",async()=>{
  const f=await fixture(true),first=await next(f),child=await f.service.reserve(f.ref,first);
@@ -306,7 +323,7 @@ it.each([true,false])("聊天诊断从原模型回执恢复，有效评分=%s",a
  await f.service.settle(f.ref,{callId:child.callId,...success,providerResult:{...success.providerResult,content:[{type:"text",text:JSON.stringify({dimensions:[{key:valid?"hook":"forged",score:4}]})}]}});
  const restored=f.make(),out=await restored.complete(f.ref,{callId:f.parent.callId});
  if(valid) expect(out).toMatchObject({status:"ok",sideEffect:"proposal",data:{kind:"calibration.diagnosis",diagnosis:{dimensions:[{key:"hook",score:4}],verdict:"",mainIssues:[],priorityFixes:[]}}});
- else expect(out).toMatchObject({status:"error",sideEffect:"none",error:{code:"no_evidence"}});
+ else expect(out).toMatchObject({status:"error",sideEffect:"none",error:{code:"transient",retryable:true}});
  expect(await restored.complete(f.ref,{callId:f.parent.callId})).toEqual(out);
  expect(f.prepareGeneration).toHaveBeenCalledTimes(1);
  expect((await f.ledger.inspect(f.ref)).calls).toHaveLength(3);

@@ -214,7 +214,7 @@ test("E2E-T913-03 自带 AI 额度不足时只显示真实额度入口", async (
   ]);
 });
 
-test("E2E-T913-04 / E2E-T913-05 未知故障可重试且不泄露内部状态", async ({
+test("E2E-T913-04 / E2E-T913-05 未知故障自动恢复且不泄露内部状态", async ({
   page,
   baseURL,
 }) => {
@@ -232,13 +232,13 @@ test("E2E-T913-04 / E2E-T913-05 未知故障可重试且不泄露内部状态", 
   await sendPrompt(page, "帮我分析这条内容");
 
   const card = page.locator('[data-slot="copilot-error"]');
-  await expect(card).toContainText("这次没有生成成功");
-  await expect(card).toContainText("刚才输入的内容还在");
+  await expect(card).toContainText("正在恢复本轮生成");
+  await expect(card).toContainText("输入和已完成内容已保留");
   await expect(card).not.toContainText(/activation|Growth|authority|API Key|opaque/i);
-  await captureVisibleCopy(page, "unknown-error-regular", [
+  await expect(card.locator('[data-slot="copilot-error-retry"]')).toHaveCount(0);
+  await captureVisibleCopy(page, "unknown-error-auto-recovery", [
     "AC-AI-UNKNOWN-RETRY",
     "AC-AI-COPY-SAFE",
   ]);
-  await card.locator('[data-slot="copilot-error-retry"]').click();
-  await expect.poll(() => attempts).toBe(2);
+  await expect.poll(() => attempts).toBeGreaterThanOrEqual(2);
 });

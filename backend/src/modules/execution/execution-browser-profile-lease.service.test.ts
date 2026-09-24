@@ -186,3 +186,23 @@ it('宿主恢复读端口不暴露worker物理档案租约',async()=>{
  const profileKey='7'.repeat(64);await service.acquireProfile(worker.ref,'douyin.com',profileKey);
  expect(await service.getHeldHostLease({userId:'recover-worker-user',domain:'douyin.com',profileKey})).toBeNull();
 });
+it('工作台恢复只读取非当前运行 attempt 的精确物理租约',async()=>{
+ const service=createExecutionBrowserProfileLeaseService(db,{now});
+ const old=await owner('recover-managed','recover-managed-user','recover-managed-account');
+ const profileKey='9'.repeat(64);
+ const receipt=await service.acquireProfile(old.ref,'example.com',profileKey);
+ expect(await service.getRecoverableWorkerProfile(profileKey)).toBeNull();
+ await db.update(executionTasks).set({status:'waiting_user'}).where(eq(executionTasks.id,old.task.id));
+ expect(await service.getRecoverableWorkerProfile(profileKey)).toBeNull();
+ await db.update(executionTasks).set({status:'unknown_result'}).where(eq(executionTasks.id,old.task.id));
+ expect(await service.getRecoverableWorkerProfile(profileKey)).toBeNull();
+ await db.update(executionTasks).set({status:'paused'}).where(eq(executionTasks.id,old.task.id));
+ expect(await service.getRecoverableWorkerProfile(profileKey)).toEqual({
+  ref:old.ref,accountId:'recover-managed-account',userId:'recover-managed-user',
+  domain:'example.com',profileKey,leaseId:receipt.leaseId,taskStatus:'paused',currentAttempt:true,
+ });
+ await db.update(executionTasks).set({status:'running',attempt:old.ref.attempt+1,fenceToken:'new-fence'}).where(eq(executionTasks.id,old.task.id));
+ expect(await service.getRecoverableWorkerProfile(profileKey)).toMatchObject({ref:old.ref,taskStatus:'running',currentAttempt:false});
+ await service.releaseAfterWorkerStopped(old.ref,receipt.leaseId);
+ expect(await service.getRecoverableWorkerProfile(profileKey)).toBeNull();
+});

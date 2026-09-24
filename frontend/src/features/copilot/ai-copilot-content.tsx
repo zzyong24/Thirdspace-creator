@@ -13,10 +13,13 @@ import { ChatToolTrace } from "./chat-tool-trace";
 
 import {TaskRuntimeActions,taskRuntimeStatus} from "@/components/ai/task-runtime-actions";
 import {ExecutionTaskCard} from "./execution-task-card";
+import {WorkbenchPlanCard} from "./workbench-plan-card";
+import {WorkbenchArtifactCard} from "./workbench-artifact-card";
+import {WorkbenchArtifactHistory} from "./workbench-artifact-history";
 import * as React from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useChat } from "@ai-sdk/react";
+import { Chat, useChat } from "@ai-sdk/react";
 import { useForegroundActivity } from "@/lib/foreground-activity";
 import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -25,6 +28,7 @@ import {
   isToolUIPart,
   getToolName as sdkGetToolName,
   lastAssistantMessageIsCompleteWithApprovalResponses,
+  type ChatTransport,
   type UIMessage,
 } from "ai";
 import { ChatCandidateCard, type ChatTopicCandidate } from "./chat-candidate-card";
@@ -116,6 +120,7 @@ import {
   CHAT_TOOL_LABELS,
   SCHEDULED_TASK_TYPE_LABELS,
 } from "@creatoros/contract";
+import {workbenchArtifactSchema,workbenchPlanSchema,workbenchResultSchema} from "@creatoros/contract/agent-workbench";
 
 /**
  * [T-439 配套] 工具名还原 —— **卡片能不能渲出来全靠它**。
@@ -131,6 +136,34 @@ import {
  */
 function getToolName(part: Parameters<typeof sdkGetToolName>[0]): string {
   return String(sdkGetToolName(part)).replace(/_/g, ".");
+}
+
+function workbenchResultOf(output:unknown){
+ if(!output||typeof output!=="object"||Array.isArray(output))return null;
+ const record=output as Record<string,unknown>;
+ const data=record.data&&typeof record.data==="object"&&!Array.isArray(record.data)?record.data as Record<string,unknown>:null;
+ const parsed=workbenchResultSchema.safeParse(record.result??record.workbench??data?.workbench);
+ return parsed.success?parsed.data:null;
+}
+function workbenchPayload(result:ReturnType<typeof workbenchResultOf>):unknown{
+ if(!result||result.status!=="succeeded")return null;
+ const text=result.content.find(part=>part.type==="text")?.text;
+ if(!text)return null;
+ try{return JSON.parse(text);}catch{return null;}
+}
+function visibleWorkbenchProgress(parts:readonly unknown[]){
+ const latest=new Map<string,string>();
+ for(const part of parts){
+  if(!part||typeof part!=="object"||Array.isArray(part))continue;
+  const item=part as Record<string,unknown>;
+  if(item.type!=="data-workbench-progress"||!item.data||typeof item.data!=="object"||Array.isArray(item.data))continue;
+  const data=item.data as Record<string,unknown>;
+  if(typeof data.operationId!=="string"||!data.operationId||data.operationId.length>160||!Array.isArray(data.content))continue;
+  const line=data.content.find(entry=>entry&&typeof entry==="object"&&!Array.isArray(entry)&&
+   (entry as Record<string,unknown>).type==="text"&&typeof (entry as Record<string,unknown>).text==="string") as {text:string}|undefined;
+  if(line){latest.delete(data.operationId);latest.set(data.operationId,line.text.slice(0,240));}
+ }
+ return [...latest].slice(-3);
 }
 
 /**
@@ -789,7 +822,23 @@ export function AICopilotContent({
   });
   const sessionAccountId = readCurrentAccountId();
   const liveSessionKey = JSON.stringify([sessionAccountId, scope]);
-  const liveSession = getLiveChatSession(liveSessionKey);
+  const liveSession = getLiveChatSession<Chat<UIMessage>, ChatTransport<UIMessage>, UIMessage>(
+    liveSessionKey,
+    session => new Chat<UIMessage>({
+      id: liveSessionKey,
+      transport: {
+        sendMessages: options => {
+          if (!session.transport) throw new Error("聊天连接尚未就绪");
+          return session.transport.sendMessages(options);
+        },
+        reconnectToStream: options => {
+          if (!session.transport) throw new Error("聊天连接尚未就绪");
+          return session.transport.reconnectToStream(options);
+        },
+      },
+      sendAutomaticallyWhen: input => session.shouldResume?.(input) ?? false,
+    }),
+  );
   const liveSessionRef = React.useRef(liveSession);
   liveSessionRef.current = liveSession;
   // [T-055b] 上下文可摘:用户点掉 chip 后,本面板实例不再注入这份选中态(会话继续,
@@ -1093,6 +1142,27 @@ export function AICopilotContent({
     finally{setStopPending(false);}
   };
   const streaming = status === "streaming" || status === "submitted";
+  const recoveryAttemptsRef = React.useRef(0);
+  const recoveryTurnKeyRef = React.useRef("");
+  const [recoveryStalled, setRecoveryStalled] = React.useState(false);
+  const recoveryTurnKey = [...messages]
+    .reverse()
+    .find((message) => message.role === "user")?.id ?? "";
+  const hasDurableTaskReceipt = taskControl.current.currentTaskId() !== null;
+  const resetRecoveryBudget = React.useCallback(() => {
+    recoveryAttemptsRef.current = 0;
+    setRecoveryStalled(false);
+  }, []);
+  React.useEffect(() => {
+    if (recoveryTurnKeyRef.current === recoveryTurnKey) return;
+    recoveryTurnKeyRef.current = recoveryTurnKey;
+    resetRecoveryBudget();
+  }, [recoveryTurnKey, resetRecoveryBudget]);
+  React.useEffect(() => {
+    if (!error && !composerLifecycleError && status === "ready") {
+      resetRecoveryBudget();
+    }
+  }, [composerLifecycleError, error, resetRecoveryBudget, status]);
   // [T-332 S4] AI 流式生成中 = 进行中的前台操作:登记进 foreground-activity 注册表,
   // 账号切换器切号前会据此弹确认「有进行中的操作,切号会离开当前页面」(SPEC §6.1)。
   useForegroundActivity("AI 编导正在生成回复", streaming);
@@ -1116,6 +1186,15 @@ export function AICopilotContent({
     return out;
   }, [messages]);
   const hasPendingApproval = pendingLocalReads.length > 0;
+  const visibleArtifactRefs=React.useMemo(()=>{
+    const refs=new Set<string>();
+    for(const message of messages)for(const part of message.parts){
+      if(!isToolUIPart(part)||part.state!=="output-available"||!["artifact.register","artifact.copy"].includes(getToolName(part)))continue;
+      const result=workbenchResultOf(part.output),artifact=workbenchArtifactSchema.safeParse(workbenchPayload(result));
+      if(artifact.success&&result?.status==="succeeded")refs.add(`${artifact.data.artifactId}@${artifact.data.version}`);
+    }
+    return refs;
+  },[messages]);
 
   // [T-276] 目录授权批量放行:一张卡点「总是允许该目录」→ 服务端已把该文件所在目录落进授权表,
   //   把**直接父目录相同**的其它待决 local.read 卡一并批准(读文件夹的多文件读共享父目录)。
@@ -1162,13 +1241,27 @@ export function AICopilotContent({
   const chatError = React.useMemo(() => {
     if (!error && !composerLifecycleError) return null;
     if (!error && composerLifecycleError) {
+      if (recoveryStalled) {
+        return {
+          title: "自动恢复暂未取得进展",
+          message: hasDurableTaskReceipt
+            ? "后台任务和已完成内容都已保留。连接暂未恢复，你可以稍后回来，或继续恢复当前轮次。"
+            : "输入和已完成内容已保留，但后台任务尚未建立。你可以继续恢复当前轮次。",
+          suggestSwitchModel: false,
+          suggestOpenCredits: false,
+          suggestOpenPositioning: false,
+          canRetry: true,
+          autoRecover: false,
+        };
+      }
       return {
-        title: "这次没有生成成功",
-        message: composerLifecycleError,
+        title: "正在恢复本轮生成",
+        message: "输入和已完成内容已保留，系统正在沿原任务补全结果。",
         suggestSwitchModel: false,
         suggestOpenCredits: false,
         suggestOpenPositioning: false,
-        canRetry: true,
+        canRetry: false,
+        autoRecover: true,
       };
     }
     if (!error) return null;
@@ -1196,9 +1289,15 @@ export function AICopilotContent({
     const suggestOpenPositioning = human?.suggestOpenPositioning ?? false;
     const isMissingModel = human?.code === "model_not_configured";
     const resultUnconfirmed = human?.code === "result_unconfirmed";
-    const modelInterrupted = human?.code === "model_response_interrupted";
+    const autoRecover =
+      !recoveryStalled &&
+      !resultUnconfirmed &&
+      !terminalScriptSelectionError &&
+      !suggestOpenCredits &&
+      !suggestOpenPositioning &&
+      !suggestSwitchModel;
     return {
-      title: modelInterrupted ? "模型回复中断" : resultUnconfirmed ? "本轮对话已停止" : suggestOpenCredits
+      title: recoveryStalled ? "自动恢复暂未取得进展" : autoRecover ? "正在恢复本轮生成" : resultUnconfirmed ? "本轮对话已停止" : suggestOpenCredits
         ? "AI 额度需要补充"
         : suggestOpenPositioning
           ? "先完成账号定位"
@@ -1208,31 +1307,35 @@ export function AICopilotContent({
               ? "检查 AI 设置后继续"
               : terminalScriptSelectionError
                 ? "这次局部改写已结束"
-                : "这次没有生成成功",
+                : "本轮生成需要处理",
       // 可恢复状态只讲用户下一步，不把版本、渠道、凭据或供应商细节露在主界面。
-      message: resultUnconfirmed || modelInterrupted ? human!.message : suggestOpenCredits
+      message: recoveryStalled
+        ? hasDurableTaskReceipt
+          ? "后台任务和已完成内容都已保留。连接暂未恢复，你可以稍后回来，或继续恢复当前轮次。"
+          : "输入和已完成内容已保留，但后台任务尚未建立。你可以继续恢复当前轮次。"
+        : resultUnconfirmed ? human!.message : suggestOpenCredits
         ? "刚才输入的内容已经保留。补充额度后，回来即可继续。"
         : suggestOpenPositioning
           ? "刚才输入的内容已经保留。保存一版定位后，回来即可继续。"
           : suggestSwitchModel
             ? "刚才输入的内容已经保留。完成设置后，回来即可继续。"
+            : autoRecover
+              ? "输入和已完成内容已保留，系统正在沿原任务自动恢复。"
             : terminalScriptSelectionError || localPatchWasPreserved || chatApiPublicError
               ? publicMessage
               : "刚才输入的内容还在，可以直接再试一次。",
       suggestSwitchModel,
       suggestOpenCredits,
       suggestOpenPositioning,
-      canRetry:
-        !resultUnconfirmed && !modelInterrupted &&
-        !terminalScriptSelectionError &&
-        !suggestOpenCredits &&
-        !suggestOpenPositioning &&
-        !suggestSwitchModel,
+      canRetry: recoveryStalled,
+      autoRecover,
     };
   }, [
     composerLifecycleError,
     error,
+    hasDurableTaskReceipt,
     pendingComposerRequest?.functionKey,
+    recoveryStalled,
     retryableScriptPatchRequest?.functionKey,
     terminalScriptSelectionError,
   ]);
@@ -1356,7 +1459,7 @@ export function AICopilotContent({
       }
       finishComposerRequest(inFlight.nonce);
       setComposerLifecycleError(
-        "本轮回复没有生成可采纳的局部改稿候选，稿面未被修改，目标段落已保留。请直接重试。",
+        "本轮回复没有生成可采纳的局部改稿候选，稿面未被修改，目标段落已保留，系统将沿原任务继续补全。",
       );
       console.warn("[T-716][script.patch] assistant finished without candidate", {
         nonce: inFlight.nonce,
@@ -1394,6 +1497,41 @@ export function AICopilotContent({
     }
     return regenerate();
   }, [messages, regenerate]);
+
+  const continueRecovery = React.useCallback(() => {
+    resetRecoveryBudget();
+    return retryLastTurn();
+  }, [resetRecoveryBudget, retryLastTurn]);
+
+  // T-1022/T-1023：regenerate 会复用后端已保存的 sourceMessageId。前端只负责把请求可靠交给
+  // 持久 Agent，连续三次仍没有新流事件就结束自动请求并给出“继续恢复”；已有 executionTaskId
+  // 的后台任务不会被取消，用户离开页面后仍由其自身 retry_wait/检查点推进。
+  React.useEffect(() => {
+    if (!chatError?.autoRecover || streaming || messages.length === 0) return;
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const continueOriginalTurn = () => {
+      if (recoveryAttemptsRef.current >= 3) {
+        setRecoveryStalled(true);
+        return;
+      }
+      const delay = 1_000 * 2 ** recoveryAttemptsRef.current;
+      timer = setTimeout(() => {
+        if (cancelled) return;
+        recoveryAttemptsRef.current += 1;
+        void Promise.resolve(retryLastTurn())
+          .catch(() => undefined)
+          .finally(() => {
+            if (!cancelled) continueOriginalTurn();
+          });
+      }, delay);
+    };
+    continueOriginalTurn();
+    return () => {
+      cancelled = true;
+      if (timer) clearTimeout(timer);
+    };
+  }, [chatError?.autoRecover, messages.length, retryLastTurn, streaming]);
 
   // [T-055b SPEC §5.1] 一键岛预填 —— 面板带 fn 打开且对话尚空 → 把「预填话术」写进**输入框**,
   // 用户回车才发,**绝不自动发送**(治「点击后内容重复两遍」:旧预调自动 sendMessage 在带 ?fn
@@ -2324,6 +2462,7 @@ export function AICopilotContent({
           data-slot="copilot-message-scroll"
           className="min-h-[120px] min-w-0 flex-1 overflow-x-hidden overflow-y-auto rounded-2xl border border-border bg-surface-subtle/40 p-3"
         >
+          <WorkbenchArtifactHistory conversationId={conversationId} accountId={sessionAccountId??""} excludeRefs={visibleArtifactRefs}/>
           {messages.length > 0 ? (
             <ol
               data-slot="copilot-messages"
@@ -2359,6 +2498,10 @@ export function AICopilotContent({
                       </div>
                     );
                   })()}
+                  {visibleWorkbenchProgress(message.parts).map(([operationId,line])=><div key={`${message.id}-progress-${operationId}`}
+                   role="status" className="rounded-md border border-border/60 bg-surface-subtle/40 px-2.5 py-1.5 text-xs text-muted-foreground">
+                   {line}
+                  </div>)}
                   {/* generative UI:首波 5 工具结果 → 对话内候选卡(逐条/整条采纳走 confirm 门)。
                       工具结果按 kind 分发到对应卡:选题候选 / 选题卡 / 维度诊断 / 复盘经验 / 定位提案。 */}
                   {message.parts.map((part, idx) => {
@@ -2449,6 +2592,19 @@ export function AICopilotContent({
                     const traceRow = (
                       <ChatToolTrace key={`${key}-trace`} label={traceLabel} input={part.input} output={out} />
                     );
+                    if(name==="plan.update"){
+                      const result=workbenchResultOf(out);
+                      const plan=workbenchPlanSchema.safeParse(workbenchPayload(result));
+                      return <React.Fragment key={key}>{traceRow}{plan.success?<WorkbenchPlanCard plan={plan.data}/>:null}</React.Fragment>;
+                    }
+                    if(name==="artifact.register"||name==="artifact.copy"){
+                      const result=workbenchResultOf(out);
+                      const artifact=workbenchArtifactSchema.safeParse(workbenchPayload(result));
+                      const reference=artifact.success?`${artifact.data.artifactId}@${artifact.data.version}`:null;
+                      return <React.Fragment key={key}>{traceRow}{artifact.success&&result?.status==="succeeded"&&
+                       reference&&result.artifactRefs.includes(reference)&&sessionAccountId?
+                       <WorkbenchArtifactCard artifact={artifact.data} accountId={sessionAccountId}/>:null}</React.Fragment>;
+                    }
                     if(name==="research.autonomous" && out.kind==="research.autonomous"){
                       const research=out as {taskId?:string|null;error?:string|null};
                       return <React.Fragment key={key}>{traceRow}{research.taskId?<ExecutionTaskCard taskId={research.taskId}/>:<div className="text-sm text-error">{research.error||"自主调研任务未提交，请重试。"}</div>}</React.Fragment>;
@@ -3017,17 +3173,25 @@ export function AICopilotContent({
                     ) : null}
                   {/* [T-231⑩] 出错不再只让用户「请重试」却无处可点:regenerate() 重发
                       最后一条用户消息(@ai-sdk/react 现成 API,不手搓重放)。流式中不渲。 */}
-                    {chatError.canRetry &&
+                    {chatError.autoRecover ? (
+                      <span
+                        data-slot="copilot-error-auto-recovery"
+                        role="status"
+                        className="inline-flex h-8 items-center rounded-md bg-primary/10 px-3 text-[11px] font-medium text-primary"
+                      >
+                        自动恢复中
+                      </span>
+                    ) : chatError.canRetry &&
                     !chatError.suggestOpenCredits &&
                     !streaming &&
                     messages.length > 0 ? (
                       <button
                         type="button"
                         data-slot="copilot-error-retry"
-                        onClick={() => void retryLastTurn()}
+                        onClick={() => void continueRecovery()}
                         className="inline-flex h-8 items-center rounded-md border border-border px-3 text-[11px] font-medium text-foreground transition-colors hover:bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
                       >
-                        重试
+                        {recoveryStalled ? "继续恢复" : "重试"}
                       </button>
                     ) : null}
                   </div>

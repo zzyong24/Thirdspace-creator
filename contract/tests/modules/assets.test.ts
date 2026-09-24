@@ -11,6 +11,7 @@ describe("assets contract", () => {
       assetType: "image",
       name: "AI Native Browser 主封面",
       description: "主视频封面图",
+      sourceUrl: null,
       status: "active",
       isFavorite: false,
       // [T-061] file 派生字段(current asset_file 投影;headless row → null)。

@@ -46,5 +46,4 @@ backups/
 
 # Codex 本机审查证据与临时授权截图，只保留在当前机器。
 .codex-tmp/
-/lark-auth-search-message.png
 /outputs/T831/

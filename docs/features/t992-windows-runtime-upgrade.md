@@ -18,5 +18,5 @@ flowchart LR
 ## 本地验证
 
 - `cargo test --manifest-path frontend/src-tauri/Cargo.toml --lib --no-default-features`：181 通过，1 项真实外部服务测试按原规则忽略。
-- Windows 运行环境专项：15 项通过（macOS 本机；第 16 项原生独占文件句柄测试带 cfg(target_os = "windows")，本机不编译，未验证）。该组测试不进发布流水线——排在 sidecar 与 externalBin 产出之前会让 tauri_build 资源校验 panic（run 34942593764），守护改由本地 reconcile LED-052 承担。
+- Windows 运行环境专项：15 项通过（macOS 本机；第 16 项原生独占文件句柄测试带 cfg(target_os = "windows")，本机不编译，未验证）。该组测试不进发布流水线——排在 sidecar 与 externalBin 产出之前会让 tauri_build 资源校验 panic（run 34942593764），守护改由本地 reconcile LED-057 承担。
 - 桌面打包与签名契约：42 项通过。

@@ -1,0 +1,235 @@
+{
+  "planSha256": "b57ad498d1123fbc48cc1bbcaa00a16218f631a2770a53dce04f097206f7acb9",
+  "music": {
+    "file": "assets/music.wav",
+    "gain": 0.65,
+    "sha256": "b03691865a770af4879151db66f18d6b8091518b9cd710493e7c0b48d591a60d"
+  },
+  "cues": [
+    {
+      "at": 4.35,
+      "actionId": "overview-nav",
+      "file": "assets/sfx/pop.wav",
+      "gain": 0.7,
+      "role": "sfx",
+      "kind": "pop",
+      "sha256": "ea11b896eb402c995a63f01ff298f0def88deed0ce96d37eb5f52d266b654dc9"
+    },
+    {
+      "at": 11.3,
+      "actionId": "positioning-card",
+      "file": "assets/sfx/pop.wav",
+      "gain": 0.7,
+      "role": "sfx",
+      "kind": "pop",
+      "sha256": "ea11b896eb402c995a63f01ff298f0def88deed0ce96d37eb5f52d266b654dc9"
+    },
+    {
+      "at": 16.3,
+      "actionId": "topics-list",
+      "file": "assets/sfx/pop.wav",
+      "gain": 0.7,
+      "role": "sfx",
+      "kind": "pop",
+      "sha256": "ea11b896eb402c995a63f01ff298f0def88deed0ce96d37eb5f52d266b654dc9"
+    },
+    {
+      "at": 22.3,
+      "actionId": "script-stage",
+      "file": "assets/sfx/click.wav",
+      "gain": 0.75,
+      "role": "sfx",
+      "kind": "click",
+      "sha256": "8cb3444a4ab4640a7417dcb539a556bd10c697b19869c17c3d4289a4c1eebc13"
+    },
+    {
+      "at": 29.3,
+      "actionId": "production-assets",
+      "file": "assets/sfx/click.wav",
+      "gain": 0.75,
+      "role": "sfx",
+      "kind": "click",
+      "sha256": "8cb3444a4ab4640a7417dcb539a556bd10c697b19869c17c3d4289a4c1eebc13"
+    },
+    {
+      "at": 35.3,
+      "actionId": "review-metrics",
+      "file": "assets/sfx/success.wav",
+      "gain": 0.7,
+      "role": "sfx",
+      "kind": "success",
+      "sha256": "91522be11e71b96367384523bc578eea1f70d93485647b77a22777eb41969ccc"
+    },
+    {
+      "at": 42.0,
+      "actionId": "end-enter",
+      "file": "assets/sfx/ding-dong.wav",
+      "gain": 0.7,
+      "role": "sfx",
+      "kind": "ding-dong",
+      "sha256": "57e3aa7d7001b2320bcdf05eb036b4e320ede132b48703518e46db5933f18399"
+    }
+  ],
+  "master": {
+    "file": "assets/master.wav",
+    "sha256": "c023a12fca2cba8f10d1a53bb53b6774eb0259d1bd863d2555da75c504a95d89"
+  },
+  "sfxStem": {
+    "file": "assets/sfx-stem.wav",
+    "sha256": "98e5c4fed810c2d576d8cb826d2454acfea9abd2f7ced6238605a6d219973b31"
+  },
+  "musicStem": {
+    "file": "assets/music-ducked.wav",
+    "sha256": "0a7778e3b88553efefa6951debbf44aa83b55c03e8b67d3602287d942fa6b676"
+  },
+  "ducking": {
+    "method": "cue-envelope",
+    "windows": [
+      {
+        "actionId": "overview-nav",
+        "kind": "pop",
+        "start": 4.31,
+        "attackEnd": 4.35,
+        "holdEnd": 4.47,
+        "end": 4.71,
+        "db": 3.5
+      },
+      {
+        "actionId": "positioning-card",
+        "kind": "pop",
+        "start": 11.260000000000002,
+        "attackEnd": 11.3,
+        "holdEnd": 11.42,
+        "end": 11.66,
+        "db": 3.5
+      },
+      {
+        "actionId": "topics-list",
+        "kind": "pop",
+        "start": 16.26,
+        "attackEnd": 16.3,
+        "holdEnd": 16.42,
+        "end": 16.66,
+        "db": 3.5
+      },
+      {
+        "actionId": "script-stage",
+        "kind": "click",
+        "start": 22.26,
+        "attackEnd": 22.3,
+        "holdEnd": 22.400000000000002,
+        "end": 22.6,
+        "db": 3
+      },
+      {
+        "actionId": "production-assets",
+        "kind": "click",
+        "start": 29.26,
+        "attackEnd": 29.3,
+        "holdEnd": 29.400000000000002,
+        "end": 29.6,
+        "db": 3
+      },
+      {
+        "actionId": "review-metrics",
+        "kind": "success",
+        "start": 35.26,
+        "attackEnd": 35.3,
+        "holdEnd": 35.65,
+        "end": 36.0,
+        "db": 5
+      },
+      {
+        "actionId": "end-enter",
+        "kind": "ding-dong",
+        "start": 41.96,
+        "attackEnd": 42.0,
+        "holdEnd": 42.45,
+        "end": 42.85,
+        "db": 6
+      }
+    ],
+    "overlap": "deepest-envelope-wins"
+  },
+  "timing": [
+    {
+      "actionId": "overview-nav",
+      "fileStart": 4.35,
+      "audibleLandmark": 4.35,
+      "actionTime": 4.35,
+      "errorFrames": 0.0
+    },
+    {
+      "actionId": "positioning-card",
+      "fileStart": 11.3,
+      "audibleLandmark": 11.3,
+      "actionTime": 11.3,
+      "errorFrames": 0.0
+    },
+    {
+      "actionId": "topics-list",
+      "fileStart": 16.3,
+      "audibleLandmark": 16.3,
+      "actionTime": 16.3,
+      "errorFrames": 0.0
+    },
+    {
+      "actionId": "script-stage",
+      "fileStart": 22.3,
+      "audibleLandmark": 22.3,
+      "actionTime": 22.3,
+      "errorFrames": 0.0
+    },
+    {
+      "actionId": "production-assets",
+      "fileStart": 29.3,
+      "audibleLandmark": 29.3,
+      "actionTime": 29.3,
+      "errorFrames": 0.0
+    },
+    {
+      "actionId": "review-metrics",
+      "fileStart": 35.3,
+      "audibleLandmark": 35.3,
+      "actionTime": 35.3,
+      "errorFrames": 0.0
+    },
+    {
+      "actionId": "end-enter",
+      "fileStart": 42.0,
+      "audibleLandmark": 42.0,
+      "actionTime": 42,
+      "errorFrames": 0.0
+    }
+  ],
+  "warnings": [],
+  "normalization": {
+    "requested": "linear",
+    "normalization_type": "dynamic",
+    "measurement": {
+      "input_i": "-21.50",
+      "input_tp": "-6.74",
+      "input_lra": "1.30",
+      "input_thresh": "-31.53",
+      "output_i": "-16.16",
+      "output_tp": "-1.50",
+      "output_lra": "1.10",
+      "output_thresh": "-26.17",
+      "normalization_type": "dynamic",
+      "target_offset": "0.16"
+    },
+    "output": {
+      "input_i": "-21.50",
+      "input_tp": "-6.74",
+      "input_lra": "1.30",
+      "input_thresh": "-31.53",
+      "output_i": "-16.00",
+      "output_tp": "-1.50",
+      "output_lra": "1.20",
+      "output_thresh": "-26.02",
+      "normalization_type": "dynamic",
+      "target_offset": "-0.00"
+    }
+  },
+  "listeningStatus": "Not auditioned by script; listen to isolated SFX, final mix and encoded MP4."
+}

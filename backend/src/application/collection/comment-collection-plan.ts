@@ -41,20 +41,19 @@ export function orderCommentCollection(
 }
 
 /**
- * [T-232] run 诚实 message:全量完成 vs 额度截断,一句话给运行详情/step 文本。
- * truncated → 「额度截断:已采 X/N 个作品(通道冷却剩 Ns),未采作品下轮优先续采」;
- * 否则 → 「全量完成:已采 N/N 个作品」。
+ * 完成只依据逐作品确认数；处理过、未被限流均不等于已经完整读取。
  */
 export function buildCommentCoverageMessage(input: {
   collectedWorks: number;
+  completedWorks: number;
   totalWorks: number;
   truncated: boolean;
   cooldownRemainMs: number;
+  hasMore?: boolean;
 }): string {
-  const { collectedWorks, totalWorks, truncated, cooldownRemainMs } = input;
-  if (!truncated) {
-    return `全量完成:已采 ${collectedWorks}/${totalWorks} 个作品`;
-  }
+  const { collectedWorks, completedWorks, totalWorks, truncated, cooldownRemainMs } = input;
+  const counts=`已处理 ${collectedWorks}/${totalWorks} 个作品，确认完成 ${completedWorks} 个，未完成 ${Math.max(0,totalWorks-completedWorks)} 个`;
+  if (!truncated) return `${completedWorks===totalWorks?"本批完成":"本批未完整完成"}:${counts}${input.hasMore?"；仍有后续批次":""}`;
   const eta = Math.max(0, Math.ceil(cooldownRemainMs / 1000));
-  return `额度截断:已采 ${collectedWorks}/${totalWorks} 个作品(通道冷却剩 ${eta}s),未采作品下轮优先续采`;
+  return `额度截断:${counts}(通道冷却剩 ${eta}s),未采作品下轮优先续采`;
 }

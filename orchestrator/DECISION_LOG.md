@@ -462,6 +462,20 @@ Owner: user+agent
 Status: active
 ```
 
+## DEC-AI-037 (2026-09-21) — 模型生成超时与不完整输出必须由原 Agent loop 恢复
+
+**来源**：用户提供内容雷达与 AI 助手真机截图并明确确认：除当前账号没有可用模型配置时直接提示并引导配置外，模型超时、输出不完整和临时服务故障不得成为用户手动重试的阻断终态，应在 Agent loop 内解决。
+
+**决定**：
+
+1. 用户提交一次生成后，timeout、network、明确可重试 HTTP 拒绝和结构化输出不完整统一沿原任务、原幂等标识、调用账本与检查点恢复；页面只展示自动恢复进度。
+2. 单次调用保留安全超时，但持续生成任务不设会把任务直接变成 `failed` 的总截止时间。退避必须持久化且单飞，页面关闭或应用重启后继续原任务。
+3. 当前账号不存在任何可用文本模型时进入 `waiting_user`，保留输入并直达模型设置；配置恢复后继续原任务。
+4. 用户取消、输入损坏、权限/归属错误及有副作用外部操作的未知结果继续遵守既有安全边界，不伪造成功、不盲目重复提交。
+5. 内容雷达和 AI 助手是本轮真机验收入口；同一防复发门覆盖后续模型生成入口。
+
+**状态**：confirmed（用户 2026-09-21 明确要求立即落实）。
+
 ```text
 ID: DEC-AI-727
 Date: 2026-08-08
@@ -1196,7 +1210,7 @@ surface 全量只读审计(6 并行 agent),逐元素定死 动作→数据来源
 ## DEC-015 (2026-06-24) — P1 持久化底座:内存 pglite → 真 Postgres + 版本化迁移
 
 **背景**:用户指出整套被当成"假的"——根因之一是 DB 是内存 pglite(`new PGlite()`),重启即回 seed,无真持久化。产品化第一阶段(P1)。
-**决策**(用户批准 L2 门控自治产物):运行时切到真 Postgres(`drizzle-orm/node-postgres` + `pg.Pool`,读 `DATABASE_URL`),本地用 docker-compose 起库;引入 drizzle migrator 应用版本化迁移。**Pattern-Ref: PAT-002**(REAL-FORCE 命中:用户数据留存 + 唯一约束 + 将来部署)。
+**决策**(用户当时批准门控自治产物，历史等级为 L2；不是当前开发模式):运行时切到真 Postgres(`drizzle-orm/node-postgres` + `pg.Pool`,读 `DATABASE_URL`),本地用 docker-compose 起库;引入 drizzle migrator 应用版本化迁移。**Pattern-Ref: PAT-002**(REAL-FORCE 命中:用户数据留存 + 唯一约束 + 将来部署)。
 **验收实证**:杀进程重启哨兵行幸存(数据持久);db:migrate 建 72 表 + `__drizzle_migrations` 追踪 + 幂等;backend 9/3skip + 真PG集成 3/3 + frontend 1335 零回归;reconcile exit 0。
 **Owner**:agent(用户 /goal + 批准)。**Status**:active。**Invalidates**:none(运行时底座替换,契约/服务/UI 不变)。
 
@@ -3356,3 +3370,426 @@ DEC-T965追加（用户2026-09-13明确）：运营报表支持单天/周/月/�
 用户当前明确要求：流量详情超时继续修复；两小时任务错峰；有活跃任务查看原运行，否则启动一次并查看。接受范围落实为默认00/15/30/45分钟，保留用户自定义非默认计划和关闭状态；服务端核对活跃运行，前端详情走本地打开并遵守LED-047。授权本地验证，未授权公开发布。
 
 T983来源状态补充：真实页面对照证明部分旧作品只有正常指标卡且无来源组件。以unavailable明确表达平台未提供，而不是伪造比例或标为采集失败；保留历史来源和原采集时间，不按年龄猜测。独立审查确认登录/加载/未知结构不得降级，用户本轮修复授权覆盖此必要契约表达。
+
+## DEC-T1000 · 周期运营方向的可选结构化扩展
+
+用户明确要求周/月运营分析提供更多建议和战略方向。保留原有日报协议版本及缓存键，增加可选 `directions` 字段，旧缓存无需迁移；模型根据所选周期真实作品决定条数与内容，证据不足不凑数。页面将阶段内容取舍与单条实验分开展示；仅内部复盘使用，不进入分享战报或数据导出。实现和验收见 `docs/features/t1000-operations-strategy.md`。
+
+## DEC-AW-1003 — 多步 Agent 与 NomiFun 能力迁移规格
+
+用户明确确认 CreatorOS 应接受目标后连续执行，不需逐步“继续”，并要求参考自己参与开发的 NomiFun 工具及 browser_use。本轮只编写规格、拆任务与评审。保留 Pi core 与 execution_tasks；新增通用工具适配和产物链路，复用版本化 NomiFun 浏览器实现，账号隔离与 profile 唯一所有者不可绕过。具体实施选择及验证触发见 docs/features/t1003-agent-workbench.md；未批准发布或修改 NomiFun 源仓。
+
+## DEC-TRIAGE-1014 — 历史治理告警按真实适用范围销账
+
+用户要求核对233项历史失败并关闭有证据的过期项。本轮明确DEC-015描述的是历史门控等级，当前开发仍为interactive（不改变产品Agent自主执行能力）。使用官方归档命令迁移98条已完成看板行，补78条搁置行的验收列为待验，并恢复评审回执绑定的SPEC链接。历史回执不重签、不降低receipt_policy、不修改有效教训命令、不扩大架构违规基线。当前仍失败的规格和测试分别沿T-916/T-1015追踪；完整清单见docs/verification/t1014-triage.csv。
+
+## DEC-AW-1004 — 多步 Agent 实施授权与依赖边界
+
+用户在 T-1003 独立评审 PASS 后明确授权于同一任务会话连续实施 T-1004～T-1013。以 `docs/features/t1003-agent-workbench.md` 为完整验收范围；保留 Pi core、`execution_tasks`、账号隔离和旧采集。NomiFun 只读参考提交 `e27bd5de9a58ce444032ef4e63bb753992555c4c`，在 CreatorOS 锁定来源与依赖，不修改参考仓。实施授权不包括推送、发布或外部系统改动。Windows 原生安装与升级证据仍须由 T-1013 当场取得；本机交叉编译失败不能冒充产品缺陷或验收通过。
+
+## DEC-AW-1009 — 同一对话跨回合产物版本谱系
+
+用户在补充规格独立评审 `PASS[REV:825f3a6d65da]` 后明确“都确认”，批准按 `docs/features/t1009-artifact-lineage-proposal.md` 实施同一对话跨回合修订。产物谱系归属用户、账号和对话；每个版本继续绑定真实任务、原工具调用和 Blob，旧版本保留。新增后端唯一谱系索引、原调用同事务结算、未知 Blob 持久对账、旧任务保守迁移、HTML 精确图片版本清单以及新旧协议排他切换。不同对话或账号不得串联；迁移受阻时旧版只读且不伪造新版本。该确认授权实现与本地验收，不包含公开发布、生产放量或修改外部仓库。
+
+
+## T-916 历史规格回执复核授权（2026-09-21）
+
+用户要求继续修复当前 reconcile 暴露的问题。以下一次性能力仅允许对绑定任务的当前 SPEC 与当前宪法执行独立复核；不得改写历史事件、跳过审查或冒充既有 PASS。
+
+```text
+ID: DEC-015
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-915
+Previous-Spec-SHA256: b990a38a015698105d29d2da0cada4767b3be4bd09948cc5ef147621fb98d8ce
+Previous-Constitution-SHA256: ab6003112be4c5b680fba05abf8326eaf59eeafd1613b4ca44464ef3d0cff126
+Allowed-Change-IDs: SPEC-DRIFT,CONSTITUTION-DRIFT
+Max-Cycles: 1
+Nonce: ff11bd90-4588-44ed-85e4-498b9f5f1121
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-016
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-859
+Previous-Spec-SHA256: e6fe3ad73fa90859a3850b09e4ffd11fd82efdc1da7e1ee27899839d045981c5
+Previous-Constitution-SHA256: e84f83b7e65a415ba7a2a4639188bc2fd2d682f42d3220107a119abdc39d2a77
+Allowed-Change-IDs: SPEC-DRIFT,CONSTITUTION-DRIFT
+Max-Cycles: 1
+Nonce: 03366bd3-4852-44ba-9e39-a33c08dfa26b
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-017
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-858
+Previous-Spec-SHA256: ab768b979e62ab63199ee8d1014c993dcac7f51dfa92f15e627dacb33b2ceed1
+Previous-Constitution-SHA256: 871570cc600267be82e2e1fbfa79d730fc51121810b8de262c5a49c876029b66
+Allowed-Change-IDs: SPEC-DRIFT,CONSTITUTION-DRIFT
+Max-Cycles: 1
+Nonce: e7266c6d-fe58-4215-9a56-d1c82be92e71
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-018
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-824
+Previous-Spec-SHA256: 58355a1e3ae9f12a57279dfb67ba05d7e950b2aec1f3284aecaf8764339950c6
+Previous-Constitution-SHA256: 871570cc600267be82e2e1fbfa79d730fc51121810b8de262c5a49c876029b66
+Allowed-Change-IDs: CONSTITUTION-DRIFT
+Max-Cycles: 1
+Nonce: c2d657d0-27b9-4fb8-97fc-6e3ee65ea71b
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-019
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-819
+Previous-Spec-SHA256: d89d457083d1d2d0dd132429b3f65b8a8470f3feca2f44284080833b4754eecb
+Previous-Constitution-SHA256: 871570cc600267be82e2e1fbfa79d730fc51121810b8de262c5a49c876029b66
+Allowed-Change-IDs: SPEC-DRIFT,CONSTITUTION-DRIFT
+Max-Cycles: 1
+Nonce: ca9488d5-e93a-4c60-9f58-f9812be0bb00
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-020
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-816
+Previous-Spec-SHA256: b9490f4fac3f5f00ff1c32d26609e48d82b94b615ab3580f0b0d2a5df955548d
+Previous-Constitution-SHA256: 871570cc600267be82e2e1fbfa79d730fc51121810b8de262c5a49c876029b66
+Allowed-Change-IDs: SPEC-DRIFT,CONSTITUTION-DRIFT
+Max-Cycles: 1
+Nonce: 10f7f1c9-b65d-4c68-bf59-cff752140c5d
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-021
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-768
+Previous-Spec-SHA256: f0771cc886f5f56646b8431bf2e939952ecaa7297a05c0b888e23f7ffdb4fec2
+Previous-Constitution-SHA256: 871570cc600267be82e2e1fbfa79d730fc51121810b8de262c5a49c876029b66
+Allowed-Change-IDs: CONSTITUTION-DRIFT
+Max-Cycles: 1
+Nonce: 7ae1d4fe-b06e-497d-8f2c-7e531e85087d
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-022
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-726
+Previous-Spec-SHA256: 7e2e8d6b672ee2cea8f84c346ac23373f2fb15069bd8f32ab560370687b3e7c1
+Previous-Constitution-SHA256: 871570cc600267be82e2e1fbfa79d730fc51121810b8de262c5a49c876029b66
+Allowed-Change-IDs: CONSTITUTION-DRIFT
+Max-Cycles: 1
+Nonce: 35a3a05d-46f1-456d-bf72-025205408349
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-023
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-703
+Previous-Spec-SHA256: 70e49d3ae5a3e418fad77e80fa0a61054c42de5c0634cc20881cfd7a4f005320
+Previous-Constitution-SHA256: 2afb9684d1ef531f56c5def2185c6cc7086c00aa3105bff0ce87fc5c81fc5fad
+Allowed-Change-IDs: SPEC-DRIFT,CONSTITUTION-DRIFT
+Max-Cycles: 1
+Nonce: 2adcb180-5753-4ea0-a0c7-90fe3a81e26a
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-024
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-691
+Previous-Spec-SHA256: a4a57d75e372b01db3c0880f6791b98971a98d0abb44a3b29c07c1723752e232
+Previous-Constitution-SHA256: 6a04d0b0fa6c123f7990f02685afeed38858494cc2501ec4bfbc742050ab97fd
+Allowed-Change-IDs: CONSTITUTION-DRIFT
+Max-Cycles: 1
+Nonce: ac8673b6-158e-4b68-9431-6ec807c855d5
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-025
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-656
+Previous-Spec-SHA256: ca037dafc7b21ab04ce3ffe20502e7cc8862f14dc342a1e3db2437a67887f40e
+Previous-Constitution-SHA256: d01469220b22455024bd58473a6ca9f307162b1317ba0fa5fe036b148f90362a
+Allowed-Change-IDs: CONSTITUTION-DRIFT
+Max-Cycles: 1
+Nonce: fabb442c-61e4-4776-b796-dfdc6fceac56
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-026
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-645
+Previous-Spec-SHA256: c693c9a4ad1175d831512f493aabd4782603a21dda58f92fdca6c76e45989c4b
+Previous-Constitution-SHA256: 76e9fa0fa2408bd5f512b640d01ad5a0c550702875abeeb4ddb648a07e0e6bca
+Allowed-Change-IDs: SPEC-DRIFT,CONSTITUTION-DRIFT
+Max-Cycles: 1
+Nonce: 2564bde3-ee0e-4e82-b317-a784d856ceb2
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-027
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-642
+Previous-Spec-SHA256: e8c4568adfcd8dcf82c91468cd1dfde4c46899e128d1388c00001eddcb9b1442
+Previous-Constitution-SHA256: 07c9b61b58ca970feff57f1647c30a32c4af4fc92063c9a87952771403376950
+Allowed-Change-IDs: REV-002,SPEC-DRIFT
+Max-Cycles: 1
+Nonce: e9eec361-0bb6-41fb-aee9-1e0ebdd4b713
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-028
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-635
+Previous-Spec-SHA256: f00d4d7c0ecf1f7821fd336ce9278a12a168e1593417b1630527d458bcc929a3
+Previous-Constitution-SHA256: 89a36038833bdaed0d6de3ca353725643aff8aa53e6e0c53933b7ebdf4b1ad9b
+Allowed-Change-IDs: CONSTITUTION-DRIFT
+Max-Cycles: 1
+Nonce: 29cc5a99-7d6d-4301-bb87-c33c1124d26b
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-029
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-652
+Previous-Spec-SHA256: 381393efb2d2f63029b4d6df27522836b5bcbb7205429b9df13ccbd6d96f513e
+Previous-Constitution-SHA256: 86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800
+Allowed-Change-IDs: REV-004,REV-005,SPEC-DRIFT
+Max-Cycles: 1
+Nonce: 21ee04c8-f878-41cb-9555-69ebd0454f44
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-030
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-694
+Previous-Spec-SHA256: 6ea31e784c68e7498c99f4bfd89f8231d3d4e545c345127acd6eeee961a3192b
+Previous-Constitution-SHA256: 86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800
+Allowed-Change-IDs: SPEC-DRIFT,THREAT-MODEL-BINDING
+Max-Cycles: 1
+Nonce: d4f103ce-f2e9-4f0e-9f08-e599a5dca694
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-031
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-707
+Previous-Spec-SHA256: 274348c049ec609de8c6fd85ff5e1c35ccd888c4d3862a744e0167f8270d3c98
+Previous-Constitution-SHA256: 86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800
+Allowed-Change-IDs: REV-003,REV-004,SPEC-DRIFT
+Max-Cycles: 1
+Nonce: 653e2dc9-8565-443c-8e94-d4a39c653707
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-032
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-656
+Previous-Spec-SHA256: a6a56eb9bdb5c7b19e59fee6bef2c8f8fdbca2d4276f1b49d7a9c7ea049bc1ac
+Previous-Constitution-SHA256: d6611dbad51dc439d17e638fc2cab9283ad6a0d5557c183f82dad0aaedb05c28
+Allowed-Change-IDs: PMEM-SYNC
+Max-Cycles: 1
+Nonce: 9135a313-e798-4475-b983-f80300305656
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-033
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-635
+Previous-Spec-SHA256: 5849ba840ce1352b97eb47a8d72b77397737242621d7e32170e2cd9e2a8d9402
+Previous-Constitution-SHA256: d6611dbad51dc439d17e638fc2cab9283ad6a0d5557c183f82dad0aaedb05c28
+Allowed-Change-IDs: PMEM-SYNC
+Max-Cycles: 1
+Nonce: 439e493a-98a7-42a6-8d4c-adc7b2fa0635
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-034
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-703
+Previous-Spec-SHA256: 1624f50bb9f70d475bec8c633a7cc6f46d0d94f8fe4e01ecf6abfced36420460
+Previous-Constitution-SHA256: d6611dbad51dc439d17e638fc2cab9283ad6a0d5557c183f82dad0aaedb05c28
+Allowed-Change-IDs: PMEM-SYNC
+Max-Cycles: 1
+Nonce: 51b2872d-f6c4-43df-b41a-c1a6f8741703
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-035
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-691
+Previous-Spec-SHA256: a4a57d75e372b01db3c0880f6791b98971a98d0abb44a3b29c07c1723752e232
+Previous-Constitution-SHA256: d6611dbad51dc439d17e638fc2cab9283ad6a0d5557c183f82dad0aaedb05c28
+Allowed-Change-IDs: PMEM-SYNC
+Max-Cycles: 1
+Nonce: e7356b91-2d2f-477f-a909-bf225c156691
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-036
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-645
+Previous-Spec-SHA256: d2e9fbef2dcb8228b3652d5f269024eada6cafbf62c03ec61ba26ad6e4418fd1
+Previous-Constitution-SHA256: d6611dbad51dc439d17e638fc2cab9283ad6a0d5557c183f82dad0aaedb05c28
+Allowed-Change-IDs: PMEM-SYNC
+Max-Cycles: 1
+Nonce: ef51bc98-82f0-463f-b6bb-ecde96654645
+Owner: user
+Status: active
+```
+
+## DEC-T1026-CLI（2026-09-21）公开验收入口
+
+用户明确要求所有新增功能可通过 CLI 验证，授权补齐缺失入口、修复问题和本机覆盖安装。增加 `workbench.tasks.inspect/events`、`workbench.capabilities.list`、`workbench.artifacts.list/read/render/reconcile`；CLI 导出仅写用户指定本地路径并校验 SHA-256。复用现有账号鉴权、持久任务、产物服务及预览渲染，不增加执行权或数据库归属。
+
+独立审查（Wegener，本轮实际发生）认可方向，指出读取隐式迁移、对账重试/跨任务回收、锁顺序和计划产物校验死锁；本任务修复并验证这些合入条件。只读入口不迁移账本，原操作对账可重复回读，恢复只限定目标任务。HTML 诊断报告实际降级，登记成功不等于图表完整。历史未验收项目继续保留缺口，Windows 无实机不得记 PASS。
+
+## DEC-T1026-ANONYMOUS-ACT（2026-09-21）
+
+用户要求新增浏览器能力全部可用并通过CLI验收；实际合法匿名scroll/click被底层crawl身份策略拒绝。沿原T1008受控工作台边界，仅由可信宿主为当前任务独占anonymous Hub启用已声明的七种交互。开关默认false、不可由序列化/模型输入开启；普通采集Hub、authenticated-replica、Debug、domain/epoch/ref/租约与外部操作授权均不扩大。Rust独立复核指出Act+evaluate需在Hub自身拒绝，已纳入修复与回归。此决定落实用户已授权功能与安全边界，不将“禁止阻断”解释为绕过授权或重复未知动作。
+
+## DEC-T1027-CLI-RETRY（2026-09-21）
+
+用户已明确授权新增功能缺少CLI入口时补齐。安装实测确认评论失败项没有公开重试入口，runNow无法解除作品级backoff。增加账号限定、有界IDs、基线CAS和幂等的失败清单/重试时间调整操作，复用原调度入口；保留历史与成功水位，不解除平台冷却。不读取或直接修写用户私有数据库，独立评审与正式契约回归先行。
+
+同项实现发现仅提前少量作品的 retryAt 无法限制随后 runNow 的范围，其他作品可能同时到期。为可靠验收和用户真实选择，扩展现有 runNow 可选 publicationIds（仅评论，1–20、真实归属、每次任务固定选择），不改变定时作业配置；不同选择与已运行作业冲突，禁止悄悄复用为本次结果。该细案按既有用户授权落实，经独立评审后实现，未发生新的用户确认消息。
+
+## DEC-T1026-FILE-RECEIPT（2026-09-21）
+
+沿用户要求补公开 `workbench.files.reconcile`（taskId、原operationId；write/apply/gateway幂等），只用可信Native持久committed记录结算原文件调用，保留旧unknown快照、原键和费用。独审Wegener已放行协议A及生产自动恢复：复用已有单在途recoveryWake lane，有界轮转，停止时等待并拒绝迟到回写，只定点恢复该unknown_result任务，paused保持暂停。缺记录/prepared不伪报成功；观察协议B未实现、未通过，原99不解锁。新同会话后续修订可在独立task目录读取不可变v1并登记v2，不能作为99恢复通过的证据。Windows实机与断电持久性仍无实证。
+
+## DEC-T1026-EXACT-ARTIFACT-COPY（2026-09-22）
+
+按用户“所有新增功能通过CLI验收，缺入口补齐，生成问题继续修复”的既有授权，补现有`artifact.copy`对已登记HTML/Markdown/CSV/PDF的精确字节复制；沿同会话/账号、真实源版本、租约和原调用身份创建独立新artifact@1，原lineage与源任务文件不动。真实子任务242/261已证明让模型转写18KB报告会超时或抄错，不能把这种搬运当可靠恢复手段。此为确定性协议能力，不替模型做内容创作或替用户挑选源版本。
+
+Socrates独立方案审查有条件通过：PNG既有2MiB守卫保留，其余支持格式沿登记20MiB；HTML必须冻结并逐项校验源依赖闭包及宿主生成的原相对路径基准，嵌套copy保留原基准。渲染不得扩大图片归属、网络或脚本权限。旧冻结工具目录不回写，新任务才采用扩展。真实红绿及完整公共调用链验收仍待完成；这不是已发布或已通过的记录。未发生额外用户确认消息，不伪造确认。
+
+## DEC-T1027-CONTROLLED-DIAGNOSIS（2026-09-22）
+
+真实七包仍无评论响应，现有公开入口无法在同一个采集身份页面核验导航契约；用户已要求CLI缺口补齐并持续修复。采用新增`analytics.comments.diagnose`窄领域入口，单真实publication、同账号原采集profile/lease、固定主页及有界导航候选观察/选择/关闭。不开放任意URL、selector、JS或私有CDP；先看真实DOM证据，再由Agent判断并选择真实引用，代码仅守身份、生命周期、范围与幂等。
+
+Socrates已实际独审通过完整方案：close只依session归属、不被作品状态变化挡住；诊断只获取平台准入、不把观察成功report为采集成功或清退避；持久CLI gateway的pending/unknown重放不重新派发；observe原子换generation、旧ref拒绝。自然网络仅有界白名单协议证据，不返回凭据/评论正文/未知字段值；无法硬限读取的body明确unavailable。TTL本身不释放未确认停止资源，不把诊断可用等同平台采集通过。具体约束和红绿门在T1027 SPEC，未新增application空转发层。无额外用户确认消息，不冒称完成。
+
+### DEC-T1027-DIAGNOSIS-ROOT-COVERAGE
+
+第八安装CLI诊断只能观察首个顶部nav，不能据此判断评论入口不存在。沿用户既有全功能测试与修复授权，增加有界多语义root与覆盖事实；不增加任意动作或正文读取权限。具体预算/旧ref约束见T1027 SPEC追加段，经Wegener前置独审PASS后实现、Carver做最终复核。未收到新的用户确认消息，不把实现裁决写成新确认。
+
+### DEC-T1027-OBSERVATION-FAILURE（2026-09-22）
+
+第九安装原诊断catch丢失阶段，实际构建模块隔离Chromium未复现该故障。落实用户持续修复与CLI验收授权，增加可选固定observationFailure四值，按阶段和自有timer来源分类，成功省略，禁止公开raw异常；保持原deadline/权限/平台预算。Carver前置条件PASS，具体约束与红测见T1027 SPEC。此为现有授权内的可观测性补齐，无额外用户确认消息，当前并未证明安装版失败根因或采集成功。
+
+### DEC-T1026-TERMINAL-FAILURE-FINALIZATION（2026-09-23）
+
+第九安装task256公开CLI真实453call快照显示：正常安全retry修复已创建准确284→retryOf283；随后plan已无pending/running，模型stop后因Pi将failed计划步骤纳入unfinished而继续自动loop，反复重试持久回执为额度耗尽的外部调用并重写报告。模型通常进展改变revision，旧相同progressToken停滞守卫未触发。主线已从正式CLI pause，未知453与全部既有费用/回执保留。原提案为增加一次工具禁用模型收尾调用；Hypatia独立复审指出其可能遗漏已有正文、不能跨重启持久化、摘要/历史可能不全且与强制工具序列冲突，故该提案废弃。
+
+修订方案不增加模型调用：Pi loop 在失败步骤已终态且无 pending/running/waiting_user 时仅返回失败 step IDs；后端在现有聊天完成事务中重验当前计划与账本，按固定可信标题写入持久 partial 回复。execution 模块通过纯校验端口拥有计划语义；新任务冻结策略版本，符合终态失败却漏传 IDs 必须拒绝。历史 stop 是否有后继按所有后续聊天 root 状态判断，以保留 rejected/superseded 的历史续行提示；提交资格要求候选是最新 settled root stop，任意后继都阻止部分提交。消息、completion、两个 task 状态、text-start/delta/end 流事件与 finish metadata 原子一致，重复提交幂等；没有模型正文时仍能由宿主说明完成。缺策略版本的旧任务保持legacy v0、不回填；公开CLI已确认task256仍paused，453 unknown，所以不迁移、不绕过checkpoint，以新隔离任务验收v1。Hypatia与Ptolemy独立复审均认可这些边界。具体验收见 T1026 SPEC。

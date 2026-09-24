@@ -1,4 +1,5 @@
 export {executionStreamEvents} from "./schema/execution-stream";
+export {workbenchArtifactLineages,workbenchArtifactLineageVersions} from "./schema/workbench-artifacts";
 export {
   createDb,
   createRuntimeDb,

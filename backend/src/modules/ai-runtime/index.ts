@@ -9,7 +9,6 @@ export {createVideoEditCandidatePreparer} from "./video-edit-candidate";
 // chat 上下文与工具定义准备及 web search(search/)不在此说明范围 —— 前者走
 // §3.2 流式端点(Batch 3),后者属前端 browser 设施经端口注入。
 
-export * from "./agent-run";
 // [T-271] 制作封面链 runner(结构化封面方案 + 文案诚实门 + 结构化组装生图 prompt)。
 export * from "./cover-runner";
 export * from "./calibration-diagnose-runner";

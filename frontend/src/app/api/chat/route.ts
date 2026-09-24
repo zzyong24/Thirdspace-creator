@@ -481,8 +481,8 @@ export async function POST(req: Request): Promise<Response> {
       //     同内容的 user 行(上一轮流失败/中断,assistant 未落库),说明这条 user 已在库里,
       //     不重插。查失败(best-effort)→ 照常 insert(宁多勿丢)。
       const approvalContinuation=messages.at(-1)?.role==="assistant" && messages.at(-1)!.parts.some(part=>typeof part==="object" && part!==null && "state" in part && part.state==="approval-responded");
-      let skipInsert = approvalContinuation;
-      if (!skipInsert && isExistingConversation && body.trigger!=="regenerate-message") {
+      let skipInsert = approvalContinuation || (isExistingConversation && body.trigger === "regenerate-message");
+      if (!skipInsert && isExistingConversation) {
         try {
           const history = await runtime.ai.listMessages(ctx, conversationId);
           const last = history[history.length - 1];

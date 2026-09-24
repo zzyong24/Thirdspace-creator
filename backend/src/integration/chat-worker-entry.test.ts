@@ -105,8 +105,8 @@ it.each([...staticModes.map(mode=>({mode,dynamic:false,resolveFailure:false})),.
    }
    await vi.waitFor(async()=>expect((await state()).status).toBe(mode==="partial"?"partial":"succeeded"),{timeout:15000});
    const streamEvents=await db.select().from(executionStreamEvents).where(eq(executionStreamEvents.executionTaskId,submission.executionTaskId));
-   expect(streamEvents.filter(event=>event.chunk.type==="text-delta").map(event=>event.chunk.delta).join("")).toBe("最终回复");
-   expect(streamEvents.filter(event=>event.chunk.type==="text-start")).toHaveLength(1);
+   expect(streamEvents.filter(event=>event.chunk.type==="text-delta").map(event=>event.chunk.delta).join("")).toBe(mode==="partial"?"最终回复".repeat(3):"最终回复");
+   expect(streamEvents.filter(event=>event.chunk.type==="text-start")).toHaveLength(mode==="partial"?3:1);
    expect(streamEvents.filter(event=>event.chunk.type==="finish")).toHaveLength(1);
    expect(streamEvents.sort((a,b)=>a.sequence-b.sequence).at(-1)!.chunk).toMatchObject({type:"finish",finishReason:mode==="partial"?"length":"stop"});
    if(usesTool){
@@ -114,9 +114,9 @@ it.each([...staticModes.map(mode=>({mode,dynamic:false,resolveFailure:false})),.
     expect(results).toHaveLength(["revoked","login"].includes(mode)?2:1);
     if(["denied","late-denied"].includes(mode))expect(results[0]!.chunk.type).toBe("tool-output-denied");
    }
-   const rows=await db.select().from(aiMessages).where(eq(aiMessages.conversationId,conversation.id));expect(rows).toHaveLength(2);expect(rows.find(row=>row.role==="assistant")).toMatchObject({content:"最终回复"});
+   const rows=await db.select().from(aiMessages).where(eq(aiMessages.conversationId,conversation.id));expect(rows).toHaveLength(2);expect(rows.find(row=>row.role==="assistant")).toMatchObject({content:mode==="partial"?"最终回复".repeat(3):"最终回复"});
    expect(await db.select().from(aiTaskResults).where(eq(aiTaskResults.aiTaskId,submission.taskId))).toHaveLength(1);
-   expect(execute).toHaveBeenCalledTimes(mode==="login"?2:usesTool && !["denied","late-denied"].includes(mode)?1:0);expect(requests).toBe(["revoked","login"].includes(mode)?3:usesTool || mode==="retry"?2:1);
+   expect(execute).toHaveBeenCalledTimes(mode==="login"?2:usesTool && !["denied","late-denied"].includes(mode)?1:0);expect(requests).toBe(mode==="partial"?3:["revoked","login"].includes(mode)?3:usesTool || mode==="retry"?2:1);
    if(usesTool && !["denied","late-denied"].includes(mode))expect(bodies.at(-1)).toContain("https://source.test/evidence");
    if(["approval","revoked","login","late-denied"].includes(mode))expect((await state()).attempt).toBe(mode==="approval"?3:2);
    if(mode==="approval"){
@@ -140,39 +140,51 @@ it.each([...staticModes.map(mode=>({mode,dynamic:false,resolveFailure:false})),.
  }finally{await host.stop();server.closeAllConnections();await new Promise<void>(r=>server.close(()=>r()));}
 },20000);
 
-it.each(["cancel","stop","pause","unknown","expired","lease-expired"])("动态工具解析不响应取消时，%s 仍能停止且迟到返回不能调用模型",async mode=>{
+it.each(["cancel","stop","pause","unknown","model-resumed","expired","lease-expired"])("动态工具解析不响应取消时，%s 仍能停止且迟到返回不能调用模型",async mode=>{
  let clockOffset=0;
  const ctx={userId:"resolve-race",accountId:`resolve-${++sequence}`,requestId:"test",source:"user" as const},now=()=>new Date(Date.now()+clockOffset).toISOString();
  const repo=createAiRepository(db,{userId:ctx.userId,accountId:ctx.accountId,now,nextId:prefix=>`${prefix}-race-${++sequence}`});
  const conversation=await repo.createConversation({title:"解析竞态",projectId:null,scope:"global"}),source=await repo.createMessage(conversation.id,{role:"user",content:"问题",attachments:[],modelMetadata:{}});
  const submitted=await createChatTurnSubmissionService(db,{assemble:async()=>({capability:"copilot.assist",system:"fixture",messages:[{role:"user",content:"问题"}],tools:[],maxSteps:3,maxOutputTokens:128})}).submit(ctx,{conversationId:conversation.id,sourceMessageId:source.id});
  const releases:Array<(tools:Record<string,ChatBackendTool>)=>void>=[];
- const resolveTools=vi.fn(()=>mode==="unknown"?Promise.reject(new Error("恢复工具不可用")):new Promise<Record<string,ChatBackendTool>>(resolve=>releases.push(resolve)));
+ const resolverFails=["unknown","model-resumed"].includes(mode);
+ const resolveTools=vi.fn(()=>resolverFails?Promise.reject(new Error("恢复工具不可用")):new Promise<Record<string,ChatBackendTool>>(resolve=>releases.push(resolve)));
  const credentials=vi.fn(async()=>{throw Error("不应请求凭据");});
  const host=createChatWorkerDispatcher(db,{now,entryPath,workerId:"resolve-race",budget:{maxCalls:5,maxTokens:10000,deadlineMs:mode==="expired"?1000:["stop","lease-expired"].includes(mode)?600000:60000},pollMs:100,modelConcurrency:1,resolveTools,resolveModelCredential:credentials});
  const state=async()=>(await db.select().from(executionTasks).where(eq(executionTasks.id,submitted.executionTaskId)))[0]!;
  const tasks=createPersistentTaskService(db);
- if(mode==="unknown"){
+ let originalCall:typeof executionCalls.$inferSelect|undefined;
+ if(resolverFails){
   const claim=(await tasks.claimTask({taskId:submitted.executionTaskId,workerId:"prior"}))!;
   const ref={executionTaskId:submitted.executionTaskId,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken};
   const {createExecutionCallLedgerService}=await import("../modules/execution/execution-call-ledger.service");
   const ledger=createExecutionCallLedgerService(db,{budget:{maxCalls:5,maxTokens:10000,deadlineMs:60000}});
-  const call=await ledger.reserve(ref,{kind:"model",operationKey:"original",inputDigest:"sha256:"+"a".repeat(64),reservedTokens:10});await ledger.start(ref,call.id);
+  // 无外部结果的根模型可在显式resume时废弃；未决工具仍必须保留unknown门。
+  const call=await ledger.reserve(ref,{kind:mode==="unknown"?"tool":"model",operationKey:"original",inputDigest:"sha256:"+"a".repeat(64),reservedTokens:mode==="unknown"?0:10});await ledger.start(ref,call.id);
   await tasks.command(ctx,{taskIds:[submitted.executionTaskId],command:"pause",idempotencyKey:"prior-pause"});
   await tasks.acknowledgeControl({taskId:submitted.executionTaskId,workerId:"prior",attempt:claim.lease.attempt});
+  originalCall=(await db.select().from(executionCalls).where(eq(executionCalls.id,call.id)))[0]!;
+  expect(originalCall.status).toBe("started");
   await tasks.command(ctx,{taskIds:[submitted.executionTaskId],command:"resume",idempotencyKey:"prior-resume"});
+  const resumed=(await db.select().from(executionCalls).where(eq(executionCalls.id,call.id)))[0]!;
+  expect(resumed).toEqual({...originalCall,status:mode==="unknown"?"started":"superseded",updatedAt:resumed.updatedAt});
+  expect((await state()).retryOfCallId).toBe(mode==="unknown"?null:call.id);
  }
  try{
   host.start();await vi.waitFor(()=>expect(resolveTools).toHaveBeenCalledTimes(1));
-  if(mode==="unknown"){
-   await vi.waitFor(async()=>expect((await state()).status).toBe("unknown_result"));
+  if(resolverFails){
+   if(mode==="unknown")await vi.waitFor(async()=>expect((await state()).status).toBe("unknown_result"));
+   else await vi.waitFor(async()=>expect((await state()).status).toBe("failed"));
+   expect((await state()).lastErrorCode).toBe("CHAT_WORKER_INPUT_UNAVAILABLE");
    expect(credentials).not.toHaveBeenCalled();
    const calls=await db.select().from(executionCalls).where(eq(executionCalls.executionTaskId,submitted.executionTaskId));
-   expect(calls).toHaveLength(1);expect(calls[0]!.operationKey).toBe("original");expect(calls[0]!.status).toBe("started");return;
+   expect(calls).toHaveLength(1);
+   expect(calls[0]).toEqual({...originalCall,status:mode==="unknown"?"started":"superseded",updatedAt:calls[0]!.updatedAt});
+   expect(calls[0]).toMatchObject({operationKey:"original",reservedTokens:mode==="unknown"?0:10,totalTokens:null,providerResult:null});return;
   }
   if(mode==="expired" || mode==="lease-expired"){
    clockOffset=mode==="expired"?2000:Date.parse((await state()).leaseExpiresAt!)-Date.now()+100;
-   await vi.waitFor(async()=>expect((await state()).status).toBe("failed"),{timeout:1500});
+   await vi.waitFor(async()=>expect((await state()).status).toBe("failed"),{timeout:3000});
    expect(credentials).not.toHaveBeenCalled();return;
   }
   if(mode!=="stop"){

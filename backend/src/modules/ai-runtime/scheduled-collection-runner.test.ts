@@ -47,6 +47,16 @@ const baseTask: ScheduledCollectionTask = {
 };
 
 describe("runScheduledCollection(确定性采集 runner)", () => {
+  it.each(['navigationStatus','timeout','audio','export'])("incomplete结构化说明含%s也不被异常文案映射误分类",async field=>{
+    const message='本批未完整完成:已处理 1/1 个作品，确认完成 0 个\n评论抓取诊断：'+JSON.stringify({reason:'no_matching_response',pageEvidence:{[field]:200,network:{totalResponses:244}}});
+    const deps=makeDeps({collectors:{comments:async()=>({itemsNew:0,itemsUpdated:0,incomplete:true,message})}});
+    await runScheduledCollection(ctx,{...baseTask,taskType:'scheduled.comments'},deps);
+    const patch=(deps.runs.updateRun as ReturnType<typeof vi.fn>).mock.calls.at(-1)![2];
+    expect(patch).toMatchObject({status:'failed',itemsNew:0,itemsUpdated:0,error:`采集抖音评论失败:${message}。`});
+    expect(deps.ai.markFailed).toHaveBeenCalledWith(ctx,baseTask.id,patch.error);
+    expect(deps.ai.markSucceeded).not.toHaveBeenCalled();
+  });
+
   it("成功路径:collector 抓数 → step → succeeded → 回填 job_run(items + finished_at)", async () => {
     const deps = makeDeps();
     await runScheduledCollection(ctx, baseTask, deps);

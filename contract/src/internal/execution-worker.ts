@@ -1,4 +1,5 @@
 import {redfoxObservationSchema} from "./redfox";
+import {workbenchCapabilitySchema,workbenchPlanSchema,workbenchResultSchema,type WorkbenchCapability,type WorkbenchResult} from "./agent-workbench";
 export {redfoxInputSchema,redfoxObservationSchema,type RedfoxInput} from "./redfox";
 export {transcribeProfileSchema,transcribeSourceFailureSchema} from "./transcribe-workflow";
 import {videoPortInputSchemas} from "./execution-video";
@@ -32,6 +33,28 @@ import { agenticWorkerInputSchema, reserveAgenticModelSchema } from "./agentic-w
 export { agenticWorkerInputSchema, reserveAgenticModelSchema, agenticCommitReceiptSchema } from "./agentic-worker";
 import { reserveAgenticToolSchema, settleAgenticToolSchema, agenticToolOutcomeSchema } from "./agentic-tool-call";
 export { reserveAgenticToolSchema, settleAgenticToolSchema, agenticToolReservationSchema, agenticToolOutcomeSchema, type AgenticToolOutcome } from "./agentic-tool-call";
+
+/** SEMANTIC_BOUNDARY_ALLOW: 四种原生观察协议不产生外部提交；不能泛化 read（navigate 也声明 read）。 */
+export function isWorkbenchBrowserObservation(descriptor:WorkbenchCapability):boolean {
+ return ["browser.observe","browser.extract","browser.status","browser.screenshot"].includes(descriptor.name)&&
+  descriptor.schemaVersion===1&&descriptor.effects.length===1&&descriptor.effects[0]==="read"&&
+  descriptor.requiredCapabilities.length===1&&descriptor.requiredCapabilities[0]==="task.browser";
+}
+export const browserObservationRecovery="未取得有效的页面观察结果；这不表示页面操作已成功。请用新的工具调用重新观察，或选择提取文本、截图等替代观察；以新结果为准。若 Lane 已失效，先核对状态并按当前租约重新打开。不要重放未知的点击、导航、打开或关闭操作。截图存储可能已留下不可变字节，本回执不声明未写入存储。";
+
+/** 通用能力进入原工具账本时的唯一回执转换；未知提交永不自动重试。 */
+export function workbenchToolOutcome(rawResult:WorkbenchResult,rawDescriptor:WorkbenchCapability){
+ const descriptor=workbenchCapabilitySchema.parse(rawDescriptor),result=workbenchResultSchema.parse(rawResult);
+ if(result.status==="running")throw new Error("GATEWAY_RUNNING_RESULT_NOT_SETTLEABLE");
+ const observationUnavailable=isWorkbenchBrowserObservation(descriptor)&&(result.status==="unknown"||(result.status==="failed"&&result.error.dispatched));
+ const unknown=!observationUnavailable&&(result.status==="unknown" || (result.status==="failed" && result.error.dispatched && result.error.confirmedNoCommit!==true));
+ const sideEffect=unknown?"unknown":result.status==="succeeded"
+  ? descriptor.effects.some(effect=>["external_write","process","task_write"].includes(effect))?"committed":descriptor.effects.includes("domain_candidate")?"proposal":"none"
+  :"none";
+ const summary=result.status==="succeeded"?(result.content.find(part=>part.type==="text")?.text??"工具已完成").slice(0,10000):`工具${unknown?"回执待核对":"调用失败"}：${result.error.code}`;
+ const code=result.status==="succeeded"?null:unknown?"unknown_commit":result.error.nextAction==="fix_input"?"invalid_input":result.error.nextAction==="login"?"needs_login":result.error.nextAction==="contact_support"?"no_evidence":"transient";
+ return agenticToolOutcomeSchema.parse({status:result.status==="succeeded"?"ok":code==="needs_login"?"blocked":"error",summary,evidence:[],data:{workbench:result},error:code?{code,retryable:false,recovery:unknown?"按原 operationId 核对回执后继续；不要重新执行。":observationUnavailable?browserObservationRecovery:result.status==="failed"&&result.error.recovery?result.error.recovery:`按 ${result.status==="failed"?result.error.nextAction:"reconcile"} 处理`}:null,continuation:null,sideEffect});
+}
 import { saveExecutionCheckpointSchema } from "./execution-checkpoint";
 export { saveExecutionCheckpointSchema, executionCheckpointSchema, checkpointToolCallSchema, workerToolResultReceiptSchema } from "./execution-checkpoint";
 import { z } from "zod";
@@ -83,7 +106,7 @@ export const workerPortSchema = z.enum([
   "failChatGeneration", "restoreChatGeneration", "resolveChatGenerationCredential", "prepareChatGeneration", "reserveChatGenerationModel", "startChatGenerationModel", "settleChatGenerationModel", "completeChatGeneration",
   "failChatScriptDraft", "restoreChatScriptDraft", "prepareChatScriptDraft", "reserveChatScriptDraftModel", "startChatScriptDraftModel", "settleChatScriptDraftModel", "completeChatScriptDraft",
   "failChatHooks", "restoreChatHooks", "prepareChatHooks", "reserveChatHooksModel", "startChatHooksModel", "settleChatHooksModel", "completeChatHooks",
-  "appendStreamEvents", "commitChatResult", "checkChatToolApproval",
+  "appendStreamEvents", "commitChatResult", "checkChatToolApproval", "readWorkbenchPlan", "saveWorkbenchPlan", "resolveWorkbenchScreenshot",
   "completeDailyTopicSkip", "commitDailyTopicResult",
   "reserveTopicRead", "startTopicRead", "settleTopicRead", "readTopicRead", "readTopicBrowserSession", "saveTopicBrowserSession",
   "readTaskContext", "resolveModelCredential", "resolveChatFallbackCredential", "reserveCall", "startCall", "settleCall",
@@ -93,6 +116,14 @@ export const workerPortSchema = z.enum([
 export type WorkerPort = z.infer<typeof workerPortSchema>;
 const emptyPortInput = z.object({}).strict();
 const operationKeySchema = z.string().min(1).max(256);
+/** 仅由 owned checkpoint 返回；无正文/凭据，不能替代 reserve 的完整身份校验。 */
+export const chatModelReplayFingerprintsSchema = z.array(z.object({
+  callId: operationKeySchema,
+  operationKey: operationKeySchema,
+  inputDigest: z.string().regex(/^sha256:[a-f0-9]{64}$/),
+  status: z.enum(["settled", "reserved"]),
+}).strict()).max(10000);
+export type ChatModelReplayFingerprint = z.infer<typeof chatModelReplayFingerprintsSchema>[number];
 const tokenCountSchema = z.number().int().nonnegative().optional();
 export const workerUsageSchema = z.object({
   inputTokens: tokenCountSchema, outputTokens: tokenCountSchema, totalTokens: tokenCountSchema,
@@ -115,6 +146,7 @@ export type WorkerProviderReceipt = z.infer<typeof workerProviderReceiptSchema>;
 const generationSettlementSchema=z.discriminatedUnion("status", [
  z.object({callId:operationKeySchema,status:z.literal("settled"),providerResult:workerProviderReceiptSchema,usage:workerUsageSchema}).strict(),
  z.object({callId:operationKeySchema,status:z.literal("rejected"),rejectionCode:z.enum(["STRUCTURED_PROTOCOL_UNSUPPORTED","CHAT_MODEL_RETRYABLE_REJECTION"]).optional()}).strict(),
+ z.object({callId:operationKeySchema,status:z.literal("superseded")}).strict(),
  z.object({callId:operationKeySchema,status:z.literal("unknown")}).strict(),
 ]);
 
@@ -128,6 +160,9 @@ export const chatResearchPreparationSchema=z.object({available:z.boolean(),query
 /** 每个命名端口都有单独的载荷边界；身份字段不得从 Worker 注入。 */
 export const workerPortInputSchemas = {
   ...videoPortInputSchemas,
+  readWorkbenchPlan:z.object({modelCallId:operationKeySchema}).strict(),
+  saveWorkbenchPlan:z.object({expectedRevision:z.number().int().nonnegative(),steps:workbenchPlanSchema.shape.steps}).strict(),
+  resolveWorkbenchScreenshot:z.object({callId:operationKeySchema,dataRef:z.string().regex(/^wm1-[a-f0-9]{64}$/)}).strict(),
   readProcessingAsset:emptyPortInput,saveMaterialExtraction:materialExtractionSchema,completeAssetProcessing:assetProcessingCompleteSchema,
   ...transcribeWorkflowPortSchemas,
   ...coverPortInputSchemas,
@@ -141,6 +176,7 @@ export const workerPortInputSchemas = {
     generationSettlementSchema.options[0].extend({awemeId:z.string().min(1).max(128)}).strict(),
     generationSettlementSchema.options[1].extend({awemeId:z.string().min(1).max(128)}).strict(),
     generationSettlementSchema.options[2].extend({awemeId:z.string().min(1).max(128)}).strict(),
+    generationSettlementSchema.options[3].extend({awemeId:z.string().min(1).max(128)}).strict(),
   ]),
   selectTranscribeLocalFallback:z.object({awemeId:z.string().min(1).max(128)}).strict(),
   prepareTranscribeAsr:z.object({awemeId:z.string().min(1).max(128)}).strict(),
@@ -191,7 +227,7 @@ export const workerPortInputSchemas = {
   completeChatHooks:chatHooksParentRequestSchema,
   appendStreamEvents:appendExecutionStreamSchema,
   checkChatToolApproval:reserveAgenticToolSchema,
-  commitChatResult:z.object({lastModelCallId:operationKeySchema,toolCallIds:z.array(operationKeySchema).max(10000).refine(ids=>new Set(ids).size===ids.length,"工具引用不能重复")}).strict(),
+  commitChatResult:z.object({lastModelCallId:operationKeySchema,toolCallIds:z.array(operationKeySchema).max(10000).refine(ids=>new Set(ids).size===ids.length,"工具引用不能重复"),partialPlanFailureStepIds:z.array(operationKeySchema).min(1).max(10000).refine(ids=>new Set(ids).size===ids.length,"未成功步骤引用不能重复").optional(),terminalToolFailureCallIds:z.array(operationKeySchema).min(2).max(10000).refine(ids=>new Set(ids).size===ids.length,"终态工具失败回执不能重复").optional()}).strict(),
   completeDailyTopicSkip: emptyPortInput,
   commitDailyTopicResult: z.object({outcome:z.literal("succeeded"),callId:operationKeySchema,text:z.string().min(1).max(2_000_000)}).strict(),
   ...topicReadPortInputSchemas,
@@ -220,7 +256,7 @@ export const workerPortInputSchemas = {
   startCall: z.object({callId: operationKeySchema}).strict(),
   settleCall: z.discriminatedUnion("status", [
     z.object({callId: operationKeySchema, status: z.literal("settled"), usage: workerUsageSchema, text: z.string().min(1).max(2_000_000)}).strict(),
-    z.object({callId: operationKeySchema, status: z.enum(["unknown", "rejected"])}).strict(),
+    z.object({callId: operationKeySchema, status: z.enum(["unknown", "rejected", "superseded"])}).strict(),
   ]),
   readCheckpoint: emptyPortInput,
   saveCheckpoint: saveExecutionCheckpointSchema,
@@ -233,7 +269,7 @@ export const workerPortInputSchemas = {
 } satisfies Record<WorkerPort, z.ZodType>;
 export const workerReservationSchema = z.object({
   callId: operationKeySchema,
-  status: z.enum(["reserved", "started", "settled", "unknown", "rejected"]),
+  status: z.enum(["reserved", "started", "settled", "unknown", "rejected", "superseded"]),
   providerResult:workerProviderReceiptSchema.optional(),
   rejectionCode:z.enum(["STRUCTURED_PROTOCOL_UNSUPPORTED","CHAT_MODEL_RETRYABLE_REJECTION"]).optional(),
   resultText: z.string().min(1).max(2_000_000).optional(),

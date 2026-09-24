@@ -150,11 +150,6 @@ export {
   type TopicItem,
   type TopicBasis,
 } from "./nodes/topic-node";
-export {
-  runTopicTask,
-  type TopicTaskPorts,
-  type RunTopicTaskInput,
-} from "./orchestrate/run-topic-task";
 // 提示词模板系统(脊柱-1):模板化解耦 + 注册表(可版本化/外部覆盖/未来服务端推送)。
 export {
   bindPrompt,

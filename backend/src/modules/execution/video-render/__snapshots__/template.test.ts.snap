@@ -63,8 +63,6 @@ tl.to("#th",{left:0,top:0,width:1080,height:1920,borderRadius:0,duration:.34,eas
 tl.set("#th",{zIndex:900},38.34);
 tl.set("#th",{zIndex:945},53.00);
 tl.to("#th",{left:54,top:1188,width:264,height:469,borderRadius:24,duration:.34,ease:"power3.inOut"},53.00);
-tl.to("#th",{left:0,top:0,width:1080,height:1920,borderRadius:0,duration:.34,ease:"power3.inOut"},60.00);
-tl.set("#th",{zIndex:900},60.00);
 tl.fromTo("#c10",{autoAlpha:0,scale:1.02},{autoAlpha:1,scale:1,duration:.4,ease:"power3.out"},2.00);
 tl.fromTo("#c10 > *:not(.ovl)",{autoAlpha:0,y:8},{autoAlpha:1,y:0,duration:.35,stagger:.08,ease:"power2.out"},2.00);
 tl.to("#c10",{autoAlpha:0,duration:.3},7.70);

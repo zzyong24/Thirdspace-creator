@@ -1,3 +1,6 @@
+import {createWorkbenchPublicService,createWorkbenchPublicTransport,createWorkbenchPublicStreamService,WORKBENCH_OP_IDS} from "@creatoros/backend/modules/execution";
+import {selectBuiltinWorkbenchCapabilities,workbenchBuiltins,workbenchDependencyLock} from "./workbench-builtin-manifest";
+import {createWorkbenchArtifactRepresentation} from "./workbench-artifact-representation";
 import {createOperationsSyncCollector} from '@creatoros/backend/application/collection/operations-sync';
 import {hostBrowserShutdownScope} from '@creatoros/ai-worker/browser/browser-shutdown-scope';
 import {createBrowserHostDisposer} from './browser-host-dispose';
@@ -55,7 +58,7 @@ import { createKnowledgeApplication } from "@creatoros/backend/application/knowl
 import { configureHostBrowserProfileLifecycle } from "./ingestion/host-browser-profile-lifecycle";
 import { createHostBrowserProfileLifecycle, createDesktopHostProcessRecovery } from "@creatoros/backend/modules/execution";
 import { createAgenticCollectionTools } from "@creatoros/backend/modules/ai-runtime";
-import { composeChatProduction, createChatProductionRuntime } from "@creatoros/backend/modules/ai-runtime";
+import { composeChatProduction, createChatProductionRuntime, type ChatProductionCompositionDeps } from "@creatoros/backend/modules/ai-runtime";
 import { resolveDouyinProfileIdentity } from "@creatoros/ai-worker/browser/profile-directory";
 
 import { createScriptDraftTargetService } from "@creatoros/backend/modules/artifacts";
@@ -78,6 +81,10 @@ import { createGeneratedAssetAdoptionService, createStructuredTargetAdoptionServ
 import { createCollectionToolPorts } from "@creatoros/backend/modules/intelligence";
 import { resolveExecutionWorkerPath, resolveAgenticWorkerPath, resolveIntelligenceGenerationWorkerPath, resolveIntelligenceTranscriptWorkerPath, resolveEmbeddingWorkerPath, resolveFlywheelWorkerPath, resolveModelProbeWorkerPath } from "./execution-worker-path";
 import { createExecutionScheduledChildService, createModelWorkerDispatcher, createAgenticWorkerDispatcher, DEFAULT_AGENTIC_SYSTEM_PROMPT } from "@creatoros/backend/modules/execution";
+import { createNativeFilesWorkbenchHost } from "./workbench-native-host";
+import { createNativeFileRecoveryService } from "./workbench-file-recovery";
+import { createWorkbenchArtifactHost } from "./workbench-artifact-host";
+import { createWorkbenchBrowserHost } from "./workbench-browser-host";
 import { createScriptSimilarityEvaluator, createTopicPreferenceSubmission, createArtifactContextReaders, createStructuredBusinessExecutionService } from "@creatoros/backend/modules/ai-runtime";
 import "server-only";
 
@@ -130,11 +137,12 @@ import { createOnboardingState, createIntegrationCredentials, createSettingsRepo
 import { assembleActivationService, type ActivationService } from "./activation";
 import { createRadarProjectService, createProjectRepository, createProjectsService, createProjectsTransport, createTranscriptArtifactService, createProjectTranscriptionTargetService, type StageGateReadersRef } from "@creatoros/backend/modules/projects";
 import { createKnowledgeRepository, createKnowledgeService } from "@creatoros/backend/modules/knowledge";
-import { createAssetRepository, createAssetsService, createWebDocumentCacheService, createAssetsTransport, createMockObjectStorage, createS3ObjectStorage, createLocalFsObjectStorage, ensureBucket, type ObjectStorageForCtx } from "@creatoros/backend/modules/assets";
+import { createAssetRepository, createAssetsService, createWebDocumentCacheService, createAssetsTransport, createMockObjectStorage, createS3ObjectStorage, createLocalFsObjectStorage, createWorkbenchBlobService, ensureBucket, type ObjectStorageForCtx } from "@creatoros/backend/modules/assets";
 import { createArtifactsService, createArtifactsTransport } from "@creatoros/backend/modules/artifacts";
 import { createProductionService, createProductionTransport } from "@creatoros/backend/modules/production";
 import { createPublishingService, createPublishingTransport, createUnavailablePublisher } from "@creatoros/backend/modules/publishing";
-import { createPublicationSyncService, createTrafficService, createAnalyticsRepository, createAnalyticsService, createAnalyticsTransport } from "@creatoros/backend/modules/analytics";
+import { createCommentDiagnosisHost } from "./ingestion/douyin-cdp-comment-diagnosis";
+import { createCommentDiagnosisService, createPublicationSyncService, createTrafficService, createAnalyticsRepository, createAnalyticsService, createAnalyticsTransport } from "@creatoros/backend/modules/analytics";
 import { createIngestionService, createIngestionTransport } from "@creatoros/backend/modules/ingestion";
 import { createReviewsService, createReviewsTransport } from "@creatoros/backend/modules/reviews";
 // T-086 文案审核门(review_rules + script_review_reports)。
@@ -149,7 +157,7 @@ import { createAiService, createAiTransport, createAiRepository, buildAiModelCon
 // dispatch 编排。存储复用 ai_tasks(taskType `exec.*`),模块本体零 db 依赖(端口注入)。
 // [T-255a] 执行层(脑手分离):execution.tasks 5 op + 沙箱 + executor 注册表 + live
 // dispatch 编排。存储复用 ai_tasks(taskType `exec.*`),模块本体零 db 依赖(端口注入)。
-import { createExecutionService, createPersistentTaskService, createExecutionTransport, createExecutorRegistry, registerBuiltinExecutors, runExecutionTask, abortExecutionTask, resolveWorkspacesRoot, sweepInterruptedRenderFrames, sweepOrphanSandboxes } from "@creatoros/backend/modules/execution";
+import { createWorkbenchArtifactService,createWorkbenchArtifactReadService,startWorkbenchArtifactReconciler,createWorkbenchScreenshotMediaService, createExecutionService, createPersistentTaskService, createExecutionTransport, createExecutorRegistry, registerBuiltinExecutors, runExecutionTask, abortExecutionTask, resolveWorkspacesRoot, sweepInterruptedRenderFrames, sweepOrphanSandboxes } from "@creatoros/backend/modules/execution";
 import { createTranscriptSourceRecoveryService, createRadarProjectQueueService, createIntelligenceService, createIntelligenceTransport, createProjectIntelligenceReferenceService, createIntelligenceTranscriptBridge, createIntelligenceGenerationBridge, createProjectScriptCandidateService, drainProjectScriptCandidateQueue, runIntelligenceSourceTask, drainIntelligenceSourceQueue, drainIntelligenceTranscriptQueue, type IntelligenceTranscriptRunnerDeps, drainIntelligenceTopicPreviewQueue } from "@creatoros/backend/modules/intelligence";
 import { createIntelligenceSourceAdapter } from "@/server/intelligence/source-adapter";
 import { drainDouyinShareImportQueue } from "@creatoros/backend/modules/intelligence";
@@ -623,6 +631,8 @@ interface PersistenceBundle {
   // [T-255a] 执行层 transport(execution.tasks.*,存储复用 ai_tasks)。
   execution: Transport;
   browserTaskAuthorizationRuntime: { grant(ctx:RequestContext,taskId:string,input:unknown):Promise<{status:"granted"|"denied"}>; prepare(ctx:RequestContext,taskId:string):Promise<void> };
+  workbenchPreviewRuntime: ReturnType<typeof createWorkbenchArtifactReadService>;
+  workbenchArtifactRecoveryRuntime: {reconcile:ReturnType<typeof startWorkbenchArtifactReconciler>["reconcile"]};
   executionPreviewRuntime: {
     readVideo(
       ctx: RequestContext,
@@ -737,6 +747,7 @@ interface PersistenceBundle {
 // context readers (assembleChatAssembly reads them for 数据层注入). The readers are bound
 // to the same public services the topic.generate trigger uses (no cross-module repo import).
 export interface ChatRuntime {
+  workbenchHost?: ChatProductionCompositionDeps["workbenchHost"];
   resolveRedfoxCredential: ReturnType<typeof createIntegrationCredentials>["resolve"];
   readCurrentScript?: (ctx:RequestContext,projectId:string,signal?:AbortSignal)=>ReturnType<ReturnType<typeof createCurrentArtifactReader>>;
   durable: ReturnType<typeof createChatProductionRuntime>;
@@ -1122,12 +1133,17 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // 主动调(singleton 跟随进程生命周期),保留以备未来显式 teardown。
   const { db, driver, dispose } = await createConfiguredDb();
   let stopExecutionWorker: (()=>Promise<void>) | undefined;
+  let disposeWorkbenchBrowserHost: (()=>Promise<void>) | undefined;
+  let disposeCommentDiagnosisHost: (()=>Promise<void>) | undefined;
+  let stopWorkbenchArtifactReconciler:(()=>void)|undefined;
   // [T-365/T-362] 把库的优雅关闭(PGlite client.close() = flush WAL)挂到 global,供
   //   sidecar-lifecycle 在 SIGTERM/孤儿自检退出时调用 —— 防「进程死于写库中途 → WAL 半写
   //   → 下次启动判损坏」(2026-07-16 数据事故根因)。挂 global 是刻意的:instrumentation
   //   不能 import 本模块(会在启动钩子里触发整个 persistence 装配)。
   (globalThis as { __creatorosDisposePersistence?: () => Promise<void> }).__creatorosDisposePersistence =
-    createBrowserHostDisposer({browser:hostBrowserShutdownScope,stopWorkers:async()=>{await stopExecutionWorker?.();},disposeDatabase:dispose});
+    createBrowserHostDisposer({browser:hostBrowserShutdownScope,stopWorkers:async()=>{
+      stopWorkbenchArtifactReconciler?.();await stopExecutionWorker?.();await disposeWorkbenchBrowserHost?.();await disposeCommentDiagnosisHost?.();
+    },disposeDatabase:dispose});
 
   // [T-363] 重置工作区(T-332 S5 Rust 整目录归档)后的首次启动:把 PRESERVE 清单表
   // (reset-preserve.ts 单一真值:users/sessions/模型配置/skill 定制/激活态…)从最新
@@ -2047,6 +2063,13 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   const startTrafficJob=async(ctx:RequestContext)=>{
     return startTrafficCollection(ctx,{snapshot:()=>trafficService.pending(ctx,2147483647),trigger:async()=>{const job=await ensureTrafficJob(ctx);return triggerScheduledJob(ctx,{...job,target:job.target??{}},triggerDeps);},fail:(rows,message)=>trafficService.failPending(ctx,rows,message)});
   };
+  const commentDiagnosisHost=createCommentDiagnosisHost({
+    open:async(identity,signal)=>(await loadDouyinCdp()).openCommentDiagnosisSession(await douyinAuthDirFor(identity.accountId,signal,identity.userId),signal),
+    acquire:()=>douyinGateway.acquire('creator-center'),
+    throttled:()=>douyinGateway.report('creator-center','throttled'),
+  });
+  disposeCommentDiagnosisHost=()=>commentDiagnosisHost.dispose();
+  const commentDiagnosisService=createCommentDiagnosisService({host:commentDiagnosisHost,assertPublication:(ctx,id)=>trafficService.assertPublication(ctx,id)});
   const analytics = createAnalyticsTransport(() => analyticsService,{
     getProject:(ctx,id)=>trafficService.getProject(ctx,id),
     refresh:async(ctx,id)=>{
@@ -2055,7 +2078,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       if(!(await trafficService.pending(ctx,1)).length)return {queued,jobRunId:null,aiTaskId:null};
       const run=await startTrafficJob(ctx);return {queued,jobRunId:run.jobRunId||null,aiTaskId:run.aiTaskId||null};
     },
-  });
+  },publicationSyncService,commentDiagnosisService);
 
   // Ingestion (module 12): the service builds a per-ctx user-scoped repo over the
   // shared db (the repo bakes userId in; the service mints one per request). It
@@ -3015,7 +3038,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   });
   // T-482 startup recovery：上次进程退出时仍持有租约的任务，按 checkpoint / attempt
   // 预算回到队列或诚实失败；控制请求则收敛到 paused / cancelled。
-  await persistentTaskService.recoverExpiredLeases();
+  // 启动时一次性把旧版本遗留的无副作用模型 unknown_result 沿原调用键续跑；
+  // 带外部副作用的未知调用仍保持待对账，不做盲重放。
+  await persistentTaskService.recoverExpiredLeases({includeSafeUnknownResults:true});
   const executionBase = createExecutionTransport(
     () => executionService,
     () => persistentTaskService,
@@ -3418,8 +3443,10 @@ dispatchIntelligenceRun});
 
   // live dispatch 范式(MEMORY 铁律):create 落 queued 后 fire-and-forget 后台编排,
   // HTTP 立即返回,UI 轮询 execution.tasks.get / ai.tasks.steps.list。
+  let workbenchPublic:Transport;
   const execution: Transport = {
     async request(endpoint, input, ctx) {
+      if((WORKBENCH_OP_IDS as readonly string[]).includes(endpoint.id))return workbenchPublic.request(endpoint,input,ctx);
       const res = await executionBase.request(endpoint, input, ctx);
       if(endpoint.id==="execution.tasks.command")recoveryWake?.wake();
       if (endpoint.id === "execution.tasks.create" && ctx) {
@@ -4033,7 +4060,7 @@ FAVORITES_PROMOTE_PER_RUN
   // (D5,scheduledJobs.runNow)共用同一份执行端口。
   // ai.createTask/runs.*/dispatch 绑工厂内可见的 aiService/schedulingService/
   // dispatchScheduledCollection。
-  const {triggerDeps,bootstrapDouyinOnBind,schedulingWithRunNow}=createSchedulingControls({aiService,schedulingService,platformAccountService,dispatchScheduledCollection,deps,ensureDailyRun:(c,id)=>dailyTopicRunIntents.ensureRunForTask(c,id),ensureCollectionRun:(c,id)=>scheduledFlywheel.ensureRunForTask(c,id),ensureCanonicalRubricForAccount:id=>ensureCanonicalRubricForAccount(id),migrateProfile:async(ctx)=>{    if (ctx.accountId) {
+  const {triggerDeps,bootstrapDouyinOnBind,schedulingWithRunNow}=createSchedulingControls({assertCommentPublications:async(ctx,ids)=>{for(const id of ids)await trafficService.assertPublication(ctx,id);},aiService,schedulingService,platformAccountService,dispatchScheduledCollection,deps,ensureDailyRun:(c,id)=>dailyTopicRunIntents.ensureRunForTask(c,id),ensureCollectionRun:(c,id)=>scheduledFlywheel.ensureRunForTask(c,id),ensureCanonicalRubricForAccount:id=>ensureCanonicalRubricForAccount(id),migrateProfile:async(ctx)=>{    if (ctx.accountId) {
       try {
         const fromDir = await douyinAuthDirFor(null,undefined,ctx.userId); // _default
         const toDir = await douyinAuthDirFor(ctx.accountId,undefined,ctx.userId);
@@ -5425,7 +5452,55 @@ FAVORITES_PROMOTE_PER_RUN
       return task;
     },
   });
+  const fileWorkbenchHost=createNativeFilesWorkbenchHost(db,{now:deps.now});
+  const fileRecovery=createNativeFileRecoveryService(db,{now:deps.now,shouldStop:()=>stoppingPreparation,
+    afterReconciled:async(taskId,control)=>{
+      if(stoppingPreparation||control?.shouldStop())return;
+      const report=await persistentTaskService.recoverExpiredLeases({includeSafeUnknownResults:true,taskId});
+      if(report.requeued&&!stoppingPreparation&&!control?.shouldStop())chatWorker?.start();
+    },
+  });
+  const workbenchBlobs=createWorkbenchBlobService(objectStorageForCtx);
+  const workbenchPreviewRuntime=createWorkbenchArtifactReadService(db,{blobs:workbenchBlobs,now:deps.now});
+  const artifactWorkbenchHost=fileWorkbenchHost?createWorkbenchArtifactHost(db,{now:deps.now,blobs:workbenchBlobs}):undefined;
+  const artifactReconciler=startWorkbenchArtifactReconciler(db,createWorkbenchArtifactService(db,{blobs:workbenchBlobs,now:deps.now}),{
+    afterReconciled:async(taskId)=>{await persistentTaskService.recoverExpiredLeases({includeSafeUnknownResults:true,taskId});recoveryWake?.wake();},
+    onError:()=>{},
+  });
+  stopWorkbenchArtifactReconciler=()=>artifactReconciler.stop();
+  const screenshotMedia=createWorkbenchScreenshotMediaService(db,{blobs:createWorkbenchBlobService(objectStorageForCtx),now:deps.now});
+  const browserWorkbenchHost=createWorkbenchBrowserHost(db,{now:deps.now,media:screenshotMedia});
+  disposeWorkbenchBrowserHost=async()=>{await browserWorkbenchHost?.dispose();};
+  const workbenchHosts=[fileWorkbenchHost,artifactWorkbenchHost,browserWorkbenchHost]
+    .filter((host):host is NonNullable<ChatProductionCompositionDeps["workbenchHost"]>=>Boolean(host));
+  const workbenchHost:ChatProductionCompositionDeps["workbenchHost"]=workbenchHosts.length?{
+    catalog:workbenchHosts.flatMap(host=>host.catalog),platform:workbenchHosts[0].platform,
+    legacyFrozenCapabilities:workbenchHosts.flatMap(host=>host.legacyFrozenCapabilities??[]),
+    capabilities:[...new Set(workbenchHosts.flatMap(host=>host.capabilities))],
+    dispatch:(call,options)=>{
+      const host=workbenchHosts.find(candidate=>candidate.catalog.some(tool=>tool.name===call.invocation.name));
+      if(!host)throw new Error("WORKBENCH_CAPABILITY_UNAVAILABLE");
+      return host.dispatch(call,options);
+    },
+    commitAndSettle:async(call,input)=>{
+      const host=workbenchHosts.find(candidate=>candidate.catalog.some(tool=>tool.name===call.invocation.name));
+      if(!host?.commitAndSettle)throw new Error("WORKBENCH_ATOMIC_COMMIT_UNAVAILABLE");
+      return host.commitAndSettle(call,input);
+    },
+    markUnknown:async(call,input)=>{
+      const host=workbenchHosts.find(candidate=>candidate.catalog.some(tool=>tool.name===call.invocation.name));
+      await host?.markUnknown?.(call,input);
+    },
+  }:undefined;
+  workbenchPublic=createWorkbenchPublicTransport({
+    tasks:createWorkbenchPublicService(db),stream:createWorkbenchPublicStreamService(db),artifacts:workbenchPreviewRuntime,
+    capabilities:()=>({platform:workbenchHost?.platform??null,capabilities:selectBuiltinWorkbenchCapabilities(workbenchHost),builtins:workbenchBuiltins,dependencyLock:workbenchDependencyLock}),
+    render:(ctx,taskId,artifactId,version,format)=>createWorkbenchArtifactRepresentation(workbenchPreviewRuntime,ctx,taskId,artifactId,version,format),
+    reconcile:artifactReconciler.reconcile,
+    reconcileFile:fileRecovery.reconcile,
+  });
   const chatRuntime: ChatRuntime = {
+    ...(workbenchHost?{workbenchHost}:{}),
     resolveRedfoxCredential: ctx => redfoxCredentials.resolve(ctx),
     readCurrentScript: async (c,projectId,signal) => {signal?.throwIfAborted();const result=await readCurrentArtifactTruth(c,projectId,"output_script");signal?.throwIfAborted();return result;},
     get durable(){if(!chatWorker)throw new Error("CHAT_RUNTIME_UNAVAILABLE");return chatWorker;},
@@ -5714,6 +5789,9 @@ FAVORITES_PROMOTE_PER_RUN
   if(workerEntry){
     chatWorker=composeChatProduction(db,{
       entryPath:workerEntry,runtime:chatRuntime,now:deps.now,
+      ...(workbenchHost?{workbenchHost}:{}),
+      ...(browserWorkbenchHost?{resolveWorkbenchScreenshot:screenshotMedia.resolve}:{}),
+      ...(artifactWorkbenchHost?{verifyWorkbenchArtifacts:artifactWorkbenchHost.verifyArtifacts}:{}),
       assertProject:(c,id)=>projectsService.getProjectOverviewCore(c,id),
       resolveModelCredential:(c,capability)=>resolveModelSpec(c,capability),
       resolveFallbackModelCredential:resolveChatFallbackCredential,
@@ -5731,6 +5809,7 @@ FAVORITES_PROMOTE_PER_RUN
   recoveryWake=createRecoveryWakeCoordinator({
     intervalMs:2000,
     lanes:{
+      workbench_files:control=>fileRecovery.scan(control),
       radar_project_upgrade: control => radarProjectQueue.tick(control),
       script_candidate:control=>drainProjectScriptCandidateQueue(projectScriptRunnerDeps,5,control),
       topic_preview:control=>drainIntelligenceTopicPreviewQueue(topicPreviewRunnerDeps,{...control,maxTasks:5}),
@@ -5809,6 +5888,8 @@ FAVORITES_PROMOTE_PER_RUN
         return result;
       },
     },
+    workbenchPreviewRuntime,
+    workbenchArtifactRecoveryRuntime:{reconcile:artifactReconciler.reconcile},
     executionPreviewRuntime: {
       readVideo: (ctx, taskId, artifactPath) =>
         executionService.previewArtifact(ctx, taskId, artifactPath),
@@ -6010,6 +6091,16 @@ export async function getLocalFileRuntime(): Promise<
   PersistenceBundle["localFileRuntime"]
 > {
   return (await getBundle()).localFileRuntime;
+}
+
+/** T-1009：已登记任务产物的只读预览，复用公共归属和版本校验服务。 */
+export async function getWorkbenchPreviewRuntime(): Promise<PersistenceBundle["workbenchPreviewRuntime"]> {
+  return (await getBundle()).workbenchPreviewRuntime;
+}
+
+/** T-1009：按原 operationId 触发持久对账，不创建新工具调用。 */
+export async function getWorkbenchArtifactRecoveryRuntime(): Promise<PersistenceBundle["workbenchArtifactRecoveryRuntime"]> {
+  return (await getBundle()).workbenchArtifactRecoveryRuntime;
 }
 
 /** T-703：待确认执行产物的只读临时预览，采纳/丢弃后 service 自动返回 404。 */

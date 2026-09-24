@@ -13,6 +13,70 @@
 
 ---
 
+## LED-055 — 回放历史模型请求不能混入最新计划
+
+- **Date**: 2026-09-22 · **Stage**: BUILD→SHIP · **Severity**: critical · **Status**: active
+- **WhatFailed**: 原综合任务重启续跑时，模型未知已安全superseded，但没有下一次新调用，最终CHAT_MODEL_REQUEST_REPLAY_MISMATCH。
+- **RootCause**: 宿主在历史stop之后生成的续行读了当前计划；当年rev3的文本被当前rev4多出的步骤改变，完整模型请求指纹因此不再一致。真实Pi/durable/SDK脱敏回放已复现。
+- **GuardRule**: 参与模型请求的宿主派生上下文必须按该历史模型调用读取当时已证明的快照；顺序和真实结算事实均须校验。不得用最新状态替代历史，不得忽略digest或覆盖旧费用/回执；历史证据缺失必须明确诊断，不能编造。新增证据门同时覆盖历史成功公共链，避免不相关未来状态反杀可用性。
+- **GuardCheck**: reconcile LED-055覆盖正式plan历史读取、原请求严格匹配与worker续行回放；具体运行结果另记当前验收，不以门存在代表已通过。
+- **Outcome(T+N)**: 第七安装实测发现，修复与新安装原任务复验进行中。
+- **Ref**: T-1026；docs/verification/t1026-cli-acceptance.md。
+
+## LED-054 — 外部 I/O 不能占住任务数据库事务
+
+- **Date**: 2026-09-21 · **Stage**: BUILD→SHIP · **Severity**: critical · **Status**: rule
+- **WhatFailed**: 聊天 Agent 调用浏览器或本机命令时，任务查询、心跳、取消和恢复全部等待；产物自动
+  对账也会卡住全部数据库读取。重启后即使原产物已完成对账，任务仍停在 `unknown_result`，页面长期
+  显示“自动恢复中”。
+- **RootCause**: PGlite 使用单连接，宿主把 execution lease 数据库事务跨越到 socket/原生 I/O；产物
+  结算又在独占事务内经根连接读取对象存储设置，形成自等待。对账完成后没有把同一任务重新入队，
+  纯模型进程退出后的未知候选也缺少安全续跑路径。
+- **GuardRule**: 外部 I/O 必须使用“短事务读取可信身份 → 事务外调用 → 短事务复核租约”；禁止在 lease
+  回调内等待 socket、浏览器、命令、网络或会再次查询根数据库的存储端口。无外部副作用且没有 provider
+  job/回执的纯模型未知调用可标记 `superseded`，在同一任务、同一 operation key 和既有预算内续跑；
+  工具副作用未知继续等待同键对账，对账结算后必须自动把原任务重新入队。长度截断有限续写后以已生成
+  内容 `partial` 收口。
+- **GuardCheck**: `reconcile.config.json` 的 LED-054 运行数据库活性、租约复核和模型未知恢复回归。
+- **Outcome(T+N)**: 红测复现浏览器等待及产物对账读取存储设置时 PGlite 查询阻塞；绿测验证前台读取
+  在 1 秒门内完成、原产物调用同键结算、同一任务从 `unknown_result` 自动回到队列，外部工具未知不盲重放。
+- **Ref**: T-1024。
+
+---
+
+## LED-053 — 自动恢复必须有进展证据，内置工具必须经过真实聊天装配
+
+- **Date**: 2026-09-21 · **Stage**: BUILD→SHIP · **Severity**: critical · **Status**: rule
+- **WhatFailed**: Mac 内置浏览器工具声明了合法的 `format: "uri"`，聊天参数桥在创建持久任务前拒绝
+  整轮请求；页面没有任务回执却持续显示“自动恢复中”，形成无限请求和永久转圈。
+- **RootCause**: 工具目录与参数桥只分别做了局部测试，没有用真实内置 Schema 跑聊天装配；前端恢复循环
+  没有连续无进展预算，也没有区分“已有持久任务”和“任务尚未建立”。
+- **GuardRule**: 内置工具 Schema 必须通过真实聊天装配并执行其约束，未知约束继续 fail-closed。前端只有在
+  有持久任务回执或有限提交预算内才能显示自动恢复；三次无进展后停止自动请求、保留原轮并提供继续恢复。
+- **GuardCheck**: `reconcile.config.json` 的 LED-053 运行工具参数桥、真实工具装配、任务回执和恢复活性回归。
+- **Outcome(T+N)**: 红测复现 `format` 阻断；绿测覆盖 URI 执行校验、未知格式拒绝、真实 `browser.navigate`
+  装配、同轮手动继续、持续 503 请求停止、持久任务提示和卸载清理。
+- **Ref**: T-1023。
+
+---
+
+## LED-052 — 模型断流和格式不完整不能把恢复责任推给用户
+
+- **Date**: 2026-09-21 · **Stage**: BUILD→SHIP · **Severity**: critical · **Status**: rule
+- **WhatFailed**: 内容雷达在逐字稿拆解后因模型输出不完整显示手动重试，AI 助手在模型断流后显示
+  “这次没有生成成功”；原任务、输入和部分结果仍在，却被页面变成阻断终态。
+- **RootCause**: 模型连接中断统一进入未知结果冻结，格式不完整直接映射失败；调用账本没有区分可废弃的
+  模型候选与可能有外部副作用的未知调用，页面又把普通临时错误交给用户重新提交。
+- **GuardRule**: timeout、可重试 HTTP、网络断流及模型候选不完整必须保留同一任务和检查点，由 Agent
+  loop 退避、修复或续跑；废弃模型调用继续保守占用预算。只有没有可用模型时引导设置。用户取消保持
+  停止，工具、发布等外部副作用结果未知仍先对账，禁止盲目重放。
+- **GuardCheck**: `reconcile.config.json` 的 LED-052 运行模型流、账本、原任务恢复、内容雷达和助手界面回归。
+- **Outcome(T+N)**: 单元与集成回归覆盖模型流缺 finish、流内 error、429、网络断开、持久任务重领、同键
+  重试、最终聊天提交、配置缺失入口及页面无手动重试；安装版证据见 T-1022 验证记录。
+- **Ref**: T-1022；DEC-AI-037。
+
+---
+
 ## LED-045 — 提交结果未知不等于所有渠道都必须停机，也不等于都能盲重放
 
 - **Date**: 2026-08-20 · **Stage**: BUILD · **Severity**: critical · **Status**: rule
@@ -780,7 +844,19 @@ T991：Windows 源码编译成功后，TypeScript 检查在约 2 GiB V8 堆耗�
 
 执行：`node --test tools/windows-closure-rat/build-memory.test.mjs tools/windows-closure-rat/build-production-closure.test.mjs`。
 
-## LED-052 — 干净安装通过不代表 Windows 保留目录下的首次启动可用
+## LED-056 — 工具宿主有实现不代表新任务能调用
+
+- **Date**: 2026-09-22 · **Stage**: BUILD→SHIP · **Severity**: critical · **Status**: active
+- **WhatFailed**: artifact.copy扩展到v2后，安装CLI能力目录只剩20项，真实新任务完全拿不到copy；宿主复制测试通过仍无法交付。
+- **RootCause**: 生产内置目录selector固定所有工具schemaVersion1，过滤了新copy@2；此前测试直接注入host.catalog，绕过实际装配。
+- **GuardRule**: 工具版本变更必须经过同一生产selector、公开capabilities投影、prepareChatReply与正式任务冻结、真实宿主/账本结算验收。各工具明确当前版本，不泛化接受未知版本，不把新定义伪装旧v1；旧任务完整冻结定义和历史执行语义保留。
+- **GuardCheck**: reconcile LED-056运行真实目录→新任务→copy@2执行/同键重放及旧v1兼容，非被测工具夹具明确fail-fast且零调用。
+- **Outcome(T+N)**: 第八安装实际失败已记录，精确目录红后绿；新包CLI复制仍待通过，不以回归存在或任务succeeded冒充交付。
+- **Ref**: T-1026；docs/verification/t1026-cli-acceptance.md。
+
+LED055追加（第八实际恢复）：历史上下文修正后，原task256仍因MODEL_CALL_REQUIRES_RECONCILIATION停止。正式PGlite/SDK链确认后续unknown准备失败会清空既有安全根模型retry锚，启动恢复又未重建；不是再次摘要漂移。保留/重建锚必须持同任务锁，证明完整已确认前缀与唯一无外部结果逻辑尾，原reserve继续严格摘要/预算，不修改历史账本，不解除未知工具。LED055追加model retry-anchor与pause恢复门；第九安装原任务仍待复验。
+
+## LED-057 — 干净安装通过不代表 Windows 保留目录下的首次启动可用
 
 T992：Windows 卸载会保留 AppData 中的业务数据和可再生成运行环境。新包完整解压后，目录切换仍可能因暂时占用返回拒绝访问；干净 CI 没有这类现场状态，把原子改名失败直接作为启动失败会让合法安装无法使用。
 

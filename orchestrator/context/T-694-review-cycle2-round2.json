@@ -1,0 +1,34 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "recheck",
+  "summary": "§12 标题已与状态行及 DEC-REL-036 的确认状态统一，足以销账 REV-003；本轮唯一 changed line 只澄清既有五项发行决策的确认状态，未改变正文范围或引入新问题。",
+  "findings": [
+    {
+      "id": "REV-003",
+      "status": "resolved",
+      "severity": "major",
+      "category": "consistency",
+      "requirement_anchor": {
+        "id": "STATUS",
+        "quote": "状态：PASS，用户已确认发布安全边界（DEC-REL-036；REV:2c7be136aea0）"
+      },
+      "acceptance_anchor": {
+        "id": "§12",
+        "quote": "已采用的发行决策（待用户确认）"
+      },
+      "where": "第 4 行状态与 §12 发行决策标题",
+      "failure_mode": "状态行声明发布安全边界已确认，但正文仍把同一五项发行决策整体标为待用户确认，实施授权相互矛盾。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "docs/superpowers/specs/2026-08-04-channel-package-factory-and-incremental-update.md:4,423-431; orchestrator/DECISION_LOG.md:2363-2393",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "clarify",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "cycle-2 full review",
+      "suggestion": "将 §12 标题中的待用户确认改为与 DEC-REL-036 一致的已确认状态，并保留五项正文不变。",
+      "resolution_evidence": "SPEC-LINE:423:087fa6d480fa198a",
+      "parent_id": ""
+    }
+  ]
+}

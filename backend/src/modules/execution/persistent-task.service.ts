@@ -3,6 +3,9 @@ import {recoverableAssetCalls} from "./asset-execution-recovery";
 import {executionEvidence} from "../../schema/intelligence";
 import {uncommittedChatTaskCalls} from "./chat-task-submission-recovery";
 import {recoverableChatNodeParents} from "./chat-generation-recovery";
+import {recoverableWorkbenchPlanCalls} from "./workbench-plan-recovery";
+import {recoverableBrowserObservationFailures} from "./workbench-browser-observation-recovery";
+import {unconfirmedModelCalls,resumableChatModelCalls,recoverableChatModelRetryAnchor,isChatReplayRecoveryError} from "./model-call-recovery";
 import {createDailyTopicRunService} from "../scheduling";
 import {scheduledChildId,assertScheduledChild,scheduledParentProjection} from "./execution-scheduled-child.service";
 import { randomUUID } from "node:crypto";
@@ -150,7 +153,7 @@ export interface PersistentTaskService {
     errorCode?: string | null;
     errorMessage?: string | null;
   }): Promise<ExecutionTaskResourceV2>;
-  recoverExpiredLeases(input?: {kinds?: PersistentTaskKind[]}): Promise<{
+  recoverExpiredLeases(input?: {kinds?: PersistentTaskKind[];includeSafeUnknownResults?:boolean;taskId?:string}): Promise<{
     requeued: number;
     unknownResult: number;
     failed: number;
@@ -233,9 +236,10 @@ function claimableAt(stamp: string) {
     AND (${executionTasks.deadlineAt} IS NULL OR ${executionTasks.deadlineAt} > ${stamp})`;
 }
 
-function recoveryDueAt(stamp: string) {
-  return sql`((${executionTasks.status} IN ('running','pause_requested','cancel_requested') AND ${executionTasks.leaseExpiresAt} < ${stamp})
+function recoveryDueAt(stamp: string, includeSafeUnknownResults=false) {
+  const due=sql`((${executionTasks.status} IN ('running','pause_requested','cancel_requested') AND ${executionTasks.leaseExpiresAt} < ${stamp})
     OR (${executionTasks.status} IN ('queued','retry_wait') AND ${executionTasks.deadlineAt} <= ${stamp}))`;
+  return includeSafeUnknownResults?sql`(${due} OR ${executionTasks.status} = 'unknown_result')`:due;
 }
 
 function commandTarget(
@@ -318,7 +322,7 @@ export function createPersistentTaskService(
           "ownerId 与 idempotencyKey 不能为空",
         );
       }
-      if (Object.hasOwn(input.payload, "modelIdentity") || Object.hasOwn(input.payload, "__scheduledChild") || Object.hasOwn(input.payload, "parentExecutionTaskId") || Object.hasOwn(input.payload, "researchBlockedAcknowledgedThroughSequence") || Object.hasOwn(input.payload, "researchBlockedAcknowledgedCallIds")) {
+      if (Object.hasOwn(input.payload, "filePredispatchRecoveries") || Object.hasOwn(input.payload, "modelIdentity") || Object.hasOwn(input.payload, "__scheduledChild") || Object.hasOwn(input.payload, "parentExecutionTaskId") || Object.hasOwn(input.payload, "researchBlockedAcknowledgedThroughSequence") || Object.hasOwn(input.payload, "researchBlockedAcknowledgedCallIds")) {
         throw new ExecutionValidationError("宿主运行字段不能由入队请求指定");
       }
       const maxAttempts = input.maxAttempts ?? 3;
@@ -400,6 +404,7 @@ export function createPersistentTaskService(
       // 模型身份、恢复认可等宿主执行状态不改变最初入队请求的幂等身份。
       const existingRequestPayload = {...asPayload(existing?.payload)};
       delete existingRequestPayload.modelIdentity;
+      delete existingRequestPayload.filePredispatchRecoveries;
       delete existingRequestPayload.researchBlockedAcknowledgedThroughSequence;
       delete existingRequestPayload.researchBlockedAcknowledgedCallIds;
       delete existingRequestPayload.__scheduledChild;
@@ -504,9 +509,20 @@ export function createPersistentTaskService(
             if(recovery?.mode==='review')throw new ConflictError('旧素材提交结果待核对，仅允许取消或采纳已有候选，不能继续或重试');
           }
         }
+        const resumeModels=new Map<string,typeof executionCalls.$inferSelect[]>();
+        const resumeAnchors=new Map<string,string>();
+        if(input.command==="resume"){
+          for(const row of rows.filter(row=>effectiveIds.includes(row.id)&&["paused","unknown_result"].includes(row.status))){
+            const calls=await tx.select().from(executionCalls).where(eq(executionCalls.executionTaskId,row.id)).orderBy(asc(executionCalls.sequence));
+            const safe=resumableChatModelCalls(row,calls);
+            if(safe.length)resumeModels.set(row.id,safe);
+            else {const anchor=recoverableChatModelRetryAnchor(row,calls);if(anchor)resumeAnchors.set(row.id,anchor.id);}
+          }
+        }
         const targetById = new Map(
           rows.filter(row=>effectiveIds.includes(row.id)).map((row) => [
             row.id,
+            input.command==='resume' && row.status==='unknown_result' && (resumeModels.has(row.id)||resumeAnchors.has(row.id)) ? 'queued' :
             (input.command==='pause' && row.status==='queued' && (parents.some(parent=>scheduledChildId(parent)===row.id) || ['self.traffic','self.metrics'].includes((asPayload(row.payload).modelInput as {kind?:string;sourceKind?:string}|undefined)?.sourceKind??''))) ? 'paused' : commandTarget(
               row.status as PersistentTaskStatus,
               input.command,
@@ -522,6 +538,11 @@ export function createPersistentTaskService(
           const target = targetById.get(taskId);
           if (!target) throw new OwnershipError("Execution task not found");
           const previous = rows.find(row => row.id === taskId)!;
+          const recoveredModels=resumeModels.get(taskId);
+          // 不结算未知费用；保留原调用、预留预算及摘要，新租约通过 retryOfCallId 沿原操作键重试。
+          if(recoveredModels){
+            for(const call of recoveredModels)await tx.update(executionCalls).set({status:"superseded",updatedAt:stamp}).where(eq(executionCalls.id,call.id));
+          }
           if(input.command==='retry')await dailyRuns.reopenForExecutionRetry(ctx,taskId,tx);
           let acknowledgedPayload: Record<string, unknown> | undefined;
           if (input.command === "resume" && previous.status === "waiting_user") {
@@ -539,6 +560,8 @@ export function createPersistentTaskService(
             .update(executionTasks)
             .set({
               status: target,
+              ...(recoveredModels ? {retryOfCallId:recoveredModels.at(-1)!.id,lastErrorCode:null,lastErrorMessage:null} : {}),
+              ...(resumeAnchors.has(taskId)?{retryOfCallId:resumeAnchors.get(taskId)!,lastErrorCode:null,lastErrorMessage:null}:{}),
               ...(acknowledgedPayload ? {payload: acknowledgedPayload} : {}),
               ...(clearLease
                 ? {
@@ -769,17 +792,21 @@ export function createPersistentTaskService(
     async finish(input) {
       const current = await getWorkerRow(input);
       if(input.status==='waiting_user'||input.status==='retry_wait'){
-        // 非模型等待门：来源读取，或只串联持久子任务的雷达父项；有调用账本一律不走此门。
+        // 无调用账本等待门：来源读取、雷达父项，以及尚未发出模型调用的连续生成任务。
+        // 生成一旦有调用事实，必须走 execution-worker-outcome 的拒绝/未知判定，不能绕账本重试。
         return db.transaction(async tx=>{
           const [row]=await tx.select().from(executionTasks).where(eq(executionTasks.id,input.taskId)).for('update');
           const stamp=now();
-          if(!row||!((row.kind==='share_import'&&row.ownerType==='item_import')||(row.kind==='radar_project_upgrade'&&row.ownerType==='item'))||row.status!=='running'||!input.fenceToken||row.fenceToken!==input.fenceToken||row.leaseOwner!==input.workerId||row.attempt!==input.attempt||!row.leaseExpiresAt||Date.parse(row.leaseExpiresAt)<=Date.parse(stamp))throw new ConflictError('任务等待恢复缺少当前执行凭证');
+          const sourceRead=row?.kind==='share_import'&&row.ownerType==='item_import';
+          const radarParent=row?.kind==='radar_project_upgrade'&&row.ownerType==='item';
+          const continuousGeneration=Boolean(row&&((row.kind==='topic_preview'&&row.ownerType==='transform')||(row.kind==='script_candidate'&&row.ownerType==='project'))&&isContinuousExecutionBudget(row.executionBudget));
+          if(!row||!(sourceRead||radarParent||continuousGeneration)||row.status!=='running'||!input.fenceToken||row.fenceToken!==input.fenceToken||row.leaseOwner!==input.workerId||row.attempt!==input.attempt||!row.leaseExpiresAt||Date.parse(row.leaseExpiresAt)<=Date.parse(stamp))throw new ConflictError('任务等待恢复缺少当前执行凭证');
           const calls=await tx.select({id:executionCalls.id}).from(executionCalls).where(eq(executionCalls.executionTaskId,row.id)).limit(1);
           if(calls.length)throw new ConflictError('存在调用账本的任务不能走无副作用读取重试');
           let status:string=input.status,retryAt:string|null=null;
           if(input.status==='retry_wait'){
             if(input.retryAfterMs!==undefined&&(!Number.isFinite(input.retryAfterMs)||input.retryAfterMs<0))throw new ConflictError('任务恢复等待时间非法');
-            const delay=row.kind==='radar_project_upgrade'?Math.max(1000,input.retryAfterMs??2000):Math.max(2000*2**Math.min(row.attempt-1,8),input.retryAfterMs??0);
+            const delay=row.kind==='radar_project_upgrade'||continuousGeneration?Math.max(1000,input.retryAfterMs??1000):Math.max(2000*2**Math.min(row.attempt-1,8),input.retryAfterMs??0);
             const next=Date.parse(stamp)+delay;
             const maxCalls=(row.executionBudget as {maxCalls?:number}|null)?.maxCalls;
             const limit=typeof maxCalls==='number'&&Number.isInteger(maxCalls)&&maxCalls>0?Math.min(row.maxAttempts,maxCalls):row.maxAttempts;
@@ -787,8 +814,8 @@ export function createPersistentTaskService(
             else retryAt=new Date(next).toISOString();
           }
           const [updated]=await tx.update(executionTasks).set({status,retryAt,leaseOwner:null,leaseExpiresAt:null,heartbeatAt:null,
-            lastErrorCode:status==='failed'?'SHARE_READ_RETRY_EXHAUSTED':input.errorCode??null,
-            lastErrorMessage:status==='failed'?'分享读取重试次数已用尽，请检查网络或原链接':input.errorMessage??null,updatedAt:stamp,
+            lastErrorCode:status==='failed'?(continuousGeneration?'GENERATION_RECOVERY_EXHAUSTED':'SHARE_READ_RETRY_EXHAUSTED'):input.errorCode??null,
+            lastErrorMessage:status==='failed'?(continuousGeneration?'生成恢复策略已停止，请保留原任务并查看诊断':'分享读取重试次数已用尽，请检查网络或原链接'):input.errorMessage??null,updatedAt:stamp,
           }).where(and(eq(executionTasks.id,row.id),eq(executionTasks.fenceToken,input.fenceToken))).returning();
           if(!updated)throw new ConflictError('分享读取恢复时执行凭证已变化');return toResource(updated);
         });
@@ -845,20 +872,66 @@ export function createPersistentTaskService(
           .select()
           .from(executionTasks)
           .where(
-            and(recoveryDueAt(stamp), input.kinds ? inArray(executionTasks.kind, input.kinds) : undefined),
+            and(recoveryDueAt(stamp,input.includeSafeUnknownResults), input.kinds ? inArray(executionTasks.kind, input.kinds) : undefined, input.taskId ? eq(executionTasks.id,input.taskId) : undefined),
           ).orderBy(asc(executionTasks.id)).for("update");
         for (const row of expired) {
           let target: PersistentTaskStatus | "unknown_result";
           const calls = row.kind === "ai_task" ? await tx.select().from(executionCalls).where(eq(executionCalls.executionTaskId,row.id)) : [];
+          // 丢锚路径在专用helper核验租约；不以该新增门替代计划/产物等既有专用恢复证明。
+          const retryAnchor=recoverableChatModelRetryAnchor(row,calls);
+          const lastPhysical=calls.slice().sort((a,b)=>a.sequence-b.sequence).at(-1);
+          const needsChatAnchor=(asPayload(row.payload).modelInput as {kind?:string}|undefined)?.kind==="chat.run"&&
+            (isChatReplayRecoveryError(row.lastErrorCode)||(lastPhysical?.kind==="model"&&lastPhysical.status==="superseded"));
+          // 已有started/unknown继续走下方原专用恢复；本门只处理不再有在途事实的丢锚族。
+          if(row.status==="unknown_result"&&needsChatAnchor&&!retryAnchor&&!calls.some(call=>call.status==="started"||call.status==="unknown"))continue;
+          // Only proven observation protocols can close a missing read receipt.
+          // Preserve the original call and unknown evidence; never repeat I/O.
+          for(const recovered of await recoverableBrowserObservationFailures(row,calls,stamp)){
+            const patch={status:"settled",resultText:recovered.resultText,totalTokens:0,usage:{totalTokens:0},updatedAt:stamp};
+            const [updated]=await tx.update(executionCalls).set(patch).where(and(eq(executionCalls.id,recovered.call.id),
+              eq(executionCalls.executionTaskId,row.id),eq(executionCalls.status,recovered.call.status),
+              eq(executionCalls.toolExecutionClaimId,recovered.call.toolExecutionClaimId!),eq(executionCalls.inputDigest,recovered.call.inputDigest))).returning();
+            if(updated)Object.assign(recovered.call,updated);
+          }
           const atomicPending=uncommittedChatTaskCalls(row,calls);
           // 子任务与回执严格同事务；只回收尚未提交的纯事务工具，不重置调用或预算。
           for(const callId of atomicPending){
             await tx.update(executionCalls).set({status:"reserved",startedAttempt:null,updatedAt:stamp}).where(eq(executionCalls.id,callId));
             calls.find(call=>call.id===callId)!.status="reserved";
           }
-          const recoverable=recoverableChatNodeParents(row,calls,await tx.select().from(executionEvidence).where(eq(executionEvidence.executionTaskId,row.id)));
+          // 计划只有本地 CAS 写入；严格核对冻结定义、原模型提案与现存计划后，
+          // 由新租约沿原调用重放。清除旧执行 claim，其他未知工具保持待对账。
+          for(const callId of await recoverableWorkbenchPlanCalls(row,calls,stamp)){
+            const patch={status:"reserved",startedAttempt:null,toolExecutionClaimId:null,updatedAt:stamp};
+            await tx.update(executionCalls).set(patch).where(eq(executionCalls.id,callId));
+            Object.assign(calls.find(call=>call.id===callId)!,patch);
+          }
+          // 文本模型只产候选，没有业务副作用。进程退出时未能结算的模型调用可在
+          // 原操作键上记为 superseded，再由重试预算控制续跑；工具和异步 provider job
+          // 仍须保持未知并按原键对账。
+          const originalRetryOfCallId=row.retryOfCallId;
+          const safeModels=["running","unknown_result"].includes(row.status)?unconfirmedModelCalls(calls):[];
+          const safeModelStatuses=new Map(safeModels.map(call=>[call.id,call.status]));
+          const safeModelIds=new Set(safeModels.map(call=>call.id));
+          for(const call of safeModels)call.status="superseded";
+          if(safeModels.length)row.retryOfCallId=safeModels.sort((a,b)=>a.sequence-b.sequence).at(-1)!.id;
+          let recoverable=recoverableChatNodeParents(row,calls,await tx.select().from(executionEvidence).where(eq(executionEvidence.executionTaskId,row.id)));
           const assetCalls=await recoverableAssetCalls({tx,task:row,context:{userId:row.userId,accountId:row.accountId,requestId:`recovery:${row.id}:${row.attempt}`,source:"ai"}},calls,stamp);
-          const completedParents=[...assetCalls,...recoverable.completedHooks,...recoverable.resumableHooks,...recoverable.structured,...recoverable.webReads,...recoverable.scriptDrafts];
+          let completedParents=[...assetCalls,...recoverable.completedHooks,...recoverable.resumableHooks,...recoverable.structured,...recoverable.webReads,...recoverable.scriptDrafts];
+          const unsafeUnknown=calls.some(call=>(call.status==="started"||call.status==="unknown")&&!safeModelIds.has(call.id)&&!completedParents.includes(call.id));
+          const recoveredModels=safeModels.length>0&&!unsafeUnknown;
+          if(recoveredModels){
+            for(const call of safeModels)await tx.update(executionCalls).set({status:"superseded",updatedAt:stamp}).where(eq(executionCalls.id,call.id));
+          }else if(safeModels.length){
+            for(const call of safeModels)call.status=safeModelStatuses.get(call.id)!;
+            row.retryOfCallId=originalRetryOfCallId;
+            recoverable=recoverableChatNodeParents(row,calls,await tx.select().from(executionEvidence).where(eq(executionEvidence.executionTaskId,row.id)));
+            completedParents=[...assetCalls,...recoverable.completedHooks,...recoverable.resumableHooks,...recoverable.structured,...recoverable.webReads,...recoverable.scriptDrafts];
+          }
+          // 外部副作用仍有 started/unknown 回执时继续等待专用对账。专用对账已经把原调用
+          // 结算后，允许同一任务重新入队；否则产物虽已恢复，Agent loop 仍会永久停住。
+          const unresolvedCalls=calls.some(call=>call.status==="started"||call.status==="unknown");
+          if(row.status==="unknown_result"&&!recoveredModels&&unresolvedCalls)continue;
           if (row.status === "pause_requested") {
             target = "paused";
           } else if (row.status === "cancel_requested") {
@@ -885,6 +958,8 @@ export function createPersistentTaskService(
               leaseOwner: null,
               leaseExpiresAt: null,
               heartbeatAt: null,
+              ...(target === "queued" && recoveredModels ? {retryOfCallId:row.retryOfCallId,lastErrorCode:null,lastErrorMessage:null} : {}),
+              ...(target === "queued" && retryAnchor ? {retryOfCallId:retryAnchor.id,lastErrorCode:null,lastErrorMessage:null} : {}),
               ...(target === "unknown_result" ? {lastErrorCode:"CALL_RESULT_UNKNOWN",lastErrorMessage:"已有调用提交结果未知，须同键对账"} : {}),
               ...(target === "failed"
                 ? {
@@ -899,7 +974,7 @@ export function createPersistentTaskService(
                 eq(executionTasks.id, row.id),
                 eq(executionTasks.status, row.status),
                 eq(executionTasks.attempt, row.attempt),
-                recoveryDueAt(stamp),
+                recoveryDueAt(stamp,input.includeSafeUnknownResults),
               ),
             ).returning({id: executionTasks.id});
           if (updated.length) {

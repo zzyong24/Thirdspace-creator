@@ -1,0 +1,31 @@
+[package]
+name = "nomifun-common"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+nomi-types.workspace = true
+thiserror.workspace = true
+serde = { workspace = true }
+serde_json.workspace = true
+uuid.workspace = true
+aes-gcm.workspace = true
+async-trait.workspace = true
+dunce.workspace = true
+axum.workspace = true
+base64.workspace = true
+getrandom.workspace = true
+hmac.workspace = true
+libc.workspace = true
+sha2.workspace = true
+tracing.workspace = true
+ts-rs.workspace = true
+tokio.workspace = true
+unicode-normalization.workspace = true
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["macros", "rt"] }
+tempfile.workspace = true
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.61", features = ["Win32_Storage_FileSystem"] }

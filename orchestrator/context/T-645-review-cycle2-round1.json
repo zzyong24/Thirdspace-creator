@@ -1,0 +1,115 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "CONCERNS。新周期完整评审确认旧周期的 scope 隔离问题仍保持关闭，但当前完整基线新增或暴露 4 个 major：受管配置与 lease 的物理属主未收敛到 backend service port、ASR 计费幂等键缺少可恢复的意图锚、渠道 authority 安全失败与 ASR 可用性降级边界冲突、非默认模型未纳入完整性判定。未提出 security major/blocker，也未误用仅绑定发行链验收的 THREAT-REL-001。",
+  "findings": [
+    {
+      "id": "REV-003",
+      "status": "open",
+      "severity": "major",
+      "category": "consistency",
+      "requirement_anchor": {
+        "id": "ARCH-SINGLE-WRITER",
+        "quote": "frontend 只放页面、UI、交互，通过 contract client 走 RPC 调后端；唯一 schema 属主和数据库写入方是 backend。"
+      },
+      "acceptance_anchor": {
+        "id": "TC-T645-09",
+        "quote": "Key 加密写后读回可用于真实 resolver，API/UI/日志不出现明文。"
+      },
+      "where": "§10.1 受管凭据同步与 §11.3 已实现写集",
+      "failure_mode": "SPEC 要求 API-265 返回的完整 token 直接写入本机加密凭据库，并把签名 bundle 解析固定在 frontend/src/server，同时只把 lease client 描述为未归属的 server-only 组件；它没有规定持久凭据写入、模型选择读写和单次 lease 必须经 contract/RPC 进入 backend service port。按该文本实现可以继续让 frontend server 持有业务凭据写权或独立 lease 权，与当前物理架构的 backend 单写者和凭据管理唯一属主冲突，也会让同步、设置页和 worker resolver 形成两套执行真值。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "docs/superpowers/specs/2026-08-02-capability-scoped-channel-model-authority.md:240-245,345-355; orchestrator/SYSTEM_ARCHITECTURE.md:20-25,74-79,94-104",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "cycle-2 full baseline review",
+      "suggestion": "明确唯一物理链：frontend 只通过 contract client 发起同步、选择和状态查询；backend settings/ai-runtime service 校验当前 RequestContext 与已验签 authority、持久化长期凭据并申请单次 lease；ai-worker 只通过受控私有端口接收本次内存 token，禁止直接读库或自行续租。把现有 frontend server 文件限定为无写权兼容适配器或迁出，并为该边界补跨层验收。",
+      "resolution_evidence": "",
+      "parent_id": ""
+    },
+    {
+      "id": "REV-004",
+      "status": "open",
+      "severity": "major",
+      "category": "data-integrity",
+      "requirement_anchor": {
+        "id": "REQ-API-282-IDEMPOTENCY",
+        "quote": "同一次转写意图生成并复用稳定 Idempotency-Key；网络断连、响应丢失或重进页面不得换 key。"
+      },
+      "acceptance_anchor": {
+        "id": "AC-API-282-IDEMPOTENCY",
+        "quote": "同一 intent 的所有重试复用同一个 Idempotency-Key；provider_unknown/expired 不生成新 key、不重复申请。"
+      },
+      "where": "§11.2 API-282 消费语义与 §11.4 验收状态",
+      "failure_mode": "SPEC 使用“同一次转写意图”作为计费幂等边界，却没有给出该意图的稳定身份、与账号/任务/音频的绑定、首次 lease 前的持久化时点、崩溃恢复读回规则或明确的新意图转换。两个实现可以分别按页面会话、按钮点击或 execution task 生成 key；刷新、进程崩溃或响应丢失后都可能把同一音频重试误判为新意图，申请第二枚 lease 并重复扣减额度，而仍声称复用了各自内存中的 key。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "docs/superpowers/specs/2026-08-02-capability-scoped-channel-model-authority.md:331-341,359-371",
+      "risk_class": "data-loss",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "cycle-2 full baseline review",
+      "suggestion": "把 intent 固定绑定到当前账号、持久 execution/transcription task、输入音频内容摘要和一次明确创建的 attempt；在任何 lease 请求前原子保存随机 Idempotency-Key，所有网络重试、页面重进和进程恢复只读回该 key。只有用户明确新建转写 attempt 才可生成新 key，并补充请求前崩溃、请求后响应丢失、重启恢复和并发双击验收。",
+      "resolution_evidence": "",
+      "parent_id": ""
+    },
+    {
+      "id": "REV-005",
+      "status": "open",
+      "severity": "major",
+      "category": "consistency",
+      "requirement_anchor": {
+        "id": "REQ-T733-AUTHORITY-FAIL-CLOSED",
+        "quote": "坏签名、响应结构漂移、撤权、过期、绑定变化、locator 不一致、版本降级与碰撞仍按原安全规则失败关闭，不得因本地模型存在而吞掉真实安全事件。"
+      },
+      "acceptance_anchor": {
+        "id": "AC-T768-ASR-FALLBACK",
+        "quote": "签名配置不可用、鉴权及其他云端 ASR 故障都不得阻断逐字稿，当前云端路径立即作废并只尝试一次本地 Whisper。"
+      },
+      "where": "§12 T-733 票据不适用边界与 §13 T-768 ASR 全故障兜底",
+      "failure_mode": "§12 要求真实 authority 安全事件保持失败关闭且不能被本地模型吞掉，§13 又把未分类的“签名配置不可用、鉴权”纳入必须自动回退 Whisper 的全故障集合。SPEC 没有区分已验签 authority/票据链失败与有效 authority 下的 provider/lease 调用失败，也没有说明本地转写成功时安全状态是否仍须保留并回显。实现者可把撤权、坏签名或 scope 绑定变化降级成普通本地成功，也可因 provider 401 阻断本可安全完成的本地转写，两种相反行为都能分别援引正文。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "docs/superpowers/specs/2026-08-02-capability-scoped-channel-model-authority.md:379-400",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "clarify",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "cycle-2 full baseline review",
+      "suggestion": "给出互斥错误分类和唯一状态转换：坏签名、撤权、绑定/版本/locator 异常继续冻结渠道 authority、保留可见安全状态且零 Growth/provider 调用；只有已建立有效 authority 后的 lease、额度、网络、provider 或响应故障进入一次 Whisper 降级。若安全失败时仍允许独立本地转写，必须明确它不清除、不改写也不伪装渠道安全状态，并为两类路径分别验收。",
+      "resolution_evidence": "",
+      "parent_id": ""
+    },
+    {
+      "id": "REV-006",
+      "status": "open",
+      "severity": "major",
+      "category": "correctness",
+      "requirement_anchor": {
+        "id": "FR-645-08",
+        "quote": "渠道为某个 capability 下发多个有效模型时，CreatorOS 必须展示每一项真实的 name + model，并只允许在已验签白名单内选择。"
+      },
+      "acceptance_anchor": {
+        "id": "TC-T645-13/14",
+        "quote": "多模型选择必须驱动测试连接和真实调用；白名单移除旧选择后只能回退唯一默认项，旧模型不可再选择或调用。"
+      },
+      "where": "§3 渠道能力完整性的唯一判定与 §8 TC-T645-13/14",
+      "failure_mode": "managed 判定只明确要求默认模型具备非空 id/name/model/connectionId，并未要求 models[C] 中每个非默认选项都具备完整字段、唯一 ID、可解析 connection/service、合法 settings 和当前 adapter 支持，也未规定任一附加选项损坏时是整项回 local 还是只剔除坏项。一个带完整默认项但含断裂第二项的签名 payload 因此可以被判 managed；实现既可能把不可调用项展示给用户，也可能静默过滤后改变 Growth 白名单语义，现有只覆盖“三个有效模型”的验收无法区分。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "docs/superpowers/specs/2026-08-02-capability-scoped-channel-model-authority.md:75-98,214-218",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "cycle-2 full baseline review",
+      "suggestion": "把完整性谓词扩展到 models[C] 的每个选项：字段完整且 ID 唯一、connection/service 引用唯一、协议/settings/adapter 可用；并选择唯一失败语义。建议任一选项断裂就仅将该 capability 判 local并给出脱敏诊断，避免已验签白名单被客户端静默改写；补非默认项缺字段、断引用、重复 ID、未知 adapter 和白名单更新并发验收。",
+      "resolution_evidence": "",
+      "parent_id": ""
+    }
+  ]
+}

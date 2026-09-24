@@ -261,7 +261,7 @@ export function createExecutionScriptCheckpointService(
         };
       if (
         calls.some(
-          (call) => call.kind === "model" && call.status !== "rejected",
+          (call) => call.kind === "model" && !["rejected","superseded"].includes(call.status),
         )
       )
         throw new ConflictError(

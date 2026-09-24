@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "已按已确认范围完整核对连续执行、计划与回执、恢复、NomiFun 迁移、现有采集协调、文件与命令边界、产物交付及 macOS/Windows 安装验收；未发现有具体证据表明已确认验收无法成立的规格缺口。",
+  "findings": []
+}

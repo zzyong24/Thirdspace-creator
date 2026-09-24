@@ -844,3 +844,7 @@ Stable TEST-* IDs to be assigned when the service contract defines testable oper
 | API-MODEL-904 | api | backend/src/modules/ai-runtime/multimodal/retry-submit.ts | DEC-MODEL-057, TEST-MODEL-904 |
 | TEST-MODEL-904 | test | backend/src/modules/ai-runtime/cover-runner.test.ts | DEC-MODEL-057, API-MODEL-904 |
 ```
+
+## T-1003 多步 Agent（PLANNED）
+
+FR-AW-01 至 FR-AW-08、AC-AW-01 至 AC-AW-09 的唯一正文见 [SPEC](../docs/features/t1003-agent-workbench.md)。用户已确认目标与迁移方向；实现和验收尚未发生。

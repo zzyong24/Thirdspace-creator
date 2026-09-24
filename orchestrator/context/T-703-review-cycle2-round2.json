@@ -1,0 +1,142 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "recheck",
+  "summary": "REV-005..009 已销账：源稿/素材真值、稳定 operationKey、重复素材安全收口、本地包公开闭环和 Jaccard 结构恢复边界均已明确，未发现新增问题。",
+  "findings": [
+    {
+      "id": "REV-005",
+      "status": "resolved",
+      "severity": "major",
+      "category": "data-integrity",
+      "requirement_anchor": {
+        "id": "FR-703-5",
+        "quote": "确认后的 VideoDecisions、inventory 快照、render props 与来源任务写入 Production"
+      },
+      "acceptance_anchor": {
+        "id": "AC-703-3",
+        "quote": "刷新后回读相同 scenes/cards/broll/subtitles"
+      },
+      "where": "editing-plan.confirm 只保护 Production revision，未绑定源稿版本/hash 与素材版本归属。",
+      "failure_mode": "基于 V1/旧素材的候选在稿件换版或素材删除后仍可确认并渲染。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "T-703 SPEC §3、AC-703-1/3；SYSTEM_ARCHITECTURE §2.2",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "new-cycle full review",
+      "suggestion": "候选冻结 source artifact/version/hash 与素材版本摘要；确认和 render admission 由 Backend 重读，源稿变化冲突，素材变化安全重编排。",
+      "resolution_evidence": "SPEC-LINE:54:5be6bc60a9f6a2aa；SPEC-LINE:62:10d9de54c2a7f8c6；SPEC-LINE:63:cea68243107b0cf3；SPEC-LINE:64:09dff9b1afc0266b；SPEC-LINE:99:dcc686c979729c2f",
+      "parent_id": ""
+    },
+    {
+      "id": "REV-006",
+      "status": "resolved",
+      "severity": "major",
+      "category": "correctness",
+      "requirement_anchor": {
+        "id": "DATA-703-CONFIRM",
+        "quote": "确认成功、读回核对后才创建 video.render"
+      },
+      "acceptance_anchor": {
+        "id": "AC-703-6",
+        "quote": "确认后新 render props 变化并可回读 plan/task"
+      },
+      "where": "确认、建任务和临时成片采纳缺稳定 operationKey 与可恢复幂等结果。",
+      "failure_mode": "提交窗口崩溃或响应丢失会卡死 expectedRevision、重复任务/计费或重复正式资产。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "T-703 SPEC §3、video.edit.render、execution.tasks.confirm",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "new-cycle full review",
+      "suggestion": "把确认并建 render 定义为带稳定 operationKey 的 Backend 编排；采纳同键幂等，注入各提交窗口故障、双击与未知响应。",
+      "resolution_evidence": "SPEC-LINE:62:10d9de54c2a7f8c6；SPEC-LINE:65:838ad43d06be8a93；SPEC-LINE:66:42f75ffa4d992d26；SPEC-LINE:67:cb5c87c144eee838；SPEC-LINE:70:fe3ef3dc2b650e3c；SPEC-LINE:71:ea7aaae74f664c6f；SPEC-LINE:103:34a393cda168f01d",
+      "parent_id": ""
+    },
+    {
+      "id": "REV-007",
+      "status": "resolved",
+      "severity": "major",
+      "category": "consistency",
+      "requirement_anchor": {
+        "id": "FR-703-17",
+        "quote": "总导演不得删除首轮有效素材绑定或要求用户重选"
+      },
+      "acceptance_anchor": {
+        "id": "AC-703-18",
+        "quote": "同一素材跨场重复必须收口或拒绝"
+      },
+      "where": "保留所有有效绑定与跨场重复为零在重复素材输入下无解。",
+      "failure_mode": "删除重复违反保留，保留无法过安全门，可能 hard-fail 反杀制作。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "T-703 SPEC FR-703-17/17C、AC-703-18/20；AGENTS关键链路规则",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "new-cycle full review",
+      "suggestion": "定义人工硬绑定>authored assetRef>模型选择的优先级；重复折叠并记录，空档回退人物主画面/合规信息卡，保留用户唯一选择。",
+      "resolution_evidence": "SPEC-LINE:48:58ba2762978ccd03；SPEC-LINE:121:3ca02d0bcc57cce2；SPEC-LINE:122:fd1d2e0106b9eb5e",
+      "parent_id": ""
+    },
+    {
+      "id": "REV-008",
+      "status": "resolved",
+      "severity": "major",
+      "category": "testability",
+      "requirement_anchor": {
+        "id": "FR-703-17B",
+        "quote": "单命令回归依次执行 decisions、审计、render、ffprobe、联系表"
+      },
+      "acceptance_anchor": {
+        "id": "AC-703-20",
+        "quote": "用真实素材与当前模型完成判断和分镜"
+      },
+      "where": "回归未从本地包公开入口覆盖确认、预览、调剪、重渲、采纳和再制作。",
+      "failure_mode": "源码命令可绿而打包后的路由、Worker、权限、播放器或采纳读回不可用。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "T-703 SPEC FR-703-17B/17D、AC-703-7/20",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "new-cycle full review",
+      "suggestion": "在隔离数据本地测试包跑完整公共旅程，逐步回读 Production/Execution/Assets/current final 并保存安装包 hash、任务和媒体证据。",
+      "resolution_evidence": "SPEC-LINE:45:54a3f5028dc9bc9d；SPEC-LINE:119:8bdde2cb74b6840b；SPEC-LINE:120:c3023fbb0832ad26；SPEC-LINE:121:3ca02d0bcc57cce2",
+      "parent_id": ""
+    },
+    {
+      "id": "REV-009",
+      "status": "resolved",
+      "severity": "minor",
+      "category": "consistency",
+      "requirement_anchor": {
+        "id": "SEMANTIC-BOUNDARY",
+        "quote": "禁止用 Jaccard 等替代 Skill 做创作语义判断"
+      },
+      "acceptance_anchor": {
+        "id": "AC-703-1",
+        "quote": "段数不一致时唯一命中或歧义失败"
+      },
+      "where": "Jaccard 对齐未声明只做结构恢复，也未要求 SEMANTIC_BOUNDARY_ALLOW。",
+      "failure_mode": "算法会改变用户时间线且可能被误用为通用语义选择。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "T-703 SPEC §5/AC-703-1；SYSTEM_ARCHITECTURE §2.1；AGENTS 语义边界",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "new-cycle full review",
+      "suggestion": "明确算法只恢复 authored section 到 scene 的结构关系，不选素材/创作；加 SEMANTIC_BOUNDARY_ALLOW、歧义失败与扫描。",
+      "resolution_evidence": "SPEC-LINE:88:b57aabccc15dda6b",
+      "parent_id": ""
+    }
+  ]
+}

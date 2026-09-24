@@ -15,6 +15,7 @@ import {
 } from "./connection";
 import { endpointInputSchema, schemaToJson } from "./tools";
 import { readDefaultAccountId, writeDefaultAccountId } from "./context";
+import { saveArtifactExport } from "./artifact-export";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 
 type JsonObject = Record<string, unknown>;
@@ -45,6 +46,10 @@ const VALUE_FLAGS = new Set([
   "--timeout",
   "--share",
   "--collection",
+  "--artifact",
+  "--artifact-version",
+  "--format",
+  "--output",
 ]);
 const BOOLEAN_FLAGS = new Set([
   "--json",
@@ -271,13 +276,16 @@ async function clientFor(args: string[]): Promise<{
   };
 }
 
+const ARTIFACT_EXPORT_USAGE = "artifacts export <taskId> --artifact <artifactId> --artifact-version <positiveInt> --format raw|preview|png|pdf --output <localPath> --account <id>";
+
 export async function runCliCommand(args: string[]): Promise<unknown> {
   assertKnownFlags(args);
   const [group, action, target] = positional(args);
   if (group === "help" || hasFlag(args, "--help")) {
     return {
       ok: true,
-      usage: "creatoros status | access status|revoke | operations list|describe <op> | call <op> --input <json|@file|-> --account <id> | tasks get|wait <taskId> --account <id> | accounts list|current|use <id> | douyin status|login|refresh|import | mcp serve",
+      usage: `creatoros status | access status|revoke | operations list|describe <op> | call <op> --input <json|@file|-> --account <id> | tasks get|wait <taskId> --account <id> | ${ARTIFACT_EXPORT_USAGE} | accounts list|current|use <id> | douyin status|login|refresh|import | mcp serve`,
+      artifactExport: "通过 workbench.artifacts.render 只读导出；显式 --output 无需 --apply，已有文件不会覆盖。filename 仅作建议展示。",
       writeFlags: "--apply --idempotency-key <key>",
       impactFlags: "--confirm-impact <真实账号或实体ID>",
     };
@@ -480,6 +488,43 @@ export async function runCliCommand(args: string[]): Promise<unknown> {
       error: null,
     };
   }
+  if (group === "artifacts" && action === "export") {
+    if (!target) throw new Error("artifacts export 缺少 taskId。");
+    const requiredFlag = (name: string): string => {
+      const value = flagValue(args, name);
+      if (!value?.trim()) throw new Error(`artifacts export 必须显式提供 ${name}。`);
+      return value;
+    };
+    const artifactId = requiredFlag("--artifact");
+    const rawVersion = requiredFlag("--artifact-version");
+    const version = Number(rawVersion);
+    if (!/^\d+$/.test(rawVersion) || !Number.isSafeInteger(version) || version <= 0) {
+      throw new Error("--artifact-version 必须是安全范围内的正整数。");
+    }
+    const format = requiredFlag("--format");
+    if (!["raw", "preview", "png", "pdf"].includes(format)) {
+      throw new Error("--format 必须是 raw、preview、png 或 pdf。");
+    }
+    const output = requiredFlag("--output");
+    const accountId = requiredFlag("--account");
+    const operation = "workbench.artifacts.render";
+    const { client } = await clientFor(args);
+    const envelope = await client.dispatch(
+      operation,
+      { params: { taskId: target, artifactId, version }, query: { format } },
+      { accountId },
+    );
+    const data = await saveArtifactExport(envelopeData(envelope), format, output);
+    return {
+      ok: true,
+      operation,
+      requestId: envelopeRequestId(envelope),
+      accountId,
+      data,
+      meta: envelopeMeta(envelope),
+      error: null,
+    };
+  }
   if (group === "call") {
     const endpoint = action ? endpointsById.get(action) : undefined;
     if (!endpoint) throw new Error(`未知 operation: ${action ?? "(missing)"}`);
@@ -529,7 +574,7 @@ export async function runCliCommand(args: string[]): Promise<unknown> {
     return new Promise(() => undefined);
   }
   throw new Error(
-    "用法: creatoros status | access status|revoke | operations list|describe <op> | call <op> --input <json|@file|-> [--account <id>|--use-default-account] | tasks get|wait <taskId> --account <id> | accounts list|current|use <id> | douyin status|login|refresh|import | mcp serve",
+    `用法: creatoros status | access status|revoke | operations list|describe <op> | call <op> --input <json|@file|-> [--account <id>|--use-default-account] | tasks get|wait <taskId> --account <id> | ${ARTIFACT_EXPORT_USAGE} | accounts list|current|use <id> | douyin status|login|refresh|import | mcp serve`,
   );
 }
 

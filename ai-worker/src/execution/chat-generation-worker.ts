@@ -10,7 +10,7 @@ import {DurableToolSuspension} from "./durable-agentic-tool";
 export async function runChatGenerationInWorker(callId:string,signal:AbortSignal,call:(port:WorkerPort,data:unknown,signal?:AbortSignal)=>Promise<unknown>){
  const spec=workerModelSpecSchema.parse(await call("resolveChatGenerationCredential",{callId},signal));
  const prepared=chatGenerationPreparationSchema.parse(await call("prepareChatGeneration",{callId},signal));
- const model=createDurableGenerationModel({model:modelFor(spec),operationKey:prepared.operationKey,signal,ports:{
+ const model=createDurableGenerationModel({model:modelFor(spec),operationKey:prepared.operationKey,signal,allowUnconfirmedModelRetry:true,ports:{
   // 模型请求是 JSON 契约；advanced IPC 会保留 SDK 的可选 undefined，必须在边界规范化。
   reserve:async input=>workerReservationSchema.parse(await call("reserveChatGenerationModel",JSON.parse(JSON.stringify({...input,callId,...(prepared.retryOfCallId && input.operationKey===prepared.retryOperationKey?{retryOfCallId:prepared.retryOfCallId}:{})})),signal)),
   start:async childId=>{const saved=workerStartReceiptSchema.parse(await call("startChatGenerationModel",{callId:childId},signal));if(saved.callId!==childId)throw new Error("生成启动回执不符");},

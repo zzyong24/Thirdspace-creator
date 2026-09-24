@@ -9,6 +9,7 @@ import {
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { executionTaskResourceV2 } from "@creatoros/contract";
 
 import {
   IntelligenceWorkbench,
@@ -2835,9 +2836,9 @@ describe("T-482 内容雷达工作区", () => {
       screen.getByRole("button", { name: "确认生成" }),
     );
 
-    expect(
-      await screen.findByText("模型没有返回可解析的选题结构"),
-    ).toBeInTheDocument();
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "模型没有返回可解析的选题结构",
+    );
     expect(screen.getByText("错误代码：MODEL_PROTOCOL_ERROR")).toBeInTheDocument();
     expect(
       screen.queryByText("候选仍在后台生成"),
@@ -2847,7 +2848,7 @@ describe("T-482 内容雷达工作区", () => {
     ).toBeEnabled();
   });
 
-  it("[T-646] 改写阶段失败保留已有结果，并可只重试未完成部分", async () => {
+  it("[T-1022] 改写阶段暂时失败保留已有结果并由原任务自动恢复", async () => {
     const stub = api();
     vi.mocked(stub.previewTopic).mockResolvedValue({
       transform: {
@@ -2883,9 +2884,10 @@ describe("T-482 内容雷达工作区", () => {
             {
               id: "transform-partial",
               status: "candidate",
-              taskStatus: "failed",
-              taskErrorCode: "TOPIC_PREVIEW_FAILED",
-              taskErrorMessage: "改写初稿暂未完成",
+              taskStatus: "queued",
+              taskRuntimeStatus: "retry_wait",
+              taskErrorCode: "TOPIC_PREVIEW_OUTPUT_INVALID",
+              taskErrorMessage: "模型输出不完整，系统正在继续生成选题卡",
               targetTopicId: null,
               outputSnapshot: {
                 hook: "反常识开场",
@@ -2926,34 +2928,50 @@ describe("T-482 内容雷达工作区", () => {
       screen.getByDisplayValue("先稳定流程，再选择模型"),
     ).toBeInTheDocument();
     expect(
-      screen.getByText("拆解和选题已保留，改写初稿待重试"),
-    ).toBeInTheDocument();
-    expect(screen.getByText("改写初稿暂未完成")).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: "确认写入选题池" }),
-    ).toBeDisabled();
-
-    await userEvent.click(
-      screen.getByRole("button", { name: "重试生成选题卡" }),
-    );
-
-    await waitFor(() =>
-      expect(stub.previewTopic).toHaveBeenCalledWith(
-        expect.objectContaining({
-          itemId: "item-1",
-          sourceSnapshotId: "snapshot-partial",
-          positioningVersionId: "positioning-1",
-          idempotencyKey: expect.any(String),
-        }),
-      ),
-    );
-    expect(screen.getByText("反常识开场")).toBeInTheDocument();
-    expect(
-      screen.getByDisplayValue("先稳定流程，再选择模型"),
-    ).toBeInTheDocument();
-    expect(
       screen.getByText("拆解和选题已保留，正在重试改写初稿"),
     ).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "重试生成选题卡" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "确认写入选题池" })).not.toBeInTheDocument();
+
+    expect(stub.previewTopic).not.toHaveBeenCalled();
+  });
+
+  it("[T-1022] 没有可用模型时保留原选题任务并直达模型设置", () => {
+    const stub = api();
+    render(
+      <IntelligenceWorkbench
+        accountId="account-1"
+        workspace={workspace}
+        items={[]}
+        initialDetail={{
+          ...detail,
+          transcript: { ...detail.transcript, status: "done", text: "来源完整逐字稿" },
+          snapshots: [{
+            id: "snapshot-model-setup",
+            title: "真实作品",
+            capturedAt: "2026-07-23T12:00:00.000Z",
+            finalUrl: detail.item.canonicalUrl,
+          }],
+          transforms: [{
+            id: "transform-model-setup",
+            status: "candidate",
+            taskStatus: "blocked",
+            taskRuntimeStatus: "waiting_user",
+            taskErrorCode: "MODEL_CONFIGURATION_REQUIRED",
+            taskErrorMessage: "还没有可用的 AI 模型，请完成模型设置后继续原任务",
+            outputSnapshot: null,
+            targetTopicId: null,
+          }],
+        }}
+        api={stub}
+        positioningVersionId="positioning-1"
+      />,
+    );
+
+    expect(screen.getByText("完成 AI 设置后继续")).toBeInTheDocument();
+    const settings = document.querySelector('[data-slot="radar-model-settings-link"]') as HTMLAnchorElement;
+    expect(settings?.getAttribute("href")).toBe("/settings?highlight=text-model");
+    expect(screen.queryByRole("button", { name: "重新生成" })).not.toBeInTheDocument();
   });
 
   it.each([
@@ -3060,8 +3078,8 @@ describe("T-482 内容雷达工作区", () => {
         screen.getByDisplayValue("这是一版已经成功但用户想重试的改写稿。"),
       ).toBeInTheDocument();
       expect(
-        screen.getByRole("button", { name: "确认写入选题池" }),
-      ).toBeDisabled();
+        screen.queryByRole("button", { name: "确认写入选题池" }),
+      ).not.toBeInTheDocument();
       expect(screen.getByLabelText("选题候选标题")).toBeDisabled();
       expect(
         screen.queryByRole("button", { name: "重新生成改写稿" }),
@@ -3109,6 +3127,30 @@ describe("T-482 内容雷达工作区", () => {
 
   it("可选择分类粘贴分享文本单条建档，且不会自动发起转写", async () => {
     const stub = api();
+    vi.mocked(stub.importDouyinShare).mockResolvedValue({
+      task: executionTaskResourceV2.parse({
+        id: "share-import-1",
+        userId: "user-1",
+        accountId: "account-1",
+        kind: "share_import",
+        ownerType: "item_import",
+        ownerId: "share-import-1",
+        status: "queued",
+        priority: 0,
+        idempotencyKey: "share-import-1",
+        checkpoint: null,
+        leaseOwner: null,
+        leaseExpiresAt: null,
+        heartbeatAt: null,
+        attempt: 0,
+        maxAttempts: 3,
+        errorCode: null,
+        errorMessage: null,
+        costEstimate: null,
+        createdAt: "2026-09-20T00:00:00.000Z",
+        updatedAt: "2026-09-20T00:00:00.000Z",
+      }),
+    });
     render(
       <IntelligenceWorkbench
         accountId="account-1"
@@ -3142,6 +3184,7 @@ describe("T-482 内容雷达工作区", () => {
       }),
     );
     expect(stub.enqueueTranscript).not.toHaveBeenCalled();
-    expect(refresh).toHaveBeenCalled();
+    expect(await screen.findByText("已排队")).toBeInTheDocument();
+    expect(refresh).not.toHaveBeenCalled();
   });
 });

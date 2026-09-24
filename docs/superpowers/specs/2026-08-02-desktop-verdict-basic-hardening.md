@@ -37,7 +37,10 @@
 NODE_ENV != production && CREATOROS_DEV_MODE == 1
 ```
 
-只要 `NODE_ENV=production`，缺 token、坏签名、过期或端口不符都必须退出，任何额外环境变量不得改变结果。
+该豁免只能存在于不会进入正式 Sidecar 的开发入口或编译期开发构建中。任何可安装、可分发的正式
+Sidecar 都不得根据运行时 `NODE_ENV`、`CREATOROS_DEV_MODE` 或其它调用者可控环境变量跳过 token；
+即使调用者同时设置 `NODE_ENV=development` 与 `CREATOROS_DEV_MODE=1`，缺 token、坏签名、过期或
+端口不符仍必须退出。
 
 ### 3.2 冒烟改走真实签名
 
@@ -59,6 +62,12 @@ NODE_ENV != production && CREATOROS_DEV_MODE == 1
 实际 `sidecarPort` 使用冒烟刚分配的端口。签名辅助函数放在桌面打包脚本目录，复用 `verdict-key-material.mjs` 的规范化解码，禁止复制第二套宽松密钥解析。
 
 私钥只额外放行给 smoke 驱动进程和最终 Cargo/Tauri 编译子进程；Next build、混淆 worker、字节码 worker、诱饵及其它脚本继续剥离私钥。smoke 驱动完成签名后，必须从实际 Sidecar 的 child env 中显式删除 `CREATOROS_VERDICT_SIGNING_KEY_B64` 与 `CREATOROS_ALLOW_VERDICT_SIGNING_KEY`，不得通过现有 `...process.env` 继续继承。该 child env 构造提取为可单测纯函数，测试同时证明真实 token仍存在、私钥变量不存在。
+
+Windows production closure 与安装候选验收同样执行最小环境白名单：默认传给 Next/NCC/Pi bundle、
+runtime 组装、setup 和普通诊断子进程的环境必须剥离 signing seed 与 allow 变量；只有专用 smoke
+签名进程和 Cargo/Tauri 编译子进程可显式注入。安装后的只读泄漏扫描由已获准持有 seed 的 smoke
+驱动/package controller 在本进程完成；不得再派生携带 seed 的扫描子进程，也不能把 seed 留在 setup
+或诊断环境。测试枚举生产链每类子进程并断言只有获准进程含 seed。
 
 ### 3.2.1 密钥输入一次性迁移
 
@@ -103,7 +112,7 @@ package 前置校验、smoke 签名与 Cargo `build.rs` 三处只接受同一规
 
 | ID | 不变量 |
 | --- | --- |
-| SEC-656-01 | `NODE_ENV=production` 时不存在环境变量旁路；缺少合法 token 必须退出。 |
+| SEC-656-01 | 正式 Sidecar 不存在调用者可控的运行时环境变量旁路；缺少合法 token 必须退出。 |
 | SEC-656-02 | 冒烟通过意味着真实 Ed25519 token 验签链通过，不允许测试专用生产分支。 |
 | SEC-656-03 | Sidecar 只含公钥；签名 seed 只进入 smoke 驱动、Cargo 构建和 Rust shell 的掩码 blob，实际 Sidecar child env 不得继承。 |
 | SEC-656-04 | 错端口、过期、坏签名、缺 token均 fail-closed。 |
@@ -125,12 +134,12 @@ package 前置校验、smoke 签名与 Cargo `build.rs` 三处只接受同一规
 
 ## 6. 验收标准
 
-- **AC-656-01**：生产环境设置历史 bypass 变量后，缺 token仍退出；源码及最终 sidecar tar grep 不到该变量名。
+- **AC-656-01**：正式产物设置历史 bypass 变量，或同时设置 `NODE_ENV=development` 与 `CREATOROS_DEV_MODE=1` 后，缺 token仍退出；源码及最终 sidecar tar grep 不到历史 bypass 变量名，开发豁免只在不会打入正式 Sidecar 的开发入口生效。
 - **AC-656-02**：打包冒烟使用真实签名 token成功启动；删除/篡改签名后冒烟失败。
 - **AC-656-03**：Rust 单测证明 64 字节 mask blob可还原原 seed，错长度拒绝，临时 key buffer离开签名路径前清零。
 - **AC-656-04**：macOS 最终 shell + `.app` 内 tar、Windows 最终 shell + canonical tar + NSIS 安装后的 current runtime，均扫描不到构建输入的 base64 私钥、sentinel 与 bypass 名；目标缺失或读取失败同样阻止出包。
 - **AC-656-05**：现有 licensed、activation-only、过期、错端口、坏签名测试保持通过。
-- **AC-656-06**：打包脚本的普通子进程继续拿不到私钥；只有 smoke 驱动进程和 Cargo/Tauri 编译得到，smoke 实际启动的 Sidecar child env 明确不含私钥变量。
+- **AC-656-06**：打包脚本及 Windows production closure 的普通子进程继续拿不到私钥；只有 smoke 驱动/package controller 和 Cargo/Tauri 编译得到，smoke 实际启动的 Sidecar、Next/NCC/Pi bundle、runtime 组装、setup、普通诊断及扫描 child env 均明确不含私钥变量；安装后泄漏扫描在已获准的 controller 本进程完成。
 - **AC-656-08**：带 `[T451-BOUND]`、换行、padding 或非 canonical 字符的旧 signing seed 在 package 前、smoke helper 与 Cargo 中一致硬失败；CI 更新为 canonical seed 后才允许正式构建。
 - **AC-656-07**：定向 Node/Vitest、Rust license tests、desktop release workflow tests、boundary scan、orphan scan 与 reconcile均有新鲜证据；如全局既有失败不属于本任务，必须在 evidence 中明确隔离。
 

@@ -28,7 +28,7 @@ import { stageExecutionWorkerRuntime,assertExecutionWorkerRuntime,assertWorkerEx
 //   - 未签名/未公证(证书=用户的,P6 补)。
 
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, rmSync, cpSync, chmodSync, copyFileSync, lstatSync, readdirSync, readlinkSync, realpathSync, symlinkSync, writeFileSync, readFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, rmSync, cpSync, chmodSync, copyFileSync, lstatSync, readdirSync, readlinkSync, realpathSync, symlinkSync, writeFileSync, readFileSync, openSync, readSync, closeSync, renameSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createRequire } from "node:module";
@@ -1665,6 +1665,69 @@ export function copyPortableBundleTree(src, dest) {
   });
 }
 
+// NomiFun 冻结引擎固定使用此 CfT 版本。构建机下载、校验后随安装包携带；
+// 运行时不能依赖构建机缓存、用户系统 Chrome 或 NomiFun 原仓。
+const WORKBENCH_CHROME_VERSION = "149.0.7827.155";
+const WORKBENCH_CHROME_ARCHIVES = Object.freeze({
+  "aarch64-apple-darwin": {platform:"mac-arm64",sha256:"135b697c49a375025ba6540a9d963d803d0b80b01f497c77ef5fd8296e4f36c7",
+    binary:"chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing"},
+  "x86_64-apple-darwin": {platform:"mac-x64",sha256:"070fad79f1c67266cc5a5bb804cc70c712c763fd703ec46cfd97f0396e664eca",
+    binary:"chrome-mac-x64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing"},
+  "x86_64-pc-windows-msvc": {platform:"win64",sha256:"efe7aa100a593ef35916be068d670d5c88c4a15a4e7de308a799b0bfc0cd4ca3",
+    binary:"chrome-win64/chrome.exe"},
+});
+
+function sha256File(file) {
+  const hash=createHash("sha256"),fd=openSync(file,"r"),chunk=Buffer.allocUnsafe(1024*1024);
+  try { for (;;) { const count=readSync(fd,chunk,0,chunk.length,null);if (!count) break;hash.update(chunk.subarray(0,count)); } }
+  finally { closeSync(fd); }
+  return hash.digest("hex");
+}
+
+/** 可用显式归档供离线构建，但仍必须与冻结 SHA-256 完全一致。 */
+export function stageWorkbenchBrowserArchive(triple,archive,destination) {
+  const spec=WORKBENCH_CHROME_ARCHIVES[triple];
+  if (!spec) throw new Error(`[build-sidecar] 无工作台浏览器资产映射:${triple}`);
+  if (sha256File(archive)!==spec.sha256) throw new Error(`[build-sidecar] 工作台 CfT ${spec.platform} SHA-256 不符`);
+  rmSync(destination,{recursive:true,force:true});mkdirSync(destination,{recursive:true});
+  const extracted=spawnSync("tar",["-xf",archive,"-C",destination],{stdio:"pipe",encoding:"utf8"});
+  if (extracted.status!==0) {
+    rmSync(destination,{recursive:true,force:true});
+    throw new Error(`[build-sidecar] 工作台 CfT 解压失败:${extracted.stderr||extracted.error||extracted.status}`);
+  }
+  const binary=join(destination,spec.binary);
+  if (!existsSync(binary)) {
+    rmSync(destination,{recursive:true,force:true});
+    throw new Error(`[build-sidecar] 工作台 CfT 缺少预期可执行文件:${spec.binary}`);
+  }
+  return binary;
+}
+
+export function bundleWorkbenchBrowser(triple=targetTriple()) {
+  const spec=WORKBENCH_CHROME_ARCHIVES[triple];
+  if (!spec) { console.warn(`[build-sidecar] 工作台浏览器尚无 ${triple} 资产，保持该能力不可用`);return false; }
+  const cache=join(homedir(),".cache","creatoros","workbench-cft",WORKBENCH_CHROME_VERSION,`${spec.platform}.zip`);
+  const explicit=process.env.CREATOROS_WORKBENCH_CHROME_ARCHIVE?.trim();
+  const source=explicit||cache;
+  if (!explicit && existsSync(cache) && sha256File(cache)!==spec.sha256) {
+    console.warn(`[build-sidecar] 工作台 CfT ${spec.platform} 缓存校验失败，重新下载`);
+    rmSync(cache,{force:true});
+  }
+  if (!existsSync(source)) {
+    mkdirSync(dirname(cache),{recursive:true});
+    const url=`https://storage.googleapis.com/chrome-for-testing-public/${WORKBENCH_CHROME_VERSION}/${spec.platform}/chrome-${spec.platform}.zip`;
+    const part=`${cache}.part`;rmSync(part,{force:true});
+    const fetched=spawnSync("curl",["-fL","--retry","2","--retry-delay","2","-o",part,url],{stdio:"inherit"});
+    if (fetched.status!==0) {rmSync(part,{force:true});throw new Error(`[build-sidecar] 工作台 CfT 下载失败:${spec.platform}`);}
+    if (sha256File(part)!==spec.sha256) {rmSync(part,{force:true});throw new Error(`[build-sidecar] 工作台 CfT 下载校验失败:${spec.platform}`);}
+    renameSync(part,cache);
+  }
+  const destination=join(SIDECAR_RUNTIME,"layers","browser","workbench-cft",WORKBENCH_CHROME_VERSION);
+  const binary=stageWorkbenchBrowserArchive(triple,source,destination);
+  console.log(`[build-sidecar] ✓ 工作台 CfT ${WORKBENCH_CHROME_VERSION} 已随包放入 ${relative(SIDECAR_RUNTIME,binary)}`);
+  return true;
+}
+
 function bundleChromiumBrowser() {
   const bj = join(
     SIDECAR_RUNTIME,
@@ -2396,6 +2459,23 @@ function main() {
     console.log("[build-sidecar] ⏭ [T-452] CREATOROS_SKIP_PLAYWRIGHT=1 → 跳 bundlePlaywright(扫码/网页截图将失效)");
   } else {
     bundlePlaywright();
+  }
+
+  // 独立于旧 Playwright 浏览器；旧采集不能因新浏览器下载失败而失去打包能力。
+  if (process.env.CREATOROS_SKIP_WORKBENCH_BROWSER === "1") {
+    if (process.env.CREATOROS_REQUIRE_WORKBENCH_BROWSER === "1")
+      throw new Error("[build-sidecar] 工作台浏览器不能同时要求随包并跳过");
+    console.log("[build-sidecar] 工作台浏览器已显式跳过；安装版不声明该能力");
+  } else {
+    try {
+      const bundled=bundleWorkbenchBrowser(targetTriple());
+      if (!bundled && process.env.CREATOROS_REQUIRE_WORKBENCH_BROWSER === "1")
+        throw new Error("[build-sidecar] 当前平台没有工作台浏览器资产");
+    }
+    catch (error) {
+      if (process.env.CREATOROS_REQUIRE_WORKBENCH_BROWSER === "1") throw error;
+      console.warn(`[build-sidecar] 工作台浏览器未能随包安装，仅此能力不可用:${error.message}`);
+    }
   }
 
   // [T-289] 实拷 gsap/hyperframes 完整包(补 Next tracing 漏的 dist/cli.js/gsap.min.js)——

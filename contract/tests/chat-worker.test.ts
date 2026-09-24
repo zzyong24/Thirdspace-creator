@@ -31,16 +31,19 @@ it("聊天完成端口只接收账本引用，拒绝自报消息、身份和终�
   const schema=workerPortInputSchemas.commitChatResult;
   const input={lastModelCallId:"model-final",toolCallIds:["tool-1"]};
   expect(schema.safeParse(input).success).toBe(true);
+  expect(schema.safeParse({...input,partialPlanFailureStepIds:["step-failed"]}).success).toBe(true);
+  for(const ids of [[],["step-failed","step-failed"],["x".repeat(257)]])expect(schema.safeParse({...input,partialPlanFailureStepIds:ids}).success).toBe(false);
+  expect(schema.safeParse({...input,partialPlanFailureStepIds:["step-failed"],partialMessage:"模型自报文案"}).success).toBe(false);
   for(const extra of [{message:{text:"伪造"}},{userId:"foreign"},{outcome:"succeeded"}])expect(schema.safeParse({...input,...extra}).success).toBe(false);
   expect(schema.safeParse({...input,toolCallIds:["tool-1","tool-1"]}).success).toBe(false);
 });
 
 import {chatSubmittedTaskType} from "../src/internal/execution-worker";
-it.each([["planning.thesis","planning.thesis"],["material.generate","asset.generate"]])("%s 只映射明确的原子子任务类型",(name,taskType)=>{
+it.each([["planning.thesis","planning.thesis"],["material.generate","asset.generate"],["cover.generate","cover.generate"]])("%s 只映射明确的原子子任务类型",(name,taskType)=>{
  expect(chatSubmittedTaskType(name)).toBe(taskType);
  expect(chatWorkerInputSchema.safeParse({...input,tools:[{name,version:"v1",description:"test",parameters:{type:"object"},effect:"committed",execution:"host.task-submit"}]}).success).toBe(true);
 });
-it.each(["asset.generate","cover.generate","arbitrary.task","__proto__","constructor"])("%s 不能冒充已迁移的事务工具",name=>{
+it.each(["asset.generate","arbitrary.task","__proto__","constructor"])("%s 不能冒充已迁移的事务工具",name=>{
  expect(chatSubmittedTaskType(name)).toBeNull();
  expect(chatWorkerInputSchema.safeParse({...input,tools:[{name,version:"v1",description:"test",parameters:{type:"object"},effect:"committed",execution:"host.task-submit"}]}).success).toBe(false);
 });

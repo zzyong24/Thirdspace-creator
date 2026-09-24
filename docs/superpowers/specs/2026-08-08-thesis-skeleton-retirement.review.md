@@ -3,48 +3,54 @@
 - Task: T-726
 - Verdict: PASS
 - Round: 2/3 (recheck)
-- Spec receipt: 7e2e8d6b672e
-- Review receipt: 2809820bf64a
+- Spec receipt: 4e03ba1b4410
+- Review receipt: 39e3f41ca866
 
 ## 当前有效问题
 
 当前无未销账问题。
 
-已销账：REV-001 (AC-726-02 现要求无历史树 imported 项目的 reconstruct 前后 `thesis_tree` artifact/version 均为 0，并要求有历史树项目的 artifact/version/hash 不变；复审上下文 SPEC-LINE:164:9b5c99a231e3883f。)；REV-002 (AC-726-03 现逐一要求 `script.draft`、`planning.contract`、`planning.outline` 的 thesisBrief 为空、输入无论点树块且非 thesis 上下文不变；复审上下文 SPEC-LINE:165:767d4f34235931a0。)；REV-003 (AC-726-04 现分别覆盖前端制作候选和 backend `video.decisions`，并断言 shared、script-only、thesis-only 三类素材及零 thesis 读取；复审上下文 SPEC-LINE:166:01e9fcd58900d3b2。)
+已销账：REV-004 (SPEC-LINE:42:1b883a570b94780f)；REV-005 (SPEC-LINE:48:cbd06c7966218bc6)；REV-006 (SPEC-LINE:102:6e6a2fecd0ad6c78)；REV-007 (SPEC-LINE:149:bf6dee30e89b8458)
 
 ```spec-review-state
 {
   "schema": "spec-review-state/v2",
   "task_id": "T-726",
+  "cycle": 2,
   "round": 2,
   "max_rounds": 3,
   "review_kind": "recheck",
   "verdict": "PASS",
-  "summary": "当前规格已为首轮三项问题补齐可执行验收：重建零写入、三个 runner 的 thesis 隔离，以及前端与 backend 制作候选的素材来源断言。",
+  "summary": "REV-004 至 REV-007 均已销账：退役门覆盖迟到 Worker 与旧 fence，素材由 Backend 统一装配，执行和采纳按当前真值校验，验收跑通真实写稿、采纳、刷新及制作链；未发现新增问题。",
   "spec_path": "docs/superpowers/specs/2026-08-08-thesis-skeleton-retirement.md",
-  "spec_sha256": "7e2e8d6b672ee2cea8f84c346ac23373f2fb15069bd8f32ab560370687b3e7c1",
+  "spec_sha256": "4e03ba1b4410acafaf062a92574100f3b8f8ee92675d263998fc231d2d299aa7",
   "constitution_path": "orchestrator/SYSTEM_ARCHITECTURE.md",
-  "constitution_sha256": "871570cc600267be82e2e1fbfa79d730fc51121810b8de262c5a49c876029b66",
+  "constitution_sha256": "eb1826d4c09054df622d9718c38ca372bd19833e72bd1a752757631a5747c1df",
   "review_path": "docs/superpowers/specs/2026-08-08-thesis-skeleton-retirement.review.md",
-  "review_mode": "cross-model-same-family",
-  "model": "gpt-5.6-terra",
+  "review_mode": "independent-readonly",
+  "model": "gpt-5.6-sol",
   "policy": "convergent-review/v2",
-  "latest_event_hash": "219feb0c4ff34b741ada21bc2d96a773bb9bfb824d2414bc41808cc516d49c34",
+  "cycle_authorization": null,
+  "latest_event_hash": "04f8e3dd085708bb4b89c5bc33641699e22ab3f90f4592f255843489891878fb",
   "open_findings": [],
   "resolved_findings": [
     {
-      "id": "REV-001",
-      "resolution_evidence": "AC-726-02 现要求无历史树 imported 项目的 reconstruct 前后 `thesis_tree` artifact/version 均为 0，并要求有历史树项目的 artifact/version/hash 不变；复审上下文 SPEC-LINE:164:9b5c99a231e3883f。"
+      "id": "REV-004",
+      "resolution_evidence": "SPEC-LINE:42:1b883a570b94780f"
     },
     {
-      "id": "REV-002",
-      "resolution_evidence": "AC-726-03 现逐一要求 `script.draft`、`planning.contract`、`planning.outline` 的 thesisBrief 为空、输入无论点树块且非 thesis 上下文不变；复审上下文 SPEC-LINE:165:767d4f34235931a0。"
+      "id": "REV-005",
+      "resolution_evidence": "SPEC-LINE:48:cbd06c7966218bc6"
     },
     {
-      "id": "REV-003",
-      "resolution_evidence": "AC-726-04 现分别覆盖前端制作候选和 backend `video.decisions`，并断言 shared、script-only、thesis-only 三类素材及零 thesis 读取；复审上下文 SPEC-LINE:166:01e9fcd58900d3b2。"
+      "id": "REV-006",
+      "resolution_evidence": "SPEC-LINE:102:6e6a2fecd0ad6c78"
+    },
+    {
+      "id": "REV-007",
+      "resolution_evidence": "SPEC-LINE:149:bf6dee30e89b8458"
     }
   ],
-  "receipt": "2809820bf64a"
+  "receipt": "39e3f41ca866"
 }
 ```

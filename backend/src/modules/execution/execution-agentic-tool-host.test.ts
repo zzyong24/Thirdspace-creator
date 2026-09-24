@@ -58,3 +58,26 @@ it.each(['{"query":null}','{invalid-json'])("参数错误%s持久化为可恢复
  expect((await f.ledger.inspect(f.ref)).calls.at(-1)?.status).toBe("settled");
  expect(await f.ports.execute(f.ref,{callId:f.callId})).toEqual(result);expect(count).toBe(0);
 });
+
+it("v2 产物工具只走专用原子结算；v1 同名工具仍走旧结算路径",async()=>{
+ async function artifact(protocolVersion:1|2){
+  const id=`artifact-protocol-${protocolVersion}`,tasks=createPersistentTaskService(db,{now}),task=await tasks.enqueue(ctx,{kind:"ai_task",ownerType:"ai_task",ownerId:id,idempotencyKey:id,payload:{artifactProtocolVersion:protocolVersion,modelInput:{kind:"agentic.run",dryRun:false,tools:[{name:"artifact.register",version:"1"}]}}});
+  await db.insert(aiTasks).values({id,userId:ctx.userId,accountId:ctx.accountId,taskType:"exec.agentic.artifact",status:"running",executionTaskId:task.id,idempotencyKey:id,requestedAt:now()});
+  const claim=(await tasks.claimTask({taskId:task.id,workerId:"worker"}))!,ref={executionTaskId:task.id,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken},ledger=createExecutionCallLedgerService(db,{now,budget});
+  const model=await ledger.reserve(ref,{kind:"model",operationKey:"model",inputDigest:"sha256:"+"d".repeat(64),reservedTokens:20});await ledger.start(ref,model.id);
+  await ledger.settle(ref,model.id,{status:"settled",usage:{totalTokens:1},providerResult:{content:[{type:"tool-call",toolCallId:"artifact-tool",toolName:"artifact.register",input:'{"path":"报告.md","mime":"text/markdown"}'}],finishReason:{unified:"tool-calls"},usage:{inputTokens:{total:1},outputTokens:{total:0}},warnings:[]}});
+  let atomic=0;const outcome={status:"ok" as const,summary:"已登记",evidence:[],data:{workbench:{operationId:"placeholder",status:"succeeded",artifactRefs:["wa@1"],progressCursor:null,content:[{type:"text",text:"{}"}]}},error:null,continuation:null,sideEffect:"committed" as const};
+  const tools:Record<string,AgenticBackendTool>={"artifact.register":{version:"1",parameters:z.object({path:z.string(),mime:z.literal("text/markdown")}).strict(),effect:"committed",execute:async(_ctx,_input,scope)=>({...outcome,data:{workbench:{...outcome.data.workbench,operationId:scope.callId}}}),commitAndSettle:async(_ctx,_input,result,scope)=>{
+   atomic++;const receipt={schemaVersion:1,kind:"tool",toolCallId:scope.toolCallId,toolName:"artifact.register",output:result};
+   await db.update(executionCalls).set({status:"settled",resultText:JSON.stringify(receipt),usage:{totalTokens:0},totalTokens:0,updatedAt:now()}).where(eq(executionCalls.id,scope.callId));return result;
+  }}};
+  const ports=createExecutionAgenticToolPorts(db,{now,budget,tools}),reserved=await ports.reserve(ref,{modelCallId:model.id,toolCallId:"artifact-tool"});await ports.start(ref,{callId:reserved.callId});
+  return {ports,ref,ledger,callId:reserved.callId,atomic:()=>atomic};
+ }
+ const v2=await artifact(2),v2Result=await v2.ports.execute(v2.ref,{callId:v2.callId});expect(v2Result).toMatchObject({sideEffect:"committed"});expect(v2.atomic()).toBe(1);expect((await v2.ledger.inspect(v2.ref)).calls.at(-1)?.status).toBe("settled");
+ const transported={...v2Result,data:{workbench:{content:v2Result.data.workbench.content,progressCursor:v2Result.data.workbench.progressCursor,
+  artifactRefs:v2Result.data.workbench.artifactRefs,status:v2Result.data.workbench.status,operationId:v2Result.data.workbench.operationId}}};
+ expect(JSON.stringify(transported)).not.toBe(JSON.stringify(v2Result));
+ expect(await v2.ports.settle(v2.ref,{callId:v2.callId,status:"settled",output:transported})).toMatchObject({status:"settled"});
+ const v1=await artifact(1),v1Result=await v1.ports.execute(v1.ref,{callId:v1.callId});expect(v1Result).toMatchObject({sideEffect:"committed"});expect(v1.atomic()).toBe(0);expect((await v1.ledger.inspect(v1.ref)).calls.at(-1)?.status).toBe("settled");
+});

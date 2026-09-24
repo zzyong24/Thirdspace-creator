@@ -1,4 +1,6 @@
 import {commentExternalId,type CommentRecord} from "@creatoros/backend/application/collection/comment-ingestion";
+import type {CommentReadDiagnostics,CommentReadReason} from '@creatoros/backend/application/collection/comment-read-diagnostics';
+import {commentHttpStatus,createCommentPageEvidence,finishCommentPageEvidence,observeCommentResponse} from './douyin-cdp-page-evidence';
 export {commentExternalId,ingestComments,type CommentRecord,type CommentIngestPorts,type IngestCommentsResult} from "@creatoros/backend/application/collection/comment-ingestion";
 import { fetchDouyinVideoUrlViaDetail as fetchWorkerDouyinVideoUrlViaDetail, AWEME_DETAIL_API, mapDetailErr } from "@creatoros/ai-worker/douyin-transcribe-detail";
 import {
@@ -267,18 +269,21 @@ export function parseCreatorProfileIdentity(
  * create_time/user.nickname/aweme_id 多键兜底)。评论列表键宽松匹配 comments /
  * comment_list / data.comments。无 commentId 或无正文的脏数据丢弃。
  */
-export function parseCommentList(
-  json: unknown,
-  defaultAwemeId = "",
-): CommentRecord[] {
+function commentListValue(json:unknown):unknown[]|null {
   const root = (json ?? {}) as Record<string, unknown>;
   const data = (root.data ?? {}) as Record<string, unknown>;
-  const list =
+  return (
     (Array.isArray(root.comments) && root.comments) ||
     (Array.isArray(root.comment_list) && root.comment_list) ||
     (Array.isArray(data.comments) && data.comments) ||
     (Array.isArray(data.comment_list) && data.comment_list) ||
-    [];
+    null);
+}
+export function parseCommentList(
+  json: unknown,
+  defaultAwemeId = "",
+): CommentRecord[] {
+  const list=commentListValue(json)??[];
   return (list as unknown[])
     .map((raw): CommentRecord | null => {
       const c = (raw ?? {}) as Record<string, unknown>;
@@ -611,6 +616,12 @@ const readSessionKey = Symbol.for('creatoros.douyinReadSessionPool');
 const readSessionRegistry = globalThis as typeof globalThis & {
   [readSessionKey]?: Promise<ReturnType<typeof import('@creatoros/ai-worker/browser/shared-read-browser-session').createSharedReadBrowserSessionPool>>;
 };
+/** T1027：同采集profile的排他诊断会话，仅暴露本次Page与确认停止清理。 */
+export async function openCommentDiagnosisSession(authDir:string,signal:AbortSignal){
+  const context=await openContext(authDir,false,signal);
+  return {newPage:()=>context.newPage(),close:()=>context.close()};
+}
+
 async function openContext(authDir: string, headless: false, signal?: AbortSignal): Promise<ExclusiveBrowserSession>;
 async function openContext(authDir: string, headless: boolean, signal?: AbortSignal): Promise<ReadBrowserSession>;
 async function openContext(authDir: string, headless: boolean, signal?: AbortSignal): Promise<ReadBrowserSession> {
@@ -2027,10 +2038,14 @@ export interface FetchCommentsTarget {
 // 结构上满足这两个接口(用作默认注入时的向上转型目标)。
 type CommentResponseHandler = (resp: {
   url(): string;
+  status?(): number;
+  request?(): {method?():string;resourceType?():string};
   json(): Promise<unknown>;
 }) => void;
 
 interface CommentCapablePage {
+  url?(): string;
+  isClosed?(): boolean;
   on(event: "response", cb: CommentResponseHandler): void;
   // 多作品复用同一 page 时,每作品抓完必须摘掉本作品的 response 监听(否则监听在 page 上累积,
   // 后续作品的 XHR 会被历史 handler 重复解析,且泄漏监听器)。真实 Playwright Page 有 off。
@@ -2064,10 +2079,8 @@ export interface FetchDouyinCommentsDeps {
   //   publishingService.resolvePublication + candidateService.listCommentsForPublication 反查装配)。
   //   评论列表倒序(新→旧):翻页时某页评论**全部** ∈ 该集(且非空)= 已翻到之前抓过的老评论 →
   //   提前 break,不再滚到 staleRounds≥3。首次无 watermark(空集 / 省略)→ 退化为原全量(安全)。
-  //   [依赖 item_id T-065,诚实标注]:若创作者中心评论管理页对该账号返回的是**全局评论列表**
-  //   (item_id 未服务端过滤,见 scrapeCommentsForWork 注释),某页会混入**其它作品**的评论 →
-  //   本作品 watermark 无法覆盖它们 → 该页非"全已知" → early-break 不触发,安全退化为全量滚动。
-  //   故真增量收益(每作品少翻很多页)要等 item_id 真机验证/收窄后才**完全**兑现;当前实现无回归。
+  // 请求作品 ID 与记录作品 ID 精确核对；混合归属的页只保留确认属于当前作品的记录，
+  // 不作为 watermark 或完整读取的证据。
   commentWatermark?: (awemeId: string) => Promise<Set<string>>;
   /** 多作品抓取每完成一个作品立即回调；调用方可同步落库并上报真实 M/N 进度。 */
   onWorkComplete?: (
@@ -2099,43 +2112,68 @@ async function scrapeCommentsForWork(
   gateway: DouyinChannelGate = instantNoopGateway,
   // [T-177 增量化] 库里该作品已知评论的 externalId 集(倒序 early-break 锚)。空集 → 退化全量。
   watermark: Set<string> = new Set<string>(),
-  onCompletion?: (complete:boolean)=>void,
+  onCompletion?: (complete:boolean,diagnostics:CommentReadDiagnostics)=>void,
 ): Promise<CommentRecord[]> {
-  const commentJsons: unknown[] = [];
+  const byId = new Map<string, CommentRecord>();
   const seenIds = new Set<string>();
   // [T-177] 某页评论全部已在 watermark(且非空)→ 倒序下已翻到老评论,提前停翻页。
   let reachedWatermark = false;
-  // [T-065 / T-176 已知未决] item_id 过滤是否真在服务端生效**尚未在真机核实**:onResponse 目前
-  //   无条件收下每一个 `/comment/list/` XHR 并用页面级 awemeId 兜底归属(parseCommentList 的
-  //   `|| defaultAwemeId`)。若创作者中心评论管理页对某些账号返回的是**全局评论列表**(item_id
-  //   仅作 UI 过滤、XHR 未带 item_id / 未服务端过滤),则 N 个作品会各自拦到同一份列表并全部误挂到
-  //   当前 awemeId → N 作品重刷 N 次。安全的收敛做法是「只保留 comment 自带 aweme_id/item_id ===
-  //   目标 awemeId 的记录」,但当且仅当该 XHR 确实逐条带 aweme_id 时才不会误伤成采 0——这需要真机
-  //   抓一次 comment/list 响应体确认字段形状(本任务硬约束:不跑真实采集/不扫码),故**暂不硬改**
-  //   运行时行为以免把「重复」变成「采 0」。待 T-177 增量化或后续真机验证时按实测 XHR 形状收窄。
+  const pageEvidence=createCommentPageEvidence();
+  let active=true,matchedResponses=0,validResponses=0,invalidResponses=0,parsedComments=0,pendingResponses=0,ignoredResponses=0;
+  // 同一请求页的成功重试可以恢复；历史计数只用于诊断，不永久否决后续成功。
+  type CommentPageState={sequence:number;invalid:boolean;unparseable:boolean;hasMore:boolean|null;watermark:boolean;identityUnverified?:boolean};
+  const pageStates=new Map<string,CommentPageState>();
+  const setPageState=(key:string,state:CommentPageState)=>{
+    if((pageStates.get(key)?.sequence??-1)>state.sequence)return;
+    pageStates.set(key,state);
+    reachedWatermark=[...pageStates.values()].some(value=>!value.invalid&&value.watermark);
+  };
   const onResponse: CommentResponseHandler = (resp) => {
+    observeCommentResponse(pageEvidence,resp);
     const url = resp.url();
     if (!COMMENT_LIST_HINTS.some((h) => url.includes(h))) return;
+    const sequence=++matchedResponses;
+    let params:URLSearchParams;
+    try{params=new URL(url).searchParams;}catch{ignoredResponses++;return;}
+    // SEMANTIC_BOUNDARY_ALLOW: 仅精确核对请求/记录作品 ID 与分页键，不推断评论语义或页面归属。
+    const requestIds=[...params.getAll('item_id'),...params.getAll('aweme_id')].filter(Boolean);
+    if(requestIds.some(id=>id!==awemeId)){ignoredResponses++;return;}
+    const requestScoped=requestIds.length>0;
+    const pageKey=JSON.stringify(['cursor','offset','page','page_index'].map(key=>params.get(key)??'0'));
+    pendingResponses++;
     void (async () => {
       try {
         const j = await resp.json();
-        commentJsons.push(j);
-        const batch = parseCommentList(j, awemeId);
-        // [T-177 增量化] 倒序 early-break:本页评论全部已在 watermark(库里已抓过)且非空 →
-        //   已翻到老评论,标记提前停(externalId 口径同落库锚 commentExternalId,cid 缺失 hash 兜底一致)。
-        if (
-          watermark.size > 0 &&
-          batch.length > 0 &&
-          batch.every((c) => watermark.has(commentExternalId(c)))
-        ) {
-          reachedWatermark = true;
+        if(!active)return;
+        const root=(j??{}) as Record<string,unknown>,data=(root.data??{}) as Record<string,unknown>;
+        const list=commentListValue(j),status=root.status_code??data.status_code;
+        if(list===null||(status!==undefined&&status!==0)){
+          invalidResponses++;
+          if(requestScoped)setPageState(pageKey,{sequence,invalid:true,unparseable:false,hasMore:null,watermark:false});
+          return;
         }
+        const rowIds=list.map(raw=>{const row=(raw??{}) as Record<string,unknown>;return [str(row.aweme_id),str(row.item_id)].filter(Boolean);});
+        const rowMatches=(ids:string[])=>ids.length?ids.every(id=>id===awemeId):requestScoped;
+        const batch=parseCommentList({comments:list.filter((_raw,index)=>rowMatches(rowIds[index]!))},requestScoped?awemeId:'');
+        parsedComments+=batch.length;
         for (const c of batch) {
-          seenIds.add(c.commentId);
+          seenIds.add(c.commentId);byId.set(c.commentId,c);
         }
+        const identityVerified=(requestScoped||list.length>0)&&rowIds.every(rowMatches);
+        if(!identityVerified){
+          ignoredResponses++;
+          // 明确属于当前作品的请求页必须保留未解决状态；完全无关的迟到请求在入口已忽略。
+          if(requestScoped)setPageState(pageKey,{sequence,invalid:false,unparseable:false,hasMore:null,watermark:false,identityUnverified:true});
+          return;
+        }
+        validResponses++;
+        const hasMoreValue=root.has_more??data.has_more;
+        const hasMore=hasMoreValue===0||hasMoreValue===false?false:hasMoreValue===1||hasMoreValue===true?true:null;
+        setPageState(pageKey,{sequence,invalid:false,unparseable:list.length>batch.length,hasMore,
+          watermark:watermark.size>0&&batch.length>0&&batch.every(c=>watermark.has(commentExternalId(c)))});
       } catch {
-        /* 非 JSON 响应,忽略 */
-      }
+        if(active){invalidResponses++;if(requestScoped)setPageState(pageKey,{sequence,invalid:true,unparseable:false,hasMore:null,watermark:false});}
+      }finally{pendingResponses--;}
     })();
   };
   page.on("response", onResponse);
@@ -2143,13 +2181,17 @@ async function scrapeCommentsForWork(
     // item_id 过滤 → 评论管理页只显示该作品的评论(对齐 crawler.py urls_to_try)。
     // [T-202] 导航加退避重试(瞬时超时自愈)。
     await gotoWithRetry(
-      page,
+      {goto:async(url,opts)=>{
+        const response=await page.goto(url,opts);
+        pageEvidence.navigationStatus=commentHttpStatus(response);
+        return response;
+      },waitForTimeout:ms=>page.waitForTimeout(ms)},
       `${CREATOR_COMMENT_MANAGE}?item_id=${encodeURIComponent(awemeId)}`,
       { timeoutMs: 60_000, label: `comment-manage(${awemeId})` },
     );
     await page.waitForTimeout(3000); // 等首屏 comment/list XHR 回来
 
-    // 礼貌滚动翻页:滚到底触发下一页加载;连续 3 轮无新评论即停(评论无 has_more 可靠信号)。
+    // 连续 3 轮无新评论只限制等待；显式 has_more=1 不能被静默覆盖为已完成。
     let staleRounds = 0;
     for (let i = 0; i < maxPages; i++) {
       // [T-177 增量化] 首屏(goto 后)或上一轮已翻到全是库里已抓过的老评论 → 提前停,不再全量重翻。
@@ -2157,6 +2199,7 @@ async function scrapeCommentsForWork(
       const before = seenIds.size;
       // [gate-F7 插装点③] 每翻一页 acquire 一次 creator-center(评论翻页真正限速)。
       await withDouyinChannel(gateway, "creator-center", async () => {
+        pageEvidence.scroll.attempts++;
         await page
           .evaluate(() => {
             // 窗口滚 + 内层可滚容器全滚到底(T-065 拉全:评论管理页列表是内层滚动容器,
@@ -2169,8 +2212,8 @@ async function scrapeCommentsForWork(
               }
             }
           })
-          .catch(() => {});
-        await page.mouse.wheel(0, 2000).catch(() => {});
+          .catch(() => {pageEvidence.scroll.evaluateErrors++;});
+        await page.mouse.wheel(0, 2000).catch(() => {pageEvidence.scroll.wheelErrors++;});
         await page.waitForTimeout(2000);
       });
       if (reachedWatermark) break; // [T-177] 本轮滚动加载的页全是老评论 → 停
@@ -2178,18 +2221,21 @@ async function scrapeCommentsForWork(
       if (staleRounds >= 3) break;
     }
 
-    // 去重(同 commentId 保留最后一次;跨页重复评论合一)。
-    const byId = new Map<string, CommentRecord>();
-    for (const j of commentJsons) {
-      for (const c of parseCommentList(j, awemeId)) {
-        byId.set(c.commentId, c);
-      }
-    }
-    onCompletion?.(commentJsons.length>0 && (reachedWatermark || staleRounds>=3));
+    const states=[...pageStates.values()];
+    const latest=states.filter(state=>!state.invalid&&!state.identityUnverified).sort((a,b)=>b.sequence-a.sequence)[0];
+    const reason:CommentReadReason=pendingResponses>0?'response_pending':validResponses===0?
+      (matchedResponses===0?'no_matching_response':ignoredResponses>0?'response_identity_unverified':'no_valid_response'):
+      states.some(state=>state.invalid)?'invalid_response':states.some(state=>state.identityUnverified)?'response_identity_unverified':states.some(state=>state.unparseable)?'unparseable_records':
+      reachedWatermark?'watermark_reached':latest?.hasMore===false?'pagination_exhausted':latest?.hasMore===true?'more_pages_pending':staleRounds>=3?'stable_end':'page_limit';
+    // 在原监听窗口终点固定结果，诊断读取不能延长采集或改变pending/完成判断。
+    active=false;page.off("response",onResponse);
+    const diagnostics:CommentReadDiagnostics={matchedResponses,validResponses,invalidResponses,parsedComments,pendingResponses,ignoredResponses,reason,pageEvidence};
+    await finishCommentPageEvidence(page,pageEvidence,reason);
+    onCompletion?.(reason==='watermark_reached'||reason==='stable_end'||reason==='pagination_exhausted',diagnostics);
     return [...byId.values()];
   } finally {
     // 多作品复用 page 时,摘掉本作品监听,避免监听在 page 上累积/后续作品 XHR 被重复解析。
-    page.off("response", onResponse);
+    active=false;page.off("response", onResponse);
   }
 }
 
@@ -2237,6 +2283,7 @@ export interface FetchCommentsForWorksResult {
   complete?: boolean;
   awemeId: string;
   records: CommentRecord[];
+  diagnostics?: CommentReadDiagnostics;
 }
 
 /** [T-232] 多作品评论抓取的批结果:works = 已成功抓到的作品(逐作品评论);truncated = 是否因
@@ -2293,12 +2340,12 @@ export async function fetchDouyinCommentsForWorks(
       try {
         // [gate-F7 插装点④] **每作品 acquire 一次** creator-center(把 72 作品逐个导航真正限速);
         // 作品内翻页再由 scrapeCommentsForWork 内部 acquire(插装点③),两层正交、均串行到 creator-center。
-        let complete=false;
+        let complete=false,diagnostics:CommentReadDiagnostics|undefined;
         const records = await withDouyinChannel(gateway, "creator-center", () =>
           // 同一 context / 同一 page 逐作品导航抓取(评论管理页每作品 item_id 过滤,goto 会换页)。
-          scrapeCommentsForWork(page, awemeId, maxPages, gateway, watermark,value=>{complete=value;}),
+          scrapeCommentsForWork(page, awemeId, maxPages, gateway, watermark,(value,detail)=>{complete=value;diagnostics=detail;}),
         );
-        const work = { awemeId, records, complete };
+        const work = { awemeId, records, complete,diagnostics };
         out.push(work);
         await deps.onWorkComplete?.(work, {
           processed: out.length,

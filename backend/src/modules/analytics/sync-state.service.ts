@@ -3,15 +3,18 @@ import {publicationSyncState} from '../../schema/analytics';
 import type {RequestContext} from '@creatoros/contract';
 import {requireAccountId} from './analytics.errors';
 import {isSyncDue,type SyncCapability} from './sync-policy';
+import {createCommentRetryService} from './comment-retry.service';
 /** 持久水位经业务服务写入；零结果也是成功，排队/失败不伪造成功。 */
 export function createPublicationSyncService(db:Db,ports:{now:()=>string;assertPublication:(ctx:RequestContext,id:string)=>Promise<{externalId:string|null;publishedAt?:string|null}>}){
  const scope=(ctx:RequestContext,id:string,capability:SyncCapability)=>and(eq(publicationSyncState.userId,ctx.userId),eq(publicationSyncState.accountId,requireAccountId(ctx.accountId,'analytics.sync')),eq(publicationSyncState.publicationId,id),eq(publicationSyncState.capability,capability));
  async function read(ctx:RequestContext,id:string,capability:SyncCapability){return(await db.select().from(publicationSyncState).where(scope(ctx,id,capability)))[0];}
  return {
+  ...createCommentRetryService(db,ports),
   read,
-  async failures(ctx:RequestContext,capabilities:readonly SyncCapability[]){
+  async failures(ctx:RequestContext,capabilities:readonly SyncCapability[],publicationIds?:readonly string[]){
    const rows=await db.select().from(publicationSyncState).where(and(eq(publicationSyncState.userId,ctx.userId),eq(publicationSyncState.accountId,requireAccountId(ctx.accountId,'analytics.sync'))));
-   let count=0;for(const row of rows){if(!row.error||!capabilities.includes(row.capability as SyncCapability))continue;try{await ports.assertPublication(ctx,row.publicationId);count++;}catch{/* 已隐藏/移除作品不阻塞当前同步 */}}
+   const selection=publicationIds?new Set(publicationIds):null;
+   let count=0;for(const row of rows){if(!row.error||!capabilities.includes(row.capability as SyncCapability)||(selection&&!selection.has(row.publicationId)))continue;try{const pub=await ports.assertPublication(ctx,row.publicationId);if(pub.externalId===row.externalId)count++;}catch{/* 已隐藏/移除作品不阻塞当前同步 */}}
    return count;
   },
   async due(ctx:RequestContext,id:string,capability:SyncCapability){const pub=await ports.assertPublication(ctx,id);const state=await read(ctx,id,capability);return isSyncDue({publishedAt:pub.publishedAt,...(state?.externalId===pub.externalId?state:{})},ports.now());},

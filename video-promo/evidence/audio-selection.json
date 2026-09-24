@@ -1,0 +1,17 @@
+{
+  "music": {
+    "method": "code-original",
+    "script": "creatoros-score.py",
+    "duration": 47,
+    "bpm": 120,
+    "sections": "Dmaj9/Bm9/Gmaj9/Aadd9 warm pad + keys + bass + restrained percussion; upward resolution at 44s–47s under brand lockup",
+    "output": "assets/music.wav",
+    "source": "Adapted from skill assets/audio/codepilot-score-example.py (same license)"
+  },
+  "sfx": [
+    { "purpose": "内容出现(导航网格/卡片/候选列表)", "method": "bundled-original", "assetId": "pop", "file": "assets/sfx/pop.wav", "fallbackReason": "无本地素材库且素材站访问受限,使用 skill 内置原创音效" },
+    { "purpose": "内容出现(阶段标签/素材标签)", "method": "bundled-original", "assetId": "click", "file": "assets/sfx/click.wav", "fallbackReason": "无本地素材库且素材站访问受限,使用 skill 内置原创音效" },
+    { "purpose": "复盘指标出现", "method": "bundled-original", "assetId": "success", "file": "assets/sfx/success.wav", "fallbackReason": "无本地素材库且素材站访问受限,使用 skill 内置原创音效" },
+    { "purpose": "品牌收尾", "method": "bundled-original", "assetId": "ding-dong", "file": "assets/sfx/ding-dong.wav", "fallbackReason": "无本地素材库且素材站访问受限,使用 skill 内置原创音效" }
+  ]
+}

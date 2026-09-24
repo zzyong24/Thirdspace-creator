@@ -8,7 +8,7 @@ import {reportPeriod,reportPeriodLabel} from "./report-period";
 import {beijingTime,overviewMetrics,type DailyReport} from "./report-metrics";
 import {exportDailyReportCsv} from "./report-export";
 import {useDailyReportAnalysis} from "./use-daily-report-analysis";
-import {ReportCoverage,ReportExperiments,ReportPositioning,ReportPeriodWorks,ReportRetention,ReportWorks} from "./report-details";
+import {ReportCoverage,ReportDirections,ReportExperiments,ReportPositioning,ReportPeriodWorks,ReportRetention,ReportWorks} from "./report-details";
 import {ReportShare} from "./report-share";
 import {reportUserText,userFacingAnalysis} from "./report-language";
 import styles from "./daily-report.module.css";
@@ -38,6 +38,7 @@ export function DailyReportPage({report}:{report:DailyReport}){
    <div className={styles.grid}><section className={styles.panel}><div className={styles.sectionHead}><h2>观众看到了哪里</h2><span className={styles.tag}>所选作品留存</span></div><label htmlFor="retention-work" className={styles.muted}>观察作品</label><Select value={selectedWork?.publicationId??""} onValueChange={setSelectedId}><SelectTrigger id="retention-work" className="mt-2 w-full min-w-0" aria-label="观察作品"><SelectValue placeholder="选择周期内作品"/></SelectTrigger><SelectContent position="popper" className="max-w-[min(36rem,calc(100vw-3rem))]">{report.works.map(w=><SelectItem key={w.publicationId} value={w.publicationId}><span className="line-clamp-2 break-words whitespace-normal" title={w.title}>{w.title}</span></SelectItem>)}</SelectContent></Select><ReportRetention work={selectedWork}/></section><ReportCoverage report={report} work={selectedWork}/></div>
    </>}
    {state.rawAnalysis&&!state.analysis&&<section className={styles.panel}><div className={styles.sectionHead}><h2>运营分析</h2></div><details className={styles.explanation}><summary>查看完整建议</summary><p className={styles.raw}>{state.rawAnalysis}</p></details></section>}
+   {!single&&<ReportDirections analysis={state.analysis} rawAnalysisAvailable={Boolean(state.rawAnalysis)}/>}
    <ReportPositioning report={report} analysis={state.analysis} rawAnalysisAvailable={Boolean(state.rawAnalysis)}/>
    <ReportWorks report={report} analysis={state.analysis} rawAnalysisAvailable={Boolean(state.rawAnalysis)}/>
    <ReportPeriodWorks report={report}/>

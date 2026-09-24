@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { createDb, executionTasks, eq } from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
+import { createContinuousExecutionBudget } from "@creatoros/contract/execution-worker";
 import {
   createPersistentTaskService,
   type PersistentTaskService,
@@ -64,6 +65,41 @@ it("大量历史任务分页不会读出全部payload并破坏后续数据库查
 },30000);
 
 describe("T-482 持久执行任务状态机", () => {
+  it("[T-1022] 无调用账本的连续选题任务可自动等待并沿原任务再次领取", async () => {
+    const { db, client } = await createDb();
+    const f = fixture();
+    const service = createPersistentTaskService(db, { now: () => f.clock.value, nextId: f.nextId });
+    try {
+      const task = await service.enqueue(ctxA, {
+        kind: "topic_preview",
+        ownerType: "transform",
+        ownerId: "transform-recovery",
+        idempotencyKey: "topic-recovery",
+        payload: {},
+        executionBudget: createContinuousExecutionBudget(),
+      });
+      const first = await service.claimTask({ taskId: task.id, workerId: "topic-worker", leaseSeconds: 30 });
+      expect(first).not.toBeNull();
+      const waiting = await service.finish({
+        taskId: task.id,
+        workerId: "topic-worker",
+        attempt: first!.lease.attempt,
+        fenceToken: first!.lease.fenceToken,
+        status: "retry_wait",
+        retryAfterMs: 1_000,
+        errorCode: "TOPIC_PREVIEW_TIMEOUT",
+        errorMessage: "模型响应超时，系统正在自动恢复",
+      });
+      expect(waiting).toMatchObject({ status: "queued", runtimeStatus: "retry_wait" });
+      expect(await service.claimTask({ taskId: task.id, workerId: "too-early" })).toBeNull();
+      f.clock.value = "2026-07-23T12:00:01.000Z";
+      const resumed = await service.claimTask({ taskId: task.id, workerId: "topic-worker-next" });
+      expect(resumed?.task.id).toBe(task.id);
+      expect(resumed?.lease.attempt).toBe(2);
+    } finally {
+      await client.close();
+    }
+  });
   it("研究恢复水位不可由入队调用者注入，宿主恢复后原入队请求仍幂等",async()=>{
     const {db,client}=await createDb();const service=createPersistentTaskService(db);
     const input={kind:"ai_task" as const,ownerType:"ai_task" as const,ownerId:"research-resume",idempotencyKey:"research-resume",payload:{modelInput:{kind:"agentic.run",goal:"冻结目标"}}};

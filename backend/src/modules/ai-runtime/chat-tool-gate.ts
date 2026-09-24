@@ -1,10 +1,12 @@
 import {
   tool,
+  jsonSchema,
   type Tool,
   type FlexibleSchema,
   type ToolApprovalStatus,
   type ToolSet,
 } from "ai";
+import { workbenchCapabilitySchema, workbenchResultSchema, type WorkbenchCapability, type WorkbenchResult } from "@creatoros/contract/agent-workbench";
 import { formatErrorDiagnostic } from "./error-diagnostics";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -390,6 +392,12 @@ const CHAT_TOOL_APPROVAL_DECIDERS = new WeakMap<
 /** 宿主经过参数、授权及执行权校验后使用；此端口不自行授权或重试。 */
 type ChatToolNativeExecutor = (input: unknown, callOptions?: unknown) => Promise<unknown>;
 const CHAT_TOOL_NATIVE_EXECUTORS = new WeakMap<Tool, { name: string; execute: ChatToolNativeExecutor }>();
+const CHAT_TOOL_WORKBENCH_CAPABILITIES = new WeakMap<Tool, WorkbenchCapability>();
+
+export function getChatToolWorkbenchCapability(t: Tool): WorkbenchCapability | undefined {
+  const descriptor = CHAT_TOOL_WORKBENCH_CAPABILITIES.get(t);
+  return descriptor ? structuredClone(descriptor) : undefined;
+}
 
 /** 保留原始异常。返回的业务错误信封仍须由具体工具适配器解释，不能一律当成功。 */
 export function getChatToolNativeExecutor(t: Tool): ChatToolNativeExecutor | undefined {
@@ -467,8 +475,9 @@ export function defineChatTool<INPUT, OUTPUT extends { kind: string }>(
     needsApproval?: ChatToolApprovalDecider<INPUT>;
   },
   humanizeError?: HumanizeErrorPort,
+  extension?: { envelope: ChatToolErrorEnvelope; preserveNativeResult: true },
 ): Tool {
-  const envelope = CHAT_TOOL_ERROR_ENVELOPES[name];
+  const envelope = extension?.envelope ?? CHAT_TOOL_ERROR_ENVELOPES[name];
   if (!envelope) {
     // 新工具没登记信封元数据 = 契约缺口(错误态 kind 无从对齐)→ 装配期即炸,别拖到运行期。
     throw new Error(`[chat-tool-gate] 工具 ${name} 未登记 CHAT_TOOL_ERROR_ENVELOPES —— 新增工具须同步登记错误信封(kind 与正常结果一致 + 结构占位)`);
@@ -478,7 +487,8 @@ export function defineChatTool<INPUT, OUTPUT extends { kind: string }>(
     const startedAt = Date.now();
     try {
       const result = await config.execute(input, callOptions);
-      const bounded = enforceChatToolResultBudget(result, budget);
+      // Workbench 完整结果先进入原 executionCalls 回执；只在面向模型的投影处分页。
+      const bounded = extension?.preserveNativeResult ? result : enforceChatToolResultBudget(result, budget);
       // 【T-239e 挂点】usage 归因扩展字段(tokens/费用)加在这行日志上,别另起打点层。
       const resultRecord =
         result && typeof result === "object"
@@ -504,7 +514,8 @@ export function defineChatTool<INPUT, OUTPUT extends { kind: string }>(
   };
   const gatedExecute = async (input: INPUT, callOptions?: unknown): Promise<unknown> => {
     try {
-      return await nativeExecute(input, callOptions);
+      const result = await nativeExecute(input, callOptions);
+      return extension?.preserveNativeResult ? enforceChatToolResultBudget(result, budget) : result;
     } catch (err) {
       const human = humanizeError?.(err) ?? null;
       return {
@@ -529,5 +540,21 @@ export function defineChatTool<INPUT, OUTPUT extends { kind: string }>(
       config.needsApproval as ChatToolApprovalDecider<unknown>,
     );
   }
+  return built;
+}
+
+/** 仅可信目录可创建动态工具；宿主原始入口保留完整回执，普通 UI 入口仍受字符预算。 */
+export function defineWorkbenchChatTool(
+  rawCapability: WorkbenchCapability,
+  execute: (input: Record<string, unknown>, callOptions?: unknown) => Promise<WorkbenchResult> | WorkbenchResult,
+): Tool {
+  const capability = workbenchCapabilitySchema.parse(rawCapability);
+  if (Object.hasOwn(CHAT_TOOL_ERROR_ENVELOPES, capability.name)) throw new Error("Workbench 工具不能覆盖正式聊天工具");
+  const built = defineChatTool(capability.name, {
+    description: capability.description,
+    inputSchema: jsonSchema<Record<string, unknown>>(capability.inputSchema),
+    execute: async (input, callOptions) => ({ kind: "workbench.result", result: workbenchResultSchema.parse(await execute(input, callOptions)) }),
+  }, undefined, { envelope: { kind: "workbench.result", extras: { result: null } }, preserveNativeResult: true });
+  CHAT_TOOL_WORKBENCH_CAPABILITIES.set(built, structuredClone(capability));
   return built;
 }

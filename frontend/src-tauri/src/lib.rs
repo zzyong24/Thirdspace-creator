@@ -34,6 +34,9 @@ mod win_job;
 mod sidecar_process;
 // [T-332 S5] 「重置工作区」启动期归档:检测 reset-pending 标记 → db/.auth 归档改名 → 清标记。
 mod workspace_reset;
+// T-1007: native files use PID-bound private IPC on macOS and Windows.
+// No workbench command is registered in generate_handler (WebView remains out).
+mod workbench;
 
 use base64::Engine as _;
 // [T-391 H-key] master key 传递加固:SecretString 包裹 base64 key(Drop 时 zeroize,不进 Debug/log),
@@ -172,6 +175,169 @@ async fn export_daily_report_csv(
         std::fs::write(path, content).map_err(|_| "保存 CSV 失败，请检查目录权限后重试。".to_string())?;
         Ok(true)
     }).await.map_err(|_| "保存 CSV 未完成，请重试。".to_string())?
+}
+
+const MAX_ARTIFACT_EXPORT_BYTES: usize = 100 * 1024 * 1024;
+
+#[derive(Clone, Copy)]
+enum NativeArtifactFormat {
+    Html,
+    Markdown,
+    Csv,
+    Png,
+    Pdf,
+}
+
+impl NativeArtifactFormat {
+    fn from_mime(mime: &str) -> Result<Self, String> {
+        let mut parts = mime.split(';');
+        let media = parts.next().unwrap_or("").trim();
+        let format = if media.eq_ignore_ascii_case("text/html") {
+            Self::Html
+        } else if media.eq_ignore_ascii_case("text/markdown") {
+            Self::Markdown
+        } else if media.eq_ignore_ascii_case("text/csv") {
+            Self::Csv
+        } else if media.eq_ignore_ascii_case("image/png") {
+            Self::Png
+        } else if media.eq_ignore_ascii_case("application/pdf") {
+            Self::Pdf
+        } else {
+            return Err("不支持的产物类型。".to_string());
+        };
+        if let Some(parameter) = parts.next() {
+            if parts.next().is_some()
+                || !matches!(format, Self::Html | Self::Markdown | Self::Csv)
+                || !parameter.trim().eq_ignore_ascii_case("charset=utf-8")
+            {
+                return Err("产物 MIME 参数无效。".to_string());
+            }
+        }
+        Ok(format)
+    }
+
+    fn extensions(self) -> &'static [&'static str] {
+        match self {
+            Self::Html => &["html", "htm"],
+            Self::Markdown => &["md", "markdown"],
+            Self::Csv => &["csv"],
+            Self::Png => &["png"],
+            Self::Pdf => &["pdf"],
+        }
+    }
+
+    fn label(self) -> &'static str {
+        match self {
+            Self::Html => "HTML 网页",
+            Self::Markdown => "Markdown 文档",
+            Self::Csv => "CSV 数据文件",
+            Self::Png => "PNG 图片",
+            Self::Pdf => "PDF 文档",
+        }
+    }
+
+    fn accepts_path(self, path: &Path) -> bool {
+        path.extension()
+            .and_then(|extension| extension.to_str())
+            .is_some_and(|extension| {
+                self.extensions()
+                    .iter()
+                    .any(|allowed| extension.eq_ignore_ascii_case(allowed))
+            })
+    }
+}
+
+struct NativeArtifactPayload {
+    format: NativeArtifactFormat,
+    suggested_name: String,
+    bytes: Vec<u8>,
+}
+
+#[derive(Debug, PartialEq, Eq, serde::Serialize)]
+#[serde(rename_all = "lowercase")]
+enum NativeArtifactExportOutcome {
+    Saved,
+    Cancelled,
+}
+
+fn validate_artifact_export_size(size: usize) -> Result<(), String> {
+    if size > MAX_ARTIFACT_EXPORT_BYTES {
+        return Err("产物超过单次导出大小限制。".to_string());
+    }
+    Ok(())
+}
+
+fn prepare_artifact_export(
+    bytes_base64: &str,
+    mime: &str,
+    suggested_name: &str,
+) -> Result<NativeArtifactPayload, String> {
+    let format = NativeArtifactFormat::from_mime(mime)?;
+    let portable_name =
+        workbench::files::validate_relative(suggested_name).is_ok_and(|parts| parts.len() == 1);
+    if suggested_name.is_empty()
+        || suggested_name.chars().count() > 160
+        || suggested_name.trim() != suggested_name
+        || !portable_name
+        || !format.accepts_path(Path::new(suggested_name))
+    {
+        return Err("导出文件名或扩展名无效。".to_string());
+    }
+    if bytes_base64.len() > MAX_ARTIFACT_EXPORT_BYTES.div_ceil(3) * 4 {
+        return Err("产物超过单次导出大小限制。".to_string());
+    }
+    let bytes = base64::engine::general_purpose::STANDARD
+        .decode(bytes_base64)
+        .map_err(|_| "产物 base64 内容无效。".to_string())?;
+    validate_artifact_export_size(bytes.len())?;
+    Ok(NativeArtifactPayload {
+        format,
+        suggested_name: suggested_name.to_string(),
+        bytes,
+    })
+}
+
+fn write_selected_artifact(
+    selected: Option<PathBuf>,
+    payload: &NativeArtifactPayload,
+) -> Result<NativeArtifactExportOutcome, String> {
+    let Some(path) = selected else {
+        return Ok(NativeArtifactExportOutcome::Cancelled);
+    };
+    if !path.is_absolute() || !payload.format.accepts_path(&path) {
+        return Err("请选择与产物类型一致的文件扩展名。".to_string());
+    }
+    std::fs::write(&path, &payload.bytes)
+        .map_err(|_| "保存产物失败，请检查目录权限后重试。".to_string())?;
+    Ok(NativeArtifactExportOutcome::Saved)
+}
+
+/// 用户在系统保存面板中选址后，原样写出已校验的产物字节；取消不落盘。
+#[tauri::command]
+async fn export_workbench_artifact(
+    app: AppHandle,
+    bytes_base64: String,
+    mime: String,
+    suggested_name: String,
+) -> Result<NativeArtifactExportOutcome, String> {
+    let payload = prepare_artifact_export(&bytes_base64, &mime, &suggested_name)?;
+    tauri::async_runtime::spawn_blocking(move || {
+        let selected = app
+            .dialog()
+            .file()
+            .add_filter(payload.format.label(), payload.format.extensions())
+            .set_file_name(payload.suggested_name.clone())
+            .blocking_save_file();
+        let path = selected
+            .map(|file| {
+                file.into_path()
+                    .map_err(|_| "无法读取所选保存位置。".to_string())
+            })
+            .transpose()?;
+        write_selected_artifact(path, &payload)
+    })
+    .await
+    .map_err(|_| "保存产物未完成，请重试。".to_string())?
 }
 
 /// [T-391 H-key] `.master-key` 文件兜底的**混淆存储**。SPEC §9:未签名下 keychain 不持久,文件兜底
@@ -2070,6 +2236,7 @@ pub fn run() {
             // 兼容性标识 `MacIntel` 当作实体芯片。
             runtime_system_info,
             export_daily_report_csv,
+            export_workbench_artifact,
             cli_access::cli_access_status,
             cli_access::cli_access_enable,
             cli_access::cli_access_revoke
@@ -2078,6 +2245,12 @@ pub fn run() {
         .manage(cli_access::CliAccessState::default())
         .setup(|app| {
             let handle = app.handle().clone();
+            #[cfg(target_os = "macos")]
+            app.manage(workbench::ipc::BridgeState::default());
+            #[cfg(windows)]
+            app.manage(workbench::ipc_windows::BridgeState::default());
+            #[cfg(all(target_os = "macos", feature = "workbench-browser"))]
+            app.manage(workbench::browser_ipc::BrowserBridgeState::default());
 
             // [T-457] **头部立即建主窗口 + splash + 注入 handshake token** —— 移到 setup 头部,
             //   先于所有慢操作(sidecar tarball 首启解压 5-15min / master key 生成 / DB 迁移 /
@@ -2530,6 +2703,47 @@ pub fn run() {
                 use std::io::{BufRead, BufReader};
                 use std::process::Stdio;
 
+                // A fresh 0700 directory contains this 0600 socket. The pathname
+                // grants no authority: the listener also checks LOCAL_PEERPID
+                // against the actual Child returned by spawn below.
+                let private_bridge = match workbench::command::RuntimeRegistry::from_sidecar(&sidecar_dir) {
+                    Ok(runtimes) => match workbench::ipc::PendingBridge::bind() {
+                        Ok(bridge) => Some((bridge, runtimes)),
+                        Err(error) => {
+                            eprintln!("[shell] workbench private socket unavailable: {error}");
+                            None
+                        }
+                    },
+                    Err(error) => {
+                        eprintln!("[shell] workbench runtime unavailable: {error:?}");
+                        None
+                    }
+                };
+                // Advertise this capability only when the pinned CfT executable
+                // for this Mac target can actually be launched. NomiFun's binary
+                // override would bypass that guarantee, so reject it here too.
+                #[cfg(feature = "workbench-browser")]
+                let workbench_cft_root =
+                    sidecar_dir.join("layers/browser/workbench-cft/149.0.7827.155");
+                #[cfg(feature = "workbench-browser")]
+                let private_browser_bridge = if workbench::browser::BrowserHost::packaged_chrome_available(
+                    &workbench_cft_root,
+                ) && std::env::var_os("NOMIFUN_CHROME_BINARY").is_none()
+                {
+                    // This PID-bound socket grants no file/command authorization
+                    // and is never registered as a WebView command.
+                    match workbench::browser_ipc::PendingBrowserBridge::bind() {
+                        Ok(bridge) => Some(bridge),
+                        Err(error) => {
+                            eprintln!("[shell] browser private socket unavailable: {error}");
+                            None
+                        }
+                    }
+                } else {
+                    eprintln!("[shell] pinned workbench CfT unavailable; browser bridge disabled");
+                    None
+                };
+
                 // server.app 内层二进制(build-sidecar.mjs 在 sidecar/server.app 里产出;随 tarball 解压到位)。
                 let inner_bin = sidecar_dir
                     .join("server.app")
@@ -2647,6 +2861,13 @@ pub fn run() {
                 if let Some(t) = &verdict_token {
                     cmd.env("CREATOROS_SIDECAR_VERDICT_TOKEN", t);
                 }
+                if let Some((bridge, _)) = &private_bridge {
+                    cmd.env("CREATOROS_WORKBENCH_SOCKET", bridge.socket_path());
+                }
+                #[cfg(feature = "workbench-browser")]
+                if let Some(bridge) = &private_browser_bridge {
+                    cmd.env("CREATOROS_WORKBENCH_BROWSER_SOCKET", bridge.socket_path());
+                }
 
                 // [T-259] spawn 失败也落日志(排障用)再 panic —— 打包态用户拿不到 stderr,靠文件看死因。
                 let mut child = match cmd.spawn() {
@@ -2658,6 +2879,21 @@ pub fn run() {
                         panic!("启动 creatoros-server sidecar(server.app 内层二进制)失败: {e}");
                     }
                 };
+                if let Some((bridge, runtimes)) = private_bridge {
+                    let running = bridge.start(child.id(), app_data_dir.join("workbench"), runtimes);
+                    app.state::<workbench::ipc::BridgeState>()
+                        .0.lock().unwrap().replace(running);
+                }
+                #[cfg(feature = "workbench-browser")]
+                if let Some(bridge) = private_browser_bridge {
+                    let running = bridge.start(
+                        child.id(),
+                        app_data_dir.join("nomifun-browser"),
+                        workbench_cft_root,
+                    );
+                    app.state::<workbench::browser_ipc::BrowserBridgeState>()
+                        .0.lock().unwrap().replace(running);
+                }
 
                 // [T-391 H-key] 把 master key(base64)+ 换行经 ChildStdin 写给 sidecar,然后**关闭
                 //   stdin(drop → EOF)**,node 侧读到换行/ EOF 即停。写完立即 zeroize 临时明文 buffer。
@@ -2706,11 +2942,18 @@ pub fn run() {
                     std::sync::Arc::new(sidecar_process::OwnedSidecar::new(child));
                 let watched_child = shared_child.clone();
                 let startup_tx_exit = startup_tx.clone();
+                let bridge_handle = handle.clone();
                 std::thread::spawn(move || {
                     let reason = match watched_child.watch_exit() {
                         Ok(()) => "sidecar 已退出，受控进程组已停止".to_string(),
                         Err(error) => format!("sidecar 退出状态读取失败({error})"),
                     };
+                    // Close the listener before the child PID could ever be reused.
+                    bridge_handle.state::<workbench::ipc::BridgeState>()
+                        .0.lock().unwrap().take();
+                    #[cfg(feature = "workbench-browser")]
+                    bridge_handle.state::<workbench::browser_ipc::BrowserBridgeState>()
+                        .0.lock().unwrap().take();
                     let _ = startup_tx_exit.send(StartupSignal::Exited(reason));
                 });
 
@@ -2724,6 +2967,14 @@ pub fn run() {
 
             #[cfg(not(target_os = "macos"))]
             {
+                #[cfg(windows)]
+                let private_bridge = match workbench::ipc_windows::PendingBridge::bind() {
+                    Ok(bridge) => Some(bridge),
+                    Err(error) => {
+                        eprintln!("[shell] Windows workbench private pipe unavailable: {error}");
+                        None
+                    }
+                };
                 let sidecar = app
                     .shell()
                     .sidecar("creatoros-server")
@@ -2825,6 +3076,11 @@ pub fn run() {
                     Some(t) => sidecar.env("CREATOROS_SIDECAR_VERDICT_TOKEN", t),
                     None => sidecar,
                 };
+                #[cfg(windows)]
+                let sidecar = match &private_bridge {
+                    Some(bridge) => sidecar.env("CREATOROS_WORKBENCH_SOCKET", bridge.pipe_name()),
+                    None => sidecar,
+                };
 
                 // [T-259] spawn 失败也落日志再 panic(打包态排障)。
                 let (mut rx, mut child) = match sidecar.spawn() {
@@ -2836,6 +3092,12 @@ pub fn run() {
                         panic!("启动 creatoros-server sidecar 失败: {e}");
                     }
                 };
+                #[cfg(windows)]
+                if let Some(bridge) = private_bridge {
+                    let running = bridge.start(child.pid(), app_data_dir.join("workbench"));
+                    app.state::<workbench::ipc_windows::BridgeState>()
+                        .0.lock().unwrap().replace(running);
+                }
 
                 // [T-391 H-key] 把 master key(base64)+ 换行经 ChildStdin 写给 sidecar。写完立即
                 //   zeroize 临时明文 buffer。注意:tauri-plugin-shell 的 CommandChild 不暴露关闭 stdin
@@ -2874,6 +3136,8 @@ pub fn run() {
                 // (打包态排障)。terminated 亦落盘(sidecar 意外退出的死因)。
                 let logger = logger.clone();
                 let startup_tx_events = startup_tx.clone();
+                #[cfg(windows)]
+                let bridge_handle = handle.clone();
                 tauri::async_runtime::spawn(async move {
                     while let Some(event) = rx.recv().await {
                         match event {
@@ -2897,6 +3161,9 @@ pub fn run() {
                                 }
                             }
                             CommandEvent::Terminated(payload) => {
+                                #[cfg(windows)]
+                                bridge_handle.state::<workbench::ipc_windows::BridgeState>()
+                                    .0.lock().unwrap().take();
                                 eprintln!("[sidecar] terminated: {payload:?}");
                                 if let Some(l) = &logger {
                                     l.log("shell", &format!("sidecar terminated: {payload:?}"));
@@ -3039,6 +3306,14 @@ pub fn run() {
             //   sidecar 侧孤儿自检(instrumentation 轮询 ppid==1 优雅自退)兜底,双保险。
             if matches!(event, RunEvent::ExitRequested { .. } | RunEvent::Exit) {
                 cli_access::revoke_on_exit(&app_handle.state::<cli_access::CliAccessState>());
+                #[cfg(target_os = "macos")]
+                app_handle.state::<workbench::ipc::BridgeState>().0.lock().unwrap().take();
+                #[cfg(windows)]
+                app_handle.state::<workbench::ipc_windows::BridgeState>()
+                    .0.lock().unwrap().take();
+                #[cfg(all(target_os = "macos", feature = "workbench-browser"))]
+                app_handle.state::<workbench::browser_ipc::BrowserBridgeState>()
+                    .0.lock().unwrap().take();
                 if let Some(child) = app_handle.state::<SidecarHandle>().0.lock().unwrap().take() {
                     child.kill();
                 }
@@ -3803,6 +4078,75 @@ mod runtime_cleanup_tests {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn native_artifact_export_preserves_bytes_and_checks_format_size() {
+        for (mime, name, bytes) in [
+            (
+                "text/html; charset=utf-8",
+                "报告.html",
+                b"<h1>0</h1>".as_slice(),
+            ),
+            ("text/markdown", "笔记.md", b"# 0".as_slice()),
+            ("text/csv", "数据.csv", b"count,0\n".as_slice()),
+            ("image/png", "图.png", b"\x89PNG\r\n\x1a\n".as_slice()),
+            ("application/pdf", "图.pdf", b"%PDF-1.7\n".as_slice()),
+        ] {
+            let encoded = base64::engine::general_purpose::STANDARD.encode(bytes);
+            let payload = prepare_artifact_export(&encoded, mime, name).unwrap();
+            assert_eq!(payload.bytes, bytes);
+        }
+        let encoded = base64::engine::general_purpose::STANDARD.encode(b"content");
+        for (mime, name) in [
+            ("application/octet-stream", "report.html"),
+            ("text/html", "report.pdf"),
+            ("text/html", "../report.html"),
+            ("text/html", "CON.html"),
+            ("text/html", "COM¹.html"),
+            ("image/png; charset=utf-8", "image.png"),
+        ] {
+            assert!(prepare_artifact_export(&encoded, mime, name).is_err());
+        }
+        assert!(prepare_artifact_export("%%%", "text/html", "report.html").is_err());
+        assert!(validate_artifact_export_size(MAX_ARTIFACT_EXPORT_BYTES).is_ok());
+        assert!(validate_artifact_export_size(MAX_ARTIFACT_EXPORT_BYTES + 1).is_err());
+    }
+
+    #[test]
+    fn native_artifact_export_cancel_overwrite_and_write_failure_are_distinct() {
+        let root = std::env::temp_dir().join(format!("creatoros-t1009-{}", rand::random::<u64>()));
+        std::fs::create_dir(&root).unwrap();
+        let payload = prepare_artifact_export(
+            &base64::engine::general_purpose::STANDARD.encode(b"new"),
+            "text/html",
+            "report.html",
+        )
+        .unwrap();
+        let target = root.join("report.html");
+        assert_eq!(
+            write_selected_artifact(None, &payload).unwrap(),
+            NativeArtifactExportOutcome::Cancelled
+        );
+        assert_eq!(
+            serde_json::to_string(&NativeArtifactExportOutcome::Cancelled).unwrap(),
+            "\"cancelled\""
+        );
+        assert!(!target.exists());
+        std::fs::write(&target, b"old").unwrap();
+        assert_eq!(
+            write_selected_artifact(Some(target.clone()), &payload).unwrap(),
+            NativeArtifactExportOutcome::Saved
+        );
+        assert_eq!(
+            serde_json::to_string(&NativeArtifactExportOutcome::Saved).unwrap(),
+            "\"saved\""
+        );
+        assert_eq!(std::fs::read(&target).unwrap(), b"new");
+        assert!(write_selected_artifact(Some(root.join("wrong.pdf")), &payload).is_err());
+        assert!(!root.join("wrong.pdf").exists());
+        assert!(write_selected_artifact(Some(root.clone()), &payload).is_err());
+        std::fs::remove_dir_all(root).unwrap();
+    }
 
     #[test]
     fn bundled_resource_candidates_follow_installed_app_layout() {

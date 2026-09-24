@@ -59,7 +59,7 @@ export const AI_ERROR_HUMAN_RULES: readonly AiErrorRule[] = [
     pattern: /\bCHAT_MODEL_RESPONSE_INTERRUPTED\b/,
     human: {
       code: "model_response_interrupted",
-      message: "模型回复中断，没有返回完整答案。当前对话已停止，输入和已完成内容已保留。",
+      message: "模型回复中断，输入和已完成内容已保留，系统正在沿原任务自动恢复。",
       suggestSwitchModel: false,
     },
   },

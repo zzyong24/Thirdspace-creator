@@ -2,45 +2,48 @@
 
 - Task: T-645
 - Verdict: PASS
-- Round: 3/3 (recheck)
-- Spec receipt: c693c9a4ad11
-- Review receipt: 5dfe24b42eb7
+- Round: 1/3 (initial)
+- Spec receipt: d2e9fbef2dcb
+- Review receipt: 7ff0c3cb1906
 
 ## 当前有效问题
 
 当前无未销账问题。
 
-已销账：REV-001 (§6（SPEC-LINE:157:a8c300fbf6cef521 至 SPEC-LINE:161:0aab1dd004b39784）已将切换前未终态任务的唯一语义限定为：在 provider 调用前比较创建时 digest 与当前 digest，不一致即取消，禁止读取旧 scope Key 或调用 provider；TC-T645-12（SPEC-LINE:192:75fe16d9ddd5f102 至 SPEC-LINE:194:befe5970396df0ab）锁定 provider 调用次数为 0、重新发起按新 scope 裁决，且公开 scope/task 参数不参与授权并被 schema 拒绝。)；REV-002 (FR-645-05 已固定 v1 域分隔、非空/C0 校验、保留精确 Unicode code point、RFC 8785 数组序列化、UTF-8 SHA-256 小写十六进制，并要求所有调用复用同一函数；TC-T645-11 锁定跨调用一致性与身份字段差异不串 Key。)
+已销账：—
 
 ```spec-review-state
 {
   "schema": "spec-review-state/v2",
   "task_id": "T-645",
-  "round": 3,
+  "cycle": 3,
+  "round": 1,
   "max_rounds": 3,
-  "review_kind": "recheck",
+  "review_kind": "initial",
   "verdict": "PASS",
-  "summary": "本轮变更将渠道切换前在途任务统一为 provider 调用前安全取消；REV-001 与 REV-002 均保持已解决，未发现 changed-lines 引入的合法新问题。",
+  "summary": "PASS。依据 DEC-036 以 PMEM-SYNC 开启 cycle 3，并对当前完整 SPEC 与 PROJECT.md 做全量 initial 评审。逐能力 authority、渠道/本地回退、用户与渠道 scope 凭据隔离、多模型白名单、backend service port 单写者、transcription intent/attempt 幂等恢复、authority 安全失败与 provider 故障分流、设置页同源及验收契约均闭合。PROJECT.md 相对 lineage 末端仅更新生成字段 LAST_SYNCED 的提交号，未改变产品定位、物理架构引用、账号归属或模型运行边界；未发现 blocker、major 或 minor。",
   "spec_path": "docs/superpowers/specs/2026-08-02-capability-scoped-channel-model-authority.md",
-  "spec_sha256": "c693c9a4ad1175d831512f493aabd4782603a21dda58f92fdca6c76e45989c4b",
+  "spec_sha256": "d2e9fbef2dcb8228b3652d5f269024eada6cafbf62c03ec61ba26ad6e4418fd1",
   "constitution_path": "PROJECT.md",
-  "constitution_sha256": "76e9fa0fa2408bd5f512b640d01ad5a0c550702875abeeb4ddb648a07e0e6bca",
+  "constitution_sha256": "3ef2af68b504329293e52184840e25bc9b15b0956267f38a0bae1faedc6ae086",
   "review_path": "docs/superpowers/specs/2026-08-02-capability-scoped-channel-model-authority.review.md",
-  "review_mode": "cross-model-same-family",
-  "model": "gpt-5.6-terra",
+  "review_mode": "independent-readonly",
+  "model": "gpt-5.6-sol",
   "policy": "convergent-review/v2",
-  "latest_event_hash": "ab61c3442f05c73c4febe511fa559717089235b244baad5920bd2186229eb6ac",
+  "cycle_authorization": {
+    "schema": "review-cycle-capability-consumption/v1",
+    "decision_id": "DEC-036",
+    "nonce": "ef51bc98-82f0-463f-b6bb-ecde96654645",
+    "task_id": "T-645",
+    "previous_event_hash": "07906f05bed3c017c17dc0773235e634de1bda139135a0790eccf3b877e5ae2c",
+    "allowed_change_ids": [
+      "PMEM-SYNC"
+    ],
+    "max_uses": 1
+  },
+  "latest_event_hash": "b8cb062969cf6e0d522ad3265c02c19e806a7184b51f2b310776d658b8036a31",
   "open_findings": [],
-  "resolved_findings": [
-    {
-      "id": "REV-001",
-      "resolution_evidence": "§6（SPEC-LINE:157:a8c300fbf6cef521 至 SPEC-LINE:161:0aab1dd004b39784）已将切换前未终态任务的唯一语义限定为：在 provider 调用前比较创建时 digest 与当前 digest，不一致即取消，禁止读取旧 scope Key 或调用 provider；TC-T645-12（SPEC-LINE:192:75fe16d9ddd5f102 至 SPEC-LINE:194:befe5970396df0ab）锁定 provider 调用次数为 0、重新发起按新 scope 裁决，且公开 scope/task 参数不参与授权并被 schema 拒绝。"
-    },
-    {
-      "id": "REV-002",
-      "resolution_evidence": "FR-645-05 已固定 v1 域分隔、非空/C0 校验、保留精确 Unicode code point、RFC 8785 数组序列化、UTF-8 SHA-256 小写十六进制，并要求所有调用复用同一函数；TC-T645-11 锁定跨调用一致性与身份字段差异不串 Key。"
-    }
-  ],
-  "receipt": "5dfe24b42eb7"
+  "resolved_findings": [],
+  "receipt": "7ff0c3cb1906"
 }
 ```

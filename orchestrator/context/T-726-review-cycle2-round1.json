@@ -1,0 +1,115 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "当前规格与现行宪法仍有 4 个 major：迟到 Worker 结果、前后端双重素材装配、执行时当前真值和真实公共链路验收均未闭合。",
+  "findings": [
+    {
+      "id": "REV-004",
+      "status": "open",
+      "severity": "major",
+      "category": "data-integrity",
+      "requirement_anchor": {
+        "id": "FR-726-02",
+        "quote": "停止所有新写入"
+      },
+      "acceptance_anchor": {
+        "id": "AC-726-02",
+        "quote": "任务数、候选数和 thesis_tree version 数不变"
+      },
+      "where": "退役规则未覆盖已执行中的 planning.thesis Worker 和迟到结果。",
+      "failure_mode": "旧 Worker 或旧 fence 可在入口关闭后创建候选、artifact 或版本。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "T-726 SPEC 第33–38、82–92、100–106行；SYSTEM_ARCHITECTURE §3/T-915/T-1004",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "new-cycle full review",
+      "suggestion": "Backend 在任务创建、结果结算、recordCandidate、确认和 reconstruct 统一重读 capability 与 task/operation/attempt/fence，迟到结果不得写入；明确旧非终态策略。",
+      "resolution_evidence": "",
+      "parent_id": ""
+    },
+    {
+      "id": "REV-005",
+      "status": "open",
+      "severity": "major",
+      "category": "consistency",
+      "requirement_anchor": {
+        "id": "SYSTEM_ARCHITECTURE-R1",
+        "quote": "frontend 只放页面、UI、交互，通过 contract client 走 RPC"
+      },
+      "acceptance_anchor": {
+        "id": "AC-726-04",
+        "quote": "前端制作候选与 backend video.decisions 输入用同一组夹具验证"
+      },
+      "where": "FR-726-03 与 AC-726-04 保留前端和 Backend 两套素材候选装配。",
+      "failure_mode": "双重来源合并、去重和引用解析形成两个候选真相，真实权限过滤或变更时可分叉。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "T-726 SPEC 第40–45、82–90、115–123行；SYSTEM_ARCHITECTURE R1/T-930",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "new-cycle full review",
+      "suggestion": "由 Backend service 唯一装配项目素材和脚本引用；前端与 video.decisions 消费同一 DTO，boundary 阻止前端重实现。",
+      "resolution_evidence": "",
+      "parent_id": ""
+    },
+    {
+      "id": "REV-006",
+      "status": "open",
+      "severity": "major",
+      "category": "data-integrity",
+      "requirement_anchor": {
+        "id": "SYSTEM_ARCHITECTURE-§2.2",
+        "quote": "执行前按当前 RequestContext 重读服务端当前值"
+      },
+      "acceptance_anchor": {
+        "id": "AC-726-03",
+        "quote": "保留定位、选题、Brief、素材、内容合同或结构方案等非 thesis 上下文"
+      },
+      "where": "执行、候选写入和采纳未绑定 Brief/素材/稿件当前真值。",
+      "failure_mode": "旧 Brief、materialLinks 或素材 ID 可在变化、删除、跨归属后继续生成或被采纳。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "T-726 SPEC 第9–11、40–45、108–123、153–158行；SYSTEM_ARCHITECTURE §2.2/§3",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "new-cycle full review",
+      "suggestion": "相关工具执行前由 Backend 重读项目、Brief、稿件版本和素材归属；采纳再次校验根实体、版本、权限和幂等。",
+      "resolution_evidence": "",
+      "parent_id": ""
+    },
+    {
+      "id": "REV-007",
+      "status": "open",
+      "severity": "major",
+      "category": "testability",
+      "requirement_anchor": {
+        "id": "USER-RESULT",
+        "quote": "准备素材后直接写稿、审核并制作"
+      },
+      "acceptance_anchor": {
+        "id": "AC-726-01",
+        "quote": "上传和联网入口保持可用"
+      },
+      "where": "验收只检查入口和夹具，未跑真实生成、采纳与制作。",
+      "failure_mode": "入口可见且单测绿时，正式 script.draft、采纳或 video.decisions 仍可能断裂。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "T-726 SPEC 第7–22、94–150行",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "new-cycle full review",
+      "suggestion": "用含历史 thesis、当前 Brief/materialLinks 的真实项目跑 script.draft→采纳→刷新→video.decisions/短预览，并记录真实 ID 与历史 hash。",
+      "resolution_evidence": "",
+      "parent_id": ""
+    }
+  ]
+}

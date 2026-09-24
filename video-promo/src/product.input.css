@@ -1,0 +1,6 @@
+/* 导入 CreatorOS 真实样式入口(含 tokens.css + Tailwind v4 + shadcn 主题映射) */
+@import "/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src/app/globals.css";
+
+/* 扫描真实产品组件源码 + 视频工程源码,避免 Tailwind 类丢失 */
+@source "/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src";
+@source "./";

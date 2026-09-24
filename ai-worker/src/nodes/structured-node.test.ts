@@ -296,7 +296,7 @@ describe("runStructuredNode 跨模型健壮性", () => {
     ).rejects.toThrow();
   });
 
-  it("交互调用显式 maxRetries=0 时文本兜底只请求一次，避免失败路径成倍放大", async () => {
+  it("交互调用 maxRetries=0 只禁 SDK 重试，节点级格式修复仍受两次共享预算约束", async () => {
     let calls = 0;
     const model = new MockLanguageModelV4({
       doGenerate: async () => {
@@ -313,10 +313,10 @@ describe("runStructuredNode 跨模型健壮性", () => {
         maxRetries: 0,
       }),
     ).rejects.toThrow();
-    expect(calls).toBe(2);
+    expect(calls).toBe(3);
   });
 
-  it("默认也只做一次结构化尝试和一次文本降级，避免所有工具隐式六次调用", async () => {
+  it("默认最多一次结构化尝试和两次节点级格式修复，避免无界放大", async () => {
     let calls = 0;
     const model = new MockLanguageModelV4({
       doGenerate: async () => {
@@ -332,7 +332,7 @@ describe("runStructuredNode 跨模型健壮性", () => {
         outputSchema: schema,
       }),
     ).rejects.toThrow();
-    expect(calls).toBe(2);
+    expect(calls).toBe(3);
   });
 });
 

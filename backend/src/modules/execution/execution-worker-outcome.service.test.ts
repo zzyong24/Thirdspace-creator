@@ -37,15 +37,42 @@ describe("持久重试调度",()=>{
     expect((await f.outcomes.recordFailure(f.ref,{outcome:"retry_wait",errorCode:"RATE_LIMIT"})).status).toBe("failed");
     expect((await f.ledger.inspect(f.ref)).calls.map(c=>c.operationKey)).toEqual(["generate","generate"]);
   });
-  it("未知提交不接受自动重试，租约过期后也不能重新领取",async()=>{
+  it("进程退出留下的纯模型调用按原键有界续跑，不进入永久 unknown_result",async()=>{
     const f=await fixture("unknown");const call=await f.ports.reserveCall(f.ref,{operationKey:"generate",maxOutputTokens:128});
     await f.ports.startCall(f.ref,{callId:call.callId});
     await expect(f.outcomes.recordFailure(f.ref,{outcome:"retry_wait",errorCode:"NETWORK"})).rejects.toMatchObject({name:"ConflictError"});
     f.clock.stamp="2026-09-05T00:01:01.000Z";
-    expect((await f.tasks.recoverExpiredLeases()).unknownResult).toBe(1);
-    expect(await f.tasks.get(ctx,f.ref.executionTaskId)).toMatchObject({status:"blocked",runtimeStatus:"unknown_result"});
-    await expect(f.tasks.command(ctx,{taskIds:[f.ref.executionTaskId],command:"retry",idempotencyKey:"blind"})).rejects.toMatchObject({name:"ConflictError"});
-    expect(await f.tasks.claimTask({taskId:f.ref.executionTaskId,workerId:"next"})).toBeNull();
+    expect((await f.tasks.recoverExpiredLeases()).requeued).toBe(1);
+    expect(await f.tasks.get(ctx,f.ref.executionTaskId)).toMatchObject({status:"queued"});
+    const claim=await f.tasks.claimTask({taskId:f.ref.executionTaskId,workerId:"next"});expect(claim).toBeTruthy();
+    f.ref={...f.ref,attempt:claim!.lease.attempt,fenceToken:claim!.lease.fenceToken};
+    const retried=await f.ports.reserveCall(f.ref,{operationKey:"generate",maxOutputTokens:128});
+    expect(retried.callId).not.toBe(call.callId);
+    expect((await f.ledger.inspect(f.ref)).calls).toEqual(expect.arrayContaining([
+      expect.objectContaining({id:call.callId,status:"superseded"}),expect.objectContaining({id:retried.callId,retryOfCallId:call.callId}),
+    ]));
+  });
+  it("旧版已落 unknown_result 的纯模型调用仅在启动扫描时沿原任务恢复",async()=>{
+    const f=await fixture("startup-unknown");const call=await f.ports.reserveCall(f.ref,{operationKey:"generate",maxOutputTokens:128});
+    await f.ports.startCall(f.ref,{callId:call.callId});await f.ports.settleCall(f.ref,{callId:call.callId,status:"unknown"});
+    await f.outcomes.recordFailure(f.ref,{outcome:"unknown_result",errorCode:"MODEL_SETTLEMENT_RECEIPT_UNKNOWN"});
+    expect((await f.tasks.recoverExpiredLeases()).requeued).toBe(0);
+    expect((await f.tasks.get(ctx,f.ref.executionTaskId)).runtimeStatus).toBe("unknown_result");
+    expect((await f.tasks.recoverExpiredLeases({includeSafeUnknownResults:true})).requeued).toBe(1);
+    expect(await f.tasks.get(ctx,f.ref.executionTaskId)).toMatchObject({status:"queued",errorCode:null});
+  });
+  it("外部工具结果未知仍保持待对账，启动扫描不会盲重放",async()=>{
+    const f=await fixture("tool-unknown");const call=await f.ledger.reserve(f.ref,{operationKey:"tool",kind:"tool",inputDigest:"sha256:"+"b".repeat(64),reservedTokens:0});
+    await f.ledger.start(f.ref,call.id);await f.ledger.settle(f.ref,call.id,{status:"unknown"});
+    await f.outcomes.recordFailure(f.ref,{outcome:"unknown_result",errorCode:"TOOL_RESULT_UNKNOWN"});
+    expect((await f.tasks.recoverExpiredLeases({includeSafeUnknownResults:true})).requeued).toBe(0);
+    expect((await f.tasks.get(ctx,f.ref.executionTaskId)).runtimeStatus).toBe("unknown_result");
+  });
+  it("模型连接中断废弃本次候选后，原任务自动进入重试等待",async()=>{
+    const f=await fixture("superseded");const call=await f.ports.reserveCall(f.ref,{operationKey:"generate",maxOutputTokens:128});
+    await f.ports.startCall(f.ref,{callId:call.callId});await f.ports.settleCall(f.ref,{callId:call.callId,status:"superseded"});
+    expect(await f.outcomes.recordFailure(f.ref,{outcome:"retry_wait",errorCode:"MODEL_STREAM_INTERRUPTED"})).toMatchObject({status:"retry_wait"});
+    expect(await f.tasks.get(ctx,f.ref.executionTaskId)).toMatchObject({status:"queued",runtimeStatus:"retry_wait"});
   });
   it("等待登录或配置不会被自动领取，显式恢复后才允许领取",async()=>{
     const f=await fixture("login");

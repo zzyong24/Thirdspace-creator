@@ -7,7 +7,7 @@ describe("T-843 CLI operation policy", () => {
     expect(Object.keys(CLI_OPERATION_POLICIES).sort()).toEqual(
       Object.values(ENDPOINTS).map((endpoint) => endpoint.id).sort(),
     );
-    expect(Object.keys(CLI_OPERATION_POLICIES)).toHaveLength(252);
+    expect(Object.keys(CLI_OPERATION_POLICIES)).toHaveLength(269);
   });
 
   it("每项都有服务端可信的执行元数据", () => {
@@ -31,5 +31,11 @@ describe("T-843 CLI operation policy", () => {
       effect: "destructive",
       confirmation: "confirm_impact",
     });
+  });
+
+  it('T-1027 评论失败列表只读，调整作品重试时间须apply且经gateway幂等',()=>{
+    const policies=CLI_OPERATION_POLICIES as Record<string,unknown>;
+    expect(policies['analytics.comments.failures.list']).toMatchObject({effect:'read',confirmation:'none',asyncTask:false,idempotency:'not_applicable'});
+    expect(policies['analytics.comments.retry']).toMatchObject({effect:'write',confirmation:'apply',asyncTask:false,idempotency:'gateway'});
   });
 });
