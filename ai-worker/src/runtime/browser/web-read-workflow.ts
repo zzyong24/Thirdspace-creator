@@ -2,6 +2,7 @@ import { WebCaptureError } from "./web-capture";
 import { WebReaderLoginRequiredError, type ReadResult } from "./web-reader";
 import { webDomainFromUrl } from "./web-domain";
 import { findAlternatesViaSearch, type AlternateSearcher, type WebReadAlternate } from "./web-read-fallback";
+import { formatErrorDiagnostic } from "../error-diagnostics";
 
 export interface WebReadAsset {
   assetId: string;
@@ -54,14 +55,24 @@ export async function acquireWebDocument(input:{url:string;signal?:AbortSignal},
     signal?.throwIfAborted();
     if (error instanceof WebReaderLoginRequiredError) return { needLogin: true as const, domain: error.domain };
     if (!(error instanceof WebCaptureError) || error.status === null || error.status < 400) throw error;
-    const searchers = await ports.searchers(signal);
+    const searchers = await ports.searchers(signal).catch(error => {
+      signal?.throwIfAborted();
+      if (ports.rethrowError?.(error)) throw error;
+      console.warn("[web-read] 备用搜索初始化失败", formatErrorDiagnostic(error));
+      return [];
+    });
     signal?.throwIfAborted();
     const alternates = await findAlternatesViaSearch(url, searchers, { signal, rethrowError:ports.rethrowError });
     signal?.throwIfAborted();
-    const hasSession = await ports.hasSession(domain, signal).catch(error => {if(ports.rethrowError?.(error))throw error;return false;});
+    const hasSession = await ports.hasSession(domain, signal).catch(error => {
+      signal?.throwIfAborted();
+      if (ports.rethrowError?.(error)) throw error;
+      console.warn("[web-read] 登录状态查询失败", formatErrorDiagnostic(error));
+      return null;
+    });
     signal?.throwIfAborted();
     return { blocked: true as const, status: error.status,
-      message: hasSession ? error.message : `${error.message}(该站还没在「设置 → 网站登录保管库」登录过 —— 登录后重试,带登录态访问更容易通过)`, alternates };
+      message: hasSession === false ? `${error.message}(该站还没在「设置 → 网站登录保管库」登录过 —— 登录后重试,带登录态访问更容易通过)` : error.message, alternates };
   }
   signal?.throwIfAborted();
   return {read};

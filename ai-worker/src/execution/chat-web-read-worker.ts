@@ -6,6 +6,7 @@ import {BrowserRuntimeUnavailableError} from "../runtime/browser/browser-launch"
 import {UrlBlockedError} from "../runtime/browser/url-guard";
 import {ResearchReadBlockedError} from "./research-worker-tools";
 import {GenerationFailure} from "./generation-error";
+import {WebCaptureError} from "../runtime/browser/web-capture";
 const preparation=z.object({url:z.string().url(),observation:chatWebReadObservationSchema.nullable(),evidenceRef:z.string().nullable(),output:agenticToolOutcomeSchema.optional()}).strict();
 const cacheResult=z.discriminatedUnion("status",[z.object({status:z.literal("miss")}).strict(),z.object({status:z.literal("hit"),output:agenticToolOutcomeSchema}).strict()]);
 interface Dependencies {
@@ -57,11 +58,12 @@ export async function runChatWebReadInWorker(callId:string,signal:AbortSignal,de
   const blocked=error instanceof ResearchReadBlockedError?error.outcome:null;
   if(blocked?.sideEffect==="unknown" || blocked?.error?.code==="unknown_commit")throw new GenerationFailure("unknown_result","CHAT_WEB_READ_RESULT_UNKNOWN");
   const runtime=error instanceof BrowserRuntimeUnavailableError || (blocked?.data as {recoveryState?:unknown}|undefined)?.recoveryState==="browser_runtime_unavailable";
-  const failure=runtime?{kind:"browser_runtime_unavailable"}:(blocked?.error?.code==="needs_login" || blocked?.error?.code==="captcha")?{kind:"needs_login"}:{kind:"read_error",code:error instanceof UrlBlockedError || blocked?.error?.code==="permission"?"permission":blocked?.error?.code==="no_evidence"?"no_evidence":"transient",message:blocked?.summary??(error instanceof Error?error.message:String(error))};
+  const readerCode=error instanceof WebCaptureError?error.code:null;
+  const failure=runtime?{kind:"browser_runtime_unavailable"}:(blocked?.error?.code==="needs_login" || blocked?.error?.code==="captcha")?{kind:"needs_login"}:{kind:"read_error",code:error instanceof UrlBlockedError || readerCode==="UNSAFE_URL" || blocked?.error?.code==="permission"?"permission":readerCode==="PARSE_FAILED" || blocked?.error?.code==="no_evidence"?"no_evidence":"transient",message:blocked?.summary??(error instanceof Error?error.message:String(error))};
   return settle("failChatWebRead",chatWebReadFailureSchema.parse({callId,failure}));
  }
  signal.throwIfAborted();
- if("needLogin" in acquired)return settle("failChatWebRead",{callId,failure:{kind:"needs_login"}});
+ if("needLogin" in acquired)return settle("failChatWebRead",chatWebReadFailureSchema.parse({callId,failure:{kind:"needs_login",domain:acquired.domain}}));
  if("blocked" in acquired)return settle("failChatWebRead",chatWebReadFailureSchema.parse({callId,failure:{kind:"http_blocked",status:acquired.status,message:acquired.message,alternates:acquired.alternates}}));
  const parsed=chatWebReadObservationSchema.safeParse(acquired.read);
  if(!parsed.success)return settle("failChatWebRead",{callId,failure:{kind:"read_error",code:"no_evidence",message:"网页正文或抽取诊断不符合读取约束"}});

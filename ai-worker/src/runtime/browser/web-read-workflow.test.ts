@@ -75,6 +75,23 @@ describe("正式网页读取共享编排", () => {
     await expect(readWebDocument(input, deps)).rejects.toThrow("保存失败");
   });
 
+  it("备用搜索初始化失败仍保留原网页 HTTP 状态，不误报另一个读取错误", async () => {
+    const deps = ports();
+    deps.read.mockRejectedValue(new WebCaptureError("HTTP 404", { status: 404 }));
+    deps.searchers.mockRejectedValue(new Error("备用搜索暂不可用"));
+    expect(await readWebDocument(input, deps)).toMatchObject({ blocked: true, status: 404, alternates: [] });
+    expect(deps.read).toHaveBeenCalledTimes(1);
+    expect(deps.saveDocument).not.toHaveBeenCalled();
+  });
+
+  it("登录态查询失败只表示未知，不误称用户未登录", async () => {
+    const deps = ports();
+    deps.read.mockRejectedValue(new WebCaptureError("HTTP 403", { status: 403 }));
+    deps.hasSession.mockRejectedValue(new Error("会话查询暂不可用"));
+    expect(await readWebDocument(input, deps)).toMatchObject({ blocked: true, status: 403, message: "HTTP 403", alternates: [] });
+    expect(deps.saveDocument).not.toHaveBeenCalled();
+  });
+
   it("读取返回前取消，不开始保存，并向端口透传同一 signal", async () => {
     const deps = ports(); const controller = new AbortController();
     deps.read.mockImplementation(async () => { controller.abort(); return document; });

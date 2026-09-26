@@ -1,6 +1,7 @@
 import {createBrowserSessionsService} from "../modules/browser-sessions";
 import {runDurableAgenticTool} from "../../../ai-worker/src/execution/durable-agentic-tool";
 import {runChatWebReadInWorker} from "../../../ai-worker/src/execution/chat-web-read-worker";
+import {WebReaderLoginRequiredError} from "../../../ai-worker/src/runtime/browser/web-reader";
 import type {WorkerPort} from "@creatoros/contract/execution-worker";
 import { afterEach, beforeEach, expect, it } from "vitest";
 import { mkdtemp, rm } from "node:fs/promises";
@@ -461,4 +462,150 @@ it("T-957 Worker 网页失败不泄漏原异常，保留真实失败分类",asyn
  const output=await f.service.fail(f.ref,{callId:f.parent.callId,failure:{kind:"read_error",code:"transient",message:"内部规则第15条 MODEL_SCHEMA_ERROR sk-secret-canary"}});
  expect(output).toMatchObject({status:"error",error:{code:"transient"},summary:"这次网页读取未完成，可稍后重试或换一个公开来源。"});
  expect(JSON.stringify(output)).not.toContain("MODEL_SCHEMA_ERROR");expect(JSON.stringify(output)).not.toContain("sk-secret-canary");
+});
+
+async function nextPage(f: Awaited<ReturnType<typeof fixture>>, offset: number, refresh = false, withLaterRefresh = false, startParent = true) {
+ const key=`page-${++sequence}`;
+ const model=await f.ledger.reserve(f.ref,{operationKey:key,kind:"model",inputDigest:`sha256:${"b".repeat(64)}`,reservedTokens:128});
+ await f.ledger.start(f.ref,model.id);
+ const content=[{type:"tool-call",toolCallId:key,toolName:"web_read",input:JSON.stringify({url:"https://example.com/bound",offset,maxChars:1000,refresh})}];
+ if(withLaterRefresh)content.push({type:"tool-call",toolCallId:`${key}-refresh`,toolName:"web_read",input:JSON.stringify({url:"https://example.com/bound",offset:0,maxChars:1000,refresh:true})});
+ await f.ledger.settle(f.ref,model.id,{status:"settled",usage:{},providerResult:{content,finishReason:{unified:"tool-calls"},usage:{inputTokens:{total:2},outputTokens:{total:3}},warnings:[]}});
+ const parent=await f.toolPorts.reserve(f.ref,{modelCallId:model.id,toolCallId:key});
+ if(startParent)await f.toolPorts.start(f.ref,{callId:parent.callId});
+ return {...parent,modelId:model.id,modelToolCallId:key,refreshId:`${key}-refresh`};
+}
+
+it.each([false,true])("T-957 分页固定本任务前页证据，忽略之后更新的账号缓存（首读缓存=%s）",async cached=>{
+ const f=await fixture();
+ let first;
+ if(cached){await seedCache(f);const hit=await f.service.cache(f.ref,{callId:f.parent.callId});if(hit.status!=="hit")throw Error("未命中");first=hit.output;}
+ else{await f.service.observe(f.ref,{callId:f.parent.callId,observation});first=await f.service.complete(f.ref,{callId:f.parent.callId});}
+ const fresh=await f.assetsService.createGeneratedAsset(f.ctx,{assetType:"document",name:"另一个任务刷新",bytes:new TextEncoder().encode("新版本".repeat(9000)),mimeType:"text/plain",pending:true});
+ await f.assetsService.mergeAiAnnotation(f.ctx,fresh.id,{sourceUrl:"https://example.com/bound"});
+ await db.update(assets).set({createdAt:"2099-01-01T00:00:00.000Z"}).where(eq(assets.id,fresh.id));
+ const parent=await nextPage(f,1000,true);
+ const hit=await f.service.cache(f.ref,{callId:parent.callId});
+ expect(hit).toMatchObject({status:"hit",output:{sideEffect:"none",evidence:[{entityId:first.evidence[0]!.entityId,version:first.evidence[0]!.version}],data:{window:{offset:1000,length:1000,total:observation.text.length}}}});
+ if(hit.status!=="hit")throw Error("未命中");
+ expect((hit.output.data as {text:string}).text).toContain(observation.text.slice(1000,2000));
+ expect(await db.select().from(executionEvidence)).toHaveLength(1);
+ expect(await f.service.cache(f.ref,{callId:parent.callId})).toEqual(hit);
+});
+
+it("T-957 九页连续读取不把同一份全文重复计入证据预算",async()=>{
+ const f=await fixture(),large={...observation,text:"a".repeat(1024*1024)};
+ await f.service.observe(f.ref,{callId:f.parent.callId,observation:large});
+ await f.service.complete(f.ref,{callId:f.parent.callId});
+ for(let page=1;page<=8;page++){
+  const parent=await nextPage(f,page*1000);
+  const hit=await f.service.cache(f.ref,{callId:parent.callId});
+  expect(hit).toMatchObject({status:"hit",output:{data:{window:{offset:page*1000,total:large.text.length}}}});
+  if(hit.status!=="hit")throw Error("未命中");
+  expect((JSON.stringify(hit.output.data).match(/沿用本任务已读正文版本/g)??[])).toHaveLength(1);
+ }
+ expect(await db.select().from(executionEvidence)).toHaveLength(1);
+ expect(await db.select().from(assets)).toHaveLength(1);
+});
+
+it("T-957 同模型回合较晚刷新先完成，较早分页仍读取原版本",async()=>{
+ const f=await fixture();await f.service.observe(f.ref,{callId:f.parent.callId,observation});
+ const original=await f.service.complete(f.ref,{callId:f.parent.callId});
+ const page=await nextPage(f,1000,false,true);
+ const fresh=await f.toolPorts.reserve(f.ref,{modelCallId:page.modelId,toolCallId:page.refreshId});await f.toolPorts.start(f.ref,{callId:fresh.callId});
+ await f.service.observe(f.ref,{callId:fresh.callId,observation:{...observation,text:"较晚刷新".repeat(5000)}});
+ await f.service.complete(f.ref,{callId:fresh.callId});
+ const hit=await f.service.cache(f.ref,{callId:page.callId});
+ expect(hit).toMatchObject({status:"hit",output:{evidence:[{entityId:original.evidence[0]!.entityId}],data:{window:{total:observation.text.length}}}});
+ expect(await db.select().from(executionEvidence)).toHaveLength(2);
+});
+
+it("T-957 完整持久工具调用分页与 ACK 丢失恢复不重读网页或新增素材",async()=>{
+ const f=await fixture();await f.service.observe(f.ref,{callId:f.parent.callId,observation});
+ await f.service.complete(f.ref,{callId:f.parent.callId});
+ const page=await nextPage(f,1000,false,false,false),signal=new AbortController().signal;let executions=0;
+ const result=await runDurableAgenticTool({modelCallId:page.modelId,toolCallId:page.modelToolCallId},{signal,
+  call:async(port,raw)=>{
+   if(port==="reserveAgenticTool")return f.toolPorts.reserve(f.ref,raw);
+   if(port==="startAgenticTool")return f.toolPorts.start(f.ref,raw);
+   if(port==="settleAgenticTool")return f.toolPorts.settle(f.ref,raw);
+   throw Error("非预期端口");
+  },
+  execute:async()=>{executions++;return runChatWebReadInWorker(page.callId,signal,{
+   call:async(port,raw)=>{
+    if(port==="prepareChatWebRead")return f.service.prepare(f.ref,raw,signal);
+    if(port==="readChatWebReadCache"){await f.service.cache(f.ref,raw,signal);throw Error("分页已结算 ACK 丢失");}
+    throw Error("不应写新观察或新素材");
+   },readDocument:async()=>{throw Error("不应重新访问网页");},searchers:async()=>{throw Error("不应搜索");},hasSession:async()=>{throw Error("不应读取会话");},
+  });},
+ });
+ expect(result).toMatchObject({status:"ok",sideEffect:"none",data:{window:{offset:1000,length:1000}}});
+ expect(executions).toBe(1);expect(await db.select().from(executionEvidence)).toHaveLength(1);expect(await db.select().from(assets)).toHaveLength(1);
+});
+
+it.each([false,true])("T-957 分页拒绝被修改的原正文，不能悄悄回退另一份缓存（缓存=%s）",async cached=>{
+ const f=await fixture();
+ if(cached){await seedCache(f);await f.service.cache(f.ref,{callId:f.parent.callId});}
+ else{await f.service.observe(f.ref,{callId:f.parent.callId,observation});await f.service.complete(f.ref,{callId:f.parent.callId});}
+ await db.update(executionEvidence).set({fullText:"篡改"}).where(eq(executionEvidence.originCallId,f.parent.callId));
+ const parent=await nextPage(f,1000);
+ await expect(f.service.cache(f.ref,{callId:parent.callId})).rejects.toThrow();
+ const [call]=await db.select().from(executionCalls).where(eq(executionCalls.id,parent.callId));
+ expect(call!.status).toBe("started");
+ expect(await db.select().from(executionEvidence)).toHaveLength(1);
+});
+
+it("T-957 分页不读取另一账号证据或素材",async()=>{
+ const first=await fixture();await first.service.observe(first.ref,{callId:first.parent.callId,observation});
+ await first.service.complete(first.ref,{callId:first.parent.callId});
+ const other=await fixture(1,undefined,true,{offset:1000});
+ expect(await other.service.cache(other.ref,{callId:other.parent.callId})).toEqual({status:"miss"});
+ await expect(first.service.cache(first.ref,{callId:other.parent.callId})).rejects.toThrow();
+ expect(await db.select().from(executionEvidence)).toHaveLength(1);
+});
+
+it("T-957 分页取消不结算，新第一页刷新后再翻页使用新版本",async()=>{
+ const f=await fixture();await f.service.observe(f.ref,{callId:f.parent.callId,observation});await f.service.complete(f.ref,{callId:f.parent.callId});
+ const fresh=await nextPage(f,0,true),updated={...observation,text:"本任务重新读取".repeat(4000)};
+ expect(await f.service.cache(f.ref,{callId:fresh.callId})).toEqual({status:"miss"});
+ await f.service.observe(f.ref,{callId:fresh.callId,observation:updated});const first=await f.service.complete(f.ref,{callId:fresh.callId});
+ const page=await nextPage(f,1000);
+ const hit=await f.service.cache(f.ref,{callId:page.callId});
+ expect(hit).toMatchObject({status:"hit",output:{evidence:[{entityId:first.evidence[0]!.entityId}],data:{window:{total:updated.text.length}}}});
+ const cancelled=await nextPage(f,2000);const controller=new AbortController();controller.abort();
+ await expect(f.service.cache(f.ref,{callId:cancelled.callId},controller.signal)).rejects.toThrow();
+ const [call]=await db.select().from(executionCalls).where(eq(executionCalls.id,cancelled.callId));expect(call!.status).toBe("started");
+ expect(await db.select().from(executionEvidence)).toHaveLength(2);
+});
+
+it("T-957 跨域登录墙经 Worker 和真实宿主结算保留实际域，ACK 丢失不改域或访问新会话",async()=>{
+ const f=await fixture();let settlements=0,reads=0;
+ const signal=new AbortController().signal,ports:WorkerPort[]=[];
+ const output=await runChatWebReadInWorker(f.parent.callId,signal,{
+  call:async(port,raw)=>{
+   ports.push(port);
+   if(port==="prepareChatWebRead")return f.service.prepare(f.ref,raw,signal);
+   if(port==="readChatWebReadCache")return f.service.cache(f.ref,raw,signal);
+   if(port==="failChatWebRead"){const result=await f.service.fail(f.ref,raw);if(settlements++===0)throw Error("ACK 丢失");return result;}
+   throw Error("不应读取或写入新域的会话");
+  },
+  readDocument:async()=>{reads++;throw new WebReaderLoginRequiredError(" Destination.Example.org ");},
+  searchers:async()=>{throw Error("不应搜索");},hasSession:async()=>{throw Error("不应查询会话");},
+ });
+ expect(output).toMatchObject({status:"blocked",data:{needLogin:{domain:"destination.example.org"}}});
+ expect(reads).toBe(1);expect(settlements).toBe(2);
+ expect(ports).not.toContain("readChatWebSession");
+ expect(await f.service.fail(f.ref,{callId:f.parent.callId,failure:{kind:"needs_login",domain:"another.example"}})).toEqual(output);
+ expect(await db.select().from(assets)).toHaveLength(0);
+});
+
+it("T-957 旧登录失败载荷兼容原域",async()=>{
+ const f=await fixture();
+ expect(await f.service.fail(f.ref,{callId:f.parent.callId,failure:{kind:"needs_login"}})).toMatchObject({data:{needLogin:{domain:"example.com"}}});
+});
+
+it.each(["../private","https://example.com","example.com/path","exam\nple.com","a".repeat(254)])("T-957 登录提示拒绝非法域名 %s",async domain=>{
+ const f=await fixture();
+ await expect(f.service.fail(f.ref,{callId:f.parent.callId,failure:{kind:"needs_login",domain}})).rejects.toThrow();
+ const [call]=await db.select().from(executionCalls).where(eq(executionCalls.id,f.parent.callId));expect(call!.status).toBe("started");
 });
