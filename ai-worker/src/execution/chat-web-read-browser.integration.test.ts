@@ -35,3 +35,23 @@ it.each([200,403])("真实 Chromium 原始读取进入共享编排：HTTP %s",as
   expect(tools.browserProcessIds().length).toBeGreaterThan(0);
  }finally{await tools.close();server.closeAllConnections();await new Promise<void>(resolve=>server.close(()=>resolve()));}
 },30000);
+
+it("T-957 真实 Chromium 从迁移页读取目标正文并交给共享保存端口",async()=>{
+ const server=createServer((req,res)=>{
+  res.writeHead(200,{"content-type":"text/html; charset=utf-8"});
+  res.end(req.url==="/old"?'<html><body><aside>正文迁移</aside><meta http-equiv="refresh" content="0; url=/new"></body></html>':`<html><head><title>迁移后指南</title></head><body><article><p>${"迁移后实际正文，包含工具调用的说明。".repeat(100)}</p></article></body></html>`);
+ });
+ await new Promise<void>(resolve=>server.listen(0,"127.0.0.1",resolve));
+ const origin=`http://127.0.0.1:${(server.address() as {port:number}).port}`,signal=AbortSignal.timeout(20000);
+ const tools=createResearchWorkerTools({signal,guardUrl:async target=>{if(new URL(target).origin!==origin)throw new Error("仅允许本测试站");},call:async port=>{
+  if(port==="readBrowserSession")return {domain:"127.0.0.1",stateJson:null,revision:null};
+  if(port==="saveBrowserSession")return {saved:true,revision:"test"};
+  throw new Error("不访问业务数据");
+ }});
+ const save=vi.fn(async()=>({assetId:"test-relocated",name:"正文·迁移后指南",previewUrl:null}));
+ try{
+  const result=await readWebDocument({url:origin+"/old",signal},{readCached:async()=>null,read:(url)=>tools.readDocument(url,{callId:"relocation",signal}),saveDocument:save,hasSession:async()=>false,searchers:async()=>[]});
+  expect(result).toMatchObject({sourceUrl:origin+"/old",fullText:expect.stringContaining("迁移后实际正文"),fromCache:false});
+  expect(save).toHaveBeenCalledTimes(1);
+ }finally{await tools.close();server.closeAllConnections();await new Promise<void>(resolve=>server.close(()=>resolve()));}
+},30000);

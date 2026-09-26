@@ -5,7 +5,7 @@ import { createHash } from "node:crypto";
 import { describe, it, expect, vi } from "vitest";
 import type { Tool } from "ai";
 // [T-263] HITL 授权门装配(local.read needsApproval → toolApproval 映射)。
-import { buildChatToolApproval } from "./chat-tool-gate";
+import { buildChatToolApproval, UNKNOWN_CHAT_TOOL_FAILURE_MESSAGE } from "./chat-tool-gate";
 import {
   buildChatTools,
   allChatTools,
@@ -674,8 +674,9 @@ describe("buildChatTools — 白名单过滤(tools 挂载)", () => {
 
     expect(result).toMatchObject({
       kind: "creatoros.guide",
-      error: expect.stringContaining("CREATOROS_GUIDE_UNAVAILABLE"),
+      error: "CreatorOS 官方产品说明当前不可读取，本轮无法依据它回答。",
     });
+    expect(JSON.stringify(result)).not.toContain("CREATOROS_GUIDE_UNAVAILABLE");
   });
 });
 
@@ -1157,7 +1158,7 @@ describe("[T-084b] material.screenshot 工具 — 自动化截图", () => {
       url: "https://paywalled.example.com",
     })) as { asset: unknown; error: string | null };
     expect(result.asset).toBeNull();
-    expect(result.error).toContain("需要登录");
+    expect(result.error).toBe(UNKNOWN_CHAT_TOOL_FAILURE_MESSAGE);
   });
 
   it("空 URL → 诚实报错,不调截图端口", async () => {
@@ -1220,7 +1221,7 @@ describe("[T-217c] web.read 工具 — 带登录态读网页正文", () => {
       url: "https://dead.example.com",
     })) as { asset: unknown; needLogin: unknown; error: string | null };
     expect(result.asset).toBeNull();
-    expect(result.error).toContain("HTTP 404");
+    expect(result.error).toBe(UNKNOWN_CHAT_TOOL_FAILURE_MESSAGE);
   });
 
   it("空 URL → 诚实报错,不调读取端口", async () => {
@@ -1391,7 +1392,7 @@ describe("[T-084c] material.generate 工具 — AI 生成素材对话化", () =>
       prompt: "一张配图",
     })) as { taskId: string | null; error: string | null };
     expect(result.taskId).toBeNull();
-    expect(result.error).toContain("未接入");
+    expect(result.error).toBe(UNKNOWN_CHAT_TOOL_FAILURE_MESSAGE);
   });
 });
 
@@ -1441,7 +1442,7 @@ describe("[T-350a] publish.package 工具 — 发布物料生成(单平台抖音
       error: string | null;
     };
     expect(result.taskId).toBeNull();
-    expect(result.error).toBe("空稿门:先写整稿");
+    expect(result.error).toBe(UNKNOWN_CHAT_TOOL_FAILURE_MESSAGE);
   });
 });
 
@@ -1495,7 +1496,7 @@ describe("[T-703] video.edit.render 工具 — 只产可确认剪辑候选", () 
 
     expect(result.kind).toBe("video.edit");
     expect(result.renderProps).toBeNull();
-    expect(result.error).toContain("尚未接入");
+    expect(result.error).toBe(UNKNOWN_CHAT_TOOL_FAILURE_MESSAGE);
   });
 });
 
@@ -1555,7 +1556,7 @@ describe("[T-385] project.transcribe 工具 — 对话内一键抓逐字稿", ()
       error: string | null;
     };
     expect(result.taskId).toBeNull();
-    expect(result.error).toContain("没有关联抖音作品");
+    expect(result.error).toBe(UNKNOWN_CHAT_TOOL_FAILURE_MESSAGE);
   });
 });
 
@@ -1681,7 +1682,7 @@ describe("[T-271] cover.generate 工具 — 制作封面链对话内真生成", 
       projectId: "proj-1",
     })) as { taskId: string | null; error: string | null };
     expect(result.taskId).toBeNull();
-    expect(result.error).toContain("未接入");
+    expect(result.error).toBe(UNKNOWN_CHAT_TOOL_FAILURE_MESSAGE);
   });
 });
 
@@ -1882,7 +1883,7 @@ describe("[T-268] script.draft 工具 — 整稿异步 dispatch(不再 inline �
       error: string | null;
     };
     expect(result.taskId).toBeNull();
-    expect(result.error).toContain("稿面");
+    expect(result.error).toBe("整稿要落进具体项目的稿面 —— 请在项目稿面右栏让我写脚本。");
   });
 
   it("dispatch 抛错 → 不抛,taskId=null + error(诚实降级,不裸机器码)", async () => {
@@ -1896,7 +1897,7 @@ describe("[T-268] script.draft 工具 — 整稿异步 dispatch(不再 inline �
       topic: "x",
     })) as { taskId: string | null; error: string | null };
     expect(result.taskId).toBeNull();
-    expect(result.error).toContain("未接入");
+    expect(result.error).toBe(UNKNOWN_CHAT_TOOL_FAILURE_MESSAGE);
   });
 
   it("[T-727] verbatim 只传 sourceRef，由服务端恢复完整原文/hash 后 dispatch，绝不塞 extraBrief 摘要", async () => {
@@ -2045,7 +2046,7 @@ describe("[T-268] script.draft 工具 — 整稿异步 dispatch(不再 inline �
       authorized: false,
       startAnchor: "我们的编导智能体支持写稿。",
       endAnchor: null,
-      reason: "当前只是在发送稿件，还没有要求写入稿面。",
+      reason: "内部语义门诊断细节不应向用户展示。",
     });
     dispatch.mockClear();
     const denied = (await runExecute(tools["script.draft"]!, {
@@ -2053,7 +2054,7 @@ describe("[T-268] script.draft 工具 — 整稿异步 dispatch(不再 inline �
       sourceRef: "user:0:0",
     })) as { taskId: string | null; error: string | null };
     expect(denied.taskId).toBeNull();
-    expect(denied.error).toContain("还没有要求写入稿面");
+    expect(denied.error).toContain("还没有明确要求写入稿面");
     expect(dispatch).not.toHaveBeenCalled();
   });
 });
@@ -3464,7 +3465,7 @@ describe("[T-094] knowledge.distill 工具 — 对话蒸馏", () => {
     expect(result.originalText).toBe("一段被平台审核拦截的原文");
   });
 
-  it("未知错误 → error 回落原始 message(诚实,不装懂),不建议换模型", async () => {
+  it("未知错误 → 使用中性错误文案,不泄漏底层地址且不建议换模型", async () => {
     const { deps } = makeDeps();
     deps.distillKnowledge = async () => {
       throw new Error("ECONNREFUSED 127.0.0.1:11434");
@@ -3473,7 +3474,7 @@ describe("[T-094] knowledge.distill 工具 — 对话蒸馏", () => {
     const result = (await runExecute(tools["knowledge.distill"]!, {
       content: "原文",
     })) as { error: string | null; suggestSwitchModel: boolean };
-    expect(result.error).toBe("ECONNREFUSED 127.0.0.1:11434");
+    expect(result.error).toBe(UNKNOWN_CHAT_TOOL_FAILURE_MESSAGE);
     expect(result.suggestSwitchModel).toBe(false);
   });
 
@@ -3969,7 +3970,7 @@ describe("[T-253] local.read 工具 — 本机文件读取(运行时授权 + 安
     const result = (await runExecute(tools["local.read"]!, {
       path: "/Users/u/nope.md",
     })) as { error: string | null; needApproval: unknown };
-    expect(result.error).toContain("不存在");
+    expect(result.error).toBe(UNKNOWN_CHAT_TOOL_FAILURE_MESSAGE);
     expect(result.needApproval).toBeNull();
   });
 
@@ -4566,4 +4567,12 @@ it.each(["selected","project"])("全部现有工具参数及%s改稿变体可建
   expect(parameters.safeParse({}).success,name).toBe(!Array.isArray(schema.required) || schema.required.length===0);
   if(schema.additionalProperties===false)expect(parameters.safeParse({__unexpected:true}).success,name).toBe(false);
  }
+});
+
+it("T-957 重新读取标志只透传首窗，翻窗仍复用原正文",async()=>{
+ const {deps}=makeDeps();
+ await runExecute(buildChatTools(["web.read"],deps)["web.read"]!,{url:"https://example.com/old",refresh:true});
+ expect(deps.readWeb).toHaveBeenLastCalledWith(expect.objectContaining({refresh:true}));
+ await runExecute(buildChatTools(["web.read"],deps)["web.read"]!,{url:"https://example.com/old",refresh:true,offset:1000});
+ expect(deps.readWeb).toHaveBeenLastCalledWith({url:"https://example.com/old",signal:undefined});
 });

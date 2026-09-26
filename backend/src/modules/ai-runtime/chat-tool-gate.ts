@@ -36,7 +36,11 @@ export const BUDGET_MIN_KEEP_CHARS = 200;
 /** 截断标记(拼在截口,让模型/用户知道此处被截,不假装是全文)。 */
 export const BUDGET_TRUNCATION_SUFFIX = "…(已截断)";
 
-/** 错误→人话端口形状(与 ChatToolDeps.humanizeError 同;null = 无映射,回落原始 message)。 */
+/** 不含供应商/模型/实现细节的安全回退；真实原因继续留在内部诊断日志。 */
+export const UNKNOWN_CHAT_TOOL_FAILURE_MESSAGE =
+  "这一步未能完成，原因尚未确认。请先确认是否已有结果，再决定是否重试。";
+
+/** 错误→人话端口形状(与 ChatToolDeps.humanizeError 同;null = 无安全映射,使用通用中性错误)。 */
 export type HumanizeErrorPort = (
   err: unknown,
 ) => { message: string; suggestSwitchModel: boolean } | null;
@@ -510,8 +514,7 @@ export function defineChatTool<INPUT, OUTPUT extends { kind: string }>(
       return {
         ...(envelope.extras ?? {}),
         kind: envelope.kind,
-        error:
-          human?.message ?? (err instanceof Error ? err.message : String(err)),
+        error: human?.message ?? UNKNOWN_CHAT_TOOL_FAILURE_MESSAGE,
       };
     }
   };

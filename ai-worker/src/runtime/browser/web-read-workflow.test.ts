@@ -23,6 +23,13 @@ describe("正式网页读取共享编排", () => {
     expect(deps.read).not.toHaveBeenCalled(); expect(deps.saveDocument).not.toHaveBeenCalled();
   });
 
+  it("明确刷新跳过旧缓存且不删除原素材，返回新读正文", async () => {
+    const deps = ports();
+    deps.readCached.mockResolvedValue({ assetId: "old", name: "旧导航", previewUrl: null, fullText: "旧迁移页" });
+    expect(await readWebDocument({ ...input, refresh: true }, deps)).toMatchObject({fromCache:false,fullText:document.text});
+    expect(deps.readCached).not.toHaveBeenCalled();expect(deps.read).toHaveBeenCalledTimes(1);expect(deps.saveDocument).toHaveBeenCalledTimes(1);
+  });
+
   it("缓存修复失败直接失败，不重新抓取或创建素材", async () => {
     const deps = ports(); deps.readCached.mockRejectedValue(new Error("来源投影失败"));
     await expect(readWebDocument(input, deps)).rejects.toThrow("来源投影失败");

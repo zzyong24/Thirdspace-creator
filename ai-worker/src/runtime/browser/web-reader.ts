@@ -483,6 +483,31 @@ export async function extractReadable(
   return { title: (parsed.title ?? "").trim(), text };
 }
 
+/** SEMANTIC_BOUNDARY_ALLOW: 解析标准网页跳转协议，不猜迁移地址、不判断正文语义。 */
+async function immediateRefreshTarget(html: string, baseUrl: string): Promise<string | null> {
+  const { JSDOM } = await import("jsdom");
+  const dom = new JSDOM(html, { url: baseUrl });
+  try {
+    for (const meta of dom.window.document.querySelectorAll("meta[http-equiv]")) {
+      if (meta.getAttribute("http-equiv")?.toLowerCase() !== "refresh") continue;
+      const match = /^\s*(\d+(?:\.\d+)?)\s*;\s*url\s*=\s*(.*?)\s*$/i.exec(meta.getAttribute("content") ?? "");
+      if (!match || Number(match[1]) > 5) continue;
+      const target = match[2]!.replace(/^(['"])(.*)\1$/, "$2").trim();
+      if (!target) continue;
+      try {
+        const resolved = new URL(target, dom.window.document.baseURI);
+        const current = new URL(baseUrl);
+        const destination = new URL(resolved); destination.hash = ""; current.hash = "";
+        // 同页锚点或刷新不需要另取正文。
+        if (destination.href === current.href) return null;
+        return resolved.href;
+      }
+      catch { throw new WebCaptureError("网页迁移地址无法解析", { code: "PARSE_FAILED" }); }
+    }
+    return null;
+  } finally { dom.window.close(); }
+}
+
 /**
  * [T-217b] 带登录态读一个 URL 的正文全文。launchPersistentContext(authDir) → goto(复用
  * web-capture 三墙分类:打不开 / HTTP 码 / 登录墙)→ 等 SPA 正文渲染 + 滚动懒加载 → 抽正文
@@ -517,7 +542,6 @@ export async function readUrl(
   // [T-239c] 入口即断:已中断的信号不再起浏览器。
   const signal = opts.signal;
   if (signal?.aborted) throw makeAbortError("网页读取");
-  const domain = webDomainFromUrl(target);
   const openContext = deps.openContext ?? realOpenReaderContext;
   const ctx = await openContext(opts.authDir);
   // [T-239c] abort → 关 context 让挂起导航/求值立刻 reject;各 catch 先查 aborted 改抛
@@ -529,182 +553,228 @@ export async function readUrl(
   try {
     if (signal?.aborted) throw makeAbortError("网页读取");
     const page = ctx.pages()[0] ?? (await ctx.newPage());
-    let resp: ReaderNavResponse | null;
-    try {
-      resp = await page.goto(target, {
-        waitUntil: "domcontentloaded",
-        timeout: NAV_TIMEOUT_MS,
-      });
-    } catch (err) {
+    let navigationTarget = target;
+    const visited = new Set<string>();
+    for (;;) {
+      try { await guardUrl(navigationTarget); } catch (error) { throw toReaderError(error); }
       if (signal?.aborted) throw makeAbortError("网页读取");
-      throw new WebCaptureError(
-        `页面打不开:${err instanceof Error ? err.message : String(err)}`,
-        {
-          code:
-            (err instanceof Error &&
-              (err.name === "TimeoutError" ||
-                /timed?\s*out|timeout|超时/i.test(err.message)))
-              ? "TIMEOUT"
-              : "HTTP_ERROR",
-        },
-      );
-    }
-    if (signal?.aborted) throw makeAbortError("网页读取");
-    // Tencent EdgeOne 等站点会先返回非标准 567 bot challenge，页面脚本写入
-    // 一次性 Cookie 后要求重载。直接按 HTTP 错误退出会让正常公网热榜永远不可用。
-    // 只对 567 做最多两次有界重载；最终仍非 2xx 时继续诚实报 HTTP_ERROR。
-    for (
-      let challengeAttempt = 0;
-      resp?.status() === 567 && challengeAttempt < 2;
-      challengeAttempt += 1
-    ) {
-      await page.waitForTimeout(1_500);
-      resp = await page.goto(page.url() || target, {
-        waitUntil: "domcontentloaded",
-        timeout: NAV_TIMEOUT_MS,
-      });
-    }
-    const status = resp ? resp.status() : 0;
-    if (status >= 400) {
-      // [T-390] 带结构化 status:上层(persistence-client readWebUrl 端口)据此触发多路回退
-      // (搜索引擎找同内容替代来源),不解析 message 文本。
-      throw new WebCaptureError(
-        `页面返回 HTTP ${status}:该链接不可访问(可能已下架或需要权限)`,
-        { status, code: "HTTP_ERROR" },
-      );
-    }
-    const finalUrl = (resp ? resp.url() : "") || page.url();
-    // [T-326·RT-H04] 重定向逐跳复检(事后链审计,选型见 url-guard 文件头):goto 已跟随的每一跳
-    // + 最终 URL 逐个重过守卫 —— 命中私网/元数据即抛错,正文绝不抽取返回。残留:命中跳的 HTTP
-    // 请求本身已被浏览器发出(无法事前拦,Playwright route 不触发于 redirect 跳)。
-    {
-      const checked = new Set<string>([target]);
-      for (const hop of [...collectRedirectChainUrls(resp), finalUrl]) {
-        if (!hop || checked.has(hop)) continue;
-        checked.add(hop);
-        try {
-          await guardUrl(hop);
-        } catch (err) {
-          throw toReaderError(err);
+      visited.add(navigationTarget);
+      let resp: ReaderNavResponse | null;
+      try {
+        resp = await page.goto(navigationTarget, {
+          waitUntil: "domcontentloaded",
+          timeout: NAV_TIMEOUT_MS,
+        });
+      } catch (err) {
+        if (signal?.aborted) throw makeAbortError("网页读取");
+        throw new WebCaptureError(
+          `页面打不开:${err instanceof Error ? err.message : String(err)}`,
+          {
+            code:
+              (err instanceof Error &&
+                (err.name === "TimeoutError" ||
+                  /timed?\s*out|timeout|超时/i.test(err.message)))
+                ? "TIMEOUT"
+                : "HTTP_ERROR",
+          },
+        );
+      }
+      if (signal?.aborted) throw makeAbortError("网页读取");
+      // Tencent EdgeOne 等站点会先返回非标准 567 bot challenge，页面脚本写入
+      // 一次性 Cookie 后要求重载。直接按 HTTP 错误退出会让正常公网热榜永远不可用。
+      // 只对 567 做最多两次有界重载；最终仍非 2xx 时继续诚实报 HTTP_ERROR。
+      for (
+        let challengeAttempt = 0;
+        resp?.status() === 567 && challengeAttempt < 2;
+        challengeAttempt += 1
+      ) {
+        await page.waitForTimeout(1_500);
+        resp = await page.goto(page.url() || navigationTarget, {
+          waitUntil: "domcontentloaded",
+          timeout: NAV_TIMEOUT_MS,
+        });
+      }
+      const status = resp ? resp.status() : 0;
+      if (status >= 400) {
+        // [T-390] 带结构化 status:上层(persistence-client readWebUrl 端口)据此触发多路回退
+        // (搜索引擎找同内容替代来源),不解析 message 文本。
+        throw new WebCaptureError(
+          `页面返回 HTTP ${status}:该链接不可访问(可能已下架或需要权限)`,
+          { status, code: "HTTP_ERROR" },
+        );
+      }
+      let finalUrl = (resp ? resp.url() : "") || page.url();
+      // [T-326·RT-H04] 重定向逐跳复检(事后链审计,选型见 url-guard 文件头):goto 已跟随的每一跳
+      // + 最终 URL 逐个重过守卫 —— 命中私网/元数据即抛错,正文绝不抽取返回。残留:命中跳的 HTTP
+      // 请求本身已被浏览器发出(无法事前拦,Playwright route 不触发于 redirect 跳)。
+      {
+        const checked = new Set<string>([navigationTarget]);
+        for (const hop of [...collectRedirectChainUrls(resp), finalUrl]) {
+          if (!hop || checked.has(hop)) continue;
+          checked.add(hop);
+          try {
+            await guardUrl(hop);
+          } catch (err) {
+            throw toReaderError(err);
+          }
         }
       }
-    }
-    // 等 SPA 正文渲染 + 滚动到底触发懒加载/长对话全量(拿不到 selector/滚动失败都不抛,兜底用当前 DOM)。
-    await page.waitForSelector("main, article, [data-message-author-role]", { timeout: 8_000 }).catch(() => {});
-    await page
-      .evaluate(() => {
-        // 滚到底几次,触发懒加载(ChatGPT 长对话按需渲染)。
-        return new Promise<void>((resolve) => {
-          let n = 0;
-          const timer = setInterval(() => {
-            window.scrollTo(0, document.body.scrollHeight);
-            if (++n >= 6) {
-              clearInterval(timer);
-              resolve();
-            }
-          }, 300);
-        });
-      })
-      .catch(() => {});
-    await page.waitForTimeout(500);
-    const html = await page.content().catch(() => "");
-    const isChatGpt = domain === "chatgpt.com" || domain.endsWith(".chatgpt.com");
-    // [T-237] ChatGPT share 的 SSR 全量抽取放在登录墙判定**之前**:公开分享页对匿名访客也会渲
-    // 「Log in / 登录」CTA,会让启发式误报登录墙 —— 但 SSR JSON 里已拿到全量对话 = 内容真可读,
-    // 直接返回。真被登录门挡住的分享页 SSR 里没有对话 → 自然落回下方登录墙判定,不漏报。
-    const title = (await page.title().catch(() => "")).trim();
-    if (isChatGpt) {
-      // ①首选:流式 SSR script JSON 抽全量轮次(不依赖渲染,长对话不截断)。
-      const ssrTurns = extractChatGptShareSsr(html);
-      if (ssrTurns && ssrTurns.length) {
-        return {
-          text: formatChatTurns(ssrTurns),
-          title: title || finalUrl,
-          finalUrl,
-          extractor: "chatgpt-share",
-          extractPath: "ssr",
-          turnCount: ssrTurns.length,
-        };
+      // 等 SPA 正文渲染 + 滚动到底触发懒加载/长对话全量(拿不到 selector/滚动失败都不抛,兜底用当前 DOM)。
+      await page.waitForSelector("main, article, [data-message-author-role]", { timeout: 8_000 }).catch(() => {});
+      await page
+        .evaluate(() => {
+          // 滚到底几次,触发懒加载(ChatGPT 长对话按需渲染)。
+          return new Promise<void>((resolve) => {
+            let n = 0;
+            const timer = setInterval(() => {
+              window.scrollTo(0, document.body.scrollHeight);
+              if (++n >= 6) {
+                clearInterval(timer);
+                resolve();
+              }
+            }, 300);
+          });
+        })
+        .catch(() => {});
+      await page.waitForTimeout(500);
+      const html = await page.content().catch(() => "");
+      if (signal?.aborted) throw makeAbortError("网页读取");
+      // 客户端可能已跳转；抽取 URL 与实际 DOM 必须属于同一页面。
+      const renderedUrl = page.url();
+      let clientRedirect: string | null = null;
+      if (renderedUrl && renderedUrl !== finalUrl) {
+        try { await guardUrl(renderedUrl); } catch (error) { throw toReaderError(error); }
+        const renderedDocument = new URL(renderedUrl), responseDocument = new URL(finalUrl);
+        renderedDocument.hash = ""; responseDocument.hash = "";
+        if (renderedDocument.href !== responseDocument.href) clientRedirect = renderedUrl;
+        else finalUrl = renderedUrl;
       }
-    }
-    // 登录墙 / 验证码启发式命中 → 结构化降级(有 .auth 登录态仍撞墙 = 会话过期/未登录该站)。
-    if (detectLoginWall(finalUrl, html)) {
-      throw new WebReaderLoginRequiredError(domain);
-    }
+      // 已发生的客户端跨页跳转仍需取得目标 HTTP 状态，不能沿用上一页的 200。
+      const refreshTarget = clientRedirect ?? await immediateRefreshTarget(html, finalUrl);
+      if (refreshTarget) {
+        try { await guardUrl(refreshTarget); } catch (error) { throw toReaderError(error); }
+        if (signal?.aborted) throw makeAbortError("网页读取");
+        if (visited.has(refreshTarget)) throw new WebCaptureError("网页迁移出现循环，未取得目标正文", { code: "PARSE_FAILED" });
+        if (visited.size >= 4) throw new WebCaptureError("网页迁移超过三次，未取得目标正文", { code: "PARSE_FAILED" });
+        navigationTarget = refreshTarget;
+        continue;
+      }
+      // 抽取期间也可能完成客户端迁移；旧 HTML/HTTP 状态不能配上新页面的正文。
+      const changedDuringExtraction = () => {
+        const current = page.url();
+        if (!current || current === finalUrl) return false;
+        const source = new URL(finalUrl), destination = new URL(current);
+        source.hash = ""; destination.hash = "";
+        if (source.href === destination.href) { finalUrl = current; return false; }
+        if (visited.has(current)) throw new WebCaptureError("网页迁移出现循环，未取得目标正文", { code: "PARSE_FAILED" });
+        if (visited.size >= 4) throw new WebCaptureError("网页迁移超过三次，未取得目标正文", { code: "PARSE_FAILED" });
+        navigationTarget = current;
+        return true;
+      };
+      const domain = webDomainFromUrl(finalUrl);
+      const isChatGpt = domain === "chatgpt.com" || domain.endsWith(".chatgpt.com");
+      // [T-237] ChatGPT share 的 SSR 全量抽取放在登录墙判定**之前**:公开分享页对匿名访客也会渲
+      // 「Log in / 登录」CTA,会让启发式误报登录墙 —— 但 SSR JSON 里已拿到全量对话 = 内容真可读,
+      // 直接返回。真被登录门挡住的分享页 SSR 里没有对话 → 自然落回下方登录墙判定,不漏报。
+      const title = (await page.title().catch(() => "")).trim();
+      if (isChatGpt) {
+        // ①首选:流式 SSR script JSON 抽全量轮次(不依赖渲染,长对话不截断)。
+        const ssrTurns = extractChatGptShareSsr(html);
+        if (ssrTurns && ssrTurns.length) {
+          if (changedDuringExtraction()) continue;
+          return {
+            text: formatChatTurns(ssrTurns),
+            title: title || finalUrl,
+            finalUrl,
+            extractor: "chatgpt-share",
+            extractPath: "ssr",
+            turnCount: ssrTurns.length,
+          };
+        }
+      }
+      // 登录墙 / 验证码启发式命中 → 结构化降级(有 .auth 登录态仍撞墙 = 会话过期/未登录该站)。
+      if (detectLoginWall(finalUrl, html)) {
+        throw new WebReaderLoginRequiredError(domain);
+      }
 
-    // ChatGPT share 定制兜底(T-237 修②③):SSR 没抽到 → 滚真容器 DOM 兜底 → 正则兜底。
-    if (isChatGpt) {
-      // ②③兜底:页内滚**真滚动容器**到轮次计数稳定,再逐元素 textContent 收轮次
-      // (不再正则扒原始 HTML,杜绝 `<div` 标签泄漏)。evaluate 失败不抛,继续降级。
-      const domTurns = await page
-        .evaluate(harvestChatGptTurnsInPage, { settleMs: 500, maxRounds: 20 })
-        .catch(() => null);
-      if (Array.isArray(domTurns) && domTurns.length) {
-        return {
-          text: formatChatTurns(domTurns),
-          title: title || finalUrl,
-          finalUrl,
-          extractor: "chatgpt-share",
-          extractPath: "dom",
-          turnCount: domTurns.length,
-        };
+      // ChatGPT share 定制兜底(T-237 修②③):SSR 没抽到 → 滚真容器 DOM 兜底 → 正则兜底。
+      if (isChatGpt) {
+        // ②③兜底:页内滚**真滚动容器**到轮次计数稳定,再逐元素 textContent 收轮次
+        // (不再正则扒原始 HTML,杜绝 `<div` 标签泄漏)。evaluate 失败不抛,继续降级。
+        const domTurns = await page
+          .evaluate(harvestChatGptTurnsInPage, { settleMs: 500, maxRounds: 20 })
+          .catch(() => null);
+        if (Array.isArray(domTurns) && domTurns.length) {
+          if (changedDuringExtraction()) continue;
+          return {
+            text: formatChatTurns(domTurns),
+            title: title || finalUrl,
+            finalUrl,
+            extractor: "chatgpt-share",
+            extractPath: "dom",
+            turnCount: domTurns.length,
+          };
+        }
+        // 最后:纯字符串正则兜底(页面 evaluate 不可用的极端场景;轮次数不可信 → null)。
+        const convo = extractChatGptShare(html);
+        if (convo) {
+          if (changedDuringExtraction()) continue;
+          return {
+            text: convo,
+            title: title || finalUrl,
+            finalUrl,
+            extractor: "chatgpt-share",
+            extractPath: "dom",
+            turnCount: null,
+          };
+        }
       }
-      // 最后:纯字符串正则兜底(页面 evaluate 不可用的极端场景;轮次数不可信 → null)。
-      const convo = extractChatGptShare(html);
-      if (convo) {
+      // 通用 Readability 兜底。
+      const readable = await extractReadable(html, finalUrl).catch(() => null);
+      if (readable && readable.text) {
+          if (changedDuringExtraction()) continue;
         return {
-          text: convo,
-          title: title || finalUrl,
+          text: readable.text,
+          title: (readable.title || title || finalUrl).trim(),
           finalUrl,
-          extractor: "chatgpt-share",
-          extractPath: "dom",
+          extractor: "readability",
+          extractPath: "readability",
           turnCount: null,
         };
       }
+      // [T-546] 热榜、榜单、SPA 首页常由卡片/列表组成，并不是“文章”，Mozilla
+      // Readability 会合法返回 null。页面已经通过 URL/重定向/HTTP/登录墙四层校验时，
+      // 再读取浏览器实际渲染的 body.innerText 作为通用动态页兜底；设最小长度避免把
+      // “加载中”/空壳/错误页伪装成有效来源。这里仍只返回真实可见文本，不由模型补写。
+      const renderedText = await page
+        .evaluate(() =>
+          (document.body?.innerText ?? "")
+            .replace(/\u00a0/g, " ")
+            .replace(/[ \t]+\n/g, "\n")
+            .replace(/\n{3,}/g, "\n\n")
+            .replace(/[ \t]{2,}/g, " ")
+            .trim(),
+        )
+        .catch(() => "");
+      if (typeof renderedText === "string" && renderedText.length >= 120) {
+          if (changedDuringExtraction()) continue;
+        return {
+          text: renderedText,
+          title: title || finalUrl,
+          finalUrl,
+          extractor: "rendered-text",
+          extractPath: "rendered-text",
+          turnCount: null,
+        };
+      }
+      // [T-239c] 中断关 context 会让上方 content()/evaluate 走 catch 兜底(html 空)最终落到这里
+      // —— 如实抛 AbortError,不误报「抽不出正文」。
+      if (signal?.aborted) throw makeAbortError("网页读取");
+      throw new WebCaptureError(
+        "读到页面但抽不出正文(可能是纯交互页/空页)——换一个有正文内容的链接,或用截图存网页样子。",
+        { code: "PARSE_FAILED" },
+      );
     }
-    // 通用 Readability 兜底。
-    const readable = await extractReadable(html, finalUrl).catch(() => null);
-    if (readable && readable.text) {
-      return {
-        text: readable.text,
-        title: (readable.title || title || finalUrl).trim(),
-        finalUrl,
-        extractor: "readability",
-        extractPath: "readability",
-        turnCount: null,
-      };
-    }
-    // [T-546] 热榜、榜单、SPA 首页常由卡片/列表组成，并不是“文章”，Mozilla
-    // Readability 会合法返回 null。页面已经通过 URL/重定向/HTTP/登录墙四层校验时，
-    // 再读取浏览器实际渲染的 body.innerText 作为通用动态页兜底；设最小长度避免把
-    // “加载中”/空壳/错误页伪装成有效来源。这里仍只返回真实可见文本，不由模型补写。
-    const renderedText = await page
-      .evaluate(() =>
-        (document.body?.innerText ?? "")
-          .replace(/\u00a0/g, " ")
-          .replace(/[ \t]+\n/g, "\n")
-          .replace(/\n{3,}/g, "\n\n")
-          .replace(/[ \t]{2,}/g, " ")
-          .trim(),
-      )
-      .catch(() => "");
-    if (typeof renderedText === "string" && renderedText.length >= 120) {
-      return {
-        text: renderedText,
-        title: title || finalUrl,
-        finalUrl,
-        extractor: "rendered-text",
-        extractPath: "rendered-text",
-        turnCount: null,
-      };
-    }
-    // [T-239c] 中断关 context 会让上方 content()/evaluate 走 catch 兜底(html 空)最终落到这里
-    // —— 如实抛 AbortError,不误报「抽不出正文」。
-    if (signal?.aborted) throw makeAbortError("网页读取");
-    throw new WebCaptureError(
-      "读到页面但抽不出正文(可能是纯交互页/空页)——换一个有正文内容的链接,或用截图存网页样子。",
-      { code: "PARSE_FAILED" },
-    );
   } finally {
     signal?.removeEventListener("abort", onAbort);
     await ctx.close().catch(() => {});

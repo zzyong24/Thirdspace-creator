@@ -8,6 +8,10 @@ import type {
   EffectiveSkill,
   EffectiveSkillSnapshotV1,
 } from "./effective-skill-types";
+import {
+  USER_FACING_RESPONSE_POLICY,
+  USER_FACING_RESPONSE_POLICY_VERSION,
+} from "./user-facing-response-policy";
 
 export type {
   CompletionPolicyAdapterRef,
@@ -110,12 +114,16 @@ export function getEffectiveSkill(skillId: string): EffectiveSkill {
 
 export function getEffectiveTemplate(skillId: string): PromptTemplate {
   const skill = getEffectiveSkill(skillId);
+  const configuredSystem = skill.effective.methodSystem;
+  // Account overrides replace editable method text. Keep the short response rule
+  // outside that editable value so an older/custom prompt cannot remove it.
+  const system = configuredSystem.endsWith(USER_FACING_RESPONSE_POLICY)
+    ? configuredSystem
+    : `${configuredSystem}\n\n${USER_FACING_RESPONSE_POLICY}`;
   return {
     id: skill.skillId,
-    version:
-      skill.overlayVersion ??
-      `${skill.baseVersion}@${skill.overlayRevision ?? "official"}`,
-    system: skill.effective.methodSystem,
+    version: `${skill.overlayVersion ?? `${skill.baseVersion}@${skill.overlayRevision ?? "official"}`}+${USER_FACING_RESPONSE_POLICY_VERSION}`,
+    system,
     template: skill.effective.template,
     requiredFacets: skill.effective.requiredFacets,
     contextRequirements: skill.effective.contextRequirements,

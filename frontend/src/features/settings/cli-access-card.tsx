@@ -127,7 +127,7 @@ export function CliAccessCard() {
               CLI 默认随应用启动开启；关闭后会记住你的选择。每次启动重新签发访问凭据，退出时清理凭据。不会暴露模型密钥、登录 Cookie 或内部数据库。
             </p>
             {enabled && expires ? (
-              <p className="mt-1 text-xs text-muted-foreground">本次访问凭据于 {expires} 到期，重启时自动更新</p>
+              <p className="mt-1 text-xs text-muted-foreground">当前连接有效至 {expires}，应用运行期间自动续期</p>
             ) : null}
             {status?.commandPath ? (
               <p className="mt-1 break-all font-mono text-xs text-muted-foreground">

@@ -157,7 +157,9 @@ describe("VIDEO_CARDS_TEMPLATE 视觉覆盖底线", () => {
   it("设置页 official Skill 与运行时共用 v7 单一真值，可恢复到同一版本", () => {
     _resetRegistry();
     const official = getOfficialSkillBase("video.cards");
-    expect(official?.baseVersion).toBe("v7");
+    expect(official?.baseVersion).toBe(
+      "v7+methods-operations-2026-09-25",
+    );
     expect(official?.template).toContain("可组合 Scene Graph");
     expect(official?.outputSchema).toMatchObject({ type: "object" });
   });

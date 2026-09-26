@@ -27,7 +27,7 @@ const observation = { text: "完整网页证据".repeat(4000), title: "观察标
 beforeEach(async () => { const opened = await createDb(); db = opened.db; client=opened.client; close = () => opened.client.close(); root = await mkdtemp(join(tmpdir(), "t915-chat-read-")); });
 afterEach(async () => { await close(); await rm(root, { recursive: true, force: true }); });
 
-async function fixture(toolCount = 1, resolveSearch?: (ctx:import("@creatoros/contract").RequestContext)=>Promise<import("../modules/ai-runtime/search/resolve").SearchSpec|null>, startParent = true) {
+async function fixture(toolCount = 1, resolveSearch?: (ctx:import("@creatoros/contract").RequestContext)=>Promise<import("../modules/ai-runtime/search/resolve").SearchSpec|null>, startParent = true, readOptions: { refresh?: boolean; offset?: number } = {}) {
   const ctx = { userId: "read-user", accountId: `account-${++sequence}`, requestId: "test", source: "user" as const };
   const ids = { now, nextId: (prefix: string) => `${prefix}-${++sequence}` };
   const repo = createAiRepository(db, { ...ctx, ...ids });
@@ -47,7 +47,7 @@ async function fixture(toolCount = 1, resolveSearch?: (ctx:import("@creatoros/co
   const ledger = createExecutionCallLedgerService(db, { now, budget });
   const model = await ledger.reserve(ref, { operationKey: "root", kind: "model", inputDigest: `sha256:${"a".repeat(64)}`, reservedTokens: 128 });
   await ledger.start(ref, model.id);
-  await ledger.settle(ref, model.id, { status: "settled", usage: {}, providerResult: { content: Array.from({ length: toolCount }, (_, i) => ({ type: "tool-call" as const, toolCallId: i === 0 ? "read" : `read-${i}`, toolName: "web_read", input: '{"url":"https://other.example/model","offset":0,"maxChars":1000}' })), finishReason: { unified: "tool-calls" }, usage: { inputTokens: { total: 2 }, outputTokens: { total: 3 } }, warnings: [] } });
+  await ledger.settle(ref, model.id, { status: "settled", usage: {}, providerResult: { content: Array.from({ length: toolCount }, (_, i) => ({ type: "tool-call" as const, toolCallId: i === 0 ? "read" : `read-${i}`, toolName: "web_read", input: JSON.stringify({url:"https://other.example/model",offset:0,maxChars:1000,...readOptions}) })), finishReason: { unified: "tool-calls" }, usage: { inputTokens: { total: 2 }, outputTokens: { total: 3 } }, warnings: [] } });
   const parent = await toolPorts.reserve(ref, { modelCallId: model.id, toolCallId: "read" });
   if(startParent)await toolPorts.start(ref, { callId: parent.callId });
   const service=toolPorts.webRead!;
@@ -438,4 +438,27 @@ it("搜索配置读取期间取消后不能返回密钥，未装配和读取故�
  await expect(f.service.resolveSearch(f.ref,{callId:f.parent.callId},controller.signal)).rejects.toThrow();
  const missing=await fixture();await expect(missing.service.resolveSearch(missing.ref,{callId:missing.parent.callId})).rejects.toThrow();
  const failed=await fixture(1,async()=>{throw new Error("config read failed");});await expect(failed.service.resolveSearch(failed.ref,{callId:failed.parent.callId})).rejects.toThrow("config read failed");
+});
+
+it("T-957 显式刷新跳过旧页缓存，新事实提交后同调用仍幂等",async()=>{
+ const f=await fixture(1,undefined,true,{refresh:true}),old=await seedCache(f);
+ expect(await f.service.cache(f.ref,{callId:f.parent.callId})).toEqual({status:"miss"});
+ expect(await db.select().from(executionEvidence)).toHaveLength(0);
+ const updated={...observation,text:"迁移后的完整新正文".repeat(300)};
+ await f.service.observe(f.ref,{callId:f.parent.callId,observation:updated});
+ const result=await f.service.complete(f.ref,{callId:f.parent.callId});
+ expect(result.data).toMatchObject({window:{total:updated.text.length}});
+ expect(await f.service.cache(f.ref,{callId:f.parent.callId})).toEqual({status:"hit",output:result});
+ const stored=await db.select().from(assets);expect(stored).toHaveLength(2);expect(stored.find(a=>a.id===old.id)?.status).toBe("pending");
+});
+it("T-957 后续翻窗即使重复 refresh 也复用正文，不重新抓取",async()=>{
+ const f=await fixture(1,undefined,true,{refresh:true,offset:1000});await seedCache(f);
+ expect(await f.service.cache(f.ref,{callId:f.parent.callId})).toMatchObject({status:"hit",output:{data:{fromCache:true,window:{offset:1000}}}});
+});
+
+it("T-957 Worker 网页失败不泄漏原异常，保留真实失败分类",async()=>{
+ const f=await fixture();
+ const output=await f.service.fail(f.ref,{callId:f.parent.callId,failure:{kind:"read_error",code:"transient",message:"内部规则第15条 MODEL_SCHEMA_ERROR sk-secret-canary"}});
+ expect(output).toMatchObject({status:"error",error:{code:"transient"},summary:"这次网页读取未完成，可稍后重试或换一个公开来源。"});
+ expect(JSON.stringify(output)).not.toContain("MODEL_SCHEMA_ERROR");expect(JSON.stringify(output)).not.toContain("sk-secret-canary");
 });

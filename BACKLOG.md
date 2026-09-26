@@ -32,7 +32,7 @@
 | T-980 | 纳入助手修复重新运行 V1.2 双端流水线 | 🔨 待办 | — | — | [SPEC](docs/features/t980-release-rerun.md) | 冻结已提交 T-976至T-978 修复，合并发布分支，预检后运行 Mac/Windows 正式构建并核验产物。 |
 | T-979 | 自动化页面慢轮询与切换对象回写防护 | ⬜ 待办 | — | — | [SPEC](docs/features/t979-automation-polling.md) | T-978 排查发现运行历史、步骤和列表轮询未限制在途请求；补慢网与切换对象回归，修复请求堆积及旧响应覆盖风险。 |
 | T-976 | 修复安装版 AI 助手 RedFox 再次失败与脱离对话的任务交互 | 🔨 待办 | — | — | [SPEC](docs/features/t976-chat-inline-redfox.md) | 定位本次原始错误；当前对话持续执行返回结果，不让用户刷新核对；真实链路验收。 |
-| T-957 | 排查编导 AI 失败并补齐真实功能验收【用户截图】 | 🔨 待办 | — | — | [SPEC](docs/features/t957-ai-real-acceptance.md) | 先核对原未知结果任务，定位模型/工具/页面故障；验证主要 AI 入口，不重复未知调用、不覆盖用户稿。 |
+| T-957 | 排查 AI 失败、全场景验收并优化 Agent 提示词【用户截图】 | 🔨 待办 | — | — | [SPEC](docs/features/t957-ai-real-acceptance.md) | 验收各 Agent 提示词与失败表达；修复 CLI 自动开启后24小时不续期阻断，继续真实场景，不重复未知调用、不覆盖用户稿。 |
 | T-956 | 修复安装版点击采集一直抓取中【用户实测阻断】 | 🔨 待办 | — | — | [SPEC](docs/features/t956-installed-collection-stuck.md) | 对照真实任务、日志与调度恢复定位阻断，修复后沿实际入口验证终态和结果，保护旧数据。 |
 | T-954 | 接入抖音流量来源并以专家方法改进编导交互【用户要求小改动】 | 🔨 待办 | — | — | [SPEC](docs/features/t954-director-content-loop.md) | 已落实来源方法、稿面诊断和独立流量队列；1005 条隔离恢复与真实页面 smoke 通过。真实模型效果对照、保留样本迁移和安装版验收待完成；明细失败不阻断基础采集。 |
 | T-951 | 修复自动化采集缺 jobRunId 与千条作品采集失败【用户实报】 | ⏸️ 待办 | — | — | [SPEC](docs/features/t951-collection-reliability.md) | 查明原调度绑定、分页和超时恢复，验证公共链路与千条规模，不以吞错冒充成功。 |

@@ -49,7 +49,7 @@ export async function prepareChatAssembly(ctx: RequestContext, chatContext: Chat
     // 1) 页面层:surface → 基础 skill。
     const skillId = resolveSkillForSurface(chatContext.surface);
     // 2) registry 取 skill(模板 system + 工具白名单)。懒加载 ai-worker(AI SDK 不进顶层 bundle)。
-    const { getEffectiveTemplate, getEffectiveTools, getTemplate, getTools, hasActiveEffectiveSkillSnapshot, getActiveEffectiveSkillSnapshot, } = await import("@creatoros/ai-worker");
+    const { getEffectiveTemplate, getEffectiveTools, getTemplate, getTools, hasActiveEffectiveSkillSnapshot, getActiveEffectiveSkillSnapshot, USER_FACING_RESPONSE_POLICY, } = await import("@creatoros/ai-worker");
     const hasEffectiveScope = hasActiveEffectiveSkillSnapshot();
     const skillLibrary = hasEffectiveScope ? createChatSkillLibrary(getActiveEffectiveSkillSnapshot(), ctx) : undefined;
     const skill = hasEffectiveScope
@@ -351,6 +351,7 @@ export async function prepareChatAssembly(ctx: RequestContext, chatContext: Chat
             "【局部改稿专用回合】",
             "用户已明确选中一个现有脚本段落。只根据用户本轮修改要求重写该段；不得改动、重写或补写其他段落，也不得要求用户提供 artifactId、versionId、sectionId 等技术字段。",
             "必须调用 script.patch 提交 replacementText。技术锚点由服务端绑定；不要调用其他工具，不要只在对话中返回改写文案。",
+            USER_FACING_RESPONSE_POLICY,
             selectionBlock,
         ]
             .filter(Boolean)

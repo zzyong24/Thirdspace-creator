@@ -47,12 +47,14 @@
 
 ## 启动和授权
 
-1. 启动 CreatorOS 桌面版。
-2. 打开“设置 → Codex 与 CLI 完整访问”。
-3. 点击“本次启动开启”。
-4. 运行 `creatoros status` 与 `creatoros access status`。
+CreatorOS 默认随桌面应用启动开启 CLI，并持久保存用户的开启/关闭选择。已开启的用户不需要每次重启重新授权；用户在本会话已授权的操作继续有效。
 
-退出 CreatorOS、授权到期或点击“立即撤销”后，已有命令会失效。这时只需重新启动并授权，不要要求用户复制 Token。
+1. 启动 CreatorOS 桌面版，运行 `creatoros status` 与 `creatoros access status`。
+2. 只有公开状态明确显示访问已关闭时，才引导到“设置 → Codex 与 CLI 完整访问”选择“开启并记住”；“关闭并记住”会撤销访问并保持关闭。
+3. `CONNECTION_EXPIRED` 表示本次连接租期过期，不能据此断言用户的持久授权已取消。旧版应用连续运行超过 24 小时可能触发此问题；沿现有授权正常重启应用后重查状态，恢复后直接继续原任务。重启前留存已知 taskId，勿把重启当成重提任务。
+4. 仍失败时记录实际错误码与运行版本供开发排查；不得要求复制 Token 或修改连接/凭据文件。
+
+退出应用会清理本次连接，保留开启选择；下次启动自动重新签发。新版本的续期修复需经安装版验收后才能声明已生效。
 
 ## 固定 CLI 表面
 
@@ -96,7 +98,7 @@ creatoros tasks wait <taskId> --account <accountId>
 | 现象 | 处理 |
 | --- | --- |
 | 找不到命令 | 按当前用户路径检查；确认桌面版已安装；Windows 重开终端/Agent |
-| 未授权或桌面不可用 | 启动 CreatorOS，在设置中开启本次访问，再运行 status |
+| 未授权或桌面不可用 | 先启动并检查 status；只有明确关闭访问时引导“开启并记住” |
 | account required | 先 `accounts list`；多账号让用户选择；后续显式带同一 accountId |
 | 输入 schema 错误 | 重新 `operations describe`，按当前 schema 组装；不猜字段 |
 | 等待被中断 | 保存并继续查询同一 taskId，不新建任务 |

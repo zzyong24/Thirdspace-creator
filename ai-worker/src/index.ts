@@ -157,6 +157,7 @@ export {
   type PromptTemplate,
   type BoundPrompt,
 } from "./prompt/template";
+export { USER_FACING_RESPONSE_POLICY } from "./prompt/user-facing-response-policy";
 // [T-269/T-270] 共享接地 facet 包(创作生成链接地根)—— anti-fabrication 可溯硬约束段(模板 +
 // 自由文本子调用共用单一真值)+ 可溯后处理纯函数(生成后校验具体 claim 是否命中注入素材,未命中标
 // 「未溯源」)。立项 Brief 硬锚段的渲染在 backend creative-context(读 CreativeContext,不拉 AI SDK)。

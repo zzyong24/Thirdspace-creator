@@ -36,7 +36,7 @@ creatoros status
 creatoros access status
 ```
 
-If the desktop app is closed or access is missing or expired, stop business calls and give the exact in-app authorization guidance from the reference. Recheck only after the user has enabled access.
+If the desktop app is closed, start it and recheck. CreatorOS remembers the access preference; do not request repeat authorization from a user who has already enabled access. For CONNECTION_EXPIRED, follow the normal restart recovery in the reference and preserve original task IDs. Ask the user to enable access only when public status explicitly shows that access is disabled. Resume authorized work once status succeeds.
 
 ### 2. Discover capabilities
 
@@ -98,7 +98,7 @@ On success, read back and report the current version ID/version, account, projec
 ## Error posture
 
 - Missing command: guide installation/access; do not search the whole disk or edit PATH.
-- Unauthorized or desktop unavailable: stop, guide in-app access, then recheck.
+- Desktop unavailable or connection expired: recover startup/connection through the reference; preserve existing authorization. Explicitly disabled access: guide in-app access, then recheck.
 - Multiple accounts/projects: ask the user to select.
 - Schema error: re-run `operations describe`; do not guess extra fields.
 - Connection loss after submission: query the original request/task or replay the same idempotency key; never create a duplicate.

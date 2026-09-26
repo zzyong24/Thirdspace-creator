@@ -845,7 +845,7 @@ export interface ChatRuntime {
   // [T-239c] input.signal(additive):用户中断本轮 → 带登录态浏览器导航/抽取提前退出。
   readWebUrl: (
     ctx: RequestContext,
-    input: { url: string; signal?: AbortSignal },
+    input: { url: string; signal?: AbortSignal; refresh?: boolean },
   ) => Promise<
     | {
         needLogin: false;
@@ -5630,7 +5630,7 @@ FAVORITES_PROMOTE_PER_RUN
     // 读取与备用来源编排由 Worker 所属模块统一维护；本装配只注入既有宿主/领域端口。
     readWebUrl: async (
       context: RequestContext,
-      input: { url: string; signal?: AbortSignal },
+      input: { url: string; signal?: AbortSignal; refresh?: boolean },
     ) => {
       const ctx = { ...context };
       return readWebDocument(input, {

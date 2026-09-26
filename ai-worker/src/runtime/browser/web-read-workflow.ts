@@ -19,10 +19,10 @@ export interface WebReadWorkflowPorts {
 }
 
 /** 旧入口和独立 Worker 共用的读取编排。数据读写只经端口，分页与不可信内容包装仍由原工具负责。 */
-export async function readWebDocument(input: { url: string; signal?: AbortSignal }, ports: WebReadWorkflowPorts) {
+export async function readWebDocument(input: { url: string; signal?: AbortSignal; refresh?: boolean }, ports: WebReadWorkflowPorts) {
   const { url, signal } = input;
   signal?.throwIfAborted();
-  const cached = await ports.readCached(url, signal);
+  const cached = input.refresh ? null : await ports.readCached(url, signal);
   signal?.throwIfAborted();
   if (cached) return {
     needLogin: false as const, ...cached, sourceUrl: url, title: cached.name.replace(/^正文·/, ""),

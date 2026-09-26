@@ -12,6 +12,8 @@ import { createWebDocumentCacheService, createPendingDocumentService, type Asset
 import { createChatHostContextReader } from "../ai/chat-host-context.service";
 import { chatWebReadDigest as digest, readChatWebReadEvidence } from "./chat-web-read-evidence";
 import { normalizeWebReadUrl } from "../ai-runtime/chat-context";
+import { ChatToolUserError } from "../ai-runtime/chat-tool-errors";
+import { formatErrorDiagnostic } from "../ai-runtime/error-diagnostics";
 import { buildChatTools, type ChatToolDeps } from "../ai-runtime/chat-tools";
 import { getChatToolNativeExecutor } from "../ai-runtime/chat-tool-gate";
 import { createAgenticToolBinding } from "./agentic-tool-binding";
@@ -96,6 +98,9 @@ export function createExecutionChatWebReadService(db: Db, deps: {
         const before=await access(ref,callId,"admission",async state=>{
           signal?.throwIfAborted();started(state,ref);
           if(await stored(state))return null;
+          // 显式重新读取只影响第一页；回执重放仍优先，翻窗仍复用已读版本。
+          const requested = state.bound.input as { refresh?: unknown; offset?: unknown };
+          if (requested.refresh === true && (requested.offset == null || (typeof requested.offset === "number" && requested.offset <= 0))) return null;
           return {context:state.context,url:state.url!,inputDigest:state.bound.inputDigest};
         });
         if(!before)return {status:"miss" as const};
@@ -136,11 +141,12 @@ export function createExecutionChatWebReadService(db: Db, deps: {
         const url=normalizeWebReadUrl(restored.hostContext.chatContext.webReadUrl ?? z.object({url:z.string()}).parse(state.bound.input).url);
         if(!url || new URL(url).username || new URL(url).password)throw new ConflictError("冻结网页 URL 无效");
         const domain=assertSafeWebDomain(webDomainFromUrl(url));
-        const summary=failure.kind==="needs_login"?"来源需要登录或人工验证":failure.kind==="browser_runtime_unavailable"?"浏览器运行环境不可用":failure.message;
+        if ("message" in failure) console.error("[chat-web-read-failure]", formatErrorDiagnostic(new Error(failure.message)));
+        const summary=failure.kind==="needs_login"?"来源需要登录或人工验证":failure.kind==="browser_runtime_unavailable"?"浏览器运行环境不可用":failure.kind==="http_blocked"?`网页读取未完成（HTTP ${failure.status}）。`:failure.code==="permission"?"此地址不在可读取范围，请使用有权限的公开网页。":failure.code==="no_evidence"?"这次未取得可用的网页正文。":"这次网页读取未完成，可稍后重试或换一个公开来源。";
         const prototype=buildChatTools(["web.read"],{readWeb:async()=>{
           if(failure.kind==="needs_login")return {needLogin:true,domain};
           if(failure.kind==="http_blocked")return {blocked:true,status:failure.status,message:failure.message,alternates:failure.alternates};
-          throw new Error(summary);
+          throw new ChatToolUserError(summary);
         }} as unknown as ChatToolDeps)["web.read"]!;
         const projected=z.json().parse(JSON.parse(JSON.stringify(await getChatToolNativeExecutor(prototype)!({...state.bound.input as Record<string,unknown>,url},{}))));
         const blocked=failure.kind==="needs_login" || failure.kind==="browser_runtime_unavailable" || (failure.kind==="read_error" && failure.code==="permission");
