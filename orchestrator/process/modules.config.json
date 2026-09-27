@@ -1587,6 +1587,33 @@
       "verify_commands": {
         "review": "node orchestrator/process/reviewctl.mjs context T-1003"
       }
+    },
+    "T-1016": {
+      "task_id": "T-1016",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "research"
+      ],
+      "read_set": [
+        "docs/features/t1016-external-agent-research.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "backend/src/modules/execution/**",
+        "mcp-server/**",
+        "ai-worker/src/**",
+        "contract/**"
+      ],
+      "write_set": [
+        "BACKLOG.md",
+        "docs/features/t1016-external-agent-research.md",
+        "docs/research/2026-09-27-external-local-agents.md",
+        "docs/research/evidence/t1016-local-probe.json",
+        "docs/research/evidence/t1016-reconcile.txt"
+      ],
+      "verify_commands": {
+        "research": "git diff --check"
+      }
     }
   }
 }

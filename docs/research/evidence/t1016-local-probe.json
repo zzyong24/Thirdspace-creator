@@ -1,0 +1,45 @@
+{
+  "task": "T-1016",
+  "date": "2026-09-27",
+  "scope": "只读能力检查，非模型或业务端到端验收",
+  "codex": {
+    "path": "/opt/homebrew/bin/codex",
+    "version": "0.144.5",
+    "schema_export_exit_code": 0,
+    "schema_json_files": 267,
+    "methods_confirmed": [
+      "thread/start",
+      "thread/resume",
+      "turn/start",
+      "turn/interrupt",
+      "item/tool/call",
+      "account/login/start"
+    ],
+    "schema_sha256": "95f68321313fc4d64c8781737abf60657d6d100e2f516a036253ca936f4d73a2"
+  },
+  "path_discovery": {
+    "claude": "/opt/homebrew/bin/claude",
+    "codebuddy": null,
+    "workbuddy": null,
+    "limitation": "PATH 未找到不等于桌面应用未安装"
+  },
+  "adapter_main_observation": {
+    "source": "https://github.com/agentclientprotocol/codex-acp/blob/main/package.json",
+    "name": "@agentclientprotocol/codex-acp",
+    "version_field": "1.13.1",
+    "codex_dependency": "^0.157.0",
+    "limitation": "main 内容，不声明已发布；未安装或验证与本机版本兼容"
+  },
+  "codegraph_index_exit_code": 0,
+  "executed_model_tasks": false,
+  "external_global_config_modified": false,
+  "review": {
+    "reviewer": "/root/external_agent_local_audit",
+    "mode": "独立只读本地源码及报告审查",
+    "findings_addressed": [
+      "外部 MCP 采纳必须绑定真实用户授权",
+      "第三方凭据不能承诺无条件自动续期",
+      "保持子进程环境白名单"
+    ]
+  }
+}

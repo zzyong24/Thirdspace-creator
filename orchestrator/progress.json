@@ -1707,6 +1707,24 @@
       "step_read_set": {},
       "step_exclusive_resources": {},
       "commits": {}
+    },
+    {
+      "id": "T-1016",
+      "task_id": "T-1016",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        {
+          "step": "research",
+          "status": "done"
+        }
+      ],
+      "depends_on": [],
+      "read_set": [],
+      "write_set": [],
+      "exclusive_resources": [],
+      "commits": {}
     }
   ],
   "leases": {}
