@@ -95,8 +95,10 @@ export function createExecutionChatWebReadService(db: Db, deps: {
       const fullText = readChatWebReadPageEvidence(row,{taskId:state.task.id,callId:origin.id,inputDigest:bound.inputDigest,url:state.url!,version:ref.version});
       // 从最初回执恢复元数据，避免分页说明一页页累加。
       const asset = pageData.parse(receipt(origin).data).asset;
+      // 页面正文已验证原观察摘要；缓存证据的 sourceUrl 只是请求地址，不冒充最终地址。
+      const finalUrl = (row.metadata as {kind?:string})?.kind === "chat.web.read" ? row.sourceUrl : undefined;
       if (asset.sourceUrl !== state.url) throw new ConflictError("网页分页来源不符");
-      const output = await projectSuccess(state.bound.input,state.url!,{...asset,assetId:asset.id,needLogin:false,fullText,fromCache:true,extraction:`沿用本任务已读正文版本；素材信息为读取时快照。${asset.extraction ?? ""}`},row,"已继续读取本任务同一版本的网页正文");
+      const output = await projectSuccess(state.bound.input,state.url!,{...asset,finalUrl,assetId:asset.id,needLogin:false,fullText,fromCache:true,extraction:`沿用本任务已读正文版本；素材信息为读取时快照。${asset.extraction ?? ""}`},row,"已继续读取本任务同一版本的网页正文");
       return agenticToolOutcomeSchema.parse({...output,sideEffect:"none"});
     }
     return null;
@@ -292,7 +294,7 @@ export function createExecutionChatWebReadService(db: Db, deps: {
       } else {
         const previewUrl = await deps.assets.getDownloadUrl(state.context, saved.assetId).then((result) => result.url).catch(() => null);
         const read = state.observation;
-        output = await projectSuccess(state.bound.input,state.row.requestedUrl,{ needLogin: false, assetId: saved.assetId, name: current.name, previewUrl, sourceUrl: state.row.requestedUrl, title: read.title, excerpt: read.text.slice(0, 280), extractor: read.extractor, turnCount: read.turnCount, extraction: read.turnCount === null ? null : read.extractPath === "ssr" ? `抽到 ${read.turnCount} 轮对话(SSR 全量,长对话不截断)` : `抽到 ${read.turnCount} 轮对话(DOM 渲染抽取,超长对话可能不全)`, fullText: read.text, fromCache: false },state.row,"已读取网页正文，素材待用户确认");
+        output = await projectSuccess(state.bound.input,state.row.requestedUrl,{ needLogin: false, assetId: saved.assetId, name: current.name, previewUrl, sourceUrl: state.row.requestedUrl, finalUrl: read.finalUrl, title: read.title, excerpt: read.text.slice(0, 280), extractor: read.extractor, turnCount: read.turnCount, extraction: read.turnCount === null ? null : read.extractPath === "ssr" ? `抽到 ${read.turnCount} 轮对话(SSR 全量,长对话不截断)` : `抽到 ${read.turnCount} 轮对话(DOM 渲染抽取,超长对话可能不全)`, fullText: read.text, fromCache: false },state.row,"已读取网页正文，素材待用户确认");
       }
       const resultText = JSON.stringify(workerToolResultReceiptSchema.parse({ schemaVersion: 1, kind: "tool", toolCallId: state.bound.toolCallId, toolName: state.bound.toolName, output }));
       return await access(ref, callId, "settlement", async (latest) => {

@@ -4576,3 +4576,18 @@ it("T-957 重新读取标志只透传首窗，翻窗仍复用原正文",async()=
  await runExecute(buildChatTools(["web.read"],deps)["web.read"]!,{url:"https://example.com/old",refresh:true,offset:1000});
  expect(deps.readWeb).toHaveBeenLastCalledWith({url:"https://example.com/old",signal:undefined});
 });
+
+describe("T-957 最终地址仅供展示，旧端口不能泄露凭据或可执行协议", () => {
+  it.each([undefined, "javascript:alert(1)", "data:text/html,test", "https://name:secret@example.org/"])("非法或未知最终地址缺省：%s", async finalUrl => {
+    const {deps} = makeDeps({readWeb:async()=>({needLogin:false as const,assetId:"final-url-asset",name:"正文",previewUrl:null,sourceUrl:"https://example.com/source",finalUrl,title:"标题",excerpt:"正文",extractor:"readability",fullText:"正文"})});
+    const result = await runExecute(buildChatTools(["web.read"],deps)["web.read"]!,{url:"https://example.com/source"});
+    expect(result).toMatchObject({kind:"web.read",error:null,asset:{sourceUrl:"https://example.com/source"}});
+    expect(result).not.toHaveProperty("asset.finalUrl");
+  });
+  it("保留真实最终地址且回执阅读器明确字符口径", async () => {
+    const {deps} = makeDeps({readWeb:async()=>({needLogin:false as const,assetId:"final-url-asset",name:"正文",previewUrl:null,sourceUrl:"https://example.com/source",finalUrl:"https://docs.example.org/final#part",title:"标题",excerpt:"正文",extractor:"readability",fullText:"正文"})});
+    const tools=buildChatTools(["web.read","tool.result.read"],deps);
+    expect(await runExecute(tools["web.read"]!,{url:"https://example.com/source"})).toHaveProperty("asset.finalUrl","https://docs.example.org/final#part");
+    expect(tools["tool.result.read"]!.description).toContain("不是网页正文总长或阅读进度");
+  });
+});

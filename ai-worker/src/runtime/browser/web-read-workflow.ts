@@ -36,7 +36,7 @@ export async function readWebDocument(input: { url: string; signal?: AbortSignal
   const asset = await ports.saveDocument({ name: `正文·${(read.title || read.finalUrl).slice(0, 40)}`, sourceUrl: url, fullText: read.text }, signal);
   signal?.throwIfAborted();
   return {
-    needLogin: false as const, ...asset, sourceUrl: url, title: read.title, excerpt: read.text.slice(0, 280),
+    needLogin: false as const, ...asset, sourceUrl: url, finalUrl: read.finalUrl, title: read.title, excerpt: read.text.slice(0, 280),
     extractor: read.extractor, turnCount: read.turnCount,
     extraction: read.turnCount != null ? read.extractPath === "ssr"
       ? `抽到 ${read.turnCount} 轮对话(SSR 全量,长对话不截断)`

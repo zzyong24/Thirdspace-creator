@@ -158,7 +158,7 @@ describe("VIDEO_CARDS_TEMPLATE 视觉覆盖底线", () => {
     _resetRegistry();
     const official = getOfficialSkillBase("video.cards");
     expect(official?.baseVersion).toBe(
-      "v7+methods-operations-2026-09-25",
+      "v7+methods-operations-2026-09-27",
     );
     expect(official?.template).toContain("可组合 Scene Graph");
     expect(official?.outputSchema).toMatchObject({ type: "object" });

@@ -65,7 +65,7 @@ export const TOPIC_GENERATE_TEMPLATE: PromptTemplate = {
   // topic-daily-collector / chat-runner)按各依据源**真实数据**算质量画像注入;模板指引按画像
   // 动态定权(评论样本少噪声高→降权只取强信号;定位完整→当骨架),每条候选 reason 注明主要
   // 依据+权重理由。非硬性打分表 = 画像(确定性可测)+ AI 判断(灵活)。
-  version: "v3",
+  version: "v4",
   outputSchema: topicArraySchema,
   tools: [],
   system:
@@ -75,7 +75,7 @@ export const TOPIC_GENERATE_TEMPLATE: PromptTemplate = {
 
 【出题依据】{{basisHint}}{{basisContext}}{{knowledgeRef}}{{learningsConstraint}}{{signalQuality}}
 
-【任务】产 6-8 条高潜力选题。每条按 钩子强度/定位契合/变现潜力 衡量。
+【任务】优先遵守本次请求明确的数量、主题与受众；未指定数量时默认产 6-8 条高潜力选题。不得为凑数扩展成用户没要的方向。每条按观众收益、钩子与定位契合评估，变现潜力仅在本次目标相关时考虑。
 若上方有【依据质量画像】:各依据**不平权**,按画像动态分配权重 —— 样本少/噪声高/覆盖窄的依据降权(只取其强信号条目,绝不把孤例放大成「受众普遍需求」);完整度高/证据密度高的依据升权当骨架。每条选题的 reason 里用一句话注明主要依据是什么、为何这样定权。
 ${ANTI_FABRICATION_CLAUSE}
 【输出】只输出一个 JSON 对象 {"topics": [...]},topics 是选题数组,每条:{"title","angle"(切入一句),"contentRole"(traffic|trust|conversion),"source"(trend|benchmark|demand),"predictedScore"(0-100 数字),"reason"(一句中文),"sourceComments"(字符串数组)}。出题依据是评论(basis=comments)时,每条选题必须在 sourceComments 里逐字贴出它依据的 1-3 条原始评论——原文照抄,不许改写、不许概括;非评论依据时 sourceComments 给空数组 []。不要多余文字、不要代码块包裹。`,

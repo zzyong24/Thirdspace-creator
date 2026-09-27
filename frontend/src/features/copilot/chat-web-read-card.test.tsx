@@ -180,3 +180,17 @@ describe("ChatWebReadCard — T-813 阅读后保存", () => {
     expect(screen.getByText(/@ 引用当前项目/)).toBeTruthy();
   });
 });
+
+
+describe("T-957 最终来源链接", () => {
+  it("显示最终页面，采纳仍绑定原始来源", async () => {
+    render(<ChatWebReadCard asset={{...ASSET, finalUrl: "https://docs.example.org/final"}} needLogin={null} error={null} projectId="project-1" />);
+    expect(screen.getByRole("link", {name: /docs.example.org/}).getAttribute("href")).toBe("https://docs.example.org/final");
+    await userEvent.click(screen.getByRole("button", {name: /保存到项目/}));
+    expect(commitPendingAsset).toHaveBeenCalledWith({params:{assetId:ASSET.id},body:{expectedSourceUrl:ASSET.sourceUrl}});
+  });
+  it.each([undefined, "javascript:alert(1)", "data:text/html,hi", "https://user:secret@example.org/"])("旧记录或非法最终地址回退原来源：%s", (finalUrl) => {
+    render(<ChatWebReadCard asset={{...ASSET,finalUrl}} needLogin={null} error={null} projectId={null} />);
+    expect(screen.getByRole("link", {name: /example.com/}).getAttribute("href")).toBe(ASSET.sourceUrl);
+  });
+});

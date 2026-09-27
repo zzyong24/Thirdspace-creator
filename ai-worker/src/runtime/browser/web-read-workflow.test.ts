@@ -20,6 +20,7 @@ describe("正式网页读取共享编排", () => {
     const deps = ports();
     deps.readCached.mockResolvedValue({ assetId: "cached", name: "正文·旧标题", previewUrl: null, fullText: document.text });
     expect(await readWebDocument(input, deps)).toMatchObject({ assetId: "cached", title: "旧标题", sourceUrl: input.url, fromCache: true, fullText: document.text, excerpt: document.text.slice(0, 280), extractor: "cached", turnCount: null });
+    expect(await readWebDocument(input, deps)).not.toHaveProperty("finalUrl");
     expect(deps.read).not.toHaveBeenCalled(); expect(deps.saveDocument).not.toHaveBeenCalled();
   });
 
@@ -39,7 +40,7 @@ describe("正式网页读取共享编排", () => {
   it.each(["ssr", "dom"] as const)("缓存 miss 后读全文，%s 诊断和原 URL 保留", async (extractPath) => {
     const deps = ports(); deps.read.mockResolvedValue({ ...document, extractPath });
     const result = await readWebDocument(input, deps);
-    expect(result).toMatchObject({ needLogin: false, assetId: "real-asset", sourceUrl: input.url, fullText: document.text, excerpt: document.text.slice(0, 280), fromCache: false, turnCount: 40 });
+    expect(result).toMatchObject({ needLogin: false, assetId: "real-asset", sourceUrl: input.url, finalUrl: document.finalUrl, fullText: document.text, excerpt: document.text.slice(0, 280), fromCache: false, turnCount: 40 });
     expect(result).toHaveProperty("extraction", extractPath === "ssr" ? "抽到 40 轮对话(SSR 全量,长对话不截断)" : "抽到 40 轮对话(DOM 渲染抽取,超长对话可能不全)");
     expect(deps.saveDocument).toHaveBeenCalledWith({ name: "正文·页面标题", sourceUrl: input.url, fullText: document.text }, undefined);
   });

@@ -20,6 +20,7 @@ export interface ChatWebReadAsset {
   name: string;
   previewUrl: string | null;
   sourceUrl: string;
+  finalUrl?: string;
   title: string;
   excerpt: string;
   extractor: string;
@@ -165,6 +166,13 @@ export function ChatWebReadCard({
     );
   }
 
+  // SEMANTIC_BOUNDARY_ALLOW: 只校验展示链接协议及凭据，不选择内容或授予访问权限。
+  let sourceLink = asset.sourceUrl;
+  try {
+    const final = new URL(asset.finalUrl ?? "");
+    if (["https:", "http:"].includes(final.protocol) && !final.username && !final.password) sourceLink = final.href;
+  } catch { /* 旧记录无最终地址时保留原来源。 */ }
+
   return (
     <div
       data-slot="chat-web-read-card"
@@ -201,14 +209,14 @@ export function ChatWebReadCard({
       )}
       <div className="flex items-center justify-between gap-2">
         <a
-          href={asset.sourceUrl}
+          href={sourceLink}
           target="_blank"
           rel="noreferrer"
           data-slot="chat-web-read-source-link"
           className="inline-flex min-w-0 items-center gap-1 truncate text-[10px] text-brand underline underline-offset-2"
-          title={asset.sourceUrl}
+          title={sourceLink}
         >
-          🔗 {domainOf(asset.sourceUrl)}
+          🔗 {domainOf(sourceLink)}
         </a>
         {saveState === "saved" ? (
           <span className="shrink-0 text-[10px] font-medium text-success">

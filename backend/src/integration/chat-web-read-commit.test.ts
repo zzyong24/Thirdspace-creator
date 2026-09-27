@@ -61,7 +61,7 @@ it("冻结URL优先；观察不创建素材；complete创建真实pending并保�
   await f.service.observe(f.ref, { callId: f.parent.callId, observation });
   expect(await db.select().from(assets)).toHaveLength(0);
   const result = await f.service.complete(f.ref, { callId: f.parent.callId });
-  expect(result.data).toMatchObject({ kind: "web.read", asset: { sourceUrl: "https://example.com/bound", title: observation.title, turnCount: 40 }, window: { offset: 0, length: 1000, total: observation.text.length }, hasMore: true });
+  expect(result.data).toMatchObject({ kind: "web.read", asset: { sourceUrl: "https://example.com/bound", finalUrl: observation.finalUrl, title: observation.title, turnCount: 40 }, window: { offset: 0, length: 1000, total: observation.text.length }, hasMore: true });
   expect(result.sideEffect).toBe("committed");
   expect(await db.select().from(assets)).toMatchObject([{ status: "pending" }]);
   expect(await db.select().from(assetFiles)).toMatchObject([{ extractedText: observation.text, extractStatus: "done", mediaMetadata: { sourceUrl: "https://example.com/bound" } }]);
@@ -80,7 +80,7 @@ it("同调用完整事实幂等，异正文/标题/抽取诊断/最终来源拒�
 it("非法观察、跨任务与取消后的新观察拒绝", async () => {
   const f = await fixture(), other = await fixture();
   await expect(f.service.observe(f.ref, { callId: other.parent.callId, observation })).rejects.toThrow();
-  for (const patch of [{ text: "" }, { text: "x".repeat(2 * 1024 * 1024 + 1) }, { finalUrl: "file:///private/a" }, { finalUrl: "https://u:p@example.com/" }, { turnCount: -1 }, { sourceUrl: "https://fake.example" }]) {
+  for (const patch of [{ text: "" }, { text: "x".repeat(2 * 1024 * 1024 + 1) }, { finalUrl: "file:///private/a" }, { finalUrl: "javascript:alert(1)" }, { finalUrl: "data:text/html,test" }, { finalUrl: "https://u:p@example.com/" }, { turnCount: -1 }, { sourceUrl: "https://fake.example" }]) {
     await expect(f.service.observe(f.ref, { callId: f.parent.callId, observation: { ...observation, ...patch } })).rejects.toThrow();
   }
   await f.tasks.command(f.ctx, { taskIds: [f.ref.executionTaskId], command: "cancel", idempotencyKey: "cancel" });
@@ -489,6 +489,8 @@ it.each([false,true])("T-957 分页固定本任务前页证据，忽略之后更
  expect(hit).toMatchObject({status:"hit",output:{sideEffect:"none",evidence:[{entityId:first.evidence[0]!.entityId,version:first.evidence[0]!.version}],data:{window:{offset:1000,length:1000,total:observation.text.length}}}});
  if(hit.status!=="hit")throw Error("未命中");
  expect((hit.output.data as {text:string}).text).toContain(observation.text.slice(1000,2000));
+ if(cached)expect(hit.output.data).not.toHaveProperty("asset.finalUrl");
+ else expect(hit.output.data).toHaveProperty("asset.finalUrl",observation.finalUrl);
  expect(await db.select().from(executionEvidence)).toHaveLength(1);
  expect(await f.service.cache(f.ref,{callId:parent.callId})).toEqual(hit);
 });
@@ -608,4 +610,17 @@ it.each(["../private","https://example.com","example.com/path","exam\nple.com","
  const f=await fixture();
  await expect(f.service.fail(f.ref,{callId:f.parent.callId,failure:{kind:"needs_login",domain}})).rejects.toThrow();
  const [call]=await db.select().from(executionCalls).where(eq(executionCalls.id,f.parent.callId));expect(call!.status).toBe("started");
+});
+
+
+it("T-957 跨域最终来源保留至续页，篡改来源后拒绝继续",async()=>{
+ const f=await fixture(),redirected={...observation,finalUrl:"https://docs.example.org/new#chapter"};
+ await f.service.observe(f.ref,{callId:f.parent.callId,observation:redirected});
+ const first=await f.service.complete(f.ref,{callId:f.parent.callId});
+ expect(first.data).toHaveProperty("asset.finalUrl",redirected.finalUrl);
+ const next=await nextPage(f,1000);
+ expect(await f.service.cache(f.ref,{callId:next.callId})).toHaveProperty("output.data.asset.finalUrl",redirected.finalUrl);
+ await db.update(executionEvidence).set({sourceUrl:"https://altered.example.org/"}).where(eq(executionEvidence.originCallId,f.parent.callId));
+ const later=await nextPage(f,2000);
+ await expect(f.service.cache(f.ref,{callId:later.callId})).rejects.toThrow("持久网页观察与原调用不符");
 });
