@@ -53,7 +53,7 @@ export function createWorkerSupervisor(options: WorkerSupervisorOptions) {
   const send = (message: HostMessage) => {
     if (!child?.connected) throw new Error("WORKER_DISCONNECTED");
     const handle = child;
-    handle.send(message, error => {if (error && child === handle) void forceStop(handle).catch(() => {});});
+    handle.send(message, error => {if (error && child === handle && !stopping) void forceStop(handle).catch(() => {});});
   };
   const cancel = (execution: ExecutionRef) => {
     if (!current || !sameExecution(current.execution, execution)) return;
@@ -134,7 +134,7 @@ export function createWorkerSupervisor(options: WorkerSupervisorOptions) {
           replies.set(message.requestId, reply);
         }
         void reply.then(response => {
-          if (processHandle.connected) processHandle.send(response, error => {if (error && child === processHandle) void forceStop(processHandle).catch(() => {});});
+          if (processHandle.connected) processHandle.send(response, error => {if (error && child === processHandle && !stopping) void forceStop(processHandle).catch(() => {});});
         });
       });
     });

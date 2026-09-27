@@ -60,7 +60,7 @@ export function createExecutionWorker(deps: WorkerDependencies) {
     const requestId = randomUUID();
     return new Promise((resolve, reject) => {
       const onAbort = () => { cleanup(); reject(new Error("WORKER_CANCELLED")); };
-      const timer = setTimeout(() => {cleanup(); reject(new Error("HOST_PORT_TIMEOUT"));}, ["executeAgenticTool","acquireTranscribeProfile","acquireTranscribeChannel"].includes(port) && active && sameExecution(active.execution,execution) ? active.deadlineAt===null ? 600000 : Math.max(1,active.deadlineAt-Date.now()) : 30000);
+      const timer = setTimeout(() => {cleanup(); reject(new Error("HOST_PORT_TIMEOUT"));}, ["executeAgenticTool","acquireTranscribeProfile","acquireTranscribeChannel","readChatWebReadSession"].includes(port) && active && sameExecution(active.execution,execution) ? active.deadlineAt===null ? 600000 : Math.max(1,active.deadlineAt-Date.now()) : 30000);
       const cleanup = () => {clearTimeout(timer); signal?.removeEventListener("abort", onAbort); pending.delete(requestId);};
       pending.set(requestId, {resolve, reject, cleanup});
       signal?.addEventListener("abort", onAbort, {once: true});

@@ -1,7 +1,8 @@
-import { afterAll, beforeAll, expect, it } from "vitest";
+import { afterAll, beforeAll, expect, it, vi } from "vitest";
 import { createDb, executionTasks, executionBrowserProfileLeases, eq, type Db } from "@creatoros/backend";
 import { createPersistentTaskService } from "./persistent-task.service";
 import { createExecutionBrowserProfileLeaseService } from "./execution-browser-profile-lease.service";
+import {waitForChatWebProfile} from "./chat-web-profile-wait";
 const stamp = "2026-09-05T00:00:00.000Z", now = () => stamp;
 let db: Db, close: () => Promise<void>;
 beforeAll(async () => { const f = await createDb(); db = f.db; close = () => f.client.close(); });
@@ -185,4 +186,33 @@ it('宿主恢复读端口不暴露worker物理档案租约',async()=>{
  const service=createExecutionBrowserProfileLeaseService(db,{now}),worker=await owner('recover-worker','recover-worker-user');
  const profileKey='7'.repeat(64);await service.acquireProfile(worker.ref,'douyin.com',profileKey);
  expect(await service.getHeldHostLease({userId:'recover-worker-user',domain:'douyin.com',profileKey})).toBeNull();
+});
+
+
+it("同用户不同账号等待真实释放后获取，不改变归属与重入幂等", async()=>{
+ const a=await owner("wait-a","wait-user","account-a"),b=await owner("wait-b","wait-user","account-b"),service=createExecutionBrowserProfileLeaseService(db,{now});
+ const first=await service.acquire(a.ref,"wait.example.com");const acquire=vi.fn(()=>service.acquire(b.ref,"wait.example.com"));
+ const pending=waitForChatWebProfile(acquire,new AbortController().signal,{pollMs:5});
+ await vi.waitFor(()=>expect(acquire).toHaveBeenCalled(),{timeout:2000});
+ expect(await service.listOwned(b.ref)).toEqual([]);
+ await service.releaseAfterWorkerStopped(a.ref,first.leaseId);
+ const second=await pending;expect(second.leaseId).not.toBe(first.leaseId);
+ expect(await service.acquire(b.ref,"wait.example.com")).toEqual(second);
+ expect(await service.listOwned(a.ref)).toEqual([]);
+});
+it.each(["fence","deadline","cancel"] as const)("等待期间%s失效不取得租约",async mode=>{
+ const user="wait-stale-"+mode,a=await owner(user+"a",user),b=await owner(user+"b",user),service=createExecutionBrowserProfileLeaseService(db,{now});
+ const first=await service.acquire(a.ref,"example.com"),acquire=vi.fn(()=>service.acquire(b.ref,"example.com"));
+ const pending=waitForChatWebProfile(acquire,new AbortController().signal,{pollMs:10}),rejected=expect(pending).rejects.toThrow();
+ await vi.waitFor(()=>expect(acquire).toHaveBeenCalled(),{timeout:2000});
+ await db.update(executionTasks).set(mode==="fence"?{fenceToken:"changed"}:mode==="deadline"?{deadlineAt:"2000-01-01T00:00:00.000Z"}:{status:"cancel_requested"}).where(eq(executionTasks.id,b.task.id));
+ await rejected;expect(await service.listOwned(b.ref)).toEqual([]);expect((await service.acquire(a.ref,"example.com")).leaseId).toBe(first.leaseId);
+});
+it("等待超时不释放持有者，不影响另一个用户或网站",async()=>{
+ const a=await owner("wait-timeout-a","wait-timeout"),b=await owner("wait-timeout-b","wait-timeout"),c=await owner("wait-other-user","different-user"),service=createExecutionBrowserProfileLeaseService(db,{now});
+ const first=await service.acquire(a.ref,"example.com");
+ await expect(waitForChatWebProfile(()=>service.acquire(b.ref,"example.com"),new AbortController().signal,{timeoutMs:25,pollMs:5})).rejects.toMatchObject({code:"BROWSER_PROFILE_BUSY"});
+ expect(await service.listOwned(b.ref)).toEqual([]);expect((await service.acquire(a.ref,"example.com")).leaseId).toBe(first.leaseId);
+ expect((await service.acquire(c.ref,"example.com")).leaseId).not.toBe(first.leaseId);
+ expect((await service.acquire(b.ref,"other.example.net")).leaseId).not.toBe(first.leaseId);
 });

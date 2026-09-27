@@ -22,6 +22,7 @@ import {createExecutionTopicReadService} from "./execution-topic-read.service";
 import {createDailyTopicCompletionService,type DailyTopicCompletionPorts} from "../ai/daily-topic-completion.service";
 import {buildTrendQuery} from "@creatoros/ai-worker";
 import {createExecutionBrowserProfileLeaseService,BrowserProfileBusyError} from "./execution-browser-profile-lease.service";
+import {waitForChatWebProfile} from "./chat-web-profile-wait";
 import {createExecutionBrowserActionService} from "./execution-browser-action.service";
 import {createExecutionBrowserEvidenceService} from "./execution-browser-evidence.service";
 import {createExecutionBrowserLoginSnapshotService,BrowserLoginSnapshotInvalidError} from "./execution-browser-login-snapshot.service";
@@ -222,7 +223,7 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
           if(port==="resolveChatWebReadSearch")return web.resolveSearch(ref,raw,scope.controller.signal);
           if(port==="readChatWebReadSession") {
             const session=await web.readSession(ref,raw,scope.controller.signal);
-            try{await browserProfiles.acquire(ref,session.domain);}
+            try{await waitForChatWebProfile(()=>browserProfiles.acquire(ref,session.domain),scope.controller.signal);}
             catch(error){if(!(error instanceof BrowserProfileBusyError))throw error;return {status:"blocked",outcome:{status:"error",summary:"网站正在被另一个任务使用",evidence:[],error:{code:"transient",retryable:true,recovery:"等待当前网站任务结束后重试"},continuation:null,sideEffect:"none"}};}
             scope.controller.signal.throwIfAborted();return web.readSession(ref,raw,scope.controller.signal);
           }
