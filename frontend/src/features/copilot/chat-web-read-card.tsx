@@ -123,7 +123,9 @@ export function ChatWebReadCard({
 
   // 失败态:诚实渲错误,不摆假正文。
   if (!asset || error) {
-    const blockedByWebsite = Boolean(error && loginSuggested);
+    // 兼容旧回执：404/限流/服务端错误即使携带旧登录标记，也不引导登录。
+    const hasHttpError = typeof httpStatus === "number" && Number.isInteger(httpStatus) && httpStatus >= 400 && httpStatus <= 599;
+    const suggestLogin = loginSuggested && (httpStatus === 401 || httpStatus === 403);
     return (
       <div
         data-slot="chat-web-read-card"
@@ -133,10 +135,10 @@ export function ChatWebReadCard({
         <span className="text-[10px] font-medium uppercase tracking-wide text-destructive">
           读取失败
         </span>
-        {blockedByWebsite ? (
+        {hasHttpError ? (
           <>
             <p className="text-[12px] leading-relaxed text-foreground">
-              当前没有拿到原文。这个页面可能已下架，也可能需要登录或额外权限。
+              当前没有拿到原文。
             </p>
             {httpStatus ? (
               <p
@@ -147,15 +149,15 @@ export function ChatWebReadCard({
               </p>
             ) : null}
             <p className="text-[11px] leading-relaxed text-text-subtle">
-              可以先登录这个网站后重试；如果仍失败，再换一个来源。系统不会根据没读到的原文编内容。
+              {suggestLogin ? "如果这个网站需要登录，可登录后重试；也可以换一个来源。" : "可以换一个来源链接，或提供原文后继续。"}
             </p>
-            <a
+            {suggestLogin ? <a
               href="/settings?highlight=web-session-vault"
               data-slot="chat-web-read-login-suggestion"
               className="inline-flex h-6 w-fit items-center rounded-control border border-warning/50 px-2 text-[11px] font-medium text-warning hover:bg-warning/10"
             >
               前往网站登录 →
-            </a>
+            </a> : null}
           </>
         ) : (
           <p className="text-[12px] leading-relaxed text-destructive">

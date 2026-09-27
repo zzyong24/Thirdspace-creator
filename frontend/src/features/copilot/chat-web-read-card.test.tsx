@@ -59,15 +59,15 @@ describe("ChatWebReadCard — T-813 阅读后保存", () => {
         asset={null}
         needLogin={null}
         error={
-          "页面返回 HTTP 404:该链接不可访问——已自动用搜索引擎找到可能的替代来源(见 alternates 列表),用 web.read 读取"
+          "页面返回 HTTP 403:该链接不可访问——已自动用搜索引擎找到可能的替代来源(见 alternates 列表),用 web.read 读取"
         }
-        httpStatus={404}
+        httpStatus={403}
         loginSuggested
         projectId={null}
       />,
     );
     expect(screen.getByText(/当前没有拿到原文/)).toBeTruthy();
-    expect(screen.getByText(/HTTP 404/)).toBeTruthy();
+    expect(screen.getByText(/HTTP 403/)).toBeTruthy();
     expect(screen.queryByText(/alternates 列表/)).toBeNull();
     expect(screen.queryByText(/web\.read/)).toBeNull();
     const link = screen.getByRole("link", { name: /前往网站登录/ });
@@ -193,4 +193,25 @@ describe("T-957 最终来源链接", () => {
     render(<ChatWebReadCard asset={{...ASSET,finalUrl}} needLogin={null} error={null} projectId={null} />);
     expect(screen.getByRole("link", {name: /example.com/}).getAttribute("href")).toBe(ASSET.sourceUrl);
   });
+});
+
+it.each([404,429,500,503])("T-957 历史HTTP %i回执即使建议登录也不能再显示登录入口或内部错误",status=>{
+ render(<ChatWebReadCard asset={null} needLogin={null} error="fixture material.gather web.read alternates 内部恢复指令" httpStatus={status} loginSuggested projectId={null} />);
+ expect(screen.queryByRole("link",{name:/网站登录/})).toBeNull();
+ expect(screen.getByText(new RegExp(`HTTP ${status}`))).toBeTruthy();
+ expect(screen.queryByText(/内部恢复指令/)).toBeNull();
+});
+it.each([401,403])("T-957 HTTP %i可以保留显式的可选登录建议",status=>{
+ render(<ChatWebReadCard asset={null} needLogin={null} error="fixture" httpStatus={status} loginSuggested projectId={null} />);
+ expect(screen.getByRole("link",{name:/前往网站登录/})).toBeTruthy();
+});
+
+it("T-957 确认登录墙优先于HTTP失败提示",()=>{
+ render(<ChatWebReadCard asset={null} needLogin={{domain:"example.com"}} error="fixture" httpStatus={404} loginSuggested projectId={null} />);
+ expect(screen.getByRole("link",{name:/去网站登录保管库/})).toBeTruthy();
+});
+it.each([null,0,302,600,NaN,401.5])("T-957 无效HTTP状态 %s 不能伪装成HTTP失败卡或登录依据",status=>{
+ render(<ChatWebReadCard asset={null} needLogin={null} error="请输入有效链接" httpStatus={status} loginSuggested projectId={null} />);
+ expect(screen.getByText("请输入有效链接")).toBeTruthy();
+ expect(screen.queryByRole("link",{name:/网站登录/})).toBeNull();
 });

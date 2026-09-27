@@ -624,3 +624,13 @@ it("T-957 跨域最终来源保留至续页，篡改来源后拒绝继续",async
  const later=await nextPage(f,2000);
  await expect(f.service.cache(f.ref,{callId:later.callId})).rejects.toThrow("持久网页观察与原调用不符");
 });
+
+it.each([401,403,404,429,500,503])("T-957 HTTP %i 真实宿主结算与重放保持准确登录建议和普通文案",async status=>{
+ const f=await fixture();
+ const input={callId:f.parent.callId,failure:{kind:"http_blocked" as const,status,message:"fixture raw internal",alternates:[]}};
+ const result=await f.service.fail(f.ref,input);
+ expect(result).toMatchObject({status:"error",sideEffect:"none",data:{httpStatus:status,loginSuggested:status===401||status===403,asset:null}});
+ expect(JSON.stringify(result)).not.toMatch(/fixture raw internal|material\.gather|如实告诉用户/);
+ expect(await f.service.fail(f.ref,input)).toEqual(result);
+ expect(await db.select().from(assets)).toHaveLength(0);
+});

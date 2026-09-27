@@ -4335,10 +4335,10 @@ describe("[T-371] web.read SERP 限制 — 窗口压缩 + 诚实注记", () => {
     expect(result.window?.total).toBe(5000);
     expect(result.hasMore).toBe(true);
     expect(result.serpNote).toBe(WEB_READ_SERP_NOTE);
-    // 注记内容:是结果列表页摘要非正文 + 指路 material.gather / 具体文章 URL。
+    // 用户注记只说明页面类型和具体文章下一步，工具操作放在description。
     // [T-390] 措辞已覆盖站内搜索列表页(「搜索结果列表页」)。
     expect(WEB_READ_SERP_NOTE).toContain("搜索结果列表页");
-    expect(WEB_READ_SERP_NOTE).toContain("material.gather");
+    expect(WEB_READ_SERP_NOTE).toContain("具体文章");
   });
 
   it("SERP 上模型请求 maxChars=12000 也被封顶 1500(cap 同压,绕不过)", async () => {
@@ -4417,9 +4417,9 @@ describe("[T-390] material.screenshot — 结果列表页硬拒 + 首屏默认",
     expect(captureScreenshot).not.toHaveBeenCalled();
     expect(result.asset).toBeNull();
     expect(result.error).toBe(MATERIAL_SCREENSHOT_SERP_ERROR);
-    // 拒绝文案本身给出正确路径:点进单篇 + material.gather。
-    expect(MATERIAL_SCREENSHOT_SERP_ERROR).toContain("单篇");
-    expect(MATERIAL_SCREENSHOT_SERP_ERROR).toContain("material.gather");
+    // 拒绝文案给用户普通语言的下一步，不暴露工具名称。
+    expect(MATERIAL_SCREENSHOT_SERP_ERROR).toContain("具体文章");
+    expect(MATERIAL_SCREENSHOT_SERP_ERROR).toContain("再截图");
   });
 
   it("引擎 SERP 同样硬拒(bing 结果页)", async () => {
@@ -4484,8 +4484,8 @@ describe("[T-390] web.read 被拒多路回退 — blocked → error + alternates
     expect(result.alternates).toHaveLength(2);
     expect(result.alternates?.[0]?.url).toBe("https://other.example.com/a");
     // 指引本身:挑一条再读 + 不编内容。
-    expect(WEB_READ_BLOCKED_ALTERNATES_NOTE).toContain("web.read");
-    expect(WEB_READ_BLOCKED_ALTERNATES_NOTE).toContain("绝不编内容");
+    expect(WEB_READ_BLOCKED_ALTERNATES_NOTE).toContain("继续读取并核对");
+    expect(WEB_READ_BLOCKED_ALTERNATES_NOTE).toContain("尚未取得原网页正文");
   });
 
   it("blocked 但替代来源为空 → error 带诚实到底指引,不带 alternates 字段", async () => {
@@ -4504,7 +4504,7 @@ describe("[T-390] web.read 被拒多路回退 — blocked → error + alternates
     expect(result.error).toContain("HTTP 500");
     expect(result.error).toContain(WEB_READ_BLOCKED_NO_ALTERNATES_NOTE.trim());
     expect(result.alternates).toBeUndefined();
-    expect(WEB_READ_BLOCKED_NO_ALTERNATES_NOTE).toContain("绝不编内容");
+    expect(WEB_READ_BLOCKED_NO_ALTERNATES_NOTE).toContain("没有取得可用的替代来源");
   });
 
   it("站内搜索列表页正文同样窗口压缩 + serpNote(T-371 扩展到站内搜索)", async () => {
@@ -4590,4 +4590,19 @@ describe("T-957 最终地址仅供展示，旧端口不能泄露凭据或可执�
     expect(await runExecute(tools["web.read"]!,{url:"https://example.com/source"})).toHaveProperty("asset.finalUrl","https://docs.example.org/final#part");
     expect(tools["tool.result.read"]!.description).toContain("不是网页正文总长或阅读进度");
   });
+});
+
+describe("T-957 网页失败的用户提示",()=>{
+ it.each([401,403,404,429,500,503])("HTTP %i 按实际状态给登录建议，不把内部操作写进错误文案",async(status)=>{
+  const {deps}=makeDeps({readWeb:async()=>({blocked:true as const,status,message:"fixture",alternates:[]})});
+  const tools=buildChatTools(["web.read"],deps);
+  const result=await runExecute(tools["web.read"]!,{url:"https://example.com/page"}) as {error:string;loginSuggested:boolean;httpStatus:number};
+  expect(result.httpStatus).toBe(status);
+  expect(result.loginSuggested).toBe(status===401||status===403);
+  expect(result.error).not.toMatch(/material\.gather|web\.read|alternates|如实告诉用户|绝不编内容/);
+  expect(result.error).toContain("没有取得可用的替代来源");
+ });
+ it("有替代来源和列表页的用户提示不包含内部工具名称",()=>{
+  for(const value of [WEB_READ_SERP_NOTE,MATERIAL_SCREENSHOT_SERP_ERROR,WEB_READ_BLOCKED_ALTERNATES_NOTE])expect(value).not.toMatch(/material\.gather|web\.read|alternates|如实告诉用户|绝不编内容/);
+ });
 });

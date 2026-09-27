@@ -1660,18 +1660,18 @@ export const WEB_READ_SERP_MAX_CHARS = 1500;
 // [T-371] SERP 命中时随结果回的诚实注记(导出供单测锚定;模型据此不把 SERP 当正文素材灌)。
 // [T-390] 措辞覆盖站内搜索列表页(36氪搜索页等)—— 与引擎 SERP 同类:列表页不是正文/素材。
 export const WEB_READ_SERP_NOTE =
-  "这是搜索结果列表页的摘要(已截断),不是文章正文;要系统检索素材请用 material.gather,要读内容请点进具体单篇文章的 URL 再调 web.read。";
+  "这是搜索结果列表页的摘要（已截断），不是文章正文。请打开具体文章后继续阅读。";
 
 // [T-390] material.screenshot 对搜索结果列表页的硬拒文案(导出供单测锚定):结果列表页截图
 // 对创作素材没有信息量(真机事故:36氪搜索列表页整页截图无意义),该点进单篇再截。
 export const MATERIAL_SCREENSHOT_SERP_ERROR =
-  "这是搜索结果列表页 —— 结果列表截图对创作素材没有意义,不截。请点进具体的单篇文章/详情页再截图;要系统性找素材请用 material.gather。";
+  "当前是搜索结果列表页，未生成截图。请打开具体文章或详情页后再截图。";
 
 // [T-390] web.read 被拒(HTTP 403/404/5xx)时按有无替代来源追加的行动指引(导出供单测锚定)。
 export const WEB_READ_BLOCKED_ALTERNATES_NOTE =
-  " 已自动用搜索引擎找到可能的替代来源(见 alternates 列表)—— 挑相关的一条,用 web.read 读它的正文;如果都不相关,如实告诉用户原文没拿到,绝不编内容。";
+  " 已找到可能相关的替代来源，可继续读取并核对；尚未取得原网页正文。";
 export const WEB_READ_BLOCKED_NO_ALTERNATES_NOTE =
-  " 搜索引擎也没找到可用的替代来源 —— 如实告诉用户原文没拿到,绝不编内容;可建议换一个来源链接,或用 material.gather 检索同主题素材。";
+  " 没有取得可用的替代来源。可以换一个来源链接，或提供原文后继续。";
 
 // [T-371] SERP 识别纯函数(导出可测):URL 是否主流搜索引擎的搜索结果页。只认「搜索结果路径」
 // (bing.com/search、baidu.com/s、google.*/search、so.com/s、sogou.com/web 等),不误伤普通文章
@@ -3796,7 +3796,7 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
                   ? WEB_READ_BLOCKED_ALTERNATES_NOTE
                   : WEB_READ_BLOCKED_NO_ALTERNATES_NOTE),
               httpStatus: res.status,
-              loginSuggested: true,
+              loginSuggested: res.status === 401 || res.status === 403,
               text: null,
               window: null,
               hasMore: false,
