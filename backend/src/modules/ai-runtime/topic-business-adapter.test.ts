@@ -1,4 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
+import {createChatBusinessGenerationPreparation} from "./chat-business-generation-preparation";
 import {
   createTopicGenerateBusinessAdapter,
   prepareTopicGenerateContext,
@@ -239,4 +240,11 @@ it('必要调用容量只由冻结来源计数，普通定位0、trend搜索加w
  const makeTask=(basis:string)=>({...task(basis),id:'t',retryOfTaskId:null,skillSnapshot});
  expect(topicAdditionalCalls(await adapter.prepare(ctx,makeTask('positioning')))).toBe(0);
  expect(topicAdditionalCalls(await adapter.prepare(ctx,makeTask('trend')))).toBe(4);
+});
+
+it("T-957 助手给子任务的建议不冒充优先用户指令",async()=>{
+ const business=createChatBusinessGenerationPreparation({...base,assertProject:async()=>{},readTrend:vi.fn()});
+ const prepared=await business.prepareTopic(ctx,{basis:"positioning",extraBrief:"生成八条，我曾踩过算法串台"});
+ expect(prepared.facets.basisContext).toContain("助手建议（不是用户原话或已核实事实）");
+ expect(prepared.facets.basisContext).not.toContain("本次生成指令");
 });

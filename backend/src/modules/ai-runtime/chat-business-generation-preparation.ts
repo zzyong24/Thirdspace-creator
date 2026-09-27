@@ -1,6 +1,5 @@
 import type {RequestContext} from "@creatoros/contract";
 import {topicFacets} from "@creatoros/ai-worker";
-import {EXTRA_BRIEF_HEADING} from "@creatoros/ai-worker/chat";
 import {prepareTopicGenerateContext,type TopicGeneratePrepareDeps} from "./topic-business-adapter";
 import {assembleCreativeContext} from "./creative-context";
 import {renderSignalQualityBrief} from "./signal-quality";
@@ -24,7 +23,7 @@ export function createChatBusinessGenerationPreparation(deps:TopicGeneratePrepar
     brief=source.brief;trendNote=source.note;trend={sourceCount:source.sourceCount,signalCount:source.signalCount};
    }
    signal?.throwIfAborted();
-   brief=[brief,args.extraBrief?`${EXTRA_BRIEF_HEADING}\n${args.extraBrief}`:""].filter(Boolean).join("\n");
+   brief=[brief,args.extraBrief?`【助手建议（不是用户原话或已核实事实）】\n${args.extraBrief}`:""].filter(Boolean).join("\n");
    return {facets:topicFacets(frozen.context.positioningBrief,args.basis,brief,args.basis==="knowledge"?undefined:frozen.context.knowledgeBrief||undefined,frozen.context.learningsBrief||undefined,renderSignalQualityBrief({...frozen.qualityProfile,trend})),trendNote};
   },
   async prepareReview(context,input,signal){

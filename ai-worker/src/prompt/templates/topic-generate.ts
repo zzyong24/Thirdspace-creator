@@ -65,7 +65,7 @@ export const TOPIC_GENERATE_TEMPLATE: PromptTemplate = {
   // topic-daily-collector / chat-runner)按各依据源**真实数据**算质量画像注入;模板指引按画像
   // 动态定权(评论样本少噪声高→降权只取强信号;定位完整→当骨架),每条候选 reason 注明主要
   // 依据+权重理由。非硬性打分表 = 画像(确定性可测)+ AI 判断(灵活)。
-  version: "v4",
+  version: "v5",
   outputSchema: topicArraySchema,
   tools: [],
   system:
@@ -74,6 +74,10 @@ export const TOPIC_GENERATE_TEMPLATE: PromptTemplate = {
 {{positioning}}
 
 【出题依据】{{basisHint}}{{basisContext}}{{knowledgeRef}}{{learningsConstraint}}{{signalQuality}}
+
+【当前用户原话】
+{{userRequest}}
+原话中的数量、主题、受众与禁止事项优先于助手建议。助手建议可用于延续选题方向，不能据此虚构用户经历、平台机制或效果；与原话冲突时按原话执行。用户仅说“继续”等承接语时，可结合已有依据和助手建议延续任务，但缺少证据的事实仍不可采用。没有提供原话的独立生成任务按本任务与出题依据执行。
 
 【任务】优先遵守本次请求明确的数量、主题与受众；未指定数量时默认产 6-8 条高潜力选题。不得为凑数扩展成用户没要的方向。每条按观众收益、钩子与定位契合评估，变现潜力仅在本次目标相关时考虑。
 若上方有【依据质量画像】:各依据**不平权**,按画像动态分配权重 —— 样本少/噪声高/覆盖窄的依据降权(只取其强信号条目,绝不把孤例放大成「受众普遍需求」);完整度高/证据密度高的依据升权当骨架。每条选题的 reason 里用一句话注明主要依据是什么、为何这样定权。

@@ -47,6 +47,8 @@ describe("Agent 对用户的共同表达约束", () => {
 
   it("选题数量服从当前请求，默认数量不覆盖明确数量", () => {
     const { template } = getOfficialTemplate("topic.generate");
+    expect(template).toContain("{{userRequest}}");
+    expect(template).toContain("原话中的数量、主题、受众与禁止事项优先于助手建议");
     expect(template).toContain("优先遵守本次请求明确的数量");
     expect(template).toContain("未指定数量时默认产 6-8 条");
     expect(template).not.toContain("【任务】产 6-8 条");

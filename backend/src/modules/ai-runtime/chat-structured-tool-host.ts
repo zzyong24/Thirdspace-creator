@@ -78,7 +78,7 @@ export function createChatStructuredTaskToolHost(
       const args=resolved.input as {basis?:"positioning"|"comments"|"knowledge"|"trend";extraBrief?:string};
       const prepared=await ports.business.prepareTopic(resolved.restored.context,{basis:args.basis??"positioning",extraBrief:clampExtraBrief(args.extraBrief),projectId:resolved.restored.hostContext.chatContext.projectId??undefined},scope.signal);
       scope.signal?.throwIfAborted();
-      return {node:{capability:"topic.generate",facets:prepared.facets,trendNote:prepared.trendNote??null},discovery:null,maxOutputTokens:resolved.config.maxOutputTokens};
+      return {node:{capability:"topic.generate",facets:{...prepared.facets,userRequest:resolved.restored.snapshot.sourceMessage.content},trendNote:prepared.trendNote??null},discovery:null,maxOutputTokens:resolved.config.maxOutputTokens};
      }
      if(definition.name==="review.analyze"){
       if(!ports.business)throw new Error("复盘上下文准备端口未装配");

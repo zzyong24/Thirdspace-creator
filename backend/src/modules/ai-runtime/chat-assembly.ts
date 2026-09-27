@@ -233,7 +233,7 @@ export async function prepareChatAssembly(ctx: RequestContext, chatContext: Chat
     // 让模型一进来就知道用户"这条"指哪条,不再瞎答/反复索要标题。
     // T-039b per-action 注入矩阵:定位对话(chatbox.positioning)额外注入账号画像 accountsBrief
     // ——定位提案要立足「这个人在平台上已经是谁」;其它 surface 不注(避免账号噪声)。
-    const baseSystem = assembleChatSystem(skill.system, context, {
+    const baseSystem = assembleChatSystem(skill.system.replaceAll(USER_FACING_RESPONSE_POLICY, "").trim(), context, {
         includeAccounts: skillId === "chatbox.positioning" && !options.positioningScratch,
     });
     // [T-684] 联网检索已改成随包浏览器能力，不再读取被隐藏的搜索模型配置。
@@ -351,8 +351,8 @@ export async function prepareChatAssembly(ctx: RequestContext, chatContext: Chat
             "【局部改稿专用回合】",
             "用户已明确选中一个现有脚本段落。只根据用户本轮修改要求重写该段；不得改动、重写或补写其他段落，也不得要求用户提供 artifactId、versionId、sectionId 等技术字段。",
             "必须调用 script.patch 提交 replacementText。技术锚点由服务端绑定；不要调用其他工具，不要只在对话中返回改写文案。",
-            USER_FACING_RESPONSE_POLICY,
             selectionBlock,
+            USER_FACING_RESPONSE_POLICY,
         ]
             .filter(Boolean)
             .join("\n\n")
@@ -373,6 +373,7 @@ export async function prepareChatAssembly(ctx: RequestContext, chatContext: Chat
             reviewSubjectBlock,
             selectionBlock,
             assetAliasBlock,
+            USER_FACING_RESPONSE_POLICY,
         ]
             .filter(Boolean)
             .join("\n\n");
