@@ -1,0 +1,163 @@
+{
+  "sourceCommit": "d18b44d22c7a03f7b28e98d5aac4870178c56041",
+  "packageVersion": "1.2.0",
+  "packageSha256": "a0412e1cb89435a48462e3887f43cf647939c4c3db91968d9ed16fbb293667ca",
+  "adHoc": true,
+  "notarized": false,
+  "cases": [
+    {
+      "accountAlias": "a",
+      "taskId": "ai-task-a3a590f1-108",
+      "runtimeStatus": "succeeded",
+      "windows": [
+        {
+          "input": {
+            "url": "https://docs.python.org/3/tutorial/datastructures.html",
+            "refresh": true
+          },
+          "window": {
+            "total": 22678,
+            "length": 12000,
+            "offset": 0
+          },
+          "hasMore": true,
+          "error": null,
+          "assetId": "asset-document-150b05b98397f749672cd0227c1d6979d9ccbd97adc86907170fe25508050631",
+          "finalUrl": "https://docs.python.org/3/tutorial/datastructures.html"
+        },
+        {
+          "input": {
+            "url": "https://docs.python.org/3/tutorial/datastructures.html",
+            "offset": 12000
+          },
+          "window": {
+            "total": 22678,
+            "length": 10678,
+            "offset": 12000
+          },
+          "hasMore": false,
+          "error": null,
+          "assetId": "asset-document-150b05b98397f749672cd0227c1d6979d9ccbd97adc86907170fe25508050631",
+          "finalUrl": "https://docs.python.org/3/tutorial/datastructures.html"
+        }
+      ],
+      "lastTitleCorrect": true,
+      "strictAnswerOnly": false,
+      "internalParametersExposed": true
+    },
+    {
+      "accountAlias": "b",
+      "taskId": "ai-task-a3a590f1-119",
+      "runtimeStatus": "succeeded",
+      "windows": [
+        {
+          "input": {
+            "url": "https://docs.python.org/3/tutorial/datastructures.html",
+            "refresh": true
+          },
+          "window": {
+            "total": 22678,
+            "length": 12000,
+            "offset": 0
+          },
+          "hasMore": true,
+          "error": null,
+          "assetId": "asset-document-6e9994b740e36a678392b4c0f57278b296a915e58a05f3ec7f7678e3e22fac4e",
+          "finalUrl": "https://docs.python.org/3/tutorial/datastructures.html"
+        },
+        {
+          "input": {
+            "url": "https://docs.python.org/3/tutorial/datastructures.html",
+            "offset": 12000
+          },
+          "window": {
+            "total": 22678,
+            "length": 10678,
+            "offset": 12000
+          },
+          "hasMore": false,
+          "error": null,
+          "assetId": "asset-document-6e9994b740e36a678392b4c0f57278b296a915e58a05f3ec7f7678e3e22fac4e",
+          "finalUrl": "https://docs.python.org/3/tutorial/datastructures.html"
+        }
+      ],
+      "lastTitleCorrect": true,
+      "strictAnswerOnly": true,
+      "internalParametersExposed": false
+    }
+  ],
+  "waitDiagnostic": {
+    "decoderExit": 0,
+    "lines": [
+      "[2026-09-27T15:10:36.173Z] [sidecar] [chat-web-profile-wait] 网站资源占用，等待实际持有者释放",
+      "[2026-09-27T15:11:24.649Z] [sidecar] [chat-web-profile-wait] 网站资源已释放，取得租约 { waitedMs: 48487 }"
+    ]
+  },
+  "crossAccount": {
+    "a": [
+      {
+        "operation": "ai.tasks.results.list",
+        "ok": false,
+        "error": "HTTP_404",
+        "dataReturned": false
+      },
+      {
+        "operation": "ai.conversations.messages.list",
+        "ok": false,
+        "error": "HTTP_404",
+        "dataReturned": false
+      },
+      {
+        "operation": "tasks get",
+        "ok": false,
+        "error": "HTTP_404",
+        "dataReturned": false
+      }
+    ],
+    "b": [
+      {
+        "operation": "ai.tasks.results.list",
+        "ok": false,
+        "error": "HTTP_404",
+        "dataReturned": false
+      },
+      {
+        "operation": "ai.conversations.messages.list",
+        "ok": false,
+        "error": "HTTP_404",
+        "dataReturned": false
+      },
+      {
+        "operation": "tasks get",
+        "ok": false,
+        "error": "HTTP_404",
+        "dataReturned": false
+      }
+    ]
+  },
+  "dataIntegrity": {
+    "accounts": {
+      "ok": true,
+      "unchanged": true,
+      "count": 3
+    },
+    "projects": {
+      "ok": true,
+      "unchanged": true,
+      "count": 85
+    },
+    "project-185382ce-364": {
+      "ok": true,
+      "unchanged": true
+    },
+    "project-9cd24147-100": {
+      "ok": true,
+      "unchanged": true
+    }
+  },
+  "acceptance": "并发网页读取通过；助手表达整体未通过",
+  "globalReconcile": {
+    "errors": 30,
+    "warnings": 1
+  }
+}
