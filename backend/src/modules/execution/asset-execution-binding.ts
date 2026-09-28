@@ -14,7 +14,14 @@ export async function bindAssetExecution(scope:AssetExecutionScope,callId?:strin
   const [business]=await tx.select().from(aiTasks).where(and(eq(aiTasks.id,task.ownerId),eq(aiTasks.executionTaskId,task.id),eq(aiTasks.userId,context.userId),eq(aiTasks.accountId,context.accountId!)));
   if(task.kind!=="ai_task" || task.ownerType!=="ai_task" || payload.aiTaskId!==business?.id || business?.taskType!==(cover?"cover.generate":"asset.generate"))throw new ConflictError("素材执行缺少真实任务归属");
   const businessInput=business.inputData as Record<string,unknown>;
-  if(!cover && ((businessInput.kind==="video"?"video":"image")!==input.mediaKind || businessInput.prompt!==input.prompt))throw new ConflictError("素材执行输入与原业务任务不符");
+  if(!cover && (
+    (businessInput.kind==="video"?"video":"image")!==input.mediaKind
+    || businessInput.prompt!==input.prompt
+    || (businessInput.mode!==undefined && businessInput.mode!==input.mode)
+    || (businessInput.referenceAssetId??null)!==(input.reference?.assetId??null)
+    || (businessInput.referenceFileId!==undefined && businessInput.referenceFileId!==input.reference?.fileId)
+    || (businessInput.referenceChecksum!==undefined && businessInput.referenceChecksum!==input.reference?.checksum)
+  ))throw new ConflictError("素材执行输入与原业务任务不符");
   const name=cover&&typeof cover.resultData.name==="string"?cover.resultData.name:undefined;
   const digest=`sha256:${createHash("sha256").update(canonicalJson(input)).digest("hex")}`;
   const recovery=payload.assetLegacyRecovery as {mode?:string;callId?:string}|undefined;

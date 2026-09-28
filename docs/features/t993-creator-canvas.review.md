@@ -2,11 +2,11 @@
 
 - Task: T-993
 - Verdict: PASS
-- Round: 2/3 (recheck)
-- Spec receipt: c99e60399bcd
-- Review receipt: 5737f1edd3f5
+- Round: 3/3 (recheck)
+- Spec receipt: 128d6333187f
+- Review receipt: 940cde16235e
 
-> Constitution 说明：仓库没有 `PRODUCT_SPEC.md`，本次两轮独立评审按项目现有权威入口使用 `PROJECT.md`，事件与 receipt 均绑定其真实 SHA-256。
+> Constitution 说明：仓库没有 `PRODUCT_SPEC.md`，本次独立复审沿用 `PROJECT.md`；事件和 receipt 均绑定其真实 SHA-256。第 3 轮同时核对 MiniMax v1/H3 官方首帧合同、仓内 OmniHi 首帧拒绝边界，以及既有任务恢复与候选采纳链。
 
 ## 当前有效问题
 
@@ -19,13 +19,13 @@
   "schema": "spec-review-state/v2",
   "task_id": "T-993",
   "cycle": 1,
-  "round": 2,
+  "round": 3,
   "max_rounds": 3,
   "review_kind": "recheck",
   "verdict": "PASS",
-  "summary": "复审确认三项服务契约缺口均已由当前 SPEC 明确约束，仓内 ai-task、generated_asset 与 image.edit 路径支持该设计，未发现新的阻断。仓库无 PRODUCT_SPEC.md，本轮继续以 PROJECT.md 作为产品宪法。",
+  "summary": "第 3 轮变更后复审确认既有 REV-001～003 继续保持销账。本轮新增的四模式公共生成契约与 MiniMax v1/H3 官方能力、仓内 OmniHi 拒绝首帧边界以及现有输入冻结、provider job 恢复、generated_asset 候选采纳链一致，未发现新的 blocker/major。仓库无 PRODUCT_SPEC.md，继续以 PROJECT.md 作为产品宪法。",
   "spec_path": "docs/features/t993-creator-canvas.md",
-  "spec_sha256": "c99e60399bcd4fd3b65ba324c5baab413949ac1a5dc72e3e6ec7d90f7b1d7fb6",
+  "spec_sha256": "128d6333187f8b334d0632046aa11bc2c83d46a09a5bfee63fc7d25d547e0d90",
   "constitution_path": "PROJECT.md",
   "constitution_sha256": "709be0304fdb7c457a41847eacb087cdeb0ed10a81c239f5c75e5260832399ed",
   "review_path": "docs/features/t993-creator-canvas.review.md",
@@ -33,7 +33,7 @@
   "model": "gpt-5.6-sol",
   "policy": "convergent-review/v2",
   "cycle_authorization": null,
-  "latest_event_hash": "0f61be13d8a7d84d604cf199b6b125e07530c02e644d02722c43f5f82b822889",
+  "latest_event_hash": "3a4c240875c690c0aabf8e82e144986382876bdd684c7ae9edfd3c3b339ded6a",
   "open_findings": [],
   "resolved_findings": [
     {
@@ -49,6 +49,6 @@
       "resolution_evidence": "SPEC 第 27、48、50 行明确 canvasId、baseRevision、proposalId、稳定操作 ID、整体事务、重复回读及陈旧版本 409。"
     }
   ],
-  "receipt": "5737f1edd3f5"
+  "receipt": "940cde16235e"
 }
 ```

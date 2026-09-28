@@ -9,6 +9,8 @@ export * from "./client";
 export * from "./local-platform";
 export * from "./cli-policy";
 export * from "./version";
+export {canvasDocumentSchema,canvasNodeSchema,canvasEdgeSchema,creativeCanvasResource,canvasGenerationLinkResource,emptyCanvasDocument,type CanvasDocument,type CanvasNode,type CreativeCanvasResource} from "./resources/creative-canvas";
+export {canvasProposalOperationSchema,canvasProposalResource} from "./resources/creative-canvas";
 
 export {
   knowledgeFolderResource,

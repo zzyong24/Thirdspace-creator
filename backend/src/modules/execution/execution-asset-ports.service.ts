@@ -11,12 +11,25 @@ import {createExecutionLeaseService} from "./execution-lease.service";
 import {bindAssetExecution} from "./asset-execution-binding";
 import type {Db} from "@creatoros/backend";
 /** 仅命名素材端口，身份、存储路径、格式及预留预算都由后端原任务决定。 */
-export function createExecutionAssetPorts(deps:Parameters<typeof createExecutionAssetResultService>[0]&{resolveCredential?:(context:RequestContext,owner:{aiTaskId:string;executionTaskId:string})=>Promise<unknown>}){
+export function createExecutionAssetPorts(deps:Parameters<typeof createExecutionAssetResultService>[0]&{resolveCredential?:(context:RequestContext,owner:{aiTaskId:string;executionTaskId:string})=>Promise<unknown>;readReference?:(context:RequestContext,assetId:string,fileId:string)=>Promise<{fileId:string;checksum:string;mimeType:string;bytes:Uint8Array}|null>}){
  const results=createExecutionAssetResultService(deps),jobs=createExecutionProviderJobService(deps.db,{now:deps.now});
  const leases=createExecutionLeaseService(deps.db,{now:deps.now});
  return {
   async invoke(execution:ExecutionRef,port:WorkerPort,raw:unknown,signal?:AbortSignal):Promise<unknown>{
    const ref=executionRefSchema.parse(execution);
+   if(port==="readAssetReference"){
+    const {callId}=workerPortInputSchemas.readAssetReference.parse(raw);
+    const bound=await leases.withLease(ref,"admission",async scope=>{
+      const {input}=await bindAssetExecution(scope,callId);
+      if(!input.reference)throw new ConflictError("素材任务没有参考图");
+      return {context:scope.context,reference:input.reference};
+    });
+    if(!deps.readReference)throw new Error("ASSET_REFERENCE_UNAVAILABLE");
+    const value=await deps.readReference(bound.context,bound.reference.assetId,bound.reference.fileId);
+    signal?.throwIfAborted();
+    if(!value || value.fileId!==bound.reference.fileId || value.checksum!==bound.reference.checksum || value.mimeType!==bound.reference.mimeType || createHash("sha256").update(value.bytes).digest("hex")!==bound.reference.checksum)throw new ConflictError("参考素材版本或字节已变化");
+    return {bytes:value.bytes,mimeType:value.mimeType};
+   }
    if(port==="resolveAssetCredential"){
     const {callId}=workerPortInputSchemas.resolveAssetCredential.parse(raw);
     const owner=await leases.withLease(ref,"admission",async scope=>{await bindAssetExecution(scope,callId);return {context:scope.context,aiTaskId:scope.task.ownerId};});

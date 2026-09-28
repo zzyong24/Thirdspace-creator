@@ -145,6 +145,7 @@ import { prepareScriptReviewContext } from "@creatoros/backend/modules/ai-runtim
 import { createEmbeddingIoService, createModelProbeIoService } from "@creatoros/backend/modules/ai-runtime";
 import { createLearningsService, createLearningsTransport } from "@creatoros/backend/modules/learnings";
 import { createAiService, createAiTransport, createAiRepository, buildAiModelConfigs, buildAiAgentConfigs, type AiService } from "@creatoros/backend/modules/ai";
+import {createCreativeCanvasService,createCreativeCanvasTransport} from "@creatoros/backend/modules/creative-canvas";
 // [T-255a] 执行层(脑手分离):execution.tasks 5 op + 沙箱 + executor 注册表 + live
 // dispatch 编排。存储复用 ai_tasks(taskType `exec.*`),模块本体零 db 依赖(端口注入)。
 // [T-255a] 执行层(脑手分离):execution.tasks 5 op + 沙箱 + executor 注册表 + live
@@ -651,6 +652,7 @@ interface PersistenceBundle {
   trendSources: Transport;
   // [T-235c] 指定收藏夹登记 CRUD transport(收藏夹跟拍信号源)。
   favoritesFolders: Transport;
+  creativeCanvas:Transport;
   // [T-235d] 选题归因只读 transport(正向归因回流)。
   topicAttribution: Transport;
   // Query services (module Q, Wave 4): the composite transport for the 3 page
@@ -955,7 +957,7 @@ export interface ChatRuntime {
   // ai.tasks.create,交由持久素材执行入口，旧提交事实沿原对账路径),立即返回 taskId(不阻塞对话回合)。
   dispatchGenerateAsset: (
     ctx: RequestContext,
-    input: { kind: "image" | "video"; prompt: string; projectId?: string | null; attemptId?: string },
+    input: { kind: "image" | "video"; prompt: string; projectId?: string | null; attemptId?: string; referenceAssetId?:string },
   ) => Promise<{ taskId: string }>;
   // [T-103b] review.script 端口 —— dispatch 既有 script.review ai_task(reviewGateService.triggerReview,
   // 复用 T-086 审核链路 L1 lint + L2 语义审 → 落 script_review_reports),立即返回 taskId。对话审核工具
@@ -4758,6 +4760,7 @@ FAVORITES_PROMOTE_PER_RUN
   const coverBusiness=createExecutionCoverService(db,{...coverExecutionPorts,budget:workerBudget,now:deps.now});
   const assetBusiness=createAssetBusinessExecutionService(db,{
     budget:{...workerBudget,deadlineMs:1_800_000},now:deps.now,
+    getReference:(c,assetId,fileId)=>assetsService.getAssetReference(c,assetId,fileId),
     async assertProject(c,id){await projectsService.getProjectOverviewCore(c,id);},
     async resolveSpec(c,capability,taskId){
       const runtime=await aiService.getTaskRuntimeData(c,taskId);
@@ -4886,7 +4889,7 @@ FAVORITES_PROMOTE_PER_RUN
       prepareSpec:(c,spec,input)=>prepareManagedTranscribeSpec(c,spec,input),
     },
     cover:coverExecutionPorts,
-    assetStorage:objectStorageForCtx,resolveAssetCredential:async(c,owner)=>{
+    assetStorage:objectStorageForCtx,readAssetReference:(c,assetId,fileId)=>assetsService.getAssetReference(c,assetId,fileId),resolveAssetCredential:async(c,owner)=>{
       const task=await aiService.getTask(c,owner.aiTaskId);
       return task.taskType==="cover.generate"?coverBusiness.resolveCredential(c,owner):assetBusiness.resolveCredential(c,owner);
     },
@@ -5425,6 +5428,25 @@ FAVORITES_PROMOTE_PER_RUN
       return task;
     },
   });
+  const creativeCanvasService=createCreativeCanvasService(db,{
+    now:deps.now,
+    resolveCapability:(c,capability)=>resolveMultimodalSpec(c,capability),
+    assertProject:async(c,id)=>{await projectsService.getProject(c,id);},
+    assertMediaAsset:async(c,id,type,fileId)=>{
+      const asset=await assetsService.getAsset(c,id);
+      if(asset.assetType!==type||!["active","pending"].includes(asset.status))throw new Error("画布素材不存在或类型不符");
+      const selectedId=fileId??asset.currentFileId;
+      if(!selectedId)throw new Error("画布素材缺少文件版本");
+      const [file]=await assetsService.listFilesByIds(c,[selectedId]);
+      if(!file||file.assetId!==id)throw new Error("画布素材文件版本不存在");
+      return {fileId:file.id,checksum:file.checksum};
+    },
+    assertReferenceAsset:async(c,id)=>{const asset=await assetsService.getAsset(c,id);if(asset.assetType!=="image"||!["active","pending"].includes(asset.status))throw new Error("参考图片不存在");},
+    getMediaFileDownloadUrl:(c,id,fileId)=>assetsService.getAssetFileDownloadUrl(c,id,fileId),
+    getReference:(c,id,fileId)=>assetsService.getAssetReference(c,id,fileId),
+    submitTask:(c,request)=>chatTaskSubmissions.submit(c,{taskType:"asset.generate",...request}),
+  });
+  const creativeCanvas=createCreativeCanvasTransport(creativeCanvasService);
   const chatRuntime: ChatRuntime = {
     resolveRedfoxCredential: ctx => redfoxCredentials.resolve(ctx),
     readCurrentScript: async (c,projectId,signal) => {signal?.throwIfAborted();const result=await readCurrentArtifactTruth(c,projectId,"output_script");signal?.throwIfAborted();return result;},
@@ -5714,6 +5736,7 @@ FAVORITES_PROMOTE_PER_RUN
   if(workerEntry){
     chatWorker=composeChatProduction(db,{
       entryPath:workerEntry,runtime:chatRuntime,now:deps.now,
+      canvas:{read:(c,id)=>creativeCanvasService.get(c,id),propose:(c,id,revision,operations)=>creativeCanvasService.propose(c,id,revision,operations)},
       assertProject:(c,id)=>projectsService.getProjectOverviewCore(c,id),
       resolveModelCredential:(c,capability)=>resolveModelSpec(c,capability),
       resolveFallbackModelCredential:resolveChatFallbackCredential,
@@ -5837,6 +5860,7 @@ FAVORITES_PROMOTE_PER_RUN
     benchmark: benchmarkWithTranscribe, // wrap:透传 CRUD + 拦 benchmark.works.transcribe(T-349)
     trendSources,
     favoritesFolders,
+    creativeCanvas,
     topicAttribution,
     queryServices,
     publishingCenter,

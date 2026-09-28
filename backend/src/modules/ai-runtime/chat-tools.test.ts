@@ -4567,3 +4567,13 @@ it.each(["selected","project"])("全部现有工具参数及%s改稿变体可建
   if(schema.additionalProperties===false)expect(parameters.safeParse({__unexpected:true}).success,name).toBe(false);
  }
 });
+
+it("画布候选工具先读真实版本，只写候选而不直接改画布",async()=>{
+ const readCanvas=vi.fn(async()=>({id:"canvas-1",title:"分镜",projectId:null,revision:7,document:{nodes:[{id:"node-1",type:"text",text:"旁白"}],edges:[]}}));
+ const proposeCanvas=vi.fn(async(baseRevision:number,operations:unknown)=>({id:"proposal-1",canvasId:"canvas-1",baseRevision,operations:operations as unknown[]}));
+ const {deps}=makeDeps({boundCanvasId:"canvas-1",readCanvas,proposeCanvas});
+ const tools=buildChatTools(["canvas.read","canvas.propose"],deps);
+ expect(await runExecute(tools["canvas.read"]!,{})).toMatchObject({canvasId:"canvas-1",revision:7,nodes:[{id:"node-1"}]});
+ expect(await runExecute(tools["canvas.propose"]!,{baseRevision:7,operations:[{type:"deleteNode",operationId:"op-1",nodeId:"node-1"}]})).toMatchObject({proposalId:"proposal-1",baseRevision:7});
+ expect(proposeCanvas).toHaveBeenCalledTimes(1);
+});

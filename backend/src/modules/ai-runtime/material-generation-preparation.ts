@@ -7,6 +7,7 @@ export interface MaterialGenerationInput {
  sectionRef?:string;
  visualPurpose?:"evidence"|"mechanism"|"comparison"|"consequence"|"emotion"|"analogy";
  mediaKind?:"illustration"|"information_card"|"fact_capture";
+ referenceAssetId?:string;
 }
 /** 只读取当前稿和准备生成输入，不创建任务或调用模型，供原入口与事务提交复用。 */
 export async function prepareMaterialGeneration(raw:MaterialGenerationInput,options:Pick<ChatToolDeps,"boundProjectId"|"forcedMaterialKind"|"getArtifactText"> & {signal?:AbortSignal}):Promise<Parameters<ChatToolDeps["dispatchGenerateAsset"]>[0]>{
@@ -32,5 +33,7 @@ export async function prepareMaterialGeneration(raw:MaterialGenerationInput,opti
   }
  }
  signal?.throwIfAborted();
- return {kind,prompt:groundedPrompt,style:typeof input.style==="string"&&input.style.trim()?input.style.trim():undefined};
+ return {kind,prompt:groundedPrompt,style:typeof input.style==="string"&&input.style.trim()?input.style.trim():undefined,
+  ...(typeof input.referenceAssetId==="string"&&input.referenceAssetId.trim()?{referenceAssetId:input.referenceAssetId.trim()}:{}),
+ };
 }

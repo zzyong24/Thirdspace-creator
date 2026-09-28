@@ -31,6 +31,8 @@ export const CHAT_TOOL_EFFECTS: Readonly<Record<string, Definition["effect"]>> =
   "local.tools": "none",
   "local.workspace": "none",
   "material.generate": "committed",
+  "canvas.read":"none",
+  "canvas.propose":"proposal",
   "cover.generate": "committed",
   "calibration.diagnose": "proposal",
   "review.analyze": "proposal",

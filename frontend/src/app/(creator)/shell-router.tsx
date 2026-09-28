@@ -80,6 +80,7 @@ const CONTENT_FILL_ROUTES: ReadonlySet<string> = new Set([
 /** 该路由是否走固定高度填满模式。工作台路由 + [T-055a] 稿面工作台(/projects/<id>,
  * 无 stage 子段;new 除外——那是新建弹窗拦截路由)。 */
 export function isContentFillRoute(pathname: string): boolean {
+  if(startsWith(pathname,"/canvases") && pathname!=="/canvases")return true;
   if (CONTENT_FILL_ROUTES.has(pathname)) return true;
   const m = pathname.match(/^\/projects\/([^/]+)$/);
   return Boolean(m && m[1] !== "new");
@@ -333,6 +334,9 @@ export function resolveRoute(
       pageDescription: "所有图片、视频、音频与文档",
       contextualCardVariant: "storage",
     };
+  }
+  if (startsWith(pathname,"/canvases")) {
+    return {headerMode:"global",pageTitle:"创作画布",pageDescription:"整理想法，生成图片和视频",contextualCardVariant:"assistant"};
   }
   if (pathname === "/publishing") {
     return {

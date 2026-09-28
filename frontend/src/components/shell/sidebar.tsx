@@ -173,6 +173,7 @@ const PRIMARY_NAV: ReadonlyArray<NavEntry> = [
   { id: "projects", label: "项目", href: "/projects", icon: creatorIcons.projects, match: matchPrefix("/projects") },
   { id: "knowledge", label: "知识库", href: "/knowledge", icon: creatorIcons.knowledge, match: matchExact("/knowledge") },
   { id: "assets", label: "素材中心", href: "/assets", icon: creatorIcons.assets, match: matchExact("/assets") },
+  { id: "canvases", label: "创作画布", href: "/canvases", icon: creatorIcons.canvas, match: matchPrefix("/canvases") },
   // [FE-M03] `/calendar`(内容日历)是发布中心的子面(shell-router 标题即「内容日历(发布中心)」),
   // 故其高亮跟随「发布中心」。`/accounts`、`/search` 无对应导航项 → 不高亮任何项(见 findActiveNav)。
   { id: "publishing", label: "发布中心", href: "/publishing", icon: creatorIcons.publishing, match: (pathname) => pathname === "/publishing" || pathname === "/calendar" },

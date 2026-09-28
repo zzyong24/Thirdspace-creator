@@ -1,6 +1,7 @@
 import * as executionStreamSchema from "./schema/execution-stream";
 import * as pendingDocumentCommitsSchema from "./schema/pending-document-commits";
 import * as pendingGeneratedAssetCommitsSchema from "./schema/pending-generated-asset-commits";
+import * as creativeCanvasSchema from "./schema/creative-canvas";
 import { PGlite } from "@electric-sql/pglite";
 import { drizzle, type PgliteDatabase } from "drizzle-orm/pglite";
 import * as projectsSchema from "./schema/projects";
@@ -69,6 +70,7 @@ const MIGRATIONS_FOLDER = resolve(
 const schema = {
   ...pendingDocumentCommitsSchema,
   ...pendingGeneratedAssetCommitsSchema,
+  ...creativeCanvasSchema,
   ...executionStreamSchema,
   ...projectsSchema,
   ...identitySchema,

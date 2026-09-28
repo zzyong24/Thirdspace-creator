@@ -30,6 +30,7 @@ import {FAVORITES_OP_IDS} from "../modules/favorites";
 import {TOPIC_ATTRIBUTION_OP_IDS} from "../modules/topic-attribution";
 import {QUERY_SERVICES_OP_IDS} from "../modules/query-services";
 import {PROJECT_OP_IDS} from "../modules/projects";
+import {CREATIVE_CANVAS_OP_IDS} from "../modules/creative-canvas";
 
 /** 公开操作只由登记的领域 transport 负责；读取宿主实例之前先拒绝未知操作。 */
 const operations = {
@@ -63,6 +64,7 @@ const operations = {
   topicAttribution: TOPIC_ATTRIBUTION_OP_IDS,
   queryServices: QUERY_SERVICES_OP_IDS,
   projects: PROJECT_OP_IDS,
+  creativeCanvas:CREATIVE_CANVAS_OP_IDS,
 } as const;
 export type ApplicationTransports = {[K in keyof typeof operations]:Transport};
 

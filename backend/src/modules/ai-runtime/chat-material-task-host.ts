@@ -67,7 +67,7 @@ export function createChatMaterialTaskHost(
     scope.signal?.throwIfAborted();
     const task=await ports.prepareTaskCommit(resolved.context,{
      taskType:"asset.generate",attemptId,
-     inputData:{kind:prepared.kind,prompt:prepared.prompt,...(prepared.style?{style:prepared.style}:{}),...(projectId?{projectId}:{}),...(scriptSnapshot?{scriptSnapshot}:{})},
+     inputData:{kind:prepared.kind,prompt:prepared.prompt,...(prepared.style?{style:prepared.style}:{}),...(prepared.referenceAssetId?{referenceAssetId:prepared.referenceAssetId}:{}),...(projectId?{projectId}:{}),...(scriptSnapshot?{scriptSnapshot}:{})},
     });
     scope.signal?.throwIfAborted();
     return {task,result:child=>({status:"ok",summary:"已提交素材生成任务",evidence:[],data:{kind:"material.generate",taskId:child.id,kindOf:prepared.kind,status:"queued",error:null},error:null,continuation:null,sideEffect:"committed"})};

@@ -4,6 +4,18 @@ Record confirmations, assumptions, tradeoffs, accepted risks, and skipped stages
 
 ---
 
+## DEC-CANVAS-058 (2026-09-28) — 先补齐公共生图与生视频输入链再接画布
+
+**来源**：用户明确要求“基础设施层面，如果有没接全的，优先先接全，不管是生图还是生视频”。T-993 初版 SPEC 将图生视频列为未接入；仓内检查确认通用 `asset.generate` 的参考图没有贯穿准备、worker 与供应商适配器。
+
+**决策**：T-993 范围包含公共 `asset.generate` 的文生图、参考图生图、文生视频和首帧图生视频完整链路，画布复用该链路。输入参考图必须绑定当前账号、冻结文件版本并经受控 worker port 读取；模型能力不支持时准确禁用，不降级为纯文本生成。继续复用原执行账本、幂等键、供应商 job 恢复、结果回执、对象存储与候选采纳。
+
+**外部依据**：[MiniMax v1 图生视频](https://platform.minimax.io/docs/api-reference/video-generation-i2v) 与 [MiniMax H3 视频生成](https://platform.minimax.io/docs/api-reference/video-generation-v2-create) 均提供首帧输入合同；其他渠道须各自核实，不套用 MiniMax 字段。用户没有要求增加未经配置的供应商或复制外部产品代码。
+
+**确认状态**：生成基础设施范围与画布“账号独立、可选关联项目”均已由用户 2026-09-28 确认。T-993 SPEC 需按变更后的内容重新独立评审。
+
+---
+
 ## DEC-MODEL-057 (2026-08-20) — 官方受管生图提交断连以同一幂等号有界恢复
 
 **来源**：本机 CreatorOS 1.1.0 日志中，三次封面与四次普通图片均在提交约 5 秒后以

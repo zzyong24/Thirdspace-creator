@@ -83,7 +83,7 @@ export interface GenerateVideoOptions {
   prompt: string;
   aspectRatio?: string;
   /** 首帧图(image-to-video 起始帧),可选。 */
-  firstFrame?: Uint8Array;
+  firstFrame?: { bytes: Uint8Array; mimeType: string } | Uint8Array;
   /** H3 v2 输出规格。旧 provider 可忽略；MiniMax H3 必须校验。 */
   durationSec?: number;
   resolution?: "768P" | "2K";

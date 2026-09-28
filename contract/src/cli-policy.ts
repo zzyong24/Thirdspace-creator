@@ -47,6 +47,12 @@ const READ_OPERATIONS = [
   "calibration.suggestions.list",
   "candidates.get",
   "candidates.list",
+  "canvas.get",
+  "canvas.capabilities",
+  "canvas.list",
+  "canvas.node.tasks",
+  "canvas.node.preview",
+  "canvas.agent.proposals",
   "execution.tasks.get",
   "execution.tasks.list",
   "favorites.folders.list",
@@ -168,6 +174,11 @@ const MUTATION_OPERATIONS = [
   "candidates.create",
   "candidates.patch",
   "candidates.promote",
+  "canvas.archive",
+  "canvas.agent.apply",
+  "canvas.create",
+  "canvas.node.generate",
+  "canvas.save",
   "execution.tasks.command",
   "execution.tasks.confirm",
   "execution.tasks.create",
@@ -331,6 +342,7 @@ const EXTERNAL_OPERATIONS = new Set<EndpointId>([
 ]);
 
 const ASYNC_TASK_OPERATIONS = new Set<EndpointId>([
+  "canvas.node.generate",
   "analytics.traffic.refresh",
   "ai.tasks.create",
   "benchmark.works.transcribe",

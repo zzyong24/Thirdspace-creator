@@ -9,18 +9,26 @@ import {canonicalJson} from "../ai/canonical-json";
 import {awaitPreparation} from "../execution/await-preparation";
 import {createExecutionAuthorityService,type PreparedModelExecution} from "../execution/execution-authority.service";
 import type {MultimodalSpec} from "./multimodal/resolve";
+import {supportsAssetGenerationMode,referenceImageAllowed,assetGenerationParameterError} from "./asset-generation-modes";
 type Task=typeof aiTasks.$inferSelect;
 type Preparation={aiTaskId:string;executionTaskId:string};
 function fields(task:Task){
  const raw=task.inputData as Record<string,unknown>,mediaKind=raw.kind==="video"?"video":"image";
  if(typeof raw.prompt!=="string" || !raw.prompt.trim())throw new Error("素材生成缺少描述");
- return {kind:"asset.generate" as const,operationKey:"asset.generate",mediaKind,capability:`${mediaKind}.generate`,prompt:raw.prompt,
+ const referenceAssetId=typeof raw.referenceAssetId==="string" && raw.referenceAssetId.trim()?raw.referenceAssetId:null;
+ const mode=raw.mode===undefined?(referenceAssetId?(mediaKind==="image"?"image_to_image":"image_to_video"):undefined):raw.mode;
+ if(mode!==undefined && !["text_to_image","image_to_image","text_to_video","image_to_video"].includes(String(mode)))throw new Error("素材生成模式无效");
+ if(mode && (String(mode).endsWith("_image")?"image":"video")!==mediaKind)throw new Error("素材生成模式与类型不符");
+ if(Boolean(referenceAssetId)!==Boolean(mode && String(mode).startsWith("image_to_")))throw new Error("参考图与生成模式不一致");
+ const capability=mode==="image_to_image"?"image.edit":`${mediaKind}.generate`;
+ return {kind:"asset.generate" as const,operationKey:"asset.generate",mediaKind,capability,prompt:raw.prompt,
+  ...(mode?{mode:mode as "text_to_image"|"image_to_image"|"text_to_video"|"image_to_video"}:{}),
   ...(typeof raw.aspectRatio==="string"?{aspectRatio:raw.aspectRatio}:{}),
   ...(mediaKind==="video"?{durationSec:typeof raw.durationSec==="number" && Number.isInteger(raw.durationSec)?raw.durationSec:6,resolution:raw.resolution==="2K"?"2K":"768P"}:{}),
  };
 }
 /** 新调用单向转交；旧素材仅恢复原 provider job 或呈现核对状态，不能重新计费。 */
-export function createAssetBusinessExecutionService(db:Db,deps:{budget:BoundedExecutionBudget;now?:()=>string;resolveSpec(ctx:RequestContext,capability:"image.generate"|"video.generate",taskId:string):Promise<MultimodalSpec>;assertProject(ctx:RequestContext,id:string):Promise<void>}){
+export function createAssetBusinessExecutionService(db:Db,deps:{budget:BoundedExecutionBudget;now?:()=>string;resolveSpec(ctx:RequestContext,capability:"image.generate"|"image.edit"|"video.generate",taskId:string):Promise<MultimodalSpec>;assertProject(ctx:RequestContext,id:string):Promise<void>;getReference?:(ctx:RequestContext,assetId:string,fileId?:string)=>Promise<{fileId:string;checksum:string;mimeType:string;bytes:Uint8Array}|null>}){
  const controller=new AbortController();
  const authority=createExecutionAuthorityService(db,{now:deps.now});
  const owned=(ctx:RequestContext,id:string)=>and(eq(aiTasks.id,id),eq(aiTasks.userId,ctx.userId),eq(aiTasks.accountId,ctx.accountId??""));
@@ -42,12 +50,16 @@ export function createAssetBusinessExecutionService(db:Db,deps:{budget:BoundedEx
     }
     const frozen=assetGenerationInputSchema.parse((execution?.payload as {modelInput?:unknown})?.modelInput);
     const expected=assetGenerationInputSchema.parse({...frozen,...fields(task)});
-    if(!isDeepStrictEqual(expected,frozen))throw new Error("素材输入与原执行不符");
+    const raw=task.inputData as Record<string,unknown>;
+    if(!isDeepStrictEqual(expected,frozen)
+      || (frozen.reference?.assetId??null)!==(typeof raw.referenceAssetId==="string"?raw.referenceAssetId:null)
+      || (typeof raw.referenceFileId==="string" && frozen.reference?.fileId!==raw.referenceFileId)
+      || (typeof raw.referenceChecksum==="string" && frozen.reference?.checksum!==raw.referenceChecksum))throw new Error("素材输入与原执行不符");
     const mapped=await authority.bindAiTask(ctx,task.id);signal.throwIfAborted();return mapped;
    }
    if(task.status!=="queued" || task.leaseOwner || task.leaseToken)throw new Error("素材任务已执行，须沿原任务对账");
    const legacy=await hasLegacy(db,task);
-   const input=fields(task),capability=input.capability as "image.generate"|"video.generate";
+   const input=fields(task),capability=input.capability as "image.generate"|"image.edit"|"video.generate";
    if(task.projectId)await awaitPreparation(()=>deps.assertProject(ctx,task.projectId!),signal);
    let modelInput:import('zod').z.infer<typeof assetGenerationInputSchema>;
    try{
@@ -55,9 +67,25 @@ export function createAssetBusinessExecutionService(db:Db,deps:{budget:BoundedEx
     const {token:_token,...configuration}=resolved;
     const spec=assetCredentialSchema.omit({token:true}).parse(configuration);
     if(spec.kind!==input.mediaKind)throw new Error("素材类型与模型配置不符");
+    if(input.mode && !supportsAssetGenerationMode(spec,input.mode))throw new Error("当前模型渠道不支持该生成模式");
+    if(input.mode){const issue=assetGenerationParameterError(spec,input.mode,input);if(issue)throw new Error(issue);}
+    let reference:import('zod').z.infer<typeof assetGenerationInputSchema>["reference"];
+    const referenceAssetId=(task.inputData as Record<string,unknown>).referenceAssetId;
+    if(typeof referenceAssetId==="string"){
+      if(!deps.getReference)throw new Error("参考素材服务未配置");
+      const rawFileId=(task.inputData as Record<string,unknown>).referenceFileId;
+      const snapshot=await awaitPreparation(()=>deps.getReference!(ctx,referenceAssetId,typeof rawFileId==="string"?rawFileId:undefined),signal);
+      if(!snapshot || !input.mode || !referenceImageAllowed(spec,input.mode,snapshot.mimeType,snapshot.bytes))throw new Error("参考图不可用，或不符合当前模型的格式、尺寸与大小限制");
+      const actual=createHash("sha256").update(snapshot.bytes).digest("hex");
+      if(snapshot.checksum!==actual)throw new Error("参考图校验失败，请重新导入素材");
+      if(typeof rawFileId==="string" && snapshot.fileId!==rawFileId)throw new Error("参考图文件版本不符");
+      const rawChecksum=(task.inputData as Record<string,unknown>).referenceChecksum;
+      if(typeof rawChecksum==="string" && rawChecksum!==actual)throw new Error("参考图与提交时版本不符");
+      reference={assetId:referenceAssetId,fileId:snapshot.fileId,checksum:actual,mimeType:snapshot.mimeType};
+    }
     const {provider,model,baseUrl,serviceId,kind:_kind,...options}=spec;
     const runtimeOptionsDigest=`sha256:${createHash("sha256").update(canonicalJson(assetRuntimeOptionsSchema.parse(options))).digest("hex")}`;
-    modelInput=assetGenerationInputSchema.parse({...input,provider,model,baseUrl,...(serviceId?{serviceId}:{}),runtimeOptionsDigest});
+    modelInput=assetGenerationInputSchema.parse({...input,...(reference?{reference}:{}),provider,model,baseUrl,...(serviceId?{serviceId}:{}),runtimeOptionsDigest});
    }catch(error){signal.throwIfAborted();if(legacy)return prepareLegacyAssetRecovery(db,ctx,task,undefined,{deadlineMs:deps.budget.deadlineMs,now:deps.now??(()=>new Date().toISOString()),signal});throw error;}
    if(legacy)return prepareLegacyAssetRecovery(db,ctx,task,modelInput,{deadlineMs:deps.budget.deadlineMs,now:deps.now??(()=>new Date().toISOString()),signal});
    return db.transaction(async tx=>{
@@ -72,7 +100,7 @@ export function createAssetBusinessExecutionService(db:Db,deps:{budget:BoundedEx
   async resolveCredential(ctx:RequestContext,owner:{aiTaskId:string;executionTaskId:string}){
    const [task]=await db.select().from(aiTasks).where(owned(ctx,owner.aiTaskId));
    if(!task || task.executionTaskId!==owner.executionTaskId || task.taskType!=="asset.generate")throw new OwnershipError("素材执行不存在");
-   return deps.resolveSpec(ctx,fields(task).capability as "image.generate"|"video.generate",task.id);
+   return deps.resolveSpec(ctx,fields(task).capability as "image.generate"|"image.edit"|"video.generate",task.id);
   },
   stop(){controller.abort();},
   async recoverQueued(onFailure:(ctx:RequestContext,id:string)=>Promise<void>,shouldStop=()=>false){
