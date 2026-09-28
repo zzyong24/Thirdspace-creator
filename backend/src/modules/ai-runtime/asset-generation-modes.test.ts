@@ -28,7 +28,9 @@ describe("通用素材生成模式",()=>{
  });
  it("模型时长和分辨率按供应商契约拒绝",()=>{
   expect(assetGenerationParameterError(minimaxH3,"text_to_video",{prompt:"镜头",durationSec:4,resolution:"2K"})).toBeNull();
+  expect(assetGenerationParameterError(minimaxH3,"image_to_video",{prompt:"镜头",durationSec:6,resolution:"768P",aspectRatio:"16:9"})).toContain("首帧图");
   expect(assetGenerationParameterError({provider:"minimax",model:"MiniMax-H3-Max"},"text_to_video",{prompt:"镜头",durationSec:4,resolution:"2K"})).toContain("H3 Max");
+  expect(assetGenerationParameterError({provider:"minimax",model:"image-01"},"text_to_image",{prompt:"图片",aspectRatio:"5:7"})).toContain("不支持该画幅");
   expect(assetGenerationParameterError(minimaxLegacy,"image_to_video",{prompt:"镜头",durationSec:7,resolution:"768P"})).toContain("6 或 10 秒");
  });
 });

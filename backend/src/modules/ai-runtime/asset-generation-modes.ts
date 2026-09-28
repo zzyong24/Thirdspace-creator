@@ -32,8 +32,11 @@ export function referenceImageAllowed(spec:AssetModelIdentity,mode:AssetGenerati
 export function assetGenerationParameterError(spec:AssetModelIdentity,mode:AssetGenerationMode,input:{prompt:string;durationSec?:number;resolution?:string;aspectRatio?:string}):string|null{
  const provider=spec.provider.toLowerCase(),model=spec.model.toLowerCase();
  if(provider==="minimax"&&mode.endsWith("_image")&&input.prompt.length>1500)return "MiniMax 生图描述不能超过 1500 字";
+ if(provider==="minimax"&&mode.endsWith("_image")&&input.aspectRatio&&!["1:1","16:9","4:3","3:2","2:3","3:4","9:16","21:9"].includes(input.aspectRatio))return "MiniMax 图片模型不支持该画幅";
  if(provider==="minimax"&&mode.endsWith("_video")&&input.prompt.length>(model.startsWith("minimax-h3")?7000:2000))return "当前 MiniMax 视频模型的生成描述过长";
  if(provider==="openai"&&input.aspectRatio&&!["1:1","9:16","3:4","2:3","16:9","4:3","3:2"].includes(input.aspectRatio))return "当前图片模型不支持该画幅";
+ if(provider==="minimax"&&model.startsWith("minimax-h3")&&mode==="image_to_video"&&input.aspectRatio)return "首帧图生视频的画幅由图片决定，请清除手动画幅";
+ if(provider==="minimax"&&model.startsWith("minimax-h3")&&mode==="text_to_video"&&input.aspectRatio&&!["21:9","16:9","4:3","1:1","3:4","9:16"].includes(input.aspectRatio))return "MiniMax H3 视频模型不支持该画幅";
  if(provider==="minimax"&&mode.endsWith("_video")){
   const duration=input.durationSec??6,resolution=input.resolution??"768P";
   if(model==="minimax-h3" && (!Number.isInteger(duration)||duration<4||duration>15||!["768P","2K"].includes(resolution)))return "MiniMax H3 支持 4–15 秒、768P 或 2K";
