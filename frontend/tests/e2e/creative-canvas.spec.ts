@@ -51,3 +51,17 @@ test("T-993 画布可保存、重开，切换账号后列表和直链隔离",asy
  await page.goto(canvasUrl);
  await expect(page.getByRole("alert").filter({hasText:"画布不存在"})).toBeVisible();
 });
+
+test("T-993 首次自动选账号后画布可创建，新增节点不会重叠",async({page})=>{
+ await dispatch(page,"accounts.create",{params:undefined,query:undefined,body:{platform:"douyin",accountHandle:`@canvas-first-${Date.now()}`}});
+ await page.goto("/canvases");
+ await expect.poll(async()=>page.evaluate(()=>window.localStorage.getItem("creatoros:current-account"))).not.toBeNull();
+ await expect(page.getByRole("alert").filter({hasText:"AccountRequiredError"})).toHaveCount(0);
+ await page.getByRole("button",{name:"新建画布"}).click();
+ await expect(page).toHaveURL(/\/canvases\/[^/]+$/);
+ await page.getByRole("button",{name:"文字说明"}).click();
+ await page.getByRole("button",{name:"图片生成"}).click();
+ const positions=await page.locator(".react-flow__node").evaluateAll(nodes=>nodes.map(node=>(node as HTMLElement).style.transform));
+ expect(positions).toHaveLength(2);
+ expect(new Set(positions).size).toBe(2);
+});

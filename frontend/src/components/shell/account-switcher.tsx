@@ -155,6 +155,10 @@ export function AccountSwitcher({ collapsed }: { collapsed: boolean }) {
         );
         if (shouldPersist) {
           writeStoredAccountId(resolved);
+          notifyAccountsChanged({
+            source: "account-switcher",
+            routeRefreshScheduled: true,
+          });
           // [T-332 S4] 归一改变了当前号(stored 失效回落 / 从无到有自动选):RSC 首屏
           // 可能已按旧号/未选号渲染 —— 补一次 refresh 让整个工作区立刻反映归一结果。
           // 不会循环:persist 后下次 load 的 stored === resolved,shouldPersist=false。

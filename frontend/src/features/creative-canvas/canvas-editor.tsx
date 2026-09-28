@@ -7,6 +7,7 @@ import "@xyflow/react/dist/style.css";
 import type {CanvasDocument,CanvasNode,CreativeCanvasResource} from "@creatoros/contract";
 import {client} from "@/lib/contract-client";
 import {copilotDeepLink} from "@/features/copilot/copilot-deeplink";
+import {useAccountsChanged} from "@/lib/account-events";
 
 type AssetOption={id:string;name:string;assetType:string;currentFileId:string};
 type ProjectOption={id:string;title:string};
@@ -40,6 +41,7 @@ export function CanvasEditor({canvasId}:{canvasId:string}){
  const docRef=useRef<CanvasDocument|null>(null),savedDocRef=useRef<CanvasDocument|null>(null),titleRef=useRef(""),savedTitleRef=useRef(""),projectIdRef=useRef<string|null>(null),savedProjectIdRef=useRef<string|null>(null),revisionRef=useRef(0),savePromiseRef=useRef<Promise<number>|null>(null),pollingRef=useRef(false),epochRef=useRef(0),attemptsRef=useRef(new Map<string,string>()),dragStartRef=useRef<CanvasDocument|null>(null);
  const [undo,setUndo]=useState<CanvasDocument[]>([]),[redo,setRedo]=useState<CanvasDocument[]>([]);
  const selected=doc?.nodes.find(node=>node.id===selectedId)??null;
+ useAccountsChanged(useCallback(()=>{setCanvas(null);setDoc(null);setLoading(true);router.replace("/canvases");},[router]));
  const changeDoc=useCallback((next:CanvasDocument,record=true)=>{
   if(record&&docRef.current){setUndo(items=>[...items.slice(-29),docRef.current!]);setRedo([]);}
   docRef.current=next;setDoc(next);setSaveState("dirty");
@@ -107,7 +109,10 @@ export function CanvasEditor({canvasId}:{canvasId:string}){
  const flowNodes=useMemo(()=>doc?toFlow(doc,canvasId,selectedId,latestResults):[],[doc,canvasId,selectedId,latestResults]);
  const flowEdges=useMemo<Edge[]>(()=>doc?.edges.map(edge=>({id:edge.id,source:edge.source,target:edge.target,label:edge.label}))??[],[doc]);
  function addNode(type:CanvasNode["type"],asset?:AssetOption){if(!doc)return;
-  const common={id:crypto.randomUUID(),position:{x:Math.round((180-doc.viewport.x)/doc.viewport.zoom),y:Math.round((120-doc.viewport.y)/doc.viewport.zoom)},label:""};
+  const x=Math.round((180-doc.viewport.x)/doc.viewport.zoom),startY=Math.round((120-doc.viewport.y)/doc.viewport.zoom);
+  let y=startY;
+  while(doc.nodes.some(existing=>Math.abs(existing.position.x-x)<240&&Math.abs(existing.position.y-y)<180))y+=220;
+  const common={id:crypto.randomUUID(),position:{x,y},label:""};
   const node:CanvasNode=type==="text"?{...common,type,text:""}:type==="image_generation"?{...common,type,prompt:"",mode:"text_to_image"}:type==="video_generation"?{...common,type,prompt:"",mode:"text_to_video",durationSec:6,resolution:"768P"}:asset?{...common,type:type as "image"|"video",assetId:asset.id,...(asset.currentFileId?{fileId:asset.currentFileId}:{})}:null as never;
   if(!node)return;changeDoc({...doc,nodes:[...doc.nodes,node]});setSelectedId(node.id);setShowAssets(false);
  }
