@@ -149,6 +149,11 @@ describe("[T-513] requiredSkillIdsForTask 确定性注册表", () => {
       "research.plan",
       ...CHAT_METHOD_SKILL_IDS,
     ]);
+    expect(requiredSkillIdsForTask("chat.sync", { surface: "canvas" })).toEqual([
+      "chatbox.canvas",
+      "research.plan",
+      ...CHAT_METHOD_SKILL_IDS,
+    ]);
     expect(requiredSkillIdsForTask("chat.sync", { surface: "topics" })).toEqual([
       "chatbox.topic",
       "creatoros.guide",
@@ -487,6 +492,16 @@ describe("[T-513] snapshot serialization", () => {
 
 
 describe("T-944 官方编导方法到聊天读取链路", () => {
+  it("[T-995] 画布对话从真实官方注册表冻结独立 Skill 和读写候选工具", async () => {
+    const bases = listOfficialSkillBases();
+    const resolver = createEffectiveSkillSnapshotResolver(deps(bases));
+    const snapshot = await resolver(ctx, requiredSkillIdsForTask("chat.sync", {surface: "canvas"}));
+    const canvas = snapshot.skills.find(item => item.skillId === "chatbox.canvas");
+    expect(canvas?.effective.tools).toContain("canvas.read");
+    expect(canvas?.effective.tools).toContain("canvas.propose");
+    expect(canvas?.effective.methodSystem).toContain("空白文字");
+    expect(snapshot.skills.some(item => item.skillId === "chatbox.topic")).toBe(false);
+  });
   it("T-962 新聊天可发现并读取 RedFox 研究和运营复盘方法", async () => {
     const bases = listOfficialSkillBases();
     const resolver = createEffectiveSkillSnapshotResolver(deps(bases));

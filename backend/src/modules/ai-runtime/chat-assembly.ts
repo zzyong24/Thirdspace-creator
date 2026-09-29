@@ -14,6 +14,8 @@ import { formatVerbatimSourceInventory, type CopilotMediaRoute } from './chat-as
 import { createChatAssemblyToolDeps } from './chat-assembly-tool-deps';
 const SKILL_PRIMARY_CAPABILITY: Record<string, string> = {
     "chatbox.topic": "topic.generate",
+    // 画布讨论仍用现有编导文本模型档；画布的图像/视频模型仅在用户提交生成任务时调用。
+    "chatbox.canvas": "topic.generate",
     "chatbox.calibration": "calibration.diagnose",
     "chatbox.positioning": "positioning.generate",
     "chatbox.review": "review.insights",
@@ -395,6 +397,8 @@ export async function prepareChatAssembly(ctx: RequestContext, chatContext: Chat
     // 命中真工具时强制本轮调它,防模型把卡当文本吐 + 谎称已渲卡(弱 tool-calling 模型的常态)。
     const forcedTool = forcedToolSequence?.[0] && toolWhitelist.includes(forcedToolSequence[0])
         ? forcedToolSequence[0]
+        : chatContext.surface === "canvas" && chatContext.selection?.kind === "canvas" && toolWhitelist.includes("canvas.read")
+            ? "canvas.read"
         : routedTool && toolWhitelist.includes(routedTool)
             ? routedTool
             : effectiveFunctionKey && effectiveFunctionKey !== "material.gather" && toolWhitelist.includes(effectiveFunctionKey)

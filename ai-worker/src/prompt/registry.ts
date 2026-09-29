@@ -57,6 +57,7 @@ import { POSITIONING_GENERATE_TEMPLATE } from "./templates/positioning-generate"
 import { TOPIC_ENRICH_TEMPLATE } from "./templates/topic-enrich";
 import { MATERIAL_MATCH_TEMPLATE } from "./templates/material-match";
 import { CHATBOX_TOPIC_TEMPLATE } from "./templates/chatbox-turn";
+import { CHATBOX_CANVAS_TEMPLATE } from "./templates/chatbox-canvas";
 import { KNOWLEDGE_CLASSIFY_TEMPLATE } from "./templates/knowledge-classify";
 import { KNOWLEDGE_DISTILL_TEMPLATE } from "./templates/knowledge-distill";
 import { KNOWLEDGE_RELATE_TEMPLATE } from "./templates/knowledge-relate";
@@ -142,6 +143,7 @@ const BUILTIN_TEMPLATES: readonly PromptTemplate[] = [
   TOPIC_ENRICH_TEMPLATE,
   MATERIAL_MATCH_TEMPLATE,
   CHATBOX_TOPIC_TEMPLATE,
+  CHATBOX_CANVAS_TEMPLATE,
   // T-062c 知识倾倒场:倒入原文 → 判 {knowledgeType,title,tags,summary} 候选(确认门采纳才落库)。
   KNOWLEDGE_CLASSIFY_TEMPLATE,
   // T-079b 知识蒸馏:倒入原文 → 一批四原子知识候选 {atoms,suggestedTags}(批量确认门采纳才落库)。
