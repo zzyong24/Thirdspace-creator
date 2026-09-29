@@ -4,6 +4,7 @@
 // Finder / Windows 桌面快捷方式启动的进程不会读取用户 shell profile，PATH 往往只有系统
 // 目录；因此运行期不能把 `which/where` 当成“用户是否安装”的真值。这里直接按目标平台
 // 解析路径，既能命中随包工具，也能命中 Homebrew 等 GUI PATH 之外的常见安装目录。
+import { existsSync as nodeExistsSync } from "node:fs";
 
 export class ExecutablePathConfigurationError extends Error {
   constructor(message: string) {
@@ -50,10 +51,7 @@ export function resolveExecutablePath(
   const env = opts.env ?? process.env;
   const platform = opts.platform ?? process.platform;
   const cwd = opts.cwd ?? (() => process.cwd());
-  const existsSync =
-    opts.existsSync ??
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    (require("node:fs") as typeof import("node:fs")).existsSync;
+  const existsSync = opts.existsSync ?? nodeExistsSync;
 
   const executable =
     platform === "win32" && !name.toLowerCase().endsWith(".exe")
