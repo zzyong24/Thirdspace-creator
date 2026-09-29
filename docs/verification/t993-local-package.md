@@ -47,3 +47,9 @@ flowchart LR
 - 已安装应用 `Contents/Resources/THIRD_PARTY_NOTICES.md` 与源码 SHA-256 一致，均为 `164b46fc33639cb2e79cba8abea46e7daccc285d9c19343178823e8ec964e962`；`codesign --verify --deep --strict` 返回 0。通过安装版公开 CLI 回读：验收画布仍为 5 节点、revision 3，关联项目 `project-ffa7b58e-109`；项目列表 86 条且含该项目；该项目 `materialLinks.list` 仍为 4 条。没有读取或更改其他用户作品的正文。
 - Windows NSIS 当前候选的真机安装/升级与渲染尚无本轮证据；真实平台发布也未执行。`reconcile` 与独立 review receipt 仍需如实对账，不能以本轮 macOS 与隔离回归替代。
 - 本轮 `pmem sync` 成功；完整 `reconcile` 退出 1，报 235 errors、0 warnings，首组仍是自治声明与各模块 `write_set`/verify 缺失。`reviewctl audit` 明确报 `T-993: review receipt 已过期：constitution hash 已变化`。本轮没有补造历史复审回执，也没有把任务状态改为完成。
+
+## 第三轮安装版真实渲染任务
+
+- 通过公开 `creatoros` CLI 在现有验收账号和项目内提交 `video.render`，输入为本轮画布真实生成并已采纳的 6.583 秒视频素材，账号和项目均显式指定。首个任务 `ai-task-57cd65ef-153` 因无对白字幕也未指定主视觉，被布局安全门拒绝，错误为“横屏无主视觉时间窗缺少可溯字幕”；这是输入不完整的真实失败，没有伪造字幕或重试同一无效输入。
+- 第二个任务 `ai-task-57cd65ef-171` 把同一真实视频明确作为整段 `large_stage` 主视觉，复用真实素材并保留空字幕；它完成正式安装版执行，状态 `awaiting_confirmation`。`execution.tasks.get` 回读 `final.mp4`，大小 3352562 字节、约 6.6 秒、1280×720、24 fps；交付探针报告 H.264、`yuv420p`、bt709、平均码率 3876 kbps、`deliveryQuality.status=pass`。来源输入、任务 ID、项目归属均可在原账本追溯。
+- 此次仅验证渲染候选，未调用 `execution.tasks.confirm`，没有自动把成片采纳进项目，也没有向平台发布。最终 DMG SHA 与上节一致，安装应用 PID `76866`。
