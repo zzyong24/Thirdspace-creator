@@ -29,3 +29,21 @@
 - 项目用料按钮增加保存画布关联后再采纳与挂载的顺序，并显示目标项目名称；打开画布时读取项目用料关系，刷新后仍显示已加入状态。若素材采纳成功而项目挂载失败，界面分开告知两段结果，便于重试。项目用料的真实持久化已通过 `materialLinks.list` 回读。
 - 最终安装后再次通过公开 CLI 回读：画布仍关联 `project-ffa7b58e-109`，共 5 个节点、revision 3；画布任务索引仍有 4 条真实结果；项目用料仍有 4 条 asset 关系。新增刷新状态逻辑后，关联项目浏览器用例再次单跑通过。
 - `pmem sync` 成功。全局 `reconcile` 运行后仍有 235 个错误，首项是既有自治配置 `write_set` / verify 缺失；本轮未将其标为全绿。`reviewctl audit` 单独复核显示 T-993 当前 SPEC 的 SHA 与最近 review event 一致，但其绑定的宪法 SHA 已因后续宪法变化过期；重新开启第 4 轮需用户拥有的、精确绑定任务/哈希/变更 ID 的 review-cycle capability，不以本次普通验收记录冒充独立复审。另有 T-915 等历史回执/文档错误。T-993 保持进行中。
+
+## 2026-09-29 旧链回归、真实渲染与第三轮本机包
+
+```mermaid
+flowchart LR
+  A[隔离测试视频] --> B[正式渲染执行器]
+  B --> C[真实 MP4 与 ffprobe 核对]
+  D[旧发布深链] --> E[当前项目稿面发布区]
+  F[本机候选包] --> G[安装版画布和项目回读]
+```
+
+- 候选源码提交 `064b7bf86792d16c6eef315d161d987bb8d2572d`。旧渲染执行器、模板、发布服务、项目用料 7 个文件共 180 项通过；当前稿面的制作/发布组件 7 个文件共 48 项通过。画布、发布物料回读、发布中心浏览器组合运行 8/9 项通过；第 9 项是仍按退役六阶段发布页断言的旧 `publishing-workspace.spec.ts`，该路由在 T-055a 已重定向到稿面。将它改为创建隔离项目并验证旧链接跳转到当前发布区后，单跑通过。此处没有宣称已经向真实平台发布。
+- 在独立系统临时目录以 FFmpeg 合成 3 秒测试输入，调用正式 `createVideoRenderExecutor()`，真实经过工具链探测、素材预处理、模板、HyperFrames 捕帧与编码、faststart 和交付校验，产生 `final.mp4`。`ffprobe` 回读为 H.264、1280×720、24 fps、3.000 秒、481839 字节。首次运行在工具路径解析时暴露 ESM 中的裸 `require` 报错；改为 `node:fs` 标准导入后同一脚本成功。合成低复杂度画面的平均码率 1281 kbps 低于建议值，执行器只给质量提醒并保留可用成片。可重跑脚本：`pnpm -C backend exec tsx scripts/t993-render-smoke.ts`；不读取用户数据库、媒体或密钥。
+- `ai-worker` 真实文件回退路径单测 6/6、类型检查通过；`frontend` 类型检查与旧发布深链 E2E 通过；打包预检 4 文件 42 项通过；`git diff --check` 通过。`boundary-scan` 仍报 7 条，其中 2 条“新违规”均位于本轮未修改的 `frontend/src/features/copilot/live-chat-session.ts`，属已有门卫基线漂移，不能记为通过。
+- 第三轮本机候选 DMG：`/Users/zyongzhu/Downloads/CreatorOS-1.2.0.dmg`，SHA-256 `12768052d35ebc7cb11513167b942b72506a75b1b451919734ee9da90d2e1e7b`；`hdiutil verify` 返回 VALID。打包过程的 sidecar 启动冒烟、页面 200、浏览器 hydration 均通过。当前 `/Applications/CreatorOS.app` 已由脚本替换并启动（PID `76866`）；最初 CLI 查询在应用启动期间暂时返回 `CONNECTION_NOT_FOUND`，之后公开 `status` 恢复 `connected=true, access=full`。本机包为 ad-hoc 签名，未 Apple 公证。
+- 已安装应用 `Contents/Resources/THIRD_PARTY_NOTICES.md` 与源码 SHA-256 一致，均为 `164b46fc33639cb2e79cba8abea46e7daccc285d9c19343178823e8ec964e962`；`codesign --verify --deep --strict` 返回 0。通过安装版公开 CLI 回读：验收画布仍为 5 节点、revision 3，关联项目 `project-ffa7b58e-109`；项目列表 86 条且含该项目；该项目 `materialLinks.list` 仍为 4 条。没有读取或更改其他用户作品的正文。
+- Windows NSIS 当前候选的真机安装/升级与渲染尚无本轮证据；真实平台发布也未执行。`reconcile` 与独立 review receipt 仍需如实对账，不能以本轮 macOS 与隔离回归替代。
+- 本轮 `pmem sync` 成功；完整 `reconcile` 退出 1，报 235 errors、0 warnings，首组仍是自治声明与各模块 `write_set`/verify 缺失。`reviewctl audit` 明确报 `T-993: review receipt 已过期：constitution hash 已变化`。本轮没有补造历史复审回执，也没有把任务状态改为完成。
