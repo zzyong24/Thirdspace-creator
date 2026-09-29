@@ -4,13 +4,56 @@
     "work_branch": "main"
   },
   "summary": {
-    "verticals": 40,
+    "verticals": 41,
     "tasks_done": 34,
-    "tasks_total": 126,
-    "tasks_pending": 92,
+    "tasks_total": 128,
+    "tasks_pending": 94,
     "verticals_complete": 1
   },
   "verticals": [
+    {
+      "id": "T-994",
+      "task_id": "T-994",
+      "archetype": [
+        "user-authored"
+      ],
+      "tasks": [
+        {
+          "step": "review",
+          "status": "pending"
+        },
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "docs/features/t994-canvas-creation-experience.md",
+        "docs/verification/t994-canvas-experience.md",
+        "docs/verification/t994/**",
+        "orchestrator/T994-FRONTEND-JOURNEY.md",
+        "orchestrator/T994-FRONTEND-VALIDATION.md",
+        "frontend/src/features/creative-canvas/**",
+        "frontend/src/features/draft-workbench/creation-flow-ctas.tsx",
+        "frontend/src/features/draft-workbench/draft-workbench-page.tsx",
+        "frontend/tests/e2e/creative-canvas.spec.ts"
+      ],
+      "read_set": [
+        "docs/features/t994-canvas-creation-experience.md",
+        "docs/features/t993-creator-canvas.md",
+        "frontend/src/features/creative-canvas/**",
+        "frontend/src/features/draft-workbench/**",
+        "frontend/tests/e2e/creative-canvas.spec.ts"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
     {
       "id": "T-987",
       "archetype": [

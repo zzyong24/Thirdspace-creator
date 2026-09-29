@@ -9,6 +9,7 @@
 
 | ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
 | --- | --- | --- | --- | --- | --- | --- |
+| T-994 | 打磨创作画布、项目用料与素材创作交互 | 🔨 待办 | PASS[REV:4dab5a12ed51] | 待验 | [SPEC](docs/features/t994-canvas-creation-experience.md) | 用户反馈当前项目与素材创作交互差；先实测画布→素材→生成→项目用料旅程，形成可核对的界面改进方案并实现，不改变账号归属与候选采纳边界。 |
 | T-993 | 给编导智能体接入持久化创作画布与图像/视频生成闭环 | 🔨 待办 | PASS[REV:27bb71481722] | 待验 | [SPEC](docs/features/t993-creator-canvas.md) | 旧库缺表已修复，真实模型四模式与 4 份项目用料在第三轮安装版保持；隔离和安装版均真实出片，安装版 6.6 秒 H.264 候选留待确认；修复 ESM 工具路径故障并更新旧发布深链测试；新 DMG 含 MIT notice 且校验有效。仍待 Windows 实包、平台发布边界与全局旧 Gate 对账；review receipt 因宪法变更过期，T-916 跟踪既有漂移。 |
 | T-992 | 修复 Windows 升级启动运行环境切换拒绝访问 | 🔨 待办 | — | — | [SPEC](docs/features/t992-windows-runtime-upgrade.md) | 用户启动日志os error5；检查旧运行目录、安装指针与升级迁移，保留数据，补既有安装升级验证。启动容忍分支已实现；CI 里那步 cargo test 已撤（插在 sidecar 产出前，必然 build.rs panic，run 34942593764），守护改为本地 reconcile guard；仍缺真机 Windows 升级验证。 |
 | T-990 | 纳入采集与页面性能修复运行 V1.2 双端流水线 | ✅ 待办 | — | — | [SPEC](docs/features/t990-dual-release.md) | 冻结已提交T983/T985/T987/T988修复，预检并运行Windows/macOS正式构建，核验并下载产物。 |

@@ -1568,6 +1568,38 @@
       "verify_commands": {
         "implementation": "node --test tools/windows-closure-rat/*.test.mjs"
       }
+    },
+    "T-994": {
+      "task_id": "T-994",
+      "archetype": [
+        "user-authored"
+      ],
+      "tasks": [
+        "review",
+        "implementation"
+      ],
+      "read_set": [
+        "docs/features/t994-canvas-creation-experience.md",
+        "docs/features/t993-creator-canvas.md",
+        "frontend/src/features/creative-canvas/**",
+        "frontend/src/features/draft-workbench/**",
+        "frontend/tests/e2e/creative-canvas.spec.ts"
+      ],
+      "write_set": [
+        "docs/features/t994-canvas-creation-experience.md",
+        "docs/verification/t994-canvas-experience.md",
+        "docs/verification/t994/**",
+        "orchestrator/T994-FRONTEND-JOURNEY.md",
+        "orchestrator/T994-FRONTEND-VALIDATION.md",
+        "frontend/src/features/creative-canvas/**",
+        "frontend/src/features/draft-workbench/creation-flow-ctas.tsx",
+        "frontend/src/features/draft-workbench/draft-workbench-page.tsx",
+        "frontend/tests/e2e/creative-canvas.spec.ts"
+      ],
+      "verify_commands": {
+        "review": "node orchestrator/process/research-gate.mjs audit",
+        "implementation": "pnpm --dir frontend exec tsc --noEmit --pretty false"
+      }
     }
   }
 }

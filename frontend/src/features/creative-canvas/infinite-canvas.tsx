@@ -17,6 +17,7 @@ type Props={
  onContextMenu:(event:MouseEvent<HTMLDivElement>)=>void;
  onDrop:(event:DragEvent<HTMLDivElement>)=>void;
  children:ReactNode;
+ overlay?:ReactNode;
 };
 
 const interactiveSelector="[data-canvas-object],[data-canvas-connection],[data-canvas-control],input,textarea,select,button,[contenteditable=true]";
@@ -24,10 +25,10 @@ const scrollSelector="[data-canvas-scroll],input,textarea,select,[contenteditabl
 const keyboardControlSelector=`${scrollSelector},button,a,[role=button]`;
 const clamp=(value:number)=>Math.min(4,Math.max(0.05,value));
 
-export function InfiniteCanvas({containerRef,viewport,tool,onViewportChange,onViewportCommit,onBlankPointerDown,onBlankDoubleClick,onContextMenu,onDrop,children}:Props){
+export function InfiniteCanvas({containerRef,viewport,tool,onViewportChange,onViewportCommit,onBlankPointerDown,onBlankDoubleClick,onContextMenu,onDrop,children,overlay}:Props){
  const viewportRef=useRef(viewport),panRef=useRef<{pointerId:number;startX:number;startY:number;origin:Viewport}|null>(null),wheelTimerRef=useRef<ReturnType<typeof setTimeout>|null>(null);
  const [spacePressed,setSpacePressed]=useState(false),[panning,setPanning]=useState(false);
- viewportRef.current=viewport;
+ useEffect(()=>{viewportRef.current=viewport;},[viewport]);
  useEffect(()=>{const down=(event:KeyboardEvent)=>{if(event.code!=="Space"||event.target instanceof Element&&event.target.closest(keyboardControlSelector))return;event.preventDefault();setSpacePressed(true);};
   const up=(event:KeyboardEvent)=>{if(event.code==="Space")setSpacePressed(false);};
   const blur=()=>{setSpacePressed(false);panRef.current=null;setPanning(false);};
@@ -53,6 +54,7 @@ export function InfiniteCanvas({containerRef,viewport,tool,onViewportChange,onVi
  const doubleClick=(event:MouseEvent<HTMLDivElement>)=>{const target=event.target instanceof Element?event.target:null;if(!target?.closest(interactiveSelector))onBlankDoubleClick(event);};
  return <div ref={containerRef} data-testid="infinite-canvas" className="relative h-full w-full select-none overflow-hidden bg-background" style={{cursor:panning?"grabbing":tool==="pan"||spacePressed?"grab":undefined}} onPointerDown={pointerDown} onPointerMove={pointerMove} onPointerUp={pointerUp} onPointerCancel={pointerUp} onDoubleClick={doubleClick} onContextMenu={onContextMenu} onDragOver={event=>event.preventDefault()} onDrop={onDrop}>
   <div className="pointer-events-none absolute inset-0 opacity-40" style={{backgroundImage:"radial-gradient(circle, var(--border) 1px, transparent 1.2px)",backgroundSize:`${Math.max(4,48*viewport.zoom)}px ${Math.max(4,48*viewport.zoom)}px`,backgroundPosition:`${viewport.x}px ${viewport.y}px`}}/>
-  <div className="absolute left-0 top-0 origin-top-left" style={{transform:`translate(${viewport.x}px, ${viewport.y}px) scale(${viewport.zoom})`}}>{children}</div>
+  <div data-testid="canvas-world" className="absolute left-0 top-0 origin-top-left" style={{transform:`translate(${viewport.x}px, ${viewport.y}px) scale(${viewport.zoom})`}}>{children}</div>
+  {overlay}
  </div>;
 }

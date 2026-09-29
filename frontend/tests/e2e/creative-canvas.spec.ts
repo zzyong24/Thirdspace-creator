@@ -1,5 +1,5 @@
 import type {Page} from "@playwright/test";
-import {readFileSync} from "node:fs";
+import {mkdirSync,readFileSync} from "node:fs";
 import {resolve} from "node:path";
 import {expect,test} from "../helpers/test-environment";
 
@@ -161,7 +161,7 @@ test("T-993 双指滚动平移、组合键缩放，节点文字仍可独立滚�
  await page.addInitScript(id=>window.localStorage.setItem("creatoros:current-account",id),account.id);
  await page.goto("/canvases");await page.getByRole("button",{name:"新建画布"}).click();
  const canvas=page.getByTestId("infinite-canvas"),rect=await canvas.boundingBox();expect(rect).not.toBeNull();
- const transform=()=>canvas.locator(":scope > div").last().getAttribute("style");
+ const transform=()=>page.getByTestId("canvas-world").getAttribute("style");
  const before=await transform();await page.mouse.move(rect!.x+rect!.width/2,rect!.y+rect!.height/2);await page.mouse.wheel(70,90);
  await expect.poll(transform).not.toBe(before);
  const moved=await transform();expect(moved).toContain("scale(1)");
@@ -221,4 +221,98 @@ test("T-993 当前账号图片与视频能插入画布并实际预览",async({pa
  await page.reload();
  await expect.poll(async()=>page.locator('[data-testid="canvas-node"] img').first().evaluate(image=>(image as HTMLImageElement).naturalWidth)).toBeGreaterThan(0);
  await expect.poll(async()=>page.locator('[data-testid="canvas-node"] video').evaluate(video=>(video as HTMLVideoElement).readyState)).toBeGreaterThan(0);
+});
+
+test("T-994 作品素材入口、项目画布过滤与安全返回",async({page,context,baseURL})=>{
+ const account=await dispatch(page,"accounts.create",{params:undefined,query:undefined,body:{platform:"douyin",accountHandle:`@canvas-ux-${Date.now()}`}});
+ const project=await dispatch(page,"projects.create",{params:undefined,query:undefined,body:{title:"新品广告体验",brief:"视觉方案"}},account.id);
+ const other=await dispatch(page,"projects.create",{params:undefined,query:undefined,body:{title:"另一件作品",brief:""}},account.id);
+ await dispatch(page,"canvas.create",{params:undefined,query:undefined,body:{title:"另一件作品的画布",projectId:other.id}},account.id);
+ await context.addCookies([{name:"creatoros_current_account",value:encodeURIComponent(account.id),url:baseURL!}]);
+ await page.addInitScript(id=>window.localStorage.setItem("creatoros:current-account",id),account.id);
+ await page.goto(`/projects/${project.id}`);
+ const evidenceRoot=resolve(process.cwd(),"../docs/verification/t994");mkdirSync(evidenceRoot,{recursive:true});
+ await expect(page.getByRole("link",{name:"打开创作画布"})).toBeVisible();
+ await page.locator('#materials').screenshot({path:resolve(evidenceRoot,"project-materials-after.png")});
+ await page.getByRole("link",{name:"打开创作画布"}).click();
+ await expect(page.getByRole("heading",{name:"新品广告体验的创作画布"})).toBeVisible();
+ await expect(page.getByText("另一件作品的画布")).toHaveCount(0);
+ await expect(page.getByRole("link",{name:"查看当前账号全部画布"})).toBeVisible();
+ await page.getByRole("button",{name:"创建作品画布"}).click();
+ await expect(page.getByRole("heading",{name:"从一个画面开始"})).toBeVisible();
+ await page.screenshot({path:resolve(evidenceRoot,"canvas-empty-after.png")});
+ await page.setViewportSize({width:1024,height:768});
+ await expect(page.getByRole("button",{name:"素材库"})).toBeVisible();
+ await expect(page.getByRole("button",{name:/生成视频 从描述或首帧开始做动态画面/})).toBeVisible();
+ await page.screenshot({path:resolve(evidenceRoot,"canvas-narrow-after.png")});
+ await page.setViewportSize({width:1536,height:1024});
+ await expect(page.getByLabel("关联项目（可选）")).toHaveValue(project.id);
+ const canvasUrl=page.url();
+ await page.getByRole("textbox",{name:"画布标题"}).fill("新品广告 · 视觉方案 A");
+ await page.getByRole("button",{name:/返回作品 · 新品广告体验/}).click();
+ await expect(page).toHaveURL(new RegExp(`/projects/${project.id}`));
+ await page.goto(canvasUrl);
+ await expect(page.getByRole("textbox",{name:"画布标题"})).toHaveValue("新品广告 · 视觉方案 A");
+ await page.getByRole("button",{name:"选已有素材 把账号里的图片和视频放进来"}).click();
+ await expect(page.getByRole("complementary",{name:"当前账号素材"})).toBeVisible();
+ await page.screenshot({path:resolve(evidenceRoot,"canvas-assets-after.png")});
+ await expect(page.getByText("搜索已加载的 0 件素材")).toBeVisible();
+ await expect(page.getByRole("link",{name:"去素材中心上传"})).toBeVisible();
+});
+
+test("T-994 画布版本冲突时不离开并给出恢复动作",async({page,context,baseURL})=>{
+ const account=await dispatch(page,"accounts.create",{params:undefined,query:undefined,body:{platform:"douyin",accountHandle:`@canvas-ux-conflict-${Date.now()}`}});
+ const project=await dispatch(page,"projects.create",{params:undefined,query:undefined,body:{title:"冲突恢复作品",brief:""}},account.id);
+ const canvas=await dispatch(page,"canvas.create",{params:undefined,query:undefined,body:{title:"原画布",projectId:project.id}},account.id);
+ await context.addCookies([{name:"creatoros_current_account",value:encodeURIComponent(account.id),url:baseURL!}]);
+ await page.addInitScript(id=>window.localStorage.setItem("creatoros:current-account",id),account.id);
+ await page.goto(`/canvases/${canvas.id}`);
+ await expect(page.getByRole("textbox",{name:"画布标题"})).toHaveValue("原画布");
+ const read=await page.request.post("/api/v1/dispatch",{headers:{"content-type":"application/json","x-account-id":account.id},data:{id:"canvas.get",input:{params:{canvasId:canvas.id},query:undefined,body:undefined}}});
+ const current=(await read.json() as {data:{revision:number;document:unknown}}).data;
+ const remote=await page.request.post("/api/v1/dispatch",{headers:{"content-type":"application/json","x-account-id":account.id},data:{id:"canvas.save",input:{params:{canvasId:canvas.id},query:undefined,body:{expectedRevision:current.revision,title:"另一窗口已改",document:current.document,projectId:project.id}}}});
+ expect(remote.ok(),await remote.text()).toBe(true);
+ await page.getByRole("textbox",{name:"画布标题"}).fill("我的未保存修改");
+ await page.getByRole("button",{name:/返回作品 · 冲突恢复作品/}).click();
+ await expect(page).toHaveURL(new RegExp(`/canvases/${canvas.id}$`));
+ await expect(page.getByRole("alert").filter({hasText:"其他窗口更新"})).toBeVisible();
+ await expect(page.getByRole("button",{name:"重新载入"})).toBeVisible();
+});
+
+test("T-994 生成结果就地保留并加入当前作品（模拟任务回执）",async({page,context,baseURL})=>{
+ const account=await dispatch(page,"accounts.create",{params:undefined,query:undefined,body:{platform:"douyin",accountHandle:`@canvas-result-${Date.now()}`}});
+ const project=await dispatch(page,"projects.create",{params:undefined,query:undefined,body:{title:"结果采纳作品",brief:""}},account.id);
+ const canvas=await dispatch(page,"canvas.create",{params:undefined,query:undefined,body:{title:"结果操作画布",projectId:project.id}},account.id) as {id:string;userId:string;document:{schemaVersion:1;viewport:{x:number;y:number;zoom:number};nodes:unknown[];edges:unknown[]}};
+ const assetId=await uploadMedia(page,account.id,resolve(process.cwd(),"../docs/image-4.png"),"image","image/png","结果操作预览.png");
+ const nodeId="result-generation-node";
+ await dispatch(page,"canvas.save",{params:{canvasId:canvas.id},query:undefined,body:{expectedRevision:1,document:{...canvas.document,nodes:[{id:nodeId,type:"image_generation",label:"主视觉",position:{x:100,y:100},size:{width:350,height:430},prompt:"秋季新品广告",mode:"text_to_image"}]}}},account.id);
+ let taskStatus:"awaiting_confirmation"|"succeeded"="awaiting_confirmation",confirmCount=0,linkAttempts=0;
+ const taskId="mock-result-task-1",stamp=new Date().toISOString();
+ await page.route("**/api/v1/dispatch",async route=>{
+  const request=route.request().postDataJSON() as {id:string;input?:{params?:Record<string,string>}};
+  if(request.id==="canvas.node.tasks"&&request.input?.params?.canvasId===canvas.id){
+   await route.fulfill({json:{data:[{id:"mock-link-1",canvasId:canvas.id,nodeId,attemptId:"mock-attempt-123456",taskId,mediaKind:"image",inputRevision:2,inputDigest:"mock-digest",referenceFileId:null,referenceChecksum:null,resultAssetId:assetId,createdAt:stamp,updatedAt:stamp}],meta:{requestId:"mock-list",page:1,pageSize:100,total:1}}});return;
+  }
+  if(request.id==="ai.tasks.get"&&request.input?.params?.taskId===taskId||request.id==="ai.tasks.confirm"&&request.input?.params?.taskId===taskId){
+   if(request.id==="ai.tasks.confirm"){confirmCount++;taskStatus="succeeded";}
+   await route.fulfill({json:{data:{id:taskId,userId:canvas.userId,projectId:null,contentOutputId:null,taskType:"asset.generate",status:taskStatus,inputData:{prompt:"秋季新品广告",mode:"text_to_image"},modelKey:"mock/image",idempotencyKey:"mock-idempotency",attemptId:"mock-attempt-123456",requestFingerprint:`sha256:${"a".repeat(64)}`,retryOfTaskId:null,requestedAt:stamp,startedAt:stamp,completedAt:stamp,errorMessage:null},meta:{requestId:"mock-task"}}});return;
+  }
+  if(request.id==="materialLinks.create"&&++linkAttempts===1){await route.fulfill({status:503,json:{error:{code:"ExternalDependencyError",message:"模拟关联失败"},meta:{requestId:"mock-link-failure"}}});return;}
+  await route.continue();
+ });
+ await context.addCookies([{name:"creatoros_current_account",value:encodeURIComponent(account.id),url:baseURL!}]);
+ await page.addInitScript(id=>window.localStorage.setItem("creatoros:current-account",id),account.id);
+ await page.goto(`/canvases/${canvas.id}`);
+ const result=page.getByTestId("canvas-node").filter({hasText:"主视觉"});
+ await expect(result.getByText("最近结果",{exact:false})).toBeVisible();
+ await page.screenshot({path:resolve(process.cwd(),"../docs/verification/t994/canvas-result-actions-after.png")});
+ await result.getByRole("button",{name:"保留到素材库"}).click();
+ await expect(result.getByRole("button",{name:"已在素材库"})).toBeDisabled();
+ expect(confirmCount).toBe(1);
+ await result.getByRole("button",{name:"加入作品 · 结果采纳作品"}).click();
+ await expect(page.getByText(/已保留到素材库，加入作品失败/).first()).toBeVisible();
+ await result.getByRole("button",{name:"加入作品 · 结果采纳作品"}).click();
+ await expect(result.getByRole("button",{name:"已加入 结果采纳作品"})).toBeDisabled();
+ expect(confirmCount).toBe(1);
+ expect(linkAttempts).toBe(2);
 });
