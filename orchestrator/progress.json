@@ -4,13 +4,21 @@
     "work_branch": "main"
   },
   "summary": {
-    "verticals": 41,
+    "verticals": 42,
     "tasks_done": 35,
-    "tasks_total": 127,
-    "tasks_pending": 92,
+    "tasks_total": 129,
+    "tasks_pending": 94,
     "verticals_complete": 2
   },
   "verticals": [
+    {
+      "id": "T-1024",
+      "task_id": "T-1024",
+      "archetype": ["orchestration"],
+      "tasks": [{"step": "review", "status": "pending"}, {"step": "implementation", "status": "pending"}],
+      "depends_on": [],
+      "blocked_reason": null
+    },
     {
       "id": "T-1003",
       "task_id": "T-1003",

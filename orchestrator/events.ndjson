@@ -1117,3 +1117,4 @@
 {"ts":"2026-09-29T07:35:33.208Z","actor":"taskctl","action":"complete","task":"T-1017","evidence":"T-1017 SPEC 与独立评审完成；reviewctl PASS[REV:0ccc72342775]，git diff --check 通过。自动上报未实现，三方契约为代码前 Gate。全局 reconcile 仍有 T-916 等既有漂移与教训门失败，未声称全绿。","sha_before":"5ac61b787133","sha_after":"cbd80b01c734"}
 {"ts":"2026-09-29T13:37:50.245Z","actor":"taskctl","action":"start","task":"T-1018","sha_before":"3de0c3533cd2","sha_after":"0fa521ec4717"}
 {"ts":"2026-09-29T14:02:55.159Z","actor":"taskctl","action":"complete","task":"T-1018","evidence":"T-1018 架构与 T-1019—T-1025 实施 SPEC 已交付待用户逐项审核；独立评审 PASS[REV:b379f9d4b12d]，8 份 SPEC 相对链接与 git diff --check 通过。仅设计完成，功能与三仓合同尚未实施/过审。全局 reconcile 仍 60 errors/1 warning，主要为 T-916/T-1015 已登记的既有边界、教训与历史 receipt 漂移；未声称全绿。","sha_before":"5313540abfcb","sha_after":"4ad31fb18b63"}
+{"ts":"2026-09-29T14:34:55.424Z","actor":"taskctl","action":"start","task":"T-1024","sha_before":"d8edbd8704c5","sha_after":"b33e5b6bb190"}

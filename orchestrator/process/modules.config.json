@@ -18,6 +18,14 @@
     ]
   },
   "modules": {
+    "T-1024": {
+      "task_id": "T-1024",
+      "archetype": ["orchestration"],
+      "tasks": ["review", "implementation"],
+      "read_set": ["docs/features/t1024-reporting-implementation.md", "docs/features/t1017-diagnostics-creator-reporting.md", "orchestrator/SYSTEM_ARCHITECTURE.md", "frontend/src/features/settings/**", "backend/src/modules/settings/**", "contract/src/**"],
+      "write_set": ["docs/features/t1024-reporting-implementation.md", "docs/features/t1024-reporting-implementation.review.md", "docs/features/t1024-reporting-implementation.review-round-1.json", "orchestrator/reviews/T-1024-round-1.json", "orchestrator/DECISION_LOG.md", "BACKLOG.md", "orchestrator/events.ndjson", "orchestrator/review-events.ndjson", "orchestrator/progress.json", "orchestrator/process/modules.config.json", "frontend/src/features/settings/**", "frontend/src/server/persistence-client.ts", "frontend/src/app/api/v1/dispatch/route.ts", "backend/src/modules/settings/**", "backend/src/application/scheduling/collection-execution.ts", "backend/src/schema/settings.ts", "backend/src/db.ts", "backend/src/index.ts", "backend/drizzle/0101_reporting_local_consent.sql", "backend/drizzle/meta/_journal.json", "contract/src/**"],
+      "verify_commands": {"review": ["node orchestrator/process/reviewctl.mjs audit"], "implementation": ["node orchestrator/process/reconcile.mjs"]}
+    },
     "T-988": {
       "task_id": "T-988",
       "archetype": [

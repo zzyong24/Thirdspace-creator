@@ -134,6 +134,9 @@ const SPEC_13: ReadonlyArray<[string, string]> = [
   // [T-051 2e] 偏好读 op(设置页初值读真)。
   ["GET", "/settings/preferences"],
   ["PATCH", "/settings/preferences"],
+  ["GET", "/settings/reporting"],
+  ["PUT", "/settings/reporting/consent"],
+  ["POST", "/settings/reporting/pending/clear"],
   ["GET", "/settings/models"],
   ["PUT", "/settings/models/:capability"],
   // [T-645] 当前验签渠道 scope 内的服务级 Key（明文不回显）。

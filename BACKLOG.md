@@ -15,7 +15,7 @@
 | T-1021 | 将本地小红书工程迁入 CreatorOS 账号采集 | 📋 待办 | 待审 | 待验 | [SPEC](docs/features/t1021-xiaohongshu-integration.md) | 依赖 T-1020；迁入独立登录、身份核验、全量笔记和数据解析，真实双账号验收，不共享原工程 Cookie/数据库。 |
 | T-1022 | 接入快手真实授权、作品和创作数据 | 📋 待办 | 待审 | 待验 | [SPEC](docs/features/t1022-kuaishou-integration.md) | 依赖 T-1020；先验证官方 scope 与实际可得字段，再实现账号/作品采集；缺失能力如实不可用。 |
 | T-1023 | 集成本地公众号写作 Skill 与品牌覆盖 | 📋 待办 | 待审 | 待验 | [SPEC](docs/features/t1023-wechat-article-skill.md) | 依赖 T-1020；拆分通用论证方法和月明品牌，项目稿件候选经用户采纳，草稿与发布另行授权。 |
-| T-1024 | 落地用户授权的故障、作品和粉丝轻量上报 | 📋 待办 | 待审 | 待验 | [SPEC](docs/features/t1024-reporting-implementation.md) | 依赖 T-1017/T-1020 与跨仓契约复审；CreatorOS、AM、Growth 闭合授权、加密队列、接收告警、撤销删除，素材与提示词不上传。 |
+| T-1024 | 落地故障、作品和粉丝轻量上报及 Growth 运营后台 | 🔨 待办 | PASS[REV:393681b9c2ab] | 待验 | [SPEC](docs/features/t1024-reporting-implementation.md) | 依赖 T-1017/T-1020 与跨仓契约复审；设置页候选偏好默认勾选、主动确认后才有效授权；随后后台自动、不中断创作；Growth 接收与 Ant Design 后台、撤销删除闭环，Activity 改动须专项授权。 |
 | T-1025 | 验收创作资产、平台接入与上报全链路 | 📋 待办 | 待审 | 待验 | [SPEC](docs/features/t1025-creator-platform-acceptance.md) | 依赖 T-1019—T-1024；真实账号、双端实包、旧链回归、跨账号/渠道隔离与云端删除回执均需证据。 |
 | T-1017 | 设计用户故障与创作数据的授权上报闭环 | ✅ 待办 | PASS[REV:0ccc72342775] | — | [SPEC](docs/features/t1017-diagnostics-creator-reporting.md) | 复用本地加密日志、问题反馈和分账号定时采集，设计诊断事件、绑定与作品指标上报、服务端告警及用户控制；先完成跨仓契约与数据归属评审。 |
 | T-1016 | 调研 CreatorOS 连接本地 Codex、WorkBuddy 与外部 Agent | ✅ 待办 | — | — | [SPEC](docs/features/t1016-external-agent-research.md) | 参考 ChatCut 和公开协议，核实双向接入、现有执行边界与可落地方案；本轮仅调研设计。 |

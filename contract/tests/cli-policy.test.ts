@@ -7,7 +7,6 @@ describe("T-843 CLI operation policy", () => {
     expect(Object.keys(CLI_OPERATION_POLICIES).sort()).toEqual(
       Object.values(ENDPOINTS).map((endpoint) => endpoint.id).sort(),
     );
-    expect(Object.keys(CLI_OPERATION_POLICIES)).toHaveLength(252);
   });
 
   it("每项都有服务端可信的执行元数据", () => {

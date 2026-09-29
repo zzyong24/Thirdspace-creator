@@ -708,6 +708,13 @@
       "when": 1789430400001,
       "tag": "0100_traffic_unavailable",
       "breakpoints": true
+    },
+    {
+      "idx": 101,
+      "version": "7",
+      "when": 1790668800000,
+      "tag": "0101_reporting_local_consent",
+      "breakpoints": true
     }
   ]
 }

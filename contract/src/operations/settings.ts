@@ -17,7 +17,34 @@ import {
 // authenticated user (not a collection); the remaining operations mutate the
 // user's preferences, per-capability model config, and agent configs.
 const redfoxStatus=z.object({provider:z.literal("redfox"),configured:z.boolean(),updatedAt:z.string().nullable()});
+// A checked suggestion is never an authorization. Only setReportingConsent can
+// create a grant for the exact scope and account named in its strict body.
+// V1 is local-only; remote delivery requires a new version and fresh consent.
+export const reportingConsentVersion = 1;
+const reportingScope = z.enum(["diagnostics", "creator"]);
+const reportingConsentState = z.object({
+  scope: reportingScope,
+  accountId: z.string().nullable(),
+  accountLabel: z.string().nullable(),
+  platform: z.string().nullable(),
+  accountActive: z.boolean(),
+  enabled: z.boolean(),
+  needsReconsent: z.boolean(),
+  consentEpoch: z.number().int().nonnegative(),
+  changedAt: z.string().nullable(),
+  queuedCount: z.number().int().nonnegative(),
+}).strict();
+export const reportingStatusResource = z.object({
+  consentVersion: z.literal(reportingConsentVersion),
+  diagnostics: reportingConsentState,
+  accounts: z.array(reportingConsentState),
+  preparationAvailable: z.boolean(),
+  uploadAvailable: z.boolean(),
+}).strict();
 export const settingsOperations = {
+ getReportingStatus:defineEndpoint({id:"settings.reporting.get",method:"GET",path:"/settings/reporting",response:reportingStatusResource,fr:["FR-REPORTING-CONSENT"]}),
+ setReportingConsent:defineEndpoint({id:"settings.reporting.consent.set",method:"PUT",path:"/settings/reporting/consent",body:z.object({scope:reportingScope,accountId:z.string().min(1).max(128).optional(),enabled:z.boolean(),consentVersion:z.literal(reportingConsentVersion),consentChangeId:z.string().uuid()}).strict(),response:reportingStatusResource,fr:["FR-REPORTING-CONSENT"]}),
+ clearReportingPending:defineEndpoint({id:"settings.reporting.pending.clear",method:"POST",path:"/settings/reporting/pending/clear",body:z.object({scope:reportingScope,accountId:z.string().min(1).max(128).optional()}).strict(),response:reportingStatusResource,fr:["FR-REPORTING-CONSENT"]}),
  getOnboarding: defineEndpoint({id:"settings.onboarding.get",method:"GET",path:"/settings/onboarding/:accountId",params:z.object({accountId:z.string().min(1)}).strict(),response:onboardingStateResource,fr:["FR-ONBOARDING"]}),
  patchOnboarding: defineEndpoint({id:"settings.onboarding.patch",method:"PATCH",path:"/settings/onboarding/:accountId",params:z.object({accountId:z.string().min(1)}).strict(),body:onboardingPatchResource,response:onboardingStateResource,fr:["FR-ONBOARDING"]}),
  getRedfox:defineEndpoint({id:"settings.redfox.get",method:"GET",path:"/settings/redfox",response:redfoxStatus,fr:["FR-REDFOX"]}),

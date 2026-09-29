@@ -16,6 +16,9 @@ deps:{now:()=>string};
 wakeScheduledFlywheel:()=>void;
 prepareDailyTopic:(ctx:RequestContext,id:string)=>Promise<{executionTaskId:string}>;
 runTaskWithEffectiveSkillSnapshot:(ctx:RequestContext,id:string,run:(signal:AbortSignal)=>void|Promise<void>)=>Promise<void>;
+afterSuccessfulMetricsCollection?:(ctx:RequestContext)=>Promise<void>;
+afterSuccessfulCollection?:(ctx:RequestContext,taskId:string)=>Promise<void>;
+afterFailedCollection?:(ctx:RequestContext,taskId:string,status:"failed"|"waiting_user")=>Promise<void>;
 isNotLoggedInError:(error:unknown)=>boolean;}){
 const {scheduledCollectors,scheduledSignals,flywheelSourceKinds,scheduledFlywheel,schedulingService,aiService,deps,wakeScheduledFlywheel,prepareDailyTopic,runTaskWithEffectiveSkillSnapshot,isNotLoggedInError}=ports;
   const enqueueCollectionRun=createAccountCollectionQueue();
@@ -25,6 +28,19 @@ const {scheduledCollectors,scheduledSignals,flywheelSourceKinds,scheduledFlywhee
       ai:scope.ai,runs:{updateRun:(c,id,patch)=>{scope.signal.throwIfAborted();return schedulingService.updateRun(c,id,patch);}},
       collectors:Object.fromEntries(Object.entries(scheduledCollectors).map(([kind,collect])=>{const guarded:ScheduledCollector=async(c,t,report,execution)=>{scope.signal.throwIfAborted();const result=await collect(c,t,progress=>{scope.signal.throwIfAborted();report(progress);},execution);scope.signal.throwIfAborted();return result;};return [kind,guarded];})),isNotLoggedInError:isNotLoggedInError,now:deps.now,
     });
+    if (ports.afterSuccessfulMetricsCollection || ports.afterSuccessfulCollection || ports.afterFailedCollection) {
+      // Projection is best effort and detached from the collector's terminal
+      // result. A reporting DB failure must never reclassify a successful run.
+      void aiService.getTask(ctx,task.id).then(async settled=>{
+        if(settled.status==="succeeded") {
+          if(["self.metrics","self.detail"].includes(task.taskType.replace(/^scheduled\./,"")))
+            await ports.afterSuccessfulMetricsCollection?.(ctx).catch(()=>{});
+          await ports.afterSuccessfulCollection?.(ctx,task.id);
+        }
+        if(["failed","waiting_user"].includes(settled.status))
+          await ports.afterFailedCollection?.(ctx,task.id,settled.status as "failed"|"waiting_user");
+      }).catch(()=>{});
+    }
   }),scope.signal);
 
   const dispatchScheduledCollection = async (ctx: RequestContext, task: {

@@ -73,6 +73,9 @@ export {
   skillConfigOverrideVersions,
   accountSkillOverlays,
   accountSkillOverlayVersions,
+  reportingConsents,
+  reportingOutbox,
+  reportingConsentChanges,
   SETTINGS_DDL,
 } from "./schema/settings";
 export type {

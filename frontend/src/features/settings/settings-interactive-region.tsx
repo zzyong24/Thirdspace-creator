@@ -4,6 +4,7 @@
 
 import { SettingsFormRow } from "./settings-form-row";
 import { RedfoxConfiguration } from "./redfox-configuration";
+import { ReportingConsentCard } from "./reporting-consent-card";
 import { SettingsModelRegion } from "./settings-model-region";
 import { useSettingsMutation } from "./use-settings-mutation";
 
@@ -359,7 +360,10 @@ export function SettingsDialog({
               </div>
             </SettingsPanel>
             <SettingsPanel tabId="preferences" active={tab}>
-              <PreferenceSettingsCard viewModel={viewModel} />
+              <div className="flex flex-col gap-card-gap">
+                <PreferenceSettingsCard viewModel={viewModel} />
+                <ReportingConsentCard />
+              </div>
             </SettingsPanel>
             <SettingsPanel tabId="appearance" active={tab}>
               <SystemSettingsCard viewModel={viewModel} />

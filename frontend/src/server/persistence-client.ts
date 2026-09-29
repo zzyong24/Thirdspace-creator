@@ -124,7 +124,7 @@ type HybridSearchHit } from "@creatoros/backend/modules/search";
 
 // [T-050 ⑦] 搜索索引真数据投影要直读六张表(根包导出,别名防与本文件局部变量撞名)。
 // [T-050 ⑦] 搜索索引真数据投影要直读六张表(根包导出,别名防与本文件局部变量撞名)。
-import { createOnboardingState, createIntegrationCredentials, createSettingsRepository, createSettingsService, createSettingsTransport, type SettingsService } from "@creatoros/backend/modules/settings";
+import { createOnboardingState, createIntegrationCredentials, createReportingLocal, createSettingsRepository, createSettingsService, createSettingsTransport, type SettingsService } from "@creatoros/backend/modules/settings";
 // T-147 P5 桌面激活授权 —— 装配一机一码激活门(桌面拦/web 跳);门控/激活页经 bundle 取用。
 // T-147 P5 桌面激活授权 —— 装配一机一码激活门(桌面拦/web 跳);门控/激活页经 bundle 取用。
 import { assembleActivationService, type ActivationService } from "./activation";
@@ -600,6 +600,7 @@ const FAVORITES_PROMOTE_PER_RUN = 50;
 // cookie via `getIdentityService()`, so the ctx they thread into the transport
 // reads/writes the same store the persistence transport serves.
 interface PersistenceBundle {
+  reportingLocal: ReturnType<typeof createReportingLocal>;
   projectListCoverIds: (ctx: RequestContext, projectIds: readonly string[]) => Promise<Record<string, string | null>>;
   readPageRevision: () => Promise<string>;
   cliInvocations: CliInvocationService;
@@ -2080,6 +2081,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       void bootstrapDouyinOnBind(ctx).catch((error) =>
         console.error("[persistence-client] 绑定后初始化失败:", error),
       );
+      if (ctx.accountId) void reportingLocal.captureAccountState(ctx,ctx.accountId,"connected",ctx.requestId,deps.now()).catch(()=>{});
     },
     ports: {
       publishing: {
@@ -4007,6 +4009,14 @@ FAVORITES_PROMOTE_PER_RUN
 }),
   };
 
+  const reportingLocal = createReportingLocal(db, masterKeyDegraded ? null : masterKey, {
+    getAccount: (ctx,id) => platformAccountService.getAccount(ctx,id),
+    listAccounts: (ctx,page) => platformAccountService.listAccounts(ctx,page),
+    listWorks: (ctx,page) => publishingService.listPublicationsForUser(ctx,page),
+    latestSnapshots: (ctx,ids) => analyticsService.listLatestSnapshotsByPublicationIds(ctx,ids),
+  },deps.now);
+  void reportingLocal.prune().catch(()=>{});
+
   scheduledCollectors["self.metrics"]=createOperationsSyncCollector({
     failures:(c,capabilities)=>publicationSyncService.failures(c,capabilities),
     metrics:(c,t,r,e)=>scheduledCollectors["self.detail"]!(c,t,r,e),
@@ -4018,7 +4028,7 @@ FAVORITES_PROMOTE_PER_RUN
   // 后端统一协调同账号串行与跨账号入场；此处仅装配采集器和唤醒入口。
   // 请求网关继续独立限制每次网络请求的并发与节奏。
   const wakeScheduledFlywheel=()=>recoveryWake?.wake("flywheel");
-  const {collectFlywheel,dispatchScheduledCollection,recoverQueuedCollection}=createCollectionExecution({trafficQueue:{snapshot:c=>trafficService.pending(c,2147483647),fail:(c,rows,message)=>trafficService.failPending(c,rows,message)},scheduledCollectors,scheduledSignals,flywheelSourceKinds,scheduledFlywheel,schedulingService,aiService,deps,wakeScheduledFlywheel,prepareDailyTopic:async(ctx,id)=>{if(!modelWorker)throw new Error("生成服务未就绪，请修复或更新应用");const bound=await businessExecution.prepare(ctx,id);modelWorker.start();return bound;},runTaskWithEffectiveSkillSnapshot,isNotLoggedInError:error=>error instanceof DouyinNotLoggedInError});
+  const {collectFlywheel,dispatchScheduledCollection,recoverQueuedCollection}=createCollectionExecution({trafficQueue:{snapshot:c=>trafficService.pending(c,2147483647),fail:(c,rows,message)=>trafficService.failPending(c,rows,message)},scheduledCollectors,scheduledSignals,flywheelSourceKinds,scheduledFlywheel,schedulingService,aiService,deps,wakeScheduledFlywheel,prepareDailyTopic:async(ctx,id)=>{if(!modelWorker)throw new Error("生成服务未就绪，请修复或更新应用");const bound=await businessExecution.prepare(ctx,id);modelWorker.start();return bound;},runTaskWithEffectiveSkillSnapshot,afterSuccessfulMetricsCollection:async ctx=>{if(ctx.accountId)await reportingLocal.captureAccountMetrics(ctx,ctx.accountId);},afterSuccessfulCollection:async(ctx,id)=>{if(ctx.accountId)await reportingLocal.captureAccountState(ctx,ctx.accountId,"collection_succeeded",id,deps.now());},afterFailedCollection:async(ctx,id,status)=>{await reportingLocal.captureDiagnostic(ctx,"collection_failed",id,deps.now());if(ctx.accountId)await reportingLocal.captureAccountState(ctx,ctx.accountId,status==="waiting_user"?"needs_reconnect":"collection_failed",id,deps.now());},isNotLoggedInError:error=>error instanceof DouyinNotLoggedInError});
 
   // 调度器沿用身份服务已确认的本机真实主用户，不使用fixture默认身份。
   // source="ingestion":调度器本质是数据采集 pipeline 触发(与 L2816 采集 ctx 一致;
@@ -4555,7 +4565,7 @@ FAVORITES_PROMOTE_PER_RUN
   readStoredChannelModelCredential = (ctx, scopeId, serviceId) =>
     settingsService.getChannelModelCredential(ctx, scopeId, serviceId);
   const onboardingState = createOnboardingState(db, (ctx, id) => platformAccountService.getAccount(ctx, id));
-  const settings = createSettingsTransport(() => settingsService, redfoxCredentials, onboardingState);
+  const settings = createSettingsTransport(() => settingsService, redfoxCredentials, onboardingState, reportingLocal);
   resolveEffectiveSkillSnapshotForRuntime =
     createEffectiveSkillSnapshotResolver({
       officialSkills: {
@@ -5773,6 +5783,7 @@ FAVORITES_PROMOTE_PER_RUN
   modelWorker?.start();
 
   return {
+    reportingLocal,
     readPageRevision: createPageReadRevisionReader(db),
     projectListCoverIds: (ctx, projectIds) => readProjectListCoverIds(ctx, projectIds, { projects: projectsService, publishing: publishingService }),
     cliInvocations,
@@ -5964,6 +5975,11 @@ export async function getActivationService(): Promise<ActivationService> {
  */
 export async function getSettingsService(): Promise<SettingsService> {
   return (await getBundle()).settingsService;
+}
+
+/** 仅供可信服务端故障边界写入已授权的结构化诊断；浏览器无此端口。 */
+export async function getReportingLocal() {
+  return (await getBundle()).reportingLocal;
 }
 
 /**
