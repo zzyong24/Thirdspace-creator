@@ -31,7 +31,8 @@
       "binaries/creatoros-server"
     ],
     "resources": [
-      "sidecar.tar.gz"
+      "sidecar.tar.gz",
+      "THIRD_PARTY_NOTICES.md"
     ],
     "createUpdaterArtifacts": true,
     "macOS": {

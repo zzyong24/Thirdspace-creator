@@ -9,7 +9,7 @@
 
 | ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
 | --- | --- | --- | --- | --- | --- | --- |
-| T-993 | 给编导智能体接入持久化创作画布与图像/视频生成闭环 | 🔨 待办 | PASS[REV:940cde16235e] | 待验 | [SPEC](docs/features/t993-creator-canvas.md) | 账号隔离画布、编导候选应用、公共四模式生成及素材采纳已实现；隔离库 E2E 和相关单测通过。仍待真实已配置模型四模式验收、旧渲染/发布公共链回归；总对账旧漂移由 T-916 跟踪。 |
+| T-993 | 给编导智能体接入持久化创作画布与图像/视频生成闭环 | 🔨 待办 | PASS[REV:27bb71481722] | 待验 | [SPEC](docs/features/t993-creator-canvas.md) | MIT 无限画布交互已移植并接入账号隔离、素材、保存与生成任务链；6 项画布 E2E、3 项旧入口回归及前端构建通过。仍待本机真实模型四模式、新安装包 MIT notice、完整渲染/发布链及全局旧 Gate 对账；T-916 跟踪既有漂移。 |
 | T-992 | 修复 Windows 升级启动运行环境切换拒绝访问 | 🔨 待办 | — | — | [SPEC](docs/features/t992-windows-runtime-upgrade.md) | 用户启动日志os error5；检查旧运行目录、安装指针与升级迁移，保留数据，补既有安装升级验证。启动容忍分支已实现；CI 里那步 cargo test 已撤（插在 sidecar 产出前，必然 build.rs panic，run 34942593764），守护改为本地 reconcile guard；仍缺真机 Windows 升级验证。 |
 | T-990 | 纳入采集与页面性能修复运行 V1.2 双端流水线 | ✅ 待办 | — | — | [SPEC](docs/features/t990-dual-release.md) | 冻结已提交T983/T985/T987/T988修复，预检并运行Windows/macOS正式构建，核验并下载产物。 |
 | T-988 | 修复首页与连续点击导航卡顿并清理界面技术话术 | ✅ 待办 | — | — | [SPEC](docs/features/t988-home-navigation-copy.md) | 复现首页与连点请求，立即响应并合并重复导航；清理PATCH/真持久等用户界面术语，保护实时数据并本机验证。 |

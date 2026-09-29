@@ -4,6 +4,43 @@ Record confirmations, assumptions, tradeoffs, accepted risks, and skipped stages
 
 ---
 
+## DEC-061 (2026-09-29) — T-993 开源无限画布修订开启一次正式复核
+
+**来源**：用户在说明 T-993 原评审周期已用尽、需要新一轮正式复核后明确回复“好的，认可你的操作”。本授权仅覆盖这次 MIT 开源画布集成方案的 SPEC 复核，不代替评审结论，也不改变账号归属与生成审批边界。
+
+```text
+ID: DEC-061
+Authorization-Kind: process-review-cycle
+Task-ID: T-993
+Previous-Spec-SHA256: 128d6333187f8b334d0632046aa11bc2c83d46a09a5bfee63fc7d25d547e0d90
+Previous-Constitution-SHA256: 709be0304fdb7c457a41847eacb087cdeb0ed10a81c239f5c75e5260832399ed
+Allowed-Change-IDs: CANVAS-OPEN-SOURCE-001
+Max-Cycles: 1
+Nonce: t993-open-source-canvas-20260929-user-approval
+Owner: user
+Status: active
+```
+
+## DEC-CANVAS-060 (2026-09-28) — 广告营销画布改用 MIT 开源媒体画布实现
+
+**来源**：用户在 T-993 预览后进一步明确“直接找开源项目针对性项目集成进来”“我们要的是无限画布”“指 GPT Image 2 的创作画布”，用途是广告营销创作。
+
+**决策**：以 [basketikun/infinite-canvas](https://github.com/basketikun/infinite-canvas) 的 MIT 媒体画布实现作为可移植前端来源，保留版权声明与来源版本，定向接入 CreatorOS 现有节点文档、素材预览、生成和账号隔离链。GPT Image 2 仍由本机已有模型配置驱动，画布不新设密钥库、数据库或第二套任务账本。此前 DEC-CANVAS-059 的 React Flow 选型被本决策取代；其数据与功能回归仍作迁移保护基线。
+
+**调研依据**：[basketikun/infinite-canvas](https://github.com/basketikun/infinite-canvas) 当前 MIT、具备图片创作与参考图迭代；[Loomic](https://github.com/fancyboi999/Loomic) 当前 MIT、展示 Excalidraw 视频嵌入与品牌创意；[gpt-image-canvas](https://github.com/mrslimslim/gpt-image-canvas) 虽直连 GPT Image 2，但使用生产需许可的 tldraw；[tiger-infinite-canvas](https://github.com/gitshop/tiger-infinite-canvas) 为 AGPL-3.0。只依据实际许可证与可移植模块选择，不复制后两者代码。
+
+---
+
+## DEC-CANVAS-059 (2026-09-28) — 将画布校正为媒体优先的无限创作空间
+
+**来源**：用户查看 T-993 本地预览后明确指出当前画布设计不对，并要求重新了解无限画布。既有预览以固定两侧栏和小型流程卡片为主；用户此前指定参考媒措创流、NomiFun 与开源画布。
+
+**决策**：T-993 的视觉交互按媒体优先的无限画布修订：图片和视频在画布中大幅呈现并可调整尺寸，文字和生成描述就地编辑，素材拖放按指针世界坐标放置；工具与编导面板按需展开。继续使用现有 React Flow 底座和账号归属、生成任务、候选应用服务，不复制外部产品代码。视口属于按用户/账号/画布隔离的本机编辑偏好，不推进内容 revision；旧画布文档中的 `viewport` 作初始视角兼容。
+
+**依据与限制**：本地 NomiFun 创意工坊提供媒体优先画布的交互参考；React Flow 官方支持自定义节点、尺寸调整和设计工具视口手势。`tigerowo/infinite-canvas` 当前仓库为 AGPL-3.0，仅参考公开产品交互。此决策不扩展账号数据归属，不授权自动提交生成或自动采纳素材。具体交互与新增验收见 T-993 SPEC 的“无限画布体验校正”；独立复核确认无 blocker/major，实施仍须验证真实浏览器行为。
+
+---
+
 ## DEC-CANVAS-058 (2026-09-28) — 先补齐公共生图与生视频输入链再接画布
 
 **来源**：用户明确要求“基础设施层面，如果有没接全的，优先先接全，不管是生图还是生视频”。T-993 初版 SPEC 将图生视频列为未接入；仓内检查确认通用 `asset.generate` 的参考图没有贯穿准备、worker 与供应商适配器。

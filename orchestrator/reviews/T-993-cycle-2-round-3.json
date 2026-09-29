@@ -1,0 +1,61 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "recheck",
+  "summary": "第 3 轮复核：本轮只修改状态与实施验证记录，未移动已确认的产品/服务契约；REV-001/002 保持销账。仓内新组件及锁定 commit/许可文件与记录相符，画布 E2E 文件确有 6 项覆盖对应交互。SPEC 第 139 行明确四模式真实计费生成、渲染/发布全链及 DMG/NSIS 资源核验尚未完成，没有把 E2E、资源配置或旧版模型连接测试写成这些验收 PASS。此为 SPEC 评审，不替代独立运行测试和最终发布 Gate。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "resolved",
+      "severity": "major",
+      "category": "completeness",
+      "requirement_anchor": {
+        "id": "开源集成决策",
+        "quote": "直接针对性集成开源项目。选用 MIT basketikun/infinite-canvas 的媒体优先画布组件与交互作为集成源"
+      },
+      "acceptance_anchor": {
+        "id": "新增验收",
+        "quote": "不能仅凭 React Flow 组件已挂载或世界坐标已入库，就宣称无限画布体验完成。"
+      },
+      "where": "T-993 SPEC 第 36、92、94 行；上游 web/src/components/canvas/infinite-canvas.tsx、canvas-node.tsx、web/src/pages/canvas/project.tsx",
+      "failure_mode": "SPEC 说移植独立画布组件、媒体对象与素材迭代逻辑，却没有固定上游 commit、实际移植文件/行为及适配边界。上游 InfiniteCanvas 仅实现视口、背景和平移入口；框选、群组拖动、连线、撤销重做和生成主要耦合在 3400 行 project.tsx 与 992 行 canvas-node.tsx，依赖上游状态、主题、图片存储和生成服务。实现可能只复制视口壳，其余继续用现有 React Flow 或自写逻辑，也可能整页复制而引入上游凭据/存储；两种都无法用现有行为验收证明符合用户确认的定向集成与 CreatorOS 单一数据归属边界。MIT 声明虽在 SPEC 中要求保留，但尚未指定最终发行物的 notice 与来源清单位置。",
+      "evidence_kind": "external-fact",
+      "evidence_ref": "上游 dab19adc0847e32e39b7fc8ff90cb392561fb826：web/src/components/canvas/infinite-canvas.tsx、canvas-node.tsx、web/src/pages/canvas/project.tsx、LICENSE；CreatorOS docs/features/t993-creator-canvas.md:36,92-94",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "new authorized review cycle full review",
+      "suggestion": "固定上游仓库与 commit，列出实际移植的画布/节点/连线/交互模块和明确排除的上游服务；对每项标出 CreatorOS adapter、数据模型与依赖替换，规定旧文档节点/连线/尺寸往返不丢失。将来源文件清单、改动说明和完整 MIT notice 纳入源码与桌面发行物；验收同时检查真实集成路径与广告图片/视频场景，不能仅靠视觉相似或上游壳组件存在。",
+      "resolution_evidence": "SPEC 第 94 行固定上游仓库与 dab19adc0847e32e39b7fc8ff90cb392561fb826，列出 infinite-canvas.tsx、canvas-connections.tsx、canvas-node.tsx、project.tsx 的目标交互及 CreatorOS adapter 输入，禁止导入上游存储、登录、模型请求或第二套持久化；规定旧文档节点/边/尺寸/素材引用映射和完整 MIT notice 的源码/桌面包交付。第 100 行要求源码逐项追溯、本地画布不再由 React Flow 承载、安装包 notice、旧 v1 往返和真实广告媒体场景验收。",
+      "parent_id": ""
+    },
+    {
+      "id": "REV-002",
+      "status": "resolved",
+      "severity": "minor",
+      "category": "correctness",
+      "requirement_anchor": {
+        "id": "无限画布体验校正-3",
+        "quote": "触控板滚动平移、捏合或 Cmd/Ctrl + 滚轮缩放"
+      },
+      "acceptance_anchor": {
+        "id": "新增验收",
+        "quote": "平移、缩放、框选后的群组移动/删除、从可见连接点拖线、适合内容、撤销/重做、折叠抽屉和键盘焦点行为通过浏览器交互验证。"
+      },
+      "where": "上游 web/src/components/canvas/infinite-canvas.tsx 的 handleWheel；T-993 SPEC 第 86、94 行",
+      "failure_mode": "上游 handleWheel 对每次 wheel 都按 deltaY 缩放，没有无修饰键触控板平移分支；直接移植会把双指滚动误作缩放，违反已写的画布手势。当前新增验收只笼统写平移/缩放，可能无法抓到这个具体退化。",
+      "evidence_kind": "external-fact",
+      "evidence_ref": "上游 dab19adc0847e32e39b7fc8ff90cb392561fb826：web/src/components/canvas/infinite-canvas.tsx handleWheel；CreatorOS docs/features/t993-creator-canvas.md:86,94",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "clarify",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "new authorized review cycle full review",
+      "suggestion": "在集成适配合同和浏览器验收中分别明确无修饰键触控板滚动平移、Ctrl/Cmd+wheel 与捏合缩放、滚轮事件不穿透页面及输入/弹层内部仍可滚动；不要原样沿用上游 handleWheel。",
+      "resolution_evidence": "SPEC 第 96 行明确上游 handleWheel 不可原样采用，无修饰键双指滚动平移、Cmd/Ctrl+wheel 与捏合锚点缩放、内部原生滚动及页面不穿透；第 100 行逐项列为浏览器验收。",
+      "parent_id": ""
+    }
+  ]
+}

@@ -2,7 +2,8 @@ import {z} from "zod";
 
 const id=z.string().min(1).max(128);
 const point=z.object({x:z.number().finite().min(-1_000_000).max(1_000_000),y:z.number().finite().min(-1_000_000).max(1_000_000)}).strict();
-const common={id,position:point,label:z.string().max(160)};
+const size=z.object({width:z.number().int().min(180).max(1200),height:z.number().int().min(120).max(900)}).strict();
+const common={id,position:point,label:z.string().max(160),size:size.optional()};
 const textNode=z.object({...common,type:z.literal("text"),text:z.string().max(10_000)}).strict();
 const mediaNode=z.object({...common,type:z.enum(["image","video"]),assetId:id,fileId:id.optional(),checksum:z.string().max(256).optional()}).strict();
 const generationNode=z.object({...common,type:z.enum(["image_generation","video_generation"]),prompt:z.string().max(10_000),mode:z.enum(["text_to_image","image_to_image","text_to_video","image_to_video"]),referenceAssetId:id.optional(),aspectRatio:z.string().max(32).optional(),durationSec:z.number().int().min(1).max(3600).optional(),resolution:z.enum(["768P","2K"]).optional()}).strict().superRefine((node,ctx)=>{
@@ -21,7 +22,7 @@ export const canvasGenerationLinkResource=z.object({id,canvasId:id,nodeId:id,att
 const operationId=id;
 export const canvasProposalOperationSchema=z.discriminatedUnion("type",[
  z.object({type:z.literal("addNode"),operationId,tempId:id,node:canvasNodeSchema}).strict(),
- z.object({type:z.literal("updateNode"),operationId,nodeId:id,patch:z.object({label:z.string().max(160).optional(),text:z.string().max(10_000).optional(),prompt:z.string().max(10_000).optional(),mode:z.enum(["text_to_image","image_to_image","text_to_video","image_to_video"]).optional(),referenceAssetId:id.nullable().optional()}).strict()}).strict(),
+ z.object({type:z.literal("updateNode"),operationId,nodeId:id,patch:z.object({label:z.string().max(160).optional(),text:z.string().max(10_000).optional(),prompt:z.string().max(10_000).optional(),mode:z.enum(["text_to_image","image_to_image","text_to_video","image_to_video"]).optional(),referenceAssetId:id.nullable().optional(),size:size.optional()}).strict()}).strict(),
  z.object({type:z.literal("moveNode"),operationId,nodeId:id,position:point}).strict(),
  z.object({type:z.literal("deleteNode"),operationId,nodeId:id}).strict(),
  z.object({type:z.literal("connect"),operationId,source:id,target:id,label:z.string().max(160).optional()}).strict(),
