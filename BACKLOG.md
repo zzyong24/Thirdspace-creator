@@ -9,6 +9,14 @@
 
 | ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
 | --- | --- | --- | --- | --- | --- | --- |
+| T-1018 | 设计创作提示词资产、跨平台接入与数据上报的统一架构 | ✅ 待办 | PASS[REV:b379f9d4b12d] | — | [SPEC](docs/features/t1018-creator-platform-architecture.md) | 先盘点本地提示词、小红书抓取、快手、公众号 Skill 与 T-1017 上报方案，再核对开源实现；形成统一领域边界、迁移与任务拆分及各实施 SPEC，交用户审核后才进入代码实施。 |
+| T-1019 | 让创作者保存、复用并版本化提示词 | 📋 待办 | 待审 | 待验 | [SPEC](docs/features/t1019-prompt-library.md) | 依赖 T-1018 审核及 T-993/T-995 画布集成与验收；按账号保存提示词资产，跨画布复用、保留生成血缘，不把系统 Skill 配置当作用户库。 |
+| T-1020 | 建立平台能力合同和账号级指标快照 | 📋 待办 | 待审 | 待验 | [SPEC](docs/features/t1020-platform-capability-contract.md) | 依赖 T-1018 审核；新增快手、公众号文章平台语义，统一授权、作品目录、账号/作品指标及不可用状态，保持旧平台可用。 |
+| T-1021 | 将本地小红书工程迁入 CreatorOS 账号采集 | 📋 待办 | 待审 | 待验 | [SPEC](docs/features/t1021-xiaohongshu-integration.md) | 依赖 T-1020；迁入独立登录、身份核验、全量笔记和数据解析，真实双账号验收，不共享原工程 Cookie/数据库。 |
+| T-1022 | 接入快手真实授权、作品和创作数据 | 📋 待办 | 待审 | 待验 | [SPEC](docs/features/t1022-kuaishou-integration.md) | 依赖 T-1020；先验证官方 scope 与实际可得字段，再实现账号/作品采集；缺失能力如实不可用。 |
+| T-1023 | 集成本地公众号写作 Skill 与品牌覆盖 | 📋 待办 | 待审 | 待验 | [SPEC](docs/features/t1023-wechat-article-skill.md) | 依赖 T-1020；拆分通用论证方法和月明品牌，项目稿件候选经用户采纳，草稿与发布另行授权。 |
+| T-1024 | 落地用户授权的故障、作品和粉丝轻量上报 | 📋 待办 | 待审 | 待验 | [SPEC](docs/features/t1024-reporting-implementation.md) | 依赖 T-1017/T-1020 与跨仓契约复审；CreatorOS、AM、Growth 闭合授权、加密队列、接收告警、撤销删除，素材与提示词不上传。 |
+| T-1025 | 验收创作资产、平台接入与上报全链路 | 📋 待办 | 待审 | 待验 | [SPEC](docs/features/t1025-creator-platform-acceptance.md) | 依赖 T-1019—T-1024；真实账号、双端实包、旧链回归、跨账号/渠道隔离与云端删除回执均需证据。 |
 | T-1017 | 设计用户故障与创作数据的授权上报闭环 | ✅ 待办 | PASS[REV:0ccc72342775] | — | [SPEC](docs/features/t1017-diagnostics-creator-reporting.md) | 复用本地加密日志、问题反馈和分账号定时采集，设计诊断事件、绑定与作品指标上报、服务端告警及用户控制；先完成跨仓契约与数据归属评审。 |
 | T-1016 | 调研 CreatorOS 连接本地 Codex、WorkBuddy 与外部 Agent | ✅ 待办 | — | — | [SPEC](docs/features/t1016-external-agent-research.md) | 参考 ChatCut 和公开协议，核实双向接入、现有执行边界与可落地方案；本轮仅调研设计。 |
 | T-1014 | 核对并清理233项历史对账失败 | ✅ 待办 | — | — | [范围](docs/verification/t1014-reconcile-triage.md) | 按真实证据关闭过期治理项，保留有效缺陷与历史回执；不修改产品运行时。 |
