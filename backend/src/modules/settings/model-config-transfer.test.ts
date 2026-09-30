@@ -20,6 +20,7 @@ import {
   type SettingsService,
 } from "./settings.service";
 import type { UserResource } from "./settings.schema";
+import { resolveLlmConfig } from "../ai-runtime/llm/resolve";
 
 const KEY = Buffer.alloc(32, 7);
 const OTHER_KEY = Buffer.alloc(32, 9); // 「另一台机器」的 master key
@@ -124,6 +125,61 @@ describe("model config export/import (T-363)", () => {
     // 文件行无密钥 → 保留库中已存密钥(kept-existing)。
     expect(report.rows[0]!.secret).toBe("kept-existing");
     expect(row?.secretValue).toBe("sk-old");
+  });
+
+  it("T-1030：默认继承占位与已配置模型共同导出后可导回，文本能力继续回退默认模型", async () => {
+    await service.setModelConfiguration(ctx, "copy.generate", {
+      provider: "",
+      modelName: "",
+      settings: { temperature: 0.3 },
+    });
+    await service.setModelConfiguration(ctx, "default", {
+      provider: "minimax",
+      modelName: "configured-text-model",
+      secret: "test-default-secret",
+      apiFormat: "anthropic",
+      baseUrl: "https://models.example.test/anthropic",
+    });
+    await service.setModelConfiguration(ctx, "image.generate", {
+      provider: "openai",
+      modelName: "configured-image-model",
+      secret: "test-image-secret",
+    });
+    const file = await service.exportModelConfigs(ctx);
+    ({ db } = await createDb());
+    service = buildService(db);
+    const report = await service.importModelConfigs(ctx, file);
+    expect(report).toMatchObject({ total: 3, imported: 3, failed: 0 });
+    expect(await service.getModelConfig(ctx, "copy.generate")).toMatchObject({
+      provider: "", modelName: "", settings: { temperature: 0.3 }, secretValue: null,
+    });
+    expect(await service.getModelConfig(ctx, "image.generate")).toMatchObject({
+      modelName: "configured-image-model", secretValue: "test-image-secret",
+    });
+    const resolved = await resolveLlmConfig(ctx, "copy.generate", {
+      getModelConfig: (c, capability) => service.getModelConfig(c, capability), env: {},
+    });
+    expect(resolved).toMatchObject({ model: "configured-text-model", token: "test-default-secret" });
+    const exportedAgain = await service.exportModelConfigs(ctx);
+    expect(exportedAgain.models.map(({ secretValue, ...row }) => row)).toEqual(
+      file.models.map(({ secretValue, ...row }) => row),
+    );
+    expect(JSON.stringify(exportedAgain)).not.toContain("test-default-secret");
+  });
+
+  it.each([
+    { capability: "default", modelName: "model" },
+    { capability: "default", provider: "provider" },
+    { capability: "default", provider: null, modelName: "" },
+    { capability: "default", provider: "", modelName: 1 },
+    { capability: " ", provider: "", modelName: "" },
+    [],
+  ])("T-1030：合法行之后出现缺字段或错误类型时仍全文件拒绝，不提前写入：%j", async (malformed) => {
+    await expect(service.importModelConfigs(ctx, {
+      kind: "creatoros.model-config-export", version: 1,
+      models: [{ capability: "default", provider: "test", modelName: "test-model" }, malformed],
+    })).rejects.toThrow(ModelConfigImportError);
+    expect(await service.listModelConfigs(ctx)).toEqual([]);
   });
 
   it("跨机器密文(别的 master key)→ 配置照导,密钥诚实标 unrecoverable", async () => {

@@ -1126,3 +1126,7 @@
 {"ts":"2026-09-30T03:34:27.892Z","actor":"taskctl","action":"start","task":"T-1022","sha_before":"e64a13f464fd","sha_after":"69d4caeaef87"}
 {"ts":"2026-09-30T12:44:41.040Z","actor":"taskctl","action":"start","task":"T-986","sha_before":"69d4caeaef87","sha_after":"bf253772a9b9"}
 {"ts":"2026-09-30T13:04:13.531Z","actor":"taskctl","action":"complete","task":"T-986","evidence":"2026-09-30 隔离 CreatorOS 真扫码复现新抖音号默认任务缺 self.traffic/self.detail；修复 systemManaged 透传。backend controls.test 5/5、platform-account.service 16/16、frontend 三平台账号与边界 26/26、typecheck 通过；重启隔离数据库自动化页读回 6 项。reconcile 全局 32 error：边界扫描新增 2 条位于未触及 live-chat-session.ts，另有既有 receipt/lesson 漂移，已保留在 T-1026 等任务；T-986 范围内门禁通过。","sha_before":"bf253772a9b9","sha_after":"189e5042c52d"}
+{"ts":"2026-09-30T15:09:19.031Z","actor":"taskctl","action":"start","task":"T-1029","sha_before":"e97866660b46","sha_after":"b8ccfad90da4"}
+{"ts":"2026-09-30T19:18:05.644Z","actor":"taskctl","action":"start","task":"T-1030","sha_before":"89d594dda2fb","sha_after":"9d1fbdb03a26"}
+{"ts":"2026-09-30T19:55:58.105Z","actor":"taskctl","action":"start","task":"T-1031","sha_before":"23215e5bbaff","sha_after":"c7a5d1e07218"}
+{"ts":"2026-09-30T20:42:29.370Z","actor":"taskctl","action":"complete","task":"T-1030","evidence":"真实后端配置往返28测试及隔离12/12导入通过；pmem成功；全局reconcile保留范围外既有32 errors/1 warning；证据docs/verification/t1030-model-config-round-trip.md","sha_before":"54d84e924bd8","sha_after":"36f6fce65e1d"}

@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "SPEC 可恢复自身导出文件中空 provider/modelName 继承占位的合法往返：只放宽字符串非空限制，保留字段存在与类型校验、全文件校验后再写入、既有服务保存路径和用户归属。凭据继续由 repository 解包及重新加密，空凭据保留已有值，跨机器密文报告 unrecoverable。默认回退沿用 resolveLlmConfig 的既有语义。未发现具体阻断问题。",
+  "findings": []
+}
