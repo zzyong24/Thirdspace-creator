@@ -1,0 +1,122 @@
+{
+  "environment": "isolated local acceptance fixture; not installed desktop",
+  "before": {
+    "id": "artifactversion-9c4e6838-55",
+    "artifactId": "artifact-4061fc0b-82",
+    "versionNumber": 8,
+    "contentText": "# 分镜脚本\n\n| # | 口播 | 画面 | 字幕 |\n| --- | --- | --- | --- |\n| 1 | 一个人运营多个平台，建议先列出每个平台要交付的作品。 | 展示作品清单 | 先定作品 |\n| 2 | 图文准备正文和图片，视频准备脚本和成片。 | 图文稿与视频稿对照 | 按作品形式准备 |\n| 3 | 作品准备好以后，再安排素材和发布时间。 | 素材清单与排期 | 再安排素材与排期 |\n",
+    "contentData": {
+      "sections": [
+        {
+          "id": "script-saved-0",
+          "body": "口播：一个人运营多个平台，建议先列出每个平台要交付的作品。\n画面：展示作品清单\n字幕：先定作品",
+          "heading": "1. 一个人运营多个平台，建议先列出每"
+        },
+        {
+          "id": "script-saved-1",
+          "body": "口播：图文准备正文和图片，视频准备脚本和成片。\n画面：图文稿与视频稿对照\n字幕：按作品形式准备",
+          "heading": "2. 图文准备正文和图片，视频准备脚本"
+        },
+        {
+          "id": "script-saved-2",
+          "body": "口播：作品准备好以后，再安排素材和发布时间。\n画面：素材清单与排期\n字幕：再安排素材与排期",
+          "heading": "3. 作品准备好以后，再安排素材和发布"
+        }
+      ],
+      "transcript": "一个人运营多个平台，建议先列出每个平台要交付的作品。\n图文准备正文和图片，视频准备脚本和成片。\n作品准备好以后，再安排素材和发布时间。",
+      "scriptTableProtocol": "labeled-storyboard-v1",
+      "scriptTableNarration": {
+        "script-saved-0": "一个人运营多个平台，建议先列出每个平台要交付的作品。",
+        "script-saved-1": "图文准备正文和图片，视频准备脚本和成片。",
+        "script-saved-2": "作品准备好以后，再安排素材和发布时间。"
+      }
+    },
+    "changeSummary": "编辑视频作品脚本",
+    "createdByType": "user",
+    "aiTaskId": null,
+    "createdAt": "2026-09-30T22:21:19.387Z"
+  },
+  "patch": {
+    "data": {
+      "id": "artifactversion-9c4e6838-62",
+      "artifactId": "artifact-4061fc0b-82",
+      "versionNumber": 9,
+      "contentText": "1. 一个人运营多个平台，建议先列出每\n口播：一个人运营多个平台，建议先列出每个平台要交付的作品。\n先把作品清单写下来。\n画面：展示作品清单\n字幕：先定作品\n\n2. 图文准备正文和图片，视频准备脚本\n口播：图文准备正文和图片，视频准备脚本和成片。\n画面：图文稿与视频稿对照\n字幕：按作品形式准备\n\n3. 作品准备好以后，再安排素材和发布\n口播：作品准备好以后，再安排素材和发布时间。\n画面：素材清单与排期\n字幕：再安排素材与排期",
+      "contentData": {
+        "sections": [
+          {
+            "id": "script-saved-0",
+            "body": "口播：一个人运营多个平台，建议先列出每个平台要交付的作品。\n先把作品清单写下来。\n画面：展示作品清单\n字幕：先定作品",
+            "heading": "1. 一个人运营多个平台，建议先列出每"
+          },
+          {
+            "id": "script-saved-1",
+            "body": "口播：图文准备正文和图片，视频准备脚本和成片。\n画面：图文稿与视频稿对照\n字幕：按作品形式准备",
+            "heading": "2. 图文准备正文和图片，视频准备脚本"
+          },
+          {
+            "id": "script-saved-2",
+            "body": "口播：作品准备好以后，再安排素材和发布时间。\n画面：素材清单与排期\n字幕：再安排素材与排期",
+            "heading": "3. 作品准备好以后，再安排素材和发布"
+          }
+        ],
+        "transcript": "一个人运营多个平台，建议先列出每个平台要交付的作品。\n先把作品清单写下来。\n图文准备正文和图片，视频准备脚本和成片。\n作品准备好以后，再安排素材和发布时间。",
+        "scriptTableProtocol": "labeled-storyboard-v1",
+        "scriptTableNarration": {
+          "script-saved-0": "一个人运营多个平台，建议先列出每个平台要交付的作品。\n先把作品清单写下来。",
+          "script-saved-1": "图文准备正文和图片，视频准备脚本和成片。",
+          "script-saved-2": "作品准备好以后，再安排素材和发布时间。"
+        }
+      },
+      "changeSummary": "本地验收：单段修改同步制作正文",
+      "createdByType": "user",
+      "aiTaskId": null,
+      "createdAt": "2026-09-30T22:22:16.353Z",
+      "previousVersionId": "artifactversion-9c4e6838-55"
+    },
+    "meta": {
+      "requestId": "req-9c4e6838-61"
+    }
+  },
+  "after": {
+    "id": "artifactversion-9c4e6838-62",
+    "artifactId": "artifact-4061fc0b-82",
+    "versionNumber": 9,
+    "contentText": "1. 一个人运营多个平台，建议先列出每\n口播：一个人运营多个平台，建议先列出每个平台要交付的作品。\n先把作品清单写下来。\n画面：展示作品清单\n字幕：先定作品\n\n2. 图文准备正文和图片，视频准备脚本\n口播：图文准备正文和图片，视频准备脚本和成片。\n画面：图文稿与视频稿对照\n字幕：按作品形式准备\n\n3. 作品准备好以后，再安排素材和发布\n口播：作品准备好以后，再安排素材和发布时间。\n画面：素材清单与排期\n字幕：再安排素材与排期",
+    "contentData": {
+      "sections": [
+        {
+          "id": "script-saved-0",
+          "body": "口播：一个人运营多个平台，建议先列出每个平台要交付的作品。\n先把作品清单写下来。\n画面：展示作品清单\n字幕：先定作品",
+          "heading": "1. 一个人运营多个平台，建议先列出每"
+        },
+        {
+          "id": "script-saved-1",
+          "body": "口播：图文准备正文和图片，视频准备脚本和成片。\n画面：图文稿与视频稿对照\n字幕：按作品形式准备",
+          "heading": "2. 图文准备正文和图片，视频准备脚本"
+        },
+        {
+          "id": "script-saved-2",
+          "body": "口播：作品准备好以后，再安排素材和发布时间。\n画面：素材清单与排期\n字幕：再安排素材与排期",
+          "heading": "3. 作品准备好以后，再安排素材和发布"
+        }
+      ],
+      "transcript": "一个人运营多个平台，建议先列出每个平台要交付的作品。\n先把作品清单写下来。\n图文准备正文和图片，视频准备脚本和成片。\n作品准备好以后，再安排素材和发布时间。",
+      "scriptTableProtocol": "labeled-storyboard-v1",
+      "scriptTableNarration": {
+        "script-saved-0": "一个人运营多个平台，建议先列出每个平台要交付的作品。\n先把作品清单写下来。",
+        "script-saved-1": "图文准备正文和图片，视频准备脚本和成片。",
+        "script-saved-2": "作品准备好以后，再安排素材和发布时间。"
+      }
+    },
+    "changeSummary": "本地验收：单段修改同步制作正文",
+    "createdByType": "user",
+    "aiTaskId": null,
+    "createdAt": "2026-09-30T22:22:16.353Z"
+  },
+  "assertions": {
+    "protocolMarked": true,
+    "latestTranscript": true,
+    "untouchedSections": true
+  }
+}

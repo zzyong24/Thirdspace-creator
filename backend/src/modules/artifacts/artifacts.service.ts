@@ -1,3 +1,4 @@
+import {decodeScriptTable, syncScriptTableTranscript} from "./script-table-protocol";
 import {extractLegacyScriptText, applyLegacyScriptRange, LEGACY_SCRIPT_RANGE_PREFIX} from "./legacy-script-patch";
 import type { RequestContext } from "@creatoros/contract";
 import { requireAccountId, type Db } from "@creatoros/backend";
@@ -219,13 +220,16 @@ export function createArtifactsService(deps: ServiceDeps): ArtifactsService {
       const isScriptArtifact =
         artifactForWrite.artifactType === "output_script" ||
         artifactForWrite.artifactType === "master_script";
+      const derived = artifactForWrite.artifactType === "output_script" && input.contentData === undefined && typeof input.contentText === "string"
+        ? decodeScriptTable(input.contentText) : null;
+      const structuredInput = derived ? {...input, contentData: derived} : input;
       const versionInput =
-        isScriptArtifact && input.contentData
+        isScriptArtifact && structuredInput.contentData
           ? {
-              ...input,
-              contentData: canonicalizeScriptContentData(input.contentData),
+              ...structuredInput,
+              contentData: canonicalizeScriptContentData(structuredInput.contentData),
             }
-          : input;
+          : structuredInput;
       // [T-183] 改稿 delta 捕捉:在 append 重指针「前」先抓「前一版 = 当前版」快照(内容 +
       // createdByType),用于判定「AI 产出 → 用户手改」并算 before→after 差异。best-effort:
       // 仅在 recordEditDelta seam 已接线时才读,失败不影响主流程。
@@ -376,10 +380,10 @@ export function createArtifactsService(deps: ServiceDeps): ArtifactsService {
           ? { ...section, body: replacementText }
           : section,
       );
-      const nextContentData: Record<string, unknown> = {
+      const nextContentData: Record<string, unknown> = syncScriptTableTranscript({
         ...data,
         sections: nextSections,
-      };
+      }, input.sectionId);
       // html 是旧版派生展示，不得跨版本携带，否则会覆盖 sections 的当前真值。
       delete nextContentData.html;
       const contentText = nextSections

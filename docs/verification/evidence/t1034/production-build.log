@@ -1,0 +1,942 @@
+
+> creatoros-frontend@1.2.0 prebuild /Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/frontend
+> node ../ai-worker/scripts/build.mjs && node scripts/verify-built-in-course.mjs
+
+[built-in-course] PASS {"assetRoot":"/Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/frontend/public/courses/xuehui-ip-practical-course","courseId":"xuehui-ip-practical-course","version":"2026.08.02.3","moduleCount":6,"lessonCount":22,"knowledgePointCount":119,"packageSha256":"87c77bacdae8b2158c63dee1894c400e55781fa1cdc817e8df23ecd20fd4559f"}
+
+> creatoros-frontend@1.2.0 build /Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/frontend
+> next build
+
+▲ Next.js 16.2.9 (Turbopack)
+
+  Creating an optimized production build ...
+Turbopack build encountered 38 warnings:
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/web-session/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/(creator)/@modal/(.)projects/new/page.js
+  [output]/frontend/.next/server/chunks/ssr/[root-of-the-server]__0qle-dk._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/web-session/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/(creator)/accounts/page.js
+  [output]/frontend/.next/server/chunks/ssr/[root-of-the-server]__0uxlyxi._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/web-session/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/(creator)/accounts/works/page.js
+  [output]/frontend/.next/server/chunks/ssr/[root-of-the-server]__0qle-dk._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/web-session/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/(creator)/assets/page.js
+  [output]/frontend/.next/server/chunks/ssr/[root-of-the-server]__0uxlyxi._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/web-session/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/(creator)/automations/page.js
+  [output]/frontend/.next/server/chunks/ssr/[root-of-the-server]__0qle-dk._.js
+  [output]/frontend/.next/server/chunks/ssr/[root-of-the-server]__0t1pks2._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/web-session/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/(creator)/daily-report/page.js
+  [output]/frontend/.next/server/chunks/ssr/[root-of-the-server]__0t1pks2._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/web-session/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/(creator)/knowledge/page.js
+  [output]/frontend/.next/server/chunks/ssr/[root-of-the-server]__0uxlyxi._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/web-session/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/(creator)/page.js
+  [output]/frontend/.next/server/chunks/ssr/[root-of-the-server]__0uxlyxi._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/web-session/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/(creator)/positioning/page.js
+  [output]/frontend/.next/server/chunks/ssr/[root-of-the-server]__0qle-dk._.js
+  [output]/frontend/.next/server/chunks/ssr/[root-of-the-server]__0t1pks2._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/web-session/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/(creator)/projects/[projectId]/article/page.js
+  [output]/frontend/.next/server/chunks/ssr/[root-of-the-server]__0uxlyxi._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/web-session/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/(creator)/projects/[projectId]/outputs/[outputId]/image/page.js
+  [output]/frontend/.next/server/chunks/ssr/[root-of-the-server]__0qle-dk._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/web-session/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/(creator)/projects/[projectId]/page.js
+  [output]/frontend/.next/server/chunks/ssr/[root-of-the-server]__0qle-dk._.js
+  [output]/frontend/.next/server/chunks/ssr/[root-of-the-server]__0uxlyxi._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/web-session/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/(creator)/projects/[projectId]/planning/page.js
+  [output]/frontend/.next/server/chunks/ssr/[root-of-the-server]__0t1pks2._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/web-session/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/(creator)/projects/[projectId]/publishing/page.js
+  [output]/frontend/.next/server/chunks/ssr/[root-of-the-server]__0qle-dk._.js
+  [output]/frontend/.next/server/chunks/ssr/[root-of-the-server]__0uxlyxi._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/web-session/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/(creator)/projects/[projectId]/research/page.js
+  [output]/frontend/.next/server/chunks/ssr/[root-of-the-server]__0qle-dk._.js
+  [output]/frontend/.next/server/chunks/ssr/[root-of-the-server]__0t1pks2._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/web-session/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/(creator)/projects/[projectId]/review/page.js
+  [output]/frontend/.next/server/chunks/ssr/[root-of-the-server]__0uxlyxi._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/web-session/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/(creator)/projects/new/page.js
+  [output]/frontend/.next/server/chunks/ssr/[root-of-the-server]__0qle-dk._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/web-session/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/(creator)/projects/page.js
+  [output]/frontend/.next/server/chunks/ssr/[root-of-the-server]__0qle-dk._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/web-session/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/(creator)/publishing/page.js
+  [output]/frontend/.next/server/chunks/ssr/[root-of-the-server]__0uxlyxi._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/web-session/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/(creator)/search/page.js
+  [output]/frontend/.next/server/chunks/ssr/[root-of-the-server]__0qle-dk._.js
+  [output]/frontend/.next/server/chunks/ssr/[root-of-the-server]__0uxlyxi._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/web-session/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/api/chat/route.js
+  [output]/frontend/.next/server/chunks/[root-of-the-server]__0m54tia._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/web-session/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/api/knowledge/distill/route.js
+  [output]/frontend/.next/server/chunks/[root-of-the-server]__065dxqw._.js
+  [output]/frontend/.next/server/chunks/[root-of-the-server]__1h4m5lu._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/web-session/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/api/knowledge/relate/route.js
+  [output]/frontend/.next/server/chunks/[root-of-the-server]__0_s-fgg._.js
+  [output]/frontend/.next/server/chunks/[root-of-the-server]__1roh99r._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/web-session/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/api/v1/auth/login/route.js
+  [output]/frontend/.next/server/chunks/[root-of-the-server]__0561gtk._.js
+  [output]/frontend/.next/server/chunks/[root-of-the-server]__05dzbf6._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/web-session/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/api/v1/auth/logout/route.js
+  [output]/frontend/.next/server/chunks/[root-of-the-server]__0rcybcm._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/web-session/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/api/v1/auth/me/route.js
+  [output]/frontend/.next/server/chunks/[root-of-the-server]__1-bmm0j._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/web-session/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/api/v1/auth/register/route.js
+  [output]/frontend/.next/server/chunks/[root-of-the-server]__18txpxe._.js
+  [output]/frontend/.next/server/chunks/[root-of-the-server]__19tcpac._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/web-session/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/api/v1/blob/[...key]/route.js
+  [output]/frontend/.next/server/chunks/[root-of-the-server]__0gtiy6-._.js
+  [output]/frontend/.next/server/chunks/[root-of-the-server]__0d4ko7z._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/web-session/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/api/v1/dispatch/route.js
+  [output]/frontend/.next/server/chunks/[root-of-the-server]__1w_ctsh._.js
+  [output]/frontend/.next/server/chunks/[root-of-the-server]__0el-cqm._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/web-session/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/api/v1/local/client-config/route.js
+  [output]/frontend/.next/server/chunks/[root-of-the-server]__0rv-650._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/web-session/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/api/v1/local/execution-preview/[taskId]/[...artifact]/route.js
+  [output]/frontend/.next/server/chunks/[root-of-the-server]__09wrqh5._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/web-session/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/api/v1/local/license-sync/route.js
+  [output]/frontend/.next/server/chunks/[root-of-the-server]__1fo50il._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/web-session/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/api/v1/local/path/route.js
+  [output]/frontend/.next/server/chunks/[root-of-the-server]__1tqd8um._.js
+  [output]/frontend/.next/server/chunks/[root-of-the-server]__02m5z2t._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/web-session/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/api/v1/local/read-grant/route.js
+  [output]/frontend/.next/server/chunks/[root-of-the-server]__1zggd_t._.js
+  [output]/frontend/.next/server/chunks/[root-of-the-server]__20-cziw._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/web-session/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/api/v1/local/reveal/route.js
+  [output]/frontend/.next/server/chunks/[root-of-the-server]__135pjut._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/web-session/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/api/v1/settings-transfer/models/route.js
+  [output]/frontend/.next/server/chunks/[root-of-the-server]__0gatoc3._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/web-session/route.ts
+
+
+./frontend/next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Output asset trace:
+  [output]/frontend/.next/server/app/api/web-session/route.js
+  [output]/frontend/.next/server/chunks/[root-of-the-server]__0z1kn0m._.js
+  [output]/frontend/.next/server/chunks/[root-of-the-server]__1x9ftuq._.js
+
+Import trace:
+  App Route:
+    ./frontend/next.config.ts
+    ./frontend/src/server/persistence-client.ts
+    ./frontend/src/app/api/web-session/route.ts
+
+
+✓ Compiled successfully in 22.9s
+  Running TypeScript ...
+  Finished TypeScript in 44s ...
+  Collecting page data using 11 workers ...
+  Generating static pages using 11 workers (0/29) ...
+  Generating static pages using 11 workers (7/29) 
+  Generating static pages using 11 workers (14/29) 
+  Generating static pages using 11 workers (21/29) 
+✓ Generating static pages using 11 workers (29/29) in 232ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ƒ /
+├ ○ /_not-found
+├ ƒ /(.)projects/new
+├ ƒ /accounts
+├ ƒ /accounts/works
+├ ƒ /activate
+├ ƒ /api/chat
+├ ƒ /api/knowledge/classify
+├ ƒ /api/knowledge/comment-sift
+├ ƒ /api/knowledge/distill
+├ ƒ /api/knowledge/relate
+├ ƒ /api/knowledge/search
+├ ƒ /api/v1/activate
+├ ƒ /api/v1/auth/login
+├ ƒ /api/v1/auth/logout
+├ ƒ /api/v1/auth/me
+├ ƒ /api/v1/auth/register
+├ ƒ /api/v1/blob/[...key]
+├ ƒ /api/v1/dispatch
+├ ƒ /api/v1/local/ai-credits/connect
+├ ƒ /api/v1/local/browser-task-authorization
+├ ƒ /api/v1/local/channel-model-selection
+├ ƒ /api/v1/local/channel-runtime
+├ ƒ /api/v1/local/client-config
+├ ƒ /api/v1/local/execution-preview/[taskId]/[...artifact]
+├ ƒ /api/v1/local/license-sync
+├ ƒ /api/v1/local/open-url
+├ ƒ /api/v1/local/path
+├ ƒ /api/v1/local/product-feedback
+├ ƒ /api/v1/local/read-grant
+├ ƒ /api/v1/local/reset-workspace
+├ ƒ /api/v1/local/reveal
+├ ƒ /api/v1/local/reveal-data-dir
+├ ƒ /api/v1/local/reveal-logs
+├ ƒ /api/v1/settings-transfer/models
+├ ƒ /api/web-session
+├ ƒ /assets
+├ ƒ /automations
+├ ƒ /calendar
+├ ƒ /daily-report
+├ ƒ /experience
+├ ƒ /intelligence
+├ ƒ /knowledge
+├ ○ /login
+├ ƒ /positioning
+├ ƒ /projects
+├ ƒ /projects/[projectId]
+├ ƒ /projects/[projectId]/article
+├ ƒ /projects/[projectId]/outputs/[outputId]/image
+├ ƒ /projects/[projectId]/outputs/[outputId]/video
+├ ƒ /projects/[projectId]/planning
+├ ƒ /projects/[projectId]/production
+├ ƒ /projects/[projectId]/publishing
+├ ƒ /projects/[projectId]/research
+├ ƒ /projects/[projectId]/review
+├ ƒ /projects/[projectId]/script
+├ ƒ /projects/create
+├ ƒ /projects/new
+├ ƒ /publishing
+├ ○ /register
+├ ƒ /search
+├ ƒ /settings
+└ ƒ /topics
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

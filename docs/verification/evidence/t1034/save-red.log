@@ -1,0 +1,47 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/backend
+
+ ❯ src/modules/output-scripts/output-scripts.integration.test.ts (4 tests | 2 failed) 4753ms
+   × 编辑分镜表真实保存→制作正文reader→口播导出：edited-adopt 1018ms
+   × 编辑分镜表真实保存→制作正文reader→口播导出：manual-save 1007ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/output-scripts/output-scripts.integration.test.ts > 编辑分镜表真实保存→制作正文reader→口播导出：edited-adopt
+ FAIL  src/modules/output-scripts/output-scripts.integration.test.ts > 编辑分镜表真实保存→制作正文reader→口播导出：manual-save
+AssertionError: expected {} to match object { transcript: '先定作品。\n再备正文和图片。', …(1) }
+
+- Expected
++ Received
+
+- {
+-   "sections": [
+-     {
+-       "body": "口播：先定作品。
+- 画面：作品清单
+- 字幕：先定作品",
+-       "id": "script-saved-0",
+-     },
+-     {
+-       "body": "口播：再备正文和图片。
+- 画面：图文稿
+- 字幕：准备素材",
+-       "id": "script-saved-1",
+-     },
+-   ],
+-   "transcript": "先定作品。
+- 再备正文和图片。",
+- }
++ {}
+
+ ❯ src/modules/output-scripts/output-scripts.integration.test.ts:68:29
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 2 passed (4)
+   Start at  05:47:28
+   Duration  6.36s (transform 759ms, setup 0ms, import 1.38s, tests 4.75s, environment 0ms)
+

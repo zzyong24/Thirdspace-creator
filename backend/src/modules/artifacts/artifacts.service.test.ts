@@ -600,3 +600,54 @@ describe("[T-332 S2] artifacts 按号隔离:未选号禁读写 + 双号零交叉
     ).rejects.toBeInstanceOf(OwnershipError);
   });
 });
+
+// 补充公共服务回归，独立于 T-1029 候选采纳模块；不是追补历史红测。
+it("T-1034：分镜保存→局部修改→实际制作正文与导出→回滚保持同一真值",async()=>{
+ const {createReviewSubjectContext}=await import('../../application/context/review-subject');
+ const {extractVoiceoverText}=await import('../production/material-export');
+ let sequence=1000;
+ const ctx:RequestContext={userId:"u-table",accountId:"a-table",requestId:"r-table",source:"user"};
+ const deps={now:()=>"2026-10-01T02:00:00.000Z",nextId:(prefix:string)=>prefix+"-"+(++sequence)};
+ const {createProjectsService,createProjectRepository}=await import("../projects");
+ const projects=createProjectsService(createProjectRepository(db),deps);
+ const artifacts=createArtifactsService({db,...deps,assertProjectOwned:(c,id)=>projects.getProject(c,id),resolveOutputProjectId:(c,id)=>projects.getProjectIdByOutput(c,id)});
+ const text="# 分镜脚本\n\n| # | 口播 | 画面 | 字幕 |\n| --- | --- | --- | --- |\n| 1 | 先定作品。 | 作品清单 | 先定作品 |\n| 2 | 再备正文和图片。 | 图文稿 | 准备素材 |";
+ {
+  const project=await projects.createProject(ctx,{title:"结构往返"});const output=await projects.createOutput(ctx,project.id,{title:"视频",contentType:"video"});
+  const artifact=await artifacts.createArtifact(ctx,{projectId:project.id,contentOutputId:output.id,artifactType:"output_script",stage:"script",title:"稿"});
+  const versionId=(await artifacts.createVersion(ctx,artifact.id,{expectedCurrentVersionId:artifact.currentVersionId!,contentText:text})).id;
+  const saved=(await artifacts.listVersions(ctx,artifact.id)).find(v=>v.id===versionId)!;
+  expect(saved.contentText).toBe(text);
+  expect(saved.contentData).toMatchObject({transcript:"先定作品。\n再备正文和图片。",sections:[{id:"script-saved-0",body:"口播：先定作品。\n画面：作品清单\n字幕：先定作品"},{id:"script-saved-1",body:"口播：再备正文和图片。\n画面：图文稿\n字幕：准备素材"}]});
+  const reader=createReviewSubjectContext({projectsService:projects,artifactsService:artifacts,selectReadableProjectScriptArtifact:rows=>rows.find(r=>r.id===artifact.id),readProjectRadarDraftSeed:async()=>"旧seed",publishingService:{listPublications:async()=>[]},analyticsService:{getPublicationAnalytics:async()=>({rows:[],total:0})},candidateService:{listCommentsForPublication:async()=>[]}} as Parameters<typeof createReviewSubjectContext>[0]);
+  expect(await reader.getScript(ctx,project.id)).toBe("先定作品。\n再备正文和图片。");
+  expect(extractVoiceoverText(await reader.getScript(ctx,project.id))).toBe("先定作品。\n再备正文和图片。");
+  await expect(artifacts.createVersion({...ctx,accountId:"other"},artifact.id,{contentText:text})).rejects.toThrow();
+  await expect(artifacts.createVersion(ctx,artifact.id,{expectedCurrentVersionId:artifact.currentVersionId!,contentText:text})).rejects.toThrow();
+  const originalSections=(saved.contentData as {sections:Array<{id:string;body:string}>}).sections;
+  const patched=await artifacts.applyScriptPatch(ctx,artifact.id,{expectedVersionId:versionId,sectionId:originalSections[0]!.id,expectedOriginalText:originalSections[0]!.body,replacementText:"口播：先核对作品。\n每个平台都用自己的稿。\n画面：新作品清单\n字幕：新作品"});
+  expect(await reader.getScript(ctx,project.id)).toBe("先核对作品。\n每个平台都用自己的稿。\n再备正文和图片。");
+  expect(extractVoiceoverText(await reader.getScript(ctx,project.id))).toBe("先核对作品。\n每个平台都用自己的稿。\n再备正文和图片。");
+  const patchSections=(patched.contentData as {sections:Array<{id:string;body:string}>}).sections;
+  const plain=await artifacts.applyScriptPatch(ctx,artifact.id,{expectedVersionId:patched.id,sectionId:patchSections[0]!.id,expectedOriginalText:patchSections[0]!.body,replacementText:"用户明确输入的新正文。"});
+  expect(await reader.getScript(ctx,project.id)).toBe("用户明确输入的新正文。\n再备正文和图片。");
+  const plainSections=(plain.contentData as {sections:Array<{id:string;body:string}>}).sections;
+  const visualOnly=await artifacts.applyScriptPatch(ctx,artifact.id,{expectedVersionId:plain.id,sectionId:plainSections[0]!.id,expectedOriginalText:plainSections[0]!.body,replacementText:"画面：展示作品\n字幕：作品"});
+  expect(await reader.getScript(ctx,project.id)).toBe("\n再备正文和图片。");
+  expect(extractVoiceoverText(await reader.getScript(ctx,project.id))).toBe("再备正文和图片。");
+  await expect(artifacts.applyScriptPatch({...ctx,accountId:"other"},artifact.id,{expectedVersionId:visualOnly.id,sectionId:originalSections[0]!.id,expectedOriginalText:"画面：展示作品\n字幕：作品",replacementText:"不应保存"})).rejects.toThrow();
+  await artifacts.restoreVersion(ctx,artifact.id,versionId,visualOnly.id);
+  expect(await reader.getScript(ctx,project.id)).toBe("先定作品。\n再备正文和图片。");
+  const ambiguousText=text.replace("先定作品。", "说明两行设置：<br>画面：蓝色<br>字幕：要点");
+  const ambiguous=await artifacts.createVersion(ctx,artifact.id,{expectedCurrentVersionId:versionId,contentText:ambiguousText});
+  const ambiguousSections=(ambiguous.contentData as {sections:Array<{id:string;body:string}>}).sections;
+  const unrelatedPatch=await artifacts.applyScriptPatch(ctx,artifact.id,{expectedVersionId:ambiguous.id,sectionId:ambiguousSections[1]!.id,expectedOriginalText:ambiguousSections[1]!.body,replacementText:"再核对图片。"});
+  expect(await reader.getScript(ctx,project.id)).toBe("说明两行设置：\n画面：蓝色\n字幕：要点\n再核对图片。");
+  expect(extractVoiceoverText(await reader.getScript(ctx,project.id))).toBe("说明两行设置：\n画面：蓝色\n字幕：要点\n再核对图片。");
+  await artifacts.restoreVersion(ctx,artifact.id,versionId,unrelatedPatch.id);
+  const explicit=await artifacts.createVersion(ctx,artifact.id,{expectedCurrentVersionId:versionId,contentText:text,contentData:{}});expect(explicit.contentData).toEqual({});
+  expect(await reader.getScript(ctx,project.id)).toBe(text);
+  const other=await artifacts.createArtifact(ctx,{projectId:project.id,artifactType:"research_material",stage:"script",title:"其他类型"});
+  expect((await artifacts.createVersion(ctx,other.id,{contentText:text})).contentData).toEqual({});
+ }
+});
