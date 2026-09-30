@@ -10,6 +10,9 @@
 | ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
 | --- | --- | --- | --- | --- | --- | --- |
 | T-1031 | 修复单项结果不能依次采纳的整稿版本阻断 | 🔨 待办 | PASS[REV:c3570711a777] | 待验 | [SPEC](docs/features/t1031-result-field-adoption.md) | 真实验收发现先采纳标签后封面失效；按字段与冻结正文校验安全保存，保留当前稿、来源和并发冲突，不回写历史整稿。 |
+| T-1032 | 核实真实脚本任务的事实约束执行与最小审校方案 | ✅ 待办 | — | — | [SPEC](docs/features/t1032-script-fact-scope-research.md) | 三轮真实模型仍补写无来源经历、比例和效果；核对冻结提示词及供应商最终消息，区分传递缺陷与模型忽略，不用关键词检测或更多提示词掩盖失败。 |
+| T-1033 | 修复模型请求前坏输入被误报为提交未知 | ✅ 待办 | PASS[REV:a971134781ac] | — | [SPEC](docs/features/t1033-preflight-error-state.md) | 公共 Worker 红测发现准备阶段 Zod/JSON 错误被判 MODEL_RESULT_UNKNOWN；只校准输入边界，保留真正已启动请求的未知回执保护。 |
+| T-1034 | 保留编辑分镜的结构与制作正文 | 🔨 待办 | PASS[REV:d9cc821540d3] | 待验 | [SPEC](docs/features/t1034-edited-script-structure.md) | 真界面发现编辑采用后仅存 Markdown，旧稿面读为整段表格；按明确协议派生分镜结构，保留原文和旧合法保存路径。 |
 | T-1030 | 修复模型配置备份无法导入自身导出文件 | ✅ 待办 | PASS[REV:db00158719fb] | — | [SPEC](docs/features/t1030-model-config-round-trip.md) | T-1029 真实验收发现：默认继承能力的空模型占位行被导出后，导入全文件被必填校验拒绝；恢复合法配置往返，密文与原用户数据归属不变。 |
 | T-1029 | 按平台作品形态重构结果优先创作工作台 | 🔨 待办 | PASS[REV:b53ee98ea79e] | 待验 | [SPEC](docs/features/t1029-outcome-first-platform-workbench.md) | 小红书图文、短视频和公众号长文各有合适的稿面；内容雷达和项目创作均可直接选择封面、正文、简介或标签等结果，规则为可选设置，保留真实来源、账号隔离和候选采纳。 |
 | T-1018 | 设计创作提示词资产、跨平台接入与数据上报的统一架构 | ✅ 待办 | PASS[REV:b379f9d4b12d] | — | [SPEC](docs/features/t1018-creator-platform-architecture.md) | 先盘点本地提示词、小红书抓取、快手、公众号 Skill 与 T-1017 上报方案，再核对开源实现；形成统一领域边界、迁移与任务拆分及各实施 SPEC，交用户审核后才进入代码实施。 |
