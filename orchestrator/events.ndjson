@@ -1118,3 +1118,11 @@
 {"ts":"2026-09-29T13:37:50.245Z","actor":"taskctl","action":"start","task":"T-1018","sha_before":"3de0c3533cd2","sha_after":"0fa521ec4717"}
 {"ts":"2026-09-29T14:02:55.159Z","actor":"taskctl","action":"complete","task":"T-1018","evidence":"T-1018 架构与 T-1019—T-1025 实施 SPEC 已交付待用户逐项审核；独立评审 PASS[REV:b379f9d4b12d]，8 份 SPEC 相对链接与 git diff --check 通过。仅设计完成，功能与三仓合同尚未实施/过审。全局 reconcile 仍 60 errors/1 warning，主要为 T-916/T-1015 已登记的既有边界、教训与历史 receipt 漂移；未声称全绿。","sha_before":"5313540abfcb","sha_after":"4ad31fb18b63"}
 {"ts":"2026-09-29T14:34:55.424Z","actor":"taskctl","action":"start","task":"T-1024","sha_before":"d8edbd8704c5","sha_after":"b33e5b6bb190"}
+{"ts":"2026-09-29T18:13:58.721Z","actor":"taskctl","action":"start","task":"T-1020","sha_before":"5043d41251cd","sha_after":"141d8ea48d0c"}
+{"ts":"2026-09-29T19:45:29.604Z","actor":"taskctl","action":"start","task":"T-1023","sha_before":"ba7afb73b88e","sha_after":"4f87b965eae0"}
+{"ts":"2026-09-29T20:52:00.039Z","actor":"taskctl","action":"block","task":"T-1020","reason":"本地平台能力合同及创作/目录回归已通过；SPEC 的云端删除回执与小红书/快手真实权限、安装版验收尚无证据，reconcile 新增边界违规另见 T-1026。","sha_before":"4f87b965eae0","sha_after":"ab18bf3d6c86"}
+{"ts":"2026-09-29T20:52:00.450Z","actor":"taskctl","action":"block","task":"T-1023","reason":"文章创作与配图锚点代码、隔离浏览器回归已通过；SPEC 要求的本机真实模型生图、双真实账号和新安装版验收未完成，生成图采纳合同措辞待 DEC 对齐。","sha_before":"ab18bf3d6c86","sha_after":"712bb4b77367"}
+{"ts":"2026-09-30T03:07:18.817Z","actor":"taskctl","action":"start","task":"T-1021","sha_before":"a7034d206187","sha_after":"e64a13f464fd"}
+{"ts":"2026-09-30T03:34:27.892Z","actor":"taskctl","action":"start","task":"T-1022","sha_before":"e64a13f464fd","sha_after":"69d4caeaef87"}
+{"ts":"2026-09-30T12:44:41.040Z","actor":"taskctl","action":"start","task":"T-986","sha_before":"69d4caeaef87","sha_after":"bf253772a9b9"}
+{"ts":"2026-09-30T13:04:13.531Z","actor":"taskctl","action":"complete","task":"T-986","evidence":"2026-09-30 隔离 CreatorOS 真扫码复现新抖音号默认任务缺 self.traffic/self.detail；修复 systemManaged 透传。backend controls.test 5/5、platform-account.service 16/16、frontend 三平台账号与边界 26/26、typecheck 通过；重启隔离数据库自动化页读回 6 项。reconcile 全局 32 error：边界扫描新增 2 条位于未触及 live-chat-session.ts，另有既有 receipt/lesson 漂移，已保留在 T-1026 等任务；T-986 范围内门禁通过。","sha_before":"bf253772a9b9","sha_after":"189e5042c52d"}

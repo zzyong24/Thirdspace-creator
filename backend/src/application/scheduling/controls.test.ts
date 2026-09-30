@@ -62,3 +62,18 @@ it.each(['manual','cron'])('公共组合%s先进入：立即运行与到点同�
  const scheduledFor=await f.schedulingService.getRunScheduledFor(f.ctx,results[0]!.jobRunId);
  expect(scheduledFor).toBe(firstKind==='cron'?now():null);
 });
+
+it('新绑抖音号当次补齐账号级系统采集任务，普通创建仍被拒绝',async()=>{
+ const f=await fixture();
+ await f.controls.bootstrapDouyinOnBind(f.ctx);
+ let kinds:string[]=[];
+ for(let attempt=0;attempt<100;attempt++){
+  const {rows}=await f.schedulingService.listJobs(f.ctx,{limit:100,offset:0});
+  kinds=rows.map(row=>row.sourceKind);
+  if(['self.metrics','self.traffic','comments','self.detail','topic.daily','intelligence.sync'].every(kind=>kinds.includes(kind)))break;
+  await new Promise(resolve=>setTimeout(resolve,20));
+ }
+ expect(kinds).toEqual(expect.arrayContaining(['self.metrics','self.traffic','comments','self.detail','topic.daily','intelligence.sync']));
+ await expect(f.schedulingService.createJob(f.ctx,{name:'手工流量',sourceKind:'self.traffic',schedule:'0 0 * * *'}))
+  .rejects.toThrow('该采集任务由系统按账号管理');
+});

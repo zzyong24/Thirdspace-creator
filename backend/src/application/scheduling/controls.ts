@@ -105,7 +105,7 @@ const {aiService,schedulingService,platformAccountService,dispatchScheduledColle
           target: input.target,
           // [T-359] 分层启用透传:默认关的模板建即 disabled(缺省 undefined = service 默认 true)。
           enabled: input.enabled,
-          systemManaged: input.sourceKind === "intelligence.sync",
+          systemManaged: input.systemManaged === true,
         });
         return { id: job.id };
       },

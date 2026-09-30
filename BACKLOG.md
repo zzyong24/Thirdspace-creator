@@ -11,12 +11,15 @@
 | --- | --- | --- | --- | --- | --- | --- |
 | T-1018 | 设计创作提示词资产、跨平台接入与数据上报的统一架构 | ✅ 待办 | PASS[REV:b379f9d4b12d] | — | [SPEC](docs/features/t1018-creator-platform-architecture.md) | 先盘点本地提示词、小红书抓取、快手、公众号 Skill 与 T-1017 上报方案，再核对开源实现；形成统一领域边界、迁移与任务拆分及各实施 SPEC，交用户审核后才进入代码实施。 |
 | T-1019 | 让创作者保存、复用并版本化提示词 | 📋 待办 | 待审 | 待验 | [SPEC](docs/features/t1019-prompt-library.md) | 依赖 T-1018 审核及 T-993/T-995 画布集成与验收；按账号保存提示词资产，跨画布复用、保留生成血缘，不把系统 Skill 配置当作用户库。 |
-| T-1020 | 建立平台能力合同和账号级指标快照 | 📋 待办 | 待审 | 待验 | [SPEC](docs/features/t1020-platform-capability-contract.md) | 依赖 T-1018 审核；新增快手、公众号文章平台语义，统一授权、作品目录、账号/作品指标及不可用状态，保持旧平台可用。 |
-| T-1021 | 将本地小红书工程迁入 CreatorOS 账号采集 | 📋 待办 | 待审 | 待验 | [SPEC](docs/features/t1021-xiaohongshu-integration.md) | 依赖 T-1020；迁入独立登录、身份核验、全量笔记和数据解析，真实双账号验收，不共享原工程 Cookie/数据库。 |
-| T-1022 | 接入快手真实授权、作品和创作数据 | 📋 待办 | 待审 | 待验 | [SPEC](docs/features/t1022-kuaishou-integration.md) | 依赖 T-1020；先验证官方 scope 与实际可得字段，再实现账号/作品采集；缺失能力如实不可用。 |
-| T-1023 | 集成本地公众号写作 Skill 与品牌覆盖 | 📋 待办 | 待审 | 待验 | [SPEC](docs/features/t1023-wechat-article-skill.md) | 依赖 T-1020；拆分通用论证方法和月明品牌，项目稿件候选经用户采纳，草稿与发布另行授权。 |
+| T-1020 | 建立平台能力合同和账号级指标快照 | ⏸️ 待办 | PASS[REV:8897b55d6f5f] | 待验 | [SPEC](docs/features/t1020-platform-capability-contract.md) | 依赖 T-1018 审核；新增快手、公众号文章平台语义，统一授权、作品目录、账号/作品指标及不可用状态，保持旧平台可用。 |
+| T-1021 | 将本地小红书工程迁入 CreatorOS 账号采集 | 🔨 待办 | PASS[REV:c67b73fd1c91] | 待验 | [SPEC](docs/features/t1021-xiaohongshu-integration.md) | 依赖 T-1020；迁入独立登录、身份核验、全量笔记和数据解析，真实双账号验收，不共享原工程 Cookie/数据库。 |
+| T-1022 | 接入快手真实授权、作品和创作数据 | 🔨 待办 | PASS[REV:bd90a18aaf27] | 待验 | [SPEC](docs/features/t1022-kuaishou-integration.md) | 依赖 T-1020；用户亲自登录本机独立档案，核验身份后自动采集本人作品与可得指标；缺失能力如实不可用。 |
+| T-1023 | 集成本地公众号写作 Skill 与品牌覆盖 | ⏸️ 待办 | PASS[REV:47cfacfe660c] | 待验 | [SPEC](docs/features/t1023-wechat-article-skill.md) | 依赖 T-1020；拆分通用论证方法和月明品牌，项目稿件候选经用户采纳，草稿与发布另行授权。 |
 | T-1024 | 落地故障、作品和粉丝轻量上报及 Growth 运营后台 | 🔨 待办 | PASS[REV:393681b9c2ab] | 待验 | [SPEC](docs/features/t1024-reporting-implementation.md) | 依赖 T-1017/T-1020 与跨仓契约复审；设置页候选偏好默认勾选、主动确认后才有效授权；随后后台自动、不中断创作；Growth 接收与 Ant Design 后台、撤销删除闭环，Activity 改动须专项授权。 |
 | T-1025 | 验收创作资产、平台接入与上报全链路 | 📋 待办 | 待审 | 待验 | [SPEC](docs/features/t1025-creator-platform-acceptance.md) | 依赖 T-1019—T-1024；真实账号、双端实包、旧链回归、跨账号/渠道隔离与云端删除回执均需证据。 |
+| T-1026 | 修复 Copilot 前端引入 Agent SDK 的物理边界回归 | 📋 待办 | 待审 | 待验 | [排查](docs/features/t1026-copilot-sdk-boundary.md) | 2026-09-30 reconcile/boundary-scan 较基线新增 R2 两项；梳理 live-chat-session 的 SDK 职责并迁到允许层，不提高违规基线。 |
+| T-1027 | 修复视频决策未走 material.match 的语义边界回归 | 📋 待办 | 待审 | 待验 | [排查](docs/features/t1027-video-decision-semantic-boundary.md) | 2026-09-30 semantic-boundary-scan 报 video-decisions-runner 未调用 material.match；恢复真实 Skill 选择及调用链回归，不写死内容判断。 |
+| T-1028 | 修复抖音登录态公开读取长时间无返回 | 📋 待办 | 待审 | 待验 | [排查](docs/features/t1028-douyin-status-timeout.md) | 月明水清深账号的安装版 `ingestion.douyin.status` 超过 40 秒未返回；核对浏览器档案租约、超时与取消传播，保证 CLI 和设置页可终止、可诊断。 |
 | T-1017 | 设计用户故障与创作数据的授权上报闭环 | ✅ 待办 | PASS[REV:0ccc72342775] | — | [SPEC](docs/features/t1017-diagnostics-creator-reporting.md) | 复用本地加密日志、问题反馈和分账号定时采集，设计诊断事件、绑定与作品指标上报、服务端告警及用户控制；先完成跨仓契约与数据归属评审。 |
 | T-1016 | 调研 CreatorOS 连接本地 Codex、WorkBuddy 与外部 Agent | ✅ 待办 | — | — | [SPEC](docs/features/t1016-external-agent-research.md) | 参考 ChatCut 和公开协议，核实双向接入、现有执行边界与可落地方案；本轮仅调研设计。 |
 | T-1014 | 核对并清理233项历史对账失败 | ✅ 待办 | — | — | [范围](docs/verification/t1014-reconcile-triage.md) | 按真实证据关闭过期治理项，保留有效缺陷与历史回执；不修改产品运行时。 |
@@ -38,7 +41,7 @@
 | T-992 | 修复 Windows 升级启动运行环境切换拒绝访问 | 🔨 待办 | — | — | [SPEC](docs/features/t992-windows-runtime-upgrade.md) | 用户启动日志os error5；检查旧运行目录、安装指针与升级迁移，保留数据，补既有安装升级验证。 |
 | T-989 | 校正知识图谱错误提示的既有回归断言 | 📋 待办 | — | — | [SPEC](docs/features/t989-knowledge-error-test.md) | T988扩展验证发现原af62ddda及当前均1/9失败；核对错误提示契约后修正，未改该行为。 |
 | T-984 | 本地打包并实测拆分采集修复 | ⏸️ 待办 | — | — | [SPEC](docs/verification/t984-local-collection.md) | 用户明确冻结改动范围；以66264111本地打包、安装、真实采集验证，不扩展恢复架构、不公开发布。 |
-| T-986 | 修复新绑定账号默认采集任务系统标记透传 | 📋 待办 | — | — | [SPEC](docs/features/t986-bind-collection-flag.md) | 只读审查发现绑定装配丢失 systemManaged，可能导致流量和内容任务待重启才补齐；本轮不扩大改动，待隔离复现与修复。 |
+| T-986 | 修复新绑定账号默认采集任务系统标记透传 | ✅ 待办 | — | — | [SPEC](docs/features/t986-bind-collection-flag.md) | 只读审查发现绑定装配丢失 systemManaged，可能导致流量和内容任务待重启才补齐；本轮不扩大改动，待隔离复现与修复。 |
 | T-980 | 纳入助手修复重新运行 V1.2 双端流水线 | 🔨 待办 | — | — | [SPEC](docs/features/t980-release-rerun.md) | 冻结已提交 T-976至T-978 修复，合并发布分支，预检后运行 Mac/Windows 正式构建并核验产物。 |
 | T-979 | 自动化页面慢轮询与切换对象回写防护 | ⬜ 待办 | — | — | [SPEC](docs/features/t979-automation-polling.md) | T-978 排查发现运行历史、步骤和列表轮询未限制在途请求；补慢网与切换对象回归，修复请求堆积及旧响应覆盖风险。 |
 | T-976 | 修复安装版 AI 助手 RedFox 再次失败与脱离对话的任务交互 | 🔨 待办 | — | — | [SPEC](docs/features/t976-chat-inline-redfox.md) | 定位本次原始错误；当前对话持续执行返回结果，不让用户刷新核对；真实链路验收。 |
