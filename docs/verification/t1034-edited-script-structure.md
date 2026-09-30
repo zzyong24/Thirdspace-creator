@@ -50,3 +50,9 @@ flowchart LR
 - 全局后端测试源码类型检查、合同注册和既有边界失败仍有欠债。
 - 三次真实模型脚本仍有无来源经历、比例与效果陈述；T-1032 验证了消息传递机制，不能据此保证生成文案准确。
 - 真实双账号绑定、雷达来源完整流程及新桌面安装包仍待父任务验收。T-1029、T-1031、T-1034 保持进行中，不声明客户端完全可用。
+
+## 2026-10-01 干净提交复验
+
+生产修复与独立测试已提交为 `ae78054c`，仅暂存 artifacts.service.ts 的三个本任务 hunk；T-1029 初始化接口、回执、repository 和 output-scripts 模块继续留在原工作区。使用 git archive 导出该提交到 `/tmp/creatoros-t1034-clean-ae78054c`，离线冻结 lockfile 安装依赖，源码三份逐字节对比一致。独立副本中协议测试与 artifacts 公共服务回归 2 文件 35 项通过，零重试；日志 clean-commit-35-green.log。这证明该修复不依赖原工作区未提交实现，未把副本包装成桌面真机验收。
+
+提交 hook 输出“Can't find lefthook in PATH”；提交本身成功，但不能记为 hook PASS。原始日志保留了工具的 EOF 空行与进度回车，暂存 diff --check 对这些日志报告空白问题；没有改动第三轮评审绑定的 patch-red.log 哈希。生产源码的工作区 diff --check 通过。

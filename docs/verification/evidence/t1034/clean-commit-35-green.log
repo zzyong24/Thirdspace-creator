@@ -1,0 +1,9 @@
+
+ RUN  v4.1.8 /private/tmp/creatoros-t1034-clean-ae78054c/backend
+
+
+ Test Files  2 passed (2)
+      Tests  35 passed (35)
+   Start at  06:31:51
+   Duration  28.26s (transform 825ms, setup 0ms, import 1.35s, tests 26.14s, environment 0ms)
+

@@ -16,3 +16,5 @@ flowchart LR
 ```
 
 本任务 Gate 的实际范围为上述 Worker 边界。本轮最终公共回归再次为 3 文件 78 通过（worker-final-78-green.log）。全局 reconcile 实测退出 1：32 errors / 1 warning，范围外问题已有 T-1015/T-1026/T-1027 与旧规格治理任务追踪；本任务 Worker 边界测试通过，不能写客户端全部通过。
+
+2026-10-01 补充：从 `ae78054c` 的干净 git archive 副本重新运行 structured-worker-generation、durable-pi-http.integration、script-worker-pipeline 三文件，78 项通过，零重试；日志 evidence/t1033/clean-commit-78-green.log。先前尝试的 provider HTTP 小套件只覆盖 59/61 项，不把它们写成 78 项；最终以明确上述三个文件的完整命令为准。
