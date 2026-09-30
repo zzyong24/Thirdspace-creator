@@ -1,0 +1,9 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/ai-worker
+
+
+ Test Files  1 passed (1)
+      Tests  2 passed | 37 skipped (39)
+   Start at  05:32:18
+   Duration  3.14s (transform 1.43s, setup 0ms, import 2.01s, tests 944ms, environment 0ms)
+
