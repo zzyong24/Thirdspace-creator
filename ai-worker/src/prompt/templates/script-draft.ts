@@ -96,11 +96,14 @@ registerOfficialCompletionPolicyAdapter(
   SCRIPT_DRAFT_COMPLETION_POLICY_ADAPTER,
 );
 
+/** 内容判断仍由 Skill/模型完成；无资料快创不以虚构指标凑篇幅。 */
+export const SCRIPT_FACT_SCOPE_SYSTEM = "事实范围：个人经历、客户案例、播放量门槛、涨粉指标、见效天数和平台算法规则，只有本轮资料明确提供且归属正确时才能作为事实写入。精确比例、耗时、错峰窗口、增幅倍数与因果结论也需要来源，不得把模型常识或编写的建议包装成已验证规律。缺少依据时交付较短的方法稿，把操作表达为建议，不能为满足时长补写结果承诺。示例必须在示例本身说明是假设，不能冒充亲身经历。交稿前逐句核对所有数字和效果断言：无来源则删除，保留可执行动作；步骤编号与明确标为拍摄估算的分镜时长可使用。";
+
 export const SCRIPT_DRAFT_TEMPLATE: PromptTemplate = {
   id: "script.draft",
   outputRecovery: "creative-partial",
   // T-944：统一因果写法与受众规则，保留本轮完整资料和明确方向优先。
-  version: "v10",
+  version: "v11",
   // 三位一体「输出 Zod schema」位收口到 registry(SPEC §4.2):runStructuredNode 从 registry 取它
   // 绑 generateObject,模型必须吐 { shots:[...] },校验失败自动重试(防发散 + 根治不可解析)。
   outputSchema: scriptDraftSchema,
@@ -111,7 +114,8 @@ export const SCRIPT_DRAFT_TEMPLATE: PromptTemplate = {
   },
   // 纯结构化生成,不挂工具。
   tools: [],
-  system: "你是这位创作者的「分镜脚本 agent」,像专业短视频编导那样写可拍的分镜脚本。",
+  system: `你是这位创作者的「分镜脚本 agent」,像专业短视频编导那样写可拍的分镜脚本。
+${SCRIPT_FACT_SCOPE_SYSTEM}`,
   // [T-081] {{extraBrief}}:对话中获得的补充指令/洞察(选填 facet,调用方拼「本次生成指令」
   // 整块传入;空则占位替换为空串、整段省略)。
   // [T-146c] {{userMaterialHard}}:用户第一手资料的「最高优先 · 必须遵守」硬约束段(高优先素材

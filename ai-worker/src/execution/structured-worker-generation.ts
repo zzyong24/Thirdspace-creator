@@ -43,7 +43,15 @@ export async function generateStructuredInWorker(input:z.infer<typeof structured
       },
       reasoningFallback:{acceptRaw:isCompleteRawScriptReview},
     }:{};
-    const businessSchema=resolveStructuredBusinessSchema(input);
+    let businessSchema: ReturnType<typeof resolveStructuredBusinessSchema>;
+    // 同步输入解析尚未预留或启动模型；供应商/节点/结算异常不进入此边界。
+    try {
+      businessSchema=resolveStructuredBusinessSchema(input);
+    } catch (error) {
+      if (error instanceof z.ZodError || error instanceof SyntaxError)
+        throw new GenerationFailure("failed", "STRUCTURED_INPUT_INVALID");
+      throw error;
+    }
     const runClassification=async()=>{
       if(!image)throw new Error("CLASSIFICATION_IMAGE_MISSING");
       const template=getEffectiveTemplate('asset.classify');
