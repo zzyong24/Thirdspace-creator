@@ -20,11 +20,52 @@
   "modules": {
     "T-1024": {
       "task_id": "T-1024",
-      "archetype": ["orchestration"],
-      "tasks": ["review", "implementation"],
-      "read_set": ["docs/features/t1024-reporting-implementation.md", "docs/features/t1017-diagnostics-creator-reporting.md", "orchestrator/SYSTEM_ARCHITECTURE.md", "frontend/src/features/settings/**", "backend/src/modules/settings/**", "contract/src/**"],
-      "write_set": ["docs/features/t1024-reporting-implementation.md", "docs/features/t1024-reporting-implementation.review.md", "docs/features/t1024-reporting-implementation.review-round-1.json", "orchestrator/reviews/T-1024-round-1.json", "orchestrator/DECISION_LOG.md", "BACKLOG.md", "orchestrator/events.ndjson", "orchestrator/review-events.ndjson", "orchestrator/progress.json", "orchestrator/process/modules.config.json", "frontend/src/features/settings/**", "frontend/src/server/persistence-client.ts", "frontend/src/app/api/v1/dispatch/route.ts", "backend/src/modules/settings/**", "backend/src/application/scheduling/collection-execution.ts", "backend/src/schema/settings.ts", "backend/src/db.ts", "backend/src/index.ts", "backend/drizzle/0101_reporting_local_consent.sql", "backend/drizzle/meta/_journal.json", "contract/src/**"],
-      "verify_commands": {"review": ["node orchestrator/process/reviewctl.mjs audit"], "implementation": ["node orchestrator/process/reconcile.mjs"]}
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "review",
+        "implementation"
+      ],
+      "read_set": [
+        "docs/features/t1024-reporting-implementation.md",
+        "docs/features/t1017-diagnostics-creator-reporting.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "frontend/src/features/settings/**",
+        "backend/src/modules/settings/**",
+        "contract/src/**"
+      ],
+      "write_set": [
+        "docs/features/t1024-reporting-implementation.md",
+        "docs/features/t1024-reporting-implementation.review.md",
+        "docs/features/t1024-reporting-implementation.review-round-1.json",
+        "orchestrator/reviews/T-1024-round-1.json",
+        "orchestrator/DECISION_LOG.md",
+        "BACKLOG.md",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson",
+        "orchestrator/progress.json",
+        "orchestrator/process/modules.config.json",
+        "frontend/src/features/settings/**",
+        "frontend/src/server/persistence-client.ts",
+        "frontend/src/app/api/v1/dispatch/route.ts",
+        "backend/src/modules/settings/**",
+        "backend/src/application/scheduling/collection-execution.ts",
+        "backend/src/schema/settings.ts",
+        "backend/src/db.ts",
+        "backend/src/index.ts",
+        "backend/drizzle/0101_reporting_local_consent.sql",
+        "backend/drizzle/meta/_journal.json",
+        "contract/src/**"
+      ],
+      "verify_commands": {
+        "review": [
+          "node orchestrator/process/reviewctl.mjs audit"
+        ],
+        "implementation": [
+          "node orchestrator/process/reconcile.mjs"
+        ]
+      }
     },
     "T-988": {
       "task_id": "T-988",
@@ -1621,6 +1662,136 @@
       ],
       "verify_commands": {
         "research": "git diff --check"
+      }
+    },
+    "T-1032": {
+      "task_id": "T-1032",
+      "archetype": [
+        "model-generated"
+      ],
+      "tasks": [
+        "research"
+      ],
+      "read_set": [
+        "docs/features/t1032-script-fact-scope-research.md",
+        "docs/verification/t1029-outcome-first-platform-workbench.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "ai-worker/src/**",
+        "backend/src/modules/ai-runtime/**",
+        "backend/src/modules/execution/**"
+      ],
+      "write_set": [
+        "docs/features/t1032-script-fact-scope-research.md",
+        "docs/verification/t1032-script-fact-scope.md",
+        "docs/verification/evidence/t1032/**",
+        "ai-worker/src/execution/structured-worker-generation.test.ts",
+        "BACKLOG.md",
+        "orchestrator/events.ndjson",
+        "orchestrator/process/modules.config.json",
+        "docs/research/t1032-script-fact-scope.md",
+        "docs/research/t1032/verify-evidence.mjs",
+        "orchestrator/process/reconcile.config.json",
+        "orchestrator/progress.json",
+        "orchestrator/context/T-1032.md"
+      ],
+      "verify_commands": {
+        "research": [
+          "node docs/research/t1032/verify-evidence.mjs",
+          "pnpm --dir ai-worker exec vitest run src/execution/structured-worker-generation.test.ts --retry 0 -t \"script.draft 新口播\""
+        ]
+      }
+    },
+    "T-1033": {
+      "task_id": "T-1033",
+      "archetype": [
+        "model-generated"
+      ],
+      "tasks": [
+        "review",
+        "implementation"
+      ],
+      "read_set": [
+        "docs/features/t1033-preflight-error-state.md",
+        "ai-worker/src/execution/**",
+        "orchestrator/SYSTEM_ARCHITECTURE.md"
+      ],
+      "write_set": [
+        "docs/features/t1033-preflight-error-state.md",
+        "docs/features/t1033-preflight-error-state.review.md",
+        "docs/verification/t1033-preflight-error-state.md",
+        "ai-worker/src/execution/structured-worker-generation.ts",
+        "ai-worker/src/execution/structured-worker-generation.test.ts",
+        "BACKLOG.md",
+        "orchestrator/reviews/T-1033-round-1.json",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson",
+        "orchestrator/progress.json",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/context/T-1033.md",
+        "docs/verification/evidence/t1033/**"
+      ],
+      "verify_commands": {
+        "review": [
+          "node orchestrator/process/reviewctl.mjs audit"
+        ],
+        "implementation": [
+          "pnpm --dir ai-worker exec vitest run src/execution/structured-worker-generation.test.ts --retry 0",
+          "pnpm --dir ai-worker exec tsc --noEmit",
+          "git diff --check"
+        ]
+      }
+    },
+    "T-1034": {
+      "task_id": "T-1034",
+      "archetype": [
+        "user-authored"
+      ],
+      "tasks": [
+        "review",
+        "implementation",
+        "acceptance"
+      ],
+      "read_set": [
+        "docs/features/t1034-edited-script-structure.md",
+        "backend/src/modules/artifacts/**",
+        "backend/src/modules/output-scripts/**",
+        "backend/src/modules/ai-runtime/script-candidate-projection.ts",
+        "frontend/src/features/script/**",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "backend/src/application/context/review-subject.ts",
+        "backend/src/modules/production/material-export.ts"
+      ],
+      "write_set": [
+        "docs/features/t1034-edited-script-structure.md",
+        "docs/features/t1034-edited-script-structure.review.md",
+        "docs/verification/t1034-edited-script-structure.md",
+        "docs/verification/evidence/t1034/**",
+        "backend/src/modules/artifacts/script-table-protocol.ts",
+        "backend/src/modules/artifacts/script-table-protocol.test.ts",
+        "backend/src/modules/artifacts/artifacts.service.ts",
+        "backend/src/modules/artifacts/artifacts.service.test.ts",
+        "backend/src/modules/output-scripts/output-scripts.integration.test.ts",
+        "BACKLOG.md",
+        "orchestrator/reviews/T-1034-round-1.json",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson",
+        "orchestrator/progress.json",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/context/T-1034.md",
+        "orchestrator/reviews/T-1034-round-2.json",
+        "orchestrator/reviews/T-1034-round-3.json"
+      ],
+      "verify_commands": {
+        "review": [
+          "node orchestrator/process/reviewctl.mjs audit"
+        ],
+        "implementation": [
+          "pnpm --dir backend exec vitest run src/modules/artifacts/script-table-protocol.test.ts src/modules/output-scripts/output-scripts.integration.test.ts src/modules/artifacts/artifacts.service.test.ts",
+          "git diff --check"
+        ],
+        "acceptance": [
+          "node orchestrator/process/frontend-validation.mjs audit"
+        ]
       }
     }
   }

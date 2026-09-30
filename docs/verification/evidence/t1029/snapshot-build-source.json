@@ -1,0 +1,23 @@
+{
+  "mode": "working-tree snapshot; not clean release candidate",
+  "baseCommit": "13fc62c3429e98c4633500713ec950196cb7ce2f",
+  "buildExitCode": 0,
+  "watchedFiles": [
+    {
+      "path": "backend/src/modules/artifacts/artifacts.service.ts",
+      "sha256": "e46d4a7aaf4e557f87d4ac2210cfcbf81030ab5e0ab41f33e8f418b3f2109aa9"
+    },
+    {
+      "path": "backend/src/modules/artifacts/script-table-protocol.ts",
+      "sha256": "f22fd5f98090cfb5b865528068a769d63c5380257e7413dfac727c7a42bb87b6"
+    },
+    {
+      "path": "frontend/src/features/article/article-workbench.test.tsx",
+      "sha256": "fd874c714d1f6d0d80d9ed96657757c1bd1c0bfb8602466c2c6602f5cb10d2ab"
+    },
+    {
+      "path": "frontend/src/features/article/article-workbench.tsx",
+      "sha256": "20b03249d116cc3666fa9a31d5c0b7bf1a203a99a5ebd15ed07b7b3d42edd79d"
+    }
+  ]
+}
