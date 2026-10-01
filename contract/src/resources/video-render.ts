@@ -214,6 +214,8 @@ export type VideoSubtitleEmphasis = z.infer<typeof videoSubtitleEmphasis>;
 
 export const videoRenderCaption = z
   .object({
+    /** T-1037：旧方案可缺；制作工程首次明确保存后持久化稳定片段身份。 */
+    id: z.string().min(1).optional(),
     start: z.number().nonnegative(),
     end: z.number().positive(),
     /** 中文行(主)。 */
@@ -327,6 +329,7 @@ export type VideoRenderDirection = z.infer<typeof videoRenderDirection>;
 // at 落在所属场景区间内)。卡片从 at 出现,持续到场景结束。
 
 const cardBase = {
+  id: z.string().min(1).optional(),
   /** 出现时刻(绝对秒)。 */
   at: z.number().nonnegative(),
   /** [T-295] 动画意图(决策层可选产出;缺省 template 按 kind 派生富动画)。 */
@@ -498,6 +501,7 @@ export type VideoBrollVisualRole = z.infer<typeof videoBrollVisualRole>;
 
 // B-roll 插点(素材来自项目资产,决策侧硬规则:精确匹配被讲对象禁近似替代)。
 export const videoRenderBroll = z.object({
+  id: z.string().min(1).optional(),
   /** 插入时刻(绝对秒)。 */
   at: z.number().nonnegative(),
   /** 沙箱 input/ 的 mountAs 相对路径(视频素材)。 */

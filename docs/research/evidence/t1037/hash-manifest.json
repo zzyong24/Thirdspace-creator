@@ -1,0 +1,44 @@
+{
+  "files": {
+    "backend-typecheck-final.log": {
+      "bytes": 3541,
+      "sha256": "ed6d88022339e914c4f56ee050c1dc7c64bab82bebbd3ef9258d0ed7abeb9aa0"
+    },
+    "backend-typecheck-second.log": {
+      "bytes": 3541,
+      "sha256": "ed6d88022339e914c4f56ee050c1dc7c64bab82bebbd3ef9258d0ed7abeb9aa0"
+    },
+    "backend-typecheck.log": {
+      "bytes": 6466,
+      "sha256": "fbfb28791c6bfd54167e9c3cc7c795878abf1b89f0b70f20a0fcdf0964c5a2e9"
+    },
+    "boundary.log": {
+      "bytes": 910,
+      "sha256": "6b23ce459cd49f9f78d9a4185f9bceaa53c27b96d14e64f2fdf1a0422b6e6985"
+    },
+    "contract-regression.log": {
+      "bytes": 448,
+      "sha256": "8364269cd985c11a8dc33fe98000f4d388aca66b760b9c0f7381b217d423432a"
+    },
+    "contract-typecheck.log": {
+      "bytes": 133,
+      "sha256": "24775d3b737785f7c0df454bb3af8728ecb7a159782b2157a8c343f3c700309b"
+    },
+    "plan-final-green.log": {
+      "bytes": 437,
+      "sha256": "9eb076a072c659c9161c63306c23b09e3501e1a2f76236dfac2a3dc517730b16"
+    },
+    "plan-first-green.log": {
+      "bytes": 437,
+      "sha256": "105aea7ddb1b5154f4ecb1cc943256de1385a23406307cb121e69ec5dd685271"
+    },
+    "plan-red.log": {
+      "bytes": 1441,
+      "sha256": "d158ba7ca36c0d69c5a035163cf7c319c0f8e86695446aa150542fe81c7405ba"
+    },
+    "unchanged-legacy-boundary-red.log": {
+      "bytes": 1791,
+      "sha256": "6c82f102c6dc9c44b6f020bbf1a412faad3386109a952f1cdf6bd87e5a0b98f3"
+    }
+  }
+}

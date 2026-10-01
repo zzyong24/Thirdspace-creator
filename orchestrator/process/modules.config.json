@@ -1976,7 +1976,9 @@
         "frontend/src/features/production/**",
         "frontend/src/features/projects/output-workbench/**",
         "frontend/src/app/**",
-        "backend/src/modules/ai-runtime/video-edit-candidate.ts"
+        "backend/src/modules/ai-runtime/video-edit-candidate.ts",
+        "contract/src/resources/production-editor.ts",
+        "contract/src/index.ts"
       ],
       "verify_commands": {
         "review": [

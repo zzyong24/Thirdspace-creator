@@ -1,4 +1,5 @@
 export const CONTRACT_API_BASE = "/api/v1";
+export * from "./resources/production-editor";
 
 export * from "./envelope";
 export * from "./primitives";
