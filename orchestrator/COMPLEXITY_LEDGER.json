@@ -1838,6 +1838,51 @@
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
       "reason": "沿用原模型端口与账本，图片字节在请求中编码为base64，保持原附件范围而不引入新协议通道。",
       "acceptance": "仅记录实现复杂度，不代表运行验收；用户暂缓测试。"
+    },
+    {
+      "task_id": "T-1036",
+      "files": [
+        "BACKLOG.md"
+      ],
+      "file_sha256": "3e73566acc9a919d6d025ed18d04f56be7b48c0ae2652fcfb6f5aaf31155f510",
+      "categories": [
+        "os_signing"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-T1036-01",
+      "scope_source": "docs/features/t1036-open-source-video-editor-selection.md",
+      "reason": "仅保留旧队列/生成记忆中的既有签名历史，或记录被排除候选的语言路线图；未新增或运行工具链/签名机制。",
+      "acceptance": "只绑定文档标记与准确 hash，不代表产品实现或全局 Gate 通过。"
+    },
+    {
+      "task_id": "T-1036",
+      "files": [
+        "PROJECT.md"
+      ],
+      "file_sha256": "7d5608babec4d73409af05d7e2656082776a1e202d7ae5cf1eae3097b5bd0aac",
+      "categories": [
+        "os_signing"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-T1036-01",
+      "scope_source": "docs/features/t1036-open-source-video-editor-selection.md",
+      "reason": "仅保留旧队列/生成记忆中的既有签名历史，或记录被排除候选的语言路线图；未新增或运行工具链/签名机制。",
+      "acceptance": "只绑定文档标记与准确 hash，不代表产品实现或全局 Gate 通过。"
+    },
+    {
+      "task_id": "T-1036",
+      "files": [
+        "docs/research/t1036-open-source-video-editor-selection.md"
+      ],
+      "file_sha256": "3de9b528cff7437bea7b1dabe58423b39ae57d59c760c42ae3d1f09f48e3165d",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1036-01",
+      "scope_source": "docs/features/t1036-open-source-video-editor-selection.md",
+      "reason": "仅保留旧队列/生成记忆中的既有签名历史，或记录被排除候选的语言路线图；未新增或运行工具链/签名机制。",
+      "acceptance": "只绑定文档标记与准确 hash，不代表产品实现或全局 Gate 通过。"
     }
   ],
   "historical_baselines": []

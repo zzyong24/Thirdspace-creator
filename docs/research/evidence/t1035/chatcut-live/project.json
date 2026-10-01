@@ -1,0 +1,54 @@
+{
+  "activeTimeline": {
+    "captionsPresent": true,
+    "compositionHeight": 1080,
+    "compositionWidth": 1668,
+    "durationFrames": 20427,
+    "id": "1baf6ea4-ca74-4730-a1b5-44dada4a2b87",
+    "markerCount": 0,
+    "name": "V4 画面音频字幕版"
+  },
+  "assets": {
+    "byType": {
+      "audio": 3,
+      "captions": 1,
+      "motion-graphic": 1,
+      "video": 2,
+      "audio-transition": 1
+    },
+    "total": 8
+  },
+  "project": {
+    "description": "29分钟原始录屏的可回退粗剪和内容复盘；保留原始素材。",
+    "name": "Git 与 GitHub 录屏｜粗剪与复盘",
+    "projectId": "fdc5170e-6afd-48a6-8204-bb5ba7b1dc18",
+    "readOnly": false,
+    "schemaVersion": 3
+  },
+  "timelines": [
+    {
+      "active": false,
+      "hidden": false,
+      "id": "61ae5292-a14a-48f9-b9d4-cfbec504b680",
+      "name": "V1 自动清理版"
+    },
+    {
+      "active": false,
+      "hidden": false,
+      "id": "0ff54321-4787-4cb5-adb7-bcfe7b0271de",
+      "name": "V2 语义粗剪"
+    },
+    {
+      "active": false,
+      "hidden": false,
+      "id": "2e95e874-960f-4ff6-980a-b689b8661d3f",
+      "name": "V3 1.2倍节奏版"
+    },
+    {
+      "active": true,
+      "hidden": false,
+      "id": "1baf6ea4-ca74-4730-a1b5-44dada4a2b87",
+      "name": "V4 画面音频字幕版"
+    }
+  ]
+}

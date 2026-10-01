@@ -1,0 +1,9 @@
+{
+  "name": "creatoros-component-install-check",
+  "private": true,
+  "dependencies": {
+    "@xzdarcy/react-timeline-editor": "1.0.0",
+    "react": "19.2.4",
+    "react-dom": "19.2.4"
+  }
+}

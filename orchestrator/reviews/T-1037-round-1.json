@@ -1,0 +1,35 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "公共版本、CAS、回执和冻结渲染边界整体可落地；旧 broll.remove 与新版稳定 item ID 在同素材多次插入时存在一个会误删未选项的兼容歧义。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "open",
+      "severity": "major",
+      "category": "consistency",
+      "requirement_anchor": {
+        "id": "FR-1035-3",
+        "quote": "编辑字幕文本、信息卡内容与动效、素材替换/移除/插入时间和时长；支持撤销/重做"
+      },
+      "acceptance_anchor": {
+        "id": "AC-1035-3",
+        "quote": "改一句字幕、移动/替换素材、修改卡内容/动效；撤销/重做准确，未修改项不变"
+      },
+      "where": "旧 outputs.production.editingPlan.broll.remove 兼容入口与 editorVersion:1 公共编辑服务的衔接",
+      "failure_mode": "SPEC 同时要求同一素材多次插入时每个 item 独立、修改只作用于明确 ID，并要求旧 remove 入口继续兼容且进入公共 CAS；但现有旧 remove 请求只有 assetId，没有 itemId。对含同 assetId 多个插入项的 editorVersion:1 方案，合理实现可能删除全部匹配项、删除首项或拒绝请求，当前文本未规定唯一结果。若沿现有按 assetId 清理路径，会把用户未选择的另一个插入项一并删除，直接违反“未修改项不变”。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "docs/features/t1037-output-production-project.md:27；docs/features/t1037-output-production-project.md:29；docs/features/t1037-output-production-project.md:53；docs/features/t1037-output-production-project.md:55；docs/features/t1037-output-production-project.md:61；backend/src/modules/production/production.service.ts#removeEditingPlanBroll；contract/src/operations/production.ts#outputs.production.editingPlan.broll.remove",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "规定旧 remove 的最小兼容后置条件：它只可处理能由 assetId 唯一定位的旧方案；对 editorVersion:1 或多个匹配项必须返回明确冲突并保留原稿，由带 itemId 的公共 apply 执行删除，禁止按 assetId 批量或任选一项。",
+      "resolution_evidence": "",
+      "parent_id": "",
+      "threat_model_id": ""
+    }
+  ]
+}

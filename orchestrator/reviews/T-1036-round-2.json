@@ -1,0 +1,35 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "recheck",
+  "summary": "REV-001 已销账：修订明确区分临时执行目录与项目内持久证据目录，并要求选型矩阵引用证据及 hash。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "resolved",
+      "severity": "major",
+      "category": "testability",
+      "requirement_anchor": {
+        "id": "FR-1036-2",
+        "quote": "在 React 19.2.4 / Next 16.2.9 的隔离工程验证候选，不在 CreatorOS 安装依赖"
+      },
+      "acceptance_anchor": {
+        "id": "AC-1036-2",
+        "quote": "记录安装与构建真实回执、选中稳定 ID、播放头以及移动/缩放回调；不通过即保留失败"
+      },
+      "where": "有界探针与证据保留约束",
+      "failure_mode": "规格要求用真实安装、构建和浏览器观察作为验收依据，却只规定把样例源文件、锁定版本、命令回执和截图保留在 /tmp/creatoros-t1036-probe；该目录不属于项目证据链且可被系统或后续清理，届时文档中的选型结论无法核对到原始回执，T-1037/T-1038 也无法可靠复用这次兼容判断。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "docs/features/t1036-open-source-video-editor-selection.md#有界探针；docs/features/t1036-open-source-video-editor-selection.md#验收；第36行",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "规定将脱敏后的锁文件、命令回执、输出 hash、观察记录和必要截图持久化到项目内的 orchestrator/probes/T-1036/，/tmp 仅作为执行工作区；同时明确文档矩阵引用这些持久证据。",
+      "resolution_evidence": "SPEC-LINE:36:f2a715f0af164590 明确 /tmp 仅用于执行，脱敏样例源文件、锁文件与包版本、安装/构建回执、输出 hash、观察记录和必要截图必须持久保存到 docs/research/evidence/t1036/，且选型矩阵必须引用这些证据与 hash。",
+      "parent_id": "",
+      "threat_model_id": ""
+    }
+  ]
+}

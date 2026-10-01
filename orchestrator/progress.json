@@ -4,18 +4,29 @@
     "work_branch": "main"
   },
   "summary": {
-    "verticals": 42,
-    "tasks_done": 35,
-    "tasks_total": 129,
-    "tasks_pending": 94,
-    "verticals_complete": 2
+    "verticals": 47,
+    "tasks_done": 38,
+    "tasks_total": 143,
+    "tasks_pending": 105,
+    "verticals_complete": 4
   },
   "verticals": [
     {
       "id": "T-1024",
       "task_id": "T-1024",
-      "archetype": ["orchestration"],
-      "tasks": [{"step": "review", "status": "pending"}, {"step": "implementation", "status": "pending"}],
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        {
+          "step": "review",
+          "status": "pending"
+        },
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
       "depends_on": [],
       "blocked_reason": null
     },
@@ -1732,6 +1743,226 @@
       "read_set": [],
       "write_set": [],
       "exclusive_resources": [],
+      "commits": {}
+    },
+    {
+      "id": "T-1035",
+      "archetype": [
+        "user-authored"
+      ],
+      "task_id": "T-1035",
+      "tasks": [
+        {
+          "step": "review",
+          "status": "pending"
+        },
+        {
+          "step": "contract",
+          "status": "pending"
+        },
+        {
+          "step": "design",
+          "status": "pending"
+        },
+        {
+          "step": "implementation",
+          "status": "pending"
+        },
+        {
+          "step": "acceptance",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "docs/features/t1035-video-production-workbench.md",
+        "docs/features/t1035-video-production-workbench.review.md",
+        "docs/research/t1035-video-production-reference.md",
+        "docs/research/evidence/t1035/**",
+        "docs/design/t1035/**",
+        "docs/verification/t1035-video-production-workbench.md",
+        "docs/verification/evidence/t1035/**",
+        "BACKLOG.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/context/T-1035.md",
+        "orchestrator/reviews/T-1035-round-1.json",
+        "orchestrator/reviews/T-1035-round-2.json",
+        "orchestrator/reviews/T-1035-round-3.json",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson",
+        "orchestrator/progress.json",
+        "frontend/SPEC.md",
+        "frontend/specs/decision-log.md",
+        "docs/features/t1036-open-source-video-editor-selection.md",
+        "docs/features/t1037-output-production-project.md",
+        "docs/features/t1038-visible-video-workbench.md",
+        "docs/features/t1039-director-video-editing.md",
+        "docs/features/t1040-production-sound-fonts.md",
+        "docs/features/t1041-video-workbench-acceptance.md"
+      ],
+      "read_set": [
+        "docs/features/t1035-video-production-workbench.md",
+        "docs/research/t1035-video-production-reference.md",
+        "docs/research/evidence/t1035/**",
+        "docs/design/t1035/**",
+        "frontend/src/features/production/**",
+        "frontend/src/features/projects/video-output-workbench.tsx",
+        "frontend/src/app/**",
+        "backend/src/modules/production/**",
+        "backend/src/modules/ai-runtime/chat-video-edit-tool-host.ts",
+        "backend/src/modules/ai-runtime/video-edit-candidate.ts",
+        "backend/src/modules/execution/video-render/**",
+        "contract/src/operations/production.ts",
+        "contract/src/resources/video-render.ts",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "frontend/SPEC.md",
+        "frontend/specs/decision-log.md",
+        "docs/features/t1036-open-source-video-editor-selection.md",
+        "docs/features/t1037-output-production-project.md",
+        "docs/features/t1038-visible-video-workbench.md",
+        "docs/features/t1039-director-video-editing.md",
+        "docs/features/t1040-production-sound-fonts.md",
+        "docs/features/t1041-video-workbench-acceptance.md"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "T-1036",
+      "archetype": [
+        "user-authored"
+      ],
+      "task_id": "T-1036",
+      "tasks": [
+        {
+          "step": "review",
+          "status": "done"
+        },
+        {
+          "step": "research",
+          "status": "done"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "docs/features/t1036-open-source-video-editor-selection.md",
+        "docs/features/t1036-open-source-video-editor-selection.review.md",
+        "docs/research/t1036-open-source-video-editor-selection.md",
+        "docs/research/evidence/t1036/**",
+        "orchestrator/reviews/T-1036-round-1.json",
+        "orchestrator/reviews/T-1036-round-2.json",
+        "orchestrator/context/T-1036.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/progress.json",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "PROJECT_CONTEXT.md",
+        "orchestrator/COMPLEXITY_LEDGER.json",
+        "orchestrator/DECISION_LOG.md"
+      ],
+      "read_set": [
+        "docs/features/t1036-open-source-video-editor-selection.md",
+        "docs/features/t1035-video-production-workbench.md",
+        "docs/research/t1035-video-production-reference.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "backend/src/modules/execution/video-render/**",
+        "contract/src/resources/video-render.ts",
+        "frontend/package.json"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "T-1037",
+      "archetype": [
+        "user-authored"
+      ],
+      "task_id": "T-1037",
+      "tasks": [
+        {
+          "step": "review",
+          "status": "pending"
+        },
+        {
+          "step": "contract",
+          "status": "pending"
+        },
+        {
+          "step": "implementation",
+          "status": "pending"
+        },
+        {
+          "step": "acceptance",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "docs/features/t1037-output-production-project.md",
+        "docs/features/t1037-output-production-project.review.md",
+        "orchestrator/reviews/**",
+        "orchestrator/context/T-1037.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/progress.json",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson",
+        "orchestrator/COMPLEXITY_LEDGER.json",
+        "orchestrator/DECISION_LOG.md",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "PROJECT_CONTEXT.md",
+        "docs/verification/t1037-output-production-project.md",
+        "docs/research/evidence/t1037/**",
+        "contract/src/operations/production.ts",
+        "contract/src/resources/production.ts",
+        "contract/src/resources/video-render.ts",
+        "contract/src/operations/execution.ts",
+        "backend/src/modules/production/**",
+        "backend/src/schema/production.ts",
+        "backend/src/schema/index.ts",
+        "backend/src/index.ts",
+        "backend/drizzle/**",
+        "backend/src/modules/execution/execution.service.ts",
+        "backend/src/modules/execution/execution.transport.ts",
+        "frontend/src/server/persistence-client.ts",
+        "frontend/src/features/production/**",
+        "frontend/src/features/projects/output-workbench/**",
+        "frontend/src/app/**",
+        "backend/src/modules/ai-runtime/video-edit-candidate.ts"
+      ],
+      "read_set": [
+        "docs/features/t1035-video-production-workbench.md",
+        "docs/features/t1037-output-production-project.md",
+        "docs/research/t1035-video-production-reference.md",
+        "docs/research/t1036-open-source-video-editor-selection.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "contract/src/operations/production.ts",
+        "contract/src/resources/video-render.ts",
+        "contract/src/resources/production.ts",
+        "contract/src/operations/execution.ts",
+        "backend/src/modules/production/**",
+        "backend/src/modules/execution/execution.service.ts",
+        "backend/src/modules/ai/ai.service.ts",
+        "frontend/src/features/production/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
       "commits": {}
     }
   ],

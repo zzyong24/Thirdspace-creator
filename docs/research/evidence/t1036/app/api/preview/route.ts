@@ -1,0 +1,12 @@
+import { createHash } from 'node:crypto';
+import { generateVideoRenderHtml } from '/Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/backend/src/modules/execution/video-render/template';
+import { videoRenderProps } from '/Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/contract/src/resources/video-render';
+export async function GET(request: Request) {
+ const q=new URL(request.url).searchParams; const start=Number(q.get('start')??8);const end=Number(q.get('end')??18);
+ if(!Number.isFinite(start)||!Number.isFinite(end)||start<0||end<=start||end>32) return new Response('明确时间范围无效',{status:400});
+ const props=videoRenderProps.parse({meta:{title:'隔离探针 · 同源预览',brandLabel:'TEST / 非用户媒体'},talkingHead:{file:'test-master.mp4',durationSec:32,hasAudio:false},delivery:{width:1920,height:1080,fps:30},scenes:[{id:'scene-1',label:'PROBE',title:'真实合成器 · 隔离样例',startSec:0,endSec:32,role:'body',cards:[{kind:'quote',at:2,text:'预览和最终生成使用同一份模板',tone:'accent'}]}],captions:[{start:0,end:8,cn:'时间轴操作会传出稳定片段 ID。'},{start:8,end:18,cn:'图片时间由用户明确修改。'},{start:18,end:32,cn:'这是测试工程，尚未接入客户端。'}],broll:[{at:start,durationSec:end-start,file:'test-image.svg',label:'测试图片 · broll-1',big:false,presentation:'large_stage',motion:'static',sourceWidth:1280,sourceHeight:720}]});
+ const html=generateVideoRenderHtml(props,{gsapSrc:'/gsap.min.js',mediaPrefix:'/',imageFiles:new Set(['test-image.svg'])});
+ const hash=createHash('sha256').update(html).digest('hex');
+ const bridge=`<script>window.addEventListener('message',e=>{if(e.origin!==location.origin||e.source!==parent||e.data?.type!=='probe-seek')return;const t=Math.min(32,Math.max(0,Number(e.data.time)));if(!Number.isFinite(t))return;window.__timelines.main.pause().seek(t);document.querySelectorAll('.clip').forEach(el=>{if(!el.dataset.probeOriginalDisplay)el.dataset.probeOriginalDisplay=el.style.display||'block';const s=Number(el.dataset.start||0),d=Number(el.dataset.duration||32);el.style.display=t>=s&&t<s+d?el.dataset.probeOriginalDisplay:'none';});document.querySelectorAll('video').forEach(v=>{const s=Number(v.dataset.start||0);const d=Number(v.dataset.duration||32);v.pause();v.currentTime=Math.max(0,Math.min(d,t-s));});parent.postMessage({type:'probe-clock',time:window.__timelines.main.time(),hash:'${hash}',imageStart:${start},imageEnd:${end}},location.origin);});</script>`;
+ return new Response(html.replace('</body>',bridge+'</body>'),{headers:{'content-type':'text/html; charset=utf-8','x-probe-composer-sha256':hash,'cache-control':'no-store'}});
+}

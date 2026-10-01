@@ -3,7 +3,7 @@
 > 本文件由 `node orchestrator/process/pmem.mjs sync` 生成,**勿手改生成段**。
 > 人写的「定位/为什么」改 pmem.mjs 顶部常量与 SYSTEM_ARCHITECTURE.md。
 
-LAST_SYNCED: codex/user-diagnostics @ 034f279a
+LAST_SYNCED: codex/user-diagnostics @ 6f54c75e
 
 ## 这是什么(定位)
 
@@ -23,13 +23,23 @@ CreatorOS —— 一个编导式的自媒体内容生产系统(非项目管理�
 
 ## 开放任务(欠债)
 
+- [open] T-1037 建立作品级制作工程、版本与公共编辑服务
+- [open] T-1038 集成可视视频制作工作台与同源预览
+- [open] T-1039 让编导助手读取选区并操控同一剪辑工程
+- [open] T-1040 接通私有音效轨与中文字体的预览和最终渲染
+- [open] T-1041 验收可视制作、编导剪辑与完整成片交付
+- [wip] T-1035 将视频制作改为可看懂、可编辑和预览的工作台
+- [wip] T-1031 修复单项结果不能依次采纳的整稿版本阻断
+- [wip] T-1034 保留编辑分镜的结构与制作正文
+- [wip] T-1029 按平台作品形态重构结果优先创作工作台
 - [open] T-1019 让创作者保存、复用并版本化提示词
-- [open] T-1020 建立平台能力合同和账号级指标快照
-- [open] T-1021 将本地小红书工程迁入 CreatorOS 账号采集
-- [open] T-1022 接入快手真实授权、作品和创作数据
-- [open] T-1023 集成本地公众号写作 Skill 与品牌覆盖
-- [open] T-1024 落地用户授权的故障、作品和粉丝轻量上报
+- [wip] T-1021 将本地小红书工程迁入 CreatorOS 账号采集
+- [wip] T-1022 接入快手真实授权、作品和创作数据
+- [wip] T-1024 落地故障、作品和粉丝轻量上报及 Growth 运营后台
 - [open] T-1025 验收创作资产、平台接入与上报全链路
+- [open] T-1026 修复 Copilot 前端引入 Agent SDK 的物理边界回归
+- [open] T-1027 修复视频决策未走 material.match 的语义边界回归
+- [open] T-1028 修复抖音登录态公开读取长时间无返回
 - [open] T-1015 核实剩余教训失败并校准过期回归断言
 - [open] T-1004 冻结共享能力协议与 NomiFun 迁移依赖
 - [open] T-1005 实现多步计划、连续执行与原任务续跑
@@ -47,7 +57,6 @@ CreatorOS —— 一个编导式的自媒体内容生产系统(非项目管理�
 - [open] T-993 同步 main 分支到最新(落后 origin/main 573 提交)
 - [wip] T-992 修复 Windows 升级启动运行环境切换拒绝访问
 - [open] T-989 校正知识图谱错误提示的既有回归断言
-- [open] T-986 修复新绑定账号默认采集任务系统标记透传
 - [wip] T-980 纳入助手修复重新运行 V1.2 双端流水线
 - [wip] T-976 修复安装版 AI 助手 RedFox 再次失败与脱离对话的任务交互
 - [wip] T-957 排查 AI 失败、全场景验收并优化 Agent 提示词【用户截图】
@@ -169,4 +178,4 @@ CreatorOS —— 一个编导式的自媒体内容生产系统(非项目管理�
 
 ## 模块地图(生成自 backend/src/modules)
 
-`ai` · `ai-runtime` · `analytics` · `artifacts` · `assets` · `benchmark` · `browser-sessions` · `calibration` · `candidate` · `cli-invocations` · `content-calendar` · `execution` · `favorites` · `identity` · `ingestion` · `intelligence` · `knowledge` · `learnings` · `material-links` · `notifications` · `platform-account` · `positioning` · `production` · `projects` · `publishing` · `query-services` · `review` · `reviews` · `scheduling` · `search` · `settings` · `taxonomy` · `topic-attribution` · `trend-sources`
+`ai` · `ai-runtime` · `analytics` · `articles` · `artifacts` · `assets` · `benchmark` · `browser-sessions` · `calibration` · `candidate` · `cli-invocations` · `content-calendar` · `creative-results` · `execution` · `favorites` · `graphic-posts` · `identity` · `ingestion` · `intelligence` · `knowledge` · `learnings` · `material-links` · `notifications` · `output-scripts` · `platform-account` · `platform-collection` · `positioning` · `production` · `projects` · `publishing` · `query-services` · `review` · `reviews` · `scheduling` · `search` · `settings` · `taxonomy` · `topic-attribution` · `trend-sources`

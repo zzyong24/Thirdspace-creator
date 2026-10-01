@@ -1,0 +1,44 @@
+{
+  "files": {
+    "chapter-after-validation.json": {
+      "bytes": 974,
+      "sha256": "29841157ff298abd120c847bca8abe13a59644e28c5f1301d2b26e41b7a57033"
+    },
+    "chapter-item.json": {
+      "bytes": 974,
+      "sha256": "29841157ff298abd120c847bca8abe13a59644e28c5f1301d2b26e41b7a57033"
+    },
+    "project.json": {
+      "bytes": 1314,
+      "sha256": "d32584819d6394b556b80d542b8613da5a21ed680a0271a3f33db9b33b0646dc"
+    },
+    "timeline.json": {
+      "bytes": 11789,
+      "sha256": "4f460971e8b8b5b743e991a2416585b10569cdfcc6602d9dc233f60012d0bfda"
+    },
+    "timelines.json": {
+      "bytes": 766,
+      "sha256": "c3298018bd787fecd37d8cfe8bcfe4fe9aff47c087285362f314b07e26460af0"
+    },
+    "validate-only-shift.json": {
+      "bytes": 202,
+      "sha256": "870ff08c41969e34dd3ee5434254e8b8fc0caa6ce155b9d6697c091e6e0d6c07"
+    },
+    "validate-only.json": {
+      "bytes": 201,
+      "sha256": "8fc7ca3e49aba2050a3021df6597092739a685e043b7ed279b4453abadb48f9a"
+    },
+    "viewer-frames.jpg": {
+      "bytes": 154473,
+      "sha256": "34e995703dfe6941619f6f31535b57bdfa066589548b2d5bb3c203fa78b894eb"
+    },
+    "web-history.png": {
+      "bytes": 75830,
+      "sha256": "5359349d69533e43c491e37e0040d35078859f3f89f0808b5dae36f1de8f50b8"
+    },
+    "web-history.txt": {
+      "bytes": 3408,
+      "sha256": "c32f6ccf680c3ca48d1d6e39c50f853c2130331dfb88edff4285d8bb0b3c9375"
+    }
+  }
+}
