@@ -25,6 +25,8 @@ export const executionOperations = {
     body: z.object({
       spec: executionTaskSpec,
       projectId: id.nullable().optional(),
+      contentOutputId:id.optional(),
+      attemptId:z.string().min(16).max(128).optional(),
     }),
     response: executionTaskResource,
     fr: ["FR-EXECUTION-TASKS"],

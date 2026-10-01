@@ -771,7 +771,7 @@ describe("createVideoRenderExecutor", () => {
     });
   });
 
-  it("[T-546] 图片 B-roll 按已物化 MIME 直拷，不交给 ffprobe 当视频探测", async () => {
+  it.each(["legacy", "stable"] as const)("[T-1037/T-546] %s 图片 B-roll 引用在物化改名后仍按 MIME 和正确时间渲染", async (mode) => {
     const calls: EngineCalls = { ffmpegArgs: [], probed: [], rendered: [] };
     const executor = createVideoRenderExecutor(fakeEngine(calls));
     const screenshotAssetId = "asset-screenshot-without-extension";
@@ -793,7 +793,7 @@ describe("createVideoRenderExecutor", () => {
     };
     const imageBrollProps = videoRenderProps.parse({
       ...props(),
-      broll: [{ at: 4, file: screenshotAssetId, label: "官网截图" }],
+      broll: [{ id: mode === "stable" ? "stable-broll" : undefined, at: 4, file: screenshotAssetId, label: "官网截图" }],
       scenes: props().scenes.map((scene) => ({ ...scene, cards: [] })),
       direction: {
         motionThesis: "真实截图在声明拍点接管主视觉。",
@@ -803,7 +803,7 @@ describe("createVideoRenderExecutor", () => {
             sceneIdx: 0,
             startSec: 5,
             endSec: 8,
-            subject: { kind: "broll", ref: `broll:${screenshotAssetId}` },
+            subject: { kind: "broll", ref: `broll:${mode === "stable" ? "stable-broll" : screenshotAssetId}` },
             startState: "off_canvas",
             endState: "takeover",
             motionVerb: "enter",

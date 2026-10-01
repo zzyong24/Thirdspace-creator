@@ -1,0 +1,5 @@
+../backend/src/modules/production/production-editor-plan.ts(127,28): error TS18046: 'copied.renderProps' is of type 'unknown'.
+../backend/src/modules/production/production-editor-plan.ts(129,12): error TS18046: 'copied.renderProps' is of type 'unknown'.
+../backend/src/modules/production/production-editor-plan.ts(132,22): error TS18046: 'copied.renderProps' is of type 'unknown'.
+../backend/src/modules/production/production-editor-plan.ts(132,70): error TS18046: 'copied.renderProps' is of type 'unknown'.
+../backend/src/modules/production/production-editor-plan.ts(137,11): error TS18046: 'value.emphasis' is of type 'unknown'.

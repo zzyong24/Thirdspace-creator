@@ -715,6 +715,20 @@
       "when": 1790668800000,
       "tag": "0101_reporting_local_consent",
       "breakpoints": true
+    },
+    {
+      "idx": 114,
+      "version": "7",
+      "when": 1790755200012,
+      "tag": "0114_production_edit_versions",
+      "breakpoints": true
+    },
+    {
+      "idx": 115,
+      "version": "7",
+      "when": 1790755200013,
+      "tag": "0115_production_render_requests",
+      "breakpoints": true
     }
   ]
 }

@@ -1,0 +1,30 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/backend
+
+ ❯ src/modules/production/production-editor-plan.test.ts (8 tests | 1 failed) 19ms
+     × 旧方向引用转为片段身份，删除卡片不因序号变化指向另一项 4ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/production/production-editor-plan.test.ts > T-1037 稳定制作片段与结构编辑 > 旧方向引用转为片段身份，删除卡片不因序号变化指向另一项
+AssertionError: expected 'card:0:1' to be 'card:item-2' // Object.is equality
+
+Expected: "card:item-2"
+Received: "card:0:1"
+
+ ❯ src/modules/production/production-editor-plan.test.ts:77:67
+     75|     const source={...raw,renderProps:{...raw.renderProps,direction:{mo…
+     76|     let n=0;const plan=prepareEditorPlan(source,()=>`item-${++n}`), fi…
+     77|     expect(plan.renderProps.direction!.beatGraph[1]!.subject.ref).toBe…
+       |                                                                   ^
+     78|     const updated=applyEditorEdits(plan,[{type:"removeItem",itemId:fir…
+     79|     expect(updated.renderProps.direction!.beatGraph).toHaveLength(1);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 7 passed (8)
+   Start at  18:28:57
+   Duration  1.30s (transform 531ms, setup 0ms, import 1.09s, tests 19ms, environment 0ms)
+

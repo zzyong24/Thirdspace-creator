@@ -77,6 +77,11 @@ const READ_OPERATIONS = [
   "notifications.list",
   "outputs.get",
   "outputs.production.get",
+  "outputs.production.editor.get",
+  "outputs.production.editor.versions.list",
+  "outputs.production.editor.versions.get",
+  "outputs.production.editor.receipt.get",
+  "outputs.production.editor.renders.list",
   "outputs.publications.list",
   "pages.dashboard.get",
   "pages.dailyReport.get",
@@ -219,6 +224,10 @@ const MUTATION_OPERATIONS = [
   "outputs.production.editingPlan.confirm",
   "outputs.production.editingPlan.broll.remove",
   "outputs.production.put",
+  "outputs.production.editor.save",
+  "outputs.production.editor.apply",
+  "outputs.production.editor.restore",
+  "outputs.production.editor.render",
   "outputs.publications.create",
   "outputs.publications.register",
   "outputs.stage.transition",
@@ -334,6 +343,7 @@ const EXTERNAL_OPERATIONS = new Set<EndpointId>([
 ]);
 
 const ASYNC_TASK_OPERATIONS = new Set<EndpointId>([
+  "outputs.production.editor.render",
   "analytics.traffic.refresh",
   "ai.tasks.create",
   "benchmark.works.transcribe",

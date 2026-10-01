@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { prepareEditorPlan, applyEditorEdits, itemDigest } from "./production-editor-plan";
+import { prepareEditorPlan, applyEditorEdits, itemDigest, unsupportedEditorFields } from "./production-editor-plan";
 
 const legacy = () => ({
   sourceTaskId: "source-task", decisions: { scenes: ["来源说明"] }, extraPlan: { preserve: true },
@@ -24,6 +24,11 @@ describe("T-1037 稳定制作片段与结构编辑", () => {
     expect(plan.renderProps.scenes[0]!.cards[0]!.extraCard).toEqual({preserve:true});
     expect(plan.renderProps.unknownRoot).toEqual({preserve:true});
     expect(prepareEditorPlan(plan, () => {throw new Error("不应重新分配");})).toEqual(plan);
+  });
+  it("未知方案与嵌套字段可见但不执行，读取不改变原件",()=>{
+    const raw=legacy(),before=structuredClone(raw);
+    expect(unsupportedEditorFields(raw)).toEqual(expect.arrayContaining(["extraPlan","renderProps.unknownRoot","renderProps.meta.extraMeta","renderProps.scenes.0.cards.0.extraCard"]));
+    expect(raw).toEqual(before);
   });
   it("同素材两次插入，只移除指定身份，不全局排除源素材", () => {
     const plan = prepare(), target = plan.renderProps.broll[0]!;
@@ -67,5 +72,23 @@ describe("T-1037 稳定制作片段与结构编辑", () => {
     const current=prepare(), target=current.renderProps.broll[0]!;
     expect(()=>applyEditorEdits(current,[{type:"eval",itemId:target.id,code:"任意代码"} as never])).toThrow();
     expect(()=>applyEditorEdits(current,[{type:"updateCaption",itemId:target.id,expectedItemDigest:itemDigest(target),patch:{cn:"不应写入"}}])).toThrow();
+  });
+  it("旧方向引用转为片段身份，删除卡片不因序号变化指向另一项", () => {
+    const raw=legacy();raw.renderProps.broll=[];
+    raw.renderProps.scenes[0]!.cards.push({kind:"quote",at:8,text:"第二张",extraCard:{preserve:true}});
+    const beat=(id:string,ref:string,startSec:number,endSec:number)=>({id,sceneIdx:0,startSec,endSec,subject:{kind:"card",ref},startState:"off_canvas",endState:"takeover",motionVerb:"reveal",stageMode:"takeover",transitionIn:"cut",transitionOut:"cut",returnGeometry:"same_base"});
+    const source={...raw,renderProps:{...raw.renderProps,direction:{motionThesis:"保留既有方向",beatGraph:[beat("first","card:0:0",2,5),beat("second","card:0:1",8,11)]}}};
+    let n=0;const plan=prepareEditorPlan(source,()=>`item-${++n}`), first=plan.renderProps.scenes[0]!.cards[0]!,second=plan.renderProps.scenes[0]!.cards[1]!;
+    expect(plan.renderProps.direction!.beatGraph[1]!.subject.ref).toBe(`card:${second.id}`);
+    const updated=applyEditorEdits(plan,[{type:"removeItem",itemId:first.id,expectedItemDigest:itemDigest(first)}]);
+    expect(updated.renderProps.direction!.beatGraph).toHaveLength(1);
+    expect(updated.renderProps.direction!.beatGraph[0]!.subject.ref).toBe(`card:${second.id}`);
+  });
+  it("更新卡片只补明确输入，省略样式不重置已选色调",()=>{
+    const p=prepare(),target=p.renderProps.scenes[0]!.cards[0]!;
+    target.tone="danger";
+    const next=applyEditorEdits(p,[{type:"updateCard",itemId:target.id,expectedItemDigest:itemDigest(target),card:{kind:"quote",at:target.at,text:"修改原句"}} as never]);
+    expect(next.renderProps.scenes[0]!.cards[0]!.tone).toBe("danger");
+    expect(next.renderProps.scenes[0]!.cards[0]!.extraCard).toEqual({preserve:true});
   });
 });

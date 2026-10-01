@@ -1975,10 +1975,21 @@
         "frontend/src/server/persistence-client.ts",
         "frontend/src/features/production/**",
         "frontend/src/features/projects/output-workbench/**",
-        "frontend/src/app/**",
         "backend/src/modules/ai-runtime/video-edit-candidate.ts",
         "contract/src/resources/production-editor.ts",
-        "contract/src/index.ts"
+        "contract/src/index.ts",
+        "backend/src/modules/execution/video-render/template.ts",
+        "backend/src/modules/execution/video-render/template.test.ts",
+        "backend/src/modules/execution/video-render/executor.ts",
+        "contract/src/cli-policy.ts",
+        "backend/src/modules/ai-runtime/video-edit-candidate.test.ts",
+        "backend/src/modules/execution/execution.service.test.ts",
+        "frontend/src/features/projects/video-output-workbench.tsx",
+        "contract/tests/registry.test.ts",
+        "frontend/src/server/__module_integration__/production-editor.persistence-client.test.ts",
+        "frontend/src/server/__module_integration__/production.persistence-client.test.ts",
+        "backend/src/modules/execution/video-render/executor.test.ts",
+        "frontend/src/app/(creator)/projects/**"
       ],
       "verify_commands": {
         "review": [

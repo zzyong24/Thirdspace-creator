@@ -636,8 +636,11 @@ export const videoRenderProps = z
     if (props.direction) {
       const expectedRefs = new Map<string, { kind: "card" | "broll"; path: (string | number)[] }>();
       props.scenes.forEach((scene, sceneIdx) => {
-        scene.cards.forEach((_card, ordinal) => {
-          expectedRefs.set(`card:${sceneIdx}:${ordinal}`, {
+        scene.cards.forEach((card, ordinal) => {
+          const stable = card.id ? `card:${card.id}` : undefined;
+          const ref = stable && props.direction!.beatGraph.some(beat => beat.subject.kind === "card" && beat.subject.ref === stable)
+            ? stable : `card:${sceneIdx}:${ordinal}`;
+          expectedRefs.set(ref, {
             kind: "card",
             path: ["scenes", sceneIdx, "cards", ordinal],
           });
@@ -645,7 +648,10 @@ export const videoRenderProps = z
       });
       props.broll.forEach((broll, index) => {
         if (broll.presentation === "overlay") return;
-        expectedRefs.set(`broll:${broll.file}`, {
+        const stable = broll.id ? `broll:${broll.id}` : undefined;
+        const ref = stable && props.direction!.beatGraph.some(beat => beat.subject.kind === "broll" && beat.subject.ref === stable)
+          ? stable : `broll:${broll.file}`;
+        expectedRefs.set(ref, {
           kind: "broll",
           path: ["broll", index],
         });

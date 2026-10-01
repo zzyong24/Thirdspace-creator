@@ -1,0 +1,35 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "iframe隔离和统一播放头缺可执行通信协议；本轮只读SPEC审查，未运行媒体或界面测试。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "open",
+      "severity": "major",
+      "category": "correctness",
+      "requirement_anchor": {
+        "id": "FR-1035-2",
+        "quote": "预览、播放头、时间轴、当前片段参数同步"
+      },
+      "acceptance_anchor": {
+        "id": "AC-1035-2",
+        "quote": "点击时间轴素材/字幕跳到实际画面；播放头同步字幕与动效"
+      },
+      "where": "同源预览iframe隔离与播放头控制边界",
+      "failure_mode": "opaque sandbox origin与外部播放头没有ready/seek/play/pause/time协议，可能增加allow-same-origin破坏隔离或只移动时间轴而预览不同步。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "docs/features/t1038-visible-video-workbench.md:48-52；docs/features/t1035-video-production-workbench.md:94-96",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "父页不得取iframeDOM权限；每次预览独立channelID交换ready/seek/play/pause/time/state；只接受当前iframeinstance source，切作品或换预览废弃旧channel；测seek连续play快速换稿和晚到旧iframe不能改当前头。",
+      "resolution_evidence": "",
+      "parent_id": "",
+      "threat_model_id": ""
+    }
+  ]
+}

@@ -1883,6 +1883,68 @@
       "scope_source": "docs/features/t1036-open-source-video-editor-selection.md",
       "reason": "仅保留旧队列/生成记忆中的既有签名历史，或记录被排除候选的语言路线图；未新增或运行工具链/签名机制。",
       "acceptance": "只绑定文档标记与准确 hash，不代表产品实现或全局 Gate 通过。"
+    },
+    {
+      "task_id": "T-1037",
+      "files": [
+        "BACKLOG.md"
+      ],
+      "file_sha256": "848602005e5ee01698b2ab158edc0fb52e48e1b53cea8d6655c75dc3ad80fc69",
+      "categories": [
+        "os_signing"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1037-01",
+      "scope_source": "docs/features/t1037-output-production-project.md",
+      "reason": "已评审的作品级制作历史与公开服务接线；仅保留原文件的既有签名历史、凭据与工具链标记，不新增这些机制。具体范围与事务复用见DEC-T1037-01。",
+      "acceptance": "仅登记准确文件hash与任务复杂度，不表示全局门卫、客户端或媒体生成验收通过。"
+    },
+    {
+      "task_id": "T-1037",
+      "files": [
+        "PROJECT.md"
+      ],
+      "file_sha256": "d1e50333146013ee2dfe9d5a644622b573f7d25b48669bb69b13b8ae96bb3c65",
+      "categories": [
+        "os_signing"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1037-01",
+      "scope_source": "docs/features/t1037-output-production-project.md",
+      "reason": "已评审的作品级制作历史与公开服务接线；仅保留原文件的既有签名历史、凭据与工具链标记，不新增这些机制。具体范围与事务复用见DEC-T1037-01。",
+      "acceptance": "仅登记准确文件hash与任务复杂度，不表示全局门卫、客户端或媒体生成验收通过。"
+    },
+    {
+      "task_id": "T-1037",
+      "files": [
+        "backend/src/index.ts"
+      ],
+      "file_sha256": "78729975ead58db32215fb14fd5ec71740269028bd8d2e85c5fab0f6f1b7c379",
+      "categories": [
+        "credential_store"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1037-01",
+      "scope_source": "docs/features/t1037-output-production-project.md",
+      "reason": "已评审的作品级制作历史与公开服务接线；仅保留原文件的既有签名历史、凭据与工具链标记，不新增这些机制。具体范围与事务复用见DEC-T1037-01。",
+      "acceptance": "仅登记准确文件hash与任务复杂度，不表示全局门卫、客户端或媒体生成验收通过。"
+    },
+    {
+      "task_id": "T-1037",
+      "files": [
+        "frontend/src/server/persistence-client.ts"
+      ],
+      "file_sha256": "6c5730db1c887438cdcb910b3d48053e8848c0998fe34421f166d85103c90433",
+      "categories": [
+        "credential_store",
+        "language_toolchain",
+        "native_executable"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1037-01",
+      "scope_source": "docs/features/t1037-output-production-project.md",
+      "reason": "已评审的作品级制作历史与公开服务接线；仅保留原文件的既有签名历史、凭据与工具链标记，不新增这些机制。具体范围与事务复用见DEC-T1037-01。",
+      "acceptance": "仅登记准确文件hash与任务复杂度，不表示全局门卫、客户端或媒体生成验收通过。"
     }
   ],
   "historical_baselines": []

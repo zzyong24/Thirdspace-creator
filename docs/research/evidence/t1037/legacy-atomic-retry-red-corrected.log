@@ -1,0 +1,81 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/backend
+
+ ❯ src/modules/production/production-editor.integration.test.ts (10 tests | 2 failed) 9848ms
+     × 旧 PUT 非法状态失败零写入，旧删除丢失回执可恢复同一版本 891ms
+     × 旧删除丢失回执可恢复同一版本 844ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/production/production-editor.integration.test.ts > T-1037 公共制作工程与持久版本 > 旧 PUT 非法状态失败零写入，旧删除丢失回执可恢复同一版本
+AssertionError: expected { videoEditingPlan: { …(3) } } to deeply equal {}
+
+- Expected
++ Received
+
+- {}
++ {
++   "videoEditingPlan": {
++     "extra": {
++       "preserve": true,
++     },
++     "renderProps": {
++       "broll": [],
++       "captions": [
++         {
++           "cn": "原文",
++           "end": 4,
++           "start": 0,
++         },
++       ],
++       "meta": {
++         "title": "视频A",
++       },
++       "scenes": [
++         {
++           "cards": [],
++           "endSec": 20,
++           "id": "scene",
++           "label": "正文",
++           "startSec": 0,
++           "title": "正文",
++         },
++       ],
++       "talkingHead": {
++         "durationSec": 20,
++         "file": "master",
++       },
++     },
++     "revision": 1,
++   },
++ }
+
+ ❯ src/modules/production/production-editor.integration.test.ts:70:68
+     68|     await expect(t.request(ENDPOINTS.putOutputProduction,{params:{outp…
+     69|       body:{status:"ready",recordingConfig:{videoEditingPlan:{...plan(…
+     70|     expect((await s.getProduction(ctx,"video-a")).recordingConfig).toE…
+       |                                                                    ^
+     71|     expect((await s.listEditorVersions(ctx,"video-a",{})).total).toBe(…
+     72|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/modules/production/production-editor.integration.test.ts > T-1037 公共制作工程与持久版本 > 旧删除丢失回执可恢复同一版本
+ConflictError: 分镜已被其他操作更新，请刷新后再删除，避免覆盖较新的剪辑方案
+ ❯ Object.removeEditingPlanBroll src/modules/production/production.service.ts:369:15
+    367|       if(plan.editorVersion===1)throw new ConflictError("请在工作台选中要移除的片段…
+    368|       if (plan.revision !== body.expectedRevision) {
+    369|         throw new ConflictError(
+       |               ^
+    370|           "分镜已被其他操作更新，请刷新后再删除，避免覆盖较新的剪辑方案",
+    371|         );
+ ❯ src/modules/production/production-editor.integration.test.ts:78:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 8 passed (10)
+   Start at  19:12:43
+   Duration  11.22s (transform 647ms, setup 0ms, import 1.20s, tests 9.85s, environment 0ms)
+

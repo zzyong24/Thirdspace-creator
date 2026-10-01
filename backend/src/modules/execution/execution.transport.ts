@@ -42,10 +42,14 @@ export function createExecutionTransport(
           const b = (body ?? {}) as {
             spec?: unknown;
             projectId?: string | null;
+            contentOutputId?:string;
+            attemptId?:string;
           };
           const task = await service.create(ctx, {
             spec: b.spec,
             projectId: b.projectId ?? null,
+            ...(b.contentOutputId?{contentOutputId:b.contentOutputId}:{}),
+            ...(b.attemptId?{attemptId:b.attemptId}:{}),
           });
           return { data: task, meta: { requestId } };
         }

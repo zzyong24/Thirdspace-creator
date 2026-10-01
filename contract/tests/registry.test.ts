@@ -300,6 +300,17 @@ const SPEC_13: ReadonlyArray<[string, string]> = [
   ["POST", "/intelligence/migrations/:migrationId/rollback"],
   ["POST", "/browser-sessions/open-login"],
   ["POST", "/browser-sessions/clear"],
+  // T-1037 已评审的作品级公共编辑合同与旧删除兼容。
+  ["GET", "/outputs/:outputId/production/editor"],
+  ["PUT", "/outputs/:outputId/production/editor"],
+  ["POST", "/outputs/:outputId/production/editor/apply"],
+  ["POST", "/outputs/:outputId/production/editor/restore"],
+  ["GET", "/outputs/:outputId/production/editor/versions"],
+  ["GET", "/outputs/:outputId/production/editor/versions/:revision"],
+  ["GET", "/outputs/:outputId/production/editor/receipts/:requestId"],
+  ["POST", "/outputs/:outputId/production/editor/render"],
+  ["GET", "/outputs/:outputId/production/editor/renders"],
+  ["PUT", "/outputs/:outputId/production/editing-plan/broll/remove"],
 ];
 
 describe("endpoint registry", () => {

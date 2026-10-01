@@ -1,0 +1,22 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/backend
+
+ ❯ src/modules/production/production-editor.integration.test.ts (12 tests | 1 failed) 12398ms
+     × 旧PUT成功后转换新版，原请求仍可恢复且不覆盖新版 770ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/production/production-editor.integration.test.ts > T-1037 公共制作工程与持久版本 > 旧PUT成功后转换新版，原请求仍可恢复且不覆盖新版
+ConflictError: 请使用保存制作方案，避免覆盖已保存版本
+ ❯ Object.updateProduction src/modules/production/production.service.ts:336:81
+
+ ❯ src/modules/production/production-editor.integration.test.ts:92:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 11 passed (12)
+   Start at  19:24:45
+   Duration  14.34s (transform 992ms, setup 0ms, import 1.78s, tests 12.40s, environment 0ms)
+

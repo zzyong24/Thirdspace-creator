@@ -7,6 +7,9 @@ import {
   exportRecordResource,
   materialExportResource,
 } from "../resources/production";
+import { productionEditorDocument,productionEditorVersion,productionEditorHistory,productionEditorHistoryQuery,
+  productionEditorSaveBody,productionEditorApplyBody,productionEditorRestoreBody,productionEditorRequestId,
+  productionEditorRenderBody,productionEditorRenderRequest,productionEditorRenders } from "../resources/production-editor";
 
 const outputParams = z.object({ outputId: id });
 const productionParams = z.object({ productionId: id });
@@ -14,6 +17,15 @@ const exportParams = z.object({ exportId: id });
 
 // SPEC §13 "制作 / Production" group.
 export const productionOperations = {
+  getProductionEditor:defineEndpoint({id:"outputs.production.editor.get",method:"GET",path:"/outputs/:outputId/production/editor",params:outputParams,response:productionEditorDocument,fr:["FR-1035-1"]}),
+  saveProductionEditor:defineEndpoint({id:"outputs.production.editor.save",method:"PUT",path:"/outputs/:outputId/production/editor",params:outputParams,body:productionEditorSaveBody,response:productionEditorVersion,fr:["FR-1035-5"]}),
+  applyProductionEditor:defineEndpoint({id:"outputs.production.editor.apply",method:"POST",path:"/outputs/:outputId/production/editor/apply",params:outputParams,body:productionEditorApplyBody,response:productionEditorVersion,fr:["FR-1035-3"]}),
+  restoreProductionEditor:defineEndpoint({id:"outputs.production.editor.restore",method:"POST",path:"/outputs/:outputId/production/editor/restore",params:outputParams,body:productionEditorRestoreBody,response:productionEditorVersion,fr:["FR-1035-5"]}),
+  listProductionEditorVersions:defineEndpoint({id:"outputs.production.editor.versions.list",method:"GET",path:"/outputs/:outputId/production/editor/versions",params:outputParams,query:productionEditorHistoryQuery,response:productionEditorHistory,fr:["FR-1035-5"]}),
+  getProductionEditorVersion:defineEndpoint({id:"outputs.production.editor.versions.get",method:"GET",path:"/outputs/:outputId/production/editor/versions/:revision",params:outputParams.extend({revision:z.number().int().nonnegative()}),response:productionEditorVersion,fr:["FR-1035-5"]}),
+  getProductionEditorReceipt:defineEndpoint({id:"outputs.production.editor.receipt.get",method:"GET",path:"/outputs/:outputId/production/editor/receipts/:requestId",params:outputParams.extend({requestId:productionEditorRequestId}),response:productionEditorVersion.nullable(),fr:["FR-1035-5"]}),
+  renderProductionEditor:defineEndpoint({id:"outputs.production.editor.render",method:"POST",path:"/outputs/:outputId/production/editor/render",params:outputParams,body:productionEditorRenderBody,response:productionEditorRenderRequest,fr:["FR-1035-5"]}),
+  listProductionEditorRenders:defineEndpoint({id:"outputs.production.editor.renders.list",method:"GET",path:"/outputs/:outputId/production/editor/renders",params:outputParams,query:productionEditorHistoryQuery,response:productionEditorRenders,fr:["FR-1035-5"]}),
   getOutputProduction: defineEndpoint({
     id: "outputs.production.get",
     method: "GET",

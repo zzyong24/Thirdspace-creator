@@ -1,4 +1,4 @@
-import type { Endpoint, RequestContext, Transport } from "@creatoros/contract";
+import { ENDPOINTS, type Endpoint, type RequestContext, type Transport } from "@creatoros/contract";
 import { AuthenticationError, UnsupportedOperationError } from "./production.errors";
 import type { ProductionService } from "./production.service";
 import type {
@@ -24,6 +24,15 @@ import type {
 // PERSISTED_OPS from PRODUCTION_OP_IDS (adding the module = registering it).
 
 export const PRODUCTION_OP_IDS = [
+  "outputs.production.editor.get",
+  "outputs.production.editor.save",
+  "outputs.production.editor.apply",
+  "outputs.production.editor.restore",
+  "outputs.production.editor.versions.list",
+  "outputs.production.editor.versions.get",
+  "outputs.production.editor.receipt.get",
+  "outputs.production.editor.render",
+  "outputs.production.editor.renders.list",
   "outputs.production.get",
   "outputs.production.put",
   "outputs.production.editingPlan.confirm",
@@ -99,14 +108,25 @@ export function createProductionTransport(
       const service = serviceFactory();
       const requestId = (ctx as RequestContext).requestId;
 
-      const { params, body } = (input ?? {}) as Input;
+      const { params, body, query } = (input ?? {}) as Input;
       const p = (params ?? {}) as {
         outputId?: string;
         productionId?: string;
         exportId?: string;
+        revision?:number;
+        requestId?:string;
       };
 
       switch (endpoint.id) {
+        case "outputs.production.editor.get":return {data:await service.getEditor(ctx,p.outputId??""),meta:{requestId}};
+        case "outputs.production.editor.save":return {data:await service.saveEditor(ctx,p.outputId??"",ENDPOINTS.saveProductionEditor.body.parse(body)),meta:{requestId}};
+        case "outputs.production.editor.apply":return {data:await service.applyEditor(ctx,p.outputId??"",ENDPOINTS.applyProductionEditor.body.parse(body)),meta:{requestId}};
+        case "outputs.production.editor.restore":return {data:await service.restoreEditor(ctx,p.outputId??"",ENDPOINTS.restoreProductionEditor.body.parse(body)),meta:{requestId}};
+        case "outputs.production.editor.versions.list":return {data:await service.listEditorVersions(ctx,p.outputId??"",ENDPOINTS.listProductionEditorVersions.query.parse(query??{})),meta:{requestId}};
+        case "outputs.production.editor.versions.get":return {data:await service.getEditorVersion(ctx,p.outputId??"",ENDPOINTS.getProductionEditorVersion.params.parse(params).revision),meta:{requestId}};
+        case "outputs.production.editor.receipt.get":return {data:await service.getEditorReceipt(ctx,p.outputId??"",ENDPOINTS.getProductionEditorReceipt.params.parse(params).requestId),meta:{requestId}};
+        case "outputs.production.editor.render":return {data:await service.renderEditor(ctx,p.outputId??"",ENDPOINTS.renderProductionEditor.body.parse(body)),meta:{requestId}};
+        case "outputs.production.editor.renders.list":return {data:await service.listEditorRenders(ctx,p.outputId??"",ENDPOINTS.listProductionEditorRenders.query.parse(query??{})),meta:{requestId}};
         case "outputs.production.get": {
           const row = await service.getProduction(ctx, p.outputId ?? "");
           return { data: toProductionResource(row), meta: { requestId } };

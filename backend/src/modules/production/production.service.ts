@@ -1,4 +1,11 @@
-import type { RequestContext } from "@creatoros/contract";
+import {
+  productionEditorSaveBody, productionEditorApplyBody, productionEditorRestoreBody, productionEditorHistoryQuery, productionEditorRequestId,
+  type RequestContext, type ProductionEditorDocument, type ProductionEditorVersion,
+  type ProductionEditorSaveBody, type ProductionEditorApplyBody, type ProductionEditorRestoreBody,
+  productionEditorRenderBody, executionTaskSpec, type ProductionEditorRenderRequest, type ExecutionTaskSpec,
+} from "@creatoros/contract";
+import { createProductionEditorRepository, editingPlan, editorRevision } from "./production-editor.repository";
+import { prepareEditorPlan, applyEditorEdits, itemDigest, unsupportedEditorFields, validateEditorChanges, type EditorPlan } from "./production-editor-plan";
 import type { Db } from "@creatoros/backend";
 import {
   createProductionRepository,
@@ -98,9 +105,23 @@ export interface ServiceDeps {
   recordExportActivity?: RecordExportActivity;
   /** [T-366b] 素材包导出接线(可选缝,unit-test 可 stub;未接线 → op 诚实拒)。 */
   materialExport?: MaterialExportWiring;
+  /** 新增/替换媒体：当前账号的真实 Asset，且明确加入当前项目。 */
+  assertEditorAsset?: (ctx:RequestContext,input:{projectId:string;assetId:string},transaction?:Db)=>Promise<void>;
+  /** 沿既有 execution live dispatch 提交，不能只建 queued 行却不启动。 */
+  createEditorRender?: (ctx:RequestContext,input:{spec:ExecutionTaskSpec;projectId:string;contentOutputId:string;attemptId:string})=>Promise<{id:string}>;
+  readEditorRenderAsset?: (ctx:RequestContext,taskId:string)=>Promise<{assetId:string|null}>;
 }
 
 export interface ProductionService {
+  getEditor(ctx:RequestContext,outputId:string):Promise<ProductionEditorDocument>;
+  saveEditor(ctx:RequestContext,outputId:string,body:ProductionEditorSaveBody):Promise<ProductionEditorVersion>;
+  applyEditor(ctx:RequestContext,outputId:string,body:ProductionEditorApplyBody):Promise<ProductionEditorVersion>;
+  restoreEditor(ctx:RequestContext,outputId:string,body:ProductionEditorRestoreBody):Promise<ProductionEditorVersion>;
+  getEditorReceipt(ctx:RequestContext,outputId:string,requestId:string):Promise<ProductionEditorVersion|null>;
+  getEditorVersion(ctx:RequestContext,outputId:string,revision:number):Promise<ProductionEditorVersion>;
+  listEditorVersions(ctx:RequestContext,outputId:string,query:{limit?:number;offset?:number}):Promise<{items:Array<Omit<ProductionEditorVersion,"plan">>;total:number}>;
+  renderEditor(ctx:RequestContext,outputId:string,input:{revision:number;requestId:string}):Promise<ProductionEditorRenderRequest>;
+  listEditorRenders(ctx:RequestContext,outputId:string,query:{limit?:number;offset?:number}):Promise<{items:ProductionEditorRenderRequest[];total:number}>;
   getProduction(ctx: RequestContext, outputId: string): Promise<ProductionRow>;
   /** 候选准备只读；输出归属错误仍抛出，缺制作记录返回 null。 */
   readProduction(ctx: RequestContext, outputId: string): Promise<ProductionRow | null>;
@@ -182,6 +203,21 @@ function bitrateForResolution(resolution: string): number {
 }
 
 export function createProductionService(deps: ServiceDeps): ProductionService {
+  const editorFor=(ctx:RequestContext)=>createProductionEditorRepository(deps.db,{now:deps.now,nextId:deps.nextId,userId:ctx.userId,accountId:ctx.accountId??null});
+  const mediaRefs=(plan:Record<string,unknown>|null)=>{
+    const p=plan?.renderProps as EditorPlan["renderProps"]|undefined;
+    return new Set([p?.talkingHead?.file,...(p?.broll??[]).map(b=>b.file),...(p?.scenes??[]).flatMap(s=>(s.cards??[]).filter(c=>c.kind==="image").map(c=>c.kind==="image"?c.file:undefined))].filter((v):v is string=>typeof v==="string"));
+  };
+  async function checkNewMedia(ctx:RequestContext,projectId:string,current:Record<string,unknown>|null,next:EditorPlan,transaction:Db) {
+    const before=mediaRefs(current);
+    for(const assetId of mediaRefs(next)) {
+      if(before.has(assetId))continue;
+      if(!deps.assertEditorAsset)throw new UnsupportedOperationError("production.editor.asset-validation");
+      await deps.assertEditorAsset(ctx,{projectId,assetId},transaction);
+    }
+  }
+  // SEMANTIC_BOUNDARY_ALLOW: 精确请求摘要仅用于回执幂等，不理解创作内容。
+  const legacyRequest=(ctx:RequestContext,payload:unknown)=>`legacy-${itemDigest({requestId:ctx.requestId,payload}).slice(7)}`;
   function repoFor(ctx: RequestContext): ProductionRepository {
     return createProductionRepository(deps.db, {
       now: deps.now,
@@ -194,6 +230,68 @@ export function createProductionService(deps: ServiceDeps): ProductionService {
   }
 
   return {
+    async getEditor(ctx,outputId) {
+      const {owned,row,plan}=await editorFor(ctx).read(outputId);
+      return {outputId,projectId:owned.projectId,productionId:row?.id??null,revision:editorRevision(plan),
+        state:plan?(plan.editorVersion===1?"editable":"legacy"):"empty",plan,unsupportedFields:unsupportedEditorFields(plan)};
+    },
+    async saveEditor(ctx,outputId,input) {
+      const body=productionEditorSaveBody.parse(input);
+      return editorFor(ctx).commit(outputId,{...body,requestDigest:itemDigest({op:"save",body})},async(current,projectId,transaction)=>{
+        if(current?.editorVersion===1 && body.plan.editorVersion!==1)throw new ConflictError("请读取当前制作方案再保存，避免旧分场覆盖片段修改");
+        const next=prepareEditorPlan(body.plan,()=>deps.nextId("item"),current?.editorVersion===1?(current as EditorPlan).renderProps:undefined);
+        if(!current || current.editorVersion===1)validateEditorChanges(next,current as EditorPlan|null);
+        await checkNewMedia(ctx,projectId,current,next,transaction);return next;
+      });
+    },
+    async applyEditor(ctx,outputId,input) {
+      const body=productionEditorApplyBody.parse(input);
+      return editorFor(ctx).commit(outputId,{...body,source:"assistant",requestDigest:itemDigest({op:"apply",body})},async(current,projectId,transaction)=>{
+        if(current?.editorVersion!==1)throw new ConflictError("请先保存制作方案，再编辑片段");
+        const next=applyEditorEdits(current as EditorPlan,body.edits,()=>deps.nextId("item"));
+        await checkNewMedia(ctx,projectId,current,next,transaction);return next;
+      });
+    },
+    async restoreEditor(ctx,outputId,input) {
+      const body=productionEditorRestoreBody.parse(input), repo=editorFor(ctx);
+      const historical=await repo.version(outputId,body.sourceRevision);
+      return repo.commit(outputId,{...body,source:"restore",requestDigest:itemDigest({op:"restore",body})},async(current,projectId,transaction)=>{
+        const next=prepareEditorPlan(historical.plan,()=>deps.nextId("item"));await checkNewMedia(ctx,projectId,current,next,transaction);return next;
+      });
+    },
+    async getEditorReceipt(ctx,outputId,requestId) {return editorFor(ctx).receipt(outputId,productionEditorRequestId.parse(requestId));},
+    async getEditorVersion(ctx,outputId,revision) {
+      if(!Number.isInteger(revision)||revision<0)throw new ConflictError("版本号无效");
+      return editorFor(ctx).version(outputId,revision);
+    },
+    async listEditorVersions(ctx,outputId,input) {const q=productionEditorHistoryQuery.parse(input);return editorFor(ctx).versions(outputId,q.limit,q.offset);},
+    async renderEditor(ctx,outputId,input) {
+      const body=productionEditorRenderBody.parse(input), repo=editorFor(ctx);
+      // 权限在 reserve 中先校验；没有接线不得产生假任务。
+      const frozen=await repo.reserveRender(outputId,{...body,requestDigest:itemDigest({op:"render",body})},async(plan,projectId,transaction)=>{
+        if(!deps.createEditorRender)throw new UnsupportedOperationError("outputs.production.editor.render");
+        const prepared=prepareEditorPlan(plan);
+        // 所有输入真实读取；渲染的是历史版本，素材不因新草稿而被替换。
+        if(!deps.assertEditorAsset)throw new UnsupportedOperationError("production.editor.asset-validation");
+        for(const assetId of mediaRefs(prepared))await deps.assertEditorAsset(ctx,{projectId,assetId},transaction);
+        return executionTaskSpec.parse({taskType:"video.render",goal:`生成视频：${prepared.renderProps.meta.title}`,
+          inputs:[...mediaRefs(prepared)].map(assetId=>({assetId,mountAs:assetId})),params:{props:prepared.renderProps},
+          constraints:{timeoutSec:null,network:"deny",maxOutputMB:512}});
+      });
+      if(frozen.request.taskId)return frozen.request;
+      if(!deps.createEditorRender)throw new UnsupportedOperationError("outputs.production.editor.render");
+      const task=await deps.createEditorRender(ctx,{spec:frozen.request.spec,projectId:frozen.projectId,contentOutputId:outputId,attemptId:frozen.request.attemptId});
+      return repo.attachRender(outputId,body.requestId,{taskId:task.id});
+    },
+    async listEditorRenders(ctx,outputId,input) {
+      const q=productionEditorHistoryQuery.parse(input),repo=editorFor(ctx),result=await repo.renders(outputId,q.limit,q.offset);
+      if(deps.readEditorRenderAsset)for(let i=0;i<result.items.length;i++) {
+        const item=result.items[i]!;if(!item.taskId || item.assetId)continue;
+        const adopted=await deps.readEditorRenderAsset(ctx,item.taskId);
+        if(adopted.assetId)result.items[i]=await repo.attachRender(outputId,item.requestId,{assetId:adopted.assetId});
+      }
+      return result;
+    },
     async readProduction(ctx, outputId) {
       return repoFor(ctx).findProductionByOutput(outputId);
     },
@@ -208,63 +306,49 @@ export function createProductionService(deps: ServiceDeps): ProductionService {
       const repo = repoFor(ctx);
       const production = await repo.getProductionByOutput(outputId);
 
-      const extra: { startedAt?: string | null } = {};
-      if (patch.status !== undefined) {
-        const fromIdx = STATUS_ORDER.indexOf(
-          production.status as (typeof STATUS_ORDER)[number],
-        );
-        const toIdx = STATUS_ORDER.indexOf(
-          patch.status as (typeof STATUS_ORDER)[number],
-        );
-        // Forward-only, adjacent step. Unknown enum (-1) or any non-+1 delta is
-        // illegal (skip or backward) → ConflictError (§12).
-        if (fromIdx < 0 || toIdx < 0 || toIdx - fromIdx !== 1) {
-          throw new ConflictError(
-            `Illegal production status transition: ${production.status} -> ${patch.status}`,
-          );
+      const validatePatch = (row: ProductionRow) => {
+        const extra: { startedAt?: string | null } = {};
+        if (patch.status !== undefined) {
+          const fromIdx = STATUS_ORDER.indexOf(row.status as (typeof STATUS_ORDER)[number]);
+          const toIdx = STATUS_ORDER.indexOf(patch.status as (typeof STATUS_ORDER)[number]);
+          if (fromIdx < 0 || toIdx < 0 || toIdx - fromIdx !== 1) {
+            throw new ConflictError(`Illegal production status transition: ${row.status} -> ${patch.status}`);
+          }
+          if (patch.status === "recording" && row.startedAt === null) extra.startedAt = deps.now();
         }
-        // Entering `recording` from `drafting` stamps startedAt if unset.
-        if (patch.status === "recording" && production.startedAt === null) {
-          extra.startedAt = deps.now();
+        return { ...patch, ...extra };
+      };
+      if(patch.recordingConfig!==undefined) {
+        const currentPlan=editingPlan(production.recordingConfig), incoming=editingPlan(patch.recordingConfig);
+        if(incoming && itemDigest(incoming)!==itemDigest(currentPlan)) {
+          if(incoming.editorVersion===1)throw new ConflictError("请使用保存制作方案，避免覆盖已保存版本");
+          const expectedRevision=editorRevision(incoming);
+          await editorFor(ctx).commit(outputId,{expectedRevision,requestId:legacyRequest(ctx,patch),requestDigest:itemDigest({op:"legacy-put",body:patch}),source:"legacy",productionPatch:validatePatch},async current=>{
+            if(current?.editorVersion===1)throw new ConflictError("请在制作工作台保存当前方案");
+            return incoming;
+          });
+          return repo.getProductionByOutput(outputId);
         }
       }
-
-      return repo.updateProduction(production.id, { ...patch, ...extra });
+      return repo.updateProduction(production.id, validatePatch(production));
     },
 
     async confirmEditingPlan(ctx, outputId, body) {
       const repo = repoFor(ctx);
-      const production = await repo.getProductionByOutput(outputId);
-      const updated = await repo.confirmEditingPlan(
-        production.id,
-        body.expectedRevision,
-        body.plan,
-      );
-      if (!updated) {
-        throw new ConflictError(
-          "分镜已被其他操作更新，请刷新后再确认，避免覆盖较新的剪辑方案",
-        );
-      }
-      return updated;
+      await repo.getProductionByOutput(outputId);
+      await editorFor(ctx).commit(outputId,{expectedRevision:body.expectedRevision,requestId:legacyRequest(ctx,body),requestDigest:itemDigest({op:"legacy-confirm",body}),source:"legacy"},async current=>{
+        if(current?.editorVersion===1)throw new ConflictError("请在制作工作台保存当前方案，避免旧分场覆盖片段修改");
+        return body.plan;
+      });
+      return repo.getProductionByOutput(outputId);
     },
 
     async removeEditingPlanBroll(ctx, outputId, body) {
       const repo = repoFor(ctx);
-      const production = await repo.getProductionByOutput(outputId);
-      const recordingConfig = (production.recordingConfig ?? {}) as Record<
-        string,
-        unknown
-      >;
-      const rawPlan = recordingConfig.videoEditingPlan;
-      if (!rawPlan || typeof rawPlan !== "object" || Array.isArray(rawPlan)) {
-        throw new ConflictError("当前没有可编辑的已确认分镜，请刷新后重新分场");
-      }
-      const plan = rawPlan as Record<string, unknown>;
-      if (plan.revision !== body.expectedRevision) {
-        throw new ConflictError(
-          "分镜已被其他操作更新，请刷新后再删除，避免覆盖较新的剪辑方案",
-        );
-      }
+      await repo.getProductionByOutput(outputId);
+      await editorFor(ctx).commit(outputId,{expectedRevision:body.expectedRevision,requestId:legacyRequest(ctx,body),requestDigest:itemDigest({op:"legacy-remove",body}),source:"legacy"},async plan=>{
+      if(!plan)throw new ConflictError("当前没有可编辑的已确认分镜，请刷新后重新分场");
+      if(plan.editorVersion===1)throw new ConflictError("请在工作台选中要移除的片段");
       const decisions =
         plan.decisions &&
         typeof plan.decisions === "object" &&
@@ -316,17 +400,9 @@ export function createProductionService(deps: ServiceDeps): ProductionService {
         inventory: filterByAssetId(plan.inventory, "assetId"),
       };
       delete nextPlan.revision;
-      const updated = await repo.confirmEditingPlan(
-        production.id,
-        body.expectedRevision,
-        nextPlan,
-      );
-      if (!updated) {
-        throw new ConflictError(
-          "分镜已被其他操作更新，请刷新后再删除，避免覆盖较新的剪辑方案",
-        );
-      }
-      return updated;
+        return nextPlan;
+      });
+      return repo.getProductionByOutput(outputId);
     },
 
     async createSegment(ctx, productionId, body) {

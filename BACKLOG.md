@@ -11,10 +11,11 @@
 | --- | --- | --- | --- | --- | --- | --- |
 | T-1036 | 开源视频编辑组件选型与兼容验证 | ✅ 待办 | PASS[REV:66f9290599b0] | — | [SPEC](docs/features/t1036-open-source-video-editor-selection.md) | 依赖 T-1035 已评审需求；先核对开源代码、许可、React/Next 与现有 HyperFrames/Asset 适配，用隔离探针选择可实际复用的时间轴/预览能力，不照搬闭源附件。 |
 | T-1037 | 建立作品级制作工程、版本与公共编辑服务 | 🔨 待办 | PASS[REV:03cbb3aedc96] | 待验 | [SPEC](docs/features/t1037-output-production-project.md) | 依赖 T-1036；按具体 video output 绑定脚本、制作素材、方案、任务与成片，统一 revision/CAS/历史/回执及旧方案兼容，先定稿合同并独立评审。 |
-| T-1038 | 集成可视视频制作工作台与同源预览 | 📋 待办 | 待审 | 待验 | [SPEC](docs/features/t1038-visible-video-workbench.md) | 依赖 T-1036/T-1037；复用选定开源组件，实现预览/时间轴/参数联动、素材字幕和卡片编辑、撤销重做，并保留原备料与成品入口。 |
+| T-1038 | 集成可视视频制作工作台与同源预览 | 📋 待办 | PASS[REV:fc5f5d60a46a] | 待验 | [SPEC](docs/features/t1038-visible-video-workbench.md) | 依赖 T-1036/T-1037；复用选定开源组件，实现预览/时间轴/参数联动、素材字幕和卡片编辑、撤销重做，并保留原备料与成品入口。 |
 | T-1039 | 让编导助手读取选区并操控同一剪辑工程 | 📋 待办 | 待审 | 待验 | [SPEC](docs/features/t1039-director-video-editing.md) | 依赖 T-1037/T-1038；复用 Worker 工具循环，读当前工程与选区、形成局部候选、对照预览、逐项应用和撤销，手工修改与助手共享版本。 |
 | T-1040 | 接通私有音效轨与中文字体的预览和最终渲染 | 📋 待办 | 待审 | 待验 | [SPEC](docs/features/t1040-production-sound-fonts.md) | 依赖 T-1037/T-1038；将音效作为账号素材可试听、定位和调音量，字体与真实字重使用同一资源预览和渲染，保留旧无音效方案可用。 |
 | T-1041 | 验收可视制作、编导剪辑与完整成片交付 | 📋 待办 | 待审 | 待验 | [SPEC](docs/features/t1041-video-workbench-acceptance.md) | 依赖 T-1037—T-1040 和现有脚本/采纳回归；从具体视频作品走备料、AI 初稿、手工/助手局部修改、版本保存、渲染、查看与导出，核验旧链和实包。 |
+| T-1042 | 整合多媒体、各类作品工作台与剪辑的完整创作链 | 📋 待办 | PASS[REV:91743d51ee0e] | 待验 | [SPEC](docs/features/t1042-multimedia-workbench-integration.md) | 2026-10-01 用户再次确认；复用画布分支与已选开源组件，合并前核对任务撞号与数据库迁移；图片、文章、视频按具体作品生成、编辑、查看和交付，运行集成测试。 |
 | T-1035 | 将视频制作改为可看懂、可编辑和预览的工作台 | 🔨 待办 | PASS[REV:e0172a52a112] | 待验 | [SPEC](docs/features/t1035-video-production-workbench.md) | 参考附件与 ChatCut，制作工作台可看、可改、可预览；编导助手读取当前作品与选区，提出局部改动并落实同一时间轴，保留自动生成、版本、素材归属及旧制作流程。 |
 | T-1031 | 修复单项结果不能依次采纳的整稿版本阻断 | 🔨 待办 | PASS[REV:c3570711a777] | 待验 | [SPEC](docs/features/t1031-result-field-adoption.md) | 真实验收发现先采纳标签后封面失效；按字段与冻结正文校验安全保存，保留当前稿、来源和并发冲突，不回写历史整稿。 |
 | T-1032 | 核实真实脚本任务的事实约束执行与最小审校方案 | ✅ 待办 | — | — | [SPEC](docs/features/t1032-script-fact-scope-research.md) | 三轮真实模型仍补写无来源经历、比例和效果；核对冻结提示词及供应商最终消息，区分传递缺陷与模型忽略，不用关键词检测或更多提示词掩盖失败。 |

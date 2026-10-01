@@ -1135,7 +1135,7 @@ export function createVideoRenderExecutor(
               direction: {
                 ...renderProps.direction,
                 beatGraph: renderProps.direction.beatGraph.map((beat) =>
-                  beat.subject.kind === "broll"
+                  beat.subject.kind === "broll" && !renderProps.broll.some(item => item.id && beat.subject.ref === `broll:${item.id}`)
                     ? {
                         ...beat,
                         subject: {

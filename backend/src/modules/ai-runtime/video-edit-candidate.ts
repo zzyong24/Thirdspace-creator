@@ -7,15 +7,16 @@ import type {ChatVideoEditPorts} from "./chat-video-edit-tool-host";
 
 /** 只读当前领域事实并落实用户明确的编辑参数；采纳和渲染仍由既有领域服务负责。 */
 export function createVideoEditCandidatePreparer(ports:{
- projectsService:Pick<ProjectsService,"listOutputIdsByProject">;
+ projectsService:Pick<ProjectsService,"listOutputRefsByProjects">;
  productionService:Pick<ProductionService,"readProduction">;
  materialLinksService:Pick<MaterialLinksService,"list">;
  assetsService:Pick<AssetsService,"getAsset">;
 }):ChatVideoEditPorts["prepareVideoEdit"]{
  const {projectsService,productionService,materialLinksService,assetsService}=ports;
  return async(ctx,input)=>{
-    const outputId = (await projectsService.listOutputIdsByProject(ctx, input.projectId))[0];
-    if (!outputId) throw new Error("当前项目还没有可调整的制作记录。");
+    const outputs=(await projectsService.listOutputRefsByProjects(ctx,[input.projectId])).filter(row=>row.projectId===input.projectId && row.contentType==="video");
+    if(outputs.length!==1)throw new Error(outputs.length?"请进入要修改的具体视频作品，在制作工作台选中片段后调整。":"当前项目还没有可调整的视频作品。");
+    const outputId=outputs[0]!.outputId;
     const production = await productionService.readProduction(ctx, outputId);
     if (!production) throw new Error("当前项目还没有可调整的制作记录。");
     const plan = (production.recordingConfig as Record<string, unknown> | null)?.videoEditingPlan as
@@ -24,6 +25,7 @@ export function createVideoEditCandidatePreparer(ports:{
     if (!plan || typeof plan.revision !== "number") {
       throw new Error("当前项目还没有已确认的分镜方案，请先完成 AI 分场决策并确认。");
     }
+    if(plan.editorVersion===1)throw new Error("请在制作工作台选中片段后调整，当前版本需要按片段逐项应用修改。");
     const parsed = videoRenderProps.safeParse(plan.renderProps);
     if (!parsed.success) throw new Error("当前剪辑方案已损坏，请回制作页重新确认分镜。");
 
@@ -31,16 +33,12 @@ export function createVideoEditCandidatePreparer(ports:{
     const summary: string[] = [];
     const replacements = input.replaceBroll ?? [];
     if (replacements.length > 0) {
-      const { rows: projectLinks } = await materialLinksService.list(ctx, {
-        projectId: input.projectId,
-        page: 1,
-        pageSize: 100,
-      });
-      const linkedAssetIds = new Set(
-        projectLinks
-          .filter((link) => link.entityType === "asset")
-          .map((link) => link.entityId),
-      );
+      const linkedAssetIds=new Set<string>();
+      for(let page=1;;page++) {
+        const batch=await materialLinksService.list(ctx,{projectId:input.projectId,page,pageSize:100});
+        for(const link of batch.rows)if(link.entityType==="asset")linkedAssetIds.add(link.entityId);
+        if(page*100>=batch.total || !batch.rows.length)break;
+      }
       for (const replacement of replacements) {
         if (!linkedAssetIds.has(replacement.assetId)) {
           throw new Error(`素材 ${replacement.assetId} 不属于当前项目，请先上传或关联到“创作素材”。`);
@@ -70,7 +68,9 @@ export function createVideoEditCandidatePreparer(ports:{
       summary.push(`第 ${replacement.sceneIdx + 1} 场改用指定素材`);
     }
     for (const move of input.moveBroll ?? []) {
-      const found = props.broll.find((item) => item.file === move.assetId);
+      const matches=props.broll.filter(item=>item.file===move.assetId);
+      if(matches.length>1)throw new Error("该素材出现多次，请在制作工作台选中要调整的片段。");
+      const found = matches[0];
       if (!found) throw new Error(`当前时间线里没有素材 ${move.assetId}。`);
       found.at = move.at;
       if (typeof move.durationSec === "number") found.durationSec = move.durationSec;

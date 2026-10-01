@@ -220,8 +220,12 @@ export function createProductionRepository(
       if (patch.productionMode !== undefined)
         set.productionMode = patch.productionMode;
       if (patch.status !== undefined) set.status = patch.status;
-      if (patch.recordingConfig !== undefined)
-        set.recordingConfig = patch.recordingConfig;
+      if (patch.recordingConfig !== undefined) {
+        // 方案只由公共版本事务写入。普通配置更新原子保留数据库当时的方案，
+        // 不能以较早读取的 JSON 覆盖并发保存。
+        const config={...patch.recordingConfig};delete config.videoEditingPlan;
+        set.recordingConfig=sql`case when ${productions.recordingConfig} ? 'videoEditingPlan' then ${JSON.stringify(config)}::jsonb || jsonb_build_object('videoEditingPlan', ${productions.recordingConfig}->'videoEditingPlan') else ${JSON.stringify(config)}::jsonb end`;
+      }
       if (patch.subtitleConfig !== undefined)
         set.subtitleConfig = patch.subtitleConfig;
       if (patch.startedAt !== undefined) set.startedAt = patch.startedAt;

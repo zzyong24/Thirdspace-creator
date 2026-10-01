@@ -166,7 +166,7 @@ function resolveLandscapeSpeakerTimeline(
       const file = beat.subject.ref.startsWith("broll:")
         ? beat.subject.ref.slice("broll:".length)
         : "";
-      const broll = props.broll.find((item) => item.file === file);
+      const broll = props.broll.find((item) => item.id === file) ?? props.broll.find((item) => item.file === file);
       addSpan(
         beat.startSec,
         beat.endSec,
@@ -2152,7 +2152,7 @@ export function generateVideoRenderHtml(
         const cardDirectionBeat = props.direction?.beatGraph.find(
           (beat) =>
             beat.subject.kind === "card" &&
-            beat.subject.ref === `card:${si}:${cardOrdinal}`,
+            (beat.subject.ref === `card:${item.card.id}` || beat.subject.ref === `card:${si}:${cardOrdinal}`),
         );
         if (props.direction && !cardDirectionBeat) {
           throw new Error(`direction 缺少 card:${si}:${cardOrdinal}，拒绝退回旧卡片时间线`);
@@ -2304,7 +2304,7 @@ export function generateVideoRenderHtml(
         const directionBeat = props.direction?.beatGraph.find(
           (beat) =>
             beat.subject.kind === "broll" &&
-            beat.subject.ref === `broll:${b.file}`,
+            (beat.subject.ref === `broll:${b.id}` || beat.subject.ref === `broll:${b.file}`),
         );
         if (props.direction && presentation !== "overlay" && !directionBeat) {
           throw new Error(`direction 缺少 broll:${b.file}，拒绝退回旧素材时间线`);

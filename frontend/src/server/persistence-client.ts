@@ -132,7 +132,7 @@ import { createRadarProjectService, createProjectRepository, createProjectsServi
 import { createKnowledgeRepository, createKnowledgeService } from "@creatoros/backend/modules/knowledge";
 import { createAssetRepository, createAssetsService, createWebDocumentCacheService, createAssetsTransport, createMockObjectStorage, createS3ObjectStorage, createLocalFsObjectStorage, ensureBucket, type ObjectStorageForCtx } from "@creatoros/backend/modules/assets";
 import { createArtifactsService, createArtifactsTransport } from "@creatoros/backend/modules/artifacts";
-import { createProductionService, createProductionTransport } from "@creatoros/backend/modules/production";
+import { createProductionService, createProductionTransport, ConflictError as ProductionConflictError } from "@creatoros/backend/modules/production";
 import { createPublishingService, createPublishingTransport, createUnavailablePublisher } from "@creatoros/backend/modules/publishing";
 import { createPublicationSyncService, createTrafficService, createAnalyticsRepository, createAnalyticsService, createAnalyticsTransport } from "@creatoros/backend/modules/analytics";
 import { createIngestionService, createIngestionTransport } from "@creatoros/backend/modules/ingestion";
@@ -1870,6 +1870,31 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     db,
     now: deps.now,
     nextId: deps.nextId,
+    assertEditorAsset: async (ctx,{projectId,assetId},transaction) => {
+      // 事务里的跨模块读取复用同一连接，避免PGlite等待自身事务外的查询。
+      // 各模块公开service保留真实归属校验；不打开第二个数据库。
+      const scopedAssets=transaction?createAssetsService(createAssetRepository(transaction,deps),objectStorageForCtx,deps):assetsService;
+      const scopedLinks=transaction?createMaterialLinksService({db:transaction,...deps}):materialLinksService;
+      await scopedAssets.getAsset(ctx,assetId);
+      for(let page=1;;page++) {
+        const batch=await scopedLinks.list(ctx,{projectId,page,pageSize:100});
+        if(batch.rows.some(link=>link.entityType==="asset" && link.entityId===assetId))return;
+        if(page*100>=batch.total || batch.rows.length===0)break;
+      }
+      throw new ProductionConflictError("请先将该素材加入当前项目，再插入视频作品");
+    },
+    createEditorRender:async (ctx,body)=>{
+      const response=await execution.request(ENDPOINTS.createExecutionTask,{params:undefined,query:undefined,body},ctx) as {data:{id:string}};
+      return response.data;
+    },
+    readEditorRenderAsset:async (ctx,taskId)=>{
+      const task=await executionService.get(ctx,taskId);
+      for(const assetId of task.adoptedAssetIds) {
+        const asset=await assetsService.getAsset(ctx,assetId);
+        if(asset.assetType==="video")return {assetId};
+      }
+      return {assetId:null};
+    },
     setPrimaryOutputAsset: (ctx, input) =>
       projectsService.patchOutput(ctx, input.outputId, {
         primaryAssetId: input.assetId,
@@ -3437,7 +3462,8 @@ dispatchIntelligenceRun});
               ctx,
               { id: executionTaskId, inputData: { spec: task.spec } },
               {
-                ai: aiService,
+                resolveOutputProjectId:(ctx,outputId)=>projectsService.getProjectIdByOutput(ctx,outputId),
+    ai: aiService,
                 assets: {
                   materializeAsset: (c, assetId, destinationPath) =>
                     assetsService.materializeAsset(c, assetId, destinationPath),

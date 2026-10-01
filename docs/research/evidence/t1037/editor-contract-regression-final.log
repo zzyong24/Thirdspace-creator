@@ -1,0 +1,41 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/contract
+
+ ❯ tests/registry.test.ts (3 tests | 1 failed) 30ms
+     × registers no routes outside SPEC §13 9ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/registry.test.ts > endpoint registry > registers no routes outside SPEC §13
+AssertionError: unexpected: POST /intelligence/projects/enqueue, GET /settings/onboarding/:accountId, PATCH /settings/onboarding/:accountId, GET /settings/redfox, PUT /settings/redfox, DELETE /settings/redfox, GET /analytics/daily-report: expected [ …(7) ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   "POST /intelligence/projects/enqueue",
++   "GET /settings/onboarding/:accountId",
++   "PATCH /settings/onboarding/:accountId",
++   "GET /settings/redfox",
++   "PUT /settings/redfox",
++   "DELETE /settings/redfox",
++   "GET /analytics/daily-report",
++ ]
+
+ ❯ tests/registry.test.ts:366:54
+    364|     const allowed = new Set(SPEC_13.map(([m, p]) => `${m} ${p}`));
+    365|     const extra = registered.filter((r) => !allowed.has(r));
+    366|     expect(extra, `unexpected: ${extra.join(", ")}`).toEqual([]);
+       |                                                      ^
+    367|   });
+    368|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 2 passed (3)
+      Tests  1 failed | 22 passed (23)
+   Start at  19:18:18
+   Duration  1.15s (transform 1.10s, setup 0ms, import 1.81s, tests 96ms, environment 0ms)
+

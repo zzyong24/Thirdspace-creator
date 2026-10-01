@@ -1,0 +1,47 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/frontend
+
+(node:55916) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55917) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | src/server/__module_integration__/production-editor.persistence-client.test.ts > 公共组合根保存不启动，冻结生成走既有运行器，重试复用实际AI任务
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+stderr | src/server/__module_integration__/production-editor.persistence-client.test.ts > 公共组合根保存不启动，冻结生成走既有运行器，重试复用实际AI任务
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+stderr | src/server/__module_integration__/production-editor.persistence-client.test.ts > 公共组合根保存不启动，冻结生成走既有运行器，重试复用实际AI任务
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+ ❯ src/server/__module_integration__/production-editor.persistence-client.test.ts (1 test | 1 failed) 5631ms
+   × 公共组合根保存不启动，冻结生成走既有运行器，重试复用实际AI任务 5630ms (retry x2)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/server/__module_integration__/production-editor.persistence-client.test.ts > 公共组合根保存不启动，冻结生成走既有运行器，重试复用实际AI任务
+ FAIL  src/server/__module_integration__/production-editor.persistence-client.test.ts > 公共组合根保存不启动，冻结生成走既有运行器，重试复用实际AI任务
+ FAIL  src/server/__module_integration__/production-editor.persistence-client.test.ts > 公共组合根保存不启动，冻结生成走既有运行器，重试复用实际AI任务
+UnsupportedOperationError: persistence: operation not implemented: material-links.create
+ ❯ Object.request ../backend/src/application/transport.ts:85:21
+     83|   return {async request(endpoint,input,ctx){
+     84|     const owner=owners.get(endpoint.id);
+     85|     if(!owner)throw new UnsupportedOperationError(endpoint.id);
+       |                     ^
+     86|     return (await resolve())[owner].request(endpoint,input,ctx);
+     87|   }};
+ ❯ Object.request src/lib/page-read-cache.server.ts:109:34
+ ❯ call src/server/__module_integration__/production-editor.persistence-client.test.ts:13:102
+ ❯ src/server/__module_integration__/production-editor.persistence-client.test.ts:20:9
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  1 failed | 3 passed (4)
+   Start at  19:17:21
+   Duration  26.23s (transform 25.43s, setup 1.40s, import 37.41s, tests 11.33s, environment 1.86s)
+

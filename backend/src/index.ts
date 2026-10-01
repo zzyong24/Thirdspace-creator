@@ -108,6 +108,8 @@ export {
 export {
   productions,
   productionSegments,
+  productionEditVersions,
+  productionRenderRequests,
   segmentAssets,
   exportRecords,
   PRODUCTION_DDL,

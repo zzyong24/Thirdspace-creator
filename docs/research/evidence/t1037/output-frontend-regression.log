@@ -1,0 +1,93 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/frontend
+
+(node:51725) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:51724) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:51726) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:51723) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ src/app/(creator)/projects/[projectId]/cross-account-gate.test.tsx (6 tests | 2 failed) 315ms
+     × production 路由:同号项目 → 照常渲制作工作台(零回归) 14ms (retry x2)
+     × production 路由:尚无正式脚本时复用内容雷达改写稿作为口播稿 6ms (retry x2)
+Not implemented: navigation to another Document
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/app/(creator)/projects/[projectId]/cross-account-gate.test.tsx > [T-373] 跨号项目整页门(不再半渲染) > production 路由:同号项目 → 照常渲制作工作台(零回归)
+ FAIL  src/app/(creator)/projects/[projectId]/cross-account-gate.test.tsx > [T-373] 跨号项目整页门(不再半渲染) > production 路由:同号项目 → 照常渲制作工作台(零回归)
+ FAIL  src/app/(creator)/projects/[projectId]/cross-account-gate.test.tsx > [T-373] 跨号项目整页门(不再半渲染) > production 路由:同号项目 → 照常渲制作工作台(零回归)
+TestingLibraryElementError: Unable to find an element by: [data-testid="production-workbench"]
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<main[39m
+      [33mclass[39m=[32m"space-y-4"[39m
+      [33mdata-page[39m=[32m"production-output-selection"[39m
+    [36m>[39m
+      [36m<h1[39m
+        [33mclass[39m=[32m"text-xl font-semibold"[39m
+      [36m>[39m
+        [0m选择要制作的视频[0m
+      [36m</h1>[39m
+      [36m<p[39m
+        [33mclass[39m=[32m"text-sm text-muted-foreground"[39m
+      [36m>[39m
+        [0m该项目还没有视频作品，请先创建视频。[0m
+      [36m</p>[39m
+      [36m<ul[39m
+        [33mclass[39m=[32m"space-y-2"[39m
+      [36m/>[39m
+      [36m<a[39m
+        [33mclass[39m=[32m"text-primary hover:underline"[39m
+        [33mhref[39m=[32m"/projects/project-old-acct"[39m
+      [36m>[39m
+        [0m回项目[0m
+      [36m</a>[39m
+    [36m</main>[39m
+  [36m</div>[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/app/(creator)/projects/[projectId]/cross-account-gate.test.tsx:140:19
+    138|     getProject.mockResolvedValue({ id: "project-old-acct" });
+    139|     await renderProductionRoute();
+    140|     expect(screen.getByTestId("production-workbench")).toBeInTheDocume…
+       |                   ^
+    141|   });
+    142|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+ FAIL  src/app/(creator)/projects/[projectId]/cross-account-gate.test.tsx > [T-373] 跨号项目整页门(不再半渲染) > production 路由:尚无正式脚本时复用内容雷达改写稿作为口播稿
+ FAIL  src/app/(creator)/projects/[projectId]/cross-account-gate.test.tsx > [T-373] 跨号项目整页门(不再半渲染) > production 路由:尚无正式脚本时复用内容雷达改写稿作为口播稿
+ FAIL  src/app/(creator)/projects/[projectId]/cross-account-gate.test.tsx > [T-373] 跨号项目整页门(不再半渲染) > production 路由:尚无正式脚本时复用内容雷达改写稿作为口播稿
+AssertionError: expected undefined to be '已经从内容雷达带入的口播稿' // Object.is equality
+
+- Expected:
+"已经从内容雷达带入的口播稿"
+
++ Received:
+undefined
+
+ ❯ src/app/(creator)/projects/[projectId]/cross-account-gate.test.tsx:155:49
+    153|     await renderProductionRoute();
+    154|
+    155|     expect(productionProps.current?.scriptText).toBe(
+       |                                                 ^
+    156|       "已经从内容雷达带入的口播稿",
+    157|     );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+
+ Test Files  1 failed | 3 passed (4)
+      Tests  2 failed | 50 passed (52)
+   Start at  18:55:10
+   Duration  3.29s (transform 1.43s, setup 1.03s, import 1.85s, tests 1.60s, environment 3.31s)
+
