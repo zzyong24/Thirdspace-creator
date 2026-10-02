@@ -2,7 +2,7 @@ import {structuredGenerationInputSchema} from '@creatoros/contract/execution-wor
 import type {RequestContext} from '@creatoros/contract';
 import {topicFacets,normalizeTopics,topicArraySchema,dailyTopicInputSchema,topicGenerateFrozenSchema} from '@creatoros/ai-worker';
 import type {ActivePreference} from '../candidate/topic-preference-guardrail';
-import {prepareTopicGenerateContext,topicAdditionalCalls,type TopicGeneratePrepareDeps} from './topic-business-adapter';
+import {prepareTopicGenerateContext,projectAudienceTopicItems,topicAdditionalCalls,type TopicGeneratePrepareDeps} from './topic-business-adapter';
 import {renderSignalQualityBrief} from './signal-quality';
 import type {StructuredBusinessAdapter} from './structured-business-execution.service';
 export interface DailyTopicPrepareDeps extends TopicGeneratePrepareDeps {
@@ -39,7 +39,7 @@ export function createDailyTopicBusinessAdapter(deps:DailyTopicPrepareDeps):Stru
    const daily=dailyTopicInputSchema.parse(JSON.parse(input.facets.__dailyTopic??'null'));
    const topic=topicGenerateFrozenSchema.parse(JSON.parse(input.facets.__topicGenerate??'null'));
    if(daily.skipReason||topic.mode!=='daily'||topic.basis!=='positioning')throw new Error('每日选题冻结准备模式不符');
-   const items=normalizeTopics(topicArraySchema.parse(object).topics);
+   const items=projectAudienceTopicItems(normalizeTopics(topicArraySchema.parse(object).topics),object,topic);
    return {resultType:'candidate_list',resultData:{items}};
   },
  };

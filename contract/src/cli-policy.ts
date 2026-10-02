@@ -120,6 +120,7 @@ const READ_OPERATIONS = [
   "taxonomy.tags.list",
   "topics.attributions.list",
   "topics.overview",
+  "topics.workspace.get",
   "trend.sources.list",
 ] as const satisfies readonly EndpointId[];
 
@@ -166,6 +167,8 @@ const MUTATION_OPERATIONS = [
   "calibration.suggestions.adopt",
   "calibration.suggestions.dismiss",
   "candidates.create",
+  "topics.workspace.save",
+  "topics.proposals.feedback",
   "candidates.patch",
   "candidates.promote",
   "execution.tasks.command",
@@ -384,7 +387,7 @@ function policyFor(operation: EndpointId): CliOperationPolicy {
         ? "apply"
         : "confirm_impact",
     asyncTask: ASYNC_TASK_OPERATIONS.has(operation),
-    idempotency: effect === "read" ? "not_applicable" : "gateway",
+    idempotency: effect === "read" ? "not_applicable" : (["topics.workspace.save","topics.proposals.feedback"] as readonly string[]).includes(operation) ? "native" : "gateway",
   };
 }
 

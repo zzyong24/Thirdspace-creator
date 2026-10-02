@@ -108,6 +108,7 @@ export interface AiCandidatePort {
         contentRole?: "traffic" | "trust" | "conversion" | null;
         productAnchorId?: string | null;
         predictedScore?: number | null;
+        card?: Record<string,unknown>;
       };
     },
   ): Promise<unknown>;
@@ -2048,6 +2049,20 @@ export function createAiService(deps: ServiceDeps): AiService {
 
     async patchResultItems(ctx, taskId, items) {
       const repo = repoFor(ctx, "ai.patchResultItems");
+      const task=await repo.requireTask(taskId);
+      if(task.taskType==="topic.generate"){
+        const results=await repo.listResults(taskId);
+        const data=results.find(r=>r.resultType==="candidate_list")?.resultData as {originalAudienceItems?:Array<Record<string,unknown>>}|undefined;
+        if(data?.originalAudienceItems){
+          const seen=new Set<string>();
+          for(const value of items){
+            const item=value as Record<string,unknown>,id=String(item.proposalId??"");
+            const original=data.originalAudienceItems.find(o=>o.proposalId===id);
+            if(!original||seen.has(id)||JSON.stringify(item.audienceTask)!==JSON.stringify(original.audienceTask))throw new ConflictError("任务审读与来源证据不能由客户端改写");
+            seen.add(id);
+          }
+        }
+      }
       const row = await repo.patchLatestResultItems(taskId, items);
       return toResultDto(row);
     },

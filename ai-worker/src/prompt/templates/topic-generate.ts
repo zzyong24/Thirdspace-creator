@@ -1,3 +1,4 @@
+import { audienceTaskProposal } from "@creatoros/contract";
 import { z } from "zod";
 import type { PromptTemplate } from "../template";
 import { ANTI_FABRICATION_CLAUSE } from "../grounding-facets";
@@ -34,6 +35,7 @@ export function isValidGeneratedTopicTitle(title: string): boolean {
 }
 
 export const topicItemSchema = z.object({
+  audienceTask: audienceTaskProposal.optional(),
   title: z
     .string()
     .default("")
@@ -65,15 +67,24 @@ export const TOPIC_GENERATE_TEMPLATE: PromptTemplate = {
   // topic-daily-collector / chat-runner)按各依据源**真实数据**算质量画像注入;模板指引按画像
   // 动态定权(评论样本少噪声高→降权只取强信号;定位完整→当骨架),每条候选 reason 注明主要
   // 依据+权重理由。非硬性打分表 = 画像(确定性可测)+ AI 判断(灵活)。
-  version: "v5",
+  version: "v7",
   outputSchema: topicArraySchema,
   tools: [],
   system:
     "你是这位创作者的「选题会 agent」,像专业自媒体编导那样按依据产高潜力选题。",
-  template: `【创作者定位】
+  template: `当账号双九宫格已配置，普通选题请求默认使用已保存中心、外围格与语义配对，不要求重复访谈或重建。策略认可不证明需求或工具效果。每条 audienceTask 必须带当前 gridVersion、观众与行业两侧 cellIds 和非空 gridRelationReason：说明这个方法如何完成这件具体的事；不要按词重合机械配对。无当前配对保留研究，不进入已审读推荐。
+
+【创作者定位】
 {{positioning}}
 
 【出题依据】{{basisHint}}{{basisContext}}{{knowledgeRef}}{{learningsConstraint}}{{signalQuality}}
+
+【观众任务工作区与实际拒绝反馈】
+{{audienceTaskContext}}
+【真实来源读取回执】
+{{sourceReads}}
+当提供工作区时，观众任务优先：分别看当前正式定位、观众兴趣/处境/任务九宫格、行业工具/方法九宫格和作者人生材料。空格不补满，只挑少量有用组合；作者兴趣不能当观众兴趣。定位为基准，补充受众若冲突而无法化解，audienceFit=uncertain；错配=mismatched，不许高热度、兴趣或总分覆盖。工具功能映射、相关性、同命题去重由你判断，不能只换标题重推拒绝题。实质改造填 changedFromCandidateId 与 changeReason。没有原始评论不得虚构评论，孤例不得称高频；无证据明示假设。
+每条新增 audienceTask，字段：propositionKey（复用同命题稳定键）、audience、audienceFit(matched/uncertain/mismatched)、audienceReason、job（帮谁干一件具体活）、input、entryUrl（未知空字符串）、steps、output、acceptance、costAndLimits（费用/语言/硬件/安装/取得条件）、authorCanDo、viewerCanUse、estimatedMinutes、route(record/test/research/reserve/unsuitable)、testPlan{sample,steps,visibleResult,acceptance,failureStory}、cellIds、problemIds、authorMaterialIds、changedFromCandidateId(null或拒绝ID)、changeReason。引用只用给定ID。可录需用户记录的一手结果与有效入口，合理假设和预算内实测计划→先测，入口未知→研究，超预算→储备，受众错配→不适合。作者幕后复杂不代表观众会工程方法。会议音频转待办、照片展示图、截图转表格只是测试假设，不是确认需求。Agent记忆/n8n调试/榜单/SaaS架构若没改造成普通观众具体任务，不进推荐。
 
 【当前用户原话】
 {{userRequest}}

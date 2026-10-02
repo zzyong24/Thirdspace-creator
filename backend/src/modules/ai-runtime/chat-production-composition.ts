@@ -38,6 +38,7 @@ export interface ChatProductionCompositionDeps {
  entryPath:string;
  runtime:ChatProductionServicePorts;
  now?:()=>string;
+ topicWorkspace?:import("./topic-business-adapter").TopicGeneratePrepareDeps["topicWorkspace"];
  assertProject:ProductionDeps["assertProject"];
  resolveModelCredential:ProductionDeps["resolveModelCredential"];
  resolveFallbackModelCredential?:ProductionDeps["resolveFallbackModelCredential"];
@@ -68,6 +69,7 @@ export function composeChatProduction(db:Db,deps:ChatProductionCompositionDeps){
     readCurrentScript:chatRuntime.readCurrentScript,
     business:createChatBusinessGenerationPreparation({
       ...chatRuntime.context,
+      topicWorkspace:deps.topicWorkspace,
       sourceReader:{listEnabledSources:deps.trend.listEnabledSources},
       now:deps.now,
       async assertProject(c,id){await deps.assertProject(c,id);},

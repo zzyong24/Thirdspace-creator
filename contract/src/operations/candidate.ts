@@ -1,3 +1,4 @@
+import { topicWorkspaceResource, topicWorkspaceConfig, topicFeedbackReason } from "../resources/audience-task";
 import { z } from "zod";
 import { defineEndpoint } from "../endpoints";
 import {
@@ -22,6 +23,9 @@ const signalParams = z.object({ signalId: id });
 // SPEC §13 "选题候选 (candidate)" group (七步③, contract v0.4). AI-sourced
 // Candidates arrive via the AI confirm flow (§C-3), not a create op here.
 export const candidateOperations = {
+  getTopicWorkspace: defineEndpoint({id:"topics.workspace.get",method:"GET",path:"/topics/workspace",response:topicWorkspaceResource,fr:["FR-AT-01","FR-AT-02"]}),
+  saveTopicWorkspace: defineEndpoint({id:"topics.workspace.save",method:"POST",path:"/topics/workspace",body:z.object({config:topicWorkspaceConfig,expectedVersion:z.number().int().nonnegative(),idempotencyKey:z.string().min(1).max(256)}).strict(),response:topicWorkspaceResource,fr:["FR-AT-01","FR-AT-02"]}),
+  saveTopicProposalFeedback: defineEndpoint({id:"topics.proposals.feedback",method:"POST",path:"/topics/proposals/feedback",body:z.object({taskId:id,proposalId:id,reason:topicFeedbackReason,note:z.string().max(10000).default(""),idempotencyKey:z.string().min(1).max(256)}).strict(),response:z.object({id,createdAt:iso8601}).strict(),fr:["FR-AT-06"]}),
   listCandidates: defineEndpoint({
     id: "candidates.list",
     method: "GET",

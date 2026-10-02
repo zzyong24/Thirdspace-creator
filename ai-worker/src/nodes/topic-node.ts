@@ -1,3 +1,4 @@
+import type { AudienceTaskProposal } from "@creatoros/contract";
 import { StructuredOutputError } from "./structured-output-error";
 import type { LanguageModel } from "ai";
 import type { AgentStepEvent } from "../runtime/agent-step-event";
@@ -17,6 +18,7 @@ import {
 // 数组 → 抛「未产出可解析选题」→ 任务 cancelled(选题会出不来的根因)。parseTopics 仍作纯工具导出。
 
 export interface TopicItem {
+  audienceTask?: AudienceTaskProposal;
   title: string;
   angle: string;
   contentRole: string; // traffic | trust | conversion(confirm 时归一化)
@@ -140,6 +142,7 @@ export function normalizeTopics(items: TopicArrayOutput["topics"]): TopicItem[] 
         predictedScore:
           typeof o.predictedScore === "number" ? o.predictedScore : null,
         reason: o.reason ?? "",
+        ...(o.audienceTask ? { audienceTask:o.audienceTask } : {}),
         // [T-066] 透传原始评论引用(schema 已 default [];再过 asStrings 滤掉空串项)。
         sourceComments: asStrings(o.sourceComments),
       };

@@ -1,3 +1,4 @@
+import { TOPIC_QUERY_PLAN_TEMPLATE } from "./templates/topic-query-plan";
 import { REDFOX_METHODS } from "./redfox-methods";
 import { AGENTIC_BUSINESS_TEMPLATES } from "./templates/agentic-business";
 import { BUSINESS_METHOD_TEMPLATES, withBusinessMethod } from "./business-methods";
@@ -118,6 +119,7 @@ const BUILTIN_TEMPLATES: readonly PromptTemplate[] = [
   COPILOT_ASSIST_TEMPLATE,
   CREATOROS_GUIDE_TEMPLATE,
   TOPIC_GENERATE_TEMPLATE,
+  TOPIC_QUERY_PLAN_TEMPLATE,
   SCRIPT_DRAFT_TEMPLATE,
   SCRIPT_STORYBOARD_SEGMENT_TEMPLATE,
   SCRIPT_VOICEOVER_COMPOSE_TEMPLATE,

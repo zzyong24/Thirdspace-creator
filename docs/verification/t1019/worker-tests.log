@@ -1,0 +1,12 @@
+
+> @creatoros/ai-worker@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+> vitest run src/execution/topic-worker-pipeline.test.ts src/execution/topic-worker-reads.test.ts src/nodes/topic-node.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+
+
+ Test Files  3 passed (3)
+      Tests  40 passed (40)
+   Start at  21:33:49
+   Duration  1.14s (transform 1.10s, setup 0ms, import 2.07s, tests 83ms, environment 0ms)

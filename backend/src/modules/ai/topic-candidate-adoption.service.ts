@@ -5,9 +5,11 @@ import {
   aiTasks,
   aiTaskResults,
   executionTasks,
+  topicProposalFeedback,
   requireAccountId,
   type Db,
 } from "@creatoros/backend";
+import { audienceTaskAssessment } from "@creatoros/contract";
 import type { RequestContext } from "@creatoros/contract";
 import type { AiCandidatePort } from "./ai.service";
 import { ConflictError, OwnershipError } from "./ai.errors";
@@ -138,15 +140,22 @@ export function createTopicCandidateAdoptionService(
           .filter((item) => str(item.title));
         if (!items.length) throw new ConflictError("缺少可采纳选题");
         const receipts: unknown[] = [];
+        const rejected=await tx.select().from(topicProposalFeedback).where(and(eq(topicProposalFeedback.userId,ctx.userId),eq(topicProposalFeedback.accountId,accountId),eq(topicProposalFeedback.taskId,taskId)));
         let i = 0;
         for (const item of items) {
-          const key = `${taskId}#${i++}`;
+          const originalIndex=i++;
+          const assessment=audienceTaskAssessment.safeParse(item.audienceTask);
+          if(assessment.success&&(assessment.data.route==="unsuitable"||rejected.some(r=>r.reason!=="tested"&&r.proposalId===item.proposalId)))continue;
+          const canonical=Array.isArray(data.originalAudienceItems)?data.originalAudienceItems.map(record).find(o=>o.proposalId===item.proposalId):undefined;
+          if(data.originalAudienceItems&&(!canonical||JSON.stringify(canonical.audienceTask)!==JSON.stringify(item.audienceTask)))throw new ConflictError("选题审读来源已被改写");
+          const key = `${taskId}#${assessment.success?str(item.proposalId):originalIndex}`;
           const receipt = await ports.createFromAIResult(
             ctx,
             {
               aiTaskId: key,
               resultType: "candidate",
               resultData: {
+                card:assessment.success?{audienceTask:assessment.data,oneLiner:assessment.data.job,targetAudience:assessment.data.audience,materialBasis:assessment.data.input,riskNote:assessment.data.costAndLimits,proposal:assessment.data.testPlan?.failureStory}:undefined,
                 title: str(item.title),
                 angle: str(item.angle),
                 source:

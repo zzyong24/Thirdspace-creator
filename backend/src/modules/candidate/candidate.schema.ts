@@ -11,7 +11,7 @@
 //       === patchCandidate.response === candidateResource
 //   - promoteCandidate.response === topicPromotionResource
 //   - listAudienceSignals.response === audienceSignalResource
-import { ENDPOINTS } from "@creatoros/contract";
+import { audienceTaskAssessment, ENDPOINTS } from "@creatoros/contract";
 import type {
   CandidateRow,
   AudienceSignalRow,
@@ -191,7 +191,9 @@ export function toCardDto(raw: unknown): CandidateCard {
     PRODUCTION_DIFFICULTY.has(c.productionDifficulty)
       ? (c.productionDifficulty as "low" | "mid" | "high")
       : null;
+  const task=audienceTaskAssessment.safeParse(c.audienceTask);
   return {
+    audienceTask:task.success?task.data:undefined,
     oneLiner: str(c.oneLiner),
     targetAudience: str(c.targetAudience),
     audiencePain: str(c.audiencePain),

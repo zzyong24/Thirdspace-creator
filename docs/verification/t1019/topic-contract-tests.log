@@ -1,0 +1,12 @@
+
+> @creatoros/contract@0.4.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/contract
+> vitest run tests/execution-topic-read.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/contract
+
+
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+   Start at  21:37:30
+   Duration  405ms (transform 135ms, setup 0ms, import 238ms, tests 12ms, environment 0ms)

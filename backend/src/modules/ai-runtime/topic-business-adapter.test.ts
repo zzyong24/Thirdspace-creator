@@ -248,3 +248,12 @@ it("T-957 助手给子任务的建议不冒充优先用户指令",async()=>{
  expect(prepared.facets.basisContext).toContain("助手建议（不是用户原话或已核实事实）");
  expect(prepared.facets.basisContext).not.toContain("本次生成指令");
 });
+
+it('普通对话选题默认消费账号网格，保留策略认可及独立材料范围',async()=>{
+ const {emptyTopicWorkspaceConfig}=await import('@creatoros/contract');
+ const context={version:2,positioningVersionId:'position',rejected:[],config:{...emptyTopicWorkspaceConfig(),audience:'已确认观众',editorialPolicy:'user_approved；认可策略，不认可所有候选'}};
+ const business=createChatBusinessGenerationPreparation({...base,topicWorkspace:{getContext:async()=>context},assertProject:async()=>{},readTrend:vi.fn()});
+ const prepared=await business.prepareTopic(ctx,{basis:'positioning'});
+ expect(JSON.parse(prepared.facets.audienceTaskContext!)).toEqual(context);
+ expect(prepared.facets.sourceReads).toBe('[]');
+});

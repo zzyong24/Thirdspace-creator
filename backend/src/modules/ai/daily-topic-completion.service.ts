@@ -1,3 +1,5 @@
+import { assessAudienceTask } from "../candidate";
+import { topicSourceRead } from "@creatoros/contract";
 import { z } from 'zod';
 import { and, eq, asc, aiTasks, aiTaskResults, executionTasks, executionCalls, type Db } from '@creatoros/backend';
 import type { RequestContext } from '@creatoros/contract';
@@ -95,11 +97,12 @@ export function createDailyTopicCompletionService(db: Db, deps: {
                 const structured = workerStructuredResultSchema.parse(JSON.parse(call.resultText));
                 if (structured.validation?.status === 'partial')
                     throw new ConflictError('每日选题结果尚未完整');
-                const topics = normalizeTopics(topicArraySchema.parse(structured.object).topics);
+                const topicFrozen=topicGenerateFrozenSchema.parse(JSON.parse(model.facets.__topicGenerate??'null'));
+                const topics = normalizeTopics(topicArraySchema.parse(structured.object).topics).map((topic,index)=>({...topic,index,audienceAssessment:topicFrozen.audienceTaskContext?assessAudienceTask(topic.audienceTask??{},topicFrozen.audienceTaskContext,stamp,z.array(topicSourceRead).parse((structured.object as {sourceReads?:unknown}).sourceReads??[])):undefined})).filter(t=>t.audienceAssessment?.route!=="unsuitable");
                 const scored = topics.map((topic, index) => { const baseScore = clamp(topic.predictedScore ?? 50); return { id: String(index), baseScore, adjustedScore: clamp(baseScore + computePreferenceAdjustment(`${topic.title} ${topic.angle}`, frozen.preferences, frozen.rankingNow)), topic }; });
                 const ranked = rankWithExploration(scored, { limit: Math.max(0, frozen.dailyLimit - count), explorationSlots: 1 });
                 for (const item of ranked) {
-                    const value = await p.createCandidate(context, { aiTaskId: `${business.id}#${item.id}`, resultType: 'candidate', resultData: { title: item.topic.title, angle: item.topic.angle, source: item.topic.source === 'benchmark' || item.topic.source === 'demand' ? item.topic.source : 'trend', predictedScore: item.adjustedScore } }, tx);
+                    const value = await p.createCandidate(context, { aiTaskId: `${business.id}#${item.id}`, resultType: 'candidate', resultData: { title: item.topic.title, angle: item.topic.angle, source: item.topic.source === 'benchmark' || item.topic.source === 'demand' ? item.topic.source : 'trend', predictedScore: item.adjustedScore,card:item.topic.audienceAssessment?{audienceTask:item.topic.audienceAssessment,oneLiner:item.topic.audienceAssessment.job,targetAudience:item.topic.audienceAssessment.audience}:undefined } }, tx);
                     ids.push(value.id);
                 }
                 usage = { totalTokens: calls.some(c => c.status === 'settled' && c.totalTokens === null) ? null : calls.reduce((n, c) => n + (c.totalTokens ?? 0), 0) };

@@ -1,3 +1,4 @@
+import { createTopicWorkspaceService, type TopicWorkspaceDeps } from "./topic-workspace.service";
 import type { RequestContext } from "@creatoros/contract";
 import {and,eq,gte,lt,sql,type Db} from "@creatoros/backend";
 import {candidates} from "./candidate.db-schema";
@@ -155,6 +156,7 @@ export interface CandidateOverviewPort {
 }
 
 export interface ServiceDeps {
+  topicWorkspace?: Pick<TopicWorkspaceDeps,"assertProject"|"currentPositioningVersion">;
   db: Db;
   now: () => string;
   nextId: (prefix: string) => string;
@@ -253,6 +255,7 @@ export interface CandidateAIResult {
     contentRole?: "traffic" | "trust" | "conversion" | null;
     productAnchorId?: string | null;
     predictedScore?: number | null;
+    card?: Partial<CandidateResource["card"]>;
   };
 }
 
@@ -276,6 +279,10 @@ export interface IngestSignalInput {
 }
 
 export interface CandidateService {
+  getTopicWorkspace: ReturnType<typeof createTopicWorkspaceService>["get"];
+  saveTopicWorkspace: ReturnType<typeof createTopicWorkspaceService>["save"];
+  getTopicRecommendationContext: ReturnType<typeof createTopicWorkspaceService>["recommendationContext"];
+  saveTopicProposalFeedback: ReturnType<typeof createTopicWorkspaceService>["feedback"];
   listCandidates(
     ctx: RequestContext,
     query: ListCandidatesQuery,
@@ -469,7 +476,12 @@ export function createCandidateService(deps: ServiceDeps): CandidateService {
     };
   }
 
+  const workspace = createTopicWorkspaceService({db:deps.db,now:deps.now,...deps.topicWorkspace});
   return {
+    getTopicWorkspace: workspace.get,
+    saveTopicWorkspace: workspace.save,
+    getTopicRecommendationContext: workspace.recommendationContext,
+    saveTopicProposalFeedback: workspace.feedback,
     async listCandidates(ctx, query) {
       // [T-216] sort=guardrail → 走护栏排序(rankTopicsWithGuardrails),复用 list seam 不新增 op。
       // 护栏只排 pool 候选,返回偏好注入后分序 + 探索位;RankedTopicResource 是 CandidateResource
@@ -576,6 +588,7 @@ export function createCandidateService(deps: ServiceDeps): CandidateService {
       //     source         → 来源标注(写进 brief 文本,便于追溯)
       const dto = toCandidateDto(cand);
       const card = dto.card;
+      if (card.audienceTask) await workspace.assertCurrent(ctx,card.audienceTask);
       // [T-284a] 复刻补链 G1:若被立项的候选带原爆款拆解要素(card.teardown,即 benchmark 复刻选题),
       //   把它复制进新 project 的 briefDetail.benchmarkRef —— 「这条复刻自某爆款,原爆款拆解在此」,
       //   供 creative-context 回流写稿。非 benchmark 候选(无 card.teardown)→ 不写(普通创作不携带、不污染)。
@@ -591,6 +604,11 @@ export function createCandidateService(deps: ServiceDeps): CandidateService {
         contentFormat: card.format,
         coreMessage: card.oneLiner ?? (dto.angle || undefined),
       };
+      if (card.audienceTask) {
+        briefDraft.targetAudience=card.audienceTask.audience;
+        briefDraft.coreMessage=card.audienceTask.job;
+        briefDraft.successCriteria=card.audienceTask.acceptance;
+      }
       if (card.teardown) {
         briefDraft.benchmarkRef = card.teardown;
       }
@@ -622,7 +640,7 @@ export function createCandidateService(deps: ServiceDeps): CandidateService {
       //    ProjectsService stamps ctx.userId + sets current_stage=brief internally.
       const project = await projects.createProject(ctx, {
         title: cand.title,
-        brief: briefText,
+        brief: [briefText,card.audienceTask ? `观众任务：${card.audienceTask.job}\n输入：${card.audienceTask.input}\n操作：${card.audienceTask.steps.join("；")}\n输出：${card.audienceTask.output}\n验收：${card.audienceTask.acceptance}\n入口：${card.audienceTask.entryUrl}\n限制：${card.audienceTask.costAndLimits}\n实测计划：${JSON.stringify(card.audienceTask.testPlan)}\n状态：${card.audienceTask.route}` : ""].filter(Boolean).join("\n"),
         briefDetail: briefDraft,
       });
       // 2. flip the candidate to promoted + 3. write the topic_promotions row.
@@ -643,6 +661,7 @@ export function createCandidateService(deps: ServiceDeps): CandidateService {
       // Idempotent on aiTaskId — confirmResult may retry; never duplicate.
       const existing = await repo.findCandidateByAiTaskId(result.aiTaskId);
       if (existing) return toCandidateDto(existing);
+      if (result.resultData.card?.audienceTask) await workspace.assertCurrent(ctx, result.resultData.card.audienceTask);
       const { resultData } = result;
       const angle = resultData.angle ?? "";
       const positioningFit = await fitFor(ctx, {
@@ -659,6 +678,7 @@ export function createCandidateService(deps: ServiceDeps): CandidateService {
         productAnchorId: resultData.productAnchorId ?? null,
         positioningFit,
         predictedScore: resultData.predictedScore ?? null,
+        card: resultData.card ? toCardDto(resultData.card) as unknown as Record<string,unknown> : undefined,
         aiTaskId: result.aiTaskId, // provenance; status stays 'pool' (no parallel machine)
       });
       return toCandidateDto(row);
@@ -672,6 +692,7 @@ export function createCandidateService(deps: ServiceDeps): CandidateService {
       const current = toCandidateDto(await repo.getCandidate(candidateId));
       const cleaned = toCardDto({
         ...card,
+        audienceTask: current.card.audienceTask,
         // AI 补全整卡不拥有来源证据；未显式带回时沿用领域中已经确认的真实来源。
         sourceReferences:
           (card as { sourceReferences?: unknown }).sourceReferences ??

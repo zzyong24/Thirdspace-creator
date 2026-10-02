@@ -53,6 +53,7 @@ function mergeEdit<T>(item: T, patch: Partial<T> | undefined): T {
  * 把改动并进 card 的 `edits`,采纳时和「删」走同一条 patch 落库。不传 = 该 node 只读(降级)。
  */
 export interface ItemEditor<T> {
+  taskId?: string;
   /** 把一个字段补丁并进本条的本地编辑态(浅合并,确定性,无副作用)。 */
   onEdit: (patch: Partial<T>) => void;
   /** 采纳进行中时为 true —— 编辑控件应 disabled,避免改了又被 patch 覆盖。 */
@@ -371,7 +372,8 @@ export function AdoptCandidateCard<T>({
                           i,
                           canEdit
                             ? {
-                                onEdit: (patch) =>
+                                taskId:taskId??undefined,
+                        onEdit: (patch) =>
                                   setEdits((prev) => {
                                     const next = new Map(prev);
                                     next.set(i, {

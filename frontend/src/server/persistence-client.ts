@@ -2529,6 +2529,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       const txProjects=createProjectsService(createProjectRepository(txDb),deps);
       const txPositioning=createPositioningService({db:txDb,...deps,projects:{getProjectSubject:async(context,id)=>{const row=await txProjects.getProjectOverviewCore(context,id);return {title:row.project.title,brief:row.project.brief};}}});
       return createCandidateService({db:txDb,...deps,
+        topicWorkspace:{assertProject:(context,id)=>txProjects.getProject(context,id),currentPositioningVersion:async context=>(await txPositioning.readPositioningCenter(context)).currentStatement?.id??null},
         projects:{createProject:(context,value)=>txProjects.createProject(context,value)},
         ingestion:{assertRunExists:async(context,id)=>{await ingestionService.getRun(context,id);}},
         positioning:{evaluateFit:async(context,subject)=>{
@@ -3477,6 +3478,7 @@ dispatchIntelligenceRun});
   // Clock/ids share the deterministic `deps` (createSeq keeps cand/sig/promo ids
   // collision-free across requests).
   const candidateService = createCandidateService({
+    topicWorkspace:{assertProject:(c,id)=>projectsService.getProject(c,id),currentPositioningVersion:async c=>(await positioningService.readPositioningCenter(c)).currentStatement?.id??null},
     db,
     now: deps.now,
     nextId: deps.nextId,
@@ -4659,6 +4661,7 @@ FAVORITES_PROMOTE_PER_RUN
   const collectionRunState=createCollectionRunStateService(db,{now:deps.now});
   const dailyTopicRunIntents=createDailyTopicRunIntentService(db,deps);
   const dailyTopicAdapter=createDailyTopicBusinessAdapter({
+        topicWorkspace:{getContext:(c,id)=>candidateService.getTopicRecommendationContext(c,id)},
         positioning: {
           getPositioningCenter: (c) =>
             positioningService.readPositioningCenter(c),
@@ -5714,6 +5717,7 @@ FAVORITES_PROMOTE_PER_RUN
   if(workerEntry){
     chatWorker=composeChatProduction(db,{
       entryPath:workerEntry,runtime:chatRuntime,now:deps.now,
+      topicWorkspace:{getContext:(c,id)=>candidateService.getTopicRecommendationContext(c,id)},
       assertProject:(c,id)=>projectsService.getProjectOverviewCore(c,id),
       resolveModelCredential:(c,capability)=>resolveModelSpec(c,capability),
       resolveFallbackModelCredential:resolveChatFallbackCredential,

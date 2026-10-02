@@ -171,6 +171,8 @@ export {
   audienceSignals,
   topicPromotions,
   topicPreferences,
+  topicWorkspaces,
+  topicProposalFeedback,
   CANDIDATE_DDL,
 } from "./schema/candidate";
 export {

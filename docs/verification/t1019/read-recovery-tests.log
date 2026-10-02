@@ -1,0 +1,12 @@
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> vitest run src/modules/execution/execution-topic-read.service.test.ts src/modules/candidate/topic-workspace.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+
+ Test Files  2 passed (2)
+      Tests  20 passed (20)
+   Start at  21:35:19
+   Duration  8.97s (transform 3.55s, setup 0ms, import 5.55s, tests 8.36s, environment 0ms)

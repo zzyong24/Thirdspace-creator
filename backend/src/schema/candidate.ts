@@ -1,4 +1,4 @@
-import { pgTable, text, integer, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, integer, jsonb, primaryKey } from "drizzle-orm/pg-core";
 
 // Candidate / AudienceSignal / TopicPromotion tables (七步整合设计 §5 — 选题情报层;
 // contract v0.4 resources/candidate.ts; SPEC §13 "选题候选 (candidate)" group). The
@@ -191,3 +191,11 @@ CREATE TABLE IF NOT EXISTS topic_preferences (
 CREATE UNIQUE INDEX IF NOT EXISTS ux_topic_preferences_identity_v2 ON topic_preferences (user_id, account_id, keyword, direction) NULLS NOT DISTINCT;
 CREATE INDEX IF NOT EXISTS ix_topic_preferences_user_status ON topic_preferences (user_id, status);
 `;
+
+// T-1019：显式用户配置；反馈保存真实任务结果，独立于采纳及发布表现。
+export const topicWorkspaces = pgTable("topic_workspaces", {
+ userId:text("user_id").notNull(),accountId:text("account_id").notNull(),version:integer("version").notNull(),config:jsonb("config").notNull(),receipts:jsonb("receipts").notNull().default({}),updatedAt:text("updated_at").notNull(),
+}, table=>[primaryKey({columns:[table.userId,table.accountId]})]);
+export const topicProposalFeedback = pgTable("topic_proposal_feedback", {
+ id:text("id").primaryKey(),userId:text("user_id").notNull(),accountId:text("account_id").notNull(),projectId:text("project_id"),taskId:text("task_id").notNull(),proposalId:text("proposal_id").notNull(),propositionKey:text("proposition_key").notNull(),title:text("title").notNull(),angle:text("angle").notNull(),reason:text("reason").notNull(),note:text("note").notNull(),positioningVersionId:text("positioning_version_id"),requestHash:text("request_hash").notNull(),createdAt:text("created_at").notNull(),
+});

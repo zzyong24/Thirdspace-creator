@@ -11,8 +11,8 @@ const url = z
     );
   }, "只支持无凭据的HTTP链接");
 export const topicReadTargetSchema = z.discriminatedUnion("kind", [
-  z.object({ kind: z.literal("search") }).strict(),
-  z.object({ kind: z.literal("source"), sourceId: id }).strict(),
+  z.object({ kind: z.literal("search"), query:z.string().trim().min(1).max(2000).optional(),allowPartial:z.boolean().optional() }).strict(),
+  z.object({ kind: z.literal("source"), sourceId: id,allowPartial:z.boolean().optional() }).strict(),
 ]);
 export const topicReadRequestSchema = z.discriminatedUnion("kind", [
   z

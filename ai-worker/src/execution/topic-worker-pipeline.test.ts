@@ -1,5 +1,6 @@
 import { beforeEach, describe, it, expect, vi } from "vitest";
 import { GenerationFailure } from "./generation-error";
+import { emptyTopicWorkspaceConfig } from "@creatoros/contract";
 import type { TopicGenerateFrozen } from "./topic-worker-input";
 const { node } = vi.hoisted(() => ({ node: vi.fn() }));
 vi.mock("../nodes/structured-node", () => ({ runStructuredNode: node }));
@@ -285,3 +286,19 @@ it('daily仍执行网页抽取再最终生成，保留评论与抽取事实',asy
 });
 
 it('每日quota跳过必须冻结实际达到配额的计数',async()=>{const {dailyTopicInputSchema}=await import('./topic-worker-input');const value={jobId:'j',jobRunId:'r',dayKey:'2026-09-05',dailyLimit:3,preferences:[],rankingNow:'2026-09-05T00:00:00.000Z',skipReason:'quota'};expect(()=>dailyTopicInputSchema.parse(value)).toThrow('实际已满计数');expect(()=>dailyTopicInputSchema.parse({...value,observedCount:2})).toThrow();expect(dailyTopicInputSchema.parse({...value,observedCount:3}).observedCount).toBe(3);});
+
+describe('观众任务规划与真实读取回执',()=>{
+ it('公开规划保留允许的格子，不暴露私有作者/来源；来源失败仍生成研究候选',async()=>{
+  const raw=input();
+  raw.audienceTaskContext={version:2,positioningVersionId:null,rejected:[],config:{...emptyTopicWorkspaceConfig(),audience:'小白',audienceGrid:[{id:'allowed',text:'把录屏变成教程',position:0,basis:'私人索引',version:2,evidence:'hypothesis',sourceRefs:['author'],publicQueryAllowed:true},{id:'private-cell',text:'私有业务内容',version:1,basis:'',evidence:'hypothesis',sourceRefs:[],publicQueryAllowed:false}],authorMaterials:[{id:'author',text:'秘密作者数据',sourceRef:'secret-path',projectId:null,contextRef:null,entryVerification:null,result:null}]}};
+  raw.trendSources=[{id:'denied',name:'受限源',url:'https://example.org',domain:'example.org',sourceType:'web'}];
+  node.mockImplementation(async(arg)=>({object:arg.template.id==='topic.query-plan'?{query:'录屏 教程 方法',rationale:'公开任务'}:{topics:[{title:'乱录屏变教程'}],sourceReads:[{id:'denied',status:'success'}]}}));
+  const read=vi.fn(async(target:TopicReadTarget):Promise<TopicReadData>=>target.kind==='source'?{kind:'error',code:'NEEDS_LOGIN'}:{kind:'search',results:[]});
+  const result=await runTopicWorkerPipeline(raw,deps(read));
+  const planner=node.mock.calls[0]![0].facets.publicTaskContext;
+  expect(planner).toContain('把录屏变成教程');
+  for(const secret of ['秘密作者数据','secret-path','私有业务内容','私人索引'])expect(planner).not.toContain(secret);
+  expect(read.mock.calls[0]![0]).toEqual({kind:'search',query:'录屏 教程 方法',allowPartial:true});
+  expect(result.object).toMatchObject({sourceReads:[{id:'denied',status:'permission_denied'},{id:'web-search',status:'partial'}]});
+ });
+});

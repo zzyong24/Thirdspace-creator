@@ -1,0 +1,12 @@
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> vitest run src/modules/candidate/topic-workspace.test.ts src/modules/candidate/audience-task-assessment.test.ts src/modules/ai-runtime/topic-business-adapter.test.ts src/modules/ai-runtime/effective-skill-snapshot.test.ts src/modules/ai/daily-topic-completion.service.test.ts src/modules/execution/execution-topic-read.service.test.ts src/modules/intelligence/rewrite-only.integration.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+
+ Test Files  7 passed (7)
+      Tests  58 passed (58)
+   Start at  21:33:17
+   Duration  14.61s (transform 14.75s, setup 0ms, import 29.19s, tests 27.32s, environment 1ms)

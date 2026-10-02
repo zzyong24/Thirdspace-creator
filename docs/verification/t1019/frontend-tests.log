@@ -1,0 +1,20 @@
+
+> creatoros-frontend@1.2.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+> vitest run src/features/topics/audience-task-workspace.test.tsx src/features/topics/topics-interactions.test.tsx src/features/intelligence/use-topic-preview.test.tsx src/features/intelligence/topic-candidate-editor.test.tsx --retry=0
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+
+(node:19327) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:19324) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:19326) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:19325) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+ Test Files  4 passed (4)
+      Tests  33 passed (33)
+   Start at  21:05:11
+   Duration  6.18s (transform 4.18s, setup 772ms, import 6.13s, tests 906ms, environment 2.43s)

@@ -101,8 +101,8 @@ function deps(
 }
 
 describe("[T-513] requiredSkillIdsForTask 确定性注册表", () => {
-  it("热点选题冻结出题与信源抽取两个Skill，普通出题保持单Skill",()=>{
-    expect(requiredSkillIdsForTask("topic.generate",{basis:"trend"})).toEqual(["topic.generate","trend.extract"]);
+  it("热点选题冻结出题、任务规划与信源抽取三个Skill，普通出题保持单Skill",()=>{
+    expect(requiredSkillIdsForTask("topic.generate",{basis:"trend"})).toEqual(["topic.generate","topic.query-plan","trend.extract"]);
     expect(requiredSkillIdsForTask("topic.generate",{basis:"positioning"})).toEqual(["topic.generate"]);
   });
   it("同名、别名、video/chat 受控输入与非 Skill task 映射固定", () => {
@@ -189,6 +189,7 @@ describe("[T-513] requiredSkillIdsForTask 确定性注册表", () => {
     ]);
     expect(requiredSkillIdsForTask("scheduled.topic.daily", {})).toEqual([
       "topic.generate",
+      "topic.query-plan",
       "trend.extract",
     ]);
     expect(requiredSkillIdsForTask("scheduled.favorites", {})).toEqual([
@@ -236,10 +237,10 @@ describe("[T-513] requiredSkillIdsForTask 确定性注册表", () => {
   });
 
   it("执行节点和聊天纯方法共同覆盖 official registry，纯方法不冒充独立任务", () => {
-    for (const skillId of [...CHAT_METHOD_SKILL_IDS, "research.plan"]) {
+    for (const skillId of [...CHAT_METHOD_SKILL_IDS, "research.plan", "topic.query-plan"]) {
       expect(() => requiredSkillIdsForTask(skillId, {})).toThrow("SKILL_TASK_MAPPING_MISSING");
     }
-    expect([...REGISTERED_SKILL_TASK_TYPES, ...CHAT_METHOD_SKILL_IDS, "research.plan"].sort()).toEqual(
+    expect([...REGISTERED_SKILL_TASK_TYPES, ...CHAT_METHOD_SKILL_IDS, "research.plan", "topic.query-plan"].sort()).toEqual(
       listOfficialSkillBases()
         .map((base) => base.skillId)
         .sort(),

@@ -465,3 +465,18 @@ it('每日搜读必须验证同一真实调度运行，普通定位任务不能�
  const rejecting=createExecutionTopicReadService(db,{now,budget,buildTrendQuery:s=>s,async validateDailyRun(){throw new Error('运行已取消');}});
  await expect(rejecting.startTopicRead(f.ref,{callId:reserved.callId})).rejects.toThrow('运行已取消');
 });
+
+it('公开模型查询冻入同一租约调用，恢复后读取原目标，不允许换查询',async()=>{
+ const {emptyTopicWorkspaceConfig}=await import('@creatoros/contract');
+ const f=await fixture('planned-query');
+ const model=f.payload.modelInput as {facets:Record<string,string>};
+ model.facets.__topicGenerate=JSON.stringify({...JSON.parse(model.facets.__topicGenerate!),audienceTaskContext:{version:1,positioningVersionId:null,config:emptyTopicWorkspaceConfig(),rejected:[]}});
+ await db.update(executionTasks).set({payload:f.payload}).where(eq(executionTasks.id,f.ref.executionTaskId));
+ const planned={kind:'search',query:'录屏教程 中文字幕',allowPartial:true};
+ const a=await f.service.reserveTopicRead(f.ref,{target:planned});
+ expect(a.request).toMatchObject({kind:'search',query:planned.query});
+ await f.service.startTopicRead(f.ref,{callId:a.callId});
+ await f.service.settleTopicRead(f.ref,{callId:a.callId,receipt:{kind:'search',status:'ok',data:{results:[]}}});
+ expect((await f.service.reserveTopicRead(f.ref,{target:planned})).callId).toBe(a.callId);
+ await expect(f.service.reserveTopicRead(f.ref,{target:{...planned,query:'换题'}})).rejects.toThrow();
+});

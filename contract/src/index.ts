@@ -284,3 +284,5 @@ export { onboardingStepKey, onboardingPatchResource, onboardingStateResource, ty
 
 export { dailyReportQuery, type DailyReportQuery } from "./pages/daily-report";
 export {dailyReportAnalysis,type DailyReportAnalysis} from "./pages/daily-report-analysis";
+
+export * from "./resources/audience-task";

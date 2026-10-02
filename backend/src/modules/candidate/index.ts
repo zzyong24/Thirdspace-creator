@@ -79,3 +79,6 @@ export {
 export {countCandidatesForDay} from "./candidate.service";
 
 export {lockCandidateSupply} from "./candidate-supply-lock";
+
+export { assessAudienceTask } from "./audience-task-assessment";
+export { createTopicWorkspaceService } from "./topic-workspace.service";

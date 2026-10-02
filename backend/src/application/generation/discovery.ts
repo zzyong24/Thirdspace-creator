@@ -15,7 +15,7 @@ import type {createStructuredBusinessExecutionService} from "../../modules/ai-ru
 /** 固定业务能力注册；冻结上下文、候选投影与原执行服务保持一致。 */
 export function createDiscoveryBusinessAdapters(ports:{
 projectsService: Pick<ReturnType<typeof import("../../modules/projects").createProjectsService>,"getProject">;
-candidateService: Pick<ReturnType<typeof import("../../modules/candidate").createCandidateService>,"listDropReasons" | "getCandidate">;
+candidateService: Pick<ReturnType<typeof import("../../modules/candidate").createCandidateService>,"listDropReasons" | "getCandidate" | "getTopicRecommendationContext">;
 trendSourcesService: Pick<ReturnType<typeof import("../../modules/trend-sources").createTrendSourcesService>,"listEnabledSources">;
 deps: {now:()=>string};
 aiService: ReturnType<typeof import("../../modules/ai").createAiService>;
@@ -36,7 +36,7 @@ return {
 "cover.generate":createCoverBusinessAdapter({...resolveContextDeps(COVER_BRIEF_TEMPLATE.contextRequirements,makeGenerationReaders().contextReaderRegistry),positioning:generationContext.positioning}),
 "copilot.assist":createCopilotBusinessAdapter({ai:aiService,positioning:generationContext.positioning,learnings:generationContext.learnings,async assertProject(c,id){await projectsService.getProject(c,id);}}),
 "scheduled.topic.daily":dailyTopicAdapter,
-"topic.generate":createTopicGenerateBusinessAdapter({...resolveContextDeps(TOPIC_GENERATE_TEMPLATE.contextRequirements,makeGenerationReaders().contextReaderRegistry),...generationContext,signals:makeGenerationReaders().signalsReader,knowledge:makeGenerationReaders().knowledgeReader,sourceReader:{listEnabledSources:(c)=>trendSourcesService.listEnabledSources(c)},now:deps.now,async assertProject(c,id){await projectsService.getProject(c,id);}}),
+"topic.generate":createTopicGenerateBusinessAdapter({topicWorkspace:{getContext:(c,id)=>candidateService.getTopicRecommendationContext(c,id)},...resolveContextDeps(TOPIC_GENERATE_TEMPLATE.contextRequirements,makeGenerationReaders().contextReaderRegistry),...generationContext,signals:makeGenerationReaders().signalsReader,knowledge:makeGenerationReaders().knowledgeReader,sourceReader:{listEnabledSources:(c)=>trendSourcesService.listEnabledSources(c)},now:deps.now,async assertProject(c,id){await projectsService.getProject(c,id);}}),
 "research.gather_material":createResearchGatherBusinessAdapter({positioning:generationContext.positioning,projectMaterials:makeProjectMaterialsReader(),async assertProject(c,id){await projectsService.getProject(c,id);}}),
 "calibration.diagnose":createCalibrationDiagnoseBusinessAdapter({...generationContext,...calibrationDiagnoseReaders}),
 "calibration.score":createCalibrationScoreBusinessAdapter({...generationContext,...calibrationScoreReaders}),

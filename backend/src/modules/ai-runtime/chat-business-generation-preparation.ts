@@ -24,7 +24,7 @@ export function createChatBusinessGenerationPreparation(deps:TopicGeneratePrepar
    }
    signal?.throwIfAborted();
    brief=[brief,args.extraBrief?`【助手建议（不是用户原话或已核实事实）】\n${args.extraBrief}`:""].filter(Boolean).join("\n");
-   return {facets:topicFacets(frozen.context.positioningBrief,args.basis,brief,args.basis==="knowledge"?undefined:frozen.context.knowledgeBrief||undefined,frozen.context.learningsBrief||undefined,renderSignalQualityBrief({...frozen.qualityProfile,trend})),trendNote};
+   return {facets:{audienceTaskContext:frozen.audienceTaskContext?JSON.stringify(frozen.audienceTaskContext):"",sourceReads:"[]",...topicFacets(frozen.context.positioningBrief,args.basis,brief,args.basis==="knowledge"?undefined:frozen.context.knowledgeBrief||undefined,frozen.context.learningsBrief||undefined,renderSignalQualityBrief({...frozen.qualityProfile,trend}))},trendNote};
   },
   async prepareReview(context,input,signal){
    const owner=structuredClone(context),args=structuredClone(input);

@@ -121,7 +121,7 @@ const TASK_ALIASES: Readonly<Record<string, readonly string[]>> = {
   // T-600 后 self.metrics 委托 canonical self.detail collector，必须冻结同一归因 Skill；
   // 否则采集主体成功、尾部 topic attribution 全部报 snapshot incomplete。
   "scheduled.self.metrics": ["topic.attribution"],
-  "scheduled.topic.daily": ["topic.generate", "trend.extract"],
+  "scheduled.topic.daily": ["topic.generate", "topic.query-plan", "trend.extract"],
 };
 const NON_SKILL_TASK_TYPES = new Set([
   "scheduled.self.traffic",
@@ -188,7 +188,7 @@ export function requiredSkillIdsForTask(
   taskType: string,
   inputData: Readonly<Record<string, unknown>>,
 ): readonly string[] {
-  if (taskType === "topic.generate" && inputData.basis === "trend") return ["topic.generate", "trend.extract"];
+  if (taskType === "topic.generate" && inputData.basis === "trend") return ["topic.generate", "topic.query-plan", "trend.extract"];
   if (taskType === "script.draft") {
     return [
       "script.draft",

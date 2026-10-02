@@ -1,0 +1,114 @@
+
+> @creatoros/contract@0.4.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/contract
+> vitest run
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/contract
+
+ ❯ tests/chat-worker.test.ts (14 tests | 1 failed) 16ms
+   × cover.generate 不能冒充已迁移的事务工具 5ms
+ ❯ tests/modules/assets.test.ts (3 tests | 1 failed) 9ms
+     × parses an Asset resource 6ms
+ ❯ tests/registry.test.ts (3 tests | 1 failed) 42ms
+     × registers no routes outside SPEC §13 7ms
+ ❯ tests/cli-policy.test.ts (4 tests | 1 failed) 38ms
+     × 穷尽覆盖且只覆盖全部正式 operation 11ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/chat-worker.test.ts > cover.generate 不能冒充已迁移的事务工具
+AssertionError: expected 'cover.generate' to be null
+
+- Expected:
+null
+
++ Received:
+"cover.generate"
+
+ ❯ tests/chat-worker.test.ts:44:38
+     42| });
+     43| it.each(["asset.generate","cover.generate","arbitrary.task","__proto__…
+     44|  expect(chatSubmittedTaskType(name)).toBeNull();
+       |                                      ^
+     45|  expect(chatWorkerInputSchema.safeParse({...input,tools:[{name,version…
+     46| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  tests/cli-policy.test.ts > T-843 CLI operation policy > 穷尽覆盖且只覆盖全部正式 operation
+AssertionError: expected [ 'projects.list', …(260) ] to have a length of 255 but got 261
+
+- Expected
++ Received
+
+- 255
++ 261
+
+ ❯ tests/cli-policy.test.ts:10:49
+      8|       Object.values(ENDPOINTS).map((endpoint) => endpoint.id).sort(),
+      9|     );
+     10|     expect(Object.keys(CLI_OPERATION_POLICIES)).toHaveLength(255);
+       |                                                 ^
+     11|   });
+     12|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  tests/registry.test.ts > endpoint registry > registers no routes outside SPEC §13
+AssertionError: unexpected: PUT /outputs/:outputId/production/editing-plan/broll/remove, POST /intelligence/projects/enqueue, GET /settings/onboarding/:accountId, PATCH /settings/onboarding/:accountId, GET /settings/redfox, PUT /settings/redfox, DELETE /settings/redfox, GET /analytics/daily-report: expected [ …(8) ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   "PUT /outputs/:outputId/production/editing-plan/broll/remove",
++   "POST /intelligence/projects/enqueue",
++   "GET /settings/onboarding/:accountId",
++   "PATCH /settings/onboarding/:accountId",
++   "GET /settings/redfox",
++   "PUT /settings/redfox",
++   "DELETE /settings/redfox",
++   "GET /analytics/daily-report",
++ ]
+
+ ❯ tests/registry.test.ts:320:54
+    318|     const allowed = new Set(SPEC_13.map(([m, p]) => `${m} ${p}`));
+    319|     const extra = registered.filter((r) => !allowed.has(r));
+    320|     expect(extra, `unexpected: ${extra.join(", ")}`).toEqual([]);
+       |                                                      ^
+    321|   });
+    322|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  tests/modules/assets.test.ts > assets contract > parses an Asset resource
+ZodError: [
+  {
+    "expected": "string",
+    "code": "invalid_type",
+    "path": [
+      "sourceUrl"
+    ],
+    "message": "Invalid input: expected string, received undefined"
+  }
+]
+ ❯ tests/modules/assets.test.ts:7:29
+      5| describe("assets contract", () => {
+      6|   it("parses an Asset resource", () => {
+      7|     const a = assetResource.parse({
+       |                             ^
+      8|       id: "asset-poster-ainativebrowser",
+      9|       userId: "user-zyongzhu",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  4 failed | 35 passed (39)
+      Tests  4 failed | 233 passed (237)
+   Start at  21:34:04
+   Duration  2.54s (transform 4.85s, setup 0ms, import 15.13s, tests 838ms, environment 4ms)
+
+/Users/zyongzhu/Workbase/Thirdspace-creator/contract:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @creatoros/contract@0.4.0 test: `vitest run`
+Exit status 1

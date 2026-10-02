@@ -7,9 +7,13 @@ describe("T-843 CLI operation policy", () => {
     expect(Object.keys(CLI_OPERATION_POLICIES).sort()).toEqual(
       Object.values(ENDPOINTS).map((endpoint) => endpoint.id).sort(),
     );
-    expect(Object.keys(CLI_OPERATION_POLICIES)).toHaveLength(252);
+    expect(Object.keys(CLI_OPERATION_POLICIES)).toHaveLength(255);
   });
 
+  it('观众任务三操作有对应读写策略',()=>{
+    expect(CLI_OPERATION_POLICIES['topics.workspace.get'].effect).toBe('read');
+    for(const id of ['topics.workspace.save','topics.proposals.feedback'] as const)expect(CLI_OPERATION_POLICIES[id]).toMatchObject({effect:'write',idempotency:'native'});
+  });
   it("每项都有服务端可信的执行元数据", () => {
     for (const policy of Object.values(CLI_OPERATION_POLICIES)) {
       expect(["read", "write", "destructive", "external"]).toContain(policy.effect);

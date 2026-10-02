@@ -8,7 +8,7 @@ import {
   workerPortSchema,
   workerPortInputSchemas,
 } from "../src/internal/execution-worker";
-it("热点端口仅允许冻结目标和两次ordinal，拒绝Worker自报query/url/归属", () => {
+it("热点端口仅允许冻结目标和两次ordinal，查询仅接受有界公开计划，拒绝URL/归属注入", () => {
   for (const name of Object.keys(topicReadPortInputSchemas))
     expect(workerPortSchema.parse(name)).toBe(name);
   expect(
@@ -16,8 +16,9 @@ it("热点端口仅允许冻结目标和两次ordinal，拒绝Worker自报query/
       target: { kind: "search" },
     }),
   ).toEqual({ target: { kind: "search" }, ordinal: 1 });
+  expect(workerPortInputSchemas.reserveTopicRead.parse({target:{kind:"search",query:"录屏教程",allowPartial:true}})).toMatchObject({target:{query:"录屏教程",allowPartial:true}});
   for (const raw of [
-    { target: { kind: "search", query: "forged" } },
+    { target: { kind: "search", query: "x".repeat(2001) } },
     { target: { kind: "source", sourceId: "a" }, url: "https://evil.com" },
     { target: { kind: "search" }, ordinal: 3 },
     { target: { kind: "search" }, userId: "other" },

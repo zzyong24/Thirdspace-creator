@@ -1,3 +1,4 @@
+import { audienceTaskAssessment } from "./audience-task";
 import { z } from "zod";
 import {
   id,
@@ -69,6 +70,7 @@ export type AdaptedDraftCandidate = z.infer<typeof adaptedDraftCandidate>;
 // topic.enrich task formalizes it. EVERY field is optional/default so a bare `{}` is a
 // valid card (待评估), and the editable patch only sets the fields the user touches.
 export const candidateCard = z.object({
+  audienceTask: audienceTaskAssessment.optional(),
   // 详情
   oneLiner: z.string().optional(), // 一句话选题
   targetAudience: z.string().optional(), // 目标观众
