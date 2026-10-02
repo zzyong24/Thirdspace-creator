@@ -1,6 +1,6 @@
 # T-1048 连续组图与画布衔接验收
 
-2026-10-03，开发树 `codex/user-diagnostics`。已集成主工作台、后端候选与版本服务、Worker 和现有画布；代码回归与隔离桌面前端生产构建通过。**任务仍进行中，真实出图、真实界面和安装版尚未验收。** 不把组件图片 fixture 或构建产物当作供应商图片和用户操作证据。
+2026-10-03，开发树 `codex/user-diagnostics`，实现提交 `1932e30d`。已集成主工作台、后端候选与版本服务、Worker 和现有画布；代码回归与隔离桌面前端生产构建通过。**任务仍进行中，真实出图、真实界面和安装版尚未验收。** 不把组件图片 fixture 或构建产物当作供应商图片和用户操作证据。
 
 用户先完成内容，再规划有序页面。可以使用原照片，也可以生成所选页；共享方向和参考是可选设置。选中页可进现有画布，确认图片后明确采用回原页。快图保留为单页细调。最后按真实页序核对图片、首图、配文与标签并导出。
 
@@ -57,7 +57,7 @@ flowchart LR
 - boundary 7 条，相对登记基线 5 新增两条既有 Copilot SDK import，T-1026 跟踪；未提高基线：[日志](../research/evidence/t1048/boundary.log)。
 - semantic boundary：既有 video-decisions-runner 未调用 material.match，T-1027 跟踪：[日志](../research/evidence/t1048/semantic-boundary.log)。
 - orphan：0 errors、100 warnings，保留既有 PLANNED 与未追踪提示：[日志](../research/evidence/t1048/orphan.log)。
-- 已运行 pmem sync；最终全仓 reconcile 原始结果保存在 [日志](../research/evidence/t1048/root-reconcile-final.log)，全局欠债由 T-916 跟踪，不宣称全绿。
+- 已运行 pmem sync；最终全仓 reconcile exit 1，35 errors / 1 warning，与此前登记的数量一致；检查未报告 T-1048 评审失效。原始结果保存在 [日志](../research/evidence/t1048/root-reconcile-final.log)，全局欠债由 T-916 跟踪，不宣称全绿。
 
 ## 源码范围与未完成验收
 

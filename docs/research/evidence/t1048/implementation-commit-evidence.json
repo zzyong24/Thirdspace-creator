@@ -1,0 +1,18 @@
+{
+  "implementationCommit": "1932e30d535fe38d45654a1346b9ae3b93ec107c",
+  "selectedImplementationHashFile": "implementation-file-hashes.json",
+  "sourceCommitIsCompleteStandaloneBaseline": false,
+  "reconcileExitCode": 1,
+  "reconcileErrors": 35,
+  "reconcileWarnings": 1,
+  "reconcileLogSHA256": "68f29b498b1cf7112b0f23f2e62badfac4d88207990a0865bf2e6d1dac70cb2a",
+  "unfinishedAcceptance": [
+    "真实图片模型三页生成与单页重做",
+    "真实界面与两种视口",
+    "画布真机采用与返回",
+    "整组实际导出",
+    "正式前端回执",
+    "完整安装包验收"
+  ],
+  "taskState": "仍由 BACKLOG 与 taskctl 管理，本证据不改变任务状态"
+}
