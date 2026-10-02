@@ -1,0 +1,11 @@
+{
+  "repository": "https://github.com/JimLiu/baoyu-skills",
+  "commit": "1567581c26ec29f4216c6e6835415bf30343b0e3",
+  "license": "MIT",
+  "files": {
+    "upstream/SKILL.md": "17bf5498641cc60cb98f0cc15fbea27fd42777d119a39fb54fd6418840442bba",
+    "upstream/references/workflows/outline-template.md": "ad140ce299bf611d074a67cab4bc0e82f350b21d4c9b7d880605926b3ad6a020",
+    "LICENSE": "601839401f6ce68b7a8aec0f7ba247ab8ef0848113378220bec4b2615cc84ee7"
+  },
+  "adapter": "method.ts：仅复用逐页规划、共享视觉方向、首图参考与局部重做方法；不执行上游脚本、CLI或模型路由；不套关键词风格、固定页数/平台限制，参考确认可选，用户文字可编辑；通过原可配置Skill模板进入现有受控模型执行。"
+}

@@ -7,16 +7,18 @@ import {replayStructuredGeneration,generationRequestDigest,type GenerationReplay
 import {providerIdentityFor,structuredModeForIdentity} from "@creatoros/ai-worker/model-identity";
 import {getTemplate,runWithEffectiveSkillSnapshot,type CoverBriefOutput} from "@creatoros/ai-worker";
 import {projectCoverPlan,type CoverContext} from "@creatoros/ai-worker/cover";
+import {projectGraphicCardPlan} from "@creatoros/ai-worker/graphic-card-plan";
 import {canonicalJson} from "../ai/canonical-json";
 import {createExecutionLeaseService} from "./execution-lease.service";
 import {createExecutionCallLedgerService} from "./execution-call-ledger.service";
 import {executionModelIdentitySchema} from "./execution-model-identity.service";
 import {bindCoverExecution,readCoverImageBinding,type CoverScope} from "./cover-execution-binding";
+import {supportsAssetGenerationMode,referenceImageAllowed,assetGenerationParameterError} from "../ai-runtime/asset-generation-modes";
 import {ConflictError} from "./execution.errors";
 type Call=typeof executionCalls.$inferSelect;
 export interface CoverExecutionPorts {
  resolveImageSpec(ctx:RequestContext,capability:"image.generate"|"image.edit",taskId:string):Promise<unknown>;
- getReferenceBytes(ctx:RequestContext,assetId:string):Promise<{bytes:Uint8Array;mimeType:string}|null>;
+ getReferenceBytes(ctx:RequestContext,assetId:string,assetFileId?:string):Promise<{bytes:Uint8Array;mimeType:string}|null>;
 }
 /** 原模型回执只读回放确定图片输入；无模型请求、无第二账本。 */
 export function createExecutionCoverService(db:Db,deps:Parameters<typeof createExecutionCallLedgerService>[1]&CoverExecutionPorts){
@@ -49,7 +51,7 @@ export function createExecutionCoverService(db:Db,deps:Parameters<typeof createE
  async function replay(rawIdentity:unknown,input:Awaited<ReturnType<typeof bindCoverExecution>>["input"],rows:Call[],signal?:AbortSignal){
   const identity=executionModelIdentitySchema.parse(rawIdentity);
   if(identity.capability!==input.capability)throw new ConflictError("封面模型身份与冻结能力不符");
-  return runWithEffectiveSkillSnapshot(input.skillSnapshot,()=>replayStructuredGeneration<CoverBriefOutput>({...providerIdentityFor(identity),structuredOutputMode:structuredModeForIdentity(identity),receipts:receipts(rows),signal},{template:getTemplate("cover.brief"),facets:input.facets,maxOutputTokens:input.maxOutputTokens,timeoutMs:input.timeoutMs}));
+  return runWithEffectiveSkillSnapshot(input.skillSnapshot,()=>replayStructuredGeneration<CoverBriefOutput>({...providerIdentityFor(identity),structuredOutputMode:structuredModeForIdentity(identity),receipts:receipts(rows),signal},{template:getTemplate(input.skillId),facets:input.facets,maxOutputTokens:input.maxOutputTokens,timeoutMs:input.timeoutMs}));
  }
  const service={
   async reserveModel(ref:ExecutionRef,raw:unknown,signal?:AbortSignal){
@@ -92,18 +94,32 @@ export function createExecutionCoverService(db:Db,deps:Parameters<typeof createE
    const result=await replay(initial.payload.modelIdentity,initial.input,models,signal);
    if(result.status==="next-request")return {status:"pending" as const};
    if(result.status!=="complete")throw new ConflictError("封面文案尚未完成，不能准备图片");
-   const source=JSON.parse(initial.input.facets.__coverContext??"null") as {context:CoverContext;visualRequirements:string;referenceAssetId:string|null};
+   const source=JSON.parse(initial.input.facets.__coverContext??"null") as {context:CoverContext;visualRequirements:string;referenceAssetId:string|null;referenceFileId?:string;referenceChecksum?:string;aspectRatio?:string};
    if(!source?.context?.topic)throw new ConflictError("封面原上下文缺失");
-   const resultData=projectCoverPlan(result.value.object,source.context,source.visualRequirements);
-   let reference:{assetId:string;checksum:string;mimeType:string}|null=null;
+   const resultData=initial.input.skillId==="graphic.card-brief"
+    ? projectGraphicCardPlan(result.value.object,source.context,source.visualRequirements,{aspectRatio:source.aspectRatio})
+    : projectCoverPlan(result.value.object,source.context,source.visualRequirements);
+   let reference:{assetId:string;assetFileId?:string;checksum:string;mimeType:string}|null=null;
+   let referenceBytes:Uint8Array|undefined;
    if(source.referenceAssetId){
-    const value=await deps.getReferenceBytes(initial.context,source.referenceAssetId).catch(()=>null);signal?.throwIfAborted();
-    if(value?.bytes.byteLength)reference={assetId:source.referenceAssetId,checksum:createHash("sha256").update(value.bytes).digest("hex"),mimeType:value.mimeType};
+    const read=()=>deps.getReferenceBytes(initial.context,source.referenceAssetId!,source.referenceFileId);
+    // Explicit immutable references may not silently fall back. Legacy cover references retain their established safe output path.
+    const value=source.referenceFileId?await read():await read().catch(()=>null);signal?.throwIfAborted();
+    if(value?.bytes.byteLength){
+      const checksum=createHash("sha256").update(value.bytes).digest("hex");
+      if(source.referenceChecksum&&checksum!==source.referenceChecksum)throw new ConflictError("统一参考的精确文件校验已变化，请重新选择参考");
+      referenceBytes=value.bytes;
+      reference={assetId:source.referenceAssetId,...(source.referenceFileId?{assetFileId:source.referenceFileId}:{}),checksum,mimeType:value.mimeType};
+    }else if(source.referenceFileId)throw new ConflictError("统一参考的精确文件无法读取，可明确取消参考后重试文生图");
    }
    const capability=reference?"image.edit":"image.generate",credential=assetCredentialSchema.parse(await deps.resolveImageSpec(initial.context,capability,initial.business.id));signal?.throwIfAborted();
    const {token:_token,provider,model,baseUrl,serviceId,kind,...options}=credential;
    if(kind!=="image")throw new ConflictError("封面图片能力配置错误");
-   const value=coverImagePreparationSchema.parse({input:{kind:"asset.generate",operationKey:`${initial.input.operationKey}/image`,mediaKind:"image",capability,prompt:resultData.prompt,...(resultData.aspectRatio?{aspectRatio:resultData.aspectRatio}:{}),provider,model,baseUrl,...(serviceId?{serviceId}:{}),runtimeOptionsDigest:`sha256:${createHash("sha256").update(canonicalJson(assetRuntimeOptionsSchema.parse(options))).digest("hex")}`},reference,resultData:{...resultData,referenceImage:{requestedAssetId:source.referenceAssetId,status:source.referenceAssetId?(reference?"used":"not_used"):"not_requested",used:Boolean(reference)}}});
+   if(source.referenceFileId){
+     if(!supportsAssetGenerationMode(credential,"image_to_image")||!reference||!referenceBytes||!referenceImageAllowed(credential,"image_to_image",reference.mimeType,referenceBytes))throw new ConflictError("当前图片模型不支持这份参考图片，可明确取消参考后文生图");
+   }
+   if(source.aspectRatio){const issue=assetGenerationParameterError(credential,reference?"image_to_image":"text_to_image",{prompt:resultData.prompt,aspectRatio:source.aspectRatio});if(issue)throw new ConflictError(issue);}
+   const value=coverImagePreparationSchema.parse({input:{kind:"asset.generate",operationKey:`${initial.input.operationKey}/image`,mediaKind:"image",capability,prompt:resultData.prompt,...("aspectRatio" in resultData && resultData.aspectRatio?{aspectRatio:resultData.aspectRatio}:{}),provider,model,baseUrl,...(serviceId?{serviceId}:{}),runtimeOptionsDigest:`sha256:${createHash("sha256").update(canonicalJson(assetRuntimeOptionsSchema.parse(options))).digest("hex")}`},reference,resultData:{...resultData,referenceImage:{requestedAssetId:source.referenceAssetId,...(source.referenceFileId?{requestedAssetFileId:source.referenceFileId}:{}),status:source.referenceAssetId?(reference?"used":"not_used"):"not_requested",used:Boolean(reference)}}});
    return access(ref,"admission",async(scope,state,rows)=>{
     signal?.throwIfAborted();if(state.payload.coverImage){const saved=await readCoverImageBinding(scope);return {status:"prepared" as const,value:coverImagePreparationSchema.parse({input:saved.input,reference:saved.reference,resultData:saved.resultData})};}
     if(state.sourceDigest!==initial.sourceDigest||!isDeepStrictEqual(rows,initial.rows))throw new ConflictError("封面准备期间原调用改变");
@@ -113,7 +129,7 @@ export function createExecutionCoverService(db:Db,deps:Parameters<typeof createE
   async resolveCredential(ctx:RequestContext,owner:{aiTaskId:string;executionTaskId:string}){
    const [business]=await db.select().from(aiTasks).where(and(eq(aiTasks.id,owner.aiTaskId),eq(aiTasks.executionTaskId,owner.executionTaskId),eq(aiTasks.userId,ctx.userId),eq(aiTasks.accountId,ctx.accountId??"")));
    const [execution]=await db.select().from(executionTasks).where(and(eq(executionTasks.id,owner.executionTaskId),eq(executionTasks.ownerId,owner.aiTaskId),eq(executionTasks.userId,ctx.userId),eq(executionTasks.accountId,ctx.accountId??"")));
-   if(business?.taskType!=="cover.generate"||!execution)throw new ConflictError("封面图片任务不存在");
+   if(!business||!["cover.generate","graphic.card.generate"].includes(business.taskType)||!execution)throw new ConflictError("图片任务不存在");
    const image=coverImagePreparationSchema.parse((execution.payload as {coverImage?:{value?:unknown}}).coverImage?.value);
    return deps.resolveImageSpec(ctx,image.reference?"image.edit":"image.generate",business.id);
   },
@@ -121,7 +137,7 @@ export function createExecutionCoverService(db:Db,deps:Parameters<typeof createE
    const {callId}=workerPortInputSchemas.readCoverReference.parse(raw);
    const state=await access(ref,"admission",async(scope,_state,rows)=>{const prepared=await readCoverImageBinding(scope);const row=rows.find(row=>row.id===callId);if(!row||row.operationKey!==prepared.input.operationKey||row.inputDigest!==`sha256:${createHash("sha256").update(canonicalJson(prepared.input)).digest("hex")}`)throw new ConflictError("参考图不属于原图片调用");return {...prepared,context:scope.context};});
    if(!state.reference)return null;
-   const value=await deps.getReferenceBytes(state.context,state.reference.assetId);signal?.throwIfAborted();
+   const value=await deps.getReferenceBytes(state.context,state.reference.assetId,state.reference.assetFileId);signal?.throwIfAborted();
    if(!value||value.mimeType!==state.reference.mimeType||createHash("sha256").update(value.bytes).digest("hex")!==state.reference.checksum)throw new ConflictError("参考图已变化或无法读取，不能偷偷更换图片输入");
    return value;
   },

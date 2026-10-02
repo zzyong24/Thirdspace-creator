@@ -1,0 +1,124 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/frontend
+
+(node:78865) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ src/features/creative-canvas/graphic-page-context.test.tsx (5 tests | 5 failed) 15088ms
+   × 独立图文无需组合即可核对真实页，准确返回原稿 3033ms (retry x2)
+   × 媒体已有图无关联也能明确替换这一页，其他页保存当前真值 3014ms (retry x2)
+   × 并发换图保留候选，未重新读回确认不覆盖 3015ms (retry x2)
+   × 迟到旧账号回读不能显示原页确认操作 3016ms (retry x2)
+   × 候选即使已保留但来自其他节点，也不能写回此页 3009ms (retry x2)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/features/creative-canvas/graphic-page-context.test.tsx > 独立图文无需组合即可核对真实页，准确返回原稿
+ FAIL  src/features/creative-canvas/graphic-page-context.test.tsx > 独立图文无需组合即可核对真实页，准确返回原稿
+ FAIL  src/features/creative-canvas/graphic-page-context.test.tsx > 独立图文无需组合即可核对真实页，准确返回原稿
+TestingLibraryElementError: Unable to find role="link" and name "返回原组图"
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ waitForWrapper ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:86:33
+ ❯ src/features/creative-canvas/graphic-page-context.test.tsx:16:74
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/15]⎯
+
+ FAIL  src/features/creative-canvas/graphic-page-context.test.tsx > 媒体已有图无关联也能明确替换这一页，其他页保存当前真值
+ FAIL  src/features/creative-canvas/graphic-page-context.test.tsx > 媒体已有图无关联也能明确替换这一页，其他页保存当前真值
+ FAIL  src/features/creative-canvas/graphic-page-context.test.tsx > 媒体已有图无关联也能明确替换这一页，其他页保存当前真值
+TestingLibraryElementError: Unable to find role="button" and name "采用到这一页"
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ waitForWrapper ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:86:33
+ ❯ src/features/creative-canvas/graphic-page-context.test.tsx:17:215
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/15]⎯
+
+ FAIL  src/features/creative-canvas/graphic-page-context.test.tsx > 并发换图保留候选，未重新读回确认不覆盖
+ FAIL  src/features/creative-canvas/graphic-page-context.test.tsx > 并发换图保留候选，未重新读回确认不覆盖
+ FAIL  src/features/creative-canvas/graphic-page-context.test.tsx > 并发换图保留候选，未重新读回确认不覆盖
+TestingLibraryElementError: Unable to find role="button" and name "采用到这一页"
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ waitForWrapper ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:86:33
+ ❯ src/features/creative-canvas/graphic-page-context.test.tsx:18:80
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/15]⎯
+
+ FAIL  src/features/creative-canvas/graphic-page-context.test.tsx > 迟到旧账号回读不能显示原页确认操作
+ FAIL  src/features/creative-canvas/graphic-page-context.test.tsx > 迟到旧账号回读不能显示原页确认操作
+ FAIL  src/features/creative-canvas/graphic-page-context.test.tsx > 迟到旧账号回读不能显示原页确认操作
+AssertionError: expected "vi.fn()" to be called once, but got 0 times
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div />[39m
+  [36m</body>[39m
+[36m</html>[39m
+ ❯ src/features/creative-canvas/graphic-page-context.test.tsx:19:181
+
+ ❯ runWithExpensiveErrorDiagnosticsDisabled ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:47:12
+ ❯ checkCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:124:77
+ ❯ Timeout.checkRealTimersCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:118:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/15]⎯
+
+ FAIL  src/features/creative-canvas/graphic-page-context.test.tsx > 候选即使已保留但来自其他节点，也不能写回此页
+ FAIL  src/features/creative-canvas/graphic-page-context.test.tsx > 候选即使已保留但来自其他节点，也不能写回此页
+ FAIL  src/features/creative-canvas/graphic-page-context.test.tsx > 候选即使已保留但来自其他节点，也不能写回此页
+TestingLibraryElementError: Unable to find role="link" and name "返回原组图"
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ waitForWrapper ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:86:33
+ ❯ src/features/creative-canvas/graphic-page-context.test.tsx:20:248
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/15]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  5 failed (5)
+   Start at  03:34:04
+   Duration  17.07s (transform 523ms, setup 167ms, import 786ms, tests 15.09s, environment 718ms)
+

@@ -1,0 +1,21 @@
+diff --git a/frontend/src/server/persistence-client.ts b/frontend/src/server/persistence-client.ts
+index 951b5f15..c4ef0aeb 100644
+--- a/frontend/src/server/persistence-client.ts
++++ b/frontend/src/server/persistence-client.ts
+@@ -3064,6 +3064,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
+   });
+   const graphicPostMediaAdapter = createGraphicPostMediaAdapter({
+     db,
++    findTaskByAttempt:(context,taskType,attemptId)=>aiService.findTaskByAttempt(context,taskType,attemptId),
+     graphicPosts: graphicPostsService,
+     projects: projectsService,
+     assets: assetsService,
+@@ -5826,7 +5827,7 @@ FAVORITES_PROMOTE_PER_RUN
+       if(!matchesPinnedModelAuthority(runtime,authority))throw new Error("MODEL_AUTHORITY_CHANGED");
+       return taskModelAuthorityScope.run(authority,()=>resolveMultimodalSpec(c,capability));
+     },
+-    getReferenceBytes:(c:RequestContext,assetId:string)=>assetsService.getAssetBytes(c,assetId),
++    getReferenceBytes:(c:RequestContext,assetId:string,assetFileId?:string)=>assetFileId?assetsService.readImageReference(c,assetId,assetFileId):assetsService.getAssetBytes(c,assetId),
+   };
+   const coverBusiness=createExecutionCoverService(db,{...coverExecutionPorts,budget:workerBudget,now:deps.now});
+   const assetBusiness=createAssetBusinessExecutionService(db,{

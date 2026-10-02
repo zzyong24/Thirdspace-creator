@@ -1,0 +1,161 @@
+当场基线复现：先前public-adopt-red/green是未导出名称导致fixture失败；改用公开ENDPOINTS，对接任务时原契约临时还原核验，不补拍历史TDD。
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/backend
+
+ ❯ src/modules/creative-results/graphic-series.integration.test.ts (4 tests | 1 failed | 3 skipped) 2899ms
+     × 失败页局部恢复、同批顺序采用、同页重做和回执重放，旧照片不丢 2898ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/creative-results/graphic-series.integration.test.ts > 多页公共bundle到GraphicPosts原owner版本 > 失败页局部恢复、同批顺序采用、同页重做和回执重放，旧照片不丢
+ZodError: [
+  {
+    "code": "invalid_union",
+    "errors": [
+      [
+        {
+          "expected": "string",
+          "code": "invalid_type",
+          "path": [
+            0,
+            "sectionId"
+          ],
+          "message": "Invalid input: expected string, received undefined"
+        },
+        {
+          "expected": "string",
+          "code": "invalid_type",
+          "path": [
+            0,
+            "heading"
+          ],
+          "message": "Invalid input: expected string, received undefined"
+        },
+        {
+          "expected": "string",
+          "code": "invalid_type",
+          "path": [
+            0,
+            "body"
+          ],
+          "message": "Invalid input: expected string, received undefined"
+        },
+        {
+          "code": "invalid_value",
+          "values": [
+            "insert",
+            "replace"
+          ],
+          "path": [
+            0,
+            "op"
+          ],
+          "message": "Invalid option: expected one of \"insert\"|\"replace\""
+        },
+        {
+          "code": "unrecognized_keys",
+          "keys": [
+            "assetId",
+            "assetFileId",
+            "role",
+            "cardId"
+          ],
+          "path": [
+            0
+          ],
+          "message": "Unrecognized keys: \"assetId\", \"assetFileId\", \"role\", \"cardId\""
+        }
+      ],
+      [
+        {
+          "expected": "string",
+          "code": "invalid_type",
+          "path": [
+            0,
+            "title"
+          ],
+          "message": "Invalid input: expected string, received undefined"
+        },
+        {
+          "expected": "string",
+          "code": "invalid_type",
+          "path": [
+            0,
+            "body"
+          ],
+          "message": "Invalid input: expected string, received undefined"
+        },
+        {
+          "expected": "array",
+          "code": "invalid_type",
+          "path": [
+            0,
+            "sourceRefs"
+          ],
+          "message": "Invalid input: expected array, received undefined"
+        },
+        {
+          "code": "unrecognized_keys",
+          "keys": [
+            "assetId",
+            "assetFileId",
+            "order",
+            "role"
+          ],
+          "path": [
+            0
+          ],
+          "message": "Unrecognized keys: \"assetId\", \"assetFileId\", \"order\", \"role\""
+        }
+      ],
+      [
+        {
+          "expected": "string",
+          "code": "invalid_type",
+          "path": [],
+          "message": "Invalid input: expected string, received array"
+        }
+      ],
+      [
+        {
+          "expected": "string",
+          "code": "invalid_type",
+          "path": [
+            0
+          ],
+          "message": "Invalid input: expected string, received object"
+        }
+      ],
+      [
+        {
+          "code": "unrecognized_keys",
+          "keys": [
+            "cardId"
+          ],
+          "path": [
+            0
+          ],
+          "message": "Unrecognized key: \"cardId\""
+        }
+      ]
+    ],
+    "path": [
+      "editedValue"
+    ],
+    "message": "Invalid input"
+  }
+]
+ ❯ adopt src/modules/creative-results/graphic-series.integration.test.ts:47:191
+
+ ❯ src/modules/creative-results/graphic-series.integration.test.ts:48:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 3 skipped (4)
+   Start at  04:00:15
+   Duration  5.69s (transform 1.37s, setup 0ms, import 2.28s, tests 2.90s, environment 0ms)
+
+
+exitCode=1

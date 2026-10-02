@@ -1,0 +1,4 @@
+src/server/persistence-client.ts(3067,5): error TS2353: Object literal may only specify known properties, and 'findTaskByAttempt' does not exist in type 'GraphicPostMediaPorts'.
+src/server/persistence-client.ts(3067,24): error TS7006: Parameter 'context' implicitly has an 'any' type.
+src/server/persistence-client.ts(3067,32): error TS7006: Parameter 'taskType' implicitly has an 'any' type.
+src/server/persistence-client.ts(3067,41): error TS7006: Parameter 'attemptId' implicitly has an 'any' type.

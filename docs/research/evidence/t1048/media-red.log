@@ -1,0 +1,69 @@
+
+ RUN  v4.1.8 /private/tmp/t1048-backend-work/backend
+
+ ❯ src/modules/creative-results/graphic-series-media.test.ts (6 tests | 6 failed) 32ms
+     × 候选file第一次冻结后不追随AssetcurrentFile 8ms
+     × 本页替换保留旧照片与其他页，其他页采用不使旧基准作废 2ms
+     × 规划依据deleted变化拒绝采用并保留候选 19ms
+     × 规划依据reordered变化拒绝采用并保留候选 2ms
+     × 规划依据visual变化拒绝采用并保留候选 1ms
+     × 规划依据sources变化拒绝采用并保留候选 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/creative-results/graphic-series-media.test.ts > 组图单页候选与顺序采用 > 候选file第一次冻结后不追随AssetcurrentFile
+Error: 封面候选图片与首次回执不一致
+ ❯ error src/modules/creative-results/graphic-post-media.adapter.ts:19:70
+     17| // SEMANTIC_BOUNDARY_ALLOW: This hash is only an idempotency identity;…
+     18| function digest(value: unknown) { return `sha256:${createHash("sha256"…
+     19| function error(code: string, message: string): never { const value = n…
+       |                                                                      ^
+     20|
+     21| export interface GraphicPostMediaPorts {
+ ❯ media src/modules/creative-results/graphic-post-media.adapter.ts:88:14
+ ❯ Object.read src/modules/creative-results/graphic-post-media.adapter.ts:168:24
+ ❯ src/modules/creative-results/graphic-series-media.test.ts:19:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+ FAIL  src/modules/creative-results/graphic-series-media.test.ts > 组图单页候选与顺序采用 > 本页替换保留旧照片与其他页，其他页采用不使旧基准作废
+Error: 封面候选图片与首次回执不一致
+ ❯ error src/modules/creative-results/graphic-post-media.adapter.ts:19:70
+     17| // SEMANTIC_BOUNDARY_ALLOW: This hash is only an idempotency identity;…
+     18| function digest(value: unknown) { return `sha256:${createHash("sha256"…
+     19| function error(code: string, message: string): never { const value = n…
+       |                                                                      ^
+     20|
+     21| export interface GraphicPostMediaPorts {
+ ❯ media src/modules/creative-results/graphic-post-media.adapter.ts:88:14
+ ❯ Object.adopt src/modules/creative-results/graphic-post-media.adapter.ts:206:24
+ ❯ src/modules/creative-results/graphic-series-media.test.ts:23:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+ FAIL  src/modules/creative-results/graphic-series-media.test.ts > 组图单页候选与顺序采用 > 规划依据deleted变化拒绝采用并保留候选
+ FAIL  src/modules/creative-results/graphic-series-media.test.ts > 组图单页候选与顺序采用 > 规划依据reordered变化拒绝采用并保留候选
+ FAIL  src/modules/creative-results/graphic-series-media.test.ts > 组图单页候选与顺序采用 > 规划依据visual变化拒绝采用并保留候选
+ FAIL  src/modules/creative-results/graphic-series-media.test.ts > 组图单页候选与顺序采用 > 规划依据sources变化拒绝采用并保留候选
+AssertionError: expected Error: 封面候选图片与首次回执不一致 { code: 'MEDIA…' } to match object { code: 'VERSION_CONFLICT' }
+
+- Expected
++ Received
+
+- {
+-   "code": "VERSION_CONFLICT",
++ Error {
++   "code": "MEDIA_BINDING_MISMATCH",
+  }
+
+ ❯ src/modules/creative-results/graphic-series-media.test.ts:29:170
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/6]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  6 failed (6)
+   Start at  03:36:20
+   Duration  1.89s (transform 840ms, setup 0ms, import 1.63s, tests 32ms, environment 0ms)
+

@@ -1,0 +1,17 @@
+
+ RUN  v4.1.8 /private/tmp/t1048-frontend-work/frontend
+
+(node:87131) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:87132) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:87134) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:87133) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+ Test Files  4 passed (4)
+      Tests  29 passed (29)
+   Start at  03:53:47
+   Duration  2.77s (transform 1.26s, setup 667ms, import 2.42s, tests 1.69s, environment 2.72s)
+

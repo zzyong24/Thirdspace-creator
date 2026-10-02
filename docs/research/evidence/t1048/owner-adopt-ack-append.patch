@@ -1,0 +1,42 @@
+--- a/backend/src/modules/creative-results/graphic-series.integration.test.ts
++++ b/backend/src/modules/creative-results/graphic-series.integration.test.ts
+@@ -90,3 +90,39 @@
+   expect(f.tasks.get(retry.taskId!)!.inputData).toEqual(frozen);expect(f.freezeCoverContext).toHaveBeenCalledOnce();
+  }finally{await f.opened.client.close();}
+ });
++
++// GREEN-only recovery evidence: the existing owner receipt path was already correct; this is not a fabricated RED bug.
++it('owner保存成功但adoptACK丢失，完整原请求重放原版本回执而不新增版本',async()=>{
++ const f=await fixture();try{
++  const candidate=await f.results.generate(ctx,{outputId:f.output.id,kind:'image_card',targetSectionId:'one',clientRequestId:'owner-ack-page-one-generate'});
++  const before=await f.posts.getGraphicPost(ctx,f.output.id);
++  const input={resultId:candidate.resultId,expected:{owner:'graphic_post',versionId:before.currentVersionId},editedValue:structuredClone(candidate.value) as never,clientRequestId:'owner-ack-adopt-complete-request'};
++  const originalCreate=f.posts.createVersion.bind(f.posts);
++  let ownerVersionId:string|null=null;
++  const saveSpy=vi.spyOn(f.posts,'createVersion');
++  saveSpy.mockImplementationOnce(async(...args)=>{
++   const receipt=await originalCreate(...args);ownerVersionId=receipt.versionId;
++   throw new Error('owner ACK lost');
++  });
++  await expect(f.results.adopt(ctx,input)).rejects.toThrow('owner ACK lost');
++  const committed=await f.posts.getGraphicPost(ctx,f.output.id);
++  expect(committed.currentVersionId).toBe(ownerVersionId);
++  expect(committed.versions).toHaveLength(before.versions.length+1);
++  expect((await f.results.get(ctx,candidate.resultId)).status).toBe('awaiting_confirmation');
++  expect(f.confirmTask).toHaveBeenCalledOnce();
++  saveSpy.mockImplementation(originalCreate);
++  // Simulates the restored full request: retain the pre-save expected version, exact files and original idempotency key.
++  const restored=structuredClone(input);
++  const replay=await f.results.adopt(ctx,restored);
++  expect(replay).toMatchObject({status:'adopted',versionId:ownerVersionId});
++  const readBack=await f.posts.getGraphicPost(ctx,f.output.id);
++  expect(readBack.currentVersionId).toBe(committed.currentVersionId);
++  expect(readBack.versions).toHaveLength(committed.versions.length);
++  expect(readBack.current).toEqual(committed.current);
++  expect(saveSpy).toHaveBeenCalledTimes(2);
++  expect(f.confirmTask).toHaveBeenCalledOnce();
++  expect(await f.results.adopt(ctx,restored)).toEqual(replay);
++  expect((await f.posts.getGraphicPost(ctx,f.output.id)).versions).toHaveLength(committed.versions.length);
++  expect(saveSpy).toHaveBeenCalledTimes(2);
++ }finally{await f.opened.client.close();}
++});

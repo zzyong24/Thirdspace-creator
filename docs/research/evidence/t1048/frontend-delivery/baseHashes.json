@@ -1,0 +1,6 @@
+{
+  "frontend/src/features/projects/graphic-post-workbench.tsx": "8a51e55e0c44ce92365bc833a5d5351b4aa86807ffa4979102c3c922cd4d4479",
+  "frontend/src/features/projects/graphic-post-workbench.test.tsx": "c5ac5d565a27b2899999fdcc66ff3743a7bb4263722165e4d3fddac44e29c91a",
+  "frontend/src/features/projects/graphic-post-results.tsx": "36133b0ca3266ed98fc52e8ed7c3fa823069665a0b13336f46fe6c099005c6e9",
+  "frontend/src/features/projects/graphic-post-results.test.tsx": "e3bbf5b5a933bb57d107a7d819e3d8a5177a7a470b22d19423c3a1be9fceb78e"
+}

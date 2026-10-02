@@ -1,0 +1,10 @@
+[
+  "frontend/src/features/projects/graphic-post-workbench.tsx",
+  "frontend/src/features/projects/graphic-post-workbench.test.tsx",
+  "frontend/src/features/projects/graphic-post-results.tsx",
+  "frontend/src/features/projects/graphic-post-results.test.tsx",
+  "frontend/src/features/projects/graphic-series-panel.tsx",
+  "frontend/src/features/projects/graphic-series-panel.test.tsx",
+  "frontend/src/features/projects/graphic-series-document.ts",
+  "frontend/src/features/projects/graphic-series-document.test.ts"
+]

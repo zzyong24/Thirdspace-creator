@@ -1,0 +1,23 @@
+{
+  "unitTests": {
+    "exitCode": 0,
+    "files": 4,
+    "passed": 29,
+    "log": "final-green.log"
+  },
+  "scopedEslint": {
+    "exitCode": 0,
+    "errors": 0,
+    "warnings": 0,
+    "log": "final-lint.log"
+  },
+  "typescript": {
+    "exitCode": 2,
+    "scopeErrors": 0,
+    "baselineErrors": 23,
+    "reason": "隔离树未复制public/courses课程JSON",
+    "log": "final-types.log"
+  },
+  "browser": "未运行，按主会话授权不使用浏览器/真实模型",
+  "imageModel": "未运行，待主会话真实链验收"
+}

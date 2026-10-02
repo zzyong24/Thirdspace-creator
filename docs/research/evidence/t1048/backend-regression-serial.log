@@ -1,0 +1,21 @@
+
+ RUN  v4.1.8 /private/tmp/t1048-backend-work/backend
+
+ ❯ src/modules/creative-canvas/creative-canvas-series-reference.test.ts (2 tests | 1 failed) 2262ms
+   × 持久精确参考文件而非currentFile，公共生成、原attempt恢复和旧自由画布均保留真实版本 1352ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/creative-canvas/creative-canvas-series-reference.test.ts > 持久精确参考文件而非currentFile，公共生成、原attempt恢复和旧自由画布均保留真实版本
+AssertionError: expected "vi.fn()" to be called once, but got 2 times
+ ❯ src/modules/creative-canvas/creative-canvas-series-reference.test.ts:21:22
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 11 passed (12)
+      Tests  1 failed | 83 passed (84)
+   Start at  03:49:11
+   Duration  45.03s (transform 1.70s, setup 0ms, import 8.44s, tests 34.55s, environment 1ms)
+

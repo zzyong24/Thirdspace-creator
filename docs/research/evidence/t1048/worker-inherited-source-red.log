@@ -1,0 +1,29 @@
+
+ RUN  v4.1.8 /private/tmp/t1048-backend-work/ai-worker
+
+ ❯ src/runtime/graphic-post-text.test.ts (2 tests | 1 failed) 10ms
+   × 连续规划保留原稿真实页来源及画面说明，不能生成其他来源 4ms (retry x2)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/runtime/graphic-post-text.test.ts > 连续规划保留原稿真实页来源及画面说明，不能生成其他来源
+ FAIL  src/runtime/graphic-post-text.test.ts > 连续规划保留原稿真实页来源及画面说明，不能生成其他来源
+ FAIL  src/runtime/graphic-post-text.test.ts > 连续规划保留原稿真实页来源及画面说明，不能生成其他来源
+Error: GRAPHIC_POST_SOURCE_REF_UNBOUND
+ ❯ validateGraphicPostTextCandidate src/runtime/graphic-post-text.ts:41:106
+     39|   if(proposal.kind==="cardBriefs"){
+     40|     const allowed=new Set(input.sourceRefs.map(refKey));
+     41|     for(const card of proposal.value)for(const ref of card.sourceRefs)…
+       |                                                                                                          ^
+     42|   }
+     43|   return proposal;
+ ❯ src/runtime/graphic-post-text.test.ts:19:9
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 1 passed (2)
+   Start at  03:45:45
+   Duration  782ms (transform 404ms, setup 0ms, import 618ms, tests 10ms, environment 0ms)
+

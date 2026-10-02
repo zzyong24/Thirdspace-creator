@@ -1,0 +1,18 @@
+{
+  "frontend/src/features/creative-canvas/work-canvas-context.tsx": {
+    "baseline": "3a0e50ff999f92f488f8e28882d9c0d1a9bd413e2c4adea7893283a1b04d229c",
+    "current": "f078706afd5643b6231d53dc6c725eaa62331c4778b136234a7a87cc61e1f213"
+  },
+  "frontend/src/features/creative-canvas/canvas-editor.tsx": {
+    "baseline": "52dfe8aaad8a108ba0a18610d5837f932aba49ed4e9f6234e69eff55f303081c",
+    "current": "48a459d5334ef9559f1d4d9f64bd3340e3eeeee49c5d48ed51b972e5c97aabe9"
+  },
+  "frontend/src/features/creative-canvas/canvas-editor.test.tsx": {
+    "baseline": "f63cf762dc8208c771c75f3416931eea4ba0cc5f937c8ffb566d25af76c4fc7c",
+    "current": "c199d6c29e4e519a4c4a8627c6c03d826e993db1568e0e0518fa66a481be74a3"
+  },
+  "frontend/src/features/creative-canvas/infinite-canvas-node.tsx": {
+    "baseline": "75a5f4be0630892a161d67192cc384ace387679d46220cafd9204e731aa91f3c",
+    "current": "7a8b216375d556be3887462adcbe7e76072c5adbfafb15b6b2db448d0c58de5a"
+  }
+}
