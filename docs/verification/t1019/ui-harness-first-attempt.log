@@ -1,0 +1,129 @@
+[playwright.config] Isolated test data root: /var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-playwright-4EFcSq
+[playwright.config] Reference baselines: 17 files, fingerprint=73a23db59f7d…
+[2m[WebServer] [22m
+[2m[WebServer] [22m> creatoros-frontend@1.2.0 predev /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+[2m[WebServer] [22m> node ../ai-worker/scripts/build.mjs
+[2m[WebServer] [22m
+[2m[WebServer] [22m
+[2m[WebServer] [22m> creatoros-frontend@1.2.0 dev /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+[2m[WebServer] [22m> next dev --hostname 127.0.0.1 --port 3448
+[2m[WebServer] [22m
+[2m[WebServer] [22m[1m[38;2;173;127;168m▲ Next.js 16.2.9[39m[22m (Turbopack)
+[2m[WebServer] [22m- Local:         http://127.0.0.1:3448
+[2m[WebServer] [22m- Network:       http://127.0.0.1:3448
+[2m[WebServer] [22m- Environments: .env.local
+[2m[WebServer] [22m[32m[1m✓[22m[39m Ready in 481ms
+[2m[WebServer] [22m[CreatorOS] SIDECAR_STARTUP_VERIFIED
+[2m[WebServer] [22m
+[2m[WebServer] [22m GET / [32m200[39m in 10.9s[2m (next.js: 1383ms, proxy.ts: 232ms, application-code: 9.3s)[22m
+
+Running 2 tests using 1 worker
+
+[playwright.config] Isolated test data root: /var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-playwright-4EFcSq
+[playwright.config] Reference baselines: 17 files, fingerprint=73a23db59f7d…
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 676ms[2m (next.js: 634ms, proxy.ts: 19ms, application-code: 23ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 15ms[2m (next.js: 1884µs, proxy.ts: 3ms, application-code: 10ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 15ms[2m (next.js: 1586µs, proxy.ts: 2ms, application-code: 11ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 23ms[2m (next.js: 1588µs, proxy.ts: 3ms, application-code: 19ms)[22m
+[2m[WebServer] [22m[page-read] operation=candidates.list durationMs=214
+[2m[WebServer] [22m[page-read] operation=candidates.list durationMs=216
+[2m[WebServer] [22m[page-read] operation=topics.overview durationMs=245
+[2m[WebServer] [22m GET /topics [32m200[39m in 444ms[2m (next.js: 39ms, proxy.ts: 3ms, application-code: 403ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 24ms[2m (next.js: 6ms, proxy.ts: 5ms, application-code: 13ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 14ms[2m (next.js: 3ms, proxy.ts: 3ms, application-code: 8ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 25ms[2m (next.js: 11ms, proxy.ts: 3ms, application-code: 10ms)[22m
+  ✘  1 [e2e] › tests/e2e/audience-task-topics.spec.ts:10:79 › 个性化导入→保存回读→持久生成→反馈→采纳→立项与版本重审 1440x900 (7.9s)
+[playwright.config] Isolated test data root: /var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-playwright-4EFcSq
+[playwright.config] Reference baselines: 17 files, fingerprint=73a23db59f7d…
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 16ms[2m (next.js: 1982µs, proxy.ts: 5ms, application-code: 10ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 14ms[2m (next.js: 3ms, proxy.ts: 1830µs, application-code: 9ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 15ms[2m (next.js: 1056µs, proxy.ts: 1497µs, application-code: 13ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 21ms[2m (next.js: 1924µs, proxy.ts: 2ms, application-code: 17ms)[22m
+[2m[WebServer] [22m GET /topics [32m200[39m in 191ms[2m (next.js: 3ms, proxy.ts: 1841µs, application-code: 187ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 25ms[2m (next.js: 1839µs, proxy.ts: 5ms, application-code: 18ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 21ms[2m (next.js: 1777µs, proxy.ts: 11ms, application-code: 9ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 14ms[2m (next.js: 1464µs, proxy.ts: 3ms, application-code: 10ms)[22m
+  ✘  2 [e2e] › tests/e2e/audience-task-topics.spec.ts:10:79 › 个性化导入→保存回读→持久生成→反馈→采纳→立项与版本重审 1024x768 (6.6s)
+
+
+  1) [e2e] › tests/e2e/audience-task-topics.spec.ts:10:79 › 个性化导入→保存回读→持久生成→反馈→采纳→立项与版本重审 1440x900 ─
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoHaveText[2m([22m[32mexpected[39m[2m)[22m failed
+
+    Locator:  getByTestId('audience-task-workspace').getByRole('alert')
+    Expected: [32m"导入失败：文件须符合双九宫格配置格式。"[39m
+    Received: [31m"导入失败：文件须符合双九宫格配置格式。[7m重新载入[27m"[39m
+    Timeout:  5000ms
+
+    Call log:
+    [2m  - Expect "toHaveText" with timeout 5000ms[22m
+    [2m  - waiting for getByTestId('audience-task-workspace').getByRole('alert')[22m
+    [2m    14 × locator resolved to <p role="alert">…</p>[22m
+    [2m       - unexpected value "导入失败：文件须符合双九宫格配置格式。重新载入"[22m
+
+
+      25 |   await capture('当前账号空配置',['UI-AT-empty']);
+      26 |   await workspace.getByLabel('导入双九宫格配置').setInputFiles({name:'bad.json',mimeType:'application/json',buffer:Buffer.from('{invalid')});
+    > 27 |   await expect(workspace.getByRole('alert')).toHaveText('导入失败：文件须符合双九宫格配置格式。');
+         |                                              ^
+      28 |   await capture('损坏配置拒绝并保留当前配置',['UI-AT-invalid']);
+      29 |   await workspace.getByLabel('导入双九宫格配置').setInputFiles({name:'moonlit-v02.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(preset))});
+      30 |   await expect(workspace.getByLabel('观众中心')).toHaveValue(preset.audienceCenter);
+        at /Users/zyongzhu/Workbase/Thirdspace-creator/frontend/tests/e2e/audience-task-topics.spec.ts:27:46
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/e2e-audience-task-topics-个-46ca2-持久生成→反馈→采纳→立项与版本重审-1440x900-e2e/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/e2e-audience-task-topics-个-46ca2-持久生成→反馈→采纳→立项与版本重审-1440x900-e2e/error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/e2e-audience-task-topics-个-46ca2-持久生成→反馈→采纳→立项与版本重审-1440x900-e2e/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace test-results/e2e-audience-task-topics-个-46ca2-持久生成→反馈→采纳→立项与版本重审-1440x900-e2e/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) [e2e] › tests/e2e/audience-task-topics.spec.ts:10:79 › 个性化导入→保存回读→持久生成→反馈→采纳→立项与版本重审 1024x768 ─
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoHaveText[2m([22m[32mexpected[39m[2m)[22m failed
+
+    Locator:  getByTestId('audience-task-workspace').getByRole('alert')
+    Expected: [32m"导入失败：文件须符合双九宫格配置格式。"[39m
+    Received: [31m"导入失败：文件须符合双九宫格配置格式。[7m重新载入[27m"[39m
+    Timeout:  5000ms
+
+    Call log:
+    [2m  - Expect "toHaveText" with timeout 5000ms[22m
+    [2m  - waiting for getByTestId('audience-task-workspace').getByRole('alert')[22m
+    [2m    14 × locator resolved to <p role="alert">…</p>[22m
+    [2m       - unexpected value "导入失败：文件须符合双九宫格配置格式。重新载入"[22m
+
+
+      25 |   await capture('当前账号空配置',['UI-AT-empty']);
+      26 |   await workspace.getByLabel('导入双九宫格配置').setInputFiles({name:'bad.json',mimeType:'application/json',buffer:Buffer.from('{invalid')});
+    > 27 |   await expect(workspace.getByRole('alert')).toHaveText('导入失败：文件须符合双九宫格配置格式。');
+         |                                              ^
+      28 |   await capture('损坏配置拒绝并保留当前配置',['UI-AT-invalid']);
+      29 |   await workspace.getByLabel('导入双九宫格配置').setInputFiles({name:'moonlit-v02.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(preset))});
+      30 |   await expect(workspace.getByLabel('观众中心')).toHaveValue(preset.audienceCenter);
+        at /Users/zyongzhu/Workbase/Thirdspace-creator/frontend/tests/e2e/audience-task-topics.spec.ts:27:46
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/e2e-audience-task-topics-个-a3832-持久生成→反馈→采纳→立项与版本重审-1024x768-e2e/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/e2e-audience-task-topics-个-a3832-持久生成→反馈→采纳→立项与版本重审-1024x768-e2e/error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/e2e-audience-task-topics-个-a3832-持久生成→反馈→采纳→立项与版本重审-1024x768-e2e/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace test-results/e2e-audience-task-topics-个-a3832-持久生成→反馈→采纳→立项与版本重审-1024x768-e2e/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2 failed
+    [e2e] › tests/e2e/audience-task-topics.spec.ts:10:79 › 个性化导入→保存回读→持久生成→反馈→采纳→立项与版本重审 1440x900 ──
+    [e2e] › tests/e2e/audience-task-topics.spec.ts:10:79 › 个性化导入→保存回读→持久生成→反馈→采纳→立项与版本重审 1024x768 ──

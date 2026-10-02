@@ -1,0 +1,4 @@
+✗ data.mode 必须为 non-fixture（真实/代表性数据）
+tdd_red_ref 不能为空：必须留下旅程曾经失败、测试能抓住它的证据
+open_defects 非空，页面组不能宣告完成
+report.status 必须为 pass；最终状态由验证器重新计算

@@ -1,0 +1,105 @@
+[playwright.config] Isolated test data root: /var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-playwright-pVnSLu
+[playwright.config] Reference baselines: 17 files, fingerprint=73a23db59f7d…
+[2m[WebServer] [22m
+[2m[WebServer] [22m> creatoros-frontend@1.2.0 predev /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+[2m[WebServer] [22m> node ../ai-worker/scripts/build.mjs
+[2m[WebServer] [22m
+[2m[WebServer] [22m
+[2m[WebServer] [22m> creatoros-frontend@1.2.0 dev /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+[2m[WebServer] [22m> next dev --hostname 127.0.0.1 --port 3448
+[2m[WebServer] [22m
+[2m[WebServer] [22m[1m[38;2;173;127;168m▲ Next.js 16.2.9[39m[22m (Turbopack)
+[2m[WebServer] [22m- Local:         http://127.0.0.1:3448
+[2m[WebServer] [22m- Network:       http://127.0.0.1:3448
+[2m[WebServer] [22m- Environments: .env.local
+[2m[WebServer] [22m[32m[1m✓[22m[39m Ready in 388ms
+[2m[WebServer] [22m[CreatorOS] SIDECAR_STARTUP_VERIFIED
+[2m[WebServer] [22m
+[2m[WebServer] [22m GET / [32m200[39m in 10.5s[2m (next.js: 920ms, proxy.ts: 191ms, application-code: 9.4s)[22m
+
+Running 2 tests using 1 worker
+
+[playwright.config] Isolated test data root: /var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-playwright-pVnSLu
+[playwright.config] Reference baselines: 17 files, fingerprint=73a23db59f7d…
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 693ms[2m (next.js: 657ms, proxy.ts: 16ms, application-code: 20ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 19ms[2m (next.js: 1883µs, proxy.ts: 4ms, application-code: 14ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 17ms[2m (next.js: 1820µs, proxy.ts: 1925µs, application-code: 13ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 20ms[2m (next.js: 1503µs, proxy.ts: 2ms, application-code: 16ms)[22m
+[2m[WebServer] [22m[page-read] operation=candidates.list durationMs=212
+[2m[WebServer] [22m[page-read] operation=candidates.list durationMs=214
+[2m[WebServer] [22m[page-read] operation=topics.overview durationMs=238
+[2m[WebServer] [22m GET /topics [32m200[39m in 495ms[2m (next.js: 32ms, proxy.ts: 3ms, application-code: 460ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 44ms[2m (next.js: 2ms, proxy.ts: 4ms, application-code: 38ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 22ms[2m (next.js: 3ms, proxy.ts: 4ms, application-code: 15ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 26ms[2m (next.js: 4ms, proxy.ts: 4ms, application-code: 18ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 13ms[2m (next.js: 1895µs, proxy.ts: 2ms, application-code: 9ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 32ms[2m (next.js: 1742µs, proxy.ts: 4ms, application-code: 27ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 14ms[2m (next.js: 3ms, proxy.ts: 2ms, application-code: 9ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 112ms[2m (next.js: 1179µs, proxy.ts: 3ms, application-code: 108ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 18ms[2m (next.js: 1861µs, proxy.ts: 5ms, application-code: 11ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 24ms[2m (next.js: 2ms, proxy.ts: 3ms, application-code: 19ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 26ms[2m (next.js: 1733µs, proxy.ts: 4ms, application-code: 20ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 35ms[2m (next.js: 1733µs, proxy.ts: 26ms, application-code: 7ms)[22m
+[2m[WebServer] [22m GET /topics [32m200[39m in 162ms[2m (next.js: 1828µs, proxy.ts: 1695µs, application-code: 158ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 19ms[2m (next.js: 7ms, proxy.ts: 3ms, application-code: 9ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 12ms[2m (next.js: 1263µs, proxy.ts: 2ms, application-code: 9ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 14ms[2m (next.js: 1601µs, proxy.ts: 1902µs, application-code: 10ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 27ms[2m (next.js: 1466µs, proxy.ts: 4ms, application-code: 22ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 14ms[2m (next.js: 1175µs, proxy.ts: 1896µs, application-code: 11ms)[22m
+[2m[WebServer] [22m[CreatorOS] DISPATCH_FAILED {"operation":"ai.tasks.results.patch","errorName":"ConflictError","errorCode":"ConflictError"}
+[2m[WebServer] [22m POST /api/v1/dispatch [33m409[39m in 14ms[2m (next.js: 1365µs, proxy.ts: 1596µs, application-code: 11ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 53ms[2m (next.js: 1258µs, proxy.ts: 3ms, application-code: 49ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 19ms[2m (next.js: 3ms, proxy.ts: 6ms, application-code: 10ms)[22m
+[2m[WebServer] [22m GET /topics [32m200[39m in 128ms[2m (next.js: 3ms, proxy.ts: 1960µs, application-code: 122ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 54ms[2m (next.js: 9ms, proxy.ts: 1918µs, application-code: 44ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 70ms[2m (next.js: 1329µs, proxy.ts: 3ms, application-code: 66ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 12ms[2m (next.js: 1401µs, proxy.ts: 2ms, application-code: 8ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 93ms[2m (next.js: 1247µs, proxy.ts: 84ms, application-code: 8ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 11ms[2m (next.js: 1526µs, proxy.ts: 1744µs, application-code: 8ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 14ms[2m (next.js: 1213µs, proxy.ts: 1640µs, application-code: 12ms)[22m
+[2m[WebServer] [22m[CreatorOS] DISPATCH_FAILED {"operation":"ai.tasks.confirm","errorName":"ConflictError","errorCode":"ConflictError"}
+[2m[WebServer] [22m POST /api/v1/dispatch [33m409[39m in 29ms[2m (next.js: 1353µs, proxy.ts: 2ms, application-code: 26ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 9ms[2m (next.js: 1725µs, proxy.ts: 1830µs, application-code: 5ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 9ms[2m (next.js: 1174µs, proxy.ts: 1669µs, application-code: 6ms)[22m
+  ✓  1 [e2e] › tests/e2e/audience-task-topics.spec.ts:10:79 › 个性化导入→保存回读→持久生成→反馈→采纳→立项与版本重审 1440x900 (6.9s)
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 11ms[2m (next.js: 1412µs, proxy.ts: 2ms, application-code: 7ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 11ms[2m (next.js: 1272µs, proxy.ts: 1983µs, application-code: 8ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 15ms[2m (next.js: 1464µs, proxy.ts: 1694µs, application-code: 12ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 21ms[2m (next.js: 1353µs, proxy.ts: 1894µs, application-code: 17ms)[22m
+[2m[WebServer] [22m GET /topics [32m200[39m in 179ms[2m (next.js: 1498µs, proxy.ts: 1832µs, application-code: 175ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 16ms[2m (next.js: 3ms, proxy.ts: 1982µs, application-code: 11ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 12ms[2m (next.js: 1228µs, proxy.ts: 2ms, application-code: 8ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 10ms[2m (next.js: 1802µs, proxy.ts: 1937µs, application-code: 6ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 16ms[2m (next.js: 1413µs, proxy.ts: 1959µs, application-code: 13ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 22ms[2m (next.js: 2ms, proxy.ts: 3ms, application-code: 16ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 12ms[2m (next.js: 1724µs, proxy.ts: 2ms, application-code: 8ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 79ms[2m (next.js: 1530µs, proxy.ts: 2ms, application-code: 76ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 13ms[2m (next.js: 3ms, proxy.ts: 1783µs, application-code: 8ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 12ms[2m (next.js: 1288µs, proxy.ts: 1803µs, application-code: 9ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 16ms[2m (next.js: 1388µs, proxy.ts: 1966µs, application-code: 12ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 203ms[2m (next.js: 85ms, proxy.ts: 112ms, application-code: 7ms)[22m
+[2m[WebServer] [22m GET /topics [32m200[39m in 132ms[2m (next.js: 1976µs, proxy.ts: 1737µs, application-code: 128ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 14ms[2m (next.js: 1267µs, proxy.ts: 2ms, application-code: 10ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 12ms[2m (next.js: 1836µs, proxy.ts: 1999µs, application-code: 8ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 11ms[2m (next.js: 1180µs, proxy.ts: 1900µs, application-code: 8ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 19ms[2m (next.js: 1978µs, proxy.ts: 2ms, application-code: 15ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 12ms[2m (next.js: 1245µs, proxy.ts: 1572µs, application-code: 9ms)[22m
+[2m[WebServer] [22m[CreatorOS] DISPATCH_FAILED {"operation":"ai.tasks.results.patch","errorName":"ConflictError","errorCode":"ConflictError"}
+[2m[WebServer] [22m POST /api/v1/dispatch [33m409[39m in 13ms[2m (next.js: 1519µs, proxy.ts: 1851µs, application-code: 10ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 46ms[2m (next.js: 1387µs, proxy.ts: 4ms, application-code: 41ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 11ms[2m (next.js: 1352µs, proxy.ts: 1848µs, application-code: 8ms)[22m
+[2m[WebServer] [22m GET /topics [32m200[39m in 122ms[2m (next.js: 1798µs, proxy.ts: 2ms, application-code: 118ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 33ms[2m (next.js: 1382µs, proxy.ts: 1810µs, application-code: 30ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 66ms[2m (next.js: 1413µs, proxy.ts: 2ms, application-code: 62ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 19ms[2m (next.js: 7ms, proxy.ts: 1762µs, application-code: 10ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 12ms[2m (next.js: 1340µs, proxy.ts: 1649µs, application-code: 9ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 11ms[2m (next.js: 1341µs, proxy.ts: 1802µs, application-code: 8ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 90ms[2m (next.js: 1494µs, proxy.ts: 82ms, application-code: 7ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 15ms[2m (next.js: 1306µs, proxy.ts: 1867µs, application-code: 12ms)[22m
+[2m[WebServer] [22m[CreatorOS] DISPATCH_FAILED {"operation":"ai.tasks.confirm","errorName":"ConflictError","errorCode":"ConflictError"}
+[2m[WebServer] [22m POST /api/v1/dispatch [33m409[39m in 36ms[2m (next.js: 1873µs, proxy.ts: 1922µs, application-code: 32ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 8ms[2m (next.js: 1203µs, proxy.ts: 2ms, application-code: 5ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 10ms[2m (next.js: 1254µs, proxy.ts: 1494µs, application-code: 7ms)[22m
+  ✓  2 [e2e] › tests/e2e/audience-task-topics.spec.ts:10:79 › 个性化导入→保存回读→持久生成→反馈→采纳→立项与版本重审 1024x768 (5.6s)
+
+  2 passed (28.4s)
