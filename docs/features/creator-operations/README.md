@@ -37,3 +37,9 @@ flowchart LR
 用户指定 shadcn-admin 的独立本地可视化工作台位于 `/Users/zyongzhu/Workbase/moonlit-creator-dashboard`，读取 `/Users/zyongzhu/moonlit-creator` 的作品、逐平台发布事件、双九宫格、评论任务、原始快照与已有四项自动化。日计划写入 `research/operations/day-plans/YYYY-MM-DD.json`，不建立第二数据库或调度器。CreatorOS 不为该工作台复制一套 UI；后续独立评审须核对其 PRODUCT_SPEC.md、SERVICE_CONTRACT.md 和 server/workspace.mjs，再确定需接入的既有服务边界。
 
 FR-OP-03/06 补充验收：同一作品逐平台显示真实状态，已发布视频与公众号草稿分别由对应平台事件证明。没有发布事件的草稿不标已发布；视频未显式关联作品时保留未关联，禁止凭标题猜配。指标缺失保留 null，原始零值显示0。本段为交接要求记录，不声称该独立工作台已完成验收。
+
+## 2026-10-02 每日池与运行时点交接
+
+独立后台已报告当前审读并导入131条先测候选、64组每组至少2条及首页三条优先实测项。这是交接当时快照，不是CreatorOS默认数据或亲测结果；候选仍由已锁定 moonlit-topic-engine 的 scripts/daily_pool.py 管理，topics-pick创建/复用作品，后台只投影和调用属主，禁止另建候选库或迁移副本。GET /api/dashboard 的dailyPool与POST /api/topics/decision契约以该工作台 docs/features/operations/DAILY_TOPICS.md 为准。哈希冲突、过期、拒绝不复活及选择后读回据交接已在隔离副本验证；CreatorOS本轮未重验该后台，不冒充本任务测试。
+
+来源快照按交接显示HF/Google已读、PH失败、Discord/X等未调用，个人工具入口未亲测。现有四项heartbeat调整为06:30回流、07:00池更新（08:00前为目标）、14:00备料、周日20:30复盘；配置生效与首晨实际执行分开，首晨现场回执仍待验。不新建或再次改写调度器。
