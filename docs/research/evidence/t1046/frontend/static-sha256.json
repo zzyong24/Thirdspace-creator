@@ -1,0 +1,34 @@
+[
+  {
+    "path": "opencut-classic/index.html",
+    "sha256": "4641fe84532a7e4ba053d7298c0847ff4dbf05fb17dc28dea6bb06f4249d0025"
+  },
+  {
+    "path": "opencut-classic/THIRD_PARTY_LICENSES.txt",
+    "sha256": "ce641ac40a6b6f80f49e2adde74bc049fbc011c99ab71139ce3bc64c3cfffe51"
+  },
+  {
+    "path": "opencut-classic/THIRD_PARTY_LICENSES.json",
+    "sha256": "338bb99042530ddfd459018b129270e9b69388e38b055795d29143610542e2a2"
+  },
+  {
+    "path": "opencut-classic/LICENSE.opencut",
+    "sha256": "8117f9bb64534f7530fc6139b014fd1c1465f7981f93d1871789150fa3f59d3d"
+  },
+  {
+    "path": "opencut-classic/effects/preview.jpg",
+    "sha256": "b318cede7bbe27bfbf1b8b94d41f65b6f52d5f2650ce3a153d03b76c2a1c0190"
+  },
+  {
+    "path": "opencut-classic/assets/index-qIbIhzgy.js",
+    "sha256": "1eaf1983d8eb32fcf5545eaa652e112ec65a8a28013f2b64aa564eb176f0c812"
+  },
+  {
+    "path": "opencut-classic/assets/opencut_wasm_bg-BWSypKWK.wasm",
+    "sha256": "e7720e0d3fc46e06fd8aa10aa2c1a29121722e3c1b1d909945ed72a35581ec67"
+  },
+  {
+    "path": "opencut-classic/assets/index-BWk2A5SJ.css",
+    "sha256": "69213a74bc128f480ced6d8242f75b4cd6d3e2a7d935911271e66e3f1f95173a"
+  }
+]

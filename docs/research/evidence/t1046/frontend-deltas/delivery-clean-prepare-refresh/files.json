@@ -1,0 +1,22 @@
+[
+  {
+    "path": "frontend/src/features/reference-editors/video-reference-workbench.tsx",
+    "sha256": "9f63aa60dc934d22fa54f8ea296a6a1558a04a412b6fdf9d5964aeb92793dc8d",
+    "baseSHA256": "00d2775339f11b567b2a30b625594311b77c991abf8f73d4f6cbfd5cacdc5031"
+  },
+  {
+    "path": "frontend/src/features/reference-editors/video-reference-workbench.test.tsx",
+    "sha256": "b930c8e5292a195484f8e73348638ea5d2157a1ee640824bf25819f5942f70b1",
+    "baseSHA256": "f8293705587c41c0141bb68f9bfc7e7ab2c3d8d3f9e8e2a6f19e224dd16dba76"
+  },
+  {
+    "path": "frontend/src/features/production/production-transcript-panel.tsx",
+    "sha256": "2169430db85592566935845f330b56122f121d634fe1ec55d2e28867b02cbeb2",
+    "baseSHA256": "118c2cf8692e1b9b40080f4b9cf2d88c794dd64d1841102b71328c418a027c55"
+  },
+  {
+    "path": "frontend/src/features/production/production-transcript-panel.test.tsx",
+    "sha256": "161ccbb97c4d8de72d98f7b1548710c09835a574c9af143f6fb0e2e0fc6251bc",
+    "baseSHA256": "993a638d6f4f083bccba4b3f4ae8e41eeac7c2de93bf619011d018d5395c8b2e"
+  }
+]

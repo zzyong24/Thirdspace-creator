@@ -1,0 +1,22 @@
+{
+  "mediabunny-1.41.0-corresponding-source.tar.gz": {
+    "bytes": 1555721,
+    "sha256": "063a433553249d25a974c2b344c7d5ae12ab49162d1bf6262f53264b073a6aa5"
+  },
+  "mediabunny-1.41.0-source.tar.gz": {
+    "bytes": 52548157,
+    "sha256": "1aa2325201afb94b63b713d8f565e0f8a18e7453ab811259335c69de5131f33e"
+  },
+  "opencut-classic-source.tar.gz": {
+    "bytes": 756237,
+    "sha256": "e5b71c60cc17b73e5e7862616d776587cae53f3e5d6eed322f5b23767a5603df"
+  },
+  "opencut-classic-static.tar.gz": {
+    "bytes": 1703248,
+    "sha256": "214a72ce7da446076ae01180590503b67596ba74bb905deff8d1e41dfad3fe0c"
+  },
+  "soundtouchjs-0.3.0-source.tar.gz": {
+    "bytes": 1815524,
+    "sha256": "b396e96f5e8e15d5125d022c2d8d53f36eb7ce7d9a654d1703bb89e1e0e6d762"
+  }
+}

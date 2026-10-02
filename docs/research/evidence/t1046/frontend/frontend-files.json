@@ -1,0 +1,52 @@
+[
+  {
+    "path": "frontend/src/features/reference-editors/video-reference-workbench.tsx",
+    "sha256": "7155c7d04dbeeb1c8db327f4e9e3604bdacc2644415675532bfc0e09d77feca7",
+    "baseSHA256": "606617f402dfe7d047879ddee01ebc1dc35d7b3c2268f73dcbc1159ceca93bc3"
+  },
+  {
+    "path": "frontend/src/features/reference-editors/reference-editor-frame.tsx",
+    "sha256": "f2868f04af43b1f92ebf80879d7d69e9ee40dfe0e48261b15b0aaf1a0e57e600",
+    "baseSHA256": "bd4dc0d14712bfd87d120fde248cef3ab8951e63bba0c266984b11ca7d2f6f0c"
+  },
+  {
+    "path": "frontend/src/features/reference-editors/native-rough-view.ts",
+    "sha256": "f19006334bf692748ef9f3bde0490416928c2779cb87e63beb094d409c60a7c0",
+    "baseSHA256": null
+  },
+  {
+    "path": "frontend/src/features/reference-editors/native-source-panel.tsx",
+    "sha256": "57e7192a248d28d0c8d393090e7b3041102c53d640b5c2ca76b33271c5e8725a",
+    "baseSHA256": null
+  },
+  {
+    "path": "frontend/src/features/reference-editors/native-rough-view.test.ts",
+    "sha256": "0c9fb2b5107afd0b4df41d4316df1481aeb53e30709653b679ea3ca661454596",
+    "baseSHA256": null
+  },
+  {
+    "path": "frontend/src/features/reference-editors/native-source-panel.test.tsx",
+    "sha256": "d62546e3339ae982dcfbeb88acbdf719517d206dc06f8c1f84a38ac769350b06",
+    "baseSHA256": null
+  },
+  {
+    "path": "frontend/src/features/reference-editors/video-reference-workbench.test.tsx",
+    "sha256": "f8293705587c41c0141bb68f9bfc7e7ab2c3d8d3f9e8e2a6f19e224dd16dba76",
+    "baseSHA256": null
+  },
+  {
+    "path": "frontend/src/features/production/production-rough-candidate-panel.tsx",
+    "sha256": "f1fdd4b1902925d430dac5d72cbea51f5082c781597d356e40bafbd5caf23d53",
+    "baseSHA256": "d48121d55f73e3f38dbbe60019bf477df59f0b7cb4fb5b42725db51779fe6ef9"
+  },
+  {
+    "path": "frontend/src/features/production/production-rough-candidate-panel.test.tsx",
+    "sha256": "ae8bcfc728a9a0f8b97e5798708adbce025988a1ed0d74054bbaee2544284c60",
+    "baseSHA256": "c58dadfc84c05004794c4892e65f116535a5f99165446b5e7c4e36f925dedfa6"
+  },
+  {
+    "path": "frontend/src/features/production/production-transcript-panel.tsx",
+    "sha256": "c6226559343a161c8eee960444ef3b157cdd2b43f50c62b847253f4d71d7470e",
+    "baseSHA256": "cc1be3034980820db0e3174389617efa1efa167c34600328b04b587ddd2cad6f"
+  }
+]

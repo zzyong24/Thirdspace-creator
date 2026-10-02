@@ -1,0 +1,26 @@
+[
+  {
+    "path": "apps/web/src/commands/base-command.ts",
+    "sha256": "db41218e2cd00672ba8f1b39f4eb11fa00ca80a80246843fc146c2c91df7be31"
+  },
+  {
+    "path": "apps/web/src/core/managers/commands.ts",
+    "sha256": "f78b36af0640b0cdd5f73513d187e51cb2a4dfab4dac45947b4d0d071c1508e5"
+  },
+  {
+    "path": "apps/web/src/commands/timeline/native-tracks-snapshot.ts",
+    "sha256": "bc28acda1bebc95eab521aa382b05a7aefd9cf15d561b627d311f357955e0b4c"
+  },
+  {
+    "path": "apps/web/src/embedded/native-operations.ts",
+    "sha256": "2d706ed295306ac86dedfe50606927bb2684c28dff1da7f161077cc20d5b2813"
+  },
+  {
+    "path": "apps/web/src/embedded/bridge.ts",
+    "sha256": "9004cc9406a5552635714878274b5f6a44ab62e1778d449ccd8dbc3f26008855"
+  },
+  {
+    "path": "apps/web/src/embedded/__tests__/native-command.test.ts",
+    "sha256": "8cbeff6d3e2eb2db078bf5ba1b77937a41c04b61e77f834d26bb9b814182b72a"
+  }
+]

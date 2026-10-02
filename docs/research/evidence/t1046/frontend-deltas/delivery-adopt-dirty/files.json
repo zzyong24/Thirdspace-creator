@@ -1,0 +1,12 @@
+[
+  {
+    "path": "frontend/src/features/reference-editors/video-reference-workbench.tsx",
+    "sha256": "cb999145c1291eaa98116e6db2e0921bda7b35e36af68bd9263ef4ebc5043840",
+    "baseSHA256": "9f63aa60dc934d22fa54f8ea296a6a1558a04a412b6fdf9d5964aeb92793dc8d"
+  },
+  {
+    "path": "frontend/src/features/reference-editors/video-reference-workbench.test.tsx",
+    "sha256": "f667f74833732c0b2f412b522ec36d30d42f98d6ea9ce924ceb9ebdfbbe0108b",
+    "baseSHA256": "b930c8e5292a195484f8e73348638ea5d2157a1ee640824bf25819f5942f70b1"
+  }
+]

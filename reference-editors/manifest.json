@@ -1,0 +1,53 @@
+{
+  "kuaitu": {
+    "sourceArchiveSha256": "6c953a34d6e9deb2a53897da3e346ed292a9869bebcf9f3b4e8585a7d3858294",
+    "bundleFiles": {
+      "THIRD_PARTY_NOTICES.txt": "69f45a329625e6768f00696650e7033ddf5c1bcd6f87f311cd4573ba6d0a78d1",
+      "assets/BlackWhite-f7b682f8.png": "f7b682f89776f0d0981fbacb67b4e224b563ab119c4e3d2dcaa5b3a672b607b8",
+      "assets/Brownie-e1fd7075.png": "e1fd70750b843710129e74f576ae8d2b5ff718bd93939fc80b43d2507917c382",
+      "assets/Invert-5af1c3a4.png": "5af1c3a464f01a865cde09ee048067d6ed62bd6e72ffbf2a91d53d444c6faa9f",
+      "assets/Kodachrome-2b49b22c.png": "2b49b22c64db7b0f86e8ab3299468660b05cc4f582b83e6f719dcab9a0b35b08",
+      "assets/Polaroid-9023c2a3.png": "9023c2a3741d1d26619acef281761f9cd5a60610484885c4e0a34c639945ec95",
+      "assets/Sepia-2ff95c35.png": "2ff95c35dc853daace0ff250c522dc9c16baf27e3b2e38df2f378c834c7d1a25",
+      "assets/Vintage-f02e23f3.png": "f02e23f339d347b9ba20a9674190d9c4e7087b671312a403f4b26cf4f3fc0960",
+      "assets/edgecontrol-dbe38ac6.svg": "dbe38ac6aee0dbef72f44ffdcb619852c464d007e4b1d55be7e63f9d6e97f9be",
+      "assets/index-5d173c33.css": "5d173c3303ac1f70ca9d3dadd0af86a01fd45191aaa95033fc19414660e1362b",
+      "assets/index-7c4e4d93.css": "7c4e4d9371bb545d321e4dd286afc4cf25abd09f67536913c5d2ba180d68ec49",
+      "assets/index-7c4e4d93.css.gz": "a120a14ca9e6f2ba27eebab4b4109e498ab00072ac78ac1d901ec943f02fa768",
+      "assets/index-a4c55352.css": "a4c55352de7832b2415b4cfed710e964dec227c0f35adae9be370ba9b0463a78",
+      "assets/index-a4c55352.css.gz": "230885e68e5b01103326b7cd3aa0a52ba84cae066d5504aee971679efb274c47",
+      "assets/ionicons-13d29fa1.ttf": "13d29fa1b804cd295603d17a7c9296c425af2724feaac7ce621f7cad43d8a31d",
+      "assets/ionicons-3cccccf5.svg": "3cccccf5fd1e61b09425fdd50011e83d55bab659c8c6cd664712d45d1d7bd8f4",
+      "assets/ionicons-503dc6b7.woff2": "503dc6b7a4b1ef89aac99bf92eab623f06d00ca212630514b660fa6ee52c437c",
+      "assets/ionicons-fe9ddf45.woff": "fe9ddf45f6f18308c6a5d71a09bd570df4f70f007e2e947c72d58deb7eb3ef2f",
+      "assets/lock-eaa0b47a.svg": "eaa0b47a16bbc2036224a31a4f097c47bb5fefa9d8923cda82f2b2b5885ccfe2",
+      "assets/middlecontrol-a163c615.svg": "a163c615ede8abf664ddbd9d1cf59307f1dc1e06cff6fdc28aa09dac8eebb17b",
+      "assets/middlecontrolhoz-9b7cc4b3.svg": "9b7cc4b3ea6e4025448cc9ea47fa395596502e1e53ca4081877fffdfdc318911",
+      "assets/rotateicon-ec6729f2.svg": "ec6729f21d308902f668c138398afc8fc4dc2770b756d7dc76b03bb87d628f7d",
+      "assets/technicolor-48049f1e.png": "48049f1e79270f5abda79fd1e6cb875c26de05f514a7c766857738c61a0f0221",
+      "favicon.ico": "c2db3148f3b014737591afb33ac0091517e78af2d9c73601af1d7292892a4809",
+      "index.html": "d468a38289417757edc3942c040c60375441b22295b9d7dee169f5179f6c10ae",
+      "js/index.2b8df2fa.js": "5d81f32a93f06643dd8cb1f7a736e4a72b97cbc9a4cda20c2d101e39a7a09367",
+      "js/index.2b8df2fa.js.gz": "527e27568cf073eb9b9acf4043a9357c34b821ae25cc3dcc95456ee32da7ef04",
+      "js/index.770609ce.js": "a95f1a410d9e534c33900f53439da21d22f42eebcd982c5e52cc04ea0fcc576c",
+      "js/index.770609ce.js.gz": "ac4d64c8cf62d1d802149795e05ce20cb4ac93b4845c74043f75a009d05909f1",
+      "js/index.d54dcc63.js": "85622ee34b4db43ff98eccded85986d31e6145ac0f70a3935f875003a000f835",
+      "js/index.d54dcc63.js.gz": "b7bd623763b7a635c40a8f12e0037e0513c7b28d7a6c4c27abcc29600e5d2c08",
+      "js/lang.85889503.js": "a2a53f5d84b705f14f6b121769abe8317c32a627a0c149ed50359c8468279fce",
+      "js/lang.85889503.js.gz": "dcb6197e4eb4d1a030a706558c83175b106d3eee79f78594e4af48b823f6198c"
+    }
+  },
+  "opencut-classic": {
+    "sourceArchiveSha256": "ad5a2b874a2b50ab10fca522a271b5c929f383af5c9e40bdf1c3f4feb45360a6",
+    "bundleFiles": {
+      "LICENSE.opencut": "8117f9bb64534f7530fc6139b014fd1c1465f7981f93d1871789150fa3f59d3d",
+      "THIRD_PARTY_LICENSES.json": "338bb99042530ddfd459018b129270e9b69388e38b055795d29143610542e2a2",
+      "THIRD_PARTY_LICENSES.txt": "ce641ac40a6b6f80f49e2adde74bc049fbc011c99ab71139ce3bc64c3cfffe51",
+      "assets/index-BWk2A5SJ.css": "69213a74bc128f480ced6d8242f75b4cd6d3e2a7d935911271e66e3f1f95173a",
+      "assets/index-DpYe8P5g.js": "c417c36665be9c278eb476c63a1f1505a82934f4504761921f1da29e97359f0c",
+      "assets/opencut_wasm_bg-BWSypKWK.wasm": "e7720e0d3fc46e06fd8aa10aa2c1a29121722e3c1b1d909945ed72a35581ec67",
+      "effects/preview.jpg": "b318cede7bbe27bfbf1b8b94d41f65b6f52d5f2650ce3a153d03b76c2a1c0190",
+      "index.html": "18b7d59c64a4f871348605ef5b71d550fd12652530d886125b1610ef051cf715"
+    }
+  }
+}

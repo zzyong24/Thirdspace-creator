@@ -1,0 +1,29 @@
+{
+  "data": {
+    "requestId": "0138f38e-5797-4bd1-80fe-a84cc9255911",
+    "taskId": "ai-task-186c9f73-142",
+    "executionTaskId": "exec_1da83cb0-475b-41eb-8cbd-18fd60d7790b",
+    "status": "succeeded",
+    "sourceId": "source-2ebb8f3fa231fa416b460b13b2dd1e2be6f2e4c7c94f19e8cce0b0286f4cf1d9",
+    "transcript": {
+      "transcriptId": "transcript-asr-media-request-186c9f73-141",
+      "sourceId": "source-2ebb8f3fa231fa416b460b13b2dd1e2be6f2e4c7c94f19e8cce0b0286f4cf1d9",
+      "assetFileId": "afile-a1381050-393",
+      "audioDigest": "d1bef350b9ec1ff9da234e61269e440574397a9da2ed9120e617eefde2753446",
+      "providerReceiptId": "asset-asr-aggregate:d9606abea66502a5507934c157d99d84d8b74c4aa16198b410d0ed33a07320ed",
+      "granularity": "text",
+      "text": "今天介绍一个做内容的方法,先把内容讲清楚。恩,这一句我重新说,先把内容讲清楚,再把它做成一组图片,最后检查每一张图是否连管。",
+      "providerEvidence": {
+        "aggregateDigest": "334175b0624cbc5e39ba4961ce55138d244933e66473743aac0edd63bed36929",
+        "effectiveAsrPlanDigest": "51bdd59be8dd9eb1e9933f0c03e2d12e215794d6db5db67c509d6b8199e84428",
+        "audioSourceMappingDigest": "13419e21fd731a86df4e41e588cd7a16923d342f86c4e5cf7b371a560488bab7"
+      }
+    },
+    "warnings": [
+      "该真实回执仅含全文，暂无可验证词句时间码，请在时间轴手工剪切"
+    ]
+  },
+  "meta": {
+    "requestId": "req-186c9f73-147"
+  }
+}

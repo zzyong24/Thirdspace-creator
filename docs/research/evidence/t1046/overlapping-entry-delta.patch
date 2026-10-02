@@ -1,0 +1,18 @@
+--- a/contract/src/index.ts
++++ b/contract/src/index.ts
+@@ -314,3 +314,5 @@
+ export * from "./resources/creative-canvas";
+ export * from "./resources/canvas-material-selection";
+ export * from './resources/reference-editor';
++
++export * from './resources/production-native-rough';
+--- a/frontend/src/server/persistence-client.ts
++++ b/frontend/src/server/persistence-client.ts
+@@ -5795,6 +5795,7 @@
+   const assetAsrOwner=createAssetAsrOwner(db,{...deps,assertProductionReservation:(c,proof,tx)=>productionService.assertAssetAsrReservation(c,proof,tx),budget:workerBudget,objectStorageForCtx,readExactFile:(c,input,signal)=>productionExactAsrFile(c,input,undefined,signal),extractAudio:extractProductionAsrAudio,prepareSpec:async(c,configuration,intentId,audioBytes)=>{const spec=await resolveTranscribeRuntimeSpec(c);if(canonical(transcribeConfiguration(spec))!==canonical(configuration))throw new ProductionConflictError("冻结转写配置已变化，不能替换原执行");return prepareManagedTranscribeSpec(c,spec,{intentId,audioBytes});}});
+   productionRoughCut=createProductionRoughCutReservations(db,{
+     ...deps,onVersionSaved:productionOwnerDeps.onVersionSaved,onRecoveryError:()=>console.warn("[T850] 粗剪原预约恢复失败，请核对原请求"),
++    readAuthoritativeScript:async(c,projectId,outputId)=>{const script=await outputScriptsService.getSavedScript(c,outputId);if(script&&script.projectId!==projectId)throw new Error("粗剪权威稿归属不符");return script;},
+     async assertExactSources(c,projectId,plan,tx){
+       const scoped=tx?createAssetsService(createAssetRepository(tx,deps),objectStorageForStore(tx),deps):assetsService;
+       for(const source of plan.mainTrack.sources){

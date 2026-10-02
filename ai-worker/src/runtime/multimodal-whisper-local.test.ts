@@ -206,6 +206,21 @@ describe("createDefaultPipelineProvider —— 模型缓存幂等(不真下模�
   });
 });
 
+describe("Whisper 真实缓冲区转移后的样本证据", () => {
+  it.each([16000,16001])("推理前PCM样本数与证据 %s 比较，transfer后仍可核验且不接受不符证据",async(validSampleCount)=>{
+    const pcm=new Float32Array(16000);
+    const adapter=createWhisperLocalAdapter({decodeAudioToFloat32:async()=>pcm,getPipeline:async()=>async(audio)=>{
+      // 真实执行 ArrayBuffer 转移，重现独立 Worker postMessage 后原数组 detached。
+      structuredClone(audio.buffer,{transfer:[audio.buffer as ArrayBuffer]});
+      return {text:"可验证单位",chunks:[{text:"可验证单位",timestamp:[0,0.5]}]};
+    }});
+    const result=await adapter.transcribeAudio!(baseSpec,{audioBytes:new Uint8Array([1,2,3]),timestampMode:"word",timingAudio:{sampleRate:16000,validSampleCount}});
+    expect(pcm.length).toBe(0);
+    if(validSampleCount===16000)expect(result.timing).toMatchObject({sampleRate:16000,validSampleCount:16000,ranges:[{text:"可验证单位",startSample:0,endSample:8000}]});
+    else expect(result.timing).toBeUndefined();
+  });
+});
+
 describe("Whisper worker —— Windows 分层 runtime 模块解析", () => {
   it("在真实 worker 内先加载随包 resolver，再解析 local-ai 层的 transformers", async () => {
     const runtimeRoot = mkdtempSync(resolve(tmpdir(), "creatoros-whisper-worker-"));
@@ -232,7 +247,9 @@ registerHooks({ resolve(specifier, context, nextResolve) {
 }});\n`,
     );
 
-    const runtime = resolveWhisperWorkerRuntime({ cwd: frontendRoot });
+    const resolveDependency=vi.fn(()=>{throw Error("桌面 resolver 存在，不应走 worker 依赖路径");});
+    const runtime = resolveWhisperWorkerRuntime({ cwd: frontendRoot,resolveDependency });
+    expect(resolveDependency).not.toHaveBeenCalled();
     expect(runtime).toEqual({
       requireBase: resolve(frontendRoot, "package.json"),
       moduleResolverPath: resolverPath,
@@ -273,11 +290,22 @@ registerHooks({ resolve(specifier, context, nextResolve) {
     }
   });
 
+  it("Web frontend cwd 无分层 resolver，使用 execution Worker 所在包真实可解析的依赖路径", () => {
+    const frontendRoot=mkdtempSync(resolve(tmpdir(),"creatoros-whisper-web-"));
+    try{
+      writeFileSync(resolve(frontendRoot,"package.json"),'{}\n');
+      const dependencyPath=resolve(frontendRoot,"..","ai-worker","node_modules","@xenova","transformers","src","transformers.js");
+      const resolveDependency=vi.fn((specifier:string)=>{expect(specifier).toBe("@xenova/transformers");return dependencyPath;});
+      expect(resolveWhisperWorkerRuntime({cwd:frontendRoot,resolveDependency})).toEqual({requireBase:dependencyPath});
+      expect(resolveDependency).toHaveBeenCalledOnce();
+    }finally{rmSync(frontendRoot,{recursive:true,force:true});}
+  });
+
   it("传统 runtime 没有 resolver 时保持原生 requireBase 兼容", () => {
     const frontendRoot = mkdtempSync(resolve(tmpdir(), "creatoros-whisper-legacy-"));
     try {
       writeFileSync(resolve(frontendRoot, "package.json"), '{}\n');
-      expect(resolveWhisperWorkerRuntime({ cwd: frontendRoot })).toEqual({
+      expect(resolveWhisperWorkerRuntime({ cwd: frontendRoot,resolveDependency:()=>{throw Object.assign(Error("传统包依赖仅在 cwd"),{code:"MODULE_NOT_FOUND"});} })).toEqual({
         requireBase: resolve(frontendRoot, "package.json"),
       });
     } finally {
