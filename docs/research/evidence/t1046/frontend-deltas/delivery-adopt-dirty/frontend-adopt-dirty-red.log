@@ -1,0 +1,355 @@
+
+ RUN  v4.1.8 /private/tmp/t1046-ui-work/frontend
+
+(node:46643) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ src/features/reference-editors/video-reference-workbench.test.tsx (12 tests | 2 failed) 2507ms
+   × 正常采用后的自动项目/scene时间变化不标dirty，明确采用成功且下次prepare不save 1022ms
+   × 恢复真实已应用但ACK丢失的原回执，clean只保留真实差异而不重复apply 1038ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/features/reference-editors/video-reference-workbench.test.tsx > 正常采用后的自动项目/scene时间变化不标dirty，明确采用成功且下次prepare不save
+TestingLibraryElementError: Unable to find an element with the text: 已采用到当前时间轴，可继续编辑或撤销。. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div>[39m
+      [36m<div>[39m
+        [36m<section[39m
+          [33maria-label[39m=[32m"视频剪辑工作台"[39m
+          [33mclass[39m=[32m"min-w-0 space-y-3"[39m
+        [36m>[39m
+          [36m<header[39m
+            [33mclass[39m=[32m"flex flex-wrap items-center justify-between gap-3"[39m
+          [36m>[39m
+            [36m<div>[39m
+              [36m<h1>[39m
+                [0m剪辑视频 · [0m
+                [0m真实粗剪[0m
+              [36m</h1>[39m
+              [36m<p[39m
+                [33mclass[39m=[32m"text-xs text-muted-foreground"[39m
+              [36m>[39m
+                [0m有未保存修改[0m
+                [0m · 使用 OpenCut 开源工作台 [0m
+                [36m<a[39m
+                  [33mclass[39m=[32m"underline"[39m
+                  [33mhref[39m=[32m"/reference-editors/NOTICE.html"[39m
+                  [33mrel[39m=[32m"noreferrer"[39m
+                  [33mtarget[39m=[32m"_blank"[39m
+                [36m>[39m
+                  [0m来源与许可[0m
+                [36m</a>[39m
+              [36m</p>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"flex flex-wrap gap-2"[39m
+            [36m>[39m
+              [36m<button[39m
+                [33mclass[39m=[32m"group/button inline-flex shrink-0 items-center justify-center rounded-lg border bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50 h-8 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2"[39m
+                [33mdata-slot[39m=[32m"button"[39m
+              [36m>[39m
+                [0m保存工程[0m
+              [36m</button>[39m
+              [36m<button[39m
+                [33mclass[39m=[32m"group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-primary text-primary-foreground hover:bg-primary/80 h-8 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2"[39m
+                [33mdata-slot[39m=[32m"button"[39m
+              [36m>[39m
+                [0m导出当前场景 MP4[0m
+              [36m</button>[39m
+              [36m<button[39m
+                [33mclass[39m=[32m"group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50 h-8 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2"[39m
+                [33mdata-slot[39m=[32m"button"[39m
+                [33mdisabled[39m=[32m""[39m
+              [36m>[39m
+                [0m历史版本[0m
+              [36m</button>[39m
+              [36m<button[39m
+                [33mclass[39m=[32m"group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50 h-8 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2"[39m
+                [33mdata-slot[39m=[32m"button"[39m
+                [33mdisabled[39m=[32m""[39m
+              [36m>[39m
+                [0m返回制作页[0m
+              [36m</button>[39m
+            [36m</div>[39m
+          [36m</header>[39m
+          [36m<p[39m
+            [33mclass[39m=[32m"text-xs leading-4"[39m
+            [33mrole[39m=[32m"status"[39m
+          [36m>[39m
+            [0m原采纳回执已确认，本地后续修改和撤销继续保留。[0m
+          [36m</p>[39m
+          [36m<div[39m
+            [33maria-label[39m=[32m"剪辑工具"[39m
+            [33mclass[39m=[32m"flex flex-wrap items-center gap-2"[39m
+          [36m>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"group/button inline-flex shrink-0 items-center justify-center border bg-clip-padding font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50 h-7 gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5"[39m
+              [33mdata-slot[39m=[32m"button"[39m
+            [36m>[39m
+              [0mAI 辅助粗剪[0m
+              [0m · 收起[...
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div>[39m
+      [36m<div>[39m
+        [36m<section[39m
+          [33maria-label[39m=[32m"视频剪辑工作台"[39m
+          [33mclass[39m=[32m"min-w-0 space-y-3"[39m
+        [36m>[39m
+          [36m<header[39m
+            [33mclass[39m=[32m"flex flex-wrap items-center justify-between gap-3"[39m
+          [36m>[39m
+            [36m<div>[39m
+              [36m<h1>[39m
+                [0m剪辑视频 · [0m
+                [0m真实粗剪[0m
+              [36m</h1>[39m
+              [36m<p[39m
+                [33mclass[39m=[32m"text-xs text-muted-foreground"[39m
+              [36m>[39m
+                [0m有未保存修改[0m
+                [0m · 使用 OpenCut 开源工作台 [0m
+                [36m<a[39m
+                  [33mclass[39m=[32m"underline"[39m
+                  [33mhref[39m=[32m"/reference-editors/NOTICE.html"[39m
+                  [33mrel[39m=[32m"noreferrer"[39m
+                  [33mtarget[39m=[32m"_blank"[39m
+                [36m>[39m
+                  [0m来源与许可[0m
+                [36m</a>[39m
+              [36m</p>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"flex flex-wrap gap-2"[39m
+            [36m>[39m
+              [36m<button[39m
+                [33mclass[39m=[32m"group/button inline-flex shrink-0 items-center justify-center rounded-lg border bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50 h-8 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2"[39m
+                [33mdata-slot[39m=[32m"button"[39m
+              [36m>[39m
+                [0m保存工程[0m
+              [36m</button>[39m
+              [36m<button[39m
+                [33mclass[39m=[32m"group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-primary text-primary-foreground hover:bg-primary/80 h-8 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2"[39m
+                [33mdata-slot[39m=[32m"button"[39m
+              [36m>[39m
+                [0m导出当前场景 MP4[0m
+              [36m</button>[39m
+              [36m<button[39m
+                [33mclass[39m=[32m"group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50 h-8 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2"[39m
+                [33mdata-slot[39m=[32m"button"[39m
+                [33mdisabled[39m=[32m""[39m
+              [36m>[39m
+                [0m历史版本[0m
+              [36m</button>[39m
+              [36m<button[39m
+                [33mclass[39m=[32m"group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50 h-8 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2"[39m
+                [33mdata-slot[39m=[32m"button"[39m
+                [33mdisabled[39m=[32m""[39m
+              [36m>[39m
+                [0m返回制作页[0m
+              [36m</button>[39m
+            [36m</div>[39m
+          [36m</header>[39m
+          [36m<p[39m
+            [33mclass[39m=[32m"text-xs leading-4"[39m
+            [33mrole[39m=[32m"status"[39m
+          [36m>[39m
+            [0m原采纳回执已确认，本地后续修改和撤销继续保留。[0m
+          [36m</p>[39m
+          [36m<div[39m
+            [33maria-label[39m=[32m"剪辑工具"[39m
+            [33mclass[39m=[32m"flex flex-wrap items-center gap-2"[39m
+          [36m>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"group/button inline-flex shrink-0 items-center justify-center border bg-clip-padding font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50 h-7 gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5"[39m
+              [33mdata-slot[39m=[32m"button"[39m
+            [36m>[39m
+              [0mAI 辅助粗剪[0m
+              [0m · 收起[...
+ ❯ waitForWrapper ../../../../Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ❯ ../../../../Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:86:33
+ ❯ src/features/reference-editors/video-reference-workbench.test.tsx:41:705
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/features/reference-editors/video-reference-workbench.test.tsx > 恢复真实已应用但ACK丢失的原回执，clean只保留真实差异而不重复apply
+TestingLibraryElementError: Unable to find an element with the text: 已采用到当前时间轴，可继续编辑或撤销。. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div>[39m
+      [36m<div>[39m
+        [36m<section[39m
+          [33maria-label[39m=[32m"视频剪辑工作台"[39m
+          [33mclass[39m=[32m"min-w-0 space-y-3"[39m
+        [36m>[39m
+          [36m<header[39m
+            [33mclass[39m=[32m"flex flex-wrap items-center justify-between gap-3"[39m
+          [36m>[39m
+            [36m<div>[39m
+              [36m<h1>[39m
+                [0m剪辑视频 · [0m
+                [0m真实粗剪[0m
+              [36m</h1>[39m
+              [36m<p[39m
+                [33mclass[39m=[32m"text-xs text-muted-foreground"[39m
+              [36m>[39m
+                [0m有未保存修改[0m
+                [0m · 使用 OpenCut 开源工作台 [0m
+                [36m<a[39m
+                  [33mclass[39m=[32m"underline"[39m
+                  [33mhref[39m=[32m"/reference-editors/NOTICE.html"[39m
+                  [33mrel[39m=[32m"noreferrer"[39m
+                  [33mtarget[39m=[32m"_blank"[39m
+                [36m>[39m
+                  [0m来源与许可[0m
+                [36m</a>[39m
+              [36m</p>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"flex flex-wrap gap-2"[39m
+            [36m>[39m
+              [36m<button[39m
+                [33mclass[39m=[32m"group/button inline-flex shrink-0 items-center justify-center rounded-lg border bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50 h-8 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2"[39m
+                [33mdata-slot[39m=[32m"button"[39m
+              [36m>[39m
+                [0m保存工程[0m
+              [36m</button>[39m
+              [36m<button[39m
+                [33mclass[39m=[32m"group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-primary text-primary-foreground hover:bg-primary/80 h-8 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2"[39m
+                [33mdata-slot[39m=[32m"button"[39m
+              [36m>[39m
+                [0m导出当前场景 MP4[0m
+              [36m</button>[39m
+              [36m<button[39m
+                [33mclass[39m=[32m"group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50 h-8 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2"[39m
+                [33mdata-slot[39m=[32m"button"[39m
+                [33mdisabled[39m=[32m""[39m
+              [36m>[39m
+                [0m历史版本[0m
+              [36m</button>[39m
+              [36m<button[39m
+                [33mclass[39m=[32m"group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50 h-8 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2"[39m
+                [33mdata-slot[39m=[32m"button"[39m
+                [33mdisabled[39m=[32m""[39m
+              [36m>[39m
+                [0m返回制作页[0m
+              [36m</button>[39m
+            [36m</div>[39m
+          [36m</header>[39m
+          [36m<p[39m
+            [33mclass[39m=[32m"text-xs leading-4"[39m
+            [33mrole[39m=[32m"status"[39m
+          [36m>[39m
+            [0m原剪辑回执已确认，本地后续修改或撤销已保留。[0m
+          [36m</p>[39m
+          [36m<div[39m
+            [33maria-label[39m=[32m"剪辑工具"[39m
+            [33mclass[39m=[32m"flex flex-wrap items-center gap-2"[39m
+          [36m>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"group/button inline-flex shrink-0 items-center justify-center border bg-clip-padding font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50 h-7 gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5"[39m
+              [33mdata-slot[39m=[32m"button"[39m
+            [36m>[39m
+              [0mAI 辅助粗剪[0m
+              [0m · 收起[0...
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div>[39m
+      [36m<div>[39m
+        [36m<section[39m
+          [33maria-label[39m=[32m"视频剪辑工作台"[39m
+          [33mclass[39m=[32m"min-w-0 space-y-3"[39m
+        [36m>[39m
+          [36m<header[39m
+            [33mclass[39m=[32m"flex flex-wrap items-center justify-between gap-3"[39m
+          [36m>[39m
+            [36m<div>[39m
+              [36m<h1>[39m
+                [0m剪辑视频 · [0m
+                [0m真实粗剪[0m
+              [36m</h1>[39m
+              [36m<p[39m
+                [33mclass[39m=[32m"text-xs text-muted-foreground"[39m
+              [36m>[39m
+                [0m有未保存修改[0m
+                [0m · 使用 OpenCut 开源工作台 [0m
+                [36m<a[39m
+                  [33mclass[39m=[32m"underline"[39m
+                  [33mhref[39m=[32m"/reference-editors/NOTICE.html"[39m
+                  [33mrel[39m=[32m"noreferrer"[39m
+                  [33mtarget[39m=[32m"_blank"[39m
+                [36m>[39m
+                  [0m来源与许可[0m
+                [36m</a>[39m
+              [36m</p>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"flex flex-wrap gap-2"[39m
+            [36m>[39m
+              [36m<button[39m
+                [33mclass[39m=[32m"group/button inline-flex shrink-0 items-center justify-center rounded-lg border bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50 h-8 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2"[39m
+                [33mdata-slot[39m=[32m"button"[39m
+              [36m>[39m
+                [0m保存工程[0m
+              [36m</button>[39m
+              [36m<button[39m
+                [33mclass[39m=[32m"group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-primary text-primary-foreground hover:bg-primary/80 h-8 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2"[39m
+                [33mdata-slot[39m=[32m"button"[39m
+              [36m>[39m
+                [0m导出当前场景 MP4[0m
+              [36m</button>[39m
+              [36m<button[39m
+                [33mclass[39m=[32m"group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50 h-8 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2"[39m
+                [33mdata-slot[39m=[32m"button"[39m
+                [33mdisabled[39m=[32m""[39m
+              [36m>[39m
+                [0m历史版本[0m
+              [36m</button>[39m
+              [36m<button[39m
+                [33mclass[39m=[32m"group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50 h-8 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2"[39m
+                [33mdata-slot[39m=[32m"button"[39m
+                [33mdisabled[39m=[32m""[39m
+              [36m>[39m
+                [0m返回制作页[0m
+              [36m</button>[39m
+            [36m</div>[39m
+          [36m</header>[39m
+          [36m<p[39m
+            [33mclass[39m=[32m"text-xs leading-4"[39m
+            [33mrole[39m=[32m"status"[39m
+          [36m>[39m
+            [0m原剪辑回执已确认，本地后续修改或撤销已保留。[0m
+          [36m</p>[39m
+          [36m<div[39m
+            [33maria-label[39m=[32m"剪辑工具"[39m
+            [33mclass[39m=[32m"flex flex-wrap items-center gap-2"[39m
+          [36m>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"group/button inline-flex shrink-0 items-center justify-center border bg-clip-padding font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50 h-7 gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5"[39m
+              [33mdata-slot[39m=[32m"button"[39m
+            [36m>[39m
+              [0mAI 辅助粗剪[0m
+              [0m · 收起[0...
+ ❯ waitForWrapper ../../../../Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ❯ ../../../../Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:86:33
+ ❯ src/features/reference-editors/video-reference-workbench.test.tsx:44:1153
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 10 passed (12)
+   Start at  00:41:25
+   Duration  4.41s (transform 566ms, setup 165ms, import 949ms, tests 2.51s, environment 607ms)
+

@@ -1,0 +1,9 @@
+
+ RUN  v4.1.8 /private/tmp/t1046-backend-work/ai-worker
+
+
+ Test Files  2 passed (2)
+      Tests  41 passed (41)
+   Start at  00:28:36
+   Duration  1.15s (transform 830ms, setup 0ms, import 1.78s, tests 64ms, environment 0ms)
+

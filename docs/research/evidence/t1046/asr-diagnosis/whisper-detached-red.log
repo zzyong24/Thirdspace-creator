@@ -1,0 +1,48 @@
+
+ RUN  v4.1.8 /private/tmp/t1046-backend-work/ai-worker
+
+ ❯ src/runtime/multimodal-whisper-local.test.ts (23 tests | 1 failed) 48ms
+     × 推理前PCM样本数与证据 16000 比较，transfer后仍可核验且不接受不符证据 7ms (retry x2)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/runtime/multimodal-whisper-local.test.ts > Whisper 真实缓冲区转移后的样本证据 > 推理前PCM样本数与证据 16000 比较，transfer后仍可核验且不接受不符证据
+ FAIL  src/runtime/multimodal-whisper-local.test.ts > Whisper 真实缓冲区转移后的样本证据 > 推理前PCM样本数与证据 16000 比较，transfer后仍可核验且不接受不符证据
+ FAIL  src/runtime/multimodal-whisper-local.test.ts > Whisper 真实缓冲区转移后的样本证据 > 推理前PCM样本数与证据 16000 比较，transfer后仍可核验且不接受不符证据
+AssertionError: expected undefined to match object { sampleRate: 16000, …(2) }
+
+- Expected:
+{
+  "ranges": [
+    {
+      "endSample": 8000,
+      "startSample": 0,
+      "text": "可验证单位",
+    },
+  ],
+  "sampleRate": 16000,
+  "validSampleCount": 16000,
+}
+
++ Received:
+undefined
+
+ ❯ src/runtime/multimodal-whisper-local.test.ts:219:55
+    217|     const result=await adapter.transcribeAudio!(baseSpec,{audioBytes:n…
+    218|     expect(pcm.length).toBe(0);
+    219|     if(validSampleCount===16000)expect(result.timing).toMatchObject({s…
+       |                                                       ^
+    220|     else expect(result.timing).toBeUndefined();
+    221|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 22 passed (23)
+   Start at  00:27:44
+   Duration  1.06s (transform 313ms, setup 0ms, import 824ms, tests 48ms, environment 0ms)
+
+undefined
+/private/tmp/t1046-backend-work/ai-worker:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/runtime/multimodal-whisper-local.test.ts

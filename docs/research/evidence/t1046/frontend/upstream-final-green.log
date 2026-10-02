@@ -1,0 +1,20 @@
+bun test v1.4.0 (34cbb9a40)
+
+apps/web/src/embedded/__tests__/native-command.test.ts:
+(pass) 采纳命令跨scene撤销只恢复目标scene，其他scene最新编辑、选区和播放头保留 [4.43ms]
+(pass) 已闭合的after不被原生ripple二次重排独立图层 [0.32ms]
+(pass) 完整beforeTracks包含独立轨；后来文字修改时零Command且原输入保留 [24.45ms]
+(pass) 相同ACK重播一次Command，撤销后重播不重新写入after [1.36ms]
+(pass) 错owner/scene回执均不写时间轴 [1.23ms]
+
+apps/web/src/embedded/__tests__/host-boundary.test.ts:
+(pass) bridge accepts only exact same-origin parent/session/protocol [0.09ms]
+(pass) storage holds one current output and snapshots without runtime binaries/URLs [3.28ms]
+(pass) export returns the exact frozen render document and rejects delayed imported edits [1.79ms]
+(pass) failed export releases editing and pending import replies cannot write during the freeze [2.07ms]
+(pass) load baseline suppresses autosave timestamps and identical snapshots but preserves editorial changes [0.60ms]
+
+ 10 pass
+ 0 fail
+ 63 expect() calls
+Ran 10 tests across 2 files. [648.00ms]

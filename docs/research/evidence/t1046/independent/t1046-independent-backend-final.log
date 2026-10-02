@@ -1,0 +1,9 @@
+
+ RUN  v4.1.8 /private/tmp/t1046-independent-work/backend
+
+
+ Test Files  3 passed (3)
+      Tests  12 passed (12)
+   Start at  23:31:27
+   Duration  8.82s (transform 5.35s, setup 0ms, import 9.47s, tests 7.69s, environment 0ms)
+

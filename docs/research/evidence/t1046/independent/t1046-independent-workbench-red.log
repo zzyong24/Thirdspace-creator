@@ -1,0 +1,176 @@
+
+ RUN  v4.1.8 /private/tmp/t1046-independent-work/frontend
+
+(node:14898) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ src/features/reference-editors/independent-native-workbench.test.tsx (3 tests | 3 failed) 1171ms
+   × 独立入口：空工程或旧 v2 打开原生新稿不抛，原生保存仍可用（null） 22ms
+   × 独立入口：空工程或旧 v2 打开原生新稿不抛，原生保存仍可用（{"editorVersion":2,"mainTrack":{"sources":[],"clips":[]},"overlayDraft":{"meta":{},"scenes":[],"captions":[],"broll":[],"delivery":{"width":640,"height":360,"fps":30}},"sourceTranscripts":[]}） 4ms
+   × 独立恢复：服务已commit而完整本地轨道冲突，保留核对后能继续保存和生成 1145ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/features/reference-editors/independent-native-workbench.test.tsx > 独立入口：空工程或旧 v2 打开原生新稿不抛，原生保存仍可用（null）
+AssertionError: expected [Function] to not throw an error but '[\n  {\n    "expected": "object",\n  …' was thrown
+
+- Expected:
+undefined
+
++ Received:
+"[
+  {
+    \"expected\": \"object\",
+    \"code\": \"invalid_type\",
+    \"path\": [],
+    \"message\": \"Invalid input: expected object, received null\"
+  }
+]"
+
+ ❯ src/features/reference-editors/independent-native-workbench.test.tsx:22:207
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  src/features/reference-editors/independent-native-workbench.test.tsx > 独立入口：空工程或旧 v2 打开原生新稿不抛，原生保存仍可用（{"editorVersion":2,"mainTrack":{"sources":[],"clips":[]},"overlayDraft":{"meta":{},"scenes":[],"captions":[],"broll":[],"delivery":{"width":640,"height":360,"fps":30}},"sourceTranscripts":[]}）
+AssertionError: expected [Function] to not throw an error but '[\n  {\n    "code": "invalid_value",\…' was thrown
+
+- Expected:
+undefined
+
++ Received:
+"[
+  {
+    \"code\": \"invalid_value\",
+    \"values\": [
+      3
+    ],
+    \"path\": [
+      \"editorVersion\"
+    ],
+    \"message\": \"Invalid input: expected 3\"
+  },
+  {
+    \"expected\": \"object\",
+    \"code\": \"invalid_type\",
+    \"path\": [
+      \"referenceEditor\"
+    ],
+    \"message\": \"Invalid input: expected object, received undefined\"
+  },
+  {
+    \"code\": \"unrecognized_keys\",
+    \"keys\": [
+      \"mainTrack\",
+      \"overlayDraft\"
+    ],
+    \"path\": [],
+    \"message\": \"Unrecognized keys: \\\"mainTrack\\\", \\\"overlayDraft\\\"\"
+  }
+]"
+
+ ❯ src/features/reference-editors/independent-native-workbench.test.tsx:22:207
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  src/features/reference-editors/independent-native-workbench.test.tsx > 独立恢复：服务已commit而完整本地轨道冲突，保留核对后能继续保存和生成
+AssertionError: expected +0 to be 1 // Object.is equality
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div>[39m
+      [36m<div>[39m
+        [36m<div>[39m
+          [36m<section[39m
+            [33maria-label[39m=[32m"视频剪辑工作台"[39m
+            [33mclass[39m=[32m"min-w-0 space-y-3"[39m
+          [36m>[39m
+            [36m<header[39m
+              [33mclass[39m=[32m"flex flex-wrap items-center justify-between gap-3"[39m
+            [36m>[39m
+              [36m<div>[39m
+                [36m<h1>[39m
+                  [0m剪辑视频 · [0m
+                  [0m本地保留[0m
+                [36m</h1>[39m
+                [36m<p[39m
+                  [33mclass[39m=[32m"text-xs text-muted-foreground"[39m
+                [36m>[39m
+                  [0m素材、预览、时间轴和属性可直接编辑[0m
+                  [0m · 使用 OpenCut 开源工作台 [0m
+                  [36m<a[39m
+                    [33mclass[39m=[32m"underline"[39m
+                    [33mhref[39m=[32m"/reference-editors/NOTICE.html"[39m
+                    [33mrel[39m=[32m"noreferrer"[39m
+                    [33mtarget[39m=[32m"_blank"[39m
+                  [36m>[39m
+                    [0m来源与许可[0m
+                  [36m</a>[39m
+                [36m</p>[39m
+              [36m</div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"flex flex-wrap gap-2"[39m
+              [36m>[39m
+                [36m<button[39m
+                  [33mclass[39m=[32m"group/button inline-flex shrink-0 items-center justify-center rounded-lg border bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50 h-8 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2"[39m
+                  [33mdata-slot[39m=[32m"button"[39m
+                [36m>[39m
+                  [0m保存工程[0m
+                [36m</button>[39m
+                [36m<button[39m
+                  [33mclass[39m=[32m"group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-primary text-primary-foreground hover:bg-primary/80 h-8 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2"[39m
+                  [33mdata-slot[39m=[32m"button"[39m
+                [36m>[39m
+                  [0m导出当前场景 MP4[0m
+                [36m</button>[39m
+                [36m<button[39m
+                  [33mclass[39m=[32m"group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50 h-8 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2"[39m
+                  [33mdata-slot[39m=[32m"button"[39m
+                [36m>[39m
+                  [0m历史版本[0m
+                [36m</button>[39m
+                [36m<button[39m
+                  [33mclass[39m=[32m"group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50 h-8 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2"[39m
+                  [33mdata-slot[39m=[32m"button"[39m
+                [36m>[39m
+                  [0m返回制作页[0m
+                [36m</button>[39m
+              [36m</div>[39m
+            [36m</header>[39m
+            [36m<p[39m
+              [33mclass[39m=[32m"text-sm"[39m
+              [33mrole[39m=[32m"status"[39m
+            [36m>[39m
+              [0m剪辑工程已保存，刷新后可继续编辑。[0m
+            [36m</p>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"flex flex-wrap items-center gap-2"[39m
+            [36m>[39m
+              [36m<button[39m
+                [33mclass[39m=[32m"group/button inline-flex shrink-0 items-center justify-center border bg-clip-padding font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50 h-7 gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5"[39m
+                [33mdata-slot[39m=[32m"button"[39m
+              [36m>[39m
+                [0m从素...
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ src/features/reference-editors/independent-native-workbench.test.tsx:23:1883
+
+ ❯ runWithExpensiveErrorDiagnosticsDisabled ../../../../Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:47:12
+ ❯ checkCallback ../../../../Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:124:77
+ ❯ Timeout.checkRealTimersCallback ../../../../Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:118:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed (3)
+   Start at  23:38:50
+   Duration  2.63s (transform 517ms, setup 112ms, import 812ms, tests 1.17s, environment 392ms)
+

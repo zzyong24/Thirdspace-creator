@@ -1,0 +1,419 @@
+
+ RUN  v4.1.8 /private/tmp/t1046-ui-work/frontend
+
+(node:26847) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ src/features/production/production-transcript-panel.test.tsx (10 tests | 2 failed) 2320ms
+   × 真实转写失败读取同一task的执行态及人话原因，不重新创建请求 1012ms
+   × unknown原结果只读诊断，读取失败仍保留原request与完整body 1011ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/features/production/production-transcript-panel.test.tsx > 真实转写失败读取同一task的执行态及人话原因，不重新创建请求
+TestingLibraryElementError: Unable to find an element with the text: 音轨格式不支持，请换成受支持的原片。. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<details[39m
+      [33mclass[39m=[32m"min-w-0 rounded border p-3"[39m
+      [33mopen[39m=[32m""[39m
+    [36m>[39m
+      [36m<summary[39m
+        [33mclass[39m=[32m"cursor-pointer text-sm font-medium"[39m
+      [36m>[39m
+        [0m原片转写与逐字稿[0m
+      [36m</summary>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"mt-3 grid min-w-0 gap-3"[39m
+      [36m>[39m
+        [36m<p[39m
+          [33mclass[39m=[32m"text-xs text-muted-foreground"[39m
+        [36m>[39m
+          [0m转写读取已加入主轨的原文件。生成结果经你采纳后保存；转写失败仍能手工修剪。[0m
+        [36m</p>[39m
+        [36m<label[39m
+          [33mclass[39m=[32m"grid gap-1 text-sm"[39m
+        [36m>[39m
+          [0m转写原片[0m
+          [36m<select[39m
+            [33maria-label[39m=[32m"转写原片"[39m
+            [33mclass[39m=[32m"min-w-0 rounded border bg-background p-2"[39m
+          [36m>[39m
+            [36m<option[39m
+              [33mvalue[39m=[32m"source-a"[39m
+            [36m>[39m
+              [0m原片 [0m
+              [0m1[0m
+            [36m</option>[39m
+          [36m</select>[39m
+        [36m</label>[39m
+        [36m<label[39m
+          [33mclass[39m=[32m"grid gap-1 text-sm"[39m
+        [36m>[39m
+          [0m转写精度[0m
+          [36m<select[39m
+            [33maria-label[39m=[32m"转写精度"[39m
+            [33mclass[39m=[32m"min-w-0 rounded border bg-background p-2"[39m
+            [33mdisabled[39m=[32m""[39m
+          [36m>[39m
+            [36m<option[39m
+              [33mvalue[39m=[32m"text"[39m
+            [36m>[39m
+              [0m全文[0m
+            [36m</option>[39m
+            [36m<option[39m
+              [33mvalue[39m=[32m"segment"[39m
+            [36m>[39m
+              [0m句级时间码[0m
+            [36m</option>[39m
+            [36m<option[39m
+              [33mvalue[39m=[32m"word"[39m
+            [36m>[39m
+              [0m词级时间码[0m
+            [36m</option>[39m
+          [36m</select>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"text-xs text-muted-foreground"[39m
+          [36m>[39m
+            [0m只有回执与源音视频时间映射可验证时才提供词句定位；无法验证时保留全文，仍可手工剪辑。[0m
+          [36m</span>[39m
+        [36m</label>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex flex-wrap gap-2"[39m
+        [36m>[39m
+          [36m<button[39m
+            [33mclass[39m=[32m"rounded-md border px-3 py-2 text-sm disabled:opacity-40"[39m
+            [33mdisabled[39m=[32m""[39m
+          [36m>[39m
+            [0m转写这段原片[0m
+          [36m</button>[39m
+          [36m<button[39m
+            [33mclass[39m=[32m"rounded-md border px-3 py-2 text-sm disabled:opacity-40"[39m
+          [36m>[39m
+            [0m读取原转写状态[0m
+          [36m</button>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"min-w-0 space-y-2 rounded border p-3"[39m
+        [36m>[39m
+          [36m<p[39m
+            [33mclass[39m=[32m"text-sm"[39m
+          [36m>[39m
+            [0m转写失败，手工剪辑仍可继续[0m
+          [36m</p>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</details>[39m
+  [36m</div>[39m
+[36m</body>[39m
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<details[39m
+      [33mclass[39m=[32m"min-w-0 rounded border p-3"[39m
+      [33mopen[39m=[32m""[39m
+    [36m>[39m
+      [36m<summary[39m
+        [33mclass[39m=[32m"cursor-pointer text-sm font-medium"[39m
+      [36m>[39m
+        [0m原片转写与逐字稿[0m
+      [36m</summary>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"mt-3 grid min-w-0 gap-3"[39m
+      [36m>[39m
+        [36m<p[39m
+          [33mclass[39m=[32m"text-xs text-muted-foreground"[39m
+        [36m>[39m
+          [0m转写读取已加入主轨的原文件。生成结果经你采纳后保存；转写失败仍能手工修剪。[0m
+        [36m</p>[39m
+        [36m<label[39m
+          [33mclass[39m=[32m"grid gap-1 text-sm"[39m
+        [36m>[39m
+          [0m转写原片[0m
+          [36m<select[39m
+            [33maria-label[39m=[32m"转写原片"[39m
+            [33mclass[39m=[32m"min-w-0 rounded border bg-background p-2"[39m
+          [36m>[39m
+            [36m<option[39m
+              [33mvalue[39m=[32m"source-a"[39m
+            [36m>[39m
+              [0m原片 [0m
+              [0m1[0m
+            [36m</option>[39m
+          [36m</select>[39m
+        [36m</label>[39m
+        [36m<label[39m
+          [33mclass[39m=[32m"grid gap-1 text-sm"[39m
+        [36m>[39m
+          [0m转写精度[0m
+          [36m<select[39m
+            [33maria-label[39m=[32m"转写精度"[39m
+            [33mclass[39m=[32m"min-w-0 rounded border bg-background p-2"[39m
+            [33mdisabled[39m=[32m""[39m
+          [36m>[39m
+            [36m<option[39m
+              [33mvalue[39m=[32m"text"[39m
+            [36m>[39m
+              [0m全文[0m
+            [36m</option>[39m
+            [36m<option[39m
+              [33mvalue[39m=[32m"segment"[39m
+            [36m>[39m
+              [0m句级时间码[0m
+            [36m</option>[39m
+            [36m<option[39m
+              [33mvalue[39m=[32m"word"[39m
+            [36m>[39m
+              [0m词级时间码[0m
+            [36m</option>[39m
+          [36m</select>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"text-xs text-muted-foreground"[39m
+          [36m>[39m
+            [0m只有回执与源音视频时间映射可验证时才提供词句定位；无法验证时保留全文，仍可手工剪辑。[0m
+          [36m</span>[39m
+        [36m</label>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex flex-wrap gap-2"[39m
+        [36m>[39m
+          [36m<button[39m
+            [33mclass[39m=[32m"rounded-md border px-3 py-2 text-sm disabled:opacity-40"[39m
+            [33mdisabled[39m=[32m""[39m
+          [36m>[39m
+            [0m转写这段原片[0m
+          [36m</button>[39m
+          [36m<button[39m
+            [33mclass[39m=[32m"rounded-md border px-3 py-2 text-sm disabled:opacity-40"[39m
+          [36m>[39m
+            [0m读取原转写状态[0m
+          [36m</button>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"min-w-0 space-y-2 rounded border p-3"[39m
+        [36m>[39m
+          [36m<p[39m
+            [33mclass[39m=[32m"text-sm"[39m
+          [36m>[39m
+            [0m转写失败，手工剪辑仍可继续[0m
+          [36m</p>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</details>[39m
+  [36m</div>[39m
+[36m</body>[39m
+ ❯ waitForWrapper ../../../../Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ❯ ../../../../Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:86:33
+ ❯ src/features/production/production-transcript-panel.test.tsx:37:471
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/features/production/production-transcript-panel.test.tsx > unknown原结果只读诊断，读取失败仍保留原request与完整body
+TestingLibraryElementError: Unable to find an element with the text: 原任务诊断暂未读到，原转写请求已保留；可再读取原状态。. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<details[39m
+      [33mclass[39m=[32m"min-w-0 rounded border p-3"[39m
+      [33mopen[39m=[32m""[39m
+    [36m>[39m
+      [36m<summary[39m
+        [33mclass[39m=[32m"cursor-pointer text-sm font-medium"[39m
+      [36m>[39m
+        [0m原片转写与逐字稿[0m
+      [36m</summary>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"mt-3 grid min-w-0 gap-3"[39m
+      [36m>[39m
+        [36m<p[39m
+          [33mclass[39m=[32m"text-xs text-muted-foreground"[39m
+        [36m>[39m
+          [0m转写读取已加入主轨的原文件。生成结果经你采纳后保存；转写失败仍能手工修剪。[0m
+        [36m</p>[39m
+        [36m<label[39m
+          [33mclass[39m=[32m"grid gap-1 text-sm"[39m
+        [36m>[39m
+          [0m转写原片[0m
+          [36m<select[39m
+            [33maria-label[39m=[32m"转写原片"[39m
+            [33mclass[39m=[32m"min-w-0 rounded border bg-background p-2"[39m
+          [36m>[39m
+            [36m<option[39m
+              [33mvalue[39m=[32m"source-a"[39m
+            [36m>[39m
+              [0m原片 [0m
+              [0m1[0m
+            [36m</option>[39m
+          [36m</select>[39m
+        [36m</label>[39m
+        [36m<label[39m
+          [33mclass[39m=[32m"grid gap-1 text-sm"[39m
+        [36m>[39m
+          [0m转写精度[0m
+          [36m<select[39m
+            [33maria-label[39m=[32m"转写精度"[39m
+            [33mclass[39m=[32m"min-w-0 rounded border bg-background p-2"[39m
+            [33mdisabled[39m=[32m""[39m
+          [36m>[39m
+            [36m<option[39m
+              [33mvalue[39m=[32m"text"[39m
+            [36m>[39m
+              [0m全文[0m
+            [36m</option>[39m
+            [36m<option[39m
+              [33mvalue[39m=[32m"segment"[39m
+            [36m>[39m
+              [0m句级时间码[0m
+            [36m</option>[39m
+            [36m<option[39m
+              [33mvalue[39m=[32m"word"[39m
+            [36m>[39m
+              [0m词级时间码[0m
+            [36m</option>[39m
+          [36m</select>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"text-xs text-muted-foreground"[39m
+          [36m>[39m
+            [0m只有回执与源音视频时间映射可验证时才提供词句定位；无法验证时保留全文，仍可手工剪辑。[0m
+          [36m</span>[39m
+        [36m</label>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex flex-wrap gap-2"[39m
+        [36m>[39m
+          [36m<button[39m
+            [33mclass[39m=[32m"rounded-md border px-3 py-2 text-sm disabled:opacity-40"[39m
+            [33mdisabled[39m=[32m""[39m
+          [36m>[39m
+            [0m转写这段原片[0m
+          [36m</button>[39m
+          [36m<button[39m
+            [33mclass[39m=[32m"rounded-md border px-3 py-2 text-sm disabled:opacity-40"[39m
+          [36m>[39m
+            [0m读取原转写状态[0m
+          [36m</button>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"min-w-0 space-y-2 rounded border p-3"[39m
+        [36m>[39m
+          [36m<p[39m
+            [33mclass[39m=[32m"text-sm"[39m
+          [36m>[39m
+            [0m供应商结果待确认[0m
+          [36m</p>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</details>[39m
+  [36m</div>[39m
+[36m</body>[39m
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<details[39m
+      [33mclass[39m=[32m"min-w-0 rounded border p-3"[39m
+      [33mopen[39m=[32m""[39m
+    [36m>[39m
+      [36m<summary[39m
+        [33mclass[39m=[32m"cursor-pointer text-sm font-medium"[39m
+      [36m>[39m
+        [0m原片转写与逐字稿[0m
+      [36m</summary>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"mt-3 grid min-w-0 gap-3"[39m
+      [36m>[39m
+        [36m<p[39m
+          [33mclass[39m=[32m"text-xs text-muted-foreground"[39m
+        [36m>[39m
+          [0m转写读取已加入主轨的原文件。生成结果经你采纳后保存；转写失败仍能手工修剪。[0m
+        [36m</p>[39m
+        [36m<label[39m
+          [33mclass[39m=[32m"grid gap-1 text-sm"[39m
+        [36m>[39m
+          [0m转写原片[0m
+          [36m<select[39m
+            [33maria-label[39m=[32m"转写原片"[39m
+            [33mclass[39m=[32m"min-w-0 rounded border bg-background p-2"[39m
+          [36m>[39m
+            [36m<option[39m
+              [33mvalue[39m=[32m"source-a"[39m
+            [36m>[39m
+              [0m原片 [0m
+              [0m1[0m
+            [36m</option>[39m
+          [36m</select>[39m
+        [36m</label>[39m
+        [36m<label[39m
+          [33mclass[39m=[32m"grid gap-1 text-sm"[39m
+        [36m>[39m
+          [0m转写精度[0m
+          [36m<select[39m
+            [33maria-label[39m=[32m"转写精度"[39m
+            [33mclass[39m=[32m"min-w-0 rounded border bg-background p-2"[39m
+            [33mdisabled[39m=[32m""[39m
+          [36m>[39m
+            [36m<option[39m
+              [33mvalue[39m=[32m"text"[39m
+            [36m>[39m
+              [0m全文[0m
+            [36m</option>[39m
+            [36m<option[39m
+              [33mvalue[39m=[32m"segment"[39m
+            [36m>[39m
+              [0m句级时间码[0m
+            [36m</option>[39m
+            [36m<option[39m
+              [33mvalue[39m=[32m"word"[39m
+            [36m>[39m
+              [0m词级时间码[0m
+            [36m</option>[39m
+          [36m</select>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"text-xs text-muted-foreground"[39m
+          [36m>[39m
+            [0m只有回执与源音视频时间映射可验证时才提供词句定位；无法验证时保留全文，仍可手工剪辑。[0m
+          [36m</span>[39m
+        [36m</label>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex flex-wrap gap-2"[39m
+        [36m>[39m
+          [36m<button[39m
+            [33mclass[39m=[32m"rounded-md border px-3 py-2 text-sm disabled:opacity-40"[39m
+            [33mdisabled[39m=[32m""[39m
+          [36m>[39m
+            [0m转写这段原片[0m
+          [36m</button>[39m
+          [36m<button[39m
+            [33mclass[39m=[32m"rounded-md border px-3 py-2 text-sm disabled:opacity-40"[39m
+          [36m>[39m
+            [0m读取原转写状态[0m
+          [36m</button>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"min-w-0 space-y-2 rounded border p-3"[39m
+        [36m>[39m
+          [36m<p[39m
+            [33mclass[39m=[32m"text-sm"[39m
+          [36m>[39m
+            [0m供应商结果待确认[0m
+          [36m</p>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</details>[39m
+  [36m</div>[39m
+[36m</body>[39m
+ ❯ waitForWrapper ../../../../Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ❯ ../../../../Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:86:33
+ ❯ src/features/production/production-transcript-panel.test.tsx:40:462
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 8 passed (10)
+   Start at  00:03:00
+   Duration  4.42s (transform 875ms, setup 165ms, import 1.18s, tests 2.32s, environment 598ms)
+

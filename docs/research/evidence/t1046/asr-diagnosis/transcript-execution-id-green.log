@@ -1,0 +1,13 @@
+
+> @creatoros/backend@0.1.0 test /private/tmp/t1046-backend-work/backend
+> vitest run src/modules/production/production-asset-asr.integration.test.ts
+
+
+ RUN  v4.1.8 /private/tmp/t1046-backend-work/backend
+
+
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+   Start at  00:06:11
+   Duration  8.87s (transform 3.43s, setup 0ms, import 4.16s, tests 4.54s, environment 0ms)
+

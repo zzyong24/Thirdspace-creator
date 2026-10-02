@@ -1,0 +1,110 @@
+
+ RUN  v4.1.8 /private/tmp/t1046-backend-work/backend
+
+ ❯ src/modules/production/production-native-public.integration.test.ts (1 test | 1 failed) 1324ms
+   × 公共native save不能伪造/删改probe-ASR证明，合法手工轨道改动CAS保持原证明 1324ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/production/production-native-public.integration.test.ts > 公共native save不能伪造/删改probe-ASR证明，合法手工轨道改动CAS保持原证明
+AssertionError: promise resolved "{ productionId: 'production-1', …(6) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "createdAt": "2026-10-02T15:12:50.244Z",
++   "plan": {
++     "editorVersion": 3,
++     "nativeSources": [
++       {
++         "mediaId": "m",
++         "source": {
++           "assetFileId": "f",
++           "assetId": "a",
++           "durationTicks": 10000,
++           "fileDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
++           "hasAudio": true,
++           "probeDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
++           "sourceId": "s",
++           "timebase": {
++             "den": 1000,
++             "num": 1,
++           },
++         },
++       },
++     ],
++     "referenceEditor": {
++       "editor": "opencut-classic",
++       "mediaRefs": [
++         {
++           "assetFileId": "f",
++           "assetId": "a",
++           "mediaId": "m",
++         },
++       ],
++       "nativeDocument": {
++         "currentSceneId": "scene",
++         "metadata": {
++           "id": "video",
++         },
++         "scenes": [
++           {
++             "id": "scene",
++             "tracks": {
++               "audio": [],
++               "main": {
++                 "elements": [
++                   {
++                     "duration": 120000,
++                     "id": "first",
++                     "mediaId": "m",
++                     "params": {},
++                     "startTime": 0,
++                     "trimEnd": 0,
++                     "trimStart": 0,
++                     "type": "video",
++                   },
++                 ],
++                 "id": "main",
++                 "type": "video",
++               },
++               "overlay": [],
++             },
++           },
++         ],
++         "settings": {
++           "fps": {
++             "denominator": 1,
++             "numerator": 30,
++           },
++         },
++         "version": 31,
++       },
++       "revision": "cccccccccccccccccccccccccccccccccccccccc",
++     },
++     "revision": 1,
++   },
++   "planDigest": "sha256:65587aaaafd8a73ad82d86bf5e665efcd0915338b1bc3ae358ce54403c75f65a",
++   "productionId": "production-1",
++   "requestId": "native-fake-probe-request",
++   "revision": 1,
++   "source": "manual",
+  }
+
+ ❯ src/modules/production/production-native-public.integration.test.ts:11:657
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed (1)
+   Start at  23:12:45
+   Duration  4.93s (transform 2.12s, setup 0ms, import 3.45s, tests 1.32s, environment 0ms)
+
+undefined
+/private/tmp/t1046-backend-work/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/production/production-native-public.integration.test.ts
