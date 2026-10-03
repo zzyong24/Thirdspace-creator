@@ -1,0 +1,220 @@
+{
+  "schema": "creatoros-reference-probe-evidence/v1",
+  "recordedAt": "2026-10-03T02:09:13.299122+00:00",
+  "taskId": "T-1049",
+  "implementationStarted": false,
+  "rootHEAD": "35d546fd1546d693bf4be5074421230d2e2362cd",
+  "nodeVersion": "v25.9.0",
+  "pnpmVersion": "10.32.1",
+  "sources": [
+    {
+      "name": "rednote",
+      "repository": "https://github.com/huanjuedadehen/rednote-cards",
+      "commit": "9c675f08681188838e6857c59bb0cd08be662a68",
+      "license": "MIT",
+      "sourcePath": "/tmp/t1049-reference-rednote",
+      "gitStatus": "",
+      "checkedFilesSHA256": {
+        "package.json": "8fa2a68f0ae9c75124d5d9c57d9fbe1d65c9dd9bd989e75a4f7283d62cea875a",
+        "pnpm-lock.yaml": "6a6c25574fe23bdbd0fffdd71c2382527ed07cb94b617ba489405917756a9d2b",
+        "LICENSE": "1126322e2cc8d165adc4c792eeb195717de2bcc7b39be1ce77959d78e87ef685",
+        "src/App.tsx": "4c16233871089ef64ab9ce490d2e158093c8de60797a9f45fd0849d39d76ce8d",
+        "src/templates/base.ts": "8c38d2cc29a601e65b84192c26b8058de6d9484d919310e0192afc1a3ab16e17",
+        "src/components/Editor.tsx": "46d905282eb39cabbb8d10c8c4711befa92d47bf241a90d3124e8111ee2981fa",
+        "src/components/RichTextEditor.tsx": "0758fd651460ffedad303869ae5db6a0c33a2cfd9922aad959332ae86596b124",
+        "src/components/Preview.tsx": "94fb486c4dc224b75743ade200802716900824e019091721062d82e89cf697ea",
+        "src/components/ExportButton.tsx": "a67c920fb34deb956eeaeb34065355706e8aecb1e8fe8c76e66d81d079a1d929",
+        "src/templates/registry.ts": "cd15330de8ae0adf6b0623ab1f018318df7d4dfcec5aa4dcd5e7b3705a71fe60"
+      }
+    },
+    {
+      "name": "doocs",
+      "repository": "https://github.com/doocs/md",
+      "commit": "a7c17fc4cda92e3c13aa7e24f06615cfa4219b31",
+      "license": "WTFPL",
+      "sourcePath": "/tmp/t1049-reference-doocs",
+      "gitStatus": "",
+      "checkedFilesSHA256": {
+        "package.json": "fdab72823157a3ae6494848cf70ba333f8308da20b8170334868de6f37857e77",
+        "pnpm-lock.yaml": "39783fe46a01a7177590f07745c24bfe3f60e0b4b7ba561346168fb949070d08",
+        "LICENSE": "cfeeb9a8bae22957f5ca9af8c5f7d9e686b34ecf36c9a8d7da6fec0185781069",
+        "apps/web/package.json": "2bd2c2cd11a5bc5b6c3588e126e7e3caba17ce038003f1e44f77ca22fc8d4122",
+        "apps/web/vite.config.ts": "31fe094de0c8cf480373ae65252641e8fd26177520d1516b8a6255e3f789d5cd",
+        "apps/web/wxt.config.ts": "cdd4ba0c70d8be62db1b00b6a5b6f9355119b64b0b744085a877d36791bc5fba",
+        "apps/web/src/types/post.ts": "df9b893bf7825fbd81d1649f72df4bc7daad4220656cd7c243a7a938e70b4abc",
+        "apps/web/src/stores/post.ts": "51dda9185404970eac60679ee62a25f3a3b0877e46bafef05eb24669ae8d0bc0",
+        "apps/web/src/stores/theme.ts": "04100df7be3ae6dfc564c2c2701ed88f794ff72d1b4b1f6454780d5efbe77bb7",
+        "apps/web/src/storage/db.ts": "c1ec2ebc0096ca4bea04a7ff355a09dbe32d33952b93a1c30a1510eb5604a946",
+        "apps/web/src/storage/prefix.ts": "2b40b23b61fe0b21da51f3e27e00c2003413d22da6c1ca89d75ca3498d5322f0",
+        "apps/web/src/storage/repositories/documents.ts": "551dea9701df60729367a65540ba17dcf159339d3f142c1c9321b83562d65e29",
+        "apps/web/src/components/editor/PreviewPanel.vue": "910c9896c6bbee3b039bd20ebdae00c4394c0fd038f610af800e37621b23d6b1",
+        "apps/web/src/services/export/html.ts": "41d160d0b29d092b22b1a2967db8e0a3c57979b8b70476309adcb6b31d5e32b3",
+        "apps/web/src/services/export/clipboard.ts": "5279b3cd7a3903e77426e712161f227edc17842f151355a010bef42a1a73b205",
+        "apps/web/src/services/export/html-content.ts": "02a9fed0cc158af221eb1a8222a8301f3a2af4ba37f740c47df6c10e0dd7801c",
+        "apps/web/src/services/export/apply-export-layout.ts": "41deaad19fa803518ce03b3152db32ae4cfcac210d7c7b63706e8dbdcc5378ee",
+        "apps/web/src/services/export/wechat-svg.ts": "46c47fd6d570526c094a768dee7c76b87ab24add1a3dfc2e8cac39133146caae",
+        "packages/core/package.json": "fb8bd72f592a9f90608109fba7d7949f5608f4670dad2027ac3d2c4e7250d7cb"
+      }
+    },
+    {
+      "name": "markcard",
+      "repository": "https://github.com/pangxiaobin/MarkCardStudio",
+      "commit": "23522d57dcce56c7299ce364323727d27f918f10",
+      "license": "GPL-3.0-only",
+      "sourcePath": "/tmp/t1049-reference-markcard",
+      "gitStatus": "",
+      "checkedFilesSHA256": {
+        "package.json": "66cd64906bcc2bc5cde1a33be4de416df9aa529b770e342eaac588398f860931",
+        "pnpm-lock.yaml": "926df33e6b80629104008c0d73f8f4d14a3ec63fcf0cb4a0a0c60796dc807855",
+        "LICENSE": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986",
+        "vite.config.js": "4939d215bba9612e4803743e22bd14763a7a0d9901425797d50982b2092db0ab",
+        "src/composables/useStudioDocument.js": "ebd86213fe959702a7ecef253815fadf1cddd787bc2953ef735742dc25f01060",
+        "src/composables/useCardExport.js": "96f291d3b59f82c7d96874f2770ab47a979dd5aa89e2687e7fe311e8d53004ae",
+        "src/composables/useCustomFonts.js": "e027a6b45a58fb0ecb3332c03f95a8aa9d7d3e10cba664f535b64485ca1489bf",
+        "src/components/PreviewPanel.vue": "aff726830e133b1437b1fd1b7a218275906c756b2c934358695e85f124c1e755",
+        "src/components/preview/PreviewArtworkCard.vue": "94635aeb706217a342210b595c2644b91c63424eb005a42e6aa17d5172355549",
+        "src/components/preview/CardArtwork.vue": "bafe554171ba603c62efb20a3539799f2a8ed5609729c4ee98ba474d67595c53",
+        "src/components/MarkdownEditor.vue": "e938f1b10830c6ea05bd5ea820be6506eb4d8bf5cbbd12702ff939924a73c2a8"
+      }
+    }
+  ],
+  "evidenceFiles": [
+    {
+      "path": "docs/research/evidence/t1049/rednote-install.log",
+      "bytes": 2078,
+      "sha256": "51949ddcc7d4d289bf334fca57f3c1df67208a1c1ead41a9552dc857293264dc"
+    },
+    {
+      "path": "docs/research/evidence/t1049/rednote-build.log",
+      "bytes": 42940,
+      "sha256": "b9f648cfc3c96bb42544c29cef64fe90239506c4f795b5504c59b36a51d9bef3"
+    },
+    {
+      "path": "docs/research/evidence/t1049/rednote-preview.log",
+      "bytes": 39,
+      "sha256": "91b1ffccda17686bf83eaab9db528571f19b36449fd06e36b120e8ead7a92632"
+    },
+    {
+      "path": "docs/research/evidence/t1049/rednote-http.json",
+      "bytes": 616,
+      "sha256": "281bea4f1584c8553786d318bd9e21b0703f5740b3060bccc36c994c22a2c077"
+    },
+    {
+      "path": "docs/research/evidence/t1049/doocs-install.log",
+      "bytes": 10689,
+      "sha256": "6b8974ad17006bcf6113a41326d779f77852a0bf54a1aeff38bc95e22344282f"
+    },
+    {
+      "path": "docs/research/evidence/t1049/doocs-build.log",
+      "bytes": 31065,
+      "sha256": "52bd449d6b52a0aeb1c13412c5ede85f41b278e866207b5793089a759d771d94"
+    },
+    {
+      "path": "docs/research/evidence/t1049/doocs-prepare.log",
+      "bytes": 60,
+      "sha256": "79eacdff377757d97adb1cce0e0c0954f6fd89b1ef41453defa9ca988d98ebcf"
+    },
+    {
+      "path": "docs/research/evidence/t1049/doocs-build-after-prepare.log",
+      "bytes": 29726,
+      "sha256": "b83b9fe373046c31b76d31ca255271835b2999b2fadbf0dbfb35a07d4883d960"
+    },
+    {
+      "path": "docs/research/evidence/t1049/doocs-core-tests.log",
+      "bytes": 226,
+      "sha256": "39d74e885adfe88c931a178e0259a8297d413f12de148d630b4c6aff3fa77f38"
+    },
+    {
+      "path": "docs/research/evidence/t1049/doocs-export-tests.log",
+      "bytes": 526,
+      "sha256": "3ac5774030010d2b15ae68339c44108a4322b85d30bc260eaae7e380468517dc"
+    },
+    {
+      "path": "docs/research/evidence/t1049/doocs-preview.log",
+      "bytes": 42,
+      "sha256": "c9e812f196c50a2912d5dc36f5d18d0e02709b2c49acda3c68b98fb94c69364a"
+    },
+    {
+      "path": "docs/research/evidence/t1049/doocs-http.json",
+      "bytes": 494,
+      "sha256": "a849d4129382e8967f193b3213ed590b5fbc5ab9a79414d691f42ba1cfe0732c"
+    },
+    {
+      "path": "docs/research/evidence/t1049/markcard-install.log",
+      "bytes": 3430,
+      "sha256": "195d5570664191f4143098f3f70d5b5ab688da87c559d91ead4ab25a174a7923"
+    },
+    {
+      "path": "docs/research/evidence/t1049/markcard-build.log",
+      "bytes": 10377,
+      "sha256": "d66c15931ba09d765cd4877afa95f31faba72b2d4ede334c8e52fc610702d62d"
+    }
+  ],
+  "meaning": "固定上游源码、许可、原始安装/构建/代码测试与静态 HTTP 健康证据。没有浏览器交互、CreatorOS 接线或实际下载通过证据。",
+  "observedCommands": [
+    {
+      "source": "rednote",
+      "command": "pnpm install --ignore-scripts --frozen-lockfile",
+      "exitCode": 0
+    },
+    {
+      "source": "rednote",
+      "command": "pnpm build",
+      "exitCode": 0,
+      "checks": "tsc -b && vite build"
+    },
+    {
+      "source": "doocs",
+      "command": "npx --yes --package=pnpm@12.6.0 pnpm --filter @md/web... install --ignore-scripts --frozen-lockfile",
+      "exitCode": 0
+    },
+    {
+      "source": "doocs",
+      "command": "npx --yes --package=pnpm@12.6.0 pnpm --filter @md/web build",
+      "exitCode": 1,
+      "log": "doocs-build.log",
+      "reason": "忽略安装脚本后缺少 WXT 类型声明；保留真实失败"
+    },
+    {
+      "source": "doocs",
+      "command": "npx --yes --package=pnpm@12.6.0 pnpm --filter @md/web exec wxt prepare",
+      "exitCode": 0,
+      "checks": "读取配置后补正常类型生成，没有运行扩展浏览器"
+    },
+    {
+      "source": "doocs",
+      "command": "npx --yes --package=pnpm@12.6.0 pnpm --filter @md/web build",
+      "exitCode": 0,
+      "log": "doocs-build-after-prepare.log",
+      "checks": "Vite 生产构建与 vue-tsc，未跳过类型检查"
+    },
+    {
+      "source": "doocs",
+      "command": "npx --yes --package=pnpm@12.6.0 pnpm --filter @md/core exec vitest run src/renderer/renderer.test.ts src/utils/pureHtml.test.ts --retry=0",
+      "exitCode": 0,
+      "testFiles": 2,
+      "tests": 16
+    },
+    {
+      "source": "doocs",
+      "command": "npx --yes --package=pnpm@12.6.0 pnpm --filter @md/web exec vitest run src/services/export/apply-export-layout.test.ts src/services/export/wechat-svg.test.ts src/services/export/clipboard.test.ts --retry=0",
+      "exitCode": 0,
+      "testFiles": 3,
+      "tests": 43
+    },
+    {
+      "source": "markcard",
+      "command": "pnpm install --ignore-scripts --frozen-lockfile",
+      "exitCode": 0
+    },
+    {
+      "source": "markcard",
+      "command": "pnpm build",
+      "exitCode": 0,
+      "checks": "上游 vite build；上游未定义类型检查脚本，不声称类型检查通过"
+    }
+  ],
+  "sourceEdits": "三个参考 checkout 的 git status 均为空；未修改源文件、锁文件、测试断言或构建参数绕过失败。",
+  "dependencies": "仅核实这些仓库根许可，未完成所有传递依赖及字体的产品分发核对。",
+  "browserStatus": "未调用浏览器、Playwright、CDP 或间接浏览器执行；此前浏览器策略阻断保持。"
+}

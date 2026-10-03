@@ -1,0 +1,109 @@
+{
+  "schema": "spec-review-recheck-context/v1",
+  "task_id": "T-1049",
+  "previous_round": 1,
+  "previous_verdict": "CONCERNS",
+  "previous_spec_sha256": "20c5494d8d05f6713a200b80ed8516e596960307081fad15068eeff178a45280",
+  "previous_packet": {
+    "schema": "spec-review-round/v2",
+    "review_kind": "initial",
+    "summary": "静态首轮评审发现两处会使已确认验收产生不同用户可见结果的规格缺口：失败/冲突恢复后的状态后置条件未定义，以及两类工作台的最低导出物与读回断言未明确。两项均与实际绑定的系统架构一致性核对后保留。",
+    "findings": [
+      {
+        "id": "REV-001",
+        "status": "open",
+        "severity": "major",
+        "category": "data-integrity",
+        "requirement_anchor": {
+          "id": "REQ-SPEC-L29",
+          "quote": "无法保真双向转换时保留原稿与原生文档，明确显示限制；不靠静默丢段落、图片或未知图层完成迁移。"
+        },
+        "acceptance_anchor": {
+          "id": "AC-SPEC-L59-RECOVERY",
+          "quote": "完成真实中文内容与图片导入、编辑、主题或页顺序修改、保存、刷新恢复、局部失败继续、版本冲突恢复、真实导出文件读回。"
+        },
+        "where": "docs/features/t1049-open-source-publishing-workbenches.md 第 57-59 行的保存读回、局部失败与版本冲突验收",
+        "failure_mode": "规格没有规定局部失败或版本冲突发生后，正式版本、原生文档、成功页和失败页各自应保持什么状态。一个实现可以保存成功子集并覆盖正式版本，另一个实现可以保持旧正式版本并等待整组重试；两者都可声称“继续/恢复”，但前者可能把新旧页或正文与图片版本静默混合，无法据此判定是否满足保留原稿和不静默丢失的已确认要求。系统架构要求修改当前领域状态前重新读取当前根实体并校验冲突，但没有替该 SPEC 定义冲突发生后的用户可见恢复结果。",
+        "evidence_kind": "spec-contradiction",
+        "evidence_ref": "docs/features/t1049-open-source-publishing-workbenches.md#L29,L57-L59; orchestrator/SYSTEM_ARCHITECTURE.md#2.2",
+        "risk_class": "data-loss",
+        "disposition": "mitigate",
+        "remedy_type": "constraint",
+        "scope_effect": "none",
+        "origin": "baseline",
+        "origin_ref": "round-1 full review",
+        "suggestion": "补一条最小后置条件：失败或冲突时哪一版仍是正式真值、哪些成功结果可保留、失败项如何显式标记，以及用户完成何种明确采用动作后才更新正式版本；绑定保存后刷新读回与冲突恢复旅程。",
+        "resolution_evidence": "",
+        "parent_id": "",
+        "threat_model_id": ""
+      },
+      {
+        "id": "REV-002",
+        "status": "open",
+        "severity": "major",
+        "category": "testability",
+        "requirement_anchor": {
+          "id": "REQ-SPEC-L41-EXPORT",
+          "quote": "能复制的排版 HTML、下载文件或原发布物料必须携带真实图片引用与实际样式，不能只展示漂亮预览。"
+        },
+        "acceptance_anchor": {
+          "id": "AC-SPEC-L59-EXPORT",
+          "quote": "真实导出文件读回；小红书检验三页连续内容及单页重做，公众号检验段落结构、图片与实际排版输出。"
+        },
+        "where": "docs/features/t1049-open-source-publishing-workbenches.md 第 41、59 行的交付物与导出验收",
+        "failure_mode": "“排版 HTML、下载文件或原发布物料”允许多种交付形式，但验收又要求“真实导出文件读回”，且没有分别规定小红书与公众号至少必须产出哪一种可读回工件。公众号实现若只提供可复制 HTML、或小红书实现只提供单页图片/预览，都可能满足一处文字却无法执行另一处验收；不同实现会形成不兼容的完成标准。",
+        "evidence_kind": "spec-contradiction",
+        "evidence_ref": "docs/features/t1049-open-source-publishing-workbenches.md#L41,L59",
+        "risk_class": "confirmed-requirement",
+        "disposition": "mitigate",
+        "remedy_type": "clarify",
+        "scope_effect": "none",
+        "origin": "baseline",
+        "origin_ref": "round-1 full review",
+        "suggestion": "分别列明两类工作台的最低交付物类型及读回断言：小红书需能按确认页序读回整组实际图片工件；公众号需明确可复制 HTML、下载文件或发布物料中哪一项是必验工件，并验证正文结构、真实图片引用与实际样式。",
+        "resolution_evidence": "",
+        "parent_id": "",
+        "threat_model_id": ""
+      }
+    ]
+  },
+  "changed_line_refs": [
+    {
+      "origin_ref": "SPEC-LINE:44:c86125e0656d649a",
+      "text": "### 保存、失败与冲突后的明确状态"
+    },
+    {
+      "origin_ref": "SPEC-LINE:46:0f5720187bade146",
+      "text": "正式正文/页面的真值始终由原作品 owner 的当前版本决定，原生排版文档绑定同一作品与明确的源版本，不把上游本地草稿库变成第二个正式 owner。适配合同需明确原生文档的保存位置、源版本指针及读回能力，经过独立评审后落实；没有真实保存服务的控制不展示为可用。"
+    },
+    {
+      "origin_ref": "SPEC-LINE:48:3b8ea8efdc45db1a",
+      "text": "失败前没有成功提交的正式版本保持不变；未保存文字和原生文档留在当前账号/作品草稿中，成功生成的图片候选与失败页分别保留，失败项就近显示并可单项重试，不偷偷把候选批量采用。每次明确采用仅修改原目标页或正文选区，其他当前真值保持；整体保存须读回真实版本与绑定关系，不能用提交成功代替保存成功。"
+    },
+    {
+      "origin_ref": "SPEC-LINE:50:ab34630634a04d5d",
+      "text": "正式内容已保存而排版附件保存失败时，分别显示真实状态，保留附件草稿；旧排版仅绑定旧源版本，不声称覆盖当前内容。存在基础排版安全输出时沿原路径继续交付当前正文和真实配图，不因排版附件失败让合法任务整单不可用。回执未知先恢复原完整请求及幂等键、回读 owner 的真实 current，不换键再写或假称已回滚。"
+    },
+    {
+      "origin_ref": "SPEC-LINE:52:98c245fdad355a08",
+      "text": "明确版本冲突时保留本地草稿与候选，展示当前正式版本供用户核对；未经明确选择不覆盖他人的当前版本。用户重新读回并明确确认后，以新 CAS 保存与当前来源对应的修改；关闭/返回的未保存提示、刷新恢复、换账号不串稿均进入真实旅程。不能把旧正文、旧原生排版与新图片静默拼成一次已保存或已导出的结果。"
+    },
+    {
+      "origin_ref": "SPEC-LINE:54:d6be6b9c954085b5",
+      "text": "### 两类工作台的最低交付物"
+    },
+    {
+      "origin_ref": "SPEC-LINE:56:042bd9ffbb2ccb47",
+      "text": "小红书必须可读回按确认页序命名的整组 PNG/JPG 实际图片和 ZIP，含配文及图片顺序清单。至少三页分别核对真实文字/图片、顺序、尺寸及完整性；重复封面用途不删真实页，单页重做只变目标页。用户使用原照片时同样能保存和导出，不要求先调用模型。"
+    },
+    {
+      "origin_ref": "SPEC-LINE:58:3fe582575b259868",
+      "text": "公众号必须可下载带实际样式的 HTML，以及包含必要图片资源的 ZIP；相对图片路径可在解压后本地打开，正文层级、表格/列表、中文与配图完整。导出绑定读回的正式正文版本及对应排版/精确图片文件；复制公众号排版沿原交付能力接线，使用目标平台可访问图片地址才可声称图片可直接复制使用，本机私有 URL 不冒充微信可用地址。图片尚需原发布流程处理时明确提示，本地 HTML/ZIP 导出仍可用。原发布链不因新编辑器被替换或自动对外发布。"
+    }
+  ],
+  "origin_ref_formats": {
+    "changed_lines": "SPEC-LINE:<line>:<16hex>（从 changed_line_refs 选择）",
+    "new_evidence": "EVIDENCE-SHA256:<64hex>:<project-relative-path>",
+    "late_critical": "SPEC-LINE:<line>:<16hex> | CONSTITUTION-LINE:<line>:<16hex> | EVIDENCE-SHA256:<64hex>:<path>"
+  }
+}

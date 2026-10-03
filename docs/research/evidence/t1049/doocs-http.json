@@ -1,0 +1,15 @@
+{
+  "name": "doocs",
+  "url": "http://127.0.0.1:4197/md/",
+  "httpStatus": 200,
+  "indexSHA256": "94f9b9e2989baead8e317fa8e00ba5d0082305d5fbc19c5add15010f82e9c0b2",
+  "moduleAssets": [
+    {
+      "path": "/md/static/js/md-index-D7H2CBEI.js",
+      "status": 200,
+      "bytes": 300709,
+      "sha256": "0018a638adf10b7d314c129f6bc129d11d5517a3798c6bd5197a3819498cac21"
+    }
+  ],
+  "meaning": "只验证本机参考静态服务与脚本可读；没有执行浏览器 JS 或验证 UI 操作"
+}

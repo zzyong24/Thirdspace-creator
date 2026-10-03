@@ -1,0 +1,484 @@
+{
+  "orchestrator/process/modules.config.json": {
+    "workingSHA256": "9a4fdaa2642743a751af9ff46dc00eb31ec5ce67271f56c907517dc039509ca2",
+    "HEADSHA256": "b982ebb413d8b477c2c5ab70fe3ba5104cf09ac5c43f1a8c97fc2cc176317132",
+    "taskBinding": {
+      "task_id": "T-1049",
+      "archetype": [
+        "user-authored",
+        "orchestration"
+      ],
+      "tasks": [
+        "review",
+        "research",
+        "implementation",
+        "acceptance"
+      ],
+      "depends_on": [
+        "T-1048",
+        "T-1046"
+      ],
+      "step_depends_on": {
+        "review": [],
+        "research": []
+      },
+      "read_set": [
+        "docs/features/t1049-open-source-publishing-workbenches.md",
+        "docs/features/t1048-image-series-workbench.md",
+        "docs/research/t1047-xiaohongshu-image-series.md",
+        "docs/research/evidence/t1042/complete-editors/verification.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md"
+      ],
+      "write_set": [
+        "docs/features/t1049-open-source-publishing-workbenches.md",
+        "docs/features/t1049-open-source-publishing-workbenches.review.md",
+        "docs/research/t1049-open-source-workbenches.md",
+        "docs/research/evidence/t1049/**",
+        "BACKLOG.md",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson",
+        "orchestrator/context/T-1049.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/progress.json",
+        "orchestrator/DECISION_LOG.md",
+        "PROJECT.md"
+      ],
+      "step_write_set": {
+        "review": [
+          "docs/research/evidence/t1049/**",
+          "docs/features/t1049-open-source-publishing-workbenches.review.md"
+        ],
+        "research": [
+          "docs/research/t1049-open-source-workbenches.md",
+          "docs/research/evidence/t1049/**"
+        ],
+        "implementation": [
+          "docs/features/t1049-open-source-publishing-workbenches.md"
+        ],
+        "acceptance": [
+          "docs/research/evidence/t1049/**"
+        ]
+      },
+      "verify_commands": {
+        "review": [
+          "node orchestrator/process/reviewctl.mjs audit"
+        ],
+        "research": [
+          "git diff --check -- docs/research/t1049-open-source-workbenches.md"
+        ],
+        "implementation": [
+          "git diff --check -- docs/features/t1049-open-source-publishing-workbenches.md"
+        ],
+        "acceptance": [
+          "node orchestrator/process/reconcile.mjs"
+        ]
+      }
+    },
+    "existingHEADModules": 60
+  },
+  "orchestrator/progress.json": {
+    "workingSHA256": "0d32c45316b50a0bd1fdec97485d6ce1168e61429786ab4dd25b662507b49abf",
+    "HEADSHA256": "37221ed922c6a914d4492add7c183b38f6d9439aa23ea23fd264d2c632d3b7e9",
+    "taskBinding": [
+      {
+        "id": "T-1049",
+        "archetype": [
+          "user-authored",
+          "orchestration"
+        ],
+        "task_id": "T-1049",
+        "tasks": [
+          {
+            "step": "review",
+            "status": "pending"
+          },
+          {
+            "step": "research",
+            "status": "pending"
+          },
+          {
+            "step": "implementation",
+            "status": "pending"
+          },
+          {
+            "step": "acceptance",
+            "status": "pending"
+          }
+        ],
+        "blocked_reason": null,
+        "depends_on": [
+          "T-1048",
+          "T-1046"
+        ],
+        "step_depends_on": {
+          "review": [],
+          "research": []
+        },
+        "write_set": [
+          "docs/features/t1049-open-source-publishing-workbenches.md",
+          "docs/features/t1049-open-source-publishing-workbenches.review.md",
+          "docs/research/t1049-open-source-workbenches.md",
+          "docs/research/evidence/t1049/**",
+          "BACKLOG.md",
+          "orchestrator/events.ndjson",
+          "orchestrator/review-events.ndjson",
+          "orchestrator/context/T-1049.md",
+          "orchestrator/process/modules.config.json",
+          "orchestrator/progress.json",
+          "orchestrator/DECISION_LOG.md",
+          "PROJECT.md"
+        ],
+        "read_set": [
+          "docs/features/t1049-open-source-publishing-workbenches.md",
+          "docs/features/t1048-image-series-workbench.md",
+          "docs/research/t1047-xiaohongshu-image-series.md",
+          "docs/research/evidence/t1042/complete-editors/verification.md",
+          "orchestrator/SYSTEM_ARCHITECTURE.md"
+        ],
+        "exclusive_resources": [],
+        "step_write_set": {
+          "review": [
+            "docs/research/evidence/t1049/**",
+            "docs/features/t1049-open-source-publishing-workbenches.review.md"
+          ],
+          "research": [
+            "docs/research/t1049-open-source-workbenches.md",
+            "docs/research/evidence/t1049/**"
+          ],
+          "implementation": [
+            "docs/features/t1049-open-source-publishing-workbenches.md"
+          ],
+          "acceptance": [
+            "docs/research/evidence/t1049/**"
+          ]
+        },
+        "step_read_set": {},
+        "step_exclusive_resources": {},
+        "commits": {}
+      }
+    ]
+  },
+  "orchestrator/review-events.ndjson": {
+    "workingSHA256": "3a314706d0121aca7ccd985b5915904b8b4d1c87da7b54ad7bb60d64a2758ea1",
+    "HEADSHA256": "73db826c78902d4b4fae0b4d2c71a6cac390d9a9a9f1d33a33e31b548036a8eb",
+    "taskEvents": [
+      {
+        "schema": "spec-review-event/v2",
+        "task_id": "T-1049",
+        "cycle": 1,
+        "round": 1,
+        "review_kind": "initial",
+        "verdict": "CONCERNS",
+        "spec_path": "docs/features/t1049-open-source-publishing-workbenches.md",
+        "spec_sha256": "20c5494d8d05f6713a200b80ed8516e596960307081fad15068eeff178a45280",
+        "spec_line_fingerprint_algorithm": "sha256-64/semantic-line/v2",
+        "spec_line_fingerprints": [
+          "c07668607614b261",
+          "e3b0c44298fc1c14",
+          "9d74536f40950065",
+          "e3b0c44298fc1c14",
+          "78cc8ff96897c256",
+          "e3b0c44298fc1c14",
+          "10a6613ced7cdd7f",
+          "e3b0c44298fc1c14",
+          "c57e4f0544207cfd",
+          "e3b0c44298fc1c14",
+          "46d9474291be579f",
+          "35bb463104586fe1",
+          "51eb934d764de953",
+          "0f2a7feaf03d211b",
+          "a8f87e6b37621ff0",
+          "7ea8e267146d32b2",
+          "80d0b57129f2bf80",
+          "3fb4f28457baf764",
+          "1062cce9d39f7045",
+          "30ba1df4789ee83a",
+          "f1b901847390b0ed",
+          "e3b0c44298fc1c14",
+          "2253b27db8636640",
+          "e3b0c44298fc1c14",
+          "af6a3e303d48b384",
+          "e3b0c44298fc1c14",
+          "9262e5f554ddfb81",
+          "e3b0c44298fc1c14",
+          "0a37ebdfae2962e5",
+          "e3b0c44298fc1c14",
+          "dcb86f4d2acaa28a",
+          "e3b0c44298fc1c14",
+          "d2adf1ea8e775975",
+          "e3b0c44298fc1c14",
+          "ce1d0403a5768e21",
+          "e3b0c44298fc1c14",
+          "9d9a20876b5be4f1",
+          "e3b0c44298fc1c14",
+          "f5ba430aeaebdb14",
+          "e3b0c44298fc1c14",
+          "51b2629c014f711e",
+          "e3b0c44298fc1c14",
+          "da3a6f7c1636e67b",
+          "e3b0c44298fc1c14",
+          "3679c27736044e7f",
+          "e3b0c44298fc1c14",
+          "5008a8a1d363d84e",
+          "b8ec48555607bc62",
+          "fdc38c29b7df0f4c",
+          "5112a8e288fc31d4",
+          "7887e0c356501c58",
+          "e3b0c44298fc1c14",
+          "ea7534ca6045ea89",
+          "e3b0c44298fc1c14",
+          "bf7374b7cf17959f",
+          "e3b0c44298fc1c14",
+          "d3e830deefb24fc7",
+          "e3b0c44298fc1c14",
+          "d941828aed31b263",
+          "e3b0c44298fc1c14",
+          "ff3ae422ce11a9fb",
+          "e3b0c44298fc1c14"
+        ],
+        "constitution_path": "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "constitution_sha256": "3efbb0394b8bcc9eb3c9ad7e8c9364df51e336006b862e02ac71fd6c9327971e",
+        "review_path": "docs/features/t1049-open-source-publishing-workbenches.review.md",
+        "review_mode": "cross-model-same-family",
+        "model": "gpt-5.6-sol",
+        "policy": "convergent-review/v2",
+        "cycle_authorization": null,
+        "reviewctl_sha256": "11c21887c01550e18a06ebfb1c190710bea994763c422203b11f5f72310e7ace",
+        "recorded_at": "2026-10-03T01:51:15.450Z",
+        "previous_event_hash": "8fb20c5b6211a4e0e34cccff6dbd510a8cbbebb7ca950928d1bf0a3ef9c96e40",
+        "packet": {
+          "schema": "spec-review-round/v2",
+          "review_kind": "initial",
+          "summary": "静态首轮评审发现两处会使已确认验收产生不同用户可见结果的规格缺口：失败/冲突恢复后的状态后置条件未定义，以及两类工作台的最低导出物与读回断言未明确。两项均与实际绑定的系统架构一致性核对后保留。",
+          "findings": [
+            {
+              "id": "REV-001",
+              "status": "open",
+              "severity": "major",
+              "category": "data-integrity",
+              "requirement_anchor": {
+                "id": "REQ-SPEC-L29",
+                "quote": "无法保真双向转换时保留原稿与原生文档，明确显示限制；不靠静默丢段落、图片或未知图层完成迁移。"
+              },
+              "acceptance_anchor": {
+                "id": "AC-SPEC-L59-RECOVERY",
+                "quote": "完成真实中文内容与图片导入、编辑、主题或页顺序修改、保存、刷新恢复、局部失败继续、版本冲突恢复、真实导出文件读回。"
+              },
+              "where": "docs/features/t1049-open-source-publishing-workbenches.md 第 57-59 行的保存读回、局部失败与版本冲突验收",
+              "failure_mode": "规格没有规定局部失败或版本冲突发生后，正式版本、原生文档、成功页和失败页各自应保持什么状态。一个实现可以保存成功子集并覆盖正式版本，另一个实现可以保持旧正式版本并等待整组重试；两者都可声称“继续/恢复”，但前者可能把新旧页或正文与图片版本静默混合，无法据此判定是否满足保留原稿和不静默丢失的已确认要求。系统架构要求修改当前领域状态前重新读取当前根实体并校验冲突，但没有替该 SPEC 定义冲突发生后的用户可见恢复结果。",
+              "evidence_kind": "spec-contradiction",
+              "evidence_ref": "docs/features/t1049-open-source-publishing-workbenches.md#L29,L57-L59; orchestrator/SYSTEM_ARCHITECTURE.md#2.2",
+              "risk_class": "data-loss",
+              "disposition": "mitigate",
+              "remedy_type": "constraint",
+              "scope_effect": "none",
+              "origin": "baseline",
+              "origin_ref": "round-1 full review",
+              "suggestion": "补一条最小后置条件：失败或冲突时哪一版仍是正式真值、哪些成功结果可保留、失败项如何显式标记，以及用户完成何种明确采用动作后才更新正式版本；绑定保存后刷新读回与冲突恢复旅程。",
+              "resolution_evidence": "",
+              "parent_id": "",
+              "threat_model_id": ""
+            },
+            {
+              "id": "REV-002",
+              "status": "open",
+              "severity": "major",
+              "category": "testability",
+              "requirement_anchor": {
+                "id": "REQ-SPEC-L41-EXPORT",
+                "quote": "能复制的排版 HTML、下载文件或原发布物料必须携带真实图片引用与实际样式，不能只展示漂亮预览。"
+              },
+              "acceptance_anchor": {
+                "id": "AC-SPEC-L59-EXPORT",
+                "quote": "真实导出文件读回；小红书检验三页连续内容及单页重做，公众号检验段落结构、图片与实际排版输出。"
+              },
+              "where": "docs/features/t1049-open-source-publishing-workbenches.md 第 41、59 行的交付物与导出验收",
+              "failure_mode": "“排版 HTML、下载文件或原发布物料”允许多种交付形式，但验收又要求“真实导出文件读回”，且没有分别规定小红书与公众号至少必须产出哪一种可读回工件。公众号实现若只提供可复制 HTML、或小红书实现只提供单页图片/预览，都可能满足一处文字却无法执行另一处验收；不同实现会形成不兼容的完成标准。",
+              "evidence_kind": "spec-contradiction",
+              "evidence_ref": "docs/features/t1049-open-source-publishing-workbenches.md#L41,L59",
+              "risk_class": "confirmed-requirement",
+              "disposition": "mitigate",
+              "remedy_type": "clarify",
+              "scope_effect": "none",
+              "origin": "baseline",
+              "origin_ref": "round-1 full review",
+              "suggestion": "分别列明两类工作台的最低交付物类型及读回断言：小红书需能按确认页序读回整组实际图片工件；公众号需明确可复制 HTML、下载文件或发布物料中哪一项是必验工件，并验证正文结构、真实图片引用与实际样式。",
+              "resolution_evidence": "",
+              "parent_id": "",
+              "threat_model_id": ""
+            }
+          ]
+        },
+        "event_hash": "9800e94d2280b848168c4fa8184c34047f2b39d0b2f21cba74489a62de349b22"
+      },
+      {
+        "schema": "spec-review-event/v2",
+        "task_id": "T-1049",
+        "cycle": 1,
+        "round": 2,
+        "review_kind": "recheck",
+        "verdict": "PASS",
+        "spec_path": "docs/features/t1049-open-source-publishing-workbenches.md",
+        "spec_sha256": "3a7152a62fbc08325b909791790cb341eac68dee8abce2cab1da398457599d90",
+        "spec_line_fingerprint_algorithm": "sha256-64/semantic-line/v2",
+        "spec_line_fingerprints": [
+          "c07668607614b261",
+          "e3b0c44298fc1c14",
+          "9d74536f40950065",
+          "e3b0c44298fc1c14",
+          "78cc8ff96897c256",
+          "e3b0c44298fc1c14",
+          "10a6613ced7cdd7f",
+          "e3b0c44298fc1c14",
+          "c57e4f0544207cfd",
+          "e3b0c44298fc1c14",
+          "46d9474291be579f",
+          "35bb463104586fe1",
+          "51eb934d764de953",
+          "0f2a7feaf03d211b",
+          "a8f87e6b37621ff0",
+          "7ea8e267146d32b2",
+          "80d0b57129f2bf80",
+          "3fb4f28457baf764",
+          "1062cce9d39f7045",
+          "30ba1df4789ee83a",
+          "f1b901847390b0ed",
+          "e3b0c44298fc1c14",
+          "2253b27db8636640",
+          "e3b0c44298fc1c14",
+          "af6a3e303d48b384",
+          "e3b0c44298fc1c14",
+          "9262e5f554ddfb81",
+          "e3b0c44298fc1c14",
+          "0a37ebdfae2962e5",
+          "e3b0c44298fc1c14",
+          "dcb86f4d2acaa28a",
+          "e3b0c44298fc1c14",
+          "d2adf1ea8e775975",
+          "e3b0c44298fc1c14",
+          "ce1d0403a5768e21",
+          "e3b0c44298fc1c14",
+          "9d9a20876b5be4f1",
+          "e3b0c44298fc1c14",
+          "f5ba430aeaebdb14",
+          "e3b0c44298fc1c14",
+          "51b2629c014f711e",
+          "e3b0c44298fc1c14",
+          "e3b0c44298fc1c14",
+          "c86125e0656d649a",
+          "e3b0c44298fc1c14",
+          "0f5720187bade146",
+          "e3b0c44298fc1c14",
+          "3b8ea8efdc45db1a",
+          "e3b0c44298fc1c14",
+          "ab34630634a04d5d",
+          "e3b0c44298fc1c14",
+          "98c245fdad355a08",
+          "e3b0c44298fc1c14",
+          "d6be6b9c954085b5",
+          "e3b0c44298fc1c14",
+          "042bd9ffbb2ccb47",
+          "e3b0c44298fc1c14",
+          "3fe582575b259868",
+          "e3b0c44298fc1c14",
+          "da3a6f7c1636e67b",
+          "e3b0c44298fc1c14",
+          "3679c27736044e7f",
+          "e3b0c44298fc1c14",
+          "5008a8a1d363d84e",
+          "b8ec48555607bc62",
+          "fdc38c29b7df0f4c",
+          "5112a8e288fc31d4",
+          "7887e0c356501c58",
+          "e3b0c44298fc1c14",
+          "ea7534ca6045ea89",
+          "e3b0c44298fc1c14",
+          "bf7374b7cf17959f",
+          "e3b0c44298fc1c14",
+          "d3e830deefb24fc7",
+          "e3b0c44298fc1c14",
+          "d941828aed31b263",
+          "e3b0c44298fc1c14",
+          "ff3ae422ce11a9fb",
+          "e3b0c44298fc1c14"
+        ],
+        "constitution_path": "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "constitution_sha256": "3efbb0394b8bcc9eb3c9ad7e8c9364df51e336006b862e02ac71fd6c9327971e",
+        "review_path": "docs/features/t1049-open-source-publishing-workbenches.review.md",
+        "review_mode": "cross-model-same-family",
+        "model": "gpt-5.6-sol",
+        "policy": "convergent-review/v2",
+        "cycle_authorization": null,
+        "reviewctl_sha256": "11c21887c01550e18a06ebfb1c190710bea994763c422203b11f5f72310e7ace",
+        "recorded_at": "2026-10-03T01:56:44.486Z",
+        "previous_event_hash": "9800e94d2280b848168c4fa8184c34047f2b39d0b2f21cba74489a62de349b22",
+        "packet": {
+          "schema": "spec-review-round/v2",
+          "review_kind": "recheck",
+          "summary": "限定增量复核确认 REV-001 与 REV-002 均已由新增规格约束销账；新增行未引入需要记录的新问题。本结论仅基于规格 diff 与系统架构，不代表真实运行或集成通过。",
+          "findings": [
+            {
+              "id": "REV-001",
+              "status": "resolved",
+              "severity": "major",
+              "category": "data-integrity",
+              "requirement_anchor": {
+                "id": "REQ-SPEC-L29",
+                "quote": "无法保真双向转换时保留原稿与原生文档，明确显示限制；不靠静默丢段落、图片或未知图层完成迁移。"
+              },
+              "acceptance_anchor": {
+                "id": "AC-SPEC-L59-RECOVERY",
+                "quote": "完成真实中文内容与图片导入、编辑、主题或页顺序修改、保存、刷新恢复、局部失败继续、版本冲突恢复、真实导出文件读回。"
+              },
+              "where": "docs/features/t1049-open-source-publishing-workbenches.md 第 57-59 行的保存读回、局部失败与版本冲突验收",
+              "failure_mode": "规格没有规定局部失败或版本冲突发生后，正式版本、原生文档、成功页和失败页各自应保持什么状态。一个实现可以保存成功子集并覆盖正式版本，另一个实现可以保持旧正式版本并等待整组重试；两者都可声称“继续/恢复”，但前者可能把新旧页或正文与图片版本静默混合，无法据此判定是否满足保留原稿和不静默丢失的已确认要求。系统架构要求修改当前领域状态前重新读取当前根实体并校验冲突，但没有替该 SPEC 定义冲突发生后的用户可见恢复结果。",
+              "evidence_kind": "spec-contradiction",
+              "evidence_ref": "docs/features/t1049-open-source-publishing-workbenches.md#L29,L57-L59; orchestrator/SYSTEM_ARCHITECTURE.md#2.2",
+              "risk_class": "data-loss",
+              "disposition": "mitigate",
+              "remedy_type": "constraint",
+              "scope_effect": "none",
+              "origin": "baseline",
+              "origin_ref": "round-1 full review",
+              "suggestion": "补一条最小后置条件：失败或冲突时哪一版仍是正式真值、哪些成功结果可保留、失败项如何显式标记，以及用户完成何种明确采用动作后才更新正式版本；绑定保存后刷新读回与冲突恢复旅程。",
+              "resolution_evidence": "SPEC-LINE:46:0f5720187bade146 规定原作品 owner 当前版本为正式真值并绑定原生文档源版本；SPEC-LINE:48:3b8ea8efdc45db1a 规定失败前正式版本不变、候选与失败页分别保留、明确采用只修改目标且整体保存必须读回；SPEC-LINE:50:ab34630634a04d5d 规定正文与排版附件部分失败及未知回执的状态；SPEC-LINE:52:98c245fdad355a08 规定冲突保留本地草稿与候选、展示当前正式版本、重新读回后以新 CAS 保存，并禁止静默拼接。由此冻结 failure mode 中两种不兼容实现的选择空间，并与 SYSTEM_ARCHITECTURE.md 2.2 的当前真值和冲突边界一致。",
+              "parent_id": "",
+              "threat_model_id": ""
+            },
+            {
+              "id": "REV-002",
+              "status": "resolved",
+              "severity": "major",
+              "category": "testability",
+              "requirement_anchor": {
+                "id": "REQ-SPEC-L41-EXPORT",
+                "quote": "能复制的排版 HTML、下载文件或原发布物料必须携带真实图片引用与实际样式，不能只展示漂亮预览。"
+              },
+              "acceptance_anchor": {
+                "id": "AC-SPEC-L59-EXPORT",
+                "quote": "真实导出文件读回；小红书检验三页连续内容及单页重做，公众号检验段落结构、图片与实际排版输出。"
+              },
+              "where": "docs/features/t1049-open-source-publishing-workbenches.md 第 41、59 行的交付物与导出验收",
+              "failure_mode": "“排版 HTML、下载文件或原发布物料”允许多种交付形式，但验收又要求“真实导出文件读回”，且没有分别规定小红书与公众号至少必须产出哪一种可读回工件。公众号实现若只提供可复制 HTML、或小红书实现只提供单页图片/预览，都可能满足一处文字却无法执行另一处验收；不同实现会形成不兼容的完成标准。",
+              "evidence_kind": "spec-contradiction",
+              "evidence_ref": "docs/features/t1049-open-source-publishing-workbenches.md#L41,L59",
+              "risk_class": "confirmed-requirement",
+              "disposition": "mitigate",
+              "remedy_type": "clarify",
+              "scope_effect": "none",
+              "origin": "baseline",
+              "origin_ref": "round-1 full review",
+              "suggestion": "分别列明两类工作台的最低交付物类型及读回断言：小红书需能按确认页序读回整组实际图片工件；公众号需明确可复制 HTML、下载文件或发布物料中哪一项是必验工件，并验证正文结构、真实图片引用与实际样式。",
+              "resolution_evidence": "SPEC-LINE:56:042bd9ffbb2ccb47 将小红书最低交付物限定为按确认页序命名、可读回的整组 PNG/JPG 与 ZIP，并明确三页、文字/图片、顺序、尺寸、完整性及单页重做断言；SPEC-LINE:58:3fe582575b259868 将公众号最低交付物限定为带实际样式的 HTML 与含必要图片资源的 ZIP，并明确解压读回、结构、中文、配图、版本与精确文件绑定。两类完成标准已分别唯一化。",
+              "parent_id": "",
+              "threat_model_id": ""
+            }
+          ]
+        },
+        "event_hash": "b42344c406fb441d7429efbe2d6462bd4973a45de6bdfe1654ca410342cc1034"
+      }
+    ],
+    "meaning": "仅保存本任务事件及原链锚；不伪造完整可独立重建控制面。"
+  },
+  "meaning": "开发树含继承的混合控制面；此证据冻结 T-1049 绑定和原评审事件。提交仅收本任务文档，不整包收其它任务配置/队列/账本，也不宣称干净 checkout 验收。"
+}
