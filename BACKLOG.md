@@ -9,7 +9,7 @@
 
 | ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
 | --- | --- | --- | --- | --- | --- | --- |
-| T-1049 | 集成开源小红书组图与公众号编辑工作台并打磨体验 | 📋 待办 | 待审 | 待验 | [SPEC](docs/features/t1049-open-source-publishing-workbenches.md) | 用户 2026-10-03 明确：当前 T-1048/T-1046 收尾后执行；两类都先核实并运行开源工作面，再接原内容、素材、画布、版本与审核，完成真实编辑和交付体验验收。 |
+| T-1049 | 集成开源小红书组图与公众号编辑工作台并打磨体验 | 📋 待办 | 待审 | 待验 | [SPEC](docs/features/t1049-open-source-publishing-workbenches.md) | 用户 2026-10-03 明确：当前 T-1048/T-1046 收尾后执行；两类都先核实并运行开源工作面，再接原内容、素材、画布、版本与审核，完成真实编辑和交付体验验收。 2026-10-03 最新确认：新会话接力完成 CreatorOS 网页版集成并提供用户直接验收入口；不以安装包或缺隔离模型凭据阻断基本编辑/保存/导出，未验项保留，见 DEC-T1049-01 与[接力说明](docs/research/evidence/t1049/web-handoff.md)。 |
 | T-1036 | 开源视频编辑组件选型与兼容验证 | ✅ 待办 | PASS[REV:66f9290599b0] | — | [SPEC](docs/features/t1036-open-source-video-editor-selection.md) | 依赖 T-1035 已评审需求；先核对开源代码、许可、React/Next 与现有 HyperFrames/Asset 适配，用隔离探针选择可实际复用的时间轴/预览能力，不照搬闭源附件。 |
 | T-1037 | 建立作品级制作工程、版本与公共编辑服务 | 🔨 待办 | PASS[REV:03cbb3aedc96] | 待验 | [SPEC](docs/features/t1037-output-production-project.md) | 依赖 T-1036；按具体 video output 绑定脚本、制作素材、方案、任务与成片，统一 revision/CAS/历史/回执及旧方案兼容，先定稿合同并独立评审。 |
 | T-1038 | 集成可视视频制作工作台与同源预览 | 📋 待办 | PASS[REV:fc5f5d60a46a] | 待验 | [SPEC](docs/features/t1038-visible-video-workbench.md) | 依赖 T-1036/T-1037；复用选定开源组件，实现预览/时间轴/参数联动、素材字幕和卡片编辑、撤销重做，并保留原备料与成品入口。 |
