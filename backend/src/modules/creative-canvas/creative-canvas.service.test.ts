@@ -17,7 +17,7 @@ const service=()=>createCreativeCanvasService(db,{
  now:()=>"2026-09-28T00:00:00.000Z",
  assertProject:async(c,id)=>{if(c.accountId!=="account-a"||id!=="project-a")throw new Error("project not owned");},
  assertMediaAsset:async(c,id,type,fileId)=>{if(c.accountId!=="account-a"||id!=="image-1"||type!=="image"||fileId&&fileId!=="file-1")throw new Error("asset not owned");return {fileId:"file-1",checksum};},
- assertReferenceAsset:async(c,id)=>{if(c.accountId!=="account-a"||id!=="image-1")throw new Error("reference not owned");},
+ assertReferenceAsset:async(c,id)=>{await db.select().from(aiTasks).limit(1);if(c.accountId!=="account-a"||id!=="image-1")throw new Error("reference not owned");},
  getMediaFileDownloadUrl:async(c,id,fileId)=>{if(c.accountId!=="account-a"||id!=="image-1"||fileId!=="file-1")throw new Error("file not owned");return {url:"https://example.invalid/file-1",fileName:"reference.png"};},
  getReference:async(c,id,fileId)=>c.accountId==="account-a"&&id==="image-1"&&(!fileId||fileId==="file-1")?{fileId:"file-1",checksum,mimeType:"image/png",bytes}:null,
  resolveCapability:async(_c,capability)=>({provider:"minimax",model:capability==="video.generate"?"MiniMax-H3":"image-01"}),
@@ -96,4 +96,35 @@ it("候选含无权素材时整单不应用；旧 revision 不覆盖新画布",a
  const changed=await s.save(ctx("account-a"),created.id,{expectedRevision:created.revision,document:doc([{id:"actual",type:"text",label:"新内容",text:"",position:{x:0,y:0}}])});
  await expect(s.applyProposal(ctx("account-a"),created.id,stale.id,changed.revision)).rejects.toThrow("画布已更新");
  expect((await s.get(ctx("account-a"),created.id)).document.nodes).toMatchObject([{id:"actual"}]);
+});
+
+const visualGroup=(pageOrder:string[],requiredIdentity=false)=>({id:"group",name:"图文",libraryKind:"xhs" as const,aspectRatio:"3:4",caption:"配文",pageOrder,templateSnapshot:{id:"template",name:"样式",version:1,prompt:"提示词",visualMode:requiredIdentity?"real_person" as const:"graphic" as const,requiredIdentity},generationAttempts:{}});
+it("页组保真、引用/顺序校验、删除页组修剪与编导保留",async()=>{
+ const s=service(),created=await s.create(ctx("account-a"),{title:"页组"});
+ const document={...doc([imageNode("page-1"),imageNode("page-2")]),visualGroups:[visualGroup(["page-1","page-2"])]};
+ const saved=await s.save(ctx("account-a"),created.id,{expectedRevision:1,document});
+ const proposal=await s.propose(ctx("account-a"),created.id,saved.revision,[{type:"deleteNode",operationId:"delete-page",nodeId:"page-1"}]);
+ const applied=await s.applyProposal(ctx("account-a"),created.id,proposal.id,saved.revision);
+ expect(applied.document.visualGroups![0]!.pageOrder).toEqual(["page-2"]);
+ await expect(s.save(ctx("account-a"),created.id,{expectedRevision:applied.revision,document:{...applied.document,visualGroups:[visualGroup(["page-2","page-2"])]}})).rejects.toThrow();
+ await expect(s.save(ctx("account-a"),created.id,{expectedRevision:applied.revision,document:{...applied.document,visualGroups:[visualGroup(["missing"])]}})).rejects.toThrow();
+});
+it("真人身份不能通过纯提示词或编导清空降级，比例来自适配器",async()=>{
+ const s=service(),created=await s.create(ctx("account-a"),{title:"真人"});
+ await expect(s.save(ctx("account-a"),created.id,{expectedRevision:1,document:{...doc([{...imageNode("real"),visualMode:"real_person"}]),visualGroups:[visualGroup(["real"],true)]}})).rejects.toThrow("身份");
+ const caps=await s.capabilities(ctx("account-a"));
+ expect(caps.modes.find(m=>m.mode==="text_to_image")!.aspectRatios).toContain("21:9");
+});
+
+it("未知提交恢复冻结原输入；编辑后拒绝旧恢复，成功页不重进提交",async()=>{
+ submit.mockClear();const s=service(),created=await s.create(ctx("account-a"),{title:"恢复守卫"});
+ let saved=await s.save(ctx("account-a"),created.id,{expectedRevision:1,document:doc([imageNode("restore-node")])});
+ submit.mockRejectedValueOnce(new Error("未知响应"));
+ await expect(s.generate(ctx("account-a"),saved.id,"restore-node",{expectedRevision:saved.revision,attemptId:"unknown-restore-attempt-1"})).rejects.toThrow("未知响应");
+ saved=await s.save(ctx("account-a"),saved.id,{expectedRevision:saved.revision,document:doc([{...imageNode("restore-node"),prompt:"明确修改输入"}])});
+ await expect(s.generate(ctx("account-a"),saved.id,"restore-node",{expectedRevision:saved.revision,attemptId:"unknown-restore-attempt-1"})).rejects.toThrow("输入已编辑");
+ expect(submit).toHaveBeenCalledTimes(1);
+ const fresh=await s.generate(ctx("account-a"),saved.id,"restore-node",{expectedRevision:saved.revision,attemptId:"new-creation-attempt-1"});
+ expect(await s.generate(ctx("account-a"),saved.id,"restore-node",{expectedRevision:saved.revision,attemptId:"new-creation-attempt-1"})).toMatchObject({taskId:fresh.taskId});
+ expect(submit).toHaveBeenCalledTimes(2);
 });

@@ -715,6 +715,13 @@
       "when": 1790553600000,
       "tag": "0101_creative_canvas",
       "breakpoints": true
+    },
+    {
+      "idx": 102,
+      "version": "7",
+      "when": 1791043200000,
+      "tag": "0102_visual_template_library",
+      "breakpoints": true
     }
   ]
 }

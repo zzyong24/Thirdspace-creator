@@ -1,6 +1,7 @@
 import * as executionStreamSchema from "./schema/execution-stream";
 import * as pendingDocumentCommitsSchema from "./schema/pending-document-commits";
 import * as pendingGeneratedAssetCommitsSchema from "./schema/pending-generated-asset-commits";
+import * as visualTemplatesSchema from "./schema/visual-templates";
 import * as creativeCanvasSchema from "./schema/creative-canvas";
 import { PGlite } from "@electric-sql/pglite";
 import { drizzle, type PgliteDatabase } from "drizzle-orm/pglite";
@@ -87,6 +88,7 @@ const schema = {
   ...pendingDocumentCommitsSchema,
   ...pendingGeneratedAssetCommitsSchema,
   ...creativeCanvasSchema,
+  ...visualTemplatesSchema,
   ...executionStreamSchema,
   ...projectsSchema,
   ...identitySchema,

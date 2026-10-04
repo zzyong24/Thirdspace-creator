@@ -84,3 +84,6 @@ export {
 export {createWebDocumentCacheService,type WebDocumentCachePreparation} from "./web-document-cache.service";
 
 export {discardGeneratedAssetCandidate,activateGeneratedAssetCandidate,verifyGeneratedAssetCandidate} from "./generated-asset-candidate.service";
+
+export {createVisualTemplateService,type VisualTemplateService,type VisualTemplateServiceDeps,type VisualTemplateReference} from "./visual-template.service";
+export {createVisualTemplateTransport,VISUAL_TEMPLATE_OP_IDS} from "./visual-template.transport";

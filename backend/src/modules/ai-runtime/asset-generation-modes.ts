@@ -29,6 +29,15 @@ export function referenceImageAllowed(spec:AssetModelIdentity,mode:AssetGenerati
  }
  return true;
 }
+/** 仅返回适配器已有协议允许的比例，未知渠道不推断能力。 */
+export function assetGenerationAspectRatios(spec:AssetModelIdentity,mode:AssetGenerationMode):string[]|undefined {
+ if(!supportsAssetGenerationMode(spec,mode))return undefined;
+ const provider=spec.provider.toLowerCase(),model=spec.model.toLowerCase();
+ if(provider==="openai"&&mode.endsWith("_image"))return ["1:1","9:16","3:4","2:3","16:9","4:3","3:2"];
+ if(provider==="minimax"&&mode.endsWith("_image"))return ["1:1","16:9","4:3","3:2","2:3","3:4","9:16","21:9"];
+ if(provider==="minimax"&&model.startsWith("minimax-h3")&&mode==="text_to_video")return ["21:9","16:9","4:3","1:1","3:4","9:16"];
+ return undefined;
+}
 export function assetGenerationParameterError(spec:AssetModelIdentity,mode:AssetGenerationMode,input:{prompt:string;durationSec?:number;resolution?:string;aspectRatio?:string}):string|null{
  const provider=spec.provider.toLowerCase(),model=spec.model.toLowerCase();
  if(provider==="minimax"&&mode.endsWith("_image")&&input.prompt.length>1500)return "MiniMax 生图描述不能超过 1500 字";

@@ -1,3 +1,4 @@
+import {VISUAL_TEMPLATE_OP_IDS} from "./visual-template.transport";
 import type { Endpoint, RequestContext, Transport } from "@creatoros/contract";
 import {
   AuthenticationError,
@@ -28,6 +29,7 @@ import type { MaterialLinkResource } from "@creatoros/contract";
 // PERSISTED_OPS from ASSET_OP_IDS (adding the module = registering it).
 
 export const ASSET_OP_IDS = [
+  ...VISUAL_TEMPLATE_OP_IDS,
   "assets.downloadUrl",
   "assets.list",
   "assets.uploads.create",

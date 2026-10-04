@@ -1,6 +1,6 @@
-import { adoptPublicationDraft,type AdoptPublicationDraftInput } from "./publication-draft-adoption.service";
-import type { RequestContext } from "@creatoros/contract";
-import type { Db } from "@creatoros/backend";
+import { adoptPublicationDraft,adoptPublicationVisualRevision,type AdoptVisualRevisionInput,type AdoptPublicationDraftInput } from "./publication-draft-adoption.service";
+import {publicationVisualNoteSchema,type RequestContext} from "@creatoros/contract";
+import {and,eq,publicationRevisions,type Db} from "@creatoros/backend";
 import {
   createPublishingRepository,
   type PublishingRepository,
@@ -74,6 +74,7 @@ export type NotifyPublished = (
 
 export interface ServiceDeps {
   db: Db;
+  getFrozenImageDownload?: (ctx:RequestContext,assetId:string,fileId:string,checksum:string)=>Promise<{url:string;fileName:string}>;
   now: () => string;
   nextId: (prefix: string) => string;
   publisher?: PlatformPublisherPort;
@@ -128,6 +129,10 @@ export interface ServiceDeps {
 
 export interface PublishingService {
   adoptDraft(ctx:RequestContext,input:AdoptPublicationDraftInput):Promise<PublicationRow>;
+  adoptVisualRevision(ctx:RequestContext,input:AdoptVisualRevisionInput):Promise<{publication:PublicationRow;revision:PublicationRevisionRow}>;
+  readRevision(ctx:RequestContext,publicationId:string,revisionId:string):Promise<PublicationRevisionRow>;
+  getVisualAdoptionRevision(ctx:RequestContext,publicationId:string,adoptionKey:string):Promise<PublicationRevisionRow>;
+  exportVisualNote(ctx:RequestContext,publicationId:string,revisionId:string):Promise<{caption:string;files:Array<{assetId:string;url:string;fileName:string}>}>;
   listPublications(
     ctx: RequestContext,
     outputId: string,
@@ -474,6 +479,41 @@ export function createPublishingService(deps: ServiceDeps): PublishingService {
       );
     },
 
+    async readRevision(ctx,publicationId,revisionId){
+      await repoFor(ctx).getPublication(publicationId);
+      const [row]=await deps.db.select().from(publicationRevisions).where(and(eq(publicationRevisions.id,revisionId),eq(publicationRevisions.publicationId,publicationId),eq(publicationRevisions.userId,ctx.userId)));
+      if(!row)throw new OwnershipError("发布物料版本不存在");return row;
+    },
+    async getVisualAdoptionRevision(ctx,publicationId,adoptionKey){
+      await repoFor(ctx).getPublication(publicationId);
+      const [row]=await deps.db.select().from(publicationRevisions).where(and(eq(publicationRevisions.visualAdoptionKey,adoptionKey),eq(publicationRevisions.publicationId,publicationId),eq(publicationRevisions.userId,ctx.userId)));
+      if(!row)throw new OwnershipError("发布物料采纳版本不存在");return row;
+    },
+    async adoptVisualRevision(ctx,input){
+      if(!PLATFORMS.has(input.platform))throw new ValidationError("发布平台无效");
+      await assertOutputOwned(ctx,input.outputId);
+      return adoptPublicationVisualRevision(deps.db,ctx,input,deps);
+    },
+    async exportVisualNote(ctx,publicationId,revisionId){
+      const pub=await repoFor(ctx).getPublication(publicationId);
+      await assertOutputOwned(ctx,pub.contentOutputId);
+      const [row]=await deps.db.select().from(publicationRevisions).where(and(eq(publicationRevisions.id,revisionId),eq(publicationRevisions.publicationId,pub.id),eq(publicationRevisions.userId,ctx.userId)));
+      if(!row)throw new OwnershipError("发布物料版本不存在");
+      const settings=(row.platformSettings??{}) as Record<string,unknown>,parsed=publicationVisualNoteSchema.safeParse(settings.visualNote??settings.visualCover);
+      if(!parsed.success)throw new ValidationError("该版本没有图文或封面物料");
+      const note=parsed.data;
+      if(note.pageReceipts.length!==note.orderedAssetIds.length)throw new ValidationError("图文页序与冻结文件不完整");
+      if(!deps.getFrozenImageDownload)throw new ConflictError("图片下载端口尚未配置");
+      const files=[];
+      for(let i=0;i<note.orderedAssetIds.length;i++){
+        const assetId=note.orderedAssetIds[i]!,receipt=note.pageReceipts[i]!;
+        const file=await deps.getFrozenImageDownload(ctx,assetId,receipt.fileId,receipt.checksum);
+        if(!file.url||!file.fileName)throw new ValidationError("图片文件不可下载");
+        const basename=file.fileName.split(/[\\/]/).pop()!;
+        files.push({assetId,url:file.url,fileName:`${String(i+1).padStart(2,"0")}-${basename}`});
+      }
+      return {caption:row.description,files};
+    },
     async adoptDraft(ctx,input){
       if(!PLATFORMS.has(input.platform))throw new ValidationError(`ValidationError: unknown platform: ${input.platform}`);
       await assertOutputOwned(ctx,input.outputId);
