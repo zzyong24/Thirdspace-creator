@@ -2,9 +2,9 @@
 
 - Task: T-1060
 - Verdict: PASS
-- Round: 2/3 (recheck)
-- Spec receipt: 11bbb6bfd565
-- Review receipt: 034e75fa3d2e
+- Round: 3/3 (recheck)
+- Spec receipt: af4fdfdd5a60
+- Review receipt: 453827cbe2c1
 
 ## 当前有效问题
 
@@ -17,13 +17,13 @@
   "schema": "spec-review-state/v2",
   "task_id": "T-1060",
   "cycle": 1,
-  "round": 2,
+  "round": 3,
   "max_rounds": 3,
   "review_kind": "recheck",
   "verdict": "PASS",
-  "summary": "已只读对照首轮 REV-001..003 复核当前 T1060 SPEC 增量（SHA256 11bbb6bfd565196d1a7b9fe64351d8677c0f4d5569b335511bdaa6314bede99a）。三项既有合同缺口均已闭合：创建绑定及旧缺字段路由/持久入场顺序、固定只读权限与启动/会话有效工具核对、沿原待采用素材服务的聊天图片绑定/收据/flush/单图降级。仅将原三项状态改为 resolved 并补准引文证据，其余冻结字段保持首轮原值，不新增 finding 或改变已确认产品方向。WorkBuddy 仍为外部 MCP，原生 mcpLaunch 只提供非秘密随包启动信息，原 API/Pi 配置保留。本结论是合同复审，可据此进入既定实现，不代表源码已经落地、构建或测试通过、模型/图片/跨应用真机可用；这些仍按 SPEC 完成标准验证。本次未改仓库或运行测试、安装、模型、浏览器。",
+  "summary": "已独立只读复审 T1060 readonly v2 补充合同（SPEC SHA256 af4fdfdd5a605b76269a3d04fdf47b65fc75e7a306c49b9712080d892332ce0c）。原 REV-001..003 全部字段与 resolved 状态逐项保持，不改写历史发现或旧结论。未发现新增合同阻止项：backend 创建时冻结 v2，旧 v1/旧缺绑定路由与 unknown 不重发不变；固定 Codex 联合配置仅直接展示 image_gen 和本轮唯一任务 MCP 官方规范化命名空间，关闭无前缀命名与 Code Mode host，保留只读、无网络、无可写根及原禁用项；启动参数、native config/read 实际回显、原 thread 配置与实际工具集合均须核验一致，不能把形状或请求值当作精确一致证明；ACP allow_once 仅由原当前 prompt 与真实 MCP 调用事件、session/toolCallId、原始 server/tool、原审批标记及选项关联决定，取消或异常继续取消，不获得永久信任；backend 原归属、租约、输入摘要、tool.approve、幂等与 committed 排除继续生效。DEC-T1060-02 已记录这是此前用户认可图片与任务工具目的下的窄修复，不扩大脚本/文件/命令/发布能力。固定上游字段与已有权限路径可支撑合同，不需新协议或任务权威。生产源码仍为 v1，已有临时检查指出回显 equality 尚需补齐；本结论仅合同复审，正式 host/Worker 真实 MCP、图片 pending 同字节读回、故障/取消/旧任务验证均待实施验收，绝不写成真机或产品修复 PASS。本次未改共享文件、未运行测试/模型/浏览器/安装或读取认证。",
   "spec_path": "docs/features/t1060-agent-source-integration.md",
-  "spec_sha256": "11bbb6bfd565196d1a7b9fe64351d8677c0f4d5569b335511bdaa6314bede99a",
+  "spec_sha256": "af4fdfdd5a605b76269a3d04fdf47b65fc75e7a306c49b9712080d892332ce0c",
   "constitution_path": "orchestrator/SYSTEM_ARCHITECTURE.md",
   "constitution_sha256": "3efbb0394b8bcc9eb3c9ad7e8c9364df51e336006b862e02ac71fd6c9327971e",
   "review_path": "docs/features/t1060-agent-source-integration.review.md",
@@ -31,7 +31,7 @@
   "model": "inherited-root",
   "policy": "convergent-review/v2",
   "cycle_authorization": null,
-  "latest_event_hash": "dec7e751699dcdcdc9fc9e6c94143844203f03eee320550eb84b5ad1b09bfeee",
+  "latest_event_hash": "0d11d546d327f0f3ccfa78ec64d496bfea27f0f9fe8a88be8d1d502b7238b52f",
   "open_findings": [],
   "resolved_findings": [
     {
@@ -47,6 +47,6 @@
       "resolution_evidence": "SPEC-SHA256:11bbb6bfd565196d1a7b9fe64351d8677c0f4d5569b335511bdaa6314bede99a:docs/features/t1060-agent-source-integration.md:57（FR-1060-3）。准引文：「聊天图片使用原 `pending-generated-asset` service，经同一聊天执行的窄 `saveExternalChatImage/recoverExternalChatImage` 端口提交/查原收据，不能伪装为 asset.generate。」；「backend 重新校验 task/lease/输入摘要/started session/turn 归属，操作键从原 callId、真实 provider toolCallId、图片序号派生。」；「聊天回执仅持有受控 asset/file/checksum/byteLength 引用及失败项，结算前查原收据验证。纯图允许空 text 且至少一张已保存候选；正文+单图失败保留正文和明确未保存说明，全部为空则明确失败。通知接收同步，保存队列必须在 prompt 终态后 await flush；重放先查原素材收据，未知回合不重新调用模型。」同段明确真实PNG/JPEG/WebP字节、单图30MiB、任务私有路径/符号链接约束及有效内联字节降级，用户仍沿原候选确认；第70行声明原域表/两项JSON增量与相关输入族检查。仅合同销账，端口装配、幂等恢复、纯图/晚保存/单图降级待实现验证。"
     }
   ],
-  "receipt": "034e75fa3d2e"
+  "receipt": "453827cbe2c1"
 }
 ```

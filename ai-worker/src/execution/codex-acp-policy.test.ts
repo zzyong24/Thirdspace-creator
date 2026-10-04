@@ -134,3 +134,44 @@ it('回合元数据来自真实原生 ID 和状态，保留原 quota；缺 ID �
     expect(policyApi.creatorOsTurnMeta({quota:{}},'thread-actual',turn)).toEqual({quota:{}});
   }
 });
+
+function v2Environment() {
+  const env=environment(),cfg:any=config();
+  cfg.features.code_mode={enabled:false,direct_only_tool_namespaces:['image_gen','mcp__creatoros_task_abcdefghijkl']};
+  cfg.features.non_prefixed_mcp_tool_names=false;
+  env.CREATOROS_ACP_POLICY='creatoros-acp-readonly-v2';
+  env.CODEX_CONFIG=JSON.stringify(cfg);
+  const args=JSON.parse(env.CREATOROS_CODEX_START_ARGS).map((arg:string)=>arg==='features.code_mode=false'
+    ? 'features.code_mode={enabled=false,direct_only_tool_namespaces=["image_gen","mcp__creatoros_task_abcdefghijkl"]}':arg);
+  args.push('-c','features.non_prefixed_mcp_tool_names=false');
+  env.CREATOROS_CODEX_START_ARGS=JSON.stringify(args);
+  return {env,cfg};
+}
+it('v2 沿锁版联合表只开放图片和当前任务，实际 config/read 必须精确相等',()=>{
+  const {env,cfg}=v2Environment(),policy=policyApi.readCreatorOsPolicy(env);
+  expect(policy.profile).toBe('creatoros-acp-readonly-v2');
+  expect(()=>policyApi.assertCreatorOsConfigResponse(policy,{config:cfg})).not.toThrow();
+  for(const list of [['image_gen'],['image_gen','mcp__creatoros_task_otherabcdefg'],
+    ['image_gen','mcp__creatoros_task_abcdefghijkl','shell'],['image_gen','image_gen']]){
+    const changed={...cfg,features:{...cfg.features,code_mode:{enabled:false,direct_only_tool_namespaces:list}}};
+    expect(()=>policyApi.assertCreatorOsConfigResponse(policy,{config:changed})).toThrow('CODEX_CAPABILITY_UNVERIFIED');
+  }
+  for(const features of [{...cfg.features,code_mode:{...cfg.features.code_mode,enabled:true}},
+    {...cfg.features,non_prefixed_mcp_tool_names:true},{...cfg.features,code_mode_host:true}]){
+    expect(()=>policyApi.readCreatorOsPolicy({...env,CODEX_CONFIG:JSON.stringify({...cfg,features})})).toThrow('CODEX_CAPABILITY_UNVERIFIED');
+  }
+});
+it('v2 声明只与原唯一任务 MCP 匹配，argv 不得沿旧布尔值或额外允许项',async()=>{
+  const api=await import('../../vendor/codex-acp/src/CreatorOsPolicy');
+  const {env}=v2Environment(),policy=policyApi.readCreatorOsPolicy(env);
+  const requested=[{name:'creatoros-task-abcdefghijkl',config:{url:'http://127.0.0.1:1/mcp'}}];
+  expect(()=>api.mergeCreatorOsMcpConfig(policy,requested)).not.toThrow();
+  for(const servers of [[],[{...requested[0]!,name:'creatoros-task-otherabcdefg'}],requested.concat(requested)]){
+    expect(()=>api.mergeCreatorOsMcpConfig(policy,servers)).toThrow('CODEX_CAPABILITY_UNVERIFIED');
+  }
+  const args=JSON.parse(env.CREATOROS_CODEX_START_ARGS).map((arg:string)=>arg.startsWith('features.code_mode=')?'features.code_mode=false':arg);
+  expect(()=>policyApi.readCreatorOsPolicy({...env,CREATOROS_CODEX_START_ARGS:JSON.stringify(args)})).toThrow('CODEX_CAPABILITY_UNVERIFIED');
+  const old=environment();
+  expect(policyApi.readCreatorOsPolicy(old).profile).toBe('creatoros-acp-readonly-v1');
+  expect(()=>policyApi.readCreatorOsPolicy({...old,CODEX_CONFIG:env.CODEX_CONFIG})).toThrow('CODEX_CAPABILITY_UNVERIFIED');
+});

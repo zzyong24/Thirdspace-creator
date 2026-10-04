@@ -40,9 +40,10 @@ export async function runCodexAcpInWorker(input:z.infer<typeof chatWorkerInputSc
  const cancel=()=>{if(owned&&sessionId)void owned.client.cancel(sessionId).catch(()=>{});};
  try{
   const cwd=await externalAgentWorkingDirectory(input),prompt=externalChatPrompt(input);
-  bridge=await startExternalTaskMcpBridge({turnCallId:reservation.callId,signal,call});
   const tools=externalTaskToolListSchema.parse(await call('listExternalTaskTools',{},signal)).tools;
-  owned=await createCodexAcpHost(cwd,signal,[bridge.configuration],tools.map(tool=>tool.name),accept);
+  const profile=input.externalAgentBinding?.policy??'creatoros-acp-readonly-v1';
+  if(tools.length||profile==='creatoros-acp-readonly-v1')bridge=await startExternalTaskMcpBridge({turnCallId:reservation.callId,signal,call});
+  owned=await createCodexAcpHost(cwd,signal,bridge?[bridge.configuration]:[],tools.map(tool=>tool.name),accept,profile);
   const session=await owned.client.createSession(cwd,{signal});sessionId=session.sessionId;
   images=createExternalChatImages({cwd,callId:reservation.callId,sessionId,signal,call});
   // 在任何 prompt 字节前等待持久入场；不能以 onRequestWritten 回调代替。
@@ -50,7 +51,7 @@ export async function runCodexAcpInWorker(input:z.infer<typeof chatWorkerInputSc
   const start=externalChatTurnStateSchema.parse(await call('startExternalChatTurn',{callId:reservation.callId,sessionId,protocolKind:'acp',protocolVersion:owned.protocolVersion},signal));
   if(start.callId!==reservation.callId||start.status!=='started'||start.sessionId!==sessionId)throw new CodexHostError('CODEX_START_RECEIPT_UNKNOWN');
   signal.addEventListener('abort',cancel,{once:true});signal.throwIfAborted();
-  const result=await owned.client.prompt(sessionId,prompt,undefined,undefined,async()=>({outcome:'cancel'}),{signal});
+  const result=await owned.client.prompt(sessionId,prompt,undefined,undefined,owned.onPermissionRequest,{signal});
   // 复用客户端自己的通知排空，随后才等待宿主文字/图片队列。
   await owned.client.waitForSessionUpdatesIdle({idleMs:0,timeoutMs:10_000});
   await updates;const imageResult=await images.flush();

@@ -1,0 +1,10 @@
+{
+  "check": "only presence booleans; no values read into logs",
+  "providedOfficialOpenApiEnv": {
+    "WORKBUDDY_CLIENT_ID": false,
+    "WORKBUDDY_CLIENT_SECRET": false,
+    "WORKBUDDY_ACCESS_TOKEN": false,
+    "WORKBUDDY_REFRESH_TOKEN": false,
+    "WORKBUDDY_REDIRECT_URI": false
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "application": "/Applications/WorkBuddy.app",
+  "name": "WorkBuddy",
+  "version": "5.2.5",
+  "bundleId": "com.workbuddy.workbuddy",
+  "pathCommandFound": false,
+  "CLI": "cli/bin/codebuddy",
+  "CLIIsWorkBuddyPublicInterface": "not_confirmed",
+  "aiPromptSent": false,
+  "authFilesRead": false,
+  "globalConfigEdited": false
+}

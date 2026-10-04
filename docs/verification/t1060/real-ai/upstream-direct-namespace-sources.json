@@ -1,0 +1,782 @@
+{
+  "schema": "t1060-ai-capability-research-sources/v1",
+  "recorded_at": "2026-10-04T11:31:57.905082+00:00",
+  "codex_version": "0.159.3",
+  "codex_commit": "01fc69f4026735edfdf6789820549727a4867b11",
+  "license": "Apache-2.0",
+  "source_files": [
+    {
+      "repo": "openai/codex",
+      "commit": "01fc69f4026735edfdf6789820549727a4867b11",
+      "path": "LICENSE",
+      "url": "https://raw.githubusercontent.com/openai/codex/01fc69f4026735edfdf6789820549727a4867b11/LICENSE",
+      "retrieved_at": null,
+      "retrieval_note": "本轮首批读取成功，精确首次获取时间未登记；未补造。",
+      "local_path": "/tmp/t1060-ai-capability-research/codex/LICENSE",
+      "actual_sha256": "d17f227e4df5da1600391338865ce0f3055211760a36688f816941d58232d8dc",
+      "bytes": 10926,
+      "sha256": "d17f227e4df5da1600391338865ce0f3055211760a36688f816941d58232d8dc",
+      "hash_matches": true
+    },
+    {
+      "repo": "openai/codex",
+      "commit": "01fc69f4026735edfdf6789820549727a4867b11",
+      "path": "codex-rs/Cargo.toml",
+      "url": "https://raw.githubusercontent.com/openai/codex/01fc69f4026735edfdf6789820549727a4867b11/codex-rs/Cargo.toml",
+      "retrieved_at": null,
+      "retrieval_note": "本轮首批读取成功，精确首次获取时间未登记；未补造。",
+      "local_path": "/tmp/t1060-ai-capability-research/codex/codex-rs/Cargo.toml",
+      "actual_sha256": "0577253499088b28e63beef6e202652bca46860eaa75ea128591d5ac920b7ec2",
+      "bytes": 20615,
+      "sha256": "0577253499088b28e63beef6e202652bca46860eaa75ea128591d5ac920b7ec2",
+      "hash_matches": true
+    },
+    {
+      "repo": "openai/codex",
+      "commit": "01fc69f4026735edfdf6789820549727a4867b11",
+      "path": "codex-rs/app-server/src/code_mode_host.rs",
+      "url": "https://raw.githubusercontent.com/openai/codex/01fc69f4026735edfdf6789820549727a4867b11/codex-rs/app-server/src/code_mode_host.rs",
+      "sha256": "39a0b682da90b7b567ef4dcbb4ba8b310401ce17a23345cb79084592b4daaf5d",
+      "bytes": 2604,
+      "retrieved_at": "2026-10-04T11:21:25.216218+00:00",
+      "local_path": "/tmp/t1060-ai-capability-research/codex/codex-rs/app-server/src/code_mode_host.rs",
+      "actual_sha256": "39a0b682da90b7b567ef4dcbb4ba8b310401ce17a23345cb79084592b4daaf5d",
+      "hash_matches": true
+    },
+    {
+      "repo": "openai/codex",
+      "commit": "01fc69f4026735edfdf6789820549727a4867b11",
+      "path": "codex-rs/app-server/src/lib.rs",
+      "url": "https://raw.githubusercontent.com/openai/codex/01fc69f4026735edfdf6789820549727a4867b11/codex-rs/app-server/src/lib.rs",
+      "sha256": "720bec82a5f8eaf1580a0b56bc52852cc39c3f1406406cb8d06de44a32e401da",
+      "bytes": 65467,
+      "retrieved_at": "2026-10-04T11:22:37.928828+00:00",
+      "local_path": "/tmp/t1060-ai-capability-research/codex/codex-rs/app-server/src/lib.rs",
+      "actual_sha256": "720bec82a5f8eaf1580a0b56bc52852cc39c3f1406406cb8d06de44a32e401da",
+      "hash_matches": true
+    },
+    {
+      "url": "https://raw.githubusercontent.com/openai/codex/01fc69f4026735edfdf6789820549727a4867b11/codex-rs/app-server/src/request_processors/mcp_processor.rs",
+      "commit": "01fc69f4026735edfdf6789820549727a4867b11",
+      "path": "codex-rs/app-server/src/request_processors/mcp_processor.rs",
+      "sha256": "79823ea342ceb18927f4046920c8f647cea33f8cf3ae9b3621f1ad0f1062cff5",
+      "bytes": 23950,
+      "retrieved_at": "2026-10-04T11:27:11.792245+00:00",
+      "repo": "openai/codex",
+      "local_path": "/tmp/t1060-ai-capability-research/codex/codex-rs/app-server/src/request_processors/mcp_processor.rs",
+      "actual_sha256": "79823ea342ceb18927f4046920c8f647cea33f8cf3ae9b3621f1ad0f1062cff5",
+      "hash_matches": true
+    },
+    {
+      "repo": "openai/codex",
+      "commit": "01fc69f4026735edfdf6789820549727a4867b11",
+      "path": "codex-rs/app-server/tests/suite/v2/code_mode_host.rs",
+      "url": "https://raw.githubusercontent.com/openai/codex/01fc69f4026735edfdf6789820549727a4867b11/codex-rs/app-server/tests/suite/v2/code_mode_host.rs",
+      "sha256": "77a55f820261ba6d8f4a9e73da21fa7652390385cd0621f340db06f7cfd2aad8",
+      "bytes": 17825,
+      "retrieved_at": "2026-10-04T11:22:05.443796+00:00",
+      "local_path": "/tmp/t1060-ai-capability-research/codex/codex-rs/app-server/tests/suite/v2/code_mode_host.rs",
+      "actual_sha256": "77a55f820261ba6d8f4a9e73da21fa7652390385cd0621f340db06f7cfd2aad8",
+      "hash_matches": true
+    },
+    {
+      "url": "https://raw.githubusercontent.com/openai/codex/01fc69f4026735edfdf6789820549727a4867b11/codex-rs/app-server-protocol/schema/typescript/Tool.ts",
+      "commit": "01fc69f4026735edfdf6789820549727a4867b11",
+      "path": "codex-rs/app-server-protocol/schema/typescript/Tool.ts",
+      "sha256": "d5e9e622156040df012f8a0769258093132854b64e30b6ec45c8831c11231d92",
+      "bytes": 460,
+      "retrieved_at": "2026-10-04T11:28:24.488760+00:00",
+      "repo": "openai/codex",
+      "local_path": "/tmp/t1060-ai-capability-research/codex/codex-rs/app-server-protocol/schema/typescript/Tool.ts",
+      "actual_sha256": "d5e9e622156040df012f8a0769258093132854b64e30b6ec45c8831c11231d92",
+      "hash_matches": true
+    },
+    {
+      "url": "https://raw.githubusercontent.com/openai/codex/01fc69f4026735edfdf6789820549727a4867b11/codex-rs/app-server-protocol/schema/typescript/v2/McpServerStatus.ts",
+      "commit": "01fc69f4026735edfdf6789820549727a4867b11",
+      "path": "codex-rs/app-server-protocol/schema/typescript/v2/McpServerStatus.ts",
+      "sha256": "983c21342eb43aaa3bd534e62912403c3e20c59a69678d5c4b3642f56bfe00dc",
+      "bytes": 1420,
+      "retrieved_at": "2026-10-04T11:27:03.772551+00:00",
+      "repo": "openai/codex",
+      "local_path": "/tmp/t1060-ai-capability-research/codex/codex-rs/app-server-protocol/schema/typescript/v2/McpServerStatus.ts",
+      "actual_sha256": "983c21342eb43aaa3bd534e62912403c3e20c59a69678d5c4b3642f56bfe00dc",
+      "hash_matches": true
+    },
+    {
+      "url": "https://raw.githubusercontent.com/openai/codex/01fc69f4026735edfdf6789820549727a4867b11/codex-rs/app-server-protocol/src/protocol/v2/mcp.rs",
+      "commit": "01fc69f4026735edfdf6789820549727a4867b11",
+      "path": "codex-rs/app-server-protocol/src/protocol/v2/mcp.rs",
+      "sha256": "591ee11cc30e8d21a03317df2ed1742af19c1a91c066ecb0f7a186cc813f5739",
+      "bytes": 31645,
+      "retrieved_at": "2026-10-04T11:27:08.947077+00:00",
+      "repo": "openai/codex",
+      "local_path": "/tmp/t1060-ai-capability-research/codex/codex-rs/app-server-protocol/src/protocol/v2/mcp.rs",
+      "actual_sha256": "591ee11cc30e8d21a03317df2ed1742af19c1a91c066ecb0f7a186cc813f5739",
+      "hash_matches": true
+    },
+    {
+      "repo": "openai/codex",
+      "commit": "01fc69f4026735edfdf6789820549727a4867b11",
+      "path": "codex-rs/code-mode/src/lib.rs",
+      "url": "https://raw.githubusercontent.com/openai/codex/01fc69f4026735edfdf6789820549727a4867b11/codex-rs/code-mode/src/lib.rs",
+      "sha256": "672628d0254daded50e508875039d7dcdb95d4d850209ae3ac3f95161b0e470d",
+      "bytes": 298,
+      "retrieved_at": "2026-10-04T11:22:02.832196+00:00",
+      "local_path": "/tmp/t1060-ai-capability-research/codex/codex-rs/code-mode/src/lib.rs",
+      "actual_sha256": "672628d0254daded50e508875039d7dcdb95d4d850209ae3ac3f95161b0e470d",
+      "hash_matches": true
+    },
+    {
+      "repo": "openai/codex",
+      "commit": "01fc69f4026735edfdf6789820549727a4867b11",
+      "path": "codex-rs/code-mode/src/remote_session.rs",
+      "url": "https://raw.githubusercontent.com/openai/codex/01fc69f4026735edfdf6789820549727a4867b11/codex-rs/code-mode/src/remote_session.rs",
+      "sha256": "72a6dbd170132bafd26f0affa0c1c2e347a8c3d8550b1065d1c88e99f0f415a2",
+      "bytes": 19089,
+      "retrieved_at": "2026-10-04T11:22:02.748934+00:00",
+      "local_path": "/tmp/t1060-ai-capability-research/codex/codex-rs/code-mode/src/remote_session.rs",
+      "actual_sha256": "72a6dbd170132bafd26f0affa0c1c2e347a8c3d8550b1065d1c88e99f0f415a2",
+      "hash_matches": true
+    },
+    {
+      "repo": "openai/codex",
+      "commit": "01fc69f4026735edfdf6789820549727a4867b11",
+      "path": "codex-rs/code-mode-host/src/lib.rs",
+      "url": "https://raw.githubusercontent.com/openai/codex/01fc69f4026735edfdf6789820549727a4867b11/codex-rs/code-mode-host/src/lib.rs",
+      "sha256": "fd1fe94fed87b69b84e511b22f2d9ee75b0f8c023eb05348b3ab02bc6645daef",
+      "bytes": 25252,
+      "retrieved_at": "2026-10-04T11:20:12.742097+00:00",
+      "local_path": "/tmp/t1060-ai-capability-research/codex/codex-rs/code-mode-host/src/lib.rs",
+      "actual_sha256": "fd1fe94fed87b69b84e511b22f2d9ee75b0f8c023eb05348b3ab02bc6645daef",
+      "hash_matches": true
+    },
+    {
+      "repo": "openai/codex",
+      "commit": "01fc69f4026735edfdf6789820549727a4867b11",
+      "path": "codex-rs/code-mode-host/src/main.rs",
+      "url": "https://raw.githubusercontent.com/openai/codex/01fc69f4026735edfdf6789820549727a4867b11/codex-rs/code-mode-host/src/main.rs",
+      "sha256": "dd7c33fb557d8be509a9750eee6c6ec7269b006fa4657f336380e61cacb99f7e",
+      "bytes": 4137,
+      "retrieved_at": "2026-10-04T11:20:12.240987+00:00",
+      "local_path": "/tmp/t1060-ai-capability-research/codex/codex-rs/code-mode-host/src/main.rs",
+      "actual_sha256": "dd7c33fb557d8be509a9750eee6c6ec7269b006fa4657f336380e61cacb99f7e",
+      "hash_matches": true
+    },
+    {
+      "repo": "openai/codex",
+      "commit": "01fc69f4026735edfdf6789820549727a4867b11",
+      "path": "codex-rs/code-mode-runtime/src/lib.rs",
+      "url": "https://raw.githubusercontent.com/openai/codex/01fc69f4026735edfdf6789820549727a4867b11/codex-rs/code-mode-runtime/src/lib.rs",
+      "sha256": "30c6333abb1345a9befd15a32312e5e48329db66756fbcfca1ab9e3fbdba7c6f",
+      "bytes": 301,
+      "retrieved_at": "2026-10-04T11:20:13.987240+00:00",
+      "local_path": "/tmp/t1060-ai-capability-research/codex/codex-rs/code-mode-runtime/src/lib.rs",
+      "actual_sha256": "30c6333abb1345a9befd15a32312e5e48329db66756fbcfca1ab9e3fbdba7c6f",
+      "hash_matches": true
+    },
+    {
+      "repo": "openai/codex",
+      "commit": "01fc69f4026735edfdf6789820549727a4867b11",
+      "path": "codex-rs/code-mode-runtime/src/runtime/globals.rs",
+      "url": "https://raw.githubusercontent.com/openai/codex/01fc69f4026735edfdf6789820549727a4867b11/codex-rs/code-mode-runtime/src/runtime/globals.rs",
+      "sha256": "e62df37ddd8d36f3f799d3a2713b225661e3706dcaf2fe97b3cf183427903c07",
+      "bytes": 6595,
+      "retrieved_at": "2026-10-04T11:21:23.453634+00:00",
+      "local_path": "/tmp/t1060-ai-capability-research/codex/codex-rs/code-mode-runtime/src/runtime/globals.rs",
+      "actual_sha256": "e62df37ddd8d36f3f799d3a2713b225661e3706dcaf2fe97b3cf183427903c07",
+      "hash_matches": true
+    },
+    {
+      "repo": "openai/codex",
+      "commit": "01fc69f4026735edfdf6789820549727a4867b11",
+      "path": "codex-rs/code-mode-runtime/src/runtime/module_loader.rs",
+      "url": "https://raw.githubusercontent.com/openai/codex/01fc69f4026735edfdf6789820549727a4867b11/codex-rs/code-mode-runtime/src/runtime/module_loader.rs",
+      "sha256": "9099345cced069d62d5ee025986f9fecabdea83859412e1ba34fbd01c3f1f159",
+      "bytes": 8308,
+      "retrieved_at": "2026-10-04T11:21:24.234668+00:00",
+      "local_path": "/tmp/t1060-ai-capability-research/codex/codex-rs/code-mode-runtime/src/runtime/module_loader.rs",
+      "actual_sha256": "9099345cced069d62d5ee025986f9fecabdea83859412e1ba34fbd01c3f1f159",
+      "hash_matches": true
+    },
+    {
+      "repo": "openai/codex",
+      "commit": "01fc69f4026735edfdf6789820549727a4867b11",
+      "path": "codex-rs/code-mode-runtime/src/runtime/module_loader_tests.rs",
+      "url": "https://raw.githubusercontent.com/openai/codex/01fc69f4026735edfdf6789820549727a4867b11/codex-rs/code-mode-runtime/src/runtime/module_loader_tests.rs",
+      "sha256": "e862d34e72a746c0946802cf9d4af7db69a65caf522ba85cc0d9512fe256e0d5",
+      "bytes": 2517,
+      "retrieved_at": "2026-10-04T11:22:37.408833+00:00",
+      "local_path": "/tmp/t1060-ai-capability-research/codex/codex-rs/code-mode-runtime/src/runtime/module_loader_tests.rs",
+      "actual_sha256": "e862d34e72a746c0946802cf9d4af7db69a65caf522ba85cc0d9512fe256e0d5",
+      "hash_matches": true
+    },
+    {
+      "url": "https://raw.githubusercontent.com/openai/codex/01fc69f4026735edfdf6789820549727a4867b11/codex-rs/codex-mcp/src/catalog.rs",
+      "commit": "01fc69f4026735edfdf6789820549727a4867b11",
+      "path": "codex-rs/codex-mcp/src/catalog.rs",
+      "sha256": "989b8dd1d7bc89786dee7273e9ae10599a4c54ef90b431058a74ff63dd2a6283",
+      "bytes": 24493,
+      "retrieved_at": "2026-10-04T11:28:19.269459+00:00",
+      "repo": "openai/codex",
+      "local_path": "/tmp/t1060-ai-capability-research/codex/codex-rs/codex-mcp/src/catalog.rs",
+      "actual_sha256": "989b8dd1d7bc89786dee7273e9ae10599a4c54ef90b431058a74ff63dd2a6283",
+      "hash_matches": true
+    },
+    {
+      "url": "https://raw.githubusercontent.com/openai/codex/01fc69f4026735edfdf6789820549727a4867b11/codex-rs/codex-mcp/src/connection_manager/startup.rs",
+      "commit": "01fc69f4026735edfdf6789820549727a4867b11",
+      "path": "codex-rs/codex-mcp/src/connection_manager/startup.rs",
+      "sha256": "1fbd2cc3ba7cf3fc4cb5131cbc98289a0e865fe7883434a83dae4678c8f7ed1c",
+      "bytes": 4818,
+      "retrieved_at": "2026-10-04T11:29:20.223429+00:00",
+      "repo": "openai/codex",
+      "local_path": "/tmp/t1060-ai-capability-research/codex/codex-rs/codex-mcp/src/connection_manager/startup.rs",
+      "actual_sha256": "1fbd2cc3ba7cf3fc4cb5131cbc98289a0e865fe7883434a83dae4678c8f7ed1c",
+      "hash_matches": true
+    },
+    {
+      "url": "https://raw.githubusercontent.com/openai/codex/01fc69f4026735edfdf6789820549727a4867b11/codex-rs/codex-mcp/src/connection_manager/tool_catalog.rs",
+      "commit": "01fc69f4026735edfdf6789820549727a4867b11",
+      "path": "codex-rs/codex-mcp/src/connection_manager/tool_catalog.rs",
+      "sha256": "749ba9975ba5c3821d003df1c20d17042f386cdfbd2c66a72c9de15e6652dd9c",
+      "bytes": 27828,
+      "retrieved_at": "2026-10-04T11:28:17.125276+00:00",
+      "repo": "openai/codex",
+      "local_path": "/tmp/t1060-ai-capability-research/codex/codex-rs/codex-mcp/src/connection_manager/tool_catalog.rs",
+      "actual_sha256": "749ba9975ba5c3821d003df1c20d17042f386cdfbd2c66a72c9de15e6652dd9c",
+      "hash_matches": true
+    },
+    {
+      "url": "https://raw.githubusercontent.com/openai/codex/01fc69f4026735edfdf6789820549727a4867b11/codex-rs/codex-mcp/src/mcp/mod.rs",
+      "commit": "01fc69f4026735edfdf6789820549727a4867b11",
+      "path": "codex-rs/codex-mcp/src/mcp/mod.rs",
+      "sha256": "3ad76e5dff1a60e597ea5a35270c2301d68654ec9d28ce07bcceb4fbd118ad1b",
+      "bytes": 33155,
+      "retrieved_at": "2026-10-04T11:29:21.801537+00:00",
+      "repo": "openai/codex",
+      "local_path": "/tmp/t1060-ai-capability-research/codex/codex-rs/codex-mcp/src/mcp/mod.rs",
+      "actual_sha256": "3ad76e5dff1a60e597ea5a35270c2301d68654ec9d28ce07bcceb4fbd118ad1b",
+      "hash_matches": true
+    },
+    {
+      "url": "https://raw.githubusercontent.com/openai/codex/01fc69f4026735edfdf6789820549727a4867b11/codex-rs/codex-mcp/src/rmcp_client.rs",
+      "commit": "01fc69f4026735edfdf6789820549727a4867b11",
+      "path": "codex-rs/codex-mcp/src/rmcp_client.rs",
+      "sha256": "b8562b3a6def953aab82fc8e728785010da932d5dce4526b0e8df861a7e3e685",
+      "bytes": 57041,
+      "retrieved_at": "2026-10-04T11:29:18.791890+00:00",
+      "repo": "openai/codex",
+      "local_path": "/tmp/t1060-ai-capability-research/codex/codex-rs/codex-mcp/src/rmcp_client.rs",
+      "actual_sha256": "b8562b3a6def953aab82fc8e728785010da932d5dce4526b0e8df861a7e3e685",
+      "hash_matches": true
+    },
+    {
+      "url": "https://raw.githubusercontent.com/openai/codex/01fc69f4026735edfdf6789820549727a4867b11/codex-rs/codex-mcp/src/runtime.rs",
+      "commit": "01fc69f4026735edfdf6789820549727a4867b11",
+      "path": "codex-rs/codex-mcp/src/runtime.rs",
+      "sha256": "2511fdad728c211a6b10fb76a32f6c27cd1f4c4989d0b82f6046b8e4d65b97ff",
+      "bytes": 52199,
+      "retrieved_at": "2026-10-04T11:28:18.330053+00:00",
+      "repo": "openai/codex",
+      "local_path": "/tmp/t1060-ai-capability-research/codex/codex-rs/codex-mcp/src/runtime.rs",
+      "actual_sha256": "2511fdad728c211a6b10fb76a32f6c27cd1f4c4989d0b82f6046b8e4d65b97ff",
+      "hash_matches": true
+    },
+    {
+      "repo": "openai/codex",
+      "commit": "01fc69f4026735edfdf6789820549727a4867b11",
+      "path": "codex-rs/codex-mcp/src/tools.rs",
+      "url": "https://raw.githubusercontent.com/openai/codex/01fc69f4026735edfdf6789820549727a4867b11/codex-rs/codex-mcp/src/tools.rs",
+      "sha256": "28d44b33ae3189a08521b0b9a4208f36952a844698db16dee69070df39719f38",
+      "bytes": 11048,
+      "retrieved_at": "2026-10-04T11:23:29.942603+00:00",
+      "local_path": "/tmp/t1060-ai-capability-research/codex/codex-rs/codex-mcp/src/tools.rs",
+      "actual_sha256": "28d44b33ae3189a08521b0b9a4208f36952a844698db16dee69070df39719f38",
+      "hash_matches": true
+    },
+    {
+      "repo": "openai/codex",
+      "commit": "01fc69f4026735edfdf6789820549727a4867b11",
+      "path": "codex-rs/config/src/config_toml.rs",
+      "url": "https://raw.githubusercontent.com/openai/codex/01fc69f4026735edfdf6789820549727a4867b11/codex-rs/config/src/config_toml.rs",
+      "sha256": "05b6d259c8882322d33a997d69c0898f7ca3693552bf9ec5f4a8f1c60457bb1e",
+      "bytes": 42060,
+      "retrieved_at": "2026-10-04T11:21:24.718440+00:00",
+      "local_path": "/tmp/t1060-ai-capability-research/codex/codex-rs/config/src/config_toml.rs",
+      "actual_sha256": "05b6d259c8882322d33a997d69c0898f7ca3693552bf9ec5f4a8f1c60457bb1e",
+      "hash_matches": true
+    },
+    {
+      "repo": "openai/codex",
+      "commit": "01fc69f4026735edfdf6789820549727a4867b11",
+      "path": "codex-rs/core/config.schema.json",
+      "url": "https://raw.githubusercontent.com/openai/codex/01fc69f4026735edfdf6789820549727a4867b11/codex-rs/core/config.schema.json",
+      "sha256": "eda7251b7e46e0b9d0f3d8eef5dab451e11a55d723e2b802e152b7208045836a",
+      "bytes": 228448,
+      "retrieved_at": "2026-10-04T11:21:24.977708+00:00",
+      "local_path": "/tmp/t1060-ai-capability-research/codex/codex-rs/core/config.schema.json",
+      "actual_sha256": "eda7251b7e46e0b9d0f3d8eef5dab451e11a55d723e2b802e152b7208045836a",
+      "hash_matches": true
+    },
+    {
+      "url": "https://raw.githubusercontent.com/openai/codex/01fc69f4026735edfdf6789820549727a4867b11/codex-rs/core/src/config/mod.rs",
+      "commit": "01fc69f4026735edfdf6789820549727a4867b11",
+      "path": "codex-rs/core/src/config/mod.rs",
+      "sha256": "df6d6871a35a9e365e36beb3d388c2c39cae59d95bd84834321c8501390ec397",
+      "bytes": 199711,
+      "retrieved_at": "2026-10-04T11:28:15.222684+00:00",
+      "repo": "openai/codex",
+      "local_path": "/tmp/t1060-ai-capability-research/codex/codex-rs/core/src/config/mod.rs",
+      "actual_sha256": "df6d6871a35a9e365e36beb3d388c2c39cae59d95bd84834321c8501390ec397",
+      "hash_matches": true
+    },
+    {
+      "repo": "openai/codex",
+      "commit": "01fc69f4026735edfdf6789820549727a4867b11",
+      "path": "codex-rs/core/src/tools/code_mode/delegate.rs",
+      "url": "https://raw.githubusercontent.com/openai/codex/01fc69f4026735edfdf6789820549727a4867b11/codex-rs/core/src/tools/code_mode/delegate.rs",
+      "sha256": "515961dca924cc2772611e8c6c30eed9011ab3a3c4f61af2a61907677b5b5f49",
+      "bytes": 18658,
+      "retrieved_at": "2026-10-04T11:22:02.763298+00:00",
+      "local_path": "/tmp/t1060-ai-capability-research/codex/codex-rs/core/src/tools/code_mode/delegate.rs",
+      "actual_sha256": "515961dca924cc2772611e8c6c30eed9011ab3a3c4f61af2a61907677b5b5f49",
+      "hash_matches": true
+    },
+    {
+      "repo": "openai/codex",
+      "commit": "01fc69f4026735edfdf6789820549727a4867b11",
+      "path": "codex-rs/core/src/tools/code_mode/execute_handler.rs",
+      "url": "https://raw.githubusercontent.com/openai/codex/01fc69f4026735edfdf6789820549727a4867b11/codex-rs/core/src/tools/code_mode/execute_handler.rs",
+      "sha256": "584b6c5486a5979d28082e45296d344b541cba011de4afd5a2d8a97b398c9370",
+      "bytes": 9609,
+      "retrieved_at": "2026-10-04T11:22:03.425261+00:00",
+      "local_path": "/tmp/t1060-ai-capability-research/codex/codex-rs/core/src/tools/code_mode/execute_handler.rs",
+      "actual_sha256": "584b6c5486a5979d28082e45296d344b541cba011de4afd5a2d8a97b398c9370",
+      "hash_matches": true
+    },
+    {
+      "repo": "openai/codex",
+      "commit": "01fc69f4026735edfdf6789820549727a4867b11",
+      "path": "codex-rs/core/src/tools/code_mode/execute_spec.rs",
+      "url": "https://raw.githubusercontent.com/openai/codex/01fc69f4026735edfdf6789820549727a4867b11/codex-rs/core/src/tools/code_mode/execute_spec.rs",
+      "sha256": "40f06a09be0edd11faaeeac9b4d3fb162d05548ee0e8ecb4289c0e0a5c50c58c",
+      "bytes": 3467,
+      "retrieved_at": "2026-10-04T11:20:11.887532+00:00",
+      "local_path": "/tmp/t1060-ai-capability-research/codex/codex-rs/core/src/tools/code_mode/execute_spec.rs",
+      "actual_sha256": "40f06a09be0edd11faaeeac9b4d3fb162d05548ee0e8ecb4289c0e0a5c50c58c",
+      "hash_matches": true
+    },
+    {
+      "repo": "openai/codex",
+      "commit": "01fc69f4026735edfdf6789820549727a4867b11",
+      "path": "codex-rs/core/src/tools/code_mode/mod.rs",
+      "url": "https://raw.githubusercontent.com/openai/codex/01fc69f4026735edfdf6789820549727a4867b11/codex-rs/core/src/tools/code_mode/mod.rs",
+      "sha256": "e7aae18f4043e9d5964779c0a20f129b9f43dc21873328aa2bcb893035b4cf75",
+      "bytes": 19820,
+      "retrieved_at": "2026-10-04T11:20:12.142871+00:00",
+      "local_path": "/tmp/t1060-ai-capability-research/codex/codex-rs/core/src/tools/code_mode/mod.rs",
+      "actual_sha256": "e7aae18f4043e9d5964779c0a20f129b9f43dc21873328aa2bcb893035b4cf75",
+      "hash_matches": true
+    },
+    {
+      "repo": "openai/codex",
+      "commit": "01fc69f4026735edfdf6789820549727a4867b11",
+      "path": "codex-rs/core/src/tools/handlers/mcp.rs",
+      "url": "https://raw.githubusercontent.com/openai/codex/01fc69f4026735edfdf6789820549727a4867b11/codex-rs/core/src/tools/handlers/mcp.rs",
+      "sha256": "f52c5ea41ecdc41f0dad9a69494baf9ffbc23e90cd6bc6f8802b1c577775570d",
+      "bytes": 34067,
+      "retrieved_at": "2026-10-04T11:22:37.495147+00:00",
+      "local_path": "/tmp/t1060-ai-capability-research/codex/codex-rs/core/src/tools/handlers/mcp.rs",
+      "actual_sha256": "f52c5ea41ecdc41f0dad9a69494baf9ffbc23e90cd6bc6f8802b1c577775570d",
+      "hash_matches": true
+    },
+    {
+      "repo": "openai/codex",
+      "commit": "01fc69f4026735edfdf6789820549727a4867b11",
+      "path": "codex-rs/core/src/tools/mod.rs",
+      "url": "https://raw.githubusercontent.com/openai/codex/01fc69f4026735edfdf6789820549727a4867b11/codex-rs/core/src/tools/mod.rs",
+      "retrieved_at": null,
+      "retrieval_note": "本轮首批读取成功，精确首次获取时间未登记；未补造。",
+      "local_path": "/tmp/t1060-ai-capability-research/codex/codex-rs/core/src/tools/mod.rs",
+      "actual_sha256": "510635e3ae67e4c63e1feaf6d645f25dc2590f54391645dddeec0a84c1d17616",
+      "bytes": 5240,
+      "sha256": "510635e3ae67e4c63e1feaf6d645f25dc2590f54391645dddeec0a84c1d17616",
+      "hash_matches": true
+    },
+    {
+      "repo": "openai/codex",
+      "commit": "01fc69f4026735edfdf6789820549727a4867b11",
+      "path": "codex-rs/core/src/tools/spec_plan.rs",
+      "url": "https://raw.githubusercontent.com/openai/codex/01fc69f4026735edfdf6789820549727a4867b11/codex-rs/core/src/tools/spec_plan.rs",
+      "retrieved_at": null,
+      "retrieval_note": "本轮首批读取成功，精确首次获取时间未登记；未补造。",
+      "local_path": "/tmp/t1060-ai-capability-research/codex/codex-rs/core/src/tools/spec_plan.rs",
+      "actual_sha256": "849ef21d4e5c83febdc31eacd7609911d43e3f69a35168fe02ae899273b5ef3e",
+      "bytes": 60033,
+      "sha256": "849ef21d4e5c83febdc31eacd7609911d43e3f69a35168fe02ae899273b5ef3e",
+      "hash_matches": true
+    },
+    {
+      "repo": "openai/codex",
+      "commit": "01fc69f4026735edfdf6789820549727a4867b11",
+      "path": "codex-rs/core/src/tools/spec_plan_tests.rs",
+      "url": "https://raw.githubusercontent.com/openai/codex/01fc69f4026735edfdf6789820549727a4867b11/codex-rs/core/src/tools/spec_plan_tests.rs",
+      "sha256": "27b9e8fd7bf32532f377bef9203c88c72709c539c1ebfec12a577ae1caa9ddb0",
+      "bytes": 120778,
+      "retrieved_at": "2026-10-04T11:20:17.311079+00:00",
+      "local_path": "/tmp/t1060-ai-capability-research/codex/codex-rs/core/src/tools/spec_plan_tests.rs",
+      "actual_sha256": "27b9e8fd7bf32532f377bef9203c88c72709c539c1ebfec12a577ae1caa9ddb0",
+      "hash_matches": true
+    },
+    {
+      "url": "https://raw.githubusercontent.com/openai/codex/01fc69f4026735edfdf6789820549727a4867b11/codex-rs/ext/image-generation/src/extension.rs",
+      "commit": "01fc69f4026735edfdf6789820549727a4867b11",
+      "path": "codex-rs/ext/image-generation/src/extension.rs",
+      "sha256": "18d276854dc851daffeaf6e33374997675c27bcb78f9b8765c5c3b01f5f480c9",
+      "bytes": 4391,
+      "retrieved_at": "2026-10-04T11:28:23.543381+00:00",
+      "repo": "openai/codex",
+      "local_path": "/tmp/t1060-ai-capability-research/codex/codex-rs/ext/image-generation/src/extension.rs",
+      "actual_sha256": "18d276854dc851daffeaf6e33374997675c27bcb78f9b8765c5c3b01f5f480c9",
+      "hash_matches": true
+    },
+    {
+      "url": "https://raw.githubusercontent.com/openai/codex/01fc69f4026735edfdf6789820549727a4867b11/codex-rs/ext/image-generation/src/lib.rs",
+      "commit": "01fc69f4026735edfdf6789820549727a4867b11",
+      "path": "codex-rs/ext/image-generation/src/lib.rs",
+      "sha256": "c710abe1967cd3f7faaf78c0a35de0f5e6cc5c461f130b79d2b25d27ba8df9de",
+      "bytes": 196,
+      "retrieved_at": "2026-10-04T11:28:20.164259+00:00",
+      "repo": "openai/codex",
+      "local_path": "/tmp/t1060-ai-capability-research/codex/codex-rs/ext/image-generation/src/lib.rs",
+      "actual_sha256": "c710abe1967cd3f7faaf78c0a35de0f5e6cc5c461f130b79d2b25d27ba8df9de",
+      "hash_matches": true
+    },
+    {
+      "url": "https://raw.githubusercontent.com/openai/codex/01fc69f4026735edfdf6789820549727a4867b11/codex-rs/ext/image-generation/src/tool.rs",
+      "commit": "01fc69f4026735edfdf6789820549727a4867b11",
+      "path": "codex-rs/ext/image-generation/src/tool.rs",
+      "sha256": "1aa00a3013fdabf547f890b43cc3ff3a0217df6240fb9989a6fe6a03e9272fe7",
+      "bytes": 26563,
+      "retrieved_at": "2026-10-04T11:28:22.284010+00:00",
+      "repo": "openai/codex",
+      "local_path": "/tmp/t1060-ai-capability-research/codex/codex-rs/ext/image-generation/src/tool.rs",
+      "actual_sha256": "1aa00a3013fdabf547f890b43cc3ff3a0217df6240fb9989a6fe6a03e9272fe7",
+      "hash_matches": true
+    },
+    {
+      "repo": "openai/codex",
+      "commit": "01fc69f4026735edfdf6789820549727a4867b11",
+      "path": "codex-rs/ext/mcp/src/lib.rs",
+      "url": "https://raw.githubusercontent.com/openai/codex/01fc69f4026735edfdf6789820549727a4867b11/codex-rs/ext/mcp/src/lib.rs",
+      "sha256": "090e5e13a2c06a4b001a69e5444fd8b676ddcd608a5d40fe7e0937498482d6d2",
+      "bytes": 2381,
+      "retrieved_at": "2026-10-04T11:22:02.676773+00:00",
+      "local_path": "/tmp/t1060-ai-capability-research/codex/codex-rs/ext/mcp/src/lib.rs",
+      "actual_sha256": "090e5e13a2c06a4b001a69e5444fd8b676ddcd608a5d40fe7e0937498482d6d2",
+      "hash_matches": true
+    },
+    {
+      "repo": "openai/codex",
+      "commit": "01fc69f4026735edfdf6789820549727a4867b11",
+      "path": "codex-rs/features/src/feature_configs.rs",
+      "url": "https://raw.githubusercontent.com/openai/codex/01fc69f4026735edfdf6789820549727a4867b11/codex-rs/features/src/feature_configs.rs",
+      "sha256": "c1012952a46f1c228ab087d5721ff7a7fe447da01dac31973abe30b9798682eb",
+      "bytes": 21831,
+      "retrieved_at": "2026-10-04T11:21:23.708756+00:00",
+      "local_path": "/tmp/t1060-ai-capability-research/codex/codex-rs/features/src/feature_configs.rs",
+      "actual_sha256": "c1012952a46f1c228ab087d5721ff7a7fe447da01dac31973abe30b9798682eb",
+      "hash_matches": true
+    },
+    {
+      "repo": "openai/codex",
+      "commit": "01fc69f4026735edfdf6789820549727a4867b11",
+      "path": "codex-rs/features/src/lib.rs",
+      "url": "https://raw.githubusercontent.com/openai/codex/01fc69f4026735edfdf6789820549727a4867b11/codex-rs/features/src/lib.rs",
+      "sha256": "4c702a9479fdbf955b0640f8d52e327dff5cc273c0e9587f29f62e5cbbcd59aa",
+      "bytes": 65180,
+      "retrieved_at": "2026-10-04T11:20:13.386993+00:00",
+      "local_path": "/tmp/t1060-ai-capability-research/codex/codex-rs/features/src/lib.rs",
+      "actual_sha256": "4c702a9479fdbf955b0640f8d52e327dff5cc273c0e9587f29f62e5cbbcd59aa",
+      "hash_matches": true
+    },
+    {
+      "repo": "openai/codex",
+      "commit": "01fc69f4026735edfdf6789820549727a4867b11",
+      "path": "codex-rs/install-context/src/lib.rs",
+      "url": "https://raw.githubusercontent.com/openai/codex/01fc69f4026735edfdf6789820549727a4867b11/codex-rs/install-context/src/lib.rs",
+      "sha256": "b7305f28586f61f7a3cc7d3c53c95dacabca05529b1ba3aa4b5e42d306db2ae5",
+      "bytes": 33763,
+      "retrieved_at": "2026-10-04T11:23:32.176150+00:00",
+      "local_path": "/tmp/t1060-ai-capability-research/codex/codex-rs/install-context/src/lib.rs",
+      "actual_sha256": "b7305f28586f61f7a3cc7d3c53c95dacabca05529b1ba3aa4b5e42d306db2ae5",
+      "hash_matches": true
+    },
+    {
+      "url": "https://raw.githubusercontent.com/openai/codex/01fc69f4026735edfdf6789820549727a4867b11/codex-rs/protocol/src/mcp.rs",
+      "commit": "01fc69f4026735edfdf6789820549727a4867b11",
+      "path": "codex-rs/protocol/src/mcp.rs",
+      "sha256": "f26edc2053e5bd7a5950987d5ac0a0ef6b332bec2984cc606513edba83f833c9",
+      "bytes": 21889,
+      "retrieved_at": "2026-10-04T11:27:13.893911+00:00",
+      "repo": "openai/codex",
+      "local_path": "/tmp/t1060-ai-capability-research/codex/codex-rs/protocol/src/mcp.rs",
+      "actual_sha256": "f26edc2053e5bd7a5950987d5ac0a0ef6b332bec2984cc606513edba83f833c9",
+      "hash_matches": true
+    },
+    {
+      "repo": "openai/codex",
+      "commit": "01fc69f4026735edfdf6789820549727a4867b11",
+      "path": "codex-rs/tools/src/mcp_tool.rs",
+      "url": "https://raw.githubusercontent.com/openai/codex/01fc69f4026735edfdf6789820549727a4867b11/codex-rs/tools/src/mcp_tool.rs",
+      "sha256": "c8c17a79295bae72b9245be2c298bfc13d83e79ca3557840564a1e249f2654b0",
+      "bytes": 3560,
+      "retrieved_at": "2026-10-04T11:22:37.288346+00:00",
+      "local_path": "/tmp/t1060-ai-capability-research/codex/codex-rs/tools/src/mcp_tool.rs",
+      "actual_sha256": "c8c17a79295bae72b9245be2c298bfc13d83e79ca3557840564a1e249f2654b0",
+      "hash_matches": true
+    }
+  ],
+  "failed_path_attempts": [
+    {
+      "path": "codex-rs/core/src/tools/handlers/code_mode.rs",
+      "error": "HTTP Error 404: Not Found"
+    },
+    {
+      "path": "codex-rs/core/src/config/types.rs",
+      "error": "HTTP Error 404: Not Found"
+    },
+    {
+      "path": "codex-rs/core/src/code_mode_host.rs",
+      "error": "HTTP Error 404: Not Found"
+    },
+    {
+      "path": "codex-rs/core/src/tools/code_mode/host.rs",
+      "error": "HTTP Error 404: Not Found"
+    },
+    {
+      "path": "codex-rs/core/src/code_mode.rs",
+      "error": "HTTP Error 404: Not Found"
+    },
+    {
+      "path": "codex-rs/core/src/codex.rs",
+      "error": "HTTP Error 404: Not Found"
+    },
+    {
+      "path": "codex-rs/core/src/session.rs",
+      "error": "HTTP Error 404: Not Found"
+    },
+    {
+      "path": "codex-rs/core/src/session/services.rs",
+      "error": "HTTP Error 404: Not Found"
+    },
+    {
+      "path": "codex-rs/core/src/session/services/code_mode.rs",
+      "error": "HTTP Error 404: Not Found"
+    }
+  ],
+  "reused_primary_snapshots": [
+    {
+      "repo": "agentclientprotocol/codex-acp",
+      "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+      "path": "package.json",
+      "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/package.json",
+      "sha256": "4c792564680304b0d4cd604baa41a67a0dd50768b6afe15ca982aefce647962f",
+      "fetched_at": "2026-10-04T08:22:42.973076+00:00",
+      "local_path": "/tmp/t1060-source/codex-acp/package.json",
+      "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/package.json",
+      "checked_local_path": "/tmp/t1060-source/codex-acp/package.json",
+      "checked_sha256": "4c792564680304b0d4cd604baa41a67a0dd50768b6afe15ca982aefce647962f",
+      "hash_matches": true
+    },
+    {
+      "repo": "agentclientprotocol/codex-acp",
+      "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+      "path": "src/AgentMode.ts",
+      "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/AgentMode.ts",
+      "sha256": "16870850683665fca2b2df7dc1f4b426c7b9bb746ea0f8672cafa17aebcccf64",
+      "fetched_at": "2026-10-04T08:22:44.558466+00:00",
+      "local_path": "/tmp/t1060-source/codex-acp/src/AgentMode.ts",
+      "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/AgentMode.ts",
+      "checked_local_path": "/tmp/t1060-source/codex-acp/src/AgentMode.ts",
+      "checked_sha256": "16870850683665fca2b2df7dc1f4b426c7b9bb746ea0f8672cafa17aebcccf64",
+      "hash_matches": true
+    },
+    {
+      "repo": "agentclientprotocol/codex-acp",
+      "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+      "path": "src/CodexAcpClient.ts",
+      "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/CodexAcpClient.ts",
+      "sha256": "5315c083f0d75340574e808d93775081673616deda907ae14c360b66301afabe",
+      "fetched_at": "2026-10-04T08:22:45.622373+00:00",
+      "local_path": "/tmp/t1060-source/codex-acp/src/CodexAcpClient.ts",
+      "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/CodexAcpClient.ts",
+      "checked_local_path": "/tmp/t1060-source/codex-acp/src/CodexAcpClient.ts",
+      "checked_sha256": "5315c083f0d75340574e808d93775081673616deda907ae14c360b66301afabe",
+      "hash_matches": true
+    },
+    {
+      "repo": "agentclientprotocol/codex-acp",
+      "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+      "path": "src/CodexAppServerClient.ts",
+      "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/CodexAppServerClient.ts",
+      "sha256": "986691d78d4d4b4a6097d6295a5a74c30fed61168dfe70a7ef9cc34bc7db0835",
+      "fetched_at": "2026-10-04T08:22:46.106075+00:00",
+      "local_path": "/tmp/t1060-source/codex-acp/src/CodexAppServerClient.ts",
+      "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/CodexAppServerClient.ts",
+      "checked_local_path": "/tmp/t1060-source/codex-acp/src/CodexAppServerClient.ts",
+      "checked_sha256": "986691d78d4d4b4a6097d6295a5a74c30fed61168dfe70a7ef9cc34bc7db0835",
+      "hash_matches": true
+    },
+    {
+      "repo": "agentclientprotocol/codex-acp",
+      "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+      "path": "src/McpServerName.ts",
+      "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/McpServerName.ts",
+      "sha256": "fa33f2d5db78b70ab958962d0435dfcbdc3cce536a9d7e9fc34cac9691ddba77",
+      "fetched_at": "2026-10-04T08:22:52.969525+00:00",
+      "local_path": "/tmp/t1060-source/codex-acp/src/McpServerName.ts",
+      "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/McpServerName.ts",
+      "checked_local_path": "/tmp/t1060-source/codex-acp/src/McpServerName.ts",
+      "checked_sha256": "fa33f2d5db78b70ab958962d0435dfcbdc3cce536a9d7e9fc34cac9691ddba77",
+      "hash_matches": true
+    },
+    {
+      "repo": "agentclientprotocol/codex-acp",
+      "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+      "path": "src/permissions/CodexApprovalHandler.ts",
+      "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/permissions/CodexApprovalHandler.ts",
+      "sha256": "dd9273edab156721199a481123a01e90302124b19b155ee545d4e57bac30154a",
+      "fetched_at": "2026-10-04T08:28:13.647465+00:00",
+      "local_path": "/tmp/t1060-source/codex-acp/src/permissions/CodexApprovalHandler.ts",
+      "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/permissions/CodexApprovalHandler.ts",
+      "checked_local_path": "/tmp/t1060-source/codex-acp/src/permissions/CodexApprovalHandler.ts",
+      "checked_sha256": "dd9273edab156721199a481123a01e90302124b19b155ee545d4e57bac30154a",
+      "hash_matches": true
+    },
+    {
+      "repo": "agentclientprotocol/codex-acp",
+      "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+      "path": "src/tool-calls/reporters/McpToolReporter.ts",
+      "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/tool-calls/reporters/McpToolReporter.ts",
+      "sha256": "5c7142a3c1d48aa8dd0bc559ef99bd31eb19c7cd249082e484bf472f4d99176f",
+      "fetched_at": "2026-10-04T08:28:22.557000+00:00",
+      "local_path": "/tmp/t1060-source/codex-acp/src/tool-calls/reporters/McpToolReporter.ts",
+      "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/src/tool-calls/reporters/McpToolReporter.ts",
+      "checked_local_path": "/tmp/t1060-source/codex-acp/src/tool-calls/reporters/McpToolReporter.ts",
+      "checked_sha256": "5c7142a3c1d48aa8dd0bc559ef99bd31eb19c7cd249082e484bf472f4d99176f",
+      "hash_matches": true
+    },
+    {
+      "path": "LICENSE",
+      "sha256": "72ea310b40e1ee2c4aa61935d22065155c50bfde288b114c9cfd3e1fa34f8049",
+      "runtime_copy_path": "/tmp/t1060-source/codex-acp-runtime/LICENSE",
+      "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/LICENSE",
+      "checked_local_path": "/tmp/t1060-source/codex-acp-runtime/LICENSE",
+      "checked_sha256": "72ea310b40e1ee2c4aa61935d22065155c50bfde288b114c9cfd3e1fa34f8049",
+      "hash_matches": true
+    },
+    {
+      "repo": "openclaw/acpx",
+      "commit": "27efb1b57b9de22105a91e9154b1d29b51ede8cb",
+      "path": "LICENSE",
+      "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/LICENSE",
+      "checked_local_path": "/tmp/t1059-source/acpx/LICENSE",
+      "checked_sha256": "5c3dd08185d6d0a0045a45b9aea2fd9d85343f7ed5dbe23915e6f15e7b814f2d",
+      "retrieved_at": null,
+      "retrieval_note": "复用此前公开固定提交快照，本轮只读核对。"
+    },
+    {
+      "repo": "openclaw/acpx",
+      "commit": "27efb1b57b9de22105a91e9154b1d29b51ede8cb",
+      "path": "package.json",
+      "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/package.json",
+      "checked_local_path": "/tmp/t1059-source/acpx/package.json",
+      "checked_sha256": "1c403c0d069851f17167830d9bc175717e6eaf0f784bf0e1759547da3f0bd02d",
+      "retrieved_at": null,
+      "retrieval_note": "复用此前公开固定提交快照，本轮只读核对。"
+    },
+    {
+      "repo": "openclaw/acpx",
+      "commit": "27efb1b57b9de22105a91e9154b1d29b51ede8cb",
+      "path": "src/acp/client.ts",
+      "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/acp/client.ts",
+      "checked_local_path": "/tmp/t1059-source/acpx/src/acp/client.ts",
+      "checked_sha256": "2d41420725b3c745542ffe5e20095dfd58036fcd839ceec7f85ad548ddc1ef3d",
+      "retrieved_at": null,
+      "retrieval_note": "复用此前公开固定提交快照，本轮只读核对。"
+    },
+    {
+      "repo": "openclaw/acpx",
+      "commit": "27efb1b57b9de22105a91e9154b1d29b51ede8cb",
+      "path": "src/acp/client-protocol.ts",
+      "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/acp/client-protocol.ts",
+      "checked_local_path": "/tmp/t1059-source/acpx/src/acp/client-protocol.ts",
+      "checked_sha256": "4a564fbf10a4a300a35b967fb5f1fe01b1057bf8191731493fb65d08728ce6f3",
+      "retrieved_at": null,
+      "retrieval_note": "复用此前公开固定提交快照，本轮只读核对。"
+    }
+  ],
+  "project_readonly_snapshots": [
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/ai-worker/src/execution/codex-acp-host.ts",
+      "sha256": "edb4c55bb81a5d550e3f0549327b333a23fb1226f728ac3b9362c29ddcf5bab5",
+      "purpose": "本轮只读项目现状核对，未执行真实Agent。"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/ai-worker/vendor/codex-acp/src/CreatorOsPolicy.ts",
+      "sha256": "1d30eb86829e77a1b775ce0a8744547814305746aa11f6ad52f7107962d0c64d",
+      "purpose": "本轮只读项目现状核对，未执行真实Agent。"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/docs/verification/t1060/real-acp-mcp-response-diagnosis.log",
+      "sha256": "8788b5e72ae2646f9e2e5703733e41a62ff348a6f2ce648050027a5e5e1010c6",
+      "purpose": "本轮只读项目现状核对，未执行真实Agent。"
+    }
+  ],
+  "official_docs": [
+    {
+      "url": "https://learn.chatgpt.com/docs/config-file/config-reference",
+      "purpose": "官方当前公开配置参考，固定版本行为由源码独立核对。"
+    },
+    {
+      "url": "https://learn.chatgpt.com/docs/extend/mcp?surface=cli",
+      "purpose": "官方MCP配置及工具允许列表，未作为固定版本保证。"
+    }
+  ],
+  "verification_scope": "仅源码、许可、命名和配置研究；本Agent未运行模型、探针、测试、安装或浏览器自动化。",
+  "temporary_probe_readonly_review": [
+    {
+      "path": "/tmp/t1060-ai-direct-namespace/adapter/src/CreatorOsPolicy.ts",
+      "sha256": "282f2751f285dd8850fc0529f74de20729f068ac305a8a87e7570c822bbe8be2",
+      "scope": "只读临时代码复核；本Agent未执行实验。"
+    },
+    {
+      "path": "/tmp/t1060-ai-direct-namespace/probe-host.mts",
+      "sha256": "06f72bb58fd8ae4fbe3e476a84540c2913744064a17779b9c779742f8e5a007d",
+      "scope": "只读临时代码复核；本Agent未执行实验。"
+    },
+    {
+      "path": "/tmp/t1060-ai-direct-namespace/mcp-probe.mts",
+      "sha256": "4b71c94a85fb8833c1e2e20255cf85cb6551737bbd3040438499c9b8f6c2a982",
+      "scope": "只读临时代码复核；本Agent未执行实验。"
+    },
+    {
+      "path": "/tmp/t1060-ai-direct-namespace/image-probe.mts",
+      "sha256": "0c06a7de594e8528439a59ddaa765c6676b2355568d6181ecf4750cf074af2a6",
+      "scope": "只读临时代码复核；本Agent未执行实验。"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "/tmp/t1060-ai-capability-research/research.md",
+      "sha256": "437b3b037135222836dcdbbfa0315c6b0f1fadf05de68bce1cddc6d0e96fcdd3"
+    },
+    {
+      "path": "/tmp/t1060-ai-capability-research/probe-review.md",
+      "sha256": "8b16c36ff64834daea959b5177dc13f107c2c39469d7468c23a325d2c5f46e40"
+    }
+  ],
+  "last_recorded_at": "2026-10-04T11:36:19.187551+00:00"
+}

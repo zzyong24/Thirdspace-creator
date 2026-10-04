@@ -2,6 +2,8 @@
 
 日期：2026-10-04。工作树：`codex/user-diagnostics`。本记录区分当场执行证据和仍待验的能力；任务保留「进行中 / 待验」。
 
+当日后续真实 AI 复测已修复默认模型的工具与图片阻断，正式 Worker 的文字、项目读取、生图与候选字节读回通过。v1 以下历史记录保留；最新结果、v2 补丁与尚待验证范围见 [真实 AI 验证](real-ai/verification.md)。
+
 实现提交：`c9c59617f7f74259985719e3f8927b9288eda11a`。提交范围和实际 Git blob 摘要见 [staged-scope.json](staged-scope.json) 与 [staged-source-sha256.json](staged-source-sha256.json)；未完成的真实工具、WorkBuddy 和跨平台验收保留在下文。
 
 ## 已实现

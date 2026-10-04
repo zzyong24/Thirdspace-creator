@@ -1,0 +1,88 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "recheck",
+  "summary": "已独立只读复审 T1060 readonly v2 补充合同（SPEC SHA256 af4fdfdd5a605b76269a3d04fdf47b65fc75e7a306c49b9712080d892332ce0c）。原 REV-001..003 全部字段与 resolved 状态逐项保持，不改写历史发现或旧结论。未发现新增合同阻止项：backend 创建时冻结 v2，旧 v1/旧缺绑定路由与 unknown 不重发不变；固定 Codex 联合配置仅直接展示 image_gen 和本轮唯一任务 MCP 官方规范化命名空间，关闭无前缀命名与 Code Mode host，保留只读、无网络、无可写根及原禁用项；启动参数、native config/read 实际回显、原 thread 配置与实际工具集合均须核验一致，不能把形状或请求值当作精确一致证明；ACP allow_once 仅由原当前 prompt 与真实 MCP 调用事件、session/toolCallId、原始 server/tool、原审批标记及选项关联决定，取消或异常继续取消，不获得永久信任；backend 原归属、租约、输入摘要、tool.approve、幂等与 committed 排除继续生效。DEC-T1060-02 已记录这是此前用户认可图片与任务工具目的下的窄修复，不扩大脚本/文件/命令/发布能力。固定上游字段与已有权限路径可支撑合同，不需新协议或任务权威。生产源码仍为 v1，已有临时检查指出回显 equality 尚需补齐；本结论仅合同复审，正式 host/Worker 真实 MCP、图片 pending 同字节读回、故障/取消/旧任务验证均待实施验收，绝不写成真机或产品修复 PASS。本次未改共享文件、未运行测试/模型/浏览器/安装或读取认证。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "resolved",
+      "severity": "major",
+      "category": "completeness",
+      "requirement_anchor": {
+        "id": "FR-1060-2",
+        "quote": "新 Codex 编导任务冻结 `protocolKind=acp`、固定适配器/客户端身份与任务上下文；已有 native/历史 ACP 任务不得因为设置切换而改协议、改版本或重发 unknown 提示。"
+      },
+      "acceptance_anchor": {
+        "id": "FR-1060-2-RECOVERY",
+        "quote": "无可靠旧回合结果时保留 unknown/明确恢复受阻；不自动新建会话重试。"
+      },
+      "where": "docs/features/t1060-agent-source-integration.md:38-41；contract/src/internal/chat-worker.ts:6；backend/src/modules/ai/chat-turn-submission.service.ts:76；backend/src/modules/ai/external-chat-turn.service.ts:42-55；固定 acpx src/acp/client.ts:1411-1423",
+      "failure_mode": "当前创建载荷只有 executionEngine；未启动旧任务和 reserved 调用没有协议/适配器版本字段，SPEC 尚未规定缺字段旧载荷的绑定规则。若 Worker 以引擎名或当前安装版本选择 ACP，会把旧 queued/reserved Codex 任务送到新路径。另一个真实入场窗口是 acpx onRequestWritten：源码不等待异步回调并吞掉异常；把它直接接 startExternalChatTurn 会出现提示已提交而账本仍 reserved，工具入场被拒，后续可能误判为未执行再发。",
+      "evidence_kind": "external-fact",
+      "evidence_ref": "当前 contract/src/internal/chat-worker.ts、backend/src/modules/ai/chat-turn-submission.service.ts、backend/src/modules/ai/external-chat-turn.service.ts；T1059 固定来源 /tmp/t1059-source/acpx/src/acp/client.ts（commit 27efb1b57b9de22105a91e9154b1d29b51ede8cb）。",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "clarify",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "SPEC:FR-1060-2:38-41",
+      "suggestion": "在 FR2 定义创建时持久化并参与摘要的执行绑定：协议、客户端来源、适配器/二进制固定工件身份、权限配置身份；由已有 payload/receipt 保存，不新增任务表。明确缺新绑定的旧 queued/reserved 使用可证明的原 native 绑定，历史 ACP 无法证明原工件/回合身份时保留读取或明确恢复受阻，不能套新默认值。固定会话创建、sessionId 保存、原账本入场确认、prompt 写出、结果结算的顺序；prompt 写出之前先完成可恢复入场，任何可能写出后的断线/落账失败为 unknown。onRequestWritten 仅作观察，不能作可等待的入场事务。验收覆盖提交前后设置/版本切换、无标记旧任务、入场失败、写出后断线和异步回调失败且不重发。",
+      "resolution_evidence": "SPEC-SHA256:11bbb6bfd565196d1a7b9fe64351d8677c0f4d5569b335511bdaa6314bede99a:docs/features/t1060-agent-source-integration.md:43（FR-1060-2）。准引文：「创建载荷中的 `externalAgentBinding` 由 backend 固定，参与原输入摘要」；「缺这个字段的旧 queued/reserved Codex 任务沿原 native 路径；旧 settled 回执仍可读，历史 ACP started/unknown 无完整绑定时明确恢复受阻」；「新路径顺序为创建会话、核对有效权限、等待原 `startExternalChatTurn` 持久入场确认、调用 prompt、等待事件处理结束、结算。`onRequestWritten` 仅观察；入场后任何无法排除已发送的失败均 unknown，不重发。」该段明确固定客户端提交、适配器2.1.1、程序0.159.3及权限配置身份；第70行列入旧缺绑定任务和入场失败/断线检查。仅合同销账，源码与故障检查待实现。",
+      "parent_id": ""
+    },
+    {
+      "id": "REV-002",
+      "status": "resolved",
+      "severity": "major",
+      "category": "completeness",
+      "requirement_anchor": {
+        "id": "FR-1060-3-TOOLS",
+        "quote": "任务限定 MCP 工具复用现有 external-task 工具服务与已存在桥接代码；不得默认向内部 Codex 暴露全契约工具。"
+      },
+      "acceptance_anchor": {
+        "id": "FR-1060-3-PERMISSION",
+        "quote": "显式关闭客户端托管 fs/terminal 回调；配置真实 Agent sandbox/approval 和可信工作目录。"
+      },
+      "where": "docs/features/t1060-agent-source-integration.md:45-49；固定 codex-acp src/AgentMode.ts:75-105、CodexAcpClient.ts:848-911；ai-worker/src/execution/codex-app-server.ts:10-40",
+      "failure_mode": "FR3 目前只要求配置真实 sandbox/approval，没有给出本轮允许的有效配置集合、原生 feature 集合、额外全局 MCP 的处理及入场核对规则。固定适配器默认 Agent 模式为 auto_review/workspace-write；createSessionConfig 合并用户配置，并不会因只传入任务 MCP 就清除其他全局 MCP。关闭客户端 fs/terminal 不限制这些原生工具。因此实现可能仍通过了两个回调关闭的检查，却绕过原 external-task 的冻结工具面；当前 native 宿主已有明确禁用项和有效配置核对，不能在替换中丢失。",
+      "evidence_kind": "external-fact",
+      "evidence_ref": "T1059 固定来源 /tmp/t1059-root-sources/src/AgentMode.ts、src/CodexAcpClient.ts（commit 68d7d2d5ddfc0ed5746f9f6130892dda685e65dd）；当前 ai-worker/src/execution/codex-app-server.ts 的 DISABLED_FEATURES、assertConfiguration、verifyCodexThreadMcp。",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "SPEC:FR-1060-3:45-49",
+      "suggestion": "在 FR3 固定本轮权限配置字段/允许值或引用准确的既有配置：sandbox、审批审核主体、可写目录、网络、原生 feature 允许集合、客户端能力、子环境允许键；不得接受模型/会话更新扩大这些值。明确通过仅本进程覆盖关闭非本轮全局 MCP/插件/Hook 等入口，保留用户磁盘配置，并核对实际会话配置/工具面后才发送 prompt。许可回调明确拒绝/取消，失败不降为 auto_review/full_access。原始认证请求/环境/日志也不能泄漏秘密。检查未能证明所选配置时仅该 ACP 入场受阻，不替换旧引擎或破坏原 Pi、保存和媒体工具路径。验收覆盖已有额外全局 MCP、上游默认模式、配置层覆盖、权限回调异常与环境传递。",
+      "resolution_evidence": "SPEC-SHA256:11bbb6bfd565196d1a7b9fe64351d8677c0f4d5569b335511bdaa6314bede99a:docs/features/t1060-agent-source-integration.md:53-55（FR-1060-3）。准引文：「权限固定使用原适配器 `read-only` 模式：`approvalPolicy=on-request`、`approvalsReviewer=user`、readOnly sandbox、网络关闭、无可写根。宿主 permission 回调明确 cancelled；客户端 fs/terminal 能力均 false。」；「以固定上游源码的窄补丁在子进程启动 argv 和 thread config 中覆盖这些设置，保留全局 MCP 的 disabled 项，再加入本任务服务器。原生 config/read 与 mcpServerStatus/list 核对实际集合后才返回可入场会话；额外/未核验工具不得进入 prompt。」；「子环境沿原 `codexRuntimeEnvironment` 允许键；再加入宿主固定 CODEX_PATH/CODEX_CONFIG/INITIAL_AGENT_MODE。不接受调用者的 DEFAULT_AUTH_REQUEST、任意 MCP 或供应商配置。启动日志关闭原配置/认证请求输出，原文件不复制、不改写。」第53行逐项定义禁用 feature/仅保留原生图片与任务MCP，配置不匹配不放宽且保留原Pi/媒体路径；第70行列入配置层、审批异常、环境检查。仅合同销账，有效配置与实际工具证据待实现核验。",
+      "parent_id": ""
+    },
+    {
+      "id": "REV-003",
+      "status": "resolved",
+      "severity": "major",
+      "category": "data-integrity",
+      "requirement_anchor": {
+        "id": "FR-1060-3-IMAGE",
+        "quote": "原 SessionNotification 工具/图片内容和 `rawOutput.savedPath` 保留到现有受控回执/素材端口；校验真实文件、任务路径、类型、大小及幂等后入素材候选。"
+      },
+      "acceptance_anchor": {
+        "id": "FR-1060-3-IMAGE-AVAILABILITY",
+        "quote": "同步通知不视为保存成功。能力不支持时如实呈现，不阻断合法文字任务。"
+      },
+      "where": "docs/features/t1060-agent-source-integration.md:48；contract/src/internal/execution-worker.ts:111、180；backend/src/modules/execution/asset-execution-binding.ts:16-21；backend/src/modules/ai/external-chat-turn.service.ts:111-146",
+      "failure_mode": "当前 externalChatReceiptSchema 严格只接受非空 text，没有图片/工具事件收据字段；commitExternalChatResult 只投影正文和宿主工具结果。现有 saveAssetResult 通过 bindAssetExecution 限定 asset.generate/cover/graphic 任务，不能直接以 chat.run 归属提交图片。FR3 未指出聊天图片如何绑定原执行、使用哪个原服务接点、以何种稳定事件标识幂等，亦未定义纯图片回复、单个坏图片和图片异步入库晚于 prompt 返回的结算策略。只接通知回调可能漏图；直接复用旧素材端口会整单拒绝，破坏有效正文可用性。",
+      "evidence_kind": "external-fact",
+      "evidence_ref": "当前 contract/src/internal/execution-worker.ts 的 externalChatReceiptSchema/saveAssetResult；backend/src/modules/execution/execution-asset-result.service.ts、asset-execution-binding.ts；backend/src/modules/ai/external-chat-turn.service.ts；既有 backend/src/modules/assets/pending-generated-asset.service.ts 接点。",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "clarify",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "SPEC:FR-1060-3:48",
+      "suggestion": "在 FR3 指定沿原聊天执行/租约的窄 backend 适配接点，复用 pending-generated-asset 原服务，不伪装为 asset.generate 或新增任务权威。定义稳定原事件 ID 与 turn/session/account/project 绑定、内容摘要/实际类型、路径或字节输入、候选资产收据及重入幂等；大图片字节走素材服务，聊天收据保存受控引用和来源事实。明确纯图片合法回复的表示、文本加单图失败时保留正文并标明该图未保存、未知入库先查原收据不重跑生成，以及收到 prompt 终态后待处理事件的可等待 flush/结算屏障。验收覆盖字节图、仅路径图、纯图、重复/重放事件、单图损坏、正文成功图片失败、入库延迟与任务取消。",
+      "resolution_evidence": "SPEC-SHA256:11bbb6bfd565196d1a7b9fe64351d8677c0f4d5569b335511bdaa6314bede99a:docs/features/t1060-agent-source-integration.md:57（FR-1060-3）。准引文：「聊天图片使用原 `pending-generated-asset` service，经同一聊天执行的窄 `saveExternalChatImage/recoverExternalChatImage` 端口提交/查原收据，不能伪装为 asset.generate。」；「backend 重新校验 task/lease/输入摘要/started session/turn 归属，操作键从原 callId、真实 provider toolCallId、图片序号派生。」；「聊天回执仅持有受控 asset/file/checksum/byteLength 引用及失败项，结算前查原收据验证。纯图允许空 text 且至少一张已保存候选；正文+单图失败保留正文和明确未保存说明，全部为空则明确失败。通知接收同步，保存队列必须在 prompt 终态后 await flush；重放先查原素材收据，未知回合不重新调用模型。」同段明确真实PNG/JPEG/WebP字节、单图30MiB、任务私有路径/符号链接约束及有效内联字节降级，用户仍沿原候选确认；第70行声明原域表/两项JSON增量与相关输入族检查。仅合同销账，端口装配、幂等恢复、纯图/晚保存/单图降级待实现验证。",
+      "parent_id": ""
+    }
+  ]
+}

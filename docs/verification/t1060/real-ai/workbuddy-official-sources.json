@@ -1,0 +1,22 @@
+[
+  {
+    "title": "WorkBuddy OpenAPI",
+    "url": "https://open.workbuddy.cn/docs/openapi",
+    "usedFor": "OAuth前提、PC本地助理与云端任务端点"
+  },
+  {
+    "title": "WorkBuddy第三方应用",
+    "url": "https://open.workbuddy.cn/docs/third-party-app",
+    "usedFor": "第三方应用审批与用户授权"
+  },
+  {
+    "title": "连接器",
+    "url": "https://open.workbuddy.cn/docs/connector",
+    "usedFor": "MCP/CLI为外部工具接入，不是独立WorkBuddy AI运行器"
+  },
+  {
+    "title": "无头模式（页面正文为CodeBuddy Code）",
+    "url": "https://www.workbuddy.cn/docs/cli/headless",
+    "usedFor": "确认公开headless命令属于已排除CodeBuddy"
+  }
+]

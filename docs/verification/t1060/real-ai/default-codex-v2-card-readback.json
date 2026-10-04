@@ -1,0 +1,29 @@
+{
+  "observedAt": "2026-10-04T12:16:19.634Z",
+  "outcome": "passed",
+  "verification": "persisted-native-image-chat-card-readback",
+  "taskId": "ai-task-59e95a7d-7ece-4e23-952b-4a97440d467b",
+  "executionTaskId": "execution-task-25be0798-3c55-4b27-aedf-92298c770bcb",
+  "assistantMessageId": "chat:ai-msg-t1060-44bd727f-94b7-4a12-911b-62aca9dcb964",
+  "resultId": "chat:ai-task-59e95a7d-7ece-4e23-952b-4a97440d467b",
+  "executionCallId": "call_8b848b49-2bb8-4801-b81d-f0a9706f339f",
+  "sessionId": "01a106d5-a09c-7b63-b62a-ff1b50466d64",
+  "providerTurnId": "01a106d5-a15e-72b3-af1e-a6ee0ad6c251",
+  "cards": [
+    {
+      "type": "tool-native.image",
+      "toolCallId": "chat-image-4852d49725b3a8701a5c3eb6debf0b709b5e8d5d2fb2a8e0dc48306f93a6c76f",
+      "state": "output-available",
+      "assetId": "asset-generated-d6cb4a71ed943bd48dbf77442381cb7f8a0c08caf94edc8c1cf4002f1113b48f",
+      "fileId": "afile-generated-d6cb4a71ed943bd48dbf77442381cb7f8a0c08caf94edc8c1cf4002f1113b48f"
+    }
+  ],
+  "checks": {
+    "originalCommitNativeImageCardPersisted": true,
+    "chatResultCallIdentityLinked": true,
+    "modelTurnMetadataMatches": true,
+    "actualPngArtifactByteChecksum": true
+  },
+  "adopted": false,
+  "published": false
+}

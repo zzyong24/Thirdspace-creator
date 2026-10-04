@@ -2103,7 +2103,7 @@
       "files": [
         "docs/verification/t1060/verification.md"
       ],
-      "file_sha256": "cbd963e9d9c674ded5b749a12d0ae1290ece2a1313fefefc4fed984385614e10",
+      "file_sha256": "220c122bad04df936617aed0e95e6a69484d4834c570cbb1466b0183c705d8d3",
       "categories": [
         "language_toolchain"
       ],
@@ -2160,6 +2160,66 @@
       "scope_source": "docs/features/t1060-agent-source-integration.md",
       "reason": "独立只读复核报告引用父提交原有机制的词项，没有新增机制或扩大产品授权。",
       "acceptance": "只读复核 findings []；真实工具与跨平台仍待验。"
+    },
+    {
+      "task_id": "T-1060",
+      "files": [
+        "docs/verification/t1060/real-ai/upstream-direct-namespace-research.md"
+      ],
+      "file_sha256": "437b3b037135222836dcdbbfa0315c6b0f1fadf05de68bce1cddc6d0e96fcdd3",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1060-02",
+      "scope_source": "docs/features/t1060-agent-source-integration.md",
+      "reason": "真实 AI 验证的只读来源和证据报告；只引用已存在的 Codex Rust 联合配置或 WorkBuddy 发布入口，没有迁入 WorkBuddy 闭源实现、安装/启动其它运行时或引入新工具链。按准确摘要登记研究引用，不扩大原接入机制。",
+      "acceptance": "仅预算归档；真实工具/图片链另以原 Worker 与 backend 记录验收，WorkBuddy 信任和真实跨应用调用仍待验。"
+    },
+    {
+      "task_id": "T-1060",
+      "files": [
+        "docs/verification/t1060/real-ai/upstream-direct-namespace-sources.json"
+      ],
+      "file_sha256": "a172217ddbec20ab6e8728f412fa7cc19c92cb4147dd6785dabd4debecad9b93",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1060-02",
+      "scope_source": "docs/features/t1060-agent-source-integration.md",
+      "reason": "真实 AI 验证的只读来源和证据报告；只引用已存在的 Codex Rust 联合配置或 WorkBuddy 发布入口，没有迁入 WorkBuddy 闭源实现、安装/启动其它运行时或引入新工具链。按准确摘要登记研究引用，不扩大原接入机制。",
+      "acceptance": "仅预算归档；真实工具/图片链另以原 Worker 与 backend 记录验收，WorkBuddy 信任和真实跨应用调用仍待验。"
+    },
+    {
+      "task_id": "T-1060",
+      "files": [
+        "docs/verification/t1060/real-ai/workbuddy-report.md"
+      ],
+      "file_sha256": "f1d4f5a91bee644521feaae50dc9c46df5e09a05751c9ef0935775da5fd425bc",
+      "categories": [
+        "native_executable"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1060-02",
+      "scope_source": "docs/features/t1060-agent-source-integration.md",
+      "reason": "真实 AI 验证的只读来源和证据报告；只引用已存在的 Codex Rust 联合配置或 WorkBuddy 发布入口，没有迁入 WorkBuddy 闭源实现、安装/启动其它运行时或引入新工具链。按准确摘要登记研究引用，不扩大原接入机制。",
+      "acceptance": "仅预算归档；真实工具/图片链另以原 Worker 与 backend 记录验收，WorkBuddy 信任和真实跨应用调用仍待验。"
+    },
+    {
+      "task_id": "T-1060",
+      "files": [
+        "docs/verification/t1060/real-ai/workbuddy-source-hashes.json"
+      ],
+      "file_sha256": "9d50bf66f50aa9b249a7612cfec05f5cbea93be27351655b91dea8a21fa72d3e",
+      "categories": [
+        "native_executable"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1060-02",
+      "scope_source": "docs/features/t1060-agent-source-integration.md",
+      "reason": "真实 AI 验证的只读来源和证据报告；只引用已存在的 Codex Rust 联合配置或 WorkBuddy 发布入口，没有迁入 WorkBuddy 闭源实现、安装/启动其它运行时或引入新工具链。按准确摘要登记研究引用，不扩大原接入机制。",
+      "acceptance": "仅预算归档；真实工具/图片链另以原 Worker 与 backend 记录验收，WorkBuddy 信任和真实跨应用调用仍待验。"
     }
   ],
   "historical_baselines": []

@@ -1,0 +1,38 @@
+{
+  "verification": "real-generated-png-original-backend-pending-service",
+  "observedAt": "2026-10-04T11:27:37.555Z",
+  "modelSource": {
+    "model": "gpt-5.5",
+    "sourcePath": "/tmp/t1060-real-ai-native-image/4b71d6bf84de2c52e4afd010d9544865f8d8a6dbe77e295ad84f6b20f51bc6b1.png",
+    "observedSessionId": null,
+    "actualToolCallId": "call_CRGw2icvZdpL3FxAWPXyMFsl",
+    "sha256": "4b71d6bf84de2c52e4afd010d9544865f8d8a6dbe77e295ad84f6b20f51bc6b1",
+    "byteLength": 839118
+  },
+  "isolatedRoot": "/tmp/t1060-ai-business/pending-native-image-38Fgx6",
+  "storageSessionId": "t1060-storage-only-cd7f06b5-bfc7-44f5-8dac-5dc78d54d918",
+  "scope": "真实模型原字节导入新的隔离存储执行身份；未重跑模型，未证明原模型回合与该新任务全链一体",
+  "taskId": "ai-task-bc601240-41a4-4e03-b556-a578fe045713",
+  "executionTaskId": "execution-task-a8035629-7e99-41f5-8d84-d0acf42e45fe",
+  "receipt": {
+    "assetId": "asset-generated-ba63bc6983c0e5103b8ef28e40500586b71a477cb3bb41b3591f75a6eda472fe",
+    "fileId": "afile-generated-ba63bc6983c0e5103b8ef28e40500586b71a477cb3bb41b3591f75a6eda472fe",
+    "assetType": "image",
+    "name": "Codex 生成图片",
+    "checksum": "4b71d6bf84de2c52e4afd010d9544865f8d8a6dbe77e295ad84f6b20f51bc6b1",
+    "byteLength": 839118,
+    "committedAt": "2026-10-04T11:27:37.486Z"
+  },
+  "checks": {
+    "pngSignature": true,
+    "saveAndRecover": true,
+    "idempotentOneAssetAndFile": true,
+    "exactFileByteEquality": true,
+    "pendingNotAdopted": true,
+    "otherAccountRejected": true,
+    "originalServiceAuthorization": true
+  },
+  "adopted": false,
+  "published": false,
+  "modelRequestsFromThisProbe": 0
+}

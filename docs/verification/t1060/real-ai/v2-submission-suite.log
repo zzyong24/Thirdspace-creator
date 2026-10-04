@@ -1,0 +1,41 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/backend
+
+ ❯ src/modules/ai/chat-turn-submission.service.test.ts (24 tests | 1 failed | 23 skipped) 2281ms
+   × 新Codex任务冻结ACP工件，重放不切版本或协议 38ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai/chat-turn-submission.service.test.ts > 新Codex任务冻结ACP工件，重放不切版本或协议
+AssertionError: expected { …(2) } to match object { modelInput: { …(1) } }
+(16 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+    "modelInput": {
+      "externalAgentBinding": {
+        "adapterVersion": "2.1.1",
+-       "policy": "creatoros-acp-readonly-v1",
++       "policy": "creatoros-acp-readonly-v2",
+        "protocolKind": "acp",
+        "runtimeVersion": "0.159.3",
+      },
+    },
+  }
+
+ ❯ src/modules/ai/chat-turn-submission.service.test.ts:238:64
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 23 skipped (24)
+   Start at  19:58:49
+   Duration  4.97s (transform 1.38s, setup 0ms, import 2.50s, tests 2.28s, environment 0ms)
+
+undefined
+/Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/ai/chat-turn-submission.service.test.ts -t Codex --retry 0

@@ -1,0 +1,12 @@
+
+> @creatoros/ai-worker@0.1.0 typecheck /Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/ai-worker
+> tsc --noEmit
+
+src/execution/codex-acp-policy.test.ts(170,51): error TS2345: Argument of type '{ name: string; config?: { url: string; } | undefined; }[]' is not assignable to parameter of type '{ name: string; config: ObjectValue; }[]'.
+  Type '{ name: string; config?: { url: string; } | undefined; }' is not assignable to type '{ name: string; config: ObjectValue; }'.
+    Types of property 'config' are incompatible.
+      Type '{ url: string; } | undefined' is not assignable to type 'ObjectValue'.
+        Type 'undefined' is not assignable to type 'ObjectValue'.
+/Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/ai-worker:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @creatoros/ai-worker@0.1.0 typecheck: `tsc --noEmit`
+Exit status 2

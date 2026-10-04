@@ -42,6 +42,8 @@ flowchart LR
 
 创建载荷中的 `externalAgentBinding` 由 backend 固定，参与原输入摘要：`protocolKind=acp`、客户端提交 `27efb1b57b9de22105a91e9154b1d29b51ede8cb`、适配器 `2.1.1`、本机程序 `0.159.3`、权限配置 `creatoros-acp-readonly-v1`。不接受前端传可执行路径、环境或策略。缺这个字段的旧 queued/reserved Codex 任务沿原 native 路径；旧 settled 回执仍可读，历史 ACP started/unknown 无完整绑定时明确恢复受阻。新路径顺序为创建会话、核对有效权限、等待原 `startExternalChatTurn` 持久入场确认、调用 prompt、等待事件处理结束、结算。`onRequestWritten` 仅观察；入场后任何无法排除已发送的失败均 unknown，不重发。真实 provider turn 如上游事件可得，通过原回执透传；缺值为空，不能拿 session 或本地序号充数。
 
+2026-10-04 真实 AI 验证补充：上段 `v1` 保留为已冻结历史任务的合同；本补充独立复审通过后，新任务改冻结 `creatoros-acp-readonly-v2`，其余来源身份不变。Worker 严格按任务已冻结的 v1/v2 选择，不把旧 v1 任务静默升级。全业务生成入口和 WorkBuddy 不因这个版本转换而改变。
+
 ### FR-1060-3 工具、认证和图片回执
 
 - 任务限定 MCP 工具复用现有 external-task 工具服务与已存在桥接代码；不得默认向内部 Codex 暴露全契约工具。工具执行重新校验归属、版本、lease 与幂等；AI 只出候选，经用户采用落库。
@@ -51,6 +53,10 @@ flowchart LR
 - 维护适配器原生审批请求必须接现有许可结果；回调异常明确拒绝/取消，不能落入自动批准模式。
 
 权限固定使用原适配器 `read-only` 模式：`approvalPolicy=on-request`、`approvalsReviewer=user`、readOnly sandbox、网络关闭、无可写根。宿主 permission 回调明确 cancelled；客户端 fs/terminal 能力均 false。沿原 native 禁用集合关闭 apps/plugins/hooks/multi_agent/multi_agent_v2/browser_use/computer_use/code_mode/code_mode_host/tool_suggest/shell_tool/unified_exec/view_image/skill_search/skill_mcp_dependency_install 和 web_search；只保留原生 image_generation 及本任务 MCP。以固定上游源码的窄补丁在子进程启动 argv 和 thread config 中覆盖这些设置，保留全局 MCP 的 disabled 项，再加入本任务服务器。原生 config/read 与 mcpServerStatus/list 核对实际集合后才返回可入场会话；额外/未核验工具不得进入 prompt。若所选模型仅支持另一个未授权工具模式，显示该 ACP 能力未就绪，保留原 Pi 和媒体服务，不偷偷放宽。
+
+`v2` 仅落实此前已授权的原生图片与任务限定 MCP：复用固定 Codex 已有 `features.code_mode={enabled:false,direct_only_tool_namespaces:[...]}` 联合配置，集合恰为 `image_gen` 和当前唯一任务服务器的官方规范化命名空间；无工具时只有 `image_gen`。显式关闭 `non_prefixed_mcp_tool_names` 使规范化与锁版源码一致；`code_mode_host` 及其它禁用项、只读 sandbox、网络关闭和无可写根继续不变。子进程 argv、native config/read 回显、原 thread 配置和实际工具集合均核验，不用请求值代替生效值，也不按模型名切换。
+
+`v2` 的 MCP 宿主许可复用原 ACP `allow_once`：仅当请求属于原客户端当前 prompt、session/toolCallId 与已收到的真实 MCP 调用事件一致、原始 server 等于本轮服务器、tool 在后台冻结的 none/proposal 清单、原 `_meta.is_mcp_tool_approval=true` 且提供 `allow_once` 选项时允许一次。关联缺失、其它服务器/工具、文件/命令/网络/URL 问题、取消/异常继续 cancelled。只存当前调用的事件关联，不另建许可/任务权威；不返回 allow_always，不持久化原生信任。工具实际执行仍经原 backend 的当前归属、lease、输入摘要、原 tool.approve 和幂等服务；committed 工具不因这个许可进入清单。`v1` 全部许可继续 cancelled。
 
 子环境沿原 `codexRuntimeEnvironment` 允许键；再加入宿主固定 CODEX_PATH/CODEX_CONFIG/INITIAL_AGENT_MODE。不接受调用者的 DEFAULT_AUTH_REQUEST、任意 MCP 或供应商配置。启动日志关闭原配置/认证请求输出，原文件不复制、不改写。新增来源补丁保留原许可、固定上游文件摘要和修改记录，不另建 ACP 方法。
 
@@ -72,6 +78,8 @@ flowchart LR
 ## 检查与完成标准
 
 执行当场、可重现的依赖构建/类型检查，协议/取消/退出/权限失败/未知回执/任务冻结/工具归属/图片路径安全的合同与隔离集成检查；保留此前失败样例。测试可用固定 mock 证明合同，但标明其不能代替真实模型或跨应用调用。
+
+v2 补测先保留 v1 真实失败，再核对联合表实际回显、额外/错命名空间拒绝、非 MCP/关联缺失/外来 session/server/tool/取消请求拒绝、单次许可和 v1 冻结兼容。默认模型真实 MCP 与图片成功必须用正式 host/Worker；只在临时适配器成功不算产品修复完成。真实图片进入 pending 素材后读回同字节，保留真实 session/turn/tool 身份，不自动采用或发布。
 
 真实 Codex/WorkBuddy 不可用时，不伪造可用状态和真机通过；可构建工件、实际产品调用链和未验证项分别交付。禁止浏览器自动化，UI 检查采用源代码与非浏览器接口证据；缺真界面验收保留“待验”。运行本任务 boundary/orphan/LED-047 相关回归、pmem sync、reconcile，与 T1059 的全局失败基线比较；范围内新增失败先修复，范围外欠债明确保留。
 

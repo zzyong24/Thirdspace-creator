@@ -1,0 +1,57 @@
+{
+  "verification": "original-worker-default-codex-public-text-chain",
+  "observedAt": "2026-10-04T11:29:37.230Z",
+  "isolatedRoot": "/tmp/t1060-ai-business/default-codex-text-LqYnfJ",
+  "modelSelection": "当前本地Codex默认；没有设置sessionModel",
+  "adopted": false,
+  "published": false,
+  "toolMap": "empty",
+  "events": [
+    "reserveExternalChatTurn",
+    "listExternalTaskTools",
+    "listExternalTaskTools",
+    "listExternalTaskTools",
+    "startExternalChatTurn",
+    "recordExternalChatProviderTurn",
+    "settleExternalChatTurn"
+  ],
+  "projectId": "project-t1060-a82d3351-545f-4dae-ba23-ae1b48e03002",
+  "taskId": "ai-task-4cabe980-565f-40a9-a60c-db6f58aa3d59",
+  "executionTaskId": "execution-task-287f630d-5bef-404d-9e17-aab4222cca38",
+  "outcome": "passed",
+  "committed": {
+    "resultId": "chat:ai-task-4cabe980-565f-40a9-a60c-db6f58aa3d59",
+    "aiTaskId": "ai-task-4cabe980-565f-40a9-a60c-db6f58aa3d59",
+    "messageId": "chat:ai-msg-t1060-366c4fbe-60d1-4edc-868e-6e54fb544490",
+    "outcome": "succeeded"
+  },
+  "executionStatus": "succeeded",
+  "businessStatus": "succeeded",
+  "conversationMessageCount": 2,
+  "assistantText": "Warning: Code Mode is unavailable because code-mode host is disabled. Code mode will fail closed; enable `features.code_mode_host` and install `codex-code-mode-host`.\n\n临时项目文本验证完成。",
+  "actualEngine": "codex",
+  "protocolKind": "acp",
+  "protocolVersion": 1,
+  "sessionId": "01a106ad-451f-74b2-8a50-12ba0c975a04",
+  "providerTurnId": "01a106ad-4eea-7ce0-8d3e-94d63acf5b90",
+  "stopReason": "end_turn",
+  "usage": {
+    "inputTokens": 18030,
+    "totalTokens": 18041,
+    "outputTokens": 11,
+    "thoughtTokens": 0,
+    "cachedReadTokens": 0
+  },
+  "callCount": 1,
+  "externalToolCallCount": 0,
+  "candidateResultCount": 1,
+  "checks": {
+    "actualDefaultRequest": true,
+    "originalRunCodexAcpInWorker": true,
+    "originalReserveStartTurnSettleCommit": true,
+    "providerIdentityPersisted": true,
+    "taskAndBusinessSucceeded": true,
+    "assistantReadbackMatchesStream": true,
+    "realIsolatedProjectAndAccount": true
+  }
+}

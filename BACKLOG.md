@@ -9,7 +9,7 @@
 
 | ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
 | --- | --- | --- | --- | --- | --- | --- |
-| T-1060 | 复用开源代码接入 Codex ACP 与 WorkBuddy MCP | 🔨 待办 | PASS[REV:034e75fa3d2e] | 待验 | [SPEC](docs/features/t1060-agent-source-integration.md) | [实现与待验](docs/verification/t1060/verification.md)。 |
+| T-1060 | 复用开源代码接入 Codex ACP 与 WorkBuddy MCP | 🔨 待办 | PASS[REV:453827cbe2c1] | 待验 | [SPEC](docs/features/t1060-agent-source-integration.md) | 本地Codex真实文字、项目MCP、生图与pending读回通过；WorkBuddy/发行等仍待验。[记录](docs/verification/t1060/real-ai/verification.md)。 |
 | T-1049 | 集成开源小红书组图与公众号编辑工作台并打磨体验 | 📋 待办 | 待审 | 待验 | [SPEC](docs/features/t1049-open-source-publishing-workbenches.md) | 用户 2026-10-03 明确：当前 T-1048/T-1046 收尾后执行；两类都先核实并运行开源工作面，再接原内容、素材、画布、版本与审核，完成真实编辑和交付体验验收。 2026-10-03 最新确认：新会话接力完成 CreatorOS 网页版集成并提供用户直接验收入口；不以安装包或缺隔离模型凭据阻断基本编辑/保存/导出，未验项保留，见 DEC-T1049-01 与[接力说明](docs/research/evidence/t1049/web-handoff.md)。 |
 | T-1036 | 开源视频编辑组件选型与兼容验证 | ✅ 待办 | PASS[REV:66f9290599b0] | — | [SPEC](docs/features/t1036-open-source-video-editor-selection.md) | 依赖 T-1035 已评审需求；先核对开源代码、许可、React/Next 与现有 HyperFrames/Asset 适配，用隔离探针选择可实际复用的时间轴/预览能力，不照搬闭源附件。 |
 | T-1037 | 建立作品级制作工程、版本与公共编辑服务 | 🔨 待办 | PASS[REV:03cbb3aedc96] | 待验 | [SPEC](docs/features/t1037-output-production-project.md) | 依赖 T-1036；按具体 video output 绑定脚本、制作素材、方案、任务与成片，统一 revision/CAS/历史/回执及旧方案兼容，先定稿合同并独立评审。 |

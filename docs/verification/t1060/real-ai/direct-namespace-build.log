@@ -1,0 +1,16 @@
+▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+
+    ../../../../../../private/tmp/t1060-ai-direct-namespace/adapter/src/CodexJsonRpcConnection.ts:27:93:
+      27 │ ...= "string" ? __filename : import.meta.url).resolve("@openai/cod...
+         ╵                              ~~~~~~~~~~~
+
+  You need to set the output format to "esm" for "import.meta" to work correctly.
+
+▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+
+    ../../../../../../private/tmp/t1060-ai-direct-namespace/adapter/src/CodexCli.ts:29:89:
+      29 │ ...= "string" ? __filename : import.meta.url).resolve("@openai/cod...
+         ╵                              ~~~~~~~~~~~
+
+  You need to set the output format to "esm" for "import.meta" to work correctly.
+

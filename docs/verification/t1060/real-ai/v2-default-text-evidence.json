@@ -1,0 +1,55 @@
+{
+  "verification": "original-worker-default-codex-v2-public-text-chain",
+  "observedAt": "2026-10-04T12:02:04.108Z",
+  "isolatedRoot": "/tmp/t1060-ai-business/v2-default-codex-text-KivutN",
+  "modelSelection": "当前本地Codex默认；没有设置sessionModel",
+  "adopted": false,
+  "published": false,
+  "toolMap": "empty",
+  "events": [
+    "reserveExternalChatTurn",
+    "listExternalTaskTools",
+    "startExternalChatTurn",
+    "recordExternalChatProviderTurn",
+    "settleExternalChatTurn"
+  ],
+  "projectId": "project-t1060-06b0dbe4-e898-4064-8ebf-a6b5f25c5b6a",
+  "taskId": "ai-task-4c9695ca-b062-4bec-86b3-93a1e1968c14",
+  "executionTaskId": "execution-task-46b26100-35a4-4077-a056-9bb0570635d4",
+  "outcome": "passed",
+  "committed": {
+    "resultId": "chat:ai-task-4c9695ca-b062-4bec-86b3-93a1e1968c14",
+    "aiTaskId": "ai-task-4c9695ca-b062-4bec-86b3-93a1e1968c14",
+    "messageId": "chat:ai-msg-t1060-cdc1ffb5-9eb4-4c20-9980-488ab7477d2d",
+    "outcome": "succeeded"
+  },
+  "executionStatus": "succeeded",
+  "businessStatus": "succeeded",
+  "conversationMessageCount": 2,
+  "assistantText": "Warning: Code Mode is unavailable because code-mode host is disabled. Code mode will fail closed; enable `features.code_mode_host` and install `codex-code-mode-host`.\n\n临时项目文本验证完成。",
+  "actualEngine": "codex",
+  "protocolKind": "acp",
+  "protocolVersion": 1,
+  "sessionId": "01a106cb-09ef-7f23-9969-345439ab92ac",
+  "providerTurnId": "01a106cb-257d-79a0-8bcb-03ab9a4e54bf",
+  "stopReason": "end_turn",
+  "usage": {
+    "inputTokens": 17749,
+    "totalTokens": 17760,
+    "outputTokens": 11,
+    "thoughtTokens": 0,
+    "cachedReadTokens": 0
+  },
+  "callCount": 1,
+  "externalToolCallCount": 0,
+  "candidateResultCount": 1,
+  "checks": {
+    "actualDefaultRequest": true,
+    "originalRunCodexAcpInWorker": true,
+    "originalReserveStartTurnSettleCommit": true,
+    "providerIdentityPersisted": true,
+    "taskAndBusinessSucceeded": true,
+    "assistantReadbackMatchesStream": true,
+    "realIsolatedProjectAndAccount": true
+  }
+}

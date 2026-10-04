@@ -2,8 +2,8 @@ import {chatSubmittedTaskType} from "./chat-task-submission";
 import { z } from "zod";
 /** SEMANTIC_BOUNDARY_ALLOW:仅编码供应商工具标识符，不判断意图。 */
 export const chatToolProviderName = (name: string) => name.replace(/[^a-zA-Z0-9_-]/g, "_");
-export const codexAcpBinding={protocolKind:"acp",clientCommit:"27efb1b57b9de22105a91e9154b1d29b51ede8cb",adapterVersion:"2.1.1",runtimeVersion:"0.159.3",policy:"creatoros-acp-readonly-v1"} as const;
-export const externalAgentBindingSchema=z.object({protocolKind:z.literal(codexAcpBinding.protocolKind),clientCommit:z.literal(codexAcpBinding.clientCommit),adapterVersion:z.literal(codexAcpBinding.adapterVersion),runtimeVersion:z.literal(codexAcpBinding.runtimeVersion),policy:z.literal(codexAcpBinding.policy)}).strict();
+export const codexAcpBinding={protocolKind:"acp",clientCommit:"27efb1b57b9de22105a91e9154b1d29b51ede8cb",adapterVersion:"2.1.1",runtimeVersion:"0.159.3",policy:"creatoros-acp-readonly-v2"} as const;
+export const externalAgentBindingSchema=z.object({protocolKind:z.literal(codexAcpBinding.protocolKind),clientCommit:z.literal(codexAcpBinding.clientCommit),adapterVersion:z.literal(codexAcpBinding.adapterVersion),runtimeVersion:z.literal(codexAcpBinding.runtimeVersion),policy:z.enum(["creatoros-acp-readonly-v1","creatoros-acp-readonly-v2"])}).strict();
 export const chatWorkerInputSchema = z.object({
   executionEngine:z.enum(["pi","codex","codebuddy"]).optional(),
   externalAgentBinding:externalAgentBindingSchema.optional(),

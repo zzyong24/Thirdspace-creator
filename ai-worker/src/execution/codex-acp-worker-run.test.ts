@@ -35,6 +35,7 @@ function imageReceipt(toolCallId='image-tool') {
 function fixture() {
   for (const boundary of Object.values(boundaries)) boundary.mockReset();
   const controller = new AbortController();
+  const onPermissionRequest=vi.fn(async()=>({outcome:'cancel' as const}));
   const events:string[] = [];
   let notify:((notification:SessionNotification)=>void)|undefined;
   const emit = (update:unknown,thread=sessionId) => {
@@ -51,7 +52,7 @@ function fixture() {
   boundaries.prompt.mockReturnValue('已冻结的提示');
   boundaries.bridge.mockResolvedValue(bridge);
   boundaries.host.mockImplementation(async(_cwd:unknown,_signal:unknown,_servers:unknown,_tools:unknown,onUpdate:(notification:SessionNotification)=>void)=>{
-    notify=onUpdate;return {client,protocolVersion:1,loginStatus:'authenticated'};
+    notify=onUpdate;return {client,protocolVersion:1,loginStatus:'authenticated',onPermissionRequest};
   });
   const ports:Partial<Record<WorkerPort,PortHandler>> = {
     reserveExternalChatTurn:()=>({callId,status:'reserved'}),
@@ -69,7 +70,7 @@ function fixture() {
   const run = (onText?:(text:string)=>void|Promise<void>)=>runCodexAcpInWorker(input,controller.signal,call as Call,onText);
   const called = (port:WorkerPort)=>call.mock.calls.filter(([name])=>name===port);
   const settlements = ()=>called('settleExternalChatTurn').map(([,data])=>record(data));
-  return {controller,events,emit,client,bridge,ports,call,run,called,settlements};
+  return {controller,events,emit,client,bridge,ports,call,run,called,settlements,onPermissionRequest};
 }
 afterEach(()=>{vi.resetAllMocks();});
 
@@ -83,6 +84,19 @@ it('原 Worker 等待后台持久入场确认后才 prompt，客户端观察写�
   expect(await running).toEqual({callId});
   expect(f.events.indexOf('startExternalChatTurn')).toBeLessThan(f.events.indexOf('prompt'));
   expect(f.client.prompt).toHaveBeenCalledWith(sessionId,'已冻结的提示',undefined,undefined,expect.any(Function),{signal:f.controller.signal});
+  expect(f.client.prompt.mock.calls[0]?.[4]).toBe(f.onPermissionRequest);
+});
+
+it('Worker 严格传递冻结的 v1/v2；v2 无工具时不启动 MCP，旧任务仍用原配置',async()=>{
+  for(const profile of ['creatoros-acp-readonly-v1','creatoros-acp-readonly-v2'] as const){
+    const f=fixture();f.ports.listExternalTaskTools=()=>({tools:[]});
+    const value={...input,externalAgentBinding:{protocolKind:'acp',clientCommit:'27efb1b57b9de22105a91e9154b1d29b51ede8cb',adapterVersion:'2.1.1',runtimeVersion:'0.159.3',policy:profile}} as Input;
+    await runCodexAcpInWorker(value,f.controller.signal,f.call as Call);
+    expect(boundaries.host.mock.calls[0]?.[5]).toBe(profile);
+    expect(boundaries.host.mock.calls[0]?.[2]).toEqual(profile==='creatoros-acp-readonly-v2'?[]:[f.bridge.configuration]);
+    expect(boundaries.bridge).toHaveBeenCalledTimes(profile==='creatoros-acp-readonly-v2'?0:1);
+    expect(f.client.prompt.mock.calls[0]?.[4]).toBe(f.onPermissionRequest);
+  }
 });
 
 it('入场确认异常或返回非 started 都不 prompt，按原账本标未知且关闭宿主和桥',async()=>{

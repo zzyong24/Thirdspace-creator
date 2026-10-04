@@ -34,8 +34,8 @@
     {
       "path": "src/CreatorOsPolicy.ts",
       "upstreamSha256": null,
-      "currentSha256": "1d30eb86829e77a1b775ce0a8744547814305746aa11f6ad52f7107962d0c64d",
-      "reason": "CreatorOS权限/回执/CJS宿主兼容"
+      "currentSha256": "2b8b41c5eca3f89b56108cef94ce9c422cd05dd7a0ff693f961ed17698c2ec00",
+      "reason": "CreatorOS冻结v1/v2权限；复用Codex 0.159.3 direct_only_tool_namespaces与原ACP单次审批，实际配置精确核验"
     },
     {
       "path": "src/StdUtils.ts",
@@ -50,5 +50,5 @@
       "reason": "CreatorOS权限/回执/CJS宿主兼容"
     }
   ],
-  "notes": "原许可与固定上游摘要保留。app-server生成类型只用于上游完整类型检查，当前构建取运行闭包，不宣称适配器完整tsc已通过。"
+  "notes": "原许可与固定上游摘要保留。app-server生成类型只用于上游完整类型检查，当前构建取运行闭包，不宣称适配器完整tsc已通过。 v2直接工具配置复用 openai/codex@01fc69f4026735edfdf6789820549727a4867b11 features/src/feature_configs.rs、core/tools/spec_plan.rs；来源摘要见 docs/verification/t1060/real-ai/upstream-direct-namespace-sources.json。"
 }
