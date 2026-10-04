@@ -1,0 +1,21 @@
+{
+  "verification": "只读定位与探针对应源，不是浏览器或模型运行证据",
+  "files": [
+    {
+      "path": "frontend/src/features/article/article-workbench.tsx",
+      "sha256": "209f9d12f92a3982a56451185715491d0304508193702e6267b756dc2f19e040"
+    },
+    {
+      "path": "contract/src/resources/articles.ts",
+      "sha256": "9d5c2222427f27f5adf482d563f23701643ebea684da9df3a5d50ad090ab3137"
+    },
+    {
+      "path": "frontend/src/features/reference-editors/graphic-design-workbench.tsx",
+      "sha256": "748ecfdfd3f3547aa4aaa10a16008f7040a4bfa56f547d5052bd212bfe41ee05"
+    },
+    {
+      "path": "frontend/src/features/reference-editors/video-reference-workbench.tsx",
+      "sha256": "3bdae23d2c9daea4dc85b5cbdb00677f1f8d7636c6339c0ce7d7e0a08fccd89f"
+    }
+  ]
+}

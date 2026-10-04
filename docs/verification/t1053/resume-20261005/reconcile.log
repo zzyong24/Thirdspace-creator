@@ -1,0 +1,92 @@
+
+── orchestrator reconcile ─────────────────────────────
+✗ [ERROR] boundary-scan.mjs found NEW structural violation(s) past baseline (exit 1). Run `node orchestrator/process/boundary-scan.mjs` for the offending files; after an intentional refactor, `--update-baseline` (with a DEC). Rules: orchestrator/SYSTEM_ARCHITECTURE.md.
+✗ [ERROR] review receipt: T-1045: review receipt 已过期：SPEC hash 00947a717d64 != 4a61dd7e0976
+✗ [ERROR] review receipt: T-1024: review receipt 已过期：constitution hash 已变化
+✗ [ERROR] review receipt: T-1017: review receipt 已过期：constitution hash 已变化
+✗ [ERROR] review receipt: T-915: review receipt 已过期：SPEC hash 76d22c886076 != b990a38a0156
+✗ [ERROR] review receipt: T-859: review receipt 已过期：SPEC hash 4db0a4daa9ba != e6fe3ad73fa9
+✗ [ERROR] review receipt: T-858: review receipt 已过期：SPEC hash 9027f820a773 != ab768b979e62
+✗ [ERROR] review receipt: T-824: review receipt 已过期：constitution hash 已变化
+✗ [ERROR] review receipt: T-819: review receipt 已过期：SPEC hash 4c0f39c41f58 != d89d457083d1
+✗ [ERROR] review receipt: T-816: review receipt 已过期：SPEC hash b532db470f69 != b9490f4fac3f
+✗ [ERROR] review receipt: T-768: review receipt 已过期：constitution hash 已变化
+✗ [ERROR] review receipt: T-726: review receipt 已过期：constitution hash 已变化
+✗ [ERROR] review receipt: T-703: review receipt 已过期：SPEC hash 6ecdc3a00c87 != 70e49d3ae5a3
+✗ [ERROR] review receipt: T-691: review receipt 已过期：constitution hash 已变化
+✗ [ERROR] review receipt: T-694: review receipt 已过期：SPEC hash 678f818f2d18 != 6ea31e784c68
+✗ [ERROR] review receipt: T-656: review receipt 已过期：constitution hash 已变化
+✗ [ERROR] review receipt: T-652: 审核列为「待审」；存在未销账问题，不得开工
+✗ [ERROR] review receipt: T-645: review receipt 已过期：SPEC hash 24659d7d13f3 != c693c9a4ad11
+✗ [ERROR] review receipt: T-642: 任务 T-642 文档列未链接 receipt 绑定的 SPEC: docs/superpowers/specs/2026-08-01-content-radar-creative-handoff.md
+✗ [ERROR] review receipt: T-635: review receipt 已过期：constitution hash 已变化
+✗ [ERROR] lesson LED-045 RECURRED — 生图幂等恢复门回归：只有 channel-managed 同步生图可在 network/submit 无 HTTP 响应时沿用同一 Idempotency-Key 有界恢复；用户自配中转站与异步视频必须保持一次即停，成功只落一份候选。
+✗ [ERROR] lesson LED-003 RECURRED — 门卫拦截:出现【新】边界违规(结构回归)。见 boundary-scan 输出与 orchestrator/SYSTEM_ARCHITECTURE.md。修掉新违规;若是有意消减,跑 boundary-scan.mjs --update-baseline 收紧基线。
+✗ [ERROR] lesson LED-006 RECURRED — 桌面启动门回归：必须保留静态 splash、显式 sidecar cwd、runtime 失败可见且落日志，并在 Windows 安装后真启动 GUI 等待 MAIN_PAGE_LOAD_FINISHED。
+✗ [ERROR] lesson LED-007 RECURRED — 模型连通门回归：必须消费 fullStream；正文或思考流任一非空即连通，error part 必须抛出并安全归类，二者全空才报空响应。
+✗ [ERROR] lesson LED-008 RECURRED — 渠道作用域门回归：缺签名 channelRef 必须投影 activation_scope_missing、零出网且 UI 可见；真实复校成功后必须刷新 SSR authority。
+✗ [ERROR] lesson LED-009 RECURRED — 语义职责边界回归：意图理解、内容归类和素材/场景匹配必须走 Skill/模型；代码只守真实 ID、归属、类型、范围、时间、幂等和安全。确定性相似度仅可用于去重/协议纠错/安全校验，并须标记 SEMANTIC_BOUNDARY_ALLOW: 与测试。
+✗ [ERROR] lesson LED-014 RECURRED — 局部改稿门回归：脚本写入必须持久化稳定段落 ID，存量无 ID 版本须用稿面同一兼容锚点并在新版本自愈；技术锚点必须由稿面点击时可信绑定；模型只产新段落正文；未保存稿先自动保存；采纳只替换目标段；冲突不得静默覆盖，也不得让失效锚点污染后续普通对话。
+✗ [ERROR] lesson LED-017 RECURRED — 逐字保真门回归：必须从本轮受信 sourceRef 恢复精确原文、校验长度和 SHA-256，并由确定性 runner 生成待采纳候选；恢复失败不得退回 extraBrief 摘要或模型生成。
+✗ [ERROR] lesson LED-018 RECURRED — 桌面浏览器交付门回归：壳层注入目录必须覆盖宿主机残留环境；入口先系统 Chrome、再随包 Chromium；正式桌面态不得依赖 CLI/npm/联网下载；安装校验必须看到真实 chrome.exe。
+✗ [ERROR] lesson LED-020 RECURRED — 封面工具链回归：生成封面入口必须绑定 cover.generate；发布参考候选只含真实已发布且有封面的作品；模型按相关性优先、时间次序选择后必须传真实 coverAssetId；组合回合禁止 local.tools 且不得静默纯文降级。
+✗ [ERROR] lesson LED-024 RECURRED — 内容动效门回归：关系选择归 video.cards Skill，代码只校验可溯原文和安全边界；数字、对比、步骤、因果、替换必须有独立渐进配方，坏计划兼容降级，虚线网格保持静态低对比。
+✗ [ERROR] lesson LED-028 RECURRED — H3 端点兼容门回归：纯域名、v2 根、完整提交接口和中转前缀必须经共享解析器只规范化一次；生成与设置探测不得各自拼接，也不得以多 POST 重试兼容 404。
+✗ [ERROR] lesson LED-038 RECURRED — 内容雷达持久任务消费门回归：启动恢复必须让每种持久 kind 都有对应消费者，持续处理到队列为空，并以固定小并发或顺序消费保护外部模型、取流、ASR 与本地数据库；不得只 recover lease 不 drain，也不得按积压数量同时调用外部服务。
+✗ [ERROR] lesson LED-040 RECURRED — B-roll 删除版本门回归：删除必须先写新 editing-plan revision 并清 decisions/render props/inventory/direction；runner 失败回退只保留当前 inventory；旧 sourceRenderTaskId 解绑，晚到旧任务不得覆盖当前成片。
+✗ [ERROR] lesson LED-042 RECURRED — 分页真相门回归：可见总数必须消费同一服务端查询的 meta.total；items.length 只表示已显示；超过首批必须能继续加载并保持筛选、排序、账号上下文一致。
+! [WARN] backlog-health.mjs reported BACKLOG bloat (exit 1). Run `node orchestrator/process/backlog-health.mjs` for the oversized lines — compact per rules/task-ledger-rules.md (`backlog-compact.mjs` handles ✅ rows). (WARN-biased: does not block reconcile.)
+✓ [OK] delivery phase: maintenance (legacy-compat)
+✓ [OK] required artifact present: ARTIFACT_MANIFEST.yaml
+✓ [OK] required artifact present: DECISION_LOG.md
+✓ [OK] governance-guard: scope authorization + complexity budget clean.
+✓ [OK] autonomy-guard: execution claim + delivery progress clean.
+✓ [OK] parsed 42 stages
+✓ [OK] CHANGE_IMPACT.md present
+✓ [OK] orphan-scan.mjs: bidirectional trace clean (computed, not attested).
+✓ [OK] asset-check.mjs: reuse-asset library integrity clean.
+✓ [OK] frontend-validation: journey receipts reconcile (or no UI receipts yet).
+✓ [OK] research-gate: implementation paused for T-1044, T-1057; bounded research may continue.
+✓ [OK] knowledge-drift.mjs: clean (or knowledge layer not enabled).
+✓ [OK] knowledge-coverage.mjs: clean (or knowledge layer not enabled).
+✓ [OK] docs-health.mjs: clean (or knowledge layer not enabled).
+✓ [OK] consistency_gate blocks 5-ship (status draft) — OK
+✓ [OK] consistency_gate blocks 17-integration-release (status draft) — OK
+✓ [OK] probe 2-contract ↔ contract/package.json: consistent (status passed, present true)
+✓ [OK] probe 4-build ↔ backend/src: consistent (status draft, present true)
+✓ [OK] probe 4-build ↔ ai-worker: consistent (status draft, present true)
+✓ [OK] probe 4-build ↔ frontend/src/app/api/v1/dispatch: consistent (status draft, present true)
+✓ [OK] updated_at (2026-08-11) is >= newest decision (2026-08-09).
+✓ [OK] lesson LED-044: guard holds (竖屏有真实口播源时再次被卡片、素材或历史 hidden 连续覆盖，导致整片无人)
+✓ [OK] lesson LED-043: guard holds (新增审美、布局或质量门把上一版可完成的合法关键链路改成整单失败)
+✓ [OK] lesson LED-001: guard holds (.env.local(含真实密钥)被提交进 git)
+✓ [OK] lesson LED-005: guard holds (长输入 AI 节点退回单次调用或丢失分块失败/覆盖真相)
+✓ [OK] lesson LED-010: guard holds (CreatorOS 本机验收包退回手工拼接环境变量)
+✓ [OK] lesson LED-011: guard holds (AI 已选素材但成片仍把录屏/截图缩成不可读小卡，竖屏人物被正方形 contain 再次缩小)
+✓ [OK] lesson LED-012: guard holds (主画面素材使用居中大卡压住人物，只露半张脸，且没有成片级视觉审核发现问题)
+✓ [OK] lesson LED-013: guard holds (人工选材仍沿用旧时间线，竖图被拉伸，编辑器场景标签被烧进成片)
+✓ [OK] lesson LED-015: guard holds (本地验收包再次暴露架构/任务/时间戳后缀，或把安装备份留给用户辨认)
+✓ [OK] lesson LED-016: guard holds (信息卡存在但仍缩成角落小标签，长场景留下大段连续视觉空档)
+✓ [OK] lesson LED-022: guard holds (跨平台桌面能力再次在调用点内联单平台命令，或素材中心文案写死 Finder/访达)
+✓ [OK] lesson LED-023: guard holds (结构化 AI 任务再次被统一超时误杀、纯文本 AI 节点再次无界挂起，协议不兼容被当成致命错误，或搜索页等 networkidle/重复撞登录墙)
+✓ [OK] lesson LED-025: guard holds (高信息架构图/流程图再次被缩成 overlay 并藏在大卡后，或信息卡不绑定真实 SRT 行而跨段滞留)
+✓ [OK] lesson LED-027: guard holds (局部改稿采纳或撤销退回先检查版本、后无条件移动当前指针，或响应上一版由 transport 提前读取)
+✓ [OK] lesson LED-029: guard holds (基础兜底卡再次冒充内容动效成功，或横屏主素材前后与 large_stage 尾部重新露出纯黑舞台)
+✓ [OK] lesson LED-031: guard holds (Windows 分层 runtime 的打包 RAT 加载了解析器，但生产 HyperFrames 子进程再次遗漏同一 module hook)
+✓ [OK] lesson LED-032: guard holds (竖屏统一舞台再次把人物整场缩角落，或素材物化改名后悄悄丢失 AI 方向与字幕重点词)
+✓ [OK] lesson LED-034: guard holds (图片编辑 multipart 再次发送字符串 n，导致严格上游按整数 schema 返回 400)
+✓ [OK] lesson LED-035: guard holds (video.cards 再次因单张 kind、sceneIdx/at 或可选 visualPlan 的静态/根级动态协议错误拖垮整批分镜)
+✓ [OK] lesson LED-036: guard holds (本稿专属 AI 素材再次被标成人工素材，或 material.match 空数组冒充自动分镜成功并生成逐条手选控件)
+✓ [OK] lesson LED-039: guard holds (总导演自动补位再次按计划游标前进，插点被吸附或去重后仍留下真实时间洞并取消整套分镜)
+✓ [OK] lesson LED-041: guard holds (Windows 分层包再次只验证主线程可加载 Xenova，而真实 Whisper worker 没有消费 resolver/runtime root)
+✓ [OK] lesson LED-046: guard holds (Windows精简包漏Worker、只保留一种依赖入口或仍使用旧运行目录，网页能启动但后台不可用)
+✓ [OK] lesson LED-047: guard holds (同页助手入口触发服务端导航、折叠详情提前序列化或慢请求轮询叠加，导致打开卡顿与状态无法更新)
+✓ [OK] lesson LED-048: guard holds (合并采集互相阻断、长任务被误清理、跨计划误绑定及浏览器占用反复失败)
+✓ [OK] lesson LED-049: guard holds (展示缓存漏接、全历史快照与计数读取放大、闲置列表持续轮询)
+✓ [OK] lesson LED-050: guard holds (首页连点重复导航与先展开全部作品再截断导致排队卡顿)
+✓ [OK] lesson LED-051: guard holds (Windows 类型检查子进程默认堆不足造成重复构建失败)
+✓ [OK] lesson LED-052: guard holds (结果按钮提交入口、JSONB键序或整稿版本变化再次阻断独立生成与依次采纳)
+✓ [OK] lesson LED-053: guard holds (原生编辑器覆盖同稿修改、已知冲突不可恢复或迟到导入被误标已保存)
+───────────────────────────────────────────────────────
+35 error(s), 1 warning(s).
+✗ DRIFT: manifest does not reconcile with reality.

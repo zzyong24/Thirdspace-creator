@@ -1,0 +1,34 @@
+{
+  "timestamp": "2026-10-04T16:09:01.475855+00:00",
+  "accountId": "acct-ef4eab23-41",
+  "checks": [
+    {
+      "name": "article",
+      "path": "/projects/project-8d660be7-54/article?outputId=output-8d660be7-79",
+      "httpStatus": 200,
+      "bytes": 84884,
+      "sha256": "27453928d7bb821c72f007829a3155a8bc5a5c77d4c64666e422394b564cbf5c",
+      "notFound": false,
+      "scriptCount": 78
+    },
+    {
+      "name": "graphic",
+      "path": "/projects/project-8d660be7-54/outputs/output-8d660be7-95/image",
+      "httpStatus": 200,
+      "bytes": 112681,
+      "sha256": "6a42425b0822627071e83b3f2e89d20cae78f0d6aba10e8a8a68d47cf06c4c79",
+      "notFound": false,
+      "scriptCount": 80
+    },
+    {
+      "name": "video",
+      "path": "/projects/project-8d660be7-197/production?outputId=output-8d660be7-208",
+      "httpStatus": 200,
+      "bytes": 99870,
+      "sha256": "5a26675924767c3da00c5038048107778dfa3bd62d4ff2ea51c9a8e7f01dd101",
+      "notFound": false,
+      "scriptCount": 77
+    }
+  ],
+  "limit": "HTTP和响应内容；未执行浏览器交互"
+}

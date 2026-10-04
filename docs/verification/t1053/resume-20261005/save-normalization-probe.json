@@ -1,0 +1,13 @@
+{
+  "verification": "合同解析和同构对象夹具，未执行 ArticleWorkbench 点击或真实浏览器",
+  "tagsAppendedThenContractParsed": {
+    "sameValues": true,
+    "currentStringComparisonRejects": true
+  },
+  "nestedThemeSettingsReordered": {
+    "sameValues": true,
+    "currentStringComparisonRejects": true
+  },
+  "productionGuard": "frontend/src/features/article/article-workbench.tsx:372",
+  "status": "复现比较缺陷，尚未修复；T-1053 验收保持待验"
+}

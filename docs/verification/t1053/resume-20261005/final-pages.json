@@ -1,0 +1,30 @@
+{
+  "timestamp": "2026-10-04T16:29:43.815116+00:00",
+  "verification": "收尾时真实HTTP响应，未执行浏览器交互",
+  "checks": [
+    {
+      "name": "article",
+      "path": "/projects/project-8d660be7-54/article?outputId=output-8d660be7-79",
+      "status": 200,
+      "notFound": false,
+      "bytes": 84884,
+      "sha256": "290f00cc8d439d2218b32fc844942bdd8a7a3ed5ab8295a46fead939b7994a09"
+    },
+    {
+      "name": "graphic",
+      "path": "/projects/project-8d660be7-54/outputs/output-8d660be7-95/image",
+      "status": 200,
+      "notFound": false,
+      "bytes": 112681,
+      "sha256": "89ee7bcecd23bae55be66faad15d2fab37c900918d916410e8de697fb815b1a4"
+    },
+    {
+      "name": "video",
+      "path": "/projects/project-8d660be7-197/production?outputId=output-8d660be7-208",
+      "status": 200,
+      "notFound": false,
+      "bytes": 99870,
+      "sha256": "dba1e012fcad38e8cac0a65c35d149d4bc311177bcbc9e43c9c719ca2d8f7996"
+    }
+  ]
+}
