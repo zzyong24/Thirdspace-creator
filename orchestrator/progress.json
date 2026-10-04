@@ -2173,7 +2173,7 @@
       "tasks": [
         {
           "step": "design",
-          "status": "pending"
+          "status": "done"
         },
         {
           "step": "backend",
