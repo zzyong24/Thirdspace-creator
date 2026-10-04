@@ -1,0 +1,13 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/cover-template-library/Thirdspace-creator/contract
+
+
+ Test Files  1 passed (1)
+      Tests  4 passed (4)
+   Start at  19:01:15
+   Duration  880ms (transform 332ms, setup 0ms, import 517ms, tests 7ms, environment 0ms)
+
+
+> @creatoros/contract@0.4.0 typecheck /Users/zyongzhu/.codex/worktrees/cover-template-library/Thirdspace-creator/contract
+> tsc --noEmit
+

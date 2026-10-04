@@ -39,15 +39,15 @@ flowchart LR
 
 ### 收藏
 
-新增 `assets.visualTemplates.list/save/remove`，共享 Zod 和原 contract client。list 支持 libraryKind/scope/industry/visualMode 分页；builtin 可无创作账号，saved 必须有当前账号，读取失败显示错误不能假装空收藏。save 支持 id/expectedRevision、完整快照与 attemptId；新建/更新有持久幂等摘要，更新CAS，重复键改内容409。remove 按ID/expectedRevision/attemptId，软删快照并保留幂等回执，不删除素材。内置项不可写；各引用经 Assets 端口校验当前用户、账号、图片、文件版本。identity 默认仅保留私人ID不分发。错误沿原认证/归属404/冲突409/输入422。
+新增 `assets.visualTemplates.list/save/remove`，共享 Zod 和原 contract client。list 支持 libraryKind/scope/industry/visualMode 分页；builtin 可无创作账号，saved 必须有当前账号，读取失败显示错误不能假装空收藏。save 支持 id/expectedRevision、完整快照与 attemptId；新建/更新有持久幂等摘要，更新CAS，重复键改内容409。remove 按ID/expectedRevision/attemptId，软删快照并保留幂等回执，不删除素材。内置项不可写；各引用经 Assets 端口校验当前用户、账号、图片、文件版本。identity 默认仅保留私人ID不分发。真人提示词或风格可以先收藏未绑定身份的配方；必需本人照片的校验发生在生成时，收藏时若提供身份仍严格验证唯一、归属与文件快照。错误沿原认证/归属404/冲突409/输入422。
 
 ### 生成、比例与真人
 
 扩展原 `canvas.capabilities` 的每模式可选 `aspectRatios`，仅从真实适配器声明生成。常用四项1:1/3:4/16:9/9:16，更多2:3/3:2/4:3/4:5/5:4/21:9；不支持项禁用并显示原因，能力未知保留原默认请求。切模板/库/资产不重置用户已选比例。用户所选比例进入节点、原任务冻结输入与收藏，画布zoom和节点UI尺寸不参与生成比例。
 
-图片节点新增可选 `visualMode=real_person|photo_product|graphic|ai_concept / templateId / templateVersion`。真实模板要求identity或明确real_person时必须使用image_to_image与当前用户选择referenceAssetId；缺图、读失败、摘要变化或不支持编辑均不能调用文生图。只有身份图进入当前单参考适配器，风格由提示词表达，界面明确此行为；不冒称参考图数量支持。原普通纯提示词仍可生成，旧未知能力默认入口不被新规则封死。
+图片节点新增可选 `visualMode=real_person|photo_product|graphic|ai_concept / templateId / templateVersion`。模板ID/版本对应的身份要求由系统内置目录或当前账号已保存的真实收藏快照解析，不能信客户端关闭requiredIdentity；节点与页组两个绑定均核验。真实模板要求identity或明确real_person时必须使用image_to_image与当前用户选择referenceAssetId；缺图、读失败、摘要变化或不支持编辑均不能调用文生图。只有身份图进入当前单参考适配器，风格由提示词表达，界面明确此行为；不冒称参考图数量支持。原普通纯提示词仍可生成，旧未知能力默认入口不被新规则封死。
 
-页组生成复用原 stable-attempt 预留和 task inputJson 机制，不造第二个调度器。每页授权先落文档；一页提交失败保留已提交页，恢复读原link，未知结果同键恢复，不自动重发。失败任务使用已有execution重试命令（适用时）或用户明确新attempt的原节点接口，恢复时冻结原输入；节点内容已编辑则只允许明确“再创作”，已成功/在途页拒绝“失败恢复”重新生成；修改内容的“再创作”仍允许作为明确新候选。过期结果显示其原节点输入版，不覆盖当前选定页。可选成功子集采纳必须用户明确，首图包含且序来自当前组。
+页组生成复用原 stable-attempt 预留和 task inputJson 机制，不造第二个调度器。每页授权先落文档；一页提交失败保留已提交页，恢复读原link，未知结果同键恢复，不自动重发。失败任务使用已有execution重试命令（适用时）或用户明确新attempt的原节点接口，恢复时冻结原输入；同attempt先读取AI领域既存任务并核验冻结来源、补回link；即使节点已编辑，既存原任务的只读恢复仍可完成且不增加提交。确认旧任务不存在且节点内容已编辑时，只允许明确“再创作”，已成功/在途页拒绝“失败恢复”重新生成；修改内容的“再创作”仍允许作为明确新候选。过期结果显示其原节点输入版，不覆盖当前选定页。用户可明确选用历史安全候选；采纳核原link/task/inputDigest/结算，不因当前提示词编辑而拒绝此前有效图片。可选成功子集采纳必须用户明确，首图包含且序来自当前组。
 
 候选展示实际图片尺寸与目标比例，供应商回错比例仍可下载与明确采纳，不拉伸/自动裁切。几何检查只比较用户所选比例与图片真实像素，不做风格选择，标注 `SEMANTIC_BOUNDARY_ALLOW` 并验证取整容差。
 
@@ -61,7 +61,7 @@ Publishing 新增领域内端口，含 `expectedCurrentRevisionId / adoptionKey 
 
 激活素材后Publishing CAS失败，素材保留为真实可用候选，草稿不变，操作显示冲突；重试沿原采纳键，不宣称整组成功也不重复创建版本。任务终态、图片文件冻结与其他平台设置均保留。
 
-返回真实 publicationId/revisionId。原查看器按currentRevisionId读当前版，不能用历史首项。导出读取指定不可变版、真实图片文件，生成真实格式扩展名及配文文件；缺失项明确错误，保留单图下载，不伪造完整包。排期与平台发布沿旧边界，当前Unavailable publisher不改。
+返回真实 publicationId/revisionId。原查看器按currentRevisionId读当前版，不能用历史首项。导出读取指定不可变版、真实图片文件，生成真实格式扩展名及配文文件；缺失项明确错误，保留单图下载，不伪造完整包。同一导出操作接受可选pageIndex，只读取该版已冻结单页；整套失败时其余页仍可分别下载，不能借素材当前文件替代冻结文件。已有发布物料的查看入口不受口播脚本保存门限制。排期与平台发布沿旧边界，当前Unavailable publisher不改。
 
 ## UI与性能
 

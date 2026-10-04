@@ -1,0 +1,33 @@
+
+/Users/zyongzhu/.codex/worktrees/cover-template-library/Thirdspace-creator/frontend/src/features/creative-canvas/canvas-template-library.tsx
+  18:771  warning  The ref value 'epoch.current' will likely have changed by the time this effect cleanup function runs. If this ref points to a node rendered by React, copy 'epoch.current' to a variable inside the effect, and use that variable in the cleanup function                                react-hooks/exhaustive-deps
+  33:600  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  34:26   warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+/Users/zyongzhu/.codex/worktrees/cover-template-library/Thirdspace-creator/frontend/src/features/creative-canvas/canvas-visual-groups.tsx
+  19:653  warning  The ref value 'epoch.current' will likely have changed by the time this effect cleanup function runs. If this ref points to a node rendered by React, copy 'epoch.current' to a variable inside the effect, and use that variable in the cleanup function  react-hooks/exhaustive-deps
+  21:243  warning  React Hook useEffect has a missing dependency: 'group?.name'. Either include it or remove the dependency array                                                                                                                                             react-hooks/exhaustive-deps
+  33:602  warning  Expected an assignment or function call and instead saw an expression                                                                                                                                                                                      @typescript-eslint/no-unused-expressions
+
+/Users/zyongzhu/.codex/worktrees/cover-template-library/Thirdspace-creator/frontend/src/features/draft-workbench/draft-workbench-data.ts
+  4:10  warning  'client' import from '@/lib/contract-client.server' is restricted. `client` is the canonical-ctx singleton (SSR/test seam only) and leaks the canonical tenant's data. Derive the request ctx and use `createServerClient(session.ctx)` instead. See contract-client.server.ts  no-restricted-imports
+
+/Users/zyongzhu/.codex/worktrees/cover-template-library/Thirdspace-creator/frontend/src/features/draft-workbench/visual-publication-media.tsx
+  19:54   warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  23:603  warning  The ref value 'epoch.current' will likely have changed by the time this effect cleanup function runs. If this ref points to a node rendered by React, copy 'epoch.current' to a variable inside the effect, and use that variable in the cleanup function                                react-hooks/exhaustive-deps
+  28:155  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+/Users/zyongzhu/.codex/worktrees/cover-template-library/Thirdspace-creator/frontend/src/features/publishing-center/publishing-center-data.ts
+  4:10  warning  'client' import from '@/lib/contract-client.server' is restricted. `client` is the canonical-ctx singleton (SSR/test seam only) and leaks the canonical tenant's data. Derive the request ctx and use `createServerClient(session.ctx)` instead. See contract-client.server.ts  no-restricted-imports
+
+/Users/zyongzhu/.codex/worktrees/cover-template-library/Thirdspace-creator/frontend/src/server/persistence-client.ts
+  1126:7   error    'stopExecutionWorker' is never reassigned. Use 'const' instead  prefer-const
+  3168:7   error    'recoveryWake' is never reassigned. Use 'const' instead         prefer-const
+  5239:40  warning  '_ctx' is defined but never used                                @typescript-eslint/no-unused-vars
+  5935:16  warning  'getProjects' is defined but never used                         @typescript-eslint/no-unused-vars
+  5939:16  warning  'getKnowledge' is defined but never used                        @typescript-eslint/no-unused-vars
+  5943:16  warning  'getProduction' is defined but never used                       @typescript-eslint/no-unused-vars
+  5947:16  warning  'getCandidate' is defined but never used                        @typescript-eslint/no-unused-vars
+
+✖ 18 problems (2 errors, 16 warnings)
+

@@ -1,0 +1,86 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/cover-template-library/Thirdspace-creator/backend
+
+ ❯ src/modules/creative-canvas/creative-canvas.service.test.ts (11 tests | 2 failed) 1805ms
+   × 可信真人模板不能通过篡改客户端视觉字段降级文生图 28ms
+   × 任务已落库但响应丢失后编辑节点，恢复原attempt补link且不再提交模型 13ms
+ ❯ src/modules/publishing/visual-material-adoption.service.test.ts (8 tests | 1 failed) 3357ms
+   × 完整公共服务链：画布三页→真实pending与结算→选择→原确认激活→不可变发布版→冻结导出 1577ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/creative-canvas/creative-canvas.service.test.ts > 可信真人模板不能通过篡改客户端视觉字段降级文生图
+AssertionError: promise resolved "{ …(10) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "accountId": "account-a",
++   "archivedAt": null,
++   "createdAt": "2026-09-28T00:00:00.000Z",
++   "document": {
++     "edges": [],
++     "nodes": [
++       {
++         "id": "spoof",
++         "label": "镜头",
++         "mode": "text_to_image",
++         "position": {
++           "x": 0,
++           "y": 0,
++         },
++         "prompt": "山间日出",
++         "templateId": "real-person-notes",
++         "templateVersion": 1,
++         "type": "image_generation",
++         "visualMode": "graphic",
++       },
++     ],
++     "schemaVersion": 1,
++     "viewport": {
++       "x": 0,
++       "y": 0,
++       "zoom": 1,
++     },
++   },
++   "id": "f69bf9c6-bb92-4319-9257-1fd4f958a7f1",
++   "projectId": null,
++   "revision": 2,
++   "title": "真人可信来源",
++   "updatedAt": "2026-09-28T00:00:00.000Z",
++   "userId": "canvas-user",
+  }
+
+ ❯ src/modules/creative-canvas/creative-canvas.service.test.ts:137:181
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  src/modules/creative-canvas/creative-canvas.service.test.ts > 任务已落库但响应丢失后编辑节点，恢复原attempt补link且不再提交模型
+ConflictError: 节点输入已编辑，请明确再创作而不是恢复旧提交
+ ❯ Object.generate src/modules/creative-canvas/creative-canvas.service.ts:277:519
+
+ ❯ src/modules/creative-canvas/creative-canvas.service.test.ts:144:9
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  src/modules/publishing/visual-material-adoption.service.test.ts > 完整公共服务链：画布三页→真实pending与结算→选择→原确认激活→不可变发布版→冻结导出
+ConflictError: 节点内容已修改，请选择当前输入生成的候选
+ ❯ verifyGeneratedPage src/modules/creative-canvas/creative-canvas.service.ts:94:347
+
+ ❯ Object.resolveMaterialSelections src/modules/creative-canvas/creative-canvas.service.ts:115:51
+ ❯ Object.adopt src/modules/publishing/visual-material-adoption.service.ts:22:14
+ ❯ Object.request src/modules/creative-canvas/creative-canvas.transport.ts:15:18
+ ❯ src/modules/publishing/visual-material-adoption.service.test.ts:146:18
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  3 failed | 16 passed (19)
+   Start at  18:44:26
+   Duration  4.59s (transform 1.59s, setup 0ms, import 2.05s, tests 5.16s, environment 0ms)
+

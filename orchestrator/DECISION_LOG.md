@@ -3409,3 +3409,8 @@ T983来源状态补充：真实页面对照证明部分旧作品只有正常指�
 ## DEC-TEMPLATE-1021-NATIVE · 2026-10-04
 
 用户明确认可原发布链并要求无限画布，随后“开始执行”。已定位既有codex/creator-canvas@de031bc3，隔离复用其宿主，不修改其他任务工作树。原子任务执行沿asset.generate，页组编辑沿原document CAS，正式配文归原Publishing。私人收藏遵守宿主原user/account隔离并在UI显示账号，没有将未回答的跨账号选项记为用户确认。原发布草稿目标由用户选定，有ID必须CAS，无ID只用户明确新建。独立新宿主评审b4e6ec12337a，原f0f3fa0ff91b仅为原方案历史，不补拍生产证据。
+
+
+### DEC-TEMPLATE-1021-NATIVE · 原生联调修复补充
+
+独立UI评审确认两个本任务验收故障：已采纳图文在无口播脚本项目被旧unlocked门隐藏；整套某页不可读使其余单图入口消失。依用户已授权的双模板与原发布查看/下载范围，查看已有物料不再依赖脚本保存，原生成与排期门仍按原规则；同一visualNotes.export增加可选pageIndex，仅核验该已冻结页，整套协议默认不变。没有新端点、数据归属、凭据或原生进程。frontend联调步骤追加精确三处publishing合同/服务/transport及聚焦测试写集，原backend候选校验与提交不改变。此补充交独立SPEC recheck和真实原生流程验证，不记虚假供应商PASS。

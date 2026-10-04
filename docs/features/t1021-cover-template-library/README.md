@@ -1,3 +1,5 @@
+> 当前原生实现已提交 `codex/t1021-canvas-templates@3f792122`，沿原无限画布和发布版本；实际验证见[实施记录](../../verification/t1021-template-library.md)。下文独立HTML和原方案文字保留为设计历史，不能作为当前系统实现或生产验收。
+
 > 2026-10-04用户纠偏：本目录的独立HTML不再作为CreatorOS产品UI方案，只保留素材研究。正式接入改在原项目稿面发布物料、编导与发布草稿版本，见[integration.md](integration.md)。
 
 # CreatorOS 封面与小红书图文双模板库样例

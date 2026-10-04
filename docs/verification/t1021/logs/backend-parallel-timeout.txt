@@ -1,0 +1,27 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/cover-template-library/Thirdspace-creator/backend
+
+ ❯ src/modules/publishing/visual-material-adoption.service.test.ts (8 tests | 1 failed) 12510ms
+   × 完整公共服务链：画布三页→真实pending与结算→选择→原确认激活→不可变发布版→冻结导出 5075ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/publishing/visual-material-adoption.service.test.ts > 完整公共服务链：画布三页→真实pending与结算→选择→原确认激活→不可变发布版→冻结导出
+Error: Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ src/modules/publishing/visual-material-adoption.service.test.ts:61:1
+     59| });
+     60|
+     61| it("完整公共服务链：画布三页→真实pending与结算→选择→原确认激活→不可变发布版→冻结导出",async()=>{
+       | ^
+     62|  const {mkdtemp,rm}=await import("node:fs/promises"),{tmpdir}=await im…
+     63|  const {createHash}=await import("node:crypto");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 5 passed (6)
+      Tests  1 failed | 72 passed (73)
+   Start at  18:49:16
+   Duration  52.08s (transform 15.40s, setup 0ms, import 26.36s, tests 80.57s, environment 1ms)
+

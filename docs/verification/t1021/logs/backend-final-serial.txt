@@ -1,0 +1,82 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/cover-template-library/Thirdspace-creator/backend
+
+ ✓ src/modules/publishing/publishing.service.test.ts > service — 未选号 ctx → AccountRequiredError (T-332 S2) > 写路径(createPublication)未选号 → AccountRequiredError 2542ms
+ ✓ src/modules/publishing/publishing.service.test.ts > service — 未选号 ctx → AccountRequiredError (T-332 S2) > 读路径(listPublicationsForUser / getPublication)未选号同样禁读 1382ms
+ ✓ src/modules/publishing/publishing.service.test.ts > [T-599] 项目真实发布事实窄读 > 保留已下架作品的 publishedAt，并返回项目最早真实发布时间 1361ms
+ ✓ src/modules/publishing/publishing.service.test.ts > [T-599] 项目真实发布事实窄读 > 只有草稿、没有 publishedAt 时诚实返回 null 1404ms
+ ✓ src/modules/publishing/publishing.service.test.ts > [T-599] 项目真实发布事实窄读 > 一次批量返回 publication 当前标题与封面投影 952ms
+ ✓ src/modules/publishing/publishing.service.test.ts > [T-595] 定位作品批量窄读直接消费源边界归一结果 > 旧 visibility 参数不再二次过滤，但继续按 accountId 隔离 906ms
+ ✓ src/modules/publishing/publishing.service.test.ts > createPublication — [DATA-H03] output 归属校验 > output 不属当前用户 / 不存在 → OwnershipError,不建悬空 publication 917ms
+ ✓ src/modules/publishing/publishing.service.test.ts > createPublication — [DATA-H03] output 归属校验 > 端口未注入(退化态)→ 跳过校验放行(生产组合根恒接线) 832ms
+ ✓ src/modules/publishing/publishing.service.test.ts > transition — [DATA-H04] 已发布重试补跑 rollup 对账 > 首发 rollup 失败(项目未跃迁)→ 同状态重试补跑成功,平台不重发 752ms
+ ✓ src/modules/publishing/publishing.service.test.ts > createPublication (OQ4: auto-mints revision 1) > auto-creates an empty revision-1 and sets it current so currentRevisionId is a real id 777ms
+ ✓ src/modules/publishing/publishing.service.test.ts > createPublication (OQ4: auto-mints revision 1) > throws ValidationError on an unknown platform string 830ms
+ ✓ src/modules/publishing/publishing.service.test.ts > createRevision > increments revisionNumber and updates currentRevisionId to the new revision 842ms
+ ✓ src/modules/publishing/publishing.service.test.ts > transition — valid paths > draft → scheduled stamps scheduledAt; no publisher call 735ms
+ ✓ src/modules/publishing/publishing.service.test.ts > transition — valid paths > scheduled → published calls publisher.publish once, stamps external fields + publishedAt, markOutputPublished once 741ms
+ ✓ src/modules/publishing/publishing.service.test.ts > transition — valid paths > draft → published (immediate publish) is allowed 887ms
+ ✓ src/modules/publishing/publishing.service.test.ts > transition — invalid paths > draft → removed (illegal) throws ConflictError 858ms
+ ✓ src/modules/publishing/publishing.service.test.ts > transition — invalid paths > published → scheduled (backward) throws ConflictError 853ms
+ ✓ src/modules/publishing/publishing.service.test.ts > transition — idempotency (SPEC §17/§22) > transition to published twice does not re-publish or re-fan-out; same externalId 3356ms
+ ✓ src/modules/publishing/publishing.service.test.ts > transition — idempotency (SPEC §17/§22) > same-status transition is a no-op returning the existing DTO 1257ms
+ ✓ src/modules/publishing/publishing.service.test.ts > transition — removed retains externalId > published → removed stamps removedAt, retains externalId, calls publisher.remove once 879ms
+ ✓ src/modules/publishing/publishing.service.test.ts > scheduled → failed > is allowed and sets status failed 956ms
+ ✓ src/modules/publishing/publishing.service.test.ts > getRecentPublications > [T-988] 先筛选近期集合并取展示数量，再解析标题；空允许集不混入其他作品 1113ms
+ ✓ src/modules/publishing/publishing.service.test.ts > getRecentPublications > returns the user's publications newest-first across outputs 1224ms
+ ✓ src/modules/publishing/publishing.service.test.ts > getRecentPublications > [T-400] recent-with-title 同时暴露当前 revision 的 coverAssetId 841ms
+ ✓ src/modules/publishing/publishing.service.test.ts > getRecentPublications > [T-400] 重复导入会补齐已有 publication 的空 title/url，不新建第二条 1080ms
+ ✓ src/modules/publishing/publishing.service.test.ts > setVisibilityByExternalKey ([T-073] 平台侧可见性) > 按 (platform, externalId) 置 hidden_at,再次同步 hidden=false 清空 1177ms
+ ✓ src/modules/publishing/publishing.service.test.ts > setVisibilityByExternalKey ([T-073] 平台侧可见性) > 幂等:已是目标态不再写(updatedAt 不变) 870ms
+ ✓ src/modules/publishing/publishing.service.test.ts > setVisibilityByExternalKey ([T-073] 平台侧可见性) > 找不到该 (platform, externalId)(作品未导入)→ 诚实返 null 875ms
+ ✓ src/modules/publishing/publishing.service.test.ts > listPublicationsMissingCover / setCover ([T-078] 作品封面) > 封面记录存在但文件丢失时重新进入候选，并追加可用封面版本 1270ms
+ ✓ src/modules/publishing/publishing.service.test.ts > listPublicationsMissingCover / setCover ([T-078] 作品封面) > 检查不可用不能覆盖仍可用的用户封面，存储故障也不能当丢失 853ms
+ ✓ src/modules/publishing/publishing.service.test.ts > listPublicationsMissingCover / setCover ([T-078] 作品封面) > 补采过程中用户更新版本时不覆盖用户新稿 1106ms
+ ✓ src/modules/publishing/publishing.service.test.ts > listPublicationsMissingCover / setCover ([T-078] 作品封面) > 导入作品(无 revision)进候选集;setCover 后离开候选集(幂等的根) 961ms
+ ✓ src/modules/publishing/publishing.service.test.ts > listPublicationsMissingCover / setCover ([T-078] 作品封面) > setCover 幂等:当前 revision 已有封面 → 原样返回,不覆盖(用户手选优先) 927ms
+ ✓ src/modules/publishing/publishing.service.test.ts > listPublicationsMissingCover / setCover ([T-078] 作品封面) > setCover 复制当前 revision 字段追加新版(append-only,标题/标签不丢) 904ms
+ ✓ src/modules/publishing/publishing.service.test.ts > listPublicationsMissingCover / setCover ([T-078] 作品封面) > 候选集只按任务必要条件过滤，不再解释旧 hidden 标记 828ms
+ ✓ src/modules/publishing/publishing.service.test.ts > listPublicationsMissingCover / setCover ([T-078] 作品封面) > setCover 走 assertCoverOwned 校验:非本用户 asset → ValidationError 865ms
+ ✓ src/modules/publishing/publishing.service.test.ts > registerOwnerPublication ([T-323] 重锚 + 归档空壳) > 重锚:imported 空壳持有 aweme → 手动 output register → 换锚 + 归档空壳 + markPublished(手动 output) 839ms
+ ✓ src/modules/publishing/publishing.service.test.ts > registerOwnerPublication ([T-323] 重锚 + 归档空壳) > fail closed:existing 已属另一个手动项目 → 409 且返回安全 canonical 引用 831ms
+ ✓ src/modules/publishing/publishing.service.test.ts > registerOwnerPublication ([T-323] 重锚 + 归档空壳) > 幂等:existing 已锚在同 output → 只 markPublished、不重锚、不归档 804ms
+ ✓ src/modules/publishing/publishing.service.test.ts > registerOwnerPublication ([T-323] 重锚 + 归档空壳) > 新建:无 existing → 建 published pub(带 external_id)+ markPublished(本 output) 933ms
+ ✓ src/modules/publishing/publishing.service.test.ts > registerOwnerPublication ([T-323] 重锚 + 归档空壳) > 已归档目标项目不能登记，publication 不创建 987ms
+ ✓ src/modules/publishing/publishing.service.test.ts > registerOwnerPublication ([T-323] 重锚 + 归档空壳) > 首次收口失败后，同 output 重复登记仍会再次收口并自愈 1045ms
+ ✓ src/modules/publishing/publishing.service.test.ts > registerOwnerPublication ([T-323] 重锚 + 归档空壳) > 端口未注入退化:缺 owner/reconcile 端口 → 走保守「不抢」,不炸 858ms
+ ✓ src/modules/publishing/publishing.service.test.ts > registerOwnerPublication ([T-323] 重锚 + 归档空壳) > 未知平台 → ValidationError(与 createImportedPublication 同门禁) 875ms
+ ✓ src/modules/publishing/publication-draft-adoption.service.test.ts > 发布草稿原子采纳 > 创建首版失败时草稿也回滚，重试只创建完整的一份 27ms
+ ✓ src/modules/publishing/publication-draft-adoption.service.test.ts > 发布草稿原子采纳 > 并发同键只生成一个首版；后续编辑不被重复采纳覆盖 51ms
+ ✓ src/modules/publishing/publication-draft-adoption.service.test.ts > 发布草稿原子采纳 > 相同来源键按用户和账号隔离 7ms
+ ✓ src/modules/publishing/visual-material-adoption.service.test.ts > 创建草稿完整字段幂等摘要与旧调用兼容，返回原首版 87ms
+ ✓ src/modules/publishing/visual-material-adoption.service.test.ts > 不可变版本完整digest、并发CAS、同键恢复与跨账号/目标拦截 22ms
+ ✓ src/modules/publishing/visual-material-adoption.service.test.ts > 导出指定不可变版真实冻结文件与配文，transport可达，缺失文件明确失败 17ms
+ ✓ src/modules/publishing/visual-material-adoption.service.test.ts > 采纳先核对当前目标，激活成功后CAS冲突保留候选并不宣布成功 28ms
+ ✓ src/modules/publishing/visual-material-adoption.service.test.ts > 完整公共服务链：画布三页→真实pending与结算→选择→原确认激活→不可变发布版→冻结导出 3474ms
+ ✓ src/modules/publishing/visual-material-adoption.service.test.ts > 封面库替换保留既有正文标签其他设置及图文余页 15ms
+ ✓ src/modules/publishing/visual-material-adoption.service.test.ts > 新建rich草稿并发同键唯一，改页序不能重放为成功 9ms
+ ✓ src/modules/publishing/visual-material-adoption.service.test.ts > 整套一页缺失时，同一导出操作仍可下载其余冻结页，页码不越界 9ms
+ ✓ src/modules/assets/visual-template.service.test.ts > 内置目录无需账号、双库与真人/实拍、13行业且不可写 13ms
+ ✓ src/modules/assets/visual-template.service.test.ts > 持久CRUD、完整快照、账号分页与未知响应同键恢复 133ms
+ ✓ src/modules/assets/visual-template.service.test.ts > 身份与参考冻结真实文件，不接收跨账号或摘要变化 58ms
+ ✓ src/modules/assets/visual-template.service.test.ts > 生成身份要求读取当前账号真实保存快照，更新或删除收藏不抹掉已用版本 49ms
+ ✓ src/modules/creative-canvas/creative-canvas.service.test.ts > 账号独立画布、CAS 保存与媒体文件版本冻结 26ms
+ ✓ src/modules/creative-canvas/creative-canvas.service.test.ts > 同一次生成复用原 attempt，删节点后仍能在历史读取 25ms
+ ✓ src/modules/creative-canvas/creative-canvas.service.test.ts > 参考图生成冻结文件和 checksum；跨账号引用无法提交 22ms
+ ✓ src/modules/creative-canvas/creative-canvas.service.test.ts > 首帧图生视频经同一画布任务入口，未知提交响应可用原 attempt 续接 17ms
+ ✓ src/modules/creative-canvas/creative-canvas.service.test.ts > 编导建议只保存候选；应用有版本门且重复应用返回原快照 18ms
+ ✓ src/modules/creative-canvas/creative-canvas.service.test.ts > 候选含无权素材时整单不应用；旧 revision 不覆盖新画布 18ms
+ ✓ src/modules/creative-canvas/creative-canvas.service.test.ts > 页组保真、引用/顺序校验、删除页组修剪与编导保留 15ms
+ ✓ src/modules/creative-canvas/creative-canvas.service.test.ts > 真人身份不能通过纯提示词或编导清空降级，比例来自适配器 2ms
+ ✓ src/modules/creative-canvas/creative-canvas.service.test.ts > 未知提交恢复冻结原输入；编辑后拒绝旧恢复，成功页不重进提交 22ms
+ ✓ src/modules/creative-canvas/creative-canvas.service.test.ts > 可信真人模板不能通过篡改客户端视觉字段降级文生图 12ms
+ ✓ src/modules/creative-canvas/creative-canvas.service.test.ts > 任务已落库但响应丢失后编辑节点，恢复原attempt补link且不再提交模型 32ms
+ ✓ src/modules/ai-runtime/asset-generation-modes.test.ts > 通用素材生成模式 > 只开放适配器真实支持的参考图模式 2ms
+ ✓ src/modules/ai-runtime/asset-generation-modes.test.ts > 通用素材生成模式 > 首帧格式、真实文件类型、尺寸和画幅在提交前校验 1ms
+ ✓ src/modules/ai-runtime/asset-generation-modes.test.ts > 通用素材生成模式 > 模型时长和分辨率按供应商契约拒绝 0ms
+
+ Test Files  6 passed (6)
+      Tests  73 passed (73)
+   Start at  18:58:05
+   Duration  71.70s (transform 4.47s, setup 0ms, import 7.92s, tests 61.74s, environment 1ms)
+

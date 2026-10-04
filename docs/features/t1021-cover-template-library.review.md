@@ -2,9 +2,9 @@
 
 - Task: T-1021
 - Verdict: PASS
-- Round: 1/3 (initial)
-- Spec receipt: 6a42b4da6d20
-- Review receipt: b4e6ec12337a
+- Round: 3/3 (recheck)
+- Spec receipt: cad6e3ff2277
+- Review receipt: d081e13ac7d4
 
 ## 当前有效问题
 
@@ -17,13 +17,13 @@
   "schema": "spec-review-state/v2",
   "task_id": "T-1021",
   "cycle": 1,
-  "round": 1,
+  "round": 3,
   "max_rounds": 3,
-  "review_kind": "initial",
+  "review_kind": "recheck",
   "verdict": "PASS",
-  "summary": "针对codex/creator-canvas@de031bc3实际宿主进行独立全文初审；已读取T-993、现有creative-canvas资源/操作/服务、asset.generate执行与候选采纳服务、Publishing采纳服务及当前产品宪法。本轮不继承旧宿主PASS。当前SPEC未发现未闭合的阻断或major：visualGroups为旧schemaVersion=1的可选扩展，页序与空间坐标分离，用户计划经原save CAS持久化，执行状态由原links/tasks投影且异步不写文档；逐页沿canvas.node.generate→asset.generate，稳定attempt恢复未知提交，失败恢复冻结原输入，成功页不重复生成；真人必需身份不降为文生图，比例按真实能力开放且错比例安全结果保留；发布选择经link/task.canvasOwner/result/结算回执及真实文件核对，目标项目/output/Publication重新校验，Publication版本由领域事务、完整内容摘要、持久采纳唯一键及当前指针CAS拥有；指定Publication必须提供基版，无目标仅用户明确新建草稿，回执丢失返回原版，素材激活后CAS冲突保持草稿不变；原生成、保存、素材与发布路径保留。评审期间发现的不存在ai.tasks.retry引用及可选发布基版歧义已在提交本包前改为既有execution命令/明确再创作与强制CAS目标合同。私人收藏按宿主既有user/account范围并显示当前账号，不声称用户另行回答过跨账号共享问题。此包只评价SPEC可实施性；生产集成、真实供应商、原生UI操作、桌面安装与系统Gate仍须实施后取得当场证据，未记为PASS。",
+  "summary": "独立bounded复核当前SPEC第48、50行的正确性澄清，未发现新增合同阻断或major，前两轮无finding。本轮已只读核对三项实施修复闭合：身份要求由可信内置ID/版本或当前user/account持久保存回执解析，节点与页组双绑定核验，私人旧快照在更新/软删后仍可核对，前端收藏节点使用自身ID/revision；历史候选移除必须匹配当前编辑的硬门，仍核原link、task所有权、冻结inputDigest、结算及真实冻结文件；未回填link先经AI.findTaskByAttempt读取既存任务，验证真实owner与原冻结输入/digest后补link，节点已编辑仍可恢复既存任务且不增加提交，仅任务不存在时拒绝按旧输入继续提交。root DI已接入上述端口。已核对当场红测3 failed/16 passed及修复后3文件23 passed记录，公共服务链包含修改prompt后明确选用历史候选，收藏旧版本与回执丢失恢复有对应回归。本结论覆盖本轮合同及三项实施缺口，不代表全部生产Gate通过；真实供应商与桌面安装仍未验证。",
   "spec_path": "docs/features/t1021-cover-template-library.md",
-  "spec_sha256": "6a42b4da6d2058b00bc98dd47c1c6c983b6bd043ab0bf0978618514df218c3bc",
+  "spec_sha256": "cad6e3ff2277973a8ae817613aa2ac7aa11113f79a3477cccb08289e8976cf29",
   "constitution_path": "PROJECT.md",
   "constitution_sha256": "923d8e5bd5cfd7f201076bc73bd583d23290f01aebf7ee5d926621df62ded6fc",
   "review_path": "docs/features/t1021-cover-template-library.review.md",
@@ -31,9 +31,9 @@
   "model": "gpt-6",
   "policy": "convergent-review/v2",
   "cycle_authorization": null,
-  "latest_event_hash": "a0f67469ad45dde19a6a66b555038d4f04fc7f9561278980fa7d27d15adf64ea",
+  "latest_event_hash": "298bebc3141f4ba85fe89939e954508a3c6a49a3936548104d9a9cd33362505a",
   "open_findings": [],
   "resolved_findings": [],
-  "receipt": "b4e6ec12337a"
+  "receipt": "d081e13ac7d4"
 }
 ```

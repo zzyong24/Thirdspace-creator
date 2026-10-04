@@ -1726,7 +1726,15 @@
           "frontend/src/features/publishing/**",
           "frontend/src/features/publishing-center/**",
           "frontend/src/server/persistence-client.ts",
-          "frontend/public/visual-templates/**"
+          "frontend/public/visual-templates/**",
+          "contract/src/operations/publishing.ts",
+          "backend/src/modules/publishing/publishing.service.ts",
+          "backend/src/modules/publishing/publishing.transport.ts",
+          "backend/src/modules/publishing/visual-material-adoption.service.test.ts",
+          "backend/src/modules/creative-canvas/creative-canvas.service.ts",
+          "backend/src/modules/creative-canvas/creative-canvas.service.test.ts",
+          "backend/src/modules/assets/visual-template.service.ts",
+          "backend/src/modules/assets/visual-template.service.test.ts"
         ],
         "verification": [
           "docs/verification/t1021-template-library.md",

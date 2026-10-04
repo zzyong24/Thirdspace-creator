@@ -9,7 +9,8 @@
 
 | ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
 | --- | --- | --- | --- | --- | --- | --- |
-| T-1021 | CreatorOS封面与小红书图文双模板库、行业分类及私人收藏 | 🔨 待办 | PASS[REV:b4e6ec12337a] | 待验 | [SPEC](docs/features/t1021-cover-template-library.md) | 用户2026-10-04开始执行；实际宿主codex/creator-canvas@de031bc3，沿原无限画布、账号素材与发布版本接入；原评审不覆盖宿主补充。 |
+| T-1021 | CreatorOS封面与小红书图文双模板库、行业分类及私人收藏 | ⏸️ 待办 | PASS[REV:d081e13ac7d4] | 待验 | [SPEC](docs/features/t1021-cover-template-library.md) | 原无限画布双库/收藏/比例/页组已接入原发布版本；前端38、后端73、Chrome原画布9项通过；独立复核当时PASS，pmem同步后凭证过期；真实供应商与安装版待验，完整reconcile238 errors。 |
+| T-1018 | 清理本轮测试暴露的全局类型与边界欠债 | 📋 待办 | — | 待验 | [T-1021补充证据](docs/verification/t1021-template-library.md) | 复用主工作区已登记T-1018：后端14项旧测试类型漂移、live-chat-session SDK边界、video-decisions-runner语义门，以及T-916历史reconcile漂移；本任务无对应源码变更，不调低门槛。 |
 | T-995 | 修复画布交给编导后聊天提交失败并核对原画布 | 🔨 待办 | — | 待验 | [T-993 SPEC](docs/features/t993-creator-canvas.md) | 安装版 2026-09-29 20:39 画布深链五次报 SKILL_TASK_MAPPING_MISSING；补齐画布对话 Skill 冻结映射、真实画布读取与候选建议入口，保留原会话和账号隔离，实测后交付逐项可审核的建议。 |
 | T-994 | 打磨创作画布、项目用料与素材创作交互 | ✅ 待办 | PASS[REV:4dab5a12ed51] | PASS:ee75fc4332de | [SPEC](docs/features/t994-canvas-creation-experience.md) | 用户反馈当前项目与素材创作交互差；先实测画布→素材→生成→项目用料旅程，形成可核对的界面改进方案并实现，不改变账号归属与候选采纳边界。 |
 | T-993 | 给编导智能体接入持久化创作画布与图像/视频生成闭环 | 🔨 待办 | PASS[REV:27bb71481722] | 待验 | [SPEC](docs/features/t993-creator-canvas.md) | 旧库缺表已修复，真实模型四模式与 4 份项目用料在第三轮安装版保持；隔离和安装版均真实出片，安装版 6.6 秒 H.264 候选留待确认；修复 ESM 工具路径故障并更新旧发布深链测试；新 DMG 含 MIT notice 且校验有效。仍待 Windows 实包、平台发布边界与全局旧 Gate 对账；review receipt 因宪法变更过期，T-916 跟踪既有漂移。 |

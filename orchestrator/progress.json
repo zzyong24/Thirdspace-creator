@@ -2177,18 +2177,18 @@
         },
         {
           "step": "backend",
-          "status": "pending"
+          "status": "done"
         },
         {
           "step": "frontend",
-          "status": "pending"
+          "status": "done"
         },
         {
           "step": "verification",
           "status": "pending"
         }
       ],
-      "blocked_reason": null,
+      "blocked_reason": "代码和相关链路已验证；全局Gate与真实供应商/安装版验收未通过，详见docs/verification/t1021-template-library.md。",
       "depends_on": [],
       "step_depends_on": {},
       "write_set": [
@@ -2300,7 +2300,10 @@
         ]
       },
       "step_exclusive_resources": {},
-      "commits": {}
+      "commits": {
+        "backend": "b9fd9288",
+        "frontend": "3f792122"
+      }
     }
   ],
   "leases": {}
