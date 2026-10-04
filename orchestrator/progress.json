@@ -4,10 +4,10 @@
     "work_branch": "main"
   },
   "summary": {
-    "verticals": 53,
-    "tasks_done": 37,
-    "tasks_total": 149,
-    "tasks_pending": 112,
+    "verticals": 54,
+    "tasks_done": 38,
+    "tasks_total": 151,
+    "tasks_pending": 113,
     "verticals_complete": 1
   },
   "verticals": [
@@ -2342,7 +2342,76 @@
         "frontend": "3f792122",
         "frontend_home": "fb566c02"
       }
+    },
+    {
+      "id": "T-1025",
+      "archetype": [
+        "reference-config",
+        "user-authored",
+        "externally-ingested",
+        "ai-generated"
+      ],
+      "task_id": "T-1025",
+      "tasks": [
+        {
+          "step": "content",
+          "status": "pending"
+        },
+        {
+          "step": "verification",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "docs/features/t1025-template-content-expansion.md",
+        "docs/features/t1025-template-content/**",
+        "docs/verification/t1025/**",
+        "backend/src/modules/assets/visual-template.catalog.ts",
+        "backend/src/modules/assets/visual-template.expansion.ts",
+        "backend/src/modules/assets/visual-template.catalog.test.ts",
+        "frontend/src/features/creative-canvas/canvas-template-library.tsx",
+        "frontend/src/features/creative-canvas/canvas-template-library.test.tsx",
+        "frontend/public/visual-templates/**",
+        "THIRD_PARTY_NOTICES.md"
+      ],
+      "read_set": [
+        "docs/features/t1025-template-content-expansion.md",
+        "docs/features/t1021-cover-template-library.md",
+        "backend/src/modules/assets/**",
+        "frontend/src/features/creative-canvas/**",
+        "contract/src/resources/visual-templates.ts",
+        "frontend/tests/e2e/creative-canvas.spec.ts"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {
+        "content": [
+          "docs/features/t1025-template-content-expansion.md",
+          "docs/features/t1025-template-content/**",
+          "docs/verification/t1025/**",
+          "backend/src/modules/assets/visual-template.catalog.ts",
+          "backend/src/modules/assets/visual-template.expansion.ts",
+          "backend/src/modules/assets/visual-template.catalog.test.ts",
+          "frontend/src/features/creative-canvas/canvas-template-library.tsx",
+          "frontend/src/features/creative-canvas/canvas-template-library.test.tsx",
+          "frontend/public/visual-templates/**",
+          "THIRD_PARTY_NOTICES.md"
+        ],
+        "verification": [
+          "docs/verification/t1025/**"
+        ]
+      },
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
     }
   ],
-  "leases": {}
+  "leases": {
+    "T-1025:content": {
+      "agent": "root",
+      "since": "2026-10-04T13:37:31.622Z"
+    }
+  }
 }

@@ -1775,6 +1775,64 @@
           "contract/src/**"
         ]
       }
+    },
+    "T-1025": {
+      "task_id": "T-1025",
+      "archetype": [
+        "reference-config",
+        "user-authored",
+        "externally-ingested",
+        "ai-generated"
+      ],
+      "tasks": [
+        "content",
+        "verification"
+      ],
+      "read_set": [
+        "docs/features/t1025-template-content-expansion.md",
+        "docs/features/t1021-cover-template-library.md",
+        "backend/src/modules/assets/**",
+        "frontend/src/features/creative-canvas/**",
+        "contract/src/resources/visual-templates.ts",
+        "frontend/tests/e2e/creative-canvas.spec.ts"
+      ],
+      "write_set": [
+        "docs/features/t1025-template-content-expansion.md",
+        "docs/features/t1025-template-content/**",
+        "docs/verification/t1025/**",
+        "backend/src/modules/assets/visual-template.catalog.ts",
+        "backend/src/modules/assets/visual-template.expansion.ts",
+        "backend/src/modules/assets/visual-template.catalog.test.ts",
+        "frontend/src/features/creative-canvas/canvas-template-library.tsx",
+        "frontend/src/features/creative-canvas/canvas-template-library.test.tsx",
+        "frontend/public/visual-templates/**",
+        "THIRD_PARTY_NOTICES.md",
+        "frontend/src/features/creative-canvas/infinite-canvas-node.tsx",
+        "frontend/src/features/creative-canvas/private-style-preview.test.tsx"
+      ],
+      "step_write_set": {
+        "content": [
+          "docs/features/t1025-template-content-expansion.md",
+          "docs/features/t1025-template-content/**",
+          "docs/verification/t1025/**",
+          "backend/src/modules/assets/visual-template.catalog.ts",
+          "backend/src/modules/assets/visual-template.expansion.ts",
+          "backend/src/modules/assets/visual-template.catalog.test.ts",
+          "frontend/src/features/creative-canvas/canvas-template-library.tsx",
+          "frontend/src/features/creative-canvas/canvas-template-library.test.tsx",
+          "frontend/public/visual-templates/**",
+          "THIRD_PARTY_NOTICES.md",
+          "frontend/src/features/creative-canvas/infinite-canvas-node.tsx",
+          "frontend/src/features/creative-canvas/private-style-preview.test.tsx"
+        ],
+        "verification": [
+          "docs/verification/t1025/**"
+        ]
+      },
+      "verify_commands": {
+        "content": "git diff --check",
+        "verification": "git diff --check"
+      }
     }
   }
 }

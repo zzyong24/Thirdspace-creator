@@ -9,6 +9,7 @@
 
 | ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
 | --- | --- | --- | --- | --- | --- | --- |
+| T-1025 | 扩充真人知识、产品实拍及GitHub参考的双库模板样图 | 🔨 待办 | — | — | [SPEC](docs/features/t1025-template-content-expansion.md) | 用户2026-10-04要求先做真人知识与产品实拍，真人用本人原图，并从GitHub扩充封面/小红书图文；复用既有T1021目录、收藏和原素材，不改IA/服务合同或发布边界。 |
 | T-1021 | CreatorOS封面与小红书图文双模板库、行业分类及私人收藏 | ⏸️ 待办 | PASS[REV:55bcfd0e2f8b] | 待验 | [SPEC](docs/features/t1021-cover-template-library.md) | 用户补充功能首页首栏并列案例库/资产库/画布，两库独立且可快速新建画布；首页IA独立复核PASS并已实施；案例/资产/画布并列，原系统新建与追加；18前端/11原生E2E/156性能回归通过，总验收仍保留待验。原画布实现115项相关测试及9项Chrome回归通过；旧凭证不覆盖新IA，真实供应商/安装版及全局Gate待验。 |
 | T-1018 | 清理本轮测试暴露的全局类型与边界欠债 | 📋 待办 | — | 待验 | [T-1021补充证据](docs/verification/t1021-template-library.md) | 复用主工作区已登记T-1018：后端14项旧测试类型漂移、live-chat-session SDK边界、video-decisions-runner语义门，以及T-916历史reconcile漂移；本任务无对应源码变更，不调低门槛。 |
 | T-995 | 修复画布交给编导后聊天提交失败并核对原画布 | 🔨 待办 | — | 待验 | [T-993 SPEC](docs/features/t993-creator-canvas.md) | 安装版 2026-09-29 20:39 画布深链五次报 SKILL_TASK_MAPPING_MISSING；补齐画布对话 Skill 冻结映射、真实画布读取与候选建议入口，保留原会话和账号隔离，实测后交付逐项可审核的建议。 |

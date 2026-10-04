@@ -1109,3 +1109,4 @@
 {"ts":"2026-10-04T11:08:45.238Z","actor":"taskctl","action":"block","task":"T-1021","reason":"实现已提交3f792122；真实供应商、安装版与真浏览器200%待验，完整reconcile239 errors及pmem同步后review constitution漂移未销账；不冒称生产验收PASS。","sha_before":"f4755db7abdf","sha_after":"99c16d8335e3"}
 {"ts":"2026-10-04T12:14:05.179Z","actor":"taskctl","action":"resume","task":"T-1021","reason":"用户明确执行首页 IA；新增 SPEC 独立复核 PASS[REV:55bcfd0e2f8b]，仅恢复新增入口实施；真实供应商、安装版和全局 Gate 待验继续保留。","sha_before":"04f340b79a9b","sha_after":"5d3ad2ea8973"}
 {"ts":"2026-10-04T13:09:04.270Z","actor":"taskctl","action":"block","task":"T-1021","reason":"首页IA已实施并独立走查通过（fb566c02/e7b5c670）；最终18前端、11原生E2E、156性能回归通过。真实供应商/安装版与完整Gate未验收，本轮reconcile为239 errors；既有全局欠债沿T-1018/T-916跟踪，详见首页验证记录。","sha_before":"17508814a251","sha_after":"592ad3df66d7"}
+{"ts":"2026-10-04T13:32:29.337Z","actor":"taskctl","action":"start","task":"T-1025","sha_before":"6519a9488aea","sha_after":"7c1d320a05c9"}

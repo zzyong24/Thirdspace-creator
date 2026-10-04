@@ -1,6 +1,83 @@
 import {visualTemplateResource,type VisualTemplate} from "@creatoros/contract";
-/** 本任务原创公共样图与配方的版本快照。私人身份不进入内置目录。 */
-export const builtinVisualTemplates:ReadonlyArray<VisualTemplate> = [
+import {expandedVisualTemplates} from "./visual-template.expansion";
+/** 公共样图与作者配方的版本快照；私人身份不进入内置目录。 */
+const originalVisualTemplates = [
+  {
+    "id": "real-person-notes",
+    "scope": "builtin",
+    "revision": 1,
+    "libraryKind": "cover",
+    "industries": [
+      "教育学习",
+      "科技数码",
+      "职场成长",
+      "商业服务"
+    ],
+    "visualMode": "real_person",
+    "kind": "style",
+    "name": "真人知识封面",
+    "prompt": "使用用户明确提供的身份图，保持本人五官与自然肤色。大标题与本期真实内容证据同场构图。标题：{{本期标题}}。内容：{{当前确认稿}}。不要复制参考作品的人脸、文字与事实。",
+    "aspectRatio": "3:4",
+    "aspectRatios": [
+      "1:1",
+      "3:4",
+      "16:9",
+      "9:16",
+      "2:3",
+      "3:2",
+      "4:3",
+      "4:5",
+      "5:4",
+      "21:9"
+    ],
+    "references": [],
+    "sourceTemplateId": "real-person-notes",
+    "pageRecipes": [],
+    "requiredIdentity": true,
+    "previewPath": "/visual-templates/public-person-notes.png",
+    "createdAt": "2026-10-04T00:00:00.000Z",
+    "updatedAt": "2026-10-04T00:00:00.000Z"
+  },
+  {
+    "id": "photo-product",
+    "scope": "builtin",
+    "revision": 1,
+    "libraryKind": "cover",
+    "industries": [
+      "美妆护肤",
+      "时尚穿搭",
+      "餐饮美食",
+      "旅行户外",
+      "家居装修",
+      "运动健康",
+      "母婴亲子",
+      "宠物生活"
+    ],
+    "visualMode": "photo_product",
+    "kind": "style",
+    "name": "产品实拍封面",
+    "prompt": "使用用户明确提供的产品实拍或场景素材，保留真实产品外观。标题：{{本期标题}}。内容：{{当前确认稿}}。让产品与本期卖点形成清楚的关系，不生成虚构的测评数据。",
+    "aspectRatio": "3:4",
+    "aspectRatios": [
+      "1:1",
+      "3:4",
+      "16:9",
+      "9:16",
+      "2:3",
+      "3:2",
+      "4:3",
+      "4:5",
+      "5:4",
+      "21:9"
+    ],
+    "references": [],
+    "sourceTemplateId": "photo-product",
+    "pageRecipes": [],
+    "requiredIdentity": false,
+    "previewPath": "/visual-templates/product-coffee.png",
+    "createdAt": "2026-10-04T00:00:00.000Z",
+    "updatedAt": "2026-10-04T00:00:00.000Z"
+  },
   {
     "id": "evidence-cards",
     "scope": "builtin",
@@ -505,81 +582,6 @@ export const builtinVisualTemplates:ReadonlyArray<VisualTemplate> = [
     "previewPath": "/visual-templates/xhs-career.png",
     "createdAt": "2026-10-04T00:00:00.000Z",
     "updatedAt": "2026-10-04T00:00:00.000Z"
-  },
-  {
-    "id": "real-person-notes",
-    "scope": "builtin",
-    "revision": 1,
-    "libraryKind": "cover",
-    "industries": [
-      "教育学习",
-      "科技数码",
-      "职场成长",
-      "商业服务"
-    ],
-    "visualMode": "real_person",
-    "kind": "style",
-    "name": "真人知识封面",
-    "prompt": "使用用户明确提供的身份图，保持本人五官与自然肤色。大标题与本期真实内容证据同场构图。标题：{{本期标题}}。内容：{{当前确认稿}}。不要复制参考作品的人脸、文字与事实。",
-    "aspectRatio": "3:4",
-    "aspectRatios": [
-      "1:1",
-      "3:4",
-      "16:9",
-      "9:16",
-      "2:3",
-      "3:2",
-      "4:3",
-      "4:5",
-      "5:4",
-      "21:9"
-    ],
-    "references": [],
-    "sourceTemplateId": "real-person-notes",
-    "pageRecipes": [],
-    "requiredIdentity": true,
-    "previewPath": null,
-    "createdAt": "2026-10-04T00:00:00.000Z",
-    "updatedAt": "2026-10-04T00:00:00.000Z"
-  },
-  {
-    "id": "photo-product",
-    "scope": "builtin",
-    "revision": 1,
-    "libraryKind": "cover",
-    "industries": [
-      "美妆护肤",
-      "时尚穿搭",
-      "餐饮美食",
-      "旅行户外",
-      "家居装修",
-      "运动健康",
-      "母婴亲子",
-      "宠物生活"
-    ],
-    "visualMode": "photo_product",
-    "kind": "style",
-    "name": "产品实拍封面",
-    "prompt": "使用用户明确提供的产品实拍或场景素材，保留真实产品外观。标题：{{本期标题}}。内容：{{当前确认稿}}。让产品与本期卖点形成清楚的关系，不生成虚构的测评数据。",
-    "aspectRatio": "3:4",
-    "aspectRatios": [
-      "1:1",
-      "3:4",
-      "16:9",
-      "9:16",
-      "2:3",
-      "3:2",
-      "4:3",
-      "4:5",
-      "5:4",
-      "21:9"
-    ],
-    "references": [],
-    "sourceTemplateId": "photo-product",
-    "pageRecipes": [],
-    "requiredIdentity": false,
-    "previewPath": null,
-    "createdAt": "2026-10-04T00:00:00.000Z",
-    "updatedAt": "2026-10-04T00:00:00.000Z"
   }
 ].map(value=>visualTemplateResource.parse(value));
+export const builtinVisualTemplates:ReadonlyArray<VisualTemplate> = [...originalVisualTemplates,...expandedVisualTemplates];

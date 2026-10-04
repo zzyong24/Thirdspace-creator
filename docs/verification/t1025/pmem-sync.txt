@@ -1,0 +1,1 @@
+✓ pmem sync 完成 → PROJECT.md (codex/t1021-canvas-templates @ 5ffb8493) · 边界剩余 5 · 开放任务 123 · codegraph 已刷新
