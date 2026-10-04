@@ -1,0 +1,11 @@
+{
+  "previous": "docs/verification/t1056/reconcile.log",
+  "current": "docs/verification/t1058/reconcile.log",
+  "previous_errors": 35,
+  "current_errors": 35,
+  "added": [],
+  "removed": [],
+  "unchanged": 35,
+  "current_summary": "35 error(s), 1 warning(s).",
+  "scope": "本研究未新增产品实现，现有根因任务 T1015/T1026/T1027/T916 等保留，未放宽基线或将全仓登记为通过。"
+}

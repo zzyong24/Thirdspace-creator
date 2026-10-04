@@ -1,0 +1,225 @@
+{
+  "schema": "t1058-readonly-source-manifest/v1",
+  "research_date": "2026-10-04",
+  "sources": [
+    {
+      "repo": "openai/codex",
+      "commit": "01fc69f4026735edfdf6789820549727a4867b11",
+      "path": "codex-rs/app-server/tests/suite/v2/imagegen_extension.rs",
+      "bytes": 39369,
+      "url": "https://raw.githubusercontent.com/openai/codex/01fc69f4026735edfdf6789820549727a4867b11/codex-rs/app-server/tests/suite/v2/imagegen_extension.rs",
+      "local_read_path": "/tmp/t1058-sources/codex-0.159.3/codex-rs/app-server/tests/suite/v2/imagegen_extension.rs",
+      "sha256": "f272988411038de3c5cd74b608e76e82494b47447505fd550fd90715f6c9afbf",
+      "retrieval_note": "本轮成功只读抓取；精确首次时间未记录，未补造时间。"
+    },
+    {
+      "repo": "openai/codex",
+      "commit": "01fc69f4026735edfdf6789820549727a4867b11",
+      "path": "codex-rs/ext/image-generation/BUILD.bazel",
+      "bytes": 208,
+      "url": "https://raw.githubusercontent.com/openai/codex/01fc69f4026735edfdf6789820549727a4867b11/codex-rs/ext/image-generation/BUILD.bazel",
+      "local_read_path": "/tmp/t1058-sources/codex-0.159.3/codex-rs/ext/image-generation/BUILD.bazel",
+      "sha256": "f838618549c58709f1542f99fab96405a62d8f35d0cbe8a7720a65c93d948805",
+      "retrieval_note": "本轮成功只读抓取；精确首次时间未记录，未补造时间。"
+    },
+    {
+      "repo": "openai/codex",
+      "commit": "01fc69f4026735edfdf6789820549727a4867b11",
+      "path": "codex-rs/ext/image-generation/Cargo.toml",
+      "bytes": 1152,
+      "url": "https://raw.githubusercontent.com/openai/codex/01fc69f4026735edfdf6789820549727a4867b11/codex-rs/ext/image-generation/Cargo.toml",
+      "local_read_path": "/tmp/t1058-sources/codex-0.159.3/codex-rs/ext/image-generation/Cargo.toml",
+      "sha256": "aa8a6fec46b64f183014df9f6f410ab47c2d453714c543e8163089d572af7555",
+      "retrieval_note": "本轮成功只读抓取；精确首次时间未记录，未补造时间。"
+    },
+    {
+      "repo": "openai/codex",
+      "commit": "01fc69f4026735edfdf6789820549727a4867b11",
+      "path": "codex-rs/ext/image-generation/imagegen_description.md",
+      "bytes": 2099,
+      "url": "https://raw.githubusercontent.com/openai/codex/01fc69f4026735edfdf6789820549727a4867b11/codex-rs/ext/image-generation/imagegen_description.md",
+      "local_read_path": "/tmp/t1058-sources/codex-0.159.3/codex-rs/ext/image-generation/imagegen_description.md",
+      "sha256": "ee89dd3b9df94cc8b42b14e48714c68d11d4cd66113853b42ccf9cbd7858af61",
+      "retrieval_note": "本轮成功只读抓取；精确首次时间未记录，未补造时间。"
+    },
+    {
+      "repo": "openai/codex",
+      "commit": "01fc69f4026735edfdf6789820549727a4867b11",
+      "path": "codex-rs/ext/image-generation/src/artifact.rs",
+      "bytes": 1725,
+      "url": "https://raw.githubusercontent.com/openai/codex/01fc69f4026735edfdf6789820549727a4867b11/codex-rs/ext/image-generation/src/artifact.rs",
+      "local_read_path": "/tmp/t1058-sources/codex-0.159.3/codex-rs/ext/image-generation/src/artifact.rs",
+      "sha256": "a5e6477035945eeeb4128f122ca382b8c3a11e55e9f599bb55136fbc685ad0de",
+      "retrieval_note": "本轮成功只读抓取；精确首次时间未记录，未补造时间。"
+    },
+    {
+      "repo": "openai/codex",
+      "commit": "01fc69f4026735edfdf6789820549727a4867b11",
+      "path": "codex-rs/ext/image-generation/src/backend.rs",
+      "bytes": 4366,
+      "url": "https://raw.githubusercontent.com/openai/codex/01fc69f4026735edfdf6789820549727a4867b11/codex-rs/ext/image-generation/src/backend.rs",
+      "local_read_path": "/tmp/t1058-sources/codex-0.159.3/codex-rs/ext/image-generation/src/backend.rs",
+      "sha256": "a46c6c4efd9cecb1a46d384adc8c5d3c71fc73fbd4d6e75641a85bcea92fa69c",
+      "retrieval_note": "本轮成功只读抓取；精确首次时间未记录，未补造时间。"
+    },
+    {
+      "repo": "openai/codex",
+      "commit": "01fc69f4026735edfdf6789820549727a4867b11",
+      "path": "codex-rs/ext/image-generation/src/extension.rs",
+      "bytes": 4391,
+      "url": "https://raw.githubusercontent.com/openai/codex/01fc69f4026735edfdf6789820549727a4867b11/codex-rs/ext/image-generation/src/extension.rs",
+      "local_read_path": "/tmp/t1058-sources/codex-0.159.3/codex-rs/ext/image-generation/src/extension.rs",
+      "sha256": "18d276854dc851daffeaf6e33374997675c27bcb78f9b8765c5c3b01f5f480c9",
+      "retrieval_note": "本轮成功只读抓取；精确首次时间未记录，未补造时间。"
+    },
+    {
+      "repo": "openai/codex",
+      "commit": "01fc69f4026735edfdf6789820549727a4867b11",
+      "path": "codex-rs/ext/image-generation/src/lib.rs",
+      "bytes": 196,
+      "url": "https://raw.githubusercontent.com/openai/codex/01fc69f4026735edfdf6789820549727a4867b11/codex-rs/ext/image-generation/src/lib.rs",
+      "local_read_path": "/tmp/t1058-sources/codex-0.159.3/codex-rs/ext/image-generation/src/lib.rs",
+      "sha256": "c710abe1967cd3f7faaf78c0a35de0f5e6cc5c461f130b79d2b25d27ba8df9de",
+      "retrieval_note": "本轮成功只读抓取；精确首次时间未记录，未补造时间。"
+    },
+    {
+      "repo": "openai/codex",
+      "commit": "01fc69f4026735edfdf6789820549727a4867b11",
+      "path": "codex-rs/ext/image-generation/src/tests.rs",
+      "bytes": 15503,
+      "url": "https://raw.githubusercontent.com/openai/codex/01fc69f4026735edfdf6789820549727a4867b11/codex-rs/ext/image-generation/src/tests.rs",
+      "local_read_path": "/tmp/t1058-sources/codex-0.159.3/codex-rs/ext/image-generation/src/tests.rs",
+      "sha256": "9b4b9c04a7a5ead8606bc70cf102e1a9986a46754c6b0dcac55c16af1725e477",
+      "retrieval_note": "本轮成功只读抓取；精确首次时间未记录，未补造时间。"
+    },
+    {
+      "repo": "openai/codex",
+      "commit": "01fc69f4026735edfdf6789820549727a4867b11",
+      "path": "codex-rs/ext/image-generation/src/tool.rs",
+      "bytes": 26563,
+      "url": "https://raw.githubusercontent.com/openai/codex/01fc69f4026735edfdf6789820549727a4867b11/codex-rs/ext/image-generation/src/tool.rs",
+      "local_read_path": "/tmp/t1058-sources/codex-0.159.3/codex-rs/ext/image-generation/src/tool.rs",
+      "sha256": "1aa00a3013fdabf547f890b43cc3ff3a0217df6240fb9989a6fe6a03e9272fe7",
+      "retrieval_note": "本轮成功只读抓取；精确首次时间未记录，未补造时间。"
+    },
+    {
+      "repo": "openai/codex",
+      "commit": "01fc69f4026735edfdf6789820549727a4867b11",
+      "path": "codex-rs/skills/src/assets/samples/imagegen/SKILL.md",
+      "bytes": 19201,
+      "url": "https://raw.githubusercontent.com/openai/codex/01fc69f4026735edfdf6789820549727a4867b11/codex-rs/skills/src/assets/samples/imagegen/SKILL.md",
+      "local_read_path": "/tmp/t1058-sources/codex-0.159.3/codex-rs/skills/src/assets/samples/imagegen/SKILL.md",
+      "sha256": "681ddb4ad6d06a2acc78a3535b583f8d0c1ea800ecda3d56370d3310fd2cd4ba",
+      "retrieval_note": "本轮成功只读抓取；精确首次时间未记录，未补造时间。"
+    },
+    {
+      "name": "openapi",
+      "url": "https://open.workbuddy.cn/docs/openapi",
+      "method": "GET",
+      "request_user_agent": "Mozilla/5.0",
+      "archive_started_at_utc": "2026-10-04T07:05:03.483222+00:00",
+      "note": "Earlier research read this source in memory without persisting raw bytes or exact timestamp. This is a later evidence-only re-fetch, not the timestamp of the initial read.",
+      "status": 200,
+      "resolved_url": "https://open.workbuddy.cn/docs/openapi",
+      "response_headers": {
+        "Content-Type": "text/html; charset=utf-8",
+        "ETag": "\"q4ftx0a2bh6xky\""
+      },
+      "archive_completed_at_utc": "2026-10-04T07:05:08.492388+00:00",
+      "raw_file": "/tmp/t1058-workbuddy-evidence/openapi.html",
+      "raw_sha256": "4e90bc49cff05d6f501f7bcf264ddc784e02b99e713d37a03db9dfe86b6ad2ed",
+      "raw_bytes": 386927,
+      "text_file": "/tmp/t1058-workbuddy-evidence/openapi.text.txt",
+      "text_sha256": "4b22c1ef77151c6dbab8e31b730ac1cea0d7bfd26a06464e97e668f47742235e"
+    },
+    {
+      "name": "connector",
+      "url": "https://open.workbuddy.cn/docs/connector",
+      "method": "GET",
+      "request_user_agent": "Mozilla/5.0",
+      "archive_started_at_utc": "2026-10-04T07:05:03.484084+00:00",
+      "note": "Earlier research read this source in memory without persisting raw bytes or exact timestamp. This is a later evidence-only re-fetch, not the timestamp of the initial read.",
+      "status": 200,
+      "resolved_url": "https://open.workbuddy.cn/docs/connector",
+      "response_headers": {
+        "Content-Type": "text/html; charset=utf-8",
+        "ETag": "\"u8iwkryrwu48ax\""
+      },
+      "archive_completed_at_utc": "2026-10-04T07:05:06.969020+00:00",
+      "raw_file": "/tmp/t1058-workbuddy-evidence/connector.html",
+      "raw_sha256": "56bef25bdc13d4523849196a7c82c21e270403a9040a57cb556de3c961014d6f",
+      "raw_bytes": 253368,
+      "text_file": "/tmp/t1058-workbuddy-evidence/connector.text.txt",
+      "text_sha256": "8222349cc18de3e96949f0e15c3153b276668a2234fae5d88b322d63b3ccebae"
+    },
+    {
+      "name": "codebuddy-npm-latest",
+      "url": "https://registry.npmjs.org/@tencent-ai/codebuddy-code/latest",
+      "method": "GET",
+      "request_user_agent": "Mozilla/5.0",
+      "archive_started_at_utc": "2026-10-04T07:05:03.484349+00:00",
+      "note": "Earlier research read this source in memory without persisting raw bytes or exact timestamp. This is a later evidence-only re-fetch, not the timestamp of the initial read.",
+      "status": 200,
+      "resolved_url": "https://registry.npmjs.org/@tencent-ai/codebuddy-code/latest",
+      "response_headers": {
+        "Content-Type": "application/json"
+      },
+      "archive_completed_at_utc": "2026-10-04T07:05:04.676753+00:00",
+      "raw_file": "/tmp/t1058-workbuddy-evidence/codebuddy-npm-latest.json",
+      "raw_sha256": "c4941f3438d5e396924fa3cba022aa39d176183426985e38fcfc549ff331b123",
+      "raw_bytes": 3432,
+      "package_summary": {
+        "name": "@tencent-ai/codebuddy-code",
+        "version": "2.161.1",
+        "license": "SEE LICENSE IN README.md",
+        "homepage": "https://cnb.cool/codebuddy/codebuddy-code"
+      },
+      "package_dist_integrity": "sha512-Ii1ziKuvDlEj0e6/Re8tnKYU0CA9Lf73XtolPYVKUnugqNjPHBG2mxPxshB/tJy5Wy6NyDDB97enrnqFKjP3tQ=="
+    },
+    {
+      "name": "codex-image-generation",
+      "url": "https://learn.chatgpt.com/docs/image-generation.md",
+      "archive_started_at_utc": "2026-10-04T07:10:13.956160+00:00",
+      "method": "GET",
+      "http_status": 200,
+      "resolved_url": "https://learn.chatgpt.com/docs/image-generation.md",
+      "local_read_path": "/tmp/t1058-sources/official-docs/codex-image-generation.txt",
+      "bytes": 8863,
+      "sha256": "0eedfcaca1d6cb8ed0a39b6e1b0b2dedc06e2f9b9d2bcff5c5dfffa5f6360daa",
+      "archive_completed_at_utc": "2026-10-04T07:10:14.987528+00:00"
+    },
+    {
+      "name": "codex-license",
+      "url": "https://raw.githubusercontent.com/openai/codex/01fc69f4026735edfdf6789820549727a4867b11/LICENSE",
+      "archive_started_at_utc": "2026-10-04T07:10:14.987542+00:00",
+      "method": "GET",
+      "http_status": 200,
+      "resolved_url": "https://raw.githubusercontent.com/openai/codex/01fc69f4026735edfdf6789820549727a4867b11/LICENSE",
+      "local_read_path": "/tmp/t1058-sources/official-docs/codex-license.txt",
+      "bytes": 10926,
+      "sha256": "d17f227e4df5da1600391338865ce0f3055211760a36688f816941d58232d8dc",
+      "archive_completed_at_utc": "2026-10-04T07:10:18.118229+00:00"
+    },
+    {
+      "name": "codex-acp-license",
+      "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/LICENSE",
+      "archive_started_at_utc": "2026-10-04T07:10:18.118241+00:00",
+      "method": "GET",
+      "http_status": 200,
+      "resolved_url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/LICENSE",
+      "local_read_path": "/tmp/t1058-sources/official-docs/codex-acp-license.txt",
+      "bytes": 10760,
+      "sha256": "72ea310b40e1ee2c4aa61935d22065155c50bfde288b114c9cfd3e1fa34f8049",
+      "archive_completed_at_utc": "2026-10-04T07:10:19.848589+00:00"
+    }
+  ],
+  "other_primary_sources": "协议与 WorkBuddy 附件逐项链接官方正文；web/source读取时间无精确记录的部分不补造快照。文件快照保留 /tmp，仅将元数据归档入仓库，固定源码 URL 可复查。",
+  "not_run": [
+    "agent/model execution",
+    "browser automation",
+    "runtime probes",
+    "installation",
+    "ChatCut tools"
+  ],
+  "source_scope": "公开源码和官方文档；不含用户凭据。"
+}
