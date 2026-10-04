@@ -1,10 +1,12 @@
 import {z} from "zod";
+import {publicationResource,publicationRevisionResource} from "../resources/publishing";
 import {defineEndpoint} from "../endpoints";
 import {canvasDocumentSchema,creativeCanvasResource,canvasGenerationLinkResource,canvasProposalResource,canvasGenerationCapabilitiesResource} from "../resources/creative-canvas";
 
 const id=z.string().min(1).max(128);
 const params=z.object({canvasId:id});
 export const creativeCanvasOperations={
+ adoptCanvasMaterial:defineEndpoint({id:"canvas.material.adopt",method:"POST",path:"/canvases/:canvasId/material/adopt",params,body:z.object({expectedRevision:z.number().int().positive(),groupId:id,outputId:id,publicationId:id.optional(),expectedCurrentRevisionId:id.optional(),platform:z.string().min(1),title:z.string().trim().min(1).max(300),selections:z.array(z.object({nodeId:id,taskId:id.optional(),resultId:id.optional()}).strict()).min(1).max(20),attemptId:z.string().min(16).max(128)}).strict().superRefine((v,c)=>{if(Boolean(v.publicationId)!==Boolean(v.expectedCurrentRevisionId))c.addIssue({code:"custom",message:"选择发布草稿必须同时提供当前版本"});}),response:z.object({publication:publicationResource,revision:publicationRevisionResource}),fr:["FR-CANVAS-MATERIAL-ADOPT"]}),
  getCanvasGenerationCapabilities:defineEndpoint({id:"canvas.capabilities",method:"GET",path:"/canvases/capabilities",response:canvasGenerationCapabilitiesResource,fr:["FR-CANVAS-CAPABILITIES"]}),
  listCanvases:defineEndpoint({id:"canvas.list",method:"GET",path:"/canvases",response:creativeCanvasResource,isList:true,fr:["FR-CANVAS-LIST"]}),
  createCanvas:defineEndpoint({id:"canvas.create",method:"POST",path:"/canvases",body:z.object({title:z.string().min(1).max(160),projectId:id.nullable().optional()}),response:creativeCanvasResource,fr:["FR-CANVAS-CREATE"]}),

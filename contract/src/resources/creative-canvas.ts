@@ -1,4 +1,5 @@
 import {z} from "zod";
+import {visualModeSchema} from "./visual-templates";
 
 const id=z.string().min(1).max(128);
 const point=z.object({x:z.number().finite().min(-1_000_000).max(1_000_000),y:z.number().finite().min(-1_000_000).max(1_000_000)}).strict();
@@ -6,13 +7,15 @@ const size=z.object({width:z.number().int().min(180).max(1200),height:z.number()
 const common={id,position:point,label:z.string().max(160),size:size.optional()};
 const textNode=z.object({...common,type:z.literal("text"),text:z.string().max(10_000)}).strict();
 const mediaNode=z.object({...common,type:z.enum(["image","video"]),assetId:id,fileId:id.optional(),checksum:z.string().max(256).optional()}).strict();
-const generationNode=z.object({...common,type:z.enum(["image_generation","video_generation"]),prompt:z.string().max(10_000),mode:z.enum(["text_to_image","image_to_image","text_to_video","image_to_video"]),referenceAssetId:id.optional(),aspectRatio:z.string().max(32).optional(),durationSec:z.number().int().min(1).max(3600).optional(),resolution:z.enum(["768P","2K"]).optional()}).strict().superRefine((node,ctx)=>{
+const generationNode=z.object({...common,type:z.enum(["image_generation","video_generation"]),prompt:z.string().max(10_000),mode:z.enum(["text_to_image","image_to_image","text_to_video","image_to_video"]),visualMode:visualModeSchema.optional(),templateId:id.optional(),templateVersion:z.number().int().positive().optional(),referenceAssetId:id.optional(),aspectRatio:z.string().max(32).optional(),durationSec:z.number().int().min(1).max(3600).optional(),resolution:z.enum(["768P","2K"]).optional()}).strict().superRefine((node,ctx)=>{
  if((node.type==="image_generation")!==node.mode.endsWith("_image"))ctx.addIssue({code:"custom",message:"节点类型与生成模式不符"});
  if(!node.mode.startsWith("image_to_")&&node.referenceAssetId)ctx.addIssue({code:"custom",message:"文生模式不能携带参考图"});
 });
 export const canvasNodeSchema=z.union([textNode,mediaNode,generationNode]);
 export const canvasEdgeSchema=z.object({id,source:id,target:id,label:z.string().max(160).optional()}).strict();
-export const canvasDocumentSchema=z.object({schemaVersion:z.literal(1),viewport:z.object({x:z.number().finite(),y:z.number().finite(),zoom:z.number().finite().min(0.05).max(4)}).strict(),nodes:z.array(canvasNodeSchema).max(300),edges:z.array(canvasEdgeSchema).max(600)}).strict();
+export const canvasVisualGroupSchema=z.object({id,name:z.string().min(1).max(160),libraryKind:z.enum(["cover","xhs"]),aspectRatio:z.string().max(32),caption:z.string().max(20_000),pageOrder:z.array(id).min(1).max(20),templateSnapshot:z.object({id,name:z.string(),version:z.number().int().positive(),prompt:z.string().max(10_000),visualMode:visualModeSchema,requiredIdentity:z.boolean()}).strict(),generationAttempts:z.record(z.string(),z.string().min(16).max(128)).default({})}).strict();
+export type CanvasVisualGroup=z.infer<typeof canvasVisualGroupSchema>;
+export const canvasDocumentSchema=z.object({schemaVersion:z.literal(1),viewport:z.object({x:z.number().finite(),y:z.number().finite(),zoom:z.number().finite().min(0.05).max(4)}).strict(),nodes:z.array(canvasNodeSchema).max(300),edges:z.array(canvasEdgeSchema).max(600),visualGroups:z.array(canvasVisualGroupSchema).max(100).optional()}).strict();
 export type CanvasDocument=z.infer<typeof canvasDocumentSchema>;
 export type CanvasNode=z.infer<typeof canvasNodeSchema>;
 export const emptyCanvasDocument:CanvasDocument={schemaVersion:1,viewport:{x:0,y:0,zoom:1},nodes:[],edges:[]};
@@ -29,5 +32,5 @@ export const canvasProposalOperationSchema=z.discriminatedUnion("type",[
  z.object({type:z.literal("disconnect"),operationId,edgeId:id}).strict(),
 ]);
 export const canvasProposalResource=z.object({id,canvasId:id,baseRevision:z.number().int().positive(),operations:z.array(canvasProposalOperationSchema).max(100),status:z.enum(["pending","applied","discarded"]),appliedRevision:z.number().int().positive().nullable(),createdAt:z.string(),expiresAt:z.string()}).strict();
-export const canvasGenerationCapabilitiesResource=z.object({modes:z.array(z.object({mode:z.enum(["text_to_image","image_to_image","text_to_video","image_to_video"]),available:z.boolean(),model:z.string().nullable(),reason:z.string().nullable()}).strict()).length(4)}).strict();
+export const canvasGenerationCapabilitiesResource=z.object({modes:z.array(z.object({mode:z.enum(["text_to_image","image_to_image","text_to_video","image_to_video"]),available:z.boolean(),model:z.string().nullable(),reason:z.string().nullable(),aspectRatios:z.array(z.string()).optional()}).strict()).length(4)}).strict();
 export type CreativeCanvasResource=z.infer<typeof creativeCanvasResource>;

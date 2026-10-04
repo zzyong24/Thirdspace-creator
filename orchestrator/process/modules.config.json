@@ -1600,6 +1600,143 @@
         "review": "node orchestrator/process/research-gate.mjs audit",
         "implementation": "pnpm --dir frontend exec tsc --noEmit --pretty false"
       }
+    },
+    "T-1021": {
+      "task_id": "T-1021",
+      "archetype": [
+        "reference-config",
+        "user-authored",
+        "ai-generated"
+      ],
+      "tasks": [
+        "design",
+        "backend",
+        "frontend",
+        "verification"
+      ],
+      "read_set": [
+        "docs/features/t1021-cover-template-library.md",
+        "docs/features/t1021-cover-template-library/**",
+        "docs/features/t993-creator-canvas.md",
+        "docs/features/t994-canvas-creation-experience.md",
+        "contract/src/**",
+        "backend/src/modules/creative-canvas/**",
+        "backend/src/modules/assets/**",
+        "backend/src/modules/publishing/**",
+        "backend/src/modules/ai-runtime/**",
+        "backend/src/schema/**",
+        "frontend/src/features/creative-canvas/**",
+        "frontend/src/features/draft-workbench/**",
+        "frontend/src/features/publishing/**",
+        "frontend/src/server/persistence-client.ts"
+      ],
+      "write_set": [
+        "docs/features/t1021-cover-template-library.md",
+        "docs/features/t1021-cover-template-library/**",
+        "docs/features/t1021-cover-template-library.native-review-round-1.json",
+        "docs/verification/t1021-template-library.md",
+        "docs/verification/t1021/**",
+        "contract/src/resources/creative-canvas.ts",
+        "contract/src/resources/visual-templates.ts",
+        "contract/src/resources/publishing.ts",
+        "contract/src/operations/creative-canvas.ts",
+        "contract/src/operations/visual-templates.ts",
+        "contract/src/operations/publishing.ts",
+        "contract/src/endpoints.ts",
+        "contract/src/index.ts",
+        "backend/src/modules/assets/**",
+        "backend/src/modules/creative-canvas/**",
+        "backend/src/modules/publishing/**",
+        "backend/src/modules/ai-runtime/asset-generation-modes.ts",
+        "backend/src/schema/visual-templates.ts",
+        "backend/src/schema/publishing.ts",
+        "backend/drizzle/**",
+        "frontend/src/features/creative-canvas/**",
+        "frontend/src/features/draft-workbench/**",
+        "frontend/src/features/publishing/**",
+        "frontend/src/features/publishing-center/**",
+        "frontend/src/server/persistence-client.ts",
+        "frontend/public/visual-templates/**",
+        "orchestrator/DECISION_LOG.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "contract/src/cli-policy.ts",
+        "contract/tests/visual-template.test.ts",
+        "backend/src/db.ts",
+        "backend/src/index.ts",
+        "backend/src/application/transport.ts"
+      ],
+      "verify_commands": {
+        "design": [
+          "pnpm --dir contract exec vitest run tests/visual-template.test.ts",
+          "pnpm --dir contract typecheck"
+        ],
+        "backend": [
+          "pnpm --dir backend exec vitest run src/modules/creative-canvas/creative-canvas.service.test.ts src/modules/assets/visual-template.service.test.ts src/modules/publishing/visual-material-adoption.service.test.ts"
+        ],
+        "frontend": [
+          "pnpm --dir frontend exec vitest run src/features/creative-canvas"
+        ],
+        "verification": [
+          "node orchestrator/process/boundary-scan.mjs",
+          "node orchestrator/process/orphan-scan.mjs"
+        ]
+      },
+      "step_write_set": {
+        "design": [
+          "docs/features/t1021-cover-template-library.md",
+          "docs/features/t1021-cover-template-library/**",
+          "docs/features/t1021-cover-template-library.native-review-round-1.json",
+          "contract/src/resources/creative-canvas.ts",
+          "contract/src/resources/visual-templates.ts",
+          "contract/src/resources/publishing.ts",
+          "contract/src/operations/creative-canvas.ts",
+          "contract/src/operations/visual-templates.ts",
+          "contract/src/operations/publishing.ts",
+          "contract/src/endpoints.ts",
+          "contract/src/index.ts",
+          "contract/src/cli-policy.ts",
+          "contract/tests/visual-template.test.ts"
+        ],
+        "backend": [
+          "backend/src/modules/assets/**",
+          "backend/src/modules/creative-canvas/**",
+          "backend/src/modules/publishing/**",
+          "backend/src/modules/ai-runtime/asset-generation-modes.ts",
+          "backend/src/schema/visual-templates.ts",
+          "backend/src/schema/publishing.ts",
+          "backend/drizzle/**",
+          "backend/src/db.ts",
+          "backend/src/index.ts",
+          "backend/src/application/transport.ts"
+        ],
+        "frontend": [
+          "frontend/src/features/creative-canvas/**",
+          "frontend/src/features/draft-workbench/**",
+          "frontend/src/features/publishing/**",
+          "frontend/src/features/publishing-center/**",
+          "frontend/src/server/persistence-client.ts",
+          "frontend/public/visual-templates/**"
+        ],
+        "verification": [
+          "docs/verification/t1021-template-library.md",
+          "docs/verification/t1021/**"
+        ]
+      },
+      "step_read_set": {
+        "backend": [
+          "docs/features/t1021-cover-template-library.md",
+          "docs/features/t1021-cover-template-library/templates.json",
+          "contract/src/**",
+          "backend/src/**",
+          "backend/drizzle/**"
+        ],
+        "frontend": [
+          "docs/features/t1021-cover-template-library.md",
+          "contract/src/**",
+          "frontend/src/**",
+          "docs/features/t1021-cover-template-library/assets/**"
+        ]
+      }
     }
   }
 }

@@ -1,0 +1,8 @@
+import {describe,it,expect} from "vitest";
+import {ENDPOINTS,canvasDocumentSchema,emptyCanvasDocument,visualTemplateInputSchema,publicationVisualNoteSchema} from "../src/index";
+describe("原画布模板合同",()=>{
+ it("旧schemaVersion1保留完整节点、坐标与连线，不强制页组",()=>{const old={...emptyCanvasDocument,nodes:[{id:"a",type:"text",label:"稿",text:"当前稿",position:{x:20,y:30}}]};expect(canvasDocumentSchema.parse(old)).toEqual(old);});
+ it("真人/私人引用角色与配方在保存快照中完整回读",()=>{const body={libraryKind:"cover",industries:["商业服务"],visualMode:"real_person",kind:"style",name:"本人封面",prompt:"保留本人身份",aspectRatio:"3:4",references:[{role:"identity",assetId:"photo",fileId:"file",checksum:"sha"}],pageRecipes:[],requiredIdentity:true};expect(visualTemplateInputSchema.parse(body)).toEqual(body);});
+ it("已有发布草稿不能省略当前版本或自报资产代替原结果",()=>{const base={expectedRevision:2,groupId:"g",outputId:"o",platform:"xiaohongshu",title:"本期",selections:[{nodeId:"n",taskId:"t",resultId:"r"}],attemptId:"abcdefghijklmnop"};expect(ENDPOINTS.adoptCanvasMaterial.body!.safeParse({...base,publicationId:"pub"}).success).toBe(false);expect(ENDPOINTS.adoptCanvasMaterial.body!.safeParse({...base,selections:[{nodeId:"n",assetId:"forged"}]}).success).toBe(false);expect(ENDPOINTS.adoptCanvasMaterial.body!.safeParse({...base,publicationId:"pub",expectedCurrentRevisionId:"rev"}).success).toBe(true);});
+ it("图文保存是真实独立素材有序回执，无预览板URL充当结果",()=>{expect(publicationVisualNoteSchema.safeParse({schemaVersion:1,sourceCanvasId:"c",sourceGroupId:"g",sourceCanvasRevision:2,imageMode:"carousel",aspectRatio:"3:4",orderedAssetIds:["a","b"],pageReceipts:[{nodeId:"n1",fileId:"f1",checksum:"s1"},{nodeId:"n2",fileId:"f2",checksum:"s2"}]}).success).toBe(true);});
+});

@@ -286,3 +286,7 @@ export { onboardingStepKey, onboardingPatchResource, onboardingStateResource, ty
 
 export { dailyReportQuery, type DailyReportQuery } from "./pages/daily-report";
 export {dailyReportAnalysis,type DailyReportAnalysis} from "./pages/daily-report-analysis";
+
+export * from "./resources/visual-templates";
+export {canvasVisualGroupSchema,type CanvasVisualGroup} from "./resources/creative-canvas";
+export {publicationVisualNoteSchema,type PublicationVisualNote} from "./resources/publishing";
