@@ -1,0 +1,78 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/backend
+
+ ❯ src/modules/ai/external-task-tool.service.test.ts (3 tests | 2 failed) 2456ms
+   × 只列当前任务的短读取工具；真实执行结算后可回放，不重复调用 88ms
+   × 执行结果不明只返回 unknown，同一 toolCallId 不重放副作用 52ms
+ ❯ src/modules/ai/external-chat-turn.service.test.ts (8 tests | 2 failed) 2665ms
+   × 新任务拒绝原生协议；旧缺绑定任务拒绝切换成 ACP 46ms
+   × 纯图片使用原 pending 收据，只保存一次；错 session、旧租约和伪造引用不能保存或结算 39ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai/external-chat-turn.service.test.ts > 新任务拒绝原生协议；旧缺绑定任务拒绝切换成 ACP
+AssertionError: promise resolved "{ …(5) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "callId": "call_cecb767f-f9ad-466a-abec-c7ebd9dc3a4a",
++   "protocolKind": "acp",
++   "protocolVersion": 1,
++   "sessionId": "s",
++   "status": "started",
+  }
+
+ ❯ src/modules/ai/external-chat-turn.service.test.ts:148:118
+    146|  await expect(current.service.start(current.ref,{callId:turn.callId,se…
+    147|  const legacy=await fixture(true),old=await legacy.service.reserve(leg…
+    148|  await expect(legacy.service.start(legacy.ref,{callId:old.callId,sessi…
+       |                                                                                                                      ^
+    149| });
+    150|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  src/modules/ai/external-chat-turn.service.test.ts > 纯图片使用原 pending 收据，只保存一次；错 session、旧租约和伪造引用不能保存或结算
+ConflictError: 素材字节与原提交摘要不符
+ ❯ finish src/modules/assets/pending-generated-asset.service.ts:35:78
+     33|   }
+     34|   signal?.throwIfAborted();
+     35|   if(stored.byteLength!==row.byteLength || hash(stored)!==row.checksum…
+       |                                                                              ^
+     36|   let head=await storage.headObject(row.storageKey);signal?.throwIfAbo…
+     37|   if(head.fileSize!==row.byteLength || head.mimeType!==row.mimeType){
+ ❯ Object.submit src/modules/assets/pending-generated-asset.service.ts:58:17
+ ❯ Object.saveImage src/modules/ai/external-chat-turn.service.ts:112:18
+ ❯ src/modules/ai/external-chat-turn.service.test.ts:157:14
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  src/modules/ai/external-task-tool.service.test.ts > 只列当前任务的短读取工具；真实执行结算后可回放，不重复调用
+ConflictError: 供应商原生回合尚未核验或被替换
+ ❯ src/modules/ai/external-chat-turn.service.ts:144:171
+
+ ❯ ../node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pglite/src/base.ts:430:23
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  src/modules/ai/external-task-tool.service.test.ts > 执行结果不明只返回 unknown，同一 toolCallId 不重放副作用
+AssertionError: expected [Function] to throw error including '子工具回执尚未确认' but got '供应商原生回合尚未核验或被替换'
+
+Expected: "子工具回执尚未确认"
+Received: "供应商原生回合尚未核验或被替换"
+
+ ❯ src/modules/ai/external-task-tool.service.test.ts:68:229
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  4 failed | 7 passed (11)
+   Start at  17:14:58
+   Duration  7.00s (transform 4.58s, setup 0ms, import 8.08s, tests 5.12s, environment 0ms)
+

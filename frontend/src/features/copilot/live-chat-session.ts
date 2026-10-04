@@ -1,3 +1,4 @@
+import {readAssistantEngine,type AssistantEngine} from './assistant-engine';
 import { Chat } from '@ai-sdk/react';
 import type { ChatTransport, UIMessage } from 'ai';
 import { createChatTaskControl } from './chat-task-control';
@@ -7,6 +8,8 @@ type Session = {
   control: ReturnType<typeof createChatTaskControl>;
   conversationId: string | null;
   epoch: number;
+  executionEngine:AssistantEngine;
+  sourceEngines:Map<string,AssistantEngine>;
   transport?: ChatTransport<UIMessage>;
   shouldResume?: (input: {messages: UIMessage[]}) => boolean;
 };
@@ -15,7 +18,7 @@ const sessions = new Map<string, Session>();
 export function getLiveChatSession(key: string): Session {
   const existing = typeof window !== 'undefined' ? sessions.get(key) : undefined;
   if (existing) return existing;
-  const session = { control: createChatTaskControl(), conversationId: null, epoch: 0 } as Session;
+  const session = { control: createChatTaskControl(), conversationId: null, epoch: 0, executionEngine:readAssistantEngine(), sourceEngines:new Map() } as Session;
   session.chat = new Chat<UIMessage>({
     id: key,
     transport: {

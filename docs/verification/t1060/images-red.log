@@ -1,0 +1,69 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/ai-worker
+
+ ❯ src/execution/external-chat-images.test.ts (4 tests | 2 failed) 39ms
+   × 原 fs-safe 拒绝路径图的符号链接、硬链接与目录外文件，保留普通文件读取 20ms (retry x2)
+   × 跨工具图片总数限制为16，单张失败及超限不撤销已保存图片 3ms (retry x2)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/execution/external-chat-images.test.ts > 原 fs-safe 拒绝路径图的符号链接、硬链接与目录外文件，保留普通文件读取
+ FAIL  src/execution/external-chat-images.test.ts > 原 fs-safe 拒绝路径图的符号链接、硬链接与目录外文件，保留普通文件读取
+ FAIL  src/execution/external-chat-images.test.ts > 原 fs-safe 拒绝路径图的符号链接、硬链接与目录外文件，保留普通文件读取
+AssertionError: promise resolved "Buffer[ 137, 80, 78, 71, 13, 10, …(-13) ]" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "data": [
++     137,
++     80,
++     78,
++     71,
++     13,
++     10,
++     26,
++     10,
++     0,
++     0,
++     0,
++     0,
++   ],
++   "type": "Buffer",
+  }
+
+ ❯ src/execution/external-chat-images.test.ts:15:95
+     13|  const dir=await mkdtemp(join(tmpdir(),'t1060-image-'));dirs.push(dir)…
+     14|  expect(Buffer.from(await readTaskImage(dir,file))).toEqual(png);
+     15|  const soft=join(dir,'soft.png');await symlink(file,soft);await expect…
+       |                                                                                               ^
+     16|  const hard=join(dir,'hard.png');await link(file,hard);await expect(re…
+     17|  await expect(readTaskImage(join(dir,'other'),file)).rejects.toThrow();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+ FAIL  src/execution/external-chat-images.test.ts > 跨工具图片总数限制为16，单张失败及超限不撤销已保存图片
+ FAIL  src/execution/external-chat-images.test.ts > 跨工具图片总数限制为16，单张失败及超限不撤销已保存图片
+ FAIL  src/execution/external-chat-images.test.ts > 跨工具图片总数限制为16，单张失败及超限不撤销已保存图片
+AssertionError: expected [ …(17) ] to have a length of 16 but got 17
+
+- Expected
++ Received
+
+- 16
++ 17
+
+ ❯ src/execution/external-chat-images.test.ts:27:58
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 2 passed (4)
+   Start at  17:07:55
+   Duration  651ms (transform 210ms, setup 0ms, import 425ms, tests 39ms, environment 0ms)
+

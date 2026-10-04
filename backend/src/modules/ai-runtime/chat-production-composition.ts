@@ -35,6 +35,7 @@ export interface ChatProductionServicePorts extends ChatIngestionToolPorts {
  getPositioningDiscovery:RequiredTaskPorts["structured"]["getPositioningDiscovery"];
 }
 export interface ChatProductionCompositionDeps {
+ externalImageStorage?:ProductionDeps["externalImageStorage"];
  entryPath:string;
  runtime:ChatProductionServicePorts;
  now?:()=>string;
@@ -85,7 +86,7 @@ export function composeChatProduction(db:Db,deps:ChatProductionCompositionDeps){
   resolveModelCredential:deps.resolveModelCredential,
   resolveFallbackModelCredential:deps.resolveFallbackModelCredential,
   resolveTools:async(c,input,ref,signal)=>Object.assign({},await taskTools(c,input,ref,signal),await ingestionTools(c,input,ref,signal)),
-  webRead:deps.webRead,
+  webRead:deps.webRead,externalImageStorage:deps.externalImageStorage,
   onError:deps.onError,
  });
 }

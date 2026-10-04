@@ -76,7 +76,7 @@ import { createKnowledgeProposalAdoptionService } from "@creatoros/backend/modul
 import { createAssetTagProposalService } from "@creatoros/backend/modules/taxonomy";
 import { createGeneratedAssetAdoptionService, createStructuredTargetAdoptionService, createAgenticProposalAdoptionService, createAgenticProposalStagingService } from "@creatoros/backend/modules/ai";
 import { createCollectionToolPorts } from "@creatoros/backend/modules/intelligence";
-import { resolveExecutionWorkerPath, resolveAgenticWorkerPath, resolveIntelligenceGenerationWorkerPath, resolveIntelligenceTranscriptWorkerPath, resolveEmbeddingWorkerPath, resolveFlywheelWorkerPath, resolveModelProbeWorkerPath } from "./execution-worker-path";
+import { resolveExecutionWorkerPath, resolveAgenticWorkerPath, resolveIntelligenceGenerationWorkerPath, resolveIntelligenceTranscriptWorkerPath, resolveEmbeddingWorkerPath, resolveFlywheelWorkerPath, resolveModelProbeWorkerPath, resolveCodexStatusWorkerPath } from "./execution-worker-path";
 import { createExecutionScheduledChildService, createModelWorkerDispatcher, createAgenticWorkerDispatcher, DEFAULT_AGENTIC_SYSTEM_PROMPT } from "@creatoros/backend/modules/execution";
 import { createScriptSimilarityEvaluator, createTopicPreferenceSubmission, createArtifactContextReaders, createStructuredBusinessExecutionService } from "@creatoros/backend/modules/ai-runtime";
 import "server-only";
@@ -741,6 +741,7 @@ export interface ChatRuntime {
   resolveRedfoxCredential: ReturnType<typeof createIntegrationCredentials>["resolve"];
   readCurrentScript?: (ctx:RequestContext,projectId:string,signal?:AbortSignal)=>ReturnType<ReturnType<typeof createCurrentArtifactReader>>;
   durable: ReturnType<typeof createChatProductionRuntime>;
+  localCodexStatus?:ReturnType<typeof createLocalCodexStatusService>["read"];
   ai: AiService;
   // [T-513] 每轮对话在服务端按当前 user/account 解析不可变 Effective Skill。
   // route 只传受控的 official skill id，不接收客户端自带 prompt/policy。
@@ -4972,6 +4973,7 @@ FAVORITES_PROMOTE_PER_RUN
     onError:code=>console.error(`[agentic-worker] ${code}`),
   }) : null;
   let chatWorker: ReturnType<typeof createChatProductionRuntime> | undefined;
+  const localCodexStatus=createLocalCodexStatusService({entryPath:resolveCodexStatusWorkerPath});
   let agenticPreparationRecovery:Promise<void>|undefined;
   let preparationRecovery:Promise<void>|undefined;
   let stoppingPreparation=false;
@@ -4980,7 +4982,7 @@ FAVORITES_PROMOTE_PER_RUN
     prepare:(c,id)=>businessExecution.prepare(c,id),
     wake:()=>{if(!modelWorker)throw new Error("生成服务未就绪");modelWorker.start();},
   });
-  stopExecutionWorker=async()=>{stoppingPreparation=true;assetBusiness.stop();transcribeBusiness.stop();await Promise.all([recoveryWake?.stop(),scheduledFlywheel.stop(),submittedPreparation.stop(),knowledgeSearchRuntime.stop(),embeddingIo.stop(),modelProbeIo.stop(),intelligenceGeneration.stop(),intelligenceTranscriptBridge.stop(),benchmarkTranscription.stop(),modelWorker?.stop(),agenticWorker?.stop(),chatWorker?.stop()]);await Promise.all([preparationRecovery,agenticPreparationRecovery]);};
+  stopExecutionWorker=async()=>{stoppingPreparation=true;assetBusiness.stop();transcribeBusiness.stop();await Promise.all([recoveryWake?.stop(),scheduledFlywheel.stop(),submittedPreparation.stop(),knowledgeSearchRuntime.stop(),embeddingIo.stop(),modelProbeIo.stop(),localCodexStatus.stop(),intelligenceGeneration.stop(),intelligenceTranscriptBridge.stop(),benchmarkTranscription.stop(),modelWorker?.stop(),agenticWorker?.stop(),chatWorker?.stop()]);await Promise.all([preparationRecovery,agenticPreparationRecovery]);};
   globalForPersistence.__creatorosStopExecutionWorker=stopExecutionWorker;
 
   // 两个审核入口转交同一持久执行权，报告由后端审核端口绑定冻结版本并原子提交。
@@ -5462,6 +5464,7 @@ FAVORITES_PROMOTE_PER_RUN
     },
   });
   const chatRuntime: ChatRuntime = {
+    localCodexStatus:localCodexStatus.read,
     resolveRedfoxCredential: ctx => redfoxCredentials.resolve(ctx),
     readCurrentScript: async (c,projectId,signal) => {signal?.throwIfAborted();const result=await readCurrentArtifactTruth(c,projectId,"output_script");signal?.throwIfAborted();return result;},
     get durable(){if(!chatWorker)throw new Error("CHAT_RUNTIME_UNAVAILABLE");return chatWorker;},
@@ -5749,7 +5752,7 @@ FAVORITES_PROMOTE_PER_RUN
 
   if(workerEntry){
     chatWorker=composeChatProduction(db,{
-      entryPath:workerEntry,runtime:chatRuntime,now:deps.now,
+      entryPath:workerEntry,runtime:chatRuntime,now:deps.now,externalImageStorage:objectStorageForCtx,
       assertProject:(c,id)=>projectsService.getProjectOverviewCore(c,id),
       resolveModelCredential:(c,capability)=>resolveModelSpec(c,capability),
       resolveFallbackModelCredential:resolveChatFallbackCredential,

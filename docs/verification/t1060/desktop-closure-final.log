@@ -1,0 +1,40 @@
+✔ 按依赖图复制并复用同版本包，缺必需包仍失败 (11.9365ms)
+✔ T1060 两条打包入口保留 ACP 安全文件包与 Codex 平台依赖 (0.794167ms)
+✔ T1060 分层物化识别已声明的 Codex npm alias 并保留 Windows 二进制和 fs-safe binding (9.581208ms)
+✔ T1060 Codex alias 仅接纳精确声明、实际名称版本和目标平台 (18.969959ms)
+✔ T1060 不接纳未声明的通用 npm alias (1.84425ms)
+✔ T1060 普通闭包从真实同名平台包中只选择精确版本和目标 (3.966292ms)
+✔ T1060 原生字节校验允许已存在vendor层，缺失或空字节明确失败 (5.905ms)
+✔ T1060 既有 frontend/.next/vendor Codex同版本错name不因非空字节而放行 (5.713083ms)
+✔ T1060 既有 frontend/.next/vendor Codex同版本错os不因非空字节而放行 (6.282542ms)
+✔ T1060 既有 frontend/.next/vendor Codex同版本错cpu不因非空字节而放行 (6.7195ms)
+✔ T1060 既有 frontend/.next/vendor Codex同版本缺os不因非空字节而放行 (6.911625ms)
+✔ T1060 既有 frontend/.next/vendor Codex同版本缺cpu不因非空字节而放行 (5.730125ms)
+✔ T1060 合法既有 frontend/.next/vendor Codex alias继续复用并保留转换字节 (7.229083ms)
+✔ T1060 既有 layers/browser/vendor Codex同版本错name不因非空字节而放行 (6.851792ms)
+✔ T1060 既有 layers/browser/vendor Codex同版本错os不因非空字节而放行 (7.953167ms)
+✔ T1060 既有 layers/browser/vendor Codex同版本错cpu不因非空字节而放行 (7.404ms)
+✔ T1060 既有 layers/browser/vendor Codex同版本缺os不因非空字节而放行 (6.579375ms)
+✔ T1060 既有 layers/browser/vendor Codex同版本缺cpu不因非空字节而放行 (6.795458ms)
+✔ T1060 合法既有 layers/browser/vendor Codex alias继续复用并保留转换字节 (8.187458ms)
+✔ T1060 既有 layers/local-ai/vendor Codex同版本错name不因非空字节而放行 (7.018375ms)
+✔ T1060 既有 layers/local-ai/vendor Codex同版本错os不因非空字节而放行 (7.3015ms)
+✔ T1060 既有 layers/local-ai/vendor Codex同版本错cpu不因非空字节而放行 (6.05ms)
+✔ T1060 既有 layers/local-ai/vendor Codex同版本缺os不因非空字节而放行 (7.57075ms)
+✔ T1060 既有 layers/local-ai/vendor Codex同版本缺cpu不因非空字节而放行 (19.296125ms)
+✔ T1060 合法既有 layers/local-ai/vendor Codex alias继续复用并保留转换字节 (29.8805ms)
+✔ T1060 frontend/.next/vendor 固定Codex0.159.3真实bin目录合法字节可以验收 (8.426042ms)
+✔ T1060 frontend/.next/vendor 只有旧codex目录不能冒充固定0.159.3真实bin (4.393291ms)
+✔ T1060 layers/browser/vendor 固定Codex0.159.3真实bin目录合法字节可以验收 (3.730292ms)
+✔ T1060 layers/browser/vendor 只有旧codex目录不能冒充固定0.159.3真实bin (4.883292ms)
+✔ T1060 layers/local-ai/vendor 固定Codex0.159.3真实bin目录合法字节可以验收 (6.062708ms)
+✔ T1060 layers/local-ai/vendor 只有旧codex目录不能冒充固定0.159.3真实bin (8.726375ms)
+✔ T1060 打包Codex目录与锁版官方入口和真实worker resolver一致 (2.166416ms)
+ℹ tests 32
+ℹ suites 0
+ℹ pass 32
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 415.859167

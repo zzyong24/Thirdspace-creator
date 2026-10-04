@@ -271,6 +271,58 @@ async function clientFor(args: string[]): Promise<{
   };
 }
 
+
+interface McpLifecycleEvents {
+  once(event: string, listener: () => void): unknown;
+  removeListener(event: string, listener: () => void): unknown;
+}
+interface McpLifecycleServer<Transport> {
+  connect(transport: Transport): Promise<void>;
+  close(): Promise<void>;
+}
+
+/**
+ * Adapted from dream-num/workbuddy-univer-office src/mcp/main.ts, Apache-2.0,
+ * commit 856eae4fe416b28adffb96092d67ff26c7797ff4. Source/license record:
+ * scripts/workbuddy/SOURCE.md. Close only this MCP connection, never backend tasks.
+ */
+export async function serveMcpStdio<Transport>(
+  server: McpLifecycleServer<Transport>,
+  transport: Transport,
+  input: McpLifecycleEvents = process.stdin,
+  signals: McpLifecycleEvents = process,
+): Promise<void> {
+  let closing: Promise<void> | undefined;
+  let finish!: () => void;
+  let fail!: (error: unknown) => void;
+  const done = new Promise<void>((resolve, reject) => { finish = resolve; fail = reject; });
+  const detach = () => {
+    input.removeListener("end", onClose);
+    signals.removeListener("SIGINT", onClose);
+    signals.removeListener("SIGTERM", onClose);
+  };
+  const close = () => closing ??= Promise.resolve().then(() => server.close());
+  const onClose = () => {
+    detach();
+    void close().then(finish, fail);
+  };
+  input.once("end", onClose);
+  signals.once("SIGINT", onClose);
+  signals.once("SIGTERM", onClose);
+  try {
+    // EOF or a signal must also release a transport still starting up.
+    await Promise.race([server.connect(transport), done]);
+    await done;
+  } catch (error) {
+    detach();
+    // A failed connection still owns local resources. Preserve the original failure.
+    await close().catch(() => undefined);
+    throw error;
+  } finally {
+    detach();
+  }
+}
+
 export async function runCliCommand(args: string[]): Promise<unknown> {
   assertKnownFlags(args);
   const [group, action, target] = positional(args);
@@ -525,8 +577,8 @@ export async function runCliCommand(args: string[]): Promise<unknown> {
   if (group === "mcp" && action === "serve") {
     const { client } = await clientFor(args);
     const server = createCreatorOsMcpServer({ dispatchClient: client });
-    await server.connect(new StdioServerTransport());
-    return new Promise(() => undefined);
+    await serveMcpStdio(server, new StdioServerTransport());
+    return undefined;
   }
   throw new Error(
     "用法: creatoros status | access status|revoke | operations list|describe <op> | call <op> --input <json|@file|-> [--account <id>|--use-default-account] | tasks get|wait <taskId> --account <id> | accounts list|current|use <id> | douyin status|login|refresh|import | mcp serve",

@@ -1,0 +1,481 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/frontend
+
+(node:13431) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ src/features/settings/assistant-engine-card.test.tsx (2 tests | 2 failed) 2230ms
+     × 使用原键保存选择并读取真实 Codex 状态；不需要服务端假偏好 1124ms
+     × 检查中按钮不会并发重复提交，真实失败后允许重查 1104ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/features/settings/assistant-engine-card.test.tsx > T-1055 设置的真实编导引擎卡 > 使用原键保存选择并读取真实 Codex 状态；不需要服务端假偏好
+TestingLibraryElementError: Unable to find an element with the text: 本地 Codex 文本会话已连接 · 0.159.3（工具执行未验证）. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mdata-highlight[39m=[32m"assistant-engine"[39m
+      [33mdata-slot[39m=[32m"assistant-engine-card"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33maria-labelledby[39m=[32m"section-card-编导引擎"[39m
+        [33mclass[39m=[32m"group/card flex flex-col gap-(--card-spacing) overflow-hidden rounded-xl bg-card py-(--card-spacing) text-sm text-card-foreground ring-1 ring-foreground/10 [--card-spacing:--spacing(4)] has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:[--card-spacing:--spacing(3)] data-[size=sm]:has-data-[slot=card-footer]:pb-0 *:[img:first-child]:rounded-t-xl *:[img:last-child]:rounded-b-xl gap-card-gap"[39m
+        [33mdata-size[39m=[32m"default"[39m
+        [33mdata-slot[39m=[32m"section-card"[39m
+        [33mrole[39m=[32m"region"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"group/card-header @container/card-header auto-rows-min gap-1 rounded-t-xl px-(--card-spacing) has-data-[slot=card-action]:grid-cols-[1fr_auto] has-data-[slot=card-description]:grid-rows-[auto_auto] [.border-b]:pb-(--card-spacing) flex flex-row items-start justify-between gap-card-gap"[39m
+          [33mdata-slot[39m=[32m"card-header"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex min-w-0 flex-col gap-0.5"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"font-heading group-data-[size=sm]/card:text-sm text-[15px] font-semibold"[39m
+              [33mdata-slot[39m=[32m"card-title"[39m
+              [33mid[39m=[32m"section-card-编导引擎"[39m
+            [36m>[39m
+              [0m编导引擎[0m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"text-sm text-muted-foreground"[39m
+              [33mdata-slot[39m=[32m"card-description"[39m
+            [36m>[39m
+              [0m设置编导对话使用的引擎，后续新消息按此执行。[0m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"px-(--card-spacing) text-sm"[39m
+          [33mdata-slot[39m=[32m"card-content"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"grid grid-cols-1 items-start gap-2 border-b border-border/60 pb-3 last:border-b-0 last:pb-0 md:grid-cols-[160px_minmax(0,1fr)]"[39m
+            [33mdata-control-id[39m=[32m"assistant-engine"[39m
+            [33mdata-slot[39m=[32m"settings-form-row"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"flex flex-col gap-0.5"[39m
+              [33mdata-slot[39m=[32m"form-row-label"[39m
+            [36m>[39m
+              [36m<label[39m
+                [33mclass[39m=[32m"text-sm font-medium text-foreground"[39m
+                [33mfor[39m=[32m"assistant-engine"[39m
+              [36m>[39m
+                [0m使用引擎[0m
+              [36m</label>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"text-xs text-muted-foreground"[39m
+              [36m>[39m
+                [0m本地保存。正在进行的回复和旧消息重试沿用原引擎。[0m
+              [36m</span>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"flex min-w-0 items-center justify-start"[39m
+              [33mdata-slot[39m=[32m"form-row-control"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"flex w-full flex-col gap-3"[39m
+              [36m>[39m
+                [36m<select[39m
+                  [33maria-label[39m=[32m"编导引擎"[39m
+                  [33mclass[39m=[32m"h-10 w-full max-w-xs rounded-control border border-border bg-surface px-3 text-sm text-foreground"[39m
+                  [33mid[39m=[32m"assistant-engine"[39m
+                [36m>[39m
+                  [36m<option[39m
+                    [33mvalue[39m=[32m"pi"[39m
+                  [36m>[39m
+                    [0mCreatorOS[0m
+                  [36m</option>[39m
+                  [36m<option[39m
+                    [33mvalue[39m=[32m"codex"[39m
+                  [36m>[39m
+                    [0m本地 Codex[0m
+                  [36m</option>[39m
+                [36m</select>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"flex flex-wrap items-center gap-3"[39m
+                [36m>[39m
+                  [36m<p[39m
+                    [33mclass[39m=[32m"text-sm text-muted-foreground"[39m
+                    [33mrole[39m=[32m"status"[39m
+                  [36m>[39m
+                    [0m本地 Codex 可用 · 0.159.3[0m
+                  [36m</p>[39m
+                  [36m<button[39m
+                    [33mclass[39m=[32m"inline-flex min-h-10 items-center rounded-control border border-border bg-surface px-4 text-sm font-medium text-foreground hover:bg-surface-subtle disabled:opacity-50"[39m
+                    [33mtype[39m=[32m"button"[39m
+                  [36m>[39m
+                    [0m重新检查[0m
+                  [36m</button>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+[36m</body>[39m
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mdata-highlight[39m=[32m"assistant-engine"[39m
+      [33mdata-slot[39m=[32m"assistant-engine-card"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33maria-labelledby[39m=[32m"section-card-编导引擎"[39m
+        [33mclass[39m=[32m"group/card flex flex-col gap-(--card-spacing) overflow-hidden rounded-xl bg-card py-(--card-spacing) text-sm text-card-foreground ring-1 ring-foreground/10 [--card-spacing:--spacing(4)] has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:[--card-spacing:--spacing(3)] data-[size=sm]:has-data-[slot=card-footer]:pb-0 *:[img:first-child]:rounded-t-xl *:[img:last-child]:rounded-b-xl gap-card-gap"[39m
+        [33mdata-size[39m=[32m"default"[39m
+        [33mdata-slot[39m=[32m"section-card"[39m
+        [33mrole[39m=[32m"region"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"group/card-header @container/card-header auto-rows-min gap-1 rounded-t-xl px-(--card-spacing) has-data-[slot=card-action]:grid-cols-[1fr_auto] has-data-[slot=card-description]:grid-rows-[auto_auto] [.border-b]:pb-(--card-spacing) flex flex-row items-start justify-between gap-card-gap"[39m
+          [33mdata-slot[39m=[32m"card-header"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex min-w-0 flex-col gap-0.5"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"font-heading group-data-[size=sm]/card:text-sm text-[15px] font-semibold"[39m
+              [33mdata-slot[39m=[32m"card-title"[39m
+              [33mid[39m=[32m"section-card-编导引擎"[39m
+            [36m>[39m
+              [0m编导引擎[0m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"text-sm text-muted-foreground"[39m
+              [33mdata-slot[39m=[32m"card-description"[39m
+            [36m>[39m
+              [0m设置编导对话使用的引擎，后续新消息按此执行。[0m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"px-(--card-spacing) text-sm"[39m
+          [33mdata-slot[39m=[32m"card-content"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"grid grid-cols-1 items-start gap-2 border-b border-border/60 pb-3 last:border-b-0 last:pb-0 md:grid-cols-[160px_minmax(0,1fr)]"[39m
+            [33mdata-control-id[39m=[32m"assistant-engine"[39m
+            [33mdata-slot[39m=[32m"settings-form-row"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"flex flex-col gap-0.5"[39m
+              [33mdata-slot[39m=[32m"form-row-label"[39m
+            [36m>[39m
+              [36m<label[39m
+                [33mclass[39m=[32m"text-sm font-medium text-foreground"[39m
+                [33mfor[39m=[32m"assistant-engine"[39m
+              [36m>[39m
+                [0m使用引擎[0m
+              [36m</label>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"text-xs text-muted-foreground"[39m
+              [36m>[39m
+                [0m本地保存。正在进行的回复和旧消息重试沿用原引擎。[0m
+              [36m</span>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"flex min-w-0 items-center justify-start"[39m
+              [33mdata-slot[39m=[32m"form-row-control"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"flex w-full flex-col gap-3"[39m
+              [36m>[39m
+                [36m<select[39m
+                  [33maria-label[39m=[32m"编导引擎"[39m
+                  [33mclass[39m=[32m"h-10 w-full max-w-xs rounded-control border border-border bg-surface px-3 text-sm text-foreground"[39m
+                  [33mid[39m=[32m"assistant-engine"[39m
+                [36m>[39m
+                  [36m<option[39m
+                    [33mvalue[39m=[32m"pi"[39m
+                  [36m>[39m
+                    [0mCreatorOS[0m
+                  [36m</option>[39m
+                  [36m<option[39m
+                    [33mvalue[39m=[32m"codex"[39m
+                  [36m>[39m
+                    [0m本地 Codex[0m
+                  [36m</option>[39m
+                [36m</select>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"flex flex-wrap items-center gap-3"[39m
+                [36m>[39m
+                  [36m<p[39m
+                    [33mclass[39m=[32m"text-sm text-muted-foreground"[39m
+                    [33mrole[39m=[32m"status"[39m
+                  [36m>[39m
+                    [0m本地 Codex 可用 · 0.159.3[0m
+                  [36m</p>[39m
+                  [36m<button[39m
+                    [33mclass[39m=[32m"inline-flex min-h-10 items-center rounded-control border border-border bg-surface px-4 text-sm font-medium text-foreground hover:bg-surface-subtle disabled:opacity-50"[39m
+                    [33mtype[39m=[32m"button"[39m
+                  [36m>[39m
+                    [0m重新检查[0m
+                  [36m</button>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+[36m</body>[39m
+ ❯ waitForWrapper ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:86:33
+ ❯ src/features/settings/assistant-engine-card.test.tsx:19:18
+     17|     fireEvent.change(select, {target: {value: "codex"}});
+     18|     expect(localStorage.getItem("creatoros:assistant-engine:v1")).toBe…
+     19|     await screen.findByText("本地 Codex 文本会话已连接 · 0.159.3（工具执行未验证）");
+       |                  ^
+     20|     expect(screen.getByRole("button", {name: "重新检查"})).toBeEnabled();
+     21|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/features/settings/assistant-engine-card.test.tsx > T-1055 设置的真实编导引擎卡 > 检查中按钮不会并发重复提交，真实失败后允许重查
+TestingLibraryElementError: Unable to find an element with the text: 本地 Codex 文本会话已连接 · 0.159.3（工具执行未验证）. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mdata-highlight[39m=[32m"assistant-engine"[39m
+      [33mdata-slot[39m=[32m"assistant-engine-card"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33maria-labelledby[39m=[32m"section-card-编导引擎"[39m
+        [33mclass[39m=[32m"group/card flex flex-col gap-(--card-spacing) overflow-hidden rounded-xl bg-card py-(--card-spacing) text-sm text-card-foreground ring-1 ring-foreground/10 [--card-spacing:--spacing(4)] has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:[--card-spacing:--spacing(3)] data-[size=sm]:has-data-[slot=card-footer]:pb-0 *:[img:first-child]:rounded-t-xl *:[img:last-child]:rounded-b-xl gap-card-gap"[39m
+        [33mdata-size[39m=[32m"default"[39m
+        [33mdata-slot[39m=[32m"section-card"[39m
+        [33mrole[39m=[32m"region"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"group/card-header @container/card-header auto-rows-min gap-1 rounded-t-xl px-(--card-spacing) has-data-[slot=card-action]:grid-cols-[1fr_auto] has-data-[slot=card-description]:grid-rows-[auto_auto] [.border-b]:pb-(--card-spacing) flex flex-row items-start justify-between gap-card-gap"[39m
+          [33mdata-slot[39m=[32m"card-header"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex min-w-0 flex-col gap-0.5"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"font-heading group-data-[size=sm]/card:text-sm text-[15px] font-semibold"[39m
+              [33mdata-slot[39m=[32m"card-title"[39m
+              [33mid[39m=[32m"section-card-编导引擎"[39m
+            [36m>[39m
+              [0m编导引擎[0m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"text-sm text-muted-foreground"[39m
+              [33mdata-slot[39m=[32m"card-description"[39m
+            [36m>[39m
+              [0m设置编导对话使用的引擎，后续新消息按此执行。[0m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"px-(--card-spacing) text-sm"[39m
+          [33mdata-slot[39m=[32m"card-content"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"grid grid-cols-1 items-start gap-2 border-b border-border/60 pb-3 last:border-b-0 last:pb-0 md:grid-cols-[160px_minmax(0,1fr)]"[39m
+            [33mdata-control-id[39m=[32m"assistant-engine"[39m
+            [33mdata-slot[39m=[32m"settings-form-row"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"flex flex-col gap-0.5"[39m
+              [33mdata-slot[39m=[32m"form-row-label"[39m
+            [36m>[39m
+              [36m<label[39m
+                [33mclass[39m=[32m"text-sm font-medium text-foreground"[39m
+                [33mfor[39m=[32m"assistant-engine"[39m
+              [36m>[39m
+                [0m使用引擎[0m
+              [36m</label>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"text-xs text-muted-foreground"[39m
+              [36m>[39m
+                [0m本地保存。正在进行的回复和旧消息重试沿用原引擎。[0m
+              [36m</span>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"flex min-w-0 items-center justify-start"[39m
+              [33mdata-slot[39m=[32m"form-row-control"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"flex w-full flex-col gap-3"[39m
+              [36m>[39m
+                [36m<select[39m
+                  [33maria-label[39m=[32m"编导引擎"[39m
+                  [33mclass[39m=[32m"h-10 w-full max-w-xs rounded-control border border-border bg-surface px-3 text-sm text-foreground"[39m
+                  [33mid[39m=[32m"assistant-engine"[39m
+                [36m>[39m
+                  [36m<option[39m
+                    [33mvalue[39m=[32m"pi"[39m
+                  [36m>[39m
+                    [0mCreatorOS[0m
+                  [36m</option>[39m
+                  [36m<option[39m
+                    [33mvalue[39m=[32m"codex"[39m
+                  [36m>[39m
+                    [0m本地 Codex[0m
+                  [36m</option>[39m
+                [36m</select>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"flex flex-wrap items-center gap-3"[39m
+                [36m>[39m
+                  [36m<p[39m
+                    [33mclass[39m=[32m"text-sm text-muted-foreground"[39m
+                    [33mrole[39m=[32m"status"[39m
+                  [36m>[39m
+                    [0m本地 Codex 可用 · 0.159.3[0m
+                  [36m</p>[39m
+                  [36m<button[39m
+                    [33mclass[39m=[32m"inline-flex min-h-10 items-center rounded-control border border-border bg-surface px-4 text-sm font-medium text-foreground hover:bg-surface-subtle disabled:opacity-50"[39m
+                    [33mtype[39m=[32m"button"[39m
+                  [36m>[39m
+                    [0m重新检查[0m
+                  [36m</button>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+[36m</body>[39m
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mdata-highlight[39m=[32m"assistant-engine"[39m
+      [33mdata-slot[39m=[32m"assistant-engine-card"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33maria-labelledby[39m=[32m"section-card-编导引擎"[39m
+        [33mclass[39m=[32m"group/card flex flex-col gap-(--card-spacing) overflow-hidden rounded-xl bg-card py-(--card-spacing) text-sm text-card-foreground ring-1 ring-foreground/10 [--card-spacing:--spacing(4)] has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:[--card-spacing:--spacing(3)] data-[size=sm]:has-data-[slot=card-footer]:pb-0 *:[img:first-child]:rounded-t-xl *:[img:last-child]:rounded-b-xl gap-card-gap"[39m
+        [33mdata-size[39m=[32m"default"[39m
+        [33mdata-slot[39m=[32m"section-card"[39m
+        [33mrole[39m=[32m"region"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"group/card-header @container/card-header auto-rows-min gap-1 rounded-t-xl px-(--card-spacing) has-data-[slot=card-action]:grid-cols-[1fr_auto] has-data-[slot=card-description]:grid-rows-[auto_auto] [.border-b]:pb-(--card-spacing) flex flex-row items-start justify-between gap-card-gap"[39m
+          [33mdata-slot[39m=[32m"card-header"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex min-w-0 flex-col gap-0.5"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"font-heading group-data-[size=sm]/card:text-sm text-[15px] font-semibold"[39m
+              [33mdata-slot[39m=[32m"card-title"[39m
+              [33mid[39m=[32m"section-card-编导引擎"[39m
+            [36m>[39m
+              [0m编导引擎[0m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"text-sm text-muted-foreground"[39m
+              [33mdata-slot[39m=[32m"card-description"[39m
+            [36m>[39m
+              [0m设置编导对话使用的引擎，后续新消息按此执行。[0m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"px-(--card-spacing) text-sm"[39m
+          [33mdata-slot[39m=[32m"card-content"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"grid grid-cols-1 items-start gap-2 border-b border-border/60 pb-3 last:border-b-0 last:pb-0 md:grid-cols-[160px_minmax(0,1fr)]"[39m
+            [33mdata-control-id[39m=[32m"assistant-engine"[39m
+            [33mdata-slot[39m=[32m"settings-form-row"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"flex flex-col gap-0.5"[39m
+              [33mdata-slot[39m=[32m"form-row-label"[39m
+            [36m>[39m
+              [36m<label[39m
+                [33mclass[39m=[32m"text-sm font-medium text-foreground"[39m
+                [33mfor[39m=[32m"assistant-engine"[39m
+              [36m>[39m
+                [0m使用引擎[0m
+              [36m</label>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"text-xs text-muted-foreground"[39m
+              [36m>[39m
+                [0m本地保存。正在进行的回复和旧消息重试沿用原引擎。[0m
+              [36m</span>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"flex min-w-0 items-center justify-start"[39m
+              [33mdata-slot[39m=[32m"form-row-control"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"flex w-full flex-col gap-3"[39m
+              [36m>[39m
+                [36m<select[39m
+                  [33maria-label[39m=[32m"编导引擎"[39m
+                  [33mclass[39m=[32m"h-10 w-full max-w-xs rounded-control border border-border bg-surface px-3 text-sm text-foreground"[39m
+                  [33mid[39m=[32m"assistant-engine"[39m
+                [36m>[39m
+                  [36m<option[39m
+                    [33mvalue[39m=[32m"pi"[39m
+                  [36m>[39m
+                    [0mCreatorOS[0m
+                  [36m</option>[39m
+                  [36m<option[39m
+                    [33mvalue[39m=[32m"codex"[39m
+                  [36m>[39m
+                    [0m本地 Codex[0m
+                  [36m</option>[39m
+                [36m</select>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"flex flex-wrap items-center gap-3"[39m
+                [36m>[39m
+                  [36m<p[39m
+                    [33mclass[39m=[32m"text-sm text-muted-foreground"[39m
+                    [33mrole[39m=[32m"status"[39m
+                  [36m>[39m
+                    [0m本地 Codex 可用 · 0.159.3[0m
+                  [36m</p>[39m
+                  [36m<button[39m
+                    [33mclass[39m=[32m"inline-flex min-h-10 items-center rounded-control border border-border bg-surface px-4 text-sm font-medium text-foreground hover:bg-surface-subtle disabled:opacity-50"[39m
+                    [33mtype[39m=[32m"button"[39m
+                  [36m>[39m
+                    [0m重新检查[0m
+                  [36m</button>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+[36m</body>[39m
+ ❯ waitForWrapper ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:86:33
+ ❯ src/features/settings/assistant-engine-card.test.tsx:36:18
+     34|     await screen.findByText("本地 Codex 状态暂未核实");
+     35|     fireEvent.click(recheck);
+     36|     await screen.findByText("本地 Codex 文本会话已连接 · 0.159.3（工具执行未验证）");
+       |                  ^
+     37|     expect(fetch).toHaveBeenCalledTimes(2);
+     38|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed (2)
+   Start at  18:22:34
+   Duration  4.42s (transform 674ms, setup 268ms, import 996ms, tests 2.23s, environment 741ms)
+

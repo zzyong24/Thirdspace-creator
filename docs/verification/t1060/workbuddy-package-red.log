@@ -1,0 +1,41 @@
+EEE
+======================================================================
+ERROR: test_bad_version_is_rejected_before_creating_output (test_package_connector.WorkBuddyConnectorPackageTest.test_bad_version_is_rejected_before_creating_output)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/scripts/workbuddy/test_package_connector.py", line 16, in setUp
+    spec.loader.exec_module(self.module)
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap_external>", line 755, in exec_module
+  File "<frozen importlib._bootstrap_external>", line 892, in get_code
+  File "<frozen importlib._bootstrap_external>", line 950, in get_data
+FileNotFoundError: [Errno 2] No such file or directory: '/Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/scripts/workbuddy/package-connector.py'
+
+======================================================================
+ERROR: test_public_package_has_no_personal_path_or_secrets_and_uses_existing_cli (test_package_connector.WorkBuddyConnectorPackageTest.test_public_package_has_no_personal_path_or_secrets_and_uses_existing_cli)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/scripts/workbuddy/test_package_connector.py", line 16, in setUp
+    spec.loader.exec_module(self.module)
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap_external>", line 755, in exec_module
+  File "<frozen importlib._bootstrap_external>", line 892, in get_code
+  File "<frozen importlib._bootstrap_external>", line 950, in get_data
+FileNotFoundError: [Errno 2] No such file or directory: '/Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/scripts/workbuddy/package-connector.py'
+
+======================================================================
+ERROR: test_repeated_builds_are_identical_and_do_not_write_host_configuration (test_package_connector.WorkBuddyConnectorPackageTest.test_repeated_builds_are_identical_and_do_not_write_host_configuration)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/scripts/workbuddy/test_package_connector.py", line 16, in setUp
+    spec.loader.exec_module(self.module)
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap_external>", line 755, in exec_module
+  File "<frozen importlib._bootstrap_external>", line 892, in get_code
+  File "<frozen importlib._bootstrap_external>", line 950, in get_data
+FileNotFoundError: [Errno 2] No such file or directory: '/Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/scripts/workbuddy/package-connector.py'
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.002s
+
+FAILED (errors=3)

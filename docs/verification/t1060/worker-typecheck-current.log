@@ -1,0 +1,19 @@
+vendor/acpx/src/agent-registry.ts(270,53): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+vendor/acpx/src/permissions.ts(245,31): error TS2532: Object is possibly 'undefined'.
+vendor/acpx/src/process-identity.ts(247,81): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+vendor/acpx/src/process-identity.ts(334,22): error TS2345: Argument of type 'number | undefined' is not assignable to parameter of type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+vendor/acpx/src/process-identity.ts(335,22): error TS2345: Argument of type 'number | undefined' is not assignable to parameter of type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+vendor/acpx/src/process-identity.ts(405,32): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string | number | bigint | boolean'.
+  Type 'undefined' is not assignable to type 'string | number | bigint | boolean'.
+vendor/acpx/src/process-identity.ts(405,58): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string | number | bigint | boolean'.
+  Type 'undefined' is not assignable to type 'string | number | bigint | boolean'.
+vendor/acpx/src/process-identity.ts(463,38): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+vendor/acpx/src/process-identity.ts(469,73): error TS2532: Object is possibly 'undefined'.
+vendor/acpx/src/process-identity.ts(477,19): error TS2532: Object is possibly 'undefined'.
+vendor/acpx/src/process-identity.ts(481,37): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.

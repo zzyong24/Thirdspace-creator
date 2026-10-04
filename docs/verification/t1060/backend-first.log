@@ -1,0 +1,68 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/backend
+
+ ❯ src/modules/ai/external-task-tool.service.test.ts (3 tests | 3 failed) 2936ms
+   × 只列当前任务的短读取工具；真实执行结算后可回放，不重复调用 49ms
+   × 发布工具、伪造回合、账号变更和旧 fence 均被拒绝 20ms
+   × 执行结果不明只返回 unknown，同一 toolCallId 不重放副作用 16ms
+ ❯ src/modules/ai/external-chat-turn.service.test.ts (6 tests | 6 failed) 3023ms
+   × ACP 总用量包含缓存读取时，真实模型回执仍可结算和提交 45ms
+   × 预留、启动、结算与提交全程使用同一真实外部回执；并发回放仅保存一次 26ms
+   × 未知结果、伪造 session/turn、错账号、被改写的源消息都不能提交 24ms
+   × 结算回放不可改写正文或用量；旧 fence 无法预留和提交 23ms
+   × 已结算的外部工具候选进入原会话卡片与事件流，用户仍需在 CreatorOS 采纳 20ms
+   × 原生 thread 与 provider turn 分别持久，缺实际 turn 和变更 ID 都不能结算 27ms
+stderr | src/modules/ai/chat-turn-submission.service.test.ts > 真实租约恢复只读工具，使用冻结产品说明及当前账号数据，拒绝旧租约和工具版本变化
+[chat-guide] optional guide unavailable { code: 'CREATOROS_GUIDE_UNAVAILABLE', reason: 'version' }
+
+stdout | src/modules/ai/chat-turn-submission.service.test.ts > 真实租约恢复只读工具，使用冻结产品说明及当前账号数据，拒绝旧租约和工具版本变化
+[chat-tool] name=creatoros.guide ok durationMs=0
+
+ ❯ src/modules/ai/chat-turn-submission.service.test.ts (24 tests | 1 failed) 3675ms
+   × 真实租约恢复只读工具，使用冻结产品说明及当前账号数据，拒绝旧租约和工具版本变化 252ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 10 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai/chat-turn-submission.service.test.ts > 真实租约恢复只读工具，使用冻结产品说明及当前账号数据，拒绝旧租约和工具版本变化
+AssertionError: expected '{"kind":"creatoros.guide","skillId":"…' to contain '提交时产品说明'
+
+Expected: "提交时产品说明"
+Received: "{"kind":"creatoros.guide","skillId":"creatoros.guide","version":null,"verifiedAt":null,"guide":null,"limitations":[],"next":null,"error":"CreatorOS 官方产品说明当前不可读取，本轮无法依据它回答。"}"
+
+ ❯ src/modules/ai/chat-turn-submission.service.test.ts:173:32
+    171|  expect(listProjects).not.toHaveBeenCalled();
+    172|  const guide=await getChatToolNativeExecutor(tools["creatoros.guide"]!…
+    173|  expect(JSON.stringify(guide)).toContain("提交时产品说明");expect(JSON.string…
+       |                                ^
+    174|  await getChatToolNativeExecutor(tools["context.projects"]!)!({},{});
+    175|  expect(listProjects).toHaveBeenLastCalledWith(expect.objectContaining…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/10]⎯
+
+ FAIL  src/modules/ai/external-chat-turn.service.test.ts > ACP 总用量包含缓存读取时，真实模型回执仍可结算和提交
+ FAIL  src/modules/ai/external-chat-turn.service.test.ts > 预留、启动、结算与提交全程使用同一真实外部回执；并发回放仅保存一次
+ FAIL  src/modules/ai/external-chat-turn.service.test.ts > 未知结果、伪造 session/turn、错账号、被改写的源消息都不能提交
+ FAIL  src/modules/ai/external-chat-turn.service.test.ts > 结算回放不可改写正文或用量；旧 fence 无法预留和提交
+ FAIL  src/modules/ai/external-chat-turn.service.test.ts > 已结算的外部工具候选进入原会话卡片与事件流，用户仍需在 CreatorOS 采纳
+ FAIL  src/modules/ai/external-chat-turn.service.test.ts > 原生 thread 与 provider turn 分别持久，缺实际 turn 和变更 ID 都不能结算
+ FAIL  src/modules/ai/external-task-tool.service.test.ts > 只列当前任务的短读取工具；真实执行结算后可回放，不重复调用
+ FAIL  src/modules/ai/external-task-tool.service.test.ts > 发布工具、伪造回合、账号变更和旧 fence 均被拒绝
+ FAIL  src/modules/ai/external-task-tool.service.test.ts > 执行结果不明只返回 unknown，同一 toolCallId 不重放副作用
+ConflictError: 任务冻结ACP协议不可替换
+ ❯ src/modules/ai/external-chat-turn.service.ts:98:105
+     96|    return leases.withLease(ref,"admission",async({tx,task,context})=>{
+     97|     const {engine,frozen}=await owner(tx,task,context,true),call=requi…
+     98|     if(frozen.externalAgentBinding && (request.protocolKind!=="acp"||r…
+       |                                                                                                         ^
+     99|     if(call.status!=="reserved")throw new ConflictError("外部聊天调用不可重复启动"…
+    100|     const prepared=object(call.providerResult);
+ ❯ ../node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pglite/src/base.ts:430:23
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/10]⎯
+
+
+ Test Files  3 failed (3)
+      Tests  10 failed | 23 passed (33)
+   Start at  17:08:22
+   Duration  6.49s (transform 4.28s, setup 0ms, import 7.97s, tests 9.63s, environment 0ms)
+

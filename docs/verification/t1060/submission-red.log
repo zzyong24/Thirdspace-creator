@@ -1,0 +1,45 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/backend
+
+stderr | src/modules/ai/chat-turn-submission.service.test.ts > 真实租约恢复只读工具，使用冻结产品说明及当前账号数据，拒绝旧租约和工具版本变化
+[chat-guide] optional guide unavailable { code: 'CREATOROS_GUIDE_UNAVAILABLE', reason: 'version' }
+
+stdout | src/modules/ai/chat-turn-submission.service.test.ts > 真实租约恢复只读工具，使用冻结产品说明及当前账号数据，拒绝旧租约和工具版本变化
+[chat-tool] name=creatoros.guide ok durationMs=0
+
+ ❯ src/modules/ai/chat-turn-submission.service.test.ts (24 tests | 2 failed) 3521ms
+   × 真实租约恢复只读工具，使用冻结产品说明及当前账号数据，拒绝旧租约和工具版本变化 318ms
+   × 新Codex任务冻结ACP工件，重放不切版本或协议 8ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai/chat-turn-submission.service.test.ts > 真实租约恢复只读工具，使用冻结产品说明及当前账号数据，拒绝旧租约和工具版本变化
+AssertionError: expected '{"kind":"creatoros.guide","skillId":"…' to contain '提交时产品说明'
+
+Expected: "提交时产品说明"
+Received: "{"kind":"creatoros.guide","skillId":"creatoros.guide","version":null,"verifiedAt":null,"guide":null,"limitations":[],"next":null,"error":"CreatorOS 官方产品说明当前不可读取，本轮无法依据它回答。"}"
+
+ ❯ src/modules/ai/chat-turn-submission.service.test.ts:173:32
+    171|  expect(listProjects).not.toHaveBeenCalled();
+    172|  const guide=await getChatToolNativeExecutor(tools["creatoros.guide"]!…
+    173|  expect(JSON.stringify(guide)).toContain("提交时产品说明");expect(JSON.string…
+       |                                ^
+    174|  await getChatToolNativeExecutor(tools["context.projects"]!)!({},{});
+    175|  expect(listProjects).toHaveBeenLastCalledWith(expect.objectContaining…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/modules/ai/chat-turn-submission.service.test.ts > 新Codex任务冻结ACP工件，重放不切版本或协议
+ReferenceError: codexAcpBinding is not defined
+ ❯ Object.submit src/modules/ai/chat-turn-submission.service.ts:76:181
+
+ ❯ src/modules/ai/chat-turn-submission.service.test.ts:237:26
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 22 passed (24)
+   Start at  16:48:50
+   Duration  7.39s (transform 2.46s, setup 0ms, import 3.43s, tests 3.52s, environment 2ms)
+

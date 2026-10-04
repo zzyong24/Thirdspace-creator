@@ -1945,6 +1945,81 @@
       "scope_source": "docs/features/t1037-output-production-project.md",
       "reason": "已评审的作品级制作历史与公开服务接线；仅保留原文件的既有签名历史、凭据与工具链标记，不新增这些机制。具体范围与事务复用见DEC-T1037-01。",
       "acceptance": "仅登记准确文件hash与任务复杂度，不表示全局门卫、客户端或媒体生成验收通过。"
+    },
+    {
+      "task_id": "T-1060",
+      "files": [
+        "ai-worker/vendor/acpx/src/agent-registry.ts"
+      ],
+      "file_sha256": "815d75d89c7e178ac8f8dda275c1047532ad0e9ffc0acfdf1758b7e260e3a6de",
+      "categories": [
+        "runtime"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1060-01",
+      "scope_source": "docs/features/t1060-agent-source-integration.md",
+      "reason": "用户已认可固定开源客户端/适配器源码及必要依赖接入；仅迁移源码闭包，实际宿主固定路径/参数；不引入上游任务、历史或凭据权威。",
+      "acceptance": "来源已核对；编译与实际接通仍待验证，不代表验收通过。"
+    },
+    {
+      "task_id": "T-1060",
+      "files": [
+        "ai-worker/vendor/acpx/src/spawn-command-options.ts"
+      ],
+      "file_sha256": "a1e6221922fbdcbef4dd1046dc234cf28d2fff51d1b129db6757e63b6b28b9ca",
+      "categories": [
+        "native_executable"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1060-01",
+      "scope_source": "docs/features/t1060-agent-source-integration.md",
+      "reason": "用户已认可固定开源客户端/适配器源码及必要依赖接入；仅迁移源码闭包，实际宿主固定路径/参数；不引入上游任务、历史或凭据权威。",
+      "acceptance": "来源已核对；编译与实际接通仍待验证，不代表验收通过。"
+    },
+    {
+      "task_id": "T-1060",
+      "files": [
+        "ai-worker/vendor/codex-acp/package.json"
+      ],
+      "file_sha256": "4c792564680304b0d4cd604baa41a67a0dd50768b6afe15ca982aefce647962f",
+      "categories": [
+        "runtime"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1060-01",
+      "scope_source": "docs/features/t1060-agent-source-integration.md",
+      "reason": "用户已认可固定开源客户端/适配器源码及必要依赖接入；仅迁移源码闭包，实际宿主固定路径/参数；不引入上游任务、历史或凭据权威。",
+      "acceptance": "来源已核对；编译与实际接通仍待验证，不代表验收通过。"
+    },
+    {
+      "task_id": "T-1060",
+      "files": [
+        "ai-worker/vendor/codex-acp/src/CodexElicitationHandler.ts"
+      ],
+      "file_sha256": "36cd147a5c0d090e2d3be5ef707efbd92dc2a7222f97549289a31db88ccd8b24",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1060-01",
+      "scope_source": "docs/features/t1060-agent-source-integration.md",
+      "reason": "用户已认可固定开源客户端/适配器源码及必要依赖接入；仅迁移源码闭包，实际宿主固定路径/参数；不引入上游任务、历史或凭据权威。",
+      "acceptance": "来源已核对；编译与实际接通仍待验证，不代表验收通过。"
+    },
+    {
+      "task_id": "T-1060",
+      "files": [
+        "pnpm-lock.yaml"
+      ],
+      "file_sha256": "199cefc3fbe3bc1e949df19e62003b75b20dd6010d01992d96351bb64a3c2297",
+      "categories": [
+        "runtime"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1060-01",
+      "scope_source": "docs/features/t1060-agent-source-integration.md",
+      "reason": "用户已认可固定开源客户端/适配器源码及必要依赖接入；仅迁移源码闭包，实际宿主固定路径/参数；不引入上游任务、历史或凭据权威。",
+      "acceptance": "来源已核对；编译与实际接通仍待验证，不代表验收通过。"
     }
   ],
   "historical_baselines": []

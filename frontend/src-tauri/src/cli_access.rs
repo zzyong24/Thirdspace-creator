@@ -95,8 +95,37 @@ pub struct CliAccessStatus {
     product_id: Option<String>,
     expires_at: Option<u64>,
     command_path: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    mcp_launch: Option<McpLaunch>,
     active_connections: u32,
     last_invocation_at: Option<u64>,
+}
+
+
+/// 非秘密宿主启动参数；WorkBuddy 自己负责首次信任和实际工具调用。
+#[derive(Serialize)]
+pub struct McpLaunch {
+    command: String,
+    args: Vec<String>,
+    env: std::collections::BTreeMap<String, String>,
+}
+
+// SEMANTIC_BOUNDARY_ALLOW: 只落实原生宿主的真实启动路径及安装身份，不推断项目或创作意图。
+fn mcp_launch(runtime: &CliAccessRuntime, enabled: bool) -> Option<McpLaunch> {
+    if !enabled || !runtime.cli_node.is_file() || !runtime.cli_script.is_file() {
+        return None;
+    }
+    let descriptor = connection_path(runtime);
+    let paths = [&runtime.cli_node, &runtime.cli_script, &descriptor];
+    if paths.iter().any(|path| !path.is_absolute()) { return None; }
+    let strings = paths.iter().map(|path| path.to_str()).collect::<Option<Vec<_>>>()?;
+    if strings.iter().any(|value| value.contains(['\0', '\n', '\r'])) { return None; }
+    Some(McpLaunch {
+        command: strings[0].to_string(),
+        args: vec![strings[1].to_string(), "mcp".into(), "serve".into(),
+            "--connection-file".into(), strings[2].to_string()],
+        env: std::collections::BTreeMap::from([("CREATOROS_BASE_URL".into(), String::new())]),
+    })
 }
 
 #[derive(Serialize, Deserialize)]
@@ -467,6 +496,7 @@ fn enable_runtime(runtime: &CliAccessRuntime) -> Result<CliAccessStatus, String>
         product_id: Some(runtime.product_id.clone()),
         expires_at: Some(expires_at),
         command_path: Some(command_path.to_string_lossy().to_string()),
+        mcp_launch: mcp_launch(runtime, true),
         active_connections: 0,
         last_invocation_at: None,
     })
@@ -556,6 +586,7 @@ pub fn cli_access_status(state: tauri::State<'_, CliAccessState>) -> CliAccessSt
             product_id: None,
             expires_at: None,
             command_path: None,
+            mcp_launch: None,
             active_connections: 0,
             last_invocation_at: None,
         };
@@ -579,6 +610,7 @@ pub fn cli_access_status(state: tauri::State<'_, CliAccessState>) -> CliAccessSt
         installed: launcher_path().is_file(),
         enabled: descriptor.is_some(),
         product_id: Some(runtime.product_id.clone()),
+        mcp_launch: mcp_launch(runtime, descriptor.is_some()),
         expires_at: descriptor.map(|value| value.expires_at),
         command_path: Some(launcher_path().to_string_lossy().to_string()),
         active_connections: activity.as_ref().map(|value| value.active_connections).unwrap_or(0),
@@ -612,6 +644,7 @@ pub fn cli_access_revoke(state: tauri::State<'_, CliAccessState>) -> Result<CliA
         product_id: Some(runtime.product_id.clone()),
         expires_at: None,
         command_path: Some(launcher_path().to_string_lossy().to_string()),
+        mcp_launch: None,
         active_connections: 0,
         last_invocation_at: None,
     })
@@ -844,4 +877,39 @@ mod tests {
             100,
         ));
     }
+
+    #[test]
+    fn workbuddy_mcp_launch_is_exact_bundled_argv_without_credentials() {
+        let root = std::env::temp_dir().join(format!("creatoros-mcp-launch-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&root);
+        std::fs::create_dir_all(&root).unwrap();
+        let node = root.join("Node 运行时.exe");
+        let script = root.join("CreatorOS CLI.cjs");
+        std::fs::write(&node, b"fixture executable").unwrap();
+        std::fs::write(&script, b"fixture bundle").unwrap();
+        let runtime = CliAccessRuntime {
+            dir: root.join("channel cli"), product_id: "channel-product".into(),
+            package_id: "test.channel".into(), port: 43127,
+            handshake_token: "never-export-handshake".into(),
+            cli_access_token: "never-export-access".into(), launch_nonce: "never-export-nonce".into(),
+            cli_node: node.clone(), cli_script: script.clone(),
+        };
+        let launch = mcp_launch(&runtime, true).expect("enabled runtime has a launch configuration");
+        let value = serde_json::to_value(launch).unwrap();
+        assert_eq!(value["command"], node.to_string_lossy().as_ref());
+        assert_eq!(value["args"], serde_json::json!([
+            script.to_string_lossy(), "mcp", "serve", "--connection-file",
+            runtime.dir.join("connection.json").to_string_lossy(),
+        ]));
+        assert_eq!(value["env"], serde_json::json!({"CREATOROS_BASE_URL": ""}));
+        let json = value.to_string();
+        for secret in ["never-export-handshake", "never-export-access", "never-export-nonce", "43127", "credential.json"] {
+            assert!(!json.contains(secret), "MCP config exported {secret}");
+        }
+        assert!(mcp_launch(&runtime, false).is_none());
+        std::fs::remove_file(&node).unwrap();
+        assert!(mcp_launch(&runtime, true).is_none());
+        std::fs::remove_dir_all(root).unwrap();
+    }
+
 }

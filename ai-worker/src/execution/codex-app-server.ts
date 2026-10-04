@@ -1,0 +1,93 @@
+import {access, readFile, realpath} from 'node:fs/promises';
+import {constants} from 'node:fs';
+import {createRequire} from 'node:module';
+import {dirname,join} from 'node:path';
+import {execFile} from 'node:child_process';
+import {CodexHostError,CodexRpcSession} from './codex-app-server-protocol';
+export {CodexHostError,CodexRpcSession};
+export const CODEX_RUNTIME_VERSION='0.159.3';
+export interface CodexDynamicTool {name:string;description:string;inputSchema:Record<string,unknown>}
+const DISABLED_FEATURES=['apps','plugins','hooks','multi_agent','multi_agent_v2','image_generation','browser_use','computer_use','code_mode','code_mode_host','tool_suggest','shell_tool','unified_exec','view_image','skill_search','skill_mcp_dependency_install'];
+const record=(value:unknown):Record<string,unknown>=>value && typeof value==='object'&&!Array.isArray(value)?value as Record<string,unknown>:{};
+export function codexProcessArguments(mcpNames:readonly string[]=[]):string[]{
+  const configs=['web_search="disabled"',...DISABLED_FEATURES.map(name=>`features.${name}=false`),
+    ...(mcpNames.length ? [`mcp_servers={${mcpNames.map(name=>`${JSON.stringify(name)}={enabled=false}`).join(",")}}`] : [])];
+  return ['app-server','--stdio',...configs.flatMap(config=>['-c',config])];
+}
+export function codexThreadParameters(cwd:string,tools:readonly CodexDynamicTool[]){
+  return {cwd,ephemeral:false,approvalPolicy:'never',sandbox:'read-only',environments:[],
+    dynamicTools:tools.map(tool=>({name:tool.name,description:tool.description,inputSchema:tool.inputSchema}))};
+}
+/** SEMANTIC_BOUNDARY_ALLOW: protocol projection rejects permission overrides;
+ * it does not select or interpret creative content. */
+export function codexTurnParameters(threadId:string,text:string,_untrusted?:unknown){return {threadId,input:[{type:'text',text}]};}
+export function readCodexConfigSummary(raw:unknown){
+  const config=record(record(raw).config),features=record(config.features),servers=record(config.mcp_servers);
+  return {mcpServers:Object.entries(servers).map(([name,value])=>({name,enabled:record(value).enabled!==false})),
+    webSearch:config.web_search=== 'disabled'?'disabled':'unknown',
+    features:Object.fromEntries(DISABLED_FEATURES.map(name=>[name,features[name]===false?false:features[name]===true?true:null]))};
+}
+function assertConfiguration(raw:unknown){
+  const summary=readCodexConfigSummary(raw);
+  if(summary.webSearch!=='disabled'||summary.mcpServers.some(server=>server.enabled)||DISABLED_FEATURES.some(name=>summary.features[name]!==false))throw new CodexHostError('CODEX_CAPABILITY_UNVERIFIED');
+  return summary;
+}
+export function assertCodexMcpDisabled(raw:unknown,expectedNames:readonly string[]){
+  const data=record(raw).data;
+  if(!Array.isArray(data))throw new CodexHostError('CODEX_CAPABILITY_UNVERIFIED');
+  const statuses=data.map(row=>record(row));
+  if(statuses.some(row=>typeof row.name!=='string'||row.runtimeStatus!=='disabled')||expectedNames.some(name=>!statuses.some(row=>row.name===name)))throw new CodexHostError('CODEX_CAPABILITY_UNVERIFIED');
+}
+export function codexRuntimeEnvironment(source:NodeJS.ProcessEnv=process.env):NodeJS.ProcessEnv{
+  const env:NodeJS.ProcessEnv={};
+  for(const key of ['HOME','USERPROFILE','PATH','SYSTEMROOT','WINDIR','TEMP','TMP','TMPDIR','LANG','LC_ALL','LC_CTYPE','CODEX_HOME','OPENAI_API_KEY','HTTP_PROXY','HTTPS_PROXY','NO_PROXY','SSL_CERT_FILE','SSL_CERT_DIR'])if(source[key]!==undefined)env[key]=source[key];
+  return env;
+}
+export async function resolveBundledCodex():Promise<string>{
+  const require=createRequire(typeof __filename === "string" ? __filename : import.meta.url);
+  const main=require.resolve('@openai/codex/package.json');
+  const metadata=JSON.parse(await readFile(main,'utf8')) as {version?:string};
+  if(metadata.version!==CODEX_RUNTIME_VERSION)throw new CodexHostError('CODEX_VERSION_UNSUPPORTED');
+  const target=({darwin:{arm64:'aarch64-apple-darwin',x64:'x86_64-apple-darwin'},linux:{arm64:'aarch64-unknown-linux-musl',x64:'x86_64-unknown-linux-musl'},win32:{arm64:'aarch64-pc-windows-msvc',x64:'x86_64-pc-windows-msvc'}} as Record<string,Record<string,string>>)[process.platform]?.[process.arch];
+  if(!target)throw new CodexHostError('CODEX_PLATFORM_UNSUPPORTED');
+  const platformRequire=createRequire(main);
+  const packagePath=platformRequire.resolve(`@openai/codex-${process.platform}-${process.arch}/package.json`);
+  const binary=await realpath(join(dirname(packagePath),'vendor',target,'bin',process.platform==='win32'?'codex.exe':'codex'));
+  await access(binary,process.platform==='win32'?constants.F_OK:constants.X_OK);
+  await new Promise<void>((resolve,reject)=>execFile(binary,['--version'],{timeout:15000,maxBuffer:4096,env:codexRuntimeEnvironment()},(error,stdout)=>{
+    if(error)reject(new CodexHostError('CODEX_RUNTIME_UNAVAILABLE'));
+    else if(stdout.trim()!==`codex-cli ${CODEX_RUNTIME_VERSION}`)reject(new CodexHostError('CODEX_VERSION_UNSUPPORTED'));else resolve();
+  }));
+  return binary;
+}
+async function initialized(binary:string,cwd:string,names:readonly string[],signal:AbortSignal,env:NodeJS.ProcessEnv){
+  const rpc=new CodexRpcSession(binary,codexProcessArguments(names),{cwd,env,signal});
+  try {await rpc.request('initialize',{clientInfo:{name:'creatoros',title:'CreatorOS',version:'1'},capabilities:{experimentalApi:true}});rpc.initialized();return rpc;}
+  catch(error){await rpc.close();throw error;}
+}
+/** The only executable path is the locked bundled artifact. Test probes may
+ * inject a fake HOME; production callers never accept artifact/argv from UI. */
+export async function createControlledCodexSession(cwd:string,signal:AbortSignal,probeEnv?:NodeJS.ProcessEnv):Promise<{rpc:CodexRpcSession;authenticated:boolean;loginStatus:"authenticated"|"not-required"|"unauthenticated";mcpNames:string[]}>{
+  const binary=await resolveBundledCodex(),env=codexRuntimeEnvironment(probeEnv),first=await initialized(binary,cwd,[],signal,env);
+  let names:string[];
+  try {const summary=readCodexConfigSummary(await first.request('config/read',{includeLayers:false,cwd}));names=summary.mcpServers.map(server=>server.name);}
+  finally {await first.close();}
+  signal.throwIfAborted();
+  const rpc=await initialized(binary,cwd,names,signal,env);
+  try {
+    const summary=assertConfiguration(await rpc.request('config/read',{includeLayers:false,cwd}));
+    if(summary.mcpServers.some(server=>!names.includes(server.name)))throw new CodexHostError('CODEX_CONFIG_CHANGED');
+    const account=record(await rpc.request('account/read',{refreshToken:false}));
+    return {rpc,loginStatus:account.account?"authenticated":account.requiresOpenaiAuth===false?"not-required":"unauthenticated",authenticated:Boolean(account.account)||account.requiresOpenaiAuth===false,mcpNames:summary.mcpServers.map(server=>server.name)};
+  }catch(error){await rpc.close();throw error;}
+}
+export async function verifyCodexThreadMcp(rpc:CodexRpcSession,threadId:string,expectedNames:readonly string[]){
+  const rows:unknown[]=[];let cursor:unknown=null;
+  for(let page=0;page<20;page++){
+    const result=record(await rpc.request('mcpServerStatus/list',{threadId,detail:'toolsAndAuthOnly',limit:100,cursor}));
+    if(!Array.isArray(result.data))throw new CodexHostError('CODEX_CAPABILITY_UNVERIFIED');
+    rows.push(...result.data);cursor=result.nextCursor;
+    if(cursor==null){assertCodexMcpDisabled({data:rows},expectedNames);return;}
+  }
+  throw new CodexHostError('CODEX_CAPABILITY_UNVERIFIED');
+}

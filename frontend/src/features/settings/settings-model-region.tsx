@@ -4,6 +4,7 @@ import * as React from "react";
 
 import { ChannelConfigRetryButton } from "@/components/shell/channel-config-bootstrap";
 import { cn } from "@/lib/utils";
+import { AssistantEngineCard } from "./assistant-engine-card";
 import { ModelConfigTransferCard } from "./model-config-transfer-card";
 import { ModelConfigurationManual } from "./model-configuration-manual";
 
@@ -58,6 +59,7 @@ export function SettingsModelRegion({ viewModel, modelAuthority, highlight }: { 
       data-slot="settings-rail"
       className="flex flex-col gap-card-gap"
     >
+      <AssistantEngineCard />
       {modelAuthority?.authority === "channel" ||
         !viewModel.model.hasSecret ? (
         <div

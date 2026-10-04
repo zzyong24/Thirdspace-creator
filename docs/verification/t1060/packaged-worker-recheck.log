@@ -1,0 +1,29 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/frontend
+
+(node:74039) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ scripts/desktop/execution-worker-runtime.test.mjs (6 tests | 1 failed) 19460ms
+     × 复制固定 Worker 与 ACP 入口并保留旧返回路径，普通Worker仍可独立启动 19272ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  scripts/desktop/execution-worker-runtime.test.mjs > 随包Worker入口资源 > 复制固定 Worker 与 ACP 入口并保留旧返回路径，普通Worker仍可独立启动
+Error: Test timed out in 15000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ scripts/desktop/execution-worker-runtime.test.mjs:9:5
+      7| import { stageExecutionWorkerRuntime,assertExecutionWorkerRuntime,asse…
+      8| describe("随包Worker入口资源",()=>{
+      9|   it("复制固定 Worker 与 ACP 入口并保留旧返回路径，普通Worker仍可独立启动",async()=>{
+       |     ^
+     10|     const root=mkdtempSync(join(tmpdir(),"worker-runtime-"));let child…
+     11|     try{
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 5 passed (6)
+   Start at  17:28:23
+   Duration  21.00s (transform 80ms, setup 274ms, import 31ms, tests 19.46s, environment 841ms)
+

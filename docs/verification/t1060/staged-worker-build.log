@@ -1,0 +1,66 @@
+▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+
+    src/execution/codex-app-server.ts:47:76:
+      47 │ ...re(typeof __filename === "string" ? __filename : import.meta.url);
+         ╵                                                     ~~~~~~~~~~~
+
+  You need to set the output format to "esm" for "import.meta" to work correctly.
+
+✘ [ERROR] Could not resolve "./asr-provider-timing"
+
+    src/runtime/multimodal-whisper-local.ts:1:39:
+      1 │ import {readActualProviderTiming} from "./asr-provider-timing";
+        ╵                                        ~~~~~~~~~~~~~~~~~~~~~~~
+
+▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+
+    src/execution/codex-acp-host.ts:9:88:
+      9 │ ...tring'?dirname(__filename):dirname(fileURLToPath(import.meta.url));
+        ╵                                                     ~~~~~~~~~~~
+
+  You need to set the output format to "esm" for "import.meta" to work correctly.
+
+▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+
+    vendor/acpx/src/agent-registry.ts:319:42:
+      319 │   let cursor = path.dirname(fileURLToPath(import.meta.url));
+          ╵                                           ~~~~~~~~~~~
+
+  You need to set the output format to "esm" for "import.meta" to work correctly.
+
+▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+
+    vendor/acpx/src/version.ts:6:90:
+      6 │ ...string" ? __dirname : path.dirname(fileURLToPath(import.meta.url));
+        ╵                                                     ~~~~~~~~~~~
+
+  You need to set the output format to "esm" for "import.meta" to work correctly.
+
+✘ [ERROR] Could not resolve "./production-main-track"
+
+    ../contract/src/resources/production-editor.ts:4:64:
+      4 │ ...ditOptions,productionOverlayAnchor} from "./production-main-track";
+        ╵                                             ~~~~~~~~~~~~~~~~~~~~~~~~~
+
+/Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/node_modules/.pnpm/esbuild@0.28.1/node_modules/esbuild/lib/main.js:1748
+  let error = new Error(text);
+              ^
+
+Error: Build failed with 2 errors:
+src/runtime/multimodal-whisper-local.ts:1:39: ERROR: Could not resolve "./asr-provider-timing"
+../contract/src/resources/production-editor.ts:4:64: ERROR: Could not resolve "./production-main-track"
+    at failureErrorWithLog (/Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/node_modules/.pnpm/esbuild@0.28.1/node_modules/esbuild/lib/main.js:1748:15)
+    at /Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/node_modules/.pnpm/esbuild@0.28.1/node_modules/esbuild/lib/main.js:1207:25
+    at runOnEndCallbacks (/Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/node_modules/.pnpm/esbuild@0.28.1/node_modules/esbuild/lib/main.js:1588:45)
+    at buildResponseToResult (/Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/node_modules/.pnpm/esbuild@0.28.1/node_modules/esbuild/lib/main.js:1205:7)
+    at /Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/node_modules/.pnpm/esbuild@0.28.1/node_modules/esbuild/lib/main.js:1232:16
+    at responseCallbacks.<computed> (/Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/node_modules/.pnpm/esbuild@0.28.1/node_modules/esbuild/lib/main.js:884:9)
+    at handleIncomingPacket (/Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/node_modules/.pnpm/esbuild@0.28.1/node_modules/esbuild/lib/main.js:939:12)
+    at Socket.readFromStdout (/Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/node_modules/.pnpm/esbuild@0.28.1/node_modules/esbuild/lib/main.js:862:7)
+    at Socket.emit (node:events:509:20)
+    at addChunk (node:internal/streams/readable:564:12) {
+  errors: [Getter/Setter],
+  warnings: [Getter/Setter]
+}
+
+Node.js v25.9.0

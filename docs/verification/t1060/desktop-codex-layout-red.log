@@ -1,0 +1,873 @@
+✔ 按依赖图复制并复用同版本包，缺必需包仍失败 (19.233291ms)
+✔ T1060 两条打包入口保留 ACP 安全文件包与 Codex 平台依赖 (1.028375ms)
+✔ T1060 分层物化识别已声明的 Codex npm alias 并保留 Windows 二进制和 fs-safe binding (31.687833ms)
+✔ T1060 Codex alias 仅接纳精确声明、实际名称版本和目标平台 (34.465333ms)
+✔ T1060 不接纳未声明的通用 npm alias (3.285042ms)
+✔ T1060 普通闭包从真实同名平台包中只选择精确版本和目标 (9.201708ms)
+✖ T1060 原生字节校验允许已存在vendor层，缺失或空字节明确失败 (3.083ms)
+✖ T1060 既有 frontend/.next/vendor Codex同版本错name不因非空字节而放行 (12.141667ms)
+✖ T1060 既有 frontend/.next/vendor Codex同版本错os不因非空字节而放行 (6.640125ms)
+✖ T1060 既有 frontend/.next/vendor Codex同版本错cpu不因非空字节而放行 (5.958791ms)
+✖ T1060 既有 frontend/.next/vendor Codex同版本缺os不因非空字节而放行 (9.110625ms)
+✖ T1060 既有 frontend/.next/vendor Codex同版本缺cpu不因非空字节而放行 (14.243709ms)
+✖ T1060 合法既有 frontend/.next/vendor Codex alias继续复用并保留转换字节 (9.304458ms)
+✖ T1060 既有 layers/browser/vendor Codex同版本错name不因非空字节而放行 (10.409625ms)
+✖ T1060 既有 layers/browser/vendor Codex同版本错os不因非空字节而放行 (22.522292ms)
+✖ T1060 既有 layers/browser/vendor Codex同版本错cpu不因非空字节而放行 (9.530125ms)
+✖ T1060 既有 layers/browser/vendor Codex同版本缺os不因非空字节而放行 (14.919333ms)
+✖ T1060 既有 layers/browser/vendor Codex同版本缺cpu不因非空字节而放行 (11.499917ms)
+✖ T1060 合法既有 layers/browser/vendor Codex alias继续复用并保留转换字节 (21.281ms)
+✖ T1060 既有 layers/local-ai/vendor Codex同版本错name不因非空字节而放行 (6.084959ms)
+✖ T1060 既有 layers/local-ai/vendor Codex同版本错os不因非空字节而放行 (9.119959ms)
+✖ T1060 既有 layers/local-ai/vendor Codex同版本错cpu不因非空字节而放行 (11.615875ms)
+✖ T1060 既有 layers/local-ai/vendor Codex同版本缺os不因非空字节而放行 (11.628042ms)
+✖ T1060 既有 layers/local-ai/vendor Codex同版本缺cpu不因非空字节而放行 (6.28925ms)
+✖ T1060 合法既有 layers/local-ai/vendor Codex alias继续复用并保留转换字节 (14.978167ms)
+✖ T1060 frontend/.next/vendor 固定Codex0.159.3真实bin目录合法字节可以验收 (8.973333ms)
+✖ T1060 frontend/.next/vendor 只有旧codex目录不能冒充固定0.159.3真实bin (9.383333ms)
+✖ T1060 layers/browser/vendor 固定Codex0.159.3真实bin目录合法字节可以验收 (15.86675ms)
+✖ T1060 layers/browser/vendor 只有旧codex目录不能冒充固定0.159.3真实bin (53.723917ms)
+✖ T1060 layers/local-ai/vendor 固定Codex0.159.3真实bin目录合法字节可以验收 (27.869417ms)
+✖ T1060 layers/local-ai/vendor 只有旧codex目录不能冒充固定0.159.3真实bin (31.05925ms)
+✖ T1060 打包Codex目录与锁版官方入口和真实worker resolver一致 (7.266708ms)
+ℹ tests 32
+ℹ suites 0
+ℹ pass 6
+ℹ fail 26
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 760.035583
+
+✖ failing tests:
+
+test at tools/windows-closure-rat/stage-layered-workers.test.mjs:116:1
+✖ T1060 原生字节校验允许已存在vendor层，缺失或空字节明确失败 (3.083ms)
+  AssertionError [ERR_ASSERTION]: Got unwanted exception.
+  Actual message: "Worker Windows 原生依赖缺失或为空: @openai/codex-win32-x64/vendor/x86_64-pc-windows-msvc/codex/codex.exe"
+      at TestContext.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:124:11)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: Error: Worker Windows 原生依赖缺失或为空: @openai/codex-win32-x64/vendor/x86_64-pc-windows-msvc/codex/codex.exe
+        at Module.assertLayeredWorkerNativeFiles (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.mjs:116:13)
+        at file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:124:43
+        at getActual (node:assert:586:5)
+        at strict.doesNotThrow (node:assert:754:32)
+        at TestContext.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:124:11)
+        at Test.runInAsyncScope (node:async_hooks:226:14)
+        at Test.run (node:internal/test_runner/test:1201:25)
+        at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+        at Test.postRun (node:internal/test_runner/test:1330:19)
+        at Test.run (node:internal/test_runner/test:1258:12),
+    expected: undefined,
+    operator: 'doesNotThrow',
+    diff: 'simple'
+  }
+
+test at tools/windows-closure-rat/stage-layered-workers.test.mjs:153:3
+✖ T1060 既有 frontend/.next/vendor Codex同版本错name不因非空字节而放行 (12.141667ms)
+  AssertionError [ERR_ASSERTION]: Got unwanted exception: 原字节门能通过此旧失败样例
+  Actual message: "Worker Windows 原生依赖缺失或为空: @openai/codex-win32-x64/vendor/x86_64-pc-windows-msvc/codex/codex.exe"
+      at TestContext.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:157:12)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: Error: Worker Windows 原生依赖缺失或为空: @openai/codex-win32-x64/vendor/x86_64-pc-windows-msvc/codex/codex.exe
+        at Module.assertLayeredWorkerNativeFiles (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.mjs:116:13)
+        at file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:157:44
+        at getActual (node:assert:586:5)
+        at strict.doesNotThrow (node:assert:754:32)
+        at TestContext.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:157:12)
+        at Test.runInAsyncScope (node:async_hooks:226:14)
+        at Test.run (node:internal/test_runner/test:1201:25)
+        at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+        at Test.postRun (node:internal/test_runner/test:1330:19)
+        at Test.run (node:internal/test_runner/test:1258:12),
+    expected: undefined,
+    operator: 'doesNotThrow',
+    diff: 'simple'
+  }
+
+test at tools/windows-closure-rat/stage-layered-workers.test.mjs:153:3
+✖ T1060 既有 frontend/.next/vendor Codex同版本错os不因非空字节而放行 (6.640125ms)
+  AssertionError [ERR_ASSERTION]: Got unwanted exception: 原字节门能通过此旧失败样例
+  Actual message: "Worker Windows 原生依赖缺失或为空: @openai/codex-win32-x64/vendor/x86_64-pc-windows-msvc/codex/codex.exe"
+      at TestContext.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:157:12)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: Error: Worker Windows 原生依赖缺失或为空: @openai/codex-win32-x64/vendor/x86_64-pc-windows-msvc/codex/codex.exe
+        at Module.assertLayeredWorkerNativeFiles (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.mjs:116:13)
+        at file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:157:44
+        at getActual (node:assert:586:5)
+        at strict.doesNotThrow (node:assert:754:32)
+        at TestContext.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:157:12)
+        at Test.runInAsyncScope (node:async_hooks:226:14)
+        at Test.run (node:internal/test_runner/test:1201:25)
+        at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+        at Test.postRun (node:internal/test_runner/test:1330:19)
+        at Test.run (node:internal/test_runner/test:1258:12),
+    expected: undefined,
+    operator: 'doesNotThrow',
+    diff: 'simple'
+  }
+
+test at tools/windows-closure-rat/stage-layered-workers.test.mjs:153:3
+✖ T1060 既有 frontend/.next/vendor Codex同版本错cpu不因非空字节而放行 (5.958791ms)
+  AssertionError [ERR_ASSERTION]: Got unwanted exception: 原字节门能通过此旧失败样例
+  Actual message: "Worker Windows 原生依赖缺失或为空: @openai/codex-win32-x64/vendor/x86_64-pc-windows-msvc/codex/codex.exe"
+      at TestContext.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:157:12)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: Error: Worker Windows 原生依赖缺失或为空: @openai/codex-win32-x64/vendor/x86_64-pc-windows-msvc/codex/codex.exe
+        at Module.assertLayeredWorkerNativeFiles (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.mjs:116:13)
+        at file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:157:44
+        at getActual (node:assert:586:5)
+        at strict.doesNotThrow (node:assert:754:32)
+        at TestContext.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:157:12)
+        at Test.runInAsyncScope (node:async_hooks:226:14)
+        at Test.run (node:internal/test_runner/test:1201:25)
+        at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+        at Test.postRun (node:internal/test_runner/test:1330:19)
+        at Test.run (node:internal/test_runner/test:1258:12),
+    expected: undefined,
+    operator: 'doesNotThrow',
+    diff: 'simple'
+  }
+
+test at tools/windows-closure-rat/stage-layered-workers.test.mjs:153:3
+✖ T1060 既有 frontend/.next/vendor Codex同版本缺os不因非空字节而放行 (9.110625ms)
+  AssertionError [ERR_ASSERTION]: Got unwanted exception: 原字节门能通过此旧失败样例
+  Actual message: "Worker Windows 原生依赖缺失或为空: @openai/codex-win32-x64/vendor/x86_64-pc-windows-msvc/codex/codex.exe"
+      at TestContext.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:157:12)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: Error: Worker Windows 原生依赖缺失或为空: @openai/codex-win32-x64/vendor/x86_64-pc-windows-msvc/codex/codex.exe
+        at Module.assertLayeredWorkerNativeFiles (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.mjs:116:13)
+        at file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:157:44
+        at getActual (node:assert:586:5)
+        at strict.doesNotThrow (node:assert:754:32)
+        at TestContext.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:157:12)
+        at Test.runInAsyncScope (node:async_hooks:226:14)
+        at Test.run (node:internal/test_runner/test:1201:25)
+        at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+        at Test.postRun (node:internal/test_runner/test:1330:19)
+        at Test.run (node:internal/test_runner/test:1258:12),
+    expected: undefined,
+    operator: 'doesNotThrow',
+    diff: 'simple'
+  }
+
+test at tools/windows-closure-rat/stage-layered-workers.test.mjs:153:3
+✖ T1060 既有 frontend/.next/vendor Codex同版本缺cpu不因非空字节而放行 (14.243709ms)
+  AssertionError [ERR_ASSERTION]: Got unwanted exception: 原字节门能通过此旧失败样例
+  Actual message: "Worker Windows 原生依赖缺失或为空: @openai/codex-win32-x64/vendor/x86_64-pc-windows-msvc/codex/codex.exe"
+      at TestContext.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:157:12)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: Error: Worker Windows 原生依赖缺失或为空: @openai/codex-win32-x64/vendor/x86_64-pc-windows-msvc/codex/codex.exe
+        at Module.assertLayeredWorkerNativeFiles (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.mjs:116:13)
+        at file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:157:44
+        at getActual (node:assert:586:5)
+        at strict.doesNotThrow (node:assert:754:32)
+        at TestContext.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:157:12)
+        at Test.runInAsyncScope (node:async_hooks:226:14)
+        at Test.run (node:internal/test_runner/test:1201:25)
+        at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+        at Test.postRun (node:internal/test_runner/test:1330:19)
+        at Test.run (node:internal/test_runner/test:1258:12),
+    expected: undefined,
+    operator: 'doesNotThrow',
+    diff: 'simple'
+  }
+
+test at tools/windows-closure-rat/stage-layered-workers.test.mjs:163:2
+✖ T1060 合法既有 frontend/.next/vendor Codex alias继续复用并保留转换字节 (9.304458ms)
+  AssertionError [ERR_ASSERTION]: Got unwanted exception.
+  Actual message: "Worker Windows 原生依赖缺失或为空: @openai/codex-win32-x64/vendor/x86_64-pc-windows-msvc/codex/codex.exe"
+      at TestContext.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:167:11)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: Error: Worker Windows 原生依赖缺失或为空: @openai/codex-win32-x64/vendor/x86_64-pc-windows-msvc/codex/codex.exe
+        at Module.assertLayeredWorkerNativeFiles (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.mjs:116:13)
+        at file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:167:43
+        at getActual (node:assert:586:5)
+        at strict.doesNotThrow (node:assert:754:32)
+        at TestContext.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:167:11)
+        at Test.runInAsyncScope (node:async_hooks:226:14)
+        at Test.run (node:internal/test_runner/test:1201:25)
+        at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+        at Test.postRun (node:internal/test_runner/test:1330:19)
+        at Test.run (node:internal/test_runner/test:1258:12),
+    expected: undefined,
+    operator: 'doesNotThrow',
+    diff: 'simple'
+  }
+
+test at tools/windows-closure-rat/stage-layered-workers.test.mjs:153:3
+✖ T1060 既有 layers/browser/vendor Codex同版本错name不因非空字节而放行 (10.409625ms)
+  AssertionError [ERR_ASSERTION]: Got unwanted exception: 原字节门能通过此旧失败样例
+  Actual message: "Worker Windows 原生依赖缺失或为空: @openai/codex-win32-x64/vendor/x86_64-pc-windows-msvc/codex/codex.exe"
+      at TestContext.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:157:12)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: Error: Worker Windows 原生依赖缺失或为空: @openai/codex-win32-x64/vendor/x86_64-pc-windows-msvc/codex/codex.exe
+        at Module.assertLayeredWorkerNativeFiles (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.mjs:116:13)
+        at file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:157:44
+        at getActual (node:assert:586:5)
+        at strict.doesNotThrow (node:assert:754:32)
+        at TestContext.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:157:12)
+        at Test.runInAsyncScope (node:async_hooks:226:14)
+        at Test.run (node:internal/test_runner/test:1201:25)
+        at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+        at Test.postRun (node:internal/test_runner/test:1330:19)
+        at Test.run (node:internal/test_runner/test:1258:12),
+    expected: undefined,
+    operator: 'doesNotThrow',
+    diff: 'simple'
+  }
+
+test at tools/windows-closure-rat/stage-layered-workers.test.mjs:153:3
+✖ T1060 既有 layers/browser/vendor Codex同版本错os不因非空字节而放行 (22.522292ms)
+  AssertionError [ERR_ASSERTION]: Got unwanted exception: 原字节门能通过此旧失败样例
+  Actual message: "Worker Windows 原生依赖缺失或为空: @openai/codex-win32-x64/vendor/x86_64-pc-windows-msvc/codex/codex.exe"
+      at TestContext.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:157:12)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: Error: Worker Windows 原生依赖缺失或为空: @openai/codex-win32-x64/vendor/x86_64-pc-windows-msvc/codex/codex.exe
+        at Module.assertLayeredWorkerNativeFiles (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.mjs:116:13)
+        at file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:157:44
+        at getActual (node:assert:586:5)
+        at strict.doesNotThrow (node:assert:754:32)
+        at TestContext.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:157:12)
+        at Test.runInAsyncScope (node:async_hooks:226:14)
+        at Test.run (node:internal/test_runner/test:1201:25)
+        at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+        at Test.postRun (node:internal/test_runner/test:1330:19)
+        at Test.run (node:internal/test_runner/test:1258:12),
+    expected: undefined,
+    operator: 'doesNotThrow',
+    diff: 'simple'
+  }
+
+test at tools/windows-closure-rat/stage-layered-workers.test.mjs:153:3
+✖ T1060 既有 layers/browser/vendor Codex同版本错cpu不因非空字节而放行 (9.530125ms)
+  AssertionError [ERR_ASSERTION]: Got unwanted exception: 原字节门能通过此旧失败样例
+  Actual message: "Worker Windows 原生依赖缺失或为空: @openai/codex-win32-x64/vendor/x86_64-pc-windows-msvc/codex/codex.exe"
+      at TestContext.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:157:12)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: Error: Worker Windows 原生依赖缺失或为空: @openai/codex-win32-x64/vendor/x86_64-pc-windows-msvc/codex/codex.exe
+        at Module.assertLayeredWorkerNativeFiles (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.mjs:116:13)
+        at file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:157:44
+        at getActual (node:assert:586:5)
+        at strict.doesNotThrow (node:assert:754:32)
+        at TestContext.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:157:12)
+        at Test.runInAsyncScope (node:async_hooks:226:14)
+        at Test.run (node:internal/test_runner/test:1201:25)
+        at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+        at Test.postRun (node:internal/test_runner/test:1330:19)
+        at Test.run (node:internal/test_runner/test:1258:12),
+    expected: undefined,
+    operator: 'doesNotThrow',
+    diff: 'simple'
+  }
+
+test at tools/windows-closure-rat/stage-layered-workers.test.mjs:153:3
+✖ T1060 既有 layers/browser/vendor Codex同版本缺os不因非空字节而放行 (14.919333ms)
+  AssertionError [ERR_ASSERTION]: Got unwanted exception: 原字节门能通过此旧失败样例
+  Actual message: "Worker Windows 原生依赖缺失或为空: @openai/codex-win32-x64/vendor/x86_64-pc-windows-msvc/codex/codex.exe"
+      at TestContext.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:157:12)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: Error: Worker Windows 原生依赖缺失或为空: @openai/codex-win32-x64/vendor/x86_64-pc-windows-msvc/codex/codex.exe
+        at Module.assertLayeredWorkerNativeFiles (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.mjs:116:13)
+        at file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:157:44
+        at getActual (node:assert:586:5)
+        at strict.doesNotThrow (node:assert:754:32)
+        at TestContext.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:157:12)
+        at Test.runInAsyncScope (node:async_hooks:226:14)
+        at Test.run (node:internal/test_runner/test:1201:25)
+        at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+        at Test.postRun (node:internal/test_runner/test:1330:19)
+        at Test.run (node:internal/test_runner/test:1258:12),
+    expected: undefined,
+    operator: 'doesNotThrow',
+    diff: 'simple'
+  }
+
+test at tools/windows-closure-rat/stage-layered-workers.test.mjs:153:3
+✖ T1060 既有 layers/browser/vendor Codex同版本缺cpu不因非空字节而放行 (11.499917ms)
+  AssertionError [ERR_ASSERTION]: Got unwanted exception: 原字节门能通过此旧失败样例
+  Actual message: "Worker Windows 原生依赖缺失或为空: @openai/codex-win32-x64/vendor/x86_64-pc-windows-msvc/codex/codex.exe"
+      at TestContext.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:157:12)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: Error: Worker Windows 原生依赖缺失或为空: @openai/codex-win32-x64/vendor/x86_64-pc-windows-msvc/codex/codex.exe
+        at Module.assertLayeredWorkerNativeFiles (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.mjs:116:13)
+        at file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:157:44
+        at getActual (node:assert:586:5)
+        at strict.doesNotThrow (node:assert:754:32)
+        at TestContext.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:157:12)
+        at Test.runInAsyncScope (node:async_hooks:226:14)
+        at Test.run (node:internal/test_runner/test:1201:25)
+        at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+        at Test.postRun (node:internal/test_runner/test:1330:19)
+        at Test.run (node:internal/test_runner/test:1258:12),
+    expected: undefined,
+    operator: 'doesNotThrow',
+    diff: 'simple'
+  }
+
+test at tools/windows-closure-rat/stage-layered-workers.test.mjs:163:2
+✖ T1060 合法既有 layers/browser/vendor Codex alias继续复用并保留转换字节 (21.281ms)
+  AssertionError [ERR_ASSERTION]: Got unwanted exception.
+  Actual message: "Worker Windows 原生依赖缺失或为空: @openai/codex-win32-x64/vendor/x86_64-pc-windows-msvc/codex/codex.exe"
+      at TestContext.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:167:11)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: Error: Worker Windows 原生依赖缺失或为空: @openai/codex-win32-x64/vendor/x86_64-pc-windows-msvc/codex/codex.exe
+        at Module.assertLayeredWorkerNativeFiles (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.mjs:116:13)
+        at file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:167:43
+        at getActual (node:assert:586:5)
+        at strict.doesNotThrow (node:assert:754:32)
+        at TestContext.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:167:11)
+        at Test.runInAsyncScope (node:async_hooks:226:14)
+        at Test.run (node:internal/test_runner/test:1201:25)
+        at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+        at Test.postRun (node:internal/test_runner/test:1330:19)
+        at Test.run (node:internal/test_runner/test:1258:12),
+    expected: undefined,
+    operator: 'doesNotThrow',
+    diff: 'simple'
+  }
+
+test at tools/windows-closure-rat/stage-layered-workers.test.mjs:153:3
+✖ T1060 既有 layers/local-ai/vendor Codex同版本错name不因非空字节而放行 (6.084959ms)
+  AssertionError [ERR_ASSERTION]: Got unwanted exception: 原字节门能通过此旧失败样例
+  Actual message: "Worker Windows 原生依赖缺失或为空: @openai/codex-win32-x64/vendor/x86_64-pc-windows-msvc/codex/codex.exe"
+      at TestContext.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:157:12)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: Error: Worker Windows 原生依赖缺失或为空: @openai/codex-win32-x64/vendor/x86_64-pc-windows-msvc/codex/codex.exe
+        at Module.assertLayeredWorkerNativeFiles (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.mjs:116:13)
+        at file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:157:44
+        at getActual (node:assert:586:5)
+        at strict.doesNotThrow (node:assert:754:32)
+        at TestContext.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:157:12)
+        at Test.runInAsyncScope (node:async_hooks:226:14)
+        at Test.run (node:internal/test_runner/test:1201:25)
+        at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+        at Test.postRun (node:internal/test_runner/test:1330:19)
+        at Test.run (node:internal/test_runner/test:1258:12),
+    expected: undefined,
+    operator: 'doesNotThrow',
+    diff: 'simple'
+  }
+
+test at tools/windows-closure-rat/stage-layered-workers.test.mjs:153:3
+✖ T1060 既有 layers/local-ai/vendor Codex同版本错os不因非空字节而放行 (9.119959ms)
+  AssertionError [ERR_ASSERTION]: Got unwanted exception: 原字节门能通过此旧失败样例
+  Actual message: "Worker Windows 原生依赖缺失或为空: @openai/codex-win32-x64/vendor/x86_64-pc-windows-msvc/codex/codex.exe"
+      at TestContext.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:157:12)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: Error: Worker Windows 原生依赖缺失或为空: @openai/codex-win32-x64/vendor/x86_64-pc-windows-msvc/codex/codex.exe
+        at Module.assertLayeredWorkerNativeFiles (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.mjs:116:13)
+        at file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:157:44
+        at getActual (node:assert:586:5)
+        at strict.doesNotThrow (node:assert:754:32)
+        at TestContext.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:157:12)
+        at Test.runInAsyncScope (node:async_hooks:226:14)
+        at Test.run (node:internal/test_runner/test:1201:25)
+        at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+        at Test.postRun (node:internal/test_runner/test:1330:19)
+        at Test.run (node:internal/test_runner/test:1258:12),
+    expected: undefined,
+    operator: 'doesNotThrow',
+    diff: 'simple'
+  }
+
+test at tools/windows-closure-rat/stage-layered-workers.test.mjs:153:3
+✖ T1060 既有 layers/local-ai/vendor Codex同版本错cpu不因非空字节而放行 (11.615875ms)
+  AssertionError [ERR_ASSERTION]: Got unwanted exception: 原字节门能通过此旧失败样例
+  Actual message: "Worker Windows 原生依赖缺失或为空: @openai/codex-win32-x64/vendor/x86_64-pc-windows-msvc/codex/codex.exe"
+      at TestContext.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:157:12)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: Error: Worker Windows 原生依赖缺失或为空: @openai/codex-win32-x64/vendor/x86_64-pc-windows-msvc/codex/codex.exe
+        at Module.assertLayeredWorkerNativeFiles (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.mjs:116:13)
+        at file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:157:44
+        at getActual (node:assert:586:5)
+        at strict.doesNotThrow (node:assert:754:32)
+        at TestContext.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:157:12)
+        at Test.runInAsyncScope (node:async_hooks:226:14)
+        at Test.run (node:internal/test_runner/test:1201:25)
+        at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+        at Test.postRun (node:internal/test_runner/test:1330:19)
+        at Test.run (node:internal/test_runner/test:1258:12),
+    expected: undefined,
+    operator: 'doesNotThrow',
+    diff: 'simple'
+  }
+
+test at tools/windows-closure-rat/stage-layered-workers.test.mjs:153:3
+✖ T1060 既有 layers/local-ai/vendor Codex同版本缺os不因非空字节而放行 (11.628042ms)
+  AssertionError [ERR_ASSERTION]: Got unwanted exception: 原字节门能通过此旧失败样例
+  Actual message: "Worker Windows 原生依赖缺失或为空: @openai/codex-win32-x64/vendor/x86_64-pc-windows-msvc/codex/codex.exe"
+      at TestContext.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:157:12)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: Error: Worker Windows 原生依赖缺失或为空: @openai/codex-win32-x64/vendor/x86_64-pc-windows-msvc/codex/codex.exe
+        at Module.assertLayeredWorkerNativeFiles (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.mjs:116:13)
+        at file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:157:44
+        at getActual (node:assert:586:5)
+        at strict.doesNotThrow (node:assert:754:32)
+        at TestContext.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:157:12)
+        at Test.runInAsyncScope (node:async_hooks:226:14)
+        at Test.run (node:internal/test_runner/test:1201:25)
+        at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+        at Test.postRun (node:internal/test_runner/test:1330:19)
+        at Test.run (node:internal/test_runner/test:1258:12),
+    expected: undefined,
+    operator: 'doesNotThrow',
+    diff: 'simple'
+  }
+
+test at tools/windows-closure-rat/stage-layered-workers.test.mjs:153:3
+✖ T1060 既有 layers/local-ai/vendor Codex同版本缺cpu不因非空字节而放行 (6.28925ms)
+  AssertionError [ERR_ASSERTION]: Got unwanted exception: 原字节门能通过此旧失败样例
+  Actual message: "Worker Windows 原生依赖缺失或为空: @openai/codex-win32-x64/vendor/x86_64-pc-windows-msvc/codex/codex.exe"
+      at TestContext.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:157:12)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: Error: Worker Windows 原生依赖缺失或为空: @openai/codex-win32-x64/vendor/x86_64-pc-windows-msvc/codex/codex.exe
+        at Module.assertLayeredWorkerNativeFiles (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.mjs:116:13)
+        at file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:157:44
+        at getActual (node:assert:586:5)
+        at strict.doesNotThrow (node:assert:754:32)
+        at TestContext.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:157:12)
+        at Test.runInAsyncScope (node:async_hooks:226:14)
+        at Test.run (node:internal/test_runner/test:1201:25)
+        at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+        at Test.postRun (node:internal/test_runner/test:1330:19)
+        at Test.run (node:internal/test_runner/test:1258:12),
+    expected: undefined,
+    operator: 'doesNotThrow',
+    diff: 'simple'
+  }
+
+test at tools/windows-closure-rat/stage-layered-workers.test.mjs:163:2
+✖ T1060 合法既有 layers/local-ai/vendor Codex alias继续复用并保留转换字节 (14.978167ms)
+  AssertionError [ERR_ASSERTION]: Got unwanted exception.
+  Actual message: "Worker Windows 原生依赖缺失或为空: @openai/codex-win32-x64/vendor/x86_64-pc-windows-msvc/codex/codex.exe"
+      at TestContext.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:167:11)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: Error: Worker Windows 原生依赖缺失或为空: @openai/codex-win32-x64/vendor/x86_64-pc-windows-msvc/codex/codex.exe
+        at Module.assertLayeredWorkerNativeFiles (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.mjs:116:13)
+        at file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:167:43
+        at getActual (node:assert:586:5)
+        at strict.doesNotThrow (node:assert:754:32)
+        at TestContext.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:167:11)
+        at Test.runInAsyncScope (node:async_hooks:226:14)
+        at Test.run (node:internal/test_runner/test:1201:25)
+        at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+        at Test.postRun (node:internal/test_runner/test:1330:19)
+        at Test.run (node:internal/test_runner/test:1258:12),
+    expected: undefined,
+    operator: 'doesNotThrow',
+    diff: 'simple'
+  }
+
+test at tools/windows-closure-rat/stage-layered-workers.test.mjs:176:2
+✖ T1060 frontend/.next/vendor 固定Codex0.159.3真实bin目录合法字节可以验收 (8.973333ms)
+  AssertionError [ERR_ASSERTION]: Got unwanted exception.
+  Actual message: "Worker Windows 原生依赖缺失或为空: @openai/codex-win32-x64/vendor/x86_64-pc-windows-msvc/codex/codex.exe"
+      at TestContext.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:178:15)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: Error: Worker Windows 原生依赖缺失或为空: @openai/codex-win32-x64/vendor/x86_64-pc-windows-msvc/codex/codex.exe
+        at Module.assertLayeredWorkerNativeFiles (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.mjs:116:13)
+        at file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:178:47
+        at getActual (node:assert:586:5)
+        at strict.doesNotThrow (node:assert:754:32)
+        at TestContext.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:178:15)
+        at Test.runInAsyncScope (node:async_hooks:226:14)
+        at Test.run (node:internal/test_runner/test:1201:25)
+        at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+        at Test.postRun (node:internal/test_runner/test:1330:19)
+        at Test.run (node:internal/test_runner/test:1258:12),
+    expected: undefined,
+    operator: 'doesNotThrow',
+    diff: 'simple'
+  }
+
+test at tools/windows-closure-rat/stage-layered-workers.test.mjs:181:2
+✖ T1060 frontend/.next/vendor 只有旧codex目录不能冒充固定0.159.3真实bin (9.383333ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:186:11)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /原生依赖缺失或为空/,
+    operator: 'throws',
+    diff: 'simple'
+  }
+
+test at tools/windows-closure-rat/stage-layered-workers.test.mjs:176:2
+✖ T1060 layers/browser/vendor 固定Codex0.159.3真实bin目录合法字节可以验收 (15.86675ms)
+  AssertionError [ERR_ASSERTION]: Got unwanted exception.
+  Actual message: "Worker Windows 原生依赖缺失或为空: @openai/codex-win32-x64/vendor/x86_64-pc-windows-msvc/codex/codex.exe"
+      at TestContext.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:178:15)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: Error: Worker Windows 原生依赖缺失或为空: @openai/codex-win32-x64/vendor/x86_64-pc-windows-msvc/codex/codex.exe
+        at Module.assertLayeredWorkerNativeFiles (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.mjs:116:13)
+        at file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:178:47
+        at getActual (node:assert:586:5)
+        at strict.doesNotThrow (node:assert:754:32)
+        at TestContext.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:178:15)
+        at Test.runInAsyncScope (node:async_hooks:226:14)
+        at Test.run (node:internal/test_runner/test:1201:25)
+        at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+        at Test.postRun (node:internal/test_runner/test:1330:19)
+        at Test.run (node:internal/test_runner/test:1258:12),
+    expected: undefined,
+    operator: 'doesNotThrow',
+    diff: 'simple'
+  }
+
+test at tools/windows-closure-rat/stage-layered-workers.test.mjs:181:2
+✖ T1060 layers/browser/vendor 只有旧codex目录不能冒充固定0.159.3真实bin (53.723917ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:186:11)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /原生依赖缺失或为空/,
+    operator: 'throws',
+    diff: 'simple'
+  }
+
+test at tools/windows-closure-rat/stage-layered-workers.test.mjs:176:2
+✖ T1060 layers/local-ai/vendor 固定Codex0.159.3真实bin目录合法字节可以验收 (27.869417ms)
+  AssertionError [ERR_ASSERTION]: Got unwanted exception.
+  Actual message: "Worker Windows 原生依赖缺失或为空: @openai/codex-win32-x64/vendor/x86_64-pc-windows-msvc/codex/codex.exe"
+      at TestContext.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:178:15)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: Error: Worker Windows 原生依赖缺失或为空: @openai/codex-win32-x64/vendor/x86_64-pc-windows-msvc/codex/codex.exe
+        at Module.assertLayeredWorkerNativeFiles (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.mjs:116:13)
+        at file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:178:47
+        at getActual (node:assert:586:5)
+        at strict.doesNotThrow (node:assert:754:32)
+        at TestContext.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:178:15)
+        at Test.runInAsyncScope (node:async_hooks:226:14)
+        at Test.run (node:internal/test_runner/test:1201:25)
+        at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+        at Test.postRun (node:internal/test_runner/test:1330:19)
+        at Test.run (node:internal/test_runner/test:1258:12),
+    expected: undefined,
+    operator: 'doesNotThrow',
+    diff: 'simple'
+  }
+
+test at tools/windows-closure-rat/stage-layered-workers.test.mjs:181:2
+✖ T1060 layers/local-ai/vendor 只有旧codex目录不能冒充固定0.159.3真实bin (31.05925ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:186:11)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /原生依赖缺失或为空/,
+    operator: 'throws',
+    diff: 'simple'
+  }
+
+test at tools/windows-closure-rat/stage-layered-workers.test.mjs:191:1
+✖ T1060 打包Codex目录与锁版官方入口和真实worker resolver一致 (7.266708ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /@openai\/codex-win32-x64\/vendor\/x86_64-pc-windows-msvc\/bin\/codex\.exe/. Input:
+  
+  "import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, statSync, writeFileSync } from 'node:fs';\n" +
+    "import { createRequire } from 'node:module';\n" +
+    "import { dirname, join, resolve, relative } from 'node:path';\n" +
+    "import { stageExecutionWorkerRuntime } from '../../frontend/scripts/desktop/execution-worker-runtime.mjs';\n" +
+    '\n' +
+    '// SEMANTIC_BOUNDARY_ALLOW: 仅核验 Codex 已声明 npm alias 的包身份/版本/目标，不做内容选择。\n' +
+    'function assertCodexAliasIdentity(from,name,identity) {\n' +
+    '  const target=/^@openai\\/codex-(darwin|linux|win32)-(arm64|x64)$/.exec(name);\n' +
+    '  if (!target) return false;\n' +
+    "  const owner=JSON.parse(readFileSync(join(from,'package.json'),'utf8'));\n" +
+    '  const version=`${owner.version}-${target[1]}-${target[2]}`;\n' +
+    "  if (owner.name!=='@openai/codex' || !/^\\d+\\.\\d+\\.\\d+$/.test(owner.version ?? '') ||\n" +
+    '      owner.optionalDependencies?.[name]!==`npm:@openai/codex@${version}`) {\n' +
+    '    throw new Error(`Codex npm alias 声明不匹配: ${name}`);\n' +
+    '  }\n' +
+    "  if (identity.name!=='@openai/codex' || identity.version!==version ||\n" +
+    '      identity.os?.length!==1 || identity.os[0]!==target[1] ||\n' +
+    '      identity.cpu?.length!==1 || identity.cpu[0]!==target[2]) {\n' +
+    '    throw new Error(`Codex npm alias 身份不匹配: ${name}`);\n' +
+    '  }\n' +
+    '  return true;\n' +
+    '}\n' +
+    '\n' +
+    'function packageRoot(from, name) {\n' +
+    "  const req=createRequire(join(from,'package.json'));\n" +
+    '  let file;\n' +
+    '  try { file=req.resolve(`${name}/package.json`); }\n' +
+    '  catch { file=req.resolve(name); }\n' +
+    '  let root=dirname(realpathSync(file));\n' +
+    '  for (;;) {\n' +
+    "    const manifest=join(root,'package.json');\n" +
+    '    if (existsSync(manifest)) {\n' +
+    "      const identity=JSON.parse(readFileSync(manifest,'utf8'));\n" +
+    '      if (assertCodexAliasIdentity(from,name,identity)) return root;\n' +
+    '      if (identity.name===name) return root;\n' +
+    '    }\n' +
+    '    const parent=dirname(root);\n' +
+    '    if (parent===root) throw new Error(`无法定位依赖 ${name}`);\n' +
+    '    root=parent;\n' +
+    '  }\n' +
+    '}\n' +
+    "const supports=(values, value)=>!values || (!values.includes(`!${value}`) && (!values.some(v=>!v.startsWith('!')) || values.includes(value)));\n" +
+    '\n' +
+    '// 按包声明物化实际依赖；不按业务关键词裁剪。已有包必须版本一致，不能偷换运行版本。\n' +
+    'export function stageMissingDependencies({from, vendorRoot, existingVendorRoots=[], packages, targetPlatform=process.platform, targetArch=process.arch}) {\n' +
+    '  const visited=new Map();\n' +
+    '  const added=[];\n' +
+    '  function visit(base,name,optional=false) {\n' +
+    '    let source;\n' +
+    "    try { source=packageRoot(base,name); } catch(error) { if(optional && error.code==='MODULE_NOT_FOUND') return; throw error; }\n" +
+    "    const manifest=JSON.parse(readFileSync(join(source,'package.json'),'utf8'));\n" +
+    '    if (!supports(manifest.os,targetPlatform) || !supports(manifest.cpu,targetArch)) {\n' +
+    '      if(optional) return;\n' +
+    '      throw new Error(`依赖 ${name} 不支持 ${targetPlatform}-${targetArch}`);\n' +
+    '    }\n' +
+    '    const prior=visited.get(name);\n' +
+    '    if(prior) { if(prior!==source) throw new Error(`Worker 依赖 ${name} 存在多个版本，不能平铺覆盖`); return; }\n' +
+    '    visited.set(name,source);\n' +
+    "    const existing=[vendorRoot,...existingVendorRoots].map(root=>join(root,name)).find(root=>existsSync(join(root,'package.json')));\n" +
+    '    if(existing) {\n' +
+    "      const existingManifest=JSON.parse(readFileSync(join(existing,'package.json'),'utf8'));\n" +
+    '      if(existingManifest.version!==manifest.version) throw new Error(`Worker 依赖 ${name} 与运行包版本不一致`);\n' +
+    '      // 原Codex alias校验同样约束复用目录；其他依赖保持原版本复用规则。\n' +
+    '      assertCodexAliasIdentity(base,name,existingManifest);\n' +
+    '    }\n' +
+    '    const destination=existing ?? join(vendorRoot,name);\n' +
+    '    mkdirSync(dirname(destination),{recursive:true});\n' +
+    '    let copied=false;\n' +
+    '    // Next只追踪某一种入口；补齐同版本包的遗漏文件，但保留已有转换文件。\n' +
+    '    cpSync(source,destination,{recursive:true,dereference:true,force:false,errorOnExist:false,filter:path=>{\n' +
+    "      if(path!==source && path.split(/[\\\\/]/).at(-1)==='node_modules') return false;\n" +
+    '      if(statSync(path).isDirectory()) return true;\n' +
+    '      if(existsSync(join(destination,relative(source,path)))) return false;\n' +
+    '      copied=true;\n' +
+    '      return true;\n' +
+    '    }});\n' +
+    '    if(copied) added.push({name,version:manifest.version});\n' +
+    '    const optionalDeps=manifest.optionalDependencies ?? {};\n' +
+    '    for(const dep of Object.keys({...manifest.dependencies,...optionalDeps})) visit(source,dep,Object.hasOwn(optionalDeps,dep));\n' +
+    '  }\n' +
+    '  for(const name of packages) visit(from,name);\n' +
+    '  return added;\n' +
+    '}\n' +
+    '\n' +
+    'export function stageLayeredWorkers({repoRoot,runtimeRoot}) {\n' +
+    '  stageExecutionWorkerRuntime({repoRoot,runtimeRoot});\n' +
+    "  const workers=join(runtimeRoot,'frontend/runtime');\n" +
+    "  for(const entry of readdirSync(workers).filter(name=>name.endsWith('.cjs'))) {\n" +
+    '    const path=join(workers,entry);\n' +
+    '    // 宿主 fork 使用 execArgv:[]；随包入口自己加载固定的相邻解析器，不继承 NODE_OPTIONS。\n' +
+    `    writeFileSync(path,'process.env.CREATOROS_RUNTIME_ROOT = require("node:path").resolve(__dirname, "../..");\\nrequire("../creatoros-module-resolver.cjs");\\n'+readFileSync(path,'utf8'));\n` +
+    '  }\n' +
+    '  const added=stageMissingDependencies({\n' +
+    "    from:join(repoRoot,'ai-worker'),\n" +
+    "    vendorRoot:join(runtimeRoot,'frontend/.next/vendor'),\n" +
+    "    existingVendorRoots:[join(runtimeRoot,'layers/browser/vendor'),join(runtimeRoot,'layers/local-ai/vendor')],\n" +
+    "    packages:['jsdom','@mozilla/readability','mammoth','pdf-parse','@openai/codex','@openclaw/fs-safe'],\n" +
+    "    targetPlatform:'win32',targetArch:'x64',\n" +
+    '  });\n' +
+    "  if (!existsSync(join(runtimeRoot,'frontend/.next/vendor/@napi-rs/canvas-win32-x64-msvc/package.json'))) {\n" +
+    "    throw new Error('Worker PDF 解析缺 Windows canvas 原生依赖');\n" +
+    '  }\n' +
+    '  assertLayeredWorkerNativeFiles(runtimeRoot);\n' +
+    "  console.log('[Worker 依赖] '+JSON.stringify(added));\n" +
+    '}\n' +
+    '\n' +
+    'export function assertLayeredWorkerNativeFiles(runtimeRoot) {\n' +
+    '  // 原 optional 依赖遍历按 os/cpu 物化Windows包；验证沿相同vendor层，不误拒绝合法已有包。\n' +
+    '  for (const relativeFile of [\n' +
+    "    '@openai/codex-win32-x64/vendor/x86_64-pc-windows-msvc/codex/codex.exe',\n" +
+    "    '@openclaw/fs-safe-win32-x64-msvc/fs-safe-native.node',\n" +
+    '  ]) {\n' +
+    "    const file=['frontend/.next/vendor','layers/browser/vendor','layers/local-ai/vendor']\n" +
+    '      .map(layer=>join(runtimeRoot,layer,relativeFile)).find(existsSync);\n' +
+    '    if (!file || !statSync(file).isFile() || statSync(file).size===0) {\n' +
+    '      throw new Error(`Worker Windows 原生依赖缺失或为空: ${relativeFile}`);\n' +
+    '    }\n' +
+    '  }\n' +
+    '}\n'
+  
+      at TestContext.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:200:9)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, statSync, writeFileSync } from \'node:fs\';\nimport { createRequire } from \'node:module\';\nimport { dirname, join, resolve, relative } from \'node:path\';\nimport { stageExecutionWorkerRuntime } from \'../../frontend/scripts/desktop/execution-worker-runtime.mjs\';\n\n// SEMANTIC_BOUNDARY_ALLOW: 仅核验 Codex 已声明 npm alias 的包身份/版本/目标，不做内容选择。\nfunction assertCodexAliasIdentity(from,name,identity) {\n  const target=/^@openai\\/codex-(darwin|linux|win32)-(arm64|x64)$/.exec(name);\n  if (!target) return false;\n  const owner=JSON.parse(readFileSync(join(from,\'package.json\'),\'utf8\'));\n  const version=`${owner.version}-${target[1]}-${target[2]}`;\n  if (owner.name!==\'@openai/codex\' || !/^\\d+\\.\\d+\\.\\d+$/.test(owner.version ?? \'\') ||\n      owner.optionalDependencies?.[name]!==`npm:@openai/codex@${version}`) {\n    throw new Error(`Codex npm alias 声明不匹配: ${name}`);\n  }\n  if (identity.name!==\'@openai/codex\' || identity.version!==version ||\n      identity.os?.length!==1 || identity.os[0]!==target[1] ||\n      identity.cpu?.length!==1 || identity.cpu[0]!==target[2]) {\n    throw new Error(`Codex npm alias 身份不匹配: ${name}`);\n  }\n  return true;\n}\n\nfunction packageRoot(from, name) {\n  const req=createRequire(join(from,\'package.json\'));\n  let file;\n  try { file=req.resolve(`${name}/package.json`); }\n  catch { file=req.resolve(name); }\n  let root=dirname(realpathSync(file));\n  for (;;) {\n    const manifest=join(root,\'package.json\');\n    if (existsSync(manifest)) {\n      const identity=JSON.parse(readFileSync(manifest,\'utf8\'));\n      if (assertCodexAliasIdentity(from,name,identity)) return root;\n      if (identity.name===name) return root;\n    }\n    const parent=dirname(root);\n    if (parent===root) throw new Error(`无法定位依赖 ${name}`);\n    root=parent;\n  }\n}\nconst supports=(values, value)=>!values || (!values.includes(`!${value}`) && (!values.some(v=>!v.startsWith(\'!\')) || values.includes(value)));\n\n// 按包声明物化实际依赖；不按业务关键词裁剪。已有包必须版本一致，不能偷换运行版本。\nexport function stageMissingDependencies({from, vendorRoot, existingVendorRoots=[], packages, targetPlatform=process.platform, targetArch=process.arch}) {\n  const visited=new Map();\n  const added=[];\n  function visit(base,name,optional=false) {\n    let source;\n    try { source=packageRoot(base,name); } catch(error) { if(optional && error.code===\'MODULE_NOT_FOUND\') return; throw error; }\n    const manifest=JSON.parse(readFileSync(join(source,\'package.json\'),\'utf8\'));\n    if (!supports(manifest.os,targetPlatform) || !supports(manifest.cpu,targetArch)) {\n      if(optional) return;\n      throw new Error(`依赖 ${name} 不支持 ${targetPlatform}-${targetArch}`);\n    }\n    const prior=visited.get(name);\n    if(prior) { if(prior!==source) throw new Error(`Worker 依赖 ${name} 存在多个版本，不能平铺覆盖`); return; }\n    visited.set(name,source);\n    const existing=[vendorRoot,...existingVendorRoots].map(root=>join(root,name)).find(root=>existsSync(join(root,\'package.json\')));\n    if(existing) {\n      const existingManifest=JSON.parse(readFileSync(join(existing,\'package.json\'),\'utf8\'));\n      if(existingManifest.version!==manifest.version) throw new Error(`Worker 依赖 ${name} 与运行包版本不一致`);\n      // 原Codex alias校验同样约束复用目录；其他依赖保持原版本复用规则。\n      assertCodexAliasIdentity(base,name,existingManifest);\n    }\n    const destination=existing ?? join(vendorRoot,name);\n    mkdirSync(dirname(destination),{recursive:true});\n    let copied=false;\n    // Next只追踪某一种入口；补齐同版本包的遗漏文件，但保留已有转换文件。\n    cpSync(source,destination,{recursive:true,dereference:true,force:false,errorOnExist:false,filter:path=>{\n      if(path!==source && path.split(/[\\\\/]/).at(-1)===\'node_modules\') return false;\n      if(statSync(path).isDirectory()) return true;\n      if(existsSync(join(destination,relative(source,path)))) return false;\n      copied=true;\n      return true;\n    }});\n    if(copied) added.push({name,version:manifest.version});\n    const optionalDeps=manifest.optionalDependencies ?? {};\n    for(const dep of Object.keys({...manifest.dependencies,...optionalDeps})) visit(source,dep,Object.hasOwn(optionalDeps,dep));\n  }\n  for(const name of packages) visit(from,name);\n  return added;\n}\n\nexport function stageLayeredWorkers({repoRoot,runtimeRoot}) {\n  stageExecutionWorkerRuntime({repoRoot,runtimeRoot});\n  const workers=join(runtimeRoot,\'frontend/runtime\');\n  for(const entry of readdirSync(workers).filter(name=>name.endsWith(\'.cjs\'))) {\n    const path=join(workers,entry);\n    // 宿主 fork 使用 execArgv:[]；随包入口自己加载固定的相邻解析器，不继承 NODE_OPTIONS。\n    writeFileSync(path,\'process.env.CREATOROS_RUNTIME_ROOT = require("node:path").resolve(__dirname, "../..");\\nrequire("../creatoros-module-resolver.cjs");\\n\'+readFileSync(path,\'utf8\'));\n  }\n  const added=stageMissingDependencies({\n    from:join(repoRoot,\'ai-worker\'),\n    vendorRoot:join(runtimeRoot,\'frontend/.next/vendor\'),\n    existingVendorRoots:[join(runtimeRoot,\'layers/browser/vendor\'),join(runtimeRoot,\'layers/local-ai/vendor\')],\n    packages:[\'jsdom\',\'@mozilla/readability\',\'mammoth\',\'pdf-parse\',\'@openai/codex\',\'@openclaw/fs-safe\'],\n    targetPlatform:\'win32\',targetArch:\'x64\',\n  });\n  if (!existsSync(join(runtimeRoot,\'frontend/.next/vendor/@napi-rs/canvas-win32-x64-msvc/package.json\'))) {\n    throw new Error(\'Worker PDF 解析缺 Windows canvas 原生依赖\');\n  }\n  assertLayeredWorkerNativeFiles(runtimeRoot);\n  console.log(\'[Worker 依赖] \'+JSON.stringify(added));\n}\n\nexport function assertLayeredWorkerNativeFiles(runtimeRoot) {\n  // 原 optional 依赖遍历按 os/cpu 物化Windows包；验证沿相同vendor层，不误拒绝合法已有包。\n  for (const relativeFile of [\n    \'@openai/codex-win32-x64/vendor/x86_64-pc-windows-msvc/codex/codex.exe\',\n    \'@openclaw/fs-safe-win32-x64-msvc/fs-safe-native.node\',\n  ]) {\n    const file=[\'frontend/.next/vendor\',\'layers/browser/vendor\',\'layers/local-ai/vendor\']\n      .map(layer=>join(runtimeRoot,layer,relativeFile)).find(existsSync);\n    if (!file || !statSync(file).isFile() || statSync(file).size===0) {\n      throw new Error(`Worker Windows 原生依赖缺失或为空: ${relativeFile}`);\n    }\n  }\n}\n',
+    expected: /@openai\/codex-win32-x64\/vendor\/x86_64-pc-windows-msvc\/bin\/codex\.exe/,
+    operator: 'match',
+    diff: 'simple'
+  }

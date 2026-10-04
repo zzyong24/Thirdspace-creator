@@ -1,3 +1,4 @@
+import type {runExternalChatInWorker} from "./external-chat-worker-run";
 import type {runVideoDecisionsInWorker} from "./video-decisions-worker";
 import type {runAssetProcessingInWorker} from "./asset-processing-worker";
 import type {runTranscribeInWorker} from "./transcribe-worker-run";
@@ -38,6 +39,7 @@ export interface WorkerDependencies {
   runVideo?:typeof runVideoDecisionsInWorker;
   runAgentic?: typeof runAgenticInWorker;
   runChat?: typeof runChatInWorker;
+  runExternalChat?:typeof runExternalChatInWorker;
   generateStructured?(input:z.infer<typeof structuredGenerationInputSchema>,model:z.infer<typeof workerModelSpecSchema>,signal:AbortSignal,call:(port:WorkerPort,data:unknown,signal?:AbortSignal)=>Promise<unknown>):Promise<{callId:string;text:string}>;
   send(message: WorkerMessage): void;
   generate(input: z.infer<typeof modelGenerationInputSchema>, model: z.infer<typeof workerModelSpecSchema>, signal: AbortSignal,
@@ -121,6 +123,16 @@ export function createExecutionWorker(deps: WorkerDependencies) {
         reason="completed";return;
       }
       if(input.kind==="chat.run"){
+        if(input.executionEngine==="codex"){
+          if(!deps.runExternalChat)throw new GenerationFailure("waiting_user","CODEX_WORKER_UNAVAILABLE");
+          const result=await deps.runExternalChat(input,signal,(port,data,portSignal)=>call(execution,port,data,portSignal),async text=>{
+            if(!signal.aborted)send({version:1,type:"progress",requestId,execution,seq:seq++,text});
+          });
+          signal.throwIfAborted();committing=true;
+          const receipt=chatCommitReceiptSchema.parse(await call(execution,"commitExternalChatResult",result,signal));
+          if(receipt.messageId!==`chat:${input.sourceMessageId}`)throw new Error("CODEX_COMMIT_RECEIPT_MISMATCH");
+          reason="completed";return;
+        }
         if(input.tools.some(tool=>tool.execution==="worker.web-read") && !capabilities.includes("chat.web-read"))throw new GenerationFailure("waiting_user","CHAT_WEB_READ_WORKER_UNAVAILABLE");
         if(input.tools.some(tool=>tool.execution==="worker.research") && !capabilities.includes("chat.research"))throw new GenerationFailure("waiting_user","CHAT_RESEARCH_WORKER_UNAVAILABLE");
         if(input.tools.some(tool=>tool.execution==="worker.structured-node") && !capabilities.includes("chat.structured"))throw new GenerationFailure("waiting_user","CHAT_STRUCTURED_WORKER_UNAVAILABLE");

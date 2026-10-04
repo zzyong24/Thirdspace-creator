@@ -232,3 +232,9 @@ it("宿主上下文可选 undefined 也按数据库 JSON 形态保存摘要",asy
  const submitted=await service.submit(f.ctx,f.request);
  expect(await service.submit(f.ctx,f.request)).toMatchObject({...submitted,replayed:true});
 });
+
+it("新Codex任务冻结ACP工件，重放不切版本或协议",async()=>{
+ const f=await fixture();await f.service.submit(f.ctx,{...f.request,executionEngine:"codex"});
+ const rows=await f.rows();expect(rows.executions[0]!.payload).toMatchObject({modelInput:{externalAgentBinding:{protocolKind:"acp",adapterVersion:"2.1.1",runtimeVersion:"0.159.3",policy:"creatoros-acp-readonly-v1"}}});
+ await expect(f.service.submit(f.ctx,{...f.request,executionEngine:"pi"})).rejects.toThrow("引擎");
+});

@@ -44,6 +44,7 @@ export const dynamic = "force-dynamic";
 //   scope 比对,不一致按 OwnershipError 语义 4xx 拒绝 —— 隔离锁在服务端,前端 bug/手工
 //   请求都穿不透(SPEC 2026-07-03 §1.3-3)。
 interface ChatRequestBody {
+  executionEngine?:"pi"|"codex";
   messages?: UIMessage[];
   chatContext?: Partial<ChatContext> & { scope?: string };
   conversationId?: string;
@@ -124,6 +125,8 @@ export async function POST(req: Request): Promise<Response> {
   } catch {
     return NextResponse.json({ error: "invalid JSON body" }, { status: 400 });
   }
+
+  if(body.executionEngine!==undefined&&body.executionEngine!=="pi"&&body.executionEngine!=="codex")return NextResponse.json({code:"CHAT_ENGINE_INVALID",error:"请选择可用的编导引擎。"},{status:400});
 
   // 鉴权:同 dispatch —— [T-046 单机免登录] 有 cookie 验 token,无/失效 cookie 以本机
   // 主用户直通;401 仅剩「库中无任何用户」的异常态兜底。
@@ -576,7 +579,7 @@ export async function POST(req: Request): Promise<Response> {
     submissionPhase = "runtime_access";
     const durable = runtime.durable;
     submissionPhase = "task_submission";
-    const submitted=await durable.submit(ctx,{conversationId,sourceMessageId:persistedUserMessageId},async(owner,snapshot)=>{
+    const submitted=await durable.submit(ctx,{conversationId,sourceMessageId:persistedUserMessageId,executionEngine:body.executionEngine},async(owner,snapshot)=>{
       // 历史只取后端已保存的消息。附件只替换本轮已验归属的用户输入副本。
       const trustedMessages: UIMessage[]=snapshot.messages.map(message=>({
         id:message.id,role:message.role as UIMessage["role"],

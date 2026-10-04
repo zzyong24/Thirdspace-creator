@@ -1,0 +1,10 @@
+{
+  "head_build_exit": 1,
+  "staged_build_exit": 1,
+  "head_typecheck_exit": 2,
+  "staged_typecheck_exit": 2,
+  "typecheck_added": [],
+  "typecheck_removed": [],
+  "head_error_signatures": 14,
+  "staged_error_signatures": 14
+}

@@ -1,0 +1,19 @@
+{
+  "recordedAt": "2026-10-04T09:08:53.708693+00:00",
+  "command": "TMPDIR=/tmp/t1060-native-cli-verify/tmp CARGO_TARGET_DIR=/tmp/t1060-native-cli-verify/target cargo test --offline --manifest-path /tmp/t1060-native-cli-verify/Cargo.toml workbuddy_mcp_launch_is_exact_bundled_argv_without_credentials -- --exact cli_access::tests::workbuddy_mcp_launch_is_exact_bundled_argv_without_credentials",
+  "exitCode": 0,
+  "passed": 1,
+  "failed": 0,
+  "filtered": 9,
+  "moduleSha256": "b636bb14f33dc457701563508134c6a1d703198c367055865277e8c8efa6ad58",
+  "logSha256": "08ba1e713a713208a5872e5f679dbd18b817a2c28dd56deddc34d5bc24df05bc",
+  "scope": "原模块拷贝的隔离crate，tauri default-features=false；并非完整desktop编译或跨平台真机测试",
+  "versions": {
+    "rustc": "1.98.0",
+    "cargo": "1.98.0",
+    "tauri": "2.11.5",
+    "serde": "1.0.228",
+    "serde_json": "1.0.150",
+    "sha2": "0.10.9"
+  }
+}

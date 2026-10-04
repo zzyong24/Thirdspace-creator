@@ -1143,3 +1143,4 @@
 {"ts":"2026-10-01T06:56:58.941Z","actor":"taskctl","action":"start","task":"T-1036","sha_before":"8e57c9acba12","sha_after":"e4ecdc11a6e0"}
 {"ts":"2026-10-01T07:44:57.562Z","actor":"taskctl","action":"complete","task":"T-1036","evidence":"官方组件新安装/React19 Next16 webpack strict构建及短片拖动伸缩、1000片段、同源合成预览通过；docs/research/evidence/t1036/hash-manifest.json。全局reconcile仍32errors/1warning，范围外既有T-1015/T-1026/T-1027及过期review等，保留reconcile.log，不宣称全局或客户端通过。","sha_before":"e4ecdc11a6e0","sha_after":"b37978c1ff03"}
 {"ts":"2026-10-01T07:56:28.957Z","actor":"taskctl","action":"start","task":"T-1037","sha_before":"091eff400869","sha_after":"3e73566acc9a"}
+{"ts":"2026-10-04T08:38:26.047Z","actor":"taskctl","action":"start","task":"T-1060","sha_before":"682c88dc3f68","sha_after":"4e8c2ce5dd63"}

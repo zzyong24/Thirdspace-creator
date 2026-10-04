@@ -42,3 +42,14 @@ export async function discardGeneratedAssetCandidate(db:Db,ctx:RequestContext,ca
  if(asset.status!=="pending")throw new ConflictError("已采纳素材不能作为待采纳候选删除");
  await db.update(assets).set({status:"deleted",updatedAt:stamp}).where(owned);
 }
+
+/** 原提交与精确历史文件的只读核验；不使用currentFileId，不激活，不修复账本。 */
+export async function readCommittedGeneratedAssetFile(db:Db,ctx:RequestContext,callId:string,raw:unknown){
+ const {row,receipt}=await readGeneratedAssetReceipt(db,ctx,callId,raw);
+ if(!["image","video"].includes(row.assetType) || !/^[a-f0-9]{64}$/.test(row.checksum) || row.byteLength<1)throw new ConflictError("原提交文件证明不完整");
+ const [asset]=await db.select().from(assets).where(and(eq(assets.id,row.assetId),eq(assets.userId,ctx.userId),eq(assets.accountId,ctx.accountId!)));
+ if(!asset || !["pending","active"].includes(asset.status) || asset.assetType!==row.assetType)throw new ConflictError("原素材不可用于选择");
+ const [file]=await db.select().from(assetFiles).where(and(eq(assetFiles.id,row.fileId),eq(assetFiles.assetId,row.assetId)));
+ if(!file || file.storageKey!==row.storageKey || file.mimeType!==row.mimeType || file.checksum!==row.checksum || file.fileSize!==row.byteLength)throw new ConflictError("历史精确文件与原提交不符");
+ return {receipt:{...receipt,assetType:row.assetType as "image"|"video"},assetStatus:asset.status as "pending"|"active"};
+}

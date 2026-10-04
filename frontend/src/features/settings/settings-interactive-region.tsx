@@ -188,6 +188,7 @@ const SETTINGS_DIALOG_TABS: ReadonlyArray<SettingsTabDef> = [
 // stepKey(或缺省 highlight)→ 无副作用(不切页签、不报错)。
 const HIGHLIGHT_TAB: Record<string, string> = {
   "redfox": "data-services",
+  "assistant-engine": "models",
   "text-model": "models",
   "image-model": "models",
   "video-model": "models",

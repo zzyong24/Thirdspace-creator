@@ -1041,11 +1041,21 @@ export function materializeHoistedEntryClosure(
 // 可能只留下 pdf-parse 的 JS，安装包读 PDF 才报模块/原生 binding 缺失。这里从 pnpm 的真实依赖
 // 图补齐整个闭包，并给 sidecar/frontend 建立 Node 可解析的顶层锚点。不是按版本硬编码文件名，
 // 依赖升级后仍从 package.json 真身识别。
-export function findPnpmEntryForPackage(srcPnpm, packageName) {
+export function findPnpmEntryForPackage(srcPnpm, packageName, expectedVersion) {
   if (!existsSync(srcPnpm)) return null;
+  // SEMANTIC_BOUNDARY_ALLOW: Codex 平台 alias 只按锁定来源版本及真实 name/os/cpu 定位原 entry。
+  const codexTarget = /^@openai\/codex-(darwin|linux|win32)-(arm64|x64)$/.exec(packageName);
+  if (codexTarget && (!expectedVersion || !expectedVersion.endsWith(`-${codexTarget[1]}-${codexTarget[2]}`))) return null;
+  const actualName = codexTarget ? "@openai/codex" : packageName;
   for (const entry of readdirSync(srcPnpm)) {
     try {
-      if (resolveEntryPackage(srcPnpm, entry).name === packageName) return entry;
+      const body = resolveEntryPackage(srcPnpm, entry);
+      if (body.name !== actualName) continue;
+      const identity = JSON.parse(readFileSync(join(body.dir, "package.json"), "utf8"));
+      if (expectedVersion && identity.version !== expectedVersion) continue;
+      if (codexTarget && (identity.os?.length !== 1 || identity.os[0] !== codexTarget[1] ||
+          identity.cpu?.length !== 1 || identity.cpu[0] !== codexTarget[2])) continue;
+      return entry;
     } catch {
       // .pnpm 中允许存在 lock/元数据目录；它们不是包 entry，跳过即可。
     }
@@ -1097,8 +1107,23 @@ export function materializeRuntimePackageClosure({
 function bundleWorkerExternalPackages() {
   const srcPnpm = join(REPO, "node_modules", ".pnpm");
   const destPnpm = join(SIDECAR_RUNTIME, "node_modules", ".pnpm");
-  for (const packageName of workerExternalPackages) {
-    const entry = findPnpmEntryForPackage(srcPnpm, packageName);
+  const declared = JSON.parse(readFileSync(join(REPO, "ai-worker/package.json"), "utf8")).dependencies;
+  for (const request of workerExternalPackages) {
+    const packageName = request.replace(/\/package\.json$/, "");
+    const codexNative = packageName === `@openai/codex-${platform}-${arch}`;
+    const version = declared["@openai/codex"];
+    const expectedVersion = codexNative && /^\d+\.\d+\.\d+$/.test(version ?? "")
+      ? `${version}-${platform}-${arch}`
+      : /^\d+\.\d+\.\d+$/.test(declared[packageName] ?? "") ? declared[packageName] : undefined;
+    if (codexNative) {
+      const ownerEntry = findPnpmEntryForPackage(srcPnpm, "@openai/codex", version);
+      if (!ownerEntry) throw new Error("[build-sidecar] Codex 根包缺失或版本不匹配");
+      const nativeOwner = JSON.parse(readFileSync(join(resolveEntryPackage(srcPnpm, ownerEntry).dir, "package.json"), "utf8"));
+      if (!expectedVersion || nativeOwner.optionalDependencies?.[packageName] !== `npm:@openai/codex@${expectedVersion}`) {
+        throw new Error(`[build-sidecar] Codex npm alias 声明不匹配：${packageName}`);
+      }
+    }
+    const entry = findPnpmEntryForPackage(srcPnpm, packageName, expectedVersion);
     if (!entry) throw new Error(`[build-sidecar] Worker 必备依赖缺失：${packageName}`);
     const anchor = join(SIDECAR_RUNTIME, "frontend/node_modules", ...packageName.split("/"));
     rmSync(anchor, { recursive: true, force: true });

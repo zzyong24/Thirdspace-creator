@@ -2,8 +2,8 @@ import { spawnSync } from "node:child_process";
 import { existsSync,mkdirSync,copyFileSync,realpathSync } from "node:fs";
 import { join,dirname,relative,isAbsolute } from "node:path";
 import { createRequire } from "node:module";
-export const workerExternalPackages = ["jsdom", "@mozilla/readability", "mammoth"];
-const workerEntries=["execution-worker.cjs","agentic-worker.cjs","intelligence-generation-worker.cjs","intelligence-transcript-worker.cjs","embedding-worker.cjs","flywheel-generation-worker.cjs","model-probe-worker.cjs"];
+export const workerExternalPackages = ["jsdom", "@mozilla/readability", "mammoth", "@openai/codex/package.json", "@openclaw/fs-safe",`@openai/codex-${process.platform}-${process.arch}/package.json`];
+const workerEntries=["codex-acp.cjs","codex-status-worker.cjs","execution-worker.cjs","agentic-worker.cjs","intelligence-generation-worker.cjs","intelligence-transcript-worker.cjs","embedding-worker.cjs","flywheel-generation-worker.cjs","model-probe-worker.cjs"];
 export function assertExecutionWorkerRuntime(runtimeRoot){
   const entry=join(runtimeRoot,"frontend/runtime/execution-worker.cjs");
   for(const filename of workerEntries){

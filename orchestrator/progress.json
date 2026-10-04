@@ -4,10 +4,10 @@
     "work_branch": "main"
   },
   "summary": {
-    "verticals": 47,
-    "tasks_done": 38,
-    "tasks_total": 143,
-    "tasks_pending": 105,
+    "verticals": 48,
+    "tasks_done": 41,
+    "tasks_total": 148,
+    "tasks_pending": 107,
     "verticals_complete": 4
   },
   "verticals": [
@@ -1979,6 +1979,137 @@
       "commits": {
         "review": "34e3b6a9"
       }
+    },
+    {
+      "id": "T-1060",
+      "archetype": [
+        "user-authored",
+        "orchestration"
+      ],
+      "task_id": "T-1060",
+      "tasks": [
+        {
+          "step": "review",
+          "status": "done"
+        },
+        {
+          "step": "reuse",
+          "status": "done"
+        },
+        {
+          "step": "implementation",
+          "status": "pending"
+        },
+        {
+          "step": "verification",
+          "status": "pending"
+        },
+        {
+          "step": "delivery",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "docs/features/t1060-agent-source-integration.md",
+        "docs/features/t1060-agent-source-integration.review.md",
+        "docs/verification/t1060/**",
+        "ai-worker/vendor/acpx/**",
+        "ai-worker/src/execution/**",
+        "ai-worker/src/runtime/**",
+        "ai-worker/package.json",
+        "backend/src/modules/ai/**",
+        "backend/src/modules/ai-runtime/**",
+        "backend/src/modules/execution/**",
+        "backend/src/application/chat/**",
+        "contract/src/internal/**",
+        "contract/src/modules/settings/**",
+        "mcp-server/**",
+        "cli/**",
+        "frontend/src/features/settings/**",
+        "frontend/src/components/settings/**",
+        "scripts/workbuddy/**",
+        "scripts/lib/**",
+        "package.json",
+        "pnpm-lock.yaml",
+        "BACKLOG.md",
+        "BACKLOG-details.md",
+        "orchestrator/DECISION_LOG.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/progress.json",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson",
+        "orchestrator/context/T-1060.md",
+        "PROJECT.md"
+      ],
+      "read_set": [
+        "docs/features/t1060-agent-source-integration.md",
+        "docs/verification/t1060/**",
+        "docs/verification/t1059/**",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "ai-worker/**",
+        "backend/src/modules/ai/**",
+        "backend/src/modules/ai-runtime/**",
+        "backend/src/modules/execution/**",
+        "backend/src/application/chat/**",
+        "contract/src/**",
+        "mcp-server/**",
+        "cli/**",
+        "frontend/src/**",
+        "scripts/**",
+        "package.json",
+        "pnpm-lock.yaml"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {
+        "review": [
+          "docs/features/t1060-agent-source-integration.md",
+          "docs/features/t1060-agent-source-integration.review.md",
+          "docs/verification/t1060/**"
+        ],
+        "reuse": [
+          "ai-worker/vendor/acpx/**",
+          "ai-worker/package.json",
+          "pnpm-lock.yaml",
+          "scripts/workbuddy/**",
+          "docs/verification/t1060/**"
+        ],
+        "implementation": [
+          "ai-worker/src/execution/**",
+          "ai-worker/src/runtime/**",
+          "backend/src/modules/ai/**",
+          "backend/src/modules/ai-runtime/**",
+          "backend/src/modules/execution/**",
+          "backend/src/application/chat/**",
+          "contract/src/internal/**",
+          "contract/src/modules/settings/**",
+          "mcp-server/**",
+          "cli/**",
+          "frontend/src/features/settings/**",
+          "frontend/src/components/settings/**",
+          "scripts/workbuddy/**",
+          "scripts/lib/**",
+          "package.json",
+          "pnpm-lock.yaml",
+          "docs/verification/t1060/**"
+        ],
+        "verification": [
+          "docs/verification/t1060/**",
+          "ai-worker/src/execution/**",
+          "backend/src/modules/ai/**",
+          "contract/src/internal/**",
+          "mcp-server/**",
+          "scripts/workbuddy/**"
+        ],
+        "delivery": [
+          "docs/verification/t1060/**"
+        ]
+      },
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
     }
   ],
   "leases": {}

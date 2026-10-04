@@ -1,0 +1,43 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/ai-worker
+
+ ❯ src/execution/external-chat-images.test.ts (5 tests | 1 failed) 72ms
+   × 保存成功但回复丢失，重放恢复后清除旧失败项 35ms (retry x2)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/execution/external-chat-images.test.ts > 保存成功但回复丢失，重放恢复后清除旧失败项
+ FAIL  src/execution/external-chat-images.test.ts > 保存成功但回复丢失，重放恢复后清除旧失败项
+ FAIL  src/execution/external-chat-images.test.ts > 保存成功但回复丢失，重放恢复后清除旧失败项
+AssertionError: expected { images: [ { …(9) } ], …(1) } to match object { images: [ { …(9) } ], …(1) }
+
+- Expected
++ Received
+
+@@ -1,7 +1,13 @@
+  {
+-   "imageFailures": [],
++   "imageFailures": [
++     {
++       "code": "CODEX_IMAGE_SAVE_UNKNOWN",
++       "imageIndex": 0,
++       "toolCallId": "tool",
++     },
++   ],
+    "images": [
+      {
+        "assetId": "asset",
+        "assetType": "image",
+        "byteLength": 12,
+
+ ❯ src/execution/external-chat-images.test.ts:36:329
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 4 passed (5)
+   Start at  17:14:58
+   Duration  1.42s (transform 639ms, setup 0ms, import 1.03s, tests 72ms, environment 0ms)
+

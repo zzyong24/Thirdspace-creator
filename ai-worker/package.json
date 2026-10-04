@@ -118,7 +118,14 @@
     "@mozilla/readability": "0.6.0",
     "jsdom": "29.1.1",
     "mammoth": "^1.12.0",
-    "pdf-parse": "^2.4.5"
+    "pdf-parse": "^2.4.5",
+    "@openai/codex": "0.159.3",
+    "@agentclientprotocol/sdk": "1.5.1",
+    "@openclaw/fs-safe": "0.21.3",
+    "@modelcontextprotocol/sdk": "1.29.0",
+    "diff": "9.0.0",
+    "open": "11.0.1",
+    "vscode-jsonrpc": "9.0.1"
   },
   "devDependencies": {
     "@ai-sdk/provider": "^4.0.0",

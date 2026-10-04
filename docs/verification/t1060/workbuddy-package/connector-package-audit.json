@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "version": "0.1.0",
+  "sourceCommit": "856eae4fe416b28adffb96092d67ff26c7797ff4",
+  "archive": "creatoros-workbuddy-connector-0.1.0.zip",
+  "archiveSha256": "5249047f7a40ec544385dbac94033059882e9829554e74eb76d9f5437a0893f9",
+  "bytes": 8868,
+  "files": [
+    {
+      "path": "LICENSE.univer-office",
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+      "bytes": 11357
+    },
+    {
+      "path": "README.md",
+      "sha256": "45f9fd7c0e07e30587562b1d4ba2f6d047d9e5e1921c9528fdeb50f207a43f2a",
+      "bytes": 2475
+    },
+    {
+      "path": "SOURCE.md",
+      "sha256": "1611cd2b03e58569d0f07b79630a35edb7e424be01430918a3b832e1090694aa",
+      "bytes": 1958
+    },
+    {
+      "path": "mcp.template.json",
+      "sha256": "0ab604578ecc2af9090b8107b641b8ab38fefcbb7f5f74c95627f36a5aad0a3e",
+      "bytes": 342
+    },
+    {
+      "path": "skills/creatoros/SKILL.md",
+      "sha256": "c7b8b7516413bec1eab2e02a35d318d287af581ed3cfaf9bdbb444e1849e2947",
+      "bytes": 2639
+    }
+  ],
+  "validation": "工件完整性已检查；WorkBuddy 安装信任和真实工具调用需独立验证"
+}

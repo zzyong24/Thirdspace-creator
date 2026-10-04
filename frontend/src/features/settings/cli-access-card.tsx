@@ -1,10 +1,16 @@
 "use client";
 
 import * as React from "react";
-import { CheckCircle2, Loader2, TerminalSquare, TriangleAlert } from "lucide-react";
+import { CheckCircle2, Copy, Download, Loader2, TerminalSquare, TriangleAlert } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { SectionCard } from "@/components/project/section-card";
+
+interface McpLaunch {
+  readonly command: string;
+  readonly args: readonly string[];
+  readonly env: Readonly<Record<string, string>>;
+}
 
 interface CliAccessStatus {
   readonly supported: boolean;
@@ -14,6 +20,7 @@ interface CliAccessStatus {
   readonly productId: string | null;
   readonly expiresAt: number | null;
   readonly commandPath: string | null;
+  readonly mcpLaunch?: McpLaunch | null;
   readonly activeConnections: number;
   readonly lastInvocationAt: number | null;
 }
@@ -54,6 +61,12 @@ export function CliAccessCard() {
   const [status, setStatus] = React.useState<CliAccessStatus | null>(null);
   const [phase, setPhase] = React.useState<Phase>("loading");
   const [message, setMessage] = React.useState("");
+  const [handoffMessage, setHandoffMessage] = React.useState("");
+  const [handoffError, setHandoffError] = React.useState("");
+  const [transferring, setTransferring] = React.useState(false);
+  const transferInFlight = React.useRef(false);
+  const mounted = React.useRef(true);
+  const handoffRevision = React.useRef(0);
 
   const refresh = React.useCallback(async () => {
     if (!isTauriRuntime()) {
@@ -63,42 +76,97 @@ export function CliAccessCard() {
     try {
       const { invoke } = await import("@tauri-apps/api/core");
       const next = await invoke<CliAccessStatus>("cli_access_status");
+      if (!mounted.current) return;
       setStatus(next);
       setPhase(next.supported ? "ready" : "unavailable");
       setMessage("");
     } catch (error) {
+      if (!mounted.current) return;
       setPhase("error");
       setMessage(errorMessage(error));
     }
   }, []);
 
   React.useEffect(() => {
+    mounted.current = true;
     void refresh();
+    return () => { mounted.current = false; handoffRevision.current += 1; };
   }, [refresh]);
 
   const changeAccess = React.useCallback(async (enable: boolean) => {
     if (phase === "changing") return;
     setPhase("changing");
     setMessage("");
+    handoffRevision.current += 1;
+    setHandoffMessage("");
+    setHandoffError("");
     try {
       const { invoke } = await import("@tauri-apps/api/core");
       const next = await invoke<CliAccessStatus>(
         enable ? "cli_access_enable" : "cli_access_revoke",
       );
+      if (!mounted.current) return;
       setStatus(next);
       setPhase("ready");
     } catch (error) {
+      if (!mounted.current) return;
       try {
         const { invoke } = await import("@tauri-apps/api/core");
-        setStatus(await invoke<CliAccessStatus>("cli_access_status"));
-      } catch { setStatus(null); }
+        const next = await invoke<CliAccessStatus>("cli_access_status");
+        if (!mounted.current) return;
+        setStatus(next);
+      } catch { if (mounted.current) setStatus(null); }
+      if (!mounted.current) return;
       setPhase("error");
       setMessage(errorMessage(error));
     }
   }, [phase]);
 
+  const transferConfig = React.useCallback(async (kind: "copy" | "download") => {
+    const launch = status?.mcpLaunch;
+    if (transferInFlight.current || phase !== "ready" || status?.ready !== true ||
+        status.enabled !== true || !launch) return;
+    transferInFlight.current = true;
+    const revision = handoffRevision.current;
+    setTransferring(true);
+    setHandoffMessage("");
+    setHandoffError("");
+    try {
+      // Native shell owns executable discovery; this UI only serializes its nonsecret argv.
+      const config = `${JSON.stringify({ mcpServers: { creatoros: { type: "stdio", ...launch } } }, null, 2)}\n`;
+      if (kind === "copy") {
+        if (!navigator.clipboard?.writeText) throw new Error("系统剪贴板不可用，请使用下载连接配置");
+        await navigator.clipboard.writeText(config);
+      } else {
+        const url = URL.createObjectURL(new Blob([config], { type: "application/json;charset=utf-8" }));
+        const link = document.createElement("a");
+        try {
+          link.href = url;
+          link.download = "creatoros-workbuddy.mcp.json";
+          document.body.appendChild(link);
+          link.click();
+        } finally {
+          link.remove();
+          // Let the host consume the click before releasing the download URL.
+          setTimeout(() => URL.revokeObjectURL(url), 0);
+        }
+      }
+      if (mounted.current && revision === handoffRevision.current) {
+        setHandoffMessage(kind === "copy"
+          ? "已复制配置，请在 WorkBuddy 中添加并确认首次信任。"
+          : "已生成连接配置，请在 WorkBuddy 中添加并确认首次信任。");
+      }
+    } catch (error) {
+      if (mounted.current && revision === handoffRevision.current) setHandoffError(errorMessage(error));
+    } finally {
+      transferInFlight.current = false;
+      if (mounted.current) setTransferring(false);
+    }
+  }, [phase, status]);
+
   const enabled = status?.enabled === true;
   const expires = expiryLabel(status?.expiresAt ?? null);
+  const canTransfer = phase === "ready" && status?.ready === true && enabled && Boolean(status.mcpLaunch);
 
   return (
     <SectionCard
@@ -161,6 +229,35 @@ export function CliAccessCard() {
             CreatorOS 已接受当前 OS 用户发起的完整读写调用
           </p>
         ) : null}
+
+        <section aria-labelledby="workbuddy-mcp-heading" className="rounded-lg border border-border p-4 text-sm">
+          <h3 id="workbuddy-mcp-heading" className="font-medium text-foreground">WorkBuddy 外部工具接入</h3>
+          <p className="mt-2 leading-6 text-muted-foreground">
+            在 WorkBuddy 的 MCP 管理中添加 CreatorOS，让其对话使用本产品的项目、稿件与素材工具。
+            首次信任和工具调用需在 WorkBuddy 中确认；这里不会修改你的 WorkBuddy 配置或选择应用内引擎。
+          </p>
+          {canTransfer ? (
+            <div className="mt-3 flex flex-wrap gap-2">
+              <Button type="button" variant="outline" disabled={transferring} onClick={() => void transferConfig("copy")}>
+                <Copy aria-hidden="true" className="size-4" />复制 MCP 配置
+              </Button>
+              <Button type="button" variant="outline" disabled={transferring} onClick={() => void transferConfig("download")}>
+                <Download aria-hidden="true" className="size-4" />下载连接配置
+              </Button>
+            </div>
+          ) : (
+            <p className="mt-3 leading-6 text-muted-foreground">
+              {phase === "unavailable" ? "请在桌面版生成本机连接配置。" :
+                !enabled ? "开启 CreatorOS CLI 访问后可生成连接配置。" :
+                  "本机 MCP 启动入口尚未就绪，请更新桌面版或检查安装文件。"}
+            </p>
+          )}
+          <p className="mt-3 leading-6 text-muted-foreground">
+            保留已有 MCP 服务器，只添加配置中的 creatoros 项。保持 CreatorOS 运行，并在 WorkBuddy 选择真实账号与项目。
+          </p>
+          {handoffMessage ? <p role="status" className="mt-3 leading-6 text-success">{handoffMessage}</p> : null}
+          {handoffError ? <p role="alert" className="mt-3 leading-6 text-danger">{handoffError}</p> : null}
+        </section>
 
         {phase !== "unavailable" ? (
           <div className="flex justify-end border-t border-border pt-3">

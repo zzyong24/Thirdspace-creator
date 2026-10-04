@@ -12,6 +12,7 @@ export interface WorkerSupervisorPorts {
 }
 export interface WorkerSupervisorOptions {
   entryPath: string;
+  extraEnv?:Record<string,string>;
   ports: WorkerSupervisorPorts;
   onText?: (execution: ExecutionRef, text: string) => void;
   shutdownGraceMs?: number;
@@ -69,7 +70,7 @@ export function createWorkerSupervisor(options: WorkerSupervisorOptions) {
     if (cleanups.size) return Promise.all([...cleanups.values()]).then(() => start());
     if (ready) return ready;
     stopping = false;
-    const processHandle = fork(options.entryPath, [], {serialization:"advanced", env: buildChildEnv(), execArgv: [], stdio: ["ignore", "ignore", "ignore", "ipc"]});
+    const processHandle = fork(options.entryPath, [], {serialization:"advanced", env: buildChildEnv(options.extraEnv), execArgv: [], stdio: ["ignore", "ignore", "ignore", "ipc"]});
     child = processHandle;
     ready = new Promise((resolve, reject) => {
       let startupTimedOut = false;

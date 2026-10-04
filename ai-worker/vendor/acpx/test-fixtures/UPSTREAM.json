@@ -1,0 +1,10 @@
+{
+  "说明": "仅用于隔离测试，生产入口不引用此文件；假标准输入输出 Agent 原样复用上游实现。",
+  "repository": "https://github.com/openclaw/acpx",
+  "commit": "27efb1b57b9de22105a91e9154b1d29b51ede8cb",
+  "path": "test/mock-agent.ts",
+  "sha256": "18f7584018705d66eaeccedf0dc461eaa9fd4da4b107472c055a801369b4f2ee",
+  "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/test/mock-agent.ts",
+  "license": "MIT",
+  "license_path": "../LICENSE"
+}
