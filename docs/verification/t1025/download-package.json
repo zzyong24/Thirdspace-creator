@@ -1,0 +1,12 @@
+{
+  "file": "CreatorOS-封面与图文模板样图.zip",
+  "storage": "Git忽略的.data/t1025-delivery",
+  "bytes": 52142044,
+  "sha256": "b666a43e24bb2532135171fd90fec7acfb32f4cdccc51d0b4c363fce98c4cba4",
+  "publicRecipes": 32,
+  "privateRecipes": 3,
+  "publicPng": 26,
+  "privatePng": 4,
+  "validation": "ZIP逐文件CRC通过",
+  "delivery": "本地图片与配方包，未新增产品导入功能"
+}

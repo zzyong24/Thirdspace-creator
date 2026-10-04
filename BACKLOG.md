@@ -9,9 +9,9 @@
 
 | ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
 | --- | --- | --- | --- | --- | --- | --- |
-| T-1025 | 扩充真人知识、产品实拍及GitHub参考的双库模板样图 | 🔨 待办 | — | — | [SPEC](docs/features/t1025-template-content-expansion.md) | 用户2026-10-04要求先做真人知识与产品实拍，真人用本人原图，并从GitHub扩充封面/小红书图文；复用既有T1021目录、收藏和原素材，不改IA/服务合同或发布边界。 |
+| T-1025 | 扩充真人知识、产品实拍及GitHub参考的双库模板样图 | ⏸️ 待办 | — | 待验 | [SPEC](docs/features/t1025-template-content-expansion.md) | 32套公共配方及本人3套私人收藏已接入，代码92ebc96b；24前端/6服务/156性能通过，样图配方本地包已CRC校验。2026-10-05同库重读通过；浏览器旧错误页仍被策略拒绝，已请求手动重新加载，页面待验；全局238失败如实保留，未安装发布。 |
 | T-1021 | CreatorOS封面与小红书图文双模板库、行业分类及私人收藏 | ⏸️ 待办 | PASS[REV:55bcfd0e2f8b] | 待验 | [SPEC](docs/features/t1021-cover-template-library.md) | 用户补充功能首页首栏并列案例库/资产库/画布，两库独立且可快速新建画布；首页IA独立复核PASS并已实施；案例/资产/画布并列，原系统新建与追加；18前端/11原生E2E/156性能回归通过，总验收仍保留待验。原画布实现115项相关测试及9项Chrome回归通过；旧凭证不覆盖新IA，真实供应商/安装版及全局Gate待验。 |
-| T-1018 | 清理本轮测试暴露的全局类型与边界欠债 | 📋 待办 | — | 待验 | [T-1021补充证据](docs/verification/t1021-template-library.md) | 复用主工作区已登记T-1018：后端14项旧测试类型漂移、live-chat-session SDK边界、video-decisions-runner语义门，以及T-916历史reconcile漂移；本任务无对应源码变更，不调低门槛。 |
+| T-1018 | 清理本轮测试暴露的全局类型与边界欠债 | 📋 待办 | — | 待验 | [T-1021补充证据](docs/verification/t1021-template-library.md) | 既有根因继续跟踪：后端旧测试类型漂移、live-chat-session SDK边界、video-decisions-runner语义门及T-916历史对账；T1025于2026-10-05实跑reconcile 238 errors、边界7条（基线5），证据docs/verification/t1025/。本轮不改门槛。 |
 | T-995 | 修复画布交给编导后聊天提交失败并核对原画布 | 🔨 待办 | — | 待验 | [T-993 SPEC](docs/features/t993-creator-canvas.md) | 安装版 2026-09-29 20:39 画布深链五次报 SKILL_TASK_MAPPING_MISSING；补齐画布对话 Skill 冻结映射、真实画布读取与候选建议入口，保留原会话和账号隔离，实测后交付逐项可审核的建议。 |
 | T-994 | 打磨创作画布、项目用料与素材创作交互 | ✅ 待办 | PASS[REV:4dab5a12ed51] | PASS:ee75fc4332de | [SPEC](docs/features/t994-canvas-creation-experience.md) | 用户反馈当前项目与素材创作交互差；先实测画布→素材→生成→项目用料旅程，形成可核对的界面改进方案并实现，不改变账号归属与候选采纳边界。 |
 | T-993 | 给编导智能体接入持久化创作画布与图像/视频生成闭环 | 🔨 待办 | PASS[REV:27bb71481722] | 待验 | [SPEC](docs/features/t993-creator-canvas.md) | 旧库缺表已修复，真实模型四模式与 4 份项目用料在第三轮安装版保持；隔离和安装版均真实出片，安装版 6.6 秒 H.264 候选留待确认；修复 ESM 工具路径故障并更新旧发布深链测试；新 DMG 含 MIT notice 且校验有效。仍待 Windows 实包、平台发布边界与全局旧 Gate 对账；review receipt 因宪法变更过期，T-916 跟踪既有漂移。 |

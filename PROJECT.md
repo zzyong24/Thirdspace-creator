@@ -3,7 +3,7 @@
 > 本文件由 `node orchestrator/process/pmem.mjs sync` 生成,**勿手改生成段**。
 > 人写的「定位/为什么」改 pmem.mjs 顶部常量与 SYSTEM_ARCHITECTURE.md。
 
-LAST_SYNCED: codex/t1021-canvas-templates @ 5ffb8493
+LAST_SYNCED: codex/t1021-canvas-templates @ 92ebc96b
 
 ## 这是什么(定位)
 
@@ -23,7 +23,6 @@ CreatorOS —— 一个编导式的自媒体内容生产系统(非项目管理�
 
 ## 开放任务(欠债)
 
-- [wip] T-1025 扩充真人知识、产品实拍及GitHub参考的双库模板样图
 - [open] T-1018 清理本轮测试暴露的全局类型与边界欠债
 - [wip] T-995 修复画布交给编导后聊天提交失败并核对原画布
 - [wip] T-993 给编导智能体接入持久化创作画布与图像/视频生成闭环

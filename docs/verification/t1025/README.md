@@ -11,3 +11,13 @@
 隔离预览重启后内存中的旧14项目录已重新加载32项。开发降级加密key随进程变化导致本地mock模型配置失效，仅通过原settings端口恢复`43423`本地fixture配置，未读取真实凭据或调用真实供应商。样图均使用内置image_gen生成，未通过这个fixture生成。
 
 本任务尚未安装到正式CreatorOS。T-1021真实供应商/安装版及既有全局Gate待验继续保留，不因本次内容交付销账。全局pmem/reconcile结果将如实附存，相关根因仍由T-1018/T-916跟踪。
+
+## 2026-10-05继续执行
+
+用户要求继续。读取当前任务SPEC、项目记忆、产品流程3.27.2（与落地一致），路由为4-build的verification；加载项目oil-ui-pro0.10.0与主工作区账号组UI_RULES，保留已认可的原系统结构。没有重新探索布局，因此不另建对比页。未取得当前页面截图，不能进行实际界面评分或独立视觉评审。
+
+恢复同一隔离预览数据后，原公共服务再次读回32套公共模板及全部3套新增私人模板。浏览器工具读取当前projects标签再次被URL协议策略拒绝；已请求用户手动刷新。未用其它浏览器/底层接口绕过，页面操作与视觉Gate继续待验。此前全局reconcile进程随中断结束且没有输出，不能宣称它完成，本轮重新运行。
+
+本地下载包已生成并逐项CRC校验：26张公共样图、本人原图与3张私人样图、32套公共/3套私人配方及完整许可。包置于Git忽略的.data/t1025-delivery；不新增产品导入按钮。摘要与体积见download-package.json。
+
+本轮reconcile实际退出1，238 errors / 0 warnings，完整日志为reconcile-continue.txt。boundary实际7条（基线5），超基线2条均是既有live-chat-session.ts的SDK导入；semantic仍是既有video-decisions-runner.ts缺material.match Skill。失败范围由已登记T-1018/T-916跟踪；没有调低门禁或修改这些业务。界面验收属于本任务，继续保留待验与阻断状态，未运行taskctl complete。

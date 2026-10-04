@@ -2355,14 +2355,14 @@
       "tasks": [
         {
           "step": "content",
-          "status": "pending"
+          "status": "done"
         },
         {
           "step": "verification",
           "status": "pending"
         }
       ],
-      "blocked_reason": null,
+      "blocked_reason": "原预览已恢复并回读32套公共/3套新增本人收藏；浏览器策略仍拒绝读取旧错误页，已请求用户手动刷新，页面视觉与操作验收待验证。",
       "depends_on": [],
       "step_depends_on": {},
       "write_set": [
@@ -2405,13 +2405,10 @@
       },
       "step_read_set": {},
       "step_exclusive_resources": {},
-      "commits": {}
+      "commits": {
+        "content": "92ebc96b"
+      }
     }
   ],
-  "leases": {
-    "T-1025:content": {
-      "agent": "root",
-      "since": "2026-10-04T13:37:31.622Z"
-    }
-  }
+  "leases": {}
 }
