@@ -1,0 +1,135 @@
+{
+  "verification": "formal-codex-saved-script-content-followup-cancel",
+  "observedAt": "2026-10-04T12:49:01.509Z",
+  "isolatedRoot": "/tmp/t1060-ai-business/continue-codex/business-gQbt22",
+  "model": "original default; no sessionModel override",
+  "adopted": false,
+  "published": false,
+  "articleWorkbenchEntryVerified": false,
+  "graphicWorkbenchEntryVerified": false,
+  "rounds": [
+    {
+      "label": "initial",
+      "events": [
+        "reserveExternalChatTurn",
+        "listExternalTaskTools",
+        "listExternalTaskTools",
+        "listExternalTaskTools",
+        "startExternalChatTurn",
+        "recordExternalChatProviderTurn",
+        "executeExternalTaskTool",
+        "executeExternalTaskTool",
+        "settleExternalChatTurn"
+      ],
+      "toolCalls": [
+        {
+          "toolName": "context.project.detail",
+          "toolCallId": "2",
+          "input": {},
+          "result": {
+            "turnCallId": "call_a6335fdd-073c-4903-a267-5e4cfabd39cf",
+            "toolCallId": "2",
+            "callId": "call_f3efc6e4-c971-4a7f-9560-bfa9145e9517",
+            "status": "settled",
+            "outcome": {
+              "status": "ok",
+              "summary": "已读取当前工具结果",
+              "evidence": [],
+              "data": {
+                "kind": "context.project.detail",
+                "found": true,
+                "project": {
+                  "id": "project-t1060-47218845-65c3-4650-bcc4-cf03ebdc1d6b",
+                  "title": "夜航灯塔 · 7a2fe479",
+                  "stage": "brief",
+                  "status": "active",
+                  "publish": {
+                    "published": false,
+                    "platform": null,
+                    "publishedAt": null
+                  },
+                  "brief": {
+                    "targetPlatforms": []
+                  },
+                  "artifacts": [
+                    {
+                      "artifactType": "output_script",
+                      "versionCount": 1,
+                      "updatedAt": "2026-10-04T12:49:01.570Z",
+                      "charCount": 161
+                    }
+                  ],
+                  "metricsSummary": ""
+                }
+              },
+              "error": null,
+              "continuation": null,
+              "sideEffect": "none"
+            }
+          }
+        },
+        {
+          "toolName": "context.artifact.text",
+          "toolCallId": "3",
+          "input": {
+            "artifactType": "output_script",
+            "maxChars": 4000,
+            "offset": 0
+          },
+          "result": {
+            "turnCallId": "call_a6335fdd-073c-4903-a267-5e4cfabd39cf",
+            "toolCallId": "3",
+            "callId": "call_5f925ecc-f897-499d-aa5f-65f3fc0dd778",
+            "status": "settled",
+            "outcome": {
+              "status": "ok",
+              "summary": "已读取当前工具结果",
+              "evidence": [],
+              "data": {
+                "kind": "context.artifact.text",
+                "found": true,
+                "artifactType": "output_script",
+                "projectId": "project-t1060-47218845-65c3-4650-bcc4-cf03ebdc1d6b",
+                "artifactId": "artifact-t1060-976c795a-b874-4931-85b5-8511679996bc",
+                "currentVersionId": "artifactversion-t1060-4868185f-d6cc-4bc2-9dfb-1d59a3e9ff0d",
+                "versionNumber": 1,
+                "updatedAt": "2026-10-04T12:49:01.570Z",
+                "contentHash": "93b57adc56d702d876b26a739a6f10a2871ad33c76d848a6322e2550ba977386",
+                "truthPriority": "current_confirmed_script",
+                "sections": [],
+                "text": "标题：夜航灯塔 · 7a2fe479\n简介：用灯塔与夜航说明先确认内容，再衍生成文章和图文。\n标签：夜航、内容创作\n\n第一段：小船在夜里出航。海面是蓝的，灯塔的光是暖橙色的。\n第二段：船长先确认航线，文章和图文如同不同航图，来自同一份已确认脚本。\n第三段：抵达前还要检查航图。AI给出候选，人可以继续修改，不代表已经发布。",
+                "offset": 0,
+                "totalChars": 161,
+                "hasMore": false
+              },
+              "error": null,
+              "continuation": null,
+              "sideEffect": "none"
+            }
+          }
+        }
+      ],
+      "cancelRequested": false,
+      "startedAt": "2026-10-04T12:49:01.589Z",
+      "executionTaskId": "execution-task-68cd0291-e8d3-45a0-8303-062b6a0ee6aa",
+      "businessTaskId": "ai-task-b7799805-8191-44cd-b2d4-ea3a699ff892",
+      "historyMessageCount": 1,
+      "elapsedMs": 40100,
+      "finishedAt": "2026-10-04T12:49:41.778Z"
+    }
+  ],
+  "projectId": "project-t1060-47218845-65c3-4650-bcc4-cf03ebdc1d6b",
+  "artifactId": "artifact-t1060-976c795a-b874-4931-85b5-8511679996bc",
+  "sourceVersionId": "artifactversion-t1060-4868185f-d6cc-4bc2-9dfb-1d59a3e9ff0d",
+  "expectedMetadata": {
+    "title": "夜航灯塔 · 7a2fe479",
+    "summary": "用灯塔与夜航说明先确认内容，再衍生成文章和图文。",
+    "tags": [
+      "夜航",
+      "内容创作"
+    ]
+  },
+  "outcome": "failed",
+  "errorCode": "AssertionError",
+  "errorMessage": "Expected values to be strictly deep-equal:\n+ actual - expected\n\n  {\n    summary: '用灯塔与夜航说明先确认内容，再衍生成文章和图文。',\n+   tags: '夜航、内容创作',\n-   tags: [\n-     '夜航',\n-     '内容创作'\n-   ],\n    title: '夜航灯塔 · 7a2fe479'\n  }\n"
+}

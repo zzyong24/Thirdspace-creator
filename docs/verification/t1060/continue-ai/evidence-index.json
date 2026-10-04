@@ -1,0 +1,207 @@
+{
+  "observedAt": "2026-10-04T12:56:46.690817+00:00",
+  "sourceCommit": "b96451fd",
+  "runtimeSourceFixCommit": "e2b1cd0862c8be1219d63794601c9b1a0accec97",
+  "productionSourceChangedByThisContinuation": false,
+  "uncommittedDependencyTreeUsed": true,
+  "records": [
+    {
+      "path": "docs/verification/t1060/continue-ai/codex/business.mts",
+      "sha256": "71f3c5ee8d84ad3ca7fd8d24665005197280d3f3d781d47a901934d9c627961a",
+      "byteLength": 19288
+    },
+    {
+      "path": "docs/verification/t1060/continue-ai/codex/evidence.json",
+      "sha256": "3b67ac8d0cc8ccaddd477ccd3bd2f30007e17b0212beebab2431b804b3cb3697",
+      "byteLength": 19030
+    },
+    {
+      "path": "docs/verification/t1060/continue-ai/codex/initial-format-failure.json",
+      "sha256": "188414f5df25f70ac08bcf1d917af79be336aea8c735b4c7f2a49af988a6b245",
+      "byteLength": 5561
+    },
+    {
+      "path": "docs/verification/t1060/continue-ai/codex/run-1.log",
+      "sha256": "a78386d8e2def0dfa83cea18ac2e75a6bddaf958960961f5d97c1458cd0e1e43",
+      "byteLength": 1624
+    },
+    {
+      "path": "docs/verification/t1060/continue-ai/codex/run-2.log",
+      "sha256": "b63550463f737e1fa847a6ab961ceb06e68a6fa4706f49224c18eb2620cc7027",
+      "byteLength": 1583
+    },
+    {
+      "path": "docs/verification/t1060/continue-ai/codex/run-3.log",
+      "sha256": "b33e9d3f27179c3e027917f5dbcf2f6293b67207132ae2d7123b2cc0afb5a341",
+      "byteLength": 3058
+    },
+    {
+      "path": "docs/verification/t1060/continue-ai/derived/report.md",
+      "sha256": "d8ebe207ba63df9b7deaf399ba1b940cdbc3b9d483e70bd957733768cd5f1e9f",
+      "byteLength": 5847
+    },
+    {
+      "path": "docs/verification/t1060/continue-ai/derived/evidence.json",
+      "sha256": "c4c6d1502e677c9b22e2ca1919407cbfd7297dde3e6507f2e6741004e00e4a12",
+      "byteLength": 6519
+    },
+    {
+      "path": "docs/verification/t1060/continue-ai/derived/verify-derived.mts",
+      "sha256": "7930e4ddf18b92957424f2df0822b3d93c07d725f3b40d3ed130891bc36d454a",
+      "byteLength": 16474
+    },
+    {
+      "path": "docs/verification/t1060/continue-ai/derived/run.log",
+      "sha256": "160b71d174cc28c2ac340faa2decb9f51f46887dd0ad3a7f5d5853ba938a07db",
+      "byteLength": 6816
+    },
+    {
+      "path": "docs/verification/t1060/continue-ai/derived/retry-guard.json",
+      "sha256": "4841fb07aed5592b8b23473c0e72765c7af8f113a7b96e6e4163c455bda89721",
+      "byteLength": 1250
+    },
+    {
+      "path": "docs/verification/t1060/continue-ai/derived/retry-guard.log",
+      "sha256": "1d4c6f6e23d1d4c3eeb63be844f4a0a3fde54cc6aa221a723729c8a6540b8e1c",
+      "byteLength": 1251
+    },
+    {
+      "path": "docs/verification/t1060/continue-ai/derived/verify-retry-guard.mts",
+      "sha256": "a4078371425bb848f2b0d8952af23e75122180dd27fe090febfe4284e393e1df",
+      "byteLength": 3230
+    },
+    {
+      "path": "docs/verification/t1060/continue-ai/derived/source-sha256.json",
+      "sha256": "a8337df1d659ffcb6afc8d25123c1bc5bf74f8d6ed46d9431c7dcb261e09cc87",
+      "byteLength": 2140
+    },
+    {
+      "path": "docs/verification/t1060/continue-ai/workbuddy/report.md",
+      "sha256": "d48f71e07b1bf9892b9745edcf226d6d91549ae733a6580b0407f07316b58788",
+      "byteLength": 4613
+    },
+    {
+      "path": "docs/verification/t1060/continue-ai/workbuddy/stdio-evidence.json",
+      "sha256": "4ecdf744a1c5a2064ee3bdd0125321cbc4993244973006f7705a79368a1fd467",
+      "byteLength": 22200
+    },
+    {
+      "path": "docs/verification/t1060/continue-ai/workbuddy/stdio-real-project.mts",
+      "sha256": "745fba68867fd09caabe1ddbe8bd58e0d45c3ad04b4bee98d78bd824f58d3550",
+      "byteLength": 12640
+    },
+    {
+      "path": "docs/verification/t1060/continue-ai/workbuddy/stdio-real-project.log",
+      "sha256": "8f9d12955716807e156e23e386f080d2d7c60535cff729e2fdfb64c1e7f5f898",
+      "byteLength": 1106
+    },
+    {
+      "path": "docs/verification/t1060/continue-ai/workbuddy/stdio-stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "byteLength": 0
+    },
+    {
+      "path": "docs/verification/t1060/continue-ai/workbuddy/environment-presence.json",
+      "sha256": "662b47387cab6fcc25fe2183755932d5bb21c8e50e7e1fe30c9935a87cc842d0",
+      "byteLength": 498
+    },
+    {
+      "path": "docs/verification/t1060/continue-ai/workbuddy/source-and-evidence-sha256.json",
+      "sha256": "d3cd77146ded9bbc5f76e65df92b20a11c8c53862890b51c6c016716eab3b157",
+      "byteLength": 4824
+    },
+    {
+      "path": "docs/verification/t1060/continue-ai/workbuddy/route-metafile.json",
+      "sha256": "ec5f03068089007ca1ceb99153d82e60d0805749fac39bb4447dc5484c0f26c6",
+      "byteLength": 8316
+    },
+    {
+      "path": "docs/verification/t1060/continue-ai/workbuddy/build-route.mjs",
+      "sha256": "558e0590c882856e6d37c54696e0e25a4ea94f7df9a7e1a871a1e3309b307ac5",
+      "byteLength": 1429
+    },
+    {
+      "path": "docs/verification/t1060/continue-ai/workbuddy/persistence-shim.ts",
+      "sha256": "67f9ca9f5afbba904c76880cbaa6af39e0bf7cab8a25309d8a32715869c43623",
+      "byteLength": 552
+    },
+    {
+      "path": "docs/verification/t1060/continue-ai/checks/governance-files.log",
+      "sha256": "19ccf355605c1a202d07f6d66556762c477ed898d2cae492ec629342198d79b5",
+      "byteLength": 69
+    },
+    {
+      "path": "docs/verification/t1060/continue-ai/checks/orphan.log",
+      "sha256": "ee3224654cf1b13b1bcd3948dd942050a0435380b5b2a84bbb61e9058d056b0e",
+      "byteLength": 15862
+    },
+    {
+      "path": "docs/verification/t1060/continue-ai/checks/backlog-health-final.log",
+      "sha256": "3474578e4326730444fb66683e15b86982ea6e11db2868a392ce98c4bc85b48e",
+      "byteLength": 1618
+    },
+    {
+      "path": "docs/verification/t1060/continue-ai/checks/reconcile.log",
+      "sha256": "5e60e02c689143d89ca8fa0d7a096eb50c68ba96acf887e408f47ae37847b0bb",
+      "byteLength": 12553
+    },
+    {
+      "path": "docs/verification/t1060/continue-ai/checks/pmem.log",
+      "sha256": "ca33c599ae20a5bb60dfadfd4e591f0b479cdb936ed2078ce38a5da7f96529aa",
+      "byteLength": 133
+    },
+    {
+      "path": "docs/verification/t1060/continue-ai/checks/receipt.json",
+      "sha256": "95e934f2ff26e73fc6dc26cd03bf970c92371b84af8ded451593436e952aba11",
+      "byteLength": 941
+    }
+  ],
+  "sources": [
+    {
+      "path": "ai-worker/src/execution/codex-acp-host.ts",
+      "sha256": "623e07b2f13bbc2dc4d571e1861582aef809b5a018529f1c67b1b5727f075463"
+    },
+    {
+      "path": "ai-worker/src/execution/codex-acp-worker-run.ts",
+      "sha256": "65a79c7461bf43396341b38945d99a7964501364f75aecab797030e94f69e986"
+    },
+    {
+      "path": "ai-worker/src/execution/external-chat-worker-run.ts",
+      "sha256": "1862684d1e614b4b218c0f750ee0a16428825118d4ff1247e114b5a99e9f24f1"
+    },
+    {
+      "path": "ai-worker/dist/codex-acp.cjs",
+      "sha256": "b742742f14649dee5a358d9ff20747c4b39c75ea4de92d69c94b52589fa9cd10"
+    },
+    {
+      "path": "backend/src/modules/ai/execution-task-projection.ts",
+      "sha256": "c470ed6c5179f9236804019b5ab0706e07b156ab4713a95b239956dad10bcf36"
+    },
+    {
+      "path": "backend/src/modules/articles/articles.service.ts",
+      "sha256": "8cd293d87b1173e8290b0a46032349bb08c9f1b5a1516fa630456628338c88f9"
+    },
+    {
+      "path": "backend/src/modules/graphic-posts/graphic-posts.service.ts",
+      "sha256": "08cf4cd9cd6b52bfa5709f363ddd2ac2276ccba1af776456c0a00dfecf987774"
+    }
+  ],
+  "counts": {
+    "codexRealPrompts": 4,
+    "codexContentInitialFormatFailures": 1,
+    "codexContentExplicitFormatPasses": 2,
+    "codexActualCancellationProbes": 1,
+    "workbuddyActualAiPrompts": 0,
+    "articleApiModelRequests": 0,
+    "graphicApiModelRequests": 0,
+    "connectorChecksPassed": 13
+  },
+  "limits": [
+    "原生产Worker与域服务的隔离装配；非完整桌面和UI",
+    "首次内容探针格式失败保留；明确格式后的新任务成功",
+    "取消通过Worker信号，未证明远端未执行；原unknown账本保留",
+    "API/Pi专用入口未生成成功，实际等待安全配置",
+    "WorkBuddy SDK消费方成功不等于WorkBuddy真实客户端成功",
+    "未读原用户数据或密钥；原账号配置未知；候选未采用/发布"
+  ]
+}

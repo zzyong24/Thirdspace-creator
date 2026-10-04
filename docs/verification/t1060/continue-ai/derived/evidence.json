@@ -1,0 +1,156 @@
+{
+  "observedAt": "2026-10-04T12:48:43.360Z",
+  "isolatedRoot": "/tmp/t1060-ai-business/continue-derived/isolated-Ly3hYh",
+  "scope": "原文章/图文 transport→领域服务→AI任务→结构化准备→正式Worker→原凭据解析→持久错误读回",
+  "originalUserDatabaseRead": false,
+  "modelSettingsModified": false,
+  "adopted": false,
+  "published": false,
+  "actualModelRequests": 0,
+  "credentialResolutions": [
+    {
+      "aiTaskId": "ai-task-t1060-04e3359c-98c0-44c1-a584-c4b538251a2e",
+      "executionTaskId": "exec_27b8c7c6-53bb-4985-8ec9-90e1f35c45c8",
+      "capability": "copy.generate",
+      "outcome": "unavailable",
+      "resolverErrorName": "LlmCredentialError",
+      "resolverErrorMessage": "capability \"copy.generate\" 无可用 LLM 凭据:请到「设置 → 模型配置」配置模型与密钥;或(开发 / 自托管)在 .env.local 设置 CREATOROS_LLM_SECRET_REF 指向的变量(如 MINIMAX_AUTH_TOKEN)或 ANTHROPIC_API_KEY。"
+    },
+    {
+      "aiTaskId": "ai-task-t1060-27199bab-9d39-4261-8ac9-fcc047b0ad79",
+      "executionTaskId": "exec_4fba6037-8446-4ed6-8186-ef9537958236",
+      "capability": "copy.generate",
+      "outcome": "unavailable",
+      "resolverErrorName": "LlmCredentialError",
+      "resolverErrorMessage": "capability \"copy.generate\" 无可用 LLM 凭据:请到「设置 → 模型配置」配置模型与密钥;或(开发 / 自托管)在 .env.local 设置 CREATOROS_LLM_SECRET_REF 指向的变量(如 MINIMAX_AUTH_TOKEN)或 ANTHROPIC_API_KEY。"
+    }
+  ],
+  "unusedPortsCalled": [],
+  "workerReports": [],
+  "safeEnvironmentPresence": {
+    "CREATOROS_LLM_SECRET_REF": false,
+    "CREATOROS_LLM_MODEL": false,
+    "CREATOROS_LLM_BASE_URL": false,
+    "CREATOROS_LLM_API_FORMAT": false,
+    "CREATOROS_LLM_AUTH_STYLE": false,
+    "MINIMAX_AUTH_TOKEN": false,
+    "ANTHROPIC_API_KEY": false,
+    "OPENAI_API_KEY": false
+  },
+  "referencedTokenPresent": false,
+  "inputs": [
+    {
+      "taskId": "ai-task-t1060-04e3359c-98c0-44c1-a584-c4b538251a2e",
+      "taskType": "wechat.article-draft",
+      "outputId": null,
+      "executionTaskId": "exec_27b8c7c6-53bb-4985-8ec9-90e1f35c45c8",
+      "prepared": {
+        "aiTaskId": "ai-task-t1060-04e3359c-98c0-44c1-a584-c4b538251a2e",
+        "executionTaskId": "exec_27b8c7c6-53bb-4985-8ec9-90e1f35c45c8"
+      },
+      "modelKind": "model.structured",
+      "capability": "copy.generate",
+      "skillId": "wechat.article-draft",
+      "externalAgentBindingPresent": false,
+      "scriptSourceActual": true,
+      "scriptArtifactId": "artifact-t1060-a5faa887-d4bb-42f0-bf46-d372ca9de012",
+      "scriptVersionId": "artifactversion-t1060-6b306fb4-ad7e-42ac-9c8c-d3fc783b3589",
+      "baseVersionId": "artifactversion-t1060-072d8dc0-aa21-474d-9d73-5ffcf8716da5"
+    },
+    {
+      "taskId": "ai-task-t1060-27199bab-9d39-4261-8ac9-fcc047b0ad79",
+      "taskType": "graphic.post-text",
+      "outputId": null,
+      "executionTaskId": "exec_4fba6037-8446-4ed6-8186-ef9537958236",
+      "prepared": {
+        "aiTaskId": "ai-task-t1060-27199bab-9d39-4261-8ac9-fcc047b0ad79",
+        "executionTaskId": "exec_4fba6037-8446-4ed6-8186-ef9537958236"
+      },
+      "modelKind": "model.structured",
+      "capability": "copy.generate",
+      "skillId": "graphic.post-text",
+      "externalAgentBindingPresent": false,
+      "scriptSourceActual": true,
+      "scriptArtifactId": "artifact-t1060-a5faa887-d4bb-42f0-bf46-d372ca9de012",
+      "scriptVersionId": "artifactversion-t1060-6b306fb4-ad7e-42ac-9c8c-d3fc783b3589",
+      "baseVersionId": "artifactversion-t1060-d0a1525e-596a-48ef-a151-d3f6b54ea655"
+    }
+  ],
+  "workerSha256": "cde0b9025efe674ae1c075f9e3e36a88bc6da8f9d032399c2b96ce45d0f6a582",
+  "drained": 2,
+  "readback": [
+    {
+      "taskId": "ai-task-t1060-04e3359c-98c0-44c1-a584-c4b538251a2e",
+      "taskType": "wechat.article-draft",
+      "publicTaskStatus": "running",
+      "publicTaskError": "执行停止，等待恢复或诊断",
+      "executionStatus": "waiting_user",
+      "executionErrorCode": "MODEL_CREDENTIAL_UNAVAILABLE",
+      "executionErrorMessage": "执行停止，等待恢复或诊断",
+      "callCount": 0,
+      "calls": [],
+      "candidateResultCount": 0,
+      "domainState": {
+        "status": "running",
+        "candidate": null,
+        "outputId": "output-t1060-1da7e8a8-cd3d-4a06-9d02-374031e3588a",
+        "baseVersionId": "artifactversion-t1060-072d8dc0-aa21-474d-9d73-5ffcf8716da5",
+        "sourceRefs": [
+          {
+            "kind": "project",
+            "id": "project-t1060-f1df774b-0590-429f-8bff-78c9c98204b6",
+            "versionId": "2026-10-04T12:48:45.633Z"
+          },
+          {
+            "kind": "project_script",
+            "id": "artifact-t1060-a5faa887-d4bb-42f0-bf46-d372ca9de012",
+            "versionId": "artifactversion-t1060-6b306fb4-ad7e-42ac-9c8c-d3fc783b3589"
+          }
+        ],
+        "errorCode": null
+      },
+      "publicCandidate": {
+        "errorName": "Error",
+        "code": "ConflictError",
+        "message": "文章候选尚未生成完成"
+      }
+    },
+    {
+      "taskId": "ai-task-t1060-27199bab-9d39-4261-8ac9-fcc047b0ad79",
+      "taskType": "graphic.post-text",
+      "publicTaskStatus": "running",
+      "publicTaskError": "执行停止，等待恢复或诊断",
+      "executionStatus": "waiting_user",
+      "executionErrorCode": "MODEL_CREDENTIAL_UNAVAILABLE",
+      "executionErrorMessage": "执行停止，等待恢复或诊断",
+      "callCount": 0,
+      "calls": [],
+      "candidateResultCount": 0,
+      "publicCandidate": {
+        "candidateId": "ai-task-t1060-27199bab-9d39-4261-8ac9-fcc047b0ad79",
+        "outputId": "output-t1060-3870636b-8492-4526-9b97-77e9d11c293f",
+        "kind": "body",
+        "status": "running",
+        "value": null,
+        "baseVersionId": "artifactversion-t1060-d0a1525e-596a-48ef-a151-d3f6b54ea655",
+        "sourceRefs": [
+          {
+            "kind": "project",
+            "id": "project-t1060-f1df774b-0590-429f-8bff-78c9c98204b6",
+            "versionId": "2026-10-04T12:48:45.633Z"
+          },
+          {
+            "kind": "project_script",
+            "id": "artifact-t1060-a5faa887-d4bb-42f0-bf46-d372ca9de012",
+            "versionId": "artifactversion-t1060-6b306fb4-ad7e-42ac-9c8c-d3fc783b3589"
+          }
+        ],
+        "ruleSnapshotRef": null,
+        "appliedRules": "not_applied"
+      }
+    }
+  ],
+  "currentVersionsUnchanged": true,
+  "successfulAiGeneration": false,
+  "outcome": "blocked_by_real_configuration"
+}

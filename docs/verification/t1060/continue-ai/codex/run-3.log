@@ -1,0 +1,28 @@
+{"label":"initial","event":"reserveExternalChatTurn","at":"2026-10-04T12:52:28.710Z"}
+{"label":"initial","event":"listExternalTaskTools","at":"2026-10-04T12:52:28.722Z"}
+{"label":"initial","event":"listExternalTaskTools","at":"2026-10-04T12:52:36.380Z"}
+{"label":"initial","event":"listExternalTaskTools","at":"2026-10-04T12:52:36.413Z"}
+{"label":"initial","event":"startExternalChatTurn","at":"2026-10-04T12:52:36.471Z"}
+{"label":"initial","event":"recordExternalChatProviderTurn","at":"2026-10-04T12:52:36.533Z"}
+{"label":"initial","event":"executeExternalTaskTool","at":"2026-10-04T12:52:44.362Z"}
+[chat-tool] name=context.project.detail ok durationMs=11
+{"label":"initial","event":"executeExternalTaskTool","at":"2026-10-04T12:52:49.779Z"}
+[chat-tool] name=context.artifact.text ok durationMs=14
+{"label":"initial","event":"settleExternalChatTurn","at":"2026-10-04T12:53:05.042Z"}
+{"label":"followup","event":"reserveExternalChatTurn","at":"2026-10-04T12:53:05.581Z"}
+{"label":"followup","event":"listExternalTaskTools","at":"2026-10-04T12:53:05.595Z"}
+{"label":"followup","event":"listExternalTaskTools","at":"2026-10-04T12:53:09.496Z"}
+{"label":"followup","event":"listExternalTaskTools","at":"2026-10-04T12:53:09.520Z"}
+{"label":"followup","event":"startExternalChatTurn","at":"2026-10-04T12:53:09.583Z"}
+{"label":"followup","event":"recordExternalChatProviderTurn","at":"2026-10-04T12:53:09.608Z"}
+{"label":"followup","event":"executeExternalTaskTool","at":"2026-10-04T12:53:16.902Z"}
+[chat-tool] name=context.project.detail ok durationMs=14
+{"label":"followup","event":"executeExternalTaskTool","at":"2026-10-04T12:53:21.543Z"}
+[chat-tool] name=context.artifact.text ok durationMs=21
+{"label":"followup","event":"settleExternalChatTurn","at":"2026-10-04T12:53:38.580Z"}
+{"label":"cancel","event":"reserveExternalChatTurn","at":"2026-10-04T12:53:38.870Z"}
+{"label":"cancel","event":"listExternalTaskTools","at":"2026-10-04T12:53:38.880Z"}
+{"label":"cancel","event":"startExternalChatTurn","at":"2026-10-04T12:53:42.830Z"}
+{"label":"cancel","event":"recordExternalChatProviderTurn","at":"2026-10-04T12:53:42.863Z"}
+{"label":"cancel","event":"settleExternalChatTurn","at":"2026-10-04T12:53:43.385Z"}
+{"outcome":"passed","root":"/tmp/t1060-ai-business/continue-codex/business-u6ui8V","rounds":[{"label":"initial","outcome":"passed","receipt":{"callId":"call_d6e17d82-9e31-4b10-b9bd-029166cabd40","sessionId":"01a106f9-21d9-7a22-a15b-872824301658","providerTurnId":"01a106f9-3010-7ca2-8037-98d623c4a381","stopReason":"end_turn"},"elapsedMs":36801},{"label":"followup","outcome":"passed","receipt":{"callId":"call_0459b0fb-e192-4f06-a54c-3d3f06e62d08","sessionId":"01a106f9-b08f-7300-942a-3da56ef76257","providerTurnId":"01a106f9-b160-79f0-9eb6-43a882218974","stopReason":"end_turn"},"elapsedMs":33238},{"label":"cancel","outcome":"passed","receipt":{"callId":"call_0402d70f-9dbb-4ae2-9ea5-f2f43e08fd59","sessionId":"01a106fa-328e-7db3-b7dc-5f56f73a8cf3","providerTurnId":"01a106fa-3342-7f62-b2b8-341363426563","callStatus":"unknown"},"elapsedMs":4725}]}
