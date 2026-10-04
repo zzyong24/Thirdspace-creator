@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "独立代理 home_spec_review 只读复核新增首页 IA：案例、资产、画布并列且两库独立；默认 tab 与 URL 恢复明确；原资产及 create/get/saveCanvas 合同可满足新建和 CAS 追加；浏览取消不写画布或调用模型；账号切换和项目权限执行时重核；创建未知回执不自动重复，已知 ID 保存失败保持稳定计划 ID 并回读恢复。对照旧 receipt 的 SPEC 和 PROJECT，新 IA 与自动记忆同步变化限定在 DEC-1021004。未发现新增合同阻断。本轮只复核 SPEC 可执行性，不代表 UI、供应商或安装版已验证。",
+  "findings": []
+}

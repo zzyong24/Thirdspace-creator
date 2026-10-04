@@ -3420,3 +3420,20 @@ T983来源状态补充：真实页面对照证明部分旧作品只有正常指�
 用户原话：“应该先放在这个功能的首栏，去放这个案例库啊、资产库啊，以及画布”“案例库和资产库它本身是可以独立存在的”。记录该需求方向：本功能首页首栏并列三入口，两库独立浏览与管理，可由所选模板/素材新建或追加到已有画布；画布负责组织、编辑、生成，原发布功能继续消费用户选择的结果。数据归属不变，资产入口复用原素材中心。
 
 当前路由为存量功能的DESIGN入口纠偏；用户本次要求判断层级是否合理，本轮交付系统现状核对与SPEC补充，未改业务代码。默认Tab、入口命名、URL恢复及创建失败恢复为推荐设计细节，待独立复核，未冒称已逐项用户确认。旧review receipt不覆盖本次IA变化；此设计记录不是process-review-cycle capability。
+
+## 功能首页IA执行与限定复核授权 · 2026-10-04
+
+用户在上一轮三入口、两库独立、从模板/素材新建或加入画布的方案后明确“执行”。该指令授权上述具体IA实施及AGENTS要求的独立SPEC复核；不授权发布、真实模型付费测试、跨账号共享或跳过既有门。同步PROJECT后仅生成记忆元数据变化一并纳入本次复核，不将旧三轮PASS移植成新方案PASS。
+
+```text
+ID: DEC-1021004
+Authorization-Kind: process-review-cycle
+Task-ID: T-1021
+Previous-Spec-SHA256: cad6e3ff2277973a8ae817613aa2ac7aa11113f79a3477cccb08289e8976cf29
+Previous-Constitution-SHA256: 923d8e5bd5cfd7f201076bc73bd583d23290f01aebf7ee5d926621df62ded6fc
+Allowed-Change-IDs: HOME-IA,MEMORY-SYNC
+Max-Cycles: 1
+Nonce: dda67d61-1549-472d-85a0-b167943bdd28
+Owner: user
+Status: active
+```

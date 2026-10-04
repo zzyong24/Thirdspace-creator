@@ -1612,6 +1612,7 @@
         "design",
         "backend",
         "frontend",
+        "frontend_home",
         "verification"
       ],
       "read_set": [
@@ -1663,7 +1664,9 @@
         "contract/tests/visual-template.test.ts",
         "backend/src/db.ts",
         "backend/src/index.ts",
-        "backend/src/application/transport.ts"
+        "backend/src/application/transport.ts",
+        "frontend/src/app/(creator)/canvases/page.tsx",
+        "frontend/src/features/assets/asset-upload-button.tsx"
       ],
       "verify_commands": {
         "design": [
@@ -1679,6 +1682,10 @@
         "verification": [
           "node orchestrator/process/boundary-scan.mjs",
           "node orchestrator/process/orphan-scan.mjs"
+        ],
+        "frontend_home": [
+          "pnpm --dir frontend exec vitest run src/features/creative-canvas/canvas-home-transfer.test.ts --retry=0",
+          "pnpm --dir frontend exec tsc --noEmit"
         ]
       },
       "step_write_set": {
@@ -1739,6 +1746,11 @@
         "verification": [
           "docs/verification/t1021-template-library.md",
           "docs/verification/t1021/**"
+        ],
+        "frontend_home": [
+          "frontend/src/features/creative-canvas/**",
+          "frontend/src/app/(creator)/canvases/page.tsx",
+          "frontend/src/features/assets/asset-upload-button.tsx"
         ]
       },
       "step_read_set": {
@@ -1754,6 +1766,11 @@
           "contract/src/**",
           "frontend/src/**",
           "docs/features/t1021-cover-template-library/assets/**"
+        ],
+        "frontend_home": [
+          "docs/features/t1021-cover-template-library.md",
+          "frontend/src/**",
+          "contract/src/**"
         ]
       }
     }

@@ -5,9 +5,9 @@
   },
   "summary": {
     "verticals": 53,
-    "tasks_done": 34,
-    "tasks_total": 148,
-    "tasks_pending": 114,
+    "tasks_done": 37,
+    "tasks_total": 149,
+    "tasks_pending": 112,
     "verticals_complete": 1
   },
   "verticals": [
@@ -2184,11 +2184,15 @@
           "status": "done"
         },
         {
+          "step": "frontend_home",
+          "status": "pending"
+        },
+        {
           "step": "verification",
           "status": "pending"
         }
       ],
-      "blocked_reason": "代码和相关链路已验证；全局Gate与真实供应商/安装版验收未通过，详见docs/verification/t1021-template-library.md。",
+      "blocked_reason": null,
       "depends_on": [],
       "step_depends_on": {},
       "write_set": [
@@ -2224,7 +2228,9 @@
         "contract/tests/visual-template.test.ts",
         "backend/src/db.ts",
         "backend/src/index.ts",
-        "backend/src/application/transport.ts"
+        "backend/src/application/transport.ts",
+        "frontend/src/app/(creator)/canvases/page.tsx",
+        "frontend/src/features/assets/asset-upload-button.tsx"
       ],
       "read_set": [
         "docs/features/t1021-cover-template-library.md",
@@ -2260,16 +2266,27 @@
           "contract/tests/visual-template.test.ts"
         ],
         "backend": [
-          "backend/src/modules/assets/**",
-          "backend/src/modules/creative-canvas/**",
-          "backend/src/modules/publishing/**",
-          "backend/src/modules/ai-runtime/asset-generation-modes.ts",
+          "backend/src/db.ts",
           "backend/src/schema/visual-templates.ts",
           "backend/src/schema/publishing.ts",
-          "backend/drizzle/**",
-          "backend/src/db.ts",
-          "backend/src/index.ts",
-          "backend/src/application/transport.ts"
+          "backend/drizzle/0102_visual_template_library.sql",
+          "backend/drizzle/meta/_journal.json",
+          "backend/src/modules/assets/visual-template.service.ts",
+          "backend/src/modules/assets/visual-template.service.test.ts",
+          "backend/src/modules/assets/visual-template.catalog.ts",
+          "backend/src/modules/assets/visual-template.transport.ts",
+          "backend/src/modules/assets/index.ts",
+          "backend/src/modules/assets/assets.transport.ts",
+          "backend/src/modules/creative-canvas/creative-canvas.service.ts",
+          "backend/src/modules/creative-canvas/creative-canvas.service.test.ts",
+          "backend/src/modules/creative-canvas/creative-canvas.transport.ts",
+          "backend/src/modules/publishing/visual-material-adoption.service.ts",
+          "backend/src/modules/publishing/visual-material-adoption.service.test.ts",
+          "backend/src/modules/publishing/publication-draft-adoption.service.ts",
+          "backend/src/modules/publishing/publishing.service.ts",
+          "backend/src/modules/publishing/publishing.transport.ts",
+          "backend/src/modules/publishing/index.ts",
+          "backend/src/modules/ai-runtime/asset-generation-modes.ts"
         ],
         "frontend": [
           "frontend/src/features/creative-canvas/**",
@@ -2277,11 +2294,24 @@
           "frontend/src/features/publishing/**",
           "frontend/src/features/publishing-center/**",
           "frontend/src/server/persistence-client.ts",
-          "frontend/public/visual-templates/**"
+          "frontend/public/visual-templates/**",
+          "contract/src/operations/publishing.ts",
+          "backend/src/modules/publishing/publishing.service.ts",
+          "backend/src/modules/publishing/publishing.transport.ts",
+          "backend/src/modules/publishing/visual-material-adoption.service.test.ts",
+          "backend/src/modules/creative-canvas/creative-canvas.service.ts",
+          "backend/src/modules/creative-canvas/creative-canvas.service.test.ts",
+          "backend/src/modules/assets/visual-template.service.ts",
+          "backend/src/modules/assets/visual-template.service.test.ts"
         ],
         "verification": [
           "docs/verification/t1021-template-library.md",
           "docs/verification/t1021/**"
+        ],
+        "frontend_home": [
+          "frontend/src/features/creative-canvas/**",
+          "frontend/src/app/(creator)/canvases/page.tsx",
+          "frontend/src/features/assets/asset-upload-button.tsx"
         ]
       },
       "step_read_set": {
@@ -2297,6 +2327,11 @@
           "contract/src/**",
           "frontend/src/**",
           "docs/features/t1021-cover-template-library/assets/**"
+        ],
+        "frontend_home": [
+          "docs/features/t1021-cover-template-library.md",
+          "frontend/src/**",
+          "contract/src/**"
         ]
       },
       "step_exclusive_resources": {},
@@ -2306,5 +2341,10 @@
       }
     }
   ],
-  "leases": {}
+  "leases": {
+    "T-1021:frontend_home": {
+      "agent": "root",
+      "since": "2026-10-04T12:14:05.998Z"
+    }
+  }
 }
