@@ -2020,6 +2020,146 @@
       "scope_source": "docs/features/t1060-agent-source-integration.md",
       "reason": "用户已认可固定开源客户端/适配器源码及必要依赖接入；仅迁移源码闭包，实际宿主固定路径/参数；不引入上游任务、历史或凭据权威。",
       "acceptance": "来源已核对；编译与实际接通仍待验证，不代表验收通过。"
+    },
+    {
+      "task_id": "T-1060",
+      "files": [
+        "ai-worker/src/execution/worker-entry.ts"
+      ],
+      "file_sha256": "cd1e3b9da84facb8d6d53c33579b4f081e2a0ba0cd60c2937e1aadde13cbdab0",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1060-01",
+      "scope_source": "docs/features/t1060-agent-source-integration.md",
+      "reason": "关联已授权接入必须的原 Codex 预检、任务兼容和服务装配；复用原进程通信、状态与凭据接口，只增加外部回合接线/受控环境透传，不新增通信、凭据存储或原生进程权威。工作树旧 WIP 不属于本轮提交。",
+      "acceptance": "精确写集与提交差异独立复核；真实工具、WorkBuddy 和跨平台仍待验。"
+    },
+    {
+      "task_id": "T-1060",
+      "files": [
+        "ai-worker/src/execution/worker-runtime.ts"
+      ],
+      "file_sha256": "9a3226882a5d0372ff1f53f6c1725fe912b64374b8b094ffa7cf807e5e0b7d61",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1060-01",
+      "scope_source": "docs/features/t1060-agent-source-integration.md",
+      "reason": "关联已授权接入必须的原 Codex 预检、任务兼容和服务装配；复用原进程通信、状态与凭据接口，只增加外部回合接线/受控环境透传，不新增通信、凭据存储或原生进程权威。工作树旧 WIP 不属于本轮提交。",
+      "acceptance": "精确写集与提交差异独立复核；真实工具、WorkBuddy 和跨平台仍待验。"
+    },
+    {
+      "task_id": "T-1060",
+      "files": [
+        "backend/src/modules/ai-runtime/request-io.service.ts"
+      ],
+      "file_sha256": "c6b8ebb21ee4007b770ce9a3a5f27f1dee74550376fef6a30466960f0a5e0f4f",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1060-01",
+      "scope_source": "docs/features/t1060-agent-source-integration.md",
+      "reason": "关联已授权接入必须的原 Codex 预检、任务兼容和服务装配；复用原进程通信、状态与凭据接口，只增加外部回合接线/受控环境透传，不新增通信、凭据存储或原生进程权威。工作树旧 WIP 不属于本轮提交。",
+      "acceptance": "精确写集与提交差异独立复核；真实工具、WorkBuddy 和跨平台仍待验。"
+    },
+    {
+      "task_id": "T-1060",
+      "files": [
+        "backend/src/modules/execution/worker-supervisor.ts"
+      ],
+      "file_sha256": "a9c5a9a49899e51f95ff7242bf193b0b64c0944dd263693655a5da0a185ad113",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1060-01",
+      "scope_source": "docs/features/t1060-agent-source-integration.md",
+      "reason": "关联已授权接入必须的原 Codex 预检、任务兼容和服务装配；复用原进程通信、状态与凭据接口，只增加外部回合接线/受控环境透传，不新增通信、凭据存储或原生进程权威。工作树旧 WIP 不属于本轮提交。",
+      "acceptance": "精确写集与提交差异独立复核；真实工具、WorkBuddy 和跨平台仍待验。"
+    },
+    {
+      "task_id": "T-1060",
+      "files": [
+        "frontend/src/server/persistence-client.ts"
+      ],
+      "file_sha256": "598e303c2ee2fd0d21661bed3c0aadf6b49514cfea68b55661aadddb08146731",
+      "categories": [
+        "credential_store",
+        "language_toolchain",
+        "native_executable"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1060-01",
+      "scope_source": "docs/features/t1060-agent-source-integration.md",
+      "reason": "关联已授权接入必须的原 Codex 预检、任务兼容和服务装配；复用原进程通信、状态与凭据接口，只增加外部回合接线/受控环境透传，不新增通信、凭据存储或原生进程权威。工作树旧 WIP 不属于本轮提交。",
+      "acceptance": "精确写集与提交差异独立复核；真实工具、WorkBuddy 和跨平台仍待验。"
+    },
+    {
+      "task_id": "T-1060",
+      "files": [
+        "docs/verification/t1060/verification.md"
+      ],
+      "file_sha256": "cbd963e9d9c674ded5b749a12d0ae1290ece2a1313fefefc4fed984385614e10",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1060-01",
+      "scope_source": "docs/features/t1060-agent-source-integration.md",
+      "reason": "仅记录现有 Rust 模块的隔离验证结果；沿用仓库原生工具链，没有新增运行时或工具链。",
+      "acceptance": "精确写集与提交差异独立复核；真实工具、WorkBuddy 和跨平台仍待验。"
+    },
+    {
+      "task_id": "T-1060",
+      "files": [
+        "docs/verification/t1060/workbuddy-native-review.md"
+      ],
+      "file_sha256": "314ae934e77962d91eac35d2bf54aa6915b3cfd670b232b7a88138c6d431d3e8",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1060-01",
+      "scope_source": "docs/features/t1060-agent-source-integration.md",
+      "reason": "仅记录现有 Rust 模块的隔离验证结果；沿用仓库原生工具链，没有新增运行时或工具链。",
+      "acceptance": "精确写集与提交差异独立复核；真实工具、WorkBuddy 和跨平台仍待验。"
+    },
+    {
+      "task_id": "T-1060",
+      "files": [
+        "docs/verification/t1060/workbuddy-native-test.json"
+      ],
+      "file_sha256": "90dacf98b0fab33b1a47692a7a1df9a8f1ab7d913486109bbb8d5364f328eefd",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1060-01",
+      "scope_source": "docs/features/t1060-agent-source-integration.md",
+      "reason": "仅记录现有 Rust 模块的隔离验证结果；沿用仓库原生工具链，没有新增运行时或工具链。",
+      "acceptance": "精确写集与提交差异独立复核；真实工具、WorkBuddy 和跨平台仍待验。"
+    },
+    {
+      "task_id": "T-1060",
+      "files": [
+        "docs/verification/t1060/governance-repair-review.md"
+      ],
+      "file_sha256": "631be1b520e3c3d53e226f1cfef40cc29ba331de7932164bceede690758624de",
+      "categories": [
+        "ipc",
+        "language_toolchain",
+        "credential_store",
+        "native_executable"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1060-01",
+      "scope_source": "docs/features/t1060-agent-source-integration.md",
+      "reason": "独立只读复核报告引用父提交原有机制的词项，没有新增机制或扩大产品授权。",
+      "acceptance": "只读复核 findings []；真实工具与跨平台仍待验。"
     }
   ],
   "historical_baselines": []

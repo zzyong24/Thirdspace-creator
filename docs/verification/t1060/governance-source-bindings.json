@@ -1,0 +1,31 @@
+{
+  "source_commit": "c9c59617f7f74259985719e3f8927b9288eda11a",
+  "bindings": [
+    {
+      "path": "pnpm-lock.yaml",
+      "workspace_sha256": "bda07a706d06292cc17e354ba5bd9ed138dd8a7447ed0aaff5a76a2ca8955598",
+      "committed_sha256": "199cefc3fbe3bc1e949df19e62003b75b20dd6010d01992d96351bb64a3c2297"
+    },
+    {
+      "path": "ai-worker/src/execution/worker-entry.ts",
+      "workspace_sha256": "0f2e22bb34e58787e7992998d3dc5e5f084bf344c094897a044fefbfddb43427",
+      "committed_sha256": "cd1e3b9da84facb8d6d53c33579b4f081e2a0ba0cd60c2937e1aadde13cbdab0"
+    },
+    {
+      "path": "ai-worker/src/execution/worker-runtime.ts",
+      "workspace_sha256": "1a84096d96c937a376565ea999be5a23c3b75ba3072daaeb821afe61555c7c15",
+      "committed_sha256": "9a3226882a5d0372ff1f53f6c1725fe912b64374b8b094ffa7cf807e5e0b7d61"
+    },
+    {
+      "path": "backend/src/modules/execution/worker-supervisor.ts",
+      "workspace_sha256": "7919f68fe33821224f2789392c31cb9e115c115bc6a1b7d0009cbe1cec69b269",
+      "committed_sha256": "a9c5a9a49899e51f95ff7242bf193b0b64c0944dd263693655a5da0a185ad113"
+    },
+    {
+      "path": "frontend/src/server/persistence-client.ts",
+      "workspace_sha256": "3900956a9c102957b52de995ff8f633a9000790f864ab8737416e89a0d5b114c",
+      "committed_sha256": "598e303c2ee2fd0d21661bed3c0aadf6b49514cfea68b55661aadddb08146731"
+    }
+  ],
+  "note": "混合源码的工作树与提交哈希分别保存；提交账本绑定实际 Git blob，旧 WIP 不随本任务纳入。"
+}

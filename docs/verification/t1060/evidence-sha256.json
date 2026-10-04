@@ -84,6 +84,10 @@
     "sha256": "46ddd0cbab3a0ded59e338ca095e45d1dd647472240e4dbe993cf1b7aa4695b8"
   },
   {
+    "path": "docs/verification/t1060/context-final.log",
+    "sha256": "46ddd0cbab3a0ded59e338ca095e45d1dd647472240e4dbe993cf1b7aa4695b8"
+  },
+  {
     "path": "docs/verification/t1060/contract-typecheck-final.log",
     "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
   },
@@ -154,6 +158,14 @@
   {
     "path": "docs/verification/t1060/frontend-final.log",
     "sha256": "a8eb8b96b9b87d9f982440cf3610a46dab7328452c6d1466dce1bd917c54b5b8"
+  },
+  {
+    "path": "docs/verification/t1060/governance-repair-review.md",
+    "sha256": "631be1b520e3c3d53e226f1cfef40cc29ba331de7932164bceede690758624de"
+  },
+  {
+    "path": "docs/verification/t1060/governance-source-bindings.json",
+    "sha256": "33225f63e6a99292f605ad9f203eee087e372bfa53c961c475c7ec3e63c56729"
   },
   {
     "path": "docs/verification/t1060/head-worker-build-baseline.log",
@@ -252,8 +264,16 @@
     "sha256": "de346e827a149b5940494c977e625e5c765bb4e2e3f7db25ee28c9cab5fcedfe"
   },
   {
+    "path": "docs/verification/t1060/pmem-sync-final.log",
+    "sha256": "eee93e34bc822962898e81d1e99004bc1107860e2cf3f3743c35de9745e3136e"
+  },
+  {
     "path": "docs/verification/t1060/pmem-sync.log",
     "sha256": "06f1e427392ef743d22c2e60b3ce3a04fb429d93965228992a14f41e87b62006"
+  },
+  {
+    "path": "docs/verification/t1060/preflight-committed-source.log",
+    "sha256": "19ccf355605c1a202d07f6d66556762c477ed898d2cae492ec629342198d79b5"
   },
   {
     "path": "docs/verification/t1060/preflight-current.log",
@@ -264,8 +284,20 @@
     "sha256": "19ccf355605c1a202d07f6d66556762c477ed898d2cae492ec629342198d79b5"
   },
   {
+    "path": "docs/verification/t1060/preflight-final-curated.log",
+    "sha256": "19ccf355605c1a202d07f6d66556762c477ed898d2cae492ec629342198d79b5"
+  },
+  {
     "path": "docs/verification/t1060/preflight-final.log",
     "sha256": "19ccf355605c1a202d07f6d66556762c477ed898d2cae492ec629342198d79b5"
+  },
+  {
+    "path": "docs/verification/t1060/preflight-postcommit.log",
+    "sha256": "480d37dbd463c9134531ef6a14cfbf75a856a6df8dc7d7e62df94b9ff3a29748"
+  },
+  {
+    "path": "docs/verification/t1060/progress-implementation-final.log",
+    "sha256": "422d11e7b0a4d329f0771c8d8ad258cd233fcb2dbf897a5034a61626944fb604"
   },
   {
     "path": "docs/verification/t1060/real-acp-mcp-final.log",
@@ -353,7 +385,7 @@
   },
   {
     "path": "docs/verification/t1060/verification.md",
-    "sha256": "7b3168a9cd783e8a98579316d6da8680a0ab68a383ac0185a44630341c1b7b12"
+    "sha256": "cbd963e9d9c674ded5b749a12d0ae1290ece2a1313fefefc4fed984385614e10"
   },
   {
     "path": "docs/verification/t1060/workbuddy-cli-green.log",

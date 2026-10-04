@@ -2,6 +2,8 @@
 
 日期：2026-10-04。工作树：`codex/user-diagnostics`。本记录区分当场执行证据和仍待验的能力；任务保留「进行中 / 待验」。
 
+实现提交：`c9c59617f7f74259985719e3f8927b9288eda11a`。提交范围和实际 Git blob 摘要见 [staged-scope.json](staged-scope.json) 与 [staged-source-sha256.json](staged-source-sha256.json)；未完成的真实工具、WorkBuddy 和跨平台验收保留在下文。
+
 ## 已实现
 
 本地 Codex 的新编导任务已接入固定开源 ACP 客户端和适配器；以前的任务继续按创建时的协议执行。工具仍调用 CreatorOS 原服务，图片进入原素材候选，用户采用后保存。WorkBuddy 连接器和设置中的配置复制已接入现有 MCP，尚未在 WorkBuddy 中安装或首次信任。
@@ -43,7 +45,7 @@ flowchart LR
 | LED-047 界面性能防复发 | 8 文件、162 项通过 | [led047.log](led047.log) |
 | 连接器包装 | 3 项通过 | [workbuddy-package-green.log](workbuddy-package-green.log) |
 | 原生 MCP 启动参数 | 隔离 Rust 模块 1 项通过，9 项过滤 | [workbuddy-native-test.json](workbuddy-native-test.json) |
-| Worker / contract / MCP 类型检查 | exit 0 | [Worker](worker-typecheck-with-fixture.log)、[contract](contract-typecheck-final.log)、[MCP](mcp-typecheck.log) |
+| Worker / contract / MCP 类型检查 | exit 0 | [Worker](worker-typecheck-final.log)、[contract](contract-typecheck-final.log)、[MCP](mcp-typecheck.log) |
 | Worker 全部入口与适配器构建 | exit 0；适配器版本 `2.1.1` | [worker-build-final.log](worker-build-final.log)、[adapter-version.log](adapter-version.log) |
 | 真实本机 Codex 登录与 ACP 会话初始化 | `0.159.3`、authenticated、available；未发送模型提示 | [bundled-codex-status-valid.log](bundled-codex-status-valid.log) |
 | Windows 依赖闭包与已有 vendor 身份 | 32 项通过；目录修正前 26 项真实失败 | [desktop-closure-final.log](desktop-closure-final.log)、[desktop-packaging-review.md](desktop-packaging-review.md) |
@@ -64,6 +66,8 @@ flowchart LR
 `pmem sync` 已运行；全局 `reconcile` exit 1，34 errors / 1 warning。与 T1059 的 35 errors / 1 warning 相比，新增错误 0；LED-046 原失败已消除。完整差异见 [reconcile-delta.json](reconcile-delta.json)。未修改违规基线或其它任务评审回执来强行通过。
 
 最后 boundary scan 为 7 条、基线 5；额外两项均是已有 `live-chat-session.ts` 的 AI SDK 引入，由 T1026 跟踪。其它历史根因由 T1015、T1027、T916 等已登记任务保留。orphan 和本任务精确写集 preflight 已通过。
+
+提交后流程登记曾失败：宽目录写集扫描了其它旧模块，最终精确写集也暴露 5 个必要前置文件的 7 类词法标记未登记。原失败保留在 [preflight-postcommit.log](preflight-postcommit.log)。实现步骤已改为实际文件写集，补记这些复用接点及 3 份既有 Rust 验证工件的精确哈希；没有修改门卫或违规基线，也没有新增机制。随后 [progress-implementation-final.log](progress-implementation-final.log) 登记实现提交成功，验证和交付步骤仍待验。
 
 后台全量类型检查仍有旧 WIP 错误；本任务隔离集成测试通过，不能宣称后台全量类型检查通过。完整 submission 测试的旧 guide fixture 版本失败保留在首轮日志，未作为本轮输入绑定失败或全量通过。
 
