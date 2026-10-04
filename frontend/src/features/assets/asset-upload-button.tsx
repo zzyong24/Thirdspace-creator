@@ -39,7 +39,7 @@ function assetTypeForFile(file: File): AssetType {
   return "document";
 }
 
-export function AssetUploadButton() {
+export function AssetUploadButton({onUploaded,accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.md,.txt,.srt,.vtt"}:{onUploaded?:()=>void;accept?:string}={}) {
   const router = useRouter();
   const [pending, startTransition] = React.useTransition();
   const inputRef = React.useRef<HTMLInputElement>(null);
@@ -111,6 +111,7 @@ export function AssetUploadButton() {
               .catch(() => undefined);
           }
           setUploadStatus(`已上传素材「${file.name}」。`);
+          onUploaded?.();
           router.refresh();
         } catch (err) {
           // [T-049 B5] 全链兜底:任一步抛错都给用户可见反馈,不再静默吞掉。
@@ -121,7 +122,7 @@ export function AssetUploadButton() {
         }
       });
     },
-    [router],
+    [router,onUploaded],
   );
 
   return (
@@ -133,7 +134,7 @@ export function AssetUploadButton() {
         aria-hidden="true"
         className="hidden"
         // 过滤到弹药库支持的素材类型(图/视频/音频/文档/字幕),不让用户误选不支持的文件。
-        accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.md,.txt,.srt,.vtt"
+        accept={accept}
         onChange={(e) => {
           const file = e.target.files?.[0];
           // Reset so re-selecting the same file fires `change` again.

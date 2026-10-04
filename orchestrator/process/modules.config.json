@@ -1666,7 +1666,8 @@
         "backend/src/index.ts",
         "backend/src/application/transport.ts",
         "frontend/src/app/(creator)/canvases/page.tsx",
-        "frontend/src/features/assets/asset-upload-button.tsx"
+        "frontend/src/features/assets/asset-upload-button.tsx",
+        "frontend/tests/e2e/creative-canvas.spec.ts"
       ],
       "verify_commands": {
         "design": [
@@ -1750,7 +1751,8 @@
         "frontend_home": [
           "frontend/src/features/creative-canvas/**",
           "frontend/src/app/(creator)/canvases/page.tsx",
-          "frontend/src/features/assets/asset-upload-button.tsx"
+          "frontend/src/features/assets/asset-upload-button.tsx",
+          "frontend/tests/e2e/creative-canvas.spec.ts"
         ]
       },
       "step_read_set": {

@@ -29,7 +29,7 @@ test("T-993 画布可保存、重开，切换账号后列表和直链隔离",asy
  await context.addCookies([{name:"creatoros_current_account",value:encodeURIComponent(accountA.id),url:baseURL!}]);
  await page.addInitScript(id=>{if(!window.localStorage.getItem("creatoros:current-account"))window.localStorage.setItem("creatoros:current-account",id);},accountA.id);
 
- await page.goto("/canvases");
+ await page.goto("/canvases?tab=canvases");
  await expect(page.getByRole("heading",{name:"创作画布"})).toBeVisible();
  await page.getByRole("button",{name:"新建画布"}).click();
  await expect(page).toHaveURL(/\/canvases\/[^/]+$/);
@@ -63,7 +63,7 @@ test("T-993 画布可保存、重开，切换账号后列表和直链隔离",asy
 
  await page.getByTestId("account-switcher-trigger").click();
  await page.getByTestId("account-switcher-menu").locator(`[data-testid="account-switcher-item"][data-account-id="${accountB.id}"]`).click();
- await page.goto("/canvases");
+ await page.goto("/canvases?tab=canvases");
  await expect(page.getByText("分镜试验画布")).toHaveCount(0);
  await page.goto(canvasUrl);
  await expect(page.getByRole("alert").filter({hasText:"画布不存在或当前账号无权访问"})).toBeVisible();
@@ -71,7 +71,7 @@ test("T-993 画布可保存、重开，切换账号后列表和直链隔离",asy
 
 test("T-993 首次自动选账号后画布可创建，新增节点不会重叠",async({page})=>{
  await dispatch(page,"accounts.create",{params:undefined,query:undefined,body:{platform:"douyin",accountHandle:`@canvas-first-${Date.now()}`}});
- await page.goto("/canvases");
+ await page.goto("/canvases?tab=canvases");
  await expect.poll(async()=>page.evaluate(()=>window.localStorage.getItem("creatoros:current-account"))).not.toBeNull();
  await expect(page.getByRole("alert").filter({hasText:"AccountRequiredError"})).toHaveCount(0);
  await page.getByRole("button",{name:"新建画布"}).click();
@@ -135,7 +135,7 @@ test("T-993 视口缩放只保存在本地，不改画布内容版本",async({pa
  const account=await dispatch(page,"accounts.create",{params:undefined,query:undefined,body:{platform:"douyin",accountHandle:`@canvas-viewport-${Date.now()}`}});
  await context.addCookies([{name:"creatoros_current_account",value:encodeURIComponent(account.id),url:baseURL!}]);
  await page.addInitScript(id=>window.localStorage.setItem("creatoros:current-account",id),account.id);
- await page.goto("/canvases");
+ await page.goto("/canvases?tab=canvases");
  await page.getByRole("button",{name:"新建画布"}).click();
  await expect(page).toHaveURL(/\/canvases\/[^/]+$/);
  const canvasId=page.url().split("/").at(-1)!;
@@ -159,7 +159,7 @@ test("T-993 双指滚动平移、组合键缩放，节点文字仍可独立滚�
  const account=await dispatch(page,"accounts.create",{params:undefined,query:undefined,body:{platform:"douyin",accountHandle:`@canvas-wheel-${Date.now()}`}});
  await context.addCookies([{name:"creatoros_current_account",value:encodeURIComponent(account.id),url:baseURL!}]);
  await page.addInitScript(id=>window.localStorage.setItem("creatoros:current-account",id),account.id);
- await page.goto("/canvases");await page.getByRole("button",{name:"新建画布"}).click();
+ await page.goto("/canvases?tab=canvases");await page.getByRole("button",{name:"新建画布"}).click();
  const canvas=page.getByTestId("infinite-canvas"),rect=await canvas.boundingBox();expect(rect).not.toBeNull();
  const transform=()=>page.getByTestId("canvas-world").getAttribute("style");
  const before=await transform();await page.mouse.move(rect!.x+rect!.width/2,rect!.y+rect!.height/2);await page.mouse.wheel(70,90);
@@ -207,7 +207,7 @@ test("T-993 当前账号图片与视频能插入画布并实际预览",async({pa
  await page.addInitScript(id=>window.localStorage.setItem("creatoros:current-account",id),account.id);
  await uploadMedia(page,account.id,resolve(process.cwd(),"../docs/image-4.png"),"image","image/png","画布预览图片.png");
  await uploadMedia(page,account.id,resolve(process.cwd(),"../output/content-samples/ai-copy-eval-loop/motion-preview.mp4"),"video","video/mp4","画布预览视频.mp4");
- await page.goto("/canvases");
+ await page.goto("/canvases?tab=canvases");
  await page.getByRole("button",{name:"新建画布"}).click();
  await expect(page).toHaveURL(/\/canvases\/[^/]+$/);
  await page.getByRole("button",{name:"素材库"}).click();
@@ -315,4 +315,45 @@ test("T-994 生成结果就地保留并加入当前作品（模拟任务回执�
  await expect(result.getByRole("button",{name:"已加入 结果采纳作品"})).toBeDisabled();
  expect(confirmCount).toBe(1);
  expect(linkAttempts).toBe(2);
+});
+
+
+test("T-1021 首页案例独立浏览、取消无写入，多页模板创建原画布并可重新读取",async({page,context,baseURL})=>{
+ const account=await dispatch(page,"accounts.create",{body:{platform:"douyin",accountHandle:`@home-${Date.now()}`}});
+ await context.addCookies([{name:"creatoros_current_account",value:encodeURIComponent(account.id),url:baseURL!}]);
+ await page.addInitScript(id=>localStorage.setItem("creatoros:current-account",id),account.id);
+ const canvases=async()=>{const response=await page.request.post("/api/v1/dispatch",{headers:{"content-type":"application/json","x-account-id":account.id},data:{id:"canvas.list",input:{}}});expect(response.ok()).toBe(true);return (await response.json()).data as unknown[];};
+ const before=(await canvases()).length;
+ await page.goto("/canvases");await expect(page.getByRole("heading",{name:"创作空间"})).toBeVisible();
+ await expect(page.getByRole("navigation",{name:"创作空间功能"}).getByRole("link",{name:"案例库"})).toHaveAttribute("aria-current","page");
+ await page.getByRole("button",{name:"小红书图文",exact:true}).click();
+ await page.getByRole("button",{name:/步骤笔记/}).click();
+ await page.locator('input[placeholder="这次想表达什么"]').fill("独立库多页创作");
+ await page.locator('textarea[placeholder="粘贴当前确认稿或本期真实素材"]').fill("用户本期已确认的真实内容");
+ await page.getByRole("button",{name:"1:1",exact:true}).click();
+ await page.getByRole("button",{name:/用这个模板创作/}).click();
+ await page.getByRole("button",{name:"取消",exact:true}).click();expect((await canvases()).length).toBe(before);
+ await page.getByRole("button",{name:/用这个模板创作/}).click();
+ await page.getByRole("button",{name:"新建画布并放入",exact:true}).click();
+ await expect(page).toHaveURL(/\/canvases\/[^/?]+$/);await expect(page.getByTestId("canvas-node")).toHaveCount(3);
+ const id=page.url().split("/").at(-1)!;const response=await page.request.post("/api/v1/dispatch",{headers:{"content-type":"application/json","x-account-id":account.id},data:{id:"canvas.get",input:{params:{canvasId:id}}}});
+ const saved=(await response.json()).data;expect(saved.document.nodes.every((n:{aspectRatio:string})=>n.aspectRatio==="1:1")).toBe(true);expect(saved.document.visualGroups[0].pageOrder).toHaveLength(3);expect(saved.document.visualGroups[0].generationAttempts).toEqual({});expect((await canvases()).length).toBe(before+1);
+ await page.reload();await expect(page.getByTestId("canvas-node")).toHaveCount(3);
+});
+
+test("T-1021 资产独立上传，选用追加原画布并冻结真实文件",async({page,context,baseURL})=>{
+ const account=await dispatch(page,"accounts.create",{body:{platform:"douyin",accountHandle:`@asset-home-${Date.now()}`}});
+ const original=await dispatch(page,"canvas.create",{body:{title:"已有创作"}},account.id);
+ await context.addCookies([{name:"creatoros_current_account",value:encodeURIComponent(account.id),url:baseURL!}]);
+ await page.addInitScript(id=>localStorage.setItem("creatoros:current-account",id),account.id);
+ await page.goto("/canvases?tab=assets");await page.locator('[data-slot="assets-upload-input"]').setInputFiles(resolve(process.cwd(),"../docs/image-4.png"));
+ await expect(page.getByRole("status").filter({hasText:"已上传素材"})).toBeVisible();
+ await page.getByRole("button",{name:/image-4.png · 用此素材创作/}).click();
+ await page.getByRole("button",{name:"已有画布",exact:true}).click();
+ await page.getByRole("dialog").locator("select").selectOption(original.id);
+ await page.getByRole("button",{name:"放入这个画布",exact:true}).click();
+ await expect(page).toHaveURL(new RegExp(`/canvases/${original.id}$`));await expect(page.getByTestId("canvas-node")).toHaveCount(1);
+ const response=await page.request.post("/api/v1/dispatch",{headers:{"content-type":"application/json","x-account-id":account.id},data:{id:"canvas.get",input:{params:{canvasId:original.id}}}});const saved=(await response.json()).data;
+ expect(saved.document.nodes[0].assetId).toBeTruthy();expect(saved.document.nodes[0].fileId).toBeTruthy();expect(saved.document.nodes[0].checksum).toMatch(/^[a-f0-9]{64}$/);
+ await page.reload();await expect(page.getByTestId("canvas-node")).toHaveCount(1);
 });

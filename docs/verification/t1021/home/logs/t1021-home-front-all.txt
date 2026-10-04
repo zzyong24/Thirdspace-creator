@@ -1,0 +1,355 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/cover-template-library/Thirdspace-creator/frontend
+
+(node:6849) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:6847) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:6848) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:6846) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ src/features/creative-canvas/canvas-template-library.test.tsx (3 tests | 1 failed) 1302ms
+   × 收藏保存用户快照并回读真实ID与版本；保存失败保留编辑并沿同attempt恢复 1050ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/features/creative-canvas/canvas-template-library.test.tsx > 收藏保存用户快照并回读真实ID与版本；保存失败保留编辑并沿同attempt恢复
+TestingLibraryElementError: Unable to find an element with the text: 网络回执丢失. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<aside[39m
+      [33maria-label[39m=[32m"案例与收藏"[39m
+      [33mclass[39m=[32m"[@media(max-height:600px)]:fixed [@media(max-height:600px)]:top-3 [@media(max-height:600px)]:bottom-3 [@media(max-height:600px)]:left-auto [@media(max-height:600px)]:right-3 [@media(max-height:600px)]:z-40 [@media(max-height:600px)]:w-[min(26rem,calc(100vw-1.5rem))] absolute bottom-16 left-4 top-16 z-20 flex w-[min(26rem,calc(100%-2rem))] flex-col overflow-hidden rounded-2xl border bg-background shadow-xl"[39m
+      [33mdata-canvas-control[39m=[32m"true"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"border-b p-4"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex items-start justify-between gap-3"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"min-w-0"[39m
+          [36m>[39m
+            [36m<h2[39m
+              [33mclass[39m=[32m"flex items-center gap-2 text-base font-semibold"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-book-open size-4 text-primary"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"24"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"24"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 7v14"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+              [0m案例与收藏[0m
+            [36m</h2>[39m
+            [36m<p[39m
+              [33mclass[39m=[32m"mt-1 text-xs text-muted-foreground"[39m
+            [36m>[39m
+              [0m挑选风格，放到当前画布继续制作。[0m
+            [36m</p>[39m
+          [36m</div>[39m
+          [36m<button[39m
+            [33maria-label[39m=[32m"关闭案例库"[39m
+            [33mclass[39m=[32m"rounded-lg p-1.5 hover:bg-muted"[39m
+            [33mtype[39m=[32m"button"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"lucide lucide-x size-4"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"24"[39m
+              [33mstroke[39m=[32m"currentColor"[39m
+              [33mstroke-linecap[39m=[32m"round"[39m
+              [33mstroke-linejoin[39m=[32m"round"[39m
+              [33mstroke-width[39m=[32m"2"[39m
+              [33mviewBox[39m=[32m"0 0 24 24"[39m
+              [33mwidth[39m=[32m"24"[39m
+              [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+            [36m>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M18 6 6 18"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"m6 6 12 12"[39m
+              [36m/>[39m
+            [36m</svg>[39m
+          [36m</button>[39m
+        [36m</div>[39m
+        [36m<button[39m
+          [33mclass[39m=[32m"mt-3 inline-flex items-center gap-1 text-xs text-primary"[39m
+        [36m>[39m
+          [36m<svg[39m
+            [33maria-hidden[39m=[32m"true"[39m
+            [33mclass[39m=[32m"lucide lucide-chevron-left size-3.5"[39m
+            [33mfill[39m=[32m"none"[39m
+            [33mheight[39m=[32m"24"[39m
+            [33mstroke[39m=[32m"currentColor"[39m
+            [33mstroke-linecap[39m=[32m"round"[39m
+            [33mstroke-linejoin[39m=[32m"round"[39m
+            [33mstroke-width[39m=[32m"2"[39m
+            [33mviewBox[39m=[32m"0 0 24 24"[39m
+            [33mwidth[39m=[32m"24"[39m
+            [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+          [36m>[39m
+            [36m<path[39m
+              [33md[39m=[32m"m15 18-6-6 6-6"[39m
+            [36m/>[39m
+          [36m</svg>[39m
+          [0m返回模板库[0m
+        [36m</button>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"min-h-0 flex-1 overflow-y-auto p-4"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"mb-3 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-xs leading-5 text-destructive"[39m
+          [33mrole[39m=[32m"alert"[39m
+        [36m>[39m
+          [0m请先选择当前创作账号[0m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"space-y-4"[39m
+        [36m>[39m
+          [36m<div>[39m
+            [36m<h3[39m
+              [33mclass[39m=[32m"text-lg font-semibold"[39m
+            [36m>[39m
+              [0m杂志封面[0m
+            [36m</h3>[39m
+            [36m<p[39m
+              [33mclass[39m=[32m"mt-1 text-xs text-muted-foreground"[39m
+            [36m>[39m
+              [0m通用[0m
+              [0m · [0m
+              [0m文字与图解[0m
+            [36m</p>[39m
+          [36m</div>[39m
+          [36m<label[39m
+            [33mclass[39m=[32m"block text-xs font-medium"[39m
+          [36m>[39m
+            [0m本期标题[0m
+            [36m<input[39m
+              [33mclass[39m=[32m"mt-1.5 h-9 w-full rounded-lg border bg-background px-3 text-sm"[39m
+              [33mplaceholder[39m=[32m"这次想表达什么"[39m
+              [33mvalue[39m=[32m""[39m
+            [36m/>[39m
+          [36m</label>[39m
+          [36m<label[39m
+            [33mclass[39m=[32m"block text-xs font-medium"[39m
+          [36m>[39m
+            [0m本期内容[0m
+            [36m<textarea[39m
+              [33mclass[39m=[32m"mt-1.5 w-full rounded-lg border bg-background p-3 text-xs leading-5"[39m
+              [33mplaceholder[39m=[32m"粘贴当前确认稿或本期真实素材"[39m
+              [33mrows[39m=[32m"3"[39m
+            [36m/>[39m
+          [36m</label>[39m
+          [36m<label[39m
+            [33mclass[39m=[32m"block text-xs font-medium"[39m
+          [36m>[39m
+            [0m提示词[0m
+            [36m<textarea[39m
+              [33mclass[39m=[32m"mt-1.5 w-full rounded-lg border bg-background p-3 text-xs leading-5"[39m
+              [33mrows[39m=[32m"7"[39m
+            [36m>[39m
+              [0m用户编辑的提示词[0m
+            [36m</textarea>[39m
+          [36m</label>[39m
+          [36m<label[39m
+            [33mclass[39m=[32m"block text-xs font-medium"[39m
+          [36m>[39m
+            [0m内容参考图（可选）[0m
+            [36m<select[39m
+              [3...
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<aside[39m
+      [33maria-label[39m=[32m"案例与收藏"[39m
+      [33mclass[39m=[32m"[@media(max-height:600px)]:fixed [@media(max-height:600px)]:top-3 [@media(max-height:600px)]:bottom-3 [@media(max-height:600px)]:left-auto [@media(max-height:600px)]:right-3 [@media(max-height:600px)]:z-40 [@media(max-height:600px)]:w-[min(26rem,calc(100vw-1.5rem))] absolute bottom-16 left-4 top-16 z-20 flex w-[min(26rem,calc(100%-2rem))] flex-col overflow-hidden rounded-2xl border bg-background shadow-xl"[39m
+      [33mdata-canvas-control[39m=[32m"true"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"border-b p-4"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex items-start justify-between gap-3"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"min-w-0"[39m
+          [36m>[39m
+            [36m<h2[39m
+              [33mclass[39m=[32m"flex items-center gap-2 text-base font-semibold"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-book-open size-4 text-primary"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"24"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"24"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 7v14"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+              [0m案例与收藏[0m
+            [36m</h2>[39m
+            [36m<p[39m
+              [33mclass[39m=[32m"mt-1 text-xs text-muted-foreground"[39m
+            [36m>[39m
+              [0m挑选风格，放到当前画布继续制作。[0m
+            [36m</p>[39m
+          [36m</div>[39m
+          [36m<button[39m
+            [33maria-label[39m=[32m"关闭案例库"[39m
+            [33mclass[39m=[32m"rounded-lg p-1.5 hover:bg-muted"[39m
+            [33mtype[39m=[32m"button"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"lucide lucide-x size-4"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"24"[39m
+              [33mstroke[39m=[32m"currentColor"[39m
+              [33mstroke-linecap[39m=[32m"round"[39m
+              [33mstroke-linejoin[39m=[32m"round"[39m
+              [33mstroke-width[39m=[32m"2"[39m
+              [33mviewBox[39m=[32m"0 0 24 24"[39m
+              [33mwidth[39m=[32m"24"[39m
+              [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+            [36m>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M18 6 6 18"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"m6 6 12 12"[39m
+              [36m/>[39m
+            [36m</svg>[39m
+          [36m</button>[39m
+        [36m</div>[39m
+        [36m<button[39m
+          [33mclass[39m=[32m"mt-3 inline-flex items-center gap-1 text-xs text-primary"[39m
+        [36m>[39m
+          [36m<svg[39m
+            [33maria-hidden[39m=[32m"true"[39m
+            [33mclass[39m=[32m"lucide lucide-chevron-left size-3.5"[39m
+            [33mfill[39m=[32m"none"[39m
+            [33mheight[39m=[32m"24"[39m
+            [33mstroke[39m=[32m"currentColor"[39m
+            [33mstroke-linecap[39m=[32m"round"[39m
+            [33mstroke-linejoin[39m=[32m"round"[39m
+            [33mstroke-width[39m=[32m"2"[39m
+            [33mviewBox[39m=[32m"0 0 24 24"[39m
+            [33mwidth[39m=[32m"24"[39m
+            [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+          [36m>[39m
+            [36m<path[39m
+              [33md[39m=[32m"m15 18-6-6 6-6"[39m
+            [36m/>[39m
+          [36m</svg>[39m
+          [0m返回模板库[0m
+        [36m</button>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"min-h-0 flex-1 overflow-y-auto p-4"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"mb-3 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-xs leading-5 text-destructive"[39m
+          [33mrole[39m=[32m"alert"[39m
+        [36m>[39m
+          [0m请先选择当前创作账号[0m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"space-y-4"[39m
+        [36m>[39m
+          [36m<div>[39m
+            [36m<h3[39m
+              [33mclass[39m=[32m"text-lg font-semibold"[39m
+            [36m>[39m
+              [0m杂志封面[0m
+            [36m</h3>[39m
+            [36m<p[39m
+              [33mclass[39m=[32m"mt-1 text-xs text-muted-foreground"[39m
+            [36m>[39m
+              [0m通用[0m
+              [0m · [0m
+              [0m文字与图解[0m
+            [36m</p>[39m
+          [36m</div>[39m
+          [36m<label[39m
+            [33mclass[39m=[32m"block text-xs font-medium"[39m
+          [36m>[39m
+            [0m本期标题[0m
+            [36m<input[39m
+              [33mclass[39m=[32m"mt-1.5 h-9 w-full rounded-lg border bg-background px-3 text-sm"[39m
+              [33mplaceholder[39m=[32m"这次想表达什么"[39m
+              [33mvalue[39m=[32m""[39m
+            [36m/>[39m
+          [36m</label>[39m
+          [36m<label[39m
+            [33mclass[39m=[32m"block text-xs font-medium"[39m
+          [36m>[39m
+            [0m本期内容[0m
+            [36m<textarea[39m
+              [33mclass[39m=[32m"mt-1.5 w-full rounded-lg border bg-background p-3 text-xs leading-5"[39m
+              [33mplaceholder[39m=[32m"粘贴当前确认稿或本期真实素材"[39m
+              [33mrows[39m=[32m"3"[39m
+            [36m/>[39m
+          [36m</label>[39m
+          [36m<label[39m
+            [33mclass[39m=[32m"block text-xs font-medium"[39m
+          [36m>[39m
+            [0m提示词[0m
+            [36m<textarea[39m
+              [33mclass[39m=[32m"mt-1.5 w-full rounded-lg border bg-background p-3 text-xs leading-5"[39m
+              [33mrows[39m=[32m"7"[39m
+            [36m>[39m
+              [0m用户编辑的提示词[0m
+            [36m</textarea>[39m
+          [36m</label>[39m
+          [36m<label[39m
+            [33mclass[39m=[32m"block text-xs font-medium"[39m
+          [36m>[39m
+            [0m内容参考图（可选）[0m
+            [36m<select[39m
+              [3...
+ ❯ waitForWrapper ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:86:33
+ ❯ src/features/creative-canvas/canvas-template-library.test.tsx:12:419
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 3 passed (4)
+      Tests  1 failed | 14 passed (15)
+   Start at  20:40:01
+   Duration  3.73s (transform 701ms, setup 1.14s, import 1.10s, tests 1.36s, environment 3.32s)
+

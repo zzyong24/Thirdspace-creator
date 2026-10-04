@@ -1,5 +1,12 @@
 # T-1021 原无限画布双模板库实施与验证
 
+## 本轮首页入口补充（2026-10-04）
+
+用户明确执行后，功能首页已改为「案例库 / 资产库 / 画布」并列，普通入口默认案例库，从项目进入仍显示该项目画布。两库可独立浏览、收藏与上传，选择后通过原 create/get/saveCanvas 新建或追加；原无限画布与 Publishing 继续承接制作和发布物料。新增 IA 独立复核通过，相关前端 18 项、原生画布与新增首页 Chrome E2E 11 项、LED-047 156 项实际通过，前端类型与本批 lint 无错误。独立 UI 走查及实际素材追加已完成，详见 [首页验证](t1021/home/REVIEW.md)。本轮不把真实供应商、安装版和既有全局 Gate 待验改成完成。
+
+![首页案例、资产与画布入口](t1021/home/t1021-home-desktop-final.png)
+
+
 ## 当前交付
 
 2026-10-04，用户明确“开始执行”。实现位于 `codex/t1021-canvas-templates`，工作区 `/Users/zyongzhu/.codex/worktrees/cover-template-library/Thirdspace-creator`，沿已存在的 `codex/creator-canvas@de031bc3` 宿主实现。后端隔离候选 `cfc2d868` 经候选验证整合为 `b9fd9288`，前端与联调修复由 root 串行完成，业务提交为 `3f7921222c50bd2198e32b1f7b23cbc954f43c00`。frontend进度已用真实提交闭合，verification保留阻塞。主工作区其他任务修改保留。
