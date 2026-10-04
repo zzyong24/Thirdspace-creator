@@ -130,10 +130,10 @@ import { createOnboardingState, createIntegrationCredentials, createSettingsRepo
 import { assembleActivationService, type ActivationService } from "./activation";
 import { createRadarProjectService, createProjectRepository, createProjectsService, createProjectsTransport, createTranscriptArtifactService, createProjectTranscriptionTargetService, type StageGateReadersRef } from "@creatoros/backend/modules/projects";
 import { createKnowledgeRepository, createKnowledgeService } from "@creatoros/backend/modules/knowledge";
-import { createAssetRepository, createAssetsService, createWebDocumentCacheService, createAssetsTransport, createMockObjectStorage, createS3ObjectStorage, createLocalFsObjectStorage, ensureBucket, type ObjectStorageForCtx } from "@creatoros/backend/modules/assets";
+import { createAssetRepository, createAssetsService, createWebDocumentCacheService, createAssetsTransport, createVisualTemplateService, createVisualTemplateTransport, VISUAL_TEMPLATE_OP_IDS, ConflictError as AssetConflictError, createMockObjectStorage, createS3ObjectStorage, createLocalFsObjectStorage, ensureBucket, type ObjectStorageForCtx } from "@creatoros/backend/modules/assets";
 import { createArtifactsService, createArtifactsTransport } from "@creatoros/backend/modules/artifacts";
 import { createProductionService, createProductionTransport } from "@creatoros/backend/modules/production";
-import { createPublishingService, createPublishingTransport, createUnavailablePublisher } from "@creatoros/backend/modules/publishing";
+import { createPublishingService, createPublishingTransport, createUnavailablePublisher, createVisualMaterialAdoptionService } from "@creatoros/backend/modules/publishing";
 import { createPublicationSyncService, createTrafficService, createAnalyticsRepository, createAnalyticsService, createAnalyticsTransport } from "@creatoros/backend/modules/analytics";
 import { createIngestionService, createIngestionTransport } from "@creatoros/backend/modules/ingestion";
 import { createReviewsService, createReviewsTransport } from "@creatoros/backend/modules/reviews";
@@ -1824,7 +1824,17 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       close: () => handle.release(),
     };
   };
-  const assets = createAssetsTransport(() => assetsService);
+  const resolveFrozenImage=async(c:RequestContext,id:string,fileId?:string,checksum?:string)=>{
+    const asset=await assetsService.getAsset(c,id);
+    if(asset.assetType!=="image"||asset.status==="deleted")throw new OwnershipError("图片素材不存在");
+    const reference=await assetsService.getAssetReference(c,id,fileId);
+    if(!reference)throw new AssetConflictError("图片文件暂时无法读取，请检查素材后重试");
+    if(checksum&&reference.checksum!==checksum)throw new AssetConflictError("图片文件已变化，请重新选择");
+    return {fileId:reference.fileId,checksum:reference.checksum};
+  };
+  const visualTemplateService=createVisualTemplateService(db,{now:deps.now,assertImageReference:(c,ref)=>resolveFrozenImage(c,ref.assetId,ref.fileId,ref.checksum)});
+  const visualTemplates=createVisualTemplateTransport(visualTemplateService),originalAssets=createAssetsTransport(() => assetsService),visualTemplateIds=new Set<string>(VISUAL_TEMPLATE_OP_IDS);
+  const assets:Transport={request:(endpoint,input,ctx)=>visualTemplateIds.has(endpoint.id)?visualTemplates.request(endpoint,input,ctx):originalAssets.request(endpoint,input,ctx)};
 
   // Artifacts (module 08): the service builds a per-ctx user-scoped repo over the
   // shared db (the repo bakes userId in; the service mints one per request). The
@@ -1989,6 +1999,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         entityType: input.entityType === "publication" ? "video" : input.entityType,
       }),
     assertCoverOwned: (ctx, id) => assetsService.getAsset(ctx, id),
+    getFrozenImageDownload:async(c,id,fileId,checksum)=>{await resolveFrozenImage(c,id,fileId,checksum);return assetsService.getAssetFileDownloadUrl(c,id,fileId);},
     isCoverAvailable: (ctx, id) => assetsService.isAssetFileAvailable(ctx, id),
     // Project→ContentOutput-ids resolver — drives Analytics' project metric read
     // (publishing.listPublicationIdsByProject → analytics.projects.get) without an
@@ -5445,8 +5456,16 @@ FAVORITES_PROMOTE_PER_RUN
     getMediaFileDownloadUrl:(c,id,fileId)=>assetsService.getAssetFileDownloadUrl(c,id,fileId),
     getReference:(c,id,fileId)=>assetsService.getAssetReference(c,id,fileId),
     submitTask:(c,request)=>chatTaskSubmissions.submit(c,{taskType:"asset.generate",...request}),
+    findTaskByAttempt:(c,attemptId)=>aiService.findTaskByAttempt(c,"asset.generate",attemptId),
+    resolveTemplateRequirement:visualTemplateService.resolveRequirement,
   });
-  const creativeCanvas=createCreativeCanvasTransport(creativeCanvasService);
+  const visualMaterialAdoption=createVisualMaterialAdoptionService({
+    canvas:creativeCanvasService,publishing:publishingService,
+    confirmGeneratedTask:(c,taskId)=>aiService.confirmTask(c,taskId),
+    assertFrozenImage:resolveFrozenImage,
+    assertOutputProject:async(c,outputId,projectId)=>{await projectsService.getProject(c,projectId);const output=await projectsService.getOutput(c,outputId);if(output.projectId!==projectId)throw new OwnershipError("稿件不属于目标作品");},
+  });
+  const creativeCanvas=createCreativeCanvasTransport(creativeCanvasService,visualMaterialAdoption);
   const chatRuntime: ChatRuntime = {
     resolveRedfoxCredential: ctx => redfoxCredentials.resolve(ctx),
     readCurrentScript: async (c,projectId,signal) => {signal?.throwIfAborted();const result=await readCurrentArtifactTruth(c,projectId,"output_script");signal?.throwIfAborted();return result;},

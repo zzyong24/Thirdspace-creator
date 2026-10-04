@@ -338,7 +338,7 @@ function PublishPackSection({
       </div>
       {/* [T-350b/T-738] 无发布物料时生成；已有持久化物料时原位查看。
           发布中心只负责排期，不承担发布物料查看。 */}
-      {unlocked ? (
+      {unlocked || publishPack ? (
         <PublishPackageCta
           projectId={projectId}
           projectTitle={projectTitle}

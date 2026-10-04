@@ -144,7 +144,7 @@ export function createPublishingTransport(
       switch (endpoint.id) {
         case "publications.visualNotes.export": {
           const parsed=ENDPOINTS.exportPublicationVisualNote.body!.parse(body);
-          return {data:await service.exportVisualNote(ctx,p.publicationId??"",parsed.revisionId),meta:{requestId}};
+          return {data:await service.exportVisualNote(ctx,p.publicationId??"",parsed.revisionId,parsed.pageIndex),meta:{requestId}};
         }
         case "outputs.publications.list": {
           const page = paginationFrom(query);

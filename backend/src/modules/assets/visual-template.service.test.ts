@@ -45,3 +45,9 @@ it("身份与参考冻结真实文件，不接收跨账号或摘要变化",async
  await expect(s.save(ctx(),{template:{...real,references:[{role:"identity",assetId:"identity"},{role:"identity",assetId:"identity"}]},attemptId:"identity-attempt-0005"})).rejects.toThrow("身份参考必须唯一");
  await expect(s.save(ctx(),{template:{...real,references:[{role:"identity",assetId:"identity",checksum:"stale"}]},attemptId:"identity-attempt-0004"})).rejects.toThrow("变化");
 });
+it("生成身份要求读取当前账号真实保存快照，更新或删除收藏不抹掉已用版本",async()=>{
+ const s=service(),created=await s.save(ctx(),{template:{...input,visualMode:'real_person',requiredIdentity:true},attemptId:'identity-snapshot-version-1'});
+ expect(await s.resolveRequirement(ctx(),created.id,1)).toBe(true);await expect(s.resolveRequirement(ctx('b'),created.id,1)).rejects.toThrow('无权');
+ const updated=await s.save(ctx(),{id:created.id,expectedRevision:1,template:{...input,requiredIdentity:false},attemptId:'identity-snapshot-version-2'});expect(await s.resolveRequirement(ctx(),created.id,1)).toBe(true);expect(await s.resolveRequirement(ctx(),created.id,2)).toBe(false);
+ await s.remove(ctx(),updated.id,{expectedRevision:2,attemptId:'identity-snapshot-remove'});expect(await s.resolveRequirement(ctx(),created.id,1)).toBe(true);await expect(s.resolveRequirement(ctx(),created.id,3)).rejects.toThrow('快照不存在');
+});

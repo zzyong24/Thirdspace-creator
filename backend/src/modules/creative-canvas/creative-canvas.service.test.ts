@@ -13,7 +13,7 @@ const imageNode=(id:string,mode:"text_to_image"|"image_to_image"="text_to_image"
 const videoNode=(id:string)=>({id,type:"video_generation" as const,position:{x:0,y:0},label:"动态镜头",prompt:"日出时缓慢推镜",mode:"image_to_video" as const,referenceAssetId:"image-1",durationSec:6,resolution:"768P" as const});
 const doc=(nodes:CanvasDocument["nodes"]):CanvasDocument=>({schemaVersion:1,viewport:{x:0,y:0,zoom:1},nodes,edges:[]});
 const submit=vi.fn(async(_context:RequestContext,input:{attemptId:string})=>({id:`task-${input.attemptId}`}));
-const service=()=>createCreativeCanvasService(db,{
+const service=(extra:Partial<Parameters<typeof createCreativeCanvasService>[1]>={})=>createCreativeCanvasService(db,{
  now:()=>"2026-09-28T00:00:00.000Z",
  assertProject:async(c,id)=>{if(c.accountId!=="account-a"||id!=="project-a")throw new Error("project not owned");},
  assertMediaAsset:async(c,id,type,fileId)=>{if(c.accountId!=="account-a"||id!=="image-1"||type!=="image"||fileId&&fileId!=="file-1")throw new Error("asset not owned");return {fileId:"file-1",checksum};},
@@ -22,6 +22,7 @@ const service=()=>createCreativeCanvasService(db,{
  getReference:async(c,id,fileId)=>c.accountId==="account-a"&&id==="image-1"&&(!fileId||fileId==="file-1")?{fileId:"file-1",checksum,mimeType:"image/png",bytes}:null,
  resolveCapability:async(_c,capability)=>({provider:"minimax",model:capability==="video.generate"?"MiniMax-H3":"image-01"}),
  submitTask:submit,
+ ...extra,
 });
 beforeAll(async()=>{const opened=await createDb();db=opened.db;close=()=>opened.client.close();});
 afterAll(async()=>{await close();});
@@ -127,4 +128,18 @@ it("未知提交恢复冻结原输入；编辑后拒绝旧恢复，成功页不�
  const fresh=await s.generate(ctx("account-a"),saved.id,"restore-node",{expectedRevision:saved.revision,attemptId:"new-creation-attempt-1"});
  expect(await s.generate(ctx("account-a"),saved.id,"restore-node",{expectedRevision:saved.revision,attemptId:"new-creation-attempt-1"})).toMatchObject({taskId:fresh.taskId});
  expect(submit).toHaveBeenCalledTimes(2);
+});
+
+it("可信真人模板不能通过篡改客户端视觉字段降级文生图",async()=>{
+ const {createVisualTemplateService}=await import("../assets/visual-template.service");
+ const templates=createVisualTemplateService(db,{assertImageReference:async()=>({fileId:"file-1",checksum})});const real=(await templates.list(ctx("account-a"),{scope:"builtin",page:1,pageSize:100})).data.find(t=>t.requiredIdentity)!;
+ const s=service({resolveTemplateRequirement:templates.resolveRequirement});const created=await s.create(ctx("account-a"),{title:"真人可信来源"});
+ await expect(s.save(ctx("account-a"),created.id,{expectedRevision:1,document:doc([{...imageNode("spoof"),templateId:real.id,templateVersion:real.revision,visualMode:"graphic"}])})).rejects.toThrow("身份");
+});
+it("任务已落库但响应丢失后编辑节点，恢复原attempt补link且不再提交模型",async()=>{
+ const {eq}=await import("drizzle-orm");const attemptId="persisted-lost-response-0001",taskId="persisted-lost-task";
+ const losingSubmit=vi.fn(async(c:RequestContext,input:Record<string,unknown>)=>{await db.insert(aiTasks).values({id:taskId,userId:c.userId,accountId:c.accountId!,taskType:"asset.generate",idempotencyKey:attemptId,inputData:input.inputData,requestedAt:"2026-10-04T00:00:00.000Z"});throw new Error("回执丢失");});
+ const findTaskByAttempt=async()=>{const [task]=await db.select().from(aiTasks).where(eq(aiTasks.idempotencyKey,attemptId));return task??null;};const s=service({submitTask:losingSubmit,findTaskByAttempt});const created=await s.create(ctx("account-a"),{title:"丢失响应"});let saved=await s.save(ctx("account-a"),created.id,{expectedRevision:1,document:doc([imageNode("lost")])});
+ await expect(s.generate(ctx("account-a"),saved.id,"lost",{expectedRevision:saved.revision,attemptId})).rejects.toThrow("回执丢失");saved=await s.save(ctx("account-a"),saved.id,{expectedRevision:saved.revision,document:doc([{...imageNode("lost"),prompt:"后来编辑的另一版"}])});
+ expect(await s.generate(ctx("account-a"),saved.id,"lost",{expectedRevision:saved.revision,attemptId})).toMatchObject({taskId});expect(losingSubmit).toHaveBeenCalledTimes(1);expect(await s.listTasks(ctx("account-a"),saved.id)).toMatchObject([{taskId}]);
 });

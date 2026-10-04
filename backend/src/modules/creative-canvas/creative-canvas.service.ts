@@ -35,6 +35,8 @@ export function createCreativeCanvasService(db:Db,deps:{
  getMediaFileDownloadUrl:(ctx:RequestContext,assetId:string,fileId:string)=>Promise<{url:string;fileName:string}>;
  getReference:(ctx:RequestContext,id:string,fileId?:string)=>Promise<Reference|null>;
  submitTask:(ctx:RequestContext,input:{attemptId:string;inputData:TaskInput})=>Promise<{id:string}>;
+ findTaskByAttempt?:(ctx:RequestContext,attemptId:string)=>Promise<{id:string}|null>;
+ resolveTemplateRequirement?:(ctx:RequestContext,id:string,version:number)=>Promise<boolean>;
  resolveCapability?:(ctx:RequestContext,capability:"image.generate"|"image.edit"|"video.generate")=>Promise<{provider:string;model:string}>;
 }){
  const now=deps.now??(()=>new Date().toISOString());
@@ -50,6 +52,20 @@ export function createCreativeCanvasService(db:Db,deps:{
   const ids=new Set(doc.nodes.map(node=>node.id));
   return {...doc,visualGroups:doc.visualGroups.map(group=>{const pageOrder=group.pageOrder.filter(id=>ids.has(id));return {...group,pageOrder,generationAttempts:Object.fromEntries(Object.entries(group.generationAttempts).filter(([id])=>pageOrder.includes(id)))};}).filter(group=>group.pageOrder.length>0)};
  }
+ async function requiresIdentity(ctx:RequestContext,node:GenerationNode,snapshot?:{id:string;version:number;requiredIdentity:boolean;visualMode:string}):Promise<boolean>{
+  const sources=[...(node.templateId?[{id:node.templateId,version:node.templateVersion}]:[]),...(snapshot?[{id:snapshot.id,version:snapshot.version}]:[])];
+  let trusted=false;for(const source of sources){if(deps.resolveTemplateRequirement){if(!source.version)throw new CanvasConflictError("模板缺少快照版本");trusted=(await deps.resolveTemplateRequirement(ctx,source.id,source.version))||trusted;}}
+  return trusted||node.visualMode==="real_person"||Boolean(snapshot?.requiredIdentity)||snapshot?.visualMode==="real_person";
+ }
+ async function recoverReservation(ctx:RequestContext,row:LinkRow):Promise<LinkRow>{
+  if(row.taskId||!deps.findTaskByAttempt)return row;const found=await deps.findTaskByAttempt(ctx,row.attemptId);if(!found)return row;
+  const [task]=await db.select().from(aiTasks).where(and(eq(aiTasks.id,found.id),eq(aiTasks.userId,ctx.userId),eq(aiTasks.accountId,account(ctx))));if(!task)throw new OwnershipError("原生成任务无权访问");
+  const frozen=row.inputJson as TaskInput;
+  if(task.userId!==ctx.userId||task.accountId!==account(ctx)||task.taskType!=="asset.generate")throw new OwnershipError("原生成任务无权访问");
+  if(!isDeepStrictEqual(task.inputData,frozen)||canvasInputDigest(row.inputRevision,row.nodeId,frozen)!==row.inputDigest||frozen.canvasOwner.inputDigest!==row.inputDigest||frozen.canvasOwner.accountId!==account(ctx)||frozen.canvasOwner.canvasId!==row.canvasId||frozen.canvasOwner.nodeId!==row.nodeId)throw new CanvasConflictError("原生成任务与冻结请求不符");
+  const [saved]=await db.update(canvasGenerationLinks).set({taskId:task.id,updatedAt:now()}).where(and(eq(canvasGenerationLinks.id,row.id),eq(canvasGenerationLinks.userId,ctx.userId),eq(canvasGenerationLinks.accountId,account(ctx)),isNull(canvasGenerationLinks.taskId))).returning();
+  if(saved)return saved;const [winner]=await db.select().from(canvasGenerationLinks).where(eq(canvasGenerationLinks.id,row.id));if(winner?.taskId!==task.id)throw new CanvasConflictError("原生成任务恢复冲突");return winner;
+ }
  async function validateDocument(ctx:RequestContext,raw:unknown):Promise<CanvasDocument>{
   const doc=canvasDocumentSchema.parse(raw),ids=new Set<string>(),edgeIds=new Set<string>();
   for(const node of doc.nodes){
@@ -59,7 +75,7 @@ export function createCreativeCanvasService(db:Db,deps:{
     if(node.checksum&&node.checksum!==file.checksum)throw new CanvasConflictError("画布素材文件校验已变化");
     node.fileId=file.fileId;node.checksum=file.checksum;
    }
-   if(node.type==="image_generation"&&node.visualMode==="real_person"&&(node.mode!=="image_to_image"||!node.referenceAssetId))throw new CanvasConflictError("真人身份需要当前用户的参考图与图生图模式");
+   if(node.type==="image_generation"&&await requiresIdentity(ctx,node)&&(node.mode!=="image_to_image"||!node.referenceAssetId))throw new CanvasConflictError("真人身份需要当前用户的参考图与图生图模式");
    if((node.type==="image_generation"||node.type==="video_generation")&&node.referenceAssetId)await deps.assertReferenceAsset(ctx,node.referenceAssetId);
   }
   for(const edge of doc.edges){if(edgeIds.has(edge.id)||!ids.has(edge.source)||!ids.has(edge.target))throw new CanvasConflictError("画布连接包含重复或失效节点");edgeIds.add(edge.id);}
@@ -70,7 +86,7 @@ export function createCreativeCanvasService(db:Db,deps:{
     const node=doc.nodes.find(node=>node.id===nodeId);
     if(!node||!['image','image_generation'].includes(node.type)||groupNodes.has(nodeId))throw new CanvasConflictError("页组引用失效、重复或跨组节点");groupNodes.add(nodeId);
     if(node.type==="image_generation"){
-     if((group.templateSnapshot.requiredIdentity||group.templateSnapshot.visualMode==="real_person")&&(node.mode!=="image_to_image"||!node.referenceAssetId))throw new CanvasConflictError("模板身份需要当前用户的参考图与图生图模式");
+     if((await requiresIdentity(ctx,node,group.templateSnapshot))&&(node.mode!=="image_to_image"||!node.referenceAssetId))throw new CanvasConflictError("模板身份需要当前用户的参考图与图生图模式");
      if(node.aspectRatio&&node.aspectRatio!==group.aspectRatio)throw new CanvasConflictError("页组与节点画幅不一致");
     }
    }
@@ -91,7 +107,6 @@ export function createCreativeCanvasService(db:Db,deps:{
   // SEMANTIC_BOUNDARY_ALLOW: 精确比较原生成协议输入与用户当前选择，仅守来源身份和版本边界。
   const digest=canvasInputDigest(source.inputRevision,node.id,input);
   if(input.kind!=="image"||digest!==source.inputDigest||business.canvasOwner?.accountId!==account(ctx)||business.canvasOwner?.canvasId!==canvas.id||business.canvasOwner?.nodeId!==node.id||business.canvasOwner?.inputDigest!==source.inputDigest||!isDeepStrictEqual(business,input))throw new CanvasConflictError("生成任务与原画布输入不符");
-  if(input.prompt!==node.prompt||input.mode!==node.mode||(input.referenceAssetId??null)!==(node.referenceAssetId??null)||(input.aspectRatio??null)!==(node.aspectRatio??null)||(input.visualMode??null)!==(node.visualMode??null)||(input.templateId??null)!==(node.templateId??null)||(input.templateVersion??null)!==(node.templateVersion??null))throw new CanvasConflictError("节点内容已修改，请选择当前输入生成的候选");
   if(!task.executionTaskId||!result.executionCallId)throw new CanvasConflictError("生成候选缺少执行回执");
   const [execution]=await db.select().from(executionTasks).where(and(eq(executionTasks.id,task.executionTaskId),eq(executionTasks.userId,ctx.userId),eq(executionTasks.accountId,account(ctx)),eq(executionTasks.ownerId,task.id)));
   const [call]=await db.select().from(executionCalls).where(and(eq(executionCalls.id,result.executionCallId),eq(executionCalls.executionTaskId,task.executionTaskId)));
@@ -221,7 +236,8 @@ export function createCreativeCanvasService(db:Db,deps:{
   },
   async listTasks(ctx:RequestContext,id:string){await requireCanvas(ctx,id);
    const rows=await db.select().from(canvasGenerationLinks).where(and(eq(canvasGenerationLinks.userId,ctx.userId),eq(canvasGenerationLinks.accountId,account(ctx)),eq(canvasGenerationLinks.canvasId,id))).orderBy(desc(canvasGenerationLinks.createdAt));
-   return Promise.all(rows.map(async row=>{
+   return Promise.all(rows.map(async original=>{
+    const row=await recoverReservation(ctx,original);
     if(!row.taskId||row.resultAssetId)return link(row);
     const [result]=await db.select({assetId:aiTaskResults.assetId}).from(aiTaskResults).innerJoin(aiTasks,eq(aiTasks.id,aiTaskResults.aiTaskId)).where(and(eq(aiTasks.id,row.taskId),eq(aiTasks.userId,ctx.userId),eq(aiTasks.accountId,account(ctx)),eq(aiTaskResults.aiTaskId,row.taskId))).limit(1);
     if(!result?.assetId)return link(row);
@@ -243,7 +259,7 @@ export function createCreativeCanvasService(db:Db,deps:{
     const config=node as GenerationNode;
     const group=doc.visualGroups?.find(group=>group.pageOrder.includes(nodeId));
     if(group&&group.generationAttempts[nodeId]!==input.attemptId)throw new CanvasConflictError("请先保存当前页的生成尝试再提交");
-    if((config.visualMode==="real_person"||group?.templateSnapshot.requiredIdentity||group?.templateSnapshot.visualMode==="real_person")&&(config.mode!=="image_to_image"||!config.referenceAssetId))throw new CanvasConflictError("真人身份需要参考图，不允许降级文生图");
+    if((await requiresIdentity(ctx,config,group?.templateSnapshot))&&(config.mode!=="image_to_image"||!config.referenceAssetId))throw new CanvasConflictError("真人身份需要参考图，不允许降级文生图");
     if(!config.prompt.trim())throw new CanvasConflictError("请先填写生成描述");
     if(!deps.resolveCapability)throw new CanvasConflictError("生成模型尚未配置");
     const spec=await deps.resolveCapability(ctx,capabilityForAssetMode(config.mode));
@@ -272,6 +288,7 @@ export function createCreativeCanvasService(db:Db,deps:{
    if(!reservation)throw new CanvasConflictError("生成请求未预留");
    const taskInput=reservation.inputJson as TaskInput;
    if(taskInput.canvasOwner.inputDigest!==reservation.inputDigest)throw new CanvasConflictError("生成输入与原提交不符");
+   reservation=await recoverReservation(ctx,reservation);
    if(reservation.taskId)return link(reservation);
    const currentCanvas=await requireCanvas(ctx,canvasId),currentNode=canvasDocumentSchema.parse(currentCanvas.documentJson).nodes.find(node=>node.id===nodeId);
    if(!currentNode||(currentNode.type!=="image_generation"&&currentNode.type!=="video_generation")||currentNode.prompt!==taskInput.prompt||currentNode.mode!==taskInput.mode||(currentNode.referenceAssetId??null)!==(taskInput.referenceAssetId??null)||(currentNode.aspectRatio??null)!==(taskInput.aspectRatio??null)||(currentNode.visualMode??null)!==(taskInput.visualMode??null)||(currentNode.templateId??null)!==(taskInput.templateId??null)||(currentNode.templateVersion??null)!==(taskInput.templateVersion??null))throw new CanvasConflictError("节点输入已编辑，请明确再创作而不是恢复旧提交");

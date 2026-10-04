@@ -132,7 +132,7 @@ export interface PublishingService {
   adoptVisualRevision(ctx:RequestContext,input:AdoptVisualRevisionInput):Promise<{publication:PublicationRow;revision:PublicationRevisionRow}>;
   readRevision(ctx:RequestContext,publicationId:string,revisionId:string):Promise<PublicationRevisionRow>;
   getVisualAdoptionRevision(ctx:RequestContext,publicationId:string,adoptionKey:string):Promise<PublicationRevisionRow>;
-  exportVisualNote(ctx:RequestContext,publicationId:string,revisionId:string):Promise<{caption:string;files:Array<{assetId:string;url:string;fileName:string}>}>;
+  exportVisualNote(ctx:RequestContext,publicationId:string,revisionId:string,pageIndex?:number):Promise<{caption:string;files:Array<{assetId:string;url:string;fileName:string}>}>;
   listPublications(
     ctx: RequestContext,
     outputId: string,
@@ -494,7 +494,7 @@ export function createPublishingService(deps: ServiceDeps): PublishingService {
       await assertOutputOwned(ctx,input.outputId);
       return adoptPublicationVisualRevision(deps.db,ctx,input,deps);
     },
-    async exportVisualNote(ctx,publicationId,revisionId){
+    async exportVisualNote(ctx,publicationId,revisionId,pageIndex){
       const pub=await repoFor(ctx).getPublication(publicationId);
       await assertOutputOwned(ctx,pub.contentOutputId);
       const [row]=await deps.db.select().from(publicationRevisions).where(and(eq(publicationRevisions.id,revisionId),eq(publicationRevisions.publicationId,pub.id),eq(publicationRevisions.userId,ctx.userId)));
@@ -504,8 +504,10 @@ export function createPublishingService(deps: ServiceDeps): PublishingService {
       const note=parsed.data;
       if(note.pageReceipts.length!==note.orderedAssetIds.length)throw new ValidationError("图文页序与冻结文件不完整");
       if(!deps.getFrozenImageDownload)throw new ConflictError("图片下载端口尚未配置");
+      if(pageIndex!==undefined&&(!Number.isInteger(pageIndex)||pageIndex<0||pageIndex>=note.orderedAssetIds.length))throw new ValidationError("图文页码不存在");
       const files=[];
-      for(let i=0;i<note.orderedAssetIds.length;i++){
+      const indexes=pageIndex===undefined?note.orderedAssetIds.map((_,index)=>index):[pageIndex];
+      for(const i of indexes){
         const assetId=note.orderedAssetIds[i]!,receipt=note.pageReceipts[i]!;
         const file=await deps.getFrozenImageDownload(ctx,assetId,receipt.fileId,receipt.checksum);
         if(!file.url||!file.fileName)throw new ValidationError("图片文件不可下载");

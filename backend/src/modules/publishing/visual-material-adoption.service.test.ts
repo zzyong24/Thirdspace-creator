@@ -140,6 +140,8 @@ it("完整公共服务链：画布三页→真实pending与结算→选择→原
   const callsAfter=await db.select().from(executionCalls);
   expect(callsAfter.filter(call=>successfulCallIds.includes(call.id))).toHaveLength(successfulCallIds.length);
   expect(callsAfter).toHaveLength(successfulCallIds.length+1);
+  // 已生成后编辑下一版提示词，用户仍明确选择此前安全候选。
+  saved=await canvas.save(ctx(),saved.id,{expectedRevision:saved.revision,document:{...saved.document,nodes:saved.document.nodes.map(node=>node.type==="image_generation"?{...node,prompt:"下一版编辑，仍选历史结果"}:node)}});
   const input={...bad,expectedRevision:saved.revision,selections,attemptId:"public-adopt-good-0001"};
   const envelope=await transport.request(publishingOperations.adoptCanvasMaterial,{params:{canvasId:saved.id},query:undefined,body:input},ctx()) as {data:{publication:{id:string;currentRevisionId:string};revision:{id:string}}};
   const pub=await publishing.getPublication(ctx(),envelope.data.publication.id),revision=await publishing.readRevision(ctx(),pub.id,pub.currentRevisionId!);
@@ -171,4 +173,14 @@ it("新建rich草稿并发同键唯一，改页序不能重放为成功",async()
  const pair=await Promise.all([s.adoptDraft(ctx(),input),s.adoptDraft(ctx(),input)]);expect(pair[0]!.id).toBe(pair[1]!.id);
  await expect(s.adoptDraft(ctx(),{...input,platformSettings:{visualNote:{...note,orderedAssetIds:["asset-2","asset-1"],pageReceipts:[note.pageReceipts[1]!,note.pageReceipts[0]!]}}})).rejects.toThrow("同一");
  expect(await s.listRevisions(ctx(),pair[0]!.id,{limit:20,offset:0})).toHaveLength(1);
+});
+it("整套一页缺失时，同一导出操作仍可下载其余冻结页，页码不越界",async()=>{
+ const calls=vi.fn(async(_c:RequestContext,assetId:string,fileId:string,checksum:string)=>{if(assetId==='asset-a')throw new Error('缺失第1页');return {url:`https://example.invalid/${assetId}/${fileId}`,fileName:'second.png'};});
+ const s=createPublishingService({db,now:()=>"2026-10-04T00:00:00.000Z",nextId:p=>`${p}-${++counter}`,resolveOutputOwner:async(c,id)=>c.accountId==="a"&&id==="output-a"?{projectId:"project-a",source:"user",status:"active",title:"稿件"}:null,getFrozenImageDownload:calls});
+ const note={...visualNote,imageMode:'carousel' as const,orderedAssetIds:['asset-a','asset-b'],pageReceipts:[visualNote.pageReceipts[0]!,{...visualNote.pageReceipts[0]!,nodeId:'node-two',fileId:'second-frozen',checksum:'second-checksum'}]};
+ const pub=await s.adoptDraft(ctx(),{...rich,platformSettings:{visualNote:note},adoptionKey:'export-partial'});
+ await expect(s.exportVisualNote(ctx(),pub.id,pub.currentRevisionId!)).rejects.toThrow('缺失第1页');calls.mockClear();
+ const transport=createPublishingTransport(()=>s);const response=await transport.request(publishingOperations.exportPublicationVisualNote,{params:{publicationId:pub.id},query:undefined,body:{revisionId:pub.currentRevisionId!,pageIndex:1}},ctx());
+ expect(response).toMatchObject({data:{files:[{assetId:'asset-b',url:'https://example.invalid/asset-b/second-frozen',fileName:'02-second.png'}]}});expect(calls).toHaveBeenCalledExactlyOnceWith(ctx(),'asset-b','second-frozen','second-checksum');
+ await expect(s.exportVisualNote(ctx(),pub.id,pub.currentRevisionId!,2)).rejects.toThrow('页码不存在');await expect(s.exportVisualNote(ctx('b'),pub.id,pub.currentRevisionId!,1)).rejects.toThrow();
 });

@@ -1,5 +1,5 @@
 import {createHash,randomUUID} from "node:crypto";
-import {and,eq,isNull,desc} from "drizzle-orm";
+import {and,eq,isNull,desc,sql} from "drizzle-orm";
 import {OwnershipError,requireAccountId,type Db} from "@creatoros/backend";
 import {ErrorCode,visualTemplateInputSchema,visualTemplateResource,ENDPOINTS as visualTemplateOperations,type RequestContext,type VisualTemplate,type VisualTemplateInput} from "@creatoros/contract";
 import {visualTemplateFavorites,visualTemplateMutationReceipts} from "../../schema/visual-templates";
@@ -25,6 +25,14 @@ export function createVisualTemplateService(db:Db,deps:VisualTemplateServiceDeps
   });
  }
  return {
+  async resolveRequirement(ctx:RequestContext,id:string,version:number):Promise<boolean>{
+   const builtin=builtinVisualTemplates.find(template=>template.id===id);
+   if(builtin){if(builtin.revision!==version)throw new TemplateConflict("内置模板版本不存在");return builtin.requiredIdentity||builtin.visualMode==="real_person";}
+   const accountId=requireAccountId(ctx.accountId,"assets.visualTemplates");
+   const [receipt]=await db.select({response:visualTemplateMutationReceipts.response}).from(visualTemplateMutationReceipts).where(and(eq(visualTemplateMutationReceipts.userId,ctx.userId),eq(visualTemplateMutationReceipts.accountId,accountId),sql`${visualTemplateMutationReceipts.response}->>'id' = ${id}`,sql`${visualTemplateMutationReceipts.response}->>'revision' = ${String(version)}`)).limit(1);
+   const parsed=visualTemplateResource.safeParse(receipt?.response);if(!parsed.success)throw new OwnershipError("收藏模板快照不存在或无权访问");
+   return parsed.data.requiredIdentity||parsed.data.visualMode==="real_person";
+  },
   async list(ctx:RequestContext,raw:unknown){
    const query=visualTemplateOperations.listVisualTemplates.query!.parse(raw);
    let values:VisualTemplate[]=[];

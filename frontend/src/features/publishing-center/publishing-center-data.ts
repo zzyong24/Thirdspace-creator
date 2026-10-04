@@ -1,4 +1,5 @@
 import "server-only";
+import {publicationVisualNoteSchema} from "@creatoros/contract";
 
 import { client as defaultClient } from "@/lib/contract-client.server";
 import type { MetricCard as MetricCardVm } from "@/types/view-models";
@@ -74,6 +75,7 @@ interface PublicationDto {
 }
 
 interface PublicationRevisionDto {
+  readonly platformSettings?: Record<string,unknown>;
   readonly id: string;
   readonly title: string;
   readonly revisionNumber: number;
@@ -186,7 +188,7 @@ function formatDate(iso: string): string {
 async function resolveRevisionMeta(
   client: PublishingCenterDataClient,
   pub: PublicationDto,
-): Promise<{ title: string | null; coverAssetId: string | null }> {
+): Promise<{ title: string | null; coverAssetId: string | null; visualContentType?: "image" }> {
   try {
     const revisions = (await client.listPublicationRevisions({
       params: { publicationId: pub.id },
@@ -195,11 +197,12 @@ async function resolveRevisionMeta(
     })) as ReadonlyArray<PublicationRevisionDto>;
     if (revisions.length === 0) return { title: null, coverAssetId: null };
     const current =
-      revisions.find((r) => r.id === pub.currentRevisionId) ?? revisions[0];
+      revisions.find((r) => r.id === pub.currentRevisionId);
     const title = current?.title?.trim();
     return {
       title: title ? title : null,
       coverAssetId: current?.coverAssetId ?? null,
+      ...(publicationVisualNoteSchema.safeParse(current?.platformSettings?.visualNote).success?{visualContentType:"image" as const}:{}),
     };
   } catch {
     return { title: null, coverAssetId: null };
@@ -410,7 +413,7 @@ async function assembleRealRows(
               : fallbackTitle,
             projectId: project.id,
             projectTitle: projectTitleById.get(project.id) ?? project.id,
-            contentType: mapContentType(output?.contentType ?? "video"),
+            contentType: revisionMeta.visualContentType??mapContentType(output?.contentType ?? "video"),
             platform: pub.platform,
             platformLabel: platformLabel(pub.platform),
             publishedAt: when,

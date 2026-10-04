@@ -55,6 +55,17 @@ function makeClient(options?: {
   } as unknown as DraftWorkbenchClient;
 }
 
+it("T-1021 当前图文版本保留多段配文与完整图片清单，不读取旧版",async()=>{
+ const visualNote={schemaVersion:1,sourceCanvasId:"canvas-a",sourceGroupId:"group-a",sourceCanvasRevision:4,imageMode:"carousel",aspectRatio:"3:4",orderedAssetIds:["img-one","img-two"],pageReceipts:[{nodeId:"node-one",fileId:"file-one",checksum:"one"},{nodeId:"node-two",fileId:"file-two",checksum:"two"}]};
+ const vm=await buildDraftWorkbenchVm("p-1",makeClient({outputs:[{id:"out-one"}],publications:[{id:"pub-one",platform:"xiaohongshu",status:"draft",currentRevisionId:"rev-current",publishedAt:null}],publicationRevisions:[{id:"rev-old",title:"旧版",description:"旧版文字",platformTags:[],coverAssetId:null},{id:"rev-current",title:"新版图文",description:"第一段。\n\n第二段。",platformTags:[],coverAssetId:"img-one",platformSettings:{visualNote}}]}));
+ expect(vm.publishPack).toMatchObject({revisionId:"rev-current",title:"新版图文",description:"第一段。\n\n第二段。",visualNote});
+});
+
+it("T-1021 当前发布版本缺失时不拿第一页历史版本冒充当前内容",async()=>{
+ const vm=await buildDraftWorkbenchVm("p-1",makeClient({outputs:[{id:"out-one"}],publications:[{id:"pub-one",platform:"xiaohongshu",status:"draft",currentRevisionId:"missing",publishedAt:null}],publicationRevisions:[{id:"rev-old",title:"历史内容",description:"这不是当前版本",platformTags:[],coverAssetId:null}]}));
+ expect(vm.publishPack?.title).toBe("");expect(vm.publishPack?.description).toBe("");expect(vm.publishPack?.revisionId).toBeUndefined();
+});
+
 describe("draft workbench project state", () => {
   it("treats an upstream-confirmed radar draft as a usable saved script", async () => {
     const vm = await buildDraftWorkbenchVm(
