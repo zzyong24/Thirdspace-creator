@@ -32,3 +32,7 @@ flowchart LR
 若验收 CreatorOS 内直接调用 WorkBuddy：当前入口未实现，须先登记用户确认的契约变更并复用已有实现。本记录不是此入口的实现或通过凭据。
 
 本轮未修改生产代码，未运行模型、采用候选或发布内容；没有新增 PASS。
+
+## 用户后续决定
+
+2026-10-04 用户明确“那就不验证WorkBuddy了。WorkBuddy那就只能通过MCP来做了”，撤回本轮 WorkBuddy 客户端真实 AI 调用验证，沿原外部 MCP 接入范围继续；本条不构成真实 AI 或跨应用工具验收 PASS。随后按请求恢复 4318 预览，沿原隔离 `/tmp/t1049-user-acceptance/db` 启动，原文章 URL 实际 HTTP 返回 200。
