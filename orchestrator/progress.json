@@ -2185,7 +2185,7 @@
         },
         {
           "step": "frontend_home",
-          "status": "pending"
+          "status": "done"
         },
         {
           "step": "verification",
@@ -2339,14 +2339,10 @@
       "step_exclusive_resources": {},
       "commits": {
         "backend": "b9fd9288",
-        "frontend": "3f792122"
+        "frontend": "3f792122",
+        "frontend_home": "fb566c02"
       }
     }
   ],
-  "leases": {
-    "T-1021:frontend_home": {
-      "agent": "root",
-      "since": "2026-10-04T12:14:05.998Z"
-    }
-  }
+  "leases": {}
 }

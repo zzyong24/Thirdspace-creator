@@ -61,6 +61,10 @@ test("T-993 画布可保存、重开，切换账号后列表和直链隔离",asy
  await page.getByRole("button",{name:"保存",exact:true}).click();
  await expect(page.getByText("已保存",{exact:true})).toBeVisible();
 
+ await page.getByRole("button",{name:"画布库",exact:true}).click();
+ await expect(page).toHaveURL(new RegExp(`projectId=${project.id}`));
+ await expect(page.getByRole("heading",{name:"画布关联项目的创作画布"})).toBeVisible();
+
  await page.getByTestId("account-switcher-trigger").click();
  await page.getByTestId("account-switcher-menu").locator(`[data-testid="account-switcher-item"][data-account-id="${accountB.id}"]`).click();
  await page.goto("/canvases?tab=canvases");
