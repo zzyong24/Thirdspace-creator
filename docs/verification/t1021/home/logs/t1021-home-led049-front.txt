@@ -1,0 +1,79 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/cover-template-library/Thirdspace-creator/frontend
+
+(node:32720) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:32722) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:32719) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:32725) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:32724) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:32723) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:32726) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+Not implemented: navigation to another Document
+ ❯ src/components/shell/shell.test.tsx (37 tests | 2 failed) 3946ms
+     × renders the approved primary nav items in order (定位中心 inserted as 2nd, 七步①②) 53ms
+     × [T-987] 展开与收拢导航不预取未点击页面，仍保留真实链接 42ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/components/shell/shell.test.tsx > AppShell > renders the approved primary nav items in order (定位中心 inserted as 2nd, 七步①②)
+AssertionError: expected [ '首页', '定位中心', '内容雷达', '选题', …(8) ] to deeply equal [ '首页', '定位中心', '内容雷达', '选题', …(7) ]
+
+- Expected
++ Received
+
+@@ -4,10 +4,11 @@
+    "内容雷达",
+    "选题",
+    "项目",
+    "知识库",
+    "素材中心",
++   "创作画布",
+    "发布中心",
+    "运营分析",
+    "自动化",
+    "设置",
+  ]
+
+ ❯ src/components/shell/shell.test.tsx:172:20
+    170|     // SPEC §3.4: 定位中心 is the upstream constraint source — pinned 2nd.…
+    171|     // under it (定位→选题→项目 upstream order: 定位约束选题, 选题落地为项目).
+    172|     expect(labels).toEqual([
+       |                    ^
+    173|       "首页",
+    174|       "定位中心",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/components/shell/shell.test.tsx > AppShell > [T-987] 展开与收拢导航不预取未点击页面，仍保留真实链接
+AssertionError: expected [ <a href="/" …(5)>…(2)</a>, …(11) ] to have a length of 11 but got 12
+
+- Expected
++ Received
+
+- 11
++ 12
+
+ ❯ assertLinks src/components/shell/shell.test.tsx:191:21
+    189|     const assertLinks = () => {
+    190|       const links = within(screen.getByRole("navigation", { name: "主要导…
+    191|       expect(links).toHaveLength(11);
+       |                     ^
+    192|       for (const link of links) {
+    193|         expect(link).toHaveAttribute("data-prefetch", "false");
+ ❯ src/components/shell/shell.test.tsx:197:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed | 6 passed (7)
+      Tests  2 failed | 75 passed (77)
+   Start at  21:06:40
+   Duration  8.62s (transform 8.84s, setup 4.57s, import 9.34s, tests 8.19s, environment 22.35s)
+

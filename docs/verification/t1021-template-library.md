@@ -67,3 +67,8 @@ flowchart LR
 4. pmem sync已运行，生成的PROJECT.md只更新分支哈希与开放任务清单。由于当前reviewctl将整份自动生成PROJECT.md绑定为constitution，收尾同步导致第三轮receipt的constitution hash过期；原独立审计结论保留为当时证据，当前receipt不得冒称有效生产Gate。没有伪造第四轮、新cycle用户授权或改写历史receipt。该治理冲突连同全局reconcile失败如实留账。
 
 第一次完整reconcile为239 errors；收尾状态更新与manifest按实际结果登记后，最终完整reconcile为238 errors、0 warnings，包含上述本任务当前receipt过期及其他模块历史漂移；两份日志完整保存，LED-047在其中继续PASS。ARTIFACT_MANIFEST的BUILD gate已按真实失败记录，SHIP不推进。本任务代码已实施；因SPEC要求未通过全部范围不得完成，已通过taskctl block记录真实未验收原因，未安装、未发布、未将生产Gate记为PASS。
+
+
+本轮首页收尾：完整 reconcile 239 errors / 0 warnings，Orphan clean、LED-047 通过；相关原生最终回归11项通过，作品画布返回列表保留 projectId。代码提交 fb566c02 / e7b5c670。pmem 收尾同步后，新增 IA receipt 的 PROJECT constitution hash 同样过期，当前生产 Gate 仍不可写 PASS。首页实现已完成，总 verification 如实保留阻塞；新证据见 `t1021/home/`。
+
+LED-049 单独复核：后端 3 文件 43 测试通过；前端 7 文件 77 测试中 75 通过、2 失败，均在未改动的 `src/components/shell/shell.test.tsx`，原导航断言预期 11 个链接而现有导航实际 12 个。该门在此前完整 reconcile 日志中已失败，本轮保留真实失败记录，没有修改原导航来迁就断言。

@@ -2192,7 +2192,7 @@
           "status": "pending"
         }
       ],
-      "blocked_reason": null,
+      "blocked_reason": "首页入口及原系统链路已验证；总SPEC真实供应商/安装版与全局239项失败继续待验，未发布。",
       "depends_on": [],
       "step_depends_on": {},
       "write_set": [

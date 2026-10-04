@@ -36,3 +36,8 @@ home_code_review 发现离开首页仍可能迟到保存/导航、收藏后单�
 ## 尚未满足的总验收
 
 本轮只完成获批首页 IA 与相关原系统回归。真实供应商比例/真人效果、安装版及既有全局 Gate 问题沿用总报告待验，未因此冒称 T-1021 全部完成、安装或发布。记录中的本地模型图明确为联调夹具。pmem sync / reconcile 的本轮结果追加到总报告与本目录日志；以前的全局失败证据只代表当时结果。
+
+
+本轮完整 reconcile 当场运行结束：239 errors / 0 warnings，Orphan clean 与 LED-047 仍通过。物理门仍为基线5/当前7，新增基线外条目指向本轮没有改动的 live-chat-session.ts 两个 SDK 导入；语义门仍指未改动的 video-decisions-runner.ts。既有全局债沿 T-1018 / T-916 登记。收尾 pmem sync 更新自动生成 PROJECT.md 的分支 SHA 与开放任务状态，导致绑定整份 PROJECT 的 receipt constitution hash 过期；新增 IA 的独立复核属于当时的真实前置证据，不伪造新 cycle 或通过当前生产 Gate。代码为 fb566c02 与 e7b5c670；frontend_home 进度由真实提交关闭，总 verification 通过 taskctl/progress 保持阻塞，未标记任务全部完成。
+
+LED-049 单独复核：后端 3 文件 43 测试通过；前端 7 文件 77 测试中 75 通过、2 失败，均在未改动的 `src/components/shell/shell.test.tsx`，原导航断言预期 11 个链接而现有导航实际 12 个。该门在此前完整 reconcile 日志中已失败，本轮保留真实失败记录，没有修改原导航来迁就断言。

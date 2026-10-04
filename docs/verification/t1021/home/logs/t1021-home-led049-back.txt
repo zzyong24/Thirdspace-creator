@@ -1,0 +1,9 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/cover-template-library/Thirdspace-creator/backend
+
+
+ Test Files  3 passed (3)
+      Tests  43 passed (43)
+   Start at  21:07:12
+   Duration  43.35s (transform 816ms, setup 0ms, import 2.65s, tests 40.09s, environment 0ms)
+
