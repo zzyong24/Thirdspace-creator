@@ -60,7 +60,7 @@
       {
         "question": "同一真实attention能否区分num_frames帧域错与不可修正provider时间码？",
         "command": "node --max-old-space-size=2048 /tmp/t1062-asr-timing-observation/observe.cjs /tmp/t1062-asr-timing-observation/capture-one；随后两个无模型verify-r2 evidence/timing",
-        "environment": "本机Node24、transformers2.17.2、固定mono16k s16/306587samples、模型原件与独立cache7SHA、fetchdeny、1pipeline/1generate；76,459,164B tensor捕获。",
+        "environment": "PATH node（原回执未冻结实际Node版本；本次核实为v25.9.0）；esbuild target node24、transformers2.17.2、固定mono16k s16/306587samples、模型原件与独立cache7SHA、fetchdeny、1pipeline/1generate；76,459,164B tensor捕获。",
         "result": "observe0；初版offline2次ESM初始化失败exit1保留；R2仅修标准入口导入顺序，两criterion0。支持窄机械OPT1，segment误差/worker/public/安装仍待验。",
         "artifact_path": "orchestrator/research/t1062-asr-timing/replay-verification.json",
         "artifact_sha256": "08d020ab757ebdbeb86c6e9e68bae46f3c4d5162d62b2675c4338d38fe8a1724"
@@ -142,6 +142,14 @@
     "path": "orchestrator/research/t1062-asr-timing/t1062-asr-timing-independent-review.json",
     "sha256": "902fdc926f42c46906560b0d3ee192e6c0b6550d73dc91280488d00bb70561dd",
     "status": "RESEARCH_CRITERION_PASS_OPT1_ELIGIBLE"
+  },
+  "runtime_environment_correction": {
+    "at": "2026-10-05T05:58:52.914203+00:00",
+    "actual_current_exec_path": "/opt/homebrew/bin/node",
+    "actual_current_version": "v25.9.0",
+    "desktop_required_major": 25,
+    "source": "frontend/scripts/desktop/node-runtime.mjs REQUIRED_NODE_MAJOR=25",
+    "historical_limit": "研究命令的node通过PATH解析，但原metadata缺execPath/version，不能把build target node24当成历史执行版本。原原件不改写，新实际worker回归将冻结真实版本。"
   }
 }
 ```

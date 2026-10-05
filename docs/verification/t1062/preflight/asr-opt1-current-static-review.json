@@ -1,0 +1,111 @@
+{
+  "schema": "t1062-asr-opt1-current-static-review/v1",
+  "reviewed_at": "2026-10-05T14:02:33+08:00",
+  "mode": "read_only_no_model",
+  "candidate_root": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator",
+  "head": "a40e76472282b8c9c51f126779e3df8dfb528f17",
+  "decision": "STATIC_PASS_RUNTIME_PENDING",
+  "scope_files": [
+    {
+      "path": "ai-worker/src/runtime/multimodal-whisper-local.ts",
+      "sha256": "3ec9a752cf72dec6df0765e2eac983db4a64ab0713f5207b81098c2c3b9fbc9e"
+    },
+    {
+      "path": "ai-worker/src/runtime/multimodal-whisper-local.test.ts",
+      "sha256": "653c2cac55a874fc1652620b89b9469073ec782d9a667ca211830871b154920e"
+    },
+    {
+      "path": "ai-worker/src/runtime/multimodal-precise-asr.test.ts",
+      "sha256": "0fcbc2eb34ce2afc0ba9479c924086cecafa789ec814d2a833337558a72d4e12"
+    },
+    {
+      "path": "ai-worker/src/execution/worker-runtime.asset-asr-control.test.ts",
+      "sha256": "1bb6f9e872b2c4a6413a873f7c4e8ceafd7506fd507b12309baeb128d4765b90"
+    }
+  ],
+  "findings": [
+    {
+      "id": "OPT1-STATIC-01",
+      "status": "PASS",
+      "text": "真实 attention [batch][step][layer] 以两次 flatMap 展平，并逐 step 核 decoder_layers、逐 tensor 核 batch/head/source dims；测试 fixture 使用真实三层布局。"
+    },
+    {
+      "id": "OPT1-STATIC-02",
+      "status": "PASS",
+      "text": "真实 AutomaticSpeechRecognitionPipeline 先对每个 subarray 调 processor；guard 用原 audio buffer 范围证明该 subarray，再以 WeakMap 将原 input_features 对象绑定实际样本数。generate 只接受同一 feature 身份，30s/5s 三 chunk 得到 crop [1500,1250,250]，未知复制 feature 保留正文且 marker=false。"
+    },
+    {
+      "id": "OPT1-STATIC-03",
+      "status": "PASS",
+      "text": "processor prototype/own descriptors 保留，raw.processor 与 model generate/forward/extract 在 finally 恢复；预取消、throw、unknown dims 与 marker 缺失均不造 word timing。word 模式现在要求 wordTimingValidated===true。"
+    },
+    {
+      "id": "OPT1-STATIC-04",
+      "status": "PASS_STATIC_ONLY",
+      "text": "guardWhisperPipeline helper主体自包含；真实worker源码测试覆盖 toString 注入。旧 bundle smoke 的 sourceSha 不等于当前3ec9，故只记迭代历史，不能证明当前最终 bundle。"
+    },
+    {
+      "id": "OPT1-STATIC-05",
+      "status": "PENDING_ACTUAL",
+      "text": "52 tests 与 tsc exit0支持当前静态闭包；仍未证明当前稳定源码的真实 default factory+native ffmpeg+真实 worker+本地模型一次运行，也未证明公共/package/安装版。"
+    }
+  ],
+  "evidence": [
+    {
+      "path": "/tmp/t1062-asr-original-pipeline-full.log",
+      "sha256": "41f8eddd66a951d443cdea4070cad0bbb43ac1c9b556a0ea5ed7f3e9acf19051"
+    },
+    {
+      "path": "/tmp/t1062-asr-typecheck-original-pipeline.log",
+      "sha256": "8eb2d00ce28a33afc842d09b444e3e45f5646e4bcf3201af2bc5006346012d7c"
+    },
+    {
+      "path": "/tmp/t1062-asr-bundle-smoke-result.json",
+      "sha256": "1f5a608d719070662220ad198925056d30ae8cd3f81de8489f840b735eebec18"
+    },
+    {
+      "path": "/tmp/t1062-worker-build-opt1-processor.log",
+      "sha256": "190f7c7429b61f4ad06d52e5b61fa1b461887a2c93c9e9bbcac6b4996322e8a7"
+    },
+    {
+      "path": "/tmp/t1062-backend-group-overlay-scope-pause.json",
+      "sha256": "4505715e570650160aecb865823b113ca69b817691ad4b8afb65ea9d41b46861"
+    },
+    {
+      "path": "/tmp/t1062-default-worker-preflight/prepared-manifest.json",
+      "sha256": "d43a3d610c07c4e7c4754129c1b38a06eb36305e9ca165682e75c1ba27e78bfc"
+    },
+    {
+      "path": "/tmp/t1062-default-worker-preflight/prepared-evidence.json",
+      "sha256": "938de85dbcb7f0916ff9e23f073f8fc6b3fdeadb19d1bf1d8c5e46034f44476b"
+    },
+    {
+      "path": "/tmp/t1062-default-worker-preflight/run.mjs",
+      "sha256": "46f61d2d478ab466f7571aa34a8023dbf4981aedb0310a2326b623dfb0be43f1"
+    },
+    {
+      "path": "/tmp/t1062-default-worker-preflight/run.cjs",
+      "sha256": "ce4f63ec50b683cbde67c0d4dc140a7cb12e95f52c21ad019196bae4bc042e21"
+    }
+  ],
+  "evidence_interpretation": {
+    "current_52_log": "/tmp/t1062-asr-original-pipeline-full.log：4 files/52 tests PASS；日志本身不内嵌source SHA，由暂停快照和本报告实时hash共同绑定。",
+    "typecheck": "/tmp/t1062-asr-typecheck-original-pipeline.log：tsc exit0。",
+    "old_bundle_smoke": "仅历史迭代，sourceSha b133... 与当前 runtime 3ec9... 不同，不作当前证明。"
+  },
+  "limited_actual_default_factory_regression": {
+    "authorization_recommendation": "APPROVE_ONCE",
+    "conditions": [
+      "必须绑定 prepared manifest d43a3d...及本报告四文件SHA，若任一漂移不得运行",
+      "固定 alternate WAV SHA245b...；native ffmpeg；createDefaultWhisperLocalAdapter() 无deps；普通runtime bootstrap；新鲜/tmp cache",
+      "fetch deny并记录attempt=0；one-attempt lock；不得读取用户数据、不得联网下载、不得写仓库",
+      "只调用一次实际 word 转写；记录worker/model调用、原text、wordTimingValidated、strict timing范围、末端≤validSampleCount、stdout/stderr/exit和全部SHA",
+      "该结果只计 actual default-driver regression，不计public durable、package、installed app或粗剪PASS"
+    ]
+  },
+  "blockers_for_final_opt1": [
+    "当前源码对应的最终esbuild worker smoke或上述真实default factory成功证据尚未返回",
+    "公共 durable ASR、package、安装版另行验证，不在本静态结论内"
+  ],
+  "no_repo_write": true
+}

@@ -1,0 +1,279 @@
+{
+  "task": "T-1062",
+  "kind": "只读独立最小scope审查",
+  "observed_at_utc": "2026-10-05T06:00:51.907259+00:00",
+  "root": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator",
+  "head": "a40e76472282b8c9c51f126779e3df8dfb528f17",
+  "expected_head": "a40e76472282b8c9c51f126779e3df8dfb528f17",
+  "dirty_path_count": 47,
+  "scope_verdict": "两个factory依赖遗漏成立；允许最小补充2个生产路径的建议，非47 WIP或整波产品验收PASS",
+  "audit_operations": {
+    "product_or_control_edits": false,
+    "commit": false,
+    "tests_executed": [],
+    "models_or_asr_or_real_database_accessed": false,
+    "network_accessed": false,
+    "only_output_written": "/tmp/t1062-group-overlay-root-scope-review.json"
+  },
+  "input_evidence": [
+    {
+      "path": "/tmp/t1062-backend-group-overlay-scope-pause.json",
+      "sha256": "4505715e570650160aecb865823b113ca69b817691ad4b8afb65ea9d41b46861",
+      "meaning": "writer pause47WIP；未将其日志绿测移记为本审查当场执行"
+    },
+    {
+      "path": "/tmp/t1062-backend-scope-governance-preflight.json",
+      "sha256": "c7d72dcf53e42e8bb33655c51fbac314a3151e3051be6a1a078cf8e242110d65",
+      "meaning": "较早144路径scope，work-review-root.test.ts已包含；最新166以parent正式manifest为准"
+    }
+  ],
+  "actual_paths": [
+    {
+      "path": "backend/src/application/generation/moments-model-runtime.ts",
+      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/backend/src/application/generation/moments-model-runtime.ts",
+      "sha256": "43c8c28ccf7708b55bde67fb57b873a554257a6319d14b497d896e801ea31aef",
+      "exists": true
+    },
+    {
+      "path": "backend/src/application/generation/transactional-task-runtime.ts",
+      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/backend/src/application/generation/transactional-task-runtime.ts",
+      "sha256": "8303b379012a95e660e9c604c1398207f6a6cc2fb10563a7b79d5ec507b547e2",
+      "exists": true
+    },
+    {
+      "path": "backend/src/modules/settings/settings.repository.ts",
+      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/backend/src/modules/settings/settings.repository.ts",
+      "sha256": "87fff5509adeb1be9404446f5a7a61fd511d4f5fb55af9e936d48659b37ab423",
+      "exists": true
+    },
+    {
+      "path": "backend/src/workspace-scope.ts",
+      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/backend/src/workspace-scope.ts",
+      "sha256": "4dfabca2c21f96efb2cddde6f77b00cfe9f18a7e4b2f3ec92471f15fc361a712",
+      "exists": true
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/effective-skill-snapshot.ts",
+      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/backend/src/modules/ai-runtime/effective-skill-snapshot.ts",
+      "sha256": "933d941f1ac92871402bb314b96f4b25be415813d42b3290901b21ef6f2d31ee",
+      "exists": true
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/effective-skill-snapshot.test.ts",
+      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/backend/src/modules/ai-runtime/effective-skill-snapshot.test.ts",
+      "sha256": "1c284e46c5d45556196bb645b096eef84af5f8d71a55f4a5c1ac4dde393c4e9d",
+      "exists": true
+    },
+    {
+      "path": "backend/src/modules/settings/group-skill-overlay.integration.test.ts",
+      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/backend/src/modules/settings/group-skill-overlay.integration.test.ts",
+      "sha256": "d820a0030c05cccfaa5bfd3712c4838e517e8b072060060f7409aca819808b51",
+      "exists": true
+    },
+    {
+      "path": "backend/src/modules/settings/account-skill-overlay.repository.integration.test.ts",
+      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/backend/src/modules/settings/account-skill-overlay.repository.integration.test.ts",
+      "sha256": "ef224b62ca4fc7f868cb5eec8db23fb8301c75331f8e53cf91f7ac038bd0bb88",
+      "exists": true
+    },
+    {
+      "path": "backend/src/modules/moments/moments-model.integration.test.ts",
+      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/backend/src/modules/moments/moments-model.integration.test.ts",
+      "sha256": "ea4ab03b1dcf9d257a4cb63112ab763d0d53fd738a0365ce05d934ca932d0ed3",
+      "exists": true
+    },
+    {
+      "path": "backend/src/application/generation/work-review-root.test.ts",
+      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/backend/src/application/generation/work-review-root.test.ts",
+      "sha256": "bb8e4a063f9b97f6939980afe369985c7804b460203f882b59af93732eeb26c3",
+      "exists": true
+    },
+    {
+      "path": "backend/src/modules/production/production-rough-cut-reservation.ts",
+      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/backend/src/modules/production/production-rough-cut-reservation.ts",
+      "sha256": "18c84731192f1b2005978271dc97370f15f41a4e21548cf9a86f1cfa7365ee5b",
+      "exists": true
+    },
+    {
+      "path": "backend/src/modules/production/production-rough-cut.integration.test.ts",
+      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/backend/src/modules/production/production-rough-cut.integration.test.ts",
+      "sha256": "688c987394293db6e79dab4c18750bc92e8b929bbe0862e41c280f630de4c9c6",
+      "exists": true
+    },
+    {
+      "path": "contract/src/internal/production-rough-cut.ts",
+      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/contract/src/internal/production-rough-cut.ts",
+      "sha256": "0cb4f33b9731e663691d5efdf28f5c50bb1197500fe87c97f971dec67ffed7ea",
+      "exists": true
+    },
+    {
+      "path": "ai-worker/src/prompt/templates/production-rough-cut.ts",
+      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/ai-worker/src/prompt/templates/production-rough-cut.ts",
+      "sha256": "89d2e1dbbd492a3d31765191afe83fdb7ad6e5cff920e727c0d8f22954da24ed",
+      "exists": true
+    },
+    {
+      "path": "ai-worker/src/prompt/registry.ts",
+      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/ai-worker/src/prompt/registry.ts",
+      "sha256": "d43e3648c7b33ffa6ce49a86ee0e0d099b051ed90603fc1f7a2afd3bec195fce",
+      "exists": true
+    },
+    {
+      "path": "frontend/src/server/persistence-client.ts",
+      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/frontend/src/server/persistence-client.ts",
+      "sha256": "cef0e9dfd9d5590b8972a70342e7998817bfcb6f837e3bd40e11af5eedf7709f",
+      "exists": true
+    },
+    {
+      "path": "backend/package.json",
+      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/backend/package.json",
+      "sha256": "ee9db46bbe172a6d8f6f634b30733321cbf2c64409659c746991484da356e9bf",
+      "exists": true
+    }
+  ],
+  "factory_findings": [
+    {
+      "path": "backend/src/application/generation/moments-model-runtime.ts",
+      "line": 7,
+      "issue": "createMomentsRuntime使用同tx settings，却只装配accountOverlays；group ctx进入resolver.groupOverlays分支后无reader返回[]，moments.compose用户组overlay静默丢失",
+      "minimal_change": "在现有createEffectiveSkillSnapshotResolver deps增加groupOverlays:{listBySkillIds:(c,ids)=>settings.listAccountSkillOverlays(c,ids)}；复用捕获tx上的settings，保留accountOverlays、官方Skill、原required mapping、pinned authority与now"
+    },
+    {
+      "path": "backend/src/application/generation/transactional-task-runtime.ts",
+      "line": 13,
+      "issue": "createTransactionalTaskRuntimeResolver同样只装配accountOverlays；work.review/creative canvas等同tx调用丢组overlay",
+      "minimal_change": "增加同tx groupOverlays:{listBySkillIds:(ctx,ids)=>settings.listAccountSkillOverlays(ctx,ids)}；保留benchmark.transcribe早返回、原requiredSkillIdsForTask与authority冻结"
+    }
+  ],
+  "settings_port_check": {
+    "verdict": "真实group-scoped，同tx，可直接复用，无需新增port或settings写集",
+    "repository": "backend/src/modules/settings/settings.repository.ts",
+    "repository_line": 781,
+    "workspace_helper": "backend/src/workspace-scope.ts",
+    "workspace_helper_lines": [
+      8,
+      13,
+      15
+    ],
+    "callgraph": [
+      "factory(tx)→createSettingsRepository(tx,deps)",
+      "listAccountSkillOverlays(ctx,ids)→workspaceKey(ctx)",
+      "ctx.groupId存在→{kind:group,id:ctx.groupId}，不要求accountId",
+      "WHERE userId=ctx.userId AND groupId=ctx.groupId",
+      "查询后只筛选requested skill IDs并排序",
+      "无group时才使用legacy-account筛选及历史grp_legacy兼容"
+    ],
+    "limitations": "list是owner过滤读，不替代公开service的真实组存在/membership/archive/readonly校验；本修复不能放宽任何权限"
+  },
+  "resolver_check": {
+    "path": "backend/src/modules/ai-runtime/effective-skill-snapshot.ts",
+    "lines": [
+      289,
+      558,
+      584,
+      589
+    ],
+    "already_supports_group": true,
+    "current_failure": "groupId存在但groupOverlays缺装配，optional reader默认[]；不会退回accountOverlays",
+    "preserve": "保持group/user归属一致性、重复overlay拒绝、official base和overlay有效性校验；不改resolver合同，不增加global/account fallback"
+  },
+  "write_set_increment": [
+    "backend/src/application/generation/moments-model-runtime.ts",
+    "backend/src/application/generation/transactional-task-runtime.ts"
+  ],
+  "test_write_paths_reused": [
+    "backend/src/modules/moments/moments-model.integration.test.ts",
+    "backend/src/application/generation/work-review-root.test.ts"
+  ],
+  "scope_membership": {
+    "moments_model_integration": "parent声明在最新166内，pause中存在该文件dirty证据",
+    "work_review_root_test": "较早144 scope已有；replan须确认最新166保留此路径，若未保留才精确补此单一test路径",
+    "effective_skill_snapshot_test": "不需新增scope；现有通用resolver已有group实现，两个真实factory公共链回归证明装配。该测试只读运行兼容回归",
+    "new_files_required": []
+  },
+  "required_regressions": [
+    {
+      "test_path": "backend/src/modules/moments/moments-model.integration.test.ts",
+      "chain": "真实空组/真实settings.putAccountSkillOverlay→MomentsModelTransport.generate→reservation/service同tx→createMomentsRuntime→AI原task持久runtime snapshot",
+      "assertions": [
+        "真实空组accountId=null应用组moments.compose overlay，记录groupId/overlayRevision/baseVersion",
+        "第二真实组相同skill不同sentinel不能串入首组snapshot",
+        "只有真实membership账号可参与同组平台切换；不能用page-filter假账号作为写入身份",
+        "更新overlay后同clientRequestId丢回复重放保持原taskId、原冻结snapshot/digest，不新task不新model调用；新请求才可取新overlay",
+        "保留legacy无group账号overlay公开回归与跨组/归档/readonly拒绝"
+      ]
+    },
+    {
+      "test_path": "backend/src/application/generation/work-review-root.test.ts",
+      "chain": "将fixture接收真实ctx并创建真实active组，无账号；真实workReview transport/service.create→createWorkReviewRoot→ai(tx).createTask→createTransactionalTaskRuntimeResolver(tx)→getTaskRuntimeData",
+      "assertions": [
+        "真实空组work.review overlay进入原公开预约task snapshot",
+        "同组切换真实已有membership账号仍读组overlay，另一真实组overlay不可串入",
+        "组overlay更新后同号预约原task/report与冻结snapshot不变",
+        "保留已有无group账号审核overlay、真实owner/source指纹、原丢ACK重入测试"
+      ]
+    },
+    {
+      "test_path": "backend/src/modules/moments/moments-model.integration.test.ts",
+      "chain": "可在既有integration文件内补同tx factory数据库证明，不新增测试文件",
+      "assertions": [
+        "在db.transaction的tx写overlay并调用factory(tx)，可见未提交overlay；外层根连接不可代替tx",
+        "故意回滚后无overlay/task残留；不调用供应商模型、不复用真实DB"
+      ]
+    }
+  ],
+  "rough_cut_contract": {
+    "scope_relation": "两factory仅装配overlay，不借机完成或改写rough v3合同",
+    "actual_paths": [
+      "backend/src/modules/production/production-rough-cut-reservation.ts",
+      "backend/src/modules/production/production-rough-cut.integration.test.ts",
+      "contract/src/internal/production-rough-cut.ts",
+      "ai-worker/src/prompt/templates/production-rough-cut.ts",
+      "ai-worker/src/prompt/registry.ts",
+      "frontend/src/server/persistence-client.ts"
+    ],
+    "facts": [
+      "productionRoughCutTaskInput为strict四字段：projectId/contentOutputId/productionRequestId/frozenInputDigest",
+      "reservation真实保存basePlan/modelContext/body/attemptId并计算原digest，再创建四字段taskinput",
+      "readFrozenTask校验唯一reservation/task/attempt/project/full input digest",
+      "requiredSkillIdsForTask(production.rough-cut.propose)仍唯一production.rough-cut",
+      "当前observed官方production-rough-cut.ts模板实际version v2；未发现production-rough-cut-v3.ts，不能声称v3已支持"
+    ],
+    "mandatory_followup": "在已有rough改造写集内，v2/v3官方Skill选择必须读并校验真实持久reservation冻结协议及身份，以reservation-aware provider/调用闭包选择原官方base；旧v2预约原bytes/digest/snapshot原样重放；新v3入口才冻结v3。不得给strict taskinput补protocolVersion/baseVersion字段、从当前plan猜旧请求协议、全局registerTemplate切版本或重签历史freeze。",
+    "public_test_requirement": "production-rough-cut.integration.test.ts现fixture手工装配resolver，无法证明transactional factory装配；后续rough适配须接实际factory/reservation版本选择，覆盖旧v2回放、新v3预约、group overlay与错误身份安全拒绝；此轮不运行任何model pipeline"
+  },
+  "verify_commands": [
+    {
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator",
+      "command": "git diff --check",
+      "purpose": "最小补充后语法补丁/空白检查"
+    },
+    {
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator",
+      "command": "pnpm -C backend typecheck",
+      "purpose": "factory deps及ctx类型兼容；按实际环境保存退出码，不洗掉既有类型诊断"
+    },
+    {
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator",
+      "command": "pnpm -C backend test src/modules/moments/moments-model.integration.test.ts src/application/generation/work-review-root.test.ts src/modules/settings/group-skill-overlay.integration.test.ts src/modules/settings/account-skill-overlay.repository.integration.test.ts src/modules/ai-runtime/effective-skill-snapshot.test.ts --maxWorkers=1",
+      "purpose": "仅现有内存PGlite/确定性fixture与两factory公共链；执行前确认createDb无真实DATABASE_URL等外部配置，不打印配置值"
+    },
+    {
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator",
+      "command": "pnpm -C backend test src/modules/production/production-rough-cut.integration.test.ts --maxWorkers=1",
+      "purpose": "仅后续rough v2/v3适配波公共链；需冻结现有本地synthetic supplier fixture及未读用户媒体，当前审查不执行、不能算本波overlay PASS"
+    }
+  ],
+  "prohibitions": [
+    "不改settings/resolver全局合同或scope fallback",
+    "不新增DDL/账号伪ID/全局overlay",
+    "不补taskinput字段或重签历史freeze",
+    "不修改现有断言以迁就假的original fixture",
+    "不把本审查当作SPEC整体PASS、运行证据或正式租约"
+  ],
+  "limitations": [
+    "最新166完整manifest未由本次重新枚举，parent需在replan时验证两个复用test路径都属于正式write_set",
+    "仅静态调用链与字节摘要独立核验；无本次红绿测、model或全suite执行",
+    "rough v3官方Skill与reservation-aware version provider仍属已知后续合同缺口，不纳入两个overlay补丁偷偷扩大范围"
+  ]
+}

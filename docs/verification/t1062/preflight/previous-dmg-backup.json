@@ -1,0 +1,11 @@
+{
+  "at": "2026-10-05T05:52:34.343548+00:00",
+  "action": "保留现有Downloads规范名DMG，避免后续固定打包入口覆盖历史交付",
+  "source": "/Users/zyongzhu/Downloads/CreatorOS-1.2.0.dmg",
+  "backup": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/previous-CreatorOS-1.2.0.dmg",
+  "bytes": 447599125,
+  "sha256": "694289d5d7c11793cf47824e21ca64e27bee3ceeb99ea1f9d7af716d3497e947",
+  "source_unchanged": true,
+  "current_app_stopped": false,
+  "current_user_data_backed_up": false
+}

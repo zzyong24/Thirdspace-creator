@@ -2047,7 +2047,9 @@
           "ai-worker/src/runtime/multimodal-whisper-local.ts",
           "ai-worker/src/runtime/multimodal-whisper-local.test.ts",
           "ai-worker/src/runtime/multimodal-precise-asr.test.ts",
-          "ai-worker/src/execution/worker-runtime.asset-asr-control.test.ts"
+          "ai-worker/src/execution/worker-runtime.asset-asr-control.test.ts",
+          "backend/src/application/generation/moments-model-runtime.ts",
+          "backend/src/application/generation/transactional-task-runtime.ts"
         ]
       }
     }

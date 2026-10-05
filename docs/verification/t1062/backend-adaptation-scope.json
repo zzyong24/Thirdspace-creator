@@ -204,7 +204,9 @@
     "ai-worker/src/runtime/multimodal-whisper-local.ts",
     "ai-worker/src/runtime/multimodal-whisper-local.test.ts",
     "ai-worker/src/runtime/multimodal-precise-asr.test.ts",
-    "ai-worker/src/execution/worker-runtime.asset-asr-control.test.ts"
+    "ai-worker/src/execution/worker-runtime.asset-asr-control.test.ts",
+    "backend/src/application/generation/moments-model-runtime.ts",
+    "backend/src/application/generation/transactional-task-runtime.ts"
   ],
   "path_details": [
     {
@@ -2363,6 +2365,36 @@
       "reasons": [
         "从正式 public asset-ASR worker 控制入口证明 word timing、原 request/digest、reserve/start/settle/取消/恢复保持；不能只测 adapter helper。"
       ]
+    },
+    {
+      "path": "backend/src/application/generation/moments-model-runtime.ts",
+      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/application/generation/moments-model-runtime.ts",
+      "exists": true,
+      "before_sha256": "43c8c28ccf7708b55bde67fb57b873a554257a6319d14b497d896e801ea31aef",
+      "areas": [
+        "same-transaction-group-skill-overlay"
+      ],
+      "roles": [
+        "implementation"
+      ],
+      "reasons": [
+        "两个既有factory增加同tx groupOverlays装配，复用真实settings workspace filter；保留account fallback仅用于legacy无group与历史任务快照，不新增存储/协议/模型机制。"
+      ]
+    },
+    {
+      "path": "backend/src/application/generation/transactional-task-runtime.ts",
+      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/application/generation/transactional-task-runtime.ts",
+      "exists": true,
+      "before_sha256": "8303b379012a95e660e9c604c1398207f6a6cc2fb10563a7b79d5ec507b547e2",
+      "areas": [
+        "same-transaction-group-skill-overlay"
+      ],
+      "roles": [
+        "implementation"
+      ],
+      "reasons": [
+        "两个既有factory增加同tx groupOverlays装配，复用真实settings workspace filter；保留account fallback仅用于legacy无group与历史任务快照，不新增存储/协议/模型机制。"
+      ]
     }
   ],
   "conditional_write_paths": [
@@ -3863,7 +3895,7 @@
     "gateway_exception": "frontend/src/app/api/v1/dispatch/route.test.ts仅公共CLI网关测试，route.ts仅条件修复；无页面/UI路径"
   },
   "counts": {
-    "required_or_new": 142,
+    "required_or_new": 144,
     "necessary_new": 6,
     "conditional": 23,
     "read_only": 48
@@ -4446,6 +4478,28 @@
         "窄机械修正保持严格timing和取消/恢复/结算；不clamp、不升级库、不以helper绿代替公共链。"
       ],
       "executed_this_audit": false
+    },
+    {
+      "label": "组Skill两个同tx factory公开回归",
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "argv": [
+        "pnpm",
+        "-C",
+        "backend",
+        "test",
+        "src/modules/moments/moments-model.integration.test.ts",
+        "src/application/generation/work-review-root.test.ts",
+        "src/modules/settings/group-skill-overlay.integration.test.ts",
+        "src/modules/settings/account-skill-overlay.repository.integration.test.ts",
+        "src/modules/ai-runtime/effective-skill-snapshot.test.ts",
+        "--maxWorkers=1"
+      ],
+      "phase": "after_adaptation",
+      "environment_rule": "原隔离PGlite，仅合成fixture，无用户库/媒体/供应商；须两真实factory组overlay/跨组/原冻结重放及同tx未提交读。",
+      "preconditions": [
+        "不修改五测试中run-only未在scope内的路径；保留全部旧断言和真实历史freeze。"
+      ],
+      "executed_this_audit": false
     }
   ],
   "source_path_validation": {
@@ -4521,6 +4575,20 @@
       "independent_review": "orchestrator/research/t1062-asr-timing/t1062-asr-opt1-production-scope-review.json",
       "review_sha256": "dbab468fc7d46090af99289ad10c1a1bfd9ec7ac4752c8c19782a28ca5242fba",
       "reason": "同一实际attention上证明feature→encoder帧域错；不改变契约、语义、历史回执或安装环境；真实defaultworker/public/包仍待验"
+    },
+    {
+      "at": "2026-10-05T06:02:50.104509+00:00",
+      "base_sha": "a40e76472282b8c9c51f126779e3df8dfb528f17",
+      "action": "scope依赖暂停后独立补两个groupOverlays factory",
+      "previous_step_path_count": 166,
+      "added_paths": [
+        "backend/src/application/generation/moments-model-runtime.ts",
+        "backend/src/application/generation/transactional-task-runtime.ts"
+      ],
+      "step_path_count": 168,
+      "independent_review": "docs/verification/t1062/preflight/group-overlay-root-scope-review.json",
+      "review_sha256": "979763a2e671050911111507f649aca6a8b440b8cdf39a8b3207b97b05f932f9",
+      "reason": "空组与组级Skill配置不可静默丢失；只接既有同tx port，不改变v2/3冻结合同。"
     }
   ]
 }

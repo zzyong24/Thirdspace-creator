@@ -1,0 +1,301 @@
+{
+  "status": "paused_pending_root_scope",
+  "head": "a40e76472282b8c9c51f126779e3df8dfb528f17",
+  "branch": "codex/t1062-backend-adaptation-candidate",
+  "root": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator",
+  "snapshotAt": "2026-10-05T05:57:18.395762+00:00",
+  "lastProductEdit": "Moments model group/NULL/freeze service+settlement and ContentOutputRow legacy nullable group input compatibility",
+  "paths": [
+    {
+      "path": "ai-worker/src/runtime/multimodal-precise-asr.test.ts",
+      "beforeSha256": "2e89342789e33917d66c7418004c0ddf92307cd1657b8f8c8d16d45dfff1e9df",
+      "currentSha256": "0fcbc2eb34ce2afc0ba9479c924086cecafa789ec814d2a833337558a72d4e12"
+    },
+    {
+      "path": "ai-worker/src/runtime/multimodal-whisper-local.test.ts",
+      "beforeSha256": "dc9419dfee47c8fbad8c30536841db64bc124bd1f3683f52916fa6cac8ddf3d7",
+      "currentSha256": "653c2cac55a874fc1652620b89b9469073ec782d9a667ca211830871b154920e"
+    },
+    {
+      "path": "ai-worker/src/runtime/multimodal-whisper-local.ts",
+      "beforeSha256": "9b74ee8dd59b707dcffbcbc76020633841a269e9bbac8538107f189978519c52",
+      "currentSha256": "3ec9a752cf72dec6df0765e2eac983db4a64ab0713f5207b81098c2c3b9fbc9e"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/asset-business-execution.service.test.ts",
+      "beforeSha256": "7ece8c0657fa3b447f161274667072c112b48f02d5fc00a5590b909a0788ef77",
+      "currentSha256": "622b1b40e5429b4ce508baa1efd794e7f39152706d69c42dab66810ad3fd75e7"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/asset-business-execution.service.ts",
+      "beforeSha256": "e2651ac4d1b18aa4b00a992ad16c155859f7bbf44d1e54ad067c21d2b678d94f",
+      "currentSha256": "872fb60acf3e102bbd09d3b6048f430a4753f906591de5e64baad41fdbc7ba3d"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/asset-legacy-recovery.service.ts",
+      "beforeSha256": "2d2485fcbfbe2cc7af982ebea910d5c0de699cff4e200f3da78f1581a285b860",
+      "currentSha256": "cb5c350f075f627eb07493f674a76c1560be7f3e193b7eae9b36d2128ce2a783"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/chat-canvas-tool-host.test.ts",
+      "beforeSha256": "69cf8bebea533dd97fd3fcc9a43be58ef1aece632f69b7faa9dc8d93a601f983",
+      "currentSha256": "1c542a9900fb681a8b0c047d9db629674b8c52714ca5efa89a61dacc10bd12b7"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/chat-canvas-tool-host.ts",
+      "beforeSha256": "5d5440f6dc31064a195dd715d4185d753c487e4c4126e2acfd86c628823928d5",
+      "currentSha256": "3226e43823002ff76ea6e097400caef6b7b5607018cdf2101eac8de8d7bf1ba9"
+    },
+    {
+      "path": "backend/src/modules/articles/articles.service.ts",
+      "beforeSha256": "8cd293d87b1173e8290b0a46032349bb08c9f1b5a1516fa630456628338c88f9",
+      "currentSha256": "77aa5fd66bb698429b903250637324c5db2c22d3dad6403976b4b28dcc8c12eb"
+    },
+    {
+      "path": "backend/src/modules/articles/articles.text-results.ts",
+      "beforeSha256": "6a5c0fa96760168d85ad462d4762db9d1c805b4388767beb714aae65c9f51a9b",
+      "currentSha256": "3169296619e0add95808147119467f611432ea9dffad446f04414376dc164264"
+    },
+    {
+      "path": "backend/src/modules/assets/visual-template.service.test.ts",
+      "beforeSha256": "1205a52b97bba7144721c9d3baeea414880be72e92620ee0c7af5bab9392b3cd",
+      "currentSha256": "601e4d5231299d66608c896876605214e422adf573b316cc76b540517e0b52cb"
+    },
+    {
+      "path": "backend/src/modules/assets/visual-template.service.ts",
+      "beforeSha256": "ec3a7f239ab4cb590b3d964529291fad3c6ee51033643972cd669a644b839a3a",
+      "currentSha256": "301dfa223ea3e384b89014abdfe14d1ffbd6cdcca8e02cca29225928abc161ac"
+    },
+    {
+      "path": "backend/src/modules/cli-invocations/cli-invocations.service.test.ts",
+      "beforeSha256": "ae7b22519834b405227387926f47dc2240d7a721b1d924da8b67960bb44fff8f",
+      "currentSha256": "56c91b969640ea69a360704ea76a28d50e02ca02fc75cfc0be4aa61142f8a807"
+    },
+    {
+      "path": "backend/src/modules/cli-invocations/cli-invocations.service.ts",
+      "beforeSha256": "72691a6b913e2bd2b0db151acad178312c0ff95e79263a96f3053f7eee5ec178",
+      "currentSha256": "6b44085cd801da46d166c2aa27db6c9ee1d4f1d078206ef049ff2aa5171b2c85"
+    },
+    {
+      "path": "backend/src/modules/graphic-posts/graphic-posts.schema.ts",
+      "beforeSha256": "6697a02e1943903676930c699fccb201adf6f0bd3410b0bd7aba654646c7a354",
+      "currentSha256": "da7556f4645ac86fc64aaa715cb4e63bab8315541970bdea43d7544169c8c09f"
+    },
+    {
+      "path": "backend/src/modules/graphic-posts/graphic-posts.service.ts",
+      "beforeSha256": "08cf4cd9cd6b52bfa5709f363ddd2ac2276ccba1af776456c0a00dfecf987774",
+      "currentSha256": "959a0da102ba70570f7c68e7ad54e458c42cb95624bd4677184518f3bbac5b61"
+    },
+    {
+      "path": "backend/src/modules/moments/execution-moments-model.service.ts",
+      "beforeSha256": "d5498da044f51b8fc6df12649465f764fd5a5cdb2e99e1878603ba1b57ea2609",
+      "currentSha256": "3c6c99eecd372155f4fdba585591d27e58f535b58466c442f664204326a1c0aa"
+    },
+    {
+      "path": "backend/src/modules/moments/moments-model.integration.test.ts",
+      "beforeSha256": "5e59377f111723272b360a882886694d205424b03341841ebfefb9f88032d405",
+      "currentSha256": "ea4ab03b1dcf9d257a4cb63112ab763d0d53fd738a0365ce05d934ca932d0ed3"
+    },
+    {
+      "path": "backend/src/modules/moments/moments-model.service.ts",
+      "beforeSha256": "c7ead316068115f231ddf33e2b9002db0bcfc71550ab7784130de6a7f640a5ab",
+      "currentSha256": "6e870c2234138e322736bd20ba88496779b3d400adcaf38cde1acdc8190dacb8"
+    },
+    {
+      "path": "backend/src/modules/moments/moments.service.test.ts",
+      "beforeSha256": "3d7e90223a80719cdbf33f2af1ba01e8d647ee6c75847a514bff57784a99e840",
+      "currentSha256": "6065fd5716dfa8ffed35ee4d7158cead4fc5b6c80eb5056d09ac46f36464319b"
+    },
+    {
+      "path": "backend/src/modules/moments/moments.service.ts",
+      "beforeSha256": "9d92a4af1c7e3bf4615afee0fa3f05bc28eaad5b7a016e46b678686fc3255c9a",
+      "currentSha256": "53795ba3ad666fea98365be29a6b5849f0b94ee4fa9af2eda313dac1496b11a5"
+    },
+    {
+      "path": "backend/src/modules/production/production-conversion.service.ts",
+      "beforeSha256": "267ea51f50682233ee3520486c70bc57c658d8c315be74af5bf9ce5d1601e290",
+      "currentSha256": "0ced03450ec6ec44183a255db9ebdd9f6ba7c2c3630157a4fd1774c0842b37bc"
+    },
+    {
+      "path": "backend/src/modules/production/production-editor.repository.ts",
+      "beforeSha256": "be8049a4996afe83eed930437b0a4d1c1091f33d037dacb97421e810febb0809",
+      "currentSha256": "df5f294629aac2b38e671cc3bd22d3c2c1077d6391e1ba4d885aad0b55f1b463"
+    },
+    {
+      "path": "backend/src/modules/production/production-pause-gaps.test.ts",
+      "beforeSha256": null,
+      "currentSha256": "d177803acb93a755772aa8b7b17b5e3bc67d3134c8cbd52ff3b6b8231ce2522f"
+    },
+    {
+      "path": "backend/src/modules/production/production-pause-gaps.ts",
+      "beforeSha256": null,
+      "currentSha256": "2396767443e0deacaa9b1b5284c12627589a6cc6fda6c73929e82c2171c52f3a"
+    },
+    {
+      "path": "backend/src/modules/production/production-rough-cut-reservation.ts",
+      "beforeSha256": "4f287ba69c882b4e908cfbdb60c5a9f403311d1647d179dc690c5e6958676204",
+      "currentSha256": "18c84731192f1b2005978271dc97370f15f41a4e21548cf9a86f1cfa7365ee5b"
+    },
+    {
+      "path": "backend/src/modules/production/production-transcripts.service.ts",
+      "beforeSha256": "dede4d2c15bd89ff3a4d34d8323010db1a07c88792049535fc5d291462ad0125",
+      "currentSha256": "bcfdd8d50e21d4c7a8403c5c5edfb2b95f08024d6f09458ec4dc3679701e29b9"
+    },
+    {
+      "path": "backend/src/modules/production/production.service.ts",
+      "beforeSha256": "05b5e28fb206caccb05ed4433bb72415b4ced76ba49f7057aebf384897f5be6c",
+      "currentSha256": "8a9a6a082838c4f88eae5990f217bd4ef546928491cfec6a9ac38d9333af5c8f"
+    },
+    {
+      "path": "backend/src/modules/projects/projects.repository.ts",
+      "beforeSha256": "5ab90ad5973c3f04683ff9a1d20fd55c87e5baede94075803bd85000fbffaded",
+      "currentSha256": "e133d1e127831f503393dfb52e3d0ee1a4dd3e71d58e4016bec6378304541f0c"
+    },
+    {
+      "path": "backend/src/modules/projects/projects.service.ts",
+      "beforeSha256": "1d31dc0b68d8fe488a372d2c74fb5a87a9c5716a6e14be8c4dc6ba4338b7b5af",
+      "currentSha256": "490378c98f98a9f621058d9fafeee0fd66e7d16536932169b7e3adb511fe0925"
+    },
+    {
+      "path": "backend/src/modules/review/work-reviews.service.ts",
+      "beforeSha256": "bbe30670f52966d8715df1dc19522d8b1192c524ca868bddf114cdd064c24f53",
+      "currentSha256": "9d54061e2668a0abed0dc2f308c876f693ebf9dcaef003677602ee8533489f3b"
+    },
+    {
+      "path": "backend/src/modules/work-compositions/work-compositions.service.ts",
+      "beforeSha256": "cd4fe85f5d2c78a1ea42609ec7f94cc4caedcb87a19054d8475d41d344f52dd5",
+      "currentSha256": "22d477c382367f97414465b29db89d8a5d9f0318ac162747f55b3fb5f35f1347"
+    },
+    {
+      "path": "backend/src/modules/work-compositions/work-materials.service.ts",
+      "beforeSha256": "17e369f36aafaddec94da131820ec13272fea1093b9741ca306e511433c951a7",
+      "currentSha256": "ee67285455dde933f8d66b9bcf47257d530bf67e4217dd83e91bcbb1358c927d"
+    },
+    {
+      "path": "backend/src/schema/articles.ts",
+      "beforeSha256": "21b0dd223b50d5e198cafa635ca90e3273633a626c61fdfa81cb0fdc58c687a9",
+      "currentSha256": "b19c6d8ac7630a4a25b3cad35fda4ca9504a872a2b18e422155522699e383ae5"
+    },
+    {
+      "path": "backend/src/schema/creative-canvas.ts",
+      "beforeSha256": "bc55df94ccfe31f7d41136cd71e44494f1ede728650202379324ea86ad4ee320",
+      "currentSha256": "ecb29bd752b8b87673b773b4e1b53215733b799fdc7513508cd47ead9ff57aee"
+    },
+    {
+      "path": "backend/src/schema/creative-results.ts",
+      "beforeSha256": "48d0db65d493d4a3c20b68a212d4027f1cf96eeb9b8d7c796605971b9983d75f",
+      "currentSha256": "65a1b45c645a4e087bd07de98b685d28de0c31ac63c82c268f0843ce0f70d444"
+    },
+    {
+      "path": "backend/src/schema/moments-model.ts",
+      "beforeSha256": "4e67af8ca6ae0a064a88f6b5f2f88ac6046434e3b604de1259221cc866def4ed",
+      "currentSha256": "b0169fb0cb8c8169e2e5d088c50812e92f881cf91b7e774d939390f13263d143"
+    },
+    {
+      "path": "backend/src/schema/moments.ts",
+      "beforeSha256": "bf33f135174bc80caa2c92c1dd00ee76299f5a088417d6e51a9373273e4cdfb7",
+      "currentSha256": "a4ae0ee7480bb55e689d00988a7a5bac7766343bd3cb2b300aed88a4edf76a83"
+    },
+    {
+      "path": "backend/src/schema/production-file-bindings.ts",
+      "beforeSha256": "56d016adf29fb17158e42cea982bd973bba285702e17a67be269941307ed589c",
+      "currentSha256": "ff0cffb11be897d9c8303413226ce38efae86b6c604a8af60568cf83ed9a1127"
+    },
+    {
+      "path": "backend/src/schema/production.ts",
+      "beforeSha256": "a9a5d2d068801e5fb6b75a200595e14bf5d44c00de371ec2c268795099550ffe",
+      "currentSha256": "73dbe25f109fad17b9349e807395eedba66228166d2fe4646453b5011357d965"
+    },
+    {
+      "path": "backend/src/schema/projects.ts",
+      "beforeSha256": "9b8f6bebfc4d4d58b28128873e9d1c531235fd588b74389601fbc8713c071875",
+      "currentSha256": "7ec9860b332060a2d4265836daa0926cf4584263fbd6eb2c29be04072c45186d"
+    },
+    {
+      "path": "backend/src/schema/visual-templates.ts",
+      "beforeSha256": "34effc62a42bb89324c6765855fdc381b33b2d63ecaea63ca3a2f6a09a31be4c",
+      "currentSha256": "3475f43720b718e2decbffb3c8ded2ab98b4cef692d158ea13ed5280ff470d13"
+    },
+    {
+      "path": "backend/src/schema/work-compositions.ts",
+      "beforeSha256": "36b4e205c57c2a6357a5101045269bec0c378cb2a61499d77f10910a6804f45a",
+      "currentSha256": "2f91c8b9fee51ea7e6412a4c14a4f4d11eebcce73654de444ad6a4fe65d6215f"
+    },
+    {
+      "path": "backend/src/schema/work-materials.ts",
+      "beforeSha256": "962fa10b6831a9d981dbde09ff29ec8e8c0f906e894fd1a4ae28badbfe9ef77d",
+      "currentSha256": "e91f0c8a3a10caf32d80de69d26b3559bfd5ac42fcfd62f1e7b5b5544abc4d5f"
+    },
+    {
+      "path": "backend/src/schema/work-reviews.ts",
+      "beforeSha256": "e67fdf0e24d80dbbc1020b31901d7f65b1dfe12996907de2721d4321991812d4",
+      "currentSha256": "f0faa0e3fc7b27371d886e10f20cbc7118c0d1327e83cce77a22e8f1b52b6e8a"
+    },
+    {
+      "path": "contract/src/resources/production-rough-cut.ts",
+      "beforeSha256": "33a6f8b5b10afbdae7d4768fcaf97d2c4ba81e333c7367ce4f240be395bb4d5d",
+      "currentSha256": "914404c1f8d93c582a13c48ab25a0923fd93f97e4777a670b55e56d6459cf9c6"
+    },
+    {
+      "path": "contract/tests/production-rough-cut.test.ts",
+      "beforeSha256": null,
+      "currentSha256": "5d03497e3c1bdf802b3cc60f7201eaa89860a6989de956b8dfe917d97f4bdfe2"
+    }
+  ],
+  "logs": {
+    "/tmp/t1062-asr-original-pipeline-attempt1.log": {
+      "sha256": "b008f220efdeca479c3f5d2053b1c838c9446daf0147fe0f7aade86ef2b3bf01",
+      "tail": "\n RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/ai-worker\n\n\n Test Files  3 passed (3)\n      Tests  34 passed (34)\n   Start at  13:52:03\n   Duration  3.86s (transform 1.19s, setup 0ms, import 2.36s, tests 3.23s, environment 0ms)\n\n"
+    },
+    "/tmp/t1062-asr-original-pipeline-full.log": {
+      "sha256": "41f8eddd66a951d443cdea4070cad0bbb43ac1c9b556a0ea5ed7f3e9acf19051",
+      "tail": "\n> @creatoros/ai-worker@0.1.0 test /Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/ai-worker\n> vitest run src/runtime/multimodal-whisper-local.test.ts src/runtime/multimodal-whisper-local-cancel.test.ts src/runtime/multimodal-precise-asr.test.ts src/execution/worker-runtime.asset-asr-control.test.ts --maxWorkers=1\n\n\n RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/ai-worker\n\n\n Test Files  4 passed (4)\n      Tests  52 passed (52)\n   Start at  13:54:16\n   Duration  2.82s (transform 622ms, setup 0ms, import 1.71s, tests 464ms, environment 0ms)\n\n"
+    },
+    "/tmp/t1062-asr-typecheck-original-pipeline.log": {
+      "sha256": "8eb2d00ce28a33afc842d09b444e3e45f5646e4bcf3201af2bc5006346012d7c",
+      "tail": "\n> @creatoros/ai-worker@0.1.0 typecheck /Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/ai-worker\n> tsc --noEmit\n\n"
+    },
+    "/tmp/t1062-asr-bundle-smoke-processor.log": {
+      "sha256": "010bfa7ac8970f56b3310c49142f0dc96089831da8bda23699e626bd3db82e0f",
+      "tail": "{\"bundlePath\":\"/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/ai-worker/dist/execution-worker.cjs\",\"bundleSha256\":\"292d8c1f905a77c2fa15dae1cffe9cd6746b541441a73b782aacdf88428926fa\",\"sourceSha256\":\"b133e77d32310f825aafb7c512e3c857c0bbc79089414c6dd422003549af31fd\",\"result\":{\"id\":1,\"ok\":true,\"text\":\"[1500,1250,250]\",\"wordTimingValidated\":true},\"fixture\":\"synthetic tensor shape; no model/media/capture use\",\"actualWorker\":true}\n"
+    },
+    "/tmp/t1062-moments-model-empty-group-red.log": {
+      "sha256": "6107c4671543162724bcd62706031b45edab30ab687e9fee9fdc17c1d8cfcbfc",
+      "tail": "test.ts (18 tests | 1 failed | 17 skipped) 3650ms\n   × T1062 空组Moments模型生成冻结NULL账号，切平台过滤共享候选，原lease结算不重签 3650ms\n\n⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯\n\n FAIL  src/modules/moments/moments-model.integration.test.ts > T1062 空组Moments模型生成冻结NULL账号，切平台过滤共享候选，原lease结算不重签\nTypeError: Cannot read properties of undefined (reading 'select')\n ❯ Object.get src/modules/projects/projects.repository.ts:286:8\n    284|   async function get(ctx: RequestContext, projectId: string, forUpdate…\n    285|     const query = db\n    286|       .select()\n       |        ^\n    287|       .from(projects)\n    288|       .where(\n ❯ Object.getProject src/modules/projects/projects.service.ts:1041:61\n ❯ Object.assertProjectOwned src/modules/moments/moments-model.integration.test.ts:34:195\n ❯ Object.createArtifact src/modules/artifacts/artifacts.service.ts:212:20\n ❯ src/modules/moments/moments.service.ts:35:73\n ❯ ../node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pglite/src/base.ts:430:23\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯\n\n\n Test Files  1 failed (1)\n      Tests  1 failed | 17 skipped (18)\n   Start at  13:53:51\n   Duration  7.89s (transform 2.72s, setup 0ms, import 4.09s, tests 3.65s, environment 0ms)\n\n"
+    },
+    "/tmp/t1062-moments-model-empty-group-functional-red.log": {
+      "sha256": "fd58dd77a89d7d988163475b897771a258a9de7e9b60995436912b7c346c8e58",
+      "tail": "ace-creator/backend\n\n ❯ src/modules/moments/moments-model.integration.test.ts (18 tests | 1 failed | 17 skipped) 3626ms\n   × T1062 空组Moments模型生成冻结NULL账号，切平台过滤共享候选，原lease结算不重签 3625ms\n\n⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯\n\n FAIL  src/modules/moments/moments-model.integration.test.ts > T1062 空组Moments模型生成冻结NULL账号，切平台过滤共享候选，原lease结算不重签\nAccountRequiredError: AccountRequiredError: per-account operation requires a selected account (ctx.accountId missing)\n ❯ requireAccountId src/errors.ts:85:11\n     83| ): string {\n     84|   if (!accountId) {\n     85|     throw new AccountRequiredError(\n       |           ^\n     86|       `AccountRequiredError: ${what} requires a selected account (ctx.…\n     87|     );\n ❯ account src/modules/moments/moments-model.service.ts:15:38\n ❯ reserve src/modules/moments/moments-model.service.ts:20:261\n ❯ src/modules/moments/moments-model.service.ts:24:251\n ❯ ../node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pglite/src/base.ts:430:23\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯\n\n\n Test Files  1 failed (1)\n      Tests  1 failed | 17 skipped (18)\n   Start at  13:54:15\n   Duration  7.92s (transform 2.86s, setup 0ms, import 4.15s, tests 3.63s, environment 0ms)\n\n"
+    },
+    "/tmp/t1062-moments-model-empty-group-green-attempt1.log": {
+      "sha256": "7aaf7de4f83c1ff548a4d32b9763886d241eb83411aed9a6b25badb0adfaef85",
+      "tail": "\n RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/backend\n\n\n Test Files  1 passed (1)\n      Tests  18 passed (18)\n   Start at  13:55:00\n   Duration  52.35s (transform 2.60s, setup 0ms, import 3.87s, tests 48.36s, environment 0ms)\n\n"
+    },
+    "/tmp/t1062-backend-type-root-current.log": {
+      "sha256": "5586c388ed755b37dc078c6ab5570bd15a1c2ed237499488ed128602301fc7f2",
+      "tail": "{ ...; } | { ...; }; } | { ...; } | { ...; } | { ...; })[]; }'.\nsrc/modules/work-compositions/work-sources.transport.test.ts(72,245): error TS2741: Property 'headingLevel' is missing in type '{ sectionId: string; heading: string; body: string; order: number; sourceRefs: never[]; }' but required in type '{ sectionId: string; order: number; heading: string; headingLevel: number; body: string; sourceRefs: ({ kind: \"project_script\"; id: string; versionId: string; } | { kind: \"output_version\"; sourceOutputId: string; ... 4 more ...; selection: { ...; } | { ...; }; } | { ...; } | { ...; } | { ...; })[]; }'.\nsrc/modules/work-compositions/work-sources.transport.test.ts(72,308): error TS2741: Property 'headingLevel' is missing in type '{ sectionId: string; heading: string; body: string; order: number; sourceRefs: never[]; }' but required in type '{ sectionId: string; order: number; heading: string; headingLevel: number; body: string; sourceRefs: ({ kind: \"project_script\"; id: string; versionId: string; } | { kind: \"output_version\"; sourceOutputId: string; ... 4 more ...; selection: { ...; } | { ...; }; } | { ...; } | { ...; } | { ...; })[]; }'.\n ELIFECYCLE  Command failed with exit code 2.\n"
+    },
+    "/tmp/t1062-production-group-editor-first.log": {
+      "sha256": "0571248c5055de861f29a03d27862266d4a5cce3a0064fc90204676cb59e9549",
+      "tail": "Workers=1\n\n\n RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/backend\n\n ❯ src/modules/production/production-editor.integration.test.ts (23 tests | 1 failed) 68467ms\n     × 真实磁盘数据库关闭重开，正常迁移重复启动后版本与回执仍可读 9641ms\n\n Test Files  1 failed | 1 passed (2)\n      Tests  1 failed | 26 passed (27)\n   Start at  13:48:14\n   Duration  85.04s (transform 3.18s, setup 0ms, import 5.05s, tests 79.71s, environment 0ms)\n\n ELIFECYCLE  Test failed. See above for more details.\n\n⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯\n\n FAIL  src/modules/production/production-editor.integration.test.ts > T-1037 公共制作工程与持久版本 > 真实磁盘数据库关闭重开，正常迁移重复启动后版本与回执仍可读\nError: Test timed out in 5000ms.\nIf this is a long-running test, pass a timeout value as the last argument or configure it globally with \"testTimeout\".\n ❯ src/modules/production/production-editor.integration.test.ts:96:3\n     94|     expect((await s.listEditorVersions(ctx,\"video-a\",{})).total).toBe(…\n     95|   });\n     96|   it(\"真实磁盘数据库关闭重开，正常迁移重复启动后版本与回执仍可读\",async()=>{\n       |   ^\n     97|     const root=await mkdtemp(join(tmpdir(),\"creatoros-editor-persisten…\n     98|     await close!();close=undefined;\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯\n\n"
+    }
+  },
+  "dependencies": [
+    {
+      "path": "backend/src/application/generation/moments-model-runtime.ts",
+      "line": 7,
+      "reason": "group overlay missing from same-tx effective Skill resolver"
+    },
+    {
+      "path": "backend/src/application/generation/transactional-task-runtime.ts",
+      "line": 13,
+      "reason": "group overlay missing from same-tx effective Skill resolver"
+    }
+  ],
+  "limits": [
+    "24 formal groups not run",
+    "rough v3 not connected to full backend/native replay",
+    "cache parent guard remains pending",
+    "no real models/media/user DB/App touched"
+  ]
+}
