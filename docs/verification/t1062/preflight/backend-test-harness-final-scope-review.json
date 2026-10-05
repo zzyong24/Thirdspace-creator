@@ -1,0 +1,122 @@
+{
+  "schema": "t1062-backend-test-harness-final-scope-review/v1",
+  "reviewed_at": "2026-10-05T13:31:05.116594+00:00",
+  "root": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "status": "PASS_SCOPE_METADATA_READY_FOR_COMMIT_NOT_IMPLEMENTED",
+  "file_bindings": [
+    {
+      "path": "docs/features/t1062-backend-test-harness.md",
+      "sha256": "a771db0a1ea324fe8458bf9ca7b3517f16cdf2cac9c41373459ac75a7ca7c4d7"
+    },
+    {
+      "path": "docs/verification/t1062/backend-adaptation-scope.json",
+      "sha256": "85e9500939a05c28f508decadbca836623e3a2cd452879d373160738c44f5c32"
+    },
+    {
+      "path": "orchestrator/process/modules.config.json",
+      "sha256": "a73bccf25ee88f3d84c581c3cadff4e392f690248601211f8aa664b522135cff"
+    },
+    {
+      "path": "BACKLOG.md",
+      "sha256": "1b933fcf78bbd1553b2dabede98bcdc09bb61f84a7bab82c8defd3d72399e1ed"
+    },
+    {
+      "path": "orchestrator/DECISION_LOG.md",
+      "sha256": "86f078debcda5c45b6b1bebd353789ae0d2b287fc42df7c4c9d2c510e43df9bd"
+    },
+    {
+      "path": "orchestrator/context/T-1062.md",
+      "sha256": "ca51ce891049d18f452a8896bc24a7d393fe654e586ec5039a1424ce3892bae8"
+    },
+    {
+      "path": "docs/features/t1062-consolidated-local-client-acceptance.md",
+      "sha256": "00088921686a37da277f0bf04f0165ae83bcb93760d230566d68d9bc270bf05f"
+    },
+    {
+      "path": "orchestrator/review-events.ndjson",
+      "sha256": "e8efd014b4e4668b4aa9e0e393ae75cbb91353fa53ac8bff6507d7d4dba4472f"
+    },
+    {
+      "path": "docs/verification/t1062/preflight/backend-test-time-budget-scope-review.json",
+      "sha256": "64c863883ccff7f3f4e7606d6642292eb65123ebb283f947de67ba3f190f373f"
+    },
+    {
+      "path": "docs/verification/t1062/preflight/backend-test-harness-scope-admission-addendum.json",
+      "sha256": "e142818c7ba0358e8f48f5a77e95763bf2e4769004a6b818a8a2fc2d8ebd1002"
+    },
+    {
+      "path": "docs/verification/t1062/preflight/backend-test-harness-preserved-wip.json",
+      "sha256": "71fdec7fc70ae9174dd7d8eca6aa6ef99a0a8069b36da6a64d1d99084408072a"
+    },
+    {
+      "path": "docs/verification/t1062/preflight/backend-attempt7-stopped-evidence.json",
+      "sha256": "d46f00de30fc7c1ae8bb4504faae96c08f4717c051f23f5d9b63413107fd3092"
+    }
+  ],
+  "scope_consistency": {
+    "required": 155,
+    "conditional": 23,
+    "result": 1,
+    "total": 179,
+    "writeConditionalOverlap": [],
+    "vitestConfigOccurrencesInRequired": 1,
+    "moduleIntegrationStepPaths": 179,
+    "moduleVitestConfigOccurrences": 1
+  },
+  "product_review_integrity": {
+    "productSpecSha256": "00088921686a37da277f0bf04f0165ae83bcb93760d230566d68d9bc270bf05f",
+    "expectedProductSpecSha256": "00088921686a37da277f0bf04f0165ae83bcb93760d230566d68d9bc270bf05f",
+    "reviewReceipt": "fd99fea0bb12",
+    "recordedEvents": [
+      {
+        "cycle": 1,
+        "round": 1,
+        "verdict": "CONCERNS"
+      },
+      {
+        "cycle": 1,
+        "round": 2,
+        "verdict": "PASS"
+      },
+      {
+        "cycle": 1,
+        "round": 3,
+        "verdict": "PASS",
+        "specSha256": "00088921686a37da277f0bf04f0165ae83bcb93760d230566d68d9bc270bf05f"
+      }
+    ],
+    "round4Recorded": false,
+    "conclusion": "技术补充未改变产品SPEC或重开产品review lineage。"
+  },
+  "technical_scope_review": {
+    "findings": [],
+    "conclusion": "技术补充、BACKLOG链接、DEC、context、scope179和module integration 179一致；唯一实现目标仍是backend/vitest.config.ts注释及testTimeout:30_000。",
+    "validationFlow": "唯一config机械独立复核后直接从第1项完整运行原27；第7项当场覆盖六个timeout并供受影响复核，不另行重复执行完整第7项。",
+    "boundaries": [
+      "无case/fixture/assert/skip/retry变化",
+      "无产品/模型deadline或PG观察6秒变化",
+      "无原27 argv/顺序或每命令20分钟上限变化",
+      "123源码与48 readonly保持冻结",
+      "原attempt7 RED保留"
+    ]
+  },
+  "required_sequence": [
+    "将本批技术scope/control-plane字节做metadata-only commit。",
+    "把该提交以non-overlap fast-forward带入candidate，并程序核123冻结无漂移。",
+    "按orchestrator现行schema取得新的完整6字段lease，精确覆盖179范围；旧lease已release但未done。",
+    "只修改backend/vitest.config.ts，使字节与技术补充预期SHA dbfe6fdaa421a8b415c9d9b0ec26dc1247bc4e62281085b9ea1f1d01f1c3cb9e一致。",
+    "机械独立复核config唯一diff，确认其余123与readonly/runner不变。",
+    "从第1项以原argv、顺序和20分钟命令上限完整运行原27；第7项日志验证六个timeout家族，任何断言失败仍失败。",
+    "全部27结束后绑定受影响及最终结果，再进入最终提交、ASR和安装版后续验收。"
+  ],
+  "implementation_state": {
+    "candidateConfigModified": false,
+    "testsExecutedForThisReview": false,
+    "scopePassIsImplementationPass": false,
+    "original27Pass": false
+  },
+  "limits": [
+    "本报告只批准当前metadata字节进入提交/FF/lease流程。",
+    "不代表config已实现、原27通过、最终HEAD通过、ASR或安装版通过。"
+  ]
+}

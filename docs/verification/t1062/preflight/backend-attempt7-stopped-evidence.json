@@ -1,0 +1,87 @@
+{
+  "task": "T-1062",
+  "kind": "attempt7实际停止/测试期限失败，不是27PASS",
+  "at": "2026-10-05T13:19:37.183884+00:00",
+  "root": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator",
+  "head": "3fe3e0d73f863fcada0aea392f0c330934a20675",
+  "startBinding": {
+    "path": "/tmp/t1062-backend-fixed27-attempt7-start-binding.json",
+    "sha256": "9079c0b8b9c2fffdf2247148faaf7c6feef7cc3e6bf974595daa0e5ae05140c0"
+  },
+  "result": {
+    "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1062-backend-verify-cLLIZS/verification-result.json",
+    "sha256": "2cde41e68de49cf686e4ef4c9f16376d743779ce425e8ba6ec5675c7b4709b37",
+    "status": "failed",
+    "finishedAt": "2026-10-05T13:17:29.701Z"
+  },
+  "sourceCount": 123,
+  "sourceDrift": [],
+  "passedCommands": 6,
+  "failedCommand": {
+    "label": "projects-article-graphic-moments公开根与真实lease闭包",
+    "argv": [
+      "pnpm",
+      "-C",
+      "backend",
+      "test",
+      "src/modules/projects/projects.service.test.ts",
+      "src/modules/projects/projects.repository.integration.test.ts",
+      "src/modules/articles/articles.integration.test.ts",
+      "src/modules/graphic-posts/graphic-posts.integration.test.ts",
+      "src/modules/moments/moments.service.test.ts",
+      "src/modules/moments/moments-model.integration.test.ts",
+      "src/modules/articles/articles.worker.integration.test.ts",
+      "--maxWorkers=1"
+    ],
+    "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator",
+    "exit": 1,
+    "signal": null,
+    "error": null,
+    "durationMs": 634232,
+    "logPath": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1062-backend-verify-cLLIZS/07.log",
+    "logSha256": "9cee95b117ee73e05be18df4f3760d36a6737b453218a0d73da8d5fa9be160f5"
+  },
+  "actualCounts": {
+    "filesPassed": 4,
+    "filesFailed": 3,
+    "testsPassed": 171,
+    "testsFailed": 6,
+    "testsSkipped": 0
+  },
+  "failureKind": "全部六条为Vitest默认5000ms执行期限，实际5041–5785ms；无断言失败输出，不把期限错误称功能PASS",
+  "failedCases": [
+    "articles.integration: 封面独立于正文段落，新增文件走账号Asset核验与版本CAS",
+    "articles.integration: Brief更新后保留原位置旧引用仍可编辑，新增或采纳旧引用必须重新核验",
+    "articles.integration: 采纳与手工保存同键重放先读账号内回执，Brief变化后仍返回原版且拒绝改参",
+    "articles.integration: 同基准标题摘要正文依次采纳并可重放历史请求",
+    "graphic-posts.integration: 同一基准四种字段依次采纳，来源不重复且同请求回放无新版本",
+    "moments-model.integration: 真实原owner生成同号重入恢复原task，正式稿不被AI改写"
+  ],
+  "unexecuted": [
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27
+  ],
+  "limits": [
+    "不拼接此前通过结果成新27PASS",
+    "原runner/argv/順序未变，123仍冻结",
+    "未改生产或实际PGlite/PG断言，不声称无未发现业务问题"
+  ]
+}

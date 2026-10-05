@@ -3510,3 +3510,7 @@ T-1017 测试补充（2026-09-30）：用户明确要求测试。本轮覆盖纯
 只对原ref、原冻结任务/业务/Skill身份和版本、真实model/N账本与已知usage、原group及imported父项目建立当前事务内的命名结算能力。普通用户create/append、foreign/搬组/取消/租约失效/未决调用仍拒绝；原成功回执重放不创建新产物或重计费用。当前红2是真可用性失败，但直接ledger.reserve并非完整generation协议；完整generation公共链与PG锁序须当场验，不回填历史PASS。精确独立报告及原失败见docs/verification/t1062/preflight/reconstruct-settlement-root-scope-review.json。
 
 102条WIP已逐字节保护，原lease释放后重编译再恢复。此修订落实既有任务收口和组归属合同，不授权新的模型请求、外部发布或自动归组真实资料。当前客户端与用户数据未替换；本次scope准入不代表全27组合或安装验收通过。
+
+## DEC-T1062-TEST-HARNESS-20261005：有限测试执行预算与原断言保留
+
+真实原27第7次执行有六项PGlite冷迁移/服务组合达到默认5秒；独立范围评审同意统一backend Vitest case预算30秒，精确新增config为179条。技术补充见docs/features/t1062-backend-test-harness.md，原产品SPEC和三轮PASS receipt不变，不创建Owner=user的新review-cycle capability。此为已授权验收中的实现选择，不声称用户逐项批准该数值或功能已通过。原27 argv/顺序/命令20分钟、PG观察6秒、产品/模型deadline、所有断言和失败证据保留，无retry或skip新增。主控制面metadata提交和新隔离lease之后才允许config唯一修改，必须重新完整运行原27。用户最后确认当前登录用户与现装App用于验收，备份和当前数据保留仍为安装前置。

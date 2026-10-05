@@ -1,0 +1,105 @@
+{
+  "schema": "t1062-backend-test-time-budget-scope-review/v1",
+  "reviewed_at": "2026-10-05T13:25:03.601321+00:00",
+  "candidate": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator",
+  "head": "3fe3e0d73f863fcada0aea392f0c330934a20675",
+  "status": "PASS_SCOPE_PROPOSAL_PENDING_FORMAL_179_AND_ACTUAL_27",
+  "review_kind": "实现前最小测试harness范围评审",
+  "read_bindings": [
+    {
+      "path": "/tmp/t1062-backend-fixed27-attempt7-root-stopped-evidence.json",
+      "sha256": "d46f00de30fc7c1ae8bb4504faae96c08f4717c051f23f5d9b63413107fd3092"
+    },
+    {
+      "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1062-backend-verify-cLLIZS/07.log",
+      "sha256": "9cee95b117ee73e05be18df4f3760d36a6737b453218a0d73da8d5fa9be160f5"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/backend/vitest.config.ts",
+      "sha256": "ef37271d6e36a38ac90641cb406afb1ef6e919047e5b09d08b3e0c5108a8ebc8"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/docs/verification/t1062/backend-adaptation-scope.json",
+      "sha256": "0bba373ad39bfcc8dfb39dc3c9af30f65d8d74780af4af9e444154550913644e"
+    },
+    {
+      "path": "/tmp/t1062-attempt6-owner-timeout-independent-review.json",
+      "sha256": "269ec56f88ec669530e7ef9fbe8a2a1609fe86619a5bb815c1093188a3b898fa"
+    },
+    {
+      "path": "/tmp/t1062-backend-fixed27-attempt7-start-binding.json",
+      "sha256": "9079c0b8b9c2fffdf2247148faaf7c6feef7cc3e6bf974595daa0e5ae05140c0"
+    }
+  ],
+  "proposal": {
+    "path": "backend/vitest.config.ts",
+    "currentSha256": "ef37271d6e36a38ac90641cb406afb1ef6e919047e5b09d08b3e0c5108a8ebc8",
+    "proposedContentSha256": "dbfe6fdaa421a8b415c9d9b0ec26dc1247bc4e62281085b9ea1f1d01f1c3cb9e",
+    "proposedContent": "import { defineConfig } from \"vitest/config\";\n// 后端真实 PGlite 迁移与服务组合测试统一使用有限执行预算；不改变产品、模型或 runner 的 deadline。\nexport default defineConfig({ test: { include: [\"src/**/*.test.ts\"], testTimeout: 30_000 } });\n",
+    "scopeCountBefore": 178,
+    "scopeCountAfter": 179,
+    "category": "测试执行harness；非产品机制、生产deadline或发布断言"
+  },
+  "actual_failure": {
+    "attempt": 7,
+    "passedCommandsBeforeFailure": 6,
+    "failedCommandIndex": 7,
+    "files": 7,
+    "testsPassed": 171,
+    "testsFailed": 6,
+    "failureDurationsMs": [
+      5158,
+      5785,
+      5398,
+      5142,
+      5041,
+      5117
+    ],
+    "failureKind": "六项均为Vitest默认5000ms timeout；日志无对应断言失败输出，因此不能称功能已通过。",
+    "families": [
+      "articles真实PGlite owner/Asset/CAS/历史回执与多字段采纳",
+      "graphic-posts真实PGlite多字段采纳/重放",
+      "moments-model真实owner同号重入/正式稿不被AI改写"
+    ],
+    "sourceCount": 123,
+    "sourceDrift": [],
+    "unexecutedCommands": "第8至27未执行"
+  },
+  "assessment": {
+    "is_minimum_necessary": true,
+    "reason": [
+      "attempt5已有两个真实IO测试、attempt6第15组真实PGlite owner测试、attempt7又有三个文件六项在5秒附近超时，已形成backend真实数据库迁移/服务组合的共同执行成本，而非单一fixture偶发。",
+      "Vitest 4.1.8的defineConfig.test.testTimeout是测试case统一执行期限；30秒仍为有限预算，保留失败而非重试。",
+      "逐一给六项继续加第三参数会把同一harness约束散落到业务测试，且后续相同真实DB测试仍会重复暴露默认5秒环境预算。"
+    ],
+    "authorized_boundary": [
+      "仅新增backend/vitest.config.ts到正式179路径",
+      "仅test.testTimeout=30_000及解释注释",
+      "保留include不变",
+      "不改case/fixture/assert/skip或PG观察6秒",
+      "不改生产、readonly48、SQL、模型/worker deadline",
+      "不改原27 runner argv、顺序和20分钟命令上限",
+      "不新增retry、bail放宽或断言过滤"
+    ],
+    "not_evidence": [
+      "当前只是scope判断，未改config",
+      "六个超时case尚未因本提案实测通过",
+      "原27尚未完整通过",
+      "不代表最终HEAD、ASR或安装版通过"
+    ]
+  },
+  "prerequisites_before_writer_change": [
+    "ROOT先把统一测试预算及其非产品语义补入已审SPEC。",
+    "正式scope改为179并绑定vitest.config.ts原SHA/预期唯一diff。",
+    "更新modules/context/reviewctl审计并完成已说明的metadata提交与candidate non-overlap FF。",
+    "新lease必须保全当前123源码冻结；旧attempt7红证据保持原字节。"
+  ],
+  "required_validation_after_change": [
+    "机械核vitest.config.ts只有注释与testTimeout:30_000，删除两处可恢复原SHA。",
+    "全123源码在运行前后零漂移，除新增config范围绑定外生产字节不变。",
+    "原27使用完全相同argv、顺序和20分钟命令上限重新从第1项完整执行，27/27 exit0；不能只重跑六个超时case。",
+    "确认0 skip、无retry新增；任何断言失败按真实失败处理，不以testTimeout继续放宽。"
+  ],
+  "findings": [],
+  "decision": "可作为第179条路径的最小测试harness范围提案进入正式SPEC/scope/lease流程；尚未批准实现或宣称测试通过。"
+}

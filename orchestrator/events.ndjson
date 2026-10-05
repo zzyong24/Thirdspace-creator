@@ -1130,3 +1130,4 @@
 {"ts":"2026-10-05T05:08:39.746Z","actor":"research-gate","action":"research_open","task":"T-1062","research_task":"T-1062","card":"orchestrator/research/t1062-asr-timing/research.md","failure_family":"local-asr-provider-tail-clock","trigger_kind":"repeated-failure-family"}
 {"ts":"2026-10-05T05:33:46.432Z","actor":"research-gate","action":"research_resume","task":"T-1062","card":"orchestrator/research/t1062-asr-timing/research.md","card_sha256":"292623673df9567a5637c5058993bea8c4b94f3131f781a78a764990382c6a73","decisions":[]}
 {"ts":"2026-10-05T05:34:02.938Z","actor":"taskctl","action":"start","task":"T-1062","sha_before":"81a847c25c81","sha_after":"4b3c9ac5c332"}
+{"ts":"2026-10-05T10:19:46.041Z","actor":"taskctl","action":"start","task":"T-1063","sha_before":"b9aecd81d38c","sha_after":"d9c78d1ecf3e"}

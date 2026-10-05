@@ -216,7 +216,8 @@
     "backend/src/modules/artifacts/artifacts.service.ts",
     "backend/src/modules/artifacts/reconstructed-artifact.service.ts",
     "backend/src/modules/ai/reconstruct-completion.service.ts",
-    "backend/src/modules/projects/project-lock.service.ts"
+    "backend/src/modules/projects/project-lock.service.ts",
+    "backend/vitest.config.ts"
   ],
   "path_details": [
     {
@@ -2559,6 +2560,22 @@
         "静态证明合法group task.accountNULL可通过formal AiService/createStructuredRuntime/group parent端口，而此函数requireAccount+eq(originaccount)会误拒",
         "仅lockImportedProjectForReconstruction function（14-18行）使用真实 user+workspaceFilter(group优先、legacy保持account归属)+projectId+source imported+同tx parent锁；lockOwnedProjectForUpdate等其它函数不改"
       ]
+    },
+    {
+      "path": "backend/vitest.config.ts",
+      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/vitest.config.ts",
+      "exists": true,
+      "before_sha256": "ef37271d6e36a38ac90641cb406afb1ef6e919047e5b09d08b3e0c5108a8ebc8",
+      "areas": [
+        "test-harness-time-budget"
+      ],
+      "roles": [
+        "verification-harness"
+      ],
+      "reasons": [
+        "真实PGlite冷迁移与服务组合的有限30秒case预算；不改产品期限、断言、retry、PG6秒观察或原27/20分钟命令限制"
+      ],
+      "expected_sha256": "dbfe6fdaa421a8b415c9d9b0ec26dc1247bc4e62281085b9ea1f1d01f1c3cb9e"
     }
   ],
   "conditional_write_paths": [
@@ -4139,7 +4156,7 @@
     "gateway_exception": "frontend/src/app/api/v1/dispatch/route.test.ts仅公共CLI网关测试，route.ts仅条件修复；无页面/UI路径"
   },
   "counts": {
-    "required_or_new": 154,
+    "required_or_new": 155,
     "necessary_new": 6,
     "conditional": 23,
     "read_only": 48
@@ -4960,6 +4977,23 @@
       "functional_red": "docs/verification/t1062/preflight/reconstruct-settlement-functional-red2.log",
       "fixture_failure_preserved": "docs/verification/t1062/preflight/reconstruct-settlement-fixture-red1.log",
       "limits": "只命名原reconstruction收口，DB grounded原ref/task/business/skill freeze/model-N已知usage/原group+imported parent；无通用allowArchived/type豁免，无API/SQL/schema/WorkerSDK/ledger/helper新增。现red2直接reserve不是完整generation协议；NULLaccount/公共全链/PG锁序仍待真实验证。"
+    },
+    {
+      "at": "2026-10-05T13:29:32.230092+00:00",
+      "base_sha": "3fe3e0d73f863fcada0aea392f0c330934a20675",
+      "action": "六项真实冷库测试达到默认5秒后独立限定测试harness30秒预算",
+      "previous_step_path_count": 178,
+      "added_paths": [
+        "backend/vitest.config.ts"
+      ],
+      "step_path_count": 179,
+      "technical_spec": "docs/features/t1062-backend-test-harness.md",
+      "independent_review": "docs/verification/t1062/preflight/backend-test-time-budget-scope-review.json",
+      "review_sha256": "64c863883ccff7f3f4e7606d6642292eb65123ebb283f947de67ba3f190f373f",
+      "admission_addendum": "docs/verification/t1062/preflight/backend-test-harness-scope-admission-addendum.json",
+      "wip_preserved": "docs/verification/t1062/preflight/backend-test-harness-preserved-wip.json",
+      "functional_red": "docs/verification/t1062/preflight/backend-attempt7-stopped-evidence.json",
+      "limits": "只追加config注释/testTimeout30000；155required+23conditional+1result=179。123源码和48readonly保持，原27顺序/argv不改，产品SPEC及原receipt不改。"
     }
   ]
 }

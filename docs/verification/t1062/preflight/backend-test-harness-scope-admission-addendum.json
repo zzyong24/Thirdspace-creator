@@ -1,0 +1,36 @@
+{
+  "schema": "t1062-backend-test-harness-scope-admission/v1",
+  "reviewed_at": "2026-10-05T13:28:43.105545+00:00",
+  "status": "PASS_TECHNICAL_SUPPLEMENT_PATH",
+  "basis": [
+    {
+      "path": "/tmp/t1062-backend-test-time-budget-scope-review.json",
+      "sha256": "64c863883ccff7f3f4e7606d6642292eb65123ebb283f947de67ba3f190f373f"
+    }
+  ],
+  "judgment": "有限Vitest testTimeout属于仓库测试harness执行预算，不改变T-1062产品范围、服务合同、数据归属、发布验收断言或用户能力，因此无需重开已完成的产品SPEC cycle1 round3，也不应伪造新的Owner=user process-review-cycle授权。",
+  "required_artifacts": [
+    "新增 docs/features/t1062-backend-test-harness.md，明确只含测试执行预算、失败证据、边界和完整27复验条件。",
+    "BACKLOG中对该技术补充建立显式链接，使范围来源可追溯。",
+    "正式backend scope更新为179并精确列入backend/vitest.config.ts；modules/context同步。",
+    "技术补充须接受独立评审并留真实receipt；该receipt与原产品SPEC review lineage分开。",
+    "reviewctl只audit原产品receipt，不record第4轮、不重置lineage。",
+    "DEC记录采用30秒有限case预算、用户当前环境事实，以及它不改变产品/发布标准。",
+    "metadata-only commit、non-overlap FF和新lease后才允许修改config。"
+  ],
+  "must_preserve": [
+    "原产品SPEC与cycle1 round3 receipt字节不变。",
+    "attempt7真实RED及此前超时证据保留。",
+    "config唯一行为差异为test.testTimeout=30_000；无retry、skip、断言过滤、全局命令上限变化。",
+    "修改后原27以同argv/顺序完整实际通过，不能用技术补充替代验收。"
+  ],
+  "reopen_product_cycle_if": [
+    "技术补充改变产品行为、合同、数据归属、发布必验标准或用户确认范围。",
+    "实现需要超出测试harness的生产源码、runner语义或质量门放宽。"
+  ],
+  "findings": [],
+  "limits": [
+    "这是路径准入判断；技术补充SPEC、scope179和modules尚未落盘，未评审其最终字节。",
+    "未批准config实现，也未声明原27或任务通过。"
+  ]
+}

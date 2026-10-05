@@ -2059,7 +2059,8 @@
           "backend/src/modules/artifacts/artifacts.service.ts",
           "backend/src/modules/artifacts/reconstructed-artifact.service.ts",
           "backend/src/modules/ai/reconstruct-completion.service.ts",
-          "backend/src/modules/projects/project-lock.service.ts"
+          "backend/src/modules/projects/project-lock.service.ts",
+          "backend/vitest.config.ts"
         ]
       }
     }

@@ -1,0 +1,35 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "范围、六文件升级边界与公共验收链基本充分；当前最小改法会同时放行含方括号的递归 /** 声明，且“字符类貌似名称仍拒绝”与字面方括号精确路径缺少可执行区分。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "open",
+      "severity": "major",
+      "category": "consistency",
+      "requirement_anchor": {
+        "id": "SPEC-L13",
+        "quote": "含字面方括号的仓内精确文件名可以进入声明、领取和候选校验；只授权该确切文件。"
+      },
+      "acceptance_anchor": {
+        "id": "SPEC-L15/L35",
+        "quote": "不引入目录 /** 扩大权限；相邻文件、字符类貌似名称仍拒绝。"
+      },
+      "where": "“必须得到的行为”第13—15行、“范围和实施边界”第26行及“验收与诚实边界”第35行",
+      "failure_mode": "规格要求的实现是从两个禁用字符集直接移除方括号。当前两个校验器先识别末尾 /**，再用同一字符集校验其目录body；直接移除 [] 会使 src/[tenant]/** 成为合法递归声明，授权整个字面目录，而已确认结果只允许含方括号的精确文件。同时“字符类貌似名称仍拒绝”无法与允许 [customerId]、invoice[2026] 的规则机械区分：工具不解释字符类，也没有表达“用户意图为glob”的第二种语法。两个合理实现会分别放行或拒绝同一真实字面文件。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "docs/features/t1063-orchestrator-literal-path-boundary.md:13-15,26,35；/Users/zyongzhu/.skills-manager/skills/product-to-code-orchestrator/process/progress.mjs:52-58；process/parallel-isolation.mjs:182-204",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "把许可明确限定为 recursive=false 的精确路径；含 [] 的目录 /** 继续拒绝。将“字符类貌似名称仍拒绝”改为“方括号始终按字面、不发生字符类展开：声明 docs/[ab].md 只匹配该同名文件，a.md、b.md及邻居拒绝”。在两个公共链各覆盖精确字面成功、邻居拒绝与含方括号 /** 拒绝；其余既定负例不变。",
+      "resolution_evidence": "",
+      "parent_id": "",
+      "threat_model_id": ""
+    }
+  ]
+}
