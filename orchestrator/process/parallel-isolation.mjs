@@ -198,7 +198,7 @@ function safePattern(value, label, ignoreCase = false) {
   if (!body || body === "." || body.split("/").some((part) => part === "." || part === "..")) {
     fail("PATH_PATTERN_INVALID", `${label} 包含不安全路径段: ${value}`);
   }
-  if (/[*?\[\]{}]/.test(body) || (!recursive && value.includes("*"))) {
+  if (/[*?{}]/.test(body) || (recursive && (body.includes("[") || body.includes("]"))) || (!recursive && value.includes("*"))) {
     fail("PATH_PATTERN_INVALID", `${label} 只允许精确路径或末尾 /**: ${value}`);
   }
   return { raw: value, body: ignoreCase ? body.toLowerCase() : body, recursive };

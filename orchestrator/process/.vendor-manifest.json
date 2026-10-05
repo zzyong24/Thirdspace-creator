@@ -1,6 +1,6 @@
 {
   "schema": "orchestrator-engine-vendor/v1",
-  "skill_version": "3.27.2",
+  "skill_version": "3.27.3",
   "files": {
     "anti-check.mjs": "96ffbbace4cdf3645643b8847d3e953c3a97e6b2c8e0cf1b9db1921ad8f415b8",
     "asset-check.config.example.json": "9f2309013bfe95b9960b891ccd74c40571645f0166c43d3b788c9b07bc4d54bc",
@@ -39,9 +39,9 @@
     "modules.config.example.json": "07e03eca02e26260a4968c97199e32770bf5c2d1100cd5805c5ba69a3c705daa",
     "orphan-scan.config.example.json": "0fff4b4c369ca54c98e8bf2f0b4dc2e76f49ddcbd1f9d4fc1b1c52228cab5cb5",
     "orphan-scan.mjs": "3fb5a7c75d8de394f999fc34202520633c37450d96400ebbf2cec29393f20232",
-    "parallel-isolation.mjs": "cc3e0b696ef2c688210f128539c1f9ee4a24efe8667b7aa9f196bcfb3c5242c9",
+    "parallel-isolation.mjs": "dae82117870024a6dc6412d946694becc1e063de94febb8d9a975ab079ce9ebd",
     "program-gate.mjs": "864072d0d29bb8ec623fc8f4d7f0fab280b0f3274d754448dd412a91889d6486",
-    "progress.mjs": "18962c7b9f7dfee202651ed0297e1d3aa9192780d7ef2800286b940c30632efb",
+    "progress.mjs": "1677a9b1aef9cc04cd77f88b3d832abce7c69b4884089a1a74ef9687949a2423",
     "queue.mjs": "d1eba74565d8056ede7b7085a9d2c071b5b0e73b4afe245ff1fdc08338d5fde4",
     "reconcile.config.example.json": "7f04b169c62dabb91a7ecd4810df672fc6f84daea4160f0469f8ce84a8b5e1ad",
     "reconcile.mjs": "f7edd1676a76d5470fdf124e3bf551ada6f6ba6bcc9c4bcab47e0655022e39e9",
