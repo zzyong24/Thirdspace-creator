@@ -140,10 +140,10 @@ import { createOnboardingState, createIntegrationCredentials, createSettingsRepo
 import { assembleActivationService, type ActivationService } from "./activation";
 import { createRadarProjectService, createProjectRepository, createProjectsService, createProjectsTransport, createTranscriptArtifactService, createProjectTranscriptionTargetService, type StageGateReadersRef } from "@creatoros/backend/modules/projects";
 import { createKnowledgeRepository, createKnowledgeService } from "@creatoros/backend/modules/knowledge";
-import { createAssetRepository, createAssetsService, createWebDocumentCacheService, createAssetsTransport, createMockObjectStorage, createS3ObjectStorage, createLocalFsObjectStorage, ensureBucket, type ObjectStorageForCtx } from "@creatoros/backend/modules/assets";
+import { createAssetRepository, createAssetsService, createWebDocumentCacheService, createAssetsTransport, createVisualTemplateService, createVisualTemplateTransport, VISUAL_TEMPLATE_OP_IDS, ConflictError as AssetConflictError, createMockObjectStorage, createS3ObjectStorage, createLocalFsObjectStorage, ensureBucket, type ObjectStorageForCtx } from "@creatoros/backend/modules/assets";
 import { createArtifactsService, createArtifactsTransport } from "@creatoros/backend/modules/artifacts";
 import { createProductionService, createProductionTransport } from "@creatoros/backend/modules/production";
-import { createPublishingService, createPublishingTransport, createUnavailablePublisher } from "@creatoros/backend/modules/publishing";
+import { createPublishingService, createPublishingTransport, createUnavailablePublisher, createVisualMaterialAdoptionService } from "@creatoros/backend/modules/publishing";
 import { createPublicationSyncService, createTrafficService, createAnalyticsRepository, createAnalyticsService, createAnalyticsTransport } from "@creatoros/backend/modules/analytics";
 import { createIngestionService, createIngestionTransport } from "@creatoros/backend/modules/ingestion";
 import { createReviewsService, createReviewsTransport } from "@creatoros/backend/modules/reviews";
@@ -155,6 +155,7 @@ import { prepareScriptReviewContext } from "@creatoros/backend/modules/ai-runtim
 import { createEmbeddingIoService, createModelProbeIoService } from "@creatoros/backend/modules/ai-runtime";
 import { createLearningsService, createLearningsTransport } from "@creatoros/backend/modules/learnings";
 import { createAiService, createAiTransport, createAiRepository, buildAiModelConfigs, buildAiAgentConfigs, type AiService } from "@creatoros/backend/modules/ai";
+import {createCreativeCanvasService,createCreativeCanvasTransport} from "@creatoros/backend/modules/creative-canvas";
 // [T-255a] 执行层(脑手分离):execution.tasks 5 op + 沙箱 + executor 注册表 + live
 // dispatch 编排。存储复用 ai_tasks(taskType `exec.*`),模块本体零 db 依赖(端口注入)。
 // [T-255a] 执行层(脑手分离):execution.tasks 5 op + 沙箱 + executor 注册表 + live
@@ -665,6 +666,7 @@ interface PersistenceBundle {
   trendSources: Transport;
   // [T-235c] 指定收藏夹登记 CRUD transport(收藏夹跟拍信号源)。
   favoritesFolders: Transport;
+  creativeCanvas:Transport;
   // [T-235d] 选题归因只读 transport(正向归因回流)。
   topicAttribution: Transport;
   // Query services (module Q, Wave 4): the composite transport for the 3 page
@@ -971,7 +973,7 @@ export interface ChatRuntime {
   // ai.tasks.create,交由持久素材执行入口，旧提交事实沿原对账路径),立即返回 taskId(不阻塞对话回合)。
   dispatchGenerateAsset: (
     ctx: RequestContext,
-    input: { kind: "image" | "video"; prompt: string; projectId?: string | null; attemptId?: string },
+    input: { kind: "image" | "video"; prompt: string; projectId?: string | null; attemptId?: string; referenceAssetId?:string },
   ) => Promise<{ taskId: string }>;
   // [T-103b] review.script 端口 —— dispatch 既有 script.review ai_task(reviewGateService.triggerReview,
   // 复用 T-086 审核链路 L1 lint + L2 语义审 → 落 script_review_reports),立即返回 taskId。对话审核工具
@@ -1847,7 +1849,17 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       close: () => handle.release(),
     };
   };
-  const assets = createAssetsTransport(() => assetsService);
+  const resolveFrozenImage=async(c:RequestContext,id:string,fileId?:string,checksum?:string)=>{
+    const asset=await assetsService.getAsset(c,id);
+    if(asset.assetType!=="image"||asset.status==="deleted")throw new OwnershipError("图片素材不存在");
+    const reference=await assetsService.getAssetReference(c,id,fileId);
+    if(!reference)throw new AssetConflictError("图片文件暂时无法读取，请检查素材后重试");
+    if(checksum&&reference.checksum!==checksum)throw new AssetConflictError("图片文件已变化，请重新选择");
+    return {fileId:reference.fileId,checksum:reference.checksum};
+  };
+  const visualTemplateService=createVisualTemplateService(db,{now:deps.now,assertImageReference:(c,ref)=>resolveFrozenImage(c,ref.assetId,ref.fileId,ref.checksum)});
+  const visualTemplates=createVisualTemplateTransport(visualTemplateService),originalAssets=createAssetsTransport(() => assetsService),visualTemplateIds=new Set<string>(VISUAL_TEMPLATE_OP_IDS);
+  const assets:Transport={request:(endpoint,input,ctx)=>visualTemplateIds.has(endpoint.id)?visualTemplates.request(endpoint,input,ctx):originalAssets.request(endpoint,input,ctx)};
 
   // Artifacts (module 08): the service builds a per-ctx user-scoped repo over the
   // shared db (the repo bakes userId in; the service mints one per request). The
@@ -2015,6 +2027,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         entityType: input.entityType === "publication" ? "video" : input.entityType,
       }),
     assertCoverOwned: (ctx, id) => assetsService.getAsset(ctx, id),
+    getFrozenImageDownload:async(c,id,fileId,checksum)=>{await resolveFrozenImage(c,id,fileId,checksum);return assetsService.getAssetFileDownloadUrl(c,id,fileId);},
     isCoverAvailable: (ctx, id) => assetsService.isAssetFileAvailable(ctx, id),
     // Project→ContentOutput-ids resolver — drives Analytics' project metric read
     // (publishing.listPublicationIdsByProject → analytics.projects.get) without an
@@ -4725,6 +4738,7 @@ FAVORITES_PROMOTE_PER_RUN
   const coverBusiness=createExecutionCoverService(db,{...coverExecutionPorts,budget:workerBudget,now:deps.now});
   const assetBusiness=createAssetBusinessExecutionService(db,{
     budget:{...workerBudget,deadlineMs:1_800_000},now:deps.now,
+    getReference:(c,assetId,fileId)=>assetsService.getAssetReference(c,assetId,fileId),
     async assertProject(c,id){await projectsService.getProjectOverviewCore(c,id);},
     async resolveSpec(c,capability,taskId){
       const runtime=await aiService.getTaskRuntimeData(c,taskId);
@@ -4853,7 +4867,7 @@ FAVORITES_PROMOTE_PER_RUN
       prepareSpec:(c,spec,input)=>prepareManagedTranscribeSpec(c,spec,input),
     },
     cover:coverExecutionPorts,
-    assetStorage:objectStorageForCtx,resolveAssetCredential:async(c,owner)=>{
+    assetStorage:objectStorageForCtx,readAssetReference:(c,assetId,fileId)=>assetsService.getAssetReference(c,assetId,fileId),resolveAssetCredential:async(c,owner)=>{
       const task=await aiService.getTask(c,owner.aiTaskId);
       return task.taskType==="cover.generate"?coverBusiness.resolveCredential(c,owner):assetBusiness.resolveCredential(c,owner);
     },
@@ -5394,6 +5408,33 @@ FAVORITES_PROMOTE_PER_RUN
       return task;
     },
   });
+  const creativeCanvasService=createCreativeCanvasService(db,{
+    now:deps.now,
+    resolveCapability:(c,capability)=>resolveMultimodalSpec(c,capability),
+    assertProject:async(c,id)=>{await projectsService.getProject(c,id);},
+    assertMediaAsset:async(c,id,type,fileId)=>{
+      const asset=await assetsService.getAsset(c,id);
+      if(asset.assetType!==type||!["active","pending"].includes(asset.status))throw new Error("画布素材不存在或类型不符");
+      const selectedId=fileId??asset.currentFileId;
+      if(!selectedId)throw new Error("画布素材缺少文件版本");
+      const [file]=await assetsService.listFilesByIds(c,[selectedId]);
+      if(!file||file.assetId!==id)throw new Error("画布素材文件版本不存在");
+      return {fileId:file.id,checksum:file.checksum};
+    },
+    assertReferenceAsset:async(c,id)=>{const asset=await assetsService.getAsset(c,id);if(asset.assetType!=="image"||!["active","pending"].includes(asset.status))throw new Error("参考图片不存在");},
+    getMediaFileDownloadUrl:(c,id,fileId)=>assetsService.getAssetFileDownloadUrl(c,id,fileId),
+    getReference:(c,id,fileId)=>assetsService.getAssetReference(c,id,fileId),
+    submitTask:(c,request)=>chatTaskSubmissions.submit(c,{taskType:"asset.generate",...request}),
+    findTaskByAttempt:(c,attemptId)=>aiService.findTaskByAttempt(c,"asset.generate",attemptId),
+    resolveTemplateRequirement:visualTemplateService.resolveRequirement,
+  });
+  const visualMaterialAdoption=createVisualMaterialAdoptionService({
+    canvas:creativeCanvasService,publishing:publishingService,
+    confirmGeneratedTask:(c,taskId)=>aiService.confirmTask(c,taskId),
+    assertFrozenImage:resolveFrozenImage,
+    assertOutputProject:async(c,outputId,projectId)=>{await projectsService.getProject(c,projectId);const output=await projectsService.getOutput(c,outputId);if(output.projectId!==projectId)throw new OwnershipError("稿件不属于目标作品");},
+  });
+  const creativeCanvas=createCreativeCanvasTransport(creativeCanvasService,visualMaterialAdoption);
   const chatRuntime: ChatRuntime = {
     resolveRedfoxCredential: ctx => redfoxCredentials.resolve(ctx),
     readCurrentScript: async (c,projectId,signal) => {signal?.throwIfAborted();const result=await readCurrentArtifactTruth(c,projectId,"output_script");signal?.throwIfAborted();return result;},
@@ -5684,6 +5725,7 @@ FAVORITES_PROMOTE_PER_RUN
     chatWorker=composeChatProduction(db,{
       entryPath:workerEntry,runtime:chatRuntime,now:deps.now,
       topicWorkspace:{getContext:(c,id)=>candidateService.getTopicRecommendationContext(c,id)},
+      canvas:{read:(c,id)=>creativeCanvasService.get(c,id),propose:(c,id,revision,operations)=>creativeCanvasService.propose(c,id,revision,operations)},
       assertProject:(c,id)=>projectsService.getProjectOverviewCore(c,id),
       resolveModelCredential:(c,capability)=>resolveModelSpec(c,capability),
       resolveFallbackModelCredential:resolveChatFallbackCredential,
@@ -5810,6 +5852,7 @@ FAVORITES_PROMOTE_PER_RUN
     benchmark: benchmarkWithTranscribe, // wrap:透传 CRUD + 拦 benchmark.works.transcribe(T-349)
     trendSources,
     favoritesFolders,
+    creativeCanvas,
     topicAttribution,
     queryServices,
     publishingCenter,

@@ -35,6 +35,7 @@ export function AccountSwitcher({collapsed}:{collapsed:boolean}) {
           const groups=(await client.listAccountGroups({params:undefined,query:{page:1,pageSize:100},body:undefined})) as unknown as SwitcherGroup[];
           if(!alive.current||version!==epoch.current)continue;
           const selected=resolveCurrentGroup(groups??[],readCurrentGroupId(),readCurrentAccountId());
+          // writeCurrentGroupId同步cookie并发送一次scope事件，不再叠加旧账号通知。
           if(selected.shouldPersist){writeCurrentGroupId(selected.currentId,'account-switcher');routerRef.current.refresh();}
           setCurrentId(selected.currentId);setState({kind:"ready",groups:groups??[]});
         }catch{if(alive.current&&version===epoch.current)setState({kind:"error"});}
