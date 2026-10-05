@@ -14,4 +14,17 @@ describe("账号组操作归属契约",()=>{
   expect(scopes["publications.revisions.create"]).toBe("project-derived");
   expect(scopes["settings.models.put"]).toBe("user");
  });
+ it("画布模板允许空组，粗剪和组合必须沿真实项目，绑定与采集分别声明",()=>{
+  expect(scopes["canvas.create"]).toBe("group");
+  expect(scopes["assets.visualTemplates.save"]).toBe("group");
+  expect(scopes["creativeCapabilities.list"]).toBe("group");
+  expect(scopes["outputs.production.editor.rough-cut.adopt"]).toBe("project-derived");
+  expect(scopes["work.sources.select"]).toBe("project-derived");
+  expect(scopes["workCompositions.members.create"]).toBe("project-derived");
+  expect(scopes["canvas.material.adopt"]).toBe("project-derived");
+  expect(scopes["platforms.bind.begin"]).toBe("group");
+  expect(scopes["platforms.collections.start"]).toBe("platform-account");
+  expect(scopes["platforms.metrics.read"]).toBe("platform-account");
+  expect(scopes["settings.reporting.get"]).toBe("user");
+ });
 });

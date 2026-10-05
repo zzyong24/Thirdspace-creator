@@ -1,0 +1,15 @@
+{
+  "added_explicit_operation_scopes": 114,
+  "tdd_red": "existing completeness test 1 failed/1 passed",
+  "contract_tests": "2 files 7 passed",
+  "frontend_typecheck": "PASS next typegen + tsc --noEmit",
+  "backend_typecheck": {
+    "status": "FAIL",
+    "errors": 105,
+    "production_errors": 0
+  },
+  "limitations": [
+    "scope declarations do not implement new domain ownership",
+    "installed and real model validation pending"
+  ]
+}
