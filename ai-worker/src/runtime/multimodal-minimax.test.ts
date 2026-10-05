@@ -401,6 +401,21 @@ describe("MiniMax H3 v2 —— 分镜短片", () => {
     ).rejects.toBeInstanceOf(MultimodalGenerationError);
     expect(called).toBe(false);
   });
+  it("H3 Max 使用 v2，拒绝 2K 和 4 秒", async () => {
+    const urls:string[]=[],maxSpec={...h3Spec,model:"MiniMax-H3-Max"};
+    const fakeFetch=(async(url:string,init?:RequestInit)=>{
+      urls.push(String(url));
+      if(init?.method==="POST")return jsonResponse({task_id:"h3-max-task"});
+      if(String(url).includes("/query/video_generation/"))return jsonResponse({task:{status:"succeeded",content:{url:"https://dl.example/max.mp4"}}});
+      return bytesResponse(new Uint8Array([1]));
+    }) as unknown as typeof fetch;
+    const adapter=createMinimaxAdapter(deps(fakeFetch));
+    await expect(adapter.generateVideo!(maxSpec,{prompt:"shot",durationSec:4})).rejects.toBeInstanceOf(MultimodalGenerationError);
+    await expect(adapter.generateVideo!(maxSpec,{prompt:"shot",durationSec:5,resolution:"2K"})).rejects.toBeInstanceOf(MultimodalGenerationError);
+    expect(urls).toEqual([]);
+    await adapter.generateVideo!(maxSpec,{prompt:"shot",durationSec:5,resolution:"768P"});
+    expect(urls[0]).toContain("/v2/video_generation");
+  });
 
   it.each([
     [401, "authentication"],

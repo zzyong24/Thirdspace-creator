@@ -1,0 +1,94 @@
+{
+  "task": "T-1062",
+  "worktree": "/Users/zyongzhu/.codex/worktrees/t1062-template-backend/Thirdspace-creator",
+  "branch": "codex/t1062-template-backend-candidate",
+  "base_commit": "125bc864",
+  "commit": "7a45ad30adc53bcfac065fb789d75821156ab1d8",
+  "pushed": false,
+  "time": "2026-10-05T10:23:04.411215",
+  "status": "",
+  "files": [
+    {
+      "path": "backend/src/modules/assets/index.ts",
+      "before_sha256": "dc79cc18000e164584a5f985d5e7940736e3f54cdbdfc84aa0bb113ab4dba0f4",
+      "integration_before_sha256": "dc79cc18000e164584a5f985d5e7940736e3f54cdbdfc84aa0bb113ab4dba0f4",
+      "main_snapshot_before_sha256": "ab7d6e2f1a91722e5f2c75d20906a28d9f01985d993be35599bdb6471c186d95",
+      "sha256": "8269701a57d5638c5ed15c783680632cb35a97a0b715d18c80b0f79484405b23"
+    },
+    {
+      "path": "backend/src/modules/publishing/publication-draft-adoption.service.ts",
+      "before_sha256": "d7d88c2ad30671cfb596dd7eaad11de556abac40978114cd00501a9dda8347cd",
+      "integration_before_sha256": "d7d88c2ad30671cfb596dd7eaad11de556abac40978114cd00501a9dda8347cd",
+      "main_snapshot_before_sha256": "74c25a75e4a07d25798705a518bce433477bf15484110814f35070e207eb91c9",
+      "sha256": "59a529c87f3b9bd9bcef1c9fb86c7d07db454f7cdfc59f487b0a00b7cb950ad7"
+    },
+    {
+      "path": "backend/src/modules/publishing/publishing.service.ts",
+      "before_sha256": "e8906e58122407454a5e4be6d2e70bb1534e9f5f78c5667211d04c75aea7eab5",
+      "integration_before_sha256": "e8906e58122407454a5e4be6d2e70bb1534e9f5f78c5667211d04c75aea7eab5",
+      "main_snapshot_before_sha256": "6a74835d661f36d9310b2e37d7f93af4d2bb159421a89bbb730ba7c9d8f174bc",
+      "sha256": "6832744f6771f25e3b6edd71bd0a3a9579f2bf32f2fb9d48a29130688a823eae"
+    },
+    {
+      "path": "contract/src/cli-policy.ts",
+      "before_sha256": "1c1bc4fe6336600ea970f59fc617b2dd13d273d0b9948c34060f1da04191077a",
+      "integration_before_sha256": "1c1bc4fe6336600ea970f59fc617b2dd13d273d0b9948c34060f1da04191077a",
+      "main_snapshot_before_sha256": "2f480b37490db988bb2a809061010dd10cd90b422adf4c4eb6b078843aa634d4",
+      "sha256": "938c890becfe86cc6a96965b02beb925e313a1b99e9f85ad1ce8efbbaccc2a01"
+    },
+    {
+      "path": "contract/src/index.ts",
+      "before_sha256": "e97c3a395a0158393f1678252794e37d2a217ecc4d874cf88a58bc34445e01a9",
+      "integration_before_sha256": "e97c3a395a0158393f1678252794e37d2a217ecc4d874cf88a58bc34445e01a9",
+      "main_snapshot_before_sha256": "2d148831ab227765613414e0925d86b02cdfb5d69bcbb7c7acfa739f27861972",
+      "sha256": "ef39ae19440cac41f0df39f591051de3f1f882872d93df61640fee454bfef6ca"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/chat-tools.test.ts",
+      "before_sha256": "4c57cf38f7c0e78a891fdcb0b2cb63b3df8643a3ca8c639d479d123cb9f88c5f",
+      "integration_before_sha256": "4c57cf38f7c0e78a891fdcb0b2cb63b3df8643a3ca8c639d479d123cb9f88c5f",
+      "main_snapshot_before_sha256": "3c4d1ac4fb0411887c11013ba4fd3aa098c6ae7ca0d4d9832ec1bed7b575d26b",
+      "sha256": "a3a49094ccb407eee347f875637447a794294fc7fc0ff3071d06bcc0d93f24b0"
+    }
+  ],
+  "validation": [
+    {
+      "name": "git diff --check",
+      "result": "PASS",
+      "exit_code": 0
+    },
+    {
+      "name": "六路径TypeScript语法解析",
+      "result": "PASS",
+      "detail": "typescript5.9.3；6文件0语法错误。仅语法，不代表类型/运行通过。"
+    },
+    {
+      "name": "路径边界",
+      "result": "PASS",
+      "detail": "git diff仅含boundary的6路径；无控制面改动。"
+    },
+    {
+      "name": "publishing草稿/视觉与chat-tools运行回归",
+      "result": "PENDING",
+      "command": "pnpm -C backend test src/modules/publishing/publication-draft-adoption.service.test.ts src/modules/publishing/visual-material-adoption.service.test.ts src/modules/ai-runtime/chat-tools.test.ts",
+      "detail": "已尝试，vitest command not found；候选树无node_modules且缺模板自动合并schema/contract依赖。按边界未复制额外依赖。"
+    },
+    {
+      "name": "默认Git提交钩子",
+      "result": "LIMITATION",
+      "detail": "正常git commit成功，commit-msg提示Can't find lefthook in PATH；未修改或绕过hook设置。"
+    }
+  ],
+  "changes": [
+    "保留workspace blob、账号组、观众任务与新视觉合同exports；CLI同时保留accounts.bind.start与canvas.node.generate异步语义。",
+    "保留root网页安全回归并增加incoming真实画布版本/候选测试。",
+    "草稿采用保留unassigned联合结果、root真实目标账号/成员事务锁/冻结groupVersion和membershipVersion；全字段视觉digest与legacy digest重放兼容。",
+    "视觉采用沿withTarget和withPublicationWrite父链锁，保留不可变版、幂等回放与CAS；同组/账号factFilter防跨组重放。",
+    "视觉读取/导出重验组及当前账号membership；归档历史只读沿root规范；图片下载处于发布事务外且返回前再验权限。"
+  ],
+  "pending_integration": [
+    "完整整合树运行类型、contract、后端与权限/CAS/迁移回归；本提交不得作为功能验收PASS。",
+    "visual-material-adoption.service.ts自动合并调用方需显式处理adoptDraft的unassigned分支再读取publication.id，保留真实账号要求；此文件不在六路径写集，未修改。",
+    "候选树缺新视觉schema与contract资源，需完整模板依赖后才能运行；不应通过类型断言屏蔽。"
+  ]
+}

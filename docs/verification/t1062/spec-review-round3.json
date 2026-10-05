@@ -1,0 +1,63 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "recheck",
+  "summary": "增量复审仅检查新增的归属与迁移整合约束。SPEC-LINE:26—34 已将只读盘点和新增域审计揭示的 account-only 归属、项目父链绕过、归档写、异步范围冻结及三分支 migration when 跳过窗口，收束为沿 T-1022 既定 group 归属、真实父关系、显式迁移闭包、四类隔离基线与原工程合同的最小约束；这些约束没有扩大产品机制、缩减粗剪范围或造成已确认结果不可实现。REV-001 与 REV-002 保持销账，本轮无新增 finding，也不把静态审计回溯写成运行 PASS。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "resolved",
+      "severity": "major",
+      "category": "completeness",
+      "requirement_anchor": {
+        "id": "T-1062-SCOPE-01",
+        "quote": "汇总几个 CreatorOS 会话正在做的任务并提交，准备本地客户端包；打包后逐个功能验证"
+      },
+      "acceptance_anchor": {
+        "id": "T-1062-AC-COMPLETE",
+        "quote": "T-1062只有统一提交、包及该包可执行功能的逐项证据齐备才可完成"
+      },
+      "where": "“范围及实现依据”的统一候选描述与“当前入口”的上游来源",
+      "failure_mode": "规格列出功能域和部分分支名，但没有形成可核对的来源会话/分支/提交/原 SPEC 封闭清单，也没有规定盘点后如何确认某一候选纳入、排除或已由其他来源覆盖。实施者可以漏掉一个已授权会话或重复/误收一项改动，仍按自己选择的候选集合生成逐项证据并声称汇总齐备。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "docs/features/t1062-consolidated-local-client-acceptance.md#范围及实现依据；docs/features/t1062-consolidated-local-client-acceptance.md#当前入口",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "在实施前固定一份来源台账：每个已授权会话/分支的标识、盘点 HEAD、关联原 SPEC、候选提交或未提交文件，以及纳入/排除/已覆盖结论；验收清单逐项引用该台账，未知来源明确列为待用户确认，不能默认为已覆盖。",
+      "resolution_evidence": "当前 SPEC 的“封闭来源清单与核对结果”固定列出四个 CreatorOS 来源会话、盘点基点、原需求/规格和纳入/排除/已覆盖处置；并要求生成 docs/verification/t1062/sources.json，记录提交范围、未提交路径及 SHA256、冲突处置，最终验收引用来源和候选 SHA，来源变化后重新核对增量，未定位或未验证项不得默认为已覆盖。该表是在首轮审核 JSON 生成后补入，首轮 record 却发生在修订后；本销账结论来自此次对当前文件的独立复审，不追溯声称首轮已审核该表。",
+      "parent_id": "",
+      "threat_model_id": ""
+    },
+    {
+      "id": "REV-002",
+      "status": "resolved",
+      "severity": "major",
+      "category": "testability",
+      "requirement_anchor": {
+        "id": "T-1062-SCOPE-EDIT",
+        "quote": "剪辑工作台需支持类似 ChatCut 的粗剪及 Skill 集成，指定会话 `01a0fffe-4bc5-7473-bdb8-8729bf5382b2` 为参考"
+      },
+      "acceptance_anchor": {
+        "id": "T-1062-AC-EDIT",
+        "quote": "视频导入/转写/Skill粗剪/对照采用/原生编辑/撤销/保存刷新/预览导出"
+      },
+      "where": "“范围及实现依据”的 ChatCut 对照段与“提交、打包及验收”的视频验收项",
+      "failure_mode": "规格同时列出 ChatCut 的重录、停顿压缩、原速备份、变速保音高等调研对象，以及既有 T-850/T-1035—T-1046 链路，但没有注明哪些是本任务必须达到的对照结果、哪些只需记录差异、各结果由哪条既有合同裁决。实施者可以只验证既有删留链路，或把全部调研项都实现为新能力；前者可能不足以满足用户所说的类似 ChatCut，后者会扩张已确认范围，而当前逐项清单无法裁决。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "docs/features/t1062-consolidated-local-client-acceptance.md#范围及实现依据；docs/features/t1062-consolidated-local-client-acceptance.md#提交打包及验收",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "clarify",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "补一张有限对照表，把每个已点名的 ChatCut 行为映射为“本包必须可执行并取证 / 仅调研记录差异 / 已确认不在本任务”，并为必须项引用既有 SPEC acceptance 或写出唯一可观察结果；不要新增未获授权的剪辑能力。",
+      "resolution_evidence": "当前 SPEC 的“ChatCut粗剪对照的必验结果”逐项区分本包必须可执行并取证、调研及验收差异、核对已有链路，并引用 T-850/T-1046 边界；明确真实时间码缺失不得猜切点，逐词/字幕联动证据不足不得称全面或完整等效，1.13 倍及保音高只是参考会话个人选择且不得硬编码，精剪模板不作为粗剪前提。该表是在首轮审核 JSON 生成后补入，首轮 record 却发生在修订后；本销账结论来自此次对当前文件的独立复审，不追溯声称首轮已审核该表。",
+      "parent_id": "",
+      "threat_model_id": ""
+    }
+  ]
+}

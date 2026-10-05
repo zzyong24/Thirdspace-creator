@@ -69,6 +69,8 @@ export const publicationRevisions = pgTable("publication_revisions", {
   userId: text("user_id").notNull(),
   publicationId: text("publication_id").notNull(),
   revisionNumber: integer("revision_number").notNull().default(1),
+  visualAdoptionKey: text("visual_adoption_key"),
+  visualAdoptionDigest: text("visual_adoption_digest"),
   title: text("title").notNull(),
   description: text("description").notNull().default(""),
   coverAssetId: text("cover_asset_id"), // nullable — validated via AssetsService
@@ -77,7 +79,7 @@ export const publicationRevisions = pgTable("publication_revisions", {
   platformTags: jsonb("platform_tags").notNull().default([]),
   platformSettings: jsonb("platform_settings").notNull().default({}),
   createdAt: text("created_at").notNull(),
-});
+},table=>[uniqueIndex("publication_revisions_visual_adoption_ux").on(table.publicationId,table.visualAdoptionKey)]);
 
 // Raw DDL applied at db init (pglite has no migration runner wired here yet).
 //   - publications_external_ux: PARTIAL unique on (platform, external_id) WHERE

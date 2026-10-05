@@ -1,4 +1,5 @@
 export {executionStreamEvents} from "./schema/execution-stream";
+export {creativeCanvases,canvasGenerationLinks,canvasAgentProposals} from "./schema/creative-canvas";
 export {
   createDb,
   createRuntimeDb,

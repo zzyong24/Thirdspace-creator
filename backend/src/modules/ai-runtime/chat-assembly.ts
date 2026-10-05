@@ -14,6 +14,8 @@ import { formatVerbatimSourceInventory, type CopilotMediaRoute } from './chat-as
 import { createChatAssemblyToolDeps } from './chat-assembly-tool-deps';
 const SKILL_PRIMARY_CAPABILITY: Record<string, string> = {
     "chatbox.topic": "topic.generate",
+    // 画布讨论仍用现有编导文本模型档；画布的图像/视频模型仅在用户提交生成任务时调用。
+    "chatbox.canvas": "topic.generate",
     "chatbox.calibration": "calibration.diagnose",
     "chatbox.positioning": "positioning.generate",
     "chatbox.review": "review.insights",
@@ -304,6 +306,9 @@ export async function prepareChatAssembly(ctx: RequestContext, chatContext: Chat
             `你已经知道这条内容的 projectId 了,**绝不要用 context.projects 列出全站项目去找这一条**——那是全账号清单,不是当前项目。`,
         ].join("\n")
         : "";
+    const canvasBlock=chatContext.surface==="canvas" && chatContext.selection?.kind==="canvas" && chatContext.selection.ids[0]
+      ? "【当前创作画布】用户正在画布里与你协作。先调用 canvas.read 读取当前账号画布真值和 revision；需要改动时调用 canvas.propose 形成候选，解释候选效果并让用户在画布里点击应用。不要声称已直接修改画布，也不要把生成任务当成已完成。画布 ID 只用于定位，执行端会重新校验归属。"
+      : "";
     // [T-240①] 阶段判据块 —— 项目对话把「创作前(未发布)/已发布(可复盘)」渲成明确场景信号
     // (formatProjectStageBlock 纯函数);读不到项目详情(projectStage=null)→ 不注(不喂猜测)。
     const stageBlock = projectStage ? formatProjectStageBlock(projectStage) : "";
@@ -364,6 +369,7 @@ export async function prepareChatAssembly(ctx: RequestContext, chatContext: Chat
             skillsBriefBlock,
             currentAccountBlock,
             currentProjectBlock,
+            canvasBlock,
             briefHardBlock,
             currentInstructionPriorityBlock,
             currentScriptPriorityBlock,
@@ -393,6 +399,8 @@ export async function prepareChatAssembly(ctx: RequestContext, chatContext: Chat
     // 命中真工具时强制本轮调它,防模型把卡当文本吐 + 谎称已渲卡(弱 tool-calling 模型的常态)。
     const forcedTool = forcedToolSequence?.[0] && toolWhitelist.includes(forcedToolSequence[0])
         ? forcedToolSequence[0]
+        : chatContext.surface === "canvas" && chatContext.selection?.kind === "canvas" && toolWhitelist.includes("canvas.read")
+            ? "canvas.read"
         : routedTool && toolWhitelist.includes(routedTool)
             ? routedTool
             : effectiveFunctionKey && effectiveFunctionKey !== "material.gather" && toolWhitelist.includes(effectiveFunctionKey)

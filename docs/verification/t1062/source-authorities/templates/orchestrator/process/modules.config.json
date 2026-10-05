@@ -1,0 +1,1838 @@
+{
+  "_meta": {
+    "purpose": "Per-module task decomposition for the autonomous harness. CRUD is NOT enough: each module is classified by archetype, and its task list adds data-sourcing and/or cross-module business-flow tasks beyond persistence. progress.mjs reads this to generate the queue. Grounded in docs/CreatorOS-storage-and-business-logic.md + data-model.md + 七步整合设计.md + module plans (2026-06-22 research).",
+    "task_types": {
+      "repo": "backend: Drizzle repository + pglite test, CRUD + invariants/FSM transitions/idempotency. [no deps]",
+      "data-source": "how REAL data enters: ingest adapter (scrape/API) / AI-worker generation / object-storage upload+metadata / derived-compute / seed. [needs repo]",
+      "flow": "cross-module business wiring: UoW fan-out, post-commit emit (search/notif), state-machine edges, feedback loops. [needs repo]",
+      "frontend": "wire the UI to the persisted+sourced ops via transport + PERSISTED_OPS + round-trip test. [needs repo/data-source/flow as applicable]",
+      "e2e": "end-to-end create->persist(SQL)->render + visual; evaluator/human sets e2e_verified. [last]"
+    },
+    "archetypes": [
+      "user-authored",
+      "ai-generated",
+      "externally-ingested",
+      "derived-computed",
+      "reference-config",
+      "orchestration"
+    ]
+  },
+  "modules": {
+    "T-988": {
+      "task_id": "T-988",
+      "archetype": [
+        "derived-computed"
+      ],
+      "tasks": [
+        "diagnosis",
+        "implementation"
+      ],
+      "read_set": [
+        "docs/features/t988-home-navigation-copy.md",
+        "docs/features/t987-page-navigation-performance.md",
+        "frontend/src/**",
+        "backend/src/application/**",
+        "backend/src/modules/query-services/**",
+        "contract/src/**"
+      ],
+      "write_set": [
+        "docs/features/t988-home-navigation-copy.md",
+        "docs/research/t988/**",
+        "docs/verification/t988-home-navigation.md",
+        "frontend/src/components/shell/**",
+        "frontend/src/features/dashboard/**",
+        "frontend/src/features/settings/**",
+        "frontend/src/features/automations/**",
+        "frontend/src/server/dashboard-query-projection.ts",
+        "backend/src/application/queries/**",
+        "backend/src/modules/query-services/**",
+        "orchestrator/LESSON_LEDGER.md",
+        "backend/src/modules/publishing/publishing.service.ts",
+        "backend/src/modules/publishing/publishing.service.test.ts",
+        "frontend/src/server/dashboard-query-projection.test.ts",
+        "frontend/src/server/persistence-client.ts",
+        "frontend/src/features/intelligence/collection-import-dialogs.tsx",
+        "frontend/src/features/knowledge/knowledge-graph-view.tsx",
+        "frontend/src/app/(creator)/loading.tsx",
+        "frontend/src/app/(creator)/daily-report/loading.tsx"
+      ],
+      "verify_commands": {
+        "diagnosis": [
+          "node docs/research/t988/verify-baseline.mjs"
+        ],
+        "implementation": [
+          "pnpm --dir frontend exec vitest run src/components/shell/use-primary-navigation.test.tsx src/server/dashboard-query-projection.test.ts --retry=0",
+          "pnpm --dir backend exec vitest run src/application/queries/dashboard-read-performance.test.ts src/modules/publishing/publishing.service.test.ts --retry=0",
+          "pnpm --dir frontend exec tsc --noEmit"
+        ]
+      }
+    },
+    "T-987": {
+      "task_id": "T-987",
+      "archetype": [
+        "derived-computed"
+      ],
+      "tasks": [
+        "diagnosis",
+        "implementation"
+      ],
+      "read_set": [
+        "docs/features/t987-page-navigation-performance.md",
+        "docs/features/t941-navigation-latency.md",
+        "backend/src/application/**",
+        "backend/src/modules/query-services/**",
+        "backend/src/modules/scheduling/**",
+        "backend/src/modules/publishing/**",
+        "frontend/src/**",
+        "frontend/next.config.ts",
+        "contract/src/**"
+      ],
+      "write_set": [
+        "docs/features/t987-page-navigation-performance.md",
+        "docs/research/t987/**",
+        "docs/verification/t987-page-performance.md",
+        "frontend/src/lib/page-read-cache.server.ts",
+        "frontend/src/lib/page-read-cache.test.ts",
+        "frontend/src/server/publishing-schedule-projection.ts",
+        "frontend/src/server/publishing-schedule-projection.test.ts",
+        "frontend/src/server/persistence-client.ts",
+        "frontend/src/features/automations/**",
+        "frontend/src/features/publishing-center/**",
+        "backend/src/modules/analytics/analytics.repository.ts",
+        "backend/src/modules/analytics/analytics.repository.integration.test.ts",
+        "backend/src/modules/scheduling/scheduling.repository.ts",
+        "backend/src/modules/material-links/material-links.repository.ts",
+        "backend/src/modules/material-links/material-links.service.test.ts",
+        "frontend/src/features/assets/assets-data.ts",
+        "frontend/src/features/assets/assets-data.test.ts",
+        "frontend/src/components/shell/sidebar.tsx",
+        "frontend/src/components/shell/shell.test.tsx"
+      ],
+      "verify_commands": {
+        "diagnosis": "git diff --check",
+        "implementation": "git diff --check"
+      }
+    },
+    "T-983": {
+      "task_id": "T-983",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "review",
+        "implementation"
+      ],
+      "read_set": [
+        "docs/features/t983-separate-collection.md",
+        "docs/verification/t982-collection-logs.md",
+        "backend/**",
+        "contract/**",
+        "frontend/src/features/automations/**",
+        "frontend/src/server/**",
+        "ai-worker/src/runtime/browser/**"
+      ],
+      "write_set": [
+        "docs/features/t983-separate-collection.md",
+        "docs/verification/t983-collection-split.md",
+        "backend/drizzle/**",
+        "backend/src/modules/scheduling/**",
+        "backend/src/modules/ai-runtime/**",
+        "backend/src/modules/analytics/sync-policy.ts",
+        "backend/src/modules/execution/**",
+        "backend/src/application/scheduling/**",
+        "backend/src/application/collection/**",
+        "contract/src/internal/execution-worker.ts",
+        "frontend/src/features/automations/**",
+        "frontend/src/server/**",
+        "ai-worker/src/runtime/browser/**",
+        "orchestrator/DECISION_LOG.md",
+        "orchestrator/LESSON_LEDGER.md"
+      ],
+      "verify_commands": {
+        "review": "git diff --check",
+        "implementation": "pnpm -C backend exec vitest run src/modules/scheduling/separate-collection-migration.test.ts src/modules/scheduling/collection-run-state.service.test.ts src/modules/ai-runtime/collection-bootstrap.test.ts src/modules/ai-runtime/scheduled-collection-scheduler.test.ts src/modules/ai-runtime/scheduled-flywheel-concurrency.test.ts src/modules/ai-runtime/scheduled-flywheel-binding.test.ts --maxWorkers=1 --testTimeout=30000 --hookTimeout=30000"
+      }
+    },
+    "T-915": {
+      "task_id": "T-915",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "design-review",
+        "build",
+        "acceptance"
+      ],
+      "read_set": [
+        "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "backend/**",
+        "ai-worker/**",
+        "contract/**",
+        "frontend/src/server/**",
+        "frontend/src/app/api/**",
+        "frontend/scripts/desktop/**",
+        "frontend/src/**",
+        "frontend/src-tauri/**",
+        "PROJECT.md",
+        "PROJECT_CONTEXT.md",
+        "package.json",
+        "pnpm-lock.yaml",
+        "pnpm-workspace.yaml",
+        "patches/@earendil-works__pi-ai@0.80.7.patch"
+      ],
+      "write_set": [
+        "backend/**",
+        "ai-worker/**",
+        "contract/**",
+        "frontend/src/**",
+        "frontend/scripts/**",
+        "frontend/package.json",
+        "package.json",
+        "pnpm-lock.yaml",
+        "docs/research/evidence/t915/**",
+        "frontend/src-tauri/src/**",
+        "frontend/src-tauri/tests/**",
+        "frontend/src-tauri/Cargo.toml",
+        "frontend/src-tauri/Cargo.lock",
+        "frontend/src-tauri/build.rs",
+        "frontend/src-tauri/tauri.conf.json",
+        "frontend/src-tauri/tauri.windows.conf.json",
+        "frontend/src-tauri/capabilities/**",
+        "pnpm-workspace.yaml",
+        "patches/@earendil-works__pi-ai@0.80.7.patch"
+      ],
+      "verify_commands": {
+        "design-review": "node orchestrator/process/research-gate.mjs audit",
+        "build": [
+          "pnpm --filter @creatoros/contract --filter @creatoros/ai-worker --filter @creatoros/backend typecheck",
+          "pnpm --filter creatoros-frontend exec tsc --noEmit",
+          "pnpm --filter @creatoros/contract --filter @creatoros/ai-worker --filter @creatoros/backend test",
+          "pnpm --filter creatoros-frontend test",
+          "node orchestrator/process/boundary-scan.mjs",
+          "node orchestrator/process/orphan-scan.mjs"
+        ],
+        "acceptance": [
+          "pnpm --filter creatoros-frontend test:e2e",
+          "pnpm --filter @creatoros/ai-worker build",
+          "pnpm --filter creatoros-frontend build",
+          "node orchestrator/process/boundary-scan.mjs",
+          "node orchestrator/process/orphan-scan.mjs"
+        ]
+      },
+      "data_source": "真实业务与模型结果；BUILD 和验收必须覆盖 SPEC 全部 R/AC，当前 Worker 局部证据不代表全部通过。",
+      "flows": "任务恢复与自主搜索浏览器循环",
+      "step_write_set": {
+        "design-review": [],
+        "acceptance": [
+          "docs/research/evidence/t915/**"
+        ]
+      },
+      "acceptance_note": "上述命令不替代 SPEC 的完整公开旅程、30次性能基线、双平台分发包与真实供应商证据；缺任何一项均不可完成 acceptance。"
+    },
+    "projects": {
+      "archetype": [
+        "user-authored",
+        "orchestration"
+      ],
+      "tasks": [
+        "repo",
+        "flow",
+        "frontend",
+        "e2e"
+      ],
+      "data_source": "create form mints Project + seeds 6 ProjectStages + 4 OutputStages (atomic UoW); progress/current_stage are recomputed caches",
+      "flows": "HEAD of pipeline; receives setPrimaryOutputAsset/markOutputPublished callbacks from Production/Publishing; emits activity -> search+notifications",
+      "oss": [
+        "kanboard/kanboard — stage columns + move-emits-activity",
+        "twentyhq/twenty — stage-on-entity drives both table & kanban"
+      ],
+      "read_set": [
+        "backend/src/modules/projects/**"
+      ],
+      "write_set": [],
+      "boundary_note": "T-916：仅允许读取历史模块；旧任务缺有效绑定与验收证据，须由 progress block 隔离，不授予实现权限。"
+    },
+    "knowledge": {
+      "archetype": [
+        "user-authored",
+        "externally-ingested"
+      ],
+      "tasks": [
+        "repo",
+        "data-source",
+        "frontend",
+        "e2e"
+      ],
+      "data_source": "UI-authored OR AI-distilled OR ingested-as-candidate; append-only KnowledgeRevision (never UPDATE old)",
+      "flows": "evidence links to artifacts; feeds search index + AI context-tools; survives project archive",
+      "oss": [
+        "TriliumNext/Notes — typed note relations graph",
+        "outline/outline — revisions + backlink-on-save"
+      ],
+      "read_set": [
+        "backend/src/modules/knowledge/**"
+      ],
+      "write_set": [],
+      "boundary_note": "T-916：仅允许读取历史模块；旧任务缺有效绑定与验收证据，须由 progress block 隔离，不授予实现权限。"
+    },
+    "assets": {
+      "archetype": [
+        "user-authored",
+        "externally-ingested"
+      ],
+      "tasks": [
+        "repo",
+        "data-source",
+        "frontend",
+        "e2e"
+      ],
+      "data_source": "two-phase upload (presign -> S3 -> complete) with metadata harvested via headObject; also minted by Production export + Ingestion",
+      "flows": "export -> registerGeneratedAsset -> ContentOutput.primary_asset_id; cover validated by Publishing",
+      "oss": [
+        "resourcespace/resourcespace — asset+metadata+renditions schema",
+        "atrocore/atrodam — typed metadata per asset"
+      ],
+      "read_set": [
+        "backend/src/modules/assets/**"
+      ],
+      "write_set": [],
+      "boundary_note": "T-916：仅允许读取历史模块；旧任务缺有效绑定与验收证据，须由 progress block 隔离，不授予实现权限。"
+    },
+    "artifacts": {
+      "archetype": [
+        "user-authored",
+        "ai-generated",
+        "orchestration"
+      ],
+      "tasks": [
+        "repo",
+        "data-source",
+        "flow",
+        "frontend",
+        "e2e"
+      ],
+      "data_source": "user saves + AI candidates (createdByType:ai) ONLY via AiService.confirmResult->createVersion; immutable ArtifactVersion; structured children replaced per version",
+      "flows": "master_script -> output_script (derived_from); EvidenceLink to knowledge/assets; review report is an Artifact",
+      "oss": [
+        "TypeCellOS/BlockNote — jsonb block document model (AI-rewritable per block)",
+        "ueberdosis/tiptap"
+      ],
+      "read_set": [
+        "backend/src/modules/artifacts/**"
+      ],
+      "write_set": [],
+      "boundary_note": "T-916：仅允许读取历史模块；旧任务缺有效绑定与验收证据，须由 progress block 隔离，不授予实现权限。"
+    },
+    "production": {
+      "archetype": [
+        "user-authored",
+        "orchestration"
+      ],
+      "tasks": [
+        "repo",
+        "flow",
+        "frontend",
+        "e2e"
+      ],
+      "data_source": "production settings + timeline segments; exports.complete (mock render in dev) registers result Asset",
+      "flows": "FLOW-export UoW: exports.complete -> registerGeneratedAsset -> setPrimaryOutputAsset -> markOutputPublished -> post-commit search+activity+notif",
+      "oss": [
+        "remotion-dev/remotion — template+props -> deterministic render job",
+        "OpenShot/openshot-qt — timeline -> render-spec"
+      ],
+      "read_set": [
+        "backend/src/modules/production/**"
+      ],
+      "write_set": [],
+      "boundary_note": "T-916：仅允许读取历史模块；旧任务缺有效绑定与验收证据，须由 progress block 隔离，不授予实现权限。"
+    },
+    "publishing": {
+      "archetype": [
+        "externally-ingested",
+        "orchestration"
+      ],
+      "tasks": [
+        "repo",
+        "flow",
+        "frontend",
+        "e2e"
+      ],
+      "data_source": "publisher.publish returns external_id/url recorded as fact-of-record; status follows external truth",
+      "flows": "publish -> markOutputPublished; anchor for all metrics; content-calendar reconciles against it; (platform,external_id) UNIQUE idempotency",
+      "oss": [
+        "gitroomhq/postiz-app — per-platform adapter + scheduled-post queue (CLOSEST stack match)",
+        "inovector/mixpost"
+      ],
+      "read_set": [
+        "backend/src/modules/publishing/**"
+      ],
+      "write_set": [],
+      "boundary_note": "T-916：仅允许读取历史模块；旧任务缺有效绑定与验收证据，须由 progress block 隔离，不授予实现权限。"
+    },
+    "analytics": {
+      "archetype": [
+        "externally-ingested",
+        "derived-computed"
+      ],
+      "tasks": [
+        "repo",
+        "data-source",
+        "frontend",
+        "e2e"
+      ],
+      "data_source": "appendSnapshot called BY Ingestion (FLOW-019): raw_metrics -> normalized MetricValue -> retention/audience curves; idempotent (publication,source,captured_at) UNIQUE",
+      "flows": "feeds Review evidence, Dashboard 数据概览, Publishing Center, Calibration actuals; 七步 adds conversion/revenue metric keys",
+      "oss": [
+        "PostHog/posthog — event + retention/funnel query patterns",
+        "umami-software/umami — Postgres rollup tables"
+      ],
+      "read_set": [
+        "backend/src/modules/analytics/**"
+      ],
+      "write_set": [],
+      "boundary_note": "T-916：仅允许读取历史模块；旧任务缺有效绑定与验收证据，须由 progress block 隔离，不授予实现权限。"
+    },
+    "reviews": {
+      "archetype": [
+        "user-authored",
+        "orchestration"
+      ],
+      "tasks": [
+        "repo",
+        "flow",
+        "frontend",
+        "e2e"
+      ],
+      "data_source": "form; period derived from Publishing min/max published_at; ReviewInsight.evidence derived from Analytics snapshots",
+      "flows": "Analytics -> Review -> confirmed insights promoteReviewInsight -> Learning; can trigger positioning revision; feeds Calibration",
+      "oss": [
+        "ParabolInc/parabol — retro -> action-items(owner,due) linking to next project"
+      ],
+      "read_set": [
+        "backend/src/modules/reviews/**"
+      ],
+      "write_set": [],
+      "boundary_note": "T-916：仅允许读取历史模块；旧任务缺有效绑定与验收证据，须由 progress block 隔离，不授予实现权限。"
+    },
+    "learnings": {
+      "archetype": [
+        "user-authored",
+        "derived-computed"
+      ],
+      "tasks": [
+        "repo",
+        "data-source",
+        "frontend",
+        "e2e"
+      ],
+      "data_source": "quick-record OR promoted from ReviewInsight (review_id backref); confidenceScore = min(100, appCount*20 + (validated?40:0))",
+      "flows": "LearningApplication = 二次验证 in new projects; Calibration adjusts confidence; Dashboard suggestions read top validated",
+      "oss": [
+        "ParabolInc/parabol — action-items / learning loop"
+      ],
+      "read_set": [
+        "backend/src/modules/learnings/**"
+      ],
+      "write_set": [],
+      "boundary_note": "T-916：仅允许读取历史模块；旧任务缺有效绑定与验收证据，须由 progress block 隔离，不授予实现权限。"
+    },
+    "notifications": {
+      "archetype": [
+        "derived-computed"
+      ],
+      "tasks": [
+        "repo",
+        "data-source",
+        "frontend",
+        "e2e"
+      ],
+      "data_source": "NOT self-authored: owning modules call insert() post-commit (task/publish/import/system/ai + cadence_gap); event-emitted ledger",
+      "flows": "shell bell countUnread (Dashboard query service); mark-read idempotent; cadence_gap fired once-on-edge by content-calendar",
+      "oss": [
+        "novuhq/novu — workflow + subscriber + in-app feed schema"
+      ],
+      "read_set": [
+        "backend/src/modules/notifications/**"
+      ],
+      "write_set": [],
+      "boundary_note": "T-916：仅允许读取历史模块；旧任务缺有效绑定与验收证据，须由 progress block 隔离，不授予实现权限。"
+    },
+    "search": {
+      "archetype": [
+        "derived-computed"
+      ],
+      "tasks": [
+        "repo",
+        "data-source",
+        "frontend",
+        "e2e"
+      ],
+      "data_source": "SearchDocument is a DERIVED, rebuildable index (not truth): owning modules upsertDocument post-commit; FTS + (deferred) pgvector",
+      "flows": "shell search -> pages.search.get composes results; index failure non-throwing (never rolls back business truth); rebuildUserIndex",
+      "oss": [
+        "pgvector/pgvector — hybrid tsvector+embedding in Postgres",
+        "meilisearch/meilisearch — if outgrown"
+      ],
+      "read_set": [
+        "backend/src/modules/search/**"
+      ],
+      "write_set": [],
+      "boundary_note": "T-916：仅允许读取历史模块；旧任务缺有效绑定与验收证据，须由 progress block 隔离，不授予实现权限。"
+    },
+    "settings": {
+      "archetype": [
+        "user-authored",
+        "reference-config"
+      ],
+      "tasks": [
+        "repo",
+        "frontend",
+        "e2e"
+      ],
+      "data_source": "UserPreference/ModelConfiguration/AgentConfiguration upsert; seeded canonical model configs; secret_reference indirection (never raw key)",
+      "flows": "AI worker consumes resolveModelForCapability with fallback chain (capability -> default -> claude-opus-4-8)",
+      "oss": [
+        "BerriAI/litellm — per-tenant model-config + virtual-key + spend ledger",
+        "open-webui/open-webui — model presets UX"
+      ],
+      "read_set": [
+        "backend/src/modules/settings/**"
+      ],
+      "write_set": [],
+      "boundary_note": "T-916：仅允许读取历史模块；旧任务缺有效绑定与验收证据，须由 progress block 隔离，不授予实现权限。"
+    },
+    "taxonomy": {
+      "archetype": [
+        "user-authored",
+        "reference-config"
+      ],
+      "tasks": [
+        "repo",
+        "frontend",
+        "e2e"
+      ],
+      "data_source": "Tag CRUD + EntityTag polymorphic join (entity_type/entity_id soft refs); seeded from fixtures",
+      "flows": "Research/Knowledge read tags via listForEntity/listEntitiesForTag -> /search?tag=; the one retained polymorphic association",
+      "oss": [
+        "mbleigh/acts-as-taggable-on — context-scoped polymorphic tagging schema"
+      ],
+      "read_set": [
+        "backend/src/modules/taxonomy/**"
+      ],
+      "write_set": [],
+      "boundary_note": "T-916：仅允许读取历史模块；旧任务缺有效绑定与验收证据，须由 progress block 隔离，不授予实现权限。"
+    },
+    "ingestion": {
+      "archetype": [
+        "externally-ingested",
+        "orchestration"
+      ],
+      "tasks": [
+        "repo",
+        "data-source",
+        "flow",
+        "frontend",
+        "e2e"
+      ],
+      "data_source": "THE single external write path: ExternalSource adapters (douyin scrape, Feishu survey) -> IngestionRun -> per-record; raw payload kept verbatim; double idempotency (source,idempotency_key)+(run,record_key)",
+      "flows": "FLOW-019 ingest metrics->Analytics.appendSnapshot; FLOW-020 ingest knowledge/assets as candidates (never overwrite current); feeds AudienceSignal/Lead/Calibration actuals",
+      "oss": [
+        "miniflux/v2 — idempotent ingest: entry-hash dedup + conditional GET + per-source scheduling",
+        "FreshRSS/FreshRSS — XPath scrape fallback"
+      ],
+      "read_set": [
+        "backend/src/modules/ingestion/**"
+      ],
+      "write_set": [],
+      "boundary_note": "T-916：仅允许读取历史模块；旧任务缺有效绑定与验收证据，须由 progress block 隔离，不授予实现权限。"
+    },
+    "ai": {
+      "archetype": [
+        "ai-generated",
+        "orchestration"
+      ],
+      "tasks": [
+        "repo",
+        "data-source",
+        "flow",
+        "frontend",
+        "e2e"
+      ],
+      "data_source": "@creatoros/ai-worker subprocess: ai.tasks.create -> claim(queued->running) -> ClaudeAgentRunner (or FakeAgentRunner w/o key) -> submit_candidate once -> AITaskResult",
+      "flows": "SOLE AI write seam: confirmResult (AI-free) -> ArtifactsService.createVersion / Candidate / Knowledge / ReviewInsight; task FSM queued->running->awaiting_confirmation->succeeded|failed|cancelled",
+      "oss": [
+        "langchain-ai/langgraph — checkpoint + human-in-the-loop interrupt/resume (=candidate-confirm)",
+        "langfuse/langfuse — run/trace/observation schema"
+      ],
+      "read_set": [
+        "backend/src/modules/ai/**"
+      ],
+      "write_set": [],
+      "boundary_note": "T-916：仅允许读取历史模块；旧任务缺有效绑定与验收证据，须由 progress block 隔离，不授予实现权限。"
+    },
+    "candidate": {
+      "archetype": [
+        "user-authored",
+        "ai-generated",
+        "externally-ingested",
+        "orchestration"
+      ],
+      "tasks": [
+        "repo",
+        "data-source",
+        "flow",
+        "frontend",
+        "e2e"
+      ],
+      "data_source": "manual(source:idea) + AI(trend/benchmark/demand) via createFromAIResult on confirm + AudienceSignal ingested (douyin comments/DM); demand_count derived from signals",
+      "flows": "ranked by predictedScore(Calibration)/positioningFit(Positioning gate)/demandCount; candidates.promote -> createProject (atomic, writes TopicPromotion)",
+      "oss": [
+        "MaartenGr/BERTopic — embed->cluster->label topic mining",
+        "rte-france/BERTrend — weak/emerging-signal temporal scoring"
+      ],
+      "read_set": [
+        "backend/src/modules/candidate/**"
+      ],
+      "write_set": [],
+      "boundary_note": "T-916：仅允许读取历史模块；旧任务缺有效绑定与验收证据，须由 progress block 隔离，不授予实现权限。"
+    },
+    "calibration": {
+      "archetype": [
+        "user-authored",
+        "externally-ingested",
+        "derived-computed",
+        "orchestration"
+      ],
+      "tasks": [
+        "repo",
+        "data-source",
+        "flow",
+        "frontend",
+        "e2e"
+      ],
+      "data_source": "Rubric/RubricVersion (immutable, 变现加权 dims not play-count) + blind Prediction lock + CalibrationResult.actualMetrics recycled from verified IngestionRun->Analytics",
+      "flows": "FLOW-校准闭环: Score->Blind-Predict(lock)->Publish->Retro(T+N ingest)->Result->RubricVersion bump + Learning.confidence adjust->re-rank Candidates; data-refresh TodoCard auto N days post-publish",
+      "oss": [
+        "confident-ai/deepeval — rubric-as-judge score+reason",
+        "promptfoo/promptfoo — expected-vs-actual eval cases"
+      ],
+      "read_set": [
+        "backend/src/modules/calibration/**"
+      ],
+      "write_set": [],
+      "boundary_note": "T-916：仅允许读取历史模块；旧任务缺有效绑定与验收证据，须由 progress block 隔离，不授予实现权限。"
+    },
+    "monetization": {
+      "archetype": [
+        "user-authored",
+        "externally-ingested",
+        "derived-computed",
+        "orchestration"
+      ],
+      "tasks": [
+        "repo",
+        "data-source",
+        "flow",
+        "frontend",
+        "e2e"
+      ],
+      "data_source": "柔性 Product + append-only Offer price snapshot + Lead (manual OR Feishu survey via Ingestion) + ConversionEvent; funnel + unattributed bucket computed at read",
+      "flows": "FLOW-变现归因: intent(content_role + ContentOutputProduct) vs actual(Lead.attributed_content_id, lossy); conversion.purchase -> Analytics conversion/revenue -> Dashboard first-class columns; NEVER force-100%-allocate (honest unattributed)",
+      "oss": [
+        "twentyhq/twenty — opportunity/pipeline CRM schema (BEST fit)",
+        "espocrm/espocrm — leads->opportunities->conversion"
+      ],
+      "read_set": [
+        "orchestrator/process/modules.config.json"
+      ],
+      "write_set": [],
+      "boundary_note": "T-916：仅允许读取历史模块；旧任务缺有效绑定与验收证据，须由 progress block 隔离，不授予实现权限。 原模块目录不存在，只读历史配置待核查。"
+    },
+    "positioning": {
+      "archetype": [
+        "user-authored",
+        "ai-generated",
+        "orchestration"
+      ],
+      "tasks": [
+        "repo",
+        "flow",
+        "frontend",
+        "e2e"
+      ],
+      "data_source": "CreatorProfile upsert + PositioningStatement immutable version chain + AI-revise via confirm seam",
+      "flows": "PositioningGate (deterministic service, NO table/NO AI) scores candidate/project positioning_fit 0-100, advisory/non-blocking; ReviewInsight -> positioning revision (loop)",
+      "oss": [
+        "twentyhq/twenty — metadata profile attributes",
+        "TriliumNext/Notes — typed key/value attributes"
+      ],
+      "read_set": [
+        "backend/src/modules/positioning/**"
+      ],
+      "write_set": [],
+      "boundary_note": "T-916：仅允许读取历史模块；旧任务缺有效绑定与验收证据，须由 progress block 隔离，不授予实现权限。"
+    },
+    "platform-account": {
+      "archetype": [
+        "user-authored",
+        "reference-config"
+      ],
+      "tasks": [
+        "repo",
+        "frontend",
+        "e2e"
+      ],
+      "data_source": "accounts.create(platform,handle,secretReference?,followerBaseline?); UNIQUE(user,platform,handle); secret_reference is a pointer never raw token",
+      "flows": "Publication.account_id/ProjectTargetPlatform.account_id validated via assertOwnedAccount; per-account metrics are READ-TIME rollup (no new ingest path)",
+      "oss": [
+        "gitroomhq/postiz-app — OAuth account model + per-platform constraints"
+      ],
+      "read_set": [
+        "backend/src/modules/platform-account/**"
+      ],
+      "write_set": [],
+      "boundary_note": "T-916：仅允许读取历史模块；旧任务缺有效绑定与验收证据，须由 progress block 隔离，不授予实现权限。"
+    },
+    "content-calendar": {
+      "archetype": [
+        "user-authored",
+        "derived-computed",
+        "orchestration"
+      ],
+      "tasks": [
+        "repo",
+        "flow",
+        "frontend",
+        "e2e"
+      ],
+      "data_source": "ContentCalendarEntry(planned_at, output|candidate) + PublishingCadence per account; status reconciled by READING published reality (no new write path)",
+      "flows": "FLOW-发布节奏达成: cadence -> planned slots -> publish -> reconcile(planned->published | past-grace->missed 断更) -> cadence_gap notification once; attainment -> Dashboard lagging accounts",
+      "oss": [
+        "gitroomhq/postiz-app — calendar + scheduled-post queue",
+        "inovector/mixpost"
+      ],
+      "read_set": [
+        "backend/src/modules/content-calendar/**"
+      ],
+      "write_set": [],
+      "boundary_note": "T-916：仅允许读取历史模块；旧任务缺有效绑定与验收证据，须由 progress block 隔离，不授予实现权限。"
+    },
+    "T-918": {
+      "task_id": "T-918",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "build"
+      ],
+      "read_set": [
+        "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+        ".agents/skills/packaging-creatoros-release/SKILL.md",
+        "frontend/scripts/desktop/**",
+        "frontend/src-tauri/**",
+        "frontend/package.json",
+        "ai-worker/**",
+        "backend/src/modules/ai-runtime/**",
+        "contract/**"
+      ],
+      "write_set": [
+        "frontend/src/**",
+        "frontend/scripts/desktop/**",
+        "docs/verification/**"
+      ],
+      "verify_commands": {
+        "build": "CREATOROS_LOCAL_SKIP_INSTALL=1 pnpm -C frontend desktop:package-local"
+      },
+      "data_source": "冻结候选构建与真实DMG文件，不访问用户业务数据",
+      "flows": "本地安装包交付，业务运行由用户验证"
+    },
+    "T-923": {
+      "task_id": "T-923",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "design-review",
+        "build"
+      ],
+      "read_set": [
+        "docs/superpowers/specs/2026-09-08-continuous-agent-execution.md",
+        "docs/research/2026-09-08-agent-loop-comparison.md",
+        "backend/**",
+        "ai-worker/**",
+        "contract/**",
+        "frontend/src/server/**",
+        "orchestrator/SYSTEM_ARCHITECTURE.md"
+      ],
+      "write_set": [
+        "backend/**",
+        "ai-worker/**",
+        "contract/**",
+        "frontend/src/server/**",
+        "docs/verification/t923-continuous-agent.md"
+      ],
+      "verify_commands": {
+        "design-review": "node orchestrator/process/research-gate.mjs audit",
+        "build": "pnpm -C frontend exec tsc --noEmit --pretty false"
+      },
+      "step_write_set": {
+        "design-review": []
+      },
+      "acceptance_note": "用户暂缓业务自动测试和全局reconcile，真实模型交付待用户验证，不记为PASS。"
+    },
+    "T-924": {
+      "task_id": "T-924",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "design-review",
+        "build"
+      ],
+      "read_set": [
+        "docs/superpowers/specs/2026-09-08-navigation-read-cache.md",
+        "frontend/**",
+        "contract/**",
+        "orchestrator/SYSTEM_ARCHITECTURE.md"
+      ],
+      "write_set": [
+        "frontend/**",
+        "docs/verification/t924-navigation-cache.md"
+      ],
+      "verify_commands": {
+        "design-review": "node orchestrator/process/research-gate.mjs audit",
+        "build": "pnpm -C frontend exec tsc --noEmit --pretty false"
+      },
+      "step_write_set": {
+        "design-review": []
+      },
+      "acceptance_note": "用户暂缓业务测试和全局reconcile，真实大数据切换待用户验证。"
+    },
+    "T-925": {
+      "task_id": "T-925",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "design-review",
+        "build"
+      ],
+      "read_set": [
+        "docs/superpowers/specs/2026-09-08-navigation-change-cache.md",
+        "frontend/**",
+        "backend/**",
+        "contract/**",
+        "orchestrator/SYSTEM_ARCHITECTURE.md"
+      ],
+      "write_set": [
+        "frontend/**",
+        "backend/**",
+        "docs/verification/t925-change-cache.md"
+      ],
+      "verify_commands": {
+        "design-review": "node orchestrator/process/research-gate.mjs audit",
+        "build": "pnpm -C frontend exec tsc --noEmit --pretty false"
+      },
+      "step_write_set": {
+        "design-review": []
+      },
+      "acceptance_note": "用户暂缓业务测试和全局reconcile，真实大数据切换待用户验证。"
+    },
+    "T-928": {
+      "task_id": "T-928",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "design-review",
+        "build"
+      ],
+      "read_set": [
+        "docs/research/2026-09-08-runtime-feedback-audit.md",
+        "backend/**",
+        "ai-worker/**",
+        "frontend/**",
+        "contract/**",
+        "orchestrator/**"
+      ],
+      "write_set": [
+        "docs/research/**",
+        "docs/superpowers/specs/**",
+        "docs/verification/**",
+        "frontend/src/features/intelligence/intelligence-workbench.tsx"
+      ],
+      "verify_commands": {
+        "design-review": "node orchestrator/process/research-gate.mjs audit",
+        "build": "pnpm -C frontend exec tsc --noEmit --pretty false"
+      },
+      "step_write_set": {
+        "design-review": []
+      },
+      "acceptance_note": "用户暂缓业务测试和全局reconcile，真实大数据切换待用户验证。"
+    },
+    "T-929": {
+      "task_id": "T-929",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "design-review",
+        "build"
+      ],
+      "read_set": [
+        "docs/superpowers/specs/2026-09-08-business-topic-script-method.md",
+        "backend/**",
+        "ai-worker/**",
+        "frontend/**",
+        "contract/**",
+        "orchestrator/**"
+      ],
+      "write_set": [
+        "docs/research/**",
+        "docs/superpowers/specs/**",
+        "docs/verification/**"
+      ],
+      "verify_commands": {
+        "design-review": "node orchestrator/process/research-gate.mjs audit",
+        "build": "pnpm -C frontend exec tsc --noEmit --pretty false"
+      },
+      "step_write_set": {
+        "design-review": []
+      },
+      "acceptance_note": "用户暂缓业务测试和全局reconcile，真实大数据切换待用户验证。"
+    },
+    "T-930": {
+      "task_id": "T-930",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "design-review",
+        "build"
+      ],
+      "read_set": [
+        "docs/superpowers/specs/2026-09-08-pi-only-runtime.md",
+        "backend/**",
+        "ai-worker/**",
+        "frontend/**",
+        "contract/**",
+        "orchestrator/**"
+      ],
+      "write_set": [
+        "backend/**",
+        "ai-worker/**",
+        "frontend/**",
+        "contract/**",
+        "docs/**",
+        "pnpm-lock.yaml",
+        "orchestrator/**"
+      ],
+      "verify_commands": {
+        "design-review": "node orchestrator/process/research-gate.mjs audit",
+        "build": "pnpm -C frontend exec tsc --noEmit --pretty false"
+      },
+      "step_write_set": {
+        "design-review": []
+      },
+      "acceptance_note": "用户暂缓业务测试和全局reconcile，真实大数据切换待用户验证。"
+    },
+    "T-932": {
+      "task_id": "T-932",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "design-review",
+        "build",
+        "acceptance"
+      ],
+      "read_set": [
+        "backend/**",
+        "ai-worker/**",
+        "contract/**",
+        "frontend/src/**",
+        "docs/superpowers/specs/2026-09-08-nomifun-skill-execution.md",
+        "docs/research/2026-09-08-nomifun-skill-execution-comparison.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md"
+      ],
+      "write_set": [
+        "backend/**",
+        "ai-worker/**",
+        "contract/**",
+        "frontend/src/**",
+        "docs/verification/**"
+      ],
+      "verify_commands": {
+        "design-review": "node orchestrator/process/research-gate.mjs audit",
+        "build": "pnpm -C frontend typecheck",
+        "acceptance": "pnpm -C ai-worker build"
+      },
+      "step_write_set": {
+        "design-review": []
+      },
+      "acceptance_note": "用户授权逐项对照并落地；编译/无IO探针可执行，业务自动测试、付费模型与全局reconcile仍按既有授权暂缓，不据此宣称模型质量通过。"
+    },
+    "T-937": {
+      "task_id": "T-937",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "design-review",
+        "build"
+      ],
+      "read_set": [
+        "docs/features/t937-radar-project-queue.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "backend/**",
+        "ai-worker/**",
+        "contract/**",
+        "frontend/src/**"
+      ],
+      "write_set": [
+        "backend/**",
+        "ai-worker/**",
+        "contract/**",
+        "frontend/src/**",
+        "docs/features/t937-radar-project-queue.md"
+      ],
+      "verify_commands": {
+        "design-review": "node orchestrator/process/research-gate.mjs audit",
+        "build": [
+          "pnpm -C frontend exec tsc --noEmit",
+          "node orchestrator/process/boundary-scan.mjs"
+        ]
+      },
+      "step_write_set": {
+        "design-review": []
+      },
+      "data_source": "公开CLI实际任务与服务端队列",
+      "flows": "作品转写、选题、项目与文案候选"
+    },
+    "T-938": {
+      "task_id": "T-938",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "design-review",
+        "build"
+      ],
+      "read_set": [
+        "docs/features/t938-radar-cooldown.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "backend/**",
+        "ai-worker/**",
+        "contract/**",
+        "frontend/src/**"
+      ],
+      "write_set": [
+        "backend/**",
+        "ai-worker/**",
+        "contract/**",
+        "frontend/src/**",
+        "docs/features/t938-radar-cooldown.md"
+      ],
+      "verify_commands": {
+        "design-review": "node orchestrator/process/research-gate.mjs audit",
+        "build": [
+          "pnpm -C frontend exec tsc --noEmit",
+          "node orchestrator/process/boundary-scan.mjs"
+        ]
+      },
+      "step_write_set": {
+        "design-review": []
+      },
+      "data_source": "公开CLI实际任务与服务端队列",
+      "flows": "作品转写、选题、项目与文案候选"
+    },
+    "T-939": {
+      "task_id": "T-939",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "design-review",
+        "build"
+      ],
+      "read_set": [
+        "docs/features/t939-positioning-release.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "backend/**",
+        "ai-worker/**",
+        "contract/**",
+        "frontend/src/**"
+      ],
+      "write_set": [
+        "backend/**",
+        "ai-worker/**",
+        "contract/**",
+        "frontend/src/**",
+        "docs/features/t939-positioning-release.md",
+        ".github/workflows/desktop-release.yml",
+        "frontend/scripts/desktop/desktop-release-workflow.test.mjs",
+        "orchestrator/DECISION_LOG.md"
+      ],
+      "verify_commands": {
+        "design-review": "node orchestrator/process/research-gate.mjs audit",
+        "build": [
+          "pnpm -C frontend exec tsc --noEmit",
+          "node orchestrator/process/boundary-scan.mjs"
+        ]
+      },
+      "step_write_set": {
+        "design-review": []
+      },
+      "data_source": "公开CLI实际任务与服务端队列",
+      "flows": "作品转写、选题、项目与文案候选"
+    },
+    "T-941": {
+      "task_id": "T-941",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "design-review",
+        "build"
+      ],
+      "read_set": [
+        "docs/features/t941-navigation-latency.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "backend/**",
+        "ai-worker/**",
+        "contract/**",
+        "frontend/src/**"
+      ],
+      "write_set": [
+        "backend/**",
+        "ai-worker/**",
+        "contract/**",
+        "frontend/src/**",
+        "docs/features/t941-navigation-latency.md",
+        ".github/workflows/desktop-release.yml",
+        "frontend/scripts/desktop/desktop-release-workflow.test.mjs",
+        "orchestrator/DECISION_LOG.md"
+      ],
+      "verify_commands": {
+        "design-review": "node orchestrator/process/research-gate.mjs audit",
+        "build": [
+          "pnpm -C frontend exec tsc --noEmit",
+          "node orchestrator/process/boundary-scan.mjs"
+        ]
+      },
+      "step_write_set": {
+        "design-review": []
+      },
+      "data_source": "公开CLI实际任务与服务端队列",
+      "flows": "作品转写、选题、项目与文案候选"
+    },
+    "T-942": {
+      "task_id": "T-942",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "design-review",
+        "build"
+      ],
+      "read_set": [
+        "docs/features/t942-radar-recovery.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "backend/**",
+        "ai-worker/**",
+        "contract/**",
+        "frontend/src/**"
+      ],
+      "write_set": [
+        "backend/**",
+        "ai-worker/**",
+        "contract/**",
+        "frontend/src/**",
+        "docs/features/t942-radar-recovery.md",
+        ".github/workflows/desktop-release.yml",
+        "frontend/scripts/desktop/desktop-release-workflow.test.mjs",
+        "orchestrator/DECISION_LOG.md"
+      ],
+      "verify_commands": {
+        "design-review": "node orchestrator/process/research-gate.mjs audit",
+        "build": [
+          "pnpm -C frontend exec tsc --noEmit",
+          "node orchestrator/process/boundary-scan.mjs"
+        ]
+      },
+      "step_write_set": {
+        "design-review": []
+      },
+      "data_source": "公开CLI实际任务与服务端队列",
+      "flows": "作品转写、选题、项目与文案候选"
+    },
+    "T-944": {
+      "task_id": "T-944",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "review",
+        "test",
+        "build"
+      ],
+      "read_set": [
+        "docs/features/t944-director-prompts.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "contract/**",
+        "backend/**",
+        "ai-worker/**",
+        "frontend/src/features/intelligence/**",
+        "frontend/src/server/persistence-client.ts"
+      ],
+      "write_set": [
+        "docs/features/t944-director-prompts.md",
+        "contract/**",
+        "backend/**",
+        "ai-worker/**",
+        "frontend/src/features/intelligence/**",
+        "frontend/src/server/persistence-client.ts"
+      ],
+      "step_write_set": {
+        "review": [],
+        "test": [
+          "backend/src/modules/candidate/candidate.service.test.ts",
+          "backend/src/modules/intelligence/topic-preview-runner.test.ts"
+        ]
+      },
+      "verify_commands": {
+        "review": "node orchestrator/process/research-gate.mjs audit",
+        "build": [
+          "pnpm --dir ai-worker run typecheck",
+          "pnpm --dir backend exec tsc --noEmit",
+          "node orchestrator/process/boundary-scan.mjs"
+        ],
+        "test": "pnpm --dir backend exec vitest run src/modules/candidate/candidate.service.test.ts src/modules/intelligence/topic-preview-runner.test.ts"
+      }
+    },
+    "T-954": {
+      "task_id": "T-954",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "review",
+        "build"
+      ],
+      "read_set": [
+        "docs/features/t954-director-content-loop.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "contract/**",
+        "backend/**",
+        "ai-worker/**",
+        "frontend/src/**"
+      ],
+      "write_set": [
+        "docs/features/t954-director-content-loop.md",
+        "docs/research/t954-director/**",
+        "contract/**",
+        "backend/**",
+        "ai-worker/**",
+        "frontend/src/**"
+      ],
+      "step_write_set": {
+        "review": []
+      },
+      "verify_commands": {
+        "review": "node orchestrator/process/research-gate.mjs audit",
+        "build": [
+          "pnpm -C frontend exec tsc --noEmit --pretty false",
+          "pnpm -C ai-worker typecheck",
+          "node orchestrator/process/boundary-scan.mjs"
+        ]
+      }
+    },
+    "T-956": {
+      "task_id": "T-956",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "review",
+        "build"
+      ],
+      "read_set": [
+        "docs/features/t956-installed-collection-stuck.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "contract/**",
+        "backend/**",
+        "frontend/src/**"
+      ],
+      "write_set": [
+        "docs/features/t956-installed-collection-stuck.md",
+        "contract/**",
+        "backend/**",
+        "frontend/src/**"
+      ],
+      "step_write_set": {
+        "review": []
+      },
+      "verify_commands": {
+        "review": "node orchestrator/process/research-gate.mjs audit",
+        "build": [
+          "pnpm -C frontend exec tsc --noEmit --pretty false",
+          "pnpm -C ai-worker typecheck",
+          "node orchestrator/process/boundary-scan.mjs"
+        ]
+      }
+    },
+    "T-957": {
+      "task_id": "T-957",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "review",
+        "build"
+      ],
+      "read_set": [
+        "docs/features/t957-ai-real-acceptance.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "contract/**",
+        "backend/**",
+        "frontend/src/**",
+        "ai-worker/**"
+      ],
+      "write_set": [
+        "docs/features/t957-ai-real-acceptance.md",
+        "contract/**",
+        "backend/**",
+        "frontend/src/**",
+        "ai-worker/**"
+      ],
+      "step_write_set": {
+        "review": []
+      },
+      "verify_commands": {
+        "review": "node orchestrator/process/research-gate.mjs audit",
+        "build": [
+          "pnpm -C frontend exec tsc --noEmit --pretty false",
+          "pnpm -C ai-worker typecheck",
+          "node orchestrator/process/boundary-scan.mjs"
+        ]
+      }
+    },
+    "T-959": {
+      "task_id": "T-959",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "review",
+        "build"
+      ],
+      "read_set": [
+        "docs/features/t959-ai-blockers.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "contract/**",
+        "backend/**",
+        "frontend/src/**",
+        "ai-worker/**"
+      ],
+      "write_set": [
+        "docs/features/t959-ai-blockers.md",
+        "contract/**",
+        "backend/**",
+        "frontend/src/**",
+        "ai-worker/**"
+      ],
+      "step_write_set": {
+        "review": []
+      },
+      "verify_commands": {
+        "review": "node orchestrator/process/research-gate.mjs audit",
+        "build": [
+          "pnpm -C frontend exec tsc --noEmit --pretty false",
+          "pnpm -C ai-worker typecheck",
+          "node orchestrator/process/boundary-scan.mjs"
+        ]
+      }
+    },
+    "T-960": {
+      "task_id": "T-960",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "design"
+      ],
+      "read_set": [
+        "docs/features/t960-director-daily-report.md",
+        "docs/research/t960-daily-report/**"
+      ],
+      "write_set": [
+        "docs/features/t960-director-daily-report.md",
+        "docs/research/t960-daily-report/**"
+      ],
+      "verify_commands": {
+        "design": "node orchestrator/process/research-gate.mjs audit"
+      }
+    },
+    "T-962": {
+      "task_id": "T-962",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "research",
+        "implementation"
+      ],
+      "read_set": [
+        "docs/features/t962-operations-sync-redfox.md",
+        "backend/src/**",
+        "contract/src/**",
+        "frontend/src/**",
+        "ai-worker/src/**"
+      ],
+      "write_set": [
+        "docs/features/t962-operations-sync-redfox.md",
+        "docs/research/t962/**",
+        "docs/research/t960-daily-report/**",
+        "backend/src/**",
+        "backend/drizzle/**",
+        "contract/src/**",
+        "frontend/src/**",
+        "ai-worker/src/**",
+        "orchestrator/DECISION_LOG.md"
+      ],
+      "verify_commands": {
+        "research": "node orchestrator/process/research-gate.mjs audit",
+        "implementation": "node orchestrator/process/boundary-scan.mjs"
+      }
+    },
+    "T-964": {
+      "task_id": "T-964",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "read_set": [
+        "docs/features/t964-onboarding-daily-report.md",
+        "frontend/src/**",
+        "backend/src/**",
+        "contract/src/**"
+      ],
+      "write_set": [
+        "docs/features/t964-onboarding-daily-report.md",
+        "docs/research/t964/**",
+        "frontend/src/**",
+        "backend/src/**",
+        "backend/drizzle/**",
+        "contract/src/**",
+        "orchestrator/DECISION_LOG.md"
+      ],
+      "verify_commands": {
+        "implementation": "pnpm -C frontend exec vitest run src/features/onboarding/onboarding-card.test.tsx src/features/onboarding/onboarding-data.test.ts src/features/onboarding/onboarding-steps.test.ts"
+      }
+    },
+    "T-965": {
+      "task_id": "T-965",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "read_set": [
+        "docs/features/t965-daily-report-parity-performance.md",
+        "frontend/src/**",
+        "backend/src/**",
+        "contract/src/**"
+      ],
+      "write_set": [
+        "docs/features/t965-daily-report-parity-performance.md",
+        "docs/research/t965/**",
+        "frontend/src/**",
+        "backend/src/**",
+        "backend/drizzle/**",
+        "contract/src/**",
+        "orchestrator/DECISION_LOG.md"
+      ],
+      "verify_commands": {
+        "implementation": "pnpm -C frontend exec vitest run src/features/onboarding/onboarding-card.test.tsx src/features/onboarding/onboarding-data.test.ts src/features/onboarding/onboarding-steps.test.ts"
+      }
+    },
+    "T-966": {
+      "task_id": "T-966",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "read_set": [
+        "docs/features/t966-operations-period-recovery.md",
+        "frontend/src/**",
+        "backend/src/**",
+        "contract/src/**"
+      ],
+      "write_set": [
+        "docs/features/t966-operations-period-recovery.md",
+        "docs/research/t966/**",
+        "frontend/src/**",
+        "backend/src/**",
+        "backend/drizzle/**",
+        "contract/src/**",
+        "orchestrator/DECISION_LOG.md"
+      ],
+      "verify_commands": {
+        "implementation": "pnpm -C frontend exec vitest run src/features/daily-report src/components/shell/shell.test.tsx src/features/dashboard/dashboard-page.test.tsx"
+      }
+    },
+    "T-968": {
+      "task_id": "T-968",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "read_set": [
+        "docs/features/t968-report-export-schedule.md",
+        "frontend/src/features/daily-report/**",
+        "frontend/src/features/projects/**",
+        "frontend/src/components/ui/**",
+        "frontend/src-tauri/**"
+      ],
+      "write_set": [
+        "docs/features/t968-report-export-schedule.md",
+        "frontend/src/features/daily-report/**",
+        "frontend/src/features/projects/**",
+        "frontend/src/components/ui/**",
+        "frontend/package.json",
+        "pnpm-lock.yaml",
+        "frontend/src-tauri/**",
+        "frontend/src-tauri/capabilities/**",
+        "orchestrator/DECISION_LOG.md"
+      ],
+      "verify_commands": {
+        "implementation": "pnpm -C frontend exec vitest run src/features/daily-report src/features/projects/project-schedule-control.test.tsx src/components/ui/creator-date-picker-antd.test.tsx && pnpm -C frontend exec tsc --noEmit"
+      }
+    },
+    "T-967": {
+      "task_id": "T-967",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "read_set": [
+        "docs/features/t967-week-share-clarity.md",
+        "frontend/src/**",
+        "backend/src/**",
+        "contract/src/**"
+      ],
+      "write_set": [
+        "docs/features/t967-week-share-clarity.md",
+        "docs/research/t967/**",
+        "frontend/src/**",
+        "backend/src/**",
+        "backend/drizzle/**",
+        "contract/src/**",
+        "orchestrator/DECISION_LOG.md"
+      ],
+      "verify_commands": {
+        "implementation": "pnpm -C frontend exec vitest run src/features/daily-report src/components/shell/shell.test.tsx src/features/dashboard/dashboard-page.test.tsx"
+      }
+    },
+    "T-974": {
+      "task_id": "T-974",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "read_set": [
+        "docs/features/t974-windows-package-reliability.md",
+        "tools/windows-closure-rat/**",
+        "frontend/scripts/desktop/**",
+        ".github/workflows/desktop-release.yml"
+      ],
+      "write_set": [
+        "docs/features/t974-windows-package-reliability.md",
+        "tools/windows-closure-rat/**",
+        "frontend/scripts/desktop/runtime-inventory.mjs",
+        "frontend/scripts/desktop/desktop-release-workflow.test.mjs",
+        ".github/workflows/desktop-release.yml"
+      ],
+      "verify_commands": {
+        "implementation": "node --test tools/windows-closure-rat/*.test.mjs"
+      }
+    },
+    "T-994": {
+      "task_id": "T-994",
+      "archetype": [
+        "user-authored"
+      ],
+      "tasks": [
+        "review",
+        "implementation"
+      ],
+      "read_set": [
+        "docs/features/t994-canvas-creation-experience.md",
+        "docs/features/t993-creator-canvas.md",
+        "frontend/src/features/creative-canvas/**",
+        "frontend/src/features/draft-workbench/**",
+        "frontend/tests/e2e/creative-canvas.spec.ts"
+      ],
+      "write_set": [
+        "docs/features/t994-canvas-creation-experience.md",
+        "docs/verification/t994-canvas-experience.md",
+        "docs/verification/t994/**",
+        "orchestrator/T994-FRONTEND-JOURNEY.md",
+        "orchestrator/T994-FRONTEND-VALIDATION.md",
+        "frontend/src/features/creative-canvas/**",
+        "frontend/src/features/draft-workbench/creation-flow-ctas.tsx",
+        "frontend/src/features/draft-workbench/draft-workbench-page.tsx",
+        "frontend/tests/e2e/creative-canvas.spec.ts"
+      ],
+      "verify_commands": {
+        "review": "node orchestrator/process/research-gate.mjs audit",
+        "implementation": "pnpm --dir frontend exec tsc --noEmit --pretty false"
+      }
+    },
+    "T-1021": {
+      "task_id": "T-1021",
+      "archetype": [
+        "reference-config",
+        "user-authored",
+        "ai-generated"
+      ],
+      "tasks": [
+        "design",
+        "backend",
+        "frontend",
+        "frontend_home",
+        "verification"
+      ],
+      "read_set": [
+        "docs/features/t1021-cover-template-library.md",
+        "docs/features/t1021-cover-template-library/**",
+        "docs/features/t993-creator-canvas.md",
+        "docs/features/t994-canvas-creation-experience.md",
+        "contract/src/**",
+        "backend/src/modules/creative-canvas/**",
+        "backend/src/modules/assets/**",
+        "backend/src/modules/publishing/**",
+        "backend/src/modules/ai-runtime/**",
+        "backend/src/schema/**",
+        "frontend/src/features/creative-canvas/**",
+        "frontend/src/features/draft-workbench/**",
+        "frontend/src/features/publishing/**",
+        "frontend/src/server/persistence-client.ts"
+      ],
+      "write_set": [
+        "docs/features/t1021-cover-template-library.md",
+        "docs/features/t1021-cover-template-library/**",
+        "docs/features/t1021-cover-template-library.native-review-round-1.json",
+        "docs/verification/t1021-template-library.md",
+        "docs/verification/t1021/**",
+        "contract/src/resources/creative-canvas.ts",
+        "contract/src/resources/visual-templates.ts",
+        "contract/src/resources/publishing.ts",
+        "contract/src/operations/creative-canvas.ts",
+        "contract/src/operations/visual-templates.ts",
+        "contract/src/operations/publishing.ts",
+        "contract/src/endpoints.ts",
+        "contract/src/index.ts",
+        "backend/src/modules/assets/**",
+        "backend/src/modules/creative-canvas/**",
+        "backend/src/modules/publishing/**",
+        "backend/src/modules/ai-runtime/asset-generation-modes.ts",
+        "backend/src/schema/visual-templates.ts",
+        "backend/src/schema/publishing.ts",
+        "backend/drizzle/**",
+        "frontend/src/features/creative-canvas/**",
+        "frontend/src/features/draft-workbench/**",
+        "frontend/src/features/publishing/**",
+        "frontend/src/features/publishing-center/**",
+        "frontend/src/server/persistence-client.ts",
+        "frontend/public/visual-templates/**",
+        "orchestrator/DECISION_LOG.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "contract/src/cli-policy.ts",
+        "contract/tests/visual-template.test.ts",
+        "backend/src/db.ts",
+        "backend/src/index.ts",
+        "backend/src/application/transport.ts",
+        "frontend/src/app/(creator)/canvases/page.tsx",
+        "frontend/src/features/assets/asset-upload-button.tsx",
+        "frontend/tests/e2e/creative-canvas.spec.ts"
+      ],
+      "verify_commands": {
+        "design": [
+          "pnpm --dir contract exec vitest run tests/visual-template.test.ts",
+          "pnpm --dir contract typecheck"
+        ],
+        "backend": [
+          "pnpm --dir backend exec vitest run src/modules/creative-canvas/creative-canvas.service.test.ts src/modules/assets/visual-template.service.test.ts src/modules/publishing/visual-material-adoption.service.test.ts"
+        ],
+        "frontend": [
+          "pnpm --dir frontend exec vitest run src/features/creative-canvas"
+        ],
+        "verification": [
+          "node orchestrator/process/boundary-scan.mjs",
+          "node orchestrator/process/orphan-scan.mjs"
+        ],
+        "frontend_home": [
+          "pnpm --dir frontend exec vitest run src/features/creative-canvas/canvas-home-transfer.test.ts --retry=0",
+          "pnpm --dir frontend exec tsc --noEmit"
+        ]
+      },
+      "step_write_set": {
+        "design": [
+          "docs/features/t1021-cover-template-library.md",
+          "docs/features/t1021-cover-template-library/**",
+          "docs/features/t1021-cover-template-library.native-review-round-1.json",
+          "contract/src/resources/creative-canvas.ts",
+          "contract/src/resources/visual-templates.ts",
+          "contract/src/resources/publishing.ts",
+          "contract/src/operations/creative-canvas.ts",
+          "contract/src/operations/visual-templates.ts",
+          "contract/src/operations/publishing.ts",
+          "contract/src/endpoints.ts",
+          "contract/src/index.ts",
+          "contract/src/cli-policy.ts",
+          "contract/tests/visual-template.test.ts"
+        ],
+        "backend": [
+          "backend/src/db.ts",
+          "backend/src/schema/visual-templates.ts",
+          "backend/src/schema/publishing.ts",
+          "backend/drizzle/0102_visual_template_library.sql",
+          "backend/drizzle/meta/_journal.json",
+          "backend/src/modules/assets/visual-template.service.ts",
+          "backend/src/modules/assets/visual-template.service.test.ts",
+          "backend/src/modules/assets/visual-template.catalog.ts",
+          "backend/src/modules/assets/visual-template.transport.ts",
+          "backend/src/modules/assets/index.ts",
+          "backend/src/modules/assets/assets.transport.ts",
+          "backend/src/modules/creative-canvas/creative-canvas.service.ts",
+          "backend/src/modules/creative-canvas/creative-canvas.service.test.ts",
+          "backend/src/modules/creative-canvas/creative-canvas.transport.ts",
+          "backend/src/modules/publishing/visual-material-adoption.service.ts",
+          "backend/src/modules/publishing/visual-material-adoption.service.test.ts",
+          "backend/src/modules/publishing/publication-draft-adoption.service.ts",
+          "backend/src/modules/publishing/publishing.service.ts",
+          "backend/src/modules/publishing/publishing.transport.ts",
+          "backend/src/modules/publishing/index.ts",
+          "backend/src/modules/ai-runtime/asset-generation-modes.ts"
+        ],
+        "frontend": [
+          "frontend/src/features/creative-canvas/**",
+          "frontend/src/features/draft-workbench/**",
+          "frontend/src/features/publishing/**",
+          "frontend/src/features/publishing-center/**",
+          "frontend/src/server/persistence-client.ts",
+          "frontend/public/visual-templates/**",
+          "contract/src/operations/publishing.ts",
+          "backend/src/modules/publishing/publishing.service.ts",
+          "backend/src/modules/publishing/publishing.transport.ts",
+          "backend/src/modules/publishing/visual-material-adoption.service.test.ts",
+          "backend/src/modules/creative-canvas/creative-canvas.service.ts",
+          "backend/src/modules/creative-canvas/creative-canvas.service.test.ts",
+          "backend/src/modules/assets/visual-template.service.ts",
+          "backend/src/modules/assets/visual-template.service.test.ts"
+        ],
+        "verification": [
+          "docs/verification/t1021-template-library.md",
+          "docs/verification/t1021/**"
+        ],
+        "frontend_home": [
+          "frontend/src/features/creative-canvas/**",
+          "frontend/src/app/(creator)/canvases/page.tsx",
+          "frontend/src/features/assets/asset-upload-button.tsx",
+          "frontend/tests/e2e/creative-canvas.spec.ts"
+        ]
+      },
+      "step_read_set": {
+        "backend": [
+          "docs/features/t1021-cover-template-library.md",
+          "docs/features/t1021-cover-template-library/templates.json",
+          "contract/src/**",
+          "backend/src/**",
+          "backend/drizzle/**"
+        ],
+        "frontend": [
+          "docs/features/t1021-cover-template-library.md",
+          "contract/src/**",
+          "frontend/src/**",
+          "docs/features/t1021-cover-template-library/assets/**"
+        ],
+        "frontend_home": [
+          "docs/features/t1021-cover-template-library.md",
+          "frontend/src/**",
+          "contract/src/**"
+        ]
+      }
+    },
+    "T-1025": {
+      "task_id": "T-1025",
+      "archetype": [
+        "reference-config",
+        "user-authored",
+        "externally-ingested",
+        "ai-generated"
+      ],
+      "tasks": [
+        "content",
+        "verification"
+      ],
+      "read_set": [
+        "docs/features/t1025-template-content-expansion.md",
+        "docs/features/t1021-cover-template-library.md",
+        "backend/src/modules/assets/**",
+        "frontend/src/features/creative-canvas/**",
+        "contract/src/resources/visual-templates.ts",
+        "frontend/tests/e2e/creative-canvas.spec.ts"
+      ],
+      "write_set": [
+        "docs/features/t1025-template-content-expansion.md",
+        "docs/features/t1025-template-content/**",
+        "docs/verification/t1025/**",
+        "backend/src/modules/assets/visual-template.catalog.ts",
+        "backend/src/modules/assets/visual-template.expansion.ts",
+        "backend/src/modules/assets/visual-template.catalog.test.ts",
+        "frontend/src/features/creative-canvas/canvas-template-library.tsx",
+        "frontend/src/features/creative-canvas/canvas-template-library.test.tsx",
+        "frontend/public/visual-templates/**",
+        "THIRD_PARTY_NOTICES.md",
+        "frontend/src/features/creative-canvas/infinite-canvas-node.tsx",
+        "frontend/src/features/creative-canvas/private-style-preview.test.tsx"
+      ],
+      "step_write_set": {
+        "content": [
+          "docs/features/t1025-template-content-expansion.md",
+          "docs/features/t1025-template-content/**",
+          "docs/verification/t1025/**",
+          "backend/src/modules/assets/visual-template.catalog.ts",
+          "backend/src/modules/assets/visual-template.expansion.ts",
+          "backend/src/modules/assets/visual-template.catalog.test.ts",
+          "frontend/src/features/creative-canvas/canvas-template-library.tsx",
+          "frontend/src/features/creative-canvas/canvas-template-library.test.tsx",
+          "frontend/public/visual-templates/**",
+          "THIRD_PARTY_NOTICES.md",
+          "frontend/src/features/creative-canvas/infinite-canvas-node.tsx",
+          "frontend/src/features/creative-canvas/private-style-preview.test.tsx"
+        ],
+        "verification": [
+          "docs/verification/t1025/**"
+        ]
+      },
+      "verify_commands": {
+        "content": "git diff --check",
+        "verification": "git diff --check"
+      }
+    }
+  }
+}

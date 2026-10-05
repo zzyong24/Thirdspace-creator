@@ -51,3 +51,6 @@ export {
   type PublicationResource,
   type PublicationRevisionResource,
 } from "./publishing.schema";
+
+export {createVisualMaterialAdoptionService,type VisualMaterialAdoptionService,type VisualMaterialAdoptionDeps,type CanvasVisualMaterialPort} from "./visual-material-adoption.service";
+export type {AdoptPublicationDraftInput,AdoptVisualRevisionInput} from "./publication-draft-adoption.service";

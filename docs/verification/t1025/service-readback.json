@@ -1,0 +1,36 @@
+{
+  "account": "当前隔离预览账号",
+  "publicTemplates": 32,
+  "cover": 17,
+  "xhs": 15,
+  "publicUniquePng": 26,
+  "privateNewTemplates": 3,
+  "privateChecks": [
+    {
+      "sample": "person-knowledge",
+      "ownedAsset": true,
+      "frozenFile": true,
+      "identityOriginal": true,
+      "styleBytesVerified": true,
+      "bytes": 1838208
+    },
+    {
+      "sample": "person-method",
+      "ownedAsset": true,
+      "frozenFile": true,
+      "identityOriginal": true,
+      "styleBytesVerified": true,
+      "bytes": 1690406
+    },
+    {
+      "sample": "person-question",
+      "ownedAsset": true,
+      "frozenFile": true,
+      "identityOriginal": true,
+      "styleBytesVerified": true,
+      "bytes": 1770993
+    }
+  ],
+  "browserCheck": "未执行：浏览器工具拒绝旧错误页动作，不绕过限制",
+  "installedVersionCheck": "未执行"
+}

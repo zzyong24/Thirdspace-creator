@@ -1,4 +1,4 @@
-import { iso8601, type Endpoint, type RequestContext, type Transport } from "@creatoros/contract";
+import { ENDPOINTS,iso8601, type Endpoint, type RequestContext, type Transport } from "@creatoros/contract";
 import {
   AuthenticationError,
   UnsupportedOperationError,
@@ -25,6 +25,7 @@ import type {
 // PERSISTED_OPS from PUBLISHING_OP_IDS (adding the module = registering it).
 
 export const PUBLISHING_OP_IDS = [
+  "publications.visualNotes.export",
   "outputs.publications.list",
   "outputs.publications.create",
   "outputs.publications.register",
@@ -34,7 +35,7 @@ export const PUBLISHING_OP_IDS = [
   "publications.transition",
 ] as const;
 
-function toPublicationResource(row: PublicationRow): PublicationResource {
+export function toPublicationResource(row: PublicationRow): PublicationResource {
   // [B-02] currentRevisionId 在 contract 里是非空 id(z.string().min(1))。所有写路径
   //   (createPublication auto-mint / register 补铸 / createImportedPublication 原子建
   //   revision-1)都保证它是真实 id;存量 null 由迁移 0040 回填。真为 null = 数据不变量被
@@ -68,7 +69,7 @@ function toPublicationResource(row: PublicationRow): PublicationResource {
   };
 }
 
-function toRevisionResource(
+export function toRevisionResource(
   row: PublicationRevisionRow,
 ): PublicationRevisionResource {
   return {
@@ -142,6 +143,10 @@ export function createPublishingTransport(
       };
 
       switch (endpoint.id) {
+        case "publications.visualNotes.export": {
+          const parsed=ENDPOINTS.exportPublicationVisualNote.body!.parse(body);
+          return {data:await service.exportVisualNote(ctx,p.publicationId??"",parsed.revisionId,parsed.pageIndex),meta:{requestId}};
+        }
         case "outputs.publications.list": {
           const page = paginationFrom(query);
           const rows = await service.listPublications(ctx, p.outputId ?? "", page);

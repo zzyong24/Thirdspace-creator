@@ -47,6 +47,7 @@ export const REGISTERED_SKILL_TASK_TYPES = [
   "calibration.diagnose",
   "calibration.score",
   "chatbox.calibration",
+  "chatbox.canvas",
   "chatbox.distill",
   "chatbox.positioning",
   "chatbox.review",
@@ -159,6 +160,7 @@ const VIDEO_KIND_TO_SKILL: Readonly<Record<string, string>> = {
 export const CHAT_METHOD_SKILL_IDS = ["method.research", "method.positioning", "method.topic", "method.planning", "method.writing", "method.visual", "method.publishing", "method.review", "method.knowledge", "method.guide", "method.redfox.topic-research", "method.redfox.benchmark", "method.operations.review"] as const;
 const CHAT_SURFACE_TO_SKILL: Readonly<Record<string, string>> = {
   calibration: "chatbox.calibration",
+  canvas: "chatbox.canvas",
   distill: "chatbox.distill",
   "knowledge-distill": "chatbox.distill",
   positioning: "chatbox.positioning",

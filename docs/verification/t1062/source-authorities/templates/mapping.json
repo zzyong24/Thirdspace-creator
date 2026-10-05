@@ -1,0 +1,9 @@
+{
+  "source_head": "55a526d609633e2b014e2a70f319125dec8c0fea",
+  "reason": "不同分支控制面和review/event链不能整份覆盖；原文保留为来源证据，不冒充当前任务完成",
+  "source_to_active_task": {
+    "templates:T-1021": "T-1021（已有同一模板需求，来源补充由T-1062验证）",
+    "templates:T-1025": "T-1062（样图库增补验收，来源ID保留）",
+    "templates:T-993": "T-1062（创作画布，保留来源SPEC）"
+  }
+}

@@ -109,7 +109,7 @@ export const BUSINESS_METHOD_BINDINGS: Readonly<Record<string, Method>> = {
  'asset.classify':'knowledge', 'material.extract':'knowledge', 'creatoros.guide':'guide',
 };
 export const CONVERSATIONAL_METHOD_SKILLS = new Set([
- 'copilot.assist','chatbox.topic','chatbox.calibration','chatbox.positioning','chatbox.review','chatbox.distill',
+ 'copilot.assist','chatbox.topic','chatbox.canvas','chatbox.calibration','chatbox.positioning','chatbox.review','chatbox.distill',
 ]);
 export function withBusinessMethod(template: PromptTemplate): PromptTemplate {
  const method = BUSINESS_METHOD_BINDINGS[template.id];

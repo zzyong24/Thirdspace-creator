@@ -1,0 +1,6 @@
+{
+  "schema":"spec-review-round/v2",
+  "review_kind":"recheck",
+  "summary":"针对原生宿主round1后的两处必要可用性补充独立bounded复核：真人提示词/风格收藏允许未绑定身份配方，提供身份仍校验唯一、归属与文件版本，生成时仍严格要求真实本人照片；同一visualNotes.export可选pageIndex读取指定不可变Revision的冻结单页，完整导出缺页不阻断其余页独立下载，禁止以当前文件替代；已有发布物料查看不受口播脚本保存门限制。未发现新增SPEC阻断或major，原初评无finding。本结论仅为合同复核，不计真实供应商、桌面安装或生产Gate通过。",
+  "findings":[]
+}

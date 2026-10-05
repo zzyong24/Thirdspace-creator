@@ -1,4 +1,5 @@
 import "server-only";
+import {publicationVisualNoteSchema,type PublicationVisualNote} from "@creatoros/contract";
 
 import { client as defaultClient } from "@/lib/contract-client.server";
 import {
@@ -61,9 +62,11 @@ interface PublicationDto {
   readonly status: string;
   readonly currentRevisionId: string;
   readonly publishedAt: string | null;
+  readonly updatedAt?: string;
 }
 
 interface RevisionDto {
+  readonly platformSettings?: Record<string,unknown>;
   readonly id: string;
   readonly title: string;
   readonly description?: string;
@@ -251,6 +254,8 @@ export interface DraftWorkbenchVm {
   /** 发布包:null = 还没有发布行(锁定态用引导文案)。 */
   readonly publishPack: {
     readonly publicationId: string;
+    readonly revisionId?: string;
+    readonly visualNote?: PublicationVisualNote | null;
     readonly platform: string;
     readonly status: string;
     readonly publishedAt: string | null;
@@ -353,7 +358,7 @@ async function readPublishPack(
           });
           const revs = (Array.isArray(revsRaw) ? revsRaw : []) as RevisionDto[];
           revision =
-            revs.find((r) => r.id === pub.currentRevisionId) ?? revs[0] ?? null;
+            revs.find((r) => r.id === pub.currentRevisionId) ?? null;
         } catch {
           revision = null;
         }
@@ -364,22 +369,25 @@ async function readPublishPack(
     // 前者常只有标题，后者才有简介与标签；查看发布物料应优先选真实含内容的 revision，
     // 而发布状态仍由同 output 下的 published 行独立回显。
     const selected =
-      packages.find(({ revision }) => {
+      [...packages].sort((a,b)=>(b.pub.updatedAt??"").localeCompare(a.pub.updatedAt??"")).find(({ revision }) => {
         const description = revision?.description?.trim() ?? "";
         const tags = revision?.platformTags ?? [];
-        return description.length > 0 || tags.length > 0;
+        return description.length > 0 || tags.length > 0 || Boolean(revision?.coverAssetId);
       }) ?? packages[0]!;
     const { pub, revision } = selected;
+    const visualNote = publicationVisualNoteSchema.safeParse(revision?.platformSettings?.visualNote).data ?? null;
     const published = pubs.find((candidate) => candidate.status === "published");
     return {
       outputId,
       publishPack: {
         publicationId: pub.id,
+        revisionId: revision?.id,
+        visualNote,
         platform: pub.platform,
         status: pub.status,
         publishedAt: pub.publishedAt,
         title: revision?.title?.trim() || "",
-        description: revision?.description?.replace(/\s+/gu, " ").trim() || "",
+        description: (visualNote ? revision?.description?.trim() : revision?.description?.replace(/\s+/gu, " ").trim()) || "",
         tags: revision?.platformTags ?? [],
         hasCover: Boolean(revision?.coverAssetId),
         coverAssetId: revision?.coverAssetId ?? null,

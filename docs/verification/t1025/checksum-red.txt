@@ -1,0 +1,70 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/cover-template-library/Thirdspace-creator/frontend
+
+(node:87580) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ src/features/creative-canvas/private-style-preview.test.tsx (3 tests | 2 failed) 3178ms
+   × 签名URL指向新版本时不显示为冻结的私人样图 3060ms (retry x2)
+   × 只有摘要匹配的字节可显示，卸载释放本地预览 111ms (retry x2)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/features/creative-canvas/private-style-preview.test.tsx > 签名URL指向新版本时不显示为冻结的私人样图
+ FAIL  src/features/creative-canvas/private-style-preview.test.tsx > 签名URL指向新版本时不显示为冻结的私人样图
+ FAIL  src/features/creative-canvas/private-style-preview.test.tsx > 签名URL指向新版本时不显示为冻结的私人样图
+AssertionError: expected "vi.fn()" to be called at least once
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"flex h-full min-h-0 w-full flex-col"[39m
+      [36m>[39m
+        [36m<img[39m
+          [33malt[39m=[32m"画布图片素材"[39m
+          [33mclass[39m=[32m"min-h-0 w-full flex-1 object-contain"[39m
+          [33msrc[39m=[32m"/signed-owned-style.png"[39m
+        [36m/>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</body>[39m
+[36m</html>[39m
+ ❯ src/features/creative-canvas/private-style-preview.test.tsx:19:36
+     17| it("签名URL指向新版本时不显示为冻结的私人样图",async()=>{
+     18|  render(<MediaPreview assetId="sample" type="image" expectedChecksum={…
+     19|  await waitFor(()=>expect(fetcher).toHaveBeenCalled());
+       |                                    ^
+     20|  await waitFor(()=>expect(api.getDownloadUrl).toHaveBeenCalledOnce());
+     21|  expect(screen.queryByRole("img")).not.toBeInTheDocument();expect(crea…
+ ❯ runWithExpensiveErrorDiagnosticsDisabled ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:47:12
+ ❯ checkCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:124:77
+ ❯ Timeout.checkRealTimersCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:118:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+ FAIL  src/features/creative-canvas/private-style-preview.test.tsx > 只有摘要匹配的字节可显示，卸载释放本地预览
+ FAIL  src/features/creative-canvas/private-style-preview.test.tsx > 只有摘要匹配的字节可显示，卸载释放本地预览
+ FAIL  src/features/creative-canvas/private-style-preview.test.tsx > 只有摘要匹配的字节可显示，卸载释放本地预览
+Error: expect(element).toHaveAttribute("src", "blob:verified-style") // element.getAttribute("src") === "blob:verified-style"
+
+Expected the element to have attribute:
+  src="blob:verified-style"
+Received:
+  src="/signed-owned-style.png"
+ ❯ src/features/creative-canvas/private-style-preview.test.tsx:25:41
+     23| it("只有摘要匹配的字节可显示，卸载释放本地预览",async()=>{
+     24|  const view=render(<MediaPreview assetId="sample" type="image" expecte…
+     25|  expect(await screen.findByRole("img")).toHaveAttribute("src","blob:ve…
+       |                                         ^
+     26|  view.unmount();expect(revokeUrl).toHaveBeenCalledWith("blob:verified-…
+     27| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 1 passed (3)
+   Start at  22:26:11
+   Duration  4.51s (transform 81ms, setup 229ms, import 78ms, tests 3.18s, environment 738ms)

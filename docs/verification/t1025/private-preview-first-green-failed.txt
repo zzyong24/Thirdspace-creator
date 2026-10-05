@@ -1,0 +1,296 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/cover-template-library/Thirdspace-creator/frontend
+
+(node:65896) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:65895) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ src/features/creative-canvas/canvas-template-library.test.tsx (7 tests | 1 failed) 1642ms
+   × 私人风格以样图预览，更新收藏保留样图并继续使用本人原始身份图 1009ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/features/creative-canvas/canvas-template-library.test.tsx > 私人风格以样图预览，更新收藏保留样图并继续使用本人原始身份图
+AssertionError: expected "vi.fn()" to be called with arguments: [ ObjectContaining{…} ]
+
+Number of calls: 0
+
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div>[39m
+      [36m<aside[39m
+        [33maria-label[39m=[32m"案例与收藏"[39m
+        [33mclass[39m=[32m"[@media(max-height:600px)]:fixed [@media(max-height:600px)]:top-3 [@media(max-height:600px)]:bottom-3 [@media(max-height:600px)]:left-auto [@media(max-height:600px)]:right-3 [@media(max-height:600px)]:z-40 [@media(max-height:600px)]:w-[min(26rem,calc(100vw-1.5rem))] absolute bottom-16 left-4 top-16 z-20 flex w-[min(26rem,calc(100%-2rem))] flex-col overflow-hidden rounded-2xl border bg-background shadow-xl"[39m
+        [33mdata-canvas-control[39m=[32m"true"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"border-b p-4"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex items-start justify-between gap-3"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"min-w-0"[39m
+            [36m>[39m
+              [36m<h2[39m
+                [33mclass[39m=[32m"flex items-center gap-2 text-base font-semibold"[39m
+              [36m>[39m
+                [36m<svg[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mclass[39m=[32m"lucide lucide-book-open size-4 text-primary"[39m
+                  [33mfill[39m=[32m"none"[39m
+                  [33mheight[39m=[32m"24"[39m
+                  [33mstroke[39m=[32m"currentColor"[39m
+                  [33mstroke-linecap[39m=[32m"round"[39m
+                  [33mstroke-linejoin[39m=[32m"round"[39m
+                  [33mstroke-width[39m=[32m"2"[39m
+                  [33mviewBox[39m=[32m"0 0 24 24"[39m
+                  [33mwidth[39m=[32m"24"[39m
+                  [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+                [36m>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M12 7v14"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"[39m
+                  [36m/>[39m
+                [36m</svg>[39m
+                [0m案例与收藏[0m
+              [36m</h2>[39m
+              [36m<p[39m
+                [33mclass[39m=[32m"mt-1 text-xs text-muted-foreground"[39m
+              [36m>[39m
+                [0m挑选风格，放到当前画布继续制作。[0m
+              [36m</p>[39m
+            [36m</div>[39m
+            [36m<button[39m
+              [33maria-label[39m=[32m"关闭案例库"[39m
+              [33mclass[39m=[32m"rounded-lg p-1.5 hover:bg-muted"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-x size-4"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"24"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"24"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M18 6 6 18"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"m6 6 12 12"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+            [36m</button>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33maria-label[39m=[32m"模板库"[39m
+            [33mclass[39m=[32m"mt-4 grid grid-cols-2 gap-1 rounded-xl bg-muted p-1"[39m
+            [33mrole[39m=[32m"group"[39m
+          [36m>[39m
+            [36m<button[39m
+              [33maria-pressed[39m=[32m"true"[39m
+              [33mclass[39m=[32m"rounded-lg px-2 py-2 text-sm font-medium bg-background text-primary shadow-sm"[39m
+            [36m>[39m
+              [0m封面制作[0m
+            [36m</button>[39m
+            [36m<button[39m
+              [33maria-pressed[39m=[32m"false"[39m
+              [33mclass[39m=[32m"rounded-lg px-2 py-2 text-sm font-medium text-muted-foreground"[39m
+            [36m>[39m
+              [0m小红书图文[0m
+            [36m</button>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"mt-3 flex gap-3 text-xs"[39m
+          [36m>[39m
+            [36m<button[39m
+              [33maria-pressed[39m=[32m"true"[39m
+              [33mclass[39m=[32m"font-semibold text-primary"[39m
+            [36m>[39m
+              [0m精选模板[0m
+            [36m</button>[39m
+            [36m<button[39m
+              [33maria-pressed[39m=[32m"false"[39m
+              [33mclass[39m=[32m"inline-flex items-center gap-1 text-muted-foreground"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-heart size-3"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"24"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"24"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+              [0m我的收藏[0m
+            [36m</button>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"mt-3 grid grid-cols-2 gap-2"[39m
+          [36m>[39m
+            [36m<select[39m
+              [33maria-label[39m=[32m"按行业筛选模板"[39m
+              [33mclass[39m=[32m"h-9 min-w-0 rounded-lg border bg-background px-2 text-xs"[39m
+            [36m>[39m
+              [36m<option[39m
+                [33mvalue[39m=[32m""[39m
+              [36m>[39m
+                [0m全部行业[0m
+              [36m</option>[39m
+              [36m<option>[39m
+                [0m通用[0m
+              [36m</option>[39m
+              [36m<option>[39m
+                [0m教育学习[0m
+              [36m</option>[39m
+              [36m<option>[39m
+                [0m科技数码[0m
+              [36m</option>[39m
+              [36m<option>[39m
+                [0m美妆护肤[0m
+              [36m</option>[39m
+              [36m<option>[39m
+                [0m时尚穿搭[0m
+              [36m</option>[39m
+              [36m<option>[39m
+                [0m餐饮美食[0m
+              [36m</option>[39m
+              [36m<option>[39m
+                [0m旅行户外[0m
+              [36m</option>[39m
+              [36m<option>[39m
+                [0m家居装修[0m
+              [36m</option>[39m
+              [36m<option>[39m
+                [0m运动健康[0m
+              [36m</option>[39m
+              [36m<option>[39m
+                [0m母婴亲子[0m
+              [36m</option>[39m
+              [36m<option>[39m
+                [0m职场成长[0m
+              [36m</option>[39m
+              [36m<option>[39m
+                [0m商业服务[0m
+              [36m</option>[39m
+              [36m<option>[39m
+                [0m宠物生活[0m
+              [36m</option>[39m
+            [36m</select>[39m
+            [36m<select[39m
+              [33maria-label[39m=[32m"按视觉方式筛选"[39m
+              [33mclass[39m=[32m"h-9 min-w-0 rounded-lg border bg-background px-2 text-xs"[39m
+            [36m>[39m
+              [36m<option[39m
+                [33mvalue[39m=[32m""[39m
+              [36m>[39m
+                [0m全部视觉方式[0m
+              [36m</option>[39m
+              [36m<option[39m
+                [33mvalue[39m=[32m"real_person"[39m
+              [36m>[39m
+                [0m真人出镜[0m
+              [36m</option>[39m
+              [36m<option[39m
+                [33mvalue[39m=[32m"photo_product"[39m
+              [36m>[39m
+                [0m实拍产品[0m
+              [36m</option>[39m
+              [36m<option[39m
+                [33mvalue[39m=[32m"graphic"[39m
+              [36m>[39m
+                [0m文字与图解[0m
+              [36m</option>[39m
+              [36m<option[39m
+                [33mvalue[39m=[32m"ai_concept"[39m
+              [36m>[39m
+                [0mAI创意[0m
+              [36m</option>[39m
+            [36m</select>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"min-h-0 flex-1 overflow-y-auto p-4"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"grid grid-cols-2 gap-3"[39m
+          [36m>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"group overflow-hidden rounded-xl border bg-card text-left transition hover:border-primary/60 hover:shadow-sm focus-visible:outline-2 focus-visible:outline-primary"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"flex h-40 items-center justify-center overflow-hidden bg-muted/40 "[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"h-full w-full overflow-hidden"[39m
+                [36m>[39m
+                  [36m<span[39m
+                    [33mclass[39m=[32m"text-xs text-muted-foreground"[39m
+                  [36m>[39m
+                    [0m私人风格样图[0m
+                  [36m</span>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"p-2.5"[39m
+              [36m>[39m
+                [36m<strong[39m
+                  [33mclass[39m=[32m"block truncate text-xs"[39m
+                [36m>[39m
+                  [0m杂志封面[0m
+                [36m</strong>[39m
+                [36m<p[39m
+                  [33mclass[39m=[32m"mt-1 line-clamp-2 text-[11px] leading-4 text-muted-foreground"[39m
+                [36m>[39m
+                  [0m通用[0m
+                [36m</p>[39m
+                [36m<span[39m
+                  [33mclass[39m=[32m"mt-2 inline-block rounded bg-primary/10 px-1.5 py-0.5 text-[10px] text-primary"[39m
+                [36m>[39m
+                  [0m真人出镜[0m
+                [36m</span>[39m
+              [36m</div>[39m
+            [36m</button>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"border-t px-4 py-2 text-[11px] text-muted-foreground"[39m
+        [36m>[39m
+          [0m私人收藏归当前创作账号 · 跨项目复用[0m
+        [36m</div>[39m
+      [36m</aside>[39m
+    [36m</div>[39m
+  [36m</body>[39m
+[36m</html>[39m
+ ❯ src/features/creative-canvas/canvas-template-library.test.tsx:28:47
+
+ ❯ runWithExpensiveErrorDiagnosticsDisabled ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:47:12
+ ❯ checkCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:124:77
+ ❯ Timeout.checkRealTimersCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:118:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  1 failed | 10 passed (11)
+   Start at  21:44:47
+   Duration  5.82s (transform 1.91s, setup 528ms, import 2.88s, tests 1.66s, environment 1.73s)

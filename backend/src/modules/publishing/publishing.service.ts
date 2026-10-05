@@ -1,14 +1,12 @@
 import {accountGroups} from "../../schema/account-groups";
-import {publications} from "../../schema/publishing";
-import {workspaceKey,factFilter} from "../../workspace-scope";
+import {publications,publicationRevisions} from "../../schema/publishing";
+import {workspaceKey,factFilter,workspaceFilter,requireWorkspace,assertWritableWorkspace} from "../../workspace-scope";
 import {projects,contentOutputs} from "../../schema/projects";
 import {and,eq,inArray} from "drizzle-orm";
-import {workspaceFilter} from "../../workspace-scope";
 import type {MembershipTransaction,FrozenWorkspace} from "../platform-account/membership-lock.service";
-import {requireWorkspace,assertWritableWorkspace} from "../../workspace-scope";
-import { adoptPublicationDraft,type AdoptPublicationDraftInput } from "./publication-draft-adoption.service";
-import type { RequestContext } from "@creatoros/contract";
-import type { Db } from "@creatoros/backend";
+import {adoptPublicationDraft,adoptPublicationVisualRevision,type AdoptVisualRevisionInput,type AdoptPublicationDraftInput} from "./publication-draft-adoption.service";
+import {publicationVisualNoteSchema,type RequestContext} from "@creatoros/contract";
+import type {Db} from "@creatoros/backend";
 import {
   createPublishingRepository,
   type PublishingRepository,
@@ -87,6 +85,7 @@ export interface ServiceDeps {
   assertTargetAccount?(ctx:RequestContext,target:{accountId:string;platform:string}):Promise<unknown>;
   retainUnassignedDraft?(ctx:RequestContext,input:AdoptPublicationDraftInput):Promise<unknown>;
   db: Db;
+  getFrozenImageDownload?: (ctx:RequestContext,assetId:string,fileId:string,checksum:string)=>Promise<{url:string;fileName:string}>;
   now: () => string;
   nextId: (prefix: string) => string;
   publisher?: PlatformPublisherPort;
@@ -145,6 +144,10 @@ export interface PublishingService {
   resolveCollectedPublicationById(ctx:RequestContext,id:string):Promise<PublicationRow|null>;
   resolveCollectedPublication(ctx:RequestContext,ref:{platform:string;externalId:string}):Promise<PublicationRow|null>;
   listCollectedExternalIds(ctx:RequestContext,platform:string):Promise<string[]>;
+  adoptVisualRevision(ctx:RequestContext,input:AdoptVisualRevisionInput):Promise<{publication:PublicationRow;revision:PublicationRevisionRow}>;
+  readRevision(ctx:RequestContext,publicationId:string,revisionId:string):Promise<PublicationRevisionRow>;
+  getVisualAdoptionRevision(ctx:RequestContext,publicationId:string,adoptionKey:string):Promise<PublicationRevisionRow>;
+  exportVisualNote(ctx:RequestContext,publicationId:string,revisionId:string,pageIndex?:number):Promise<{caption:string;files:Array<{assetId:string;url:string;fileName:string}>}>;
   listPublications(
     ctx: RequestContext,
     outputId: string,
@@ -367,7 +370,7 @@ export function createPublishingService(deps: ServiceDeps): PublishingService {
     if(rows.length!==ids.length)throw new OwnershipError("内容产物已归组或不可写，请重新选择工作区");
   }
 
-  async function withPublicationWrite<T>(ctx:RequestContext,publicationId:string,body:(repo:PublishingRepository)=>Promise<T>,existingTx?:MembershipTransaction):Promise<T>{
+  async function withPublicationWrite<T>(ctx:RequestContext,publicationId:string,body:(repo:PublishingRepository,tx:MembershipTransaction)=>Promise<T>,existingTx?:MembershipTransaction):Promise<T>{
     const execute=async(tx:MembershipTransaction)=>{
       const allowArchived=ctx.source==="ingestion";
       await assertWritableWorkspace(tx as unknown as Db,ctx,{allowArchived});
@@ -382,9 +385,20 @@ export function createPublishingService(deps: ServiceDeps): PublishingService {
         const historical=ctx.source==="ingestion"?await tx.select({id:publications.id}).from(publications).where(and(eq(publications.userId,ctx.userId),factFilter(publications,ctx),eq(publications.id,publicationId))).for("update"):[];
         if(historical.length!==1)throw new OwnershipError("发布内容已归组或不可写，请重新选择工作区");
       }
-      return body(repoFor(ctx,tx as unknown as Db));
+      return body(repoFor(ctx,tx as unknown as Db),tx);
     };
     return existingTx?execute(existingTx):deps.db.transaction(execute);
+  }
+
+  // 视觉版本沿发布事实的组/账号读权限；归档保留只读，当前成员仍须锁内重验。
+  async function withPublicationRead<T>(ctx:RequestContext,publicationId:string,body:(publication:PublicationRow,db:Db)=>Promise<T>):Promise<T>{
+    const publication=await repoFor(ctx).getPublication(publicationId);
+    if(ctx.accountId)return withTarget(ctx,publication.platform,async(repo,tx)=>body(await repo.getPublication(publicationId),(tx??deps.db) as Db),true);
+    if(!deps.membership)throw new OwnershipError("账号组读取校验不可用");
+    return deps.db.transaction(async tx=>{
+      const frozen=await deps.membership!.lock(tx,ctx,{allowArchived:true});
+      return body(await repoFor(ctx,tx as unknown as Db,frozen).getPublication(publicationId),tx as unknown as Db);
+    });
   }
 
   // [T-321/T-323] best-effort 跃迁 output 属主项目到已发布态。未注入端口或任何失败都吞掉
@@ -859,6 +873,57 @@ export function createPublishingService(deps: ServiceDeps): PublishingService {
       );
     },
 
+    async readRevision(ctx,publicationId,revisionId){
+      return withPublicationRead(ctx,publicationId,async(_publication,db)=>{
+        const [row]=await db.select().from(publicationRevisions).where(and(eq(publicationRevisions.id,revisionId),eq(publicationRevisions.publicationId,publicationId),eq(publicationRevisions.userId,ctx.userId)));
+        if(!row)throw new OwnershipError("发布物料版本不存在");return row;
+      });
+    },
+    async getVisualAdoptionRevision(ctx,publicationId,adoptionKey){
+      return withPublicationRead(ctx,publicationId,async(_publication,db)=>{
+        const [row]=await db.select().from(publicationRevisions).where(and(eq(publicationRevisions.visualAdoptionKey,adoptionKey),eq(publicationRevisions.publicationId,publicationId),eq(publicationRevisions.userId,ctx.userId)));
+        if(!row)throw new OwnershipError("发布物料采纳版本不存在");return row;
+      });
+    },
+    async adoptVisualRevision(ctx,input){
+      if(!PLATFORMS.has(input.platform))throw new ValidationError("发布平台无效");
+      await assertWritableWorkspace(deps.db,ctx);
+      await assertOutputOwned(ctx,input.outputId);
+      return withTarget(ctx,input.platform,async(repo,tx,frozen)=>{
+        const publication=await repo.getPublication(input.publicationId);
+        if(tx&&publication.groupId){
+          if(!deps.membership)throw new OwnershipError("冻结账号归属校验不可用");
+          await deps.membership.assertFrozen(tx,{userId:ctx.userId,groupId:publication.groupId,accountId:publication.accountId,groupVersion:publication.groupVersion??null,membershipVersion:publication.membershipVersion??null});
+        }
+        return withPublicationWrite(ctx,input.publicationId,(_lockedRepo,writeTx)=>adoptPublicationVisualRevision(writeTx as unknown as Db,ctx,input,{...deps,frozen}),tx??undefined);
+      },false,[input.outputId]);
+    },
+    async exportVisualNote(ctx,publicationId,revisionId,pageIndex){
+      const pub=await repoFor(ctx).getPublication(publicationId);
+      await assertOutputOwned(ctx,pub.contentOutputId);
+      const row=await withPublicationRead(ctx,publicationId,async(_publication,db)=>{
+        const [revision]=await db.select().from(publicationRevisions).where(and(eq(publicationRevisions.id,revisionId),eq(publicationRevisions.publicationId,publicationId),eq(publicationRevisions.userId,ctx.userId)));
+        if(!revision)throw new OwnershipError("发布物料版本不存在");return revision;
+      });
+      const settings=(row.platformSettings??{}) as Record<string,unknown>,parsed=publicationVisualNoteSchema.safeParse(settings.visualNote??settings.visualCover);
+      if(!parsed.success)throw new ValidationError("该版本没有图文或封面物料");
+      const note=parsed.data;
+      if(note.pageReceipts.length!==note.orderedAssetIds.length)throw new ValidationError("图文页序与冻结文件不完整");
+      if(!deps.getFrozenImageDownload)throw new ConflictError("图片下载端口尚未配置");
+      if(pageIndex!==undefined&&(!Number.isInteger(pageIndex)||pageIndex<0||pageIndex>=note.orderedAssetIds.length))throw new ValidationError("图文页码不存在");
+      const files=[];
+      const indexes=pageIndex===undefined?note.orderedAssetIds.map((_,index)=>index):[pageIndex];
+      for(const i of indexes){
+        const assetId=note.orderedAssetIds[i]!,receipt=note.pageReceipts[i]!;
+        const file=await deps.getFrozenImageDownload(ctx,assetId,receipt.fileId,receipt.checksum);
+        if(!file.url||!file.fileName)throw new ValidationError("图片文件不可下载");
+        const basename=file.fileName.split(/[\\/]/).pop()!;
+        files.push({assetId,url:file.url,fileName:`${String(i+1).padStart(2,"0")}-${basename}`});
+      }
+      // 文件端口位于本领域事务外，避免PGlite自锁；返回下载引用前再验当前组/账号。
+      await withPublicationRead(ctx,publicationId,async()=>undefined);
+      return {caption:row.description,files};
+    },
     async adoptDraft(ctx,input){
       if(!PLATFORMS.has(input.platform))throw new ValidationError(`ValidationError: unknown platform: ${input.platform}`);
       await assertOutputOwned(ctx,input.outputId);

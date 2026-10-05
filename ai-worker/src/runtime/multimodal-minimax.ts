@@ -14,7 +14,6 @@
 //        Preparing/Queueing/Processing/Success/Fail,Success 时给 file_id。
 //   ⚠️ TODO 待 MiniMax 文档核实 + 真 key 验(下方各处标注):
 //      - file 检索 endpoint(file_id → 下载直链)的确切 path 与 resp 路径。
-//      - image-to-video 首帧(firstFrame)在 /v1/video_generation 的确切入参名(文档未列)。
 //      - aspectRatio → video duration/resolution 的映射细节。
 // 真产物验收留给用户配 key 后([gate-F4] 已定死走自建 REST,非 SDK)。装配逻辑(含异步轮询)
 // 由 fake 适配器在单测里零成本覆盖。
@@ -72,8 +71,17 @@ function decodeBase64(b64: string): Uint8Array {
   return new Uint8Array(Buffer.from(b64, "base64"));
 }
 
+function firstFrameDataUrl(frame: GenerateVideoOptions["firstFrame"]): string | undefined {
+  if (!frame) return undefined;
+  const value = frame instanceof Uint8Array ? { bytes: frame, mimeType: "image/png" } : frame;
+  if (!["image/jpeg", "image/png", "image/webp"].includes(value.mimeType) || value.bytes.byteLength === 0 || value.bytes.byteLength > 20 * 1024 * 1024) {
+    throw new MultimodalGenerationError("MiniMax 首帧只支持不超过 20MB 的 JPG、PNG 或 WebP", {reason:"response_contract",stage:"submit"});
+  }
+  return `data:${value.mimeType};base64,${Buffer.from(value.bytes).toString("base64")}`;
+}
+
 function isH3(spec: MultimodalSpec): boolean {
-  return spec.model.trim().toLowerCase() === "minimax-h3";
+  return ["minimax-h3", "minimax-h3-max"].includes(spec.model.trim().toLowerCase());
 }
 
 function safeReference(value: string): string {
@@ -126,10 +134,8 @@ async function generateImage(
       model: spec.model, // 如 "image-01"
       prompt: opts.prompt,
       ...(opts.aspectRatio ? { aspect_ratio: opts.aspectRatio } : {}),
-      // [T-380] 以图生图(风格/主体参考):MiniMax image_generation 的 subject_reference
-      // 入参 —— 数组,每项 { type:"character", image_file:<data URL base64> }(按官方公开
-      // 文档惯例写;⚠️ 本环境无真 key,字段名/编码待真 key 实测核实,与本文件头部诚实边界
-      // 一致)。无参考图 → 不发该字段,行为与纯文生图完全一致(零回归)。
+      // [T-380/T-993] 官方以图生图契约支持 subject_reference 的 Data URL；
+      // 无参考图时不传该字段，保留原文生图调用。
       ...(opts.referenceImage
         ? {
             subject_reference: [
@@ -168,6 +174,8 @@ async function generateVideo(
   deps: MinimaxAdapterDeps,
 ): Promise<GeneratedAsset> {
   if (isH3(spec)) return generateH3Video(spec, opts, deps);
+  if (opts.resolution === "2K") throw new MultimodalGenerationError("当前 MiniMax 视频模型不支持 2K", {reason:"response_contract",stage:"submit"});
+  if (opts.durationSec !== undefined && ![6,10].includes(opts.durationSec)) throw new MultimodalGenerationError("当前 MiniMax 视频模型只支持 6 或 10 秒", {reason:"response_contract",stage:"submit"});
   // 已有 provider job 必须原号续查，不能恢复时重新计费提交。
   let taskId=opts.resumeJobId;
   if(!taskId){
@@ -179,10 +187,10 @@ async function generateVideo(
       model: spec.model, // 如 "MiniMax-Hailuo-2.3" / "T2V-01"
       prompt: opts.prompt,
       prompt_optimizer: true,
-      // TODO 待 MiniMax 文档核实 + 真 key 验:aspectRatio → duration/resolution 映射;
-      //   firstFrame(image-to-video 首帧)在此端点的确切入参名(文档未列 first_frame_image)。
-      //   结构位已留,真参数名/编码(base64 or file_id)待文档核实。
-      ...(opts.firstFrame ? { /* first_frame_image: <TODO 编码方式待核实> */ } : {}),
+      ...(opts.durationSec ? { duration: opts.durationSec } : {}),
+      ...(opts.resolution ? { resolution: opts.resolution } : {}),
+      // 首帧由任务冻结的素材版本提供；不允许静默退回文生视频。
+      ...(opts.firstFrame ? { first_frame_image: firstFrameDataUrl(opts.firstFrame) } : {}),
     }),
   });
   if (!submitRes.ok) {
@@ -213,6 +221,7 @@ async function generateH3Video(
   const prompt = opts.prompt.trim();
   const duration = opts.durationSec ?? 6;
   const resolution = opts.resolution ?? "768P";
+  const h3Max = spec.model.trim().toLowerCase() === "minimax-h3-max";
   const ratio = opts.aspectRatio ?? "9:16";
   if (!prompt || prompt.length > 7_000) {
     throw new MultimodalGenerationError("MiniMax H3 prompt 必须为 1–7000 字", {
@@ -220,14 +229,14 @@ async function generateH3Video(
       stage: "submit",
     });
   }
-  if (!Number.isInteger(duration) || duration < 4 || duration > 15) {
-    throw new MultimodalGenerationError("MiniMax H3 duration 必须为 4–15 秒整数", {
+  if (!Number.isInteger(duration) || duration < (h3Max ? 5 : 4) || duration > 15) {
+    throw new MultimodalGenerationError(`MiniMax ${h3Max ? "H3 Max" : "H3"} duration 必须为 ${h3Max ? "5" : "4"}–15 秒整数`, {
       reason: "response_contract",
       stage: "submit",
     });
   }
-  if (resolution !== "768P" && resolution !== "2K") {
-    throw new MultimodalGenerationError("MiniMax H3 resolution 只支持 768P / 2K", {
+  if (resolution !== "768P" && (resolution !== "2K" || h3Max)) {
+    throw new MultimodalGenerationError(`MiniMax ${h3Max ? "H3 Max" : "H3"} 不支持该分辨率`, {
       reason: "response_contract",
       stage: "submit",
     });
@@ -249,10 +258,10 @@ async function generateH3Video(
         headers: authHeaders(spec),
         body: JSON.stringify({
           model: spec.model,
-          content: [{ type: "text", text: prompt }],
+          content: [{ type: "text", text: prompt }, ...(opts.firstFrame ? [{type:"image_url",image_url:{url:firstFrameDataUrl(opts.firstFrame)},role:"first_frame"}] : [])],
           duration,
           resolution,
-          ratio,
+          ratio: opts.firstFrame ? "adaptive" : ratio,
         }),
       });
     } catch (error) {

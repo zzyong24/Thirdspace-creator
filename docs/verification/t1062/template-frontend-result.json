@@ -1,0 +1,74 @@
+{
+  "task": "T-1062",
+  "worktree": "/Users/zyongzhu/.codex/worktrees/t1062-template-frontend/Thirdspace-creator",
+  "branch": "codex/t1062-template-frontend-candidate",
+  "base_commit": "125bc864",
+  "source_template_commit": "55a526d6",
+  "commit": "eab9a280a6b0c4c515909c3a0f9c48303ef408bb",
+  "pushed": false,
+  "time": "2026-10-05T10:28:12.220507",
+  "status": "",
+  "files": [
+    {
+      "path": "frontend/src/components/shell/account-switcher.tsx",
+      "before_sha256": "99092047ad1f60e4abddb4a3589a64ee3416c2a943c2237a000eedacc251d0e9",
+      "integration_before_sha256": "99092047ad1f60e4abddb4a3589a64ee3416c2a943c2237a000eedacc251d0e9",
+      "main_snapshot_before_sha256": "05454718ec623c0f669bcf22275df8fd9d8a435dece73171f1f646e63556911b",
+      "sha256": "151adbd2fdf0c6352eeaa29eeb76afcfa41fc0077ed5e7b648b812202fc7aa98"
+    },
+    {
+      "path": "frontend/src/server/persistence-client.ts",
+      "before_sha256": "df5b65de351db70a7ad8c17429edbf56d176ac550f25707e750eb6c588a37452",
+      "integration_before_sha256": "df5b65de351db70a7ad8c17429edbf56d176ac550f25707e750eb6c588a37452",
+      "main_snapshot_before_sha256": "f8281d50f02649553769814bcba9972b0cbb2ddfec91fde74d2fb395eb308029",
+      "sha256": "21a410eb1c3d3f44a1deb4132dafafd92508f15affdd13f34732bfe5952d7d7f"
+    }
+  ],
+  "validation": [
+    {
+      "name": "git diff --check",
+      "result": "PASS"
+    },
+    {
+      "name": "TypeScript语法解析",
+      "result": "PASS",
+      "detail": "2文件0语法错误；不冒充类型或运行验证。"
+    },
+    {
+      "name": "词法/装配保留检查",
+      "result": "PASS",
+      "detail": "AccountSwitcher去注释词法与root125bc完全一致；workspaceBlobService、ensureStartupJobs、runAccountGroupStartup调用原文本完全保留；topicWorkspace/canvas/getFrozenImageDownload并存。该项是源码检查，不是真实操作。"
+    },
+    {
+      "name": "账号组选单运行回归",
+      "result": "PENDING",
+      "command": "pnpm -C frontend test src/components/shell/account-switcher.test.tsx",
+      "detail": "vitest command not found，隔离候选无node_modules；按边界未复制或改额外依赖。"
+    },
+    {
+      "name": "LED-047/ctx/startup/视觉与交互实测",
+      "result": "PENDING",
+      "detail": "交完整整合树运行；未启动服务、真实DB或浏览器，不生成新视觉方向。"
+    },
+    {
+      "name": "默认提交hook",
+      "result": "LIMITATION",
+      "detail": "正常git commit成功，commit-msg提示Can't find lefthook in PATH，未修改或绕过hook设置。"
+    }
+  ],
+  "changes": [
+    "AccountSwitcher保留root组模型、原样Dropdown/Tooltip真实触发器、在途请求/过期卸载防护、前台切换提示与一次scope事件；只补事件ownership注释。",
+    "Persistence装配同时保留root topicWorkspace和incoming canvas读/候选回调；沿实际projects/assets/ai/publishing公共service接canvas、模板、采用及冻结下载，不新造account context。",
+    "保留root启动/组上下文/私有采集与backgroundCollector flag、workspaceBlobService和无账号ctx行为；原assets transport仍承接旧入口，visualTemplate op按真实ID分流。"
+  ],
+  "pending_integration": [
+    "机械接线不表示新canvas/visual-template域已支持group ownership；完整整合树须由总控补齐新域group隔离及权限。",
+    "完整依赖后跑frontend类型、LED-047、账号组选单/ctx/启动/模板/画布/采用/导出真实链路；不把源码检查当运行或安装版PASS。",
+    "上一后端候选保留adoptDraft unassigned联合结果，visual-material-adoption调用方需显式分支；本两路径未越边界改该service。"
+  ],
+  "design_skill": {
+    "path": ".agents/skills/oil-ui-pro/SKILL.md",
+    "version": "0.10.0",
+    "scope": "保留已批准原版；未新设计、未改视觉或操作流程；真实视觉/交互待总控整合验证。"
+  }
+}

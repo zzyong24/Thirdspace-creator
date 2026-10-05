@@ -61,6 +61,7 @@
     "@tiptap/pm": "3.27.1",
     "@tiptap/react": "3.27.1",
     "@tiptap/starter-kit": "3.27.1",
+    "@xyflow/react": "^12.12.0",
     "ai": "^7.0.4",
     "antd": "^6.6.3",
     "class-variance-authority": "0.7.1",

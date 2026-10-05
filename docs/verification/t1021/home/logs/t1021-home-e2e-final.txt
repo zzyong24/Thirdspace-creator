@@ -1,0 +1,485 @@
+[playwright.config] Isolated test data root: /var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-playwright-KiWVDL
+[playwright.config] Reference baselines: 17 files, fingerprint=73a23db59f7d…
+[2m[WebServer] [22m
+[2m[WebServer] [22m> creatoros-frontend@1.2.0 predev /Users/zyongzhu/.codex/worktrees/cover-template-library/Thirdspace-creator/frontend
+[2m[WebServer] [22m> node ../ai-worker/scripts/build.mjs
+[2m[WebServer] [22m
+[2m[WebServer] [22m
+[2m[WebServer] [22m> creatoros-frontend@1.2.0 dev /Users/zyongzhu/.codex/worktrees/cover-template-library/Thirdspace-creator/frontend
+[2m[WebServer] [22m> next dev --hostname 127.0.0.1 --port 3201
+[2m[WebServer] [22m
+[2m[WebServer] [22m[1m[38;2;173;127;168m▲ Next.js 16.2.9[39m[22m (Turbopack)
+[2m[WebServer] [22m- Local:         http://127.0.0.1:3201
+[2m[WebServer] [22m- Network:       http://127.0.0.1:3201
+[2m[WebServer] [22m[32m[1m✓[22m[39m Ready in 982ms
+[2m[WebServer] [22m[CreatorOS] SIDECAR_STARTUP_VERIFIED
+[2m[WebServer] [22m
+[2m[WebServer] [22m[37m[1m○[22m[39m Compiling / ...
+[2m[WebServer] [22m[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[2m[WebServer] [22m[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+[2m[WebServer] [22m GET / [32m200[39m in 22.5s[2m (next.js: 5.2s, proxy.ts: 388ms, application-code: 16.9s)[22m
+
+Running 11 tests using 1 worker
+
+[playwright.config] Isolated test data root: /var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-playwright-KiWVDL
+[playwright.config] Reference baselines: 17 files, fingerprint=73a23db59f7d…
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 1675ms[2m (next.js: 1596ms, proxy.ts: 27ms, application-code: 52ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 141ms[2m (next.js: 26ms, proxy.ts: 40ms, application-code: 76ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 326ms[2m (next.js: 35ms, proxy.ts: 38ms, application-code: 252ms)[22m
+[2m[WebServer] [22m GET /canvases?tab=canvases [32m200[39m in 759ms[2m (next.js: 155ms, proxy.ts: 20ms, application-code: 584ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 42ms[2m (next.js: 16ms, proxy.ts: 9ms, application-code: 17ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 68ms[2m (next.js: 47ms, proxy.ts: 11ms, application-code: 10ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 84ms[2m (next.js: 54ms, proxy.ts: 16ms, application-code: 13ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 92ms[2m (next.js: 44ms, proxy.ts: 37ms, application-code: 11ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 104ms[2m (next.js: 55ms, proxy.ts: 39ms, application-code: 10ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 136ms[2m (next.js: 53ms, proxy.ts: 54ms, application-code: 29ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 102ms[2m (next.js: 41ms, proxy.ts: 53ms, application-code: 8ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 89ms[2m (next.js: 16ms, proxy.ts: 67ms, application-code: 7ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 44ms[2m (next.js: 11ms, proxy.ts: 20ms, application-code: 13ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 24ms[2m (next.js: 5ms, proxy.ts: 4ms, application-code: 15ms)[22m
+[2m[WebServer] [22m GET /canvases/56b1a033-ba0a-462f-b4ab-90620f2c0c20 [32m200[39m in 3.9s[2m (next.js: 3.8s, proxy.ts: 7ms, application-code: 51ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 23ms[2m (next.js: 8ms, proxy.ts: 3ms, application-code: 12ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 41ms[2m (next.js: 11ms, proxy.ts: 21ms, application-code: 9ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 53ms[2m (next.js: 20ms, proxy.ts: 22ms, application-code: 11ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 80ms[2m (next.js: 34ms, proxy.ts: 24ms, application-code: 22ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 89ms[2m (next.js: 55ms, proxy.ts: 25ms, application-code: 8ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 111ms[2m (next.js: 69ms, proxy.ts: 35ms, application-code: 8ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 91ms[2m (next.js: 15ms, proxy.ts: 67ms, application-code: 9ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 57ms[2m (next.js: 14ms, proxy.ts: 19ms, application-code: 24ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 100ms[2m (next.js: 48ms, proxy.ts: 15ms, application-code: 37ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 118ms[2m (next.js: 86ms, proxy.ts: 16ms, application-code: 16ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 27ms[2m (next.js: 2ms, proxy.ts: 5ms, application-code: 20ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 27ms[2m (next.js: 4ms, proxy.ts: 3ms, application-code: 20ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 21ms[2m (next.js: 1686µs, proxy.ts: 2ms, application-code: 17ms)[22m
+[2m[WebServer] [22m GET /canvases/56b1a033-ba0a-462f-b4ab-90620f2c0c20 [32m200[39m in 326ms[2m (next.js: 9ms, proxy.ts: 3ms, application-code: 314ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 32ms[2m (next.js: 7ms, proxy.ts: 9ms, application-code: 16ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 45ms[2m (next.js: 24ms, proxy.ts: 9ms, application-code: 12ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 55ms[2m (next.js: 36ms, proxy.ts: 9ms, application-code: 10ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 71ms[2m (next.js: 47ms, proxy.ts: 10ms, application-code: 14ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 136ms[2m (next.js: 62ms, proxy.ts: 10ms, application-code: 64ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 49ms[2m (next.js: 12ms, proxy.ts: 13ms, application-code: 23ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 69ms[2m (next.js: 34ms, proxy.ts: 14ms, application-code: 21ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 320ms[2m (next.js: 4ms, proxy.ts: 11ms, application-code: 305ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 29ms[2m (next.js: 5ms, proxy.ts: 3ms, application-code: 21ms)[22m
+[2m[WebServer] [22m GET /canvases/56b1a033-ba0a-462f-b4ab-90620f2c0c20 [32m200[39m in 192ms[2m (next.js: 7ms, proxy.ts: 4ms, application-code: 181ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 24ms[2m (next.js: 6ms, proxy.ts: 9ms, application-code: 9ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 40ms[2m (next.js: 16ms, proxy.ts: 8ms, application-code: 16ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 54ms[2m (next.js: 33ms, proxy.ts: 10ms, application-code: 10ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 59ms[2m (next.js: 44ms, proxy.ts: 8ms, application-code: 8ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 122ms[2m (next.js: 80ms, proxy.ts: 7ms, application-code: 34ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 31ms[2m (next.js: 8ms, proxy.ts: 7ms, application-code: 16ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 46ms[2m (next.js: 25ms, proxy.ts: 7ms, application-code: 14ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 57ms[2m (next.js: 40ms, proxy.ts: 8ms, application-code: 9ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 15ms[2m (next.js: 3ms, proxy.ts: 3ms, application-code: 10ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 22ms[2m (next.js: 1543µs, proxy.ts: 2ms, application-code: 18ms)[22m
+[2m[WebServer] [22m GET /canvases?tab=canvases&projectId=project-4a304a91-8 [32m200[39m in 86ms[2m (next.js: 4ms, proxy.ts: 3ms, application-code: 79ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 16ms[2m (next.js: 4ms, proxy.ts: 3ms, application-code: 9ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 34ms[2m (next.js: 6ms, proxy.ts: 18ms, application-code: 10ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 41ms[2m (next.js: 16ms, proxy.ts: 20ms, application-code: 4ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 47ms[2m (next.js: 22ms, proxy.ts: 18ms, application-code: 6ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 54ms[2m (next.js: 29ms, proxy.ts: 18ms, application-code: 7ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 64ms[2m (next.js: 37ms, proxy.ts: 18ms, application-code: 9ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 74ms[2m (next.js: 48ms, proxy.ts: 7ms, application-code: 19ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 23ms[2m (next.js: 7ms, proxy.ts: 6ms, application-code: 10ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 35ms[2m (next.js: 17ms, proxy.ts: 6ms, application-code: 11ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 45ms[2m (next.js: 28ms, proxy.ts: 7ms, application-code: 9ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 55ms[2m (next.js: 37ms, proxy.ts: 8ms, application-code: 10ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 72ms[2m (next.js: 48ms, proxy.ts: 8ms, application-code: 17ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 79ms[2m (next.js: 65ms, proxy.ts: 8ms, application-code: 5ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 13ms[2m (next.js: 3ms, proxy.ts: 3ms, application-code: 7ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 24ms[2m (next.js: 10ms, proxy.ts: 4ms, application-code: 10ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 37ms[2m (next.js: 16ms, proxy.ts: 9ms, application-code: 13ms)[22m
+[2m[WebServer] [22m[CreatorOS] DISPATCH_FAILED {"operation":"projects.get","errorName":"OwnershipError","errorCode":"OwnershipError"}
+[2m[WebServer] [22m POST /api/v1/dispatch [33m404[39m in 72ms[2m (next.js: 39ms, proxy.ts: 10ms, application-code: 24ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 105ms[2m (next.js: 23ms, proxy.ts: 61ms, application-code: 20ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 118ms[2m (next.js: 45ms, proxy.ts: 62ms, application-code: 11ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 155ms[2m (next.js: 68ms, proxy.ts: 67ms, application-code: 19ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 167ms[2m (next.js: 101ms, proxy.ts: 56ms, application-code: 11ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 190ms[2m (next.js: 78ms, proxy.ts: 106ms, application-code: 7ms)[22m
+[2m[WebServer] [22m GET /canvases?tab=canvases&projectId=project-4a304a91-8 [32m200[39m in 183ms[2m (next.js: 35ms, proxy.ts: 75ms, application-code: 73ms)[22m
+[2m[WebServer] [22m GET /canvases?tab=canvases [32m200[39m in 304ms[2m (next.js: 63ms, proxy.ts: 71ms, application-code: 170ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 28ms[2m (next.js: 9ms, proxy.ts: 7ms, application-code: 12ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 38ms[2m (next.js: 23ms, proxy.ts: 7ms, application-code: 9ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 47ms[2m (next.js: 33ms, proxy.ts: 7ms, application-code: 6ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 60ms[2m (next.js: 40ms, proxy.ts: 7ms, application-code: 12ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 69ms[2m (next.js: 53ms, proxy.ts: 7ms, application-code: 8ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 84ms[2m (next.js: 61ms, proxy.ts: 8ms, application-code: 14ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 16ms[2m (next.js: 4ms, proxy.ts: 6ms, application-code: 7ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 24ms[2m (next.js: 13ms, proxy.ts: 5ms, application-code: 6ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 35ms[2m (next.js: 20ms, proxy.ts: 5ms, application-code: 10ms)[22m
+[2m[WebServer] [22m GET /canvases/56b1a033-ba0a-462f-b4ab-90620f2c0c20 [32m200[39m in 214ms[2m (next.js: 38ms, proxy.ts: 6ms, application-code: 171ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 34ms[2m (next.js: 10ms, proxy.ts: 13ms, application-code: 11ms)[22m
+[2m[WebServer] [22m[CreatorOS] DISPATCH_FAILED {"operation":"canvas.get","errorName":"OwnershipError","errorCode":"OwnershipError"}
+[2m[WebServer] [22m POST /api/v1/dispatch [33m404[39m in 47ms[2m (next.js: 22ms, proxy.ts: 14ms, application-code: 11ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 186ms[2m (next.js: 154ms, proxy.ts: 15ms, application-code: 17ms)[22m
+  ✓   1 [e2e] › tests/e2e/creative-canvas.spec.ts:25:5 › T-993 画布可保存、重开，切换账号后列表和直链隔离 (18.9s)
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 212ms[2m (next.js: 177ms, proxy.ts: 15ms, application-code: 20ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 255ms[2m (next.js: 209ms, proxy.ts: 14ms, application-code: 32ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 29ms[2m (next.js: 6ms, proxy.ts: 9ms, application-code: 14ms)[22m
+[2m[WebServer] [22m GET /canvases?tab=canvases [32m200[39m in 745ms[2m (next.js: 6ms, proxy.ts: 3ms, application-code: 737ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 21ms[2m (next.js: 5ms, proxy.ts: 6ms, application-code: 10ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 33ms[2m (next.js: 17ms, proxy.ts: 7ms, application-code: 10ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 20ms[2m (next.js: 8ms, proxy.ts: 3ms, application-code: 9ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 45ms[2m (next.js: 15ms, proxy.ts: 19ms, application-code: 10ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 56ms[2m (next.js: 26ms, proxy.ts: 21ms, application-code: 10ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 83ms[2m (next.js: 35ms, proxy.ts: 22ms, application-code: 25ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 91ms[2m (next.js: 57ms, proxy.ts: 27ms, application-code: 8ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 90ms[2m (next.js: 66ms, proxy.ts: 17ms, application-code: 7ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 86ms[2m (next.js: 55ms, proxy.ts: 23ms, application-code: 8ms)[22m
+[2m[WebServer] [22m GET /canvases?tab=canvases [32m200[39m in 146ms[2m (next.js: 14ms, proxy.ts: 66ms, application-code: 66ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 14ms[2m (next.js: 2ms, proxy.ts: 2ms, application-code: 10ms)[22m
+[2m[WebServer] [22m GET /canvases/bdcb919e-7b0c-479a-b298-89ef11940f52 [32m200[39m in 119ms[2m (next.js: 6ms, proxy.ts: 2ms, application-code: 110ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 30ms[2m (next.js: 9ms, proxy.ts: 15ms, application-code: 7ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 38ms[2m (next.js: 16ms, proxy.ts: 16ms, application-code: 6ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 45ms[2m (next.js: 23ms, proxy.ts: 16ms, application-code: 6ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 53ms[2m (next.js: 21ms, proxy.ts: 14ms, application-code: 18ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 63ms[2m (next.js: 24ms, proxy.ts: 30ms, application-code: 9ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 65ms[2m (next.js: 20ms, proxy.ts: 34ms, application-code: 11ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 79ms[2m (next.js: 32ms, proxy.ts: 33ms, application-code: 14ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 96ms[2m (next.js: 46ms, proxy.ts: 33ms, application-code: 17ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 17ms[2m (next.js: 3ms, proxy.ts: 4ms, application-code: 10ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 25ms[2m (next.js: 13ms, proxy.ts: 5ms, application-code: 7ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 62ms[2m (next.js: 6ms, proxy.ts: 11ms, application-code: 44ms)[22m
+[2m[WebServer] [22m GET /canvases/bdcb919e-7b0c-479a-b298-89ef11940f52 [32m200[39m in 381ms[2m (next.js: 10ms, proxy.ts: 6ms, application-code: 364ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 56ms[2m (next.js: 13ms, proxy.ts: 20ms, application-code: 23ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 78ms[2m (next.js: 41ms, proxy.ts: 17ms, application-code: 20ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 113ms[2m (next.js: 65ms, proxy.ts: 18ms, application-code: 30ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 143ms[2m (next.js: 96ms, proxy.ts: 19ms, application-code: 28ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 189ms[2m (next.js: 124ms, proxy.ts: 20ms, application-code: 46ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 67ms[2m (next.js: 14ms, proxy.ts: 9ms, application-code: 45ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 89ms[2m (next.js: 64ms, proxy.ts: 9ms, application-code: 16ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 17ms[2m (next.js: 2ms, proxy.ts: 2ms, application-code: 13ms)[22m
+[2m[WebServer] [22m GET /canvases/bdcb919e-7b0c-479a-b298-89ef11940f52 [32m200[39m in 137ms[2m (next.js: 6ms, proxy.ts: 3ms, application-code: 129ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 34ms[2m (next.js: 9ms, proxy.ts: 9ms, application-code: 16ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 61ms[2m (next.js: 27ms, proxy.ts: 9ms, application-code: 24ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 94ms[2m (next.js: 55ms, proxy.ts: 9ms, application-code: 30ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 133ms[2m (next.js: 88ms, proxy.ts: 10ms, application-code: 34ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 221ms[2m (next.js: 133ms, proxy.ts: 11ms, application-code: 78ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 97ms[2m (next.js: 20ms, proxy.ts: 22ms, application-code: 56ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 132ms[2m (next.js: 87ms, proxy.ts: 21ms, application-code: 25ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 130ms[2m (next.js: 9ms, proxy.ts: 61ms, application-code: 60ms)[22m
+[2m[WebServer] [22m GET /canvases/bdcb919e-7b0c-479a-b298-89ef11940f52 [32m200[39m in 322ms[2m (next.js: 15ms, proxy.ts: 7ms, application-code: 300ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 38ms[2m (next.js: 9ms, proxy.ts: 9ms, application-code: 20ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 51ms[2m (next.js: 30ms, proxy.ts: 9ms, application-code: 12ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 63ms[2m (next.js: 42ms, proxy.ts: 9ms, application-code: 11ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 75ms[2m (next.js: 55ms, proxy.ts: 9ms, application-code: 11ms)[22m
+  ✓   2 [e2e] › tests/e2e/creative-canvas.spec.ts:76:5 › T-993 首次自动选账号后画布可创建，新增节点不会重叠 (16.8s)
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 107ms[2m (next.js: 66ms, proxy.ts: 9ms, application-code: 32ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 14ms[2m (next.js: 1825µs, proxy.ts: 4ms, application-code: 8ms)[22m
+[2m[WebServer] [22m GET /canvases?tab=canvases [32m200[39m in 123ms[2m (next.js: 2ms, proxy.ts: 3ms, application-code: 117ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 30ms[2m (next.js: 6ms, proxy.ts: 13ms, application-code: 12ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 51ms[2m (next.js: 18ms, proxy.ts: 13ms, application-code: 20ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 66ms[2m (next.js: 42ms, proxy.ts: 12ms, application-code: 12ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 77ms[2m (next.js: 56ms, proxy.ts: 12ms, application-code: 10ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 90ms[2m (next.js: 66ms, proxy.ts: 11ms, application-code: 12ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 117ms[2m (next.js: 81ms, proxy.ts: 11ms, application-code: 25ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 16ms[2m (next.js: 4ms, proxy.ts: 6ms, application-code: 6ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 23ms[2m (next.js: 10ms, proxy.ts: 7ms, application-code: 7ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 38ms[2m (next.js: 18ms, proxy.ts: 9ms, application-code: 11ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 57ms[2m (next.js: 2ms, proxy.ts: 45ms, application-code: 10ms)[22m
+[2m[WebServer] [22m GET /canvases/a8834951-de4a-4fe0-b47b-8048e8e3bd80 [32m200[39m in 29ms[2m (next.js: 6ms, proxy.ts: 2ms, application-code: 20ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 45ms[2m (next.js: 13ms, proxy.ts: 9ms, application-code: 24ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 70ms[2m (next.js: 43ms, proxy.ts: 7ms, application-code: 20ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 103ms[2m (next.js: 64ms, proxy.ts: 16ms, application-code: 23ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 122ms[2m (next.js: 10ms, proxy.ts: 85ms, application-code: 28ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 133ms[2m (next.js: 40ms, proxy.ts: 83ms, application-code: 10ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 76ms[2m (next.js: 49ms, proxy.ts: 8ms, application-code: 19ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 91ms[2m (next.js: 40ms, proxy.ts: 39ms, application-code: 13ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 93ms[2m (next.js: 12ms, proxy.ts: 54ms, application-code: 26ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 91ms[2m (next.js: 34ms, proxy.ts: 10ms, application-code: 47ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 165ms[2m (next.js: 102ms, proxy.ts: 11ms, application-code: 52ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 25ms[2m (next.js: 3ms, proxy.ts: 3ms, application-code: 19ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 42ms[2m (next.js: 5ms, proxy.ts: 27ms, application-code: 10ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 113ms[2m (next.js: 8ms, proxy.ts: 9ms, application-code: 96ms)[22m
+  ✓   3 [e2e] › tests/e2e/creative-canvas.spec.ts:138:5 › T-993 视口缩放只保存在本地，不改画布内容版本 (3.4s)
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 183ms[2m (next.js: 77ms, proxy.ts: 67ms, application-code: 39ms)[22m
+[2m[WebServer] [22m GET /canvases?tab=canvases [32m200[39m in 278ms[2m (next.js: 7ms, proxy.ts: 6ms, application-code: 265ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 54ms[2m (next.js: 7ms, proxy.ts: 33ms, application-code: 14ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 67ms[2m (next.js: 22ms, proxy.ts: 33ms, application-code: 12ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 81ms[2m (next.js: 36ms, proxy.ts: 33ms, application-code: 11ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 94ms[2m (next.js: 47ms, proxy.ts: 35ms, application-code: 13ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 105ms[2m (next.js: 62ms, proxy.ts: 35ms, application-code: 8ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 112ms[2m (next.js: 70ms, proxy.ts: 9ms, application-code: 33ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 20ms[2m (next.js: 6ms, proxy.ts: 6ms, application-code: 7ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 28ms[2m (next.js: 14ms, proxy.ts: 6ms, application-code: 8ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 39ms[2m (next.js: 22ms, proxy.ts: 8ms, application-code: 9ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 13ms[2m (next.js: 2ms, proxy.ts: 2ms, application-code: 9ms)[22m
+[2m[WebServer] [22m GET /canvases/1c04ea5a-81d3-478a-901c-cce67a47b5ef [32m200[39m in 103ms[2m (next.js: 16ms, proxy.ts: 3ms, application-code: 84ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 22ms[2m (next.js: 9ms, proxy.ts: 5ms, application-code: 8ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 29ms[2m (next.js: 18ms, proxy.ts: 5ms, application-code: 7ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 25ms[2m (next.js: 6ms, proxy.ts: 10ms, application-code: 8ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 33ms[2m (next.js: 17ms, proxy.ts: 9ms, application-code: 8ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 63ms[2m (next.js: 26ms, proxy.ts: 9ms, application-code: 28ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 96ms[2m (next.js: 78ms, proxy.ts: 9ms, application-code: 9ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 105ms[2m (next.js: 87ms, proxy.ts: 9ms, application-code: 9ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 55ms[2m (next.js: 7ms, proxy.ts: 28ms, application-code: 20ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 45ms[2m (next.js: 28ms, proxy.ts: 6ms, application-code: 11ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 56ms[2m (next.js: 40ms, proxy.ts: 7ms, application-code: 9ms)[22m
+  ✓   4 [e2e] › tests/e2e/creative-canvas.spec.ts:162:5 › T-993 双指滚动平移、组合键缩放，节点文字仍可独立滚动 (3.6s)
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 25ms[2m (next.js: 5ms, proxy.ts: 6ms, application-code: 15ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 33ms[2m (next.js: 7ms, proxy.ts: 9ms, application-code: 16ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 35ms[2m (next.js: 4ms, proxy.ts: 9ms, application-code: 22ms)[22m
+[2m[WebServer] [22m GET /canvases/270a2db9-36fd-4bd6-9741-293f0f51e65f [32m200[39m in 556ms[2m (next.js: 4ms, proxy.ts: 3ms, application-code: 549ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 31ms[2m (next.js: 7ms, proxy.ts: 7ms, application-code: 17ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 44ms[2m (next.js: 8ms, proxy.ts: 27ms, application-code: 9ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 57ms[2m (next.js: 14ms, proxy.ts: 30ms, application-code: 13ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 72ms[2m (next.js: 29ms, proxy.ts: 30ms, application-code: 13ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 103ms[2m (next.js: 42ms, proxy.ts: 31ms, application-code: 31ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 30ms[2m (next.js: 8ms, proxy.ts: 8ms, application-code: 13ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 38ms[2m (next.js: 19ms, proxy.ts: 11ms, application-code: 8ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 16ms[2m (next.js: 1671µs, proxy.ts: 3ms, application-code: 12ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 22ms[2m (next.js: 3ms, proxy.ts: 6ms, application-code: 13ms)[22m
+  ✓   5 [e2e] › tests/e2e/creative-canvas.spec.ts:181:5 › T-993 旧版无尺寸画布可读，保存后补默认尺寸且连线不丢 (3.2s)
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 13ms[2m (next.js: 1336µs, proxy.ts: 3ms, application-code: 9ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 24ms[2m (next.js: 1477µs, proxy.ts: 3ms, application-code: 20ms)[22m
+[2m[WebServer] [22m PUT /api/v1/blob/acct-4a304a91-215/inbox/uploads/objkey-4a304a91-217-%E7%94%BB%E5%B8%83%E9%A2%84%E8%A7%88%E5%9B%BE%E7%89%87.png?exp=1791119795232&token=d195d4ddce2074c40e2a3a6e924b70ba65cda1509c11610d41162743de5c6dbc [32m200[39m in 1637ms[2m (next.js: 1619ms, application-code: 18ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 67ms[2m (next.js: 3ms, proxy.ts: 2ms, application-code: 62ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 14ms[2m (next.js: 1559µs, proxy.ts: 1780µs, application-code: 11ms)[22m
+[2m[WebServer] [22m PUT /api/v1/blob/acct-4a304a91-215/inbox/uploads/objkey-4a304a91-224-%E7%94%BB%E5%B8%83%E9%A2%84%E8%A7%88%E8%A7%86%E9%A2%91.mp4?exp=1791119796969&token=937818ddcd550d9bc3c3531f41c0052e2ce55cc37fc865e5fdc72f4c64b0492f [32m200[39m in 10ms[2m (next.js: 3ms, application-code: 7ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 66ms[2m (next.js: 1317µs, proxy.ts: 1670µs, application-code: 63ms)[22m
+[2m[WebServer] [22m GET /canvases?tab=canvases [32m200[39m in 134ms[2m (next.js: 3ms, proxy.ts: 2ms, application-code: 129ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 34ms[2m (next.js: 13ms, proxy.ts: 4ms, application-code: 17ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 63ms[2m (next.js: 35ms, proxy.ts: 11ms, application-code: 17ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 70ms[2m (next.js: 29ms, proxy.ts: 33ms, application-code: 8ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 80ms[2m (next.js: 37ms, proxy.ts: 33ms, application-code: 10ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 70ms[2m (next.js: 30ms, proxy.ts: 32ms, application-code: 7ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 86ms[2m (next.js: 38ms, proxy.ts: 31ms, application-code: 17ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 181ms[2m (next.js: 145ms, proxy.ts: 31ms, application-code: 6ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 159ms[2m (next.js: 11ms, proxy.ts: 144ms, application-code: 4ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 27ms[2m (next.js: 7ms, proxy.ts: 12ms, application-code: 8ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 21ms[2m (next.js: 1313µs, proxy.ts: 5ms, application-code: 14ms)[22m
+[2m[WebServer] [22m GET /canvases/1c0956e0-bddc-4cae-a56b-135db7934bbf [32m200[39m in 53ms[2m (next.js: 12ms, proxy.ts: 3ms, application-code: 38ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 24ms[2m (next.js: 7ms, proxy.ts: 7ms, application-code: 10ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 39ms[2m (next.js: 19ms, proxy.ts: 7ms, application-code: 14ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 47ms[2m (next.js: 33ms, proxy.ts: 8ms, application-code: 7ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 113ms[2m (next.js: 13ms, proxy.ts: 44ms, application-code: 56ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 98ms[2m (next.js: 65ms, proxy.ts: 14ms, application-code: 18ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 109ms[2m (next.js: 83ms, proxy.ts: 14ms, application-code: 12ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 127ms[2m (next.js: 99ms, proxy.ts: 14ms, application-code: 13ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 158ms[2m (next.js: 113ms, proxy.ts: 14ms, application-code: 31ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 36ms[2m (next.js: 6ms, proxy.ts: 18ms, application-code: 12ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 63ms[2m (next.js: 23ms, proxy.ts: 11ms, application-code: 29ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 25ms[2m (next.js: 7ms, proxy.ts: 4ms, application-code: 13ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 37ms[2m (next.js: 20ms, proxy.ts: 8ms, application-code: 10ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 60ms[2m (next.js: 24ms, proxy.ts: 22ms, application-code: 15ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 73ms[2m (next.js: 39ms, proxy.ts: 21ms, application-code: 14ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 19ms[2m (next.js: 4ms, proxy.ts: 3ms, application-code: 12ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 37ms[2m (next.js: 15ms, proxy.ts: 4ms, application-code: 18ms)[22m
+[2m[WebServer] [22m GET /api/v1/blob/acct-4a304a91-215/inbox/uploads/objkey-4a304a91-217-%E7%94%BB%E5%B8%83%E9%A2%84%E8%A7%88%E5%9B%BE%E7%89%87.png?exp=1791119799436&token=e704dee7e663ff4a263cb0eb55fb8e0e3676d63d8b8b8ece673553d7d7fa24c9 [32m200[39m in 18ms[2m (next.js: 4ms, application-code: 14ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 40ms[2m (next.js: 6ms, proxy.ts: 5ms, application-code: 29ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 68ms[2m (next.js: 36ms, proxy.ts: 5ms, application-code: 27ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 93ms[2m (next.js: 64ms, proxy.ts: 6ms, application-code: 23ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 134ms[2m (next.js: 106ms, proxy.ts: 6ms, application-code: 21ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 38ms[2m (next.js: 9ms, proxy.ts: 9ms, application-code: 20ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 85ms[2m (next.js: 30ms, proxy.ts: 10ms, application-code: 44ms)[22m
+[2m[WebServer] [22m GET /api/v1/blob/acct-4a304a91-215/inbox/uploads/objkey-4a304a91-224-%E7%94%BB%E5%B8%83%E9%A2%84%E8%A7%88%E8%A7%86%E9%A2%91.mp4?exp=1791119799754&token=bcffcd7c69636aedbfe1da1262aa70acba3bddffdd6779eb191fc99af86940a0 [32m206[39m in 21ms[2m (next.js: 6ms, application-code: 15ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 85ms[2m (next.js: 37ms, proxy.ts: 10ms, application-code: 37ms)[22m
+[2m[WebServer] [22m GET /canvases/1c0956e0-bddc-4cae-a56b-135db7934bbf [32m200[39m in 350ms[2m (next.js: 17ms, proxy.ts: 15ms, application-code: 318ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 44ms[2m (next.js: 10ms, proxy.ts: 17ms, application-code: 18ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 68ms[2m (next.js: 27ms, proxy.ts: 17ms, application-code: 24ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 128ms[2m (next.js: 57ms, proxy.ts: 17ms, application-code: 54ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 178ms[2m (next.js: 117ms, proxy.ts: 17ms, application-code: 44ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 289ms[2m (next.js: 164ms, proxy.ts: 17ms, application-code: 108ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 50ms[2m (next.js: 24ms, proxy.ts: 9ms, application-code: 18ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 69ms[2m (next.js: 42ms, proxy.ts: 14ms, application-code: 13ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 76ms[2m (next.js: 4ms, proxy.ts: 42ms, application-code: 30ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 107ms[2m (next.js: 43ms, proxy.ts: 42ms, application-code: 21ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 119ms[2m (next.js: 65ms, proxy.ts: 24ms, application-code: 30ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 177ms[2m (next.js: 88ms, proxy.ts: 40ms, application-code: 49ms)[22m
+[2m[WebServer] [22m GET /api/v1/blob/acct-4a304a91-215/inbox/uploads/objkey-4a304a91-217-%E7%94%BB%E5%B8%83%E9%A2%84%E8%A7%88%E5%9B%BE%E7%89%87.png?exp=1791119803504&token=3ea0190c8f5d676173cfa2bc03673b128debff2fe23ab9dc2910134320f96906 [32m200[39m in 190ms[2m (next.js: 46ms, application-code: 144ms)[22m
+[2m[WebServer] [22m GET /api/v1/blob/acct-4a304a91-215/inbox/uploads/objkey-4a304a91-224-%E7%94%BB%E5%B8%83%E9%A2%84%E8%A7%88%E8%A7%86%E9%A2%91.mp4?exp=1791119803581&token=e13b73d2c95db541c36f08274cd00edc0cf392cd5f94ba1289101ca93b99a41d [32m206[39m in 142ms[2m (next.js: 6ms, application-code: 136ms)[22m
+  ✓   6 [e2e] › tests/e2e/creative-canvas.spec.ts:208:5 › T-993 当前账号图片与视频能插入画布并实际预览 (9.6s)
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 28ms[2m (next.js: 4ms, proxy.ts: 10ms, application-code: 14ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 181ms[2m (next.js: 7ms, proxy.ts: 63ms, application-code: 112ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 67ms[2m (next.js: 5ms, proxy.ts: 6ms, application-code: 56ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 40ms[2m (next.js: 11ms, proxy.ts: 8ms, application-code: 20ms)[22m
+[2m[WebServer] [22m GET /projects/project-4a304a91-283 [32m200[39m in 5.0s[2m (next.js: 2.5s, proxy.ts: 6ms, application-code: 2.5s)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 68ms[2m (next.js: 6ms, proxy.ts: 15ms, application-code: 47ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 99ms[2m (next.js: 64ms, proxy.ts: 9ms, application-code: 26ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 132ms[2m (next.js: 91ms, proxy.ts: 9ms, application-code: 33ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 188ms[2m (next.js: 150ms, proxy.ts: 6ms, application-code: 32ms)[22m
+[2m[WebServer] [22m GET /canvases?projectId=project-4a304a91-283 [32m200[39m in 164ms[2m (next.js: 21ms, proxy.ts: 5ms, application-code: 139ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 1491ms[2m (next.js: 911ms, proxy.ts: 482ms, application-code: 98ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 513ms[2m (next.js: 18ms, proxy.ts: 484ms, application-code: 11ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 526ms[2m (next.js: 29ms, proxy.ts: 484ms, application-code: 12ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 545ms[2m (next.js: 40ms, proxy.ts: 486ms, application-code: 19ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 558ms[2m (next.js: 61ms, proxy.ts: 486ms, application-code: 10ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 587ms[2m (next.js: 79ms, proxy.ts: 485ms, application-code: 22ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 209ms[2m (next.js: 41ms, proxy.ts: 114ms, application-code: 54ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 193ms[2m (next.js: 131ms, proxy.ts: 22ms, application-code: 39ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 213ms[2m (next.js: 172ms, proxy.ts: 30ms, application-code: 11ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 233ms[2m (next.js: 180ms, proxy.ts: 36ms, application-code: 17ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 252ms[2m (next.js: 93ms, proxy.ts: 142ms, application-code: 16ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 307ms[2m (next.js: 110ms, proxy.ts: 142ms, application-code: 55ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 201ms[2m (next.js: 7ms, proxy.ts: 185ms, application-code: 9ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 40ms[2m (next.js: 16ms, proxy.ts: 5ms, application-code: 19ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 61ms[2m (next.js: 38ms, proxy.ts: 5ms, application-code: 18ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 61ms[2m (next.js: 4ms, proxy.ts: 16ms, application-code: 42ms)[22m
+[2m[WebServer] [22m GET /canvases/9bd141e5-45d2-4249-82b1-4db80d723a90 [32m200[39m in 109ms[2m (next.js: 29ms, proxy.ts: 5ms, application-code: 75ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 40ms[2m (next.js: 4ms, proxy.ts: 9ms, application-code: 28ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 50ms[2m (next.js: 9ms, proxy.ts: 11ms, application-code: 30ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 70ms[2m (next.js: 45ms, proxy.ts: 11ms, application-code: 13ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 100ms[2m (next.js: 59ms, proxy.ts: 11ms, application-code: 30ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 120ms[2m (next.js: 90ms, proxy.ts: 12ms, application-code: 18ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 194ms[2m (next.js: 69ms, proxy.ts: 90ms, application-code: 35ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 323ms[2m (next.js: 36ms, proxy.ts: 274ms, application-code: 13ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 349ms[2m (next.js: 47ms, proxy.ts: 274ms, application-code: 29ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 212ms[2m (next.js: 67ms, proxy.ts: 131ms, application-code: 15ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 226ms[2m (next.js: 68ms, proxy.ts: 146ms, application-code: 12ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 24ms[2m (next.js: 1990µs, proxy.ts: 5ms, application-code: 17ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 50ms[2m (next.js: 22ms, proxy.ts: 17ms, application-code: 11ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 24ms[2m (next.js: 3ms, proxy.ts: 4ms, application-code: 17ms)[22m
+[2m[WebServer] [22m GET /projects/project-4a304a91-283 [32m200[39m in 482ms[2m (next.js: 19ms, proxy.ts: 3ms, application-code: 460ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 32ms[2m (next.js: 9ms, proxy.ts: 9ms, application-code: 14ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 100ms[2m (next.js: 28ms, proxy.ts: 10ms, application-code: 63ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 138ms[2m (next.js: 99ms, proxy.ts: 8ms, application-code: 32ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 156ms[2m (next.js: 131ms, proxy.ts: 7ms, application-code: 17ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 178ms[2m (next.js: 8ms, proxy.ts: 153ms, application-code: 16ms)[22m
+[2m[WebServer] [22m GET /canvases/9bd141e5-45d2-4249-82b1-4db80d723a90 [32m200[39m in 1379ms[2m (next.js: 10ms, proxy.ts: 26ms, application-code: 1343ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 360ms[2m (next.js: 29ms, proxy.ts: 24ms, application-code: 307ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 417ms[2m (next.js: 339ms, proxy.ts: 28ms, application-code: 50ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 592ms[2m (next.js: 528ms, proxy.ts: 27ms, application-code: 37ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 622ms[2m (next.js: 576ms, proxy.ts: 24ms, application-code: 22ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 633ms[2m (next.js: 599ms, proxy.ts: 24ms, application-code: 10ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 244ms[2m (next.js: 19ms, proxy.ts: 17ms, application-code: 207ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 367ms[2m (next.js: 232ms, proxy.ts: 17ms, application-code: 118ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 720ms[2m (next.js: 371ms, proxy.ts: 17ms, application-code: 332ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 76ms[2m (next.js: 34ms, proxy.ts: 15ms, application-code: 27ms)[22m
+  ✓   7 [e2e] › tests/e2e/creative-canvas.spec.ts:230:5 › T-994 作品素材入口、项目画布过滤与安全返回 (26.9s)
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 52ms[2m (next.js: 5ms, proxy.ts: 16ms, application-code: 31ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 73ms[2m (next.js: 6ms, proxy.ts: 5ms, application-code: 62ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 32ms[2m (next.js: 2ms, proxy.ts: 5ms, application-code: 24ms)[22m
+[2m[WebServer] [22m GET /canvases/a0f6299b-2317-4ddd-a424-1191c53ad63f [32m200[39m in 234ms[2m (next.js: 24ms, proxy.ts: 4ms, application-code: 205ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 44ms[2m (next.js: 9ms, proxy.ts: 19ms, application-code: 17ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 65ms[2m (next.js: 28ms, proxy.ts: 18ms, application-code: 20ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 162ms[2m (next.js: 127ms, proxy.ts: 14ms, application-code: 22ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 181ms[2m (next.js: 18ms, proxy.ts: 128ms, application-code: 35ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 234ms[2m (next.js: 56ms, proxy.ts: 130ms, application-code: 49ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 254ms[2m (next.js: 227ms, proxy.ts: 15ms, application-code: 12ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 278ms[2m (next.js: 115ms, proxy.ts: 138ms, application-code: 25ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 286ms[2m (next.js: 143ms, proxy.ts: 133ms, application-code: 10ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 334ms[2m (next.js: 133ms, proxy.ts: 188ms, application-code: 13ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 23ms[2m (next.js: 3ms, proxy.ts: 4ms, application-code: 17ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 21ms[2m (next.js: 3ms, proxy.ts: 6ms, application-code: 13ms)[22m
+[2m[WebServer] [22m[CreatorOS] DISPATCH_FAILED {"operation":"canvas.save","errorName":"ConflictError","errorCode":"ConflictError"}
+[2m[WebServer] [22m POST /api/v1/dispatch [33m409[39m in 44ms[2m (next.js: 7ms, proxy.ts: 4ms, application-code: 34ms)[22m
+  ✓   8 [e2e] › tests/e2e/creative-canvas.spec.ts:267:5 › T-994 画布版本冲突时不离开并给出恢复动作 (3.2s)
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 26ms[2m (next.js: 5ms, proxy.ts: 3ms, application-code: 19ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 26ms[2m (next.js: 1511µs, proxy.ts: 3ms, application-code: 22ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 13ms[2m (next.js: 1465µs, proxy.ts: 2ms, application-code: 9ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 34ms[2m (next.js: 3ms, proxy.ts: 5ms, application-code: 25ms)[22m
+[2m[WebServer] [22m PUT /api/v1/blob/acct-4a304a91-383/inbox/uploads/objkey-4a304a91-397-%E7%BB%93%E6%9E%9C%E6%93%8D%E4%BD%9C%E9%A2%84%E8%A7%88.png?exp=1791119835180&token=0cffb4901e1abb76f05d030f240a244bdac4632481f9fe7087207c6aa856e5d3 [32m200[39m in 35ms[2m (next.js: 4ms, application-code: 31ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 164ms[2m (next.js: 4ms, proxy.ts: 7ms, application-code: 153ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 28ms[2m (next.js: 2ms, proxy.ts: 5ms, application-code: 21ms)[22m
+[2m[WebServer] [22m GET /canvases/2161e609-7551-4fb1-be41-4b8a4e57ed10 [32m200[39m in 278ms[2m (next.js: 6ms, proxy.ts: 5ms, application-code: 268ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 30ms[2m (next.js: 6ms, proxy.ts: 6ms, application-code: 18ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 42ms[2m (next.js: 8ms, proxy.ts: 19ms, application-code: 15ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 67ms[2m (next.js: 25ms, proxy.ts: 20ms, application-code: 21ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 105ms[2m (next.js: 47ms, proxy.ts: 19ms, application-code: 39ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 131ms[2m (next.js: 85ms, proxy.ts: 24ms, application-code: 22ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 53ms[2m (next.js: 12ms, proxy.ts: 9ms, application-code: 32ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 154ms[2m (next.js: 125ms, proxy.ts: 10ms, application-code: 20ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 48ms[2m (next.js: 12ms, proxy.ts: 12ms, application-code: 24ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 66ms[2m (next.js: 40ms, proxy.ts: 11ms, application-code: 14ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 93ms[2m (next.js: 52ms, proxy.ts: 11ms, application-code: 30ms)[22m
+[2m[WebServer] [22m[CreatorOS] DISPATCH_FAILED {"operation":"ai.tasks.results.list","errorName":"OwnershipError","errorCode":"OwnershipError"}
+[2m[WebServer] [22m POST /api/v1/dispatch [33m404[39m in 115ms[2m (next.js: 78ms, proxy.ts: 16ms, application-code: 21ms)[22m
+[2m[WebServer] [22m GET /api/v1/blob/acct-4a304a91-383/inbox/uploads/objkey-4a304a91-397-%E7%BB%93%E6%9E%9C%E6%93%8D%E4%BD%9C%E9%A2%84%E8%A7%88.png?exp=1791119837413&token=beb8897013af5e9a4018c701fde9b3df6f4b8daf26229f25346a29662e90f920 [32m200[39m in 114ms[2m (next.js: 4ms, application-code: 110ms)[22m
+[2m[WebServer] [22m[CreatorOS] DISPATCH_FAILED {"operation":"ai.tasks.results.list","errorName":"OwnershipError","errorCode":"OwnershipError"}
+[2m[WebServer] [22m POST /api/v1/dispatch [33m404[39m in 176ms[2m (next.js: 4ms, proxy.ts: 158ms, application-code: 14ms)[22m
+[2m[WebServer] [22m[CreatorOS] DISPATCH_FAILED {"operation":"ai.tasks.results.list","errorName":"OwnershipError","errorCode":"OwnershipError"}
+[2m[WebServer] [22m POST /api/v1/dispatch [33m404[39m in 36ms[2m (next.js: 10ms, proxy.ts: 11ms, application-code: 15ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 31ms[2m (next.js: 4ms, proxy.ts: 4ms, application-code: 23ms)[22m
+  ✓   9 [e2e] › tests/e2e/creative-canvas.spec.ts:286:5 › T-994 生成结果就地保留并加入当前作品（模拟任务回执） (4.4s)
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 22ms[2m (next.js: 3ms, proxy.ts: 3ms, application-code: 16ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 12ms[2m (next.js: 1486µs, proxy.ts: 3ms, application-code: 7ms)[22m
+[2m[WebServer] [22m GET /canvases [32m200[39m in 232ms[2m (next.js: 3ms, proxy.ts: 3ms, application-code: 225ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 68ms[2m (next.js: 19ms, proxy.ts: 22ms, application-code: 28ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 83ms[2m (next.js: 48ms, proxy.ts: 16ms, application-code: 19ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 109ms[2m (next.js: 68ms, proxy.ts: 16ms, application-code: 25ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 150ms[2m (next.js: 92ms, proxy.ts: 17ms, application-code: 41ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 163ms[2m (next.js: 134ms, proxy.ts: 19ms, application-code: 11ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 171ms[2m (next.js: 143ms, proxy.ts: 20ms, application-code: 8ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 39ms[2m (next.js: 3ms, proxy.ts: 29ms, application-code: 6ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 23ms[2m (next.js: 11ms, proxy.ts: 5ms, application-code: 7ms)[22m
+[2m[WebServer] [22m GET /canvases?library=xhs&scope=builtin&page=1 [32m200[39m in 45ms[2m (next.js: 20ms, proxy.ts: 5ms, application-code: 21ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 68ms[2m (next.js: 17ms, proxy.ts: 36ms, application-code: 15ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 56ms[2m (next.js: 25ms, proxy.ts: 17ms, application-code: 14ms)[22m
+[2m[WebServer] [22m GET /canvases?library=xhs&scope=builtin&page=1&template=xhs-learning [32m200[39m in 182ms[2m (next.js: 83ms, proxy.ts: 8ms, application-code: 91ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 23ms[2m (next.js: 6ms, proxy.ts: 5ms, application-code: 12ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 31ms[2m (next.js: 1888µs, proxy.ts: 8ms, application-code: 21ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 42ms[2m (next.js: 14ms, proxy.ts: 15ms, application-code: 13ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 52ms[2m (next.js: 4ms, proxy.ts: 9ms, application-code: 39ms)[22m
+[2m[WebServer] [22m GET /canvases/17dfcf1c-6b8b-4409-8011-36cee7472791 [32m200[39m in 58ms[2m (next.js: 12ms, proxy.ts: 7ms, application-code: 39ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 46ms[2m (next.js: 23ms, proxy.ts: 10ms, application-code: 13ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 74ms[2m (next.js: 48ms, proxy.ts: 18ms, application-code: 8ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 83ms[2m (next.js: 57ms, proxy.ts: 17ms, application-code: 9ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 178ms[2m (next.js: 106ms, proxy.ts: 46ms, application-code: 26ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 311ms[2m (next.js: 180ms, proxy.ts: 118ms, application-code: 13ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 214ms[2m (next.js: 22ms, proxy.ts: 178ms, application-code: 14ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 216ms[2m (next.js: 27ms, proxy.ts: 165ms, application-code: 23ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 244ms[2m (next.js: 52ms, proxy.ts: 166ms, application-code: 26ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 45ms[2m (next.js: 20ms, proxy.ts: 5ms, application-code: 21ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 62ms[2m (next.js: 42ms, proxy.ts: 4ms, application-code: 16ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 14ms[2m (next.js: 1637µs, proxy.ts: 4ms, application-code: 8ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 10ms[2m (next.js: 1425µs, proxy.ts: 2ms, application-code: 7ms)[22m
+[2m[WebServer] [22m GET /canvases/17dfcf1c-6b8b-4409-8011-36cee7472791 [32m200[39m in 216ms[2m (next.js: 10ms, proxy.ts: 4ms, application-code: 202ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 37ms[2m (next.js: 12ms, proxy.ts: 12ms, application-code: 13ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 97ms[2m (next.js: 26ms, proxy.ts: 15ms, application-code: 57ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 132ms[2m (next.js: 85ms, proxy.ts: 16ms, application-code: 32ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 152ms[2m (next.js: 119ms, proxy.ts: 18ms, application-code: 15ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 165ms[2m (next.js: 134ms, proxy.ts: 19ms, application-code: 12ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 35ms[2m (next.js: 9ms, proxy.ts: 6ms, application-code: 20ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 52ms[2m (next.js: 30ms, proxy.ts: 7ms, application-code: 15ms)[22m
+  ✓  10 [e2e] › tests/e2e/creative-canvas.spec.ts:325:5 › T-1021 首页案例独立浏览、取消无写入，多页模板创建原画布并可重新读取 (6.4s)
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 29ms[2m (next.js: 10ms, proxy.ts: 8ms, application-code: 11ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 15ms[2m (next.js: 1826µs, proxy.ts: 5ms, application-code: 8ms)[22m
+[2m[WebServer] [22m GET /canvases?tab=assets [32m200[39m in 132ms[2m (next.js: 4ms, proxy.ts: 3ms, application-code: 125ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 65ms[2m (next.js: 7ms, proxy.ts: 5ms, application-code: 53ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 45ms[2m (next.js: 8ms, proxy.ts: 28ms, application-code: 9ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 75ms[2m (next.js: 19ms, proxy.ts: 39ms, application-code: 18ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 78ms[2m (next.js: 40ms, proxy.ts: 26ms, application-code: 12ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 91ms[2m (next.js: 54ms, proxy.ts: 25ms, application-code: 12ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 123ms[2m (next.js: 68ms, proxy.ts: 27ms, application-code: 28ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 87ms[2m (next.js: 3ms, proxy.ts: 79ms, application-code: 6ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 29ms[2m (next.js: 6ms, proxy.ts: 9ms, application-code: 14ms)[22m
+[2m[WebServer] [22m PUT /api/v1/blob/acct-4a304a91-460/inbox/uploads/objkey-4a304a91-471-image-4.png?exp=1791119847386&token=d2a9b7beeef5b6f9a5703041e1dbbddc2d113ee2fd6d614359271c8bd5638724 [32m200[39m in 16ms[2m (next.js: 3ms, application-code: 13ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 133ms[2m (next.js: 1621µs, proxy.ts: 3ms, application-code: 128ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 41ms[2m (next.js: 5ms, proxy.ts: 9ms, application-code: 28ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 47ms[2m (next.js: 32ms, proxy.ts: 5ms, application-code: 9ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 188ms[2m (next.js: 164ms, proxy.ts: 6ms, application-code: 17ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 26ms[2m (next.js: 4ms, proxy.ts: 7ms, application-code: 16ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 41ms[2m (next.js: 21ms, proxy.ts: 6ms, application-code: 14ms)[22m
+[2m[WebServer] [22m GET /canvases?tab=assets [32m200[39m in 319ms[2m (next.js: 183ms, proxy.ts: 6ms, application-code: 131ms)[22m
+[2m[WebServer] [22m GET /api/v1/blob/acct-4a304a91-460/inbox/uploads/objkey-4a304a91-471-image-4.png?exp=1791119847923&token=1330f8750156f93a9813b3e2ce58b21f604369916a9b33541a56d866b545e498 [32m200[39m in 31ms[2m (next.js: 1911µs, application-code: 29ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 17ms[2m (next.js: 3ms, proxy.ts: 5ms, application-code: 8ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 27ms[2m (next.js: 4ms, proxy.ts: 6ms, application-code: 18ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 26ms[2m (next.js: 2ms, proxy.ts: 6ms, application-code: 17ms)[22m
+[2m[WebServer] [22m GET /canvases/2f1fd84b-2d8a-4ee1-b83e-8b5c4d8e3000 [32m200[39m in 36ms[2m (next.js: 7ms, proxy.ts: 2ms, application-code: 27ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 32ms[2m (next.js: 8ms, proxy.ts: 9ms, application-code: 14ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 46ms[2m (next.js: 27ms, proxy.ts: 9ms, application-code: 10ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 91ms[2m (next.js: 58ms, proxy.ts: 8ms, application-code: 25ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 102ms[2m (next.js: 84ms, proxy.ts: 10ms, application-code: 9ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 111ms[2m (next.js: 92ms, proxy.ts: 9ms, application-code: 10ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 76ms[2m (next.js: 3ms, proxy.ts: 52ms, application-code: 21ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 53ms[2m (next.js: 39ms, proxy.ts: 3ms, application-code: 10ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 75ms[2m (next.js: 50ms, proxy.ts: 3ms, application-code: 21ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 62ms[2m (next.js: 4ms, proxy.ts: 44ms, application-code: 15ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 51ms[2m (next.js: 19ms, proxy.ts: 10ms, application-code: 22ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 63ms[2m (next.js: 42ms, proxy.ts: 6ms, application-code: 15ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 80ms[2m (next.js: 57ms, proxy.ts: 5ms, application-code: 18ms)[22m
+[2m[WebServer] [22m GET /api/v1/blob/acct-4a304a91-460/inbox/uploads/objkey-4a304a91-471-image-4.png?exp=1791119849120&token=64e56c7068a3a3fe30b1ef5495f5e4a94cac4a6657ebd5f54dabd57df7ebc5b1 [32m200[39m in 11ms[2m (next.js: 1706µs, application-code: 9ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 43ms[2m (next.js: 5ms, proxy.ts: 11ms, application-code: 27ms)[22m
+[2m[WebServer] [22m GET /canvases/2f1fd84b-2d8a-4ee1-b83e-8b5c4d8e3000 [32m200[39m in 494ms[2m (next.js: 10ms, proxy.ts: 2ms, application-code: 482ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 22ms[2m (next.js: 4ms, proxy.ts: 5ms, application-code: 13ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 35ms[2m (next.js: 17ms, proxy.ts: 6ms, application-code: 13ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 30ms[2m (next.js: 13ms, proxy.ts: 9ms, application-code: 8ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 42ms[2m (next.js: 26ms, proxy.ts: 6ms, application-code: 11ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 69ms[2m (next.js: 35ms, proxy.ts: 7ms, application-code: 26ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 24ms[2m (next.js: 5ms, proxy.ts: 5ms, application-code: 14ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 34ms[2m (next.js: 19ms, proxy.ts: 5ms, application-code: 10ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 28ms[2m (next.js: 4ms, proxy.ts: 9ms, application-code: 15ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 36ms[2m (next.js: 18ms, proxy.ts: 3ms, application-code: 14ms)[22m
+  ✓  11 [e2e] › tests/e2e/creative-canvas.spec.ts:348:5 › T-1021 资产独立上传，选用追加原画布并冻结真实文件 (6.1s)
+
+  11 passed (2.3m)

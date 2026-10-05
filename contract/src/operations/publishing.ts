@@ -11,6 +11,7 @@ const publicationParams = z.object({ publicationId: id });
 
 // SPEC §13 "发布" group.
 export const publishingOperations = {
+  exportPublicationVisualNote:defineEndpoint({id:"publications.visualNotes.export",method:"POST",path:"/publications/:publicationId/visual-note/export",params:publicationParams,body:z.object({revisionId:id,pageIndex:z.number().int().min(0).max(19).optional()}),response:z.object({caption:z.string(),files:z.array(z.object({assetId:id,url:z.string(),fileName:z.string()}))}),fr:["FR-PUBLISHING-VISUAL-EXPORT"]}),
   listPublications: defineEndpoint({
     id: "outputs.publications.list",
     method: "GET",

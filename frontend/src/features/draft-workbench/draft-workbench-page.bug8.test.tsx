@@ -449,3 +449,7 @@ describe("DraftWorkbenchPage — T-387b 缺素材清单", () => {
     ).toBeNull();
   });
 });
+it("T-1021 没有口播脚本也能查看已有图文物料，不开放新生成",()=>{
+ render(<DraftWorkbenchPage vm={baseVm({publishPack:{publicationId:'pub-a',revisionId:'rev-a',platform:'xiaohongshu',status:'draft',publishedAt:null,title:'已采纳图文',description:'真实图文配文',tags:[],hasCover:false,coverAssetId:null},publishUnlocked:false})}/>);
+ expect(screen.getByRole('button',{name:'查看发布物料'})).toBeVisible();expect(screen.queryByRole('button',{name:'生成发布物料'})).not.toBeInTheDocument();fireEvent.click(screen.getByRole('button',{name:'查看发布物料'}));expect(screen.getByRole('dialog')).toHaveTextContent('真实图文配文');
+});

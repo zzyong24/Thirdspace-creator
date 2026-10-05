@@ -1,0 +1,53 @@
+import {afterAll,beforeAll,expect,it,vi} from "vitest";
+import {createDb,users,type Db} from "@creatoros/backend";
+import type {RequestContext,VisualTemplateInput} from "@creatoros/contract";
+import {createVisualTemplateService} from "./visual-template.service";
+let db:Db,close:()=>Promise<void>;
+const ctx=(accountId:string|null="a"):RequestContext=>({userId:"templates-user",accountId,requestId:"templates",source:"user"});
+const input:VisualTemplateInput={libraryKind:"cover",industries:["通用"],visualMode:"graphic",kind:"style",name:"我的风格",prompt:"大标题与真实证据",aspectRatio:"3:4",references:[],pageRecipes:[],requiredIdentity:false};
+const reference=vi.fn(async(c:RequestContext,ref:{assetId:string;fileId?:string;checksum?:string})=>{await db.select().from(users).limit(1);if(c.accountId!=="a"||ref.assetId!=="identity")throw new Error("无权素材");if(ref.checksum&&ref.checksum!=="digest")throw new Error("文件变化");return {fileId:"file",checksum:"digest"};});
+const service=()=>createVisualTemplateService(db,{assertImageReference:reference});
+beforeAll(async()=>{const opened=await createDb();db=opened.db;close=()=>opened.client.close();});
+afterAll(async()=>{await close();});
+it("内置目录无需账号、双库与真人/实拍、13行业且不可写",async()=>{
+ const s=service(),page=await s.list(ctx(null),{scope:"builtin",page:1,pageSize:100});
+ expect(new Set(page.data.flatMap(t=>t.industries)).size).toBe(13);
+ expect(page.data.some(t=>t.visualMode==="real_person"&&t.requiredIdentity)).toBe(true);
+ expect(page.data.some(t=>t.visualMode==="photo_product")).toBe(true);
+ expect(page.data.some(t=>t.libraryKind==="xhs"&&t.pageRecipes.length===3)).toBe(true);
+ expect(page.data.every(t=>t.references.length===0)).toBe(true);
+ await expect(s.save(ctx(),{id:page.data[0]!.id,expectedRevision:1,template:input,attemptId:"builtin-attempt-0001"})).rejects.toThrow();
+ await expect(s.list(ctx(null),{scope:"saved",page:1,pageSize:10})).rejects.toThrow();
+});
+it("持久CRUD、完整快照、账号分页与未知响应同键恢复",async()=>{
+ const s=service(),created=await s.save(ctx(),{template:input,attemptId:"template-attempt-0001"});
+ expect(await service().save(ctx(),{template:input,attemptId:"template-attempt-0001"})).toEqual(created);
+ await expect(s.save(ctx(),{template:{...input,prompt:"改内容"},attemptId:"template-attempt-0001"})).rejects.toThrow("同一");
+ expect((await s.list(ctx("b"),{scope:"saved",page:1,pageSize:1})).total).toBe(0);
+ const second=await s.save(ctx(),{template:{...input,name:"第二张"},attemptId:"template-attempt-0002"});
+ expect((await service().list(ctx(),{scope:"saved",page:1,pageSize:1})).data).toHaveLength(1);
+ const changed=await s.save(ctx(),{id:created.id,expectedRevision:1,template:{...input,name:"修改"},attemptId:"template-attempt-0003"});
+ expect(changed.revision).toBe(2);
+ await expect(s.save(ctx(),{id:created.id,expectedRevision:1,template:input,attemptId:"template-attempt-0004"})).rejects.toThrow("版本");
+ await expect(s.remove(ctx("b"),created.id,{expectedRevision:2,attemptId:"template-remove-0001"})).rejects.toThrow();
+ const removed=await s.remove(ctx(),created.id,{expectedRevision:2,attemptId:"template-remove-0001"});
+ expect(await service().remove(ctx(),created.id,{expectedRevision:2,attemptId:"template-remove-0001"})).toEqual(removed);
+ expect((await service().list(ctx(),{scope:"saved",page:1,pageSize:100})).data.map(t=>t.id)).toEqual([second.id]);
+});
+it("身份与参考冻结真实文件，不接收跨账号或摘要变化",async()=>{
+ const s=service(),real={...input,visualMode:"real_person" as const,requiredIdentity:true,references:[{role:"identity" as const,assetId:"identity"}]};
+ const saved=await s.save(ctx(),{template:real,attemptId:"identity-attempt-0001"});
+ expect(saved.references).toEqual([{role:"identity",assetId:"identity",fileId:"file",checksum:"digest"}]);
+ await expect(s.save(ctx("b"),{template:real,attemptId:"identity-attempt-0002"})).rejects.toThrow("无权");
+ const unbound=await s.save(ctx(),{template:{...real,references:[]},attemptId:"identity-attempt-0003"});
+ expect(unbound).toMatchObject({requiredIdentity:true,references:[]});
+ expect((await service().list(ctx(),{scope:"saved",visualMode:"real_person",page:1,pageSize:100})).data).toContainEqual(unbound);
+ await expect(s.save(ctx(),{template:{...real,references:[{role:"identity",assetId:"identity"},{role:"identity",assetId:"identity"}]},attemptId:"identity-attempt-0005"})).rejects.toThrow("身份参考必须唯一");
+ await expect(s.save(ctx(),{template:{...real,references:[{role:"identity",assetId:"identity",checksum:"stale"}]},attemptId:"identity-attempt-0004"})).rejects.toThrow("变化");
+});
+it("生成身份要求读取当前账号真实保存快照，更新或删除收藏不抹掉已用版本",async()=>{
+ const s=service(),created=await s.save(ctx(),{template:{...input,visualMode:'real_person',requiredIdentity:true},attemptId:'identity-snapshot-version-1'});
+ expect(await s.resolveRequirement(ctx(),created.id,1)).toBe(true);await expect(s.resolveRequirement(ctx('b'),created.id,1)).rejects.toThrow('无权');
+ const updated=await s.save(ctx(),{id:created.id,expectedRevision:1,template:{...input,requiredIdentity:false},attemptId:'identity-snapshot-version-2'});expect(await s.resolveRequirement(ctx(),created.id,1)).toBe(true);expect(await s.resolveRequirement(ctx(),created.id,2)).toBe(false);
+ await s.remove(ctx(),updated.id,{expectedRevision:2,attemptId:'identity-snapshot-remove'});expect(await s.resolveRequirement(ctx(),created.id,1)).toBe(true);await expect(s.resolveRequirement(ctx(),created.id,3)).rejects.toThrow('快照不存在');
+});

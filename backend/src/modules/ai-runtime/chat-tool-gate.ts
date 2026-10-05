@@ -63,6 +63,8 @@ export interface ChatToolErrorEnvelope {
 export const CHAT_TOOL_ERROR_ENVELOPES: Readonly<
   Record<string, ChatToolErrorEnvelope>
 > = {
+  "canvas.read":{kind:"canvas.read",extras:{canvasId:null,revision:null,title:null,projectId:null,nodes:[],edges:[]}},
+  "canvas.propose":{kind:"canvas.propose",extras:{proposalId:null,canvasId:null,baseRevision:null,operations:[]}},
   "history.read": { kind: "history.read", extras: { text: null, hasMore: false, nextOffset: null } },
   "tool.result.read": { kind: "tool.result.read", extras: { text: null, hasMore: false, nextOffset: null } },
   "skill.read": { kind: "skill.read", extras: { text: null, hasMore: false, nextOffset: null } },

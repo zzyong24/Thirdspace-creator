@@ -1838,6 +1838,22 @@
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
       "reason": "沿用原模型端口与账本，图片字节在请求中编码为base64，保持原附件范围而不引入新协议通道。",
       "acceptance": "仅记录实现复杂度，不代表运行验收；用户暂缓测试。"
+    },
+    {
+      "task_id": "T-1021",
+      "files": [
+        "frontend/src/server/persistence-client.ts"
+      ],
+      "file_sha256": "6772dbcc7a0186ef861065a8643cda2349a9496ebeb97f7d99d7f01f95f431f5",
+      "categories": [
+        "credential_store",
+        "language_toolchain",
+        "native_executable"
+      ],
+      "disposition": "baseline-migrated",
+      "scope_source": "docs/features/t1021-cover-template-library.md",
+      "reason": "b22e6522原装配文件已包含这些凭据与桌面工具链标记。本任务diff仅装配原Assets/Publishing/creative-canvas服务端口；未新增凭据保管、语言工具链、原生进程或安装机制。准确哈希绑定本任务，标记不授权新机制。",
+      "acceptance": "git diff b22e6522 -- frontend/src/server/persistence-client.ts可核对只增加模板与采纳服务接线。本项不是测试或发布PASS。"
     }
   ],
   "historical_baselines": []

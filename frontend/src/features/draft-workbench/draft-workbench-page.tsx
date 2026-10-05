@@ -11,6 +11,8 @@
  */
 
 import * as React from "react";
+import Link from "next/link";
+import {ArrowUpRight,Images,Video} from "lucide-react";
 
 import { CoverThumb } from "@/components/resources/cover-thumb";
 import { ScriptRichEditor } from "@/features/script/script-rich-editor";
@@ -336,7 +338,7 @@ function PublishPackSection({
       </div>
       {/* [T-350b/T-738] 无发布物料时生成；已有持久化物料时原位查看。
           发布中心只负责排期，不承担发布物料查看。 */}
-      {unlocked ? (
+      {unlocked || publishPack ? (
         <PublishPackageCta
           projectId={projectId}
           projectTitle={projectTitle}
@@ -440,17 +442,27 @@ function AmmoDrawer({
 }) {
   return (
     <section
+      id="materials"
       data-slot="draft-ammo-drawer"
       aria-label="创作素材"
       className="rounded-xl border border-border/70 bg-surface p-3"
     >
-      <div className="mb-2 flex flex-wrap items-start gap-x-2 gap-y-1">
+      <div className="mb-3 flex flex-wrap items-start gap-x-3 gap-y-2">
         <div className="min-w-0 flex-1">
           <h2 className="text-[13.5px] font-semibold text-foreground">创作素材</h2>
           <p className="mt-0.5 text-xs leading-5 text-text-subtle">
-            联网找到的资料、你上传的文件和制作中产生的截图、录屏，都统一保存在这里，整个创作周期都能继续使用。
+            收集资料、上传文件，也可以用画布制作图片和视频。选中的结果会出现在这件作品里。
           </p>
         </div>
+        <Link
+          href={`/canvases?projectId=${encodeURIComponent(projectId)}`}
+          className="inline-flex min-h-9 items-center gap-2 rounded-lg bg-primary px-3 text-xs font-semibold text-primary-foreground shadow-sm transition hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+        >
+          <Images className="size-4" aria-hidden="true" />
+          打开创作画布
+          <Video className="size-3.5" aria-hidden="true" />
+          <ArrowUpRight className="size-3.5" aria-hidden="true" />
+        </Link>
         {/* [T-055g SPEC §8.1] 知识库可写:稿面就地记一条,存入即挂本项目。 */}
         <AmmoNoteForm projectId={projectId} />
         {ammo.length > 0 ? (

@@ -1,0 +1,2414 @@
+{
+  "meta": {
+    "purpose": "Per-module task queue (generic; signals from modules.config.json). One task = one isolated session.",
+    "work_branch": "main"
+  },
+  "summary": {
+    "verticals": 54,
+    "tasks_done": 38,
+    "tasks_total": 151,
+    "tasks_pending": 113,
+    "verticals_complete": 1
+  },
+  "verticals": [
+    {
+      "id": "T-988",
+      "archetype": [
+        "derived-computed"
+      ],
+      "task_id": "T-988",
+      "tasks": [
+        {
+          "step": "diagnosis",
+          "status": "pending"
+        },
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "docs/features/t988-home-navigation-copy.md",
+        "docs/research/t988/**",
+        "docs/verification/t988-home-navigation.md",
+        "frontend/src/components/shell/**",
+        "frontend/src/features/dashboard/**",
+        "frontend/src/features/settings/**",
+        "frontend/src/features/automations/**",
+        "frontend/src/server/dashboard-query-projection.ts",
+        "backend/src/application/queries/**",
+        "backend/src/modules/query-services/**",
+        "orchestrator/LESSON_LEDGER.md",
+        "backend/src/modules/publishing/publishing.service.ts",
+        "backend/src/modules/publishing/publishing.service.test.ts",
+        "frontend/src/server/dashboard-query-projection.test.ts",
+        "frontend/src/server/persistence-client.ts",
+        "frontend/src/features/intelligence/collection-import-dialogs.tsx",
+        "frontend/src/features/knowledge/knowledge-graph-view.tsx",
+        "frontend/src/app/(creator)/loading.tsx",
+        "frontend/src/app/(creator)/daily-report/loading.tsx"
+      ],
+      "read_set": [
+        "docs/features/t988-home-navigation-copy.md",
+        "docs/features/t987-page-navigation-performance.md",
+        "frontend/src/**",
+        "backend/src/application/**",
+        "backend/src/modules/query-services/**",
+        "contract/src/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "T-987",
+      "archetype": [
+        "derived-computed"
+      ],
+      "task_id": "T-987",
+      "tasks": [
+        {
+          "step": "diagnosis",
+          "status": "pending"
+        },
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "docs/features/t987-page-navigation-performance.md",
+        "docs/research/t987/**",
+        "docs/verification/t987-page-performance.md",
+        "frontend/src/lib/page-read-cache.server.ts",
+        "frontend/src/lib/page-read-cache.test.ts",
+        "frontend/src/server/publishing-schedule-projection.ts",
+        "frontend/src/server/publishing-schedule-projection.test.ts",
+        "frontend/src/server/persistence-client.ts",
+        "frontend/src/features/automations/**",
+        "frontend/src/features/publishing-center/**",
+        "backend/src/modules/analytics/analytics.repository.ts",
+        "backend/src/modules/analytics/analytics.repository.integration.test.ts",
+        "backend/src/modules/scheduling/scheduling.repository.ts",
+        "backend/src/modules/material-links/material-links.repository.ts",
+        "backend/src/modules/material-links/material-links.service.test.ts",
+        "frontend/src/features/assets/assets-data.ts",
+        "frontend/src/features/assets/assets-data.test.ts",
+        "frontend/src/components/shell/sidebar.tsx",
+        "frontend/src/components/shell/shell.test.tsx"
+      ],
+      "read_set": [
+        "docs/features/t987-page-navigation-performance.md",
+        "docs/features/t941-navigation-latency.md",
+        "backend/src/application/**",
+        "backend/src/modules/query-services/**",
+        "backend/src/modules/scheduling/**",
+        "backend/src/modules/publishing/**",
+        "frontend/src/**",
+        "frontend/next.config.ts",
+        "contract/src/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "T-983",
+      "archetype": [
+        "orchestration"
+      ],
+      "task_id": "T-983",
+      "tasks": [
+        {
+          "step": "review",
+          "status": "pending"
+        },
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "docs/features/t983-separate-collection.md",
+        "docs/verification/t983-collection-split.md",
+        "backend/drizzle/**",
+        "backend/src/modules/scheduling/**",
+        "backend/src/modules/ai-runtime/**",
+        "backend/src/modules/analytics/sync-policy.ts",
+        "backend/src/modules/execution/**",
+        "backend/src/application/scheduling/**",
+        "backend/src/application/collection/**",
+        "contract/src/internal/execution-worker.ts",
+        "frontend/src/features/automations/**",
+        "frontend/src/server/**",
+        "ai-worker/src/runtime/browser/**",
+        "orchestrator/DECISION_LOG.md",
+        "orchestrator/LESSON_LEDGER.md"
+      ],
+      "read_set": [
+        "docs/features/t983-separate-collection.md",
+        "docs/verification/t982-collection-logs.md",
+        "backend/**",
+        "contract/**",
+        "frontend/src/features/automations/**",
+        "frontend/src/server/**",
+        "ai-worker/src/runtime/browser/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "T-915",
+      "archetype": [
+        "orchestration"
+      ],
+      "task_id": "T-915",
+      "tasks": [
+        {
+          "step": "design-review",
+          "status": "done"
+        },
+        {
+          "step": "build",
+          "status": "pending"
+        },
+        {
+          "step": "acceptance",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "backend/**",
+        "ai-worker/**",
+        "contract/**",
+        "frontend/src/**",
+        "frontend/scripts/**",
+        "frontend/package.json",
+        "package.json",
+        "pnpm-lock.yaml",
+        "docs/research/evidence/t915/**",
+        "frontend/src-tauri/src/**",
+        "frontend/src-tauri/tests/**",
+        "frontend/src-tauri/Cargo.toml",
+        "frontend/src-tauri/Cargo.lock",
+        "frontend/src-tauri/build.rs",
+        "frontend/src-tauri/tauri.conf.json",
+        "frontend/src-tauri/tauri.windows.conf.json",
+        "frontend/src-tauri/capabilities/**",
+        "pnpm-workspace.yaml",
+        "patches/@earendil-works__pi-ai@0.80.7.patch"
+      ],
+      "read_set": [
+        "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "backend/**",
+        "ai-worker/**",
+        "contract/**",
+        "frontend/src/server/**",
+        "frontend/src/app/api/**",
+        "frontend/scripts/desktop/**",
+        "frontend/src/**",
+        "frontend/src-tauri/**",
+        "PROJECT.md",
+        "PROJECT_CONTEXT.md",
+        "package.json",
+        "pnpm-lock.yaml",
+        "pnpm-workspace.yaml",
+        "patches/@earendil-works__pi-ai@0.80.7.patch"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {
+        "design-review": [],
+        "acceptance": [
+          "docs/research/evidence/t915/**"
+        ]
+      },
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {
+        "design-review": "51ed266e"
+      }
+    },
+    {
+      "id": "projects",
+      "archetype": [
+        "user-authored",
+        "orchestration"
+      ],
+      "task_id": "projects",
+      "tasks": [
+        {
+          "step": "repo",
+          "status": "done"
+        },
+        {
+          "step": "flow",
+          "status": "pending"
+        },
+        {
+          "step": "frontend",
+          "status": "pending"
+        },
+        {
+          "step": "e2e",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": "T-916：历史任务缺有效绑定及验收证据，禁止执行，待独立恢复",
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [],
+      "read_set": [
+        "backend/src/modules/projects/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "knowledge",
+      "archetype": [
+        "user-authored",
+        "externally-ingested"
+      ],
+      "task_id": "knowledge",
+      "tasks": [
+        {
+          "step": "repo",
+          "status": "done"
+        },
+        {
+          "step": "data-source",
+          "status": "pending"
+        },
+        {
+          "step": "frontend",
+          "status": "done"
+        },
+        {
+          "step": "e2e",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": "T-916：历史任务缺有效绑定及验收证据，禁止执行，待独立恢复",
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [],
+      "read_set": [
+        "backend/src/modules/knowledge/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "assets",
+      "archetype": [
+        "user-authored",
+        "externally-ingested"
+      ],
+      "task_id": "assets",
+      "tasks": [
+        {
+          "step": "repo",
+          "status": "done"
+        },
+        {
+          "step": "data-source",
+          "status": "pending"
+        },
+        {
+          "step": "frontend",
+          "status": "done"
+        },
+        {
+          "step": "e2e",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": "T-916：历史任务缺有效绑定及验收证据，禁止执行，待独立恢复",
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [],
+      "read_set": [
+        "backend/src/modules/assets/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "artifacts",
+      "archetype": [
+        "user-authored",
+        "ai-generated",
+        "orchestration"
+      ],
+      "task_id": "artifacts",
+      "tasks": [
+        {
+          "step": "repo",
+          "status": "done"
+        },
+        {
+          "step": "data-source",
+          "status": "pending"
+        },
+        {
+          "step": "flow",
+          "status": "pending"
+        },
+        {
+          "step": "frontend",
+          "status": "done"
+        },
+        {
+          "step": "e2e",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": "T-916：历史任务缺有效绑定及验收证据，禁止执行，待独立恢复",
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [],
+      "read_set": [
+        "backend/src/modules/artifacts/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "production",
+      "archetype": [
+        "user-authored",
+        "orchestration"
+      ],
+      "task_id": "production",
+      "tasks": [
+        {
+          "step": "repo",
+          "status": "done"
+        },
+        {
+          "step": "flow",
+          "status": "pending"
+        },
+        {
+          "step": "frontend",
+          "status": "done"
+        },
+        {
+          "step": "e2e",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": "T-916：历史任务缺有效绑定及验收证据，禁止执行，待独立恢复",
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [],
+      "read_set": [
+        "backend/src/modules/production/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "publishing",
+      "archetype": [
+        "externally-ingested",
+        "orchestration"
+      ],
+      "task_id": "publishing",
+      "tasks": [
+        {
+          "step": "repo",
+          "status": "done"
+        },
+        {
+          "step": "flow",
+          "status": "pending"
+        },
+        {
+          "step": "frontend",
+          "status": "done"
+        },
+        {
+          "step": "e2e",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": "T-916：历史任务缺有效绑定及验收证据，禁止执行，待独立恢复",
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [],
+      "read_set": [
+        "backend/src/modules/publishing/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "analytics",
+      "archetype": [
+        "externally-ingested",
+        "derived-computed"
+      ],
+      "task_id": "analytics",
+      "tasks": [
+        {
+          "step": "repo",
+          "status": "done"
+        },
+        {
+          "step": "data-source",
+          "status": "pending"
+        },
+        {
+          "step": "frontend",
+          "status": "pending"
+        },
+        {
+          "step": "e2e",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": "T-916：历史任务缺有效绑定及验收证据，禁止执行，待独立恢复",
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [],
+      "read_set": [
+        "backend/src/modules/analytics/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "reviews",
+      "archetype": [
+        "user-authored",
+        "orchestration"
+      ],
+      "task_id": "reviews",
+      "tasks": [
+        {
+          "step": "repo",
+          "status": "done"
+        },
+        {
+          "step": "flow",
+          "status": "pending"
+        },
+        {
+          "step": "frontend",
+          "status": "pending"
+        },
+        {
+          "step": "e2e",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": "T-916：历史任务缺有效绑定及验收证据，禁止执行，待独立恢复",
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [],
+      "read_set": [
+        "backend/src/modules/reviews/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "learnings",
+      "archetype": [
+        "user-authored",
+        "derived-computed"
+      ],
+      "task_id": "learnings",
+      "tasks": [
+        {
+          "step": "repo",
+          "status": "done"
+        },
+        {
+          "step": "data-source",
+          "status": "pending"
+        },
+        {
+          "step": "frontend",
+          "status": "pending"
+        },
+        {
+          "step": "e2e",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": "T-916：历史任务缺有效绑定及验收证据，禁止执行，待独立恢复",
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [],
+      "read_set": [
+        "backend/src/modules/learnings/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "notifications",
+      "archetype": [
+        "derived-computed"
+      ],
+      "task_id": "notifications",
+      "tasks": [
+        {
+          "step": "repo",
+          "status": "done"
+        },
+        {
+          "step": "data-source",
+          "status": "pending"
+        },
+        {
+          "step": "frontend",
+          "status": "pending"
+        },
+        {
+          "step": "e2e",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": "T-916：历史任务缺有效绑定及验收证据，禁止执行，待独立恢复",
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [],
+      "read_set": [
+        "backend/src/modules/notifications/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "search",
+      "archetype": [
+        "derived-computed"
+      ],
+      "task_id": "search",
+      "tasks": [
+        {
+          "step": "repo",
+          "status": "done"
+        },
+        {
+          "step": "data-source",
+          "status": "pending"
+        },
+        {
+          "step": "frontend",
+          "status": "pending"
+        },
+        {
+          "step": "e2e",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": "T-916：历史任务缺有效绑定及验收证据，禁止执行，待独立恢复",
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [],
+      "read_set": [
+        "backend/src/modules/search/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "settings",
+      "archetype": [
+        "user-authored",
+        "reference-config"
+      ],
+      "task_id": "settings",
+      "tasks": [
+        {
+          "step": "repo",
+          "status": "done"
+        },
+        {
+          "step": "frontend",
+          "status": "pending"
+        },
+        {
+          "step": "e2e",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": "T-916：历史任务缺有效绑定及验收证据，禁止执行，待独立恢复",
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [],
+      "read_set": [
+        "backend/src/modules/settings/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "taxonomy",
+      "archetype": [
+        "user-authored",
+        "reference-config"
+      ],
+      "task_id": "taxonomy",
+      "tasks": [
+        {
+          "step": "repo",
+          "status": "done"
+        },
+        {
+          "step": "frontend",
+          "status": "pending"
+        },
+        {
+          "step": "e2e",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": "T-916：历史任务缺有效绑定及验收证据，禁止执行，待独立恢复",
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [],
+      "read_set": [
+        "backend/src/modules/taxonomy/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "ingestion",
+      "archetype": [
+        "externally-ingested",
+        "orchestration"
+      ],
+      "task_id": "ingestion",
+      "tasks": [
+        {
+          "step": "repo",
+          "status": "done"
+        },
+        {
+          "step": "data-source",
+          "status": "pending"
+        },
+        {
+          "step": "flow",
+          "status": "pending"
+        },
+        {
+          "step": "frontend",
+          "status": "pending"
+        },
+        {
+          "step": "e2e",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": "T-916：历史任务缺有效绑定及验收证据，禁止执行，待独立恢复",
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [],
+      "read_set": [
+        "backend/src/modules/ingestion/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "ai",
+      "archetype": [
+        "ai-generated",
+        "orchestration"
+      ],
+      "task_id": "ai",
+      "tasks": [
+        {
+          "step": "repo",
+          "status": "done"
+        },
+        {
+          "step": "data-source",
+          "status": "pending"
+        },
+        {
+          "step": "flow",
+          "status": "pending"
+        },
+        {
+          "step": "frontend",
+          "status": "pending"
+        },
+        {
+          "step": "e2e",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": "T-916：历史任务缺有效绑定及验收证据，禁止执行，待独立恢复",
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [],
+      "read_set": [
+        "backend/src/modules/ai/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "candidate",
+      "archetype": [
+        "user-authored",
+        "ai-generated",
+        "externally-ingested",
+        "orchestration"
+      ],
+      "task_id": "candidate",
+      "tasks": [
+        {
+          "step": "repo",
+          "status": "done"
+        },
+        {
+          "step": "data-source",
+          "status": "pending"
+        },
+        {
+          "step": "flow",
+          "status": "pending"
+        },
+        {
+          "step": "frontend",
+          "status": "pending"
+        },
+        {
+          "step": "e2e",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": "T-916：历史任务缺有效绑定及验收证据，禁止执行，待独立恢复",
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [],
+      "read_set": [
+        "backend/src/modules/candidate/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "calibration",
+      "archetype": [
+        "user-authored",
+        "externally-ingested",
+        "derived-computed",
+        "orchestration"
+      ],
+      "task_id": "calibration",
+      "tasks": [
+        {
+          "step": "repo",
+          "status": "done"
+        },
+        {
+          "step": "data-source",
+          "status": "pending"
+        },
+        {
+          "step": "flow",
+          "status": "pending"
+        },
+        {
+          "step": "frontend",
+          "status": "pending"
+        },
+        {
+          "step": "e2e",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": "T-916：历史任务缺有效绑定及验收证据，禁止执行，待独立恢复",
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [],
+      "read_set": [
+        "backend/src/modules/calibration/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "monetization",
+      "archetype": [
+        "user-authored",
+        "externally-ingested",
+        "derived-computed",
+        "orchestration"
+      ],
+      "task_id": "monetization",
+      "tasks": [
+        {
+          "step": "repo",
+          "status": "done"
+        },
+        {
+          "step": "data-source",
+          "status": "pending"
+        },
+        {
+          "step": "flow",
+          "status": "pending"
+        },
+        {
+          "step": "frontend",
+          "status": "pending"
+        },
+        {
+          "step": "e2e",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": "T-916：历史任务缺有效绑定及验收证据，禁止执行，待独立恢复",
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [],
+      "read_set": [
+        "orchestrator/process/modules.config.json"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "positioning",
+      "archetype": [
+        "user-authored",
+        "ai-generated",
+        "orchestration"
+      ],
+      "task_id": "positioning",
+      "tasks": [
+        {
+          "step": "repo",
+          "status": "done"
+        },
+        {
+          "step": "flow",
+          "status": "pending"
+        },
+        {
+          "step": "frontend",
+          "status": "pending"
+        },
+        {
+          "step": "e2e",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": "T-916：历史任务缺有效绑定及验收证据，禁止执行，待独立恢复",
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [],
+      "read_set": [
+        "backend/src/modules/positioning/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "platform-account",
+      "archetype": [
+        "user-authored",
+        "reference-config"
+      ],
+      "task_id": "platform-account",
+      "tasks": [
+        {
+          "step": "repo",
+          "status": "done"
+        },
+        {
+          "step": "frontend",
+          "status": "done"
+        },
+        {
+          "step": "e2e",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": "T-916：历史任务缺有效绑定及验收证据，禁止执行，待独立恢复",
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [],
+      "read_set": [
+        "backend/src/modules/platform-account/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "content-calendar",
+      "archetype": [
+        "user-authored",
+        "derived-computed",
+        "orchestration"
+      ],
+      "task_id": "content-calendar",
+      "tasks": [
+        {
+          "step": "repo",
+          "status": "done"
+        },
+        {
+          "step": "flow",
+          "status": "pending"
+        },
+        {
+          "step": "frontend",
+          "status": "done"
+        },
+        {
+          "step": "e2e",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": "T-916：历史任务缺有效绑定及验收证据，禁止执行，待独立恢复",
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [],
+      "read_set": [
+        "backend/src/modules/content-calendar/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "T-918",
+      "archetype": [
+        "orchestration"
+      ],
+      "task_id": "T-918",
+      "tasks": [
+        {
+          "step": "build",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "frontend/src/**",
+        "frontend/scripts/desktop/**",
+        "docs/verification/**"
+      ],
+      "read_set": [
+        "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+        ".agents/skills/packaging-creatoros-release/SKILL.md",
+        "frontend/scripts/desktop/**",
+        "frontend/src-tauri/**",
+        "frontend/package.json",
+        "ai-worker/**",
+        "backend/src/modules/ai-runtime/**",
+        "contract/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "T-923",
+      "archetype": [
+        "orchestration"
+      ],
+      "task_id": "T-923",
+      "tasks": [
+        {
+          "step": "design-review",
+          "status": "pending"
+        },
+        {
+          "step": "build",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "backend/**",
+        "ai-worker/**",
+        "contract/**",
+        "frontend/src/server/**",
+        "docs/verification/t923-continuous-agent.md"
+      ],
+      "read_set": [
+        "docs/superpowers/specs/2026-09-08-continuous-agent-execution.md",
+        "docs/research/2026-09-08-agent-loop-comparison.md",
+        "backend/**",
+        "ai-worker/**",
+        "contract/**",
+        "frontend/src/server/**",
+        "orchestrator/SYSTEM_ARCHITECTURE.md"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {
+        "design-review": []
+      },
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "T-924",
+      "archetype": [
+        "orchestration"
+      ],
+      "task_id": "T-924",
+      "tasks": [
+        {
+          "step": "design-review",
+          "status": "pending"
+        },
+        {
+          "step": "build",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "frontend/**",
+        "docs/verification/t924-navigation-cache.md"
+      ],
+      "read_set": [
+        "docs/superpowers/specs/2026-09-08-navigation-read-cache.md",
+        "frontend/**",
+        "contract/**",
+        "orchestrator/SYSTEM_ARCHITECTURE.md"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {
+        "design-review": []
+      },
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "T-925",
+      "archetype": [
+        "orchestration"
+      ],
+      "task_id": "T-925",
+      "tasks": [
+        {
+          "step": "design-review",
+          "status": "pending"
+        },
+        {
+          "step": "build",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "frontend/**",
+        "backend/**",
+        "docs/verification/t925-change-cache.md"
+      ],
+      "read_set": [
+        "docs/superpowers/specs/2026-09-08-navigation-change-cache.md",
+        "frontend/**",
+        "backend/**",
+        "contract/**",
+        "orchestrator/SYSTEM_ARCHITECTURE.md"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {
+        "design-review": []
+      },
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "T-928",
+      "archetype": [
+        "orchestration"
+      ],
+      "task_id": "T-928",
+      "tasks": [
+        {
+          "step": "design-review",
+          "status": "pending"
+        },
+        {
+          "step": "build",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "docs/research/**",
+        "docs/superpowers/specs/**",
+        "docs/verification/**",
+        "frontend/src/features/intelligence/intelligence-workbench.tsx"
+      ],
+      "read_set": [
+        "docs/research/2026-09-08-runtime-feedback-audit.md",
+        "backend/**",
+        "ai-worker/**",
+        "frontend/**",
+        "contract/**",
+        "orchestrator/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {
+        "design-review": []
+      },
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "T-929",
+      "archetype": [
+        "orchestration"
+      ],
+      "task_id": "T-929",
+      "tasks": [
+        {
+          "step": "design-review",
+          "status": "pending"
+        },
+        {
+          "step": "build",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "docs/research/**",
+        "docs/superpowers/specs/**",
+        "docs/verification/**"
+      ],
+      "read_set": [
+        "docs/superpowers/specs/2026-09-08-business-topic-script-method.md",
+        "backend/**",
+        "ai-worker/**",
+        "frontend/**",
+        "contract/**",
+        "orchestrator/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {
+        "design-review": []
+      },
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "T-930",
+      "archetype": [
+        "orchestration"
+      ],
+      "task_id": "T-930",
+      "tasks": [
+        {
+          "step": "design-review",
+          "status": "pending"
+        },
+        {
+          "step": "build",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "backend/**",
+        "ai-worker/**",
+        "frontend/**",
+        "contract/**",
+        "docs/**",
+        "pnpm-lock.yaml",
+        "orchestrator/**"
+      ],
+      "read_set": [
+        "docs/superpowers/specs/2026-09-08-pi-only-runtime.md",
+        "backend/**",
+        "ai-worker/**",
+        "frontend/**",
+        "contract/**",
+        "orchestrator/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {
+        "design-review": []
+      },
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "T-932",
+      "archetype": [
+        "orchestration"
+      ],
+      "task_id": "T-932",
+      "tasks": [
+        {
+          "step": "design-review",
+          "status": "pending"
+        },
+        {
+          "step": "build",
+          "status": "pending"
+        },
+        {
+          "step": "acceptance",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "backend/**",
+        "ai-worker/**",
+        "contract/**",
+        "frontend/src/**",
+        "docs/verification/**"
+      ],
+      "read_set": [
+        "backend/**",
+        "ai-worker/**",
+        "contract/**",
+        "frontend/src/**",
+        "docs/superpowers/specs/2026-09-08-nomifun-skill-execution.md",
+        "docs/research/2026-09-08-nomifun-skill-execution-comparison.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {
+        "design-review": []
+      },
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "T-937",
+      "archetype": [
+        "orchestration"
+      ],
+      "task_id": "T-937",
+      "tasks": [
+        {
+          "step": "design-review",
+          "status": "pending"
+        },
+        {
+          "step": "build",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "backend/**",
+        "ai-worker/**",
+        "contract/**",
+        "frontend/src/**",
+        "docs/features/t937-radar-project-queue.md"
+      ],
+      "read_set": [
+        "docs/features/t937-radar-project-queue.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "backend/**",
+        "ai-worker/**",
+        "contract/**",
+        "frontend/src/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {
+        "design-review": []
+      },
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "T-938",
+      "archetype": [
+        "orchestration"
+      ],
+      "task_id": "T-938",
+      "tasks": [
+        {
+          "step": "design-review",
+          "status": "pending"
+        },
+        {
+          "step": "build",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "backend/**",
+        "ai-worker/**",
+        "contract/**",
+        "frontend/src/**",
+        "docs/features/t938-radar-cooldown.md"
+      ],
+      "read_set": [
+        "docs/features/t938-radar-cooldown.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "backend/**",
+        "ai-worker/**",
+        "contract/**",
+        "frontend/src/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {
+        "design-review": []
+      },
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "T-939",
+      "archetype": [
+        "orchestration"
+      ],
+      "task_id": "T-939",
+      "tasks": [
+        {
+          "step": "design-review",
+          "status": "pending"
+        },
+        {
+          "step": "build",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "backend/**",
+        "ai-worker/**",
+        "contract/**",
+        "frontend/src/**",
+        "docs/features/t939-positioning-release.md",
+        ".github/workflows/desktop-release.yml",
+        "frontend/scripts/desktop/desktop-release-workflow.test.mjs",
+        "orchestrator/DECISION_LOG.md"
+      ],
+      "read_set": [
+        "docs/features/t939-positioning-release.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "backend/**",
+        "ai-worker/**",
+        "contract/**",
+        "frontend/src/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {
+        "design-review": []
+      },
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "T-941",
+      "archetype": [
+        "orchestration"
+      ],
+      "task_id": "T-941",
+      "tasks": [
+        {
+          "step": "design-review",
+          "status": "pending"
+        },
+        {
+          "step": "build",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "backend/**",
+        "ai-worker/**",
+        "contract/**",
+        "frontend/src/**",
+        "docs/features/t941-navigation-latency.md",
+        ".github/workflows/desktop-release.yml",
+        "frontend/scripts/desktop/desktop-release-workflow.test.mjs",
+        "orchestrator/DECISION_LOG.md"
+      ],
+      "read_set": [
+        "docs/features/t941-navigation-latency.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "backend/**",
+        "ai-worker/**",
+        "contract/**",
+        "frontend/src/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {
+        "design-review": []
+      },
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "T-942",
+      "archetype": [
+        "orchestration"
+      ],
+      "task_id": "T-942",
+      "tasks": [
+        {
+          "step": "design-review",
+          "status": "pending"
+        },
+        {
+          "step": "build",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "backend/**",
+        "ai-worker/**",
+        "contract/**",
+        "frontend/src/**",
+        "docs/features/t942-radar-recovery.md",
+        ".github/workflows/desktop-release.yml",
+        "frontend/scripts/desktop/desktop-release-workflow.test.mjs",
+        "orchestrator/DECISION_LOG.md"
+      ],
+      "read_set": [
+        "docs/features/t942-radar-recovery.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "backend/**",
+        "ai-worker/**",
+        "contract/**",
+        "frontend/src/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {
+        "design-review": []
+      },
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "T-944",
+      "archetype": [
+        "orchestration"
+      ],
+      "task_id": "T-944",
+      "tasks": [
+        {
+          "step": "review",
+          "status": "done"
+        },
+        {
+          "step": "test",
+          "status": "done"
+        },
+        {
+          "step": "build",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "docs/features/t944-director-prompts.md",
+        "contract/**",
+        "backend/**",
+        "ai-worker/**",
+        "frontend/src/features/intelligence/**",
+        "frontend/src/server/persistence-client.ts"
+      ],
+      "read_set": [
+        "docs/features/t944-director-prompts.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "contract/**",
+        "backend/**",
+        "ai-worker/**",
+        "frontend/src/features/intelligence/**",
+        "frontend/src/server/persistence-client.ts"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {
+        "review": [],
+        "test": [
+          "backend/src/modules/candidate/candidate.service.test.ts",
+          "backend/src/modules/intelligence/topic-preview-runner.test.ts"
+        ]
+      },
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "T-954",
+      "archetype": [
+        "orchestration"
+      ],
+      "task_id": "T-954",
+      "tasks": [
+        {
+          "step": "review",
+          "status": "done"
+        },
+        {
+          "step": "build",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "docs/features/t954-director-content-loop.md",
+        "docs/research/t954-director/**",
+        "contract/**",
+        "backend/**",
+        "ai-worker/**",
+        "frontend/src/**"
+      ],
+      "read_set": [
+        "docs/features/t954-director-content-loop.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "contract/**",
+        "backend/**",
+        "ai-worker/**",
+        "frontend/src/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {
+        "review": []
+      },
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "T-956",
+      "archetype": [
+        "orchestration"
+      ],
+      "task_id": "T-956",
+      "tasks": [
+        {
+          "step": "review",
+          "status": "pending"
+        },
+        {
+          "step": "build",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "docs/features/t956-installed-collection-stuck.md",
+        "contract/**",
+        "backend/**",
+        "frontend/src/**"
+      ],
+      "read_set": [
+        "docs/features/t956-installed-collection-stuck.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "contract/**",
+        "backend/**",
+        "frontend/src/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {
+        "review": []
+      },
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "T-957",
+      "archetype": [
+        "orchestration"
+      ],
+      "task_id": "T-957",
+      "tasks": [
+        {
+          "step": "review",
+          "status": "pending"
+        },
+        {
+          "step": "build",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "docs/features/t957-ai-real-acceptance.md",
+        "contract/**",
+        "backend/**",
+        "frontend/src/**",
+        "ai-worker/**"
+      ],
+      "read_set": [
+        "docs/features/t957-ai-real-acceptance.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "contract/**",
+        "backend/**",
+        "frontend/src/**",
+        "ai-worker/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {
+        "review": []
+      },
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "T-959",
+      "archetype": [
+        "orchestration"
+      ],
+      "task_id": "T-959",
+      "tasks": [
+        {
+          "step": "review",
+          "status": "done"
+        },
+        {
+          "step": "build",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "docs/features/t959-ai-blockers.md",
+        "contract/**",
+        "backend/**",
+        "frontend/src/**",
+        "ai-worker/**"
+      ],
+      "read_set": [
+        "docs/features/t959-ai-blockers.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "contract/**",
+        "backend/**",
+        "frontend/src/**",
+        "ai-worker/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {
+        "review": []
+      },
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "T-960",
+      "archetype": [
+        "orchestration"
+      ],
+      "task_id": "T-960",
+      "tasks": [
+        {
+          "step": "design",
+          "status": "done"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "docs/features/t960-director-daily-report.md",
+        "docs/research/t960-daily-report/**"
+      ],
+      "read_set": [
+        "docs/features/t960-director-daily-report.md",
+        "docs/research/t960-daily-report/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "T-962",
+      "archetype": [
+        "orchestration"
+      ],
+      "task_id": "T-962",
+      "tasks": [
+        {
+          "step": "research",
+          "status": "pending"
+        },
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "docs/features/t962-operations-sync-redfox.md",
+        "docs/research/t962/**",
+        "docs/research/t960-daily-report/**",
+        "backend/src/**",
+        "backend/drizzle/**",
+        "contract/src/**",
+        "frontend/src/**",
+        "ai-worker/src/**",
+        "orchestrator/DECISION_LOG.md"
+      ],
+      "read_set": [
+        "docs/features/t962-operations-sync-redfox.md",
+        "backend/src/**",
+        "contract/src/**",
+        "frontend/src/**",
+        "ai-worker/src/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "T-964",
+      "archetype": [
+        "orchestration"
+      ],
+      "task_id": "T-964",
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "docs/features/t964-onboarding-daily-report.md",
+        "docs/research/t964/**",
+        "frontend/src/**",
+        "backend/src/**",
+        "backend/drizzle/**",
+        "contract/src/**",
+        "orchestrator/DECISION_LOG.md"
+      ],
+      "read_set": [
+        "docs/features/t964-onboarding-daily-report.md",
+        "frontend/src/**",
+        "backend/src/**",
+        "contract/src/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "T-965",
+      "archetype": [
+        "orchestration"
+      ],
+      "task_id": "T-965",
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "docs/features/t965-daily-report-parity-performance.md",
+        "docs/research/t965/**",
+        "frontend/src/**",
+        "backend/src/**",
+        "backend/drizzle/**",
+        "contract/src/**",
+        "orchestrator/DECISION_LOG.md"
+      ],
+      "read_set": [
+        "docs/features/t965-daily-report-parity-performance.md",
+        "frontend/src/**",
+        "backend/src/**",
+        "contract/src/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "T-966",
+      "archetype": [
+        "orchestration"
+      ],
+      "task_id": "T-966",
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "docs/features/t966-operations-period-recovery.md",
+        "docs/research/t966/**",
+        "frontend/src/**",
+        "backend/src/**",
+        "backend/drizzle/**",
+        "contract/src/**",
+        "orchestrator/DECISION_LOG.md"
+      ],
+      "read_set": [
+        "docs/features/t966-operations-period-recovery.md",
+        "frontend/src/**",
+        "backend/src/**",
+        "contract/src/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "T-968",
+      "archetype": [
+        "orchestration"
+      ],
+      "task_id": "T-968",
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "docs/features/t968-report-export-schedule.md",
+        "frontend/src/features/daily-report/**",
+        "frontend/src/features/projects/**",
+        "frontend/src/components/ui/**",
+        "frontend/package.json",
+        "pnpm-lock.yaml",
+        "frontend/src-tauri/**",
+        "frontend/src-tauri/capabilities/**",
+        "orchestrator/DECISION_LOG.md"
+      ],
+      "read_set": [
+        "docs/features/t968-report-export-schedule.md",
+        "frontend/src/features/daily-report/**",
+        "frontend/src/features/projects/**",
+        "frontend/src/components/ui/**",
+        "frontend/src-tauri/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "T-967",
+      "archetype": [
+        "orchestration"
+      ],
+      "task_id": "T-967",
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "docs/features/t967-week-share-clarity.md",
+        "docs/research/t967/**",
+        "frontend/src/**",
+        "backend/src/**",
+        "backend/drizzle/**",
+        "contract/src/**",
+        "orchestrator/DECISION_LOG.md"
+      ],
+      "read_set": [
+        "docs/features/t967-week-share-clarity.md",
+        "frontend/src/**",
+        "backend/src/**",
+        "contract/src/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "T-974",
+      "archetype": [
+        "orchestration"
+      ],
+      "task_id": "T-974",
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "docs/features/t974-windows-package-reliability.md",
+        "tools/windows-closure-rat/**",
+        "frontend/scripts/desktop/runtime-inventory.mjs",
+        "frontend/scripts/desktop/desktop-release-workflow.test.mjs",
+        ".github/workflows/desktop-release.yml"
+      ],
+      "read_set": [
+        "docs/features/t974-windows-package-reliability.md",
+        "tools/windows-closure-rat/**",
+        "frontend/scripts/desktop/**",
+        ".github/workflows/desktop-release.yml"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "T-994",
+      "archetype": [
+        "user-authored"
+      ],
+      "task_id": "T-994",
+      "tasks": [
+        {
+          "step": "review",
+          "status": "pending"
+        },
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "docs/features/t994-canvas-creation-experience.md",
+        "docs/verification/t994-canvas-experience.md",
+        "docs/verification/t994/**",
+        "orchestrator/T994-FRONTEND-JOURNEY.md",
+        "orchestrator/T994-FRONTEND-VALIDATION.md",
+        "frontend/src/features/creative-canvas/**",
+        "frontend/src/features/draft-workbench/creation-flow-ctas.tsx",
+        "frontend/src/features/draft-workbench/draft-workbench-page.tsx",
+        "frontend/tests/e2e/creative-canvas.spec.ts"
+      ],
+      "read_set": [
+        "docs/features/t994-canvas-creation-experience.md",
+        "docs/features/t993-creator-canvas.md",
+        "frontend/src/features/creative-canvas/**",
+        "frontend/src/features/draft-workbench/**",
+        "frontend/tests/e2e/creative-canvas.spec.ts"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "T-1021",
+      "archetype": [
+        "reference-config",
+        "user-authored",
+        "ai-generated"
+      ],
+      "task_id": "T-1021",
+      "tasks": [
+        {
+          "step": "design",
+          "status": "done"
+        },
+        {
+          "step": "backend",
+          "status": "done"
+        },
+        {
+          "step": "frontend",
+          "status": "done"
+        },
+        {
+          "step": "frontend_home",
+          "status": "done"
+        },
+        {
+          "step": "verification",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": "首页入口及原系统链路已验证；总SPEC真实供应商/安装版与全局239项失败继续待验，未发布。",
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "docs/features/t1021-cover-template-library.md",
+        "docs/features/t1021-cover-template-library/**",
+        "docs/features/t1021-cover-template-library.native-review-round-1.json",
+        "docs/verification/t1021-template-library.md",
+        "docs/verification/t1021/**",
+        "contract/src/resources/creative-canvas.ts",
+        "contract/src/resources/visual-templates.ts",
+        "contract/src/resources/publishing.ts",
+        "contract/src/operations/creative-canvas.ts",
+        "contract/src/operations/visual-templates.ts",
+        "contract/src/operations/publishing.ts",
+        "contract/src/endpoints.ts",
+        "contract/src/index.ts",
+        "backend/src/modules/assets/**",
+        "backend/src/modules/creative-canvas/**",
+        "backend/src/modules/publishing/**",
+        "backend/src/modules/ai-runtime/asset-generation-modes.ts",
+        "backend/src/schema/visual-templates.ts",
+        "backend/src/schema/publishing.ts",
+        "backend/drizzle/**",
+        "frontend/src/features/creative-canvas/**",
+        "frontend/src/features/draft-workbench/**",
+        "frontend/src/features/publishing/**",
+        "frontend/src/features/publishing-center/**",
+        "frontend/src/server/persistence-client.ts",
+        "frontend/public/visual-templates/**",
+        "orchestrator/DECISION_LOG.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "contract/src/cli-policy.ts",
+        "contract/tests/visual-template.test.ts",
+        "backend/src/db.ts",
+        "backend/src/index.ts",
+        "backend/src/application/transport.ts",
+        "frontend/src/app/(creator)/canvases/page.tsx",
+        "frontend/src/features/assets/asset-upload-button.tsx",
+        "frontend/tests/e2e/creative-canvas.spec.ts"
+      ],
+      "read_set": [
+        "docs/features/t1021-cover-template-library.md",
+        "docs/features/t1021-cover-template-library/**",
+        "docs/features/t993-creator-canvas.md",
+        "docs/features/t994-canvas-creation-experience.md",
+        "contract/src/**",
+        "backend/src/modules/creative-canvas/**",
+        "backend/src/modules/assets/**",
+        "backend/src/modules/publishing/**",
+        "backend/src/modules/ai-runtime/**",
+        "backend/src/schema/**",
+        "frontend/src/features/creative-canvas/**",
+        "frontend/src/features/draft-workbench/**",
+        "frontend/src/features/publishing/**",
+        "frontend/src/server/persistence-client.ts"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {
+        "design": [
+          "docs/features/t1021-cover-template-library.md",
+          "docs/features/t1021-cover-template-library/**",
+          "docs/features/t1021-cover-template-library.native-review-round-1.json",
+          "contract/src/resources/creative-canvas.ts",
+          "contract/src/resources/visual-templates.ts",
+          "contract/src/resources/publishing.ts",
+          "contract/src/operations/creative-canvas.ts",
+          "contract/src/operations/visual-templates.ts",
+          "contract/src/operations/publishing.ts",
+          "contract/src/endpoints.ts",
+          "contract/src/index.ts",
+          "contract/src/cli-policy.ts",
+          "contract/tests/visual-template.test.ts"
+        ],
+        "backend": [
+          "backend/src/db.ts",
+          "backend/src/schema/visual-templates.ts",
+          "backend/src/schema/publishing.ts",
+          "backend/drizzle/0102_visual_template_library.sql",
+          "backend/drizzle/meta/_journal.json",
+          "backend/src/modules/assets/visual-template.service.ts",
+          "backend/src/modules/assets/visual-template.service.test.ts",
+          "backend/src/modules/assets/visual-template.catalog.ts",
+          "backend/src/modules/assets/visual-template.transport.ts",
+          "backend/src/modules/assets/index.ts",
+          "backend/src/modules/assets/assets.transport.ts",
+          "backend/src/modules/creative-canvas/creative-canvas.service.ts",
+          "backend/src/modules/creative-canvas/creative-canvas.service.test.ts",
+          "backend/src/modules/creative-canvas/creative-canvas.transport.ts",
+          "backend/src/modules/publishing/visual-material-adoption.service.ts",
+          "backend/src/modules/publishing/visual-material-adoption.service.test.ts",
+          "backend/src/modules/publishing/publication-draft-adoption.service.ts",
+          "backend/src/modules/publishing/publishing.service.ts",
+          "backend/src/modules/publishing/publishing.transport.ts",
+          "backend/src/modules/publishing/index.ts",
+          "backend/src/modules/ai-runtime/asset-generation-modes.ts"
+        ],
+        "frontend": [
+          "frontend/src/features/creative-canvas/**",
+          "frontend/src/features/draft-workbench/**",
+          "frontend/src/features/publishing/**",
+          "frontend/src/features/publishing-center/**",
+          "frontend/src/server/persistence-client.ts",
+          "frontend/public/visual-templates/**",
+          "contract/src/operations/publishing.ts",
+          "backend/src/modules/publishing/publishing.service.ts",
+          "backend/src/modules/publishing/publishing.transport.ts",
+          "backend/src/modules/publishing/visual-material-adoption.service.test.ts",
+          "backend/src/modules/creative-canvas/creative-canvas.service.ts",
+          "backend/src/modules/creative-canvas/creative-canvas.service.test.ts",
+          "backend/src/modules/assets/visual-template.service.ts",
+          "backend/src/modules/assets/visual-template.service.test.ts"
+        ],
+        "verification": [
+          "docs/verification/t1021-template-library.md",
+          "docs/verification/t1021/**"
+        ],
+        "frontend_home": [
+          "frontend/src/features/creative-canvas/**",
+          "frontend/src/app/(creator)/canvases/page.tsx",
+          "frontend/src/features/assets/asset-upload-button.tsx",
+          "frontend/tests/e2e/creative-canvas.spec.ts"
+        ]
+      },
+      "step_read_set": {
+        "backend": [
+          "docs/features/t1021-cover-template-library.md",
+          "docs/features/t1021-cover-template-library/templates.json",
+          "contract/src/**",
+          "backend/src/**",
+          "backend/drizzle/**"
+        ],
+        "frontend": [
+          "docs/features/t1021-cover-template-library.md",
+          "contract/src/**",
+          "frontend/src/**",
+          "docs/features/t1021-cover-template-library/assets/**"
+        ],
+        "frontend_home": [
+          "docs/features/t1021-cover-template-library.md",
+          "frontend/src/**",
+          "contract/src/**"
+        ]
+      },
+      "step_exclusive_resources": {},
+      "commits": {
+        "backend": "b9fd9288",
+        "frontend": "3f792122",
+        "frontend_home": "fb566c02"
+      }
+    },
+    {
+      "id": "T-1025",
+      "archetype": [
+        "reference-config",
+        "user-authored",
+        "externally-ingested",
+        "ai-generated"
+      ],
+      "task_id": "T-1025",
+      "tasks": [
+        {
+          "step": "content",
+          "status": "done"
+        },
+        {
+          "step": "verification",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": "原预览已恢复并回读32套公共/3套新增本人收藏；浏览器策略仍拒绝读取旧错误页，已请求用户手动刷新，页面视觉与操作验收待验证。",
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "docs/features/t1025-template-content-expansion.md",
+        "docs/features/t1025-template-content/**",
+        "docs/verification/t1025/**",
+        "backend/src/modules/assets/visual-template.catalog.ts",
+        "backend/src/modules/assets/visual-template.expansion.ts",
+        "backend/src/modules/assets/visual-template.catalog.test.ts",
+        "frontend/src/features/creative-canvas/canvas-template-library.tsx",
+        "frontend/src/features/creative-canvas/canvas-template-library.test.tsx",
+        "frontend/public/visual-templates/**",
+        "THIRD_PARTY_NOTICES.md"
+      ],
+      "read_set": [
+        "docs/features/t1025-template-content-expansion.md",
+        "docs/features/t1021-cover-template-library.md",
+        "backend/src/modules/assets/**",
+        "frontend/src/features/creative-canvas/**",
+        "contract/src/resources/visual-templates.ts",
+        "frontend/tests/e2e/creative-canvas.spec.ts"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {
+        "content": [
+          "docs/features/t1025-template-content-expansion.md",
+          "docs/features/t1025-template-content/**",
+          "docs/verification/t1025/**",
+          "backend/src/modules/assets/visual-template.catalog.ts",
+          "backend/src/modules/assets/visual-template.expansion.ts",
+          "backend/src/modules/assets/visual-template.catalog.test.ts",
+          "frontend/src/features/creative-canvas/canvas-template-library.tsx",
+          "frontend/src/features/creative-canvas/canvas-template-library.test.tsx",
+          "frontend/public/visual-templates/**",
+          "THIRD_PARTY_NOTICES.md"
+        ],
+        "verification": [
+          "docs/verification/t1025/**"
+        ]
+      },
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {
+        "content": "92ebc96b"
+      }
+    }
+  ],
+  "leases": {}
+}

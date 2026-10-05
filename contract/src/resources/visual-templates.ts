@@ -1,0 +1,10 @@
+import {z} from "zod";
+const id=z.string().min(1).max(128);
+export const visualAspectRatios=["1:1","3:4","16:9","9:16","2:3","3:2","4:3","4:5","5:4","21:9"] as const;
+export const visualModeSchema=z.enum(["real_person","photo_product","graphic","ai_concept"]);
+export const visualReferenceSchema=z.object({role:z.enum(["identity","style","content"]),assetId:id,fileId:id.optional(),checksum:z.string().max(256).optional()}).strict();
+export const visualPageRecipeSchema=z.object({role:z.enum(["cover","body"]),label:z.string().min(1).max(160),prompt:z.string().min(1).max(10_000)}).strict();
+export const visualTemplateInputSchema=z.object({libraryKind:z.enum(["cover","xhs"]),industries:z.array(z.string().min(1).max(80)).min(1).max(30),visualMode:visualModeSchema,kind:z.enum(["prompt","style"]),name:z.string().trim().min(1).max(160),prompt:z.string().trim().min(1).max(10_000),aspectRatio:z.enum(visualAspectRatios),references:z.array(visualReferenceSchema).max(9),sourceTemplateId:id.optional(),pageRecipes:z.array(visualPageRecipeSchema).max(20),requiredIdentity:z.boolean().default(false)}).strict();
+export const visualTemplateResource=visualTemplateInputSchema.extend({id,scope:z.enum(["builtin","saved"]),revision:z.number().int().positive(),aspectRatios:z.array(z.enum(visualAspectRatios)),previewPath:z.string().nullable(),createdAt:z.string(),updatedAt:z.string()}).strict();
+export type VisualTemplate=z.infer<typeof visualTemplateResource>;
+export type VisualTemplateInput=z.infer<typeof visualTemplateInputSchema>;

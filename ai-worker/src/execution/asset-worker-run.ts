@@ -17,7 +17,7 @@ export const generateAssetInWorkerRuntime:Generate=async(input,spec,signal,optio
  const sleep=(ms:number)=>delay(ms,undefined,{signal});
  const omnihi=createOmnihiVideoAdapter({fetch:fetchBound,sleep,pollIntervalMs:5000,maxPollAttempts:120,maxTransientAttempts:1});
  const registry={minimax:createMinimaxAdapter({fetch:fetchBound,sleep,pollIntervalMs:5000,maxPollAttempts:120,h3MaxPollAttempts:240}),openai:createOpenaiImagesAdapter({fetch:fetchBound,sleep,maxTransientAttempts:1}),omnihi,seedance:omnihi,seeddance:omnihi};
- const result=await (input.mediaKind==="image"?generateImage(spec,{prompt:input.prompt,aspectRatio:input.aspectRatio,idempotencyKey:options.idempotencyKey,...(options.referenceImage?{referenceImage:options.referenceImage}:{})},registry):generateVideo(spec,{prompt:input.prompt,aspectRatio:input.aspectRatio,durationSec:input.durationSec,resolution:input.resolution,signal,...options},registry));
+ const result=await (input.mediaKind==="image"?generateImage(spec,{prompt:input.prompt,aspectRatio:input.aspectRatio,idempotencyKey:options.idempotencyKey,...(options.referenceImage?{referenceImage:options.referenceImage}:{})},registry):generateVideo(spec,{prompt:input.prompt,aspectRatio:input.aspectRatio,durationSec:input.durationSec,resolution:input.resolution,signal,resumeJobId:options.resumeJobId,idempotencyKey:options.idempotencyKey,onJobSubmitted:options.onJobSubmitted,...(options.referenceImage?{firstFrame:options.referenceImage}:{})},registry));
  signal.throwIfAborted();return result;
 };
 /** 恢复先于供应商动作；只使用后端持久化的原调用和原任务号。 */
@@ -39,8 +39,15 @@ export async function runAssetInWorker(input:Input,signal:AbortSignal,call:Call,
   try{spec=assetCredentialSchema.parse(await call("resolveAssetCredential",{callId},signal));}catch{throw new GenerationFailure(started?"unknown_result":"waiting_user","ASSET_CREDENTIAL_UNAVAILABLE");}
   if(spec.provider!==input.provider || spec.model!==input.model || spec.baseUrl!==input.baseUrl || spec.serviceId!==input.serviceId || spec.kind!==input.mediaKind)throw new GenerationFailure(started?"unknown_result":"waiting_user","ASSET_CREDENTIAL_IDENTITY_MISMATCH");
   signal.throwIfAborted();
+  let referenceImage:{bytes:Uint8Array;mimeType:string}|undefined;
+  if(input.reference && !job){
+   const raw=await call("readAssetReference",{callId},signal);
+   const parsed=z.object({bytes:z.instanceof(Uint8Array).refine(bytes=>bytes.byteLength>0),mimeType:z.string().min(1)}).strict().parse(raw);
+   if(parsed.mimeType!==input.reference.mimeType)throw new GenerationFailure(started?"unknown_result":"waiting_user","ASSET_REFERENCE_MISMATCH");
+   referenceImage=parsed;
+  }
   if(!started){started=true;const receipt=workerStartReceiptSchema.parse(await call("startAssetCall",{callId},signal));if(receipt.callId!==callId)throw new Error("ASSET_START_RECEIPT_INVALID");}
-  const result=await generateAsset(input,spec,signal,{resumeJobId:job?.jobId,idempotencyKey:`execution-asset:${callId}`,onJobSubmitted:async jobId=>{
+  const result=await generateAsset(input,spec,signal,{resumeJobId:job?.jobId,idempotencyKey:`execution-asset:${callId}`,...(referenceImage?{referenceImage}:{}),onJobSubmitted:async jobId=>{
    jobKnown=true;
    await call("recordAssetProviderJob",{callId,job:{schemaVersion:1,provider:input.provider,model:input.model,baseUrl:input.baseUrl,...(input.serviceId?{serviceId:input.serviceId}:{}),jobId}});
   }});

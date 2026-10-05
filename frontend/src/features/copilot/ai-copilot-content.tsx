@@ -2227,6 +2227,7 @@ export function AICopilotContent({
             未关联项目 · 输入 @ 引用一个项目
           </span>
         )}
+        <Link href={activeProjectChip?`/canvases?projectId=${encodeURIComponent(activeProjectChip.id)}`:"/canvases"} className="rounded-md border px-2.5 py-1 text-xs text-foreground hover:bg-surface-muted">在画布中打开</Link>
         {objectChip ? (
           <span
             data-slot="context-chip"

@@ -102,6 +102,7 @@ export interface AssetsService {
     ctx: RequestContext,
     assetId: string,
   ): Promise<{ url: string; fileName: string }>;
+  getAssetFileDownloadUrl(ctx: RequestContext, assetId: string, fileId: string): Promise<{url:string;fileName:string}>;
   /**
    * 服务端已有字节的一次性下载产物：只写对象存储并换短时签名 URL，不创建
    * assets / asset_files 行。素材包、诊断包等非创作容器必须走此端口。
@@ -117,6 +118,10 @@ export interface AssetsService {
     ctx: RequestContext,
     assetId: string,
   ): Promise<{ bytes: Uint8Array; mimeType: string } | null>;
+  /** 冻结引用只允许读取所属账号下指定的文件版本，不追随 currentFileId。 */
+  getAssetReference(ctx: RequestContext, assetId: string, fileId?: string): Promise<{
+    fileId: string; checksum: string; mimeType: string; bytes: Uint8Array;
+  } | null>;
   /**
    * [T-782] 将当前素材文件安全物化到执行工作区。本地存储优先 CoW/reflink，
    * S3/mock 自动回退取字节写文件；目标路径由 execution 沙箱在边界内生成。
@@ -437,6 +442,20 @@ export function createAssetsService(
         existingExt ?? stripped + (extForMime(current.mimeType) ?? "");
       return { url, fileName };
     },
+    async getAssetFileDownloadUrl(ctx, assetId, fileId) {
+      const accountId=requireAccountId(ctx.accountId,"assets.getAssetFileDownloadUrl");
+      const asset=await requireAsset(ctx,assetId);
+      if(!["active","pending"].includes(asset.status))throw new OwnershipError("Asset not found");
+      const files=await repo.listAssetFiles(ctx.userId,assetId,accountId);
+      const file=files.find(value=>value.id===fileId);
+      if(!file)throw new OwnershipError("Asset file not found");
+      const storage=await objectStorageForCtx(ctx);
+      const url=await storage.getSignedUrl(file.storageKey);
+      const base=file.storageKey.split("/").pop()??"download";
+      const stripped=base.replace(/^asset-key-\d+-/,"");
+      const fileName=extForFileName(stripped)??stripped+(extForMime(file.mimeType)??"");
+      return {url,fileName};
+    },
     async isAssetFileAvailable(ctx, assetId) {
       const accountId = workspaceKey(ctx);
       const asset = await repo.getAsset(ctx.userId, assetId, accountId);
@@ -465,6 +484,19 @@ export function createAssetsService(
       const bytes = await storage.getObject(current.storageKey);
       if (!bytes || bytes.byteLength === 0) return null;
       return { bytes, mimeType: current.mimeType };
+    },
+
+    async getAssetReference(ctx, assetId, fileId) {
+      const accountId = requireAccountId(ctx.accountId, "assets.getAssetReference");
+      const asset = await requireAsset(ctx, assetId);
+      if (asset.assetType !== "image" || !["active", "pending"].includes(asset.status)) return null;
+      const files = await repo.listAssetFiles(ctx.userId, assetId, accountId);
+      const selected = files.find(file => file.id === (fileId ?? asset.currentFileId));
+      if (!selected || !selected.mimeType.startsWith("image/")) return null;
+      const storage = await objectStorageForCtx(ctx);
+      const bytes = await storage.getObject(selected.storageKey);
+      if (!bytes?.byteLength) return null;
+      return { fileId: selected.id, checksum: selected.checksum, mimeType: selected.mimeType, bytes };
     },
 
     async materializeAsset(ctx, assetId, destinationPath) {

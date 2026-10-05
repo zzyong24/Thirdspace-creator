@@ -17,11 +17,11 @@ const {aiService,projectsService,reviewGateService,chatTaskSubmissions,readCurre
 return {
 dispatchGenerateAsset: async (
       ctx: RequestContext,
-      input: { kind: "image" | "video"; prompt: string; projectId?: string | null; attemptId?: string },
+      input: { kind: "image" | "video"; prompt: string; projectId?: string | null; attemptId?: string; referenceAssetId?:string },
     ) => {
       const task=await chatTaskSubmissions.submit(ctx,{
         taskType:"asset.generate",attemptId:input.attemptId??createAiTaskAttemptId(),
-        inputData:{kind:input.kind,prompt:input.prompt,...(input.projectId?{projectId:input.projectId}:{})},
+        inputData:{kind:input.kind,prompt:input.prompt,...(input.projectId?{projectId:input.projectId}:{}),...(input.referenceAssetId?{referenceAssetId:input.referenceAssetId}:{})},
       },{
         snapshotKeys:["scriptSnapshot"],
         prepareSnapshot:async(context,inputData)=>{

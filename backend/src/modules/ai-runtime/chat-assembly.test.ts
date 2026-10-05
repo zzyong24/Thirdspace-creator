@@ -494,6 +494,21 @@ describe("prepareChatAssembly — 三层注入装配", () => {
     expect(a.skillId).toBe("chatbox.topic");
   });
 
+  it("[T-995] 画布对话选择专用 Skill 并先读取真实画布", async () => {
+    const { deps } = makeDeps();
+    const a = await prepareChatAssembly(ctx, {
+      surface: "canvas",
+      selection: { kind: "canvas", ids: ["canvas-1"], label: "当前画布" },
+    }, deps);
+    expect(a.skillId).toBe("chatbox.canvas");
+    expect(a.forcedTool).toBe("canvas.read");
+    expect(a.system).toContain("先调用 canvas.read");
+    expect(a.system).toContain("逐项");
+    expect(Object.keys(a.tools)).toContain("canvas.read");
+    expect(Object.keys(a.tools)).toContain("canvas.propose");
+    expect(Object.keys(a.tools)).not.toContain("topic.generate");
+  });
+
   it("[T-513] active 账号快照覆盖 chat method 与工具，不读取全局 registry 定制", async () => {
     const { deps } = makeDeps();
     const a = await runWithEffectiveSkillSnapshot(

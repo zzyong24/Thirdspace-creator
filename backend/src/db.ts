@@ -2,6 +2,8 @@ import {backupBeforeGroupUpgrade,backupPostgresBeforeGroupUpgrade,verifyGroupUpg
 import * as executionStreamSchema from "./schema/execution-stream";
 import * as pendingDocumentCommitsSchema from "./schema/pending-document-commits";
 import * as pendingGeneratedAssetCommitsSchema from "./schema/pending-generated-asset-commits";
+import * as visualTemplatesSchema from "./schema/visual-templates";
+import * as creativeCanvasSchema from "./schema/creative-canvas";
 import { PGlite } from "@electric-sql/pglite";
 import { drizzle, type PgliteDatabase } from "drizzle-orm/pglite";
 import * as projectsSchema from "./schema/projects";
@@ -58,6 +60,8 @@ import { dirname, resolve, isAbsolute, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { homedir } from "node:os";
 import { rename } from "node:fs/promises";
+import { readFileSync } from "node:fs";
+import { sql } from "drizzle-orm";
 
 // Versioned migrations live in backend/drizzle (baseline 0000_init derived from the
 // per-module *_DDL). The pglite (tests) and node-postgres (runtime) migrators apply this
@@ -67,11 +71,27 @@ const MIGRATIONS_FOLDER = resolve(
   "../drizzle",
 );
 
+// 部分旧装机的迁移 journal 已越过 0101，但实际未建画布表。只在缺表时重放
+// 0101 的幂等 DDL；沿用迁移文件本身，避免运行时和版本化迁移出现两份定义。
+async function ensureCreativeCanvasSchema(db: Db): Promise<void> {
+  const result = await db.execute(sql.raw(
+    "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_name IN ('creative_canvases', 'canvas_generation_links', 'canvas_agent_proposals')",
+  ));
+  if (result.rows.length === 3) return;
+  const migration = readFileSync(join(MIGRATIONS_FOLDER, "0101_creative_canvas.sql"), "utf8");
+  const statements = migration.split("--> statement-breakpoint").map((part) => part.trim()).filter(Boolean);
+  await db.transaction(async (tx) => {
+    for (const statement of statements) await tx.execute(sql.raw(statement));
+  });
+}
+
 // Shared DDL/schema union applied at every createDb(). Each module's tables join
 // here as they land (foundation §1: one pglite store, shared db factory).
 const schema = {
   ...pendingDocumentCommitsSchema,
   ...pendingGeneratedAssetCommitsSchema,
+  ...creativeCanvasSchema,
+  ...visualTemplatesSchema,
   ...executionStreamSchema,
   ...projectsSchema,
   ...identitySchema,
@@ -175,6 +195,7 @@ async function migrateOpenedDb(client: PGlite): Promise<Db> {
   // baseline drizzle/0000_init.sql is identical across drivers. Replaces the old
   // per-module client.exec(*_DDL) sequence — the schema is now built by the migration.
   await migratePglite(db, { migrationsFolder: MIGRATIONS_FOLDER });
+  await ensureCreativeCanvasSchema(db);
     // [T-033 fixup] 老 pglite(< 2026-07-08 build 前的 .dmg 装的)schema 不带 publications.platform_status 列,
     // 旧 journal 也没记 0029 → migrator 不会跑 → 启动 SSR list 报「column 不存在」500。
     // 这里用 information_schema 查列存不存在,缺就 ALTER TABLE 加(IF NOT EXISTS 兜幂等)。
@@ -369,6 +390,7 @@ export async function createRuntimeDb(
     const client={query:async<T>(query:string)=>{const result=await guard.query(query);return {rows:result.rows as T[]};}};
     const backup=await backupPostgresBeforeGroupUpgrade(client as never,connectionString);
     await migratePg(db, { migrationsFolder: MIGRATIONS_FOLDER });
+    await ensureCreativeCanvasSchema(db as unknown as Db);
     if(backup)await verifyGroupUpgradeCounts(client as never,backup);
   }catch(error){
     try{await guard.query("SELECT pg_advisory_unlock(1022,1)");}finally{guard.release();}

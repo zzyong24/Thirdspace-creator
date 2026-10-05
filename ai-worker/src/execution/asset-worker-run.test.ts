@@ -12,6 +12,32 @@ it("原调用启动后才生成字节，保存回执作为唯一结果",async()=
  const result=await runAssetInWorker(input,new AbortController().signal,async(port,data)=>{seen.push(port);if(port==="reserveAssetCall")return {callId:"call",status:"reserved"};if(port==="resolveAssetCredential")return {provider:"openai",model:"image",baseUrl:null,kind:"image",token:"private"};if(port==="startAssetCall")return {callId:"call",status:"started"};if(port==="saveAssetResult"){expect(data).toEqual({callId:"call",bytes});return receipt;}throw new Error("unexpected");},async()=>{seen.push("generate");return {assetBytes:bytes};});
  expect(seen).toEqual(["reserveAssetCall","resolveAssetCredential","startAssetCall","generate","saveAssetResult"]);expect(result.text).toBe(JSON.stringify(receipt));
 });
+it("参考图按冻结版本在启动前读取，字节交给图片适配器",async()=>{
+ const seen:string[]=[],refBytes=new Uint8Array([9,8,7]);
+ const referenced={...input,mode:"image_to_image" as const,capability:"image.edit" as const,reference:{assetId:"reference",fileId:"version-1",checksum:"a".repeat(64),mimeType:"image/png"}};
+ await runAssetInWorker(referenced,new AbortController().signal,async(port)=>{
+  seen.push(port);
+  if(port==="reserveAssetCall")return {callId:"call",status:"reserved"};
+  if(port==="resolveAssetCredential")return {provider:"openai",model:"image",baseUrl:null,kind:"image",token:"secret"};
+  if(port==="readAssetReference")return {bytes:refBytes,mimeType:"image/png"};
+  if(port==="startAssetCall")return {callId:"call",status:"started"};
+  if(port==="saveAssetResult")return receipt;
+  throw Error("unexpected");
+ },async(_input,_spec,_signal,options)=>{expect(options.referenceImage).toEqual({bytes:refBytes,mimeType:"image/png"});seen.push("generate");return {assetBytes:new Uint8Array([1,2,3])};});
+ expect(seen.indexOf("readAssetReference")).toBeLessThan(seen.indexOf("startAssetCall"));
+});
+it("参考图不可读时不启动供应商，也不降级为文生图",async()=>{
+ const seen:string[]=[],generate=vi.fn();
+ const referenced={...input,mode:"image_to_image" as const,capability:"image.edit" as const,reference:{assetId:"reference",fileId:"version-1",checksum:"a".repeat(64),mimeType:"image/png"}};
+ await expect(runAssetInWorker(referenced,new AbortController().signal,async(port)=>{
+  seen.push(port);
+  if(port==="reserveAssetCall")return {callId:"call",status:"reserved"};
+  if(port==="resolveAssetCredential")return {provider:"openai",model:"image",baseUrl:null,kind:"image",token:"secret"};
+  if(port==="readAssetReference")throw new Error("参考版本丢失");
+  throw Error("unexpected");
+ },generate)).rejects.toThrow("参考版本丢失");
+ expect(seen).not.toContain("startAssetCall");expect(generate).not.toHaveBeenCalled();
+});
 
 it("凭据不可用保留原reserved，不启动或结算模型",async()=>{
  const seen:string[]=[];await expect(runAssetInWorker(input,new AbortController().signal,async port=>{seen.push(port);if(port==="reserveAssetCall")return {callId:"call",status:"reserved"};throw new Error("配置缺失");})).rejects.toMatchObject({outcome:"waiting_user"});

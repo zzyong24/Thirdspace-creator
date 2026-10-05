@@ -1,0 +1,12 @@
+
+/Users/zyongzhu/.codex/worktrees/cover-template-library/Thirdspace-creator/frontend/src/features/creative-canvas/canvas-template-library.tsx
+  21:794  warning  The ref value 'epoch.current' will likely have changed by the time this effect cleanup function runs. If this ref points to a node rendered by React, copy 'epoch.current' to a variable inside the effect, and use that variable in the cleanup function                                react-hooks/exhaustive-deps
+  24:258  warning  React Hook useEffect has missing dependencies: 'browse', 'choose', and 'selected?.id'. Either include them or remove the dependency array                                                                                                                                                react-hooks/exhaustive-deps
+  38:738  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  39:26   warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+/Users/zyongzhu/.codex/worktrees/cover-template-library/Thirdspace-creator/frontend/src/features/creative-canvas/creative-workspace-home.tsx
+  49:109  warning  The ref value 'epoch.current' will likely have changed by the time this effect cleanup function runs. If this ref points to a node rendered by React, copy 'epoch.current' to a variable inside the effect, and use that variable in the cleanup function  react-hooks/exhaustive-deps
+
+✖ 5 problems (0 errors, 5 warnings)
+
