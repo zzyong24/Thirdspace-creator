@@ -10,6 +10,7 @@ import { readSessionCookie } from "../../v1/auth/_session";
 import {
   readRequestAccountId,
   resolveRequestContext,
+  readRequestGroupId,
 } from "@/lib/request-context.server";
 import { humanizeAiError } from "@/lib/ai-error-humanize";
 

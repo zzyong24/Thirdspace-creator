@@ -1,0 +1,16 @@
+{
+  "extends": "../../../backend/tsconfig.json",
+  "include": [
+    "../../../backend/src/**/*.ts"
+  ],
+  "exclude": [
+    "../../../backend/src/**/*.test.ts",
+    "../../../backend/src/**/*.spec.ts",
+    "../../../backend/src/**/__tests__/**"
+  ],
+  "compilerOptions": {
+    "typeRoots": [
+      "../../../backend/node_modules/@types"
+    ]
+  }
+}

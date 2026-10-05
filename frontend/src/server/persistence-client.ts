@@ -1,3 +1,13 @@
+import {runAccountGroupStartup} from '@creatoros/backend/application/workspace/startup';
+import {hasLegacyDouyinCredentialEvidence} from '@creatoros/backend/application/workspace/credential-evidence';
+import {createTaxonomyEntityAccess} from "@creatoros/backend/application/taxonomy-entity-access";
+import {workspaceKey} from "@creatoros/backend";
+import {createDouyinAccountBindingStage} from "@/server/ingestion/account-binding-stage";
+import {createAccountBindingService,createAccountBindingTransport} from "@creatoros/backend/modules/platform-account";
+import {createUnassignedDraftRetainer} from "@creatoros/backend/application/publishing-retain-unassigned";
+import {createMembershipLockService} from "@creatoros/backend/modules/platform-account";
+import {createGroupWorkspaceApplication} from "@creatoros/backend/application/queries/group-workspace";
+import {createWorkspaceBlobService} from "@creatoros/backend/modules/assets";
 import {createOperationsSyncCollector} from '@creatoros/backend/application/collection/operations-sync';
 import {hostBrowserShutdownScope} from '@creatoros/ai-worker/browser/browser-shutdown-scope';
 import {createBrowserHostDisposer} from './browser-host-dispose';
@@ -256,7 +266,8 @@ import { sweepStaleAiTasks } from "@creatoros/backend/modules/ai-runtime";
 // [T-189a] 绑定抖音 → 幂等建三个每天定时采集 job + 初始化跑一次(纯编排;组合根注入 listJobs/
 //   createJob/trigger 端口)。[T-227] ensureCollectionJobs:启动兜底,对存量账号幂等补齐缺失的
 //   DEFAULT_JOBS(只建不触发)。
-import { ensureCollectionJobs } from "@creatoros/backend/modules/ai-runtime";
+import { ensureCollectionJobs,DAILY_COLLECTION_JOB_DEFAULTS } from "@creatoros/backend/modules/ai-runtime";
+import {PRIVATE_COLLECTION_SOURCE_KINDS} from "@creatoros/backend/modules/scheduling";
 
 import { createPlatformDraftAdoptionPort } from "@creatoros/backend/modules/ai-runtime";
 // [T-254b] 制作视频四决策编排(分场/信息卡/B-roll/双语字幕 → video_decisions 候选,
@@ -323,6 +334,7 @@ const PLATFORM_POLICY_TEXT = [
 ].join("\n");
 import { createCandidateService, createCandidateTransport } from "@creatoros/backend/modules/candidate";
 import { createCalibrationService, createCalibrationTransport, createCalibrationRepository, type RubricRow as CalibrationRubricRow, type RubricVersionRow as CalibrationRubricVersionRow } from "@creatoros/backend/modules/calibration";
+import {createAccountGroupService,createGroupMigrationService,createGroupResourceAccessService,createAccountGroupTransport,type AccountGroupService,ACCOUNT_GROUP_OP_IDS} from "@creatoros/backend/modules/platform-account";
 import { createPlatformAccountService, createPlatformAccountTransport, type PlatformAccountService } from "@creatoros/backend/modules/platform-account";
 import { createContentCalendarService, createContentCalendarTransport, type ContentCalendarService } from "@creatoros/backend/modules/content-calendar";
 import { createMaterialLinksService, createMaterialLinksTransport } from "@creatoros/backend/modules/material-links";
@@ -636,6 +648,8 @@ interface PersistenceBundle {
   candidate: Transport;
   calibration: Transport;
   platformAccount: Transport;
+  accountBinding:Transport;
+  accountGroup: Transport;
   scheduling: Transport;
   contentCalendar: Transport;
   /** T-599：无新增公开 operation 的服务端月历/首页组合端口。 */
@@ -663,6 +677,8 @@ interface PersistenceBundle {
   // 在解析 ctx 时对 x-account-id header 做属主硬校验(getAccount 域内查号,不属主抛 404 → 降级
   // null)。与 identity/settingsService 同款「无 dispatch endpoint 的 route 直调服务」逃生口。
   platformAccountService: PlatformAccountService;
+  accountGroupService: AccountGroupService;
+  workspaceBlobService:ReturnType<typeof createWorkspaceBlobService>;
   // item B — exposed so the blob route (no dispatch endpoint) can resolve the
   // request user's media root, the same root uploads were minted against.
   settingsService: SettingsService;
@@ -1408,8 +1424,16 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // Ids/clock share the deterministic `deps` (createSeq above keeps tag ids
   // collision-free across requests).
   const taxonomyRepo = createTaxonomyRepository(db, deps);
+  const taxonomyAccess = createTaxonomyEntityAccess(db, {
+    project: (ctx,id)=>projectsService.getProject(ctx,id),
+    artifact: async(ctx,id)=>{const row=await artifactsService.getArtifact(ctx,id);await projectsService.getProject(ctx,row.projectId);return row;},
+    asset: (ctx,id)=>assetsService.getAsset(ctx,id),
+    knowledge: (ctx,id)=>knowledgeService.getKnowledge(ctx,id),
+    learning: (ctx,id)=>learningsService.getLearning(ctx,id),
+    publication: (ctx,id)=>publishingService.getPublication(ctx,id),
+  });
   const taxonomy = createTaxonomyTransport(() =>
-    createTaxonomyService(taxonomyRepo),
+    createTaxonomyService(taxonomyRepo, taxonomyAccess),
   );
 
   // Notifications (module 01): one repository over the shared db; its transport
@@ -1435,6 +1459,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // Clock/ids share the deterministic `deps`; the mock's nextKey reuses createSeq
   // so storage keys stay collision-free across requests.
   const assetsRepo = createAssetRepository(db, deps);
+  const workspaceBlobService=createWorkspaceBlobService(db,deps.now);
   // item B — per-ctx object-storage factory (硬决策 2). AssetsService no longer
   // holds a singleton adapter: each storage-touching method resolves the adapter
   // for the REQUEST's ctx. The choice reads that user's storage_config (via the
@@ -1476,7 +1501,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       return createS3ObjectStorage(s3Cfg, { nextKey });
     }
     const rootPath = await svc.resolveStorageRoot(ctx);
-    return createLocalFsObjectStorage({ rootPath, publicBaseUrl: "/api/v1/blob" },{ nextKey });
+    return createLocalFsObjectStorage({ rootPath, publicBaseUrl: "/api/v1/blob",scope:ctx,onMint:(key,exp)=>workspaceBlobService.register(ctx,key,new Date(exp).toISOString()) },{ nextKey });
   };
 
   // [T-055d SPEC §7.1] 项目目录名:projects/<safe-title>-<id 后 6 位>。safe-title = 去
@@ -1516,11 +1541,11 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       assetId: string,
     ): Promise<string | null> => {
       const asset = await assetsService.getAsset(ctx, assetId); // OwnershipError → 上抛
-      // [T-332 S2] asset_files 经父 asset 号门透传:未选号 → AccountRequiredError。
+      // 文件读取沿用刚验证的工作区，空组与共享引用不要求制造平台账号。
       const files = await assetsRepo.listAssetFiles(
         ctx.userId,
         assetId,
-        requireAccountId(ctx.accountId, "assets.listAssetFiles"),
+        workspaceKey(ctx),
       );
       const current =
         files.find((f) => f.id === (asset as { currentFileId?: string | null }).currentFileId) ??
@@ -1839,9 +1864,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     searchUpsert: (ctx, input) => searchService.upsertDocument(ctx, input),
     assertKnowledgeOwned: (ctx, id) => knowledgeService.getKnowledge(ctx, id),
     assertAssetOwned: (ctx, id) => assetsService.getAsset(ctx, id),
-    assertProjectOwned: async (ctx, projectId) => {
-      await projectsService.listOutputIdsByProject(ctx, projectId);
-    },
+    assertProjectOwned:(ctx,projectId)=>projectsService.getProject(ctx,projectId),
     resolveOutputProjectId: (ctx, outputId) =>
       projectsService.getProjectIdByOutput(ctx, outputId),
     // [T-183] 改稿 delta → 品味信号 best-effort seam。Lazy 箭头:`learningsService` 在下方
@@ -1867,6 +1890,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // export ids collision-free across requests).
   const productionService = createProductionService({
     db,
+    assertOutputOwned:(ctx,id)=>projectsService.getOutput(ctx,id),
+    assertAssetOwned:(ctx,id)=>assetsService.getAsset(ctx,id),
     now: deps.now,
     nextId: deps.nextId,
     setPrimaryOutputAsset: (ctx, input) =>
@@ -1976,6 +2001,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     now: deps.now,
     nextId: deps.nextId,
     publisher: createUnavailablePublisher(),
+    membership:createMembershipLockService(db),
+    assertTargetAccount:async(ctx,target)=>platformAccountService.assertOwnedAccount(ctx,target.accountId,target.platform),
+    retainUnassignedDraft:createUnassignedDraftRetainer({db,...deps}),
     // [全局搜索修复③] video/publication tab 对齐:publishing.service 发布时投影
     // entity_type='publication',但读侧 search.transport 的 video tab 查的是
     // entity_type='video'(启动 seed 亦投影成 video)→ 已发布作品在 video tab 恒搜不到。
@@ -2073,7 +2101,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // deterministic `deps`. The MockIngestionSource is the deterministic producer
   // (foundation §4) used by dev/seeds — not on the dispatch path.
   const ingestionService = createIngestionService({
-    deps,
+    deps:{...deps,membership:createMembershipLockService(db),assertCollectionAccount:async(ctx)=>{const account=await platformAccountService.getAccount(ctx,ctx.accountId!);await platformAccountService.assertOwnedAccount(ctx,account.id,account.platform);}},
     db,
     // [T-189a] 绑定成功回调:fire-and-forget 触发组合根 bootstrap(建 job + 初始化)。
     onDouyinBound: (ctx) => {
@@ -2083,6 +2111,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     },
     ports: {
       publishing: {
+        resolveCollectedPublication:(ctx,ref)=>publishingService.resolveCollectedPublication(ctx,ref),
+        listCollectedExternalIds:(ctx,platform)=>publishingService.listCollectedExternalIds(ctx,platform),
         resolvePublication: (ctx, ref) =>
           publishingService.resolvePublication(ctx, ref),
         // 数据底座(SPEC §1.3):导入作品落 published publication(external_id=aweme_id)。
@@ -2388,6 +2418,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // The transport returns this ONE shared service. Clock/ids share the deterministic
   // `deps` (createSeq keeps learning/learning-app ids collision-free).
   const learningsService = createLearningsService({
+    assertReviewOwned:(ctx,id)=>reviewsService.getReview(ctx,id),
+    assertArtifactOwned:(ctx,id)=>artifactsService.getArtifact(ctx,id),
     db,
     now: deps.now,
     nextId: deps.nextId,
@@ -2495,6 +2527,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     },
     createDraftPrediction(c,input,tx){
       return createCalibrationService({db:tx as unknown as Db,...deps,
+        assertLearningOwned:(context,id)=>learningsService.getLearning(context,id),
+        assertSubjectOwned:async(context,subject)=>subject.subjectType==="publication"?createPublishingService({db:tx as unknown as Db,...deps,publisher:createUnavailablePublisher()}).getPublication(context,subject.subjectId):createProjectsService(createProjectRepository(tx as unknown as Db),deps).getOutput(context,subject.subjectId),
         ingestion:{assertRunExists:async(context,id)=>{await ingestionService.getRun(context,id);},ensureManualRun:(context,key)=>ingestionService.ensureManualRun(context,key)},
         learnings:{adjustConfidence:async()=>{}},
       }).createDraftPrediction(c,input);
@@ -3021,29 +3055,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     () => executionService,
     () => persistentTaskService,
   );
-  let createTopicFromIntelligence: (
-    ctx: RequestContext,
-    input: {
-      title: string;
-      angle: string;
-      contentRole?: "traffic" | "trust" | "conversion" | null;
-      card?: {
-        oneLiner?: string;
-        hook?: string;
-        contentStructure?: string[];
-        materialBasis?: string;
-        riskNote?: string;
-        proposal?: string;
-      };
-      sourceReferences?: Array<{
-        kind: "original_video" | "source_page";
-        platform: string;
-        label: string;
-        url: string;
-        intelligenceItemId?: string;
-      }>;
-    },
-  ) => Promise<{ id: string }> = async () => {
+  let createTopicFromIntelligence: NonNullable<Parameters<typeof createIntelligenceService>[1]["topics"]>["create"] = async () => {
     throw new Error("CandidateServiceNotReady");
   };
   let platformAccountServiceForCollectors: PlatformAccountService | null =
@@ -3068,6 +3080,26 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           id: statement.id,
           oneLiner: statement.oneLiner,
           keywords: statement.keywords,
+        };
+      },
+      getCurrentSnapshot: async (ctx) => {
+        const center = await positioningService.readPositioningCenter(ctx);
+        const statement = center.currentStatement;
+        const masterSnapshot = statement?.masterSnapshot;
+        if (!statement || !masterSnapshot) return null;
+        return {
+          id: statement.id,
+          oneLiner: statement.oneLiner,
+          keywords: statement.keywords,
+          masterSnapshot: {
+            persona: masterSnapshot.persona,
+            field: masterSnapshot.field,
+            audience: masterSnapshot.audience,
+            differentiation: masterSnapshot.differentiation,
+            capabilities: masterSnapshot.capabilities,
+            facets: masterSnapshot.facets,
+            downstreamRules: masterSnapshot.downstreamRules,
+          },
         };
       },
     },
@@ -3385,6 +3417,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     }
   };
   const intelligence: Transport = createIntelligenceApplicationTransport({intelligenceBase,
+assertWorkspaceReadable:(ctx)=>intelligenceService.assertWorkspaceReadable(ctx),
+assertCollectorEligible:(ctx,id)=>intelligenceService.assertCollectorEligible(ctx,id),
 getCollectorAccount:(ctx,id)=>requirePlatformAccountServiceForCollectors().getAccount(ctx,id),
 previewProfile:async (collectorAccountId:string, externalAccountId:string, canonicalUrl:string)=>(
           await loadDouyinCdp()
@@ -3478,6 +3512,7 @@ dispatchIntelligenceRun});
   // Clock/ids share the deterministic `deps` (createSeq keeps cand/sig/promo ids
   // collision-free across requests).
   const candidateService = createCandidateService({
+    resolveCollectedPublication:async(ctx,id)=>{const row=await publishingService.resolveCollectedPublicationById(ctx,id);return row?{groupId:row.groupId??null,accountId:row.accountId}:null;},
     topicWorkspace:{assertProject:(c,id)=>projectsService.getProject(c,id),currentPositioningVersion:async c=>(await positioningService.readPositioningCenter(c)).currentStatement?.id??null},
     db,
     now: deps.now,
@@ -3562,6 +3597,7 @@ dispatchIntelligenceRun});
   });
   createTopicFromIntelligence = async (ctx, input) => {
     const candidate = await candidateService.createCandidate(ctx, {
+      intelligenceTransformId: input.intelligenceTransformId,
       title: input.title,
       angle: input.angle,
       source: "benchmark",
@@ -3569,7 +3605,7 @@ dispatchIntelligenceRun});
       card: input.card,
       sourceReferences: input.sourceReferences,
     });
-    return { id: candidate.id };
+    return { id: candidate.id, adoptedTitle: candidate.title, adoptedDraftContentText: candidate.card.adaptedDraft?.contentText };
   };
   const candidateBase = createCandidateTransport(() => candidateService);
   // 内容雷达候选沿用现有 Candidate→Project 主链；promote 成功后，同步把
@@ -3613,6 +3649,8 @@ dispatchIntelligenceRun});
   // Clock/ids share the deterministic `deps` (createSeq keeps rubric/rubricver/pred/
   // calibres ids collision-free across requests).
   const calibrationService = createCalibrationService({
+    assertLearningOwned:(ctx,id)=>learningsService.getLearning(ctx,id),
+    assertSubjectOwned:async(ctx,subject)=>{if(subject.subjectType==="publication")return publishingService.getPublication(ctx,subject.subjectId);return projectsService.getOutput(ctx,subject.subjectId);},
     db,
     now: deps.now,
     nextId: deps.nextId,
@@ -3721,7 +3759,10 @@ dispatchIntelligenceRun});
   // Publishing/Projects call before stamping accountId (through index.ts, no cross-module
   // repo import). Clock/ids share the deterministic `deps` (createSeq keeps acct ids
   // collision-free across requests).
+  const accountGroupService = createAccountGroupService({db, now: deps.now, nextId: deps.nextId});
+  const accountGroup = createAccountGroupTransport(()=>accountGroupService,()=>createGroupMigrationService({db,...deps}),()=>createGroupResourceAccessService({db,now:deps.now}));
   const platformAccountService = createPlatformAccountService({
+    bindingCapabilities:async()=>["douyin","kuaishou","wechatVideo","wechatOfficial","xiaohongshu"].map(platform=>({platform:platform as import("@creatoros/contract").PlatformAccountCapabilitiesResource["platform"],bind:platform==="douyin"?{available:true,reason:"已接入抖音扫码登录与真实身份读取",method:"qr" as const}:{available:false,reason:"尚未接入该平台身份绑定",method:"none" as const},collect:{available:platform==="douyin",reason:platform==="douyin"?"已接入作品与明细采集":"尚未接入该平台自动采集"},publish:{available:false,reason:"尚未接入自动发布"},draft:{available:false,reason:"尚未接入平台草稿保存"},manual:{available:true,reason:"可登记账号、导出物料与录入真实发布记录"}})),
     db,
     now: deps.now,
     nextId: deps.nextId,
@@ -3730,6 +3771,20 @@ dispatchIntelligenceRun});
   const platformAccount = createPlatformAccountTransport(
     () => platformAccountService,
   );
+
+  const accountBindingService=createAccountBindingService({db,...deps,
+    stage:createDouyinAccountBindingStage({db,base:douyinAuthDirBase,authority:profileAuthority,lifecycle:hostProfileLifecycle,...deps,loadCdp:loadDouyinCdp}),
+    capabilities:ctx=>platformAccountService.getBindingCapabilities(ctx),
+    wake:()=>recoveryWake?.wake('account_binding'),
+    onProfileCleanupError:()=>console.error('[account-binding] 登录目录备份清理未完成，请保留恢复文件'),
+    onBound:async(c,accountId)=>{
+      if(!await accountGroupService.hasVerifiedBinding(c,accountId))throw new Error('绑定成功回执尚未完成，请保留原扫码任务');
+      const member=await accountGroupService.forAccount(c,accountId);
+      await bootstrapDouyinOnBind({...c,accountId,groupId:member.groupId,membershipVersion:member.version,source:'ingestion'});
+    },
+    onBoundError:()=>console.warn('[account-binding] 账号已绑定，默认采集计划补齐未完成，下次启动会按真实账号重试'),
+  });
+  const accountBinding=createAccountBindingTransport(()=>accountBindingService);
 
   // Scheduling (module 23, T-007 / data-source-pipeline §4): the service builds a
   // per-ctx user-scoped repo over the shared db (repo bakes userId in). No external
@@ -3763,6 +3818,9 @@ dispatchIntelligenceRun});
   // [T-235c] 指定收藏夹服务(收藏夹跟拍信号源)。collectors["favorites"] 用它读 enabled 登记夹 +
   //   落台账/进池流转;composite 用它服务 4 个登记 CRUD op。clock/ids 共享 deterministic deps。
   const favoritesService: FavoritesService = createFavoritesService({
+    membership:createMembershipLockService(db),
+    assertCollectionAccount:async(ctx)=>{const a=await platformAccountService.getAccount(ctx,ctx.accountId!);await platformAccountService.assertOwnedAccount(ctx,a.id,a.platform);},
+    assertCandidateOwned:(ctx,id)=>candidateService.getCandidate(ctx,id),
     db,
     now: deps.now,
     nextId: deps.nextId,
@@ -3773,6 +3831,8 @@ dispatchIntelligenceRun});
   //   [gate-F1] 与 learnings 零接触:独立表 topic_attributions,由发布实绩触发。
   const topicAttributionService: TopicAttributionService =
     createTopicAttributionService({
+      resolvePublication:(ctx,id)=>publishingService.getPublication(ctx,id),
+      resolveProject:(ctx,id)=>projectsService.listOutputIdsByProject(ctx,id),
       db,
       now: deps.now,
       nextId: deps.nextId,
@@ -4200,9 +4260,7 @@ FAVORITES_PROMOTE_PER_RUN
     db,
     now: deps.now,
     nextId: deps.nextId,
-    assertProjectOwned: async (ctx, projectId) => {
-      await projectsService.listOutputIdsByProject(ctx, projectId);
-    },
+    assertProjectOwned:(ctx,projectId)=>projectsService.getProject(ctx,projectId),
     resolveOutputProjectId: (ctx, outputId) =>
       projectsService.getProjectIdByOutput(ctx, outputId),
     assertKnowledgeOwned: (ctx, knowledgeId) =>
@@ -4323,7 +4381,7 @@ FAVORITES_PROMOTE_PER_RUN
 
   const dailyReportQuery = createDailyReportApplication({
     now: deps.now, projectsService, publishingService, analyticsService, trafficService,
-    readAccountName: async ctx => ctx.accountId ? (await platformAccountService.getAccount(ctx, ctx.accountId)).accountHandle : null,
+    readAccountName: async ctx => ctx.groupId ? (await accountGroupService.get(ctx,ctx.groupId)).name : ctx.accountId ? (await platformAccountService.getAccount(ctx, ctx.accountId)).accountHandle : null,
     readAccountProfileUrl: async ctx => {
       if (!ctx.accountId) return null;
       const account = await platformAccountService.getAccount(ctx, ctx.accountId);
@@ -4347,7 +4405,9 @@ FAVORITES_PROMOTE_PER_RUN
       return [center.currentStatement?.oneLiner, profile?.field, profile?.audience, profile?.differentiation].filter(Boolean).join("\n") || null;
     },
   });
+  const groupOverviewQuery=createGroupWorkspaceApplication({groups:accountGroupService,projects:projectsService,publishing:publishingService,analytics:analyticsService,dashboard:dashboardQuery,now:deps.now});
   const queryServices = createQueryServicesTransport({
+    groupOverview:groupOverviewQuery,
     dailyReport: dailyReportQuery,
     dashboard: dashboardQuery,
     overview: overviewQuery,
@@ -4359,137 +4419,40 @@ FAVORITES_PROMOTE_PER_RUN
 
   // 本机用户已在装配入口经identity初始化；此处不再种固定身份或演示项目。
 
-  // [User] win-video-tutor 22 节课程 → canonical user 知识库(knowledge_items reference 类型,
-  // 整篇 markdown 入 content)。**替代 T-135 退役的金句假内容**,让知识库开箱就有真东西。
-  // Idempotent(查 sourceMetadata.origin);文件缺失/异常 → 安静 no-op(该 skill 没装到本机是合法状态,
-  // 绝不能因此炸 buildPersistence)。用户首次开 app 触发一次,后续 build/install 跳过。
-  // [T-211] 课程保留作预设(读法 B),只去品牌前缀:seed 内部标题模板已去「Win 短视频私教 · 」,
-  // 存量带前缀条目由下方 fixupWinVideoTutorTitles 幂等改名。
-  try {
-    // [T-218] tag 写侧 service:与 taxonomy transport 同一 repo/db,给 seed 挂 module
-    // tag + 给存量回填(tags 是 user 级词表,C-04,不随号切)。
-    const canonTaxonomyService = createTaxonomyService(taxonomyRepo);
-    // [T-332 S2] 知识库按号独立(SPEC C-01,strict + NOT NULL):课程预设按 active 账号
-    // **逐号**种入(每号一套知识库,一套预设;seed 幂等判据 origin 是 per-account ctx 读的,
-    // 每号各判各的)。0 账号 → 跳过(引导态无处落号;绑号后下次启动自动补种)。
-    const wvtSeedCtx: RequestContext = {
-      userId: localUser.id,
-      requestId: "seed-win-video-tutor",
-      source: "ingestion",
-    };
-    const { rows: wvtAccounts } = await platformAccountService.listAccounts(
-      wvtSeedCtx,
-      { limit: 100, offset: 0 },
-    );
-    for (const wvtAcct of wvtAccounts.filter((a) => a.status === "active")) {
-      const acctCtx = { userId: localUser.id, accountId: wvtAcct.id };
-      const seeded = await seedWinVideoTutor(knowledgeService, acctCtx, {
-        taxonomyService: canonTaxonomyService,
-      });
-      if (seeded > 0) {
-        console.log(
-          `[seed] win-video-tutor 课程已写入 ${seeded} 节到账号 ${wvtAcct.id} 的知识库`,
-        );
-      }
-      // [T-218] 存量按 module 挂 tag 回填:seed 早于 T-218 的装机(现网 22/23 条)只有
-      // knowledge item、无 tag → 观点地图(默认视图,按 tag 聚类)开箱即空。这里对已存在的
-      // origin=win-video-tutor 条目按 sourceMetadata.module 幂等补挂 module tag,用户不用
-      // reset、下次启动观点地图即填充。幂等(tag 名 per-user 唯一 + entity_tags 唯一)。
-      const backfilledTags = await fixupWinVideoTutorModuleTags(
-        knowledgeService,
-        canonTaxonomyService,
-        acctCtx,
-      );
-      if (backfilledTags > 0) {
-        console.log(
-          `[seed] win-video-tutor ${backfilledTags} 条存量已按 module 回填 tag(观点地图,账号 ${wvtAcct.id})`,
-        );
-      }
-    }
-    // [T-211] 存量去前缀 fixup:已装机(seed 早于本改动)的条目标题仍带「Win 短视频私教 · 」
-    // 前缀 —— 经仓储幂等 strip(drizzle 留在后端,不在前端引 drizzle-orm)。安全边界:
-    // ①仅 canonical user 名下(System 方法 userId 收窄);②仅 sourceMetadata.origin=
-    // 'win-video-tutor' 的 seed 条目(不碰用户自己的笔记);③仅标题仍带旧前缀者(已去过
-    // 的跳过 → 幂等,重启不重复动)。renameTitleSystem 只改 title + updatedAt(不动 content/
-    // revision/status)。[T-332 S2 · ISO-06] 种子巡检跨号扫描走显式 *System 方法(组合根
-    // 种子维护语义),不是隐式全量读退化。
-    const renamed=await repairSeedTitles(localUser.id,"win-video-tutor",WIN_VIDEO_TUTOR_LEGACY_TITLE_PREFIX);
-    if (renamed > 0) {
-      console.log(
-        `[seed] win-video-tutor ${renamed} 条存量标题已去「Win 短视频私教 · 」前缀`,
-      );
-    }
-  } catch (seedErr) {
-    console.error(
-      "[seed] win-video-tutor 知识库 seed 失败(已 ignore,app 仍可启动):",
-      seedErr instanceof Error ? seedErr.message : seedErr,
-    );
-  }
-
-  // [T-332 S2] T-220「启动认领存量无号 asset」已随 claimOrphans 全链退役(SPEC §4.4):
-  //   strict + NOT NULL 世界不存在无号 asset(写侧 chat route / 截图端口已治本 stamp 真号),
-  //   存量污染走「设置 → 重置工作区」(S5),不再有任何启动期归属改写。
-
-  // [T-227] 启动幂等 ensure 全部 DEFAULT_JOBS(存量账号回填缺失采集 job)。根因:collection-
-  //   bootstrap 只在**绑定抖音时**跑一次 —— 账号绑定早于新 job 模板上线(T-212 benchmark /
-  //   T-235a topic.daily)的存量号,模板后加的 job 永远缺(真机曾现「还没有对标采集作业」)。
-  //   修:启动时对 active 账号跑 ensureCollectionJobs(有则跳无则建,**只建不触发** —— 新 job 等
-  //   下一次到点跑,不在每次启动拉一轮采集)。
-  //   [T-332 S2] 账号全域隔离后 scheduled_job strict 按号:**逐个** active 账号各自 ensure
-  //   (listJobs 在该号 ctx 下只见该号 job → 每号缺啥补啥,job 出生即带号)。0 号 → 跳过。
-  //   best-effort:失败只告警,不阻断启动。
-  try {
-    const ensureJobsCtx: RequestContext = {
-      userId: localUser.id,
-      requestId: "startup-collection-ensure",
-      source: "ingestion",
-    };
-    const { rows: ensureAccounts } = await platformAccountService.listAccounts(
-      ensureJobsCtx,
-      { limit: 100, offset: 0 },
-    );
-    const activeForEnsure = ensureAccounts.filter((a) => a.status === "active");
-    for (const ensureAcct of activeForEnsure) {
-      const { created } = await ensureCollectionJobs(
-        { ...ensureJobsCtx, accountId: ensureAcct.id },
-        {
-          listJobsBySourceKind: async (c, sourceKind) => {
-            const { rows } = await schedulingService.listJobs(c, {
-              sourceKind,
-              limit: 1,
-              offset: 0,
-            });
-            return rows.map((r) => ({ id: r.id, accountId: r.accountId ?? null }));
-          },
-          createJob: async (c, input) => {
-            const job = await schedulingService.createJob(c, {
-              name: input.name,
-              prompt: input.prompt,
-              sourceKind: input.sourceKind,
-              schedule: input.schedule,
-              target: input.target,
-              // [T-359] 启动兜底补建同样分层:默认关的补建即 disabled。
-              enabled: input.enabled,
-              systemManaged: input.systemManaged === true || input.sourceKind === "intelligence.sync",
-            });
-            return { id: job.id };
-          },
-          // 空 target:采集器空 target 时自 ensureDouyinSource 兜底解析源(与 bootstrap 一致)。
-          target: {},
-        },
-      );
-      if (created.length > 0) {
-        console.log(
-          `[T-227] 启动回填缺失采集 job(账号 ${ensureAcct.id}):${created.join(", ")}`,
-        );
-      }
-    }
-  } catch (ensureErr) {
-    console.warn(
-      "[T-227] 启动 ensure 采集 job 失败(已 ignore,app 仍可启动):",
-      ensureErr instanceof Error ? ensureErr.message : ensureErr,
-    );
-  }
+  // T-1022：共享知识/选题/雷达按当前组幂等；私有采集只为真实具备绑定证据的账号回填。
+  // 这里只建计划，不触发浏览器或外网；组归档不等价于隐藏活跃平台账号。
+  const startupTaxonomy=createTaxonomyService(taxonomyRepo,taxonomyAccess);
+  const ensureStartupJobs=async(ctx:RequestContext,privateCollector:boolean)=>{
+    await ensureCollectionJobs(ctx,{
+      defaults:DAILY_COLLECTION_JOB_DEFAULTS.filter(tpl=>PRIVATE_COLLECTION_SOURCE_KINDS.has(tpl.sourceKind)===privateCollector),
+      listJobsBySourceKind:async(c,sourceKind)=>{
+        const {rows}=await schedulingService.listJobs(c,{sourceKind,...(privateCollector?{accountId:c.accountId}:{}),limit:1,offset:0});
+        return rows.map(row=>({id:row.id,accountId:row.accountId??null,enabled:row.enabled,target:row.target??{}}));
+      },
+      createJob:async(c,input)=>{
+        const job=await schedulingService.createJob(c,{...input,systemManaged:privateCollector||input.systemManaged===true||input.sourceKind==='intelligence.sync'},privateCollector?{backgroundCollector:true}:undefined);
+        return {id:job.id};
+      },target:{},
+    });
+  };
+  try{
+    await runAccountGroupStartup({userId:localUser.id,requestId:'startup-account-groups',source:'ingestion'},{
+      listAccounts:(c,q)=>platformAccountService.listAccounts(c,q),
+      membership:(c,id)=>accountGroupService.forAccount(c,id),
+      group:(c,id)=>accountGroupService.get(c,id),
+      capabilities:c=>platformAccountService.getBindingCapabilities(c),
+      hasCredentialEvidence:async(c,account)=>{
+        if(await accountGroupService.hasVerifiedBinding(c,account.id))return true;
+        // 已授权实际账号目录的旧凭据证明；手动填外部ID不能替代它。
+        return hasLegacyDouyinCredentialEvidence(await douyinAuthDirFor(account.id,undefined,c.userId));
+      },
+      seedGroup:async c=>{await seedWinVideoTutor(knowledgeService,c,{taxonomyService:startupTaxonomy});await fixupWinVideoTutorModuleTags(knowledgeService,startupTaxonomy,c);},
+      ensureSharedJobs:c=>ensureStartupJobs(c,false),
+      ensurePrivateJobs:c=>ensureStartupJobs(c,true),
+      warn:(stage,error,accountId)=>console.warn(`[startup] ${stage}未完成${accountId?`(账号 ${accountId})`:''}，其余工作区继续启动：`,error instanceof Error?error.message:error),
+    });
+    await repairSeedTitles(localUser.id,'win-video-tutor',WIN_VIDEO_TUTOR_LEGACY_TITLE_PREFIX);
+  }catch(error){console.warn('[startup] 账号组默认内容与采集计划补齐未完成，app仍可启动：',error instanceof Error?error.message:error);}
 
   // [T-050] canonical 通知种子已退役(demo 文案指向已删除的演示项目);通知全部
   // 来自运行时真实事件。
@@ -4556,7 +4519,7 @@ FAVORITES_PROMOTE_PER_RUN
   );
   readStoredChannelModelCredential = (ctx, scopeId, serviceId) =>
     settingsService.getChannelModelCredential(ctx, scopeId, serviceId);
-  const onboardingState = createOnboardingState(db, (ctx, id) => platformAccountService.getAccount(ctx, id));
+  const onboardingState = createOnboardingState(db, (ctx, id) => platformAccountService.getAccount(ctx, id), (ctx, id) => accountGroupService.get(ctx, id));
   const settings = createSettingsTransport(() => settingsService, redfoxCredentials, onboardingState);
   resolveEffectiveSkillSnapshotForRuntime =
     createEffectiveSkillSnapshotResolver({
@@ -4568,6 +4531,7 @@ FAVORITES_PROMOTE_PER_RUN
           text: PLATFORM_POLICY_TEXT,
         }),
       },
+      groupOverlays:{listBySkillIds:(ctx,skillIds)=>settingsRepo.listAccountSkillOverlays(ctx,skillIds)},
       accountOverlays: {
         listBySkillIds: (ctx, skillIds) =>
           settingsRepo.listAccountSkillOverlays(ctx, skillIds),
@@ -4947,7 +4911,7 @@ FAVORITES_PROMOTE_PER_RUN
     prepare:(c,id)=>businessExecution.prepare(c,id),
     wake:()=>{if(!modelWorker)throw new Error("生成服务未就绪");modelWorker.start();},
   });
-  stopExecutionWorker=async()=>{stoppingPreparation=true;assetBusiness.stop();transcribeBusiness.stop();await Promise.all([recoveryWake?.stop(),scheduledFlywheel.stop(),submittedPreparation.stop(),knowledgeSearchRuntime.stop(),embeddingIo.stop(),modelProbeIo.stop(),intelligenceGeneration.stop(),intelligenceTranscriptBridge.stop(),benchmarkTranscription.stop(),modelWorker?.stop(),agenticWorker?.stop(),chatWorker?.stop()]);await Promise.all([preparationRecovery,agenticPreparationRecovery]);};
+  stopExecutionWorker=async()=>{stoppingPreparation=true;assetBusiness.stop();transcribeBusiness.stop();await Promise.all([recoveryWake?.stop(),accountBindingService.stop(),scheduledFlywheel.stop(),submittedPreparation.stop(),knowledgeSearchRuntime.stop(),embeddingIo.stop(),modelProbeIo.stop(),intelligenceGeneration.stop(),intelligenceTranscriptBridge.stop(),benchmarkTranscription.stop(),modelWorker?.stop(),agenticWorker?.stop(),chatWorker?.stop()]);await Promise.all([preparationRecovery,agenticPreparationRecovery]);};
   globalForPersistence.__creatorosStopExecutionWorker=stopExecutionWorker;
 
   // 两个审核入口转交同一持久执行权，报告由后端审核端口绑定冻结版本并原子提交。
@@ -5344,6 +5308,7 @@ FAVORITES_PROMOTE_PER_RUN
     const versionRow: CalibrationRubricVersionRow = {
       id: `rubricver-canonical-1:${accountId}`,
       userId: localUser.id,
+      groupId: `grp_legacy_${accountId}`,
       accountId, // per-account stamp(NOT NULL 终态)
       rubricId: `rubric-canonical:${accountId}`,
       versionNumber: 1,
@@ -5355,6 +5320,7 @@ FAVORITES_PROMOTE_PER_RUN
     const rubricRow: CalibrationRubricRow = {
       id: `rubric-canonical:${accountId}`,
       userId: localUser.id,
+      groupId: `grp_legacy_${accountId}`,
       accountId, // per-account stamp(NOT NULL 终态)
       name: "变现加权评分标准",
       currentVersionId: versionRow.id,
@@ -5735,6 +5701,7 @@ FAVORITES_PROMOTE_PER_RUN
   recoveryWake=createRecoveryWakeCoordinator({
     intervalMs:2000,
     lanes:{
+      account_binding:control=>accountBindingService.drainAccountBindingQueue(control,{waitForCompletion:false}),
       radar_project_upgrade: control => radarProjectQueue.tick(control),
       script_candidate:control=>drainProjectScriptCandidateQueue(projectScriptRunnerDeps,5,control),
       topic_preview:control=>drainIntelligenceTopicPreviewQueue(topicPreviewRunnerDeps,{...control,maxTasks:5}),
@@ -5821,6 +5788,8 @@ FAVORITES_PROMOTE_PER_RUN
     positioning,
     candidate,
     calibration,
+    accountGroup,
+    accountBinding,
     platformAccount,
     scheduling: schedulingWithRunNow, // wrap:透传 CRUD + 拦 scheduledJobs.runNow(D5)
     contentCalendar,
@@ -5845,6 +5814,8 @@ FAVORITES_PROMOTE_PER_RUN
     queryServices,
     publishingCenter,
     identity,
+    accountGroupService,
+    workspaceBlobService,
     platformAccountService,
     settingsService,
     activationService,
@@ -6071,3 +6042,7 @@ export async function readPageRevision(): Promise<string> {
 export async function getProjectListCoverIds(ctx: RequestContext, projectIds: readonly string[]): Promise<Record<string, string | null>> {
   return (await getBundle()).projectListCoverIds(ctx, projectIds);
 }
+
+export async function getAccountGroupService():Promise<AccountGroupService>{return (await getBundle()).accountGroupService;}
+
+export async function getWorkspaceBlobService(){return (await getBundle()).workspaceBlobService;}

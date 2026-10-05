@@ -35,7 +35,8 @@ export const aiConversations = pgTable("ai_conversations", {
   userId: text("user_id").notNull(), // ownership boundary (owned-root)
   // [T-136 多账号 · OQ2 裁决=按号切] AI 编导对话按号隔离(切号=换对话桶)。nullable 稳定终态。
   // 子表 ai_messages 经 requireConversation 门透传属主,不加 account_id。
-  accountId: text("account_id").notNull(),
+  accountId: text("account_id"),
+  groupId: text("group_id"),
   projectId: text("project_id"), // nullable
   // T-096 会话作用域(SPEC 2026-07-03 chat-session-scope-contract §1.1)—— 入口级隔离与延续的
   // 一等公民字段。文法:'global' | 'project:<id>' | 'surface:<name>'(<name>:<entityId> 扩展位
@@ -74,7 +75,10 @@ export const aiTasks = pgTable("ai_tasks", {
   userId: text("user_id").notNull(), // ownership boundary (owned-root)
   // [T-136 多账号 · OQ2 裁决=按号切] AI 任务按号隔离。nullable 稳定终态。子表
   // ai_task_references/results/steps 经 requireTask 门透传属主,不加 account_id。
-  accountId: text("account_id").notNull(),
+  accountId: text("account_id"),
+  groupId: text("group_id"),
+  groupVersion: integer("group_version"),
+  membershipVersion: integer("membership_version"),
   projectId: text("project_id"), // nullable
   contentOutputId: text("content_output_id"), // nullable
   taskType: text("task_type").notNull(),
@@ -248,10 +252,14 @@ CREATE INDEX IF NOT EXISTS idx_ai_tasks_user_account ON ai_tasks (user_id, accou
 export const projectTranscriptionRequests = pgTable("project_transcription_requests", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(),
-  accountId: text("account_id").notNull(),
+  groupId: text("group_id"),
+  accountId: text("account_id"),
   attemptId: text("attempt_id").notNull(),
   projectId: text("project_id").notNull(),
   awemeId: text("aweme_id").notNull(),
   aiTaskId: text("ai_task_id").notNull(),
   createdAt: text("created_at").notNull(),
-}, table => [uniqueIndex("project_transcription_requests_user_id_account_id_attempt_id_key").on(table.userId, table.accountId, table.attemptId)]);
+}, table => [
+  uniqueIndex("project_transcription_requests_legacy_scope_ux").on(table.userId, table.accountId, table.attemptId).where(sql`${table.groupId} IS NULL`),
+  uniqueIndex("project_transcription_requests_group_scope_ux").on(table.userId, table.groupId, table.attemptId).where(sql`${table.groupId} IS NOT NULL`),
+]);

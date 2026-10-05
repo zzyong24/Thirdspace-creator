@@ -8,13 +8,15 @@ import * as React from "react";
 import type { RadarApi,RadarCollection } from "./intelligence-workbench-types";
 import { useShareImportTasks } from "./use-share-import-tasks";
 import { ShareImportTaskStatus } from "./share-import-task-status";
+import {radarScopeKey} from "./intelligence-workbench-types";
 import { operationKey } from "./radar-operation-key";
 export function AddCollectionDialog({
+  groupId,
   accountId,
   api,
   onDone,
 }: {
-  accountId: string;
+  groupId?: string; accountId?: string;
   api: RadarApi;
   onDone: () => void;
 }) {
@@ -54,7 +56,7 @@ export function AddCollectionDialog({
                 setError(null);
                 try {
                   await api.createCollection({
-                    accountId,
+                    groupId,accountId,
                     name: name.trim(),
                     parentId: null,
                     idempotencyKey: operationKey("collection"),
@@ -77,14 +79,15 @@ export function AddCollectionDialog({
 }
 
 type ShareDialogProps = {
-  accountId: string; collections: RadarCollection[]; api: RadarApi; onDone: () => void;
+  groupId?: string; accountId?: string; collections: RadarCollection[]; api: RadarApi; onDone: () => void;
 };
 
 export function ImportDouyinShareDialog(props: ShareDialogProps) {
-  return <ShareImportDialogSession key={props.accountId} {...props} />;
+  return <ShareImportDialogSession key={radarScopeKey(props)} {...props} />;
 }
 
 function ShareImportDialogSession({
+  groupId,
   accountId,
   collections,
   api,
@@ -93,7 +96,7 @@ function ShareImportDialogSession({
   const [open, setOpen] = React.useState(false);
   const [shareText, setShareText] = React.useState("");
   const [collectionId, setCollectionId] = React.useState("");
-  const {tasks, hasMore, error, pending, unconfirmed, commandBusy, submit, command, refresh} = useShareImportTasks(accountId, api, open, onDone);
+  const {tasks, hasMore, error, pending, unconfirmed, commandBusy, submit, command, refresh} = useShareImportTasks({groupId,accountId}, api, open, onDone);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -160,4 +163,3 @@ function ShareImportDialogSession({
     </Dialog>
   );
 }
-

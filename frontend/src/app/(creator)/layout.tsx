@@ -143,7 +143,7 @@ export default async function CreatorLayout({
         try {
           const accounts = (await createServerClient(session.ctx).listAccounts({
             params: undefined,
-            query: { page: 1, pageSize: 100, platform: "douyin" },
+            query: { page: 1, pageSize: 100 },
             body: undefined,
           })) as unknown as ReadonlyArray<{
             status: "active" | "archived";
@@ -159,7 +159,7 @@ export default async function CreatorLayout({
       readChannelRuntime().catch(() => null),
     ]);
   const zeroAccountGuarded =
-    !hasActiveAccount && !isZeroAccountAllowedPath(pathname);
+    !session.ctx.groupId && !hasActiveAccount && !isZeroAccountAllowedPath(pathname);
 
   // [T-530/T-534] 渠道品牌名只从已验证加密 runtime 读取。
   // 读失败/未激活/未配置 → runtime 为 null，Sidebar 使用构建期包品牌；Growth 已验签

@@ -22,7 +22,8 @@ export const searchDocuments = pgTable("search_documents", {
   userId: text("user_id").notNull(),
   // [T-136 多账号 · SPEC §B MAJOR-4] 搜索索引按号隔离(防跨号串味);启动重建投影时按号
   // stamp。派生可重建,nullable 稳定终态。search_history 是 user 级查询日志,不按号隔离。
-  accountId: text("account_id").notNull(), // [T-332 S1] per-account 收口 NOT NULL(迁移 0042)
+  groupId: text("group_id"),
+  accountId: text("account_id"), // [T-332 S1] per-account 收口 NOT NULL(迁移 0042)
   entityType: text("entity_type").notNull(), // project|knowledge|asset|video|...
   entityId: text("entity_id").notNull(),
   title: text("title").notNull(),

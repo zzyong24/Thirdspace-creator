@@ -1,0 +1,91 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "当前 SPEC 有三处会让已确认验收产生不同实现结果：对话内候选的完整任务卡没有可落库的采纳契约，定位与 workspace 受众冲突没有裁决规则，‘已核验入口’没有可验证状态。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "open",
+      "severity": "major",
+      "category": "correctness",
+      "requirement_anchor": {
+        "id": "FR-AT-06",
+        "quote": "当前配置/定位版本与拒绝候选原文原因冻入生成；模型承接反馈"
+      },
+      "acceptance_anchor": {
+        "id": "AC-AT-06",
+        "quote": "冻结版本+拒绝接续+显式新尝试；新任务字段在候选/立项保留"
+      },
+      "where": "契约、归属和实现边界：原 AI 选题会采纳 audienceTask 的写入链路",
+      "failure_mode": "SPEC 只新增 workspace 的 get/save 操作，并称新 audienceTask 随 candidate.card 落库、采纳沿原 service 端口；但当前选题中心入口把 topic.generate 导向 Copilot，对话候选采纳走公共 candidates.create，该输入只接受标题、角度和有限来源字段，创建时 aiTaskId 为 null，未采纳卡也没有绑定真实生成结果的拒绝原因写入。合理实现若只扩生成结果而沿用该端口，冻结的 workspace/定位版本、来源读取状态和任务卡会在采纳时丢失，未采纳反馈也无法进入下一次生成，AC-AT-06 的字段保留与拒绝接续都会失败。",
+      "evidence_kind": "deterministic-check",
+      "evidence_ref": "frontend/src/features/topics/topic-generate-island.tsx:3; frontend/src/features/copilot/chat-candidate-card.tsx:3; frontend/src/features/copilot/chat-candidate-card.tsx:123; backend/src/modules/candidate/candidate.service.ts:189; backend/src/modules/candidate/candidate.service.ts:533; backend/src/modules/candidate/candidate.contract.test.ts:71",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "在 SPEC 中指定原 AI 选题会使用真实持久 topic.generate 任务；采纳路径只接收可信 taskId 与结果项索引，在同一次写入中保存完整 audienceTask、生成任务和冻结版本关联；拒绝路径同样只接收 taskId、结果项索引与原因，由服务端回读原结果后保存反馈。为采纳字段保留和未采纳拒绝接续各加一条 contract 验收。",
+      "resolution_evidence": "",
+      "parent_id": "",
+      "threat_model_id": ""
+    },
+    {
+      "id": "REV-002",
+      "status": "open",
+      "severity": "major",
+      "category": "consistency",
+      "requirement_anchor": {
+        "id": "FR-AT-04",
+        "quote": "模型判断受众相关性"
+      },
+      "acceptance_anchor": {
+        "id": "AC-AT-04",
+        "quote": "三正例和工程方法反例的结构测试"
+      },
+      "where": "DEC-T1019：当前定位正文与 workspace 受众补充发生冲突时",
+      "failure_mode": "SPEC 一方面规定当前定位正文为受众基准，另一方面允许 workspace 编辑受众，并明确写着冲突‘需明确模型处理’，却没有规定冲突输入应如何标记、传给模型或影响候选状态。两个合理实现可以分别忽略 workspace 补充或让补充覆盖定位，导致同一输入得到相反的受众相关性结论，工程方法反例也无法形成唯一预期。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "docs/features/audience-task-topics/README.md#DEC-T1019-与验证",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "clarify",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "补一条最小结果约束：定位始终是基准，冲突的 workspace 补充不得静默覆盖；将两者和冲突标记一起冻结给模型，并规定未化解冲突时候选最高只能进入哪一状态，再用一个冲突样例验收。",
+      "resolution_evidence": "",
+      "parent_id": "",
+      "threat_model_id": ""
+    },
+    {
+      "id": "REV-003",
+      "status": "open",
+      "severity": "major",
+      "category": "completeness",
+      "requirement_anchor": {
+        "id": "FR-AT-05",
+        "quote": "可录需作者真实结果引用与已核验入口"
+      },
+      "acceptance_anchor": {
+        "id": "AC-AT-05",
+        "quote": "代码只验证事实引用、显式模型判定与时间"
+      },
+      "where": "workspace 作者材料与候选状态判定契约",
+      "failure_mode": "SPEC 定义了手工引用、来源 URL/记录和读取状态，但没有定义入口核验的字段、核验主体、核验时间或失效语义。实现可以仅凭 URL 格式正确或用户填写文字就把入口视为‘已核验’，从而把入口实际未知的候选标成可录；另一实现则可能一律降为研究，二者都能声称符合当前文字。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "docs/features/audience-task-topics/README.md#已确认需求与验收; docs/features/audience-task-topics/README.md#契约归属和实现边界",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "为入口引用补最小可机检状态（至少核验结果与核验时间/来源），明确手工引用默认不等于已核验；只有有效核验状态可进入可录，其余按既定规则降为研究或先测，并增加一正一反 contract 测试。",
+      "resolution_evidence": "",
+      "parent_id": "",
+      "threat_model_id": ""
+    }
+  ]
+}

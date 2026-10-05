@@ -49,8 +49,10 @@ const PLATFORM_LABELS: Record<string, string> = {
   youtube: "YouTube",
   bilibili: "哔哩哔哩",
   douyin: "抖音",
+  kuaishou: "快手",
   xiaohongshu: "小红书",
-  wechatVideo: "微信视频号",
+  wechatOfficial: "公众号",
+  wechatVideo: "视频号",
   x: "X",
 };
 const STATUS_LABELS: Record<PublicationRow["status"], string> = {
@@ -298,8 +300,8 @@ export async function buildPublishingScheduleProjection(
   ctx: RequestContext,
   monthParam?: string,
 ): Promise<PublishingScheduleProjection> {
-  const accountId = ctx.accountId;
-  if (!accountId) {
+  const accountId = ctx.accountId ?? null;
+  if (!ctx.groupId && !accountId) {
     throw new Error("AccountRequiredError: publishing schedule requires account");
   }
 
@@ -324,16 +326,20 @@ export async function buildPublishingScheduleProjection(
   };
 
   const calendarEntriesPromise = calendarContext
-    ? deps.calendar
-        .listCalendar(ctx, accountId, window, { limit: 500, offset: 0 })
+    ? (ctx.groupId
+        ? deps.calendar.listGroupCalendar(ctx, ctx.groupId, window, { limit:500,offset:0 })
+        : deps.calendar.listCalendar(ctx, accountId!, window, {limit:500,offset:0}))
         .then((page) => page.rows)
     : Promise.reject(contextError ?? new Error("日历上下文不可用"));
 
+  let sharedProjects:Array<{id:string;title:string;schedulable?:boolean}>|null=null;
   const readPerformance = async () => {
-    const projects = (await deps.projects.listProjectsForComposition(ctx)).map(({ id, title }) => ({ id, title }));
+    const creativeContext = ctx.groupId ? {...ctx,accountId:null,membershipVersion:undefined} : ctx;
+    const projects = (await deps.projects.listProjectsForComposition(creativeContext)).map(({id,title,status,source,currentStage})=>({id,title,schedulable:status!=="archived"&&status!=="completed"&&source!=="imported"&&currentStage!=="review"}));
+    sharedProjects=projects;
     const projectById = new Map(projects.map((project) => [project.id, project]));
     const outputs = await deps.projects.listOutputRefsByProjects(
-      ctx,
+      creativeContext,
       projects.map((project) => project.id),
     );
     const outputById = new Map(outputs.map((output) => [output.outputId, output]));
@@ -399,11 +405,29 @@ export async function buildPublishingScheduleProjection(
         snapshotByPublication.get(publication.id),
       );
       const performance = formatPerformance(snapshot);
+      const rawMetrics = snapshotByPublication.get(publication.id)?.rawMetrics;
+      const raw = rawMetrics && typeof rawMetrics === "object" ? rawMetrics as Record<string, unknown> : {};
+      const measuredValue = (keys: string[]): number | null => {
+        for (const key of keys) { const value = raw[key]; if (typeof value === "number" && Number.isFinite(value)) return value; }
+        return null;
+      };
+      const article = publication.platform === "wechatOfficial";
+      const metricValue = measuredValue(article ? ["reads", "read_count", "views"] : ["views", "plays"]);
       const bareTitle =
         revision?.title.trim() || output.title || platformLabel(publication.platform);
-      const title = `${bareTitle} · ${platformLabel(publication.platform)}`;
+      const title = bareTitle;
       rows.push({
         id: publication.id,
+        accountId: publication.accountId ?? null,
+        accountName: publication.accountReference ?? undefined,
+        revisionId: publication.currentRevisionId,
+        capturedAt: snapshot?.capturedAt ?? null,
+        dateKind: publication.publishedAt ? "published" : publication.scheduledAt ? "scheduled" : "created",
+        metricKind: article ? "reads" : "views",
+        metricValue,
+        likes: measuredValue(["likes"]),
+        comments: measuredValue(["comments"]),
+        shares: measuredValue(["shares"]),
         contentTitle: title,
         projectId: project.id,
         projectTitle: project.title,
@@ -415,9 +439,9 @@ export async function buildPublishingScheduleProjection(
           ? dateInTimezone(when)
           : when.slice(0, 10),
         status,
-        statusLabel: STATUS_LABELS[status],
+        statusLabel: ({failed:"发布失败",publishing:"发布中",scheduling:"排期中"} as Record<string,string>)[publication.status] ?? STATUS_LABELS[status],
         hidden: publication.hiddenAt !== null,
-        views: performance.views,
+        views: ctx.groupId ? metricValue === null ? "—" : `${formatCount(metricValue)} ${article ? "阅读" : "播放"}` : performance.views,
         engagementLabel: performance.engagementLabel,
         engagementTone: performance.engagementTone,
         thumbnailToken: `pub-${publication.id}`,
@@ -459,9 +483,10 @@ export async function buildPublishingScheduleProjection(
       })
     : readPerformance();
 
-  const [calendarResult, performanceResult] = await Promise.allSettled([
+  const [calendarResult, performanceResult, cadenceResult] = await Promise.allSettled([
     calendarEntriesPromise,
     performancePromise,
+    ctx.groupId ? deps.calendar.getGroupCadence({...ctx,accountId:null,membershipVersion:undefined},ctx.groupId) : Promise.resolve(null),
   ]);
 
   const performance =
@@ -494,7 +519,7 @@ export async function buildPublishingScheduleProjection(
   if (
     !calendarContext ||
     calendarResult.status === "rejected" ||
-    performanceResult.status === "rejected"
+    (performanceResult.status === "rejected" && !(ctx.groupId && sharedProjects))
   ) {
     const reason =
       calendarResult.status === "rejected"
@@ -515,7 +540,7 @@ export async function buildPublishingScheduleProjection(
     };
   }
 
-  const publishedRows = performanceResult.value.rows.filter(
+  const publishedRows = (performanceResult.status === "fulfilled" ? performanceResult.value.rows : []).filter(
     (row) =>
       Boolean(row.publishedAt) &&
       row.publishedAt.slice(0, 7) !== "" &&
@@ -529,6 +554,7 @@ export async function buildPublishingScheduleProjection(
       error: null,
       viewModel: {
         accountId,
+        groupId:ctx.groupId??null,
         accounts: [],
         month,
         referenceDateKey: calendarContext.today,
@@ -540,21 +566,21 @@ export async function buildPublishingScheduleProjection(
           .map((row) => ({
             id: row.id,
             dateKey: dateInTimezone(row.publishedAt),
-            title: row.contentTitle.replace(
-              new RegExp(` · ${platformLabel(row.platform)}$`),
-              "",
-            ),
+            title: row.contentTitle,
             projectId: row.projectId ?? null,
             platformLabel: row.platformLabel,
             views: row.views,
             coverAssetId: row.coverAssetId ?? null,
           })),
         entries,
-        projects: performanceResult.value.projects.map((project) => ({
+        projects: (performanceResult.status === "fulfilled" ? performanceResult.value.projects : (sharedProjects??[])).map((project) => ({
           id: project.id,
           title: project.title,
+          schedulable:project.schedulable,
         })),
-        cadence: null,
+        publicationsUnavailable:performanceResult.status === "rejected",
+        cadence: cadenceResult.status === "fulfilled" ? cadenceResult.value : null,
+        cadenceUnavailable:cadenceResult.status === "rejected",
         attainment: null,
         window,
       },

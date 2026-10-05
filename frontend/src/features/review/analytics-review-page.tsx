@@ -70,6 +70,10 @@ export interface AnalyticsReviewPageProps {
    * 数据还没回流,正是「等待回流」该被看见的时刻。
    */
   readonly predictionComparison?: PredictionComparisonVm | null;
+  readonly groupFilters?: React.ReactNode;
+  readonly metricsContent?: React.ReactNode;
+  readonly analysisScope?: string;
+  readonly publicationIds?: readonly string[];
 }
 
 // ---------------------------------------------------------------------------
@@ -89,6 +93,10 @@ export function AnalyticsReviewPage({
   viewModel,
   reviewsWiring,
   predictionComparison,
+  groupFilters,
+  metricsContent,
+  analysisScope,
+  publicationIds,
 }: AnalyticsReviewPageProps) {
   const vm = viewModel ?? buildAnalyticsReviewViewModel(projectId);
   const metricsEmpty =
@@ -110,14 +118,16 @@ export function AnalyticsReviewPage({
       data-page-state={state}
       className="flex flex-col gap-section-gap"
     >
+      {groupFilters}
       {state === "loading" ? (
         <LoadingState label="正在加载数据复盘…" rows={6} />
       ) : state === "error" ? (
         <ErrorState error={vm.error} />
       ) : (
         <>
-          <ReviewAnalyzeIsland projectId={vm.projectId} />
-          {reviewsWiring ? <TrafficSourcesPanel projectId={vm.projectId} /> : null}
+          {metricsContent}
+          <ReviewAnalyzeIsland projectId={vm.projectId} analysisScope={analysisScope}/>
+          {reviewsWiring ? <TrafficSourcesPanel projectId={vm.projectId} publicationIds={publicationIds}/> : null}
           {/* [T-063e] 预测 vs 实际 对照(校准飞轮对照步并入复盘)。空指标态也照渲 ——
               已锁定盲预测、数据还没回流,正是「等待回流」该被看见的时刻。 */}
           {predictionComparison !== undefined ? (
@@ -132,6 +142,8 @@ export function AnalyticsReviewPage({
             reviewsWiring={reviewsWiring}
             metricsEmpty={state === "empty"}
             reviewEvidenceReady={reviewEvidenceReady}
+            metricsContent={metricsContent ? <></> : undefined}
+            analysisScope={analysisScope}
           />
         </>
       )}

@@ -1,3 +1,5 @@
+import {assertFrozenWorkspaceMembership} from "../platform-account/membership-lock.service";
+import {requireWorkspace,workspaceFilter,assertWritableWorkspace} from "../../workspace-scope";
 import { z } from "zod";
 import {
   and,
@@ -59,10 +61,7 @@ export function createTopicCandidateAdoptionService(
 ) {
   return {
     async confirmTask(ctx: RequestContext, taskId: string) {
-      const accountId = requireAccountId(
-        ctx.accountId,
-        "ai.confirmTopicCandidates",
-      );
+      await assertWritableWorkspace(db,ctx);requireWorkspace(ctx);const accountId=ctx.accountId??null;
       await db.transaction(async (tx) => {
         const [task] = await tx
           .select()
@@ -71,11 +70,12 @@ export function createTopicCandidateAdoptionService(
             and(
               eq(aiTasks.id, taskId),
               eq(aiTasks.userId, ctx.userId),
-              eq(aiTasks.accountId, accountId),
+              workspaceFilter(aiTasks,ctx),
             ),
           )
           .for("update");
         if (!task) throw new OwnershipError("选题任务不存在");
+        await assertFrozenWorkspaceMembership(tx,{userId:task.userId,groupId:task.groupId,accountId:task.accountId,groupVersion:task.groupVersion,membershipVersion:task.membershipVersion});
         if (task.taskType !== "topic.generate")
           throw new ConflictError("任务不是选题生成");
         if (task.status === "succeeded") return;
@@ -110,7 +110,7 @@ export function createTopicCandidateAdoptionService(
               and(
                 eq(executionTasks.id, task.executionTaskId),
                 eq(executionTasks.userId, ctx.userId),
-                eq(executionTasks.accountId, accountId),
+                workspaceFilter(executionTasks,ctx),
               ),
             );
           if (
@@ -140,7 +140,7 @@ export function createTopicCandidateAdoptionService(
           .filter((item) => str(item.title));
         if (!items.length) throw new ConflictError("缺少可采纳选题");
         const receipts: unknown[] = [];
-        const rejected=await tx.select().from(topicProposalFeedback).where(and(eq(topicProposalFeedback.userId,ctx.userId),eq(topicProposalFeedback.accountId,accountId),eq(topicProposalFeedback.taskId,taskId)));
+        const rejected=await tx.select().from(topicProposalFeedback).where(and(eq(topicProposalFeedback.userId,ctx.userId),eq(topicProposalFeedback.taskId,taskId)));
         let i = 0;
         for (const item of items) {
           const originalIndex=i++;

@@ -84,3 +84,6 @@ export {
 export {createWebDocumentCacheService,type WebDocumentCachePreparation} from "./web-document-cache.service";
 
 export {discardGeneratedAssetCandidate,activateGeneratedAssetCandidate,verifyGeneratedAssetCandidate} from "./generated-asset-candidate.service";
+
+export {createWorkspaceBlobService} from "./workspace-blob.service";
+export {encodeWorkspaceBlobScope,decodeWorkspaceBlobScope,signWorkspaceBlobToken,verifyWorkspaceBlobToken,type WorkspaceBlobScope} from "./blob-security";

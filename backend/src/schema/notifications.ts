@@ -21,6 +21,7 @@ export const notifications = pgTable("notifications", {
   // [T-332 S2] 账号域 stamp(SPEC §3.2 C-02)。**设计性 nullable——全仓唯一例外,
   // 非存量兼容**:NULL = 系统级通知(激活到期/版本更新),全局所有号可见;
   // 非 NULL = 账号域事件通知(采集失败/任务完成),只在该号 + 当前号视角可见。
+  groupId: text("group_id"),
   accountId: text("account_id"),
   notificationType: text("notification_type").notNull(), // task|publish|import|system|ai
   title: text("title").notNull(),

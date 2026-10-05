@@ -1,0 +1,98 @@
+{
+  "observed_at": "2026-10-04T18:47:32.006Z",
+  "scope": "当前任务代码和隔离服务测试；真实平台、安装版和formal receipt另验，不由此替代",
+  "results": [
+    {
+      "key": "backend-group",
+      "command": [
+        "pnpm",
+        "-C",
+        "backend",
+        "exec",
+        "vitest",
+        "run",
+        "--maxWorkers=4",
+        "src/application/queries/group-workspace.test.ts",
+        "src/application/scheduling/controls.test.ts",
+        "src/application/workspace/startup.test.ts",
+        "src/group-upgrade-backup.integration.test.ts",
+        "src/group-upgrade-postgres.integration.test.ts",
+        "src/integration/group-knowledge-write.postgres.integration.test.ts",
+        "src/integration/group-migration-concurrency.postgres.integration.test.ts",
+        "src/integration/group-platform-facts.integration.test.ts",
+        "src/integration/startup-group-collectors.postgres.integration.test.ts",
+        "src/modules/ai/ai.execution-authority.integration.test.ts",
+        "src/modules/ai/group-task-scope.integration.test.ts",
+        "src/modules/ai-runtime/automation-driver.test.ts",
+        "src/modules/ai-runtime/scheduled-collection-scheduler.test.ts",
+        "src/modules/assets/group-pending-assets.integration.test.ts",
+        "src/modules/benchmark/group-research-sources.integration.test.ts",
+        "src/modules/candidate/group-audience-facts.integration.test.ts",
+        "src/modules/candidate/group-shared-domains.integration.test.ts",
+        "src/modules/content-calendar/group-calendar.integration.test.ts",
+        "src/modules/knowledge/group-knowledge-authorization.integration.test.ts",
+        "src/modules/notifications/group-notifications.integration.test.ts",
+        "src/modules/platform-account/account-binding-commit.integration.test.ts",
+        "src/modules/platform-account/account-binding.integration.test.ts",
+        "src/modules/platform-account/account-group.integration.test.ts",
+        "src/modules/platform-account/group-migration.integration.test.ts",
+        "src/modules/platform-account/group-resource-access.integration.test.ts",
+        "src/modules/platform-account/group-resource.integration.test.ts",
+        "src/modules/platform-account/group-workspace.integration.test.ts",
+        "src/modules/production/group-project-derived.integration.test.ts",
+        "src/modules/settings/group-onboarding-state.integration.test.ts",
+        "src/modules/settings/group-skill-overlay.integration.test.ts",
+        "src/modules/taxonomy/group-taxonomy.integration.test.ts",
+        "src/integration/adjacent-parent-migration.postgres.integration.test.ts",
+        "src/integration/calibration-archive-concurrency.postgres.integration.test.ts",
+        "src/integration/project-create-archive.postgres.integration.test.ts",
+        "src/integration/publication-mutations-migration.postgres.integration.test.ts",
+        "src/integration/shared-parent-writers.postgres.integration.test.ts"
+      ],
+      "started": "2026-10-04T18:45:20.589Z",
+      "exit_code": 0,
+      "log": "docs/verification/t1022/logs/gate-backend-group.log"
+    },
+    {
+      "key": "backend-production-types",
+      "command": [
+        "pnpm",
+        "-C",
+        "backend",
+        "exec",
+        "tsc",
+        "--noEmit",
+        "-p",
+        "../docs/verification/t1022/backend-production.tsconfig.json"
+      ],
+      "started": "2026-10-04T18:46:48.938Z",
+      "exit_code": 0,
+      "log": "docs/verification/t1022/logs/gate-backend-production-types.log"
+    },
+    {
+      "key": "frontend-types",
+      "command": [
+        "pnpm",
+        "-C",
+        "frontend",
+        "exec",
+        "tsc",
+        "--noEmit"
+      ],
+      "started": "2026-10-04T18:47:05.207Z",
+      "exit_code": 0,
+      "log": "docs/verification/t1022/logs/gate-frontend-types.log"
+    },
+    {
+      "key": "diff-check",
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "started": "2026-10-04T18:47:31.756Z",
+      "exit_code": 0,
+      "log": "docs/verification/t1022/logs/gate-diff-check.log"
+    }
+  ]
+}

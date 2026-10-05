@@ -87,9 +87,9 @@ return (ctx:RequestContext)=>runTopicAttribution(ctx, {
           if (rollup.snapshotCount === 0) return null;
           return {
             avgPlays:
-              rollup.plays > 0 ? rollup.plays / rollup.snapshotCount : null,
+              rollup.plays !== null ? rollup.plays / (rollup.metricCoverage?.plays?.measured??rollup.snapshotCount) : null,
             avgLikes:
-              rollup.likes > 0 ? rollup.likes / rollup.snapshotCount : null,
+              rollup.likes !== null ? rollup.likes / (rollup.metricCoverage?.likes?.measured??rollup.snapshotCount) : null,
           };
         },
         getPositioningBrief: async (c) => {

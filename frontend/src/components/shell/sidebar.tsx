@@ -161,6 +161,7 @@ function PrimaryNavContents({icon:Icon,label,collapsed,pending}:{icon:LucideIcon
 
 const PRIMARY_NAV: ReadonlyArray<NavEntry> = [
   { id: "dashboard", label: "首页", href: "/", icon: creatorIcons.dashboard, match: matchExact("/") },
+  { id: "overview", label: "创作者总览", href: "/overview", icon: creatorIcons.operations, match: matchExact("/overview") },
   // 定位中心 — the upstream constraint source (七步①②, SPEC §3.4): 排在「项目」前.
   { id: "positioning", label: "定位中心", href: "/positioning", icon: creatorIcons.positioning, match: matchExact("/positioning") },
   // T-482 内容雷达：定位之后先观察真实信源，再由用户转为选题。
@@ -228,21 +229,28 @@ export function Sidebar({
   // [T-129] 折叠态。默认展开(SSR/首帧一致,避免 hydration mismatch);挂载后读 localStorage,
   // 是收拢态则切过去(收拢用户会有一帧展开闪,可接受)。
   const [collapsed, setCollapsed] = React.useState(false);
+  const desktopCollapsed = React.useRef(false);
   React.useEffect(() => {
     try {
-      if (window.localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === "1") {
-        // eslint-disable-next-line react-hooks/set-state-in-effect -- 挂载时从 localStorage 同步折叠偏好，SSR 首帧保持展开
-        setCollapsed(true);
-      }
+      desktopCollapsed.current = window.localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === "1";
     } catch {
       /* storage 不可用 → 维持展开(默认),不崩 */
     }
+    const narrow = window.matchMedia("(max-width: 1024px)");
+    const sync = () => setCollapsed(narrow.matches || desktopCollapsed.current);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- 挂载时同步真实视口与桌面偏好，SSR 首帧保持一致
+    sync();
+    const change = (event: MediaQueryListEvent) => setCollapsed(event.matches || desktopCollapsed.current);
+    narrow.addEventListener("change", change);
+    return () => narrow.removeEventListener("change", change);
   }, []);
   const handleToggle = React.useCallback(() => {
     setCollapsed((prev) => {
       const next = !prev;
+      // 自动收起不覆盖桌面偏好；窄窗口仍可由用户临时展开。
+      if (!window.matchMedia("(max-width: 1024px)").matches) desktopCollapsed.current = next;
       try {
-        window.localStorage.setItem(SIDEBAR_COLLAPSED_KEY, next ? "1" : "0");
+        if (!window.matchMedia("(max-width: 1024px)").matches) window.localStorage.setItem(SIDEBAR_COLLAPSED_KEY, next ? "1" : "0");
       } catch {
         /* 写失败(隐私模式)→ 本次会话内切换仍生效,只是不持久 */
       }
@@ -620,7 +628,7 @@ function UserProfileCard({
 // ---------------------------------------------------------------------------
 
 function resolveUser(overrides: SidebarProps["user"]) {
-  if (overrides) return overrides;
+  if (overrides) return {...overrides,displayName:overrides.displayName.trim() || "创作者"};
   const user = canonicalDataset.user;
   return {
     displayName: user.displayName,

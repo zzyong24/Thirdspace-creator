@@ -1,13 +1,21 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { TrafficSourcesPanel } from './traffic-sources-panel';
-const mocks=vi.hoisted(()=>({account:'account-1',get:vi.fn(),refresh:vi.fn()}));
-vi.mock('@/lib/http-transport',()=>({readCurrentAccountId:()=>mocks.account}));
+const mocks=vi.hoisted(()=>({account:'account-1',group:'group-1',get:vi.fn(),refresh:vi.fn()}));
+vi.mock('@/lib/http-transport',()=>({readCurrentAccountId:()=>mocks.account,readCurrentGroupId:()=>mocks.group}));
 vi.mock('@/lib/contract-client',()=>({client:{getProjectTrafficSources:mocks.get,refreshProjectTrafficSources:mocks.refresh}}));
 vi.mock('@/lib/ai-error-humanize',()=>({describeUserError:(_:unknown,fallback:string)=>fallback}));
 const row=(status='pending',label='推荐页')=>({publicationId:'pub-1',externalId:'123',status,error:null,capturedAt:'2026-09-11T01:00:00Z',data:status==='pending'?null:{app:'抖音 App',windowLabel:null,complete:true,entries:[{label,percentage:0}]}});
 const settle=()=>act(async()=>{await Promise.resolve();});
-beforeEach(()=>{vi.useFakeTimers();vi.resetAllMocks();mocks.account='account-1';mocks.get.mockResolvedValue({items:[]});mocks.refresh.mockResolvedValue({jobRunId:'run-1'});});
+beforeEach(()=>{vi.useFakeTimers();vi.resetAllMocks();mocks.account='account-1';mocks.group='group-1';mocks.get.mockResolvedValue({items:[]});mocks.refresh.mockResolvedValue({jobRunId:'run-1'});});
+it('局部平台选择只展示真实所选发布的来源，切组不接受旧组晚到响应',async()=>{
+ let resolveOld!:(v:unknown)=>void;
+ mocks.get.mockReturnValueOnce(new Promise(r=>{resolveOld=r;})).mockResolvedValue({items:[{...row('succeeded','目标来源'),publicationId:'selected'},row('succeeded','非所选来源')]});
+ render(<TrafficSourcesPanel projectId="p1" publicationIds={['selected']}/>);
+ mocks.group='group-2';window.dispatchEvent(new Event('creatoros:accounts-changed'));await settle();
+ resolveOld({items:[{...row('succeeded','旧组来源'),publicationId:'selected'}]});await settle();
+ expect(screen.queryByText('旧组来源')).toBeNull();expect(screen.queryByText('非所选来源')).toBeNull();expect(screen.getByText('目标来源')).toBeTruthy();
+});
 afterEach(()=>{cleanup();vi.useRealTimers();});
 it('平台未提供来源时保留历史及原采集时间，不显示读取失败或伪造比例',async()=>{
  mocks.get.mockResolvedValue({items:[{...row('unavailable','历史来源'),error:'平台暂未提供该作品的流量来源数据'}]});

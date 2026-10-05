@@ -11,11 +11,11 @@ import {getChatToolApprovalDecider} from "./chat-tool-gate";
 /** 原工具只提供真实参数、版本和授权规则；不把旧模型执行闭包挂到宿主端口。 */
 export function createChatHooksTaskToolHost(reader:Pick<ReturnType<typeof createChatHostContextReader>,"read">):NonNullable<ChatWorkerDispatcherDeps["resolveTools"]>{
   async function current(ctx:RequestContext,ref:ExecutionRef,signal?:AbortSignal){
-    const owner={userId:ctx.userId,accountId:ctx.accountId};
+    const owner={userId:ctx.userId,accountId:ctx.accountId??null,groupId:ctx.groupId??null};
     signal?.throwIfAborted();
     const restored=await reader.read({...ref});
     signal?.throwIfAborted();
-    if(!owner.userId || !owner.accountId || restored.context.userId!==owner.userId || restored.context.accountId!==owner.accountId)throw new Error("开场工具账号与原任务不符");
+    if(!owner.userId || (!owner.accountId && !owner.groupId) || restored.context.userId!==owner.userId || (restored.context.accountId??null)!==owner.accountId || (restored.context.groupId??null)!==owner.groupId)throw new Error("开场工具账号与原任务不符");
     const frozen=restored.modelInput.tools.find(tool=>tool.name==="script.hooks");
     if(!frozen)return null;
     if(frozen.execution!=="worker.script-hooks" || !restored.hostContext.scriptHooksContext || !restored.hostContext.scriptHooksGeneration)throw new Error("原任务未冻结 Worker 开场配置");

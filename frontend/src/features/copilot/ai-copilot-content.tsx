@@ -158,10 +158,11 @@ import {
 } from "@/lib/ai-error-humanize";
 import { openAiCreditCenter } from "@/lib/open-ai-credit-center";
 import { client } from "@/lib/contract-client";
-import { creatorApiHeaders, readCurrentAccountId } from "@/lib/http-transport";
+import { creatorApiHeaders } from "@/lib/http-transport";
 import type { BasePageViewModel } from "@/types/view-models";
 import {
   readStoredConversationId,
+  conversationStorageOwner,
   writeStoredConversationId,
   toUIMessages,
   // [T-239e] 会话成本角标:历史底数(落库行的 token 列)+ 流式增量(metadata.usage)分账相加。
@@ -787,8 +788,9 @@ export function AICopilotContent({
         }
       : null,
   });
-  const sessionAccountId = readCurrentAccountId();
-  const liveSessionKey = JSON.stringify([sessionAccountId, scope]);
+  const [sessionOwner,setSessionOwner]=React.useState(()=>conversationStorageOwner());
+  React.useEffect(()=>{const sync=()=>setSessionOwner(conversationStorageOwner());window.addEventListener("creatoros:accounts-changed",sync);window.addEventListener("storage",sync);return ()=>{window.removeEventListener("creatoros:accounts-changed",sync);window.removeEventListener("storage",sync);};},[]);
+  const liveSessionKey = JSON.stringify([sessionOwner, scope]);
   const liveSession = getLiveChatSession(liveSessionKey);
   const liveSessionRef = React.useRef(liveSession);
   liveSessionRef.current = liveSession;
@@ -871,11 +873,11 @@ export function AICopilotContent({
   const captureConversationId = React.useCallback((id: string) => {
     if (!id) return;
     liveSession.conversationId = id;
-    writeStoredConversationId(scope, id);
+    writeStoredConversationId(scope, id,sessionOwner);
     if (liveSessionRef.current !== liveSession || conversationIdRef.current === id) return;
     conversationIdRef.current = id;
     setConversationId(id);
-  }, [liveSession, scope]);
+  }, [liveSession, scope,sessionOwner]);
 
   // @项目引用(T-039b):输入框 @ 选中的项目。存在时等价「选中态项目」注入后端(见下 chatContextBody)。
   // 与 URL 带来的选中态(一键岛)并存时,URL 选中态优先(它是打开来源的强上下文);@ 只在无 URL
@@ -1065,7 +1067,7 @@ export function AICopilotContent({
   // lastAssistantMessageIsCompleteWithApprovalResponses —— local.read 的授权响应齐了就
   // **同回合自动 resume** execute,无新 user 消息、无第二回合叙述(根治「点了还得手动发」)。
   liveSession.transport = transport;
-  liveSession.shouldResume = input => readCurrentAccountId() === sessionAccountId && resumeApprovedToolsOnce(input);
+  liveSession.shouldResume = input => conversationStorageOwner() === sessionOwner && resumeApprovedToolsOnce(input);
   const {
     messages,
     sendMessage,
@@ -1606,14 +1608,14 @@ export function AICopilotContent({
         liveSession.conversationId = id;
         conversationIdRef.current = id;
         setConversationId(id);
-        writeStoredConversationId(scopeRef.current, id);
+        writeStoredConversationId(scopeRef.current, id,sessionOwner);
         return true;
       } catch (err) {
         console.error("[copilot] load conversation failed:", err);
         return false;
       }
     },
-    [setMessages, scope, liveSession],
+    [setMessages, scope, liveSession,sessionOwner],
   );
 
   // 历史记录面板状态(声明提前:下方 scope 恢复 effect 在 scope 切换时要重置它)。
@@ -1642,7 +1644,7 @@ export function AICopilotContent({
       prefilledRef.current = true;
       return;
     }
-    const stored = readStoredConversationId(scope);
+    const stored = readStoredConversationId(scope,sessionOwner);
     conversationIdRef.current = stored;
     setConversationId(stored);
     if (stored) {
@@ -1654,7 +1656,8 @@ export function AICopilotContent({
       if (stored) {
         const ok = await loadConversation(stored);
         if (ok) return;
-        writeStoredConversationId(scope, null);
+        if(liveSessionRef.current!==liveSession||conversationStorageOwner()!==sessionOwner)return;
+        writeStoredConversationId(scope, null,sessionOwner);
       }
       // 路 2:服务端兜底 —— 该 scope 最近一条会话(只查本 scope,跨 scope 会话绝不流入)。
       try {
@@ -1745,7 +1748,7 @@ export function AICopilotContent({
     liveSession.conversationId = null;
     conversationIdRef.current = null;
     setConversationId(null);
-    writeStoredConversationId(scopeRef.current, null);
+    writeStoredConversationId(scopeRef.current, null,sessionOwner);
     setMessages([]);
     setHistoryUsage({ inputTokens: 0, outputTokens: 0 }); // [T-239e] 新对话底数归零
     prefilledRef.current = false;

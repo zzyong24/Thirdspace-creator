@@ -54,7 +54,7 @@ function immutableSnapshot(
   if (
     source.snapshotVersion !== 1 ||
     !source.userId.trim() ||
-    !source.accountId.trim() ||
+    (!source.groupId?.trim() && !source.accountId?.trim()) ||
     !source.platformPolicyVersion.trim() ||
     !source.platformPolicy.trim()
   ) {

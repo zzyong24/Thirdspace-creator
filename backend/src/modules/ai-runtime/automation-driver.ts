@@ -9,7 +9,8 @@ export type AutomationHandlerKey = "scheduled_collection";
 
 export interface AutomationDriverJob {
   id: string;
-  accountId: string;
+  accountId: string|null;
+  groupId?:string|null;groupVersion?:number|null;membershipVersion?:number|null;
   sourceKind: string;
   target: Record<string, unknown>;
   schedule: string;
@@ -162,7 +163,10 @@ function payloadOf(value: Record<string, unknown>): {
   const job: AutomationDriverJob = {
     id: typeof rawJob.id === "string" ? rawJob.id : "",
     accountId:
-      typeof rawJob.accountId === "string" ? rawJob.accountId : "",
+      typeof rawJob.accountId === "string" ? rawJob.accountId : null,
+    ...(rawJob.groupId!==undefined?{groupId:typeof rawJob.groupId==="string"?rawJob.groupId:null}:{}),
+    ...(rawJob.groupVersion!==undefined?{groupVersion:typeof rawJob.groupVersion==="number"?rawJob.groupVersion:null}:{}),
+    ...(rawJob.membershipVersion!==undefined?{membershipVersion:typeof rawJob.membershipVersion==="number"?rawJob.membershipVersion:null}:{}),
     sourceKind:
       typeof rawJob.sourceKind === "string" ? rawJob.sourceKind : "",
     target:
@@ -174,7 +178,7 @@ function payloadOf(value: Record<string, unknown>): {
     enabled: rawJob.enabled === true,
     ...(lastRunStartedAt ? { lastRunStartedAt } : {}),
   };
-  if (!handler || !scheduledFor || !job.id || !job.accountId || !job.sourceKind) {
+  if (!handler || !scheduledFor || !job.id || !job.sourceKind || (!job.accountId&&!(["topic.daily","intelligence.sync"].includes(job.sourceKind)&&job.groupId))) {
     throw new Error("自动化任务 payload 不完整");
   }
   return { handler, scheduledFor, job };
@@ -228,7 +232,7 @@ export async function runAutomationDriverTick(
         `[automation-driver] 补跑错过的作品同步 job=${job.id} scheduledFor=${missedDailyAnchor}`,
       );
     }
-    const jobCtx: RequestContext = { ...deps.ctx, accountId: job.accountId };
+    const jobCtx: RequestContext = { ...deps.ctx,source:"ingestion", accountId: job.accountId,groupId:job.groupId??null,groupVersion:job.groupVersion??undefined,membershipVersion:job.membershipVersion??undefined };
     try {
       await deps.tasks.enqueue(jobCtx, {
         kind: AUTOMATION_TASK_KIND,
@@ -264,7 +268,7 @@ export async function runAutomationDriverTick(
     if (!claim) break;
     const taskCtx: RequestContext = {
       userId: claim.task.userId,
-      accountId: claim.task.accountId,
+      accountId: claim.task.accountId,groupId:claim.task.groupId,groupVersion:claim.task.groupVersion??undefined,membershipVersion:claim.task.membershipVersion??undefined,
       requestId: `automation:${claim.task.id}`,
       source: "ingestion",
     };

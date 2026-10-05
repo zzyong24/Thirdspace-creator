@@ -4,6 +4,7 @@
 export {
   UnsupportedOperationError,
   AuthenticationError,
+  OwnershipError,
   // [T-332 S2] 账号全域隔离:未选号访问 per-account 域(topic_attributions)→ 引导态错误 + 统一断言。
   AccountRequiredError,
   requireAccountId,

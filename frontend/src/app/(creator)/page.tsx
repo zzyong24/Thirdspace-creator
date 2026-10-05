@@ -18,13 +18,22 @@ import { resolveSession } from "@/lib/session.server";
 import { createServerClient } from "@/lib/contract-client.server";
 import { isAccountRequiredError } from "@/lib/http-transport";
 import type { DashboardViewModel } from "@/types/view-models";
+import {GroupWorkspaceFilters} from "@/features/group-workspace/group-workspace-filters";
+import {workspaceQueryFromSearch} from "@/features/group-workspace/workspace-query";
 
-export default async function Page() {
+export default async function Page({searchParams}: {searchParams?:Promise<Record<string,string|string[]|undefined>>}={}) {
   const session = await resolveSession();
   if (!session) {
     // No session (the (creator) layout guard redirects on a real request).
     // Render the fixture-composed fallback so SSR never crashes.
     return <DashboardPage />;
+  }
+
+  if(session.ctx.groupId){
+    const data=await createServerClient(session.ctx).getGroupOverview({body:undefined,params:{groupId:session.ctx.groupId},query:workspaceQueryFromSearch(await searchParams??{})});
+    const w=data.workspace;
+    const trendContext={emptyMessage:w.totalAccounts===0?'当前筛选内尚未绑定平台账号':w.platform==='wechatOfficial'?'公众号阅读不参与视频播放趋势':'缺少相邻日采集记录，暂无法计算播放变化',sourceNote:w.latestCapturedAt?`最近采集：${new Date(w.latestCapturedAt).toLocaleString('zh-CN',{timeZone:'Asia/Shanghai',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'})} · 各账号时间见发布记录`:undefined};
+    return <DashboardPage viewModel={data} greetingName={session.user.displayName} dateRange={{startDate:w.startDate,endDate:w.endDate}} trendContext={trendContext} filters={<GroupWorkspaceFilters workspace={w}/>}/>;
   }
 
   // [T-348] 0 号(未绑号)首页现放行守卫(见 zero-account-guidance 白名单)→ 首页自己承接

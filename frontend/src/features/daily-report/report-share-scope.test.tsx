@@ -1,0 +1,14 @@
+import * as React from "react";
+import {afterEach,beforeEach,it,expect,vi} from "vitest";
+import {render,screen,waitFor,cleanup,act} from "@testing-library/react";
+import {ReportShare} from "./report-share";
+import type {DailyReport} from "./report-metrics";
+const mock=vi.hoisted(()=>({draw:vi.fn(),export:vi.fn()}));
+vi.mock("./share-poster",()=>({drawSharePoster:mock.draw,posterCount:()=>1}));
+vi.mock("./report-export",()=>({exportDailyReport:mock.export}));
+vi.mock("next/image",()=>({default:(props:{unoptimized?:boolean;src:string;alt:string;width:number;height:number;className?:string})=>{const {unoptimized,...imageProps}=props;void unoptimized;return React.createElement("img",imageProps);}}));
+const report:DailyReport={groupId:"g1",date:"2026-09-01",timeZone:"Asia/Shanghai",generatedAt:"2026-09-02T00:00:00Z",accountId:null,accountName:"第一组",positioning:null,warnings:[],works:[],recentWorks:[]};
+const canvas=()=>({width:2160,height:3000,toBlob:(cb:(b:Blob)=>void)=>cb(new Blob(["png"]))});
+beforeEach(()=>{vi.clearAllMocks();mock.draw.mockResolvedValue(canvas());Object.defineProperty(URL,"createObjectURL",{configurable:true,value:vi.fn(()=>"blob:preview")});Object.defineProperty(URL,"revokeObjectURL",{configurable:true,value:vi.fn()});});afterEach(cleanup);
+it("新组首帧立即移除旧战报，未完成旧图不得挂到新组",async()=>{const snapshots:(string|null)[]=[];function Snapshot({value}:{value:DailyReport}){React.useLayoutEffect(()=>{snapshots.push(document.querySelector("img")?.getAttribute("src")??null);},[value]);return <ReportShare report={value}/>;}const view=render(<Snapshot value={report}/>);await screen.findByRole("img");mock.draw.mockImplementation(()=>new Promise(()=>{}));view.rerender(<Snapshot value={{...report,groupId:"g2",accountName:"第二组"}}/>);expect(snapshots.at(-1)).toBeNull();expect(screen.queryByRole("img")).toBeNull();expect(screen.getByRole("status")).toHaveTextContent("正在生成战报预览");await waitFor(()=>expect(URL.revokeObjectURL).toHaveBeenCalledWith("blob:preview"));});
+it("离页后旧绘图结束不会分配图片URL",async()=>{let release!:(value:ReturnType<typeof canvas>)=>void;mock.draw.mockImplementation(()=>new Promise(resolve=>{release=resolve;}));const view=render(<ReportShare report={report}/>);view.unmount();await act(async()=>{release(canvas());await Promise.resolve();});expect(URL.createObjectURL).not.toHaveBeenCalled();});

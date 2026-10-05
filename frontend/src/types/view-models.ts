@@ -135,14 +135,14 @@ export interface PublicationCompactRow {
   readonly title: string;
   readonly platform: PlatformId;
   readonly status: PublicationStatus;
-  readonly views: number;
-  readonly engagement: number;
+  readonly views: number | null;
+  readonly engagement: number | null;
   readonly publishedAt: Iso8601;
 }
 
 export interface DataOverview {
   readonly metrics: ReadonlyArray<MetricCard>;
-  readonly trend: ReadonlyArray<{ label: string; value: number }>;
+  readonly trend: ReadonlyArray<{ label: string; value: number|null }>;
 }
 
 export interface CreationSuggestion {

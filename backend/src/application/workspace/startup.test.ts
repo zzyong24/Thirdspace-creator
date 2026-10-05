@@ -1,0 +1,25 @@
+import {expect,it,vi} from 'vitest';
+import {mkdtemp,mkdir,writeFile,rm,symlink} from 'node:fs/promises';
+import os from 'node:os';import path from 'node:path';
+import {runAccountGroupStartup} from './startup';
+import {hasLegacyDouyinCredentialEvidence} from './credential-evidence';
+import type {PlatformAccountResource,AccountGroupResource,GroupMemberResource} from '@creatoros/contract';
+type StartupPorts=Parameters<typeof runAccountGroupStartup>[1];
+const stamp='2026-10-05T00:00:00.000Z';
+function account(id:string,platform:PlatformAccountResource['platform']):PlatformAccountResource{return {id,userId:'owner',platform,accountHandle:id,status:'active',externalAccountId:'手动填写也不是验证',secretReference:null,followerBaseline:0,createdAt:stamp,updatedAt:stamp};}
+function member(id:string,groupId='real-group',version=7):GroupMemberResource{return {id:'member-'+id,accountId:id,groupId,platform:'douyin',accountHandle:id,status:'active',version,joinedAt:stamp,leftAt:null};}
+function group(id='real-group',version=4,status:AccountGroupResource['status']='active'):AccountGroupResource{return {id,userId:'owner',name:id,status,version,createdAt:stamp,updatedAt:stamp,members:[]};}
+const ctx={userId:'owner',requestId:'startup',source:'ingestion' as const};
+function ports(){
+ const platforms:PlatformAccountResource['platform'][]=['douyin','douyin','kuaishou','wechatVideo','wechatOfficial','xiaohongshu'];
+ const accounts=platforms.map((platform,i)=>account(`account-${i}`,platform));
+ const seedGroup=vi.fn<StartupPorts['seedGroup']>(async()=>{}),ensureSharedJobs=vi.fn<StartupPorts['ensureSharedJobs']>(async()=>{}),ensurePrivateJobs=vi.fn<StartupPorts['ensurePrivateJobs']>(async()=>{}),warn=vi.fn<StartupPorts['warn']>();
+ return {accounts,seedGroup,ensureSharedJobs,ensurePrivateJobs,warn,
+ listAccounts:vi.fn<StartupPorts['listAccounts']>(async()=>({rows:accounts,total:accounts.length})),membership:vi.fn<StartupPorts['membership']>(async(_c,id)=>member(id)),group:vi.fn<StartupPorts['group']>(async()=>group()),capabilities:async()=>accounts.map(row=>({platform:row.platform,collect:{available:true}})),hasCredentialEvidence:vi.fn<StartupPorts['hasCredentialEvidence']>(async(_c,a)=>a.id==='account-0')};
+}
+it('共享预设与任务只做一次，实际支持的平台与登录凭据同时满足才建私有采集',async()=>{const p=ports();await runAccountGroupStartup(ctx,p);expect(p.seedGroup).toHaveBeenCalledOnce();expect(p.ensureSharedJobs).toHaveBeenCalledOnce();expect(p.seedGroup).toHaveBeenCalledWith(expect.objectContaining({groupId:'real-group',accountId:null,membershipVersion:undefined}));expect(p.ensurePrivateJobs).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({groupId:'real-group',accountId:'account-0',membershipVersion:7,groupVersion:4}));expect(p.hasCredentialEvidence).toHaveBeenCalledTimes(2);});
+it('组归档只暂停共享写，真实活跃账号的私有采集计划继续补齐',async()=>{const p=ports();p.group.mockResolvedValue(group('real-group',5,'archived'));await runAccountGroupStartup(ctx,p);expect(p.seedGroup).not.toHaveBeenCalled();expect(p.ensureSharedJobs).not.toHaveBeenCalled();expect(p.ensurePrivateJobs).toHaveBeenCalledOnce();});
+it('平台能力缺失和未验证的手动登记不产生私有collector任务',async()=>{const p=ports();p.capabilities=async()=>[{platform:'douyin',collect:{available:false}}];await runAccountGroupStartup(ctx,p);expect(p.ensurePrivateJobs).not.toHaveBeenCalled();expect(p.hasCredentialEvidence).not.toHaveBeenCalled();});
+it('单个账号scope读取失败不阻断另一个真实账号和其它组',async()=>{const p=ports();p.membership.mockRejectedValueOnce(Error('账号转组中'));p.hasCredentialEvidence.mockResolvedValue(true);await runAccountGroupStartup(ctx,p);expect(p.warn).toHaveBeenCalledOnce();expect(p.ensurePrivateJobs).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({accountId:'account-1'}));});
+it('读取所有分页，不把101号之后的组默默丢弃',async()=>{const p=ports();p.listAccounts.mockImplementation(async(_c,q)=>q.offset===0?{rows:Array.from({length:100},(_,i)=>account(`a-${i}`,'kuaishou')),total:101}:{rows:[account('last','douyin')],total:101});p.membership.mockImplementation(async(_c,id)=>member(id,id,1));p.group.mockImplementation(async(_c,id)=>group(id,1));p.hasCredentialEvidence.mockResolvedValue(true);await runAccountGroupStartup(ctx,p);expect(p.ensureSharedJobs).toHaveBeenCalledTimes(101);expect(p.ensurePrivateJobs).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({accountId:'last'}));});
+it('旧profile证明要求真实非空Cookie文件，不读内容，不接受空目录/手填ID/链接',async()=>{const dir=await mkdtemp(path.join(os.tmpdir(),'t1022-credential-'));try{expect(await hasLegacyDouyinCredentialEvidence(dir)).toBe(false);await mkdir(path.join(dir,'Default','Network'),{recursive:true});await writeFile(path.join(dir,'Default','Network','Cookies'),'');expect(await hasLegacyDouyinCredentialEvidence(dir)).toBe(false);await writeFile(path.join(dir,'Default','Network','Cookies'),'仅隔离凭据测试');expect(await hasLegacyDouyinCredentialEvidence(dir)).toBe(true);await rm(path.join(dir,'Default','Network','Cookies'));await writeFile(path.join(dir,'dummy'),'仅测试');await symlink(path.join(dir,'dummy'),path.join(dir,'Default','Network','Cookies'));expect(await hasLegacyDouyinCredentialEvidence(dir)).toBe(false);}finally{await rm(dir,{recursive:true,force:true});}});

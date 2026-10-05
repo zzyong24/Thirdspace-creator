@@ -1,3 +1,4 @@
+import {workspaceFilter} from "../../workspace-scope";
 import { isDeepStrictEqual } from "node:util";
 import { createHash, randomUUID } from "node:crypto";
 import { z } from "zod";
@@ -46,7 +47,7 @@ export function createExecutionAgenticToolPorts(db:Db,deps:Parameters<typeof cre
    const {callId}=workerPortInputSchemas.executeAgenticTool.parse(raw);
    const claimed=await leases.withLease(ref,"admission",async({tx,task,context})=>{
     if(task.ownerType!=="ai_task")throw new ConflictError("工具执行没有AI业务归属");
-    const [business]=await tx.select().from(aiTasks).where(and(eq(aiTasks.id,task.ownerId),eq(aiTasks.executionTaskId,task.id),eq(aiTasks.userId,context.userId),eq(aiTasks.accountId,context.accountId!))).for("update");
+    const [business]=await tx.select().from(aiTasks).where(and(eq(aiTasks.id,task.ownerId),eq(aiTasks.executionTaskId,task.id),eq(aiTasks.userId,context.userId),workspaceFilter(aiTasks,context))).for("update");
     if(!business || !["queued","running"].includes(business.status))throw new ConflictError("工具执行的AI任务映射或状态不符");
     const calls=await tx.select().from(executionCalls).where(eq(executionCalls.executionTaskId,task.id)).orderBy(asc(executionCalls.sequence));
     const call=calls.find(row=>row.id===callId);if(!call)throw new ConflictError("工具调用不存在");

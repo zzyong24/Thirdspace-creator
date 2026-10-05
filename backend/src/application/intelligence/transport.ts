@@ -1,9 +1,11 @@
 import type {RequestContext,Transport} from "@creatoros/contract";
-import {requireAccountId} from "../../errors";
+import {requireWorkspace} from "../../workspace-scope";
 import {OwnershipError} from "../../modules/projects";
 import {parseFeed} from "@creatoros/ai-worker";
 /** 来源预检与提交后唤醒；资源访问由宿主端口提供。 */
 export function createIntelligenceApplicationTransport(ports:{intelligenceBase:Transport;
+assertWorkspaceReadable:(ctx:RequestContext)=>Promise<void>;
+assertCollectorEligible:import("../../modules/intelligence/intelligence.service").IntelligenceService["assertCollectorEligible"];
 getCollectorAccount:import("../../modules/platform-account").PlatformAccountService["getAccount"];
 previewProfile:(collectorAccountId:string,externalAccountId:string,canonicalUrl:string)=>Promise<{externalAccountId:string;nickname:string;avatarUrl:string|null;canonicalUrl:string;visibleWorkCount:number|null}>;
 readFavoriteFolders:(ctx:RequestContext,collectorAccountId:string)=>Promise<Array<{collectsId:string;name:string;totalCount:number}>>;
@@ -14,7 +16,7 @@ isLoginRequiredError:(error:unknown)=>boolean;
 wake:(kind:"share_import"|"transcribe"|"topic_preview"|"script_candidate")=>void;
 canWakeTranscript:()=>boolean;
 dispatchIntelligenceRun:(ctx:RequestContext,result:unknown)=>void;}):Transport {
-const {intelligenceBase,getCollectorAccount,previewProfile,readFavoriteFolders,fetchIntelligenceFeed,isSyndicationFeed,readWeb,isLoginRequiredError,wake,canWakeTranscript,dispatchIntelligenceRun}=ports;
+const {intelligenceBase,assertWorkspaceReadable,assertCollectorEligible,previewProfile,readFavoriteFolders,fetchIntelligenceFeed,isSyndicationFeed,readWeb,isLoginRequiredError,wake,canWakeTranscript,dispatchIntelligenceRun}=ports;
 return {
     async request(endpoint, input, ctx) {
       if (ctx && endpoint.id === "intelligence.sources.previewProfile") {
@@ -25,16 +27,13 @@ return {
             url?: string;
           };
         })?.body;
-        const accountId = requireAccountId(
-          ctx.accountId,
-          endpoint.id,
-        );
-        if (body?.accountId !== accountId) {
+        requireWorkspace(ctx);await assertWorkspaceReadable(ctx);
+        if (body?.accountId && body.accountId !== ctx.accountId) {
           throw new Error("Intelligence source not found");
         }
-        const collectorAccountId = body.collectorAccountId ?? "";
+        const collectorAccountId = body?.collectorAccountId ?? "";
         const collector =
-          await getCollectorAccount(
+          await assertCollectorEligible(
             ctx,
             collectorAccountId,
           );
@@ -44,7 +43,7 @@ return {
         ) {
           throw new OwnershipError("采集账号不可用，请重新选择");
         }
-        const url = new URL(body.url ?? "");
+        const url = new URL(body?.url ?? "");
         if (
           !/(^|\.)douyin\.com$/i.test(url.hostname) ||
           !url.pathname.match(/\/user\/([^/?#]+)/)
@@ -72,11 +71,11 @@ return {
             browserSessionRef?: string;
           };
         })?.body;
-        const accountId = requireAccountId(ctx.accountId, endpoint.id);
-        if (body?.accountId !== accountId) {
+        requireWorkspace(ctx);await assertWorkspaceReadable(ctx);
+        if (body?.accountId && body.accountId !== ctx.accountId) {
           throw new Error("Intelligence source not found");
         }
-        const requestedUrl = new URL(body.url ?? "").toString();
+        const requestedUrl = new URL(body?.url ?? "").toString();
         try {
           const feed = await fetchIntelligenceFeed(requestedUrl);
           if (isSyndicationFeed(feed.xml)) {
@@ -96,7 +95,7 @@ return {
                 })),
                 loginRequired: false,
                 parser: "rss-or-atom-feed",
-                browserSessionRef: body.browserSessionRef ?? null,
+                browserSessionRef: body?.browserSessionRef ?? null,
               },
               meta: { requestId: ctx.requestId },
             };
@@ -121,7 +120,7 @@ return {
               ],
               loginRequired: false,
               parser: `readable:${read.extractor}`,
-              browserSessionRef: body.browserSessionRef ?? null,
+              browserSessionRef: body?.browserSessionRef ?? null,
             },
             meta: { requestId: ctx.requestId },
           };
@@ -135,7 +134,7 @@ return {
                 samples: [],
                 loginRequired: true,
                 parser: "login-required",
-                browserSessionRef: body.browserSessionRef ?? null,
+                browserSessionRef: body?.browserSessionRef ?? null,
               },
               meta: { requestId: ctx.requestId },
             };
@@ -153,15 +152,15 @@ return {
             collectorAccountId?: string;
           };
         })?.query;
-        const accountId = requireAccountId(ctx.accountId, endpoint.id);
-        if (query?.accountId !== accountId) {
+        requireWorkspace(ctx);await assertWorkspaceReadable(ctx);
+        if (query?.accountId && query.accountId !== ctx.accountId) {
           // 已知是当前页面账号与收藏归属不一致；仍使用 404-class OwnershipError，
           // 但给本机用户可操作的收藏语义，避免 UI 只得到无关的 source not found。
           throw new OwnershipError("收藏账号与当前页面账号不一致");
         }
-        const collectorAccountId = query.collectorAccountId ?? "";
+        const collectorAccountId = query?.collectorAccountId ?? "";
         const collector =
-          await getCollectorAccount(
+          await assertCollectorEligible(
             ctx,
             collectorAccountId,
           );

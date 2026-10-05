@@ -18,6 +18,9 @@ import { getCliOperationPolicy } from "@creatoros/contract";
 
 export interface CreatorOsMcpServerOptions {
   dispatchClient: DispatchClient;
+  /** 仅由 serve 的显式参数固定范围；工具可显式覆盖。 */
+  defaultGroupId?: string;
+  defaultAccountId?: string;
 }
 
 /** 装配一个 CreatorOS MCP Server(未连 transport;index.ts 负责接 stdio)。 */
@@ -68,7 +71,10 @@ export function createCreatorOsMcpServer(
           throw new Error(`${tool.opId} 必须提供 confirmImpact。`);
         }
       }
-      const envelope = await dispatchClient.dispatch(tool.opId, input, _creatoros);
+      const groupId=_creatoros?.groupId ?? options.defaultGroupId;
+      // 显式切组时不把启动时原组的真实平台目标带过去。
+      const accountId=_creatoros?.accountId ?? (_creatoros?.groupId && _creatoros.groupId!==options.defaultGroupId ? undefined : options.defaultAccountId);
+      const envelope = await dispatchClient.dispatch(tool.opId, input, {..._creatoros,groupId,accountId});
       return {
         content: [
           { type: "text" as const, text: JSON.stringify(envelope, null, 2) },

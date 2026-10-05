@@ -1,3 +1,4 @@
+import {workspaceFilter} from "../../workspace-scope";
 import { assertFrozenBrowserTaskGrant } from "./browser-task-grant";
 import { z } from "zod";
 import {
@@ -101,7 +102,7 @@ export function createExecutionBrowserActionService(
                 eq(aiTasks.id, task.ownerId),
                 eq(aiTasks.executionTaskId, task.id),
                 eq(aiTasks.userId, context.userId),
-                eq(aiTasks.accountId, context.accountId!),
+                workspaceFilter(aiTasks,context),
               ),
             )
             .for("update");

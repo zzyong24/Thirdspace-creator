@@ -1,3 +1,4 @@
+import {seedAdjacentContent} from "../../integration/adjacent-domain-fixtures";
 import { expect, it, vi } from "vitest";
 import { createDb } from "@creatoros/backend";
 import { ErrorCode, type Endpoint, type RequestContext } from "@creatoros/contract";
@@ -9,6 +10,7 @@ import { createUnavailablePublisher } from "./platform-publisher";
 const ctx: RequestContext = {userId:"publishing-truth-user",accountId:"publishing-truth-account",source:"user",requestId:"publishing-truth"};
 it.each([false,true])("真实PGlite公共transport：手工登记保留，自动发布不可用且不伪造发布事实（显式装配=%s）",async explicit=>{
   const {db,client}=await createDb();let serial=0;
+  await seedAdjacentContent(db,ctx,["manual-output","draft-output"]);
   const markOutputPublished=vi.fn(async()=>{}),notify=vi.fn(async()=>{});
   const service=createPublishingService({db,now:()=>"2026-09-05T00:00:00.000Z",nextId:prefix=>`${prefix}-${++serial}`,...(explicit?{publisher:createUnavailablePublisher()}:{}),markOutputPublished,notify});
   const transport=createPublishingTransport(()=>service);

@@ -90,7 +90,7 @@ describe("Dashboard derived metrics", () => {
 
   it("recent publication engagement is derived (likes + comments), not zero", () => {
     const vm = buildDashboardViewModel();
-    const total = vm.recentPublications.reduce((s, r) => s + r.engagement, 0);
+    const total = vm.recentPublications.reduce((s, r) => s + (r.engagement??0), 0);
     expect(total).toBeGreaterThan(0);
   });
 

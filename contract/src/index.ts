@@ -286,3 +286,15 @@ export { dailyReportQuery, type DailyReportQuery } from "./pages/daily-report";
 export {dailyReportAnalysis,type DailyReportAnalysis} from "./pages/daily-report-analysis";
 
 export * from "./resources/audience-task";
+
+export type {GroupResourceGrantResource,GroupResourceRevokePreview,AccountGroupResource,GroupMemberResource,GroupTransferPreview} from "./resources/account-groups";
+
+export {groupWorkspaceQuery,groupWorkspaceMeta,groupDashboardPage,type GroupWorkspaceQuery} from "./pages/group-workspace";
+
+export {platformAccountCapabilitiesResource,type PlatformAccountCapabilitiesResource} from "./resources/platform-accounts";
+
+export {accountBindingStart,accountBindingResource,type AccountBindingResource} from "./resources/platform-accounts";
+
+export {groupOnboardingStateResource,type GroupOnboardingStateResource} from "./resources/settings";
+
+export {WORKSPACE_OPERATION_SCOPES,type WorkspaceOperationScope} from "./workspace-operation-scope";

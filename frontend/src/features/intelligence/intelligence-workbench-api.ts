@@ -1,28 +1,31 @@
-import { client } from "@/lib/contract-client";
-import { createHttpTransport } from "@/lib/http-transport";
-import { ENDPOINTS,requestListWithMeta, executionTaskResourceV2 } from "@creatoros/contract";
-import type { RadarApi,RadarItemDetail,RadarItemRow,RadarRun,RadarRunEvent,RadarSource } from "./intelligence-workbench-types";
-const radarTransport = createHttpTransport();
 
-export function defaultApi(): RadarApi {
+import { createHttpTransport } from "@/lib/http-transport";
+import { createClient,ENDPOINTS,requestListWithMeta, executionTaskResourceV2 } from "@creatoros/contract";
+import {radarAccountInput,radarTaskInScope} from "./intelligence-workbench-types";
+import type { RadarScope,RadarApi,RadarItemDetail,RadarItemRow,RadarRun,RadarRunEvent,RadarSource } from "./intelligence-workbench-types";
+const scopedInput=<T extends RadarScope>(input:T)=>{const rest={...input};delete rest.groupId;delete rest.accountId;return {...rest,...radarAccountInput(input)};};
+
+export function defaultApi(scope?:RadarScope): RadarApi {
+  const radarTransport=createHttpTransport("/api/v1",scope?.groupId?{groupId:scope.groupId}:scope);
+  const client=createClient(ENDPOINTS,radarTransport);
   return {
     async enqueueProjectUpgrades(input){
       return client.enqueueIntelligenceProjectUpgrades({params:undefined,query:undefined,body:input});
     },
     async listProjectUpgrades(input){
-      const result=await requestListWithMeta(radarTransport,ENDPOINTS.listExecutionTasks,{params:undefined,query:{accountId:input.accountId,kind:"radar_project_upgrade",page:input.page,pageSize:100},body:undefined});
+      const result=await requestListWithMeta(radarTransport,ENDPOINTS.listExecutionTasks,{params:undefined,query:{...radarAccountInput(input),kind:"radar_project_upgrade",page:input.page,pageSize:100},body:undefined});
       return {tasks:result.data.map(row=>executionTaskResourceV2.parse(row)),total:result.meta.total};
     },
     async listShareImportTasks(input) {
-      const rows: unknown = await client.listExecutionTasks({params: undefined, query: {...input, kind: "share_import", page: input.page ?? 1, pageSize: 100}, body: undefined});
+      const rows: unknown = await client.listExecutionTasks({params: undefined, query: {...scopedInput(input), kind: "share_import", page: input.page ?? 1, pageSize: 100}, body: undefined});
       if (!Array.isArray(rows)) throw new Error("导入任务列表回执格式不正确，请刷新核对。");
-      return rows.map(row => executionTaskResourceV2.parse(row)).filter(task => task.kind === "share_import" && task.accountId === input.accountId && task.ownerType === "item_import");
+      return rows.map(row => executionTaskResourceV2.parse(row)).filter(task => task.kind === "share_import" && radarTaskInScope(task,input) && task.ownerType === "item_import");
     },
     async commandTask(input){const result=await client.commandExecutionTasks({params:undefined,query:undefined,body:{taskIds:[input.taskId],command:input.command,idempotencyKey:input.idempotencyKey}});if(!result.tasks.some(task=>task.id===input.taskId))throw new Error("任务操作回执不匹配，请刷新后核对。");},
     listCollectors: (input) =>
       client.listIntelligenceCollectors({
         params: undefined,
-        query: input,
+        query: scopedInput(input),
         body: undefined,
       }) as unknown as Promise<
         Array<{
@@ -35,18 +38,18 @@ export function defaultApi(): RadarApi {
       client.previewIntelligenceProfile({
         params: undefined,
         query: undefined,
-        body: input,
+        body: scopedInput(input),
       }),
     previewWeb: (input) =>
       client.previewIntelligenceWeb({
         params: undefined,
         query: undefined,
-        body: { ...input, instruction: input.instruction },
+        body: { ...scopedInput(input), instruction: input.instruction },
       }),
     listFavoriteFolders: (input) =>
       client.listIntelligenceFavoriteFolders({
         params: undefined,
-        query: input,
+        query: scopedInput(input),
         body: undefined,
       }) as unknown as Promise<
         Array<{ id: string; name: string; itemCount: number | null }>
@@ -55,13 +58,13 @@ export function defaultApi(): RadarApi {
       client.createIntelligenceCollection({
         params: undefined,
         query: undefined,
-        body: input,
+        body: scopedInput(input),
       }),
     createSource: (input) =>
       client.createIntelligenceSource({
         params: undefined,
         query: undefined,
-        body: input as never,
+        body: scopedInput(input) as never,
       }),
     updateSource: (input) =>
       client.updateIntelligenceSource({
@@ -83,7 +86,7 @@ export function defaultApi(): RadarApi {
       client.importDouyinShareItem({
         params: undefined,
         query: undefined,
-        body: input,
+        body: scopedInput(input),
       }),
     startRun: (input) =>
       client.startIntelligenceRun({
@@ -95,7 +98,7 @@ export function defaultApi(): RadarApi {
         },
       }),
     reconnectCollector: (input) =>
-      client.loginDouyin({
+      createClient(ENDPOINTS,createHttpTransport("/api/v1",{groupId:scope?.groupId,accountId:input.collectorAccountId})).loginDouyin({
         params: undefined,
         query: undefined,
         body: {
@@ -127,7 +130,7 @@ export function defaultApi(): RadarApi {
         {
           params: undefined,
           query: {
-            accountId: input.accountId,
+            ...radarAccountInput(input),
             page,
             pageSize,
             sort: input.sort,
@@ -180,16 +183,20 @@ export function defaultApi(): RadarApi {
       client.previewIntelligenceTopic({
         params: undefined,
         query: undefined,
-        body: input,
+        // The shared contract is being extended to make positioningVersionId optional.
+        body: input as unknown as Parameters<typeof client.previewIntelligenceTopic>[0]["body"],
       }),
     confirmTopic: (input) =>
       client.confirmIntelligenceTopic({
         params: { transformId: input.transformId },
         query: undefined,
         body: {
-          editedCandidate: input.editedCandidate,
+          ...("editedCandidate" in input ? { editedCandidate: input.editedCandidate } : {}),
+          ...("editedDraftContentText" in input && input.editedDraftContentText !== undefined
+            ? { editedDraftContentText: input.editedDraftContentText }
+            : {}),
           idempotencyKey: input.idempotencyKey,
-        },
+        } as unknown as Parameters<typeof client.confirmIntelligenceTopic>[0]["body"],
       }),
     promoteCandidate: (input) =>
       client.promoteCandidate({

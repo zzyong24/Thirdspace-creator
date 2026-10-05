@@ -1,3 +1,4 @@
+import {requireWorkspace} from "@creatoros/backend";
 import {createHash} from 'node:crypto';
 import type {RequestContext} from '@creatoros/contract';
 import type {ObjectStorageForCtx} from './assets.service';
@@ -8,9 +9,9 @@ export const transcribeAudioDigest=(bytes:Uint8Array)=>`sha256:${createHash('sha
 export function createTranscribeAudioStorage(objectStorageForCtx:ObjectStorageForCtx){
  return {
   async allocate(ctx:RequestContext,bytes:Uint8Array,signal?:AbortSignal){
-   requireAccountId(ctx.accountId,'transcribe.audio');signal?.throwIfAborted();
+   requireWorkspace(ctx);signal?.throwIfAborted();
    const storage=await objectStorageForCtx(ctx);signal?.throwIfAborted();
-   const key=await storage.createPresignedUpload({accountId:ctx.accountId,assetType:'audio',mimeType:'audio/mpeg',fileSize:bytes.byteLength,folder:'execution-inputs',fileName:'transcribe.mp3'});signal?.throwIfAborted();
+   const key=await storage.createPresignedUpload({accountId:ctx.accountId,groupId:ctx.groupId,assetType:'audio',mimeType:'audio/mpeg',fileSize:bytes.byteLength,folder:'execution-inputs',fileName:'transcribe.mp3'});signal?.throwIfAborted();
    return transcribeAudioReceiptSchema.parse({schemaVersion:1,state:'reserved',storageKey:key.storageKey,audioDigest:transcribeAudioDigest(bytes),audioByteLength:bytes.byteLength});
   },
   async read(ctx:RequestContext,raw:unknown,signal?:AbortSignal){

@@ -74,8 +74,9 @@ export function endpointInputSchema(endpoint: Endpoint): Record<string, unknown>
       : ["idempotencyKey", "apply"];
   properties._creatoros = {
     type: "object",
-    description: "CreatorOS CLI/MCP 调用上下文。并行多账号时每次显式传 accountId。",
+    description: "CreatorOS CLI/MCP 调用上下文。每次显式传 groupId；平台目标另传真实 accountId。",
     properties: {
+      groupId: { type: "string", minLength: 1 },
       accountId: { type: "string", minLength: 1 },
       idempotencyKey: { type: "string", minLength: 1 },
       apply: { type: "boolean" },
@@ -159,8 +160,8 @@ export const OVERVIEW_TOOL: McpToolDef = {
     properties: {
       _creatoros: {
         type: "object",
-        description: "并行多账号时显式传 accountId。",
-        properties: { accountId: { type: "string", minLength: 1 } },
+        description: "显式传 groupId，平台目标另传 accountId。",
+        properties: { groupId: { type: "string", minLength: 1 }, accountId: { type: "string", minLength: 1 } },
         additionalProperties: false,
       },
     },

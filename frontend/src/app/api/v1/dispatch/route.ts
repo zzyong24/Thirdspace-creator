@@ -250,6 +250,13 @@ export function dispatchErrorResponse(err: unknown): Response {
   if (err instanceof OwnershipError) {
     return errorEnvelope(ErrorCode.OwnershipError, err.message);
   }
+  // SEMANTIC_BOUNDARY_ALLOW: 识别数据库资源授权守卫的固定错误协议，不按业务正文猜错误。
+  let resourceError:unknown=err;
+  for(let depth=0;depth<5&&resourceError&&typeof resourceError==='object';depth++){
+    const row=resourceError as {code?:unknown;message?:unknown;cause?:unknown};
+    if(row.code==='40001'&&typeof row.message==='string'&&row.message.startsWith('GROUP_RESOURCE_SCOPE_CONFLICT:'))return errorEnvelope(ErrorCode.ConflictError,row.message.slice('GROUP_RESOURCE_SCOPE_CONFLICT:'.length).trim());
+    resourceError=row.cause;
+  }
   // Module/CDP errors carry a contract ErrorCode in `.code`. Keeping the
   // structured envelope here is what lets HttpTransport and UI act on the code.
   const code = (err as { code?: unknown }).code;
@@ -320,7 +327,9 @@ export async function POST(req: Request): Promise<Response> {
   // + active;验不过(不存在/不属主/已归档)→ 抛 OwnershipError → 下方转 404 **拒绝**,
   // 不再静默降级 null(降级会把失效号伪装成「未选号引导态」,不诚实;SPEC §4.3)。
   const rawToken = readSessionCookie(req);
-  const accountId = req.headers.get("x-account-id");
+  // 用户域管理读不依赖当前选择；失效选择也要能从真实账号组列表恢复。
+  const selectionIndependentRead=new Set(["accountGroups.list","accountGroups.get","accounts.list","accounts.get","accounts.bindingCapabilities"]).has(endpoint.id);
+  const accountId = selectionIndependentRead?null:req.headers.get("x-account-id");
   // [RT-H01] 状态变更类 op 要求「明确身份或拒绝」:present-but-invalid cookie 不静默降级
   //   主用户 → 上抛 → 401(缺失 cookie 仍走单机免登录直通,读 op 保持宽松)。契约 HttpMethod
   //   只有 GET/POST/PATCH/PUT/DELETE(无 HEAD),故「非 GET 即写路径」。
@@ -329,6 +338,8 @@ export async function POST(req: Request): Promise<Response> {
   try {
     ctx = await resolveRequestContext(rawToken, accountId, {
       rejectInvalidToken: isMutation,
+      groupId: req.headers.get("x-group-id"),
+      groupSelectionMode:selectionIndependentRead?"unselected":"reject",
     });
   } catch (err) {
     // 结构化识别鉴权错误(跨 Next bundle 边界 instanceof 不可靠,故并用 code/name)。

@@ -7,7 +7,7 @@ describe("T-843 CLI operation policy", () => {
     expect(Object.keys(CLI_OPERATION_POLICIES).sort()).toEqual(
       Object.values(ENDPOINTS).map((endpoint) => endpoint.id).sort(),
     );
-    expect(Object.keys(CLI_OPERATION_POLICIES)).toHaveLength(255);
+    expect(Object.keys(CLI_OPERATION_POLICIES)).toHaveLength(Object.keys(ENDPOINTS).length);
   });
 
   it('观众任务三操作有对应读写策略',()=>{

@@ -243,3 +243,19 @@ it("[T-944] 确认允许可选内容目的，但不能改写只读推荐理由�
     expect(schema.safeParse({ editedCandidate: { ...editedCandidate, ...extra }, idempotencyKey: "confirm" }).success).toBe(false);
   }
 });
+
+describe("[T-1017] 改写首稿契约兼容", () => {
+  const preview = { itemId: "item", sourceSnapshotId: "snapshot", idempotencyKey: "preview" };
+  it("无定位版本也能请求，旧客户端版本字段继续接受；不开放内部旧链切换", () => {
+    expect(ENDPOINTS.previewIntelligenceTopic.body.safeParse(preview).success).toBe(true);
+    expect(ENDPOINTS.previewIntelligenceTopic.body.safeParse({ ...preview, positioningVersionId: "old-version" }).success).toBe(true);
+    expect(ENDPOINTS.previewIntelligenceTopic.body.safeParse({ ...preview, strategyBacked: true }).success).toBe(false);
+  });
+  it("采纳改写仅需幂等键，可提交正文编辑，拒绝空正文和伪造来源", () => {
+    const schema = ENDPOINTS.confirmIntelligenceTopic.body;
+    expect(schema.safeParse({ idempotencyKey: "adopt" }).success).toBe(true);
+    expect(schema.safeParse({ idempotencyKey: "adopt", editedDraftContentText: "我编辑的正文" }).success).toBe(true);
+    expect(schema.safeParse({ idempotencyKey: "adopt", editedDraftContentText: "" }).success).toBe(false);
+    expect(schema.safeParse({ idempotencyKey: "adopt", sourceSnapshotId: "forged" }).success).toBe(false);
+  });
+});

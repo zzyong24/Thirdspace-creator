@@ -1,3 +1,4 @@
+import {projects as parentProjects,contentOutputs as parentOutputs,publications as parentPublications,reviews as parentReviews} from "@creatoros/backend";
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { createDb, assets, eq, type Db } from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
@@ -98,6 +99,9 @@ describe("ai service", () => {
   let db: Db;
   beforeEach(async () => {
     ({ db } = await createDb());
+    // 真实父实体fixture；授权不能只靠通过的mock服务端口。
+    await db.insert(parentProjects).values(["project-a", "p-1", "proj-1"].map(id=>({id,userId:"user-a",accountId:"acct-a",title:id,creationMode:"free",status:"active",currentStage:"script",startedAt:NOW,createdAt:NOW,updatedAt:NOW}))).onConflictDoNothing();
+
   });
 
   it("[T-730] createTask 恢复 planning.thesis，但创建任务本身不写 artifact version", async () => {
@@ -1079,6 +1083,9 @@ describe("[DATA-H06] confirmTask 批量采纳:第 N 条失败 → 重试不重�
   let db: Db;
   beforeEach(async () => {
     ({ db } = await createDb());
+    // 真实父实体fixture；授权不能只靠通过的mock服务端口。
+    await db.insert(parentProjects).values(["project-a", "p-1", "proj-1"].map(id=>({id,userId:"user-a",accountId:"acct-a",title:id,creationMode:"free",status:"active",currentStage:"script",startedAt:NOW,createdAt:NOW,updatedAt:NOW}))).onConflictDoNothing();
+
   });
 
   it("material_list:第 2 条 createKnowledge 抛 → 任务仍 awaiting;重试只补第 2/3 条,第 1 条不重复(实体 + 用料链)", async () => {
@@ -1239,6 +1246,9 @@ describe("[DATA-H07] generated_asset:pending 候选态 → 采纳 active / 拒�
   let db: Db;
   beforeEach(async () => {
     ({ db } = await createDb());
+    // 真实父实体fixture；授权不能只靠通过的mock服务端口。
+    await db.insert(parentProjects).values(["project-a", "p-1", "proj-1"].map(id=>({id,userId:"user-a",accountId:"acct-a",title:id,creationMode:"free",status:"active",currentStage:"script",startedAt:NOW,createdAt:NOW,updatedAt:NOW}))).onConflictDoNothing();
+
   });
 
   async function seedAsset(
@@ -1381,6 +1391,9 @@ describe("[T-332 S2] AI 按号隔离:C-07 未选号禁建 + 双号零交叉", ()
   let db: Db;
   beforeEach(async () => {
     ({ db } = await createDb());
+    // 真实父实体fixture；授权不能只靠通过的mock服务端口。
+    await db.insert(parentProjects).values(["project-a", "p-1", "proj-1"].map(id=>({id,userId:"user-a",accountId:"acct-a",title:id,creationMode:"free",status:"active",currentStage:"script",startedAt:NOW,createdAt:NOW,updatedAt:NOW}))).onConflictDoNothing();
+
   });
 
   const ctxNoAccount: RequestContext = {

@@ -54,6 +54,8 @@ node orchestrator/process/taskctl.mjs complete <T-id> --evidence "<commit / test
 
 ## 硬规矩(踩过的坑,别再踩)
 
+- **页面设计统一使用 oil-ui-pro（用户2026-10-04要求）**：新增页面、页面重构、视觉优化与UI评审必须加载项目内 [.agents/skills/oil-ui-pro/SKILL.md](.agents/skills/oil-ui-pro/SKILL.md)（当前0.10.0），并遵循 [账号组页面规范](docs/features/t1022-account-group-workspace/UI_RULES.md)。先盘点现有tokens与组件、保留基线，再设计关键流程、状态和响应式。方向探索用技能自带对比页；整体改版按技能独立评审并取得实际视觉与操作证据。该Skill负责设计判断，不替代product-to-code-orchestrator、服务契约、数据隔离及实现验收；未选定候选不得声称视觉方向已确认。
+
 - **界面性能防复发（LED-047）**：同页弹层的链接和程序化按钮共用本地打开路径，不等待整页加载；真实页面/筛选导航保留路由。折叠大对象按需渲染；轮询必须限制在途请求并防止过期或卸载回写。改动这些路径运行 LED-047 回归，不靠删除历史或阻断合法任务提速。
 - **严禁假按钮**:UI 控件要么真实有效,要么删掉。
 - **关键链路禁止质量门反杀可用性**:启动、保存、生成、渲染、导出、发布等上一版可完成的合法任务，

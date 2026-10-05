@@ -1,3 +1,4 @@
+import {requireWorkspace,workspaceFilter,assertWritableWorkspace} from "../../workspace-scope";
 import {and,eq,executionTasks,executionCalls,itemTranscripts,type Db} from '@creatoros/backend';
 import {createContinuousExecutionBudget,type ExecutionRef} from '@creatoros/contract/execution-worker';
 import type {RequestContext} from '@creatoros/contract';
@@ -40,7 +41,7 @@ export function createTranscriptSourceRecoveryService(db:Db,deps:{now?:()=>strin
   /** 仅供已获授权的升级父项点名恢复，不扫描历史任务。 */
   async recoverReferenced(ctx:RequestContext,taskId:string):Promise<boolean> {
    return db.transaction(async tx=>{
-    const [task]=await tx.select().from(executionTasks).where(and(eq(executionTasks.id,taskId),eq(executionTasks.userId,ctx.userId),eq(executionTasks.accountId,ctx.accountId!))).for('update');
+    const [task]=await tx.select().from(executionTasks).where(and(eq(executionTasks.id,taskId),eq(executionTasks.userId,ctx.userId),workspaceFilter(executionTasks,ctx))).for('update');
     if(!task||task.status!=='failed'||task.kind!=='transcribe'||task.lastErrorCode!=='TRANSCRIBE_FAILED'||task.lastErrorMessage!=='DouyinCooldownActiveError'||task.leaseOwner)return false;
     // 存量只保存了错误名称，已无可信剩余时长；先退避，再由共享网关核验实际冷却。
     await schedule(tx,task,ctx,5_000,true);return true;

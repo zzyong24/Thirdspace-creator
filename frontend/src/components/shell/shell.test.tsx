@@ -109,6 +109,17 @@ describe("AppShell", () => {
     expect(headers).toHaveLength(1);
   });
 
+  it("新项目弹层关闭回原页，焦点返回点击入口", async () => {
+    const {AppShell}=await import("./app-shell");
+    const view=render(<AppShell pathname="/"><div>首页正文</div></AppShell>);
+    const trigger=view.container.querySelector<HTMLAnchorElement>('header a[href="/projects/new"]')!;
+    trigger.focus();fireEvent.click(trigger);
+    view.rerender(<AppShell pathname="/projects/new"><button>对话框关闭</button></AppShell>);
+    screen.getByRole("button",{name:"对话框关闭"}).focus();
+    view.rerender(<AppShell pathname="/"><div>首页正文</div></AppShell>);
+    await waitFor(()=>expect(document.activeElement).toBe(view.container.querySelector('header a[href="/projects/new"]')));
+  });
+
   it("[T-718] 激活前使用包级品牌名和品牌图标，Growth 品牌可在激活后覆盖名称", async () => {
     const { AppShell } = await import("./app-shell");
     const { SidebarBrandNameProvider } = await import("./sidebar");
@@ -171,6 +182,7 @@ describe("AppShell", () => {
     // under it (定位→选题→项目 upstream order: 定位约束选题, 选题落地为项目).
     expect(labels).toEqual([
       "首页",
+      "创作者总览",
       "定位中心",
       "内容雷达",
       "选题",
@@ -188,7 +200,7 @@ describe("AppShell", () => {
     await renderShell();
     const assertLinks = () => {
       const links = within(screen.getByRole("navigation", { name: "主要导航" })).getAllByRole("link");
-      expect(links).toHaveLength(11);
+      expect(links).toHaveLength(12);
       for (const link of links) {
         expect(link).toHaveAttribute("data-prefetch", "false");
         expect(link.getAttribute("href")).toMatch(/^\//);
@@ -554,6 +566,21 @@ describe("AppShell", () => {
 // ---------------------------------------------------------------------------
 
 describe("Sidebar 折叠 (T-129)", () => {
+  it("窄窗口自动收起，恢复宽窗口时保留桌面展开偏好", async () => {
+    let listener: ((event: MediaQueryListEvent) => void) | undefined;
+    const original = window.matchMedia;
+    window.localStorage.setItem("creatoros:sidebar:collapsed", "0");
+    window.matchMedia = vi.fn((query: string) => ({matches:query === "(max-width: 1024px)",media:query,addEventListener:(_type:string,fn: typeof listener)=>{if(query === "(max-width: 1024px)")listener=fn;},removeEventListener:vi.fn(),addListener:vi.fn(),removeListener:vi.fn(),dispatchEvent:()=>true,onchange:null}) as MediaQueryList);
+    try {
+      await renderShell();
+      const sidebar=screen.getByRole("complementary",{name:/主侧栏/});
+      await waitFor(()=>expect(sidebar).toHaveAttribute("data-collapsed","true"));
+      expect(window.localStorage.getItem("creatoros:sidebar:collapsed")).toBe("0");
+      const {act}=await import("@testing-library/react");
+      act(()=>listener?.({matches:false} as MediaQueryListEvent));
+      await waitFor(()=>expect(sidebar).toHaveAttribute("data-collapsed","false"));
+    } finally { cleanup(); window.matchMedia=original; }
+  });
   afterEach(() => {
     cleanup();
     try {

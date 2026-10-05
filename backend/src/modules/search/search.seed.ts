@@ -23,12 +23,12 @@ import type { SearchDocumentRow } from "./search.repository";
 interface CanonicalLike {
   user: { id: string };
   projects: ReadonlyArray<{
-    id: string; title: string; brief: string; currentStage: string; progressPct: number; accountId: string;
+    id: string; title: string; brief: string; currentStage: string; progressPct: number; accountId: string | null; groupId?: string | null;
   }>;
-  knowledgeItems: ReadonlyArray<{ id: string; title: string; currentRevisionId: string; accountId: string }>;
+  knowledgeItems: ReadonlyArray<{ id: string; title: string; currentRevisionId: string; accountId: string | null; groupId?: string | null }>;
   knowledgeRevisions: ReadonlyArray<{ id: string; knowledgeItemId: string; content?: string }>;
-  assets: ReadonlyArray<{ id: string; name: string; assetType: string; accountId: string }>;
-  publications: ReadonlyArray<{ id: string; platform: string; currentRevisionId: string | null; accountId: string }>;
+  assets: ReadonlyArray<{ id: string; name: string; assetType: string; accountId: string | null; groupId?: string | null }>;
+  publications: ReadonlyArray<{ id: string; platform: string; currentRevisionId: string | null; accountId: string | null; groupId?: string | null }>;
   publicationRevisions: ReadonlyArray<{ id: string; title?: string }>;
 }
 
@@ -47,7 +47,8 @@ export function buildCanonicalSearchDocuments(
     rows.push({
       id: `searchdoc-seed-project-${p.id}`,
       userId,
-      accountId: p.accountId, // [T-332 S2] 派生索引承源实体的号(源行 NOT NULL)
+      accountId: p.accountId,
+      groupId: p.groupId ?? null, // [T-332 S2] 派生索引承源实体的号(源行 NOT NULL)
       entityType: "project",
       entityId: p.id,
       title: p.title,
@@ -71,7 +72,8 @@ export function buildCanonicalSearchDocuments(
     rows.push({
       id: `searchdoc-seed-knowledge-${k.id}`,
       userId,
-      accountId: k.accountId, // [T-332 S2] 派生索引承源实体的号(源行 NOT NULL)
+      accountId: k.accountId,
+      groupId: k.groupId ?? null, // [T-332 S2] 派生索引承源实体的号(源行 NOT NULL)
       entityType: "knowledge",
       entityId: k.id,
       title: k.title,
@@ -86,7 +88,8 @@ export function buildCanonicalSearchDocuments(
     rows.push({
       id: `searchdoc-seed-asset-${a.id}`,
       userId,
-      accountId: a.accountId, // [T-332 S2] 派生索引承源实体的号(源行 NOT NULL)
+      accountId: a.accountId,
+      groupId: a.groupId ?? null, // [T-332 S2] 派生索引承源实体的号(源行 NOT NULL)
       entityType: "asset",
       entityId: a.id,
       title: a.name,
@@ -105,7 +108,8 @@ export function buildCanonicalSearchDocuments(
     rows.push({
       id: `searchdoc-seed-video-${pub.id}`,
       userId,
-      accountId: pub.accountId, // [T-332 S2] 派生索引承源实体的号(publications 行 NOT NULL)
+      accountId: pub.accountId,
+      groupId: pub.groupId ?? null, // [T-332 S2] 派生索引承源实体的号(publications 行 NOT NULL)
       entityType: "video",
       entityId: pub.id,
       title,

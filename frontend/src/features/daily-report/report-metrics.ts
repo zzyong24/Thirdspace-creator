@@ -14,8 +14,12 @@ export function percentage(raw:Record<string,number>,key:string){const n=metricV
 export function displayRate(n:number|null){return n===null?"暂无":`${n.toLocaleString("zh-CN",{maximumFractionDigits:2})}%`;}
 export function retention(work:ReportWork|undefined){const raw=work?.metrics??{},bounce=percentage(raw,"bounce_2s_rate");return [{label:"2 秒留存",value:bounce===null?null:100-bounce},{label:"5 秒留存",value:percentage(raw,"finish_5s_rate")},{label:"完整观看",value:percentage(raw,"finish_rate")}];}
 export function sumMetric(report:DailyReport,aliases:readonly string[]){const values=report.works.map(w=>metricValue(w.metrics,aliases)).filter((v):v is number=>v!==null);return {value:values.length?values.reduce((a,b)=>a+b,0):null,coverage:values.length};}
-export function overviewMetrics(report:DailyReport,work:ReportWork|undefined){const views=sumMetric(report,["views","plays"]),likes=sumMetric(report,["likes","digg"]),comments=sumMetric(report,["comments"]),profile=sumMetric(report,["profile_visits"]);return [
- {label:"当前累计播放",value:displayNumber(views.value),note:`${views.coverage}/${report.works.length} 条有播放数据`},
+/** SEMANTIC_BOUNDARY_ALLOW: 平台原生字段归一，公众号的 views 字段表示阅读，不作内容判断。 */
+export function nativeMetric(work:ReportWork,metric:"views"|"reads"){if(metric==="views"&&work.platform==="wechatOfficial")return null;return metricValue(work.metrics,metric==="views"?["views","plays"]:work.platform==="wechatOfficial"?["reads","read_count","views"]:["reads","read_count"]);}
+function nativeTotal(report:DailyReport,metric:"views"|"reads"){const values=report.works.map(work=>nativeMetric(work,metric)).filter((v):v is number=>v!==null);return {value:values.length?values.reduce((a,b)=>a+b,0):null,coverage:values.length};}
+export function overviewMetrics(report:DailyReport,work:ReportWork|undefined){const views=nativeTotal(report,"views"),reads=nativeTotal(report,"reads"),likes=sumMetric(report,["likes","digg"]),comments=sumMetric(report,["comments"]),profile=sumMetric(report,["profile_visits"]);return [
+ {label:"视频累计播放",value:displayNumber(views.value),note:`${views.coverage}/${report.works.length} 条有播放数据`},
+ {label:"文章累计阅读",value:displayNumber(reads.value),note:`${reads.coverage}/${report.works.length} 条有阅读数据`},
  {label:"点赞 / 评论",value:`${displayNumber(likes.value)} / ${displayNumber(comments.value)}`,note:`点赞 ${likes.coverage}/${report.works.length} · 评论 ${comments.coverage}/${report.works.length} 条有数据`},
  {label:"5 秒留存率",value:displayRate(percentage(work?.metrics??{},"finish_5s_rate")),note:work?`所选作品 · ${work.title}`:"暂无可观察作品"},
  {label:"主页访问",value:displayNumber(profile.value),note:`${profile.coverage}/${report.works.length} 条有数据`},

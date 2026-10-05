@@ -20,6 +20,13 @@ afterEach(() => {
 });
 
 describe("ReviewAnalyzeIsland", () => {
+  it('明确平台与窗口附给既有复盘请求，不悄悄改用全组',()=>{
+    render(<ReviewAnalyzeIsland projectId="p1" analysisScope="公众号，2026-09-28—2026-10-04；publicationId: wx1"/>);
+    fireEvent.click(screen.getByRole('button',{name:'帮我复盘'}));
+    expect(openChat.mock.calls[0][0].prefill).toContain('publicationId: wx1');
+    expect(openChat.mock.calls[0][0].prefill).toContain('不合并不同平台的比例');
+    expect(openChat.mock.calls[0][0].selection.id).toBe('p1');
+  });
   it("[T-623] prepares review.analyze in the existing rail without opening a second Copilot", () => {
     const { container } = render(
       <ReviewAnalyzeIsland

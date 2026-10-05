@@ -83,6 +83,28 @@ function makeClient(
 }
 
 describe("buildPredictionComparison(复盘对照读侧,T-063e)", () => {
+  it("账号组复盘只比较当前发布记录，隔离同一期的另一平台与通用内容预测", async () => {
+    const publicationPrediction = (id: string, subjectId: string) => ({
+      ...PREDICTIONS[0]!, id, subjectType: "publication", subjectId,
+    });
+    const selected = publicationPrediction("prediction-selected", "pub-selected");
+    const other = publicationPrediction("prediction-other-platform", "pub-other-platform");
+    const scopedClient = makeClient({
+      listPublications: vi.fn().mockResolvedValue([{id:"pub-selected"},{id:"pub-other-platform"}]),
+      listPredictions: vi.fn().mockResolvedValue([PREDICTIONS[0]!, selected, other]),
+      overview: vi.fn().mockResolvedValue({reflowRows:[
+        {...OVERVIEW.reflowRows[0]!,predictionId:selected.id,subjectId:selected.subjectId},
+        {...OVERVIEW.reflowRows[0]!,predictionId:other.id,subjectId:other.subjectId},
+      ]}),
+    });
+    const vm=await buildPredictionComparison("proj-1",scopedClient,{publicationIds:["pub-selected"]});
+    expect(vm?.rows.map(row=>row.predictionId)).toEqual([selected.id]);
+    expect(vm?.rows[0]?.reflow?.dimensions[0]?.actual).toBe(3);
+    expect(await buildPredictionComparison("proj-1",scopedClient,{publicationIds:[]})).toBeNull();
+    const legacy=await buildPredictionComparison("proj-1",scopedClient);
+    expect(legacy?.rows.map(row=>row.predictionId)).toEqual(["pred-1",selected.id,other.id]);
+  });
+
   it("只收本项目 subject 命中的盲预测,回流行按 predictionId 关联", async () => {
     const vm = await buildPredictionComparison("proj-1", makeClient());
     expect(vm).not.toBeNull();

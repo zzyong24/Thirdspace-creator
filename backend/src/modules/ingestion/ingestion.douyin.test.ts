@@ -1042,7 +1042,7 @@ describe("ingestion.loginDouyin — forceNew 绑新号 staging 编排 (T-330)", 
     ]);
     // 登录态搬到 ensureAccount 返回的真号目录。
     expect(staged.adopted).toEqual([
-      { stagingKey: "0123456789abcdef", accountId: "acct-new" },
+      { userId:ctx.userId,stagingKey: "0123456789abcdef", accountId: "acct-new" },
     ]);
     // 身份回填(applyDouyinIdentity)带 sec_uid + 粉丝数。
     expect(handleUpdates).toEqual([
@@ -1116,7 +1116,7 @@ describe("ingestion.loginDouyin — forceNew 绑新号 staging 编排 (T-330)", 
       },
     ]);
     expect(staged.adopted).toEqual([
-      { stagingKey: "0123456789abcdef", accountId: "acct-pending" },
+      { userId:ctx.userId,stagingKey: "0123456789abcdef", accountId: "acct-pending" },
     ]);
     expect(boundCtxs[0]?.accountId).toBe("acct-pending");
   });

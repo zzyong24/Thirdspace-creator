@@ -525,3 +525,14 @@ describe("POST /api/v1/dispatch (FE<->BE seam over HTTP; project ops on real SQL
     expect(json.data.length).toBeGreaterThan(0);
   });
 });
+
+
+it("账号组授权事务冲突透传409，其他数据库错误不冒充授权冲突", async () => {
+ const conflict=Object.assign(new Error("GROUP_RESOURCE_SCOPE_CONFLICT: 原组授权已撤销，请重新选择素材"),{code:"40001"});
+ const wrapped=new Error("数据库执行失败",{cause:new Error("查询失败",{cause:conflict})});
+ const response=dispatchErrorResponse(wrapped);
+ expect(response.status).toBe(409);
+ expect((await response.json()).error).toMatchObject({code:"ConflictError",message:"原组授权已撤销，请重新选择素材"});
+ const other=dispatchErrorResponse(Object.assign(new Error("真实数据库故障"),{code:"40001"}));
+ expect(other.status).not.toBe(409);
+});

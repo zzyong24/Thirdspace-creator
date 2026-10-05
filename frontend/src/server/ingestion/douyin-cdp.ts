@@ -434,6 +434,8 @@ export interface FetchDouyinOptions {
 
 export interface LoginDouyinOptions {
   authDir: string;
+  /** 本次扫码任务的取消权；停止必须等待 owned context 关闭。 */
+  signal?: AbortSignal;
   /** 扫码最多等多少秒(默认 240)。 */
   timeoutSec?: number;
 }
@@ -679,22 +681,25 @@ export async function loginDouyin(
   opts: LoginDouyinOptions,
   deps: LoginDouyinDeps = {},
 ): Promise<boolean> {
+  opts.signal?.throwIfAborted();
   const timeoutSec = opts.timeoutSec ?? 240;
   const openCtx = deps.openContext ?? openContext;
-  const ctx = await openCtx(opts.authDir, false);
+  const ctx = await openCtx(opts.authDir, false, opts.signal);
   try {
+    opts.signal?.throwIfAborted();
     const page = ctx.pages()[0] ?? (await ctx.newPage());
     await page
       .goto(CREATOR_LOGIN_HOME, { waitUntil: "domcontentloaded" })
       .catch(() => {});
     let rejectedSessionCleared = false;
     for (let i = 0; i < timeoutSec; i++) {
+      opts.signal?.throwIfAborted();
       try {
         if (await isLoggedIn(ctx)) {
           // 在创作者中心页面内请求同源账号资料，既验证服务端确实接受会话，也不会被
           // BrowserContext.request 缺页面反爬上下文误判。扫码成功后即可自动关窗。
           const acceptance = await probeCreatorSessionAcceptance(page);
-          if (acceptance === "active") return true;
+          if (acceptance === "active") {opts.signal?.throwIfAborted();return true;}
           if (acceptance === "expired" && !rejectedSessionCleared) {
             // 这是 CreatorOS 为该采集账号维护的专用 profile。只清抖音认证 Cookie，不碰
             // 其它站点或浏览数据；否则旧 Cookie 会让登录页继续把失效会话当成已登录。
@@ -710,15 +715,18 @@ export async function loginDouyin(
           }
         }
         await page.waitForTimeout(1000);
+        opts.signal?.throwIfAborted();
       } catch (error) {
         // 用户主动关掉扫码窗口是一次正常取消，不应冒泡成 transport 400。
+        opts.signal?.throwIfAborted();
         if (isPlaywrightTargetClosed(error)) return false;
         throw error;
       }
     }
     return false;
   } finally {
-    await ctx.close().catch(() => {}); // 关我们自起的 Chromium(非用户浏览器)
+    if(opts.signal)await ctx.close(); // 新 run 不能吞停止失败；host guard close 等待真实 onStopped。
+    else await ctx.close().catch(() => {}); // 保留旧同步入口的关闭兼容
   }
 }
 
@@ -1030,25 +1038,31 @@ export async function fetchDouyinMetrics(
  */
 export async function fetchDouyinIdentity(opts: {
   authDir: string;
+  signal?: AbortSignal;
 }, deps: FetchDouyinMetricsDeps = {}): Promise<DouyinSelfIdentity | null> {
+  opts.signal?.throwIfAborted();
   const openCtx = deps.openContext ?? realMetricsOpenContext;
-  const ctx = await openCtx(opts.authDir, true);
+  const ctx = await openCtx(opts.authDir, true, opts.signal);
+  const lifetime=bindAbortContext(opts.signal,()=>ctx.close());
   let profileIdentity: DouyinSelfIdentity | null = null;
   try {
+    opts.signal?.throwIfAborted();
     const cookies = await ctx.cookies("https://creator.douyin.com");
     const loggedIn = cookies.some(
       (c) => c.name === "sessionid" || c.name === "sessionid_ss",
     );
     if (!loggedIn) throw new DouyinNotLoggedInError();
+    opts.signal?.throwIfAborted();
     const page = ctx.pages()[0] ?? (await ctx.newPage());
     const pending: Array<Promise<void>> = [];
     page.on("response", (resp) => {
       // 只解析 user/account/profile 结构，不读取作品 author；URL 不写死，兼容创作者中心
       // 灰度接口改名。parseCreatorProfileIdentity 自身要求稳定平台标识，负责最后一道防误认。
+      if(opts.signal?.aborted)return;
       const task = resp
         .json()
         .then((json) => {
-          if (profileIdentity) return;
+          if (profileIdentity||opts.signal?.aborted) return;
           const parsed = parseCreatorProfileIdentity(json);
           if (!parsed) return;
           profileIdentity = parsed;
@@ -1065,12 +1079,20 @@ export async function fetchDouyinIdentity(opts: {
     await gotoWithRetry(page, CREATOR_LOGIN_HOME, {
       timeoutMs: 60_000,
       label: "creator-home(账号资料)",
+      signal:opts.signal,
     });
+    opts.signal?.throwIfAborted();
     await page.waitForTimeout(3000);
+    opts.signal?.throwIfAborted();
     await Promise.allSettled([...pending]);
+    opts.signal?.throwIfAborted();
+  } catch(error) {
+    opts.signal?.throwIfAborted();
+    throw error;
   } finally {
-    await ctx.close().catch(() => {});
+    await lifetime.close();
   }
+  opts.signal?.throwIfAborted();
   if (profileIdentity) return profileIdentity;
 
   console.warn(
@@ -1080,7 +1102,9 @@ export async function fetchDouyinIdentity(opts: {
     authDir: opts.authDir,
     capturedAt: new Date().toISOString(),
     maxPages: 1,
+    signal:opts.signal,
   }, deps);
+  opts.signal?.throwIfAborted();
   return identity;
 }
 

@@ -10,6 +10,7 @@ import { id, iso8601 } from "../primitives";
 export const favoritesFolderResource = z.object({
   id,
   userId: id,
+  groupId:id.nullable().optional(),
   accountId: id.nullable(), // 按抖音号隔离(哪个号在采这个夹)
   name: z.string(), // 收藏夹名(幂等锚:同 user 同名唯一;须与抖音收藏夹同名)
   collectsId: z.string().nullable(), // 抖音 collects_id_str(首采按名匹配回填;未匹配 null)

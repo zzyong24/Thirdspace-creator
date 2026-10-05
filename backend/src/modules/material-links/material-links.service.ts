@@ -1,3 +1,4 @@
+import {assertWritableWorkspace,requireWorkspace} from "../../workspace-scope";
 import type { RequestContext } from "@creatoros/contract";
 import type { Db } from "@creatoros/backend";
 import {
@@ -110,24 +111,35 @@ export function createMaterialLinksService(
   const { db, now, nextId } = deps;
 
   function repoFor(ctx: RequestContext): MaterialLinkRepository {
-    const repoDeps: RepoDeps = { now, nextId, userId: ctx.userId };
+    const repoDeps: RepoDeps = { now, nextId, userId: ctx.userId,groupId:ctx.groupId??null,accountId:ctx.accountId??null };
     return createMaterialLinkRepository(db, repoDeps);
+  }
+
+  async function assertParent(ctx:RequestContext,id:string):Promise<unknown>{
+    if(ctx.groupId&&!deps.assertProjectOwned)throw new OwnershipError("项目归属验证不可用");
+    const project=await deps.assertProjectOwned?.(ctx,id);
+    if(ctx.groupId&&(!project||typeof project!=="object"||(project as {groupId?:unknown}).groupId!==ctx.groupId))throw new OwnershipError("项目不存在");
+    return project;
   }
 
   return {
     async list(ctx, query) {
+      requireWorkspace(ctx);
+      if(query.projectId)await assertParent(ctx,query.projectId);
       const { rows, total } = await repoFor(ctx).list(query.projectId ?? null, {
         limit: query.pageSize,
         offset: (query.page - 1) * query.pageSize,
       });
+      for(const projectId of new Set(rows.map(row=>row.projectId)))await assertParent(ctx,projectId);
       return { rows: rows.map(toMaterialLinkDto), total };
     },
 
     async create(ctx, input) {
       guardCreateInput(input);
-      if (deps.assertProjectOwned) {
-        await deps.assertProjectOwned(ctx, input.projectId);
-      }
+      if(ctx.groupId||ctx.accountId)await assertWritableWorkspace(db,ctx);
+      await assertParent(ctx,input.projectId);
+      if(ctx.groupId&&input.contentOutputId&&!deps.resolveOutputProjectId)throw new OwnershipError("产出归属验证不可用");
+      if(ctx.groupId&&input.entityType==="knowledge"&&!deps.assertKnowledgeOwned||ctx.groupId&&input.entityType==="asset"&&!deps.assertAssetOwned)throw new OwnershipError("用料归属验证不可用");
       if (input.contentOutputId && deps.resolveOutputProjectId) {
         const outputProjectId = await deps.resolveOutputProjectId(
           ctx,
@@ -160,7 +172,10 @@ export function createMaterialLinksService(
     },
 
     async delete(ctx, linkId) {
-      const row = await repoFor(ctx).delete(linkId);
+      if(ctx.groupId||ctx.accountId)await assertWritableWorkspace(db,ctx);
+      const repo=repoFor(ctx),owned=await repo.get(linkId);
+      await assertParent(ctx,owned.projectId);
+      const row = await repo.delete(linkId);
       return toMaterialLinkDto(row);
     },
   };

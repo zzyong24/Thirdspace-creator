@@ -1,0 +1,85 @@
+{
+  "worktree": "/Users/zyongzhu/.codex/worktrees/t1022-shared-domains/Thirdspace-creator",
+  "files": [
+    {
+      "path": "backend/src/modules/content-calendar/content-calendar.repository.ts",
+      "sha256": "f17768270607c3f795b2fa6c2f0d33cb69dc5129cda172ca329f84c5a38de5af"
+    },
+    {
+      "path": "backend/src/modules/content-calendar/content-calendar.repository.integration.test.ts",
+      "sha256": "31d6ddf5126f4682f76faf504caa1f94eee52a83d2322abebdf8a45b949730d2"
+    },
+    {
+      "path": "backend/src/modules/content-calendar/content-calendar.service.test.ts",
+      "sha256": "55ce6805000e98c09c239e38f412f94f7158d7653b7d2da0ba1bdc38e77737dc"
+    },
+    {
+      "path": "backend/src/modules/calibration/calibration.repository.ts",
+      "sha256": "f40ba754615f12ae6aeae3eccb31e36d666bca9c0e6ff7776d4688d40484d550"
+    },
+    {
+      "path": "backend/src/modules/calibration/calibration.repository.integration.test.ts",
+      "sha256": "adbd0beb382fd24a8795030bfa3307292b128f88fa26fecb421a5fc1e1ea22a2"
+    },
+    {
+      "path": "backend/src/modules/calibration/calibration.service.test.ts",
+      "sha256": "87053bdbd090e224ca7b4de33a8d748b09638ece9ce9757cc85c0a18d03eabd2"
+    },
+    {
+      "path": "backend/src/modules/calibration/calibration.contract.test.ts",
+      "sha256": "11b395efd6a8a5d72142118c788ed519ac9bbd4dc0c5a6d80167d591d059e3db"
+    },
+    {
+      "path": "backend/src/modules/calibration/calibration.acceptance.test.ts",
+      "sha256": "1fe236396576dec1edc380710ecafc36f5285a53ee9baec36a952bc36c77640b"
+    },
+    {
+      "path": "backend/src/modules/publishing/publishing.service.ts",
+      "sha256": "444397fd71aa53b44fa2436bf18c19469bd0c5dd3b157d8402187fe043834ffa"
+    },
+    {
+      "path": "backend/src/modules/publishing/publishing.service.test.ts",
+      "sha256": "f1e907c17f7d5d3dcbbe7c7865a4cfe07b41ff203b8a16a450d3def05f91647e"
+    },
+    {
+      "path": "backend/src/modules/publishing/publishing.contract.test.ts",
+      "sha256": "61186d7581505538b35f5cbbc0bc0a0efbae65ec75497cc006c10df7ea87d6a7"
+    },
+    {
+      "path": "backend/src/modules/publishing/publishing.acceptance.test.ts",
+      "sha256": "b9841e2af39ffae799f29fd3ad79cf742484c4a52f2a7d4c862bc0af0112369a"
+    },
+    {
+      "path": "backend/src/modules/publishing/publishing-unavailable.test.ts",
+      "sha256": "8276459bc069e911ed51ee43d586746352868b4286d51125a8409ea79a9744b6"
+    },
+    {
+      "path": "backend/src/modules/publishing/publication-draft-adoption.service.test.ts",
+      "sha256": "18d1d51fe878963410f47675c1e2511d4a1d37a72a8f1b30e6fd87edf54b1724"
+    },
+    {
+      "path": "backend/src/modules/publishing/group-platform-facts.integration.test.ts",
+      "sha256": "8da1870adf78e09e4dae5ef88c0af87dba6e59b6c16ecf9ada3fbb63631ea128"
+    },
+    {
+      "path": "backend/src/integration/adjacent-domain-fixtures.ts",
+      "sha256": "d8aaf4ab031d9fb6a6be45b779511d18ddd91b1f7193037918bdf0c6e0e974ae"
+    },
+    {
+      "path": "backend/src/integration/adjacent-parent-migration.postgres.integration.test.ts",
+      "sha256": "61e2bc9b394f12618922fc180ea232a4a5d3a80e272c1d935fa6873c988d7645"
+    }
+  ],
+  "composition_ports": "无新增或修改",
+  "schema_contract_helper": "无修改",
+  "logs": [
+    "/tmp/t1022-adjacent-pg-review.log",
+    "/tmp/t1022-publishing-pg-review.log",
+    "/tmp/t1022-adjacent-parent-final-green.log",
+    "/tmp/t1022-adjacent-regression-green.log",
+    "/tmp/t1022-publishing-final-green.log",
+    "/tmp/t1022-adjacent-types-final.log"
+  ],
+  "notes": "全局tsc失败属于既有欠债；owned文件0条类型错误。无commit/push，无控制面写入。",
+  "status": "冻结完成；最终真实PG18/18 PASS；三域回归179 tests已通过（122 prior + 57 final）"
+}

@@ -27,6 +27,7 @@ import type {
 
 export const SETTINGS_OP_IDS = [
   "settings.onboarding.get", "settings.onboarding.patch",
+  "settings.onboarding.group.get", "settings.onboarding.group.patch",
   "settings.redfox.get", "settings.redfox.put", "settings.redfox.delete",
   "settings.get",
   // `PATCH /me` (identity.profile.patch) is served HERE rather than by a bare
@@ -77,6 +78,12 @@ export function createSettingsTransport(
       const { params, body } = (input ?? {}) as Input;
 
       switch (endpoint.id) {
+        case "settings.onboarding.group.get": case "settings.onboarding.group.patch": {
+          if(!onboarding)throw Error("ONBOARDING_SETTINGS_UNAVAILABLE");
+          const groupId=(params as {groupId?:string}|undefined)?.groupId??"";
+          const data=endpoint.id==="settings.onboarding.group.get"?await onboarding.getGroup(ctx,groupId):await onboarding.patchGroup(ctx,groupId,body as import("@creatoros/contract").OnboardingPatch);
+          return {data,meta:{requestId:ctx.requestId}};
+        }
         case "settings.onboarding.get": case "settings.onboarding.patch": {
           if (!onboarding) throw Error("ONBOARDING_SETTINGS_UNAVAILABLE");
           const accountId=(params as {accountId?:string}|undefined)?.accountId??"";

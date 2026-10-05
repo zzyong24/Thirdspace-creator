@@ -1,3 +1,4 @@
+import {workspaceFilter} from "../../workspace-scope";
 import {readCoverImageBinding} from "./cover-execution-binding";
 import {createHash} from "node:crypto";
 import {and,eq,aiTasks,executionCalls} from "@creatoros/backend";
@@ -11,7 +12,7 @@ export async function bindAssetExecution(scope:AssetExecutionScope,callId?:strin
   const payload=task.payload as Record<string,unknown>;
   const cover=(payload.modelInput as {kind?:string;skillId?:string})?.kind==="model.structured"&&(payload.modelInput as {skillId?:string}).skillId==="cover.brief"?await readCoverImageBinding(scope):null;
   const input=cover?.input??assetGenerationInputSchema.parse(payload.modelInput);
-  const [business]=await tx.select().from(aiTasks).where(and(eq(aiTasks.id,task.ownerId),eq(aiTasks.executionTaskId,task.id),eq(aiTasks.userId,context.userId),eq(aiTasks.accountId,context.accountId!)));
+  const [business]=await tx.select().from(aiTasks).where(and(eq(aiTasks.id,task.ownerId),eq(aiTasks.executionTaskId,task.id),eq(aiTasks.userId,context.userId),workspaceFilter(aiTasks,context)));
   if(task.kind!=="ai_task" || task.ownerType!=="ai_task" || payload.aiTaskId!==business?.id || business?.taskType!==(cover?"cover.generate":"asset.generate"))throw new ConflictError("素材执行缺少真实任务归属");
   const businessInput=business.inputData as Record<string,unknown>;
   if(!cover && ((businessInput.kind==="video"?"video":"image")!==input.mediaKind || businessInput.prompt!==input.prompt))throw new ConflictError("素材执行输入与原业务任务不符");

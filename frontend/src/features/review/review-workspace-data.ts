@@ -593,6 +593,7 @@ interface OverviewReflowDto {
 export async function buildPredictionComparison(
   projectId: string,
   client: PredictionComparisonClient,
+  scope?: {publicationIds:readonly string[]},
 ): Promise<PredictionComparisonVm | null> {
   // 1. 本项目的 subject 集合:content_output ids + 其下 publication ids。
   const subjectIds = new Set<string>();
@@ -606,7 +607,8 @@ export async function buildPredictionComparison(
       id: string;
     }>;
     for (const o of outputs) {
-      subjectIds.add(o.id);
+      // 组复盘仅消费当前真实发布版本的预测，不用平台不限的稿件分冒充跨平台实绩。
+      if(!scope)subjectIds.add(o.id);
       try {
         const pubsRaw = await client.listPublications({
           params: { outputId: o.id },
@@ -616,7 +618,7 @@ export async function buildPredictionComparison(
         for (const p of (Array.isArray(pubsRaw) ? pubsRaw : []) as Array<{
           id: string;
         }>) {
-          subjectIds.add(p.id);
+          if(!scope||scope.publicationIds.includes(p.id))subjectIds.add(p.id);
         }
       } catch {
         // 单产出的发布读失败 → 跳过它,不沉整个对照区。

@@ -159,7 +159,7 @@ return async (ctx, _target, report) => {
       try {
         distilled = await runFavoritesDistill(ctx, {
           listItemsForDistill: (c, limit) =>
-            favoritesService.listItemsForDistill(c, limit),
+            favoritesService.listItemsForDistill(c, limit,{collectorAccountOnly:true}),
           saveTranscript: (c, itemId, t) =>
             favoritesService.saveTranscript(c, itemId, t),
           saveVerdict: (c, itemId, v) =>

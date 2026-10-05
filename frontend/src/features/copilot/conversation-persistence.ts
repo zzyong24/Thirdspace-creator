@@ -1,3 +1,4 @@
+import {readCurrentGroupId,readCurrentAccountId} from "@/lib/http-transport";
 /**
  * Copilot 会话持久化 + 读回映射的纯逻辑(与 React 解耦,便于单测)。
  *
@@ -21,18 +22,17 @@ import type { UIMessage } from "ai";
 const CONV_KEY_PREFIX = "copilot:conv:";
 
 /** 该 scope 的「当前 conversationId」localStorage 键。 */
-export function convKey(scope: string): string {
-  return `${CONV_KEY_PREFIX}${scope}`;
-}
+export function conversationStorageOwner():string|null{const group=readCurrentGroupId();if(group)return 'group:'+group;const account=readCurrentAccountId();return account?'account:'+account:null;}
+export function convKey(scope:string,owner:string|null=conversationStorageOwner()):string{return `${CONV_KEY_PREFIX}${owner?owner+':':''}${scope}`;}
 
 /**
  * 读该 scope 存的 conversationId(客户端专用,SSR 环境返回 null)。任何异常(禁用
  * storage / JSON 无关)静默降级为 null —— 视作「无快路指针」,走服务端兜底/空会话。
  */
-export function readStoredConversationId(scope: string): string | null {
+export function readStoredConversationId(scope: string,owner:string|null=conversationStorageOwner()): string | null {
   if (typeof window === "undefined") return null;
   try {
-    const v = window.localStorage.getItem(convKey(scope));
+    const v = window.localStorage.getItem(convKey(scope,owner));
     return v && v.length > 0 ? v : null;
   } catch {
     return null;
@@ -46,13 +46,14 @@ export function readStoredConversationId(scope: string): string | null {
 export function writeStoredConversationId(
   scope: string,
   conversationId: string | null | undefined,
+  owner:string|null=conversationStorageOwner(),
 ): void {
   if (typeof window === "undefined") return;
   try {
     if (!conversationId) {
-      window.localStorage.removeItem(convKey(scope));
+      window.localStorage.removeItem(convKey(scope,owner));
     } else {
-      window.localStorage.setItem(convKey(scope), conversationId);
+      window.localStorage.setItem(convKey(scope,owner), conversationId);
     }
   } catch {
     /* storage 不可用 → 降级为不持久,吞掉异常 */

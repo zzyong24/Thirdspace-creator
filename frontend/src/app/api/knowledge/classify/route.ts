@@ -10,6 +10,7 @@ import { readSessionCookie } from "../../v1/auth/_session";
 import {
   readRequestAccountId,
   resolveRequestContext,
+  readRequestGroupId,
 } from "@/lib/request-context.server";
 
 // 知识倾倒场归类入口(T-062c SPEC §4)—— 同步轻路由(/api/chat 同款 escape hatch:AI 交互

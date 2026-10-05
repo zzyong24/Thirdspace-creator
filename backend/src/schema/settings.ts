@@ -6,6 +6,7 @@ import {
   integer,
   jsonb,
   uniqueIndex,
+  primaryKey,
 } from "drizzle-orm/pg-core";
 
 // Settings tables (data-model USER_PREFERENCE / MODEL_CONFIGURATION /
@@ -161,7 +162,8 @@ export const accountSkillOverlays = pgTable(
   {
     id: text("id").primaryKey(),
     userId: text("user_id").notNull(),
-    accountId: text("account_id").notNull(),
+    accountId: text("account_id"),
+    groupId: text("group_id"),
     skillId: text("skill_id").notNull(),
     rowRevision: integer("row_revision").notNull(),
     observedBaseVersion: text("observed_base_version").notNull(),
@@ -186,7 +188,8 @@ export const accountSkillOverlayVersions = pgTable(
     id: text("id").primaryKey(),
     overlayId: text("overlay_id").notNull(),
     userId: text("user_id").notNull(),
-    accountId: text("account_id").notNull(),
+    accountId: text("account_id"),
+    groupId: text("group_id"),
     skillId: text("skill_id").notNull(),
     rowRevision: integer("row_revision").notNull(),
     observedBaseVersion: text("observed_base_version").notNull(),
@@ -215,7 +218,21 @@ export type AccountSkillOverlayVersionRow = InferSelectModel<
 // Raw DDL applied at db init (pglite has no migration runner wired here yet).
 //   - model_config_user_capability: the (user_id, capability) unique upsert key
 //     putModel's ON CONFLICT DO UPDATE targets.
+export const groupOnboardingStates=pgTable("group_onboarding_states",{
+ userId:text("user_id").notNull(),groupId:text("group_id").notNull(),
+ origin:text("origin"),hidden:boolean("hidden").notNull().default(false),collapsed:boolean("collapsed").notNull().default(true),
+ completedSteps:jsonb("completed_steps").notNull().default([]),updatedAt:text("updated_at").notNull(),
+},table=>[primaryKey({columns:[table.userId,table.groupId]})]);
+
 export const SETTINGS_DDL = `
+CREATE TABLE IF NOT EXISTS group_onboarding_states (
+ user_id text NOT NULL, group_id text NOT NULL,
+ origin text CHECK(origin IN ('fresh','existing')),
+ hidden boolean NOT NULL DEFAULT false, collapsed boolean NOT NULL DEFAULT true,
+ completed_steps jsonb NOT NULL DEFAULT '[]'::jsonb CHECK(jsonb_typeof(completed_steps)='array'),
+ updated_at text NOT NULL, PRIMARY KEY(user_id,group_id)
+);
+
 CREATE TABLE IF NOT EXISTS redfox_submissions (user_id text NOT NULL, input_hash text NOT NULL, fingerprint text NOT NULL, call_id text NOT NULL, task_id text, observation jsonb, PRIMARY KEY(user_id,input_hash));
 CREATE TABLE IF NOT EXISTS integration_credentials (user_id text NOT NULL, provider text NOT NULL, encrypted_secret text NOT NULL, updated_at text NOT NULL, PRIMARY KEY(user_id,provider));
 CREATE TABLE IF NOT EXISTS user_preferences (

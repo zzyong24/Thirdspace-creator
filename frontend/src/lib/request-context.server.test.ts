@@ -15,11 +15,14 @@ vi.mock("server-only", () => ({}));
 const resolveContextFromToken = vi.fn();
 const resolveLocalContext = vi.fn();
 const getAccount = vi.fn();
+const getGroup = vi.fn();
+const forAccount = vi.fn();
 vi.mock("@/server/persistence-client", () => ({
   getIdentityService: async () => ({
     resolveContextFromToken,
     resolveLocalContext,
   }),
+  getAccountGroupService: async () => ({get:getGroup,forAccount}),
   getPlatformAccountService: async () => ({
     getAccount,
   }),
@@ -39,6 +42,8 @@ beforeEach(() => {
   resolveContextFromToken.mockReset();
   resolveLocalContext.mockReset();
   getAccount.mockReset();
+  getGroup.mockReset();
+  forAccount.mockReset();
   resolveLocalContext.mockResolvedValue(LOCAL);
 });
 
@@ -332,4 +337,22 @@ describe("readRequestAccountId — 自定义 route 的账号入口", () => {
       mismatch: true,
     });
   });
+});
+
+
+describe("账号组选择校验", () => {
+ it("管理读取可从失效组恢复为未选中；业务请求拒绝失效组", async () => {
+   const denied=Object.assign(new Error("不存在"),{name:"OwnershipError",code:"OwnershipError"});
+   getGroup.mockRejectedValue(denied);
+   await expect(resolveRequestContext(null,null,{groupId:"deleted-group",groupSelectionMode:"unselected"})).resolves.toMatchObject({groupId:null,accountId:null});
+   await expect(resolveRequestContext(null,null,{groupId:"deleted-group"})).rejects.toBe(denied);
+ });
+ it("真实账号只有仍属于所选组时才附带成员版本", async () => {
+   getAccount.mockResolvedValue({id:"real-account",status:"active"});
+   getGroup.mockResolvedValue({id:"group-a",version:3});
+   forAccount.mockResolvedValue({groupId:"group-b",version:8});
+   await expect(resolveRequestContext(null,"real-account",{groupId:"group-a"})).rejects.toThrow("账号不在当前组");
+   forAccount.mockResolvedValue({groupId:"group-a",version:8});
+   await expect(resolveRequestContext(null,"real-account",{groupId:"group-a"})).resolves.toMatchObject({groupId:"group-a",groupVersion:3,accountId:"real-account",membershipVersion:8});
+ });
 });

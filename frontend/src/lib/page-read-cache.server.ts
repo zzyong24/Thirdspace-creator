@@ -43,7 +43,7 @@ function invalidate(userId?: string) {
 /** 仅已验证 session 的展示页面显式启用；不是业务服务或 Agent 的真值缓存。 */
 export function withPageReadCache(transport: Transport, readRevision: () => Promise<string>): Transport {
   return { async request(endpoint, input, ctx) {
-    if (!ctx?.userId || !ctx.accountId || ctx.source !== "user" || endpoint.method !== "GET" || !reads.has(endpoint.id)) {
+    if (!ctx?.userId || (!ctx.groupId && !ctx.accountId) || ctx.source !== "user" || endpoint.method !== "GET" || !reads.has(endpoint.id)) {
       return transport.request(endpoint, input, ctx);
     }
     // 日报必须使用已解析的北京时间日期，默认昨天不跨日复用。
@@ -68,11 +68,11 @@ export async function readCachedPageValue<T>(options: {
   isCacheable: (value: T) => boolean; maxAgeMs?: number;
 }): Promise<T> {
   const { ctx } = options;
-  if (!ctx.userId || !ctx.accountId || ctx.source !== "user") return options.read();
+  if (!ctx.userId || (!ctx.groupId && !ctx.accountId) || ctx.source !== "user") return options.read();
   let revision: string;
   try { revision = await options.readRevision(); }
   catch { return options.read(); }
-  const key = JSON.stringify([ctx.userId, ctx.accountId, ctx.source, ...options.key]);
+  const key = JSON.stringify([ctx.userId, ctx.groupId ?? null, ctx.accountId ?? null, ctx.groupVersion ?? null, ctx.membershipVersion ?? null, ctx.source, ...options.key]);
   const existing = state.entries.get(key);
   if (existing && existing.revision === revision && ((existing.settled && (existing.expiresAt === undefined || existing.expiresAt > Date.now())) || (!existing.settled && existing.pendingUntil > Date.now()))) {
     state.entries.delete(key); state.entries.set(key, existing);

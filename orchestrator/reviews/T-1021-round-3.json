@@ -1,0 +1,63 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "recheck",
+  "summary": "独立只读复核未发现尚未销账的major。原两项finding维持resolved并更新为当前SPEC证据。此前未记录的模型选择缺口已由真实modelConfigurationId、共享backend能力端口及冻结执行身份闭合；Publishing追加版本缺口已由领域事务、当前版本CAS、完整内容digest、持久采纳唯一键与并发/回执丢失验收闭合。封面与图文接入现有稿面发布物料及编导，正式正文、封面和页序归同一PublicationRevision，当前版本按currentRevisionId回读，Assets继续负责素材与收藏；旧默认生成和安全候选保留路径明确。私人收藏保存范围仍待用户确认。此结论仅为SPEC复核，生产实现及系统Gate均未验证.",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "resolved",
+      "severity": "major",
+      "category": "completeness",
+      "requirement_anchor": {
+        "id": "双库与行业分类",
+        "quote": "小红书图文库服务完整笔记，包括首图、正文页、配文和图片顺序"
+      },
+      "acceptance_anchor": {
+        "id": "验收与性能",
+        "quote": "成功页保留与失败页恢复、页序及实际导出文件、配文编辑回读"
+      },
+      "where": "图文生成与采纳闭环；页面与真实操作表；assets.visualTemplates.generate 契约",
+      "failure_mode": "SPEC 承诺 visual.carousel 的单页重试、配文编辑回读和最终采纳，但操作表只绑定现有封面生成与单图采纳。缺少稳定页 ID、逐页状态、配文修改保存操作、原任务重试操作、整套笔记采纳业务归属；现有 generated_asset 采纳只物化单图，不能证明配文与页序刷新后保留。",
+      "evidence_kind": "deterministic-check",
+      "evidence_ref": "docs/features/t1021-cover-template-library.md:60-80,114; contract/src/operations/ai.ts:ai.tasks.results.patch,ai.tasks.confirm; backend/src/modules/ai/ai.service.ts:1214-1238,1360-1420",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "补齐稳定页 ID、候选/配文版本、编辑与重试操作、项目内完整笔记采纳归属；封面与整套笔记采纳分开；一次一张只限制封面；验收失败一页后编辑配文、刷新、单页重试、导出及采纳。",
+      "resolution_evidence": "SPEC-LINE:137:387d588eadad95e9 定义visual_note、稳定pageId、逐页状态、候选及配文版本，并绑定项目、ContentOutput与发布草稿基版。SPEC-LINE:139:acc6cc9828624066 与 SPEC-LINE:140:fc71dac5d60942ac 绑定配文/页序持久修改及原任务失败页重试，禁止成功页重生成。SPEC-LINE:141:76d94aa9dc2c080d 与 SPEC-LINE:142:ced9b8b845af463a 明确成功子集采纳，经Publishing保存同一不可变PublicationRevision；正式配文归description，页序归platformSettings.visualNote，不另建Assets图文交付物。SPEC-LINE:143:11c6230dd979183d 冻结完整内容digest、领域事务、当前版本CAS与持久采纳唯一键，回执丢失返回原Publication/Revision，同键变内容409。SPEC-LINE:144:fbd51feadaf9c3a8 按currentRevisionId回读并导出真实独立图片与配文。SPEC-LINE:147:7c4275c26ba0b151 将整套笔记采纳与另设项目封面分开。SPEC-LINE:183:b3d2eb986ceb113f 要求失败一页后编辑、刷新、单页重试、采纳、当前版本回读及导出的完整旅程，成功页调用数不增加，并覆盖同基版竞争、回执丢失、同键改封面/页序及旧Revision请求兼容；这是待实施验收合同，未声称运行通过。",
+      "parent_id": "",
+      "threat_model_id": ""
+    },
+    {
+      "id": "REV-002",
+      "status": "resolved",
+      "severity": "major",
+      "category": "consistency",
+      "requirement_anchor": {
+        "id": "首批通用封面样图",
+        "quote": "真人模式为必要能力：必须使用用户明确选择的身份照片，绝不能生成陌生人替代"
+      },
+      "acceptance_anchor": {
+        "id": "验收与性能",
+        "quote": "真人身份与风格参考分离、多参考不支持时保留身份图的诚实降级"
+      },
+      "where": "真人模式判别与缺图降级；references；正式图片准备",
+      "failure_mode": "真人必须使用身份图与通用缺图仅提示词降级相冲突，未规定不选号模板时如何明确模式，未冻结身份图必填边界。正式 execution-cover.service 已有参考读取失败 catch 为 null 并转 image.generate 路径，可能生成陌生人。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "docs/features/t1021-cover-template-library.md:99,114,120; backend/src/modules/execution/execution-cover.service.ts:95-106",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "按明确模式或可信模板 requiredInputs 冻结身份图必要性，身份缺失、读取失败或供应商不支持编辑不得提交文生图，允许补图或明确切换普通模式；只有风格缺失可保留身份图降级。验收必要身份图与普通提示词路径。",
+      "resolution_evidence": "SPEC-LINE:151:2333398019deb302 定义明确visualMode并以可信requiredInputs约束真人模板；真人请求必须且只能有一张用户选择的identity，无模板请求同样受约束，不按关键词判别。SPEC-LINE:153:11f662f22edb4152 明确身份缺失、不可读、摘要变化及供应商不支持编辑均禁止文生图，限制旧catch→null回退，仅风格缺失或多图不支持时保留identity。SPEC-LINE:171:3dde1aff4bd7301c 将仅提示词降级限定于普通请求，必要身份及权限错误不得降级忽略。SPEC-LINE:183:b3d2eb986ceb113f 要求身份缺失、身份读取失败、单参考供应商及普通纯提示词四类合同验收；前两类没有文生图调用，单参考保留身份，普通请求正常生成。这些为SPEC约束与待实施验收，不代表生产调用已验证。",
+      "parent_id": "",
+      "threat_model_id": ""
+    }
+  ]
+}

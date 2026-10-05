@@ -20,6 +20,8 @@ import { pgTable, text } from "drizzle-orm/pg-core";
 export const materialLinks = pgTable("material_links", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(),
+  groupId:text("group_id"),
+  accountId:text("account_id"),
   projectId: text("project_id").notNull(),
   contentOutputId: text("content_output_id"), // nullable → contract string|null
   entityType: text("entity_type").notNull(), // 'knowledge' | 'asset'

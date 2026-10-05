@@ -48,3 +48,18 @@ export function resolveCurrentAccount(
 
   return { currentId: fallback, shouldPersist };
 }
+
+export interface SwitcherGroup {
+  readonly id: string;
+  readonly name: string;
+  readonly status: "active" | "archived";
+  readonly members: readonly { readonly accountId: string; readonly leftAt: string | null }[];
+}
+/** SEMANTIC_BOUNDARY_ALLOW: 仅按真实ID及成员关系归一选中组，不按昵称猜测合并。 */
+export function resolveCurrentGroup(groups: readonly SwitcherGroup[], storedId: string | null, legacyAccountId: string | null = null): ResolveResult {
+  const active = groups.filter(group => group.status === "active");
+  if (storedId && active.some(group => group.id === storedId)) return {currentId:storedId,shouldPersist:false};
+  const legacy = legacyAccountId ? active.filter(group => group.members.some(member => member.accountId === legacyAccountId && member.leftAt === null)) : [];
+  const currentId = (legacy.length === 1 ? legacy[0]?.id : active[0]?.id) ?? null;
+  return {currentId,shouldPersist:currentId !== storedId};
+}

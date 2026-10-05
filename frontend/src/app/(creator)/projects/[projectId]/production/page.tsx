@@ -163,6 +163,7 @@ export default async function ProductionRoute({ params }: ProductionRouteProps) 
           className="flex flex-col gap-card-gap"
         >
           <CrossAccountEmptyState
+            groupId={session.ctx.groupId}
             entityLabel="项目"
             backHref="/projects"
             backLabel="回项目列表"

@@ -1,3 +1,4 @@
+import {workspaceFilter} from "../../workspace-scope";
 import { createHash } from "node:crypto";
 import { z } from "zod";
 import {and,eq,aiTasks,type Db} from "@creatoros/backend";
@@ -38,7 +39,7 @@ export function createExecutionScriptLocalService(
         task.kind !== "ai_task" ||
         input.skillId !== "script.draft" ||
         input.skillSnapshot.userId !== context.userId ||
-        input.skillSnapshot.accountId !== context.accountId
+        input.skillSnapshot.accountId !== (context.accountId??null) || (input.skillSnapshot.groupId??null)!==(context.groupId??null)
       )
         throw new ConflictError("当前任务不是所属文稿执行");
       return input;
@@ -96,8 +97,8 @@ export function createExecutionScriptLocalService(
       const {text}=workerPortInputSchemas.saveScriptFallback.parse(raw);
       return leases.withLease(ref,"admission",async({tx,task,context})=>{
         const input=structuredGenerationInputSchema.parse((task.payload as {modelInput?:unknown}).modelInput);
-        const [business]=await tx.select().from(aiTasks).where(and(eq(aiTasks.id,task.ownerId),eq(aiTasks.executionTaskId,task.id),eq(aiTasks.userId,context.userId),eq(aiTasks.accountId,context.accountId!))).for("update");
-        if(task.kind!=="ai_task" || task.ownerType!=="ai_task" || input.skillId!=="script.draft" || input.skillSnapshot.userId!==context.userId || input.skillSnapshot.accountId!==context.accountId || business?.taskType!=="script.draft")throw new ConflictError("当前任务不是所属文稿执行");
+        const [business]=await tx.select().from(aiTasks).where(and(eq(aiTasks.id,task.ownerId),eq(aiTasks.executionTaskId,task.id),eq(aiTasks.userId,context.userId),workspaceFilter(aiTasks,context))).for("update");
+        if(task.kind!=="ai_task" || task.ownerType!=="ai_task" || input.skillId!=="script.draft" || input.skillSnapshot.userId!==context.userId || input.skillSnapshot.accountId !== (context.accountId??null) || (input.skillSnapshot.groupId??null)!==(context.groupId??null) || business?.taskType!=="script.draft")throw new ConflictError("当前任务不是所属文稿执行");
         const initial=(JSON.parse(input.facets.__scriptDraft ?? "null") as {initialVoiceover?:{voiceover?:string;sha256?:string;charCount?:number;storyboardAttemptCount?:number}}|null)?.initialVoiceover;
         const validate=(candidateText:string)=>{
           const result=workerStructuredResultSchema.parse(JSON.parse(candidateText));

@@ -125,3 +125,33 @@ describe("discardDouyinStagingDir — 失败路径清理", () => {
     expect(await exists(real)).toBe(true);
   });
 });
+
+describe('账号组绑定的登录目录事务回执',()=>{
+ it('数据库提交失败时恢复原登录态，重试仍有完整staging',async()=>{
+  const {prepareDouyinStagingAdoption}=await import('./douyin-auth-staging');
+  const stage=douyinStagingDirFor(base,createDouyinStagingToken()),target=nodePath.join(base,'acct-original');
+  await mkdir(stage);await writeFile(nodePath.join(stage,'Cookies'),'new-login');await mkdir(target);await writeFile(nodePath.join(target,'Cookies'),'original-login');
+  const receipt=await prepareDouyinStagingAdoption(stage,target);
+  expect(await readFile(nodePath.join(target,'Cookies'),'utf8')).toBe('new-login');
+  await receipt.rollbackProfile();
+  expect(await readFile(nodePath.join(target,'Cookies'),'utf8')).toBe('original-login');
+  expect(await readFile(nodePath.join(stage,'Cookies'),'utf8')).toBe('new-login');
+  await receipt.rollbackProfile();
+ });
+ it('事务成功后才删除备份，新账号回滚不留下正式目录',async()=>{
+  const {prepareDouyinStagingAdoption}=await import('./douyin-auth-staging');
+  const stage=douyinStagingDirFor(base,createDouyinStagingToken()),target=nodePath.join(base,'acct-new');await mkdir(stage);await writeFile(nodePath.join(stage,'Cookies'),'verified');
+  const first=await prepareDouyinStagingAdoption(stage,target);await first.rollbackProfile();expect(await exists(target)).toBe(false);
+  const second=await prepareDouyinStagingAdoption(stage,target);await second.finalizeProfile();await second.finalizeProfile();expect(await readFile(nodePath.join(target,'Cookies'),'utf8')).toBe('verified');
+ });
+});
+it('进程中断后从持久恢复记录找回原登录态，不依赖内存receipt',async()=>{
+ const {prepareDouyinStagingAdoption,readDouyinBindingAdoption,rollbackDouyinBindingAdoption}=await import('./douyin-auth-staging');
+ const stage=douyinStagingDirFor(base,createDouyinStagingToken()),target=nodePath.join(base,'acct-persisted');await mkdir(stage);await writeFile(nodePath.join(stage,'Cookies'),'verified-new');await mkdir(target);await writeFile(nodePath.join(target,'Cookies'),'original');
+ await prepareDouyinStagingAdoption(stage,target,{userId:'owner',runId:'run-real'});
+ expect(await readDouyinBindingAdoption(stage)).toMatchObject({userId:'owner',runId:'run-real',hadTarget:true});
+ await rollbackDouyinBindingAdoption(stage);expect(await readFile(nodePath.join(target,'Cookies'),'utf8')).toBe('original');expect(await readDouyinBindingAdoption(stage)).toBeNull();await rollbackDouyinBindingAdoption(stage);
+});
+it('恢复文件不能指向其它目录根',async()=>{
+ const {readDouyinBindingAdoption}=await import('./douyin-auth-staging');const stage=douyinStagingDirFor(base,createDouyinStagingToken());await writeFile(stage+'.adoption.json',JSON.stringify({version:1,stagingDir:stage,targetDir:nodePath.join(base,'..','victim'),backupDir:'victim',hadTarget:true}));await expect(readDouyinBindingAdoption(stage)).rejects.toThrow('恢复记录无效');
+});

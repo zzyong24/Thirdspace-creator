@@ -17,7 +17,8 @@ import type { RequestContext } from "@creatoros/contract";
 // T-007 D3 调度器验证(补 D3 子代理死于提交前没写的:SPEC §10 要求的**幂等断言** +
 // cron 匹配器正确性 + gate finding-3 启动扫超时)。全纯逻辑、注入端口,零成本。
 
-const ctx: RequestContext = { userId: "u1", requestId: "sched", source: "ingestion" };
+// 显式legacy范围也有冻结scope字段；只校准ctx断言，保留原调度行为和计数。
+const ctx: RequestContext = { userId: "u1", requestId: "sched", source: "ingestion",groupId:null,groupVersion:undefined,membershipVersion:undefined };
 const job: SchedulableJob = {
   id: "job1",
   sourceKind: "self.metrics",

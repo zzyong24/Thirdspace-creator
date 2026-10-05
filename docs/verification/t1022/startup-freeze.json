@@ -1,0 +1,112 @@
+{
+  "tree": "/Users/zyongzhu/.codex/worktrees/t1022-task-scope/Thirdspace-creator",
+  "ownedFiles": [
+    {
+      "path": "backend/src/application/workspace/startup.ts",
+      "sha256": "8bbed161caf5925930b1c5bf5d1013e01a0cd6cb91127f123cb14cc0b62c036a",
+      "rootBeforeIntegrationSha256": null
+    },
+    {
+      "path": "backend/src/application/workspace/credential-evidence.ts",
+      "sha256": "df1ab1a6f96e1426a51317f93996e8be392cd148cedeb7cd6ff4e01f7fcb8027",
+      "rootBeforeIntegrationSha256": null
+    },
+    {
+      "path": "backend/src/application/workspace/startup.test.ts",
+      "sha256": "570b4ea913af7a94cd85d6f39d986d0ef88bfee7840ff9e7ebd7312023ee01eb",
+      "rootBeforeIntegrationSha256": null
+    },
+    {
+      "path": "backend/src/application/scheduling/controls.ts",
+      "sha256": "ee1a3f510794cc3256020f0e0e098a6cbe68839396976eb9adde5e8af3075b27",
+      "rootBeforeIntegrationSha256": "3fc099349e8b7034cb188d7e431cfbd69655f1a80629385641a14eb82d0dd103"
+    },
+    {
+      "path": "backend/src/application/scheduling/automation.ts",
+      "sha256": "0fea78809aaecb5739307dcc299ae8a2bd8f4a81e8f33104a5e70e2d21f51f32",
+      "rootBeforeIntegrationSha256": "f6b849562f20519b338b19a311229da7e46e45659d70e5dc63ff69dad195a276"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/automation-driver.ts",
+      "sha256": "a48dbd065cfad74366a6c502138e1017ef98d9a829f3e1d0419a957484ef3292",
+      "rootBeforeIntegrationSha256": "32ae1ada0c0c329c4939dd1fde5d67e996269095f0a5a347c3e9c4ca8d71f662"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/collection-bootstrap.ts",
+      "sha256": "267a443d8af5a7b7be3e85eb7f345705a68cb31e2455a920c1b42c2afe954783",
+      "rootBeforeIntegrationSha256": "c0cb98dd010af19627dd60019a82007c169e15b917c7b40ba035bd65f028578f"
+    },
+    {
+      "path": "backend/src/modules/scheduling/scheduling.service.ts",
+      "sha256": "55bc9b8547b72b6728ff94e9e96eb80b454d4fe05685c07278d7b752ffb25ca8",
+      "rootBeforeIntegrationSha256": "efe543fa9c114c2642c3dbdea77def0af64f0cd207abe876e3454ceb7130fcb0"
+    },
+    {
+      "path": "backend/src/modules/scheduling/scheduling.repository.ts",
+      "sha256": "1f4a9f3ed1a8cf342b737d8663cfee2f95f13269f91f8cebb4dadef074f250cf",
+      "rootBeforeIntegrationSha256": "c09147d9e2d56a970e8d133f79251741ea56b823f6e047653c8b86d32d01a276"
+    },
+    {
+      "path": "backend/src/modules/scheduling/index.ts",
+      "sha256": "1f867035237ff3380c3fc9c24bf3b87c80201ac35869a928960f6dd98250e3a5",
+      "rootBeforeIntegrationSha256": "eea53b5480bc242985b37af50cc2d1deec820728ba514e69d51178fda9c0ddda"
+    },
+    {
+      "path": "backend/src/modules/scheduling/private-collector-admission.service.ts",
+      "sha256": "6ac00cad76f16286c7235c098fe90aa9b7f1e6e7c2249c9713ed773ddcbaee37",
+      "rootBeforeIntegrationSha256": null
+    },
+    {
+      "path": "backend/src/modules/platform-account/account-group.service.ts",
+      "sha256": "7807d8c60a0abb422226effc4a24d6786ade4a737a7f03e8fbb6cd2c5be18973",
+      "rootBeforeIntegrationSha256": "2e4ef6dc85dc5f4a776ccd05d757c7796c576e6eb370ff70758327d4ae5d1ea9"
+    },
+    {
+      "path": "backend/src/modules/ai/ai.repository.ts",
+      "sha256": "89f8d9964c100fca096d0af5394e1c4072e98e5e0b49df5dbc0d0f31feaba10a",
+      "rootBeforeIntegrationSha256": "410b1ef411b98e23f996863015f72f6f91e3f2154356ab8e9db3c33eff557553"
+    },
+    {
+      "path": "backend/src/modules/ai/ai.service.ts",
+      "sha256": "8741ab268703eaf390d33d24692f1e3108b43a09711587daf91abada327f3625",
+      "rootBeforeIntegrationSha256": "b5110c04a130754bdf889d1fd04ac3a6b034aaa866c17aad7a12715b65e8734e"
+    },
+    {
+      "path": "backend/src/modules/execution/persistent-task.service.ts",
+      "sha256": "423b1f5140849c50ffd99119abe3f7812e024eb7fe944e88f5bd404ffd65d3aa",
+      "rootBeforeIntegrationSha256": "f4284227cfde576bf46b2eb4059626d67d0c587ac2f9ff12c32878e93ab342bc"
+    },
+    {
+      "path": "backend/src/modules/execution/execution-authority.service.ts",
+      "sha256": "b29bf107a85012868e31f41dcc0827ba8faa2276de44fd8a4d3a7df43e9b25b1",
+      "rootBeforeIntegrationSha256": "550c62dba0811b1f92fe9358a849ee1cd608d13bf85cae64f02ddd28b2191c8c"
+    },
+    {
+      "path": "backend/src/integration/startup-group-collectors.postgres.integration.test.ts",
+      "sha256": "057a3d777f791ec3a98e7cfa6d37d8f5f01a6d4e49398ed23eb00acfdb95d454",
+      "rootBeforeIntegrationSha256": null
+    },
+    {
+      "path": "frontend/src/server/persistence-client.ts",
+      "sha256": "f8281d50f02649553769814bcba9972b0cbb2ddfec91fde74d2fb395eb308029",
+      "rootBeforeIntegrationSha256": "7a3ab48fd3cb803662b5112983c7eae52588261cc5097a456e7d44985fa1a12a"
+    },
+    {
+      "path": "backend/src/modules/platform-account/account-binding.service.ts",
+      "sha256": "570880cf956436200efd12b19baca8390852abcfd3ea26ffcc11d1759b2d4bc7",
+      "rootBeforeIntegrationSha256": "9c9ca124aaa0737cd8d4e5d3d47f76f2d91c482b9e333eb38aab7cb201978196"
+    },
+    {
+      "path": "backend/src/modules/platform-account/account-binding.integration.test.ts",
+      "sha256": "6ecec1b7e1a35d7226b9b35fc42e66a9cc178858355a5dbec1ddc69480065fd9",
+      "rootBeforeIntegrationSha256": "eed31272c0a67d9b358948d6bfb4fcb0e812bb0d7366d4940f10e66163244d86"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/scheduled-collection-scheduler.test.ts",
+      "sha256": "ff200f58f8bb3b00c41d98f6418c2bc10a856e7b98ac8e22e1ce7579417291f3",
+      "rootBeforeIntegrationSha256": "46604e15ced2b4410bbf80364d5e012b50db0db679d0873d6353271c6c0f1111"
+    }
+  ],
+  "frozenAt": "2026-10-05 02:27 Asia/Shanghai",
+  "testLog": "/tmp/t1022-startup-binding-scheduler-final.log"
+}

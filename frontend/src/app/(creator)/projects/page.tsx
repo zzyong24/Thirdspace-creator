@@ -57,15 +57,15 @@ export default async function Page({
   // [T-353] 未选号(含 0 号)= 引导态(T-332 §4.2):本页 per-account 读会撞 S2 strict 门
   // (AccountRequiredError → 整页错误边界)。layout 的零账号守卫只在首次渲染判定(App Router
   // 客户端导航不重渲 layout),故页面自兜:ctx 无选中号 → 渲绑定引导,不发注定失败的读。
-  if (!session.ctx.accountId) {
+  if (!session.ctx.groupId && !session.ctx.accountId) {
     return <ZeroAccountGuidance />;
   }
   const calendar = await getContentCalendarService();
   const [calendarContext, activeSchedules] = await Promise.all([
     calendar.getCalendarRequestContext(session.ctx),
     calendar.listActiveProjectSchedules(
-      session.ctx,
-      session.ctx.accountId,
+      session.ctx.groupId ? {...session.ctx,accountId:null,membershipVersion:undefined} : session.ctx,
+      session.ctx.groupId ? null : session.ctx.accountId!,
     ),
   ]);
   return (
@@ -73,10 +73,12 @@ export default async function Page({
       page={page}
       status={status}
       sort={sort}
+      groupId={session.ctx.groupId}
       client={createCachedPageClient(session.ctx)}
       resolveCoverIds={(ids) => getProjectListCoverIds(session.ctx, ids)}
       scheduleContext={{
-        accountId: session.ctx.accountId,
+        accountId: session.ctx.accountId ?? null,
+        groupId:session.ctx.groupId ?? null,
         referenceDateKey: calendarContext.today,
         entries: activeSchedules
           .filter(

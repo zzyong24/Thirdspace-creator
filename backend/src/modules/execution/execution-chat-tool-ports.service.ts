@@ -1,3 +1,4 @@
+import {workspaceFilter} from "../../workspace-scope";
 import {createExecutionChatRedfoxService} from "./execution-chat-redfox.service";
 import {createExecutionChatScriptDraftService} from "./execution-chat-script-draft.service";
 import {createExecutionChatWebReadService} from "./execution-chat-web-read.service";
@@ -32,8 +33,8 @@ const object=(value:unknown):Record<string,unknown>=>value && typeof value==="ob
 export async function readExecutionChatTask(db:Db,ref:ExecutionRef,now?:()=>string){
   return createExecutionLeaseService(db,{now}).withLease(ref,"admission",async({tx,task,context})=>{
    const input=chatWorkerInputSchema.parse(object(task.payload).modelInput);
-   const [business]=await tx.select().from(aiTasks).where(and(eq(aiTasks.id,task.ownerId),eq(aiTasks.executionTaskId,task.id),eq(aiTasks.userId,context.userId),eq(aiTasks.accountId,context.accountId!))).for("update");
-   if(task.kind!=="ai_task" || task.ownerType!=="ai_task" || !business || !["queued","running"].includes(business.status) || business.taskType!=="copilot.assist" || object(task.payload).aiTaskId!==business.id || object(business.inputData).modelInputDigest!==chatInputDigest(input) || input.userId!==context.userId || input.accountId!==context.accountId)throw new ConflictError("聊天工具任务映射无效");
+   const [business]=await tx.select().from(aiTasks).where(and(eq(aiTasks.id,task.ownerId),eq(aiTasks.executionTaskId,task.id),eq(aiTasks.userId,context.userId),workspaceFilter(aiTasks,context))).for("update");
+   if(task.kind!=="ai_task" || task.ownerType!=="ai_task" || !business || !["queued","running"].includes(business.status) || business.taskType!=="copilot.assist" || object(task.payload).aiTaskId!==business.id || object(business.inputData).modelInputDigest!==chatInputDigest(input) || input.userId!==context.userId || input.accountId!==(context.accountId??null) || (input.groupId??null)!==(context.groupId??null))throw new ConflictError("聊天工具任务映射无效");
    return {context,input};
   });
 }

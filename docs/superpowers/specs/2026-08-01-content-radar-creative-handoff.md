@@ -5,6 +5,8 @@
 > 现状证据：[链路审计](../../research/2026-08-01-content-radar-topic-project-script-chain-audit.md)。  
 > 用户于 2026-08-01 明确调整既有边界：内容雷达在拆解完成后自动生成一份本账号改写初稿；原稿、拆解、策略、选题和改写初稿作为同一创作包进入选题与 Project，不再等用户到 Project 后从零生成。
 
+> **2026-09-30 局部覆盖（DEC-T1017）**：新内容雷达改用 `rewrite_only` 主链，一次模型调用先保存可用纯文本改写稿；不再要求先生成拆解/策略/完整 TopicBriefCandidate。新变体只需真实来源引用、快照/逐字稿哈希、定位是否实际应用/版本、模板和模型运行回执以及改写稿 seed；拆解/策略/strategyHash 可缺省。Candidate/Project/`script.draft` 必须按新变体读取并继续使用已确认 seed，不能因可选证据缺项失败。这里只覆盖本文对新生成链、最小 evidence 和无策略的新项目写稿门槛；旧 strategy-backed transform、存量 Candidate/Project、普通 Project 与本文其余来源归属、幂等、事实和相似性安全边界仍有效。实现契约见 [T-1017](../../features/t1017-content-radar-rewrite-first.md)。
+
 ## 1. 用户结果
 
 用户从内容雷达选择一条已有完整逐字稿的对标内容后，应完成一次可检查的编导转换：

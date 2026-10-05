@@ -1,11 +1,13 @@
 /**
  * 发布中心主视图（T-599）。
  *
- * 项目列表拥有作品库存，发布中心只回答两个问题：
+ * 原单账号视图保留月历与表现；账号组视图补充同一期内容的各平台版本。
+ * 发布中心回答：
  * 1. 过去发布和未来排期在时间上如何分布；
  * 2. 已发布内容的真实表现如何。
+ * 3. 同一期内容各目标账号的当前版本与状态，或逐条查看发布记录。
  *
- * 因此页面只保留“左月历 / 右表现”的主从布局。月历由 route 的 batch
+ * 主区域沿用“左月历 / 右表现”的布局，账号组版本列表排在其后。月历由 route 的 batch
  * composition 作为真实 React 节点传入；本 feature 不重新取数，也不保留 fixture
  * 回退。月历与表现各自处理 loading/error/empty，任何一侧失败都不会遮住另一侧。
  */
@@ -22,12 +24,14 @@ import {
   PublishingCenterSummaryRail,
   PublishingCenterTopContent,
 } from "./publishing-center-interactive-region";
+import { PublishingContentList } from "./publishing-content-list";
 
 // ---------------------------------------------------------------------------
 // Public types
 // ---------------------------------------------------------------------------
 
 export interface PublishingCenterPageProps {
+  readonly navigationQuery?: string;
   /** 真实表现投影；缺省只用于接线期间的诚实空投影，不读取 fixture。 */
   readonly viewModel?: PublishingCenterViewModel;
   /**
@@ -35,6 +39,8 @@ export interface PublishingCenterPageProps {
    * 未接线时显示明确错误，不用旧“打开日历”入口兜底。
    */
   readonly calendar?: React.ReactNode;
+  readonly filters?: React.ReactNode;
+  readonly groupMode?: boolean;
 }
 
 export interface PublishingCenterViewModel extends BasePageViewModel {
@@ -43,7 +49,7 @@ export interface PublishingCenterViewModel extends BasePageViewModel {
   readonly publications: ReadonlyArray<PublicationRow>;
   readonly metrics: ReadonlyArray<MetricCardVm>;
   readonly platformComparison: ReadonlyArray<PlatformShare>;
-  readonly trend: ReadonlyArray<{ readonly label: string; readonly value: number }>;
+  readonly trend: ReadonlyArray<{ readonly label: string; readonly value: number|null }>;
   readonly topContent: ReadonlyArray<TopContentRow>;
   readonly pagination: { readonly currentPage: number; readonly totalPages: number };
 }
@@ -58,6 +64,16 @@ export interface ContentTypeTab {
 export type PublicationContentType = "video" | "image" | "audio";
 
 export interface PublicationRow {
+  readonly accountId?: string | null;
+  readonly accountName?: string;
+  readonly revisionId?: string | null;
+  readonly capturedAt?: string | null;
+  readonly dateKind?: "published" | "scheduled" | "created";
+  readonly metricValue?: number | null;
+  readonly metricKind?: "views" | "reads";
+  readonly likes?: number | null;
+  readonly comments?: number | null;
+  readonly shares?: number | null;
   readonly id: string;
   readonly contentTitle: string;
   /** The owning project's id, when resolvable — drives the row 查看 deep link (D3). */
@@ -121,6 +137,9 @@ const CALENDAR_NOT_COMPOSED: ViewModelError = {
 export function PublishingCenterPage({
   viewModel,
   calendar,
+  navigationQuery,
+  filters,
+  groupMode = false,
 }: PublishingCenterPageProps = {}) {
   const vm = viewModel ?? EMPTY_VIEW_MODEL;
   const performanceState =
@@ -143,6 +162,7 @@ export function PublishingCenterPage({
         data-layout="calendar-70-performance-30"
         className="flex min-w-0 flex-col gap-card-gap"
       >
+        {filters}
         <div
           data-slot="publishing-center-primary-row"
           className="grid min-w-0 grid-cols-1 items-start gap-card-gap lg:grid-cols-[minmax(0,7fr)_minmax(17rem,3fr)]"
@@ -152,6 +172,7 @@ export function PublishingCenterPage({
             aria-label="内容日历"
             className="min-w-0 rounded-card border border-border bg-surface p-4 shadow-sm"
           >
+            {groupMode && <p className="mb-4 text-sm text-muted-foreground">账号组创作排期 · 平台筛选仅影响发布记录</p>}
             {calendar ?? <ErrorState error={CALENDAR_NOT_COMPOSED} />}
           </section>
 
@@ -165,10 +186,12 @@ export function PublishingCenterPage({
             ) : performanceState === "error" ? (
               <ErrorState error={vm.error} />
             ) : (
-              <PublishingCenterSummaryRail viewModel={{ metrics: vm.metrics, platformComparison: vm.platformComparison, trend: vm.trend }} />
+              <PublishingCenterSummaryRail viewModel={{ metrics: vm.metrics, platformComparison: vm.platformComparison, trend: vm.trend }} nativeMode={groupMode} />
             )}
           </section>
         </div>
+
+        {groupMode && performanceState === "ready" && <PublishingContentList rows={vm.publications} navigationQuery={navigationQuery}/>}
 
         <section
           data-slot="publishing-center-details"

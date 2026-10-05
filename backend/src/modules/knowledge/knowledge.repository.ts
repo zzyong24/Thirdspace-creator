@@ -1,5 +1,9 @@
+import {alias,type AnyPgColumn} from "drizzle-orm/pg-core";
+import {withWorkspaceParentWrite,withWorkspaceWrite,type WorkspaceWriteParent} from '../../workspace-write';
+import {workspaceFilter,workspaceStamp,assertWritableWorkspace,resourceAccessGrants,type WorkspaceKey} from "@creatoros/backend";
 import {
   and,
+  or,
   asc,
   eq,
   desc,
@@ -68,7 +72,7 @@ export interface RepoDeps {
 // SPEC 2026-07-15 account-full-isolation §4.1/§4.2:一律 strict——调用方(service)
 // 已用 requireAccountId 断言非空,repo 侧类型收紧为 string,不存在「null → 退化
 // 不过滤」路径。子表 revisions/relations 无此列,经父行门透传。
-export type AccountScope = string;
+export type AccountScope = string|WorkspaceKey;
 
 export interface KnowledgeRepository {
   seedKnowledge(rows: KnowledgeItemRow[]): Promise<void>;
@@ -203,10 +207,32 @@ export function createKnowledgeRepository(
   db: Db,
   deps: RepoDeps,
 ): KnowledgeRepository {
+  return knowledgeRepository(db,deps,false);
+}
+function knowledgeRepository(db:Db,deps:RepoDeps,locked:boolean):KnowledgeRepository {
+  const context=(userId:string,scope:AccountScope)=>({userId,...workspaceStamp(scope),requestId:'knowledge-parent-write',source:'user' as const});
+  const parent:WorkspaceWriteParent={table:knowledgeItems,id:knowledgeItems.id,userId:knowledgeItems.userId,groupId:knowledgeItems.groupId,accountId:knowledgeItems.accountId,lock:'update'};
+  const write=<T>(userId:string,scope:AccountScope,ids:string[],run:(repo:KnowledgeRepository)=>Promise<T>)=>withWorkspaceParentWrite(db,context(userId,scope),parent,ids,tx=>run(knowledgeRepository(tx as unknown as Db,deps,true)));
+  const create=<T>(userId:string,scope:AccountScope,run:(repo:KnowledgeRepository)=>Promise<T>)=>withWorkspaceWrite(db,context(userId,scope),tx=>run(knowledgeRepository(tx as unknown as Db,deps,true)));
   // [T-332 S2] strict 号门(SPEC §4.1,退役 lenient OR-NULL):当前号 = 唯一可见集。
   // 存量 NULL 行兼容前提已被拍板 ②(清库重拉)废除;调用方已断言 accountId 非空。
   const accountVisibility = (accountId: AccountScope) =>
-    eq(knowledgeItems.accountId, accountId);
+    workspaceFilter(knowledgeItems,accountId);
+
+  const readVisibility=(userId:string,scope:AccountScope,table:{id:AnyPgColumn;groupId:AnyPgColumn;accountId:AnyPgColumn}=knowledgeItems)=>{
+    const owner=workspaceFilter(table,scope);
+    if(typeof scope==='string'||scope.kind!=='group')return owner;
+    return or(owner,sql`EXISTS (SELECT 1 FROM ${resourceAccessGrants} g WHERE g.user_id=${userId} AND g.target_group_id=${scope.id} AND g.resource_type='knowledge' AND g.resource_id=${table.id} AND g.revoked_at IS NULL)`);
+  };
+  // 子边必须同时通过两端父授权；历史软边不能借source暴露其它组或用户的target ID。
+  async function readableRelations(userId:string,scope:AccountScope,sourceId?:string){
+    const source=alias(knowledgeItems,"relation_source"),target=alias(knowledgeItems,"relation_target");
+    const rows=await db.select({relation:knowledgeRelations}).from(knowledgeRelations)
+      .innerJoin(source,eq(source.id,knowledgeRelations.sourceKnowledgeId))
+      .innerJoin(target,eq(target.id,knowledgeRelations.targetKnowledgeId))
+      .where(and(eq(source.userId,userId),eq(target.userId,userId),readVisibility(userId,scope,source),readVisibility(userId,scope,target),sourceId?eq(source.id,sourceId):undefined));
+    return rows.map(row=>parseRelation(row.relation));
+  }
 
   // 轻量行读:写路径/子实体的所有权门用它(不付战绩统计成本)。
   // [T-332 S2] strict:仅当前号的行可见;跨号 by-id → OwnershipError(404,§4.5)。
@@ -214,6 +240,7 @@ export function createKnowledgeRepository(
     userId: string,
     accountId: AccountScope,
     knowledgeId: string,
+    readable=false,
   ): Promise<KnowledgeItemRow> {
     const rows = await db
       .select()
@@ -222,7 +249,7 @@ export function createKnowledgeRepository(
         and(
           eq(knowledgeItems.id, knowledgeId),
           eq(knowledgeItems.userId, userId),
-          accountVisibility(accountId),
+          readable?readVisibility(userId,accountId):accountVisibility(accountId),
         ),
       );
     const row = rows[0];
@@ -241,11 +268,13 @@ export function createKnowledgeRepository(
   async function attachStats(
     userId: string,
     rows: KnowledgeItemRow[],
+    currentScope?:AccountScope, // 只有显式System方法可省略；业务调用必须传当前workspace。
   ): Promise<KnowledgeItemWithStats[]> {
     if (rows.length === 0) return [];
     const ids = rows.map((r) => r.id);
     const scope = and(
       eq(materialLinks.userId, userId),
+      currentScope?workspaceFilter(materialLinks,currentScope):undefined,
       eq(materialLinks.entityType, "knowledge"),
       inArray(materialLinks.entityId, ids),
     );
@@ -269,6 +298,8 @@ export function createKnowledgeRepository(
         and(
           eq(publications.contentOutputId, contentOutputs.id),
           eq(publications.status, "published"),
+          eq(publications.userId,userId),
+          currentScope?workspaceFilter(publications,currentScope):undefined,
         ),
       )
       .where(scope);
@@ -286,8 +317,8 @@ export function createKnowledgeRepository(
     accountId: AccountScope,
     knowledgeId: string,
   ): Promise<KnowledgeItemWithStats> {
-    const row = await getRow(userId, accountId, knowledgeId);
-    const [withStats] = await attachStats(userId, [row]);
+    const row = await getRow(userId, accountId, knowledgeId,true);
+    const [withStats] = await attachStats(userId, [row],accountId);
     return withStats!;
   }
 
@@ -312,7 +343,7 @@ export function createKnowledgeRepository(
         .where(
           and(
             eq(knowledgeFolders.userId, userId),
-            eq(knowledgeFolders.accountId, accountId),
+            workspaceFilter(knowledgeFolders,accountId),
             eq(knowledgeFolders.status, "active"),
           ),
         )
@@ -320,6 +351,8 @@ export function createKnowledgeRepository(
     },
 
     async createFolder(userId, accountId, input) {
+      if(!locked)return create(userId,accountId,repo=>repo.createFolder(userId,accountId,input));
+      await assertWritableWorkspace(db,{userId,...workspaceStamp(accountId),requestId:"knowledge-folder",source:"user"});
       if (input.parentId) {
         const parents = await db
           .select()
@@ -328,7 +361,7 @@ export function createKnowledgeRepository(
             and(
               eq(knowledgeFolders.id, input.parentId),
               eq(knowledgeFolders.userId, userId),
-              eq(knowledgeFolders.accountId, accountId),
+              workspaceFilter(knowledgeFolders,accountId),
               eq(knowledgeFolders.status, "active"),
             ),
           );
@@ -339,7 +372,7 @@ export function createKnowledgeRepository(
       await db.insert(knowledgeFolders).values({
         id,
         userId,
-        accountId,
+        ...workspaceStamp(accountId),
         parentId: input.parentId ?? null,
         name: input.name,
         status: "active",
@@ -354,6 +387,8 @@ export function createKnowledgeRepository(
     },
 
     async moveToFolder(userId, accountId, knowledgeId, folderId) {
+      if(!locked)return write(userId,accountId,[knowledgeId],repo=>repo.moveToFolder(userId,accountId,knowledgeId,folderId));
+      await assertWritableWorkspace(db,{userId,...workspaceStamp(accountId),requestId:"knowledge-write",source:"user"});
       await getRow(userId, accountId, knowledgeId);
       if (folderId) {
         const folders = await db
@@ -363,7 +398,7 @@ export function createKnowledgeRepository(
             and(
               eq(knowledgeFolders.id, folderId),
               eq(knowledgeFolders.userId, userId),
-              eq(knowledgeFolders.accountId, accountId),
+              workspaceFilter(knowledgeFolders,accountId),
               eq(knowledgeFolders.status, "active"),
             ),
           );
@@ -376,7 +411,7 @@ export function createKnowledgeRepository(
           and(
             eq(knowledgeItems.id, knowledgeId),
             eq(knowledgeItems.userId, userId),
-            eq(knowledgeItems.accountId, accountId),
+            workspaceFilter(knowledgeItems,accountId),
           ),
         );
       return get(userId, accountId, knowledgeId);
@@ -390,14 +425,14 @@ export function createKnowledgeRepository(
           and(
             eq(knowledgeItems.userId, userId),
             // [T-332 S2] strict:只读当前号的知识(无 OR-NULL、无退化)。
-            accountVisibility(accountId),
+            readVisibility(userId,accountId),
           ),
         )
         // [T-547] 知识库是导入/写入型资源：默认最新写入在前；id 作为同毫秒
         // 稳定次序，避免数据库返回顺序漂移。课程自然章节顺序不再绑架全局列表。
         .orderBy(desc(knowledgeItems.createdAt), desc(knowledgeItems.id));
       // [T-079a] 列表带战绩投影(一次 grouped 查询,无 N+1)。
-      return attachStats(userId, rows);
+      return attachStats(userId, rows,accountId);
     },
 
     get,
@@ -410,7 +445,7 @@ export function createKnowledgeRepository(
       const rev = rows[0];
       if (!rev) throw new OwnershipError("Revision not found");
       // Ownership gate: the parent item must be owned by `userId` (+号) (throws if not).
-      await getRow(userId, accountId, rev.knowledgeItemId);
+      await getRow(userId, accountId, rev.knowledgeItemId,true);
       return rev;
     },
 
@@ -418,7 +453,7 @@ export function createKnowledgeRepository(
       // Ownership gate on the parent item (cross-user / 跨号 / unknown id → 404, no
       // leak). Newest revision first so the caller can read the current head
       // (highest revisionNumber) as rows[0] without re-querying the item.
-      await getRow(userId, accountId, knowledgeId);
+      await getRow(userId, accountId, knowledgeId,true);
       return db
         .select()
         .from(knowledgeRevisions)
@@ -427,33 +462,12 @@ export function createKnowledgeRepository(
     },
 
     async listRelations(userId, accountId, knowledgeId) {
-      // Ownership gate on the source item.
-      await getRow(userId, accountId, knowledgeId);
-      const rows = await db
-        .select()
-        .from(knowledgeRelations)
-        .where(eq(knowledgeRelations.sourceKnowledgeId, knowledgeId));
-      return rows.map(parseRelation);
+      await getRow(userId, accountId, knowledgeId,true);
+      return readableRelations(userId,accountId,knowledgeId);
     },
 
     async listAllRelations(userId, accountId) {
-      // [T-091] 全量边:relations 无 user_id 列 → join source 端 knowledge_items
-      // 以 user_id 收窄(createRelation 已保证两端同 owner,source 端过滤即够)。
-      // [T-332 S2] 号维度:经 source 端 knowledge_items.account_id strict 收窄。
-      const rows = await db
-        .select({ relation: knowledgeRelations })
-        .from(knowledgeRelations)
-        .innerJoin(
-          knowledgeItems,
-          eq(knowledgeItems.id, knowledgeRelations.sourceKnowledgeId),
-        )
-        .where(
-          and(
-            eq(knowledgeItems.userId, userId),
-            accountVisibility(accountId),
-          ),
-        );
-      return rows.map((r) => parseRelation(r.relation));
+      return readableRelations(userId,accountId);
     },
 
     async listBackflowedSignalExternalIds(userId, accountId) {
@@ -484,6 +498,8 @@ export function createKnowledgeRepository(
     },
 
     async create(userId, accountId, input) {
+      if(!locked)return create(userId,accountId,repo=>repo.create(userId,accountId,input));
+      await assertWritableWorkspace(db,{userId,...workspaceStamp(accountId),requestId:"knowledge-create",source:"user"});
       const now = deps.now();
       const itemId = deps.nextId("knowledge");
       const revId = deps.nextId("revision");
@@ -493,8 +509,7 @@ export function createKnowledgeRepository(
       await db.insert(knowledgeItems).values({
         id: itemId,
         userId,
-        // [T-332 S2] 号维度盖章(service 已断言非空;列 NOT NULL,ISO-01/03)。
-        accountId,
+        ...workspaceStamp(accountId),
         currentRevisionId: revId,
         folderId: input.folderId ?? null,
         assetId: input.assetId ?? null,
@@ -524,6 +539,8 @@ export function createKnowledgeRepository(
     },
 
     async createRevision(userId, accountId, knowledgeId, input) {
+      if(!locked)return write(userId,accountId,[knowledgeId],repo=>repo.createRevision(userId,accountId,knowledgeId,input));
+      await assertWritableWorkspace(db,{userId,...workspaceStamp(accountId),requestId:"knowledge-write",source:"user"});
       // Ownership gate: a cross-user / 跨号 / unknown id throws before any write.
       await getRow(userId, accountId, knowledgeId);
 
@@ -570,6 +587,7 @@ export function createKnowledgeRepository(
       knowledgeId,
       sourceMetadata,
     ) {
+      if(!locked)return write(userId,accountId,[knowledgeId],repo=>repo.updateSourceMetadata(userId,accountId,knowledgeId,sourceMetadata));
       await getRow(userId, accountId, knowledgeId);
       const now = deps.now();
       await db
@@ -586,6 +604,8 @@ export function createKnowledgeRepository(
     },
 
     async createRelation(userId, accountId, sourceKnowledgeId, input) {
+      if(!locked)return write(userId,accountId,[sourceKnowledgeId,input.targetKnowledgeId],repo=>repo.createRelation(userId,accountId,sourceKnowledgeId,input));
+      await assertWritableWorkspace(db,{userId,...workspaceStamp(accountId),requestId:"knowledge-write",source:"user"});
       // Reject a self-link before touching ownership (cheap guard first).
       if (sourceKnowledgeId === input.targetKnowledgeId) {
         throw new ConflictError("Cannot link a knowledge item to itself");
@@ -626,6 +646,8 @@ export function createKnowledgeRepository(
     },
 
     async archive(userId, accountId, knowledgeId) {
+      if(!locked)return write(userId,accountId,[knowledgeId],repo=>repo.archive(userId,accountId,knowledgeId));
+      await assertWritableWorkspace(db,{userId,...workspaceStamp(accountId),requestId:"knowledge-write",source:"user"});
       // Ownership gate (cross-user / 跨号 / unknown id → 404, no leak). The §12-style
       // status transition (active → archived) is enforced by the SERVICE; the
       // repo only stamps the new status + archivedAt + updatedAt. Re-read scoped
@@ -645,6 +667,8 @@ export function createKnowledgeRepository(
     },
 
     async renameTitle(userId, accountId, knowledgeId, title) {
+      if(!locked)return write(userId,accountId,[knowledgeId],repo=>repo.renameTitle(userId,accountId,knowledgeId,title));
+      await assertWritableWorkspace(db,{userId,...workspaceStamp(accountId),requestId:"knowledge-write",source:"user"});
       // [T-211] Ownership gate (cross-user / 跨号 / unknown id → 404, no leak),
       // then scoped title update. WHERE 收窄 id + userId,跨用户更新 = no-op(0 行)。
       // 只改 title + updatedAt(不动 content/revision/status/archivedAt)。
@@ -663,6 +687,8 @@ export function createKnowledgeRepository(
     },
 
     async removeRelation(userId, accountId, sourceKnowledgeId, input) {
+      if(!locked)return write(userId,accountId,[sourceKnowledgeId,input.targetKnowledgeId],repo=>repo.removeRelation(userId,accountId,sourceKnowledgeId,input));
+      await assertWritableWorkspace(db,{userId,...workspaceStamp(accountId),requestId:"knowledge-write",source:"user"});
       // Ownership gate on the source item (the only end we need to own to drop
       // an outgoing relation; cross-user / 跨号 / unknown id → 404, no leak).
       await getRow(userId, accountId, sourceKnowledgeId);

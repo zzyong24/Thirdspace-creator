@@ -2,7 +2,7 @@ import type {DailyReportAnalysis} from '@creatoros/contract';
 import type {client} from '@/lib/contract-client';
 import {reportPeriodLabel} from "./report-period";
 import type {DailyReport} from './report-metrics';
-import {createReportRequest,declaresReportProtocol,readReportRequest,parseReportAnalysis,reportEvidenceKey,reportScope,type ReportRequest} from './analysis-protocol';
+import {createReportRequest,declaresReportProtocol,readReportRequest,parseReportAnalysis,reportEvidenceKey,reportScope,hasReportScope,type ReportRequest} from './analysis-protocol';
 type AIConversationResource=Awaited<ReturnType<typeof client.listConversations>>;
 type AIMessageResource=Awaited<ReturnType<typeof client.listMessages>>;
 type Api=Pick<typeof client,'listConversations'|'createConversation'|'createMessage'|'listMessages'|'getTask'|'commandExecutionTasks'>;
@@ -17,7 +17,7 @@ export function createAnalysisSession(report:DailyReport,deps:{api:Api;send:(bod
  const call=async<T>(fn:()=>Promise<T>)=>{deps.assertScope();const value=await fn();deps.assertScope();return value;};
  const api=deps.api;
  async function refresh():Promise<AnalysisState>{
-  if(!report.accountId)return {...emptyAnalysis};
+  if(!hasReportScope(report))return {...emptyAnalysis};
   if(!conversationId){const rows=await call(()=>api.listConversations({params:undefined,query:{scope:reportScope(report),page:1,pageSize:1},body:undefined})) as unknown as AIConversationResource[];conversationId=rows[0]?.id??null;}
   if(!conversationId)return state={...emptyAnalysis};
   const messages=await call(()=>api.listMessages({params:{conversationId:conversationId!},query:undefined,body:undefined})) as unknown as AIMessageResource[];
@@ -37,6 +37,7 @@ export function createAnalysisSession(report:DailyReport,deps:{api:Api;send:(bod
   return state={...base,status:'running'};
  }
  async function performStart(){
+  if(!hasReportScope(report))return state={...emptyAnalysis};
   // 已有明确在途任务只恢复显示，不额外提交。
   if(state.status==='running'||(executionId&&state.status==='failed'&&!retryTerminal))return refresh();
   if(!conversationId){const c=await call(()=>api.createConversation({params:undefined,query:undefined,body:{title:`运营报表 ${reportPeriodLabel(report)}`,scope:reportScope(report),projectId:null}}));conversationId=c.id;}

@@ -64,6 +64,10 @@ export interface DashboardPageProps {
    * falls back to the fixture dataset so SSR never crashes. Also the test seam.
    */
   readonly greetingName?: string;
+  /** 当前组的数据筛选位于问候之后，与原顶栏动作留出同一行空间。 */
+  readonly filters?: React.ReactNode;
+  readonly dateRange?: {startDate:string;endDate:string};
+  readonly trendContext?: {emptyMessage:string;sourceNote?:string};
 }
 
 // ---------------------------------------------------------------------------
@@ -73,6 +77,9 @@ export interface DashboardPageProps {
 export async function DashboardPage({
   viewModel,
   greetingName,
+  filters,
+  dateRange,
+  trendContext,
 }: DashboardPageProps = {}) {
   const vm =
     viewModel ??
@@ -86,7 +93,7 @@ export async function DashboardPage({
   // tests reach the fixture default (so SSR never crashes).
   const greeting = buildGreeting(
     vm,
-    greetingName ?? canonicalDataset.user.displayName,
+    (greetingName ?? canonicalDataset.user.displayName).trim() || "创作者",
   );
   return (
     <main
@@ -98,7 +105,7 @@ export async function DashboardPage({
           判显隐(未完成且未「不再显示」才渲),配全或点「不再显示」后自动消失。 */}
       <OnboardingCard />
 
-      <header className="flex flex-col gap-0.5">
+      <header className="flex flex-col gap-0.5 max-sm:pt-14">
         <h1
           data-slot="dashboard-welcome"
           className="font-heading text-xl font-semibold text-foreground"
@@ -112,10 +119,9 @@ export async function DashboardPage({
           {buildDashboardSubtext(vm.todos.length, vm.suggestions.length)}
         </p>
       </header>
-
-
+      {filters}
       <SummaryMetrics metrics={vm.metrics} />
-      <DashboardGrid vm={vm} />
+      <DashboardGrid vm={vm} dateRange={dateRange} trendContext={trendContext}/>
     </main>
   );
 }
@@ -150,7 +156,7 @@ function SummaryMetrics({ metrics }: { metrics: DashboardViewModel["metrics"] })
 // Grid
 // ---------------------------------------------------------------------------
 
-function DashboardGrid({ vm }: { vm: DashboardViewModel }) {
+function DashboardGrid({ vm,dateRange,trendContext }: { vm: DashboardViewModel;dateRange?:{startDate:string;endDate:string};trendContext?:DashboardPageProps['trendContext'] }) {
   return (
     <section
       data-slot="dashboard-grid"
@@ -171,7 +177,7 @@ function DashboardGrid({ vm }: { vm: DashboardViewModel }) {
       />
       <TrendingTopicsCard topics={vm.trendingTopics} />
       <RecentPublicationsCard publications={vm.recentPublications} />
-      <DataOverviewCard vm={vm} />
+      <DataOverviewCard vm={vm} dateRange={dateRange} trendContext={trendContext}/>
       <CreationSuggestionsCard
         suggestions={vm.suggestions}
         continueCreating={vm.continueCreating}
@@ -213,13 +219,13 @@ function ContinueCreatingCard({
                 data-slot="dashboard-empty-bootstrap-hint"
                 className="text-xs text-muted-foreground"
               >
-                新账号建议先
+                建议先为当前账号组
                 <Link
                   href="/positioning"
                   data-slot="dashboard-empty-positioning-link"
                   className="mx-0.5 font-medium text-brand underline-offset-4 hover:underline"
                 >
-                  完成这个号的定位
+                  设置创作定位
                 </Link>
                 ;数据类卡片会在首轮采集任务跑完后自动充实。
               </p>
@@ -386,6 +392,7 @@ function RecentPublicationsCard({
   return (
     <div data-slot="recent-publications-card">
     <SectionCard title="最近发布" description="各平台的最新表现">
+      {!publications.length?<p className="py-4 text-sm text-muted-foreground">当前筛选内暂无发布记录。<Link href="/publishing" className="ml-2 text-brand">去发布中心 →</Link></p>:null}
       <ul
         data-slot="recent-publications"
         className="flex flex-col gap-2"
@@ -407,7 +414,7 @@ function RecentPublicationsCard({
                     {row.title}
                   </span>
                   <span className="text-xs text-muted-foreground tabular-nums">
-                    {row.views.toLocaleString()} 次播放
+                    {row.views === null ? "尚未采集" : `${row.views.toLocaleString()} ${row.platform === "wechatOfficial" ? "次阅读" : "次播放"}`}
                   </span>
                 </div>
               </div>
@@ -425,35 +432,27 @@ function RecentPublicationsCard({
 // 数据概览
 // ---------------------------------------------------------------------------
 
-function DataOverviewCard({ vm }: { vm: DashboardViewModel }) {
+function DataOverviewCard({ vm,dateRange,trendContext }: { vm: DashboardViewModel;dateRange?:{startDate:string;endDate:string};trendContext?:DashboardPageProps['trendContext'] }) {
   return (
     <div data-slot="data-overview-card">
     <SectionCard
       title="数据概览"
-      description="本周累计播放与转化趋势"
+      description="相邻日采集的播放变化，缺失数据留空"
       className="md:col-span-2 lg:col-span-1"
     >
       {/* [T-054] 删重复 KPI 瓷砖:同 5 个指标顶部一排已展示,本区再铺一遍是
           信息冗余(审计「怪」感来源之一)。数据概览聚焦趋势图。 */}
-      {vm.dataOverview.trend.length === 0 ? (
-        // [T-197] 无日序数据时显诚实说明,别显「最高0最低0」空图(误导成 0 播放;
-        //   实际是单点快照没跨天日序)。需连续多日采集才有本周趋势。
-        <p
-          data-slot="data-overview-empty"
-          className="mt-1 rounded-control border border-dashed border-border bg-surface-subtle px-3 py-6 text-center text-xs text-muted-foreground"
-        >
-          本周还没有足够的播放数据画趋势。多发几天、系统持续更新后,这里会出现走势图。
-        </p>
-      ) : (
-      <div className="mt-1">
+      <div className="mt-1" data-slot={vm.dataOverview.trend.length?undefined:"data-overview-empty"}>
         <ChartFrame
-          title="本周播放趋势"
+          title="每日播放变化"
           summary={buildTrendSummary(vm.dataOverview.trend)}
-          trend={vm.dataOverview.trend}
+          trend={vm.dataOverview.trend.length?vm.dataOverview.trend:dateRange?[{label:dateRange.startDate,value:null},{label:dateRange.endDate,value:null}]:[]}
           testId="dashboard-data-trend"
+          emptyMessage={trendContext?.emptyMessage}
+          emptyAction={trendContext?<Link href="/accounts" className="text-sm text-brand">查看账号与采集状态 →</Link>:undefined}
+          sourceNote={trendContext?.sourceNote}
         />
       </div>
-      )}
     </SectionCard>
     </div>
   );
@@ -611,18 +610,19 @@ function getProjectPlatformLabels(projectId: string): ReadonlyArray<string> {
 }
 
 function buildTrendSummary(
-  trend: ReadonlyArray<{ label: string; value: number }>,
+  trend: ReadonlyArray<{ label: string; value: number|null }>,
 ): string {
   if (trend.length === 0) {
     return "本周暂无播放数据。";
   }
-  const values = trend.map((point) => point.value);
+  const values = trend.flatMap((point) => point.value===null?[]:[point.value]);
+  if(values.length===0)return "本周暂无可计算的播放增量。";
   const total = values.reduce((sum, value) => sum + value, 0);
   const max = Math.max(...values);
   const min = Math.min(...values);
   const maxPoint = trend.find((point) => point.value === max);
   const minPoint = trend.find((point) => point.value === min);
-  return `本周累计播放 ${total.toLocaleString()} 次，${maxPoint?.label ?? ""} ${max.toLocaleString()} 次最高，${minPoint?.label ?? ""} ${min.toLocaleString()} 次最低`;
+  return `已测日期播放增量 ${total.toLocaleString()} 次，${maxPoint?.label ?? ""} ${max.toLocaleString()} 次最高，${minPoint?.label ?? ""} ${min.toLocaleString()} 次最低`;
 }
 
 function buildGreeting(

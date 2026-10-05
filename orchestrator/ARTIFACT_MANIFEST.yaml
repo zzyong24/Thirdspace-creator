@@ -72,6 +72,8 @@ stages:
     gate_status: "not-run"
     confirmation_required: false
     artifacts:
+      - existing: "docs/features/t1022-account-group-workspace.md (原版增补页面约束独立复核PASS[REV:2f179f8d9380]；历史归属迁移待确认，未进入生产实现)"
+      - existing: "docs/features/t1022-account-group-workspace/style-explorer.html (现状与用户指定的原版增补预览；A/B退出候选，非产品UI验收PASS)"
       - existing: "backend/src"
       - existing: "frontend/src"
       - existing: "ai-worker"

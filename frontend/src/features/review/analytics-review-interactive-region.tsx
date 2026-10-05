@@ -135,6 +135,8 @@ export function AnalyticsReviewInteractiveRegion({
   reviewsWiring,
   metricsEmpty = false,
   reviewEvidenceReady = true,
+  metricsContent,
+  analysisScope,
 }: {
   readonly viewModel: AnalyticsViewModel;
   readonly reviewsWiring?: ReviewsWiring;
@@ -146,6 +148,8 @@ export function AnalyticsReviewInteractiveRegion({
   readonly metricsEmpty?: boolean;
   /** 当前项目已有发布后指标或评论；没有证据时禁止生成/展示伪复盘。 */
   readonly reviewEvidenceReady?: boolean;
+  readonly metricsContent?: React.ReactNode;
+  readonly analysisScope?: string;
 }) {
   const [activeReviewId, setActiveReviewId] = React.useState<string | null>(
     null,
@@ -243,7 +247,7 @@ export function AnalyticsReviewInteractiveRegion({
       {/* [T-209] 主列竖向间距 gap-3(12px)与右栏/外层网格 gap-card-gap(16px)不齐 →
           统一为 card-gap,消除左右两列节奏错位的「布局奇怪」观感。 */}
       <div data-slot="analytics-main-column" className="flex flex-col gap-card-gap">
-        {metricsEmpty ? (
+        {metricsContent ?? (metricsEmpty ? (
           // [T-329] 空态收窄到指标/图表区:没拉到明细快照时只这块显空态引导,
           // 复盘编辑/记录等真 op 面照常可用。
           <EmptyState
@@ -262,7 +266,7 @@ export function AnalyticsReviewInteractiveRegion({
               conversionFunnel={viewModel.conversionFunnel}
             />
           </>
-        )}
+        ))}
         {/* [T-116b] 观众画像 / 观众来源 / 留存曲线(SecondaryCharts)+ 关键时刻区已移除:
             均无数据源 op(需单视频采集 T-100),真项目恒空占位。待 T-100 做了再加回。 */}
         {/* [T-356②] 热门作品发布列表已下架:单项目复盘页拉账号级全作品列表=凑数
@@ -275,7 +279,8 @@ export function AnalyticsReviewInteractiveRegion({
       >
         {/* [T-404 用户拍板 2026-07-18] 本期经验裁决区(含「帮我复盘」CTA)从左列移到右栏、
             复盘编辑之上 —— 帮我复盘是复盘编辑的入口动作,放一起动线更顺。 */}
-        <CurrentPeriodLearnings
+          <CurrentPeriodLearnings
+            analysisScope={analysisScope}
           candidates={
             reviewEvidenceReady ? (viewModel.candidateLearnings ?? []) : []
           }
@@ -658,10 +663,12 @@ function CurrentPeriodLearnings({
   candidates,
   projectId,
   reviewEvidenceReady,
+  analysisScope,
 }: {
   candidates: AdjudicationQueueProps["candidates"];
   projectId: string;
   reviewEvidenceReady: boolean;
+  analysisScope?: string;
 }) {
   const isEmpty = candidates.length === 0;
   return (
@@ -683,6 +690,7 @@ function CurrentPeriodLearnings({
         {/* [T-356③] 常驻再跑入口(原「AI 要点」卡下架后,非空态也要能再复盘)。 */}
         {!reviewEvidenceReady || isEmpty ? null : (
           <ReviewAnalyzeButton
+            analysisScope={analysisScope}
             projectId={projectId}
             slot="current-period-learnings-rerun"
             className="h-7 shrink-0 px-3 text-[11px] [&_svg]:size-3.5"
@@ -713,6 +721,7 @@ function CurrentPeriodLearnings({
             点「帮我复盘」让编导从本期评论 / 指标提炼(复盘会同时产要点 + 经验候选)。
           </p>
           <ReviewAnalyzeButton
+            analysisScope={analysisScope}
             projectId={projectId}
             slot="current-period-learnings-cta"
             className="h-7 w-fit px-3 text-[11px] [&_svg]:size-3.5"

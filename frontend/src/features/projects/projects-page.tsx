@@ -68,6 +68,8 @@ export type ProjectsReadClient = Pick<typeof defaultClient, "listProjects"> &
   >;
 
 export interface ProjectsPageProps {
+  /** 服务端传入的真实账号组上下文；旧账号调用方省略。 */
+  readonly groupId?:string|null;
   /** Override hook for tests; defaults to the production selector. */
   readonly viewModel?: ProjectsViewModel;
   /** 1-based page number (from the route's ?page= search param). */
@@ -90,7 +92,8 @@ export interface ProjectsPageProps {
    * 缺省不渲染控件，避免未登录/未选号或旧调用方制造无归属写请求。
    */
   readonly scheduleContext?: {
-    readonly accountId: string;
+    readonly accountId?: string | null;
+    readonly groupId?: string | null;
     readonly referenceDateKey: string;
     readonly entries: ReadonlyArray<ProjectScheduleSummary>;
   };
@@ -128,6 +131,7 @@ export async function ProjectsPage({
   client = defaultClient,
   scheduleContext,
   resolveCoverIds,
+  groupId,
 }: ProjectsPageProps = {}) {
   // Reads flow page -> await client.* -> MockTransport -> store -> DTO. The
   // `viewModel?` prop remains the test-override seam (fixture-driven, sync).
@@ -245,7 +249,7 @@ export async function ProjectsPage({
         sort={sort}
       />
 
-      <ProjectList rows={rows} scheduleContext={scheduleContext} />
+      <ProjectList rows={rows} scheduleContext={scheduleContext} groupId={groupId}/>
 
       <Pagination
         currentPage={currentPage}
@@ -265,8 +269,10 @@ export async function ProjectsPage({
 function ProjectList({
   rows,
   scheduleContext,
+  groupId,
 }: {
   rows: ReadonlyArray<ProjectListRow>;
+  groupId?:string|null;
   scheduleContext?: ProjectsPageProps["scheduleContext"];
 }) {
   // [T-332 S4·§6.2] 新号零项目:诚实空态 + 从零开始的两个入口(新建 / 从选题立项),
@@ -274,8 +280,8 @@ function ProjectList({
   if (rows.length === 0) {
     return (
       <EmptyState
-        title="这个账号还没有项目"
-        description="项目按抖音号隔离。新建一个项目,或先去选题池挑一条候选立项。"
+        title={groupId?"这个账号组还没有项目":"这个账号还没有项目"}
+        description={groupId?"项目属于当前账号组。可以先创建项目，分发时再添加平台账号，也可以从选题池立项。":"项目按抖音号隔离。新建一个项目,或先去选题池挑一条候选立项。"}
         action={
           <div className="flex items-center gap-4">
             <Link
@@ -452,7 +458,8 @@ function ProjectListItem({
       <div data-slot="project-schedule-cell" className="flex min-w-0 items-center">
         {scheduleContext && scheduleEligible ? (
           <ProjectScheduleControl
-            accountId={scheduleContext.accountId}
+            accountId={scheduleContext.accountId ?? null}
+            groupId={scheduleContext.groupId ?? undefined}
             projectId={row.id}
             projectTitle={row.title}
             referenceDateKey={scheduleContext.referenceDateKey}

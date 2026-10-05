@@ -67,7 +67,7 @@ describe("notifications.service", () => {
   it("C2.1: list forwards ctx.userId + ctx.accountId + pagination to the repo", async () => {
     const calls: Array<{
       userId: string;
-      accountId: string | null;
+      accountId: import("./notifications.repository").NotificationAccountScope;
       page: number;
       pageSize: number;
     }> = [];

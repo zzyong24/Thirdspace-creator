@@ -301,7 +301,7 @@ export function sameExecution(a: ExecutionRef, b: ExecutionRef): boolean {
 
 const completionPolicySchema=z.object({schemaVersion:z.literal(1),minSegments:z.number().int().nonnegative(),maxSegments:z.number().int().positive().nullable(),requiredSequence:z.array(z.string()),repairAttempts:z.number().int().nonnegative()}).strict();
 export const workerSkillSnapshotSchema=z.object({
-  snapshotVersion:z.literal(1),userId:z.string().min(1),accountId:z.string().min(1),resolvedAt:z.string().min(1),platformPolicyVersion:z.string().min(1),platformPolicy:z.string().min(1),
+  snapshotVersion:z.literal(1),userId:z.string().min(1),accountId:z.string().min(1).nullable(),groupId:z.string().min(1).nullable().optional(),groupVersion:z.number().int().positive().nullable().optional(),membershipVersion:z.number().int().positive().nullable().optional(),resolvedAt:z.string().min(1),platformPolicyVersion:z.string().min(1),platformPolicy:z.string().min(1),
   skills:z.array(z.object({skillId:z.string().min(1),baseVersion:z.string().min(1),overlayRevision:z.number().int().nonnegative().nullable(),overlayVersion:z.string().nullable(),effective:z.object({
     methodSystem:z.string(),template:z.string(),tools:z.array(z.string()),requiredFacets:z.array(z.string()),contextRequirements:z.array(z.string()),outputSchema:z.record(z.string(),z.json()).nullable(),completionPolicy:completionPolicySchema.nullable(),completionPolicyAdapter:z.object({id:z.string().min(1),version:z.string().min(1)}).strict().nullable(),
   }).strict()}).strict()).min(1),

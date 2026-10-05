@@ -1,3 +1,4 @@
+import {seedAdjacentContent} from "../../integration/adjacent-domain-fixtures";
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import {
   createDb,
@@ -126,6 +127,7 @@ describe("content-calendar service", () => {
   let db: Db;
   beforeEach(async () => {
     ({ db } = await createDb());
+    await seedAdjacentContent(db,ctx,["out-1","out-pub","out-none","out-pub-1","out-pub-2","out-pub-3"]);
     await db.insert(projects).values({
       id: "project-1",
       userId: ctx.userId,

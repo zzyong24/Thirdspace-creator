@@ -1,0 +1,25 @@
+{
+  "tree": "/Users/zyongzhu/.codex/worktrees/t1022-task-scope/Thirdspace-creator",
+  "ownedFiles": [
+    {
+      "path": "backend/src/application/workspace/startup.test.ts",
+      "sha256": "0a45dd74de65ea38894ed46cde35a79509f7d0d0a5701250ffb5e34420e44764",
+      "rootBeforeIntegrationSha256": "570b4ea913af7a94cd85d6f39d986d0ef88bfee7840ff9e7ebd7312023ee01eb"
+    },
+    {
+      "path": "backend/src/integration/startup-group-collectors.postgres.integration.test.ts",
+      "sha256": "9db2d4b6dae212e02323f4599a22a922b276ca00bb88dbc4311542fe462200d7",
+      "rootBeforeIntegrationSha256": "b581901b2debd5b29cf0e903b8691e40d3492f727b1e980b43d59e674da5e712"
+    }
+  ],
+  "scope": "test-only; production unchanged",
+  "fullTscExit": 2,
+  "fullTscRemainingDiagnostics": 12,
+  "ownedTestDiagnostics": 0,
+  "testFilesPassed": 2,
+  "testsPassed": 34,
+  "logs": [
+    "/tmp/t1022-backend-full-types-test-cleanup.log",
+    "/tmp/t1022-test-types-cleanup-green.log"
+  ]
+}

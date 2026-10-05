@@ -1,6 +1,7 @@
 import { beforeAll, afterAll, it, expect, vi } from "vitest";
 import { createDb, aiTasks, aiMessages, eq, type Db } from "@creatoros/backend";
-import { createAiService } from "./ai.service";
+import { createAiService, type ServiceDeps } from "./ai.service";
+import type {RequestContext} from "@creatoros/contract";
 let db: Db,
   close: () => Promise<void>,
   seq = 0;
@@ -15,9 +16,9 @@ const unused = async (): Promise<never> => {
   throw new Error("unused domain port");
 };
 function fixture(fail = false) {
-  const resolve = vi.fn(async (_ctx, snapshot) => {
+  const resolve = vi.fn(async (_ctx:RequestContext, snapshot:Parameters<NonNullable<ServiceDeps["prepareChatReply"]>>[1]) => {
     await db.select().from(aiTasks); // 真实 PGlite 读取：验证装配不在外层事务内自锁。
-    return {capability:"copilot.assist",system:"真实策略",messages:snapshot.messages.map(m=>({role:m.role,content:m.content})),tools:[],maxSteps:6,maxOutputTokens:128};
+    return {capability:"copilot.assist",system:"真实策略",messages:snapshot.messages.map(m=>({role:m.role as "user"|"assistant"|"system"|"tool",content:m.content})),tools:[],maxSteps:6,maxOutputTokens:128};
   });
   const service = createAiService({
     db,

@@ -30,10 +30,11 @@ import type { PlatformAccountResource } from "@creatoros/backend/modules/platfor
  * `createServerClient(ctx)` so `accounts.list` stays user-scoped; the default
  * keeps the singleton (canonical ctx) as the SSR/test fallback seam.
  */
-export type AccountManagerReadClient = Pick<typeof defaultClient, "listAccounts">;
+export type AccountManagerReadClient = Pick<typeof defaultClient, "listAccounts"> & Partial<Pick<typeof defaultClient, "listAccountGroups">>;
 
 export interface AccountManagerViewModel {
   readonly accounts: PlatformAccountResource[];
+  readonly groups?: import("@creatoros/contract").AccountGroupResource[];
 }
 
 export interface AccountManagerPageProps {
@@ -63,5 +64,6 @@ async function loadViewModel(
     query: { page: 1, pageSize: 100 },
     body: undefined,
   })) as unknown as PlatformAccountResource[];
-  return { accounts };
+  const groups = client.listAccountGroups ? (await client.listAccountGroups({ params: undefined, query: { page: 1, pageSize: 100, includeArchived: true }, body: undefined })) as unknown as import("@creatoros/contract").AccountGroupResource[] : undefined;
+  return { accounts, groups };
 }

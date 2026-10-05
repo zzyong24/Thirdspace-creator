@@ -16,7 +16,8 @@ export const projects = pgTable("projects", {
   // [T-136 多账号] 按号隔离维度(soft FK → platform_accounts.id)。nullable —— 存量行/
   // 全局视图 accountId=null 兜底(SPEC §6 MAJOR-3:nullable 是稳定终态,新行由 service
   // 层强制带号,非 DB 约束)。迁移 0025 建默认号后 backfill。
-  accountId: text("account_id").notNull(), // [T-332 S1] per-account 收口 NOT NULL(迁移 0042)
+  groupId: text("group_id"),
+  accountId: text("account_id"), // [T-332 S1] per-account 收口 NOT NULL(迁移 0042)
   title: text("title").notNull(),
   brief: text("brief").notNull().default(""),
   // 结构化 Brief(立项 Brief 地基 / PRD §5.2)—— jsonb 扩展位(沿用 facets/card 模式,

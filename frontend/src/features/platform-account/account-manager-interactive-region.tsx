@@ -1,22 +1,9 @@
 "use client";
 
 /**
- * `account-manager-interactive-region.tsx` — 账号管理页客户端岛(抖音-only,极简版)。
- *
- * [T-136§D-bind⑤ · 用户 2026-07-06 截图报障] 账号页彻底简化 —— 用户原话「不是直接扫码,
- * 然后账号列表直接展示就行了吗?每扫码一次判断是否已绑定(是就更新、不是就新增),再加一个移除」。
- * 删掉全部多平台矩阵老设计(手动登记表单 handle/密钥引用/涨粉基线、平台 tab、「未配置密钥」徽标、
- * 每行涨粉基线框)—— 抖音扫码没有 API key 概念,这些字段用户全看不懂。
- *
- * 整页 = 两个动作:
- *  - `CreateAccountForm`(「扫码绑定新抖音号」单一主按钮)→ `client.loginDouyin`(复用设置页同款
- *    扫码链,零新 op);扫码成功后后端按 secUid upsert(命中已有号=更新、无则新增)+ 占位号合并
- *    (§D applyDouyinIdentity/persistence-client),`router.refresh()` 读回真实号。
- *  - `AccountRow`(每行:真实抖音昵称 + 抖音号 ID〔若已回填〕+「隐藏」)→「隐藏」复用
- *    `client.archiveAccount`(status→archived,可逆/诚实,永不硬删)。[T-201c]
- *
- * 诚实(铁律):headed 扫码端到端卡真机,前端只发起 + 据结果推进,绝不假装登录过;扫码超时/失败
- * → 明确提示重试,不写任何假账号。粉丝数暂无按号聚合的采集 metric → 不显(不造假),待接。
+ * 保留真实抖音扫码与平台账号隐藏操作。扫码成功只采信后端身份回执，并读回账号；
+ * 同一账号组内的管理与其他平台手动登记位于 account-group-manager.tsx。
+ * PLATFORMS仅描述本文件支持扫码的平台，不是账号组的平台枚举。
  */
 
 import * as React from "react";
@@ -24,6 +11,8 @@ import { useRouter } from "next/navigation";
 
 import { client } from "@/lib/contract-client";
 import { notifyAccountsChanged } from "@/lib/account-events";
+import { readCurrentGroupId } from "@/lib/http-transport";
+import { beginForegroundActivity } from "@/lib/foreground-activity";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -55,6 +44,8 @@ const PLATFORM_LABELS: Record<string, string> = {
   douyin: "抖音",
   xiaohongshu: "小红书",
   wechatVideo: "视频号",
+  wechatOfficial: "公众号",
+  kuaishou: "快手",
   x: "X",
 };
 
@@ -62,23 +53,23 @@ const PLATFORM_LABELS: Record<string, string> = {
 // it calls router.refresh() so the server re-reads the persisted rows.
 function useMutation() {
   const router = useRouter();
-  const [pending, setPending] = React.useState(false);
-  const run = React.useCallback(
-    (mutate: () => Promise<unknown>) => {
-      if (pending) return;
-      setPending(true);
-      void (async () => {
-        try {
-          await mutate();
-          router.refresh();
-        } finally {
-          setPending(false);
-        }
-      })();
-    },
-    [pending, router],
-  );
-  return { pending, run };
+  const [pending, setPending] = React.useState(false), [error, setError] = React.useState<string | null>(null);
+  const alive=React.useRef(false), inFlight=React.useRef(false);
+  React.useEffect(()=>{alive.current=true;return()=>{alive.current=false;};},[]);
+  const run = React.useCallback((mutate: () => Promise<unknown>, after?:()=>void) => {
+    if(inFlight.current)return;inFlight.current=true;setPending(true);setError(null);
+    const groupId=readCurrentGroupId();
+    const end=beginForegroundActivity("平台账号管理正在保存");
+    void(async()=>{
+      try{
+        await mutate();
+        if(!alive.current||readCurrentGroupId()!==groupId)return;
+        after?.();notifyAccountsChanged({source:"account-management",routeRefreshScheduled:true});router.refresh();
+      }catch(err){if(alive.current&&readCurrentGroupId()===groupId)setError(err instanceof Error?err.message:"账号操作没有完成，请重试。");}
+      finally{inFlight.current=false;end();if(alive.current)setPending(false);}
+    })();
+  },[router]);
+  return {pending,error,run};
 }
 
 // [T-136§D-bind⑤] 扫码绑定新抖音号 —— 复用设置页账号绑定的同款扫码链(client.loginDouyin,零新 op)。
@@ -92,14 +83,23 @@ type ScanFeedback =
   | { kind: "success"; text: string }
   | { kind: "error"; text: string };
 
-export function CreateAccountForm() {
+export function CreateAccountForm({ disabled = false, targetGroupId }: { disabled?: boolean; targetGroupId?: string } = {}) {
   const router = useRouter();
   const [phase, setPhase] = React.useState<ScanPhase>("idle");
   const [feedback, setFeedback] = React.useState<ScanFeedback>({ kind: "none" });
-  const busy = phase !== "idle";
+  const alive = React.useRef(false), scanning = React.useRef(false);
+  React.useEffect(() => { alive.current = true; return () => { alive.current = false; }; }, []);
+  const busy = disabled || phase !== "idle";
 
   const scan = React.useCallback(() => {
-    if (busy) return;
+    if (busy || scanning.current) return;
+    const groupId = targetGroupId ?? readCurrentGroupId();
+    if (targetGroupId && readCurrentGroupId() !== targetGroupId) {
+      setFeedback({ kind: "error", text: "账号组已切换，请在当前账号组重新绑定。" }); return;
+    }
+    scanning.current = true;
+    const endActivity = beginForegroundActivity("平台账号正在扫码绑定");
+    const canUpdate = () => alive.current && readCurrentGroupId() === groupId;
     setPhase("scanning");
     setFeedback({ kind: "none" });
     void (async () => {
@@ -113,6 +113,7 @@ export function CreateAccountForm() {
           query: undefined,
           body: { forceNew: true },
         })) as { loggedIn?: boolean };
+        if (!canUpdate()) return;
         if (res.loggedIn) {
           // 登录成功 → 后端 upsert 按 secUid 去重 + 占位号合并;refresh 读回真实号。
           setPhase("refreshing");
@@ -137,12 +138,13 @@ export function CreateAccountForm() {
           err instanceof Error && err.message.trim()
             ? err.message
             : "扫码登录失败，请重试。";
-        setFeedback({ kind: "error", text: msg });
+        if (canUpdate()) setFeedback({ kind: "error", text: msg });
       } finally {
-        setPhase("idle");
+        scanning.current = false; endActivity();
+        if (alive.current) setPhase("idle");
       }
     })();
-  }, [busy, router]);
+  }, [busy, router, targetGroupId]);
 
   const scanLabel = busy
     ? phase === "scanning"
@@ -170,7 +172,7 @@ export function CreateAccountForm() {
       {phase === "scanning" ? (
         <p
           data-slot="douyin-scan-hint"
-          className="text-[11px] text-muted-foreground"
+          className="text-xs text-muted-foreground"
         >
           扫码中…请在弹出的 Chrome 窗口扫码（最多 4 分钟）。
         </p>
@@ -181,7 +183,7 @@ export function CreateAccountForm() {
           role="status"
           aria-live="polite"
           className={
-            "text-[11px] " +
+            "text-xs " +
             (feedback.kind === "success" ? "text-success" : "text-destructive")
           }
         >
@@ -205,7 +207,7 @@ export function AccountRow({
   readonly account: PlatformAccountResource;
   readonly isOnlyAccount?: boolean;
 }) {
-  const { pending, run } = useMutation();
+  const { pending, error, run } = useMutation();
   const [open, setOpen] = React.useState(false);
   const [confirmText, setConfirmText] = React.useState("");
   const phraseMatches = confirmText.trim() === REMOVE_CONFIRM_PHRASE;
@@ -225,8 +227,8 @@ export function AccountRow({
         query: undefined,
         body: undefined,
       }),
+      () => setOpen(false),
     );
-    setOpen(false);
   }
 
   // 抖音号 ID:§D 回填到 external_source.sourceIdentifier;平台账号侧尚无独立 ID 列,
@@ -293,9 +295,9 @@ export function AccountRow({
           </DialogTrigger>
           <DialogContent data-testid="account-remove-dialog">
             <DialogHeader>
-              <DialogTitle>隐藏抖音号「{account.accountHandle}」</DialogTitle>
+              <DialogTitle>隐藏{PLATFORM_LABELS[account.platform] ?? account.platform}账号「{account.accountHandle}」</DialogTitle>
               <DialogDescription>
-                隐藏后该号从列表消失（可逆，不删历史数据）。此操作影响该号名下的定位/选题/项目归属。
+                隐藏后停止该账号采集，保留组内内容和历史数据。可以在账号组管理中恢复。
                 如确认，请在下方逐字键入「{REMOVE_CONFIRM_PHRASE}」。
               </DialogDescription>
             </DialogHeader>
@@ -307,6 +309,7 @@ export function AccountRow({
               placeholder={REMOVE_CONFIRM_PHRASE}
               autoComplete="off"
             />
+            {error ? <p role="alert" className="text-sm text-destructive">{error}</p> : null}
             <DialogFooter>
               <DialogClose asChild>
                 <Button type="button" variant="ghost" size="sm">

@@ -20,6 +20,12 @@
   ],
   "lessons": [
     {
+      "led": "LED-052",
+      "what": "归档组的执行豁免被账号ID存在条件扩大到普通生成和同步任务",
+      "check": "node docs/verification/t1022/run-archive-guard.mjs",
+      "onFail": "归档执行门失败：普通AI/source_sync claim与新动作必须拒绝；四类实际collector按真实job/member/owner/version验证；已存在同键调用settlement必须保留幂等。缺隔离PG配置不能skip。"
+    },
+    {
       "led": "LED-045",
       "what": "官方受管生图提交瞬时断连再次被立即取消，或未知中转站/视频被盲目重放",
       "check": "pnpm --dir backend exec vitest run src/modules/ai-runtime/cover-runner.test.ts src/modules/ai-runtime/asset-generate-runner.test.ts",
@@ -306,7 +312,8 @@
     "navigation-account-performance:test": "pnpm --dir frontend exec vitest run src/components/shell/account-switcher.test.tsx src/lib/account-events.test.ts src/components/shell/shell.test.tsx src/lib/session.server.test.ts --retry=0 && pnpm --dir backend exec vitest run src/modules/positioning/positioning.service.test.ts --retry=0",
     "navigation-account-smoothness:test": "pnpm --dir frontend exec vitest run src/components/shell/shell.test.tsx src/components/shell/account-switcher.test.tsx src/lib/account-events.test.ts src/components/shell/account-switcher-logic.test.ts --retry=0",
     "ai-recovery-guidance:e2e": "CREATOROS_TEST_PORT=3441 CREATOROS_PLAYWRIGHT_BROWSER_CHANNEL=chrome pnpm --dir frontend exec playwright test tests/e2e/ai-recovery-guidance.spec.ts --project=e2e",
-    "audience-task-topics:e2e": "CREATOROS_TEST_PORT=3448 CREATOROS_PLAYWRIGHT_BROWSER_CHANNEL=chrome pnpm --dir frontend exec playwright test tests/e2e/audience-task-topics.spec.ts --project=e2e"
+    "audience-task-topics:e2e": "CREATOROS_TEST_PORT=3448 CREATOROS_PLAYWRIGHT_BROWSER_CHANNEL=chrome pnpm --dir frontend exec playwright test tests/e2e/audience-task-topics.spec.ts --project=e2e",
+    "account-group-workspace:e2e": "node docs/verification/t1022/run-journey.mjs"
   },
   "research_verify_commands": {
     "t987-baseline-timing": "node docs/research/t987/verify-baseline.mjs timing",

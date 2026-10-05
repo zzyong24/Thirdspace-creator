@@ -3,13 +3,14 @@
 /**
  * 发布中心右侧真实表现栏（T-599）。
  *
- * 这里不再拥有作品筛选、搜索、历史长表或分页；这些都属于项目库存的重复呈现。
- * 组件只消费 route 已组合好的真实表现投影，并对空数组显示诚实空态。
+ * 组件只消费 route 已组合并按账号组筛选的真实表现投影，对空数组显示诚实空态。
+ * 一期内容与目标平台版本由 PublishingContentList 负责，组口径比较复用统一坐标图表。
  */
 
 import * as React from "react";
 
 import { ChartFrame } from "@/components/analytics/chart-frame";
+import { HorizontalBarsChart } from "@/components/analytics/horizontal-bars-chart";
 import { MetricCard } from "@/components/project/metric-card";
 import { SectionCard } from "@/components/project/section-card";
 import { PlatformIcon } from "@/components/publishing/platform-icon";
@@ -36,8 +37,10 @@ export function PublishingCenterInteractiveRegion({
 
 export function PublishingCenterSummaryRail({
   viewModel,
+  nativeMode = false,
 }: {
   readonly viewModel: Pick<PublishingCenterViewModel, "metrics" | "platformComparison" | "trend">;
+  readonly nativeMode?: boolean;
 }) {
   return (
     <aside
@@ -46,8 +49,8 @@ export function PublishingCenterSummaryRail({
       className="flex min-w-0 flex-col gap-card-gap"
     >
       <PublishingMetrics metrics={viewModel.metrics} />
-      <PlatformComparisonChart shares={viewModel.platformComparison} />
-      <TrendChart trend={viewModel.trend} />
+      {nativeMode ? <SectionCard title="视频播放 · 平台比较" description="同一期间作品的累计播放（次）"><HorizontalBarsChart slot="publishing-platform-comparison" shape="platform-views" data={viewModel.platformComparison.map(row=>({label:row.platformLabel,value:row.share}))} emptyMessage="当前筛选内暂无视频播放指标" unit="次" summary="按相同播放口径比较各平台，文章阅读另列统计。"/><p className="mt-3 text-xs text-muted-foreground">各账号采集时间见下方发布记录</p></SectionCard> : <PlatformComparisonChart shares={viewModel.platformComparison} />}
+      <TrendChart trend={viewModel.trend} nativeMode={nativeMode} />
     </aside>
   );
 }
@@ -173,12 +176,15 @@ function PlatformComparisonChart({
 
 function TrendChart({
   trend,
+  nativeMode = false,
 }: {
-  trend: ReadonlyArray<{ readonly label: string; readonly value: number }>;
+  trend: ReadonlyArray<{ readonly label: string; readonly value: number|null }>;
+  nativeMode?: boolean;
 }) {
+  if (nativeMode) return <ChartFrame title="视频每日新增播放" description="相邻采集日实测差分（次）；缺失日期留空" summary={`视频每日新增播放：${trend.map(point=>`${point.label} ${point.value===null?"未知":point.value.toLocaleString()+"次"}`).join("；") || "尚无可比较的逐日采集"}`} trend={trend} slot="trend-chart" shape="line" testId="publishing-trend-chart" />;
   if (trend.length === 0) {
     return (
-      <SectionCard title="发布趋势" description="按日播放量">
+      <SectionCard title={nativeMode ? "视频每日新增播放" : "发布趋势"} description={nativeMode ? "相邻采集日实测差分（次）" : "按日播放量"}>
         <p
           data-slot="trend-chart-empty"
           className="py-6 text-center text-xs text-muted-foreground"
@@ -199,7 +205,7 @@ function TrendChart({
         >
           <div className="flex flex-col gap-1">
             <span className="text-2xl font-semibold tabular-nums text-foreground">
-              {only.value.toLocaleString()}
+              {only.value?.toLocaleString()??"—"}
             </span>
             <span className="text-xs text-muted-foreground">{only.label}</span>
           </div>
@@ -214,17 +220,17 @@ function TrendChart({
   const first = trend[0];
   const last = trend[trend.length - 1];
   const direction =
-    (last?.value ?? 0) > (first?.value ?? 0)
+    first?.value===null||last?.value===null?"暂无可比较端点":(last?.value ?? 0) > (first?.value ?? 0)
       ? "上升"
       : (last?.value ?? 0) < (first?.value ?? 0)
         ? "下降"
         : "持平";
-  const summary = `发布趋势：${first?.label ?? ""} ${first?.value.toLocaleString() ?? ""}，${last?.label ?? ""} ${last?.value.toLocaleString() ?? ""}，整体${direction}。`;
+  const summary = `发布趋势：${first?.label ?? ""} ${first?.value?.toLocaleString() ?? ""}，${last?.label ?? ""} ${last?.value?.toLocaleString() ?? ""}，整体${direction}。`;
 
   return (
     <ChartFrame
-      title="发布趋势"
-      description="按日播放量"
+      title={nativeMode ? "视频每日新增播放" : "发布趋势"}
+      description={nativeMode ? "相邻采集日实测差分（次）；缺失日期留空" : "按日播放量"}
       summary={summary}
       trend={trend}
       slot="trend-chart"

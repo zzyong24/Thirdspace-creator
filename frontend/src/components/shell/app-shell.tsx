@@ -92,8 +92,22 @@ export function AppShell({
   children,
   className,
 }: AppShellProps) {
+  const newProjectReturn = React.useRef<{node:HTMLAnchorElement;path:string;index:number}|null>(null);
+  const previousPath = React.useRef(pathname);
+  React.useEffect(()=>{
+    if(previousPath.current === "/projects/new" && pathname === newProjectReturn.current?.path){
+      const saved=newProjectReturn.current;
+      const target=saved.node.isConnected?saved.node:Array.from(document.querySelectorAll<HTMLAnchorElement>('a[href="/projects/new"]'))[saved.index];
+      target?.focus();newProjectReturn.current=null;
+    }
+    previousPath.current=pathname;
+  },[pathname]);
   return (
     <div
+      onClickCapture={event=>{
+        const target=event.target instanceof Element?event.target.closest<HTMLAnchorElement>('a[href="/projects/new"]'):null;
+        if(target && event.button===0) newProjectReturn.current={node:target,path:pathname,index:Array.from(document.querySelectorAll<HTMLAnchorElement>('a[href="/projects/new"]')).indexOf(target)};
+      }}
       data-slot="app-shell"
       data-testid="app-shell"
       data-masked={overlayMasked ? "true" : "false"}

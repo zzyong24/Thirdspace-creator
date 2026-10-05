@@ -12,6 +12,7 @@ import { readSessionCookie } from "../../auth/_session";
 import {
   readRequestAccountId,
   resolveRequestContext,
+  readRequestGroupId,
 } from "@/lib/request-context.server";
 import { getSettingsService } from "@/server/persistence-client";
 

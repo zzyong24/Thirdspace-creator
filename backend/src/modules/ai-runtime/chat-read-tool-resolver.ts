@@ -16,11 +16,11 @@ import { canonicalJson } from "../ai/canonical-json";
 /** 由真实租约reader恢复；只构造冻结清单中的短读取，不重新装配创作上下文。 */
 export function createChatReadToolResolver(reader:Pick<ReturnType<typeof createChatHostContextReader>,"read"> & Partial<Pick<ReturnType<typeof createChatHostContextReader>,"readToolResult">>,readers:ContextReaders) {
  return async (ctx:RequestContext,execution:ExecutionRef,signal?:AbortSignal)=>{
-  const expected={userId:ctx.userId,accountId:ctx.accountId};
+  const expected={userId:ctx.userId,accountId:ctx.accountId??null,groupId:ctx.groupId??null};
   signal?.throwIfAborted();
   const restored=structuredClone(await reader.read({...execution}));
   signal?.throwIfAborted();
-  if(!expected.userId || !expected.accountId || restored.context.userId!==expected.userId || restored.context.accountId!==expected.accountId)throw new Error("读取工具账号与任务不符");
+  if(!expected.userId || (!expected.accountId && !expected.groupId) || restored.context.userId!==expected.userId || (restored.context.accountId??null)!==expected.accountId || (restored.context.groupId??null)!==expected.groupId)throw new Error("读取工具账号与任务不符");
   const {context,hostContext,modelInput}=restored;
   const definitions=modelInput.tools.filter(tool=>isChatReadToolName(tool.name));
   if(!definitions.length)return {};

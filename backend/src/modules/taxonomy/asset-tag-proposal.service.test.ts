@@ -1,3 +1,4 @@
+import {createAssetsService,createAssetRepository,createMockObjectStorage} from '../assets';
 import {describe,it,expect} from "vitest";
 import {createDb,assets,assetTagAdoptions,entityTags,eq} from "@creatoros/backend";
 import {createAssetTagProposalService} from "./asset-tag-proposal.service";
@@ -8,7 +9,9 @@ async function fixture(){
   const opened=await createDb();let serial=0;
   const deps={now:()=>"2026-09-05T00:00:00.000Z",nextId:(p:string)=>`${p}-${++serial}`};
   await opened.db.insert(assets).values(["a","b"].map(id=>({id,userId:ctx.userId,accountId:ctx.accountId,name:id,assetType:"image",createdAt:deps.now(),updatedAt:deps.now()})));
-  return {...opened,service:createAssetTagProposalService(opened.db,deps),taxonomy:createTaxonomyService(createTaxonomyRepository(opened.db,deps))};
+  const assetsService=createAssetsService(createAssetRepository(opened.db,deps),async()=>createMockObjectStorage({nextKey:()=>`key/${++serial}`}),deps);
+  const read=(c:import("@creatoros/contract").RequestContext,type:string,id:string)=>assetsService.getAsset(c,id);
+  return {...opened,service:createAssetTagProposalService(opened.db,deps),taxonomy:createTaxonomyService(createTaxonomyRepository(opened.db,deps),{assertEntityReadable:read,assertEntityWritable:read})};
 }
 describe("素材标签建议采纳",()=>{
   it("12次并发重放只打标一次，人工移除后仍返回原回执",async()=>{

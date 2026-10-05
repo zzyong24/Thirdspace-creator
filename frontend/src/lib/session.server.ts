@@ -8,8 +8,8 @@ import {
   type UserDTO,
 } from "@creatoros/backend/modules/identity";
 import { SESSION_COOKIE } from "@/app/api/v1/auth/_session";
-import { CURRENT_ACCOUNT_COOKIE } from "@/lib/http-transport";
-import { verifyAccountSelection } from "@/lib/request-context.server";
+import { CURRENT_ACCOUNT_COOKIE,CURRENT_GROUP_COOKIE } from "@/lib/http-transport";
+import { verifyAccountSelection,verifyGroupSelection } from "@/lib/request-context.server";
 
 // Server-only session helper (Module 00, Task 11). The (creator) layout session
 // guard reads the httpOnly session cookie from the RSC request store, resolves a
@@ -46,7 +46,10 @@ async function withAccountFromCookie(
       /* 保留原串 */
     }
   }
-  return verifyAccountSelection(ctx, accountId, "unselected");
+  const base=await verifyAccountSelection(ctx,accountId,"unselected");
+  let groupId=cookieStore.get(CURRENT_GROUP_COOKIE)?.value??null;
+  if(groupId){try{groupId=decodeURIComponent(groupId);}catch{}}
+  return verifyGroupSelection(base,groupId,"unselected");
 }
 
 /**

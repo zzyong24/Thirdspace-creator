@@ -15,9 +15,9 @@ export function createTopicPreferenceBusinessAdapter(deps:{listDropReasons(ctx:R
 /** 相同真实原因快照只提交同一任务；唤醒失败仍保留可恢复的 queued 任务。 */
 export function createTopicPreferenceSubmission(deps:{ai:Pick<AiService,"createTask">;listDropReasons(ctx:RequestContext):Promise<string[]>;prepare(ctx:RequestContext,taskId:string):Promise<unknown>;wake():void|Promise<void>}){
  return {async submit(context:RequestContext){
-  const ctx={...context};if(!ctx.accountId)throw new Error("选题偏好需要账号");
+  const ctx={...context};if(!ctx.accountId&&!ctx.groupId)throw new Error("选题偏好需要账号");
   const reasons=(await deps.listDropReasons(ctx)).slice(0,50);if(!reasons.length)return null;
-  const attemptId=`topic-pref:${createHash("sha256").update(JSON.stringify([ctx.userId,ctx.accountId,reasons])).digest("hex")}`;
+  const attemptId=`topic-pref:${createHash("sha256").update(JSON.stringify([ctx.userId,ctx.groupId??null,ctx.accountId??null,reasons])).digest("hex")}`;
   const task=await deps.ai.createTask(ctx,{taskType:"topic.preference",attemptId,inputData:{reasons}});
   if(["queued","running"].includes(task.status)){await deps.prepare(ctx,task.id);await deps.wake();}
   return task;

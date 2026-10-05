@@ -43,3 +43,12 @@ it("模型本地初始化失败不能谎报为已调用后结果未知",async()=
  expect(messages.filter(m=>m.type==="call").map(m=>m.port)).not.toContain("reserveGenerationCall");
  expect(JSON.stringify(messages)).not.toContain(spec.token);
 });
+
+it("[T-1017] 显式 strategy_backed 旧链协议仍能到达模型预留", async () => {
+ const original = input();
+ const target = JSON.parse(original.facets.target!);
+ original.facets.target = JSON.stringify({ ...target, generationMode: "strategy_backed", positioningVersionId: "legacy" });
+ const messages = await run(original);
+ expect(messages.filter(m => m.type === "call").map(m => m.port)).toContain("reserveGenerationCall");
+ expect(messages.find(m => m.type === "call" && m.port === "commitResult")).toMatchObject({ data: { errorCode: "MODEL_CALL_REQUIRES_RECONCILIATION" } });
+});

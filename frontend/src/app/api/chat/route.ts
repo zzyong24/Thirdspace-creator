@@ -21,6 +21,7 @@ import {
 import { readSessionCookie } from "../v1/auth/_session";
 import {
   resolveRequestContext,
+  readRequestGroupId,
   isAuthError,
   isOwnershipError,
   readRequestAccountSelection,
@@ -149,7 +150,7 @@ export async function POST(req: Request): Promise<Response> {
   try {
     // 对话恒为状态变更类(落库 + 触发工具任务)→ present-but-invalid cookie 明确拒(401),不静默降级主用户。
     ctx = await resolveRequestContext(rawToken, accountId, {
-      rejectInvalidToken: true,
+      rejectInvalidToken: true,groupId:readRequestGroupId(req),
     });
   } catch (err) {
     // 结构化识别鉴权错误(跨 bundle instanceof 不可靠)。

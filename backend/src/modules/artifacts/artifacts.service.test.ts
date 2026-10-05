@@ -1,3 +1,8 @@
+import {projects,type Db as FixtureDb} from '@creatoros/backend';
+async function seedOwnedProjects(db:FixtureDb){
+ const rows=([["project-1", "user-a", "acct-a"], ["project-b", "user-b", "acct-b"], ["proj-shared-1", "user-a", "acct-1"], ["proj-shared-2", "user-a", "acct-2"]] as Array<[string,string,string]>).map(([id,userId,accountId])=>({id,userId,accountId,title:'真实测试父项目',brief:'',creationMode:'guided',status:'active',currentStage:'script',startedAt:new Date().toISOString(),createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()}));
+ await db.insert(projects).values(rows).onConflictDoNothing();
+}
 import { describe, it, expect, beforeEach } from "vitest";
 import { createDb, type Db } from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
@@ -51,12 +56,13 @@ let service: ArtifactsService;
 
 beforeEach(async () => {
   ({ db } = await createDb());
+  await seedOwnedProjects(db);
   service = makeService(db);
 });
 
 async function seedArtifact(ctx: RequestContext) {
   return service.createArtifact(ctx, {
-    projectId: "project-1",
+    projectId: ctx.userId===ctxB.userId?"project-b":"project-1",
     title: "脚本",
     artifactType: "master_script",
     stage: "script",
@@ -485,6 +491,7 @@ describe("artifacts.service — 改稿 delta 捕捉埋点 (recordEditDelta seam)
 
   it("AI 版 → 用户改版 (脚本) → 触发一条 delta,before/after 正确", async () => {
     const { db } = await createDb();
+    await seedOwnedProjects(db);
     const { service: svc, calls } = makeServiceWithSpy(db);
     const artifact = await seedScript(svc, ctxA);
     // 前一版 = AI 产出。
@@ -505,6 +512,7 @@ describe("artifacts.service — 改稿 delta 捕捉埋点 (recordEditDelta seam)
 
   it("纯用户版 → 用户版 → 不触发(前版非 AI)", async () => {
     const { db } = await createDb();
+    await seedOwnedProjects(db);
     const { service: svc, calls } = makeServiceWithSpy(db);
     const artifact = await seedScript(svc, ctxA);
     await svc.createVersion(ctxA, artifact.id, { contentText: "用户稿 A" });
@@ -514,6 +522,7 @@ describe("artifacts.service — 改稿 delta 捕捉埋点 (recordEditDelta seam)
 
   it("非脚本 artifact 即使 AI→用户 也不触发(埋点限脚本改稿)", async () => {
     const { db } = await createDb();
+    await seedOwnedProjects(db);
     const { service: svc, calls } = makeServiceWithSpy(db);
     const artifact = await svc.createArtifact(ctxA, {
       projectId: "project-1",
@@ -569,22 +578,22 @@ describe("[T-332 S2] artifacts 按号隔离:未选号禁读写 + 双号零交叉
 
   it("双号隔离:同项目下各建稿,list 零交叉,by-id 跨号 404,版本链承父锚", async () => {
     const a1 = await service.createArtifact(ctxAcct1, {
-      projectId: "proj-shared",
+      projectId: "proj-shared-1",
       title: "号1稿",
       artifactType: "master_script",
       stage: "script",
     });
     const a2 = await service.createArtifact(ctxAcct2, {
-      projectId: "proj-shared",
+      projectId: "proj-shared-2",
       title: "号2稿",
       artifactType: "master_script",
       stage: "script",
     });
     expect(
-      (await service.listProjectArtifacts(ctxAcct1, "proj-shared")).map((x) => x.id),
+      (await service.listProjectArtifacts(ctxAcct1, "proj-shared-1")).map((x) => x.id),
     ).toEqual([a1.id]);
     expect(
-      (await service.listProjectArtifacts(ctxAcct2, "proj-shared")).map((x) => x.id),
+      (await service.listProjectArtifacts(ctxAcct2, "proj-shared-2")).map((x) => x.id),
     ).toEqual([a2.id]);
     // §4.5 by-id 门:跨号读与未知 id 同语义。
     await expect(service.getArtifact(ctxAcct2, a1.id)).rejects.toBeInstanceOf(

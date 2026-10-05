@@ -18,6 +18,7 @@ import { readSessionCookie } from "../../v1/auth/_session";
 import {
   readRequestAccountId,
   resolveRequestContext,
+  readRequestGroupId,
 } from "@/lib/request-context.server";
 import { createServerClient } from "@/lib/contract-client.server";
 

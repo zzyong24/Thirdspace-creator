@@ -53,9 +53,9 @@ export function createS3ObjectStorage(
   const expiresIn = cfg.expiresInSeconds ?? 900;
   return {
     kind: "s3",
-    async createPresignedUpload({ assetType, mimeType, accountId }) {
+    async createPresignedUpload({ assetType, mimeType, accountId,groupId }) {
       // [T-157] 账号分区:key = <accountId ?? _default>/<assetType>/<nextKey>。
-      const storageKey = `${accountKeyPrefix(accountId)}${assetType}/${deps.nextKey()}`;
+      const storageKey = `${groupId?`groups/${accountKeyPrefix(groupId)}`:accountKeyPrefix(accountId)}${assetType}/${deps.nextKey()}`;
       // Sign ContentType so the client MUST send the same header on PUT (tamper-resistant).
       const uploadUrl = await presign(
         s3,

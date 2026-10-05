@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { createDb, AccountRequiredError, type Db } from "@creatoros/backend";
+import { createDb, AccountRequiredError, platformAccounts, type Db } from "@creatoros/backend";
+import { accountGroups } from "../../schema/account-groups";
 import type { RequestContext } from "@creatoros/contract";
 import { createKnowledgeRepository } from "./knowledge.repository";
 import {
@@ -64,6 +65,11 @@ let service: KnowledgeService;
 
 beforeEach(async () => {
   ({ db } = await createDb());
+  // 正式归属约束要求真实账号及其旧工作区，不能用不存在的accountId冒充父资料。
+  for (const ctx of [ctxA, ctxB, ctxA2]) {
+    await db.insert(platformAccounts).values({id:ctx.accountId!,userId:ctx.userId,platform:"douyin",accountHandle:ctx.accountId!,createdAt:NOW,updatedAt:NOW});
+    await db.insert(accountGroups).values({id:`grp_legacy_${ctx.accountId}`,userId:ctx.userId,name:ctx.accountId!,createdAt:NOW,updatedAt:NOW});
+  }
   const repo = createKnowledgeRepository(db, deterministicDeps());
   service = createKnowledgeService(repo);
 });

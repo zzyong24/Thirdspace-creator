@@ -39,7 +39,10 @@ export interface OfficialSkillBase {
 export interface EffectiveSkillSnapshotV1 {
   snapshotVersion: 1;
   userId: string;
-  accountId: string;
+  accountId: string | null;
+  groupId?: string | null;
+  groupVersion?: number | null;
+  membershipVersion?: number | null;
   resolvedAt: string;
   platformPolicyVersion: string;
   platformPolicy: string;

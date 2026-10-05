@@ -162,6 +162,7 @@ export function resolveRoute(
   // 退回中性「当前项目」)。非项目路由 / 无 override → 走原 fixture 逻辑,**不破坏现有 fixture 路由**。
   override?: CurrentProjectOverride | null,
 ): RouteResolution {
+  if (pathname === "/overview") return {headerMode:"global",pageTitle:"创作者总览",pageDescription:"账号组的内容与多平台表现",contextualCardVariant:"assistant"};
   if (pathname === "/") {
     return {
       headerMode: "global",
@@ -182,8 +183,8 @@ export function resolveRoute(
     return {
       headerMode: "global",
       // [T-136§D-bind⑤] 抖音-only 极简:去「多账号矩阵/字符串」老话术,一句话说清扫码即绑。
-      pageTitle: "抖音号",
-      pageDescription: "扫码绑定你的抖音号，作品数据、定位都归到这个号",
+      pageTitle: "账号组与绑定账号",
+      pageDescription: "管理创作者工作区和各平台账号",
       contextualCardVariant: "assistant",
     };
   }

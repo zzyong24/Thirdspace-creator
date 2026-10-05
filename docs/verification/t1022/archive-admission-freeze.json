@@ -1,0 +1,43 @@
+{
+  "tree": "/Users/zyongzhu/.codex/worktrees/t1022-task-scope/Thirdspace-creator",
+  "frozenAt": "2026-10-05 02:44 Asia/Shanghai",
+  "ownedFiles": [
+    {
+      "path": "backend/src/modules/ai/ai.repository.ts",
+      "sha256": "5c3e9906f4e1e5460d314225d8be497f7e1447cf880bfe4ead9db623e2f97b48",
+      "rootBeforeIntegrationSha256": "89f8d9964c100fca096d0af5394e1c4072e98e5e0b49df5dbc0d0f31feaba10a"
+    },
+    {
+      "path": "backend/src/modules/ai/ai.service.ts",
+      "sha256": "91cd9a9eae3d9def01dc7ae086f717186cb75d034c3b3da693bf79fc5260e03e",
+      "rootBeforeIntegrationSha256": "8741ab268703eaf390d33d24692f1e3108b43a09711587daf91abada327f3625"
+    },
+    {
+      "path": "backend/src/modules/execution/persistent-task.service.ts",
+      "sha256": "33b151be2d88bfed4563a6b30975bec42191bf43676d65176ffe74b7daec40fb",
+      "rootBeforeIntegrationSha256": "423b1f5140849c50ffd99119abe3f7812e024eb7fe944e88f5bd404ffd65d3aa"
+    },
+    {
+      "path": "backend/src/modules/execution/execution-lease.service.ts",
+      "sha256": "3aa4f15dbe1039adf0f031f35f7e545c63d909ad42c706361efbc6e429340cb0",
+      "rootBeforeIntegrationSha256": "b4f37526ec5335fcfcd12a383871014ce0bf60539b4346d152308b11da6182c0"
+    },
+    {
+      "path": "backend/src/modules/scheduling/private-collector-admission.service.ts",
+      "sha256": "89f0d5bfdac9f21a8ba54396ce9ce05ee963cf7694b04b3e2d98203babd14551",
+      "rootBeforeIntegrationSha256": "6ac00cad76f16286c7235c098fe90aa9b7f1e6e7c2249c9713ed773ddcbaee37"
+    },
+    {
+      "path": "backend/src/modules/scheduling/index.ts",
+      "sha256": "6fe1d021089ec6326e1cd82add89fdb0f3244beb661818350917c782f0996cae",
+      "rootBeforeIntegrationSha256": "1f867035237ff3380c3fc9c24bf3b87c80201ac35869a928960f6dd98250e3a5"
+    },
+    {
+      "path": "backend/src/integration/startup-group-collectors.postgres.integration.test.ts",
+      "sha256": "b581901b2debd5b29cf0e903b8691e40d3492f727b1e980b43d59e674da5e712",
+      "rootBeforeIntegrationSha256": "057a3d777f791ec3a98e7cfa6d37d8f5f01a6d4e49398ed23eb00acfdb95d454"
+    }
+  ],
+  "supersedesPathsIn": "/tmp/t1022-startup-freeze.json",
+  "newOwnedFile": "backend/src/modules/execution/execution-lease.service.ts"
+}

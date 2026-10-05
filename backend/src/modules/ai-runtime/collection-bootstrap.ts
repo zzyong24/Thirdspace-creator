@@ -165,7 +165,7 @@ export interface CollectionBootstrapResult {
 export type EnsureCollectionJobsDeps = Pick<
   CollectionBootstrapDeps,
   "listJobsBySourceKind" | "createJob" | "target"
->;
+> & {defaults?:readonly CollectionJobDefault[]};
 
 export interface EnsureCollectionJobsResult {
   /** 本次**新建**的 job 的 sourceKind(既有复用的不列入)。 */
@@ -196,7 +196,7 @@ export async function ensureCollectionJobs(
 ): Promise<EnsureCollectionJobsResult> {
   const created: string[] = [];
   const jobsInOrder: EnsureCollectionJobsResult["jobsInOrder"] = [];
-  for (const tpl of DAILY_COLLECTION_JOB_DEFAULTS) {
+  for (const tpl of deps.defaults??DAILY_COLLECTION_JOB_DEFAULTS) {
     const target: Record<string, unknown> = tpl.sourceKind === "self.metrics"?{...(deps.target??{}),__skipHeavyBackfill:true,__operationsSync:true}:tpl.sourceKind==='self.detail'?{...(deps.target??{}),__backfillOnly:true,__skipMetricRefresh:true,__operationsSync:true}:{...(deps.target??{})};
     if (["self.metrics", "self.traffic", "comments", "self.detail"].includes(tpl.sourceKind)) {
       // 时区写进计划，避免跟随运行设备时区而在错误小时触发。

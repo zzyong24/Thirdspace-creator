@@ -2,7 +2,7 @@ import {beforeEach,describe,expect,it,vi} from "vitest";
 const current=vi.hoisted(()=>vi.fn(()=>"a"));
 const client=vi.hoisted(()=>({getOnboarding:vi.fn(),patchOnboarding:vi.fn(),getAccount:vi.fn(),listProjects:vi.fn(),getPositioningCenter:vi.fn(),getIntelligenceWorkspace:vi.fn(),listIntelligenceItems:vi.fn(),statusDouyin:vi.fn()}));
 vi.mock("@/lib/contract-client",()=>({client}));
-vi.mock("@/lib/http-transport",()=>({readCurrentAccountId:current}));
+vi.mock("@/lib/http-transport",()=>({readCurrentAccountId:current,readCurrentGroupId:()=>null}));
 import {loadState,loadProjectSignals,saveOnboarding} from './onboarding-data';
 const record=()=>({accountId:"a",origin:null,hidden:false,collapsed:true,completedSteps:[] as string[],updatedAt:null});
 beforeEach(()=>{vi.clearAllMocks();window.localStorage.clear();current.mockReturnValue('a');client.getOnboarding.mockResolvedValue(record());client.patchOnboarding.mockImplementation(async({body})=>({...record(),...body}));client.getAccount.mockResolvedValue({id:'a'});client.listProjects.mockResolvedValue([]);client.getPositioningCenter.mockResolvedValue({profile:null});client.getIntelligenceWorkspace.mockResolvedValue({sources:[]});client.listIntelligenceItems.mockResolvedValue([]);});

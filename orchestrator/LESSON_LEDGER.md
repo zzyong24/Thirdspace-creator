@@ -779,3 +779,13 @@ T988安装验证补充：Next可能在数据未返回时先提交骨架并结束
 T991：Windows 源码编译成功后，TypeScript 检查在约 2 GiB V8 堆耗尽，exit134。先分清主机内存和子进程堆上限，再为构建阶段设置有限预算：按有效主机容量最多 60%、至少保留 2 GiB、上限 6 GiB。用真实 Next Worker 验证继承；保留类型检查，禁止全局环境污染安装后运行时。记录实际机器容量与预算，最终以 Windows 安装、启动、卸载验证为准，不原样重试或跳过类型错误。
 
 执行：`node --test tools/windows-closure-rat/build-memory.test.mjs tools/windows-closure-rat/build-production-closure.test.mjs`。
+
+## LED-052 — 归档执行豁免不能只判断账号ID存在
+
+- **Date**: 2026-10-05 · **Stage**: BUILD · **Severity**: high · **Status**: active
+- **WhatFailed**: 新建普通任务已拒绝归档组，但归档前排队或已认领的普通写稿/source_sync仍可claim并进入lease admission。独立真实PG探针实证该缺口，131条绿测未覆盖反例。
+- **RootCause**: 创建口验证真实私有作业，认领/模型/lease口却用 accountId 存在放行归档，未共享同一权限证明。
+- **GuardRule**: 所有新动作与claim在同一事务重验冻结成员；仅四类私有collector且真实job、账号、组、owner、membershipVersion一致时可继续。普通队列不执行；已有同键调用的安全settlement仍可幂等结算，不能取消合法采集或反杀已发生用量。
+- **GuardCheck**: `node docs/verification/t1022/run-archive-guard.mjs`；缺隔离PG配置必须失败，不能skip成绿。
+- **Outcome(T+N)**: 当场负向RED 3 FAIL/4 PASS后修复，作者86条及追加56条通过；增量及test-only按SHA集成，独立最终复验B1 PASS，4个不同测试文件62条通过（两次PG运行不累加），组合22文件ROOT/候选匹配；原FAIL证据保留。
+- **Ref**: T-1022；docs/verification/t1022/startup-permission-review-initial-fail.md；archive-admission-freeze.json。

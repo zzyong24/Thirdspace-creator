@@ -1,0 +1,42 @@
+{
+  "task": "T-1017",
+  "recordedAt": "2026-09-30",
+  "environment": "Node v25.9.0 / pnpm 10.32.1 / macOS",
+  "model": "本地HTTP SSE响应；未调用真实供应商",
+  "reports": [
+    {
+      "group": "backend",
+      "total": 157,
+      "passed": 157,
+      "failed": 0,
+      "report": "backend.vitest.json",
+      "sha256": "608673564a621b21396273f7c1512d957c7a9ccc734878ea8c163d5a15ebddb3"
+    },
+    {
+      "group": "front",
+      "total": 66,
+      "passed": 66,
+      "failed": 0,
+      "report": "front.vitest.json",
+      "sha256": "210d0c8e6dc50507a9fcfcc40e6ea04c552693c5967f90e67642dd64296bd15a"
+    },
+    {
+      "group": "worker",
+      "total": 19,
+      "passed": 19,
+      "failed": 0,
+      "report": "worker.vitest.json",
+      "sha256": "ba88e77fd6a95b5cb560c1e3f599e492202a45048a1a29b1a73899de46e99c65"
+    },
+    {
+      "group": "contract",
+      "total": 10,
+      "passed": 10,
+      "failed": 0,
+      "report": "contract.vitest.json",
+      "sha256": "ac2616214c1f0aa97b267ce73afe6cfd0fcefc5d74412dc4b1030e318f0a6e7a"
+    }
+  ],
+  "total": 252,
+  "testsUseRetries": false
+}

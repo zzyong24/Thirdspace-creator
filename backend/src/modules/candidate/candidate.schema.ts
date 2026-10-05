@@ -140,8 +140,34 @@ export function parseAdaptedDraft(
   const value = raw as Record<string, unknown>;
   const contentText = str(value.contentText)?.trim();
   const generatedFromTranscriptHash = str(value.generatedFromTranscriptHash)?.trim();
-  const strategyHash = str(value.strategyHash)?.trim();
   const templateVersion = str(value.templateVersion)?.trim();
+  if (value.generationMode === "rewrite_only") {
+    const sourceSnapshotId = str(value.sourceSnapshotId)?.trim();
+    const aiTaskId = str(value.aiTaskId)?.trim();
+    const positioningVersionId = str(value.positioningVersionId)?.trim();
+    const personalizationStatus = value.personalizationStatus;
+    if (
+      !contentText ||
+      !sourceSnapshotId ||
+      !generatedFromTranscriptHash ||
+      !templateVersion ||
+      (personalizationStatus !== "applied" && personalizationStatus !== "not_applied")
+    ) {
+      return undefined;
+    }
+    return {
+      generationMode: "rewrite_only",
+      contentText: contentText.slice(0, 50_000),
+      sourceSnapshotId,
+      generatedFromTranscriptHash,
+      ...(aiTaskId ? { aiTaskId } : {}),
+      ...(positioningVersionId ? { positioningVersionId } : {}),
+      personalizationStatus,
+      templateVersion,
+    };
+  }
+
+  const strategyHash = str(value.strategyHash)?.trim();
   if (!contentText || !generatedFromTranscriptHash || !strategyHash || !templateVersion) {
     return undefined;
   }

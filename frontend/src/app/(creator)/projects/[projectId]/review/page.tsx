@@ -32,9 +32,14 @@ import { isOwnershipError } from "@/features/project-overview/project-overview-w
 import { CrossAccountEmptyState } from "@/components/state/page-state";
 import { createServerClient } from "@/lib/contract-client.server";
 import { resolveSession } from "@/lib/session.server";
+import {GroupWorkspaceFilters} from '@/features/group-workspace/group-workspace-filters';
+import {workspaceQueryFromSearch,platformName} from '@/features/group-workspace/workspace-query';
+import {GroupProjectEvidence,projectEvidence} from '@/features/review/group-project-evidence';
+import {ErrorState} from '@/components/state/page-state';
 
 interface AnalyticsReviewRouteProps {
   readonly params: Promise<{ readonly projectId: string }>;
+  readonly searchParams?: Promise<Record<string,string|string[]|undefined>>;
 }
 
 // Minimal client shape `resolveProjectIdParam` needs (projects.list) — narrower
@@ -55,6 +60,7 @@ interface ProjectListClient {
 
 export default async function AnalyticsReviewRoute({
   params,
+  searchParams,
 }: AnalyticsReviewRouteProps) {
   const { projectId } = await params;
   // Session → ctx (layout already guarded). No session → fixture-deriving page.
@@ -87,6 +93,7 @@ export default async function AnalyticsReviewRoute({
           className="flex flex-col gap-card-gap"
         >
           <CrossAccountEmptyState
+            groupId={session.ctx.groupId}
             entityLabel="项目"
             backHref="/projects"
             backLabel="回项目列表"
@@ -100,9 +107,29 @@ export default async function AnalyticsReviewRoute({
     scoped as unknown as ReviewDataClient,
   );
   // [T-063e] 预测 vs 实际 对照(校准飞轮对照步并入复盘;null = 本项目未做盲预测)。
+  const filters=workspaceQueryFromSearch(searchParams?await searchParams:{});
+  let groupFilters:React.ReactNode, metricsContent:React.ReactNode, analysisScope:string|undefined;
+  let publicationIds:readonly string[]|undefined;
+  if(session.ctx.groupId){
+    try{
+      const groupData=await scoped.getGroupOverview({params:{groupId:session.ctx.groupId},query:filters,body:undefined});
+      const workspace=groupData.workspace;
+      groupFilters=<GroupWorkspaceFilters workspace={workspace}/>;
+      const report=projectEvidence(await scoped.getDailyReport({params:undefined,query:{...filters,startDate:workspace.startDate,endDate:workspace.endDate},body:undefined}),resolvedId);
+      publicationIds=report.works.map(w=>w.publicationId);
+      const accountNames=Object.fromEntries(workspace.accounts.map(a=>[a.id,a.name]));
+      metricsContent=<GroupProjectEvidence report={report} accountNames={accountNames}/>;
+      analysisScope=`账号组 ${workspace.groupName}（${workspace.groupId}），${workspace.platform?platformName(workspace.platform):'全部平台'}，账号 ${workspace.accountId?accountNames[workspace.accountId]??workspace.accountId:'全部'}；${workspace.startDate}—${workspace.endDate}期间发布版本截至采集时的累计表现；publicationId: ${publicationIds.join(', ')||'无发布事实'}`;
+    }catch{
+      publicationIds=[];
+      metricsContent=<ErrorState error={{code:'group_review_unavailable',message:'所选平台复盘数据暂时不可用，请重新读取。手动复盘记录仍可使用。'}}/>;
+      analysisScope='所选平台数据读取失败，没有可核验的发布后证据；仅诊断当前稿件，不作效果归因';
+    }
+  }
   const predictionComparison = await buildPredictionComparison(
     resolvedId,
     scoped as unknown as PredictionComparisonClient,
+    publicationIds?{publicationIds}:undefined,
   );
   // Module 13 Step 5 — supply the Reviews wiring so the authoring panel + history
   // drill call the real ops (reviews.create/insights.create/complete/get) over the
@@ -113,6 +140,10 @@ export default async function AnalyticsReviewRoute({
       viewModel={viewModel}
       reviewsWiring={{ projectId: resolvedId }}
       predictionComparison={predictionComparison}
+      groupFilters={groupFilters}
+      metricsContent={metricsContent}
+      analysisScope={analysisScope}
+      publicationIds={publicationIds}
     />
   );
 }

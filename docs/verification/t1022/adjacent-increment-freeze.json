@@ -1,0 +1,53 @@
+{
+  "worktree": "/Users/zyongzhu/.codex/worktrees/t1022-shared-domains/Thirdspace-creator",
+  "files": [
+    {
+      "path": "backend/src/modules/calibration/calibration.repository.ts",
+      "sha256": "71e83dfd55f10626a4fdc187c5c8ae4777c16c1f897f07efc66fdb1dfe2f71d0"
+    },
+    {
+      "path": "backend/src/modules/calibration/calibration.service.ts",
+      "sha256": "cbc640da067cbe8a9864faad2d55e01e1ec60141ac4fadc630f4754752eb9422"
+    },
+    {
+      "path": "backend/src/modules/calibration/calibration.repository.integration.test.ts",
+      "sha256": "b66f57eebd707e25a4654160bb022bad5231576371dcfd4f203a90b79f29ee4b"
+    },
+    {
+      "path": "backend/src/modules/calibration/calibration.service.test.ts",
+      "sha256": "0787e94b7ed6ef80917214ffe85a94338186f0b53e14a116dbe22b15fca9fb7f"
+    },
+    {
+      "path": "backend/src/modules/calibration/calibration.contract.test.ts",
+      "sha256": "668aa4dc220b079d9235a91dfd85c50303205d0a9cec89b1645297bea9f887f3"
+    },
+    {
+      "path": "backend/src/modules/publishing/publishing.service.ts",
+      "sha256": "6a74835d661f36d9310b2e37d7f93af4d2bb159421a89bbb730ba7c9d8f174bc"
+    },
+    {
+      "path": "backend/src/integration/calibration-archive-concurrency.postgres.integration.test.ts",
+      "sha256": "cd55d1cede15641e1b668cfecc10763d63944b4c310e2f49aa6a367524681ffc"
+    },
+    {
+      "path": "backend/src/integration/publication-mutations-migration.postgres.integration.test.ts",
+      "sha256": "84dda08648a2de8b0f098bc21352ab20de4cb512e662785874fa146acf051ed9"
+    }
+  ],
+  "ports": "仅CalibrationRepository事务回调withWrite/withRubricWrite/withPredictionWrite/withSuggestionWrite新增，域内service调用；composition端口无变化",
+  "excluded": "ROOT已集成原17，groupfacts仍按root integration target路径，增量不包含原源groupfacts；workspace-write.ts仅同步root依赖，不在增量中；无schema/contract/control-plane修改",
+  "true_red": [
+    "/tmp/t1022-independent-root-archive.log",
+    "/tmp/t1022-calibration-root-red.log",
+    "/tmp/t1022-independent-publishing-revision.log"
+  ],
+  "green": [
+    "/tmp/t1022-adjacent-increment-final-pg.log (56/56)",
+    "/tmp/t1022-calibration-archive-regression.log (30 PASS，16 fixture shadow失败已修)",
+    "/tmp/t1022-calibration-service-archive-regression.log (16/16)",
+    "/tmp/t1022-publication-mutations-regression.log (86/86)",
+    "/tmp/t1022-publishing-increment-final-regression.log (最终54项重跑中)",
+    "/tmp/t1022-adjacent-increment-final-types.log (全局既有欠债，owned0错误)"
+  ],
+  "status": "production和test已冻结；最终publish54回归在跑，无commit/push"
+}

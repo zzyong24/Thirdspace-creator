@@ -1,0 +1,8 @@
+{
+  "task": "T-1017",
+  "reviewer": "/root/t1017_spec_review",
+  "mode": "independent-read-only",
+  "verdict": "PASS",
+  "executedTests": false,
+  "summary": "已关闭精确请求恢复、候选幂等回放、task/transform抢跑、冻结文案、标题协议回退及oneLiner污染等实现复核问题。常规script.draft相似度门缺项为既有T-642欠债，未记录accepted-risk。"
+}
