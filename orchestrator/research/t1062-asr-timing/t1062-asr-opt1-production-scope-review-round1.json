@@ -1,0 +1,80 @@
+{
+  "schema": "t1062-asr-opt1-production-scope-review/v1",
+  "task_id": "T-1062",
+  "reviewed_at": "2026-10-05T14:45:00+08:00",
+  "mode": "read_only_pre_implementation_scope",
+  "base_head": "35a01e7b1aba9f23ec19a35dedde17348a256648",
+  "decision": "PASS_MINIMAL_SCOPE_ONLY",
+  "decision_limits": "只批准 OPT1 的最小实现/测试路径进入后续精确租约；不代表实现、默认 worker、package、安装版、真实媒体或公共粗剪 PASS。",
+  "research_basis": {
+    "status": "mechanism_positive",
+    "facts": [
+      "同一 WAV、模型、sequences、tokenizer 与 Transformers.js 2.17.2 原 _extract_token_timestamps；一次 model.generate、零网络。",
+      "实际 feature=[1,80,3000]、encoder=[1,1500,768]、cross-attention=[1,12,1,1500]，实测 stride=2。",
+      "legacy num_frames=1916 实际保留至 attention 上限1500，原 strict timing 为 negative；按物理帧 crop=958 重放后 strict timing 为 positive。",
+      "原函数 SHA、legacy token timestamps 字节、raw provider output、正文文本均保持；最后 endSample=306240 < validSampleCount=306587，无尾钳制。"
+    ],
+    "boundary": "研究只证明同一库机制中的机械物理帧 crop；不能替代 direct/default-worker 两装配与公共 durable ASR 回归。"
+  },
+  "formal_162_increment": {
+    "new_write_paths": 4,
+    "paths": [
+      {
+        "path": "ai-worker/src/runtime/multimodal-whisper-local.ts",
+        "sha256": "9b74ee8dd59b707dcffbcbc76020633841a269e9bbac8538107f189978519c52",
+        "reason": "唯一生产实现文件同时包含 direct createDefaultPipelineProvider、worker source/proxy 与 createDefaultWhisperLocalAdapter。以共享窄机械规则从真实 decodedSampleCount、hop/feature/encoder/attention 尺寸派生 num_frames；两装配必须调用同一规则。不得升级库、改 tokenizer/DTW、改正文、clamp/round 最终时间码或放宽 readActualProviderTiming。"
+      },
+      {
+        "path": "ai-worker/src/runtime/multimodal-whisper-local.test.ts",
+        "sha256": "dc9419dfee47c8fbad8c30536841db64bc124bd1f3683f52916fa6cac8ddf3d7",
+        "reason": "覆盖 direct 与 worker 两真实装配的同规则输入传递、实际 dims/stride、legacy text/bytes 不变、不能从未知/不一致尺寸猜 crop。"
+      },
+      {
+        "path": "ai-worker/src/runtime/multimodal-precise-asr.test.ts",
+        "sha256": "2e89342789e33917d66c7418004c0ddf92307cd1657b8f8c8d16d45dfff1e9df",
+        "reason": "保持 strict provider timing 门：有效 crop 可生成物理样本范围，越界、重叠、非整数、无同源 sample 仍返回无 timing；明确禁止末尾钳制洗绿。"
+      },
+      {
+        "path": "ai-worker/src/execution/worker-runtime.asset-asr-control.test.ts",
+        "sha256": "1bb6f9e872b2c4a6413a873f7c4e8ceafd7506fd507b12309baeb128d4765b90",
+        "reason": "从正式 public asset-ASR worker 控制入口证明 word timing、原 request/digest、reserve/start/settle/取消/恢复保持；不能只测 adapter helper。"
+      }
+    ]
+  },
+  "required_regression_run_only_no_scope_increment": [
+    {
+      "path": "ai-worker/src/runtime/multimodal-whisper-local-cancel.test.ts",
+      "sha256": "d1289fe01079eced6ff90518a1fef2a71b5b3d595053f8478120e53c6dcfe1a0",
+      "reason": "必须原样通过 worker queue、terminate barrier、late event、PCM有效范围与 ffmpeg 取消回归；只有真实失败证明才可申请改字节。"
+    },
+    {
+      "path": "backend/src/modules/production/production-precise-asr.integration.test.ts",
+      "sha256": "4598a98bbe87f4bb40618c51879fdfeb7c7d4d1d5542d44d90cfcffa338690b7",
+      "reason": "formal162 已有公共 Source→durable provider→get/adopt→精确删除回归，按原路径运行；不因 OPT1 重写 backend。"
+    },
+    {
+      "path": "backend/src/modules/production/production-asset-asr.integration.test.ts",
+      "sha256": "3815b28131385b2f3535291744db458c4df3d2569e89e70226d33fd3aae9b908",
+      "reason": "formal162 已有历史 text/manual/安全降级闭包，保持原 negative 与无 timing 路径。"
+    }
+  ],
+  "explicitly_out_of_scope": [
+    "@xenova/transformers 依赖版本、node_modules 或模型文件修改",
+    "contract timing criterion、readActualProviderTiming 放宽、最终 timestamp clamp/round",
+    "新 ASR provider、模型选择、下载/缓存生命周期、凭据、IPC 或 worker 进程机制",
+    "backend receipt/digest/schema 改动；formal162 既有路径继续由原 writer 负责",
+    "用研究 capture/replay 文件进入产品或测试 fixture"
+  ],
+  "minimum_acceptance": [
+    "direct 与默认 worker 对同一实际尺寸得到相同 crop；worker 消息必须携带足够的同源样本/尺寸证明，不能由 host 假定固定1500或硬编码除2。",
+    "输入维度、hop、encoder/attention source 不一致或不可观测时保持 timing 缺失和 manual/review_only，正文仍可用。",
+    "旧 text、legacy request bytes/digest、chunks、取消、恢复、durable settle 保持；不得重签历史任务。",
+    "真实 positive 样本的 strict timing 末端自然位于 validSampleCount 内；断言无 clamp、无最终时间码修补。",
+    "运行上述四个新增/修改路径测试、cancel 原测试及两个 backend public integration；保留所有原失败，不删测试洗绿。"
+  ],
+  "not_verified": [
+    "尚未审最终实现 diff/hash。",
+    "尚未运行 direct/default worker、package、公共服务、真实音频或安装版验证。",
+    "R2 离线 replay 的最终原件恢复与执行 history 由独立最终 review 另行绑定。"
+  ]
+}

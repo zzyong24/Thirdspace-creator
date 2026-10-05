@@ -1,0 +1,138 @@
+{
+  "status": "paused_pending_root_research_gate",
+  "reason": "parent requested Gate04 pause for ASR word/segment bounds repeated-failure family, product edits stopped",
+  "at": "2026-10-05T05:06:52.428493+00:00",
+  "base": "35a01e7b1aba9f23ec19a35dedde17348a256648",
+  "head": "35a01e7b1aba9f23ec19a35dedde17348a256648",
+  "branch": "codex/t1062-backend-adaptation-candidate",
+  "stashRetained": "f7dc0410bce329b0f7f06c681cc2346b75908c14",
+  "restored20MatchingEvidence": "/tmp/t1062-backend-wip-restored-check.json",
+  "lastProductEdit": "backend/src/modules/moments/moments.service.test.ts: added actual public service empty-group create/output receipt + moments create/read/save/history/archive/cross-group regression",
+  "lastCommand": "node /tmp/t1062-isolated-test.mjs pnpm -C backend test src/modules/moments/moments.service.test.ts --maxWorkers=1 > /tmp/t1062-root-empty-group-red.log 2>&1",
+  "dirty": [
+    {
+      "path": "backend/src/modules/ai-runtime/asset-business-execution.service.test.ts",
+      "beforeSha256": "7ece8c0657fa3b447f161274667072c112b48f02d5fc00a5590b909a0788ef77",
+      "currentSha256": "622b1b40e5429b4ce508baa1efd794e7f39152706d69c42dab66810ad3fd75e7"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/asset-business-execution.service.ts",
+      "beforeSha256": "e2651ac4d1b18aa4b00a992ad16c155859f7bbf44d1e54ad067c21d2b678d94f",
+      "currentSha256": "872fb60acf3e102bbd09d3b6048f430a4753f906591de5e64baad41fdbc7ba3d"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/asset-legacy-recovery.service.ts",
+      "beforeSha256": "2d2485fcbfbe2cc7af982ebea910d5c0de699cff4e200f3da78f1581a285b860",
+      "currentSha256": "cb5c350f075f627eb07493f674a76c1560be7f3e193b7eae9b36d2128ce2a783"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/chat-canvas-tool-host.test.ts",
+      "beforeSha256": "69cf8bebea533dd97fd3fcc9a43be58ef1aece632f69b7faa9dc8d93a601f983",
+      "currentSha256": "1c542a9900fb681a8b0c047d9db629674b8c52714ca5efa89a61dacc10bd12b7"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/chat-canvas-tool-host.ts",
+      "beforeSha256": "5d5440f6dc31064a195dd715d4185d753c487e4c4126e2acfd86c628823928d5",
+      "currentSha256": "3226e43823002ff76ea6e097400caef6b7b5607018cdf2101eac8de8d7bf1ba9"
+    },
+    {
+      "path": "backend/src/modules/assets/visual-template.service.test.ts",
+      "beforeSha256": "1205a52b97bba7144721c9d3baeea414880be72e92620ee0c7af5bab9392b3cd",
+      "currentSha256": "601e4d5231299d66608c896876605214e422adf573b316cc76b540517e0b52cb"
+    },
+    {
+      "path": "backend/src/modules/assets/visual-template.service.ts",
+      "beforeSha256": "ec3a7f239ab4cb590b3d964529291fad3c6ee51033643972cd669a644b839a3a",
+      "currentSha256": "301dfa223ea3e384b89014abdfe14d1ffbd6cdcca8e02cca29225928abc161ac"
+    },
+    {
+      "path": "backend/src/modules/cli-invocations/cli-invocations.service.test.ts",
+      "beforeSha256": "ae7b22519834b405227387926f47dc2240d7a721b1d924da8b67960bb44fff8f",
+      "currentSha256": "56c91b969640ea69a360704ea76a28d50e02ca02fc75cfc0be4aa61142f8a807"
+    },
+    {
+      "path": "backend/src/modules/cli-invocations/cli-invocations.service.ts",
+      "beforeSha256": "72691a6b913e2bd2b0db151acad178312c0ff95e79263a96f3053f7eee5ec178",
+      "currentSha256": "6b44085cd801da46d166c2aa27db6c9ee1d4f1d078206ef049ff2aa5171b2c85"
+    },
+    {
+      "path": "backend/src/modules/moments/moments.service.test.ts",
+      "beforeSha256": "3d7e90223a80719cdbf33f2af1ba01e8d647ee6c75847a514bff57784a99e840",
+      "currentSha256": "be141f5ef7af0a1b299a496ebb5fd47920e87ca5fdebd00ce4d412fe38c520e6"
+    },
+    {
+      "path": "backend/src/modules/review/work-reviews.service.ts",
+      "beforeSha256": "bbe30670f52966d8715df1dc19522d8b1192c524ca868bddf114cdd064c24f53",
+      "currentSha256": "9d54061e2668a0abed0dc2f308c876f693ebf9dcaef003677602ee8533489f3b"
+    },
+    {
+      "path": "backend/src/modules/work-compositions/work-compositions.service.ts",
+      "beforeSha256": "cd4fe85f5d2c78a1ea42609ec7f94cc4caedcb87a19054d8475d41d344f52dd5",
+      "currentSha256": "22d477c382367f97414465b29db89d8a5d9f0318ac162747f55b3fb5f35f1347"
+    },
+    {
+      "path": "backend/src/modules/work-compositions/work-materials.service.ts",
+      "beforeSha256": "17e369f36aafaddec94da131820ec13272fea1093b9741ca306e511433c951a7",
+      "currentSha256": "ee67285455dde933f8d66b9bcf47257d530bf67e4217dd83e91bcbb1358c927d"
+    },
+    {
+      "path": "backend/src/schema/creative-canvas.ts",
+      "beforeSha256": "bc55df94ccfe31f7d41136cd71e44494f1ede728650202379324ea86ad4ee320",
+      "currentSha256": "ecb29bd752b8b87673b773b4e1b53215733b799fdc7513508cd47ead9ff57aee"
+    },
+    {
+      "path": "backend/src/schema/creative-results.ts",
+      "beforeSha256": "48d0db65d493d4a3c20b68a212d4027f1cf96eeb9b8d7c796605971b9983d75f",
+      "currentSha256": "65a1b45c645a4e087bd07de98b685d28de0c31ac63c82c268f0843ce0f70d444"
+    },
+    {
+      "path": "backend/src/schema/production-file-bindings.ts",
+      "beforeSha256": "56d016adf29fb17158e42cea982bd973bba285702e17a67be269941307ed589c",
+      "currentSha256": "ff0cffb11be897d9c8303413226ce38efae86b6c604a8af60568cf83ed9a1127"
+    },
+    {
+      "path": "backend/src/schema/production.ts",
+      "beforeSha256": "a9a5d2d068801e5fb6b75a200595e14bf5d44c00de371ec2c268795099550ffe",
+      "currentSha256": "73dbe25f109fad17b9349e807395eedba66228166d2fe4646453b5011357d965"
+    },
+    {
+      "path": "backend/src/schema/visual-templates.ts",
+      "beforeSha256": "34effc62a42bb89324c6765855fdc381b33b2d63ecaea63ca3a2f6a09a31be4c",
+      "currentSha256": "3475f43720b718e2decbffb3c8ded2ab98b4cef692d158ea13ed5280ff470d13"
+    },
+    {
+      "path": "backend/src/schema/work-compositions.ts",
+      "beforeSha256": "36b4e205c57c2a6357a5101045269bec0c378cb2a61499d77f10910a6804f45a",
+      "currentSha256": "2f91c8b9fee51ea7e6412a4c14a4f4d11eebcce73654de444ad6a4fe65d6215f"
+    },
+    {
+      "path": "backend/src/schema/work-materials.ts",
+      "beforeSha256": "962fa10b6831a9d981dbde09ff29ec8e8c0f906e894fd1a4ae28badbfe9ef77d",
+      "currentSha256": "e91f0c8a3a10caf32d80de69d26b3559bfd5ac42fcfd62f1e7b5b5544abc4d5f"
+    },
+    {
+      "path": "backend/src/schema/work-reviews.ts",
+      "beforeSha256": "e67fdf0e24d80dbbc1020b31901d7f65b1dfe12996907de2721d4321991812d4",
+      "currentSha256": "f0faa0e3fc7b27371d886e10f20cbc7118c0d1327e83cce77a22e8f1b52b6e8a"
+    }
+  ],
+  "dirtyCount": 21,
+  "redLog": "/tmp/t1062-root-empty-group-red.log",
+  "redLogSha256": "db28999952fc3166326c9ac2f2e8f7d21492a807aedee479b1ad0f76cba53c7b",
+  "statusOutput": " M backend/src/modules/ai-runtime/asset-business-execution.service.test.ts\n M backend/src/modules/ai-runtime/asset-business-execution.service.ts\n M backend/src/modules/ai-runtime/asset-legacy-recovery.service.ts\n M backend/src/modules/ai-runtime/chat-canvas-tool-host.test.ts\n M backend/src/modules/ai-runtime/chat-canvas-tool-host.ts\n M backend/src/modules/assets/visual-template.service.test.ts\n M backend/src/modules/assets/visual-template.service.ts\n M backend/src/modules/cli-invocations/cli-invocations.service.test.ts\n M backend/src/modules/cli-invocations/cli-invocations.service.ts\n M backend/src/modules/moments/moments.service.test.ts\n M backend/src/modules/review/work-reviews.service.ts\n M backend/src/modules/work-compositions/work-compositions.service.ts\n M backend/src/modules/work-compositions/work-materials.service.ts\n M backend/src/schema/creative-canvas.ts\n M backend/src/schema/creative-results.ts\n M backend/src/schema/production-file-bindings.ts\n M backend/src/schema/production.ts\n M backend/src/schema/visual-templates.ts\n M backend/src/schema/work-compositions.ts\n M backend/src/schema/work-materials.ts\n M backend/src/schema/work-reviews.ts\n",
+  "limits": [
+    "No commit/reset/stash/drop performed",
+    "No ASR provider/decoder/SQL/journal/control-plane edits",
+    "No current user database/media/App/model call accessed",
+    "This snapshot is not an accepted candidate"
+  ],
+  "lastCommandExit": 1,
+  "lastCommandCounts": {
+    "files": 1,
+    "passed": 7,
+    "failed": 1,
+    "tests": 8
+  },
+  "failureClassification": "新测试fixture导入accountGroups未从backend公开index导出，undefined导致Drizzle insert异常；未到达目标权限/空组行为，不能计为功能TDD红",
+  "nextAfterFormalResume": "仅改已授权moments.service.test.ts为实际schema import，再执行隔离红测；暂停期间未修改产品"
+}

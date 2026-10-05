@@ -1,0 +1,142 @@
+{
+  "schema": "t1062-asr-timing-independent-review/v1",
+  "task_id": "T-1062",
+  "reviewed_at": "2026-10-05T13:31:49+08:00",
+  "mode": "read_only_no_model_execution",
+  "decision": "RESEARCH_CRITERION_PASS_OPT1_ELIGIBLE",
+  "decision_impact": {
+    "OPT1": "可进入已单独批准的最小实施范围；仍须实现、direct/default-worker、公共 durable ASR、打包与安装版验证。",
+    "NONE": "不再是该固定同源样本的首选结论，因为同一原函数与同一捕获存在通过 strict timing 的机械物理帧 crop；若产品实现无法在真实装配取得相同尺寸证明，仍回到 manual/review_only，而非造 timing。"
+  },
+  "criterion_result": {
+    "evidence": "PASS",
+    "timing": "PASS",
+    "facts": {
+      "model_generation_calls": 1,
+      "replay_model_calls": 0,
+      "network_attempts": 0,
+      "capture_bytes": 76459164,
+      "capture_limit_bytes": 134217728,
+      "feature_dims": [
+        1,
+        80,
+        3000
+      ],
+      "encoder_dims": [
+        1,
+        1500,
+        768
+      ],
+      "attention_dims": [
+        1,
+        12,
+        1,
+        1500
+      ],
+      "measured_stride": 2,
+      "legacy_crop_requested": 1916,
+      "legacy_crop_effective": 1500,
+      "actual_stride_crop": 958,
+      "legacy_timing_accepted": false,
+      "actual_stride_timing_accepted": true,
+      "range_count": 65,
+      "last_end_sample": 306240,
+      "valid_sample_count": 306587,
+      "legacy_token_timestamps_byte_equal": true,
+      "legacy_provider_output_exact_equal": true,
+      "same_text_preserved": true,
+      "original_units_unchanged": true,
+      "final_timestamp_clamped": false
+    }
+  },
+  "evidence_bindings": [
+    {
+      "path": "/tmp/t1062-asr-timing-observation/verify-r2.mjs",
+      "sha256": "f643602e3fb18006220e8a2401551d5cf66245a42f428f263001421c1e69fe3c"
+    },
+    {
+      "path": "/tmp/t1062-asr-timing-observation/verify-r2.cjs",
+      "sha256": "0cafb69ceb3f1a06930de79cf0db7d4993e34b527056090f95d210c9d8e05d79"
+    },
+    {
+      "path": "/tmp/t1062-asr-timing-observation/capture-one/capture.json",
+      "sha256": "68e088a43661cc543edba4ed7d685f9e479da04eafd5d1ea1e29a592fbe94dd0"
+    },
+    {
+      "path": "/tmp/t1062-asr-timing-observation/capture-one/capture.bin",
+      "sha256": "75811d3b3e16662ced7ff8484a8d7d0c8ed6e6a623c24df96e2236d379823655"
+    },
+    {
+      "path": "/tmp/t1062-asr-timing-observation/observe.stdout.log",
+      "sha256": "c5407d21c39ff164e38abc2d6944352b611cfb5365715d959a1728184edac215",
+      "exit": 0
+    },
+    {
+      "path": "/tmp/t1062-asr-timing-observation/observe.stderr.log",
+      "sha256": "ee433f5b78105d5a70db523caf2322088ffe85c715c77d73fbddeb056c4f7ad1",
+      "note": "仅 ONNX unused initializer warnings；不改变结果"
+    },
+    {
+      "path": "/tmp/t1062-asr-timing-observation/evidence-r2.stdout.log",
+      "sha256": "400731ea0d9371c0fc4421e26ea83bf2cf4df232e010a9d7e59473b5d7fbb464",
+      "exit": 0
+    },
+    {
+      "path": "/tmp/t1062-asr-timing-observation/evidence-r2.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4e8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/tmp/t1062-asr-timing-observation/timing-r2.stdout.log",
+      "sha256": "9d5d8b985a0bd22b0bb92961dd83e20679e2e329b2f46192d783acf5d9b63d14",
+      "exit": 0
+    },
+    {
+      "path": "/tmp/t1062-asr-timing-observation/timing-r2.stderr.log",
+      "sha256": "e3b0c44298fc1a149afbf4e8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    }
+  ],
+  "original_verifier_restoration": {
+    "verify_mjs_sha256": "0312653b0ba75040f815ffe9382b521fd8709bef0068c431e0d88688b0c28abc",
+    "verify_cjs_sha256": "d2f76fe84a2c96830b5392793bb46ba4b58233d33b31fd9a86a9e77834d6211c",
+    "status": "BYTE_EXACT_RESTORED",
+    "initial_failure_logs_preserved": [
+      {
+        "path": "/tmp/t1062-asr-timing-observation/evidence.stderr.log",
+        "sha256": "95f5a95706113534e28e201c196466db6fa562b4fd8015a16e9f57383daf2c56",
+        "exit": 1,
+        "reason": "Transformers ESM 并行内部导入初始化环，不是 timing negative"
+      },
+      {
+        "path": "/tmp/t1062-asr-timing-observation/timing.stderr.log",
+        "sha256": "95f5a95706113534e28e201c196466db6fa562b4fd8015a16e9f57383daf2c56",
+        "exit": 1,
+        "reason": "同上"
+      }
+    ]
+  },
+  "fidelity_review": [
+    "R2 先 import 标准 src/transformers.js 完成同一模块实例初始化，再顺序读内部模块；未调用 pipeline/from_pretrained/session/generate/forward。",
+    "R2 仍按 capture 中 originalExtractFunctionSHA256 校验原 WhisperForConditionalGeneration.prototype._extract_token_timestamps，没有替换 DTW、tokenizer 或函数实例。",
+    "同一 sequences、cross/decoder attention 原 dtype/shape、alignment heads、time precision 重放；legacy timestamps 与 capture 字节相等，legacy raw JSON 精确相等。",
+    "crop=958 来自 validSampleCount、hop、实际 feature/encoder/attention 尺寸；不是硬编码除2。最终 strict parser 自然接受，未 clamp 或 round 修补末端。"
+  ],
+  "known_limits_and_script_corrections": [
+    "原 README/prepared-manifest 的未执行描述已是历史状态，不能作为最终执行记录；应以本报告绑定的 observe/R2 logs 为准。",
+    "128MiB 是捕获 tensor 落盘总量上限，不是整个推理进程或离线 verifier 的总内存上限。",
+    "初始 offline exit1 必须保留；不可覆盖成首次成功或称为原 timing negative。",
+    "direct actual adapter observation 不是默认 worker、packaged worker、公共服务或安装版证明。"
+  ],
+  "production_scope_reference": {
+    "path": "/tmp/t1062-asr-opt1-production-scope-review.json",
+    "sha256": "dbab468fc7d46090af99289ad10c1a1bfd9ec7ac4752c8c19782a28ca5242fba",
+    "status": "PRE_IMPLEMENTATION_SCOPE_ONLY"
+  },
+  "safe_fallback": "任何真实装配无法取得同源样本数与实际维度、尺寸不一致、strict parser 拒绝或 worker/public链未通过时，保留正文并走 manual/review_only；不得钳制、猜测或把该研究样本推广为全部音频。",
+  "not_verified": [
+    "未审 OPT1 最终实现 diff/hash。",
+    "未运行 direct/default worker、public durable ASR、package、安装版或真实粗剪听审。",
+    "本独立复核未运行模型、replay 或任何产品命令。"
+  ]
+}

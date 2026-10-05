@@ -2043,7 +2043,11 @@
           "backend/src/schema/moments-model.ts",
           "backend/src/modules/moments/moments-model.service.ts",
           "backend/src/modules/moments/execution-moments-model.service.ts",
-          "backend/src/modules/moments/moments-model.integration.test.ts"
+          "backend/src/modules/moments/moments-model.integration.test.ts",
+          "ai-worker/src/runtime/multimodal-whisper-local.ts",
+          "ai-worker/src/runtime/multimodal-whisper-local.test.ts",
+          "ai-worker/src/runtime/multimodal-precise-asr.test.ts",
+          "ai-worker/src/execution/worker-runtime.asset-asr-control.test.ts"
         ]
       }
     }

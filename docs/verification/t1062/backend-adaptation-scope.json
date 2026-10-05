@@ -200,7 +200,11 @@
     "backend/src/schema/moments-model.ts",
     "backend/src/modules/moments/moments-model.service.ts",
     "backend/src/modules/moments/execution-moments-model.service.ts",
-    "backend/src/modules/moments/moments-model.integration.test.ts"
+    "backend/src/modules/moments/moments-model.integration.test.ts",
+    "ai-worker/src/runtime/multimodal-whisper-local.ts",
+    "ai-worker/src/runtime/multimodal-whisper-local.test.ts",
+    "ai-worker/src/runtime/multimodal-precise-asr.test.ts",
+    "ai-worker/src/execution/worker-runtime.asset-asr-control.test.ts"
   ],
   "path_details": [
     {
@@ -2299,6 +2303,66 @@
       "reasons": [
         "纯组 generate→lease→settle→adopt/retry、原 digest/frozen proof、cancel/failure、旧 account 任务归档读取与当前写拒绝"
       ]
+    },
+    {
+      "path": "ai-worker/src/runtime/multimodal-whisper-local.ts",
+      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/ai-worker/src/runtime/multimodal-whisper-local.ts",
+      "exists": true,
+      "before_sha256": "9b74ee8dd59b707dcffbcbc76020633841a269e9bbac8538107f189978519c52",
+      "areas": [
+        "same-source-asr-frame-domain"
+      ],
+      "roles": [
+        "implementation"
+      ],
+      "reasons": [
+        "唯一生产实现文件同时包含 direct createDefaultPipelineProvider、worker source/proxy 与 createDefaultWhisperLocalAdapter。以共享窄机械规则从真实 decodedSampleCount、hop/feature/encoder/attention 尺寸派生 num_frames；两装配必须调用同一规则。不得升级库、改 tokenizer/DTW、改正文、clamp/round 最终时间码或放宽 readActualProviderTiming。"
+      ]
+    },
+    {
+      "path": "ai-worker/src/runtime/multimodal-whisper-local.test.ts",
+      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/ai-worker/src/runtime/multimodal-whisper-local.test.ts",
+      "exists": true,
+      "before_sha256": "dc9419dfee47c8fbad8c30536841db64bc124bd1f3683f52916fa6cac8ddf3d7",
+      "areas": [
+        "same-source-asr-frame-domain"
+      ],
+      "roles": [
+        "test"
+      ],
+      "reasons": [
+        "覆盖 direct 与 worker 两真实装配的同规则输入传递、实际 dims/stride、legacy text/bytes 不变、不能从未知/不一致尺寸猜 crop。"
+      ]
+    },
+    {
+      "path": "ai-worker/src/runtime/multimodal-precise-asr.test.ts",
+      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/ai-worker/src/runtime/multimodal-precise-asr.test.ts",
+      "exists": true,
+      "before_sha256": "2e89342789e33917d66c7418004c0ddf92307cd1657b8f8c8d16d45dfff1e9df",
+      "areas": [
+        "same-source-asr-frame-domain"
+      ],
+      "roles": [
+        "test"
+      ],
+      "reasons": [
+        "保持 strict provider timing 门：有效 crop 可生成物理样本范围，越界、重叠、非整数、无同源 sample 仍返回无 timing；明确禁止末尾钳制洗绿。"
+      ]
+    },
+    {
+      "path": "ai-worker/src/execution/worker-runtime.asset-asr-control.test.ts",
+      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/ai-worker/src/execution/worker-runtime.asset-asr-control.test.ts",
+      "exists": true,
+      "before_sha256": "1bb6f9e872b2c4a6413a873f7c4e8ceafd7506fd507b12309baeb128d4765b90",
+      "areas": [
+        "same-source-asr-frame-domain"
+      ],
+      "roles": [
+        "test"
+      ],
+      "reasons": [
+        "从正式 public asset-ASR worker 控制入口证明 word timing、原 request/digest、reserve/start/settle/取消/恢复保持；不能只测 adapter helper。"
+      ]
     }
   ],
   "conditional_write_paths": [
@@ -3799,7 +3863,7 @@
     "gateway_exception": "frontend/src/app/api/v1/dispatch/route.test.ts仅公共CLI网关测试，route.ts仅条件修复；无页面/UI路径"
   },
   "counts": {
-    "required_or_new": 138,
+    "required_or_new": 142,
     "necessary_new": 6,
     "conditional": 23,
     "read_only": 48
@@ -4361,6 +4425,27 @@
         "确认隔离PG进程已有而非本审计启动；本报告不启动服务，仅复用之后授权的55422 harness"
       ],
       "executed_this_audit": false
+    },
+    {
+      "label": "ASR真实frame域两装配与公共worker控制",
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "argv": [
+        "pnpm",
+        "-C",
+        "ai-worker",
+        "test",
+        "src/runtime/multimodal-whisper-local.test.ts",
+        "src/runtime/multimodal-whisper-local-cancel.test.ts",
+        "src/runtime/multimodal-precise-asr.test.ts",
+        "src/execution/worker-runtime.asset-asr-control.test.ts",
+        "--maxWorkers=1"
+      ],
+      "phase": "after_adaptation",
+      "environment_rule": "隔离fixture，无外部模型/用户媒体；默认worker真实媒体与安装验收另行留证。",
+      "preconditions": [
+        "窄机械修正保持严格timing和取消/恢复/结算；不clamp、不升级库、不以helper绿代替公共链。"
+      ],
+      "executed_this_audit": false
     }
   ],
   "source_path_validation": {
@@ -4420,6 +4505,22 @@
       "review_sha256": "df33c673be66de388fca0af750ad054f9f9537114433005bb21b0fd49b5dd6a4",
       "wip_preserved": "docs/verification/t1062/preflight/backend-adaptation-paused-wip.json",
       "reason": "已授权新创作组域的公开根依赖补全；不改SQL/历史journal/安装环境/产品方向"
+    },
+    {
+      "at": "2026-10-05T05:34:51.150517+00:00",
+      "base_sha": "35a01e7b1aba9f23ec19a35dedde17348a256648",
+      "action": "research resume后加入独立批准的OPT1窄修正",
+      "previous_step_path_count": 162,
+      "added_paths": [
+        "ai-worker/src/runtime/multimodal-whisper-local.ts",
+        "ai-worker/src/runtime/multimodal-whisper-local.test.ts",
+        "ai-worker/src/runtime/multimodal-precise-asr.test.ts",
+        "ai-worker/src/execution/worker-runtime.asset-asr-control.test.ts"
+      ],
+      "step_path_count": 166,
+      "independent_review": "orchestrator/research/t1062-asr-timing/t1062-asr-opt1-production-scope-review.json",
+      "review_sha256": "dbab468fc7d46090af99289ad10c1a1bfd9ec7ac4752c8c19782a28ca5242fba",
+      "reason": "同一实际attention上证明feature→encoder帧域错；不改变契约、语义、历史回执或安装环境；真实defaultworker/public/包仍待验"
     }
   ]
 }

@@ -320,7 +320,9 @@
     "t987-baseline-scope": "node docs/research/t987/verify-baseline.mjs scope",
     "t915-resource-guardian-probe": "node -e \"if(process.platform!=='darwin')process.exit(1)\" && pnpm --filter @creatoros/backend test src/modules/execution/browser-resource-guardian.probe.test.ts",
     "t988-baseline": "node docs/research/t988/verify-baseline.mjs",
-    "t1062-index-catalog": "node orchestrator/research/t1062-index-catalog/probe.cjs"
+    "t1062-index-catalog": "node orchestrator/research/t1062-index-catalog/probe.cjs",
+    "t1062-asr-tail-clock-evidence": "node --max-old-space-size=512 /tmp/t1062-asr-timing-observation/verify-r2.cjs evidence /tmp/t1062-asr-timing-observation/capture-one",
+    "t1062-asr-tail-clock-timing": "node --max-old-space-size=512 /tmp/t1062-asr-timing-observation/verify-r2.cjs timing /tmp/t1062-asr-timing-observation/capture-one"
   },
   "execution_mode": "interactive",
   "autonomy_level": "interactive"
