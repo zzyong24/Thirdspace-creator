@@ -1878,7 +1878,28 @@
         "THIRD_PARTY_NOTICES.md"
       ],
       "verify_commands": {
-        "integration": "git diff --check"
+        "integration": "pnpm -C backend exec vitest run src/migration-convergence.test.ts src/db.creative-canvas-lineage.test.ts src/db.creative-canvas-upgrade.test.ts src/group-upgrade-backup.integration.test.ts src/db.migrate-error.test.ts src/db.driver.test.ts && git diff --check"
+      },
+      "step_write_set": {
+        "integration": [
+          "backend/src/db.ts",
+          "backend/src/creative-canvas-migration-lineage.ts",
+          "backend/src/group-upgrade-backup.ts",
+          "backend/src/db.creative-canvas-upgrade.test.ts",
+          "backend/src/db.creative-canvas-lineage.test.ts",
+          "backend/src/group-upgrade-backup.integration.test.ts",
+          "backend/src/db.migrate-error.test.ts",
+          "backend/src/db.driver.test.ts",
+          "backend/src/migration-convergence.ts",
+          "backend/src/migration-convergence.test.ts",
+          "backend/src/migration-convergence-lineages.json",
+          "backend/drizzle/0128_workspace_convergence.sql",
+          "backend/drizzle/meta/_journal.json",
+          "backend/drizzle/lineages/**",
+          "docs/features/t1062-rough-cut-contract.md",
+          "docs/verification/t1062/migration-convergence-result.json",
+          "docs/verification/t1062/rough-cut-contract-review.json"
+        ]
       }
     }
   }
