@@ -1,0 +1,40 @@
+isolated roots=/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-writer-check-nWtnrb
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/backend
+
+ ❯ src/modules/ai-runtime/transcribe-runner.test.ts (11 tests | 7 failed) 5437ms
+     × 完整保存与公开读同一正文、真实单次ASR账本、总态成功 373ms
+     × 部分失败总态failed但已完成子集保留原正文/版本并经公开工件读取可用 184ms
+     × 保存后重建排队失败不反转原事实或成功终态 184ms
+     × 可选后处理未配置/配置读取故障=false仍真实落原文与明确reason 184ms
+     × 可选后处理未配置/配置读取故障=true仍真实落原文与明确reason 177ms
+     × 同作品已有事实经真实prepareItem恢复，不识别第二次，也不新增逐字稿版本 181ms
+     × 取消后的保存入口保留已保存事实，不能新写另一作品或覆盖终态 188ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 7 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai-runtime/transcribe-runner.test.ts > 转写当前durable公共持久链 > 完整保存与公开读同一正文、真实单次ASR账本、总态成功
+ FAIL  src/modules/ai-runtime/transcribe-runner.test.ts > 转写当前durable公共持久链 > 部分失败总态failed但已完成子集保留原正文/版本并经公开工件读取可用
+ FAIL  src/modules/ai-runtime/transcribe-runner.test.ts > 转写当前durable公共持久链 > 保存后重建排队失败不反转原事实或成功终态
+ FAIL  src/modules/ai-runtime/transcribe-runner.test.ts > 转写当前durable公共持久链 > 可选后处理未配置/配置读取故障=false仍真实落原文与明确reason
+ FAIL  src/modules/ai-runtime/transcribe-runner.test.ts > 转写当前durable公共持久链 > 可选后处理未配置/配置读取故障=true仍真实落原文与明确reason
+ FAIL  src/modules/ai-runtime/transcribe-runner.test.ts > 转写当前durable公共持久链 > 同作品已有事实经真实prepareItem恢复，不识别第二次，也不新增逐字稿版本
+ FAIL  src/modules/ai-runtime/transcribe-runner.test.ts > 转写当前durable公共持久链 > 取消后的保存入口保留已保存事实，不能新写另一作品或覆盖终态
+ConflictError: 后处理最终正文与原回执不符
+ ❯ src/modules/execution/execution-transcribe-workflow.service.ts:56:187
+
+ ❯ src/modules/execution/execution-transcribe-workflow.service.ts:19:205
+ ❯ ../node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pglite/src/base.ts:430:23
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/7]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  7 failed | 4 passed (11)
+   Start at  15:58:42
+   Duration  9.21s (transform 2.29s, setup 0ms, import 3.63s, tests 5.44s, environment 0ms)
+
+undefined
+/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/ai-runtime/transcribe-runner.test.ts
+{"cmd":"pnpm","args":["--filter","@creatoros/backend","exec","vitest","run","src/modules/ai-runtime/transcribe-runner.test.ts"],"exit":1,"signal":null,"isolated":"/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-writer-check-nWtnrb"}

@@ -15,3 +15,12 @@ JSON 内含逐路径用途/前摘要、域矩阵、0128 精确语句与 partial 
 暂停中的20个WIP文件完整保留，原lease已释放。实际调用显示外围转换/组合依赖projects、article、graphic-post、moments及原模型lease根仍按账号隔离；独立一次性审查19条精确路径后纳入其中18条新路径，当前step共162条（138条必要/新、23条条件、1结果）。报告19/19原文件摘要与base75131f一致；第一轮1条人工摘要遗漏原样保留，第二轮程序重采纠正。仅scope足够，不是实现或测试通过。
 
 content_outputs.group_id仅从同事务锁定的project派生，project仍为唯一授权父真相；旧账号回执、摘要与冻结费用保持，新纯组键使用真实group/account NULL，历史多账号同key不得任取。article/graphic读取时的不可变候选投影和归档历史读取须兼容，当前采纳/新创作仍按写权限；moments原lease settle不得以eq(NULL)静默零命中。0128/原SQL/journal不改。新增第23组验证覆盖这些真实公开根与lease；后续前端/原生仍未动。
+
+
+## durable转写回执结构比较修订（2026-10-05）
+
+当前正式step为174条（150条必要/新、23条条件、1条结果），原27组验证保持。首段及162条记录是历史提案/修订，不能当当前范围或通过证据。最新精确路径以JSON和modules.config.json为准。
+
+真实公共持久链转写回归11项中7失败/4通过：原ASR账本已结算，数据库JSONB键顺序与现有严格result schema解析对象顺序不同，saveArtifact误拒合法原文。日志原字节保留；ASR边界使用adapter fixture，本次红不是新真实模型推理。唯一新增生产路径为execution-transcribe-workflow.service.ts；在既有回执优先分支之后、ensure之前严格校验两侧现有schema，再按全部值/类型比较。对象键顺序不作身份，正文/reason/applied/额外字段和非法类型仍拒绝；不改变父权限、取消、租约、费用或DDL。
+
+独立scope审查及101条WIP暂停摘要见preflight/transcribe-workflow-structural-receipt-scope-review.json与transcribe-workflow-paused-wip.json。ROOT核101/101当前摘要后以自有stash保护，释放旧lease后再修订。此记录不是产品实现、整套测试、安装或任务完成PASS。

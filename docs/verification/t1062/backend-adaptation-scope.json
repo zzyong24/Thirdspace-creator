@@ -211,7 +211,8 @@
     "backend/src/schema/intelligence.ts",
     "backend/src/modules/ai-runtime/chat-submitted-tool-parameters.ts",
     "backend/src/modules/execution/execution-chat-script-draft.service.test.ts",
-    "backend/src/modules/artifacts/artifacts.repository.ts"
+    "backend/src/modules/artifacts/artifacts.repository.ts",
+    "backend/src/modules/execution/execution-transcribe-workflow.service.ts"
   ],
   "path_details": [
     {
@@ -2475,6 +2476,21 @@
       "reasons": [
         "原文章/图文保存/采用共享artifact父锁内没有archivedAt检查；仅wechat_article/graphic_post新append，原receipt重放先行，原group→project→artifact锁/CAS不变。不泛化helper或trend_analysis已started结算，不改schema/SQL。"
       ]
+    },
+    {
+      "path": "backend/src/modules/execution/execution-transcribe-workflow.service.ts",
+      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/modules/execution/execution-transcribe-workflow.service.ts",
+      "exists": true,
+      "before_sha256": "e0c52a9342acc6887867e8e07a4c1e3d63d07ea60af2e864d96f3418e9260ea2",
+      "areas": [
+        "durable-transcribe-authoritative-receipt-integrity"
+      ],
+      "roles": [
+        "implementation"
+      ],
+      "reasons": [
+        "真实JSONB回执与严格schema解析结果仅键顺序不同，saveArtifact误拒合法原文。仅在既有locked receipt-first后、ensure前严格校验两侧现有result schema并做结构比较；保全部值/类型/extra拒绝，不改lease/parent/signal/paid/终态协议或SQL。"
+      ]
     }
   ],
   "conditional_write_paths": [
@@ -4055,7 +4071,7 @@
     "gateway_exception": "frontend/src/app/api/v1/dispatch/route.test.ts仅公共CLI网关测试，route.ts仅条件修复；无页面/UI路径"
   },
   "counts": {
-    "required_or_new": 149,
+    "required_or_new": 150,
     "necessary_new": 6,
     "conditional": 23,
     "read_only": 48
@@ -4841,6 +4857,21 @@
       "review_sha256": "c66ed79fed2857acbd70b186856659bc1907ef51692f483b0ae2c733406430aa",
       "wip_preserved": "docs/verification/t1062/preflight/artifact-parent-archive-paused-wip.json",
       "reason": "只约束文章/图文新版本写权限，保合法已started模型重建结算，不引全域新门。"
+    },
+    {
+      "at": "2026-10-05T08:04:23.955506+00:00",
+      "base_sha": "de3771f59a6966c123326ebdf06473e74127a294",
+      "action": "真实durable转写保存7失败/4通过后窄补严格回执结构比较",
+      "previous_step_path_count": 173,
+      "added_paths": [
+        "backend/src/modules/execution/execution-transcribe-workflow.service.ts"
+      ],
+      "step_path_count": 174,
+      "independent_review": "docs/verification/t1062/preflight/transcribe-workflow-structural-receipt-scope-review.json",
+      "review_sha256": "a145cefe2670e39b4434ab0fdaa9708dbf8aabb0c1f0c014699755d5f55a568b",
+      "wip_preserved": "docs/verification/t1062/preflight/transcribe-workflow-paused-wip.json",
+      "functional_red": "docs/verification/t1062/preflight/transcribe-workflow-durable-functional-red.log",
+      "reason": "原11项真实durable服务/JSONB公共落稿红保留；ASR I/O为adapter fixture，不称真实供应商推理。忽略对象键序但不放宽任何结果值，原27组合保持。"
     }
   ]
 }

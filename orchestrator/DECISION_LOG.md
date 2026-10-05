@@ -3494,3 +3494,10 @@ T-1017 测试补充（2026-09-30）：用户明确要求测试。本轮覆盖纯
 真实模板/CLI红测试后，调用图发现组合和转换依赖的projects创建回执及文章、图文、朋友圈根仍要求account；原moments模型结算还使用eq(accountId,NULL)。同一个T-1062范围补全这些实际依赖，不新建创作域/账本/SQL或改变归属方向。先暂停writer，保存20个WIP的base/current哈希，release lease，再按独立19路径审查补18条精确写集并重编译；不在活跃lease上扩大配置。独立报告首轮1条手抄摘要遗漏已保留并经19/19 git-show重采纠正。
 
 新output group只从锁定父project派生；新共享创建account=NULL，旧账号行/唯一键/原digest与费用freeze保持。同组平台筛选不改owner，不同组隔离，旧同key多账号不能隐式首行。归档合法历史读与不可变候选投影不等同新写授权。此次只确认必要依赖闭包，产品实现/23组测试/真实ASR/安装版仍待验。第二份独立真实ASR音频也保留正文成功但末尾时码越界的负例，不裁剪、补写或认作词句成功。
+
+
+## DEC-T1062-TRANSCRIBE-RECEIPT-20261005：回执键序不构成正文变化
+
+沿用户2026-10-05授权的汇总、实现及逐功能验证范围，真实durable转写服务11项回归发生7失败/4通过。数据库JSONB回读与严格协议解析仅对象键顺序不同，却被原JSON.stringify判为不同，合法识别原文无法保存。独立只读审查后，scope173窄增execution-transcribe-workflow.service.ts一条成为174；原27验证组合和11项断言不缩减。
+
+只在既有回执优先之后、实际工件保存之前校验原strict result schema并做结构值比较。原正文/原因/布尔值/额外字段拒绝、原账本、父归属、租约及取消均保持；不新增API/模型选择/DDL/自动采纳。真实红日志、源码及WIP摘要绑定见docs/verification/t1062/preflight/transcribe-workflow-structural-receipt-scope-review.json。该修复落实既有协议，不改变产品方向；用户安装验收和完整Gate仍待发生，不补造历史证据。

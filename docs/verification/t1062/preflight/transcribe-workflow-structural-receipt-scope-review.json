@@ -1,0 +1,181 @@
+{
+  "review_kind": "只读独立 scope 准入审查，不代表scope174授权或整任务PASS",
+  "observed_at": "2026-10-05T08:02:13.007782+00:00",
+  "observed_head": "de3771f59a6966c123326ebdf06473e74127a294",
+  "candidate_root": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator",
+  "formal_scope_count": 173,
+  "source_sha256": {
+    "backend/src/modules/execution/execution-transcribe-workflow.service.ts": "e0c52a9342acc6887867e8e07a4c1e3d63d07ea60af2e864d96f3418e9260ea2",
+    "backend/src/modules/execution/execution-transcribe-postprocess.service.ts": "f39eb0bba03d7d64f6db384829917bbf7e35e3f13b6cfed87389998fa86611d5",
+    "contract/src/internal/execution-worker.ts": "317a91704aaa7e3dd23295190c4246c8be2521029b2dc01cf0453e9ff376f4f7",
+    "backend/src/modules/ai-runtime/transcribe-runner.test.ts": "2918488a288cf0a6ef8a0121f141dcacde8c361889dd9537f546087b0e0f0378",
+    "backend/src/modules/projects/transcript-artifact.service.ts": "b4a5d4de5863d99500f998c59458ff12c0f121ff6d4bdb3acc80e4877e875fdc",
+    "backend/src/modules/execution/transcribe-execution-binding.ts": "e0be33e2bf1256e0015a6ac0eabc2257abb894a0272c70715b699a1b257032ea",
+    "backend/src/modules/execution/execution-lease.service.ts": "3aa4f15dbe1039adf0f031f35f7e545c63d909ad42c706361efbc6e429340cb0"
+  },
+  "functional_red": {
+    "path": "/tmp/t1062-transcribe-current-durable-migration1.log",
+    "sha256": "3a5cdba36e987325befb062688cff81e91bb168adcc93778bc1592545026b460",
+    "source": "writer真实当场执行；本review未重跑",
+    "command": "pnpm --filter @creatoros/backend exec vitest run src/modules/ai-runtime/transcribe-runner.test.ts",
+    "exit": 1,
+    "tests": 11,
+    "failed": 7,
+    "passed": 4,
+    "error": "ConflictError: 后处理最终正文与原回执不符",
+    "production_stack": "backend/src/modules/execution/execution-transcribe-workflow.service.ts:56:187",
+    "failed_case_names": [
+      "src/modules/ai-runtime/transcribe-runner.test.ts > 转写当前durable公共持久链 > 完整保存与公开读同一正文、真实单次ASR账本、总态成功",
+      "src/modules/ai-runtime/transcribe-runner.test.ts > 转写当前durable公共持久链 > 部分失败总态failed但已完成子集保留原正文/版本并经公开工件读取可用",
+      "src/modules/ai-runtime/transcribe-runner.test.ts > 转写当前durable公共持久链 > 保存后重建排队失败不反转原事实或成功终态",
+      "src/modules/ai-runtime/transcribe-runner.test.ts > 转写当前durable公共持久链 > 可选后处理未配置/配置读取故障=false仍真实落原文与明确reason",
+      "src/modules/ai-runtime/transcribe-runner.test.ts > 转写当前durable公共持久链 > 可选后处理未配置/配置读取故障=true仍真实落原文与明确reason",
+      "src/modules/ai-runtime/transcribe-runner.test.ts > 转写当前durable公共持久链 > 同作品已有事实经真实prepareItem恢复，不识别第二次，也不新增逐字稿版本",
+      "src/modules/ai-runtime/transcribe-runner.test.ts > 转写当前durable公共持久链 > 取消后的保存入口保留已保存事实，不能新写另一作品或覆盖终态"
+    ],
+    "isolated_test_root": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-writer-check-nWtnrb"
+  },
+  "minimal_scope_increment": [
+    {
+      "path": "backend/src/modules/execution/execution-transcribe-workflow.service.ts",
+      "exists": true,
+      "in_current_scope": false,
+      "scope_reason": "saveArtifact锁内用JSON.stringify比较后端原JSONB结果与schema.parse回读结果，同值不同对象键序拒合法正文。只能在生产实际比较处修复。"
+    }
+  ],
+  "existing_test_write_path": {
+    "path": "backend/src/modules/ai-runtime/transcribe-runner.test.ts",
+    "in_current_scope": true,
+    "current_actual_positions": [
+      {
+        "line": 62,
+        "case": "完整实际ASR账本→后处理fallback→公开artifact读原正文→终态成功"
+      },
+      {
+        "line": 63,
+        "case": "部分失败保持已成功子集实际artifact版本，终态failed"
+      },
+      {
+        "line": 64,
+        "case": "派生重建失败不反转原事实"
+      },
+      {
+        "line": 65,
+        "case": "配置未配/读配置失败false,true，原文+明确reason"
+      },
+      {
+        "line": 66,
+        "case": "同item receipt先返回，零二次ASR/零新版本"
+      },
+      {
+        "line": 67,
+        "case": "album占位无ASR/后处理"
+      },
+      {
+        "line": 68,
+        "case": "取消保存保留已有事实，不写另一item/不覆终态"
+      }
+    ]
+  },
+  "actual_callgraph": [
+    "当前fixture先用real business.prepare及persistentTask.claim构造原executionRef，真实tmp objectStorage保存音频",
+    "runTranscribeAsrInWorker→actual Qwen adapter fixture(fetch仅是网络IO模拟)→reserve/start/settle真实ASR ledger",
+    "actual post.prepare→state绑定原task/aweme/fence，读已settled完整ASR正文/sourceDigest；无配置产生明确applied:false/transcript/reason",
+    "post.persist→entrySchema.strict.parse并存executionTasks.payload.transcribePostprocess[awemeId].result",
+    "post.read→entriesSchema.strict.parse得到权威result（schema声明顺序），再次核源ASR/digest/原lease",
+    "workflow.saveArtifact→outer原receipt先返回→post.read→第二admission事务读取当前raw冻结result→line56 JSON.stringify相等→artifact.ensure→item receipt"
+  ],
+  "root_cause": "JSON.stringify是序列化文本比较，对对象键插入序敏感。JSONB回读对象及Zod按schema解析对象可能顺序不同，不是正文/身份差异。红日志明确真实合法持久链被该guard拦截；其日志未打印raw字段键序，因此精确键序来源属基于当前读写源码推导，不能冒充本review新增DB观察。",
+  "schema_contract": {
+    "path": "contract/src/internal/execution-worker.ts",
+    "line": 314,
+    "variants": [
+      "strict {applied:true, transcript:string(min1,max2000000)}",
+      "strict {applied:false, transcript:string(max2000000), reason:string(min1,max1000)}"
+    ],
+    "normalization": "无coerce、default、transform、trim；额外key、错误type/array、缺required键均拒绝。当前结果形状没有任何array字段。"
+  },
+  "minimal_strict_compare": {
+    "source_changes_only": "backend/src/modules/execution/execution-transcribe-workflow.service.ts",
+    "imports": [
+      "node:util isDeepStrictEqual（当前其它backend源已使用）",
+      "@creatoros/contract/execution-worker transcribePostprocessResultSchema（既有contract，不扩API）"
+    ],
+    "placement": "只替换saveArtifact non-album第二admission事务line56的结果一致性guard；原receipt优先返回之后、ensure之前，保留同一tx/current payload读取。",
+    "design": "对frozen与post分别用既有strict result schema safeParse；任一不合法抛原ConflictError；两侧合法时isDeepStrictEqual(parsedFrozen.data, parsedPost.data)。只有对象键顺序不再是身份；全部primitive值、类型、结构继续精确。",
+    "why_not_bare_equal": "仅isDeepStrictEqual两个裸unknown可能在两侧同样非法extra或array时返回true；先strict schema使相同非法形状也不能成为合法回执。",
+    "body_preservation": "不排序/拼接/trim/修正文，不重新生成、重签digest或改plan；ensure仍只保存post.read已验证正文，结构比较通过不代表模型创造了新正文。",
+    "no_new_helpers_or_api": true,
+    "no_schema_or_sql_changes": true,
+    "no_new_paid_calls": true,
+    "protected_boundaries": [
+      "原initial/locked receipt-first与exact original aweme",
+      "原access admission lease/attempt/fence/owner/current frozen task绑定",
+      "原signal checks于post/read/锁内/ensure之后",
+      "原父project/artifact ensure与group归属",
+      "paid ASR/model原call/identity/sourceDigest/plan/lifecycle，不修改settle/admission区分",
+      "album旁路仍必须真实source image-album，不把坏post降为album",
+      "部分失败终态与已存子集，不删除未完成或覆盖取消状态"
+    ]
+  },
+  "necessary_followup_regressions": [
+    {
+      "case": "不同合法对象key order",
+      "setup": "经actual post.prepare/persist/read的original result与锁内JSONB result所有值完全相同但键序不同；可在in-scope test包装real read仅重排own key，不fake正文或fallback生成。",
+      "assert": [
+        "public saveArtifact成功保存准确原文",
+        "原ASR paid ledger调用数/status不变",
+        "artifact/public versions真实读到原正文",
+        "同item repeat回原receipt且无新version"
+      ]
+    },
+    {
+      "case": "合法形状但mutated文本/理由/applied",
+      "setup": "real post.read后只在测试port边界改变一个字段，让锁内原冻结result不变；亦验证真实payload在read到lock之间变更拒绝。",
+      "assert": [
+        "不同transcript逐字符、reason、applied均拒绝",
+        "零新artifact/version/item成功receipt",
+        "不能trim空白或unicode normalization来忽略正文差异",
+        "paidcalls不重提"
+      ]
+    },
+    {
+      "case": "相同非法extra/type/array不能互相洗成合法",
+      "setup": "测试false/true分支的extra key、缺reason、transcript/ reason改number/null/array、applied改string/number；非法内容即使两侧相同仍拒绝。",
+      "assert": [
+        "strict schema拒绝，原ConflictError与零写保持",
+        "true分支带reason也作为extra拒绝",
+        "当前schema无array字段，因此任何array（包括同数组或换序数组）都是非法，不新增array协议；isDeepStrictEqual不会把未来array换序当相等"
+      ]
+    },
+    {
+      "case": "回执先行/不重复paid/历史",
+      "setup": "先real成功保存，再令post read失败或未装；原已存item replay仍先回receipt。",
+      "assert": [
+        "回原receipt/project/version且不再read post/ASR/model",
+        "既有admission原owner/lease保护继续，foreign/旧fence不能借replay越权",
+        "保存前取消拒新写，已存历史仍可读；取消终态不被complete覆盖"
+      ]
+    },
+    {
+      "case": "原11项公共持久链全量保留",
+      "assert": [
+        "7个真实red必须通过实际生产guard修复闭合，不删断言",
+        "原4passed仍通过，尤其album、配置失败零execution与pure分类",
+        "原部分失败failed/原文可用/派生重建不可反转事实原assert保留"
+      ]
+    }
+  ],
+  "verify_proposal_not_executed": [
+    "pnpm --filter @creatoros/backend exec vitest run src/modules/ai-runtime/transcribe-runner.test.ts",
+    "pnpm --filter @creatoros/backend typecheck",
+    "git diff --check"
+  ],
+  "scope_verdict": "源1path必要且足够容纳当前strict结果比较最小修复，测试已有授权文件；不扩API/SQL/任意工具helper。新scope仍需ROOT正式编译/批准再恢复writer。",
+  "limitations": [
+    "本review只读，无DB/model/test执行，无产品/Git变更",
+    "真实red来源writer当场日志；未通过本review复现",
+    "structural helper通过不等于完整转写、真实模型、安装包或全任务PASS",
+    "当前schema仅scalar；数组顺序要求表现为拒绝array形状，不虚构array result兼容"
+  ]
+}
