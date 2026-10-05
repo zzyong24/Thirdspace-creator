@@ -1,0 +1,4 @@
+
+> @creatoros/contract@0.4.0 typecheck /Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/contract
+> tsc --noEmit
+

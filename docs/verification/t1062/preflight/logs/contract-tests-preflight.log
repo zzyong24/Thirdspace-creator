@@ -1,0 +1,129 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/contract
+
+ ❯ tests/platform-capabilities.test.ts (8 tests | 1 failed) 29ms
+     × keeps the old manual account create contract closed to new platforms 7ms
+ ❯ tests/registry.test.ts (3 tests | 1 failed) 43ms
+     × registers no routes outside SPEC §13 15ms
+ ❯ tests/chat-worker.test.ts (14 tests | 1 failed) 21ms
+   × cover.generate 不能冒充已迁移的事务工具 6ms
+ ❯ tests/modules/assets.test.ts (3 tests | 1 failed) 28ms
+     × parses an Asset resource 4ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/chat-worker.test.ts > cover.generate 不能冒充已迁移的事务工具
+AssertionError: expected 'cover.generate' to be null
+
+- Expected:
+null
+
++ Received:
+"cover.generate"
+
+ ❯ tests/chat-worker.test.ts:44:38
+     42| });
+     43| it.each(["asset.generate","cover.generate","arbitrary.task","__proto__…
+     44|  expect(chatSubmittedTaskType(name)).toBeNull();
+       |                                      ^
+     45|  expect(chatWorkerInputSchema.safeParse({...input,tools:[{name,version…
+     46| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  tests/platform-capabilities.test.ts > T-1020 platform service contract fixtures > keeps the old manual account create contract closed to new platforms
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/platform-capabilities.test.ts:182:86
+    180|     const body = platformAccountOperations.createAccount.body;
+    181|     expect(body.safeParse({ platform: "douyin", accountHandle: "owned"…
+    182|     expect(body.safeParse({ platform: "kuaishou", accountHandle: "owne…
+       |                                                                                      ^
+    183|     expect(body.safeParse({ platform: "wechatOfficialAccount", account…
+    184|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  tests/registry.test.ts > endpoint registry > registers no routes outside SPEC §13
+AssertionError: unexpected: POST /canvases/:canvasId/material/adopt, GET /canvases/:canvasId/generations/:generationLinkId/material, GET /canvases/capabilities, GET /canvases, POST /canvases, GET /canvases/:canvasId, POST /canvases/:canvasId/save, POST /canvases/:canvasId/archive, POST /canvases/:canvasId/nodes/:nodeId/generate, GET /canvases/:canvasId/tasks, GET /canvases/:canvasId/nodes/:nodeId/preview, GET /canvases/:canvasId/proposals, POST /canvases/:canvasId/proposals/:proposalId/apply, POST /outputs/:outputId/production/editor/convert, GET /outputs/:outputId/production/editor/convert/:requestId, POST /outputs/:outputId/production/editor/convert/adopt, POST /outputs/:outputId/production/editor/transcripts, GET /outputs/:outputId/production/editor/transcripts/:requestId, POST /outputs/:outputId/production/editor/transcripts/adopt, POST /outputs/:outputId/production/editor/rough-cut, GET /outputs/:outputId/production/editor/rough-cut/:requestId, POST /outputs/:outputId/production/editor/rough-cut/adopt, POST /publications/:publicationId/visual-note/export, POST /intelligence/projects/enqueue, GET /settings/redfox, PUT /settings/redfox, DELETE /settings/redfox, GET /assets/visual-templates, POST /assets/visual-templates/save, POST /assets/visual-templates/:templateId/remove: expected [ …(30) ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   "POST /canvases/:canvasId/material/adopt",
++   "GET /canvases/:canvasId/generations/:generationLinkId/material",
++   "GET /canvases/capabilities",
++   "GET /canvases",
++   "POST /canvases",
++   "GET /canvases/:canvasId",
++   "POST /canvases/:canvasId/save",
++   "POST /canvases/:canvasId/archive",
++   "POST /canvases/:canvasId/nodes/:nodeId/generate",
++   "GET /canvases/:canvasId/tasks",
++   "GET /canvases/:canvasId/nodes/:nodeId/preview",
++   "GET /canvases/:canvasId/proposals",
++   "POST /canvases/:canvasId/proposals/:proposalId/apply",
++   "POST /outputs/:outputId/production/editor/convert",
++   "GET /outputs/:outputId/production/editor/convert/:requestId",
++   "POST /outputs/:outputId/production/editor/convert/adopt",
++   "POST /outputs/:outputId/production/editor/transcripts",
++   "GET /outputs/:outputId/production/editor/transcripts/:requestId",
++   "POST /outputs/:outputId/production/editor/transcripts/adopt",
++   "POST /outputs/:outputId/production/editor/rough-cut",
++   "GET /outputs/:outputId/production/editor/rough-cut/:requestId",
++   "POST /outputs/:outputId/production/editor/rough-cut/adopt",
++   "POST /publications/:publicationId/visual-note/export",
++   "POST /intelligence/projects/enqueue",
++   "GET /settings/redfox",
++   "PUT /settings/redfox",
++   "DELETE /settings/redfox",
++   "GET /assets/visual-templates",
++   "POST /assets/visual-templates/save",
++   "POST /assets/visual-templates/:templateId/remove",
++ ]
+
+ ❯ tests/registry.test.ts:450:54
+    448|     const allowed = new Set(SPEC_13.map(([m, p]) => `${m} ${p}`));
+    449|     const extra = registered.filter((r) => !allowed.has(r));
+    450|     expect(extra, `unexpected: ${extra.join(", ")}`).toEqual([]);
+       |                                                      ^
+    451|   });
+    452|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  tests/modules/assets.test.ts > assets contract > parses an Asset resource
+ZodError: [
+  {
+    "expected": "string",
+    "code": "invalid_type",
+    "path": [
+      "sourceUrl"
+    ],
+    "message": "Invalid input: expected string, received undefined"
+  }
+]
+ ❯ tests/modules/assets.test.ts:7:29
+      5| describe("assets contract", () => {
+      6|   it("parses an Asset resource", () => {
+      7|     const a = assetResource.parse({
+       |                             ^
+      8|       id: "asset-poster-ainativebrowser",
+      9|       userId: "user-zyongzhu",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  4 failed | 56 passed (60)
+      Tests  4 failed | 317 passed (321)
+   Start at  11:30:21
+   Duration  5.47s (transform 9.82s, setup 0ms, import 38.17s, tests 1.80s, environment 8ms)
+
