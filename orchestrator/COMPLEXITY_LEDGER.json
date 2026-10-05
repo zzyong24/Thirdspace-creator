@@ -1918,6 +1918,40 @@
       "reason": "只复用现有 resolveExecutablePath 与 worker dispatcher；不新增二进制、搜索/下载/安装、spawn 参数族或进程拓扑。",
       "review": "docs/verification/t1062/backend-complexity-review.json",
       "acceptance": "仅批准现有机制复用预算，不代表测试/安装或预先放行后续字节；最终diff与hash需独立复核。"
+    },
+    {
+      "task_id": "T-1062",
+      "files": [
+        "docs/verification/t1062/frontend-native-adaptation-scope.json"
+      ],
+      "file_sha256": "3b167095bf486a8c68b8107d6e329fdd435fec08de62ef8102a29199ee69d1a5",
+      "categories": [
+        "runtime",
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1062-INTEGRATION-20261005 / DEC-T1062-ROUGH-20261005",
+      "scope_source": "docs/features/t1062-consolidated-local-client-acceptance.md",
+      "reason": "本文件仅记录已审T1062前端/native精确来源、构建/测试argv和交接证据。Bun标记来自既有OpenCut测试/构建工具及bun.lock；Rust标记包含既有Doocs CodeMirror语言包许可证名称，不是新Rust编译器。沿用原Node/native编辑器工具链，不新增产品runtime、语言工具链、安装机制或进程权限。",
+      "review": "docs/verification/t1062/frontend-native-adaptation-scope-independent-review.json",
+      "acceptance": "仅当前task/file精确SHA的两类既有机制说明预算，依据独立范围复核9645dabb73e507567660daf4665b011b37770868688d3229ace2597618401257及原SPEC/DEC；不代表原18、安装、听审或任务PASS。后续只可随批准的实际source application receipt及其治理身份字段重绑此条file_sha256，不授权新的类别/来源/产品范围。"
+    },
+    {
+      "task_id": "T-1062",
+      "files": [
+        "docs/verification/t1062/frontend-native-transfer.json"
+      ],
+      "file_sha256": "6eccee0312ffe08a327952383366f003c09522c132c6a38dd0f274521948a93e",
+      "categories": [
+        "runtime",
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1062-INTEGRATION-20261005 / DEC-T1062-ROUGH-20261005",
+      "scope_source": "docs/features/t1062-consolidated-local-client-acceptance.md",
+      "reason": "本文件仅记录已审T1062前端/native精确来源、构建/测试argv和交接证据。Bun标记来自既有OpenCut测试/构建工具及bun.lock；Rust标记包含既有Doocs CodeMirror语言包许可证名称，不是新Rust编译器。沿用原Node/native编辑器工具链，不新增产品runtime、语言工具链、安装机制或进程权限。",
+      "review": "docs/verification/t1062/frontend-native-adaptation-scope-independent-review.json",
+      "acceptance": "仅当前task/file精确SHA的两类既有机制说明预算，依据独立范围复核9645dabb73e507567660daf4665b011b37770868688d3229ace2597618401257及原SPEC/DEC；不代表原18、安装、听审或任务PASS。后续只可随批准的实际source application receipt及其治理身份字段重绑此条file_sha256，不授权新的类别/来源/产品范围。"
     }
   ],
   "historical_baselines": []

@@ -1,0 +1,78 @@
+{
+  "schema": "t1062-final-packet-bounded-independent-static-review/v1",
+  "observed_start_utc": "2026-10-05T19:02:29.218311+00:00",
+  "observed_end_utc": "2026-10-05T19:02:30.372152+00:00",
+  "review_scope": "唯一 final current536b-r2：5 metadata、T1062三个 module 指针、568 exact provider rows、r5 runner/helper消费者；不重做上游实现评审。",
+  "conclusion": "BOUNDED_STATIC_GO_PENDING_EXACT_GOVERNANCE_REBIND",
+  "findings": [],
+  "hash_manifest": {
+    "absolute_path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-final-packet-independent-review-qnzcn2ux/independent-hash-manifest.json",
+    "sha256": "e394b5d8234767c3111b3e39c4cb7153c2ae2c0b2e2e4d1ba3193551c077cfd5",
+    "checks": 2123,
+    "mismatch_count": 0,
+    "drift_count": 0
+  },
+  "heads_before": {
+    "MAIN": "536b703fe3b90d9cc842cfdcca1f71d54f56fced",
+    "writer": "536b703fe3b90d9cc842cfdcca1f71d54f56fced"
+  },
+  "heads_after": {
+    "MAIN": "536b703fe3b90d9cc842cfdcca1f71d54f56fced",
+    "writer": "536b703fe3b90d9cc842cfdcca1f71d54f56fced"
+  },
+  "counts": {
+    "product_write_paths": 568,
+    "scope_write_set": 567,
+    "active_conditional": 1,
+    "module_write": 573,
+    "module_read": 789,
+    "source_snapshot": 785,
+    "protected_readers": 217,
+    "fixed_protected_readers": 214,
+    "copy": 523,
+    "retain": 33,
+    "delete": 12,
+    "expected_native_outputs": 414,
+    "native_source_members": 31,
+    "original_verification_commands": 18
+  },
+  "verified": [
+    "T1062 module candidate 相对真实 base 仅三指针；step_read_set 为 add，其余两项 replace，sole runner 字符串精确。",
+    "568 row 与 scope567+active1 全等；523 TMP provider SHA、33 retained before、12 exact delete 和 MAIN/writer before 均实际独立复核。",
+    "r5 正式候选与已审 runner dcaffc65 字节相同；原18顺序、总预算、owner bootstrap、真实 worker/cache/ready seam 和失败关闭修正沿用 c710 审查。",
+    "NoteRelay source_archive 消费真实78802新ZIP；外部package/lock保持冻结；R8来源沿用b208，未替换原ZIP历史失败证据。",
+    "未把 pending 独评/result/application receipt 或未执行占位改成成功。"
+  ],
+  "only_permitted_mechanical_rebind": {
+    "protected_governance_three_paths": [
+      {
+        "relative_path": "orchestrator/context/T-1062.md",
+        "packet_sha256": "d2fcb223b8f9fba0a88de03f40c28e98137783c25cad5f72f705d621600ae6b1",
+        "MAIN_actual_sha256": "d2fcb223b8f9fba0a88de03f40c28e98137783c25cad5f72f705d621600ae6b1",
+        "writer_actual_sha256": "8e361d3301511e9a4412300fd745bff97fd681d4912ff541a7b88979258483b8"
+      },
+      {
+        "relative_path": "orchestrator/process/modules.config.json",
+        "packet_sha256": "a73bccf25ee88f3d84c581c3cadff4e392f690248601211f8aa664b522135cff",
+        "MAIN_actual_sha256": "a73bccf25ee88f3d84c581c3cadff4e392f690248601211f8aa664b522135cff",
+        "writer_actual_sha256": "a73bccf25ee88f3d84c581c3cadff4e392f690248601211f8aa664b522135cff"
+      },
+      {
+        "relative_path": "orchestrator/progress.json",
+        "packet_sha256": "80c722591794fca556cbcea607581d8916dbcbdd43718713ff7973b4fece792c",
+        "MAIN_actual_sha256": "80c722591794fca556cbcea607581d8916dbcbdd43718713ff7973b4fece792c",
+        "writer_actual_sha256": "80c722591794fca556cbcea607581d8916dbcbdd43718713ff7973b4fece792c"
+      }
+    ],
+    "rule": "维护 commit/FF 后只按真实 writer 当前字节重新绑定上述三路径；其余214 protected（含冻结SPEC、历史receipt、backend/readcontract）不修改、不跳过。writer progress SHA不可用MAIN lease SHA代替。",
+    "other_formal_bindings": "只重绑同一最终MAIN/writer HEAD、base/branch/workspace/wave/lease身份和实际五metadata、module/context/progress SHA、正式scope/独评指针、真实source应用receipt/12删除/414 outputs/UTC/head；原产品rows.before存在性/SHA和所有provider.after SHA保持冻结，backend b1cd073及合同保护不放宽。",
+    "control_consumption": "helper 独立锁 MAIN actual progress+modules 和正式writer scope+review；贯穿每行和结束复核，不以 protected writer progress 替代 MAIN lease。"
+  },
+  "application_boundary": "完成上述实际治理重绑、正式review approved和原public lease后，ROOT可按helper精确--root writer /--manifest/--manifest-sha256/--agent/--apply应用本包；当前原pending包本身拒绝apply。真实source receipt再绑定transfer，runner的pending/deletion门继续存在。",
+  "limits": [
+    "本审查未运行applier/preflight、runner、测试、构建、DB、模型、浏览器、App或lease。",
+    "不宣称原18、host UI、安装、用户听审或T1062任务PASS；新功能结果由后续实际执行决定。",
+    "全局 reconcile保留35 errors/1 warning及历史失败，未称全绿。"
+  ],
+  "no_repo_or_control_writes": true
+}

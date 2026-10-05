@@ -1,0 +1,25 @@
+{
+  "schema": "t1062-frontend-native-adaptation-result/v1",
+  "task": "T-1062",
+  "step": "integration",
+  "status": "NOT_EXECUTED",
+  "verification18": "pending",
+  "product_application": "pending",
+  "native_R8_TMP_actual_static_evidence": {
+    "absolute_path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r8-nzjmtyxt/r8-final-execution-provider-binding.json",
+    "sha256": "c8bf73244faef88a4ebaee8a2b7415d111db654bd7b9462c6a3a032bd0aaddb0"
+  },
+  "installed_WK_hearing": "pending",
+  "global_reconcile_preserved": {
+    "errors": 35,
+    "warnings": 1
+  },
+  "LED049_existing_T1015_test_drift": {
+    "frontend_files": 7,
+    "cases": 79,
+    "passed": 77,
+    "failed": 2,
+    "backend_not_started_due_to_shell_and": true
+  },
+  "does_not_complete_task": true
+}
