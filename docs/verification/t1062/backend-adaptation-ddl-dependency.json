@@ -1,0 +1,796 @@
+{
+  "source_path": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/backend/drizzle/0128_workspace_convergence.sql",
+  "sha256": "60cac883f02fa7fcd83051264bd6a63ec49132369c7c983b36e34e979a2f7713",
+  "schema_files": [
+    "backend/src/schema/creative-canvas.ts",
+    "backend/src/schema/visual-templates.ts",
+    "backend/src/schema/creative-results.ts",
+    "backend/src/schema/work-compositions.ts",
+    "backend/src/schema/work-materials.ts",
+    "backend/src/schema/production.ts",
+    "backend/src/schema/production-file-bindings.ts",
+    "backend/src/schema/work-reviews.ts"
+  ],
+  "table_names": [
+    "canvas_agent_proposals",
+    "canvas_generation_links",
+    "creative_canvases",
+    "creative_result_bundles",
+    "creative_results",
+    "export_records",
+    "output_media_attempts",
+    "production_edit_versions",
+    "production_editor_file_binding_requests",
+    "production_editor_file_bindings",
+    "production_media_requests",
+    "production_render_requests",
+    "production_segments",
+    "productions",
+    "segment_assets",
+    "visual_template_favorites",
+    "visual_template_mutation_receipts",
+    "work_composition_requests",
+    "work_composition_versions",
+    "work_compositions",
+    "work_dependencies",
+    "work_material_associations",
+    "work_material_receipts",
+    "work_review_confirmations",
+    "work_review_reports",
+    "work_review_requests"
+  ],
+  "matching_statements": [
+    {
+      "line": 227,
+      "sql": "ALTER TABLE public.\"canvas_agent_proposals\" ADD COLUMN IF NOT EXISTS \"account_id\" text;"
+    },
+    {
+      "line": 245,
+      "sql": "ALTER TABLE public.\"canvas_agent_proposals\" ADD COLUMN IF NOT EXISTS \"group_id\" text;"
+    },
+    {
+      "line": 253,
+      "sql": "ALTER TABLE public.\"canvas_generation_links\" ADD COLUMN IF NOT EXISTS \"account_id\" text;"
+    },
+    {
+      "line": 279,
+      "sql": "ALTER TABLE public.\"canvas_generation_links\" ADD COLUMN IF NOT EXISTS \"group_id\" text;"
+    },
+    {
+      "line": 281,
+      "sql": "ALTER TABLE public.\"canvas_generation_links\" ADD COLUMN IF NOT EXISTS \"group_version\" integer;"
+    },
+    {
+      "line": 283,
+      "sql": "ALTER TABLE public.\"canvas_generation_links\" ADD COLUMN IF NOT EXISTS \"membership_version\" integer;"
+    },
+    {
+      "line": 301,
+      "sql": "ALTER TABLE public.\"creative_canvases\" ADD COLUMN IF NOT EXISTS \"account_id\" text;"
+    },
+    {
+      "line": 317,
+      "sql": "ALTER TABLE public.\"creative_canvases\" ADD COLUMN IF NOT EXISTS \"group_id\" text;"
+    },
+    {
+      "line": 325,
+      "sql": "ALTER TABLE public.\"creative_result_bundles\" ADD COLUMN IF NOT EXISTS \"account_id\" text;"
+    },
+    {
+      "line": 343,
+      "sql": "ALTER TABLE public.\"creative_result_bundles\" ADD COLUMN IF NOT EXISTS \"group_id\" text;"
+    },
+    {
+      "line": 351,
+      "sql": "ALTER TABLE public.\"creative_results\" ADD COLUMN IF NOT EXISTS \"account_id\" text;"
+    },
+    {
+      "line": 403,
+      "sql": "ALTER TABLE public.\"creative_results\" ADD COLUMN IF NOT EXISTS \"group_id\" text;"
+    },
+    {
+      "line": 435,
+      "sql": "ALTER TABLE public.\"export_records\" ADD COLUMN IF NOT EXISTS \"group_id\" text;"
+    },
+    {
+      "line": 693,
+      "sql": "ALTER TABLE public.\"output_media_attempts\" ADD COLUMN IF NOT EXISTS \"account_id\" text;"
+    },
+    {
+      "line": 715,
+      "sql": "ALTER TABLE public.\"output_media_attempts\" ADD COLUMN IF NOT EXISTS \"group_id\" text;"
+    },
+    {
+      "line": 717,
+      "sql": "ALTER TABLE public.\"output_media_attempts\" ADD COLUMN IF NOT EXISTS \"group_version\" integer;"
+    },
+    {
+      "line": 719,
+      "sql": "ALTER TABLE public.\"output_media_attempts\" ADD COLUMN IF NOT EXISTS \"membership_version\" integer;"
+    },
+    {
+      "line": 1061,
+      "sql": "ALTER TABLE public.\"production_edit_versions\" ADD COLUMN IF NOT EXISTS \"group_id\" text;"
+    },
+    {
+      "line": 1069,
+      "sql": "ALTER TABLE public.\"production_editor_file_binding_requests\" ADD COLUMN IF NOT EXISTS \"account_id\" text;"
+    },
+    {
+      "line": 1093,
+      "sql": "ALTER TABLE public.\"production_editor_file_binding_requests\" ADD COLUMN IF NOT EXISTS \"group_id\" text;"
+    },
+    {
+      "line": 1095,
+      "sql": "ALTER TABLE public.\"production_editor_file_binding_requests\" ADD COLUMN IF NOT EXISTS \"group_version\" integer;"
+    },
+    {
+      "line": 1097,
+      "sql": "ALTER TABLE public.\"production_editor_file_binding_requests\" ADD COLUMN IF NOT EXISTS \"membership_version\" integer;"
+    },
+    {
+      "line": 1105,
+      "sql": "ALTER TABLE public.\"production_editor_file_bindings\" ADD COLUMN IF NOT EXISTS \"account_id\" text;"
+    },
+    {
+      "line": 1129,
+      "sql": "ALTER TABLE public.\"production_editor_file_bindings\" ADD COLUMN IF NOT EXISTS \"group_id\" text;"
+    },
+    {
+      "line": 1137,
+      "sql": "ALTER TABLE public.\"production_media_requests\" ADD COLUMN IF NOT EXISTS \"account_id\" text;"
+    },
+    {
+      "line": 1153,
+      "sql": "ALTER TABLE public.\"production_media_requests\" ADD COLUMN IF NOT EXISTS \"group_id\" text;"
+    },
+    {
+      "line": 1155,
+      "sql": "ALTER TABLE public.\"production_media_requests\" ADD COLUMN IF NOT EXISTS \"group_version\" integer;"
+    },
+    {
+      "line": 1157,
+      "sql": "ALTER TABLE public.\"production_media_requests\" ADD COLUMN IF NOT EXISTS \"membership_version\" integer;"
+    },
+    {
+      "line": 1183,
+      "sql": "ALTER TABLE public.\"production_render_requests\" ADD COLUMN IF NOT EXISTS \"group_id\" text;"
+    },
+    {
+      "line": 1185,
+      "sql": "ALTER TABLE public.\"production_render_requests\" ADD COLUMN IF NOT EXISTS \"group_version\" integer;"
+    },
+    {
+      "line": 1187,
+      "sql": "ALTER TABLE public.\"production_render_requests\" ADD COLUMN IF NOT EXISTS \"membership_version\" integer;"
+    },
+    {
+      "line": 1189,
+      "sql": "ALTER TABLE public.\"production_segments\" ADD COLUMN IF NOT EXISTS \"group_id\" text;"
+    },
+    {
+      "line": 1191,
+      "sql": "ALTER TABLE public.\"productions\" ADD COLUMN IF NOT EXISTS \"group_id\" text;"
+    },
+    {
+      "line": 1441,
+      "sql": "ALTER TABLE public.\"segment_assets\" ADD COLUMN IF NOT EXISTS \"group_id\" text;"
+    },
+    {
+      "line": 1513,
+      "sql": "ALTER TABLE public.\"visual_template_favorites\" ADD COLUMN IF NOT EXISTS \"account_id\" text;"
+    },
+    {
+      "line": 1525,
+      "sql": "ALTER TABLE public.\"visual_template_favorites\" ADD COLUMN IF NOT EXISTS \"group_id\" text;"
+    },
+    {
+      "line": 1533,
+      "sql": "ALTER TABLE public.\"visual_template_mutation_receipts\" ADD COLUMN IF NOT EXISTS \"account_id\" text;"
+    },
+    {
+      "line": 1543,
+      "sql": "ALTER TABLE public.\"visual_template_mutation_receipts\" ADD COLUMN IF NOT EXISTS \"group_id\" text;"
+    },
+    {
+      "line": 1551,
+      "sql": "ALTER TABLE public.\"work_composition_requests\" ADD COLUMN IF NOT EXISTS \"account_id\" text;"
+    },
+    {
+      "line": 1573,
+      "sql": "ALTER TABLE public.\"work_composition_requests\" ADD COLUMN IF NOT EXISTS \"group_id\" text;"
+    },
+    {
+      "line": 1587,
+      "sql": "ALTER TABLE public.\"work_composition_versions\" ADD COLUMN IF NOT EXISTS \"group_id\" text;"
+    },
+    {
+      "line": 1595,
+      "sql": "ALTER TABLE public.\"work_compositions\" ADD COLUMN IF NOT EXISTS \"account_id\" text;"
+    },
+    {
+      "line": 1605,
+      "sql": "ALTER TABLE public.\"work_compositions\" ADD COLUMN IF NOT EXISTS \"group_id\" text;"
+    },
+    {
+      "line": 1613,
+      "sql": "ALTER TABLE public.\"work_dependencies\" ADD COLUMN IF NOT EXISTS \"account_id\" text;"
+    },
+    {
+      "line": 1625,
+      "sql": "ALTER TABLE public.\"work_dependencies\" ADD COLUMN IF NOT EXISTS \"group_id\" text;"
+    },
+    {
+      "line": 1633,
+      "sql": "ALTER TABLE public.\"work_material_associations\" ADD COLUMN IF NOT EXISTS \"account_id\" text;"
+    },
+    {
+      "line": 1645,
+      "sql": "ALTER TABLE public.\"work_material_associations\" ADD COLUMN IF NOT EXISTS \"group_id\" text;"
+    },
+    {
+      "line": 1653,
+      "sql": "ALTER TABLE public.\"work_material_receipts\" ADD COLUMN IF NOT EXISTS \"account_id\" text;"
+    },
+    {
+      "line": 1665,
+      "sql": "ALTER TABLE public.\"work_material_receipts\" ADD COLUMN IF NOT EXISTS \"group_id\" text;"
+    },
+    {
+      "line": 1675,
+      "sql": "ALTER TABLE public.\"work_review_confirmations\" ADD COLUMN IF NOT EXISTS \"account_id\" text;"
+    },
+    {
+      "line": 1687,
+      "sql": "ALTER TABLE public.\"work_review_confirmations\" ADD COLUMN IF NOT EXISTS \"group_id\" text;"
+    },
+    {
+      "line": 1697,
+      "sql": "ALTER TABLE public.\"work_review_reports\" ADD COLUMN IF NOT EXISTS \"account_id\" text;"
+    },
+    {
+      "line": 1725,
+      "sql": "ALTER TABLE public.\"work_review_reports\" ADD COLUMN IF NOT EXISTS \"group_id\" text;"
+    },
+    {
+      "line": 1727,
+      "sql": "ALTER TABLE public.\"work_review_reports\" ADD COLUMN IF NOT EXISTS \"group_version\" integer;"
+    },
+    {
+      "line": 1729,
+      "sql": "ALTER TABLE public.\"work_review_reports\" ADD COLUMN IF NOT EXISTS \"membership_version\" integer;"
+    },
+    {
+      "line": 1739,
+      "sql": "ALTER TABLE public.\"work_review_requests\" ADD COLUMN IF NOT EXISTS \"account_id\" text;"
+    },
+    {
+      "line": 1763,
+      "sql": "ALTER TABLE public.\"work_review_requests\" ADD COLUMN IF NOT EXISTS \"group_id\" text;"
+    },
+    {
+      "line": 1809,
+      "sql": "ALTER TABLE public.\"canvas_agent_proposals\" ALTER COLUMN account_id DROP NOT NULL;"
+    },
+    {
+      "line": 1811,
+      "sql": "ALTER TABLE public.\"canvas_generation_links\" ALTER COLUMN account_id DROP NOT NULL;"
+    },
+    {
+      "line": 1815,
+      "sql": "ALTER TABLE public.\"creative_canvases\" ALTER COLUMN account_id DROP NOT NULL;"
+    },
+    {
+      "line": 1817,
+      "sql": "ALTER TABLE public.\"creative_result_bundles\" ALTER COLUMN account_id DROP NOT NULL;"
+    },
+    {
+      "line": 1819,
+      "sql": "ALTER TABLE public.\"creative_results\" ALTER COLUMN account_id DROP NOT NULL;"
+    },
+    {
+      "line": 1881,
+      "sql": "ALTER TABLE public.\"output_media_attempts\" ALTER COLUMN account_id DROP NOT NULL;"
+    },
+    {
+      "line": 1893,
+      "sql": "ALTER TABLE public.\"production_editor_file_binding_requests\" ALTER COLUMN account_id DROP NOT NULL;"
+    },
+    {
+      "line": 1895,
+      "sql": "ALTER TABLE public.\"production_editor_file_bindings\" ALTER COLUMN account_id DROP NOT NULL;"
+    },
+    {
+      "line": 1897,
+      "sql": "ALTER TABLE public.\"production_media_requests\" ALTER COLUMN account_id DROP NOT NULL;"
+    },
+    {
+      "line": 1939,
+      "sql": "ALTER TABLE public.\"visual_template_favorites\" ALTER COLUMN account_id DROP NOT NULL;"
+    },
+    {
+      "line": 1941,
+      "sql": "ALTER TABLE public.\"visual_template_mutation_receipts\" ALTER COLUMN account_id DROP NOT NULL;"
+    },
+    {
+      "line": 1943,
+      "sql": "ALTER TABLE public.\"work_composition_requests\" ALTER COLUMN account_id DROP NOT NULL;"
+    },
+    {
+      "line": 1945,
+      "sql": "ALTER TABLE public.\"work_compositions\" ALTER COLUMN account_id DROP NOT NULL;"
+    },
+    {
+      "line": 1947,
+      "sql": "ALTER TABLE public.\"work_dependencies\" ALTER COLUMN account_id DROP NOT NULL;"
+    },
+    {
+      "line": 1949,
+      "sql": "ALTER TABLE public.\"work_material_associations\" ALTER COLUMN account_id DROP NOT NULL;"
+    },
+    {
+      "line": 1951,
+      "sql": "ALTER TABLE public.\"work_material_receipts\" ALTER COLUMN account_id DROP NOT NULL;"
+    },
+    {
+      "line": 1953,
+      "sql": "ALTER TABLE public.\"work_review_confirmations\" ALTER COLUMN account_id DROP NOT NULL;"
+    },
+    {
+      "line": 1955,
+      "sql": "ALTER TABLE public.\"work_review_reports\" ALTER COLUMN account_id DROP NOT NULL;"
+    },
+    {
+      "line": 1957,
+      "sql": "ALTER TABLE public.\"work_review_requests\" ALTER COLUMN account_id DROP NOT NULL;"
+    },
+    {
+      "line": 2279,
+      "sql": "CREATE INDEX IF NOT EXISTS canvas_agent_proposals_canvas_idx ON public.canvas_agent_proposals USING btree (user_id, account_id, canvas_id);"
+    },
+    {
+      "line": 2281,
+      "sql": "CREATE INDEX IF NOT EXISTS canvas_agent_proposals_group_scope_idx ON public.canvas_agent_proposals USING btree (user_id, group_id);"
+    },
+    {
+      "line": 2283,
+      "sql": "CREATE INDEX IF NOT EXISTS canvas_generation_links_canvas_idx ON public.canvas_generation_links USING btree (user_id, account_id, canvas_id);"
+    },
+    {
+      "line": 2285,
+      "sql": "CREATE INDEX IF NOT EXISTS canvas_generation_links_group_scope_idx ON public.canvas_generation_links USING btree (user_id, group_id);"
+    },
+    {
+      "line": 2293,
+      "sql": "CREATE INDEX IF NOT EXISTS creative_canvases_group_scope_idx ON public.creative_canvases USING btree (user_id, group_id);"
+    },
+    {
+      "line": 2295,
+      "sql": "CREATE INDEX IF NOT EXISTS creative_canvases_owner_updated_idx ON public.creative_canvases USING btree (user_id, account_id, updated_at);"
+    },
+    {
+      "line": 2297,
+      "sql": "CREATE UNIQUE INDEX IF NOT EXISTS creative_result_bundles_group_46c5ab4b ON public.creative_result_bundles USING btree (user_id, group_id, client_request_id) WHERE ((group_id IS NOT NULL) AND (account_id IS NULL));"
+    },
+    {
+      "line": 2299,
+      "sql": "CREATE INDEX IF NOT EXISTS creative_result_bundles_group_scope_idx ON public.creative_result_bundles USING btree (user_id, group_id);"
+    },
+    {
+      "line": 2301,
+      "sql": "CREATE INDEX IF NOT EXISTS creative_result_bundles_output_ix ON public.creative_result_bundles USING btree (user_id, account_id, output_id, created_at, id);"
+    },
+    {
+      "line": 2303,
+      "sql": "CREATE UNIQUE INDEX IF NOT EXISTS creative_result_bundles_request_ux ON public.creative_result_bundles USING btree (user_id, account_id, client_request_id);"
+    },
+    {
+      "line": 2305,
+      "sql": "CREATE UNIQUE INDEX IF NOT EXISTS creative_results_group_46c5ab4b ON public.creative_results USING btree (user_id, group_id, client_request_id) WHERE ((group_id IS NOT NULL) AND (account_id IS NULL));"
+    },
+    {
+      "line": 2307,
+      "sql": "CREATE INDEX IF NOT EXISTS creative_results_group_scope_idx ON public.creative_results USING btree (user_id, group_id);"
+    },
+    {
+      "line": 2309,
+      "sql": "CREATE INDEX IF NOT EXISTS creative_results_output_ix ON public.creative_results USING btree (user_id, account_id, output_id, created_at, id);"
+    },
+    {
+      "line": 2311,
+      "sql": "CREATE UNIQUE INDEX IF NOT EXISTS creative_results_request_ux ON public.creative_results USING btree (user_id, account_id, client_request_id);"
+    },
+    {
+      "line": 2439,
+      "sql": "CREATE UNIQUE INDEX IF NOT EXISTS output_media_attempts_group_46c5ab4b ON public.output_media_attempts USING btree (user_id, group_id, client_request_id) WHERE ((group_id IS NOT NULL) AND (account_id IS NULL));"
+    },
+    {
+      "line": 2441,
+      "sql": "CREATE INDEX IF NOT EXISTS output_media_attempts_group_scope_idx ON public.output_media_attempts USING btree (user_id, group_id);"
+    },
+    {
+      "line": 2443,
+      "sql": "CREATE UNIQUE INDEX IF NOT EXISTS output_media_attempts_request_ux ON public.output_media_attempts USING btree (user_id, account_id, client_request_id);"
+    },
+    {
+      "line": 2445,
+      "sql": "CREATE UNIQUE INDEX IF NOT EXISTS output_media_attempts_task_ux ON public.output_media_attempts USING btree (task_id);"
+    },
+    {
+      "line": 2479,
+      "sql": "CREATE UNIQUE INDEX IF NOT EXISTS production_edit_versions_request_ux ON public.production_edit_versions USING btree (production_id, request_id);"
+    },
+    {
+      "line": 2481,
+      "sql": "CREATE UNIQUE INDEX IF NOT EXISTS production_edit_versions_revision_ux ON public.production_edit_versions USING btree (production_id, revision);"
+    },
+    {
+      "line": 2483,
+      "sql": "CREATE UNIQUE INDEX IF NOT EXISTS production_editor_file_binding_requests_group_68016e59 ON public.production_editor_file_binding_requests USING btree (user_id, group_id, output_id, request_id) WHERE ((group_id IS NOT NULL) AND (account_id IS NULL));"
+    },
+    {
+      "line": 2485,
+      "sql": "CREATE INDEX IF NOT EXISTS production_editor_file_binding_requests_group_scope_idx ON public.production_editor_file_binding_requests USING btree (user_id, group_id);"
+    },
+    {
+      "line": 2487,
+      "sql": "CREATE UNIQUE INDEX IF NOT EXISTS production_editor_file_bindings_group_bb5f5789 ON public.production_editor_file_bindings USING btree (user_id, group_id, output_id, revision, location) WHERE ((group_id IS NOT NULL) AND (account_id IS NULL));"
+    },
+    {
+      "line": 2489,
+      "sql": "CREATE INDEX IF NOT EXISTS production_editor_file_bindings_group_scope_idx ON public.production_editor_file_bindings USING btree (user_id, group_id);"
+    },
+    {
+      "line": 2491,
+      "sql": "CREATE UNIQUE INDEX IF NOT EXISTS production_media_requests_group_68016e59 ON public.production_media_requests USING btree (user_id, group_id, output_id, request_id) WHERE ((group_id IS NOT NULL) AND (account_id IS NULL));"
+    },
+    {
+      "line": 2493,
+      "sql": "CREATE INDEX IF NOT EXISTS production_media_requests_group_scope_idx ON public.production_media_requests USING btree (user_id, group_id);"
+    },
+    {
+      "line": 2495,
+      "sql": "CREATE UNIQUE INDEX IF NOT EXISTS production_media_requests_scope_ux ON public.production_media_requests USING btree (user_id, account_id, output_id, request_id);"
+    },
+    {
+      "line": 2497,
+      "sql": "CREATE UNIQUE INDEX IF NOT EXISTS production_render_requests_request_ux ON public.production_render_requests USING btree (production_id, request_id);"
+    },
+    {
+      "line": 2587,
+      "sql": "CREATE INDEX IF NOT EXISTS visual_template_favorites_group_scope_idx ON public.visual_template_favorites USING btree (user_id, group_id);"
+    },
+    {
+      "line": 2589,
+      "sql": "CREATE INDEX IF NOT EXISTS visual_template_favorites_owner_idx ON public.visual_template_favorites USING btree (user_id, account_id);"
+    },
+    {
+      "line": 2591,
+      "sql": "CREATE UNIQUE INDEX IF NOT EXISTS visual_template_mutation_attempt_ux ON public.visual_template_mutation_receipts USING btree (user_id, account_id, attempt_id);"
+    },
+    {
+      "line": 2593,
+      "sql": "CREATE UNIQUE INDEX IF NOT EXISTS visual_template_mutation_receipts_group_3eed8954 ON public.visual_template_mutation_receipts USING btree (user_id, group_id, attempt_id) WHERE ((group_id IS NOT NULL) AND (account_id IS NULL));"
+    },
+    {
+      "line": 2595,
+      "sql": "CREATE INDEX IF NOT EXISTS visual_template_mutation_receipts_group_scope_idx ON public.visual_template_mutation_receipts USING btree (user_id, group_id);"
+    },
+    {
+      "line": 2597,
+      "sql": "CREATE UNIQUE INDEX IF NOT EXISTS work_composition_requests_group_d4edcb23 ON public.work_composition_requests USING btree (user_id, group_id, request_id) WHERE ((group_id IS NOT NULL) AND (account_id IS NULL));"
+    },
+    {
+      "line": 2599,
+      "sql": "CREATE INDEX IF NOT EXISTS work_composition_requests_group_scope_idx ON public.work_composition_requests USING btree (user_id, group_id);"
+    },
+    {
+      "line": 2601,
+      "sql": "CREATE UNIQUE INDEX IF NOT EXISTS work_composition_requests_scope_ux ON public.work_composition_requests USING btree (user_id, account_id, request_id);"
+    },
+    {
+      "line": 2603,
+      "sql": "CREATE UNIQUE INDEX IF NOT EXISTS work_composition_versions_revision_ux ON public.work_composition_versions USING btree (composition_id, revision);"
+    },
+    {
+      "line": 2605,
+      "sql": "CREATE INDEX IF NOT EXISTS work_compositions_group_scope_idx ON public.work_compositions USING btree (user_id, group_id);"
+    },
+    {
+      "line": 2607,
+      "sql": "CREATE INDEX IF NOT EXISTS work_dependencies_group_scope_idx ON public.work_dependencies USING btree (user_id, group_id);"
+    },
+    {
+      "line": 2609,
+      "sql": "CREATE INDEX IF NOT EXISTS work_material_associations_group_scope_idx ON public.work_material_associations USING btree (user_id, group_id);"
+    },
+    {
+      "line": 2611,
+      "sql": "CREATE UNIQUE INDEX IF NOT EXISTS work_material_receipts_group_d4edcb23 ON public.work_material_receipts USING btree (user_id, group_id, request_id) WHERE ((group_id IS NOT NULL) AND (account_id IS NULL));"
+    },
+    {
+      "line": 2613,
+      "sql": "CREATE INDEX IF NOT EXISTS work_material_receipts_group_scope_idx ON public.work_material_receipts USING btree (user_id, group_id);"
+    },
+    {
+      "line": 2615,
+      "sql": "CREATE UNIQUE INDEX IF NOT EXISTS work_material_receipts_scope_ux ON public.work_material_receipts USING btree (user_id, account_id, request_id);"
+    },
+    {
+      "line": 2617,
+      "sql": "CREATE INDEX IF NOT EXISTS work_review_confirmation_scope_idx ON public.work_review_confirmations USING btree (user_id, account_id, composition_id, scope_key);"
+    },
+    {
+      "line": 2619,
+      "sql": "CREATE INDEX IF NOT EXISTS work_review_confirmations_group_scope_idx ON public.work_review_confirmations USING btree (user_id, group_id);"
+    },
+    {
+      "line": 2621,
+      "sql": "CREATE UNIQUE INDEX IF NOT EXISTS work_review_report_attempt_ux ON public.work_review_reports USING btree (user_id, account_id, attempt_id);"
+    },
+    {
+      "line": 2623,
+      "sql": "CREATE UNIQUE INDEX IF NOT EXISTS work_review_report_call_ux ON public.work_review_reports USING btree (settled_call_id);"
+    },
+    {
+      "line": 2625,
+      "sql": "CREATE INDEX IF NOT EXISTS work_review_report_scope_idx ON public.work_review_reports USING btree (user_id, account_id, composition_id, scope_key);"
+    },
+    {
+      "line": 2627,
+      "sql": "CREATE UNIQUE INDEX IF NOT EXISTS work_review_report_task_ux ON public.work_review_reports USING btree (task_id);"
+    },
+    {
+      "line": 2629,
+      "sql": "CREATE UNIQUE INDEX IF NOT EXISTS work_review_reports_group_3eed8954 ON public.work_review_reports USING btree (user_id, group_id, attempt_id) WHERE ((group_id IS NOT NULL) AND (account_id IS NULL));"
+    },
+    {
+      "line": 2631,
+      "sql": "CREATE INDEX IF NOT EXISTS work_review_reports_group_scope_idx ON public.work_review_reports USING btree (user_id, group_id);"
+    },
+    {
+      "line": 2633,
+      "sql": "CREATE UNIQUE INDEX IF NOT EXISTS work_review_request_scope_ux ON public.work_review_requests USING btree (user_id, account_id, request_id);"
+    },
+    {
+      "line": 2635,
+      "sql": "CREATE UNIQUE INDEX IF NOT EXISTS work_review_requests_group_d4edcb23 ON public.work_review_requests USING btree (user_id, group_id, request_id) WHERE ((group_id IS NOT NULL) AND (account_id IS NULL));"
+    },
+    {
+      "line": 2637,
+      "sql": "CREATE INDEX IF NOT EXISTS work_review_requests_group_scope_idx ON public.work_review_requests USING btree (user_id, group_id);"
+    },
+    {
+      "line": 3160,
+      "sql": "UPDATE public.\"canvas_agent_proposals\" child SET group_id=origin.id FROM account_groups origin WHERE child.group_id IS NULL AND NOT (current_setting('creatoros.existing_group_tables')::jsonb ? 'canvas_agent_proposals') AND origin.id='grp_legacy_'||child.account_id AND origin.user_id=child.user_id;"
+    },
+    {
+      "line": 3162,
+      "sql": "UPDATE public.\"canvas_generation_links\" child SET group_id=origin.id FROM account_groups origin WHERE child.group_id IS NULL AND NOT (current_setting('creatoros.existing_group_tables')::jsonb ? 'canvas_generation_links') AND origin.id='grp_legacy_'||child.account_id AND origin.user_id=child.user_id;"
+    },
+    {
+      "line": 3168,
+      "sql": "UPDATE public.\"creative_canvases\" child SET group_id=parent.group_id FROM projects parent WHERE child.group_id IS NULL AND child.project_id=parent.id AND child.user_id=parent.user_id AND parent.group_id IS NOT NULL;"
+    },
+    {
+      "line": 3170,
+      "sql": "UPDATE public.\"creative_canvases\" child SET group_id=origin.id FROM account_groups origin WHERE child.group_id IS NULL AND NOT (current_setting('creatoros.existing_group_tables')::jsonb ? 'creative_canvases') AND origin.id='grp_legacy_'||child.account_id AND origin.user_id=child.user_id;"
+    },
+    {
+      "line": 3172,
+      "sql": "UPDATE public.\"creative_result_bundles\" child SET group_id=parent.group_id FROM projects parent WHERE child.group_id IS NULL AND child.project_id=parent.id AND child.user_id=parent.user_id AND parent.group_id IS NOT NULL;"
+    },
+    {
+      "line": 3174,
+      "sql": "UPDATE public.\"creative_result_bundles\" child SET group_id=origin.id FROM account_groups origin WHERE child.group_id IS NULL AND NOT (current_setting('creatoros.existing_group_tables')::jsonb ? 'creative_result_bundles') AND origin.id='grp_legacy_'||child.account_id AND origin.user_id=child.user_id;"
+    },
+    {
+      "line": 3176,
+      "sql": "UPDATE public.\"creative_results\" child SET group_id=parent.group_id FROM projects parent WHERE child.group_id IS NULL AND child.project_id=parent.id AND child.user_id=parent.user_id AND parent.group_id IS NOT NULL;"
+    },
+    {
+      "line": 3178,
+      "sql": "UPDATE public.\"creative_results\" child SET group_id=origin.id FROM account_groups origin WHERE child.group_id IS NULL AND NOT (current_setting('creatoros.existing_group_tables')::jsonb ? 'creative_results') AND origin.id='grp_legacy_'||child.account_id AND origin.user_id=child.user_id;"
+    },
+    {
+      "line": 3262,
+      "sql": "UPDATE public.\"output_media_attempts\" child SET group_id=parent.group_id FROM projects parent WHERE child.group_id IS NULL AND child.project_id=parent.id AND child.user_id=parent.user_id AND parent.group_id IS NOT NULL;"
+    },
+    {
+      "line": 3264,
+      "sql": "UPDATE public.\"output_media_attempts\" child SET group_id=origin.id FROM account_groups origin WHERE child.group_id IS NULL AND NOT (current_setting('creatoros.existing_group_tables')::jsonb ? 'output_media_attempts') AND origin.id='grp_legacy_'||child.account_id AND origin.user_id=child.user_id;"
+    },
+    {
+      "line": 3276,
+      "sql": "UPDATE public.\"production_editor_file_binding_requests\" child SET group_id=origin.id FROM account_groups origin WHERE child.group_id IS NULL AND NOT (current_setting('creatoros.existing_group_tables')::jsonb ? 'production_editor_file_binding_requests') AND origin.id='grp_legacy_'||child.account_id AND origin.user_id=child.user_id;"
+    },
+    {
+      "line": 3278,
+      "sql": "UPDATE public.\"production_editor_file_bindings\" child SET group_id=origin.id FROM account_groups origin WHERE child.group_id IS NULL AND NOT (current_setting('creatoros.existing_group_tables')::jsonb ? 'production_editor_file_bindings') AND origin.id='grp_legacy_'||child.account_id AND origin.user_id=child.user_id;"
+    },
+    {
+      "line": 3280,
+      "sql": "UPDATE public.\"production_media_requests\" child SET group_id=origin.id FROM account_groups origin WHERE child.group_id IS NULL AND NOT (current_setting('creatoros.existing_group_tables')::jsonb ? 'production_media_requests') AND origin.id='grp_legacy_'||child.account_id AND origin.user_id=child.user_id;"
+    },
+    {
+      "line": 3344,
+      "sql": "UPDATE public.\"visual_template_favorites\" child SET group_id=origin.id FROM account_groups origin WHERE child.group_id IS NULL AND NOT (current_setting('creatoros.existing_group_tables')::jsonb ? 'visual_template_favorites') AND origin.id='grp_legacy_'||child.account_id AND origin.user_id=child.user_id;"
+    },
+    {
+      "line": 3346,
+      "sql": "UPDATE public.\"visual_template_mutation_receipts\" child SET group_id=origin.id FROM account_groups origin WHERE child.group_id IS NULL AND NOT (current_setting('creatoros.existing_group_tables')::jsonb ? 'visual_template_mutation_receipts') AND origin.id='grp_legacy_'||child.account_id AND origin.user_id=child.user_id;"
+    },
+    {
+      "line": 3348,
+      "sql": "UPDATE public.\"work_composition_requests\" child SET group_id=origin.id FROM account_groups origin WHERE child.group_id IS NULL AND NOT (current_setting('creatoros.existing_group_tables')::jsonb ? 'work_composition_requests') AND origin.id='grp_legacy_'||child.account_id AND origin.user_id=child.user_id;"
+    },
+    {
+      "line": 3350,
+      "sql": "UPDATE public.\"work_compositions\" child SET group_id=parent.group_id FROM projects parent WHERE child.group_id IS NULL AND child.project_id=parent.id AND child.user_id=parent.user_id AND parent.group_id IS NOT NULL;"
+    },
+    {
+      "line": 3352,
+      "sql": "UPDATE public.\"work_compositions\" child SET group_id=origin.id FROM account_groups origin WHERE child.group_id IS NULL AND NOT (current_setting('creatoros.existing_group_tables')::jsonb ? 'work_compositions') AND origin.id='grp_legacy_'||child.account_id AND origin.user_id=child.user_id;"
+    },
+    {
+      "line": 3354,
+      "sql": "UPDATE public.\"work_dependencies\" child SET group_id=parent.group_id FROM projects parent WHERE child.group_id IS NULL AND child.project_id=parent.id AND child.user_id=parent.user_id AND parent.group_id IS NOT NULL;"
+    },
+    {
+      "line": 3356,
+      "sql": "UPDATE public.\"work_dependencies\" child SET group_id=origin.id FROM account_groups origin WHERE child.group_id IS NULL AND NOT (current_setting('creatoros.existing_group_tables')::jsonb ? 'work_dependencies') AND origin.id='grp_legacy_'||child.account_id AND origin.user_id=child.user_id;"
+    },
+    {
+      "line": 3358,
+      "sql": "UPDATE public.\"work_material_associations\" child SET group_id=parent.group_id FROM projects parent WHERE child.group_id IS NULL AND child.project_id=parent.id AND child.user_id=parent.user_id AND parent.group_id IS NOT NULL;"
+    },
+    {
+      "line": 3360,
+      "sql": "UPDATE public.\"work_material_associations\" child SET group_id=origin.id FROM account_groups origin WHERE child.group_id IS NULL AND NOT (current_setting('creatoros.existing_group_tables')::jsonb ? 'work_material_associations') AND origin.id='grp_legacy_'||child.account_id AND origin.user_id=child.user_id;"
+    },
+    {
+      "line": 3362,
+      "sql": "UPDATE public.\"work_material_receipts\" child SET group_id=origin.id FROM account_groups origin WHERE child.group_id IS NULL AND NOT (current_setting('creatoros.existing_group_tables')::jsonb ? 'work_material_receipts') AND origin.id='grp_legacy_'||child.account_id AND origin.user_id=child.user_id;"
+    },
+    {
+      "line": 3364,
+      "sql": "UPDATE public.\"work_review_confirmations\" child SET group_id=parent.group_id FROM projects parent WHERE child.group_id IS NULL AND child.project_id=parent.id AND child.user_id=parent.user_id AND parent.group_id IS NOT NULL;"
+    },
+    {
+      "line": 3366,
+      "sql": "UPDATE public.\"work_review_confirmations\" child SET group_id=origin.id FROM account_groups origin WHERE child.group_id IS NULL AND NOT (current_setting('creatoros.existing_group_tables')::jsonb ? 'work_review_confirmations') AND origin.id='grp_legacy_'||child.account_id AND origin.user_id=child.user_id;"
+    },
+    {
+      "line": 3368,
+      "sql": "UPDATE public.\"work_review_reports\" child SET group_id=parent.group_id FROM projects parent WHERE child.group_id IS NULL AND child.project_id=parent.id AND child.user_id=parent.user_id AND parent.group_id IS NOT NULL;"
+    },
+    {
+      "line": 3370,
+      "sql": "UPDATE public.\"work_review_reports\" child SET group_id=origin.id FROM account_groups origin WHERE child.group_id IS NULL AND NOT (current_setting('creatoros.existing_group_tables')::jsonb ? 'work_review_reports') AND origin.id='grp_legacy_'||child.account_id AND origin.user_id=child.user_id;"
+    },
+    {
+      "line": 3372,
+      "sql": "UPDATE public.\"work_review_requests\" child SET group_id=parent.group_id FROM projects parent WHERE child.group_id IS NULL AND child.project_id=parent.id AND child.user_id=parent.user_id AND parent.group_id IS NOT NULL;"
+    },
+    {
+      "line": 3374,
+      "sql": "UPDATE public.\"work_review_requests\" child SET group_id=origin.id FROM account_groups origin WHERE child.group_id IS NULL AND NOT (current_setting('creatoros.existing_group_tables')::jsonb ? 'work_review_requests') AND origin.id='grp_legacy_'||child.account_id AND origin.user_id=child.user_id;"
+    },
+    {
+      "line": 3378,
+      "sql": "UPDATE public.\"canvas_generation_links\" child SET group_id=parent.group_id FROM public.\"creative_canvases\" parent WHERE (child.group_id IS NULL OR NOT(current_setting('creatoros.existing_group_tables')::jsonb ? 'canvas_generation_links')) AND child.\"canvas_id\"=parent.id AND child.user_id=parent.user_id AND parent.group_id IS NOT NULL;"
+    },
+    {
+      "line": 3380,
+      "sql": "UPDATE public.\"canvas_agent_proposals\" child SET group_id=parent.group_id FROM public.\"creative_canvases\" parent WHERE (child.group_id IS NULL OR NOT(current_setting('creatoros.existing_group_tables')::jsonb ? 'canvas_agent_proposals')) AND child.\"canvas_id\"=parent.id AND child.user_id=parent.user_id AND parent.group_id IS NOT NULL;"
+    },
+    {
+      "line": 3382,
+      "sql": "UPDATE public.\"work_composition_versions\" child SET group_id=parent.group_id FROM public.\"work_compositions\" parent WHERE (child.group_id IS NULL OR NOT(current_setting('creatoros.existing_group_tables')::jsonb ? 'work_composition_versions')) AND child.\"composition_id\"=parent.id AND parent.group_id IS NOT NULL;"
+    },
+    {
+      "line": 3384,
+      "sql": "UPDATE public.\"production_edit_versions\" child SET group_id=parent.group_id FROM public.\"productions\" parent WHERE (child.group_id IS NULL OR NOT(current_setting('creatoros.existing_group_tables')::jsonb ? 'production_edit_versions')) AND child.\"production_id\"=parent.id AND child.user_id=parent.user_id AND parent.group_id IS NOT NULL;"
+    },
+    {
+      "line": 3386,
+      "sql": "UPDATE public.\"production_render_requests\" child SET group_id=parent.group_id FROM public.\"productions\" parent WHERE (child.group_id IS NULL OR NOT(current_setting('creatoros.existing_group_tables')::jsonb ? 'production_render_requests')) AND child.\"production_id\"=parent.id AND child.user_id=parent.user_id AND parent.group_id IS NOT NULL;"
+    },
+    {
+      "line": 3390,
+      "sql": "UPDATE public.\"productions\" child SET group_id=parent.group_id FROM public.\"content_outputs\" parent WHERE (child.group_id IS NULL OR NOT(current_setting('creatoros.existing_group_tables')::jsonb ? 'productions')) AND child.\"content_output_id\"=parent.id AND EXISTS(SELECT 1 FROM projects owner WHERE owner.id=parent.project_id AND owner.user_id=child.user_id) AND parent.group_id IS NOT NULL;"
+    },
+    {
+      "line": 3392,
+      "sql": "UPDATE public.\"production_segments\" child SET group_id=parent.group_id FROM public.\"productions\" parent WHERE (child.group_id IS NULL OR NOT(current_setting('creatoros.existing_group_tables')::jsonb ? 'production_segments')) AND child.\"production_id\"=parent.id AND child.user_id=parent.user_id AND parent.group_id IS NOT NULL;"
+    },
+    {
+      "line": 3394,
+      "sql": "UPDATE public.\"production_edit_versions\" child SET group_id=parent.group_id FROM public.\"productions\" parent WHERE (child.group_id IS NULL OR NOT(current_setting('creatoros.existing_group_tables')::jsonb ? 'production_edit_versions')) AND child.\"production_id\"=parent.id AND child.user_id=parent.user_id AND parent.group_id IS NOT NULL;"
+    },
+    {
+      "line": 3396,
+      "sql": "UPDATE public.\"production_render_requests\" child SET group_id=parent.group_id FROM public.\"productions\" parent WHERE (child.group_id IS NULL OR NOT(current_setting('creatoros.existing_group_tables')::jsonb ? 'production_render_requests')) AND child.\"production_id\"=parent.id AND child.user_id=parent.user_id AND parent.group_id IS NOT NULL;"
+    },
+    {
+      "line": 3398,
+      "sql": "UPDATE public.\"segment_assets\" child SET group_id=parent.group_id FROM public.\"production_segments\" parent WHERE (child.group_id IS NULL OR NOT(current_setting('creatoros.existing_group_tables')::jsonb ? 'segment_assets')) AND child.\"production_segment_id\"=parent.id AND child.user_id=parent.user_id AND parent.group_id IS NOT NULL;"
+    },
+    {
+      "line": 3400,
+      "sql": "UPDATE public.\"export_records\" child SET group_id=parent.group_id FROM public.\"productions\" parent WHERE (child.group_id IS NULL OR NOT(current_setting('creatoros.existing_group_tables')::jsonb ? 'export_records')) AND child.\"production_id\"=parent.id AND child.user_id=parent.user_id AND parent.group_id IS NOT NULL;"
+    },
+    {
+      "line": 3406,
+      "sql": "UPDATE public.\"work_composition_requests\" child SET group_id=parent.group_id FROM public.\"work_compositions\" parent WHERE (child.group_id IS NULL OR NOT(current_setting('creatoros.existing_group_tables')::jsonb ? 'work_composition_requests')) AND child.\"composition_id\"=parent.id AND child.user_id=parent.user_id AND parent.group_id IS NOT NULL;"
+    },
+    {
+      "line": 3408,
+      "sql": "UPDATE public.\"work_material_receipts\" child SET group_id=parent.group_id FROM public.\"work_compositions\" parent WHERE (child.group_id IS NULL OR NOT(current_setting('creatoros.existing_group_tables')::jsonb ? 'work_material_receipts')) AND child.\"composition_id\"=parent.id AND child.user_id=parent.user_id AND parent.group_id IS NOT NULL;"
+    },
+    {
+      "line": 3410,
+      "sql": "UPDATE public.\"work_material_associations\" child SET group_id=parent.group_id FROM public.\"work_compositions\" parent WHERE (child.group_id IS NULL OR NOT(current_setting('creatoros.existing_group_tables')::jsonb ? 'work_material_associations')) AND child.\"composition_id\"=parent.id AND child.user_id=parent.user_id AND parent.group_id IS NOT NULL;"
+    },
+    {
+      "line": 3412,
+      "sql": "UPDATE public.\"work_dependencies\" child SET group_id=parent.group_id FROM public.\"work_compositions\" parent WHERE (child.group_id IS NULL OR NOT(current_setting('creatoros.existing_group_tables')::jsonb ? 'work_dependencies')) AND child.\"composition_id\"=parent.id AND child.user_id=parent.user_id AND parent.group_id IS NOT NULL;"
+    },
+    {
+      "line": 3414,
+      "sql": "UPDATE public.\"work_review_reports\" child SET group_id=parent.group_id FROM public.\"work_compositions\" parent WHERE (child.group_id IS NULL OR NOT(current_setting('creatoros.existing_group_tables')::jsonb ? 'work_review_reports')) AND child.\"composition_id\"=parent.id AND child.user_id=parent.user_id AND parent.group_id IS NOT NULL;"
+    },
+    {
+      "line": 3416,
+      "sql": "UPDATE public.\"work_review_confirmations\" child SET group_id=parent.group_id FROM public.\"work_compositions\" parent WHERE (child.group_id IS NULL OR NOT(current_setting('creatoros.existing_group_tables')::jsonb ? 'work_review_confirmations')) AND child.\"composition_id\"=parent.id AND child.user_id=parent.user_id AND parent.group_id IS NOT NULL;"
+    },
+    {
+      "line": 3418,
+      "sql": "UPDATE public.\"work_review_requests\" child SET group_id=parent.group_id FROM public.\"work_compositions\" parent WHERE (child.group_id IS NULL OR NOT(current_setting('creatoros.existing_group_tables')::jsonb ? 'work_review_requests')) AND child.\"composition_id\"=parent.id AND child.user_id=parent.user_id AND parent.group_id IS NOT NULL;"
+    },
+    {
+      "line": 3430,
+      "sql": "UPDATE public.\"creative_result_bundles\" child SET group_id=parent.group_id FROM public.\"content_outputs\" parent WHERE (child.group_id IS NULL OR NOT(current_setting('creatoros.existing_group_tables')::jsonb ? 'creative_result_bundles')) AND child.\"output_id\"=parent.id AND EXISTS(SELECT 1 FROM projects owner WHERE owner.id=parent.project_id AND owner.user_id=child.user_id) AND parent.group_id IS NOT NULL;"
+    },
+    {
+      "line": 3432,
+      "sql": "UPDATE public.\"creative_results\" child SET group_id=parent.group_id FROM public.\"content_outputs\" parent WHERE (child.group_id IS NULL OR NOT(current_setting('creatoros.existing_group_tables')::jsonb ? 'creative_results')) AND child.\"output_id\"=parent.id AND EXISTS(SELECT 1 FROM projects owner WHERE owner.id=parent.project_id AND owner.user_id=child.user_id) AND parent.group_id IS NOT NULL;"
+    },
+    {
+      "line": 3440,
+      "sql": "UPDATE public.\"output_media_attempts\" child SET group_id=parent.group_id FROM public.\"content_outputs\" parent WHERE (child.group_id IS NULL OR NOT(current_setting('creatoros.existing_group_tables')::jsonb ? 'output_media_attempts')) AND child.\"output_id\"=parent.id AND EXISTS(SELECT 1 FROM projects owner WHERE owner.id=parent.project_id AND owner.user_id=child.user_id) AND parent.group_id IS NOT NULL;"
+    },
+    {
+      "line": 3442,
+      "sql": "UPDATE public.\"production_editor_file_binding_requests\" child SET group_id=parent.group_id FROM public.\"content_outputs\" parent WHERE (child.group_id IS NULL OR NOT(current_setting('creatoros.existing_group_tables')::jsonb ? 'production_editor_file_binding_requests')) AND child.\"output_id\"=parent.id AND EXISTS(SELECT 1 FROM projects owner WHERE owner.id=parent.project_id AND owner.user_id=child.user_id) AND parent.group_id IS NOT NULL;"
+    },
+    {
+      "line": 3444,
+      "sql": "UPDATE public.\"production_editor_file_bindings\" child SET group_id=parent.group_id FROM public.\"content_outputs\" parent WHERE (child.group_id IS NULL OR NOT(current_setting('creatoros.existing_group_tables')::jsonb ? 'production_editor_file_bindings')) AND child.\"output_id\"=parent.id AND EXISTS(SELECT 1 FROM projects owner WHERE owner.id=parent.project_id AND owner.user_id=child.user_id) AND parent.group_id IS NOT NULL;"
+    },
+    {
+      "line": 3446,
+      "sql": "UPDATE public.\"production_media_requests\" child SET group_id=parent.group_id FROM public.\"content_outputs\" parent WHERE (child.group_id IS NULL OR NOT(current_setting('creatoros.existing_group_tables')::jsonb ? 'production_media_requests')) AND child.\"output_id\"=parent.id AND EXISTS(SELECT 1 FROM projects owner WHERE owner.id=parent.project_id AND owner.user_id=child.user_id) AND parent.group_id IS NOT NULL;"
+    },
+    {
+      "line": 3454,
+      "sql": "UPDATE public.\"canvas_generation_links\" child SET group_id=task.group_id,group_version=task.group_version,membership_version=task.membership_version FROM ai_tasks task WHERE child.task_id=task.id AND child.user_id=task.user_id AND task.group_id IS NOT NULL AND (child.group_id IS NULL OR NOT(current_setting('creatoros.existing_group_tables')::jsonb ? 'canvas_generation_links'));"
+    },
+    {
+      "line": 3456,
+      "sql": "UPDATE public.\"production_media_requests\" child SET group_id=task.group_id,group_version=task.group_version,membership_version=task.membership_version FROM ai_tasks task WHERE child.task_id=task.id AND child.user_id=task.user_id AND task.group_id IS NOT NULL AND (child.group_id IS NULL OR NOT(current_setting('creatoros.existing_group_tables')::jsonb ? 'production_media_requests'));"
+    },
+    {
+      "line": 3458,
+      "sql": "UPDATE public.\"production_render_requests\" child SET group_id=task.group_id,group_version=task.group_version,membership_version=task.membership_version FROM ai_tasks task WHERE child.task_id=task.id AND child.user_id=task.user_id AND task.group_id IS NOT NULL AND (child.group_id IS NULL OR NOT(current_setting('creatoros.existing_group_tables')::jsonb ? 'production_render_requests'));"
+    },
+    {
+      "line": 3460,
+      "sql": "UPDATE public.\"output_media_attempts\" child SET group_id=task.group_id,group_version=task.group_version,membership_version=task.membership_version FROM ai_tasks task WHERE child.task_id=task.id AND child.user_id=task.user_id AND task.group_id IS NOT NULL AND (child.group_id IS NULL OR NOT(current_setting('creatoros.existing_group_tables')::jsonb ? 'output_media_attempts'));"
+    },
+    {
+      "line": 3462,
+      "sql": "UPDATE public.\"work_review_reports\" child SET group_id=task.group_id,group_version=task.group_version,membership_version=task.membership_version FROM ai_tasks task WHERE child.task_id=task.id AND child.user_id=task.user_id AND task.group_id IS NOT NULL AND (child.group_id IS NULL OR NOT(current_setting('creatoros.existing_group_tables')::jsonb ? 'work_review_reports'));"
+    }
+  ]
+}

@@ -1854,6 +1854,70 @@
       "scope_source": "docs/features/t1021-cover-template-library.md",
       "reason": "b22e6522原装配文件已包含这些凭据与桌面工具链标记。本任务diff仅装配原Assets/Publishing/creative-canvas服务端口；未新增凭据保管、语言工具链、原生进程或安装机制。准确哈希绑定本任务，标记不授权新机制。",
       "acceptance": "git diff b22e6522 -- frontend/src/server/persistence-client.ts可核对只增加模板与采纳服务接线。本项不是测试或发布PASS。"
+    },
+    {
+      "task_id": "T-1062",
+      "files": [
+        "ai-worker/src/execution/structured-worker-generation.ts"
+      ],
+      "file_sha256": "94d1af7b6a02420116b0698aca527c67075d9326ae58c1bf611a58614fda4987",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1062-INTEGRATION-20261005 / DEC-T1062-ROUGH-20261005",
+      "scope_source": "docs/features/t1062-consolidated-local-client-acceptance.md",
+      "reason": "在现有 WorkerPort JSON reserve/start/settle/save 通道内透传已冻结 v2/v3 schema 选择与回执校验；无新 port、transport 或进程。",
+      "review": "docs/verification/t1062/backend-complexity-review.json",
+      "acceptance": "仅批准现有机制复用预算，不代表测试/安装或预先放行后续字节；最终diff与hash需独立复核。"
+    },
+    {
+      "task_id": "T-1062",
+      "files": [
+        "frontend/src/server/persistence-client.ts"
+      ],
+      "file_sha256": "cef0e9dfd9d5590b8972a70342e7998817bfcb6f837e3bd40e11af5eedf7709f",
+      "categories": [
+        "credential_store"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1062-INTEGRATION-20261005 / DEC-T1062-ROUGH-20261005",
+      "scope_source": "docs/features/t1062-consolidated-local-client-acceptance.md",
+      "reason": "只复用既有 channel/model credential resolver 进行当前 Skill/ASR 接线；不新增存储、迁移、加密或凭据生命周期。",
+      "review": "docs/verification/t1062/backend-complexity-review.json",
+      "acceptance": "仅批准现有机制复用预算，不代表测试/安装或预先放行后续字节；最终diff与hash需独立复核。"
+    },
+    {
+      "task_id": "T-1062",
+      "files": [
+        "frontend/src/server/persistence-client.ts"
+      ],
+      "file_sha256": "cef0e9dfd9d5590b8972a70342e7998817bfcb6f837e3bd40e11af5eedf7709f",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1062-INTEGRATION-20261005 / DEC-T1062-ROUGH-20261005",
+      "scope_source": "docs/features/t1062-consolidated-local-client-acceptance.md",
+      "reason": "保留文件内既有工具链相关装配；T-1062 不新增或改变运行时安装、探测、编译与环境管理。",
+      "review": "docs/verification/t1062/backend-complexity-review.json",
+      "acceptance": "仅批准现有机制复用预算，不代表测试/安装或预先放行后续字节；最终diff与hash需独立复核。"
+    },
+    {
+      "task_id": "T-1062",
+      "files": [
+        "frontend/src/server/persistence-client.ts"
+      ],
+      "file_sha256": "cef0e9dfd9d5590b8972a70342e7998817bfcb6f837e3bd40e11af5eedf7709f",
+      "categories": [
+        "native_executable"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1062-INTEGRATION-20261005 / DEC-T1062-ROUGH-20261005",
+      "scope_source": "docs/features/t1062-consolidated-local-client-acceptance.md",
+      "reason": "只复用现有 resolveExecutablePath 与 worker dispatcher；不新增二进制、搜索/下载/安装、spawn 参数族或进程拓扑。",
+      "review": "docs/verification/t1062/backend-complexity-review.json",
+      "acceptance": "仅批准现有机制复用预算，不代表测试/安装或预先放行后续字节；最终diff与hash需独立复核。"
     }
   ],
   "historical_baselines": []

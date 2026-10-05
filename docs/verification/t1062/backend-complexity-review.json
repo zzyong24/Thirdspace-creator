@@ -1,0 +1,135 @@
+{
+  "schema": "t1062-backend-complexity-review/v1",
+  "review_kind": "read_only_complexity_budget",
+  "reviewed_head": "8e9af0eedbf50de49266a4d7ff072e31bfd3d77e",
+  "sources": {
+    "spec": {
+      "path": "docs/features/t1062-consolidated-local-client-acceptance.md",
+      "sha256": "00088921686a37da277f0bf04f0165ae83bcb93760d230566d68d9bc270bf05f"
+    },
+    "rough_contract": {
+      "path": "docs/features/t1062-rough-cut-contract.md",
+      "sha256": "460a5ff4a5718f6ac567eb06f2dc106f1e06125e7db6e69ffea17d943adc0665",
+      "reviewed_source_matches": true
+    },
+    "advisory_write_set": {
+      "path": "/tmp/t1062-backend-adaptation-write-set.json",
+      "sha256": "05e47aaea9a2a1396222f36a00d5567b17d180a497842b23a178ead49081272c",
+      "declared_head": "f8ce322d63e1844e6eff8595af85813e50d7d79d",
+      "current_head_note": "清单生成后主树已前进到 8e9af0ee；本次只认可两个目标文件 before_sha256 仍与当前字节一致，不能把整份旧清单当作当前 HEAD 的最终租约。",
+      "counts": {
+        "required_or_new": 120,
+        "necessary_new": 6,
+        "conditional": 23,
+        "read_only": 50
+      }
+    },
+    "governance_preflight": {
+      "path": "/tmp/t1062-backend-scope-governance-preflight.json",
+      "sha256": "c7d72dcf53e42e8bb33655c51fbac314a3151e3051be6a1a078cf8e242110d65",
+      "markers": 4
+    }
+  },
+  "verdict": "IN_BUDGET_WITH_EXACT_REUSE_BOUNDARIES",
+  "blocking_findings": [],
+  "summary": "四个 governance 标记都来自两份现有组合/worker 文件已经承载的机制，不代表 T-1062 获得新增 IPC、凭据保管、语言工具链或原生进程机制的授权。当前建议允许 writer 在这两个文件内完成已审范围所必需的最小接线：worker 继续使用既有 WorkerPort JSON 调用来选择 v2/v3 strict schema；server composition 继续复用既有凭据读取、可执行文件解析和 worker dispatcher，只注入 group/parent 冻结、exact 文件/音频可用性及粗剪 v3 端口。任何新存储后端、新密钥生命周期、新二进制下载/执行、新语言运行时探测、新 IPC port/transport/process topology 均超预算并阻断，需另行事实、合同和复核。",
+  "files": [
+    {
+      "path": "ai-worker/src/execution/structured-worker-generation.ts",
+      "file_sha256": "94d1af7b6a02420116b0698aca527c67075d9326ae58c1bf611a58614fda4987",
+      "write_set_role": "conditional",
+      "current_mechanism": "既有 generateStructuredInWorker 通过注入的 WorkerPort call 使用 reserveGenerationCall/startCall/settleGenerationCall/saveGenerationResult 等 JSON 请求与回执；当前代码已把 JSON 序列化字节纳入后端摘要边界，并验证 reservation/start/result 回执。",
+      "authorization_basis": [
+        "SPEC 第 9、28、32、62 行要求 Skill 粗剪、冻结 group 归属、旧 digest 重放及公共执行链兼容。",
+        "粗剪合同第 23-26 行要求协议 2 原请求/摘要保持，协议 3 显式分支；第 61-63 行要求 Skill/模型只作语义候选；第 73 行要求沿原 requestId/receipt 执行链。",
+        "建议写集把本文件列为 frozen-worker-ports 条件路径：仅协议版本选择或冻结 scope 对账确需时纳入。"
+      ],
+      "categories": [
+        {
+          "category": "ipc",
+          "decision": "in_budget_conditional",
+          "allowed_delta": "只在现有 WorkerPort call 和现有 reserve/start/settle/save 生命周期内透传已经由 contract 定义并由后端冻结的 protocolVersion/scope/gap schema 选择信息；保持 JSON 可序列化、typed receipt 和 unknown-result 处理。",
+          "mechanism_boundary": "不得增加新 IPC transport、消息总线、socket/pipe、进程管理器、新 port 名或第二套 reservation/settlement 通道；不得让 worker 自造 group/parent/account 身份或重签旧 v2 输入。",
+          "minimum_evidence_after_change": "最终 diff 能逐行证明只复用现有 call；contract registry 与 worker 测试覆盖 v2 原字节和 v3 schema 分支；按最终文件 SHA 再跑 governance 复核。"
+        }
+      ]
+    },
+    {
+      "path": "frontend/src/server/persistence-client.ts",
+      "file_sha256": "cef0e9dfd9d5590b8972a70342e7998817bfcb6f837e3bd40e11af5eedf7709f",
+      "write_set_role": "required_server_wiring",
+      "current_mechanism": "大型 server composition root 已装配 channel model credential wrapper、resolveExecutablePath、多个既有 worker entry/dispatcher、浏览器与原生文件绑定协调器。建议写集只授权 group/tx owner ports、冻结 createTask/ASR/rough 回读、exact 音频解码端口与恢复分类回调的接线。",
+      "authorization_basis": [
+        "SPEC 第 28-32 行要求新创作域沿 root group 规则、可空账号、父依赖闭包、原 public service/原生文档与旧 digest 同时保留。",
+        "SPEC 第 40-44、62 行要求真实源、ASR、Skill 粗剪、采用、原生编辑与 exact 证据经公开链可执行，但不自动未知费用调用模型。",
+        "粗剪合同第 9 行明确不新增第二编辑器、执行账本、音频分析或自动裁剪系统；第 67-73 行要求复用真实播放器/原 root/group/parent 锁与原 native apply/receipt 链。",
+        "建议写集将本文件定位为 server-wiring，明确不得改 native UI 或另造机制。"
+      ],
+      "categories": [
+        {
+          "category": "credential_store",
+          "decision": "in_budget_conditional",
+          "allowed_delta": "仅调用现有 createSettingsWithChannelModelCredentials/getChannelModelCredential/现有模型配置解析，为既有粗剪 Skill/ASR 执行选择已配置凭据；保持原费用、权限和配置边界。",
+          "mechanism_boundary": "不得新增凭据表、文件、keyring namespace、加解密格式、迁移、复制、导入导出、自动探测或生命周期管理；不得读取真实凭据写入日志/fixture，也不得把 account/group 迁移变成凭据搬迁。",
+          "minimum_evidence_after_change": "最终 diff 只能表现为既有 credential resolver 的接线或参数透传；若出现新持久化/密钥 API 即阻断并移出本预算。"
+        },
+        {
+          "category": "language_toolchain",
+          "decision": "in_budget_conditional",
+          "allowed_delta": "本任务无需改变语言工具链；允许本文件保留并继续调用既有 worker/ASR/模型模块的当前构建产物，T-1062 接线不得触碰工具链行为。",
+          "mechanism_boundary": "不得新增 Python/Node/Rust/FFmpeg 等运行时安装、下载、版本探测、包管理、编译或环境修复逻辑；也不得用工具链探测作为粗剪 actionability 的替代证据。",
+          "minimum_evidence_after_change": "最终 diff 在工具链相关区域应为零；若因 import/装配必须相邻改动，只能是类型或现有模块引用且无新运行时行为。"
+        },
+        {
+          "category": "native_executable",
+          "decision": "in_budget_conditional",
+          "allowed_delta": "仅复用现有 resolveExecutablePath、既有 execution worker entry 和 dispatcher 来运行当前 worker；粗剪 exact 文件/音频证据通过既有后端/worker 端口提供。",
+          "mechanism_boundary": "不得新增原生可执行文件、下载/解压/签名/安装/搜索路径、spawn/exec 参数族、守护进程或进程拓扑；不得为 v3 粗剪启动第二 worker 或外部音频分析器。",
+          "minimum_evidence_after_change": "最终 diff 不得新增 resolve/spawn/execFile/worker entry；只允许现有 dispatcher 的 adapter/port 注册。出现新二进制或进程入口即阻断。"
+        }
+      ]
+    }
+  ],
+  "proposed_entries": [
+    {
+      "path": "ai-worker/src/execution/structured-worker-generation.ts",
+      "category": "ipc",
+      "budget": "reuse_only",
+      "scope": "在现有 WorkerPort JSON reserve/start/settle/save 通道内透传已冻结 v2/v3 schema 选择与回执校验；无新 port、transport 或进程。",
+      "source_sha256": "94d1af7b6a02420116b0698aca527c67075d9326ae58c1bf611a58614fda4987"
+    },
+    {
+      "path": "frontend/src/server/persistence-client.ts",
+      "category": "credential_store",
+      "budget": "reuse_only",
+      "scope": "只复用既有 channel/model credential resolver 进行当前 Skill/ASR 接线；不新增存储、迁移、加密或凭据生命周期。",
+      "source_sha256": "cef0e9dfd9d5590b8972a70342e7998817bfcb6f837e3bd40e11af5eedf7709f"
+    },
+    {
+      "path": "frontend/src/server/persistence-client.ts",
+      "category": "language_toolchain",
+      "budget": "presence_only_no_delta",
+      "scope": "保留文件内既有工具链相关装配；T-1062 不新增或改变运行时安装、探测、编译与环境管理。",
+      "source_sha256": "cef0e9dfd9d5590b8972a70342e7998817bfcb6f837e3bd40e11af5eedf7709f"
+    },
+    {
+      "path": "frontend/src/server/persistence-client.ts",
+      "category": "native_executable",
+      "budget": "reuse_only",
+      "scope": "只复用现有 resolveExecutablePath 与 worker dispatcher；不新增二进制、搜索/下载/安装、spawn 参数族或进程拓扑。",
+      "source_sha256": "cef0e9dfd9d5590b8972a70342e7998817bfcb6f837e3bd40e11af5eedf7709f"
+    }
+  ],
+  "budget_rules": {
+    "required_120": "仅覆盖建议清单逐路径写入理由；writer 仍须按当前 HEAD 复核 before_sha，并把真实改动压到各领域 service/contract/schema/public-chain 所需最小集合。路径在清单中不等于可重构整文件。",
+    "conditional_23": "只有真实编译、contract 或聚焦回归证明必要时才能写；需记录触发证据和最终 diff。无触发则保持字节不变。",
+    "result_path": "docs/verification/t1062/backend-adaptation-result.json 只能记录实际候选 SHA、真实执行命令、失败与未验边界；不得先写 PASS 或把历史基线失败洗成当前通过。",
+    "baseline_failures": "保留建议清单引用的 integrated typecheck、contract failures 与兼容审计原始证据。修复属于当前范围时用候选上的聚焦测试证明；范围外历史失败继续列明，禁止通过删除断言、放宽 strict schema、改测试基线或跳过公共链洗绿。",
+    "future_diff_gate": "writer 修改任一目标文件后，本预算只作预期边界；必须以真实 base..candidate diff、最终 file_sha256 和 governance 输出重新审核。新增机制词命中不能引用本报告自动放行。"
+  },
+  "not_test_evidence": [
+    "本报告未运行测试、模型、浏览器、数据库、原生进程或安装版。",
+    "IN_BUDGET 只表示当前计划可在严格复用边界内实施，不表示代码正确、合同通过或安装版可用。",
+    "当前两个文件的 SHA 是 writer 修改前基线；任何字节变化都会使对应 proposed entry 需要最终 diff 复核。"
+  ]
+}

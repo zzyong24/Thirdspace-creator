@@ -1,0 +1,13 @@
+{
+  "task": "T-1062",
+  "rawEvidenceCommit": "8e9af0ee",
+  "rawLogStagedDiffCheck": {
+    "exit": 2,
+    "finding": "六份原始命令输出含末尾空行；保留原始字节，不剪日志或伪称通过。"
+  },
+  "gitHook": {
+    "message": "Can't find lefthook in PATH",
+    "status": "自动hook未运行，不作为验证PASS"
+  },
+  "limits": "源代码与后续候选须运行各自声明的实际Gate；本项不是全局格式全绿、安装版或功能验收。"
+}

@@ -3480,3 +3480,11 @@ T-1017 测试补充（2026-09-30）：用户明确要求测试。本轮覆盖纯
 最终迁移候选 `f8ce322d63e1844e6eff8595af85813e50d7d79d` 已通过隔离候选校验并由主会话 fast-forward 整合。独立最终复核 PASS，371/371 文件哈希匹配，354 个冻结 lineage SQL 和三个 journal 无漂移；独立提交副本重新生成的新增 DDL/catalog 与提交逐字一致。最终新增 SQL bytes 的六文件 43 项回归通过，包括 PGlite/PostgreSQL 四种基线、原安装包 0101 前缀、原数据核对、备份恢复、二次启动、转组及孤立资料保持。全部结果见 `docs/verification/t1062/preflight/migration-independent-review-final.json` 与 `migration-convergence-final-candidate.json`。
 
 保留两次 FK 索引发现失败、Research Gate 实验及恢复、中间自有 WIP 提交/soft reset、暂存内容格式检查遗漏与最终重验，不把旧失败改写成历史 PASS。迁移租约已释放，T-1062 仍进行中；新增域服务组归属、粗剪协议 3、真实模型/原生操作及安装版逐项验收未通过。当前仅创建私有备份目录，未停止/替换现装客户端，未操作真实数据库。
+
+## DEC-T1062-BACKEND-REUSE-BUDGET-20261005：新增域适配的精确复用边界
+
+迁移整合后，后端、合同及既有 Worker 适配写集限定为 120 条必要/新路径、23 条条件路径及一个结果工件，不新增 SQL/journal，不修改前端页面或原生归档。已存在的 CLI 组参数和 projects 的事务锁读取继续复用；服务仍需落实空组、跨组、只读/归档、原父归属和冻结回执。粗剪只实现已独立评审的协议 3，协议 2 原冻结字节和摘要保持。准确路径和迁移 DDL 对照见 `docs/verification/t1062/backend-adaptation-scope.json`。
+
+两个装配文件的四个复杂度标记经独立逐项复核，可在既有机制内接线：Worker IPC、凭据 resolver、既有语言工具链装配及 native dispatcher。预算精确绑定当前文件 SHA，不授权新 port、凭据保管/迁移/加密、运行时安装探测、二进制下载或进程拓扑；writer 改字节后须按真实 diff 和最终 SHA 再复核。该记录不是功能、测试或安装验收 PASS。
+
+验证入口从候选自己的根目录执行声明的类型与公共链测试，使用独立临时目录、内存测试库、mock storage及限定 55422 的随机 PG 库；local storage fixture须自行使用临时根，环境变量不冒充覆盖用户自定义存储。所有失败保留，不使用旧日志代签新字节。此前归档原始输出时六个末尾空行触发格式告警，原始字节和告警均保留；Git自动hook因lefthook不在PATH未运行，后续必须显式执行实际Gate，不声称hook通过。
