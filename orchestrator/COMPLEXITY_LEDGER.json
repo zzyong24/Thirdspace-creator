@@ -1876,7 +1876,7 @@
       "files": [
         "frontend/src/server/persistence-client.ts"
       ],
-      "file_sha256": "cef0e9dfd9d5590b8972a70342e7998817bfcb6f837e3bd40e11af5eedf7709f",
+      "file_sha256": "8e27512fb9f3286686d07bdd968354de730cda6561735192949f36176ccb535a",
       "categories": [
         "credential_store"
       ],
@@ -1892,7 +1892,7 @@
       "files": [
         "frontend/src/server/persistence-client.ts"
       ],
-      "file_sha256": "cef0e9dfd9d5590b8972a70342e7998817bfcb6f837e3bd40e11af5eedf7709f",
+      "file_sha256": "8e27512fb9f3286686d07bdd968354de730cda6561735192949f36176ccb535a",
       "categories": [
         "language_toolchain"
       ],
@@ -1908,7 +1908,7 @@
       "files": [
         "frontend/src/server/persistence-client.ts"
       ],
-      "file_sha256": "cef0e9dfd9d5590b8972a70342e7998817bfcb6f837e3bd40e11af5eedf7709f",
+      "file_sha256": "8e27512fb9f3286686d07bdd968354de730cda6561735192949f36176ccb535a",
       "categories": [
         "native_executable"
       ],

@@ -1,0 +1,178 @@
+{
+  "schema": "t1062-complexity-ledger-baseline-rebind-independent-review/v1",
+  "reviewed_at": "2026-10-05T23:35:17.917271+00:00",
+  "verdict": "PASS_EXACT_BASELINE_REBIND_ONLY",
+  "candidate": {
+    "manifest_path": "/tmp/t1062-ledger-baseline-rebind-5jyr7u1j/manifest.json",
+    "manifest_sha256": "fb1bc95a3781d386fcc099a86e4c1e9f92ee8831fba7055a555531d4b5f6fb8d",
+    "path": "orchestrator/COMPLEXITY_LEDGER.json",
+    "before_sha256": "876798cb906c50d83172454a9a751258d11baef6cb0c2cfab681f5d627822f76",
+    "after_sha256": "c65f2905f5f22ed51fbd7be70302d3700e585a71f4b8b1a4d96793ae955e1c34"
+  },
+  "source_binding": {
+    "path": "frontend/src/server/persistence-client.ts",
+    "expected_sha256": "8e27512fb9f3286686d07bdd968354de730cda6561735192949f36176ccb535a",
+    "main_head": "7aa131e4e11afce0e320443593da997d91453b8c",
+    "main_sha256": "8e27512fb9f3286686d07bdd968354de730cda6561735192949f36176ccb535a",
+    "writer_head": "7aa131e4e11afce0e320443593da997d91453b8c",
+    "writer_sha256": "8e27512fb9f3286686d07bdd968354de730cda6561735192949f36176ccb535a",
+    "b1cd_sha256": "8e27512fb9f3286686d07bdd968354de730cda6561735192949f36176ccb535a",
+    "head_7aa_sha256": "8e27512fb9f3286686d07bdd968354de730cda6561735192949f36176ccb535a",
+    "main_clean": true,
+    "writer_clean": true
+  },
+  "ledger_diff": {
+    "entry_count_before": 150,
+    "entry_count_after": 150,
+    "changed_entry_indices": [
+      123,
+      124,
+      125
+    ],
+    "changes": [
+      {
+        "index": 123,
+        "changed_fields": [
+          "file_sha256"
+        ],
+        "before": {
+          "task_id": "T-1062",
+          "files": [
+            "frontend/src/server/persistence-client.ts"
+          ],
+          "file_sha256": "cef0e9dfd9d5590b8972a70342e7998817bfcb6f837e3bd40e11af5eedf7709f",
+          "categories": [
+            "credential_store"
+          ],
+          "disposition": "in-budget",
+          "decision": "DEC-T1062-INTEGRATION-20261005 / DEC-T1062-ROUGH-20261005",
+          "scope_source": "docs/features/t1062-consolidated-local-client-acceptance.md",
+          "reason": "只复用既有 channel/model credential resolver 进行当前 Skill/ASR 接线；不新增存储、迁移、加密或凭据生命周期。",
+          "review": "docs/verification/t1062/backend-complexity-review.json",
+          "acceptance": "仅批准现有机制复用预算，不代表测试/安装或预先放行后续字节；最终diff与hash需独立复核。"
+        },
+        "after": {
+          "task_id": "T-1062",
+          "files": [
+            "frontend/src/server/persistence-client.ts"
+          ],
+          "file_sha256": "8e27512fb9f3286686d07bdd968354de730cda6561735192949f36176ccb535a",
+          "categories": [
+            "credential_store"
+          ],
+          "disposition": "in-budget",
+          "decision": "DEC-T1062-INTEGRATION-20261005 / DEC-T1062-ROUGH-20261005",
+          "scope_source": "docs/features/t1062-consolidated-local-client-acceptance.md",
+          "reason": "只复用既有 channel/model credential resolver 进行当前 Skill/ASR 接线；不新增存储、迁移、加密或凭据生命周期。",
+          "review": "docs/verification/t1062/backend-complexity-review.json",
+          "acceptance": "仅批准现有机制复用预算，不代表测试/安装或预先放行后续字节；最终diff与hash需独立复核。"
+        }
+      },
+      {
+        "index": 124,
+        "changed_fields": [
+          "file_sha256"
+        ],
+        "before": {
+          "task_id": "T-1062",
+          "files": [
+            "frontend/src/server/persistence-client.ts"
+          ],
+          "file_sha256": "cef0e9dfd9d5590b8972a70342e7998817bfcb6f837e3bd40e11af5eedf7709f",
+          "categories": [
+            "language_toolchain"
+          ],
+          "disposition": "in-budget",
+          "decision": "DEC-T1062-INTEGRATION-20261005 / DEC-T1062-ROUGH-20261005",
+          "scope_source": "docs/features/t1062-consolidated-local-client-acceptance.md",
+          "reason": "保留文件内既有工具链相关装配；T-1062 不新增或改变运行时安装、探测、编译与环境管理。",
+          "review": "docs/verification/t1062/backend-complexity-review.json",
+          "acceptance": "仅批准现有机制复用预算，不代表测试/安装或预先放行后续字节；最终diff与hash需独立复核。"
+        },
+        "after": {
+          "task_id": "T-1062",
+          "files": [
+            "frontend/src/server/persistence-client.ts"
+          ],
+          "file_sha256": "8e27512fb9f3286686d07bdd968354de730cda6561735192949f36176ccb535a",
+          "categories": [
+            "language_toolchain"
+          ],
+          "disposition": "in-budget",
+          "decision": "DEC-T1062-INTEGRATION-20261005 / DEC-T1062-ROUGH-20261005",
+          "scope_source": "docs/features/t1062-consolidated-local-client-acceptance.md",
+          "reason": "保留文件内既有工具链相关装配；T-1062 不新增或改变运行时安装、探测、编译与环境管理。",
+          "review": "docs/verification/t1062/backend-complexity-review.json",
+          "acceptance": "仅批准现有机制复用预算，不代表测试/安装或预先放行后续字节；最终diff与hash需独立复核。"
+        }
+      },
+      {
+        "index": 125,
+        "changed_fields": [
+          "file_sha256"
+        ],
+        "before": {
+          "task_id": "T-1062",
+          "files": [
+            "frontend/src/server/persistence-client.ts"
+          ],
+          "file_sha256": "cef0e9dfd9d5590b8972a70342e7998817bfcb6f837e3bd40e11af5eedf7709f",
+          "categories": [
+            "native_executable"
+          ],
+          "disposition": "in-budget",
+          "decision": "DEC-T1062-INTEGRATION-20261005 / DEC-T1062-ROUGH-20261005",
+          "scope_source": "docs/features/t1062-consolidated-local-client-acceptance.md",
+          "reason": "只复用现有 resolveExecutablePath 与 worker dispatcher；不新增二进制、搜索/下载/安装、spawn 参数族或进程拓扑。",
+          "review": "docs/verification/t1062/backend-complexity-review.json",
+          "acceptance": "仅批准现有机制复用预算，不代表测试/安装或预先放行后续字节；最终diff与hash需独立复核。"
+        },
+        "after": {
+          "task_id": "T-1062",
+          "files": [
+            "frontend/src/server/persistence-client.ts"
+          ],
+          "file_sha256": "8e27512fb9f3286686d07bdd968354de730cda6561735192949f36176ccb535a",
+          "categories": [
+            "native_executable"
+          ],
+          "disposition": "in-budget",
+          "decision": "DEC-T1062-INTEGRATION-20261005 / DEC-T1062-ROUGH-20261005",
+          "scope_source": "docs/features/t1062-consolidated-local-client-acceptance.md",
+          "reason": "只复用现有 resolveExecutablePath 与 worker dispatcher；不新增二进制、搜索/下载/安装、spawn 参数族或进程拓扑。",
+          "review": "docs/verification/t1062/backend-complexity-review.json",
+          "acceptance": "仅批准现有机制复用预算，不代表测试/安装或预先放行后续字节；最终diff与hash需独立复核。"
+        }
+      }
+    ],
+    "other_147_entries_unchanged": true,
+    "schema_unchanged": true,
+    "historical_baselines_unchanged": true,
+    "raw_exact_old_to_new_replacement_only": true,
+    "categories": [
+      "credential_store",
+      "language_toolchain",
+      "native_executable"
+    ]
+  },
+  "bounded_future_tx": {
+    "independent_review_path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-root-transaction-project-owner-independent-review-wpcx8_kt/independent-review.json",
+    "independent_review_sha256": "f5e7f5f114731ba642b7dc5fd89f56d774895ebac3edb25f7c2d8d6863e3922d",
+    "patch_sha256": "2cee79c02c433d657542bee1ee67adfb7a09516208ebc0fc6bed2eb8bba13282",
+    "future_after_sha256": "b59cffa4d7848168efab2f47a6264275c22c88599b6d95b18533f120afac3a09",
+    "finding": "未来两行只增加同事务project owner公开service装配，未增加三类别机制；尚未应用，b59c不在本次重绑授权内。"
+  },
+  "governance": {
+    "active_lease": false,
+    "prior_public_claim_exit": 1,
+    "prior_failure_preserved_required": true,
+    "scope": "只允许应用候选ledger并提交/FF/重新claim；恢复173另按保存证据执行。"
+  },
+  "not_claimed": [
+    "future b59c source applied",
+    "public claim PASS",
+    "Original18 PASS",
+    "installed PASS",
+    "article candidate review"
+  ]
+}
