@@ -1,0 +1,49 @@
+isolated roots=/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-writer-check-t0lwey
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/backend
+
+ ❯ src/modules/execution/execution-chat-script-draft.service.test.ts (19 tests | 11 failed) 6459ms
+   × generate 零子模型，真实任务和回执同事务，ACK 重放不重复提交 150ms
+   × 授权真回执逐字保留首句和换行 210ms
+   × 新租约只恢复已结算授权回执，不重发子模型，原提交 ACK 可重放 232ms
+   × 已提交整稿的准备 503 可原任务补偿，重建服务不重置计数 90ms
+   × 普通 host.task-submit 伪整稿声明不能接管 Worker 提交 84ms
+   × JSONB 重排真实整稿 schema 后，恢复沿用生产解析器与原任务摘要 98ms
+   × 恢复解析器参数契约不符仍拒绝执行原子子任务 86ms
+   × 已验证 continuous 父任务给准备端传递原预算，不再新建十分钟总期限 85ms
+   × 原任务零调用 deadline 缺陷可修复；存在调用=false 时不恢复 85ms
+   × 原任务零调用 deadline 缺陷可修复；存在调用=true 时不恢复 88ms
+   × continuous 父提交整稿在一小时排队后绑定真实执行仍无总期限 89ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 11 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/execution/execution-chat-script-draft.service.test.ts > generate 零子模型，真实任务和回执同事务，ACK 重放不重复提交
+ FAIL  src/modules/execution/execution-chat-script-draft.service.test.ts > 授权真回执逐字保留首句和换行
+ FAIL  src/modules/execution/execution-chat-script-draft.service.test.ts > 新租约只恢复已结算授权回执，不重发子模型，原提交 ACK 可重放
+ FAIL  src/modules/execution/execution-chat-script-draft.service.test.ts > 已提交整稿的准备 503 可原任务补偿，重建服务不重置计数
+ FAIL  src/modules/execution/execution-chat-script-draft.service.test.ts > 普通 host.task-submit 伪整稿声明不能接管 Worker 提交
+ FAIL  src/modules/execution/execution-chat-script-draft.service.test.ts > JSONB 重排真实整稿 schema 后，恢复沿用生产解析器与原任务摘要
+ FAIL  src/modules/execution/execution-chat-script-draft.service.test.ts > 恢复解析器参数契约不符仍拒绝执行原子子任务
+ FAIL  src/modules/execution/execution-chat-script-draft.service.test.ts > 已验证 continuous 父任务给准备端传递原预算，不再新建十分钟总期限
+ FAIL  src/modules/execution/execution-chat-script-draft.service.test.ts > 原任务零调用 deadline 缺陷可修复；存在调用=false 时不恢复
+ FAIL  src/modules/execution/execution-chat-script-draft.service.test.ts > 原任务零调用 deadline 缺陷可修复；存在调用=true 时不恢复
+ FAIL  src/modules/execution/execution-chat-script-draft.service.test.ts > continuous 父提交整稿在一小时排队后绑定真实执行仍无总期限
+OwnershipError: 父资料已归组或不可写，请重新选择工作区
+ ❯ src/workspace-write.ts:35:83
+
+ ❯ PgliteTransaction.transaction ../node_modules/.pnpm/drizzle-orm@0.36.4_@electric-sql+pglite@0.2.17_@opentelemetry+api@1.9.0_@types+pg@8.20._2b67dc22f5b69a01eab93a65df972558/node_modules/src/pglite/session.ts:168:18
+ ❯ PgliteTransaction.transaction ../node_modules/.pnpm/drizzle-orm@0.36.4_@electric-sql+pglite@0.2.17_@opentelemetry+api@1.9.0_@types+pg@8.20._2b67dc22f5b69a01eab93a65df972558/node_modules/src/pglite/session.ts:168:18
+ ❯ Object.createTask src/modules/ai/ai.service.ts:994:20
+ ❯ Object.commit src/modules/ai/ai-task-commit.ts:33:14
+ ❯ src/modules/execution/execution-chat-task-submission.service.ts:117:18
+ ❯ ../node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pglite/src/base.ts:430:23
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/11]⎯
+
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  11 failed | 16 passed (27)
+   Start at  15:12:51
+   Duration  10.37s (transform 3.27s, setup 0ms, import 5.42s, tests 6.50s, environment 0ms)
+
+{"cmd":"pnpm","args":["-C","backend","exec","vitest","run","src/modules/ai-runtime/chat-canvas-tool-host.test.ts","src/modules/execution/execution-chat-script-draft.service.test.ts"],"exit":1,"signal":null,"isolated":"/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-writer-check-t0lwey"}

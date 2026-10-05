@@ -1,0 +1,79 @@
+{
+  "schema": "t1062-submitted-task-parent-fixture-root-scope-review/v1",
+  "reviewed_at": "2026-10-05T07:14:49.223200+00:00",
+  "review_mode": "read_only_no_db_no_model_no_product_write",
+  "candidate": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator",
+  "observed_head": "3f9c00c83e99fc02b367e4792410d4f85bac5a07",
+  "decision": "PASS_ADD_EXACTLY_ONE_TEST_PATH",
+  "approved_additional_path": "backend/src/modules/execution/execution-chat-script-draft.service.test.ts",
+  "production_change_required": false,
+  "finding": {
+    "classification": "fixture_missing_real_owned_parents",
+    "evidence": [
+      "The 11 failures share OwnershipError at workspace-write.ts before submitted-task recovery reaches the resolver.",
+      "Fixture prepareTask always submits projectId=fixture-project and artifactId=fixture-artifact, but fixture creates only an account-scoped global conversation/message and no matching project/artifact rows.",
+      "AiRepository.withTaskParents locks the real project parent whenever projectId is present; an absent parent is correctly indistinguishable from a foreign parent."
+    ],
+    "conclusion": "The new production parent lock exposed an invalid test fixture. Weakening or mocking the production lock would erase the owner guarantee; inserting real owned parents is the minimal correction."
+  },
+  "minimum_fixture_contract": [
+    "Import the existing projects and artifacts tables in this test only.",
+    "For each fixture context, insert a project with the exact fixed project ID used by prepareTask, the same userId, and the exact accountId/groupId workspace stamp. Use ordinary active/script/manual fields and the existing fixed clock.",
+    "Insert the exact fixed artifact under that project with the same userId and accountId/groupId, artifactType and stage consistent with the script-draft path. Do not invent a second ownership source or bypass the service.",
+    "If fixture IDs can collide across the 19 shared-DB cases, derive stable per-fixture project/artifact IDs and thread those same IDs through prepareTask result assertions instead of onConflictDoNothing; collisions must not hide owner mistakes.",
+    "For account/group negative cases, create real foreign parents stamped to the foreign workspace, then call through the original context (and the inverse where applicable). Assert owner rejection and zero child task/artifact-version/call changes. A missing-parent negative is separate and cannot stand in for cross-account isolation.",
+    "Preserve the original submitted model input, frozen tool definition/version/schema, input digest, settled receipt, execution refs, budget/usage, attemptId, concurrency/replay assertions, and early-failure zero-write assertions byte-for-byte except where expected IDs must be parameterized."
+  ],
+  "required_assertions": [
+    "The same-owner account fixture reaches the intended submitted recovery/resolver assertion rather than failing at project ownership.",
+    "A same-owner group fixture, when present in the existing T1062 overlay, stamps groupId and nullable accountId on both parent rows and keeps group/version membership behavior unchanged.",
+    "Foreign account and foreign group rows exist but are rejected without revealing existence and without creating a child task, execution call, artifact version, or duplicate receipt.",
+    "Original ID reuse, digest equality, receipt equality, fee/budget preservation, retry count, ACK replay, concurrency, rollback, deadline, and early cancellation assertions remain.",
+    "The legacy resolver red remains independently reproducible after parent setup; fixing this fixture does not count as resolver approval."
+  ],
+  "scope_exclusions": [
+    "No changes to ai.repository.ts, workspace-write.ts, submitted-task-preparation.service.ts, schema, migration, resolver, model, SDK, IPC, or lifecycle.",
+    "Do not replace real parent rows with mocked ownership ports.",
+    "Do not loosen the new parent lock or turn foreign-parent tests into missing-parent tests.",
+    "The modern receipt unique-key issue and resolver compatibility implementation remain separate reviews."
+  ],
+  "evidence_status": {
+    "full_recovery_log": "Observed 11 failures before resolver due missing project parent.",
+    "legacy_resolver_log": "Observed separate functional resolver red at line 15 after its narrower fixture reaches resolver; not reviewed as fixed here.",
+    "modern_receipt_probe": "17 tests passed; retained as adjacent evidence only."
+  },
+  "evidence_bindings": [
+    {
+      "path": "/tmp/t1062-submitted-tool-full-recovery-green1.log",
+      "sha256": "7ce48687fb25cfc2bb0d1fce45736604a7632b872cf5e088bed2ccba2c97e47a"
+    },
+    {
+      "path": "/tmp/t1062-submitted-old-freeze-resolver-functional-red.log",
+      "sha256": "45a7b8685e56e379fcd069baca4bd3fa19b4491b849d87c645c77621a8e89839"
+    },
+    {
+      "path": "/tmp/t1062-probe-modern-and-legacy-receipts-green1.log",
+      "sha256": "5bd0733ce28f4a5670936198ccd6823a9f27f88bfcd56b7070447035c8003472"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/backend/src/modules/execution/execution-chat-script-draft.service.test.ts",
+      "sha256": "6a50541645dc98ea3e52ad40af686f6faab0382921f6a340cb901bef4540d5ef"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/backend/src/modules/ai/ai.repository.ts",
+      "sha256": "5c3e9906f4e1e5460d314225d8be497f7e1447cf880bfe4ead9db623e2f97b48"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/backend/src/schema/projects.ts",
+      "sha256": "7ec9860b332060a2d4265836daa0926cf4584263fbd6eb2c29be04072c45186d"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/backend/src/schema/artifacts.ts",
+      "sha256": "03202299173db9faec07caca1cc1de5f7043b947fdcd4f3b8d06511db2014e04"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/backend/src/modules/ai/script-draft-task-submission.integration.test.ts",
+      "sha256": "18014d0a6efccdbf47fcb118267e200e497b6d2f93e3a832e3888a49c98c3e00"
+    }
+  ]
+}

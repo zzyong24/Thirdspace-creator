@@ -209,7 +209,8 @@
     "backend/src/application/generation/transactional-task-runtime.ts",
     "backend/src/modules/ai/ai-media-probe-control.ts",
     "backend/src/schema/intelligence.ts",
-    "backend/src/modules/ai-runtime/chat-submitted-tool-parameters.ts"
+    "backend/src/modules/ai-runtime/chat-submitted-tool-parameters.ts",
+    "backend/src/modules/execution/execution-chat-script-draft.service.test.ts"
   ],
   "path_details": [
     {
@@ -2443,6 +2444,21 @@
       "reasons": [
         "保留T993已授权参考图当前定义；在既有解析器内用完整不可变历史definition精确兼容旧冻结参数，不忽略hash、不按业务名称分支。旧恢复实际缺口本轮仅静态证据，先补真实窄红，不把旧过期current equality失败当resolver实跑红。"
       ]
+    },
+    {
+      "path": "backend/src/modules/execution/execution-chat-script-draft.service.test.ts",
+      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/modules/execution/execution-chat-script-draft.service.test.ts",
+      "exists": true,
+      "before_sha256": "6a50541645dc98ea3e52ad40af686f6faab0382921f6a340cb901bef4540d5ef",
+      "areas": [
+        "submitted-task-public-recovery-fixture"
+      ],
+      "roles": [
+        "test-fixture"
+      ],
+      "reasons": [
+        "27th原恢复测试11红止于真实父project缺失；仅补同user/account/group真实project/artifact与foreign父，贯穿真实ID，保原冻结input/hash/version/费用/ACK/恢复/回滚/零写全部断言，不改生产门。"
+      ]
     }
   ],
   "conditional_write_paths": [
@@ -3942,6 +3958,25 @@
       "legacy_resolver_gap": "静态确定性发现，真实执行红需后续补",
       "probe_28_actual_public": "已通过旧迁移NULLfreeze与Source真实retry回归，modern真实account组receipt唯一键族仍待修/验",
       "implementation_verdict": "pending"
+    },
+    {
+      "submitted_parent_fixture_scope": {
+        "at": "2026-10-05T07:16:35.817992+00:00",
+        "base_sha": "3f9c00c83e99fc02b367e4792410d4f85bac5a07",
+        "action": "真实submitted父fixture红后只补一个测试源真实前置数据",
+        "previous_step_path_count": 171,
+        "added_paths": [
+          "backend/src/modules/execution/execution-chat-script-draft.service.test.ts"
+        ],
+        "step_path_count": 172,
+        "independent_review": "docs/verification/t1062/preflight/submitted-task-parent-fixture-scope-review.json",
+        "review_sha256": "d45633f890f4300e67245fa5812685ed3d197465afafdec50b4a4f9e5d910381",
+        "wip_preserved": "docs/verification/t1062/preflight/submitted-task-parent-fixture-paused-wip.json",
+        "reason": "原public recovery完整验收前置失真修正；生产权限、合同、schema和冻结历史均不变。"
+      },
+      "modern_probe_17_actual": "已真红→绿，现代group真实account也用group NULLaccount receipt，旧legacy独立保原account",
+      "old_resolver_functional_red": "此次真正到resolver:15，原日志保留，不与之前current equality过期断言混称",
+      "full_submitted_recovery": "11fail/8pass止于真实project不存在，待fixture修复，无整波PASS"
     }
   ],
   "ordered_prerequisites": [
@@ -3984,7 +4019,7 @@
     "gateway_exception": "frontend/src/app/api/v1/dispatch/route.test.ts仅公共CLI网关测试，route.ts仅条件修复；无页面/UI路径"
   },
   "counts": {
-    "required_or_new": 147,
+    "required_or_new": 148,
     "necessary_new": 6,
     "conditional": 23,
     "read_only": 48
@@ -4742,6 +4777,20 @@
       "review_sha256": "d60e9bceed1fcb0ef9f362e55594095b9e7edf7c36d6486e7eed67024eb6974b",
       "wip_preserved": "docs/verification/t1062/preflight/submitted-tool-freeze-paused-wip.json",
       "reason": "保留当前参考图能力与真实旧执行冻结；不改原frozen JSON/hash、DB、SDK/IPC或生命周期。"
+    },
+    {
+      "at": "2026-10-05T07:16:35.817992+00:00",
+      "base_sha": "3f9c00c83e99fc02b367e4792410d4f85bac5a07",
+      "action": "真实submitted父fixture红后只补一个测试源真实前置数据",
+      "previous_step_path_count": 171,
+      "added_paths": [
+        "backend/src/modules/execution/execution-chat-script-draft.service.test.ts"
+      ],
+      "step_path_count": 172,
+      "independent_review": "docs/verification/t1062/preflight/submitted-task-parent-fixture-scope-review.json",
+      "review_sha256": "d45633f890f4300e67245fa5812685ed3d197465afafdec50b4a4f9e5d910381",
+      "wip_preserved": "docs/verification/t1062/preflight/submitted-task-parent-fixture-paused-wip.json",
+      "reason": "原public recovery完整验收前置失真修正；生产权限、合同、schema和冻结历史均不变。"
     }
   ]
 }
