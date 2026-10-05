@@ -3464,3 +3464,19 @@ T-1017 测试补充（2026-09-30）：用户明确要求测试。本轮覆盖纯
 原生成请求落库丢回执沿真实旧attempt/task与冻结输入恢复；未落库新提交仍要求当前revision，不重写历史digest。三源migration SQL/tag/when原文保留，新增收敛使用真实新receipt和版本物理检查，首次建组与已有转组库分开；不得重播旧membership初始INSERT或伪造旧125receipt。四谱系公共启动与原ID/行数/storageKey/历史回执/二次启动均需当场证据。目前隔离原SQL已复现root与canvas跳过建表，仍为待修真红，不是验收PASS。
 
 本条记录既有确认范围的冲突落实及来源追溯，不声称用户对代码逐项新签字。具体裁决及未验边界见docs/verification/t1062/merge-decisions.md、migration-red-evidence.md；最终安装验收由当场结果和用户实际确认决定。
+
+## DEC-T1062-ROUGH-20261005：停顿候选的精确范围与听审采用
+
+用户本轮明确要求像 ChatCut 一样支持粗剪及 Skill；既有 T-1062 有限范围已包含停顿处理。对照现有实现确认真实词句删留已存在，但相邻停顿缩短缺合同。新增 `docs/features/t1062-rough-cut-contract.md`（SHA256:460a5ff4a5718f6ac567eb06f2dc106f1e06125e7db6e69ffea17d943adc0665）经两轮独立静态合同评审，首次 CONCERNS 保留，源有理 timebase、组/父范围冻结及无音轨降级三项修订后 PASS，见 `docs/verification/t1062/rough-cut-contract-review.json`。
+
+协议 3 只补后端冻结的相邻真实 timed-token gap，不开放模型任意时间范围；沿原候选/结算/原生工程采用、完整影响确认与单 Command 撤销。模型仅提待听审候选，真实播放与用户声明后才可缩短，gap 不是静音证明；不引入停顿阈值或词表替代 Skill。原协议 2 冻结字节、digest 与回执保持，不替历史证据改签。缺时码、变速、丰富效果及无可播放音轨保留手工路径。合同 PASS 不是实现、ASR、并发、播放器或安装版 PASS。
+
+安装验证环境确认：用户2026-10-05答复“有专用测试用户，可以用于安装版验收”。后续核对该 macOS 登录用户和本次包内运行证据；不清现用用户资料、激活，不以开发服务冒充安装版，不代签用户验收。
+
+安装环境更正（同日后续答复，覆盖上项）：用户明确“没有测试用户，就是当前登录的用户、当前安装的app，直接拿去测试就行”。本次安装版采用当前 macOS 用户及现装官方客户端环境；无需专用用户。切换候选包之前完整备份数据库、媒体引用与必要授权状态，保留激活和原资料；实际安装/启动/升级验收按本次包取证。该授权不扩大为对外发布或自动合并真实资料。
+
+## DEC-T1062-MIGRATION-CLOSURE-20261005：迁移候选绑定与后续验收边界
+
+最终迁移候选 `f8ce322d63e1844e6eff8595af85813e50d7d79d` 已通过隔离候选校验并由主会话 fast-forward 整合。独立最终复核 PASS，371/371 文件哈希匹配，354 个冻结 lineage SQL 和三个 journal 无漂移；独立提交副本重新生成的新增 DDL/catalog 与提交逐字一致。最终新增 SQL bytes 的六文件 43 项回归通过，包括 PGlite/PostgreSQL 四种基线、原安装包 0101 前缀、原数据核对、备份恢复、二次启动、转组及孤立资料保持。全部结果见 `docs/verification/t1062/preflight/migration-independent-review-final.json` 与 `migration-convergence-final-candidate.json`。
+
+保留两次 FK 索引发现失败、Research Gate 实验及恢复、中间自有 WIP 提交/soft reset、暂存内容格式检查遗漏与最终重验，不把旧失败改写成历史 PASS。迁移租约已释放，T-1062 仍进行中；新增域服务组归属、粗剪协议 3、真实模型/原生操作及安装版逐项验收未通过。当前仅创建私有备份目录，未停止/替换现装客户端，未操作真实数据库。

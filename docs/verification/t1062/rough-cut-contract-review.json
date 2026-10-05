@@ -1,0 +1,144 @@
+{
+  "first_review": {
+    "schema": "t1062-rough-cut-contract-review/v1",
+    "contract_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/features/t1062-rough-cut-contract.md",
+    "contract_sha256": "c2dfeefc94bb2754346bfb9ec187f43486b656de4d8947f1a8b81f03049623c2",
+    "reviewed_at": "2026-10-05T03:23:55Z",
+    "verdict": "CONCERNS",
+    "summary": "合同已正确限制为候选、真实时间证据、独立听审和明确采用，并保留 v2、完整场景影响确认、union ripple、原 apply-tracks/Undo 及合法任务降级。当前仍有两个会导致合理实现分叉的主要缺口：pauseGaps 的时钟字段不能无损表达现有权威有理 timebase；协议 3 预约/恢复没有明确冻结 group/parent 范围。另需明确无音轨来源不能进入 requires_audio_review 可采用态。修正这些最小约束后可重新评为 PASS；本评审没有运行模型、数据库、浏览器、音频或安装版，不代表这些能力被用户禁止或已经通过。",
+    "findings": [
+      {
+        "id": "RC-001",
+        "severity": "major",
+        "category": "correctness",
+        "where": "可定位间隙由后端提供：pauseGaps.sourceTicksPerSecond；模型目标 retainedTicks",
+        "problem": "合同把源媒体权威 timebase 压成正整数 sourceTicksPerSecond，但现有公开源合同的权威时钟是有理数 timebase {num,den}。合法媒体可使用 1001/30000 等不能化成整数 ticks-per-second 的时钟；仅冻结整数会丢失 num，或迫使实现者舍入，与合同同时要求的“不作舍入、精确落到原生 120000 ticks/s”冲突。两个实现者可能分别拒绝这类源或错误取整后采用，产生不同的用户可见切点。",
+        "evidence": [
+          "docs/features/t1062-rough-cut-contract.md:38-41 将 sourceTicksPerSecond 定义为权威 timebase 正安全整数，并要求精确映射、不舍入",
+          "docs/features/t1062-rough-cut-contract.md:55-59 将 retainedTicks 定义在源 timebase 中并要求候选裁切点精确落原生格点",
+          "contract/src/resources/production-main-track.ts:9-11 的权威源字段为 timebase.num/timebase.den",
+          "contract/src/resources/production-native-rough.ts:25 的 sourceNativeTickExact 使用 sourceTick*num*120000/den，只有整除时才可采用"
+        ],
+        "minimal_fix": "将 gap 冻结字段改为或直接绑定现有 source.timebase {num,den}（并纳入 source identity/digest），规定 sourceStartTicks、sourceEndTicks、retainedTicks 都用该源 tick 单位；采用前用现有 exact 有理映射分别验证删除窗两端可整除到 120000 格点，不可表达就保持 review_only。不要新增舍入规则，也不要改写旧 source/transcript 时钟。"
+      },
+      {
+        "id": "RC-002",
+        "severity": "major",
+        "category": "ownership",
+        "where": "版本与历史兼容的 protocol 3 reservation；adopt 的 root/group/parent 锁",
+        "problem": "合同只明确 protocol 3 reservation 冻结 roughProtocolVersion 与 pauseGaps，并在采用事务中检查 root/group/parent；没有规定创建、读取、恢复、结算与采用回执都冻结和恢复原 group/parent scope。当前真实 reservation/scope 仍以 requireAccountId/accountId 查询，recoverPending 也从 userId/accountId 重建 ctx。账号转组、空组、归档或迁移并发时，合理实现可能按当前 membership 重新解释旧预约、让旧任务丢失，或在错误 group 继续结算，违背已确认的组归属、任务冻结和历史不改写。",
+        "evidence": [
+          "docs/features/t1062-rough-cut-contract.md:24 只列 roughProtocolVersion 与 pauseGaps 冻结，原 task input 仍只指 project/output/request/digest",
+          "docs/features/t1062-rough-cut-contract.md:72 只在 adopt 描述 root/group/parent 锁、归档与 CAS",
+          "backend/src/modules/production/production-rough-cut-reservation.ts:14-18,23-27 的现实现 scope/adoption 依赖 accountId",
+          "backend/src/modules/production/production-rough-cut-reservation.ts:20 的 recoverPending 从保存行的 userId/accountId 重建 RequestContext",
+          "T-1062 已评审整合约束要求异步预约冻结真实 group scope、项目 owner、可选 account/membership，不能按当前 membership 补 stamp"
+        ],
+        "minimal_fix": "在本合同明确 protocol 3 reservation 与 adoption receipt 冻结 project-derived groupId、group/version 或等价的既定 workspace scope 摘要；create/read/recovery/settlement/adopt 全链从冻结 parent scope 恢复并经同一 group→parent 锁与归档写守卫复核。真实平台 account 仅在任务确需时作为可选来源冻结；空组不得制造 accountId。旧 v2 reservation 继续走原协议解码与回执，不回填新字段或改 digest。"
+      },
+      {
+        "id": "RC-003",
+        "severity": "minor",
+        "category": "completeness",
+        "where": "requires_audio_review 资格与六类拒绝/降级表",
+        "problem": "合同要求真实听审，但 mechanically valid 的 gap 资格没有显式要求冻结 source.hasAudio=true、exact 音频可播放。现有正常 ASR 创建会拒绝无音轨源，但公开工程 schema 并不在 transcript 与 source 之间强制 hasAudio，历史/迁移异常数据仍可能同时存在 timed transcript 与 hasAudio=false。若仅凭 gap/token 合法就开放勾选，播放器可能完成无声视频范围，用户声明被记录却没有真实音频可听。该情况不会形成“自动删除”，但会让合同声称的独立听审证据失真。",
+        "evidence": [
+          "docs/features/t1062-rough-cut-contract.md:67-70 以 mechanically valid + 播放完成开放 requires_audio_review 与确认",
+          "docs/features/t1062-rough-cut-contract.md:79-84 的六类表未单列无音轨或 exact audio 不可播放",
+          "contract/src/resources/production-main-track.ts:9-11 的 source.hasAudio 是独立布尔字段，transcript union 未交叉强制它",
+          "backend/src/modules/production/production-transcripts.service.ts:24 正常新建 ASR 会检查 source.hasAudio，但这不能替代采用时对冻结源再次核验"
+        ],
+        "minimal_fix": "把 source.hasAudio=true、exact 原片音频范围可读且播放器实际进入有音轨的该范围列为 requires_audio_review 的必要条件；无音轨、音频缺失或播放失败保持 review_only/手工路径并禁用采用，不撤掉其它合法建议、保存或导出。回执仍只记录用户声明，不声称证明静音。"
+      }
+    ],
+    "verified_contract_properties": [
+      "v2 旧请求/回执被明确保留：protocolVersion 缺省仍为 2，旧 frozenInputDigest、storageKey、taskId 与终态不改写；v3 schema 要求显式分支。",
+      "pause_gap 不能由模型自报时间或 ID；模型只能选择后端冻结 gapId，且 decision 固定为 review。",
+      "合同明确相邻 ASR token 空白不等于静音，也不等于没有未识别语音；文字链不得声称模型听过音频。",
+      "独立听审要求 exact 原片、实际范围播放、逐 gap 未勾选确认；播放标记不被后端当授权来源，后端只记录明确声明。",
+      "requires_audio_review 被限定为协议 3、机械有效且未采用的 pause_gap；普通 review、非法时钟、丰富局部效果不能借此变 actionable。",
+      "pauseGapConfirmation 只覆盖选中的 gap 子集，nativeImpactConfirmation 仍覆盖本次所选全集与完整 sceneDigest。",
+      "删除窗口必须从冻结 gap 派生并与其它合法窗口取 union；其余 scene 和独立轨保持原绝对位置，且需明确影响。",
+      "合同沿原 apply-tracks before/after、单 Command、Undo/Redo、unknown ACK 原 requestId 与持久 receipt，不另造 v2 影子工程。",
+      "六类拒绝表覆盖 timing/身份/范围/格点/丰富局部/CAS/听审/语义不确定性，并要求局部不支持时保留其它合法粗剪、保存与导出。"
+    ],
+    "unverified_boundaries": [
+      "未运行旧 strict v2 请求、settlement、touch digest、receipt 的字节级重放；静态合同方向正确，但实现后必须用冻结旧样本验证。",
+      "未运行 protocol 3 schema、gap digest、模型输出、结算、采用或迁移；当前项目代码尚未实现本合同。",
+      "未调用任何 ASR/模型，未读取音频，无法证明供应商返回 word/segment timing、PCM 映射或实际费用；不得虚构音频已听或模型已成功。",
+      "未验证播放器对 exact 原片、gap 与左右上下文的实际播放完成语义、错误恢复及确认清除。",
+      "未在真实 OpenCut 执行 pause-gap union、单 Command、Undo/Redo、unknown ACK 重放或导出 MP4 视听回读。",
+      "未运行空组、转组、归档、迁移并发、父闭包或恢复任务；RC-002 需先补合同再由实现证据验证。",
+      "未安装或启动客户端，未运行浏览器/数据库；这只是本只读评审范围，不缩减用户已授权的后续隔离逐功能验证。"
+    ]
+  },
+  "recheck": {
+    "schema": "t1062-rough-cut-contract-review/v1",
+    "review_kind": "recheck",
+    "contract_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/features/t1062-rough-cut-contract.md",
+    "contract_sha256": "460a5ff4a5718f6ac567eb06f2dc106f1e06125e7db6e69ffea17d943adc0665",
+    "reviewed_at": "2026-10-05T03:26:18Z",
+    "previous_review": "/tmp/t1062-rough-cut-contract-review.json",
+    "previous_verdict": "CONCERNS",
+    "verdict": "PASS",
+    "summary": "首轮三项 CONCERNS 均以最小合同约束销账：源时钟沿既有有理 timebase 精确核整除；协议 3 冻结并贯穿组、父级与可选真实账号成员身份，同时保持协议 2 原字节与摘要；停顿采用只有在真实音轨和 exact 音频可播放时才进入听审确认。新增锁顺序与已确认的 group→parent 写守卫方向一致，未发现由本轮修订引入的新合同缺口。此 PASS 仅表示静态合同复核通过，不代表实现、真实模型、安装包、数据库或视听 E2E 已通过。",
+    "findings": [
+      {
+        "id": "RC-001",
+        "previous_severity": "major",
+        "status": "resolved",
+        "title": "源时钟现已沿既有有理 timebase 精确映射",
+        "resolution": "pauseGaps 冻结 sourceTimebase {num,den}，要求两项为正安全整数；所有 gap 边界和候选裁切点按 ticks*num*120000/den 用 BigInt 核整除及安全整数，明确禁止舍入、禁止假设 num=1。该表达与现有 source schema 及 sourceNativeTickExact 的方向一致。",
+        "evidence": [
+          "docs/features/t1062-rough-cut-contract.md:38-41",
+          "docs/features/t1062-rough-cut-contract.md:55-59",
+          "contract/src/resources/production-main-track.ts:5-11",
+          "contract/src/resources/production-native-rough.ts:3,22-25"
+        ],
+        "minimum_result_constraint": "协议 3 实现必须从冻结 source 读取原 num/den，并对 gap 起止及 retainedTicks 对应切点逐一使用无舍入的 BigInt 可整除检查；任一点不可表达时仅拒绝该候选并保留合法任务降级。"
+      },
+      {
+        "id": "RC-002",
+        "previous_severity": "major",
+        "status": "resolved",
+        "title": "协议 3 已冻结并贯穿组、父级及可选真实账号成员范围",
+        "resolution": "合同把 workspaceScope、真实父 ID、协议版本与 pauseGaps 纳入新摘要；预约在同一事务按 group→parent→必要 membership 锁序冻结，恢复、认领、模型回读、结算、查询、采用均与唯一任务 stamp 对账。纯组任务不制造 accountId/membershipVersion，账号转组不改历史费用；新采用和文件副作用重核当前组/父归属，归档及显式 rebind 行为也已限定。协议 2 保留原 bytes/digest，并只经可证明的历史 scope 映射适配。该 group→parent 顺序与域审计要求的父写守卫顺序一致；membership 仅在存在真实账号时追加，不改变纯组路径。",
+        "evidence": [
+          "docs/features/t1062-rough-cut-contract.md:21-26",
+          "docs/features/t1062-rough-cut-contract.md:72-73",
+          "/tmp/t1062-new-domain-group-audit.md:68,74-82",
+          "/tmp/t1062-new-domain-group-audit.md:99-104,112-113"
+        ],
+        "minimum_result_constraint": "实现必须提供同一事务的真实 group/parent 写锁端口并保持全调用链相同锁序；有关真实账号的路径再经共享 membership port 锁内冻结。恢复及结算不得按当前页面或当前成员关系重盖章，协议 2 不得补默认字段重算摘要。"
+      },
+      {
+        "id": "RC-003",
+        "previous_severity": "minor",
+        "status": "resolved",
+        "title": "听审采用现已要求真实音轨与 exact 音频可播放",
+        "resolution": "requires_audio_review 只允许真实音轨且 exact 音频可播放的协议 3 pause_gap；无音轨、文件缺失或解码失败保持 review_only，提供手工处理或重新导入路径，不产生假播放回执。确认项还绑定真实范围播放并在证据变化时清除，且明确用户声明不等于系统证明无声。",
+        "evidence": [
+          "docs/features/t1062-rough-cut-contract.md:67-72",
+          "contract/src/resources/production-main-track.ts:9-11"
+        ],
+        "minimum_result_constraint": "服务端 actionability 必须同时验证 source.hasAudio 与 exact 授权文件可解码播放；失败只能返回 review_only 和恢复动作，adopt 必须保持零写入并拒绝伪造或陈旧确认。"
+      }
+    ],
+    "new_findings": [],
+    "verified_contract_properties": [
+      "旧协议 2 请求、严格解码、冻结输入字节、fingerprint/digest、receipt 与终态重放未被协议 3 默认值改写。",
+      "协议 3 gap 证据包含真实 token 邻接、source/transcript/clip 身份、timingReceipt/source proof、范围与有理 timebase；ASR 空白未被表述成静音证据。",
+      "pause_gap 始终为 review，模型只选冻结 gapId，不自报时间、不直接写原生轨道；无声音或不可听时不能自动删。",
+      "采用同时保留 pauseGapConfirmation 与 nativeImpactConfirmation，后者覆盖所选全集及完整 sceneDigest，review_only 不能经泛化开关提升为可采用。",
+      "删除窗与其他合法窗取 union，沿原生 apply-tracks 的单 Command、Undo/Redo、CAS、requestId 重放与持久 receipt；未引入第二工程或影子 v2。",
+      "组归属、父闭包、归档历史读取、历史结算与资料移动后的显式 rebind 已在合同中区分；accountId 为可空真实来源。",
+      "六类拒绝表覆盖时钟、身份、retainedTicks、复杂原生实例、影响/确认变化及语义不确定，同时要求局部失败不阻断其它合法编辑、保存或导出。"
+    ],
+    "unverified_boundaries": [
+      "本次为只读静态复核，未验证协议 3 schema、摘要规范化字节、数据库迁移、共享锁端口、恢复/结算实现或旧协议回放。",
+      "未运行真实 ASR、模型、音频解码、播放器、原生采用、撤销重做、保存刷新、MP4 视听回读或安装包验收。",
+      "未用并发实测证明 group→parent→membership 与账号转组/归档事务在所有公共调用链上无死锁且能在等待后重读版本；这是实现与验收 Gate，不能由合同文字冒充 PASS。",
+      "现有 production-native-rough 的非 exact 换算 helper 仍会舍入；本合同要求协议 3 gap 采用路径使用 exact 检查。此复核未证明未来实现不会误用舍入 helper。"
+    ]
+  }
+}

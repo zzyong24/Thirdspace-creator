@@ -1,0 +1,2266 @@
+{
+  "mode": "只读审计输出；未来写集建议，不是本轮授权修改",
+  "integration_root": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "integration_head_observed": "11784cc22a29ac8232cdb675e078432f0dca6680",
+  "baseline_candidate": "a56dba58bc4d624c834f5ecda101787a545e769c",
+  "baseline_verify_log": "/tmp/t1062-native-baseline-verify.log",
+  "baseline_verify_status": "PASS_SOURCE_HASH_ONLY",
+  "proposed_owner_contract": {
+    "groupId": "string|null",
+    "accountId": "string|null",
+    "outputId": "nonempty string",
+    "sourceVersionId": "nonempty string",
+    "invariant": "真实group或真实legacy account至少其一；group创作不采用当前平台筛选账号冒充owner；同组共享account筛选不重建创作归属"
+  },
+  "scope_guard": "完整owner key + 生命周期epoch；每个await后及保存/导入完成/采纳/导出交付前验证；请求使用捕获的真实scope transport，服务仍守member/readonly/archive",
+  "host_source_files": [
+    {
+      "path": "frontend/src/features/reference-editors/native-editor-contract.ts",
+      "exists": true,
+      "before_sha256": "df7e8d58e0735b400b3a1ce8fb4890159660909b51e649213a338fd7e64073cc"
+    },
+    {
+      "path": "frontend/src/features/reference-editors/native-editor-surface.tsx",
+      "exists": true,
+      "before_sha256": "6efe8f609334096d609df45f56b3c59c2ca770c1b10f0e45eeab5152a7b85be7"
+    },
+    {
+      "path": "frontend/src/features/reference-editors/native-editor-surface.test.tsx",
+      "exists": true,
+      "before_sha256": "2475d136709076d35eaf43d919542e6ecd344b2881b8aea816b20cf042ff190b"
+    },
+    {
+      "path": "frontend/src/features/reference-editors/use-native-account.ts",
+      "exists": true,
+      "before_sha256": "f6d08c61bb7511673f4b31badda7d37d7dec3046e312b93962e88253975be0c2"
+    },
+    {
+      "path": "frontend/src/features/reference-editors/graphic-design-workbench.tsx",
+      "exists": true,
+      "before_sha256": "748ecfdfd3f3547aa4aaa10a16008f7040a4bfa56f547d5052bd212bfe41ee05"
+    },
+    {
+      "path": "frontend/src/features/reference-editors/graphic-design-workbench.test.tsx",
+      "exists": true,
+      "before_sha256": "a15e348fbd91748cce525c05cd4e5506453089cad695a905d677f98de5a268a6"
+    },
+    {
+      "path": "frontend/src/features/reference-editors/video-reference-workbench.tsx",
+      "exists": true,
+      "before_sha256": "3bdae23d2c9daea4dc85b5cbdb00677f1f8d7636c6339c0ce7d7e0a08fccd89f"
+    },
+    {
+      "path": "frontend/src/features/reference-editors/video-reference-workbench.test.tsx",
+      "exists": true,
+      "before_sha256": "7d94a0f9d97635e86bef867281ff1b5b2509fb5611462cf501b5c183e24ca7e7"
+    },
+    {
+      "path": "frontend/src/features/reference-editors/noterelay/noterelay-editor.tsx",
+      "exists": true,
+      "before_sha256": "a3fe08d1cdbd19876a2011febbf5eba987f94a0caf50561575eb9e08b0a267e1"
+    },
+    {
+      "path": "frontend/src/features/reference-editors/noterelay/noterelay-editor.test.tsx",
+      "exists": true,
+      "before_sha256": "6aaa8b1be31c53e8bb1dc4ada3d1cf4074a93c7ad91bffbd4062c99beb8cc8e7"
+    },
+    {
+      "path": "frontend/src/features/reference-editors/reference-editor-media.ts",
+      "exists": true,
+      "before_sha256": "062627e46352750ab1aa8e4e79e8136020e04b8a0e34177d075d295892f7a45d"
+    },
+    {
+      "path": "frontend/src/features/reference-editors/native-source-panel.tsx",
+      "exists": true,
+      "before_sha256": "57e7192a248d28d0c8d393090e7b3041102c53d640b5c2ca76b33271c5e8725a"
+    },
+    {
+      "path": "frontend/src/features/reference-editors/native-source-panel.test.tsx",
+      "exists": true,
+      "before_sha256": "d62546e3339ae982dcfbeb88acbdf719517d206dc06f8c1f84a38ac769350b06"
+    },
+    {
+      "path": "frontend/src/features/article/doocs-article-editor.tsx",
+      "exists": true,
+      "before_sha256": "5ac98a7241fd407822600ddbd40272a650373138ca3b3e6dba1445331e6578bb"
+    },
+    {
+      "path": "frontend/src/features/article/doocs-article-editor.test.tsx",
+      "exists": true,
+      "before_sha256": "9602aac1f7b57430d91769ebf154af44f18fd05a301b953b51cfd830fa16612a"
+    },
+    {
+      "path": "frontend/src/features/article/article-workbench.tsx",
+      "exists": true,
+      "before_sha256": "209f9d12f92a3982a56451185715491d0304508193702e6267b756dc2f19e040"
+    },
+    {
+      "path": "frontend/src/features/projects/graphic-post-workbench.tsx",
+      "exists": true,
+      "before_sha256": "d46d1fbf6df9b7cd14f579ea466f63f4ebb3c89e340d3d0fb49bcdc88d0ef4bb"
+    },
+    {
+      "path": "frontend/src/features/production/production-editor-entry.tsx",
+      "exists": true,
+      "before_sha256": "a8e2b68aaa2c2dffa5f8b8149187f69bf10f72a961d0fff92aa1192ff4bec39c"
+    },
+    {
+      "path": "frontend/src/features/production/production-transcript-panel.tsx",
+      "exists": true,
+      "before_sha256": "2169430db85592566935845f330b56122f121d634fe1ec55d2e28867b02cbeb2"
+    },
+    {
+      "path": "frontend/src/features/production/production-rough-candidate-panel.tsx",
+      "exists": true,
+      "before_sha256": "f1fdd4b1902925d430dac5d72cbea51f5082c781597d356e40bafbd5caf23d53"
+    }
+  ],
+  "editors": {
+    "kuaitu": {
+      "clone_baseline_root": "/tmp/t1062-native-audit-sources/kuaitu",
+      "archive_source_files": [
+        "src/native-types.ts",
+        "src/native-entry.ts",
+        "src/native-controller.ts",
+        "src/native-engine.ts",
+        "native-controller.test.ts",
+        "native-core-lifecycle.test.ts"
+      ],
+      "build_entries": [
+        "native-build.mjs",
+        "native.vite.config.ts"
+      ],
+      "command": "pnpm install --frozen-lockfile --ignore-scripts; node native-build.mjs",
+      "output_root": "native-dist",
+      "source_paths": [
+        "reference-editors/kuaitu/native/native-source.tar.gz",
+        "frontend/public/reference-editors/sources/kuaitu/native-source.tar.gz",
+        "reference-editors/kuaitu/native/native.patch",
+        "frontend/public/reference-editors/sources/kuaitu/native-patches.diff",
+        "frontend/public/reference-editors/sources/kuaitu/native.patch"
+      ],
+      "metadata": [
+        "reference-editors/kuaitu/native/VERIFY.md"
+      ],
+      "baseline_archive_sha256": "caec8830b6d9b11dfc79b47c721aee882d8f58dc0e9ac64c1364ecb70323b994",
+      "source_archive_from_manifest": "frontend/public/reference-editors/sources/kuaitu/native-source.tar.gz",
+      "current_bundle_files": [
+        {
+          "path": "frontend/public/reference-editors/kuaitu/native/LICENSE",
+          "before_sha256": "ab11c1e29b8beda3d49d39a1fb4cf476a88de23a1194c24382323f086d4cddcc"
+        },
+        {
+          "path": "frontend/public/reference-editors/kuaitu/native/THIRD_PARTY_NOTICES.txt",
+          "before_sha256": "69f45a329625e6768f00696650e7033ddf5c1bcd6f87f311cd4573ba6d0a78d1"
+        },
+        {
+          "path": "frontend/public/reference-editors/kuaitu/native/favicon.ico",
+          "before_sha256": "c2db3148f3b014737591afb33ac0091517e78af2d9c73601af1d7292892a4809"
+        },
+        {
+          "path": "frontend/public/reference-editors/kuaitu/native/native-graph.json",
+          "before_sha256": "cacadcee9346e8b7303291a12bb67accfc718f4d03715fca81bf712ebe9a2ec5"
+        },
+        {
+          "path": "frontend/public/reference-editors/kuaitu/native/native-meta.json",
+          "before_sha256": "713906c208acbd8d7e228408007cd480b06a0b5915bdce50417de34f7ea5011a"
+        },
+        {
+          "path": "frontend/public/reference-editors/kuaitu/native/native.css",
+          "before_sha256": "cd47761c252f0c78ca84955dd10a4fb088c86a592145ece94deb6162cbfb2662"
+        },
+        {
+          "path": "frontend/public/reference-editors/kuaitu/native/native.js",
+          "before_sha256": "47c8193cde75f04be063e4e0d999b56609721db27a71fa9112f01e059fed4a4d"
+        }
+      ],
+      "current_bundle_count": 7,
+      "source_type_paths": [
+        "src/native-types.ts"
+      ],
+      "existing_source_paths": [
+        {
+          "path": "reference-editors/kuaitu/native/native-source.tar.gz",
+          "sha256": "caec8830b6d9b11dfc79b47c721aee882d8f58dc0e9ac64c1364ecb70323b994"
+        },
+        {
+          "path": "frontend/public/reference-editors/sources/kuaitu/native-source.tar.gz",
+          "sha256": "caec8830b6d9b11dfc79b47c721aee882d8f58dc0e9ac64c1364ecb70323b994"
+        },
+        {
+          "path": "reference-editors/kuaitu/native/native.patch",
+          "sha256": "f4a86b25abcf9247a5ed699a95c4647e20a58b9750f65fcdd707abf7328e70bb"
+        },
+        {
+          "path": "frontend/public/reference-editors/sources/kuaitu/native-patches.diff",
+          "sha256": "f4a86b25abcf9247a5ed699a95c4647e20a58b9750f65fcdd707abf7328e70bb"
+        },
+        {
+          "path": "frontend/public/reference-editors/sources/kuaitu/native.patch",
+          "sha256": "e1036e50746fa3897603751b3cb428fb41f8daffeb94c404f3169d95320ec858"
+        },
+        {
+          "path": "reference-editors/kuaitu/native/VERIFY.md",
+          "sha256": "fc437c8eb7e9f14e13b5b11d4fcd84aaaa34e7adafc05aa8f5393a00b020edac"
+        }
+      ],
+      "missing_named_paths": [],
+      "archive_files_to_inspect": [
+        {
+          "path": "src/native-types.ts",
+          "exists": true,
+          "sha256": "036de5d49b282ed63296e1d00dd61741a9f0af8c2d5141dd1372b632d7baa6c1"
+        },
+        {
+          "path": "src/native-entry.ts",
+          "exists": true,
+          "sha256": "2f851becf9d053dd0f42f5900c2fddf62e0d15b81988d1ef2c4277ba4e79bc25"
+        },
+        {
+          "path": "src/native-controller.ts",
+          "exists": true,
+          "sha256": "9643f341bc0c5de8cff5ef3f40bf07639d2d2c1a378fee98928ce05ce126a924"
+        },
+        {
+          "path": "src/native-engine.ts",
+          "exists": true,
+          "sha256": "4c50441feb30663d5f2e10716a936a7ff9df47c5ccb70249ffd8d1df8c09527a"
+        },
+        {
+          "path": "native-controller.test.ts",
+          "exists": true,
+          "sha256": "e8da4c60a393f65ed8d773df7350145c44e67f13fb8f2ee392e366001969828c"
+        },
+        {
+          "path": "native-core-lifecycle.test.ts",
+          "exists": true,
+          "sha256": "6c4fd0abdbdb0641f4371b64895c0fd8862e376b36b4832c92b5f69735e250ff"
+        },
+        {
+          "path": "native-build.mjs",
+          "exists": true,
+          "sha256": "4a77a7326943b34238968c516934cca16423b12b55af7cdcbe13e4df7929f7ac"
+        },
+        {
+          "path": "native.vite.config.ts",
+          "exists": true,
+          "sha256": "c9bcfd3e531d7609bc162693592902977ad3b44e5d92916f8cc14d7e474c5179"
+        }
+      ]
+    },
+    "doocs-md": {
+      "clone_baseline_root": "/tmp/t1062-native-audit-sources/doocs-md/doocs-md-native",
+      "archive_source_files": [
+        "apps/web/src/native-entry.ts",
+        "apps/web/src/native-lease.ts",
+        "apps/web/src/native-queue.ts",
+        "apps/web/src/native-lease.test.ts",
+        "packages/core/src/native-host.ts",
+        "scripts/verify-native-dom.mjs",
+        "scripts/verify-native-image-variants.mjs"
+      ],
+      "build_entries": [
+        "scripts/build-native.mjs",
+        "scripts/verify-native-build.mjs",
+        "scripts/verify-native-rebuild.mjs",
+        "apps/web/vite.native.config.ts",
+        "NATIVE_SOURCE.json"
+      ],
+      "command": "按归档 pnpm-lock.yaml 安装真实独立锁依赖（postinstall/wxt prepare 按原说明）；node scripts/build-native.mjs; node scripts/verify-native-build.mjs",
+      "output_root": "apps/web/dist-native",
+      "source_paths": [
+        "reference-editors/doocs-md/native/native-source.tar.gz",
+        "frontend/public/reference-editors/sources/doocs-md/native-source.tar.gz",
+        "reference-editors/doocs-md/native/NATIVE_PATCHES_FROM_T1049.diff",
+        "frontend/public/reference-editors/sources/doocs-md/native-patches.diff"
+      ],
+      "metadata": [
+        "reference-editors/doocs-md/native/SHA256.json",
+        "reference-editors/doocs-md/native/VERIFY.md",
+        "reference-editors/doocs-md/native/README.md"
+      ],
+      "baseline_archive_sha256": "60baa6f2656e5038e31bab6c2ff71ddfbaba54a6a7f703796364b78f4f96f3a7",
+      "source_archive_from_manifest": "frontend/public/reference-editors/sources/doocs-md/native-source.tar.gz",
+      "current_bundle_files": [
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/LICENSE",
+          "before_sha256": "cfeeb9a8bae22957f5ca9af8c5f7d9e686b34ecf36c9a8d7da6fec0185781069"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/SHA256.json",
+          "before_sha256": "fac19db561390b8be77009a18c562477bc8ba17c20b813bf51439b2255814240"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/assets/images/logo-2.png",
+          "before_sha256": "c87964e8e29a7ea5994648a4d9a346139d2529dbd01a8bb3b848d96c0abd510a"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/assets/images/logo.png",
+          "before_sha256": "e4505ee6fad1b3f99a513ff779273b3f152edcd1976c88e3c63019142456bfd7"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/Button-B4kIEl6s.js",
+          "before_sha256": "c6bcf85e80492d631055f639bad0314f412ac8a35c06797d01626cae8aef427f"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/ConfirmDialog-C5N-abdb.js",
+          "before_sha256": "78786961ce085cd3f0bb4e115bdf6c12de0be791650ab2291ef88d433aece1e3"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/CssEditor-DuXTwX8p.js",
+          "before_sha256": "33c82f0eff63ddd29068f73b5760237cab8ad1899cb8dcc10b6d4be77bec0b47"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/DialogFooter-99Z6qvPr.js",
+          "before_sha256": "876346962a6e3f908c11bcb7a803b11139bc15b05ebf3ec681148069149773ef"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/DialogTitle-w1SUV50e.js",
+          "before_sha256": "30a1db025aa20d8dfc1fe347b082f2ac99419dff65bf75bb78d2738c433bed39"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/FormulaEditorDialog-D6Mch5W-.js",
+          "before_sha256": "a35157a1a4e1104be2e0d12855ddf4024e92c095253050746ab33b350a5b42ed"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/Input-BSRhgp5H.js",
+          "before_sha256": "6dbce2c35743be2a8503df2c885a88ecceef3635e41260dc640a83bf764b5214"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/Label-BgDHuDsA.js",
+          "before_sha256": "6967ae9bf3d602001362cf67a77d37f6c26a88efaf4a932a7e3576bbd4f1061a"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/PopperContent-RtMDF-yC.js",
+          "before_sha256": "3119bf56f41f7a5b52bd63fa436416f11575cb392b893e1c55265cda9c9ec3ec"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/RightSlider-3HjJiw_t.js",
+          "before_sha256": "2e4d884d75619a0429ecfa994468cff56d5a14f6c5d2f5ad08dc9c9ca8214e9e"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/SearchTab-D0a6QC6a.js",
+          "before_sha256": "17cfb62f066129c6db19438a75a27327337356730e4d08f698f7d91b1a86b15b"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/SelectContent-CWUKV6JE.js",
+          "before_sha256": "054aa81ea405629b569c7900c763f3323fdf0957a7ec16478555140ab7b0725c"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/SignatureV4MultiRegion-DnNN33PO.js",
+          "before_sha256": "1ed7f4788f507032b97e4600f7ea8cbf06dff534da7f78fe7a5a3fd773effe16"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/SlashCommandMenu-DPaa3PV4.js",
+          "before_sha256": "5e3ba27e3e625d7ec86ff60331758d430bc1e9b78c8533ac0a6dcf60fe4a5653"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/TableEditDialog-DDk-xto3.js",
+          "before_sha256": "dc526e636645a3f08d4fbd04b665e2be1f773f1891f7a2bca97cf745d06fda75"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/Teleport-YNIcOte_.js",
+          "before_sha256": "b8252ebc4f919b90afc2a5eeac4d269e584e228502a7d6b791f472b7db481467"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/TemplateDialog-BweqQGzH.js",
+          "before_sha256": "268b64c210590c270b773a3d14fb92ac1df6619ca7c48f9a2bc41cab9d494aa9"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/VisuallyHidden-D556S2Ak.js",
+          "before_sha256": "802fb151c7963559933f17fe61a4f04fcdf828aa0f835f99b3c00d265fcc98e8"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/VisuallyHiddenInput-Xoe8o7nr.js",
+          "before_sha256": "4b96f1c2720a35c1c31ce142e3529db5856e731b7077b89fb5b1bd88439885a7"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/__vite-browser-external-Nt6Cd1Uc.js",
+          "before_sha256": "73b3deab242bbfba9e39960d1fa0b2cc17c33931cbdcd0d3bee3aa98825a59bd"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/_baseClone-DUCekXKG.js",
+          "before_sha256": "111e005f14c73e547e6e3d6efd4fab887d04d3f5f4c33ee826f4838fd82075f9"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/_basePickBy-ZbTIFjS1.js",
+          "before_sha256": "3a8e7217808f9dcf52a1820a9351cf49e0b4120ff6b8a3b4194b76786915d72e"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/_baseSlice-JqEMw6zX.js",
+          "before_sha256": "cda6356e980b9004f32d4f2aa3638c84e7392182ce71d76892cb34a6cb7dc7d8"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/_baseUniq-pZWp5yyr.js",
+          "before_sha256": "e32704aaa72e9abd8ceb71a6036e06d9c7bee9681b28ecdd67d81e280cadfbd7"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/_plugin-vue_export-helper-B3W2xDgE.js",
+          "before_sha256": "31abbd580b9dfc9d01326f602788b0cd44e871bc789f00bb33c71fe733b5f38f"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/abnfDiagram-O67JEVCF-CPVCA-ja.js",
+          "before_sha256": "70f49ab6124f92161da7909c557b0134a4ddb45e189bb33a50dc6053661c77fe"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/arc-Bsd6XOnE.js",
+          "before_sha256": "3588c9fbde4c4a921a63f6c529ce5e463dc9d3af304e5180f07154122ad1d713"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/architecture-7GRP2DOG-BFMCy-iJ.js",
+          "before_sha256": "7e6b626bce3655aa2a5ad8ab608b778d2a5bf8eee2c9e027b661eea4c5c21fc7"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/architectureDiagram-NJMV4G6O-myaGrbEc.js",
+          "before_sha256": "60c969388f6a72b4ab49690dfae7966f368ba67086344e1a04e3a757a34fa885"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/array-CR4KRclK.js",
+          "before_sha256": "6891d036949ab441604d857216f8a3013a0fdac9f7d604585fc5c26d841e2555"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/blockDiagram-BEXU5L5S-BL0dHRlQ.js",
+          "before_sha256": "8cbd3599ce33264dbe25e7c890a01f1f3e973b9b20071af15d2cc22ae4495ca4"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/browser-CVKpqfEq.js",
+          "before_sha256": "0e08d6b4ca1f52d5fb8bd2bcd065efc40b830f130eac03e2e7f2ab6f3c121aec"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/browser-image-compression-BN7VflS2.js",
+          "before_sha256": "f6de542356b5bc19313a1acef6fc84ab622d0b4098fe8da673c73c876a95a4f9"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/buffer-from-BCDylzzi.js",
+          "before_sha256": "c7c880a12ec1e366948a2c15cfbe2186ece5508c70ed20239780ba254399bb97"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/c4Diagram-YGBWAQC7-BsAr5jur.js",
+          "before_sha256": "2aeb87f4542ab2dadc5ccae44307c1dcc714bbad92ff0bce557a586731531f1c"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/channel-Ll6CRjfJ.js",
+          "before_sha256": "8a9493dd12651bc519c05dea376329cf090eed88a7d3f9dcbfb27dc4855d8064"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/chevron-down-VU0vsl_3.js",
+          "before_sha256": "9f4cb12d30ce06306b9ffc2e2fd226726a763ab6b3e8628d06d63f503d1319c6"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/chevron-right-BTkVQ4BO.js",
+          "before_sha256": "0b91e7ffff3c0c642b61e2b866c5008766063be47b95f8be9e98de83fbd53f69"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/chevron-up-gO5-pfnB.js",
+          "before_sha256": "2811fab8f7c6730cc2639b9ccdecf976c49c714761da2407836132c80e5bd1c4"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/chunk-2Q5K7J3B-DtUCi9bI.js",
+          "before_sha256": "5fb76a8aa3ee7470f35fb5804be96418cfd3bd62ef95a9fc03a55ae1ec920898"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/chunk-3FUC2YCW-D0IJRafW.js",
+          "before_sha256": "be4dca2f529001cd06d2fb0f3d845fac72717d1c9df2726dadebd09054536849"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/chunk-5DYCD2WN-H1yJbv79.js",
+          "before_sha256": "1900a3a8171c894f4900ad196f7216d499346a7c7bdf8ef22e086e78ef12076e"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/chunk-5VM5RSS4-CL-DFaMc.js",
+          "before_sha256": "76cd084630e316e57fabff7f427ea2c68965befbf8bef0049093d52e8e4a3460"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/chunk-742MDFTN-BDr8Hm9g.js",
+          "before_sha256": "3360fc46530c7ff6ca0c43fd8dd6fdae66f2fb0da79156e74e2a74140110474f"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/chunk-7INBJB4K-CUqQ2Lhw.js",
+          "before_sha256": "808268050aac3889fad497f44a9e6c32da999fc03c3b610770c6fd1d55f91451"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/chunk-7M6MHVWA-ClNt-2T3.js",
+          "before_sha256": "6c22dc0a89263bc349667c6348bed30e35545f2690ded309d4b415ca040d4077"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/chunk-7PRAP22T-B1ndr8eL.js",
+          "before_sha256": "cebcf194787c2eb1fb72a1389dbb622c2d8c606a93cdf2f377fb8716beb002e8"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/chunk-DUW6YSOI-BwFt7zlA.js",
+          "before_sha256": "f1f5b63af340b59969c9b6372d8310d8efe3a6813690a01ef26160d11583f7e9"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/chunk-FOHPRMQF-BjehDZv7.js",
+          "before_sha256": "8710801dfb009cded40abe6f19d8b3d9d7972c475c71a9fd17ff63153e8d2f8e"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/chunk-GTNCS2PH-CTLJQYrh.js",
+          "before_sha256": "7fc1c88cc7597f3408d18aaa23bc821db189b5b70ecec4f8d689537f83896973"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/chunk-GWA4HPMP-D7InLXiF.js",
+          "before_sha256": "3d72a98a096b8830ceefc486eb276488ecd045f46e88ee8c5b4bb065f9d29ab9"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/chunk-J5ZVWO5B-DnI7VZNN.js",
+          "before_sha256": "4ee3312b360f174e1a0975c6f696254d9ad1b5260a59a01ef5880984463b0bf9"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/chunk-JWPE2WC7-BCoTUzKK.js",
+          "before_sha256": "6053db4bb93113885c0b8d1be0472df66341d9cfedcd729da178b53396803018"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/chunk-MBY4JIJT-DOzZpBoU.js",
+          "before_sha256": "b724c46db7c6e34c42aece8267efbe66fe979b01c2b15acb6b0ac45ca019ad88"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/chunk-NETBCI7D-DAQdXrBC.js",
+          "before_sha256": "a5781056efdc4be95cebe2ac27df2457b2a469a6e8737b96121ec0b97be3b677"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/chunk-O7XYJQB3-CuTSgmsg.js",
+          "before_sha256": "8dd81bcf30bbed2b7390cab16cdfb2cdd444036333e6dffd76ff448598c7ffd2"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/chunk-UA2S7LBM-CkbQfO34.js",
+          "before_sha256": "76fd289cf11331a1de833e2c765b949bc1eda91982429107c4d192c64fddfa64"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/chunk-WEXAMYUT-6kbPOTZ_.js",
+          "before_sha256": "ef7c5e7c4f596adebcc0662e367b6cde03d8c154624a4c8648be67616f27486f"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/chunk-X3CZISLH-CyeAZ9SC.js",
+          "before_sha256": "d7856a0dbd5a4181f37381937b3ac253bcb2a1d1cf6ca625b834c8b89d89403e"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/chunk-XXDRQBXY-DoFinDyf.js",
+          "before_sha256": "a895b1823b9027c93c91e3085b72fc0e153f6667292a9dea48a544add3fb2b6c"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/chunk-Y2CYZVJY-BAmSaPLl.js",
+          "before_sha256": "ddf9a2a8af281d8d5b6a4223061f80f216ec26a3dc3dc3fc7344ab00b54aae88"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/chunk-Z7XXMR3K-BQOjLvhe.js",
+          "before_sha256": "69bf24268c25b08ab03128024352c157b8a1dbb9410c62139f0420e07fe1d665"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/chunk-ZIGJFQKS-B1q1oAt1.js",
+          "before_sha256": "2aaee8be675356398fa38a2ec13f0682b70882996d507343dbc4ff4694fac588"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/classDiagram-v2-NBCMYWYE-BZ4bGHet.js",
+          "before_sha256": "727d34c7994b7b25725d6aef9189416fd6832912ba650d9ec3de8132000d5ac8"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/clipboard-CNx6erJo.js",
+          "before_sha256": "cb154b2b5951af75cfde0ccac6f680a5e96a58b9ca34eaa3cae2c090cc8093a5"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/codemirror-C3tEDw1q.js",
+          "before_sha256": "d95348207c70e7067e2111e70831323b054063a72f1fff28006875b320eb3e00"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/config-DbfjmaEn.js",
+          "before_sha256": "be6f97ab7e84116fbd22a0328f245dbd45a0b209f1e4a85d5815ffd21845614f"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/confirm-BRFdpM55.js",
+          "before_sha256": "abe792f9f26e58ad0abbeea6d373bc3efea7194f2e663af157344632bdc7e06e"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/cose-bilkent-JH36ORCC-CyOPQ0AF.js",
+          "before_sha256": "4af404d9f1cc513a8cc2cc1570e19af50ac31611028fc9d4b8f7bea80b9162c6"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/createLucideIcon-CFmwvUbS.js",
+          "before_sha256": "d792dc2b1a0d6c356d39b4346cf57c3d6c4b86f0ed5449eaa5a7d740ec34a0db"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/cynefin-OW5HDTMX-TMQfuSSk.js",
+          "before_sha256": "231ae9b88b701fe7605187a48cac8ef302a12a81e998c1fa0deac4b4038f980c"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/cynefinDiagram-VND7K2PF-DlL3wrQP.js",
+          "before_sha256": "cc413b3bae94ac9655bd636c42809fab91e409df366c7187fe2942e91e2000e3"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/cytoscape.esm-C1f22V3u.js",
+          "before_sha256": "7015585ced954b122b164ef00a060300bfdcdb64cadf2d9ded6dd2e96109ee79"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/dagre-6A5THRUB-Cw7jr7x-.js",
+          "before_sha256": "364dcf8da0bf39b0afb1a46b95e194453e3b26487937ddf1fe4f5c12cf7c4312"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/defaultLocale-Ckyx_N-9.js",
+          "before_sha256": "ddc179307ea43f52804b585346462e0256798742032f6398f6f7b342144710c8"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/diagram-22UHCM2B-DeVi2DDa.js",
+          "before_sha256": "c605c5e7720bcdd3a8059fe8c260b89162b6ae7f5a95c2a1806cc65e09ad2ae3"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/diagram-3UASUU5V-4TvIrRMk.js",
+          "before_sha256": "9723a451382b1d5c2c2049e7bad7a279c33fa4631cb4e31d71a4eefadc9e283e"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/diagram-ATOU4E4O-gXFvKK71.js",
+          "before_sha256": "b25e6ac6a2e242b90ff7a7783db6a222d74d05c9d5ae7806884e884ed070023d"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/diagram-CDSNMT55-FGarHLnE.js",
+          "before_sha256": "bff989a114c3a36b1b9d9b1f7d74cd271f31e10f53ee761a1eb14b0c6092a338"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/diagram-MLGK6HIB-ChWMX2JR.js",
+          "before_sha256": "e7b0171e59bdda12db61f8d06698cde957009c03d7e830b7e28da62e86babb1a"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/diagram-MPIPVDR6-BxZXQzVU.js",
+          "before_sha256": "37740f43f8e306cd92a4de010ed70caced0e16a259943e52433581e9867d4d97"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/dialog-focus-DTw3vPHC.js",
+          "before_sha256": "285693df95df6cadaa8259b998d345984ea4bcbaf186f0ee461f80ac9e624375"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/dist-BLy4XDkZ.js",
+          "before_sha256": "bfaf9919be7c8afaa60ca1014b8deba770e9a6cd965157321e0a4079e489c8cb"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/dist-BZUIPWhT.js",
+          "before_sha256": "85f87e6a3523776190a23586dc88e0bed52b3e09ba4aecf9fdabd7f3899f4cc5"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/dist-BdHio7w4.js",
+          "before_sha256": "7bd7d999041153ef9da1404302835b87323f31d0b9ce2ab18e616f7dd18dd05e"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/dist-BvAVXpEm.js",
+          "before_sha256": "e74ed01adfb27c398bc34a564e6d4502805272aeb9976d5319e633171a55dc39"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/dist-CKHFdyIa.js",
+          "before_sha256": "b74e262312ff657c07a6285b0bb31d43dc0737edd7dc36dcef097fb97a49a2e2"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/dist-CKT5BxhH.js",
+          "before_sha256": "945e6861554c0662935c9308f84169e41fb70c3fcd7b8b14f885401e227c2b8e"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/dist-CUznL96T.js",
+          "before_sha256": "7152a50380e0dae5eead6eab82824ae04d55a118af81867ffd72895c20176460"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/dist-D59A65n_.js",
+          "before_sha256": "8a7d40dd2703755aff1ab2ac7adf5ad7c371efed08e72e5e93b3dbf0f4185965"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/dist-DDDV7C0t.js",
+          "before_sha256": "d175913746a301665be9fa17969a835a8a1965570e048640e7606fc5c9d44dc2"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/dist-DTIuew6s.js",
+          "before_sha256": "bea12f853064613825376998d5052cb93ac0bb16ffcafbf60b9286165350ccfb"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/dist-DwlXcRCs.js",
+          "before_sha256": "07ca8f4673d199be5c0648961b6dc46a462e158f46937e84fcd3bfbdb42288bd"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/dist-Q-vJZiJG.js",
+          "before_sha256": "14c45e9f6aef465908ed0ee97867b5baa4f0cb7c0047f5de2bafde436b1777c4"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/dist-es-BGbb-8tE.js",
+          "before_sha256": "6ba06a8dcc1f303d47812854a33582945f1798c574d537c73017513263d77159"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/dist-es-DCION3WI.js",
+          "before_sha256": "ef6995eecc776fa2bad1d6290c0ecdd6689299bdae12350377b77aa5541589f4"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/ebnfDiagram-ZINNZB2B-QGzHu4f0.js",
+          "before_sha256": "4d67e2f2cb86ef8f2d9b80bfebf0e1e15854a52bf08df0dfd4c112a070732f38"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/editor-VmYacIt-.js",
+          "before_sha256": "274be4713cd316fd11ba2721cc24dce552b2e7a4e3dca9fa15d8fc6d1665e25f"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/elk-276RUBZZ-DDCgGmyj.js",
+          "before_sha256": "f23033a54097d9f95efb6a0b6f048b8519c533c27a099f5d6cf4c9d0806bdb5c"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/en-US-q0gc1nIW.js",
+          "before_sha256": "e37aafcc704c439610dcc334acb0e8499bf37d924a6872e40d65ea0b1e10b28f"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/erDiagram-OPXOYQCR-DQa6N70o.js",
+          "before_sha256": "da6cf97822745343b26bbeecf43c8e513ceb5b3b2f639ded7227100d8af6408b"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/es-IlpKT8sT.js",
+          "before_sha256": "576d95fbee0c47633f0b96ebab80edf35d4ef8aa1f65c1f6f8f681c325aeb49a"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/esm-CpymJYxv.js",
+          "before_sha256": "dd8234812c93edfb55e2b3ad612447cd8bc71aec63997b94e53a2f903b7e1f18"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/esm-EyeMpEWb.js",
+          "before_sha256": "0480e192f82d0f98aec055d835ebf1a3f5aa5b349825a773fead314950fadc43"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/eventmodeling-NTZA5JFV-BPyOwass.js",
+          "before_sha256": "d67a161411228a3d9518d693c2f133bb95571ac36460d0ea4b10901ebf2574f0"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/file-text-DscvNBZB.js",
+          "before_sha256": "6badb123b79a9e298b7170f008c7cf6f7588662dbfe4257fe81e40139f173886"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/flowDiagram-KWPJA3E3-BW8nkhXb.js",
+          "before_sha256": "37cbc9735c1e434e01d91de03077d94ea713d5f63c5e08ee70fa36a6e4448632"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/formatDoc-BDYZgvY1.js",
+          "before_sha256": "d8aff93b163520f5fb02d3e117083337c709d4fd180eadaea202fb3df95688b4"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/formula-BY10rzjJ.js",
+          "before_sha256": "245a1d2c68882ffec321e773e1137cd2cca29158c89b247c3122ddd2330e96aa"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/ganttDiagram-FUAMR5RP-BbB3QIwG.js",
+          "before_sha256": "f4081ffbad1fcf08cbd41049e518ca254a2b2fe618f65cbca355d1e1fbf6dc96"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/gitGraph-4MIJSDKK-BCC1e5MS.js",
+          "before_sha256": "8c0c2cef239891f4496ce9472058cfd457ff9c1cf128c280918ee8f148f4edb9"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/gitGraphDiagram-X574FWY7-bDc2GCWg.js",
+          "before_sha256": "11f8a51a37105b309c28a9bb2dd333229f790450bc351f11ddf8987b5661f86a"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/graphlib-TuBEVTtx.js",
+          "before_sha256": "e479e6f8e44566d571db7c0961bc0d15f3e3b015e2bc1567a5199d39e1412692"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/hex-encoding-BZxwfeJD.js",
+          "before_sha256": "45a0a487cd881dca83ee319d257a1d0b9ae36a21977ccbfa8daf3164e8e606ad"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/hierarchy-VtCRZ5ch.js",
+          "before_sha256": "90554fc5d849cc1bd57c9c760219547fbac5998c44937a06bae23b4e4ec93163"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/highlight-ZqbupznI.js",
+          "before_sha256": "978dd19fa0650b10af4bc2ebe482cc500661e8b9dee055e61d8319a7a0772934"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/index.browser-LeTeYHkU.js",
+          "before_sha256": "ceaadceba60b1c9f61edbdb6c18401169137ec44ceed70890ff67a5df379b185"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/index.esm-Bw5633gn.js",
+          "before_sha256": "b43fc6de97d60acc03114cde326aa4985f2d498b0ba66b8bb7974f1784defeb3"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/info-A6RAGUB7-BstDJZA7.js",
+          "before_sha256": "796e4bd0f73ab311e5ffe6e939763ec512a93116b1b1573beb191c5740aa5cd1"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/infoDiagram-VRGFBTTK-BbDGR5Qo.js",
+          "before_sha256": "5ef29af83f986c88b04c822120f16fe44354d556b65e9ad8595d0c9c4bc3601e"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/init-CtAePtIP.js",
+          "before_sha256": "6e79949912b730280eacd84c1badbd9f3ecd90f0492fa5d8fdb9d7d049de22fb"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/isArrayLikeObject-BPODWOsn.js",
+          "before_sha256": "d415be43df8519e7c5a87c89e8f80ea8ad88c60546567aefa9c9bb60b1e3e4a1"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/ishikawaDiagram-OU5B5YK6-C5HD1kzB.js",
+          "before_sha256": "cbca651c09c808d11feb02a80d316948d8c6ae5fb168ddc8c9defba87e60c9c9"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/ja-JP-Ca_3Xhzk.js",
+          "before_sha256": "d1d422c9a994233cf123120173c0fc5f87fdcaaae242e72f46393838cb6a27d8"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/journeyDiagram-ZHPQQLJL-_EvFD6Oi.js",
+          "before_sha256": "484a64a74d95fb22c12a35375a902af7ecd8aee2e0a63c9c90456fada28ae49e"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/kanban-definition-PNTS6WVX-gHofTSYy.js",
+          "before_sha256": "e409216d7028f0fdfc2f2b1736f7c91b8069c77b7f3e78d8f549a718c9e3073f"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/katex-D3MbIlph.js",
+          "before_sha256": "00c49c18434e14b0d102b9d4715aab00bdeea71a154e773f80508a7a2d5f119c"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/lib-DIiEqr8B.js",
+          "before_sha256": "33cbf9404e54b44a68969bc4f2ea12fdf5798c732636616b632c5ec7724fa25f"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/line-DcIgSGTJ.js",
+          "before_sha256": "16135620530d879339ce860ebdcfbe8f5b2801a23cf40c9d3d1767bfaa00f8a3"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/linear-CIJoUPCJ.js",
+          "before_sha256": "7a5c187809f2f16695204003ffafd5e32206d57af29e471a7b65bc639ce9544a"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/linear-mJ1vRInF.js",
+          "before_sha256": "f36edb41c29d30e74bf3ebc49a2778e2fc69649563f30e56f7792f7170546867"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/marketplace-C8nh3WtE.js",
+          "before_sha256": "c2b6157cb48a40e9c68b95ceb4b5d3298abd805ae5c661e934c36e4079ae5c9b"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/math-DPq8ZQwl.js",
+          "before_sha256": "85f4185067cea0c6662e31f19a16c15ebc82a1452f367acb9b430ce9b0483aa2"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/merge-DNqpCYL5.js",
+          "before_sha256": "141ecf6d28c5fa62a5a8e2fa8935c72ad4065992c0312fc0c6ba26a951aea692"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/mermaid-parser.core-GHfTH9tR.js",
+          "before_sha256": "d4bedf75eeedc100b7b1f98e4d043f0f02526f514a4e193c78600fa51114dd65"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/mermaid.core-DsMCwKuT.js",
+          "before_sha256": "22c89204dd60d3b8492383e460982574770c8d416be27c4be39035f887ae58ca"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/mindmap-definition-NLK3R4M7-rdC3mmFY.js",
+          "before_sha256": "125a8ca71f5977de94b97d8dfafd150de144010790c40f1831646dc653f6899f"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/minus-u0NdL0u6.js",
+          "before_sha256": "0d6cc9e45b9145c56e562f288262afc4bc8ed27a1cbb1c9e50ecef6d1bd9386b"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/native-host-BoAU4GnD.js",
+          "before_sha256": "23a532278e2608f9ed798cb91aed3315e64537b8c77291bfd74f778be83f0eaa"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/oauth-CN0-Wcs0.js",
+          "before_sha256": "82df4c1681098e8668d62758641483193091720660287aaf8702da2331b01f0a"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/ordinal-DWLOU4FX.js",
+          "before_sha256": "941f4e4d036b4ddc629b134c329e68eec1e840099d38efeae221f89b90437556"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/packet-AYTQ26CC-B7-PyqKZ.js",
+          "before_sha256": "c4125825d17705dbb4c767297fdb898242b9ff773e4603753d494e547ef28ee4"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/path-C5ASbN8J.js",
+          "before_sha256": "f37ac0f692a371689a164144d767ebdd4616ada0fc996406f5854a23ecd6758a"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/pegDiagram-GJSIUBJH-CyVezvF8.js",
+          "before_sha256": "638a00fd6dcdaa87625aa8772b1baa40b00107e761c0d8c428ecede1ac52cb17"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/pie-BdgXQf_M.js",
+          "before_sha256": "3b4ec77a150537b6eb6776d8bd951c249253102ea520de25ca74956a5c6666f0"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/pie-WAS4IAKB-J8RWEOm3.js",
+          "before_sha256": "cf2b29fdd9eee8812be796820c916157708c8d750db78aee18cdfb61023073e2"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/pieDiagram-5QR66LMP-DyJ9jHdj.js",
+          "before_sha256": "5aa0560308d61181733675ee07543ac7548290af48e8172203d6c9c274e6a305"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/plus-C2jBVcNN.js",
+          "before_sha256": "717426c5591cb5d5ff7108a89f024554f8c3040711c3fe8f7202f8882970c59e"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/post-BeiAh9Pa.js",
+          "before_sha256": "eb9e7e1be12ed8c5db921b90b8d998caa4ab2420234e48ea16ff5a6155eb19df"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/prettier-GzVfHlfC.js",
+          "before_sha256": "337d6b42491e0674df523b660ea82259fa197916378dbd32990a96d853f21944"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/provider-registry-C_yJEJu8.js",
+          "before_sha256": "e922913e7a2e262ebdd1fc14a324d082f8c2cefd28734a15b95ef83fbcc13256"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/providers-5OiUFt8V.js",
+          "before_sha256": "a1446488dc0690cd98d4fba9527df9a6627db1c7ff25f0f48c6b9e8532c11998"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/purify.es-CcTd0BvO.js",
+          "before_sha256": "e9fd30db6c38e526c62dc8edcb2940c54cf47457eb9946153f046e9ee3b7690a"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/quadrantDiagram-O4NWA36T-B82Q13Fw.js",
+          "before_sha256": "133758b92411a2d9f0b4426cee3cb1944e32ac09489964a65b171c01aa3275c1"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/radar-RG4KPBEZ-xGFToNUt.js",
+          "before_sha256": "16535e25ef3438ebdeae6f71e4d18e72a11489ef94ced94d79edbfc25c437cd6"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/railroad-74A4TZTK-BkC7P-Ff.js",
+          "before_sha256": "12600c7b066d6d84f56f299419b502368b134ae554dd0b47ddac351c89fa0ffd"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/railroad-abnf-HS5TGJTU-BlQkFnPa.js",
+          "before_sha256": "c264ff40b931ca6685351a2f2998eca7e415981623d2317a104664f4f6814399"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/railroad-ebnf-LZEXJU2U-ChAJDX5x.js",
+          "before_sha256": "a3056baeda0f191e9a0fa6e084d91624b74f1f7a6db3afa8303661827f3edb02"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/railroad-peg-WCYAUIDC-z04BDQ1X.js",
+          "before_sha256": "0ae7a3d541780ae2f6abe348b712753841848de07450fd8aa9ee7950e7784482"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/railroadDiagram-XR7U4H2S-Q3RPzXTZ.js",
+          "before_sha256": "c40a1a45983057c684b2a48739aaa5926969250938c7ddae5d0548fe355a5fff"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/render-DsjZRMnM.js",
+          "before_sha256": "99704573c2a7bf293981ca76785a4c739f9d14f444c2d4954ebe946d99728c8f"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/renderer-2bSccpei.js",
+          "before_sha256": "532119184aa58aa20647cae93b59b851429f8112160dfa670e89fd228ec0e0bc"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/requirementDiagram-PLB6GJNP-C9DiSk7z.js",
+          "before_sha256": "89f62983301b92336ea28e9640b7bbe13153f0c4829bcb075f0c06888cb981c2"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/rolldown-runtime-WOOOH1Hs.js",
+          "before_sha256": "df43ddef67bf1be07f59727a77f8aab357818d7db870b64793406e7678800680"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/rough.esm-BhsdIuQj.js",
+          "before_sha256": "b77c8f9631f0961458b5fd9bcdbd9b521a932ad3ad3120cc690dad85ec1a70c4"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/sankeyDiagram-IPEJSGJF-Bx1mNGdZ.js",
+          "before_sha256": "3a464fdaf9b3e7bd696da34b0f20fe6bc0f1053c57cde483025571603a97ab37"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/search-DYgNslcJ.js",
+          "before_sha256": "38b67ecf3cb92285be90e3a3369ac319815ef1ee070a6f3138bfe42e991778da"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/sequenceDiagram-PO4LG4MO-BVz8cU4K.js",
+          "before_sha256": "b40b08dd7a2785454086f2ff93e42e50fef13c7757c0a71afe61cf5f61d6a973"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/sizeCapture-INFHLROL-DrR9NkPf.js",
+          "before_sha256": "b64b0fb374398d47bca633f0af2ce363662ea7e209ea7b11136be7a6db0b32c4"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/slashCommands-5rC_jymM.js",
+          "before_sha256": "301e6496343ff7330a8667b7f0735258a677d3ad69a33cb3a7dc0de2c5cc1cd3"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/src-CKkAgJ42.js",
+          "before_sha256": "7a626dc25766753b41a9ed9f21ed24f1fb6e7d454c3f78fdb6ea5cfad0baf1d3"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/stateDiagram-v2-GCMORJYK-GRK2W4dq.js",
+          "before_sha256": "792930f6b02181b1874b21f76f6d7ecc3516a63ef214f34d789217f79cd519e2"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/storage-jiCkQUgy.js",
+          "before_sha256": "d96f4ee07bd4ba1c869646bf60e4c33814450337389f929c484112d5114e8b08"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/swimlanes-2SLR337P-h7AlebHt.js",
+          "before_sha256": "dc07ff38ca686d8c3de33b960b73a0e8b5a3eea1adbe78838ea4b2bb0ba6b6d8"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/swimlanesDiagram-TC7HE7FX-QKCn4BpV.js",
+          "before_sha256": "e38ff17fe30a7dff42cff15d7ede896486f8f323c06ebccbde524bbd50e7f23b"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/table-neeg7dzE.js",
+          "before_sha256": "3584b3ee78a1ece768f6b9ec733a7eff7233e5b8c8640549d8d0ff9941b543de"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/timeline-definition-EJHVYXUP-cqxKpNaY.js",
+          "before_sha256": "8efe5ff9c62665d82980eb70f0f64db7627c9bca6d29707e08a022b5ae9dbf05"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/translate-CUv9RhnO.js",
+          "before_sha256": "ae8f99bb49c2a3d277d4f317cf2fadd1d5f446129d17bff0392785b9619d302a"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/trash-DHg1WvRr.js",
+          "before_sha256": "ac25a41695815ebac599bd4ac80cc3094c209baac1dd157c52d3616e7b04d536"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/treeView-Q6P3EWNA-Cnlic2nE.js",
+          "before_sha256": "b16c75a5b61c7e39f83b5cb55c420f5301817c0449ebdcd483d4e9e3139fd400"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/treemap-WGGIJYW6-BsPfJeBW.js",
+          "before_sha256": "05705057f0f57c6d23162b0256b05c2803784d043314809ce4d88e407bf4cc7f"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/useEditorRefresh-BBWJMw8B.js",
+          "before_sha256": "bb8fd738a01a5580093b0598e400be11dfaf4844496b253044ad8ef0a4b211e1"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/useLocalizedStyleOptions-BV-WqjoJ.js",
+          "before_sha256": "8b0ce791a2ede8ddb8f05eb4461d8766436e61dcf6a2a932c9fc9fac5af41616"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/usePrimitiveElement-CnkYcO3s.js",
+          "before_sha256": "8814e59c2c595119d76cdd0791188a3a2f9080f5127a300d703ddb56a49f88d5"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/usecaseDiagram-POWQR4AR-B_PlDco-.js",
+          "before_sha256": "05a8f48fda10e453861a041995034e2ea2e93984078cdbc0a82ed55954141604"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/utils-D7O4F-LG.js",
+          "before_sha256": "410bfa7ba9779c9c3cde7541f6aa36d30e535eb2cb059fa6b8ca09543afb0393"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/v4-vx8gRFYx.js",
+          "before_sha256": "e0293a68c063b86b70c33da423ac8d26b2cae1f90402fe8b5d8c0fd810e2bf27"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/vendor_vue-OlfIOlFg.js",
+          "before_sha256": "535bfa3b73171b4e14c7c119bd1e90fad1316f6ddd0e873ec78391366c90e16b"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/vendor_vueuse-DbHwQsn4.js",
+          "before_sha256": "65e8bc9953feeb8311ce20e6f38f2156e38cf763a1a619f865d59fb4bf67abe5"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/vennDiagram-UO4OBE2U-DuiLkbOp.js",
+          "before_sha256": "1734d99e145ed0a58b81224d965cc339e8956b3caf48fe84e08514a81e497db1"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/vue-i18n-8AnKzzG6.js",
+          "before_sha256": "f2af1264b74c9d8af0216400a0cf70ee72acb5bcba9c6fb607099ddf6578ae03"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/wardley-WFR3VGLG-CxkuYBEh.js",
+          "before_sha256": "962516547c1363f58bc2604c170fd14ee1352497b15c729313532663d3d0538f"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/wardleyDiagram-VNRHLVJA-BFSaBTs3.js",
+          "before_sha256": "3b9f466d4cb5286e17ae3076aaed8cd740a56dfa2c75d9caf0c060eb60979951"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/x-E9vLZ87c.js",
+          "before_sha256": "d4d35892b0a9eb260700b60578320c2fbc902136fd9c85fad25d610a3ffe9375"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/xychartDiagram-PMCCYNJV-C2yKbTfv.js",
+          "before_sha256": "f94d5f4d332622180f5464a7cdfe460b6059a8720473e2bade27241a195ea357"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/chunks/zh-TW-4sBTq6P1.js",
+          "before_sha256": "fd18b60ee6caee39e614c6c9967d34b366d5f0e1e817e1e14753e3cf3a93000a"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/favicon.png",
+          "before_sha256": "b611e578a233595003ac6cc6691bccce3c2cd643ef379a1541d9feb4465f8f68"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/_antv_hierarchy-0.7.1-LICENSE",
+          "before_sha256": "1ea346eab2dc79e0f3bf85d4ae3ce3730631c50d82ef680eadeda8235aa86b9d"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/_antv_infographic-0.2.20-LICENSE",
+          "before_sha256": "cacec99fa5f02241b33906689924718962f4991cd6eada3624f56c6bd4f3ff28"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/_antv_layout-2.0.0-LICENSE",
+          "before_sha256": "d296127a77fae081300d5b18fcfa5ccda75cd16670c1b46dc890a8903ca95128"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/_aws-sdk_checksums-3.1001.1-LICENSE",
+          "before_sha256": "07364a5f7d0177a59a05a0002187431f8f899320983c0dc049d72df015e8064c"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/_aws-sdk_client-s3-3.1142.0-LICENSE",
+          "before_sha256": "e345c2ee7df4446e739de7b91535f0c10ddcd909b9753889e943ee637b05db8c"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/_aws-sdk_core-3.978.1-LICENSE",
+          "before_sha256": "edea91454b811f127fbdea3d86f378f6719bd372ed440abf82b232f6fca06c3d"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/_aws-sdk_middleware-sdk-s3-3.972.77-LICENSE",
+          "before_sha256": "07364a5f7d0177a59a05a0002187431f8f899320983c0dc049d72df015e8064c"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/_aws-sdk_s3-request-presigner-3.1142.0-LICENSE",
+          "before_sha256": "07364a5f7d0177a59a05a0002187431f8f899320983c0dc049d72df015e8064c"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/_aws-sdk_signature-v4-multi-region-3.996.47-LICENSE",
+          "before_sha256": "07364a5f7d0177a59a05a0002187431f8f899320983c0dc049d72df015e8064c"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/_aws-sdk_xml-builder-3.972.41-LICENSE",
+          "before_sha256": "d82ceb8cbd004a2d4834085c557d55459f528e30268d95159ee1e4030a693a6e"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/_braintree_sanitize-url-7.1.2-LICENSE",
+          "before_sha256": "0984740e0c3d725c8044dec7edcefe1dbce180ef5a7bc710c251e19607000158"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/_chevrotain_gast-11.1.2-LICENSE.txt",
+          "before_sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/_chevrotain_regexp-to-ast-11.1.2-LICENSE.txt",
+          "before_sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/_chevrotain_utils-11.1.2-LICENSE.txt",
+          "before_sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/_codemirror_autocomplete-6.20.3-LICENSE",
+          "before_sha256": "05c6130cda97e7600ca91427a41e8a065efcf82365fc0293e7de80faec494c07"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/_codemirror_commands-6.11.1-LICENSE",
+          "before_sha256": "05c6130cda97e7600ca91427a41e8a065efcf82365fc0293e7de80faec494c07"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/_codemirror_lang-cpp-6.0.3-LICENSE",
+          "before_sha256": "05c6130cda97e7600ca91427a41e8a065efcf82365fc0293e7de80faec494c07"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/_codemirror_lang-css-6.3.1-LICENSE",
+          "before_sha256": "05c6130cda97e7600ca91427a41e8a065efcf82365fc0293e7de80faec494c07"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/_codemirror_lang-go-6.0.1-LICENSE",
+          "before_sha256": "8ac9cfc9c82c397298c2139028d2474d8e0470f2092a97edddccf353bc5d4d36"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/_codemirror_lang-html-6.4.12-LICENSE",
+          "before_sha256": "05c6130cda97e7600ca91427a41e8a065efcf82365fc0293e7de80faec494c07"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/_codemirror_lang-java-6.0.2-LICENSE",
+          "before_sha256": "05c6130cda97e7600ca91427a41e8a065efcf82365fc0293e7de80faec494c07"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/_codemirror_lang-javascript-6.2.5-LICENSE",
+          "before_sha256": "05c6130cda97e7600ca91427a41e8a065efcf82365fc0293e7de80faec494c07"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/_codemirror_lang-json-6.0.2-LICENSE",
+          "before_sha256": "05c6130cda97e7600ca91427a41e8a065efcf82365fc0293e7de80faec494c07"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/_codemirror_lang-markdown-6.5.2-LICENSE",
+          "before_sha256": "05c6130cda97e7600ca91427a41e8a065efcf82365fc0293e7de80faec494c07"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/_codemirror_lang-php-6.0.2-LICENSE",
+          "before_sha256": "05c6130cda97e7600ca91427a41e8a065efcf82365fc0293e7de80faec494c07"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/_codemirror_lang-python-6.2.1-LICENSE",
+          "before_sha256": "05c6130cda97e7600ca91427a41e8a065efcf82365fc0293e7de80faec494c07"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/_codemirror_lang-rust-6.0.2-LICENSE",
+          "before_sha256": "05c6130cda97e7600ca91427a41e8a065efcf82365fc0293e7de80faec494c07"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/_codemirror_lang-sql-6.10.0-LICENSE",
+          "before_sha256": "05c6130cda97e7600ca91427a41e8a065efcf82365fc0293e7de80faec494c07"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/_codemirror_lang-xml-6.1.0-LICENSE",
+          "before_sha256": "05c6130cda97e7600ca91427a41e8a065efcf82365fc0293e7de80faec494c07"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/_codemirror_lang-yaml-6.1.3-LICENSE",
+          "before_sha256": "8ac9cfc9c82c397298c2139028d2474d8e0470f2092a97edddccf353bc5d4d36"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/_codemirror_language-6.12.4-LICENSE",
+          "before_sha256": "05c6130cda97e7600ca91427a41e8a065efcf82365fc0293e7de80faec494c07"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/_codemirror_lint-6.9.7-LICENSE",
+          "before_sha256": "05c6130cda97e7600ca91427a41e8a065efcf82365fc0293e7de80faec494c07"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/_codemirror_search-6.7.2-LICENSE",
+          "before_sha256": "05c6130cda97e7600ca91427a41e8a065efcf82365fc0293e7de80faec494c07"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/_codemirror_state-6.7.6-LICENSE",
+          "before_sha256": "05c6130cda97e7600ca91427a41e8a065efcf82365fc0293e7de80faec494c07"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/_codemirror_view-6.43.13-LICENSE",
+          "before_sha256": "05c6130cda97e7600ca91427a41e8a065efcf82365fc0293e7de80faec494c07"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/_floating-ui_core-1.8.0-LICENSE",
+          "before_sha256": "0e4c9a9b6c71019cbbea3bdc20b01223110a9035700f9c960c8fcbf78c2325ce"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/_floating-ui_dom-1.8.0-LICENSE",
+          "before_sha256": "0e4c9a9b6c71019cbbea3bdc20b01223110a9035700f9c960c8fcbf78c2325ce"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/_floating-ui_utils-0.2.12-LICENSE",
+          "before_sha256": "0e4c9a9b6c71019cbbea3bdc20b01223110a9035700f9c960c8fcbf78c2325ce"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/_floating-ui_vue-1.1.11-LICENSE",
+          "before_sha256": "46c97b198a78dc0befc1a823ba7bcdf993726a887d0215edcce575a61b947115"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/_fsegurai_codemirror-theme-vscode-dark-6.2.8-LICENSE",
+          "before_sha256": "82501d585a5fe42968185c99f338b22aa7a179f8c0397844d7ee45cb444c8ded"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/_fsegurai_codemirror-theme-vscode-light-6.2.8-LICENSE",
+          "before_sha256": "82501d585a5fe42968185c99f338b22aa7a179f8c0397844d7ee45cb444c8ded"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/_iconify_utils-3.1.7-license.txt",
+          "before_sha256": "a86793ac023162ce98b91899601c15f6712f44943163c4f92a0a4bf89152b3bf"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/_internationalized_number-3.6.8-LICENSE",
+          "before_sha256": "7dfe6526888bac51759c99f9a51262ba2711a8c12a067f2181609dd9a4066b84"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/_intlify_core-base-11.4.12-LICENSE",
+          "before_sha256": "403a4d6f9815ae33bd7a613202529f0805045c642f92a169fa673d7fa07dd568"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/_intlify_message-compiler-11.4.12-LICENSE",
+          "before_sha256": "403a4d6f9815ae33bd7a613202529f0805045c642f92a169fa673d7fa07dd568"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/_intlify_shared-11.4.12-LICENSE",
+          "before_sha256": "403a4d6f9815ae33bd7a613202529f0805045c642f92a169fa673d7fa07dd568"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/_lezer_common-1.5.3-LICENSE",
+          "before_sha256": "568902fb66eaf1f11750e966b33fd7b5d7c618e65af09f35ef843635bcf5f1ba"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/_lezer_cpp-1.1.6-LICENSE",
+          "before_sha256": "54bd812a6d334e0c438b78a43cea74b67e882739fd3450115ddc7c52be5706c1"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/_lezer_css-1.3.8-LICENSE",
+          "before_sha256": "568902fb66eaf1f11750e966b33fd7b5d7c618e65af09f35ef843635bcf5f1ba"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/_lezer_go-1.0.1-LICENSE",
+          "before_sha256": "54bd812a6d334e0c438b78a43cea74b67e882739fd3450115ddc7c52be5706c1"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/_lezer_highlight-1.2.5-LICENSE",
+          "before_sha256": "568902fb66eaf1f11750e966b33fd7b5d7c618e65af09f35ef843635bcf5f1ba"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/_lezer_html-1.3.13-LICENSE",
+          "before_sha256": "568902fb66eaf1f11750e966b33fd7b5d7c618e65af09f35ef843635bcf5f1ba"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/_lezer_java-1.1.4-LICENSE",
+          "before_sha256": "54bd812a6d334e0c438b78a43cea74b67e882739fd3450115ddc7c52be5706c1"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/_lezer_javascript-1.5.5-LICENSE",
+          "before_sha256": "568902fb66eaf1f11750e966b33fd7b5d7c618e65af09f35ef843635bcf5f1ba"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/_lezer_json-1.0.3-LICENSE",
+          "before_sha256": "7e744ae18ef84389d576469a5781172b0d50b7981111109f6da7cbc6b4188288"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/_lezer_lr-1.4.10-LICENSE",
+          "before_sha256": "568902fb66eaf1f11750e966b33fd7b5d7c618e65af09f35ef843635bcf5f1ba"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/_lezer_markdown-1.7.2-LICENSE",
+          "before_sha256": "54bd812a6d334e0c438b78a43cea74b67e882739fd3450115ddc7c52be5706c1"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/_lezer_php-1.0.6-LICENSE",
+          "before_sha256": "568902fb66eaf1f11750e966b33fd7b5d7c618e65af09f35ef843635bcf5f1ba"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/_lezer_python-1.1.19-LICENSE",
+          "before_sha256": "54bd812a6d334e0c438b78a43cea74b67e882739fd3450115ddc7c52be5706c1"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/_lezer_rust-1.0.3-LICENSE",
+          "before_sha256": "568902fb66eaf1f11750e966b33fd7b5d7c618e65af09f35ef843635bcf5f1ba"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/_lezer_xml-1.0.6-LICENSE",
+          "before_sha256": "568902fb66eaf1f11750e966b33fd7b5d7c618e65af09f35ef843635bcf5f1ba"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/_lezer_yaml-1.0.4-LICENSE",
+          "before_sha256": "8cb910abd2a5463466b7c31958b39d6787ebf9e9f299598266b814bc90dd076b"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/_lucide_vue-1.48.0-LICENSE",
+          "before_sha256": "b495047bd93a9b06913511076f504daba17d5bbeb3e0650f3bb53a4220329c57"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/_marijn_find-cluster-break-1.0.4-LICENSE",
+          "before_sha256": "9360b00fdd091f05c783b568bdd46c679c41b72415599252de98949462ea1acb"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/_mermaid-js_parser-2.0.0-LICENSE",
+          "before_sha256": "d374061c40bfb6f99c5033290caefda97a9b3e7e477e5ee02f487143ef2177e8"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/_popperjs_core-2.11.8-LICENSE.md",
+          "before_sha256": "bf67e2c9b7974543bb18ced3a0b37f53729aaff953b442dd89a3adaf90fd93e8"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/_replit_codemirror-indentation-markers-6.5.3-LICENSE",
+          "before_sha256": "f3202d54e64d4949a309745912ac025fb1d73ac764da4acaaf117fc70ff4c19b"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/_smithy_core-3.35.0-LICENSE",
+          "before_sha256": "07364a5f7d0177a59a05a0002187431f8f899320983c0dc049d72df015e8064c"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/_smithy_fetch-http-handler-5.8.0-LICENSE",
+          "before_sha256": "d82ceb8cbd004a2d4834085c557d55459f528e30268d95159ee1e4030a693a6e"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/_smithy_signature-v4-5.7.4-LICENSE",
+          "before_sha256": "d82ceb8cbd004a2d4834085c557d55459f528e30268d95159ee1e4030a693a6e"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/_smithy_types-4.19.0-LICENSE",
+          "before_sha256": "07364a5f7d0177a59a05a0002187431f8f899320983c0dc049d72df015e8064c"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/_upsetjs_venn.js-2.0.0-LICENSE",
+          "before_sha256": "6a3508febf2cfccfee96597394543a6154a4bb0b1f91f28404be42c09e9fcb54"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/_vue_reactivity-3.5.43-LICENSE",
+          "before_sha256": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/_vue_runtime-core-3.5.43-LICENSE",
+          "before_sha256": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/_vue_runtime-dom-3.5.43-LICENSE",
+          "before_sha256": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/_vue_shared-3.5.43-LICENSE",
+          "before_sha256": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/_vueuse_core-14.4.0-LICENSE",
+          "before_sha256": "0f844b1160603552a01662ac2999c14e5fb4df487e65619b9ed4406e43eb3c0b"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/_vueuse_core-15.0.0-LICENSE",
+          "before_sha256": "0f844b1160603552a01662ac2999c14e5fb4df487e65619b9ed4406e43eb3c0b"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/_vueuse_shared-14.4.0-LICENSE",
+          "before_sha256": "0f844b1160603552a01662ac2999c14e5fb4df487e65619b9ed4406e43eb3c0b"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/_vueuse_shared-15.0.0-LICENSE",
+          "before_sha256": "0f844b1160603552a01662ac2999c14e5fb4df487e65619b9ed4406e43eb3c0b"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/aria-hidden-1.2.6-LICENSE",
+          "before_sha256": "30f0cfddf483d1128e3610205020f2041a6c5e837aa999e0aa82e5576187d4a9"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/browser-image-compression-2.0.2-LICENSE",
+          "before_sha256": "6aeb9cd1549315900b91eea89819e509818c733ea3040d59d67041c168703694"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/buffer-from-1.1.2-LICENSE",
+          "before_sha256": "14275f5c8139d02054c5259d52a88ccbba662a86af18c30f071c8d082dc6004c"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/call-bind-apply-helpers-1.0.2-LICENSE",
+          "before_sha256": "5e325595b4ea8cfec3802f545b1def5d7b73e4a5b8e9ba63e32a320f67732292"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/call-bound-1.0.4-LICENSE",
+          "before_sha256": "5e325595b4ea8cfec3802f545b1def5d7b73e4a5b8e9ba63e32a320f67732292"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/chevrotain-11.1.2-LICENSE.txt",
+          "before_sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/class-variance-authority-0.7.1-LICENSE",
+          "before_sha256": "0ccbf956cffc8dcf515809433cb5242ee67c94513d46e48c261d68d0880de406"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/clsx-2.1.1-license",
+          "before_sha256": "9a9edad7baae52622bddf3c15b2ef8a33d2c89f2d25408ad13e8a7481c6b0c97"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/cose-base-1.0.3-LICENSE",
+          "before_sha256": "5fb3cf4a14c3c5af6e473a192df8bca10c77754e3a0c6492c79fb92a76a5478a"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/cose-base-2.2.0-LICENSE",
+          "before_sha256": "5fb3cf4a14c3c5af6e473a192df8bca10c77754e3a0c6492c79fb92a76a5478a"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/crelt-1.0.7-LICENSE",
+          "before_sha256": "23852ebf6aef7fadffc92514b3c5df163a8651f2c3ed0dbb494cb49d93bd5de5"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/crypto-es-3.1.3-LICENSE",
+          "before_sha256": "1c027ae30d1f747c3e860406cc93eff8bc9ce0882c6c1567eb5d3f5a0eb88a73"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/culori-4.0.2-LICENSE",
+          "before_sha256": "5e9ac3317f048184d001bd3814aed28d4874bdcac9da1d001465e52e1a0e8077"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/cytoscape-3.34.3-LICENSE",
+          "before_sha256": "eb319c6e6f233607f71e8e2f450391751883cfc0eeb3ca7ef574c13d1d9c2203"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/cytoscape-3.34.3-license-update.mjs",
+          "before_sha256": "4a5a644717fc90d678e8fbbc537a08452d0566726710eef47b196abd6363e635"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/cytoscape-cose-bilkent-4.1.0-LICENSE",
+          "before_sha256": "440fc58a56a12814e417d2b341da89b050da052dc75bdb235607d37ec5fe74ef"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/cytoscape-fcose-2.2.0-LICENSE",
+          "before_sha256": "2837634f403949215760fcdd2fa1ed0c64875d02099ecc8318c704b852f1421d"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/d3-7.9.0-LICENSE",
+          "before_sha256": "3e6849627f74ff73c257a3ae1efb574015d94fc1035c05ec3c15805165efcbc4"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/d3-array-2.12.1-LICENSE",
+          "before_sha256": "0747bebeb06b10954913149be9b9a8bdf6fad3e6fdcbd9f9524e7a94c13d2cea"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/d3-array-3.2.4-LICENSE",
+          "before_sha256": "3e6849627f74ff73c257a3ae1efb574015d94fc1035c05ec3c15805165efcbc4"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/d3-axis-3.0.0-LICENSE",
+          "before_sha256": "e008c5e25a6be382593089c29bfabbc553c6378eee02895aec46ce396cc404ee"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/d3-brush-3.0.0-LICENSE",
+          "before_sha256": "e008c5e25a6be382593089c29bfabbc553c6378eee02895aec46ce396cc404ee"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/d3-color-3.1.0-LICENSE",
+          "before_sha256": "faa682e3e430941f958d26180458f5934a62f58dac4d70ccdd15608c15d0f884"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/d3-dispatch-3.0.1-LICENSE",
+          "before_sha256": "e008c5e25a6be382593089c29bfabbc553c6378eee02895aec46ce396cc404ee"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/d3-ease-3.0.1-LICENSE",
+          "before_sha256": "b989d9085148d21ff64a75e14462aefa06b2589a55553b07b1460c70081c7d08"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/d3-force-3.0.0-LICENSE",
+          "before_sha256": "e008c5e25a6be382593089c29bfabbc553c6378eee02895aec46ce396cc404ee"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/d3-format-3.1.2-LICENSE",
+          "before_sha256": "2a6d2d5f32ba0b755ddbc1c833f766e30cdbe6ebe9a6d4e3e24427721f0b63d3"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/d3-hierarchy-3.1.2-LICENSE",
+          "before_sha256": "e008c5e25a6be382593089c29bfabbc553c6378eee02895aec46ce396cc404ee"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/d3-interpolate-3.0.1-LICENSE",
+          "before_sha256": "e008c5e25a6be382593089c29bfabbc553c6378eee02895aec46ce396cc404ee"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/d3-path-1.0.9-LICENSE",
+          "before_sha256": "b8265327ab678f554800e71188b1cc6b1ff57522e292d2b1c0be66f27cf328b6"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/d3-path-3.1.0-LICENSE",
+          "before_sha256": "a09b0d6d76e768fca2085fad05743ee81ddd11946bcda160a3cf5e1081a479aa"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/d3-quadtree-3.0.1-LICENSE",
+          "before_sha256": "e008c5e25a6be382593089c29bfabbc553c6378eee02895aec46ce396cc404ee"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/d3-sankey-0.12.3-LICENSE",
+          "before_sha256": "2bf785e778d67a4f5266cffcd4f2cc5bb98cde73791666e7efeb8002ba32dfa5"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/d3-scale-4.0.2-LICENSE",
+          "before_sha256": "e008c5e25a6be382593089c29bfabbc553c6378eee02895aec46ce396cc404ee"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/d3-scale-chromatic-3.1.0-LICENSE",
+          "before_sha256": "0986d93944902cca9af86824b6a641b4b7c2d10602fc510c433a8bcd443919fe"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/d3-selection-3.0.0-LICENSE",
+          "before_sha256": "e008c5e25a6be382593089c29bfabbc553c6378eee02895aec46ce396cc404ee"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/d3-shape-1.3.7-LICENSE",
+          "before_sha256": "7eea8533ea92bd8c32a901e89ecb0305890905bb12711449565ddff96891146d"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/d3-shape-3.2.0-LICENSE",
+          "before_sha256": "faa682e3e430941f958d26180458f5934a62f58dac4d70ccdd15608c15d0f884"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/d3-time-3.1.0-LICENSE",
+          "before_sha256": "faa682e3e430941f958d26180458f5934a62f58dac4d70ccdd15608c15d0f884"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/d3-time-format-4.1.0-LICENSE",
+          "before_sha256": "e008c5e25a6be382593089c29bfabbc553c6378eee02895aec46ce396cc404ee"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/d3-timer-3.0.1-LICENSE",
+          "before_sha256": "e008c5e25a6be382593089c29bfabbc553c6378eee02895aec46ce396cc404ee"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/d3-transition-3.0.1-LICENSE",
+          "before_sha256": "e008c5e25a6be382593089c29bfabbc553c6378eee02895aec46ce396cc404ee"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/d3-zoom-3.0.0-LICENSE",
+          "before_sha256": "e008c5e25a6be382593089c29bfabbc553c6378eee02895aec46ce396cc404ee"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/dagre-d3-es-7.0.14-LICENSE.md",
+          "before_sha256": "d01eb84ccce437dbf5fd40853bceea0f287930920acea066597a4a25ead63858"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/dayjs-1.11.23-LICENSE",
+          "before_sha256": "5faab7526d055651be3aab769d58897be6bd91f3d39d137f25f12dba1b31d5dc"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/defu-6.1.7-LICENSE",
+          "before_sha256": "46231df5a7733c3f52f11b71f3df61813007745b62b09031acfb45fb42d75082"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/dompurify-3.4.16-LICENSE",
+          "before_sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/dompurify-3.4.16-LICENSE-MPL",
+          "before_sha256": "fab3dd6bdab226f1c08630b1dd917e11fcb4ec5e1e020e2c16f83a0a13863e85"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/dunder-proto-1.0.1-LICENSE",
+          "before_sha256": "2b770a704c15de238c3f622b01b0044ddd60b49ee30608ea6991ebf19db7a7a1"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/elkjs-0.9.3-LICENSE.md",
+          "before_sha256": "89591d4578fb1ebd91501312a3d25f021bd865a2e436641c1cf7b1bc7e3c1617"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/entities-8.1.0-LICENSE",
+          "before_sha256": "cb992345949ccd6e8394b2cd6c465f7b897c864f845937dbf64e8997f389e164"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/es-define-property-1.0.1-LICENSE",
+          "before_sha256": "5e325595b4ea8cfec3802f545b1def5d7b73e4a5b8e9ba63e32a320f67732292"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/es-errors-1.3.0-LICENSE",
+          "before_sha256": "5e325595b4ea8cfec3802f545b1def5d7b73e4a5b8e9ba63e32a320f67732292"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/es-object-atoms-1.1.2-LICENSE",
+          "before_sha256": "5e325595b4ea8cfec3802f545b1def5d7b73e4a5b8e9ba63e32a320f67732292"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/es-toolkit-1.52.0-LICENSE",
+          "before_sha256": "51f3674294d988d89dbebd31273baaeb3c697a15482d9699b14d1fded2e132a7"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/es-toolkit-1.52.0-NOTICE",
+          "before_sha256": "11ee5e3bce9b0a4dde7f73811caf98978e710228d891c3111ad8ef8d7d2a916f"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/eventemitter3-5.0.4-LICENSE",
+          "before_sha256": "3aecc12b1cb28832b5f65ab64291de96568c3f236a74d646281b4491f7bcadbf"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/fflate-0.8.3-LICENSE",
+          "before_sha256": "0a1df3a083d0c010560aa342e87959c8c1070e6fd54545741f083f22d0c8b551"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/flru-1.0.2-license",
+          "before_sha256": "9a9edad7baae52622bddf3c15b2ef8a33d2c89f2d25408ad13e8a7481c6b0c97"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/function-bind-1.1.2-LICENSE",
+          "before_sha256": "773e131a7684726005a7e4688a80b4620033bc08499bc1404dd1a1eb3bca725e"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/get-intrinsic-1.3.0-LICENSE",
+          "before_sha256": "39c5ec504cf6bd5cd782a7c695828e09189df79f5d94840e4f08feb97b9fd416"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/get-proto-1.0.1-LICENSE",
+          "before_sha256": "be46ce1e3b0479af9ce82d22b465a6d7d2ff084fca0aaf3d54172da2b5eb5781"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/gopd-1.2.0-LICENSE",
+          "before_sha256": "d90bf0a089da4cf43d644ed240a0b3825dcdb705e64e38371d56995a4cc9e4c5"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/has-symbols-1.1.0-LICENSE",
+          "before_sha256": "206c1adcf206dc0031b11232f5b054ec5f1662407ab1ca415247921cab2068ab"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/hasown-2.0.4-LICENSE",
+          "before_sha256": "bf9b0d665be2a689851eea667ca9f42066ea1d903b38349c51e6a44b2577680a"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/highlight.js-11.12.0-LICENSE",
+          "before_sha256": "6c081431591d9df696c82dc598fe1423765b8a299b200ed00b281afd0f64c490"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/html-to-image-1.11.13-LICENSE",
+          "before_sha256": "9fe73723f7a9e91057f73aafc9b6a3c3b2174db2b3ddc0a3a6a8ddf2bad68e37"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/idb-8.0.3-LICENSE",
+          "before_sha256": "873a2f333fda393ec3464f4579209b019d98e97c3bf498b10e85f630162fd708"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/internmap-2.0.3-LICENSE",
+          "before_sha256": "9ea8903938dab5f12c4572d60725069bec2d1b0dc3bcc210b09bae946a5ebb1f"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/isomorphic-dompurify-4.4.0-LICENSE",
+          "before_sha256": "6354ab976818c186f78b8f80b54668dfb4dadcfbb7a016c0b0acbf5fa5678fc9"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/js-yaml-5.4.2-LICENSE",
+          "before_sha256": "a07bc24468b9654ce76a547d47a2db282d07733b715db4c73a98bd63961f9550"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/katex-0.16.47-LICENSE",
+          "before_sha256": "766ccc1f306c885aa45542a9846bbd0a505b27a0374f146778171c2254ce18e3"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/khroma-2.1.0-license",
+          "before_sha256": "66b333b0f66759a0b710459e03f7029abe17f4358114a128d2c972e642961b49"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/layout-base-1.0.2-LICENSE",
+          "before_sha256": "eabb762d8a95109a39c9be3247325529a5239a7aca327d909c3ccdc41f3a06bf"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/layout-base-2.0.1-LICENSE",
+          "before_sha256": "eabb762d8a95109a39c9be3247325529a5239a7aca327d909c3ccdc41f3a06bf"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/lodash-es-4.18.1-LICENSE",
+          "before_sha256": "f71e8ed126b46346494aad5486874cd8f0aafe95092ed67d2e3cb6110f939abc"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/marked-16.4.2-LICENSE.md",
+          "before_sha256": "8e3a3f82f59a60958f56ca08f445647c32a4733dc7ca6c2c46f6eb898471ab9c"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/marked-18.0.14-LICENSE",
+          "before_sha256": "8e3a3f82f59a60958f56ca08f445647c32a4733dc7ca6c2c46f6eb898471ab9c"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/math-intrinsics-1.1.0-LICENSE",
+          "before_sha256": "2b770a704c15de238c3f622b01b0044ddd60b49ee30608ea6991ebf19db7a7a1"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/mermaid-12.0.0-LICENSE",
+          "before_sha256": "ec9fb67dcb25eccc416ed56e1aab819222c805a2a4bfe4cb19e7556bf2ffde80"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/nanoid-3.3.19-LICENSE",
+          "before_sha256": "da4db1480d9beea3483a2eda5c53b22238d0827d57da162b48f122e04d2d9987"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/object-inspect-1.13.4-LICENSE",
+          "before_sha256": "bd40cc437e28a3ad7bef2ad34e6b72e757b182e67bda1acadbab4ef0476f8232"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/ohash-2.0.12-LICENSE",
+          "before_sha256": "46231df5a7733c3f52f11b71f3df61813007745b62b09031acfb45fb42d75082"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/picocolors-1.1.1-LICENSE",
+          "before_sha256": "6582629e2979466878f6014313dcc2f3756c9616148682227ce3063dde310750"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/pinia-4.0.3-LICENSE",
+          "before_sha256": "91a2845c4db44e7497b514b98634a674c737986ad0db81599307cf733bf850b2"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/postcss-8.5.28-LICENSE",
+          "before_sha256": "5be1f3465bba68a626777f984878814aaf35e7ef8e9fd314d469bcf887050fb8"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/prettier-2.8.8-LICENSE",
+          "before_sha256": "4d9b29fc0935ac68f29e579c3ddc79d501f812ba2fca6efa0754cc5ff5c7cbdc"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/qs-6.16.0-LICENSE.md",
+          "before_sha256": "e7dc37bf662d7f786efcb46c545615e70c1daf458a38385521c63cf6607cdfe1"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/reka-ui-2.10.5-LICENSE",
+          "before_sha256": "120a7305524d383f5a0fe2078009dddbe0d10bf951a6644156472cc6602c6039"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/roughjs-4.6.6-LICENSE",
+          "before_sha256": "dca9a392272606ac748ac0976a2a1133f14eef841c27beaa51a844d53c56a09d"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/round-polygon-0.6.7-LICENSE",
+          "before_sha256": "32829461e1b88e9fa0fd41e98164049d4805c343a2bcd35a6178d3405a02b379"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/side-channel-1.1.1-LICENSE",
+          "before_sha256": "cfc3f455254c0af0655cc3ff46a41ed644b67599f6043346169d285bf2b3cf3b"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/side-channel-list-1.0.1-LICENSE",
+          "before_sha256": "5e325595b4ea8cfec3802f545b1def5d7b73e4a5b8e9ba63e32a320f67732292"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/side-channel-map-1.0.1-LICENSE",
+          "before_sha256": "5e325595b4ea8cfec3802f545b1def5d7b73e4a5b8e9ba63e32a320f67732292"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/side-channel-weakmap-1.0.2-LICENSE",
+          "before_sha256": "cfc3f455254c0af0655cc3ff46a41ed644b67599f6043346169d285bf2b3cf3b"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/spark-md5-3.0.2-LICENSE",
+          "before_sha256": "9c4214d48030b7e877ed2fd76044ea079a987c9b3f01f9b6964ba4a475a5a13d"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/style-mod-4.1.4-LICENSE",
+          "before_sha256": "cb4474e26547397169061d3586c00022cda5330a1b64fa13e872319f3b63aff1"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/stylis-4.4.0-LICENSE",
+          "before_sha256": "88c579c6ee44b41137a21321190d177982e5b17d4fa1b83a4a2e3ea325a8fc9a"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/tailwind-merge-3.7.0-LICENSE.md",
+          "before_sha256": "d4c70c7ce38cea8778f0aed3fc0bef0a9dbd27f13bd8b6773cbd6d37941971e5"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/tinycolor2-1.6.0-LICENSE",
+          "before_sha256": "c6cb470a9ba0a50d57611aeec1f31da609c5aefdbee8eac7f289bcb0e30625fa"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/ts-dedent-2.3.0-LICENSE",
+          "before_sha256": "eff13095d9d762c3bd9dda74370c81e2130c28f2691bc455603abf973bac25b9"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/uuid-14.0.2-LICENSE.md",
+          "before_sha256": "beaa6b04fb82e41dd2ad679e19e27953afb5999b1abbb455b6564e78ebfeb332"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/vue-3.5.43-LICENSE",
+          "before_sha256": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/vue-i18n-11.4.12-LICENSE",
+          "before_sha256": "403a4d6f9815ae33bd7a613202529f0805045c642f92a169fa673d7fa07dd568"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/vue-pick-colors-1.8.0-LICENSE",
+          "before_sha256": "c5573764369296c34383411542706cf0976ef3f4258c15f0482f033b3918292d"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/vue-sonner-2.0.9-LICENSE",
+          "before_sha256": "c94aa6106139c6d717569e4ec983187fe2d8d80eb54334efb4aa25620c9f0835"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/licenses/w3c-keyname-2.2.8-LICENSE",
+          "before_sha256": "869c30f368eb08735e779027b9f4bc9fea2f39624351856aebe42741f0bc0884"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/mpmd/icon-256-gray.png",
+          "before_sha256": "1642ba12860db2250128f412adfa5daa213949b502042503234e46011ebdc622"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/mpmd/icon-256.png",
+          "before_sha256": "0af1ad575ec9a31b2e393407590066f2eec813c58acbe38befef80d0ac87557b"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/mpmd/logo.svg",
+          "before_sha256": "9244cb4bf9fc5dd508d6e9b91a0dd9a2545d841522c55a3e8457090c63a2adb1"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/native-build-graph.json",
+          "before_sha256": "73d35916f387081221bb73aba6c7c7c2045a652bf7aed72bcbd38fc18667bf92"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/native.css",
+          "before_sha256": "cf6a66b7e51c1b4251b663f7b03edbc1eebd74154993e263d80698e528407e57"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/native.js",
+          "before_sha256": "5e31ddf1044faf3ac200a08d50fe51b7f40e55a885a592df9387f2891df43adb"
+        },
+        {
+          "path": "frontend/public/reference-editors/doocs-md/native/upload/.gitkeep",
+          "before_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "current_bundle_count": 395,
+      "source_type_paths": [
+        "apps/web/src/native-entry.ts"
+      ],
+      "existing_source_paths": [
+        {
+          "path": "reference-editors/doocs-md/native/native-source.tar.gz",
+          "sha256": "60baa6f2656e5038e31bab6c2ff71ddfbaba54a6a7f703796364b78f4f96f3a7"
+        },
+        {
+          "path": "frontend/public/reference-editors/sources/doocs-md/native-source.tar.gz",
+          "sha256": "60baa6f2656e5038e31bab6c2ff71ddfbaba54a6a7f703796364b78f4f96f3a7"
+        },
+        {
+          "path": "frontend/public/reference-editors/sources/doocs-md/native-patches.diff",
+          "sha256": "57b2a7211781e836019a586cefd278fe057e21439135efacb22929e8b2def87d"
+        },
+        {
+          "path": "reference-editors/doocs-md/native/SHA256.json",
+          "sha256": "df21765227367d276a14d4f038d9196f29c3cfdbc015910bc7c57a0ba5610476"
+        },
+        {
+          "path": "reference-editors/doocs-md/native/VERIFY.md",
+          "sha256": "ad42a5ecb436d2e8d833051d95e71662e88b37bcaec6b94db0e4537b1b51cedb"
+        },
+        {
+          "path": "reference-editors/doocs-md/native/README.md",
+          "sha256": "d1d699593b642a89270c558839c1b4491dfcdd8813b5f884c5cbb4b1463ab875"
+        },
+        {
+          "path": "reference-editors/doocs-md/native/NATIVE_PATCHES_FROM_T1049.diff",
+          "sha256": "57b2a7211781e836019a586cefd278fe057e21439135efacb22929e8b2def87d"
+        }
+      ],
+      "missing_named_paths": [],
+      "archive_files_to_inspect": [
+        {
+          "path": "apps/web/src/native-entry.ts",
+          "exists": true,
+          "sha256": "3e19e0314a1300730e2c1193e9611a94d04d1714a15f44a792a61d0e0bceb935"
+        },
+        {
+          "path": "apps/web/src/native-lease.ts",
+          "exists": true,
+          "sha256": "7ba3500d5116fe5dc6cac1adeca345fc4df6241a4e21f154f0938fa5d485d0e3"
+        },
+        {
+          "path": "apps/web/src/native-queue.ts",
+          "exists": true,
+          "sha256": "76eb6c4965d04afed457fc5e48116de8b51d4de66f5c1e876143ef51d32e0111"
+        },
+        {
+          "path": "apps/web/src/native-lease.test.ts",
+          "exists": true,
+          "sha256": "910f7d1c16948fe58bf228e4d700ef6d0b1ad420b54df9cc99221f63800e829d"
+        },
+        {
+          "path": "packages/core/src/native-host.ts",
+          "exists": true,
+          "sha256": "d383df9d81500575b02040d70aa42b208ae1f1525be7dff1b5e4420edba93be3"
+        },
+        {
+          "path": "scripts/verify-native-dom.mjs",
+          "exists": true,
+          "sha256": "592e9ac01b7a555ef20940772e531c308001910facce8721f4848b09c3f7281e"
+        },
+        {
+          "path": "scripts/verify-native-image-variants.mjs",
+          "exists": true,
+          "sha256": "d6ed048a041b8a62d352452bce73e66601ee6d9448513af167e51e5a173dfc8c"
+        },
+        {
+          "path": "scripts/build-native.mjs",
+          "exists": true,
+          "sha256": "e2311c02592dfa03954a6b41d821e698a645e851e52c80c4ebf48475e7dde57b"
+        },
+        {
+          "path": "scripts/verify-native-build.mjs",
+          "exists": true,
+          "sha256": "ac58319b710f1e567c70c72bbb6970f693046492f36d9bce59f31aff9f251542"
+        },
+        {
+          "path": "scripts/verify-native-rebuild.mjs",
+          "exists": true,
+          "sha256": "e4d4d9afc2af0ed83727ef0825655e3877310f6440c4c3f7a98a93f0dd480481"
+        },
+        {
+          "path": "apps/web/vite.native.config.ts",
+          "exists": true,
+          "sha256": "7418e2cca6db6def4aeadcc4ff0dab0cc8d79458b8ef686e5d019d2735582fca"
+        },
+        {
+          "path": "NATIVE_SOURCE.json",
+          "exists": true,
+          "sha256": "f487bcb0d3388229f908416771b08d781c9a7aa47d25a6001be3261287529efd"
+        }
+      ]
+    },
+    "opencut-classic": {
+      "clone_baseline_root": "/tmp/t1062-native-audit-sources/opencut-classic",
+      "archive_source_files": [
+        "apps/web/src/embedded/native-host.ts",
+        "apps/web/src/embedded/native-entry.tsx",
+        "apps/web/src/embedded/native-controller.ts",
+        "apps/web/src/embedded/native-lifecycle.ts",
+        "apps/web/src/embedded/media-registration.ts",
+        "apps/web/src/embedded/edit-lock.ts",
+        "apps/web/src/embedded/__tests__/host-boundary.test.ts",
+        "apps/web/src/embedded/__tests__/native-lifecycle.test.ts",
+        "apps/web/src/embedded/__tests__/native-resources.test.ts",
+        "apps/web/src/embedded/__tests__/native-command.test.ts"
+      ],
+      "build_entries": [
+        "bun.lock",
+        "apps/web/scripts/build-native.mjs",
+        "reference-editors/opencut-classic/native/rebuild-native.sh"
+      ],
+      "command": "reference-editors/opencut-classic/native/rebuild-native.sh <独立clone源码> install|build|verify；fixture仅明确DOM夹具；生产build禁用CREATOROS_NATIVE_DOM_FIXTURE",
+      "output_root": "apps/web/native-dist",
+      "source_paths": [
+        "reference-editors/opencut-classic/native/native-source.tar.gz",
+        "frontend/public/reference-editors/sources/opencut-classic/native-source.tar.gz",
+        "reference-editors/opencut-classic/native/native-from-t1046.patch",
+        "frontend/public/reference-editors/sources/opencut-classic/native-patches.diff",
+        "frontend/public/reference-editors/sources/opencut-classic/native-from-t1046.patch"
+      ],
+      "metadata": [
+        "reference-editors/opencut-classic/native/SHA256SUMS",
+        "reference-editors/opencut-classic/native/SOURCE_CHANGES.json",
+        "reference-editors/opencut-classic/native/VERIFICATION.md",
+        "reference-editors/opencut-classic/native/README.md"
+      ],
+      "baseline_archive_sha256": "0da70debcdf5a6656c65847606314f523c29e8f59e83e27e02077521130e9420",
+      "source_archive_from_manifest": "frontend/public/reference-editors/sources/opencut-classic/native-source.tar.gz",
+      "current_bundle_files": [
+        {
+          "path": "frontend/public/reference-editors/opencut-classic/native/LICENSE.opencut",
+          "before_sha256": "8117f9bb64534f7530fc6139b014fd1c1465f7981f93d1871789150fa3f59d3d"
+        },
+        {
+          "path": "frontend/public/reference-editors/opencut-classic/native/NATIVE_BUILD_GRAPH.json",
+          "before_sha256": "d1bcbd11d320f80c93e9c4d91c3293375e608b0099046f6d63c28949633f65f5"
+        },
+        {
+          "path": "frontend/public/reference-editors/opencut-classic/native/THIRD_PARTY_LICENSES.json",
+          "before_sha256": "becfab856e0610ccbc14f1abf05d38c25593b60ada26f553dac667fcd471e8ad"
+        },
+        {
+          "path": "frontend/public/reference-editors/opencut-classic/native/THIRD_PARTY_LICENSES.txt",
+          "before_sha256": "d3e59d1b80d9ebcccfc76f84dc51d976ed113749afec53d51c02f6832eafe51f"
+        },
+        {
+          "path": "frontend/public/reference-editors/opencut-classic/native/effects/preview.jpg",
+          "before_sha256": "b318cede7bbe27bfbf1b8b94d41f65b6f52d5f2650ce3a153d03b76c2a1c0190"
+        },
+        {
+          "path": "frontend/public/reference-editors/opencut-classic/native/native.css",
+          "before_sha256": "e8757103e0fd57d164826df1de27070222dc6b2ba23bcd4bb32a3cbbe64ee688"
+        },
+        {
+          "path": "frontend/public/reference-editors/opencut-classic/native/native.js",
+          "before_sha256": "f61b0939ff9a185861dbc7addee2c40ef1b3a0d71cfac81c31c41d1f43a50354"
+        }
+      ],
+      "current_bundle_count": 7,
+      "source_type_paths": [
+        "apps/web/src/embedded/native-host.ts"
+      ],
+      "existing_source_paths": [
+        {
+          "path": "reference-editors/opencut-classic/native/native-source.tar.gz",
+          "sha256": "0da70debcdf5a6656c65847606314f523c29e8f59e83e27e02077521130e9420"
+        },
+        {
+          "path": "frontend/public/reference-editors/sources/opencut-classic/native-source.tar.gz",
+          "sha256": "0da70debcdf5a6656c65847606314f523c29e8f59e83e27e02077521130e9420"
+        },
+        {
+          "path": "reference-editors/opencut-classic/native/native-from-t1046.patch",
+          "sha256": "d9b2f6da0d2c7cf8317ab1cae955896a13d70412e416e50172543504b0ab1c9b"
+        },
+        {
+          "path": "frontend/public/reference-editors/sources/opencut-classic/native-patches.diff",
+          "sha256": "d9b2f6da0d2c7cf8317ab1cae955896a13d70412e416e50172543504b0ab1c9b"
+        },
+        {
+          "path": "frontend/public/reference-editors/sources/opencut-classic/native-from-t1046.patch",
+          "sha256": "d95ebaf1f7ad688b60dbf4b62e2946164d3fe9a345a4c948b66f623d0db4f922"
+        },
+        {
+          "path": "reference-editors/opencut-classic/native/SHA256SUMS",
+          "sha256": "019cc6add398801ff0a8ec041fa0e6c4cdbf5207b2b4947a128d727d26f381f9"
+        },
+        {
+          "path": "reference-editors/opencut-classic/native/SOURCE_CHANGES.json",
+          "sha256": "32f76074d93eb9fd3971093f6182adddf46485530771f7f0531efdcc9143f488"
+        },
+        {
+          "path": "reference-editors/opencut-classic/native/VERIFICATION.md",
+          "sha256": "44c222af6d7f45157936c83b37c6d6c8314b5b63f1ca0c3826cc8d93ab3b37ef"
+        },
+        {
+          "path": "reference-editors/opencut-classic/native/README.md",
+          "sha256": "ded676ddd78fbfce277b836659b1691969c1a27985f099d855b9a61274169a97"
+        }
+      ],
+      "missing_named_paths": [],
+      "archive_files_to_inspect": [
+        {
+          "path": "apps/web/src/embedded/native-host.ts",
+          "exists": true,
+          "sha256": "0a6763561d5f9235a4ec8c2b05e50bf138cf44542df09edebe0badd7be44fcae"
+        },
+        {
+          "path": "apps/web/src/embedded/native-entry.tsx",
+          "exists": true,
+          "sha256": "811f6519c7f8422b8e4221e6031cf574d3b601480bfcb8742692839cbb859e9a"
+        },
+        {
+          "path": "apps/web/src/embedded/native-controller.ts",
+          "exists": true,
+          "sha256": "30402f8cc50c8eb791a91c14f33dba53060940ca379c86dae5fd9d420df5928a"
+        },
+        {
+          "path": "apps/web/src/embedded/native-lifecycle.ts",
+          "exists": true,
+          "sha256": "48706d8a0ae773d685adf77e03556bd00e685e06095004567ca4cab993793c5d"
+        },
+        {
+          "path": "apps/web/src/embedded/media-registration.ts",
+          "exists": true,
+          "sha256": "32208e2eabbc9567dba0f6560c3db0f23747e9fe5de56417806ef2d9bb0dbac5"
+        },
+        {
+          "path": "apps/web/src/embedded/edit-lock.ts",
+          "exists": true,
+          "sha256": "d00df443e43bde317794970aa3354fdd0e9305cb45c7a8ffcae5d85eb03a1d21"
+        },
+        {
+          "path": "apps/web/src/embedded/__tests__/host-boundary.test.ts",
+          "exists": true,
+          "sha256": "73cd28dd7d0cd1f82e96ccd401f787f7d8ab91e97d033e3c2ff48fb08cfe6659"
+        },
+        {
+          "path": "apps/web/src/embedded/__tests__/native-lifecycle.test.ts",
+          "exists": true,
+          "sha256": "1f6a583bcf21d64a3df53a6ba25e5d23588ede9f0988a8033b1744160683bbdb"
+        },
+        {
+          "path": "apps/web/src/embedded/__tests__/native-resources.test.ts",
+          "exists": true,
+          "sha256": "ea9eb9151703367675701d009d9ba55e22e42069d5577d8b5f241cb125a10cdc"
+        },
+        {
+          "path": "apps/web/src/embedded/__tests__/native-command.test.ts",
+          "exists": true,
+          "sha256": "8f2e8c0dd76719eb65ce6b99a4783d41652b48ec68e4335ed2fb7ba83a08ee52"
+        },
+        {
+          "path": "bun.lock",
+          "exists": true,
+          "sha256": "aa113c84eb08dfa3dbb51139312ffcf3ff660c9ad4e0859bbb0a51691bef9178"
+        },
+        {
+          "path": "apps/web/scripts/build-native.mjs",
+          "exists": true,
+          "sha256": "71c2f29a51a3faad99b80df7506b40dcfd40fdc67d768b79abb3c5a6941ef15a"
+        }
+      ],
+      "verify_entry_note": "真实archive无verify-native-bundle.mjs；verify命令在仓内rebuild-native.sh上，不能捏造源码脚本。 仓内rebuild-native.sh引用两个未随来源交付的verification脚本，verify/fixture模式当前缺输入，不能记独立验证PASS。",
+      "pending_source_delivery_inputs": [
+        "reference-editors/opencut-classic/native/verification/check-process-globals.ts",
+        "reference-editors/opencut-classic/native/verification/dom-probe.ts"
+      ]
+    },
+    "noterelay": {
+      "clone_baseline_root": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/reference-editors/noterelay",
+      "clone_instruction": "只读来源根；实现时复制完整目录到独立/tmp根，不能改本只读根。web/build.mjs可独立重建；project frontend构建脚本依赖真实project frontend/contract dependency tree。",
+      "archive_source_files": [
+        "web/native.ts",
+        "web/noterelay-layout.ts",
+        "web/build.mjs",
+        "web/host-port.ts",
+        "web/package.json"
+      ],
+      "build_entries": [
+        "frontend/scripts/build-noterelay.mjs",
+        "reference-editors/noterelay/web/build.mjs"
+      ],
+      "command": "独立源码:node web/build.mjs；产品整合:pnpm -C frontend build:noterelay; node frontend/scripts/build-noterelay.mjs --verify",
+      "output_root": "web/dist",
+      "source_paths": [
+        "reference-editors/noterelay/web/native.ts",
+        "reference-editors/noterelay/WEB_PATCHES.diff",
+        "frontend/public/reference-editors/sources/noterelay/source.zip"
+      ],
+      "metadata": [
+        "reference-editors/noterelay/WEB_ADAPTER.md"
+      ],
+      "baseline_archive_sha256": "07f7376e868b26691340224ba46bd82d40df80752d5a837cc9e3898ff10faf5f",
+      "source_archive_from_manifest": "frontend/public/reference-editors/sources/noterelay/source.zip",
+      "current_bundle_files": [
+        {
+          "path": "frontend/public/reference-editors/noterelay/native/LICENSE",
+          "before_sha256": "0d96a4ff68ad6d4b6f1f30f713b18d5184912ba8dd389f86aa7710db079abcb0"
+        },
+        {
+          "path": "frontend/public/reference-editors/noterelay/native/THIRD_PARTY_NOTICES.md",
+          "before_sha256": "f2947cc1979b8e0347731c59abf9cf5201835a03d4cf6194aa817118f0cd9d0d"
+        },
+        {
+          "path": "frontend/public/reference-editors/noterelay/native/build-meta.json",
+          "before_sha256": "ed871952619e97a7d2e894eaf92ee044f68bc9d6caa905149bbac6c846f00ef1"
+        },
+        {
+          "path": "frontend/public/reference-editors/noterelay/native/native.css",
+          "before_sha256": "e379e8cc8d1d90e49a09fe2af5ef813d231411fd902cee32bf1be908675612bf"
+        },
+        {
+          "path": "frontend/public/reference-editors/noterelay/native/native.js",
+          "before_sha256": "e0cf56a0063b30645cef4092888d6a44a0fd92942eba495d67478211eebe4e58"
+        }
+      ],
+      "current_bundle_count": 5,
+      "source_type_paths": [
+        "web/native.ts"
+      ],
+      "existing_source_paths": [
+        {
+          "path": "reference-editors/noterelay/web/native.ts",
+          "sha256": "faa6b753ba4613d9b95ba16ad9ffd3adec7236dd378941ac6e7ce9f51ebeee50"
+        },
+        {
+          "path": "reference-editors/noterelay/WEB_PATCHES.diff",
+          "sha256": "2b1fc3271c5666e9d1fa5d8d8ec68257732bcbfe54c5e39925d37865284d3ae1"
+        },
+        {
+          "path": "frontend/public/reference-editors/sources/noterelay/source.zip",
+          "sha256": "07f7376e868b26691340224ba46bd82d40df80752d5a837cc9e3898ff10faf5f"
+        },
+        {
+          "path": "reference-editors/noterelay/WEB_ADAPTER.md",
+          "sha256": "4f93ca1bd08f9158739f1107c390b5bdc4698757a3be75769d2723d357914e80"
+        }
+      ],
+      "missing_named_paths": [],
+      "archive_files_to_inspect": [
+        {
+          "path": "web/native.ts",
+          "exists": true,
+          "sha256": "faa6b753ba4613d9b95ba16ad9ffd3adec7236dd378941ac6e7ce9f51ebeee50"
+        },
+        {
+          "path": "web/noterelay-layout.ts",
+          "exists": true,
+          "sha256": "a6bca3199412fbe7253c6dd935092ef1aa90d418479f0f5f742758d6b7ac8858"
+        },
+        {
+          "path": "web/build.mjs",
+          "exists": true,
+          "sha256": "171c814d394acfb73470dfdc329d263a4cff45d7e7d76e622e840766e940dfe7"
+        },
+        {
+          "path": "web/host-port.ts",
+          "exists": true,
+          "sha256": "2a75567d88e09e85cdecb226f3f71eb2f6772e33ca37d5ef4677922c537cc8ed"
+        },
+        {
+          "path": "web/package.json",
+          "exists": true,
+          "sha256": "f26f5bf5e61729ce8351604b140261db19fe889126e7906581a995c4642dfdf5"
+        }
+      ]
+    }
+  },
+  "shared_generated_paths": [
+    "reference-editors/manifest.json"
+  ],
+  "generated_delivery_rule": "从实际源码构建整个native目录；重新打包对应source archive与patch；重新计算实际文件集/bundle/patch/source SHA与编译调用图，不能仅手改manifest/hash或浏览器minified bundle",
+  "additional_files_rule": "不存在的建议路径不得自动纳入；实际构建新增chunk按原完整输出文件集审查后纳入，旧无引用chunk清理须由构建且hash清单核验",
+  "regressions": [
+    "四编辑器group+account:null真实挂载/load/snapshot/save/import/export",
+    "G1到G2且同account/null与同output/version字符串下，旧module/css/mount/request/import/export/clipboard/download/保存回执不能回写G2",
+    "同组切平台筛选不把作品重新绑到筛选account，不丢dirty/恢复回执",
+    "冻结HTTP group scope跨多个upload create/PUT/complete/materialLink步骤，取消/档案变更服务端拒绝",
+    "四source合同复制件一致，保留历史lease/epoch/portal/style/资源回收/slowimage/慢音视频测试",
+    "只读/归档owner不能采纳/写入；合法缺单素材沿旧降级路径可安全输出",
+    "两独立source clone+同锁真实构建逐文件hash比较；独立真实类型与生产宏扫描",
+    "真实浏览器四编辑器操作与导出另验，DOMfixture不是浏览器像素/E2E"
+  ],
+  "no_product_files_modified": true,
+  "audit_scripts": [
+    "/tmp/t1062-asset-compat-probe.mts"
+  ],
+  "audit_results": [
+    "/tmp/t1062-asset-compat-probe-result.json",
+    "/tmp/t1062-asset-compat-audit-tests.log",
+    "/tmp/t1062-native-baseline-verify.log"
+  ],
+  "contract_preflight_log": "/tmp/t1062-contract-tests-preflight.log"
+}

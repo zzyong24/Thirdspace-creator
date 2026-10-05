@@ -1,0 +1,86 @@
+{
+  "task": "T-1062",
+  "sourceHead": "11784cc22a29ac8232cdb675e078432f0dca6680",
+  "capturedAt": "2026-10-05T03:56:28.025904+00:00",
+  "status": "实施前检查与保留失败，未打包、未验收候选安装版",
+  "records": [
+    {
+      "source": "/tmp/t1062-native-build-preflight.json",
+      "artifact": "native-build-preflight.json",
+      "sha256": "6ec4c01cabb081071f5f0d522fb795cd5bfd2a7e32ac192f34485c4d1bb725cd",
+      "meaning": "四源码独立构建通过，部分验证失败；非组适配/安装证据"
+    },
+    {
+      "source": "/tmp/t1062-backend-test-compat-audit.md",
+      "artifact": "backend-test-compat-audit.md",
+      "sha256": "096488552958b8e1c22fee678548bc422a2ea00a62cecbcaa5ba0e0620e7f50c",
+      "meaning": "105类型诊断分类及真实资产恢复/画布工具缺口"
+    },
+    {
+      "source": "/tmp/t1062-native-bundle-update-boundary.json",
+      "artifact": "native-bundle-update-boundary.json",
+      "sha256": "17b285cbaf14858bc24b2b0a6edc08bcabe181136e542a6800478ea1f42b4cf2",
+      "meaning": "未来原生源码与归档产物更新边界"
+    },
+    {
+      "source": "/tmp/t1062-installed-migration-resource-baseline.json",
+      "artifact": "installed-migration-resource-baseline.json",
+      "sha256": "c554345827073f293ebab9d97c173cbc16501b912c8e092375dee302c3256589",
+      "meaning": "升级前现有安装包内journal只读基线"
+    },
+    {
+      "source": "/tmp/t1062-contract-tests-preflight.log",
+      "artifact": "logs/contract-tests-preflight.log",
+      "sha256": "040d8f5634de98a2da26c9cfa5af954e5cffb7bd261f491629d5159da4382602",
+      "meaning": "317通过/4失败，失败保留"
+    },
+    {
+      "source": "/tmp/t1062-contract-typecheck-preflight.log",
+      "artifact": "logs/contract-typecheck-preflight.log",
+      "sha256": "d819a6e1f78b2951433132e182dffbbd1eaa881e6c535db02871314377997331",
+      "meaning": "contract类型检查通过"
+    },
+    {
+      "source": "/tmp/t1062-ai-worker-typecheck-preflight.log",
+      "artifact": "logs/ai-worker-typecheck-preflight.log",
+      "sha256": "f7e0274cdcecda48497f193a594347fce2e14a12f0cadab4ba3a707690fa4ead",
+      "meaning": "ai-worker类型检查通过"
+    },
+    {
+      "source": "/tmp/t1062-package-entry-preflight.log",
+      "artifact": "logs/package-entry-preflight.log",
+      "sha256": "e5ed3e199dce2be0d59a22d8ca7344dba6f0a694e979d2f0fed715b14d9a5a5f",
+      "meaning": "42打包入口测试通过；尚未进入打包"
+    },
+    {
+      "source": "/tmp/t1062-codegraph-preflight.log",
+      "artifact": "logs/codegraph-preflight.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "meaning": "跨层调用图索引完成"
+    },
+    {
+      "source": "/tmp/t1062-installed-cli-status.json",
+      "artifact": "installed-cli-status.json",
+      "sha256": "7d73462808346b0c06e328aafd9d99a36f14592362d38bf5925a04b3c4885727",
+      "meaning": "现有安装版公开CLI连接过期；未重启"
+    },
+    {
+      "source": "/tmp/t1062-installed-cli-access.json",
+      "artifact": "installed-cli-access.json",
+      "sha256": "7d73462808346b0c06e328aafd9d99a36f14592362d38bf5925a04b3c4885727",
+      "meaning": "现有安装版公开CLI连接过期；未授权新访问"
+    },
+    {
+      "source": "/tmp/creatoros-t1062-asr-preflight/segment-result.json",
+      "artifact": "asr/segment-result.json",
+      "sha256": "f364e6fb5cd0ba4d525099094f3a18e9a79d055b84f083608b1ac582e1d9e699",
+      "meaning": "真实本地ASR direct driver；越界时间码降级全文"
+    },
+    {
+      "source": "/tmp/creatoros-t1062-asr-preflight/word-result.json",
+      "artifact": "asr/word-result.json",
+      "sha256": "0af1d30589779bc8e4cb98a98d6aea928be051a2fb33ea3a3eb4bade1aafbfbe",
+      "meaning": "真实本地ASR direct driver；越界时间码降级全文"
+    }
+  ]
+}

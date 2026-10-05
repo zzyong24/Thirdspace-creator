@@ -1,0 +1,7 @@
+{
+  "ok": false,
+  "error": {
+    "code": "CONNECTION_EXPIRED",
+    "message": "CreatorOS CLI 连接已经过期，请重新开启。"
+  }
+}

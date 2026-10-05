@@ -1,0 +1,72 @@
+{
+  "schema": "t1062-migration-independent-review/v1",
+  "review_kind": "final_commit_recheck",
+  "reviewed_at": "2026-10-05T04:10:53Z",
+  "candidate_root": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator",
+  "base": "11784cc22a29ac8232cdb675e078432f0dca6680",
+  "head": "f8ce322d63e1844e6eff8595af85813e50d7d79d",
+  "commit_count": 1,
+  "worktree_clean": true,
+  "verdict": "PASS",
+  "blocking_findings": [],
+  "summary": "最终交付是 base 之上的唯一提交，工作树 clean；未发现阻断问题。base..HEAD 的 git diff --check 通过。371 个结果清单文件全部与最终字节哈希一致，354 个冻结 lineage SQL 与三个原 journal 全部匹配 migration-convergence-lineages.json；旧 tag、when、SQL 未漂移。使用最终提交的归档副本重新运行生成器，得到的 0128 SQL 与 catalog-query.json 分别逐字匹配最终文件，0128 SHA256 为 60cac883f02fa7fcd83051264bd6a63ec49132369c7c983b36e34e979a2f7713。六文件回归日志记录 43/43 PASS。该 PASS 仅覆盖最终迁移候选的来源、字节、catalog 与隔离回归，不代表安装版或用户真实数据库已经验收。",
+  "evidence": {
+    "git": {
+      "head_parent_subject": "f8ce322d63e1844e6eff8595af85813e50d7d79d 11784cc22a29ac8232cdb675e078432f0dca6680 T-1062: converge frozen migration lineages with verified workspace upgrade",
+      "status": "clean",
+      "diff_check": "PASS: git diff --check 11784cc22a29ac8232cdb675e078432f0dca6680..f8ce322d63e1844e6eff8595af85813e50d7d79d returned no diagnostics"
+    },
+    "final_bytes": {
+      "backend/drizzle/0128_workspace_convergence.sql": "60cac883f02fa7fcd83051264bd6a63ec49132369c7c983b36e34e979a2f7713",
+      "backend/drizzle/meta/_journal.json": "7e97c6390fb14872864383797f98e8c8e698ef762cbec4f72990ebb0ab89917c",
+      "backend/src/migration-convergence-lineages.json": "f794af700b711094c50bf5ad4c7f0eeb2ac36ff1fb9ae8958a8ffb4cb5c338c7",
+      "backend/src/migration-convergence.ts": "a70d2245e392e368e92b39f02da0cb6c04d82e13a49916aa178a8a08cd6ce212",
+      "backend/src/group-upgrade-backup.ts": "7e9b108534cf3294f506e1e0426b5f9a7a400eca25e446360cbdb81ac9497c1d",
+      "backend/src/db.ts": "15a05f64b00fc5095abb6e96aa3d3039db8f4ff4faa894fb1429e843093cd98f",
+      "backend/drizzle/lineages/catalog-query.json": "d8263298acfc16b515f318660324671a8e0b8844b023a1a32b1656f5558276d1",
+      "/tmp/t1062-six-regressions-final-bytes.log": "abcab21c47f2faa886e1b1adde313810b4f8c792c03b1677ae486d11236655b2",
+      "/tmp/t1062-migration-convergence-result.json": "749885c3b16d6ad52026c15d96997eff96b838d66592c3aa4b7507eca15196d5"
+    },
+    "manifest_verification": {
+      "boundary_files": 371,
+      "boundary_hash_errors": 0,
+      "frozen_lineage_sql_files": 354,
+      "frozen_lineage_hash_errors": 0,
+      "journal_hash_errors": 0,
+      "result": "PASS"
+    },
+    "generator_reproduction": {
+      "method": "从 git archive HEAD 建立独立 /tmp 副本，复用 frozen node_modules，只让生成器写副本；未修改评审工作树。",
+      "generated_tables": 184,
+      "generated_statements": 1581,
+      "generated_0128_sha256": "60cac883f02fa7fcd83051264bd6a63ec49132369c7c983b36e34e979a2f7713",
+      "generated_catalog_sha256": "d8263298acfc16b515f318660324671a8e0b8844b023a1a32b1656f5558276d1",
+      "matches_committed_files": true
+    },
+    "regression_log": {
+      "path": "/tmp/t1062-six-regressions-final-bytes.log",
+      "result": "PASS: 6 test files, 43 tests",
+      "duration": "75.87s",
+      "assessment": "日志绑定最终字节；本轮未无理由重复全套，仅复现生成器和哈希清单。"
+    },
+    "result_manifest": {
+      "path": "/tmp/t1062-migration-convergence-result.json",
+      "declared_status": "migration_candidate_verified_not_installed_or_service_acceptance",
+      "declared_base": "11784cc22a29ac8232cdb675e078432f0dca6680",
+      "declared_head": "f8ce322d63e1844e6eff8595af85813e50d7d79d",
+      "hash_binding": "PASS: 371/371 boundaryFiles afterSha256 match final HEAD bytes"
+    }
+  },
+  "source_integrity_conclusion": [
+    "三个冻结来源 journal 及其 SQL 均由最终 manifest 的 SHA256 完整覆盖，没有旧 when/tag/SQL 篡改。",
+    "主 journal 仍是共同 0000–0100 前缀加唯一新 0128，未交付中间 9caf5412。",
+    "最终修改相对先前暂存候选仅体现新 DDL 尾随空格规整及生成器 trimEnd 规则；重新生成后 SQL/catalog 与最终提交逐字一致。",
+    "最终 0128 保留已复核的 known-prefix、standalone unique/partial、旧 account identity、新 group account-null identity、父 provenance、原 task freeze、备份及同连接锁/失败释放约束。"
+  ],
+  "unverified_boundaries": [
+    "未安装或启动桌面安装版，未执行安装包逐功能验收。",
+    "未读取、备份、迁移或恢复用户真实数据库与媒体目录。",
+    "未把隔离 PGlite/PostgreSQL 测试表述为真实用户库升级 PASS。",
+    "未验证迁移之外的后续服务组归属适配、模型、浏览器或完整产品 E2E。"
+  ]
+}
