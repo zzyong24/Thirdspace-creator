@@ -1,0 +1,261 @@
+{
+  "task": "T-1062",
+  "wave": "t1062-backend-group-rough",
+  "state": "paused_for_exact_scope_recompile",
+  "createdAt": "2026-10-05T04:54:25.977450+00:00",
+  "base": "75131fb489962e50d483fe21baccab39e0350e89",
+  "head": "75131fb489962e50d483fe21baccab39e0350e89",
+  "branch": "codex/t1062-backend-adaptation-candidate",
+  "committed": false,
+  "product_edits_stopped": true,
+  "paths": [
+    {
+      "path": "backend/src/modules/ai-runtime/asset-business-execution.service.test.ts",
+      "beforeBaseSha256": "7ece8c0657fa3b447f161274667072c112b48f02d5fc00a5590b909a0788ef77",
+      "currentSha256": "622b1b40e5429b4ce508baa1efd794e7f39152706d69c42dab66810ad3fd75e7"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/asset-business-execution.service.ts",
+      "beforeBaseSha256": "e2651ac4d1b18aa4b00a992ad16c155859f7bbf44d1e54ad067c21d2b678d94f",
+      "currentSha256": "872fb60acf3e102bbd09d3b6048f430a4753f906591de5e64baad41fdbc7ba3d"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/asset-legacy-recovery.service.ts",
+      "beforeBaseSha256": "2d2485fcbfbe2cc7af982ebea910d5c0de699cff4e200f3da78f1581a285b860",
+      "currentSha256": "cb5c350f075f627eb07493f674a76c1560be7f3e193b7eae9b36d2128ce2a783"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/chat-canvas-tool-host.test.ts",
+      "beforeBaseSha256": "69cf8bebea533dd97fd3fcc9a43be58ef1aece632f69b7faa9dc8d93a601f983",
+      "currentSha256": "1c542a9900fb681a8b0c047d9db629674b8c52714ca5efa89a61dacc10bd12b7"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/chat-canvas-tool-host.ts",
+      "beforeBaseSha256": "5d5440f6dc31064a195dd715d4185d753c487e4c4126e2acfd86c628823928d5",
+      "currentSha256": "3226e43823002ff76ea6e097400caef6b7b5607018cdf2101eac8de8d7bf1ba9"
+    },
+    {
+      "path": "backend/src/modules/assets/visual-template.service.test.ts",
+      "beforeBaseSha256": "1205a52b97bba7144721c9d3baeea414880be72e92620ee0c7af5bab9392b3cd",
+      "currentSha256": "601e4d5231299d66608c896876605214e422adf573b316cc76b540517e0b52cb"
+    },
+    {
+      "path": "backend/src/modules/assets/visual-template.service.ts",
+      "beforeBaseSha256": "ec3a7f239ab4cb590b3d964529291fad3c6ee51033643972cd669a644b839a3a",
+      "currentSha256": "301dfa223ea3e384b89014abdfe14d1ffbd6cdcca8e02cca29225928abc161ac"
+    },
+    {
+      "path": "backend/src/modules/cli-invocations/cli-invocations.service.test.ts",
+      "beforeBaseSha256": "ae7b22519834b405227387926f47dc2240d7a721b1d924da8b67960bb44fff8f",
+      "currentSha256": "56c91b969640ea69a360704ea76a28d50e02ca02fc75cfc0be4aa61142f8a807"
+    },
+    {
+      "path": "backend/src/modules/cli-invocations/cli-invocations.service.ts",
+      "beforeBaseSha256": "72691a6b913e2bd2b0db151acad178312c0ff95e79263a96f3053f7eee5ec178",
+      "currentSha256": "6b44085cd801da46d166c2aa27db6c9ee1d4f1d078206ef049ff2aa5171b2c85"
+    },
+    {
+      "path": "backend/src/modules/review/work-reviews.service.ts",
+      "beforeBaseSha256": "bbe30670f52966d8715df1dc19522d8b1192c524ca868bddf114cdd064c24f53",
+      "currentSha256": "9d54061e2668a0abed0dc2f308c876f693ebf9dcaef003677602ee8533489f3b"
+    },
+    {
+      "path": "backend/src/modules/work-compositions/work-compositions.service.ts",
+      "beforeBaseSha256": "cd4fe85f5d2c78a1ea42609ec7f94cc4caedcb87a19054d8475d41d344f52dd5",
+      "currentSha256": "22d477c382367f97414465b29db89d8a5d9f0318ac162747f55b3fb5f35f1347"
+    },
+    {
+      "path": "backend/src/modules/work-compositions/work-materials.service.ts",
+      "beforeBaseSha256": "17e369f36aafaddec94da131820ec13272fea1093b9741ca306e511433c951a7",
+      "currentSha256": "ee67285455dde933f8d66b9bcf47257d530bf67e4217dd83e91bcbb1358c927d"
+    },
+    {
+      "path": "backend/src/schema/creative-canvas.ts",
+      "beforeBaseSha256": "bc55df94ccfe31f7d41136cd71e44494f1ede728650202379324ea86ad4ee320",
+      "currentSha256": "ecb29bd752b8b87673b773b4e1b53215733b799fdc7513508cd47ead9ff57aee"
+    },
+    {
+      "path": "backend/src/schema/creative-results.ts",
+      "beforeBaseSha256": "48d0db65d493d4a3c20b68a212d4027f1cf96eeb9b8d7c796605971b9983d75f",
+      "currentSha256": "65a1b45c645a4e087bd07de98b685d28de0c31ac63c82c268f0843ce0f70d444"
+    },
+    {
+      "path": "backend/src/schema/production-file-bindings.ts",
+      "beforeBaseSha256": "56d016adf29fb17158e42cea982bd973bba285702e17a67be269941307ed589c",
+      "currentSha256": "ff0cffb11be897d9c8303413226ce38efae86b6c604a8af60568cf83ed9a1127"
+    },
+    {
+      "path": "backend/src/schema/production.ts",
+      "beforeBaseSha256": "a9a5d2d068801e5fb6b75a200595e14bf5d44c00de371ec2c268795099550ffe",
+      "currentSha256": "73dbe25f109fad17b9349e807395eedba66228166d2fe4646453b5011357d965"
+    },
+    {
+      "path": "backend/src/schema/visual-templates.ts",
+      "beforeBaseSha256": "34effc62a42bb89324c6765855fdc381b33b2d63ecaea63ca3a2f6a09a31be4c",
+      "currentSha256": "3475f43720b718e2decbffb3c8ded2ab98b4cef692d158ea13ed5280ff470d13"
+    },
+    {
+      "path": "backend/src/schema/work-compositions.ts",
+      "beforeBaseSha256": "36b4e205c57c2a6357a5101045269bec0c378cb2a61499d77f10910a6804f45a",
+      "currentSha256": "2f91c8b9fee51ea7e6412a4c14a4f4d11eebcce73654de444ad6a4fe65d6215f"
+    },
+    {
+      "path": "backend/src/schema/work-materials.ts",
+      "beforeBaseSha256": "962fa10b6831a9d981dbde09ff29ec8e8c0f906e894fd1a4ae28badbfe9ef77d",
+      "currentSha256": "e91f0c8a3a10caf32d80de69d26b3559bfd5ac42fcfd62f1e7b5b5544abc4d5f"
+    },
+    {
+      "path": "backend/src/schema/work-reviews.ts",
+      "beforeBaseSha256": "e67fdf0e24d80dbbc1020b31901d7f65b1dfe12996907de2721d4321991812d4",
+      "currentSha256": "f0faa0e3fc7b27371d886e10f20cbc7118c0d1327e83cce77a22e8f1b52b6e8a"
+    }
+  ],
+  "commands": [
+    {
+      "argv": [
+        "codegraph",
+        "index",
+        "--force",
+        "--quiet",
+        "."
+      ],
+      "exit": 1,
+      "reason": "首次未初始化，按提示init后重跑"
+    },
+    {
+      "argv": [
+        "codegraph",
+        "init",
+        "."
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "codegraph",
+        "index",
+        "--force",
+        "--quiet",
+        "."
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "codegraph",
+        "callers",
+        "createCreativeCanvasService"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "codegraph",
+        "callees",
+        "createProductionEditorRepository"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "env",
+        "-u",
+        "DATABASE_URL",
+        "-u",
+        "PGLITE_DATA_DIR",
+        "pnpm",
+        "-C",
+        "backend",
+        "test",
+        "src/modules/assets/visual-template.service.test.ts",
+        "src/modules/cli-invocations/cli-invocations.service.test.ts",
+        "--maxWorkers=1"
+      ],
+      "exit": 1,
+      "counts": {
+        "filesFailed": 2,
+        "testsFailed": 2,
+        "testsPassed": 9
+      },
+      "log": "/tmp/t1062-backend-group-template-cli-red.log",
+      "logSha256": "0e30435b7584e28ea56500d7c346d6a3f1113427e7aa33ddb7b18118581383ce"
+    },
+    {
+      "argv": [
+        "env",
+        "-u",
+        "DATABASE_URL",
+        "-u",
+        "PGLITE_DATA_DIR",
+        "pnpm",
+        "-C",
+        "backend",
+        "test",
+        "src/modules/assets/visual-template.service.test.ts",
+        "src/modules/cli-invocations/cli-invocations.service.test.ts",
+        "--maxWorkers=1"
+      ],
+      "exit": 0,
+      "counts": {
+        "filesPassed": 2,
+        "testsPassed": 11
+      },
+      "log": "/tmp/t1062-backend-group-template-cli-green.log",
+      "note": "该绿发生在资产/组合/审核编辑之前；不是当前WIP全面通过",
+      "logSha256": "ee9a45ee183da94a73c1798b66157df4e7caba05bbc31f1cbf34b7deaeacff24"
+    },
+    {
+      "argv": [
+        "env",
+        "-u",
+        "DATABASE_URL",
+        "-u",
+        "PGLITE_DATA_DIR",
+        "pnpm",
+        "-C",
+        "backend",
+        "test",
+        "src/modules/ai-runtime/asset-business-execution.service.test.ts",
+        "src/modules/ai-runtime/chat-canvas-tool-host.test.ts",
+        "--maxWorkers=1"
+      ],
+      "exit": 1,
+      "counts": {
+        "filesFailed": 2,
+        "testsFailed": 8,
+        "testsPassed": 7
+      },
+      "log": "/tmp/t1062-backend-asset-canvas-host-red.log",
+      "note": "包含原fixture协议漂移及新组恢复/tool红；当前修复尚未复验",
+      "logSha256": "e608b72dffc9d15bfd674352313b791bc8bd0a50e0c4ec5349d34a36b6cdea63"
+    },
+    {
+      "argv": [
+        "env",
+        "-u",
+        "DATABASE_URL",
+        "-u",
+        "PGLITE_DATA_DIR",
+        "pnpm",
+        "-C",
+        "backend",
+        "typecheck"
+      ],
+      "exit": 2,
+      "diagnostics": 108,
+      "productionDiagnostics": 0,
+      "originalDiagnostics": 105,
+      "newTestMissingSignalDiagnostics": 3,
+      "log": "/tmp/t1062-backend-type-current.log",
+      "logSha256": "4fb2dfc1982af175316bb66de4b054d96a120e5a788bc1d452bddefa403c4471"
+    }
+  ],
+  "limitations": [
+    "未提交；未运行完整22组入口、PG并发、模型、用户媒体、安装App/native UI；它们仍pending",
+    "旧v2/v3粗剪尚未实施",
+    "ORM已对齐26表但所有service group链未闭合",
+    "asset修复尚未green，canvas test原global material schema/version drift需校准或保持原冻结协议适配",
+    "第一次临时ORM脚本遇callback(parenthesized alias) assertion停止，仅写两个允许schema；第二次使用base原bytes重生成八文件成功；不是测试失败",
+    "git diff --check发现自身新增production.ts空白，已只trim该ORM文件；最后未再次检查，不能记PASS"
+  ]
+}

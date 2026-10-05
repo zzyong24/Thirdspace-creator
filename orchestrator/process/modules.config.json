@@ -2025,7 +2025,25 @@
           "backend/src/modules/work-compositions/work-sources.transport.ts",
           "contract/src/internal/execution-worker.ts",
           "frontend/src/app/api/v1/dispatch/route.ts",
-          "docs/verification/t1062/backend-adaptation-result.json"
+          "docs/verification/t1062/backend-adaptation-result.json",
+          "backend/src/schema/projects.ts",
+          "backend/src/modules/projects/projects.service.ts",
+          "backend/src/modules/projects/projects.repository.ts",
+          "backend/src/modules/projects/projects.service.test.ts",
+          "backend/src/modules/projects/projects.repository.integration.test.ts",
+          "backend/src/schema/articles.ts",
+          "backend/src/modules/articles/articles.service.ts",
+          "backend/src/modules/articles/articles.text-results.ts",
+          "backend/src/modules/graphic-posts/graphic-posts.schema.ts",
+          "backend/src/modules/graphic-posts/graphic-posts.service.ts",
+          "backend/src/modules/graphic-posts/graphic-posts.integration.test.ts",
+          "backend/src/schema/moments.ts",
+          "backend/src/modules/moments/moments.service.ts",
+          "backend/src/modules/moments/moments.service.test.ts",
+          "backend/src/schema/moments-model.ts",
+          "backend/src/modules/moments/moments-model.service.ts",
+          "backend/src/modules/moments/execution-moments-model.service.ts",
+          "backend/src/modules/moments/moments-model.integration.test.ts"
         ]
       }
     }

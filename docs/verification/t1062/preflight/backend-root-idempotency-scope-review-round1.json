@@ -1,0 +1,93 @@
+{
+  "schema_version": "t1062-backend-root-idempotency-scope-review/v1",
+  "task_id": "T-1062",
+  "reviewed_at": "2026-10-05T13:30:00+08:00",
+  "mode": "read_only_scope_review",
+  "repository": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "base_head": "75131fb489962e50d483fe21baccab39e0350e89",
+  "scope_decision": {
+    "original_five_path_projects_only_scope": "BLOCKED_INSUFFICIENT",
+    "expanded_exact_root_scope_below": "PASS_AS_AUTHORIZED_SCOPE",
+    "implementation_or_test_verdict": "NOT_ASSESSED",
+    "reason": "projects 的 output_create_requests 只是共同底层回执；article、graphic-post、moments 仍各有 account-only anchor/candidate/request 根，moments 模型结算还会因 SQL NULL= NULL 零命中。补齐这些根文件是在实现已确认的组归属闭包，不构成新的产品决定。"
+  },
+  "authorization_basis": [
+    {
+      "path": "docs/features/t1062-consolidated-local-client-acceptance.md",
+      "sha256": "00088921686a37da277f0bf04f0165ae83bcb93760d230566d68d9bc270bf05f",
+      "lines": [26, 27, 28, 29, 31, 32],
+      "meaning": "所有新创作以真实 group 归属，account 可空且不得伪造；项目/输出父链、事务成员锁、归档/CAS、旧任务与旧回执兼容均属于既定范围。"
+    },
+    {
+      "path": "docs/verification/t1062/new-domain-group-audit.md",
+      "sha256": "6b27627ff4b5c4e1db768a4d3ca0b5bd06573447f8fd295bdf545a86630b7d45",
+      "lines": [68, 74, 75, 88, 89, 90, 91, 92, 104, 109, 110, 111, 112, 113, 114],
+      "meaning": "组到父对象采用稳定锁序，写入不能把读授权当写授权；创作、结果、组合、制作及旧 digest/协议兼容已有明确约束。"
+    }
+  ],
+  "physical_sql_dependency": {
+    "path": "backend/drizzle/0128_workspace_convergence.sql",
+    "sha256": "60cac883f02fa7fcd83051264bd6a63ec49132369c7c983b36e34e979a2f7713",
+    "must_not_change_for_this_scope": true,
+    "evidence": [
+      "103-179: article 三表已有 nullable account_id 与 group_id",
+      "445-493: graphic 两表已有 nullable account_id 与 group_id",
+      "605-685: moments、moments_candidates、moments_requests、output_create_requests 已有 nullable account_id 与 group_id",
+      "2229-2245,2339-2351,2417-2437: 旧 account 唯一/索引保留；新 group + account_id IS NULL partial unique 已为 article anchors/candidates、graphic anchors、moments requests、output requests 建立",
+      "3388,3402-3404,3424-3438: content_outputs 及 article/graphic/moments/request 子链按真实父对象回填"
+    ],
+    "constraint": "ORM 与服务必须镜像 0128；不得修改历史 SQL、不得重写旧 account 行、不得删除旧 account 唯一键。"
+  },
+  "required_write_set": [
+    {"path":"backend/src/schema/projects.ts","sha256":"9b8f6bebfc4d4d58b28128873e9d1c531235fd588b74389601fbc8713c071875","category":"orm","required":"outputCreateRequests 映射 nullable accountId/groupId/旧 account unique+新 partial group unique；contentOutputs 映射派生 groupId"},
+    {"path":"backend/src/modules/projects/projects.service.ts","sha256":"1d31dc0b68d8fe488a372d2c74fb5a87a9c5716a6e14be8c4dc6ba4338b7b5af","category":"public_port","required":"1043 getOutputByCreationRequest 不得 requireAccountId，须传真实 group scope"},
+    {"path":"backend/src/modules/projects/projects.repository.ts","sha256":"5ab90ad5973c3f04683ff9a1d20fd55c87e5baede94075803bd85000fbffaded","category":"repository","required":"1205-1236 的 find/create receipt 必须按显式 owner scope 查写；项目锁后给 output 与 receipt 写入同一 parent group；冲突不得任取首行"},
+    {"path":"backend/src/modules/projects/projects.service.test.ts","sha256":"52e6d265e04ab2844ed11a7ff13d6c22acf9df0681e6860bc9025a318625629c","category":"test","required":"公共 create/getOutputByCreationRequest 的空 account 组路径、跨组拒绝与旧 account 行兼容"},
+    {"path":"backend/src/modules/projects/projects.repository.integration.test.ts","sha256":"b9835b316c463b18a282e6097be7c870917ab65199cb41244e44735470421e07","category":"test","required":"真实 unique race、同组幂等、旧 key 多 account 不歧义、父锁/归档写拒绝"},
+    {"path":"backend/src/schema/articles.ts","sha256":"21b0dd223b50d5e198cafa635ca90e3273633a626c61fdfa81cb0fdc58c687a9","category":"orm","required":"articleAnchors/articleCandidates/articleTextCandidates 映射 nullable accountId 与 groupId；保留物理索引语义"},
+    {"path":"backend/src/modules/articles/articles.service.ts","sha256":"8cd293d87b1173e8290b0a46032349bb08c9f1b5a1516fa630456628338c88f9","category":"public_root","required":"72/77/155-194 与 309-395 的 anchor、创建回执、whole candidate 按真实 group+父 output 核验及写入"},
+    {"path":"backend/src/modules/articles/articles.text-results.ts","sha256":"6a5c0fa96760168d85ad462d4762db9d1c805b4388767beb714aae65c9f51a9b","category":"projection_root","required":"49/78-103 的读取时 projection 写入也须绑定 output 父 group；归档后的合法历史读取仍能返回既有/可证明的不可变候选，不得把读取变成新采纳"},
+    {"path":"backend/src/modules/articles/articles.integration.test.ts","sha256":"40d5adfbab885f32bf1c4ce9eb55df3cdd1e26cf29da488334bf40d34d85b","category":"test","required":"article create/replay、whole candidate、single-field projection、归档历史读、当前写拒绝、跨组拒绝"},
+    {"path":"backend/src/modules/graphic-posts/graphic-posts.schema.ts","sha256":"6697a02e1943903676930c699fccb201adf6f0bd3410b0bd7aba654646c7a354","category":"orm","required":"anchors/textCandidates 映射 nullable accountId/groupId"},
+    {"path":"backend/src/modules/graphic-posts/graphic-posts.service.ts","sha256":"08cf4cd9cd6b52bfa5709f363ddd2ac2276ccba1af776456c0a00dfecf987774","category":"public_root","required":"113-122、217-268、399-461 的 anchor/create/text projection 按父 output group 读写并保持 digest 冲突"},
+    {"path":"backend/src/modules/graphic-posts/graphic-posts.integration.test.ts","sha256":"9a50b94c52a7ba1d091bc759cfaf8ce0c442fd307dbc0c68301e69390f40ba68","category":"test","required":"graphic create/replay/text projection、归档历史读、跨组与旧 account 兼容"},
+    {"path":"backend/src/schema/moments.ts","sha256":"bf33f135174bc80caa2c92c1dd00ee76299f5a088417d6e51a9373273e4cdfb7","category":"orm","required":"momentsAnchors/momentsRequests 映射 nullable accountId/groupId、旧 account unique 与 group partial unique"},
+    {"path":"backend/src/modules/moments/moments.service.ts","sha256":"9d92a4af1c7e3bf4615afee0fa3f05bc28eaad5b7a016e46b678686fc3255c9a","category":"public_root","required":"12-40 的 anchor/request/reserve/create/save/list/receipt 全部沿 project parent group；reserved targetId 为空时也必须直接写 groupId"},
+    {"path":"backend/src/modules/moments/moments.service.test.ts","sha256":"3d7e90223a80719cdbf33f2af1ba01e8d647ee6c75847a514bff57784a99e840","category":"test","required":"手工 create/save/request/list 在纯组、跨组、归档、旧 account 回执下的真实服务回归"},
+    {"path":"backend/src/schema/moments-model.ts","sha256":"4e67af8ca6ae0a064a88f6b5f2f88ac6046434e3b604de1259221cc866def4ed","category":"orm","required":"momentsCandidates 映射 0128 已存在的 nullable accountId/groupId"},
+    {"path":"backend/src/modules/moments/moments-model.service.ts","sha256":"c7ead316068115f231ddf33e2b9002db0bcfc71550ab7784130de6a7f640a5ab","category":"model_reservation_root","required":"15-30 的 candidate/request reserve、generate、readFrozen、adopt、retry 使用冻结 owner scope；旧 account 任务按原 scope 读回，当前 group 创建/采纳按父 moments 锁"},
+    {"path":"backend/src/modules/moments/execution-moments-model.service.ts","sha256":"d5498da044f51b8fc6df12649465f764fd5a5cdb2e99e1878603ba1b57ea2609","category":"lease_settlement_root","required":"10-16 不可用 eq(accountId,NULL)；结算按租约冻结 owner/group、root/active candidate 与 digest 证明命中，旧 account 任务费用和终态仍按原冻结 scope 归档"},
+    {"path":"backend/src/modules/moments/moments-model.integration.test.ts","sha256":"5e59377f111723272b360a882886694d205424b03341841ebfefb9f88032d405","category":"test","required":"纯组 generate→lease→settle→adopt/retry、原 digest/frozen proof、cancel/failure、旧 account 任务归档读取与当前写拒绝"}
+  ],
+  "explicitly_not_required_without_new_diff_evidence": [
+    {"path":"backend/src/modules/moments/moments-model.adapter.ts","reason":"只透传 readFrozenGenerationTask/facets，无直接 account 门或持久化。"},
+    {"path":"backend/src/modules/moments/moments-model.ports.ts","reason":"现有 moments(tx)、ai(tx)、lockMoments 事务端口足以承载父锁；无新接口证据。"},
+    {"path":"backend/drizzle/0128_workspace_convergence.sql","reason":"物理列、nullable、partial unique、旧 unique 与 backfill 已具备且已冻结。"}
+  ],
+  "content_outputs_group_id_decision": {
+    "decision": "REQUIRED_AS_DERIVED_PROVENANCE_IN_EXISTING_PROJECTS_SCHEMA_AND_REPOSITORY_PATHS",
+    "owner_truth": "projects 是唯一授权父真相；content_outputs.group_id 只能等于锁定 project.group_id，不得成为另一个可独立选择的 owner。",
+    "reason": "0128:293/3388 已把该列纳入显式迁移闭包，且下游 3424-3438 从 content_outputs 回填。若新 output 不 stamp，迁移服务虽能读物理列却得到 NULL，下游新行也失去稳定父 group。",
+    "constraint": "读权限仍通过真实 project parent；写入 output 时在同一 project parent transaction/lock 下 stamp。检测不一致须冲突，禁止静默重算或伪造 account。"
+  },
+  "minimum_behavioral_constraints": [
+    "新组行一律 accountId=null、groupId=真实 group；禁止用 groupId 填 accountId。",
+    "lookup 必须显式区分 group-null-account 与 legacy account scope；SQL NULL 不能用普通 eq 假装相等。",
+    "同 clientRequestId 在多个旧 account 行存在时不得任取首行；只有显式旧 scope 可恢复，否则返回确定性冲突。",
+    "所有当前 create/save/adopt/retry 先锁真实父 project/moments/output 并验证成员写权限与非归档；candidate/receipt 子锁在父锁之后。",
+    "历史 document/candidate/task/receipt 的读回与终态/费用归档保留原冻结 owner、digest、version；转组不得重签历史费用或改 digest。",
+    "读取路径首次物化 article/graphic candidate projection 时，必须从已验证的 output/task 冻结证据取得 group；归档历史读可完成不可变投影，但不得借此执行新的业务采纳或绕过当前写禁令。"
+  ],
+  "minimum_test_matrix": [
+    "projects：纯组 createOutputWithRequest 并发唯一、精确 replay、同 key 异 digest 冲突、跨组拒绝、legacy account 精确回读、多 account 同 key 不任取。",
+    "article/graphic：空组 create→find；whole/text candidate 首次物化和再次读；归档后历史候选可读，create/adopt 拒绝；父 output/group 不一致拒绝。",
+    "moments 手工：空组 create/save/request/list；reserved target 为空仍带 group；归档写拒绝；旧 account receipt 可精确读。",
+    "moments 模型：空组 generate→原 lease settle→候选→adopt/retry；冻结 digest、root/active CAS、失败/cancel 保持；旧 account 任务只按原冻结 scope 结算/归档。",
+    "不得把外围 adapter/helper 单测或 ORM 编译通过记作上述公共调用链 PASS。"
+  ],
+  "review_limits": [
+    "仅审查 HEAD 75131f 的依赖闭包与建议写集；未审查暂停中的 20 个 dirty 文件实现。",
+    "未运行测试、数据库、模型、网络或安装版；本报告不是实现验收或安装版 PASS。",
+    "writer 最终改字节后仍需按真实 diff、最终 hash、测试 argv 与日志复核。"
+  ]
+}

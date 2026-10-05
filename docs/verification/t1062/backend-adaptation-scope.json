@@ -182,7 +182,25 @@
     "frontend/src/server/__module_integration__/production-source-bytes.persistence-client.test.ts",
     "frontend/src/server/__module_integration__/production-video-material-root.persistence-client.test.ts",
     "frontend/src/server/__module_integration__/work-composition.persistence-client.test.ts",
-    "frontend/src/server/persistence-client.ts"
+    "frontend/src/server/persistence-client.ts",
+    "backend/src/schema/projects.ts",
+    "backend/src/modules/projects/projects.service.ts",
+    "backend/src/modules/projects/projects.repository.ts",
+    "backend/src/modules/projects/projects.service.test.ts",
+    "backend/src/modules/projects/projects.repository.integration.test.ts",
+    "backend/src/schema/articles.ts",
+    "backend/src/modules/articles/articles.service.ts",
+    "backend/src/modules/articles/articles.text-results.ts",
+    "backend/src/modules/graphic-posts/graphic-posts.schema.ts",
+    "backend/src/modules/graphic-posts/graphic-posts.service.ts",
+    "backend/src/modules/graphic-posts/graphic-posts.integration.test.ts",
+    "backend/src/schema/moments.ts",
+    "backend/src/modules/moments/moments.service.ts",
+    "backend/src/modules/moments/moments.service.test.ts",
+    "backend/src/schema/moments-model.ts",
+    "backend/src/modules/moments/moments-model.service.ts",
+    "backend/src/modules/moments/execution-moments-model.service.ts",
+    "backend/src/modules/moments/moments-model.integration.test.ts"
   ],
   "path_details": [
     {
@@ -2011,6 +2029,276 @@
       "reasons": [
         "仅server装配：group/tx owner ports、scope冻结createTask/ASR/rough回读、exact音频可解码端口、asset startup恢复review分类回调；不得改页面、native UI或风格"
       ]
+    },
+    {
+      "path": "backend/src/schema/projects.ts",
+      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/schema/projects.ts",
+      "exists": true,
+      "before_sha256": "9b8f6bebfc4d4d58b28128873e9d1c531235fd588b74389601fbc8713c071875",
+      "areas": [
+        "root-group-creation-closure"
+      ],
+      "roles": [
+        "orm"
+      ],
+      "reasons": [
+        "outputCreateRequests 映射 nullable accountId/groupId/旧 account unique+新 partial group unique；contentOutputs 映射派生 groupId"
+      ]
+    },
+    {
+      "path": "backend/src/modules/projects/projects.service.ts",
+      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/modules/projects/projects.service.ts",
+      "exists": true,
+      "before_sha256": "1d31dc0b68d8fe488a372d2c74fb5a87a9c5716a6e14be8c4dc6ba4338b7b5af",
+      "areas": [
+        "root-group-creation-closure"
+      ],
+      "roles": [
+        "public_port"
+      ],
+      "reasons": [
+        "1043 getOutputByCreationRequest 不得 requireAccountId，须传真实 group scope"
+      ]
+    },
+    {
+      "path": "backend/src/modules/projects/projects.repository.ts",
+      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/modules/projects/projects.repository.ts",
+      "exists": true,
+      "before_sha256": "5ab90ad5973c3f04683ff9a1d20fd55c87e5baede94075803bd85000fbffaded",
+      "areas": [
+        "root-group-creation-closure"
+      ],
+      "roles": [
+        "repository"
+      ],
+      "reasons": [
+        "1205-1236 的 find/create receipt 必须按显式 owner scope 查写；项目锁后给 output 与 receipt 写入同一 parent group；冲突不得任取首行"
+      ]
+    },
+    {
+      "path": "backend/src/modules/projects/projects.service.test.ts",
+      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/modules/projects/projects.service.test.ts",
+      "exists": true,
+      "before_sha256": "52e6d265e04ab2844ed11a7ff13d6c22acf9df0681e6860bc9025a318625629c",
+      "areas": [
+        "root-group-creation-closure"
+      ],
+      "roles": [
+        "test"
+      ],
+      "reasons": [
+        "公共 create/getOutputByCreationRequest 的空 account 组路径、跨组拒绝与旧 account 行兼容"
+      ]
+    },
+    {
+      "path": "backend/src/modules/projects/projects.repository.integration.test.ts",
+      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/modules/projects/projects.repository.integration.test.ts",
+      "exists": true,
+      "before_sha256": "b9835b316c463b18a282e6097be7c870917ab65199cb41244e44735470421e07",
+      "areas": [
+        "root-group-creation-closure"
+      ],
+      "roles": [
+        "test"
+      ],
+      "reasons": [
+        "真实 unique race、同组幂等、旧 key 多 account 不歧义、父锁/归档写拒绝"
+      ]
+    },
+    {
+      "path": "backend/src/schema/articles.ts",
+      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/schema/articles.ts",
+      "exists": true,
+      "before_sha256": "21b0dd223b50d5e198cafa635ca90e3273633a626c61fdfa81cb0fdc58c687a9",
+      "areas": [
+        "root-group-creation-closure"
+      ],
+      "roles": [
+        "orm"
+      ],
+      "reasons": [
+        "articleAnchors/articleCandidates/articleTextCandidates 映射 nullable accountId 与 groupId；保留物理索引语义"
+      ]
+    },
+    {
+      "path": "backend/src/modules/articles/articles.service.ts",
+      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/modules/articles/articles.service.ts",
+      "exists": true,
+      "before_sha256": "8cd293d87b1173e8290b0a46032349bb08c9f1b5a1516fa630456628338c88f9",
+      "areas": [
+        "root-group-creation-closure"
+      ],
+      "roles": [
+        "public_root"
+      ],
+      "reasons": [
+        "72/77/155-194 与 309-395 的 anchor、创建回执、whole candidate 按真实 group+父 output 核验及写入"
+      ]
+    },
+    {
+      "path": "backend/src/modules/articles/articles.text-results.ts",
+      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/modules/articles/articles.text-results.ts",
+      "exists": true,
+      "before_sha256": "6a5c0fa96760168d85ad462d4762db9d1c805b4388767beb714aae65c9f51a9b",
+      "areas": [
+        "root-group-creation-closure"
+      ],
+      "roles": [
+        "projection_root"
+      ],
+      "reasons": [
+        "49/78-103 的读取时 projection 写入也须绑定 output 父 group；归档后的合法历史读取仍能返回既有/可证明的不可变候选，不得把读取变成新采纳"
+      ]
+    },
+    {
+      "path": "backend/src/modules/graphic-posts/graphic-posts.schema.ts",
+      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/modules/graphic-posts/graphic-posts.schema.ts",
+      "exists": true,
+      "before_sha256": "6697a02e1943903676930c699fccb201adf6f0bd3410b0bd7aba654646c7a354",
+      "areas": [
+        "root-group-creation-closure"
+      ],
+      "roles": [
+        "orm"
+      ],
+      "reasons": [
+        "anchors/textCandidates 映射 nullable accountId/groupId"
+      ]
+    },
+    {
+      "path": "backend/src/modules/graphic-posts/graphic-posts.service.ts",
+      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/modules/graphic-posts/graphic-posts.service.ts",
+      "exists": true,
+      "before_sha256": "08cf4cd9cd6b52bfa5709f363ddd2ac2276ccba1af776456c0a00dfecf987774",
+      "areas": [
+        "root-group-creation-closure"
+      ],
+      "roles": [
+        "public_root"
+      ],
+      "reasons": [
+        "113-122、217-268、399-461 的 anchor/create/text projection 按父 output group 读写并保持 digest 冲突"
+      ]
+    },
+    {
+      "path": "backend/src/modules/graphic-posts/graphic-posts.integration.test.ts",
+      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/modules/graphic-posts/graphic-posts.integration.test.ts",
+      "exists": true,
+      "before_sha256": "9a50b94c52a7ba1d091bc759cfaf8ce0c442fd307dbc0c68301e69390f40ba68",
+      "areas": [
+        "root-group-creation-closure"
+      ],
+      "roles": [
+        "test"
+      ],
+      "reasons": [
+        "graphic create/replay/text projection、归档历史读、跨组与旧 account 兼容"
+      ]
+    },
+    {
+      "path": "backend/src/schema/moments.ts",
+      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/schema/moments.ts",
+      "exists": true,
+      "before_sha256": "bf33f135174bc80caa2c92c1dd00ee76299f5a088417d6e51a9373273e4cdfb7",
+      "areas": [
+        "root-group-creation-closure"
+      ],
+      "roles": [
+        "orm"
+      ],
+      "reasons": [
+        "momentsAnchors/momentsRequests 映射 nullable accountId/groupId、旧 account unique 与 group partial unique"
+      ]
+    },
+    {
+      "path": "backend/src/modules/moments/moments.service.ts",
+      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/modules/moments/moments.service.ts",
+      "exists": true,
+      "before_sha256": "9d92a4af1c7e3bf4615afee0fa3f05bc28eaad5b7a016e46b678686fc3255c9a",
+      "areas": [
+        "root-group-creation-closure"
+      ],
+      "roles": [
+        "public_root"
+      ],
+      "reasons": [
+        "12-40 的 anchor/request/reserve/create/save/list/receipt 全部沿 project parent group；reserved targetId 为空时也必须直接写 groupId"
+      ]
+    },
+    {
+      "path": "backend/src/modules/moments/moments.service.test.ts",
+      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/modules/moments/moments.service.test.ts",
+      "exists": true,
+      "before_sha256": "3d7e90223a80719cdbf33f2af1ba01e8d647ee6c75847a514bff57784a99e840",
+      "areas": [
+        "root-group-creation-closure"
+      ],
+      "roles": [
+        "test"
+      ],
+      "reasons": [
+        "手工 create/save/request/list 在纯组、跨组、归档、旧 account 回执下的真实服务回归"
+      ]
+    },
+    {
+      "path": "backend/src/schema/moments-model.ts",
+      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/schema/moments-model.ts",
+      "exists": true,
+      "before_sha256": "4e67af8ca6ae0a064a88f6b5f2f88ac6046434e3b604de1259221cc866def4ed",
+      "areas": [
+        "root-group-creation-closure"
+      ],
+      "roles": [
+        "orm"
+      ],
+      "reasons": [
+        "momentsCandidates 映射 0128 已存在的 nullable accountId/groupId"
+      ]
+    },
+    {
+      "path": "backend/src/modules/moments/moments-model.service.ts",
+      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/modules/moments/moments-model.service.ts",
+      "exists": true,
+      "before_sha256": "c7ead316068115f231ddf33e2b9002db0bcfc71550ab7784130de6a7f640a5ab",
+      "areas": [
+        "root-group-creation-closure"
+      ],
+      "roles": [
+        "model_reservation_root"
+      ],
+      "reasons": [
+        "15-30 的 candidate/request reserve、generate、readFrozen、adopt、retry 使用冻结 owner scope；旧 account 任务按原 scope 读回，当前 group 创建/采纳按父 moments 锁"
+      ]
+    },
+    {
+      "path": "backend/src/modules/moments/execution-moments-model.service.ts",
+      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/modules/moments/execution-moments-model.service.ts",
+      "exists": true,
+      "before_sha256": "d5498da044f51b8fc6df12649465f764fd5a5cdb2e99e1878603ba1b57ea2609",
+      "areas": [
+        "root-group-creation-closure"
+      ],
+      "roles": [
+        "lease_settlement_root"
+      ],
+      "reasons": [
+        "10-16 不可用 eq(accountId,NULL)；结算按租约冻结 owner/group、root/active candidate 与 digest 证明命中，旧 account 任务费用和终态仍按原冻结 scope 归档"
+      ]
+    },
+    {
+      "path": "backend/src/modules/moments/moments-model.integration.test.ts",
+      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/modules/moments/moments-model.integration.test.ts",
+      "exists": true,
+      "before_sha256": "5e59377f111723272b360a882886694d205424b03341841ebfefb9f88032d405",
+      "areas": [
+        "root-group-creation-closure"
+      ],
+      "roles": [
+        "test"
+      ],
+      "reasons": [
+        "纯组 generate→lease→settle→adopt/retry、原 digest/frozen proof、cancel/failure、旧 account 任务归档读取与当前写拒绝"
+      ]
     }
   ],
   "conditional_write_paths": [
@@ -2651,36 +2939,6 @@
       "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/modules/platform-account/platform-account.service.ts",
       "exists": true,
       "before_sha256": "c120109e4edf2a04df84b4733b8b0535cfdb3df444e2b0a6d704f3b7b919a9ee",
-      "areas": [
-        "existing-safety-ports"
-      ],
-      "roles": [
-        "read-and-regression-only"
-      ],
-      "reasons": [
-        "保留/复用现有事务、费用、成员冻结、scope与真实target account合同；当前审计未证明需要修改，先跑公共链，出现具体协议缺口再精确replan"
-      ]
-    },
-    {
-      "path": "backend/src/modules/projects/projects.repository.ts",
-      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/modules/projects/projects.repository.ts",
-      "exists": true,
-      "before_sha256": "5ab90ad5973c3f04683ff9a1d20fd55c87e5baede94075803bd85000fbffaded",
-      "areas": [
-        "existing-safety-ports"
-      ],
-      "roles": [
-        "read-and-regression-only"
-      ],
-      "reasons": [
-        "保留/复用现有事务、费用、成员冻结、scope与真实target account合同；当前审计未证明需要修改，先跑公共链，出现具体协议缺口再精确replan"
-      ]
-    },
-    {
-      "path": "backend/src/modules/projects/projects.service.ts",
-      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/modules/projects/projects.service.ts",
-      "exists": true,
-      "before_sha256": "1d31dc0b68d8fe488a372d2c74fb5a87a9c5716a6e14be8c4dc6ba4338b7b5af",
       "areas": [
         "existing-safety-ports"
       ],
@@ -3464,7 +3722,42 @@
     "CLI源支持group，但现装help/Skill旧；生产幂等account_scope缺group真实缺口已精确列，不靠文案声称安装版支持",
     "新增workspace-operation-scope声明已存在；不默认编辑该map，必须继续service/public chain授权验证",
     "ProjectsService.getProject(ctx,id,forUpdate)当前已存在；复用tx真实port，需在其前拿group锁，不能删forUpdate",
-    "rough round2 stash字节与PASS SHA一致；当前v3尚无实现，不能把本写集或prompt断言当模型/安装包PASS"
+    "rough round2 stash字节与PASS SHA一致；当前v3尚无实现，不能把本写集或prompt断言当模型/安装包PASS",
+    {
+      "root_closure_scope_review": {
+        "at": "2026-10-05T04:59:18.745494+00:00",
+        "base_sha": "75131fb489962e50d483fe21baccab39e0350e89",
+        "action": "release and replan after proven public-root dependencies",
+        "previous_step_path_count": 144,
+        "added_paths": [
+          "backend/src/schema/projects.ts",
+          "backend/src/modules/projects/projects.service.ts",
+          "backend/src/modules/projects/projects.repository.ts",
+          "backend/src/modules/projects/projects.service.test.ts",
+          "backend/src/modules/projects/projects.repository.integration.test.ts",
+          "backend/src/schema/articles.ts",
+          "backend/src/modules/articles/articles.service.ts",
+          "backend/src/modules/articles/articles.text-results.ts",
+          "backend/src/modules/graphic-posts/graphic-posts.schema.ts",
+          "backend/src/modules/graphic-posts/graphic-posts.service.ts",
+          "backend/src/modules/graphic-posts/graphic-posts.integration.test.ts",
+          "backend/src/schema/moments.ts",
+          "backend/src/modules/moments/moments.service.ts",
+          "backend/src/modules/moments/moments.service.test.ts",
+          "backend/src/schema/moments-model.ts",
+          "backend/src/modules/moments/moments-model.service.ts",
+          "backend/src/modules/moments/execution-moments-model.service.ts",
+          "backend/src/modules/moments/moments-model.integration.test.ts"
+        ],
+        "step_path_count": 162,
+        "independent_review": "docs/verification/t1062/preflight/backend-root-idempotency-scope-review.json",
+        "review_sha256": "df33c673be66de388fca0af750ad054f9f9537114433005bb21b0fd49b5dd6a4",
+        "wip_preserved": "docs/verification/t1062/preflight/backend-adaptation-paused-wip.json",
+        "reason": "已授权新创作组域的公开根依赖补全；不改SQL/历史journal/安装环境/产品方向"
+      },
+      "implementation_verdict": "pending",
+      "new_red_required": true
+    }
   ],
   "ordered_prerequisites": [
     "唯一migration writer完成真实收敛并整合；重新取最终HEAD/dirty path SHA，当前before_sha仅建议",
@@ -3506,10 +3799,10 @@
     "gateway_exception": "frontend/src/app/api/v1/dispatch/route.test.ts仅公共CLI网关测试，route.ts仅条件修复；无页面/UI路径"
   },
   "counts": {
-    "required_or_new": 120,
+    "required_or_new": 138,
     "necessary_new": 6,
     "conditional": 23,
-    "read_only": 50
+    "read_only": 48
   },
   "limitations": [
     "未运行任何产品测试/DB/媒体/模型/服务；沿用当场原红/绿证据并明确来源，不冒充本次重跑",
@@ -3696,6 +3989,30 @@
       "environment_rule": "unset真实DATABASE_URL/PGLITE_DATA_DIR等库与媒体位置；仅合成fixtures和明确隔离测试库，无外部AI/真实媒体/用户资料",
       "preconditions": [
         "完整迁移整合候选的独立真实依赖已安装，新增必要tests已创建"
+      ],
+      "executed_this_audit": false
+    },
+    {
+      "label": "projects-article-graphic-moments公开根与真实lease闭包",
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "argv": [
+        "pnpm",
+        "-C",
+        "backend",
+        "test",
+        "src/modules/projects/projects.service.test.ts",
+        "src/modules/projects/projects.repository.integration.test.ts",
+        "src/modules/articles/articles.integration.test.ts",
+        "src/modules/graphic-posts/graphic-posts.integration.test.ts",
+        "src/modules/moments/moments.service.test.ts",
+        "src/modules/moments/moments-model.integration.test.ts",
+        "src/modules/articles/articles.worker.integration.test.ts",
+        "--maxWorkers=1"
+      ],
+      "phase": "after_adaptation",
+      "environment_rule": "沿隔离runner，无真实媒体、模型网络或用户资料",
+      "preconditions": [
+        "根ORM与公开服务适配完成；原回执/digest与租约断言保留"
       ],
       "executed_this_audit": false
     },
@@ -4071,5 +4388,38 @@
       "protocol3明确新入口+frozen scope+pause gap model schema+actualSkill+backend adopt/settle/recover；确认缺失0写，真实音轨缺失review_only",
       "六输入族和有理timebase非num1/非整除/重复媒体多实例，公共链及安全降级覆盖；后续前端真实播放和native Undo/Redo/save/export必需另验"
     ]
-  }
+  },
+  "scope_revisions": [
+    {
+      "at": "2026-10-05T04:59:18.745494+00:00",
+      "base_sha": "75131fb489962e50d483fe21baccab39e0350e89",
+      "action": "release and replan after proven public-root dependencies",
+      "previous_step_path_count": 144,
+      "added_paths": [
+        "backend/src/schema/projects.ts",
+        "backend/src/modules/projects/projects.service.ts",
+        "backend/src/modules/projects/projects.repository.ts",
+        "backend/src/modules/projects/projects.service.test.ts",
+        "backend/src/modules/projects/projects.repository.integration.test.ts",
+        "backend/src/schema/articles.ts",
+        "backend/src/modules/articles/articles.service.ts",
+        "backend/src/modules/articles/articles.text-results.ts",
+        "backend/src/modules/graphic-posts/graphic-posts.schema.ts",
+        "backend/src/modules/graphic-posts/graphic-posts.service.ts",
+        "backend/src/modules/graphic-posts/graphic-posts.integration.test.ts",
+        "backend/src/schema/moments.ts",
+        "backend/src/modules/moments/moments.service.ts",
+        "backend/src/modules/moments/moments.service.test.ts",
+        "backend/src/schema/moments-model.ts",
+        "backend/src/modules/moments/moments-model.service.ts",
+        "backend/src/modules/moments/execution-moments-model.service.ts",
+        "backend/src/modules/moments/moments-model.integration.test.ts"
+      ],
+      "step_path_count": 162,
+      "independent_review": "docs/verification/t1062/preflight/backend-root-idempotency-scope-review.json",
+      "review_sha256": "df33c673be66de388fca0af750ad054f9f9537114433005bb21b0fd49b5dd6a4",
+      "wip_preserved": "docs/verification/t1062/preflight/backend-adaptation-paused-wip.json",
+      "reason": "已授权新创作组域的公开根依赖补全；不改SQL/历史journal/安装环境/产品方向"
+    }
+  ]
 }

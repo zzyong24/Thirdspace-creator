@@ -9,3 +9,9 @@
 - CLI 源已有 `--group`、组头和 task read/wait；现装 `creatoros --help` 当场 exit0，仍旧账号帮助，Skill 文档旧。真实生产问题是 `accountScope=account??__user__` 跨纯组缓存，不能只改文案。按正式 operation scope 分组 namespace：同组创作跨平台共收据，不同组隔离，真实平台目标另核；旧 account 回执不改，gateway 公共测试必须实测。
 
 JSON 内含逐路径用途/前摘要、域矩阵、0128 精确语句与 partial index、源红绿证据 SHA，以及 22 组可执行 argv 验证组合。真实 PG 并发仅允许已有 `127.0.0.1:55422` 隔离 harness，跳过只能 pending；没有在本审计运行产品测试或读取真实数据库。真正 frontend 组切换/音频播放确认/四 native source-copy 与构建留下一串行 wave，只列精确 server 装配和 gateway 测试例外。
+
+## 公开根依赖修订（2026-10-05）
+
+暂停中的20个WIP文件完整保留，原lease已释放。实际调用显示外围转换/组合依赖projects、article、graphic-post、moments及原模型lease根仍按账号隔离；独立一次性审查19条精确路径后纳入其中18条新路径，当前step共162条（138条必要/新、23条条件、1结果）。报告19/19原文件摘要与base75131f一致；第一轮1条人工摘要遗漏原样保留，第二轮程序重采纠正。仅scope足够，不是实现或测试通过。
+
+content_outputs.group_id仅从同事务锁定的project派生，project仍为唯一授权父真相；旧账号回执、摘要与冻结费用保持，新纯组键使用真实group/account NULL，历史多账号同key不得任取。article/graphic读取时的不可变候选投影和归档历史读取须兼容，当前采纳/新创作仍按写权限；moments原lease settle不得以eq(NULL)静默零命中。0128/原SQL/journal不改。新增第23组验证覆盖这些真实公开根与lease；后续前端/原生仍未动。

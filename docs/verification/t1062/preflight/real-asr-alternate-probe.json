@@ -1,0 +1,552 @@
+{
+  "schema": "t1062-real-asr-alternate-direct-driver-preflight/v1",
+  "created_at": "2026-10-05T04:23:05.157922+00:00",
+  "status": "bounded_real_local_driver_text_success_timing_negative_both_modes",
+  "directory": "/tmp/creatoros-t1062-asr-alternate-preflight-20261005",
+  "source_mov_absolute_path": "/tmp/creatoros-t1062-asr-alternate-preflight-20261005/source.mov",
+  "source_mov_sha256": "8d76c7d6abec52e4a6dd19db98e15dc8b416461cb2d40241cfbf45ec82bf6bc4",
+  "wav_absolute_path": "/tmp/creatoros-t1062-asr-alternate-preflight-20261005/audio.wav",
+  "wav_sha256": "245b1ad0dec735444d10a741ece8414bca9359da25ba2ed4f0983c92ac55c252",
+  "synthetic_source": {
+    "kind": "macOS系统say合成口播，不是真实人物录音",
+    "voice": "Tingting",
+    "locale": "zh_CN",
+    "voice_inventory_path": "/tmp/creatoros-t1062-asr-alternate-preflight-20261005/voices.log",
+    "script_path": "/tmp/creatoros-t1062-asr-alternate-preflight-20261005/speech.txt",
+    "script_sha256": "4ee3aa302da504e59ede2c4e15b1145174f4f48d719835aaca176807eaebbd79",
+    "script_text": "今天上午，我们一起整理桌面上的文件。先把正在使用的资料放在左边，再把已经完成的记录放进文件夹。下午我们会核对日期和名称，确认没有遗漏之后，再保存这一份整理结果。谢谢大家。\n",
+    "original_aiff_path": "/tmp/creatoros-t1062-asr-alternate-preflight-20261005/speech.aiff",
+    "original_aiff_sha256": "2aed3def52bba9082ba2c962def31a937266ae0af992d33ab762424488ee5db8",
+    "conversion": "一次生成AIFF→ffmpeg mono16000Hz pcm_s16le MOV→copy音频流WAV。没有添加静音、拉长、截尾、重选文本或修改时间码",
+    "native_pcm_source": {
+      "codec": "pcm_s16le",
+      "sample_rate": 16000,
+      "channels": 1,
+      "time_base": "1/16000",
+      "valid_sample_count": 306587,
+      "duration_exact_seconds": 19.1616875,
+      "video_streams": 0
+    },
+    "source_probe_path": "/tmp/creatoros-t1062-asr-alternate-preflight-20261005/generate-3.log"
+  },
+  "commands": [
+    {
+      "argv": [
+        "say",
+        "-v",
+        "Tingting",
+        "-f",
+        "/tmp/creatoros-t1062-asr-alternate-preflight-20261005/speech.txt",
+        "-o",
+        "/tmp/creatoros-t1062-asr-alternate-preflight-20261005/speech.aiff"
+      ],
+      "exit": 0,
+      "log": "/tmp/creatoros-t1062-asr-alternate-preflight-20261005/generate-0.log"
+    },
+    {
+      "argv": [
+        "/opt/homebrew/bin/ffmpeg",
+        "-nostdin",
+        "-hide_banner",
+        "-i",
+        "/tmp/creatoros-t1062-asr-alternate-preflight-20261005/speech.aiff",
+        "-map",
+        "0:a:0",
+        "-ar",
+        "16000",
+        "-ac",
+        "1",
+        "-c:a",
+        "pcm_s16le",
+        "-f",
+        "mov",
+        "/tmp/creatoros-t1062-asr-alternate-preflight-20261005/source.mov"
+      ],
+      "exit": 0,
+      "log": "/tmp/creatoros-t1062-asr-alternate-preflight-20261005/generate-1.log"
+    },
+    {
+      "argv": [
+        "/opt/homebrew/bin/ffmpeg",
+        "-nostdin",
+        "-hide_banner",
+        "-i",
+        "/tmp/creatoros-t1062-asr-alternate-preflight-20261005/source.mov",
+        "-map",
+        "0:a:0",
+        "-c:a",
+        "copy",
+        "/tmp/creatoros-t1062-asr-alternate-preflight-20261005/audio.wav"
+      ],
+      "exit": 0,
+      "log": "/tmp/creatoros-t1062-asr-alternate-preflight-20261005/generate-2.log"
+    },
+    {
+      "argv": [
+        "/opt/homebrew/bin/ffprobe",
+        "-v",
+        "error",
+        "-show_format",
+        "-show_streams",
+        "-of",
+        "json",
+        "/tmp/creatoros-t1062-asr-alternate-preflight-20261005/source.mov"
+      ],
+      "exit": 0,
+      "log": "/tmp/creatoros-t1062-asr-alternate-preflight-20261005/generate-3.log"
+    },
+    {
+      "argv": [
+        "node",
+        "/tmp/creatoros-t1062-asr-alternate-preflight-20261005/build.mjs"
+      ],
+      "exit": 0,
+      "log": "/tmp/creatoros-t1062-asr-alternate-preflight-20261005/build.log"
+    },
+    {
+      "argv": [
+        "node",
+        "/tmp/creatoros-t1062-asr-alternate-preflight-20261005/probe.cjs"
+      ],
+      "exit": 0,
+      "log": "/tmp/creatoros-t1062-asr-alternate-preflight-20261005/probe.log"
+    }
+  ],
+  "input_driver_and_validator_sources": [
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/ai-worker/src/runtime/multimodal-whisper-local.ts",
+      "sha256": "9b74ee8dd59b707dcffbcbc76020633841a269e9bbac8538107f189978519c52",
+      "after_sha256": "9b74ee8dd59b707dcffbcbc76020633841a269e9bbac8538107f189978519c52",
+      "unchanged": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/ai-worker/src/runtime/asr-provider-timing.ts",
+      "sha256": "b8088d3e1854e6f155762af3e5a4267e128142a19e21bdb5af5c0c67c87a7d62",
+      "after_sha256": "b8088d3e1854e6f155762af3e5a4267e128142a19e21bdb5af5c0c67c87a7d62",
+      "unchanged": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/ai-worker/src/runtime/asr-request.ts",
+      "sha256": "50e32a815ce654b174f66603a6ed86003454d7b02805adc57e250b4d0ac710d9",
+      "after_sha256": "50e32a815ce654b174f66603a6ed86003454d7b02805adc57e250b4d0ac710d9",
+      "unchanged": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/ai-worker/scripts/pi-runtime-bundle.mjs",
+      "sha256": "380de992e3e9a483fabdda8f6a17413ea7ad84e35c85a513f8a8afce21fdea3c",
+      "after_sha256": "380de992e3e9a483fabdda8f6a17413ea7ad84e35c85a513f8a8afce21fdea3c",
+      "unchanged": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/contract/src/internal/asset-asr-timing.ts",
+      "sha256": "a41b7a86f75a4abcf533b302d18986dc119d0174bb48ebd7256e4c7b39d23568",
+      "after_sha256": "a41b7a86f75a4abcf533b302d18986dc119d0174bb48ebd7256e4c7b39d23568",
+      "unchanged": true
+    }
+  ],
+  "observed_source_head": "8e9af0eedbf50de49266a4d7ff072e31bfd3d77e",
+  "actual_driver": "createWhisperLocalAdapter + createDefaultPipelineProvider + createFfmpegPcmDecoder；actual pipeline、actual readActualProviderTiming，不是fixture",
+  "runtime_build": "esbuild CJS +项目piRuntimeInitializationPlugin，external @xenova/transformers@2.17.2，模型Xenova/whisper-small本地CPU",
+  "dependency_directory": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/ai-worker/node_modules",
+  "dependency_limit": "共享只读现有AI-worker依赖解析，不声称全新独立依赖安装；推理cache为独立复制且SHA验证相同",
+  "offline_controls": {
+    "transformers_allow_remote_models": false,
+    "local_model_path": "/tmp/creatoros-t1062-asr-alternate-preflight-20261005",
+    "fetch_reject_network": true,
+    "network_attempts": 0,
+    "credential_used": false,
+    "external_paid_calls": 0,
+    "model_cache_manifest_path": "/tmp/creatoros-t1062-asr-alternate-preflight-20261005/input-model-manifest.json",
+    "model_cache_files": 7,
+    "model_copy_unchanged_after_run": true
+  },
+  "bounded_execution": {
+    "single_source": true,
+    "segment_calls": 1,
+    "word_calls": 1,
+    "sample_retry_or_selection": false,
+    "timecode_edit_or_clamp": false,
+    "failed_mode_not_retried": true
+  },
+  "mode_results": [
+    {
+      "mode": "segment",
+      "pipeline_invocations": 1,
+      "started_at": "2026-10-05T04:21:19.013Z",
+      "finished_at": "2026-10-05T04:21:26.194Z",
+      "adapter_error": null,
+      "returned_text_length": 85,
+      "has_driver_verified_timing": false,
+      "public_validator_accepted": false,
+      "valid_sample_count": 306587,
+      "exact_audio_sha256": "245b1ad0dec735444d10a741ece8414bca9359da25ba2ed4f0983c92ac55c252",
+      "source_sha256": "8d76c7d6abec52e4a6dd19db98e15dc8b416461cb2d40241cfbf45ec82bf6bc4",
+      "frozen_request": {
+        "timestampMode": "segment",
+        "protocol": "whisper-local.v1",
+        "provider": "whisper-local",
+        "model": "Xenova/whisper-small",
+        "endpointDigest": null,
+        "language": "zh",
+        "audioDigest": "sha256:245b1ad0dec735444d10a741ece8414bca9359da25ba2ed4f0983c92ac55c252",
+        "audioByteLength": 613252,
+        "chunks": [
+          {
+            "digest": "sha256:245b1ad0dec735444d10a741ece8414bca9359da25ba2ed4f0983c92ac55c252",
+            "byteLength": 613252
+          }
+        ],
+        "chunkDigest": "sha256:245b1ad0dec735444d10a741ece8414bca9359da25ba2ed4f0983c92ac55c252",
+        "chunkByteLength": 613252,
+        "chunkIndex": 0,
+        "chunkCount": 1
+      },
+      "pipeline_options": {
+        "return_timestamps": true,
+        "chunk_length_s": 30,
+        "stride_length_s": 5,
+        "forced_decoder_ids": [
+          [
+            1,
+            50260
+          ],
+          [
+            2,
+            50359
+          ]
+        ],
+        "num_frames": 1916
+      },
+      "raw_provider_output_path": "/tmp/creatoros-t1062-asr-alternate-preflight-20261005/segment-raw-provider.json",
+      "raw_provider_output_sha256": "35a8f63e8fba7b7f914f8db19bd0b1f92bd664f53786f1ff6e9422ce6bd25099",
+      "raw_response_digest_from_pipeline": "6693e5f964ce70f83747bb0c5dbd4747284cc6e013b123abfcfd7477c9b2fc0b",
+      "full_result_path": "/tmp/creatoros-t1062-asr-alternate-preflight-20261005/segment-result.json",
+      "full_result_sha256": "4f0c79eed7b62b4ec18a8e0678d2f48708c85f7a877f2cdd75dd21d6a43634aa",
+      "diagnostic_issues": [
+        {
+          "code": "custom",
+          "path": [
+            "ranges",
+            1
+          ],
+          "message": "供应商真实时间码范围或身份无效"
+        }
+      ],
+      "out_of_bounds_observations": [
+        {
+          "index": 1,
+          "timestamp": [
+            10.56,
+            19.56
+          ],
+          "exactStartSample": 168960,
+          "exactEndSample": 312960,
+          "endPastValidSamples": true
+        }
+      ],
+      "network_attempts": 0,
+      "conclusion": "真实正文可用；尾部原供应商时码超出有效样本，公共driver拒绝时码，不可用于精确剪切"
+    },
+    {
+      "mode": "word",
+      "pipeline_invocations": 1,
+      "started_at": "2026-10-05T04:21:26.196Z",
+      "finished_at": "2026-10-05T04:21:39.369Z",
+      "adapter_error": null,
+      "returned_text_length": 85,
+      "has_driver_verified_timing": false,
+      "public_validator_accepted": false,
+      "valid_sample_count": 306587,
+      "exact_audio_sha256": "245b1ad0dec735444d10a741ece8414bca9359da25ba2ed4f0983c92ac55c252",
+      "source_sha256": "8d76c7d6abec52e4a6dd19db98e15dc8b416461cb2d40241cfbf45ec82bf6bc4",
+      "frozen_request": {
+        "timestampMode": "word",
+        "protocol": "whisper-local.v1",
+        "provider": "whisper-local",
+        "model": "Xenova/whisper-small",
+        "endpointDigest": null,
+        "language": "zh",
+        "audioDigest": "sha256:245b1ad0dec735444d10a741ece8414bca9359da25ba2ed4f0983c92ac55c252",
+        "audioByteLength": 613252,
+        "chunks": [
+          {
+            "digest": "sha256:245b1ad0dec735444d10a741ece8414bca9359da25ba2ed4f0983c92ac55c252",
+            "byteLength": 613252
+          }
+        ],
+        "chunkDigest": "sha256:245b1ad0dec735444d10a741ece8414bca9359da25ba2ed4f0983c92ac55c252",
+        "chunkByteLength": 613252,
+        "chunkIndex": 0,
+        "chunkCount": 1
+      },
+      "pipeline_options": {
+        "return_timestamps": "word",
+        "chunk_length_s": 30,
+        "stride_length_s": 5,
+        "return_token_timestamps": true,
+        "forced_decoder_ids": [
+          [
+            1,
+            50260
+          ],
+          [
+            2,
+            50359
+          ]
+        ],
+        "num_frames": 1916
+      },
+      "raw_provider_output_path": "/tmp/creatoros-t1062-asr-alternate-preflight-20261005/word-raw-provider.json",
+      "raw_provider_output_sha256": "95c84e54199db8e8df63ec35409981dce0bcd92d769487792454e487a5edc44d",
+      "raw_response_digest_from_pipeline": "5d980ce991f9e11a0ff97a6ab369da1587d644d69ef7fccab9b36ce6a8790fbe",
+      "full_result_path": "/tmp/creatoros-t1062-asr-alternate-preflight-20261005/word-result.json",
+      "full_result_sha256": "37a8031436109396494df19ad02fed789ccc97bf17b298b58449c0051e5a712c",
+      "diagnostic_issues": [
+        {
+          "code": "custom",
+          "path": [
+            "ranges",
+            64
+          ],
+          "message": "供应商真实时间码范围或身份无效"
+        }
+      ],
+      "out_of_bounds_observations": [
+        {
+          "index": 64,
+          "timestamp": [
+            18.36,
+            19.4
+          ],
+          "exactStartSample": 293760,
+          "exactEndSample": 310400,
+          "endPastValidSamples": true
+        }
+      ],
+      "network_attempts": 0,
+      "conclusion": "真实正文可用；尾部原供应商时码超出有效样本，公共driver拒绝时码，不可用于精确剪切"
+    }
+  ],
+  "original_negative_preservation": {
+    "all_original_files_byte_unchanged": true,
+    "files": [
+      {
+        "path": "/tmp/creatoros-t1062-asr-preflight/source.mov",
+        "sha256": "2375aacd786e3c64eb47a94229821bae6ef94f688377c4fccd4f3dbe0b283def",
+        "bytes": 470680,
+        "after_sha256": "2375aacd786e3c64eb47a94229821bae6ef94f688377c4fccd4f3dbe0b283def",
+        "bytes_unchanged": true
+      },
+      {
+        "path": "/tmp/creatoros-t1062-asr-preflight/audio.wav",
+        "sha256": "d1bef350b9ec1ff9da234e61269e440574397a9da2ed9120e617eefde2753446",
+        "bytes": 457956,
+        "after_sha256": "d1bef350b9ec1ff9da234e61269e440574397a9da2ed9120e617eefde2753446",
+        "bytes_unchanged": true
+      },
+      {
+        "path": "/tmp/creatoros-t1062-asr-preflight/segment-result.json",
+        "sha256": "f364e6fb5cd0ba4d525099094f3a18e9a79d055b84f083608b1ac582e1d9e699",
+        "bytes": 966,
+        "after_sha256": "f364e6fb5cd0ba4d525099094f3a18e9a79d055b84f083608b1ac582e1d9e699",
+        "bytes_unchanged": true
+      },
+      {
+        "path": "/tmp/creatoros-t1062-asr-preflight/word-result.json",
+        "sha256": "0af1d30589779bc8e4cb98a98d6aea928be051a2fb33ea3a3eb4bade1aafbfbe",
+        "bytes": 5828,
+        "after_sha256": "0af1d30589779bc8e4cb98a98d6aea928be051a2fb33ea3a3eb4bade1aafbfbe",
+        "bytes_unchanged": true
+      },
+      {
+        "path": "/tmp/creatoros-t1062-asr-preflight/probe.mts",
+        "sha256": "052b5b875924372b145a024540a8226e43a3d1bb467242da582e7ab950d04e8a",
+        "bytes": 1665,
+        "after_sha256": "052b5b875924372b145a024540a8226e43a3d1bb467242da582e7ab950d04e8a",
+        "bytes_unchanged": true
+      },
+      {
+        "path": "/tmp/creatoros-t1062-asr-preflight/probe.cjs",
+        "sha256": "007e848cb26bd633f8e716b55b2e1e594b9524bf2ca2173b886b24144b12ab52",
+        "bytes": 761852,
+        "after_sha256": "007e848cb26bd633f8e716b55b2e1e594b9524bf2ca2173b886b24144b12ab52",
+        "bytes_unchanged": true
+      },
+      {
+        "path": "/tmp/creatoros-t1062-asr-preflight/build.mjs",
+        "sha256": "9d59a74167c9b0b5b4ca876ef3f78b930db8827c6bf08c757e607e78307dd4af",
+        "bytes": 657,
+        "after_sha256": "9d59a74167c9b0b5b4ca876ef3f78b930db8827c6bf08c757e607e78307dd4af",
+        "bytes_unchanged": true
+      },
+      {
+        "path": "/tmp/creatoros-t1062-asr-preflight/probe.log",
+        "sha256": "9fbc4558c8baf96dfbde91ad1e569406f0ca1c145a6240c8cad0daf6f794b413",
+        "bytes": 65970,
+        "after_sha256": "9fbc4558c8baf96dfbde91ad1e569406f0ca1c145a6240c8cad0daf6f794b413",
+        "bytes_unchanged": true
+      }
+    ],
+    "original_results": [
+      {
+        "mode": "segment",
+        "path": "/tmp/creatoros-t1062-asr-preflight/segment-result.json",
+        "sha256": "f364e6fb5cd0ba4d525099094f3a18e9a79d055b84f083608b1ac582e1d9e699",
+        "decoded_sample_count": 228939,
+        "duration_seconds": 14.3086875,
+        "has_verified_timing": false,
+        "last_raw_provider_chunk": {
+          "timestamp": [
+            4.6,
+            14.6
+          ],
+          "text": "恩,这一句我重新说,先把内容讲清楚,再把它做成一组图片,最后检查每一张图是否连管。"
+        }
+      },
+      {
+        "mode": "word",
+        "path": "/tmp/creatoros-t1062-asr-preflight/word-result.json",
+        "sha256": "0af1d30589779bc8e4cb98a98d6aea928be051a2fb33ea3a3eb4bade1aafbfbe",
+        "decoded_sample_count": 228939,
+        "duration_seconds": 14.3086875,
+        "has_verified_timing": false,
+        "last_raw_provider_chunk": {
+          "text": "管。",
+          "timestamp": [
+            13.96,
+            17.14
+          ]
+        }
+      }
+    ]
+  },
+  "file_manifest": [
+    {
+      "path": "/tmp/creatoros-t1062-asr-alternate-preflight-20261005/audio.wav",
+      "sha256": "245b1ad0dec735444d10a741ece8414bca9359da25ba2ed4f0983c92ac55c252",
+      "bytes": 613252
+    },
+    {
+      "path": "/tmp/creatoros-t1062-asr-alternate-preflight-20261005/before-run-manifest.json",
+      "sha256": "df0b452acc94f2a077511ee36816b4acc82347630805360b55825734dd6aaa3e",
+      "bytes": 4506
+    },
+    {
+      "path": "/tmp/creatoros-t1062-asr-alternate-preflight-20261005/build.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/tmp/creatoros-t1062-asr-alternate-preflight-20261005/build.mjs",
+      "sha256": "2c128287c95360f324c9a7e2ddd3d49d2c249f9b813cac9802c56e04da6ca13c",
+      "bytes": 695
+    },
+    {
+      "path": "/tmp/creatoros-t1062-asr-alternate-preflight-20261005/generate-0.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/tmp/creatoros-t1062-asr-alternate-preflight-20261005/generate-1.log",
+      "sha256": "71557abfcd358dd5eb0a69548cc570f7ce18ed83d05710008075b8fcff33b4da",
+      "bytes": 881
+    },
+    {
+      "path": "/tmp/creatoros-t1062-asr-alternate-preflight-20261005/generate-2.log",
+      "sha256": "e202eafd84cb4228737d12aabf984d6bc7cd739e17dbbb56c78fe2fc784ad81c",
+      "bytes": 1151
+    },
+    {
+      "path": "/tmp/creatoros-t1062-asr-alternate-preflight-20261005/generate-3.log",
+      "sha256": "bea8394c9890daada929a19944e4f40a05b1363ad40096837ddea27458221747",
+      "bytes": 2246
+    },
+    {
+      "path": "/tmp/creatoros-t1062-asr-alternate-preflight-20261005/generation-result.json",
+      "sha256": "30cfdcd43a0670b49867e2397ca80711a63aaf439de0e8532b5b352747d88590",
+      "bytes": 1595
+    },
+    {
+      "path": "/tmp/creatoros-t1062-asr-alternate-preflight-20261005/input-model-manifest.json",
+      "sha256": "9ec6b42b5a693c54bbf0df842753b238ca674a5abeb9ff9d990d3fec93debe37",
+      "bytes": 1203
+    },
+    {
+      "path": "/tmp/creatoros-t1062-asr-alternate-preflight-20261005/original-negative-before.json",
+      "sha256": "604f775d1baab56bb5d768ac34a2e0b6477f39505f1e7b9d87f54ad4b4989880",
+      "bytes": 1378
+    },
+    {
+      "path": "/tmp/creatoros-t1062-asr-alternate-preflight-20261005/probe.cjs",
+      "sha256": "5e31b2278e6776c3255ae921958fc425d96001646730a19553d22a1d5c4505e3",
+      "bytes": 775967
+    },
+    {
+      "path": "/tmp/creatoros-t1062-asr-alternate-preflight-20261005/probe.log",
+      "sha256": "5aade8b8dec2010fa82498deb8e8af4bc0462a62856ea217086b70d411d298d9",
+      "bytes": 66375
+    },
+    {
+      "path": "/tmp/creatoros-t1062-asr-alternate-preflight-20261005/probe.mts",
+      "sha256": "28db6ad41ddf83ff056ab98f8eae5c680c913fcae3801b0c01ad21579024fbc9",
+      "bytes": 5264
+    },
+    {
+      "path": "/tmp/creatoros-t1062-asr-alternate-preflight-20261005/segment-raw-provider.json",
+      "sha256": "35a8f63e8fba7b7f914f8db19bd0b1f92bd664f53786f1ff6e9422ce6bd25099",
+      "bytes": 585
+    },
+    {
+      "path": "/tmp/creatoros-t1062-asr-alternate-preflight-20261005/segment-result.json",
+      "sha256": "4f0c79eed7b62b4ec18a8e0678d2f48708c85f7a877f2cdd75dd21d6a43634aa",
+      "bytes": 3434
+    },
+    {
+      "path": "/tmp/creatoros-t1062-asr-alternate-preflight-20261005/source.mov",
+      "sha256": "8d76c7d6abec52e4a6dd19db98e15dc8b416461cb2d40241cfbf45ec82bf6bc4",
+      "bytes": 613859
+    },
+    {
+      "path": "/tmp/creatoros-t1062-asr-alternate-preflight-20261005/speech.aiff",
+      "sha256": "2aed3def52bba9082ba2c962def31a937266ae0af992d33ab762424488ee5db8",
+      "bytes": 849124
+    },
+    {
+      "path": "/tmp/creatoros-t1062-asr-alternate-preflight-20261005/speech.txt",
+      "sha256": "4ee3aa302da504e59ede2c4e15b1145174f4f48d719835aaca176807eaebbd79",
+      "bytes": 256
+    },
+    {
+      "path": "/tmp/creatoros-t1062-asr-alternate-preflight-20261005/voices.log",
+      "sha256": "bdfb2ed782fdb4a425175b0abc7c7fbb08fe1bae515a8f6db442f8d85283c37f",
+      "bytes": 12544
+    },
+    {
+      "path": "/tmp/creatoros-t1062-asr-alternate-preflight-20261005/word-raw-provider.json",
+      "sha256": "95c84e54199db8e8df63ec35409981dce0bcd92d769487792454e487a5edc44d",
+      "bytes": 2880
+    },
+    {
+      "path": "/tmp/creatoros-t1062-asr-alternate-preflight-20261005/word-result.json",
+      "sha256": "37a8031436109396494df19ad02fed789ccc97bf17b298b58449c0051e5a712c",
+      "bytes": 23059
+    }
+  ],
+  "acceptance": {
+    "direct_real_transcript_text": true,
+    "new_source_verified_segment_timing": false,
+    "new_source_verified_word_timing": false,
+    "positive_verified_timing_evidence_obtained": false,
+    "installed_driver_pass": false,
+    "public_group_chain_pass": false,
+    "protocol3_or_native_editor_pass": false,
+    "pending": "需要后续真实公共组/冻结/ASR链实现及真实合法时码正例；本次有界单源两模式仍负，不变造时码/音频求绿"
+  },
+  "limitations": [
+    "MOV是音频-only原生PCM容器，可复用为精确音频源；没有验证视频scene/source/session导入及native编辑器兼容",
+    "合成中文口播是透明测试源，不代替用户真实拍摄素材；没有启用GUI、当前app或现用媒体",
+    "严格时码拒绝保留完整正文，后续应安全review_only，不能把文本当可切词/停顿证据",
+    "不运行DB/tasklease/execution public transport，不读密钥、不修改Git或任何产品/control文件",
+    "除上述两模式未重复选样本；两种尾部越界均真实保留，尚无新的通过时码正证据"
+  ]
+}
