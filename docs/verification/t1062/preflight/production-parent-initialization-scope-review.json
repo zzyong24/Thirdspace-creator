@@ -1,0 +1,71 @@
+{
+  "schema": "t1062-production-init-exact-scope-amendment-independent-review/v1",
+  "verdict": "BOUNDED_GO_EXACT_THREE_CONTROL_CANDIDATES_AND_LOSSLESS_LEASE_REPLAN",
+  "manifest_sha256": "51b1f55d8e3c75907106f09abeda942bf59e53912ad2d62976f4cfb318597ed1",
+  "exact_controls": [
+    {
+      "path": "docs/features/t1062-consolidated-local-client-acceptance.md",
+      "before_sha256": "00088921686a37da277f0bf04f0165ae83bcb93760d230566d68d9bc270bf05f",
+      "after_sha256": "7e64fc92bd8b0a0ef3f001e156e2bfd7395787f35c3914ef36a77cb77d3fa16b",
+      "baseline_exact": true,
+      "candidate_exact": true,
+      "old_prefix_exact": true
+    },
+    {
+      "path": "orchestrator/DECISION_LOG.md",
+      "before_sha256": "86f078debcda5c45b6b1bebd353789ae0d2b287fc42df7c4c9d2c510e43df9bd",
+      "after_sha256": "31e12c1bd461f25cc51e99e78243fb87420ce3563cf6641710692f9c8c83178a",
+      "baseline_exact": true,
+      "candidate_exact": true,
+      "old_prefix_exact": true
+    },
+    {
+      "path": "orchestrator/process/modules.config.json",
+      "before_sha256": "aec484aba2e8ac77928b50252f2e1db0e263df4c0880990780dc0eb011a73dbd",
+      "after_sha256": "4e27a869b0538edbacf55217e97b1c24e8ffd5cf508d98e3a5dc86e80c9a1431",
+      "baseline_exact": true,
+      "candidate_exact": true,
+      "old_prefix_exact": null
+    }
+  ],
+  "config_delta": {
+    "unique_json_pointer": "/modules/T-1062/step_write_set/integration",
+    "before_count": 573,
+    "after_count": 575,
+    "added": [
+      "backend/src/modules/production/production.repository.ts",
+      "backend/src/modules/production/production-native-public.integration.test.ts"
+    ],
+    "removed": [],
+    "all_other_json_values_exact": true,
+    "duplicate_paths": false
+  },
+  "scope_opinion": "新增2backend路径恢复已确认T1062父group闭包，沿同tx原锁，不新增产品方向、归属规则、API/DTO/SQL/journal、模型预算、自动归组或发布权限。SPEC/DEC正确保留实际RED7内3FAIL与候选GREEN7PASS，不把完整18/安装验收写绿。既有文档prefix完全保留。",
+  "doc_permission_boundaries": "关于旧单账号/画布夹具的文字仅说明合法公开样本要求，不授予额外写集。此次modules唯一2条新增不包含受保护旧E2E路径；不得凭此文本改旧protected E2E。若后续真要更新不在write_set的fixture须另做精确scope准入，原语义断言保持。",
+  "wip_actual_observation": {
+    "writer": "/Users/zyongzhu/.codex/worktrees/t1062-frontend-native-delivery/Thirdspace-creator",
+    "head": "bb565cd3b5b6508d6322d7c4188bfec45caa6e25",
+    "git_porcelain_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "count": 0,
+    "status_counts": {},
+    "control_wip": [
+      "docs/verification/t1062/frontend-native-adaptation-scope.json",
+      "docs/verification/t1062/frontend-native-transfer.json",
+      "orchestrator/verification/t1062-frontend-native-adaptation.mjs"
+    ]
+  },
+  "preservation_plan_static_conditions": [
+    "先冻结163逐项path/type/mode/workingSHA/索引状态，12删除缺席、20未跟踪全部纳入独立备份；记录HEAD、scope/transfer/runner与原失败报告SHA。",
+    "stash必须包含20未跟踪（-u或等价完整已证据方式）；保存stashOID及refs不可变引用，不drop、不pop；未包含ignored内容不得假称全盘备份，ownedignored按既有restore证据处理。",
+    "释放旧lease前保全快照与stash；MAIN只提交明确三份控制候选和ROOT已审ledger/progress/context字节，执行前复核baselineSHA/无意外暂存产品或别人WIP。",
+    "writer只FF到真实新MAIN；stash apply还原，若冲突停止并据原bytes逐path恢复，不能用theirs/ours整树覆盖。",
+    "恢复后163全部原字节/absence/类型/索引状态或已清楚记录的index等价、原785产品/历史证据/runner精确核对。不得以stash command exit0代替文件核验。",
+    "module/base/current_reader按实际新commit/source重绑；两新backend路径移出保护清单但保留旧historical snapshot来源，不能继续宣称217protected全部当前未改。context重新compile并claim新的isolatedlease之后再应用已审2path。",
+    "不在活跃run/旧lease中漂移配置；后续完整18保持原argv/order，并追加独立7case后端公共链实际重验，不跳过原失败。"
+  ],
+  "unseen_existing_control_changes": "本次只精确审manifest三份candidate。MAIN既有ledger/progress/context后续release/commit/reader重绑的实际diff与SHA不在此manifest，须ROOT单独实核绑定；本审不无限批准它们。",
+  "limits": [
+    "静态评审保存/replan方案，未执行stash/release/commit/FF/claim或改任何repo。",
+    "7case父组候选独评2ded1881仍有效；正式新scope与实际应用回执未发生，完整18/安装/听审仍pending。"
+  ]
+}

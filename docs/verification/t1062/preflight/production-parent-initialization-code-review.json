@@ -1,0 +1,111 @@
+{
+  "schema": "t1062-exact-production-parent-group-independent-review/v1",
+  "verdict": "BOUNDED_GO_EXACT_TWO_BACKEND_PATHS_PENDING_ROOT_SCOPE_BINDING_AND_ACTUAL18",
+  "candidate_manifest_sha256": "42b5e264910cf8a323af8f28fcb5238a31afd63423581a218ee89ec27a4a665b",
+  "candidate_patch_sha256": "4f2e5ca1c1e456b25f2bb1f035f44ad0f229f4e8c83489600d4bb3757bea533c",
+  "candidate_report_sha256": "def46be0707cc84007d33c71d6deb40ae6cdc212539c4d44de3226adc899c6c9",
+  "exact_file_checks": [
+    {
+      "path": "backend/src/modules/production/production.repository.ts",
+      "before_matches": true,
+      "candidate_matches": true
+    },
+    {
+      "path": "backend/src/modules/production/production-native-public.integration.test.ts",
+      "before_matches": true,
+      "candidate_matches": true
+    }
+  ],
+  "patch_exact_reconstructed": true,
+  "original_test_prefix_byte_exact": true,
+  "protected_guards_and_DTO": [
+    {
+      "path": "backend/src/modules/production/production-editor.repository.ts",
+      "sha_matches": true
+    },
+    {
+      "path": "backend/src/modules/production/production.transport.ts",
+      "sha_matches": true
+    },
+    {
+      "path": "backend/src/modules/production/production.service.ts",
+      "sha_matches": true
+    },
+    {
+      "path": "backend/src/workspace-write.ts",
+      "sha_matches": true
+    },
+    {
+      "path": "backend/src/workspace-scope.ts",
+      "sha_matches": true
+    }
+  ],
+  "actual_evidence_hash_checks": [
+    {
+      "file": "red-command.json",
+      "sha_matches": true
+    },
+    {
+      "file": "red-vitest.json",
+      "sha_matches": true
+    },
+    {
+      "file": "red.stdout.log",
+      "sha_matches": true
+    },
+    {
+      "file": "red.stderr.log",
+      "sha_matches": true
+    },
+    {
+      "file": "green-command.json",
+      "sha_matches": true
+    },
+    {
+      "file": "green-vitest.json",
+      "sha_matches": true
+    },
+    {
+      "file": "green.stdout.log",
+      "sha_matches": true
+    },
+    {
+      "file": "green.stderr.log",
+      "sha_matches": true
+    }
+  ],
+  "writer_head": "bb565cd3b5b6508d6322d7c4188bfec45caa6e25",
+  "head_matches": true,
+  "findings": {
+    "same_transaction_lock": "ensure wrapper仍先withWorkspaceParentWrite，调用productionRepository(tx,deps,true)；withWorkspaceWrite同tx先实际组FOR SHARE，再实际project/output JOIN FOR SHARE并校验user/workspace；ownedOutput查询及INSERT均用同tx。新增取group值在锁内，未改变锁顺序、predicate或onConflictDoNothing/winner重读。",
+    "external_callback": "requireOwnedOutput只有!locked时沿已有assertOutputOwned读授权回调return undefined；ensure进入locked=true后跳过该回调，用tx SQL真实父链取得groupId。新增undefined拒绝防止未来误用回调结果当父stamp；既有读调用await不依赖返回值。测试注入真实projectsRepository.getOutput而非mock权限。",
+    "ownership_contract": "从projects.groupId复制到新production，而非deps.groupId/account筛选推断；实际legacy nullable父组保持null，legacy非null父组也复制真实值。group-only与group+filter均由父根决定。",
+    "bad_rows": "不回填任何已有行；read原严格group检查未改。真实负例已有production改null后editor读仍拒绝、version零写；因此不是洗历史或放宽守卫。",
+    "public_contract": "transport/service/contract DTO与CAS/request/idempotency未变；测试额外断言getOutputProduction DTO仍没有groupId字段。",
+    "regression_scope": "真实memory PGlite + ENDPOINTS/transport/service/repository/editor/envelope RED4pass3fail→GREEN7pass0fail；四合法族、三越权族合一case、坏行拒绝、原probeASR防伪前缀全部实测。对新建父stamp这一局部修复足够；实际浏览器/nativeDOM/音频/锁并发与完整18仍不由此代称通过。"
+  },
+  "spec_scope_opinion": {
+    "spec_path": "/Users/zyongzhu/.codex/worktrees/t1062-frontend-native-delivery/Thirdspace-creator/docs/features/t1062-consolidated-local-client-acceptance.md",
+    "spec_sha256": "00088921686a37da277f0bf04f0165ae83bcb93760d230566d68d9bc270bf05f",
+    "references": [
+      "第28行 新视频工程必须冻结group归属，空组可创作，禁止为requireAccountId造账号",
+      "第29行 已有project/output父归属由真实服务端关系落实依赖闭包，写经服务端锁/CAS守卫"
+    ],
+    "opinion": "这两条已确认行为要求本补丁；实际浏览器暴露的是旧首载production初始化漏继承父group的实现缺口，属于恢复既有归属契约与授权客户端验收，不新增产品方向/DTO/数据迁移。赞成仅追加manifest中的exact2路径作为必要实施范围，独立记录技术DEC/精确before-after与受保护source重绑；不得扩backend目录、追写历史库或声称新产品范围获批。",
+    "exact_paths": [
+      "backend/src/modules/production/production.repository.ts",
+      "backend/src/modules/production/production-native-public.integration.test.ts"
+    ],
+    "scope_metadata_currently_observed": "当前manifest和正式scope仍不包含这个后端增量；ROOT完成精确scope/受保护source绑定之后才可应用。"
+  },
+  "limits": [
+    "实际证据为producer已发生RED/GREEN，独评读取并核其精确SHA/命令/逐case结果，没有再次执行测试。",
+    "PGlite不证明PG并发锁竞争；这里只静态确认既有锁事务仍同tx，未声称新并发实测。",
+    "RED继承provider key env名称的已披露隔离局限保留，未读密钥值；GREEN改最小白名单。未把无network instrumentation冒称网络审计。",
+    "existing坏production不自动修复；若客户端真实存量坏行阻断，需另外明确历史repair处理，不能在本补丁偷偷回填。",
+    "完整18、客户端安装验收、听审仍pending。"
+  ],
+  "repository_changed_by_reviewer": false,
+  "test_executed_by_reviewer": false,
+  "flow": "旧公共get-or-create → 同TX组/父锁 → SQL真实project.groupId → 新production继承父组 → 原editor守卫 → native保存/原回执重入"
+}

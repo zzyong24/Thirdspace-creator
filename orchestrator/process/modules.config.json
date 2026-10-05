@@ -2454,7 +2454,9 @@
           "docs/verification/t1062/frontend-native-transfer.json",
           "docs/verification/t1062/frontend-native-adaptation-scope-independent-review.json",
           "orchestrator/verification/t1062-frontend-native-adaptation.mjs",
-          "docs/verification/t1062/frontend-native-adaptation-result.json"
+          "docs/verification/t1062/frontend-native-adaptation-result.json",
+          "backend/src/modules/production/production.repository.ts",
+          "backend/src/modules/production/production-native-public.integration.test.ts"
         ]
       },
       "step_read_set": {

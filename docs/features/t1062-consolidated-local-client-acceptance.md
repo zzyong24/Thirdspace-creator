@@ -66,3 +66,11 @@ flowchart LR
 ## 当前入口
 
 BUILD集成和验证→SHIP本地包。上游来源为主树、`codex/user-diagnostics`、`codex/t1021-canvas-templates`及其已合入依赖；旧全局Gate仍按实际结果保留。用户本轮已经授权汇总、提交、本地打包与逐项验证，无新增发布授权。
+
+### 实际浏览器首载发现的父归属修复（2026-10-06）
+
+完整前端检查首次进入真实浏览器后，剪辑页公开 `getOutputProduction` 在锁定父项目事务中创建 production 时遗漏父项目 `groupId`，随后原 native editor 守卫正确拒绝它，导致组内工程无法打开。修复只从已锁定且已授权的真实父项目读取组归属并写入新 production；旧 nullable 父组原样保留，既有错误行仍拒绝，不从当前平台筛选猜组、不新增 DTO/API、不自动归组或改写用户旧资料。
+
+实现写集仅增 `backend/src/modules/production/production.repository.ts` 与既有 `backend/src/modules/production/production-native-public.integration.test.ts`。已发生隔离公开 get→native read→save→重入回归：修复前 7 项中 3 项失败，候选修复后 7 项通过；纯组、同组平台筛选、旧账号 nullable/初始组、跨用户/组/账号零写入、幂等及已有错误行拒绝均有断言。该证据不等于完整浏览器或安装版通过。原 18 检查命令与顺序保留，另重跑此后端公共链回归。
+
+旧画布浏览器夹具应按已确认的新组工作区公开 API 创建真实归组资源；历史孤立 account 资料仍须显式迁移，不新增按当前成员关系开放旧资料的捷径。被 T-995 清除的私人截图不恢复，图片与视频解码验收使用可追溯的中性有效媒体。

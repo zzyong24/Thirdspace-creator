@@ -1924,7 +1924,7 @@
       "files": [
         "docs/verification/t1062/frontend-native-adaptation-scope.json"
       ],
-      "file_sha256": "3b167095bf486a8c68b8107d6e329fdd435fec08de62ef8102a29199ee69d1a5",
+      "file_sha256": "533b768da72ae091d6ba8123e8b880c4c649f3a582f1960b925a6b6632082a82",
       "categories": [
         "runtime",
         "language_toolchain"
@@ -1941,7 +1941,7 @@
       "files": [
         "docs/verification/t1062/frontend-native-transfer.json"
       ],
-      "file_sha256": "6eccee0312ffe08a327952383366f003c09522c132c6a38dd0f274521948a93e",
+      "file_sha256": "8ff3a0c95af845a3efbb72f24c420fb2c6d7c409f998233cf386afc41355e9e5",
       "categories": [
         "runtime",
         "language_toolchain"
@@ -2257,6 +2257,54 @@
       "reason": "原DOM验证在浏览器缺Node process时移除该全局并于退出前恢复Bun宿主的说明注释；原探针已有的机制，不新增runtime。仅准入已审原Skill/native源码锁定产物在本任务的精确文件字节；不引入runtime/toolchain/安装或进程权限。",
       "review": "docs/verification/t1062/frontend-native-adaptation-scope-independent-review.json",
       "acceptance": "覆盖冻结after精确SHA的既有引用预算，不代表原18/安装/听审/任务PASS；不允许新hash自动沿用，不使用historical baseline豁免。"
+    },
+    {
+      "task_id": "T-1062",
+      "files": [
+        "reference-editors/manifest.json"
+      ],
+      "file_sha256": "6283437aedf594dfaace32d7706052143ef258acc009e18484b0f7e00f571ac9",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1062-INTEGRATION-20261005 / DEC-T1062-ROUGH-20261005",
+      "scope_source": "docs/features/t1062-consolidated-local-client-acceptance.md",
+      "reason": "四native既有归档/bundle/许可证hash清单中的Rust语言包名称。仅准入已审原Skill/native源码锁定产物在本任务的精确文件字节；不引入runtime/toolchain/安装或进程权限。 本候选仅Kuaitu新增patch表达的摘要变化；原31源码、414产物和语言/工具链文本不变。",
+      "review": "docs/verification/t1062/frontend-native-adaptation-scope-independent-review.json",
+      "acceptance": "待ROOT及独立评审对本精确新SHA批准后才可追加；原entries全原样，不覆盖不自动重签；不代表原18或安装PASS。"
+    },
+    {
+      "task_id": "T-1062",
+      "files": [
+        "reference-editors/kuaitu/native/provenance.json"
+      ],
+      "file_sha256": "b3e570d652c25c2cf660aec3fe05f529340529d6c2eee4fc509c39d4259c465f",
+      "categories": [
+        "runtime"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1062-INTEGRATION-20261005 / DEC-T1062-ROUGH-20261005",
+      "scope_source": "docs/features/t1062-consolidated-local-client-acceptance.md",
+      "reason": "仅更新Kuaitu patch摘要的provenance仍记录已审R8既有Bun构建命令/来源。实际字节唯一diff是patchSha256，无新runtime/toolchain/进程权限；原before entry保留。",
+      "review": "docs/verification/t1062/frontend-native-adaptation-scope-independent-review.json",
+      "acceptance": "待ROOT及独立评审对本精确新SHA批准后才可追加；原entries全原样，不覆盖不自动重签；不代表原18或安装PASS。"
+    },
+    {
+      "task_id": "T-1062",
+      "files": [
+        "reference-editors/manifest.json"
+      ],
+      "file_sha256": "675cdd2ee7f088b6fbe09ef7f48d344d67b6b72c54e455ea4c7a92f1bf59e1b0",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1062-INTEGRATION-20261005 / DEC-T1062-ROUGH-20261005",
+      "scope_source": "docs/features/t1062-consolidated-local-client-acceptance.md",
+      "reason": "四native既有归档/bundle/许可证hash清单中的Rust语言包名称。仅准入已审原Skill/native源码锁定产物在本任务的精确文件字节；不引入runtime/toolchain/安装或进程权限。 本次仅NoteRelay顶层bundleFiles.native.js指向已交付真实脚本SHA；原4项bundle、归档SHA、31native源码、414交付产物及语言包文本不变。",
+      "review": "docs/verification/t1062/frontend-native-adaptation-scope-independent-review.json",
+      "acceptance": "本精确SHA已由e9bf42665706ca8c1e994a80793493bf27ed085a312ca82e175cc1191fa1ba3d独立批准，实际应用回执9a8df5ea9f1bf456c6698dc1d5ed0ce37b98bb16b42535f5892b4995a98cb8a1；保留原预算历史，仅追加同一既有language_toolchain说明，不代表原18/安装/听审或任务PASS。"
     }
   ],
   "historical_baselines": []
