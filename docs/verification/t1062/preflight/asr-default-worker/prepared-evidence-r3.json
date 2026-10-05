@@ -1,0 +1,58 @@
+{
+  "status": "r3_prepared_not_executed",
+  "buildExit": 0,
+  "syntaxCheckExit": 0,
+  "modelCalls": 0,
+  "decodeCalls": 0,
+  "networkAttempts": 0,
+  "runThreeLockExists": false,
+  "allR1R2ArtifactsSHAUnchanged": true,
+  "sourceRevisionChangedPaths": [
+    "ai-worker/src/runtime/multimodal-whisper-local.ts",
+    "ai-worker/src/runtime/multimodal-whisper-local.test.ts"
+  ],
+  "observedHead": "7487f94341688003f053525ccf296370c4bf7bce",
+  "preparedManifestSHA256": "faec0c5dc75c3649bca6874fe95ae391c1b96c5092b43a1e0ccba3b52796526f",
+  "artifacts": [
+    {
+      "path": "/tmp/t1062-default-worker-preflight/run-r3.mjs",
+      "sha256": "a144263414bd86176ab051d9606b9746870e10da0bcbe3515bbbb7ad3317502c"
+    },
+    {
+      "path": "/tmp/t1062-default-worker-preflight/run-r3.cjs",
+      "sha256": "286f3b1ce7f64891ed0596f02c1a958da100e3755480e33f55a8ba15d2e73a61"
+    },
+    {
+      "path": "/tmp/t1062-default-worker-preflight/build-r3.mjs",
+      "sha256": "3b5c34dcaffe691e9ae1a665eb43732a5927a9390b55af4ec8d0abb1b9dd5f3d"
+    },
+    {
+      "path": "/tmp/t1062-default-worker-preflight/bootstrap-r3-template.cjs",
+      "sha256": "8426f36efd3f6bc7c16c5455b79bd1b74f83a1e7a2cb911214e8dd84ca3786c0"
+    },
+    {
+      "path": "/tmp/t1062-default-worker-preflight/prepared-manifest-r3.json",
+      "sha256": "faec0c5dc75c3649bca6874fe95ae391c1b96c5092b43a1e0ccba3b52796526f"
+    },
+    {
+      "path": "/tmp/t1062-default-worker-preflight/README-r3.md",
+      "sha256": "e106433b09f909062c1fed621a615e0acc94610e0a8e659df2ffef079fddf679"
+    },
+    {
+      "path": "/tmp/t1062-default-worker-preflight/root-r3-reviewed-sources.json",
+      "sha256": "20e24d861778eaf94cca6365c18133c313f004ecea2f67a4c7cad03e538f68aa"
+    },
+    {
+      "path": "/tmp/t1062-default-worker-preflight/build-r3-result.json",
+      "sha256": "35bbb4cede00ac661e48ed7e736b6138ffe88b8d1cd4b031f6932c85cbcfbec1"
+    },
+    {
+      "path": "/tmp/t1062-default-worker-preflight/r3-preparation.stdout.log",
+      "sha256": "1c9be08718023c8dc58ae571edd9aafb5ec28ef3e4e0389cc71cc565557fcc27"
+    },
+    {
+      "path": "/tmp/t1062-default-worker-preflight/r3-preparation.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}

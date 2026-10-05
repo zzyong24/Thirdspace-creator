@@ -1,0 +1,164 @@
+{
+  "schema": "t1062-default-worker-r3-execution-evidence/v1",
+  "status": "PASS_actual_default_factory_word_timing_only",
+  "argv": [
+    "/opt/homebrew/bin/node",
+    "--max-old-space-size=2048",
+    "/tmp/t1062-default-worker-preflight/run-r3.cjs",
+    "faec0c5dc75c3649bca6874fe95ae391c1b96c5092b43a1e0ccba3b52796526f"
+  ],
+  "exit": 0,
+  "artifacts": [
+    {
+      "path": "/tmp/t1062-default-worker-preflight/root-r3-authorization.json",
+      "sha256": "732e5d2ae6a18403a5f45f03db30a137cd8fca8dbe7e743f580dea463c5be2ae",
+      "bytes": 683
+    },
+    {
+      "path": "/tmp/t1062-default-worker-preflight/run-r3.stdout.log",
+      "sha256": "d3b41f402ed5cc9f485e969dbbbe00f4c4999e0db4f1fa80c52c7f6a59710f08",
+      "bytes": 1621
+    },
+    {
+      "path": "/tmp/t1062-default-worker-preflight/run-r3.stderr.log",
+      "sha256": "48ff760ff1d16df0cdb686067e2f8c75a66207b3b6ec6973e8267856c003d129",
+      "bytes": 65809
+    },
+    {
+      "path": "/tmp/t1062-default-worker-preflight/run-three/result.json",
+      "sha256": "f6f07c1afdfdc70107359034366e6b7c92c761952ff7b4879133944221b2c214",
+      "bytes": 33094
+    },
+    {
+      "path": "/tmp/t1062-default-worker-preflight/run-three/worker-counts.json",
+      "sha256": "cca781162f2913c18c57b17bcfd716934dc9d5cf2f791f84cdb195ee83b59bfb",
+      "bytes": 784
+    },
+    {
+      "path": "/tmp/t1062-default-worker-preflight/run-three/one-attempt.lock",
+      "sha256": "6db3c61c52fa55290fcb72ee2b47027e2026001b734148187273b488552ce8cb",
+      "bytes": 24
+    },
+    {
+      "path": "/tmp/t1062-default-worker-preflight/run-r3.mjs",
+      "sha256": "a144263414bd86176ab051d9606b9746870e10da0bcbe3515bbbb7ad3317502c",
+      "bytes": 7221
+    },
+    {
+      "path": "/tmp/t1062-default-worker-preflight/run-r3.cjs",
+      "sha256": "286f3b1ce7f64891ed0596f02c1a958da100e3755480e33f55a8ba15d2e73a61",
+      "bytes": 790822
+    },
+    {
+      "path": "/tmp/t1062-default-worker-preflight/bootstrap-r3-template.cjs",
+      "sha256": "8426f36efd3f6bc7c16c5455b79bd1b74f83a1e7a2cb911214e8dd84ca3786c0",
+      "bytes": 2860
+    },
+    {
+      "path": "/tmp/t1062-default-worker-preflight/prepared-manifest-r3.json",
+      "sha256": "faec0c5dc75c3649bca6874fe95ae391c1b96c5092b43a1e0ccba3b52796526f",
+      "bytes": 6321
+    },
+    {
+      "path": "/tmp/t1062-default-worker-preflight/prepared-evidence-r3.json",
+      "sha256": "04257a27d2d4563a8732904d4e2bdc2678ebe1dbaf123d782b19ee50af028148",
+      "bytes": 2248
+    },
+    {
+      "path": "/tmp/t1062-default-worker-preflight/execution-evidence.json",
+      "sha256": "b0a1b568918a9aac9ebec3cd574e74a7561bf716291a82af8811c27b68da71e1",
+      "bytes": 2385
+    },
+    {
+      "path": "/tmp/t1062-default-worker-preflight/execution-evidence-r2.json",
+      "sha256": "8bbc98f7d7f809802af2af3a7ee24bacaa6e99feb97aeee71167527899feb54b",
+      "bytes": 4861
+    },
+    {
+      "path": "/tmp/t1062-default-worker-preflight/r2-initial-preparation-failure.json",
+      "sha256": "987e49590e4142641dec330e5e86d3851d440ac9dbf1fe575e628171d2f1e7e3",
+      "bytes": 2111
+    }
+  ],
+  "allR1R2ArtifactSHAUnchanged": true,
+  "sourceBeforeAfterSHAEqual": true,
+  "nativeDecode": {
+    "calls": 1,
+    "sampleCount": 306587,
+    "commandAndArgs": {
+      "command": "/opt/homebrew/bin/ffmpeg",
+      "args": [
+        "-hide_banner",
+        "-loglevel",
+        "error",
+        "-i",
+        "pipe:0",
+        "-f",
+        "f32le",
+        "-acodec",
+        "pcm_f32le",
+        "-ar",
+        "16000",
+        "-ac",
+        "1",
+        "pipe:1"
+      ]
+    }
+  },
+  "worker": {
+    "assembly": "actual default eval worker; temporary module-resolver bootstrap",
+    "factoryCalls": 1,
+    "pipelineCalls": 1,
+    "modelCalls": 1,
+    "networkAttempts": 0,
+    "actualDependencyEntry": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/transformers.js",
+    "runtimeVersion": "v25.9.0",
+    "env": {
+      "allowRemoteModels": false,
+      "allowLocalModels": true,
+      "localModelPath": "/tmp/t1062-default-worker-preflight/run-three/cache/",
+      "useFSCache": false
+    },
+    "actualPcmSampleCount": 306587,
+    "optionsBefore": {
+      "return_timestamps": "word",
+      "chunk_length_s": 30,
+      "stride_length_s": 5,
+      "language": "zh",
+      "task": "transcribe"
+    }
+  },
+  "actualRuntime": {
+    "requireBase": "/private/tmp/t1062-default-worker-preflight/run-three/runtime/frontend/package.json",
+    "moduleResolverPath": "/private/tmp/t1062-default-worker-preflight/run-three/runtime/frontend/creatoros-module-resolver.cjs",
+    "runtimeRoot": "/private/tmp/t1062-default-worker-preflight/run-three/runtime"
+  },
+  "execPath": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+  "runtimeVersion": "v25.9.0",
+  "buildTarget": "node24",
+  "strictTiming": true,
+  "actualRangeCount": 65,
+  "actualLastRange": {
+    "id": "provider-unit-64",
+    "text": "大家。",
+    "startSample": 293760,
+    "endSample": 306240
+  },
+  "actualText": "今天上午,我們一起整理桌面上的文件,先把正在使用的資料放在左邊,再把已經完成的記錄放進文件家。下午我們會核對日期核名稱,確認沒有遺漏之後,再保存這一份整理結果。謝謝大家。",
+  "allRangesEqualPriorOfflineSameCaptureStrideCandidate": true,
+  "parentNetworkAttempts": 0,
+  "pipelineErrorCaptureFileExists": false,
+  "retryPerformed": false,
+  "productWritesByThisAgent": 0,
+  "acceptedScope": "actual no-deps default adapter + native ffmpeg + real eval worker, fixed original alternate WAV and same7models fresh cache",
+  "publicReserveSettleVerified": false,
+  "installedAppVerified": false,
+  "roughCutVerified": false,
+  "semanticSkillAdoptionVerified": false,
+  "retainedNegatives": [
+    "R1 harness path alias exit1 before decode/model",
+    "R2 first prepare exit1 temporary WIP sourceSHA rejected",
+    "R2 actual default worker exit1 before generate due Callable.apply; original evidence preserved",
+    "Original old segment and word provider out-of-bounds files remain separate unchanged evidence"
+  ]
+}

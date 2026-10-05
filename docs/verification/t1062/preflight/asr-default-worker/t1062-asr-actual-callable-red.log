@@ -1,0 +1,32 @@
+isolated roots=/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-writer-check-DzOYsd
+
+> @creatoros/ai-worker@0.1.0 test /Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/ai-worker
+> vitest run src/runtime/multimodal-whisper-local.test.ts -t '原依赖Pipeline'
+
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/ai-worker
+
+ ❯ src/runtime/multimodal-whisper-local.test.ts (26 tests | 1 failed | 25 skipped) 173ms
+   × T1062 原依赖Pipeline执行真实Whisper分块、配置读取与拼接，仅注入神经推理 172ms (retry x2)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/runtime/multimodal-whisper-local.test.ts > T1062 原依赖Pipeline执行真实Whisper分块、配置读取与拼接，仅注入神经推理
+ FAIL  src/runtime/multimodal-whisper-local.test.ts > T1062 原依赖Pipeline执行真实Whisper分块、配置读取与拼接，仅注入神经推理
+ FAIL  src/runtime/multimodal-whisper-local.test.ts > T1062 原依赖Pipeline执行真实Whisper分块、配置读取与拼接，仅注入神经推理
+TypeError: originalProcessor.apply is not a function
+ ❯ closure src/runtime/multimodal-whisper-local.ts:87:133
+
+ ❯ closure._call_whisper ../node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/pipelines.js:1787:48
+ ❯ job src/runtime/multimodal-whisper-local.ts:102:21
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 25 skipped (26)
+   Start at  14:16:00
+   Duration  1.09s (transform 290ms, setup 0ms, import 765ms, tests 173ms, environment 0ms)
+
+ ELIFECYCLE  Test failed. See above for more details.
+{"cmd":"pnpm","args":["-C","ai-worker","test","src/runtime/multimodal-whisper-local.test.ts","-t","原依赖Pipeline"],"exit":1,"signal":null,"isolated":"/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-writer-check-DzOYsd"}

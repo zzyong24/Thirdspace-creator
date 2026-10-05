@@ -1,0 +1,44 @@
+{
+  "state": "暂停待正式scope重编，非最终合同候选",
+  "source": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator",
+  "currentHashes": {
+    "contract/src/operations/creative-results.ts": "267d3bd584704e977b4bc3a4c3c969e27c47bdd55b5daa3e4e4f2c8470ed33c3",
+    "contract/src/resources/creative-canvas.ts": "4143dc37e960405de6e2c038b28b8c65b5a7107dc4550a76f7cd3defe7e0c733",
+    "contract/src/resources/production-rough-cut.ts": "be13724284c6173a171e7ee57ea01911894ab13f2bfa36c2f2e7a7adaf539cf2",
+    "contract/src/internal/production-rough-cut.ts": "0cb4f33b9731e663691d5efdf28f5c50bb1197500fe87c97f971dec67ffed7ea",
+    "contract/src/internal/asset-asr.ts": "4e6eba4bf1ff0264b3e3327b6321afca695daa84ae30e940cae5e3db1f349115",
+    "contract/src/internal/execution-worker.ts": "317a91704aaa7e3dd23295190c4246c8be2521029b2dc01cf0453e9ff376f4f7",
+    "ai-worker/src/runtime/multimodal-whisper-local.ts": "204fb5081f327e07567b9d1c06b19195cbbe789bc09d670ae5f40b798db402c9",
+    "ai-worker/src/runtime/multimodal-whisper-local.test.ts": "5725ef9aecf1e76d4d2467ecd3abab33e801c79c6add282b85f37f8b215de5cb",
+    "ai-worker/src/runtime/multimodal-precise-asr.test.ts": "0fcbc2eb34ce2afc0ba9479c924086cecafa789ec814d2a833337558a72d4e12",
+    "ai-worker/src/execution/worker-runtime.asset-asr-control.test.ts": "1bb6f9e872b2c4a6413a873f7c4e8ceafd7506fd507b12309baeb128d4765b90"
+  },
+  "contractTypecheck": {
+    "log": "/tmp/t1062-contract-type-current.log",
+    "exit": 0
+  },
+  "roughPublic": {
+    "log": "/tmp/t1062-rough-v2-v3-public-full.log",
+    "exit": 0,
+    "cases": 11,
+    "notCurrentEmptyGroupPass": true
+  },
+  "contractWholeSuite": {
+    "log": "/tmp/t1062-contract-current-all.log",
+    "exit": 1,
+    "pass": 321,
+    "fail": 4
+  },
+  "probeScopeDependencies": [
+    {
+      "path": "backend/src/modules/ai/ai-media-probe-control.ts",
+      "line": 33,
+      "reason": "空组Probe原公共执行在scope强制accountId拒绝，原冻结/claim/retry/settle围栏必须适配"
+    },
+    {
+      "path": "backend/src/schema/intelligence.ts",
+      "line": 346,
+      "reason": "executionControlReceipts nullable account/group字段及partial unique须与已验0128精确对齐，旧account unique保留"
+    }
+  ]
+}

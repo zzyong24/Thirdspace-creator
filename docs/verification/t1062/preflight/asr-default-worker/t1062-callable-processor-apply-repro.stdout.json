@@ -1,0 +1,16 @@
+{
+  "typeofProcessor": "function",
+  "prototypeConstructor": "ProbeProcessor",
+  "memberApplyType": "undefined",
+  "reflectApplyResult": {
+    "input_features": {
+      "inputLength": 7
+    }
+  },
+  "memberApply": {
+    "ok": false,
+    "name": "TypeError",
+    "message": "processor.apply is not a function",
+    "stack": "TypeError: processor.apply is not a function\n    at file:///private/tmp/t1062-callable-processor-apply-repro.mjs:17:19"
+  }
+}

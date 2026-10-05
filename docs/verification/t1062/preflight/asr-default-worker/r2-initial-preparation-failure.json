@@ -1,0 +1,54 @@
+{
+  "status": "r2_prepare_source_sha_guard_stopped",
+  "exit": 1,
+  "modelCalls": 0,
+  "decodeCalls": 0,
+  "runTwoCreated": false,
+  "reason": "ROOT temporary WIP stash exposed base runtime; original reviewed sourceSHA guard rejected; no resnapshot allowed",
+  "artifacts": [
+    {
+      "path": "/tmp/t1062-default-worker-preflight/run-r2.mjs",
+      "sha256": "3a0a57e0ed6aea9cf5a96438186bb4b6d63c0f34781446ad9c932987a3802b92"
+    },
+    {
+      "path": "/tmp/t1062-default-worker-preflight/build-r2.mjs",
+      "sha256": "1c9de27e7c14950f4c2d95203c4ef0f3a158ca0ed01071a3d0a5416328f0d8bf"
+    },
+    {
+      "path": "/tmp/t1062-default-worker-preflight/r2-preparation.stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/tmp/t1062-default-worker-preflight/r2-preparation.stderr.log",
+      "sha256": "82ec5899362c94038beda6f89c986f92b2e66640eae66ede57f6f7604926d740"
+    },
+    {
+      "path": "/tmp/t1062-default-worker-preflight/run.mjs",
+      "sha256": "46f61d2d478ab466f7571aa34a8023dbf4981aedb0310a2326b623dfb0be43f1"
+    },
+    {
+      "path": "/tmp/t1062-default-worker-preflight/run.cjs",
+      "sha256": "ce4f63ec50b683cbde67c0d4dc140a7cb12e95f52c21ad019196bae4bc042e21"
+    },
+    {
+      "path": "/tmp/t1062-default-worker-preflight/prepared-manifest.json",
+      "sha256": "d43a3d610c07c4e7c4754129c1b38a06eb36305e9ca165682e75c1ba27e78bfc"
+    },
+    {
+      "path": "/tmp/t1062-default-worker-preflight/run.stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/tmp/t1062-default-worker-preflight/run.stderr.log",
+      "sha256": "f9734d9eb913602d1ff980fef971397f4c145a3ca87f9587b05355197d3fc017"
+    },
+    {
+      "path": "/tmp/t1062-default-worker-preflight/run-one/unknown.json",
+      "sha256": "65850c35c56e8cd1bf6df17f83b760b2b4b14076d5b9561bc98b109801f56024"
+    },
+    {
+      "path": "/tmp/t1062-default-worker-preflight/run-one/one-attempt.lock",
+      "sha256": "e08af81998eb0a7ed19239c3e7c45fa42683c167284d74630e152e56ff3c5962"
+    }
+  ]
+}

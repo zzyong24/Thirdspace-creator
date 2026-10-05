@@ -1,0 +1,242 @@
+{
+  "schema": "t1062-asr-opt1-reflect-apply-independent-review/v1",
+  "reviewed_at": "2026-10-05T06:19:11.365414+00:00",
+  "review_mode": "read_only_no_model_no_decode_no_network",
+  "candidate": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator",
+  "observed_head_at_review": "7487f94341688003f053525ccf296370c4bf7bce",
+  "decision": "PASS_MINIMAL_FIX_AND_AUTHORIZE_ONE_LIMITED_REAL_DEFAULT_REGRESSION",
+  "scope_statement": "This is a review of the Reflect.apply repair and a no-model compiled-bundle regression only; it is not a backend, public-chain, package, or installed-app PASS.",
+  "source_binding": {
+    "runtime": {
+      "sha256": "204fb5081f327e07567b9d1c06b19195cbbe789bc09d670ae5f40b798db402c9",
+      "expected": "204fb5081f327e07567b9d1c06b19195cbbe789bc09d670ae5f40b798db402c9",
+      "matches": true
+    },
+    "test": {
+      "sha256": "5725ef9aecf1e76d4d2467ecd3abab33e801c79c6add282b85f37f8b215de5cb",
+      "expected": "5725ef9aecf1e76d4d2467ecd3abab33e801c79c6add282b85f37f8b215de5cb",
+      "matches": true
+    },
+    "unchanged_precise_test": "0fcbc2eb34ce2afc0ba9479c924086cecafa789ec814d2a833337558a72d4e12",
+    "unchanged_cancel_test": "d1289fe01079eced6ff90518a1fef2a71b5b3d595053f8478120e53c6dcfe1a0"
+  },
+  "findings": [],
+  "verification": [
+    {
+      "name": "red_test",
+      "result": "EXPECTED_FAIL",
+      "evidence": "Real WhisperProcessor has no member apply; original guard fails at first processor and does not reach model.",
+      "log": "/tmp/t1062-asr-actual-callable-red.log"
+    },
+    {
+      "name": "green_suite",
+      "result": "PASS",
+      "evidence": "Four files, 52 tests pass in isolated writer run. This is accepted as supplied execution evidence, not rerun by this review.",
+      "log": "/tmp/t1062-asr-actual-callable-green.log"
+    },
+    {
+      "name": "production_delta",
+      "result": "PASS",
+      "evidence": "Frozen runtime line 87 invokes original processor with Reflect.apply(originalProcessor,this,args); no dependency, protocol, timing rule, or fallback is added by this repair."
+    },
+    {
+      "name": "real_dependency_shape_test",
+      "result": "PASS",
+      "evidence": "Test constructs actual exported WhisperProcessor and AutomaticSpeechRecognitionPipeline, asserts processor.apply is undefined, checks 3 physical chunks/crops, second 306587-sample crop 958, pre-cancel, and processor/model method identity restoration."
+    },
+    {
+      "name": "fresh_compiled_bundle_probe",
+      "result": "PASS",
+      "evidence": {
+        "status": "PASS_NO_MODEL",
+        "bundlePath": "/tmp/t1062-default-worker-preflight/run-r3.cjs",
+        "compiledReflectApply": true,
+        "processorApply": "undefined",
+        "samples": [
+          480000,
+          400000,
+          80000,
+          306587
+        ],
+        "crops": [
+          1500,
+          1250,
+          250,
+          958
+        ],
+        "decodedStrides": [
+          [
+            30,
+            0,
+            5
+          ],
+          [
+            25,
+            5,
+            5
+          ],
+          [
+            5,
+            5,
+            0
+          ],
+          [
+            19.1616875,
+            0,
+            0
+          ]
+        ],
+        "firstWordTimingValidated": true,
+        "secondWordTimingValidated": true,
+        "restored": {
+          "processor": true,
+          "generate": true,
+          "forward": true,
+          "extract": true,
+          "configIdentity": true
+        },
+        "modelSessionCalls": 0,
+        "decodeCalls": 0,
+        "networkCalls": 0
+      },
+      "bundle_sha256": "286f3b1ce7f64891ed0596f02c1a958da100e3755480e33f55a8ba15d2e73a61",
+      "method": "Extracted the exact compiled guardWhisperPipeline function from fresh run-r3.cjs, then used actual dependency WhisperProcessor and AutomaticSpeechRecognitionPipeline with virtual feature/neural components. No model/session, decode, or network."
+    },
+    {
+      "name": "bundle_self_containment",
+      "result": "PASS",
+      "evidence": "Fresh compiled function was evaluated standalone from its emitted function string and completed; this mechanically rules out missing external helper capture for this guard."
+    },
+    {
+      "name": "restoration_and_configuration",
+      "result": "PASS",
+      "evidence": "Compiled probe preserves raw processor identity, model generate/forward/extract identity, and feature_extractor.config identity after first, second, and pre-cancel paths."
+    }
+  ],
+  "authorization_recommendation": {
+    "allowed": "One fresh, isolated real createDefaultWhisperLocalAdapter fixed-WAV regression against exactly the R3 manifest/source bundle, with network denied and before/after source/cache hashes.",
+    "required_success": "native decode exactly once; factory/pipeline exactly once; model.generate greater than zero; no network; strict timing evidence meets the original criterion; source/cache unchanged; transparent underlying error retained if failure.",
+    "does_not_authorize": "Additional model attempts, public reserve/settle claims, package/install claims, publishing, or expansion beyond the already authorized regression."
+  },
+  "limitations": [
+    "R3 real model/default-worker execution had not run at review time.",
+    "The earlier R2 worker did not propagate the underlying stack; the red test and real-Callable probes mechanically reproduce the causative failure, while the green evidence verifies its repair.",
+    "Current worktree HEAD may include unrelated concurrent work; conclusions bind to exact hashes, not the whole dirty tree."
+  ],
+  "evidence_bindings": [
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/ai-worker/src/runtime/multimodal-whisper-local.ts",
+      "sha256": "204fb5081f327e07567b9d1c06b19195cbbe789bc09d670ae5f40b798db402c9"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/ai-worker/src/runtime/multimodal-whisper-local.test.ts",
+      "sha256": "5725ef9aecf1e76d4d2467ecd3abab33e801c79c6add282b85f37f8b215de5cb"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/ai-worker/src/runtime/multimodal-precise-asr.test.ts",
+      "sha256": "0fcbc2eb34ce2afc0ba9479c924086cecafa789ec814d2a833337558a72d4e12"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/ai-worker/src/runtime/multimodal-whisper-local-cancel.test.ts",
+      "sha256": "d1289fe01079eced6ff90518a1fef2a71b5b3d595053f8478120e53c6dcfe1a0"
+    },
+    {
+      "path": "/tmp/t1062-asr-actual-callable-red.log",
+      "sha256": "9838a2797771765b78364eff6c0eb52a30500107559959092b14b2dc552b5e2d"
+    },
+    {
+      "path": "/tmp/t1062-asr-actual-callable-green.log",
+      "sha256": "280fd0903f65ef7a432de7b63ada64a99e2e8edd5c8fac4d7277f1e5c041881e"
+    },
+    {
+      "path": "/tmp/t1062-callable-processor-root-probe.json",
+      "sha256": "d62e5774a90030601f2b4c014ba9ef924754c3e737829d1967510835967411a9"
+    },
+    {
+      "path": "/tmp/t1062-default-worker-preflight/run-r3.cjs",
+      "sha256": "286f3b1ce7f64891ed0596f02c1a958da100e3755480e33f55a8ba15d2e73a61"
+    },
+    {
+      "path": "/tmp/t1062-default-worker-preflight/prepared-manifest-r3.json",
+      "sha256": "faec0c5dc75c3649bca6874fe95ae391c1b96c5092b43a1e0ccba3b52796526f"
+    },
+    {
+      "path": "/tmp/t1062-default-worker-preflight/r3-preparation.stdout.log",
+      "sha256": "1c9be08718023c8dc58ae571edd9aafb5ec28ef3e4e0389cc71cc565557fcc27"
+    },
+    {
+      "path": "/tmp/t1062-default-worker-preflight/r3-preparation.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/tmp/t1062-r3-compiled-callable-pipeline-probe.mjs",
+      "sha256": "185f111ce2d1471def0677e14fea26e69e7ad80d26604fbc29af0a75ed7bf930"
+    },
+    {
+      "path": "/tmp/t1062-r3-compiled-callable-pipeline-probe.stdout.json",
+      "sha256": "1fbdd506945bb322c8d55fc966c56e2c54075edfb86ad6c6e3e6a760f1f0f1e8"
+    },
+    {
+      "path": "/tmp/t1062-r3-compiled-callable-pipeline-probe.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "manifest_source_hashes": [
+    {
+      "path": "ai-worker/src/runtime/multimodal-whisper-local.ts",
+      "sha256": "204fb5081f327e07567b9d1c06b19195cbbe789bc09d670ae5f40b798db402c9"
+    },
+    {
+      "path": "ai-worker/src/runtime/multimodal-whisper-local.test.ts",
+      "sha256": "5725ef9aecf1e76d4d2467ecd3abab33e801c79c6add282b85f37f8b215de5cb"
+    },
+    {
+      "path": "ai-worker/src/runtime/multimodal-precise-asr.test.ts",
+      "sha256": "0fcbc2eb34ce2afc0ba9479c924086cecafa789ec814d2a833337558a72d4e12"
+    },
+    {
+      "path": "ai-worker/src/execution/worker-runtime.asset-asr-control.test.ts",
+      "sha256": "1bb6f9e872b2c4a6413a873f7c4e8ceafd7506fd507b12309baeb128d4765b90"
+    },
+    {
+      "path": "ai-worker/src/runtime/multimodal-whisper-local-cancel.test.ts",
+      "sha256": "d1289fe01079eced6ff90518a1fef2a71b5b3d595053f8478120e53c6dcfe1a0"
+    },
+    {
+      "path": "ai-worker/src/runtime/asr-provider-timing.ts",
+      "sha256": "b8088d3e1854e6f155762af3e5a4267e128142a19e21bdb5af5c0c67c87a7d62"
+    },
+    {
+      "path": "ai-worker/src/runtime/asr-request.ts",
+      "sha256": "50e32a815ce654b174f66603a6ed86003454d7b02805adc57e250b4d0ac710d9"
+    },
+    {
+      "path": "ai-worker/scripts/pi-runtime-bundle.mjs",
+      "sha256": "380de992e3e9a483fabdda8f6a17413ea7ad84e35c85a513f8a8afce21fdea3c"
+    },
+    {
+      "path": "contract/src/internal/asset-asr-timing.ts",
+      "sha256": "a41b7a86f75a4abcf533b302d18986dc119d0174bb48ebd7256e4c7b39d23568"
+    },
+    {
+      "path": "ai-worker/node_modules/@xenova/transformers/package.json",
+      "sha256": "0d605ca8d31ccbcff74729534f6f5e2f722d047c534cef6f53fafd22ef0b4c3d"
+    },
+    {
+      "path": "ai-worker/node_modules/@xenova/transformers/src/transformers.js",
+      "sha256": "f6a0528f691f3e81602c8b7a765e71b56aa06a7e06116e90eddf110a71a36256"
+    },
+    {
+      "path": "ai-worker/node_modules/@xenova/transformers/src/models.js",
+      "sha256": "1eb492e7d2cc425c27a596639a46a2c61b9aed9e4f8f6ea4c917421189ba503d"
+    },
+    {
+      "path": "ai-worker/node_modules/@xenova/transformers/src/pipelines.js",
+      "sha256": "95916d72e45c881cca1c9cd381135265b6ecfafffc9316f69da837a277e10031"
+    },
+    {
+      "path": "ai-worker/node_modules/@xenova/transformers/src/processors.js",
+      "sha256": "06583f94a1b5b672078094c96baeca6dc38d22dedab26ef55835966ec9ec1992"
+    }
+  ]
+}

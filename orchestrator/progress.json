@@ -2651,7 +2651,15 @@
           "backend/src/schema/moments-model.ts",
           "backend/src/modules/moments/moments-model.service.ts",
           "backend/src/modules/moments/execution-moments-model.service.ts",
-          "backend/src/modules/moments/moments-model.integration.test.ts"
+          "backend/src/modules/moments/moments-model.integration.test.ts",
+          "ai-worker/src/runtime/multimodal-whisper-local.ts",
+          "ai-worker/src/runtime/multimodal-whisper-local.test.ts",
+          "ai-worker/src/runtime/multimodal-precise-asr.test.ts",
+          "ai-worker/src/execution/worker-runtime.asset-asr-control.test.ts",
+          "backend/src/application/generation/moments-model-runtime.ts",
+          "backend/src/application/generation/transactional-task-runtime.ts",
+          "backend/src/modules/ai/ai-media-probe-control.ts",
+          "backend/src/schema/intelligence.ts"
         ]
       },
       "step_read_set": {},

@@ -1,0 +1,1125 @@
+{
+  "schema": "t1062-actual-default-worker-result/v1",
+  "harnessRevision": "r3-canonical-path-transparent-error-observation",
+  "status": "default_factory_word_timing_verified",
+  "assembly": "createDefaultWhisperLocalAdapter() without deps; native ffmpeg + real default eval worker",
+  "execPath": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+  "runtimeVersion": "v25.9.0",
+  "buildTarget": "node24",
+  "publicReserveSettleVerified": false,
+  "installedAppVerified": false,
+  "beforeSHA": {
+    "inputSHA256": "245b1ad0dec735444d10a741ece8414bca9359da25ba2ed4f0983c92ac55c252",
+    "sourceMovSHA256": "8d76c7d6abec52e4a6dd19db98e15dc8b416461cb2d40241cfbf45ec82bf6bc4",
+    "models": [
+      {
+        "path": "Xenova/whisper-small/config.json",
+        "sourceSHA256": "5a6429d21d7a3379dd0861b74510f9f7076f32b563bffc9fcb072482d55ab3be",
+        "independentCacheSHA256": "5a6429d21d7a3379dd0861b74510f9f7076f32b563bffc9fcb072482d55ab3be"
+      },
+      {
+        "path": "Xenova/whisper-small/generation_config.json",
+        "sourceSHA256": "0b7407a4e53a677f826e03c75d409e6f830663932bf43dda3b08c5efa2223279",
+        "independentCacheSHA256": "0b7407a4e53a677f826e03c75d409e6f830663932bf43dda3b08c5efa2223279"
+      },
+      {
+        "path": "Xenova/whisper-small/onnx/decoder_model_merged_quantized.onnx",
+        "sourceSHA256": "fcfc6100dc7339e7507e10f8b274350be7c4f8d8b575f0293f94cc0e156d6d24",
+        "independentCacheSHA256": "fcfc6100dc7339e7507e10f8b274350be7c4f8d8b575f0293f94cc0e156d6d24"
+      },
+      {
+        "path": "Xenova/whisper-small/onnx/encoder_model_quantized.onnx",
+        "sourceSHA256": "969f5ac12974340386bf7a02ea6626003e5e2dee396ffc6ab0eec282bf55ba06",
+        "independentCacheSHA256": "969f5ac12974340386bf7a02ea6626003e5e2dee396ffc6ab0eec282bf55ba06"
+      },
+      {
+        "path": "Xenova/whisper-small/preprocessor_config.json",
+        "sourceSHA256": "a6a76d28c93edb273669eb9e0b0636a2bddbb1272c3261e47b7ca6dfdbac1b8d",
+        "independentCacheSHA256": "a6a76d28c93edb273669eb9e0b0636a2bddbb1272c3261e47b7ca6dfdbac1b8d"
+      },
+      {
+        "path": "Xenova/whisper-small/tokenizer.json",
+        "sourceSHA256": "27fc476bfe7f17299480be2273fc0608e4d5a99aba2ab5dec5374b4482d1a566",
+        "independentCacheSHA256": "27fc476bfe7f17299480be2273fc0608e4d5a99aba2ab5dec5374b4482d1a566"
+      },
+      {
+        "path": "Xenova/whisper-small/tokenizer_config.json",
+        "sourceSHA256": "2a4c4281cf9f51ac6ccc406fdc711a087afe6530f671fa7b80953edc498275ce",
+        "independentCacheSHA256": "2a4c4281cf9f51ac6ccc406fdc711a087afe6530f671fa7b80953edc498275ce"
+      }
+    ],
+    "sources": [
+      {
+        "path": "ai-worker/src/runtime/multimodal-whisper-local.ts",
+        "sha256": "204fb5081f327e07567b9d1c06b19195cbbe789bc09d670ae5f40b798db402c9"
+      },
+      {
+        "path": "ai-worker/src/runtime/multimodal-whisper-local.test.ts",
+        "sha256": "5725ef9aecf1e76d4d2467ecd3abab33e801c79c6add282b85f37f8b215de5cb"
+      },
+      {
+        "path": "ai-worker/src/runtime/multimodal-precise-asr.test.ts",
+        "sha256": "0fcbc2eb34ce2afc0ba9479c924086cecafa789ec814d2a833337558a72d4e12"
+      },
+      {
+        "path": "ai-worker/src/execution/worker-runtime.asset-asr-control.test.ts",
+        "sha256": "1bb6f9e872b2c4a6413a873f7c4e8ceafd7506fd507b12309baeb128d4765b90"
+      },
+      {
+        "path": "ai-worker/src/runtime/multimodal-whisper-local-cancel.test.ts",
+        "sha256": "d1289fe01079eced6ff90518a1fef2a71b5b3d595053f8478120e53c6dcfe1a0"
+      },
+      {
+        "path": "ai-worker/src/runtime/asr-provider-timing.ts",
+        "sha256": "b8088d3e1854e6f155762af3e5a4267e128142a19e21bdb5af5c0c67c87a7d62"
+      },
+      {
+        "path": "ai-worker/src/runtime/asr-request.ts",
+        "sha256": "50e32a815ce654b174f66603a6ed86003454d7b02805adc57e250b4d0ac710d9"
+      },
+      {
+        "path": "ai-worker/scripts/pi-runtime-bundle.mjs",
+        "sha256": "380de992e3e9a483fabdda8f6a17413ea7ad84e35c85a513f8a8afce21fdea3c"
+      },
+      {
+        "path": "contract/src/internal/asset-asr-timing.ts",
+        "sha256": "a41b7a86f75a4abcf533b302d18986dc119d0174bb48ebd7256e4c7b39d23568"
+      },
+      {
+        "path": "ai-worker/node_modules/@xenova/transformers/package.json",
+        "sha256": "0d605ca8d31ccbcff74729534f6f5e2f722d047c534cef6f53fafd22ef0b4c3d"
+      },
+      {
+        "path": "ai-worker/node_modules/@xenova/transformers/src/transformers.js",
+        "sha256": "f6a0528f691f3e81602c8b7a765e71b56aa06a7e06116e90eddf110a71a36256"
+      },
+      {
+        "path": "ai-worker/node_modules/@xenova/transformers/src/models.js",
+        "sha256": "1eb492e7d2cc425c27a596639a46a2c61b9aed9e4f8f6ea4c917421189ba503d"
+      },
+      {
+        "path": "ai-worker/node_modules/@xenova/transformers/src/pipelines.js",
+        "sha256": "95916d72e45c881cca1c9cd381135265b6ecfafffc9316f69da837a277e10031"
+      },
+      {
+        "path": "ai-worker/node_modules/@xenova/transformers/src/processors.js",
+        "sha256": "06583f94a1b5b672078094c96baeca6dc38d22dedab26ef55835966ec9ec1992"
+      }
+    ]
+  },
+  "sourceAndCacheBeforeUnchanged": true,
+  "preparedManifestSHA256": "faec0c5dc75c3649bca6874fe95ae391c1b96c5092b43a1e0ccba3b52796526f",
+  "sourceFiles": [
+    {
+      "path": "ai-worker/src/runtime/multimodal-whisper-local.ts",
+      "sha256": "204fb5081f327e07567b9d1c06b19195cbbe789bc09d670ae5f40b798db402c9"
+    },
+    {
+      "path": "ai-worker/src/runtime/multimodal-whisper-local.test.ts",
+      "sha256": "5725ef9aecf1e76d4d2467ecd3abab33e801c79c6add282b85f37f8b215de5cb"
+    },
+    {
+      "path": "ai-worker/src/runtime/multimodal-precise-asr.test.ts",
+      "sha256": "0fcbc2eb34ce2afc0ba9479c924086cecafa789ec814d2a833337558a72d4e12"
+    },
+    {
+      "path": "ai-worker/src/execution/worker-runtime.asset-asr-control.test.ts",
+      "sha256": "1bb6f9e872b2c4a6413a873f7c4e8ceafd7506fd507b12309baeb128d4765b90"
+    },
+    {
+      "path": "ai-worker/src/runtime/multimodal-whisper-local-cancel.test.ts",
+      "sha256": "d1289fe01079eced6ff90518a1fef2a71b5b3d595053f8478120e53c6dcfe1a0"
+    },
+    {
+      "path": "ai-worker/src/runtime/asr-provider-timing.ts",
+      "sha256": "b8088d3e1854e6f155762af3e5a4267e128142a19e21bdb5af5c0c67c87a7d62"
+    },
+    {
+      "path": "ai-worker/src/runtime/asr-request.ts",
+      "sha256": "50e32a815ce654b174f66603a6ed86003454d7b02805adc57e250b4d0ac710d9"
+    },
+    {
+      "path": "ai-worker/scripts/pi-runtime-bundle.mjs",
+      "sha256": "380de992e3e9a483fabdda8f6a17413ea7ad84e35c85a513f8a8afce21fdea3c"
+    },
+    {
+      "path": "contract/src/internal/asset-asr-timing.ts",
+      "sha256": "a41b7a86f75a4abcf533b302d18986dc119d0174bb48ebd7256e4c7b39d23568"
+    },
+    {
+      "path": "ai-worker/node_modules/@xenova/transformers/package.json",
+      "sha256": "0d605ca8d31ccbcff74729534f6f5e2f722d047c534cef6f53fafd22ef0b4c3d"
+    },
+    {
+      "path": "ai-worker/node_modules/@xenova/transformers/src/transformers.js",
+      "sha256": "f6a0528f691f3e81602c8b7a765e71b56aa06a7e06116e90eddf110a71a36256"
+    },
+    {
+      "path": "ai-worker/node_modules/@xenova/transformers/src/models.js",
+      "sha256": "1eb492e7d2cc425c27a596639a46a2c61b9aed9e4f8f6ea4c917421189ba503d"
+    },
+    {
+      "path": "ai-worker/node_modules/@xenova/transformers/src/pipelines.js",
+      "sha256": "95916d72e45c881cca1c9cd381135265b6ecfafffc9316f69da837a277e10031"
+    },
+    {
+      "path": "ai-worker/node_modules/@xenova/transformers/src/processors.js",
+      "sha256": "06583f94a1b5b672078094c96baeca6dc38d22dedab26ef55835966ec9ec1992"
+    }
+  ],
+  "actualRuntime": {
+    "requireBase": "/private/tmp/t1062-default-worker-preflight/run-three/runtime/frontend/package.json",
+    "moduleResolverPath": "/private/tmp/t1062-default-worker-preflight/run-three/runtime/frontend/creatoros-module-resolver.cjs",
+    "runtimeRoot": "/private/tmp/t1062-default-worker-preflight/run-three/runtime"
+  },
+  "nativeDecoder": {
+    "command": "/opt/homebrew/bin/ffmpeg",
+    "args": [
+      "-hide_banner",
+      "-loglevel",
+      "error",
+      "-i",
+      "pipe:0",
+      "-f",
+      "f32le",
+      "-acodec",
+      "pcm_f32le",
+      "-ar",
+      "16000",
+      "-ac",
+      "1",
+      "pipe:1"
+    ]
+  },
+  "actualAdapterOutput": {
+    "text": "今天上午,我們一起整理桌面上的文件,先把正在使用的資料放在左邊,再把已經完成的記錄放進文件家。下午我們會核對日期核名稱,確認沒有遺漏之後,再保存這一份整理結果。謝謝大家。",
+    "timing": {
+      "granularity": "word",
+      "units": "audio_samples",
+      "originalUnits": "seconds",
+      "originalRanges": [
+        {
+          "id": "provider-unit-0",
+          "text": "今天",
+          "start": "0",
+          "end": "0.28"
+        },
+        {
+          "id": "provider-unit-1",
+          "text": "上",
+          "start": "0.28",
+          "end": "0.68"
+        },
+        {
+          "id": "provider-unit-2",
+          "text": "午,",
+          "start": "0.68",
+          "end": "1.3"
+        },
+        {
+          "id": "provider-unit-3",
+          "text": "我們",
+          "start": "1.3",
+          "end": "1.52"
+        },
+        {
+          "id": "provider-unit-4",
+          "text": "一起",
+          "start": "1.52",
+          "end": "1.9"
+        },
+        {
+          "id": "provider-unit-5",
+          "text": "整",
+          "start": "1.9",
+          "end": "2.18"
+        },
+        {
+          "id": "provider-unit-6",
+          "text": "理",
+          "start": "2.18",
+          "end": "2.4"
+        },
+        {
+          "id": "provider-unit-7",
+          "text": "桌",
+          "start": "2.4",
+          "end": "2.6"
+        },
+        {
+          "id": "provider-unit-8",
+          "text": "面",
+          "start": "2.6",
+          "end": "2.82"
+        },
+        {
+          "id": "provider-unit-9",
+          "text": "上",
+          "start": "2.82",
+          "end": "3.1"
+        },
+        {
+          "id": "provider-unit-10",
+          "text": "的",
+          "start": "3.1",
+          "end": "3.26"
+        },
+        {
+          "id": "provider-unit-11",
+          "text": "文",
+          "start": "3.26",
+          "end": "3.44"
+        },
+        {
+          "id": "provider-unit-12",
+          "text": "件,",
+          "start": "3.44",
+          "end": "3.98"
+        },
+        {
+          "id": "provider-unit-13",
+          "text": "先",
+          "start": "3.98",
+          "end": "4.2"
+        },
+        {
+          "id": "provider-unit-14",
+          "text": "把",
+          "start": "4.2",
+          "end": "4.44"
+        },
+        {
+          "id": "provider-unit-15",
+          "text": "正",
+          "start": "4.44",
+          "end": "4.64"
+        },
+        {
+          "id": "provider-unit-16",
+          "text": "在",
+          "start": "4.64",
+          "end": "4.88"
+        },
+        {
+          "id": "provider-unit-17",
+          "text": "使",
+          "start": "4.88",
+          "end": "5.14"
+        },
+        {
+          "id": "provider-unit-18",
+          "text": "用",
+          "start": "5.14",
+          "end": "5.32"
+        },
+        {
+          "id": "provider-unit-19",
+          "text": "的",
+          "start": "5.32",
+          "end": "5.48"
+        },
+        {
+          "id": "provider-unit-20",
+          "text": "資",
+          "start": "5.48",
+          "end": "5.66"
+        },
+        {
+          "id": "provider-unit-21",
+          "text": "料",
+          "start": "5.66",
+          "end": "5.9"
+        },
+        {
+          "id": "provider-unit-22",
+          "text": "放",
+          "start": "5.9",
+          "end": "6.14"
+        },
+        {
+          "id": "provider-unit-23",
+          "text": "在",
+          "start": "6.14",
+          "end": "6.4"
+        },
+        {
+          "id": "provider-unit-24",
+          "text": "左",
+          "start": "6.4",
+          "end": "6.62"
+        },
+        {
+          "id": "provider-unit-25",
+          "text": "邊,",
+          "start": "6.62",
+          "end": "7.26"
+        },
+        {
+          "id": "provider-unit-26",
+          "text": "再",
+          "start": "7.26",
+          "end": "7.46"
+        },
+        {
+          "id": "provider-unit-27",
+          "text": "把",
+          "start": "7.46",
+          "end": "7.64"
+        },
+        {
+          "id": "provider-unit-28",
+          "text": "已經",
+          "start": "7.64",
+          "end": "7.94"
+        },
+        {
+          "id": "provider-unit-29",
+          "text": "完成",
+          "start": "7.94",
+          "end": "8.36"
+        },
+        {
+          "id": "provider-unit-30",
+          "text": "的",
+          "start": "8.36",
+          "end": "8.68"
+        },
+        {
+          "id": "provider-unit-31",
+          "text": "記",
+          "start": "8.68",
+          "end": "8.9"
+        },
+        {
+          "id": "provider-unit-32",
+          "text": "錄",
+          "start": "8.9",
+          "end": "9.06"
+        },
+        {
+          "id": "provider-unit-33",
+          "text": "放",
+          "start": "9.06",
+          "end": "9.3"
+        },
+        {
+          "id": "provider-unit-34",
+          "text": "進",
+          "start": "9.3",
+          "end": "9.52"
+        },
+        {
+          "id": "provider-unit-35",
+          "text": "文",
+          "start": "9.52",
+          "end": "9.78"
+        },
+        {
+          "id": "provider-unit-36",
+          "text": "件",
+          "start": "9.78",
+          "end": "9.98"
+        },
+        {
+          "id": "provider-unit-37",
+          "text": "家。",
+          "start": "9.98",
+          "end": "10.58"
+        },
+        {
+          "id": "provider-unit-38",
+          "text": "下",
+          "start": "10.64",
+          "end": "10.82"
+        },
+        {
+          "id": "provider-unit-39",
+          "text": "午",
+          "start": "10.82",
+          "end": "11.04"
+        },
+        {
+          "id": "provider-unit-40",
+          "text": "我們",
+          "start": "11.04",
+          "end": "11.28"
+        },
+        {
+          "id": "provider-unit-41",
+          "text": "會",
+          "start": "11.28",
+          "end": "11.64"
+        },
+        {
+          "id": "provider-unit-42",
+          "text": "核",
+          "start": "11.64",
+          "end": "11.88"
+        },
+        {
+          "id": "provider-unit-43",
+          "text": "對",
+          "start": "11.88",
+          "end": "12.06"
+        },
+        {
+          "id": "provider-unit-44",
+          "text": "日",
+          "start": "12.06",
+          "end": "12.3"
+        },
+        {
+          "id": "provider-unit-45",
+          "text": "期",
+          "start": "12.3",
+          "end": "12.52"
+        },
+        {
+          "id": "provider-unit-46",
+          "text": "核",
+          "start": "12.52",
+          "end": "12.78"
+        },
+        {
+          "id": "provider-unit-47",
+          "text": "名",
+          "start": "12.78",
+          "end": "12.98"
+        },
+        {
+          "id": "provider-unit-48",
+          "text": "稱,",
+          "start": "12.98",
+          "end": "13.72"
+        },
+        {
+          "id": "provider-unit-49",
+          "text": "確",
+          "start": "13.72",
+          "end": "13.92"
+        },
+        {
+          "id": "provider-unit-50",
+          "text": "認",
+          "start": "13.92",
+          "end": "14.12"
+        },
+        {
+          "id": "provider-unit-51",
+          "text": "沒有",
+          "start": "14.12",
+          "end": "14.32"
+        },
+        {
+          "id": "provider-unit-52",
+          "text": "遺",
+          "start": "14.32",
+          "end": "14.68"
+        },
+        {
+          "id": "provider-unit-53",
+          "text": "漏",
+          "start": "14.68",
+          "end": "14.84"
+        },
+        {
+          "id": "provider-unit-54",
+          "text": "之後,",
+          "start": "14.84",
+          "end": "15.68"
+        },
+        {
+          "id": "provider-unit-55",
+          "text": "再",
+          "start": "15.68",
+          "end": "15.86"
+        },
+        {
+          "id": "provider-unit-56",
+          "text": "保",
+          "start": "15.86",
+          "end": "16.08"
+        },
+        {
+          "id": "provider-unit-57",
+          "text": "存",
+          "start": "16.08",
+          "end": "16.38"
+        },
+        {
+          "id": "provider-unit-58",
+          "text": "這一",
+          "start": "16.38",
+          "end": "16.7"
+        },
+        {
+          "id": "provider-unit-59",
+          "text": "份",
+          "start": "16.7",
+          "end": "16.92"
+        },
+        {
+          "id": "provider-unit-60",
+          "text": "整",
+          "start": "16.92",
+          "end": "17.14"
+        },
+        {
+          "id": "provider-unit-61",
+          "text": "理",
+          "start": "17.14",
+          "end": "17.32"
+        },
+        {
+          "id": "provider-unit-62",
+          "text": "結果。",
+          "start": "17.32",
+          "end": "18.08"
+        },
+        {
+          "id": "provider-unit-63",
+          "text": "謝謝",
+          "start": "18.08",
+          "end": "18.36"
+        },
+        {
+          "id": "provider-unit-64",
+          "text": "大家。",
+          "start": "18.36",
+          "end": "19.14"
+        }
+      ],
+      "audioDigest": "sha256:245b1ad0dec735444d10a741ece8414bca9359da25ba2ed4f0983c92ac55c252",
+      "rawResponseDigest": "sha256:90fae4e8ec3208f90b68b8ae9f2505079c9b688a35ab3561387111456558db83",
+      "sampleRate": 16000,
+      "validSampleCount": 306587,
+      "ranges": [
+        {
+          "id": "provider-unit-0",
+          "text": "今天",
+          "startSample": 0,
+          "endSample": 4480
+        },
+        {
+          "id": "provider-unit-1",
+          "text": "上",
+          "startSample": 4480,
+          "endSample": 10880
+        },
+        {
+          "id": "provider-unit-2",
+          "text": "午,",
+          "startSample": 10880,
+          "endSample": 20800
+        },
+        {
+          "id": "provider-unit-3",
+          "text": "我們",
+          "startSample": 20800,
+          "endSample": 24320
+        },
+        {
+          "id": "provider-unit-4",
+          "text": "一起",
+          "startSample": 24320,
+          "endSample": 30400
+        },
+        {
+          "id": "provider-unit-5",
+          "text": "整",
+          "startSample": 30400,
+          "endSample": 34880
+        },
+        {
+          "id": "provider-unit-6",
+          "text": "理",
+          "startSample": 34880,
+          "endSample": 38400
+        },
+        {
+          "id": "provider-unit-7",
+          "text": "桌",
+          "startSample": 38400,
+          "endSample": 41600
+        },
+        {
+          "id": "provider-unit-8",
+          "text": "面",
+          "startSample": 41600,
+          "endSample": 45120
+        },
+        {
+          "id": "provider-unit-9",
+          "text": "上",
+          "startSample": 45120,
+          "endSample": 49600
+        },
+        {
+          "id": "provider-unit-10",
+          "text": "的",
+          "startSample": 49600,
+          "endSample": 52160
+        },
+        {
+          "id": "provider-unit-11",
+          "text": "文",
+          "startSample": 52160,
+          "endSample": 55040
+        },
+        {
+          "id": "provider-unit-12",
+          "text": "件,",
+          "startSample": 55040,
+          "endSample": 63680
+        },
+        {
+          "id": "provider-unit-13",
+          "text": "先",
+          "startSample": 63680,
+          "endSample": 67200
+        },
+        {
+          "id": "provider-unit-14",
+          "text": "把",
+          "startSample": 67200,
+          "endSample": 71040
+        },
+        {
+          "id": "provider-unit-15",
+          "text": "正",
+          "startSample": 71040,
+          "endSample": 74240
+        },
+        {
+          "id": "provider-unit-16",
+          "text": "在",
+          "startSample": 74240,
+          "endSample": 78080
+        },
+        {
+          "id": "provider-unit-17",
+          "text": "使",
+          "startSample": 78080,
+          "endSample": 82240
+        },
+        {
+          "id": "provider-unit-18",
+          "text": "用",
+          "startSample": 82240,
+          "endSample": 85120
+        },
+        {
+          "id": "provider-unit-19",
+          "text": "的",
+          "startSample": 85120,
+          "endSample": 87680
+        },
+        {
+          "id": "provider-unit-20",
+          "text": "資",
+          "startSample": 87680,
+          "endSample": 90560
+        },
+        {
+          "id": "provider-unit-21",
+          "text": "料",
+          "startSample": 90560,
+          "endSample": 94400
+        },
+        {
+          "id": "provider-unit-22",
+          "text": "放",
+          "startSample": 94400,
+          "endSample": 98240
+        },
+        {
+          "id": "provider-unit-23",
+          "text": "在",
+          "startSample": 98240,
+          "endSample": 102400
+        },
+        {
+          "id": "provider-unit-24",
+          "text": "左",
+          "startSample": 102400,
+          "endSample": 105920
+        },
+        {
+          "id": "provider-unit-25",
+          "text": "邊,",
+          "startSample": 105920,
+          "endSample": 116160
+        },
+        {
+          "id": "provider-unit-26",
+          "text": "再",
+          "startSample": 116160,
+          "endSample": 119360
+        },
+        {
+          "id": "provider-unit-27",
+          "text": "把",
+          "startSample": 119360,
+          "endSample": 122240
+        },
+        {
+          "id": "provider-unit-28",
+          "text": "已經",
+          "startSample": 122240,
+          "endSample": 127040
+        },
+        {
+          "id": "provider-unit-29",
+          "text": "完成",
+          "startSample": 127040,
+          "endSample": 133760
+        },
+        {
+          "id": "provider-unit-30",
+          "text": "的",
+          "startSample": 133760,
+          "endSample": 138880
+        },
+        {
+          "id": "provider-unit-31",
+          "text": "記",
+          "startSample": 138880,
+          "endSample": 142400
+        },
+        {
+          "id": "provider-unit-32",
+          "text": "錄",
+          "startSample": 142400,
+          "endSample": 144960
+        },
+        {
+          "id": "provider-unit-33",
+          "text": "放",
+          "startSample": 144960,
+          "endSample": 148800
+        },
+        {
+          "id": "provider-unit-34",
+          "text": "進",
+          "startSample": 148800,
+          "endSample": 152320
+        },
+        {
+          "id": "provider-unit-35",
+          "text": "文",
+          "startSample": 152320,
+          "endSample": 156480
+        },
+        {
+          "id": "provider-unit-36",
+          "text": "件",
+          "startSample": 156480,
+          "endSample": 159680
+        },
+        {
+          "id": "provider-unit-37",
+          "text": "家。",
+          "startSample": 159680,
+          "endSample": 169280
+        },
+        {
+          "id": "provider-unit-38",
+          "text": "下",
+          "startSample": 170240,
+          "endSample": 173120
+        },
+        {
+          "id": "provider-unit-39",
+          "text": "午",
+          "startSample": 173120,
+          "endSample": 176640
+        },
+        {
+          "id": "provider-unit-40",
+          "text": "我們",
+          "startSample": 176640,
+          "endSample": 180480
+        },
+        {
+          "id": "provider-unit-41",
+          "text": "會",
+          "startSample": 180480,
+          "endSample": 186240
+        },
+        {
+          "id": "provider-unit-42",
+          "text": "核",
+          "startSample": 186240,
+          "endSample": 190080
+        },
+        {
+          "id": "provider-unit-43",
+          "text": "對",
+          "startSample": 190080,
+          "endSample": 192960
+        },
+        {
+          "id": "provider-unit-44",
+          "text": "日",
+          "startSample": 192960,
+          "endSample": 196800
+        },
+        {
+          "id": "provider-unit-45",
+          "text": "期",
+          "startSample": 196800,
+          "endSample": 200320
+        },
+        {
+          "id": "provider-unit-46",
+          "text": "核",
+          "startSample": 200320,
+          "endSample": 204480
+        },
+        {
+          "id": "provider-unit-47",
+          "text": "名",
+          "startSample": 204480,
+          "endSample": 207680
+        },
+        {
+          "id": "provider-unit-48",
+          "text": "稱,",
+          "startSample": 207680,
+          "endSample": 219520
+        },
+        {
+          "id": "provider-unit-49",
+          "text": "確",
+          "startSample": 219520,
+          "endSample": 222720
+        },
+        {
+          "id": "provider-unit-50",
+          "text": "認",
+          "startSample": 222720,
+          "endSample": 225920
+        },
+        {
+          "id": "provider-unit-51",
+          "text": "沒有",
+          "startSample": 225920,
+          "endSample": 229120
+        },
+        {
+          "id": "provider-unit-52",
+          "text": "遺",
+          "startSample": 229120,
+          "endSample": 234880
+        },
+        {
+          "id": "provider-unit-53",
+          "text": "漏",
+          "startSample": 234880,
+          "endSample": 237440
+        },
+        {
+          "id": "provider-unit-54",
+          "text": "之後,",
+          "startSample": 237440,
+          "endSample": 250880
+        },
+        {
+          "id": "provider-unit-55",
+          "text": "再",
+          "startSample": 250880,
+          "endSample": 253760
+        },
+        {
+          "id": "provider-unit-56",
+          "text": "保",
+          "startSample": 253760,
+          "endSample": 257280
+        },
+        {
+          "id": "provider-unit-57",
+          "text": "存",
+          "startSample": 257280,
+          "endSample": 262080
+        },
+        {
+          "id": "provider-unit-58",
+          "text": "這一",
+          "startSample": 262080,
+          "endSample": 267200
+        },
+        {
+          "id": "provider-unit-59",
+          "text": "份",
+          "startSample": 267200,
+          "endSample": 270720
+        },
+        {
+          "id": "provider-unit-60",
+          "text": "整",
+          "startSample": 270720,
+          "endSample": 274240
+        },
+        {
+          "id": "provider-unit-61",
+          "text": "理",
+          "startSample": 274240,
+          "endSample": 277120
+        },
+        {
+          "id": "provider-unit-62",
+          "text": "結果。",
+          "startSample": 277120,
+          "endSample": 289280
+        },
+        {
+          "id": "provider-unit-63",
+          "text": "謝謝",
+          "startSample": 289280,
+          "endSample": 293760
+        },
+        {
+          "id": "provider-unit-64",
+          "text": "大家。",
+          "startSample": 293760,
+          "endSample": 306240
+        }
+      ]
+    }
+  },
+  "strictTiming": true,
+  "worker": {
+    "assembly": "actual default eval worker; temporary module-resolver bootstrap",
+    "factoryCalls": 1,
+    "pipelineCalls": 1,
+    "modelCalls": 1,
+    "networkAttempts": 0,
+    "actualDependencyEntry": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/transformers.js",
+    "runtimeVersion": "v25.9.0",
+    "env": {
+      "allowRemoteModels": false,
+      "allowLocalModels": true,
+      "localModelPath": "/tmp/t1062-default-worker-preflight/run-three/cache/",
+      "useFSCache": false
+    },
+    "actualPcmSampleCount": 306587,
+    "optionsBefore": {
+      "return_timestamps": "word",
+      "chunk_length_s": 30,
+      "stride_length_s": 5,
+      "language": "zh",
+      "task": "transcribe"
+    }
+  },
+  "decodeCalls": 1,
+  "actualDecodedSampleCount": 306587,
+  "parentNetworkAttempts": 0,
+  "afterSHA": {
+    "inputSHA256": "245b1ad0dec735444d10a741ece8414bca9359da25ba2ed4f0983c92ac55c252",
+    "sourceMovSHA256": "8d76c7d6abec52e4a6dd19db98e15dc8b416461cb2d40241cfbf45ec82bf6bc4",
+    "models": [
+      {
+        "path": "Xenova/whisper-small/config.json",
+        "sourceSHA256": "5a6429d21d7a3379dd0861b74510f9f7076f32b563bffc9fcb072482d55ab3be",
+        "independentCacheSHA256": "5a6429d21d7a3379dd0861b74510f9f7076f32b563bffc9fcb072482d55ab3be"
+      },
+      {
+        "path": "Xenova/whisper-small/generation_config.json",
+        "sourceSHA256": "0b7407a4e53a677f826e03c75d409e6f830663932bf43dda3b08c5efa2223279",
+        "independentCacheSHA256": "0b7407a4e53a677f826e03c75d409e6f830663932bf43dda3b08c5efa2223279"
+      },
+      {
+        "path": "Xenova/whisper-small/onnx/decoder_model_merged_quantized.onnx",
+        "sourceSHA256": "fcfc6100dc7339e7507e10f8b274350be7c4f8d8b575f0293f94cc0e156d6d24",
+        "independentCacheSHA256": "fcfc6100dc7339e7507e10f8b274350be7c4f8d8b575f0293f94cc0e156d6d24"
+      },
+      {
+        "path": "Xenova/whisper-small/onnx/encoder_model_quantized.onnx",
+        "sourceSHA256": "969f5ac12974340386bf7a02ea6626003e5e2dee396ffc6ab0eec282bf55ba06",
+        "independentCacheSHA256": "969f5ac12974340386bf7a02ea6626003e5e2dee396ffc6ab0eec282bf55ba06"
+      },
+      {
+        "path": "Xenova/whisper-small/preprocessor_config.json",
+        "sourceSHA256": "a6a76d28c93edb273669eb9e0b0636a2bddbb1272c3261e47b7ca6dfdbac1b8d",
+        "independentCacheSHA256": "a6a76d28c93edb273669eb9e0b0636a2bddbb1272c3261e47b7ca6dfdbac1b8d"
+      },
+      {
+        "path": "Xenova/whisper-small/tokenizer.json",
+        "sourceSHA256": "27fc476bfe7f17299480be2273fc0608e4d5a99aba2ab5dec5374b4482d1a566",
+        "independentCacheSHA256": "27fc476bfe7f17299480be2273fc0608e4d5a99aba2ab5dec5374b4482d1a566"
+      },
+      {
+        "path": "Xenova/whisper-small/tokenizer_config.json",
+        "sourceSHA256": "2a4c4281cf9f51ac6ccc406fdc711a087afe6530f671fa7b80953edc498275ce",
+        "independentCacheSHA256": "2a4c4281cf9f51ac6ccc406fdc711a087afe6530f671fa7b80953edc498275ce"
+      }
+    ],
+    "sources": [
+      {
+        "path": "ai-worker/src/runtime/multimodal-whisper-local.ts",
+        "sha256": "204fb5081f327e07567b9d1c06b19195cbbe789bc09d670ae5f40b798db402c9"
+      },
+      {
+        "path": "ai-worker/src/runtime/multimodal-whisper-local.test.ts",
+        "sha256": "5725ef9aecf1e76d4d2467ecd3abab33e801c79c6add282b85f37f8b215de5cb"
+      },
+      {
+        "path": "ai-worker/src/runtime/multimodal-precise-asr.test.ts",
+        "sha256": "0fcbc2eb34ce2afc0ba9479c924086cecafa789ec814d2a833337558a72d4e12"
+      },
+      {
+        "path": "ai-worker/src/execution/worker-runtime.asset-asr-control.test.ts",
+        "sha256": "1bb6f9e872b2c4a6413a873f7c4e8ceafd7506fd507b12309baeb128d4765b90"
+      },
+      {
+        "path": "ai-worker/src/runtime/multimodal-whisper-local-cancel.test.ts",
+        "sha256": "d1289fe01079eced6ff90518a1fef2a71b5b3d595053f8478120e53c6dcfe1a0"
+      },
+      {
+        "path": "ai-worker/src/runtime/asr-provider-timing.ts",
+        "sha256": "b8088d3e1854e6f155762af3e5a4267e128142a19e21bdb5af5c0c67c87a7d62"
+      },
+      {
+        "path": "ai-worker/src/runtime/asr-request.ts",
+        "sha256": "50e32a815ce654b174f66603a6ed86003454d7b02805adc57e250b4d0ac710d9"
+      },
+      {
+        "path": "ai-worker/scripts/pi-runtime-bundle.mjs",
+        "sha256": "380de992e3e9a483fabdda8f6a17413ea7ad84e35c85a513f8a8afce21fdea3c"
+      },
+      {
+        "path": "contract/src/internal/asset-asr-timing.ts",
+        "sha256": "a41b7a86f75a4abcf533b302d18986dc119d0174bb48ebd7256e4c7b39d23568"
+      },
+      {
+        "path": "ai-worker/node_modules/@xenova/transformers/package.json",
+        "sha256": "0d605ca8d31ccbcff74729534f6f5e2f722d047c534cef6f53fafd22ef0b4c3d"
+      },
+      {
+        "path": "ai-worker/node_modules/@xenova/transformers/src/transformers.js",
+        "sha256": "f6a0528f691f3e81602c8b7a765e71b56aa06a7e06116e90eddf110a71a36256"
+      },
+      {
+        "path": "ai-worker/node_modules/@xenova/transformers/src/models.js",
+        "sha256": "1eb492e7d2cc425c27a596639a46a2c61b9aed9e4f8f6ea4c917421189ba503d"
+      },
+      {
+        "path": "ai-worker/node_modules/@xenova/transformers/src/pipelines.js",
+        "sha256": "95916d72e45c881cca1c9cd381135265b6ecfafffc9316f69da837a277e10031"
+      },
+      {
+        "path": "ai-worker/node_modules/@xenova/transformers/src/processors.js",
+        "sha256": "06583f94a1b5b672078094c96baeca6dc38d22dedab26ef55835966ec9ec1992"
+      }
+    ]
+  },
+  "sourceAndCacheAfterUnchanged": true,
+  "rangeCount": 65,
+  "lastRange": {
+    "id": "provider-unit-64",
+    "text": "大家。",
+    "startSample": 293760,
+    "endSample": 306240
+  },
+  "text": "今天上午,我們一起整理桌面上的文件,先把正在使用的資料放在左邊,再把已經完成的記錄放進文件家。下午我們會核對日期核名稱,確認沒有遺漏之後,再保存這一份整理結果。謝謝大家。"
+}

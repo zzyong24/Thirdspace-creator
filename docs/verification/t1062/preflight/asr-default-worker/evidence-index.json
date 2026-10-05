@@ -1,0 +1,351 @@
+{
+  "schema": "t1062-default-worker-committed-evidence/v1",
+  "at": "2026-10-05T06:23:30.262656+00:00",
+  "status": "真实默认转写通过；公共预约结算、粗剪、安装版仍待验",
+  "sourceRuntimeSHA256": "204fb5081f327e07567b9d1c06b19195cbbe789bc09d670ae5f40b798db402c9",
+  "sourceTestSHA256": "5725ef9aecf1e76d4d2467ecd3abab33e801c79c6add282b85f37f8b215de5cb",
+  "resultSHA256": "f6f07c1afdfdc70107359034366e6b7c92c761952ff7b4879133944221b2c214",
+  "decodeCalls": 1,
+  "factoryCalls": 1,
+  "pipelineCalls": 1,
+  "modelGenerateCalls": 1,
+  "networkAttempts": 0,
+  "strictRanges": 65,
+  "lastEndSample": 306240,
+  "validSampleCount": 306587,
+  "initialFailuresRetained": true,
+  "bundlesAndModelsOutsideGit": true,
+  "artifacts": [
+    {
+      "source": "/tmp/t1062-default-worker-preflight/run.mjs",
+      "artifact": "docs/verification/t1062/preflight/asr-default-worker/run.mjs",
+      "sha256": "46f61d2d478ab466f7571aa34a8023dbf4981aedb0310a2326b623dfb0be43f1",
+      "bytes": 6828
+    },
+    {
+      "source": "/tmp/t1062-default-worker-preflight/build.mjs",
+      "artifact": "docs/verification/t1062/preflight/asr-default-worker/build.mjs",
+      "sha256": "8e8f5922978244f62890912e1d054270bcc181bf68e21e4adc0d754100f898fd",
+      "bytes": 2971
+    },
+    {
+      "source": "/tmp/t1062-default-worker-preflight/bootstrap-template.cjs",
+      "artifact": "docs/verification/t1062/preflight/asr-default-worker/bootstrap-template.cjs",
+      "sha256": "b61d4e052fa423d2986dd041ff683cefe42804545e6dbf2b611b98015535d7cc",
+      "bytes": 2385
+    },
+    {
+      "source": "/tmp/t1062-default-worker-preflight/prepared-manifest.json",
+      "artifact": "docs/verification/t1062/preflight/asr-default-worker/prepared-manifest.json",
+      "sha256": "d43a3d610c07c4e7c4754129c1b38a06eb36305e9ca165682e75c1ba27e78bfc",
+      "bytes": 5971
+    },
+    {
+      "source": "/tmp/t1062-default-worker-preflight/prepared-evidence.json",
+      "artifact": "docs/verification/t1062/preflight/asr-default-worker/prepared-evidence.json",
+      "sha256": "938de85dbcb7f0916ff9e23f073f8fc6b3fdeadb19d1bf1d8c5e46034f44476b",
+      "bytes": 2384
+    },
+    {
+      "source": "/tmp/t1062-default-worker-preflight/execution-evidence.json",
+      "artifact": "docs/verification/t1062/preflight/asr-default-worker/execution-evidence.json",
+      "sha256": "b0a1b568918a9aac9ebec3cd574e74a7561bf716291a82af8811c27b68da71e1",
+      "bytes": 2385
+    },
+    {
+      "source": "/tmp/t1062-default-worker-preflight/execution-evidence.md",
+      "artifact": "docs/verification/t1062/preflight/asr-default-worker/execution-evidence.md",
+      "sha256": "697ac2b62db29eee80b1651fd83ed999527e8db7ab1d621faf6c3c8e65b7b809",
+      "bytes": 1308
+    },
+    {
+      "source": "/tmp/t1062-default-worker-preflight/run.stdout.log",
+      "artifact": "docs/verification/t1062/preflight/asr-default-worker/run.stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "source": "/tmp/t1062-default-worker-preflight/run.stderr.log",
+      "artifact": "docs/verification/t1062/preflight/asr-default-worker/run.stderr.log",
+      "sha256": "f9734d9eb913602d1ff980fef971397f4c145a3ca87f9587b05355197d3fc017",
+      "bytes": 231
+    },
+    {
+      "source": "/tmp/t1062-default-worker-preflight/run-one/unknown.json",
+      "artifact": "docs/verification/t1062/preflight/asr-default-worker/run-one/unknown.json",
+      "sha256": "65850c35c56e8cd1bf6df17f83b760b2b4b14076d5b9561bc98b109801f56024",
+      "bytes": 12650
+    },
+    {
+      "source": "/tmp/t1062-default-worker-preflight/run-one/one-attempt.lock",
+      "artifact": "docs/verification/t1062/preflight/asr-default-worker/run-one/one-attempt.lock",
+      "sha256": "e08af81998eb0a7ed19239c3e7c45fa42683c167284d74630e152e56ff3c5962",
+      "bytes": 24
+    },
+    {
+      "source": "/tmp/t1062-default-worker-preflight/run-r2.mjs",
+      "artifact": "docs/verification/t1062/preflight/asr-default-worker/run-r2.mjs",
+      "sha256": "3a0a57e0ed6aea9cf5a96438186bb4b6d63c0f34781446ad9c932987a3802b92",
+      "bytes": 7198
+    },
+    {
+      "source": "/tmp/t1062-default-worker-preflight/build-r2.mjs",
+      "artifact": "docs/verification/t1062/preflight/asr-default-worker/build-r2.mjs",
+      "sha256": "1c9de27e7c14950f4c2d95203c4ef0f3a158ca0ed01071a3d0a5416328f0d8bf",
+      "bytes": 3412
+    },
+    {
+      "source": "/tmp/t1062-default-worker-preflight/prepared-manifest-r2.json",
+      "artifact": "docs/verification/t1062/preflight/asr-default-worker/prepared-manifest-r2.json",
+      "sha256": "523a1f680b4ab0b282a0964aa89634a99322b3ac22626920f5e85af6c0e2e02f",
+      "bytes": 6223
+    },
+    {
+      "source": "/tmp/t1062-default-worker-preflight/prepared-evidence-r2.json",
+      "artifact": "docs/verification/t1062/preflight/asr-default-worker/prepared-evidence-r2.json",
+      "sha256": "61870a1e5771c2c7a74330275039612a05c0fd99fd1aabfdbce4c9ee130410c7",
+      "bytes": 2937
+    },
+    {
+      "source": "/tmp/t1062-default-worker-preflight/execution-evidence-r2.json",
+      "artifact": "docs/verification/t1062/preflight/asr-default-worker/execution-evidence-r2.json",
+      "sha256": "8bbc98f7d7f809802af2af3a7ee24bacaa6e99feb97aeee71167527899feb54b",
+      "bytes": 4861
+    },
+    {
+      "source": "/tmp/t1062-default-worker-preflight/execution-evidence-r2.md",
+      "artifact": "docs/verification/t1062/preflight/asr-default-worker/execution-evidence-r2.md",
+      "sha256": "bf0771fc2fdbe927a8866bcf3e40c7553c4bde8eaf0360fe1d9bc95ed2d238fc",
+      "bytes": 1570
+    },
+    {
+      "source": "/tmp/t1062-default-worker-preflight/r2-initial-preparation-failure.json",
+      "artifact": "docs/verification/t1062/preflight/asr-default-worker/r2-initial-preparation-failure.json",
+      "sha256": "987e49590e4142641dec330e5e86d3851d440ac9dbf1fe575e628171d2f1e7e3",
+      "bytes": 2111
+    },
+    {
+      "source": "/tmp/t1062-default-worker-preflight/r2-preparation.stdout.log",
+      "artifact": "docs/verification/t1062/preflight/asr-default-worker/r2-preparation.stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "source": "/tmp/t1062-default-worker-preflight/r2-preparation.stderr.log",
+      "artifact": "docs/verification/t1062/preflight/asr-default-worker/r2-preparation.stderr.log",
+      "sha256": "82ec5899362c94038beda6f89c986f92b2e66640eae66ede57f6f7604926d740",
+      "bytes": 632
+    },
+    {
+      "source": "/tmp/t1062-default-worker-preflight/r2-restored-preparation.stdout.log",
+      "artifact": "docs/verification/t1062/preflight/asr-default-worker/r2-restored-preparation.stdout.log",
+      "sha256": "8d426c7141c2d0664b1a560a377e769e3892617236bd2e883844eb53ca536a35",
+      "bytes": 3942
+    },
+    {
+      "source": "/tmp/t1062-default-worker-preflight/r2-restored-preparation.stderr.log",
+      "artifact": "docs/verification/t1062/preflight/asr-default-worker/r2-restored-preparation.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "source": "/tmp/t1062-default-worker-preflight/run-r2.stdout.log",
+      "artifact": "docs/verification/t1062/preflight/asr-default-worker/run-r2.stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "source": "/tmp/t1062-default-worker-preflight/run-r2.stderr.log",
+      "artifact": "docs/verification/t1062/preflight/asr-default-worker/run-r2.stderr.log",
+      "sha256": "c28ebc2257f50e15cf844578f134860a2ad9ee32ed40cc15c5ef258a84208442",
+      "bytes": 66389
+    },
+    {
+      "source": "/tmp/t1062-default-worker-preflight/run-two/unknown.json",
+      "artifact": "docs/verification/t1062/preflight/asr-default-worker/run-two/unknown.json",
+      "sha256": "871072056a8de6c65c64ebf641cf64820c9e30dfc31aca3e72f307639ebf18d9",
+      "bytes": 13845
+    },
+    {
+      "source": "/tmp/t1062-default-worker-preflight/run-two/worker-counts.json",
+      "artifact": "docs/verification/t1062/preflight/asr-default-worker/run-two/worker-counts.json",
+      "sha256": "fd396621fd05340439f8932dc2148ddb1044e92e2cdd28a2e101809836e98907",
+      "bytes": 782
+    },
+    {
+      "source": "/tmp/t1062-default-worker-preflight/run-two/one-attempt.lock",
+      "artifact": "docs/verification/t1062/preflight/asr-default-worker/run-two/one-attempt.lock",
+      "sha256": "3733829b339103bd9b97a9b00682d053875f35bc2c3eea3f26570dfcd71c8859",
+      "bytes": 24
+    },
+    {
+      "source": "/tmp/t1062-default-worker-preflight/root-r2-authorization.json",
+      "artifact": "docs/verification/t1062/preflight/asr-default-worker/root-r2-authorization.json",
+      "sha256": "0ae312b0f842efd763d125357547e4798ff9c693c1f57b97d5fd21567d159862",
+      "bytes": 732
+    },
+    {
+      "source": "/tmp/t1062-default-worker-preflight/run-r3.mjs",
+      "artifact": "docs/verification/t1062/preflight/asr-default-worker/run-r3.mjs",
+      "sha256": "a144263414bd86176ab051d9606b9746870e10da0bcbe3515bbbb7ad3317502c",
+      "bytes": 7221
+    },
+    {
+      "source": "/tmp/t1062-default-worker-preflight/build-r3.mjs",
+      "artifact": "docs/verification/t1062/preflight/asr-default-worker/build-r3.mjs",
+      "sha256": "3b5c34dcaffe691e9ae1a665eb43732a5927a9390b55af4ec8d0abb1b9dd5f3d",
+      "bytes": 4069
+    },
+    {
+      "source": "/tmp/t1062-default-worker-preflight/bootstrap-r3-template.cjs",
+      "artifact": "docs/verification/t1062/preflight/asr-default-worker/bootstrap-r3-template.cjs",
+      "sha256": "8426f36efd3f6bc7c16c5455b79bd1b74f83a1e7a2cb911214e8dd84ca3786c0",
+      "bytes": 2860
+    },
+    {
+      "source": "/tmp/t1062-default-worker-preflight/prepared-manifest-r3.json",
+      "artifact": "docs/verification/t1062/preflight/asr-default-worker/prepared-manifest-r3.json",
+      "sha256": "faec0c5dc75c3649bca6874fe95ae391c1b96c5092b43a1e0ccba3b52796526f",
+      "bytes": 6321
+    },
+    {
+      "source": "/tmp/t1062-default-worker-preflight/prepared-evidence-r3.json",
+      "artifact": "docs/verification/t1062/preflight/asr-default-worker/prepared-evidence-r3.json",
+      "sha256": "04257a27d2d4563a8732904d4e2bdc2678ebe1dbaf123d782b19ee50af028148",
+      "bytes": 2248
+    },
+    {
+      "source": "/tmp/t1062-default-worker-preflight/execution-evidence-r3.json",
+      "artifact": "docs/verification/t1062/preflight/asr-default-worker/execution-evidence-r3.json",
+      "sha256": "c6b204fdb139c986f5b78557e80fcb3a615938d88e69245aeeeb522e43e578d8",
+      "bytes": 6147
+    },
+    {
+      "source": "/tmp/t1062-default-worker-preflight/execution-evidence-r3.md",
+      "artifact": "docs/verification/t1062/preflight/asr-default-worker/execution-evidence-r3.md",
+      "sha256": "189c054560a592ef5dce1ffc21e172170c69636a8228d3901a70b6597c6a0752",
+      "bytes": 1606
+    },
+    {
+      "source": "/tmp/t1062-default-worker-preflight/r3-preparation.stdout.log",
+      "artifact": "docs/verification/t1062/preflight/asr-default-worker/r3-preparation.stdout.log",
+      "sha256": "1c9be08718023c8dc58ae571edd9aafb5ec28ef3e4e0389cc71cc565557fcc27",
+      "bytes": 2969
+    },
+    {
+      "source": "/tmp/t1062-default-worker-preflight/r3-preparation.stderr.log",
+      "artifact": "docs/verification/t1062/preflight/asr-default-worker/r3-preparation.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "source": "/tmp/t1062-default-worker-preflight/run-r3.stdout.log",
+      "artifact": "docs/verification/t1062/preflight/asr-default-worker/run-r3.stdout.log",
+      "sha256": "d3b41f402ed5cc9f485e969dbbbe00f4c4999e0db4f1fa80c52c7f6a59710f08",
+      "bytes": 1621
+    },
+    {
+      "source": "/tmp/t1062-default-worker-preflight/run-r3.stderr.log",
+      "artifact": "docs/verification/t1062/preflight/asr-default-worker/run-r3.stderr.log",
+      "sha256": "48ff760ff1d16df0cdb686067e2f8c75a66207b3b6ec6973e8267856c003d129",
+      "bytes": 65809
+    },
+    {
+      "source": "/tmp/t1062-default-worker-preflight/run-three/result.json",
+      "artifact": "docs/verification/t1062/preflight/asr-default-worker/run-three/result.json",
+      "sha256": "f6f07c1afdfdc70107359034366e6b7c92c761952ff7b4879133944221b2c214",
+      "bytes": 33094
+    },
+    {
+      "source": "/tmp/t1062-default-worker-preflight/run-three/worker-counts.json",
+      "artifact": "docs/verification/t1062/preflight/asr-default-worker/run-three/worker-counts.json",
+      "sha256": "cca781162f2913c18c57b17bcfd716934dc9d5cf2f791f84cdb195ee83b59bfb",
+      "bytes": 784
+    },
+    {
+      "source": "/tmp/t1062-default-worker-preflight/run-three/one-attempt.lock",
+      "artifact": "docs/verification/t1062/preflight/asr-default-worker/run-three/one-attempt.lock",
+      "sha256": "6db3c61c52fa55290fcb72ee2b47027e2026001b734148187273b488552ce8cb",
+      "bytes": 24
+    },
+    {
+      "source": "/tmp/t1062-default-worker-preflight/root-r3-authorization.json",
+      "artifact": "docs/verification/t1062/preflight/asr-default-worker/root-r3-authorization.json",
+      "sha256": "732e5d2ae6a18403a5f45f03db30a137cd8fca8dbe7e743f580dea463c5be2ae",
+      "bytes": 683
+    },
+    {
+      "source": "/tmp/t1062-default-worker-preflight/root-r3-result-verification.json",
+      "artifact": "docs/verification/t1062/preflight/asr-default-worker/root-r3-result-verification.json",
+      "sha256": "356c43081fbe32bd8d124880dc77ab3e6302e131dc09b4282c9ac18b2aff7553",
+      "bytes": 492
+    },
+    {
+      "source": "/tmp/t1062-asr-default-worker-r2-independent-diagnosis.json",
+      "artifact": "docs/verification/t1062/preflight/asr-default-worker/t1062-asr-default-worker-r2-independent-diagnosis.json",
+      "sha256": "5d39993c218e3ea59a7c6401fdd740fdf5efd200215308360458f547184e2e50",
+      "bytes": 7284
+    },
+    {
+      "source": "/tmp/t1062-asr-reflect-apply-minimal-fix-independent-review.json",
+      "artifact": "docs/verification/t1062/preflight/asr-default-worker/t1062-asr-reflect-apply-minimal-fix-independent-review.json",
+      "sha256": "a0cc47481e3a066a26c0de193674031334756253261413fda9794f9ca35efc48",
+      "bytes": 10659
+    },
+    {
+      "source": "/tmp/t1062-callable-processor-root-probe.json",
+      "artifact": "docs/verification/t1062/preflight/asr-default-worker/t1062-callable-processor-root-probe.json",
+      "sha256": "d62e5774a90030601f2b4c014ba9ef924754c3e737829d1967510835967411a9",
+      "bytes": 1343
+    },
+    {
+      "source": "/tmp/t1062-callable-processor-apply-repro.mjs",
+      "artifact": "docs/verification/t1062/preflight/asr-default-worker/t1062-callable-processor-apply-repro.mjs",
+      "sha256": "65c5f3522dba02563b90cd5fd4a7a92a7d37f93ba61b1292798d33990f97d2dc",
+      "bytes": 888
+    },
+    {
+      "source": "/tmp/t1062-callable-processor-apply-repro.stdout.json",
+      "artifact": "docs/verification/t1062/preflight/asr-default-worker/t1062-callable-processor-apply-repro.stdout.json",
+      "sha256": "70d60ac03693034709815e16fc897df9a70151daa2c9514d20e8568e251e2014",
+      "bytes": 451
+    },
+    {
+      "source": "/tmp/t1062-r3-compiled-callable-pipeline-probe.mjs",
+      "artifact": "docs/verification/t1062/preflight/asr-default-worker/t1062-r3-compiled-callable-pipeline-probe.mjs",
+      "sha256": "185f111ce2d1471def0677e14fea26e69e7ad80d26604fbc29af0a75ed7bf930",
+      "bytes": 4053
+    },
+    {
+      "source": "/tmp/t1062-r3-compiled-callable-pipeline-probe.stdout.json",
+      "artifact": "docs/verification/t1062/preflight/asr-default-worker/t1062-r3-compiled-callable-pipeline-probe.stdout.json",
+      "sha256": "1fbdd506945bb322c8d55fc966c56e2c54075edfb86ad6c6e3e6a760f1f0f1e8",
+      "bytes": 752
+    },
+    {
+      "source": "/tmp/t1062-r3-compiled-callable-pipeline-probe.stderr.log",
+      "artifact": "docs/verification/t1062/preflight/asr-default-worker/t1062-r3-compiled-callable-pipeline-probe.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "source": "/tmp/t1062-asr-actual-callable-red.log",
+      "artifact": "docs/verification/t1062/preflight/asr-default-worker/t1062-asr-actual-callable-red.log",
+      "sha256": "9838a2797771765b78364eff6c0eb52a30500107559959092b14b2dc552b5e2d",
+      "bytes": 1987
+    },
+    {
+      "source": "/tmp/t1062-asr-actual-callable-green.log",
+      "artifact": "docs/verification/t1062/preflight/asr-default-worker/t1062-asr-actual-callable-green.log",
+      "sha256": "280fd0903f65ef7a432de7b63ada64a99e2e8edd5c8fac4d7277f1e5c041881e",
+      "bytes": 1093
+    },
+    {
+      "source": "/tmp/t1062-asr-actual-callable-typecheck.log",
+      "artifact": "docs/verification/t1062/preflight/asr-default-worker/t1062-asr-actual-callable-typecheck.log",
+      "sha256": "76e33116e2ba09e313ee42b9c5158a71605d35e5afa16e42df6fb199bfa7c29e",
+      "bytes": 400
+    }
+  ],
+  "aiWorkerTypecheckExit": 0
+}

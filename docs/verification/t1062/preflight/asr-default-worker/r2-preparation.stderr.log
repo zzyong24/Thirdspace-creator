@@ -1,0 +1,9 @@
+file:///private/tmp/t1062-default-worker-preflight/build-r2.mjs:12
+for(const file of original.sourceFiles)if(await sha(path.join(original.registry.sourceRoot,file.path))!==file.sha256)throw Error('ROOT reviewed source changed: '+file.path);
+                                                                                                                           ^
+
+Error: ROOT reviewed source changed: ai-worker/src/runtime/multimodal-whisper-local.ts
+    at file:///private/tmp/t1062-default-worker-preflight/build-r2.mjs:12:124
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+
+Node.js v25.9.0

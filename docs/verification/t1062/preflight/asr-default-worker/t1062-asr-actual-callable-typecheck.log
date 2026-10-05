@@ -1,0 +1,6 @@
+isolated roots=/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-writer-check-WTGip4
+
+> @creatoros/ai-worker@0.1.0 typecheck /Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/ai-worker
+> tsc --noEmit
+
+{"cmd":"pnpm","args":["-C","ai-worker","typecheck"],"exit":0,"signal":null,"isolated":"/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-writer-check-WTGip4"}

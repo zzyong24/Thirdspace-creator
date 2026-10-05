@@ -1,0 +1,38 @@
+isolated roots=/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-writer-check-Gu6HKF
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/backend
+
+stderr | src/modules/production/production-rough-cut.integration.test.ts > 真实Source→原Skill/Worker/结算冻结公共链（native-v3-group）
+[run-execution-task] task ai-task-rough-4 失败: OwnershipError: 请先选择账号
+    at scope (/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/backend/src/modules/ai/ai-media-probe-control.ts:33:27)
+    at locked (/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/backend/src/modules/ai/ai-media-probe-control.ts:38:54)
+    at /Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/backend/src/modules/ai/ai-media-probe-control.ts:81:54
+    at file:///Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/node_modules/.pnpm/drizzle-orm@0.36.4_@electric-sql+pglite@0.2.17_@opentelemetry+api@1.9.0_@types+pg@8.20._2b67dc22f5b69a01eab93a65df972558/node_modules/drizzle-orm/pglite/session.js:94:14
+    at file:///Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pglite/dist/chunk-A7RFOIQ7.js:8:1622
+
+ ❯ src/modules/production/production-rough-cut.integration.test.ts (12 tests | 1 failed | 11 skipped) 4146ms
+   × 真实Source→原Skill/Worker/结算冻结公共链（native-v3-group） 4145ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/production/production-rough-cut.integration.test.ts > 真实Source→原Skill/Worker/结算冻结公共链（native-v3-group）
+ConflictError: 原片探针尚未成功，请等处理完成后采用
+ ❯ Object.adopt [as adoptEditorSource] src/modules/production/production-sources.ts:66:61
+     64|   if(old)return owner.commit(outputId,{...input,source:"manual",reques…
+     65|   const candidate=await get(ctx,outputId,input.sourceRequestId),saved=…
+     66|   if(candidate.status!=="succeeded"||!candidate.probe)throw new Confli…
+       |                                                             ^
+     67|   const source={sourceId:candidate.sourceId,assetId:candidate.assetId,…
+     68|   const frozen=saved.frozenInput as {projectId:string};
+ ❯ Object.request src/modules/production/production.transport.ts:147:69
+ ❯ src/modules/production/production-rough-cut.integration.test.ts:55:288
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 11 skipped (12)
+   Start at  14:42:05
+   Duration  8.67s (transform 2.91s, setup 0ms, import 4.37s, tests 4.15s, environment 0ms)
+
+{"cmd":"pnpm","args":["-C","backend","exec","vitest","run","src/modules/production/production-rough-cut.integration.test.ts","-t","native-v3-group"],"exit":1,"signal":null,"isolated":"/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-writer-check-Gu6HKF"}

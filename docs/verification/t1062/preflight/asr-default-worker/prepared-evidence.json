@@ -1,0 +1,64 @@
+{
+  "status": "prepared_not_executed",
+  "buildTarget": "node24",
+  "actualPreparationRuntime": "v25.9.0",
+  "execPath": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+  "preparedManifestSHA256": "d43a3d610c07c4e7c4754129c1b38a06eb36305e9ca165682e75c1ba27e78bfc",
+  "modelCalls": 0,
+  "decodeCalls": 0,
+  "oneAttemptLockExists": false,
+  "scripts": [
+    {
+      "path": "/tmp/t1062-default-worker-preflight/registry.json",
+      "sha256": "f5abb78abc6128c2a24a7cd0b6f2460068fd5ccca129c96877f156c8c63c175f"
+    },
+    {
+      "path": "/tmp/t1062-default-worker-preflight/bootstrap-template.cjs",
+      "sha256": "b61d4e052fa423d2986dd041ff683cefe42804545e6dbf2b611b98015535d7cc"
+    },
+    {
+      "path": "/tmp/t1062-default-worker-preflight/build.mjs",
+      "sha256": "8e8f5922978244f62890912e1d054270bcc181bf68e21e4adc0d754100f898fd"
+    },
+    {
+      "path": "/tmp/t1062-default-worker-preflight/run.mjs",
+      "sha256": "46f61d2d478ab466f7571aa34a8023dbf4981aedb0310a2326b623dfb0be43f1"
+    },
+    {
+      "path": "/tmp/t1062-default-worker-preflight/run.cjs",
+      "sha256": "ce4f63ec50b683cbde67c0d4dc140a7cb12e95f52c21ad019196bae4bc042e21"
+    },
+    {
+      "path": "/tmp/t1062-default-worker-preflight/README.md",
+      "sha256": "a37a7a3e4bf40bfacefdb0452acd5df9cce80e2967870589dc25d3ca580a6255"
+    },
+    {
+      "path": "/tmp/t1062-default-worker-preflight/prepared-manifest.json",
+      "sha256": "d43a3d610c07c4e7c4754129c1b38a06eb36305e9ca165682e75c1ba27e78bfc"
+    },
+    {
+      "path": "/tmp/t1062-default-worker-preflight/build-result.json",
+      "sha256": "cb75d7f4850ca4614c2a3576176818dbc8af23573b401eb4acc2861f23a4c408"
+    }
+  ],
+  "commands": [
+    {
+      "name": "build",
+      "exit": 0,
+      "stdoutSHA256": "108f188ff1e9310c821c7c23a619a99c12495485eaf8ab23adbf9de41523d0a5",
+      "stderrSHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "build-r2",
+      "exit": 0,
+      "stdoutSHA256": "108f188ff1e9310c821c7c23a619a99c12495485eaf8ab23adbf9de41523d0a5",
+      "stderrSHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "build-r3",
+      "exit": 0,
+      "stdoutSHA256": "108f188ff1e9310c821c7c23a619a99c12495485eaf8ab23adbf9de41523d0a5",
+      "stderrSHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}

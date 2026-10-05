@@ -1,0 +1,52 @@
+{
+  "status": "PASS_NO_MODEL",
+  "bundlePath": "/tmp/t1062-default-worker-preflight/run-r3.cjs",
+  "compiledReflectApply": true,
+  "processorApply": "undefined",
+  "samples": [
+    480000,
+    400000,
+    80000,
+    306587
+  ],
+  "crops": [
+    1500,
+    1250,
+    250,
+    958
+  ],
+  "decodedStrides": [
+    [
+      30,
+      0,
+      5
+    ],
+    [
+      25,
+      5,
+      5
+    ],
+    [
+      5,
+      5,
+      0
+    ],
+    [
+      19.1616875,
+      0,
+      0
+    ]
+  ],
+  "firstWordTimingValidated": true,
+  "secondWordTimingValidated": true,
+  "restored": {
+    "processor": true,
+    "generate": true,
+    "forward": true,
+    "extract": true,
+    "configIdentity": true
+  },
+  "modelSessionCalls": 0,
+  "decodeCalls": 0,
+  "networkCalls": 0
+}

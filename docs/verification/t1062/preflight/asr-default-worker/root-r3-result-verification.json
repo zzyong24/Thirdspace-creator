@@ -1,0 +1,16 @@
+{
+  "at": "2026-10-05T06:22:45.779757+00:00",
+  "status": "ROOT_OBSERVED_DEFAULT_FIXED_WAV_PASS",
+  "rangeCount": 65,
+  "allSamplesIntegralOrderedBounded": true,
+  "lastEnd": 306240,
+  "validSampleCount": 306587,
+  "sourceAndCacheBeforeAfterEqual": true,
+  "decodeCalls": 1,
+  "factoryCalls": 1,
+  "pipelineCalls": 1,
+  "modelCalls": 1,
+  "networkAttempts": 0,
+  "resultSHA256": "f6f07c1afdfdc70107359034366e6b7c92c761952ff7b4879133944221b2c214",
+  "publicInstalledRoughCutVerified": false
+}

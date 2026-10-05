@@ -1,0 +1,15 @@
+isolated roots=/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-writer-check-Y1ua9g
+
+> @creatoros/ai-worker@0.1.0 test /Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/ai-worker
+> vitest run src/runtime/multimodal-whisper-local.test.ts src/runtime/multimodal-whisper-local-cancel.test.ts src/runtime/multimodal-precise-asr.test.ts src/execution/worker-runtime.asset-asr-control.test.ts --maxWorkers=1
+
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/ai-worker
+
+
+ Test Files  4 passed (4)
+      Tests  52 passed (52)
+   Start at  14:16:17
+   Duration  2.79s (transform 614ms, setup 0ms, import 1.80s, tests 441ms, environment 0ms)
+
+{"cmd":"pnpm","args":["-C","ai-worker","test","src/runtime/multimodal-whisper-local.test.ts","src/runtime/multimodal-whisper-local-cancel.test.ts","src/runtime/multimodal-precise-asr.test.ts","src/execution/worker-runtime.asset-asr-control.test.ts","--maxWorkers=1"],"exit":0,"signal":null,"isolated":"/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-writer-check-Y1ua9g"}

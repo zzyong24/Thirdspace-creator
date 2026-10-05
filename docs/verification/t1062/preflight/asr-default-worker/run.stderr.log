@@ -1,0 +1,3 @@
+Error: Unknown: default resolver did not find temporary real-dependency bootstrap
+    at must (/private/tmp/t1062-default-worker-preflight/run.cjs:18373:18)
+    at main (/private/tmp/t1062-default-worker-preflight/run.cjs:18427:3)

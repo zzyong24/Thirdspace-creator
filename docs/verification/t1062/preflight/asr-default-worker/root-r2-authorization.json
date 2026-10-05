@@ -1,0 +1,18 @@
+{
+  "at": "2026-10-05T06:11:40.211701+00:00",
+  "decision": "APPROVE_ONE_ACTUAL_R2_DEFAULT_FACTORY_RUN",
+  "manifestSHA256": "523a1f680b4ab0b282a0964aa89634a99322b3ac22626920f5e85af6c0e2e02f",
+  "runCjsSHA256": "f206a9ceb496e0e10536fba2b86c17a2504b8188b502418213ee4a671d7d0a60",
+  "staticReviewSHA256": "be30344516e66080dcb4bbb6dcda855dd62c2e86c5fdbbd252330433f0eaa1e4",
+  "sourceFilesMatched": 14,
+  "artifactHashesMatched": 12,
+  "priorAttemptModelCalls": 0,
+  "priorAttemptDecodeCalls": 0,
+  "publicInstalledProof": false,
+  "argv": [
+    "/opt/homebrew/bin/node",
+    "--max-old-space-size=2048",
+    "/tmp/t1062-default-worker-preflight/run-r2.cjs",
+    "523a1f680b4ab0b282a0964aa89634a99322b3ac22626920f5e85af6c0e2e02f"
+  ]
+}

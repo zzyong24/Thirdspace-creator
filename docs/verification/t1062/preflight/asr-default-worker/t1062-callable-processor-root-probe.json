@@ -1,0 +1,27 @@
+{
+  "schema": "t1062-callable-processor-no-model-probe/v1",
+  "at": "2026-10-05T06:14:31.791Z",
+  "runtimeVersion": "v25.9.0",
+  "processorClass": "actual dependency WhisperProcessor",
+  "typeofProcessor": "function",
+  "typeofApply": "undefined",
+  "typeofCall": "undefined",
+  "modelCalls": 0,
+  "decodeCalls": 0,
+  "sourceEntry": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/node_modules/.pnpm/@xenova+transformers@2.17.2/node_modules/@xenova/transformers/src/transformers.js",
+  "guardCurrentInvocationError": {
+    "name": "TypeError",
+    "message": "processor.apply is not a function",
+    "stack": "TypeError: processor.apply is not a function\n    at [stdin]:9:15\n    at runScriptInThisContext (node:internal/vm:219:10)\n    at node:internal/process/execution:483:12\n    at [stdin]-wrapper:6:24\n    at runScriptInContext (node:internal/process/execution:481:60)\n    at evalFunction (node:internal/process/execution:315:30)\n    at evalTypeScript (node:internal/process/execution:327:3)\n    at node:internal/main/eval_stdin:51:5\n    at ReadStream.<anonymous> (node:internal/process/execution:237:5)\n    at ReadStream.emit (node:events:509:20)"
+  },
+  "reflectApplyResult": {
+    "input_features": {
+      "dims": [
+        1,
+        80,
+        3000
+      ]
+    }
+  },
+  "featureCalls": 1
+}

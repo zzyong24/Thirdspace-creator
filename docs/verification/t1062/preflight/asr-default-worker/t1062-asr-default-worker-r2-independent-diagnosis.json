@@ -1,0 +1,139 @@
+{
+  "schema": "t1062-asr-default-worker-r2-independent-diagnosis/v1",
+  "reviewed_at": "2026-10-05T06:14:34.968803+00:00",
+  "review_mode": "read_only_no_model_no_decode_no_network",
+  "candidate": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator",
+  "observed_head_at_review": "7487f94341688003f053525ccf296370c4bf7bce",
+  "source_binding": {
+    "path": "ai-worker/src/runtime/multimodal-whisper-local.ts",
+    "sha256": "3ec9a752cf72dec6df0765e2eac983db4a64ab0713f5207b81098c2c3b9fbc9e",
+    "expected_frozen_sha256": "3ec9a752cf72dec6df0765e2eac983db4a64ab0713f5207b81098c2c3b9fbc9e",
+    "matches_expected": true
+  },
+  "status": "BLOCKED_DETERMINISTIC_PRE_GENERATE_PROCESSOR_INVOCATION_BUG",
+  "cause": {
+    "classification": "confirmed_by_source_chain_and_no_model_reproduction",
+    "summary": "guardWhisperPipeline 通过 originalProcessor.apply(this,args) 调用 Xenova Callable processor；Callable 构造器把函数对象原型替换为具体类 prototype，因而实例不继承 Function.prototype，processor.apply 为 undefined。真实 pipeline 首先 await this.processor(subarr)，包装器在进入 processor _call 前抛 TypeError，故 model.generate 计数为 0。",
+    "source_chain": [
+      {
+        "path": "ai-worker/src/runtime/multimodal-whisper-local.ts",
+        "line": 87,
+        "evidence": "await originalProcessor.apply(this,args)"
+      },
+      {
+        "path": "ai-worker/node_modules/@xenova/transformers/src/utils/core.js",
+        "line": 64,
+        "evidence": "Object.setPrototypeOf(closure,new.target.prototype) replaces callable function prototype chain"
+      },
+      {
+        "path": "ai-worker/node_modules/@xenova/transformers/src/pipelines.js",
+        "line": 1787,
+        "evidence": "await this.processor(subarr) precedes generation"
+      },
+      {
+        "path": "ai-worker/node_modules/@xenova/transformers/src/pipelines.js",
+        "line": 1816,
+        "evidence": "this.model.generate occurs only after processor output is collected"
+      }
+    ],
+    "reproduction": {
+      "script": "/tmp/t1062-callable-processor-apply-repro.mjs",
+      "stdout": "/tmp/t1062-callable-processor-apply-repro.stdout.json",
+      "result": {
+        "typeofProcessor": "function",
+        "prototypeConstructor": "ProbeProcessor",
+        "memberApplyType": "undefined",
+        "reflectApplyResult": {
+          "input_features": {
+            "inputLength": 7
+          }
+        },
+        "memberApply": {
+          "ok": false,
+          "name": "TypeError",
+          "message": "processor.apply is not a function",
+          "stack": "TypeError: processor.apply is not a function\n    at file:///private/tmp/t1062-callable-processor-apply-repro.mjs:17:19"
+        }
+      },
+      "constraints": "Imported only real Xenova Callable and used a virtual processor; no model, decoder, audio, database, browser, or network."
+    },
+    "r2_consistency": {
+      "factoryCalls": 1,
+      "pipelineCalls": 1,
+      "modelCalls": 0,
+      "networkAttempts": 0,
+      "decodeCalls": 1,
+      "actualDecodedSampleCount": 306587,
+      "outerError": "MultimodalGenerationError: whisper-local(worker)执行失败: inference failed"
+    }
+  },
+  "minimal_in_scope_fix": {
+    "production_files": [
+      "ai-worker/src/runtime/multimodal-whisper-local.ts"
+    ],
+    "test_files": [
+      "ai-worker/src/runtime/multimodal-whisper-local.test.ts"
+    ],
+    "required_change": "Use Reflect.apply(originalProcessor,this,args) (or Function.prototype.apply.call) so invocation does not depend on Function.prototype being in the callable object prototype chain.",
+    "required_regression": "Add a processor fixture derived from the real @xenova/transformers Callable shape (member .apply absent), run it through the actual AutomaticSpeechRecognitionPipeline/guard path with virtual neural generation, and assert chunk identity/valid length, restoration, error and cancellation behavior.",
+    "excluded": "No dependency upgrade, timing criterion change, tail clamp, model/network behavior change, or new fallback."
+  },
+  "required_after_fix_evidence": [
+    "Re-run the four ASR test files plus cancellation and ai-worker typecheck against the new exact hashes.",
+    "Build a fresh esbuild worker from the fixed source and run the no-model real-Callable pipeline regression; old bundle evidence cannot prove the changed bytes.",
+    "Then run exactly one fresh authorized real createDefaultWhisperLocalAdapter fixed-WAV regression with network denied and cache/source before-after hashes, and require model.generate > 0 plus strict timing result. This diagnosis does not authorize or claim that run.",
+    "Public reserve/settle, packaged app, and installed app remain unverified."
+  ],
+  "not_claimed": [
+    "No model inference was run by this review.",
+    "No decoder was run by this review.",
+    "The exact swallowed worker stack was not recovered; the deterministic pre-generate failure is established independently and matches all observed counters.",
+    "No implementation or product PASS."
+  ],
+  "evidence_bindings": [
+    {
+      "path": "/tmp/t1062-callable-processor-apply-repro.mjs",
+      "sha256": "65c5f3522dba02563b90cd5fd4a7a92a7d37f93ba61b1292798d33990f97d2dc"
+    },
+    {
+      "path": "/tmp/t1062-callable-processor-apply-repro.stdout.json",
+      "sha256": "70d60ac03693034709815e16fc897df9a70151daa2c9514d20e8568e251e2014"
+    },
+    {
+      "path": "/tmp/t1062-default-worker-preflight/run-r2.cjs",
+      "sha256": "f206a9ceb496e0e10536fba2b86c17a2504b8188b502418213ee4a671d7d0a60"
+    },
+    {
+      "path": "/tmp/t1062-default-worker-preflight/run-r2.stderr.log",
+      "sha256": "c28ebc2257f50e15cf844578f134860a2ad9ee32ed40cc15c5ef258a84208442"
+    },
+    {
+      "path": "/tmp/t1062-default-worker-preflight/run-r2.stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/tmp/t1062-default-worker-preflight/run-two/unknown.json",
+      "sha256": "871072056a8de6c65c64ebf641cf64820c9e30dfc31aca3e72f307639ebf18d9"
+    },
+    {
+      "path": "/tmp/t1062-default-worker-preflight/run-two/worker-counts.json",
+      "sha256": "fd396621fd05340439f8932dc2148ddb1044e92e2cdd28a2e101809836e98907"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/ai-worker/src/runtime/multimodal-whisper-local.ts",
+      "sha256": "3ec9a752cf72dec6df0765e2eac983db4a64ab0713f5207b81098c2c3b9fbc9e"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/ai-worker/src/runtime/multimodal-whisper-local.test.ts",
+      "sha256": "653c2cac55a874fc1652620b89b9469073ec782d9a667ca211830871b154920e"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/ai-worker/node_modules/@xenova/transformers/src/utils/core.js",
+      "sha256": "47b676780b669b83ae9d499fae6e2209a36e6ca45c3db4a916f1620175e56262"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/ai-worker/node_modules/@xenova/transformers/src/pipelines.js",
+      "sha256": "95916d72e45c881cca1c9cd381135265b6ecfafffc9316f69da837a277e10031"
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "at": "2026-10-05T06:19:58.158626+00:00",
+  "decision": "APPROVE_ONE_ACTUAL_R3_AFTER_CONFIRMED_CALLABLE_FIX",
+  "manifestSHA256": "faec0c5dc75c3649bca6874fe95ae391c1b96c5092b43a1e0ccba3b52796526f",
+  "runCjsSHA256": "286f3b1ce7f64891ed0596f02c1a958da100e3755480e33f55a8ba15d2e73a61",
+  "independentReviewSHA256": "a0cc47481e3a066a26c0de193674031334756253261413fda9794f9ca35efc48",
+  "sourceFilesMatched": 14,
+  "artifactHashesMatched": 10,
+  "publicInstalledProof": false,
+  "argv": [
+    "/opt/homebrew/bin/node",
+    "--max-old-space-size=2048",
+    "/tmp/t1062-default-worker-preflight/run-r3.cjs",
+    "faec0c5dc75c3649bca6874fe95ae391c1b96c5092b43a1e0ccba3b52796526f"
+  ]
+}

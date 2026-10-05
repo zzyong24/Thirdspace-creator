@@ -1,0 +1,285 @@
+{
+  "task": "T-1062",
+  "kind": "只读独立probe group最小scope准入审查",
+  "observed_at_utc": "2026-10-05T06:46:23.837377+00:00",
+  "root": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator",
+  "head": "7487f94341688003f053525ccf296370c4bf7bce",
+  "writer_state": "已按提供pause停止68WIP；本审查不承认其整体验收",
+  "verdict": "建议准入两个精确生产路径；只修媒体probe组范围及receipt ORM对齐，不扩大DDL/模型/进程/IPC",
+  "write_set_increment": [
+    "backend/src/modules/ai/ai-media-probe-control.ts",
+    "backend/src/schema/intelligence.ts"
+  ],
+  "existing_test_write_paths": [
+    "backend/src/modules/ai/ai-media-probe-control.test.ts",
+    "backend/src/modules/production/production-rough-cut.integration.test.ts"
+  ],
+  "scope168": {
+    "packet": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/orchestrator/context/T-1062.md",
+    "sha256": "3834ea3312de7021e6c18803d2cae81600983470ad63882a81f05bcabb597a3d",
+    "count": 168,
+    "source_currently_in_scope": false,
+    "schema_currently_in_scope": false,
+    "existing_tests_in_scope": {
+      "backend/src/modules/ai/ai-media-probe-control.test.ts": true,
+      "backend/src/modules/production/production-rough-cut.integration.test.ts": true
+    }
+  },
+  "observed_files": [
+    {
+      "path": "backend/src/modules/ai/ai-media-probe-control.ts",
+      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/backend/src/modules/ai/ai-media-probe-control.ts",
+      "sha256": "91df749c7b1ec6d722084aa862e386d74d91f33c900e704d1df0402bbfda2843"
+    },
+    {
+      "path": "backend/src/schema/intelligence.ts",
+      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/backend/src/schema/intelligence.ts",
+      "sha256": "d9c1cc951c45dd05445a9a10f43eac5345f8c881083ac4ab431153b893c90a56"
+    },
+    {
+      "path": "backend/src/modules/ai/ai-media-probe-control.test.ts",
+      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/backend/src/modules/ai/ai-media-probe-control.test.ts",
+      "sha256": "d49d4c7b507ad7f257ff6357b79d438461f2e8eefce7dea0e09aeaf168af4b29"
+    },
+    {
+      "path": "backend/src/modules/production/production-rough-cut.integration.test.ts",
+      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/backend/src/modules/production/production-rough-cut.integration.test.ts",
+      "sha256": "0902a4d67f494d9cb422f11a3f9a324252ec877a5b87c458c38205cf54b2f758"
+    },
+    {
+      "path": "backend/src/schema/ai.ts",
+      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/backend/src/schema/ai.ts",
+      "sha256": "e95fbc05975055f4f1e2f9c5acc32836c7366545ec628a9948f013f201d3739c"
+    },
+    {
+      "path": "backend/drizzle/0128_workspace_convergence.sql",
+      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/backend/drizzle/0128_workspace_convergence.sql",
+      "sha256": "60cac883f02fa7fcd83051264bd6a63ec49132369c7c983b36e34e979a2f7713"
+    },
+    {
+      "path": "backend/src/modules/production/production-sources.ts",
+      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/backend/src/modules/production/production-sources.ts",
+      "sha256": "861ad1d0b3482d9d9599105a11a3396779fda8eebfb85fdc8703e9a083d002db"
+    },
+    {
+      "path": "backend/src/modules/execution/execution.service.ts",
+      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/backend/src/modules/execution/execution.service.ts",
+      "sha256": "b3cc28576842960a6b2420eea674c1fd5f849278aa3682be19b7f4803e4d83f8"
+    },
+    {
+      "path": "backend/src/modules/execution/run-execution-task.ts",
+      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/backend/src/modules/execution/run-execution-task.ts",
+      "sha256": "5d32a5f0bcc4e46f6e552bb263205dd62bc966210aedeba51e1b878022c87a95"
+    },
+    {
+      "path": "backend/src/modules/ai/ai.service.ts",
+      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/backend/src/modules/ai/ai.service.ts",
+      "sha256": "3d9a5edbdfac24cb8323ad6b6d8d5a26ecaed7f6ea1facbb6561b2cd1dc58ee5"
+    },
+    {
+      "path": "backend/src/modules/ai/ai.repository.ts",
+      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/backend/src/modules/ai/ai.repository.ts",
+      "sha256": "5c3e9906f4e1e5460d314225d8be497f7e1447cf880bfe4ead9db623e2f97b48"
+    },
+    {
+      "path": "backend/src/workspace-scope.ts",
+      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/backend/src/workspace-scope.ts",
+      "sha256": "4dfabca2c21f96efb2cddde6f77b00cfe9f18a7e4b2f3ec92471f15fc361a712"
+    },
+    {
+      "path": "backend/src/workspace-write.ts",
+      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/backend/src/workspace-write.ts",
+      "sha256": "c75a788ef9e1bcd86f5e620fda6ea19d9a66413d2b184ece342df62a1925a937"
+    },
+    {
+      "path": "backend/src/modules/platform-account/membership-lock.service.ts",
+      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/backend/src/modules/platform-account/membership-lock.service.ts",
+      "sha256": "27d59f591636b8fd4b6ce3a09f485e7966274bac01744e724fd00882ca426fa4"
+    },
+    {
+      "path": "backend/src/modules/scheduling/private-collector-admission.service.ts",
+      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/backend/src/modules/scheduling/private-collector-admission.service.ts",
+      "sha256": "89f0d5bfdac9f21a8ba54396ce9ce05ee963cf7694b04b3e2d98203babd14551"
+    },
+    {
+      "path": "contract/src/request-context.ts",
+      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/contract/src/request-context.ts",
+      "sha256": "85de07c38e0acb8baed83aa7f1d46b19a68d589b61cd1a9be6d936735c4e61ba"
+    }
+  ],
+  "evidence": [
+    {
+      "path": "/tmp/t1062-probe-control-scope-pause.json",
+      "sha256": "38b00584722debf1331fe85bc19f5619d8b8d0c936ed25881907cb6ec8658a69",
+      "kind": "writer暂停/真实红日志；本审查未执行"
+    },
+    {
+      "path": "/tmp/t1062-paused-contract-and-probe-dependency.json",
+      "sha256": "c4ad101c1910b11259bd6ad2a863b4f9ca7f0c4b9597339de7d48493e96bebf3",
+      "kind": "writer暂停/真实红日志；本审查未执行"
+    },
+    {
+      "path": "/tmp/t1062-rough-v3-empty-group-public-source-green1.log",
+      "sha256": "eb365d1ca70597e0198069038f399b599cd8a725739597188af9b6d588705360",
+      "kind": "writer暂停/真实红日志；本审查未执行"
+    }
+  ],
+  "runtime_root_cause": {
+    "line": 33,
+    "chain": [
+      "Production Source prepare真实group/account null预约→原ExecutionService.create",
+      "AiService.createTask持久aiTasks真实group与account null",
+      "Source group dispatch→runExecutionTask",
+      "probeControl.claim→locked→scope硬要求ctx.accountId",
+      "OwnershipError请先选择账号→runExecutionTask catch→Source.status未成功",
+      "Source.adopt拒绝原片探针尚未成功；不是缺ffmpeg或v3模型"
+    ],
+    "red_log_fact": "native-v3-group日志真实exit1，stderr直接指control.scope:33/claim:81；不要因为文件名含green把该日志当绿"
+  },
+  "schema_check": {
+    "aiTasks": "已有account nullable、groupId/groupVersion/membershipVersion，当前无需新增schema/ai写集",
+    "receipt_orm": "intelligence.ts:346旧accountId.notNull、无groupId，仅旧unique，与既有0128不一致",
+    "existing_physical_0128": {
+      "account_nullable_line": 1823,
+      "group_column_line": 425,
+      "group_unique_line": 2317,
+      "group_unique_name": "execution_control_receipts_group_715b2c6d",
+      "group_unique_columns": [
+        "user_id",
+        "group_id",
+        "idempotency_key"
+      ],
+      "group_unique_predicate": "group_id IS NOT NULL AND account_id IS NULL",
+      "group_index_line": 2319,
+      "legacy_unique_line": 2321,
+      "legacy_unique_name": "execution_control_receipts_scope_key_uq",
+      "legacy_unique_columns": [
+        "user_id",
+        "account_id",
+        "idempotency_key"
+      ]
+    },
+    "minimal_orm_change": "仅executionControlReceipts表：accountId移除notNull、加groupId(text)、保留旧account unique、显式对齐既有group partial unique及group_scope_idx（使用真实0128原名称/谓词）。保留同文件其他所有schema原字节/语义，不新增SQL。",
+    "additional_paths_required": []
+  },
+  "minimal_control_changes": {
+    "owner_filter": "task ID+userId+workspaceFilter(aiTasks,ctx)；真实group优先，可空account，无group保持legacy account兼容。不把ctx.groupId全局化，不把groupId造为accountId。读取原task冻结owner再作用，当前平台filter不能改原owner。",
+    "same_tx": "新retry/claim：在同事务读取授权task snapshot，按既有冻结workspace admission锁原group/member，随后锁task并重读输入/状态；保留根既有锁顺序，不能先task后随意新锁次序。retry task状态改变与control receipt写入一个事务；assertSettled严格使用调用者现有transaction，不开嵌套独立tx或换root db。",
+    "existing_guards": "复用workspaceKey/workspaceFilter和assertAiTaskWorkspaceAdmission/lockWorkspaceMembership的原冻结组校验。media.probe不是private scheduled collector，不能借allowArchived初次claim/retry。现有helper依真实group/member锁，不新增全局scope或临时admin特例。",
+    "frozen_fields": "原inputData/spec/requestFingerprint/attemptId/groupId/accountId/groupVersion/membershipVersion/费用与既有执行标记不得由当前ctx重新写入；新retry只增加已有probeRunGeneration并按原逻辑重排queued。禁止重签旧input digest。",
+    "probe_only": "原assertProbe(taskType exec.media.probe、spec media.probe、无模型开始/worker execution/lease)全保留。"
+  },
+  "retry_receipt_policy": {
+    "old_key": "ai-deterministic-retry:${requestId}，legacy oldkey原样保留",
+    "old_digest": "SHA256(canonical({operation:media.probe.retry,taskId,taskType,requestFingerprint,inputData}))；原算法与字段不加group，不重算历史receipt",
+    "new_group_rows": "新group receipt使用真实groupId、accountId:null以匹配0128 partial unique；key字面可保留原prefix，scope由user+group+NULLaccount决定，不需要新DDL。原task带account不意味新组共享receipt必须按当前平台account分桶。",
+    "legacy_replay": "无group按旧user+原account+key唯一查询。group入口如需恢复旧account receipt，只能按被授权原task的冻结account精确读原旧键，验证digest和receipt.taskId/generation；不能使用当前平台filter寻找旧回执。旧group backfill/NULLgroup值不能被当前membership猜改。",
+    "ambiguity": "同group历史两account同requestId必须保持两条原task精确旧回放；group范围不能query后取首行。新无明确原legacy身份遇多个匹配先领域冲突/人工review，不能任意挑account；同组新group command相同requestId不同task即digest冲突，全回滚。",
+    "concurrency": "保留23505唯一竞争回滚后重新真实owner鉴权、读取同scope唯一赢家、校验原digest；再读不能漏group/null谓词或退到user级first。",
+    "replay_before_new_admission": "原receipt存在且身份/digest完整可返回原result，不重新增加generation、不重排后来状态、不创建新执行；归档后允许此无新副作用回读，新receipt/newgeneration才需活动组准入。"
+  },
+  "phase_permissions": [
+    {
+      "operations": [
+        "claim queued→running",
+        "retry首次新generation/receipt"
+      ],
+      "policy": "活动且真实owner/member冻结准入，同tx；归档/外组/非owner/readonly借用资源拒绝，零state/result/receipt/external executor writes。旧receipt同号回读不属于新admission。"
+    },
+    {
+      "operations": [
+        "recordStep",
+        "markFailed",
+        "recordCandidate"
+      ],
+      "policy": "已claim started的原generation允许在归档后按冻结原user/group/task及running/generation围栏结算，不要求当前active或当前页面account；仍拒外组/foreign user、取消和旧generation。不能所有writes统一包active guard误杀已开始事实。"
+    },
+    {
+      "operations": [
+        "cancel"
+      ],
+      "policy": "对被授权原task按generation锁取消，已终态保持原幂等；归档后已在跑任务仍可安全取消。旧generation不能取消新run。"
+    },
+    {
+      "operations": [
+        "assertSettled"
+      ],
+      "policy": "在采用调用者原tx锁task、原generation与awaiting_confirmation/succeeded、真实manifest/probeDigest完整匹配；只验证既有事实，不开启新claim。实际采用的父owner仍由Source/editor的原active/readonly/CAS门守，不能放宽归档写入。"
+    }
+  ],
+  "old_test_count": 10,
+  "old_tests_all_preserved": [
+    "原任务恢复与回执持久原子，回复丢失及再次失败后旧命令不重排",
+    "同请求并发恢复一次，同key异任务全回滚，跨账号拒绝",
+    "旧取消轮次迟到结算不污染新轮次，claim同轮次只成功一次",
+    "其他执行类型及模型调用标记不可借探针恢复入口",
+    "同请求不同任务并发只提交一个，另一任务保持失败并返回领域冲突",
+    "当前轮次坏清单零写入，历史预演与旧轮次清单不能成为新探针结果",
+    "旧轮次迟到清理保留新沙箱与控制器，不吞同任务的新执行",
+    "旧取消不能取消新轮次，正式采用须在同事务锁定当前成功探针",
+    "损坏历史轮次不阻断任务列表读取，恢复仍拒绝损坏状态且零写",
+    "显式null轮次不冒充历史缺字段0，列表保留损坏任务且恢复零写"
+  ],
+  "new_required_regressions": [
+    {
+      "path": "backend/src/modules/ai/ai-media-probe-control.test.ts",
+      "cases": [
+        "真实active空group+NULLaccount task retry→claim→recordCandidate→assertSettled，同txgroup receiptNULLaccount、输入/attempt/费用/版本原样",
+        "同组两个真实membership账号切platform读取同task/同group回执，不按filter重新分桶",
+        "同user不同group+NULLaccount与foreign user对claim/retry/cancel/recordCandidate/assertSettled全部拒绝，零写",
+        "同group新相同requestId不同task并发只提交一次，败方task仍failed领域409；不同group同requestId可独立成功",
+        "两历史account同group同requestId精确原task回放；无明确身份组查询歧义不首行；legacy oldkey/digest/result原字节不改",
+        "归档前queued，归档后首次claim/newretry拒绝零executor；旧已存在retryreceipt回放不重排",
+        "active开始后归档：当轮step/failure/candidate成功事实可收尾；cancel可停；旧generation迟到candidate/cleanup不污染后来task/sandbox",
+        "group membership转移/版本输入不可由当前ctx偷改；原modelCallStarted/其他exec类型仍安全拒绝",
+        "真实read-only跨组资源grant不能用来claim/retry其owner task，保留Source前置权限拒绝",
+        "外层transaction内assertSettled看到同tx最新状态，取消/改generation后采用验证拒绝；回滚不留下receipt/taskpartial"
+      ]
+    },
+    {
+      "path": "backend/src/modules/production/production-rough-cut.integration.test.ts",
+      "cases": [
+        "现有native-v3-group真实Source→ExecutionService→runExecutionTask probe→adopt source→v3 skill/worker/结算公共链重跑，不只fake probeControl绿",
+        "在该公共fixture加入Source.retry真实原task新generation与丢回复重入，冻结group account NULL不重新建模型/任务",
+        "实际source media/file hash授权/归档/readonly拒绝、safe无音轨降级原断言保留；新group成功不冒称installed/frontend PASS"
+      ]
+    }
+  ],
+  "verify_proposal_only": [
+    {
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator",
+      "command": "git diff --check"
+    },
+    {
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator",
+      "command": "pnpm -C backend typecheck"
+    },
+    {
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator",
+      "command": "pnpm -C backend test src/modules/ai/ai-media-probe-control.test.ts --maxWorkers=1"
+    },
+    {
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator",
+      "command": "pnpm -C backend exec vitest run src/modules/production/production-rough-cut.integration.test.ts -t native-v3-group --maxWorkers=1"
+    },
+    {
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator",
+      "command": "pnpm -C backend test src/modules/production/production-rough-cut.integration.test.ts --maxWorkers=1",
+      "note": "writer获准后完整旧9+新v3族真实public fixture；本审查未执行，禁外部AI/真实用户DB/media"
+    }
+  ],
+  "not_in_scope": [
+    "任何SQL/0128修改",
+    "schema/ai新增修改",
+    "新增模型/进程/IPC/worker",
+    "修改原冻结digest/receipt key字面",
+    "把group冒充account",
+    "修合同路由清单或前端闭包"
+  ],
+  "limits": [
+    "仅当前源码/SHA/既有DDL/真实失败日志静态复核，未执行模型/DB/tests/tsc",
+    "两个paths的scope准入建议不是实现PASS、68WIP或合同/前端闭包PASS",
+    "已开始结算采用冻结身份；资源readonly授权仍需其公开source/owner实际拒绝回归，不能以ctx没有readonly字段就声称覆盖",
+    "若实现发现历史receipt跨group歧义无法唯一恢复，保留原数据与明确review/冲突，不新增fallback或DDL"
+  ]
+}

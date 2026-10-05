@@ -206,7 +206,9 @@
     "ai-worker/src/runtime/multimodal-precise-asr.test.ts",
     "ai-worker/src/execution/worker-runtime.asset-asr-control.test.ts",
     "backend/src/application/generation/moments-model-runtime.ts",
-    "backend/src/application/generation/transactional-task-runtime.ts"
+    "backend/src/application/generation/transactional-task-runtime.ts",
+    "backend/src/modules/ai/ai-media-probe-control.ts",
+    "backend/src/schema/intelligence.ts"
   ],
   "path_details": [
     {
@@ -2395,6 +2397,36 @@
       "reasons": [
         "两个既有factory增加同tx groupOverlays装配，复用真实settings workspace filter；保留account fallback仅用于legacy无group与历史任务快照，不新增存储/协议/模型机制。"
       ]
+    },
+    {
+      "path": "backend/src/modules/ai/ai-media-probe-control.ts",
+      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/modules/ai/ai-media-probe-control.ts",
+      "exists": true,
+      "before_sha256": "91df749c7b1ec6d722084aa862e386d74d91f33c900e704d1df0402bbfda2843",
+      "areas": [
+        "media-probe-group-workspace"
+      ],
+      "roles": [
+        "implementation"
+      ],
+      "reasons": [
+        "真实空group Source公共链因probe要求account失败；仅组范围/原同tx准入与executionControlReceipts ORM对齐0128，保留历史account key/digest/收尾围栏，不改SQL或模型。"
+      ]
+    },
+    {
+      "path": "backend/src/schema/intelligence.ts",
+      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/schema/intelligence.ts",
+      "exists": true,
+      "before_sha256": "d9c1cc951c45dd05445a9a10f43eac5345f8c881083ac4ab431153b893c90a56",
+      "areas": [
+        "media-probe-group-workspace"
+      ],
+      "roles": [
+        "implementation"
+      ],
+      "reasons": [
+        "真实空group Source公共链因probe要求account失败；仅组范围/原同tx准入与executionControlReceipts ORM对齐0128，保留历史account key/digest/收尾围栏，不改SQL或模型。"
+      ]
     }
   ],
   "conditional_write_paths": [
@@ -3853,6 +3885,27 @@
       },
       "implementation_verdict": "pending",
       "new_red_required": true
+    },
+    {
+      "probe_scope_review": {
+        "at": "2026-10-05T06:51:23.518432+00:00",
+        "base_sha": "7487f94341688003f053525ccf296370c4bf7bce",
+        "action": "真实空组Source probe红后暂停、独立审查并重编写集",
+        "previous_step_path_count": 168,
+        "added_paths": [
+          "backend/src/modules/ai/ai-media-probe-control.ts",
+          "backend/src/schema/intelligence.ts"
+        ],
+        "step_path_count": 170,
+        "independent_review": "docs/verification/t1062/preflight/probe-control-root-scope-review.json",
+        "review_sha256": "4741fbff5c8cabc031e9beab0d528a650b2a68cb19cf87b00c6f0e1040208deb",
+        "wip_preserved": "docs/verification/t1062/preflight/probe-control-paused-wip.json",
+        "reason": "已授权组工作区与粗剪原公共Source链适配；不改SQL、历史digest/key、进程、IPC或供应商。"
+      },
+      "implementation_verdict": "pending",
+      "source_red_log": "docs/verification/t1062/preflight/rough-v3-empty-group-source-red.log",
+      "actual_red_exit": 1,
+      "default_local_asr_status": "R3真实默认worker PASS；见preflight/asr-default-worker，公共粗剪和安装版未验"
     }
   ],
   "ordered_prerequisites": [
@@ -3895,7 +3948,7 @@
     "gateway_exception": "frontend/src/app/api/v1/dispatch/route.test.ts仅公共CLI网关测试，route.ts仅条件修复；无页面/UI路径"
   },
   "counts": {
-    "required_or_new": 144,
+    "required_or_new": 146,
     "necessary_new": 6,
     "conditional": 23,
     "read_only": 48
@@ -4500,6 +4553,23 @@
         "不修改五测试中run-only未在scope内的路径；保留全部旧断言和真实历史freeze。"
       ],
       "executed_this_audit": false
+    },
+    {
+      "label": "媒体probe组范围与原10项生命周期完整回归",
+      "argv": [
+        "pnpm",
+        "-C",
+        "backend",
+        "test",
+        "src/modules/ai/ai-media-probe-control.test.ts",
+        "--maxWorkers=1"
+      ],
+      "phase": "after_adaptation",
+      "environment_rule": "隔离PGlite合成fixture，无用户库/媒体/供应商；包含空组、跨组、只读、归档开始后收尾、真实旧key/digest与并发重放。",
+      "preconditions": [
+        "保留原10项断言；native-v3-group必须在既有完整rough公共链组合通过。"
+      ],
+      "executed_this_audit": false
     }
   ],
   "source_path_validation": {
@@ -4589,6 +4659,21 @@
       "independent_review": "docs/verification/t1062/preflight/group-overlay-root-scope-review.json",
       "review_sha256": "979763a2e671050911111507f649aca6a8b440b8cdf39a8b3207b97b05f932f9",
       "reason": "空组与组级Skill配置不可静默丢失；只接既有同tx port，不改变v2/3冻结合同。"
+    },
+    {
+      "at": "2026-10-05T06:51:23.518432+00:00",
+      "base_sha": "7487f94341688003f053525ccf296370c4bf7bce",
+      "action": "真实空组Source probe红后暂停、独立审查并重编写集",
+      "previous_step_path_count": 168,
+      "added_paths": [
+        "backend/src/modules/ai/ai-media-probe-control.ts",
+        "backend/src/schema/intelligence.ts"
+      ],
+      "step_path_count": 170,
+      "independent_review": "docs/verification/t1062/preflight/probe-control-root-scope-review.json",
+      "review_sha256": "4741fbff5c8cabc031e9beab0d528a650b2a68cb19cf87b00c6f0e1040208deb",
+      "wip_preserved": "docs/verification/t1062/preflight/probe-control-paused-wip.json",
+      "reason": "已授权组工作区与粗剪原公共Source链适配；不改SQL、历史digest/key、进程、IPC或供应商。"
     }
   ]
 }

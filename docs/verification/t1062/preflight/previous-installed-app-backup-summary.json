@@ -1,0 +1,15 @@
+{
+  "schema": "t1062-previous-installed-application-backup/v1",
+  "at": "2026-10-05T06:12:35.295249+00:00",
+  "source": "/Applications/CreatorOS.app",
+  "backup": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/previous-CreatorOS.app",
+  "bundleId": "cloud.aitongban.creatoros",
+  "version": "1.2.0",
+  "sourceBeforeAfterAndCopyMatch": true,
+  "fileCount": 7,
+  "inventorySHA256": "c5f5278005599f98e00debeddf46d7ad2147fd59084567eba9372b1c11fa3b6f",
+  "applicationOnly": true,
+  "userdataBackupCompleted": false,
+  "sourceRunningStateUnchanged": true,
+  "protectedFullManifest": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/previous-installed-app-backup.json"
+}
