@@ -110,7 +110,7 @@
         "frontend/src/features/draft-workbench/draft-chat-request.tsx",
         "frontend/src/features/publishing-center/**",
         "frontend/src/features/copilot/chat-publish-package-card.tsx",
-        "frontend/src/app/(creator)/projects/[projectId]/publishing/page.tsx",
+        "frontend/src/app/(creator)/projects/**",
         "backend/src/modules/publishing/**",
         "backend/src/modules/ai/ai.service.ts",
         "backend/src/application/chat/generation-tasks.ts",
@@ -1725,7 +1725,9 @@
         "docs/features/t1003-agent-workbench.md"
       ],
       "write_set": [
-        "orchestrator/reviews/T-1003-round-*.json"
+        "orchestrator/reviews/T-1003-round-1.json",
+        "orchestrator/reviews/T-1003-round-2.json",
+        "orchestrator/reviews/T-1003-round-3.json"
       ],
       "verify_commands": {
         "review": "node orchestrator/process/reviewctl.mjs context T-1003"
@@ -1772,7 +1774,8 @@
         "backend/src/modules/candidate/**",
         "backend/src/modules/ai-runtime/**",
         "backend/src/modules/ai/**",
-        "backend/src/modules/execution/execution-topic-read*",
+        "backend/src/modules/execution/execution-topic-read.service.ts",
+        "backend/src/modules/execution/execution-topic-read.service.test.ts",
         "backend/src/application/generation/**",
         "ai-worker/src/**",
         "contract/src/**",
@@ -1846,7 +1849,11 @@
         ".agents/**",
         "pnpm-lock.yaml",
         "package.json",
-        "LICENSE"
+        "LICENSE",
+        "reference-editors/**",
+        "scripts/workbuddy/**",
+        "tools/windows-closure-rat/**",
+        "THIRD_PARTY_NOTICES.md"
       ],
       "write_set": [
         "BACKLOG.md",
@@ -1864,7 +1871,11 @@
         "pnpm-lock.yaml",
         "package.json",
         "LICENSE",
-        "AGENTS.md"
+        "AGENTS.md",
+        "reference-editors/**",
+        "scripts/workbuddy/**",
+        "tools/windows-closure-rat/**",
+        "THIRD_PARTY_NOTICES.md"
       ],
       "verify_commands": {
         "integration": "git diff --check"
