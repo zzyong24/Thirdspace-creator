@@ -1,0 +1,135 @@
+{
+  "status": "GO_EXACT_THREE_CONTROL_ADMISSION_ONLY_PENDING_REQUIRED_SEQUENCE_AND_SOURCE_REVIEWS",
+  "reviewer": "final_scope_recheck",
+  "candidate_manifest_path": "/tmp/t1062-attempt10-transaction-owner-k4s2bqyf/controls-revision2/manifest.json",
+  "candidate_manifest_sha256": "9070c30791a72d3412903432cd645f43b8f67de9b106bdb0a5606d44739b0108",
+  "candidate_patch_sha256": "6049e68b24516d852c8d95bb6805422aff60521f828461dd44703b29ead95244",
+  "exact_control_rows": [
+    {
+      "path": "docs/features/t1062-consolidated-local-client-acceptance.md",
+      "before_sha256": "32ee74fdb423e82778fcd01bc9a5b371a506f110034ebcbcf29e5f28e0d30d0e",
+      "after_sha256": "a57ebe7488ac13036ae93d02212a388859b63755e4c42074cbbc42f5a2850f98",
+      "provider": "/tmp/t1062-attempt10-transaction-owner-k4s2bqyf/controls-revision2/after/docs/features/t1062-consolidated-local-client-acceptance.md",
+      "append_only": true,
+      "actual_MAIN_before_matches": true,
+      "actual_writer_before_matches": true,
+      "commit_cd6_before_matches": true
+    },
+    {
+      "path": "orchestrator/DECISION_LOG.md",
+      "before_sha256": "a7f3fd87f2e0e1ea36a8af870fd5a41c82da34e78afce0331b2f95f604c63d98",
+      "after_sha256": "4d3ad1aadd57c53b0c57f7d1b7d196ef4f541090459659c9caf70028abfc79ca",
+      "provider": "/tmp/t1062-attempt10-transaction-owner-k4s2bqyf/controls-revision2/after/orchestrator/DECISION_LOG.md",
+      "append_only": true,
+      "actual_MAIN_before_matches": true,
+      "actual_writer_before_matches": true,
+      "commit_cd6_before_matches": true
+    },
+    {
+      "path": "orchestrator/process/modules.config.json",
+      "before_sha256": "3d782b4bc743d49a7a9bd36e51a5340c4246b360e0f163b10240fa18c2926068",
+      "after_sha256": "db8b6a564b8c535e49ebe84be17487dde8464d2004a1c81a1281f2cc5ec8c98b",
+      "provider": "/tmp/t1062-attempt10-transaction-owner-k4s2bqyf/controls-revision2/after/orchestrator/process/modules.config.json",
+      "append_only": false,
+      "actual_MAIN_before_matches": true,
+      "actual_writer_before_matches": true,
+      "commit_cd6_before_matches": true
+    }
+  ],
+  "read_observation": {
+    "MAIN_head": "cd6cd3e6e4f6ad925484861f22756e6a5324f8eb",
+    "writer_head": "cd6cd3e6e4f6ad925484861f22756e6a5324f8eb",
+    "MAIN_dirty_only": [
+      "orchestrator/context/T-1062.md",
+      "orchestrator/progress.json"
+    ],
+    "writer_individual_WIP_count": 173,
+    "writer_status_counts": {
+      "modified": 139,
+      "deleted_absent": 12,
+      "untracked": 22
+    },
+    "index_actual_empty": true,
+    "deletion_proof12_equals_status_deleted12_and_all_absent": true,
+    "active_lease_still_old_cd6_release_required": [
+      {
+        "pointer": "/leases/T-1062:integration",
+        "record": {
+          "agent": "root-t1062-frontend-delivery",
+          "since": "2026-10-05T22:16:30.585Z",
+          "isolation_kind": "worktree",
+          "workspace_root": "/Users/zyongzhu/.codex/worktrees/t1062-frontend-native-delivery/Thirdspace-creator",
+          "branch": "codex/t1062-frontend-native-delivery",
+          "base_sha": "cd6cd3e6e4f6ad925484861f22756e6a5324f8eb",
+          "wave_id": "t1062-first-root-ready-final-20261006",
+          "merge_index": 0
+        }
+      }
+    ]
+  },
+  "source_reader_binding_basis": {
+    "writer_current": {
+      "docs/verification/t1062/frontend-native-adaptation-scope.json": "3a13e574d4515be97b72423dfc6ec53b1baed6f2c1c3933d84909a64d27552be",
+      "docs/verification/t1062/frontend-native-transfer.json": "c04fd72aedd9ecbed17494120abc82627588482e6e61cc2c7a9eb19048d43296"
+    },
+    "MAIN_historical": {
+      "docs/verification/t1062/frontend-native-adaptation-scope.json": "3b167095bf486a8c68b8107d6e329fdd435fec08de62ef8102a29199ee69d1a5",
+      "docs/verification/t1062/frontend-native-transfer.json": "6eccee0312ffe08a327952383366f003c09522c132c6a38dd0f274521948a93e"
+    }
+  },
+  "exact_structural_checks": {
+    "SPEC_before_prefix_byte_exact": true,
+    "DEC_before_prefix_byte_exact": true,
+    "module_whole_JSON_restore_step_list_equals_before": true,
+    "only_diff_json_pointer": "/modules/T-1062/step_write_set/integration",
+    "exact_three_entries_append": [
+      "frontend/src/server/persistence-client.ts",
+      "frontend/src/lib/http-transport.ts",
+      "frontend/src/components/overlays/overlay-routing.test.tsx"
+    ],
+    "no_removed_or_duplicate_entries": true,
+    "remaining_module_read_set_write_set_steps_commands_unchanged": true,
+    "scope_product_counts_before": [
+      577,
+      1,
+      578,
+      795,
+      217,
+      9
+    ],
+    "scope_product_counts_after": [
+      580,
+      1,
+      581,
+      795,
+      214,
+      8
+    ],
+    "module_before_after": [
+      583,
+      586
+    ],
+    "current_writer_metadata_derived_not_MAIN_old_metadata": true,
+    "http_test_remains_explicit_readonly": true,
+    "original18_argv_no_change_in_control_package": true
+  },
+  "scope_judgment": "三路径只恢复已确认客户端合法公开保存、冻结传输和旧组件真实scope port回归，SPEC/DEC没有新产品方向、权限算法、DTO、DB/runtime或SQL方案。命名材料项目owner必须同transaction公开service验证，不可用假parent/账号/放宽group guard；HTTP恢复用户级管理、forceNewDouyin和显式空freeze不继承currentB；overlay只允许旧unit port接真实factory，不删原15业务断言/epoch/abort。源代码实现仍须ROOT独立exact审与真实Gate，此控制准入不代签。",
+  "mandatory_execution_order": [
+    "先将当前173 WIP逐文件内容/absence/status/mode及空index实际保存并验证，不drop历史stash；12deletion-proof路径真实absence保留。",
+    "公开release现有root-t1062-frontend-delivery/basecd6租约后，才可改SPEC/DEC/modules配置并实际contextcompile/control commit；MAIN现有ctx/progress变更按真实publicrelease/recompile记录处理。",
+    "writer必须在干净工作区FF新控制commit，使用真实新HEAD/publicclaim，干净claim成功后恢复全部173 WIP原字节/status/mode/12absence/空index。",
+    "各生产/测试exact源候选经他人独审后实际apply，保旧FAIL及源码provider链；不自审本agent的初始化groupE2E候选。",
+    "后续scope/transfer/currentReader必须从实读writer current3a13e574/c04fd72a历史基线及新actualsource receipts衍生580+conditional1/214protected/8readonly，三目标只重分类现有795不增行，完整历史快照保留。不得从MAIN旧3b167/6eccee（567/785）倒退读者表或复制writer到MAIN洗businessdirty。",
+    "原18 argv/order/预算、HTTP17 readonly测试、原6native、31native source/414output/12delete和其它保护保持。实际完整18/browser/ASR/install/hearing失败/待验继续如实，不能用TMP局部证据宣布通过。"
+  ],
+  "explicit_non_approvals": [
+    "不批准源实现字节，不批准self-produced groupE2E，不批准修改http-transport.test.ts或其断言。",
+    "不批准活跃lease修改modules配置或强制claim/绕publicguard；此静态GO不是已执行保护、release、commit、FF、claim、恢复或应用的回执。",
+    "不标原18、真实ASR、浏览器性能、安装、用户听感为PASS。"
+  ],
+  "historical_two_control_manifest": {
+    "absolute_path": "/tmp/t1062-attempt10-transaction-owner-k4s2bqyf/controls/manifest.json",
+    "sha256": "9983e4bb100dce9c015b4d0dab44f3bf81189618d0737d9781b87e75d8f19301"
+  },
+  "no_repo_control_mutation_or_db_browser_native_operations": true
+}

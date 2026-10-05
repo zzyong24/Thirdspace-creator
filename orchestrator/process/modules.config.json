@@ -2464,7 +2464,10 @@
           "frontend/src/components/shell/account-switcher.tsx",
           "frontend/src/components/shell/workspace-initialization.tsx",
           "frontend/src/components/shell/workspace-initialization.test.tsx",
-          "frontend/src/components/shell/account-switcher.test.tsx"
+          "frontend/src/components/shell/account-switcher.test.tsx",
+          "frontend/src/server/persistence-client.ts",
+          "frontend/src/lib/http-transport.ts",
+          "frontend/src/components/overlays/overlay-routing.test.tsx"
         ]
       },
       "step_read_set": {

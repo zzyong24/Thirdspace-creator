@@ -96,3 +96,16 @@ flowchart LR
  C --> E[同组刷新保留未保存内容]
  C --> F[明确切组后取消旧范围操作]
 ```
+
+
+## 实际公开保存与冻结传输装配补充（2026-10-06）
+
+Original18 Attempt10 的两条真实原声/ASR旅程已完成公共上传、exact 文件回读、原生导入与真实时间轴加入，首次保存收到 404 OwnershipError「项目归属验证不可用」，尚未进入 ASR。真实调用链在 `frontend/src/server/persistence-client.ts` 的 `assertProductionEditorAsset` 事务分支创建 materialLinks service 时漏接项目归属端口；非事务根已通过公开 projects service 校验。只在该已冻结 reader 路径补同一 transaction 的公开 projects service `getProject` 返回真实父行，继续严格组/用户归属、精确 AssetFile 与项目用料关系检查，不换连接、不绕 guard、不造 materialId 或成功回执，不扩展该文件其他装配责任。
+
+另只在 `frontend/src/lib/http-transport.ts` 恢复已有用户级账号管理操作、`forceNewDouyin` 选择及显式空 frozenScope 的传输兼容。原两常量、管理分支与严格冻结归属仍是边界；空 scope 不继承切换后的 currentB，不扩大共享/平台账号权限，不新增 DTO、服务契约、SQL、runtime 或 toolchain。原 `http-transport.test.ts` 两项真实失败、全部原17断言和 Original18 命令保持，生产候选由 ROOT 另行提供并独立评审，本补充不代签其实现。
+
+另 targeted 原 LED-047 回归162项中161通过、1失败；`frontend/src/components/overlays/overlay-routing.test.tsx` 的旧 unit client mock 未连接已批准的真实 scopedWorkspace port，触发 Node URL parse 错误。只在该既有测试附加同款稳定 port proxy，保留真实 factory/capture/signal/epoch/assertCurrent/abort 与全部原15主体、业务断言、mocks，其他7个LED-047文件不改；不修改生产去迎合夹具，不把 unit兼容修复称作性能浏览器通过。测试候选由ROOT另产并独立评审。
+
+本次权限只新增上述两个生产路径及一条既有unit测试，共三个 EXACT 既有路径：T-1062 integration module 583→586，required owned 577→580，加既有 active conditional 1 后有效产品 578→581；source snapshot 795 不增，protected 217 仅移出这三个路径成为 214，explicit readonly 9 仅移出 `http-transport.ts` 成为 8，其原测试仍只读。其他保护、原7首载路径、backend/contract/native闭包、31 source members、414 outputs、12删除、原6 native旅程、词级 ASR、原声20检查、旧失败及安装/听审待验状态保持。
+
+仅 TMP 产生候选与有界隔离公开 service/transport 红→绿证据，来源函数从当前冻结字节机械抽取而非改测试接口；这不替代完整 frontend composite dispatch、浏览器、真实 ASR 或安装验收。两生产源、一测试源与本3控制须由其他 Agent 独立评审，先逐字节保护全部 WIP、释放旧 public lease、提交控制增量、同步干净 writer，再以新控制 HEAD claim并逐字节恢复；禁止在活跃 lease 上修改 modules.config。最终正式元数据只重绑新增3权限、当前 source bytes/回执、214保护和8只读，原18 argv/预算/断言不改。

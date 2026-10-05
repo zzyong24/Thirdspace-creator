@@ -3529,3 +3529,12 @@ T-1017 测试补充（2026-09-30）：用户明确要求测试。本轮覆盖纯
 用户已授权整合、修复与逐功能验收。真实trace显示组初始化归一取消正在创建的文章；本次7条精确前端路径补全既有根选择的初始化闭包，包含统一context、layout外modal与Copilot、真正可取消的公共contract请求、真实恢复和测试。初次根未确定时避免开放写入；已有合法原根遇列表错误/超时不被新门反杀，后续重试仅菜单回读不自动换根，同组dirty/native不卸载，显式跨组原确认/abort保持。原账号/组权限及旧nullable路径不变，不新增session/归属算法/业务协议或自动重发。
 
 公众号夹具读取公开真实唯一active成员组并保两个原用例全部断言；新增首载真实延迟回归，原18命令与6native旅程保留。原native标题漏dirty同步只重建现有owned源及输出，不手补生成JS。静态独评通过后先保护全部WIP、释放租约、提交控制增量、同步writer，再干净workspace claim后逐字节恢复并应用已评审候选。先前仅Wechat一条TMP控制增量未应用、保留历史，现以本7条完整闭包替代。该记录落实授权范围内的可用性，不声称用户另签了代码或功能验收通过。
+
+
+## DEC-T1062-PUBLIC-PORT-WIRING-20261006：实际组内保存与冻结传输兼容
+
+沿用户已授权的整合、修复与逐功能验收，Attempt10 的真实 native 媒体初存公开响应揭示同事务 materialLinks 组合根遗漏项目 owner；另既有 http-transport 原17测试揭示用户级管理分支及空 frozenScope 兼容缺口。本次仅准入 `frontend/src/server/persistence-client.ts` 和 `frontend/src/lib/http-transport.ts` 两条生产读者的命名装配修复，并仅准入 `frontend/src/components/overlays/overlay-routing.test.tsx` 一条既有受保护测试的真实unit port proxy兼容。原LED-047实际162项中161通过、1失败，候选保全部原主体/断言和真实factory/signal/epoch/abort，其它LED0477文件不改，不新建产品或权限算法、不放宽组域、平台账号事实、精确文件、取消、epoch、lease或SQL。
+
+项目 owner 只由同一 transaction 的公开 projects service 返回真实父行，素材仍由真实 assets 与 materialLinks 服务校验；HTTP 只恢复既有 user-scope/forceNewDouyin 与显式冻结空 scope，不从当前根补身份。生产各候选及 SPEC/DEC/module 由其他 Agent 独审；保全 WIP后释放租约、提交三路径控制增量、FF同步并干净 claim 后才允许应用。控制3路径使 module586/owned580+conditional1=effective581，snapshot795保持；protected214、explicitreadonly8仅对应上述三保护移出及HTTP唯一readonly移出，HTTP原测试仍只读。
+
+保留实际两ASR首次save404、原17两红和所有原18失败。TMP公开调用集成红/绿仅证明真实service/transport及命名事务装配，不称浏览器、词级ASR、安装或听感通过。本记录落实已确认服务归属和可用性，不声称用户对这两行代码另签确认；完整原18及用户安装验收仍待发生。
