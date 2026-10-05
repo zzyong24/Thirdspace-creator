@@ -1,0 +1,181 @@
+{
+  "review_kind": "只读独立 scope 准入建议，不授权178、不判全任务PASS",
+  "observed_at": "2026-10-05T08:23:14.442729+00:00",
+  "candidate_root": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator",
+  "observed_head": "d76ca3e2fb92b91a56b53fa1e720bdac66c2fc89",
+  "formal_scope_count": 174,
+  "source_sha256": {
+    "backend/src/modules/artifacts/artifacts.service.ts": "ca490c2cc23526bf4754f9b375ca8ea5b06acff4b6d865378c7f811a83487e7c",
+    "backend/src/modules/artifacts/reconstructed-artifact.service.ts": "3885261803e317f30bea245162f7360aa7b814661ccb9dccabb612726fd5f6c9",
+    "backend/src/modules/ai/reconstruct-completion.service.ts": "b949ef3c36009831f89f1f2fd15e3f5f79194c5a6a17726217af44945a04ab91",
+    "backend/src/modules/projects/project-lock.service.ts": "e0e1683a4cc66de05d3cf52d1024e3c65aff8cb3f1bceeae4f20d2e72fcb4e82",
+    "backend/src/modules/artifacts/artifacts.repository.ts": "bb2a7573da6f91187057f906072f2d0ce5baddf96d203991bb1d13b67d35aadd",
+    "backend/src/modules/execution/execution-lease.service.ts": "3aa4f15dbe1039adf0f031f35f7e545c63d909ad42c706361efbc6e429340cb0",
+    "backend/src/modules/execution/execution-call-ledger.service.ts": "c7d74ec9080ce894cf842c54864786163a762169e022ca843af38f0936d57561",
+    "backend/src/modules/execution/execution-generation-ports.service.ts": "f7f70087e881acaafbb9c140b782f3edd2462503878843537b49983ab22351cd",
+    "backend/src/modules/ai/ai.service.ts": "3d9a5edbdfac24cb8323ad6b6d8d5a26ecaed7f6ea1facbb6561b2cd1dc58ee5",
+    "backend/src/modules/ai-runtime/reconstruct-business-adapter.ts": "fbc8d02652f59fd971817aa241637744ddfde4fffb3e55ec407b3435378aa2dc",
+    "backend/src/modules/ai-runtime/structured-business-execution.service.ts": "9ba9953416438761fbac8740a8c9344c19ad8c59171f2cde0d87f73c4b8dade1",
+    "backend/src/modules/execution/execution-authority.service.ts": "f97137801b09925acab20b05e8641bb201c9cc414a92327d196421df77a2969d",
+    "backend/src/application/generation/media.ts": "6349c9bb69bebe763b8eb7634d216faf266a45eb52777ef6e8d4095ba28716a8",
+    "backend/src/modules/platform-account/membership-lock.service.ts": "27d59f591636b8fd4b6ce3a09f485e7966274bac01744e724fd00882ca426fa4",
+    "backend/src/modules/platform-account/group-migration.service.ts": "8c4eeedb153ccee27c2cd0dc247e12b1628b83fbd6716ab59c12c56502a3525e",
+    "backend/src/integration/t1062-new-domain-group-workspace.integration.test.ts": "8c104cdfede8e4bfe95115d88c099de7e1bfbedcd687478bbfa98f24afa75860",
+    "backend/src/workspace-write.ts": "c75a788ef9e1bcd86f5e620fda6ea19d9a66413d2b184ece342df62a1925a937",
+    "backend/src/workspace-scope.ts": "4dfabca2c21f96efb2cddde6f77b00cfe9f18a7e4b2f3ec92471f15fc361a712",
+    "contract/src/internal/execution-worker.ts": "317a91704aaa7e3dd23295190c4246c8be2521029b2dc01cf0453e9ff376f4f7"
+  },
+  "actual_red_evidence": [
+    {
+      "path": "/tmp/t1062-reconstruct-settled-group-archive-functional-red.log",
+      "sha256": "52a6488f7cd4bef14c2bcfd68fd2d90e87a0c71471499fe51236449deefb83f3",
+      "verdict": "保留真实失败，平台fixture缺失，在claim membership前失败；不是归档结算功能red"
+    },
+    {
+      "path": "/tmp/t1062-reconstruct-settled-group-archive-functional-red2.log",
+      "sha256": "8c28e9456ab3a99b386797a2b5c53e27810cabf3032ee89931aec22914dabf5f",
+      "command": "pnpm --filter @creatoros/backend test src/integration/t1062-new-domain-group-workspace.integration.test.ts -t 原重建模型已settled",
+      "exit": 1,
+      "observed": "1失败/1skip，约7.95s；真实平台/member/enqueue/claim/ledger reserve-start-settle/providerResult/15tokens；aiTaskResults空；归档后ArtSvc206拒绝",
+      "verdict": "真实production completion/materialize可用性red；未跑模型、未重跑测试"
+    }
+  ],
+  "necessary_scope_increment": [
+    {
+      "path": "backend/src/modules/artifacts/artifacts.service.ts",
+      "exists": true,
+      "currently_in_scope": false,
+      "reason": "当前createArtifact:206 archived workspace拒合法已发生模型收口；207 group还要求assertProjectOwned port",
+      "edit_boundary": "新增仅后端命名reconstruction-settlement受限物化入口，通用createArtifact/createVersion及其它用户写的active门不变；不能通用allowArchived参数"
+    },
+    {
+      "path": "backend/src/modules/artifacts/reconstructed-artifact.service.ts",
+      "exists": true,
+      "currently_in_scope": false,
+      "reason": "当前materialize使用通用ArtSvc.createArtifact/createVersion，无原ref/call证明；没装配group assertProjectOwned",
+      "edit_boundary": "只从受验证当前事务的原ref/call/冻结target派生物化，不接调用方布尔、任意scope、可变正文；保持两version原ID逻辑与原origin不重建第二链"
+    },
+    {
+      "path": "backend/src/modules/ai/reconstruct-completion.service.ts",
+      "exists": true,
+      "currently_in_scope": false,
+      "reason": "唯一实际commitResult拥有original lease/AI task/modelInput/call/providerResult/result映射；当前证明未完整group/version/operation/usage",
+      "edit_boundary": "在原事务中建立严格命名结算证明、parent/owner冻结、终态与一次回执；不扩大cancel/expired/foreign/普通模型接口或新调用能力"
+    },
+    {
+      "path": "backend/src/modules/projects/project-lock.service.ts",
+      "exists": true,
+      "currently_in_scope": false,
+      "reason": "静态证明合法group task.accountNULL可通过formal AiService/createStructuredRuntime/group parent端口，而此函数requireAccount+eq(originaccount)会误拒",
+      "edit_boundary": "仅lockImportedProjectForReconstruction function（14-18行）使用真实 user+workspaceFilter(group优先、legacy保持account归属)+projectId+source imported+同tx parent锁；lockOwnedProjectForUpdate等其它函数不改"
+    }
+  ],
+  "already_in_scope_runtime_path": {
+    "path": "backend/src/modules/artifacts/artifacts.repository.ts",
+    "in_scope": true,
+    "reason": "当前create.outer/helper及locked.writable、createVersion helper+writable仍拒archived；必须通过原受限named proof仅对该次原reconstruction物化授权，普通create/append门不改，不按artifactType豁免"
+  },
+  "group_null_admission_proof": {
+    "static_status": "必要性已通过实际调用链静态证明；尚无当前NULLaccount公共实测PASS，不把red2有账号fixture当NULL证据",
+    "actual_chain": [
+      "ai.service.createTask:900-907先要求workspace/group，不按reconstruct要求account；accountId=ctx.accountId??null",
+      "task runtime/skill snapshot按原组冻结，structured-business-execution:46-53校验snapshot owner后传task.groupId/accountNULL给adapter",
+      "reconstruct-business-adapter:12-19仅要求真实项目、source imported、已存逐字稿/metrics；没有account强制",
+      "application/generation/media:79-108调用真实projectsService.getProject与artifact list/versions，都使用workspace group归属",
+      "execution-authority.bindAiTask:47,65保留原task accountNULL+group/version入execution payload",
+      "completion.materialize→project-lock:15 requireAccount及16 eq(project.accountId,currentaccount)，对于同组originaccount旧来源或NULL parent误拒"
+    ],
+    "parent_contract": "account在group任务是可空原冻结出处，不是共享project owner。必须读锁project真实user+group+source；不得让account转组搬走旧parent，也不允许任取同group另一project。Legacy groupNULL路径继续原账号+NULL/grp_legacy account范围。",
+    "required_test": "原public integration中新增accountNULL group任务（有效原Skill freeze、groupVersion）+samegroup imported parent带originaccount；另NULLparent；走真实prepare/reserveGenerationCall/settle/commit，非helper参数unit，且foreign/moved parent拒绝。"
+  },
+  "minimal_named_settlement_proof_contract": {
+    "must_be_database_grounded": "不能只接受allowArchived=true、createdByType=ai、artifactType=trend_analysis、source=ai、调用者自报group/project/call。证明来源必须是同一当前事务锁住的真实execution/AItask/调用/父项目与冻结Skill。scope只允许该命名重建结果收口，不是新模型请求授权。",
+    "identity": [
+      "原ExecutionRef schema的taskId/attempt/fenceToken与锁住task完全一致",
+      "kind/ownerType=ai_task、ownerId=真实AI业务任务ID、business.executionTaskId=task.id、payload.aiTaskId=business.id、taskType=reconstruct.project",
+      "task.user/group/account以及frozen skillSnapshot.user/group/account/groupVersion/membershipVersion与business冻结值精确一致；不拿当前UI/platform/scope覆写原freeze",
+      "frozen structured kind/skill/capability/operationKey是原reconstruct.project，__reconstructProject exact projectId=business.projectId/inputData项目；不读当前编辑生成新digest"
+    ],
+    "parent_and_group": [
+      "同tx锁真实user+原frozen group parent project，source必须imported；当前project若搬组/foreign/missing拒绝且零artifact",
+      "原group同user实体必须存在；本例只允许原组status archived状态结算，不忽略组身份或迁移",
+      "可空account不制造member；原任务有account时校验真实member仍原frozen group/版本，转组不豁免；accountNULL无平台事实副作用",
+      "group archive可改变group revision，但不能把冻结版本改成当前版本；对原task/business/snapshot精确一致并不要求当前archived group.version回退为旧值"
+    ],
+    "paid_call": [
+      "call属于真实task且model顶层，无parent/tool claim/foreigncall；settled、完整providerResult+resultText=本次input、usage已知/非NULL且原budget/ledger不变",
+      "实际model调用键须符合原structured input.operationKey/model/N有序账本，输入digest保留原请求；不能任意同task settledcall充当重建证明",
+      "original call已started/settled事实与generationattempt保留；无reserved/started/unknown未决call、实际last完整call；不新reserve/start/modelcall",
+      "结构化result来自原provider/worker receipt解析且validated完整、研究coreTopic非空；不能caller直接编正文，不能helper修body或重签原frozen request"
+    ],
+    "lifecycle": [
+      "新物化仅原task running、leaseOwner/expiry/deadline有效、business queued/running，原signal未取消；暂停/取消/expired不得借archived豁免新物化",
+      "原resultId=reconstruct:call.id；若existing已完成必须先精确核对aiTaskId/executionCallId/resultType/call.resultRef/两终态，然后回原receipt，零新artifact/version/calls",
+      "materialize、aiTaskResults、call.resultRef、AI/Execution终态清lease同一事务、取消最终检查回滚新结果，但保已发生paid ledger",
+      "受限writer/证明只活在当前事务，不能保存序列化为通用外部token或泛化WorkspaceWrite options"
+    ]
+  },
+  "proof_gap_in_current_red2": {
+    "not_full_model_gateway": "红2直接callLedger.reserve(operationKey=reconstruct.project,inputDigest=sha256:a*64)，实际execution-generation-ports:43-57要求reconstruct.project/model/N、冻结maxOutputTokens与JSON真实request摘要。原red2是有效可用性红，不是完整结构化model request冻结合法性证据。",
+    "current_completion_gaps": [
+      "仅workspaceFilter business（组匹配）未单独证明business/task/snapshot account与版本一致",
+      "未检model operationKey/inputDigest/已知token/完整原request序列",
+      "原membership/group current归属未于本named completion验证；不能因为withLease mode settlement忽略admission而把scope全部豁免"
+    ],
+    "required_closure": "新增完整重建验收必须经过actual create/structured preparation/execution-generation reserve/start/settle、原named commit；保留raw red1/red2，不改它们冒充full PASS。"
+  },
+  "lock_order_risk": {
+    "existing_sequences": [
+      "workspace parent新增写与group migration是group→project→closure locks",
+      "completion当前withLease先execution task UPDATE→business UPDATE→materialize parent UPDATE；settlement不查group",
+      "group-migration先lockGroups UPDATE→lockImages真实parent/closure FOR UPDATE，闭包含AI/Execution引用"
+    ],
+    "required": "新增named证明/物化不可在持execution/business锁后用rootDb工厂再获取group/parent造成自等待，也不能新增事务不一致的late group锁并声称root锁序已证明。设计保持同一typed当前tx，重新核对真实owner与group迁移；必要以named completion私有局部流程对齐root group/parent→task/call锁序，并原ref/expiry/fence/receipt检查等价保留。若需修改通用lease/helper签名才可做到，必须先报精确阻塞，不能自扩scope或cast PgTx as Db。",
+    "gate": "真实Postgres archive/migration两顺序+原lease结算等待回归；PGlite只是逻辑证据，不能冒充多连接锁序PASS"
+  },
+  "counterexamples_to_reject": [
+    "用户调用artifacts.createArtifact/createVersion传trend_analysis/createdByType=ai，archived group仍必须拒，零新行",
+    "没有模型call或call unknown/usageNULL/foreign task，仅复制结构化text不能物化",
+    "原call settled但task cancelled/paused/lease expired/deadline expired/attempt或fence改变，不得新物化（已发生ledger可记账边界保持）",
+    "original groupA project搬B或originaccount转B，当前UI ctxB不能把原A任务结果保存B；group无效/ownerforeign拒",
+    "public user/article/graphic新append必须继续archive拒，原receipt-first/history与合法写wins保留",
+    "既有完成receipt重放不创建第二artifact/version/resultcall，不重计15tokens，input改变不能改旧receipt"
+  ],
+  "authorized_test_closure": {
+    "existing_paths": [
+      {
+        "path": "backend/src/integration/t1062-new-domain-group-workspace.integration.test.ts",
+        "in_scope": true
+      },
+      {
+        "path": "backend/src/modules/articles/articles.integration.test.ts",
+        "in_scope": true
+      },
+      {
+        "path": "backend/src/modules/graphic-posts/graphic-posts.integration.test.ts",
+        "in_scope": true
+      }
+    ],
+    "no_new_test_file_required": true,
+    "full_public_cases": [
+      "完整actualgeneration request→ledger15tokens settled→group通过真实archive操作→completion一次物化/原receipt replay→公开artifact/version读同正文，账本不增加",
+      "accountNULL task+同group originaccount与NULL imported parent合法；foreign/nonimported/moved parent零结果",
+      "cancel/expired/deadline/fence/foreign call/unknown/usageNULL/changedmodelInput/newcall拒绝零结果，不删已经settled费用",
+      "调用方boolean/type/source不能绕过普通archived user writes",
+      "任一artifact/version/result/terminal写失败整同txrollback，原paid receipt保留可review恢复",
+      "原27正式组合继续运行，新增完整reconstruct公共test必须包含进该已有组合；专项绿不能替代完整27验收"
+    ]
+  },
+  "verify_suggested_not_executed": [
+    "pnpm --filter @creatoros/backend test src/integration/t1062-new-domain-group-workspace.integration.test.ts",
+    "原ROOT固定27文件组合（需explicit包含上述公共integration文件）",
+    "pnpm --filter @creatoros/backend typecheck",
+    "git diff --check"
+  ],
+  "scope_verdict": "建议当前174增加3必要结算源+1静态已证明必要parent scope适配源，共4精确路径；repo源已授权。第4只改指定function，NULL公共链TDD仍待发生。无API/SQL/schema/WorkerSDK/账本/通用helper新增。",
+  "limitations": [
+    "本review零repo/Git/DB/model/test写或执行",
+    "writer暂停时观察HEAD/SHA；红2当场writer日志只证明其实际fixture链，不冒充完整生成gateway",
+    "锁序/原请求完整证明需实现后真实公共回归；本报告不授新scope或全任务PASS"
+  ]
+}

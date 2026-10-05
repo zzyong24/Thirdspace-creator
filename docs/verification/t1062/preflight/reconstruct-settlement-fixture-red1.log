@@ -1,0 +1,32 @@
+isolated roots=/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-writer-check-GuOVuV
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/backend
+> vitest run src/integration/t1062-new-domain-group-workspace.integration.test.ts -t '原重建模型已settled'
+
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/backend
+
+ ❯ src/integration/t1062-new-domain-group-workspace.integration.test.ts (2 tests | 1 failed | 1 skipped) 4316ms
+   × T1062 原重建模型已settled且尚无结果，组归档后仍一次完成原lease结算 4315ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/integration/t1062-new-domain-group-workspace.integration.test.ts > T1062 原重建模型已settled且尚无结果，组归档后仍一次完成原lease结算
+OwnershipError: 平台账号不可用，请重新选择
+ ❯ lockWorkspaceMembership src/modules/platform-account/membership-lock.service.ts:35:48
+
+ ❯ src/modules/execution/persistent-task.service.ts:323:20
+ ❯ ../node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pglite/src/base.ts:430:23
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 1 skipped (2)
+   Start at  16:16:16
+   Duration  7.95s (transform 2.25s, setup 0ms, import 3.48s, tests 4.32s, environment 0ms)
+
+/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @creatoros/backend@0.1.0 test: `vitest run src/integration/t1062-new-domain-group-workspace.integration.test.ts -t '原重建模型已settled'`
+Exit status 1
+{"cmd":"pnpm","args":["--filter","@creatoros/backend","test","src/integration/t1062-new-domain-group-workspace.integration.test.ts","-t","原重建模型已settled"],"exit":1,"signal":null,"isolated":"/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-writer-check-GuOVuV"}

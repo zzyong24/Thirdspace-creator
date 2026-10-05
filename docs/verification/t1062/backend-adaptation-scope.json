@@ -212,7 +212,11 @@
     "backend/src/modules/ai-runtime/chat-submitted-tool-parameters.ts",
     "backend/src/modules/execution/execution-chat-script-draft.service.test.ts",
     "backend/src/modules/artifacts/artifacts.repository.ts",
-    "backend/src/modules/execution/execution-transcribe-workflow.service.ts"
+    "backend/src/modules/execution/execution-transcribe-workflow.service.ts",
+    "backend/src/modules/artifacts/artifacts.service.ts",
+    "backend/src/modules/artifacts/reconstructed-artifact.service.ts",
+    "backend/src/modules/ai/reconstruct-completion.service.ts",
+    "backend/src/modules/projects/project-lock.service.ts"
   ],
   "path_details": [
     {
@@ -2491,6 +2495,70 @@
       "reasons": [
         "真实JSONB回执与严格schema解析结果仅键顺序不同，saveArtifact误拒合法原文。仅在既有locked receipt-first后、ensure前严格校验两侧现有result schema并做结构比较；保全部值/类型/extra拒绝，不改lease/parent/signal/paid/终态协议或SQL。"
       ]
+    },
+    {
+      "path": "backend/src/modules/artifacts/artifacts.service.ts",
+      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/modules/artifacts/artifacts.service.ts",
+      "exists": true,
+      "before_sha256": "ca490c2cc23526bf4754f9b375ca8ea5b06acff4b6d865378c7f811a83487e7c",
+      "areas": [
+        "reconstruct-original-settlement-group-closure"
+      ],
+      "roles": [
+        "implementation"
+      ],
+      "reasons": [
+        "当前createArtifact:206 archived workspace拒合法已发生模型收口；207 group还要求assertProjectOwned port",
+        "新增仅后端命名reconstruction-settlement受限物化入口，通用createArtifact/createVersion及其它用户写的active门不变；不能通用allowArchived参数"
+      ]
+    },
+    {
+      "path": "backend/src/modules/artifacts/reconstructed-artifact.service.ts",
+      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/modules/artifacts/reconstructed-artifact.service.ts",
+      "exists": true,
+      "before_sha256": "3885261803e317f30bea245162f7360aa7b814661ccb9dccabb612726fd5f6c9",
+      "areas": [
+        "reconstruct-original-settlement-group-closure"
+      ],
+      "roles": [
+        "implementation"
+      ],
+      "reasons": [
+        "当前materialize使用通用ArtSvc.createArtifact/createVersion，无原ref/call证明；没装配group assertProjectOwned",
+        "只从受验证当前事务的原ref/call/冻结target派生物化，不接调用方布尔、任意scope、可变正文；保持两version原ID逻辑与原origin不重建第二链"
+      ]
+    },
+    {
+      "path": "backend/src/modules/ai/reconstruct-completion.service.ts",
+      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/modules/ai/reconstruct-completion.service.ts",
+      "exists": true,
+      "before_sha256": "b949ef3c36009831f89f1f2fd15e3f5f79194c5a6a17726217af44945a04ab91",
+      "areas": [
+        "reconstruct-original-settlement-group-closure"
+      ],
+      "roles": [
+        "implementation"
+      ],
+      "reasons": [
+        "唯一实际commitResult拥有original lease/AI task/modelInput/call/providerResult/result映射；当前证明未完整group/version/operation/usage",
+        "在原事务中建立严格命名结算证明、parent/owner冻结、终态与一次回执；不扩大cancel/expired/foreign/普通模型接口或新调用能力"
+      ]
+    },
+    {
+      "path": "backend/src/modules/projects/project-lock.service.ts",
+      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/modules/projects/project-lock.service.ts",
+      "exists": true,
+      "before_sha256": "e0e1683a4cc66de05d3cf52d1024e3c65aff8cb3f1bceeae4f20d2e72fcb4e82",
+      "areas": [
+        "reconstruct-original-settlement-group-closure"
+      ],
+      "roles": [
+        "implementation"
+      ],
+      "reasons": [
+        "静态证明合法group task.accountNULL可通过formal AiService/createStructuredRuntime/group parent端口，而此函数requireAccount+eq(originaccount)会误拒",
+        "仅lockImportedProjectForReconstruction function（14-18行）使用真实 user+workspaceFilter(group优先、legacy保持account归属)+projectId+source imported+同tx parent锁；lockOwnedProjectForUpdate等其它函数不改"
+      ]
     }
   ],
   "conditional_write_paths": [
@@ -4071,7 +4139,7 @@
     "gateway_exception": "frontend/src/app/api/v1/dispatch/route.test.ts仅公共CLI网关测试，route.ts仅条件修复；无页面/UI路径"
   },
   "counts": {
-    "required_or_new": 150,
+    "required_or_new": 154,
     "necessary_new": 6,
     "conditional": 23,
     "read_only": 48
@@ -4526,7 +4594,8 @@
       "phase": "after_adaptation",
       "environment_rule": "unset真实DATABASE_URL/PGLITE_DATA_DIR等库与媒体位置；仅合成fixtures和明确隔离测试库，无外部AI/真实媒体/用户资料",
       "preconditions": [
-        "完整迁移整合候选的独立真实依赖已安装，新增必要tests已创建"
+        "完整迁移整合候选的独立真实依赖已安装，新增必要tests已创建",
+        "原重建完整structured prepare→generation reserve/start/settle→原completion同tx物化；账号NULL与originaccount父、归档原回执、cancel/expired/foreign/moved反例及实际PG锁序在既有test内覆盖，专项红绿不代替27组合。"
       ],
       "executed_this_audit": false
     },
@@ -4872,6 +4941,25 @@
       "wip_preserved": "docs/verification/t1062/preflight/transcribe-workflow-paused-wip.json",
       "functional_red": "docs/verification/t1062/preflight/transcribe-workflow-durable-functional-red.log",
       "reason": "原11项真实durable服务/JSONB公共落稿红保留；ASR I/O为adapter fixture，不称真实供应商推理。忽略对象键序但不放宽任何结果值，原27组合保持。"
+    },
+    {
+      "at": "2026-10-05T08:25:21.323717+00:00",
+      "base_sha": "d76ca3e2fb92b91a56b53fa1e720bdac66c2fc89",
+      "action": "已结算原重建归档误拒及组任务可空账号父锁适配",
+      "previous_step_path_count": 174,
+      "added_paths": [
+        "backend/src/modules/artifacts/artifacts.service.ts",
+        "backend/src/modules/artifacts/reconstructed-artifact.service.ts",
+        "backend/src/modules/ai/reconstruct-completion.service.ts",
+        "backend/src/modules/projects/project-lock.service.ts"
+      ],
+      "step_path_count": 178,
+      "independent_review": "docs/verification/t1062/preflight/reconstruct-settlement-root-scope-review.json",
+      "review_sha256": "c09be270f808f0211d2b5f0e8aa4fc4c871e751867610be111f7caa43889387c",
+      "wip_preserved": "docs/verification/t1062/preflight/reconstruct-settlement-paused-wip.json",
+      "functional_red": "docs/verification/t1062/preflight/reconstruct-settlement-functional-red2.log",
+      "fixture_failure_preserved": "docs/verification/t1062/preflight/reconstruct-settlement-fixture-red1.log",
+      "limits": "只命名原reconstruction收口，DB grounded原ref/task/business/skill freeze/model-N已知usage/原group+imported parent；无通用allowArchived/type豁免，无API/SQL/schema/WorkerSDK/ledger/helper新增。现red2直接reserve不是完整generation协议；NULLaccount/公共全链/PG锁序仍待真实验证。"
     }
   ]
 }

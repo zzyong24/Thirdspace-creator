@@ -3501,3 +3501,12 @@ T-1017 测试补充（2026-09-30）：用户明确要求测试。本轮覆盖纯
 沿用户2026-10-05授权的汇总、实现及逐功能验证范围，真实durable转写服务11项回归发生7失败/4通过。数据库JSONB回读与严格协议解析仅对象键顺序不同，却被原JSON.stringify判为不同，合法识别原文无法保存。独立只读审查后，scope173窄增execution-transcribe-workflow.service.ts一条成为174；原27验证组合和11项断言不缩减。
 
 只在既有回执优先之后、实际工件保存之前校验原strict result schema并做结构值比较。原正文/原因/布尔值/额外字段拒绝、原账本、父归属、租约及取消均保持；不新增API/模型选择/DDL/自动采纳。真实红日志、源码及WIP摘要绑定见docs/verification/t1062/preflight/transcribe-workflow-structural-receipt-scope-review.json。该修复落实既有协议，不改变产品方向；用户安装验收和完整Gate仍待发生，不补造历史证据。
+
+
+## DEC-T1062-RECONSTRUCT-SETTLEMENT-20261005：原调用结算不能被归档误拒
+
+沿用户授权的整合、修复、提交、打包和逐功能验证范围，真实原任务完成闭包在模型账本已结算后被账号组归档门拒绝；实际AiService及structured准备还支持group任务accountNULL，而重建父锁仍要求平台账号。独立只读调用链及原源码摘要复核后，174窄增4个精确源成为178，不改变共享资料与平台事实归属，不新增API/SQL/WorkerSDK/账本/通用权限helper。
+
+只对原ref、原冻结任务/业务/Skill身份和版本、真实model/N账本与已知usage、原group及imported父项目建立当前事务内的命名结算能力。普通用户create/append、foreign/搬组/取消/租约失效/未决调用仍拒绝；原成功回执重放不创建新产物或重计费用。当前红2是真可用性失败，但直接ledger.reserve并非完整generation协议；完整generation公共链与PG锁序须当场验，不回填历史PASS。精确独立报告及原失败见docs/verification/t1062/preflight/reconstruct-settlement-root-scope-review.json。
+
+102条WIP已逐字节保护，原lease释放后重编译再恢复。此修订落实既有任务收口和组归属合同，不授权新的模型请求、外部发布或自动归组真实资料。当前客户端与用户数据未替换；本次scope准入不代表全27组合或安装验收通过。

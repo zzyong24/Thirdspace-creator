@@ -24,3 +24,14 @@ content_outputs.group_id仅从同事务锁定的project派生，project仍为唯
 真实公共持久链转写回归11项中7失败/4通过：原ASR账本已结算，数据库JSONB键顺序与现有严格result schema解析对象顺序不同，saveArtifact误拒合法原文。日志原字节保留；ASR边界使用adapter fixture，本次红不是新真实模型推理。唯一新增生产路径为execution-transcribe-workflow.service.ts；在既有回执优先分支之后、ensure之前严格校验两侧现有schema，再按全部值/类型比较。对象键顺序不作身份，正文/reason/applied/额外字段和非法类型仍拒绝；不改变父权限、取消、租约、费用或DDL。
 
 独立scope审查及101条WIP暂停摘要见preflight/transcribe-workflow-structural-receipt-scope-review.json与transcribe-workflow-paused-wip.json。ROOT核101/101当前摘要后以自有stash保护，释放旧lease后再修订。此记录不是产品实现、整套测试、安装或任务完成PASS。
+
+
+## 原重建结算与可空账号父锁修订（2026-10-05）
+
+当前正式step为178条（154条必要/新、23条条件、1条结果），只读依赖48条、必要新文件6个及原27组验证不变。完整重建测试已属于既有“公共cover atomic与新领域组合”，不得只交专项绿色。新增4个精确源为artifacts.service、reconstructed-artifact.service、reconstruct-completion.service及project-lock.service；第4源仅修改lockImportedProjectForReconstruction。artifacts.repository已经在scope内。
+
+原模型账本已settled/providerResult/15tokens、业务结果尚空，原账号组归档后ArtSvc206拒绝物化，真实红2原字节保留。红1在claim前缺平台fixture，明确不是功能红。红2直接调用ledger.reserve，尚未证明真实generation model/N请求协议；后续必须从actual structured prepare及generation端口建立原调用、经过同一completion收口，不更改旧日志冒充完整PASS。
+
+仅对真实同事务原ref/fence、task↔business↔Skill冻结身份/版本、model/N已知usage、同user原group及imported父项目建立受限命名结算证明。普通新建/追加归档门不变，不按source/type/布尔值豁免；父搬组、成员转组、foreign/cancel/expired/未决调用等拒绝保留。可空account是共享任务真实入口，父按user/group锁，不造账号。锁序须按真实PG两顺序验证，不把PGlite当并发证据；如果需新增通用helper/lease路径，先报精确阻塞。
+
+独立scope报告及102条暂停WIP摘要见preflight/reconstruct-settlement-root-scope-review.json与reconstruct-settlement-paused-wip.json。ROOT当场核102/102字节并以自有stash保护后释放lease。这次只准入最小修复范围，不是实现、完整验证、真实模型或安装验收PASS。

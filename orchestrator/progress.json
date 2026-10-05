@@ -2663,7 +2663,11 @@
           "backend/src/modules/ai-runtime/chat-submitted-tool-parameters.ts",
           "backend/src/modules/execution/execution-chat-script-draft.service.test.ts",
           "backend/src/modules/artifacts/artifacts.repository.ts",
-          "backend/src/modules/execution/execution-transcribe-workflow.service.ts"
+          "backend/src/modules/execution/execution-transcribe-workflow.service.ts",
+          "backend/src/modules/artifacts/artifacts.service.ts",
+          "backend/src/modules/artifacts/reconstructed-artifact.service.ts",
+          "backend/src/modules/ai/reconstruct-completion.service.ts",
+          "backend/src/modules/projects/project-lock.service.ts"
         ]
       },
       "step_read_set": {},
