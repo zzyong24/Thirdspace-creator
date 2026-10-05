@@ -4606,3 +4606,13 @@ describe("T-957 网页失败的用户提示",()=>{
   for(const value of [WEB_READ_SERP_NOTE,MATERIAL_SCREENSHOT_SERP_ERROR,WEB_READ_BLOCKED_ALTERNATES_NOTE])expect(value).not.toMatch(/material\.gather|web\.read|alternates|如实告诉用户|绝不编内容/);
  });
 });
+
+it("画布候选工具先读真实版本，只写候选而不直接改画布",async()=>{
+ const readCanvas=vi.fn(async()=>({id:"canvas-1",title:"分镜",projectId:null,revision:7,document:{nodes:[{id:"node-1",type:"text",text:"旁白"}],edges:[]}}));
+ const proposeCanvas=vi.fn(async(baseRevision:number,operations:unknown)=>({id:"proposal-1",canvasId:"canvas-1",baseRevision,operations:operations as unknown[]}));
+ const {deps}=makeDeps({boundCanvasId:"canvas-1",readCanvas,proposeCanvas});
+ const tools=buildChatTools(["canvas.read","canvas.propose"],deps);
+ expect(await runExecute(tools["canvas.read"]!,{})).toMatchObject({canvasId:"canvas-1",revision:7,nodes:[{id:"node-1"}]});
+ expect(await runExecute(tools["canvas.propose"]!,{baseRevision:7,operations:[{type:"deleteNode",operationId:"op-1",nodeId:"node-1"}]})).toMatchObject({proposalId:"proposal-1",baseRevision:7});
+ expect(proposeCanvas).toHaveBeenCalledTimes(1);
+});

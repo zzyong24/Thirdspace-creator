@@ -9,6 +9,8 @@ export * from "./client";
 export * from "./local-platform";
 export * from "./cli-policy";
 export * from "./version";
+export {canvasDocumentSchema,canvasNodeSchema,canvasEdgeSchema,creativeCanvasResource,canvasGenerationLinkResource,emptyCanvasDocument,type CanvasDocument,type CanvasNode,type CreativeCanvasResource} from "./resources/creative-canvas";
+export {canvasProposalOperationSchema,canvasProposalResource} from "./resources/creative-canvas";
 
 export {
   knowledgeFolderResource,
@@ -298,3 +300,6 @@ export {accountBindingStart,accountBindingResource,type AccountBindingResource} 
 export {groupOnboardingStateResource,type GroupOnboardingStateResource} from "./resources/settings";
 
 export {WORKSPACE_OPERATION_SCOPES,type WorkspaceOperationScope} from "./workspace-operation-scope";
+export * from "./resources/visual-templates";
+export {canvasVisualGroupSchema,type CanvasVisualGroup} from "./resources/creative-canvas";
+export {publicationVisualNoteSchema,type PublicationVisualNote} from "./resources/publishing";
