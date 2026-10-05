@@ -2,7 +2,7 @@ import {isDeepStrictEqual} from "node:util";
 import {createHash, randomUUID} from "node:crypto";
 import {and, eq, isNull} from "drizzle-orm";
 import type {Db} from "@creatoros/backend";
-import {requireAccountId} from "@creatoros/backend";
+import {workspaceKey,workspaceStamp,workspaceFilter,requireWorkspace,assertWritableWorkspace} from "../../workspace-scope";
 import type {RequestContext} from "@creatoros/contract";
 import {COVER_VISUAL_REQUIREMENTS_MAX, type CoverContext} from "@creatoros/ai-worker/cover";
 import type {ArticlesService} from "../articles";
@@ -10,6 +10,11 @@ import type {AssetsService} from "../assets";
 import type {ProjectsService} from "../projects";
 import {readFrozenCoverContext,readFrozenGraphicCardContext} from "../ai-runtime/frozen-cover-context";
 import {outputMediaAttempts} from "../../schema/creative-results";
+import {withWorkspaceParentWrite,type WorkspaceWriteTx} from "../../workspace-write";
+import {projects,contentOutputs} from "../../schema/projects";
+import {artifacts} from "../../schema/artifacts";
+import {accountGroups} from "../../schema/account-groups";
+import {aiTasks} from "../../schema/ai";
 import type {CreativeResultAdapter} from "./creative-results.service";
 
 type Task = {id:string;taskType:string;status:string;projectId:string|null;contentOutputId:string|null;inputData:Record<string,unknown>};
@@ -36,18 +41,42 @@ export interface ArticleCoverMediaPorts {
 
 export function createArticleCoverMediaAdapter(ports:ArticleCoverMediaPorts):CreativeResultAdapter {
   const now=ports.now??(()=>new Date().toISOString()),nextId=ports.nextId??randomUUID;
-  const scope=(ctx:RequestContext)=>({userId:ctx.userId,accountId:requireAccountId(ctx.accountId,"article-cover")});
+  const scope=(ctx:RequestContext)=>{requireWorkspace(ctx);return{userId:ctx.userId,...workspaceStamp(workspaceKey(ctx)),namespace:workspaceKey(ctx).id};};
+  // SEMANTIC_BOUNDARY_ALLOW: 只锁当前真实group→project/output→artifact并核冻结版本；不做内容选取。
+  async function submission<T>(ctx:RequestContext,parent:{projectId:string;outputId:string;artifactId?:string;baseVersionId?:string},commit:(tx:WorkspaceWriteTx,frozen:RequestContext)=>Promise<T>):Promise<T>{
+    const admission=ctx.groupId?{...ctx,accountId:null,membershipVersion:undefined}:ctx;
+    return withWorkspaceParentWrite(ports.db,admission,{table:projects,id:projects.id,userId:projects.userId,accountId:projects.accountId,groupId:projects.groupId,lock:"share",via:[{table:contentOutputs,id:contentOutputs.id,parentId:contentOutputs.projectId}]},[parent.outputId],async tx=>{
+      const [project]=await tx.select().from(projects).where(eq(projects.id,parent.projectId));
+      const [output]=await tx.select().from(contentOutputs).where(eq(contentOutputs.id,parent.outputId));
+      if(!project||output?.projectId!==project.id||project.archivedAt||project.status==="archived")return fail("OUTPUT_NOT_OWNED","项目已归档或归属改变，不能提交新图片任务");
+      let frozen=admission;
+      if(admission.groupId){const [group]=await tx.select().from(accountGroups).where(and(eq(accountGroups.id,admission.groupId),eq(accountGroups.userId,admission.userId)));
+        if(!group||admission.groupVersion!==undefined&&admission.groupVersion!==group.version)return fail("OUTPUT_NOT_OWNED","原冻结账号组版本已改变");
+        frozen={...admission,groupVersion:group.version,membershipVersion:undefined};}
+      if(parent.artifactId){const [artifact]=await tx.select().from(artifacts).where(and(eq(artifacts.id,parent.artifactId),eq(artifacts.userId,ctx.userId),workspaceFilter(artifacts,admission),eq(artifacts.projectId,parent.projectId),eq(artifacts.contentOutputId,parent.outputId))).for("share");
+        if(!artifact||artifact.archivedAt||parent.baseVersionId&&artifact.currentVersionId!==parent.baseVersionId)return fail("VERSION_CONFLICT","原稿在冻结期间已变化，请重新读取");}
+      return commit(tx,frozen);
+    });
+  }
+  // 当前作品父先授权；原任务、结果、确认只沿真实不可搬AI行的冻结身份读取，绝不按平台筛选重盖owner。
+  async function historyContext(ctx:RequestContext,row:typeof outputMediaAttempts.$inferSelect):Promise<RequestContext>{
+    if(!row.groupId)return ctx;
+    const [task]=await ports.db.select().from(aiTasks).where(and(eq(aiTasks.id,row.taskId),eq(aiTasks.userId,ctx.userId)));
+    if(!task||task.projectId!==row.projectId||task.contentOutputId!==row.outputId||row.groupVersion!==null&&row.groupVersion!==task.groupVersion||row.membershipVersion!==null&&row.membershipVersion!==task.membershipVersion)return fail("MEDIA_BINDING_MISMATCH","原图片任务冻结身份与绑定不符");
+    if(!task.groupId&&!task.accountId)return fail("MEDIA_BINDING_MISMATCH","原图片任务缺少可证明来源");
+    return {...ctx,accountId:task.accountId,groupId:task.groupId??undefined,groupVersion:task.groupVersion??undefined,membershipVersion:task.membershipVersion??undefined};
+  }
   async function bound(ctx:RequestContext,taskId:string){
     const identity=scope(ctx);
     const [row]=await ports.db.select().from(outputMediaAttempts).where(and(eq(outputMediaAttempts.taskId,taskId),
-      eq(outputMediaAttempts.userId,identity.userId),eq(outputMediaAttempts.accountId,identity.accountId)));
+      eq(outputMediaAttempts.userId,identity.userId),workspaceFilter(outputMediaAttempts,ctx)));
     if(!row)return fail("MEDIA_CANDIDATE_NOT_FOUND","文章封面候选不存在");
     if(row.kind!=="cover"&&row.kind!=="image_card")return fail("MEDIA_BINDING_MISMATCH","文章图片候选类型不符");
     const article=await ports.articles.getArticle(ctx,row.outputId);
-    const task=await ports.readTask(ctx,taskId),input=task.inputData;
+    const originalContext=await historyContext(ctx,row),task=await ports.readTask(originalContext,taskId),input=task.inputData;
     const expectedTaskType=row.kind==="cover"?"cover.generate":"graphic.card.generate";
     const snapshot=row.kind==="cover"?readFrozenCoverContext(input):readFrozenGraphicCardContext(input);
-    if(article.projectId!==row.projectId||task.taskType!==expectedTaskType||task.projectId!==row.projectId||
+    if(task.id!==taskId||article.projectId!==row.projectId||task.taskType!==expectedTaskType||task.projectId!==row.projectId||
       task.contentOutputId!==row.outputId||input.outputId!==row.outputId||input.contentOutputId!==row.outputId||
       input.projectId!==row.projectId||input.artifactId!==article.artifactId||input.kind!==row.kind||
       (row.kind==="image_card"&&input.contentType!=="article")||
@@ -57,13 +86,13 @@ export function createArticleCoverMediaAdapter(ports:ArticleCoverMediaPorts):Cre
     if(row.kind==="image_card" && (typeof input.targetSectionId!=="string"||
       !base.document.sections.some(section=>section.sectionId===input.targetSectionId)))
       return fail("MEDIA_BINDING_MISMATCH","图卡目标段落不属于原文章版本");
-    return {row,article,task,baseVersionId};
+    return {row,article,task,baseVersionId,originalContext};
   }
   async function observed(ctx:RequestContext,taskId:string){
     const binding=await bound(ctx,taskId),status=binding.task.status;
     if(["queued","running","failed","cancelled"].includes(status))return {binding,status,value:null,errorCode:status==="failed"?"GENERATION_FAILED":null};
     if(status!=="awaiting_confirmation"&&status!=="succeeded")return fail("CANDIDATE_NOT_READY","文章封面任务状态无效");
-    const results=(await ports.listResults(ctx,taskId)).filter(row=>row.resultType==="generated_asset");
+    const results=(await ports.listResults(binding.originalContext,taskId)).filter(row=>row.resultType==="generated_asset");
     if(results.length!==1)return fail("MEDIA_BINDING_MISMATCH","文章封面缺少唯一真实图片");
     const result=results[0]!,assetId=result.assetId??String(result.resultData.assetId??"");
     if(!assetId||result.resultData.assetId!==assetId||result.resultData.assetType!=="image")return fail("MEDIA_BINDING_MISMATCH","文章封面图片结果不符");
@@ -100,18 +129,21 @@ export function createArticleCoverMediaAdapter(ports:ArticleCoverMediaPorts):Cre
         (visualRequirements!==undefined&&(typeof visualRequirements!=="string"||visualRequirements.length>COVER_VISUAL_REQUIREMENTS_MAX)))
         return fail("CAPABILITY_UNAVAILABLE","文章封面画面要求无效");
       const identity=scope(ctx);
-      const [old]=await ports.db.select().from(outputMediaAttempts).where(and(eq(outputMediaAttempts.userId,identity.userId),
-        eq(outputMediaAttempts.accountId,identity.accountId),eq(outputMediaAttempts.clientRequestId,input.clientRequestId)));
+      const oldRows=await ports.db.select().from(outputMediaAttempts).where(and(eq(outputMediaAttempts.userId,identity.userId),
+        workspaceFilter(outputMediaAttempts,ctx),eq(outputMediaAttempts.clientRequestId,input.clientRequestId)));
+      if(oldRows.length>1)return fail("IDEMPOTENCY_CONFLICT","同组旧账号存在多个原请求，请使用明确候选ID");const [old]=oldRows;
       if(old){if(old.outputId!==input.outputId||old.kind!==input.kind)return fail("IDEMPOTENCY_CONFLICT","请求号已用于其他作品");
         const value=await observed(ctx,old.taskId);
         if(value.binding.task.inputData.targetSectionId!==input.targetSectionId)
           return fail("IDEMPOTENCY_CONFLICT","请求号已用于另一正文段落");
         return {candidateId:old.taskId,taskId:old.taskId,baseVersionId:value.binding.baseVersionId,
           ruleSnapshotRef:null,appliedRules:value.binding.task.inputData.visualRequirements?"applied":"not_applied",sourceRefs:[],status:value.status as "queued"|"running"|"awaiting_confirmation"|"failed"|"cancelled"};}
+      if(ctx.groupId)await assertWritableWorkspace(ports.db,ctx);
       const article=await ports.articles.getArticle(ctx,input.outputId);
       if(article.projectId!==input.projectId||input.targetPlatform&&input.targetPlatform!=="wechatOfficialAccount")
         return fail("MEDIA_BINDING_MISMATCH","文章封面目标不符");
       const project=await ports.projects.getProject(ctx,article.projectId);
+      if(project.archivedAt||project.status==="archived")return fail("OUTPUT_NOT_OWNED","项目已归档，不能创建新图片任务");
       const selectedSection=input.kind==="image_card"?article.current.sections.find(section=>section.sectionId===input.targetSectionId):null;
       if(input.kind==="image_card"&&!selectedSection)return fail("SOURCE_UNAVAILABLE","所选正文段落已不存在，请重新选择");
       const fullText=input.kind==="image_card"?
@@ -128,11 +160,12 @@ export function createArticleCoverMediaAdapter(ports:ArticleCoverMediaPorts):Cre
         ...(visualRequirements?{visualRequirements}:{}),
         scriptSnapshot:{artifactId:article.artifactId,versionId:article.currentVersionId,fullText}};
       const submit=input.kind==="cover"?ports.submitCover:ports.submitCard;
-      const task=await submit(ctx,{attemptId:`article-${input.kind}:${digest([identity.accountId,input.clientRequestId]).slice(7)}`,
+      const frozenContext=await submission(ctx,{projectId:article.projectId,outputId:input.outputId,artifactId:article.artifactId,baseVersionId:article.currentVersionId},async(_tx,frozen)=>frozen);
+      const task=await submit(frozenContext,{attemptId:`article-${input.kind}:${digest([identity.namespace,input.clientRequestId]).slice(7)}`,
         projectId:article.projectId,inputData:frozen});
-      await ports.db.insert(outputMediaAttempts).values({id:nextId(),userId:identity.userId,accountId:identity.accountId,
+      await submission(frozenContext,{projectId:article.projectId,outputId:input.outputId},async tx=>{await tx.insert(outputMediaAttempts).values({id:nextId(),userId:identity.userId,accountId:identity.accountId,groupId:identity.groupId,groupVersion:frozenContext.groupVersion??null,membershipVersion:frozenContext.membershipVersion??null,
         projectId:article.projectId,outputId:input.outputId,kind:input.kind,taskId:task.id,candidateId:task.id,
-        clientRequestId:input.clientRequestId,requestDigest:digest(frozen),createdAt:now()}).onConflictDoNothing();
+        clientRequestId:input.clientRequestId,requestDigest:digest(frozen),createdAt:now()}).onConflictDoNothing();});
       const value=await observed(ctx,task.id);
       return {candidateId:task.id,taskId:task.id,baseVersionId:value.binding.baseVersionId,
         ruleSnapshotRef:null,appliedRules:visualRequirements?"applied":"not_applied",sourceRefs:[],status:value.status as "queued"|"running"|"awaiting_confirmation"|"failed"|"cancelled"};
@@ -162,7 +195,7 @@ export function createArticleCoverMediaAdapter(ports:ArticleCoverMediaPorts):Cre
       }
       // Confirmed tasks still save through receipt/CAS. Reconstructing from expected's
       // immutable document keeps replay stable and cannot overwrite a newer draft.
-      if(value.binding.task.status!=="succeeded")await ports.confirmTask(ctx,input.candidateId);
+      if(value.binding.task.status!=="succeeded")await ports.confirmTask(value.binding.originalContext,input.candidateId);
       const document=input.kind==="cover"?
         {...target,coverImageUse:{assetId:selected.assetId,assetFileId:selected.assetFileId,sourceKind:"generated" as const,reviewState:"selected" as const}}:
         {...target,imageUses:[...target.imageUses.filter(use=>use.sectionId!==targetSectionId),
@@ -176,17 +209,19 @@ export function createArticleCoverMediaAdapter(ports:ArticleCoverMediaPorts):Cre
       const old=await bound(ctx,input.candidateId);
       if(old.task.status!=="failed"&&old.task.status!=="cancelled")return fail("CANDIDATE_NOT_READY","该文章封面不可重试");
       const identity=scope(ctx),frozen=structuredClone(old.task.inputData);
-      const [prior]=await ports.db.select().from(outputMediaAttempts).where(and(eq(outputMediaAttempts.userId,identity.userId),
-        eq(outputMediaAttempts.accountId,identity.accountId),eq(outputMediaAttempts.clientRequestId,input.clientRequestId)));
+      const priorRows=await ports.db.select().from(outputMediaAttempts).where(and(eq(outputMediaAttempts.userId,identity.userId),
+        workspaceFilter(outputMediaAttempts,ctx),eq(outputMediaAttempts.clientRequestId,input.clientRequestId)));
+      if(priorRows.length>1)return fail("IDEMPOTENCY_CONFLICT","同组旧账号存在多个原请求，请使用明确候选ID");const [prior]=priorRows;
       if(prior){if(prior.outputId!==old.row.outputId||prior.requestDigest!==digest({retryOf:old.task.id,frozen}))return fail("IDEMPOTENCY_CONFLICT","重试请求号已用于其他图片");
         const value=await observed(ctx,prior.taskId);return {candidateId:prior.taskId,taskId:prior.taskId,baseVersionId:value.binding.baseVersionId,
           ruleSnapshotRef:null,appliedRules:frozen.visualRequirements?"applied":"not_applied",sourceRefs:[],status:value.status as "queued"|"running"|"awaiting_confirmation"|"failed"|"cancelled"};}
       const submit=old.row.kind==="cover"?ports.submitCover:ports.submitCard;
-      const task=await submit(ctx,{attemptId:`article-${old.row.kind}-retry:${digest([identity.accountId,input.clientRequestId]).slice(7)}`,
+      const frozenContext=await submission(old.originalContext,{projectId:old.row.projectId,outputId:old.row.outputId},async()=>old.originalContext);
+      const task=await submit(frozenContext,{attemptId:`article-${old.row.kind}-retry:${digest([identity.namespace,input.clientRequestId]).slice(7)}`,
         projectId:old.row.projectId,inputData:frozen});
-      await ports.db.insert(outputMediaAttempts).values({id:nextId(),userId:identity.userId,accountId:identity.accountId,
+      await submission(frozenContext,{projectId:old.row.projectId,outputId:old.row.outputId},async tx=>{await tx.insert(outputMediaAttempts).values({id:nextId(),userId:identity.userId,accountId:identity.accountId,groupId:identity.groupId,groupVersion:frozenContext.groupVersion??null,membershipVersion:frozenContext.membershipVersion??null,
         projectId:old.row.projectId,outputId:old.row.outputId,kind:old.row.kind,taskId:task.id,candidateId:task.id,
-        clientRequestId:input.clientRequestId,requestDigest:digest({retryOf:old.task.id,frozen}),createdAt:now()}).onConflictDoNothing();
+        clientRequestId:input.clientRequestId,requestDigest:digest({retryOf:old.task.id,frozen}),createdAt:now()}).onConflictDoNothing();});
       const value=await observed(ctx,task.id);return {candidateId:task.id,taskId:task.id,baseVersionId:value.binding.baseVersionId,
         ruleSnapshotRef:null,appliedRules:frozen.visualRequirements?"applied":"not_applied",sourceRefs:[],status:value.status as "queued"|"running"|"awaiting_confirmation"|"failed"|"cancelled"};
     },

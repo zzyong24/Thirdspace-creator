@@ -8,7 +8,7 @@ let db:Db,close:()=>Promise<void>,seq=0;
 const now=()=>"2026-10-02T05:00:00.000Z",nextId=(prefix:string)=>`${prefix}-${++seq}`;
 const document=(text="手工朋友圈")=>({schemaVersion:1 as const,text,imageUses:[],sourceRefs:[]});
 async function assertProjectOwned(transaction:Db,id:string){const [row]=await transaction.select().from(projects).where(and(eq(projects.id,id),eq(projects.userId,ctx.userId),eq(projects.accountId,ctx.accountId)));if(!row)throw new OwnershipError("项目不存在");}
-const owner=()=>createMomentsService({db,now,nextId,ports:{assertProjectOwned:async(c,id,tx,forUpdate)=>{await createProjectsService(createProjectRepository(tx),{now,nextId}).getProject(c,id,forUpdate);},artifacts:tx=>createArtifactsService({db:tx,now,nextId}),assertFile:async()=>{throw Error("未授权配图");},assertSource:async()=>{throw Error("未授权来源");}}});
+const owner=()=>createMomentsService({db,now,nextId,ports:{assertProjectOwned:async(c,id,tx,forUpdate)=>{await createProjectsService(createProjectRepository(tx),{now,nextId}).getProject(c,id,forUpdate);},artifacts:tx=>createArtifactsService({db:tx,now,nextId,assertProjectOwned:async(c,id)=>{await createProjectsService(createProjectRepository(tx),{now,nextId}).getProject(c,id);}}),assertFile:async()=>{throw Error("未授权配图");},assertSource:async()=>{throw Error("未授权来源");}}});
 beforeEach(async()=>{const opened=await createDb();db=opened.db;close=()=>opened.client.close();seq=0;await db.insert(projects).values({id:"moments-project",userId:ctx.userId,accountId:ctx.accountId,title:"真实项目",creationMode:"guided",status:"active",currentStage:"planning",startedAt:now(),createdAt:now(),updatedAt:now()});});afterEach(async()=>close());
 it("朋友圈为独立真实Artifact：创建、保存、刷新、历史与原请求恢复",async()=>{
  const initial=await owner().create(ctx,{projectId:"moments-project",clientRequestId:"moments-create-request",document:document()});expect(initial.current.text).toBe("手工朋友圈");
@@ -41,7 +41,7 @@ it("公开朋友圈列表分页符合契约，空列表为真实0",async()=>{
 });
 
 it("原位置历史来源保留，新增来源仍验证且失败回滚",async()=>{
- let live=true,checks=0;const service=createMomentsService({db,now,nextId,ports:{artifacts:tx=>createArtifactsService({db:tx,now,nextId}),assertProjectOwned:async(c,id,tx,lock)=>{await createProjectsService(createProjectRepository(tx),{now,nextId}).getProject(c,id,lock);},assertFile:async()=>{throw Error("新图需验权");},assertSource:async(c,id,ref,tx)=>{checks++;const actual=await createProjectsService(createProjectRepository(tx),{now,nextId}).getProject(c,id);if(!live||ref.kind!=="project"||ref.id!==actual.id||ref.versionId!==actual.updatedAt)throw Error("来源版本变更");}}});
+ let live=true,checks=0;const service=createMomentsService({db,now,nextId,ports:{artifacts:tx=>createArtifactsService({db:tx,now,nextId,assertProjectOwned:async(c,id)=>{await createProjectsService(createProjectRepository(tx),{now,nextId}).getProject(c,id);}}),assertProjectOwned:async(c,id,tx,lock)=>{await createProjectsService(createProjectRepository(tx),{now,nextId}).getProject(c,id,lock);},assertFile:async()=>{throw Error("新图需验权");},assertSource:async(c,id,ref,tx)=>{checks++;const actual=await createProjectsService(createProjectRepository(tx),{now,nextId}).getProject(c,id);if(!live||ref.kind!=="project"||ref.id!==actual.id||ref.versionId!==actual.updatedAt)throw Error("来源版本变更");}}});
  const ref={kind:"project",id:"moments-project",versionId:now()},initial=await service.create(ctx,{projectId:"moments-project",clientRequestId:"history-source-create",document:{...document(),sourceRefs:[ref]}});live=false;
  const saved=await service.save(ctx,initial.momentsId,{expectedCurrentVersionId:initial.currentVersionId,clientRequestId:"history-source-edit",document:{...initial.current,text:"仅修改文字"}});expect(saved.document.sourceRefs).toEqual([ref]);expect(checks).toBe(1);
  await expect(service.save(ctx,initial.momentsId,{expectedCurrentVersionId:saved.versionId,clientRequestId:"history-source-new",document:{...saved.document,sourceRefs:[ref,{kind:"project",id:"moments-project",versionId:"another-version"}]}})).rejects.toThrow("来源版本变更");expect((await service.get(ctx,initial.momentsId)).currentVersionId).toBe(saved.versionId);expect(await service.history(ctx,initial.momentsId)).toHaveLength(2);
@@ -50,9 +50,44 @@ it("原位置历史来源保留，新增来源仍验证且失败回滚",async()=
 it("真实素材owner验证非空配图：外账号/错文件拒绝，原历史文件不阻断改文字",async()=>{
  const {createAssetsService,createAssetRepository}=await import("../assets");
  for(const [id,accountId]of ([["image-owned",ctx.accountId],["image-foreign","other-account"]] as const)){await db.insert(assets).values({id,userId:ctx.userId,accountId,assetType:"image",name:id,status:"active",currentFileId:`${id}-file`,createdAt:now(),updatedAt:now()});await db.insert(assetFiles).values({id:`${id}-file`,assetId:id,versionNumber:1,storageKey:`${id}.png`,mimeType:"image/png",fileSize:68,checksum:"actual-db-file-identity",mediaMetadata:{},createdAt:now()});}
- const service=createMomentsService({db,now,nextId,ports:{artifacts:tx=>createArtifactsService({db:tx,now,nextId}),assertProjectOwned:async(c,id,tx,lock)=>{await createProjectsService(createProjectRepository(tx),{now,nextId}).getProject(c,id,lock);},assertFile:async(c,_p,file,tx)=>{await createAssetsService(createAssetRepository(tx,{now,nextId}),async()=>{throw Error("此用例仅验证已落库素材身份");},{now,nextId}).assertAssetFileOwned(c,file.assetId,file.assetFileId,true);},assertSource:async()=>{throw Error("此用例未选来源");}}});
+ const service=createMomentsService({db,now,nextId,ports:{artifacts:tx=>createArtifactsService({db:tx,now,nextId,assertProjectOwned:async(c,id)=>{await createProjectsService(createProjectRepository(tx),{now,nextId}).getProject(c,id);}}),assertProjectOwned:async(c,id,tx,lock)=>{await createProjectsService(createProjectRepository(tx),{now,nextId}).getProject(c,id,lock);},assertFile:async(c,_p,file,tx)=>{await createAssetsService(createAssetRepository(tx,{now,nextId}),async()=>{throw Error("此用例仅验证已落库素材身份");},{now,nextId}).assertAssetFileOwned(c,file.assetId,file.assetFileId,true);},assertSource:async()=>{throw Error("此用例未选来源");}}});
  const initial=await service.create(ctx,{projectId:"moments-project",clientRequestId:"real-file-moments-create",document:{...document(),imageUses:[{assetId:"image-owned",assetFileId:"image-owned-file",order:0}]}});expect(initial.current.imageUses).toHaveLength(1);
  for(const [suffix,assetId,assetFileId]of [["foreign","image-foreign","image-foreign-file"],["mismatch","image-owned","image-foreign-file"]])await expect(service.save(ctx,initial.momentsId,{expectedCurrentVersionId:initial.currentVersionId,clientRequestId:`real-file-reject-${suffix}`,document:{...initial.current,imageUses:[{assetId,assetFileId,order:0}]}})).rejects.toThrow();
  expect((await service.get(ctx,initial.momentsId)).currentVersionId).toBe(initial.currentVersionId);expect(await service.history(ctx,initial.momentsId)).toHaveLength(1);
  await db.update(assets).set({status:"deleted"}).where(eq(assets.id,"image-owned"));const saved=await service.save(ctx,initial.momentsId,{expectedCurrentVersionId:initial.currentVersionId,clientRequestId:"real-file-history-text",document:{...initial.current,text:"旧配图缺失仍可改文字"}});expect(saved.document.imageUses).toEqual(initial.current.imageUses);
+});
+
+
+it("T1062 空组公共作品与朋友圈回执同组共享、跨组与归档拒绝",async()=>{
+ const {accountGroups}=await import("../../schema/account-groups");
+ const {momentsAnchors,momentsRequests}=await import("../../schema/moments");
+ const {outputCreateRequests}=await import("../../schema/projects");
+ const g=(groupId:string,accountId:string|null=null):import("@creatoros/contract").RequestContext=>({...ctx,groupId,accountId});
+ await db.insert(accountGroups).values(["moments-group-a","moments-group-b"].map(id=>({id,userId:ctx.userId,name:id,status:"active",version:1,createdAt:now(),updatedAt:now()})));
+ await db.update(projects).set({groupId:"moments-group-a",accountId:null}).where(eq(projects.id,"moments-project"));
+ const projectOwner=createProjectsService(createProjectRepository(db),{now,nextId}),a=g("moments-group-a"),aFiltered=g("moments-group-a","irrelevant-filter"),b=g("moments-group-b");
+ const output=await projectOwner.createOutput(a,"moments-project",{title:"空组作品",contentType:"article",clientRequestId:"group-output-key-0001"});
+ expect(await projectOwner.getOutputByCreationRequest(aFiltered,"group-output-key-0001")).toEqual(output);
+ const [outputReceipt]=await db.select().from(outputCreateRequests);expect(outputReceipt).toMatchObject({groupId:a.groupId,accountId:null});
+ const initial=await owner().create(a,{projectId:"moments-project",clientRequestId:"group-moments-key-0001",document:document()});
+ expect(await owner().findByCreationRequest(aFiltered,"group-moments-key-0001","moments-project")).toEqual(initial);
+ const [anchor]=await db.select().from(momentsAnchors),[receipt]=await db.select().from(momentsRequests);expect(anchor).toMatchObject({groupId:a.groupId,accountId:null});expect(receipt).toMatchObject({groupId:a.groupId,accountId:null});
+ await expect(owner().get(b,initial.momentsId)).rejects.toThrow();
+ const saved=await owner().save(aFiltered,initial.momentsId,{expectedCurrentVersionId:initial.currentVersionId,clientRequestId:"group-moments-save-0001",document:document("同组编辑")});
+ await db.update(accountGroups).set({status:"archived"}).where(eq(accountGroups.id,a.groupId!));
+ expect((await owner().history(a,initial.momentsId)).map(v=>v.versionId)).toContain(saved.versionId);
+ await expect(owner().save(a,initial.momentsId,{expectedCurrentVersionId:saved.versionId,clientRequestId:"group-moments-save-0002",document:document("不可写") })).rejects.toThrow();
+ expect((await owner().get(a,initial.momentsId)).currentVersionId).toBe(saved.versionId);
+});
+
+it("T1062 已迁移旧账号朋友圈请求精确重放不自造NULL账号行，双来源明确冲突零写",async()=>{
+ const {accountGroups}=await import("../../schema/account-groups"),{momentsAnchors,momentsRequests}=await import("../../schema/moments");
+ const input={projectId:"moments-project",clientRequestId:"legacy-replay-moments",document:document("原旧账号内容")},before=await owner().create(ctx,input);
+ const groupId=`grp_legacy_${ctx.accountId}`;await db.insert(accountGroups).values({id:groupId,userId:ctx.userId,name:"历史组",status:"active",version:1,createdAt:now(),updatedAt:now()});
+ // 持久旧谱系升级只回填物理group，原account/requestDigest/IDs保留，不模拟新任务freeze。
+ await db.update(projects).set({groupId});await db.update((await import("../../schema/artifacts")).artifacts).set({groupId});await db.update(momentsAnchors).set({groupId});await db.update(momentsRequests).set({groupId});
+ const group={...ctx,groupId,accountId:null},rows=await db.select().from(momentsRequests);
+ expect(await owner().create(group,input)).toEqual(before);expect(await db.select().from(momentsRequests)).toEqual(rows);
+ await db.insert(momentsRequests).values({...rows[0]!,id:"second-legacy-moments-receipt",accountId:"other-old-account"});const ambiguous=await db.select().from(momentsRequests);
+ await expect(owner().create(group,input)).rejects.toMatchObject({code:"ConflictError"});expect(await db.select().from(momentsRequests)).toEqual(ambiguous);expect(await owner().list(group,input.projectId)).toHaveLength(1);
 });

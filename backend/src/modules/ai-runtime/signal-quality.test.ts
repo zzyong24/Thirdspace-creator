@@ -7,7 +7,10 @@ import {
   buildSignalQualityProfile,
   renderSignalQualityBrief,
 } from "./signal-quality";
-import { trendQualityFromDetail } from "./topic-task-adapter";
+import { MockLanguageModelV4 } from "ai/test";
+import { runTopicWorkerPipeline, type TopicReadData } from "../../../../ai-worker/src/execution/topic-worker-pipeline";
+import { topicGenerateFrozenSchema } from "../../../../ai-worker/src/execution/topic-worker-input";
+import { registerAllTemplates, getOfficialSkillBase, runWithEffectiveSkillSnapshot } from "@creatoros/ai-worker";
 import type { SignalRow } from "./creative-context";
 
 // [T-238] 信号质量画像纯函数测试:评论强信号/噪声启发式、各源边界(空/满)、画像渲染、
@@ -193,27 +196,38 @@ describe("buildSignalQualityProfile(各源边界)", () => {
   });
 });
 
-describe("trendQualityFromDetail(热点画像指标派生)", () => {
-  it("distinct 信源名 + web 搜索算一路(有命中才算)", () => {
-    expect(
-      trendQualityFromDetail({
-        brief: "x",
-        sourceSignalCount: 6,
-        searchHitCount: 4,
-        sourceNameCount: 2,
-      }),
-    ).toEqual({ sourceCount: 3, signalCount: 10 });
+describe("真实 topic Worker 热点画像派生（只替代推理与外部读取）", () => {
+  async function quality(populated: boolean) {
+    registerAllTemplates();
+    const prompts: string[] = [];
+    const model = new MockLanguageModelV4({doGenerate: async options => {
+      const prompt = JSON.stringify(options.prompt); prompts.push(prompt);
+      const extracting = prompt.includes('网页提取 fixture');
+      return {content:[{type:'text',text:JSON.stringify(extracting
+        ? {signals:Array.from({length:3},(_,i)=>({title:`真实信号${i}`,url:null,heat:null,publishedAt:null}))}
+        : {topics:[{title:'最终候选'}]})}],finishReason:{unified:'stop',raw:undefined},
+        usage:{inputTokens:{total:1,noCache:1,cacheRead:undefined,cacheWrite:undefined},outputTokens:{total:1,text:1,reasoning:undefined}},warnings:[]};
+    }});
+    const sources = populated ? ['源A','源B'].map((name,i)=>({id:`source-${i}`,name,url:`https://fixture.invalid/${i}`,domain:'fixture.invalid',sourceType:'web'})) : [];
+    const input = topicGenerateFrozenSchema.parse({version:1,basis:'trend',projectId:null,
+      context:{positioningBrief:'',knowledgeBrief:'',learningsBrief:''},qualityNow:'2026-07-11T00:00:00.000Z',
+      qualityInputs:{signals:[],knowledge:[],positioning:null},qualityProfile:buildSignalQualityProfile({signals:[],knowledge:[],positioning:null,trend:{sourceCount:0,signalCount:0}}),basisBrief:'',trendSources:sources});
+    await runWithEffectiveSkillSnapshot({snapshotVersion:1,userId:'fixture-user',accountId:'fixture-account',resolvedAt:input.qualityNow,platformPolicyVersion:'fixture-v1',platformPolicy:'真实测试策略',skills:['topic.generate','trend.extract'].map(skillId=>{const base=getOfficialSkillBase(skillId);if(!base)throw Error('缺官方Skill');return {skillId,baseVersion:base.baseVersion,overlayRevision:null,overlayVersion:null,effective:{methodSystem:base.methodSystem,template:base.template,tools:base.tools,requiredFacets:base.requiredFacets,contextRequirements:base.contextRequirements,outputSchema:base.outputSchema,completionPolicy:base.completionPolicy,completionPolicyAdapter:base.completionPolicyAdapter}};})},()=>runTopicWorkerPipeline(input,{model,signal:new AbortController().signal,maxOutputTokens:4096,
+      read:async (target): Promise<TopicReadData|null> => target.kind==='search'
+        ? {kind:'search',results:populated?Array.from({length:4},(_,i)=>({title:`命中${i}`,url:`https://fixture.invalid/hit/${i}`,snippet:'搜索摘要'})):[]}
+        : {kind:'web',sourceUrl:'https://fixture.invalid/source',title:'来源',text:'网页提取 fixture'}}));
+    return prompts;
+  }
+  it("distinct 两个信源名 + 有命中搜索算一路，6+4=10", async () => {
+    const prompts = await quality(true);
+    expect(prompts).toHaveLength(3);
+    expect(prompts.at(-1)).toContain('10 条(来自 3 路信源)');
   });
-
-  it("两路全空 → 0/0", () => {
-    expect(
-      trendQualityFromDetail({
-        brief: "",
-        sourceSignalCount: 0,
-        searchHitCount: 0,
-        sourceNameCount: 0,
-      }),
-    ).toEqual({ sourceCount: 0, signalCount: 0 });
+  it("两路全空 → 0/0且诚实说明无实时信号", async () => {
+    const prompts = await quality(false);
+    expect(prompts).toHaveLength(1);
+    expect(prompts[0]).toContain('本次未拉到实时信号');
+    expect(prompts[0]).not.toContain('来自 1 路信源');
   });
 });
 

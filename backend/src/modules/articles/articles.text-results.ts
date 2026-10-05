@@ -1,3 +1,7 @@
+import {withWorkspaceWrite} from "../../workspace-write";
+import {aiTasks,projects as projectionProjects} from "@creatoros/backend";
+import type {WorkspaceWriteTx} from "../../workspace-write";
+import {workspaceFilter,workspaceStamp,workspaceKey,requireWorkspace} from "../../workspace-scope";
 import { createHash } from "node:crypto";
 import { isDeepStrictEqual } from "node:util";
 import { and, eq, requireAccountId, type Db } from "@creatoros/backend";
@@ -46,7 +50,18 @@ export interface ArticleTextResultPorts {
 
 /** Owns only single-field article candidates. The existing whole-article candidate path remains independent. */
 export function createArticleTextResultsService(db: Db, deps: ArticleTextResultPorts) {
-  const account = (ctx: RequestContext) => requireAccountId(ctx.accountId, "article-text-results");
+  const account = (ctx: RequestContext) => {requireWorkspace(ctx);return workspaceKey(ctx);};
+  async function projectionOwner(tx:WorkspaceWriteTx,ctx:RequestContext,taskId:string,projectId:string,input:Record<string,unknown>,kind:string){
+    const [parent]=await tx.select().from(projectionProjects).where(and(eq(projectionProjects.id,projectId),eq(projectionProjects.userId,ctx.userId),workspaceFilter(projectionProjects,ctx))).for('update');
+    if(!parent)throw Error('候选原父归属已改变');
+    const [original]=await tx.select().from(aiTasks).where(and(eq(aiTasks.id,taskId),eq(aiTasks.userId,ctx.userId))).for('share');
+    if(!original){if(ctx.groupId)throw Error('候选缺少原真实冻结任务');return workspaceStamp(workspaceKey(ctx));}
+    if(original.taskType!==kind||original.projectId!==projectId||!isDeepStrictEqual(original.inputData,input))throw Error('候选原冻结输入不符');
+    if(original.groupId!==null){if(original.groupId!==parent.groupId)throw Error('候选原冻结组与父归属不符');return workspaceStamp(workspaceKey(original));}
+    if(!original.accountId||parent.accountId!==original.accountId||(parent.groupId!==null&&parent.groupId!==`grp_legacy_${original.accountId}`))throw Error('旧候选缺少可证明的原账号父归属');
+    // SEMANTIC_BOUNDARY_ALLOW: 旧物理父链证明归属；不凭当前member猜组、不重签原AI freeze。
+    return{groupId:parent.groupId,accountId:original.accountId};
+  }
   async function taskFor(ctx: RequestContext, taskId: string) {
     account(ctx);
     const task = await deps.readGeneration(ctx, taskId);
@@ -75,9 +90,9 @@ export function createArticleTextResultsService(db: Db, deps: ArticleTextResultP
   }
   function hasOverrides(raw: unknown) { return !!raw && typeof raw === "object" && !Array.isArray(raw) && Object.keys(raw).length > 0; }
   async function getCandidate(ctx: RequestContext, candidateId: string): Promise<Candidate> {
-    const accountId = account(ctx);
+    account(ctx);
     const [saved] = await db.select().from(articleTextCandidates).where(and(eq(articleTextCandidates.id, candidateId),
-      eq(articleTextCandidates.userId, ctx.userId), eq(articleTextCandidates.accountId, accountId)));
+      eq(articleTextCandidates.userId, ctx.userId), workspaceFilter(articleTextCandidates,ctx)));
     if (saved) {
       await deps.articles.getArticle(ctx, saved.outputId);
       return {candidateId, outputId: saved.outputId, kind: kindOf(saved.kind), status: "succeeded", value: saved.value,
@@ -95,12 +110,15 @@ export function createArticleTextResultsService(db: Db, deps: ArticleTextResultP
     if (!result || result.resultData.kind !== kind || typeof result.resultData.value !== "string") {
       fail("CANDIDATE_NOT_READY", "文章单项任务缺少有效候选回执");
     }
-    await db.insert(articleTextCandidates).values({id: candidateId, projectId: article.projectId,
-      outputId, artifactId: article.artifactId, userId: ctx.userId, accountId, baseVersionId,
-      kind, value: result.resultData.value, sourceRefs, ruleSnapshotRef, appliedRules, createdAt: deps.now(),
+    const candidateValue=result.resultData.value;
+      await withWorkspaceWrite(db,ctx,async tx=>{const frozenOwner=await projectionOwner(tx,ctx,candidateId,article.projectId,task.inputData,"wechat.article-text");
+    await tx.insert(articleTextCandidates).values({id: candidateId, projectId: article.projectId,
+      outputId, artifactId: article.artifactId, userId: ctx.userId, ...frozenOwner, baseVersionId,
+      kind, value: candidateValue, sourceRefs, ruleSnapshotRef, appliedRules, createdAt: deps.now(),
     }).onConflictDoNothing();
+      },{allowArchived:true});
     const [persisted] = await db.select().from(articleTextCandidates).where(and(eq(articleTextCandidates.id, candidateId),
-      eq(articleTextCandidates.userId, ctx.userId), eq(articleTextCandidates.accountId, accountId)));
+      eq(articleTextCandidates.userId, ctx.userId), workspaceFilter(articleTextCandidates,ctx)));
     if (!persisted || persisted.outputId !== outputId || persisted.kind !== kind) fail("IDEMPOTENCY_CONFLICT", "文章候选持久化冲突");
     return {candidateId, outputId, kind, status: "succeeded", value: persisted.value, baseVersionId,
       sourceRefs, ruleSnapshotRef, appliedRules};

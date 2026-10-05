@@ -1,9 +1,17 @@
+import {createArtifactsService} from '../artifacts';
+import {createArticlesService} from '../articles/articles.service';
+import {createGraphicPostsService} from '../graphic-posts/graphic-posts.service';
+import {articleAnchors} from '../../schema/articles';
+import {graphicPostAnchors} from '../graphic-posts/graphic-posts.schema';
 import {intelligenceItems,intelligenceSources,sourceSnapshots,intelligenceTransforms,projectIntelligenceReferences} from '../../schema/intelligence';
 import {candidates,topicProposalFeedback} from '../../schema/candidate';
 import {contentCalendarEntries} from '../../schema/content-calendar';
 import {creatorProfiles,positioningStatements} from '../../schema/positioning';
 import {rubrics,rubricVersions,predictions,calibrationRuleSuggestions} from '../../schema/calibration';
 import {learnings,learningApplications} from '../../schema/learnings';
+import {workspaceFilter} from '../../workspace-scope';
+import {createCreativeCanvasService,type CanvasTaskInput} from '../creative-canvas/creative-canvas.service';
+import {canvasGenerationLinks,canvasAgentProposals} from '../../schema/creative-canvas';
 import {aiTasks,aiTaskReferences} from '../../schema/ai';
 import {productions,productionSegments,exportRecords} from '../../schema/production';
 import {platformAccounts} from '../../schema/platform-account';
@@ -13,7 +21,7 @@ import {reviews,reviewPublications} from '../../schema/reviews';
 import {mkdtemp,rm} from 'node:fs/promises';
 import {join} from 'node:path';
 import {tmpdir} from 'node:os';
-import {eq} from 'drizzle-orm';
+import {eq,and} from 'drizzle-orm';
 import {artifacts,artifactVersions,artifactRelations} from '../../schema/artifacts';
 import {resourceAccessGrants,resourceAccessGrantUses} from '../../schema/resource-access';
 import {createWorkspaceBlobService} from '../assets';
@@ -32,6 +40,61 @@ const base:RequestContext={userId:'migration-user',requestId:'migration',source:
 beforeEach(async()=>{store=await createDb();let seq=0;const deps={db:store.db,now:()=>new Date().toISOString(),nextId:(p:string)=>p+'-'+ ++seq};groups=createAccountGroupService(deps);migration=createGroupMigrationService(deps);projects=createProjectsService(createProjectRepository(store.db),deps);source=(await groups.create(base,{name:'来源',idempotencyKey:'source'})).id;target=(await groups.create(base,{name:'目标',idempotencyKey:'target'})).id;});
 afterEach(async()=>store?.client.close());
 describe('显式项目闭包归组',()=>{
+ it('画布公共生成预约和建议搬组后仍读取原冻结任务，undo不重签原AI身份',async()=>{
+  const ctx={...base,groupId:source},targetCtx={...base,groupId:target};const originalContexts:RequestContext[]=[];
+  const parent=await projects.createProject(ctx,{title:'真实画布迁移父'});
+  const unused=async():Promise<never>=>{throw Error('此测试不调用素材或模型');};
+  const canvas=createCreativeCanvasService(store.db,{now:()=> '2026-10-05T00:00:00.000Z',assertProject:async(c,id,tx=store.db,locked)=>{await createProjectRepository(tx).get(c,id,locked);},assertMediaAsset:unused,assertReferenceAsset:unused,getMediaFileDownloadUrl:unused,getReference:async()=>null,resolveCapability:async()=>({provider:'minimax',model:'image-01'}),
+   submitTask:async(c,input:{attemptId:string;inputData:CanvasTaskInput})=>{const id='migration-canvas-task';await store.db.insert(aiTasks).values({id,userId:c.userId,accountId:c.accountId??null,groupId:c.groupId??null,groupVersion:c.groupVersion??1,membershipVersion:null,projectId:parent.id,taskType:'asset.generate',status:'succeeded',idempotencyKey:input.attemptId,attemptId:input.attemptId,inputData:input.inputData,requestedAt:'2026-10-05T00:00:00.000Z'});return {id};},
+   readTask:async(c,id,tx=store.db)=>{originalContexts.push(c);const [task]=await tx.select().from(aiTasks).where(and(eq(aiTasks.id,id),eq(aiTasks.userId,c.userId),workspaceFilter(aiTasks,c)));return task??null;},readTaskResults:async()=>[]});
+  const created=await canvas.create(ctx,{title:'真实画布',projectId:parent.id});
+  const saved=await canvas.save(ctx,created.id,{expectedRevision:created.revision,document:{schemaVersion:1,viewport:{x:0,y:0,zoom:1},nodes:[{id:'migration-node',type:'image_generation',label:'真实节点',position:{x:0,y:0},prompt:'原冻结主题',mode:'text_to_image'}],edges:[]}});
+  const link=await canvas.generate(ctx,saved.id,'migration-node',{expectedRevision:saved.revision,attemptId:'migration-canvas-attempt'});
+  const proposal=await canvas.propose(ctx,saved.id,saved.revision,[{type:'addNode',operationId:'migration-op',tempId:'new-node',node:{id:'temp',type:'text',label:'原建议',text:'原建议正文',position:{x:1,y:2}}}]);
+  const originalTask=(await store.db.select().from(aiTasks).where(eq(aiTasks.id,link.taskId!)))[0]!;
+  const originalLink=(await store.db.select().from(canvasGenerationLinks).where(eq(canvasGenerationLinks.id,link.id)))[0]!;
+  const body={fromGroupId:source,toGroupId:target,projectIds:[parent.id],knowledgeIds:[],conversationIds:[]},preview=await migration.preview(ctx,body);
+  expect(preview.counts.canvas_generation_links).toBe(1);expect(preview.counts.canvas_agent_proposals).toBe(1);
+  const moved=await migration.apply(ctx,{...body,digest:preview.digest,idempotencyKey:'canvas-move'});
+  await expect(canvas.getGenerationMaterial(ctx,saved.id,link.id)).rejects.toThrow();
+  expect(await canvas.getGenerationMaterial(targetCtx,saved.id,link.id)).toMatchObject({status:'not_ready',taskId:link.taskId});
+  expect(await canvas.listTasks(targetCtx,saved.id)).toMatchObject([{id:link.id,taskId:link.taskId}]);
+  expect(await canvas.listProposals(targetCtx,saved.id)).toMatchObject([{id:proposal.id}]);
+  expect(originalContexts.every(c=>c.groupId===source)).toBe(true);
+  expect((await store.db.select().from(aiTasks).where(eq(aiTasks.id,link.taskId!)))[0]).toEqual(originalTask);
+  expect((await store.db.select().from(canvasGenerationLinks).where(eq(canvasGenerationLinks.id,link.id)))[0]).toEqual({...originalLink,groupId:target});
+  await migration.undo(targetCtx,moved.id);
+  expect((await store.db.select().from(canvasGenerationLinks).where(eq(canvasGenerationLinks.id,link.id)))[0]).toEqual(originalLink);
+  const again=await migration.preview(ctx,body);await migration.apply(ctx,{...body,digest:again.digest,idempotencyKey:'canvas-move-again'});
+  expect((await canvas.applyProposal(targetCtx,saved.id,proposal.id,saved.revision)).document.nodes).toHaveLength(2);
+  expect((await store.db.select().from(aiTasks).where(eq(aiTasks.id,link.taskId!)))[0]).toEqual(originalTask);
+ });
+
+ it.each(['article','graphic'] as const)('公共创建%s→preview/apply→目标读取→undo保持output主键锚点及原版本',async kind=>{
+  const ctx={...base,groupId:source},targetCtx={...base,groupId:target};let seq=0;
+  const deps={now:()=> '2026-10-04T00:00:00.000Z',nextId:(p:string)=>`migration-domain-${p}-${++seq}`};
+  const projectPort=(db:typeof store.db)=>createProjectsService(createProjectRepository(db),deps);
+  const artifactPort=(db:typeof store.db)=>createArtifactsService({db,...deps,assertProjectOwned:(c,id)=>projectPort(db).getProject(c,id),resolveOutputProjectId:(c,id)=>projectPort(db).getProjectIdByOutput(c,id)});
+  const unused=async():Promise<never>=>{throw Error('此迁移测试不调用模型或素材');};
+  const article=createArticlesService(store.db,{...deps,projects:projectPort,artifacts:artifactPort,assertAssetFile:unused,resolveDocumentSource:unused,resolveSelectedBrand:unused,submitGeneration:unused,readGeneration:unused});
+  const graphic=createGraphicPostsService(store.db,{...deps,projects:projectPort,artifacts:artifactPort,assertAssetFile:unused});
+  const parent=await projects.createProject(ctx,{title:'真实创作迁移父',creationMode:'free',targetPlatforms:[]});
+  const output=kind==='article'?await article.createOutput(ctx,parent.id,{title:'真实文章',clientRequestId:'migration-create'}):await graphic.createOutput(ctx,parent.id,{title:'真实图文',clientRequestId:'migration-create'});
+  const requestOutput=await projects.createOutput(ctx,parent.id,{title:'真实公共创建回执',contentType:'video',clientRequestId:'migration-project-create'});
+  const read=(c:RequestContext)=>kind==='article'?article.getArticle(c,output.id):graphic.getGraphicPost(c,output.id);
+  const before=await read(ctx),table=kind==='article'?articleAnchors:graphicPostAnchors;
+  const originalAnchor=(await store.db.select().from(table))[0]!;
+  const body={fromGroupId:source,toGroupId:target,projectIds:[parent.id],knowledgeIds:[],conversationIds:[]},preview=await migration.preview(ctx,body);
+  expect(preview.counts[kind==='article'?'article_anchors':'graphic_post_anchors']).toBe(1);
+  const done=await migration.apply(ctx,{...body,digest:preview.digest,idempotencyKey:'migration-domain'});
+  await expect(read(ctx)).rejects.toMatchObject({code:'OwnershipError'});
+  expect(await projects.getOutputByCreationRequest(targetCtx,'migration-project-create')).toMatchObject({id:requestOutput.id,projectId:parent.id});
+  const moved=await read(targetCtx);expect(moved.current).toEqual(before.current);expect(moved.currentVersionId).toBe(before.currentVersionId);expect(moved.artifactId).toBe(before.artifactId);
+  expect((await store.db.select().from(table))[0]).toEqual({...originalAnchor,groupId:target});
+  await migration.undo(targetCtx,done.id);expect(await read(ctx)).toEqual(before);await expect(read(targetCtx)).rejects.toMatchObject({code:'OwnershipError'});
+  expect((await store.db.select().from(table))[0]).toEqual(originalAnchor);
+ });
+
  it('完整项目与子稿件保持真实ID；digest过期拒绝；事务幂等，原组不可读，目标重读，未改版本可undo',async()=>{
   const ctx={...base,groupId:source};const p=await projects.createProject(ctx,{title:'同一期内容',creationMode:'free',targetPlatforms:[]});
   const body={fromGroupId:source,toGroupId:target,projectIds:[p.id],knowledgeIds:[],conversationIds:[]};

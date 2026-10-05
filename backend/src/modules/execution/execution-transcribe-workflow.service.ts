@@ -1,7 +1,8 @@
 import {z} from 'zod';
+import {isDeepStrictEqual} from 'node:util';
 import {eq,executionTasks,executionCalls,aiTasks,aiTaskSteps,type Db} from '@creatoros/backend';
 import type {RequestContext} from '@creatoros/contract';
-import {workerPortInputSchemas,transcribeSourceSchema,transcribeItemReceiptSchema,type ExecutionRef,type WorkerPort} from '@creatoros/contract/execution-worker';
+import {workerPortInputSchemas,transcribeSourceSchema,transcribeItemReceiptSchema,transcribePostprocessResultSchema,type ExecutionRef,type WorkerPort} from '@creatoros/contract/execution-worker';
 import {createTranscriptArtifactService} from '../projects/transcript-artifact.service';
 import {createExecutionLeaseService} from './execution-lease.service';
 import {bindTranscribeExecution,type TranscribeExecutionScope} from './transcribe-execution-binding';
@@ -53,7 +54,12 @@ export function createExecutionTranscribeWorkflowService(db:Db,deps:TranscribeWo
    const result=await access(ref,awemeId,async(scope,state)=>{
     signal?.throwIfAborted();const previous=entries(state.payload)[awemeId];if(previous&&previous.status!=='failed')return previous;
     if(album&&sources(state.payload)[awemeId]?.kind!=='image-album')throw new ConflictError('图集来源已变化');
-    if(!album){const frozen=(state.payload.transcribePostprocess as Record<string,{result?:unknown}>|undefined)?.[awemeId]?.result;if(JSON.stringify(frozen)!==JSON.stringify(post))throw new ConflictError('后处理最终正文与原回执不符');}
+    if(!album){
+     const frozen=(state.payload.transcribePostprocess as Record<string,{result?:unknown}>|undefined)?.[awemeId]?.result;
+     // SEMANTIC_BOUNDARY_ALLOW: 只核验原回执的严格结构和值，不判断或改写正文；对象键序不是内容差异。
+     const original=transcribePostprocessResultSchema.safeParse(frozen),observed=transcribePostprocessResultSchema.safeParse(post);
+     if(!original.success||!observed.success||!isDeepStrictEqual(original.data,observed.data))throw new ConflictError('后处理最终正文与原回执不符');
+    }
     const bound=await createTranscriptArtifactService({db:scope.tx as unknown as Db,now:deps.now,nextId:deps.nextId}).ensure(scope.context,{awemeId,transcript:album?'(图集作品,无口播音频)':post!.transcript,source:album?'image-album':'transcribed',...(album?{skipMasterScript:true}:{})});
     signal?.throwIfAborted();return store(scope,state,{awemeId,status:bound.status==='skipped'&&bound.reason==='no-imported-project'?'no-project':album?'image-album':'saved',projectId:'projectId'in bound?bound.projectId??null:null,error:null});
    });

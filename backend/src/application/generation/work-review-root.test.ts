@@ -16,20 +16,21 @@ import {createAiService} from '@creatoros/backend/modules/ai';
 import {createWorkReviewRoot} from './work-review-root';
 import {createWorkReviewReader,type ReviewOwners} from '@creatoros/backend/modules/review';
 import {freezeReview} from '../../modules/review/work-review-fingerprint';
-const ctx:RequestContext={userId:'reader-user',accountId:'reader-account',source:'user',requestId:'reader-http'};
+const rootFixtureContext:RequestContext={userId:'reader-user',accountId:'reader-account',source:'user',requestId:'reader-http'};
+const ctx=rootFixtureContext;
 const unavailable=async():Promise<never>=>{throw Error('本fixture不调用供应商模型或无关owner');};
-async function fixture(kind:'article'|'image'|'moments'){
- const opened=await createDb(),db=opened.db;let seq=0;const deps={now:()=> '2026-10-02T10:00:00.000Z',nextId:(prefix:string)=>`${prefix}-${++seq}`};
- const projects=(tx:Db=db)=>createProjectsService(createProjectRepository(tx),deps),artifacts=(tx:Db)=>createArtifactsService({db:tx,...deps});
+async function fixture(kind:'article'|'image'|'moments',pg?:{db:Db;ctx:RequestContext;prefix:string}){
+ const context=pg?.ctx??rootFixtureContext,opened=pg?null:await createDb(),db=pg?.db??opened!.db;const ctx=context;let seq=0;const deps={now:()=> '2026-10-02T10:00:00.000Z',nextId:(prefix:string)=>`${prefix}-${pg?.prefix??''}${++seq}`};
+ const projects=(tx:Db=db)=>createProjectsService(createProjectRepository(tx),deps),artifacts=(tx:Db)=>createArtifactsService({db:tx,...deps,...(pg?{assertProjectOwned:async(c:RequestContext,id:string)=>{await projects(tx).getProject(c,id);}}:{})});
  const asset=(tx:Db=db)=>createAssetsService(createAssetRepository(tx,deps),unavailable,deps);
  const article=(tx:Db=db)=>createArticlesService(tx,{...deps,projects,artifacts,assertAssetFile:(c,id,file,active)=>asset(tx).assertAssetFileOwned(c,id,file,active),resolveDocumentSource:async()=>null,resolveSelectedBrand:async()=>null,submitGeneration:unavailable,readGeneration:unavailable});
  const image=(tx:Db=db)=>createGraphicPostsService(tx,{...deps,projects,artifacts,assertAssetFile:(c,id,file,active)=>asset(tx).assertAssetFileOwned(c,id,file,active),submitTextGeneration:unavailable,readTextGeneration:unavailable});
  const moments=(tx:Db=db)=>createMomentsService({db:tx,...deps,ports:{artifacts,assertProjectOwned:async(c,p,t,lock)=>{await projects(t).getProject(c,p,lock);},assertFile:unavailable,assertSource:unavailable}});
  const project=await projects().createProject(ctx,{title:'真实审核字段',brief:'DB回归'});let member:WorkMemberRef;
- if(kind==='moments'){const row=await moments().create(ctx,{projectId:project.id,clientRequestId:'reader-moments-create',document:{schemaVersion:1,text:'朋友圈真实正文',imageUses:[],sourceRefs:[]}});member={kind,momentsId:row.momentsId};}
- else{const row=kind==='article'?await article().createOutput(ctx,project.id,{title:'真实文章',clientRequestId:'reader-article-create'}):await image().createOutput(ctx,project.id,{title:'真实图文',clientRequestId:'reader-image-create'});member={kind,outputId:row.id};if(kind==='article'){const original=await article().getArticle(ctx,row.id);await article().createVersion(ctx,row.id,{clientRequestId:'reader-initial-title',expectedCurrentVersionId:original.currentVersionId,document:{...original.current,title:'真实文章'}});}if(kind==='image'){const original=await image().getGraphicPost(ctx,row.id);await image().createVersion(ctx,row.id,{clientRequestId:'reader-initial-cards',expectedCurrentVersionId:original.currentVersionId,document:{...original.current,cardBriefs:[{cardId:'a',title:'第一卡',body:'保留卡正文',sourceRefs:[]},{cardId:'b',title:'第二卡',body:'别卡正文',sourceRefs:[]}]}});}}
+ if(kind==='moments'){const row=await moments().create(ctx,{projectId:project.id,clientRequestId:'reader-moments-create'+(pg?.prefix??''),document:{schemaVersion:1,text:'朋友圈真实正文',imageUses:[],sourceRefs:[]}});member={kind,momentsId:row.momentsId};}
+ else{const row=kind==='article'?await article().createOutput(ctx,project.id,{title:'真实文章',clientRequestId:'reader-article-create'+(pg?.prefix??'')}):await image().createOutput(ctx,project.id,{title:'真实图文',clientRequestId:'reader-image-create'+(pg?.prefix??'')});member={kind,outputId:row.id};if(kind==='article'){const original=await article().getArticle(ctx,row.id);await article().createVersion(ctx,row.id,{clientRequestId:'reader-initial-title'+(pg?.prefix??''),expectedCurrentVersionId:original.currentVersionId,document:{...original.current,title:'真实文章'}});}if(kind==='image'){const original=await image().getGraphicPost(ctx,row.id);await image().createVersion(ctx,row.id,{clientRequestId:'reader-initial-cards'+(pg?.prefix??''),expectedCurrentVersionId:original.currentVersionId,document:{...original.current,cardBriefs:[{cardId:'a',title:'第一卡',body:'保留卡正文',sourceRefs:[]},{cardId:'b',title:'第二卡',body:'别卡正文',sourceRefs:[]}]}});}}
  const comp=(tx:Db=db)=>createWorkCompositionsService({db:tx,...deps,ports:{artifacts,assertProjectOwned:async(c,p,t,lock)=>{await projects(t).getProject(c,p,lock);},readMember:async(c,_p,m,t=tx)=>{const item=m.kind==='moments'?await moments(t).get(c,m.momentsId):m.kind==='article'?await article(t).getArticle(c,m.outputId):await image(t).getGraphicPost(c,m.outputId);return{kind:'artifact',artifactId:item.artifactId,versionId:item.currentVersionId};},createMember:unavailable,findCreatedMember:async()=>null,assertSource:unavailable,assertRule:unavailable}});
- const composition=await comp().create(ctx,{projectId:project.id,title:'组合',clientRequestId:'reader-comp-create'});await comp().bindMember(ctx,composition.compositionId,{expectedRevision:0,clientRequestId:'reader-comp-bind',member});
+ const composition=await comp().create(ctx,{projectId:project.id,title:'组合',clientRequestId:'reader-comp-create'+(pg?.prefix??'')});await comp().bindMember(ctx,composition.compositionId,{expectedRevision:0,clientRequestId:'reader-comp-bind'+(pg?.prefix??''),member});
  const publicationReads:string[]=[],publicationLocks:string[]=[];
  const publishing=(tx:Db=db)=>createPublishingService({db:tx,...deps,resolveOutputOwner:(c,id)=>projects(tx).getOutputOwnerSummary(c,id),assertCoverOwned:(c,id)=>asset(tx).getAsset(c,id)});
  const owners=(t:Db)=>({projects:projects(t),articles:article(t),graphicPosts:image(t),moments:moments(t),compositions:comp(t),publishing:{listPublicationsByOutputIds:(c,ids)=>publishing(t).listPublicationsByOutputIds(c,ids),getPublication:(c,id)=>{publicationReads.push(id);return publishing(t).getPublication(c,id);},listRevisions:(c,id,page)=>{publicationReads.push(id);return publishing(t).listRevisions(c,id,page);}},assets:asset(t),production:{getEditor:unavailable},outputScripts:{getSavedScript:unavailable}} satisfies ReviewOwners);
@@ -40,13 +41,14 @@ async function fixture(kind:'article'|'image'|'moments'){
  const runtimeDeps={...deps,officialSkills:{get:getOfficialSkillBase,list:listOfficialSkillBases,platformPolicy:()=>({version:'explicit-root-fixture-policy',text:'原官方Skill+真实账号overlay数据库探针，不调用供应商'})},readPinnedAuthority:async()=>({authority:'local' as const,digest:'local'})};
  const aiFor=(t:Db)=>createAiService({db:t,...deps,resolveTaskRuntimeData:createTransactionalTaskRuntimeResolver(t,runtimeDeps),artifacts:{} as never,knowledge:{} as never,candidate:{} as never,learnings:{} as never,publishing:{} as never,materialLinks:{} as never,positioning:{} as never,calibration:{} as never});
  const wakes:string[]=[];const root=createWorkReviewRoot(db,deps,{owners,artifacts,ai:aiFor,positioning:()=>({getStatement:unavailable}),materials:()=>({dependencies:async()=>[]}),sources:{read:unavailable},frozenProductionFiles:{readFrozenFileBinding:async()=>null},wake:async(_c,id)=>{wakes.push(id);}});
- return{opened,db,member,composition,article,image,moments,comp,scope,frozen,deps,publishing,publicationReads,publicationLocks,root,wakes,aiFor};
+ return{opened:{db,client:{close:async()=>{if(opened)await opened.client.close();}}},db,member,composition,article,image,moments,comp,scope,frozen,deps,publishing,publicationReads,publicationLocks,root,wakes,aiFor};
 }
+// 此系列真实执行PGlite冷初始化/迁移、owner冻结和foreign拒绝；原article现场6706ms，局部期限保留完整断言。
 it.each(['article','image','moments'] as const)('%s 从真实原owner读取精确值，隔离账号',async kind=>{const f=await fixture(kind);try{
  const target=kind==='moments'?{kind:'moments_field',momentsId:(f.member as any).momentsId,field:'text'}:kind==='article'?{kind:'article_field',outputId:(f.member as any).outputId,field:'title'}:{kind:'image_card',outputId:(f.member as any).outputId,cardId:'a',field:'body'};
  const result=await f.frozen(f.scope(target));expect(result.context.members[0]!.fields[0]!.value).toBe(kind==='moments'?'朋友圈真实正文':kind==='article'?'真实文章':'保留卡正文');
  await expect(f.frozen(f.scope(target),{...ctx,accountId:'another-account'})).rejects.toThrow();
- }finally{await f.opened.client.close();}});
+ }finally{await f.opened.client.close();}},30000);
 it('真实图文另卡编辑及重排不改变单卡正文指纹；明确字段改变失效',async()=>{const f=await fixture('image');try{
  const outputId=(f.member as any).outputId,s=f.scope({kind:'image_card',outputId,cardId:'a',field:'body'}),before=await f.frozen(s),item=await f.image().getGraphicPost(ctx,outputId);
  await f.image().createVersion(ctx,outputId,{clientRequestId:'reader-card-b-change',expectedCurrentVersionId:item.currentVersionId,document:{...item.current,cardBriefs:[{...item.current.cardBriefs![1]!,body:'修改别卡'},item.current.cardBriefs![0]!]}});
@@ -92,3 +94,36 @@ it('根装配原AI预约失回复重放仍是同任务；真实审核transport�
  const frozen=await f.root.readCurrent(ctx,scope,f.db,false);const task=await f.root.businessAdapters['work.review'].prepare(ctx,{id:report.taskId!,retryOfTaskId:null,projectId:frozen.projectId,inputData:{workReviewReportId:report.reportId,snapshotFingerprint:report.snapshot.fingerprint},skillSnapshot:{} as never});expect(task.reviewContext).toContain('朋友圈真实正文');
  const status=await f.root.service.status(ctx,scope);expect(await f.root.transport.request(ENDPOINTS.confirmWorkReview,{params:undefined,query:undefined,body:{mode:'manual',clientRequestId:'root-original-review-confirm',scope,expectedFingerprint:status.currentFingerprint,historicalBasis:[]}},ctx)).toMatchObject({data:{status:{state:'confirmed_current',modelVerification:'not_verified'},confirmation:{mode:'manual',reportId:null}}});
  }finally{await f.opened.client.close();}});
+
+
+import {Pool} from 'pg';
+import {randomUUID} from 'node:crypto';
+import {createRuntimeDb} from '../../db';
+import {createAccountGroupService} from '../../modules/platform-account/account-group.service';
+import {aiTasks,executionTasks,executionCalls} from '@creatoros/backend';
+import {workReviewReports,workReviewRequests} from '../../schema/work-reviews';
+import {createStructuredBusinessExecutionService} from '../../modules/ai-runtime/structured-business-execution.service';
+const reviewLockPg=process.env.CREATOROS_TEST_POSTGRES_URL;
+it.skipIf(!reviewLockPg)('T1062真实PG原审核root→actualAi(tx)同组双父Lock观察及两个阶段原回执恢复',async()=>{
+ const url=new URL(reviewLockPg!);if(url.hostname!=='127.0.0.1'||url.port!=='55422')throw Error('仅55422随机PG库');
+ const name=`t1062_review_lock_${randomUUID().replaceAll('-','')}`,admin=new Pool({connectionString:reviewLockPg});await admin.query(`CREATE DATABASE ${name}`);url.pathname=`/${name}`;
+ const runtimes:Array<Awaited<ReturnType<typeof createRuntimeDb>>>=[];let held=false,blocker:import('pg').PoolClient|undefined,pending:Promise<unknown>[]=[];
+ async function open(role:string){const scoped=new URL(url);scoped.searchParams.set('application_name',`${name}_${role}`);const runtime=await createRuntimeDb({connectionString:scoped.toString()});runtime.pool.options.max=1;runtimes.push(runtime);return runtime;}
+ try{
+  const setup=await open('setup'),left=await open('left'),right=await open('right');let n=0;const deps={now:()=>new Date().toISOString(),nextId:(p:string)=>`${p}-${++n}`},user:RequestContext={userId:name,requestId:'review-lock-public',source:'user'};
+  const group=await createAccountGroupService({db:setup.db,...deps}).create(user,{name:'审核真实空组',idempotencyKey:'review-lock-group'}),scope={...user,groupId:group.id,groupVersion:group.version,accountId:null};
+  const fixtures=[await fixture('moments',{db:left.db,ctx:scope,prefix:'left-'}),await fixture('moments',{db:right.db,ctx:scope,prefix:'right-'})];
+  const inputs=fixtures.map((f,i)=>{if(f.member.kind!=='moments')throw Error('fixture真实member应为moments');return{clientRequestId:`review-pg-public-create-${i}`,scope:f.scope({kind:'moments_field',momentsId:f.member.momentsId,field:'text'})};});
+  blocker=await setup.pool.connect();await blocker.query('BEGIN');held=true;await blocker.query('SELECT id FROM account_groups WHERE id=$1 FOR SHARE',[group.id]);
+  const results=Promise.allSettled(fixtures.map((f,i)=>f.root.service.create(scope,inputs[i]!)));pending=[results];
+  let observed=false;const deadline=Date.now()+6000;
+  try{while(Date.now()<deadline){const rows=await admin.query('SELECT application_name,wait_event_type,wait_event,query FROM pg_stat_activity WHERE datname=$1 AND application_name=ANY($2::text[]) AND wait_event_type=\'Lock\'',[name,[`${name}_left`,`${name}_right`]]);if(rows.rows.length===2){observed=true;console.info('T1062审核真实锁观察',rows.rows);break;}await new Promise(resolve=>setTimeout(resolve,10));}}
+  finally{held=false;await blocker.query('ROLLBACK');blocker.release();blocker=undefined;}
+  expect(observed).toBe(true);const settled=await results;console.info('T1062审核公共锁结果',settled);for(const result of settled)expect(result.status).toBe('fulfilled');
+  const reports=await setup.db.select().from(workReviewReports),tasks=await setup.db.select().from(aiTasks);expect(reports).toHaveLength(2);expect(tasks).toHaveLength(2);expect(new Set(tasks.map(t=>t.projectId)).size).toBe(2);for(const task of tasks)expect(task).toMatchObject({userId:name,groupId:group.id,accountId:null,groupVersion:group.version,membershipVersion:null});
+  for(let i=0;i<2;i++){const f=fixtures[i]!,report=await f.root.service.create(scope,inputs[i]!);if(!report.taskId)throw Error('原report无task');await createStructuredBusinessExecutionService(f.db,{adapters:f.root.businessAdapters,budget:{maxCalls:4,maxTokens:100000,deadlineMs:600000},maxOutputTokens:2048}).prepare(scope,report.taskId);}
+  expect(await setup.db.select().from(executionTasks)).toHaveLength(2);const before={tasks:await setup.db.select().from(aiTasks),reports:await setup.db.select().from(workReviewReports),requests:await setup.db.select().from(workReviewRequests),executions:await setup.db.select().from(executionTasks)};
+  await Promise.all(fixtures.map((f,i)=>f.root.service.create({...scope,accountId:'仅平台筛选'},inputs[i]!)));
+  expect(await setup.db.select().from(aiTasks)).toEqual(before.tasks);expect(await setup.db.select().from(workReviewReports)).toEqual(before.reports);expect(await setup.db.select().from(workReviewRequests)).toEqual(before.requests);expect(await setup.db.select().from(executionTasks)).toEqual(before.executions);expect(await setup.db.select().from(executionCalls)).toHaveLength(0);
+ }finally{if(held&&blocker)await blocker.query('ROLLBACK');await Promise.allSettled(pending);blocker?.release();const closed=await Promise.allSettled(runtimes.map(runtime=>runtime.pool.end()));try{await admin.query(`DROP DATABASE ${name} WITH (FORCE)`);}finally{await admin.end();}for(const result of closed)if(result.status==='rejected')throw result.reason;}
+},30000);

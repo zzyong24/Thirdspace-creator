@@ -18,7 +18,7 @@ export const sourceTextDigest=(text:string)=>createHash("sha256").update(text).d
 function fail(code:string,message:string):never {throw Object.assign(new Error(message),{code});}
 function same(a:unknown,b:unknown){return sourceCanonical(a)===sourceCanonical(b);}
 function splitPair(text:string,at:number){return at>0&&at<text.length&&text.charCodeAt(at-1)>=0xd800&&text.charCodeAt(at-1)<=0xdbff&&text.charCodeAt(at)>=0xdc00&&text.charCodeAt(at)<=0xdfff;}
-export const workSourceOutputContent=z.object({fields:z.object({title:z.string().optional(),summary:z.string().optional(),body:z.union([z.string(),z.array(z.string())]).optional(),tags:z.array(z.string()).optional(),script:z.union([z.string(),z.array(z.string())]).optional(),cardBriefs:graphicPostCardBriefs.optional()}).strict(),sections:z.array(z.object({sectionId:id,heading:z.string(),body:z.string(),sourceRefs:z.array(workSourceRef)}).strict())}).strict();
+export const workSourceOutputContent=z.object({fields:z.object({title:z.string().optional(),summary:z.string().optional(),body:z.union([z.string(),z.array(z.string())]).optional(),tags:z.array(z.string()).optional(),script:z.union([z.string(),z.array(z.string())]).optional(),cardBriefs:graphicPostCardBriefs.optional()}).strict(),sections:z.array(z.object({sectionId:id,heading:z.string(),headingLevel:z.number().int().min(1).max(6).optional(),body:z.string(),sourceRefs:z.array(workSourceRef)}).strict())}).strict();
 export const workSourceConstraints=z.object({sourceRefs:z.array(z.object({location:z.string(),refs:z.array(workSourceRef)}).strict()),factItems:z.array(workBasisFactItem),ruleSnapshotRef:z.union([workRuleRef,z.array(workRuleRef),z.null()])}).strict();
 const common={schemaVersion:z.literal(1),projectId:id,source:workSourceRef,contentDigest:workFingerprint};
 export const workFrozenSource=z.discriminatedUnion("kind",[
@@ -135,6 +135,17 @@ export function createWorkSourceService(factory:(tx:Db)=>WorkSourcePorts){
   if(snapshot.projectId!==projectId||sourceDigest(payload)!==contentDigest)
     fail("SOURCE_SNAPSHOT_CONFLICT","冻结快照身份或完整摘要不一致");
   const saved=await read(ctx,projectId,snapshot.source,tx);
+  if(snapshot.kind==="output"&&saved.kind==="output"&&snapshot.source.kind==="output_version"&&snapshot.source.sourceType==="article"){
+   // 旧opaque协议未存headingLevel：先验原摘要，再仅投影原字段形状；不更新旧快照/摘要。
+   const projected={...saved,content:{...saved.content,sections:saved.content.sections.map(section=>{
+    const old=snapshot.content.sections.find(item=>item.sectionId===section.sectionId);
+    if(!old||old.headingLevel!==undefined)return section;
+    const {headingLevel,...originalShape}=section;return originalShape;
+   })}};
+   const {contentDigest:ignored,...payload}=projected;
+   if(!same({...projected,contentDigest:sourceDigest(payload)},snapshot))fail("SOURCE_SNAPSHOT_CONFLICT","快照与真实历史来源不一致");
+   return structuredClone(snapshot);
+  }
   if(!same(saved,snapshot))fail("SOURCE_SNAPSHOT_CONFLICT","快照与真实历史来源不一致");
   return saved;
  }

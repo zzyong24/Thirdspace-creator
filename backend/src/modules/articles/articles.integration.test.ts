@@ -1,5 +1,10 @@
+import {articleTextCandidates} from "../../schema/articles";
+import {accountGroups} from '../../schema/account-groups';
+import {z} from 'zod';
+import {articleCandidateSection} from '@creatoros/contract';
+import {articleSection} from '@creatoros/contract';
 import { describe, expect, it } from "vitest";
-import { createDb, eq, type Db, articleAnchors, contentOutputs, artifacts, projects as projectRows } from "@creatoros/backend";
+import { createDb, aiTasks,eq, type Db, articleAnchors, contentOutputs, artifacts, projects as projectRows } from "@creatoros/backend";
 import type { RequestContext, ArticleCandidateProposal } from "@creatoros/contract";
 import { createProjectRepository, createProjectsService } from "../projects";
 import { createArtifactsService } from "../artifacts";
@@ -11,22 +16,22 @@ const ctx = (accountId: string): RequestContext => ({userId: "user", accountId, 
 const proposal: ArticleCandidateProposal = {
   proposedTitle: "候选标题", proposedTitleSourceRefs: [], proposedSummary: "候选摘要", proposedSummarySourceRefs: [],
   proposedFactItems: [{id: "fact-1", text: "需确认的数值", sourceRefs: [], reviewState: "needs_confirmation"}],
-  proposedSections: [{op: "insert", sectionId: "s1", afterSectionId: null, order: 0, heading: "开头", body: "这是正文。", sourceRefs: []}],
+  proposedSections: [articleCandidateSection.parse({op: "insert", sectionId: "s1", afterSectionId: null, order: 0, heading: "开头", body: "这是正文。", sourceRefs: []})],
   proposedVisualBriefs: [{sectionId: "s1", brief: "待配的示意图"}], sourceRefs: [],
 };
 
 async function fixture(assertAssetFile: (ctx: RequestContext, assetId: string, assetFileId: string, active: boolean) => Promise<void> = async () => {},
   resolveDocumentSource: (ctx: RequestContext, projectId: string, assetId: string, assetFileId: string) => Promise<{label: string; text: string} | null> = async () => null,
-  extraPorts:Partial<ArticlePeerPorts>={}) {
-  const opened = await createDb();
+  extraPorts:Partial<ArticlePeerPorts>={}, beforeVersion:()=>Promise<void>=async()=>{}, store?:{db:Db;client:{close:()=>Promise<void>}}) {
+  const opened = store ?? await createDb();
   const db = opened.db;
   let seq = 0;
   const deps = {now: () => now, nextId: (prefix: string) => `${prefix}-${++seq}`};
   const projects = (store: Db) => createProjectsService(createProjectRepository(store), deps);
-  const artifactsFor = (store: Db) => createArtifactsService({db: store, ...deps,
+  const artifactsFor = (store: Db) => { const actual = createArtifactsService({db: store, ...deps,
     assertProjectOwned: (c, id) => projects(store).getProject(c, id),
     resolveOutputProjectId: (c, id) => projects(store).getProjectIdByOutput(c, id),
-  });
+  }); return {...actual, createVersion: async (...args:Parameters<typeof actual.createVersion>)=>{await beforeVersion();return actual.createVersion(...args);}}; };
   const results = new Map<string, {taskType: string; status: string; inputData: Record<string, unknown>; results: Array<{resultType: string; resultData: Record<string, unknown>}>}>();
   const service = createArticlesService(db, {...deps, projects, artifacts: artifactsFor,
     assertAssetFile,
@@ -168,8 +173,8 @@ describe("T-1023 公众号文章完整持久链", () => {
       await expect(f.service.adoptCandidate(ctx("a"), task.candidateId, {expectedCurrentVersionId: initial.currentVersionId,
         selectedSectionIds: ["not-in-proposal"], selectedMetadataFields: [], clientRequestId: "bad-selection"})).rejects.toThrow();
       await expect(f.service.createVersion(ctx("a"), output.id, {expectedCurrentVersionId: initial.currentVersionId,
-        clientRequestId: "bad-section", document: {...initial.current, sections: [{sectionId: "s1", order: 3,
-          heading: "无效顺序", body: "正文", sourceRefs: []}]}})).rejects.toThrow();
+        clientRequestId: "bad-section", document: {...initial.current, sections: [articleSection.parse({sectionId: "s1", order: 3,
+          heading: "无效顺序", body: "正文", sourceRefs: []})]}})).rejects.toThrow();
       expect((await f.service.getArticle(ctx("a"), output.id)).versions).toHaveLength(1);
     } finally { await f.opened.client.close(); }
   });
@@ -186,7 +191,7 @@ describe("T-1023 公众号文章完整持久链", () => {
       const initial = await f.service.getArticle(ctx("a"), output.id);
       const selected = await f.service.createVersion(ctx("a"), output.id, {expectedCurrentVersionId: initial.currentVersionId,
         clientRequestId: "select-image", document: {...initial.current,
-          sections: [{sectionId: "s1", order: 0, heading: "配图段", body: "初稿", sourceRefs: []}],
+          sections: [articleSection.parse({sectionId: "s1", order: 0, heading: "配图段", body: "初稿", sourceRefs: []})],
           imageUses: [{sectionId: "s1", assetId: "image-a", assetFileId: "file-a", sourceKind: "existing", reviewState: "selected"}]}});
       expect(calls).toEqual([{assetId: "image-a", assetFileId: "file-a", active: true}]);
       available = false;
@@ -224,14 +229,14 @@ describe("T-1023 公众号文章完整持久链", () => {
       const initial = await f.service.getArticle(ctx("a"), output.id);
       const base = await f.service.createVersion(ctx("a"), output.id, {expectedCurrentVersionId: initial.currentVersionId,
         clientRequestId: "base-article-006", document: {...initial.current, title: "保留标题", summary: "保留摘要",
-          sections: [{sectionId: "s0", order: 0, heading: "旧段", body: "旧正文", sourceRefs: []}]}});
+          sections: [articleSection.parse({sectionId: "s0", order: 0, heading: "旧段", body: "旧正文", sourceRefs: []})]}});
       const task = await f.service.generateCandidate(ctx("a"), output.id, "generate-article-006");
       const result = f.results.get(task.taskId)!;
       result.results[0]!.resultData.proposal = {...proposal, proposedTitle: "未选标题", proposedSummary: "选中摘要",
         proposedSections: [
-          {op: "replace", sectionId: "s0", afterSectionId: null, order: 0, heading: "替换段", body: "新正文", sourceRefs: []},
-          {op: "insert", sectionId: "s1", afterSectionId: "s0", order: 1, heading: "插入一", body: "第一段", sourceRefs: []},
-          {op: "insert", sectionId: "s2", afterSectionId: "s0", order: 2, heading: "插入二", body: "第二段", sourceRefs: []},
+          articleCandidateSection.parse({op: "replace", sectionId: "s0", afterSectionId: null, order: 0, heading: "替换段", body: "新正文", sourceRefs: []}),
+          articleCandidateSection.parse({op: "insert", sectionId: "s1", afterSectionId: "s0", order: 1, heading: "插入一", body: "第一段", sourceRefs: []}),
+          articleCandidateSection.parse({op: "insert", sectionId: "s2", afterSectionId: "s0", order: 2, heading: "插入二", body: "第二段", sourceRefs: []}),
         ], proposedVisualBriefs: []} satisfies ArticleCandidateProposal;
       const candidate = await f.service.getCandidate(ctx("a"), task.candidateId);
       const adopted = await f.service.adoptCandidate(ctx("a"), candidate.candidateId, {expectedCurrentVersionId: base.versionId,
@@ -278,7 +283,7 @@ describe("T-1023 公众号文章完整持久链", () => {
       const oldRef = {kind: "project" as const, id: f.project.id, versionId: f.project.updatedAt};
       const saved = await f.service.createVersion(ctx("a"), output.id, {expectedCurrentVersionId: initial.currentVersionId,
         clientRequestId: "old-ref-008", document: {...initial.current, title: "旧标题", titleSourceRefs: [oldRef],
-          sections: [{sectionId: "s0", order: 0, heading: "旧段", body: "旧正文", sourceRefs: [oldRef]}]}});
+          sections: [articleSection.parse({sectionId: "s0", order: 0, heading: "旧段", body: "旧正文", sourceRefs: [oldRef]})]}});
       const newVersion = "2026-09-30T13:00:00.000Z";
       await f.db.update(projectRows).set({updatedAt: newVersion, brief: "已更新的 Brief"}).where(eq(projectRows.id, f.project.id));
       const edited = await f.service.createVersion(ctx("a"), output.id, {expectedCurrentVersionId: saved.versionId,
@@ -286,17 +291,17 @@ describe("T-1023 公众号文章完整持久链", () => {
       expect(edited.document.sections[0]?.sourceRefs).toEqual([oldRef]);
       await expect(f.service.createVersion(ctx("a"), output.id, {expectedCurrentVersionId: edited.versionId,
         clientRequestId: "add-stale-ref-008", document: {...edited.document,
-          sections: [...edited.document.sections, {sectionId: "s1", order: 1, heading: "新增", body: "新段", sourceRefs: [oldRef]}]}}))
+          sections: [...edited.document.sections, articleSection.parse({sectionId: "s1", order: 1, heading: "新增", body: "新段", sourceRefs: [oldRef]})]}}))
         .rejects.toThrow("项目引用版本已变化");
       const task = await f.service.generateCandidate(ctx("a"), output.id, "generate-after-brief-008");
       const result = f.results.get(task.taskId)!;
-      result.results[0]!.resultData.proposal = {...proposal, proposedSections: [{op: "replace", sectionId: "s0",
-        afterSectionId: null, order: 0, heading: "候选替换", body: "新文", sourceRefs: [oldRef]}], proposedVisualBriefs: []};
+      result.results[0]!.resultData.proposal = {...proposal, proposedSections: [articleCandidateSection.parse({op: "replace", sectionId: "s0",
+        afterSectionId: null, order: 0, heading: "候选替换", body: "新文", sourceRefs: [oldRef]})], proposedVisualBriefs: []};
       await expect(f.service.adoptCandidate(ctx("a"), task.candidateId, {expectedCurrentVersionId: edited.versionId,
         selectedSectionIds: ["s0"], selectedMetadataFields: [], clientRequestId: "adopt-stale-008"}))
         .rejects.toThrow("项目引用版本已变化");
-      result.results[0]!.resultData.proposal = {...proposal, proposedSections: [{op: "replace", sectionId: "s0",
-        afterSectionId: null, order: 0, heading: "候选替换", body: "新文", sourceRefs: [{...oldRef, versionId: newVersion}]}], proposedVisualBriefs: []};
+      result.results[0]!.resultData.proposal = {...proposal, proposedSections: [articleCandidateSection.parse({op: "replace", sectionId: "s0",
+        afterSectionId: null, order: 0, heading: "候选替换", body: "新文", sourceRefs: [{...oldRef, versionId: newVersion}]})], proposedVisualBriefs: []};
       // A distinct task models a new candidate; the previous result is immutable once read.
       const currentTask = await f.service.generateCandidate(ctx("a"), output.id, "generate-current-ref-008");
       f.results.get(currentTask.taskId)!.results[0]!.resultData.proposal = result.results[0]!.resultData.proposal;
@@ -407,7 +412,7 @@ describe("T-1031 文章单项字段独立采纳", () => {
       const initial = await f.service.getArticle(ctx("a"), f.output.id);
       const title = await f.results.generate(ctx("a"), {outputId: f.output.id, kind, clientRequestId: "generate-conflict-title-1031"});
       const edited = await f.service.createVersion(ctx("a"), f.output.id, {expectedCurrentVersionId: initial.currentVersionId,
-        document: kind === "body" ? {...initial.current, sections: [{sectionId: "manual-section", order: 0, heading: "", body: "已手工改正文", sourceRefs: []}]} : {...initial.current, [kind]: "已手工改字段"}, clientRequestId: "manual-title-1031"});
+        document: kind === "body" ? {...initial.current, sections: [articleSection.parse({sectionId: "manual-section", order: 0, heading: "", body: "已手工改正文", sourceRefs: []})]} : {...initial.current, [kind]: "已手工改字段"}, clientRequestId: "manual-title-1031"});
       const input = {candidateId: title.candidateId, kind, expectedCurrentVersionId: edited.versionId,
         editedValue: "生成标题", clientRequestId: "adopt-conflict-title-1031"};
       await expect(f.results.adopt(ctx("a"), input)).rejects.toThrow();
@@ -483,8 +488,8 @@ it("T-1043 替换只写明确触点：保护修改后的视觉简报，保留当
   const initial=await f.service.getArticle(ctx("a"),output.id);
   const base=await f.service.createVersion(ctx("a"),output.id,{expectedCurrentVersionId:initial.currentVersionId,
    clientRequestId:"brief-base",document:{...initial.current,sections:[
-    {sectionId:"s1",order:0,heading:"旧",body:"原正文",sourceRefs:[]},
-    {sectionId:"other",order:1,heading:"不动",body:"无关正文",sourceRefs:[]}],visualBriefs:[{sectionId:"s1",brief:"原简报"}]}});
+    articleSection.parse({sectionId:"s1",order:0,heading:"旧",body:"原正文",sourceRefs:[]}),
+    articleSection.parse({sectionId:"other",order:1,heading:"不动",body:"无关正文",sourceRefs:[]})],visualBriefs:[{sectionId:"s1",brief:"原简报"}]}});
   const task=await f.service.generateCandidate(ctx("a"),output.id,"brief-generate");
   f.results.get(task.taskId)!.results[0]!.resultData.proposal={...proposal,
    proposedSections:[{...proposal.proposedSections[0]!,op:"replace",body:"替换正文"}],
@@ -510,7 +515,7 @@ it("T-1043 局部插入锚点已删除时不落到文首",async()=>{
   const output=await f.service.createOutput(ctx("a"),f.project.id,{title:"插入锚点保护",clientRequestId:"anchor-create"});
   const initial=await f.service.getArticle(ctx("a"),output.id);
   const base=await f.service.createVersion(ctx("a"),output.id,{expectedCurrentVersionId:initial.currentVersionId,
-   clientRequestId:"anchor-base",document:{...initial.current,sections:[{sectionId:"anchor",order:0,heading:"锚点",body:"正文",sourceRefs:[]}]}});
+   clientRequestId:"anchor-base",document:{...initial.current,sections:[articleSection.parse({sectionId:"anchor",order:0,heading:"锚点",body:"正文",sourceRefs:[]})]}});
   const task=await f.service.generateCandidate(ctx("a"),output.id,"anchor-generate");
   f.results.get(task.taskId)!.results[0]!.resultData.proposal={...proposal,
    proposedSections:[{...proposal.proposedSections[0]!,afterSectionId:"anchor"}]};
@@ -742,3 +747,116 @@ describe("T-1055 文章主稿metadata与语义配图候选",()=>{
   }finally{await f.opened.client.close();}
  });
 });
+
+
+describe("T1062 文章真实父归档与旧回执",()=>{
+ it("归档后保留旧保存回执和历史，拒绝新保存且版本完全不变",async()=>{
+  const f=await fixture();try{
+   const out=await f.service.createOutput(ctx("a"),f.project.id,{title:"归档文章",clientRequestId:"archive-article-output"});
+   const old=await f.service.getArticle(ctx("a"),out.id);
+   const input={expectedCurrentVersionId:old.currentVersionId,clientRequestId:"archive-article-save",document:{...old.current,title:"归档前保存"}};
+   const saved=await f.service.createVersion(ctx("a"),out.id,input);
+   await f.projects(f.db).archiveProject(ctx("a"),f.project.id);
+   const before=await f.service.getArticle(ctx("a"),out.id);
+   expect(await f.service.createVersion(ctx("a"),out.id,input)).toEqual(saved);
+   const receipt=(await f.artifactsFor(f.db).listVersions(ctx("a"),before.artifactId)).find(v=>v.id===saved.versionId)!;
+   expect((await f.artifactsFor(f.db).createVersion(ctx("a"),before.artifactId,{expectedCurrentVersionId:old.currentVersionId,
+    contentData:z.record(z.string(),z.unknown()).parse(receipt.contentData),contentText:receipt.contentText,adoptionKey:receipt.adoptionKey!,adoptionSourceDigest:receipt.adoptionSourceDigest!})).id).toBe(receipt.id);
+   await expect(f.service.createVersion(ctx("a"),out.id,{...input,document:{...input.document,title:"改旧请求"}})).rejects.toThrow();
+   await expect(f.service.createVersion(ctx("a"),out.id,{expectedCurrentVersionId:saved.versionId,clientRequestId:"archive-article-new-save",document:{...saved.document,title:"归档后新写"}})).rejects.toThrow("归档");
+   expect(await f.service.getArticle(ctx("a"),out.id)).toEqual(before);
+   expect((await f.service.getVersion(ctx("a"),out.id,old.currentVersionId)).document).toEqual(old.current);
+  }finally{await f.opened.client.close();}
+ },30000);
+ it("整稿采用到达真实repo前项目归档先提交，拒绝追加且候选保留",async()=>{
+  let hold=false;let arrived!:()=>void;let release!:()=>void;
+  const reached=new Promise<void>(r=>arrived=r),resume=new Promise<void>(r=>release=r);
+  const f=await fixture(undefined,undefined,{},async()=>{if(hold){arrived();await resume;}});
+  try{
+   const out=await f.service.createOutput(ctx("a"),f.project.id,{title:"竞争文章",clientRequestId:"archive-race-article-output"});
+   const before=await f.service.getArticle(ctx("a"),out.id);
+   const task=await f.service.generateCandidate(ctx("a"),out.id,"archive-race-article-generate");
+   const candidate=await f.service.getCandidate(ctx("a"),task.candidateId);
+   hold=true;
+   const attempt=f.service.adoptCandidate(ctx("a"),task.candidateId,{expectedCurrentVersionId:before.currentVersionId,selectedSectionIds:["s1"],selectedMetadataFields:[],clientRequestId:"archive-race-article-adopt"});
+   const assertion=expect(attempt).rejects.toThrow("归档");
+   await reached;await f.projects(f.db).archiveProject(ctx("a"),f.project.id);release();await assertion;
+   expect(await f.service.getArticle(ctx("a"),out.id)).toEqual(before);
+   expect(await f.service.getCandidate(ctx("a"),task.candidateId)).toEqual(candidate);
+  }finally{release();await f.opened.client.close();}
+ },30000);
+});
+
+
+// 真PG随机库：raw blocker仅调度锁顺序，归档和保存仍走真实公共service。
+import {Pool} from "pg";
+import {randomUUID} from "node:crypto";
+import {createRuntimeDb} from "@creatoros/backend";
+const isolatedPgUrl=process.env.CREATOROS_TEST_POSTGRES_URL;
+it.skipIf(!isolatedPgUrl)("T1062 真实PG项目归档先提交，公共保存等待父锁后零写",async()=>{
+ const url=new URL(isolatedPgUrl!);if(url.hostname!=="127.0.0.1"||url.port!=="55422")throw Error("只允许隔离PG服务");
+ const name="t1062_archive_"+randomUUID().replaceAll("-","");
+ const admin=new Pool({connectionString:url.toString()});await admin.query(`CREATE DATABASE ${name}`);url.pathname="/"+name;
+ const runtime=await createRuntimeDb({connectionString:url.toString()});
+ const blocker=await runtime.pool.connect();let locked=false;
+ try{
+  const f=await fixture(undefined,undefined,{},undefined,{db:runtime.db,client:{close:async()=>{}}});
+  const out=await f.service.createOutput(ctx("a"),f.project.id,{title:"真实PG文章",clientRequestId:"pg-archive-output"});
+  const before=await f.service.getArticle(ctx("a"),out.id);
+  await blocker.query("BEGIN");locked=true;await blocker.query("SELECT id FROM projects WHERE id=$1 FOR UPDATE",[f.project.id]);
+  const waitForLocks=async(count:number)=>{for(let i=0;i<200;i++){
+   const result=await runtime.pool.query("SELECT count(*)::int AS n FROM pg_stat_activity WHERE datname=$1 AND wait_event_type='Lock'",[name]);
+   if(result.rows[0].n>=count)return;await new Promise(r=>setTimeout(r,10));
+  }throw Error("未观察到真实PG父锁等待");};
+  const archive=f.projects(f.db).archiveProject(ctx("a"),f.project.id);await waitForLocks(1);
+  const write=f.service.createVersion(ctx("a"),out.id,{expectedCurrentVersionId:before.currentVersionId,document:{...before.current,title:"归档后不得写"},clientRequestId:"pg-archive-save"});
+  const checked=expect(write).rejects.toThrow("归档");await waitForLocks(2);
+  await blocker.query("COMMIT");locked=false;await archive;await checked;
+  expect(await f.service.getArticle(ctx("a"),out.id)).toEqual(before);
+ }finally{if(locked)await blocker.query("ROLLBACK");blocker.release();await runtime.pool.end();await admin.query(`DROP DATABASE ${name} WITH (FORCE)`);await admin.end();}
+},30000);
+
+
+it("T1062 窄文章归档守卫保留trend_analysis既有已开始结算的版本端口",async()=>{
+ const f=await fixture();try{
+  const repo=f.artifactsFor(f.db);
+  const artifact=await repo.createArtifact(ctx("a"),{projectId:f.project.id,title:"已开始重建结果",artifactType:"trend_analysis",stage:"analysis",initialContentText:"初稿"});
+  await f.projects(f.db).archiveProject(ctx("a"),f.project.id);
+  const version=await repo.createVersion(ctx("a"),artifact.id,{expectedCurrentVersionId:artifact.currentVersionId!,contentText:"模型已结算结果",createdByType:"ai"});
+  expect(version.contentText).toBe("模型已结算结果");
+  expect((await repo.getArtifact(ctx("a"),artifact.id)).currentVersionId).toBe(version.id);
+ }finally{await f.opened.client.close();}
+},30000);
+
+describe('T1062 组归档后的原artifact采用回执',()=>{
+ it('精确原回执可回读，改digest/跨组/新append仍拒绝且版本不变',async()=>{
+  const f=await fixture(),groupCtx:RequestContext={...ctx('a'),accountId:null,groupId:'receipt-group'};
+  try{
+   await f.db.insert(accountGroups).values({id:'receipt-group',userId:groupCtx.userId,name:'原组',status:'active',version:1,createdAt:now,updatedAt:now});
+   const project=await f.projects(f.db).createProject(groupCtx,{title:'组归档历史文章',brief:''}),output=await f.service.createOutput(groupCtx,project.id,{title:'历史文章',clientRequestId:'group-history-output'});
+   const old=await f.service.getArticle(groupCtx,output.id),saved=await f.service.createVersion(groupCtx,output.id,{expectedCurrentVersionId:old.currentVersionId,clientRequestId:'group-history-save',document:{...old.current,title:'原事实'}});
+   const repo=f.artifactsFor(f.db),versions=await repo.listVersions(groupCtx,old.artifactId),receipt=versions.find(v=>v.id===saved.versionId);if(!receipt?.adoptionKey||!receipt.adoptionSourceDigest)throw Error('缺少真实保存回执');
+   const exact={expectedCurrentVersionId:old.currentVersionId,contentData:z.record(z.string(),z.unknown()).parse(receipt.contentData),contentText:receipt.contentText,adoptionKey:receipt.adoptionKey,adoptionSourceDigest:receipt.adoptionSourceDigest};
+   await f.db.update(accountGroups).set({status:'archived'}).where(eq(accountGroups.id,groupCtx.groupId!));
+   expect(await repo.createVersion(groupCtx,old.artifactId,exact)).toEqual(receipt);
+   await expect(repo.createVersion(groupCtx,old.artifactId,{...exact,adoptionSourceDigest:'sha256:'+'f'.repeat(64)})).rejects.toThrow('原候选');
+   await expect(repo.createVersion({...groupCtx,groupId:'foreign'},old.artifactId,exact)).rejects.toThrow();
+   await expect(repo.createVersion(groupCtx,old.artifactId,{...exact,adoptionKey:'new-after-group-archive'})).rejects.toThrow();
+   expect(await repo.listVersions(groupCtx,old.artifactId)).toEqual(versions);expect((await f.service.getArticle(groupCtx,output.id)).currentVersionId).toBe(saved.versionId);
+  }finally{await f.opened.client.close();}
+ },30000);
+});
+
+it.each(['owned','foreign','missing'] as const)('T1062 单项首次投影必须原冻结任务/父归属：%s',async source=>{
+ const f=await fixture();try{
+  const owner:RequestContext={userId:'user',accountId:null,groupId:'text-group-a',requestId:'projection',source:'user'};
+  await f.db.insert(accountGroups).values(['text-group-a','text-group-b'].map(id=>({id,userId:owner.userId,name:id,status:'active',version:1,createdAt:now,updatedAt:now})));
+  const parent=await f.projects(f.db).createProject(owner,{title:'空组文章父'}),output=await f.service.createOutput(owner,parent.id,{title:'文章',clientRequestId:'text-projection-output'}),article=await f.service.getArticle(owner,output.id);
+  const inputData={projectId:parent.id,outputId:output.id,artifactId:article.artifactId,baseVersionId:article.currentVersionId,kind:'title',targetPlatform:null,sourceRefs:[]};
+  if(source!=='missing')await f.db.insert(aiTasks).values({id:'projection-task',userId:owner.userId,accountId:null,groupId:source==='owned'?owner.groupId:'text-group-b',groupVersion:1,projectId:parent.id,taskType:'wechat.article-text',status:'awaiting_confirmation',idempotencyKey:'projection-task',inputData,requestedAt:now});
+  const unused=async():Promise<never>=>{throw Error('仅候选投影，不能新paid');};
+  const text=createArticleTextResultsService(f.db,{articles:f.service,projects:f.projects(f.db),now:()=>now,nextId:()=>{throw Error('不造另候选ID');},submitGeneration:unused,readGeneration:async()=>({taskType:'wechat.article-text',status:'awaiting_confirmation',inputData,results:[{resultType:'wechat_article_text_candidate',resultData:{kind:'title',value:'原冻结候选'}}]})});
+  if(source==='owned'){expect(await text.getCandidate(owner,'projection-task')).toMatchObject({value:'原冻结候选'});expect(await text.getCandidate({...owner,accountId:'platform-filter-only'},'projection-task')).toMatchObject({value:'原冻结候选'});const [row]=await f.db.select().from(articleTextCandidates).where(eq(articleTextCandidates.id,'projection-task'));expect(row).toMatchObject({groupId:owner.groupId,accountId:null});}
+  else{await expect(text.getCandidate(owner,'projection-task')).rejects.toThrow();expect(await f.db.select().from(articleTextCandidates).where(eq(articleTextCandidates.id,'projection-task'))).toEqual([]);}
+ }finally{await f.opened.client.close();}
+},30000);

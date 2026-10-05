@@ -1,3 +1,4 @@
+import {accountGroups} from "../../schema/account-groups";
 import {afterAll,beforeAll,expect,it,vi} from "vitest";
 import {createDb,users,type Db} from "@creatoros/backend";
 import type {RequestContext,VisualTemplateInput} from "@creatoros/contract";
@@ -50,4 +51,16 @@ it("生成身份要求读取当前账号真实保存快照，更新或删除收�
  expect(await s.resolveRequirement(ctx(),created.id,1)).toBe(true);await expect(s.resolveRequirement(ctx('b'),created.id,1)).rejects.toThrow('无权');
  const updated=await s.save(ctx(),{id:created.id,expectedRevision:1,template:{...input,requiredIdentity:false},attemptId:'identity-snapshot-version-2'});expect(await s.resolveRequirement(ctx(),created.id,1)).toBe(true);expect(await s.resolveRequirement(ctx(),created.id,2)).toBe(false);
  await s.remove(ctx(),updated.id,{expectedRevision:2,attemptId:'identity-snapshot-remove'});expect(await s.resolveRequirement(ctx(),created.id,1)).toBe(true);await expect(s.resolveRequirement(ctx(),created.id,3)).rejects.toThrow('快照不存在');
+});
+
+it("T1062 空组收藏共享不依赖平台筛选、跨组拒绝、归档拒写且保留原收据",async()=>{
+ const stamp=new Date().toISOString();
+ await db.insert(accountGroups).values(['template-group-a','template-group-b'].map(id=>({id,userId:'templates-user',name:id,status:'active',version:1,createdAt:stamp,updatedAt:stamp})));
+ const g=(groupId:string,accountId:string|null=null):RequestContext=>({...ctx(accountId),groupId});
+ const s=service(),saved=await s.save(g('template-group-a'),{template:input,attemptId:'group-template-key-0001'});
+ expect((await s.list(g('template-group-a','platform-filter'),{scope:'saved',page:1,pageSize:100})).data).toContainEqual(saved);
+ expect((await s.list(g('template-group-b'),{scope:'saved',page:1,pageSize:100})).total).toBe(0);
+ await expect(s.remove(g('template-group-b'),saved.id,{expectedRevision:1,attemptId:'group-remove-0001'})).rejects.toThrow();
+ await db.update(accountGroups).set({status:'archived'}).where((await import('drizzle-orm')).eq(accountGroups.id,'template-group-a'));
+ await expect(s.save(g('template-group-a'),{template:input,attemptId:'group-template-key-0002'})).rejects.toThrow();
 });

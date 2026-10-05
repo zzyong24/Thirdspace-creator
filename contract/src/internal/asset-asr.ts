@@ -8,7 +8,10 @@ const sha=z.string().regex(/^[a-f0-9]{64}$/),prefixed=z.string().regex(/^sha256:
 export const assetAsrInput=z.object({kind:z.literal('asset.asr'),projectId:id,contentOutputId:id,source:productionMainTrack.shape.sources.element,language:z.literal('zh'),timestampMode:z.enum(['text','segment','word']),extractionProtocolVersion:z.literal('asset-original-audio.v1'),configuration:transcribeConfigurationSchema}).strict();
 export type AssetAsrInput=z.infer<typeof assetAsrInput>;
 export const internalAssetAsrTaskCreate=z.object({taskType:z.literal('asset.asr'),attemptId:z.string().min(16).max(128),inputData:assetAsrInput}).strict();
-export const productionAssetAsrReservationFrozen=z.object({ownerCreateBody:internalAssetAsrTaskCreate,ownerCreateBodyDigest:sha}).strict();
+const originalReservation=z.object({ownerCreateBody:internalAssetAsrTaskCreate,ownerCreateBodyDigest:sha}).strict();
+const asrWorkspace=z.object({userId:id,accountId:id.nullable(),groupId:id.nullable(),groupVersion:z.number().int().positive().nullable(),membershipVersion:z.number().int().positive().nullable()}).strict();
+// 旧freeze保持原严格形状；新版本明确任务创建协议与真实会员冻结，不给旧对象补默认值。
+export const productionAssetAsrReservationFrozen=z.union([originalReservation,originalReservation.extend({schemaVersion:z.literal(2),creationScope:z.object({userId:id,accountId:id.nullable(),groupId:id.nullable()}).strict(),workspaceScope:asrWorkspace}).strict()]);
 export const rational=z.object({num:z.string().regex(/^-?(0|[1-9]\d*)$/),den:z.string().regex(/^[1-9]\d*$/)}).strict();
 // This candidate never exports precision editing. A mapping is evidence, not inferred word timing.
 export const assetAsrAudioEvidence=z.object({schemaVersion:z.literal(1),assetFileId:id,fileDigest:sha,sourceStreamIndex:revision,sourceClockOrigin:rational.nullable(),firstDecodedSamplePts:rational,sampleRate:z.number().int().positive(),decodedValidSampleCount:revision,initialSkipSamples:revision.nullable(),trailingDiscardSamples:revision.nullable(),probeEvidenceDigest:sha,extractorArgumentsDigest:sha,audioDigest:prefixed,audioByteLength:z.number().int().positive(),mappingStatus:z.enum(['unverified','verified']),mappingReceipt:assetAsrPcmMappingReceipt.optional(),reason:z.string().min(1)}).strict();

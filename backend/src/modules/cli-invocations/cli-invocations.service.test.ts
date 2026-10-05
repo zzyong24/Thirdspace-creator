@@ -1,3 +1,4 @@
+import {accountGroups} from "../../schema/account-groups";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import type { RequestContext } from "@creatoros/contract";
 
@@ -41,6 +42,22 @@ describe("T-843 CLI invocation gateway", () => {
     inputHash: "sha256:aaa",
     targetRefs: ["project:new"],
   };
+
+  it("T1062 纯组同键缓存彼此独立，同组切平台过滤回读原收据，归档可读原成功回执但不能新写", async()=>{
+    const stamp=new Date().toISOString();
+    await db.insert(accountGroups).values(['cli-group-a','cli-group-b'].map(id=>({id,userId:'user-cli',name:id,status:'active',version:1,createdAt:stamp,updatedAt:stamp})));
+    const g=(groupId:string,accountId:string|null=null):RequestContext=>({...ctx('unused'),groupId,accountId});
+    const first=await service.begin(g('cli-group-a'),input);
+    expect(first.kind).toBe('execute'); if(first.kind!=='execute')throw new Error('expected execute');
+    await service.succeed(first.invocationId,{data:{id:'group-a-project'}});
+    expect((await service.begin(g('cli-group-b'),input)).kind).toBe('execute');
+    expect(await service.begin(g('cli-group-a','platform-filter'),input)).toMatchObject({kind:'cached',response:{data:{id:'group-a-project'}}});
+    await db.update(accountGroups).set({status:'archived'}).where((await import('drizzle-orm')).eq(accountGroups.id,'cli-group-a'));
+    expect(await service.begin(g('cli-group-a'),input)).toMatchObject({kind:'cached',response:{data:{id:'group-a-project'}}});
+    await expect(service.begin(g('cli-group-a'),{...input,idempotencyKey:'new-after-archive'})).rejects.toThrow();
+    expect(await service.begin(g('cli-group-a'),{...input,inputHash:'changed'})).toMatchObject({kind:'conflict'});
+    await expect(service.begin({...g('cli-group-a'),userId:'foreign'},input)).rejects.toThrow();
+  });
 
   it("同 scope、operation、key、hash 返回加密缓存结果而不再执行", async () => {
     const first = await service.begin(ctx("acct-a"), input);

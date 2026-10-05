@@ -1,3 +1,7 @@
+import {aiTasks,projects as projectionProjects} from "@creatoros/backend";
+import type {WorkspaceWriteTx} from "../../workspace-write";
+import {workspaceFilter,workspaceStamp,workspaceKey} from "../../workspace-scope";
+import {withWorkspaceWrite} from "../../workspace-write";
 import { optionalScriptContext,optionalProjectImageLibrary,type ProjectScriptSourcePorts } from "../projects/project-script-source.port";
 import { createHash } from "node:crypto";
 import { isDeepStrictEqual } from "node:util";
@@ -69,12 +73,23 @@ export interface ArticlesService {
 }
 
 export function createArticlesService(db: Db, deps: ArticlePeerPorts & {now: () => string; nextId: (prefix: string) => string}): ArticlesService {
-  const scope = (ctx: RequestContext) => ({userId: ctx.userId, accountId: requireAccountId(ctx.accountId, "articles")});
+  const scope = (ctx:RequestContext)=>({userId:ctx.userId,...workspaceStamp(workspaceKey(ctx))});
+  async function projectionOwner(tx:WorkspaceWriteTx,ctx:RequestContext,taskId:string,projectId:string,input:Record<string,unknown>,kind:string){
+    const [parent]=await tx.select().from(projectionProjects).where(and(eq(projectionProjects.id,projectId),eq(projectionProjects.userId,ctx.userId),workspaceFilter(projectionProjects,ctx))).for('update');
+    if(!parent)throw Error('候选原父归属已改变');
+    const [original]=await tx.select().from(aiTasks).where(and(eq(aiTasks.id,taskId),eq(aiTasks.userId,ctx.userId))).for('share');
+    if(!original){if(ctx.groupId)throw Error('候选缺少原真实冻结任务');return workspaceStamp(workspaceKey(ctx));}
+    if(original.taskType!==kind||original.projectId!==projectId||!isDeepStrictEqual(original.inputData,input))throw Error('候选原冻结输入不符');
+    if(original.groupId!==null){if(original.groupId!==parent.groupId)throw Error('候选原冻结组与父归属不符');return workspaceStamp(workspaceKey(original));}
+    if(!original.accountId||parent.accountId!==original.accountId||(parent.groupId!==null&&parent.groupId!==`grp_legacy_${original.accountId}`))throw Error('旧候选缺少可证明的原账号父归属');
+    // SEMANTIC_BOUNDARY_ALLOW: 旧物理父链证明归属；不凭当前member猜组、不重签原AI freeze。
+    return{groupId:parent.groupId,accountId:original.accountId};
+  }
   async function anchor(ctx: RequestContext, outputId: string) {
     const owner = scope(ctx);
     const output = await deps.projects(db).getOutput(ctx, outputId);
     if (output.contentType !== "article") throw new ArticleOwnership("文章不存在");
-    const [row] = await db.select().from(articleAnchors).where(and(eq(articleAnchors.outputId, outputId), eq(articleAnchors.userId, owner.userId), eq(articleAnchors.accountId, owner.accountId)));
+    const [row] = await db.select().from(articleAnchors).where(and(eq(articleAnchors.outputId, outputId), eq(articleAnchors.userId, owner.userId), workspaceFilter(articleAnchors,ctx)));
     if (!row || row.projectId !== output.projectId) throw new ArticleOwnership("文章不存在");
     const artifact = await deps.artifacts(db).getArtifact(ctx, row.artifactId);
     if (artifact.artifactType !== "wechat_article" || artifact.projectId !== row.projectId || artifact.contentOutputId !== outputId) throw new ArticleConflict("文章锚点不一致");
@@ -154,19 +169,19 @@ export function createArticlesService(db: Db, deps: ArticlePeerPorts & {now: () 
   return {
     async findOutputByCreationRequest(ctx, clientRequestId) {
       const owner = scope(ctx);
-      const [row] = await db.select().from(articleAnchors).where(and(
-        eq(articleAnchors.userId, owner.userId), eq(articleAnchors.accountId, owner.accountId),
+      const rows = await db.select().from(articleAnchors).where(and(
+        eq(articleAnchors.userId, owner.userId), workspaceFilter(articleAnchors,ctx),
         eq(articleAnchors.clientRequestId, clientRequestId),
       ));
-      return row ? (await anchor(ctx, row.outputId)).output : null;
+      if(rows.length>1)throw new ArticleConflict("原创建请求存在多个账号来源，请以真实作品ID读取");const row=rows[0];return row ? (await anchor(ctx, row.outputId)).output : null;
     },
     async createOutput(ctx, projectId, input) {
       const owner = scope(ctx);
       const requestDigest = digest({projectId, title: input.title, contentRole: input.contentRole ?? null, targetPlatform: input.targetPlatform ?? null});
-      const receipt = async () => input.clientRequestId ? (await db.select().from(articleAnchors).where(and(
-        eq(articleAnchors.userId, owner.userId), eq(articleAnchors.accountId, owner.accountId),
+      const receipt = async () => {if(!input.clientRequestId)return undefined;const rows=await db.select().from(articleAnchors).where(and(
+        eq(articleAnchors.userId, owner.userId), workspaceFilter(articleAnchors,ctx),
         eq(articleAnchors.clientRequestId, input.clientRequestId),
-      )))[0] : undefined;
+      ));if(rows.length>1)throw new ArticleConflict("原创建请求存在多个账号来源，请以真实作品ID读取");return rows[0];};
       const restore = async (row: typeof articleAnchors.$inferSelect) => {
         if (row.projectId !== projectId || (row.requestDigest && row.requestDigest !== requestDigest)) {
           throw new ArticleConflict("同一创建请求不能修改作品内容");
@@ -183,7 +198,7 @@ export function createArticlesService(db: Db, deps: ArticlePeerPorts & {now: () 
       };
       const old = await receipt();
       if (old) return restore(old);
-      try { return await db.transaction(async (tx) => {
+      try { return await withWorkspaceWrite(db,ctx,async (tx) => {
         const txDb = tx as unknown as Db;
         const projects = deps.projects(txDb);
         // 本地草稿不依赖完整 Brief 或平台绑定；归属仍由 owner 核验。
@@ -191,7 +206,7 @@ export function createArticlesService(db: Db, deps: ArticlePeerPorts & {now: () 
         if (input.targetPlatform && input.targetPlatform !== "wechatOfficialAccount") throw new ArticleValidation("文章目标平台不支持");
         const output = await projects.createOutput(ctx, projectId, {title: input.title, contentRole: input.contentRole, contentType: "article", targetPlatform: input.targetPlatform});
         const artifact = await deps.artifacts(txDb).createArtifact(ctx, {projectId, contentOutputId: output.id, title: input.title, artifactType: "wechat_article", stage: "script", initialContentData: emptyArticleDocument()});
-        await tx.insert(articleAnchors).values({outputId: output.id, projectId, userId: owner.userId, accountId: owner.accountId,
+        await tx.insert(articleAnchors).values({outputId: output.id, projectId, userId: owner.userId, ...workspaceStamp(workspaceKey(ctx)),
           artifactId: artifact.id, clientRequestId: input.clientRequestId ?? null, requestDigest, createdAt: deps.now()});
         return output;
       }); } catch (error) {
@@ -307,7 +322,7 @@ export function createArticlesService(db: Db, deps: ArticlePeerPorts & {now: () 
     },
     async getCandidate(ctx, candidateId) {
       const owner = scope(ctx);
-      const [existing] = await db.select().from(articleCandidates).where(and(eq(articleCandidates.id, candidateId), eq(articleCandidates.userId, owner.userId), eq(articleCandidates.accountId, owner.accountId)));
+      const [existing] = await db.select().from(articleCandidates).where(and(eq(articleCandidates.id, candidateId), eq(articleCandidates.userId, owner.userId), workspaceFilter(articleCandidates,ctx)));
       if (existing) { await anchor(ctx, existing.outputId); return candidateFromRow(existing); }
       const generation = await deps.readGeneration(ctx, candidateId);
       if (generation.taskType !== "wechat.article-draft" || !["awaiting_confirmation","succeeded"].includes(generation.status)) throw new ArticleConflict("文章候选尚未生成完成");
@@ -326,11 +341,13 @@ export function createArticlesService(db: Db, deps: ArticlePeerPorts & {now: () 
       }
       const baseVersionId = String(input.baseVersionId ?? "");
       if (!(await deps.artifacts(db).listVersions(ctx, artifact.id)).some((v) => v.id === baseVersionId)) throw new ArticleConflict("候选基准文章版本不存在");
-      await db.insert(articleCandidates).values({id: candidateId, projectId: row.projectId, outputId, artifactId: artifact.id,
-        userId: owner.userId, accountId: owner.accountId, baseVersionId, methodVersion: "1.0.0",
+      await withWorkspaceWrite(db,ctx,async tx=>{const frozenOwner=await projectionOwner(tx,ctx,candidateId,row.projectId,input,"wechat.article-draft");
+      await tx.insert(articleCandidates).values({id: candidateId, projectId: row.projectId, outputId, artifactId: artifact.id,
+        userId: owner.userId, ...frozenOwner, baseVersionId, methodVersion: "1.0.0",
         brandProfileVersionId: typeof input.brandProfileVersionId === "string" ? input.brandProfileVersionId : null,
         clientRequestId: candidateId, proposal, createdAt: deps.now()}).onConflictDoNothing();
-      const [saved] = await db.select().from(articleCandidates).where(and(eq(articleCandidates.id, candidateId), eq(articleCandidates.userId, owner.userId), eq(articleCandidates.accountId, owner.accountId)));
+      },{allowArchived:true});
+      const [saved] = await db.select().from(articleCandidates).where(and(eq(articleCandidates.id, candidateId), eq(articleCandidates.userId, owner.userId), workspaceFilter(articleCandidates,ctx)));
       if (!saved) throw new ArticleConflict("文章候选保存失败");
       return candidateFromRow(saved);
     },
@@ -392,7 +409,7 @@ export function createArticlesService(db: Db, deps: ArticlePeerPorts & {now: () 
     async adoptCandidate(ctx, candidateId, input) {
       const owner = scope(ctx);
       const [savedCandidate] = await db.select().from(articleCandidates).where(and(eq(articleCandidates.id, candidateId),
-        eq(articleCandidates.userId, owner.userId), eq(articleCandidates.accountId, owner.accountId)));
+        eq(articleCandidates.userId, owner.userId), workspaceFilter(articleCandidates,ctx)));
       if (savedCandidate) {
         const {artifact: savedArtifact} = await anchor(ctx, savedCandidate.outputId);
         const receipt = await deps.artifacts(db).getVersionByAdoptionReceipt(ctx, savedArtifact.id,

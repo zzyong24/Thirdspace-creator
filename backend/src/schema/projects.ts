@@ -1,5 +1,6 @@
+import {sql} from "drizzle-orm";
 import {
-  pgTable,
+  pgTable,index,
   text,
   integer,
   boolean,
@@ -43,7 +44,7 @@ export const projects = pgTable("projects", {
   archivedAt: text("archived_at"),
   createdAt: text("created_at").notNull(),
   updatedAt: text("updated_at").notNull(),
-});
+},t=>[index("projects_group_scope_ix").on(t.userId,t.groupId)]);
 
 export const projectActivities = pgTable("project_activities", {
   id: text("id").primaryKey(),
@@ -86,6 +87,7 @@ export const projectTargetPlatforms = pgTable("project_target_platforms", {
 // monetization-weighted intent layer (七步整合设计 §4.4): traffic | trust |
 // conversion (nullable for outputs created before the field).
 export const contentOutputs = pgTable("content_outputs", {
+ groupId:text("group_id"),
   id: text("id").primaryKey(),
   projectId: text("project_id").notNull(),
   title: text("title").notNull(),
@@ -102,14 +104,17 @@ export const contentOutputs = pgTable("content_outputs", {
 });
 
 export const outputCreateRequests = pgTable("output_create_requests", {
+ groupId:text("group_id"),
   userId: text("user_id").notNull(),
-  accountId: text("account_id").notNull(),
+  accountId: text("account_id"),
   clientRequestId: text("client_request_id").notNull(),
   requestDigest: text("request_digest").notNull(),
   projectId: text("project_id").notNull(),
   outputId: text("output_id").notNull(),
   createdAt: text("created_at").notNull(),
-}, table => [uniqueIndex("output_create_requests_owner_key_ux").on(table.userId, table.accountId, table.clientRequestId)]);
+}, table => [
+ uniqueIndex("output_create_requests_group_46c5ab4b").on(table.userId,table.groupId,table.clientRequestId).where(sql`${table.groupId} IS NOT NULL AND ${table.accountId} IS NULL`),
+ index("output_create_requests_group_scope_idx").on(table.userId,table.groupId),uniqueIndex("output_create_requests_owner_key_ux").on(table.userId, table.accountId, table.clientRequestId)]);
 
 // Output's four independent stages (script/production/publishing/review);
 // ≤1 row per (content_output, stage).

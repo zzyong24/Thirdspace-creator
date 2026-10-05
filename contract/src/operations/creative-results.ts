@@ -17,7 +17,7 @@ export const creativeResultsOperations = {
   convertOutput:defineEndpoint({id:"outputs.conversions.create",method:"POST",path:"/output-conversions",body:outputConversionRequest,response:outputConversionReceipt,fr:["FR-1043-3"]}),
   getOutputConversion:defineEndpoint({id:"outputs.conversions.get",method:"GET",path:"/output-conversions/:clientRequestId",params:z.object({clientRequestId:requestId}).strict(),response:outputConversionReceipt,fr:["FR-1043-5"]}),
   listCreativeCapabilities: defineEndpoint({id: "creativeCapabilities.list", method: "GET", path: "/creative-capabilities",
-    query: z.object({accountId: id, projectId: id.optional(), outputId: id.optional()}).strict(),
+    query: z.object({accountId: id.optional(), projectId: id.optional(), outputId: id.optional()}).strict(),
     response: z.object({items: z.array(creativeCapability)}).strict(), fr: ["FR-1029-2"]}),
   generateResult: defineEndpoint({id: "creativeResults.generate", method: "POST", path: "/outputs/:outputId/creative-results/generate",
     params: outputParams, body: generationItem.extend({clientRequestId: requestId, sourceItemId: id.optional(),

@@ -1,5 +1,5 @@
 import {withWorkspaceWrite,withWorkspaceParentWrite,type WorkspaceWriteParent} from "../../workspace-write";
-import {workspaceFilter,workspaceStamp,assertWritableWorkspace} from "@creatoros/backend";
+import {workspaceFilter,requireWorkspace,workspaceKey,workspaceStamp,assertWritableWorkspace} from "@creatoros/backend";
 import { and, eq, or, asc, inArray, sql, type Db } from "@creatoros/backend";
 import {
   projects,
@@ -88,7 +88,8 @@ export type StageRow = typeof projectStages.$inferSelect;
 export type TargetPlatformRow = typeof projectTargetPlatforms.$inferSelect;
 // Legacy fixtures and historical service ports omit the additive nullable target.
 // Database reads still return the column; callers normalize absence to null.
-export type ContentOutputRow = Omit<typeof contentOutputs.$inferSelect, "targetPlatform"> & {
+export type ContentOutputRow = Omit<typeof contentOutputs.$inferSelect, "targetPlatform"|"groupId"> & {
+  groupId?:string|null;
   targetPlatform?: string | null;
 };
 export type OutputStageRow = typeof outputStages.$inferSelect;
@@ -304,7 +305,7 @@ export function createProjectRepository(db: Db): ProjectRepository {
     outputId: string,
   ): Promise<ContentOutputRow> {
     const rows = await db
-      .select({ output: contentOutputs })
+      .select({ output: contentOutputs,parentGroupId:projects.groupId })
       .from(contentOutputs)
       .innerJoin(projects, eq(contentOutputs.projectId, projects.id))
       .where(
@@ -318,6 +319,7 @@ export function createProjectRepository(db: Db): ProjectRepository {
       );
     const row = rows[0]?.output;
     if (!row) throw new OwnershipError(`Output not found: ${outputId}`);
+    if(row.groupId!==rows[0]!.parentGroupId)throw new OwnershipError("作品与原父项目归组不一致");
     return row;
   }
 
@@ -1203,33 +1205,39 @@ export function createProjectRepository(db: Db): ProjectRepository {
     },
 
     async findOutputByCreationRequest(ctx,clientRequestId){
-      const accountId=requireAccountId(ctx.accountId,"projects.findOutputByCreationRequest");
-      const [receipt]=await db.select().from(outputCreateRequests).where(and(eq(outputCreateRequests.userId,ctx.userId),eq(outputCreateRequests.accountId,accountId),eq(outputCreateRequests.clientRequestId,clientRequestId)));
+      const receipts=await db.select().from(outputCreateRequests).where(and(eq(outputCreateRequests.userId,ctx.userId),workspaceFilter(outputCreateRequests,ctx),eq(outputCreateRequests.clientRequestId,clientRequestId)));
+      if(receipts.length>1)throw new OutputStateError("原创建请求存在多个账号来源，请以真实作品ID读取");
+      const receipt=receipts[0];
       return receipt?getOutput(ctx,receipt.outputId):null;
     },
     async createOutputAtomic(ctx,input) {
       return withWorkspaceParentWrite(db,ctx,{...projectParent,lock:"update"},[input.output.projectId],async tx=>{
-        const [output]=await tx.insert(contentOutputs).values(input.output).returning();
+        const parent=await createProjectRepository(tx).get(ctx,input.output.projectId,true);
+        if(parent.status==='archived')throw new OutputStateError("归档项目只读");
+        const [output]=await tx.insert(contentOutputs).values({...input.output,groupId:parent.groupId}).returning();
         if(input.stages.length)await tx.insert(outputStages).values(input.stages);
         await tx.insert(projectActivities).values(input.activity);
         return output!;
       });
     },
     async createOutputWithRequest(ctx, input) {
-      const accountId = requireAccountId(ctx.accountId, "projects.createOutput");
+      requireWorkspace(ctx);
       return withWorkspaceParentWrite(db,ctx,{...projectParent,lock:"update"},[input.output.projectId],async tx => {
         const scoped = createProjectRepository(tx as unknown as Db);
-        await scoped.get(ctx, input.output.projectId, true);
+        const parent=await scoped.get(ctx, input.output.projectId, true);
+        if(parent.status==='archived')throw new OutputStateError("归档项目只读");
         const [inserted] = await tx.insert(outputCreateRequests).values({
-          userId: ctx.userId, accountId, clientRequestId: input.clientRequestId, requestDigest: input.requestDigest,
+          userId: ctx.userId, ...workspaceStamp(workspaceKey(ctx)), clientRequestId: input.clientRequestId, requestDigest: input.requestDigest,
           projectId: input.output.projectId, outputId: input.output.id, createdAt: input.output.createdAt,
         }).onConflictDoNothing().returning();
         if (!inserted) {
-          const [receipt] = await tx.select().from(outputCreateRequests).where(and(eq(outputCreateRequests.userId, ctx.userId), eq(outputCreateRequests.accountId, accountId), eq(outputCreateRequests.clientRequestId, input.clientRequestId)));
+          const receipts = await tx.select().from(outputCreateRequests).where(and(eq(outputCreateRequests.userId, ctx.userId), workspaceFilter(outputCreateRequests,ctx), eq(outputCreateRequests.clientRequestId, input.clientRequestId)));
+          if(receipts.length>1)throw new OutputStateError("原创建请求存在多个账号来源，请以真实作品ID读取");
+          const receipt=receipts[0];
           if (!receipt || receipt.requestDigest !== input.requestDigest) throw new OutputStateError("同一创建请求不能修改作品内容");
           return scoped.getOutput(ctx, receipt.outputId);
         }
-        const [output] = await tx.insert(contentOutputs).values(input.output).returning();
+        const [output] = await tx.insert(contentOutputs).values({...input.output,groupId:parent.groupId}).returning();
         if (input.stages.length) await tx.insert(outputStages).values(input.stages);
         await tx.insert(projectActivities).values(input.activity);
         return output!;
@@ -1238,7 +1246,9 @@ export function createProjectRepository(db: Db): ProjectRepository {
 
     async insertOutput(ctx,row) {
       return withWorkspaceParentWrite(db,ctx,projectParent,[row.projectId],async tx=>{
-        const [inserted]=await tx.insert(contentOutputs).values(row).returning();return inserted!;
+        const parent=await createProjectRepository(tx).get(ctx,row.projectId,true);
+        if(parent.status==='archived')throw new OutputStateError("归档项目只读");
+        const [inserted]=await tx.insert(contentOutputs).values({...row,groupId:parent.groupId}).returning();return inserted!;
       });
     },
 

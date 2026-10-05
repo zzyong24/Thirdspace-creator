@@ -1,7 +1,9 @@
+import {sql} from "drizzle-orm";
 import {
   type AnyPgColumn,
   boolean,
   integer,
+  index,
   jsonb,
   pgTable,
   text,
@@ -344,7 +346,7 @@ export const intelligenceMigrationLedgers = pgTable(
 
 /** 原执行控制回执，状态修改与回执同事务；不创建执行任务或重置预算。 */
 export const executionControlReceipts=pgTable("execution_control_receipts",{
- id:text("id").primaryKey(),userId:text("user_id").notNull(),accountId:text("account_id").notNull(),
+ id:text("id").primaryKey(),userId:text("user_id").notNull(),accountId:text("account_id"),groupId:text("group_id"),
  idempotencyKey:text("idempotency_key").notNull(),requestDigest:text("request_digest").notNull(),
  result:jsonb("result").notNull(),createdAt:text("created_at").notNull(),
-},table=>[uniqueIndex("execution_control_receipts_scope_key_uq").on(table.userId,table.accountId,table.idempotencyKey)]);
+},table=>[uniqueIndex("execution_control_receipts_scope_key_uq").on(table.userId,table.accountId,table.idempotencyKey),uniqueIndex("execution_control_receipts_group_715b2c6d").on(table.userId,table.groupId,table.idempotencyKey).where(sql`${table.groupId} IS NOT NULL AND ${table.accountId} IS NULL`),index("execution_control_receipts_group_scope_idx").on(table.userId,table.groupId)]);

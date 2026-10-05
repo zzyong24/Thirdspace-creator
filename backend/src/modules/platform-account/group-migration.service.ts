@@ -13,11 +13,14 @@ const digest=(value:unknown)=>createHash('sha256').update(JSON.stringify(value))
 const terminal=new Set(['succeeded','failed','cancelled','partial']);
 const frozenTables=new Set(['ai_tasks','execution_tasks','scheduled_job','job_run','account_group_migrations','account_group_commands']);
 const sorted=(ids:string[])=>[...new Set(ids)].sort();
-// 这两张真实发布明细表没有id，必须用原生主键/唯一键定位，不能制造行ID。
-const compositeKeys:Record<string,string[]>={publication_traffic:['publication_id'],publication_sync_state:['user_id','account_id','publication_id','capability']};
+// 无id的真实明细和稿件锚点必须用原生主键定位，不能制造行ID。
+const compositeKeys:Record<string,string[]>={output_create_requests:['user_id','account_id','client_request_id','output_id'],article_anchors:['output_id'],graphic_post_anchors:['output_id'],publication_traffic:['publication_id'],publication_sync_state:['user_id','account_id','publication_id','capability']};
 const rowKey=(table:string,row:Row)=>JSON.stringify((compositeKeys[table]??['id']).map(key=>row[key]));
-const rowWhere=(table:string,row:Row)=>sql.join((compositeKeys[table]??['id']).map(key=>sql`${sql.identifier(key)}=${String(row[key])}`),sql` AND `);
+const rowWhere=(table:string,row:Row)=>sql.join((compositeKeys[table]??['id']).map(key=>row[key]===null?sql`${sql.identifier(key)} IS NULL`:sql`${sql.identifier(key)}=${String(row[key])}`),sql` AND `);
 const relations:Record<string,[string,string]>={
+ output_create_requests:['output_id','content_outputs'],
+ canvas_generation_links:['canvas_id','creative_canvases'],canvas_agent_proposals:['canvas_id','creative_canvases'],
+ article_anchors:['output_id','content_outputs'],graphic_post_anchors:['output_id','content_outputs'],
  project_stages:['project_id','projects'],project_target_platforms:['project_id','projects'],project_activities:['project_id','projects'],content_outputs:['project_id','projects'],tasks:['project_id','projects'],output_stages:['content_output_id','content_outputs'],material_links:['project_id','projects'],
  publications:['content_output_id','content_outputs'],publication_revisions:['publication_id','publications'],metric_snapshots:['publication_id','publications'],metric_values:['metric_snapshot_id','metric_snapshots'],audience_snapshots:['publication_id','publications'],retention_points:['publication_id','publications'],publication_traffic:['publication_id','publications'],publication_sync_state:['publication_id','publications'],topic_attributions:['publication_id','publications'],
  artifacts:['project_id','projects'],artifact_versions:['artifact_id','artifacts'],script_sections:['artifact_version_id','artifact_versions'],thesis_points:['artifact_version_id','artifact_versions'],evidence_items:['artifact_version_id','artifact_versions'],timeline_segments:['artifact_version_id','artifact_versions'],

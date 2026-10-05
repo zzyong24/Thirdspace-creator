@@ -1,4 +1,6 @@
 import {describe,it,expect,vi} from 'vitest';
+// 新增真实隔离Db迁移与父锁IO需容纳初始化；不改产品请求deadline/取消或任何业务断言。
+vi.setConfig({testTimeout:30_000});
 import {ENDPOINTS} from '@creatoros/contract';
 import {createHash} from 'node:crypto';
 import {createDb,type Db} from '@creatoros/backend';

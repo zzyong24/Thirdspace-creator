@@ -1,4 +1,4 @@
-import {productionRoughCutModelOutput} from '@creatoros/contract';
+import {productionRoughCutModelOutput,productionRoughCutModelOutputV3} from '@creatoros/contract';
 import {classificationSchema,materialSummarySchema} from "../prompt/templates/asset-processing";
 import {scriptSourceSimilaritySchema} from "../prompt/templates/script-source-similarity";
 import {topicPreferenceDistillSchema} from "../prompt/templates/topic-preference-distill";
@@ -38,7 +38,11 @@ export function resolveStructuredBusinessSchema(
 ): z.ZodType | undefined {
   // SEMANTIC_BOUNDARY_ALLOW: 只检查类型、非空结果和冻结真实ID范围，不评判内容、素材或评分质量。
   switch (input.skillId) {
-    case "production.rough-cut": return productionRoughCutModelOutput;
+    case "production.rough-cut": {
+      const context=z.object({roughProtocolVersion:z.literal(3).optional()}).passthrough().parse(JSON.parse(input.facets.roughCutContext??'{}'));
+      if(context.roughProtocolVersion===3){if(input.skillSnapshot.skills.find(s=>s.skillId==='production.rough-cut')?.baseVersion!=='v3')throw new Error('粗剪协议3未冻结v3 Skill');return productionRoughCutModelOutputV3;}
+      return productionRoughCutModelOutput;
+    }
     case "publication.text": {
       const context = JSON.parse(input.facets.publicationContext ?? "null");
       return publicationTextCandidateSchema.superRefine((value, ctx) => {

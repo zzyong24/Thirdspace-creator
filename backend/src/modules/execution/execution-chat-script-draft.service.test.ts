@@ -5,7 +5,7 @@ import {resolveSubmittedChatToolParameters} from "../ai-runtime/chat-submitted-t
 import {createSubmittedTaskPreparationService} from "./submitted-task-preparation.service";
 import {beforeAll,afterAll,it,expect,vi} from "vitest";
 import {z} from "zod";
-import {createDb,aiTasks,executionCalls,executionTasks,eq,type Db} from "@creatoros/backend";
+import {createDb,aiTasks,executionCalls,executionTasks,projects,artifacts,artifactVersions,eq,type Db} from "@creatoros/backend";
 import {createAiService} from "../ai/ai.service";
 import {createChatTurnSubmissionService} from "../ai/chat-turn-submission.service";
 import {createPersistentTaskService} from "./persistent-task.service";
@@ -18,13 +18,16 @@ let db:Db,close:()=>Promise<void>,seq=0;
 const now=()=>"2026-09-06T10:00:00.000Z",budget={maxCalls:10,maxTokens:100000,deadlineMs:60000};
 beforeAll(async()=>{const f=await createDb();db=f.db;close=()=>f.client.close();});
 afterAll(async()=>close());
-async function fixture(options: { verbatim?: boolean; production?: boolean } = {}) {
+async function fixture(options: { verbatim?: boolean; production?: boolean; parent?:{projectId:string;artifactId:string} } = {}) {
   const ctx = {
     userId: "hooks-u",
     accountId: `hooks-a-${++seq}`,
     requestId: "test",
     source: "user" as const,
   };
+  const projectId=`fixture-project-${ctx.accountId}`,artifactId=`fixture-artifact-${ctx.accountId}`;
+  await db.insert(projects).values({id:projectId,userId:ctx.userId,accountId:ctx.accountId,groupId:null,title:"真实原父项目",creationMode:"guided",status:"active",source:"manual",currentStage:"script",startedAt:now(),createdAt:now(),updatedAt:now()});
+  await db.insert(artifacts).values({id:artifactId,userId:ctx.userId,accountId:ctx.accountId,groupId:null,projectId,stage:"script",artifactType:"script",title:"真实原父稿",status:"drafting",createdAt:now(),updatedAt:now()});
   const unexpectedWrite = async (): Promise<never> => {
     throw new Error("测试不允许候选采纳写入");
   };
@@ -51,8 +54,8 @@ async function fixture(options: { verbatim?: boolean; production?: boolean } = {
   const check=vi.fn(async()=>({status:"not-applicable" as const}));
   const tools={"script.draft":{version:production?.definitions[0]!.version??"draft-v1",parameters:production?.parameters["script.draft"]!.parameters??z.record(z.string(),z.json()),effect:"committed" as const,execution:"worker.script-draft" as const,approve:check,
     async prepareTask(context:typeof ctx,input:unknown,scope:{attemptId:string}){
-      const task=await ai.prepareTaskCommit(context,{taskType:"script.draft",attemptId:scope.attemptId,inputData:{...(input as Record<string,unknown>),projectId:"fixture-project",artifactId:"fixture-artifact"}});
-      return {task,result:(child:{id:string})=>({status:"ok" as const,summary:"整稿已提交",data:{kind:"script.draft",taskId:child.id,projectId:"fixture-project",error:null},evidence:[],error:null,continuation:null,sideEffect:"committed" as const})};
+      const task=await ai.prepareTaskCommit(context,{taskType:"script.draft",attemptId:scope.attemptId,inputData:{...(input as Record<string,unknown>),projectId:options.parent?.projectId??projectId,artifactId:options.parent?.artifactId??artifactId}});
+      return {task,result:(child:{id:string})=>({status:"ok" as const,summary:"整稿已提交",data:{kind:"script.draft",taskId:child.id,projectId,error:null},evidence:[],error:null,continuation:null,sideEffect:"committed" as const})};
     }} };
   const conversation = await ai.createConversation(ctx, {
     title: "开场",
@@ -188,7 +191,7 @@ async function fixture(options: { verbatim?: boolean; production?: boolean } = {
     tools,
     check,
   });
-  return { ctx, ref, parent, ledger, hooks, check, tasks, task, tools, ai };
+  return { ctx, ref, parent, ledger, hooks, check, tasks, task, tools, ai,projectId,artifactId };
 }
 const requestFor = (prepared: {
   prompt: string;
@@ -367,4 +370,13 @@ it("continuous 父提交整稿在一小时排队后绑定真实执行仍无总�
  const [task]=await db.select().from(aiTasks).where(eq(aiTasks.id,id));expect(task!.executionTaskId).toBeTruthy();
  const [execution]=await db.select().from(executionTasks).where(eq(executionTasks.id,task!.executionTaskId!));expect(execution!.executionBudget).toEqual(continuous);expect(execution!.deadlineAt).toBeNull();
  await recovery.stop();
+});
+
+it("实际foreign账号父存在仍拒绝宿主提交，原工具回执/digest及版本零新写",async()=>{
+ const foreign=await fixture(),f=await fixture({parent:{projectId:foreign.projectId,artifactId:foreign.artifactId}});
+ const beforeTasks=await db.select().from(aiTasks),beforeVersions=await db.select().from(artifactVersions),beforeCalls=await db.select().from(executionCalls);
+ await expect(f.hooks.complete(f.ref,{callId:f.parent.callId})).rejects.toThrow();
+ expect(await db.select().from(aiTasks)).toEqual(beforeTasks);expect(await db.select().from(artifactVersions)).toEqual(beforeVersions);expect(await db.select().from(executionCalls)).toEqual(beforeCalls);
+ await expect(foreign.ai.createTask(f.ctx,{taskType:'script.draft',attemptId:'foreign-inverse-parent-request',inputData:{projectId:foreign.projectId,artifactId:foreign.artifactId}})).rejects.toThrow();
+ expect(await db.select().from(aiTasks)).toEqual(beforeTasks);
 });

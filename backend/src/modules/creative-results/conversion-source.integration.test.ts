@@ -1,3 +1,4 @@
+import {articleSection} from '@creatoros/contract';
 import {createHash} from "node:crypto";
 import {expect,it} from "vitest";
 import {createDb,type Db} from "@creatoros/backend";
@@ -33,8 +34,8 @@ async function fixture(){
  const articleInitial=await articles.getArticle(ctx(),article.id);
  const articleVersion=await articles.createVersion(ctx(),article.id,{expectedCurrentVersionId:articleInitial.currentVersionId,
   clientRequestId:"source-article-version",document:{...articleInitial.current,title:"文章标题",summary:"未选的摘要",
-   sections:[{sectionId:"s-a",order:0,heading:"一",body:"选定的段落",sourceRefs:[]},
-    {sectionId:"s-b",order:1,heading:"二",body:"未选正文不得入模",sourceRefs:[]}],
+   sections:[articleSection.parse({sectionId:"s-a",order:0,heading:"一",body:"选定的段落",sourceRefs:[]}),
+    articleSection.parse({sectionId:"s-b",order:1,heading:"二",body:"未选正文不得入模",sourceRefs:[]})],
    factItems:[{id:"fact-a",text:"数量尚待确认",reviewState:"needs_confirmation",sourceRefs:[]}]}});
  const image=await graphicPosts.createOutput(ctx(),project.id,{title:"图文",clientRequestId:"source-image"});
  const imageInitial=await graphicPosts.getGraphicPost(ctx(),image.id);

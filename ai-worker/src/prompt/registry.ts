@@ -1,6 +1,6 @@
 import { TOPIC_QUERY_PLAN_TEMPLATE } from "./templates/topic-query-plan";
 import {MOMENTS_COMPOSE_TEMPLATE} from "./moments-compose";
-import {PRODUCTION_ROUGH_CUT_TEMPLATE} from './templates/production-rough-cut';
+import {PRODUCTION_ROUGH_CUT_TEMPLATE,PRODUCTION_ROUGH_CUT_TEMPLATE_V3} from './templates/production-rough-cut';
 import { REDFOX_METHODS } from "./redfox-methods";
 import { AGENTIC_BUSINESS_TEMPLATES } from "./templates/agentic-business";
 import { BUSINESS_METHOD_TEMPLATES, withBusinessMethod } from "./business-methods";
@@ -277,9 +277,9 @@ function deepFreezeOfficial<T>(value: T, seen = new Set<object>()): T {
   return Object.freeze(value);
 }
 
-export function getOfficialSkillBase(id: string): OfficialSkillBase | null {
+export function getOfficialSkillBase(id: string, options?: {protocolVersion:3}): OfficialSkillBase | null {
   ensureOfficialRegistry();
-  const tpl = OFFICIAL_REGISTRY.get(id);
+  const tpl = id==='production.rough-cut'&&options?.protocolVersion===3?withBusinessMethod(PRODUCTION_ROUGH_CUT_TEMPLATE_V3):OFFICIAL_REGISTRY.get(id);
   if (!tpl) return null;
   const base: OfficialSkillBase = {
     skillId: tpl.id,

@@ -245,7 +245,7 @@ function bitrateForResolution(resolution: string): number {
 export function createProductionService(deps: ServiceDeps): ProductionService {
   const conversion=()=>{if(!deps.sourcePorts||!deps.conversionPorts)throw new UnsupportedOperationError("production.editor.convert");return createProductionConversion(deps.db,{now:deps.now,nextId:deps.nextId,onVersionSaved:deps.onVersionSaved,ports:{...deps.conversionPorts,source:deps.sourcePorts,sourceGet:(ctx,id,requestId,tx)=>createProductionSources({...deps,db:tx??deps.db,ports:deps.sourcePorts}).get(ctx,id,requestId)}});};
 
-  const editorFor=(ctx:RequestContext)=>createProductionEditorRepository(deps.db,{now:deps.now,nextId:deps.nextId,userId:ctx.userId,accountId:ctx.accountId??null,onVersionSaved:(event,tx)=>deps.onVersionSaved?.(ctx,event,tx)??Promise.resolve()});
+  const editorFor=(ctx:RequestContext)=>createProductionEditorRepository(deps.db,{now:deps.now,nextId:deps.nextId,userId:ctx.userId,accountId:ctx.accountId??null,groupId:ctx.groupId,groupVersion:ctx.groupVersion,membershipVersion:ctx.membershipVersion,onVersionSaved:(event,tx)=>deps.onVersionSaved?.(ctx,event,tx)??Promise.resolve()});
   const mediaRefs=(plan:Record<string,unknown>|null)=>{
     const p=(plan?.editorVersion===2?plan.overlayDraft:plan?.renderProps) as EditorPlan["renderProps"]|undefined;
     return new Set([p?.talkingHead?.file,...(p?.broll??[]).map(b=>b.file),...(p?.scenes??[]).flatMap(s=>(s.cards??[]).filter(c=>c.kind==="image").map(c=>c.kind==="image"?c.file:undefined))].filter((v):v is string=>typeof v==="string"));

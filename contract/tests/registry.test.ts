@@ -3,6 +3,38 @@ import { ENDPOINTS } from "../src/endpoints";
 
 // The authoritative SPEC §13 surface — every "METHOD /path" line, verbatim.
 const SPEC_13: ReadonlyArray<[string, string]> = [
+  // T-1062封闭冻结来源：T-993画布、T-1021模板/物料、T-850/T-1046编辑、T-937项目升级、T-962独立密钥。
+  // 对应既有approved行为与30实际operation逐项证据见本任务verification记录；不是注册表自动白名单。
+  ["POST", "/canvases/:canvasId/material/adopt"],
+  ["GET", "/canvases/:canvasId/generations/:generationLinkId/material"],
+  ["GET", "/canvases/capabilities"],
+  ["GET", "/canvases"],
+  ["POST", "/canvases"],
+  ["GET", "/canvases/:canvasId"],
+  ["POST", "/canvases/:canvasId/save"],
+  ["POST", "/canvases/:canvasId/archive"],
+  ["POST", "/canvases/:canvasId/nodes/:nodeId/generate"],
+  ["GET", "/canvases/:canvasId/tasks"],
+  ["GET", "/canvases/:canvasId/nodes/:nodeId/preview"],
+  ["GET", "/canvases/:canvasId/proposals"],
+  ["POST", "/canvases/:canvasId/proposals/:proposalId/apply"],
+  ["POST", "/outputs/:outputId/production/editor/convert"],
+  ["GET", "/outputs/:outputId/production/editor/convert/:requestId"],
+  ["POST", "/outputs/:outputId/production/editor/convert/adopt"],
+  ["POST", "/outputs/:outputId/production/editor/transcripts"],
+  ["GET", "/outputs/:outputId/production/editor/transcripts/:requestId"],
+  ["POST", "/outputs/:outputId/production/editor/transcripts/adopt"],
+  ["POST", "/outputs/:outputId/production/editor/rough-cut"],
+  ["GET", "/outputs/:outputId/production/editor/rough-cut/:requestId"],
+  ["POST", "/outputs/:outputId/production/editor/rough-cut/adopt"],
+  ["POST", "/publications/:publicationId/visual-note/export"],
+  ["POST", "/intelligence/projects/enqueue"],
+  ["GET", "/settings/redfox"],
+  ["PUT", "/settings/redfox"],
+  ["DELETE", "/settings/redfox"],
+  ["GET", "/assets/visual-templates"],
+  ["POST", "/assets/visual-templates/save"],
+  ["POST", "/assets/visual-templates/:templateId/remove"],
   // T-1022已评审SPEC第8节及对应正式contract。
   ["POST", "/assets/:assetId/delete-preview"],
   ["GET", "/settings/group-onboarding/:groupId"],
@@ -456,3 +488,5 @@ describe("endpoint registry", () => {
     expect(dupes, `dupe ids: ${dupes.join(", ")}`).toEqual([]);
   });
 });
+
+it("纯账号组创作能力请求允许不选择平台账号，拒绝未知字段",()=>{expect(ENDPOINTS.listCreativeCapabilities.query.safeParse({}).success).toBe(true);expect(ENDPOINTS.listCreativeCapabilities.query.safeParse({projectId:"real-project"}).success).toBe(true);expect(ENDPOINTS.listCreativeCapabilities.query.safeParse({groupId:"client-owner-guess"}).success).toBe(false);});

@@ -1,3 +1,4 @@
+import {articleCandidateSection} from '@creatoros/contract';
 import {expect,it} from "vitest";
 import {createArticleCreativeResultAdapter} from "./articles.creative-adapter";
 import type {ArticlesService} from "./articles.service";
@@ -5,7 +6,7 @@ import type {ArticleTextResultsService} from "./articles.text-results";
 import type {RequestContext} from "@creatoros/contract";
 const ctx:RequestContext={userId:"u",accountId:"a",requestId:"r",source:"user"};
 const context={request:{sourceOutputId:"source",sourceVersionId:"source-v",targetType:"article" as const,mode:"whole" as const,clientRequestId:"conversion-original-request",reuseImages:[]},sourceAnchor:{kind:"output_version" as const,sourceOutputId:"source",artifactId:"source-artifact",versionId:"source-v",sourceType:"video" as const,selectionDigest:"a".repeat(64),selection:{mode:"whole" as const}}};
-const sections=[{op:"insert" as const,sectionId:"s",order:0,afterSectionId:null,heading:"原小标题",body:"原正文",sourceRefs:[]}];
+const sections=[articleCandidateSection.parse({op:"insert" as const,sectionId:"s",order:0,afterSectionId:null,heading:"原小标题",body:"原正文",sourceRefs:[]})];
 it("原结构任务投影标题/完整段落并落实人工编辑，字段结果不产生第二个模型任务",async()=>{
  const attempts:string[]=[],adoptions:unknown[]=[];
  const articles={generateCandidate:async(_c:RequestContext,_id:string,key:string)=>{attempts.push(key);return {taskId:"task",candidateId:"task",status:"queued"};},

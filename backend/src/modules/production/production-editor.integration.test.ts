@@ -107,7 +107,8 @@ describe("T-1037 公共制作工程与持久版本",()=>{
       expect(await service().getEditorReceipt(ctx,"video-a","request-restart-01")).toEqual(saved);
       expect((await service().listEditorVersions(ctx,"video-a",{})).total).toBe(1);
     } finally {await close?.();close=undefined;await rm(root,{recursive:true,force:true});}
-  });
+  // 两次真实磁盘createDb均执行正常迁移；仅该IO用例留30秒，不改变生产deadline或断言。
+  },30000);
   it("新素材归属失败、整批前值失败均不留下半成品或历史",async()=>{
     const s=service(), bad=plan();bad.renderProps.talkingHead.file="other-account-asset";
     await expect(s.saveEditor(ctx,"video-a",{...save("request-badasset-1"),plan:bad})).rejects.toThrow();
@@ -296,3 +297,15 @@ describe('T1042 完整开源剪辑工作台沿原owner保存',()=>{
   expect((await owner.getEditor(ctx,'video-a')).revision).toBe(1);
  });
 });
+
+it.each(['group','project'] as const)('归档%s精确公共保存回执只读返回；active replay仍修复hook，异body/foreign/实际迁组拒绝',async(archivedKind)=>{
+ const {eq,productionEditVersions}=await import('@creatoros/backend');const {accountGroups}=await import('../../schema/account-groups');
+ await db.insert(accountGroups).values([{id:'editor-group',userId:'user',name:'原组',createdAt:now,updatedAt:now},{id:'editor-target',userId:'user',name:'目标',createdAt:now,updatedAt:now}]);await db.update(projects).set({groupId:'editor-group'}).where(eq(projects.id,'project-a'));for(const id of ['video-a','video-b','image','article'])await db.update(contentOutputs).set({groupId:'editor-group'}).where(eq(contentOutputs.id,id));
+ const scope:RequestContext={userId:'user',groupId:'editor-group',accountId:null,source:'user',requestId:'editor-history'};
+ const events:Array<{revision:number;replay:boolean}>=[],production=createProductionService({db,now:()=>now,nextId:p=>`${p}-${++seq}`,assertEditorAsset:async()=>{},onVersionSaved:async(_ctx,event)=>{events.push({revision:event.version.revision,replay:event.replay});}}),transport=createProductionTransport(()=>production),args={params:{outputId:'video-a'},query:undefined,body:save('archived-editor-receipt')};
+ const saved=await transport.request(ENDPOINTS.saveProductionEditor,args,scope);expect(await transport.request(ENDPOINTS.saveProductionEditor,args,scope)).toEqual(saved);expect(events).toEqual([{revision:1,replay:false},{revision:1,replay:true}]);
+ if(archivedKind==='group')await db.update(accountGroups).set({status:'archived'}).where(eq(accountGroups.id,'editor-group'));else await db.update(projects).set({status:'archived'}).where(eq(projects.id,'project-a'));
+ const versionsBefore=await db.select().from(productionEditVersions),rowsBefore=await db.select().from(productions);expect(await transport.request(ENDPOINTS.saveProductionEditor,args,scope)).toEqual(saved);
+ await expect(transport.request(ENDPOINTS.saveProductionEditor,{...args,body:{...args.body,plan:{...plan(),extra:'changed'}}},scope)).rejects.toThrow();await expect(transport.request(ENDPOINTS.saveProductionEditor,{...args,body:{...args.body,expectedRevision:1}},scope)).rejects.toThrow();await expect(transport.request(ENDPOINTS.saveProductionEditor,{...args,body:save('archived-new-request',1)},scope)).rejects.toThrow();await expect(transport.request(ENDPOINTS.saveProductionEditor,args,{...scope,groupId:'editor-target'})).rejects.toThrow();expect(events).toHaveLength(2);expect(await db.select().from(productionEditVersions)).toEqual(versionsBefore);expect(await db.select().from(productions)).toEqual(rowsBefore);
+ await db.update(accountGroups).set({status:'active'}).where(eq(accountGroups.id,'editor-group'));await db.update(projects).set({status:'active'}).where(eq(projects.id,'project-a'));const {createGroupMigrationService}=await import('../platform-account/group-migration.service');const migration=createGroupMigrationService({db,now:()=>now,nextId:p=>`${p}-${++seq}`}),selection={fromGroupId:'editor-group',toGroupId:'editor-target',projectIds:['project-a'],knowledgeIds:[],conversationIds:[]},preview=await migration.preview(scope,selection);await migration.apply(scope,{...selection,digest:preview.digest,idempotencyKey:'editor-actual-move'});await expect(transport.request(ENDPOINTS.saveProductionEditor,args,scope)).rejects.toThrow();expect(events).toHaveLength(2);
+},30000);

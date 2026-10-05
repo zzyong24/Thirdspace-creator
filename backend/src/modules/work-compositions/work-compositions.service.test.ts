@@ -96,3 +96,12 @@ it("依据旧来源只在原触点保留，复制到新观点必须重验并失�
  const edited=await service.saveBasis(ctx,initial.compositionId,{expectedRevision:saved.currentRevision,clientRequestId:"history-basis-edit",document:{...document,topic:"仅改共享主题"}});expect(edited.basis.sourceRefs).toEqual([ref]);expect(checks).toBe(1);
  await expect(service.saveBasis(ctx,initial.compositionId,{expectedRevision:edited.currentRevision,clientRequestId:"history-basis-new-claim",document:{...document,claims:[{id:"new-claim",text:"新观点",sourceRefs:[ref]}]}})).rejects.toThrow("新引用须审读");expect((await service.get(ctx,initial.compositionId)).currentRevision).toBe(edited.currentRevision);expect(await service.history(ctx,initial.compositionId)).toHaveLength(3);
 });
+
+it("T1062 已迁移旧账号组合请求精确重放不自造NULL行，双来源明确冲突零写",async()=>{
+ const {accountGroups}=await import("../../schema/account-groups");const input={projectId:"work-project",title:"旧原组合",clientRequestId:"legacy-replay-work"},before=await owner().create(ctx,input);
+ const groupId=`grp_legacy_${ctx.accountId}`;await db.insert(accountGroups).values({id:groupId,userId:ctx.userId,name:"历史组",status:"active",version:1,createdAt:now(),updatedAt:now()});
+ await db.update(projects).set({groupId});await db.update(artifacts).set({groupId});await db.update(workCompositions).set({groupId});await db.update(workCompositionVersions).set({groupId});await db.update(workCompositionRequests).set({groupId});
+ const group={...ctx,groupId,accountId:null},rows=await db.select().from(workCompositionRequests);expect(await owner().create(group,input)).toEqual(before);expect(await db.select().from(workCompositionRequests)).toEqual(rows);
+ await db.insert(workCompositionRequests).values({...rows[0]!,id:"second-legacy-work-receipt",accountId:"other-old-account"});const ambiguous=await db.select().from(workCompositionRequests);
+ await expect(owner().create(group,input)).rejects.toMatchObject({code:"ConflictError"});expect(await db.select().from(workCompositionRequests)).toEqual(ambiguous);
+});

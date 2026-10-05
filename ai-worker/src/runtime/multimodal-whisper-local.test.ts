@@ -212,7 +212,7 @@ describe("Whisper 真实缓冲区转移后的样本证据", () => {
     const adapter=createWhisperLocalAdapter({decodeAudioToFloat32:async()=>pcm,getPipeline:async()=>async(audio)=>{
       // 真实执行 ArrayBuffer 转移，重现独立 Worker postMessage 后原数组 detached。
       structuredClone(audio.buffer,{transfer:[audio.buffer as ArrayBuffer]});
-      return {text:"可验证单位",chunks:[{text:"可验证单位",timestamp:[0,0.5]}]};
+      return {wordTimingValidated:true,text:"可验证单位",chunks:[{text:"可验证单位",timestamp:[0,0.5]}]};
     }});
     const result=await adapter.transcribeAudio!(baseSpec,{audioBytes:new Uint8Array([1,2,3]),timestampMode:"word",timingAudio:{sampleRate:16000,validSampleCount}});
     expect(pcm.length).toBe(0);
@@ -451,3 +451,60 @@ describe("createFfmpegPcmDecoder —— f32le 解析(fake spawn,不跑真 ffmpeg
 
 // 静默 vi 未用告警(保留导入以便将来扩展)。
 void vi;
+
+
+it("T1062 direct与真实默认worker以实际tensor物理帧裁剪，不使用legacy feature帧",async()=>{
+ // 合成模型仅模拟调用形状和原提取函数，不读取研究capture、不执行模型。
+ const code=`module.exports={env:{},pipeline:async()=>{
+ const model={config:{max_source_positions:1500,decoder_layers:1,decoder_attention_heads:12},generate:async function(input){await this.forward(input);return this._extract_token_timestamps({cross_attentions:[[[{dims:[1,12,1,1500]}]]]},[],1916,0.02);},forward:async()=>({encoder_outputs:{dims:[1,1500,768]}}),_extract_token_timestamps:(_out,_heads,frames)=>({text:'原完整正文',chunks:[{text:'原词',timestamp:[0,frames*0.02]}]})};
+ const pipe=async(audio)=>{if(pipe.processor.feature_extractor.config.hop_length!==160)throw Error("真实pipeline读取processor配置");const features=await pipe.processor(audio);return model.generate(features.input_features);};pipe.model=model;pipe.processor=async()=>({input_features:{dims:[1,80,3000]}});pipe.processor.feature_extractor={config:{nb_max_frames:3000,n_samples:480000,chunk_length:30,sampling_rate:16000,hop_length:160}};return pipe;}};`;
+ const dir=mkdtempSync(resolve(tmpdir(),'t1062-whisper-frame-')),fake=resolve(dir,'transformers.cjs'),resolver=resolve(dir,'resolver.cjs');
+ writeFileSync(fake,code);writeFileSync(resolve(dir,'package.json'),'{}');
+ writeFileSync(resolver,`const {registerHooks}=require('node:module');const {pathToFileURL}=require('node:url');registerHooks({resolve(s,c,n){return s==='@xenova/transformers'?{shortCircuit:true,url:pathToFileURL(${JSON.stringify(fake)}).href}:n(s,c);}});`);
+ let worker:ReturnType<typeof createWhisperWorker>|undefined;
+ try{
+ const {createRequire}=await import('node:module'),lib=createRequire(resolve(dir,'package.json'))(fake);
+ vi.doMock('@xenova/transformers',()=>lib);
+ const direct=await createDefaultPipelineProvider()('Xenova/whisper-small');
+ expect(await direct(new Float32Array(306587),{return_timestamps:'word'})).toMatchObject({text:'原完整正文',chunks:[{text:'原词',timestamp:[0,19.16]}],wordTimingValidated:true});
+ worker=createWhisperWorker({requireBase:resolve(dir,'package.json'),moduleResolverPath:resolver,runtimeRoot:dir});
+ const {createWorkerPipelineProvider}=await import('./multimodal-whisper-local'),proxy=await createWorkerPipelineProvider(()=>worker!)('Xenova/whisper-small');
+ expect(await proxy(new Float32Array(306587),{return_timestamps:'word'})).toMatchObject({text:'原完整正文',chunks:[{text:'原词',timestamp:[0,19.16]}],wordTimingValidated:true});
+ }finally{vi.doUnmock('@xenova/transformers');await worker?.terminate();rmSync(dir,{recursive:true,force:true});}
+});
+
+it('T1062 同源多chunk只按实际processor输入和feature对象绑定；未知关联保留正文和原chunks',async()=>{
+ const {guardWhisperPipeline}=await import('./multimodal-whisper-local');
+ const create=(unknown=false)=>{
+  const model={config:{max_source_positions:1500,decoder_layers:2,decoder_attention_heads:4},async generate(feature:unknown,options:{num_frames:number}){await this.forward();return this._extract_token_timestamps({cross_attentions:[[[{dims:[1,4,1,1500]},{dims:[1,4,1,1500]}]]]},[],options.num_frames,0.02);},async forward(){return{encoder_outputs:{dims:[1,1500,768]}};},_extract_token_timestamps(_out:unknown,_heads:unknown,frames:number,_precision:number){return frames;}};
+  const processor=Object.assign(async(_input:Float32Array)=>({input_features:{dims:[1,80,3000]}}),{feature_extractor:{config:{nb_max_frames:3000,n_samples:480000,chunk_length:30,sampling_rate:16000,hop_length:160}}});
+  const pipe=Object.assign(async(audio:Float32Array)=>{const chunks=[],config=pipe.processor.feature_extractor.config;expect(config.hop_length).toBe(160);for(let offset=0;offset<audio.length;offset+=320000){const input=audio.subarray(offset,offset+480000),feature=await pipe.processor(input);chunks.push({feature:feature.input_features,count:input.length});}const frames=[];for(const c of chunks)frames.push(await model.generate(unknown?{...c.feature}:c.feature,{num_frames:Math.floor(c.count/160)}));return{text:JSON.stringify(frames),chunks:[{text:'完整原正文',timestamp:[0,45] as [number,number]}]};},{model,processor});
+  return guardWhisperPipeline(pipe);
+ };
+ const good=await create()(new Float32Array(720000),{return_timestamps:'word'});expect(good).toEqual({text:'[1500,1250,250]',chunks:[{text:'完整原正文',timestamp:[0,45]}],wordTimingValidated:true});
+ const unknown=await create(true)(new Float32Array(720000),{return_timestamps:'word'});expect(unknown).toEqual({text:'[3000,2500,500]',chunks:[{text:'完整原正文',timestamp:[0,45]}],wordTimingValidated:false});
+});
+
+it('T1062 原依赖Pipeline执行真实Whisper分块、配置读取与拼接，仅注入神经推理',async()=>{
+ // 只构造已安装库导出的Pipeline，不调用pipeline factory、不加载模型/session。
+ const {AutomaticSpeechRecognitionPipeline,WhisperProcessor}=await vi.importActual<typeof import('@xenova/transformers')>('@xenova/transformers');
+ const {guardWhisperPipeline}=await import('./multimodal-whisper-local');
+ const samples:number[]=[],crops:number[]=[],decoded:Array<{stride:number[];tokens:number[];token_timestamps:number[]}>=[];
+ const model={config:{model_type:'whisper',max_source_positions:1500,decoder_layers:2,decoder_attention_heads:4},async generate(_feature:unknown,options:{num_frames:number}){await this.forward();return{sequences:[[1,2]],token_timestamps:this._extract_token_timestamps({cross_attentions:[[[{dims:[1,4,1,1500]},{dims:[1,4,1,1500]}]]]},[],options.num_frames,0.02)};},async forward(){return{encoder_outputs:{dims:[1,1500,768]}};},_extract_token_timestamps(_out:unknown,_heads:unknown,frames:number,precision:number){crops.push(frames);return{tolist:()=>[[0,frames*precision]]};}};
+ const featureExtractor=Object.assign(async(input:Float32Array)=>{samples.push(input.length);return{input_features:{dims:[1,80,3000]}};},{config:{nb_max_frames:3000,n_samples:480000,chunk_length:30,sampling_rate:16000,hop_length:160}});
+ const processor:unknown=Reflect.construct(WhisperProcessor,[featureExtractor]);if(typeof processor!=='function')throw Error('依赖Processor不是Callable');expect(Reflect.get(processor,'apply')).toBeUndefined();
+ const tokenizer={get_decoder_prompt_ids:()=>[],_decode_asr(chunks:typeof decoded,options:{time_precision:number;return_timestamps:string}){expect(options).toMatchObject({time_precision:0.02,return_timestamps:'word'});decoded.push(...chunks);return['完整原正文',{chunks:[{text:'合成词',timestamp:[0,45]}]}];}};
+ const candidate:unknown=Reflect.construct(AutomaticSpeechRecognitionPipeline,[{task:'automatic-speech-recognition',model,tokenizer,processor}]);
+ function isPipeline(value:unknown):value is AsrPipeline{return typeof value==='function'&&Reflect.get(value,'model')===model&&Reflect.get(value,'processor')===processor;}
+ expect(isPipeline(candidate)).toBe(true);if(!isPipeline(candidate))throw Error('真实Callable Pipeline构造失败');
+ const originalGenerate=model.generate,originalForward=model.forward,originalExtract=model._extract_token_timestamps;
+ const pipeline=guardWhisperPipeline(candidate);
+ expect(await pipeline(new Float32Array(720000),{return_timestamps:'word',chunk_length_s:30,stride_length_s:5})).toEqual({text:'完整原正文',chunks:[{text:'合成词',timestamp:[0,45]}],wordTimingValidated:true});
+ expect(samples).toEqual([480000,400000,80000]);expect(crops).toEqual([1500,1250,250]);
+ expect(decoded.map(c=>c.stride)).toEqual([[30,0,5],[25,5,5],[5,5,0]]);
+ expect(decoded.map(c=>c.token_timestamps)).toEqual([[0,30],[0,25],[0,5]]);
+ expect(Reflect.get(candidate,'processor')).toBe(processor);expect(model.generate).toBe(originalGenerate);expect(model.forward).toBe(originalForward);expect(model._extract_token_timestamps).toBe(originalExtract);
+ // 同一Callable二次调用与取消均恢复原身份，既有segment路径不要求word声明。
+ expect(await pipeline(new Float32Array(306587),{return_timestamps:'word',chunk_length_s:30,stride_length_s:5})).toMatchObject({wordTimingValidated:true});expect(crops.at(-1)).toBe(958);
+ const cancel=new AbortController();cancel.abort();await expect(pipeline(new Float32Array(16000),{return_timestamps:'word'},cancel.signal)).rejects.toMatchObject({name:'AbortError'});expect(Reflect.get(candidate,'processor')).toBe(processor);
+});

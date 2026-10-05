@@ -1,0 +1,1854 @@
+{
+  "schema": "t1062-backend-adaptation-result/v1",
+  "task": "T-1062",
+  "createdAtUtc": "2026-10-05T16:37:43.332394+00:00",
+  "status": "后端原27及单列补验完成；前端、真实公开ASR、安装包与用户验收继续待验",
+  "base": "23b4d6e71f508448af41f18c96ba15e6a8fa2411",
+  "verificationHead": "23b4d6e71f508448af41f18c96ba15e6a8fa2411",
+  "branch": "codex/t1062-backend-adaptation-candidate",
+  "worktree": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator",
+  "wave": "t1062-backend-group-rough-budget",
+  "mergeIndex": 0,
+  "scope": {
+    "path": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/docs/verification/t1062/backend-adaptation-scope.json",
+    "sha256": "85e9500939a05c28f508decadbca836623e3a2cd452879d373160738c44f5c32"
+  },
+  "moduleBinding": {
+    "path": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/orchestrator/process/modules.config.json",
+    "sha256": "a73bccf25ee88f3d84c581c3cadff4e392f690248601211f8aa664b522135cff"
+  },
+  "scopeModulePathCount": 179,
+  "authorizedResultPath": "docs/verification/t1062/backend-adaptation-result.json",
+  "sourceCount": 126,
+  "candidatePathCountIncludingThisResult": 127,
+  "beforeAfterHashes": [
+    {
+      "path": "ai-worker/src/execution/structured-business-schema.ts",
+      "beforeSHA256": "3bec1df7366a36864353a2a944914cf0b79255994b65b64a18132262f3d4faae",
+      "afterSHA256": "8f829d7d8cc3fbf4ac06f60ef4a7172c1cd563cfb36701bebb761adbf80c46d0"
+    },
+    {
+      "path": "ai-worker/src/execution/transcribe-worker-run.test.ts",
+      "beforeSHA256": null,
+      "afterSHA256": "686a841851bf49478a965d9a2e543153cf0cb140c8b4043e733d57c33ffe134f"
+    },
+    {
+      "path": "ai-worker/src/prompt/registry.ts",
+      "beforeSHA256": "d43e3648c7b33ffa6ce49a86ee0e0d099b051ed90603fc1f7a2afd3bec195fce",
+      "afterSHA256": "d3bc35a86c129c531809a08f1443a6cddf273df00f721d790906ad21e1f6f22c"
+    },
+    {
+      "path": "ai-worker/src/prompt/templates/production-rough-cut.test.ts",
+      "beforeSHA256": null,
+      "afterSHA256": "ffc7f1585a63f57e5fb95c8c105c1ecf39a2652f71ffcd5f610c0b8ced89da81"
+    },
+    {
+      "path": "ai-worker/src/prompt/templates/production-rough-cut.ts",
+      "beforeSHA256": "89d2e1dbbd492a3d31765191afe83fdb7ad6e5cff920e727c0d8f22954da24ed",
+      "afterSHA256": "c5b61f4a79f3416cdbf7db8d5edbdc741520370fd0e16b1a9ed73459c2fb8b6b"
+    },
+    {
+      "path": "ai-worker/src/runtime/multimodal-precise-asr.test.ts",
+      "beforeSHA256": "2e89342789e33917d66c7418004c0ddf92307cd1657b8f8c8d16d45dfff1e9df",
+      "afterSHA256": "0fcbc2eb34ce2afc0ba9479c924086cecafa789ec814d2a833337558a72d4e12"
+    },
+    {
+      "path": "ai-worker/src/runtime/multimodal-whisper-local.test.ts",
+      "beforeSHA256": "dc9419dfee47c8fbad8c30536841db64bc124bd1f3683f52916fa6cac8ddf3d7",
+      "afterSHA256": "5725ef9aecf1e76d4d2467ecd3abab33e801c79c6add282b85f37f8b215de5cb"
+    },
+    {
+      "path": "ai-worker/src/runtime/multimodal-whisper-local.ts",
+      "beforeSHA256": "9b74ee8dd59b707dcffbcbc76020633841a269e9bbac8538107f189978519c52",
+      "afterSHA256": "204fb5081f327e07567b9d1c06b19195cbbe789bc09d670ae5f40b798db402c9"
+    },
+    {
+      "path": "backend/src/application/generation/moments-model-runtime.ts",
+      "beforeSHA256": "43c8c28ccf7708b55bde67fb57b873a554257a6319d14b497d896e801ea31aef",
+      "afterSHA256": "1c9e548096c565a6ff0191deb120bfa9ace07fc05dc79ef240eec915228792e7"
+    },
+    {
+      "path": "backend/src/application/generation/transactional-task-runtime.ts",
+      "beforeSHA256": "8303b379012a95e660e9c604c1398207f6a6cc2fb10563a7b79d5ec507b547e2",
+      "afterSHA256": "d0563ee941a9b9faeaf1aba5cda6a8f6c8847e56bdd9abddcdb01d79f1a8a2e0"
+    },
+    {
+      "path": "backend/src/application/generation/work-review-root.test.ts",
+      "beforeSHA256": "bb8e4a063f9b97f6939980afe369985c7804b460203f882b59af93732eeb26c3",
+      "afterSHA256": "cf7347cb43e7127c05e2197ade1e67e9d5b878754293f163dfe6b7bf72790026"
+    },
+    {
+      "path": "backend/src/integration/chat-task-atomic.test.ts",
+      "beforeSHA256": "8ceb532badedd5602d05dd8c8a1bf7f0ab40d6e8d1d47514a83aae1eabc3b3cf",
+      "afterSHA256": "7c00bdc62b9a9edba25e5d2f74a06784446a49659d1d18d8cfb16a78cc94ed6d"
+    },
+    {
+      "path": "backend/src/integration/t1062-new-domain-group-workspace.integration.test.ts",
+      "beforeSHA256": null,
+      "afterSHA256": "e94d5210c11df4883d455c954ab16418bf6d4dd7916b6422ff6cca15da6ad60f"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/asset-business-execution.service.test.ts",
+      "beforeSHA256": "7ece8c0657fa3b447f161274667072c112b48f02d5fc00a5590b909a0788ef77",
+      "afterSHA256": "b37da8f3c132be128cfecfb6d7363f9b141de85a97af601577828d892960f52f"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/asset-business-execution.service.ts",
+      "beforeSHA256": "e2651ac4d1b18aa4b00a992ad16c155859f7bbf44d1e54ad067c21d2b678d94f",
+      "afterSHA256": "cb092b0db36debf8e890ef2dbcec912a41af15262cc4eb51d6533c9f55eaa93e"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/asset-legacy-recovery.service.ts",
+      "beforeSHA256": "2d2485fcbfbe2cc7af982ebea910d5c0de699cff4e200f3da78f1581a285b860",
+      "afterSHA256": "45a82a9de913439aa8ac099cebbfcfdff0fb16662f61c53fba6a68843bd36e41"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/chat-assembly.test.ts",
+      "beforeSHA256": "bfca10993ff0815d091ae88f49ce90ca62b2104ce36edfe262bca20e1490e0a9",
+      "afterSHA256": "6a8f82d031f8269cd256c0fb24684bb3e3191f0d0a4271178421729aa49eeca7"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/chat-canvas-tool-host.test.ts",
+      "beforeSHA256": "69cf8bebea533dd97fd3fcc9a43be58ef1aece632f69b7faa9dc8d93a601f983",
+      "afterSHA256": "d3c85e41035fb2be4b9070208664f8729a260bae862bdbc960be1fc8e7d186db"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/chat-canvas-tool-host.ts",
+      "beforeSHA256": "5d5440f6dc31064a195dd715d4185d753c487e4c4126e2acfd86c628823928d5",
+      "afterSHA256": "3226e43823002ff76ea6e097400caef6b7b5607018cdf2101eac8de8d7bf1ba9"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/chat-submitted-tool-parameters.ts",
+      "beforeSHA256": "eee5fd513eb9d2711baf3dd508be6545f8aef729eaaa467f4fda3ca13957f758",
+      "afterSHA256": "ed8bd25f62f554d6816410f8f039d4176d77c1527eae40900f3d6a6807ec3f8e"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/effective-skill-snapshot.ts",
+      "beforeSHA256": "933d941f1ac92871402bb314b96f4b25be415813d42b3290901b21ef6f2d31ee",
+      "afterSHA256": "14a9e589b8452c0aee9e566870fbdd4e4b5b650ec7202f7aee01a71c55123a30"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/signal-quality.test.ts",
+      "beforeSHA256": "2f2931e4924e70f80c275b285cd975b86eddca3aeccb1929feca4cba742209a7",
+      "afterSHA256": "38f866c5476b8ea0bdf54b5eeb87079694e2231d270f8f621fbc3b2f0cb2feea"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/transcribe-runner.test.ts",
+      "beforeSHA256": "13eb7c406c975f2ffb5a3338090f9cbb7f1b6658e85d56ed66979226346b2d0c",
+      "afterSHA256": "e9cd5cf16e3b95964e294ecda3bf153374954d92f934e31bcb4f9e17562383c5"
+    },
+    {
+      "path": "backend/src/modules/ai/ai-media-probe-control.test.ts",
+      "beforeSHA256": "d49d4c7b507ad7f257ff6357b79d438461f2e8eefce7dea0e09aeaf168af4b29",
+      "afterSHA256": "cb261df11aad3540b34e58cf92a40249ba11413796041e476491a0f33f8ca9b7"
+    },
+    {
+      "path": "backend/src/modules/ai/ai-media-probe-control.ts",
+      "beforeSHA256": "91df749c7b1ec6d722084aa862e386d74d91f33c900e704d1df0402bbfda2843",
+      "afterSHA256": "c22a2932afef9963ee03cc687db94eac3a7b0ff64d8233d328a36deb46c27419"
+    },
+    {
+      "path": "backend/src/modules/ai/reconstruct-completion.service.ts",
+      "beforeSHA256": "b949ef3c36009831f89f1f2fd15e3f5f79194c5a6a17726217af44945a04ab91",
+      "afterSHA256": "26cd2081bc8da694d39c64a9fd9039afd4eebc732325710b56b167d831f17543"
+    },
+    {
+      "path": "backend/src/modules/articles/articles.creative-adapter.test.ts",
+      "beforeSHA256": "b101aec55fa2a66c67405cc8689857253719cece2c90a4481c9fe83faeefeee4",
+      "afterSHA256": "cfb92416614dde62b455dc72064eefeec74f84e85c2f31a90d9023174f46d3ac"
+    },
+    {
+      "path": "backend/src/modules/articles/articles.integration.test.ts",
+      "beforeSHA256": "40d5adfbab885f32bf1c4ce9eb55df3cdd1e26cf2cf29da488334bf40d34d85b",
+      "afterSHA256": "eacc71df7b216f528ad6db72c124c48c038c82350ca5c2c9242e63aff612ad46"
+    },
+    {
+      "path": "backend/src/modules/articles/articles.service.ts",
+      "beforeSHA256": "8cd293d87b1173e8290b0a46032349bb08c9f1b5a1516fa630456628338c88f9",
+      "afterSHA256": "06f719af828b1c3d2226f343e207d0dbe38a14f195d328830e28571c66b43690"
+    },
+    {
+      "path": "backend/src/modules/articles/articles.text-results.ts",
+      "beforeSHA256": "6a5c0fa96760168d85ad462d4762db9d1c805b4388767beb714aae65c9f51a9b",
+      "afterSHA256": "69e45194800c55d097bdd86dafc9ffad87f1c1d7e7598d6a870f1e5b86f4d8a2"
+    },
+    {
+      "path": "backend/src/modules/artifacts/artifacts.repository.ts",
+      "beforeSHA256": "7377ac4cbfec9ea2c75332060aba087949c3f216f13a12160c2915667d86b4ae",
+      "afterSHA256": "abd36627260726a84cf585ad988c86fc187a714f9dd60cf588f310c44de1ff4f"
+    },
+    {
+      "path": "backend/src/modules/artifacts/artifacts.service.ts",
+      "beforeSHA256": "ca490c2cc23526bf4754f9b375ca8ea5b06acff4b6d865378c7f811a83487e7c",
+      "afterSHA256": "b426d023dbb7f948a20fea2f2d2aa7b753b66ff0a2fc50b881665fa3185cc013"
+    },
+    {
+      "path": "backend/src/modules/artifacts/reconstructed-artifact.service.ts",
+      "beforeSHA256": "3885261803e317f30bea245162f7360aa7b814661ccb9dccabb612726fd5f6c9",
+      "afterSHA256": "a37dc0c65b2022c95d032de89f09ddc40d2824d7c3513eb73ed227e3d0952b20"
+    },
+    {
+      "path": "backend/src/modules/assets/visual-template.service.test.ts",
+      "beforeSHA256": "1205a52b97bba7144721c9d3baeea414880be72e92620ee0c7af5bab9392b3cd",
+      "afterSHA256": "601e4d5231299d66608c896876605214e422adf573b316cc76b540517e0b52cb"
+    },
+    {
+      "path": "backend/src/modules/assets/visual-template.service.ts",
+      "beforeSHA256": "ec3a7f239ab4cb590b3d964529291fad3c6ee51033643972cd669a644b839a3a",
+      "afterSHA256": "301dfa223ea3e384b89014abdfe14d1ffbd6cdcca8e02cca29225928abc161ac"
+    },
+    {
+      "path": "backend/src/modules/cli-invocations/cli-invocations.service.test.ts",
+      "beforeSHA256": "ae7b22519834b405227387926f47dc2240d7a721b1d924da8b67960bb44fff8f",
+      "afterSHA256": "a5b15a6b2c32d09dd13453dd34cc6217cf2018cbaa68994ca7d8a2fb4f3fa9fd"
+    },
+    {
+      "path": "backend/src/modules/cli-invocations/cli-invocations.service.ts",
+      "beforeSHA256": "72691a6b913e2bd2b0db151acad178312c0ff95e79263a96f3053f7eee5ec178",
+      "afterSHA256": "27fc2a8a0ba105ae05717eb29f82e34bdfcb63f234b03ca4651104efbbae5927"
+    },
+    {
+      "path": "backend/src/modules/creative-canvas/creative-canvas.service.test.ts",
+      "beforeSHA256": "e8fe2669219b8fd65d9097900cf55f8e3793f249bbe1f8fb4eb1a2bf8a5425f3",
+      "afterSHA256": "75d4de9b3ac9adb9284064df95a07ca1540475bb2dfd667b174b06c5db8d93fe"
+    },
+    {
+      "path": "backend/src/modules/creative-canvas/creative-canvas.service.ts",
+      "beforeSHA256": "88c412422f60d6fc7108956dd27ed217f35ff25e8d5fbdd360f066e8829bf9ad",
+      "afterSHA256": "07e13e247f1f504011df6797ff380c67ae5254b4d784ff7a1c535af608836e5b"
+    },
+    {
+      "path": "backend/src/modules/creative-results/article-cover-media.adapter.test.ts",
+      "beforeSHA256": "8bdf2600b1979aeb6ac58a8e4abd9f61fbee94115f35cf751ac5a8db279f4182",
+      "afterSHA256": "e350bc1bc32e3ccdf3775ee1d39bc1b8759de6f22645699ce6c6ccde859ef6d3"
+    },
+    {
+      "path": "backend/src/modules/creative-results/article-cover-media.adapter.ts",
+      "beforeSHA256": "a51f1c624fba3c20941e34a34701c5439fc702b915bb36f50c7e57afd8101805",
+      "afterSHA256": "1b973b2f865c8ab269ee59135b6da710239a63332af5590d14a0cf9dbc67aae2"
+    },
+    {
+      "path": "backend/src/modules/creative-results/conversion-reservation.integration.test.ts",
+      "beforeSHA256": "63ef595a04e36d3f72bc5c168a72ed500bc162f3f0401d8f49d15e2d55000363",
+      "afterSHA256": "39564793f8179c3dd3fcebbab156c06bd6b3d22af4979227a0ea3cf761416027"
+    },
+    {
+      "path": "backend/src/modules/creative-results/conversion-reservation.repository.ts",
+      "beforeSHA256": "40eef0312440c8e46979a7e1f405a914dc6ab62785ccb289daf3c4401706e6d3",
+      "afterSHA256": "616f7714e044862fbdcaa54552072282b5c227efc0fc15fdd5923f9ba0b5a035"
+    },
+    {
+      "path": "backend/src/modules/creative-results/conversion-source.integration.test.ts",
+      "beforeSHA256": "a324fd2eee524d0cc4f9a032cdbe06693350f165c936fb2f778dfb22761b9b31",
+      "afterSHA256": "38d965645386aa5428294f048711b91a8c827de19263f8088977597213ba7c5a"
+    },
+    {
+      "path": "backend/src/modules/creative-results/creative-results.integration.test.ts",
+      "beforeSHA256": "6803ff00c298440120b3c522b2665ac2d0d6fb668b09aba7d4ba501b3b5a4896",
+      "afterSHA256": "bb17f22e74cb8b97e86c660e043721dd81dd4e3780fc4e94b7270ef157ae4921"
+    },
+    {
+      "path": "backend/src/modules/creative-results/creative-results.service.ts",
+      "beforeSHA256": "de1aca6dae4b176de0f74a1b963667e736cbbff2ebe06d0d3be777684312127b",
+      "afterSHA256": "b794d931d4bf3cc50eafd7a1690706d0389cda1712968117ac68b01aa2dbe4d8"
+    },
+    {
+      "path": "backend/src/modules/creative-results/graphic-post-media.adapter.test.ts",
+      "beforeSHA256": "f182141dea755f73025c9e6d5ea2cb218457c400d2640e0d79d3ed16a4a2b765",
+      "afterSHA256": "acc8d7141571b40a8959a62d3f6c970831e0d87f5c11268e85b40ed2ddd2a41a"
+    },
+    {
+      "path": "backend/src/modules/creative-results/graphic-post-media.adapter.ts",
+      "beforeSHA256": "b5b07869b8e1ba4b7a260a7629df53144e46eeb06a02980182e7cf335d7cf5f0",
+      "afterSHA256": "8bdc78965097a1791a535fcb5e88ace9f7042266ab522f888053ac2c6c19ed45"
+    },
+    {
+      "path": "backend/src/modules/creative-results/graphic-series.integration.test.ts",
+      "beforeSHA256": "d6da29376326cb27bc2800707583e66195cabcd5909bc28b9752341564669e70",
+      "afterSHA256": "bd083a9139975ddcc343d83bf8b7977c221a79461969587718012e6ef465efc1"
+    },
+    {
+      "path": "backend/src/modules/creative-results/media-adoption.integration.test.ts",
+      "beforeSHA256": "0030cbfc25703f47623c098aa3c75ce4356a26d183b526365d3e9a27a4e99a4a",
+      "afterSHA256": "118a33ae806b639544d7381670931f84cea7587cb02951e43ec5da9085fcdb96"
+    },
+    {
+      "path": "backend/src/modules/creative-results/output-conversions.integration.test.ts",
+      "beforeSHA256": "951a13af612c04b50894ad7837a899b023aabdc42910b507b1ab907d1c1d92fc",
+      "afterSHA256": "b898b1654caebe87d33cf6810f4c0973e308e275ec5c939896d541aa4b17e51f"
+    },
+    {
+      "path": "backend/src/modules/execution/asset-asr-owner.service.ts",
+      "beforeSHA256": "b48bcd7b5c67e8aad2fbf68ff3f612562d1a6078486d5dfcf5a6076045bc9b3f",
+      "afterSHA256": "ca84613f0d8989eb514cf7fb321173e9f0485fd5bc4882bf94718d95be5a8206"
+    },
+    {
+      "path": "backend/src/modules/execution/asset-worker-runtime.integration.test.ts",
+      "beforeSHA256": "f93f46c5cdb6c7fcf7d9a4976905bd1907b4bb5293dfa348df3487aac7e38576",
+      "afterSHA256": "2b398f91216be16307b987a05aea268cfa7e4d4f0984f6eaa3acb365233b3955"
+    },
+    {
+      "path": "backend/src/modules/execution/execution-chat-script-draft.service.test.ts",
+      "beforeSHA256": "6a50541645dc98ea3e52ad40af686f6faab0382921f6a340cb901bef4540d5ef",
+      "afterSHA256": "98f11a4d8cd581ce7e4a725ef94e62fe1bd889f717901b0e2e5eaf1a402184b6"
+    },
+    {
+      "path": "backend/src/modules/execution/execution-transcribe-workflow.service.ts",
+      "beforeSHA256": "e0c52a9342acc6887867e8e07a4c1e3d63d07ea60af2e864d96f3418e9260ea2",
+      "afterSHA256": "c63e634b0a52ceaf1f2051c7001cbe020177c169558e9d61aa2e60433da81104"
+    },
+    {
+      "path": "backend/src/modules/graphic-posts/graphic-posts.integration.test.ts",
+      "beforeSHA256": "9a50b94c52a7ba1d091bc759cfaf8ce0c442fd307dbc0c68301e69390f40ba68",
+      "afterSHA256": "14761851e1ca3d6c45575e86ff22fa2769f452e5e07571b7498b054861eec51a"
+    },
+    {
+      "path": "backend/src/modules/graphic-posts/graphic-posts.schema.ts",
+      "beforeSHA256": "6697a02e1943903676930c699fccb201adf6f0bd3410b0bd7aba654646c7a354",
+      "afterSHA256": "da7556f4645ac86fc64aaa715cb4e63bab8315541970bdea43d7544169c8c09f"
+    },
+    {
+      "path": "backend/src/modules/graphic-posts/graphic-posts.service.ts",
+      "beforeSHA256": "08cf4cd9cd6b52bfa5709f363ddd2ac2276ccba1af776456c0a00dfecf987774",
+      "afterSHA256": "6105e2170aae0a3b503c26a95b128f683c39e045d346c59d2ca5cf1e663b01fa"
+    },
+    {
+      "path": "backend/src/modules/moments/execution-moments-model.service.ts",
+      "beforeSHA256": "d5498da044f51b8fc6df12649465f764fd5a5cdb2e99e1878603ba1b57ea2609",
+      "afterSHA256": "3c6c99eecd372155f4fdba585591d27e58f535b58466c442f664204326a1c0aa"
+    },
+    {
+      "path": "backend/src/modules/moments/moments-model.integration.test.ts",
+      "beforeSHA256": "5e59377f111723272b360a882886694d205424b03341841ebfefb9f88032d405",
+      "afterSHA256": "0619b3f891485d73839c55ff1a6571492bfe561f15c6446d4ac1abde361b610a"
+    },
+    {
+      "path": "backend/src/modules/moments/moments-model.service.ts",
+      "beforeSHA256": "c7ead316068115f231ddf33e2b9002db0bcfc71550ab7784130de6a7f640a5ab",
+      "afterSHA256": "ef39cc8e1154aafc4ca25a7a4efe97156151c4773c7666626dc0cf0d9127db63"
+    },
+    {
+      "path": "backend/src/modules/moments/moments.service.test.ts",
+      "beforeSHA256": "3d7e90223a80719cdbf33f2af1ba01e8d647ee6c75847a514bff57784a99e840",
+      "afterSHA256": "0e76f31b21711ffcfe3feae58ba3a3308f6bd8a7d6284e541a36e7f07014ebc6"
+    },
+    {
+      "path": "backend/src/modules/moments/moments.service.ts",
+      "beforeSHA256": "9d92a4af1c7e3bf4615afee0fa3f05bc28eaad5b7a016e46b678686fc3255c9a",
+      "afterSHA256": "3f2cc41e5a5c8e7935b50af6d5b3d313935454436d6958b4462c3c81a4a0a91b"
+    },
+    {
+      "path": "backend/src/modules/platform-account/group-migration.integration.test.ts",
+      "beforeSHA256": "dbb979c6fd56972d6c48914183816625b2ac5ff85b6b970b98b7c62dd5d045e1",
+      "afterSHA256": "aaf33ca76bc013ab5ca037557ddd39a6e14ae8a0ad7a0e5efd47f09538c34ef7"
+    },
+    {
+      "path": "backend/src/modules/platform-account/group-migration.service.ts",
+      "beforeSHA256": "8c4eeedb153ccee27c2cd0dc247e12b1628b83fbd6716ab59c12c56502a3525e",
+      "afterSHA256": "bb5be778824aa1d3b8edbbf8a3792660c4b25563b9d85977db9d96710bee2d5c"
+    },
+    {
+      "path": "backend/src/modules/production/production-asset-asr-media.ts",
+      "beforeSHA256": "9fefa9fde3bcc40cdebb83945a31163d08b8ca2d45c848d13c2cda8d873aaca3",
+      "afterSHA256": "495de43a5f9d5e5601dd4e60bcfa44b2c59e6233c052a724c8311971721175c9"
+    },
+    {
+      "path": "backend/src/modules/production/production-asset-asr.integration.test.ts",
+      "beforeSHA256": "3815b28131385b2f3535291744db458c4df3d2569e89e70226d33fd3aae9b908",
+      "afterSHA256": "3fd93ea3546080fd6190a535a6647dd5fb4271cb71c993234799dc48f6648fee"
+    },
+    {
+      "path": "backend/src/modules/production/production-conversion-owner.test.ts",
+      "beforeSHA256": "7be8c416ecb098951cd8584fce236db29323b6e31a7507d94a8471107c7d2292",
+      "afterSHA256": "4abc197451dfa5a322f9474700666a6b72f87f5174239368e1046e484f631a8f"
+    },
+    {
+      "path": "backend/src/modules/production/production-conversion.integration.test.ts",
+      "beforeSHA256": "e65662d7ff013190adf4a50c69b8a9d2a4e695e4953623763868eb57a108a073",
+      "afterSHA256": "4d0c476fa70c21e42a417fe4853daa4ef91a4997d806a05b470b36749f502251"
+    },
+    {
+      "path": "backend/src/modules/production/production-conversion.service.ts",
+      "beforeSHA256": "267ea51f50682233ee3520486c70bc57c658d8c315be74af5bf9ce5d1601e290",
+      "afterSHA256": "f7988b7e32a1cd62f5983dcd5213620b8234a1a00cd0107707c0ea8a6cedaa5a"
+    },
+    {
+      "path": "backend/src/modules/production/production-editor.integration.test.ts",
+      "beforeSHA256": "477f6ab07006697a1c23c0bbd11998cf7bae7226e561019bb77dbcf04381727d",
+      "afterSHA256": "f8757dd4b81d140b8ac40df4770ed5dc246b972def2acdde1308ab30e5fe47a0"
+    },
+    {
+      "path": "backend/src/modules/production/production-editor.repository.ts",
+      "beforeSHA256": "be8049a4996afe83eed930437b0a4d1c1091f33d037dacb97421e810febb0809",
+      "afterSHA256": "9c095f46c414e4908462f99a4135f5c6cbdbc7303f8f6d10f5cbbb8e1fb17ee8"
+    },
+    {
+      "path": "backend/src/modules/production/production-native-rough.ts",
+      "beforeSHA256": "1d8252d8a09bd4a336961b78f7ba7ef0745f6a9b539f49e64a654ace97f6a9b4",
+      "afterSHA256": "2a41094415c22c5271cc9e46f8ec64cddfe726f5f2197c20e05eae060e12ecd4"
+    },
+    {
+      "path": "backend/src/modules/production/production-pause-gaps.test.ts",
+      "beforeSHA256": null,
+      "afterSHA256": "f252f2fef7191ecf91360368a1138fdc225f368a31a58fd42aac3c45ba5f6aa5"
+    },
+    {
+      "path": "backend/src/modules/production/production-pause-gaps.ts",
+      "beforeSHA256": null,
+      "afterSHA256": "2396767443e0deacaa9b1b5284c12627589a6cc6fda6c73929e82c2171c52f3a"
+    },
+    {
+      "path": "backend/src/modules/production/production-precise-asr.integration.test.ts",
+      "beforeSHA256": "4598a98bbe87f4bb40618c51879fdfeb7c7d4d1d5542d44d90cfcffa338690b7",
+      "afterSHA256": "0c7a02ea7b27770de8e8a3dfde0c9835a87eeb1ba18e660b867263636357029b"
+    },
+    {
+      "path": "backend/src/modules/production/production-rough-cut-adapter.ts",
+      "beforeSHA256": "8b839bb29e8088c30926a2f0c0b65f85cf6621cfa3cf6d2d7bc24f2d3ccc967e",
+      "afterSHA256": "1294acfa0b9b24fe5b11fb98aba4583305a7494c0eed2828109dd80250b8b907"
+    },
+    {
+      "path": "backend/src/modules/production/production-rough-cut-reservation.ts",
+      "beforeSHA256": "4f287ba69c882b4e908cfbdb60c5a9f403311d1647d179dc690c5e6958676204",
+      "afterSHA256": "c135729907fdaf0033a175f445ef18f9104c45ac9a19149ec50b4f8004a08c1e"
+    },
+    {
+      "path": "backend/src/modules/production/production-rough-cut.integration.test.ts",
+      "beforeSHA256": "688c987394293db6e79dab4c18750bc92e8b929bbe0862e41c280f630de4c9c6",
+      "afterSHA256": "3eddedaedaeed193144ab360ab4417d8de8313072276ff3015a33b51abef5b01"
+    },
+    {
+      "path": "backend/src/modules/production/production-sources.ts",
+      "beforeSHA256": "e4ad8a79cf357023f875b3507f308bdb8dc4ce9767a5f2650fccb97a5b8cff40",
+      "afterSHA256": "9b88180380246791b8c6348da0594d8db2da1b644bc26e2d9fcd5133038ac9d9"
+    },
+    {
+      "path": "backend/src/modules/production/production-transcripts.service.ts",
+      "beforeSHA256": "dede4d2c15bd89ff3a4d34d8323010db1a07c88792049535fc5d291462ad0125",
+      "afterSHA256": "f0b881cbed033c3c8296810d27b9e718437fa72aab0d3c58e60b4e3ea832588c"
+    },
+    {
+      "path": "backend/src/modules/production/production-video-material-hooks.test.ts",
+      "beforeSHA256": "521438d387ffb1f384d0702f06c828ad8858711ff58ad6bfb8f6d8e9ef2ecb8c",
+      "afterSHA256": "0be57374810de3de2f236cfb601f8a37696bc383251c1c20a4af6566352e1599"
+    },
+    {
+      "path": "backend/src/modules/production/production-video-material-owner.test.ts",
+      "beforeSHA256": "0d3672b116dbcf64656e236f2ed7b08ac0ad744036f5c36ff039a30dac546d5b",
+      "afterSHA256": "f37e68a8a647311c1168cec3b59031e7e7be3dc71a93b9fb72268939348996a7"
+    },
+    {
+      "path": "backend/src/modules/production/production.service.ts",
+      "beforeSHA256": "05b5e28fb206caccb05ed4433bb72415b4ced76ba49f7057aebf384897f5be6c",
+      "afterSHA256": "8a9a6a082838c4f88eae5990f217bd4ef546928491cfec6a9ac38d9333af5c8f"
+    },
+    {
+      "path": "backend/src/modules/projects/project-lock.service.ts",
+      "beforeSHA256": "e0e1683a4cc66de05d3cf52d1024e3c65aff8cb3f1bceeae4f20d2e72fcb4e82",
+      "afterSHA256": "02288e867120920b46d66db40ef065b97ca465185c421c263a973502d38aed89"
+    },
+    {
+      "path": "backend/src/modules/projects/projects.repository.ts",
+      "beforeSHA256": "5ab90ad5973c3f04683ff9a1d20fd55c87e5baede94075803bd85000fbffaded",
+      "afterSHA256": "e133d1e127831f503393dfb52e3d0ee1a4dd3e71d58e4016bec6378304541f0c"
+    },
+    {
+      "path": "backend/src/modules/projects/projects.service.ts",
+      "beforeSHA256": "1d31dc0b68d8fe488a372d2c74fb5a87a9c5716a6e14be8c4dc6ba4338b7b5af",
+      "afterSHA256": "490378c98f98a9f621058d9fafeee0fd66e7d16536932169b7e3adb511fe0925"
+    },
+    {
+      "path": "backend/src/modules/publishing/visual-material-adoption.service.test.ts",
+      "beforeSHA256": "1d6231b95aec1aa1c727b63d380f9e3ace6d385a07f2cf829c750bb3f28bfc96",
+      "afterSHA256": "d3fdc411ce1a61b4d6dd4a9fbfd81f5585f946c36b6fe90c83278e73f78e5a2f"
+    },
+    {
+      "path": "backend/src/modules/review/work-reviews.service.test.ts",
+      "beforeSHA256": "7477a539a7e82552e16bc4b9c5bd025c52ff84610d5a0ff1a4ee1e4001b1dbfe",
+      "afterSHA256": "40ea42975d0d28e8e9221ae78dc7ac19c2d3e5a08681a16a4339a13e08feb061"
+    },
+    {
+      "path": "backend/src/modules/review/work-reviews.service.ts",
+      "beforeSHA256": "bbe30670f52966d8715df1dc19522d8b1192c524ca868bddf114cdd064c24f53",
+      "afterSHA256": "3852abe7044a1cb2532974b1cbd4cc9c3568465e14ee4e21e196e84c6c91dfcc"
+    },
+    {
+      "path": "backend/src/modules/work-compositions/owner-materials.integration.test.ts",
+      "beforeSHA256": "8d190bcd6b773af34c3c2bcd28dc5e341cb9ef6a19091992b0d65be4319bc689",
+      "afterSHA256": "b84478870db3e43987152e92014fb0f70130d13ee755c896f58fe78587fed32c"
+    },
+    {
+      "path": "backend/src/modules/work-compositions/work-canvas-context.integration.test.ts",
+      "beforeSHA256": "99f3fca74e42e9f37ec8bd7e63396cd165f1e73ef04db30a5dd760214d7bd0df",
+      "afterSHA256": "53cfab821b2b530c2bb99b035ed09b236c3e2aa0f8db599a98d472a5e3a4fd3e"
+    },
+    {
+      "path": "backend/src/modules/work-compositions/work-compositions.service.test.ts",
+      "beforeSHA256": "a4e37d50c52f045b842630cc05eef0528c416080231e6809b452f2eda3d45cdf",
+      "afterSHA256": "da8e83fd96d3a3650502489f71c2d0b7832d73914016e21824c7aef374d93de9"
+    },
+    {
+      "path": "backend/src/modules/work-compositions/work-compositions.service.ts",
+      "beforeSHA256": "cd4fe85f5d2c78a1ea42609ec7f94cc4caedcb87a19054d8475d41d344f52dd5",
+      "afterSHA256": "7a68d2b44a424b3894ac2125256e82b64f2442afd59a145ea13916688506bc8c"
+    },
+    {
+      "path": "backend/src/modules/work-compositions/work-materials.integration.test.ts",
+      "beforeSHA256": "67805ac6e4fb0cbbd8a377b96bacf00299952e3ae8efafe232bcd8e02477a82f",
+      "afterSHA256": "5b5d2683812ebc0b4248ea40fd4e5e1a1a00e54836a9608c3e6cf812913f758c"
+    },
+    {
+      "path": "backend/src/modules/work-compositions/work-materials.service.ts",
+      "beforeSHA256": "17e369f36aafaddec94da131820ec13272fea1093b9741ca306e511433c951a7",
+      "afterSHA256": "69ee733fc7c96db4424f5a2d83ca9ac7446439a23d3c697f56c9e29c3a6ef45b"
+    },
+    {
+      "path": "backend/src/modules/work-compositions/work-source.integration.test.ts",
+      "beforeSHA256": "a8ce5401caf8571b517616329849416b2bcdab5aff4ae29f709fd5edb90e65d9",
+      "afterSHA256": "1b632d1187f417779d5fe473374daecb5a428514e80494876dffa52c1ce59247"
+    },
+    {
+      "path": "backend/src/modules/work-compositions/work-source.ports.ts",
+      "beforeSHA256": "1ed062ec8f900e755ecca025e41e7086918f487a73cee76f252b74efeabfedf7",
+      "afterSHA256": "605ae3db120e0be14dd50a1009ecadf51362360fa6f62f50ac3c0e75e944a58e"
+    },
+    {
+      "path": "backend/src/modules/work-compositions/work-source.service.ts",
+      "beforeSHA256": "bc90da4e5cfb5ec6af778e8cf177a5bd410b3cf4e92b6157b903168f5662b416",
+      "afterSHA256": "13e8a8f684ff333552fa724c85e10230bf99ca866b15976f31de1d1379921292"
+    },
+    {
+      "path": "backend/src/modules/work-compositions/work-sources.transport.test.ts",
+      "beforeSHA256": "39e1cddd86c02f2c2adb96d5948638dacf2233f7d6be07c6462f745242a54585",
+      "afterSHA256": "a6832de46e3765b9a6d729e8904b85b0bfc475d6a265f46c2f5951a985dfc206"
+    },
+    {
+      "path": "backend/src/schema/articles.ts",
+      "beforeSHA256": "21b0dd223b50d5e198cafa635ca90e3273633a626c61fdfa81cb0fdc58c687a9",
+      "afterSHA256": "b19c6d8ac7630a4a25b3cad35fda4ca9504a872a2b18e422155522699e383ae5"
+    },
+    {
+      "path": "backend/src/schema/creative-canvas.ts",
+      "beforeSHA256": "bc55df94ccfe31f7d41136cd71e44494f1ede728650202379324ea86ad4ee320",
+      "afterSHA256": "ecb29bd752b8b87673b773b4e1b53215733b799fdc7513508cd47ead9ff57aee"
+    },
+    {
+      "path": "backend/src/schema/creative-results.ts",
+      "beforeSHA256": "48d0db65d493d4a3c20b68a212d4027f1cf96eeb9b8d7c796605971b9983d75f",
+      "afterSHA256": "65a1b45c645a4e087bd07de98b685d28de0c31ac63c82c268f0843ce0f70d444"
+    },
+    {
+      "path": "backend/src/schema/intelligence.ts",
+      "beforeSHA256": "d9c1cc951c45dd05445a9a10f43eac5345f8c881083ac4ab431153b893c90a56",
+      "afterSHA256": "2ac7b3d136452ce7759847175a62f5a303e9e92b03af4b001eb0945cfe587fcc"
+    },
+    {
+      "path": "backend/src/schema/moments-model.ts",
+      "beforeSHA256": "4e67af8ca6ae0a064a88f6b5f2f88ac6046434e3b604de1259221cc866def4ed",
+      "afterSHA256": "b0169fb0cb8c8169e2e5d088c50812e92f881cf91b7e774d939390f13263d143"
+    },
+    {
+      "path": "backend/src/schema/moments.ts",
+      "beforeSHA256": "bf33f135174bc80caa2c92c1dd00ee76299f5a088417d6e51a9373273e4cdfb7",
+      "afterSHA256": "a4ae0ee7480bb55e689d00988a7a5bac7766343bd3cb2b300aed88a4edf76a83"
+    },
+    {
+      "path": "backend/src/schema/production-file-bindings.ts",
+      "beforeSHA256": "56d016adf29fb17158e42cea982bd973bba285702e17a67be269941307ed589c",
+      "afterSHA256": "ff0cffb11be897d9c8303413226ce38efae86b6c604a8af60568cf83ed9a1127"
+    },
+    {
+      "path": "backend/src/schema/production.ts",
+      "beforeSHA256": "a9a5d2d068801e5fb6b75a200595e14bf5d44c00de371ec2c268795099550ffe",
+      "afterSHA256": "73dbe25f109fad17b9349e807395eedba66228166d2fe4646453b5011357d965"
+    },
+    {
+      "path": "backend/src/schema/projects.ts",
+      "beforeSHA256": "9b8f6bebfc4d4d58b28128873e9d1c531235fd588b74389601fbc8713c071875",
+      "afterSHA256": "7ec9860b332060a2d4265836daa0926cf4584263fbd6eb2c29be04072c45186d"
+    },
+    {
+      "path": "backend/src/schema/visual-templates.ts",
+      "beforeSHA256": "34effc62a42bb89324c6765855fdc381b33b2d63ecaea63ca3a2f6a09a31be4c",
+      "afterSHA256": "3475f43720b718e2decbffb3c8ded2ab98b4cef692d158ea13ed5280ff470d13"
+    },
+    {
+      "path": "backend/src/schema/work-compositions.ts",
+      "beforeSHA256": "36b4e205c57c2a6357a5101045269bec0c378cb2a61499d77f10910a6804f45a",
+      "afterSHA256": "2f91c8b9fee51ea7e6412a4c14a4f4d11eebcce73654de444ad6a4fe65d6215f"
+    },
+    {
+      "path": "backend/src/schema/work-materials.ts",
+      "beforeSHA256": "962fa10b6831a9d981dbde09ff29ec8e8c0f906e894fd1a4ae28badbfe9ef77d",
+      "afterSHA256": "e91f0c8a3a10caf32d80de69d26b3559bfd5ac42fcfd62f1e7b5b5544abc4d5f"
+    },
+    {
+      "path": "backend/src/schema/work-reviews.ts",
+      "beforeSHA256": "e67fdf0e24d80dbbc1020b31901d7f65b1dfe12996907de2721d4321991812d4",
+      "afterSHA256": "f0faa0e3fc7b27371d886e10f20cbc7118c0d1327e83cce77a22e8f1b52b6e8a"
+    },
+    {
+      "path": "backend/vitest.config.ts",
+      "beforeSHA256": "ef37271d6e36a38ac90641cb406afb1ef6e919047e5b09d08b3e0c5108a8ebc8",
+      "afterSHA256": "dbfe6fdaa421a8b415c9d9b0ec26dc1247bc4e62281085b9ea1f1d01f1c3cb9e"
+    },
+    {
+      "path": "contract/src/internal/asset-asr.ts",
+      "beforeSHA256": "4e6eba4bf1ff0264b3e3327b6321afca695daa84ae30e940cae5e3db1f349115",
+      "afterSHA256": "50a4ad3f7ac6bff1b87faed01e0a5c278ddba534e18bea0aff0afbc68f83fde7"
+    },
+    {
+      "path": "contract/src/operations/creative-results.ts",
+      "beforeSHA256": "3368c8c8eb087c602183d33195692149fc989ce3bd856d7651a8d95d4c495773",
+      "afterSHA256": "267d3bd584704e977b4bc3a4c3c969e27c47bdd55b5daa3e4e4f2c8470ed33c3"
+    },
+    {
+      "path": "contract/src/resources/creative-canvas.ts",
+      "beforeSHA256": "1dbe331e111dbe8a44576c96109e4e1710ef36e3e0235b4ae9b6777d6edfcac4",
+      "afterSHA256": "4143dc37e960405de6e2c038b28b8c65b5a7107dc4550a76f7cd3defe7e0c733"
+    },
+    {
+      "path": "contract/src/resources/production-rough-cut.ts",
+      "beforeSHA256": "33a6f8b5b10afbdae7d4768fcaf97d2c4ba81e333c7367ce4f240be395bb4d5d",
+      "afterSHA256": "be13724284c6173a171e7ee57ea01911894ab13f2bfa36c2f2e7a7adaf539cf2"
+    },
+    {
+      "path": "contract/tests/chat-worker.test.ts",
+      "beforeSHA256": "0e0295b3fd432b94831a34f8f18a9b5f85db667813fe5d03e97cb8f6d3d05a55",
+      "afterSHA256": "51485ae6aab89eeb6c88606e77aed6af4e612ed0ef56e6730f69049aff61377d"
+    },
+    {
+      "path": "contract/tests/modules/assets.test.ts",
+      "beforeSHA256": "1b36d78cc9f17e58bb98ee42bca05c1399fa519dcedd92c277be04bd23fd1bc5",
+      "afterSHA256": "95e5ded54f84a1eade79773b79de08403c6e72431b6e610ea9613d7d55f3ed42"
+    },
+    {
+      "path": "contract/tests/platform-capabilities.test.ts",
+      "beforeSHA256": "046adc7696431ad4401dabd5eedc62aab6dbc2822ab2ef788a6e8a933737f0ed",
+      "afterSHA256": "86642334a7efd8103c1a5435da4746cdd8de65c5b833428b2cb3d3aa980428f1"
+    },
+    {
+      "path": "contract/tests/production-rough-cut.test.ts",
+      "beforeSHA256": null,
+      "afterSHA256": "5d03497e3c1bdf802b3cc60f7201eaa89860a6989de956b8dfe917d97f4bdfe2"
+    },
+    {
+      "path": "contract/tests/registry.test.ts",
+      "beforeSHA256": "490891094479d5a7b072a8d5fe365ee7611c2643f48e602169a448f27a2f9002",
+      "afterSHA256": "551c6ca4435b57c2190e40a39ba4bb6c9d59607ede42a2279e0715f8b3c7a736"
+    },
+    {
+      "path": "frontend/src/app/api/v1/dispatch/route.test.ts",
+      "beforeSHA256": "6df2d53360a95b9dd73aaa2f5aaad3099bb7b27194c6582b4dc93d04f1b0928a",
+      "afterSHA256": "39a2f50e6907098a9125fd5e026d866e2210fd031015e9008b3bc07adfc633d6"
+    },
+    {
+      "path": "frontend/src/app/api/v1/dispatch/route.ts",
+      "beforeSHA256": "ad69a1cd87dbdd2ca5a20dc4b3b61cf18be8838db7690779b7453ff15484a7f8",
+      "afterSHA256": "c65e3550629cae1135a251130aa18ad0841a1d78af8a7e299bb168797846cc28"
+    },
+    {
+      "path": "frontend/src/server/persistence-client.ts",
+      "beforeSHA256": "cef0e9dfd9d5590b8972a70342e7998817bfcb6f837e3bd40e11af5eedf7709f",
+      "afterSHA256": "8e27512fb9f3286686d07bdd968354de730cda6561735192949f36176ccb535a"
+    }
+  ],
+  "readonlyBindings": [
+    {
+      "path": "ai-worker/src/execution/asset-asr-worker-run.ts",
+      "sha256": "861fce9445d3227cbb2989e68ef8ab17f7b7ed39eb76ab96d82e166643e0a4b6",
+      "actualSha256": "861fce9445d3227cbb2989e68ef8ab17f7b7ed39eb76ab96d82e166643e0a4b6"
+    },
+    {
+      "path": "ai-worker/src/execution/transcribe-asr-run.test.ts",
+      "sha256": "e89d85242480daba3a0da78d19a81937e983e2226c409982576f6fc8621e1def",
+      "actualSha256": "e89d85242480daba3a0da78d19a81937e983e2226c409982576f6fc8621e1def"
+    },
+    {
+      "path": "ai-worker/src/execution/transcribe-postprocess-run.test.ts",
+      "sha256": "cd924e2f33e98294cc8d2c1fb751bef1d234478219e133b5b5a2f55b294b32c5",
+      "actualSha256": "cd924e2f33e98294cc8d2c1fb751bef1d234478219e133b5b5a2f55b294b32c5"
+    },
+    {
+      "path": "ai-worker/src/execution/transcribe-worker-run.ts",
+      "sha256": "8edcff07f5d225bc73807326767092eaaddfb0130ad273b2a05f423aec8dd49d",
+      "actualSha256": "8edcff07f5d225bc73807326767092eaaddfb0130ad273b2a05f423aec8dd49d"
+    },
+    {
+      "path": "ai-worker/src/execution/worker-runtime.test.ts",
+      "sha256": "127133231d606bc7774849805ee760ea88a3b766f93942b4dd0ffd46d7891368",
+      "actualSha256": "127133231d606bc7774849805ee760ea88a3b766f93942b4dd0ffd46d7891368"
+    },
+    {
+      "path": "backend/drizzle/meta/_journal.json",
+      "sha256": "7e97c6390fb14872864383797f98e8c8e698ef762cbec4f72990ebb0ab89917c",
+      "actualSha256": "7e97c6390fb14872864383797f98e8c8e698ef762cbec4f72990ebb0ab89917c"
+    },
+    {
+      "path": "backend/src/creative-canvas-migration-lineage.ts",
+      "sha256": "c9743441d7a85e7d2d378eda2dc409165397460f75a78b0931f7275c93f71058",
+      "actualSha256": "c9743441d7a85e7d2d378eda2dc409165397460f75a78b0931f7275c93f71058"
+    },
+    {
+      "path": "backend/src/db.ts",
+      "sha256": "15a05f64b00fc5095abb6e96aa3d3039db8f4ff4faa894fb1429e843093cd98f",
+      "actualSha256": "15a05f64b00fc5095abb6e96aa3d3039db8f4ff4faa894fb1429e843093cd98f"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/chat-cover-task-host.ts",
+      "sha256": "7ac78a741a609627e18c84650b8748ee8eecd7434244afc1c55d77a0130344a9",
+      "actualSha256": "7ac78a741a609627e18c84650b8748ee8eecd7434244afc1c55d77a0130344a9"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/chat-task-tool-host.ts",
+      "sha256": "77aca00cf4619c9ecf46faced93622fe3ceb2581fd41e0cc480e99107bf17298",
+      "actualSha256": "77aca00cf4619c9ecf46faced93622fe3ceb2581fd41e0cc480e99107bf17298"
+    },
+    {
+      "path": "backend/src/modules/ai/ai-task-commit.ts",
+      "sha256": "84f0a1310b630eef1542c1c387f088c4be3bb4eb4eaad0e689547e769b89c226",
+      "actualSha256": "84f0a1310b630eef1542c1c387f088c4be3bb4eb4eaad0e689547e769b89c226"
+    },
+    {
+      "path": "backend/src/modules/ai/ai-task-submission.service.ts",
+      "sha256": "38efbca0f020e80e3c33d4677d8a07396b780bf4340266f4b9504f65c72039a3",
+      "actualSha256": "38efbca0f020e80e3c33d4677d8a07396b780bf4340266f4b9504f65c72039a3"
+    },
+    {
+      "path": "backend/src/modules/assets/assets.transport.ts",
+      "sha256": "bb72ca3e71dbf01496452a8fe8a62bf3f65fef74d113563b9192089327968212",
+      "actualSha256": "bb72ca3e71dbf01496452a8fe8a62bf3f65fef74d113563b9192089327968212"
+    },
+    {
+      "path": "backend/src/modules/creative-results/conversion-source.service.ts",
+      "sha256": "4115309ab7a2b01a875d26283e73371b9e2b8a6683d42ebae21b4e8f10e010e4",
+      "actualSha256": "4115309ab7a2b01a875d26283e73371b9e2b8a6683d42ebae21b4e8f10e010e4"
+    },
+    {
+      "path": "backend/src/modules/execution/execution-asset-result.service.ts",
+      "sha256": "75887ce91412c6683bb0017b0eeab383e0d24ae371a4830964d4a983e880fa60",
+      "actualSha256": "75887ce91412c6683bb0017b0eeab383e0d24ae371a4830964d4a983e880fa60"
+    },
+    {
+      "path": "backend/src/modules/execution/execution-authority.service.ts",
+      "sha256": "f97137801b09925acab20b05e8641bb201c9cc414a92327d196421df77a2969d",
+      "actualSha256": "f97137801b09925acab20b05e8641bb201c9cc414a92327d196421df77a2969d"
+    },
+    {
+      "path": "backend/src/modules/execution/execution-chat-task-submission.service.ts",
+      "sha256": "5aae7b4eb203d0bc614617725396636b2ddd1ed0c2a3a7627cf186c496c4a74a",
+      "actualSha256": "5aae7b4eb203d0bc614617725396636b2ddd1ed0c2a3a7627cf186c496c4a74a"
+    },
+    {
+      "path": "backend/src/modules/execution/execution-lease.service.ts",
+      "sha256": "3aa4f15dbe1039adf0f031f35f7e545c63d909ad42c706361efbc6e429340cb0",
+      "actualSha256": "3aa4f15dbe1039adf0f031f35f7e545c63d909ad42c706361efbc6e429340cb0"
+    },
+    {
+      "path": "backend/src/modules/platform-account/membership-lock.service.ts",
+      "sha256": "27d59f591636b8fd4b6ce3a09f485e7966274bac01744e724fd00882ca426fa4",
+      "actualSha256": "27d59f591636b8fd4b6ce3a09f485e7966274bac01744e724fd00882ca426fa4"
+    },
+    {
+      "path": "backend/src/modules/platform-account/platform-account.service.ts",
+      "sha256": "c120109e4edf2a04df84b4733b8b0535cfdb3df444e2b0a6d704f3b7b919a9ee",
+      "actualSha256": "c120109e4edf2a04df84b4733b8b0535cfdb3df444e2b0a6d704f3b7b919a9ee"
+    },
+    {
+      "path": "backend/src/modules/review/production-review-files.ts",
+      "sha256": "3e5b739b49ed4b92c5abb31b2f135fe6645f0b24be6c741b5f3505b6d4411524",
+      "actualSha256": "3e5b739b49ed4b92c5abb31b2f135fe6645f0b24be6c741b5f3505b6d4411524"
+    },
+    {
+      "path": "backend/src/modules/review/work-review-fingerprint.ts",
+      "sha256": "7e6d3db5d9b4cb466498f09fae74e5720a882214a6677e1cf50f56748c6b2814",
+      "actualSha256": "7e6d3db5d9b4cb466498f09fae74e5720a882214a6677e1cf50f56748c6b2814"
+    },
+    {
+      "path": "backend/src/modules/review/work-review-read-current.ts",
+      "sha256": "484618e474f4b764b61c895e7db47de47e188f52e3532aa5e60f758e5f7bc474",
+      "actualSha256": "484618e474f4b764b61c895e7db47de47e188f52e3532aa5e60f758e5f7bc474"
+    },
+    {
+      "path": "backend/src/modules/review/work-reviews.transport.ts",
+      "sha256": "b97572519a64c911984819b5a0951b5e5f12598e018dee9c8ce9958907d99327",
+      "actualSha256": "b97572519a64c911984819b5a0951b5e5f12598e018dee9c8ce9958907d99327"
+    },
+    {
+      "path": "backend/src/schema/cli-invocations.ts",
+      "sha256": "d6e25d3548b4c380b923954f2ffb80c98aab3a5a339fd2e6dccd38aff614df62",
+      "actualSha256": "d6e25d3548b4c380b923954f2ffb80c98aab3a5a339fd2e6dccd38aff614df62"
+    },
+    {
+      "path": "backend/src/workspace-scope.ts",
+      "sha256": "4dfabca2c21f96efb2cddde6f77b00cfe9f18a7e4b2f3ec92471f15fc361a712",
+      "actualSha256": "4dfabca2c21f96efb2cddde6f77b00cfe9f18a7e4b2f3ec92471f15fc361a712"
+    },
+    {
+      "path": "backend/src/workspace-write.ts",
+      "sha256": "c75a788ef9e1bcd86f5e620fda6ea19d9a66413d2b184ece342df62a1925a937",
+      "actualSha256": "c75a788ef9e1bcd86f5e620fda6ea19d9a66413d2b184ece342df62a1925a937"
+    },
+    {
+      "path": "contract/src/operations/creative-canvas.ts",
+      "sha256": "a8daf069fb630fdaa4a7cd5dd03618c7e0c1380db7d81484fb71356e92ab6323",
+      "actualSha256": "a8daf069fb630fdaa4a7cd5dd03618c7e0c1380db7d81484fb71356e92ab6323"
+    },
+    {
+      "path": "contract/src/operations/platform-accounts.ts",
+      "sha256": "57e15bd520e0646fe6407c79b7de86fe333731e00274c0a34740e06fb424ca4a",
+      "actualSha256": "57e15bd520e0646fe6407c79b7de86fe333731e00274c0a34740e06fb424ca4a"
+    },
+    {
+      "path": "contract/src/operations/production.ts",
+      "sha256": "8cb485405cdbe2c951ce792b9c69589b3b29737dc20eca36d68bf161c9938861",
+      "actualSha256": "8cb485405cdbe2c951ce792b9c69589b3b29737dc20eca36d68bf161c9938861"
+    },
+    {
+      "path": "contract/src/operations/visual-templates.ts",
+      "sha256": "070069bdb819440df247898d2848cb0e7a97a8f9997bbbe2ffcbd43ca54e9fb3",
+      "actualSha256": "070069bdb819440df247898d2848cb0e7a97a8f9997bbbe2ffcbd43ca54e9fb3"
+    },
+    {
+      "path": "contract/src/operations/work-compositions.ts",
+      "sha256": "679e68144f807d09877c9c7e2941e0182dca4f2c955785e44d96f215291a4cc0",
+      "actualSha256": "679e68144f807d09877c9c7e2941e0182dca4f2c955785e44d96f215291a4cc0"
+    },
+    {
+      "path": "contract/src/resources/creative-results.ts",
+      "sha256": "2762c0033c47ec9b38ae47683d5eddb14e4c3e0a295ac425e5b99de7844f3ca0",
+      "actualSha256": "2762c0033c47ec9b38ae47683d5eddb14e4c3e0a295ac425e5b99de7844f3ca0"
+    },
+    {
+      "path": "contract/src/resources/output-conversions.ts",
+      "sha256": "fbdadce6690b6f3abbbdc900c73c21e99518e6c20eaf7bc2cd21d49b8718df80",
+      "actualSha256": "fbdadce6690b6f3abbbdc900c73c21e99518e6c20eaf7bc2cd21d49b8718df80"
+    },
+    {
+      "path": "contract/src/resources/platform-capabilities.ts",
+      "sha256": "810dc293d7494037f0cb4f67bffd00525c92668efd95d0ed8dab452a74369310",
+      "actualSha256": "810dc293d7494037f0cb4f67bffd00525c92668efd95d0ed8dab452a74369310"
+    },
+    {
+      "path": "contract/src/resources/visual-templates.ts",
+      "sha256": "ab67a3565862bbfc456baa0d9de5933d1b08deafe8814e9094ea551349054d86",
+      "actualSha256": "ab67a3565862bbfc456baa0d9de5933d1b08deafe8814e9094ea551349054d86"
+    },
+    {
+      "path": "contract/src/resources/work-compositions.ts",
+      "sha256": "55a8733911c99c1828caefac68a6ff0b24c3f3c9746632487c505b3999ecd86d",
+      "actualSha256": "55a8733911c99c1828caefac68a6ff0b24c3f3c9746632487c505b3999ecd86d"
+    },
+    {
+      "path": "contract/src/resources/work-reviews.ts",
+      "sha256": "0f0bb23d398796076a68c2f0c16a3fdcb7efee5b28c5f8f5b3f675fdda1151c2",
+      "actualSha256": "0f0bb23d398796076a68c2f0c16a3fdcb7efee5b28c5f8f5b3f675fdda1151c2"
+    },
+    {
+      "path": "contract/src/workspace-operation-scope.ts",
+      "sha256": "3bfefb76e70f46d453fc635a961208921ac2e5c0dfe364e2ee839575483f47d4",
+      "actualSha256": "3bfefb76e70f46d453fc635a961208921ac2e5c0dfe364e2ee839575483f47d4"
+    },
+    {
+      "path": "contract/tests/workspace-operation-scope.test.ts",
+      "sha256": "61d283fea1bb0347be7d91034d4ff595b6e1c786495b86ec31084ed77e099bce",
+      "actualSha256": "61d283fea1bb0347be7d91034d4ff595b6e1c786495b86ec31084ed77e099bce"
+    },
+    {
+      "path": "mcp-server/src/cli.ts",
+      "sha256": "d5144d42073c4b4bb242da074fd5d7407f3bf0e8c93f1a1b8156803f3eda525f",
+      "actualSha256": "d5144d42073c4b4bb242da074fd5d7407f3bf0e8c93f1a1b8156803f3eda525f"
+    },
+    {
+      "path": "mcp-server/src/context.ts",
+      "sha256": "c403cf8a914cd2b6b18ad56c0740824056e4ed3a815d6cf771b5298fca1027cf",
+      "actualSha256": "c403cf8a914cd2b6b18ad56c0740824056e4ed3a815d6cf771b5298fca1027cf"
+    },
+    {
+      "path": "mcp-server/src/dispatch.ts",
+      "sha256": "dab056c67934343581e9e34bb7914b8f65ffda16b337b82374d3cdf2c405567e",
+      "actualSha256": "dab056c67934343581e9e34bb7914b8f65ffda16b337b82374d3cdf2c405567e"
+    },
+    {
+      "path": "mcp-server/src/server.ts",
+      "sha256": "e2b849dfef8f69aa6d3728e8e3fe786af27e7e086cf077897febb634a10d4f6b",
+      "actualSha256": "e2b849dfef8f69aa6d3728e8e3fe786af27e7e086cf077897febb634a10d4f6b"
+    },
+    {
+      "path": "mcp-server/src/tools.ts",
+      "sha256": "8990fe8365361dbfd68fb494e12f030cf6777731c3e31e140e13fe5c889556f7",
+      "actualSha256": "8990fe8365361dbfd68fb494e12f030cf6777731c3e31e140e13fe5c889556f7"
+    },
+    {
+      "path": "mcp-server/tests/cli.test.ts",
+      "sha256": "c1abaa9474bf2c820b8f9ecb55c0e6b30a9fd193dd28f7b5b9e6fb07a87d8f46",
+      "actualSha256": "c1abaa9474bf2c820b8f9ecb55c0e6b30a9fd193dd28f7b5b9e6fb07a87d8f46"
+    },
+    {
+      "path": "mcp-server/tests/group-context.test.ts",
+      "sha256": "d995cf72c3bab41777dbd6b6ebe0c47fa925ce4003d8db7dab2d38f506bdb56e",
+      "actualSha256": "d995cf72c3bab41777dbd6b6ebe0c47fa925ce4003d8db7dab2d38f506bdb56e"
+    },
+    {
+      "path": "mcp-server/tests/group-mcp-context.test.ts",
+      "sha256": "f227e9466adb8b9d56acecd63cad16ca0aeb4506fb7a3e30978385f733db02e7",
+      "actualSha256": "f227e9466adb8b9d56acecd63cad16ca0aeb4506fb7a3e30978385f733db02e7"
+    }
+  ],
+  "scopeOutside": [],
+  "verification": {
+    "attempt": 10,
+    "sameSequentialOriginalRun": true,
+    "report": {
+      "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1062-backend-verify-RkR0rS/verification-result.json",
+      "sha256": "25d5b335db6ba932d66cb179ce1ea9d8da23174d83c6ab37239269c0041371c6"
+    },
+    "rootStoppedEvidence": {
+      "path": "/tmp/t1062-backend-fixed27-attempt10-root-stopped-evidence.json",
+      "sha256": "4c6f7489a186bfd2c7aa487bcb9f11c26add2d1df325b8af53beb2e29e262fac"
+    },
+    "commands": [
+      {
+        "label": "diff卫生",
+        "argv": [
+          "git",
+          "diff",
+          "--check"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator",
+        "exit": 0,
+        "signal": null,
+        "error": null,
+        "durationMs": 139,
+        "logPath": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1062-backend-verify-RkR0rS/01.log",
+        "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "originalIndex": 1,
+        "actualSummary": [],
+        "expectedOriginalFilesAndTests": null,
+        "allExpectedNoSkip": true
+      },
+      {
+        "label": "contract类型",
+        "argv": [
+          "pnpm",
+          "-C",
+          "contract",
+          "typecheck"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator",
+        "exit": 0,
+        "signal": null,
+        "error": null,
+        "durationMs": 6835,
+        "logPath": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1062-backend-verify-RkR0rS/02.log",
+        "logSha256": "e2e9e2e93f2ee847de649def290188741bb25281795b0378a4976592151d0456",
+        "originalIndex": 2,
+        "actualSummary": [],
+        "expectedOriginalFilesAndTests": null,
+        "allExpectedNoSkip": true
+      },
+      {
+        "label": "ai-worker类型",
+        "argv": [
+          "pnpm",
+          "-C",
+          "ai-worker",
+          "typecheck"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator",
+        "exit": 0,
+        "signal": null,
+        "error": null,
+        "durationMs": 10500,
+        "logPath": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1062-backend-verify-RkR0rS/03.log",
+        "logSha256": "8eb2d00ce28a33afc842d09b444e3e45f5646e4bcf3201af2bc5006346012d7c",
+        "originalIndex": 3,
+        "actualSummary": [],
+        "expectedOriginalFilesAndTests": null,
+        "allExpectedNoSkip": true
+      },
+      {
+        "label": "backend类型",
+        "argv": [
+          "pnpm",
+          "-C",
+          "backend",
+          "typecheck"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator",
+        "exit": 0,
+        "signal": null,
+        "error": null,
+        "durationMs": 53877,
+        "logPath": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1062-backend-verify-RkR0rS/04.log",
+        "logSha256": "d5b59696d423739b819756912dd3e92d297e0a6de06cf9192628bf24a690b045",
+        "originalIndex": 4,
+        "actualSummary": [],
+        "expectedOriginalFilesAndTests": null,
+        "allExpectedNoSkip": true
+      },
+      {
+        "label": "合同全suite，原317pass/4fail均保留",
+        "argv": [
+          "pnpm",
+          "-C",
+          "contract",
+          "test"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator",
+        "exit": 0,
+        "signal": null,
+        "error": null,
+        "durationMs": 6913,
+        "logPath": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1062-backend-verify-RkR0rS/05.log",
+        "logSha256": "883c0abaceed35f693ce59a4b979d9a3a345f2fa6d624ab40e20b03f23943770",
+        "originalIndex": 5,
+        "actualSummary": [
+          "Test Files  61 passed (61)",
+          "Tests  325 passed (325)",
+          "Duration  6.19s (transform 8.34s, setup 0ms, import 43.47s, tests 1.97s, environment 11ms)"
+        ],
+        "expectedOriginalFilesAndTests": [
+          61,
+          325
+        ],
+        "allExpectedNoSkip": true
+      },
+      {
+        "label": "creative-canvas实际域聚焦",
+        "argv": [
+          "pnpm",
+          "-C",
+          "backend",
+          "test",
+          "src/modules/creative-canvas/creative-canvas.service.test.ts",
+          "src/modules/creative-canvas/creative-canvas-ai-owner.test.ts",
+          "src/modules/creative-canvas/creative-canvas-result-proof.test.ts",
+          "src/modules/creative-canvas/creative-canvas-committed-file.test.ts",
+          "src/modules/creative-canvas/creative-canvas-reference-ports.test.ts",
+          "--maxWorkers=1"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator",
+        "exit": 0,
+        "signal": null,
+        "error": null,
+        "durationMs": 44595,
+        "logPath": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1062-backend-verify-RkR0rS/06.log",
+        "logSha256": "f27c2e021cbf9ea3eabef5ccb14af8cedde2e3dcccc55bf84a5070f17c8d4109",
+        "originalIndex": 6,
+        "actualSummary": [
+          "Test Files  5 passed (5)",
+          "Tests  35 passed (35)",
+          "Duration  43.81s (transform 3.58s, setup 0ms, import 9.81s, tests 33.14s, environment 0ms)"
+        ],
+        "expectedOriginalFilesAndTests": [
+          5,
+          35
+        ],
+        "allExpectedNoSkip": true
+      },
+      {
+        "label": "projects-article-graphic-moments公开根与真实lease闭包",
+        "argv": [
+          "pnpm",
+          "-C",
+          "backend",
+          "test",
+          "src/modules/projects/projects.service.test.ts",
+          "src/modules/projects/projects.repository.integration.test.ts",
+          "src/modules/articles/articles.integration.test.ts",
+          "src/modules/graphic-posts/graphic-posts.integration.test.ts",
+          "src/modules/moments/moments.service.test.ts",
+          "src/modules/moments/moments-model.integration.test.ts",
+          "src/modules/articles/articles.worker.integration.test.ts",
+          "--maxWorkers=1"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator",
+        "exit": 0,
+        "signal": null,
+        "error": null,
+        "durationMs": 578481,
+        "logPath": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1062-backend-verify-RkR0rS/07.log",
+        "logSha256": "2ccfcb95db9e3ff0032bb01efd6ddd608983bd3437ebe96d8685187f00a94c8c",
+        "originalIndex": 7,
+        "actualSummary": [
+          "Test Files  7 passed (7)",
+          "Tests  177 passed (177)",
+          "Duration  577.76s (transform 3.91s, setup 0ms, import 10.33s, tests 566.13s, environment 0ms)"
+        ],
+        "expectedOriginalFilesAndTests": [
+          7,
+          177
+        ],
+        "allExpectedNoSkip": true
+      },
+      {
+        "label": "private-visual-templates实际域聚焦",
+        "argv": [
+          "pnpm",
+          "-C",
+          "backend",
+          "test",
+          "src/modules/assets/visual-template.service.test.ts",
+          "--maxWorkers=1"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator",
+        "exit": 0,
+        "signal": null,
+        "error": null,
+        "durationMs": 8201,
+        "logPath": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1062-backend-verify-RkR0rS/08.log",
+        "logSha256": "2dcec677310caf36b2c3c9ac72a908b138b7e68638b7a93c408d6d0ce0cb4361",
+        "originalIndex": 8,
+        "actualSummary": [
+          "Test Files  1 passed (1)",
+          "Tests  5 passed (5)",
+          "Duration  7.45s (transform 816ms, setup 0ms, import 1.44s, tests 5.83s, environment 0ms)"
+        ],
+        "expectedOriginalFilesAndTests": [
+          1,
+          5
+        ],
+        "allExpectedNoSkip": true
+      },
+      {
+        "label": "creative-results-and-conversions实际域聚焦",
+        "argv": [
+          "pnpm",
+          "-C",
+          "backend",
+          "test",
+          "src/modules/creative-results/creative-results.integration.test.ts",
+          "src/modules/creative-results/conversion-reservation.integration.test.ts",
+          "src/modules/creative-results/output-conversions.integration.test.ts",
+          "src/modules/creative-results/article-cover-media.adapter.test.ts",
+          "src/modules/creative-results/graphic-post-media.adapter.test.ts",
+          "src/modules/creative-results/media-adoption.integration.test.ts",
+          "src/modules/creative-results/graphic-series.integration.test.ts",
+          "--maxWorkers=1"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator",
+        "exit": 0,
+        "signal": null,
+        "error": null,
+        "durationMs": 120404,
+        "logPath": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1062-backend-verify-RkR0rS/09.log",
+        "logSha256": "f07c022daf7d3842fe1b3c77cb92b1aff5d13aaf19493b297bdb64211d1684b6",
+        "originalIndex": 9,
+        "actualSummary": [
+          "Test Files  7 passed (7)",
+          "Tests  43 passed (43)",
+          "Duration  119.67s (transform 1.90s, setup 0ms, import 9.33s, tests 108.99s, environment 1ms)"
+        ],
+        "expectedOriginalFilesAndTests": [
+          7,
+          43
+        ],
+        "allExpectedNoSkip": true
+      },
+      {
+        "label": "work-compositions-and-materials实际域聚焦",
+        "argv": [
+          "pnpm",
+          "-C",
+          "backend",
+          "test",
+          "src/modules/work-compositions/work-compositions.service.test.ts",
+          "src/modules/work-compositions/work-members.integration.test.ts",
+          "src/modules/work-compositions/work-materials.integration.test.ts",
+          "src/modules/work-compositions/owner-materials.integration.test.ts",
+          "src/modules/work-compositions/work-canvas-context.integration.test.ts",
+          "--maxWorkers=1"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator",
+        "exit": 0,
+        "signal": null,
+        "error": null,
+        "durationMs": 108099,
+        "logPath": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1062-backend-verify-RkR0rS/10.log",
+        "logSha256": "c3fb96ef33523d61ca21dfb6cddb8783de40d3384d66c57f734d27e7067c3fb5",
+        "originalIndex": 10,
+        "actualSummary": [
+          "Test Files  5 passed (5)",
+          "Tests  24 passed (24)",
+          "Duration  107.32s (transform 3.97s, setup 0ms, import 8.52s, tests 97.85s, environment 0ms)"
+        ],
+        "expectedOriginalFilesAndTests": [
+          5,
+          24
+        ],
+        "allExpectedNoSkip": true
+      },
+      {
+        "label": "production-editor-and-media-reservations实际域聚焦",
+        "argv": [
+          "pnpm",
+          "-C",
+          "backend",
+          "test",
+          "src/modules/production/production-editor.integration.test.ts",
+          "src/modules/production/production-conversion.integration.test.ts",
+          "src/modules/production/production-asset-asr.integration.test.ts",
+          "src/modules/production/production-precise-asr.integration.test.ts",
+          "src/modules/production/production-native-public.integration.test.ts",
+          "src/modules/production/group-project-derived.integration.test.ts",
+          "src/modules/production/workspace-parent-write.integration.test.ts",
+          "--maxWorkers=1"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator",
+        "exit": 0,
+        "signal": null,
+        "error": null,
+        "durationMs": 224937,
+        "logPath": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1062-backend-verify-RkR0rS/11.log",
+        "logSha256": "b8e13edcbfe249b6f52911f71e03427edf6d2f1a723f6b18f48376b46e6e86f8",
+        "originalIndex": 11,
+        "actualSummary": [
+          "Test Files  7 passed (7)",
+          "Tests  53 passed (53)",
+          "Duration  224.14s (transform 4.37s, setup 0ms, import 13.46s, tests 209.47s, environment 1ms)"
+        ],
+        "expectedOriginalFilesAndTests": [
+          7,
+          53
+        ],
+        "allExpectedNoSkip": true
+      },
+      {
+        "label": "rough-cut-v3-pause-gap实际域聚焦",
+        "argv": [
+          "pnpm",
+          "-C",
+          "backend",
+          "test",
+          "src/modules/production/production-rough-cut.integration.test.ts",
+          "src/modules/production/production-rough-cut-touch.test.ts",
+          "src/modules/production/production-native-rough.test.ts",
+          "src/modules/production/production-pause-gaps.test.ts",
+          "--maxWorkers=1"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator",
+        "exit": 0,
+        "signal": null,
+        "error": null,
+        "durationMs": 80218,
+        "logPath": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1062-backend-verify-RkR0rS/12.log",
+        "logSha256": "38aeaae12f7af6573fd72aeeaae34127be0dc56ac47017be066dd80a21e2a254",
+        "originalIndex": 12,
+        "actualSummary": [
+          "Test Files  4 passed (4)",
+          "Tests  28 passed (28)",
+          "Duration  79.56s (transform 3.00s, setup 0ms, import 5.83s, tests 73.12s, environment 0ms)"
+        ],
+        "expectedOriginalFilesAndTests": [
+          4,
+          28
+        ],
+        "allExpectedNoSkip": true
+      },
+      {
+        "label": "asset-legacy-recovery-and-canvas-tool实际域聚焦",
+        "argv": [
+          "pnpm",
+          "-C",
+          "backend",
+          "test",
+          "src/modules/ai-runtime/asset-business-execution.service.test.ts",
+          "src/modules/ai-runtime/chat-canvas-tool-host.test.ts",
+          "src/modules/execution/asset-worker-runtime.integration.test.ts",
+          "--maxWorkers=1"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator",
+        "exit": 0,
+        "signal": null,
+        "error": null,
+        "durationMs": 81646,
+        "logPath": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1062-backend-verify-RkR0rS/13.log",
+        "logSha256": "233924cc84a84333f918794d5003e9c70313160f2075a115b50a4f3aa6bc58f2",
+        "originalIndex": 13,
+        "actualSummary": [
+          "Test Files  3 passed (3)",
+          "Tests  29 passed (29)",
+          "Duration  80.99s (transform 2.89s, setup 0ms, import 6.59s, tests 73.92s, environment 0ms)"
+        ],
+        "expectedOriginalFilesAndTests": [
+          3,
+          29
+        ],
+        "allExpectedNoSkip": true
+      },
+      {
+        "label": "production-frozen-file-bindings实际域聚焦",
+        "argv": [
+          "pnpm",
+          "-C",
+          "backend",
+          "test",
+          "src/modules/production/production-file-bindings.test.ts",
+          "--maxWorkers=1"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator",
+        "exit": 0,
+        "signal": null,
+        "error": null,
+        "durationMs": 24091,
+        "logPath": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1062-backend-verify-RkR0rS/14.log",
+        "logSha256": "a717195b7c2db0d377fa25c3b36400effdba26dc651c2bbf4a988bb11dd0855b",
+        "originalIndex": 14,
+        "actualSummary": [
+          "Test Files  1 passed (1)",
+          "Tests  6 passed (6)",
+          "Duration  23.40s (transform 2.57s, setup 0ms, import 3.75s, tests 19.47s, environment 0ms)"
+        ],
+        "expectedOriginalFilesAndTests": [
+          1,
+          6
+        ],
+        "allExpectedNoSkip": true
+      },
+      {
+        "label": "work-reviews实际域聚焦",
+        "argv": [
+          "pnpm",
+          "-C",
+          "backend",
+          "test",
+          "src/modules/review/work-reviews.service.test.ts",
+          "src/modules/review/work-review-read-current.test.ts",
+          "src/application/generation/work-review-root.test.ts",
+          "--maxWorkers=1"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator",
+        "exit": 0,
+        "signal": null,
+        "error": null,
+        "durationMs": 156609,
+        "logPath": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1062-backend-verify-RkR0rS/15.log",
+        "logSha256": "e1569c8ae5ad800fe80ba793fc60149cffa342aba1e4738f0e133e92bddec30c",
+        "originalIndex": 15,
+        "actualSummary": [
+          "Test Files  3 passed (3)",
+          "Tests  45 passed (45)",
+          "Duration  155.92s (transform 3.22s, setup 0ms, import 7.41s, tests 147.99s, environment 0ms)"
+        ],
+        "expectedOriginalFilesAndTests": [
+          3,
+          45
+        ],
+        "allExpectedNoSkip": true
+      },
+      {
+        "label": "cli-group-idempotency实际域聚焦",
+        "argv": [
+          "pnpm",
+          "-C",
+          "backend",
+          "test",
+          "src/modules/cli-invocations/cli-invocations.service.test.ts",
+          "--maxWorkers=1"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator",
+        "exit": 0,
+        "signal": null,
+        "error": null,
+        "durationMs": 20776,
+        "logPath": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1062-backend-verify-RkR0rS/16.log",
+        "logSha256": "b94b5a54377d31ccbd5bfabd892d6b2ff88a38e61991cf3967ff05d6f4d61c27",
+        "originalIndex": 16,
+        "actualSummary": [
+          "Test Files  1 passed (1)",
+          "Tests  6 passed (6)",
+          "Duration  20.11s (transform 698ms, setup 0ms, import 1.29s, tests 18.66s, environment 0ms)"
+        ],
+        "expectedOriginalFilesAndTests": [
+          1,
+          6
+        ],
+        "allExpectedNoSkip": true
+      },
+      {
+        "label": "105类型红证据22原tests",
+        "argv": [
+          "pnpm",
+          "-C",
+          "backend",
+          "test",
+          "src/modules/ai-runtime/asset-business-execution.service.test.ts",
+          "src/modules/ai-runtime/chat-assembly.test.ts",
+          "src/modules/ai-runtime/chat-canvas-tool-host.test.ts",
+          "src/modules/ai-runtime/signal-quality.test.ts",
+          "src/modules/ai-runtime/transcribe-runner.test.ts",
+          "src/modules/ai/ai-media-probe-control.test.ts",
+          "src/modules/articles/articles.creative-adapter.test.ts",
+          "src/modules/articles/articles.integration.test.ts",
+          "src/modules/creative-results/conversion-source.integration.test.ts",
+          "src/modules/creative-results/output-conversions.integration.test.ts",
+          "src/modules/execution/asset-worker-runtime.integration.test.ts",
+          "src/modules/production/production-conversion-owner.test.ts",
+          "src/modules/production/production-precise-asr.integration.test.ts",
+          "src/modules/production/production-video-material-hooks.test.ts",
+          "src/modules/production/production-video-material-owner.test.ts",
+          "src/modules/publishing/visual-material-adoption.service.test.ts",
+          "src/modules/review/work-reviews.service.test.ts",
+          "src/modules/work-compositions/owner-materials.integration.test.ts",
+          "src/modules/work-compositions/work-canvas-context.integration.test.ts",
+          "src/modules/work-compositions/work-materials.integration.test.ts",
+          "src/modules/work-compositions/work-source.integration.test.ts",
+          "src/modules/work-compositions/work-sources.transport.test.ts",
+          "--maxWorkers=1"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator",
+        "exit": 0,
+        "signal": null,
+        "error": null,
+        "durationMs": 540130,
+        "logPath": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1062-backend-verify-RkR0rS/17.log",
+        "logSha256": "faef7c40d8768367b866a4f705e428e410f061a00f27ee191a1ad1085fc6d189",
+        "originalIndex": 17,
+        "actualSummary": [
+          "Test Files  22 passed (22)",
+          "Tests  332 passed (332)",
+          "Duration  539.41s (transform 4.17s, setup 0ms, import 25.65s, tests 510.26s, environment 2ms)"
+        ],
+        "expectedOriginalFilesAndTests": [
+          22,
+          332
+        ],
+        "allExpectedNoSkip": true
+      },
+      {
+        "label": "公共cover atomic与新领域组合",
+        "argv": [
+          "pnpm",
+          "-C",
+          "backend",
+          "test",
+          "src/integration/chat-task-atomic.test.ts",
+          "src/integration/t1062-new-domain-group-workspace.integration.test.ts",
+          "--maxWorkers=1"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator",
+        "exit": 0,
+        "signal": null,
+        "error": null,
+        "durationMs": 94429,
+        "logPath": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1062-backend-verify-RkR0rS/18.log",
+        "logSha256": "f7328f492429bbbe00c45245ed120596de687d169ba9e41d60d144ac61439a0c",
+        "originalIndex": 18,
+        "actualSummary": [
+          "Test Files  2 passed (2)",
+          "Tests  73 passed (73)",
+          "Duration  93.76s (transform 3.01s, setup 0ms, import 5.71s, tests 87.73s, environment 0ms)"
+        ],
+        "expectedOriginalFilesAndTests": [
+          2,
+          73
+        ],
+        "allExpectedNoSkip": true
+      },
+      {
+        "label": "DDL/旧库/资料搬组闭包回归",
+        "argv": [
+          "pnpm",
+          "-C",
+          "backend",
+          "test",
+          "src/db.creative-canvas-lineage.test.ts",
+          "src/db.creative-canvas-upgrade.test.ts",
+          "src/modules/platform-account/group-migration.integration.test.ts",
+          "--maxWorkers=1"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator",
+        "exit": 0,
+        "signal": null,
+        "error": null,
+        "durationMs": 157447,
+        "logPath": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1062-backend-verify-RkR0rS/19.log",
+        "logSha256": "b854a830d26297c8b64d20434399ef9f5aaf6ef540dea37e2d4b954f0c980bfd",
+        "originalIndex": 19,
+        "actualSummary": [
+          "Test Files  3 passed (3)",
+          "Tests  34 passed (34)",
+          "Duration  156.80s (transform 2.55s, setup 0ms, import 4.31s, tests 151.97s, environment 0ms)"
+        ],
+        "expectedOriginalFilesAndTests": [
+          3,
+          34
+        ],
+        "allExpectedNoSkip": true
+      },
+      {
+        "label": "实际worker新版Skill+冻结模型+原转录端口",
+        "argv": [
+          "pnpm",
+          "-C",
+          "ai-worker",
+          "test",
+          "src/prompt/templates/production-rough-cut.test.ts",
+          "src/execution/structured-worker-generation.test.ts",
+          "src/execution/transcribe-worker-run.test.ts",
+          "src/execution/transcribe-asr-run.test.ts",
+          "src/execution/transcribe-postprocess-run.test.ts",
+          "--maxWorkers=1"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator",
+        "exit": 0,
+        "signal": null,
+        "error": null,
+        "durationMs": 5080,
+        "logPath": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1062-backend-verify-RkR0rS/20.log",
+        "logSha256": "33436325fcd212b6d337fd836f0a890ee56f66ac6cae052b9e72506b17492071",
+        "originalIndex": 20,
+        "actualSummary": [
+          "Test Files  5 passed (5)",
+          "Tests  101 passed (101)",
+          "Duration  4.46s (transform 1.01s, setup 0ms, import 2.87s, tests 886ms, environment 0ms)"
+        ],
+        "expectedOriginalFilesAndTests": [
+          5,
+          101
+        ],
+        "allExpectedNoSkip": true
+      },
+      {
+        "label": "server装配与gateway实际公共链",
+        "argv": [
+          "pnpm",
+          "-C",
+          "frontend",
+          "test",
+          "src/app/api/v1/dispatch/route.test.ts",
+          "src/server/__module_integration__/canvas-chat-original.persistence-client.test.ts",
+          "src/server/__module_integration__/canvas-original-worker.persistence-client.test.ts",
+          "src/server/__module_integration__/production-source-bytes.persistence-client.test.ts",
+          "src/server/__module_integration__/production-video-material-root.persistence-client.test.ts",
+          "src/server/__module_integration__/work-composition.persistence-client.test.ts",
+          "--maxWorkers=1"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator",
+        "exit": 0,
+        "signal": null,
+        "error": null,
+        "durationMs": 119662,
+        "logPath": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1062-backend-verify-RkR0rS/21.log",
+        "logSha256": "5cf44035dddba1eebcf18c80ebeff6890237c49112b3fc0e4133ca9661c9be68",
+        "originalIndex": 21,
+        "actualSummary": [
+          "Test Files  6 passed (6)",
+          "Tests  30 passed (30)",
+          "Duration  118.80s (transform 9.23s, setup 766ms, import 18.35s, tests 96.61s, environment 2.13s)"
+        ],
+        "expectedOriginalFilesAndTests": [
+          6,
+          30
+        ],
+        "allExpectedNoSkip": true
+      },
+      {
+        "label": "已支持CLI/MCP组端口保持",
+        "argv": [
+          "pnpm",
+          "-C",
+          "mcp-server",
+          "test",
+          "tests/cli.test.ts",
+          "tests/group-context.test.ts",
+          "tests/group-mcp-context.test.ts"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator",
+        "exit": 0,
+        "signal": null,
+        "error": null,
+        "durationMs": 1825,
+        "logPath": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1062-backend-verify-RkR0rS/22.log",
+        "logSha256": "27b4bac334a687a2b5205e057246a5ad79336aa9e686c57c8444f8721ac34251",
+        "originalIndex": 22,
+        "actualSummary": [
+          "Test Files  3 passed (3)",
+          "Tests  21 passed (21)",
+          "Duration  1.22s (transform 1.28s, setup 0ms, import 2.18s, tests 410ms, environment 0ms)"
+        ],
+        "expectedOriginalFilesAndTests": [
+          3,
+          21
+        ],
+        "allExpectedNoSkip": true
+      },
+      {
+        "label": "真实PG锁并发（不准PGlite模拟）",
+        "argv": [
+          "pnpm",
+          "-C",
+          "backend",
+          "test",
+          "src/integration/group-migration-concurrency.postgres.integration.test.ts",
+          "src/integration/adjacent-parent-migration.postgres.integration.test.ts",
+          "--maxWorkers=1"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator",
+        "exit": 0,
+        "signal": null,
+        "error": null,
+        "durationMs": 78771,
+        "logPath": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1062-backend-verify-RkR0rS/23.log",
+        "logSha256": "dd62c72aaed27347a6d13bb16e89c50ebda8f2d08ba39128118803db52125a0d",
+        "originalIndex": 23,
+        "actualSummary": [
+          "Test Files  2 passed (2)",
+          "Tests  30 passed (30)",
+          "Duration  78.13s (transform 2.44s, setup 0ms, import 4.05s, tests 73.75s, environment 0ms)"
+        ],
+        "expectedOriginalFilesAndTests": [
+          2,
+          30
+        ],
+        "allExpectedNoSkip": true
+      },
+      {
+        "label": "ASR真实frame域两装配与公共worker控制",
+        "argv": [
+          "pnpm",
+          "-C",
+          "ai-worker",
+          "test",
+          "src/runtime/multimodal-whisper-local.test.ts",
+          "src/runtime/multimodal-whisper-local-cancel.test.ts",
+          "src/runtime/multimodal-precise-asr.test.ts",
+          "src/execution/worker-runtime.asset-asr-control.test.ts",
+          "--maxWorkers=1"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator",
+        "exit": 0,
+        "signal": null,
+        "error": null,
+        "durationMs": 3447,
+        "logPath": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1062-backend-verify-RkR0rS/24.log",
+        "logSha256": "e41119c3e2f18a745825b98528c946b5981562686c7d88941b5efe8b89c7bb51",
+        "originalIndex": 24,
+        "actualSummary": [
+          "Test Files  4 passed (4)",
+          "Tests  52 passed (52)",
+          "Duration  2.82s (transform 669ms, setup 0ms, import 1.78s, tests 483ms, environment 0ms)"
+        ],
+        "expectedOriginalFilesAndTests": [
+          4,
+          52
+        ],
+        "allExpectedNoSkip": true
+      },
+      {
+        "label": "组Skill两个同tx factory公开回归",
+        "argv": [
+          "pnpm",
+          "-C",
+          "backend",
+          "test",
+          "src/modules/moments/moments-model.integration.test.ts",
+          "src/application/generation/work-review-root.test.ts",
+          "src/modules/settings/group-skill-overlay.integration.test.ts",
+          "src/modules/settings/account-skill-overlay.repository.integration.test.ts",
+          "src/modules/ai-runtime/effective-skill-snapshot.test.ts",
+          "--maxWorkers=1"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator",
+        "exit": 0,
+        "signal": null,
+        "error": null,
+        "durationMs": 148495,
+        "logPath": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1062-backend-verify-RkR0rS/25.log",
+        "logSha256": "5fe33e6d1f23fffdd3d80f8dc9c36a6b7c4bcf7246d5c69dbf051df6faaba51a",
+        "originalIndex": 25,
+        "actualSummary": [
+          "Test Files  5 passed (5)",
+          "Tests  57 passed (57)",
+          "Duration  147.82s (transform 3.28s, setup 0ms, import 7.76s, tests 139.23s, environment 0ms)"
+        ],
+        "expectedOriginalFilesAndTests": [
+          5,
+          57
+        ],
+        "allExpectedNoSkip": true
+      },
+      {
+        "label": "媒体probe组范围与原10项生命周期完整回归",
+        "argv": [
+          "pnpm",
+          "-C",
+          "backend",
+          "test",
+          "src/modules/ai/ai-media-probe-control.test.ts",
+          "--maxWorkers=1"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator",
+        "exit": 0,
+        "signal": null,
+        "error": null,
+        "durationMs": 9117,
+        "logPath": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1062-backend-verify-RkR0rS/26.log",
+        "logSha256": "ccc115bdb633a25f3344ac196a1a75f2a071fcc408bf916a1de365b4a5e8daa7",
+        "originalIndex": 26,
+        "actualSummary": [
+          "Test Files  1 passed (1)",
+          "Tests  17 passed (17)",
+          "Duration  8.46s (transform 2.47s, setup 0ms, import 3.62s, tests 4.69s, environment 0ms)"
+        ],
+        "expectedOriginalFilesAndTests": [
+          1,
+          17
+        ],
+        "allExpectedNoSkip": true
+      },
+      {
+        "label": "旧submitted冻结工具恢复与当前参考图合同完整回归",
+        "argv": [
+          "pnpm",
+          "-C",
+          "backend",
+          "test",
+          "src/modules/ai-runtime/chat-canvas-tool-host.test.ts",
+          "src/modules/execution/execution-chat-script-draft.service.test.ts",
+          "--maxWorkers=1"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator",
+        "exit": 0,
+        "signal": null,
+        "error": null,
+        "durationMs": 13434,
+        "logPath": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1062-backend-verify-RkR0rS/27.log",
+        "logSha256": "1715810277daa75fcf483e7282cb3268954e5fb1141b8299c8a5cd0f86c5365d",
+        "originalIndex": 27,
+        "actualSummary": [
+          "Test Files  2 passed (2)",
+          "Tests  28 passed (28)",
+          "Duration  12.79s (transform 2.81s, setup 0ms, import 4.95s, tests 7.55s, environment 0ms)"
+        ],
+        "expectedOriginalFilesAndTests": [
+          2,
+          28
+        ],
+        "allExpectedNoSkip": true
+      }
+    ],
+    "sourceBeforeAfterDrift": [],
+    "readonlyDrift": [],
+    "limits": [
+      "只运行声明的类型/测试/格式命令，不是安装版验收。",
+      "媒体环境变量不覆盖用户自定义存储；local fixture必须自行使用临时storage，不得读写现用媒体。",
+      "真实PG只在127.0.0.1:55422创建/清理随机测试数据库，不能用skip冒充锁并发通过。"
+    ]
+  },
+  "supplementalVerification": {
+    "sourceDrift": [],
+    "readonlyDrift": [],
+    "head": "23b4d6e71f508448af41f18c96ba15e6a8fa2411",
+    "staged": "",
+    "task": "T-1062",
+    "startedAt": "2026-10-05T16:36:10.949376+00:00",
+    "finishedAt": "2026-10-05T16:36:23.506427+00:00",
+    "exit": 0,
+    "durationMs": 12557,
+    "argv": [
+      "pnpm",
+      "-C",
+      "backend",
+      "test",
+      "src/modules/execution/execution-transcribe-preparation.service.test.ts",
+      "--maxWorkers=1"
+    ],
+    "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator",
+    "isolatedRoot": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-transcribe-preparation-final-mcr85_ge",
+    "logPath": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-transcribe-preparation-final-mcr85_ge/test.log",
+    "logSha256": "b6ecfb4aebf7cb565751088220a7be4d58e7a02dc488569b415b1f77d82c25fa",
+    "testSource": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/backend/src/modules/execution/execution-transcribe-preparation.service.test.ts",
+    "testSourceSha256": "c099bbc666cc808b920cc3146a9b43e5dcfbdb7868fc09fc2af27c1d73068ea7",
+    "full27StopEvidence": "/tmp/t1062-backend-fixed27-attempt10-root-stopped-evidence.json",
+    "full27StopSha256": "4c6f7489a186bfd2c7aa487bcb9f11c26add2d1df325b8af53beb2e29e262fac",
+    "full27ReportSha256": "25d5b335db6ba932d66cb179ce1ea9d8da23174d83c6ab37239269c0041371c6",
+    "actualRemovedEnvironmentKeyNames": [
+      "REDFOX_API_KEY",
+      "TOKENTRACKER_HTTP_TIMEOUT_MS"
+    ],
+    "summary": [
+      "Test Files  1 passed (1)",
+      "Tests  17 passed (17)",
+      "Duration  11.78s (transform 2.35s, setup 0ms, import 3.49s, tests 8.14s, environment 0ms)"
+    ],
+    "limits": [
+      "完整原preparation文件单列补验；注入模型与网络，不能算真实ASR或安装验收",
+      "不覆盖原27结果与历史失败证据"
+    ]
+  },
+  "supplementalResult": {
+    "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-transcribe-preparation-final-mcr85_ge/root-result.json",
+    "sha256": "f0db7e93fae7f43a3e2245575853add60f11b341f7128aed2c15af4d082e8fff"
+  },
+  "expectedSupplementalFilesAndTests": [
+    1,
+    17
+  ],
+  "fullCountAnchorNote": "旧实际logs仅证明相同原source应收集files/tests数量；本轮每项必须实际exit0且完整计数一致，不借旧PASS。",
+  "assemblyAndRegistryFix": {
+    "path": "/tmp/t1062-assembly-registry-repair-implementation.json",
+    "sha256": "581cfa74cf87e01d8d1e497cfcad7626f9f8fb9aaa2afbf8ec9e25d1b75e3f02"
+  },
+  "finalFocusedOriginal21and25": {
+    "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-assembly-registry-focused-6wt50m2b/root-result.json",
+    "sha256": "6916cf2903d0b623c3cb9b9b05a3b28ed642e5780e331d02f8495a059fda42a1"
+  },
+  "redHistory": {
+    "original21": {
+      "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1062-backend-verify-Bntj3g/verification-result.json",
+      "sha256": "79593fc9e97f1fed6bae341a4f738b128a90af2b529a204e8480a3e2ea8a4a11",
+      "testLogSha256": "049104bc02494100fdeac72a05e90c573e047eef4811ba1ed7aee7ee084a1467"
+    },
+    "original25": {
+      "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-original27-suffix22to27-qdjr_we7/25.log",
+      "sha256": "661639cea9f9abd94aaea896c33567fa8fe3a9dba0bb62a370178cb7c21df57b"
+    },
+    "scopeHistoricalEvidence": "原scope/current_audit_updates及已提交preflight历史保持；不覆盖attempt6–9失败、fixture/类型校准、research中间状态。"
+  },
+  "diagnosticLimitation": "有三条装配store/tx丢失与registry缺口静态依据、原完整#21/#25修复后绿测；透明trace无有效运行事件，不声称已观测每个hang的因果。",
+  "legacyCoverageLimit": "原30项转写映射按实际原27与完整preparation补验分列；第31项历史缺锚保留待验。注入ASR测试不冒充真实默认模型。",
+  "independentReviews": [
+    {
+      "path": "/tmp/t1062-attempt9-exact-assembly-patch-and-registry-scope-independent-review.json",
+      "sha256": "ed0d6eb8c16e64e369c9d5d933ab5f42e99d4a6666faff2449e1a828ef2925bd"
+    },
+    {
+      "path": "/tmp/t1062-assembly-registry-implementation-independent-static-review.json",
+      "sha256": "5e516c80aac070ddb0e18210fe6db4ac7545fe0b33ab48854a14491d04e02c7f"
+    },
+    {
+      "path": "/tmp/t1062-assembly-registry-focused-result-and-attempt10-runner-independent-review.json",
+      "sha256": "6fb59e41de5ff5b44f8e4cc42fb001afd7bd534b3235a70a23de397d8fa4ce48"
+    },
+    {
+      "path": "/tmp/t1062-transcribe-preparation-supplemental-wrapper-independent-review.json",
+      "sha256": "9411f316d82c17607b96abc0d01256069e615f7e6438a89c423585a429d86ba1"
+    }
+  ],
+  "formatChecks": {
+    "unstagedDiffCheckExit": 0,
+    "cachedAndCandidate": "实际stage/commit后另行外部绑定，不在此提交内预填未发生证据"
+  },
+  "candidateBinding": "测试发生在23b4基点加126冻结source字节；此doc及唯一commit随后生成。实际candidateSHA在外部回执绑定，避免自身SHA循环。",
+  "globalGateHistory": {
+    "boundary": "此前7条对比既有5条，新增两条既有frontend SDK欠债登记T-1018；不是全局门绿",
+    "reconcile": "此前33 errors/1 warning/15旧LED失败保留，最终combined仍须实际reconcile",
+    "hooks": "不能将缺失Lefthook报告为hook通过"
+  },
+  "pendingAcceptance": [
+    "前端正式范围、原18组与实际视觉/操作",
+    "公开默认ASR R2词时间码/冻结源绑定",
+    "原生剪辑试听/明确采用/Undo/Redo/保存刷新/MP4回读",
+    "干净已提交候选的本地包与逐项安装验收",
+    "真实五平台登录/采集/发布回执未验证项",
+    "用户功能验收签字"
+  ],
+  "limits": [
+    "不拼接旧轮为完整27通过",
+    "前端夹具、真实模型、原生UI、安装版及用户验收证据彼此不能替代",
+    "无push/公开发版/真实账号自动归组",
+    "此TMP结果需要ROOT及最终独评后才能写入唯一授权result路径"
+  ]
+}

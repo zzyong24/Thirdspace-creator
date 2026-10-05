@@ -1,3 +1,7 @@
+import {aiTasks,projects as projectionProjects} from "@creatoros/backend";
+import type {WorkspaceWriteTx} from "../../workspace-write";
+import {workspaceFilter,workspaceStamp,workspaceKey} from "../../workspace-scope";
+import {withWorkspaceWrite} from "../../workspace-write";
 import {optionalScriptContext,optionalProjectImageLibrary,type ProjectScriptSourcePorts } from "../projects/project-script-source.port";
 import { createHash } from "node:crypto";
 import { isDeepStrictEqual } from "node:util";
@@ -109,17 +113,26 @@ export interface GraphicPostsService {
 export function createGraphicPostsService(db: Db, deps: GraphicPostPeerPorts & {
   now: () => string;
 }): GraphicPostsService {
-  const scope = (ctx: RequestContext) => ({
-    userId: ctx.userId, accountId: requireAccountId(ctx.accountId, "graphicPosts"),
-  });
+  const scope = (ctx:RequestContext)=>({userId:ctx.userId,...workspaceStamp(workspaceKey(ctx))});
 
+  async function projectionOwner(tx:WorkspaceWriteTx,ctx:RequestContext,taskId:string,projectId:string,input:Record<string,unknown>,kind:string){
+    const [parent]=await tx.select().from(projectionProjects).where(and(eq(projectionProjects.id,projectId),eq(projectionProjects.userId,ctx.userId),workspaceFilter(projectionProjects,ctx))).for('update');
+    if(!parent)throw Error('候选原父归属已改变');
+    const [original]=await tx.select().from(aiTasks).where(and(eq(aiTasks.id,taskId),eq(aiTasks.userId,ctx.userId))).for('share');
+    if(!original){if(ctx.groupId)throw Error('候选缺少原真实冻结任务');return workspaceStamp(workspaceKey(ctx));}
+    if(original.taskType!==kind||original.projectId!==projectId||!isDeepStrictEqual(original.inputData,input))throw Error('候选原冻结输入不符');
+    if(original.groupId!==null){if(original.groupId!==parent.groupId)throw Error('候选原冻结组与父归属不符');return workspaceStamp(workspaceKey(original));}
+    if(!original.accountId||parent.accountId!==original.accountId||(parent.groupId!==null&&parent.groupId!==`grp_legacy_${original.accountId}`))throw Error('旧候选缺少可证明的原账号父归属');
+    // SEMANTIC_BOUNDARY_ALLOW: 旧物理父链证明归属；不凭当前member猜组、不重签原AI freeze。
+    return{groupId:parent.groupId,accountId:original.accountId};
+  }
   async function anchor(ctx: RequestContext, outputId: string) {
     const owner = scope(ctx);
     const output = await deps.projects(db).getOutput(ctx, outputId);
     if (output.contentType !== "image") throw new GraphicPostOwnership("图文作品不存在");
     const [row] = await db.select().from(graphicPostAnchors).where(and(
       eq(graphicPostAnchors.outputId, outputId), eq(graphicPostAnchors.userId, owner.userId),
-      eq(graphicPostAnchors.accountId, owner.accountId),
+      workspaceFilter(graphicPostAnchors,ctx),
     ));
     if (!row || row.projectId !== output.projectId) throw new GraphicPostOwnership("图文作品不存在");
     const artifact = await deps.artifacts(db).getArtifact(ctx, row.artifactId);
@@ -216,11 +229,11 @@ export function createGraphicPostsService(db: Db, deps: GraphicPostPeerPorts & {
   return {
     async findOutputByCreationRequest(ctx, clientRequestId) {
       const owner = scope(ctx);
-      const [row] = await db.select().from(graphicPostAnchors).where(and(
-        eq(graphicPostAnchors.userId, owner.userId), eq(graphicPostAnchors.accountId, owner.accountId),
+      const rows = await db.select().from(graphicPostAnchors).where(and(
+        eq(graphicPostAnchors.userId, owner.userId), workspaceFilter(graphicPostAnchors,ctx),
         eq(graphicPostAnchors.clientRequestId, clientRequestId),
       ));
-      return row ? (await anchor(ctx, row.outputId)).output : null;
+      if(rows.length>1)throw new GraphicPostConflict("原创建请求存在多个账号来源，请以真实作品ID读取");const row=rows[0];return row ? (await anchor(ctx, row.outputId)).output : null;
     },
     async createOutput(ctx, projectId, input) {
       const owner = scope(ctx);
@@ -231,16 +244,17 @@ export function createGraphicPostsService(db: Db, deps: GraphicPostPeerPorts & {
         throw new GraphicPostValidation("所选平台当前不支持图文作品");
       }
       const requestDigest = digest({projectId, title: input.title, targetPlatform: input.targetPlatform ?? null});
-      const [old] = await db.select().from(graphicPostAnchors).where(and(
-        eq(graphicPostAnchors.userId, owner.userId), eq(graphicPostAnchors.accountId, owner.accountId),
+      const oldRows = await db.select().from(graphicPostAnchors).where(and(
+        eq(graphicPostAnchors.userId, owner.userId), workspaceFilter(graphicPostAnchors,ctx),
         eq(graphicPostAnchors.clientRequestId, input.clientRequestId),
       ));
+      if(oldRows.length>1)throw new GraphicPostConflict("原创建请求存在多个账号来源，请以真实作品ID读取");const old=oldRows[0];
       if (old) {
         if (old.requestDigest !== requestDigest) throw new GraphicPostConflict("同一创建请求不能修改作品内容");
         await anchor(ctx, old.outputId);
         return deps.projects(db).getOutput(ctx, old.outputId);
       }
-      try { return await db.transaction(async tx => {
+      try { return await withWorkspaceWrite(db,ctx,async tx => {
         const txDb = tx as unknown as Db;
         await deps.projects(txDb).getProject(ctx, projectId, true);
         const output = await deps.projects(txDb).createOutput(ctx, projectId, {
@@ -251,7 +265,7 @@ export function createGraphicPostsService(db: Db, deps: GraphicPostPeerPorts & {
           initialContentData: emptyGraphicPostDocument(),
         });
         await tx.insert(graphicPostAnchors).values({
-          outputId: output.id, projectId, userId: owner.userId, accountId: owner.accountId,
+          outputId: output.id, projectId, userId: owner.userId, ...workspaceStamp(workspaceKey(ctx)),
           artifactId: artifact.id, clientRequestId: input.clientRequestId,
           requestDigest, createdAt: deps.now(),
         });
@@ -259,7 +273,7 @@ export function createGraphicPostsService(db: Db, deps: GraphicPostPeerPorts & {
       }); } catch (error) {
         // A concurrent retry may have committed the same request while this transaction lost the unique race.
         const [winner] = await db.select().from(graphicPostAnchors).where(and(
-          eq(graphicPostAnchors.userId, owner.userId), eq(graphicPostAnchors.accountId, owner.accountId),
+          eq(graphicPostAnchors.userId, owner.userId), workspaceFilter(graphicPostAnchors,ctx),
           eq(graphicPostAnchors.clientRequestId, input.clientRequestId),
         ));
         if (!winner) throw error;
@@ -400,7 +414,7 @@ export function createGraphicPostsService(db: Db, deps: GraphicPostPeerPorts & {
       const owner = scope(ctx);
       const [saved] = await db.select().from(graphicPostTextCandidates).where(and(
         eq(graphicPostTextCandidates.id, candidateId), eq(graphicPostTextCandidates.userId, owner.userId),
-        eq(graphicPostTextCandidates.accountId, owner.accountId),
+        workspaceFilter(graphicPostTextCandidates,ctx),
       ));
       if (saved) {
         await anchor(ctx, saved.outputId);
@@ -449,14 +463,16 @@ export function createGraphicPostsService(db: Db, deps: GraphicPostPeerPorts & {
         // SEMANTIC_BOUNDARY_ALLOW: 只核验模型建议的 exact pair 在本轮真实目录，不替模型选图。
         for(const card of graphicPostCardBriefs.parse(value))if(card.proposedImage&&!library.some(image=>image.assetId===card.proposedImage!.assetId&&image.assetFileId===card.proposedImage!.assetFileId))throw new GraphicPostValidation("图卡候选图片不属于本次真实目录。");
       }
-      await db.insert(graphicPostTextCandidates).values({
+      await withWorkspaceWrite(db,ctx,async tx=>{const frozenOwner=await projectionOwner(tx,ctx,candidateId,row.projectId,taskInput,"graphic.post-text");
+      await tx.insert(graphicPostTextCandidates).values({
         id: candidateId, outputId, projectId: row.projectId, artifactId: artifact.id,
-        userId: owner.userId, accountId: owner.accountId, baseVersionId, kind,
+        userId: owner.userId, ...frozenOwner, baseVersionId, kind,
         value, sourceRefs, ruleSnapshotRef, appliedRules, createdAt: deps.now(),
       }).onConflictDoNothing();
+      },{allowArchived:true});
       const [persisted] = await db.select().from(graphicPostTextCandidates).where(and(
         eq(graphicPostTextCandidates.id, candidateId), eq(graphicPostTextCandidates.userId, owner.userId),
-        eq(graphicPostTextCandidates.accountId, owner.accountId),
+        workspaceFilter(graphicPostTextCandidates,ctx),
       ));
       if (!persisted || persisted.outputId !== outputId || persisted.kind !== kind) throw new GraphicPostConflict("图文候选保存冲突");
       return {candidateId, outputId, kind, status: "succeeded" as const, value: parseTextCandidateValue(kind,persisted.value),

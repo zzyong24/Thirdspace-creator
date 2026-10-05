@@ -62,12 +62,49 @@ export function whisperModelId(level: WhisperLevel): `Xenova/whisper-${WhisperLe
 
 /** ASR pipeline 的最小调用形状(只用到我们需要的:传 Float32Array PCM → { text })。
  *  真实现是 @xenova/transformers 的 `pipeline('automatic-speech-recognition', modelId)` 返回值。 */
-export type AsrPipelineOutput={text:string;chunks?:Array<{text:string;timestamp:[number,number|null]}>};
+export type AsrPipelineOutput={wordTimingValidated?:boolean;text:string;chunks?:Array<{text:string;timestamp:[number,number|null]}>};
 export type AsrPipeline = (
   audio: Float32Array,
   options?: Record<string, unknown>,
   signal?: AbortSignal,
 ) => Promise<AsrPipelineOutput | AsrPipelineOutput[]>;
+
+/** SEMANTIC_BOUNDARY_ALLOW: 仅把实际特征/encoder/attention的物理单位转换为原提取函数crop，不识别内容、不修改最终时间码。 */
+export function guardWhisperPipeline(raw:AsrPipeline):AsrPipeline {
+ const record=(v:unknown):Record<string,unknown>|null=>v!==null&&(typeof v==='object'||typeof v==='function')?v as Record<string,unknown>:null;
+ const dimensions=(v:unknown):number[]|null=>{const d=record(v)?.dims;return Array.isArray(d)&&d.length>0&&Array.from(d).every(n=>Number.isSafeInteger(n)&&n>0)?d:null;};
+ // 模型对象来自现有pipeline，运行时验证最小方法形状；不增加provider/IPC或更换模型。
+ const model=record(record(raw)?.model??(typeof raw==='function'?Object.getOwnPropertyDescriptor(raw,'model')?.value:null));
+ let queue:Promise<unknown>=Promise.resolve();
+ return (audio,options,signal)=>{
+  const job=async()=>{
+   signal?.throwIfAborted();
+   if(options?.return_timestamps!=='word')return raw(audio,options,signal);
+   const config=record(model?.config),originalProcessor=Object.getOwnPropertyDescriptor(raw,'processor')?.value,processor=record(originalProcessor),pre=record(record(processor?.feature_extractor)?.config);
+   const generate=model?.generate,forward=model?.forward,extract=model?._extract_token_timestamps;
+   if(!model||typeof generate!=='function'||typeof forward!=='function'||typeof extract!=='function'||!pre||!config||typeof originalProcessor!=='function'){const result=await raw(audio,options,signal);return Array.isArray(result)?result:{...result,wordTimingValidated:false};}
+   const chunks=new WeakMap<object,number>();let sampleCount:number|null=null,feature:number[]|null=null,encoder:number[]|null=null,verified=true,extractions=0;
+   const wrappedProcessor=async function(this:unknown,...args:unknown[]){const input=args[0],result:unknown=await Reflect.apply(originalProcessor,this,args),tensor=record(record(result)?.input_features);if(input instanceof Float32Array&&input.length>0&&input.buffer===audio.buffer&&input.byteOffset>=audio.byteOffset&&input.byteOffset+input.byteLength<=audio.byteOffset+audio.byteLength&&tensor)chunks.set(tensor,input.length);return result;};
+   Object.setPrototypeOf(wrappedProcessor,Object.getPrototypeOf(originalProcessor));
+   Object.defineProperties(wrappedProcessor,Object.getOwnPropertyDescriptors(originalProcessor));
+   record(raw)!.processor=wrappedProcessor;
+   model.generate=async function(this:unknown,...args:unknown[]){feature=dimensions(args[0]);sampleCount=record(args[0])?chunks.get(record(args[0])!)??null:null;encoder=null;return generate.apply(this,args);};
+   model.forward=async function(this:unknown,...args:unknown[]){const result:unknown=await forward.apply(this,args),actual=dimensions(record(result)?.encoder_outputs);if(!actual||encoder&&JSON.stringify(encoder)!==JSON.stringify(actual))verified=false;else encoder=actual;return result;};
+   model._extract_token_timestamps=function(this:unknown,...args:unknown[]){
+    extractions++;const out=record(args[0]),attention=out?.cross_attentions;
+    const batches=Array.isArray(attention)?attention:[],all=batches.flatMap(x=>Array.isArray(x)?x:[]).flatMap(x=>Array.isArray(x)?x:[]),dims=all.map(dimensions),a=dims[0];
+    const f=feature,e=encoder,hop=pre.hop_length,rate=pre.sampling_rate,window=pre.n_samples,chunk=pre.chunk_length,frames=args[2],precision=args[3]??0.02;
+    const physical=f?.length===3&&e?.length===3&&a?.length===4&&f[0]===1&&e[0]===1&&a[0]===1&&batches.length===1&&Array.isArray(batches[0])&&batches[0].length>0&&batches[0].every(layers=>Array.isArray(layers)&&layers.length===config.decoder_layers)&&dims.length>0&&dims.every(d=>d?.length===4&&d[0]===1&&d[1]===config.decoder_attention_heads&&d[3]===a[3])&&a[3]===e[1]&&f[2]===pre.nb_max_frames&&a[3]===config.max_source_positions&&typeof hop==='number'&&Number.isSafeInteger(hop)&&hop>0&&typeof rate==='number'&&rate===16000&&typeof window==='number'&&window===Number(chunk)*rate&&window/hop===f[2]&&sampleCount!==null&&sampleCount<=window&&Number.isInteger(f[2]!/e[1]!)&&Number(chunk)/a[3]! ===hop*(f[2]!/e[1]!)/rate&&precision===Number(chunk)/a[3]! &&frames===Math.floor(sampleCount/hop);
+    const crop=physical&&sampleCount!==null?Math.floor(sampleCount*e![1]!/(Number(hop)*f![2]!)):0;
+    if(!physical||crop<=0||crop>a![3]!)verified=false;
+    return extract.apply(this,physical&&crop>0&&crop<=a![3]!?[args[0],args[1],crop,...args.slice(3)]:args);
+   };
+   try{const result=await raw(audio,options,signal);return Array.isArray(result)?result:{...result,wordTimingValidated:verified&&extractions>0};}
+   finally{record(raw)!.processor=originalProcessor;model.generate=generate;model.forward=forward;model._extract_token_timestamps=extract;}
+  };
+  const pending=queue.then(job,job);queue=pending.catch(()=>{});return pending;
+ };
+}
 
 /** 可注入副作用(测试零成本:注 fake pipeline/fake decode;真跑走默认 transformers + ffmpeg)。 */
 export interface WhisperLocalAdapterDeps {
@@ -177,7 +214,7 @@ async function transcribeAudio(
       { reference: "LOCAL_WHISPER_TRANSCRIPT_EMPTY", retryable: false },
     );
   }
-  const timing=!Array.isArray(result)&&opts.timestampMode&&opts.timingAudio?.sampleRate===16000&&decodedSampleCount===opts.timingAudio.validSampleCount?readActualProviderTiming({rawResponse:JSON.stringify(result),response:result,audioBytes:opts.audioBytes,granularity:opts.timestampMode,...opts.timingAudio,local:true}):null;
+  const timing=!Array.isArray(result)&&opts.timestampMode&&(opts.timestampMode!=="word"||result.wordTimingValidated===true)&&opts.timingAudio?.sampleRate===16000&&decodedSampleCount===opts.timingAudio.validSampleCount?readActualProviderTiming({rawResponse:JSON.stringify(result),response:result,audioBytes:opts.audioBytes,granularity:opts.timestampMode,...opts.timingAudio,local:true}):null;
   return { text,...(timing?{timing}:{}) };
 }
 
@@ -249,7 +286,7 @@ export function createDefaultPipelineProvider(): (
       // 缓存目录 → ~/CreatorOS/models/whisper(SPEC §3.3);允许本地缓存命中不重下。
       env.cacheDir = defaultCacheDir();
       env.allowLocalModels = true;
-      return pipeline("automatic-speech-recognition", modelId);
+      return guardWhisperPipeline(await pipeline("automatic-speech-recognition", modelId));
     })();
     memo.set(modelId, p);
     // 若加载失败,清掉 memo 让下次可重试(不把一次失败永久钉死)。
@@ -460,6 +497,7 @@ export function createFfmpegPcmDecoder(
  *  协议:主线程发 { id, modelId, cacheDir, pcm: ArrayBuffer, options } →
  *  worker 回 { id, ok: true, text } 或 { id, ok: false, error }。 */
 const WHISPER_WORKER_SOURCE = `
+const guardWhisperPipeline = (${guardWhisperPipeline.toString()});
 const { parentPort, workerData } = require("node:worker_threads");
 const { createRequire } = require("node:module");
 const req = createRequire(workerData.requireBase);
@@ -480,7 +518,7 @@ function getPipeline(modelId, cacheDir) {
     const { pipeline, env } = req("@xenova/transformers");
     env.cacheDir = cacheDir;
     env.allowLocalModels = true;
-    return pipeline("automatic-speech-recognition", modelId);
+    return guardWhisperPipeline(await pipeline("automatic-speech-recognition", modelId));
   })();
   memo.set(modelId, p);
   p.catch(() => memo.delete(modelId));
@@ -512,7 +550,7 @@ parentPort.on("message", async (msg) => {
     const pcm = new Float32Array(msg.pcm);
     const result = await pipe(pcm, msg.options);
     const text = Array.isArray(result) ? result.map((r) => r.text).join("") : result.text;
-    parentPort.postMessage({ id: msg.id, ok: true, text,...(!Array.isArray(result)&&Array.isArray(result.chunks)?{chunks:result.chunks}:{}) });
+    parentPort.postMessage({ id: msg.id, ok: true, text,...(!Array.isArray(result)&&Array.isArray(result.chunks)?{chunks:result.chunks}:{}),...(!Array.isArray(result)&&typeof result.wordTimingValidated==='boolean'?{wordTimingValidated:result.wordTimingValidated}:{}) });
   } catch (err) {
     parentPort.postMessage({
       id: msg.id,
@@ -573,6 +611,7 @@ export interface WhisperWorkerLike {
       ok: boolean;
       text?: string;
       chunks?:AsrPipelineOutput["chunks"];
+      wordTimingValidated?:boolean;
       error?: string;
       errorCode?: string;
     }) => void,
@@ -604,7 +643,7 @@ export function createWorkerPipelineProvider(
 ): (modelId: string) => Promise<AsrPipeline> {
   let worker: WhisperWorkerLike | null = null;
   let nextId = 1;
-  type Pending = { owner: WhisperWorkerLike; resolve: (text: string,chunks?:AsrPipelineOutput["chunks"]) => void; reject: (err: Error) => void };
+  type Pending = { owner: WhisperWorkerLike; resolve: (text: string,chunks?:AsrPipelineOutput["chunks"],wordTimingValidated?:boolean) => void; reject: (err: Error) => void };
   const pending = new Map<number, Pending>();
   const exits = new WeakMap<WhisperWorkerLike, Promise<number>>();
   let queue: Promise<unknown> = Promise.resolve();
@@ -628,7 +667,7 @@ export function createWorkerPipelineProvider(
       const p = pending.get(msg.id);
       if (!p || p.owner !== w) return;
       pending.delete(msg.id);
-      if (msg.ok && typeof msg.text === "string") p.resolve(msg.text,msg.chunks);
+      if (msg.ok && typeof msg.text === "string") p.resolve(msg.text,msg.chunks,msg.wordTimingValidated);
       else p.reject(new MultimodalGenerationError(
         `whisper-local(worker)执行失败: ${msg.error ?? "未知错误"}`,
         { reference: msg.errorCode ?? "LOCAL_WHISPER_WORKER_UNKNOWN", retryable: true },
@@ -669,7 +708,7 @@ export function createWorkerPipelineProvider(
           const cleanup = () => signal?.removeEventListener("abort", cancel);
           pending.set(id, {
             owner: w,
-            resolve: (text,chunks) => { cleanup(); resolve({ text,...(chunks?{chunks}:{}) }); },
+            resolve: (text,chunks,wordTimingValidated) => { cleanup(); resolve({ text,...(chunks?{chunks}:{}),...(typeof wordTimingValidated==='boolean'?{wordTimingValidated}:{}) }); },
             reject: (err) => { cleanup(); reject(err); },
           });
           signal?.addEventListener("abort", cancel, { once: true });

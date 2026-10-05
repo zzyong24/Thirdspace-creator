@@ -1543,7 +1543,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       return createS3ObjectStorage(s3Cfg, { nextKey });
     }
     const rootPath = await svc.resolveStorageRoot(ctx);
-    return createLocalFsObjectStorage({ rootPath, publicBaseUrl: "/api/v1/blob",scope:ctx,onMint:(key,exp)=>workspaceBlobService.register(ctx,key,new Date(exp).toISOString()) },{ nextKey });
+    const blobService = store===db ? workspaceBlobService : createWorkspaceBlobService(store,deps.now);
+    return createLocalFsObjectStorage({ rootPath, publicBaseUrl: "/api/v1/blob",scope:ctx,onMint:(key,exp)=>blobService.register(ctx,key,new Date(exp).toISOString()) },{ nextKey });
   };
 
   const objectStorageForCtx=objectStorageForStore(db);
@@ -1993,7 +1994,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       await assertProductionEditorAsset(ctx,{...input,fileDigest:undefined},transaction);
       const scoped=transaction?createAssetsService(createAssetRepository(transaction,deps),objectStorageForStore(transaction),deps):assetsService;
       return scoped.readMediaFile(ctx,input.assetId,input.assetFileId,input.fileDigest);
-    },createTask:async(ctx,body)=>{const response=await execution.request(ENDPOINTS.createExecutionTask,{params:undefined,query:undefined,body},ctx) as {data:{id:string}};return response.data;},readTask:(ctx,id)=>executionService.get(ctx,id),retryTask:async(ctx,input)=>{await aiService.probeControl.retry(ctx,input);const task=await executionService.get(ctx,input.taskId);if(task.status === "queued")dispatchExecution(ctx,task);}},
+    },createTask:async(ctx,body,tx)=>{if(tx)return createExecutionService({ai:createAiService({...aiOwnerDeps,db:tx}),assets:{createGeneratedAsset:async(c,input)=>({id:(await assetsService.createGeneratedAsset(c,input)).id})},hasExecutor:t=>executorRegistry.has(t),loopTypeOf:t=>executorRegistry.loopTypeOf(t),workspacesRoot:executionWorkspacesRoot,abortRun:abortExecutionTask,resolveOutputProjectId:(c,id)=>createProjectsService(createProjectRepository(tx),deps).getProjectIdByOutput(c,id)}).create(ctx,body);const response=await execution.request(ENDPOINTS.createExecutionTask,{params:undefined,query:undefined,body},ctx) as {data:{id:string}};return response.data;},dispatchTask:async(c,id)=>{const task=await executionService.get(c,id);if(task.status==='queued')dispatchExecution(c,task);},readTask:(ctx,id)=>executionService.get(ctx,id),retryTask:async(ctx,input)=>{await aiService.probeControl.retry(ctx,input);const task=await executionService.get(ctx,input.taskId);if(task.status === "queued")dispatchExecution(ctx,task);}},
     resolveEditorMedia:async(ctx,input)=>{
       await assertProductionEditorAsset(ctx,input);
       if(input.assetFileId){const media=await assetsService.readMediaFile(ctx,input.assetId,input.assetFileId,input.fileDigest);return {url:media.url,mimeType:media.mimeType};}
@@ -3270,10 +3271,17 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   const workProjectsFor=(store:typeof db)=>createProjectsService(createProjectRepository(store),deps);
   const workAssetsFor=(store:typeof db)=>createAssetsService(createAssetRepository(store,deps),objectStorageForStore(store),deps);
   const workArtifactsFor=(store:typeof db)=>createArtifactsService({db:store,...deps,assertProjectOwned:async(c,id)=>{await workProjectsFor(store).getProject(c,id);},resolveOutputProjectId:(c,id)=>workProjectsFor(store).getProjectIdByOutput(c,id)});
-  const workArticlesFor=(store:typeof db)=>createArticlesService(store,{...articleOwnerPorts,
+  const workPublishingFor=(store:typeof db)=>withPublicationManualRevisionLock(store,publicationCoverPorts,publishingOriginalFor);
+  const workProjectScriptPortsFor=(store:typeof db)=>{
+    const source=createProjectScriptSource({projects:workProjectsFor(store),artifacts:workArtifactsFor(store),publishing:workPublishingFor(store),assets:workAssetsFor(store)});
+    return {readProjectScript:source.read,assertProjectScriptSource:source.assert,
+      readProjectScriptContext:source.readContext,assertScriptMetadataSource:source.assertMetadata,
+      readProjectImageLibrary:source.readImages,assertProjectImageFile:source.assertImage};
+  };
+  const workArticlesFor=(store:typeof db)=>createArticlesService(store,{...articleOwnerPorts,...workProjectScriptPortsFor(store),
     assertAssetFile:(c,id,file,active)=>workAssetsFor(store).assertAssetFileOwned(c,id,file,active),
     assertWorkSource:async(c,ref,projectId)=>{await workSourceService.read(c,projectId,ref,store);}});
-  const workGraphicFor=(store:typeof db)=>createGraphicPostsService(store,{...graphicOwnerPorts,
+  const workGraphicFor=(store:typeof db)=>createGraphicPostsService(store,{...graphicOwnerPorts,...workProjectScriptPortsFor(store),
     assertAssetFile:(c,id,file,active)=>workAssetsFor(store).assertAssetFileOwned(c,id,file,active),
     assertWorkSource:async(c,ref,projectId)=>{await workSourceService.read(c,projectId,ref,store);}});
   const workScriptsFor=(store:typeof db)=>createOutputScriptsService({...outputScriptOwnerPorts,projects:workProjectsFor(store),artifacts:workArtifactsFor(store)});
@@ -3284,7 +3292,6 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     assertSource:async(c,projectId,ref,tx)=>{await workSourceService.read(c,projectId,ref,tx);},
   }});
   const workProductionFor=(store:typeof db)=>createProductionService({...productionOwnerDeps,db:store});
-  const workPublishingFor=(store:typeof db)=>withPublicationManualRevisionLock(store,publicationCoverPorts,publishingOriginalFor);
   const workPublicationCoverFor=(store:typeof db)=>createPublicationCoverService({db:store,...deps,ports:publicationCoverPorts});
   const workMemberPorts=createWorkMemberPorts(store=>({projects:workProjectsFor(store??db),articles:workArticlesFor(store??db),graphicPosts:workGraphicFor(store??db),moments:workMomentsFor(store??db),outputScripts:workScriptsFor(store??db),production:workProductionFor(store??db)}));
   const workCompositionsFor:(store:typeof db)=>import("@creatoros/backend/modules/work-compositions").WorkCompositionsService=store=>createWorkCompositionsService({db:store,...deps,ports:{...workMemberPorts,artifacts:workArtifactsFor,
@@ -5796,8 +5803,14 @@ FAVORITES_PROMOTE_PER_RUN
         await scoped.readMediaFile(c,source.assetId,source.assetFileId,source.fileDigest);
       }
     },
-    createTask:(c,body)=>aiService.createTask(c,body),
-    readTask:(c,id,tx)=>(tx?createAiService({...aiOwnerDeps,db:tx}):aiService).getTask(c,id),
+    createTask:(c,body,tx,protocolVersion)=>tx?createAiService({...aiOwnerDeps,db:tx,
+      resolveTaskRuntimeData:createTransactionalTaskRuntimeResolver(tx,{...deps,masterKey,
+        officialSkills:{get:id=>getOfficialSkillBase(id,protocolVersion===3?{protocolVersion:3}:undefined),list:listOfficialSkillBases,platformPolicy:()=>({version:PLATFORM_POLICY_VERSION,text:PLATFORM_POLICY_TEXT})},
+        readPinnedAuthority:async()=>pinModelAuthority(await readChannelModelAuthority()),
+      }),
+    }).createTask(c,body):aiService.createTask(c,body),
+    readExactSource:(c,projectId,source,tx)=>productionExactAsrFile(c,{projectId,source:{assetId:source.assetId,assetFileId:source.assetFileId,fileDigest:source.fileDigest}},tx),
+    async readTask(c,id,tx){const store=tx??db,task=await(tx?createAiService({...aiOwnerDeps,db:tx}):aiService).getTask(c,id),origin=await store.query.aiTasks.findFirst({where:(row,{and,eq})=>and(eq(row.id,id),eq(row.userId,c.userId))});if(!origin)throw new OwnershipError('原粗剪AI任务不存在');return{...task,accountId:origin.accountId,groupId:origin.groupId,groupVersion:origin.groupVersion,membershipVersion:origin.membershipVersion};},
     readResults:(c,id,tx)=>(tx?createAiService({...aiOwnerDeps,db:tx}):aiService).listResults(c,id),
     async bindExecution(c,id){const bound=await businessExecution.prepare(c,id);if(!stoppingPreparation)modelWorker?.start();return bound;},
   });
@@ -5826,7 +5839,10 @@ FAVORITES_PROMOTE_PER_RUN
     assertCanvasInput:creativeCanvasRoot.assertCanvasInput,
     getReference:(c,id,file)=>workAssetsFor(db).readImageReference(c,id,file),
     budget:{...workerBudget,deadlineMs:1_800_000},now:deps.now,
-    async assertProject(c,id){await projectsService.getProjectOverviewCore(c,id);},
+    async assertProject(c,id,store,lock){
+      if(store)await workProjectsFor(store).getProject(c,id,lock);
+      else await projectsService.getProjectOverviewCore(c,id);
+    },
     async resolveSpec(c,capability,taskId){
       const runtime=await aiService.getTaskRuntimeData(c,taskId);
       const authority=pinModelAuthority(await readChannelModelAuthority());

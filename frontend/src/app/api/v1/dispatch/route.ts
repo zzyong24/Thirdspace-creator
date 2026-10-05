@@ -10,6 +10,7 @@ import {
   listEnvelope,
   successEnvelope,
   type Endpoint,
+  type RequestContext,
 } from "@creatoros/contract";
 import {
   compositeTransport,
@@ -44,6 +45,47 @@ import {
 const ENDPOINTS_BY_ID: Record<string, Endpoint> = Object.fromEntries(
   Object.values(ENDPOINTS).map((e) => [e.id, e]),
 );
+
+// SEMANTIC_BOUNDARY_ALLOW: 缓存只重放旧结果，不执行旧写操作；按正式实体字段和
+// resource schema 重读当前归属。这里不分析正文、ID 前缀或业务名称，也不重签旧收据。
+async function assertCliCachedOwnership(endpoint:Endpoint,input:unknown,response:unknown,ctx:RequestContext):Promise<void> {
+  const object=(value:unknown):value is Record<string,unknown>=>value!==null&&typeof value==='object'&&!Array.isArray(value);
+  const request=object(input)?input:{};
+  const envelope=successEnvelope(endpoint.response).parse(response);
+  const refs=new Map<string,Set<string>>();
+  const add=(field:string,id:string)=>{const values=refs.get(field)??new Set<string>();values.add(id);refs.set(field,values);};
+  const fields=['projectId','outputId','contentOutputId','assetId','canvasId','compositionId','momentsId','resultId','bundleId','knowledgeId','artifactId','publicationId','reportId'] as const;
+  const collect=(value:unknown)=>{if(object(value))for(const field of fields){const id=value[field];if(typeof id==='string'&&id)add(field==='contentOutputId'?'outputId':field,id);}};
+  for(const value of [request.params,request.body,request.query,envelope.data])collect(value);
+  const resources=[
+    [ENDPOINTS.getProject,'projectId'],[ENDPOINTS.getOutput,'outputId'],[ENDPOINTS.getAsset,'assetId'],
+    [ENDPOINTS.getCanvas,'canvasId'],[ENDPOINTS.getWorkComposition,'compositionId'],[ENDPOINTS.getMoments,'momentsId'],
+    [ENDPOINTS.getKnowledge,'knowledgeId'],[ENDPOINTS.getArtifact,'artifactId'],[ENDPOINTS.getPublication,'publicationId'],
+  ] as const;
+  for(const [reader,field] of resources)if(endpoint.response===reader.response){
+    const entity=reader.response.parse(envelope.data);if('id' in entity)add(field,entity.id);else if('compositionId' in entity)add(field,entity.compositionId);else if('momentsId' in entity)add(field,entity.momentsId);
+  }
+  for(const value of [request.body,envelope.data]){
+    if(!object(value))continue;
+    if(value.composition!==undefined){const owned=ENDPOINTS.getWorkComposition.response.parse(value.composition);add('compositionId',owned.compositionId);collect(owned);}
+    if(value.moments!==undefined){const owned=ENDPOINTS.getMoments.response.parse(value.moments);add('momentsId',owned.momentsId);collect(owned);}
+    for(const field of ['scope','source','expected','target'] as const)collect(value[field]);
+  }
+  const projectIds=refs.get('projectId')??new Set<string>();
+  for(const id of refs.get('outputId')??[]){const current=successEnvelope(ENDPOINTS.getOutput.response).parse(await compositeTransport.request(ENDPOINTS.getOutput,{params:{outputId:id},query:undefined,body:undefined},ctx)).data;projectIds.add(current.projectId);}
+  for(const id of refs.get('canvasId')??[]){const current=successEnvelope(ENDPOINTS.getCanvas.response).parse(await compositeTransport.request(ENDPOINTS.getCanvas,{params:{canvasId:id},query:undefined,body:undefined},ctx)).data;if(current.projectId)projectIds.add(current.projectId);}
+  for(const id of refs.get('compositionId')??[]){const current=successEnvelope(ENDPOINTS.getWorkComposition.response).parse(await compositeTransport.request(ENDPOINTS.getWorkComposition,{params:{compositionId:id},query:undefined,body:undefined},ctx)).data;projectIds.add(current.projectId);}
+  for(const id of refs.get('momentsId')??[]){const current=successEnvelope(ENDPOINTS.getMoments.response).parse(await compositeTransport.request(ENDPOINTS.getMoments,{params:{momentsId:id},query:undefined,body:undefined},ctx)).data;projectIds.add(current.projectId);}
+  for(const id of refs.get('resultId')??[]){const current=successEnvelope(ENDPOINTS.getResult.response).parse(await compositeTransport.request(ENDPOINTS.getResult,{params:{resultId:id},query:undefined,body:undefined},ctx)).data;projectIds.add(current.projectId);}
+  for(const id of refs.get('assetId')??[])await compositeTransport.request(ENDPOINTS.getAsset,{params:{assetId:id},query:undefined,body:undefined},ctx);
+  for(const id of refs.get('knowledgeId')??[])await compositeTransport.request(ENDPOINTS.getKnowledge,{params:{knowledgeId:id},query:undefined,body:undefined},ctx);
+  for(const id of refs.get('artifactId')??[])await compositeTransport.request(ENDPOINTS.getArtifact,{params:{artifactId:id},query:undefined,body:undefined},ctx);
+  for(const id of refs.get('publicationId')??[])await compositeTransport.request(ENDPOINTS.getPublication,{params:{publicationId:id},query:undefined,body:undefined},ctx);
+  for(const id of refs.get('bundleId')??[])await compositeTransport.request(ENDPOINTS.getBundle,{params:{bundleId:id},query:undefined,body:undefined},ctx);
+  for(const id of refs.get('reportId')??[])await compositeTransport.request(ENDPOINTS.getWorkReview,{params:{reportId:id},query:undefined,body:undefined},ctx);
+  // 已成功缓存仅回读原事实；归档不触发旧handler。当前父归属仍逐一由真实读端口核验。
+  for(const id of projectIds)successEnvelope(ENDPOINTS.getProject.response).parse(await compositeTransport.request(ENDPOINTS.getProject,{params:{projectId:id},query:undefined,body:undefined},ctx));
+}
 
 const CLI_ACCESS_HEADER = "x-creatoros-cli-access";
 const CLI_ACTIVITY_WINDOW_MS = 5 * 60 * 1000;
@@ -425,6 +467,7 @@ export async function POST(req: Request): Promise<Response> {
         );
       }
       if (begin.kind === "cached") {
+        await assertCliCachedOwnership(endpoint,payload.input,begin.response,ctx);
         return NextResponse.json(begin.response);
       }
       if (begin.kind === "receipt") {

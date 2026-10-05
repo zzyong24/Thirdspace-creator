@@ -1,14 +1,23 @@
 import {describe, expect, it} from "vitest";
-import {createDb} from "@creatoros/backend";
+import {createDb, projects, contentOutputs, type Db} from "@creatoros/backend";
+import {accountGroups} from "../../schema/account-groups";
+import {ENDPOINTS} from "@creatoros/contract";
+import {createCreativeResultsTransport} from "./creative-results.transport";
 import type {RequestContext} from "@creatoros/contract";
 import {createCreativeResultsService, type CreativeResultAdapter} from "./creative-results.service";
 
 const context = (accountId: string): RequestContext => ({userId: "u-1029", accountId, requestId: "r-1029", source: "user"});
 const output = {id: "out-1029", projectId: "project-1029", contentType: "image", targetPlatform: "xiaohongshu"};
 
+async function seedOwnedParents(db:Db){
+ const now='2026-10-01T00:00:00.000Z';
+ await db.insert(projects).values({id:output.projectId,userId:'u-1029',accountId:'a',groupId:null,title:'原测试真实父',creationMode:'script',status:'active',currentStage:'planning',startedAt:now,createdAt:now,updatedAt:now});
+ await db.insert(contentOutputs).values([{id:output.id,projectId:output.projectId,contentType:'image',title:'原图文',status:'draft',targetPlatform:'xiaohongshu',createdAt:now,updatedAt:now},{id:'article-1029',projectId:output.projectId,contentType:'article',title:'原文章',status:'draft',targetPlatform:'wechatOfficialAccount',createdAt:now,updatedAt:now}]);
+}
+
 describe("T-1029 result ownership and partial delivery", () => {
   it("persists an article image candidate's selected section across result and bundle reads", async () => {
-    const opened = await createDb();
+    const opened = await createDb();await seedOwnedParents(opened.db);
     let sequence = 0;
     const articleOutput = {id: "article-1029", projectId: "project-1029", contentType: "article", targetPlatform: "wechatOfficialAccount"};
     const seen: string[] = [];
@@ -42,7 +51,7 @@ describe("T-1029 result ownership and partial delivery", () => {
   });
 
   it("keeps a successful item when another bundle item fails, and denies cross-account reads", async () => {
-    const opened = await createDb();
+    const opened = await createDb();await seedOwnedParents(opened.db);
     let sequence = 0;
     const adapter: CreativeResultAdapter = {
       owner: "graphic_post",
@@ -81,7 +90,7 @@ describe("T-1029 result ownership and partial delivery", () => {
 
 describe("重试保留数据库读回的冻结来源", () => {
   it("字段顺序不影响重试，真实来源变化和跨账号仍拒绝，重复请求不新增任务", async () => {
-    const opened = await createDb();
+    const opened = await createDb();await seedOwnedParents(opened.db);
     let sequence = 0, retries = 0, changeSource = false;
     const refs = [{kind: "project", id: "project-1029", versionId: "project-v1"}];
     const frozen = {baseVersionId: "v1", ruleSnapshotRef: "rule-v1", appliedRules: "applied" as const, sourceRefs: refs};
@@ -111,7 +120,7 @@ describe("重试保留数据库读回的冻结来源", () => {
 });
 
 it("转换提交丢回执仍保留原预约，并携带完整冻结意图恢复同一任务",async()=>{
- const opened=await createDb();let calls=0;
+ const opened=await createDb();await seedOwnedParents(opened.db);let calls=0;
  const conversion={request:{sourceOutputId:"article-source",sourceVersionId:"source-v",targetType:"image" as const,mode:"whole" as const,clientRequestId:"conversion-request-original",reuseImages:[]},
   sourceAnchor:{kind:"output_version" as const,sourceOutputId:"article-source",artifactId:"source-artifact",versionId:"source-v",sourceType:"article" as const,selectionDigest:"a".repeat(64),selection:{mode:"whole" as const}}};
  const adapter:CreativeResultAdapter={owner:"graphic_post",probe:async()=>({state:"supported",reasonCode:null,lastVerifiedAt:null}),
@@ -129,7 +138,7 @@ it("转换提交丢回执仍保留原预约，并携带完整冻结意图恢复�
 },20000);
 
 it("转换所有字段先落原账本预约，随后生成恢复其原 result ID",async()=>{
- const opened=await createDb();let seq=0,calls=0;
+ const opened=await createDb();await seedOwnedParents(opened.db);let seq=0,calls=0;
  const conversion={request:{sourceOutputId:"article-source",sourceVersionId:"v",targetType:"image" as const,mode:"whole" as const,clientRequestId:"conversion-all-fields-request",reuseImages:[]},sourceAnchor:{kind:"output_version" as const,sourceOutputId:"article-source",artifactId:"article-artifact",versionId:"v",sourceType:"article" as const,selectionDigest:"a".repeat(64),selection:{mode:"whole" as const}}};
  const {creativeResultBundles}=await import("@creatoros/backend");
  const adapter:CreativeResultAdapter={owner:"graphic_post",probe:async()=>({state:"supported",reasonCode:null,lastVerifiedAt:null}),enqueue:async(_c,input)=>{calls++;expect((await service.list(context("a"),{outputId:output.id})).items).toHaveLength(3);return {candidateId:`candidate-${input.kind}`,taskId:`task-${input.kind}`,baseVersionId:"base",ruleSnapshotRef:null,appliedRules:"not_applied",sourceRefs:[conversion.sourceAnchor],status:"queued"};},read:async()=>({status:"queued",value:null,errorCode:null}),adopt:async()=>({versionId:"saved"})};
@@ -145,7 +154,7 @@ it("转换所有字段先落原账本预约，随后生成恢复其原 result ID
 },20000);
 
 it("转换回执按持久字段映射读取真实生成与独立采用，不凭作品内容猜采用",async()=>{
- const opened=await createDb();let seq=0;
+ const opened=await createDb();await seedOwnedParents(opened.db);let seq=0;
  const conversion={request:{sourceOutputId:"article-source",sourceVersionId:"v",targetType:"image" as const,mode:"whole" as const,clientRequestId:"receipt-original-request",reuseImages:[]},sourceAnchor:{kind:"output_version" as const,sourceOutputId:"article-source",artifactId:"article-artifact",versionId:"v",sourceType:"article" as const,selectionDigest:"a".repeat(64),selection:{mode:"whole" as const}}};
  const {creativeResultBundles}=await import("@creatoros/backend");
  const adapter:CreativeResultAdapter={owner:"graphic_post",probe:async()=>({state:"supported",reasonCode:null,lastVerifiedAt:null}),enqueue:async(_c,input)=>({candidateId:`candidate-${input.kind}`,taskId:`task-${input.kind}`,baseVersionId:"base",ruleSnapshotRef:null,appliedRules:"not_applied",sourceRefs:[conversion.sourceAnchor],status:"succeeded"}),read:async()=>({status:"succeeded",value:"标题",errorCode:null}),adopt:async()=>({versionId:"actual-adopted-version"})};
@@ -163,7 +172,7 @@ it("转换回执按持久字段映射读取真实生成与独立采用，不凭�
 },20000);
 
 it("转换 owner 的已知输入拒绝不能标成提交未知",async()=>{
- const opened=await createDb();
+ const opened=await createDb();await seedOwnedParents(opened.db);
  const conversion={request:{sourceOutputId:"source",sourceVersionId:"v",targetType:"image" as const,mode:"whole" as const,clientRequestId:"bad-input-conversion",reuseImages:[]},sourceAnchor:{kind:"output_version" as const,sourceOutputId:"source",artifactId:"artifact",versionId:"v",sourceType:"article" as const,selectionDigest:"a".repeat(64),selection:{mode:"whole" as const}}};
  const adapter:CreativeResultAdapter={owner:"graphic_post",probe:async()=>({state:"supported",reasonCode:null,lastVerifiedAt:null}),enqueue:async()=>{throw Object.assign(Error("原冻结来源失效"),{code:"SOURCE_SELECTION_INVALID"});},read:async()=>({status:"queued",value:null,errorCode:null}),adopt:async()=>({versionId:"v"})};
  const service=createCreativeResultsService(opened.db,{projects:{getOutput:async()=>output as never,getProject:async()=>({id:output.projectId}) as never},adapters:{graphic_post:adapter},nextId:()=>"bad-input-result"});
@@ -172,7 +181,7 @@ it("转换 owner 的已知输入拒绝不能标成提交未知",async()=>{
 },20000);
 
 it.each(["success","error"])("迟到的转换提交%s不覆盖先完成的真实采用回执",async(late)=>{
- const opened=await createDb();let calls=0;
+ const opened=await createDb();await seedOwnedParents(opened.db);let calls=0;
  let resolveFirst!:()=>void,resolveSecond!:()=>void,entered!:()=>void;
  const firstGate=new Promise<void>(resolve=>{resolveFirst=resolve;}),secondGate=new Promise<void>(resolve=>{resolveSecond=resolve;}),bothEntered=new Promise<void>(resolve=>{entered=resolve;});
  const conversion={request:{sourceOutputId:"source",sourceVersionId:"v",targetType:"image" as const,mode:"whole" as const,clientRequestId:"late-submit-conversion",reuseImages:[]},sourceAnchor:{kind:"output_version" as const,sourceOutputId:"source",artifactId:"source-artifact",versionId:"v",sourceType:"article" as const,selectionDigest:"a".repeat(64),selection:{mode:"whole" as const}}};
@@ -190,7 +199,7 @@ it.each(["success","error"])("迟到的转换提交%s不覆盖先完成的真实
  }finally{resolveFirst();resolveSecond();await opened.client.close();}
 },20000);
 it("重试先预约套装结果，原 owner 已运行而回复丢失时恢复原请求；读取不执行",async()=>{
- const opened=await createDb();let sequence=0,resumeCalls=0,status:"failed"|"running"="failed";
+ const opened=await createDb();await seedOwnedParents(opened.db);let sequence=0,resumeCalls=0,status:"failed"|"running"="failed";
  const frozen={baseVersionId:"base",ruleSnapshotRef:null,sourceRefs:[],appliedRules:"not_applied" as const};
  const adapter:CreativeResultAdapter={owner:"graphic_post",probe:async()=>({state:"supported",reasonCode:null,lastVerifiedAt:null}),enqueue:async()=>({...frozen,candidateId:"original-candidate",taskId:"original-task",status:"failed"}),
   read:async()=>({status,value:null,errorCode:status==="failed"?"MODEL_FAILED":null}),adopt:async()=>({versionId:"unused"}),
@@ -207,3 +216,13 @@ it("重试先预约套装结果，原 owner 已运行而回复丢失时恢复原
   await expect(service.retry(context("a"),old,"another-pending-retry")).rejects.toThrow();
  }finally{await opened.client.close();}
 },20000);
+
+it("纯空组通过正式创作能力 transport，账号筛选不充当 owner，其他组拒绝",async()=>{
+ const opened=await createDb();await seedOwnedParents(opened.db);const at="2026-10-05T00:00:00.000Z";
+ try{await opened.db.insert(accountGroups).values({id:"creative-empty-group",userId:"u-1029",name:"真实空组",status:"active",version:1,createdAt:at,updatedAt:at});
+ const unused=async():Promise<never>=>{throw new Error("本请求未选择父项");};const service=createCreativeResultsService(opened.db,{projects:{getOutput:unused,getProject:unused},adapters:{},now:()=>at});const transport=createCreativeResultsTransport(()=>service),ctx:RequestContext={userId:"u-1029",groupId:"creative-empty-group",accountId:null,source:"user",requestId:"empty-group-capabilities"};
+ const request=async(c:RequestContext,query:unknown)=>ENDPOINTS.listCreativeCapabilities.response.parse((await transport.request(ENDPOINTS.listCreativeCapabilities,{params:undefined,body:undefined,query:ENDPOINTS.listCreativeCapabilities.query.parse(query)},c) as {data:unknown}).data);
+ expect((await request(ctx,{})).items.length).toBeGreaterThan(0);expect((await request({...ctx,accountId:"platform-filter"},{accountId:"platform-filter"})).items).toEqual((await request(ctx,{})).items);
+ await expect(request({...ctx,groupId:"foreign-group"},{})).rejects.toThrow();
+ }finally{await opened.client.close();}
+});

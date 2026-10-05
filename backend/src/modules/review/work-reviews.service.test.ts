@@ -94,8 +94,18 @@ it("等待DTO必须具有原task/execution且不能附模型成功证据",async(
 it("原执行resume回执幂等：旧命令不重置后来等待，同task/attempt/预算保持",async()=>{
  const r=await service().create(ctx,{scope,clientRequestId:"waiting-receipt"});const persistent=createPersistentTaskService(db,{now});const execution=await persistent.enqueue(ctx,{kind:"ai_task",ownerType:"ai_task",ownerId:r.taskId!,idempotencyKey:`wait-receipt-${r.taskId}`,payload:{fixture:"原控制账本fixture"}});
  await db.update(aiTasks).set({executionTaskId:execution.id,status:"running"}).where(eq(aiTasks.id,r.taskId!));await db.update(executionTasks).set({status:"waiting_user",lastErrorCode:"MODEL_CREDENTIAL_UNAVAILABLE"}).where(eq(executionTasks.id,execution.id));
- const transport=createExecutionTransport(()=>({} as never),()=>persistent);const listed=await transport.request(ENDPOINTS.listExecutionTasks,{params:undefined,query:{accountId:ctx.accountId,kind:"ai_task",ownerId:r.taskId,page:1,pageSize:100},body:undefined},ctx) as {data:unknown};expect(ENDPOINTS.listExecutionTasks.response.array().parse(listed.data)[0]).toMatchObject({id:execution.id,ownerId:r.taskId,runtimeStatus:"waiting_user"});
+ const transport=createExecutionTransport(()=>({} as never),()=>persistent);const listed=await transport.request(ENDPOINTS.listExecutionTasks,{params:undefined,query:{accountId:ctx.accountId??undefined,kind:"ai_task",ownerId:r.taskId??undefined,page:1,pageSize:100},body:undefined},ctx) as {data:unknown};expect(ENDPOINTS.listExecutionTasks.response.array().parse(listed.data)[0]).toMatchObject({id:execution.id,ownerId:r.taskId,runtimeStatus:"waiting_user"});
  const original={taskIds:[execution.id],command:"resume" as const,idempotencyKey:"review-original-resume"};const first=await persistent.command(ctx,original);expect(first[0]?.status).toBe("queued");
  await db.update(executionTasks).set({status:"waiting_user",lastErrorCode:"MODEL_CREDENTIAL_UNAVAILABLE",updatedAt:now()}).where(eq(executionTasks.id,execution.id));expect(await persistent.command(ctx,original)).toEqual(first);expect((await persistent.get(ctx,execution.id)).runtimeStatus).toBe("waiting_user");
  const next=await persistent.command(ctx,{...original,idempotencyKey:"review-next-wait-resume"});expect(next[0]).toMatchObject({id:execution.id,ownerId:r.taskId,attempt:execution.attempt,maxAttempts:execution.maxAttempts,status:"queued"});expect((await db.select().from(aiTasks)).length).toBe(1);expect((await db.select().from(executionCalls)).length).toBe(0);
+});
+
+it("T1062 已迁移旧账号审核确认精确重放不造NULL行，双来源明确冲突",async()=>{
+ const {accountGroups}=await import("../../schema/account-groups");const before=await service().status(ctx,scope),input={mode:"manual",scope,clientRequestId:"legacy-replay-review",expectedFingerprint:before.currentFingerprint,historicalBasis:[]} as const,result=await service().confirm(ctx,input);
+ const groupId=`grp_legacy_${ctx.accountId}`;await db.insert(accountGroups).values({id:groupId,userId:ctx.userId,name:"历史组",status:"active",version:1,createdAt:now(),updatedAt:now()});
+ for(const table of ["projects","artifacts","moments_anchors","moments_requests","work_compositions","work_composition_requests","work_review_requests","work_review_confirmations"])await db.execute(sql`UPDATE ${sql.identifier(table)} SET group_id=${groupId} WHERE user_id=${ctx.userId}`);
+ await db.execute(sql`UPDATE work_composition_versions SET group_id=${groupId}`);
+ const group={...ctx,groupId},rows=await db.select().from(workReviewRequests);expect((await service().confirm(group,input)).confirmation).toEqual(result.confirmation);expect(await db.select().from(workReviewRequests)).toEqual(rows);
+ await db.insert(workReviewRequests).values({...rows[0]!,id:"second-legacy-review-receipt",accountId:"other-old-account"});const ambiguous=await db.select().from(workReviewRequests);
+ await expect(service().confirm(group,input)).rejects.toMatchObject({code:"ConflictError"});expect(await db.select().from(workReviewRequests)).toEqual(ambiguous);
 });

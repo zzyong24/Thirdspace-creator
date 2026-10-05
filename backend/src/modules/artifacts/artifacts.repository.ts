@@ -1,3 +1,4 @@
+import {consumeReconstructionSettlement,type ReconstructionTransaction,type ReconstructionSettlement} from './reconstructed-artifact.service';
 import {withWorkspaceParentWrite,type WorkspaceWriteParent} from '../../workspace-write';
 import {projects,contentOutputs} from '../../schema/projects';
 import {workspaceKey,workspaceFilter,workspaceStamp,assertWritableWorkspace} from "@creatoros/backend";
@@ -293,10 +294,21 @@ function artifactRepository(db:Db,deps:RepoDeps,locked:boolean):ArtifactReposito
     },
 
     async createVersion(artifactId, input) {
-      if(!locked)return withWorkspaceParentWrite(db,writeCtx,{...artifactParent,lock:'update'},[artifactId],tx=>artifactRepository(tx as unknown as Db,deps,true).createVersion(artifactId,input));
-      await writable();
       if((input.adoptionKey===undefined)!==(input.adoptionSourceDigest===undefined) ||
         (input.adoptionKey!==undefined && (!input.adoptionKey || input.adoptionKey.length>200 || !/^sha256:[a-f0-9]{64}$/.test(input.adoptionSourceDigest!))))throw new ConflictError("采纳来源无效");
+      if(!locked&&input.adoptionKey){
+        const artifact=await requireArtifact(artifactId);
+        const [receipt]=await db.select().from(artifactVersions).where(and(eq(artifactVersions.artifactId,artifactId),eq(artifactVersions.adoptionKey,input.adoptionKey)));
+        if(receipt){
+          const [parent]=await db.select({id:projects.id}).from(projects).where(and(eq(projects.id,artifact.projectId),eq(projects.userId,userId),workspaceFilter(projects,scope)));
+          if(!parent)throw new OwnershipError("Project not found");
+          if(receipt.adoptionSourceDigest!==input.adoptionSourceDigest||receipt.aiTaskId!==(input.aiTaskId??null))throw new ConflictError("采纳来源与原候选不一致");
+          // 已存在的不可变采用回执只回读，不再次 append；归档不隐藏原事实，当前父归属仍核验。
+          return receipt;
+        }
+      }
+      if(!locked)return withWorkspaceParentWrite(db,writeCtx,{...artifactParent,lock:'update'},[artifactId],tx=>artifactRepository(tx as unknown as Db,deps,true).createVersion(artifactId,input));
+      await writable();
       return db.transaction(async (tx) => {
         const artifactRows = await tx
           .select()
@@ -315,6 +327,19 @@ function artifactRepository(db:Db,deps:RepoDeps,locked:boolean):ArtifactReposito
           if(receipt){
             if(receipt.adoptionSourceDigest!==input.adoptionSourceDigest || receipt.aiTaskId!==(input.aiTaskId ?? null))throw new ConflictError("采纳来源与原候选不一致");
             return receipt;
+          }
+        }
+        // T1062：仅文章/图文的新版本追加要求真实父项目仍可写。
+        // 外层已按 group→project→artifact 取锁；在同连接中重读，避免归档先提交后仍写入。
+        // 原采用回执已在上方精确返回，trend_analysis 的已开始重建结算不受此门影响。
+        if (artifact.artifactType === "wechat_article" || artifact.artifactType === "graphic_post") {
+          const [parent] = await tx.select().from(projects).where(and(
+            eq(projects.id, artifact.projectId), eq(projects.userId, userId),
+            workspaceFilter(projects, scope),
+          ));
+          if (!parent) throw new OwnershipError("Project not found");
+          if (parent.archivedAt || parent.status === "archived") {
+            throw new ConflictError("项目已归档，不能新增文章或图文版本");
           }
         }
         if (
@@ -560,4 +585,13 @@ function artifactRepository(db:Db,deps:RepoDeps,locked:boolean):ArtifactReposito
     },
 
   };
+}
+
+/** 仅后端原重建结算证明的固定初稿+结果版本，不接受user字段或可变权限flag。 */
+export async function materializeSettledReconstructionRows(tx:ReconstructionTransaction,proof:ReconstructionSettlement,deps:{now:()=>string;nextId:(prefix:string)=>string}){
+ const facts=consumeReconstructionSettlement(proof,tx),stamp=deps.now(),artifactId=deps.nextId('artifact'),initialId=deps.nextId('artifactversion'),resultId=deps.nextId('artifactversion');
+ await tx.insert(artifacts).values({id:artifactId,userId:facts.context.userId,...workspaceStamp(workspaceKey(facts.context)),projectId:facts.projectId,contentOutputId:null,currentVersionId:null,stage:'research',artifactType:'trend_analysis',title:'研究重建（AI 反推）',status:'drafting',archivedAt:null,origin:'reconstructed',createdAt:stamp,updatedAt:stamp});
+ await tx.insert(artifactVersions).values([{id:initialId,artifactId,versionNumber:1,contentText:'',contentData:{},changeSummary:'初稿',createdByType:'user',aiTaskId:null,createdAt:stamp},{id:resultId,artifactId,versionNumber:2,contentText:facts.contentText,contentData:facts.contentData,changeSummary:'AI 历史反推重建',createdByType:'ai',aiTaskId:null,createdAt:stamp}]);
+ await tx.update(artifacts).set({currentVersionId:resultId,updatedAt:stamp}).where(and(eq(artifacts.id,artifactId),eq(artifacts.userId,facts.context.userId),workspaceFilter(artifacts,facts.context)));
+ return{id:artifactId};
 }

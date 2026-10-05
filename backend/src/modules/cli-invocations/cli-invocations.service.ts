@@ -1,6 +1,8 @@
 import { and, desc, eq, lt } from "drizzle-orm";
-import { CONTRACT_VERSION, type CliEffect, type RequestContext } from "@creatoros/contract";
+import { CONTRACT_VERSION, WORKSPACE_OPERATION_SCOPES, type EndpointId, type CliEffect, type RequestContext } from "@creatoros/contract";
 
+import {assertWritableWorkspace,requireWorkspace} from "../../workspace-scope";
+import {requireAccountId} from "../../errors";
 import type { Db } from "../../db";
 import { decryptSecret, encryptSecret } from "../../secret-crypto";
 import {
@@ -80,75 +82,24 @@ function extractTaskId(response: unknown): string | null {
 }
 
 export function createCliInvocationService(deps: ServiceDeps): CliInvocationService {
-  const scope = (ctx: RequestContext) => ctx.accountId ?? USER_SCOPE;
+  // SEMANTIC_BOUNDARY_ALLOW: 按正式操作权限声明生成缓存命名空间，不作内容判断，旧行/摘要不重写。
+  function scope(ctx:RequestContext,operation:string):string {
+    const policy=WORKSPACE_OPERATION_SCOPES[operation as EndpointId];
+    if(!policy)throw new Error("CLI_OPERATION_SCOPE_UNDECLARED");
+    if(policy==="user")return USER_SCOPE;
+    if(policy==="platform-account")return requireAccountId(ctx.accountId,"CLI platform operation");
+    requireWorkspace(ctx);
+    return ctx.groupId?`group:${ctx.groupId}`:requireAccountId(ctx.accountId,"CLI legacy operation");
+  }
   const byIdempotency = (ctx: RequestContext, input: BeginCliInvocationInput) =>
     and(
       eq(cliInvocations.userId, ctx.userId),
-      eq(cliInvocations.accountScope, scope(ctx)),
+      eq(cliInvocations.accountScope, scope(ctx,input.operation)),
       eq(cliInvocations.operation, input.operation),
       eq(cliInvocations.idempotencyKey, input.idempotencyKey!),
     );
 
-  return {
-    async begin(ctx, input) {
-      const now = deps.now();
-      const invocationId = deps.nextId("cli-inv");
-      // 短期结果缓存不是审计：任何新调用顺手物理删除已过期密文，审计行继续保留稳定收据。
-      await deps.db
-        .delete(cliInvocationResults)
-        .where(lt(cliInvocationResults.resultExpiresAt, now));
-
-      if (input.effect === "read") {
-        await deps.db.insert(cliInvocations).values({
-          id: invocationId,
-          userId: ctx.userId,
-          accountId: ctx.accountId ?? null,
-          accountScope: scope(ctx),
-          clientId: input.clientId,
-          operation: input.operation,
-          effect: input.effect,
-          idempotencyKey: null,
-          inputHash: input.inputHash,
-          targetRefs: [...input.targetRefs],
-          requestId: ctx.requestId,
-          status: "running",
-          receivedAt: now,
-          updatedAt: now,
-        });
-        return { kind: "execute", invocationId };
-      }
-
-      if (!input.idempotencyKey) {
-        throw new Error("CLI_IDEMPOTENCY_REQUIRED");
-      }
-      await deps.db
-        .insert(cliInvocations)
-        .values({
-          id: invocationId,
-          userId: ctx.userId,
-          accountId: ctx.accountId ?? null,
-          accountScope: scope(ctx),
-          clientId: input.clientId,
-          operation: input.operation,
-          effect: input.effect,
-          idempotencyKey: input.idempotencyKey,
-          inputHash: input.inputHash,
-          targetRefs: [...input.targetRefs],
-          requestId: ctx.requestId,
-          status: "running",
-          receivedAt: now,
-          updatedAt: now,
-        })
-        .onConflictDoNothing();
-
-      const rows = await deps.db
-        .select()
-        .from(cliInvocations)
-        .where(byIdempotency(ctx, input))
-        .limit(1);
-      const row = rows[0];
-      if (!row) throw new Error("CLI_INVOCATION_NOT_PERSISTED");
-      if (row.id === invocationId) return { kind: "execute", invocationId };
+  async function replay(row:CliInvocationRow,input:BeginCliInvocationInput,now:string):Promise<BeginCliInvocationResult>{
       if (row.inputHash !== input.inputHash) {
         return { kind: "conflict", requestId: row.requestId };
       }
@@ -202,6 +153,79 @@ export function createCliInvocationService(deps: ServiceDeps): CliInvocationServ
         return { kind: "receipt", receipt: receipt(row) };
       }
       return { kind: "receipt", receipt: receipt(row) };
+  }
+
+  return {
+    async begin(ctx, input) {
+      scope(ctx,input.operation);
+      const policy=WORKSPACE_OPERATION_SCOPES[input.operation as EndpointId];
+      if((policy==="group"||policy==="project-derived")&&ctx.groupId)await assertWritableWorkspace(deps.db,ctx,{allowArchived:true});
+      const now = deps.now();
+      // 成功调用是原历史事实：当前组仍须属于原用户，但归档不应重执行或隐藏精确旧回执。
+      // 新调用继续经过 active 门；hash/密文/版本规则与旧回执均不改。
+      if((policy==="group"||policy==="project-derived")&&ctx.groupId&&input.effect!=="read"&&input.idempotencyKey){
+        const [prior]=await deps.db.select().from(cliInvocations).where(byIdempotency(ctx,input)).limit(1);
+        if(prior?.status==="succeeded")return replay(prior,input,now);
+      }
+      if((policy==="group"||policy==="project-derived")&&ctx.groupId)await assertWritableWorkspace(deps.db,ctx,{allowArchived:input.effect==="read"});
+      const invocationId = deps.nextId("cli-inv");
+      // 短期结果缓存不是审计：任何新调用顺手物理删除已过期密文，审计行继续保留稳定收据。
+      await deps.db
+        .delete(cliInvocationResults)
+        .where(lt(cliInvocationResults.resultExpiresAt, now));
+
+      if (input.effect === "read") {
+        await deps.db.insert(cliInvocations).values({
+          id: invocationId,
+          userId: ctx.userId,
+          accountId: (WORKSPACE_OPERATION_SCOPES[input.operation as EndpointId]==="group"||WORKSPACE_OPERATION_SCOPES[input.operation as EndpointId]==="project-derived")&&ctx.groupId?null:ctx.accountId??null,
+          accountScope: scope(ctx,input.operation),
+          clientId: input.clientId,
+          operation: input.operation,
+          effect: input.effect,
+          idempotencyKey: null,
+          inputHash: input.inputHash,
+          targetRefs: [...input.targetRefs],
+          requestId: ctx.requestId,
+          status: "running",
+          receivedAt: now,
+          updatedAt: now,
+        });
+        return { kind: "execute", invocationId };
+      }
+
+      if (!input.idempotencyKey) {
+        throw new Error("CLI_IDEMPOTENCY_REQUIRED");
+      }
+      await deps.db
+        .insert(cliInvocations)
+        .values({
+          id: invocationId,
+          userId: ctx.userId,
+          accountId: (WORKSPACE_OPERATION_SCOPES[input.operation as EndpointId]==="group"||WORKSPACE_OPERATION_SCOPES[input.operation as EndpointId]==="project-derived")&&ctx.groupId?null:ctx.accountId??null,
+          accountScope: scope(ctx,input.operation),
+          clientId: input.clientId,
+          operation: input.operation,
+          effect: input.effect,
+          idempotencyKey: input.idempotencyKey,
+          inputHash: input.inputHash,
+          targetRefs: [...input.targetRefs],
+          requestId: ctx.requestId,
+          status: "running",
+          receivedAt: now,
+          updatedAt: now,
+        })
+        .onConflictDoNothing();
+
+      const rows = await deps.db
+        .select()
+        .from(cliInvocations)
+        .where(byIdempotency(ctx, input))
+        .limit(1);
+      const row = rows[0];
+      if (!row) throw new Error("CLI_INVOCATION_NOT_PERSISTED");
+      if (row.id === invocationId) return { kind: "execute", invocationId };
+      return replay(row,input,now);
     },
 
     async succeed(invocationId, response) {

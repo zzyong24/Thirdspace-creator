@@ -1,3 +1,5 @@
+import {workspaceFilter,workspaceStamp,workspaceKey} from "../../workspace-scope";
+import {withWorkspaceWrite} from "../../workspace-write";
 import {createHash} from "node:crypto";
 import {and,eq,workMaterialAssociations,workMaterialReceipts,workDependencies,workCompositionRequests,OwnershipError,requireAccountId,type Db} from "@creatoros/backend";
 import {ENDPOINTS,workCanvasContext,ErrorCode,workMaterialAttachBody,workMaterialReplaceBody,workMaterialDetachBody,workMaterialAssociation,workMaterialTarget,workRuleRef,workCompositionRequestResource,workDependency,workCommitReceipt,workTargetBelongsToMember,type RequestContext,type WorkMemberRef,type WorkMaterialTarget,type WorkAssetFile,type WorkContentSource,type WorkOwnerVersion,type WorkFieldTarget,type WorkCompositionRequestResource,type WorkMaterialAssociation,type WorkDependency,type WorkCommitReceipt,type WorkRuleRef} from "@creatoros/contract";
@@ -20,18 +22,24 @@ type Ports={
 };
 export function createWorkMaterialsService(deps:{db:Db;now:()=>string;nextId:(p:string)=>string;ports:Ports}){
  const {db,now,nextId,ports}=deps,account=(ctx:RequestContext)=>requireAccountId(ctx.accountId);
- const scope=(table:typeof workMaterialAssociations|typeof workMaterialReceipts|typeof workDependencies,ctx:RequestContext,id:string)=>and(eq(table.compositionId,id),eq(table.userId,ctx.userId),eq(table.accountId,account(ctx)));
+ const scope=(table:typeof workMaterialAssociations|typeof workMaterialReceipts|typeof workDependencies,ctx:RequestContext,id:string)=>and(eq(table.compositionId,id),eq(table.userId,ctx.userId),workspaceFilter(table,ctx));
  async function change(ctx:RequestContext,id:string,operation:"attach"|"replace"|"detach",raw:unknown){
   const input=operation==="attach"?workMaterialAttachBody.parse(raw):operation==="replace"?workMaterialReplaceBody.parse(raw):workMaterialDetachBody.parse(raw);
   const requestDigest=digest({compositionId:id,operation:`materials.${operation}`,input});
-  return db.transaction(async transaction=>{
+  return withWorkspaceWrite(db,ctx,async transaction=>{
    const tx=transaction as unknown as Db;await ports.assertComposition(ctx,id,tx,true);
-   const requestScope=and(eq(workCompositionRequests.userId,ctx.userId),eq(workCompositionRequests.accountId,account(ctx)),eq(workCompositionRequests.requestId,input.clientRequestId));
-   await tx.insert(workCompositionRequests).values({id:nextId("work-request"),userId:ctx.userId,accountId:account(ctx),compositionId:id,requestId:input.clientRequestId,requestDigest,operation:`materials.${operation}`,input,status:"reserved",createdAt:now()}).onConflictDoNothing();
-   const [reserved]=await tx.select().from(workCompositionRequests).where(requestScope).for("update");
+   const requestScope=and(eq(workCompositionRequests.userId,ctx.userId),workspaceFilter(workCompositionRequests,ctx),eq(workCompositionRequests.requestId,input.clientRequestId));
+   const priorRequests=await tx.select().from(workCompositionRequests).where(requestScope).for("update");
+   if(priorRequests.length>1)throw new ConflictError("原物料请求存在多个账号来源，请以原真实ID读取");
+   if(!priorRequests.length)await tx.insert(workCompositionRequests).values({id:nextId("work-request"),userId:ctx.userId,...workspaceStamp(workspaceKey(ctx)),compositionId:id,requestId:input.clientRequestId,requestDigest,operation:`materials.${operation}`,input,status:"reserved",createdAt:now()}).onConflictDoNothing();
+   const requests=await tx.select().from(workCompositionRequests).where(requestScope).for("update");
+   if(requests.length>1)throw new ConflictError("原物料请求存在多个账号来源，请以原真实ID读取");
+   const [reserved]=requests;
    if(!reserved||reserved.compositionId!==id||reserved.requestDigest!==requestDigest)throw new ConflictError("同一物料请求不能改变组合或输入");
-   const [old]=await tx.select().from(workMaterialReceipts).where(and(scope(workMaterialReceipts,ctx,id),eq(workMaterialReceipts.requestId,input.clientRequestId))).for("update");
-   if(old){if(old.requestDigest!==requestDigest)throw new ConflictError("同一物料请求不能改变输入");const saved=old.snapshot as {association:unknown;request:unknown};return{association:workMaterialAssociation.parse(saved.association),request:workCompositionRequestResource.parse(saved.request)};}
+   const receipts=await tx.select().from(workMaterialReceipts).where(and(scope(workMaterialReceipts,ctx,id),eq(workMaterialReceipts.requestId,input.clientRequestId))).for("update");
+   if(receipts.length>1)throw new ConflictError("原物料回执存在多个账号来源，请以原真实ID读取");
+   const [old]=receipts;
+   if(old){if(!priorRequests.length)throw new ConflictError("原物料提交缺少对应原请求");if(old.requestDigest!==requestDigest)throw new ConflictError("同一物料请求不能改变输入");const saved=old.snapshot as {association:unknown;request:unknown};return{association:workMaterialAssociation.parse(saved.association),request:workCompositionRequestResource.parse(saved.request)};}
    if(reserved.status!=="reserved")throw new ConflictError("原物料提交回执缺失，请读取原请求");
    let prior:WorkMaterialAssociation|null=null,priorRules:WorkRuleRef[]=[];
    if("associationId"in input){const [row]=await tx.select().from(workMaterialAssociations).where(and(scope(workMaterialAssociations,ctx,id),eq(workMaterialAssociations.id,input.associationId))).for("update");if(!row)throw new OwnershipError("物料关联不存在");prior=workMaterialAssociation.parse(row.snapshot);priorRules=workRuleRef.array().parse(row.ruleRefs);if(prior.status!=="attached")throw new ConflictError("物料已解除关联");if(canonical(prior.file)!==canonical(input.expectedFile))throw new ConflictError("物料文件已变化，原选择保留");}
@@ -55,9 +63,9 @@ export function createWorkMaterialsService(deps:{db:Db;now:()=>string;nextId:(p:
    if(committed.targetFiles!==undefined){const selected=operation==='detach'?[]:[file];if(canonical(identities(committed.targetFiles))!==canonical(identities(selected)))throw new ConflictError('原owner写后的明确素材触点不符');}
    const association=workMaterialAssociation.parse({associationId,compositionId:id,member,target,file,source,ownerVersion:committed.version,clientRequestId:input.clientRequestId,requestDigest,status:operation==="detach"?"detached":"attached",createdAt:prior?.createdAt??now()});
    const request=workCompositionRequestResource.parse({compositionId:id,clientRequestId:input.clientRequestId,requestDigest,operation:`materials.${operation}`,input,status:"committed",resultRevision:owner.revision,memberReservation:null,errorCode:null,createdAt:reserved.createdAt});
-   if(prior)await tx.update(workMaterialAssociations).set({snapshot:association,ruleRefs:associationRules}).where(and(scope(workMaterialAssociations,ctx,id),eq(workMaterialAssociations.id,associationId)));else await tx.insert(workMaterialAssociations).values({id:associationId,userId:ctx.userId,accountId:account(ctx),projectId:owner.projectId,compositionId:id,snapshot:association,ruleRefs:associationRules,createdAt:association.createdAt});
-   await tx.update(workCompositionRequests).set({status:"committed",resultRevision:owner.revision}).where(requestScope);
-   await tx.insert(workMaterialReceipts).values({id:nextId("work-material-receipt"),userId:ctx.userId,accountId:account(ctx),compositionId:id,requestId:input.clientRequestId,requestDigest,snapshot:{association,request},createdAt:request.createdAt});
+   if(prior)await tx.update(workMaterialAssociations).set({snapshot:association,ruleRefs:associationRules}).where(and(scope(workMaterialAssociations,ctx,id),eq(workMaterialAssociations.id,associationId)));else await tx.insert(workMaterialAssociations).values({id:associationId,userId:ctx.userId,...workspaceStamp(workspaceKey(ctx)),projectId:owner.projectId,compositionId:id,snapshot:association,ruleRefs:associationRules,createdAt:association.createdAt});
+   await tx.update(workCompositionRequests).set({status:"committed",resultRevision:owner.revision}).where(eq(workCompositionRequests.id,reserved.id));
+   await tx.insert(workMaterialReceipts).values({id:nextId("work-material-receipt"),userId:ctx.userId,...workspaceStamp(workspaceKey(ctx)),compositionId:id,requestId:input.clientRequestId,requestDigest,snapshot:{association,request},createdAt:request.createdAt});
    // SEMANTIC_BOUNDARY_ALLOW: 原触点前值与明确依赖身份的机械状态，不解释内容冲突。
    const existingDependencies=await tx.select().from(workDependencies).where(scope(workDependencies,ctx,id));
    for(const row of existingDependencies){const previous=workDependency.parse(row.snapshot);if(canonical(previous.target)===canonical(committed.field)&&previous.status==="current")await tx.update(workDependencies).set({snapshot:{...previous,status:"historical"}}).where(eq(workDependencies.id,row.id));}
@@ -65,14 +73,14 @@ export function createWorkMaterialsService(deps:{db:Db;now:()=>string;nextId:(p:
    const currentSources:WorkContentSource[]=[],currentRules:WorkRuleRef[]=[];
    for(const row of attached){const material=workMaterialAssociation.parse(row.snapshot);if(material.status!=="attached"||canonical(material.member)!==canonical(member)||!committed.files.some(file=>canonical(file)===canonical(material.file)))continue;let materialField:WorkFieldTarget;try{const selected=await ports.readTarget(ctx,material.member,material.target,tx);if(!(selected.targetFiles??selected.files).some(file=>canonical(file)===canonical(material.file)))continue;materialField=selected.field;}catch(error){if((error as {code?:string}).code===ErrorCode.OwnershipError)continue;throw error;}if(canonical(materialField)!==canonical(committed.field)||!material.source)continue;if(!currentSources.some(ref=>canonical(ref)===canonical(material.source)))currentSources.push(material.source);for(const rule of workRuleRef.array().parse(row.ruleRefs))if(!currentRules.some(ref=>ref.versionId===rule.versionId))currentRules.push(rule);}
    const dependency=workDependency.parse({dependencyId:nextId("work-dependency"),compositionId:id,member,target:committed.field,targetVersion:committed.version,targetFingerprint:digest(committed.value),sources:currentSources,sourceRefs:currentSources,files:committed.files,ruleRefs:currentRules,commitReceipt,status:"current",createdAt:now()});
-   await tx.insert(workDependencies).values({id:dependency.dependencyId,userId:ctx.userId,accountId:account(ctx),projectId:owner.projectId,compositionId:id,snapshot:dependency,materialTarget:target,createdAt:dependency.createdAt});
+   await tx.insert(workDependencies).values({id:dependency.dependencyId,userId:ctx.userId,...workspaceStamp(workspaceKey(ctx)),projectId:owner.projectId,compositionId:id,snapshot:dependency,materialTarget:target,createdAt:dependency.createdAt});
    return{association,request};
   });
  }
  return{
   async canvasContext(ctx:RequestContext,id:string,raw:unknown){
    const input=ENDPOINTS.getWorkCompositionCanvasContext.body!.parse(raw);
-   return db.transaction(async transaction=>{
+   return withWorkspaceWrite(db,ctx,async transaction=>{
     const tx=transaction as unknown as Db;
     await ports.assertComposition(ctx,id,tx);
     const owner=await ports.lockMember(ctx,id,input.member,tx);

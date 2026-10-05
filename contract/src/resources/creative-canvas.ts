@@ -21,7 +21,7 @@ export type CanvasDocument=z.infer<typeof canvasDocumentSchema>;
 export type CanvasNode=z.infer<typeof canvasNodeSchema>;
 export const emptyCanvasDocument:CanvasDocument={schemaVersion:1,viewport:{x:0,y:0,zoom:1},nodes:[],edges:[]};
 
-export const creativeCanvasResource=z.object({id,userId:id,accountId:id,title:z.string(),projectId:id.nullable(),document:canvasDocumentSchema,revision:z.number().int().positive(),createdAt:z.string(),updatedAt:z.string(),archivedAt:z.string().nullable()}).strict();
+export const creativeCanvasResource=z.object({id,userId:id,accountId:id.nullable(),groupId:id.nullable().optional(),title:z.string(),projectId:id.nullable(),document:canvasDocumentSchema,revision:z.number().int().positive(),createdAt:z.string(),updatedAt:z.string(),archivedAt:z.string().nullable()}).strict();
 export const canvasGenerationLinkResource=z.object({id,canvasId:id,nodeId:id,attemptId:id,taskId:id.nullable(),mediaKind:z.enum(["image","video"]),inputRevision:z.number().int().positive(),inputDigest:z.string(),referenceFileId:id.nullable(),referenceChecksum:z.string().nullable(),resultAssetId:id.nullable(),createdAt:z.string(),updatedAt:z.string()}).strict();
 const operationId=id;
 export const canvasProposalOperationSchema=z.discriminatedUnion("type",[

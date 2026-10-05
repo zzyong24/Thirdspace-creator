@@ -8,17 +8,17 @@ import {createGraphicPostsService,type GraphicPostPeerPorts} from "./graphic-pos
 
 const now = "2026-10-01T01:00:00.000Z";
 const ctx = (accountId = "a"): RequestContext => ({userId: "user", accountId, requestId: "req", source: "user"});
-async function fixture(duplicateSources = false,extraPorts:Partial<GraphicPostPeerPorts>={}) {
-  const opened = await createDb();
+async function fixture(duplicateSources = false,extraPorts:Partial<GraphicPostPeerPorts>={},beforeVersion:()=>Promise<void>=async()=>{},store?:{db:Db;client:{close:()=>Promise<void>}}) {
+  const opened = store ?? await createDb();
   const db = opened.db;
   let seq = 0;
   let currentTime = now;
   const deps = {now: () => currentTime, nextId: (prefix: string) => `${prefix}-${++seq}`};
   const projects = (store: Db) => createProjectsService(createProjectRepository(store), deps);
-  const artifacts = (store: Db) => createArtifactsService({db: store, ...deps,
+  const artifacts = (store: Db) => {const actual=createArtifactsService({db: store, ...deps,
     assertProjectOwned: (c, id) => projects(store).getProject(c, id),
     resolveOutputProjectId: (c, id) => projects(store).getProjectIdByOutput(c, id),
-  });
+  });return {...actual,createVersion:async(...args:Parameters<typeof actual.createVersion>)=>{await beforeVersion();return actual.createVersion(...args);}};};
   type Task = {taskType: string; status: string; inputData: Record<string, unknown>;
     results: Array<{resultType: string; resultData: Record<string, unknown>}>};
   const tasks = new Map<string, Task>();
@@ -285,3 +285,66 @@ describe("T-1055 图文主稿metadata与语义配图",()=>{
   }finally{await f.opened.client.close();}
  });
 });
+
+
+describe("T1062 图文真实父归档与旧回执",()=>{
+ it("归档后保留旧保存回执和历史，拒绝新保存且版本完全不变",async()=>{
+  const f=await fixture();try{
+   const old=await f.service.getGraphicPost(ctx(),f.output.id);
+   const input={expectedCurrentVersionId:old.currentVersionId,clientRequestId:"archive-graphic-save",document:{...old.current,title:"归档前保存"}};
+   const saved=await f.service.createVersion(ctx(),f.output.id,input);
+   await f.projects(f.db).archiveProject(ctx(),f.project.id);
+   const before=await f.service.getGraphicPost(ctx(),f.output.id);
+   expect(await f.service.createVersion(ctx(),f.output.id,input)).toEqual(saved);
+   await expect(f.service.createVersion(ctx(),f.output.id,{...input,document:{...input.document,title:"改旧请求"}})).rejects.toThrow();
+   await expect(f.service.createVersion(ctx(),f.output.id,{expectedCurrentVersionId:saved.versionId,clientRequestId:"archive-graphic-new-save",document:{...saved.document,title:"归档后新写"}})).rejects.toThrow("归档");
+   expect(await f.service.getGraphicPost(ctx(),f.output.id)).toEqual(before);
+   expect((await f.service.getVersion(ctx(),f.output.id,old.currentVersionId)).document).toEqual(old.current);
+  }finally{await f.opened.client.close();}
+ },30000);
+ it("字段采用到达真实repo前项目归档先提交，拒绝追加且候选保留",async()=>{
+  let hold=false;let arrived!:()=>void;let release!:()=>void;
+  const reached=new Promise<void>(r=>arrived=r),resume=new Promise<void>(r=>release=r);
+  const f=await fixture(false,{},async()=>{if(hold){arrived();await resume;}});
+  try{
+   const before=await f.service.getGraphicPost(ctx(),f.output.id);
+   const task=await f.service.generateTextCandidate(ctx(),f.output.id,{kind:"title",clientRequestId:"archive-race-graphic-generate"});
+   const candidate=await f.service.getTextCandidate(ctx(),task.candidateId);
+   hold=true;
+   const attempt=f.service.adoptTextCandidate(ctx(),task.candidateId,{kind:"title",expectedCurrentVersionId:before.currentVersionId,editedValue:"采用新标题",clientRequestId:"archive-race-graphic-adopt"});
+   const assertion=expect(attempt).rejects.toThrow("归档");
+   await reached;await f.projects(f.db).archiveProject(ctx(),f.project.id);release();await assertion;
+   expect(await f.service.getGraphicPost(ctx(),f.output.id)).toEqual(before);
+   expect(await f.service.getTextCandidate(ctx(),task.candidateId)).toEqual(candidate);
+  }finally{release();await f.opened.client.close();}
+ },30000);
+});
+
+
+// 真PG随机库：raw blocker仅调度锁顺序，归档和保存仍走真实公共service。
+import {Pool} from "pg";
+import {randomUUID} from "node:crypto";
+import {createRuntimeDb} from "@creatoros/backend";
+const isolatedPgUrl=process.env.CREATOROS_TEST_POSTGRES_URL;
+it.skipIf(!isolatedPgUrl)("T1062 真实PG项目归档先提交，公共保存等待父锁后零写",async()=>{
+ const url=new URL(isolatedPgUrl!);if(url.hostname!=="127.0.0.1"||url.port!=="55422")throw Error("只允许隔离PG服务");
+ const name="t1062_archive_"+randomUUID().replaceAll("-","");
+ const admin=new Pool({connectionString:url.toString()});await admin.query(`CREATE DATABASE ${name}`);url.pathname="/"+name;
+ const runtime=await createRuntimeDb({connectionString:url.toString()});
+ const blocker=await runtime.pool.connect();let locked=false;
+ try{
+  const f=await fixture(false,{},undefined,{db:runtime.db,client:{close:async()=>{}}});
+  const out=f.output;
+  const before=await f.service.getGraphicPost(ctx(),out.id);
+  await blocker.query("BEGIN");locked=true;await blocker.query("SELECT id FROM projects WHERE id=$1 FOR UPDATE",[f.project.id]);
+  const waitForLocks=async(count:number)=>{for(let i=0;i<200;i++){
+   const result=await runtime.pool.query("SELECT count(*)::int AS n FROM pg_stat_activity WHERE datname=$1 AND wait_event_type='Lock'",[name]);
+   if(result.rows[0].n>=count)return;await new Promise(r=>setTimeout(r,10));
+  }throw Error("未观察到真实PG父锁等待");};
+  const archive=f.projects(f.db).archiveProject(ctx(),f.project.id);await waitForLocks(1);
+  const write=f.service.createVersion(ctx(),out.id,{expectedCurrentVersionId:before.currentVersionId,document:{...before.current,title:"归档后不得写"},clientRequestId:"pg-archive-save"});
+  const checked=expect(write).rejects.toThrow("归档");await waitForLocks(2);
+  await blocker.query("COMMIT");locked=false;await archive;await checked;
+  expect(await f.service.getGraphicPost(ctx(),out.id)).toEqual(before);
+ }finally{if(locked)await blocker.query("ROLLBACK");blocker.release();await runtime.pool.end();await admin.query(`DROP DATABASE ${name} WITH (FORCE)`);await admin.end();}
+},30000);

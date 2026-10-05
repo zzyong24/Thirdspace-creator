@@ -1,3 +1,5 @@
+import {materializeSettledReconstructionRows} from './artifacts.repository';
+import {readReconstructionSettlement,type ReconstructionTransaction,type ReconstructionSettlement} from './reconstructed-artifact.service';
 import {workspaceKey,workspaceStamp,workspaceFilter,assertWritableWorkspace} from "@creatoros/backend";
 import {decodeScriptTable, syncScriptTableTranscript} from "./script-table-protocol";
 import {extractLegacyScriptText, applyLegacyScriptRange, LEGACY_SCRIPT_RANGE_PREFIX} from "./legacy-script-patch";
@@ -460,4 +462,10 @@ export function createArtifactsService(deps: ServiceDeps): ArtifactsService {
     },
   };
   return service;
+}
+
+/** 仅当前事务已验证原generation结算的命名端口；公开create/append权限门保持原样。 */
+export async function materializeSettledReconstructionArtifact(tx:ReconstructionTransaction,proof:ReconstructionSettlement,deps:{now:()=>string;nextId:(prefix:string)=>string}){
+ readReconstructionSettlement(proof,tx);
+ return materializeSettledReconstructionRows(tx,proof,deps);
 }

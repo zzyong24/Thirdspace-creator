@@ -164,13 +164,15 @@ function cliDispatch(
   accountId: string,
   idempotencyKey: string,
   confirmImpact?: string,
+  groupId?:string,
 ) {
   return POST(
     new Request("http://localhost/api/v1/dispatch", {
       method: "POST",
       headers: {
         "content-type": "application/json",
-        "x-account-id": accountId,
+        ...(accountId?{"x-account-id":accountId}:{}),
+        ...(groupId?{"x-group-id":groupId}:{}),
         "x-creatoros-cli-access": "cli-integration-grant",
         "x-creatoros-cli-client-id": "cli-integration-client",
         "x-creatoros-cli-apply": "1",
@@ -220,6 +222,35 @@ describe("POST /api/v1/dispatch (FE<->BE seam over HTTP; project ops on real SQL
     // [T-332 S2] 真建当前号(开箱空,canonical account seed 已随 T-135 退役)。
     ACCOUNT_ID = await createFixtureAccount();
   });
+
+  it('T1062 CLI公开缓存不得泄露已显式迁组的project/output，纯组切平台不串缓存',async()=>{
+    const previous=process.env.CREATOROS_CLI_ACCESS_TOKEN;process.env.CREATOROS_CLI_ACCESS_TOKEN='cli-integration-grant';
+    const userCall=async(id:string,input:unknown,groupId?:string)=>POST(new Request('http://localhost/api/v1/dispatch',{method:'POST',headers:{'content-type':'application/json',...(groupId?{'x-group-id':groupId}:{})},body:JSON.stringify({id,input})}));
+    try{const a=ENDPOINTS.createAccountGroup.response.parse((await(await userCall('accountGroups.create',{body:{name:'CLI空组A',idempotencyKey:'cli-empty-a'}})).json()).data),b=ENDPOINTS.createAccountGroup.response.parse((await(await userCall('accountGroups.create',{body:{name:'CLI空组B',idempotencyKey:'cli-empty-b'}})).json()).data);
+      const input={body:{title:'真实缓存作品',brief:'迁移后原组不能取缓存'}};const first=await cliDispatch('projects.create',input,'','cli-group-create-key',undefined,a.id);expect(first.status).toBe(200);const project=ENDPOINTS.createProject.response.parse((await first.json()).data);
+      const again=await cliDispatch('projects.create',input,'','cli-group-create-key',undefined,a.id);expect(again.status).toBe(200);expect((await again.json()).data.id).toBe(project.id);
+      const outputInput={params:{projectId:project.id},body:{title:'真实缓存成品'}};const output=await cliDispatch('projects.outputs.create',outputInput,'','cli-group-output-key',undefined,a.id);expect(output.status).toBe(200);
+      const selection={fromGroupId:a.id,toGroupId:b.id,projectIds:[project.id],knowledgeIds:[],conversationIds:[]};const previewResponse=await userCall('accountGroups.migration.preview',{body:selection},a.id);expect(previewResponse.status).toBe(200);const preview=ENDPOINTS.previewAccountGroupMigration.response.parse((await previewResponse.json()).data);const applied=await userCall('accountGroups.migration.apply',{body:{...selection,digest:preview.digest,idempotencyKey:'cli-cache-explicit-move'}},a.id);expect(applied.status).toBe(200);
+      expect((await cliDispatch('projects.create',input,'','cli-group-create-key',undefined,a.id)).status).toBe(404);expect((await cliDispatch('projects.outputs.create',outputInput,'','cli-group-output-key',undefined,a.id)).status).toBe(404);
+      const other=await cliDispatch('projects.create',input,'','cli-group-create-key',undefined,b.id);expect(other.status).toBe(200);expect((await other.json()).data.id).not.toBe(project.id);
+    }finally{if(previous===undefined)delete process.env.CREATOROS_CLI_ACCESS_TOKEN;else process.env.CREATOROS_CLI_ACCESS_TOKEN=previous;}
+  },60000);
+
+  it('T1062 CLI成功缓存是历史回读，项目/组归档后不执行旧handler，新键仍拒绝',async()=>{
+    const previous=process.env.CREATOROS_CLI_ACCESS_TOKEN;process.env.CREATOROS_CLI_ACCESS_TOKEN='cli-integration-grant';
+    const userCall=(id:string,input:unknown,groupId?:string)=>POST(new Request('http://localhost/api/v1/dispatch',{method:'POST',headers:{'content-type':'application/json',...(groupId?{'x-group-id':groupId}:{})},body:JSON.stringify({id,input})}));
+    try{
+      const created=await userCall('accountGroups.create',{body:{name:'CLI历史组',idempotencyKey:'cli-history-group'}});expect(created.status).toBe(200);const group=ENDPOINTS.createAccountGroup.response.parse((await created.json()).data);
+      const input={body:{title:'归档历史项目',brief:'保留原cache'}};const first=await cliDispatch('projects.create',input,'','cli-history-project',undefined,group.id);expect(first.status).toBe(200);const project=ENDPOINTS.createProject.response.parse((await first.json()).data);
+      const outputInput={params:{projectId:project.id},body:{title:'归档历史output'}};const outputResponse=await cliDispatch('projects.outputs.create',outputInput,'','cli-history-output',undefined,group.id);expect(outputResponse.status).toBe(200);const output=ENDPOINTS.createOutput.response.parse((await outputResponse.json()).data);
+      expect((await userCall('projects.archive',{params:{projectId:project.id}},group.id)).status).toBe(200);
+      const projectReplay=await cliDispatch('projects.create',input,'','cli-history-project',undefined,group.id);expect(projectReplay.status).toBe(200);expect(ENDPOINTS.createProject.response.parse((await projectReplay.json()).data).id).toBe(project.id);
+      const groupArchived=await userCall('accountGroups.archive',{params:{groupId:group.id},body:{expectedVersion:group.version}});expect(groupArchived.status).toBe(200);
+      const outputReplay=await cliDispatch('projects.outputs.create',outputInput,'','cli-history-output',undefined,group.id);expect(outputReplay.status).toBe(200);expect(ENDPOINTS.createOutput.response.parse((await outputReplay.json()).data).id).toBe(output.id);
+      expect((await cliDispatch('projects.outputs.create',outputInput,'','cli-history-new-output',undefined,group.id)).status).not.toBe(200);
+      const historicalRead=await cliDispatch('projects.get',{params:{projectId:project.id}},'','cli-history-read',undefined,group.id);expect(historicalRead.status).toBe(200);expect(ENDPOINTS.getProject.response.parse((await historicalRead.json()).data).id).toBe(project.id);
+    }finally{if(previous===undefined)delete process.env.CREATOROS_CLI_ACCESS_TOKEN;else process.env.CREATOROS_CLI_ACCESS_TOKEN=previous;}
+  },60000);
 
   it("[T-843] CLI 同号重复写返回原结果、异输入冲突，三个号同 key 不串号", async () => {
     const previous = process.env.CREATOROS_CLI_ACCESS_TOKEN;

@@ -1,4 +1,5 @@
-import { pgTable, text, integer, jsonb, uniqueIndex } from "drizzle-orm/pg-core";
+import {sql} from "drizzle-orm";
+import { pgTable,index, text, integer, jsonb, uniqueIndex } from "drizzle-orm/pg-core";
 
 // Production tables (data-model §9 lines 464-507 + contract/src/resources/
 // production.ts; SPEC §13 "制作 / Production" group). Canonical defs live in shared
@@ -18,6 +19,7 @@ import { pgTable, text, integer, jsonb, uniqueIndex } from "drizzle-orm/pg-core"
 // enforced in the SERVICE, not the schema.
 
 export const productions = pgTable("productions", {
+ groupId:text("group_id"),
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(),
   contentOutputId: text("content_output_id").notNull(),
@@ -31,6 +33,7 @@ export const productions = pgTable("productions", {
 });
 
 export const productionSegments = pgTable("production_segments", {
+ groupId:text("group_id"),
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(),
   productionId: text("production_id").notNull(),
@@ -45,6 +48,7 @@ export const productionSegments = pgTable("production_segments", {
 // Schema only this wave; the asset-attach button is decorative (plan Step 5). No
 // op wired against this table — it exists so the source ref is durable.
 export const segmentAssets = pgTable("segment_assets", {
+ groupId:text("group_id"),
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(),
   productionSegmentId: text("production_segment_id").notNull(),
@@ -54,6 +58,7 @@ export const segmentAssets = pgTable("segment_assets", {
 });
 
 export const exportRecords = pgTable("export_records", {
+ groupId:text("group_id"),
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(),
   productionId: text("production_id").notNull(),
@@ -70,6 +75,7 @@ export const exportRecords = pgTable("export_records", {
 
 // 版本同时持有该次提交的幂等回执；历史永远不是第二份当前方案。
 export const productionEditVersions = pgTable("production_edit_versions", {
+ groupId:text("group_id"),
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(),
   productionId: text("production_id").notNull(),
@@ -81,15 +87,20 @@ export const productionEditVersions = pgTable("production_edit_versions", {
   plan: jsonb("plan").notNull(),
   createdAt: text("created_at").notNull(),
 }, t => [
+
   uniqueIndex("production_edit_versions_revision_ux").on(t.productionId,t.revision),
   uniqueIndex("production_edit_versions_request_ux").on(t.productionId,t.requestId),
 ]);
 
 export const productionRenderRequests=pgTable("production_render_requests",{
+ groupId:text("group_id"),
+ groupVersion:integer("group_version"),
+ membershipVersion:integer("membership_version"),
   id:text("id").primaryKey(),userId:text("user_id").notNull(),productionId:text("production_id").notNull(),
   requestId:text("request_id").notNull(),requestDigest:text("request_digest").notNull(),revision:integer("revision").notNull(),
   spec:jsonb("spec").notNull(),attemptId:text("attempt_id").notNull(),taskId:text("task_id"),assetId:text("asset_id"),createdAt:text("created_at").notNull(),
-},t=>[uniqueIndex("production_render_requests_request_ux").on(t.productionId,t.requestId)]);
+},t=>[
+ uniqueIndex("production_render_requests_request_ux").on(t.productionId,t.requestId)]);
 
 // Raw DDL applied at db init (pglite has no migration runner wired here yet).
 //   - productions_output_ux: data-model CONTENT_OUTPUT ||--o| PRODUCTION is 0..1,
@@ -164,7 +175,12 @@ CREATE UNIQUE INDEX IF NOT EXISTS production_render_requests_request_ux ON produ
 `;
 
 export const productionMediaRequests=pgTable("production_media_requests",{
- id:text("id").primaryKey(),userId:text("user_id").notNull(),accountId:text("account_id").notNull(),outputId:text("output_id").notNull(),
+ groupId:text("group_id"),
+ groupVersion:integer("group_version"),
+ membershipVersion:integer("membership_version"),
+ id:text("id").primaryKey(),userId:text("user_id").notNull(),accountId:text("account_id"),outputId:text("output_id").notNull(),
  requestId:text("request_id").notNull(),requestDigest:text("request_digest").notNull(),kind:text("kind").notNull(),
  frozenInput:jsonb("frozen_input").notNull(),taskId:text("task_id"),createdAt:text("created_at").notNull(),
-},t=>[uniqueIndex("production_media_requests_scope_ux").on(t.userId,t.accountId,t.outputId,t.requestId)]);
+},t=>[
+ uniqueIndex("production_media_requests_group_68016e59").on(t.userId,t.groupId,t.outputId,t.requestId).where(sql`${t.groupId} IS NOT NULL AND ${t.accountId} IS NULL`),
+ index("production_media_requests_group_scope_idx").on(t.userId,t.groupId),uniqueIndex("production_media_requests_scope_ux").on(t.userId,t.accountId,t.outputId,t.requestId)]);

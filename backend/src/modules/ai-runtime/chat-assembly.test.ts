@@ -11,10 +11,13 @@ import {
   runWithEffectiveSkillSnapshot,
   ANTI_FABRICATION_CLAUSE,
   USER_FACING_RESPONSE_POLICY,
+  getOfficialSkillBase,
 } from "@creatoros/ai-worker";
 import {
   prepareChatAssembly,
 } from "./chat-assembly";
+import { getChatToolNativeExecutor } from "./chat-tool-gate";
+import { createChatSkillLibrary } from "./chat-skill-library";
 import { buildEnrichPrompt } from "./topic-enrich-runner";
 import {
   SKILLS_BRIEF_MAX_LINES,
@@ -22,11 +25,12 @@ import {
 } from "@creatoros/contract";
 import type { ChatContext } from "./chat-context";
 
-const ctx = {
+const ctx: RequestContext = {
   userId: "u-1",
   accountId: "acct-current",
-  correlationId: "c-1",
-} as never;
+  requestId: "c-1",
+  source: "user",
+};
 
 describe("[T-523] Copilot 媒体意图确定性路由", () => {
   it("只用最新一轮原文授权转写；历史轮次的转写要求不能污染普通分享", () => {
@@ -515,7 +519,7 @@ describe("prepareChatAssembly — 三层注入装配", () => {
       {
         snapshotVersion: 1,
         userId: "u-1",
-        accountId: "account-a",
+        accountId: ctx.accountId??null,
         resolvedAt: "2026-07-24T00:00:00.000Z",
         platformPolicyVersion: "policy-v1",
         platformPolicy: "平台规则",
@@ -560,14 +564,13 @@ describe("prepareChatAssembly — 三层注入装配", () => {
     expect(Object.keys(a.tools)).toContain("topic.generate");
   });
 
-  it("[T-770] 批准 surface 的 snapshot 缺 guide 时整轮显式失败", async () => {
+  it("[T-770] 冻结快照缺可选 guide 仅说明工具不可用，主聊天仍可用", async () => {
     const { deps } = makeDeps();
-    await expect(
-      runWithEffectiveSkillSnapshot(
+    const a = await runWithEffectiveSkillSnapshot(
         {
           snapshotVersion: 1,
           userId: "u-1",
-          accountId: "account-a",
+          accountId: ctx.accountId??null,
           resolvedAt: "2026-08-11T00:00:00.000Z",
           platformPolicyVersion: "policy-v1",
           platformPolicy: "平台规则",
@@ -591,8 +594,13 @@ describe("prepareChatAssembly — 三层注入装配", () => {
           ],
         },
         () => prepareChatAssembly(ctx, { surface: "topics" }, deps),
-      ),
-    ).rejects.toThrow("SKILL_SNAPSHOT_INCOMPLETE");
+      );
+    expect(a.system).toContain("选题编导");
+    expect(a.tools["topic.generate"]).toBeDefined();
+    const guide = await getChatToolNativeExecutor(a.tools["creatoros.guide"]!)!({}, {abortSignal: new AbortController().signal});
+    expect(guide).toMatchObject({kind:"creatoros.guide",guide:null,error:expect.stringContaining("当前不可读取")});
+    const incomplete=durableChatSnapshot("acct-current","方法");incomplete.skills=[];
+    await expect(runWithEffectiveSkillSnapshot(incomplete,()=>prepareChatAssembly(ctx,{surface:"topics"},deps))).rejects.toThrow("SKILL_SNAPSHOT_INCOMPLETE");
   });
 
   it("未知 surface → 回落 chatbox.topic(路由不崩)", async () => {
@@ -643,10 +651,14 @@ describe("prepareChatAssembly — 三层注入装配", () => {
     const { deps } = makeDeps();
     const a = await prepareChatAssembly(ctx, { surface: "project" }, deps);
 
-    expect(a.system).toContain("Windows 盘符路径");
-    expect(a.system).toContain("UNC 网络路径");
-    expect(a.system).toContain("Windows 路径读不了");
-    expect(a.system).toContain("E:\\资料\\稿子.md");
+    const read=a.tools["local.read"]!;
+    expect(read.description).toContain("Windows 盘符路径");
+    expect(read.description).toContain("UNC 路径");
+    expect(read.description).toContain("绝不能因为是 Windows 就说无法读取");
+    expect(read.description).toContain("E:\\资料\\稿子.md");
+    expect(JSON.stringify(read.inputSchema)).toContain("Windows 盘符路径");
+    expect(read.description).toContain("敏感文件");
+    expect(read.description).toContain("同一回合自动续跑");
   });
 
   it("[T-096 矩阵#10] 系统注入不受 scope 隔离影响:任意 scope 声明下 system 仍含账号级 facets(不过度隔离)", async () => {
@@ -855,6 +867,8 @@ describe("prepareChatAssembly — 三层注入装配", () => {
       "positioning.generate",
       // [T-350a] 发布物料生成(创作产出工具,dispatch publish.package;排序:'po' < 'pu' < 's')。
       "publish.package",
+      "redfox.query",
+      "research.autonomous",
       // [T-240③] review.analyze / review.script 被场景砍掉:选题页无单条作品的复盘/审核语境。
       "script.draft",
       "script.hooks",
@@ -865,14 +879,14 @@ describe("prepareChatAssembly — 三层注入装配", () => {
     ]);
   });
 
-  it("[T-077c] 技能自感知:skillsBrief 注入 system(每白名单工具一行「中文名(工具名):用途」,行数=白名单数、≤30)", async () => {
+  it("[T-077c] 技能自感知:skillsBrief 注入 system(每白名单工具一行「中文名(工具名):用途」,行数=min(白名单数,40))", async () => {
     const { deps } = makeDeps();
     const a = await prepareChatAssembly(ctx, { surface: "topics" }, deps);
     // 清单块头(与 honestyBlock 并列注入)。
-    expect(a.system).toContain("你的技能清单");
+    expect(a.system).toContain("本轮可调用工具");
     // 每个白名单工具一行,格式「中文名(工具名):一句话用途」(gate-F1)。
     const whitelist = Object.keys(a.tools);
-    for (const id of whitelist) {
+    for (const id of whitelist.slice(0, SKILLS_BRIEF_MAX_LINES)) {
       // 行内含「(工具名):」—— 中文名和用途由词表给,这里锚定格式骨架。
       expect(a.system).toContain(`(${id}):`);
     }
@@ -882,11 +896,11 @@ describe("prepareChatAssembly — 三层注入装配", () => {
     // 行数 = 白名单工具数(≤ SKILLS_BRIEF_MAX_LINES,gate-F1 截断上限;[T-099c] 20→30,
     // [T-256a] 30→40 覆盖环境感知扩展后的全工具集 33)。
     const brief = a.system
-      .split("【你的技能清单")[1]!
+      .split("【本轮可调用工具")[1]!
       .split("\n\n")[0]!
       .split("\n")
       .filter((l) => /\(.+\):/.test(l));
-    expect(brief).toHaveLength(whitelist.length);
+    expect(brief).toHaveLength(Math.min(whitelist.length, SKILLS_BRIEF_MAX_LINES));
     expect(brief.length).toBeLessThanOrEqual(SKILLS_BRIEF_MAX_LINES);
   });
 
@@ -909,7 +923,8 @@ describe("prepareChatAssembly — 三层注入装配", () => {
     expect(names).toContain("positioning.generate");
     expect(names).not.toContain("topic.generate");
     expect(names).not.toContain("review.analyze");
-    expect(names.length).toBe(27);
+    expect(names).toEqual(expect.arrayContaining(["redfox.query","research.autonomous"]));
+    expect(names.length).toBe(29);
   });
 
   it("T-039b:surface=positioning → 把账号画像(accountsBrief)注进定位对话 system(定位提案立足真实账号)", async () => {
@@ -963,7 +978,8 @@ describe("prepareChatAssembly — 三层注入装配", () => {
     expect(names).toContain("context.metrics");
     expect(names).not.toContain("topic.generate");
     expect(names).not.toContain("script.draft");
-    expect(names.length).toBe(28); // [T-691] + 生命周期/历史检索/审核报告三个只读工具
+    expect(names).toEqual(expect.arrayContaining(["redfox.query","research.autonomous"]));
+    expect(names.length).toBe(30); // [T-691] + 生命周期/历史检索/审核报告三个只读工具
   });
 
   it("T-039a:surface=review + projectId → 装配期把 projectId 传给 reviewSubject reader(全链路后端段)", async () => {
@@ -1029,7 +1045,8 @@ describe("prepareChatAssembly — 三层注入装配", () => {
       deps,
     );
     const names = Object.keys(a.tools);
-    expect(names.length).toBe(38);
+    expect(names).toEqual(expect.arrayContaining(["redfox.query","research.autonomous"]));
+    expect(names.length).toBe(40);
     expect(names).toContain("calibration.diagnose"); // 可调
     expect(names[0]).not.toBe("calibration.diagnose"); // 但越权不置顶
   });
@@ -1087,36 +1104,40 @@ describe("prepareChatAssembly — 三层注入装配", () => {
 
     it("② 规则带作用域:全局条款(编造禁令/直接写稿)+ 场景条款(S1 已发布无稿门 / S2 创作前豁免)", async () => {
       const { deps } = makeDeps();
-      const a = await prepareChatAssembly(ctx, { surface: "topics" }, deps);
-      // 全局条款:编造禁令 + 可选论点/直接写稿边界。
-      expect(a.system).toContain("全局条款");
-      expect(a.system).toContain("绝不编造具体数字、案例、来源");
-      expect(a.system).toContain("准备素材 → 直接写稿");
-      expect(a.system).toContain("planning.thesis");
-      expect(a.system).toContain("可选辅助，不是写稿前置");
-      // 场景条款:S1 无稿门限定「已发布」;S2 创作前搭结构/起稿不适用无稿门。
-      expect(a.system).toContain("场景条款");
-      expect(a.system).toContain("S1.(仅在拆解/复盘一条**已发布**作品时生效)");
-      expect(a.system).toContain("必须先读到这条作品的真逐字稿");
-      expect(a.system).toContain("S2.(仅在为**创作前(未发布)**的项目搭结构或起草脚本时生效)");
-      expect(a.system).toContain("不适用 S1 的无稿门");
+      const snapshot=durableChatSnapshot("acct-current","冻结选题方法");
+      for(const id of ["method.planning","method.writing","method.review"]){const base=getOfficialSkillBase(id);if(!base)throw Error(`缺真实注册方法:${id}`);snapshot.skills.push({skillId:id,baseVersion:base.baseVersion,overlayRevision:null,overlayVersion:null,effective:{methodSystem:base.methodSystem,template:base.template,tools:[],requiredFacets:[],contextRequirements:[],outputSchema:null,completionPolicy:null,completionPolicyAdapter:null}});}
+      snapshot.skills.sort((a,b)=>a.skillId.localeCompare(b.skillId));
+      const a=await runWithEffectiveSkillSnapshot(snapshot,()=>prepareChatAssembly(ctx,{surface:"topics"},deps));
+      expect(a.system).toContain("可按需读取的方法目录");
+      expect(a.system).toContain("不得伪造来源、数字、案例或操作结果");
+      const library=createChatSkillLibrary(snapshot,ctx);
+      expect(library.read({skillId:"method.planning"}).text).toContain("避免把可选的论点骨架变成写稿前置");
+      expect(library.read({skillId:"method.writing"}).text).toContain("已有信息直接用，不把填写策划表变成写作资格");
+      const review=library.read({skillId:"method.review"}).text;
+      expect(review).toContain("任一可用来源都可支持其范围内的有限分析");
+      expect(review).toContain("没有正文就不猜开头和结构");
+      expect(()=>library.read({skillId:"method.unknown"})).toThrow("SKILL_NOT_IN_FROZEN_CATALOG");
     });
 
     it("[T-730] 编导仍可直接使用 Brief、定位和真实素材写稿，不强制论点前置", async () => {
       const { deps } = makeDeps();
       const a = await prepareChatAssembly(ctx, { surface: "topics" }, deps);
-      expect(a.system).toContain("直接用当前选题、项目 Brief、定位和真实素材起草或改写脚本");
-      expect(a.system).toContain("不得要求先立论点");
+      expect(a.tools["script.draft"]!.description).toContain("基于当前项目 brief 先给可编辑稿");
+      expect(a.tools["planning.thesis"]!.description).toContain("它不是写稿前置");
+      expect(a.tools["planning.thesis"]!.description).toContain("直接写稿");
     });
 
     it("[T-265] 全局反工具冒充条款在场(治「深链死链 → 编导抓 topic.enrich 冒充论点树」)", async () => {
       const { deps } = makeDeps();
       const a = await prepareChatAssembly(ctx, { surface: "topics" }, deps);
-      expect(a.system).toContain(
-        "绝不用「用途不同的工具」冒充用户真正要的能力",
-      );
-      // 诚实优先于硬凑:清单没对应工具就说没有。
-      expect(a.system).toContain("没有就诚实告诉用户");
+      expect(a.system).toContain("只使用本轮真实工具");
+      expect(a.system).toContain("权限、账号归属与当前实体状态以工具回执为准");
+      const {prepareChatToolDefinitions}=await import("./chat-tool-definitions");
+      const definitions=await prepareChatToolDefinitions(a.tools);
+      expect(definitions.definitions.find(d=>d.name==="topic.enrich")?.effect).toBe("proposal");
+      expect(definitions.definitions.find(d=>d.name==="planning.thesis")).toBeDefined();
+      expect(definitions.parameters["topic.enrich"]!.parameters.safeParse({thesis:"冒充论点树"}).success).toBe(false);
+      expect(a.tools["unknown.tool"]).toBeUndefined();
     });
 
     it("③ 创作前 project surface → review.analyze 被阶段感知砍掉(review.script/calibration.diagnose 保留)", async () => {
@@ -1134,7 +1155,8 @@ describe("prepareChatAssembly — 三层注入装配", () => {
       expect(names).not.toContain("project.transcribe");
       expect(names).not.toContain("context.projects"); // [T-642] 已绑定项目不再暴露全量库
       expect(names).toContain("video.edit.render");
-      expect(names.length).toBe(40);
+      expect(names).toEqual(expect.arrayContaining(["redfox.query","research.autonomous"]));
+      expect(names.length).toBe(42);
     });
 
     it("③ 已发布 project surface → review.analyze 保留(复盘不误伤);阶段未知(无读端口)→ 全量兜底", async () => {
@@ -1157,7 +1179,7 @@ describe("prepareChatAssembly — 三层注入装配", () => {
       expect(Object.keys(a.tools)).toContain("review.analyze");
       expect(Object.keys(a.tools)).toContain("video.edit.render");
       expect(Object.keys(a.tools)).not.toContain("context.projects");
-      expect(Object.keys(a.tools).length).toBe(42);
+      expect(Object.keys(a.tools).length).toBe(44);
       // 阶段未知(读端口未装配)→ project 全集(诚实兜底,不误砍)。
       const { deps: noReaders } = makeDeps({
         contextReaders: undefined,
@@ -1169,13 +1191,13 @@ describe("prepareChatAssembly — 三层注入装配", () => {
       );
       expect(Object.keys(b.tools)).toContain("review.analyze");
       expect(Object.keys(b.tools)).not.toContain("context.projects");
-      expect(Object.keys(b.tools).length).toBe(41); // 阶段未知仍保留复盘工具，但项目库无需摸索
+      expect(Object.keys(b.tools).length).toBe(43); // 阶段未知仍保留复盘工具，但项目库无需摸索
     });
 
     it("③ 未知 surface(global 全局唤醒/兜底)→ 无场景映射,回落全量工具(向后兼容)", async () => {
       const { deps } = makeDeps();
       const a = await prepareChatAssembly(ctx, { surface: "nope" }, deps);
-      expect(Object.keys(a.tools).length).toBe(41);
+      expect(Object.keys(a.tools).length).toBe(43);
       expect(Object.keys(a.tools)).toContain("review.analyze");
       expect(Object.keys(a.tools)).toContain("topic.generate");
       expect(Object.keys(a.tools)).not.toContain("creatoros.guide");
@@ -1209,7 +1231,7 @@ describe("prepareChatAssembly — 三层注入装配", () => {
       );
       expect(Object.keys(a.tools)).toContain("review.script");
       expect(a.forcedTool).toBe("review.script");
-      expect(Object.keys(a.tools).length).toBe(39);
+      expect(Object.keys(a.tools).length).toBe(41);
     });
   });
 
@@ -1234,10 +1256,10 @@ describe("[T-081⑤] honestyBlock — 工具边界诚实", () => {
   it("system 注入「绝不提供工具不具备的操作选项」规则", async () => {
     const { deps } = makeDeps();
     const a = await prepareChatAssembly(ctx, { surface: "topics" }, deps);
-    expect(a.system).toContain(
-      "绝不向用户提供你的工具不具备的操作选项",
-    );
-    expect(a.system).toContain("说明当前工具边界");
+    expect(a.system).toContain("只使用本轮真实工具");
+    expect(a.system).toContain("权限、账号归属与当前实体状态以工具回执为准");
+    for(const name of Object.keys(a.tools).slice(0,SKILLS_BRIEF_MAX_LINES))expect(a.system).toContain(`(${name}):`);
+    expect(a.tools["unknown.tool"]).toBeUndefined();
   });
 
   it("[T-806/T-957] 对用户说明状态，不泄漏内部提示词或原始错误", async () => {
@@ -1284,29 +1306,32 @@ describe("[T-081⑤] honestyBlock — 工具边界诚实", () => {
   it("[T-098] system 注入「指针权/禁逐字复述清单」规则", async () => {
     const { deps } = makeDeps();
     const a = await prepareChatAssembly(ctx, { surface: "topics" }, deps);
-    expect(a.system).toContain("只有指针权");
-    expect(a.system).toContain("禁止逐字复述清单内容");
-    expect(a.system).toContain("已展示在卡片中");
+    expect(a.system).toContain("可以引用、整理、比较工具返回的正文");
+    expect(a.system).toContain("摘要和片段不能冒充全文");
+    expect(a.tools["context.knowledge.text"]!.description).toContain("只有指针权,别逐字复述整段");
+    expect(a.tools["context.knowledge.text"]!.description).toContain("不产候选、不写库");
+    expect(a.system.endsWith(USER_FACING_RESPONSE_POLICY)).toBe(true);
   });
 
   it("[T-708] 创作完整度统一为软提示，用户要先生成时不再被形式门禁拦住", async () => {
     const { deps } = makeDeps();
     const a = await prepareChatAssembly(ctx, { surface: "topics" }, deps);
-    expect(a.system).toContain("创作完整度不是拒绝服务的理由");
-    expect(a.system).toContain("六问未答完");
-    expect(a.system).toContain("联网失败");
-    expect(a.system).toContain("直接生成/先给一版");
-    expect(a.system).toContain("待验证/待补证据/待补真实案例");
-    expect(a.system).toContain("隐私安全");
+    expect(a.system).toContain("不阻断可独立完成的公开研究");
+    expect(a.tools["script.draft"]!.description).toContain("真实资料优先，但不是整稿门禁");
+    expect(a.tools["script.draft"]!.description).toContain("基于当前项目 brief 先给可编辑稿");
+    expect(a.tools["script.draft"]!.description).toContain("待补真实案例");
+    expect(a.tools["script.draft"]!.description).toContain("用户采纳后才写入稿面");
   });
 
   it("[T-708] 长文允许阶段结果，本机授权在同一回合续跑而不是重复调用", async () => {
     const { deps } = makeDeps();
     const a = await prepareChatAssembly(ctx, { surface: "topics" }, deps);
-    expect(a.system).toContain("仅基于已读 X/总 Y 字");
-    expect(a.system).toContain("不要一直转圈而不给结果");
-    expect(a.system).toContain("同一回合自动续跑");
-    expect(a.system).toContain("不要重复调用制造循环");
+    const description=a.tools["local.read"]!.description;
+    expect(description).toContain("已读范围和剩余字数");
+    expect(description).toContain("不能一直转圈而不给阶段结果");
+    expect(description).toContain("同一回合自动续跑");
+    expect(description).toContain("别自行重调路径");
+    expect(a.system).toContain("摘要和片段不能冒充全文");
   });
 });
 
@@ -1316,7 +1341,8 @@ describe("[T-684] 随包浏览器检索 + 禁止模型记忆兜底", () => {
     const { deps } = makeDeps();
     const a = await prepareChatAssembly(ctx, { surface: "topics" }, deps);
     expect(a.system).toContain("未装配浏览器搜索端口");
-    expect(a.system).toContain("不要引导用户配置已经下线的“搜索模型”");
+    expect(a.system).toContain("不得伪称已经联网");
+    expect(a.system).not.toContain("配置搜索模型");
     expect(a.system).not.toContain("模型训练记忆");
   });
 });
@@ -1515,63 +1541,40 @@ describe("Pi 显式工具指令", () => {
   });
 });
 
-// ── [T-239c S2] 长工具可中断:execute 第二参 abortSignal → 端口 signal(提前退出)────────
-describe("[T-239c] 长工具 signal 透传(material.screenshot / web.read)", () => {
-  it("material.screenshot:SDK callOptions.abortSignal 经工具 execute 透传到 captureScreenshotPort", async () => {
-    const captured: { signal?: AbortSignal } = {};
-    const captureScreenshotPort = vi.fn(
-      async (
-        _ctx: unknown,
-        input: { url: string; fullPage?: boolean; signal?: AbortSignal },
-      ) => {
-        captured.signal = input.signal;
-        return {
-          assetId: "as-1",
-          name: "截图·x",
-          previewUrl: null,
-          sourceUrl: input.url,
-        };
-      },
-    );
-    const { deps } = makeDeps({ captureScreenshotPort });
-    const a = await prepareChatAssembly(ctx, { surface: "topics" }, deps);
-    const tool = a.tools["material.screenshot"]! as { execute?: unknown };
-    const ac = new AbortController();
-    const exec = tool.execute as (i: unknown, o: unknown) => Promise<unknown>;
-    const res = (await exec(
-      { url: "https://example.com" },
-      { toolCallId: "tc", messages: [], context: {}, abortSignal: ac.signal },
-    )) as { kind: string; error: string | null };
-    expect(res.kind).toBe("material.screenshot");
-    expect(res.error).toBeNull();
-    // 端口收到的就是本轮请求的 abortSignal(用户点「停止」→ Playwright 层提前退出)。
-    expect(captured.signal).toBe(ac.signal);
+// 长工具已迁入持久宿主/Worker；仅替代截图和网页IO，不恢复退役 assembly execute。
+describe("[T-239c] 当前长工具取消信号链", () => {
+  it("material.screenshot: 原冻结宿主 execute 将同一 scope.signal 交给截图端口", async () => {
+    const {createChatIngestionTaskToolHost}=await import('./chat-ingestion-tool-host');
+    const {chatWorkerInputSchema}=await import('@creatoros/contract/execution-worker');
+    const {deps}=makeDeps(), owner:RequestContext={userId:'u-1',accountId:'acct-current',source:'user',requestId:'screenshot-signal'};
+    const prepared=await prepareDurableChatTurn(owner,{messages:[{id:'message',role:'user',parts:[{type:'text',text:'截图'}]}],chatContext:{surface:'topics'}},deps,durableChatSnapshot('acct-current','原冻结方法'));
+    const definition=prepared.toolDefinitions.find(d=>d.name==='material.screenshot');
+    if(!definition)throw Error('真实白名单缺截图');
+    const modelInput=chatWorkerInputSchema.parse({kind:'chat.run',operationKey:'original-operation',capability:'chat',userId:owner.userId,accountId:owner.accountId,conversationId:'conversation',sourceMessageId:'message',system:prepared.assembly.system,messages:prepared.modelMessages,maxSteps:6,maxOutputTokens:4096,tools:[definition]});
+    const message={id:'message',conversationId:'conversation',role:'user',content:'截图',parts:[],attachments:[],modelMetadata:{},inputTokens:null,outputTokens:null,cachedTokens:null,modelKey:null,createdAt:'fixed'};
+    const reader={read:vi.fn(async()=>({context:owner,aiTaskId:'original-task',hostContext:prepared.hostContext,modelInput,snapshot:{conversation:{id:'conversation',userId:owner.userId,accountId:owner.accountId!,groupId:null,projectId:null,scope:'global',title:'原会话',createdAt:'fixed',updatedAt:'fixed'},messages:[message],sourceMessage:message}}))};
+    const screenshot=vi.fn(async(_c:RequestContext,input:{url:string;fullPage?:boolean;signal?:AbortSignal})=>({assetId:'as-1',name:'截图·x',previewUrl:null,sourceUrl:input.url}));
+    const host=createChatIngestionTaskToolHost(reader,{captureScreenshot:screenshot,dispatchProjectTranscribe:async()=>{throw Error('不应转写');},dispatchDouyinShare:async()=>{throw Error('不应采集');}});
+    const controller=new AbortController(),execution={executionTaskId:'original-execution',attempt:1,fenceToken:'original-fence'};
+    const tools=await host(owner,modelInput,execution,controller.signal),scope={execution,aiTaskId:'original-task',callId:'original-call',toolCallId:'original-tool-call',signal:controller.signal};
+    const result=await tools['material.screenshot']!.execute!(owner,{url:'https://example.com'},scope);
+    expect(result).toMatchObject({status:'ok',data:{kind:'material.screenshot',error:null},sideEffect:'committed'});
+    expect(screenshot).toHaveBeenCalledWith(owner,expect.objectContaining({signal:controller.signal,url:'https://example.com'}));
+    controller.abort();await expect(tools['material.screenshot']!.execute!(owner,{url:'https://example.com'},scope)).rejects.toMatchObject({name:'AbortError'});
+    expect(screenshot).toHaveBeenCalledTimes(1);
   });
-
-  it("web.read:同款透传到 readWebUrlPort;端口抛 AbortError → 工具信封人话(不裸抛给 SDK)", async () => {
-    const captured: { signal?: AbortSignal } = {};
-    const readWebUrlPort = vi.fn(
-      async (_ctx: unknown, input: { url: string; signal?: AbortSignal }) => {
-        captured.signal = input.signal;
-        const err = new Error("已中断:用户停止了本轮对话,网页读取已取消。");
-        err.name = "AbortError";
-        throw err;
-      },
-    );
-    const { deps } = makeDeps({ readWebUrlPort });
-    const a = await prepareChatAssembly(ctx, { surface: "topics" }, deps);
-    const tool = a.tools["web.read"]! as { execute?: unknown };
-    const ac = new AbortController();
-    ac.abort();
-    const exec = tool.execute as (i: unknown, o: unknown) => Promise<unknown>;
-    const res = (await exec(
-      { url: "https://chatgpt.com/share/x" },
-      { toolCallId: "tc", messages: [], context: {}, abortSignal: ac.signal },
-    )) as { kind: string; error: string | null };
-    expect(captured.signal).toBe(ac.signal);
-    // 中断错误进结果信封(execute 内 catch 转人话),kind 不变 → 前端卡渲错误态不崩。
-    expect(res.kind).toBe("web.read");
-    expect(res.error).toContain("已中断");
+  it("web.read: 实际 Worker 透传 signal；取消不结算失败，普通读取错误保存人话", async () => {
+    const {runChatWebReadInWorker}=await import('../../../../ai-worker/src/execution/chat-web-read-worker');
+    const controller=new AbortController();
+    const output={status:'error',summary:'网页读取未完成，请重试',evidence:[],error:{code:'transient',retryable:true,recovery:'请重试'},continuation:null,sideEffect:'none'};
+    const call=vi.fn(async(port:string)=>port==='prepareChatWebRead'?{url:'https://example.com',observation:null,evidenceRef:null}:port==='readChatWebReadCache'?{status:'miss'}:output);
+    const readDocument=vi.fn(async(_url:string,scope:{callId:string;signal:AbortSignal})=>{expect(scope.signal).toBe(controller.signal);controller.abort();throw new DOMException('用户停止了本轮对话','AbortError');});
+    const ports={call,readDocument,searchers:async()=>[],hasSession:async()=>false};
+    await expect(runChatWebReadInWorker('original-call',controller.signal,ports)).rejects.toMatchObject({name:'AbortError'});
+    expect(readDocument).toHaveBeenCalledTimes(1);expect(call.mock.calls.some(c=>c[0]==='failChatWebRead')).toBe(false);
+    const active=new AbortController();readDocument.mockImplementation(async(_url,scope)=>{expect(scope.signal).toBe(active.signal);throw Error('网页读取暂时中断，请重试');});
+    expect(await runChatWebReadInWorker('original-call',active.signal,ports)).toEqual(output);
+    expect(call).toHaveBeenCalledWith('failChatWebRead',expect.objectContaining({failure:expect.objectContaining({message:'网页读取暂时中断，请重试'})}),undefined);
   });
 });
 
@@ -1581,16 +1584,12 @@ describe("[T-256a] 环境感知能力认知 — honesty 第 13 条", () => {
   it("system 注入第 13 条:能探测已装工具 + 列工作区目录,缺工具诚实引导、只读不装不跑命令", async () => {
     const { deps } = makeDeps();
     const a = await prepareChatAssembly(ctx, { surface: "topics" }, deps);
-    expect(a.system).toContain("你能感知用户的电脑环境");
-    // 工具探测认知 + 缺失诚实引导 + 反编造铁律。
-    expect(a.system).toContain("local.tools");
-    expect(a.system).toContain("绝不假装工具存在、绝不编造版本号");
-    expect(a.system).toContain("绝不能用 local.tools 探测 CreatorOS 的生图/文生视频/文本模型配置");
-    // 工作区目录认知(复用 T-253 授权表)+ 反臆造。
-    expect(a.system).toContain("local.workspace");
-    expect(a.system).toContain("绝不臆造用户没授权过的目录");
-    // 能力边界:只读,不装工具/不跑任意命令/不写本地文件。
-    expect(a.system).toContain("只能读、不能装、不能乱跑命令");
+    expect(a.tools["local.tools"]!.description).toContain("操作系统可执行文件(ffmpeg / ffprobe / node / python3 / git)");
+    expect(a.tools["local.tools"]!.description).toContain("不得用它探测 CreatorOS");
+    expect(a.tools["local.tools"]!.description).toContain("只读、白名单外名字会被拒绝");
+    expect(a.tools["local.workspace"]!.description).toContain("已长期授权");
+    expect(a.tools["local.workspace"]!.description).toContain("绝不臆造用户没授权过的目录");
+    expect(a.tools["local.workspace"]!.description).toContain("本工具只给目录清单、不列文件内容");
   });
 });
 
@@ -1599,11 +1598,11 @@ describe("[T-245] 热点能力认知 — honesty 条款 + trend 出题接信源"
   it("system 注入第 11 条:有真实热点能力(内容雷达/web 搜索)+ 引导登记来源,绝不自称没能力", async () => {
     const { deps } = makeDeps();
     const a = await prepareChatAssembly(ctx, { surface: "topics" }, deps);
-    expect(a.system).toContain("你有真实热点能力");
-    expect(a.system).toContain("热点宝/黑马发现");
-    expect(a.system).toContain("basis=trend");
-    expect(a.system).toContain("去『内容雷达』登记网页/RSS、博主或分享链接");
-    expect(a.system).toContain("绝不自称「没有实时热点/热搜拉取能力」");
+    expect(a.tools["topic.generate"]!.description).toContain("trend");
+    expect(a.tools["redfox.query"]).toBeDefined();
+    expect(a.tools["research.autonomous"]).toBeDefined();
+    expect(a.system).toContain("不得伪造来源、数字、案例或操作结果");
+    expect(a.system).toContain("未装配浏览器搜索端口");
   });
 });
 
@@ -1708,8 +1707,8 @@ describe("[T-386] prepareChatAssembly — 后台任务状态真值块", () => {
     const a2 = await prepareChatAssembly(ctx, { surface: "topics" }, deps);
     expect(a2.system).not.toContain("系统本轮刚查的库内真实状态");
     // 第 16 条全局条款(不依赖端口):不凭记忆断言 + 叙述稿面前先读当前版本。
-    expect(a2.system).toContain("后台任务状态绝不凭记忆断言");
-    expect(a2.system).toContain("context.artifact.text 读当前版本");
+    expect(a2.system).toContain("只有真实回执能证明保存或执行");
+    expect(a2.system).toContain("不要声称后台任务已经完成");
   });
 
   it("非 chat 派发类任务(定时采集等)被滤掉,不喂噪声", async () => {

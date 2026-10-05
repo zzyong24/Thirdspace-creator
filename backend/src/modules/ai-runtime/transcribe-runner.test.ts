@@ -1,787 +1,121 @@
-import { GenerationFailure } from "../../../../ai-worker/src/execution/generation-error";
-import { describe, it, expect, vi } from "vitest";
-import type { RequestContext } from "@creatoros/contract";
-import type {
-  MultimodalSpec,
-  MultimodalProviderRegistry,
-  GeneratedTranscript,
-} from "@creatoros/ai-worker";
-import type {
-  EnsureTranscriptArtifactInput,
-  EnsureTranscriptArtifactResult,
-} from "@creatoros/backend/modules/projects";
-import { TranscribeConfigError } from "./multimodal/resolve";
-import {
-  runTranscribe,
-  classifyTranscribeFailure,
-  IMAGE_ALBUM_TRANSCRIPT_PLACEHOLDER,
-  type TranscribeRunnerDeps,
-  type DouyinVideoSource,
-} from "./transcribe-runner";
-
-// transcribe.douyin runner 单测(T-030-D2,SPEC §5.2/§5.3)。全 fake IO(fake fetchVideoUrl /
-// streamAudio / transcribeAudio / ensureTranscriptArtifact),**不碰真抖音 / 真 ffmpeg / 真 ASR**。
-// 覆盖:成功路径(markRunning→recordStep→markSucceeded,绑作品收到真 text);F7-a(ASR 未配→整
-// 任务停 markFailed 不 markSucceeded);F7-b(一条 streamAudio 抛 → 该 aweme 失败其余成功,任务不整
-// 体崩,markSucceeded 带失败计数);幂等(ensure 报 already-exists → 跳过 fetch/ASR,fetchVideoUrl 未被调)。
-
-const ctx: RequestContext = { userId: "u1", requestId: "r1", source: "user" };
-
-const SPEC: MultimodalSpec = {
-  provider: "siliconflow",
-  baseUrl: null,
-  model: "FunAudioLLM/SenseVoiceSmall",
-  token: "sk-fake",
-  kind: "audio",
-};
-
-const FAKE_REGISTRY: MultimodalProviderRegistry = {}; // runner 不直接 index registry(交给注入的 transcribeAudio)
-
-function makeDeps(opts: {
-  awemeIds: string[];
-  streamThrowsFor?: (awemeId: string) => Error | null;
-  /** [T-243] streamThrowsFor 命中的 aweme 抛几次后恢复(默认 Infinity=次次抛,旧行为)。
-   *  设 1 → 首抽抛、重试成功(覆盖 ffmpeg 单次重试路径)。 */
-  streamFailTimes?: number;
-  /** [T-243] 自定义 fetchVideoUrl 返回(图集 / kind 显式 video);缺省裸 { playUrl }(旧行为)。 */
-  videoSourceFor?: (awemeId: string) => DouyinVideoSource;
-  resolveThrows?: Error | null;
-  transcribeResult?: GeneratedTranscript & {
-    effectiveSpec?: MultimodalSpec;
-    executionMode?: "channel-managed" | "configured-cloud" | "whisper-local";
-  };
-  /** 只读幂等探测:哪些 aweme 已有逐字稿(→ 跳过 fetch/ASR)。默认全 false。 */
-  alreadyHas?: (awemeId: string) => boolean;
-  /** 写入 ensure 时返回什么(默认 bound)。 */
-  onWrite?: (
-    input: EnsureTranscriptArtifactInput,
-  ) => EnsureTranscriptArtifactResult;
-}) {
-  const markRunning = vi.fn(
-    async (_c: RequestContext, _id: string) => undefined,
-  );
-  const recordStep = vi.fn(
-    async (
-      _c: RequestContext,
-      _id: string,
-      _input: {
-        stepNo: number;
-        kind: string;
-        text: string;
-        toolCalls: unknown[];
-      },
-    ) => undefined,
-  );
-  const markSucceeded = vi.fn(
-    async (_c: RequestContext, _id: string) => undefined,
-  );
-  const markFailed = vi.fn(
-    async (_c: RequestContext, _id: string, _err?: string) => undefined,
-  );
-
-  const fetchVideoUrl = vi.fn(
-    async (
-      _c: RequestContext,
-      awemeId: string,
-    ): Promise<DouyinVideoSource> =>
-      opts.videoSourceFor?.(awemeId) ?? {
-        playUrl: `https://v.example/${awemeId}?play=1`,
-      },
-  );
-  const streamFailCounts = new Map<string, number>(); // [T-243] 每 aweme 已抛次数(重试预算)
-  const streamAudio = vi.fn(async (_c: RequestContext, playUrl: string) => {
-    const awemeId = playUrl.split("/").pop()!.split("?")[0]!;
-    const boom = opts.streamThrowsFor?.(awemeId) ?? null;
-    if (boom) {
-      const budget = opts.streamFailTimes ?? Number.POSITIVE_INFINITY;
-      const n = streamFailCounts.get(awemeId) ?? 0;
-      if (n < budget) {
-        streamFailCounts.set(awemeId, n + 1);
-        throw boom;
-      }
-    }
-    return new Uint8Array([1, 2, 3, 4]); // 固定 fake mp3 bytes
-  });
-  const resolveTranscribeSpec = vi.fn(async () => {
-    if (opts.resolveThrows) throw opts.resolveThrows;
-    return SPEC;
-  });
-  const transcribeAudio = vi.fn(
-    async (
-      _spec: MultimodalSpec,
-      _o: { audioBytes: Uint8Array; language?: string },
-      _r: MultimodalProviderRegistry,
-    ): Promise<GeneratedTranscript & {
-      effectiveSpec?: MultimodalSpec;
-      executionMode?: "channel-managed" | "configured-cloud" | "whisper-local";
-    }> => opts.transcribeResult ?? ({ text: "逐字稿X" }),
-  );
-  const prepareTranscribeSpec = vi.fn(
-    async (
-      _c: RequestContext,
-      spec: MultimodalSpec,
-      _input: { audioBytes: Uint8Array; intentId: string },
-    ) => spec,
-  );
-
-  // 只读幂等探测 fake(默认全 false → 都要真转写)。
-  const hasTranscriptArtifact = vi.fn(
-    async (_c: RequestContext, awemeId: string) =>
-      opts.alreadyHas?.(awemeId) ?? false,
-  );
-
-  // ensureTranscriptArtifact fake(仅带真 text 的写入调用会到这;探测已分到 hasTranscriptArtifact)。
-  const ensureCalls: EnsureTranscriptArtifactInput[] = [];
-  const ensureTranscriptArtifact = vi.fn(
-    async (
-      _c: RequestContext,
-      input: EnsureTranscriptArtifactInput,
-    ): Promise<EnsureTranscriptArtifactResult> => {
-      ensureCalls.push(input);
-      return (
-        opts.onWrite?.(input) ?? {
-          status: "bound",
-          projectId: `proj-${input.awemeId}`,
-          artifactId: `art-${input.awemeId}`,
-          awemeId: input.awemeId,
-        }
-      );
-    },
-  );
-  const onTranscriptReady = vi.fn(
-    async (_c: RequestContext, _input: { awemeId: string; projectId: string }) =>
-      undefined,
-  );
-
-  const deps: TranscribeRunnerDeps = {
-    ai: { markRunning, recordStep, markSucceeded, markFailed },
-    fetchVideoUrl,
-    streamAudio,
-    resolveTranscribeSpec,
-    prepareTranscribeSpec,
-    transcribeAudio,
-    registry: FAKE_REGISTRY,
-    hasTranscriptArtifact,
-    ensureTranscriptArtifact,
-    onTranscriptReady,
-  };
-  return {
-    deps,
-    spies: {
-      markRunning,
-      recordStep,
-      markSucceeded,
-      markFailed,
-      fetchVideoUrl,
-      streamAudio,
-      resolveTranscribeSpec,
-      prepareTranscribeSpec,
-      transcribeAudio,
-      hasTranscriptArtifact,
-      ensureTranscriptArtifact,
-      onTranscriptReady,
-    },
-    ensureCalls,
-  };
+import {z} from 'zod';
+import {afterAll,beforeAll,describe,expect,it,vi} from 'vitest';
+import {mkdtemp,rm} from 'node:fs/promises';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
+import {createDb,aiTasks,executionTasks,executionCalls,projects,eq,sql,type Db} from '@creatoros/backend';
+import {workerPortInputSchemas,type WorkerPort} from '@creatoros/contract/execution-worker';
+import {runTranscribeAsrInWorker,createQwenAsrAdapter,type MultimodalSpec} from '@creatoros/ai-worker';
+import {createTranscribeBusinessExecutionService} from './transcribe-business-execution.service';
+import {createExecutionTranscribeAudioService} from '../execution/execution-transcribe-audio.service';
+import {createExecutionTranscribePreparationService} from '../execution/execution-transcribe-preparation.service';
+import {createExecutionAsrPorts} from '../execution/execution-asr-ports.service';
+import {createExecutionTranscribePostprocessService} from '../execution/execution-transcribe-postprocess.service';
+import {createExecutionTranscribeWorkflowService} from '../execution/execution-transcribe-workflow.service';
+import {createPersistentTaskService} from '../execution/persistent-task.service';
+import {createLocalFsObjectStorage} from '../assets/localfs-object-storage';
+import {createTranscriptArtifactService} from '../projects/transcript-artifact.service';
+import {createArtifactsService} from '../artifacts';
+import {classifyTranscribeFailure,IMAGE_ALBUM_TRANSCRIPT_PLACEHOLDER} from './transcribe-runner';
+// 旧执行循环已迁至Worker。取流/抽音/取消/冷却/未知回执覆盖在真实
+// ai-worker/execution/transcribe-worker-run.test.ts；本文件验证原公开持久端口与已保存事实。
+let db:Db,close:()=>Promise<void>,dir:string,seq=0;
+const now=()=>new Date().toISOString(),nextId=(prefix:string)=>`${prefix}-${++seq}`;
+const budget={maxCalls:20,maxTokens:100000,deadlineMs:600000};
+const spec:MultimodalSpec={kind:'audio',provider:'qwen',model:'asr',baseUrl:null,token:'fixture-only'};
+beforeAll(async()=>{const opened=await createDb();db=opened.db;close=()=>opened.client.close();dir=await mkdtemp(join(tmpdir(),'t1062-transcribe-durable-'));});
+afterAll(async()=>{await close?.();await rm(dir,{recursive:true,force:true});});
+async function fixture(ids=['one'],opts:{readyFailure?:boolean;postSpecFailure?:boolean}={}){
+ const id=`durable-transcribe-${++seq}`,ctx={userId:id,accountId:id,requestId:id,source:'user' as const};
+ await db.insert(aiTasks).values({id,userId:ctx.userId,accountId:ctx.accountId,taskType:'transcribe.douyin',idempotencyKey:id,inputData:{awemeIds:ids},requestedAt:now(),requestFingerprint:'sha256:'+'a'.repeat(64)});
+ for(const awemeId of ids)await db.insert(projects).values({id:`${id}-${awemeId}`,userId:ctx.userId,accountId:ctx.accountId,title:awemeId,source:'imported',platformRef:{platform:'douyin',externalId:awemeId},brief:'',creationMode:'free',status:'active',currentStage:'analysis',startedAt:now(),createdAt:now(),updatedAt:now()});
+ const business=createTranscribeBusinessExecutionService(db,{budget,resolveSpec:async()=>spec}),mapped=await business.prepare(ctx,id);
+ if(!mapped.executionTaskId)throw Error('新fixture必须进入真实执行');
+ const claim=await createPersistentTaskService(db).claimTask({taskId:mapped.executionTaskId,workerId:'isolated-fixture'});if(!claim)throw Error('真实claim失败');
+ const ref={executionTaskId:mapped.executionTaskId,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken};
+ const storage=createLocalFsObjectStorage({rootPath:join(dir,id),publicBaseUrl:'/unused'},{nextKey:()=>`audio-${++seq}`});
+ const audio=createExecutionTranscribeAudioService(db,{objectStorageForCtx:async()=>storage}),asr=createExecutionAsrPorts(db,{budget});
+ const prepare=createExecutionTranscribePreparationService(db,{audio,asr,resolveSpec:async()=>spec,prepareSpec:async(_c,s)=>s});
+ const post=createExecutionTranscribePostprocessService(db,{budget,resolveModelSpec:async()=>{if(opts.postSpecFailure)throw Error('可选模型暂不可用');return null;},readContext:async()=>({})});
+ const transcripts=createTranscriptArtifactService({db,now,nextId});
+ const ready=vi.fn(async()=>{if(opts.readyFailure)throw Error('重建排队失败');});
+ const workflow=createExecutionTranscribeWorkflowService(db,{now,nextId,postprocess:post,hasTranscriptArtifact:(c,awemeId)=>transcripts.hasExisting(c,awemeId),onTranscriptReady:ready});
+ const fetcher=vi.fn(async()=>new Response(JSON.stringify({choices:[{message:{content:'真实端口原文'}}]})));
+ const call=async(port:WorkerPort,raw:unknown,signal?:AbortSignal):Promise<unknown>=>{
+  if(port==='prepareTranscribeAsr')return prepare.prepare(ref,workerPortInputSchemas.prepareTranscribeAsr.parse(raw).awemeId,signal);
+  if(port==='readTranscribeAudio')return audio.read(ref,raw,signal);
+  if(['reserveAsrRequest','startAsrRequest','settleAsrRequest','selectTranscribeLocalFallback'].includes(port))return asr.invoke(ref,port,raw);
+  if(port.includes('TranscribePostprocess'))return post.invoke(ref,port,raw,signal);
+  return workflow.invoke(ref,port,raw,signal);
+ };
+ async function prepareSaving(awemeId:string,signal=new AbortController().signal){
+  await workflow.recordSource(ref,{awemeId,source:{kind:'video',playUrl:`https://fixture.invalid/${awemeId}`}});
+  await audio.save(ref,{awemeId,bytes:new Uint8Array([1])},signal);
+  await runTranscribeAsrInWorker(awemeId,signal,call,{qwen:createQwenAsrAdapter({fetch:fetcher})});
+  await post.prepare(ref,{awemeId},signal);
+ }
+ async function save(awemeId:string,signal=new AbortController().signal){await prepareSaving(awemeId,signal);return workflow.saveArtifact(ref,{awemeId},signal);}
+ const artifactService=createArtifactsService({db,now,nextId});
+ async function read(awemeId:string){const rows=await artifactService.listProjectArtifacts(ctx,`${id}-${awemeId}`),artifact=rows.find(r=>r.artifactType==='output_script');if(!artifact?.currentVersionId)throw Error('公开逐字稿不存在');const version=(await artifactService.listVersions(ctx,artifact.id)).find(v=>v.id===artifact.currentVersionId);return{artifact,version};}
+ return{id,ctx,ref,workflow,save,prepareSaving,read,artifactService,fetcher,ready,transcripts,post,business};
 }
-
-describe("runTranscribe(transcribe.douyin, T-030-D2)", () => {
-  it("成功路径:markRunning → 取音频 → ASR → 绑作品(收到真 text)→ recordStep → markSucceeded", async () => {
-    const { deps, spies, ensureCalls } = makeDeps({
-      awemeIds: ["7400000000000000001"],
-    });
-    await runTranscribe(
-      ctx,
-      {
-        id: "task-1",
-        taskType: "transcribe.douyin",
-        inputData: { awemeIds: ["7400000000000000001"] },
-      },
-      deps,
-    );
-    expect(spies.markRunning).toHaveBeenCalledTimes(1);
-    expect(spies.fetchVideoUrl).toHaveBeenCalledTimes(1);
-    expect(spies.streamAudio).toHaveBeenCalledTimes(1);
-    expect(spies.transcribeAudio).toHaveBeenCalledTimes(1);
-    expect(spies.prepareTranscribeSpec).toHaveBeenCalledWith(
-      ctx,
-      SPEC,
-      expect.objectContaining({ intentId: "task:task-1:aweme:7400000000000000001" }),
-    );
-    expect(spies.markSucceeded).toHaveBeenCalledTimes(1);
-    expect(spies.markFailed).not.toHaveBeenCalled();
-    // recordStep 至少一条(逐条)+ 末尾汇总。
-    expect(spies.recordStep).toHaveBeenCalled();
-    // ensureTranscriptArtifact 写入调用(transcript 非空)收到真逐字稿 "逐字稿X"。
-    const writeCall = ensureCalls.find((c) => c.transcript !== "");
-    expect(writeCall?.transcript).toBe("逐字稿X");
-    expect(writeCall?.source).toBe("transcribed");
-    expect(writeCall?.awemeId).toBe("7400000000000000001");
-    expect(spies.onTranscriptReady).toHaveBeenCalledWith(ctx, {
-      awemeId: "7400000000000000001",
-      projectId: "proj-7400000000000000001",
-    });
+describe('转写当前durable公共持久链',()=>{
+ it('完整保存与公开读同一正文、真实单次ASR账本、总态成功',async()=>{const f=await fixture();expect(await f.save('one')).toMatchObject({status:'saved'});expect((await f.read('one')).version?.contentText).toBe('真实端口原文');expect(await f.workflow.complete(f.ref,{})).toEqual({status:'succeeded'});const [task]=await db.select().from(aiTasks).where(eq(aiTasks.id,f.id));expect(task?.status).toBe('succeeded');const calls=await db.select().from(executionCalls).where(eq(executionCalls.executionTaskId,f.ref.executionTaskId));expect(calls.map(c=>c.status)).toEqual(['settled']);expect(f.fetcher).toHaveBeenCalledTimes(1);},30000);
+ it('部分失败总态failed但已完成子集保留原正文/版本并经公开工件读取可用',async()=>{const f=await fixture(['one','two']);await f.save('one');const before=await f.read('one');await f.workflow.failItem(f.ref,{awemeId:'two',error:'抽音失败'});expect(await f.workflow.complete(f.ref,{})).toEqual({status:'failed'});expect(await f.read('one')).toEqual(before);const [task]=await db.select().from(aiTasks).where(eq(aiTasks.id,f.id));expect(task).toMatchObject({status:'failed',errorMessage:'1 个作品转写失败，已保存其它完成结果'});expect(f.fetcher).toHaveBeenCalledTimes(1);},30000);
+ it('保存后重建排队失败不反转原事实或成功终态',async()=>{const f=await fixture(['one'],{readyFailure:true});expect(await f.save('one')).toMatchObject({status:'saved'});expect(f.ready).toHaveBeenCalledTimes(1);expect((await f.read('one')).version?.contentText).toBe('真实端口原文');expect(await f.workflow.complete(f.ref,{})).toEqual({status:'succeeded'});},30000);
+ it.each([false,true])('可选后处理未配置/配置读取故障=%s仍真实落原文与明确reason',async failure=>{const f=await fixture(['one'],{postSpecFailure:failure});await f.save('one');expect(await f.post.read(f.ref,{awemeId:'one'})).toMatchObject({applied:false,transcript:'真实端口原文',reason:'模型未配置或暂不可用，保留原文'});expect((await f.read('one')).version?.contentText).toBe('真实端口原文');},30000);
+ it('同作品已有事实经真实prepareItem恢复，不识别第二次，也不新增逐字稿版本',async()=>{const f=await fixture();await f.save('one');const before=await f.read('one');const state=await f.workflow.prepareItem(f.ref,{awemeId:'one'});expect(state.receipt).toMatchObject({status:'saved'});expect(await f.workflow.saveArtifact(f.ref,{awemeId:'one'})).toEqual(state.receipt);expect(await f.read('one')).toEqual(before);expect(f.fetcher).toHaveBeenCalledTimes(1);},30000);
+ it.each([false,true])('此前逐字稿无item回执，派生恢复失败=%s仍保原文并跳过重复ASR',async failRestore=>{
+  const f=await fixture();const prior=await f.artifactService.createArtifact(f.ctx,{projectId:`${f.id}-one`,title:'先前已保存事实',artifactType:'output_script',stage:'analysis',initialContentText:'历史原文字节',initialContentData:{awemeId:'one',source:'transcribed'}});
+  const before=await f.read('one');if(failRestore)await db.execute(sql`CREATE OR REPLACE FUNCTION reject_transcribe_master_fixture() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF NEW.artifact_type='master_script' THEN RAISE EXCEPTION 'fixture restore master failure'; END IF; RETURN NEW; END $$`);
+  if(failRestore)await db.execute(sql`CREATE TRIGGER reject_transcribe_master_fixture BEFORE INSERT ON artifacts FOR EACH ROW EXECUTE FUNCTION reject_transcribe_master_fixture()`);
+  try{
+   const state=await f.workflow.prepareItem(f.ref,{awemeId:'one'});expect(state.receipt).toMatchObject({status:'existing',awemeId:'one'});expect(await f.workflow.saveArtifact(f.ref,{awemeId:'one'})).toEqual(state.receipt);expect(await f.read('one')).toEqual(before);expect((await f.read('one')).artifact.id).toBe(prior.id);expect(f.fetcher).not.toHaveBeenCalled();expect(await f.workflow.complete(f.ref,{})).toEqual({status:'succeeded'});
+   const rows=await f.artifactService.listProjectArtifacts(f.ctx,`${f.id}-one`);expect(rows.filter(row=>row.artifactType==='master_script')).toHaveLength(failRestore?0:1);
+  }finally{if(failRestore){await db.execute(sql`DROP TRIGGER reject_transcribe_master_fixture ON artifacts`);await db.execute(sql`DROP FUNCTION reject_transcribe_master_fixture()`);}}
+ },30000);
+ it('三作品混合视频/图集/验证码失败，公开保留两份事实且不伪造图集口播',async()=>{
+  const f=await fixture(['one','album','blocked']);await f.save('one');await f.workflow.recordSource(f.ref,{awemeId:'album',source:{kind:'image-album'}});await f.workflow.saveArtifact(f.ref,{awemeId:'album'});await f.workflow.failItem(f.ref,{awemeId:'blocked',error:'作品页命中验证码'});expect(await f.workflow.complete(f.ref,{})).toEqual({status:'failed'});expect((await f.read('one')).version?.contentText).toBe('真实端口原文');expect((await f.read('album')).version?.contentText).toBe(IMAGE_ALBUM_TRANSCRIPT_PLACEHOLDER);expect(await f.artifactService.listProjectArtifacts(f.ctx,`${f.id}-blocked`)).toEqual([]);expect(f.fetcher).toHaveBeenCalledTimes(1);
+ },30000);
+ it('图集真实保存诚实占位，跳过口播初始化及后处理',async()=>{const f=await fixture();await f.workflow.recordSource(f.ref,{awemeId:'one',source:{kind:'image-album'}});expect(await f.workflow.saveArtifact(f.ref,{awemeId:'one'})).toMatchObject({status:'image-album'});expect((await f.read('one')).version?.contentText).toBe(IMAGE_ALBUM_TRANSCRIPT_PLACEHOLDER);expect(f.fetcher).not.toHaveBeenCalled();expect(f.ready).not.toHaveBeenCalled();expect(await f.workflow.complete(f.ref,{})).toEqual({status:'succeeded'});},30000);
+ it('取消后的保存入口保留已保存事实，不能新写另一作品或覆盖终态',async()=>{const f=await fixture(['one','two']);await f.save('one');const before=await f.read('one'),controller=new AbortController();controller.abort();await expect(f.workflow.saveArtifact(f.ref,{awemeId:'two'},controller.signal)).rejects.toMatchObject({name:'AbortError'});expect(await f.read('one')).toEqual(before);await expect(f.workflow.complete(f.ref,{})).rejects.toThrow('尚未全部处理');},30000);
+ it.each([
+  {name:'正文',field:'transcript',value:'被替换正文'},
+  {name:'reason',field:'reason',value:'被替换原因'},
+  {name:'applied',field:'applied',value:true},
+ ])('已读回执后冻结$name突变拒绝且零工件/零新增付费',async mutation=>{
+  const f=await fixture();await f.prepareSaving('one');const originalRead=f.post.read.bind(f.post);
+  vi.spyOn(f.post,'read').mockImplementation(async(...args)=>{
+   const observed=await originalRead(...args);const [task]=await db.select().from(executionTasks).where(eq(executionTasks.id,f.ref.executionTaskId));
+   const payload=z.record(z.string(),z.unknown()).parse(task?.payload),entries=z.record(z.string(),z.unknown()).parse(payload.transcribePostprocess),entry=z.record(z.string(),z.unknown()).parse(entries.one),result=z.record(z.string(),z.unknown()).parse(entry.result);
+   const changed=mutation.field==='applied'?{applied:true,transcript:result.transcript}:{...result,[mutation.field]:mutation.value};
+   await db.update(executionTasks).set({payload:{...payload,transcribePostprocess:{...entries,one:{...entry,result:changed}}}}).where(eq(executionTasks.id,f.ref.executionTaskId));return observed;
   });
-
-  it("逐字稿已落库后，后续重建排队失败只告警，不反向把转写判失败", async () => {
-    const { deps, spies } = makeDeps({ awemeIds: ["ready"] });
-    deps.onTranscriptReady = vi.fn(async () => {
-      throw new Error("重建队列暂不可用");
-    });
-    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
-
-    await runTranscribe(
-      ctx,
-      {
-        id: "task-ready",
-        taskType: "transcribe.douyin",
-        inputData: { awemeIds: ["ready"] },
-      },
-      deps,
-    );
-
-    expect(spies.ensureTranscriptArtifact).toHaveBeenCalledTimes(1);
-    expect(spies.markSucceeded).toHaveBeenCalledTimes(1);
-    expect(spies.markFailed).not.toHaveBeenCalled();
-    expect(warn).toHaveBeenCalledWith(
-      expect.stringContaining("逐字稿已就绪，但重建排队失败"),
-      expect.any(String),
-    );
+  await expect(f.workflow.saveArtifact(f.ref,{awemeId:'one'})).rejects.toThrow('后处理最终正文与原回执不符');
+  expect(await f.artifactService.listProjectArtifacts(f.ctx,`${f.id}-one`)).toEqual([]);expect(f.fetcher).toHaveBeenCalledTimes(1);expect(f.ready).not.toHaveBeenCalled();
+ },30000);
+ it.each([
+  {name:'extra',field:'unexpected',value:'非法字段'},
+  {name:'reason类型',field:'reason',value:3},
+  {name:'applied数组',field:'applied',value:[]},
+  {name:'正文数组',field:'transcript',value:['正文']},
+ ])('两侧同样非法$name不能因深等而落稿',async mutation=>{
+  const f=await fixture();await f.prepareSaving('one');const originalRead=f.post.read.bind(f.post);
+  vi.spyOn(f.post,'read').mockImplementation(async(...args)=>{
+   const observed=await originalRead(...args);if(!observed)throw Error('fixture缺少原回执');
+   Object.defineProperty(observed,mutation.field,{value:mutation.value,enumerable:true,configurable:true});
+   const [task]=await db.select().from(executionTasks).where(eq(executionTasks.id,f.ref.executionTaskId));const payload=z.record(z.string(),z.unknown()).parse(task?.payload),entries=z.record(z.string(),z.unknown()).parse(payload.transcribePostprocess),entry=z.record(z.string(),z.unknown()).parse(entries.one);
+   await db.update(executionTasks).set({payload:{...payload,transcribePostprocess:{...entries,one:{...entry,result:observed}}}}).where(eq(executionTasks.id,f.ref.executionTaskId));return observed;
   });
-
-  it("在线失败后本地成功时接受 host 回传的真实 whisper-local 执行规格", async () => {
-    const localSpec: MultimodalSpec = {
-      provider: "whisper-local",
-      baseUrl: null,
-      model: "small",
-      token: "",
-      kind: "audio",
-    };
-    const { deps, spies, ensureCalls } = makeDeps({
-      awemeIds: ["fallback-local"],
-      transcribeResult: {
-        text: "本地真实逐字稿",
-        effectiveSpec: localSpec,
-        executionMode: "whisper-local",
-      },
-    });
-    await runTranscribe(
-      ctx,
-      {
-        id: "task-local-fallback",
-        taskType: "transcribe.douyin",
-        inputData: { awemeIds: ["fallback-local"] },
-      },
-      deps,
-    );
-    expect(spies.transcribeAudio).toHaveBeenCalledTimes(1);
-    expect(ensureCalls.find((c) => c.transcript)?.transcript).toBe("本地真实逐字稿");
-    expect(spies.markSucceeded).toHaveBeenCalledTimes(1);
-  });
-
-  it("F7-a:ASR 未配置 → 整批立即停止并给设置指引，不继续逐条调用", async () => {
-    const { deps, spies } = makeDeps({
-      awemeIds: ["a1", "a2"],
-      resolveThrows: new TranscribeConfigError("transcribe.audio 未配置(测试注入)"),
-    });
-    await runTranscribe(
-      ctx,
-      {
-        id: "task-2",
-        taskType: "transcribe.douyin",
-        inputData: { awemeIds: ["a1", "a2"] },
-      },
-      deps,
-    );
-    expect(spies.markRunning).toHaveBeenCalledTimes(1);
-    expect(spies.markSucceeded).not.toHaveBeenCalled();
-    expect(spies.markFailed).toHaveBeenCalledTimes(1);
-    expect(spies.transcribeAudio).not.toHaveBeenCalled();
-    expect(spies.fetchVideoUrl).toHaveBeenCalledTimes(1);
-    expect(spies.streamAudio).not.toHaveBeenCalled();
-    const [, , msg] = spies.markFailed.mock.calls[0]!;
-    expect(String(msg)).toMatch(/设置.*模型配置.*小米 MiMo/);
-  });
-
-  it("F7-b:多 aweme,其中一条 streamAudio 抛 → 该 aweme 失败、其余成功、任务不整体崩(markSucceeded 带失败计数)", async () => {
-    const { deps, spies } = makeDeps({
-      awemeIds: ["ok1", "bad", "ok2"],
-      // 取音频失败模拟:runner 不按错误类判别(只特判 TranscribeConfigError),故普通 Error
-      // 即可覆盖「该 aweme 失败其余继续」路径,无需 import 前端 ingestion 的 DouyinAudioFetchError。
-      streamThrowsFor: (id) =>
-        id === "bad"
-          ? new Error("ffmpeg 非 0 退出 (直链失效)")
-          : null,
-    });
-    await runTranscribe(
-      ctx,
-      {
-        id: "task-3",
-        taskType: "transcribe.douyin",
-        inputData: { awemeIds: ["ok1", "bad", "ok2"] },
-      },
-      deps,
-    );
-    // 不整体崩:markSucceeded 被调(有成功),markFailed 不被调。
-    expect(spies.markSucceeded).toHaveBeenCalledTimes(1);
-    expect(spies.markFailed).not.toHaveBeenCalled();
-    // 两条成功各转写一次;失败那条 streamAudio 抛后不进 transcribeAudio。
-    expect(spies.transcribeAudio).toHaveBeenCalledTimes(2);
-    // 末尾汇总 step 文案含「成功 2 条,失败 1 条」。
-    const summarySteps = spies.recordStep.mock.calls
-      .map((c) => (c[2] as { text: string }).text)
-      .filter((t) => t.includes("采集完成"));
-    expect(summarySteps.length).toBe(1);
-    expect(summarySteps[0]).toContain("成功 2 条");
-    expect(summarySteps[0]).toContain("失败 1 条");
-  });
-
-  it("幂等:hasTranscriptArtifact 报已存在 → 跳过 fetch/ASR(fetchVideoUrl 未被调)", async () => {
-    const { deps, spies } = makeDeps({
-      awemeIds: ["dup"],
-      alreadyHas: (id) => id === "dup",
-    });
-    await runTranscribe(
-      ctx,
-      {
-        id: "task-4",
-        taskType: "transcribe.douyin",
-        inputData: { awemeIds: ["dup"] },
-      },
-      deps,
-    );
-    // 已有逐字稿 → 省流:不 fetch 直链、不抽音、不 ASR、不重复写 artifact。
-    expect(spies.fetchVideoUrl).not.toHaveBeenCalled();
-    expect(spies.streamAudio).not.toHaveBeenCalled();
-    expect(spies.transcribeAudio).not.toHaveBeenCalled();
-    expect(spies.ensureTranscriptArtifact).not.toHaveBeenCalled();
-    // 已跳过的 aweme 记一条 step + 计入成功 → markSucceeded。
-    expect(spies.markSucceeded).toHaveBeenCalledTimes(1);
-    expect(spies.markFailed).not.toHaveBeenCalled();
-  });
+  await expect(f.workflow.saveArtifact(f.ref,{awemeId:'one'})).rejects.toThrow();expect(await f.artifactService.listProjectArtifacts(f.ctx,`${f.id}-one`)).toEqual([]);expect(f.fetcher).toHaveBeenCalledTimes(1);expect(f.ready).not.toHaveBeenCalled();
+ },30000);
+ it('已保存原回执先返回，不重新读后处理或付费，并保留原版本',async()=>{
+  const f=await fixture();const receipt=await f.save('one'),before=await f.read('one');const read=vi.spyOn(f.post,'read').mockRejectedValue(Error('不得重读已保存后处理'));
+  expect(await f.workflow.saveArtifact(f.ref,{awemeId:'one'})).toEqual(receipt);expect(await f.read('one')).toEqual(before);expect(read).not.toHaveBeenCalled();expect(f.fetcher).toHaveBeenCalledTimes(1);
+ },30000);
+ it('原配置准备失败不制造Execution、付费调用或伪转写成功',async()=>{const id=`config-failure-${++seq}`,ctx={userId:id,accountId:id,requestId:id,source:'user' as const};await db.insert(aiTasks).values({id,userId:id,accountId:id,taskType:'transcribe.douyin',idempotencyKey:id,inputData:{awemeIds:['one']},requestedAt:now()});const service=createTranscribeBusinessExecutionService(db,{budget,resolveSpec:async()=>{throw Error('ASR未配置，请设置');}});await expect(service.prepare(ctx,id)).rejects.toThrow('ASR未配置');const [task]=await db.select().from(aiTasks).where(eq(aiTasks.id,id));expect(task).toMatchObject({status:'queued',executionTaskId:null});expect(await db.select().from(executionTasks).where(eq(executionTasks.ownerId,id))).toEqual([]);},30000);
 });
-
-it.each([false,true])('已有事实恢复口播稿且恢复失败不重复 ASR (失败=%s)',async(fail)=>{
- const {deps,spies}=makeDeps({awemeIds:['dup'],alreadyHas:()=>true});
- const restore=vi.fn(async()=>{if(fail)throw new Error('temporary restore failure');});
- deps.restoreTranscriptArtifact=restore;
- const warn=vi.spyOn(console,'warn').mockImplementation(()=>{});
- try{
-  await runTranscribe(ctx,{id:'restore-existing',taskType:'transcribe.douyin',inputData:{awemeIds:['dup']}},deps);
-  expect(restore).toHaveBeenCalledWith(ctx,'dup');
-  expect(spies.fetchVideoUrl).not.toHaveBeenCalled();
-  expect(spies.transcribeAudio).not.toHaveBeenCalled();
-  expect(spies.markSucceeded).toHaveBeenCalledTimes(1);
-  expect(spies.markFailed).not.toHaveBeenCalled();
- }finally{warn.mockRestore();}
-});
-
-// [T-243] 逐字稿覆盖率修复:图集诚实跳过 / ffmpeg 单次重试 / 失败分类计数。
-describe("[T-243] runTranscribe 图集跳过 + ffmpeg 重试 + 失败分类", () => {
-  it("图集作品 → 写占位锚(source:image-album + skipMasterScript),不抽音不 ASR,计数单列不算失败", async () => {
-    const { deps, spies, ensureCalls } = makeDeps({
-      awemeIds: ["album1", "vid1"],
-      videoSourceFor: (id) =>
-        id === "album1"
-          ? { kind: "image-album" }
-          : { kind: "video", playUrl: `https://v.example/${id}?play=1` },
-    });
-    await runTranscribe(
-      ctx,
-      {
-        id: "task-5",
-        taskType: "transcribe.douyin",
-        inputData: { awemeIds: ["album1", "vid1"] },
-      },
-      deps,
-    );
-    // 图集:不抽音、不 ASR;占位锚经 ensureTranscriptArtifact 写入(幂等锚防每轮重查)。
-    expect(spies.streamAudio).toHaveBeenCalledTimes(1); // 仅 vid1
-    expect(spies.transcribeAudio).toHaveBeenCalledTimes(1); // 仅 vid1
-    const albumWrite = ensureCalls.find((c) => c.awemeId === "album1");
-    expect(albumWrite?.transcript).toBe(IMAGE_ALBUM_TRANSCRIPT_PLACEHOLDER);
-    expect(albumWrite?.source).toBe("image-album");
-    expect(albumWrite?.skipMasterScript).toBe(true);
-    expect(spies.onTranscriptReady).toHaveBeenCalledTimes(1);
-    expect(spies.onTranscriptReady).toHaveBeenCalledWith(ctx, {
-      awemeId: "vid1",
-      projectId: "proj-vid1",
-    });
-    // 图集不算失败 → markSucceeded;汇总含「图集跳过 1 条」且失败 0。
-    expect(spies.markSucceeded).toHaveBeenCalledTimes(1);
-    expect(spies.markFailed).not.toHaveBeenCalled();
-    const summary = spies.recordStep.mock.calls
-      .map((c) => (c[2] as { text: string }).text)
-      .find((t) => t.includes("采集完成"))!;
-    expect(summary).toContain("图集跳过 1 条");
-    expect(summary).toContain("失败 0 条");
-  });
-
-  it("全图集(0 转写成功)→ 仍 markSucceeded(诚实处理结果,非失败)", async () => {
-    const { deps, spies } = makeDeps({
-      awemeIds: ["album1"],
-      videoSourceFor: () => ({ kind: "image-album" }),
-    });
-    await runTranscribe(
-      ctx,
-      {
-        id: "task-6",
-        taskType: "transcribe.douyin",
-        inputData: { awemeIds: ["album1"] },
-      },
-      deps,
-    );
-    expect(spies.markSucceeded).toHaveBeenCalledTimes(1);
-    expect(spies.markFailed).not.toHaveBeenCalled();
-  });
-
-  it("ffmpeg 首抽失败 → 重取直链重试一次成功(fetchVideoUrl 调 2 次,任务成功零失败)", async () => {
-    const { deps, spies } = makeDeps({
-      awemeIds: ["flaky"],
-      streamThrowsFor: (id) =>
-        id === "flaky"
-          ? new Error("streamAudioFromVideo: ffmpeg 非 0 退出 (code=1): 403")
-          : null,
-      streamFailTimes: 1, // 首抽抛,重试恢复(直链瞬时失效场景)
-    });
-    await runTranscribe(
-      ctx,
-      {
-        id: "task-7",
-        taskType: "transcribe.douyin",
-        inputData: { awemeIds: ["flaky"] },
-      },
-      deps,
-    );
-    expect(spies.fetchVideoUrl).toHaveBeenCalledTimes(2); // 首取 + 重取直链
-    expect(spies.streamAudio).toHaveBeenCalledTimes(2); // 首抽失败 + 重试成功
-    expect(spies.transcribeAudio).toHaveBeenCalledTimes(1);
-    expect(spies.markSucceeded).toHaveBeenCalledTimes(1);
-    expect(spies.markFailed).not.toHaveBeenCalled();
-  });
-
-  it("ffmpeg 重试后仍失败 → 单作品失败继续,汇总带分类计数(ffmpeg 1)", async () => {
-    const { deps, spies } = makeDeps({
-      awemeIds: ["dead", "ok1"],
-      streamThrowsFor: (id) =>
-        id === "dead"
-          ? new Error("streamAudioFromVideo: ffmpeg 非 0 退出 (code=1): 403")
-          : null,
-      // streamFailTimes 缺省 = 次次抛 → 重试也失败。
-    });
-    await runTranscribe(
-      ctx,
-      {
-        id: "task-8",
-        taskType: "transcribe.douyin",
-        inputData: { awemeIds: ["dead", "ok1"] },
-      },
-      deps,
-    );
-    expect(spies.markSucceeded).toHaveBeenCalledTimes(1); // ok1 成功,不整体崩
-    const summary = spies.recordStep.mock.calls
-      .map((c) => (c[2] as { text: string }).text)
-      .find((t) => t.includes("采集完成"))!;
-    expect(summary).toContain("失败 1 条");
-    expect(summary).toContain("ffmpeg 1");
-    // 单条失败 step 也标了分类。
-    const failStep = spies.recordStep.mock.calls
-      .map((c) => (c[2] as { text: string }).text)
-      .find((t) => t.includes("dead") && t.includes("失败"))!;
-    expect(failStep).toContain("ffmpeg");
-  });
-
-  it("classifyTranscribeFailure 纯函数:按消息归类(解析/ffmpeg/验证码/其他)", () => {
-    expect(
-      classifyTranscribeFailure(
-        "parseDouyinVideoUrl: 无法从 _ROUTER_DATA 中解析视频信息(item_list 为空)",
-      ),
-    ).toBe("parse-failed");
-    expect(
-      classifyTranscribeFailure("parseAwemeDetail: aweme_detail 为空(作品不存在/不可见/接口风控)"),
-    ).toBe("parse-failed");
-    expect(
-      classifyTranscribeFailure("fetchDouyinVideoUrl: iesdouyin HTTP 503 (aweme x)"),
-    ).toBe("parse-failed");
-    expect(
-      classifyTranscribeFailure("streamAudioFromVideo: ffmpeg 非 0 退出 (code=1)"),
-    ).toBe("ffmpeg");
-    expect(
-      classifyTranscribeFailure(
-        "fetchDouyinVideoUrlViaDetail: 作品页命中验证码,跳过 (aweme x)",
-      ),
-    ).toBe("captcha");
-    expect(classifyTranscribeFailure("ASR 返回空逐字稿")).toBe("other");
-  });
-});
-
-// ---------------------------------------------------------------------------
-// [T-230] 限流冷却批级延迟重试:self.detail 重活先烧通道 → transcribe 紧跟撞
-// DouyinCooldownActiveError 快速失败。修 = 检测冷却类失败 → 等冷却结束(fake gateway 可查
-// 剩余)→ 只重跑冷却失败子集一次。全 fake(fake sleep 不真等),确定性单测。
-// ---------------------------------------------------------------------------
-describe("[T-230] 冷却类失败 → 延迟重试一次", () => {
-  // gateway 冷却快速失败的形状(runner 经注入 isCooldownError 判别,不 import 前端错误类)。
-  class FakeCooldownError extends Error {
-    constructor(readonly remainMs: number) {
-      super(
-        `[douyin-gateway] channel "iesdouyin" 冷却中,剩余 ${Math.ceil(remainMs / 1000)}s 超过单次 acquire 等待上限,快速失败本轮`,
-      );
-      this.name = "DouyinCooldownActiveError";
-    }
-  }
-
-  it("classifyTranscribeFailure:冷却消息归 cooldown 类", () => {
-    expect(
-      classifyTranscribeFailure(new FakeCooldownError(960_000).message),
-    ).toBe("cooldown");
-  });
-
-  it("全批撞冷却 → 等冷却结束重试子集一次 → 全部成功,任务 markSucceeded", async () => {
-    const awemeIds = ["a1", "a2"];
-    const { deps, spies, ensureCalls } = makeDeps({ awemeIds });
-    // 首轮每个 aweme 的 fetchVideoUrl 都撞冷却;重试轮放行。
-    const attempts = new Map<string, number>();
-    spies.fetchVideoUrl.mockImplementation(async (_c, awemeId: string) => {
-      const n = (attempts.get(awemeId) ?? 0) + 1;
-      attempts.set(awemeId, n);
-      if (n === 1) throw new FakeCooldownError(960_000);
-      return { playUrl: `https://v.example/${awemeId}?play=1` };
-    });
-    const sleep = vi.fn(async (_ms: number) => undefined);
-    let cooldownRemain = 960_000;
-    await runTranscribe(
-      ctx,
-      { id: "task-cd", taskType: "transcribe.douyin", inputData: { awemeIds } },
-      {
-        ...deps,
-        isCooldownError: (e) => e instanceof FakeCooldownError,
-        getCooldownRemainMs: () => cooldownRemain,
-        maxCooldownWaitMs: 30 * 60 * 1000, // 30min 上限 > 剩余 16min → 等
-        sleep: async (ms) => {
-          await sleep(ms);
-          cooldownRemain = 0; // 睡醒 = 冷却已过
-        },
-      },
-    );
-    // 等待了一次(剩余 + 5s buffer),且重试子集全部成功 → markSucceeded、非 markFailed。
-    expect(sleep).toHaveBeenCalledTimes(1);
-    expect(sleep).toHaveBeenCalledWith(960_000 + 5000);
-    expect(spies.markSucceeded).toHaveBeenCalledTimes(1);
-    expect(spies.markFailed).not.toHaveBeenCalled();
-    // 每 aweme 恰好两次 fetch(首轮撞冷却 + 重试成功),真转写写入两条。
-    expect(attempts.get("a1")).toBe(2);
-    expect(attempts.get("a2")).toBe(2);
-    expect(
-      ensureCalls.filter((c) => c.transcript === "逐字稿X"),
-    ).toHaveLength(2);
-    // 汇总 step 不再有失败计数(失败 0 条)。
-    const texts = spies.recordStep.mock.calls.map(
-      (c) => (c[2] as { text: string }).text,
-    );
-    expect(texts.some((t) => t.includes("限流冷却") && t.includes("重试"))).toBe(
-      true,
-    );
-    expect(texts.some((t) => t.includes("失败 0 条"))).toBe(true);
-  });
-
-  it("冷却剩余超等待上限 → 诚实不等(sleep 不被调),失败照旧终态", async () => {
-    const awemeIds = ["a1"];
-    const { deps, spies } = makeDeps({ awemeIds });
-    spies.fetchVideoUrl.mockImplementation(async () => {
-      throw new FakeCooldownError(3_600_000); // 剩 60min
-    });
-    const sleep = vi.fn(async (_ms: number) => undefined);
-    await runTranscribe(
-      ctx,
-      { id: "task-cd2", taskType: "transcribe.douyin", inputData: { awemeIds } },
-      {
-        ...deps,
-        isCooldownError: (e) => e instanceof FakeCooldownError,
-        getCooldownRemainMs: () => 3_600_000,
-        maxCooldownWaitMs: 30 * 60 * 1000, // 上限 30min < 剩余 60min → 不等
-        sleep,
-      },
-    );
-    expect(sleep).not.toHaveBeenCalled();
-    // 全失败 → markFailed,消息带冷却分类计数。
-    expect(spies.markSucceeded).not.toHaveBeenCalled();
-    expect(spies.markFailed).toHaveBeenCalledTimes(1);
-    const msg = spies.markFailed.mock.calls[0]?.[2] as string;
-    expect(msg).toContain("限流冷却 1");
-    // 诚实 step:说明不等待、下轮幂等自动补。
-    const texts = spies.recordStep.mock.calls.map(
-      (c) => (c[2] as { text: string }).text,
-    );
-    expect(texts.some((t) => t.includes("超过等待上限"))).toBe(true);
-  });
-
-  it("未注入冷却端口(旧 host)→ 零回归:冷却失败按原样终态,不重试", async () => {
-    const awemeIds = ["a1"];
-    const { deps, spies } = makeDeps({ awemeIds });
-    spies.fetchVideoUrl.mockImplementation(async () => {
-      throw new FakeCooldownError(960_000);
-    });
-    await runTranscribe(
-      ctx,
-      { id: "task-cd3", taskType: "transcribe.douyin", inputData: { awemeIds } },
-      deps, // 不带 isCooldownError/getCooldownRemainMs/sleep
-    );
-    expect(spies.markFailed).toHaveBeenCalledTimes(1);
-    expect(spies.fetchVideoUrl).toHaveBeenCalledTimes(1); // 无重试
-  });
-});
-
-describe("[T-357] 采集逐字稿后处理(落库前一遍,失败诚实落原文不阻断)", () => {
-  it("后处理生效 → ensure 收到校正稿(非 ASR 原文),步骤注记「纠错+断句完成」,任务成功", async () => {
-    const awemeIds = ["a1"];
-    const { deps, spies, ensureCalls } = makeDeps({ awemeIds });
-    const postprocess = vi.fn(
-      async (_c: RequestContext, input: { awemeId: string; transcript: string }) => ({
-        applied: true,
-        transcript: `${input.transcript}(已校正)`,
-      }),
-    );
-    await runTranscribe(
-      ctx,
-      { id: "t-pp1", taskType: "transcribe.douyin", inputData: { awemeIds } },
-      { ...deps, postprocessTranscript: postprocess },
-    );
-    expect(postprocess).toHaveBeenCalledTimes(1);
-    expect(postprocess.mock.calls[0]![1]).toEqual({
-      awemeId: "a1",
-      transcript: "逐字稿X",
-    });
-    expect(ensureCalls[0]!.transcript).toBe("逐字稿X(已校正)"); // 落库的是校正稿
-    const stepTexts = spies.recordStep.mock.calls.map((c) => c[2].text);
-    expect(stepTexts.some((t) => t.includes("后处理:纠错+断句完成"))).toBe(true);
-    expect(spies.markSucceeded).toHaveBeenCalledTimes(1);
-  });
-
-  it("后处理未执行(applied:false + reason)→ 落 ASR 原文,步骤注记「后处理未执行:<原因>」,不阻断", async () => {
-    const awemeIds = ["a1"];
-    const { deps, spies, ensureCalls } = makeDeps({ awemeIds });
-    const postprocess = vi.fn(
-      async (_c: RequestContext, input: { awemeId: string; transcript: string }) => ({
-        applied: false,
-        transcript: input.transcript,
-        reason: "模型未配置(无可用 LLM 凭据)",
-      }),
-    );
-    await runTranscribe(
-      ctx,
-      { id: "t-pp2", taskType: "transcribe.douyin", inputData: { awemeIds } },
-      { ...deps, postprocessTranscript: postprocess },
-    );
-    expect(ensureCalls[0]!.transcript).toBe("逐字稿X"); // 诚实落原文
-    const stepTexts = spies.recordStep.mock.calls.map((c) => c[2].text);
-    expect(
-      stepTexts.some((t) => t.includes("后处理未执行:模型未配置")),
-    ).toBe(true);
-    expect(spies.markSucceeded).toHaveBeenCalledTimes(1); // 转写链不因后处理挂掉
-    expect(spies.markFailed).not.toHaveBeenCalled();
-  });
-
-  it("后处理直接抛错(实现违约)→ runner 双保险接住:落原文 + 注记,任务仍成功", async () => {
-    const awemeIds = ["a1"];
-    const { deps, spies, ensureCalls } = makeDeps({ awemeIds });
-    const postprocess = vi.fn(async () => {
-      throw new Error("后处理内部崩了");
-    });
-    await runTranscribe(
-      ctx,
-      { id: "t-pp3", taskType: "transcribe.douyin", inputData: { awemeIds } },
-      { ...deps, postprocessTranscript: postprocess },
-    );
-    expect(ensureCalls[0]!.transcript).toBe("逐字稿X");
-    const stepTexts = spies.recordStep.mock.calls.map((c) => c[2].text);
-    expect(stepTexts.some((t) => t.includes("后处理未执行:后处理内部崩了"))).toBe(
-      true,
-    );
-    expect(spies.markSucceeded).toHaveBeenCalledTimes(1);
-  });
-
-  it("未注入后处理端口(旧 host / 缺省)→ 零回归:落 ASR 原文,无后处理注记", async () => {
-    const awemeIds = ["a1"];
-    const { deps, spies, ensureCalls } = makeDeps({ awemeIds });
-    await runTranscribe(
-      ctx,
-      { id: "t-pp4", taskType: "transcribe.douyin", inputData: { awemeIds } },
-      deps, // 不带 postprocessTranscript
-    );
-    expect(ensureCalls[0]!.transcript).toBe("逐字稿X");
-    const stepTexts = spies.recordStep.mock.calls.map((c) => c[2].text);
-    expect(stepTexts.some((t) => t.includes("后处理"))).toBe(false);
-    expect(spies.markSucceeded).toHaveBeenCalledTimes(1);
-  });
-
-  it("图集占位锚路径不走后处理(占位文本非 ASR 产文本)", async () => {
-    const awemeIds = ["album1"];
-    const { deps, spies } = makeDeps({
-      awemeIds,
-      videoSourceFor: () => ({ kind: "image-album" }),
-    });
-    const postprocess = vi.fn(async () => ({
-      applied: true,
-      transcript: "不该被调用",
-    }));
-    await runTranscribe(
-      ctx,
-      { id: "t-pp5", taskType: "transcribe.douyin", inputData: { awemeIds } },
-      { ...deps, postprocessTranscript: postprocess },
-    );
-    expect(postprocess).not.toHaveBeenCalled();
-    expect(spies.markSucceeded).toHaveBeenCalledTimes(1);
-  });
-});
-it('取消后的 ASR 返回不继续后处理或落稿，并原样交回取消状态',async()=>{
- const {deps,spies}=makeDeps({awemeIds:['one','two']});const controller=new AbortController();deps.signal=controller.signal;
- deps.transcribeAudio=vi.fn(async(_spec,opts)=>{expect(opts.signal).toBe(controller.signal);controller.abort();return {text:'迟到正文'};});
- deps.postprocessTranscript=vi.fn(async()=>({applied:false,transcript:'正文'}));
- await expect(runTranscribe(ctx,{id:'cancel-asr',taskType:'transcribe.douyin',inputData:{awemeIds:['one','two']}},deps)).rejects.toMatchObject({name:'AbortError'});
- expect(deps.postprocessTranscript).not.toHaveBeenCalled();expect(spies.ensureTranscriptArtifact).not.toHaveBeenCalled();expect(spies.markFailed).not.toHaveBeenCalled();expect(spies.fetchVideoUrl).toHaveBeenCalledTimes(1);
-});
-it('抽音阶段取消不再重取直链或启动 ASR',async()=>{
- const {deps,spies}=makeDeps({awemeIds:['one']});const controller=new AbortController();deps.signal=controller.signal;
- deps.streamAudio=vi.fn(async()=>{controller.abort();throw new DOMException('cancel','AbortError');});
- await expect(runTranscribe(ctx,{id:'cancel-stream',taskType:'transcribe.douyin',inputData:{awemeIds:['one']}},deps)).rejects.toMatchObject({name:'AbortError'});
- expect(spies.fetchVideoUrl).toHaveBeenCalledTimes(1);expect(spies.transcribeAudio).not.toHaveBeenCalled();expect(spies.markFailed).not.toHaveBeenCalled();
-});
-it('把同一个取消信号传给首次和重试取流、抽音端口',async()=>{
- const {deps}=makeDeps({awemeIds:['one']});const controller=new AbortController();deps.signal=controller.signal;
- const signals:unknown[]=[];let attempts=0;
- deps.fetchVideoUrl=async(...args)=>{signals.push(args[2]);return {playUrl:'https://fixture.invalid/audio'};};
- deps.streamAudio=async(...args)=>{signals.push(args[2]);if(++attempts===1)throw Error('expired');return new Uint8Array([1]);};
- await runTranscribe(ctx,{id:'forward-signal',taskType:'transcribe.douyin',inputData:{awemeIds:['one']}},deps);
- expect(signals).toEqual([controller.signal,controller.signal,controller.signal,controller.signal]);
-});
-it('冷却等待可立即取消，不等待到期、不重新抓取',async()=>{
- const {deps,spies}=makeDeps({awemeIds:['cooldown']});const controller=new AbortController();deps.signal=controller.signal;
- spies.fetchVideoUrl.mockRejectedValue(Object.assign(new Error('cooldown'),{name:'DouyinCooldownError'}));
- deps.isCooldownError=()=>true;deps.getCooldownRemainMs=()=>60_000;
- let entered!:()=>void;const waiting=new Promise<void>(r=>{entered=r;});
- spies.recordStep.mockImplementation(async(_c,_id,data)=>{if(data.text.includes('等待冷却结束'))entered();});
- const running=runTranscribe(ctx,{id:'cancel-wait',taskType:'transcribe.douyin',inputData:{awemeIds:['cooldown']}},deps);
- const stopped=expect(running).rejects.toMatchObject({name:'AbortError'});
- await waiting;await Promise.resolve();controller.abort();await stopped;
- expect(spies.fetchVideoUrl).toHaveBeenCalledTimes(1);expect(spies.transcribeAudio).not.toHaveBeenCalled();expect(spies.markFailed).not.toHaveBeenCalled();
-});
-it.each([true,false])('已存事实探测返回 %s 时取消，不再启动恢复或取流',async(hasTranscript)=>{
- const {deps,spies}=makeDeps({awemeIds:['existing']});const controller=new AbortController();deps.signal=controller.signal;
- deps.hasTranscriptArtifact=async()=>{controller.abort();return hasTranscript;};deps.restoreTranscriptArtifact=vi.fn(async()=>{});
- await expect(runTranscribe(ctx,{id:'cancel-restore',taskType:'transcribe.douyin',inputData:{awemeIds:['existing']}},deps)).rejects.toMatchObject({name:'AbortError'});
- expect(deps.restoreTranscriptArtifact).not.toHaveBeenCalled();expect(spies.fetchVideoUrl).not.toHaveBeenCalled();expect(spies.markFailed).not.toHaveBeenCalled();
-});
-
-it('后处理取消传播 signal 并阻止落稿和下一作品',async()=>{
- const {deps,spies}=makeDeps({awemeIds:['one','two']});const controller=new AbortController();deps.signal=controller.signal;
- deps.postprocessTranscript=vi.fn(async(_ctx,input)=>{expect(input.signal).toBe(controller.signal);controller.abort();return {applied:true,transcript:'迟到校正'};});
- await expect(runTranscribe(ctx,{id:'cancel-post',taskType:'transcribe.douyin',inputData:{awemeIds:['one','two']}},deps)).rejects.toMatchObject({name:'AbortError'});
- expect(spies.ensureTranscriptArtifact).not.toHaveBeenCalled();expect(spies.markFailed).not.toHaveBeenCalled();expect(spies.fetchVideoUrl).toHaveBeenCalledTimes(1);
-});
-it('后处理结果未知不能记成原文成功，也不继续下一作品',async()=>{
- const {deps,spies}=makeDeps({awemeIds:['one','two']});const error=new GenerationFailure('unknown_result','MODEL_RESULT_UNKNOWN');
- deps.postprocessTranscript=vi.fn(async()=>{throw error;});
- await expect(runTranscribe(ctx,{id:'unknown-post',taskType:'transcribe.douyin',inputData:{awemeIds:['one','two']}},deps)).rejects.toBe(error);
- expect(spies.ensureTranscriptArtifact).not.toHaveBeenCalled();expect(spies.markFailed).not.toHaveBeenCalled();expect(spies.fetchVideoUrl).toHaveBeenCalledTimes(1);
+describe('保留原失败分类',()=>{
+ it('按消息归类解析/ffmpeg/验证码/其他，不作内容语义选择',()=>{expect(classifyTranscribeFailure('parseDouyinVideoUrl: 无法从 _ROUTER_DATA 中解析视频信息(item_list 为空)')).toBe('parse-failed');expect(classifyTranscribeFailure('parseAwemeDetail: aweme_detail 为空(作品不存在/不可见/接口风控)')).toBe('parse-failed');expect(classifyTranscribeFailure('fetchDouyinVideoUrl: iesdouyin HTTP 503 (aweme x)')).toBe('parse-failed');expect(classifyTranscribeFailure('streamAudioFromVideo: ffmpeg 非 0 退出 (code=1)')).toBe('ffmpeg');expect(classifyTranscribeFailure('fetchDouyinVideoUrlViaDetail: 作品页命中验证码,跳过 (aweme x)')).toBe('captcha');expect(classifyTranscribeFailure('ASR 返回空逐字稿')).toBe('other');});
+ it('冷却原错误分类保持',()=>{expect(classifyTranscribeFailure('DouyinCooldownActiveError: 限流冷却中，960000ms')).toBe('cooldown');});
 });

@@ -1,3 +1,5 @@
+import {withWorkspaceWrite} from "../../workspace-write";
+import {assertFrozenWorkspaceMembership} from "../platform-account/membership-lock.service";
 import {workspaceFilter} from "../../workspace-scope";
 import type {BoundedExecutionBudget,ExecutionBudget} from "@creatoros/contract/execution-worker";
 import {prepareLegacyAssetRecovery} from "./asset-legacy-recovery.service";
@@ -12,6 +14,7 @@ import {createExecutionAuthorityService,type PreparedModelExecution} from "../ex
 import type {MultimodalSpec} from "./multimodal/resolve";
 import {supportsAssetGenerationMode,referenceImageAllowed,assetGenerationParameterError} from "./asset-generation-modes";
 type Task=typeof aiTasks.$inferSelect;
+class LegacyFactAppeared extends Error{}
 type Preparation={aiTaskId:string;executionTaskId:string};
 function fields(task:Task,legacyPlain=false){
  const raw=task.inputData as Record<string,unknown>,mediaKind=raw.kind==="video"?"video":"image";
@@ -29,7 +32,7 @@ function fields(task:Task,legacyPlain=false){
  };
 }
 /** 新调用单向转交；旧素材仅恢复原 provider job 或呈现核对状态，不能重新计费。 */
-export function createAssetBusinessExecutionService(db:Db,deps:{budget:BoundedExecutionBudget;now?:()=>string;resolveSpec(ctx:RequestContext,capability:"image.generate"|"image.edit"|"video.generate",taskId:string):Promise<MultimodalSpec>;assertProject(ctx:RequestContext,id:string):Promise<void>;assertCanvasInput?:(ctx:RequestContext,input:{attemptId:string;inputData:unknown;taskId:string},tx:Db)=>Promise<void>;getReference?:(ctx:RequestContext,assetId:string,fileId?:string)=>Promise<{fileId:string;checksum:string;mimeType:string;bytes:Uint8Array}|null>}){
+export function createAssetBusinessExecutionService(db:Db,deps:{budget:BoundedExecutionBudget;now?:()=>string;resolveSpec(ctx:RequestContext,capability:"image.generate"|"image.edit"|"video.generate",taskId:string):Promise<MultimodalSpec>;assertProject(ctx:RequestContext,id:string,tx?:Db,forUpdate?:boolean):Promise<void>;assertCanvasInput?:(ctx:RequestContext,input:{attemptId:string;inputData:unknown;taskId:string},tx:Db)=>Promise<void>;getReference?:(ctx:RequestContext,assetId:string,fileId?:string)=>Promise<{fileId:string;checksum:string;mimeType:string;bytes:Uint8Array}|null>}){
  const controller=new AbortController();
  const authority=createExecutionAuthorityService(db,{now:deps.now});
  const owned=(ctx:RequestContext,id:string)=>and(eq(aiTasks.id,id),eq(aiTasks.userId,ctx.userId),workspaceFilter(aiTasks,ctx));
@@ -47,13 +50,16 @@ export function createAssetBusinessExecutionService(db:Db,deps:{budget:BoundedEx
  }
  const service={
   async prepare(context:RequestContext,taskId:string,signal?:AbortSignal,inheritedBudget?:ExecutionBudget):Promise<Preparation>{
-   const ctx={...context};signal=signal?AbortSignal.any([signal,controller.signal]):controller.signal;signal.throwIfAborted();
+   let ctx={...context};signal=signal?AbortSignal.any([signal,controller.signal]):controller.signal;signal.throwIfAborted();
    const [task]=await db.select().from(aiTasks).where(owned(ctx,taskId));
    if(!task || task.taskType!=="asset.generate")throw new OwnershipError("素材生成任务不存在");
+   // 现页只授权访问；后续恢复/模型解析始终保存原任务身份。
+   ctx={...ctx,accountId:task.accountId,groupId:task.groupId,groupVersion:task.groupVersion??undefined,membershipVersion:task.membershipVersion??undefined};
    await assertCanvasInput(ctx,task,db);
    if(task.executionTaskId){
     const [execution]=await db.select().from(executionTasks).where(eq(executionTasks.id,task.executionTaskId));
     const recovery=(execution?.payload as {assetLegacyRecovery?:{inputData:unknown;requestFingerprint:string}})?.assetLegacyRecovery;
+    if(!execution||execution.userId!==task.userId||execution.accountId!==task.accountId||execution.groupId!==task.groupId||execution.groupVersion!==task.groupVersion||execution.membershipVersion!==task.membershipVersion||execution.ownerId!==task.id||execution.ownerType!=="ai_task"||execution.kind!=="ai_task")throw new OwnershipError("素材执行原归属不符");
     if(recovery){
      if(!isDeepStrictEqual(recovery.inputData,task.inputData)||recovery.requestFingerprint!==task.requestFingerprint)throw new Error("历史素材输入与原恢复记录不符");
      return authority.bindAiTask(ctx,task.id);
@@ -96,17 +102,27 @@ export function createAssetBusinessExecutionService(db:Db,deps:{budget:BoundedEx
     const {provider,model,baseUrl,serviceId,kind:_kind,...options}=spec;
     const runtimeOptionsDigest=`sha256:${createHash("sha256").update(canonicalJson(assetRuntimeOptionsSchema.parse(options))).digest("hex")}`;
     modelInput=assetGenerationInputSchema.parse({...input,...(reference?{reference}:{}),provider,model,baseUrl,...(serviceId?{serviceId}:{}),runtimeOptionsDigest});
-   }catch(error){signal.throwIfAborted();if(legacy)return prepareLegacyAssetRecovery(db,ctx,task,undefined,{deadlineMs:deps.budget.deadlineMs,now:deps.now??(()=>new Date().toISOString()),signal});throw error;}
-   if(legacy)return prepareLegacyAssetRecovery(db,ctx,task,modelInput,{deadlineMs:deps.budget.deadlineMs,now:deps.now??(()=>new Date().toISOString()),signal});
-   return db.transaction(async tx=>{
+   }catch(error){signal.throwIfAborted();if(legacy)return prepareLegacyAssetRecovery(db,ctx,task,undefined,{deadlineMs:deps.budget.deadlineMs,now:deps.now??(()=>new Date().toISOString()),signal,assertProject:deps.assertProject});throw error;}
+   if(legacy)return prepareLegacyAssetRecovery(db,ctx,task,modelInput,{deadlineMs:deps.budget.deadlineMs,now:deps.now??(()=>new Date().toISOString()),signal,assertProject:deps.assertProject});
+   try{return await db.transaction(async outer=>{
+    await assertFrozenWorkspaceMembership(outer,task);
+    return withWorkspaceWrite(outer,ctx,async tx=>{
+    if(task.projectId)await deps.assertProject(ctx,task.projectId,tx,true);
     signal?.throwIfAborted();const [current]=await tx.select().from(aiTasks).where(owned(ctx,task.id)).for("update");
     if(!current || current.requestFingerprint!==task.requestFingerprint || !isDeepStrictEqual(current.inputData,task.inputData) || current.projectId!==task.projectId)throw new Error("素材准备期间原任务发生变化");
-    if(!current.executionTaskId && await hasLegacy(tx,current))throw new Error("素材准备期间出现旧提交事实，请重新读取原记录");
-    await assertCanvasInput(ctx,current,tx as unknown as Db);
+    if(!current.executionTaskId && await hasLegacy(tx,current))throw new LegacyFactAppeared("素材准备期间出现旧提交事实，请重新读取原记录");
+    await assertCanvasInput(ctx,current,tx);
     signal?.throwIfAborted();
-    const mapped=await createExecutionAuthorityService(tx as unknown as Db,{now:deps.now}).bindAiTask(ctx,task.id,{requestFingerprint:task.requestFingerprint,modelInput,budget:inheritedBudget??deps.budget});
+    const mapped=await createExecutionAuthorityService(tx,{now:deps.now}).bindAiTask(ctx,task.id,{requestFingerprint:task.requestFingerprint,modelInput,budget:inheritedBudget??deps.budget});
     signal!.throwIfAborted();return mapped;
-   });
+    });
+   });}catch(error){
+    if(!(error instanceof LegacyFactAppeared))throw error;
+    // 原事务已经回滚，回读刚出现的原事实；不把未知结果转作新付费提交或普通失败。
+    const [original]=await db.select().from(aiTasks).where(owned(ctx,task.id));
+    if(!original||original.requestFingerprint!==task.requestFingerprint||!isDeepStrictEqual(original.inputData,task.inputData)||original.projectId!==task.projectId)throw new OwnershipError("旧素材原输入已改变，保留原记录待核对");
+    return prepareLegacyAssetRecovery(db,ctx,original,modelInput,{deadlineMs:deps.budget.deadlineMs,now:deps.now??(()=>new Date().toISOString()),signal:signal!,assertProject:deps.assertProject});
+   }
   },
   async resolveCredential(ctx:RequestContext,owner:{aiTaskId:string;executionTaskId:string}){
    const [task]=await db.select().from(aiTasks).where(owned(ctx,owner.aiTaskId));

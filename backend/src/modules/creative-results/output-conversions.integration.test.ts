@@ -1,3 +1,4 @@
+import {articleSection} from '@creatoros/contract';
 import {expect,it} from "vitest";
 import {createDb,type Db,contentOutputs,creativeResults} from "@creatoros/backend";
 import {createClient,ENDPOINTS} from "@creatoros/contract";
@@ -32,7 +33,7 @@ it("正式文章转图文由原 owner 创建目标及三原文字任务；改源
   const project=await projects.createProject(ctx(),{title:"互转来源"});
   const original=await articles.createOutput(ctx(),project.id,{title:"源文章",clientRequestId:"journey-source-create"});
   const initial=await articles.getArticle(ctx(),original.id);
-  const saved=await articles.createVersion(ctx(),original.id,{expectedCurrentVersionId:initial.currentVersionId,clientRequestId:"journey-source-save",document:{...initial.current,title:"真实来源标题",sections:[{sectionId:"original-section",order:0,heading:"原段落",body:"真实正文",sourceRefs:[]}]}});
+  const saved=await articles.createVersion(ctx(),original.id,{expectedCurrentVersionId:initial.currentVersionId,clientRequestId:"journey-source-save",document:{...initial.current,title:"真实来源标题",sections:[articleSection.parse({sectionId:"original-section",order:0,heading:"原段落",body:"真实正文",sourceRefs:[]})]}});
   const request={sourceOutputId:original.id,sourceVersionId:saved.versionId,targetType:"image" as const,mode:"whole" as const,clientRequestId:"journey-conversion-request",reuseImages:[]};
   const publicClient=createClient(ENDPOINTS,createCreativeResultsTransport(()=>ledger,()=>service),ctx());
   const one=await publicClient.convertOutput({params:undefined,query:undefined,body:request});expect(one.items.map(i=>i.targetField)).toEqual(["title","body","cardBriefs"]);expect(one.status).toBe("queued");expect(submissions).toBe(3);

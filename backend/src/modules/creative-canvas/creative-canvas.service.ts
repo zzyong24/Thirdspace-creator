@@ -1,3 +1,6 @@
+import {workspaceFilter,workspaceStamp,workspaceKey,requireWorkspace,assertWritableWorkspace} from '../../workspace-scope';
+import {withWorkspaceWrite} from '../../workspace-write';
+import {lockWorkspaceMembership} from '../platform-account/membership-lock.service';
 import {isDeepStrictEqual} from "node:util";
 import {createHash,randomUUID} from "node:crypto";
 import {and,desc,eq,isNull} from "drizzle-orm";
@@ -11,27 +14,32 @@ type LinkRow=typeof canvasGenerationLinks.$inferSelect;
 type GenerationNode=Extract<CanvasNode,{type:"image_generation"|"video_generation"}>;
 type ProposalOperation=z.infer<typeof canvasProposalOperationSchema>;
 type Reference={fileId:string;checksum:string;mimeType:string;bytes:Uint8Array};
-export type CanvasTaskInput={projectId?:string|null;kind:"image"|"video";mode:"text_to_image"|"image_to_image"|"text_to_video"|"image_to_video";prompt:string;visualMode?:"real_person"|"photo_product"|"graphic"|"ai_concept";templateId?:string;templateVersion?:number;aspectRatio?:string;durationSec?:number;resolution?:"768P"|"2K";referenceAssetId?:string;referenceFileId?:string;referenceChecksum?:string;canvasOwner:{accountId:string;canvasId:string;nodeId:string;inputDigest:string}};
+export type CanvasTaskInput={projectId?:string|null;kind:"image"|"video";mode:"text_to_image"|"image_to_image"|"text_to_video"|"image_to_video";prompt:string;visualMode?:"real_person"|"photo_product"|"graphic"|"ai_concept";templateId?:string;templateVersion?:number;aspectRatio?:string;durationSec?:number;resolution?:"768P"|"2K";referenceAssetId?:string;referenceFileId?:string;referenceChecksum?:string;canvasOwner:{accountId:string|null;groupId?:string;groupVersion?:number|null;membershipVersion?:number|null;canvasId:string;nodeId:string;inputDigest:string}};
 type TaskInput=CanvasTaskInput;
 // SEMANTIC_BOUNDARY_ALLOW: 冻结字段顺序仅恢复历史JSON摘要；JSONB回读的键顺序不代表内容变化。
 function canvasInputDigest(revision:number,nodeId:string,input:TaskInput){
- const ordered={...(Object.prototype.hasOwnProperty.call(input,"projectId")?{projectId:input.projectId}:{}),kind:input.kind,mode:input.mode,prompt:input.prompt,...(input.visualMode?{visualMode:input.visualMode}:{}),...(input.templateId?{templateId:input.templateId}:{}),...(input.templateVersion?{templateVersion:input.templateVersion}:{}),...(input.aspectRatio?{aspectRatio:input.aspectRatio}:{}),...(input.kind==="video"?{durationSec:input.durationSec??6,resolution:input.resolution??"768P"}:{}),...(input.referenceAssetId?{referenceAssetId:input.referenceAssetId,referenceFileId:input.referenceFileId,referenceChecksum:input.referenceChecksum}:{}),canvasOwner:{accountId:input.canvasOwner.accountId,canvasId:input.canvasOwner.canvasId,nodeId:input.canvasOwner.nodeId,inputDigest:""}};
+ const ordered={...(Object.prototype.hasOwnProperty.call(input,"projectId")?{projectId:input.projectId}:{}),kind:input.kind,mode:input.mode,prompt:input.prompt,...(input.visualMode?{visualMode:input.visualMode}:{}),...(input.templateId?{templateId:input.templateId}:{}),...(input.templateVersion?{templateVersion:input.templateVersion}:{}),...(input.aspectRatio?{aspectRatio:input.aspectRatio}:{}),...(input.kind==="video"?{durationSec:input.durationSec??6,resolution:input.resolution??"768P"}:{}),...(input.referenceAssetId?{referenceAssetId:input.referenceAssetId,referenceFileId:input.referenceFileId,referenceChecksum:input.referenceChecksum}:{}),canvasOwner:{accountId:input.canvasOwner.accountId,...(input.canvasOwner.groupId?{groupId:input.canvasOwner.groupId,groupVersion:input.canvasOwner.groupVersion,membershipVersion:input.canvasOwner.membershipVersion}:{}),canvasId:input.canvasOwner.canvasId,nodeId:input.canvasOwner.nodeId,inputDigest:""}};
  return createHash("sha256").update(JSON.stringify([revision,nodeId,ordered])).digest("hex");
 }
-const frozenTaskInputSchema=z.object({projectId:z.string().min(1).nullable().optional(),kind:z.enum(["image","video"]),mode:z.enum(["text_to_image","image_to_image","text_to_video","image_to_video"]),prompt:z.string().min(1).max(10000),visualMode:z.enum(["real_person","photo_product","graphic","ai_concept"]).optional(),templateId:z.string().min(1).optional(),templateVersion:z.number().int().positive().optional(),aspectRatio:z.string().max(32).optional(),durationSec:z.number().int().positive().optional(),resolution:z.enum(["768P","2K"]).optional(),referenceAssetId:z.string().min(1).optional(),referenceFileId:z.string().min(1).optional(),referenceChecksum:z.string().regex(/^[a-f0-9]{64}$/).optional(),canvasOwner:z.object({accountId:z.string().min(1),canvasId:z.string().min(1),nodeId:z.string().min(1),inputDigest:z.string().regex(/^[a-f0-9]{64}$/)}).strict()}).strict();
+const frozenTaskInputSchema=z.object({projectId:z.string().min(1).nullable().optional(),kind:z.enum(["image","video"]),mode:z.enum(["text_to_image","image_to_image","text_to_video","image_to_video"]),prompt:z.string().min(1).max(10000),visualMode:z.enum(["real_person","photo_product","graphic","ai_concept"]).optional(),templateId:z.string().min(1).optional(),templateVersion:z.number().int().positive().optional(),aspectRatio:z.string().max(32).optional(),durationSec:z.number().int().positive().optional(),resolution:z.enum(["768P","2K"]).optional(),referenceAssetId:z.string().min(1).optional(),referenceFileId:z.string().min(1).optional(),referenceChecksum:z.string().regex(/^[a-f0-9]{64}$/).optional(),canvasOwner:z.object({accountId:z.string().min(1).nullable(),groupId:z.string().min(1).optional(),groupVersion:z.number().int().positive().nullable().optional(),membershipVersion:z.number().int().positive().nullable().optional(),canvasId:z.string().min(1),nodeId:z.string().min(1),inputDigest:z.string().regex(/^[a-f0-9]{64}$/)}).strict()}).strict();
 function frozenInput(row:LinkRow):CanvasTaskInput{
  const value=frozenTaskInputSchema.parse(row.inputJson);
+ if(value.canvasOwner.groupId&&(value.canvasOwner.groupVersion!==row.groupVersion||value.canvasOwner.membershipVersion!==row.membershipVersion))throw new CanvasConflictError("原生成冻结组不符");
+ if(value.canvasOwner.accountId===null&&!value.canvasOwner.groupId)throw new CanvasConflictError("原生成缺少冻结归属");
  const digest=canvasInputDigest(row.inputRevision,row.nodeId,value);
  const legacyDigest=createHash("sha256").update(JSON.stringify([row.inputRevision,row.nodeId,{...(row.inputJson as CanvasTaskInput),canvasOwner:{...value.canvasOwner,inputDigest:""}}])).digest("hex");
  if(value.canvasOwner.accountId!==row.accountId||value.canvasOwner.canvasId!==row.canvasId||value.canvasOwner.nodeId!==row.nodeId||value.canvasOwner.inputDigest!==row.inputDigest||(digest!==row.inputDigest&&legacyDigest!==row.inputDigest)||row.referenceFileId!==(value.referenceFileId??null)||row.referenceChecksum!==(value.referenceChecksum??null))throw new CanvasConflictError("生成输入与原提交不符");
  return value;
 }
 class CanvasConflictError extends Error {readonly code=ErrorCode.ConflictError;constructor(message:string){super(message);this.name="ConflictError";}}
-function account(ctx:RequestContext){return requireAccountId(ctx.accountId,"creativeCanvas");}
-function owned(ctx:RequestContext,id:string){return and(eq(creativeCanvases.id,id),eq(creativeCanvases.userId,ctx.userId),eq(creativeCanvases.accountId,account(ctx)),isNull(creativeCanvases.archivedAt));}
+function account(ctx:RequestContext){requireWorkspace(ctx);return workspaceStamp(workspaceKey(ctx)).accountId;}
+// SEMANTIC_BOUNDARY_ALLOW: 当前物理行只授权内容；任务读取严格沿原冻结身份，不重签迁组后的输入/版本。
+function sourceContext(ctx:RequestContext,row:LinkRow):RequestContext{const original=frozenInput(row).canvasOwner;return {...ctx,userId:row.userId,accountId:original.accountId,groupId:original.groupId,groupVersion:original.groupVersion??undefined,membershipVersion:original.membershipVersion??undefined};}
+function rowOwned(ctx:RequestContext,row:{userId:string;accountId:string|null;groupId:string|null}){return row.userId===ctx.userId&&(ctx.groupId?row.groupId===ctx.groupId:row.accountId===ctx.accountId&&(!row.groupId||row.groupId===`grp_legacy_${ctx.accountId}`));}
+function owned(ctx:RequestContext,id:string){return and(eq(creativeCanvases.id,id),eq(creativeCanvases.userId,ctx.userId),workspaceFilter(creativeCanvases,ctx),isNull(creativeCanvases.archivedAt));}
 function project(row:CanvasRow){const {documentJson,...visible}=row;return {...visible,document:canvasDocumentSchema.parse(documentJson)};}
-function link(row:LinkRow){const {userId:_userId,accountId:_accountId,inputJson,...visible}=row;return {...visible,mediaKind:frozenInput(row).kind};}
-function proposal(row:typeof canvasAgentProposals.$inferSelect){const {userId:_userId,accountId:_accountId,operationsJson,appliedCanvasJson:_appliedCanvasJson,...visible}=row;return {...visible,operations:z.array(canvasProposalOperationSchema).parse(operationsJson)};}
+function link(row:LinkRow){const {userId:_userId,accountId:_accountId,groupId:_groupId,groupVersion:_groupVersion,membershipVersion:_membershipVersion,inputJson,...visible}=row;return {...visible,mediaKind:frozenInput(row).kind};}
+function proposal(row:typeof canvasAgentProposals.$inferSelect){const {userId:_userId,accountId:_accountId,groupId:_groupId,operationsJson,appliedCanvasJson:_appliedCanvasJson,...visible}=row;return {...visible,operations:z.array(canvasProposalOperationSchema).parse(operationsJson)};}
 
 export interface CanvasMaterialSelection {nodeId:string;taskId?:string;resultId?:string;}
 export interface CanvasMaterialPage extends CanvasMaterialSelection {assetId:string;fileId?:string;checksum?:string;}
@@ -52,7 +60,7 @@ export function createCreativeCanvasService(db:Db,deps:{
  resolveCapability?:(ctx:RequestContext,capability:"image.generate"|"image.edit"|"video.generate")=>Promise<{provider:string;model:string}>;
 }){
  const now=deps.now??(()=>new Date().toISOString());
- async function requireCanvas(ctx:RequestContext,id:string){const [row]=await db.select().from(creativeCanvases).where(owned(ctx,id));if(!row)throw new OwnershipError("画布不存在");return row;}
+ async function requireCanvas(ctx:RequestContext,id:string,store:Db=db){const [row]=await store.select().from(creativeCanvases).where(owned(ctx,id));if(!row)throw new OwnershipError("画布不存在");return row;}
  async function visibleCanvas(ctx:RequestContext,row:CanvasRow){
   const value=project(row);
   if(!row.projectId)return value;
@@ -70,12 +78,12 @@ export function createCreativeCanvasService(db:Db,deps:{
   return trusted||node.visualMode==="real_person"||Boolean(snapshot?.requiredIdentity)||snapshot?.visualMode==="real_person";
  }
  async function recoverReservation(ctx:RequestContext,row:LinkRow):Promise<LinkRow>{
-  if(row.taskId||!deps.findTaskByAttempt)return row;const found=await deps.findTaskByAttempt(ctx,row.attemptId);if(!found)return row;
-  const [task]=await db.select().from(aiTasks).where(and(eq(aiTasks.id,found.id),eq(aiTasks.userId,ctx.userId),eq(aiTasks.accountId,account(ctx))));if(!task)throw new OwnershipError("原生成任务无权访问");
-  const frozen=row.inputJson as TaskInput;
-  if(task.userId!==ctx.userId||task.accountId!==account(ctx)||task.taskType!=="asset.generate")throw new OwnershipError("原生成任务无权访问");
-  if(!isDeepStrictEqual(task.inputData,frozen)||canvasInputDigest(row.inputRevision,row.nodeId,frozen)!==row.inputDigest||frozen.canvasOwner.inputDigest!==row.inputDigest||frozen.canvasOwner.accountId!==account(ctx)||frozen.canvasOwner.canvasId!==row.canvasId||frozen.canvasOwner.nodeId!==row.nodeId)throw new CanvasConflictError("原生成任务与冻结请求不符");
-  const [saved]=await db.update(canvasGenerationLinks).set({taskId:task.id,updatedAt:now()}).where(and(eq(canvasGenerationLinks.id,row.id),eq(canvasGenerationLinks.userId,ctx.userId),eq(canvasGenerationLinks.accountId,account(ctx)),isNull(canvasGenerationLinks.taskId))).returning();
+  const accessContext=ctx;ctx=sourceContext(ctx,row);if(row.taskId||!deps.findTaskByAttempt)return row;const found=await deps.findTaskByAttempt(ctx,row.attemptId);if(!found)return row;
+  const [task]=await db.select().from(aiTasks).where(and(eq(aiTasks.id,found.id),eq(aiTasks.userId,ctx.userId),workspaceFilter(aiTasks,ctx)));if(!task)throw new OwnershipError("原生成任务无权访问");
+  const frozen=frozenInput(row);
+  if(task.userId!==ctx.userId||task.accountId!==row.accountId||!rowOwned(ctx,task)||task.taskType!=="asset.generate")throw new OwnershipError("原生成任务无权访问");
+  if(!isDeepStrictEqual(task.inputData,frozen)||canvasInputDigest(row.inputRevision,row.nodeId,frozen)!==row.inputDigest||frozen.canvasOwner.inputDigest!==row.inputDigest||frozen.canvasOwner.accountId!==row.accountId||frozen.canvasOwner.canvasId!==row.canvasId||frozen.canvasOwner.nodeId!==row.nodeId)throw new CanvasConflictError("原生成任务与冻结请求不符");
+  const [saved]=await db.update(canvasGenerationLinks).set({taskId:task.id,updatedAt:now()}).where(and(eq(canvasGenerationLinks.id,row.id),eq(canvasGenerationLinks.userId,ctx.userId),workspaceFilter(canvasGenerationLinks,accessContext),isNull(canvasGenerationLinks.taskId))).returning();
   if(saved)return saved;const [winner]=await db.select().from(canvasGenerationLinks).where(eq(canvasGenerationLinks.id,row.id));if(winner?.taskId!==task.id)throw new CanvasConflictError("原生成任务恢复冲突");return winner;
  }
  async function validateDocument(ctx:RequestContext,raw:unknown,tx?:Db):Promise<CanvasDocument>{
@@ -110,17 +118,20 @@ export function createCreativeCanvasService(db:Db,deps:{
  }
  async function verifyGeneratedPage(ctx:RequestContext,canvas:CanvasRow,node:GenerationNode,selection:CanvasMaterialSelection,settled=false):Promise<CanvasMaterialPage>{
   if(!selection.taskId||!selection.resultId)throw new CanvasConflictError("生成页必须选择原任务的真实候选");
-  const [source]=await db.select().from(canvasGenerationLinks).where(and(eq(canvasGenerationLinks.canvasId,canvas.id),eq(canvasGenerationLinks.nodeId,node.id),eq(canvasGenerationLinks.taskId,selection.taskId),eq(canvasGenerationLinks.userId,ctx.userId),eq(canvasGenerationLinks.accountId,account(ctx))));
-  const [task]=await db.select().from(aiTasks).where(and(eq(aiTasks.id,selection.taskId),eq(aiTasks.userId,ctx.userId),eq(aiTasks.accountId,account(ctx))));
+  const [source]=await db.select().from(canvasGenerationLinks).where(and(eq(canvasGenerationLinks.canvasId,canvas.id),eq(canvasGenerationLinks.nodeId,node.id),eq(canvasGenerationLinks.taskId,selection.taskId),eq(canvasGenerationLinks.userId,ctx.userId),workspaceFilter(canvasGenerationLinks,ctx)));
+  if(!source)throw new OwnershipError("生成候选不属于当前画布节点");
+  const input=frozenInput(source),originalContext=sourceContext(ctx,source);
+  const [task]=await db.select().from(aiTasks).where(and(eq(aiTasks.id,selection.taskId),eq(aiTasks.userId,ctx.userId),workspaceFilter(aiTasks,originalContext)));
   const [result]=await db.select().from(aiTaskResults).where(and(eq(aiTaskResults.id,selection.resultId),eq(aiTaskResults.aiTaskId,selection.taskId)));
   if(!source||!task||!result?.assetId||task.taskType!=="asset.generate"||result.resultType!=="generated_asset"||source.inputRevision>canvas.revision)throw new OwnershipError("生成候选不属于当前画布节点");
   if(!["awaiting_confirmation","succeeded"].includes(task.status)||(settled&&task.status!=="succeeded"))throw new CanvasConflictError("生成候选尚未完成或采纳");
-  const input=source.inputJson as TaskInput,business=task.inputData as TaskInput;
+  const parsedBusiness=frozenTaskInputSchema.safeParse(task.inputData);if(!parsedBusiness.success)throw new CanvasConflictError("生成任务与原画布输入不符");
+  const business=parsedBusiness.data;
   // SEMANTIC_BOUNDARY_ALLOW: 精确比较原生成协议输入与用户当前选择，仅守来源身份和版本边界。
   const digest=canvasInputDigest(source.inputRevision,node.id,input);
-  if(input.kind!=="image"||digest!==source.inputDigest||business.canvasOwner?.accountId!==account(ctx)||business.canvasOwner?.canvasId!==canvas.id||business.canvasOwner?.nodeId!==node.id||business.canvasOwner?.inputDigest!==source.inputDigest||!isDeepStrictEqual(business,input))throw new CanvasConflictError("生成任务与原画布输入不符");
+  if(input.kind!=="image"||digest!==source.inputDigest||business.canvasOwner.accountId!==input.canvasOwner.accountId||business.canvasOwner?.canvasId!==canvas.id||business.canvasOwner?.nodeId!==node.id||business.canvasOwner?.inputDigest!==source.inputDigest||!isDeepStrictEqual(business,input))throw new CanvasConflictError("生成任务与原画布输入不符");
   if(!task.executionTaskId||!result.executionCallId)throw new CanvasConflictError("生成候选缺少执行回执");
-  const [execution]=await db.select().from(executionTasks).where(and(eq(executionTasks.id,task.executionTaskId),eq(executionTasks.userId,ctx.userId),eq(executionTasks.accountId,account(ctx)),eq(executionTasks.ownerId,task.id)));
+  const [execution]=await db.select().from(executionTasks).where(and(eq(executionTasks.id,task.executionTaskId),eq(executionTasks.userId,ctx.userId),workspaceFilter(executionTasks,originalContext),eq(executionTasks.ownerId,task.id)));
   const [call]=await db.select().from(executionCalls).where(and(eq(executionCalls.id,result.executionCallId),eq(executionCalls.executionTaskId,task.executionTaskId)));
   if(execution?.kind!=="ai_task"||execution.ownerType!=="ai_task"||execution.status!=="succeeded"||call?.status!=="settled"||call.resultRef!==result.id||!call.resultText)throw new CanvasConflictError("生成候选缺少原结算回执");
   const receipt=JSON.parse(call.resultText) as {assetId?:string;assetType?:string;fileId?:string;checksum?:string};
@@ -148,11 +159,12 @@ export function createCreativeCanvasService(db:Db,deps:{
   async verifyMaterialSettlement(ctx:RequestContext,plan:CanvasMaterialPlan){
    const canvas=await requireCanvas(ctx,plan.canvasId);
    if(canvas.revision!==plan.revision||canvas.projectId!==plan.projectId)throw new CanvasConflictError("采纳期间画布版本已变化");
+   if(canvas.projectId)await deps.assertProject(ctx,canvas.projectId);
    const doc=canvasDocumentSchema.parse(canvas.documentJson);
    for(const page of plan.pages){if(!page.taskId)continue;const node=doc.nodes.find(node=>node.id===page.nodeId);if(node?.type!=="image_generation")throw new CanvasConflictError("生成节点已变化");const verified=await verifyGeneratedPage(ctx,canvas,node,page,true);if(!isDeepStrictEqual(verified,page))throw new CanvasConflictError("采纳产物与所选原候选不符");}
   },
   async assertFrozenGenerationInput(ctx:RequestContext,input:{attemptId:string;inputData:unknown;taskId?:string},transaction:Db=db){
-   const [row]=await transaction.select().from(canvasGenerationLinks).where(and(eq(canvasGenerationLinks.attemptId,input.attemptId),eq(canvasGenerationLinks.userId,ctx.userId),eq(canvasGenerationLinks.accountId,account(ctx))));
+   const [row]=await transaction.select().from(canvasGenerationLinks).where(and(eq(canvasGenerationLinks.attemptId,input.attemptId),eq(canvasGenerationLinks.userId,ctx.userId),workspaceFilter(canvasGenerationLinks,ctx)));
    if(!row)throw new OwnershipError("画布生成预约不存在");
    const frozen=frozenInput(row);
    if(!isDeepStrictEqual(frozenTaskInputSchema.parse(input.inputData),frozen)||input.taskId&&row.taskId&&row.taskId!==input.taskId)throw new CanvasConflictError("生成输入或原任务与原提交不符");
@@ -167,17 +179,16 @@ export function createCreativeCanvasService(db:Db,deps:{
     }catch{return {mode,available:false,model:null,reason:"当前账号尚未配置可用模型",aspectRatios:undefined};}
    }))};
   },
-  async list(ctx:RequestContext){const rows=await db.select().from(creativeCanvases).where(and(eq(creativeCanvases.userId,ctx.userId),eq(creativeCanvases.accountId,account(ctx)),isNull(creativeCanvases.archivedAt))).orderBy(desc(creativeCanvases.updatedAt));return Promise.all(rows.map(row=>visibleCanvas(ctx,row)));},
+  async list(ctx:RequestContext){const rows=await db.select().from(creativeCanvases).where(and(eq(creativeCanvases.userId,ctx.userId),workspaceFilter(creativeCanvases,ctx),isNull(creativeCanvases.archivedAt))).orderBy(desc(creativeCanvases.updatedAt));return Promise.all(rows.map(row=>visibleCanvas(ctx,row)));},
   async get(ctx:RequestContext,id:string){return visibleCanvas(ctx,await requireCanvas(ctx,id));},
   async create(ctx:RequestContext,input:{title:string;projectId?:string|null}){
-   const accountId=account(ctx);return db.transaction(async transaction=>{const tx=transaction as unknown as Db;if(input.projectId)await deps.assertProject(ctx,input.projectId,tx,true);
+   const accountId=account(ctx);return withWorkspaceWrite(db,ctx,async tx=>{if(input.projectId)await deps.assertProject(ctx,input.projectId,tx,true);
    const stamp=now(),id=randomUUID();
-   const [row]=await tx.insert(creativeCanvases).values({id,userId:ctx.userId,accountId,title:input.title.trim(),projectId:input.projectId??null,documentJson:emptyCanvasDocument,revision:1,createdAt:stamp,updatedAt:stamp}).returning();
+   const [row]=await tx.insert(creativeCanvases).values({id,userId:ctx.userId,...workspaceStamp(workspaceKey(ctx)),title:input.title.trim(),projectId:input.projectId??null,documentJson:emptyCanvasDocument,revision:1,createdAt:stamp,updatedAt:stamp}).returning();
    return project(row!);});
   },
   async save(ctx:RequestContext,id:string,input:{expectedRevision:number;document:unknown;title?:string;projectId?:string|null}){
-   return db.transaction(async transaction=>{
-    const tx=transaction as unknown as Db;
+   return withWorkspaceWrite(db,ctx,async tx=>{
     // 原项目根锁先于画布锁；每个依赖都显式使用同事务owner。
     const [before]=await tx.select().from(creativeCanvases).where(owned(ctx,id));
     if(!before)throw new OwnershipError("画布不存在");
@@ -192,7 +203,7 @@ export function createCreativeCanvasService(db:Db,deps:{
     return project(saved!);
    });
   },
-  async archive(ctx:RequestContext,id:string){const [row]=await db.update(creativeCanvases).set({archivedAt:now(),updatedAt:now()}).where(owned(ctx,id)).returning();if(!row)throw new OwnershipError("画布不存在");return project(row);},
+  async archive(ctx:RequestContext,id:string){return withWorkspaceWrite(db,ctx,async tx=>{const current=await requireCanvas(ctx,id,tx);if(current.projectId)await deps.assertProject(ctx,current.projectId,tx,true);const [row]=await tx.update(creativeCanvases).set({archivedAt:now(),updatedAt:now()}).where(owned(ctx,id)).returning();if(!row)throw new OwnershipError("画布不存在");return project(row);});},
   async previewNode(ctx:RequestContext,id:string,nodeId:string){
    const canvas=await requireCanvas(ctx,id),doc=canvasDocumentSchema.parse(canvas.documentJson);
    const node=doc.nodes.find(value=>value.id===nodeId);
@@ -201,26 +212,26 @@ export function createCreativeCanvasService(db:Db,deps:{
    if(node.checksum&&file.checksum!==node.checksum)throw new CanvasConflictError("画布素材文件校验已变化");
    return deps.getMediaFileDownloadUrl(ctx,node.assetId,node.fileId);
   },
-  async listProposals(ctx:RequestContext,id:string){await requireCanvas(ctx,id);return (await db.select().from(canvasAgentProposals).where(and(eq(canvasAgentProposals.userId,ctx.userId),eq(canvasAgentProposals.accountId,account(ctx)),eq(canvasAgentProposals.canvasId,id))).orderBy(desc(canvasAgentProposals.createdAt))).map(proposal);},
+  async listProposals(ctx:RequestContext,id:string){await requireCanvas(ctx,id);return (await db.select().from(canvasAgentProposals).where(and(eq(canvasAgentProposals.userId,ctx.userId),workspaceFilter(canvasAgentProposals,ctx),eq(canvasAgentProposals.canvasId,id))).orderBy(desc(canvasAgentProposals.createdAt))).map(proposal);},
   async propose(ctx:RequestContext,id:string,baseRevision:number,raw:unknown){
-   const canvas=await requireCanvas(ctx,id),operations=z.array(canvasProposalOperationSchema).min(1).max(100).parse(raw);
+   return withWorkspaceWrite(db,ctx,async tx=>{
+   const canvas=await requireCanvas(ctx,id,tx);if(canvas.projectId)await deps.assertProject(ctx,canvas.projectId,tx,true);const operations=z.array(canvasProposalOperationSchema).min(1).max(100).parse(raw);
    if(canvas.revision!==baseRevision)throw new CanvasConflictError("画布版本已变化，请先重新读取");
    if(new Set(operations.map(operation=>operation.operationId)).size!==operations.length)throw new CanvasConflictError("候选操作 ID 重复");
    const stamp=now(),expiresAt=new Date(Date.parse(stamp)+24*60*60*1000).toISOString();
-   const [row]=await db.insert(canvasAgentProposals).values({id:randomUUID(),userId:ctx.userId,accountId:account(ctx),canvasId:id,baseRevision,operationsJson:operations,status:"pending",appliedRevision:null,createdAt:stamp,expiresAt}).returning();
-   return proposal(row!);
+   const [row]=await tx.insert(canvasAgentProposals).values({id:randomUUID(),userId:ctx.userId,...workspaceStamp(workspaceKey(ctx)),canvasId:id,baseRevision,operationsJson:operations,status:"pending",appliedRevision:null,createdAt:stamp,expiresAt}).returning();
+   return proposal(row!);});
   },
   async applyProposal(ctx:RequestContext,id:string,proposalId:string,expectedRevision:number){
    const accountId=account(ctx);
-   return db.transaction(async transaction=>{
-    const tx=transaction as unknown as Db;
+   return withWorkspaceWrite(db,ctx,async tx=>{
     const [before]=await tx.select().from(creativeCanvases).where(owned(ctx,id));
     if(!before)throw new OwnershipError("画布不存在");
     if(before.projectId)await deps.assertProject(ctx,before.projectId,tx,true);
     const [canvas]=await tx.select().from(creativeCanvases).where(owned(ctx,id)).for("update");
     if(!canvas)throw new OwnershipError("画布不存在");
     if(canvas.projectId!==before.projectId)throw new CanvasConflictError("画布关联作品已变化，请重试");
-    const [candidate]=await tx.select().from(canvasAgentProposals).where(and(eq(canvasAgentProposals.id,proposalId),eq(canvasAgentProposals.userId,ctx.userId),eq(canvasAgentProposals.accountId,accountId),eq(canvasAgentProposals.canvasId,id))).for("update");
+    const [candidate]=await tx.select().from(canvasAgentProposals).where(and(eq(canvasAgentProposals.id,proposalId),eq(canvasAgentProposals.userId,ctx.userId),workspaceFilter(canvasAgentProposals,ctx),eq(canvasAgentProposals.canvasId,id))).for("update");
     if(!candidate)throw new OwnershipError("画布建议不存在");
     if(candidate.status==="applied"&&candidate.appliedCanvasJson)return creativeCanvasResource.parse(candidate.appliedCanvasJson);
     if(candidate.status!=="pending"||Date.parse(candidate.expiresAt)<=Date.parse(now()))throw new CanvasConflictError("画布建议已失效，请重新生成");
@@ -256,44 +267,44 @@ export function createCreativeCanvasService(db:Db,deps:{
    });
   },
   async getGenerationMaterial(ctx:RequestContext,canvasId:string,generationLinkId:string){
-   return db.transaction(async transaction=>{
-    const tx=transaction as unknown as Db;
+   return db.transaction(async tx=>{
     const [canvas]=await tx.select().from(creativeCanvases).where(owned(ctx,canvasId));
     if(!canvas)throw new OwnershipError("画布不存在");
-    const [row]=await tx.select().from(canvasGenerationLinks).where(and(eq(canvasGenerationLinks.id,generationLinkId),eq(canvasGenerationLinks.canvasId,canvasId),eq(canvasGenerationLinks.userId,ctx.userId),eq(canvasGenerationLinks.accountId,account(ctx))));
+    if(canvas.projectId)await deps.assertProject(ctx,canvas.projectId,tx);
+    const [row]=await tx.select().from(canvasGenerationLinks).where(and(eq(canvasGenerationLinks.id,generationLinkId),eq(canvasGenerationLinks.canvasId,canvasId),eq(canvasGenerationLinks.userId,ctx.userId),workspaceFilter(canvasGenerationLinks,ctx)));
     if(!row)throw new OwnershipError("画布生成记录不存在");
     const anchor={canvasId,generationLinkId,nodeId:row.nodeId,attemptId:row.attemptId,inputRevision:row.inputRevision,inputDigest:row.inputDigest,taskId:row.taskId};
     const unavailable=(status:"not_ready"|"unverifiable",reason:string)=>canvasMaterialSelectionResource.parse({status,...anchor,reason});
     if(!row.taskId)return unavailable("not_ready","原任务尚未绑定，请恢复原生成请求");
-    const task=await deps.readTask(ctx,row.taskId,tx);
+    const task=await deps.readTask(sourceContext(ctx,row),row.taskId,tx);
     if(!task||task.id!==row.taskId||task.userId!==ctx.userId||task.taskType!=="asset.generate"||(task.attemptId!==row.attemptId&&task.idempotencyKey!==row.attemptId))return unavailable("unverifiable","原生成任务身份与预约不符");
     try{await this.assertFrozenGenerationInput(ctx,{attemptId:row.attemptId,inputData:task.inputData,taskId:task.id},tx);}catch(error){if(error instanceof CanvasConflictError||error instanceof z.ZodError)return unavailable("unverifiable","原生成输入与预约不符");throw error;}
     const frozen=frozenInput(row);
     if(Object.prototype.hasOwnProperty.call(frozen,"projectId")&&task.projectId!==frozen.projectId)return unavailable("unverifiable","原任务项目与冻结预约不符");
-    const results=(await deps.readTaskResults(ctx,task.id,tx)).filter(value=>value.resultType==="generated_asset"&&typeof value.assetId==="string"&&value.assetId.length>0);
+    const results=(await deps.readTaskResults(sourceContext(ctx,row),task.id,tx)).filter(value=>value.resultType==="generated_asset"&&typeof value.assetId==="string"&&value.assetId.length>0);
     if(results.length===0)return unavailable("not_ready","原生成任务尚无素材结果");
     if(results.length!==1||!results[0]!.id)return unavailable("unverifiable","原生成任务缺少唯一可追溯结果");
     const result=results[0]!;
     if(row.resultAssetId&&row.resultAssetId!==result.assetId)return unavailable("unverifiable","历史预约与原素材结果不符");
     if(!deps.getCommittedAssetResult)return unavailable("unverifiable","精确生成文件证明端口未装配");
-    const checked=await deps.getCommittedAssetResult(ctx,{taskId:task.id,resultId:result.id!},tx);
+    const checked=await deps.getCommittedAssetResult(sourceContext(ctx,row),{taskId:task.id,resultId:result.id!},tx);
     if(checked.status!=="verified")return unavailable("unverifiable",checked.reason);
     const proof=committedGeneratedAssetProof.parse(checked.proof);
     if(proof.taskId!==task.id||proof.resultId!==result.id||proof.receipt.assetId!==result.assetId||proof.receipt.assetType!==frozen.kind)return unavailable("unverifiable","原生成文件证明身份不符");
     return canvasMaterialSelectionResource.parse({status:"available",phase:proof.taskStatus==="succeeded"?"confirmed":"candidate",origin:{canvasId,generationLinkId,nodeId:row.nodeId,attemptId:row.attemptId,inputRevision:row.inputRevision,inputDigest:row.inputDigest,taskId:task.id,resultId:result.id!,executionTaskId:proof.executionTaskId,callId:proof.callId},file:{assetId:proof.receipt.assetId,assetFileId:proof.receipt.fileId},checksum:proof.receipt.checksum,assetType:proof.receipt.assetType,name:proof.receipt.name,assetStatus:proof.assetStatus,taskStatus:proof.taskStatus});
    });
   },
-  async listTasks(ctx:RequestContext,id:string){await requireCanvas(ctx,id);
-   const rows=await db.select().from(canvasGenerationLinks).where(and(eq(canvasGenerationLinks.userId,ctx.userId),eq(canvasGenerationLinks.accountId,account(ctx)),eq(canvasGenerationLinks.canvasId,id))).orderBy(desc(canvasGenerationLinks.createdAt));
+  async listTasks(ctx:RequestContext,id:string){const canvas=await requireCanvas(ctx,id);if(canvas.projectId)await deps.assertProject(ctx,canvas.projectId);
+   const rows=await db.select().from(canvasGenerationLinks).where(and(eq(canvasGenerationLinks.userId,ctx.userId),workspaceFilter(canvasGenerationLinks,ctx),eq(canvasGenerationLinks.canvasId,id))).orderBy(desc(canvasGenerationLinks.createdAt));
    return Promise.all(rows.map(async row=>{
     if(!row.taskId)return link(row);
-    const task=await deps.readTask(ctx,row.taskId,db);
+    const task=await deps.readTask(sourceContext(ctx,row),row.taskId,db);
     if(!task||task.id!==row.taskId||task.userId!==ctx.userId||task.taskType!=="asset.generate")throw new OwnershipError("原生成任务不存在");
     if((task.attemptId!==row.attemptId&&task.idempotencyKey!==row.attemptId))throw new CanvasConflictError("原生成任务请求与预约不符");
     await this.assertFrozenGenerationInput(ctx,{attemptId:row.attemptId,inputData:task.inputData,taskId:task.id},db);
     const input=frozenInput(row);
     if(Object.prototype.hasOwnProperty.call(input,"projectId")&&task.projectId!==input.projectId)throw new CanvasConflictError("原生成任务项目与预约不符");
-    const results=(await deps.readTaskResults(ctx,row.taskId,db)).filter(value=>value.resultType==="generated_asset"&&typeof value.assetId==="string"&&value.assetId.length>0);
+    const results=(await deps.readTaskResults(sourceContext(ctx,row),row.taskId,db)).filter(value=>value.resultType==="generated_asset"&&typeof value.assetId==="string"&&value.assetId.length>0);
     if(results.length>1)throw new CanvasConflictError("原生成任务有多个素材结果，不能自动选择");
     const result=results[0];
     if(row.resultAssetId&&row.resultAssetId!==result?.assetId)throw new CanvasConflictError("原生成结果与历史预约不符");
@@ -304,7 +315,7 @@ export function createCreativeCanvasService(db:Db,deps:{
   async generate(ctx:RequestContext,canvasId:string,nodeId:string,input:{expectedRevision:number;attemptId:string}){
    const accountId=account(ctx);
    const [existing]=await db.select().from(canvasGenerationLinks).where(eq(canvasGenerationLinks.attemptId,input.attemptId));
-   if(existing && (existing.userId!==ctx.userId||existing.accountId!==accountId||existing.canvasId!==canvasId||existing.nodeId!==nodeId))throw new OwnershipError("生成请求不存在");
+   if(existing && (!rowOwned(ctx,existing)||existing.canvasId!==canvasId||existing.nodeId!==nodeId))throw new OwnershipError("生成请求不存在");
    if(existing){const current=await requireCanvas(ctx,canvasId);if(input.expectedRevision!==existing.inputRevision&&input.expectedRevision!==current.revision)throw new CanvasConflictError("生成请求版本与原提交不符");}
    let reservation=existing;
    if(!reservation){
@@ -331,34 +342,40 @@ export function createCreativeCanvasService(db:Db,deps:{
      if(!referenceImageAllowed(spec,config.mode,reference.mimeType,reference.bytes)||createHash("sha256").update(reference.bytes).digest("hex")!==reference.checksum)throw new CanvasConflictError("参考图片格式、尺寸、大小或校验不符合生成要求");
     }
     const kind=config.type==="image_generation"?"image":"video";
-    const taskInput:CanvasTaskInput={projectId:canvas.projectId,kind,mode:config.mode,prompt:config.prompt,...(config.visualMode?{visualMode:config.visualMode}:{}),...(config.templateId?{templateId:config.templateId}:{}),...(config.templateVersion?{templateVersion:config.templateVersion}:{}),...(config.aspectRatio?{aspectRatio:config.aspectRatio}:{}),...(kind==="video"?{durationSec:config.durationSec??6,resolution:config.resolution??"768P"}:{}),...(reference&&config.referenceAssetId?{referenceAssetId:config.referenceAssetId,referenceFileId:reference.fileId,referenceChecksum:reference.checksum}:{}),canvasOwner:{accountId,canvasId,nodeId,inputDigest:""}};
+    const taskInput:CanvasTaskInput={projectId:canvas.projectId,kind,mode:config.mode,prompt:config.prompt,...(config.visualMode?{visualMode:config.visualMode}:{}),...(config.templateId?{templateId:config.templateId}:{}),...(config.templateVersion?{templateVersion:config.templateVersion}:{}),...(config.aspectRatio?{aspectRatio:config.aspectRatio}:{}),...(kind==="video"?{durationSec:config.durationSec??6,resolution:config.resolution??"768P"}:{}),...(reference&&config.referenceAssetId?{referenceAssetId:config.referenceAssetId,referenceFileId:reference.fileId,referenceChecksum:reference.checksum}:{}),canvasOwner:{accountId,...(ctx.groupId?{groupId:ctx.groupId,groupVersion:ctx.groupVersion??null,membershipVersion:null}:{}),canvasId,nodeId,inputDigest:""}};
     const digest=canvasInputDigest(canvas.revision,nodeId,taskInput);taskInput.canvasOwner.inputDigest=digest;
     const stamp=now();
-    reservation=await db.transaction(async transaction=>{
-     const tx=transaction as unknown as Db;
+    reservation=await db.transaction(async outer=>{
+     // 先账号/member/组，再真实父；避免已持组 SHARE 后升级 UPDATE。
+     const freeze=await lockWorkspaceMembership(outer,ctx.groupId?{...ctx,accountId:null,membershipVersion:undefined}:ctx);
+     return withWorkspaceWrite(outer,ctx,async tx=>{
      if(canvas.projectId)await deps.assertProject(ctx,canvas.projectId,tx,true);
      const [current]=await tx.select({revision:creativeCanvases.revision,projectId:creativeCanvases.projectId}).from(creativeCanvases).where(owned(ctx,canvasId)).for("update");
      if(!current||current.revision!==canvas.revision||current.projectId!==canvas.projectId)throw new CanvasConflictError("画布在提交生成前已更新，请重新保存后再生成");
-     const [inserted]=await tx.insert(canvasGenerationLinks).values({id:randomUUID(),userId:ctx.userId,accountId,canvasId,nodeId,attemptId:input.attemptId,taskId:null,inputRevision:canvas.revision,inputDigest:digest,inputJson:taskInput,referenceFileId:reference?.fileId??null,referenceChecksum:reference?.checksum??null,resultAssetId:null,createdAt:stamp,updatedAt:stamp}).onConflictDoNothing().returning();
+     if(taskInput.canvasOwner.groupId){taskInput.canvasOwner.groupVersion=freeze.groupVersion;taskInput.canvasOwner.membershipVersion=freeze.membershipVersion;taskInput.canvasOwner.inputDigest=canvasInputDigest(canvas.revision,nodeId,taskInput);}
+     const [inserted]=await tx.insert(canvasGenerationLinks).values({id:randomUUID(),userId:ctx.userId,...workspaceStamp(workspaceKey(ctx)),groupVersion:freeze.groupVersion,membershipVersion:freeze.membershipVersion,canvasId,nodeId,attemptId:input.attemptId,taskId:null,inputRevision:canvas.revision,inputDigest:taskInput.canvasOwner.inputDigest,inputJson:taskInput,referenceFileId:reference?.fileId??null,referenceChecksum:reference?.checksum??null,resultAssetId:null,createdAt:stamp,updatedAt:stamp}).onConflictDoNothing().returning();
      return inserted;
+     });
     });
-    if(!reservation){const [winner]=await db.select().from(canvasGenerationLinks).where(eq(canvasGenerationLinks.attemptId,input.attemptId));if(!winner||winner.userId!==ctx.userId||winner.accountId!==accountId||winner.canvasId!==canvasId||winner.nodeId!==nodeId)throw new OwnershipError("生成请求不存在");if(winner.inputRevision!==input.expectedRevision)throw new CanvasConflictError("生成请求版本与原提交不符");reservation=winner;}
+    if(!reservation){const [winner]=await db.select().from(canvasGenerationLinks).where(eq(canvasGenerationLinks.attemptId,input.attemptId));if(!winner||!rowOwned(ctx,winner)||winner.canvasId!==canvasId||winner.nodeId!==nodeId)throw new OwnershipError("生成请求不存在");if(winner.inputRevision!==input.expectedRevision)throw new CanvasConflictError("生成请求版本与原提交不符");reservation=winner;}
    }
    if(!reservation)throw new CanvasConflictError("生成请求未预留");
    reservation=await recoverReservation(ctx,reservation);
    const taskInput=frozenInput(reservation);
+   const originalContext=sourceContext(ctx,reservation);
    if(taskInput.canvasOwner.inputDigest!==reservation.inputDigest)throw new CanvasConflictError("生成输入与原提交不符");
    if(!reservation.taskId){const currentCanvas=await requireCanvas(ctx,canvasId),currentNode=canvasDocumentSchema.parse(currentCanvas.documentJson).nodes.find(node=>node.id===nodeId);
    if(!currentNode||(currentNode.type!=="image_generation"&&currentNode.type!=="video_generation")||currentNode.prompt!==taskInput.prompt||currentNode.mode!==taskInput.mode||(currentNode.referenceAssetId??null)!==(taskInput.referenceAssetId??null)||(currentNode.aspectRatio??null)!==(taskInput.aspectRatio??null)||(currentNode.visualMode??null)!==(taskInput.visualMode??null)||(currentNode.templateId??null)!==(taskInput.templateId??null)||(currentNode.templateVersion??null)!==(taskInput.templateVersion??null))throw new CanvasConflictError("节点输入已编辑，请明确再创作而不是恢复旧提交");}
+   if(!reservation.taskId){await assertWritableWorkspace(db,originalContext);const currentCanvas=await requireCanvas(ctx,canvasId);if(currentCanvas.projectId)await deps.assertProject(originalContext,currentCanvas.projectId);}
    // Known link re-reads the original task; only an unknown submission invokes the original idempotent attempt again.
-   const task=reservation.taskId?{id:reservation.taskId}:await deps.submitTask(ctx,{attemptId:reservation.attemptId,inputData:taskInput});
-   const original=await deps.readTask(ctx,task.id,db);
+   const task=reservation.taskId?{id:reservation.taskId}:await deps.submitTask(originalContext,{attemptId:reservation.attemptId,inputData:taskInput});
+   const original=await deps.readTask(originalContext,task.id,db);
    if(!original||original.id!==task.id||original.userId!==ctx.userId||original.taskType!=="asset.generate")throw new OwnershipError("原生成任务不存在");
    if((original.attemptId!==reservation.attemptId&&original.idempotencyKey!==reservation.attemptId)||Object.prototype.hasOwnProperty.call(taskInput,"projectId")&&original.projectId!==taskInput.projectId)throw new CanvasConflictError("原生成任务请求或项目与预约不符");
    await this.assertFrozenGenerationInput(ctx,{attemptId:reservation.attemptId,inputData:original.inputData,taskId:original.id},db);
    if(reservation.taskId && reservation.taskId!==task.id)throw new CanvasConflictError("生成任务与原请求不符");
    if(reservation.taskId)return link(reservation);
-   const [saved]=await db.update(canvasGenerationLinks).set({taskId:task.id,updatedAt:now()}).where(and(eq(canvasGenerationLinks.id,reservation.id),eq(canvasGenerationLinks.accountId,accountId),eq(canvasGenerationLinks.userId,ctx.userId))).returning();
+   const [saved]=await db.update(canvasGenerationLinks).set({taskId:task.id,updatedAt:now()}).where(and(eq(canvasGenerationLinks.id,reservation.id),workspaceFilter(canvasGenerationLinks,ctx),eq(canvasGenerationLinks.userId,ctx.userId))).returning();
    return link(saved!);
   },
  };

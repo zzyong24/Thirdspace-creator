@@ -1,11 +1,12 @@
 import {sql} from "drizzle-orm";
-import { pgTable, text, jsonb, uniqueIndex, index,check } from "drizzle-orm/pg-core";
+import { pgTable,integer, text, jsonb, uniqueIndex, index,check } from "drizzle-orm/pg-core";
 
 // Only references are stored here. Candidate bodies remain with their domain owner.
 export const creativeResults = pgTable("creative_results", {
+ groupId:text("group_id"),
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(),
-  accountId: text("account_id").notNull(),
+  accountId: text("account_id"),
   projectId: text("project_id").notNull(),
   outputId: text("output_id").notNull(),
   outputType: text("output_type").notNull(),
@@ -32,14 +33,17 @@ export const creativeResults = pgTable("creative_results", {
   createdAt: text("created_at").notNull(),
   updatedAt: text("updated_at").notNull(),
 }, (table) => [
+ uniqueIndex("creative_results_group_46c5ab4b").on(table.userId,table.groupId,table.clientRequestId).where(sql`${table.groupId} IS NOT NULL AND ${table.accountId} IS NULL`),
+ index("creative_results_group_scope_idx").on(table.userId,table.groupId),
   uniqueIndex("creative_results_request_ux").on(table.userId, table.accountId, table.clientRequestId),
   index("creative_results_output_ix").on(table.userId, table.accountId, table.outputId, table.createdAt, table.id),
 ]);
 
 export const creativeResultBundles = pgTable("creative_result_bundles", {
+ groupId:text("group_id"),
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(),
-  accountId: text("account_id").notNull(),
+  accountId: text("account_id"),
   projectId: text("project_id").notNull(),
   outputId: text("output_id"),
   conversionContext: jsonb("conversion_context"),
@@ -49,15 +53,20 @@ export const creativeResultBundles = pgTable("creative_result_bundles", {
   clientRequestId: text("client_request_id").notNull(),
   createdAt: text("created_at").notNull(),
 }, (table) => [
+ uniqueIndex("creative_result_bundles_group_46c5ab4b").on(table.userId,table.groupId,table.clientRequestId).where(sql`${table.groupId} IS NOT NULL AND ${table.accountId} IS NULL`),
+ index("creative_result_bundles_group_scope_idx").on(table.userId,table.groupId),
   check("creative_result_bundles_pending_conversion_ck",sql`${table.outputId} IS NOT NULL OR (${table.conversionContext} IS NOT NULL AND ${table.targetCreationKey} IS NOT NULL)`),
   uniqueIndex("creative_result_bundles_request_ux").on(table.userId, table.accountId, table.clientRequestId),
   index("creative_result_bundles_output_ix").on(table.userId, table.accountId, table.outputId, table.createdAt, table.id),
 ]);
 
 export const outputMediaAttempts = pgTable("output_media_attempts", {
+ groupId:text("group_id"),
+ groupVersion:integer("group_version"),
+ membershipVersion:integer("membership_version"),
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(),
-  accountId: text("account_id").notNull(),
+  accountId: text("account_id"),
   projectId: text("project_id").notNull(),
   outputId: text("output_id").notNull(),
   kind: text("kind").notNull(),
@@ -69,6 +78,8 @@ export const outputMediaAttempts = pgTable("output_media_attempts", {
   requestDigest: text("request_digest").notNull(),
   createdAt: text("created_at").notNull(),
 }, (table) => [
+ uniqueIndex("output_media_attempts_group_46c5ab4b").on(table.userId,table.groupId,table.clientRequestId).where(sql`${table.groupId} IS NOT NULL AND ${table.accountId} IS NULL`),
+ index("output_media_attempts_group_scope_idx").on(table.userId,table.groupId),
   uniqueIndex("output_media_attempts_task_ux").on(table.taskId),
   uniqueIndex("output_media_attempts_request_ux").on(table.userId, table.accountId, table.clientRequestId),
 ]);

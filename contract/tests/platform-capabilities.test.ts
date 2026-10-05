@@ -176,10 +176,10 @@ describe("T-1020 platform service contract fixtures", () => {
     } }).success).toBe(false);
   });
 
-  it("keeps the old manual account create contract closed to new platforms", () => {
+  it("手工账号支持正式legacyManualPlatformId，公众号仍须原授权绑定入口", () => {
     const body = platformAccountOperations.createAccount.body;
     expect(body.safeParse({ platform: "douyin", accountHandle: "owned" }).success).toBe(true);
-    expect(body.safeParse({ platform: "kuaishou", accountHandle: "owned" }).success).toBe(false);
+    expect(body.safeParse({ platform: "kuaishou", accountHandle: "owned" }).success).toBe(true);
     expect(body.safeParse({ platform: "wechatOfficialAccount", accountHandle: "owned" }).success).toBe(false);
   });
 

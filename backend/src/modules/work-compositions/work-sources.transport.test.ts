@@ -1,3 +1,4 @@
+import {articleSection} from '@creatoros/contract';
 import {it,expect} from "vitest";
 import {createDb,projects,aiTasks,assets,artifactVersions,productionMediaRequests,workCompositionRequests,workReviewRequests,type Db} from "@creatoros/backend";
 import {createProjectsService,createProjectRepository} from "@creatoros/backend/modules/projects";
@@ -7,8 +8,8 @@ import {createGraphicPostsService} from "@creatoros/backend/modules/graphic-post
 import {createOutputScriptsService} from "@creatoros/backend/modules/output-scripts";
 import {createMomentsService} from "@creatoros/backend/modules/moments";
 import {createWorkCompositionsService} from "@creatoros/backend/modules/work-compositions";
-import {createConversionSourceService} from "../creative-results/conversion-source.service";
-import {createWorkSourceService,workSourceOutputContent,workSourceConstraints,type WorkSourcePorts} from "./work-source.service";
+import {createWorkSourcePortsFactory} from "./work-source.ports";
+import {createWorkSourceService,sourceDigest,workFrozenSource} from "./work-source.service";
 import {createWorkSourcesTransport} from "./work-sources.transport";
 import {ENDPOINTS} from "@creatoros/contract";
 import {workSourceSelectBody} from "@creatoros/contract";
@@ -23,7 +24,7 @@ async function fixture(){const opened=await createDb(),db=opened.db;let seq=0;co
  const moments=(tx:Db)=>createMomentsService({db:tx,...deps,ports:{artifacts,assertProjectOwned,assertFile:unavailable,assertSource:unavailable}});
  const compositions=(tx:Db)=>createWorkCompositionsService({db:tx,...deps,ports:{artifacts,assertProjectOwned,readMember:unavailable,createMember:unavailable,findCreatedMember:async()=>null,assertSource:unavailable,assertRule:unavailable}});
  const scripts=(tx:Db)=>createOutputScriptsService({projects:project(tx),artifacts:artifacts(tx),submitScriptDraft:unavailable,readTask:unavailable});
- const factory=(tx:Db):WorkSourcePorts=>({projects:project(tx),assets:{assertAssetFileOwned:unavailable,readDocumentFileSource:unavailable,getAsset:unavailable},assertAssetLinkedToProject:unavailable,readIntelligenceSnapshot:unavailable,moments:moments(tx),compositions:compositions(tx),conversion:(()=>{const owner=createConversionSourceService({projects:project(tx),articles:article(tx),graphicPosts:graphic(tx),outputScripts:scripts(tx)});const normalize=(saved:Awaited<ReturnType<typeof owner.selectSavedSource>>)=>({...saved,content:workSourceOutputContent.parse(saved.content),constraints:workSourceConstraints.parse(saved.constraints)});return{selectSavedSource:async(c,p)=>normalize(await owner.selectSavedSource(c,p)),freeze:async(c,p)=>normalize(await owner.freeze(c,p)),restore:async(c,p,a)=>normalize(await owner.restore(c,p,a))};})(),ownerProject:async(c,kind,id)=>kind==="moments"?(await moments(tx).get(c,id)).projectId:(await compositions(tx).get(c,id)).projectId});
+ const factory=createWorkSourcePortsFactory({projects:project,assets:()=>({assertAssetFileOwned:unavailable,readDocumentFileSource:unavailable,getAsset:unavailable}),materialLinks:()=>({list:unavailable}),pureIntelligenceSnapshot:()=>({readImmutableSnapshot:unavailable}),moments,compositions,conversion:tx=>({projects:project(tx),articles:article(tx),graphicPosts:graphic(tx),outputScripts:scripts(tx)})});
  const source=createWorkSourceService(factory),service=source,transport=createWorkSourcesTransport(()=>service,db);
  const select=async(body:unknown,c=ctx)=>((await transport.request(ENDPOINTS.selectWorkSource,{body} as any,c)) as any).data.source;
  const counts=async()=>Promise.all([aiTasks,assets,artifactVersions,productionMediaRequests,workCompositionRequests,workReviewRequests].map(async t=>(await db.select().from(t)).length));
@@ -69,10 +70,18 @@ it("strict公共输入拒绝client摘要/正文/path/空选区/重叠/重复；�
 
 it("文章段落按历史保存顺序，视频结构与旧纯文本严格分开且来源type由owner产生",async()=>{const f=await fixture();try{
  const out=await f.article.createOutput(ctx,"project",{title:"文章",clientRequestId:"selector-section-output"}),empty=await f.article.getArticle(ctx,out.id);
- const saved=await f.article.createVersion(ctx,out.id,{expectedCurrentVersionId:empty.currentVersionId,clientRequestId:"selector-sections-save",document:{...empty.current,sections:[{sectionId:"one",heading:"一",body:"正文一",order:0,sourceRefs:[]},{sectionId:"two",heading:"二",body:"正文二",order:1,sourceRefs:[]},{sectionId:"hidden",heading:"未选",body:"秘密",order:2,sourceRefs:[]}]}});
+ const saved=await f.article.createVersion(ctx,out.id,{expectedCurrentVersionId:empty.currentVersionId,clientRequestId:"selector-sections-save",document:{...empty.current,sections:[articleSection.parse({sectionId:"one",heading:"一",headingLevel:3,body:"正文一",order:0,sourceRefs:[]}),articleSection.parse({sectionId:"two",heading:"二",body:"正文二",order:1,sourceRefs:[]}),articleSection.parse({sectionId:"hidden",heading:"未选",body:"秘密",order:2,sourceRefs:[]})]}});
  const pick={kind:"output_version",sourceOutputId:out.id,versionId:saved.versionId,selection:{mode:"selected",sourceFields:[],sourceSectionIds:["two","one"],textRanges:[]}};
  const aw=await f.select({projectId:"project",pick:{...pick,selection:{mode:"whole"}}});expect((await f.source.read(ctx,"project",aw,f.db)).source).toEqual(aw);
  const a=await f.select({projectId:"project",pick});expect(await f.select({projectId:"project",pick:{...pick,selection:{...pick.selection,sourceSectionIds:["one","two"]}}})).toEqual(a);expect((await f.source.read(ctx,"project",a,f.db)).content).toEqual({fields:{},sections:saved.document.sections.slice(0,2).map(({order,...v})=>v)});
+ const current=await f.source.read(ctx,"project",a,f.db);if(current.kind!=="output")throw Error("真实文章来源应为output");
+ expect(current.content.sections[0]!.headingLevel).toBe(3);
+ const {contentDigest:ignored,...oldPayload}=current;const legacyPayload={...oldPayload,content:{...current.content,sections:current.content.sections.map(({headingLevel,...old})=>old)}};
+ const opaque=workFrozenSource.parse({...legacyPayload,contentDigest:sourceDigest(legacyPayload)}),bytes=JSON.stringify(opaque);
+ expect(await f.source.restoreSnapshot(ctx,"project",opaque,f.db)).toEqual(opaque);expect(JSON.stringify(opaque)).toBe(bytes);
+ const mutated={...opaque,content:{...current.content,sections:current.content.sections.map(section=>({...section,headingLevel:6}))}};const {contentDigest:oldDigest,...changedPayload}=mutated;
+ await expect(f.source.restoreSnapshot(ctx,"project",{...mutated,contentDigest:sourceDigest(changedPayload)},f.db)).rejects.toThrow("真实历史");
+ await expect(f.source.restoreSnapshot(ctx,"project",{...opaque,contentDigest:"f".repeat(64)},f.db)).rejects.toThrow("完整摘要");
  await expect(f.select({projectId:"project",pick:{...pick,selection:{...pick.selection,sourceSectionIds:["missing"]}}})).rejects.toThrow();
  const video=await f.projects.createOutput(ctx,"project",{contentType:"video",title:"视频",clientRequestId:"selector-video-output"});
  const artifact=await f.artifacts.createArtifact(ctx,{projectId:"project",contentOutputId:video.id,artifactType:"output_script",title:"视频脚本",stage:"scripting",initialContentText:"甲😀秘密",initialContentData:{sections:[{id:"v-one",heading:"段落一",body:"第一段",sourceRefs:[]},{id:"v-two",heading:"段落二",body:"第二段",sourceRefs:[]}]}});

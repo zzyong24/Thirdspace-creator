@@ -1040,7 +1040,7 @@ export function createProjectsService(
   const service: ProjectsService = {
     getProject: (ctx, projectId, forUpdate = false) => repo.get(ctx, projectId, forUpdate),
     getOutput: (ctx, outputId) => repo.getOutput(ctx, outputId),
-    getOutputByCreationRequest:async(ctx,key)=>{requireAccountId(ctx.accountId,"projects.getOutputByCreationRequest");if(!repo.findOutputByCreationRequest)throw new OutputStateError("作品创建回执读取服务不可用");return repo.findOutputByCreationRequest(ctx,key);},
+    getOutputByCreationRequest:async(ctx,key)=>{requireWorkspace(ctx);if(!repo.findOutputByCreationRequest)throw new OutputStateError("作品创建回执读取服务不可用");return repo.findOutputByCreationRequest(ctx,key);},
     async createProject(ctx, cmd) {
       requireWorkspace(ctx);
       const ts = deps.now();
@@ -1543,10 +1543,11 @@ export function createProjectsService(
 
     async createOutput(ctx, projectId, cmd) {
       requireWorkspace(ctx); // [T-332 S2] 未选号=引导态禁读写
-      await repo.get(ctx, projectId); // ownership before the UoW
+      const ownedParent=await repo.get(ctx, projectId); // ownership before the UoW
       const ts = deps.now();
       const outputId = deps.nextId("output");
       const outputRow: ContentOutputRow = {
+        groupId:ownedParent.groupId??null,
         id: outputId,
         projectId,
         title: cmd.title,
