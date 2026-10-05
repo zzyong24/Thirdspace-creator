@@ -1,0 +1,44 @@
+{
+  "schema": "t1062-design-scope-review/v1",
+  "reviewed_at": "2026-10-05T22:12:41.764453+00:00",
+  "verdict": "PASS_DESIGN_SCOPE_WITH_REQUIRED_IMPLEMENTATION_GATES",
+  "bindings": {
+    "manifest": "/tmp/t1062-workspace-initialization-plan-ib2hofzy/manifest.json",
+    "manifest_sha256": "e32089a2759e23112b21499534597875365dc50ab17e586a2bb5005dd9bc24eb",
+    "plan_json_sha256": "989b8229ee15137a67b4773faa725a1bc8ec2fd7b46d0fc569b357007ebcdada",
+    "plan_md_sha256": "a6a7350743f0a5d657dc1bd871f86903f2157e18a3333a56b31c6d42100916bf"
+  },
+  "scope": {
+    "startup_paths": 6,
+    "wechat_path_separately_reviewed": 1,
+    "module_total_after": 583,
+    "product_total_after": 578,
+    "protected_after": 217,
+    "source_after": 795
+  },
+  "call_graph_assessment": {
+    "single_owner": "AccountSwitcher仍是唯一真实group list/归一owner；Provider只持首次ready状态，不复制权限或第二组列表。",
+    "coverage": "layout Provider同时包ShellRouter与外置@modal；ShellRouter boundary覆盖page outlet和Copilot；Sidebar/Switcher保持可见。",
+    "stability": "firstReady按shell lifetime latch且Provider不以scope为key；ready后的列表重载/同组筛选不卸载dirty/native。",
+    "switching": "真实根变化继续走原foreground确认、scope事件、abort和refresh。",
+    "failure": "只有server已验证initial root与browser当前root逐一相同才fail-open；无verified root时保留retry及管理入口，empty/legacy合法路径不被永久锁死。"
+  },
+  "required_implementation_constraints": [
+    "signal-aware transport必须复用fetchCreatorApi统一session/handshake并把显式signal交给fetch；不得手拼身份header。",
+    "账号组完整性必须用createClient/requestListWithMeta校验listEnvelope并按actual total完成分页；不得凭当前页length猜全量。",
+    "timeout必须真正AbortController.abort并推进epoch；late response不得写state，retry不得与旧inFlight串扰。",
+    "持久化新根后仅在必要router.refresh transition真实完成且epoch/root一致时firstReady；不得setTimeout或DOM猜测。",
+    "正常ready后的retry只更新菜单，不自动normalize另一根。",
+    "仅/accounts与/settings恢复入口可旁路内容gate；首页和创作modal/Copilot不得旁路。"
+  ],
+  "required_gates": [
+    "旧Switcher 8 tests一字不减并新增hang-timeout/abort/lateepoch/retry",
+    "新组件覆盖delayed success、pure group、legacy account、empty、stale/archive、error、timeout、StrictMode/unmount、manual retry、modal/Copilot",
+    "真实浏览器延迟实际group list bytes：ready前0 mutation，ready后create/save/reload；同组native/dirty/Undo/CAS实例保持",
+    "原Wechat2和既有跨组确认/abort回归；LED-047；原18命令/顺序/断言不变"
+  ],
+  "limitations": [
+    "仅设计准入，无代码、类型、测试、浏览器或安装PASS",
+    "UI状态尚无渲染证据，最终仍需oil-ui既有样式审查"
+  ]
+}

@@ -1,0 +1,215 @@
+{
+  "schema": "t1062-first-load-scope-control-addendum-r2-independent-review/v1",
+  "observed_utc": "2026-10-05T22:14:52.610278+00:00",
+  "verdict": "BOUNDED_GO_SEVEN_EXACT_PATH_CONTROL_APPEND_ONLY_CONDITIONAL_WIP_PRESERVATION_RELEASE_SYNC_AND_FINAL_SCOPE_REBIND",
+  "review_scope": "仅审ROOT控制3文件，不自评本agent生产native候选，不签初始化方案实现/浏览器/安装通过。",
+  "MAIN_head": "c06fb26d3f53b6b6a284606d7932fa7ce0d52d65",
+  "MAIN_dirty_paths_actual": [
+    " M orchestrator/context/T-1062.md",
+    " M orchestrator/progress.json"
+  ],
+  "manifest": {
+    "path": "/tmp/t1062-first-load-scope-addendum-r2/manifest.json",
+    "sha256": "605d4264d19a917dc8e607dca2138aa37b377745f6eabdfa5b5dcaabb85a9f7c"
+  },
+  "plan": {
+    "path": "/tmp/t1062-workspace-initialization-plan-ib2hofzy/manifest.json",
+    "sha256": "e32089a2759e23112b21499534597875365dc50ab17e586a2bb5005dd9bc24eb",
+    "design_still_pending_other_independent_review": true
+  },
+  "control_files": [
+    {
+      "path": "docs/features/t1062-consolidated-local-client-acceptance.md",
+      "before_sha256": "33576f81caf91a3f6a80f4c0d89485d1b8d139787c81c9a065403e0e5dbb9318",
+      "after_sha256": "32ee74fdb423e82778fcd01bc9a5b371a506f110034ebcbcf29e5f28e0d30d0e",
+      "provider": "/tmp/t1062-first-load-scope-addendum-r2/spec-after.md",
+      "MAIN_current_before_matches": true,
+      "pure_append": true,
+      "append_bytes": 2628
+    },
+    {
+      "path": "orchestrator/DECISION_LOG.md",
+      "before_sha256": "77edb1f6f234f954c7e9c8271d4edf4bfd33850b5e80718daf863bc883e00863",
+      "after_sha256": "a7f3fd87f2e0e1ea36a8af870fd5a41c82da34e78afce0331b2f95f604c63d98",
+      "provider": "/tmp/t1062-first-load-scope-addendum-r2/decision-after.md",
+      "MAIN_current_before_matches": true,
+      "pure_append": true,
+      "append_bytes": 1309
+    },
+    {
+      "path": "orchestrator/process/modules.config.json",
+      "before_sha256": "270f44ac5cc5409188c7f418368c908e6c4d50fd8ca97a8aba4cd4af50b9f584",
+      "after_sha256": "3d782b4bc743d49a7a9bd36e51a5340c4246b360e0f163b10240fa18c2926068",
+      "provider": "/tmp/t1062-first-load-scope-addendum-r2/modules-after.json",
+      "MAIN_current_before_matches": true
+    }
+  ],
+  "module_semantic_diff": {
+    "only_json_pointer": "/modules/T-1062/step_write_set/integration",
+    "before": 576,
+    "after": 583,
+    "added_exact_paths": [
+      "frontend/tests/e2e/wechat-article-workbench.spec.ts",
+      "frontend/src/app/(creator)/layout.tsx",
+      "frontend/src/app/(creator)/shell-router.tsx",
+      "frontend/src/components/shell/account-switcher.tsx",
+      "frontend/src/components/shell/workspace-initialization.tsx",
+      "frontend/src/components/shell/workspace-initialization.test.tsx",
+      "frontend/src/components/shell/account-switcher.test.tsx"
+    ],
+    "removed": [],
+    "other_semantic_changes": 0,
+    "original18_commands_runner_and_other_modules_unchanged": true
+  },
+  "path_baselines": [
+    {
+      "relative_path": "frontend/src/app/(creator)/layout.tsx",
+      "existing_module_write": false,
+      "module_added": true,
+      "existing_snapshot": false,
+      "exists": true,
+      "sha256": "82d273efda565b31f02a15cca0de7011fdf1aa507bd799473c56256a23047593"
+    },
+    {
+      "relative_path": "frontend/src/app/(creator)/shell-router.tsx",
+      "existing_module_write": false,
+      "module_added": true,
+      "existing_snapshot": false,
+      "exists": true,
+      "sha256": "7948448ac14dfef537e01d37058ae04a06b71d9cd949c71f9bc7c60e738a7553"
+    },
+    {
+      "relative_path": "frontend/src/components/shell/account-switcher.tsx",
+      "existing_module_write": false,
+      "module_added": true,
+      "existing_snapshot": true,
+      "exists": true,
+      "sha256": "151adbd2fdf0c6352eeaa29eeb76afcfa41fc0077ed5e7b648b812202fc7aa98"
+    },
+    {
+      "relative_path": "frontend/src/components/shell/workspace-initialization.tsx",
+      "existing_module_write": false,
+      "module_added": true,
+      "existing_snapshot": false,
+      "exists": false,
+      "sha256": null
+    },
+    {
+      "relative_path": "frontend/src/components/shell/workspace-initialization.test.tsx",
+      "existing_module_write": false,
+      "module_added": true,
+      "existing_snapshot": false,
+      "exists": false,
+      "sha256": null
+    },
+    {
+      "relative_path": "frontend/src/components/shell/account-switcher.test.tsx",
+      "existing_module_write": false,
+      "module_added": true,
+      "existing_snapshot": false,
+      "exists": true,
+      "sha256": "d2e077f515a9f2d11b32647a27e3f0371e3607ba83629923615f3e377cd0398c"
+    },
+    {
+      "relative_path": "frontend/tests/e2e/t1062-group-native-rough.spec.ts",
+      "existing_module_write": true,
+      "module_added": false,
+      "existing_snapshot": true,
+      "exists": true,
+      "sha256": "9b98c5b23dbd75dc9a383b154abcb6053decf51c1e8783e16827713fa38058f1"
+    },
+    {
+      "relative_path": "frontend/tests/e2e/wechat-article-workbench.spec.ts",
+      "existing_module_write": false,
+      "module_added": true,
+      "existing_snapshot": true,
+      "exists": true,
+      "sha256": "32e2373e2709b9f50c54e2fd04eb089561f152945f5cb4db1cff7f07f2d97867"
+    }
+  ],
+  "counts": {
+    "effective_product_before": 571,
+    "effective_product_after": 578,
+    "explanation": "writer scope570 write_set +1 already active conditional; add7 existing/new exact paths. Not the historical MAIN scope567 snapshot785.",
+    "snapshot_before": 790,
+    "snapshot_after": 795,
+    "snapshot_added_exact_paths": [
+      "frontend/src/app/(creator)/layout.tsx",
+      "frontend/src/app/(creator)/shell-router.tsx",
+      "frontend/src/components/shell/workspace-initialization.tsx",
+      "frontend/src/components/shell/workspace-initialization.test.tsx",
+      "frontend/src/components/shell/account-switcher.test.tsx"
+    ],
+    "protected_before_declared": 219,
+    "protected_after_expected": 217,
+    "only_protected_to_owned_paths": [
+      "frontend/src/components/shell/account-switcher.tsx",
+      "frontend/tests/e2e/wechat-article-workbench.spec.ts"
+    ],
+    "protected_evidence_boundary": "此包只有SPEC/DEC/module，实际219 reader inventory不是本包文件；两路径已在790 snapshot中，其余217正式protected SHA须ROOT原inventory最终重绑核验，不准泛化豁免。"
+  },
+  "minimum_path_necessity": [
+    {
+      "paths": [
+        "frontend/src/app/(creator)/layout.tsx",
+        "frontend/src/app/(creator)/shell-router.tsx"
+      ],
+      "reason": "已实读CreatorLayout负责真实resolveSession且@modal在ShellRouter之外；ShellRouter包含AppShell及OverlayController/Copilot，二者需要同一Provider boundary覆盖，不能只在一处page加loading。"
+    },
+    {
+      "paths": [
+        "frontend/src/components/shell/account-switcher.tsx",
+        "frontend/src/components/shell/workspace-initialization.tsx"
+      ],
+      "reason": "现唯一组列表/选择owner改为signal/epoch/timeout真实查询并提供一次ready；新context只承接初始化状态，不存第二份权限/组事实。同组latch保留实例，初载失败只与server validated同根fail-open；retry only menu。"
+    },
+    {
+      "paths": [
+        "frontend/src/components/shell/workspace-initialization.test.tsx",
+        "frontend/src/components/shell/account-switcher.test.tsx"
+      ],
+      "reason": "新增初载/真实Abort/legacy/failure/StrictMode/late-response/恢复/Copilot/modal覆盖，旧8Switcher断言保持；不拿单测代真实浏览器。"
+    },
+    {
+      "paths": [
+        "frontend/tests/e2e/wechat-article-workbench.spec.ts"
+      ],
+      "reason": "旧两公共旅程fixture改真实唯一active membership回读，同源组就绪；保模型候选/采纳/保存/刷新/隔离，不能替代首载production修正。"
+    }
+  ],
+  "authorized_product_boundary": "原T1062 SPEC明确用户已授权汇总、修复、提交和本地逐功能验收；新增首载闭包修复当场真实创建取消，非新增backend/API/真实平台membership/模型语义/自动账号资料合并。不包含发布/push或用户另签功能PASS。",
+  "control_application_order": {
+    "actual_active_lease_observed": {
+      "agent": "root-t1062-frontend-delivery",
+      "since": "2026-10-05T21:41:07.538Z",
+      "isolation_kind": "worktree",
+      "workspace_root": "/Users/zyongzhu/.codex/worktrees/t1062-frontend-native-delivery/Thirdspace-creator",
+      "branch": "codex/t1062-frontend-native-delivery",
+      "base_sha": "c06fb26d3f53b6b6a284606d7932fa7ce0d52d65",
+      "wave_id": "t1062-production-parent-final-20261006",
+      "merge_index": 0
+    },
+    "not_safe_to_apply_config_under_current_lease": true,
+    "required_ROOT_sequence": [
+      "先实际完整保护全部writer WIP/current metadata/provider/失败证据，记录路径SHA与缺席项，不stash或覆盖源造成丢失。",
+      "ROOT沿正式工具释放现integration lease；核真实无active lease后再变更配置，不能把此静态GO当lease已释放。",
+      "提交精确3control addendum，并按已评审最终scope/source/readers/protected217重绑治理元数据；保old MAIN历史scope，不改protected业务基线求绿。",
+      "同步干净writer至相同控制HEAD，再正式claim后按回执逐字节恢复已授权WIP和候选。",
+      "新增初始化代码还需设计独评、候选独评和真实RED/GREEN/浏览器，原18 argv/顺序/预算/失败历史不删。"
+    ]
+  },
+  "other_reviews_and_limits": [
+    "本次不审native生产patch，ROOT/consolidated独审。",
+    "计划的react refresh transition真正完成、fallback同root比较、retry不换根、modal/Copilot/管理入口以及group-null legacy保用须在候选和真实运行复核；这里不是实现PASS。",
+    "未运行tool config apply/reconcile/claim/test/build/browser/DB/model/App。"
+  ],
+  "input_hash_manifest": {
+    "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-first-load-controls-r2-independent-n3_r1pez/input-hash-manifest.json",
+    "sha256": "5ed2fd5b3e0552cb24fffde8d08a3421f4b37e45e3ce3726746bf35100694f62",
+    "count": 20,
+    "before_after_drift": 0
+  },
+  "verification18_passed": false,
+  "installation_passed": false,
+  "hearing_passed": false
+}

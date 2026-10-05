@@ -76,3 +76,23 @@ BUILD集成和验证→SHIP本地包。上游来源为主树、`codex/user-diagn
 旧画布浏览器夹具应按已确认的新组工作区公开 API 创建真实归组资源；历史孤立 account 资料仍须显式迁移，不新增按当前成员关系开放旧资料的捷径。被 T-995 清除的私人截图不恢复，图片与视频解码验收使用可追溯的中性有效媒体。
 
 素材预览补充：真实浏览器中素材卡已有 `currentFileId`，但未交给要求 exact 文件的 `MediaPreview`，合法图片/视频因此只显示占位。实现范围另精确增加 `frontend/src/features/creative-canvas/canvas-asset-picker.tsx`，仅补传真实 `currentFileId`；权限、素材内容、插入行为及预览授权不变。既有 `canvas-editor.test.tsx` 的真实组件回归已出现 RED 1 项失败、候选 GREEN 27 项通过；不代签浏览器解码或安装版。
+
+### 真实首载根就绪与文章验收夹具（2026-10-06）
+
+真实浏览器两项公众号创建请求未取得回执，随后被AccountSwitcher初次载入真实组后切根取消；不能靠更新夹具代替产品修复。统一初次初始化状态复用真实Switcher公开列表和选择，不新增归属算法。通过同一context覆盖ShellRouter页面/Copilot和layout外的@modal，在初次根确认及真实选择/cookie同步完成后开放创作。后续同组列表刷新不关闭屏障、不卸载未保存稿或native；显式跨组切换仍沿原确认及旧操作取消。
+
+列表错误/有界超时必须通过真实AbortSignal结束本轮请求，并提供可操作重试。已有server与browser一致的原group或旧account根保留可用性，原权限仍由backend严格检查；缺根时显示可恢复状态，账号/设置等管理入口仍可访问。初次已安全开放后，重试只刷新菜单，不隐式切根、重发写入或丢弃原输入。沿Oil0.10及原紫色丰富布局，仅使用既有tokens和状态组件，不另改视觉方向。
+
+公众号夹具另通过公开分页accountGroups.list读取真实账号唯一active成员组，在原入口前同步同一组；缺失/非唯一即拒绝夹具，不猜组、不迁移资料。两个原用例的手写、保存、刷新、隔离、模型候选及采纳断言保留。原6项native/group旅程保留，另增真实延迟首载检查；原18检查argv、顺序、截止与失败历史不减，新增初始化和既有Switcher真实信号/失败恢复回归作为额外验证。
+
+精确新增写集7条：frontend/tests/e2e/wechat-article-workbench.spec.ts、frontend/src/app/(creator)/layout.tsx、frontend/src/app/(creator)/shell-router.tsx、frontend/src/components/shell/account-switcher.tsx、frontend/src/components/shell/workspace-initialization.tsx、frontend/src/components/shell/workspace-initialization.test.tsx、frontend/src/components/shell/account-switcher.test.tsx。产品写集571→578，219保护项中的Switcher和wechat两项转写集，剩217；新增5快照，总790→795，module576→583。没有backend/SQL/平台事实归属或模型选择变更。静态方案和候选必须独立评审，实际失败先复现再实测，不以准备、夹具或单测代签浏览器及安装版。
+
+```mermaid
+flowchart LR
+ A[首次读取真实账号组] --> B{当前工作区已确定}
+ B -->|已确定| C[开放稿件和剪辑操作]
+ A -->|失败或超时| D[保留原合法工作区并提供重试]
+ D --> C
+ C --> E[同组刷新保留未保存内容]
+ C --> F[明确切组后取消旧范围操作]
+```

@@ -2457,7 +2457,14 @@
           "docs/verification/t1062/frontend-native-adaptation-result.json",
           "backend/src/modules/production/production.repository.ts",
           "backend/src/modules/production/production-native-public.integration.test.ts",
-          "frontend/src/features/creative-canvas/canvas-asset-picker.tsx"
+          "frontend/src/features/creative-canvas/canvas-asset-picker.tsx",
+          "frontend/tests/e2e/wechat-article-workbench.spec.ts",
+          "frontend/src/app/(creator)/layout.tsx",
+          "frontend/src/app/(creator)/shell-router.tsx",
+          "frontend/src/components/shell/account-switcher.tsx",
+          "frontend/src/components/shell/workspace-initialization.tsx",
+          "frontend/src/components/shell/workspace-initialization.test.tsx",
+          "frontend/src/components/shell/account-switcher.test.tsx"
         ]
       },
       "step_read_set": {
