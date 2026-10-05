@@ -1952,6 +1952,311 @@
       "reason": "本文件仅记录已审T1062前端/native精确来源、构建/测试argv和交接证据。Bun标记来自既有OpenCut测试/构建工具及bun.lock；Rust标记包含既有Doocs CodeMirror语言包许可证名称，不是新Rust编译器。沿用原Node/native编辑器工具链，不新增产品runtime、语言工具链、安装机制或进程权限。",
       "review": "docs/verification/t1062/frontend-native-adaptation-scope-independent-review.json",
       "acceptance": "仅当前task/file精确SHA的两类既有机制说明预算，依据独立范围复核9645dabb73e507567660daf4665b011b37770868688d3229ace2597618401257及原SPEC/DEC；不代表原18、安装、听审或任务PASS。后续只可随批准的实际source application receipt及其治理身份字段重绑此条file_sha256，不授权新的类别/来源/产品范围。"
+    },
+    {
+      "task_id": "T-1062",
+      "files": [
+        "frontend/public/reference-editors/doocs-md/native/SHA256.json"
+      ],
+      "file_sha256": "08a9f50f251f44fbac4694cadd5b38e0246e70da1d312c6b730e09c7487a50ea",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1062-INTEGRATION-20261005 / DEC-T1062-ROUGH-20261005",
+      "scope_source": "docs/features/t1062-consolidated-local-client-acceptance.md",
+      "reason": "既有许可证及精确产物hash表中的CodeMirror Rust语言包名称。仅准入已审原Skill/native源码锁定产物在本任务的精确文件字节；不引入runtime/toolchain/安装或进程权限。",
+      "review": "docs/verification/t1062/frontend-native-adaptation-scope-independent-review.json",
+      "acceptance": "覆盖冻结after精确SHA的既有引用预算，不代表原18/安装/听审/任务PASS；不允许新hash自动沿用，不使用historical baseline豁免。"
+    },
+    {
+      "task_id": "T-1062",
+      "files": [
+        "frontend/public/reference-editors/doocs-md/native/SHA256.json"
+      ],
+      "file_sha256": "fac19db561390b8be77009a18c562477bc8ba17c20b813bf51439b2255814240",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1062-INTEGRATION-20261005 / DEC-T1062-ROUGH-20261005",
+      "scope_source": "docs/features/t1062-consolidated-local-client-acceptance.md",
+      "reason": "既有许可证及精确产物hash表中的CodeMirror Rust语言包名称。仅准入已审原Skill/native源码锁定产物在本任务的精确文件字节；不引入runtime/toolchain/安装或进程权限。",
+      "review": "docs/verification/t1062/frontend-native-adaptation-scope-independent-review.json",
+      "acceptance": "覆盖冻结before精确SHA的既有引用预算，不代表原18/安装/听审/任务PASS；不允许新hash自动沿用，不使用historical baseline豁免。"
+    },
+    {
+      "task_id": "T-1062",
+      "files": [
+        "frontend/public/reference-editors/doocs-md/native/chunks/dist-DDDV7C0t.js"
+      ],
+      "file_sha256": "d175913746a301665be9fa17969a835a8a1965570e048640e7606fc5c9d44dc2",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1062-INTEGRATION-20261005 / DEC-T1062-ROUGH-20261005",
+      "scope_source": "docs/features/t1062-consolidated-local-client-acceptance.md",
+      "reason": "既有CodeMirror/Lezer Rust语法高亮parser，非系统Rust/Cargo工具链。仅准入已审原Skill/native源码锁定产物在本任务的精确文件字节；不引入runtime/toolchain/安装或进程权限。",
+      "review": "docs/verification/t1062/frontend-native-adaptation-scope-independent-review.json",
+      "acceptance": "覆盖冻结before,after精确SHA的既有引用预算，不代表原18/安装/听审/任务PASS；不允许新hash自动沿用，不使用historical baseline豁免。"
+    },
+    {
+      "task_id": "T-1062",
+      "files": [
+        "frontend/public/reference-editors/doocs-md/native/chunks/prettier-GzVfHlfC.js"
+      ],
+      "file_sha256": "337d6b42491e0674df523b660ea82259fa197916378dbd32990a96d853f21944",
+      "categories": [
+        "runtime"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1062-INTEGRATION-20261005 / DEC-T1062-ROUGH-20261005",
+      "scope_source": "docs/features/t1062-consolidated-local-client-acceptance.md",
+      "reason": "既有Prettier依赖的Deno/global版本探测兼容分支，非新增Deno runtime。仅准入已审原Skill/native源码锁定产物在本任务的精确文件字节；不引入runtime/toolchain/安装或进程权限。",
+      "review": "docs/verification/t1062/frontend-native-adaptation-scope-independent-review.json",
+      "acceptance": "覆盖冻结before,after精确SHA的既有引用预算，不代表原18/安装/听审/任务PASS；不允许新hash自动沿用，不使用historical baseline豁免。"
+    },
+    {
+      "task_id": "T-1062",
+      "files": [
+        "frontend/public/reference-editors/doocs-md/native/chunks/render-C0-GwsvR.js"
+      ],
+      "file_sha256": "ee5dea2c3534d536e2d5a7ca3bb317e1809c2cf07a6795c3032128da22730645",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1062-INTEGRATION-20261005 / DEC-T1062-ROUGH-20261005",
+      "scope_source": "docs/features/t1062-consolidated-local-client-acceptance.md",
+      "reason": "既有CodeMirror Rust语言支持的lazy import与语言名称，非Rust编译器。仅准入已审原Skill/native源码锁定产物在本任务的精确文件字节；不引入runtime/toolchain/安装或进程权限。",
+      "review": "docs/verification/t1062/frontend-native-adaptation-scope-independent-review.json",
+      "acceptance": "覆盖冻结after精确SHA的既有引用预算，不代表原18/安装/听审/任务PASS；不允许新hash自动沿用，不使用historical baseline豁免。"
+    },
+    {
+      "task_id": "T-1062",
+      "files": [
+        "frontend/public/reference-editors/doocs-md/native/chunks/render-DsjZRMnM.js"
+      ],
+      "file_sha256": "99704573c2a7bf293981ca76785a4c739f9d14f444c2d4954ebe946d99728c8f",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1062-INTEGRATION-20261005 / DEC-T1062-ROUGH-20261005",
+      "scope_source": "docs/features/t1062-consolidated-local-client-acceptance.md",
+      "reason": "既有CodeMirror Rust语言支持的lazy import与语言名称，非Rust编译器。仅准入已审原Skill/native源码锁定产物在本任务的精确文件字节；不引入runtime/toolchain/安装或进程权限。",
+      "review": "docs/verification/t1062/frontend-native-adaptation-scope-independent-review.json",
+      "acceptance": "覆盖冻结before精确SHA的既有引用预算，不代表原18/安装/听审/任务PASS；不允许新hash自动沿用，不使用historical baseline豁免。"
+    },
+    {
+      "task_id": "T-1062",
+      "files": [
+        "frontend/public/reference-editors/doocs-md/native/chunks/storage-jiCkQUgy.js"
+      ],
+      "file_sha256": "d96f4ee07bd4ba1c869646bf60e4c33814450337389f929c484112d5114e8b08",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1062-INTEGRATION-20261005 / DEC-T1062-ROUGH-20261005",
+      "scope_source": "docs/features/t1062-consolidated-local-client-acceptance.md",
+      "reason": "既有代码高亮主题列表中的xcode主题字符串，非Xcode工具链安装。仅准入已审原Skill/native源码锁定产物在本任务的精确文件字节；不引入runtime/toolchain/安装或进程权限。",
+      "review": "docs/verification/t1062/frontend-native-adaptation-scope-independent-review.json",
+      "acceptance": "覆盖冻结before,after精确SHA的既有引用预算，不代表原18/安装/听审/任务PASS；不允许新hash自动沿用，不使用historical baseline豁免。"
+    },
+    {
+      "task_id": "T-1062",
+      "files": [
+        "frontend/public/reference-editors/doocs-md/native/native-build-graph.json"
+      ],
+      "file_sha256": "73d35916f387081221bb73aba6c7c7c2045a652bf7aed72bcbd38fc18667bf92",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1062-INTEGRATION-20261005 / DEC-T1062-ROUGH-20261005",
+      "scope_source": "docs/features/t1062-consolidated-local-client-acceptance.md",
+      "reason": "既有CodeMirror/Lezer Rust语言包的依赖图和许可证记录。仅准入已审原Skill/native源码锁定产物在本任务的精确文件字节；不引入runtime/toolchain/安装或进程权限。",
+      "review": "docs/verification/t1062/frontend-native-adaptation-scope-independent-review.json",
+      "acceptance": "覆盖冻结before,after精确SHA的既有引用预算，不代表原18/安装/听审/任务PASS；不允许新hash自动沿用，不使用historical baseline豁免。"
+    },
+    {
+      "task_id": "T-1062",
+      "files": [
+        "frontend/public/reference-editors/opencut-classic/native/native.js"
+      ],
+      "file_sha256": "8356943449ba3c071d2a27971abe5627239d057e2aae988317622b2d43917696",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1062-INTEGRATION-20261005 / DEC-T1062-ROUGH-20261005",
+      "scope_source": "docs/features/t1062-consolidated-local-client-acceptance.md",
+      "reason": "既有OpenCut媒体时间转换错误字符串rust returned undefined；沿原打包引擎，非本轮新增Rust运行/编译器。仅准入已审原Skill/native源码锁定产物在本任务的精确文件字节；不引入runtime/toolchain/安装或进程权限。",
+      "review": "docs/verification/t1062/frontend-native-adaptation-scope-independent-review.json",
+      "acceptance": "覆盖冻结after精确SHA的既有引用预算，不代表原18/安装/听审/任务PASS；不允许新hash自动沿用，不使用historical baseline豁免。"
+    },
+    {
+      "task_id": "T-1062",
+      "files": [
+        "frontend/public/reference-editors/opencut-classic/native/native.js"
+      ],
+      "file_sha256": "f61b0939ff9a185861dbc7addee2c40ef1b3a0d71cfac81c31c41d1f43a50354",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1062-INTEGRATION-20261005 / DEC-T1062-ROUGH-20261005",
+      "scope_source": "docs/features/t1062-consolidated-local-client-acceptance.md",
+      "reason": "既有OpenCut媒体时间转换错误字符串rust returned undefined；沿原打包引擎，非本轮新增Rust运行/编译器。仅准入已审原Skill/native源码锁定产物在本任务的精确文件字节；不引入runtime/toolchain/安装或进程权限。",
+      "review": "docs/verification/t1062/frontend-native-adaptation-scope-independent-review.json",
+      "acceptance": "覆盖冻结before精确SHA的既有引用预算，不代表原18/安装/听审/任务PASS；不允许新hash自动沿用，不使用historical baseline豁免。"
+    },
+    {
+      "task_id": "T-1062",
+      "files": [
+        "reference-editors/doocs-md/native/native-delivery.json"
+      ],
+      "file_sha256": "82fb9cbb156b0d84a88144c3c663bc8bf34da321655f3e89c34866a093e3a0d9",
+      "categories": [
+        "language_toolchain",
+        "runtime"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1062-INTEGRATION-20261005 / DEC-T1062-ROUGH-20261005",
+      "scope_source": "docs/features/t1062-consolidated-local-client-acceptance.md",
+      "reason": "既有语言包许可及R8真实Bun命令/log来源回执，非新增runtime或toolchain。仅准入已审原Skill/native源码锁定产物在本任务的精确文件字节；不引入runtime/toolchain/安装或进程权限。",
+      "review": "docs/verification/t1062/frontend-native-adaptation-scope-independent-review.json",
+      "acceptance": "覆盖冻结after精确SHA的既有引用预算，不代表原18/安装/听审/任务PASS；不允许新hash自动沿用，不使用historical baseline豁免。"
+    },
+    {
+      "task_id": "T-1062",
+      "files": [
+        "reference-editors/kuaitu/native/provenance.json"
+      ],
+      "file_sha256": "1ef0bed2c08559af650f194219053951d74f6fc4230f0a3dba2aa5e14f2cce5a",
+      "categories": [
+        "runtime"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1062-INTEGRATION-20261005 / DEC-T1062-ROUGH-20261005",
+      "scope_source": "docs/features/t1062-consolidated-local-client-acceptance.md",
+      "reason": "R8真实既有Bun构建/测试命令来源说明，非新产品runtime。仅准入已审原Skill/native源码锁定产物在本任务的精确文件字节；不引入runtime/toolchain/安装或进程权限。",
+      "review": "docs/verification/t1062/frontend-native-adaptation-scope-independent-review.json",
+      "acceptance": "覆盖冻结after精确SHA的既有引用预算，不代表原18/安装/听审/任务PASS；不允许新hash自动沿用，不使用historical baseline豁免。"
+    },
+    {
+      "task_id": "T-1062",
+      "files": [
+        "reference-editors/manifest.json"
+      ],
+      "file_sha256": "27c127ca345ec9109c9539d40386f3a104376d7b753a318462a0e19aaeddac1d",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1062-INTEGRATION-20261005 / DEC-T1062-ROUGH-20261005",
+      "scope_source": "docs/features/t1062-consolidated-local-client-acceptance.md",
+      "reason": "四native既有归档/bundle/许可证hash清单中的Rust语言包名称。仅准入已审原Skill/native源码锁定产物在本任务的精确文件字节；不引入runtime/toolchain/安装或进程权限。",
+      "review": "docs/verification/t1062/frontend-native-adaptation-scope-independent-review.json",
+      "acceptance": "覆盖冻结after精确SHA的既有引用预算，不代表原18/安装/听审/任务PASS；不允许新hash自动沿用，不使用historical baseline豁免。"
+    },
+    {
+      "task_id": "T-1062",
+      "files": [
+        "reference-editors/manifest.json"
+      ],
+      "file_sha256": "de59866e650e8c0c6d40f836c84460eaa219603dcc91b07878377bdceaca3fd0",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1062-INTEGRATION-20261005 / DEC-T1062-ROUGH-20261005",
+      "scope_source": "docs/features/t1062-consolidated-local-client-acceptance.md",
+      "reason": "四native既有归档/bundle/许可证hash清单中的Rust语言包名称。仅准入已审原Skill/native源码锁定产物在本任务的精确文件字节；不引入runtime/toolchain/安装或进程权限。",
+      "review": "docs/verification/t1062/frontend-native-adaptation-scope-independent-review.json",
+      "acceptance": "覆盖冻结before精确SHA的既有引用预算，不代表原18/安装/听审/任务PASS；不允许新hash自动沿用，不使用historical baseline豁免。"
+    },
+    {
+      "task_id": "T-1062",
+      "files": [
+        "reference-editors/opencut-classic/native/DELIVERY.json"
+      ],
+      "file_sha256": "2d01b96ea6f90b9763259efaaa52cd19aca160f683588090f9f17ef6c3477c67",
+      "categories": [
+        "runtime"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1062-INTEGRATION-20261005 / DEC-T1062-ROUGH-20261005",
+      "scope_source": "docs/features/t1062-consolidated-local-client-acceptance.md",
+      "reason": "既有OpenCut构建工具版本与原Bun命令、源码/产物回执。仅准入已审原Skill/native源码锁定产物在本任务的精确文件字节；不引入runtime/toolchain/安装或进程权限。",
+      "review": "docs/verification/t1062/frontend-native-adaptation-scope-independent-review.json",
+      "acceptance": "覆盖冻结after精确SHA的既有引用预算，不代表原18/安装/听审/任务PASS；不允许新hash自动沿用，不使用historical baseline豁免。"
+    },
+    {
+      "task_id": "T-1062",
+      "files": [
+        "reference-editors/opencut-classic/native/DELIVERY.json"
+      ],
+      "file_sha256": "c2227ae8a1c4eae396994f5323bafd78b80fb559ae612e50039a57f52d0e6ed0",
+      "categories": [
+        "runtime"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1062-INTEGRATION-20261005 / DEC-T1062-ROUGH-20261005",
+      "scope_source": "docs/features/t1062-consolidated-local-client-acceptance.md",
+      "reason": "既有OpenCut构建工具版本与原Bun命令、源码/产物回执。仅准入已审原Skill/native源码锁定产物在本任务的精确文件字节；不引入runtime/toolchain/安装或进程权限。",
+      "review": "docs/verification/t1062/frontend-native-adaptation-scope-independent-review.json",
+      "acceptance": "覆盖冻结before精确SHA的既有引用预算，不代表原18/安装/听审/任务PASS；不允许新hash自动沿用，不使用historical baseline豁免。"
+    },
+    {
+      "task_id": "T-1062",
+      "files": [
+        "reference-editors/opencut-classic/native/VERIFICATION.md"
+      ],
+      "file_sha256": "0031db53690cff79f6cb0105fb35890a10d2e5036315674438e44455a53ec16f",
+      "categories": [
+        "runtime"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1062-INTEGRATION-20261005 / DEC-T1062-ROUGH-20261005",
+      "scope_source": "docs/features/t1062-consolidated-local-client-acceptance.md",
+      "reason": "既有Bun宿主与原native验证结果/失败说明，保留原失败和验收限制。仅准入已审原Skill/native源码锁定产物在本任务的精确文件字节；不引入runtime/toolchain/安装或进程权限。",
+      "review": "docs/verification/t1062/frontend-native-adaptation-scope-independent-review.json",
+      "acceptance": "覆盖冻结after精确SHA的既有引用预算，不代表原18/安装/听审/任务PASS；不允许新hash自动沿用，不使用historical baseline豁免。"
+    },
+    {
+      "task_id": "T-1062",
+      "files": [
+        "reference-editors/opencut-classic/native/VERIFICATION.md"
+      ],
+      "file_sha256": "44c222af6d7f45157936c83b37c6d6c8314b5b63f1ca0c3826cc8d93ab3b37ef",
+      "categories": [
+        "runtime"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1062-INTEGRATION-20261005 / DEC-T1062-ROUGH-20261005",
+      "scope_source": "docs/features/t1062-consolidated-local-client-acceptance.md",
+      "reason": "既有Bun宿主与原native验证结果/失败说明，保留原失败和验收限制。仅准入已审原Skill/native源码锁定产物在本任务的精确文件字节；不引入runtime/toolchain/安装或进程权限。",
+      "review": "docs/verification/t1062/frontend-native-adaptation-scope-independent-review.json",
+      "acceptance": "覆盖冻结before精确SHA的既有引用预算，不代表原18/安装/听审/任务PASS；不允许新hash自动沿用，不使用historical baseline豁免。"
+    },
+    {
+      "task_id": "T-1062",
+      "files": [
+        "reference-editors/opencut-classic/native/verification/dom-probe.ts"
+      ],
+      "file_sha256": "6d40f22b91ee665df994a1eed7c6bcf521a051324610621255ab3b4f9393123c",
+      "categories": [
+        "runtime"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1062-INTEGRATION-20261005 / DEC-T1062-ROUGH-20261005",
+      "scope_source": "docs/features/t1062-consolidated-local-client-acceptance.md",
+      "reason": "原DOM验证在浏览器缺Node process时移除该全局并于退出前恢复Bun宿主的说明注释；原探针已有的机制，不新增runtime。仅准入已审原Skill/native源码锁定产物在本任务的精确文件字节；不引入runtime/toolchain/安装或进程权限。",
+      "review": "docs/verification/t1062/frontend-native-adaptation-scope-independent-review.json",
+      "acceptance": "覆盖冻结after精确SHA的既有引用预算，不代表原18/安装/听审/任务PASS；不允许新hash自动沿用，不使用historical baseline豁免。"
     }
   ],
   "historical_baselines": []
