@@ -1,0 +1,23 @@
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+Error: Transform failed with 1 error:
+/private/tmp/t1060-ai-business/continue-codex/business.ts:117:242: ERROR: Expected ")" but found "as"
+    at failureErrorWithLog (/Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/node_modules/.pnpm/esbuild@0.28.1/node_modules/esbuild/lib/main.js:1748:15)
+    at /Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/node_modules/.pnpm/esbuild@0.28.1/node_modules/esbuild/lib/main.js:1017:50
+    at responseCallbacks.<computed> (/Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/node_modules/.pnpm/esbuild@0.28.1/node_modules/esbuild/lib/main.js:884:9)
+    at handleIncomingPacket (/Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/node_modules/.pnpm/esbuild@0.28.1/node_modules/esbuild/lib/main.js:939:12)
+    at Socket.readFromStdout (/Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/node_modules/.pnpm/esbuild@0.28.1/node_modules/esbuild/lib/main.js:862:7)
+    at Socket.emit (node:events:509:20)
+    at addChunk (node:internal/streams/readable:564:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:515:3)
+    at Readable.push (node:internal/streams/readable:395:5)
+    at Pipe.onStreamRead (node:internal/stream_base_commons:189:23) {
+  name: 'TransformError'
+}
+
+Node.js v25.9.0
+undefined
+/Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: tsx /tmp/t1060-ai-business/continue-codex/business.mts

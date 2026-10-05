@@ -1,0 +1,9 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/mcp-server
+
+
+ Test Files  1 passed (1)
+      Tests  17 passed (17)
+   Start at  17:37:26
+   Duration  2.26s (transform 1.22s, setup 0ms, import 1.76s, tests 329ms, environment 0ms)
+

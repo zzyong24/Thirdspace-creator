@@ -5,6 +5,7 @@
 //
 // executor **只见沙箱文件面**:输入=input/ 只读物化文件,输出=写 out/;绝不直连
 // PGlite/资产库/网络配置(数据壁垒留脑侧,SPEC §2)。
+import {createMediaProbeExecutor} from "./media-probe";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import type { z } from "zod";
@@ -150,6 +151,7 @@ export function registerBuiltinExecutors(
   },
 ): void {
   registry.register(createEchoManifestExecutor());
+  registry.register(createMediaProbeExecutor());
   // [T-254a] video.render(HyperFrames 确定性渲染)。构造零 IO(工具链检测在 run 内)。
   registry.register(
     createVideoRenderExecutor(

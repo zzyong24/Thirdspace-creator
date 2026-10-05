@@ -1,0 +1,337 @@
+[
+  {
+    "path": "orchestrator/SCOPE_LEDGER.md",
+    "active": "preserved current integration authority",
+    "source": "c5316506"
+  },
+  {
+    "path": "orchestrator/context/T-1029.md",
+    "active": "source-only archived",
+    "source": "c5316506"
+  },
+  {
+    "path": "orchestrator/context/T-1030.md",
+    "active": "source-only archived",
+    "source": "c5316506"
+  },
+  {
+    "path": "orchestrator/context/T-1031.md",
+    "active": "source-only archived",
+    "source": "c5316506"
+  },
+  {
+    "path": "orchestrator/context/T-1032.md",
+    "active": "source-only archived",
+    "source": "c5316506"
+  },
+  {
+    "path": "orchestrator/context/T-1033.md",
+    "active": "source-only archived",
+    "source": "c5316506"
+  },
+  {
+    "path": "orchestrator/context/T-1034.md",
+    "active": "source-only archived",
+    "source": "c5316506"
+  },
+  {
+    "path": "orchestrator/context/T-1035.md",
+    "active": "source-only archived",
+    "source": "c5316506"
+  },
+  {
+    "path": "orchestrator/context/T-1036.md",
+    "active": "source-only archived",
+    "source": "c5316506"
+  },
+  {
+    "path": "orchestrator/context/T-1037.md",
+    "active": "source-only archived",
+    "source": "c5316506"
+  },
+  {
+    "path": "orchestrator/context/T-1038.md",
+    "active": "source-only archived",
+    "source": "c5316506"
+  },
+  {
+    "path": "orchestrator/context/T-1042.md",
+    "active": "source-only archived",
+    "source": "c5316506"
+  },
+  {
+    "path": "orchestrator/context/T-1043.md",
+    "active": "source-only archived",
+    "source": "c5316506"
+  },
+  {
+    "path": "orchestrator/context/T-1044.md",
+    "active": "source-only archived",
+    "source": "c5316506"
+  },
+  {
+    "path": "orchestrator/context/T-1045.md",
+    "active": "source-only archived",
+    "source": "c5316506"
+  },
+  {
+    "path": "orchestrator/context/T-1046.md",
+    "active": "source-only archived",
+    "source": "c5316506"
+  },
+  {
+    "path": "orchestrator/context/T-1047.md",
+    "active": "source-only archived",
+    "source": "c5316506"
+  },
+  {
+    "path": "orchestrator/context/T-1048.md",
+    "active": "source-only archived",
+    "source": "c5316506"
+  },
+  {
+    "path": "orchestrator/context/T-1049.md",
+    "active": "source-only archived",
+    "source": "c5316506"
+  },
+  {
+    "path": "orchestrator/context/T-1050.md",
+    "active": "source-only archived",
+    "source": "c5316506"
+  },
+  {
+    "path": "orchestrator/context/T-1051.md",
+    "active": "source-only archived",
+    "source": "c5316506"
+  },
+  {
+    "path": "orchestrator/context/T-1052.md",
+    "active": "source-only archived",
+    "source": "c5316506"
+  },
+  {
+    "path": "orchestrator/context/T-1053.md",
+    "active": "source-only archived",
+    "source": "c5316506"
+  },
+  {
+    "path": "orchestrator/context/T-1054.md",
+    "active": "source-only archived",
+    "source": "c5316506"
+  },
+  {
+    "path": "orchestrator/context/T-1055.md",
+    "active": "source-only archived",
+    "source": "c5316506"
+  },
+  {
+    "path": "orchestrator/context/T-1056.md",
+    "active": "source-only archived",
+    "source": "c5316506"
+  },
+  {
+    "path": "orchestrator/context/T-1057.md",
+    "active": "source-only archived",
+    "source": "c5316506"
+  },
+  {
+    "path": "orchestrator/context/T-1058.md",
+    "active": "source-only archived",
+    "source": "c5316506"
+  },
+  {
+    "path": "orchestrator/context/T-1059.md",
+    "active": "source-only archived",
+    "source": "c5316506"
+  },
+  {
+    "path": "orchestrator/context/T-1060.md",
+    "active": "source-only archived",
+    "source": "c5316506"
+  },
+  {
+    "path": "orchestrator/context/T-850.md",
+    "active": "source-only archived",
+    "source": "c5316506"
+  },
+  {
+    "path": "orchestrator/evidence/T-849-visible-copy.json",
+    "active": "preserved current integration authority",
+    "source": "c5316506"
+  },
+  {
+    "path": "orchestrator/process/reconcile.config.json",
+    "active": "preserved current integration authority",
+    "source": "c5316506"
+  },
+  {
+    "path": "orchestrator/reviews/T-1018-round-1.json",
+    "active": "source-only archived",
+    "source": "c5316506"
+  },
+  {
+    "path": "orchestrator/reviews/T-1020-round-1.json",
+    "active": "source-only archived",
+    "source": "c5316506"
+  },
+  {
+    "path": "orchestrator/reviews/T-1020-round-2.json",
+    "active": "source-only archived",
+    "source": "c5316506"
+  },
+  {
+    "path": "orchestrator/reviews/T-1020-service-contract.json",
+    "active": "source-only archived",
+    "source": "c5316506"
+  },
+  {
+    "path": "orchestrator/reviews/T-1023-round-1.json",
+    "active": "source-only archived",
+    "source": "c5316506"
+  },
+  {
+    "path": "orchestrator/reviews/T-1024-round-1.json",
+    "active": "source-only archived",
+    "source": "c5316506"
+  },
+  {
+    "path": "orchestrator/reviews/T-1024-round-2.json",
+    "active": "source-only archived",
+    "source": "c5316506"
+  },
+  {
+    "path": "orchestrator/reviews/T-1029-round-1.json",
+    "active": "source-only archived",
+    "source": "c5316506"
+  },
+  {
+    "path": "orchestrator/reviews/T-1029-round-2.json",
+    "active": "source-only archived",
+    "source": "c5316506"
+  },
+  {
+    "path": "orchestrator/reviews/T-1030-round-1.json",
+    "active": "source-only archived",
+    "source": "c5316506"
+  },
+  {
+    "path": "orchestrator/reviews/T-1031-round-1.json",
+    "active": "source-only archived",
+    "source": "c5316506"
+  },
+  {
+    "path": "orchestrator/reviews/T-1033-round-1.json",
+    "active": "source-only archived",
+    "source": "c5316506"
+  },
+  {
+    "path": "orchestrator/reviews/T-1034-round-1.json",
+    "active": "source-only archived",
+    "source": "c5316506"
+  },
+  {
+    "path": "orchestrator/reviews/T-1034-round-2.json",
+    "active": "source-only archived",
+    "source": "c5316506"
+  },
+  {
+    "path": "orchestrator/reviews/T-1034-round-3.json",
+    "active": "source-only archived",
+    "source": "c5316506"
+  },
+  {
+    "path": "orchestrator/reviews/T-1035-round-1.json",
+    "active": "source-only archived",
+    "source": "c5316506"
+  },
+  {
+    "path": "orchestrator/reviews/T-1035-round-2.json",
+    "active": "source-only archived",
+    "source": "c5316506"
+  },
+  {
+    "path": "orchestrator/reviews/T-1035-round-3.json",
+    "active": "source-only archived",
+    "source": "c5316506"
+  },
+  {
+    "path": "orchestrator/reviews/T-1036-round-1.json",
+    "active": "source-only archived",
+    "source": "c5316506"
+  },
+  {
+    "path": "orchestrator/reviews/T-1036-round-2.json",
+    "active": "source-only archived",
+    "source": "c5316506"
+  },
+  {
+    "path": "orchestrator/reviews/T-1037-round-1.json",
+    "active": "source-only archived",
+    "source": "c5316506"
+  },
+  {
+    "path": "orchestrator/reviews/T-1037-round-2.json",
+    "active": "source-only archived",
+    "source": "c5316506"
+  },
+  {
+    "path": "orchestrator/reviews/T-1038-round-1.json",
+    "active": "source-only archived",
+    "source": "c5316506"
+  },
+  {
+    "path": "orchestrator/reviews/T-1038-round-2.json",
+    "active": "source-only archived",
+    "source": "c5316506"
+  },
+  {
+    "path": "orchestrator/reviews/T-1042-round-1.json",
+    "active": "source-only archived",
+    "source": "c5316506"
+  },
+  {
+    "path": "orchestrator/reviews/T-1042-round-2.json",
+    "active": "source-only archived",
+    "source": "c5316506"
+  },
+  {
+    "path": "orchestrator/reviews/T-1043-round-1.json",
+    "active": "source-only archived",
+    "source": "c5316506"
+  },
+  {
+    "path": "orchestrator/reviews/T-1043-round-2.json",
+    "active": "source-only archived",
+    "source": "c5316506"
+  },
+  {
+    "path": "orchestrator/reviews/T-1043-round-3.json",
+    "active": "source-only archived",
+    "source": "c5316506"
+  },
+  {
+    "path": "orchestrator/reviews/T-1044-round-1.json",
+    "active": "source-only archived",
+    "source": "c5316506"
+  },
+  {
+    "path": "orchestrator/reviews/T-1044-round-2.json",
+    "active": "source-only archived",
+    "source": "c5316506"
+  },
+  {
+    "path": "orchestrator/reviews/T-1044-round-3.json",
+    "active": "source-only archived",
+    "source": "c5316506"
+  },
+  {
+    "path": "orchestrator/reviews/T-1045-round-1.json",
+    "active": "source-only archived",
+    "source": "c5316506"
+  },
+  {
+    "path": "orchestrator/reviews/T-850-round-1.json",
+    "active": "source-only archived",
+    "source": "c5316506"
+  }
+]

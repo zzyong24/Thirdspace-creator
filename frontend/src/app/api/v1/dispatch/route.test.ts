@@ -5,6 +5,7 @@ import { join } from "node:path";
 import {
   dispatchErrorResponse,
   safeDispatchErrorDiagnostic,
+  shouldCaptureDispatchFailure,
   validateCliInvocation,
   POST,
 } from "./route";
@@ -18,6 +19,13 @@ import { ConflictError as PublishingConflictError } from "@creatoros/backend/mod
 // 走 T-046 单机免登录:不带 cookie → 本机主用户(= seed canonical user-zyongzhu)直通,
 // dispatch 照旧解析到规范租户,无需 mint 会话。
 const SESSION_COOKIE = "";
+
+it("T-1024 only queues unexpected dispatch failures, never consent recursion or ordinary client errors",()=>{
+  expect(shouldCaptureDispatchFailure("projects.get",{code:"OwnershipError"})).toBe(false);
+  expect(shouldCaptureDispatchFailure("settings.reporting.consent.set",new Error("db"))).toBe(false);
+  expect(shouldCaptureDispatchFailure("projects.scripts.generateCandidate",{code:"ExternalDependencyError"})).toBe(true);
+  expect(shouldCaptureDispatchFailure("projects.scripts.generateCandidate",new Error("unexpected"))).toBe(true);
+});
 
 describe("T-843 CLI 完整访问调用门", () => {
   const previous = process.env.CREATOROS_CLI_ACCESS_TOKEN;

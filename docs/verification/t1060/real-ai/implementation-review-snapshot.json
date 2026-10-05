@@ -1,0 +1,51 @@
+{
+  "review_kind": "implementation_readonly",
+  "verdict": "PASS",
+  "findings": [],
+  "scope": "T1060 正式 ACP v2 已列源码增量静态复核，不代表模型/真机验收",
+  "observed_at": "2026-10-04T12:09:32.195301+00:00",
+  "head": "1b5271e5813fc299ca06775d49b29e0dd11c3a0d",
+  "files": [
+    {
+      "path": "contract/src/internal/chat-worker.ts",
+      "sha256": "9c08863e3832832ba12a19cbb70664f1338544e15b55ce52b098ec44c34dc628"
+    },
+    {
+      "path": "ai-worker/src/execution/codex-acp-host.ts",
+      "sha256": "623e07b2f13bbc2dc4d571e1861582aef809b5a018529f1c67b1b5727f075463"
+    },
+    {
+      "path": "ai-worker/src/execution/codex-acp-worker-run.ts",
+      "sha256": "65a79c7461bf43396341b38945d99a7964501364f75aecab797030e94f69e986"
+    },
+    {
+      "path": "ai-worker/vendor/codex-acp/src/CreatorOsPolicy.ts",
+      "sha256": "2b8b41c5eca3f89b56108cef94ce9c422cd05dd7a0ff693f961ed17698c2ec00"
+    },
+    {
+      "path": "ai-worker/vendor/codex-acp/LOCAL_PATCHES.json",
+      "sha256": "c032062022914c2ab186b8c85a007d053dd087b8f86ed96593eb7e0c4a7809bb"
+    },
+    {
+      "path": "ai-worker/src/execution/codex-acp-host.test.ts",
+      "sha256": "6e8ac14d86ff5f558f848d4060a9e4cd7e31e07a49cb76d6a68a6676fb786968"
+    },
+    {
+      "path": "ai-worker/src/execution/codex-acp-policy.test.ts",
+      "sha256": "091e97f4af03f287164dc1e4397b1795ba4413aefeabe94533050d5fb1daa5cd"
+    },
+    {
+      "path": "ai-worker/src/execution/codex-acp-worker-run.test.ts",
+      "sha256": "c686b46247932065405bc0746a09f39e73d6049968b1b3e119cd0ef7109ad7ab"
+    },
+    {
+      "path": "ai-worker/src/execution/external-chat-binding.test.ts",
+      "sha256": "38ad94e98537cd7a9266bbc23640e059498ed80d4b594617af710c48431e8fb2"
+    }
+  ],
+  "diff_sha256": "9d38a5ff9ca842e770df7b55f88afd52485ed309851de62796fe88fe80260d3d",
+  "report_sha256": "ee7e0d7006158d751418f81313fca6f4dced9a0bc3d3c22b1b7d86ef99c594ff",
+  "executed_tests": false,
+  "executed_models": false,
+  "shared_writes": false
+}

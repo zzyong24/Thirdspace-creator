@@ -1,0 +1,233 @@
+{
+  "inputs": {
+    "../../../../../../tmp/t1060-ai-business/continue-workbuddy/persistence-shim.ts": {
+      "bytes": 552,
+      "imports": [],
+      "format": "esm"
+    },
+    "test-server-boundary:server-only": {
+      "bytes": 10,
+      "imports": [],
+      "format": "esm"
+    },
+    "frontend/src/app/api/v1/auth/_session.ts": {
+      "bytes": 2980,
+      "imports": [
+        {
+          "path": "test-server-boundary:server-only",
+          "kind": "import-statement",
+          "original": "server-only"
+        },
+        {
+          "path": "/Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/node_modules/.pnpm/next@16.2.9_@babel+core@7.29.7_@opentelemetry+api@1.9.0_@playwright+test@1.60.0_react-d_a304033642f6062f33667264f51c2493/node_modules/next/server.js",
+          "kind": "import-statement",
+          "external": true
+        },
+        {
+          "path": "/Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/contract/src/index.ts",
+          "kind": "import-statement",
+          "external": true
+        }
+      ],
+      "format": "esm"
+    },
+    "frontend/src/lib/request-context.server.ts": {
+      "bytes": 9509,
+      "imports": [
+        {
+          "path": "test-server-boundary:server-only",
+          "kind": "import-statement",
+          "original": "server-only"
+        },
+        {
+          "path": "/Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/contract/src/index.ts",
+          "kind": "import-statement",
+          "external": true
+        },
+        {
+          "path": "../../../../../../tmp/t1060-ai-business/continue-workbuddy/persistence-shim.ts",
+          "kind": "import-statement",
+          "original": "@/server/persistence-client"
+        },
+        {
+          "path": "/Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/backend/src/modules/identity/index.ts",
+          "kind": "import-statement",
+          "external": true
+        }
+      ],
+      "format": "esm"
+    },
+    "frontend/src/lib/loopback-core.ts": {
+      "bytes": 4373,
+      "imports": [],
+      "format": "esm"
+    },
+    "frontend/src/lib/loopback-guard.server.ts": {
+      "bytes": 1038,
+      "imports": [
+        {
+          "path": "test-server-boundary:server-only",
+          "kind": "import-statement",
+          "original": "server-only"
+        },
+        {
+          "path": "/Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/node_modules/.pnpm/next@16.2.9_@babel+core@7.29.7_@opentelemetry+api@1.9.0_@playwright+test@1.60.0_react-d_a304033642f6062f33667264f51c2493/node_modules/next/server.js",
+          "kind": "import-statement",
+          "external": true
+        },
+        {
+          "path": "frontend/src/lib/loopback-core.ts",
+          "kind": "import-statement",
+          "original": "./loopback-core"
+        }
+      ],
+      "format": "esm"
+    },
+    "frontend/src/app/api/v1/dispatch/route.ts": {
+      "bytes": 17291,
+      "imports": [
+        {
+          "path": "/Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/node_modules/.pnpm/next@16.2.9_@babel+core@7.29.7_@opentelemetry+api@1.9.0_@playwright+test@1.60.0_react-d_a304033642f6062f33667264f51c2493/node_modules/next/server.js",
+          "kind": "import-statement",
+          "external": true
+        },
+        {
+          "path": "node:crypto",
+          "kind": "import-statement",
+          "external": true
+        },
+        {
+          "path": "node:fs",
+          "kind": "import-statement",
+          "external": true
+        },
+        {
+          "path": "node:path",
+          "kind": "import-statement",
+          "external": true
+        },
+        {
+          "path": "/Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/contract/src/index.ts",
+          "kind": "import-statement",
+          "external": true
+        },
+        {
+          "path": "../../../../../../tmp/t1060-ai-business/continue-workbuddy/persistence-shim.ts",
+          "kind": "import-statement",
+          "original": "@/server/persistence-client"
+        },
+        {
+          "path": "/Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/backend/src/modules/identity/index.ts",
+          "kind": "import-statement",
+          "external": true
+        },
+        {
+          "path": "frontend/src/app/api/v1/auth/_session.ts",
+          "kind": "import-statement",
+          "original": "../auth/_session"
+        },
+        {
+          "path": "frontend/src/lib/request-context.server.ts",
+          "kind": "import-statement",
+          "original": "@/lib/request-context.server"
+        },
+        {
+          "path": "frontend/src/lib/loopback-guard.server.ts",
+          "kind": "import-statement",
+          "original": "@/lib/loopback-guard.server"
+        }
+      ],
+      "format": "esm"
+    }
+  },
+  "outputs": {
+    "../../../../../../tmp/t1060-ai-business/continue-workbuddy/original-route.mjs": {
+      "imports": [
+        {
+          "path": "/Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/node_modules/.pnpm/next@16.2.9_@babel+core@7.29.7_@opentelemetry+api@1.9.0_@playwright+test@1.60.0_react-d_a304033642f6062f33667264f51c2493/node_modules/next/server.js",
+          "kind": "import-statement",
+          "external": true
+        },
+        {
+          "path": "node:crypto",
+          "kind": "import-statement",
+          "external": true
+        },
+        {
+          "path": "node:fs",
+          "kind": "import-statement",
+          "external": true
+        },
+        {
+          "path": "node:path",
+          "kind": "import-statement",
+          "external": true
+        },
+        {
+          "path": "/Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/contract/src/index.ts",
+          "kind": "import-statement",
+          "external": true
+        },
+        {
+          "path": "/Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/backend/src/modules/identity/index.ts",
+          "kind": "import-statement",
+          "external": true
+        },
+        {
+          "path": "/Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/node_modules/.pnpm/next@16.2.9_@babel+core@7.29.7_@opentelemetry+api@1.9.0_@playwright+test@1.60.0_react-d_a304033642f6062f33667264f51c2493/node_modules/next/server.js",
+          "kind": "import-statement",
+          "external": true
+        },
+        {
+          "path": "/Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/contract/src/index.ts",
+          "kind": "import-statement",
+          "external": true
+        },
+        {
+          "path": "/Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/contract/src/index.ts",
+          "kind": "import-statement",
+          "external": true
+        },
+        {
+          "path": "/Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/backend/src/modules/identity/index.ts",
+          "kind": "import-statement",
+          "external": true
+        },
+        {
+          "path": "/Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/node_modules/.pnpm/next@16.2.9_@babel+core@7.29.7_@opentelemetry+api@1.9.0_@playwright+test@1.60.0_react-d_a304033642f6062f33667264f51c2493/node_modules/next/server.js",
+          "kind": "import-statement",
+          "external": true
+        }
+      ],
+      "exports": [
+        "POST",
+        "dispatchErrorResponse",
+        "safeDispatchErrorDiagnostic",
+        "shouldCaptureDispatchFailure",
+        "validateCliInvocation"
+      ],
+      "entryPoint": "frontend/src/app/api/v1/dispatch/route.ts",
+      "inputs": {
+        "frontend/src/app/api/v1/dispatch/route.ts": {
+          "bytesInOutput": 13243
+        },
+        "../../../../../../tmp/t1060-ai-business/continue-workbuddy/persistence-shim.ts": {
+          "bytesInOutput": 406
+        },
+        "frontend/src/app/api/v1/auth/_session.ts": {
+          "bytesInOutput": 860
+        },
+        "frontend/src/lib/request-context.server.ts": {
+          "bytesInOutput": 2494
+        },
+        "frontend/src/lib/loopback-guard.server.ts": {
+          "bytesInOutput": 452
+        },
+        "frontend/src/lib/loopback-core.ts": {
+          "bytesInOutput": 1336
+        }
+      },
+      "bytes": 19365
+    }
+  }
+}

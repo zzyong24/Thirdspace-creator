@@ -289,6 +289,13 @@ describe("(creator) layout — [T-348] 0 号引导守卫", () => {
     ).toBeNull();
   });
 
+  it("只有小红书 active 账号也允许进入项目创作", async () => {
+    listAccounts.mockResolvedValue([{ status: "active", platform: "xiaohongshu" }]);
+    await renderAt("/projects/project-x/article");
+    expect(screen.getByTestId("guarded-child")).toBeInTheDocument();
+    expect(listAccounts).toHaveBeenCalledWith(expect.objectContaining({ query: { page: 1, pageSize: 100 } }));
+  });
+
   it("accounts.list 读失败 → fail-open,per-account 页仍渲 children(守卫是引导,非安全门)", async () => {
     listAccounts.mockRejectedValue(new Error("transport down"));
     await renderAt("/projects");

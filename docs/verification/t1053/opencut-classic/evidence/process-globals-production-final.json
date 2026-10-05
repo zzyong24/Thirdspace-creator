@@ -1,0 +1,36 @@
+{
+  "status": "PASS",
+  "sha256": "f61b0939ff9a185861dbc7addee2c40ef1b3a0d71cfac81c31c41d1f43a50354",
+  "unreplacedNodeEnv": 0,
+  "guardedGlobalProcessReferences": 6,
+  "unguardedGlobalProcessReferences": 0,
+  "propertyOrMethodNames": 8,
+  "scope": "TypeScript AST检查全产物；仅typeof和同条件短路保护的Node可选分支属于安全全局引用，成员/方法名不算全局。",
+  "guarded": [
+    {
+      "offset": 14627,
+      "context": "ng(m),\n        error: m\n      });\n      if (!window.dispatchEvent(j)) return;\n    } else if (typeof process == \"object\" && typeof process.emit == \"function\") {\n      process.emit(\"uncaughtException\", m);\n      return;"
+    },
+    {
+      "offset": 14657,
+      "context": "});\n      if (!window.dispatchEvent(j)) return;\n    } else if (typeof process == \"object\" && typeof process.emit == \"function\") {\n      process.emit(\"uncaughtException\", m);\n      return;\n    }\n    console.error(m);\n "
+    },
+    {
+      "offset": 14693,
+      "context": "j)) return;\n    } else if (typeof process == \"object\" && typeof process.emit == \"function\") {\n      process.emit(\"uncaughtException\", m);\n      return;\n    }\n    console.error(m);\n  }, gA = {\n    map: Z,\n    forEach: "
+    },
+    {
+      "offset": 73141,
+      "context": "ng(i),\n        error: i\n      });\n      if (!window.dispatchEvent(o)) return;\n    } else if (typeof process == \"object\" && typeof process.emit == \"function\") {\n      process.emit(\"uncaughtException\", i);\n      return;"
+    },
+    {
+      "offset": 73171,
+      "context": "});\n      if (!window.dispatchEvent(o)) return;\n    } else if (typeof process == \"object\" && typeof process.emit == \"function\") {\n      process.emit(\"uncaughtException\", i);\n      return;\n    }\n    console.error(i);\n "
+    },
+    {
+      "offset": 73207,
+      "context": "o)) return;\n    } else if (typeof process == \"object\" && typeof process.emit == \"function\") {\n      process.emit(\"uncaughtException\", i);\n      return;\n    }\n    console.error(i);\n  }, zC = [], yo = 0, o0 = 0;\n  funct"
+    }
+  ],
+  "unguarded": []
+}

@@ -6,11 +6,7 @@
  * a Server Component that renders the account-manager feature shell, which reads
  * `accounts.list` (real SQL via the composite transport).
  *
- * Session-scoped read (lane center-pages): the route resolves the request's
- * session and constructs `createServerClient(session.ctx)` so `accounts.list` is
- * scoped to the logged-in user — a brand-new empty account reads empty, not the
- * user-zyongzhu seed. With no session the singleton seam (the feature's own
- * default client) renders so SSR/tests never crash.
+ * Reads use the current session only; an absent session renders an error state.
  *
  * Visual baseline: `/accounts` is "暂不纳入视觉门禁" until stage-12 re-baseline (C-5).
  */
@@ -21,7 +17,9 @@ import { resolveSession } from "@/lib/session.server";
 export default async function AccountsRoutePage() {
   const session = await resolveSession();
   if (!session) {
-    return <AccountManagerPage />;
+    return <p role="alert" className="rounded-lg border border-danger/40 p-6 text-sm text-destructive">
+      暂时无法读取账号。已有数据未受影响，请重启应用后重试。
+    </p>;
   }
-  return <AccountManagerPage client={createServerClient(session.ctx)} />;
+  return <AccountManagerPage client={createServerClient(session.ctx)} selectedAccountId={session.ctx.accountId} />;
 }

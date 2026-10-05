@@ -1,0 +1,155 @@
+{
+  "timestamp": "2026-10-03T18:47:19.973196+00:00",
+  "environment": "实际本地 HTTP；隔离 PGlite；没有浏览器或模型调用",
+  "rpc": [
+    {
+      "operation": "projects.create",
+      "status": 200
+    },
+    {
+      "operation": "projects.outputs.create",
+      "status": 200
+    },
+    {
+      "operation": "artifacts.create",
+      "status": 200
+    },
+    {
+      "operation": "artifacts.versions.create",
+      "status": 200
+    },
+    {
+      "operation": "outputs.publications.create",
+      "status": 200
+    },
+    {
+      "operation": "publications.revisions.create",
+      "status": 200
+    },
+    {
+      "operation": "projects.outputs.create",
+      "status": 200
+    },
+    {
+      "operation": "articles.get",
+      "status": 200
+    },
+    {
+      "operation": "articles.versions.create",
+      "status": 200
+    },
+    {
+      "operation": "articles.get",
+      "status": 200
+    },
+    {
+      "operation": "articles.versions.get",
+      "status": 200
+    },
+    {
+      "operation": "articles.versions.create",
+      "status": 200
+    },
+    {
+      "operation": "articles.versions.create",
+      "status": 409
+    },
+    {
+      "operation": "projects.outputs.create",
+      "status": 200
+    },
+    {
+      "operation": "graphicPosts.get",
+      "status": 200
+    },
+    {
+      "operation": "graphicPosts.versions.create",
+      "status": 200
+    },
+    {
+      "operation": "graphicPosts.get",
+      "status": 200
+    },
+    {
+      "operation": "graphicPosts.versions.get",
+      "status": 200
+    },
+    {
+      "operation": "graphicPosts.versions.create",
+      "status": 200
+    },
+    {
+      "operation": "graphicPosts.versions.create",
+      "status": 409
+    },
+    {
+      "operation": "publications.revisions.create",
+      "status": 200
+    },
+    {
+      "operation": "artifacts.versions.create",
+      "status": 200
+    },
+    {
+      "operation": "articles.get",
+      "status": 200
+    },
+    {
+      "operation": "articles.versions.create",
+      "status": 200
+    },
+    {
+      "operation": "graphicPosts.get",
+      "status": 200
+    },
+    {
+      "operation": "graphicPosts.versions.create",
+      "status": 200
+    }
+  ],
+  "projectId": "project-c59c9be4-71",
+  "article": {
+    "outputId": "output-c59c9be4-100",
+    "versionId": "artifactversion-c59c9be4-110",
+    "metadataSameSource": true,
+    "manualEditSaveReadback": true,
+    "historyReadback": true,
+    "idempotency": true,
+    "staleCasRejected": true,
+    "laterScriptDoesNotOverwrite": true,
+    "historicalSourcePreserved": true
+  },
+  "image": {
+    "outputId": "output-c59c9be4-116",
+    "versionId": "artifactversion-c59c9be4-126",
+    "metadataSameSource": true,
+    "manualEditSaveReadback": true,
+    "historyReadback": true,
+    "idempotency": true,
+    "staleCasRejected": true,
+    "laterScriptDoesNotOverwrite": true,
+    "historicalSourcePreserved": true
+  },
+  "pages": [
+    {
+      "route": "/projects/project-c59c9be4-71/article?outputId=output-c59c9be4-100",
+      "status": 200,
+      "bytes": 86119
+    },
+    {
+      "route": "/projects/project-c59c9be4-71/outputs/output-c59c9be4-116/image",
+      "status": 200,
+      "bytes": 112922
+    },
+    {
+      "route": "/settings?tab=models&highlight=assistant-engine",
+      "status": 200,
+      "bytes": 721849
+    }
+  ],
+  "unverified": [
+    "浏览器真实像素和最小视口",
+    "真实模型生成/配图质量",
+    "系统剪贴板与公众号粘贴"
+  ]
+}

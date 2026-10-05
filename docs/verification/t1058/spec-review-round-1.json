@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "只读研究范围无阻断项。SPEC准确记录用户将底层工具保留在产品、模型来源与Agent引擎自由组合的新方向，并将ACP/MCP、Codex与WorkBuddy真实能力、激活及旧冻结任务兼容列为研究问题。产物限定研究与候选，保留原账号/项目/作品归属、service ports、execution_tasks、候选采用与CAS，符合物理边界；不操作ChatCut示例项目、不读原始凭据、不运行模型/浏览器/探针/测试。WorkBuddy支持和免图片配置均须以来源证明，不能由名称或prompt推断。本结论仅允许开展既定只读调研，不是未来实现合同或真实连接验收通过。",
+  "findings": []
+}

@@ -3,6 +3,8 @@ import {createLegacyScriptRange, legacyScriptHash} from "../artifacts";
 import { buildChatToolResultReader, buildChatHistoryReader, type ChatHistoryReader, type ChatToolResultReader } from "./chat-tool-result-reader";
 import { buildChatSkillReadTool, type ChatSkillLibrary } from "./chat-skill-library";
 import {prepareMaterialGeneration,type MaterialGenerationInput} from "./material-generation-preparation";
+import type {ArticleImageAnchor,ArticleImageReadable,ArticleImageSnapshot} from "./material-generation-preparation";
+import type {ChatSelection} from "./chat-context";
 import { createHash } from "node:crypto";
 import { jsonSchema, type Tool, type ToolSet } from "ai";
 // [T-239a] 统一工具门:所有工具经 defineChatTool 包装(错误信封/结果预算/审计打点),
@@ -80,6 +82,9 @@ export interface ChatToolDeps {
   boundProjectId?: string;
   /** T-836：来自快捷按钮的可信媒体类型；模型不得把“生成图片”改成视频，反之亦然。 */
   forcedMaterialKind?: "image" | "video";
+  /** T-1023：文章配图深链的用户选择；执行时再读当前文章并核验账号/版本/段落。 */
+  articleImageSelection?: ChatSelection;
+  getArticleForImage?: (input:{outputId:string})=>Promise<ArticleImageReadable>;
   /**
    * [T-716] 稿面按钮随可信 ChatContext 绑定的局部改稿锚点。锚点不是模型要推理/复述的
    * 参数：模型只负责产 replacementText，execute 必须用这里的 artifact/version/section/
@@ -507,7 +512,8 @@ export interface ChatToolDeps {
     kind: "image" | "video";
     prompt: string;
     style?: string;
-    referenceAssetId?: string;
+    referenceAssetId?:string;articleImageAnchor?: ArticleImageAnchor;
+    articleSnapshot?: ArticleImageSnapshot;
   }) => Promise<{ taskId: string }>;
   /**
    * [T-271] cover.generate 核心 —— **不直接生成**(封面链先跑结构化文案方案再生图,分钟级不能阻塞
@@ -2547,14 +2553,16 @@ const MATERIAL_GENERATE_PARAMS = jsonSchema<MaterialGenerationInput>({
 });
 
 // [T-271] cover.generate 入参 —— 全可选:封面锚「当前项目」(缺省用项目对话的 projectId + 选中标题)。
+
+
+// [T-271] cover.generate 入参 —— 全可选:封面锚「当前项目」(缺省用项目对话的 projectId + 选中标题)。
+// 封面文案的接地来源(核心信息/口播稿/素材)由 runner 从项目上下文读,不靠模型传 —— 故无 prompt 入参
+// (与 material.generate 的裸 prompt 透传相反,这正是封面链接地的核心)。
 const CANVAS_READ_PARAMS=jsonSchema<Record<string,never>>({type:"object",properties:{},required:[],additionalProperties:false});
 const CANVAS_PROPOSE_PARAMS=jsonSchema<{baseRevision:number;operations:unknown[]}>({
   type:"object",properties:{baseRevision:{type:"integer",minimum:1,description:"逐字使用 canvas.read 返回的 revision"},operations:{type:"array",minItems:1,maxItems:100,items:{type:"object",additionalProperties:true},description:"操作数组，每项含唯一 operationId 与 type；可用 addNode(tempId,node)、updateNode(nodeId,patch)、moveNode(nodeId,position)、deleteNode(nodeId)、connect(source,target)、disconnect(edgeId)。节点引用须来自 canvas.read。"}},required:["baseRevision","operations"],additionalProperties:false,
 });
 
-// [T-271] cover.generate 入参 —— 全可选:封面锚「当前项目」(缺省用项目对话的 projectId + 选中标题)。
-// 封面文案的接地来源(核心信息/口播稿/素材)由 runner 从项目上下文读,不靠模型传 —— 故无 prompt 入参
-// (与 material.generate 的裸 prompt 透传相反,这正是封面链接地的核心)。
 const COVER_GENERATE_PARAMS = jsonSchema<{
   projectId?: string;
   topic?: string;
@@ -4079,7 +4087,7 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
         const signal=(callOptions as {abortSignal?:AbortSignal}|undefined)?.abortSignal;
         try {
           const prepared=await prepareMaterialGeneration(input,{
-            boundProjectId,forcedMaterialKind:deps.forcedMaterialKind,getArtifactText:deps.getArtifactText,signal,
+            boundProjectId,forcedMaterialKind:deps.forcedMaterialKind,getArtifactText:deps.getArtifactText,getArticleForImage:deps.getArticleForImage,articleImageSelection:deps.articleImageSelection,signal,
           });
           signal?.throwIfAborted();
           const {taskId}=await deps.dispatchGenerateAsset(prepared);
@@ -5031,6 +5039,8 @@ export const ALL_CHAT_TOOL_NAMES: readonly string[] = [
   "context.learnings",
   "context.candidates",
   "context.predictions",
+  "canvas.read",
+  "canvas.propose",
 ];
 
 // ── [T-240③] 场景工具白名单(「场景」一等机制的静态层)────────────────────────────────

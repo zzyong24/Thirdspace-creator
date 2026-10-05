@@ -1,0 +1,61 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "recheck",
+  "summary": "独立只读复审 PASS：新增协议来源标记，结构段局部改稿同步 transcript；富文本保存重建 sections 不携带旧 marker/transcript，历史回滚恢复整版。实现及连续回归待验。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "resolved",
+      "severity": "major",
+      "category": "completeness",
+      "requirement_anchor": {
+        "id": "T-1034-制作正文",
+        "quote": "后续制作可能消费表格语法"
+      },
+      "acceptance_anchor": {
+        "id": "T-1034-实际制作正文",
+        "quote": "确认逐段正文不含表格表头"
+      },
+      "where": "保存结构与实际制作读端",
+      "failure_mode": "仅派生 sections 未覆盖 getScript→extractVoiceoverText，导出仍会优先读取没有 transcript 的原始 Markdown。",
+      "evidence_kind": "deterministic-check",
+      "evidence_ref": "backend/src/application/context/review-subject.ts:36-41; backend/src/modules/production/material-export.ts:375",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "独立首轮评审：当前源码读取路径",
+      "suggestion": "严格解析后同时派生 transcript，保留 contentText；补真实保存→实际 reader→口播导出断言。",
+      "resolution_evidence": "当前 SPEC 范围新增 transcript 精确按各行口播连接；验收新增 artifacts 保存→createReviewSubjectContext.getScript→extractVoiceoverText，要求无表头/制作字段与无转换稿保留原读法。",
+      "parent_id": ""
+    },
+    {
+      "id": "REV-002",
+      "status": "resolved",
+      "severity": "major",
+      "category": "completeness",
+      "requirement_anchor": {
+        "id": "T-1034-后续正文一致性",
+        "quote": "必须验证同一正式稿后续修改与回滚不会消费陈旧口播"
+      },
+      "acceptance_anchor": {
+        "id": "T-1034-连续局部改稿",
+        "quote": "表格采用→结构段 applyScriptPatch→实际 getScript→extractVoiceoverText"
+      },
+      "where": "artifacts.service.ts 结构段 applyScriptPatch",
+      "failure_mode": "结构段补丁展开旧 contentData 保留旧 transcript，实际读端消费陈旧口播。",
+      "evidence_kind": "deterministic-check",
+      "evidence_ref": "docs/verification/evidence/t1034/patch-red.log",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "new-evidence",
+      "origin_ref": "EVIDENCE-SHA256:00431417f8cf1665c8fddc9356a085af64b54c413e4b3bcf24ddc0d15fd0d61b:docs/verification/evidence/t1034/patch-red.log",
+      "suggestion": "在协议来源标记范围内同步派生 transcript，补连续改稿和回滚回归。",
+      "resolution_evidence": "修订 SPEC 明确来源标记、带标签与无标签、多行、仅制作字段及实际保存/读取/导出/回滚，尚不代表生产测试通过。",
+      "parent_id": ""
+    }
+  ]
+}

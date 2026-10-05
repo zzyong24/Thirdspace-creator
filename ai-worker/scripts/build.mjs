@@ -6,7 +6,7 @@ await build({
   entryPoints: [fileURLToPath(new URL("../src/execution/worker-entry.ts", import.meta.url))],
   outfile: fileURLToPath(new URL("../dist/execution-worker.cjs", import.meta.url)),
   bundle: true, platform: "node", target: "node24", format: "cjs", logLevel: "warning",
-  external: ["mammoth", "pdf-parse", "@playwright/test", "jsdom", "@mozilla/readability", "@xenova/transformers"],
+  external: ["@openclaw/fs-safe", "mammoth", "pdf-parse", "@playwright/test", "jsdom", "@mozilla/readability", "@xenova/transformers"],
 });
 
 await build({
@@ -49,3 +49,8 @@ await build({
   external:["@playwright/test","jsdom","@mozilla/readability","@xenova/transformers"],
 });
 await build({entryPoints:[fileURLToPath(new URL("../src/io/model-probe-worker-entry.ts",import.meta.url))],outfile:fileURLToPath(new URL("../dist/model-probe-worker.cjs",import.meta.url)),bundle:true,platform:"node",target:"node24",format:"cjs",logLevel:"warning"});
+
+await build({entryPoints:[fileURLToPath(new URL("../src/execution/codex-status-entry.ts",import.meta.url))],outfile:fileURLToPath(new URL("../dist/codex-status-worker.cjs",import.meta.url)),bundle:true,platform:"node",target:"node24",format:"cjs",logLevel:"warning",external:["@openclaw/fs-safe"]});
+
+// 固定上游源码经当前构建器打包；不运行上游脚本或浮动下载。
+await build({entryPoints:[fileURLToPath(new URL("../vendor/codex-acp/src/index.ts",import.meta.url))],outfile:fileURLToPath(new URL("../dist/codex-acp.cjs",import.meta.url)),bundle:true,platform:"node",target:"node24",format:"cjs",logLevel:"warning",banner:{js:'// Derived from codex-acp 2.1.1 (Apache-2.0), commit 68d7d2d5ddfc0ed5746f9f6130892dda685e65dd.'}});

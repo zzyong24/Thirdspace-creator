@@ -1,0 +1,820 @@
+[
+  {
+    "name": "@floating-ui/core",
+    "version": "1.7.5",
+    "license": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/floating-ui/floating-ui.git",
+      "directory": "packages/core"
+    },
+    "licenseFiles": [
+      "LICENSE"
+    ]
+  },
+  {
+    "name": "@floating-ui/dom",
+    "version": "1.7.6",
+    "license": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/floating-ui/floating-ui.git",
+      "directory": "packages/dom"
+    },
+    "licenseFiles": [
+      "LICENSE"
+    ]
+  },
+  {
+    "name": "@floating-ui/react-dom",
+    "version": "2.1.8",
+    "license": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/floating-ui/floating-ui.git",
+      "directory": "packages/react-dom"
+    },
+    "licenseFiles": [
+      "LICENSE"
+    ]
+  },
+  {
+    "name": "@floating-ui/utils",
+    "version": "0.2.11",
+    "license": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/floating-ui/floating-ui.git",
+      "directory": "packages/utils"
+    },
+    "licenseFiles": [
+      "LICENSE"
+    ]
+  },
+  {
+    "name": "@hugeicons/core-free-icons",
+    "version": "3.3.0",
+    "license": "MIT",
+    "licenseFiles": []
+  },
+  {
+    "name": "@hugeicons/react",
+    "version": "1.1.6",
+    "license": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/hugeicons/react.git"
+    },
+    "licenseFiles": [
+      "LICENSE.md"
+    ]
+  },
+  {
+    "name": "@radix-ui/number",
+    "version": "1.1.1",
+    "license": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/radix-ui/primitives.git"
+    },
+    "licenseFiles": []
+  },
+  {
+    "name": "@radix-ui/primitive",
+    "version": "1.1.3",
+    "license": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/radix-ui/primitives.git"
+    },
+    "licenseFiles": [
+      "LICENSE"
+    ]
+  },
+  {
+    "name": "@radix-ui/react-arrow",
+    "version": "1.1.7",
+    "license": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/radix-ui/primitives.git"
+    },
+    "licenseFiles": [
+      "LICENSE"
+    ]
+  },
+  {
+    "name": "@radix-ui/react-aspect-ratio",
+    "version": "1.1.7",
+    "license": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/radix-ui/primitives.git"
+    },
+    "licenseFiles": [
+      "LICENSE"
+    ]
+  },
+  {
+    "name": "@radix-ui/react-collection",
+    "version": "1.1.7",
+    "license": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/radix-ui/primitives.git"
+    },
+    "licenseFiles": [
+      "LICENSE"
+    ]
+  },
+  {
+    "name": "@radix-ui/react-compose-refs",
+    "version": "1.1.2",
+    "license": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/radix-ui/primitives.git"
+    },
+    "licenseFiles": []
+  },
+  {
+    "name": "@radix-ui/react-context",
+    "version": "1.1.2",
+    "license": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/radix-ui/primitives.git"
+    },
+    "licenseFiles": []
+  },
+  {
+    "name": "@radix-ui/react-context-menu",
+    "version": "2.2.16",
+    "license": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/radix-ui/primitives.git"
+    },
+    "licenseFiles": [
+      "LICENSE"
+    ]
+  },
+  {
+    "name": "@radix-ui/react-dialog",
+    "version": "1.1.15",
+    "license": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/radix-ui/primitives.git"
+    },
+    "licenseFiles": [
+      "LICENSE"
+    ]
+  },
+  {
+    "name": "@radix-ui/react-direction",
+    "version": "1.1.1",
+    "license": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/radix-ui/primitives.git"
+    },
+    "licenseFiles": []
+  },
+  {
+    "name": "@radix-ui/react-dismissable-layer",
+    "version": "1.1.11",
+    "license": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/radix-ui/primitives.git"
+    },
+    "licenseFiles": [
+      "LICENSE"
+    ]
+  },
+  {
+    "name": "@radix-ui/react-dropdown-menu",
+    "version": "2.1.16",
+    "license": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/radix-ui/primitives.git"
+    },
+    "licenseFiles": [
+      "LICENSE"
+    ]
+  },
+  {
+    "name": "@radix-ui/react-focus-guards",
+    "version": "1.1.3",
+    "license": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/radix-ui/primitives.git"
+    },
+    "licenseFiles": [
+      "LICENSE"
+    ]
+  },
+  {
+    "name": "@radix-ui/react-focus-scope",
+    "version": "1.1.7",
+    "license": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/radix-ui/primitives.git"
+    },
+    "licenseFiles": [
+      "LICENSE"
+    ]
+  },
+  {
+    "name": "@radix-ui/react-id",
+    "version": "1.1.1",
+    "license": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/radix-ui/primitives.git"
+    },
+    "licenseFiles": []
+  },
+  {
+    "name": "@radix-ui/react-label",
+    "version": "2.1.7",
+    "license": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/radix-ui/primitives.git"
+    },
+    "licenseFiles": [
+      "LICENSE"
+    ]
+  },
+  {
+    "name": "@radix-ui/react-menu",
+    "version": "2.1.16",
+    "license": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/radix-ui/primitives.git"
+    },
+    "licenseFiles": [
+      "LICENSE"
+    ]
+  },
+  {
+    "name": "@radix-ui/react-popover",
+    "version": "1.1.15",
+    "license": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/radix-ui/primitives.git"
+    },
+    "licenseFiles": [
+      "LICENSE"
+    ]
+  },
+  {
+    "name": "@radix-ui/react-popper",
+    "version": "1.2.8",
+    "license": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/radix-ui/primitives.git"
+    },
+    "licenseFiles": [
+      "LICENSE"
+    ]
+  },
+  {
+    "name": "@radix-ui/react-portal",
+    "version": "1.1.9",
+    "license": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/radix-ui/primitives.git"
+    },
+    "licenseFiles": [
+      "LICENSE"
+    ]
+  },
+  {
+    "name": "@radix-ui/react-presence",
+    "version": "1.1.5",
+    "license": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/radix-ui/primitives.git"
+    },
+    "licenseFiles": [
+      "LICENSE"
+    ]
+  },
+  {
+    "name": "@radix-ui/react-primitive",
+    "version": "2.1.3",
+    "license": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/radix-ui/primitives.git"
+    },
+    "licenseFiles": [
+      "LICENSE"
+    ]
+  },
+  {
+    "name": "@radix-ui/react-primitive",
+    "version": "2.1.4",
+    "license": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/radix-ui/primitives.git"
+    },
+    "licenseFiles": [
+      "LICENSE"
+    ]
+  },
+  {
+    "name": "@radix-ui/react-roving-focus",
+    "version": "1.1.11",
+    "license": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/radix-ui/primitives.git"
+    },
+    "licenseFiles": [
+      "LICENSE"
+    ]
+  },
+  {
+    "name": "@radix-ui/react-select",
+    "version": "2.2.6",
+    "license": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/radix-ui/primitives.git"
+    },
+    "licenseFiles": [
+      "LICENSE"
+    ]
+  },
+  {
+    "name": "@radix-ui/react-separator",
+    "version": "1.1.8",
+    "license": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/radix-ui/primitives.git"
+    },
+    "licenseFiles": [
+      "LICENSE"
+    ]
+  },
+  {
+    "name": "@radix-ui/react-slider",
+    "version": "1.3.6",
+    "license": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/radix-ui/primitives.git"
+    },
+    "licenseFiles": [
+      "LICENSE"
+    ]
+  },
+  {
+    "name": "@radix-ui/react-slot",
+    "version": "1.2.3",
+    "license": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/radix-ui/primitives.git"
+    },
+    "licenseFiles": [
+      "LICENSE"
+    ]
+  },
+  {
+    "name": "@radix-ui/react-slot",
+    "version": "1.2.4",
+    "license": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/radix-ui/primitives.git"
+    },
+    "licenseFiles": [
+      "LICENSE"
+    ]
+  },
+  {
+    "name": "@radix-ui/react-switch",
+    "version": "1.2.6",
+    "license": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/radix-ui/primitives.git"
+    },
+    "licenseFiles": [
+      "LICENSE"
+    ]
+  },
+  {
+    "name": "@radix-ui/react-tabs",
+    "version": "1.1.13",
+    "license": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/radix-ui/primitives.git"
+    },
+    "licenseFiles": [
+      "LICENSE"
+    ]
+  },
+  {
+    "name": "@radix-ui/react-tooltip",
+    "version": "1.2.8",
+    "license": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/radix-ui/primitives.git"
+    },
+    "licenseFiles": [
+      "LICENSE"
+    ]
+  },
+  {
+    "name": "@radix-ui/react-use-callback-ref",
+    "version": "1.1.1",
+    "license": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/radix-ui/primitives.git"
+    },
+    "licenseFiles": []
+  },
+  {
+    "name": "@radix-ui/react-use-controllable-state",
+    "version": "1.2.2",
+    "license": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/radix-ui/primitives.git"
+    },
+    "licenseFiles": [
+      "LICENSE"
+    ]
+  },
+  {
+    "name": "@radix-ui/react-use-escape-keydown",
+    "version": "1.1.1",
+    "license": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/radix-ui/primitives.git"
+    },
+    "licenseFiles": []
+  },
+  {
+    "name": "@radix-ui/react-use-layout-effect",
+    "version": "1.1.1",
+    "license": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/radix-ui/primitives.git"
+    },
+    "licenseFiles": []
+  },
+  {
+    "name": "@radix-ui/react-use-previous",
+    "version": "1.1.1",
+    "license": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/radix-ui/primitives.git"
+    },
+    "licenseFiles": []
+  },
+  {
+    "name": "@radix-ui/react-use-size",
+    "version": "1.1.1",
+    "license": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/radix-ui/primitives.git"
+    },
+    "licenseFiles": []
+  },
+  {
+    "name": "@radix-ui/react-visually-hidden",
+    "version": "1.2.3",
+    "license": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/radix-ui/primitives.git"
+    },
+    "licenseFiles": [
+      "LICENSE"
+    ]
+  },
+  {
+    "name": "aria-hidden",
+    "version": "1.2.6",
+    "license": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/theKashey/aria-hidden.git"
+    },
+    "licenseFiles": [
+      "LICENSE"
+    ]
+  },
+  {
+    "name": "class-variance-authority",
+    "version": "0.7.1",
+    "license": "Apache-2.0",
+    "repository": "https://github.com/joe-bell/cva.git",
+    "licenseFiles": [
+      "LICENSE"
+    ]
+  },
+  {
+    "name": "clsx",
+    "version": "2.1.1",
+    "license": "MIT",
+    "repository": "lukeed/clsx",
+    "licenseFiles": [
+      "license"
+    ]
+  },
+  {
+    "name": "culori",
+    "version": "4.0.2",
+    "license": "MIT",
+    "repository": "git@github.com:Evercoder/culori.git",
+    "licenseFiles": [
+      "LICENSE"
+    ]
+  },
+  {
+    "name": "dequal",
+    "version": "2.0.3",
+    "license": "MIT",
+    "repository": "lukeed/dequal",
+    "licenseFiles": [
+      "license"
+    ]
+  },
+  {
+    "name": "eventemitter3",
+    "version": "5.0.4",
+    "license": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "git://github.com/primus/eventemitter3.git"
+    },
+    "licenseFiles": [
+      "LICENSE"
+    ]
+  },
+  {
+    "name": "get-nonce",
+    "version": "1.0.1",
+    "license": "MIT",
+    "repository": "git@github.com:theKashey/get-nonce.git",
+    "licenseFiles": [
+      "LICENSE"
+    ]
+  },
+  {
+    "name": "lucide-react",
+    "version": "0.562.0",
+    "license": "ISC",
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/lucide-icons/lucide.git",
+      "directory": "packages/lucide-react"
+    },
+    "licenseFiles": [
+      "LICENSE"
+    ]
+  },
+  {
+    "name": "mediabunny",
+    "version": "1.41.0",
+    "license": "MPL-2.0",
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/Vanilagy/mediabunny.git"
+    },
+    "licenseFiles": [
+      "LICENSE"
+    ]
+  },
+  {
+    "name": "next-themes",
+    "version": "0.4.6",
+    "license": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/pacocoursey/next-themes.git"
+    },
+    "licenseFiles": [
+      "license.md"
+    ]
+  },
+  {
+    "name": "opencut-wasm",
+    "version": "0.2.10",
+    "license": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/opencut/opencut"
+    },
+    "licenseFiles": []
+  },
+  {
+    "name": "react",
+    "version": "19.2.5",
+    "license": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/facebook/react.git",
+      "directory": "packages/react"
+    },
+    "licenseFiles": [
+      "LICENSE"
+    ]
+  },
+  {
+    "name": "react-dom",
+    "version": "19.2.5",
+    "license": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/facebook/react.git",
+      "directory": "packages/react-dom"
+    },
+    "licenseFiles": [
+      "LICENSE"
+    ]
+  },
+  {
+    "name": "react-remove-scroll",
+    "version": "2.7.2",
+    "license": "MIT",
+    "repository": "https://github.com/theKashey/react-remove-scroll",
+    "licenseFiles": [
+      "LICENSE"
+    ]
+  },
+  {
+    "name": "react-remove-scroll-bar",
+    "version": "2.3.8",
+    "license": "MIT",
+    "repository": "https://github.com/theKashey/react-remove-scroll-bar",
+    "licenseFiles": []
+  },
+  {
+    "name": "react-resizable-panels",
+    "version": "2.1.9",
+    "license": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/bvaughn/react-resizable-panels.git"
+    },
+    "licenseFiles": [
+      "LICENSE"
+    ]
+  },
+  {
+    "name": "react-style-singleton",
+    "version": "2.2.3",
+    "license": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/theKashey/react-style-singleton"
+    },
+    "licenseFiles": [
+      "LICENSE"
+    ]
+  },
+  {
+    "name": "react-window",
+    "version": "2.2.7",
+    "license": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/bvaughn/react-window.git"
+    },
+    "licenseFiles": [
+      "LICENSE.md"
+    ]
+  },
+  {
+    "name": "scheduler",
+    "version": "0.27.0",
+    "license": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/facebook/react.git",
+      "directory": "packages/scheduler"
+    },
+    "licenseFiles": [
+      "LICENSE"
+    ]
+  },
+  {
+    "name": "sonner",
+    "version": "1.7.4",
+    "license": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/emilkowalski/sonner.git"
+    },
+    "licenseFiles": [
+      "LICENSE.md"
+    ]
+  },
+  {
+    "name": "soundtouchjs",
+    "version": "0.3.0",
+    "license": "LGPL-2.1",
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/cutterbl/SoundTouchJS.git"
+    },
+    "licenseFiles": [
+      "LICENSE"
+    ]
+  },
+  {
+    "name": "tailwind-merge",
+    "version": "3.5.0",
+    "license": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/dcastil/tailwind-merge.git"
+    },
+    "licenseFiles": [
+      "LICENSE.md"
+    ]
+  },
+  {
+    "name": "tslib",
+    "version": "2.8.1",
+    "license": "0BSD",
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/Microsoft/tslib.git"
+    },
+    "licenseFiles": [
+      "LICENSE.txt"
+    ]
+  },
+  {
+    "name": "use-callback-ref",
+    "version": "1.3.3",
+    "license": "MIT",
+    "repository": "https://github.com/theKashey/use-callback-ref/",
+    "licenseFiles": [
+      "LICENSE"
+    ]
+  },
+  {
+    "name": "use-deep-compare-effect",
+    "version": "1.8.1",
+    "license": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/kentcdodds/use-deep-compare-effect"
+    },
+    "licenseFiles": [
+      "LICENSE"
+    ]
+  },
+  {
+    "name": "use-sidecar",
+    "version": "1.1.3",
+    "license": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/theKashey/use-sidecar"
+    },
+    "licenseFiles": [
+      "LICENSE"
+    ]
+  },
+  {
+    "name": "zustand",
+    "version": "5.0.12",
+    "license": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/pmndrs/zustand.git"
+    },
+    "licenseFiles": [
+      "LICENSE"
+    ]
+  }
+]

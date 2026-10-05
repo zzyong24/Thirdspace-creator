@@ -1,0 +1,20 @@
+{
+  "name": "creatoros-noterelay-web-adapter",
+  "version": "0.1.8",
+  "private": true,
+  "type": "module",
+  "license": "AGPL-3.0-or-later",
+  "scripts": {
+    "build": "node build.mjs"
+  },
+  "dependencies": {
+    "dompurify": "3.3.0",
+    "fflate": "0.8.3",
+    "html-to-image": "1.11.13",
+    "markdown-it": "14.3.0",
+    "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.1"
+  }
+}

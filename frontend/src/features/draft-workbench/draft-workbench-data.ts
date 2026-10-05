@@ -54,6 +54,7 @@ interface ProjectDto {
 
 interface OutputDto {
   readonly id: string;
+  readonly contentType?: string;
 }
 
 interface PublicationDto {
@@ -338,7 +339,10 @@ async function readPublishPack(
     });
     const outputs = (Array.isArray(outputsRaw) ? outputsRaw : []) as OutputDto[];
     // [T-055h③] outputId 单独浮出:没有发布行时登记表单也要知道挂点在哪。
-    const outputId = outputs[0]?.id ?? null;
+    // 同项目可同时有图文、文章和视频；视频稿面只绑定视频 output。
+    // 旧窄桩缺 contentType 时保留兼容，真实已标注的非视频不能误选。
+    const outputId = (outputs.find((item) => item.contentType === "video")
+      ?? outputs.find((item) => !item.contentType))?.id ?? null;
     if (!outputId) return { outputId: null, publishPack: null };
     const pubsRaw = await client.listPublications({
       params: { outputId },

@@ -1,0 +1,32 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/backend
+
+ ❯ src/modules/output-scripts/output-scripts.integration.test.ts (4 tests | 2 failed) 4842ms
+   × 编辑分镜表真实保存→制作正文reader→口播导出：edited-adopt 1067ms
+   × 编辑分镜表真实保存→制作正文reader→口播导出：manual-save 1014ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/output-scripts/output-scripts.integration.test.ts > 编辑分镜表真实保存→制作正文reader→口播导出：edited-adopt
+ FAIL  src/modules/output-scripts/output-scripts.integration.test.ts > 编辑分镜表真实保存→制作正文reader→口播导出：manual-save
+AssertionError: expected '先定作品。\n再备正文和图片。' to be '先核对作品。\n每个平台都用自己的稿。\n再备正文和图片。' // Object.is equality
+
+- Expected
++ Received
+
+- 先核对作品。
+- 每个平台都用自己的稿。
++ 先定作品。
+  再备正文和图片。
+
+ ❯ src/modules/output-scripts/output-scripts.integration.test.ts:76:50
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 2 passed (4)
+   Start at  06:02:42
+   Duration  6.57s (transform 806ms, setup 0ms, import 1.52s, tests 4.84s, environment 0ms)
+

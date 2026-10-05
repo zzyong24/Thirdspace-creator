@@ -1,0 +1,22 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/backend
+
+ ❯ src/modules/creative-results/graphic-series.integration.test.ts (3 tests | 1 failed | 2 skipped) 1664ms
+     × 失败页局部恢复、同批顺序采用、同页重做和回执重放，旧照片不丢 1663ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/creative-results/graphic-series.integration.test.ts > 多页公共bundle到GraphicPosts原owner版本 > 失败页局部恢复、同批顺序采用、同页重做和回执重放，旧照片不丢
+TypeError: Cannot read properties of undefined (reading 'adoptResult')
+ ❯ adopt src/modules/creative-results/graphic-series.integration.test.ts:47:190
+
+ ❯ src/modules/creative-results/graphic-series.integration.test.ts:48:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 2 skipped (3)
+   Start at  03:58:22
+   Duration  3.40s (transform 927ms, setup 0ms, import 1.57s, tests 1.66s, environment 0ms)
+

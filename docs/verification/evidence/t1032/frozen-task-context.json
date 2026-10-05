@@ -1,0 +1,156 @@
+{
+  "capturedAt": "2026-09-30T21:29:26.970Z",
+  "environment": "独立验收库，只读查询；无原用户资料与密钥",
+  "tasks": [
+    {
+      "taskId": "ai-task-3256c9ab-80",
+      "executionTaskId": "exec_81aa8f55-c541-476c-8a19-a9dc5441d59f",
+      "executionPayloadKeys": [
+        "aiTaskId",
+        "modelInput",
+        "modelIdentity"
+      ],
+      "modelInputPresent": true,
+      "initialVoiceoverPresent": false,
+      "initialVoiceoverInspectionComplete": true,
+      "sourceFieldNames": [
+        "positioningBrief",
+        "learningsBrief",
+        "knowledgeBrief",
+        "topicTitle",
+        "topicAngle",
+        "assetsBrief"
+      ],
+      "skills": [
+        {
+          "skillId": "script.draft",
+          "baseVersion": "v10+methods-operations-2026-09-27",
+          "overlayVersion": null,
+          "factScopeInFrozenSystem": false,
+          "personalBoundaryInFrozenSystem": false
+        },
+        {
+          "skillId": "script.source_similarity",
+          "baseVersion": "v1+methods-operations-2026-09-27",
+          "overlayVersion": null,
+          "factScopeInFrozenSystem": false,
+          "personalBoundaryInFrozenSystem": false
+        },
+        {
+          "skillId": "script.storyboard.segment",
+          "baseVersion": "v2",
+          "overlayVersion": null,
+          "factScopeInFrozenSystem": false,
+          "personalBoundaryInFrozenSystem": false
+        },
+        {
+          "skillId": "script.voiceover.compose",
+          "baseVersion": "v2+methods-operations-2026-09-27",
+          "overlayVersion": null,
+          "factScopeInFrozenSystem": false,
+          "personalBoundaryInFrozenSystem": false
+        }
+      ]
+    },
+    {
+      "taskId": "ai-task-86115380-110",
+      "executionTaskId": "exec_79fca43e-c656-41db-bc5a-64afa883dc60",
+      "executionPayloadKeys": [
+        "aiTaskId",
+        "modelInput",
+        "modelIdentity"
+      ],
+      "modelInputPresent": true,
+      "initialVoiceoverPresent": false,
+      "initialVoiceoverInspectionComplete": true,
+      "sourceFieldNames": [
+        "positioningBrief",
+        "learningsBrief",
+        "knowledgeBrief",
+        "topicTitle",
+        "topicAngle",
+        "assetsBrief"
+      ],
+      "skills": [
+        {
+          "skillId": "script.draft",
+          "baseVersion": "v11+methods-operations-2026-09-27",
+          "overlayVersion": null,
+          "factScopeInFrozenSystem": true,
+          "personalBoundaryInFrozenSystem": true
+        },
+        {
+          "skillId": "script.source_similarity",
+          "baseVersion": "v1+methods-operations-2026-09-27",
+          "overlayVersion": null,
+          "factScopeInFrozenSystem": false,
+          "personalBoundaryInFrozenSystem": false
+        },
+        {
+          "skillId": "script.storyboard.segment",
+          "baseVersion": "v2",
+          "overlayVersion": null,
+          "factScopeInFrozenSystem": false,
+          "personalBoundaryInFrozenSystem": false
+        },
+        {
+          "skillId": "script.voiceover.compose",
+          "baseVersion": "v3+methods-operations-2026-09-27",
+          "overlayVersion": null,
+          "factScopeInFrozenSystem": true,
+          "personalBoundaryInFrozenSystem": true
+        }
+      ]
+    },
+    {
+      "taskId": "ai-task-6302e9d3-56",
+      "executionTaskId": "exec_97a43332-a912-4260-bd7f-5585b3f49a8a",
+      "executionPayloadKeys": [
+        "aiTaskId",
+        "modelInput",
+        "modelIdentity"
+      ],
+      "modelInputPresent": true,
+      "initialVoiceoverPresent": false,
+      "initialVoiceoverInspectionComplete": true,
+      "sourceFieldNames": [
+        "positioningBrief",
+        "learningsBrief",
+        "knowledgeBrief",
+        "topicTitle",
+        "topicAngle",
+        "assetsBrief"
+      ],
+      "skills": [
+        {
+          "skillId": "script.draft",
+          "baseVersion": "v11+methods-operations-2026-09-27",
+          "overlayVersion": null,
+          "factScopeInFrozenSystem": true,
+          "personalBoundaryInFrozenSystem": true
+        },
+        {
+          "skillId": "script.source_similarity",
+          "baseVersion": "v1+methods-operations-2026-09-27",
+          "overlayVersion": null,
+          "factScopeInFrozenSystem": false,
+          "personalBoundaryInFrozenSystem": false
+        },
+        {
+          "skillId": "script.storyboard.segment",
+          "baseVersion": "v2",
+          "overlayVersion": null,
+          "factScopeInFrozenSystem": false,
+          "personalBoundaryInFrozenSystem": false
+        },
+        {
+          "skillId": "script.voiceover.compose",
+          "baseVersion": "v3+methods-operations-2026-09-27",
+          "overlayVersion": null,
+          "factScopeInFrozenSystem": true,
+          "personalBoundaryInFrozenSystem": true
+        }
+      ]
+    }
+  ]
+}

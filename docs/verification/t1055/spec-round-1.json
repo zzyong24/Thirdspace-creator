@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "独立前置审查通过，无阻断项。已只读核对 SPEC、DEC-T1055-01、Task Packet、project-script-source application/port、draft-workbench-data.readPublishPack、articles/graphic-posts 的生成与采用服务及合同、两原 Worker 模板/runtime、AssistantEngineSelector/assistant-engine、聊天 liveSession 请求引擎绑定和脚本顶条。现有主稿类型优先读取、首视频发布包、简介/标签非空优先、冻结基准与来源、按目标字段采用及版本 CAS 接点属实。SPEC 将这些原链扩为公开 service 聚合的可选 scriptContext，明确发布元数据与正文引用区分、明确绑定同项目视频时校验、首次仅填空且标未保存、人工字段独立、历史出处与跨账号校验。图片候选使用冻结真实 exact pair 目录，由原 Worker 模型选择并由 backend 再校验；采用保持目标 ID 和既有图，单图过期或读取失败保留合法正文，无目录不虚构。严格合同及 Worker 输入需一起兼容扩展，已明确纳入范围与 AC。引擎 UI 迁移同时保留无 UI 订阅、真实状态、在途与原消息重试的引擎绑定；NoteRelay 折叠设置保留原实例及交付能力。写入仍由原 articles/graphic-posts 服务承担，没有新增 operation、表、模型运行器或数据所有者。AC 覆盖来源、旧稿、并发、降级可用性和实际公共链读回，并明确网页视觉与真实模型结果缺证据时待验。本轮只确认方案可实施，未运行测试、浏览器或模型。",
+  "findings": []
+}

@@ -1,0 +1,13 @@
+
+> @creatoros/backend@0.1.0 test /private/tmp/t1046-backend-work/backend
+> vitest run src/modules/production/production-native-rough.test.ts src/modules/production/production-rough-cut.integration.test.ts src/modules/production/production-native-public.integration.test.ts
+
+
+ RUN  v4.1.8 /private/tmp/t1046-backend-work/backend
+
+
+ Test Files  3 passed (3)
+      Tests  18 passed (18)
+   Start at  00:49:17
+   Duration  27.73s (transform 6.91s, setup 0ms, import 12.21s, tests 24.66s, environment 0ms)
+

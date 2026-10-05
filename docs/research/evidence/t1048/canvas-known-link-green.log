@@ -1,0 +1,9 @@
+
+ RUN  v4.1.8 /private/tmp/t1048-backend-work/backend
+
+
+ Test Files  2 passed (2)
+      Tests  13 passed (13)
+   Start at  03:51:32
+   Duration  8.36s (transform 1.44s, setup 0ms, import 3.08s, tests 4.93s, environment 0ms)
+

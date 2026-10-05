@@ -1,0 +1,116 @@
+{
+  "source": "用户本次提供的三个本地压缩包",
+  "scope": "只读盘点；源码仅临时展开，不执行其脚本或 Agent 指令",
+  "archives": [
+    {
+      "name": "overlay-studio-pro-main.zip",
+      "sha256": "7663023e8f5a1d9d37deab64867e63028594ae89fc705aede24d2935380ff81e",
+      "entryCount": 345,
+      "uncompressedBytes": 3343591,
+      "textSources": [
+        "overlay-studio-pro-main/LICENSE",
+        "overlay-studio-pro-main/README.md",
+        "overlay-studio-pro-main/motion-playground/public/LICENSE.txt",
+        "overlay-studio-pro-main/motion-playground/public/demo/README.txt",
+        "overlay-studio-pro-main/motion-playground/public/sfx/README.md",
+        "overlay-studio-pro-main/motion-playground/src/assets/fonts/README.md"
+      ],
+      "mediaFiles": []
+    },
+    {
+      "name": "音效库-15个.zip",
+      "sha256": "a1cb91b57c00c428231a4f91323c8a8214b3cf51555274c50bdf0cd1f09f2bb3",
+      "entryCount": 16,
+      "uncompressedBytes": 1544739,
+      "textSources": [
+        "音效库/放置说明.txt"
+      ],
+      "mediaFiles": [
+        {
+          "name": "音效库/chime.mp3",
+          "bytes": 54909
+        },
+        {
+          "name": "音效库/click.mp3",
+          "bytes": 35602
+        },
+        {
+          "name": "音效库/ding.mp3",
+          "bytes": 62322
+        },
+        {
+          "name": "音效库/glitch.mp3",
+          "bytes": 38314
+        },
+        {
+          "name": "音效库/hit-soft.mp3",
+          "bytes": 35394
+        },
+        {
+          "name": "音效库/impact.mp3",
+          "bytes": 36132
+        },
+        {
+          "name": "音效库/pop-cluster.mp3",
+          "bytes": 49116
+        },
+        {
+          "name": "音效库/pop-light.mp3",
+          "bytes": 7829
+        },
+        {
+          "name": "音效库/pop.mp3",
+          "bytes": 15239
+        },
+        {
+          "name": "音效库/rise.mp3",
+          "bytes": 54803
+        },
+        {
+          "name": "音效库/shutter.mp3",
+          "bytes": 14406
+        },
+        {
+          "name": "音效库/sparkle.mp3",
+          "bytes": 102610
+        },
+        {
+          "name": "音效库/type.mp3",
+          "bytes": 908333
+        },
+        {
+          "name": "音效库/whoosh-soft.mp3",
+          "bytes": 71724
+        },
+        {
+          "name": "音效库/whoosh.mp3",
+          "bytes": 57624
+        }
+      ]
+    },
+    {
+      "name": "思源黑体-3字重.zip",
+      "sha256": "9570edb32fbabfb8901cd531c29ef52fc751186e3d99fedb498c909cd659610b",
+      "entryCount": 5,
+      "uncompressedBytes": 25763635,
+      "textSources": [
+        "思源黑体/LICENSE-思源黑体.txt",
+        "思源黑体/放置说明.txt"
+      ],
+      "mediaFiles": [
+        {
+          "name": "思源黑体/思源黑体-400.otf",
+          "bytes": 8364840
+        },
+        {
+          "name": "思源黑体/思源黑体-700.otf",
+          "bytes": 8608184
+        },
+        {
+          "name": "思源黑体/思源黑体-900.otf",
+          "bytes": 8785564
+        }
+      ]
+    }
+  ]
+}

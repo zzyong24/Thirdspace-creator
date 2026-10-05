@@ -1,0 +1,53 @@
+{
+  "schema": "spec-review-recheck-context/v1",
+  "task_id": "T-1051",
+  "previous_round": 1,
+  "previous_verdict": "CONCERNS",
+  "previous_spec_sha256": "4e635ab477d27fee6171e2d827d181d5c7558946d3a90c45de5514073cc20f5e",
+  "previous_packet": {
+    "schema": "spec-review-round/v2",
+    "review_kind": "initial",
+    "summary": "主脚本来源在同类型存在多份 artifact 时缺少唯一选择方向，可能使全新生成冻结错误版本。",
+    "findings": [
+      {
+        "id": "REV-001",
+        "status": "open",
+        "severity": "major",
+        "category": "consistency",
+        "requirement_anchor": {
+          "id": "FR-03",
+          "quote": "按原编辑台排序选择当前有内容 output_script、master_script；都无正文时可读同项目 content_outline。同类型按创建顺序"
+        },
+        "acceptance_anchor": {
+          "id": "AC-03",
+          "quote": "脚本修改后旧候选引用旧历史、全新生成取新稿"
+        },
+        "where": "FR-03 主脚本来源装配的同类型多 artifact 选择规则",
+        "failure_mode": "同一项目存在两份都有正文的 output_script（或 master_script）时，一个实现可按创建时间升序取最早稿，另一个可按降序取最新稿；两者都符合“按创建顺序”，但前者会让全新生成继续冻结旧稿，违反 AC-03 的“全新生成取新稿”。文本也未明确排序前还是排序后跳过空正文，因此空的新 artifact 与有正文的旧 artifact 并存时仍可能得到不同结果。",
+        "evidence_kind": "spec-contradiction",
+        "evidence_ref": "docs/features/t1051-script-first-workbench.md#要求",
+        "risk_class": "confirmed-requirement",
+        "disposition": "mitigate",
+        "remedy_type": "constraint",
+        "scope_effect": "none",
+        "origin": "baseline",
+        "origin_ref": "round-1 full review",
+        "suggestion": "在 FR-03 明确候选过滤和唯一排序规则：先限定有正文且 currentVersionId 有效的同类型 artifact，再规定按创建时间取最早或最新，并给稳定并列键；选择结果须满足 AC-03 的全新生成取当前新稿。",
+        "resolution_evidence": "",
+        "parent_id": "",
+        "threat_model_id": ""
+      }
+    ]
+  },
+  "changed_line_refs": [
+    {
+      "origin_ref": "SPEC-LINE:25:74a6c9d911dbfd7e",
+      "text": "- FR-03：backend application 新增窄主脚本来源装配，唯一写者仍是原 artifacts service。按原编辑台排序选择当前有内容 output_script、master_script；都无正文时可读同项目 content_outline。同类型固定按 createdAt 升序，与原编辑台 list 顺序一致：先扫描该类型全部候选并排除空正文，输出脚本中有正文者优先，再扫描主脚本。全新生成取被选中 artifact 的当前保存版本，不是凭最新创建的 artifact 改主稿；该当前版本缺失/无法读取必须报错，不能假装无稿换用简介。无正文的所有脚本才回退大纲，同类型大纲同样按 createdAt 升序取首个有内容者。核验账号、项目、stage/type 和真实 currentVersionId。结构化正文、contentText 或 HTML 中的正文均可作为冻结模型输入，未保存 UI 字不当真值。"
+    }
+  ],
+  "origin_ref_formats": {
+    "changed_lines": "SPEC-LINE:<line>:<16hex>（从 changed_line_refs 选择）",
+    "new_evidence": "EVIDENCE-SHA256:<64hex>:<project-relative-path>",
+    "late_critical": "SPEC-LINE:<line>:<16hex> | CONSTITUTION-LINE:<line>:<16hex> | EVIDENCE-SHA256:<64hex>:<path>"
+  }
+}

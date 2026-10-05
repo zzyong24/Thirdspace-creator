@@ -1,0 +1,124 @@
+✔ 按依赖图复制并复用同版本包，缺必需包仍失败 (15.542542ms)
+✖ T1060 两条打包入口保留 ACP 安全文件包与 Codex 平台依赖 (1.461542ms)
+✖ T1060 分层物化识别已声明的 Codex npm alias 并保留 Windows 二进制和 fs-safe binding (10.531709ms)
+✖ T1060 Codex alias 仅接纳精确声明、实际名称版本和目标平台 (5.414583ms)
+✔ T1060 不接纳未声明的通用 npm alias (1.587666ms)
+✖ T1060 普通闭包从真实同名平台包中只选择精确版本和目标 (5.827167ms)
+✖ T1060 原生字节校验允许已存在vendor层，缺失或空字节明确失败 (0.272416ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 2
+ℹ fail 5
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 214.88825
+
+✖ failing tests:
+
+test at tools/windows-closure-rat/stage-layered-workers.test.mjs:38:1
+✖ T1060 两条打包入口保留 ACP 安全文件包与 Codex 平台依赖 (1.461542ms)
+  AssertionError [ERR_ASSERTION]: 分层物化根缺少 @openai/codex
+      at TestContext.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:42:66)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:385:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tools/windows-closure-rat/stage-layered-workers.test.mjs:59:1
+✖ T1060 分层物化识别已声明的 Codex npm alias 并保留 Windows 二进制和 fs-safe binding (10.531709ms)
+  Error: 无法定位依赖 @openai/codex-win32-x64
+      at packageRoot (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.mjs:16:30)
+      at visit (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.mjs:28:18)
+      at visit (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.mjs:55:79)
+      at stageMissingDependencies (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.mjs:57:31)
+      at TestContext.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:68:15)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+
+test at tools/windows-closure-rat/stage-layered-workers.test.mjs:76:1
+✖ T1060 Codex alias 仅接纳精确声明、实际名称版本和目标平台 (5.414583ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /Codex.*alias.*(身份|声明)/. Input:
+  
+  'Error: 无法定位依赖 @openai/codex-win32-x64'
+  
+      at TestContext.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:83:11)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: Error: 无法定位依赖 @openai/codex-win32-x64
+        at packageRoot (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.mjs:16:30)
+        at visit (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.mjs:28:18)
+        at visit (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.mjs:55:79)
+        at stageMissingDependencies (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.mjs:57:31)
+        at file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:83:22
+        at getActual (node:assert:586:5)
+        at strict.throws (node:assert:734:24)
+        at TestContext.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:83:11)
+        at Test.runInAsyncScope (node:async_hooks:226:14)
+        at Test.run (node:internal/test_runner/test:1201:25),
+    expected: /Codex.*alias.*(身份|声明)/,
+    operator: 'throws',
+    diff: 'simple'
+  }
+
+test at tools/windows-closure-rat/stage-layered-workers.test.mjs:97:1
+✖ T1060 普通闭包从真实同名平台包中只选择精确版本和目标 (5.827167ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  null !== 'x64'
+  
+      at TestContext.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:104:10)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: null,
+    expected: 'x64',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tools/windows-closure-rat/stage-layered-workers.test.mjs:115:1
+✖ T1060 原生字节校验允许已存在vendor层，缺失或空字节明确失败 (0.272416ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'undefined'
+  - 'function'
+  
+      at TestContext.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:116:9)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'undefined',
+    expected: 'function',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

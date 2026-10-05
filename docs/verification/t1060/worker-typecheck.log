@@ -1,0 +1,93 @@
+src/execution/codex-acp-host.ts(28,241): error TS2322: Type '() => Promise<{ outcome: { outcome: string; }; }>' is not assignable to type 'AcpPermissionHandler'.
+  Type 'Promise<{ outcome: { outcome: string; }; }>' is not assignable to type 'Promise<AcpPermissionDecision | undefined>'.
+    Type '{ outcome: { outcome: string; }; }' is not assignable to type 'AcpPermissionDecision | undefined'.
+      Type '{ outcome: { outcome: string; }; }' is not assignable to type '{ outcome: "allow_once"; } | { outcome: "allow_always"; } | { outcome: "reject_once"; } | { outcome: "reject_always"; } | { outcome: "cancel"; }'.
+        Type '{ outcome: { outcome: string; }; }' is not assignable to type '{ outcome: "cancel"; }'.
+          Types of property 'outcome' are incompatible.
+            Type '{ outcome: string; }' is not assignable to type '"cancel"'.
+src/execution/codex-acp-host.ts(29,112): error TS2339: Property 'protocolVersion' does not exist on type 'void'.
+src/execution/codex-acp-policy.test.ts(85,71): error TS2532: Object is possibly 'undefined'.
+src/execution/codex-acp-policy.test.ts(110,62): error TS2322: Type '{ name: string; type?: "http" | undefined; url?: string | undefined; headers?: { name: string; value: string; }[] | undefined; }' is not assignable to type 'McpServer'.
+  Type '{ name: string; type?: "http" | undefined; url?: string | undefined; headers?: { name: string; value: string; }[] | undefined; }' is not assignable to type '(McpServerHttp & { type: "http"; }) | McpServerStdio'.
+    Type '{ name: string; type?: "http" | undefined; url?: string | undefined; headers?: { name: string; value: string; }[] | undefined; }' is not assignable to type 'McpServerHttp & { type: "http"; }'.
+      Type '{ name: string; type?: "http" | undefined; url?: string | undefined; headers?: { name: string; value: string; }[] | undefined; }' is not assignable to type 'McpServerHttp'.
+        Types of property 'url' are incompatible.
+          Type 'string | undefined' is not assignable to type 'string'.
+            Type 'undefined' is not assignable to type 'string'.
+src/execution/codex-acp-worker-run.ts(39,79): error TS2345: Argument of type '() => Promise<{ outcome: { outcome: string; }; }>' is not assignable to parameter of type 'AcpPermissionHandler'.
+  Type 'Promise<{ outcome: { outcome: string; }; }>' is not assignable to type 'Promise<AcpPermissionDecision | undefined>'.
+    Type '{ outcome: { outcome: string; }; }' is not assignable to type 'AcpPermissionDecision | undefined'.
+      Type '{ outcome: { outcome: string; }; }' is not assignable to type '{ outcome: "allow_once"; } | { outcome: "allow_always"; } | { outcome: "reject_once"; } | { outcome: "reject_always"; } | { outcome: "cancel"; }'.
+        Type '{ outcome: { outcome: string; }; }' is not assignable to type '{ outcome: "cancel"; }'.
+          Types of property 'outcome' are incompatible.
+            Type '{ outcome: string; }' is not assignable to type '"cancel"'.
+vendor/acpx/src/acp/client-process.ts(230,5): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+vendor/acpx/src/acp/client.ts(2315,45): error TS2550: Property 'findLast' does not exist on type 'ActivePromptState[]'. Do you need to change your target library? Try changing the 'lib' compiler option to 'es2023' or later.
+vendor/acpx/src/acp/client.ts(2315,55): error TS7006: Parameter 'owner' implicitly has an 'any' type.
+vendor/acpx/src/acp/model-support.ts(149,36): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+vendor/acpx/src/acp/terminal-manager.ts(159,36): error TS2532: Object is possibly 'undefined'.
+vendor/acpx/src/acp/terminal-manager.ts(755,22): error TS2345: Argument of type 'number | undefined' is not assignable to parameter of type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+vendor/acpx/src/acp/terminal-manager.ts(756,41): error TS2345: Argument of type 'number | undefined' is not assignable to parameter of type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+vendor/acpx/src/agent-registry.ts(162,15): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+vendor/acpx/src/agent-registry.ts(244,77): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+vendor/acpx/src/agent-registry.ts(249,65): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+vendor/acpx/src/agent-registry.ts(270,53): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+vendor/acpx/src/permissions.ts(245,31): error TS2532: Object is possibly 'undefined'.
+vendor/acpx/src/process-identity.ts(247,81): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+vendor/acpx/src/process-identity.ts(334,22): error TS2345: Argument of type 'number | undefined' is not assignable to parameter of type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+vendor/acpx/src/process-identity.ts(335,22): error TS2345: Argument of type 'number | undefined' is not assignable to parameter of type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+vendor/acpx/src/process-identity.ts(405,32): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string | number | bigint | boolean'.
+  Type 'undefined' is not assignable to type 'string | number | bigint | boolean'.
+vendor/acpx/src/process-identity.ts(405,58): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string | number | bigint | boolean'.
+  Type 'undefined' is not assignable to type 'string | number | bigint | boolean'.
+vendor/acpx/src/process-identity.ts(463,38): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+vendor/acpx/src/process-identity.ts(469,73): error TS2532: Object is possibly 'undefined'.
+vendor/acpx/src/process-identity.ts(477,19): error TS2532: Object is possibly 'undefined'.
+vendor/acpx/src/process-identity.ts(481,37): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+vendor/codex-acp/src/AgentMode.ts(1,82): error TS2307: Cannot find module './app-server/v2' or its corresponding type declarations.
+vendor/codex-acp/src/AuthStatusMeta.ts(1,56): error TS2307: Cannot find module './app-server/v2' or its corresponding type declarations.
+vendor/codex-acp/src/AuthStatusMeta.ts(2,29): error TS2307: Cannot find module './app-server/AuthMode' or its corresponding type declarations.
+vendor/codex-acp/src/AuthStatusMeta.ts(3,29): error TS2307: Cannot find module './app-server/PlanType' or its corresponding type declarations.
+vendor/codex-acp/src/AuthStatusMeta.ts(137,55): error TS2366: Function lacks ending return statement and return type does not include 'undefined'.
+vendor/codex-acp/src/AuthStatusMeta.ts(177,4): error TS2366: Function lacks ending return statement and return type does not include 'undefined'.
+vendor/codex-acp/src/CodexAcpClient.ts(24,8): error TS2307: Cannot find module './app-server' or its corresponding type declarations.
+vendor/codex-acp/src/CodexAcpClient.ts(25,32): error TS2307: Cannot find module './app-server/ServiceTier' or its corresponding type declarations.
+vendor/codex-acp/src/CodexAcpClient.ts(26,30): error TS2307: Cannot find module './app-server/serde_json/JsonValue' or its corresponding type declarations.
+vendor/codex-acp/src/CodexAcpClient.ts(55,8): error TS2307: Cannot find module './app-server/v2' or its corresponding type declarations.
+vendor/codex-acp/src/CodexAcpClient.ts(59,29): error TS2307: Cannot find module './app-server/ModeKind' or its corresponding type declarations.
+vendor/codex-acp/src/CodexAcpClient.ts(63,63): error TS2307: Cannot find module './SessionMetadata' or its corresponding type declarations.
+vendor/codex-acp/src/CodexAcpClient.ts(70,63): error TS2307: Cannot find module './SessionMetadata' or its corresponding type declarations.
+vendor/codex-acp/src/CodexAcpClient.ts(300,38): error TS2366: Function lacks ending return statement and return type does not include 'undefined'.
+vendor/codex-acp/src/CodexAcpClient.ts(664,56): error TS7006: Parameter 'turn' implicitly has an 'any' type.
+vendor/codex-acp/src/CodexAcpClient.ts(902,50): error TS7006: Parameter 'layer' implicitly has an 'any' type.
+vendor/codex-acp/src/CodexAppServerClient.ts(7,8): error TS2307: Cannot find module './app-server' or its corresponding type declarations.
+vendor/codex-acp/src/CodexAppServerClient.ts(90,8): error TS2307: Cannot find module './app-server/v2' or its corresponding type declarations.
+vendor/codex-acp/src/CodexAppServerClient.ts(97,8): error TS2307: Cannot find module './async-tasks/BackgroundTerminalApi' or its corresponding type declarations.
+vendor/codex-acp/src/CodexAppServerClient.ts(680,45): error TS18046: 'entry' is of type 'unknown'.
+vendor/codex-acp/src/CollaborationModeConfig.ts(2,36): error TS2307: Cannot find module './app-server' or its corresponding type declarations.
+vendor/codex-acp/src/CollaborationModeConfig.ts(3,29): error TS2307: Cannot find module './app-server/ModeKind' or its corresponding type declarations.
+vendor/codex-acp/src/ElicitationCapabilities.ts(2,43): error TS2307: Cannot find module './app-server' or its corresponding type declarations.
+vendor/codex-acp/src/ModelId.ts(1,36): error TS2307: Cannot find module './app-server' or its corresponding type declarations.
+vendor/codex-acp/src/ModelId.ts(2,26): error TS2307: Cannot find module './app-server/v2' or its corresponding type declarations.
+vendor/codex-acp/src/SessionFork.ts(5,29): error TS2307: Cannot find module './app-server/ModeKind' or its corresponding type declarations.
+vendor/codex-acp/src/SessionFork.ts(6,32): error TS2307: Cannot find module './app-server/ServiceTier' or its corresponding type declarations.
+vendor/codex-acp/src/SessionFork.ts(7,44): error TS2307: Cannot find module './app-server/v2' or its corresponding type declarations.
+vendor/codex-acp/src/SessionFork.ts(8,36): error TS2307: Cannot find module './SessionMetadata' or its corresponding type declarations.
+vendor/codex-acp/src/SessionFork.ts(67,55): error TS7006: Parameter 'turn' implicitly has an 'any' type.
+vendor/codex-acp/src/SessionFork.ts(67,79): error TS7006: Parameter 'item' implicitly has an 'any' type.
+vendor/codex-acp/src/SessionFork.ts(72,60): error TS7006: Parameter 'turn' implicitly has an 'any' type.
+vendor/codex-acp/src/SessionFork.ts(73,21): error TS7006: Parameter 'item' implicitly has an 'any' type.
+vendor/codex-acp/src/subagents/CodexSubagentSubscriptions.ts(6,39): error TS2307: Cannot find module '../app-server' or its corresponding type declarations.

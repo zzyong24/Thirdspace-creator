@@ -1,3 +1,4 @@
+import {productionRoughCutModelOutput} from '@creatoros/contract';
 import {classificationSchema,materialSummarySchema} from "../prompt/templates/asset-processing";
 import {scriptSourceSimilaritySchema} from "../prompt/templates/script-source-similarity";
 import {topicPreferenceDistillSchema} from "../prompt/templates/topic-preference-distill";
@@ -22,6 +23,14 @@ import { materialMatchSchema } from "../prompt/templates/material-match";
 import { diagnosisSchema } from "../prompt/templates/calibration-diagnose";
 import { calibrationScoreSchema } from "../prompt/templates/calibration-score";
 import { positioningSuggestionSchema } from "../prompt/templates/positioning-generate";
+import { wechatArticleCandidateSchema } from "../prompt/templates/wechat-article-draft";
+import { validateWechatArticleCandidate } from "../runtime/wechat-article-candidate";
+import { graphicPostTextCandidateSchema } from "../prompt/templates/graphic-post-text";
+import { validateGraphicPostTextCandidate } from "../runtime/graphic-post-text";
+import { wechatArticleTextCandidateSchema } from "../prompt/templates/wechat-article-text";
+import { validateWechatArticleTextCandidate } from "../runtime/wechat-article-text";
+import { publicationTextCandidateSchema } from "../prompt/templates/publication-text";
+import { validatePublicationTextCandidate } from "../runtime/publication-text";
 
 /** 固定候选协议与宿主投影保持一致；在有界生成修复内验证，不能保存后才发现无法提交。 */
 export function resolveStructuredBusinessSchema(
@@ -29,6 +38,35 @@ export function resolveStructuredBusinessSchema(
 ): z.ZodType | undefined {
   // SEMANTIC_BOUNDARY_ALLOW: 只检查类型、非空结果和冻结真实ID范围，不评判内容、素材或评分质量。
   switch (input.skillId) {
+    case "production.rough-cut": return productionRoughCutModelOutput;
+    case "publication.text": {
+      const context = JSON.parse(input.facets.publicationContext ?? "null");
+      return publicationTextCandidateSchema.superRefine((value, ctx) => {
+        try { validatePublicationTextCandidate(value, context); }
+        catch (error) { ctx.addIssue({code: "custom", message: error instanceof Error ? error.message : "PUBLICATION_TEXT_CANDIDATE_INVALID"}); }
+      });
+    }
+    case "wechat.article-text": {
+      const context = JSON.parse(input.facets.articleTextContext ?? "null");
+      return wechatArticleTextCandidateSchema.superRefine((value, ctx) => {
+        try { validateWechatArticleTextCandidate(value, context); }
+        catch (error) { ctx.addIssue({code: "custom", message: error instanceof Error ? error.message : "ARTICLE_TEXT_CANDIDATE_INVALID"}); }
+      });
+    }
+    case "graphic.post-text": {
+      const context = JSON.parse(input.facets.graphicPostContext ?? "null");
+      return graphicPostTextCandidateSchema.superRefine((value, ctx) => {
+        try { validateGraphicPostTextCandidate(value, context); }
+        catch (error) { ctx.addIssue({code: "custom", message: error instanceof Error ? error.message : "GRAPHIC_POST_CANDIDATE_INVALID"}); }
+      });
+    }
+    case "wechat.article-draft": {
+      const context = JSON.parse(input.facets.articleContext ?? "null");
+      return wechatArticleCandidateSchema.transform((value, ctx) => {
+        try { return validateWechatArticleCandidate(value, context); }
+        catch (error) { ctx.addIssue({code: "custom", message: error instanceof Error ? error.message : "ARTICLE_CANDIDATE_INVALID"}); return z.NEVER; }
+      });
+    }
     case "asset.classify":return classificationSchema;
     case "material.extract":return materialSummarySchema;
     case "reconstruct.project": return reconstructProjectSchema.refine(value=>Boolean(value.research.coreTopic.trim()),"研究重建缺少主题");

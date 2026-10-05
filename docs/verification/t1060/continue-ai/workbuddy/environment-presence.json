@@ -1,0 +1,17 @@
+{
+  "observedAppPresent": true,
+  "version": "5.2.5",
+  "bundleId": "com.workbuddy.workbuddy",
+  "independentWorkBuddyOnPath": false,
+  "codeBuddyInvoked": false,
+  "agentConfigurationReadOrModified": false,
+  "originalUserDatabaseReadOrModified": false,
+  "authJsonReadOrCopied": false,
+  "oauthPresence": {
+    "WORKBUDDY_CLIENT_ID": false,
+    "WORKBUDDY_CLIENT_SECRET": false,
+    "WORKBUDDY_ACCESS_TOKEN": false,
+    "WORKBUDDY_REFRESH_TOKEN": false,
+    "WORKBUDDY_REDIRECT_URI": false
+  }
+}

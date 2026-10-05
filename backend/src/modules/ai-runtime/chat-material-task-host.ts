@@ -18,7 +18,7 @@ export interface ChatMaterialTaskPorts {
 /** 只准备原子子任务；调用方须提供独立执行准备和唤醒，不能在此执行模型。 */
 export function createChatMaterialTaskHost(
  reader:Pick<ReturnType<typeof createChatHostContextReader>,"read">,
- readers:Pick<ContextReaders,"getArtifactText">,
+ readers:Pick<ContextReaders,"getArtifactText"|"getArticleForImage">,
  ports:ChatMaterialTaskPorts,
 ):NonNullable<ChatWorkerDispatcherDeps["resolveTools"]>{
  async function current(ctx:RequestContext,ref:ExecutionRef,signal?:AbortSignal){
@@ -52,12 +52,15 @@ export function createChatMaterialTaskHost(
     const parsed=resolved.parameters.parse(input) as MaterialGenerationInput;
     const projectId=resolved.chatContext.projectId?.trim();
     const getArtifactText=readers.getArtifactText;
-    if(projectId && !getArtifactText)throw new Error("素材任务缺少当前稿读取能力");
+    const articleSelection=resolved.chatContext.selection?.kind==="article_section"?resolved.chatContext.selection:undefined;
+    if(projectId && !articleSelection && !getArtifactText)throw new Error("素材任务缺少当前稿读取能力");
+    if(articleSelection && !readers.getArticleForImage)throw new Error("文章配图缺少当前文章读取能力");
     // SEMANTIC_BOUNDARY_ALLOW: 只落实用户显式选择的图片/视频功能，不按语义猜测素材类型。
     const forcedMaterialKind=resolved.chatContext.functionKey==="material.generate.image"?"image":resolved.chatContext.functionKey==="material.generate.video"?"video":undefined;
     let scriptSnapshot:ArtifactTextRaw|null=null;
     const prepared=await prepareMaterialGeneration(parsed,{
-     boundProjectId:projectId,forcedMaterialKind,signal:scope.signal,
+     boundProjectId:projectId,forcedMaterialKind,articleImageSelection:articleSelection,signal:scope.signal,
+     getArticleForImage:readers.getArticleForImage?query=>readers.getArticleForImage!(resolved.context,query):undefined,
      getArtifactText:getArtifactText?async query=>{
       const source=await getArtifactText(resolved.context,query);
       scriptSnapshot=source?structuredClone(source):null;
@@ -67,7 +70,7 @@ export function createChatMaterialTaskHost(
     scope.signal?.throwIfAborted();
     const task=await ports.prepareTaskCommit(resolved.context,{
      taskType:"asset.generate",attemptId,
-     inputData:{kind:prepared.kind,prompt:prepared.prompt,...(prepared.style?{style:prepared.style}:{}),...(prepared.referenceAssetId?{referenceAssetId:prepared.referenceAssetId}:{}),...(projectId?{projectId}:{}),...(scriptSnapshot?{scriptSnapshot}:{})},
+     inputData:{kind:prepared.kind,prompt:prepared.prompt,...(prepared.style?{style:prepared.style}:{}),...(prepared.referenceAssetId?{referenceAssetId:prepared.referenceAssetId}:{}),...(projectId?{projectId}:{}),...(scriptSnapshot?{scriptSnapshot}:{}),...(prepared.articleSnapshot?{articleSnapshot:prepared.articleSnapshot}:{})},
     });
     scope.signal?.throwIfAborted();
     return {task,result:child=>({status:"ok",summary:"已提交素材生成任务",evidence:[],data:{kind:"material.generate",taskId:child.id,kindOf:prepared.kind,status:"queued",error:null},error:null,continuation:null,sideEffect:"committed"})};

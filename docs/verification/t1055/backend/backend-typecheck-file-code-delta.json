@@ -1,0 +1,7 @@
+{
+  "baselineErrors": 74,
+  "currentErrors": 74,
+  "newFileCodeCounts": {},
+  "removedFileCodeCounts": {},
+  "note": "比较文件与诊断编码数量；新增可选字段会影响 TypeScript 展开字符串，不将字符串变化伪装成新错误或PASS。"
+}

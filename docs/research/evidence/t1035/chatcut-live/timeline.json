@@ -1,0 +1,445 @@
+{
+  "state": {
+    "canvas": {
+      "height": 1080,
+      "width": 1668
+    },
+    "durationFrames": 20427,
+    "editor": {
+      "activeTimelineId": "1baf6ea4-ca74-4730-a1b5-44dada4a2b87",
+      "asOf": "turn-start",
+      "selectedItemIds": [],
+      "trackLocks": [
+        {
+          "hidden": false,
+          "id": "6777eb15-ea6e-4e15-9497-7aa26706fd9f",
+          "locked": false,
+          "muted": false
+        },
+        {
+          "hidden": false,
+          "id": "3cb0afec-c38c-46ea-96cb-266d9cacce20",
+          "locked": false,
+          "muted": false
+        },
+        {
+          "hidden": false,
+          "id": "e0013b38-15e6-4303-bf81-96b6ed3b046c",
+          "locked": false,
+          "muted": false
+        }
+      ]
+    },
+    "fps": 30,
+    "id": "1baf6ea4-ca74-4730-a1b5-44dada4a2b87",
+    "name": "V4 画面音频字幕版",
+    "range": {
+      "fromFrame": 0,
+      "toFrame": 1800
+    }
+  },
+  "views": [
+    "timeline"
+  ],
+  "timeline": {
+    "entries": [
+      {
+        "asset": {
+          "id": "67eea8ce-2130-40bf-89fd-d95304b9eaa1",
+          "name": "Built-in Retina Display",
+          "type": "video"
+        },
+        "startFrame": 0,
+        "id": "7c9f3bf2-f7b2-4805-912c-1dd0e5691341",
+        "itemType": "video",
+        "kind": "item",
+        "sourceRange": {
+          "end": 6630000,
+          "start": 2070000
+        },
+        "timelineRange": {
+          "fromFrame": 0,
+          "toFrame": 114
+        },
+        "trackAlias": "V1",
+        "trackId": "6777eb15-ea6e-4e15-9497-7aa26706fd9f"
+      },
+      {
+        "asset": {
+          "id": "b81d34f2-084b-4ee3-9c5a-cde19e59d1c9",
+          "name": "Git V4 章节分段条",
+          "type": "motion-graphic"
+        },
+        "startFrame": 0,
+        "id": "be3e2aba-07b8-4c55-80a2-7ef28aae82c2",
+        "itemType": "motion-graphic",
+        "kind": "item",
+        "timelineRange": {
+          "fromFrame": 0,
+          "toFrame": 1800
+        },
+        "trackAlias": "V2",
+        "trackId": "3cb0afec-c38c-46ea-96cb-266d9cacce20"
+      },
+      {
+        "fromFrame": 0,
+        "kind": "gap",
+        "timelineRange": {
+          "fromFrame": 0,
+          "toFrame": 1800
+        },
+        "trackAlias": "A1",
+        "trackId": "e0013b38-15e6-4303-bf81-96b6ed3b046c"
+      },
+      {
+        "asset": {
+          "id": "67eea8ce-2130-40bf-89fd-d95304b9eaa1",
+          "name": "Built-in Retina Display",
+          "type": "video"
+        },
+        "startFrame": 114,
+        "id": "0f150e05-dff0-4cdd-87cf-fb7f7dc500cf",
+        "itemType": "video",
+        "kind": "item",
+        "sourceRange": {
+          "end": 10640000.4,
+          "start": 6720000
+        },
+        "timelineRange": {
+          "fromFrame": 114,
+          "toFrame": 212
+        },
+        "trackAlias": "V1",
+        "trackId": "6777eb15-ea6e-4e15-9497-7aa26706fd9f"
+      },
+      {
+        "asset": {
+          "id": "67eea8ce-2130-40bf-89fd-d95304b9eaa1",
+          "name": "Built-in Retina Display",
+          "type": "video"
+        },
+        "startFrame": 212,
+        "id": "ae11b534-bb88-4a03-9104-deb63df7f742",
+        "itemType": "video",
+        "kind": "item",
+        "sourceRange": {
+          "end": 12279999.6,
+          "start": 11040000
+        },
+        "timelineRange": {
+          "fromFrame": 212,
+          "toFrame": 243
+        },
+        "trackAlias": "V1",
+        "trackId": "6777eb15-ea6e-4e15-9497-7aa26706fd9f"
+      },
+      {
+        "asset": {
+          "id": "67eea8ce-2130-40bf-89fd-d95304b9eaa1",
+          "name": "Built-in Retina Display",
+          "type": "video"
+        },
+        "startFrame": 243,
+        "id": "db427f06-6de7-43b6-a7aa-283b7bdabcac",
+        "itemType": "video",
+        "kind": "item",
+        "sourceRange": {
+          "end": 43940000.4,
+          "start": 41100000
+        },
+        "timelineRange": {
+          "fromFrame": 243,
+          "toFrame": 314
+        },
+        "trackAlias": "V1",
+        "trackId": "6777eb15-ea6e-4e15-9497-7aa26706fd9f"
+      },
+      {
+        "asset": {
+          "id": "67eea8ce-2130-40bf-89fd-d95304b9eaa1",
+          "name": "Built-in Retina Display",
+          "type": "video"
+        },
+        "startFrame": 314,
+        "id": "1f6d63f8-4547-47df-ab61-0bb78347da37",
+        "itemType": "video",
+        "kind": "item",
+        "sourceRange": {
+          "end": 75889999.2,
+          "start": 70890000
+        },
+        "timelineRange": {
+          "fromFrame": 314,
+          "toFrame": 439
+        },
+        "trackAlias": "V1",
+        "trackId": "6777eb15-ea6e-4e15-9497-7aa26706fd9f"
+      },
+      {
+        "asset": {
+          "id": "67eea8ce-2130-40bf-89fd-d95304b9eaa1",
+          "name": "Built-in Retina Display",
+          "type": "video"
+        },
+        "startFrame": 439,
+        "id": "55f2d47e-f767-4a15-83f7-8da975ef71d9",
+        "itemType": "video",
+        "kind": "item",
+        "sourceRange": {
+          "end": 84220000,
+          "start": 81100000
+        },
+        "timelineRange": {
+          "fromFrame": 439,
+          "toFrame": 517
+        },
+        "trackAlias": "V1",
+        "trackId": "6777eb15-ea6e-4e15-9497-7aa26706fd9f"
+      },
+      {
+        "asset": {
+          "id": "67eea8ce-2130-40bf-89fd-d95304b9eaa1",
+          "name": "Built-in Retina Display",
+          "type": "video"
+        },
+        "startFrame": 517,
+        "id": "c689e115-5d16-459a-bda0-d30840b4fb72",
+        "itemType": "video",
+        "kind": "item",
+        "sourceRange": {
+          "end": 88650000,
+          "start": 85890000
+        },
+        "timelineRange": {
+          "fromFrame": 517,
+          "toFrame": 586
+        },
+        "trackAlias": "V1",
+        "trackId": "6777eb15-ea6e-4e15-9497-7aa26706fd9f"
+      },
+      {
+        "asset": {
+          "id": "67eea8ce-2130-40bf-89fd-d95304b9eaa1",
+          "name": "Built-in Retina Display",
+          "type": "video"
+        },
+        "startFrame": 586,
+        "id": "e556d44b-a67e-4bf9-af19-94865cebee40",
+        "itemType": "video",
+        "kind": "item",
+        "sourceRange": {
+          "end": 94010000,
+          "start": 89450000
+        },
+        "timelineRange": {
+          "fromFrame": 586,
+          "toFrame": 700
+        },
+        "trackAlias": "V1",
+        "trackId": "6777eb15-ea6e-4e15-9497-7aa26706fd9f"
+      },
+      {
+        "asset": {
+          "id": "67eea8ce-2130-40bf-89fd-d95304b9eaa1",
+          "name": "Built-in Retina Display",
+          "type": "video"
+        },
+        "startFrame": 700,
+        "id": "17bf87bf-2b8d-4c55-ab22-906056269d2b",
+        "itemType": "video",
+        "kind": "item",
+        "sourceRange": {
+          "end": 96800000.4,
+          "start": 94920000
+        },
+        "timelineRange": {
+          "fromFrame": 700,
+          "toFrame": 747
+        },
+        "trackAlias": "V1",
+        "trackId": "6777eb15-ea6e-4e15-9497-7aa26706fd9f"
+      },
+      {
+        "asset": {
+          "id": "67eea8ce-2130-40bf-89fd-d95304b9eaa1",
+          "name": "Built-in Retina Display",
+          "type": "video"
+        },
+        "startFrame": 747,
+        "id": "a47fb6f7-fd14-4741-8b3e-7e547a313aad",
+        "itemType": "video",
+        "kind": "item",
+        "sourceRange": {
+          "end": 98910000,
+          "start": 97590000
+        },
+        "timelineRange": {
+          "fromFrame": 747,
+          "toFrame": 780
+        },
+        "trackAlias": "V1",
+        "trackId": "6777eb15-ea6e-4e15-9497-7aa26706fd9f"
+      },
+      {
+        "asset": {
+          "id": "67eea8ce-2130-40bf-89fd-d95304b9eaa1",
+          "name": "Built-in Retina Display",
+          "type": "video"
+        },
+        "startFrame": 780,
+        "id": "d46420d3-fa8d-4bfa-8094-50f283b828db",
+        "itemType": "video",
+        "kind": "item",
+        "sourceRange": {
+          "end": 100510000.4,
+          "start": 98990000
+        },
+        "timelineRange": {
+          "fromFrame": 780,
+          "toFrame": 818
+        },
+        "trackAlias": "V1",
+        "trackId": "6777eb15-ea6e-4e15-9497-7aa26706fd9f"
+      },
+      {
+        "asset": {
+          "id": "67eea8ce-2130-40bf-89fd-d95304b9eaa1",
+          "name": "Built-in Retina Display",
+          "type": "video"
+        },
+        "startFrame": 818,
+        "id": "5fe234e0-111c-4e6d-8077-77d31d920fe8",
+        "itemType": "video",
+        "kind": "item",
+        "sourceRange": {
+          "end": 106859999.2,
+          "start": 105340000
+        },
+        "timelineRange": {
+          "fromFrame": 818,
+          "toFrame": 856
+        },
+        "trackAlias": "V1",
+        "trackId": "6777eb15-ea6e-4e15-9497-7aa26706fd9f"
+      },
+      {
+        "asset": {
+          "id": "67eea8ce-2130-40bf-89fd-d95304b9eaa1",
+          "name": "Built-in Retina Display",
+          "type": "video"
+        },
+        "startFrame": 856,
+        "id": "b426e8f3-6519-4e8a-8d5c-2b471314b988",
+        "itemType": "video",
+        "kind": "item",
+        "sourceRange": {
+          "end": 110640000.4,
+          "start": 107200000
+        },
+        "timelineRange": {
+          "fromFrame": 856,
+          "toFrame": 942
+        },
+        "trackAlias": "V1",
+        "trackId": "6777eb15-ea6e-4e15-9497-7aa26706fd9f"
+      },
+      {
+        "asset": {
+          "id": "67eea8ce-2130-40bf-89fd-d95304b9eaa1",
+          "name": "Built-in Retina Display",
+          "type": "video"
+        },
+        "startFrame": 942,
+        "id": "fb2831c9-9632-4b15-8a6c-e2860f539a64",
+        "itemType": "video",
+        "kind": "item",
+        "sourceRange": {
+          "end": 116249999.6,
+          "start": 112250000
+        },
+        "timelineRange": {
+          "fromFrame": 942,
+          "toFrame": 1042
+        },
+        "trackAlias": "V1",
+        "trackId": "6777eb15-ea6e-4e15-9497-7aa26706fd9f"
+      },
+      {
+        "asset": {
+          "id": "67eea8ce-2130-40bf-89fd-d95304b9eaa1",
+          "name": "Built-in Retina Display",
+          "type": "video"
+        },
+        "startFrame": 1042,
+        "id": "a50f05de-58dd-42ce-9a01-43a9acd017ea",
+        "itemType": "video",
+        "kind": "item",
+        "sourceRange": {
+          "end": 119130000,
+          "start": 116490000
+        },
+        "timelineRange": {
+          "fromFrame": 1042,
+          "toFrame": 1108
+        },
+        "trackAlias": "V1",
+        "trackId": "6777eb15-ea6e-4e15-9497-7aa26706fd9f"
+      },
+      {
+        "asset": {
+          "id": "67eea8ce-2130-40bf-89fd-d95304b9eaa1",
+          "name": "Built-in Retina Display",
+          "type": "video"
+        },
+        "startFrame": 1108,
+        "id": "f07138d5-a55a-493f-8774-2db8944fd3ae",
+        "itemType": "video",
+        "kind": "item",
+        "sourceRange": {
+          "end": 122570000.4,
+          "start": 119490000
+        },
+        "timelineRange": {
+          "fromFrame": 1108,
+          "toFrame": 1185
+        },
+        "trackAlias": "V1",
+        "trackId": "6777eb15-ea6e-4e15-9497-7aa26706fd9f"
+      }
+    ],
+    "nextOffset": 18,
+    "totalEntries": 25,
+    "tracks": [
+      {
+        "alias": "V1",
+        "hidden": false,
+        "id": "6777eb15-ea6e-4e15-9497-7aa26706fd9f",
+        "locked": false,
+        "muted": false,
+        "name": null,
+        "order": 0,
+        "trackType": "video"
+      },
+      {
+        "alias": "V2",
+        "hidden": false,
+        "id": "3cb0afec-c38c-46ea-96cb-266d9cacce20",
+        "locked": false,
+        "muted": false,
+        "name": "章节分段条",
+        "order": 1,
+        "trackType": "video"
+      },
+      {
+        "alias": "A1",
+        "hidden": false,
+        "id": "e0013b38-15e6-4303-bf81-96b6ed3b046c",
+        "locked": false,
+        "muted": false,
+        "name": "SFX",
+        "order": 2,
+        "trackType": "audio"
+      }
+    ]
+  }
+}

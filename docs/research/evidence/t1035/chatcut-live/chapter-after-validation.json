@@ -1,0 +1,44 @@
+{
+  "item": {
+    "asset": {
+      "id": "b81d34f208",
+      "name": "Git V4 章节分段条",
+      "type": "motion-graphic"
+    },
+    "attachedEffects": [],
+    "item": {
+      "blendingMode": "normal",
+      "durationFrames": 20427,
+      "fadeInDurationFrames": 0,
+      "fadeOutDurationFrames": 0,
+      "height": 72,
+      "id": "be3e2aba07",
+      "left": 0,
+      "opacity": 1,
+      "rotation": 0,
+      "startFrame": 0,
+      "top": 0,
+      "width": 1668,
+      "cropBottom": 0,
+      "cropLeft": 0,
+      "cropRight": 0,
+      "cropTop": 0,
+      "keepAspectRatio": true,
+      "assetId": "b81d34f208",
+      "attributeOverrides": null,
+      "playbackRate": 1,
+      "propertyOverrides": null,
+      "type": "motion-graphic"
+    },
+    "timeline": {
+      "id": "1baf6ea4ca",
+      "name": "V4 画面音频字幕版"
+    },
+    "track": {
+      "id": "3cb0afecc3",
+      "name": "章节分段条",
+      "trackType": "video"
+    },
+    "transitions": []
+  }
+}

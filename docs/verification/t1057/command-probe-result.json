@@ -1,0 +1,27 @@
+{
+  "runtimeVersion": "0.159.3",
+  "platform": "darwin",
+  "architecture": "arm64",
+  "usesRealAuth": false,
+  "requestsModel": false,
+  "sandboxPolicy": {
+    "type": "workspaceWrite",
+    "writableRoots": [
+      "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1057-command-7zLsoY/workspace"
+    ],
+    "readOnlyAccess": {
+      "type": "restricted",
+      "includePlatformDefaults": true,
+      "readableRoots": [
+        "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1057-command-7zLsoY/workspace"
+      ]
+    },
+    "networkAccess": false,
+    "excludeTmpdirEnvVar": true,
+    "excludeSlashTmp": true
+  },
+  "checks": [],
+  "error": "{\"code\":-32600,\"message\":\"Invalid request: workspaceWrite.readOnlyAccess is no longer supported; use permissionProfile for restricted reads\"}",
+  "fakeHomeDiagnostics": "",
+  "passed": false
+}

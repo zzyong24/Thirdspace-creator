@@ -1,0 +1,8 @@
+{
+  "baseline": "T1060 v1 当场全局对账",
+  "baseline_errors": 34,
+  "current_errors": 34,
+  "added": [],
+  "removed": [],
+  "current_exit_code": 1
+}

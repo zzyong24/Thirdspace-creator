@@ -1,0 +1,7 @@
+{
+  "schema": "creatoros-codex-startup-diagnostic/v1",
+  "environment": "isolated fake home/config; no credentials or model turn",
+  "exitCode": 0,
+  "diagnostic": "",
+  "handshakeFrameCount": 2
+}

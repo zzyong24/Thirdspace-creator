@@ -1,0 +1,56 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/mcp-server
+
+ ❯ tests/cli.test.ts (16 tests | 5 failed) 349ms
+     × end closes only the local MCP server exactly once 3ms
+     × SIGINT closes only the local MCP server exactly once 0ms
+     × SIGTERM closes only the local MCP server exactly once 0ms
+     × connect failure releases owned listeners and local server without pretending ready 0ms
+     × close failure is reported and does not leave listeners or repeat close 0ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/cli.test.ts > T-1060 MCP stdio lifecycle > end closes only the local MCP server exactly once
+ FAIL  tests/cli.test.ts > T-1060 MCP stdio lifecycle > SIGINT closes only the local MCP server exactly once
+ FAIL  tests/cli.test.ts > T-1060 MCP stdio lifecycle > SIGTERM closes only the local MCP server exactly once
+TypeError: serveMcpStdio is not a function
+ ❯ tests/cli.test.ts:271:21
+    269|     const server = { connect: vi.fn().mockResolvedValue(undefined), cl…
+    270|     const transport = {};
+    271|     const waiting = serveMcpStdio(server, transport, input, signals);
+       |                     ^
+    272|     await Promise.resolve();
+    273|     (event === "end" ? input : signals).emit(event);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
+
+ FAIL  tests/cli.test.ts > T-1060 MCP stdio lifecycle > connect failure releases owned listeners and local server without pretending ready
+TypeError: serveMcpStdio is not a function
+ ❯ tests/cli.test.ts:289:18
+    287|     const signals = new EventEmitter();
+    288|     const server = { connect: vi.fn().mockRejectedValue(new Error("con…
+    289|     await expect(serveMcpStdio(server, {}, input, signals)).rejects.to…
+       |                  ^
+    290|     expect(server.close).toHaveBeenCalledTimes(1);
+    291|     expect(input.listenerCount("end")).toBe(0);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
+
+ FAIL  tests/cli.test.ts > T-1060 MCP stdio lifecycle > close failure is reported and does not leave listeners or repeat close
+TypeError: serveMcpStdio is not a function
+ ❯ tests/cli.test.ts:299:21
+    297|     const signals = new EventEmitter();
+    298|     const server = { connect: vi.fn().mockResolvedValue(undefined), cl…
+    299|     const waiting = serveMcpStdio(server, {}, input, signals);
+       |                     ^
+    300|     const result = expect(waiting).rejects.toThrow("close rejected");
+    301|     await Promise.resolve();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  5 failed | 11 passed (16)
+   Start at  16:48:50
+   Duration  2.35s (transform 961ms, setup 0ms, import 1.52s, tests 349ms, environment 0ms)
+

@@ -1,0 +1,299 @@
+   Compiling proc-macro2 v1.0.106
+   Compiling quote v1.0.46
+   Compiling unicode-ident v1.0.24
+   Compiling serde_core v1.0.228
+   Compiling memchr v2.8.2
+   Compiling smallvec v1.15.2
+   Compiling siphasher v1.0.3
+   Compiling cfg-if v1.0.4
+   Compiling writeable v0.6.3
+   Compiling libc v0.2.186
+   Compiling litemap v0.8.2
+   Compiling itoa v1.0.18
+   Compiling stable_deref_trait v1.2.1
+   Compiling fastrand v2.4.1
+   Compiling utf8_iter v1.0.4
+   Compiling zmij v1.0.21
+   Compiling phf_shared v0.13.1
+   Compiling icu_normalizer_data v2.2.0
+   Compiling serde v1.0.228
+   Compiling icu_properties_data v2.2.0
+   Compiling winnow v1.0.3
+   Compiling serde_json v1.0.150
+   Compiling phf_generator v0.13.1
+   Compiling phf_codegen v0.13.1
+   Compiling toml_parser v1.1.2+spec-1.1.0
+   Compiling strsim v0.11.1
+   Compiling time-core v0.1.9
+   Compiling typeid v1.0.3
+   Compiling toml_writer v1.1.1+spec-1.1.0
+   Compiling ident_case v1.0.1
+   Compiling num-conv v0.2.2
+   Compiling parking_lot_core v0.9.12
+   Compiling version_check v0.9.5
+   Compiling byteorder v1.5.0
+   Compiling scopeguard v1.2.0
+   Compiling erased-serde v0.4.10
+   Compiling new_debug_unreachable v1.0.6
+   Compiling powerfmt v0.2.0
+   Compiling deranged v0.5.8
+   Compiling lock_api v0.4.14
+   Compiling aho-corasick v1.1.4
+   Compiling syn v2.0.118
+   Compiling string_cache_codegen v0.6.1
+   Compiling thiserror v1.0.69
+   Compiling unic-char-range v0.9.0
+   Compiling unic-common v0.9.0
+   Compiling precomputed-hash v0.1.1
+   Compiling log v0.4.33
+   Compiling regex-syntax v0.8.11
+   Compiling thiserror v2.0.18
+   Compiling getrandom v0.4.3
+   Compiling fnv v1.0.7
+   Compiling synstructure v0.13.2
+   Compiling darling_core v0.23.0
+   Compiling zerofrom-derive v0.1.7
+   Compiling yoke-derive v0.8.2
+   Compiling zerovec-derive v0.11.3
+   Compiling zerofrom v0.1.8
+   Compiling serde_derive v1.0.228
+   Compiling displaydoc v0.2.6
+   Compiling phf_macros v0.13.1
+   Compiling darling_macro v0.23.0
+   Compiling darling v0.23.0
+   Compiling phf v0.13.1
+   Compiling parking_lot v0.12.5
+   Compiling serde_spanned v1.1.1
+   Compiling thiserror-impl v1.0.69
+   Compiling thiserror-impl v2.0.18
+   Compiling regex-automata v0.4.14
+   Compiling unic-ucd-version v0.9.0
+   Compiling unic-char-property v0.9.0
+   Compiling web_atoms v0.2.5
+   Compiling equivalent v1.0.2
+   Compiling hashbrown v0.17.1
+   Compiling unic-ucd-ident v0.9.0
+   Compiling string_cache v0.9.0
+   Compiling indexmap v2.14.0
+   Compiling semver v1.0.28
+   Compiling quick-xml v0.41.0
+   Compiling regex v1.12.4
+   Compiling base64 v0.22.1
+   Compiling percent-encoding v2.3.2
+   Compiling dtoa v1.0.11
+   Compiling yoke v0.8.3
+   Compiling bytes v1.12.0
+   Compiling anyhow v1.0.103
+   Compiling serde_with_macros v3.21.0
+   Compiling autocfg v1.5.1
+   Compiling indexmap v1.9.3
+   Compiling dtoa-short v0.3.5
+   Compiling form_urlencoded v1.2.2
+   Compiling uuid v1.23.4
+   Compiling bitflags v2.13.0
+   Compiling toml_datetime v1.1.1+spec-1.1.0
+   Compiling derive_more-impl v2.1.1
+   Compiling cssparser-macros v0.6.1
+   Compiling tendril v0.5.1
+   Compiling selectors v0.36.1
+   Compiling crc32fast v1.5.0
+   Compiling camino v1.2.4
+   Compiling ctor-proc-macro v0.0.7
+   Compiling objc2 v0.6.4
+   Compiling same-file v1.0.6
+   Compiling dunce v1.0.5
+   Compiling simd-adler32 v0.3.9
+   Compiling ctor v0.8.0
+   Compiling walkdir v2.5.0
+   Compiling derive_more v2.1.1
+   Compiling swift-rs v1.0.7
+   Compiling cssparser v0.36.0
+   Compiling markup5ever v0.38.0
+   Compiling toml v1.1.2+spec-1.1.0
+   Compiling zerovec v0.11.6
+   Compiling zerotrie v0.2.4
+   Compiling http v1.4.2
+   Compiling serde_derive_internals v0.29.1
+   Compiling generic-array v0.14.7
+   Compiling servo_arc v0.4.3
+   Compiling adler2 v2.0.1
+   Compiling schemars v0.8.22
+   Compiling rustc-hash v2.1.3
+   Compiling hashbrown v0.12.3
+   Compiling objc2-encode v4.1.0
+   Compiling glob v0.3.3
+   Compiling bit-vec v0.8.0
+   Compiling bit-set v0.8.0
+   Compiling schemars_derive v0.8.22
+   Compiling miniz_oxide v0.8.9
+   Compiling html5ever v0.38.0
+   Compiling jsonptr v0.6.3
+   Compiling cargo-platform v0.1.9
+   Compiling cfb v0.7.3
+   Compiling time v0.3.53
+   Compiling base64 v0.21.7
+   Compiling typenum v1.20.1
+   Compiling dyn-clone v1.0.20
+   Compiling foldhash v0.2.0
+   Compiling serde-untagged v0.1.9
+   Compiling infer v0.19.0
+   Compiling cargo_metadata v0.19.2
+   Compiling json-patch v3.0.1
+   Compiling plist v1.10.0
+   Compiling dom_query v0.27.0
+   Compiling flate2 v1.1.9
+   Compiling objc2-core-foundation v0.3.2
+   Compiling fdeflate v0.3.7
+   Compiling serde_with v3.21.0
+   Compiling shlex v2.0.1
+   Compiling tinystr v0.8.3
+   Compiling potential_utf v0.1.5
+   Compiling icu_collections v2.2.0
+   Compiling icu_locale_core v2.2.0
+   Compiling find-msvc-tools v0.1.9
+   Compiling cc v1.2.66
+   Compiling objc2-foundation v0.3.2
+   Compiling rustc_version v0.4.1
+   Compiling toml_datetime v0.7.5+spec-1.1.0
+   Compiling icu_provider v2.2.0
+   Compiling time-macros v0.2.31
+   Compiling icu_properties v2.2.0
+   Compiling icu_normalizer v2.2.0
+   Compiling winnow v0.7.15
+   Compiling option-ext v0.2.0
+   Compiling dirs-sys v0.5.0
+   Compiling embed-resource v3.0.11
+   Compiling crypto-common v0.1.7
+   Compiling block-buffer v0.10.4
+   Compiling idna_adapter v1.2.2
+   Compiling bitflags v1.3.2
+   Compiling heck v0.5.0
+   Compiling crossbeam-utils v0.8.22
+   Compiling png v0.17.16
+   Compiling idna v1.1.0
+   Compiling tauri-winres v0.3.6
+   Compiling url v2.5.8
+   Compiling toml v0.9.12+spec-1.1.0
+   Compiling digest v0.10.7
+   Compiling urlpattern v0.3.0
+   Compiling objc2-app-kit v0.3.2
+   Compiling cargo_toml v0.22.3
+   Compiling dirs v6.0.0
+   Compiling cpufeatures v0.2.17
+   Compiling cookie v0.18.1
+   Compiling sha2 v0.10.9
+   Compiling ico v0.5.0
+   Compiling dpi v0.1.2
+   Compiling tauri-utils v2.9.3
+   Compiling tauri-runtime v2.11.3
+   Compiling raw-window-handle v0.6.2
+   Compiling unicode-segmentation v1.13.3
+   Compiling getrandom v0.3.4
+   Compiling crossbeam-channel v0.5.16
+   Compiling keyboard-types v0.7.0
+   Compiling png v0.18.1
+   Compiling serialize-to-javascript-impl v0.1.2
+   Compiling once_cell v1.21.4
+   Compiling pin-project-lite v0.2.17
+   Compiling serde_repr v0.1.20
+   Compiling mime v0.3.17
+   Compiling tokio v1.52.3
+   Compiling embed_plist v1.2.2
+   Compiling serialize-to-javascript v0.1.2
+   Compiling objc2-web-kit v0.3.2
+   Compiling window-vibrancy v0.6.0
+   Compiling muda v0.19.3
+   Compiling tauri-build v2.6.3
+   Compiling tauri-codegen v2.6.3
+   Compiling tauri v2.11.5
+   Compiling tauri-macros v2.6.3
+   Compiling t1060-native-cli-verify v0.1.0 (/tmp/t1060-native-cli-verify)
+warning: constant `ACCESS_CHECK_INTERVAL` is never used
+  --> src/cli_access.rs:12:7
+   |
+12 | const ACCESS_CHECK_INTERVAL: std::time::Duration = std::time::Duration::from_secs(60);
+   |       ^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: struct `StoredActivity` is never constructed
+  --> src/cli_access.rs:82:8
+   |
+82 | struct StoredActivity {
+   |        ^^^^^^^^^^^^^^
+
+warning: struct `CliAccessStatus` is never constructed
+  --> src/cli_access.rs:90:12
+   |
+90 | pub struct CliAccessStatus {
+   |            ^^^^^^^^^^^^^^^
+
+warning: function `epoch_ms` is never used
+   --> src/cli_access.rs:161:4
+    |
+161 | fn epoch_ms() -> u64 {
+    |    ^^^^^^^^
+
+warning: function `default_connection_dir` is never used
+   --> src/cli_access.rs:202:8
+    |
+202 | pub fn default_connection_dir(product_id: &str) -> PathBuf {
+    |        ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `launcher_path` is never used
+   --> src/cli_access.rs:231:4
+    |
+231 | fn launcher_path() -> PathBuf {
+    |    ^^^^^^^^^^^^^
+
+warning: function `install_launcher` is never used
+   --> src/cli_access.rs:442:4
+    |
+442 | fn install_launcher(runtime: &CliAccessRuntime) -> Result<PathBuf, String> {
+    |    ^^^^^^^^^^^^^^^^
+
+warning: function `enable_runtime` is never used
+   --> src/cli_access.rs:475:4
+    |
+475 | fn enable_runtime(runtime: &CliAccessRuntime) -> Result<CliAccessStatus, String> {
+    |    ^^^^^^^^^^^^^^
+
+warning: function `start_renewal` is never used
+   --> src/cli_access.rs:538:4
+    |
+538 | fn start_renewal(state: &CliAccessState) {
+    |    ^^^^^^^^^^^^^
+
+warning: function `initialize` is never used
+   --> src/cli_access.rs:560:8
+    |
+560 | pub fn initialize(state: &CliAccessState, runtime: CliAccessRuntime) {
+    |        ^^^^^^^^^^
+
+warning: function `cli_access_status` is never used
+   --> src/cli_access.rs:578:8
+    |
+578 | pub fn cli_access_status(state: tauri::State<'_, CliAccessState>) -> CliAccessStatus {
+    |        ^^^^^^^^^^^^^^^^^
+
+warning: function `cli_access_enable` is never used
+   --> src/cli_access.rs:622:8
+    |
+622 | pub fn cli_access_enable(state: tauri::State<'_, CliAccessState>) -> Result<CliAccessStatus, String> {
+    |        ^^^^^^^^^^^^^^^^^
+
+warning: function `cli_access_revoke` is never used
+   --> src/cli_access.rs:633:8
+    |
+633 | pub fn cli_access_revoke(state: tauri::State<'_, CliAccessState>) -> Result<CliAccessStatus, String> {
+    |        ^^^^^^^^^^^^^^^^^
+
+warning: `t1060-native-cli-verify` (lib test) generated 13 warnings
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 46.36s
+     Running unittests src/lib.rs (/tmp/t1060-native-cli-verify/target/debug/deps/t1060_native_cli_verify-6fd7047ab18f806e)
+
+running 1 test
+test cli_access::tests::workbuddy_mcp_launch_is_exact_bundled_argv_without_credentials ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 9 filtered out; finished in 0.00s
+

@@ -8,7 +8,8 @@ export type CoverScope=Parameters<Parameters<ReturnType<typeof createExecutionLe
 export async function bindCoverExecution({tx,task,context}:CoverScope){
  const payload=task.payload as Record<string,unknown>,input=structuredGenerationInputSchema.parse(payload.modelInput);
  const [business]=await tx.select().from(aiTasks).where(and(eq(aiTasks.id,task.ownerId),eq(aiTasks.executionTaskId,task.id),eq(aiTasks.userId,context.userId),workspaceFilter(aiTasks,context)));
- if(task.kind!=="ai_task"||task.ownerType!=="ai_task"||payload.aiTaskId!==business?.id||business?.taskType!=="cover.generate"||input.skillId!=="cover.brief"||input.capability!=="copy.generate"||input.skillSnapshot.userId!==context.userId||input.skillSnapshot.accountId !== (context.accountId??null) || (input.skillSnapshot.groupId??null)!==(context.groupId??null))throw new ConflictError("封面缺少真实任务与当前账号绑定");
+ const paired=(business?.taskType==="cover.generate"&&input.skillId==="cover.brief")||(business?.taskType==="graphic.card.generate"&&input.skillId==="graphic.card-brief");
+ if(task.kind!=="ai_task"||task.ownerType!=="ai_task"||payload.aiTaskId!==business?.id||!paired||input.capability!=="copy.generate"||input.skillSnapshot.userId!==context.userId||input.skillSnapshot.accountId !== (context.accountId??null) || (input.skillSnapshot.groupId??null)!==(context.groupId??null))throw new ConflictError("封面缺少真实任务与当前账号绑定");
  if(input.facets.__coverTaskInputDigest!==generationRequestDigest({inputData:business.inputData,projectId:business.projectId}))throw new ConflictError("封面原业务输入已变化");
  const sourceDigest=generationRequestDigest({input});
  return {input,business,payload,sourceDigest};

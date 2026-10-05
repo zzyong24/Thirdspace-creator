@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "独立只读评审：范围明确，未发现阻断项。已核对实际页头文案、脚本正文 text-sm leading-relaxed、段落标题 text-[13px] font-semibold、区标题 text-[13.5px] font-semibold及公共按钮样式。限定前端展示，删除重复页头小字并保留作品切换、资料配置、真实保存反馈、历史、生成采纳及原生编辑器操作。内容预览主题和后端契约不变。折叠与保存状态需实际组件回归；未运行测试或浏览器，不声明视觉验收。",
+  "findings": []
+}

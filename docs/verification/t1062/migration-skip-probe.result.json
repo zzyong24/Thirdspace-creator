@@ -1,0 +1,82 @@
+{
+  "kind": "isolated-readonly-research-probe",
+  "source_refs": {
+    "root": "125bc864",
+    "diagnostic": "c5316506",
+    "canvas": "55a526d6"
+  },
+  "sql_root": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-lineage-probe-L8bmLJ",
+  "scope": "Original SQL and Drizzle0.36.4 reproducer; no product constructor, real user DB or installed acceptance",
+  "results": [
+    {
+      "baseline": "fresh",
+      "phase": "union-migrated",
+      "table_count": 184,
+      "required_presence": {
+        "account_groups": true,
+        "creative_canvases": true,
+        "creative_results": true,
+        "work_compositions": true,
+        "production_media_requests": true,
+        "visual_template_favorites": true
+      },
+      "missing": [],
+      "result": "DOMAIN_TABLES_PRESENT_NOT_FULL_ACCEPTANCE"
+    },
+    {
+      "baseline": "root",
+      "phase": "union-migrated",
+      "table_count": 137,
+      "required_presence": {
+        "account_groups": true,
+        "creative_canvases": false,
+        "creative_results": false,
+        "work_compositions": false,
+        "production_media_requests": false,
+        "visual_template_favorites": true
+      },
+      "missing": [
+        "creative_canvases",
+        "creative_results",
+        "work_compositions",
+        "production_media_requests"
+      ],
+      "result": "RED_MISSING_DOMAIN_TABLES"
+    },
+    {
+      "baseline": "diagnostic",
+      "phase": "union-migrated",
+      "table_count": 184,
+      "required_presence": {
+        "account_groups": true,
+        "creative_canvases": true,
+        "creative_results": true,
+        "work_compositions": true,
+        "production_media_requests": true,
+        "visual_template_favorites": true
+      },
+      "missing": [],
+      "result": "DOMAIN_TABLES_PRESENT_NOT_FULL_ACCEPTANCE"
+    },
+    {
+      "baseline": "canvas",
+      "phase": "union-migrated",
+      "table_count": 130,
+      "required_presence": {
+        "account_groups": false,
+        "creative_canvases": true,
+        "creative_results": false,
+        "work_compositions": false,
+        "production_media_requests": false,
+        "visual_template_favorites": true
+      },
+      "missing": [
+        "account_groups",
+        "creative_results",
+        "work_compositions",
+        "production_media_requests"
+      ],
+      "result": "RED_MISSING_DOMAIN_TABLES"
+    }
+  ]
+}

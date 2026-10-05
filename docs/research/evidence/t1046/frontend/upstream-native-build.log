@@ -1,0 +1,20 @@
+vite v6.4.3 building for production...
+transforming...
+✓ 2513 modules transformed.
+[plugin vite:reporter] 
+(!) /private/tmp/t1046-ui-work/upstream/opencut-classic-source/apps/web/src/stickers/providers/countries-data.ts is dynamically imported by /private/tmp/t1046-ui-work/upstream/opencut-classic-source/apps/web/src/stickers/providers/flags.ts but also statically imported by /private/tmp/t1046-ui-work/upstream/opencut-classic-source/apps/web/src/stickers/providers/flags.ts, dynamic import will not move module into another chunk.
+
+rendering chunks...
+computing gzip size...
+embedded-dist/index.html                                0.34 kB │ gzip:     0.26 kB
+embedded-dist/THIRD_PARTY_LICENSES.json                17.13 kB │ gzip:     1.44 kB
+embedded-dist/THIRD_PARTY_LICENSES.txt                122.99 kB │ gzip:    20.43 kB
+embedded-dist/assets/opencut_wasm_bg-BWSypKWK.wasm  3,037.90 kB │ gzip: 1,105.84 kB
+embedded-dist/assets/index-BWk2A5SJ.css               113.09 kB │ gzip:    18.02 kB
+embedded-dist/assets/index-qIbIhzgy.js              1,770.12 kB │ gzip:   504.54 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 5.25s

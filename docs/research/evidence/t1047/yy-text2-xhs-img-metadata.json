@@ -1,0 +1,388 @@
+{
+  "repo": {
+    "id": 1350560832,
+    "node_id": "R_kgDOUH_sQA",
+    "name": "yy-text2-xhs-img",
+    "full_name": "ivercurry99/yy-text2-xhs-img",
+    "private": false,
+    "owner": {
+      "login": "ivercurry99",
+      "id": 303988273,
+      "node_id": "U_kgDOEh5-MQ",
+      "avatar_url": "https://avatars.githubusercontent.com/u/303988273?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/ivercurry99",
+      "html_url": "https://github.com/ivercurry99",
+      "followers_url": "https://api.github.com/users/ivercurry99/followers",
+      "following_url": "https://api.github.com/users/ivercurry99/following{/other_user}",
+      "gists_url": "https://api.github.com/users/ivercurry99/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/ivercurry99/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/ivercurry99/subscriptions",
+      "organizations_url": "https://api.github.com/users/ivercurry99/orgs",
+      "repos_url": "https://api.github.com/users/ivercurry99/repos",
+      "events_url": "https://api.github.com/users/ivercurry99/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/ivercurry99/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "html_url": "https://github.com/ivercurry99/yy-text2-xhs-img",
+    "description": "Generates 3:4 Xiaohongshu-style images from short text. 8 built-in style presets; if one image API fails, the next provider is tried automatically. 依据简短文本生成小红书常用的 3:4 比例图文，内置 8 套风格预设。若某一处出图接口返回错误，脚本会自动切换到备用接口继续处理。",
+    "fork": false,
+    "url": "https://api.github.com/repos/ivercurry99/yy-text2-xhs-img",
+    "forks_url": "https://api.github.com/repos/ivercurry99/yy-text2-xhs-img/forks",
+    "keys_url": "https://api.github.com/repos/ivercurry99/yy-text2-xhs-img/keys{/key_id}",
+    "collaborators_url": "https://api.github.com/repos/ivercurry99/yy-text2-xhs-img/collaborators{/collaborator}",
+    "teams_url": "https://api.github.com/repos/ivercurry99/yy-text2-xhs-img/teams",
+    "hooks_url": "https://api.github.com/repos/ivercurry99/yy-text2-xhs-img/hooks",
+    "issue_events_url": "https://api.github.com/repos/ivercurry99/yy-text2-xhs-img/issues/events{/number}",
+    "events_url": "https://api.github.com/repos/ivercurry99/yy-text2-xhs-img/events",
+    "assignees_url": "https://api.github.com/repos/ivercurry99/yy-text2-xhs-img/assignees{/user}",
+    "branches_url": "https://api.github.com/repos/ivercurry99/yy-text2-xhs-img/branches{/branch}",
+    "tags_url": "https://api.github.com/repos/ivercurry99/yy-text2-xhs-img/tags",
+    "blobs_url": "https://api.github.com/repos/ivercurry99/yy-text2-xhs-img/git/blobs{/sha}",
+    "git_tags_url": "https://api.github.com/repos/ivercurry99/yy-text2-xhs-img/git/tags{/sha}",
+    "git_refs_url": "https://api.github.com/repos/ivercurry99/yy-text2-xhs-img/git/refs{/sha}",
+    "trees_url": "https://api.github.com/repos/ivercurry99/yy-text2-xhs-img/git/trees{/sha}",
+    "statuses_url": "https://api.github.com/repos/ivercurry99/yy-text2-xhs-img/statuses/{sha}",
+    "languages_url": "https://api.github.com/repos/ivercurry99/yy-text2-xhs-img/languages",
+    "stargazers_url": "https://api.github.com/repos/ivercurry99/yy-text2-xhs-img/stargazers",
+    "contributors_url": "https://api.github.com/repos/ivercurry99/yy-text2-xhs-img/contributors",
+    "subscribers_url": "https://api.github.com/repos/ivercurry99/yy-text2-xhs-img/subscribers",
+    "subscription_url": "https://api.github.com/repos/ivercurry99/yy-text2-xhs-img/subscription",
+    "commits_url": "https://api.github.com/repos/ivercurry99/yy-text2-xhs-img/commits{/sha}",
+    "git_commits_url": "https://api.github.com/repos/ivercurry99/yy-text2-xhs-img/git/commits{/sha}",
+    "comments_url": "https://api.github.com/repos/ivercurry99/yy-text2-xhs-img/comments{/number}",
+    "issue_comment_url": "https://api.github.com/repos/ivercurry99/yy-text2-xhs-img/issues/comments{/number}",
+    "contents_url": "https://api.github.com/repos/ivercurry99/yy-text2-xhs-img/contents/{+path}",
+    "compare_url": "https://api.github.com/repos/ivercurry99/yy-text2-xhs-img/compare/{base}...{head}",
+    "merges_url": "https://api.github.com/repos/ivercurry99/yy-text2-xhs-img/merges",
+    "archive_url": "https://api.github.com/repos/ivercurry99/yy-text2-xhs-img/{archive_format}{/ref}",
+    "downloads_url": "https://api.github.com/repos/ivercurry99/yy-text2-xhs-img/downloads",
+    "issues_url": "https://api.github.com/repos/ivercurry99/yy-text2-xhs-img/issues{/number}",
+    "pulls_url": "https://api.github.com/repos/ivercurry99/yy-text2-xhs-img/pulls{/number}",
+    "milestones_url": "https://api.github.com/repos/ivercurry99/yy-text2-xhs-img/milestones{/number}",
+    "notifications_url": "https://api.github.com/repos/ivercurry99/yy-text2-xhs-img/notifications{?since,all,participating}",
+    "labels_url": "https://api.github.com/repos/ivercurry99/yy-text2-xhs-img/labels{/name}",
+    "releases_url": "https://api.github.com/repos/ivercurry99/yy-text2-xhs-img/releases{/id}",
+    "deployments_url": "https://api.github.com/repos/ivercurry99/yy-text2-xhs-img/deployments",
+    "created_at": "2026-08-29T12:20:39Z",
+    "updated_at": "2026-09-19T06:39:56Z",
+    "pushed_at": "2026-09-19T06:39:52Z",
+    "git_url": "git://github.com/ivercurry99/yy-text2-xhs-img.git",
+    "ssh_url": "git@github.com:ivercurry99/yy-text2-xhs-img.git",
+    "clone_url": "https://github.com/ivercurry99/yy-text2-xhs-img.git",
+    "svn_url": "https://github.com/ivercurry99/yy-text2-xhs-img",
+    "homepage": "https://github.com/ivercurry99/yy-text2-xhs-img",
+    "size": 90,
+    "stargazers_count": 1,
+    "watchers_count": 1,
+    "language": "Python",
+    "has_issues": true,
+    "has_projects": true,
+    "has_downloads": false,
+    "has_wiki": true,
+    "has_pages": false,
+    "has_discussions": false,
+    "forks_count": 0,
+    "mirror_url": null,
+    "archived": false,
+    "disabled": false,
+    "open_issues_count": 0,
+    "license": {
+      "key": "mit",
+      "name": "MIT License",
+      "spdx_id": "MIT",
+      "url": "https://api.github.com/licenses/mit",
+      "node_id": "MDc6TGljZW5zZTEz"
+    },
+    "allow_forking": true,
+    "is_template": false,
+    "web_commit_signoff_required": false,
+    "has_pull_requests": true,
+    "pull_request_creation_policy": "all",
+    "topics": [
+      "ai-content-creation",
+      "ai-image-generation",
+      "dalle3",
+      "flux",
+      "little-red-book",
+      "prompt-engineering",
+      "python",
+      "seedream",
+      "social-media-content",
+      "stable-diffusion",
+      "text-to-image",
+      "xiaohongshu"
+    ],
+    "visibility": "public",
+    "forks": 0,
+    "open_issues": 0,
+    "watchers": 1,
+    "default_branch": "main",
+    "temp_clone_token": null,
+    "network_count": 0,
+    "subscribers_count": 0
+  },
+  "commit": {
+    "sha": "12521824dc5525790cca4d5f7ce909c7551fa23d",
+    "node_id": "C_kwDOUH_sQNoAKDEyNTIxODI0ZGM1NTI1NzkwY2NhNGQ1ZjdjZTkwOWM3NTUxZmEyM2Q",
+    "commit": {
+      "author": {
+        "name": "ivercurry99",
+        "email": "ivercurry99@users.noreply.github.com",
+        "date": "2026-09-19T06:39:45Z"
+      },
+      "committer": {
+        "name": "ivercurry99",
+        "email": "ivercurry99@users.noreply.github.com",
+        "date": "2026-09-19T06:39:45Z"
+      },
+      "message": "重写 README\n\n按阅读顺序重新组织：项目用途、问题处理方式、安装和快速上手放在前面。\n去掉表情符号、口号式表述和没有依据的场景描述。",
+      "tree": {
+        "sha": "74aa929ca4053cdd56439a14d3397117f5d5391f",
+        "url": "https://api.github.com/repos/ivercurry99/yy-text2-xhs-img/git/trees/74aa929ca4053cdd56439a14d3397117f5d5391f"
+      },
+      "url": "https://api.github.com/repos/ivercurry99/yy-text2-xhs-img/git/commits/12521824dc5525790cca4d5f7ce909c7551fa23d",
+      "comment_count": 0,
+      "verification": {
+        "verified": false,
+        "reason": "unsigned",
+        "signature": null,
+        "payload": null,
+        "verified_at": null
+      }
+    },
+    "url": "https://api.github.com/repos/ivercurry99/yy-text2-xhs-img/commits/12521824dc5525790cca4d5f7ce909c7551fa23d",
+    "html_url": "https://github.com/ivercurry99/yy-text2-xhs-img/commit/12521824dc5525790cca4d5f7ce909c7551fa23d",
+    "comments_url": "https://api.github.com/repos/ivercurry99/yy-text2-xhs-img/commits/12521824dc5525790cca4d5f7ce909c7551fa23d/comments",
+    "author": {
+      "login": "ivercurry99",
+      "id": 303988273,
+      "node_id": "U_kgDOEh5-MQ",
+      "avatar_url": "https://avatars.githubusercontent.com/u/303988273?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/ivercurry99",
+      "html_url": "https://github.com/ivercurry99",
+      "followers_url": "https://api.github.com/users/ivercurry99/followers",
+      "following_url": "https://api.github.com/users/ivercurry99/following{/other_user}",
+      "gists_url": "https://api.github.com/users/ivercurry99/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/ivercurry99/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/ivercurry99/subscriptions",
+      "organizations_url": "https://api.github.com/users/ivercurry99/orgs",
+      "repos_url": "https://api.github.com/users/ivercurry99/repos",
+      "events_url": "https://api.github.com/users/ivercurry99/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/ivercurry99/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "committer": {
+      "login": "ivercurry99",
+      "id": 303988273,
+      "node_id": "U_kgDOEh5-MQ",
+      "avatar_url": "https://avatars.githubusercontent.com/u/303988273?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/ivercurry99",
+      "html_url": "https://github.com/ivercurry99",
+      "followers_url": "https://api.github.com/users/ivercurry99/followers",
+      "following_url": "https://api.github.com/users/ivercurry99/following{/other_user}",
+      "gists_url": "https://api.github.com/users/ivercurry99/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/ivercurry99/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/ivercurry99/subscriptions",
+      "organizations_url": "https://api.github.com/users/ivercurry99/orgs",
+      "repos_url": "https://api.github.com/users/ivercurry99/repos",
+      "events_url": "https://api.github.com/users/ivercurry99/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/ivercurry99/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "parents": [
+      {
+        "sha": "4ba0b887c45a9e1266c286fde165928f48050ecc",
+        "url": "https://api.github.com/repos/ivercurry99/yy-text2-xhs-img/commits/4ba0b887c45a9e1266c286fde165928f48050ecc",
+        "html_url": "https://github.com/ivercurry99/yy-text2-xhs-img/commit/4ba0b887c45a9e1266c286fde165928f48050ecc"
+      }
+    ],
+    "stats": {
+      "total": 144,
+      "additions": 59,
+      "deletions": 85
+    },
+    "files": [
+      {
+        "sha": "c1e0ae8bb0162f242e8d4b9726917a59d2de95e0",
+        "filename": "README.md",
+        "status": "modified",
+        "additions": 59,
+        "deletions": 85,
+        "changes": 144,
+        "blob_url": "https://github.com/ivercurry99/yy-text2-xhs-img/blob/12521824dc5525790cca4d5f7ce909c7551fa23d/README.md",
+        "raw_url": "https://github.com/ivercurry99/yy-text2-xhs-img/raw/12521824dc5525790cca4d5f7ce909c7551fa23d/README.md",
+        "contents_url": "https://api.github.com/repos/ivercurry99/yy-text2-xhs-img/contents/README.md?ref=12521824dc5525790cca4d5f7ce909c7551fa23d",
+        "patch": "@@ -1,47 +1,34 @@\n-<p align=\"center\">\n-  <strong><samp>yy-text2-xhs-img</samp></strong><br>\n-  <sub>简短文本生成小红书图文 · 风格预设固定 · 出图接口故障时自动切换</sub>\n-</p>\n-\n-<p align=\"center\">\n-  <a href=\"#项目简介\"><kbd>项目简介</kbd></a>\n-  <a href=\"#为什么能做到稳定出图\"><kbd>稳定性设计</kbd></a>\n-  <a href=\"#八套内置风格预设\"><kbd>8 套预设</kbd></a>\n-  <a href=\"#安装方式\"><kbd>安装</kbd></a>\n-  <a href=\"#快速上手\"><kbd>快速上手</kbd></a>\n-  <a href=\"#路线图与贡献\"><kbd>路线 & 贡献</kbd></a>\n-  <a href=\"#许可证\"><kbd>许可证</kbd></a>\n-</p>\n-\n----\n+# yy-text2-xhs-img\n+\n+把简短文本转换成小红书图文配图。风格预设、负面词和尺寸映射在调用模型前由配置文件确定，出图接口故障时按顺序切换供应商，每张图片生成后做文件完整性和比例校验。\n \n ## 项目简介\n \n-`yy-text2-xhs-img` 接收简短文本需求（例如「夏天油皮护肤三步曲，做 4 张小红书配图」），输出 3:4 或其他常用比例的图片文件。调用出图接口前，各家供应商的尺寸映射、调色板、构图规则和风格负面词都由预设文件确定，避免每次调用都重新编写提示词。\n+`yy-text2-xhs-img` 接收简短文本需求（例如「夏天油皮护肤三步曲，做 4 张小红书配图」），输出 3:4 或其他常用比例的图片文件。调用出图接口前，各家供应商的尺寸映射、调色板、构图规则和风格负面词都由预设文件确定，不需要每次调用都重新编写提示词。\n \n-核心脚本 `scripts/generate.py` 处理了以下几类实际问题：\n+核心脚本 `scripts/generate.py` 处理以下几类问题：\n \n-| 常见痛点 | 本仓库的解法 |\n+| 问题 | 处理方式 |\n |---|---|\n-| 🎨 同一次出图里卡片之间颜色/风格飘了 | **8 套风格预设 JSON** — 经过小红书实测的造型手册，调色板 5 色锁定、构图、灯光、氛围、镜头 + 反风格负面词一应俱全。 |\n-| ⛔ 水印 / 畸形人体 / 乱码文字 | **通用负面词库（30+ 条）** + 预设专属负面词 + 用户自定义负面词，**每一次**调用全部分层叠加。 |\n-| 🚦 一个供应商挂了 → 整篇笔记卡住 | **4 路供应商降级链**：TRAE 内置 → Seedream 插件 → DALL·E 3 → FLUX。每家最多重试 3 次、指数退避；全挂再切下一家。 |\n-| 📏 小红书首页比例不对，被硬裁切 | **固定 sizeMap**：3:4 / 1:1 / 4:3 / 9:16 对应各家供应商最接近的原生尺寸桶。 |\n-| 🚫 损坏/截断图片悄悄发出去了 | **每张图必检**：PNG Magic 头 + 50 KB 下限 + 比例容差 < 1%；失败自动重试，不合格文件移入 `_failed/`。 |\n-| 🔁 \"上周那篇出图效果好，想一模一样再来一次\" | **manifest.json** 记录每张卡片的供应商 ID、种子、Prompt、预设、尺寸 — 重新执行即可 1:1 复现。 |\n+| 同一次出图里，卡片之间的颜色和风格不一致 | 8 套风格预设（`styles/presets.json`），每套锁定 5 色调色板、构图、灯光、氛围、镜头和反风格负面词 |\n+| 生成结果出现水印、畸形人体、乱码文字 | 通用负面词库（30+ 条）、预设专属负面词和用户自定义负面词在每次调用时分层叠加 |\n+| 一个供应商故障导致整篇笔记无法完成 | 4 路供应商降级链：TRAE 内置 → Seedream 插件 → DALL·E 3 → FLUX。每家最多重试 3 次（指数退避），全部失败后切换下一家 |\n+| 图片比例不符合小红书首页要求 | 固定 sizeMap：3:4 / 1:1 / 4:3 / 9:16 对应各供应商最接近的原生尺寸 |\n+| 损坏或截断的图片被误认为生成成功 | 每张图检查 PNG 文件头、50 KB 下限和比例容差（< 1%），不合格的文件移入 `_failed/` 并重试 |\n+| 需要复现某一次出图 | `manifest.json` 记录每张卡片的供应商 ID、种子、Prompt、预设和尺寸，重新执行即可复现 |\n \n-支持两种运行模式，无论你是在智能体宿主（TRAE / Codex / Claude Desktop 的 skills 目录）里跑，还是在 Shell 中直接调 API，走的都是同一套核心逻辑：\n+## 运行模式\n \n-- **智能体模式（默认）**：先写一份 `tasks.json` 描述每张卡片；宿主调用自带的 `GenerateImage` / Seedream 插件把 PNG 丢进运行目录；脚本二次校验 + 写 manifest。\n-- **API 模式（`--mode api`）**：环境变量存在 Key 时，脚本直接调 OpenAI DALL·E 3 / FAL FLUX 生成。\n+两种模式走同一套核心逻辑：\n \n----\n+- 智能体模式（默认）：脚本生成 `tasks.json` 描述每张卡片；宿主（TRAE / Codex / Claude Desktop 的 skills 目录）调用自带的 `GenerateImage` 或 Seedream 插件生成图片；脚本随后校验文件并写入 manifest。\n+- API 模式（`--mode api`）：环境变量存在 Key 时，脚本直接调用 OpenAI DALL·E 3 或 FAL FLUX。\n \n-## 为什么能做到稳定出图？\n+## Prompt 拼接与定制\n \n-因为**一致性才是小红书笔记的产品力**。读者在刷 4 张 carousel 的时候，如果第 1 张是奶油 INS 风、第 2 张突然跳成 Y2K 铬金属，他在看到 CTA 之前就会划走。脚本强制用一套严格的 **Prompt 拼接顺序**：主体还原 → 构图 → 灯光 → 氛围 → 调色板锁定 → 场景具象化 → 角色定位，**之后**再给封面/步骤卡/过渡卡/收尾图拼上各自的角色话术。\n+每次调用模型前，脚本按固定顺序拼接 Prompt：主体还原 → 构图 → 灯光 → 氛围 → 调色板锁定 → 场景具象化 → 角色定位，然后为封面、步骤卡、过渡卡和收尾图分别拼上各自的角色话术。\n \n-在此之上，你仍然可以通过 CLI 参数自由定制：\n+在此基础上，CLI 参数可以定制每次出图：\n \n ```\n --keywords \"道具1, 道具2, 材质3\"\n@@ -51,32 +38,28 @@\n --extra-prompt-suffix \"品牌一致性规则：圆形点缀、烫金线条\"\n ```\n \n-所有核心逻辑都是纯函数并经过单测，库里不会偷偷播种随机数。\n-\n----\n+核心逻辑是纯函数并有单元测试覆盖；脚本内部不播种随机数，两次运行之间不存在隐藏状态。\n \n-## 八套内置风格预设\n+## 风格预设\n \n-每套预设都是调优、锁死、并且**小红书原生适配**过的造型手册，都包含 **5 色调色板**、**4+ 条构图规则**、**4+ 条灯光规则**、**氛围 + 镜头 + 质量增强 + 反风格负面词**：\n+8 套内置预设，每套包含 5 色调色板、4 条以上构图规则、4 条以上灯光规则，以及氛围、镜头、质量增强和反风格负面词：\n \n | `--style` | 视觉印象 | 最适合 |\n |---|---|---|\n | `ins-aesthetic` | 奶白 + 50mm 柔光窗边 + 低对比 + 留白柔和 | 护肤 · 穿搭平铺 · 生活方式 |\n-| `clean-minimal` | 100% 纯白无缝 + 俯视对称 + 硬接触阴影 | 单品主图 · 美妆 · 电商画册 |\n+| `clean-minimal` | 纯白无缝 + 俯视对称 + 硬接触阴影 | 单品主图 · 美妆 · 电商画册 |\n | `neo-chinese` | 朱砂红 + 24K 金 + 水墨晕染 + 国潮纹样 | 节日 · 茶饮 · 口红 · 文创 |\n | `y2k-funky` | 品红/青蓝 铬金属 + 闪光灯过曝 + 珠光亮面 | Z世代 · 校园 · 潮流 · 夏日选题 |\n | `magazine-editorial` | Portra 400 颗粒 + 大片 3 灯布光 + 三分法 + 30% 安全文案区 | 深度长文 · 观点笔记 · 高定穿搭 |\n | `emotional-daily` | 黄金时段暖色 + 35mm 抓拍 + 胶卷重颗粒 + 生活切片 | 美食日记 · 探店 · 旅行情绪 |\n | `product-flatlay` | 正 90° 平铺 + 麻布/牛皮纸背景 + 道具同色系点缀 | 合集 · 开箱 · 护肤步骤 · 拆箱 |\n | `cute-illustration` | 粗边圆润描边 + 三丽鸥马卡龙色 + 扁平矢量 | 知识卡片 · 教程 · 儿童教育 |\n \n-完整 Schema 见 `styles/presets.json`；如何追加自定义预设详见 `references/prompt-engineering.md` 第 7 节。\n-\n----\n+完整 Schema 见 `styles/presets.json`；追加自定义预设的方法见 `references/prompt-engineering.md` 第 7 节。\n \n-## 安装方式\n+## 安装\n \n-### 1. 作为智能体 Skill 安装\n+### 作为智能体 Skill 安装\n \n 把下面这句话发给任意支持 Skill 的智能体（TRAE、Claude Desktop、Alma、Codex…）：\n \n@@ -100,24 +83,24 @@ npx skills add ivercurry99/yy-text2-xhs-img\n git clone https://github.com/ivercurry99/yy-text2-xhs-img.git <your-skills-dir>/yy-text2-xhs-img\n ```\n \n-### 2. 安装可选 Python 依赖（仅 `--mode api` 需要）\n+### 安装 Python 依赖（仅 `--mode api` 需要）\n \n ```bash\n cd yy-text2-xhs-img\n pip install -r requirements.txt\n ```\n \n-流水线核心的唯一硬依赖是 Python 3.10+。图片校验环节在 Pillow 已安装时使用 Pillow，否则自动退回纯 Python 的 PNG IHDR 解析实现 — 也就是说，在**纯标准库**环境里，dry-run 和智能体模式也能照常工作。\n+流水线核心的唯一硬依赖是 Python 3.10+。图片校验环节在 Pillow 已安装时使用 Pillow，否则退回纯 Python 的 PNG IHDR 解析；纯标准库环境下，dry-run 和智能体模式可以照常工作。\n \n-### 3. （可选）配置 API Key\n+### 配置 API Key（可选）\n \n-详见 `references/fallback-strategy.md`。只有你要用 `--mode api` 调 DALL·E 3 / FAL FLUX 时才需要 Key；默认降级链里的前两级（TRAE 内置 + Seedream 插件）是**完全零配置**的。\n-\n----\n+详见 `references/fallback-strategy.md`。只有用 `--mode api` 调 DALL·E 3 / FAL FLUX 时才需要 Key；默认降级链的前两级（TRAE 内置 + Seedream 插件）不需要任何配置。\n \n ## 快速上手\n \n-### 花额度之前，先空跑看 Prompt\n+### 先空跑查看 Prompt\n+\n+调用模型前，可以先用 `--dry-run-prompts` 打印完整的 Prompt 和负面词，确认调色板锁定行和场景细节后再实际生成。新的选题建议先空跑一次：\n \n ```bash\n cd yy-text2-xhs-img\n@@ -129,9 +112,7 @@ python scripts/generate.py ^\n   --dry-run-prompts\n ```\n \n-这条命令会把**封面 + 3 张正文**的 Prompt 和负面词完整打印出来，方便你在调用模型前先核对调色板锁死行和场景细节。新的选题强烈建议先空跑一次。\n-\n-### 智能体模式（默认） — 用宿主自带的生图工具\n+### 智能体模式（默认）\n \n ```bash\n python scripts/generate.py ^\n@@ -141,12 +122,13 @@ python scripts/generate.py ^\n   --ratio 3:4\n ```\n \n-它会：\n+执行过程：\n+\n 1. 生成 `output/<run-id>/tasks.json`，每张卡片一个任务（Prompt、负面词、TRAE 尺寸预设、比例、宽高）。\n-2. 把路径打印出来；宿主依次读取任务，调用 `GenerateImage` 或 Seedream 插件，将 `cover.png`、`card_1.png`……写入运行目录。\n-3. 调用 `--resume <run-id>` 进行 PNG 校验 + 写 `manifest.json`。\n+2. 打印路径；宿主依次读取任务，调用 `GenerateImage` 或 Seedream 插件，将 `cover.png`、`card_1.png` 等写入运行目录。\n+3. 调用 `--resume <run-id>` 校验 PNG 文件并写 `manifest.json`。\n \n-### API 模式 — 直连 DALL·E 3 / FLUX（环境变量里有 Key 时）\n+### API 模式\n \n ```powershell\n # 每个 Shell 先设置一次 Key（PowerShell 示例）：\n@@ -163,26 +145,22 @@ python scripts/generate.py ^\n   --providers fal-flux,dalle3   # 只选付费供应商，跳过智能体专用的\n ```\n \n-失败的调用会按 2 → 4 → 8 秒退避重试 3 次；某家供应商彻底挂了就切到下一家；**每一张**图片写进 manifest 之前都必须通过 PNG 头校验和比例校验。\n+失败的调用按 2 → 4 → 8 秒退避重试 3 次；某家供应商连续失败后切换下一家；每张图片写入 manifest 前都要通过 PNG 头校验和比例校验。\n \n-### 严格模式（像素级比例对齐）\n+### 严格模式\n \n-默认比例容差是 1%（允许尺寸桶取整的误差）。如果你的笔记版式是硬裁切裁切框、必须严格 3:4，加上 `--strict`：\n+默认比例容差是 1%，允许尺寸桶取整的误差。如果笔记版式要求严格的 3:4，加 `--strict` 把软警告升级为硬拒绝，连续 3 次失败后切换供应商：\n \n ```bash\n python scripts/generate.py … --strict\n ```\n \n-原本的软警告会升级为硬拒绝 → 重试 → 连续 3 次失败就换下一家供应商。\n-\n----\n-\n ## 仓库结构\n \n ```text\n yy-text2-xhs-img/\n ├── SKILL.md                        # Skill 清单 + 智能体执行规则\n-├── README.md                       # ← 你当前看的就是这份\n+├── README.md\n ├── LICENSE                         # MIT 许可证\n ├── requirements.txt                # 可选 Python 依赖\n │\n@@ -198,7 +176,7 @@ yy-text2-xhs-img/\n │   └── fallback-strategy.md        # 降级链行为细节 + Key 配置 + resume 语义\n │\n ├── tests/\n-│   └── test_generate.py            # 纯函数单测（无网络），覆盖 6 大类逻辑\n+│   └── test_generate.py            # 纯函数单测（无网络）\n │\n ├── evals/\n │   └── evals.json                  # Prompt/尺寸/降级链 三方面的回归用例\n@@ -207,16 +185,14 @@ yy-text2-xhs-img/\n     └── workflows/ci.yml            # Ubuntu-22.04 × Py 3.10/3.11/3.12：语法校验 + 预设结构校验 + pytest\n ```\n \n----\n-\n-## 本地跑测试\n+## 测试\n \n ```bash\n-pip install -r requirements.txt   # 至少装 pytest；Pillow 能打开额外校验分支\n+pip install -r requirements.txt   # 至少需要 pytest；Pillow 能打开额外校验分支\n pytest tests/test_generate.py -v --cov=scripts --cov-report=term\n ```\n \n-测试覆盖的点：\n+测试覆盖以下内容：\n \n - 预设 Schema 完整性（每个字段都有，不空）\n - 8 套内置预设 × 尺寸映射 × 通用负面词\n@@ -227,26 +203,24 @@ pytest tests/test_generate.py -v --cov=scripts --cov-report=term\n - 主题关键词 → 场景具象化命中\n - PNG Magic & 尺寸校验（含纯 Python IHDR 解析回退路径）\n - 尺寸映射查询 + 1080×1440 假 PNG 的比例匹配\n-- 全空环境下供应商降级 → 预期 \"全部失败\"（不是 bug）\n-- 5 张卡 国潮口红 选题的 CLI dry-run JSON 往返\n-\n----\n+- 全空环境下供应商降级 → 预期「全部失败」（不是 bug）\n+- 5 张卡国潮口红选题的 CLI dry-run JSON 往返\n \n-## 路线图与贡献\n+## 参与贡献\n \n 近期计划：\n-- [ ] 新增第二波适配器：`fal-ai/flux-pro` 和 Seedream 5（等官方暴露接口）。\n-- [ ] 集级一致性：支持 `--same-seed <N>`，用 manifest 中的种子重跑扩图。\n-- [ ] 第 9 套预设 `k-beauty-glow`（已有人提需求）& 品牌自定义预设子文件教程。\n-- [ ] 端到端：PR 级别 `--dry-run` 的 Actions 冒烟测试。\n+\n+- [ ] 新增适配器 `fal-ai/flux-pro` 和 Seedream 5（等待官方暴露接口）。\n+- [ ] 支持 `--same-seed <N>`，用 manifest 中的种子重跑并扩图。\n+- [ ] 新增第 9 套预设 `k-beauty-glow`，以及品牌自定义预设子文件的教程。\n+- [ ] 在 Actions 中加入 PR 级别的 `--dry-run` 冒烟测试。\n \n 贡献流程：\n-1. 先开 issue 描述你修改要解决的场景（避免重复劳动，也能挡住跑偏的 PR）。\n-2. 对应测试加进 `tests/test_generate.py`，保证修完就不再回退。新增预设的话，在 `TestPresetSchema` 里加一段显式断言，并在 `evals/evals.json` 补一组回归用例。\n-3. 本地全量测试过：在**纯标准库**和**装了 Pillow** 两种环境都跑 `pytest tests/ -v`，确保纯 Python PNG 解析路径没被你弄坏。\n-4. 发 PR，CI 会再跑一遍矩阵。\n \n----\n+1. 先开 issue 描述修改要解决的场景，避免重复劳动。\n+2. 对应测试加进 `tests/test_generate.py`，保证修完不回退。新增预设时，在 `TestPresetSchema` 里加显式断言，并在 `evals/evals.json` 补一组回归用例。\n+3. 在纯标准库和安装了 Pillow 的两种环境里分别运行 `pytest tests/ -v`，确认纯 Python PNG 解析路径正常。\n+4. 发 PR，CI 会再运行一遍测试矩阵。\n \n ## 许可证\n "
+      }
+    ]
+  },
+  "tree": {
+    "sha": "12521824dc5525790cca4d5f7ce909c7551fa23d",
+    "url": "https://api.github.com/repos/ivercurry99/yy-text2-xhs-img/git/trees/12521824dc5525790cca4d5f7ce909c7551fa23d",
+    "tree": [
+      {
+        "path": ".github",
+        "mode": "040000",
+        "type": "tree",
+        "sha": "5980e66800cec3a3d0fe3055eebac0711e0065f0",
+        "url": "https://api.github.com/repos/ivercurry99/yy-text2-xhs-img/git/trees/5980e66800cec3a3d0fe3055eebac0711e0065f0"
+      },
+      {
+        "path": ".github/workflows",
+        "mode": "040000",
+        "type": "tree",
+        "sha": "36706cd127ed238b3489f2b159801b65e65120ce",
+        "url": "https://api.github.com/repos/ivercurry99/yy-text2-xhs-img/git/trees/36706cd127ed238b3489f2b159801b65e65120ce"
+      },
+      {
+        "path": ".github/workflows/ci.yml",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "d79feb5f61b90f498cf03b836736b10927643c29",
+        "size": 2958,
+        "url": "https://api.github.com/repos/ivercurry99/yy-text2-xhs-img/git/blobs/d79feb5f61b90f498cf03b836736b10927643c29"
+      },
+      {
+        "path": ".gitignore",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "fccf54f58db3b404e84b1e586dd419baca457d26",
+        "size": 903,
+        "url": "https://api.github.com/repos/ivercurry99/yy-text2-xhs-img/git/blobs/fccf54f58db3b404e84b1e586dd419baca457d26"
+      },
+      {
+        "path": "LICENSE",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "df2bc03ebac465b5b139b4749a8845ef7ad70f4a",
+        "size": 1068,
+        "url": "https://api.github.com/repos/ivercurry99/yy-text2-xhs-img/git/blobs/df2bc03ebac465b5b139b4749a8845ef7ad70f4a"
+      },
+      {
+        "path": "README.md",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "c1e0ae8bb0162f242e8d4b9726917a59d2de95e0",
+        "size": 10345,
+        "url": "https://api.github.com/repos/ivercurry99/yy-text2-xhs-img/git/blobs/c1e0ae8bb0162f242e8d4b9726917a59d2de95e0"
+      },
+      {
+        "path": "SKILL.md",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "503a55eb4aa1b6a487983a68308173ce6157541e",
+        "size": 8902,
+        "url": "https://api.github.com/repos/ivercurry99/yy-text2-xhs-img/git/blobs/503a55eb4aa1b6a487983a68308173ce6157541e"
+      },
+      {
+        "path": "evals",
+        "mode": "040000",
+        "type": "tree",
+        "sha": "864420414bf42dd53153572a8cc5e687cab232d6",
+        "url": "https://api.github.com/repos/ivercurry99/yy-text2-xhs-img/git/trees/864420414bf42dd53153572a8cc5e687cab232d6"
+      },
+      {
+        "path": "evals/evals.json",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "bfe35d8566114e3945bf033986e0ef58a8bd96ac",
+        "size": 4328,
+        "url": "https://api.github.com/repos/ivercurry99/yy-text2-xhs-img/git/blobs/bfe35d8566114e3945bf033986e0ef58a8bd96ac"
+      },
+      {
+        "path": "references",
+        "mode": "040000",
+        "type": "tree",
+        "sha": "2007f2ede1743d5c92dfd4cf6537e8f1186289de",
+        "url": "https://api.github.com/repos/ivercurry99/yy-text2-xhs-img/git/trees/2007f2ede1743d5c92dfd4cf6537e8f1186289de"
+      },
+      {
+        "path": "references/fallback-strategy.md",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "79732ea69ff6ef11d269b57f002e293431af9871",
+        "size": 6880,
+        "url": "https://api.github.com/repos/ivercurry99/yy-text2-xhs-img/git/blobs/79732ea69ff6ef11d269b57f002e293431af9871"
+      },
+      {
+        "path": "references/model-matrix.md",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "4df2a92dd4e56ab314897c9a2ab4f22614854f84",
+        "size": 5865,
+        "url": "https://api.github.com/repos/ivercurry99/yy-text2-xhs-img/git/blobs/4df2a92dd4e56ab314897c9a2ab4f22614854f84"
+      },
+      {
+        "path": "references/prompt-engineering.md",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "7a651d2965970b881abd7ee89d075e2dcddf330d",
+        "size": 8584,
+        "url": "https://api.github.com/repos/ivercurry99/yy-text2-xhs-img/git/blobs/7a651d2965970b881abd7ee89d075e2dcddf330d"
+      },
+      {
+        "path": "requirements.txt",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "5caf0ab62009ee663c2edcab6989fb27b2f3fb8d",
+        "size": 1014,
+        "url": "https://api.github.com/repos/ivercurry99/yy-text2-xhs-img/git/blobs/5caf0ab62009ee663c2edcab6989fb27b2f3fb8d"
+      },
+      {
+        "path": "scripts",
+        "mode": "040000",
+        "type": "tree",
+        "sha": "f5440062b032b28a2fb4f5c99768c1f8ca95df38",
+        "url": "https://api.github.com/repos/ivercurry99/yy-text2-xhs-img/git/trees/f5440062b032b28a2fb4f5c99768c1f8ca95df38"
+      },
+      {
+        "path": "scripts/generate.py",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "98a3dfee51dfae18cd19170a1e25c58a868bf7a3",
+        "size": 31098,
+        "url": "https://api.github.com/repos/ivercurry99/yy-text2-xhs-img/git/blobs/98a3dfee51dfae18cd19170a1e25c58a868bf7a3"
+      },
+      {
+        "path": "styles",
+        "mode": "040000",
+        "type": "tree",
+        "sha": "1f9d6681096f21449f575d67fe0041071df19685",
+        "url": "https://api.github.com/repos/ivercurry99/yy-text2-xhs-img/git/trees/1f9d6681096f21449f575d67fe0041071df19685"
+      },
+      {
+        "path": "styles/presets.json",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "d34028a8c54022bca90ffb7b676ce6f0eaad041c",
+        "size": 11126,
+        "url": "https://api.github.com/repos/ivercurry99/yy-text2-xhs-img/git/blobs/d34028a8c54022bca90ffb7b676ce6f0eaad041c"
+      },
+      {
+        "path": "tests",
+        "mode": "040000",
+        "type": "tree",
+        "sha": "c91410226d7a93acb4c646da7c627439037ca297",
+        "url": "https://api.github.com/repos/ivercurry99/yy-text2-xhs-img/git/trees/c91410226d7a93acb4c646da7c627439037ca297"
+      },
+      {
+        "path": "tests/test_generate.py",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "d53d7324e0e6823ac1df5a80edb37c56bdf9812f",
+        "size": 13069,
+        "url": "https://api.github.com/repos/ivercurry99/yy-text2-xhs-img/git/blobs/d53d7324e0e6823ac1df5a80edb37c56bdf9812f"
+      }
+    ],
+    "truncated": false
+  }
+}

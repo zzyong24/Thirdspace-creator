@@ -3,7 +3,7 @@ import type {ContextReaders} from "./chat-assembly-types";
 import type { ChatToolDeps } from "./chat-tools";
 
 export type ChatReadToolBindings=Pick<ChatToolDeps,
- "listProjects" | "searchProjects" | "listComments" | "searchKnowledge" | "searchMaterials" | "getProjectDetail" | "getProjectLifecycle" | "getReviewReport" | "getPositioningDetail" | "getKnowledgeDetail" | "listProjectArtifacts" | "getArtifactText" | "getKnowledgeText" | "listPublications" | "getMetrics" | "listLearnings" | "listCandidates" | "getPredictions" | "boundProjectId" | "publicationView" | "readCreatorOsGuide">;
+ "listProjects" | "searchProjects" | "listComments" | "searchKnowledge" | "searchMaterials" | "getProjectDetail" | "getProjectLifecycle" | "getReviewReport" | "getPositioningDetail" | "getKnowledgeDetail" | "listProjectArtifacts" | "getArtifactText" | "getArticleForImage" | "getKnowledgeText" | "listPublications" | "getMetrics" | "listLearnings" | "listCandidates" | "getPredictions" | "boundProjectId" | "publicationView" | "readCreatorOsGuide">;
 /** 共享原读取绑定；构造时不读库，执行时把当前账号交给真实服务。 */
 export function createChatReadToolBindings(ctx:RequestContext,readers:ContextReaders|undefined,binding:Pick<ChatToolDeps,"boundProjectId"|"publicationView"|"readCreatorOsGuide">={}):ChatReadToolBindings {
  return {
@@ -70,6 +70,10 @@ export function createChatReadToolBindings(ctx:RequestContext,readers:ContextRea
     getArtifactText: async ({ projectId, artifactType }) => {
       if (!readers?.getArtifactText) return null;
       return readers.getArtifactText(ctx, { projectId, artifactType });
+    },
+    getArticleForImage: async ({outputId}) => {
+      if(!readers?.getArticleForImage)throw new Error("ARTICLE_IMAGE_READER_UNAVAILABLE");
+      return readers.getArticleForImage(ctx,{outputId});
     },
     getKnowledgeText: async ({ id }) => {
       if (!readers?.getKnowledgeText) return null;

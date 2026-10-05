@@ -1,0 +1,331 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/frontend
+
+(node:39866) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ src/features/article/article-workbench.test.tsx (10 tests | 1 failed | 9 skipped) 1093ms
+     × 稿面只显示真实版本号和段落名，接口继续使用精确来源与图片 ID 1092ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/features/article/article-workbench.test.tsx > 公众号文章工作台 > 稿面只显示真实版本号和段落名，接口继续使用精确来源与图片 ID
+TestingLibraryElementError: Unable to find role="img" and name "给读者的第一步 的已选配图"
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<main[39m
+      [33mclass[39m=[32m"mx-auto w-full max-w-5xl space-y-6 px-5 py-6"[39m
+      [33mdata-page[39m=[32m"article-workbench"[39m
+    [36m>[39m
+      [36m<header[39m
+        [33mclass[39m=[32m"flex flex-wrap items-start justify-between gap-4"[39m
+      [36m>[39m
+        [36m<div>[39m
+          [36m<p[39m
+            [33mclass[39m=[32m"text-xs text-muted-foreground"[39m
+          [36m>[39m
+            [0m选题[0m
+            [0m / 公众号文章[0m
+          [36m</p>[39m
+          [36m<h1[39m
+            [33mclass[39m=[32m"mt-1 text-2xl font-semibold"[39m
+          [36m>[39m
+            [0m文章创作[0m
+          [36m</h1>[39m
+          [36m<p[39m
+            [33mclass[39m=[32m"mt-1 text-sm text-muted-foreground"[39m
+          [36m>[39m
+            [0m直接写正文，或按需要生成标题、摘要和正文。审读采纳后会保存为新版本。[0m
+          [36m</p>[39m
+        [36m</div>[39m
+        [36m<a[39m
+          [33mclass[39m=[32m"text-sm underline"[39m
+          [33mhref[39m=[32m"/projects/project-a"[39m
+        [36m>[39m
+          [0m返回项目稿面[0m
+        [36m</a>[39m
+      [36m</header>[39m
+      [36m<section[39m
+        [33mclass[39m=[32m"flex flex-wrap items-center gap-3 rounded-xl border p-4"[39m
+      [36m>[39m
+        [36m<label[39m
+          [33mclass[39m=[32m"text-sm font-medium"[39m
+          [33mfor[39m=[32m"article-output"[39m
+        [36m>[39m
+          [0m文章产物[0m
+        [36m</label>[39m
+        [36m<select[39m
+          [33mclass[39m=[32m"rounded-md border bg-background px-3 py-2 text-sm"[39m
+          [33mid[39m=[32m"article-output"[39m
+        [36m>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m"output-a"[39m
+          [36m>[39m
+            [0m文章[0m
+          [36m</option>[39m
+        [36m</select>[39m
+        [36m<button[39m
+          [33mclass[39m=[32m"group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-primary text-primary-foreground hover:bg-primary/80 h-8 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2"[39m
+          [33mdata-slot[39m=[32m"button"[39m
+        [36m>[39m
+          [0m新建文章[0m
+        [36m</button>[39m
+        [36m<span[39m
+          [33mclass[39m=[32m"text-xs text-muted-foreground"[39m
+        [36m>[39m
+          [0m版本 [0m
+          [0m2[0m
+          [0m · [0m
+          [0minternal-version-current[0m
+        [36m</span>[39m
+      [36m</section>[39m
+      [36m<details[39m
+        [33mclass[39m=[32m"rounded-xl border p-4 text-sm"[39m
+      [36m>[39m
+        [36m<summary[39m
+          [33mclass[39m=[32m"cursor-pointer font-medium"[39m
+        [36m>[39m
+          [0m本次依据与资料（可选）[0m
+        [36m</summary>[39m
+        [36m<p[39m
+          [33mclass[39m=[32m"mt-2 text-muted-foreground"[39m
+        [36m>[39m
+          [0m默认沿用当前账号已确认的写作规则。资料和写作身份可在这里调整，不影响直接开写。[0m
+        [36m</p>[39m
+        [36m<section[39m
+          [33mclass[39m=[32m"rounded-xl border p-4 text-sm"[39m
+        [36m>[39m
+          [36m<h2[39m
+            [33mclass[39m=[32m"font-medium"[39m
+          [36m>[39m
+            [0m写作身份[0m
+          [36m</h2>[39m
+          [36m<p[39m
+            [33mclass[39m=[32m"mt-1 text-muted-foreground"[39m
+          [36m>[39m
+            [0m生成前选择本次使用的身份。手写内容不受此选项影响。[0m
+          [36m</p>[39m
+          [36m<label[39m
+            [33mclass[39m=[32m"mt-3 flex items-start gap-2"[39m
+          [36m>[39m
+            [36m<input[39m
+              [33mchecked[39m=[32m""[39m
+              [33mname[39m=[32m"article-brand"[39m
+              [33mtype[39m=[32m"radio"[39m
+            [36m/>[39m
+            [36m<span>[39m
+              [0m中性写作方法[0m
+            [36m</span>[39m
+          [36m</label>[39m
+          [36m<p[39m
+            [33mclass[39m=[32m"mt-2 text-muted-foreground"[39m
+          [36m>[39m
+            [0m当前账号尚无可用品牌版本，将使用中性写作方法。[0m
+          [36m</p>[39m
+        [36m</section>[39m
+        [36m<section[39m
+          [33mclass[39m=[32m"rounded-xl border p-4 text-sm"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex items-center justify-between gap-3"[39m
+          [36m>[39m
+            [36m<h2[39m
+              [33mclass[39m=[32m"font-medium"[39m
+            [36m>[39m
+              [0m本次生成的参考资料[0m
+            [36m</h2>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"group/button inline-flex shrink-0 items-center justify-center border bg-clip-padding font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50 h-7 gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5"[39m
+              [33mdata-slot[39m=[32m"button"[39m
+            [36m>[39m
+              [0m刷新项目资料[0m
+            [36m</button>[39m
+          [36m</div>[39m
+          [36m<p[39m
+            [33mclass[39m=[32m"mt-1 text-muted-foreground"[39m
+          [36m>[39m
+            [0m项目 Brief 会自动作为来源。勾选的项目文档按当前文件版本提供给模型；不勾选也能生成候选。[0m
+          [36m</p>[39m
+          [36m<p[39m
+            [33mclass[39m=[32m"mt-2 text-muted-foreground"[39m
+          [36m>[39m
+            [0m当前项目没有已关联且完成文字抽取的文档。[0m
+            [36m<a[39m
+              [33mclass[39m=[32m"underline"[39m
+              [33mhref[39m=[32m"/assets"[39m
+            [36m>[39m
+              [0m去素材中心添加资料[0m
+            [36m</a>[39m
+          [36m</p>[39m
+        [36m</section>[39m
+      [36m</details>[39m
+      [36m<section[39m
+        [33mclass[39m=[32m"rounded-xl border p-5"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex ...
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div>[39m
+      [36m<main[39m
+        [33mclass[39m=[32m"mx-auto w-full max-w-5xl space-y-6 px-5 py-6"[39m
+        [33mdata-page[39m=[32m"article-workbench"[39m
+      [36m>[39m
+        [36m<header[39m
+          [33mclass[39m=[32m"flex flex-wrap items-start justify-between gap-4"[39m
+        [36m>[39m
+          [36m<div>[39m
+            [36m<p[39m
+              [33mclass[39m=[32m"text-xs text-muted-foreground"[39m
+            [36m>[39m
+              [0m选题[0m
+              [0m / 公众号文章[0m
+            [36m</p>[39m
+            [36m<h1[39m
+              [33mclass[39m=[32m"mt-1 text-2xl font-semibold"[39m
+            [36m>[39m
+              [0m文章创作[0m
+            [36m</h1>[39m
+            [36m<p[39m
+              [33mclass[39m=[32m"mt-1 text-sm text-muted-foreground"[39m
+            [36m>[39m
+              [0m直接写正文，或按需要生成标题、摘要和正文。审读采纳后会保存为新版本。[0m
+            [36m</p>[39m
+          [36m</div>[39m
+          [36m<a[39m
+            [33mclass[39m=[32m"text-sm underline"[39m
+            [33mhref[39m=[32m"/projects/project-a"[39m
+          [36m>[39m
+            [0m返回项目稿面[0m
+          [36m</a>[39m
+        [36m</header>[39m
+        [36m<section[39m
+          [33mclass[39m=[32m"flex flex-wrap items-center gap-3 rounded-xl border p-4"[39m
+        [36m>[39m
+          [36m<label[39m
+            [33mclass[39m=[32m"text-sm font-medium"[39m
+            [33mfor[39m=[32m"article-output"[39m
+          [36m>[39m
+            [0m文章产物[0m
+          [36m</label>[39m
+          [36m<select[39m
+            [33mclass[39m=[32m"rounded-md border bg-background px-3 py-2 text-sm"[39m
+            [33mid[39m=[32m"article-output"[39m
+          [36m>[39m
+            [36m<option[39m
+              [33mvalue[39m=[32m"output-a"[39m
+            [36m>[39m
+              [0m文章[0m
+            [36m</option>[39m
+          [36m</select>[39m
+          [36m<button[39m
+            [33mclass[39m=[32m"group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-primary text-primary-foreground hover:bg-primary/80 h-8 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2"[39m
+            [33mdata-slot[39m=[32m"button"[39m
+          [36m>[39m
+            [0m新建文章[0m
+          [36m</button>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"text-xs text-muted-foreground"[39m
+          [36m>[39m
+            [0m版本 [0m
+            [0m2[0m
+            [0m · [0m
+            [0minternal-version-current[0m
+          [36m</span>[39m
+        [36m</section>[39m
+        [36m<details[39m
+          [33mclass[39m=[32m"rounded-xl border p-4 text-sm"[39m
+        [36m>[39m
+          [36m<summary[39m
+            [33mclass[39m=[32m"cursor-pointer font-medium"[39m
+          [36m>[39m
+            [0m本次依据与资料（可选）[0m
+          [36m</summary>[39m
+          [36m<p[39m
+            [33mclass[39m=[32m"mt-2 text-muted-foreground"[39m
+          [36m>[39m
+            [0m默认沿用当前账号已确认的写作规则。资料和写作身份可在这里调整，不影响直接开写。[0m
+          [36m</p>[39m
+          [36m<section[39m
+            [33mclass[39m=[32m"rounded-xl border p-4 text-sm"[39m
+          [36m>[39m
+            [36m<h2[39m
+              [33mclass[39m=[32m"font-medium"[39m
+            [36m>[39m
+              [0m写作身份[0m
+            [36m</h2>[39m
+            [36m<p[39m
+              [33mclass[39m=[32m"mt-1 text-muted-foreground"[39m
+            [36m>[39m
+              [0m生成前选择本次使用的身份。手写内容不受此选项影响。[0m
+            [36m</p>[39m
+            [36m<label[39m
+              [33mclass[39m=[32m"mt-3 flex items-start gap-2"[39m
+            [36m>[39m
+              [36m<input[39m
+                [33mchecked[39m=[32m""[39m
+                [33mname[39m=[32m"article-brand"[39m
+                [33mtype[39m=[32m"radio"[39m
+              [36m/>[39m
+              [36m<span>[39m
+                [0m中性写作方法[0m
+              [36m</span>[39m
+            [36m</label>[39m
+            [36m<p[39m
+              [33mclass[39m=[32m"mt-2 text-muted-foreground"[39m
+            [36m>[39m
+              [0m当前账号尚无可用品牌版本，将使用中性写作方法。[0m
+            [36m</p>[39m
+          [36m</section>[39m
+          [36m<section[39m
+            [33mclass[39m=[32m"rounded-xl border p-4 text-sm"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"flex items-center justify-between gap-3"[39m
+            [36m>[39m
+              [36m<h2[39m
+                [33mclass[39m=[32m"font-medium"[39m
+              [36m>[39m
+                [0m本次生成的参考资料[0m
+              [36m</h2>[39m
+              [36m<button[39m
+                [33mclass[39m=[32m"group/button inline-flex shrink-0 items-center justify-center border bg-clip-padding font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50 h-7 gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5"[39m
+                [33mdata-slot[39m=[32m"button"[39m
+              [36m>[39m
+                [0m刷新项目资料[0m
+              [36m</button>[39m
+            [36m</div>[39m
+            [36m<p[39m
+              [33mclass[39m=[32m"mt-1 text-muted-foreground"[39m
+            [36m>[39m
+              [0m项目 Brief 会自动作为来源。勾选的项目文档按当前文件版本提供给模型；不勾选也能生成候选。[0m
+            [36m</p>[39m
+            [36m<p[39m
+              [33mclass[39m=[32m"mt-2 text-muted-foreground"[39m
+            [36m>[39m
+              [0m当前项目没有已关联且完成文字抽取的文档。[0m
+              [36m<a[39m
+                [33mclass[39m=[32m"underline"[39m
+                [33mhref[39m=[32m"/assets"[39m
+   ...
+ ❯ Proxy.waitForWrapper ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ❯ src/features/article/article-workbench.test.tsx:52:11
+     50|         imageUses: [{sectionId: "internal-section-id", assetId: "image…
+     51|     render(<ArticleWorkbench projectId="project-a" projectTitle="选题" i…
+     52|     await waitFor(() => expect(screen.getByRole("img", {name: "给读者的第一步…
+       |           ^
+     53|     expect(screen.getByText("当前版本 v7")).toBeTruthy();
+     54|     expect(screen.getByText("来源：项目资料")).toBeTruthy();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 9 skipped (10)
+   Start at  06:43:58
+   Duration  2.51s (transform 165ms, setup 161ms, import 352ms, tests 1.09s, environment 607ms)
+

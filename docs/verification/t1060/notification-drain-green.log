@@ -1,0 +1,9 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/ai-worker
+
+No test files found, exiting with code 1
+
+filter: src/execution/codex-acp-notification-drain.test.ts
+include: src/**/*.test.ts
+exclude:  smoke/**
+

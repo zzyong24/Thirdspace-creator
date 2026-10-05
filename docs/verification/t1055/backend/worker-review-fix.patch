@@ -1,0 +1,164 @@
+diff --git a/ai-worker/src/runtime/wechat-article-candidate.ts b/ai-worker/src/runtime/wechat-article-candidate.ts
+--- a/ai-worker/src/runtime/wechat-article-candidate.ts
++++ b/ai-worker/src/runtime/wechat-article-candidate.ts
+@@ -57,6 +57,11 @@
+   }
+   const request=input.conversion?.request;
+   if(request && request.targetType!=="article")throw new Error("ARTICLE_CONVERSION_TARGET_MISMATCH");
++  const preserveTitle=!request&&Boolean(input.current.title.trim());
++  const preserveSummary=!request&&Boolean(input.current.summary.trim());
++  // SEMANTIC_BOUNDARY_ALLOW: 落实冻结的用户元数据，不作创作选择；模型偏离时保留合法正文与原出处。
++  if(preserveTitle){candidate.proposedTitle=input.current.title;candidate.proposedTitleSourceRefs=input.current.titleSourceRefs??[];}
++  if(preserveSummary){candidate.proposedSummary=input.current.summary;candidate.proposedSummarySourceRefs=input.current.summarySourceRefs??[];}
+   if(request?.mode==="selected"){
+     if((!request.targetFields.includes("title") && (candidate.proposedTitle!=="" || candidate.proposedTitleSourceRefs.length)) ||
+        (!request.targetFields.includes("summary") && (candidate.proposedSummary!=="" || candidate.proposedSummarySourceRefs.length)) ||
+@@ -67,14 +72,14 @@
+        (request.targetFields.includes("sections") && !candidate.proposedSections.length))throw new Error("ARTICLE_CONVERSION_FIELD_MISSING");
+   }else if(!candidate.proposedTitle.trim() || !candidate.proposedSummary.trim() || !candidate.proposedSections.length)
+     throw new Error("ARTICLE_WHOLE_CANDIDATE_INCOMPLETE");
+-  if(!request && ((input.current.title.trim()&&candidate.proposedTitle!==input.current.title)||(input.current.summary.trim()&&candidate.proposedSummary!==input.current.summary)))throw new Error("ARTICLE_METADATA_CHANGED");
+   const allowed = new Set(input.sourceRefs.map(refKey));
+   const assertRefs = (refs: WechatArticleCandidate["sourceRefs"]) => {
+     for (const ref of refs) if (!allowed.has(refKey(ref))) throw new Error("ARTICLE_SOURCE_REF_UNBOUND");
+   };
+   assertRefs(candidate.sourceRefs);
+-  assertRefs(candidate.proposedTitleSourceRefs);
+-  assertRefs(candidate.proposedSummarySourceRefs);
++  // 原稿引用已在可信冻结 current 中；只核验模型新建议引用，不能用新目录反杀历史已存元数据。
++  if(!preserveTitle)assertRefs(candidate.proposedTitleSourceRefs);
++  if(!preserveSummary)assertRefs(candidate.proposedSummarySourceRefs);
+   for (const fact of candidate.proposedFactItems) assertRefs(fact.sourceRefs);
+   const existing = new Set(input.current.sections.map(section => section.sectionId));
+   const seenSections = new Set<string>();
+@@ -98,7 +103,8 @@
+   for (const brief of candidate.proposedVisualBriefs) {
+     if (briefs.has(brief.sectionId) || !seenSections.has(brief.sectionId)) throw new Error("ARTICLE_VISUAL_BRIEF_TARGET_INVALID");
+     briefs.add(brief.sectionId);
+-    if(brief.proposedAssetId!==undefined && !(input.imageLibrary??[]).some(image=>image.assetId===brief.proposedAssetId&&image.assetFileId===brief.proposedAssetFileId))throw new Error("ARTICLE_IMAGE_PAIR_UNBOUND");
++    if((input.imageLibrary!==undefined&&brief.proposedAssetId!==undefined&&!brief.proposedAssetFileId)||
++       (brief.proposedAssetFileId!==undefined&&!(input.imageLibrary??[]).some(image=>image.assetId===brief.proposedAssetId&&image.assetFileId===brief.proposedAssetFileId)))throw new Error("ARTICLE_IMAGE_PAIR_UNBOUND");
+   }
+   return candidate;
+ }
+diff --git a/ai-worker/src/runtime/wechat-article-candidate.test.ts b/ai-worker/src/runtime/wechat-article-candidate.test.ts
+--- a/ai-worker/src/runtime/wechat-article-candidate.test.ts
++++ b/ai-worker/src/runtime/wechat-article-candidate.test.ts
+@@ -111,6 +111,32 @@
+  expect(JSON.parse(buildWechatArticleFacets(raw).articleContext!).imageLibrary).toEqual([image]);
+  expect(validateWechatArticleCandidate(value,raw).proposedVisualBriefs).toEqual(value.proposedVisualBriefs);
+  expect(()=>validateWechatArticleCandidate({...value,proposedVisualBriefs:[{...value.proposedVisualBriefs[0],proposedAssetFileId:"other"}]},raw)).toThrow("ARTICLE_IMAGE_PAIR_UNBOUND");
+- expect(()=>validateWechatArticleCandidate({...value,proposedTitle:"另起标题"},raw)).toThrow("ARTICLE_METADATA_CHANGED");
++ expect(validateWechatArticleCandidate({...value,proposedTitle:"另起标题"},raw).proposedTitle).toBe("沿用标题");
+  expect(validateWechatArticleCandidate({...value,proposedVisualBriefs:[{sectionId:"section-1",brief:"没有匹配"}]},{...raw,imageLibrary:[]})).toBeTruthy();
+ });
++
++describe("T-1055 review 原成功输入兼容",()=>{
++ it.each(["changed","empty"] as const)("模型元数据 %s 时透传冻结人工字段及原引用，合法正文继续形成候选",mode=>{
++  const saved=input(),oldTitleRef={...source,versionId:"原标题出处版本"},oldSummaryRef={...asset,versionId:"原简介出处版本"};
++  saved.current={...saved.current,title:"人工标题",summary:"人工简介",titleSourceRefs:[oldTitleRef],summarySourceRefs:[oldSummaryRef],tags:["人工标签"]};
++  const value={...proposal(),proposedTitle:mode==="empty"?"":"模型另起标题",proposedSummary:mode==="empty"?"":"模型另写简介",proposedTitleSourceRefs:[{...source,id:"无关的模型元数据出处"}],proposedSummarySourceRefs:[{...asset,id:"无关的模型元数据出处"}]};
++  const candidate=validateWechatArticleCandidate(value,saved);
++  expect(candidate).toMatchObject({proposedTitle:"人工标题",proposedSummary:"人工简介",proposedTitleSourceRefs:[oldTitleRef],proposedSummarySourceRefs:[oldSummaryRef],proposedSections:value.proposedSections,proposedFactItems:value.proposedFactItems});
++  const schema=resolveStructuredBusinessSchema({kind:"model.structured",operationKey:"metadata-safe-body",capability:"copy.generate",maxOutputTokens:4096,skillId:"wechat.article-draft",facets:buildWechatArticleFacets(saved),skillSnapshot:{skills:[]}} as never);
++  expect(schema?.safeParse(value)).toMatchObject({success:true,data:{proposedTitle:"人工标题",proposedSummary:"人工简介"}});
++  expect(()=>validateWechatArticleCandidate({...value,proposedSections:[{...value.proposedSections[0]!,sourceRefs:[{...source,id:"越界正文出处"}]}]},saved)).toThrow("ARTICLE_SOURCE_REF_UNBOUND");
++ });
++ it("旧无图片目录的 assetId-only 视觉建议仍合法，新的目录任务必须 exact pair，孤 file 仍拒绝",()=>{
++  const legacy={...proposal(),proposedVisualBriefs:[{sectionId:"section-1",brief:"旧建议",proposedAssetId:"legacy-image"}]};
++  expect(validateWechatArticleCandidate(legacy,input()).proposedVisualBriefs).toEqual(legacy.proposedVisualBriefs);
++  const schema=resolveStructuredBusinessSchema({kind:"model.structured",operationKey:"legacy-visual-hint",capability:"copy.generate",maxOutputTokens:4096,skillId:"wechat.article-draft",facets:buildWechatArticleFacets(input()),skillSnapshot:{skills:[]}} as never);
++  expect(schema?.safeParse(legacy).success).toBe(true);
++  const image={assetId:"legacy-image",assetFileId:"real-file",name:"图",description:"真实描述"};
++  expect(()=>validateWechatArticleCandidate(legacy,{...input(),imageLibrary:[image]})).toThrow();
++  expect(()=>validateWechatArticleCandidate(legacy,{...input(),imageLibrary:[]})).toThrow();
++  const exact={...legacy,proposedVisualBriefs:[{...legacy.proposedVisualBriefs[0]!,proposedAssetFileId:image.assetFileId}]};
++  expect(validateWechatArticleCandidate(exact,{...input(),imageLibrary:[image]}).proposedVisualBriefs).toEqual(exact.proposedVisualBriefs);
++  expect(()=>validateWechatArticleCandidate(exact,input())).toThrow("ARTICLE_IMAGE_PAIR_UNBOUND");
++  expect(()=>validateWechatArticleCandidate({...legacy,proposedVisualBriefs:[{sectionId:"section-1",brief:"只有文件",proposedAssetFileId:"file"}]},input())).toThrow();
++ });
++});
+diff --git a/ai-worker/src/prompt/templates/wechat-article-draft.ts b/ai-worker/src/prompt/templates/wechat-article-draft.ts
+--- a/ai-worker/src/prompt/templates/wechat-article-draft.ts
++++ b/ai-worker/src/prompt/templates/wechat-article-draft.ts
+@@ -43,8 +43,8 @@
+     brief: z.string().trim().min(1),
+     proposedAssetId:z.string().min(1).optional(),proposedAssetFileId:z.string().min(1).optional(),
+   }).strict().superRefine((value,ctx)=>{
+-    // SEMANTIC_BOUNDARY_ALLOW: 文件身份必须成对，语义匹配仍由模型负责。
+-    if((value.proposedAssetId!==undefined)!==(value.proposedAssetFileId!==undefined))ctx.addIssue({code:"custom",message:"图片候选缺少完整文件身份"});
++    // SEMANTIC_BOUNDARY_ALLOW: 兼容旧 ID-only 视觉建议；文件不能脱离素材，目录任务的 exact pair 由 runtime 核验。
++    if(value.proposedAssetFileId!==undefined&&value.proposedAssetId===undefined)ctx.addIssue({code:"custom",message:"图片候选文件缺少素材身份"});
+   })),
+   sourceRefs: z.array(articleSourceRefSchema),
+ }).strict();
+diff --git a/ai-worker/src/execution/structured-business-schema.ts b/ai-worker/src/execution/structured-business-schema.ts
+--- a/ai-worker/src/execution/structured-business-schema.ts
++++ b/ai-worker/src/execution/structured-business-schema.ts
+@@ -62,9 +62,9 @@
+     }
+     case "wechat.article-draft": {
+       const context = JSON.parse(input.facets.articleContext ?? "null");
+-      return wechatArticleCandidateSchema.superRefine((value, ctx) => {
+-        try { validateWechatArticleCandidate(value, context); }
+-        catch (error) { ctx.addIssue({code: "custom", message: error instanceof Error ? error.message : "ARTICLE_CANDIDATE_INVALID"}); }
++      return wechatArticleCandidateSchema.transform((value, ctx) => {
++        try { return validateWechatArticleCandidate(value, context); }
++        catch (error) { ctx.addIssue({code: "custom", message: error instanceof Error ? error.message : "ARTICLE_CANDIDATE_INVALID"}); return z.NEVER; }
+       });
+     }
+     case "asset.classify":return classificationSchema;
+diff --git a/ai-worker/src/execution/structured-worker-generation.test.ts b/ai-worker/src/execution/structured-worker-generation.test.ts
+--- a/ai-worker/src/execution/structured-worker-generation.test.ts
++++ b/ai-worker/src/execution/structured-worker-generation.test.ts
+@@ -5,6 +5,7 @@
+ import * as businessSchemas from "./structured-business-schema";
+ import { workerSkillSnapshotSchema, type WorkerPort } from "@creatoros/contract/execution-worker";
+ import { generateStructuredInWorker } from "./structured-worker-generation";
++import {buildWechatArticleFacets} from "../runtime/wechat-article-candidate";
+ 
+ const input={kind:"model.structured" as const,operationKey:"review",capability:"default",maxOutputTokens:500,skillId:"script.review",facets:{script:"原文片段"},skillSnapshot:{
+   snapshotVersion:1 as const,userId:"fixture-user",accountId:"fixture-account",resolvedAt:"2026-09-05T00:00:00.000Z",platformPolicyVersion:"1",platformPolicy:"冻结平台规则",
+@@ -40,6 +41,42 @@
+   };
+   const run=()=>generateStructuredInWorker({...input,skillId,...(skillId==="planning.thesis"?{facets:{...input.facets,__planningThesisGrounding:JSON.stringify(["冻结真实材料",...Array(6).fill("")])}}:{}),skillSnapshot:{...input.skillSnapshot,skills:input.skillSnapshot.skills.map(skill=>({...skill,skillId}))}},{apiFormat:"openai_chat",baseUrl:`http://127.0.0.1:${(server.address() as {port:number}).port}/v1`,model:"review-fixture-model",token:"fixture",structuredOutputs:native},new AbortController().signal,call);
+   return {run,requests,saved,rows,call,spec:{apiFormat:"openai_chat" as const,baseUrl:`http://127.0.0.1:${(server.address() as {port:number}).port}/v1`,model:"review-fixture-model",token:"fixture"},close:async()=>{server.closeAllConnections();await new Promise<void>(done=>server.close(()=>done()));}};
++}
++
++const articleProjectRef={kind:"project" as const,id:"article-project",versionId:"frozen-project"};
++const articleTitleRef={...articleProjectRef,versionId:"saved-title-source"};
++const articleProposal={
++ proposedTitle:"模型重写的标题",proposedTitleSourceRefs:[articleProjectRef],proposedSummary:"模型重写的简介",proposedSummarySourceRefs:[articleProjectRef],
++ proposedSections:[{op:"insert" as const,sectionId:"real-section",afterSectionId:null,order:0,heading:"正文",body:"合法完整正文",sourceRefs:[articleProjectRef]}],
++ proposedFactItems:[],proposedVisualBriefs:[],sourceRefs:[articleProjectRef],
++};
++const articleFacets=buildWechatArticleFacets({projectId:"article-project",outputId:"article-output",artifactId:"article-artifact",baseVersionId:"saved-version",brief:"基于冻结主稿补正文",
++ current:{schemaVersion:1,title:"人工原标题",summary:"人工原简介",titleSourceRefs:[articleTitleRef],summarySourceRefs:[articleTitleRef],tags:["原标签"],sections:[],factItems:[],visualBriefs:[],imageUses:[]},
++ sourceRefs:[articleProjectRef],sourceMaterials:[{ref:articleProjectRef,label:"冻结原稿",text:"真实正文来源"}],brandProfileVersionId:null,brandProfile:null});
++for(const native of [false,true]){
++ it.each(["changed","empty"] as const)(`T-1055 metadata %s 不反杀正文且实际落账透传原字段/native=${native}`,async mode=>{
++  const candidate={...articleProposal,...(mode==="empty"?{proposedTitle:"",proposedSummary:""}:{})};
++  const f=await fixture(JSON.stringify(candidate),undefined,native,false,"wechat.article-draft");
++  try{
++   const task={...input,skillId:"wechat.article-draft",facets:{...input.facets,...articleFacets},skillSnapshot:{...input.skillSnapshot,skills:input.skillSnapshot.skills.map(skill=>({...skill,skillId:"wechat.article-draft"}))}};
++   const result=await generateStructuredInWorker(task,{...f.spec,structuredOutputs:native},new AbortController().signal,f.call);
++   const object=JSON.parse(result.text).object;
++   expect(object).toMatchObject({proposedTitle:"人工原标题",proposedSummary:"人工原简介",proposedTitleSourceRefs:[articleTitleRef],proposedSummarySourceRefs:[articleTitleRef],proposedSections:articleProposal.proposedSections});
++   expect(f.saved).toEqual([result.text]);expect(f.requests).toHaveLength(1);
++   expect((await generateStructuredInWorker(task,{...f.spec,structuredOutputs:native},new AbortController().signal,f.call)).text).toBe(result.text);
++   expect(f.requests).toHaveLength(1);
++  }finally{await f.close();}
++ });
++ it(`T-1055 无目录旧 ID-only 视觉建议可经公共 Worker 保存/native=${native}`,async()=>{
++  const candidate={...articleProposal,proposedVisualBriefs:[{sectionId:"real-section",brief:"旧视觉建议",proposedAssetId:"legacy-image-id"}]};
++  const f=await fixture(JSON.stringify(candidate),undefined,native,false,"wechat.article-draft");
++  try{
++   const task={...input,skillId:"wechat.article-draft",facets:{...input.facets,...articleFacets},skillSnapshot:{...input.skillSnapshot,skills:input.skillSnapshot.skills.map(skill=>({...skill,skillId:"wechat.article-draft"}))}};
++   const result=await generateStructuredInWorker(task,{...f.spec,structuredOutputs:native},new AbortController().signal,f.call);
++   expect(JSON.parse(result.text).object.proposedVisualBriefs).toEqual(candidate.proposedVisualBriefs);
++   expect(f.saved).toEqual([result.text]);expect(f.requests).toHaveLength(1);
++  }finally{await f.close();}
++ });
+ }
+ it.each([
+   {content:"{}",native:false},

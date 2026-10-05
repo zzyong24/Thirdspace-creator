@@ -1,0 +1,75 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/ai-worker
+
+ ❯ src/execution/structured-worker-generation.test.ts (50 tests | 12 failed) 609ms
+   × planning.thesis缺失或坏grounding在模型预留前拒绝 undefined 8ms
+   × planning.thesis缺失或坏grounding在模型预留前拒绝 [] 1ms
+   × planning.thesis缺失或坏grounding在模型预留前拒绝 [42] 1ms
+   × 前置冻结输入损坏明确失败且零端口/HTTP/保存：{"skillId":"planning.thesis","key":"__planningThesisGrounding","raw":"{"} 1ms
+   × 前置冻结输入损坏明确失败且零端口/HTTP/保存：{"skillId":"copilot.assist","key":"__copilotReply","raw":"{"} 1ms
+   × 前置冻结输入损坏明确失败且零端口/HTTP/保存：{"skillId":"copilot.assist","key":"__copilotReply","raw":"[]"} 1ms
+   × 前置冻结输入损坏明确失败且零端口/HTTP/保存：{"skillId":"research.gather","key":"__researchGather","raw":"{"} 1ms
+   × 前置冻结输入损坏明确失败且零端口/HTTP/保存：{"skillId":"research.gather","key":"__researchGather","raw":"[]"} 0ms
+   × 前置冻结输入损坏明确失败且零端口/HTTP/保存：{"skillId":"material.match","key":"__materialMatchGrounding","raw":"{"} 0ms
+   × 前置冻结输入损坏明确失败且零端口/HTTP/保存：{"skillId":"material.match","key":"__materialMatchGrounding","raw":"{\"assetIds\":[42]}"} 1ms
+   × 前置冻结输入损坏明确失败且零端口/HTTP/保存：{"skillId":"calibration.diagnose","key":"__calibrationDiagnosis","raw":"{"} 0ms
+   × 前置冻结输入损坏明确失败且零端口/HTTP/保存：{"skillId":"calibration.score","key":"__calibrationScore","raw":"{\"rubricKeys\":[42]}"} 0ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 12 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/execution/structured-worker-generation.test.ts > planning.thesis缺失或坏grounding在模型预留前拒绝 undefined
+ FAIL  src/execution/structured-worker-generation.test.ts > planning.thesis缺失或坏grounding在模型预留前拒绝 []
+ FAIL  src/execution/structured-worker-generation.test.ts > planning.thesis缺失或坏grounding在模型预留前拒绝 [42]
+AssertionError: expected Error: MODEL_RESULT_UNKNOWN { …(3) } to match object { outcome: 'failed', …(1) }
+(1 matching property omitted from actual)
+
+- Expected
++ Received
+
+- {
+-   "errorCode": "STRUCTURED_INPUT_INVALID",
+-   "outcome": "failed",
++ GenerationFailure {
++   "errorCode": "MODEL_RESULT_UNKNOWN",
++   "outcome": "unknown_result",
+  }
+
+ ❯ src/execution/structured-worker-generation.test.ts:176:517
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/12]⎯
+
+ FAIL  src/execution/structured-worker-generation.test.ts > 前置冻结输入损坏明确失败且零端口/HTTP/保存：{"skillId":"planning.thesis","key":"__planningThesisGrounding","raw":"{"}
+ FAIL  src/execution/structured-worker-generation.test.ts > 前置冻结输入损坏明确失败且零端口/HTTP/保存：{"skillId":"copilot.assist","key":"__copilotReply","raw":"{"}
+ FAIL  src/execution/structured-worker-generation.test.ts > 前置冻结输入损坏明确失败且零端口/HTTP/保存：{"skillId":"copilot.assist","key":"__copilotReply","raw":"[]"}
+ FAIL  src/execution/structured-worker-generation.test.ts > 前置冻结输入损坏明确失败且零端口/HTTP/保存：{"skillId":"research.gather","key":"__researchGather","raw":"{"}
+ FAIL  src/execution/structured-worker-generation.test.ts > 前置冻结输入损坏明确失败且零端口/HTTP/保存：{"skillId":"research.gather","key":"__researchGather","raw":"[]"}
+ FAIL  src/execution/structured-worker-generation.test.ts > 前置冻结输入损坏明确失败且零端口/HTTP/保存：{"skillId":"material.match","key":"__materialMatchGrounding","raw":"{"}
+ FAIL  src/execution/structured-worker-generation.test.ts > 前置冻结输入损坏明确失败且零端口/HTTP/保存：{"skillId":"material.match","key":"__materialMatchGrounding","raw":"{\"assetIds\":[42]}"}
+ FAIL  src/execution/structured-worker-generation.test.ts > 前置冻结输入损坏明确失败且零端口/HTTP/保存：{"skillId":"calibration.diagnose","key":"__calibrationDiagnosis","raw":"{"}
+ FAIL  src/execution/structured-worker-generation.test.ts > 前置冻结输入损坏明确失败且零端口/HTTP/保存：{"skillId":"calibration.score","key":"__calibrationScore","raw":"{\"rubricKeys\":[42]}"}
+AssertionError: expected Error: MODEL_RESULT_UNKNOWN { …(3) } to match object { outcome: 'failed', …(1) }
+(1 matching property omitted from actual)
+
+- Expected
++ Received
+
+- {
+-   "errorCode": "STRUCTURED_INPUT_INVALID",
+-   "outcome": "failed",
++ GenerationFailure {
++   "errorCode": "MODEL_RESULT_UNKNOWN",
++   "outcome": "unknown_result",
+  }
+
+ ❯ src/execution/structured-worker-generation.test.ts:232:256
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/12]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  12 failed | 38 passed (50)
+   Start at  05:34:54
+   Duration  2.35s (transform 930ms, setup 0ms, import 1.54s, tests 609ms, environment 0ms)
+

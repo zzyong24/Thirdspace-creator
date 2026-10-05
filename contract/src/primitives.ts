@@ -40,9 +40,11 @@ export const platformId = z.enum([
   "bilibili",
   "douyin",
   "xiaohongshu",
+  "kuaishou",
   "wechatVideo",
   "wechatOfficial",
   "kuaishou",
+  "wechatOfficialAccount",
   "x",
 ]);
 

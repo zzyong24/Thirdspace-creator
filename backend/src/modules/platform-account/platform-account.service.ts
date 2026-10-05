@@ -2,7 +2,7 @@ import {createHash} from "node:crypto";
 import {accountGroupCommands} from "../../schema/account-groups";
 import {ConflictError} from "./platform-account.errors";
 import {createAccountGroupService} from "./account-group.service";
-import type { RequestContext } from "@creatoros/contract";
+import {platformId,type RequestContext } from "@creatoros/contract";
 import {and,eq,type Db} from "@creatoros/backend";
 import {platformAccounts} from "./platform-account.db-schema";
 import {
@@ -27,18 +27,9 @@ import { OwnershipError, ValidationError } from "./platform-account.errors";
 // opaque reference resolved elsewhere — this module NEVER stores or fetches a raw token
 // (§7.1 + Settings precedent). No AI candidate state machine (C-3 N/A here).
 
-// The valid platform set (= contract platformId enum). Kept inline (no zod dependency
-// in the frontend package) and deterministic (C-5 — no Date.now/Math.random/fetch).
-const VALID_PLATFORMS = new Set([
-  "youtube",
-  "bilibili",
-  "douyin",
-  "xiaohongshu",
-  "wechatVideo",
-  "wechatOfficial",
-  "kuaishou",
-  "x",
-]);
+// The contract enum is the single source of truth for account platforms.
+// A copied list previously omitted kuaishou and rejected its account workflow.
+const VALID_PLATFORMS = new Set<string>(platformId.options);
 
 export interface ServiceDeps {
   bindingCapabilities?: (ctx:RequestContext)=>Promise<import("@creatoros/contract").PlatformAccountCapabilitiesResource[]>;

@@ -1,0 +1,9 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/contract
+
+
+ Test Files  2 passed (2)
+      Tests  4 passed (4)
+   Start at  03:54:42
+   Duration  510ms (transform 225ms, setup 0ms, import 468ms, tests 15ms, environment 0ms)
+

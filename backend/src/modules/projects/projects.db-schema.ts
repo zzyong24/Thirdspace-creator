@@ -10,6 +10,7 @@ export {
   projectStages,
   projectTargetPlatforms,
   contentOutputs,
+  outputCreateRequests,
   outputStages,
   tasks,
   PROJECTS_DDL,

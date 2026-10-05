@@ -20,6 +20,7 @@ export function createChatAssemblyToolDeps(ctx: RequestContext, chatContext: Cha
         readCreatorOsGuide: input.creatorOsGuideSnapshot ? () => input.creatorOsGuideSnapshot! : undefined,
         boundProjectId: chatContext.projectId ?? undefined,
         ...(input.forcedMaterialKind ? { forcedMaterialKind: input.forcedMaterialKind } : {}),
+        ...(chatContext.selection?.kind === "article_section" ? {articleImageSelection: chatContext.selection} : {}),
         verbatimSources: input.verbatimSources ?? [], latestUserInstruction: input.latestUserInstruction ?? '',
         ...(chatContext.selection?.kind === 'script_section' && chatContext.selection.artifactId?.trim() && chatContext.selection.versionId?.trim() && chatContext.selection.ids[0]?.trim() && chatContext.selection.excerpt?.trim() ? { scriptPatchAnchor: { artifactId: chatContext.selection.artifactId.trim(), versionId: chatContext.selection.versionId.trim(), sectionId: chatContext.selection.ids[0].trim(), originalText: chatContext.selection.excerpt } } : {}),
         humanizeError: deps.humanizeError,

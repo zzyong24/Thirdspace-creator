@@ -1,0 +1,31 @@
+{
+  "productionSourceChanged": false,
+  "fullReconcile": {
+    "exitCode": 1,
+    "errors": 35,
+    "warnings": 0,
+    "baselineErrors": 34,
+    "addedErrors": [
+      "backlog-health.mjs: BACKLOG RUNAWAY (exit 2, >2× hard limit) — every session pays this tax; compact BEFORE other work: `node orchestrator/process/backlog-compact.mjs` archives ✅ rows mechanically, then squeeze flagged rows per rules/task-ledger-rules.md."
+    ],
+    "removedErrors": []
+  },
+  "subsequentBacklogCheck": {
+    "exitCode": 1,
+    "runawayErrorRemains": false,
+    "note": "仅压缩本轮两行，原信息在SPEC/验收报告保留；原30KB硬限膨胀问题仍存在。本轮全仓未再次运行，不追认全绿。"
+  },
+  "orphan": {
+    "errors": 0,
+    "warnings": 100
+  },
+  "scopedGovernance": {
+    "exitCode": 0,
+    "explicitPathCount": 27
+  },
+  "pmem": {
+    "exitCode": 0
+  },
+  "taskCompleted": false,
+  "productionFixAdded": false
+}

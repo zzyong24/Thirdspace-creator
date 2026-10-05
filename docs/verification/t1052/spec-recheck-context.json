@@ -1,0 +1,57 @@
+{
+  "schema": "spec-review-recheck-context/v1",
+  "task_id": "T-1052",
+  "previous_round": 1,
+  "previous_verdict": "CONCERNS",
+  "previous_spec_sha256": "dc7c5eba65e531ed055fd8a81574055b76ca287335880d6c2288a325e3ba8282",
+  "previous_packet": {
+    "schema": "spec-review-round/v2",
+    "review_kind": "initial",
+    "summary": "物理架构边界与 T-1052 方案一致；发现 1 项会直接影响真实图文素材预览与 PNG/ZIP 交付的规格缺口：图文 imageUses 到 NoteRelay Markdown 图片节点的确定性投影未定义。",
+    "findings": [
+      {
+        "id": "REV-001",
+        "status": "open",
+        "severity": "major",
+        "category": "completeness",
+        "requirement_anchor": {
+          "id": "FR-04",
+          "quote": "图片用 creatoros-asset:<assetId>:<assetFileId> 从稿件真实 imageUses 建立 allowlist"
+        },
+        "acceptance_anchor": {
+          "id": "AC-03",
+          "quote": "Graphic 的真实素材保持版本引用"
+        },
+        "where": "FR-04 的图文 Markdown 投影与图片引用生成规则",
+        "failure_mode": "GraphicPostDocument 的 body 与 imageUses 是分离字段，imageUses 只有 order/role/cardId；规格只规定从 imageUses 建 allowlist，却未规定怎样把这些引用确定性投影为 NoteRelay 接收的 Markdown 图片节点、放在哪一页/卡片、以及如何形成持久化图片版式所依赖的原 key。NoteRelay RednoteAdapter 只会处理 Markdown 中已经存在的图片 token。一个实现可以仅建 allowlist而不插图，另一个可以按 order 追加图片并改变分页，两者都符合当前文字，却会产生不同的真实素材预览和 PNG/ZIP，导致已确认交付不可唯一验收。",
+        "evidence_kind": "deterministic-check",
+        "evidence_ref": "docs/features/t1052-noterelay-derived-workbenches.md:33; contract/src/resources/graphic-posts.ts:8-15,33-45; /private/tmp/douyin_dl/noterelay-main/src/platforms/rednote/adapter.ts:27-40,47-59",
+        "risk_class": "confirmed-requirement",
+        "disposition": "mitigate",
+        "remedy_type": "constraint",
+        "scope_effect": "none",
+        "origin": "baseline",
+        "origin_ref": "round-1 full review",
+        "suggestion": "在 FR-04 中补一条最小确定性投影规则：明确每个 graphic imageUse 根据 role/order/cardId 映射到哪段 Markdown/哪张卡、生成何种 creatoros-asset 引用与稳定原 key，并规定不得回写或重排 body/cardBriefs；用含 cover、cardId 和无 cardId 的现有稿各绑定一条投影及 PNG/ZIP 页序验收。",
+        "resolution_evidence": "",
+        "parent_id": "",
+        "threat_model_id": ""
+      }
+    ]
+  },
+  "changed_line_refs": [
+    {
+      "origin_ref": "SPEC-LINE:34:208038d24dcbc5c7",
+      "text": "图文投影固定如下：标题与正文构成正文段，保留 body 的 Markdown；已登记的 creatoros-asset 图片节点若已在 body 出现，保持其位置且不重复插入。其余 cover 按 order 升序（同 order 按 imageUses 原数组序）组成最前面的封面段；随后正文段；随后 cardBriefs 原数组顺序各成一段，含该卡 title/body 及同 cardId 的非 cover 图片（按 order/原数组序）；剩余无 cardId 或找不到对应卡的非 cover 图片各成一段，仍按 order/原数组序。段之间用原分页器支持的 Markdown 分割线；段内仍按用户选择的分割标题级别及原 DOM 溢出分页。每张图片节点为 `![图片](creatoros-asset:<assetId>:<assetFileId>)`，原 key 按最终 splitByHeading 的 sectionIndex、段内 imageIndex 和原 source 组成 `<sectionIndex>:<imageIndex>:<source>`；DOM 溢出分页保留此 key。不回写或重排 body/cardBriefs/imageUses；未登记图片不进入可下载投影。"
+    },
+    {
+      "origin_ref": "SPEC-LINE:44:96b1d6f8449a0d9e",
+      "text": "- AC-03：真实 article imageUses 精确文件可以预览与写入公众号 HTML；Graphic 的真实素材保持版本引用；用含 cover、匹配 cardId 与无 cardId 的稿件检查封面→正文→卡片→剩余图片的投影及 ZIP 页序，已有正文图片不重复。伪造、跨会话和迟到消息不修改当前稿或导出；更改后旧导出作废。"
+    }
+  ],
+  "origin_ref_formats": {
+    "changed_lines": "SPEC-LINE:<line>:<16hex>（从 changed_line_refs 选择）",
+    "new_evidence": "EVIDENCE-SHA256:<64hex>:<project-relative-path>",
+    "late_critical": "SPEC-LINE:<line>:<16hex> | CONSTITUTION-LINE:<line>:<16hex> | EVIDENCE-SHA256:<64hex>:<path>"
+  }
+}

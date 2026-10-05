@@ -8,7 +8,7 @@ import {uncommittedChatTaskCalls} from "./chat-task-submission-recovery";
 import {recoverableChatNodeParents} from "./chat-generation-recovery";
 import {createDailyTopicRunService} from "../scheduling";
 import {scheduledChildId,assertScheduledChild,scheduledParentProjection} from "./execution-scheduled-child.service";
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 
 import {
   and,
@@ -23,6 +23,7 @@ import {
 import {
   requireAccountId,
   executionTasks,
+  executionControlReceipts,
   executionCalls,
   OwnershipError,
 } from "@creatoros/backend";
@@ -480,7 +481,16 @@ export function createPersistentTaskService(
           "taskIds 必须非空且不得重复，idempotencyKey 不能为空",
         );
       }
-      return db.transaction(async (tx) => {
+      // SEMANTIC_BOUNDARY_ALLOW: 摘要只核验用户明确命令和目标 ID，不做创作选择。
+      const requestDigest=createHash("sha256").update(JSON.stringify({command:input.command,taskIds:[...taskIds].sort()})).digest("hex");
+      const accountId=ctx.accountId??null;
+      const receiptWhere=and(eq(executionControlReceipts.userId,ctx.userId),accountId?eq(executionControlReceipts.accountId,accountId):sql`false`,eq(executionControlReceipts.idempotencyKey,input.idempotencyKey));
+      const restore=(receipt:typeof executionControlReceipts.$inferSelect)=>{
+        if(receipt.requestDigest!==requestDigest)throw new ConflictError("同一命令请求号对应不同输入");
+        const resources=receipt.result as ExecutionTaskResourceV2[];
+        return taskIds.map(id=>{const resource=resources.find(item=>item.id===id);if(!resource)throw new ConflictError("原命令回执缺少目标");return resource;});
+      };
+      try{return await db.transaction(async (tx) => {
         const discovered = await tx.select().from(executionTasks).where(and(inArray(executionTasks.id,taskIds),eq(executionTasks.userId,ctx.userId),workspaceFilter(executionTasks,ctx)));
         const lockIds=[...new Set([...taskIds,...discovered.map(scheduledChildId).filter((id):id is string=>Boolean(id))])];
         const rows = await tx
@@ -497,6 +507,8 @@ export function createPersistentTaskService(
           throw new OwnershipError("Execution task not found");
         }
 
+        const [receipt]=await tx.select().from(executionControlReceipts).where(receiptWhere);
+        if(receipt)return restore(receipt);
         const parents=rows.filter(row=>taskIds.includes(row.id)&&scheduledChildId(row));
         for(const parent of parents){const child=rows.find(row=>row.id===scheduledChildId(parent));if(!child||asPayload(child.payload).parentExecutionTaskId!==parent.id)throw new ConflictError('调度链接变更，请重新执行控制命令');assertScheduledChild(parent,child);}
         const effectiveIds=[...new Set(taskIds.map(id=>scheduledChildId(rows.find(row=>row.id===id)!)??id))];
@@ -569,8 +581,16 @@ export function createPersistentTaskService(
           updated.push(row);
         }
         for(const parent of parents){const child=updated.find(row=>row.id===scheduledChildId(parent))!;const [projected]=await tx.update(executionTasks).set({...scheduledParentProjection(child),updatedAt:stamp}).where(eq(executionTasks.id,parent.id)).returning();updated.push(projected!);}
-        return taskIds.map(id=>toResource(updated.find(row=>row.id===id)!));
-      });
+        const result=taskIds.map(id=>toResource(updated.find(row=>row.id===id)!));
+        if(accountId)await tx.insert(executionControlReceipts).values({id:nextId("control-receipt"),userId:ctx.userId,accountId,idempotencyKey:input.idempotencyKey,requestDigest,result,createdAt:stamp});
+        return result;
+      });}catch(error){
+        // 唯一冲突后事务已回滚；重新鉴权再恢复真实赢家，不重复执行命令。
+        const owned=await db.select({id:executionTasks.id}).from(executionTasks).where(and(inArray(executionTasks.id,taskIds),eq(executionTasks.userId,ctx.userId),workspaceFilter(executionTasks,ctx)));
+        if(owned.length!==taskIds.length)throw new OwnershipError("Execution task not found");
+        const [winner]=await db.select().from(executionControlReceipts).where(receiptWhere);
+        if(winner)return restore(winner);throw error;
+      }
     },
 
     async claimNext(input) {
@@ -590,7 +610,7 @@ export function createPersistentTaskService(
         if (input.executionMode === "scheduled.flywheel") filters.push(sql`${executionTasks.kind} = 'ai_task' AND ${executionTasks.payload}->'modelInput'->>'kind' = 'scheduled.flywheel'`);
         if (input.executionMode === "chat.run") filters.push(sql`${executionTasks.kind} = 'ai_task' AND ${executionTasks.payload}->'modelInput'->>'kind' = 'chat.run'`);
         if (input.executionMode === "agentic.run") filters.push(sql`${executionTasks.kind} = 'ai_task' AND ${executionTasks.payload}->'modelInput'->>'kind' = 'agentic.run'`);
-        if (input.executionMode === "model") filters.push(sql`${executionTasks.kind} = 'ai_task' AND ${executionTasks.payload}->'modelInput'->>'kind' IN ('model.generate','model.structured','asset.generate','transcribe.douyin')`);
+        if (input.executionMode === "model") filters.push(sql`${executionTasks.kind} = 'ai_task' AND ${executionTasks.payload}->'modelInput'->>'kind' IN ('model.generate','model.structured','asset.generate','transcribe.douyin','asset.asr')`);
         if (input.executionMode === "model.generate") filters.push(sql`${executionTasks.kind} = 'ai_task' AND ${executionTasks.payload}->'modelInput'->>'kind' = 'model.generate'`);
         if (input.kinds) {
           filters.push(inArray(executionTasks.kind, input.kinds));

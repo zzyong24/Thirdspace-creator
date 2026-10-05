@@ -1,0 +1,30 @@
+{
+  "at": "2026-10-03T18:38:25.832150+00:00",
+  "checks": [
+    {
+      "route": "/projects/project-8d660be7-54",
+      "status": 200,
+      "bytes": 178295,
+      "containsProjectWorksButton": false
+    },
+    {
+      "route": "/projects/project-8d660be7-54/article?outputId=output-8d660be7-79",
+      "status": 200,
+      "bytes": 85765,
+      "containsProjectWorksButton": false
+    },
+    {
+      "route": "/projects/project-8d660be7-54/outputs/output-8d660be7-95/image",
+      "status": 200,
+      "bytes": 113003,
+      "containsProjectWorksButton": false
+    },
+    {
+      "route": "/settings?tab=models&highlight=assistant-engine",
+      "status": 200,
+      "bytes": 719428,
+      "containsProjectWorksButton": false
+    }
+  ],
+  "limit": "仅实际 HTTP 响应，不是浏览器渲染、交互或视觉验收"
+}

@@ -1,0 +1,16 @@
+{
+  "url": "http://127.0.0.1:4318/projects",
+  "status": 200,
+  "sha256": "213133b495220a50406f807549746ef7ba726c9230b6ae005916789d1ae54415",
+  "direct_creation_present": false,
+  "new_project_links": [
+    {
+      "href": "/projects/new",
+      "text": "＋ 新建项目"
+    }
+  ],
+  "project_detail_links": 8,
+  "bytes": 172144,
+  "transport": "direct localhost",
+  "browser_visual": "not-run"
+}

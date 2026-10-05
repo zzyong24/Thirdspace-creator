@@ -1,0 +1,405 @@
+
+ RUN  v4.1.8 /private/tmp/t1046-ui-work/frontend
+
+(node:44007) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:44008) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ src/features/reference-editors/video-reference-workbench.test.tsx (8 tests | 1 failed) 421ms
+   × 干净工程仅自动updatedAt变化及服务revision不会再save，首次采用沿用候选版本 23ms
+ ❯ src/features/production/production-transcript-panel.test.tsx (12 tests | 1 failed) 1374ms
+   × 已采纳succeeded转写显式另建允许选择句级，保存原逐字稿且不自动create 1016ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/features/reference-editors/video-reference-workbench.test.tsx > 干净工程仅自动updatedAt变化及服务revision不会再save，首次采用沿用候选版本
+AssertionError: expected "vi.fn()" to not be called at all, but actually been called 1 times
+
+Received:
+
+  1st vi.fn() call:
+
+    Array [
+      Object {
+        "body": Object {
+          "expectedRevision": 1,
+          "plan": Object {
+            "editorVersion": 3,
+            "nativeSources": Array [
+              Object {
+                "mediaId": "media",
+                "source": Object {
+                  "assetFileId": "file",
+                  "assetId": "asset",
+                  "durationTicks": 720000,
+                  "fileDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                  "hasAudio": true,
+                  "probeDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                  "sourceId": "source",
+                  "timebase": Object {
+                    "den": 120000,
+                    "num": 1,
+                  },
+                },
+              },
+            ],
+            "referenceEditor": Object {
+              "editor": "opencut-classic",
+              "mediaRefs": Array [
+                Object {
+                  "assetFileId": "file",
+                  "assetId": "asset",
+                  "mediaId": "media",
+                },
+              ],
+              "nativeDocument": Object {
+                "currentSceneId": "scene",
+                "mediaMetadata": Array [
+                  Object {
+                    "mediaId": "media",
+                    "name": "原片.mp4",
+                    "type": "video",
+                  },
+                ],
+                "metadata": Object {
+                  "id": "output",
+                  "name": "测试稿",
+                  "updatedAt": "2026-10-03T00:00:00.000Z",
+                },
+                "scenes": Array [
+                  Object {
+                    "id": "scene",
+                    "tracks": Object {
+                      "audio": Array [],
+                      "main": Object {
+                        "elements": [Array],
+                        "id": "main",
+                        "type": "video",
+                      },
+                      "overlay": Array [
+                        [Object],
+                      ],
+                    },
+                    "updatedAt": "2026-10-03T00:00:00.000Z",
+                  },
+                ],
+                "settings": Object {},
+                "version": 31,
+              },
+              "revision": "cf5e79e919144200294fb9fed22a222592a0aeea",
+            },
+            "sourceTranscripts": Array [],
+          },
+          "requestId": "45c3db72-10ae-46ed-bffe-f9589904f67f",
+          "source": "manual",
+        },
+        "params": Object {
+          "outputId": "output",
+        },
+        "query": undefined,
+      },
+    ]
+
+
+Number of calls: 1
+
+ ❯ src/features/reference-editors/video-reference-workbench.test.tsx:31:345
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/features/production/production-transcript-panel.test.tsx > 已采纳succeeded转写显式另建允许选择句级，保存原逐字稿且不自动create
+TestingLibraryElementError: Unable to find role="button" and name "生成另一份转写"
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<details[39m
+      [33mclass[39m=[32m"min-w-0 rounded border p-3"[39m
+      [33mopen[39m=[32m""[39m
+    [36m>[39m
+      [36m<summary[39m
+        [33mclass[39m=[32m"cursor-pointer text-sm font-medium"[39m
+      [36m>[39m
+        [0m原片转写与逐字稿[0m
+      [36m</summary>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"mt-3 grid min-w-0 gap-3"[39m
+      [36m>[39m
+        [36m<p[39m
+          [33mclass[39m=[32m"text-xs text-muted-foreground"[39m
+        [36m>[39m
+          [0m转写读取已加入主轨的原文件。生成结果经你采纳后保存；转写失败仍能手工修剪。[0m
+        [36m</p>[39m
+        [36m<label[39m
+          [33mclass[39m=[32m"grid gap-1 text-sm"[39m
+        [36m>[39m
+          [0m转写原片[0m
+          [36m<select[39m
+            [33maria-label[39m=[32m"转写原片"[39m
+            [33mclass[39m=[32m"min-w-0 rounded border bg-background p-2"[39m
+          [36m>[39m
+            [36m<option[39m
+              [33mvalue[39m=[32m"source-a"[39m
+            [36m>[39m
+              [0m原片 [0m
+              [0m1[0m
+            [36m</option>[39m
+          [36m</select>[39m
+        [36m</label>[39m
+        [36m<label[39m
+          [33mclass[39m=[32m"grid gap-1 text-sm"[39m
+        [36m>[39m
+          [0m转写精度[0m
+          [36m<select[39m
+            [33maria-label[39m=[32m"转写精度"[39m
+            [33mclass[39m=[32m"min-w-0 rounded border bg-background p-2"[39m
+            [33mdisabled[39m=[32m""[39m
+          [36m>[39m
+            [36m<option[39m
+              [33mvalue[39m=[32m"text"[39m
+            [36m>[39m
+              [0m全文[0m
+            [36m</option>[39m
+            [36m<option[39m
+              [33mvalue[39m=[32m"segment"[39m
+            [36m>[39m
+              [0m句级时间码[0m
+            [36m</option>[39m
+            [36m<option[39m
+              [33mvalue[39m=[32m"word"[39m
+            [36m>[39m
+              [0m词级时间码[0m
+            [36m</option>[39m
+          [36m</select>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"text-xs text-muted-foreground"[39m
+          [36m>[39m
+            [0m只有回执与源音视频时间映射可验证时才提供词句定位；无法验证时保留全文，仍可手工剪辑。[0m
+          [36m</span>[39m
+        [36m</label>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex flex-wrap gap-2"[39m
+        [36m>[39m
+          [36m<button[39m
+            [33mclass[39m=[32m"rounded-md border px-3 py-2 text-sm disabled:opacity-40"[39m
+            [33mdisabled[39m=[32m""[39m
+          [36m>[39m
+            [0m转写这段原片[0m
+          [36m</button>[39m
+          [36m<button[39m
+            [33mclass[39m=[32m"rounded-md border px-3 py-2 text-sm disabled:opacity-40"[39m
+          [36m>[39m
+            [0m读取原转写状态[0m
+          [36m</button>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"min-w-0 space-y-2 rounded border p-3"[39m
+        [36m>[39m
+          [36m<p[39m
+            [33mclass[39m=[32m"text-sm"[39m
+          [36m>[39m
+            [0m转写已完成[0m
+          [36m</p>[39m
+          [36m<button[39m
+            [33mclass[39m=[32m"rounded-md border px-3 py-2 text-sm disabled:opacity-40"[39m
+          [36m>[39m
+            [0m读取原任务诊断[0m
+          [36m</button>[39m
+          [36m<p[39m
+            [33mclass[39m=[32m"whitespace-pre-wrap break-words text-sm"[39m
+          [36m>[39m
+            [0m真实全文，没有假时间码[0m
+          [36m</p>[39m
+          [36m<p[39m
+            [33mclass[39m=[32m"text-xs text-muted-foreground"[39m
+          [36m>[39m
+            [0m该结果仅有全文，没有词句时间码；请在时间轴按原片时间手工剪辑。[0m
+          [36m</p>[39m
+          [36m<button[39m
+            [33mclass[39m=[32m"rounded-md border px-3 py-2 text-sm disabled:opacity-40"[39m
+            [33mdisabled[39m=[32m""[39m
+          [36m>[39m
+            [0m已保存这份转写[0m
+          [36m</button>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"min-w-0 space-y-2"[39m
+        [36m>[39m
+          [36m<h3[39m
+            [33mclass[39m=[32m"text-sm font-medium"[39m
+          [36m>[39m
+            [0m已保存的原始转写[0m
+          [36m</h3>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"rounded border p-3"[39m
+          [36m>[39m
+            [36m<p[39m
+              [33mclass[39m=[32m"whitespace-pre-wrap break-words text-sm"[39m
+            [36m>[39m
+              [0m真实全文，没有假时间码[0m
+            [36m</p>[39m
+            [36m<p[39m
+              [33mclass[39m=[32m"mt-2 text-xs text-muted-foreground"[39m
+            [36m>[39m
+              [0m全文来源，暂无时间码[0m
+            [36m</p>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</details>[39m
+  [36m</div>[39m
+[36m</body>[39m
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<details[39m
+      [33mclass[39m=[32m"min-w-0 rounded border p-3"[39m
+      [33mopen[39m=[32m""[39m
+    [36m>[39m
+      [36m<summary[39m
+        [33mclass[39m=[32m"cursor-pointer text-sm font-medium"[39m
+      [36m>[39m
+        [0m原片转写与逐字稿[0m
+      [36m</summary>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"mt-3 grid min-w-0 gap-3"[39m
+      [36m>[39m
+        [36m<p[39m
+          [33mclass[39m=[32m"text-xs text-muted-foreground"[39m
+        [36m>[39m
+          [0m转写读取已加入主轨的原文件。生成结果经你采纳后保存；转写失败仍能手工修剪。[0m
+        [36m</p>[39m
+        [36m<label[39m
+          [33mclass[39m=[32m"grid gap-1 text-sm"[39m
+        [36m>[39m
+          [0m转写原片[0m
+          [36m<select[39m
+            [33maria-label[39m=[32m"转写原片"[39m
+            [33mclass[39m=[32m"min-w-0 rounded border bg-background p-2"[39m
+          [36m>[39m
+            [36m<option[39m
+              [33mvalue[39m=[32m"source-a"[39m
+            [36m>[39m
+              [0m原片 [0m
+              [0m1[0m
+            [36m</option>[39m
+          [36m</select>[39m
+        [36m</label>[39m
+        [36m<label[39m
+          [33mclass[39m=[32m"grid gap-1 text-sm"[39m
+        [36m>[39m
+          [0m转写精度[0m
+          [36m<select[39m
+            [33maria-label[39m=[32m"转写精度"[39m
+            [33mclass[39m=[32m"min-w-0 rounded border bg-background p-2"[39m
+            [33mdisabled[39m=[32m""[39m
+          [36m>[39m
+            [36m<option[39m
+              [33mvalue[39m=[32m"text"[39m
+            [36m>[39m
+              [0m全文[0m
+            [36m</option>[39m
+            [36m<option[39m
+              [33mvalue[39m=[32m"segment"[39m
+            [36m>[39m
+              [0m句级时间码[0m
+            [36m</option>[39m
+            [36m<option[39m
+              [33mvalue[39m=[32m"word"[39m
+            [36m>[39m
+              [0m词级时间码[0m
+            [36m</option>[39m
+          [36m</select>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"text-xs text-muted-foreground"[39m
+          [36m>[39m
+            [0m只有回执与源音视频时间映射可验证时才提供词句定位；无法验证时保留全文，仍可手工剪辑。[0m
+          [36m</span>[39m
+        [36m</label>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex flex-wrap gap-2"[39m
+        [36m>[39m
+          [36m<button[39m
+            [33mclass[39m=[32m"rounded-md border px-3 py-2 text-sm disabled:opacity-40"[39m
+            [33mdisabled[39m=[32m""[39m
+          [36m>[39m
+            [0m转写这段原片[0m
+          [36m</button>[39m
+          [36m<button[39m
+            [33mclass[39m=[32m"rounded-md border px-3 py-2 text-sm disabled:opacity-40"[39m
+          [36m>[39m
+            [0m读取原转写状态[0m
+          [36m</button>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"min-w-0 space-y-2 rounded border p-3"[39m
+        [36m>[39m
+          [36m<p[39m
+            [33mclass[39m=[32m"text-sm"[39m
+          [36m>[39m
+            [0m转写已完成[0m
+          [36m</p>[39m
+          [36m<button[39m
+            [33mclass[39m=[32m"rounded-md border px-3 py-2 text-sm disabled:opacity-40"[39m
+          [36m>[39m
+            [0m读取原任务诊断[0m
+          [36m</button>[39m
+          [36m<p[39m
+            [33mclass[39m=[32m"whitespace-pre-wrap break-words text-sm"[39m
+          [36m>[39m
+            [0m真实全文，没有假时间码[0m
+          [36m</p>[39m
+          [36m<p[39m
+            [33mclass[39m=[32m"text-xs text-muted-foreground"[39m
+          [36m>[39m
+            [0m该结果仅有全文，没有词句时间码；请在时间轴按原片时间手工剪辑。[0m
+          [36m</p>[39m
+          [36m<button[39m
+            [33mclass[39m=[32m"rounded-md border px-3 py-2 text-sm disabled:opacity-40"[39m
+            [33mdisabled[39m=[32m""[39m
+          [36m>[39m
+            [0m已保存这份转写[0m
+          [36m</button>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"min-w-0 space-y-2"[39m
+        [36m>[39m
+          [36m<h3[39m
+            [33mclass[39m=[32m"text-sm font-medium"[39m
+          [36m>[39m
+            [0m已保存的原始转写[0m
+          [36m</h3>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"rounded border p-3"[39m
+          [36m>[39m
+            [36m<p[39m
+              [33mclass[39m=[32m"whitespace-pre-wrap break-words text-sm"[39m
+            [36m>[39m
+              [0m真实全文，没有假时间码[0m
+            [36m</p>[39m
+            [36m<p[39m
+              [33mclass[39m=[32m"mt-2 text-xs text-muted-foreground"[39m
+            [36m>[39m
+              [0m全文来源，暂无时间码[0m
+            [36m</p>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</details>[39m
+  [36m</div>[39m
+[36m</body>[39m
+ ❯ waitForWrapper ../../../../Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ❯ ../../../../Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:86:33
+ ❯ src/features/production/production-transcript-panel.test.tsx:44:268
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  2 failed | 18 passed (20)
+   Start at  00:34:44
+   Duration  3.39s (transform 1.26s, setup 407ms, import 1.97s, tests 1.80s, environment 1.42s)
+

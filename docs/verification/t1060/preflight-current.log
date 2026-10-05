@@ -1,0 +1,22 @@
+governance-guard HALT (21)
+  ✗ ai-worker/src/execution/agentic-worker-entry.test.ts: unledgered complexity marker ipc; record structured budget entry and default non-essential hardening to a later task
+  ✗ ai-worker/src/execution/chat-generation-worker.ts: unledgered complexity marker ipc; record structured budget entry and default non-essential hardening to a later task
+  ✗ ai-worker/src/execution/durable-stream-model.ts: unledgered complexity marker ipc; record structured budget entry and default non-essential hardening to a later task
+  ✗ ai-worker/src/execution/flywheel-generation-worker-entry.ts: unledgered complexity marker ipc; record structured budget entry and default non-essential hardening to a later task
+  ✗ ai-worker/src/execution/intelligence-generation-worker-entry.ts: unledgered complexity marker ipc; record structured budget entry and default non-essential hardening to a later task
+  ✗ ai-worker/src/execution/intelligence-transcript-worker-entry.ts: unledgered complexity marker ipc; record structured budget entry and default non-essential hardening to a later task
+  ✗ ai-worker/src/execution/intelligence-worker-bundle.test.ts: unledgered complexity marker ipc; record structured budget entry and default non-essential hardening to a later task
+  ✗ ai-worker/src/execution/persistent-stream-writer.ts: unledgered complexity marker ipc; record structured budget entry and default non-essential hardening to a later task
+  ✗ ai-worker/src/execution/structured-worker-generation.ts: unledgered complexity marker ipc; record structured budget entry and default non-essential hardening to a later task
+  ✗ ai-worker/src/execution/topic-worker-reads.test.ts: unledgered complexity marker ipc; record structured budget entry and default non-essential hardening to a later task
+  ✗ ai-worker/src/execution/worker-entry.ts: unledgered complexity marker ipc; record structured budget entry and default non-essential hardening to a later task
+  ✗ ai-worker/src/execution/worker-runtime.ts: unledgered complexity marker ipc; record structured budget entry and default non-essential hardening to a later task
+  ✗ ai-worker/src/runtime/browser/runtime-load.test.ts: unledgered complexity marker runtime; record structured budget entry and default non-essential hardening to a later task
+  ✗ ai-worker/src/runtime/ffmpeg-path.test.ts: unledgered complexity marker native_executable; record structured budget entry and default non-essential hardening to a later task
+  ✗ ai-worker/src/runtime/ffmpeg-path.ts: unledgered complexity marker language_toolchain; record structured budget entry and default non-essential hardening to a later task
+  ✗ ai-worker/src/runtime/ffmpeg-path.ts: unledgered complexity marker native_executable; record structured budget entry and default non-essential hardening to a later task
+  ✗ ai-worker/vendor/acpx/src/agent-registry.ts: complexity ledger entry for runtime has a missing/stale file_sha256; legacy category grants fail closed and must be rebound to this exact task/file hash
+  ✗ backend/src/modules/ai/ai.repository.ts: unledgered complexity marker native_executable; record structured budget entry and default non-essential hardening to a later task
+  ✗ backend/src/modules/ai/ai.service.test.ts: unledgered complexity marker native_executable; record structured budget entry and default non-essential hardening to a later task
+  ✗ backend/src/modules/ai/ai.service.ts: unledgered complexity marker native_executable; record structured budget entry and default non-essential hardening to a later task
+  ✗ contract/src/internal/embedding-io.ts: unledgered complexity marker ipc; record structured budget entry and default non-essential hardening to a later task

@@ -1,9 +1,16 @@
 import {backupBeforeGroupUpgrade,backupPostgresBeforeGroupUpgrade,verifyGroupUpgradeCounts} from "./group-upgrade-backup";
+import * as publicationCoverSchema from "./schema/publication-cover";
+import * as creativeCanvasSchema from "./schema/creative-canvas";
+import {inspectCanvasMigrationLineage,assertCanvasMigrationConverged} from "./creative-canvas-migration-lineage";
+import * as momentsModelSchema from "./schema/moments-model";
+import * as workReviewsSchema from "./schema/work-reviews";
+import * as workMaterialsSchema from "./schema/work-materials";
+import * as workCompositionsSchema from "./schema/work-compositions";
+import * as momentsSchema from "./schema/moments";
 import * as executionStreamSchema from "./schema/execution-stream";
 import * as pendingDocumentCommitsSchema from "./schema/pending-document-commits";
 import * as pendingGeneratedAssetCommitsSchema from "./schema/pending-generated-asset-commits";
 import * as visualTemplatesSchema from "./schema/visual-templates";
-import * as creativeCanvasSchema from "./schema/creative-canvas";
 import { PGlite } from "@electric-sql/pglite";
 import { drizzle, type PgliteDatabase } from "drizzle-orm/pglite";
 import * as projectsSchema from "./schema/projects";
@@ -15,8 +22,10 @@ import * as settingsSchema from "./schema/settings";
 import * as knowledgeSchema from "./schema/knowledge";
 import * as assetsSchema from "./schema/assets";
 import * as artifactsSchema from "./schema/artifacts";
+import * as productionFileBindingsSchema from "./schema/production-file-bindings";
 import * as productionSchema from "./schema/production";
 import * as publishingSchema from "./schema/publishing";
+import * as publicationResultsSchema from "./modules/publishing/publication-results.schema";
 import * as analyticsSchema from "./schema/analytics";
 import * as ingestionSchema from "./schema/ingestion";
 import * as reviewsSchema from "./schema/reviews";
@@ -52,6 +61,10 @@ import * as intelligenceSchema from "./schema/intelligence";
 import * as executionBrowserProfileLeasesSchema from "./schema/execution-browser-profile-leases";
 import * as proposalAdoptionsSchema from "./schema/proposal-adoptions";
 import * as cliInvocationsSchema from "./schema/cli-invocations";
+import * as platformCollectionSchema from "./schema/platform-collection";
+import * as articlesSchema from "./schema/articles";
+import * as creativeResultsSchema from "./schema/creative-results";
+import * as graphicPostsSchema from "./modules/graphic-posts/graphic-posts.schema";
 import { Pool } from "pg";
 import { drizzle as drizzlePg } from "drizzle-orm/node-postgres";
 import { migrate as migratePg } from "drizzle-orm/node-postgres/migrator";
@@ -88,6 +101,13 @@ async function ensureCreativeCanvasSchema(db: Db): Promise<void> {
 // Shared DDL/schema union applied at every createDb(). Each module's tables join
 // here as they land (foundation §1: one pglite store, shared db factory).
 const schema = {
+  ...publicationCoverSchema,
+  ...creativeCanvasSchema,
+  ...workCompositionsSchema,
+  ...workMaterialsSchema,
+  ...workReviewsSchema,
+  ...momentsSchema,
+  ...momentsModelSchema,
   ...pendingDocumentCommitsSchema,
   ...pendingGeneratedAssetCommitsSchema,
   ...creativeCanvasSchema,
@@ -103,7 +123,9 @@ const schema = {
   ...assetsSchema,
   ...artifactsSchema,
   ...productionSchema,
+  ...productionFileBindingsSchema,
   ...publishingSchema,
+  ...publicationResultsSchema,
   ...analyticsSchema,
   ...ingestionSchema,
   ...reviewsSchema,
@@ -127,6 +149,10 @@ const schema = {
   ...browserSessionsSchema,
   ...intelligenceSchema,
   ...cliInvocationsSchema,
+  ...platformCollectionSchema,
+  ...articlesSchema,
+  ...creativeResultsSchema,
+  ...graphicPostsSchema,
   ...proposalAdoptionsSchema,
   ...executionBrowserProfileLeasesSchema,
 };
@@ -194,8 +220,10 @@ async function migrateOpenedDb(client: PGlite): Promise<Db> {
   // Apply the same versioned migrations the runtime uses. pglite is Postgres-WASM, so the
   // baseline drizzle/0000_init.sql is identical across drivers. Replaces the old
   // per-module client.exec(*_DDL) sequence — the schema is now built by the migration.
+  await inspectCanvasMigrationLineage(db, MIGRATIONS_FOLDER);
   await migratePglite(db, { migrationsFolder: MIGRATIONS_FOLDER });
   await ensureCreativeCanvasSchema(db);
+  await assertCanvasMigrationConverged(db, MIGRATIONS_FOLDER);
     // [T-033 fixup] 老 pglite(< 2026-07-08 build 前的 .dmg 装的)schema 不带 publications.platform_status 列,
     // 旧 journal 也没记 0029 → migrator 不会跑 → 启动 SSR list 报「column 不存在」500。
     // 这里用 information_schema 查列存不存在,缺就 ALTER TABLE 加(IF NOT EXISTS 兜幂等)。
@@ -389,8 +417,10 @@ export async function createRuntimeDb(
     await guard.query("SELECT pg_advisory_lock(1022,1)");
     const client={query:async<T>(query:string)=>{const result=await guard.query(query);return {rows:result.rows as T[]};}};
     const backup=await backupPostgresBeforeGroupUpgrade(client as never,connectionString);
+    await inspectCanvasMigrationLineage(db as unknown as Db, MIGRATIONS_FOLDER);
     await migratePg(db, { migrationsFolder: MIGRATIONS_FOLDER });
     await ensureCreativeCanvasSchema(db as unknown as Db);
+    await assertCanvasMigrationConverged(db as unknown as Db,MIGRATIONS_FOLDER);
     if(backup)await verifyGroupUpgradeCounts(client as never,backup);
   }catch(error){
     try{await guard.query("SELECT pg_advisory_unlock(1022,1)");}finally{guard.release();}

@@ -1,0 +1,34 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "独立只读评审 FAIL：sections 未覆盖制作正文实际读端。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "open",
+      "severity": "major",
+      "category": "completeness",
+      "requirement_anchor": {
+        "id": "T-1034-制作正文",
+        "quote": "后续制作可能消费表格语法"
+      },
+      "acceptance_anchor": {
+        "id": "T-1034-实际制作正文",
+        "quote": "确认逐段正文不含表格表头"
+      },
+      "where": "保存结构与实际制作读端",
+      "failure_mode": "仅派生 sections 未覆盖 getScript→extractVoiceoverText，导出仍会优先读取没有 transcript 的原始 Markdown。",
+      "evidence_kind": "deterministic-check",
+      "evidence_ref": "backend/src/application/context/review-subject.ts:36-41; backend/src/modules/production/material-export.ts:375",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "独立首轮评审：当前源码读取路径",
+      "suggestion": "严格解析后同时派生 transcript，保留 contentText；补真实保存→实际 reader→口播导出断言。",
+      "resolution_evidence": "",
+      "parent_id": ""
+    }
+  ]
+}

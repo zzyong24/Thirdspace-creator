@@ -17,7 +17,7 @@ export const generateAssetInWorkerRuntime:Generate=async(input,spec,signal,optio
  const sleep=(ms:number)=>delay(ms,undefined,{signal});
  const omnihi=createOmnihiVideoAdapter({fetch:fetchBound,sleep,pollIntervalMs:5000,maxPollAttempts:120,maxTransientAttempts:1});
  const registry={minimax:createMinimaxAdapter({fetch:fetchBound,sleep,pollIntervalMs:5000,maxPollAttempts:120,h3MaxPollAttempts:240}),openai:createOpenaiImagesAdapter({fetch:fetchBound,sleep,maxTransientAttempts:1}),omnihi,seedance:omnihi,seeddance:omnihi};
- const result=await (input.mediaKind==="image"?generateImage(spec,{prompt:input.prompt,aspectRatio:input.aspectRatio,idempotencyKey:options.idempotencyKey,...(options.referenceImage?{referenceImage:options.referenceImage}:{})},registry):generateVideo(spec,{prompt:input.prompt,aspectRatio:input.aspectRatio,durationSec:input.durationSec,resolution:input.resolution,signal,resumeJobId:options.resumeJobId,idempotencyKey:options.idempotencyKey,onJobSubmitted:options.onJobSubmitted,...(options.referenceImage?{firstFrame:options.referenceImage}:{})},registry));
+ const result=await (input.mediaKind==="image"?generateImage(spec,{prompt:input.prompt,aspectRatio:input.aspectRatio,idempotencyKey:options.idempotencyKey,...(options.referenceImage?{referenceImage:options.referenceImage}:{})},registry):generateVideo(spec,{prompt:input.prompt,aspectRatio:input.aspectRatio,durationSec:input.durationSec,resolution:input.resolution,legacyPlain:!input.mode,signal,resumeJobId:options.resumeJobId,idempotencyKey:options.idempotencyKey,onJobSubmitted:options.onJobSubmitted,...(options.referenceImage?{firstFrame:options.referenceImage}:{})},registry));
  signal.throwIfAborted();return result;
 };
 /** 恢复先于供应商动作；只使用后端持久化的原调用和原任务号。 */

@@ -4,6 +4,7 @@
 
 import { SettingsFormRow } from "./settings-form-row";
 import { RedfoxConfiguration } from "./redfox-configuration";
+import { ReportingConsentCard } from "./reporting-consent-card";
 import { SettingsModelRegion } from "./settings-model-region";
 import { useSettingsMutation } from "./use-settings-mutation";
 
@@ -187,6 +188,7 @@ const SETTINGS_DIALOG_TABS: ReadonlyArray<SettingsTabDef> = [
 // stepKey(或缺省 highlight)→ 无副作用(不切页签、不报错)。
 const HIGHLIGHT_TAB: Record<string, string> = {
   "redfox": "data-services",
+  "assistant-engine": "models",
   "text-model": "models",
   "image-model": "models",
   "video-model": "models",
@@ -359,7 +361,10 @@ export function SettingsDialog({
               </div>
             </SettingsPanel>
             <SettingsPanel tabId="preferences" active={tab}>
-              <PreferenceSettingsCard viewModel={viewModel} />
+              <div className="flex flex-col gap-card-gap">
+                <PreferenceSettingsCard viewModel={viewModel} />
+                <ReportingConsentCard />
+              </div>
             </SettingsPanel>
             <SettingsPanel tabId="appearance" active={tab}>
               <SystemSettingsCard viewModel={viewModel} />

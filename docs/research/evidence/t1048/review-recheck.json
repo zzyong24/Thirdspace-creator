@@ -1,0 +1,61 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "recheck",
+  "summary": "PASS：仅增量复核初审 REV-001/002。修订明确独立图文使用账号隔离页上下文，通过既有 GraphicPosts owner 读回/CAS 写回；已有页图无 association 时按精确原槽明确替换，有效 association 仍沿原 WorkMaterials。最新第 45 行可选 referenceFileId 与现有 getReference(ctx,id,fileId?) / Assets.readImageReference(ctx,assetId,fileId?,expectedChecksum?) 兼容，旧自由画布的 Asset-only 提交仍冻结当时当前文件；实现尚待接通节点契约和传参，不宣称已实现。两项 SPEC 完整性问题已消除，未新增领域写者或隐式组合。此为 SPEC 评审通过，不表示实现或真实模型/UI 链验收已通过。",
+  "findings": [
+    {
+      "status": "resolved",
+      "severity": "major",
+      "category": "completeness",
+      "requirement_anchor": {
+        "id": "T-1048/画布衔接",
+        "quote": "从选定页进入现有画布"
+      },
+      "acceptance_anchor": {
+        "id": "T-1048/真实UI验收",
+        "quote": "单页重做/采用、画布返回"
+      },
+      "evidence_kind": "deterministic-check",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "clarify",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "SPEC-LINE:45:dbadb4406ddc282f",
+      "resolution_evidence": "SPEC-LINE:45:371470ad86e89df7；第 45 行明确独立稿无 compositionId 前置，账号隔离 handle 绑定真实 output/cardId/baseVersion/精确文件，经 getGraphicPost/getGraphicPostVersion 核验和原 createVersion 当前 CAS 采用，返回原 output 路由；第 47 行追加独立稿与归属/CAS 公共链回归。仅 SPEC 静态增量复核，未宣称实现通过。",
+      "parent_id": "",
+      "id": "REV-001",
+      "where": "docs/features/t1048-image-series-workbench.md:29,45",
+      "failure_mode": "SPEC 将画布采用限定在已有 WorkMaterials attach/replace，但普通图文工作台没有 compositionId；现有 workCanvasContext 和物料公共操作都要求真实组合及成员。未明确独立图文页入口/写回路径会使合法独立稿无法回原页，或迫使实现隐式创建/挑选组合，超出已确认创作流程。",
+      "evidence_ref": "frontend/src/features/projects/graphic-post-workbench.tsx:43-49 仅 projectId/accountId/GraphicPostResource；contract/src/resources/work-compositions.ts:162 workCanvasContext 必需 compositionId；contract/src/operations/work-compositions.ts:62-67 路由必需 compositionId；backend/src/modules/work-compositions/work-materials.service.ts:76-83 核验组合及成员。均为静态源码检查，未宣称真实链运行通过。",
+      "suggestion": "明确不属于组合的图文页通过既有 GraphicPostsService get/getVersion/createVersion 核验及 CAS 采用，保持唯一领域 owner；scoped canvas handle 冻结 account/project/output/cardId/baseVersion/精确文件，入画布和采用前重读后端；不隐式创建或选择组合。明确原图文返回路由，并添加独立稿公共链与跨账号/目标删除/CAS 冲突回归。"
+    },
+    {
+      "status": "resolved",
+      "severity": "major",
+      "category": "completeness",
+      "requirement_anchor": {
+        "id": "T-1048/画布衔接",
+        "quote": "从选定页进入现有画布"
+      },
+      "acceptance_anchor": {
+        "id": "T-1048/真实UI验收",
+        "quote": "单页重做/采用、画布返回"
+      },
+      "evidence_kind": "deterministic-check",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "clarify",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "SPEC-LINE:45:dbadb4406ddc282f",
+      "resolution_evidence": "SPEC-LINE:47:bbc08c0bc438a8d9；第 47 行明确已占页槽无有效 association 由 owner 读取 expectedFile，确认替换，经原 createVersion CAS 仅换本页并保留其他页；原槽已变化时报冲突/重新确认，不伪造 association，不先删图；有效 association 的原 replace 保留；新增对应公共链回归。仅 SPEC 静态增量复核，未宣称实现通过。",
+      "parent_id": "",
+      "id": "REV-002",
+      "where": "docs/features/t1048-image-series-workbench.md:45",
+      "failure_mode": "已有 card 图片可能由媒体采用、用户选择或快图产生，不具有 WorkMaterialAssociation；现 WorkMaterials attach 在槽位有图时报冲突，replace 强制真实 associationId。因此 SPEC 承诺画布替换已有页图，不能仅靠现 attach/replace 覆盖这类合法稿面。",
+      "evidence_ref": "contract/src/resources/work-compositions.ts:143-146 replace 必需 associationId/expectedFile；backend/src/modules/work-compositions/work-materials.service.ts:37 读取真实 attached association，缺失即拒绝；backend/src/modules/work-compositions/graphic-materials.ts:21 attach 拒绝已占槽；backend/src/modules/creative-results/graphic-post-media.adapter.ts:230-238 媒体采用直接创建 GraphicPost 版本，没有创建物料关联。均为静态源码检查。",
+      "suggestion": "明确已占槽且没有有效 association 的路径：从后端读当前槽及精确 expectedFile，向用户明确确认替换，经原 GraphicPosts createVersion 当前版本 CAS 只替换该 cardId；保留其余页及历史。已有组合且有效 association 时沿原 WorkMaterials replace。不得伪造 association、先删旧图再 attach 或复用错误 association。加媒体/用户先采用→画布替换、并发换图、旧回执重放的公共链测试。"
+    }
+  ]
+}

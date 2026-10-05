@@ -1,0 +1,7 @@
+.creatoros-noterelay-native {height:100%;min-height:0;overflow:auto;background:var(--creatoros-surface-subtle);color:var(--creatoros-text);font-family:var(--creatoros-font-sans);border-radius:var(--creatoros-radius-card)}
+.creatoros-noterelay-stage {min-width:0;padding:24px;display:flex;justify-content:center;align-items:flex-start}
+.creatoros-noterelay-stage > .noterelay-wechat {width:min(100%,780px)}
+.creatoros-noterelay-stage > .noterelay-rednote {max-width:100%}
+.creatoros-noterelay-stage .noterelay-card-nav[hidden] {display:none}
+.creatoros-noterelay-stage .noterelay-wechat-warning {color:var(--creatoros-text-muted);background:var(--creatoros-surface);border:1px solid var(--creatoros-border);font-size:12px;border-radius:var(--creatoros-radius-control)}
+@media(max-width:600px){.creatoros-noterelay-stage{padding:12px;justify-content:flex-start}}

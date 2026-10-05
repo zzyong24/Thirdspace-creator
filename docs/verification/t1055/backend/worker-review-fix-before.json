@@ -1,0 +1,7 @@
+{
+  "ai-worker/src/runtime/wechat-article-candidate.ts": "db602bd83465bd9224b78398e15c40d24b8ffc63a31dde62ba28b6018ba712d6",
+  "ai-worker/src/runtime/wechat-article-candidate.test.ts": "bccb42f4a8c81457f620aec8d06b77544cd744a3182e13a117ab60ad0e3600c7",
+  "ai-worker/src/prompt/templates/wechat-article-draft.ts": "13a41de7f0d8d3c06f8db01dd59b805ed0522ce37a7a19eb6eca32f90e9eaf85",
+  "ai-worker/src/execution/structured-business-schema.ts": "48f60849eeb3f97916323bc689e6559998ab884107ac128b47fd5f9a40a3da73",
+  "ai-worker/src/execution/structured-worker-generation.test.ts": "67d51fb053fd1fef4ee109fa3d2f3fbae5fbec55d8d1a66df32f798d60688010"
+}

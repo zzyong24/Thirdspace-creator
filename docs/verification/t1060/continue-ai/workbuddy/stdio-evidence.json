@@ -1,0 +1,621 @@
+{
+  "verification": "CreatorOS bundled-CLI stdio MCP to original HTTP dispatch to real isolated domain services",
+  "at": "2026-10-04T12:50:44.919Z",
+  "isolatedRoot": "/tmp/t1060-ai-business/continue-workbuddy/isolated-mcp-OgqE9P",
+  "workbuddyActualAiCallsByProbe": 0,
+  "workbuddyActualClientToolCallsByProbe": 0,
+  "connectorInstalledOrTrustedByProbe": false,
+  "existingWorkBuddyTrustState": "未读取配置，未知",
+  "temporaryDataOnly": true,
+  "originalUserDatabaseAccessed": false,
+  "checks": {
+    "originalBundledCliStarted": true,
+    "realMcpInitialize": true,
+    "realMcpToolsList": true,
+    "realAccountsOnlyOwned": true,
+    "realProjectReadViaOriginalDispatch": true,
+    "emptyOutputsHonest": true,
+    "noAccountRejected": true,
+    "foreignAccountRejected": true,
+    "foreignProjectRejected": true,
+    "writeMissingApplyRejectedBeforeHttp": true,
+    "revocationImmediate": true,
+    "eofCleanExit": true,
+    "originalCliAuditPersisted": true
+  },
+  "calls": [
+    {
+      "name": "accounts_list",
+      "args": {
+        "query": {
+          "page": 1,
+          "pageSize": 20
+        }
+      },
+      "isError": false,
+      "text": "{\n  \"data\": [\n    {\n      \"id\": \"acct-t1060-00020deb-c1f6-469c-abe2-a3e5cd536b60\",\n      \"userId\": \"user-t1060-1bdc8125-8bd5-409d-9f54-c4db8b5332bc\",\n      \"platform\": \"xiaohongshu\",\n      \"accountHandle\": \"T1060 MCP 临时账号\",\n      \"externalAccountId\": null,\n      \"secretReference\": null,\n      \"followerBaseline\": 0,\n      \"status\": \"active\",\n      \"createdAt\": \"2026-10-04T12:50:44.965Z\",\n      \"updatedAt\": \"2026-10-04T12:50:44.965Z\"\n    }\n  ],\n  \"meta\": {\n    \"requestId\": \"req-t1060-f7c724a0-17ba-4a8b-aa46-51a4a7da5f11\",\n    \"page\": 1,\n    \"pageSize\": 20,\n    \"total\": 1\n  }\n}"
+    },
+    {
+      "name": "projects_list",
+      "args": {
+        "query": {},
+        "_creatoros": {
+          "accountId": "acct-t1060-00020deb-c1f6-469c-abe2-a3e5cd536b60"
+        }
+      },
+      "isError": false,
+      "text": "{\n  \"data\": [\n    {\n      \"id\": \"project-t1060-eaf5fb75-a603-4d1b-b6e5-9b516acd76b0\",\n      \"userId\": \"user-t1060-1bdc8125-8bd5-409d-9f54-c4db8b5332bc\",\n      \"title\": \"隔离 MCP 验证 · 松林晨光 f3e81f3f\",\n      \"brief\": \"只用于验证 Connector 的真实读取，不采纳、不发布。\",\n      \"briefDetail\": {\n        \"targetPlatforms\": []\n      },\n      \"contentCategory\": \"\",\n      \"source\": \"manual\",\n      \"platformRef\": {\n        \"platform\": \"\",\n        \"externalId\": \"\"\n      },\n      \"creationMode\": \"guided\",\n      \"status\": \"active\",\n      \"currentStage\": \"brief\",\n      \"progressPct\": 0,\n      \"starred\": false,\n      \"startedAt\": \"2026-10-04T12:50:45.008Z\",\n      \"targetCompletedAt\": null,\n      \"completedAt\": null,\n      \"archivedAt\": null,\n      \"createdAt\": \"2026-10-04T12:50:45.008Z\",\n      \"updatedAt\": \"2026-10-04T12:50:45.008Z\"\n    }\n  ],\n  \"meta\": {\n    \"requestId\": \"req-t1060-1ca7d670-0b30-4c7a-b437-cc075353af6b\",\n    \"page\": 1,\n    \"pageSize\": 50,\n    \"total\": 1\n  }\n}"
+    },
+    {
+      "name": "projects_get",
+      "args": {
+        "params": {
+          "projectId": "project-t1060-eaf5fb75-a603-4d1b-b6e5-9b516acd76b0"
+        },
+        "_creatoros": {
+          "accountId": "acct-t1060-00020deb-c1f6-469c-abe2-a3e5cd536b60"
+        }
+      },
+      "isError": false,
+      "text": "{\n  \"data\": {\n    \"id\": \"project-t1060-eaf5fb75-a603-4d1b-b6e5-9b516acd76b0\",\n    \"userId\": \"user-t1060-1bdc8125-8bd5-409d-9f54-c4db8b5332bc\",\n    \"title\": \"隔离 MCP 验证 · 松林晨光 f3e81f3f\",\n    \"brief\": \"只用于验证 Connector 的真实读取，不采纳、不发布。\",\n    \"briefDetail\": {\n      \"targetPlatforms\": []\n    },\n    \"contentCategory\": \"\",\n    \"source\": \"manual\",\n    \"platformRef\": {\n      \"platform\": \"\",\n      \"externalId\": \"\"\n    },\n    \"creationMode\": \"guided\",\n    \"status\": \"active\",\n    \"currentStage\": \"brief\",\n    \"progressPct\": 0,\n    \"starred\": false,\n    \"startedAt\": \"2026-10-04T12:50:45.008Z\",\n    \"targetCompletedAt\": null,\n    \"completedAt\": null,\n    \"archivedAt\": null,\n    \"createdAt\": \"2026-10-04T12:50:45.008Z\",\n    \"updatedAt\": \"2026-10-04T12:50:45.008Z\"\n  },\n  \"meta\": {\n    \"requestId\": \"req-t1060-cf636bf1-6eb4-4291-aafa-172991fabb3b\"\n  }\n}"
+    },
+    {
+      "name": "projects_outputs_list",
+      "args": {
+        "params": {
+          "projectId": "project-t1060-eaf5fb75-a603-4d1b-b6e5-9b516acd76b0"
+        },
+        "_creatoros": {
+          "accountId": "acct-t1060-00020deb-c1f6-469c-abe2-a3e5cd536b60"
+        }
+      },
+      "isError": false,
+      "text": "{\n  \"data\": [],\n  \"meta\": {\n    \"requestId\": \"req-t1060-42455c95-fc11-422f-9de6-3e51b5d3e5a9\",\n    \"page\": 1,\n    \"pageSize\": 50,\n    \"total\": 0\n  }\n}"
+    },
+    {
+      "name": "projects_list",
+      "args": {
+        "query": {}
+      },
+      "isError": true,
+      "text": "dispatch projects.list failed (428): AccountRequiredError: projects.accountGate requires a selected account (ctx.accountId missing)"
+    },
+    {
+      "name": "projects_get",
+      "args": {
+        "params": {
+          "projectId": "project-t1060-eaf5fb75-a603-4d1b-b6e5-9b516acd76b0"
+        },
+        "_creatoros": {
+          "accountId": "acct-t1060-a7bcc835-913c-4af7-8f83-5f7ef3147b67"
+        }
+      },
+      "isError": true,
+      "text": "dispatch projects.get failed (404): OwnershipError: platform account not found: acct-t1060-a7bcc835-913c-4af7-8f83-5f7ef3147b67"
+    },
+    {
+      "name": "projects_get",
+      "args": {
+        "params": {
+          "projectId": "project-t1060-677ac2d9-1251-4a44-9fd2-6eb04d16e7eb"
+        },
+        "_creatoros": {
+          "accountId": "acct-t1060-00020deb-c1f6-469c-abe2-a3e5cd536b60"
+        }
+      },
+      "isError": true,
+      "text": "dispatch projects.get failed (404): Project not found: project-t1060-677ac2d9-1251-4a44-9fd2-6eb04d16e7eb"
+    },
+    {
+      "name": "projects_patch",
+      "args": {
+        "params": {
+          "projectId": "project-t1060-eaf5fb75-a603-4d1b-b6e5-9b516acd76b0"
+        },
+        "body": {
+          "title": "不应执行"
+        },
+        "_creatoros": {
+          "accountId": "acct-t1060-00020deb-c1f6-469c-abe2-a3e5cd536b60"
+        }
+      },
+      "isError": true,
+      "text": "dispatch projects.patch 失败:projects.patch 必须显式 apply=true。(dev server 是否在运行?CREATOROS_BASE_URL 是否正确?)"
+    },
+    {
+      "name": "projects_get",
+      "args": {
+        "params": {
+          "projectId": "project-t1060-eaf5fb75-a603-4d1b-b6e5-9b516acd76b0"
+        },
+        "_creatoros": {
+          "accountId": "acct-t1060-00020deb-c1f6-469c-abe2-a3e5cd536b60"
+        }
+      },
+      "isError": true,
+      "text": "dispatch projects.get failed (403): CLI 完整访问未开启或已撤销。"
+    }
+  ],
+  "http": [
+    {
+      "operation": "accounts.list",
+      "status": 200
+    },
+    {
+      "operation": "projects.list",
+      "status": 200
+    },
+    {
+      "operation": "projects.get",
+      "status": 200
+    },
+    {
+      "operation": "projects.outputs.list",
+      "status": 200
+    },
+    {
+      "operation": "projects.list",
+      "status": 428
+    },
+    {
+      "operation": "projects.get",
+      "status": 404
+    },
+    {
+      "operation": "projects.get",
+      "status": 404
+    },
+    {
+      "operation": "projects.get",
+      "status": 403
+    }
+  ],
+  "launch": {
+    "command": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+    "args": [
+      "/tmp/t1060-ai-business/continue-workbuddy/runtime/CreatorOS连接器/creatoros.cjs",
+      "mcp",
+      "serve",
+      "--connection-file",
+      "/tmp/t1060-ai-business/continue-workbuddy/isolated-mcp-OgqE9P/connection.json"
+    ],
+    "env": {
+      "CREATOROS_BASE_URL": ""
+    },
+    "shell": false,
+    "templateSha256": "0ab604578ecc2af9090b8107b641b8ab38fefcbb7f5f74c95627f36a5aad0a3e",
+    "bundleSha256": "d7646b326d8d7de6ecf09b2faa629198e07c7a796b6277a3d47bdb859a6367c0"
+  },
+  "initialize": {
+    "serverVersion": {
+      "name": "creatoros",
+      "version": "0.1.0"
+    },
+    "serverCapabilities": {
+      "tools": {}
+    },
+    "pid": 20091
+  },
+  "tools": {
+    "count": 368,
+    "readOnlyCount": 161,
+    "names": [
+      "accounts_archive",
+      "accounts_cadence_attainment",
+      "accounts_cadence_get",
+      "accounts_cadence_upsert",
+      "accounts_calendar_entries_create",
+      "accounts_calendar_list",
+      "accounts_create",
+      "accounts_get",
+      "accounts_list",
+      "accounts_update",
+      "ai_conversations_create",
+      "ai_conversations_list",
+      "ai_conversations_messages_create",
+      "ai_conversations_messages_list",
+      "ai_tasks_cancel",
+      "ai_tasks_confirm",
+      "ai_tasks_create",
+      "ai_tasks_get",
+      "ai_tasks_list",
+      "ai_tasks_results_list",
+      "ai_tasks_results_patch",
+      "ai_tasks_steps_list",
+      "analytics_projects_get",
+      "analytics_publications_get",
+      "analytics_traffic_get",
+      "analytics_traffic_refresh",
+      "articles_candidates_adopt",
+      "articles_candidates_generate",
+      "articles_candidates_get",
+      "articles_get",
+      "articles_versions_create",
+      "articles_versions_get",
+      "artifacts_create",
+      "artifacts_get",
+      "artifacts_list",
+      "artifacts_relations_create",
+      "artifacts_restore",
+      "artifacts_scriptPatches_apply",
+      "artifacts_versions_create",
+      "artifacts_versions_list",
+      "assets_commit",
+      "assets_downloadUrl",
+      "assets_favorite_toggle",
+      "assets_fileDownloadUrl",
+      "assets_files_create",
+      "assets_get",
+      "assets_list",
+      "assets_restore",
+      "assets_trash",
+      "assets_uploads_complete",
+      "assets_uploads_create",
+      "assets_usage_list",
+      "audienceSignals_linkToCandidate",
+      "audienceSignals_list",
+      "benchmark_sources_create",
+      "benchmark_sources_list",
+      "benchmark_sources_remove",
+      "benchmark_sources_toggle",
+      "benchmark_works_list",
+      "benchmark_works_transcribe",
+      "browserSessions_clear",
+      "browserSessions_openLogin",
+      "calendar_entries_delete",
+      "calendar_entries_transition",
+      "calendar_entries_update",
+      "calibration_overview",
+      "calibration_predictions_create",
+      "calibration_predictions_get",
+      "calibration_predictions_list",
+      "calibration_predictions_lock",
+      "calibration_results_create",
+      "calibration_rubrics_bumpVersion",
+      "calibration_rubrics_create",
+      "calibration_rubrics_get",
+      "calibration_suggestions_adopt",
+      "calibration_suggestions_dismiss",
+      "calibration_suggestions_list",
+      "candidates_create",
+      "candidates_get",
+      "candidates_list",
+      "candidates_patch",
+      "candidates_promote",
+      "canvas_agent_apply",
+      "canvas_agent_proposals",
+      "canvas_archive",
+      "canvas_capabilities",
+      "canvas_create",
+      "canvas_generations_material_get",
+      "canvas_get",
+      "canvas_list",
+      "canvas_node_generate",
+      "canvas_node_preview",
+      "canvas_node_tasks",
+      "canvas_save",
+      "creativeCapabilities_list",
+      "creativeResults_adopt",
+      "creativeResults_bundles_create",
+      "creativeResults_bundles_get",
+      "creativeResults_bundles_list",
+      "creativeResults_generate",
+      "creativeResults_get",
+      "creativeResults_list",
+      "creativeResults_retry",
+      "creatoros_overview",
+      "execution_tasks_command",
+      "execution_tasks_confirm",
+      "execution_tasks_create",
+      "execution_tasks_discard",
+      "execution_tasks_get",
+      "execution_tasks_list",
+      "exports_complete",
+      "favorites_folders_create",
+      "favorites_folders_list",
+      "favorites_folders_remove",
+      "favorites_folders_toggle",
+      "graphicPosts_candidates_adopt",
+      "graphicPosts_candidates_generate",
+      "graphicPosts_candidates_get",
+      "graphicPosts_get",
+      "graphicPosts_outputs_create",
+      "graphicPosts_versions_create",
+      "graphicPosts_versions_get",
+      "identity_profile_patch",
+      "identity_register",
+      "ingestion_douyin_login",
+      "ingestion_douyin_refresh",
+      "ingestion_douyin_status",
+      "ingestion_douyin_throttleStatus",
+      "ingestion_runs_complete",
+      "ingestion_runs_create",
+      "ingestion_runs_get",
+      "intelligence_collections_create",
+      "intelligence_collections_delete",
+      "intelligence_collections_update",
+      "intelligence_collectors_list",
+      "intelligence_items_get",
+      "intelligence_items_importDouyinShare",
+      "intelligence_items_list",
+      "intelligence_migrations_inventory",
+      "intelligence_migrations_report",
+      "intelligence_migrations_rollback",
+      "intelligence_migrations_start",
+      "intelligence_projects_enqueue",
+      "intelligence_runs_get",
+      "intelligence_runs_list",
+      "intelligence_runs_start",
+      "intelligence_sources_create",
+      "intelligence_sources_delete",
+      "intelligence_sources_list",
+      "intelligence_sources_listFavoriteFolders",
+      "intelligence_sources_previewProfile",
+      "intelligence_sources_previewWeb",
+      "intelligence_sources_update",
+      "intelligence_transcripts_enqueue",
+      "intelligence_transcripts_uploadManual",
+      "intelligence_transforms_confirmTopic",
+      "intelligence_transforms_previewTopic",
+      "intelligence_workspace_get",
+      "jobRuns_get",
+      "jobRuns_listByJob",
+      "knowledge_archive",
+      "knowledge_create",
+      "knowledge_folders_create",
+      "knowledge_folders_list",
+      "knowledge_get",
+      "knowledge_list",
+      "knowledge_move",
+      "knowledge_relations_create",
+      "knowledge_relations_delete",
+      "knowledge_relations_list",
+      "knowledge_relations_listAll",
+      "knowledge_revisions_create",
+      "knowledge_revisions_list",
+      "learnings_applications_create",
+      "learnings_calibrationSuggestions_create",
+      "learnings_create",
+      "learnings_evaluate",
+      "learnings_get",
+      "learnings_list",
+      "learnings_patch",
+      "materialLinks_create",
+      "materialLinks_delete",
+      "materialLinks_list",
+      "moments_candidates_adopt",
+      "moments_candidates_generate",
+      "moments_candidates_get",
+      "moments_candidates_retry",
+      "moments_create",
+      "moments_get",
+      "moments_list",
+      "moments_requests_get",
+      "moments_versions_create",
+      "moments_versions_get",
+      "moments_versions_list",
+      "notifications_list",
+      "notifications_read",
+      "outputs_conversions_create",
+      "outputs_conversions_get",
+      "outputs_get",
+      "outputs_patch",
+      "outputs_production_editingPlan_broll_remove",
+      "outputs_production_editingPlan_confirm",
+      "outputs_production_editor_apply",
+      "outputs_production_editor_convert_adopt",
+      "outputs_production_editor_convert_get",
+      "outputs_production_editor_convert_prepare",
+      "outputs_production_editor_get",
+      "outputs_production_editor_preview",
+      "outputs_production_editor_receipt_get",
+      "outputs_production_editor_render",
+      "outputs_production_editor_renders_list",
+      "outputs_production_editor_restore",
+      "outputs_production_editor_rough-cut_adopt",
+      "outputs_production_editor_rough-cut_create",
+      "outputs_production_editor_rough-cut_get",
+      "outputs_production_editor_save",
+      "outputs_production_editor_sources_adopt",
+      "outputs_production_editor_sources_get",
+      "outputs_production_editor_sources_prepare",
+      "outputs_production_editor_sources_retry",
+      "outputs_production_editor_transcripts_adopt",
+      "outputs_production_editor_transcripts_create",
+      "outputs_production_editor_transcripts_get",
+      "outputs_production_editor_versions_get",
+      "outputs_production_editor_versions_list",
+      "outputs_production_get",
+      "outputs_production_put",
+      "outputs_publications_create",
+      "outputs_publications_list",
+      "outputs_publications_register",
+      "outputs_stage_transition",
+      "pages_dailyReport_get",
+      "pages_dashboard_get",
+      "pages_positioning_get",
+      "pages_projectOverview_get",
+      "pages_search_get",
+      "platforms_bind_begin",
+      "platforms_bind_cancel",
+      "platforms_bind_confirm",
+      "platforms_capabilities_list",
+      "platforms_collections_cancel",
+      "platforms_collections_get",
+      "platforms_collections_start",
+      "platforms_metrics_read",
+      "platforms_works_list",
+      "positioning_discovery_answer_update",
+      "positioning_discovery_confirm",
+      "positioning_discovery_evidence_set",
+      "positioning_discovery_research",
+      "positioning_discovery_start",
+      "positioning_gate_evaluate",
+      "positioning_master_reset",
+      "positioning_master_restore",
+      "positioning_profile_get",
+      "positioning_profile_upsert",
+      "positioning_statements_create",
+      "positioning_statements_get",
+      "positioning_statements_list",
+      "productions_exports_create",
+      "productions_exports_materials",
+      "productions_segments_create",
+      "productions_segments_list",
+      "projects_activity_list",
+      "projects_archive",
+      "projects_create",
+      "projects_delete",
+      "projects_get",
+      "projects_intelligence_attach",
+      "projects_intelligence_list",
+      "projects_list",
+      "projects_outputs_create",
+      "projects_outputs_list",
+      "projects_patch",
+      "projects_scripts_acceptCandidate",
+      "projects_scripts_generateCandidate",
+      "projects_stage_transition",
+      "projects_stages_list",
+      "projects_tasks_create",
+      "projects_tasks_list",
+      "projects_transcribe",
+      "publications_comments_list",
+      "publications_get",
+      "publications_revisions_create",
+      "publications_revisions_list",
+      "publications_transition",
+      "reviewRules_create",
+      "reviewRules_delete",
+      "reviewRules_list",
+      "reviewRules_patch",
+      "reviews_complete",
+      "reviews_create",
+      "reviews_get",
+      "reviews_insights_create",
+      "reviews_insights_list",
+      "reviews_list",
+      "scheduledJobs_create",
+      "scheduledJobs_get",
+      "scheduledJobs_list",
+      "scheduledJobs_runNow",
+      "scheduledJobs_setEnabled",
+      "scheduledJobs_update",
+      "scriptReviews_getLatest",
+      "scriptReviews_trigger",
+      "search_facets",
+      "settings_channelModelCredentials_list",
+      "settings_channelModelCredentials_put",
+      "settings_get",
+      "settings_models_list",
+      "settings_models_put",
+      "settings_models_test",
+      "settings_onboarding_get",
+      "settings_onboarding_patch",
+      "settings_preferences_get",
+      "settings_preferences_patch",
+      "settings_prompts_get",
+      "settings_prompts_list",
+      "settings_prompts_put",
+      "settings_prompts_rollback",
+      "settings_prompts_versions_list",
+      "settings_redfox_delete",
+      "settings_redfox_get",
+      "settings_redfox_put",
+      "settings_reporting_consent_set",
+      "settings_reporting_get",
+      "settings_reporting_pending_clear",
+      "settings_storage_get",
+      "settings_storage_put",
+      "tasks_patch",
+      "taxonomy_entityTags_assign",
+      "taxonomy_entityTags_listEntitiesForTag",
+      "taxonomy_entityTags_listForEntity",
+      "taxonomy_entityTags_remove",
+      "taxonomy_tags_create",
+      "taxonomy_tags_delete",
+      "taxonomy_tags_list",
+      "taxonomy_tags_patch",
+      "topics_attributions_list",
+      "topics_overview",
+      "trend_sources_create",
+      "trend_sources_list",
+      "trend_sources_remove",
+      "trend_sources_toggle",
+      "work_sources_select",
+      "workCompositions_basis_save",
+      "workCompositions_basis_versions_get",
+      "workCompositions_canvasContext_get",
+      "workCompositions_create",
+      "workCompositions_dependencies_get",
+      "workCompositions_get",
+      "workCompositions_list",
+      "workCompositions_materials_attach",
+      "workCompositions_materials_detach",
+      "workCompositions_materials_list",
+      "workCompositions_materials_replace",
+      "workCompositions_members_bind",
+      "workCompositions_members_cancel",
+      "workCompositions_members_create",
+      "workCompositions_members_requests_get",
+      "workCompositions_requests_get",
+      "workCompositions_selection_save",
+      "workCompositions_versions_get",
+      "workCompositions_versions_list",
+      "workReviews_confirm",
+      "workReviews_create",
+      "workReviews_get",
+      "workReviews_list",
+      "workReviews_requests_get",
+      "workReviews_status"
+    ]
+  },
+  "project": {
+    "id": "project-t1060-eaf5fb75-a603-4d1b-b6e5-9b516acd76b0",
+    "title": "隔离 MCP 验证 · 松林晨光 f3e81f3f",
+    "accountId": "acct-t1060-00020deb-c1f6-469c-abe2-a3e5cd536b60",
+    "outputCount": 0
+  },
+  "close": {
+    "elapsedMs": 120,
+    "exit": {
+      "code": 0,
+      "signal": null
+    }
+  },
+  "audit": [
+    {
+      "operation": "accounts.list",
+      "status": "succeeded"
+    },
+    {
+      "operation": "projects.list",
+      "status": "succeeded"
+    },
+    {
+      "operation": "projects.get",
+      "status": "succeeded"
+    },
+    {
+      "operation": "projects.outputs.list",
+      "status": "succeeded"
+    },
+    {
+      "operation": "projects.list",
+      "status": "failed"
+    },
+    {
+      "operation": "projects.get",
+      "status": "failed"
+    }
+  ],
+  "oauthEnvPresence": {
+    "WORKBUDDY_CLIENT_ID": false,
+    "WORKBUDDY_CLIENT_SECRET": false,
+    "WORKBUDDY_ACCESS_TOKEN": false,
+    "WORKBUDDY_REFRESH_TOKEN": false,
+    "WORKBUDDY_REDIRECT_URI": false
+  },
+  "scope": "实跑原生产 CJS MCP 入口、原 HTTP POST 身份/归属/CLI审计、真实独立 PGLite 项目；仅宿主装配用临时服务实例。MCP 消费方为官方 SDK，未启动 WorkBuddy，未完成其安装/首次信任或 AI 实调。",
+  "outcome": "passed"
+}

@@ -1,0 +1,103 @@
+
+ RUN  v4.1.8 /private/tmp/t1046-ui-work/frontend
+
+(node:98213) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | src/features/production/production-rough-candidate-panel.test.tsx > native只读planView生成携带真实scene/track，先保存且不改document.plan
+An error occurred in the <Contents> component.
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://react.dev/link/error-boundaries to learn more about error boundaries.
+
+
+ ❯ src/features/production/production-rough-candidate-panel.test.tsx (19 tests | 1 failed) 1642ms
+   × native只读planView生成携带真实scene/track，先保存且不改document.plan 1005ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/features/production/production-rough-candidate-panel.test.tsx > native只读planView生成携带真实scene/track，先保存且不改document.plan
+TestingLibraryElementError: Unable to find role="textbox" and name "粗剪要求"
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ waitForWrapper ../../../../Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ❯ ../../../../Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:86:33
+ ❯ open src/features/production/production-rough-candidate-panel.test.tsx:12:86
+
+ ❯ src/features/production/production-rough-candidate-panel.test.tsx:47:285
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+⎯⎯⎯⎯⎯⎯ Unhandled Errors ⎯⎯⎯⎯⎯⎯
+
+Vitest caught 1 unhandled error during the test run.
+This might cause false positive tests. Resolve unhandled errors to make sure your tests are not affected.
+
+⎯⎯⎯⎯⎯ Uncaught Exception ⎯⎯⎯⎯⎯
+ZodError: [
+  {
+    "code": "invalid_value",
+    "values": [
+      2
+    ],
+    "path": [
+      "editorVersion"
+    ],
+    "message": "Invalid input: expected 2"
+  },
+  {
+    "expected": "object",
+    "code": "invalid_type",
+    "path": [
+      "mainTrack"
+    ],
+    "message": "Invalid input: expected object, received undefined"
+  },
+  {
+    "expected": "object",
+    "code": "invalid_type",
+    "path": [
+      "overlayDraft"
+    ],
+    "message": "Invalid input: expected object, received undefined"
+  }
+]
+ ❯ src/features/production/production-rough-candidate-panel.tsx:17:44
+     15| function usePlan(raw:ProductionEditorDocument["plan"]){
+     16|  "use no memo";
+     17|  return React.useMemo(()=>productionPlanV2.parse(raw),[raw]);
+       |                                            ^
+     18| }
+     19| export function ProductionRoughCandidatePanel(props:RoughCandidatePane…
+ ❯ mountMemo ../../../../Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/node_modules/.pnpm/react-dom@19.2.4_react@19.2.4/node_modules/react-dom/cjs/react-dom-client.development.js:8777:23
+ ❯ Object.useMemo ../../../../Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/node_modules/.pnpm/react-dom@19.2.4_react@19.2.4/node_modules/react-dom/cjs/react-dom-client.development.js:26216:18
+ ❯ Proxy.process.env.NODE_ENV.exports.useMemo ../../../../Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/node_modules/.pnpm/react@19.2.4/node_modules/react/cjs/react.development.js:1251:34
+ ❯ usePlan src/features/production/production-rough-candidate-panel.tsx:17:15
+ ❯ Contents src/features/production/production-rough-candidate-panel.tsx:24:13
+ ❯ Object.react_stack_bottom_frame ../../../../Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/node_modules/.pnpm/react-dom@19.2.4_react@19.2.4/node_modules/react-dom/cjs/react-dom-client.development.js:25904:20
+ ❯ renderWithHooks ../../../../Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/node_modules/.pnpm/react-dom@19.2.4_react@19.2.4/node_modules/react-dom/cjs/react-dom-client.development.js:7662:22
+ ❯ updateFunctionComponent ../../../../Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/node_modules/.pnpm/react-dom@19.2.4_react@19.2.4/node_modules/react-dom/cjs/react-dom-client.development.js:10166:19
+ ❯ beginWork ../../../../Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/node_modules/.pnpm/react-dom@19.2.4_react@19.2.4/node_modules/react-dom/cjs/react-dom-client.development.js:11778:18
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { _zod: { def: [ { code: 'invalid_value', values: [ 2 ], path: [ 'editorVersion' ], message: 'Invalid input: expected 2' }, { expected: 'object', code: 'invalid_type', path: [ 'mainTrack' ], message: 'Invalid input: expected object, received undefined' }, { expected: 'object', code: 'invalid_type', path: [ 'overlayDraft' ], message: 'Invalid input: expected object, received undefined' } ], constr: 'Function<ZodError>', traits: { constructor: 'Function<Set>', has: 'Function<has>', add: 'Function<add>', delete: 'Function<delete>', difference: 'Function<difference>', clear: 'Function<clear>', entries: 'Function<entries>', forEach: 'Function<forEach>', intersection: 'Function<intersection>', isSubsetOf: 'Function<isSubsetOf>', isSupersetOf: 'Function<isSupersetOf>', isDisjointFrom: 'Function<isDisjointFrom>', size: 2, symmetricDifference: 'Function<symmetricDifference>', union: 'Function<union>', values: 'Function<values>', keys: 'Function<values>' }, deferred: [] }, issues: [ { code: 'invalid_value', values: [ 2 ], path: [ 'editorVersion' ], message: 'Invalid input: expected 2' }, { expected: 'object', code: 'invalid_type', path: [ 'mainTrack' ], message: 'Invalid input: expected object, received undefined' }, { expected: 'object', code: 'invalid_type', path: [ 'overlayDraft' ], message: 'Invalid input: expected object, received undefined' } ], format: 'Function<value>', flatten: 'Function<value>', addIssue: 'Function<value>', addIssues: 'Function<value>', isEmpty: false }
+This error originated in "src/features/production/production-rough-candidate-panel.test.tsx" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.
+The latest test that might've caused the error is "native只读planView生成携带真实scene/track，先保存且不改document.plan". It might mean one of the following:
+- The error was thrown, while Vitest was running this test.
+- If the error occurred after the test had been completed, this was the last documented test before it was thrown.
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 18 passed (19)
+     Errors  1 error
+   Start at  23:18:49
+   Duration  3.97s (transform 771ms, setup 324ms, import 1.04s, tests 1.64s, environment 788ms)
+

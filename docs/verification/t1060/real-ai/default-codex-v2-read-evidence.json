@@ -1,0 +1,148 @@
+{
+  "verification": "original-v2-default-codex-read-business",
+  "observedAt": "2026-10-04T12:13:18.090Z",
+  "isolatedRoot": "/tmp/t1060-ai-business/default-codex-v2-read-8GeMcG",
+  "modelSelection": "当前默认；未设置sessionModel",
+  "adopted": false,
+  "published": false,
+  "events": [
+    "reserveExternalChatTurn",
+    "listExternalTaskTools",
+    "listExternalTaskTools",
+    "listExternalTaskTools",
+    "startExternalChatTurn",
+    "recordExternalChatProviderTurn",
+    "executeExternalTaskTool",
+    "settleExternalChatTurn"
+  ],
+  "toolCalls": [
+    {
+      "turnCallId": "call_e80eedb3-653c-4ae9-b2de-9dcd1fe58464",
+      "toolCallId": "2",
+      "toolName": "context.project.detail",
+      "input": {},
+      "result": {
+        "turnCallId": "call_e80eedb3-653c-4ae9-b2de-9dcd1fe58464",
+        "toolCallId": "2",
+        "callId": "call_b943a509-4e2e-4e0b-87da-0a82bd944a95",
+        "status": "settled",
+        "outcome": {
+          "status": "ok",
+          "summary": "已读取当前工具结果",
+          "evidence": [],
+          "data": {
+            "kind": "context.project.detail",
+            "found": true,
+            "project": {
+              "id": "project-t1060-c7e1cc10-2e6d-4364-b1cb-a240d8b2eb44",
+              "title": "隔离项目 · 琥珀灯塔 a9327e66",
+              "stage": "brief",
+              "status": "active",
+              "publish": {
+                "published": false,
+                "platform": null,
+                "publishedAt": null
+              },
+              "brief": {
+                "targetPlatforms": []
+              },
+              "artifacts": [],
+              "metricsSummary": ""
+            }
+          },
+          "error": null,
+          "continuation": null,
+          "sideEffect": "none"
+        }
+      }
+    }
+  ],
+  "imageSaves": [],
+  "projectId": "project-t1060-c7e1cc10-2e6d-4364-b1cb-a240d8b2eb44",
+  "expectedProjectTitle": "隔离项目 · 琥珀灯塔 a9327e66",
+  "taskId": "ai-task-d589c58b-55aa-4f3a-a851-a68e18a16e36",
+  "executionTaskId": "execution-task-e66d16d4-eb6c-4190-9dd7-52ad62bba4e7",
+  "policy": "creatoros-acp-readonly-v2",
+  "frozenTools": [
+    {
+      "name": "context.project.detail",
+      "effect": "none",
+      "version": "chat-tools-v1:3460e27f5e8b14ef3b10706ac28c6d96d18874b78db7d0af7a9b681a3ed198a5"
+    }
+  ],
+  "observedReceipt": {
+    "sessionId": "01a106d5-4602-7170-840b-f7ae821ec9b2",
+    "providerTurnId": "01a106d5-53ed-7ca2-81fa-aac09c7b28f3",
+    "stopReason": "end_turn",
+    "imageCount": 0,
+    "imageFailures": []
+  },
+  "outcome": "passed",
+  "committed": {
+    "resultId": "chat:ai-task-d589c58b-55aa-4f3a-a851-a68e18a16e36",
+    "aiTaskId": "ai-task-d589c58b-55aa-4f3a-a851-a68e18a16e36",
+    "messageId": "chat:ai-msg-t1060-e2fc2b0b-2c7f-4a9a-9cdc-e5c2ad3dda46",
+    "outcome": "succeeded"
+  },
+  "executionStatus": "succeeded",
+  "businessStatus": "succeeded",
+  "assistantText": "Warning: Code Mode is unavailable because code-mode host is disabled. Code mode will fail closed; enable `features.code_mode_host` and install `codex-code-mode-host`.\n\n我会调用 context.project.detail 读取当前绑定项目，并根据回执报告标题、阶段和发布状态。- 项目标题：隔离项目 · 琥珀灯塔 a9327e66\n- 阶段：brief\n- 是否已发布：否",
+  "sessionId": "01a106d5-4602-7170-840b-f7ae821ec9b2",
+  "providerTurnId": "01a106d5-53ed-7ca2-81fa-aac09c7b28f3",
+  "stopReason": "end_turn",
+  "usage": {
+    "inputTokens": 409,
+    "totalTokens": 18623,
+    "outputTokens": 38,
+    "thoughtTokens": 0,
+    "cachedReadTokens": 18176
+  },
+  "toolOutcomes": [
+    {
+      "id": "call_b943a509-4e2e-4e0b-87da-0a82bd944a95",
+      "status": "settled",
+      "providerResult": {
+        "kind": "external_tool",
+        "toolName": "context.project.detail",
+        "toolCallId": "2",
+        "turnCallId": "call_e80eedb3-653c-4ae9-b2de-9dcd1fe58464",
+        "toolVersion": "chat-tools-v1:3460e27f5e8b14ef3b10706ac28c6d96d18874b78db7d0af7a9b681a3ed198a5",
+        "schemaVersion": 1
+      },
+      "resultText": "{\"status\":\"ok\",\"summary\":\"已读取当前工具结果\",\"evidence\":[],\"data\":{\"kind\":\"context.project.detail\",\"found\":true,\"project\":{\"id\":\"project-t1060-c7e1cc10-2e6d-4364-b1cb-a240d8b2eb44\",\"title\":\"隔离项目 · 琥珀灯塔 a9327e66\",\"stage\":\"brief\",\"status\":\"active\",\"publish\":{\"published\":false,\"platform\":null,\"publishedAt\":null},\"brief\":{\"targetPlatforms\":[]},\"artifacts\":[],\"metricsSummary\":\"\"}},\"error\":null,\"continuation\":null,\"sideEffect\":\"none\"}"
+    }
+  ],
+  "calls": [
+    {
+      "id": "call_e80eedb3-653c-4ae9-b2de-9dcd1fe58464",
+      "kind": "external_agent",
+      "status": "settled"
+    },
+    {
+      "id": "call_b943a509-4e2e-4e0b-87da-0a82bd944a95",
+      "kind": "external_tool",
+      "status": "settled"
+    }
+  ],
+  "candidateResults": [
+    {
+      "id": "chat:ai-task-d589c58b-55aa-4f3a-a851-a68e18a16e36",
+      "executionCallId": "call_e80eedb3-653c-4ae9-b2de-9dcd1fe58464",
+      "resultType": "conversation_reply"
+    }
+  ],
+  "imageChecks": [],
+  "checks": {
+    "formalRunCodexAcpInWorker": true,
+    "formalHostDist": true,
+    "v2FrozenByOriginalSubmission": true,
+    "actualDefaultRequest": true,
+    "actualProjectServiceThroughOriginalReadHost": true,
+    "originalApprovalLeaseOwnerChecks": true,
+    "actualToolOutcomePersisted": true,
+    "providerSessionAndTurnPersisted": true,
+    "taskAndBusinessSucceeded": true,
+    "assistantMessageReadback": true,
+    "sameTaskNativeImageChain": false
+  }
+}

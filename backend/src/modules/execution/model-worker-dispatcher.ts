@@ -1,3 +1,10 @@
+import {createExecutionMomentsModelService} from "../moments";
+import {createAssetAsrPortInvoker} from './asset-asr-port-invoker';
+import type {createAssetAsrOwner} from './asset-asr-owner.service';
+import {assetAsrPortInputs,type AssetAsrPort} from '@creatoros/contract/execution-worker';
+import {localCodexWorkerEnv} from "./local-codex-worker-env";
+import {createExternalChatTurnService} from "../ai/external-chat-turn.service";
+import {createExternalTaskToolService} from "../ai/external-task-tool.service";
 import {executionBudgetSchema} from "@creatoros/contract/execution-worker";
 import {createScriptSimilarityCompletionService} from "../ai/script-similarity-completion.service";
 import {createTopicPreferenceCompletionService} from "../ai/topic-preference-completion.service";
@@ -30,6 +37,7 @@ import {createExecutionBrowserSessionService} from "./execution-browser-session.
 import {createExecutionScriptLocalService} from "./execution-script-local.service";
 import {createExecutionScriptCheckpointService} from "./execution-script-checkpoint.service";
 import {createScriptPartialFinalizationService} from "../ai/script-partial-finalization.service";
+import {createExecutionWorkReviewService} from "../review";
 import {createExecutionReviewReportService} from "../review/execution-review-report.service";
 import type {BrowserSessionsService} from "../browser-sessions";
 import {createExecutionResearchEvidenceService} from "./execution-research-evidence.service";
@@ -62,8 +70,8 @@ interface WorkerDispatcherDeps {
   /** 现有队列领取前有界恢复已提交任务的准备；不得直接执行模型。 */
   recoverPendingPreparation?(signal:AbortSignal):Promise<void>;
 }
-export interface ModelWorkerDispatcherDeps extends WorkerDispatcherDeps, ExecutionCandidateDeps {assetProcessing?:Parameters<typeof createExecutionAssetProcessingService>[1];video?:Pick<Parameters<typeof createExecutionVideoService>[1],"resolveModelSpec">;transcribeWorkflow?:Omit<TranscribeWorkflowDeps,"now">;transcribeSource?:TranscribeSourceDeps;cover?:CoverExecutionPorts;transcribePostprocess?:Pick<Parameters<typeof createExecutionTranscribePostprocessService>[1],"resolveModelSpec"|"readContext"|"maxOutputTokens">;transcribePreparation?:Pick<Parameters<typeof createExecutionTranscribePreparationService>[1],"resolveSpec"|"prepareSpec">;transcribeAudioStorage?:Parameters<typeof createExecutionTranscribeAudioService>[1]["objectStorageForCtx"];resolveAssetCredential?:Parameters<typeof createExecutionAssetPorts>[0]["resolveCredential"];readAssetReference?:Parameters<typeof createExecutionAssetPorts>[0]["readReference"];assetStorage?:Parameters<typeof createExecutionAssetPorts>[0]["objectStorageForCtx"];browserSessions?:Pick<BrowserSessionsService,"getStateVersioned"|"saveStateVersioned">;dailyTopicPorts?:DailyTopicCompletionPorts}
-export type ChatWorkerDispatcherDeps = WorkerDispatcherDeps & {resolveRedfoxCredential?:Parameters<typeof createExecutionChatToolPorts>[1]["resolveRedfoxCredential"];resolveFallbackModelCredential?(context:RequestContext):Promise<unknown|null>;webRead?:Parameters<typeof createExecutionChatToolPorts>[1]["webRead"]} & (
+export interface ModelWorkerDispatcherDeps extends WorkerDispatcherDeps, ExecutionCandidateDeps {assetAsr?:ReturnType<typeof createAssetAsrOwner>;assetProcessing?:Parameters<typeof createExecutionAssetProcessingService>[1];video?:Pick<Parameters<typeof createExecutionVideoService>[1],"resolveModelSpec">;transcribeWorkflow?:Omit<TranscribeWorkflowDeps,"now">;transcribeSource?:TranscribeSourceDeps;cover?:CoverExecutionPorts;transcribePostprocess?:Pick<Parameters<typeof createExecutionTranscribePostprocessService>[1],"resolveModelSpec"|"readContext"|"maxOutputTokens">;transcribePreparation?:Pick<Parameters<typeof createExecutionTranscribePreparationService>[1],"resolveSpec"|"prepareSpec">;transcribeAudioStorage?:Parameters<typeof createExecutionTranscribeAudioService>[1]["objectStorageForCtx"];resolveAssetCredential?:Parameters<typeof createExecutionAssetPorts>[0]["resolveCredential"];readAssetReference?:Parameters<typeof createExecutionAssetPorts>[0]["readReference"];assetStorage?:Parameters<typeof createExecutionAssetPorts>[0]["objectStorageForCtx"];browserSessions?:Pick<BrowserSessionsService,"getStateVersioned"|"saveStateVersioned">;dailyTopicPorts?:DailyTopicCompletionPorts}
+export type ChatWorkerDispatcherDeps = WorkerDispatcherDeps & {externalImageStorage?:import("../assets").ObjectStorageForCtx;resolveRedfoxCredential?:Parameters<typeof createExecutionChatToolPorts>[1]["resolveRedfoxCredential"];resolveFallbackModelCredential?(context:RequestContext):Promise<unknown|null>;webRead?:Parameters<typeof createExecutionChatToolPorts>[1]["webRead"]} & (
  {tools:Record<string,ChatBackendTool>;resolveTools?:never} |
  {tools?:never;resolveTools(context:RequestContext,input:Awaited<ReturnType<typeof readExecutionChatTask>>["input"],execution:ExecutionRef,signal:AbortSignal):Promise<Record<string,ChatBackendTool>>}
 );
@@ -85,6 +93,7 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
   const browserProfiles=createExecutionBrowserProfileLeaseService(db,{now});
   const activeWorkers=new Map<string,{ref:ExecutionRef;supervisor:ReturnType<typeof createWorkerSupervisor>}>();
   const calls=createExecutionWorkerCallPorts(db,{now,budget:deps.budget});
+  const assetAsr=deps.executionMode==="model"&&deps.assetAsr?createAssetAsrPortInvoker(deps.assetAsr):null;
   const checkpoints=createExecutionCheckpointService(db,{now});
   const streamEvents=createExecutionStreamService(db,{now});
   const generation=createExecutionGenerationPorts(db,{now,budget:deps.budget});
@@ -110,6 +119,8 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
   const preferences=deps.executionMode==="model"?createTopicPreferenceCompletionService(db,{now}):null;
   const reconstructions=deps.executionMode==="model"?createReconstructCompletionService(db,{now}):null;
   const copilotReplies=deps.executionMode==="model"?createCopilotReplyCompletionService(db,{now}):null;
+  const momentsModels=deps.executionMode==="model"?createExecutionMomentsModelService(db,{now,nextId:()=>crypto.randomUUID()}):null;
+  const workReviews=deps.executionMode==="model"?createExecutionWorkReviewService(db,{now}):null;
   const reviewReports=deps.executionMode==="model"?createExecutionReviewReportService(db,{now}):null;
   const agentModels=deps.executionMode==="agentic.run"?createExecutionAgenticModelPorts(db,{now,budget:deps.budget}):null;
   const resolveGenerationCredential=async(context:RequestContext,capability:string,ref:ExecutionRef,signal?:AbortSignal)=>{
@@ -117,6 +128,8 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
     const owner=await leases.withLease(ref,"admission",async({task})=>({aiTaskId:task.ownerId,executionTaskId:task.id}));
     const credential=await deps.resolveModelCredential(context,capability,owner);signal?.throwIfAborted();return credential;
   };
+  const externalChat=deps.executionMode==="chat.run"?createExternalChatTurnService(db,{now,budget:deps.budget,objectStorageForCtx:deps.externalImageStorage}):null;
+  const externalTaskTools=deps.executionMode==="chat.run"?createExternalTaskToolService(db,{now}):null;
   const staticChatTools=deps.executionMode==="chat.run" && deps.tools?createExecutionChatToolPorts(db,{now,budget:deps.budget,tools:deps.tools,resolveGenerationCredential,resolveRedfoxCredential:deps.resolveRedfoxCredential,webRead:deps.webRead}):null;
   const agentTools=deps.executionMode==="agentic.run"?createExecutionAgenticToolPorts(db,{now,budget:deps.budget,tools:deps.tools}):null;
   const browserSessions=deps.executionMode==="agentic.run" && deps.browserSessions?createExecutionBrowserSessionService(db,{now,budget:deps.budget,tools:deps.tools,sessions:deps.browserSessions}):null;
@@ -126,7 +139,7 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
   const researchEvidence=deps.executionMode==="agentic.run"?createExecutionResearchEvidenceService(db,{now,budget:deps.budget,tools:deps.tools}):null;
   const agentCandidates=deps.executionMode==="agentic.run"?createExecutionAgenticCandidateService(db,{now}):null;
   type ChatPorts=ReturnType<typeof createExecutionChatToolPorts>;
-  type ToolScope={controller:AbortController;pending:Set<Promise<unknown>>;chatPorts?:Promise<ChatPorts>;chatReady?:boolean};
+  type ToolScope={controller:AbortController;pending:Set<Promise<unknown>>;chatPorts?:Promise<ChatPorts>;externalToolMap?:Promise<Record<string,ChatBackendTool>>;chatReady?:boolean};
   const activeTools=new Map<string,ToolScope>();
   const executionKey=(ref:ExecutionRef)=>JSON.stringify([ref.executionTaskId,ref.attempt,ref.fenceToken]);
   async function getChatTools(ref:ExecutionRef):Promise<ChatPorts>{
@@ -134,7 +147,7 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
     if(!scope || deps.executionMode!=="chat.run")throw new Error("STALE_EXECUTION");
     if(!scope.chatPorts)scope.chatPorts=(async()=>{
       const signal=scope.controller.signal;signal.throwIfAborted();
-      if(staticChatTools)return staticChatTools;
+      if(staticChatTools){scope.externalToolMap=Promise.resolve(deps.executionMode==="chat.run"?deps.tools!:{ });return staticChatTools;}
       const {context,input}=await readExecutionChatTask(db,ref,now);
       await calls.readTaskContext(ref);
       signal.throwIfAborted();
@@ -149,7 +162,7 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
       signal.throwIfAborted();
       const tools=Object.fromEntries(Object.entries(resolved).map(([name,tool])=>[name,{...tool}]));
       const ports=createExecutionChatToolPorts(db,{now,budget:deps.budget,tools,resolveGenerationCredential,resolveRedfoxCredential:deps.resolveRedfoxCredential,webRead:deps.webRead});
-      await ports.validateTask(ref);signal.throwIfAborted();
+      await ports.validateTask(ref);signal.throwIfAborted();scope.externalToolMap=Promise.resolve(tools);
       return ports;
     })();
     return scope.chatPorts;
@@ -158,7 +171,7 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
   let timer:ReturnType<typeof setTimeout>|undefined;
   let draining:Promise<number>|undefined;
   const report=(code:string)=>{try{deps.onError?.(code);}catch{/* 诊断订阅故障不改变执行。 */}};
-  const createSupervisor=()=>createWorkerSupervisor({entryPath:deps.entryPath,shutdownGraceMs:1000,ports:{
+  const createSupervisor=()=>createWorkerSupervisor({entryPath:deps.entryPath,extraEnv:deps.executionMode==="chat.run"?localCodexWorkerEnv():undefined,shutdownGraceMs:1000,ports:{
     async validate(ref,mode){if(stopping && mode==="admission")throw new Error("WORKER_HOST_STOPPING");await leases.withLease(ref,mode,async()=>{});},
     async invoke(ref,port,raw){
       if(["resolveVideoModel","reserveVideoModel","recordVideoStep","saveVideoCheckpoint","saveVideoResult"].includes(port)){
@@ -203,6 +216,23 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
         const scope=activeTools.get(executionKey(ref));if(!scope)throw new Error("STALE_EXECUTION");
         const settlement=["settleAssetCall","saveAssetResult","recoverAssetResult","recordAssetProviderJob"].includes(port);
         const work=assetPorts.invoke(ref,port,raw,settlement?undefined:scope.controller.signal);
+        scope.pending.add(work);try{return await work;}finally{scope.pending.delete(work);}
+      }
+      if(externalChat){
+        if(port==="reserveExternalChatTurn")return externalChat.reserve(ref,raw);
+        if(port==="prepareExternalChatThread")return externalChat.prepareThread(ref,raw);
+        if(port==="startExternalChatTurn")return externalChat.start(ref,raw);
+        if(port==="recordExternalChatProviderTurn")return externalChat.recordProviderTurn(ref,raw);
+        if(port==="saveExternalChatImage"||port==="recoverExternalChatImage"){
+          const scope=activeTools.get(executionKey(ref));if(!scope)throw new Error("STALE_EXECUTION");
+          const work=port==="saveExternalChatImage"?externalChat.saveImage(ref,raw,scope.controller.signal):externalChat.recoverImage(ref,raw,scope.controller.signal);scope.pending.add(work);try{return await work;}finally{scope.pending.delete(work);}
+        }
+        if(port==="settleExternalChatTurn")return externalChat.settle(ref,raw);
+        if(port==="commitExternalChatResult")return externalChat.commit(ref,raw);
+      }
+      if(externalTaskTools&&(port==="listExternalTaskTools"||port==="executeExternalTaskTool")){
+        const scope=activeTools.get(executionKey(ref));if(!scope)throw new Error("STALE_EXECUTION");
+        const work=(async()=>{await getChatTools(ref);const tools=await scope.externalToolMap!;return port==="listExternalTaskTools"?externalTaskTools.list(ref,raw,tools):externalTaskTools.execute(ref,raw,tools,scope.controller.signal);})();
         scope.pending.add(work);try{return await work;}finally{scope.pending.delete(work);}
       }
       const chatTools=deps.executionMode==="chat.run" && ["prepareChatRedfox","settleChatRedfox","resolveChatWebReadSearch","readChatWebReadCache","failChatWebRead","prepareChatWebRead","observeChatWebRead","restoreChatWebRead","completeChatWebRead","readChatWebReadSession","saveChatWebReadSession","prepareChatResearch","settleChatResearch","failChatGeneration","restoreChatGeneration","resolveChatGenerationCredential","prepareChatGeneration","reserveChatGenerationModel","startChatGenerationModel","settleChatGenerationModel","completeChatGeneration","failChatScriptDraft","restoreChatScriptDraft","prepareChatScriptDraft","reserveChatScriptDraftModel","startChatScriptDraftModel","settleChatScriptDraftModel","completeChatScriptDraft","failChatHooks","restoreChatHooks","prepareChatHooks","reserveChatHooksModel","startChatHooksModel","settleChatHooksModel","completeChatHooks","checkChatToolApproval","reserveAgenticTool","startAgenticTool","settleAgenticTool","executeAgenticTool"].includes(port)?await getChatTools(ref):null;
@@ -353,6 +383,7 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
         // 凭据解析期间可能取消，返回私有凭据前再检查当前执行。
         return modelIdentity.pin(ref,input.capability,credential);
       }
+      if(Object.hasOwn(assetAsrPortInputs,port)){const scope=activeTools.get(executionKey(ref));if(!assetAsr||!scope)throw new Error("ASSET_ASR_PORT_UNAVAILABLE");const work=assetAsr(ref,port as AssetAsrPort,raw,port==="settleAssetAsrRequest"?undefined:scope.controller.signal);scope.pending.add(work);try{return await work;}finally{scope.pending.delete(work);}}
       if(port==="commitResult"){
         const input=workerPortInputSchemas.commitResult.parse(raw);
         if(input.outcome!=="succeeded"){
@@ -364,6 +395,8 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
         if(skillId==="reconstruct.project"&&reconstructions){const scope=activeTools.get(executionKey(ref));if(!scope)throw new Error('RECONSTRUCT_SCOPE_UNAVAILABLE');const work=reconstructions.commitResult(ref,input,scope.controller.signal);scope.pending.add(work);try{return await work;}finally{scope.pending.delete(work);}}
         if(skillId==="topic.preference"&&preferences){const scope=activeTools.get(executionKey(ref));if(!scope)throw new Error('PREFERENCE_SCOPE_UNAVAILABLE');const work=preferences.commitResult(ref,input,scope.controller.signal);scope.pending.add(work);try{return await work;}finally{scope.pending.delete(work);}}
         if(skillId==="script.source_similarity"&&similarities){const scope=activeTools.get(executionKey(ref));if(!scope)throw new Error("STALE_EXECUTION");const work=similarities.commitResult(ref,input,scope.controller.signal);scope.pending.add(work);try{return await work;}finally{scope.pending.delete(work);}}
+        if(skillId==="moments.compose"&&momentsModels)return momentsModels.commitResult(ref,input);
+        if(skillId==="work.review" && workReviews)return workReviews.commitResult(ref,input);
         if(skillId==="script.review" && reviewReports)return reviewReports.commitResult(ref,input);
         if(skillId==="copilot.assist" && copilotReplies)return copilotReplies.commitResult(ref,input);
         return candidates.commitResult(ref,input);

@@ -1,0 +1,13 @@
+
+> @creatoros/contract@0.4.0 test /Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/contract
+> vitest run tests/video-render.test.ts tests/modules/production.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/contract
+
+
+ Test Files  2 passed (2)
+      Tests  23 passed (23)
+   Start at  16:08:21
+   Duration  1.51s (transform 526ms, setup 0ms, import 1.01s, tests 42ms, environment 0ms)
+

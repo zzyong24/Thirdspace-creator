@@ -1,0 +1,203 @@
+
+ RUN  v4.1.8 /private/tmp/t1048-backend-work/backend
+
+ ❯ src/modules/execution/execution-cover-series.test.ts (4 tests | 3 failed) 15ms
+     × 按原file读字节、原画幅入图片调用、重复prepare复用已存回执 8ms
+     × 旧cover只指定Asset的读取失败继续合法降级 0ms
+     × 用户明确的unsupported画幅给出真实模型原因 3ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/execution/execution-cover-series.test.ts > 组图沿原封面持久调用传精确参考和画幅 > 按原file读字节、原画幅入图片调用、重复prepare复用已存回执
+ZodError: [
+  {
+    "code": "invalid_value",
+    "values": [
+      "anthropic",
+      "openai_chat",
+      "openai_responses"
+    ],
+    "path": [
+      "apiFormat"
+    ],
+    "message": "Invalid option: expected one of \"anthropic\"|\"openai_chat\"|\"openai_responses\""
+  },
+  {
+    "code": "invalid_value",
+    "values": [
+      1
+    ],
+    "path": [
+      "schemaVersion"
+    ],
+    "message": "Invalid input: expected 1"
+  },
+  {
+    "expected": "string",
+    "code": "invalid_type",
+    "path": [
+      "baseUrlDigest"
+    ],
+    "message": "Invalid input: expected string, received undefined"
+  },
+  {
+    "expected": "boolean",
+    "code": "invalid_type",
+    "path": [
+      "customEndpoint"
+    ],
+    "message": "Invalid input: expected boolean, received undefined"
+  },
+  {
+    "code": "unrecognized_keys",
+    "keys": [
+      "provider",
+      "baseUrl",
+      "protocol",
+      "structuredOutputMode"
+    ],
+    "path": [],
+    "message": "Unrecognized keys: \"provider\", \"baseUrl\", \"protocol\", \"structuredOutputMode\""
+  }
+]
+ ❯ replay src/modules/execution/execution-cover.service.ts:51:47
+
+ ❯ Object.prepareImage src/modules/execution/execution-cover.service.ts:93:23
+ ❯ src/modules/execution/execution-cover-series.test.ts:27:15
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  src/modules/execution/execution-cover-series.test.ts > 组图沿原封面持久调用传精确参考和画幅 > 旧cover只指定Asset的读取失败继续合法降级
+ZodError: [
+  {
+    "code": "invalid_value",
+    "values": [
+      "anthropic",
+      "openai_chat",
+      "openai_responses"
+    ],
+    "path": [
+      "apiFormat"
+    ],
+    "message": "Invalid option: expected one of \"anthropic\"|\"openai_chat\"|\"openai_responses\""
+  },
+  {
+    "code": "invalid_value",
+    "values": [
+      1
+    ],
+    "path": [
+      "schemaVersion"
+    ],
+    "message": "Invalid input: expected 1"
+  },
+  {
+    "expected": "string",
+    "code": "invalid_type",
+    "path": [
+      "baseUrlDigest"
+    ],
+    "message": "Invalid input: expected string, received undefined"
+  },
+  {
+    "expected": "boolean",
+    "code": "invalid_type",
+    "path": [
+      "customEndpoint"
+    ],
+    "message": "Invalid input: expected boolean, received undefined"
+  },
+  {
+    "code": "unrecognized_keys",
+    "keys": [
+      "provider",
+      "baseUrl",
+      "protocol",
+      "structuredOutputMode"
+    ],
+    "path": [],
+    "message": "Unrecognized keys: \"provider\", \"baseUrl\", \"protocol\", \"structuredOutputMode\""
+  }
+]
+ ❯ replay src/modules/execution/execution-cover.service.ts:51:47
+
+ ❯ Object.prepareImage src/modules/execution/execution-cover.service.ts:93:23
+ ❯ src/modules/execution/execution-cover-series.test.ts:47:10
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  src/modules/execution/execution-cover-series.test.ts > 组图沿原封面持久调用传精确参考和画幅 > 用户明确的unsupported画幅给出真实模型原因
+AssertionError: expected [Function] to throw error including '画幅' but got '[\n  {\n    "code": "invalid_value",\…'
+
+- Expected
++ Received
+
+- 画幅
++ [
++   {
++     "code": "invalid_value",
++     "values": [
++       "anthropic",
++       "openai_chat",
++       "openai_responses"
++     ],
++     "path": [
++       "apiFormat"
++     ],
++     "message": "Invalid option: expected one of \"anthropic\"|\"openai_chat\"|\"openai_responses\""
++   },
++   {
++     "code": "invalid_value",
++     "values": [
++       1
++     ],
++     "path": [
++       "schemaVersion"
++     ],
++     "message": "Invalid input: expected 1"
++   },
++   {
++     "expected": "string",
++     "code": "invalid_type",
++     "path": [
++       "baseUrlDigest"
++     ],
++     "message": "Invalid input: expected string, received undefined"
++   },
++   {
++     "expected": "boolean",
++     "code": "invalid_type",
++     "path": [
++       "customEndpoint"
++     ],
++     "message": "Invalid input: expected boolean, received undefined"
++   },
++   {
++     "code": "unrecognized_keys",
++     "keys": [
++       "provider",
++       "baseUrl",
++       "protocol",
++       "structuredOutputMode"
++     ],
++     "path": [],
++     "message": "Unrecognized keys: \"provider\", \"baseUrl\", \"protocol\", \"structuredOutputMode\""
++   }
++ ]
+
+ ❯ src/modules/execution/execution-cover-series.test.ts:51:46
+     49|  it('用户明确的unsupported画幅给出真实模型原因',async()=>{
+     50|   const f=fixture({context,visualRequirements:'',referenceAssetId:null…
+     51|   await expect(f.service.prepareImage(ref,{})).rejects.toThrow('画幅');
+       |                                              ^
+     52|  });
+     53| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 1 passed (4)
+   Start at  03:40:38
+   Duration  2.36s (transform 1.13s, setup 0ms, import 2.19s, tests 15ms, environment 0ms)
+

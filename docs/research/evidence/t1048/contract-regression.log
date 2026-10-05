@@ -1,0 +1,9 @@
+
+ RUN  v4.1.8 /private/tmp/t1048-backend-work/contract
+
+
+ Test Files  2 passed (2)
+      Tests  4 passed (4)
+   Start at  03:46:54
+   Duration  313ms (transform 155ms, setup 0ms, import 281ms, tests 11ms, environment 0ms)
+

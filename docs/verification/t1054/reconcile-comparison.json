@@ -1,0 +1,8 @@
+{
+  "baseline": "T-1053",
+  "added": [
+    "✗ [ERROR] backlog-health.mjs: BACKLOG RUNAWAY (exit 2, >2× hard limit) — every session pays this tax; compact BEFORE other work: `node orchestrator/process/backlog-compact.mjs` archives ✅ rows mechanically, then squeeze flagged rows per rules/task-ledger-rules.md."
+  ],
+  "removed": [],
+  "unchanged_errors": 36
+}

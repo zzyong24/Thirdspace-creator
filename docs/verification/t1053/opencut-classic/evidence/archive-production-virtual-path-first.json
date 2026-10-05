@@ -1,0 +1,17 @@
+{
+  "status": "FAIL",
+  "outputs": 7,
+  "different": [
+    "NATIVE_BUILD_GRAPH.json"
+  ],
+  "scope": "新目录解包交付源码，连接本次已有冻结锁依赖树，重新执行生产构建；未重新安装依赖，未声称跨OS位复现",
+  "files": {
+    "native.css": "e8757103e0fd57d164826df1de27070222dc6b2ba23bcd4bb32a3cbbe64ee688",
+    "native.js": "fe56232f3e2ce56e15f4da2c3ce188317605870056bfedfeacf594efe0d2fba3",
+    "NATIVE_BUILD_GRAPH.json": "98fb9af5f59f66e6686b81b382f3d6baf63b7d5c1d0e481e7d33fc12950f81b8",
+    "THIRD_PARTY_LICENSES.txt": "d3e59d1b80d9ebcccfc76f84dc51d976ed113749afec53d51c02f6832eafe51f",
+    "THIRD_PARTY_LICENSES.json": "becfab856e0610ccbc14f1abf05d38c25593b60ada26f553dac667fcd471e8ad",
+    "LICENSE.opencut": "8117f9bb64534f7530fc6139b014fd1c1465f7981f93d1871789150fa3f59d3d",
+    "effects/preview.jpg": "b318cede7bbe27bfbf1b8b94d41f65b6f52d5f2650ce3a153d03b76c2a1c0190"
+  }
+}

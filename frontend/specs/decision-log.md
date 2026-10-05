@@ -45,3 +45,13 @@ This file resolves known conflicts between product rules, screenshots and implem
 ## D-011 Repository and Deployment Shape
 
 **Decision:** One Git repository uses a root pnpm workspace with `frontend` and `backend` packages and one root lockfile. They are separate deployment units. The backend package remains one modular-monolith deployment; frontend code consumes approved HTTP contracts and never imports backend repository, service, database or infrastructure modules.
+
+## D-012 视频制作工作台与编导同一工程（2026-10-01）
+
+**依据：** 用户本轮明确要求“制作那里也要有一个工作台，而不是现在的完全黑盒式的自动化剪辑”，随后追加参考 ChatCut、“通过这个编导助手就能够操控剪辑”。这是已授权产品方向；具体可逆布局由当前方案明确，新增存储/API 仍需 CONTRACT 与独立评审，不将方向授权扩展为发布授权。
+
+**裁决：** `docs/features/t1035-video-production-workbench.md` 成为制作工作区内部的当前功能与关系权威，替代旧 `ui/Production Workspace.png` 中录制脚本、素材网格、预览和示意章节条的固定内部排列。新关系为编导/素材入口、合成预览、选中项参数与同步时间轴。保留 AppShell、Sidebar、TopHeader、WorkspacePage 容器、既有紫色品牌和通用组件；不另建全局导航或第二个编导执行器。旧图继续作为备料、成品、字幕和导出功能的保留参考，不要求用假按钮或假数据还原旧示意功能。
+
+**验收范围：** 制作内容区正常 1440×900、最低 900×600，全局壳沿其已有约束；其他页面的视觉规则和 D-009 不被本条改写。探索稿只是可审阅示例，不能作为正式参考绑定或真实制作验收。正式实现前必须通过本任务合同与页面规范复核；正式数据来自账号归属已校验的服务，而非设计 fixture。
+
+**编导快照：** 用户已经手工修改但未保存时，明确显示“保存并交给编导”，点击先 CAS 保存并回读，再给模型读取该版；失败保留指令/草稿且不提交模型，未应用 AI 候选不自动采纳。界面和编导最终应用使用同一个制作版本服务。

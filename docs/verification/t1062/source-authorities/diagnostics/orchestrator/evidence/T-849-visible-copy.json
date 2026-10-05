@@ -1,0 +1,35 @@
+{
+  "schema": "frontend-visible-copy/v1",
+  "task_id": "T-849",
+  "commit_sha": "1eb94970cd8936d0741388932eab34ca4ad6f726",
+  "captures": [
+    {
+      "checkpoint": "desktop-publish-package-dialog",
+      "check_ids": [
+        "AC-PUBLISH-PACK-RICH-REVISION",
+        "AC-PUBLISH-PACK-SINGLE-LINE",
+        "AC-PUBLISH-PACK-REFRESH",
+        "AC-PUBLISH-STATUS-PRESERVED"
+      ],
+      "viewport": {
+        "width": 1536,
+        "height": 1024
+      },
+      "text": "发布物料\n\n已保存到当前项目，刷新页面后仍可查看。\n\n抖音\n标题\n\n三个号素材全混？我用AI 20秒拆成可复用资产\n\n正文\n\n第一段简介。 第二段简介。 收尾。\n\n标签\n# AI提效\n# 素材库搭建\n关闭"
+    },
+    {
+      "checkpoint": "compact-refresh-publish-package-dialog",
+      "check_ids": [
+        "AC-PUBLISH-PACK-RICH-REVISION",
+        "AC-PUBLISH-PACK-SINGLE-LINE",
+        "AC-PUBLISH-PACK-REFRESH",
+        "AC-PUBLISH-STATUS-PRESERVED"
+      ],
+      "viewport": {
+        "width": 900,
+        "height": 720
+      },
+      "text": "发布物料\n\n已保存到当前项目，刷新页面后仍可查看。\n\n抖音\n标题\n\n三个号素材全混？我用AI 20秒拆成可复用资产\n\n正文\n\n第一段简介。 第二段简介。 收尾。\n\n标签\n# AI提效\n# 素材库搭建\n关闭"
+    }
+  ]
+}

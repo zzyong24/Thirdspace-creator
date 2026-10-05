@@ -1,3 +1,4 @@
+import {readActualProviderTiming} from "./asr-provider-timing";
 import {createHash} from "node:crypto";
 import {snapshotAsrInput,type AsrRequest} from "./asr-request";
 // 本地 Whisper 适配器(T-160,SPEC 2026-07-06 §3.1/§3.2 方案 A)—— 实现
@@ -61,11 +62,12 @@ export function whisperModelId(level: WhisperLevel): `Xenova/whisper-${WhisperLe
 
 /** ASR pipeline 的最小调用形状(只用到我们需要的:传 Float32Array PCM → { text })。
  *  真实现是 @xenova/transformers 的 `pipeline('automatic-speech-recognition', modelId)` 返回值。 */
+export type AsrPipelineOutput={text:string;chunks?:Array<{text:string;timestamp:[number,number|null]}>};
 export type AsrPipeline = (
   audio: Float32Array,
   options?: Record<string, unknown>,
   signal?: AbortSignal,
-) => Promise<{ text: string } | { text: string }[]>;
+) => Promise<AsrPipelineOutput | AsrPipelineOutput[]>;
 
 /** 可注入副作用(测试零成本:注 fake pipeline/fake decode;真跑走默认 transformers + ffmpeg)。 */
 export interface WhisperLocalAdapterDeps {
@@ -137,7 +139,9 @@ async function transcribeAudio(
     );
   }
 
-  let result: { text: string } | { text: string }[];
+  // Worker 转移 PCM 的底层缓冲区后原 view 会 detached，必须在推理前冻结真实样本数。
+  const decodedSampleCount = pcm.length;
+  let result: AsrPipelineOutput | AsrPipelineOutput[];
   try {
     // language:whisper 支持 language 提示(默认自动检测)。传 language 时映射到 whisper 的
     // language 选项(如 "zh"→中文)。
@@ -146,6 +150,7 @@ async function transcribeAudio(
     //   口播逐字稿全被砍成 ~30s(avg 165 字)。30s 分块 + 5s 滑窗重叠是官方 long-form 推荐,
     //   分块间用重叠区对齐去重,拼出全长转写。
     const pipelineOptions: Record<string, unknown> = {
+      ...(opts.timestampMode?{return_timestamps:opts.timestampMode==="word"?"word":true}:{}),
       chunk_length_s: 30,
       stride_length_s: 5,
       ...(opts.language ? { language: opts.language, task: "transcribe" } : {}),
@@ -172,7 +177,8 @@ async function transcribeAudio(
       { reference: "LOCAL_WHISPER_TRANSCRIPT_EMPTY", retryable: false },
     );
   }
-  return { text };
+  const timing=!Array.isArray(result)&&opts.timestampMode&&opts.timingAudio?.sampleRate===16000&&decodedSampleCount===opts.timingAudio.validSampleCount?readActualProviderTiming({rawResponse:JSON.stringify(result),response:result,audioBytes:opts.audioBytes,granularity:opts.timestampMode,...opts.timingAudio,local:true}):null;
+  return { text,...(timing?{timing}:{}) };
 }
 
 /** 构造本地 whisper 适配器。deps 可注入(测试零成本);默认走真 transformers pipeline + ffmpeg 解码。
@@ -187,7 +193,7 @@ export function createWhisperLocalAdapter(
       if (!opts.executeRequest) return transcribeAudio(frozen.spec, frozen.opts, deps);
       const audioDigest=`sha256:${createHash('sha256').update(frozen.opts.audioBytes).digest('hex')}`;
       const audioByteLength=frozen.opts.audioBytes.byteLength;
-      const request:AsrRequest={protocol:'whisper-local.v1',provider:'whisper-local',model:whisperModelId(whisperLevelFromSpec(frozen.spec)),endpointDigest:null,language:frozen.opts.language??null,audioDigest,audioByteLength,chunks:[{digest:audioDigest,byteLength:audioByteLength}],chunkDigest:audioDigest,chunkByteLength:audioByteLength,chunkIndex:0,chunkCount:1};
+      const request:AsrRequest={...(frozen.opts.timestampMode?{timestampMode:frozen.opts.timestampMode}:{}),protocol:'whisper-local.v1',provider:'whisper-local',model:whisperModelId(whisperLevelFromSpec(frozen.spec)),endpointDigest:null,language:frozen.opts.language??null,audioDigest,audioByteLength,chunks:[{digest:audioDigest,byteLength:audioByteLength}],chunkDigest:audioDigest,chunkByteLength:audioByteLength,chunkIndex:0,chunkCount:1};
       const result=await opts.executeRequest(request,()=>transcribeAudio(frozen.spec,frozen.opts,deps));
       throwIfAborted(opts.signal);
       return result;
@@ -506,7 +512,7 @@ parentPort.on("message", async (msg) => {
     const pcm = new Float32Array(msg.pcm);
     const result = await pipe(pcm, msg.options);
     const text = Array.isArray(result) ? result.map((r) => r.text).join("") : result.text;
-    parentPort.postMessage({ id: msg.id, ok: true, text });
+    parentPort.postMessage({ id: msg.id, ok: true, text,...(!Array.isArray(result)&&Array.isArray(result.chunks)?{chunks:result.chunks}:{}) });
   } catch (err) {
     parentPort.postMessage({
       id: msg.id,
@@ -528,6 +534,7 @@ export function resolveWhisperWorkerRuntime(
   options: {
     cwd?: string;
     fileExists?: (path: string) => boolean;
+    resolveDependency?: (specifier: string) => string;
   } = {},
 ): WhisperWorkerRuntime {
   // worker 的模块根必须与 sidecar 的真实 cwd 一致。Windows 分层包的 cwd 固定为
@@ -540,12 +547,20 @@ export function resolveWhisperWorkerRuntime(
   const requireBase = path.join(cwd, "package.json");
   const moduleResolverPath = path.join(cwd, "creatoros-module-resolver.cjs");
   const exists = options.fileExists ?? fs.existsSync;
-  if (!exists(moduleResolverPath)) return { requireBase };
-  return {
+  if (exists(moduleResolverPath)) return {
     requireBase,
     moduleResolverPath,
     runtimeRoot: path.resolve(cwd, ".."),
   };
+  // Web 从 frontend cwd fork Worker；依赖属于 ai-worker。用当前模块真正解析到的
+  // 入口作为 eval Worker 的模块根，不依赖宿主恰好也安装了本地模型运行时。
+  // 传统包或旧运行布局无法解析时，仍保留原 cwd 的兼容查找路径。
+  try {
+    const dependencyPath = (options.resolveDependency ?? ((specifier: string) => require.resolve(specifier)))("@xenova/transformers");
+    return { requireBase: dependencyPath };
+  } catch {
+    return { requireBase };
+  }
 }
 
 /** worker 句柄可注入面(单测注 fake worker,不真加载 transformers)。 */
@@ -557,6 +572,7 @@ export interface WhisperWorkerLike {
       id: number;
       ok: boolean;
       text?: string;
+      chunks?:AsrPipelineOutput["chunks"];
       error?: string;
       errorCode?: string;
     }) => void,
@@ -588,7 +604,7 @@ export function createWorkerPipelineProvider(
 ): (modelId: string) => Promise<AsrPipeline> {
   let worker: WhisperWorkerLike | null = null;
   let nextId = 1;
-  type Pending = { owner: WhisperWorkerLike; resolve: (text: string) => void; reject: (err: Error) => void };
+  type Pending = { owner: WhisperWorkerLike; resolve: (text: string,chunks?:AsrPipelineOutput["chunks"]) => void; reject: (err: Error) => void };
   const pending = new Map<number, Pending>();
   const exits = new WeakMap<WhisperWorkerLike, Promise<number>>();
   let queue: Promise<unknown> = Promise.resolve();
@@ -612,7 +628,7 @@ export function createWorkerPipelineProvider(
       const p = pending.get(msg.id);
       if (!p || p.owner !== w) return;
       pending.delete(msg.id);
-      if (msg.ok && typeof msg.text === "string") p.resolve(msg.text);
+      if (msg.ok && typeof msg.text === "string") p.resolve(msg.text,msg.chunks);
       else p.reject(new MultimodalGenerationError(
         `whisper-local(worker)执行失败: ${msg.error ?? "未知错误"}`,
         { reference: msg.errorCode ?? "LOCAL_WHISPER_WORKER_UNKNOWN", retryable: true },
@@ -640,7 +656,7 @@ export function createWorkerPipelineProvider(
         const w = ensureWorker();
         const id = nextId++;
         let stopping: Promise<number> | undefined;
-        const result = new Promise<{ text: string }>((resolve, reject) => {
+        const result = new Promise<AsrPipelineOutput>((resolve, reject) => {
           const cancel = () => {
             // 删除 pending，使 terminate 引发的 exit/error 不会提前放行队列。
             pending.delete(id);
@@ -653,7 +669,7 @@ export function createWorkerPipelineProvider(
           const cleanup = () => signal?.removeEventListener("abort", cancel);
           pending.set(id, {
             owner: w,
-            resolve: (text) => { cleanup(); resolve({ text }); },
+            resolve: (text,chunks) => { cleanup(); resolve({ text,...(chunks?{chunks}:{}) }); },
             reject: (err) => { cleanup(); reject(err); },
           });
           signal?.addEventListener("abort", cancel, { once: true });

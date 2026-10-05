@@ -453,3 +453,32 @@ it("T-1021 没有口播脚本也能查看已有图文物料，不开放新生成
  render(<DraftWorkbenchPage vm={baseVm({publishPack:{publicationId:'pub-a',revisionId:'rev-a',platform:'xiaohongshu',status:'draft',publishedAt:null,title:'已采纳图文',description:'真实图文配文',tags:[],hasCover:false,coverAssetId:null},publishUnlocked:false})}/>);
  expect(screen.getByRole('button',{name:'查看发布物料'})).toBeVisible();expect(screen.queryByRole('button',{name:'生成发布物料'})).not.toBeInTheDocument();fireEvent.click(screen.getByRole('button',{name:'查看发布物料'}));expect(screen.getByRole('dialog')).toHaveTextContent('真实图文配文');
 });
+
+
+describe("DraftWorkbenchPage — T-1055 顶条仅保留真实动作", () => {
+  it("普通未发布稿删除重复入口及整个空顶条", () => {
+    const {container} = render(<DraftWorkbenchPage vm={baseVm()} />);
+    expect(screen.queryByRole("link", {name: "项目作品与创作"})).toBeNull();
+    expect(container.querySelector('[data-slot="draft-topbar"]')).toBeNull();
+  });
+  it("导入徽标仍在真实顶条，重复入口不出现", () => {
+    const original = baseVm();
+    const vm = baseVm({project: {...original.project, imported: true}});
+    const {container} = render(<DraftWorkbenchPage vm={vm} />);
+    expect(container.querySelector('[data-slot="draft-topbar"]')).not.toBeNull();
+    expect(screen.getByText("真实导入作品")).toBeTruthy();
+    expect(screen.queryByRole("link", {name: "项目作品与创作"})).toBeNull();
+  });
+  it("真实逐字稿任务和已发布复盘顶条保留", () => {
+    const original = baseVm();
+    const vm = baseVm({project: {...original.project, douyinExternalId: "douyin-1", transcriptState: "queued"}});
+    const {container} = render(<DraftWorkbenchPage vm={vm} />);
+    expect(container.querySelector('[data-slot="draft-topbar"] [data-slot="mock-transcribe-now"]')).not.toBeNull();
+  });
+  it("明确未发布不会被旧 published 包状态误判", () => {
+    const vm = baseVm({publishPack: {publicationId: "pub-1", platform: "douyin", status: "published", outputPublished: false,
+      publishedAt: null, title: "标题", description: "简介", tags: [], hasCover: false, coverAssetId: null}});
+    const {container} = render(<DraftWorkbenchPage vm={vm} />);
+    expect(container.querySelector('[data-slot="draft-topbar"]')).toBeNull();
+  });
+});

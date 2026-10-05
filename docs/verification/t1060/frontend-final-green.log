@@ -1,0 +1,69 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/frontend
+
+(node:72421) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:72422) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:72423) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ scripts/desktop/execution-worker-runtime.test.mjs (6 tests | 2 failed) 15122ms
+     × 复制固定 Worker 与 ACP 入口并保留旧返回路径，普通Worker仍可独立启动 15021ms
+     × 分层包使用真实解析器验证依赖，删除依赖后必须失败 92ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  scripts/desktop/execution-worker-runtime.test.mjs > 随包Worker入口资源 > 复制固定 Worker 与 ACP 入口并保留旧返回路径，普通Worker仍可独立启动
+Error: Test timed out in 15000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ scripts/desktop/execution-worker-runtime.test.mjs:9:5
+      7| import { stageExecutionWorkerRuntime,assertExecutionWorkerRuntime,asse…
+      8| describe("随包Worker入口资源",()=>{
+      9|   it("复制固定 Worker 与 ACP 入口并保留旧返回路径，普通Worker仍可独立启动",async()=>{
+       |     ^
+     10|     const root=mkdtempSync(join(tmpdir(),"worker-runtime-"));let child;
+     11|     try{
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  scripts/desktop/execution-worker-runtime.test.mjs > 随包Worker入口资源 > 分层包使用真实解析器验证依赖，删除依赖后必须失败
+AssertionError: expected [Function] to not throw an error but 'Error: Worker分层依赖验证失败: node:fs:436\n …' was thrown
+
+- Expected:
+undefined
+
++ Received:
+"Error: Worker分层依赖验证失败: node:fs:436
+    return binding.readFileUtf8(path, stringToFlags(options.flag));
+                   ^
+
+Error: EISDIR: illegal operation on a directory, read
+    at Object.readFileSync (node:fs:436:20)
+    at resolveFromVendors (/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/layered-worker-uJy4gp/frontend/creatoros-module-resolver.cjs:125:32)
+    at resolve (/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/layered-worker-uJy4gp/frontend/creatoros-module-resolver.cjs:146:22)
+    at nextStep (node:internal/modules/customization_hooks:189:26)
+    at resolveWithHooks (node:internal/modules/customization_hooks:417:10)
+    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1136:25)
+    at require.resolve (node:internal/modules/helpers:209:31)
+    at [eval]:4:60
+    at runScriptInThisContext (node:internal/vm:219:10)
+    at node:internal/process/execution:483:12 {
+  errno: -21,
+  code: 'EISDIR',
+  syscall: 'read'
+}
+
+Node.js v25.9.0
+"
+
+ ❯ scripts/desktop/execution-worker-runtime.test.mjs:30:58
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed | 2 passed (3)
+      Tests  2 failed | 17 passed (19)
+   Start at  17:25:51
+   Duration  16.31s (transform 307ms, setup 1.24s, import 597ms, tests 15.56s, environment 1.67s)
+

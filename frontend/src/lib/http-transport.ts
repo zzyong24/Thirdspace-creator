@@ -62,10 +62,11 @@ export interface FrozenWorkspaceScope {
 
 export function creatorApiHeaders(
   input?: HeadersInit,
-  scope?: FrozenWorkspaceScope,
+  scope?: FrozenWorkspaceScope & {readonly includeCurrentAccount?:boolean},
 ): Record<string, string> {
   const headers = Object.fromEntries(new Headers(input).entries());
-  if (scope !== undefined) {
+  const options=scope??{};
+  if (scope !== undefined && ("groupId" in scope || "accountId" in scope)) {
     Object.assign(headers, handshakeHeaders());
     delete headers["x-group-id"];
     delete headers["x-account-id"];
@@ -79,14 +80,20 @@ export function creatorApiHeaders(
   const currentAccountId = readCurrentAccountId();
   syncCurrentAccountCookie(currentAccountId);
   Object.assign(headers, handshakeHeaders());
-  if (currentAccountId) headers["x-account-id"] = currentAccountId;
+  if (options.includeCurrentAccount !== false) {
+    const currentAccountId = readCurrentAccountId();
+    syncCurrentAccountCookie(currentAccountId);
+    if (currentAccountId) headers["x-account-id"] = currentAccountId;
+  } else {
+    delete headers["x-account-id"];
+  }
   return headers;
 }
 
 export function fetchCreatorApi(
   input: RequestInfo | URL,
   init: RequestInit = {},
-  scope?: FrozenWorkspaceScope,
+  scope?: FrozenWorkspaceScope & {readonly includeCurrentAccount?:boolean},
 ): Promise<Response> {
   return fetch(input, {
     ...init,
@@ -94,6 +101,14 @@ export function fetchCreatorApi(
     credentials: init.credentials ?? "same-origin",
   });
 }
+
+// These operations are user-scoped and validate their target IDs in their own
+// service. A stale current-account selection must not block account recovery
+// or binding another account. Account-owned reads/writes still use the header.
+const USER_SCOPED_OPERATIONS = new Set([
+  "accounts.list", "accounts.create", "accounts.get", "accounts.update", "accounts.archive",
+  "platforms.capabilities.list", "platforms.bind.begin", "platforms.bind.confirm", "platforms.bind.cancel",
+]);
 
 /**
  * [T-332 S3] dispatch 结构化错误的类型化载体。之前只抛裸 Error(message 拼串),调用方
@@ -145,6 +160,8 @@ export function createHttpTransport(baseUrl = "/api/v1", scope?: FrozenWorkspace
   const frozenScope = scope === undefined ? undefined : Object.freeze({ ...scope });
   return {
     async request(endpoint: Endpoint, input) {
+      const forceNewDouyin = endpoint.id === "ingestion.douyin.login" &&
+        (input as { body?: { forceNew?: boolean } } | undefined)?.body?.forceNew === true;
       const res = await fetchCreatorApi(`${baseUrl}/dispatch`, {
         method: "POST",
         headers: { "content-type": "application/json" },

@@ -132,6 +132,21 @@ export interface IngestionAnalyticsPort {
   ): Promise<{ created: boolean }>;
 }
 
+export interface IngestionPlatformCollectionPort {
+  recordConfirmedLegacyImport(ctx: RequestContext, input: {
+    accountId: string;
+    platform: "douyin";
+    externalId: string;
+    kind: "video";
+    title: string | null;
+    publishedAt: string | null;
+    publicationId: string;
+    legacyProjectId: string | null;
+    capturedAt: string;
+    metrics: Record<string, unknown>;
+  }): Promise<{ platformWorkId: string; created: boolean; metricsCreated: number }>;
+}
+
 export interface IngestionKnowledgePort {
   ingest(
     ctx: RequestContext,
@@ -168,6 +183,13 @@ export interface IngestionPorts {
   // 数据底座(SPEC §1.3):导入历史项目端口。可选 —— 未注入时 refreshDouyin 退回旧
   // 行为(未知作品 reject)。composition root 注入 projectsService.ensureImportedProject。
   projects?: IngestionProjectsPort;
+  platformCollection?: IngestionPlatformCollectionPort;
+}
+
+class PlatformMirrorRetryableError extends Error {
+  constructor(cause: unknown) {
+    super(cause instanceof Error ? cause.message : String(cause));
+  }
 }
 
 // T-144 —— 扫码绑定时"确保有一个平台账号"的端口(composition root 适配到 platformAccount
@@ -653,7 +675,8 @@ export function createIngestionService(args: {
         await repo.appendError({
           ingestionRunId: input.runId,
           recordKey,
-          errorCode: "DOWNSTREAM_ERROR",
+          errorCode: err instanceof PlatformMirrorRetryableError
+            ? "PLATFORM_MIRROR_RETRYABLE" : "DOWNSTREAM_ERROR",
           errorMessage: err instanceof Error ? err.message : String(err),
           rejectedPayload: record,
         });
@@ -762,8 +785,8 @@ export function createIngestionService(args: {
         (input.platform === "douyin"
           ? `https://www.douyin.com/video/${encodeURIComponent(input.externalId)}`
           : undefined);
-      // [T-321] 主去重键 = publications.externalId(不是 projects.platform_ref)。先按
-      //   (platform, externalId) 查既有 publication:命中即该作品已绑定到某属主项目
+      // [T-321/T-1020] 主去重键 = 当前 user+account+platform+publications.externalId
+      //   (不是 projects.platform_ref)。只查本账号既有 publication:命中即该作品已绑定到某属主项目
       //   (用户手建 manual 项目「登记已发布」把 aweme_id 落这里,或上一轮日拉建的 imported
       //   项目)。用它反查属主 → merge 更新(不新建重复)。这样 manual 项目也能被再次命中而
       //   不重建(旧 findImportedByRef 只认 source='imported',对 manual 视而不见 → 建重复)。
@@ -920,6 +943,23 @@ export function createIngestionService(args: {
             source: "ingestion",
             rawMetrics: value.metrics,
           });
+          if (ports.platformCollection && value.platform === "douyin") {
+            const accountId = requireAccountId(dctx.accountId, "ingestion.platformMirror");
+            try {
+              const legacyProjectId = pub.contentOutputId && ports.projects?.getProjectIdByOutput
+                ? await ports.projects.getProjectIdByOutput(dctx, pub.contentOutputId)
+                : null;
+              await ports.platformCollection.recordConfirmedLegacyImport(dctx, {
+                accountId, platform: "douyin", externalId: value.externalId,
+                kind: "video", title: value.title?.trim() || null,
+                publishedAt: value.publishedAt ?? null,
+                publicationId: pub.id, legacyProjectId, capturedAt: value.capturedAt,
+                metrics: value.metrics,
+              });
+            } catch (error) {
+              throw new PlatformMirrorRetryableError(error);
+            }
+          }
         },
       );
     },

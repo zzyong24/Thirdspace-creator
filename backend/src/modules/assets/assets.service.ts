@@ -2,6 +2,10 @@ import {workspaceKey,requireWorkspace,type WorkspaceKey} from "../../workspace-s
 import { searchAssetLibrary,type AssetSearchInput,type AssetSearchResult } from "./asset-search";
 import type { RequestContext } from "@creatoros/contract";
 import * as fs from "node:fs/promises";
+import {createHash} from "node:crypto";
+import {createReadStream} from "node:fs";
+import {tmpdir} from "node:os";
+import {join} from "node:path";
 import type {
   AssetRepository,
   AssetRow,
@@ -13,6 +17,7 @@ import type { ObjectStoragePort } from "./object-storage";
 import type { RepoDeps } from "./assets.repository";
 import {
   OwnershipError,
+  ConflictError,
   InvalidTransitionError,
   UploadValidationError,
   requireAccountId,
@@ -102,7 +107,9 @@ export interface AssetsService {
     ctx: RequestContext,
     assetId: string,
   ): Promise<{ url: string; fileName: string }>;
-  getAssetFileDownloadUrl(ctx: RequestContext, assetId: string, fileId: string): Promise<{url:string;fileName:string}>;
+  assertAssetFileOwned(ctx: RequestContext, assetId: string, assetFileId: string, requireActive: boolean): Promise<void>;
+  readDocumentFileSource(ctx: RequestContext, assetId: string, assetFileId: string): Promise<{label: string; text: string}>;
+  getAssetFileDownloadUrl(ctx: RequestContext, assetId: string, assetFileId: string): Promise<{ url: string; fileName: string }>;
   /**
    * 服务端已有字节的一次性下载产物：只写对象存储并换短时签名 URL，不创建
    * assets / asset_files 行。素材包、诊断包等非创作容器必须走此端口。
@@ -126,10 +133,13 @@ export interface AssetsService {
    * [T-782] 将当前素材文件安全物化到执行工作区。本地存储优先 CoW/reflink，
    * S3/mock 自动回退取字节写文件；目标路径由 execution 沙箱在边界内生成。
    */
+  readImageReference(ctx:RequestContext,assetId:string,fileId?:string,expectedChecksum?:string):Promise<{fileId:string;checksum:string;mimeType:string;bytes:Uint8Array}>;
+  readMediaFile(ctx:RequestContext,assetId:string,assetFileId:string,fileDigest?:string):Promise<{assetId:string;assetFileId:string;fileDigest:string;mimeType:string;url:string}>;
   materializeAsset(
     ctx: RequestContext,
     assetId: string,
     destinationPath: string,
+    exact?: {assetFileId?:string;fileDigest?:string},
   ): Promise<{ size: number; mimeType: string } | null>;
   mergeAiAnnotation(
     ctx: RequestContext,
@@ -439,22 +449,45 @@ export function createAssetsService(
       const stripped = base.replace(/^asset-key-\d+-/, "");
       const existingExt = extForFileName(stripped);
       const fileName =
-        existingExt ?? stripped + (extForMime(current.mimeType) ?? "");
+        existingExt ? stripped : stripped + (extForMime(current.mimeType) ?? "");
       return { url, fileName };
     },
-    async getAssetFileDownloadUrl(ctx, assetId, fileId) {
-      const accountId=requireAccountId(ctx.accountId,"assets.getAssetFileDownloadUrl");
-      const asset=await requireAsset(ctx,assetId);
-      if(!["active","pending"].includes(asset.status))throw new OwnershipError("Asset not found");
-      const files=await repo.listAssetFiles(ctx.userId,assetId,accountId);
-      const file=files.find(value=>value.id===fileId);
-      if(!file)throw new OwnershipError("Asset file not found");
-      const storage=await objectStorageForCtx(ctx);
-      const url=await storage.getSignedUrl(file.storageKey);
-      const base=file.storageKey.split("/").pop()??"download";
-      const stripped=base.replace(/^asset-key-\d+-/,"");
-      const fileName=extForFileName(stripped)??stripped+(extForMime(file.mimeType)??"");
-      return {url,fileName};
+    async assertAssetFileOwned(ctx, assetId, assetFileId, requireActive) {
+      const asset = await requireAsset(ctx, assetId);
+      if (requireActive && asset.status !== "active") throw new ConflictError("素材尚未确认可用");
+      if (requireActive && asset.assetType !== "image") throw new ConflictError("文章配图必须选择图片素材");
+      if (asset.status === "deleted") throw new ConflictError("素材已删除");
+      const files = await repo.listAssetFiles(ctx.userId, assetId, workspaceKey(ctx));
+      if (!files.some((file) => file.id === assetFileId && file.assetId === assetId)) throw new OwnershipError("Asset file not found");
+    },
+    async readDocumentFileSource(ctx, assetId, assetFileId) {
+      const asset = await requireAsset(ctx, assetId);
+      if (asset.status !== "active" || asset.assetType !== "document") throw new ConflictError("所选资料不是可用文档");
+      const files = await repo.listAssetFiles(ctx.userId, assetId, workspaceKey(ctx));
+      const file = files.find((row) => row.id === assetFileId && row.assetId === assetId);
+      if (!file) throw new OwnershipError("Asset file not found");
+      if (file.extractStatus !== "done" || !file.extractedText?.trim()) throw new ConflictError("所选文档版本尚未完成文本提取");
+      return {label: asset.name, text: file.extractedText};
+    },
+    async getAssetFileDownloadUrl(ctx, assetId, assetFileId) {
+      await this.assertAssetFileOwned(ctx, assetId, assetFileId, false);
+      const files = await repo.listAssetFiles(ctx.userId, assetId, workspaceKey(ctx));
+      const file = files.find((row) => row.id === assetFileId && row.assetId === assetId);
+      if (!file) throw new OwnershipError("Asset file not found");
+      const storage = await objectStorageForCtx(ctx);
+      try {
+        const exists = storage.objectExists ? await storage.objectExists(file.storageKey) : (await storage.headObject(file.storageKey)).fileSize > 0;
+        if (!exists) throw new ConflictError("此版本图片文件已不可用");
+      } catch (error) {
+        const e = error as {code?: string; name?: string; $metadata?: {httpStatusCode?: number}};
+        if (e.code === "ENOENT" || e.name === "NotFound" || e.name === "NoSuchKey" || e.$metadata?.httpStatusCode === 404) throw new ConflictError("此版本图片文件已不可用");
+        throw error;
+      }
+      const url = await storage.getSignedUrl(file.storageKey);
+      const base = file.storageKey.split("/").pop() ?? "download";
+      const stripped = base.replace(/^asset-key-\d+-/, "");
+      const fileName = extForFileName(stripped) ? stripped : stripped + (extForMime(file.mimeType) ?? "");
+      return {url, fileName};
     },
     async isAssetFileAvailable(ctx, assetId) {
       const accountId = workspaceKey(ctx);
@@ -499,14 +532,45 @@ export function createAssetsService(
       return { fileId: selected.id, checksum: selected.checksum, mimeType: selected.mimeType, bytes };
     },
 
-    async materializeAsset(ctx, assetId, destinationPath) {
+    async readImageReference(ctx,assetId,fileId,expectedChecksum){
+      const asset=await requireAsset(ctx,assetId);
+      if(asset.assetType!=="image"||!["active","pending"].includes(asset.status))throw new ConflictError("参考素材不是可用图片");
+      const selected=fileId??asset.currentFileId;
+      if(!selected)throw new OwnershipError("Asset file not found");
+      const files=await repo.listAssetFiles(ctx.userId,assetId,workspaceKey(ctx));
+      const file=files.find(row=>row.id===selected&&row.assetId===assetId);
+      if(!file)throw new OwnershipError("Asset file not found");
+      if(!file.mimeType.startsWith("image/"))throw new ConflictError("参考文件不是图片");
+      const bytes=await (await objectStorageForCtx(ctx)).getObject(file.storageKey);
+      if(!bytes||!bytes.byteLength)throw new ConflictError("参考图片文件为空");
+      const checksum=createHash("sha256").update(bytes).digest("hex");
+      if(file.checksum&&file.checksum!==checksum||expectedChecksum&&expectedChecksum!==checksum)throw new ConflictError("参考图片文件校验已变化");
+      return {fileId:file.id,checksum,mimeType:file.mimeType,bytes};
+    },
+    async readMediaFile(ctx,assetId,assetFileId,fileDigest) {
+      const asset=await requireAsset(ctx,assetId);
+      if(asset.status!=="active" || !["video","audio","image"].includes(asset.assetType))throw new ConflictError("所选素材不是可用媒体");
+      const files=await repo.listAssetFiles(ctx.userId,assetId,workspaceKey(ctx));
+      const file=files.find(f=>f.id===assetFileId&&f.assetId===assetId);
+      if(!file)throw new OwnershipError("Asset file not found");
+      const root=await fs.mkdtemp(join(tmpdir(),"creatoros-media-identity-"));
+      try{
+        const target=join(root,"source");
+        const loaded=await this.materializeAsset(ctx,assetId,target,{assetFileId,fileDigest});
+        if(!loaded)throw new ConflictError("冻结原始文件不可读取");
+        const hash=createHash("sha256");for await(const chunk of createReadStream(target))hash.update(chunk);
+        const actualDigest=hash.digest("hex");
+        const download=await this.getAssetFileDownloadUrl(ctx,assetId,assetFileId);
+        return {assetId,assetFileId,fileDigest:actualDigest,mimeType:file.mimeType,url:download.url};
+      }finally{await fs.rm(root,{recursive:true,force:true});}
+    },
+    async materializeAsset(ctx, assetId, destinationPath, exact) {
       const accountId = workspaceKey(ctx);
       const asset = await requireAsset(ctx, assetId);
       const files = await repo.listAssetFiles(ctx.userId, assetId, accountId);
-      const current =
-        files.find((file) => file.id === asset.currentFileId) ??
-        files[files.length - 1];
-      if (!current) return null;
+      const current = exact?.assetFileId ? files.find(file=>file.id===exact.assetFileId) :
+        files.find(file=>file.id===asset.currentFileId) ?? files[files.length-1];
+      if (!current) {if(exact?.assetFileId)throw new ConflictError("冻结的原始文件不存在，请恢复该文件或明确更换来源");return null;}
 
       const storage = await objectStorageForCtx(ctx);
       if (storage.copyObjectToFile) {
@@ -518,6 +582,8 @@ export function createAssetsService(
       }
       const stat = await fs.stat(destinationPath);
       if (!stat.isFile() || stat.size === 0) return null;
+      // SEMANTIC_BOUNDARY_ALLOW: 核验完整实际字节，不把存储元信息当可信内容。
+      if(exact?.fileDigest){const hash=createHash("sha256");for await(const chunk of createReadStream(destinationPath))hash.update(chunk);if(hash.digest("hex")!==exact.fileDigest)throw new ConflictError("冻结媒体字节已变化，请恢复原始文件");}
       return { size: stat.size, mimeType: current.mimeType };
     },
 

@@ -1,0 +1,1 @@
+{"schema":"spec-review-round/v2","review_kind":"initial","summary":"独立只读评审 PASS。仅在 resolver 同步调用边界捕获 ZodError/SyntaxError，其他异常原样传播；不覆盖节点、模型或结算。新增准确码与零端口、其他冻结输入族、普通异常和已启动断连回归。__scriptDraft/__topicGenerate 等别处解析不纳入本修复保证。","findings":[]}

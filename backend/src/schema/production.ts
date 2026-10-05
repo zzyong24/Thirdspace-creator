@@ -1,4 +1,4 @@
-import { pgTable, text, integer, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, integer, jsonb, uniqueIndex } from "drizzle-orm/pg-core";
 
 // Production tables (data-model §9 lines 464-507 + contract/src/resources/
 // production.ts; SPEC §13 "制作 / Production" group). Canonical defs live in shared
@@ -68,6 +68,29 @@ export const exportRecords = pgTable("export_records", {
   completedAt: text("completed_at"), // nullable → contract iso8601|null
 });
 
+// 版本同时持有该次提交的幂等回执；历史永远不是第二份当前方案。
+export const productionEditVersions = pgTable("production_edit_versions", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").notNull(),
+  productionId: text("production_id").notNull(),
+  revision: integer("revision").notNull(),
+  requestId: text("request_id"),
+  requestDigest: text("request_digest"),
+  planDigest: text("plan_digest").notNull(),
+  source: text("source").notNull(),
+  plan: jsonb("plan").notNull(),
+  createdAt: text("created_at").notNull(),
+}, t => [
+  uniqueIndex("production_edit_versions_revision_ux").on(t.productionId,t.revision),
+  uniqueIndex("production_edit_versions_request_ux").on(t.productionId,t.requestId),
+]);
+
+export const productionRenderRequests=pgTable("production_render_requests",{
+  id:text("id").primaryKey(),userId:text("user_id").notNull(),productionId:text("production_id").notNull(),
+  requestId:text("request_id").notNull(),requestDigest:text("request_digest").notNull(),revision:integer("revision").notNull(),
+  spec:jsonb("spec").notNull(),attemptId:text("attempt_id").notNull(),taskId:text("task_id"),assetId:text("asset_id"),createdAt:text("created_at").notNull(),
+},t=>[uniqueIndex("production_render_requests_request_ux").on(t.productionId,t.requestId)]);
+
 // Raw DDL applied at db init (pglite has no migration runner wired here yet).
 //   - productions_output_ux: data-model CONTENT_OUTPUT ||--o| PRODUCTION is 0..1,
 //     so (content_output_id) is UNIQUE — ensureProductionForOutput is idempotent.
@@ -125,4 +148,23 @@ CREATE TABLE IF NOT EXISTS export_records (
   completed_at TEXT
 );
 CREATE INDEX IF NOT EXISTS export_records_production_ix ON export_records(production_id);
+CREATE TABLE IF NOT EXISTS production_edit_versions (
+  id TEXT PRIMARY KEY, user_id TEXT NOT NULL, production_id TEXT NOT NULL,
+  revision INTEGER NOT NULL, request_id TEXT, request_digest TEXT,
+  plan_digest TEXT NOT NULL, source TEXT NOT NULL, plan JSONB NOT NULL, created_at TEXT NOT NULL
+);
+CREATE UNIQUE INDEX IF NOT EXISTS production_edit_versions_revision_ux ON production_edit_versions(production_id, revision);
+CREATE UNIQUE INDEX IF NOT EXISTS production_edit_versions_request_ux ON production_edit_versions(production_id, request_id);
+CREATE TABLE IF NOT EXISTS production_render_requests (
+  id TEXT PRIMARY KEY,user_id TEXT NOT NULL,production_id TEXT NOT NULL,request_id TEXT NOT NULL,
+  request_digest TEXT NOT NULL,revision INTEGER NOT NULL,spec JSONB NOT NULL,attempt_id TEXT NOT NULL,
+  task_id TEXT,asset_id TEXT,created_at TEXT NOT NULL
+);
+CREATE UNIQUE INDEX IF NOT EXISTS production_render_requests_request_ux ON production_render_requests(production_id,request_id);
 `;
+
+export const productionMediaRequests=pgTable("production_media_requests",{
+ id:text("id").primaryKey(),userId:text("user_id").notNull(),accountId:text("account_id").notNull(),outputId:text("output_id").notNull(),
+ requestId:text("request_id").notNull(),requestDigest:text("request_digest").notNull(),kind:text("kind").notNull(),
+ frozenInput:jsonb("frozen_input").notNull(),taskId:text("task_id"),createdAt:text("created_at").notNull(),
+},t=>[uniqueIndex("production_media_requests_scope_ux").on(t.userId,t.accountId,t.outputId,t.requestId)]);

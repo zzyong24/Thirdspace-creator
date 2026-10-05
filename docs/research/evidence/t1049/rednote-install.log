@@ -1,0 +1,53 @@
+Lockfile is up to date, resolution step is skipped
+Progress: resolved 1, reused 0, downloaded 0, added 0
+Packages: +210
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Progress: resolved 210, reused 123, downloaded 0, added 123
+Progress: resolved 210, reused 123, downloaded 1, added 123
+Progress: resolved 210, reused 123, downloaded 22, added 145
+Progress: resolved 210, reused 123, downloaded 29, added 151
+Progress: resolved 210, reused 123, downloaded 33, added 156
+ WARN  Tarball download average speed 33 KiB/s (size 78 KiB) is below 50 KiB/s: https://registry.npmmirror.com/@types/react/-/react-18.3.28.tgz (GET)
+Progress: resolved 210, reused 123, downloaded 49, added 172
+Progress: resolved 210, reused 123, downloaded 53, added 176
+Progress: resolved 210, reused 123, downloaded 59, added 182
+Progress: resolved 210, reused 123, downloaded 68, added 191
+Progress: resolved 210, reused 123, downloaded 75, added 197
+Progress: resolved 210, reused 123, downloaded 77, added 200
+Progress: resolved 210, reused 123, downloaded 80, added 203
+Progress: resolved 210, reused 123, downloaded 82, added 205
+Progress: resolved 210, reused 123, downloaded 85, added 208
+Progress: resolved 210, reused 123, downloaded 86, added 208
+Progress: resolved 210, reused 123, downloaded 86, added 209
+Progress: resolved 210, reused 123, downloaded 87, added 209
+Progress: resolved 210, reused 123, downloaded 87, added 210, done
+
+dependencies:
++ @tiptap/extension-placeholder 3.22.4
++ @tiptap/react 3.22.4
++ @tiptap/starter-kit 3.22.4
++ class-variance-authority 0.7.1
++ clsx 2.1.1
++ file-saver 2.0.5
++ html-to-image 1.11.13
++ jszip 3.10.1
++ lucide-react 0.468.0
++ lxgw-wenkai-webfont 1.7.0
++ react 18.3.1
++ react-dom 18.3.1
++ react-router-dom 7.14.2
++ tailwind-merge 2.6.1
++ tailwindcss-animate 1.0.7
+
+devDependencies:
++ @types/file-saver 2.0.7
++ @types/react 18.3.28
++ @types/react-dom 18.3.7
++ @vitejs/plugin-react 4.7.0
++ autoprefixer 10.5.0
++ postcss 8.5.10
++ tailwindcss 3.4.19
++ typescript 5.6.3
++ vite 6.4.2
+
+Done in 36.9s using pnpm v10.32.1

@@ -9,6 +9,8 @@ type Definition = z.infer<typeof chatWorkerInputSchema>["tools"][number];
 const IMPLEMENTATION_REVISION = "chat-tools-v1";
 /** 显式审计表；不能根据工具名称或候选是否需要采纳来猜测副作用。 */
 export const CHAT_TOOL_EFFECTS: Readonly<Record<string, Definition["effect"]>> = Object.freeze({
+  "canvas.read":"none",
+  "canvas.propose":"proposal",
   "history.read": "none",
   "tool.result.read": "none",
   "skill.read": "none",
@@ -31,8 +33,6 @@ export const CHAT_TOOL_EFFECTS: Readonly<Record<string, Definition["effect"]>> =
   "local.tools": "none",
   "local.workspace": "none",
   "material.generate": "committed",
-  "canvas.read":"none",
-  "canvas.propose":"proposal",
   "cover.generate": "committed",
   "calibration.diagnose": "proposal",
   "review.analyze": "proposal",

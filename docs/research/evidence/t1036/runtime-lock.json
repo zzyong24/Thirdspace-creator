@@ -1,0 +1,61 @@
+[
+  {
+    "name": "next",
+    "version": "16.2.9",
+    "resolvedPath": "/Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/node_modules/.pnpm/next@16.2.9_@babel+core@7.29.7_@opentelemetry+api@1.9.0_@playwright+test@1.60.0_react-d_a304033642f6062f33667264f51c2493/node_modules/next",
+    "source": "existing workspace package, read-only symlink; no project dependency changes"
+  },
+  {
+    "name": "react",
+    "version": "19.2.4",
+    "resolvedPath": "/Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/node_modules/.pnpm/react@19.2.4/node_modules/react",
+    "source": "existing workspace package, read-only symlink; no project dependency changes"
+  },
+  {
+    "name": "react-dom",
+    "version": "19.2.4",
+    "resolvedPath": "/Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/node_modules/.pnpm/react-dom@19.2.4_react@19.2.4/node_modules/react-dom",
+    "source": "existing workspace package, read-only symlink; no project dependency changes"
+  },
+  {
+    "name": "gsap",
+    "version": "3.15.0",
+    "resolvedPath": "/Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/node_modules/.pnpm/gsap@3.15.0/node_modules/gsap",
+    "source": "existing workspace package, read-only symlink; no project dependency changes"
+  },
+  {
+    "name": "typescript",
+    "version": "5.9.3",
+    "resolvedPath": "/Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript",
+    "source": "existing workspace package, read-only symlink; no project dependency changes"
+  },
+  {
+    "name": "@types/react",
+    "version": "19.2.17",
+    "resolvedPath": "/Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/node_modules/.pnpm/@types+react@19.2.17/node_modules/@types/react",
+    "source": "existing workspace package, read-only symlink; no project dependency changes"
+  },
+  {
+    "name": "@types/react-dom",
+    "version": "19.2.3",
+    "resolvedPath": "/Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/node_modules/.pnpm/@types+react-dom@19.2.3_@types+react@19.2.17/node_modules/@types/react-dom",
+    "source": "existing workspace package, read-only symlink; no project dependency changes"
+  },
+  {
+    "name": "@types/node",
+    "version": "20.19.43",
+    "resolvedPath": "/Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/node_modules/.pnpm/@types+node@20.19.43/node_modules/@types/node",
+    "source": "existing workspace package, read-only symlink; no project dependency changes"
+  },
+  {
+    "name": "tsx",
+    "version": "4.22.4",
+    "resolvedPath": "/Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/node_modules/.pnpm/tsx@4.22.4/node_modules/tsx",
+    "source": "existing workspace package, read-only symlink; no project dependency changes"
+  },
+  {
+    "name": "@xzdarcy/react-timeline-editor",
+    "version": "1.0.0",
+    "source": "official npm package unpacked during isolated install; bundled runtime inspected"
+  }
+]

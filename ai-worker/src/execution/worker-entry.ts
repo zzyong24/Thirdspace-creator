@@ -1,3 +1,5 @@
+import {runAssetAsrInWorker} from './asset-asr-worker-run';
+import {runExternalChatInWorker} from "./external-chat-worker-run";
 import {runVideoDecisionsInWorker} from "./video-decisions-worker";
 import {runAssetProcessingInWorker} from "./asset-processing-worker";
 import {runTranscribeInWorker} from "./transcribe-worker-run";
@@ -20,9 +22,11 @@ const worker = createExecutionWorker({
   runAsset:runAssetInWorker,
   runVideo:runVideoDecisionsInWorker,
   runTranscribe:runTranscribeInWorker,
+  runAssetAsr:runAssetAsrInWorker,
   runCover:runCoverInWorker,
   generateStructured:generateStructuredInWorker,
   runChat:runChatInWorker,
+  runExternalChat:runExternalChatInWorker,
   supportsChatWebRead:true,
   supportsChatHooks:true,
   supportsChatScriptDraft:true,

@@ -1,0 +1,35 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "已独立读取架构、T-1029、T-1035—1042及画布分支迁移；存在1个迁移谱系收敛缺口。未运行模型、迁移、浏览器或安装包。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "open",
+      "severity": "major",
+      "category": "data-integrity",
+      "requirement_anchor": {
+        "id": "T-1042-DEPENDENCY-INTEGRATION",
+        "quote": "画布已在 `creator-canvas` 工作树实施，先盘点已提交与未提交改动，记录来源提交，逐文件核对后整合"
+      },
+      "acceptance_anchor": {
+        "id": "T-1042-AC-5",
+        "quote": "合并后的契约、数据库、前后端类型、boundary、semantic、LED-047、集成测试和 reconcile 记录当场结果"
+      },
+      "where": "creator-canvas 与目标分支的 0101 迁移谱系合并",
+      "failure_mode": "画布分支0101为creative_canvas，目标分支0101为reporting_local_consent；画布db.ts固定重放0101_creative_canvas.sql。仅改号没有规定两种已执行谱系的识别和收敛，可能跳过报表DDL或遗留失效兜底。",
+      "evidence_kind": "deterministic-check",
+      "evidence_ref": "codex/creator-canvas:backend/drizzle/0101_creative_canvas.sql；backend/src/db.ts:70-81；目标backend/drizzle/0101_reporting_local_consent.sql；两分支_journal.json",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "画布DDL使用目标下一个未占编号，移除旧文件名依赖；全新库、目标0101旧库、画布0101且含数据旧库分别升级，全部保留报表同意和画布数据并达到相同schema，不能手改journal或用户库。",
+      "resolution_evidence": "",
+      "parent_id": "",
+      "threat_model_id": ""
+    }
+  ]
+}

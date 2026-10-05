@@ -1,0 +1,64 @@
+{
+  "status": "FAIL",
+  "sha256": "fe56232f3e2ce56e15f4da2c3ce188317605870056bfedfeacf594efe0d2fba3",
+  "unreplacedNodeEnv": 14,
+  "reason": "Vite library默认保留React CJS里的process.env.NODE_ENV，浏览器缺少process时崩溃",
+  "matches": [
+    {
+      "offset": 13323,
+      "context": "rts;\nvar H3;\nfunction c6() {\n  return H3 || (H3 = 1, (function(g, A) {\n    process.env.NODE_ENV !== \"production\" && (function() {\n      function I(X, lA) {\n        Object.defineProperty"
+    },
+    {
+      "offset": 45869,
+      "context": "k.exports)), Tk.exports;\n}\nvar m3;\nfunction E0() {\n  return m3 || (m3 = 1, process.env.NODE_ENV === \"production\" ? au.exports = s6() : au.exports = c6()), au.exports;\n}\n/**\n * @license "
+    },
+    {
+      "offset": 46259,
+      "context": "y of this source tree.\n */\nvar L3;\nfunction n6() {\n  return L3 || (L3 = 1, process.env.NODE_ENV !== \"production\" && (function() {\n    function g(Z) {\n      if (Z == null) return null;\n "
+    },
+    {
+      "offset": 54211,
+      "context": "  );\n    };\n  })()), Yk;\n}\nvar p3;\nfunction D6() {\n  return p3 || (p3 = 1, process.env.NODE_ENV === \"production\" ? tu.exports = a6() : tu.exports = n6()), tu.exports;\n}\nvar d = D6(), su"
+    },
+    {
+      "offset": 61315,
+      "context": "ee.\n */\nvar q3;\nfunction h6() {\n  return q3 || (q3 = 1, (function(g) {\n    process.env.NODE_ENV !== \"production\" && (function() {\n      function A() {\n        if (L = !1, j) {\n         "
+    },
+    {
+      "offset": 68586,
+      "context": "    })();\n  })(xf)), xf;\n}\nvar V3;\nfunction _4() {\n  return V3 || (V3 = 1, process.env.NODE_ENV === \"production\" ? cu.exports = r6() : cu.exports = h6()), cu.exports;\n}\nvar nu = { expor"
+    },
+    {
+      "offset": 73925,
+      "context": "y of this source tree.\n */\nvar Z3;\nfunction l6() {\n  return Z3 || (Z3 = 1, process.env.NODE_ENV !== \"production\" && (function() {\n    function g() {\n    }\n    function A(w) {\n      retu"
+    },
+    {
+      "offset": 85913,
+      "context": "typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.checkDCE != \"function\")) {\n      if (process.env.NODE_ENV !== \"production\")\n        throw new Error(\"^_^\");\n      try {\n        __REACT_DEVTOOLS_GL"
+    },
+    {
+      "offset": 86121,
+      "context": ";\n      } catch (A) {\n        console.error(A);\n      }\n    }\n  }\n  return process.env.NODE_ENV === \"production\" ? (g(), nu.exports = w6()) : nu.exports = l6(), nu.exports;\n}\n/**\n * @li"
+    },
+    {
+      "offset": 381861,
+      "context": "y of this source tree.\n */\nvar X3;\nfunction d6() {\n  return X3 || (X3 = 1, process.env.NODE_ENV !== \"production\" && (function() {\n    function g(Q, E) {\n      for (Q = Q.memoizedState; "
+    },
+    {
+      "offset": 967075,
+      "context": "typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.checkDCE != \"function\")) {\n      if (process.env.NODE_ENV !== \"production\")\n        throw new Error(\"^_^\");\n      try {\n        __REACT_DEVTOOLS_GL"
+    },
+    {
+      "offset": 967283,
+      "context": ";\n      } catch (A) {\n        console.error(A);\n      }\n    }\n  }\n  return process.env.NODE_ENV === \"production\" ? (g(), su.exports = G6()) : su.exports = d6(), su.exports;\n}\nvar k6 = y"
+    },
+    {
+      "offset": 6717406,
+      "context": "[c, n] = Y.useState(t ?? I);\n  Y.useEffect(() => {\n    if (C)\n      return process.env.NODE_ENV !== \"production\" && sK.has(C) && console.error(\n        `[Section] duplicate sectionKey m"
+    },
+    {
+      "offset": 7040464,
+      "context": "{\n    return A.current;\n  }, [I.current]);\n}\nfunction aLA(g, A) {\n  return process.env.NODE_ENV !== \"production\" && eLA(A), Y.useEffect(g, tLA(A));\n}\nfunction sLA(g) {\n  const A = Y.use"
+    }
+  ]
+}

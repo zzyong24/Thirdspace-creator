@@ -1,0 +1,511 @@
+--- src/core/clipboard.ts:upstream
++++ src/core/clipboard.ts:native
+@@ -1,23 +1,7 @@
+-export async function copyRichHtml(html: string, plainText: string): Promise<void> {
+-  if (typeof ClipboardItem !== "undefined" && navigator.clipboard?.write) {
+-    await navigator.clipboard.write([
+-      new ClipboardItem({
+-        "text/html": new Blob([html], { type: "text/html" }),
+-        "text/plain": new Blob([plainText], { type: "text/plain" })
+-      })
+-    ]);
+-    return;
+-  }
+-
+-  await navigator.clipboard.writeText(plainText);
++import {rich, png, type Delivery} from "../../web/host-port";
++export async function copyRichHtml(html: string, plainText: string, receive?: (delivery: Delivery) => void) {
++  if (!receive) throw new Error('交付请求已失效'); receive(rich(html, plainText));
+ }
+-
+-export async function copyPng(dataUrl: string): Promise<void> {
+-  const [header, payload] = dataUrl.split(",", 2);
+-  if (!header || !payload || !header.includes(";base64")) throw new Error("图片数据格式无效");
+-  const type = header.match(/^data:([^;]+)/)?.[1] ?? "image/png";
+-  const binary = atob(payload);
+-  const bytes = Uint8Array.from(binary, (character) => character.charCodeAt(0));
+-  const blob = new Blob([bytes], { type });
+-  await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
++export async function copyPng(dataUrl: string, receive?: (delivery: Delivery) => void) {
++  if (!receive) throw new Error('交付请求已失效'); receive(png(dataUrl));
+ }
+--- src/core/dom.ts:upstream
++++ src/core/dom.ts:native
+@@ -1,12 +1,26 @@
+ import { sanitizeHTMLToDom } from "obsidian";
+ 
+-export function setSanitizedHtml(element: HTMLElement, html: string): void {
+-  element.empty();
+-  element.append(sanitizeHTMLToDom(html));
+-}
+-
+-export function createSanitizedHost(html: string, tag: keyof HTMLElementTagNameMap = "div"): HTMLElement {
+-  const element = createEl(tag);
+-  element.append(sanitizeHTMLToDom(html));
++type Options = {text?: string; cls?: string; attr?: Record<string, string>; value?: string; type?: string};
++export function createEl<K extends keyof HTMLElementTagNameMap>(tag: K, options: Options = {}): HTMLElementTagNameMap[K] {
++  const element = document.createElement(tag);
++  if (options.text !== undefined) element.textContent = options.text;
++  if (options.cls) element.className = options.cls;
++  for (const [key, value] of Object.entries(options.attr ?? {})) element.setAttribute(key, value);
++  if (options.value !== undefined) element.setAttribute("value", options.value);
++  if (options.type) element.setAttribute("type", options.type);
+   return element;
+ }
++export const createDiv = (options?: Options) => createEl("div", options);
++export function appendEl<K extends keyof HTMLElementTagNameMap>(parent: HTMLElement, tag: K, options?: Options) {
++  const element = createEl(tag, options); parent.append(element); return element;
++}
++export const appendSpan = (parent: HTMLElement, options?: Options) => appendEl(parent, "span", options);
++export function setCssProps(element: HTMLElement, values: Record<string, string>) {
++  for (const [key, value] of Object.entries(values)) element.style.setProperty(key, value);
++}
++export function setSanitizedHtml(element: HTMLElement, html: string): void {
++  element.replaceChildren(); element.append(sanitizeHTMLToDom(html));
++}
++export function createSanitizedHost(html: string, tag: keyof HTMLElementTagNameMap = "div"): HTMLElement {
++  const element = createEl(tag); element.append(sanitizeHTMLToDom(html)); return element;
++}
+--- src/platforms/rednote/adapter.ts:upstream
++++ src/platforms/rednote/adapter.ts:native
+@@ -1,10 +1,11 @@
++import {png} from "../../../web/host-port";
+ import { toPng } from "html-to-image";
+ import { zipSync } from "fflate";
+ import MarkdownIt from "markdown-it";
+ import { requestUrl } from "obsidian";
+ import { replaceAccountVariables } from "../../core/accountVariables";
+ import { copyPng } from "../../core/clipboard";
+-import { setSanitizedHtml } from "../../core/dom";
++import { setSanitizedHtml, createEl, createDiv, appendEl, appendSpan, setCssProps } from "../../core/dom";
+ import { escapeAttr, escapeHtml } from "../../core/html";
+ import { blobToDataUrl } from "../../core/imageData";
+ import type { RenderContext, RednoteTemplateId } from "../../types";
+@@ -71,32 +72,34 @@
+       const current = Number(root.dataset.activeIndex || 0);
+       const next = button.dataset.direction === "next" ? Math.min(total - 1, current + 1) : Math.max(0, current - 1);
+       root.dataset.activeIndex = String(next);
+-      cards.querySelectorAll<HTMLElement>("[data-card-index]").forEach((item, itemIndex) => item.toggleClass("is-active", itemIndex === next));
++      cards.querySelectorAll<HTMLElement>("[data-card-index]").forEach((item, itemIndex) => item.classList.toggle("is-active", itemIndex === next));
+       const label = nav.querySelector("span");
+       if (label) label.textContent = `${next + 1} / ${total}`;
+       this.updateNavigation(nav, next, total);
+     });
+     this.updateNavigation(nav, 0, pages.length);
+     root.append(cards);
+-    this.attachImageControls(root, context);
++    if (!context.nativeControls) this.attachImageControls(root, context);
++    else root.querySelectorAll<HTMLImageElement>("img[data-noterelay-image-key]").forEach(image => image.addEventListener("click", () => context.onImageSelected?.(image.dataset.noterelayImageKey || ""), {signal: context.signal}));
+     root.append(nav);
+     root.querySelectorAll<HTMLImageElement>("img").forEach((image) => {
+       if (!image.complete) image.addEventListener("load", () => void this.ensureLayout(root, context).catch(() => undefined), { once: true });
+     });
+-    window.requestAnimationFrame(() => void this.ensureLayout(root, context).catch(() => undefined));
++    const frame = window.requestAnimationFrame(() => {if (!context.signal?.aborted) void this.ensureLayout(root, context).catch(() => undefined);});
++    context.signal?.addEventListener("abort", () => window.cancelAnimationFrame(frame), {once: true});
+     return root;
+   }
+ 
+   async copy(context: RenderContext, root: HTMLElement): Promise<string> {
+     await this.ensureLayout(root, context);
+-    await copyPng(await this.renderCurrentPng(root, context));
++    await copyPng(await this.renderCurrentPng(root, context), context.onDeliver);
+     return "当前小红书卡片已复制为 PNG";
+   }
+ 
+   async downloadCurrent(context: RenderContext, root: HTMLElement): Promise<string> {
+     await this.ensureLayout(root, context);
+     const active = Number(root.dataset.activeIndex || 0);
+-    downloadDataUrl(await this.renderCurrentPng(root, context), `${safeName(context.note.title)}-${active + 1}.png`);
++    await downloadDataUrl(await this.renderCurrentPng(root, context), `${safeName(context.note.title)}-${active + 1}.png`, context);
+     return "当前页已下载";
+   }
+ 
+@@ -107,12 +110,13 @@
+     const files: Record<string, Uint8Array> = {};
+     for (let index = 0; index < cards.length; index += 1) {
+       const dataUrl = await this.renderCardPng(cards[index], context);
++      context.signal?.throwIfAborted();
+       const base64 = dataUrl.split(",", 2)[1];
+       if (!base64) throw new Error(`第 ${index + 1} 页图片数据无效`);
+       files[`${safeName(context.note.title)}-${String(index + 1).padStart(2, "0")}.png`] = Uint8Array.from(atob(base64), (character) => character.charCodeAt(0));
+     }
+     const blob = new Blob([zipSync(files, { level: 6 })], { type: "application/zip" });
+-    downloadBlob(blob, `${safeName(context.note.title)}-全部页面.zip`);
++    await downloadBlob(blob, `${safeName(context.note.title)}-全部页面.zip`, context);
+     return `已将 ${cards.length} 页图片打包导出`;
+   }
+ 
+@@ -132,7 +136,7 @@
+     card.dataset.sectionIndex = String(sectionIndex);
+     card.dataset.exportWidth = String(imageSize.width);
+     card.dataset.exportHeight = String(imageSize.height);
+-    card.setCssProps({
++    setCssProps(card, {
+       "--nr-card-width": `${PREVIEW_WIDTH}px`,
+       "--nr-card-height": `${previewHeight}px`,
+       "--nr-card-padding": `${tokens.cardPadding}px`,
+@@ -152,7 +156,7 @@
+       "--nr-card-shadow": tokens.glow ?? "0 4px 12px rgba(0,0,0,.1)"
+     });
+     const background = renderCardBackground(settings.rednoteBackgroundImage, settings.rednoteBackgroundScale, settings.rednoteBackgroundPosition);
+-    setSanitizedHtml(card, `${background}${renderCardHeader(settings.rednoteTemplateId, account?.name ?? "创作者", account?.handle ?? "", account?.avatarUrl ?? "")}<section class="red-preview-content"><main class="noterelay-card-content red-content-section red-section-active">${markdown.render(page, { resolveImageSrc: context.resolveImageSrc, imageIndex: 0, sectionIndex })}</main></section>${renderCardFooter(settings.rednoteTemplateId, account?.signature || "夜半过后，光明便启程", account?.handle || "欢迎关注", account?.name || "创作者")}`);
++    setSanitizedHtml(card, `${background}${renderCardHeader(settings.rednoteTemplateId, account?.name ?? "", account?.handle ?? "", account?.avatarUrl ?? "")}<section class="red-preview-content"><main class="noterelay-card-content red-content-section red-section-active">${markdown.render(page, { resolveImageSrc: context.resolveImageSrc, imageIndex: 0, sectionIndex })}</main></section>${renderCardFooter(settings.rednoteTemplateId, account?.signature || "", account?.handle || "", account?.name || "")}`);
+     const overrides = context.notePath ? settings.rednoteImageWidths[context.notePath] : undefined;
+     const radii = context.notePath ? settings.rednoteImageRadii[context.notePath] : undefined;
+     card.querySelectorAll<HTMLImageElement>(".noterelay-card-content img[data-noterelay-image-key]").forEach((image) => {
+@@ -164,13 +168,15 @@
+     return card;
+   }
+ 
+-  private ensureLayout(root: HTMLElement, context: RenderContext): Promise<void> {
++  ensureLayout(root: HTMLElement, context: RenderContext): Promise<void> {
+     const existing = layoutPromises.get(root);
+     if (existing) return existing;
+     const promise = (async () => {
+       if (!root.isConnected) await nextAnimationFrame();
+-      await document.fonts?.ready;
+-      await waitForImages(root);
++      await abortable(document.fonts?.ready ?? Promise.resolve(), context.signal);
++      context.signal?.throwIfAborted();
++      await waitForImages(root, context.signal);
++      context.signal?.throwIfAborted();
+       if (root.dataset.layoutBalanced === "true") return;
+       this.balanceCards(root, context);
+       root.dataset.layoutBalanced = "true";
+@@ -194,7 +200,7 @@
+     while (cardIndex < host.querySelectorAll(".noterelay-rednote-card").length && operations < 500) {
+       const cards = Array.from(host.querySelectorAll<HTMLElement>(".noterelay-rednote-card"));
+       const card = cards[cardIndex];
+-      card.addClass("is-measuring");
++      card.classList.add("is-measuring");
+       const content = card.querySelector<HTMLElement>(".noterelay-card-content");
+       this.applyContentSafeHeight(card);
+       while (content && contentOverflows(content) && operations < 500) {
+@@ -202,14 +208,14 @@
+         const bodyNodes = movableContentNodes(content);
+         if (!bodyNodes.length) break;
+         const last = bodyNodes[bodyNodes.length - 1];
+-        const isTable = last.instanceOf(HTMLTableElement);
++        const isTable = (last instanceof HTMLTableElement);
+         const hasOnlySectionHeadingsBefore = bodyNodes.slice(0, -1).every((node) => /^H[3-6]$/.test(node.tagName));
+         const canFillCurrentCard = bodyNodes.length === 1 || (isTable && hasOnlySectionHeadingsBefore);
+         let overflowNode: HTMLElement | undefined;
+         if (isTable && canFillCurrentCard && compactTableToFit(content, last)) continue;
+         if (canFillCurrentCard) overflowNode = splitElementToFit(content, last);
+         if (canFillCurrentCard && !overflowNode) {
+-          last.addClass("is-overflow-fallback");
++          last.classList.add("is-overflow-fallback");
+           break;
+         }
+         if (!overflowNode) {
+@@ -226,13 +232,13 @@
+           nextContent.insertBefore(trailing, firstBodyNode(nextContent));
+         }
+       }
+-      card.removeClass("is-measuring");
++      card.classList.remove("is-measuring");
+       cardIndex += 1;
+     }
+     const cards = Array.from(host.querySelectorAll<HTMLElement>(".noterelay-rednote-card"));
+     cards.forEach((card, index) => {
+       card.dataset.cardIndex = String(index);
+-      card.toggleClass("is-active", index === Number(root.dataset.activeIndex || 0));
++      card.classList.toggle("is-active", index === Number(root.dataset.activeIndex || 0));
+     });
+     const active = Math.min(Number(root.dataset.activeIndex || 0), Math.max(0, cards.length - 1));
+     root.dataset.activeIndex = String(active);
+@@ -245,8 +251,8 @@
+     const content = card.querySelector<HTMLElement>(".noterelay-card-content");
+     const footer = card.querySelector<HTMLElement>(".red-preview-footer");
+     if (!content || !footer) return;
+-    footer.removeClass("is-wrapping");
+-    if (footer.scrollWidth > footer.clientWidth + 1) footer.addClass("is-wrapping");
++    footer.classList.remove("is-wrapping");
++    if (footer.scrollWidth > footer.clientWidth + 1) footer.classList.add("is-wrapping");
+     content.style.removeProperty("height");
+     const layoutHeight = content.clientHeight;
+     const footerSafeHeight = Math.floor(footer.getBoundingClientRect().top - content.getBoundingClientRect().top - 8);
+@@ -260,7 +266,7 @@
+     const total = host.querySelectorAll(".noterelay-rednote-card").length;
+     const previewHeight = Math.round(PREVIEW_WIDTH * REDNOTE_IMAGE_SIZE.height / REDNOTE_IMAGE_SIZE.width);
+     const card = this.createCard("", total, Number(sectionIndex), context, previewHeight);
+-    card.removeClass("is-active");
++    card.classList.remove("is-active");
+     const sourceHeading = current.querySelector<HTMLElement>(".noterelay-card-content > h1, .noterelay-card-content > h2");
+     const target = card.querySelector<HTMLElement>(".noterelay-card-content");
+     if (sourceHeading && target) {
+@@ -275,14 +281,16 @@
+   }
+ 
+   private async renderCardPng(card: HTMLElement, context: RenderContext): Promise<string> {
+-    const wasActive = card.hasClass("is-active");
++    const wasActive = card.classList.contains("is-active");
+     const selectedImages = Array.from(card.querySelectorAll<HTMLImageElement>("[data-noterelay-selected]"));
+     selectedImages.forEach((image) => image.removeAttribute("data-noterelay-selected"));
+-    card.addClass("is-active");
++    card.classList.add("is-active");
+     let restoreImages: () => void = () => {};
+     try {
+-      await waitForImages(card);
++      await waitForImages(card, context.signal);
++      context.signal?.throwIfAborted();
+       restoreImages = await inlineImagesForExport(card, context);
++      context.signal?.throwIfAborted();
+       const exportWidth = Number(card.dataset.exportWidth || PREVIEW_WIDTH);
+       return await toPng(card, {
+         pixelRatio: exportWidth / PREVIEW_WIDTH,
+@@ -290,12 +298,12 @@
+         backgroundColor: context.theme.tokens.background,
+         imagePlaceholder: TRANSPARENT_PIXEL,
+         onImageErrorHandler: () => undefined,
+-        filter: (node) => !(node.instanceOf(HTMLElement) && node.hasAttribute("data-rednote-copy"))
++        filter: (node) => !((node instanceof HTMLElement) && node.hasAttribute("data-rednote-copy"))
+       });
+     } finally {
+       restoreImages();
+       selectedImages.forEach((image) => image.setAttribute("data-noterelay-selected", ""));
+-      card.toggleClass("is-active", wasActive);
++      card.classList.toggle("is-active", wasActive);
+     }
+   }
+ 
+@@ -309,24 +317,24 @@
+   private attachImageControls(root: HTMLElement, context: RenderContext): void {
+     const images = Array.from(root.querySelectorAll<HTMLImageElement>(".noterelay-card-content img[data-noterelay-image-key]"));
+     if (!images.length) return;
+-    images.forEach((image) => image.addClass("is-adjustable-image"));
++    images.forEach((image) => image.classList.add("is-adjustable-image"));
+ 
+     const controls = createDiv({ cls: "noterelay-image-controls" });
+-    controls.createSpan({ cls: "noterelay-image-controls-label", text: "图片" });
+-    const selector = controls.createEl("select", { attr: { "aria-label": "选择正文图片", "data-rednote-image-select": "true" } });
++    appendSpan(controls, { cls: "noterelay-image-controls-label", text: "图片" });
++    const selector = appendEl(controls, "select", { attr: { "aria-label": "选择正文图片", "data-rednote-image-select": "true" } });
+     images.forEach((image, index) => {
+       const source = image.dataset.noterelaySource || image.alt || `图片 ${index + 1}`;
+       const filename = source.split(/[\\/]/).pop()?.replace(/[?#].*$/, "") || `图片 ${index + 1}`;
+-      selector.createEl("option", { value: image.dataset.noterelayImageKey || "", text: `${index + 1}. ${image.alt || filename}` });
+-    });
+-    const autoButton = controls.createEl("button", { text: "自适应", attr: { type: "button" } });
+-    const presets = [50, 75, 100].map((width) => controls.createEl("button", { text: `${width}%`, attr: { type: "button", "data-image-width": String(width) } }));
+-    controls.createSpan({ cls: "noterelay-image-control-row-label", text: "宽度" });
+-    const slider = controls.createEl("input", { type: "range", attr: { min: "30", max: "100", step: "5", "aria-label": "图片宽度" } });
+-    const value = controls.createSpan({ cls: "noterelay-image-width-value" });
+-    controls.createSpan({ cls: "noterelay-image-control-row-label", text: "圆角" });
+-    const radiusSlider = controls.createEl("input", { type: "range", attr: { min: "0", max: "32", step: "1", "aria-label": "图片圆角" } });
+-    const radiusValue = controls.createSpan({ cls: "noterelay-image-radius-value" });
++      appendEl(selector, "option", { value: image.dataset.noterelayImageKey || "", text: `${index + 1}. ${image.alt || filename}` });
++    });
++    const autoButton = appendEl(controls, "button", { text: "自适应", attr: { type: "button" } });
++    const presets = [50, 75, 100].map((width) => appendEl(controls, "button", { text: `${width}%`, attr: { type: "button", "data-image-width": String(width) } }));
++    appendSpan(controls, { cls: "noterelay-image-control-row-label", text: "宽度" });
++    const slider = appendEl(controls, "input", { type: "range", attr: { min: "30", max: "100", step: "5", "aria-label": "图片宽度" } });
++    const value = appendSpan(controls, { cls: "noterelay-image-width-value" });
++    appendSpan(controls, { cls: "noterelay-image-control-row-label", text: "圆角" });
++    const radiusSlider = appendEl(controls, "input", { type: "range", attr: { min: "0", max: "32", step: "1", "aria-label": "图片圆角" } });
++    const radiusValue = appendSpan(controls, { cls: "noterelay-image-radius-value" });
+     root.appendChild(controls);
+ 
+     const noteOverrides = () => context.notePath ? context.settings.rednoteImageWidths[context.notePath] : undefined;
+@@ -418,15 +426,15 @@
+   private applyImageWidth(image: HTMLImageElement, width?: number): void {
+     if (width === undefined) {
+       image.style.removeProperty("--nr-image-width");
+-      image.removeClass("has-custom-size");
++      image.classList.remove("has-custom-size");
+       return;
+     }
+-    image.setCssProps({ "--nr-image-width": `${Math.max(30, Math.min(100, width))}%` });
+-    image.addClass("has-custom-size");
++    setCssProps(image, { "--nr-image-width": `${Math.max(30, Math.min(100, width))}%` });
++    image.classList.add("has-custom-size");
+   }
+ 
+   private applyImageRadius(image: HTMLImageElement, radius: number): void {
+-    image.setCssProps({ "--nr-image-radius": `${Math.max(0, Math.min(32, radius))}px` });
++    setCssProps(image, { "--nr-image-radius": `${Math.max(0, Math.min(32, radius))}px` });
+   }
+ 
+   private effectiveImageWidth(image: HTMLImageElement): number | undefined {
+@@ -437,7 +445,7 @@
+     return Math.max(1, Math.min(100, Math.round(imageWidth / contentWidth * 100)));
+   }
+ 
+-  private revealImage(root: HTMLElement, imageKey: string): void {
++  revealImage(root: HTMLElement, imageKey: string): void {
+     const image = root.querySelector<HTMLImageElement>(`.noterelay-card-content img[data-noterelay-image-key="${CSS.escape(imageKey)}"]`);
+     const card = image?.closest<HTMLElement>(".noterelay-rednote-card");
+     if (!card) return;
+@@ -445,7 +453,7 @@
+     const active = cards.indexOf(card);
+     if (active < 0) return;
+     root.dataset.activeIndex = String(active);
+-    cards.forEach((item, index) => item.toggleClass("is-active", index === active));
++    cards.forEach((item, index) => item.classList.toggle("is-active", index === active));
+     const nav = root.querySelector<HTMLElement>(".noterelay-card-nav");
+     const label = nav?.querySelector("span");
+     if (label) label.textContent = `${active + 1} / ${cards.length}`;
+@@ -482,35 +490,28 @@
+   return `<span class="red-card-background" style="background-image:url(&quot;${safeImage}&quot;);transform:translate(${x}px,${y}px) scale(${safeScale})"></span>`;
+ }
+ 
+-function downloadDataUrl(dataUrl: string, filename: string): void {
+-  const link = createEl("a");
+-  link.href = dataUrl;
+-  link.download = filename;
+-  document.body.appendChild(link);
+-  link.click();
+-  link.remove();
+-}
+-
+-function downloadBlob(blob: Blob, filename: string): void {
+-  const url = URL.createObjectURL(blob);
+-  const link = createEl("a");
+-  link.href = url;
+-  link.download = filename;
+-  document.body.appendChild(link);
+-  link.click();
+-  link.remove();
+-  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+-}
+-
+-async function waitForImages(root: HTMLElement): Promise<void> {
++async function downloadDataUrl(dataUrl: string, filename: string, context: RenderContext): Promise<void> { context.signal?.throwIfAborted(); if (!context.onDeliver) throw new Error("交付请求已失效"); context.onDeliver(png(dataUrl,filename)); }
++async function downloadBlob(blob: Blob, filename: string, context: RenderContext): Promise<void> { context.signal?.throwIfAborted(); if (!context.onDeliver) throw new Error("交付请求已失效"); context.onDeliver({blob,filename}); }
++
++async function waitForImages(root: HTMLElement, signal?: AbortSignal): Promise<void> {
+   const images = Array.from(root.querySelectorAll<HTMLImageElement>("img"));
+-  await Promise.all(images.map(async (image) => {
++    await Promise.all(images.map(async (image) => {
+     if (image.complete) return;
+     await Promise.race([
+-      image.decode().catch(() => undefined),
+-      new Promise<void>((resolve) => window.setTimeout(resolve, 3000))
++      abortable(image.decode().catch(() => undefined), signal),
++      new Promise<void>((resolve) => { const done = () => { clearTimeout(timer); signal?.removeEventListener("abort", done); resolve(); }; const timer = window.setTimeout(done, 3000); signal?.addEventListener("abort", done, {once: true}); })
+     ]);
+   }));
++}
++
++function abortable<T>(promise: Promise<T>, signal?: AbortSignal): Promise<T> {
++  if (!signal) return promise;
++  signal.throwIfAborted();
++  return new Promise((resolve, reject) => {
++    const abort = () => reject(new Error('已切换稿件'));
++    signal.addEventListener('abort', abort, {once: true});
++    void promise.then(resolve, reject).finally(() => signal.removeEventListener('abort', abort)).catch(() => undefined);
++  });
+ }
+ 
+ async function inlineImagesForExport(root: HTMLElement, context: RenderContext): Promise<() => void> {
+--- src/platforms/rednote/domPaginate.ts:upstream
++++ src/platforms/rednote/domPaginate.ts:native
+@@ -24,7 +24,7 @@
+ 
+ export function compactTableToFit(content: HTMLElement, table: HTMLTableElement): boolean {
+   for (const className of ["is-compact", "is-dense"]) {
+-    if (!table.hasClass(className)) table.addClass(className);
++    if (!table.classList.contains(className)) table.classList.add(className);
+     if (!contentOverflows(content)) return true;
+   }
+   return !contentOverflows(content);
+@@ -72,8 +72,8 @@
+ }
+ 
+ function splitStructuredElementToFit(content: HTMLElement, element: HTMLElement, original: HTMLElement): HTMLElement | undefined {
+-  if (original.instanceOf(HTMLTableElement)) return splitTableToFit(content, element, original);
+-  if (original.instanceOf(HTMLUListElement) || original.instanceOf(HTMLOListElement)) return splitListToFit(content, element, original);
++  if ((original instanceof HTMLTableElement)) return splitTableToFit(content, element, original);
++  if ((original instanceof HTMLUListElement) || (original instanceof HTMLOListElement)) return splitListToFit(content, element, original);
+   return undefined;
+ }
+ 
+@@ -91,11 +91,11 @@
+ function splitListToFit(content: HTMLElement, element: HTMLElement, original: HTMLUListElement | HTMLOListElement): HTMLElement | undefined {
+   const itemCount = directListItems(original).length;
+   if (itemCount < 2) return undefined;
+-  const orderedStart = original.instanceOf(HTMLOListElement) ? original.start : 1;
++  const orderedStart = (original instanceof HTMLOListElement) ? original.start : 1;
+   return findStructuredSplit(content, element, itemCount, (start, end) => {
+     const clone = original.cloneNode(false) as HTMLUListElement | HTMLOListElement;
+     directListItems(original).slice(start, end).forEach((item) => clone.appendChild(item.cloneNode(true)));
+-    if (clone.instanceOf(HTMLOListElement) && start > 0) clone.start = clone.reversed ? orderedStart - start : orderedStart + start;
++    if ((clone instanceof HTMLOListElement) && start > 0) clone.start = clone.reversed ? orderedStart - start : orderedStart + start;
+     return clone;
+   });
+ }
+@@ -128,7 +128,7 @@
+       const prefix = cloneRange(0, 1);
+       const suffix = cloneRange(1, itemCount);
+       candidate.replaceWith(prefix);
+-      prefix.addClass("is-forced-row");
++      prefix.classList.add("is-forced-row");
+       return suffix;
+     }
+     candidate.replaceWith(element);
+@@ -150,7 +150,7 @@
+ }
+ 
+ function directListItems(list: HTMLUListElement | HTMLOListElement): HTMLLIElement[] {
+-  return Array.from(list.children).filter((child): child is HTMLLIElement => child.instanceOf(HTMLLIElement));
++  return Array.from(list.children).filter((child): child is HTMLLIElement => (child instanceof HTMLLIElement));
+ }
+ 
+ function canSplitByText(element: HTMLElement): boolean {
+--- src/platforms/wechat/adapter.ts:upstream
++++ src/platforms/wechat/adapter.ts:native
+@@ -1,5 +1,5 @@
+ import { copyRichHtml } from "../../core/clipboard";
+-import { setSanitizedHtml } from "../../core/dom";
++import { setSanitizedHtml, createEl, createDiv, appendEl, appendSpan, setCssProps } from "../../core/dom";
+ import type { RenderContext } from "../../types";
+ import type { PlatformAdapter } from "../platform";
+ import { baseThemeId, customWechatThemeInfo, findCustomWechatTheme } from "./customTheme";
+@@ -34,7 +34,8 @@
+     const wrapped = `<article class="noterelay-themed">${result.html}</article>`;
+     const portableHtml = await inlineLocalImages(wrapped, context);
+     const html = makeHtmlWeChatCompatible(portableHtml, { safeMode: true, stripInternalAttrs: true });
+-    await copyRichHtml(html, result.plainText);
++    context.signal?.throwIfAborted();
++    await copyRichHtml(html, result.plainText, context.onDeliver);
+     return "公众号文章已复制";
+   }
+ }
+@@ -49,6 +50,7 @@
+       continue;
+     }
+     const dataUrl = await context.resolveImageDataUrl?.(source);
++    context.signal?.throwIfAborted();
+     if (!dataUrl) throw new Error(`无法读取本地图片：${source}`);
+     image.src = dataUrl;
+     image.removeAttribute("data-noterelay-source");
+--- src/platforms/wechat/wenote/wechatCompat.ts:upstream
++++ src/platforms/wechat/wenote/wechatCompat.ts:native
+@@ -98,11 +98,11 @@
+     element.style.removeProperty("width");
+     element.style.removeProperty("min-width");
+     element.style.removeProperty("max-width");
+-    element.setCssStyles({ boxSizing: "border-box" });
++    Object.assign(element.style, { boxSizing: "border-box" });
+   }
+   if (tag === "SECTION" || tag === "DIV" || tag === "P") {
+     const overflow = element.style.overflow || "";
+-    if (overflow === "hidden" || overflow === "auto" || overflow === "scroll") element.setCssStyles({ overflow: "visible" });
++    if (overflow === "hidden" || overflow === "auto" || overflow === "scroll") Object.assign(element.style, { overflow: "visible" });
+     element.style.removeProperty("overflow-x");
+     element.style.removeProperty("overflow-y");
+   }
+--- src/types.ts:upstream
++++ src/types.ts:native
+@@ -132,6 +132,10 @@
+ }
+ 
+ export interface RenderContext {
++  signal?: AbortSignal;
++  nativeControls?: boolean;
++  onDeliver?: (delivery: import("../web/host-port").Delivery) => void;
++  onImageSelected?: (imageKey: string) => void;
+   note: ParsedNote;
+   account?: SocialAccount;
+   theme: SocialTheme;

@@ -44,6 +44,10 @@
       "types": "./src/runtime/browser/*.ts",
       "default": "./src/runtime/browser/*.ts"
     },
+    "./platform/*": {
+      "types": "./src/runtime/platform/*.ts",
+      "default": "./src/runtime/platform/*.ts"
+    },
     "./durable-stream": {
       "types": "./src/execution/durable-stream-model.ts",
       "default": "./src/execution/durable-stream-model.ts"
@@ -99,6 +103,34 @@
     "./error-diagnostics": {
       "types": "./src/runtime/error-diagnostics.ts",
       "default": "./src/runtime/error-diagnostics.ts"
+    },
+    "./xhs-creator-normalizer": {
+      "types": "./src/runtime/platform/xhs-creator-normalizer.ts",
+      "default": "./src/runtime/platform/xhs-creator-normalizer.ts"
+    },
+    "./wechat-article-candidate": {
+      "types": "./src/runtime/wechat-article-candidate.ts",
+      "default": "./src/runtime/wechat-article-candidate.ts"
+    },
+    "./graphic-post-text": {
+      "types": "./src/runtime/graphic-post-text.ts",
+      "default": "./src/runtime/graphic-post-text.ts"
+    },
+    "./wechat-article-text": {
+      "types": "./src/runtime/wechat-article-text.ts",
+      "default": "./src/runtime/wechat-article-text.ts"
+    },
+    "./graphic-card-brief": {
+      "types": "./src/prompt/templates/graphic-card-brief.ts",
+      "default": "./src/prompt/templates/graphic-card-brief.ts"
+    },
+    "./graphic-card-plan": {
+      "types": "./src/runtime/graphic-card-plan.ts",
+      "default": "./src/runtime/graphic-card-plan.ts"
+    },
+    "./publication-text": {
+      "types": "./src/runtime/publication-text.ts",
+      "default": "./src/runtime/publication-text.ts"
     }
   },
   "scripts": {
@@ -107,25 +139,32 @@
     "build": "node scripts/build.mjs"
   },
   "dependencies": {
-    "@xenova/transformers": "^2.17.2",
-    "ai": "^7.0.4",
-    "ajv": "^8.20.0",
-    "zod": "^4.4.3",
     "@creatoros/contract": "workspace:*",
     "@earendil-works/pi-ai": "0.80.7",
     "@earendil-works/pi-coding-agent": "0.80.7",
-    "@playwright/test": "1.60.0",
     "@mozilla/readability": "0.6.0",
+    "@openai/codex": "0.159.3",
+    "@playwright/test": "1.60.0",
+    "@xenova/transformers": "^2.17.2",
+    "ai": "^7.0.4",
+    "ajv": "^8.20.0",
     "jsdom": "29.1.1",
     "mammoth": "^1.12.0",
-    "pdf-parse": "^2.4.5"
+    "pdf-parse": "^2.4.5",
+    "zod": "^4.4.3",
+    "@agentclientprotocol/sdk": "1.5.1",
+    "@openclaw/fs-safe": "0.21.3",
+    "@modelcontextprotocol/sdk": "1.29.0",
+    "diff": "9.0.0",
+    "open": "11.0.1",
+    "vscode-jsonrpc": "9.0.1"
   },
   "devDependencies": {
     "@ai-sdk/provider": "^4.0.0",
+    "@types/jsdom": "28.0.3",
     "@types/node": "20.19.43",
-    "typescript": "5.9.3",
-    "vitest": "4.1.8",
     "esbuild": "0.28.1",
-    "@types/jsdom": "28.0.3"
+    "typescript": "5.9.3",
+    "vitest": "4.1.8"
   }
 }

@@ -1,0 +1,39 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/backend
+
+ ❯ src/modules/production/production-editor-plan.test.ts (10 tests | 1 failed) 23ms
+     × 未知方案与嵌套字段可见但不执行，读取不改变原件 7ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/production/production-editor-plan.test.ts > T-1037 稳定制作片段与结构编辑 > 未知方案与嵌套字段可见但不执行，读取不改变原件
+AssertionError: expected [ 'renderProps.meta.extraMeta', …(2) ] to deeply equal ArrayContaining{…}
+
+- Expected
++ Received
+
+- ArrayContaining [
+-   "extraPlan",
+-   "renderProps.unknownRoot",
++ [
+    "renderProps.meta.extraMeta",
+    "renderProps.scenes.0.cards.0.extraCard",
++   "renderProps.unknownRoot",
+  ]
+
+ ❯ src/modules/production/production-editor-plan.test.ts:30:42
+     28|   it("未知方案与嵌套字段可见但不执行，读取不改变原件",()=>{
+     29|     const raw=legacy(),before=structuredClone(raw);
+     30|     expect(unsupportedEditorFields(raw)).toEqual(expect.arrayContainin…
+       |                                          ^
+     31|     expect(raw).toEqual(before);
+     32|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 9 passed (10)
+   Start at  19:31:04
+   Duration  1.87s (transform 788ms, setup 0ms, import 1.66s, tests 23ms, environment 0ms)
+

@@ -1,5 +1,8 @@
 export {executionStreamEvents} from "./schema/execution-stream";
 export {creativeCanvases,canvasGenerationLinks,canvasAgentProposals} from "./schema/creative-canvas";
+export { articleAnchors, articleCandidates } from "./schema/articles";
+export { creativeResults, creativeResultBundles, outputMediaAttempts } from "./schema/creative-results";
+export { graphicPostAnchors, graphicPostTextCandidates } from "./modules/graphic-posts/graphic-posts.schema";
 export {
   createDb,
   createRuntimeDb,
@@ -18,6 +21,7 @@ export {
 } from "./db";
 export {
   executionTasks,
+  executionControlReceipts,
   intelligenceCollections,
   executionCalls,
   executionEvidence,
@@ -56,6 +60,7 @@ export {
   projectStages,
   projectTargetPlatforms,
   contentOutputs,
+  outputCreateRequests,
   outputStages,
   tasks,
   PROJECTS_DDL,
@@ -74,6 +79,9 @@ export {
   skillConfigOverrideVersions,
   accountSkillOverlays,
   accountSkillOverlayVersions,
+  reportingConsents,
+  reportingOutbox,
+  reportingConsentChanges,
   SETTINGS_DDL,
 } from "./schema/settings";
 export type {
@@ -106,6 +114,9 @@ export {
 export {
   productions,
   productionSegments,
+  productionEditVersions,
+  productionRenderRequests,
+  productionMediaRequests,
   segmentAssets,
   exportRecords,
   PRODUCTION_DDL,
@@ -286,3 +297,18 @@ export {ConflictError} from "./errors";
 export {resourceAccessGrants,workspaceBlobObjects} from "./schema/resource-access";
 
 export {resourceAccessGrantUses} from "./schema/resource-access";
+export {momentsAnchors,momentsRequests} from "./schema/moments";
+
+export {workCompositions,workCompositionVersions,workCompositionRequests} from "./schema/work-compositions";
+
+export {workMaterialAssociations,workMaterialReceipts,workDependencies} from "./schema/work-materials";
+
+export {workReviewReports,workReviewConfirmations,workReviewRequests} from "./schema/work-reviews";
+
+export {productionFileBindingRequests,productionFileBindings} from "./schema/production-file-bindings";
+
+export {momentsCandidates} from "./schema/moments-model";
+
+export * from "./schema/creative-canvas";
+
+export {publicationCoverRequests} from "./schema/publication-cover";

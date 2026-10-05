@@ -47,7 +47,7 @@ export function createVisualMaterialAdoptionService(deps:VisualMaterialAdoptionD
   const revision={outputId:input.outputId,adoptionKey,platform:input.platform,title:input.title,description:isCover&&base?base.description:plan.group.caption,platformTags:(base?.platformTags??[]) as string[],category:base?.category??"",series:base?.series??"",coverAssetId:pages[0]!.assetId,platformSettings:settings};
   if(previous)return deps.publishing.adoptVisualRevision(ctx,{...revision,publicationId:previous.id,expectedCurrentRevisionId:input.expectedCurrentRevisionId!});
   const publication=await deps.publishing.adoptDraft(ctx,revision);
-  if("kind" in publication && publication.kind==="unassigned")throw new ConflictError("物料已保存，请选择发布账号后采纳到发布草稿");
+  if(!("id" in publication))throw new ConflictError("物料已保存，请选择发布账号后采纳到发布草稿");
   return {publication,revision:await deps.publishing.getVisualAdoptionRevision(ctx,publication.id,adoptionKey)};
  },
 };}

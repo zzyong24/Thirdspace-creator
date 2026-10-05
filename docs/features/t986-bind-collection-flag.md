@@ -4,6 +4,6 @@ T983独立审查发现既有路径缺口，本轮按用户“不扩展范围”�
 
 `backend/src/application/scheduling/controls.ts` 的 bootstrap `createJob` 将 `systemManaged` 写成仅 `sourceKind === "intelligence.sync"`；`collection-bootstrap.ts` 对 `self.traffic/self.detail` 模板传入true，但被丢弃。`scheduling.service.ts` 拒绝未带系统标记的这两类任务。
 
-预期复现条件：新绑定账号、两类任务不存在，ensure逐项catch后创建失败，需后续启动兜底补齐。当前证据是代码路径独立审查，尚无新绑号真机复现。
+真实复现：2026-09-30 在隔离 CreatorOS 页面中新扫码绑定抖音账号，自动化页当次只有 4 项默认任务；`self.traffic` 与 `self.detail` 未创建。重启后启动兜底才补齐为 6 项。
 
-后续需隔离真实service composition红测，最小透传已授权模板标记；保持普通用户创建系统任务的拒绝和账号归属校验，验证新绑定当次即创建完整独立任务。不得为测试删除用户账号或现存计划。
+修复：组合层把模板传入的 `systemManaged` 原样透传给调度服务；调度服务继续拒绝普通用户手工创建受管任务。对应 service composition 回归在新账号绑定时核对 6 项任务，且手工创建系统任务仍被拒绝。后端相关 5/5 测试通过；隔离页面重启回读 6 项任务。未在修复后再次使用另一只真实抖音账号扫码，故“新号当次真实扫码 6 项”仍由组合回归而非第二次真机证明。

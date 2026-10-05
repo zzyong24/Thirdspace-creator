@@ -1,0 +1,12 @@
+{"name":"accounts_list","isError":false}
+{"name":"projects_list","isError":false}
+{"name":"projects_get","isError":false}
+{"name":"projects_outputs_list","isError":false}
+[CreatorOS] DISPATCH_FAILED {"operation":"projects.list","errorName":"AccountRequiredError","errorCode":"AccountRequiredError"}
+{"name":"projects_list","isError":true}
+{"name":"projects_get","isError":true}
+[CreatorOS] DISPATCH_FAILED {"operation":"projects.get","errorName":"OwnershipError","errorCode":"OwnershipError"}
+{"name":"projects_get","isError":true}
+{"name":"projects_patch","isError":true}
+{"name":"projects_get","isError":true}
+{"outcome":"passed","checks":{"originalBundledCliStarted":true,"realMcpInitialize":true,"realMcpToolsList":true,"realAccountsOnlyOwned":true,"realProjectReadViaOriginalDispatch":true,"emptyOutputsHonest":true,"noAccountRejected":true,"foreignAccountRejected":true,"foreignProjectRejected":true,"writeMissingApplyRejectedBeforeHttp":true,"revocationImmediate":true,"eofCleanExit":true,"originalCliAuditPersisted":true},"evidence":"/tmp/t1060-ai-business/continue-workbuddy/stdio-evidence.json"}

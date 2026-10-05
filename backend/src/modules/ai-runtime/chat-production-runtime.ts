@@ -13,7 +13,7 @@ export function createChatProductionRuntime(db:Db,deps:ChatWorkerDispatcherDeps 
  let stopped=false;
  const worker=createChatWorkerDispatcher(db,deps),events=createExecutionStreamService(db),tasks=createPersistentTaskService(db);
  return {
-  async submit(ctx:RequestContext,input:{conversationId:string;sourceMessageId:string},assemble:(ctx:RequestContext,snapshot:ChatTurnSnapshot)=>Promise<ChatTurnAssembly>){
+  async submit(ctx:RequestContext,input:{conversationId:string;sourceMessageId:string;executionEngine?:"pi"|"codex"},assemble:(ctx:RequestContext,snapshot:ChatTurnSnapshot)=>Promise<ChatTurnAssembly>){
    if(stopped)throw new Error("应用正在停止，无法启动新聊天");
    const result=await createChatTurnSubmissionService(db,{assemble,assertProject:deps.assertProject}).submit(ctx,input);
    if(!stopped)worker.start();return result;

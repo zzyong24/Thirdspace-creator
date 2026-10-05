@@ -1,0 +1,9 @@
+{
+  "baseline_log": "docs/verification/t1058/reconcile.log",
+  "baseline_sha256": "af13dbfe9176fda4af4c051b9f691b17e8ab9ce9abccccae08a92c67e83f2b5e",
+  "current_log": "docs/verification/t1059/reconcile.log",
+  "current_sha256": "af13dbfe9176fda4af4c051b9f691b17e8ab9ce9abccccae08a92c67e83f2b5e",
+  "added": [],
+  "removed": [],
+  "unchanged_count": 35
+}

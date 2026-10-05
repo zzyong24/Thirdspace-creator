@@ -12,6 +12,8 @@
 
 当前共有 17 张设计图，画布尺寸均为 `1536 × 1024`。
 
+**视频制作更新（2026-10-01）：** 用户本轮已要求可视制作工作台和编导操控剪辑。仅 Production Workspace 的内部排列与制作视口按 `specs/decision-log.md` D-012 和 `../docs/features/t1035-video-production-workbench.md` 执行；旧图为功能保留参考，AppShell/Sidebar/TopHeader/WorkspacePage、品牌和其余页面规则继续有效。探索稿不构成已完成界面或真实数据来源，正式接线仍须本任务合同与验收。
+
 ### 1.1 已锁定技术基线
 
 - Next.js App Router + React + TypeScript `strict`。

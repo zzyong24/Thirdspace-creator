@@ -1,0 +1,65 @@
+{
+  "task": "T-1053",
+  "deliveryStatus": "candidate-ready-for-parent-integration",
+  "upstreamCommit": "cf5e79e919144200294fb9fed22a222592a0aeea",
+  "baseArchiveSha256": "ad5a2b874a2b50ab10fca522a271b5c929f383af5c9e40bdf1c3f4feb45360a6",
+  "build": {
+    "command": "bun apps/web/scripts/build-native.mjs",
+    "entry": "apps/web/src/embedded/native-entry.tsx",
+    "bun": "1.4.0",
+    "vite": "6.4.3",
+    "typescript": "6.0.2",
+    "outputs": 7,
+    "esmBytes": 7256208,
+    "cssBytes": 127770,
+    "renderedModules": 426,
+    "licensedDependencies": 59,
+    "nativeHashes": {
+      "native/native.css": "e8757103e0fd57d164826df1de27070222dc6b2ba23bcd4bb32a3cbbe64ee688",
+      "native/native.js": "fe56232f3e2ce56e15f4da2c3ce188317605870056bfedfeacf594efe0d2fba3",
+      "native/NATIVE_BUILD_GRAPH.json": "eb96ad60a39f6d02ca5a0252a4b04bd2c336732de0433cf6661a5a01ca93529e",
+      "native/THIRD_PARTY_LICENSES.txt": "d3e59d1b80d9ebcccfc76f84dc51d976ed113749afec53d51c02f6832eafe51f",
+      "native/THIRD_PARTY_LICENSES.json": "becfab856e0610ccbc14f1abf05d38c25593b60ada26f553dac667fcd471e8ad",
+      "native/LICENSE.opencut": "8117f9bb64534f7530fc6139b014fd1c1465f7981f93d1871789150fa3f59d3d",
+      "native/effects/preview.jpg": "b318cede7bbe27bfbf1b8b94d41f65b6f52d5f2650ce3a153d03b76c2a1c0190"
+    },
+    "sameInstalledDependencyTreeReconstruction": "PASS",
+    "freshDependencyInstall": "not-run",
+    "crossOsBitReproducibility": "not-claimed"
+  },
+  "source": {
+    "files": 704,
+    "changedFiles": 64,
+    "archiveBytes": 734749,
+    "patchBytes": 203709,
+    "hashes": {
+      "native-source.tar.gz": "9eee350c26607318b770332cca01b27ed76cabea5dcfd6d9ef011a6bac41f01d",
+      "native-from-t1046.patch": "d95ebaf1f7ad688b60dbf4b62e2946164d3fe9a345a4c948b66f623d0db4f922",
+      "corresponding-source/mediabunny-source.tar.gz": "063a433553249d25a974c2b344c7d5ae12ab49162d1bf6262f53264b073a6aa5",
+      "corresponding-source/soundtouch-source.tar.gz": "b396e96f5e8e15d5125d022c2d8d53f36eb7ce7d9a654d1703bb89e1e0e6d762",
+      "corresponding-source/mediabunny-exclusions.json": "3df0e77e6bca8c19dd73e0ef9cd8f722a38d727d36e3325a13bcc71b9600a30e"
+    },
+    "patchMatchesArchive": "PASS"
+  },
+  "verification": {
+    "typecheckExitCode": 0,
+    "regressionTests": 13,
+    "regressionAssertions": 68,
+    "resourceFixtureTests": 3,
+    "resourceFixtureAssertions": 12,
+    "totalTests": 16,
+    "totalAssertions": 80,
+    "domFixtureChecks": 38,
+    "testFailures": 0,
+    "fixtureOnly": true,
+    "browserAutomation": "not-used",
+    "historicalFailures": "preserved-in-verification/evidence"
+  },
+  "limitations": [
+    "真实浏览器/WebGPU预览、像素、音视频解码和MP4未验证；DOM与资源取消使用明确命名的fixture。",
+    "系统剪贴板与真实拖拽坐标、各尺寸人工视觉检查未验证。",
+    "opencut-wasm0.2.10没有GPU设备/compositor销毁API；释放当前纹理、缩小/移除canvas后模块GPU初始化对象保留到文档关闭。",
+    "主会话负责宿主串行集成与根任务Gate；候选不代表任务整体完成。"
+  ],
+  "scope": "只写/tmp/t1053-native-video；共享checkout只读；未写根控制manifest或提交共享WIP"
+}

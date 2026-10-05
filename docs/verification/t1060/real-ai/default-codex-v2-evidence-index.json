@@ -1,0 +1,93 @@
+{
+  "observedAt": "2026-10-04T12:18:15.085536+00:00",
+  "outcome": "passed",
+  "realModelPromptCount": 2,
+  "modelSelection": "原默认；未设 sessionModel。持久回执未包含精确model名称，不另创证明。",
+  "formalHostDistSha256": "b742742f14649dee5a358d9ff20747c4b39c75ea4de92d69c94b52589fa9cd10",
+  "artifacts": [
+    {
+      "path": "/tmp/t1060-ai-business/default-codex-v2-read-evidence.json",
+      "sha256": "b7be6ba43bf0868fe29f78690dfa3ede1e8d1c408ef014db733b28033f7319de"
+    },
+    {
+      "path": "/tmp/t1060-ai-business/default-codex-v2-image-evidence.json",
+      "sha256": "5a6aa50fc02fee3c4d6ca7f0e2c2bfe61bd788ce09885be0efc9dc9c40421bd5"
+    },
+    {
+      "path": "/tmp/t1060-ai-business/default-codex-v2-card-readback.json",
+      "sha256": "fc72c88682e7b799eef6545494a3de192b588ad528278df66d1a668d023d2e5d"
+    },
+    {
+      "path": "/tmp/t1060-ai-business/default-codex-v2-read.log",
+      "sha256": "8aa2cf473ab21addea6154863ce748a3f3cb0574792f6d9e1b6063bc487e4a92"
+    },
+    {
+      "path": "/tmp/t1060-ai-business/default-codex-v2-image.log",
+      "sha256": "b7614c49d5d3c37f5e3ad9eb543affd832802e27fceff1e3f432b383802eee9b"
+    },
+    {
+      "path": "/tmp/t1060-ai-business/default-codex-v2-business.mts",
+      "sha256": "78c873ab398b0c95f3f83c9f9e6b3b4a5cc2cea01ab7d63884961605326be26c"
+    },
+    {
+      "path": "/tmp/t1060-ai-business/default-codex-v2-card-readback.mts",
+      "sha256": "91ae59e9ac442181b36f90208bf4c470f69da814ebf3ac7841509411f2e0a389"
+    },
+    {
+      "path": "/tmp/t1060-ai-business/default-codex-v2-card-readback.log",
+      "sha256": "e9712c7ad1f67b7cad931dc86cba72215fdaf44cb8f6fe1ce9eb0ab82cdb1380"
+    }
+  ],
+  "sourceSnapshot": [
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/ai-worker/src/execution/codex-acp-worker-run.ts",
+      "sha256": "65a79c7461bf43396341b38945d99a7964501364f75aecab797030e94f69e986"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/ai-worker/src/execution/codex-acp-host.ts",
+      "sha256": "623e07b2f13bbc2dc4d571e1861582aef809b5a018529f1c67b1b5727f075463"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/ai-worker/dist/codex-acp.cjs",
+      "sha256": "b742742f14649dee5a358d9ff20747c4b39c75ea4de92d69c94b52589fa9cd10"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/backend/src/modules/ai/external-chat-turn.service.ts",
+      "sha256": "16323fefe52b5d977a20f49fc22d552b5b7586ea5394653d94e936ade73c8f63"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/backend/src/modules/ai/external-task-tool.service.ts",
+      "sha256": "56eeb64dfb6e3e0762eeda88c79aae88b36e06b07b924d8282aa692ad1c23a62"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/backend/src/modules/ai/chat-turn-submission.service.ts",
+      "sha256": "ce23f105f23c9ba86ffee26d742a39135aa9407a577e8b8a9acca3d609acd321"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/contract/src/internal/chat-worker.ts",
+      "sha256": "9c08863e3832832ba12a19cbb70664f1338544e15b55ce52b098ec44c34dc628"
+    }
+  ],
+  "nativeImage": {
+    "path": "/tmp/t1060-ai-business/default-codex-v2-image-VKo9rx/db68d271ab7922c41722e12b0fc25ba73c6f1740446e00e67e935e65cbfc077a.png",
+    "sha256": "db68d271ab7922c41722e12b0fc25ba73c6f1740446e00e67e935e65cbfc077a",
+    "byteLength": 1674537,
+    "width": 1254,
+    "height": 1254,
+    "providerSessionId": "01a106d5-a09c-7b63-b62a-ff1b50466d64",
+    "providerTurnId": "01a106d5-a15e-72b3-af1e-a6ee0ad6c251",
+    "providerToolCallId": "call_3q4XA4iQh75vPlCsJAe9n3Be",
+    "backendCallId": "call_8b848b49-2bb8-4801-b81d-f0a9706f339f",
+    "assetId": "asset-generated-d6cb4a71ed943bd48dbf77442381cb7f8a0c08caf94edc8c1cf4002f1113b48f",
+    "fileId": "afile-generated-d6cb4a71ed943bd48dbf77442381cb7f8a0c08caf94edc8c1cf4002f1113b48f",
+    "status": "pending"
+  },
+  "adopted": false,
+  "published": false,
+  "limits": [
+    "未浏览器操作或真实WorkBuddy验证",
+    "未运行API/Pi脚本/文章/图文生成；没有可用安全配置入口",
+    "原默认文本仍含CodeMode host disabled warning，但真实MCP与图片已成功；不能据warning判0执行",
+    "没有额外捕获内部ACP rawInput/approval metadata；原外部工具+模型回合+图片回执身份均已持久。成功不伪造额外trace"
+  ]
+}

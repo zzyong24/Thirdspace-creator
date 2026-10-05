@@ -1,3 +1,6 @@
+import {AsrExecutionInterruption} from '../runtime/asr-request';
+import type {runAssetAsrInWorker} from './asset-asr-worker-run';
+import type {runExternalChatInWorker} from "./external-chat-worker-run";
 import type {runVideoDecisionsInWorker} from "./video-decisions-worker";
 import type {runAssetProcessingInWorker} from "./asset-processing-worker";
 import type {runTranscribeInWorker} from "./transcribe-worker-run";
@@ -25,7 +28,7 @@ const modelCheckpointSchema = z.object({
 
 export interface WorkerDependencies {
   heartbeatMs?: number;
-  capabilities?: Array<"transcribe.douyin"|"asset.generate"|"model.generate"|"model.structured"|"agentic.run"|"chat.run"|"chat.script-draft"|"chat.hooks"|"chat.structured"|"chat.research"|"chat.web-read">;
+  capabilities?: Array<"asset.asr"|"transcribe.douyin"|"asset.generate"|"model.generate"|"model.structured"|"agentic.run"|"chat.run"|"chat.script-draft"|"chat.hooks"|"chat.structured"|"chat.research"|"chat.web-read">;
   supportsChatWebRead?:boolean;
   supportsChatResearch?:boolean;
   supportsChatHooks?:boolean;
@@ -33,11 +36,13 @@ export interface WorkerDependencies {
   supportsChatStructured?:boolean;
   runAsset?:typeof runAssetInWorker;
   runAssetProcessing?:typeof runAssetProcessingInWorker;
+  runAssetAsr?:typeof runAssetAsrInWorker;
   runTranscribe?:typeof runTranscribeInWorker;
   runCover?:typeof runCoverInWorker;
   runVideo?:typeof runVideoDecisionsInWorker;
   runAgentic?: typeof runAgenticInWorker;
   runChat?: typeof runChatInWorker;
+  runExternalChat?:typeof runExternalChatInWorker;
   generateStructured?(input:z.infer<typeof structuredGenerationInputSchema>,model:z.infer<typeof workerModelSpecSchema>,signal:AbortSignal,call:(port:WorkerPort,data:unknown,signal?:AbortSignal)=>Promise<unknown>):Promise<{callId:string;text:string}>;
   send(message: WorkerMessage): void;
   generate(input: z.infer<typeof modelGenerationInputSchema>, model: z.infer<typeof workerModelSpecSchema>, signal: AbortSignal,
@@ -46,7 +51,7 @@ export interface WorkerDependencies {
 
 /** Worker 只执行；状态、预算、凭据、候选的权威均在父进程命名端口。 */
 export function createExecutionWorker(deps: WorkerDependencies) {
-  const capabilities=["model.generate", ...(deps.runTranscribe?["transcribe.douyin"]:[]), ...(deps.runAsset?["asset.generate"]:[]), ...(deps.generateStructured ? ["model.structured"] : []), ...(deps.runAgentic ? ["agentic.run"] : []), ...(deps.runChat ? ["chat.run",...(deps.supportsChatScriptDraft?["chat.script-draft"]:[]),...(deps.supportsChatHooks?["chat.hooks"]:[]),...(deps.supportsChatStructured?["chat.structured"]:[]),...(deps.supportsChatResearch?["chat.research"]:[]),...(deps.supportsChatWebRead?["chat.web-read"]:[])] : [])].filter(capability=>!deps.capabilities || deps.capabilities.some(item=>item===capability));
+  const capabilities=["model.generate",...(deps.runAssetAsr?["asset.asr"]:[]), ...(deps.runTranscribe?["transcribe.douyin"]:[]), ...(deps.runAsset?["asset.generate"]:[]), ...(deps.generateStructured ? ["model.structured"] : []), ...(deps.runAgentic ? ["agentic.run"] : []), ...(deps.runChat ? ["chat.run",...(deps.supportsChatScriptDraft?["chat.script-draft"]:[]),...(deps.supportsChatHooks?["chat.hooks"]:[]),...(deps.supportsChatStructured?["chat.structured"]:[]),...(deps.supportsChatResearch?["chat.research"]:[]),...(deps.supportsChatWebRead?["chat.web-read"]:[])] : [])].filter(capability=>!deps.capabilities || deps.capabilities.some(item=>item===capability));
   const pending = new Map<string, {resolve(data: unknown): void; reject(error: Error): void; cleanup(): void}>();
   // 只缓存最近的 IPC 重投结果；跨进程/历史幂等仍由后端账本负责。
   const completed = new Map<string, WorkerStopReason>();
@@ -108,6 +113,17 @@ export function createExecutionWorker(deps: WorkerDependencies) {
       const input = await readBoundary("readTaskContext", {}, workerTaskInputSchema);
       if(!capabilities.includes(input.kind))throw new GenerationFailure("waiting_user","WORKER_CAPABILITY_UNAVAILABLE");
       if((input.kind==="scheduled.flywheel"||input.kind==="benchmark.transcribe"))throw new GenerationFailure("failed","DOMAIN_STAGE_AUTHORIZATION_REQUIRED");
+      if(input.kind==="asset.asr"){
+        if(!deps.runAssetAsr)throw new GenerationFailure("waiting_user","ASSET_ASR_WORKER_UNAVAILABLE");
+        try {
+          const result=await deps.runAssetAsr(input,signal,(port,data,portSignal)=>call(execution,port,data,portSignal));
+          reason=result.status==="succeeded"?"completed":"failed";return;
+        } catch(error) {
+          // 原持久 ASR 端口报告未确认结果；不得被普通文本生命周期的局部 started 标志降为可重试失败。
+          if(error instanceof AsrExecutionInterruption)throw new GenerationFailure("unknown_result","ASR_RESULT_UNKNOWN");
+          throw error;
+        }
+      }
       if(input.kind==="transcribe.douyin"){
         if(!deps.runTranscribe)throw new GenerationFailure("waiting_user","TRANSCRIBE_WORKER_UNAVAILABLE");
         const result=await deps.runTranscribe(input,signal,(port,data,portSignal)=>call(execution,port,data,portSignal));
@@ -121,6 +137,16 @@ export function createExecutionWorker(deps: WorkerDependencies) {
         reason="completed";return;
       }
       if(input.kind==="chat.run"){
+        if(input.executionEngine==="codex"){
+          if(!deps.runExternalChat)throw new GenerationFailure("waiting_user","CODEX_WORKER_UNAVAILABLE");
+          const result=await deps.runExternalChat(input,signal,(port,data,portSignal)=>call(execution,port,data,portSignal),async text=>{
+            if(!signal.aborted)send({version:1,type:"progress",requestId,execution,seq:seq++,text});
+          });
+          signal.throwIfAborted();committing=true;
+          const receipt=chatCommitReceiptSchema.parse(await call(execution,"commitExternalChatResult",result,signal));
+          if(receipt.messageId!==`chat:${input.sourceMessageId}`)throw new Error("CODEX_COMMIT_RECEIPT_MISMATCH");
+          reason="completed";return;
+        }
         if(input.tools.some(tool=>tool.execution==="worker.web-read") && !capabilities.includes("chat.web-read"))throw new GenerationFailure("waiting_user","CHAT_WEB_READ_WORKER_UNAVAILABLE");
         if(input.tools.some(tool=>tool.execution==="worker.research") && !capabilities.includes("chat.research"))throw new GenerationFailure("waiting_user","CHAT_RESEARCH_WORKER_UNAVAILABLE");
         if(input.tools.some(tool=>tool.execution==="worker.structured-node") && !capabilities.includes("chat.structured"))throw new GenerationFailure("waiting_user","CHAT_STRUCTURED_WORKER_UNAVAILABLE");
@@ -166,7 +192,7 @@ export function createExecutionWorker(deps: WorkerDependencies) {
           await call(execution,"commitResult",{outcome:"succeeded",...result},signal);reason="completed";return;
         }
         if(input.facets.__assetProcessing!==undefined){if(!deps.runAssetProcessing)throw new Error("ASSET_PROCESSING_WORKER_UNAVAILABLE");await deps.runAssetProcessing(input,signal,(port,data,portSignal)=>call(execution,port,data,portSignal));reason="completed";return;}
-        if(input.skillId==="cover.brief"){
+        if(input.skillId==="cover.brief" || input.skillId==="graphic.card-brief"){
           if(!deps.runCover)throw new GenerationFailure("waiting_user","COVER_WORKER_UNAVAILABLE");
           if(input.capability!=="copy.generate")throw new Error("COVER_INPUT_MISMATCH");
           // 先沿原凭据端口锁定业务任务的模型身份，封面链返回最终图片回执。

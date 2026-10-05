@@ -1,0 +1,38 @@
+
+ RUN  v4.1.8 /private/tmp/t1048-backend-work/backend
+
+ ❯ src/application/generation/graphic-series.test.ts (6 tests | 1 failed) 13ms
+     × 指定统一参考时不能遗漏精确文件证明 6ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/application/generation/graphic-series.test.ts > 冻结组图指定页业务公共入口 > 指定统一参考时不能遗漏精确文件证明
+AssertionError: promise resolved "{ …(3) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "__coverContext": "{\"context\":{\"positioningBrief\":\"\",\"projectBriefHard\":\"\",\"reviewScript\":\"一组内容\\n\\n正文\\n\\n总结\",\"userMaterialHardBrief\":\"\",\"userMaterialRefBrief\":\"\",\"knowledgeBrief\":\"\",\"orientationHint\":\"\",\"topic\":{\"title\":\"一组内容\",\"angle\":\"\"}},\"visualRequirements\":\"\",\"referenceAssetId\":\"ref-1\",\"referenceFileId\":\"ref-file-old\",\"aspectRatio\":\"3:4\"}",
++   "__coverTaskInputDigest": "sha256:7ad2bbaacad5df6ad4dcbd8e5007bcb73fbc656d86c6dc87cb1cb2c08e579d17",
++   "graphicCardContext": "{\"context\":{\"positioningBrief\":\"\",\"projectBriefHard\":\"\",\"reviewScript\":\"一组内容\\n\\n正文\\n\\n总结\",\"userMaterialHardBrief\":\"\",\"userMaterialRefBrief\":\"\",\"knowledgeBrief\":\"\",\"orientationHint\":\"\",\"topic\":{\"title\":\"一组内容\",\"angle\":\"\"}},\"visualRequirements\":\"\",\"targetSectionId\":\"two\",\"series\":{\"targetCardId\":\"two\",\"cardBriefs\":[{\"cardId\":\"one\",\"title\":\"起因\",\"body\":\"第一段\",\"sourceRefs\":[],\"visualBrief\":\"共享角色\"},{\"cardId\":\"two\",\"title\":\"结果\",\"body\":\"第二段\",\"sourceRefs\":[]}],\"seriesProfile\":{\"visualDirection\":\"铅笔画\",\"aspectRatio\":\"3:4\",\"referenceImage\":{\"assetId\":\"ref-1\",\"assetFileId\":\"ref-file-old\"}},\"sourceRefs\":[]}}",
+  }
+
+ ❯ src/application/generation/graphic-series.test.ts:22:116
+     20|  it('指定统一参考时不能遗漏精确文件证明',async()=>{
+     21|   const {referenceProof,...seriesSnapshot}=input.seriesSnapshot;
+     22|   await expect(adapter().prepare(ctx as never,{projectId:'project-1',i…
+       |                                                                                                                    ^
+     23|  });
+     24|  it('旧整稿无页请求继续可用',async()=>{
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 5 passed (6)
+   Start at  03:45:43
+   Duration  1.48s (transform 771ms, setup 0ms, import 1.31s, tests 13ms, environment 0ms)
+

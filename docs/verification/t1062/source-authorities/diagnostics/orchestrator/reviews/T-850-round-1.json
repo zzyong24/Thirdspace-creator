@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "独立具体合同复核PASS；v2空draft唯一真值、真实ASR粒度、源及转写回执、tick映射与字节核验五项阻断已澄清。可进入schema红测与实现，不代表真实媒体或客户端通过。 Reviewer /root/rough_contract 本轮只读复核。",
+  "findings": []
+}

@@ -1,0 +1,178 @@
+{
+  "verification": "original-v2-default-codex-image-business",
+  "observedAt": "2026-10-04T12:13:38.775Z",
+  "isolatedRoot": "/tmp/t1060-ai-business/default-codex-v2-image-VKo9rx",
+  "modelSelection": "当前默认；未设置sessionModel",
+  "adopted": false,
+  "published": false,
+  "events": [
+    "reserveExternalChatTurn",
+    "listExternalTaskTools",
+    "listExternalTaskTools",
+    "listExternalTaskTools",
+    "startExternalChatTurn",
+    "recordExternalChatProviderTurn",
+    "executeExternalTaskTool",
+    "recoverExternalChatImage",
+    "saveExternalChatImage",
+    "settleExternalChatTurn"
+  ],
+  "toolCalls": [
+    {
+      "turnCallId": "call_8b848b49-2bb8-4801-b81d-f0a9706f339f",
+      "toolCallId": "2",
+      "toolName": "context.project.detail",
+      "input": {},
+      "result": {
+        "turnCallId": "call_8b848b49-2bb8-4801-b81d-f0a9706f339f",
+        "toolCallId": "2",
+        "callId": "call_6c6f14c0-0d5f-42d1-a06e-3ed1df898a40",
+        "status": "settled",
+        "outcome": {
+          "status": "ok",
+          "summary": "已读取当前工具结果",
+          "evidence": [],
+          "data": {
+            "kind": "context.project.detail",
+            "found": true,
+            "project": {
+              "id": "project-t1060-bb25396d-d24c-4813-8d0c-c4f7244cbe9a",
+              "title": "隔离项目 · 琥珀灯塔 e9428979",
+              "stage": "brief",
+              "status": "active",
+              "publish": {
+                "published": false,
+                "platform": null,
+                "publishedAt": null
+              },
+              "brief": {
+                "targetPlatforms": []
+              },
+              "artifacts": [],
+              "metricsSummary": ""
+            }
+          },
+          "error": null,
+          "continuation": null,
+          "sideEffect": "none"
+        }
+      }
+    }
+  ],
+  "imageSaves": [
+    {
+      "callId": "call_8b848b49-2bb8-4801-b81d-f0a9706f339f",
+      "sessionId": "01a106d5-a09c-7b63-b62a-ff1b50466d64",
+      "toolCallId": "call_3q4XA4iQh75vPlCsJAe9n3Be",
+      "imageIndex": 0,
+      "receipt": {
+        "assetId": "asset-generated-d6cb4a71ed943bd48dbf77442381cb7f8a0c08caf94edc8c1cf4002f1113b48f",
+        "fileId": "afile-generated-d6cb4a71ed943bd48dbf77442381cb7f8a0c08caf94edc8c1cf4002f1113b48f",
+        "assetType": "image",
+        "name": "Codex 生成图片",
+        "checksum": "db68d271ab7922c41722e12b0fc25ba73c6f1740446e00e67e935e65cbfc077a",
+        "byteLength": 1674537,
+        "committedAt": "2026-10-04T12:14:31.555Z"
+      },
+      "path": "/tmp/t1060-ai-business/default-codex-v2-image-VKo9rx/db68d271ab7922c41722e12b0fc25ba73c6f1740446e00e67e935e65cbfc077a.png",
+      "saveRecoverIdempotent": true,
+      "pngSignature": true
+    }
+  ],
+  "projectId": "project-t1060-bb25396d-d24c-4813-8d0c-c4f7244cbe9a",
+  "expectedProjectTitle": "隔离项目 · 琥珀灯塔 e9428979",
+  "taskId": "ai-task-59e95a7d-7ece-4e23-952b-4a97440d467b",
+  "executionTaskId": "execution-task-25be0798-3c55-4b27-aedf-92298c770bcb",
+  "policy": "creatoros-acp-readonly-v2",
+  "frozenTools": [
+    {
+      "name": "context.project.detail",
+      "effect": "none",
+      "version": "chat-tools-v1:3460e27f5e8b14ef3b10706ac28c6d96d18874b78db7d0af7a9b681a3ed198a5"
+    }
+  ],
+  "observedReceipt": {
+    "sessionId": "01a106d5-a09c-7b63-b62a-ff1b50466d64",
+    "providerTurnId": "01a106d5-a15e-72b3-af1e-a6ee0ad6c251",
+    "stopReason": "end_turn",
+    "imageCount": 1,
+    "imageFailures": []
+  },
+  "outcome": "passed",
+  "committed": {
+    "resultId": "chat:ai-task-59e95a7d-7ece-4e23-952b-4a97440d467b",
+    "aiTaskId": "ai-task-59e95a7d-7ece-4e23-952b-4a97440d467b",
+    "messageId": "chat:ai-msg-t1060-44bd727f-94b7-4a12-911b-62aca9dcb964",
+    "outcome": "succeeded"
+  },
+  "executionStatus": "succeeded",
+  "businessStatus": "succeeded",
+  "assistantText": "Warning: Code Mode is unavailable because code-mode host is disabled. Code mode will fail closed; enable `features.code_mode_host` and install `codex-code-mode-host`.\n\n我会先读取当前绑定项目，再生成这张方形插画，保留为候选，不采用、不发布。已读取绑定项目「隔离项目 · 琥珀灯塔 e9428979」，并实际调用原生 image_gen 生成方形无文字插画。\n\n图片仅作为本轮候选展示，未采用、未发布，未写入项目产物。未读取文件或运行命令。",
+  "sessionId": "01a106d5-a09c-7b63-b62a-ff1b50466d64",
+  "providerTurnId": "01a106d5-a15e-72b3-af1e-a6ee0ad6c251",
+  "stopReason": "end_turn",
+  "usage": {
+    "inputTokens": 2462,
+    "totalTokens": 20964,
+    "outputTokens": 70,
+    "thoughtTokens": 0,
+    "cachedReadTokens": 18432
+  },
+  "toolOutcomes": [
+    {
+      "id": "call_6c6f14c0-0d5f-42d1-a06e-3ed1df898a40",
+      "status": "settled",
+      "providerResult": {
+        "kind": "external_tool",
+        "toolName": "context.project.detail",
+        "toolCallId": "2",
+        "turnCallId": "call_8b848b49-2bb8-4801-b81d-f0a9706f339f",
+        "toolVersion": "chat-tools-v1:3460e27f5e8b14ef3b10706ac28c6d96d18874b78db7d0af7a9b681a3ed198a5",
+        "schemaVersion": 1
+      },
+      "resultText": "{\"status\":\"ok\",\"summary\":\"已读取当前工具结果\",\"evidence\":[],\"data\":{\"kind\":\"context.project.detail\",\"found\":true,\"project\":{\"id\":\"project-t1060-bb25396d-d24c-4813-8d0c-c4f7244cbe9a\",\"title\":\"隔离项目 · 琥珀灯塔 e9428979\",\"stage\":\"brief\",\"status\":\"active\",\"publish\":{\"published\":false,\"platform\":null,\"publishedAt\":null},\"brief\":{\"targetPlatforms\":[]},\"artifacts\":[],\"metricsSummary\":\"\"}},\"error\":null,\"continuation\":null,\"sideEffect\":\"none\"}"
+    }
+  ],
+  "calls": [
+    {
+      "id": "call_8b848b49-2bb8-4801-b81d-f0a9706f339f",
+      "kind": "external_agent",
+      "status": "settled"
+    },
+    {
+      "id": "call_6c6f14c0-0d5f-42d1-a06e-3ed1df898a40",
+      "kind": "external_tool",
+      "status": "settled"
+    }
+  ],
+  "candidateResults": [
+    {
+      "id": "chat:ai-task-59e95a7d-7ece-4e23-952b-4a97440d467b",
+      "executionCallId": "call_8b848b49-2bb8-4801-b81d-f0a9706f339f",
+      "resultType": "conversation_reply"
+    }
+  ],
+  "imageChecks": [
+    {
+      "assetId": "asset-generated-d6cb4a71ed943bd48dbf77442381cb7f8a0c08caf94edc8c1cf4002f1113b48f",
+      "fileId": "afile-generated-d6cb4a71ed943bd48dbf77442381cb7f8a0c08caf94edc8c1cf4002f1113b48f",
+      "pending": true,
+      "byteChecksumMatch": true,
+      "executionAssetReceiptMatch": true,
+      "otherAccountRejected": true
+    }
+  ],
+  "checks": {
+    "formalRunCodexAcpInWorker": true,
+    "formalHostDist": true,
+    "v2FrozenByOriginalSubmission": true,
+    "actualDefaultRequest": true,
+    "actualProjectServiceThroughOriginalReadHost": true,
+    "originalApprovalLeaseOwnerChecks": true,
+    "actualToolOutcomePersisted": true,
+    "providerSessionAndTurnPersisted": true,
+    "taskAndBusinessSucceeded": true,
+    "assistantMessageReadback": true,
+    "sameTaskNativeImageChain": true
+  }
+}

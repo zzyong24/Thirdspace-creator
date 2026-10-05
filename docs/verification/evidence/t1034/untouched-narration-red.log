@@ -1,0 +1,32 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/backend
+
+ ❯ src/modules/output-scripts/output-scripts.integration.test.ts (4 tests | 2 failed) 4890ms
+   × 编辑分镜表真实保存→制作正文reader→口播导出：edited-adopt 1075ms
+   × 编辑分镜表真实保存→制作正文reader→口播导出：manual-save 988ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/output-scripts/output-scripts.integration.test.ts > 编辑分镜表真实保存→制作正文reader→口播导出：edited-adopt
+ FAIL  src/modules/output-scripts/output-scripts.integration.test.ts > 编辑分镜表真实保存→制作正文reader→口播导出：manual-save
+AssertionError: expected '说明两行设置：\n再核对图片。' to be '说明两行设置：\n画面：蓝色\n字幕：要点\n再核对图片。' // Object.is equality
+
+- Expected
++ Received
+
+  说明两行设置：
+- 画面：蓝色
+- 字幕：要点
+  再核对图片。
+
+ ❯ src/modules/output-scripts/output-scripts.integration.test.ts:92:50
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 2 passed (4)
+   Start at  06:09:45
+   Duration  6.36s (transform 717ms, setup 0ms, import 1.30s, tests 4.89s, environment 0ms)
+

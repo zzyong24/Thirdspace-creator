@@ -1,0 +1,31 @@
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/backend
+> vitest run src/modules/production/production-editor-plan.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/backend
+
+ ❯ src/modules/production/production-editor-plan.test.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/production/production-editor-plan.test.ts [ src/modules/production/production-editor-plan.test.ts ]
+Error: Cannot find module './production-editor-plan' imported from /Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/backend/src/modules/production/production-editor-plan.test.ts
+ ❯ src/modules/production/production-editor-plan.test.ts:2:1
+      1| import { describe, expect, it } from "vitest";
+      2| import { prepareEditorPlan, applyEditorEdits, itemDigest } from "./pro…
+       | ^
+      3|
+      4| const legacy = () => ({
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  16:01:26
+   Duration  281ms (transform 31ms, setup 0ms, import 0ms, tests 0ms, environment 0ms)
+
+/Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @creatoros/backend@0.1.0 test: `vitest run src/modules/production/production-editor-plan.test.ts`
+Exit status 1

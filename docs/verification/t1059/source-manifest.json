@@ -1,0 +1,741 @@
+{
+  "task_id": "T-1059",
+  "kind": "公开固定源码读取；不是连接验收",
+  "recorded_at_utc": "2026-10-04T07:55:32.263749+00:00",
+  "projects": [
+    {
+      "repo": "agentclientprotocol/codex-acp",
+      "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+      "license_file_claim": "Apache-2.0",
+      "source_records_sha256": "14f27ee2230f68c8165157afa568426d03d5a53094de6d06d29fde4b0aa8b862",
+      "files": [
+        {
+          "path": "package.json",
+          "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/package.json",
+          "sha256": "4c792564680304b0d4cd604baa41a67a0dd50768b6afe15ca982aefce647962f",
+          "bytes": 3856,
+          "read_at_utc": "2026-10-04T07:40:39.986010+00:00",
+          "local_snapshot": "/tmp/t1059-root-sources/package.json"
+        },
+        {
+          "path": "README.md",
+          "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/README.md",
+          "sha256": "3bc46d4c8fcb648540d1fad00d44f26f322df178eda747c4f74baf58b0d3de68",
+          "bytes": 5502,
+          "read_at_utc": "2026-10-04T07:40:40.979972+00:00",
+          "local_snapshot": "/tmp/t1059-root-sources/README.md"
+        },
+        {
+          "path": "src/CodexAcpServer.ts",
+          "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/CodexAcpServer.ts",
+          "sha256": "e8f907106e3e4f975eb9d8b9085e0b02844767ab21c317e0f2dba134f5e280a0",
+          "bytes": 156156,
+          "read_at_utc": "2026-10-04T07:40:43.292868+00:00",
+          "local_snapshot": "/tmp/t1059-root-sources/src/CodexAcpServer.ts"
+        },
+        {
+          "path": "src/CodexAcpClient.ts",
+          "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/CodexAcpClient.ts",
+          "sha256": "5315c083f0d75340574e808d93775081673616deda907ae14c360b66301afabe",
+          "bytes": 58884,
+          "read_at_utc": "2026-10-04T07:40:45.346989+00:00",
+          "local_snapshot": "/tmp/t1059-root-sources/src/CodexAcpClient.ts"
+        },
+        {
+          "path": "src/index.ts",
+          "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/index.ts",
+          "sha256": "c9cddb3bd3bb653079785debde08991d521cf68e8eded15586b05681280d4693",
+          "bytes": 7656,
+          "read_at_utc": "2026-10-04T07:40:48.585098+00:00",
+          "local_snapshot": "/tmp/t1059-root-sources/src/index.ts"
+        },
+        {
+          "path": "src/AgentMode.ts",
+          "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/AgentMode.ts",
+          "sha256": "16870850683665fca2b2df7dc1f4b426c7b9bb746ea0f8672cafa17aebcccf64",
+          "bytes": 4869,
+          "read_at_utc": "2026-10-04T07:40:51.410246+00:00",
+          "local_snapshot": "/tmp/t1059-root-sources/src/AgentMode.ts"
+        },
+        {
+          "path": "LICENSE",
+          "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/LICENSE",
+          "sha256": "72ea310b40e1ee2c4aa61935d22065155c50bfde288b114c9cfd3e1fa34f8049",
+          "bytes": 10760,
+          "read_at_utc": "2026-10-04T07:47:54.299443+00:00",
+          "local_snapshot": "/tmp/t1059-root-sources/LICENSE"
+        },
+        {
+          "path": "src/CodexEventHandler.ts",
+          "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/CodexEventHandler.ts",
+          "sha256": "46bd2098d039bcef76a2353d0f5f9786c2b8b62dd88bacb34c3cb478b3f95c02",
+          "bytes": 52259,
+          "read_at_utc": "2026-10-04T07:47:56.004001+00:00",
+          "local_snapshot": "/tmp/t1059-root-sources/src/CodexEventHandler.ts"
+        },
+        {
+          "path": "src/tool-calls/reporters/ImageGenerationReporter.ts",
+          "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/tool-calls/reporters/ImageGenerationReporter.ts",
+          "sha256": "e467e509a675b98cde3f194729edcf3675282a6dc0f35b7d0d9062bfd284dab1",
+          "bytes": 3269,
+          "read_at_utc": "2026-10-04T07:47:59.326559+00:00",
+          "local_snapshot": "/tmp/t1059-root-sources/src/tool-calls/reporters/ImageGenerationReporter.ts"
+        },
+        {
+          "path": "src/tool-calls/AcpToolCallRenderer.ts",
+          "url": "https://raw.githubusercontent.com/agentclientprotocol/codex-acp/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/tool-calls/AcpToolCallRenderer.ts",
+          "sha256": "613d7b0b9d11228b7446ea9333791084ec6a6535a611f787a4218ef56527ae89",
+          "bytes": 9345,
+          "read_at_utc": "2026-10-04T07:48:00.235719+00:00",
+          "local_snapshot": "/tmp/t1059-root-sources/src/tool-calls/AcpToolCallRenderer.ts"
+        }
+      ]
+    },
+    {
+      "repo": "openclaw/acpx",
+      "commit": "27efb1b57b9de22105a91e9154b1d29b51ede8cb",
+      "license_file_claim": "MIT",
+      "source_records_sha256": "53d4f661b0e20d4beec03df6519506044a19e3ac632de71bb512114acf5b5deb",
+      "files": [
+        {
+          "path": "LICENSE",
+          "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/LICENSE",
+          "sha256": "5c3dd08185d6d0a0045a45b9aea2fd9d85343f7ed5dbe23915e6f15e7b814f2d",
+          "bytes": 1070,
+          "read_at_utc": "2026-10-04T07:46:52.463527+00:00",
+          "local_snapshot": "/tmp/t1059-source/acpx/LICENSE"
+        },
+        {
+          "path": "package.json",
+          "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/package.json",
+          "sha256": "1c403c0d069851f17167830d9bc175717e6eaf0f784bf0e1759547da3f0bd02d",
+          "bytes": 6475,
+          "read_at_utc": "2026-10-04T07:46:54.126109+00:00",
+          "local_snapshot": "/tmp/t1059-source/acpx/package.json"
+        },
+        {
+          "path": "src/runtime.ts",
+          "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/runtime.ts",
+          "sha256": "a65c6ed8f33244bf4cd7cf3914047c399729be578bdb1886fcc3774690b9c53e",
+          "bytes": 14699,
+          "read_at_utc": "2026-10-04T07:47:40.703384+00:00",
+          "local_snapshot": "/tmp/t1059-source/acpx/src/runtime.ts"
+        },
+        {
+          "path": "src/runtime/public/contract.ts",
+          "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/runtime/public/contract.ts",
+          "sha256": "4a0616d00f054e37cc1d4ee496f49372433b6a76e65ed049688cfe9bef1c900e",
+          "bytes": 16492,
+          "read_at_utc": "2026-10-04T07:47:40.486311+00:00",
+          "local_snapshot": "/tmp/t1059-source/acpx/src/runtime/public/contract.ts"
+        },
+        {
+          "path": "src/runtime/public/events.ts",
+          "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/runtime/public/events.ts",
+          "sha256": "eda09477abe01471f26eb7f1bb0f841ae95734649776ee8890bc8e0f918185a7",
+          "bytes": 21487,
+          "read_at_utc": "2026-10-04T07:47:39.336812+00:00",
+          "local_snapshot": "/tmp/t1059-source/acpx/src/runtime/public/events.ts"
+        },
+        {
+          "path": "src/runtime/engine/manager.ts",
+          "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/runtime/engine/manager.ts",
+          "sha256": "9ab95c2099b1eca31e73992cf8a6f95b2f9abdc96b09032b1d7cc90c1b3c313a",
+          "bytes": 72237,
+          "read_at_utc": "2026-10-04T07:47:40.390346+00:00",
+          "local_snapshot": "/tmp/t1059-source/acpx/src/runtime/engine/manager.ts"
+        },
+        {
+          "path": "src/runtime/engine/connected-session.ts",
+          "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/runtime/engine/connected-session.ts",
+          "sha256": "dcc87e94989860f71bc1d93682b55f829cbd7aac930964435461d5f4b48c04bc",
+          "bytes": 7483,
+          "read_at_utc": "2026-10-04T07:47:38.635923+00:00",
+          "local_snapshot": "/tmp/t1059-source/acpx/src/runtime/engine/connected-session.ts"
+        },
+        {
+          "path": "src/runtime/engine/controls.ts",
+          "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/runtime/engine/controls.ts",
+          "sha256": "de1cb870be577355464c1c2d3b99cbc3a0fbac329ccf3f2db00b7a0b56c47f38",
+          "bytes": 1729,
+          "read_at_utc": "2026-10-04T07:47:39.973806+00:00",
+          "local_snapshot": "/tmp/t1059-source/acpx/src/runtime/engine/controls.ts"
+        },
+        {
+          "path": "src/runtime/engine/reconnect.ts",
+          "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/runtime/engine/reconnect.ts",
+          "sha256": "ad1b9c485316e1e3b2cd57493eebfa9ca553cf0adc9614bfbf16c1b3d89fe32e",
+          "bytes": 28329,
+          "read_at_utc": "2026-10-04T07:47:40.104402+00:00",
+          "local_snapshot": "/tmp/t1059-source/acpx/src/runtime/engine/reconnect.ts"
+        },
+        {
+          "path": "src/runtime/engine/session-options.ts",
+          "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/runtime/engine/session-options.ts",
+          "sha256": "d2ffbc58bdce36bd8fab64c93d851fb1d1cba0af2c6e6acf02b61077d333c32b",
+          "bytes": 6165,
+          "read_at_utc": "2026-10-04T07:47:43.560936+00:00",
+          "local_snapshot": "/tmp/t1059-source/acpx/src/runtime/engine/session-options.ts"
+        },
+        {
+          "path": "src/acp/client.ts",
+          "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/acp/client.ts",
+          "sha256": "2d41420725b3c745542ffe5e20095dfd58036fcd839ceec7f85ad548ddc1ef3d",
+          "bytes": 92809,
+          "read_at_utc": "2026-10-04T07:47:41.675951+00:00",
+          "local_snapshot": "/tmp/t1059-source/acpx/src/acp/client.ts"
+        },
+        {
+          "path": "src/acp/client-protocol.ts",
+          "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/acp/client-protocol.ts",
+          "sha256": "4a564fbf10a4a300a35b967fb5f1fe01b1057bf8191731493fb65d08728ce6f3",
+          "bytes": 1697,
+          "read_at_utc": "2026-10-04T07:47:41.091809+00:00",
+          "local_snapshot": "/tmp/t1059-source/acpx/src/acp/client-protocol.ts"
+        },
+        {
+          "path": "src/acp/client-process.ts",
+          "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/acp/client-process.ts",
+          "sha256": "3d2fd50ed5f1898d2fbf772dd9b25c8147331f164f76e6ca9b057f8403ab2acb",
+          "bytes": 8896,
+          "read_at_utc": "2026-10-04T07:47:41.562648+00:00",
+          "local_snapshot": "/tmp/t1059-source/acpx/src/acp/client-process.ts"
+        },
+        {
+          "path": "src/acp/auth-env.ts",
+          "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/acp/auth-env.ts",
+          "sha256": "d03f290435460c7d84d380e641927022444f940368461a419a07787bff4362af",
+          "bytes": 6017,
+          "read_at_utc": "2026-10-04T07:47:42.806011+00:00",
+          "local_snapshot": "/tmp/t1059-source/acpx/src/acp/auth-env.ts"
+        },
+        {
+          "path": "src/acp/codex-compat.ts",
+          "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/acp/codex-compat.ts",
+          "sha256": "788fa15f4c27b23aca62453ae7f33f037576b22489b95d0330312b9e7075c8db",
+          "bytes": 1573,
+          "read_at_utc": "2026-10-04T07:47:41.919541+00:00",
+          "local_snapshot": "/tmp/t1059-source/acpx/src/acp/codex-compat.ts"
+        },
+        {
+          "path": "src/agent-registry.ts",
+          "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/agent-registry.ts",
+          "sha256": "5d71c2edcd97e674a0a751f709f6692d4bceb69c801f9e784ca58439c9990add",
+          "bytes": 17478,
+          "read_at_utc": "2026-10-04T07:47:42.186594+00:00",
+          "local_snapshot": "/tmp/t1059-source/acpx/src/agent-registry.ts"
+        },
+        {
+          "path": "src/prompt-content.ts",
+          "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/prompt-content.ts",
+          "sha256": "a02bcf1c3a78f59d28d326c1f60997aff4a8f67ec21637c11040a61fc58185c1",
+          "bytes": 10161,
+          "read_at_utc": "2026-10-04T07:47:43.149010+00:00",
+          "local_snapshot": "/tmp/t1059-source/acpx/src/prompt-content.ts"
+        },
+        {
+          "path": "src/permission-policy.ts",
+          "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/permission-policy.ts",
+          "sha256": "05132d8b3e1b95bc81bf6c42c5b1e7c050c915b884acf4fbf267ea3fd058751f",
+          "bytes": 2898,
+          "read_at_utc": "2026-10-04T07:47:42.867370+00:00",
+          "local_snapshot": "/tmp/t1059-source/acpx/src/permission-policy.ts"
+        },
+        {
+          "path": "src/mcp-servers.ts",
+          "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/mcp-servers.ts",
+          "sha256": "0a33b2e6db61d010926203096de54d14aa98252cae720037593b9078db650c31",
+          "bytes": 4637,
+          "read_at_utc": "2026-10-04T07:47:43.245537+00:00",
+          "local_snapshot": "/tmp/t1059-source/acpx/src/mcp-servers.ts"
+        },
+        {
+          "path": "pnpm-lock.yaml",
+          "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/pnpm-lock.yaml",
+          "sha256": "f690474e2888eac608844d801ceef520bab201271edf1474e185330e8eb29b63",
+          "bytes": 185290,
+          "read_at_utc": "2026-10-04T07:47:44.156039+00:00",
+          "local_snapshot": "/tmp/t1059-source/acpx/pnpm-lock.yaml"
+        },
+        {
+          "path": "src/types.ts",
+          "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/types.ts",
+          "sha256": "3e0dbd9b07ecbd9f4a64e13f67206a482477729539dbf17aeb1c81002a10a2ec",
+          "bytes": 14560,
+          "read_at_utc": "2026-10-04T07:49:40.076202+00:00",
+          "local_snapshot": "/tmp/t1059-source/acpx/src/types.ts"
+        },
+        {
+          "path": "src/runtime/engine/prompt-turn.ts",
+          "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/runtime/engine/prompt-turn.ts",
+          "sha256": "4fc28353af8befd98f338f0d5819ec8c854a38b7fe4e64c8c3330b68138b1b6c",
+          "bytes": 4473,
+          "read_at_utc": "2026-10-04T07:49:40.076929+00:00",
+          "local_snapshot": "/tmp/t1059-source/acpx/src/runtime/engine/prompt-turn.ts"
+        },
+        {
+          "path": "src/runtime/engine/lifecycle.ts",
+          "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/runtime/engine/lifecycle.ts",
+          "sha256": "c481c25c0d4f52886bf26b5586d649739478dd492ae7afcc4aec90a9719ada8a",
+          "bytes": 2795,
+          "read_at_utc": "2026-10-04T07:49:39.854260+00:00",
+          "local_snapshot": "/tmp/t1059-source/acpx/src/runtime/engine/lifecycle.ts"
+        },
+        {
+          "path": "src/runtime/engine/reuse-policy.ts",
+          "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/runtime/engine/reuse-policy.ts",
+          "sha256": "7d1f53fdae6516ce19b3e1b7ac91511b42b49d08d417d90a3dbbb7616cf28d90",
+          "bytes": 1073,
+          "read_at_utc": "2026-10-04T07:49:39.931037+00:00",
+          "local_snapshot": "/tmp/t1059-source/acpx/src/runtime/engine/reuse-policy.ts"
+        },
+        {
+          "path": "src/runtime/public/file-session-store.ts",
+          "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/runtime/public/file-session-store.ts",
+          "sha256": "e042cea3435622b3e300ad973fa77e0e2c9bf6c14183cd02f244ee4c824d9d9e",
+          "bytes": 1992,
+          "read_at_utc": "2026-10-04T07:49:40.051494+00:00",
+          "local_snapshot": "/tmp/t1059-source/acpx/src/runtime/public/file-session-store.ts"
+        },
+        {
+          "path": "src/session/persistence.ts",
+          "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/session/persistence.ts",
+          "sha256": "e8d0c2ee5b09447154f46f05929802902999a75ccd32629323b73a7953abf2ae",
+          "bytes": 524,
+          "read_at_utc": "2026-10-04T07:49:43.278271+00:00",
+          "local_snapshot": "/tmp/t1059-source/acpx/src/session/persistence.ts"
+        },
+        {
+          "path": "src/acp/agent-command.ts",
+          "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/acp/agent-command.ts",
+          "sha256": "a462eee1d52ad25271f793f218acd10a43b1097ee35df027c4657556b50aff91",
+          "bytes": 11182,
+          "read_at_utc": "2026-10-04T07:49:42.739235+00:00",
+          "local_snapshot": "/tmp/t1059-source/acpx/src/acp/agent-command.ts"
+        },
+        {
+          "path": "src/permissions.ts",
+          "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/permissions.ts",
+          "sha256": "7cc4d4cec200b8e43b89a1e22db8caa9721c3d199f91c0ab0dcbd5bcd4f458b2",
+          "bytes": 14054,
+          "read_at_utc": "2026-10-04T07:49:43.901418+00:00",
+          "local_snapshot": "/tmp/t1059-source/acpx/src/permissions.ts"
+        }
+      ]
+    },
+    {
+      "repo": "dream-num/workbuddy-univer-office",
+      "commit": "856eae4fe416b28adffb96092d67ff26c7797ff4",
+      "license_file_claim": "Apache-2.0",
+      "source_records_sha256": "693127eac8699658425f7ed33449e4c7c99b81a0e0aa43951f073803b654006d",
+      "files": [
+        {
+          "path": "LICENSE",
+          "url": "https://raw.githubusercontent.com/dream-num/workbuddy-univer-office/856eae4fe416b28adffb96092d67ff26c7797ff4/LICENSE",
+          "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+          "bytes": 11357,
+          "read_at_utc": "2026-10-04T07:40:11.231221+00:00",
+          "local_snapshot": "/tmp/t1059-source/workbuddy-univer-office/LICENSE"
+        },
+        {
+          "path": "README.md",
+          "url": "https://raw.githubusercontent.com/dream-num/workbuddy-univer-office/856eae4fe416b28adffb96092d67ff26c7797ff4/README.md",
+          "sha256": "a369a6700fa017198ef796a537da1dc5e9dffcc372c64a395949091846a2068e",
+          "bytes": 6949,
+          "read_at_utc": "2026-10-04T07:40:11.231850+00:00",
+          "local_snapshot": "/tmp/t1059-source/workbuddy-univer-office/README.md"
+        },
+        {
+          "path": "package.json",
+          "url": "https://raw.githubusercontent.com/dream-num/workbuddy-univer-office/856eae4fe416b28adffb96092d67ff26c7797ff4/package.json",
+          "sha256": "b4ae5b7d6ed72104f807cfd9cc0bd7a45699b93e9a629f6876038c46128fd69f",
+          "bytes": 7737,
+          "read_at_utc": "2026-10-04T07:40:11.232106+00:00",
+          "local_snapshot": "/tmp/t1059-source/workbuddy-univer-office/package.json"
+        },
+        {
+          "path": ".workbuddy-plugin/plugin.json",
+          "url": "https://raw.githubusercontent.com/dream-num/workbuddy-univer-office/856eae4fe416b28adffb96092d67ff26c7797ff4/.workbuddy-plugin/plugin.json",
+          "sha256": "acd79d9b8fb7249af940797aa2cd4a65211b1385be57f1dcc6c4882005db9d39",
+          "bytes": 445,
+          "read_at_utc": "2026-10-04T07:40:11.232321+00:00",
+          "local_snapshot": "/tmp/t1059-source/workbuddy-univer-office/.workbuddy-plugin/plugin.json"
+        },
+        {
+          "path": "bin/univer-office.mjs",
+          "url": "https://raw.githubusercontent.com/dream-num/workbuddy-univer-office/856eae4fe416b28adffb96092d67ff26c7797ff4/bin/univer-office.mjs",
+          "sha256": "0d26297a01fa759f6be625064ffe0bedfbdaadc3d6943035de6fba3f77ac4c0b",
+          "bytes": 929,
+          "read_at_utc": "2026-10-04T07:40:11.233044+00:00",
+          "local_snapshot": "/tmp/t1059-source/workbuddy-univer-office/bin/univer-office.mjs"
+        },
+        {
+          "path": "src/mcp/http.ts",
+          "url": "https://raw.githubusercontent.com/dream-num/workbuddy-univer-office/856eae4fe416b28adffb96092d67ff26c7797ff4/src/mcp/http.ts",
+          "sha256": "bb9494438a42d4c41220ba08103c49ed42676ab80f85c6482e148b7dd22ac5bb",
+          "bytes": 3043,
+          "read_at_utc": "2026-10-04T07:40:12.205248+00:00",
+          "local_snapshot": "/tmp/t1059-source/workbuddy-univer-office/src/mcp/http.ts"
+        },
+        {
+          "path": "src/mcp/main.ts",
+          "url": "https://raw.githubusercontent.com/dream-num/workbuddy-univer-office/856eae4fe416b28adffb96092d67ff26c7797ff4/src/mcp/main.ts",
+          "sha256": "123b485d381dd7bd5277a4d0a0c21b5b61219c0ffee8744dabf002a91d4db384",
+          "bytes": 1120,
+          "read_at_utc": "2026-10-04T07:40:12.235838+00:00",
+          "local_snapshot": "/tmp/t1059-source/workbuddy-univer-office/src/mcp/main.ts"
+        },
+        {
+          "path": "src/mcp/server.ts",
+          "url": "https://raw.githubusercontent.com/dream-num/workbuddy-univer-office/856eae4fe416b28adffb96092d67ff26c7797ff4/src/mcp/server.ts",
+          "sha256": "8dcaf4244dfe8d9aa331b6a96ee25228e96b8215537a0f03e3ab49dc794a50bd",
+          "bytes": 13734,
+          "read_at_utc": "2026-10-04T07:40:12.465732+00:00",
+          "local_snapshot": "/tmp/t1059-source/workbuddy-univer-office/src/mcp/server.ts"
+        },
+        {
+          "path": "scripts/package-workbuddy-connector.py",
+          "url": "https://raw.githubusercontent.com/dream-num/workbuddy-univer-office/856eae4fe416b28adffb96092d67ff26c7797ff4/scripts/package-workbuddy-connector.py",
+          "sha256": "af4aa4594493fcc5a23fd6f92cd30c0d9b871e7505656f311f255f0f22fcd106",
+          "bytes": 6782,
+          "read_at_utc": "2026-10-04T07:40:12.514678+00:00",
+          "local_snapshot": "/tmp/t1059-source/workbuddy-univer-office/scripts/package-workbuddy-connector.py"
+        },
+        {
+          "path": "scripts/package-connector-runtime.mjs",
+          "url": "https://raw.githubusercontent.com/dream-num/workbuddy-univer-office/856eae4fe416b28adffb96092d67ff26c7797ff4/scripts/package-connector-runtime.mjs",
+          "sha256": "a7895f1f8c4f68c3d82367d358d546d434dafff3ef551da62ecf6aa8fa75e5a7",
+          "bytes": 2355,
+          "read_at_utc": "2026-10-04T07:40:12.781639+00:00",
+          "local_snapshot": "/tmp/t1059-source/workbuddy-univer-office/scripts/package-connector-runtime.mjs"
+        },
+        {
+          "path": "docs/release-readiness.md",
+          "url": "https://raw.githubusercontent.com/dream-num/workbuddy-univer-office/856eae4fe416b28adffb96092d67ff26c7797ff4/docs/release-readiness.md",
+          "sha256": "492cf65ca12a60e825e73fc6316ce4fcc480851c7fbbda165ce015fe03d50035",
+          "bytes": 13700,
+          "read_at_utc": "2026-10-04T07:40:13.264056+00:00",
+          "local_snapshot": "/tmp/t1059-source/workbuddy-univer-office/docs/release-readiness.md"
+        },
+        {
+          "path": "docs/marketplace-submission.md",
+          "url": "https://raw.githubusercontent.com/dream-num/workbuddy-univer-office/856eae4fe416b28adffb96092d67ff26c7797ff4/docs/marketplace-submission.md",
+          "sha256": "ac3912626ec4bb7719fc2c0e5fc6517fa70657fdd2851151348255f0fa8eaab0",
+          "bytes": 10740,
+          "read_at_utc": "2026-10-04T07:40:13.489489+00:00",
+          "local_snapshot": "/tmp/t1059-source/workbuddy-univer-office/docs/marketplace-submission.md"
+        },
+        {
+          "path": "docs/workbuddy-univer-office-validation.md",
+          "url": "https://raw.githubusercontent.com/dream-num/workbuddy-univer-office/856eae4fe416b28adffb96092d67ff26c7797ff4/docs/workbuddy-univer-office-validation.md",
+          "sha256": "929045ea761fe304e451caa97a55e0f553aa4ff03645831db71739a54122fdca",
+          "bytes": 167310,
+          "read_at_utc": "2026-10-04T07:40:13.613543+00:00",
+          "local_snapshot": "/tmp/t1059-source/workbuddy-univer-office/docs/workbuddy-univer-office-validation.md"
+        },
+        {
+          "path": "docs/workbuddy-return-card-investigation.md",
+          "url": "https://raw.githubusercontent.com/dream-num/workbuddy-univer-office/856eae4fe416b28adffb96092d67ff26c7797ff4/docs/workbuddy-return-card-investigation.md",
+          "sha256": "2b96855e9ec69ed3b1245c861d89648ee2c3b3d08aa757436eea85b90a0ba020",
+          "bytes": 1809,
+          "read_at_utc": "2026-10-04T07:40:13.886850+00:00",
+          "local_snapshot": "/tmp/t1059-source/workbuddy-univer-office/docs/workbuddy-return-card-investigation.md"
+        },
+        {
+          "path": "skills/univer-office/SKILL.md",
+          "url": "https://raw.githubusercontent.com/dream-num/workbuddy-univer-office/856eae4fe416b28adffb96092d67ff26c7797ff4/skills/univer-office/SKILL.md",
+          "sha256": "e75683a86c4a4742625f750a3b75206c1ae497640b34a3753c53df4daf2ef416",
+          "bytes": 4744,
+          "read_at_utc": "2026-10-04T07:40:14.515204+00:00",
+          "local_snapshot": "/tmp/t1059-source/workbuddy-univer-office/skills/univer-office/SKILL.md"
+        },
+        {
+          "path": "src/server/main.ts",
+          "url": "https://raw.githubusercontent.com/dream-num/workbuddy-univer-office/856eae4fe416b28adffb96092d67ff26c7797ff4/src/server/main.ts",
+          "sha256": "acb482c21deb9a3f9758aa99ab7e0f237a6b4e8c419c2721aea5dc3e110192a2",
+          "bytes": 23485,
+          "read_at_utc": "2026-10-04T07:44:55.998830+00:00",
+          "local_snapshot": "/tmp/t1059-source/workbuddy-univer-office/src/server/main.ts"
+        },
+        {
+          "path": "src/mcp-app/main.ts",
+          "url": "https://raw.githubusercontent.com/dream-num/workbuddy-univer-office/856eae4fe416b28adffb96092d67ff26c7797ff4/src/mcp-app/main.ts",
+          "sha256": "4e04aa893c9822b8a53f6e09b9721f04b704c8cadd62eb64252e715f07506288",
+          "bytes": 10043,
+          "read_at_utc": "2026-10-04T07:44:56.973746+00:00",
+          "local_snapshot": "/tmp/t1059-source/workbuddy-univer-office/src/mcp-app/main.ts"
+        }
+      ]
+    },
+    {
+      "repo": "oceanbase/powercontext",
+      "commit": "ba7dc8dddea2c37168dbaf801e6399a40aae49f1",
+      "license_file_claim": "Apache-2.0",
+      "source_records_sha256": "955bf8670cfebf0d1e1fda7045ef02442e159c163eb305613d65a921803a945f",
+      "files": [
+        {
+          "path": "LICENSE",
+          "url": "https://raw.githubusercontent.com/oceanbase/powercontext/ba7dc8dddea2c37168dbaf801e6399a40aae49f1/LICENSE",
+          "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+          "bytes": 11358,
+          "read_at_utc": "2026-10-04T07:46:07.816461+00:00",
+          "local_snapshot": "/tmp/t1059-source/powercontext/LICENSE"
+        },
+        {
+          "path": "pyproject.toml",
+          "url": "https://raw.githubusercontent.com/oceanbase/powercontext/ba7dc8dddea2c37168dbaf801e6399a40aae49f1/pyproject.toml",
+          "sha256": "72a2c8e933913669db179032cc697d0e08f19f225b751bd5cd51e3c7f680a147",
+          "bytes": 7631,
+          "read_at_utc": "2026-10-04T07:46:07.661506+00:00",
+          "local_snapshot": "/tmp/t1059-source/powercontext/pyproject.toml"
+        },
+        {
+          "path": "integrations/workbuddy/README.md",
+          "url": "https://raw.githubusercontent.com/oceanbase/powercontext/ba7dc8dddea2c37168dbaf801e6399a40aae49f1/integrations/workbuddy/README.md",
+          "sha256": "ec67fdde495676bc67db550deae1ce557b041a8b8dc049ba7da51437bf7f36c5",
+          "bytes": 10497,
+          "read_at_utc": "2026-10-04T07:46:08.567068+00:00",
+          "local_snapshot": "/tmp/t1059-source/powercontext/integrations/workbuddy/README.md"
+        },
+        {
+          "path": "integrations/workbuddy/plugins/powercontext/.mcp.json",
+          "url": "https://raw.githubusercontent.com/oceanbase/powercontext/ba7dc8dddea2c37168dbaf801e6399a40aae49f1/integrations/workbuddy/plugins/powercontext/.mcp.json",
+          "sha256": "29ced8c7317e6ddf0f38c7c4065dafb76611b6ee681ef39622c65c1c0cb6be42",
+          "bytes": 377,
+          "read_at_utc": "2026-10-04T07:46:07.814760+00:00",
+          "local_snapshot": "/tmp/t1059-source/powercontext/integrations/workbuddy/plugins/powercontext/.mcp.json"
+        },
+        {
+          "path": "integrations/workbuddy/plugins/powercontext/hooks/hooks.workbuddy.json",
+          "url": "https://raw.githubusercontent.com/oceanbase/powercontext/ba7dc8dddea2c37168dbaf801e6399a40aae49f1/integrations/workbuddy/plugins/powercontext/hooks/hooks.workbuddy.json",
+          "sha256": "a5c088f9733df4eac4363bf7160c597cb63baf7fdc6e1e1feaa0b574b526cef0",
+          "bytes": 438,
+          "read_at_utc": "2026-10-04T07:46:08.724138+00:00",
+          "local_snapshot": "/tmp/t1059-source/powercontext/integrations/workbuddy/plugins/powercontext/hooks/hooks.workbuddy.json"
+        },
+        {
+          "path": "integrations/workbuddy/plugins/powercontext/hooks/workbuddy_powercontext_hook.py",
+          "url": "https://raw.githubusercontent.com/oceanbase/powercontext/ba7dc8dddea2c37168dbaf801e6399a40aae49f1/integrations/workbuddy/plugins/powercontext/hooks/workbuddy_powercontext_hook.py",
+          "sha256": "c1a6c570f5fcc57626c17a9d22a5d89089f690166b7d584da005efa9dbb22f86",
+          "bytes": 21020,
+          "read_at_utc": "2026-10-04T07:46:09.084841+00:00",
+          "local_snapshot": "/tmp/t1059-source/powercontext/integrations/workbuddy/plugins/powercontext/hooks/workbuddy_powercontext_hook.py"
+        },
+        {
+          "path": "integrations/workbuddy/plugins/powercontext/hooks/workbuddy_settings.py",
+          "url": "https://raw.githubusercontent.com/oceanbase/powercontext/ba7dc8dddea2c37168dbaf801e6399a40aae49f1/integrations/workbuddy/plugins/powercontext/hooks/workbuddy_settings.py",
+          "sha256": "08e8804a6877bec10d424fccd40e48509545aeff8c66f8782fec68427baed6fc",
+          "bytes": 7449,
+          "read_at_utc": "2026-10-04T07:46:08.957657+00:00",
+          "local_snapshot": "/tmp/t1059-source/powercontext/integrations/workbuddy/plugins/powercontext/hooks/workbuddy_settings.py"
+        },
+        {
+          "path": "src/powercontext/cli/workbuddy.py",
+          "url": "https://raw.githubusercontent.com/oceanbase/powercontext/ba7dc8dddea2c37168dbaf801e6399a40aae49f1/src/powercontext/cli/workbuddy.py",
+          "sha256": "f289708d18689159f98d4de3c00f58ba8275e2e60261cc21afdaf654cf974112",
+          "bytes": 23596,
+          "read_at_utc": "2026-10-04T07:46:09.632944+00:00",
+          "local_snapshot": "/tmp/t1059-source/powercontext/src/powercontext/cli/workbuddy.py"
+        }
+      ]
+    },
+    {
+      "repo": "EverMind-AI/EverMe",
+      "commit": "6739467509892c69a8d08073c250000120378029",
+      "license_file_claim": "Apache-2.0",
+      "source_records_sha256": "dfee62773776b00f7696e1dd722a0abc36a5d4608d7fbaf481250525f09c4b74",
+      "files": [
+        {
+          "path": "LICENSE",
+          "url": "https://raw.githubusercontent.com/EverMind-AI/EverMe/6739467509892c69a8d08073c250000120378029/LICENSE",
+          "sha256": "32339eca630d2177e637c37dab8dc434ce72132ae148df2ed35707f4119c53b9",
+          "bytes": 11342,
+          "read_at_utc": "2026-10-04T07:46:09.928502+00:00",
+          "local_snapshot": "/tmp/t1059-source/everme/LICENSE"
+        },
+        {
+          "path": "README.md",
+          "url": "https://raw.githubusercontent.com/EverMind-AI/EverMe/6739467509892c69a8d08073c250000120378029/README.md",
+          "sha256": "80aee0b20715f472b2200846e67a8a2b3b5bce17d414d4732ef29c519e4b2cc1",
+          "bytes": 14154,
+          "read_at_utc": "2026-10-04T07:46:11.004987+00:00",
+          "local_snapshot": "/tmp/t1059-source/everme/README.md"
+        },
+        {
+          "path": "cli/internal/plugin/workbuddy.go",
+          "url": "https://raw.githubusercontent.com/EverMind-AI/EverMe/6739467509892c69a8d08073c250000120378029/cli/internal/plugin/workbuddy.go",
+          "sha256": "a12af6f019861f505e83f593208d019111e4ec6af419c69e11b381c17cd8a68f",
+          "bytes": 3328,
+          "read_at_utc": "2026-10-04T07:46:10.101491+00:00",
+          "local_snapshot": "/tmp/t1059-source/everme/cli/internal/plugin/workbuddy.go"
+        },
+        {
+          "path": "cli/internal/plugin/workbuddy_test.go",
+          "url": "https://raw.githubusercontent.com/EverMind-AI/EverMe/6739467509892c69a8d08073c250000120378029/cli/internal/plugin/workbuddy_test.go",
+          "sha256": "3090ed85ca36e790b874e7ecb8889d5f034973f54a31a1da1d0afa36364fb3b5",
+          "bytes": 4482,
+          "read_at_utc": "2026-10-04T07:46:11.687246+00:00",
+          "local_snapshot": "/tmp/t1059-source/everme/cli/internal/plugin/workbuddy_test.go"
+        },
+        {
+          "path": "cli/cmd/plugin/install.go",
+          "url": "https://raw.githubusercontent.com/EverMind-AI/EverMe/6739467509892c69a8d08073c250000120378029/cli/cmd/plugin/install.go",
+          "sha256": "a01158a9647d9dea4425503a11896e417bc1dae4d35bd57f770c17c4867ff8d8",
+          "bytes": 6338,
+          "read_at_utc": "2026-10-04T07:46:10.853729+00:00",
+          "local_snapshot": "/tmp/t1059-source/everme/cli/cmd/plugin/install.go"
+        }
+      ]
+    },
+    {
+      "repo": "JaguarJack/workbuddy-openapi",
+      "commit": "738f794a73bc327d730ffbcb29b220e4e39863d2",
+      "license_file_claim": "MIT",
+      "source_records_sha256": "0279721463f757ea96053b1d0a0a855819486e96ae55219a04c0a15b8310e6ac",
+      "files": [
+        {
+          "path": "LICENSE",
+          "url": "https://raw.githubusercontent.com/JaguarJack/workbuddy-openapi/738f794a73bc327d730ffbcb29b220e4e39863d2/LICENSE",
+          "sha256": "1fa52604a2c4525d678f0492fac05be1c0729f7b93e7cb0f623de82c4b1bd915",
+          "bytes": 1067,
+          "read_at_utc": "2026-10-04T07:47:30.291559+00:00",
+          "local_snapshot": "/tmp/t1059-source/workbuddy-openapi/LICENSE"
+        },
+        {
+          "path": "README.md",
+          "url": "https://raw.githubusercontent.com/JaguarJack/workbuddy-openapi/738f794a73bc327d730ffbcb29b220e4e39863d2/README.md",
+          "sha256": "decaad3b57590d7ca7f2fb7cbf7f444101832be3b669f6c7323d1badf9657feb",
+          "bytes": 11273,
+          "read_at_utc": "2026-10-04T07:47:33.261048+00:00",
+          "local_snapshot": "/tmp/t1059-source/workbuddy-openapi/README.md"
+        },
+        {
+          "path": "composer.json",
+          "url": "https://raw.githubusercontent.com/JaguarJack/workbuddy-openapi/738f794a73bc327d730ffbcb29b220e4e39863d2/composer.json",
+          "sha256": "c2daf3b50cc3fa318609e0fe45d10dc08e324b5c3da8b6eeb4367b18d998ff7d",
+          "bytes": 653,
+          "read_at_utc": "2026-10-04T07:47:34.445655+00:00",
+          "local_snapshot": "/tmp/t1059-source/workbuddy-openapi/composer.json"
+        },
+        {
+          "path": "src/Support/AcpTransport.php",
+          "url": "https://raw.githubusercontent.com/JaguarJack/workbuddy-openapi/738f794a73bc327d730ffbcb29b220e4e39863d2/src/Support/AcpTransport.php",
+          "sha256": "a67b94a5ed89449d68acc07c2ab7e865c99e9d2f599ba35193538ba7ecd3db33",
+          "bytes": 15919,
+          "read_at_utc": "2026-10-04T07:48:04.303920+00:00",
+          "local_snapshot": "/tmp/t1059-source/workbuddy-openapi/src/Support/AcpTransport.php"
+        },
+        {
+          "path": "src/Actions/Acp/OpenConnection.php",
+          "url": "https://raw.githubusercontent.com/JaguarJack/workbuddy-openapi/738f794a73bc327d730ffbcb29b220e4e39863d2/src/Actions/Acp/OpenConnection.php",
+          "sha256": "3914a78b8f02f3d16cc189569bde9b897f74cf873a9c09f067245e68a9688fe7",
+          "bytes": 405,
+          "read_at_utc": "2026-10-04T07:48:04.229919+00:00",
+          "local_snapshot": "/tmp/t1059-source/workbuddy-openapi/src/Actions/Acp/OpenConnection.php"
+        },
+        {
+          "path": "src/Actions/Acp/Initialize.php",
+          "url": "https://raw.githubusercontent.com/JaguarJack/workbuddy-openapi/738f794a73bc327d730ffbcb29b220e4e39863d2/src/Actions/Acp/Initialize.php",
+          "sha256": "cab77a6abba2a6027002b522140c65de9200414160421130f17464bb486471cb",
+          "bytes": 427,
+          "read_at_utc": "2026-10-04T07:48:04.697920+00:00",
+          "local_snapshot": "/tmp/t1059-source/workbuddy-openapi/src/Actions/Acp/Initialize.php"
+        },
+        {
+          "path": "src/Actions/Acp/LoadSession.php",
+          "url": "https://raw.githubusercontent.com/JaguarJack/workbuddy-openapi/738f794a73bc327d730ffbcb29b220e4e39863d2/src/Actions/Acp/LoadSession.php",
+          "sha256": "55817202af484d8cdc9436f131a427d63abf3d1db3bfe2f5600660dece87bbd4",
+          "bytes": 539,
+          "read_at_utc": "2026-10-04T07:48:04.406024+00:00",
+          "local_snapshot": "/tmp/t1059-source/workbuddy-openapi/src/Actions/Acp/LoadSession.php"
+        },
+        {
+          "path": "src/Actions/Acp/Prompt.php",
+          "url": "https://raw.githubusercontent.com/JaguarJack/workbuddy-openapi/738f794a73bc327d730ffbcb29b220e4e39863d2/src/Actions/Acp/Prompt.php",
+          "sha256": "247a77c932fd4df5a872d13d793801cc0eea141b998bf050aa3464168bccedf3",
+          "bytes": 546,
+          "read_at_utc": "2026-10-04T07:48:05.222670+00:00",
+          "local_snapshot": "/tmp/t1059-source/workbuddy-openapi/src/Actions/Acp/Prompt.php"
+        },
+        {
+          "path": "src/Actions/Acp/RespondToPermission.php",
+          "url": "https://raw.githubusercontent.com/JaguarJack/workbuddy-openapi/738f794a73bc327d730ffbcb29b220e4e39863d2/src/Actions/Acp/RespondToPermission.php",
+          "sha256": "2ac7b9ad4ece9830c54e2939eacc4f24988c439b884b8db77a4593fff96dba13",
+          "bytes": 503,
+          "read_at_utc": "2026-10-04T07:48:06.651752+00:00",
+          "local_snapshot": "/tmp/t1059-source/workbuddy-openapi/src/Actions/Acp/RespondToPermission.php"
+        },
+        {
+          "path": "src/Actions/Task/CreateTask.php",
+          "url": "https://raw.githubusercontent.com/JaguarJack/workbuddy-openapi/738f794a73bc327d730ffbcb29b220e4e39863d2/src/Actions/Task/CreateTask.php",
+          "sha256": "5cd2f3ab0992d7145ab4d52bc38a90843a40b48be766393ba321965bf0ca797d",
+          "bytes": 871,
+          "read_at_utc": "2026-10-04T07:48:05.609305+00:00",
+          "local_snapshot": "/tmp/t1059-source/workbuddy-openapi/src/Actions/Task/CreateTask.php"
+        },
+        {
+          "path": "src/WorkBuddyClient.php",
+          "url": "https://raw.githubusercontent.com/JaguarJack/workbuddy-openapi/738f794a73bc327d730ffbcb29b220e4e39863d2/src/WorkBuddyClient.php",
+          "sha256": "086b268b10ffe31597d601d318d4b28fb98f0cfedb66bf3637129fbc54753cf0",
+          "bytes": 7856,
+          "read_at_utc": "2026-10-04T07:48:06.673583+00:00",
+          "local_snapshot": "/tmp/t1059-source/workbuddy-openapi/src/WorkBuddyClient.php"
+        },
+        {
+          "path": "src/Config.php",
+          "url": "https://raw.githubusercontent.com/JaguarJack/workbuddy-openapi/738f794a73bc327d730ffbcb29b220e4e39863d2/src/Config.php",
+          "sha256": "25786223e3f03b51fdf6df89811038cc0c348720eec0cbe4b6e57ff6d247c888",
+          "bytes": 3507,
+          "read_at_utc": "2026-10-04T07:48:06.334081+00:00",
+          "local_snapshot": "/tmp/t1059-source/workbuddy-openapi/src/Config.php"
+        },
+        {
+          "path": "tests/AcpTest.php",
+          "url": "https://raw.githubusercontent.com/JaguarJack/workbuddy-openapi/738f794a73bc327d730ffbcb29b220e4e39863d2/tests/AcpTest.php",
+          "sha256": "5c22ada72002f32ccb9546d2417f66d7db1393b4030238e48dbf585fcb902aa7",
+          "bytes": 18411,
+          "read_at_utc": "2026-10-04T07:48:08.133228+00:00",
+          "local_snapshot": "/tmp/t1059-source/workbuddy-openapi/tests/AcpTest.php"
+        },
+        {
+          "path": "tests/OfficialContractTest.php",
+          "url": "https://raw.githubusercontent.com/JaguarJack/workbuddy-openapi/738f794a73bc327d730ffbcb29b220e4e39863d2/tests/OfficialContractTest.php",
+          "sha256": "873bbf02c760529b9326b0f370e71beebffa440cba08bce2c7146f7972a63fd1",
+          "bytes": 28132,
+          "read_at_utc": "2026-10-04T07:48:07.592662+00:00",
+          "local_snapshot": "/tmp/t1059-source/workbuddy-openapi/tests/OfficialContractTest.php"
+        }
+      ]
+    }
+  ],
+  "comparison_archives": [
+    {
+      "repo": "iOfficeAI/AionUi",
+      "commit": "6744099b279b991c17e31c243f0920477bd31cb6",
+      "purpose": "仅核对未选用的既有桌面宿主；未复制生产代码",
+      "records_snapshot": "/tmp/t1059-source/aionui/source-records.json",
+      "sha256": "9d8333d215fadfe19cdeda855646fca3ae5a9eb9e5f9eb8c9f90576408451784"
+    },
+    {
+      "repo": "iOfficeAI/AionCore",
+      "commit": "47e66d0d151123e973b3fd1e77afcb5671b3f8c5",
+      "purpose": "仅核对未选用的既有桌面宿主；未复制生产代码",
+      "records_snapshot": "/tmp/t1059-source/aioncore/source-records.json",
+      "sha256": "b4a95ebec17ef74ceecc245d5cdf43f17bfe2e177a0b12b39ba08779764b2dff"
+    }
+  ],
+  "public_package_metadata": [
+    {
+      "url": "https://registry.npmjs.org/@agentclientprotocol%2Fcodex-acp/1.1.5",
+      "local_snapshot": "/tmp/t1059-source/acpx/codex-acp-1.1.5-metadata.json",
+      "sha256": "ade19441c4124188c7f32a8df0e256c11d87fa043a8a3d4823373631b09ce95b",
+      "read_time_note": "子代理未单独保存首次读取时间，不补造时间"
+    },
+    {
+      "url": "https://registry.npmjs.org/@agentclientprotocol%2Fsdk/1.5.1",
+      "local_snapshot": "/tmp/t1059-source/acpx/sdk-1.5.1-metadata.json",
+      "sha256": "cac5f780e7b000f536da89ab581419cdbd958ae55c2649c51936a69f31bc1eab",
+      "read_time_note": "子代理未单独保存首次读取时间，不补造时间"
+    }
+  ]
+}

@@ -1,0 +1,111 @@
+--- a/frontend/src/features/projects/graphic-post-results.tsx
++++ b/frontend/src/features/projects/graphic-post-results.tsx
+@@ -93,6 +93,26 @@
+   series?:{cards:GraphicPostCardBrief[];selectedCardId:string|null;selectedCardIds:string[]};
+ };
+ type SeriesRequest={items:{kind:'image_card';targetSectionId:string}[];clientRequestId:string};
++type PageAdoptionAttempt={accountId:string;outputId:string;resultId:string;digest:string;editedValue:MediaValue[];expectedVersionId:string;clientRequestId:string};
++function pageAdoptionStorageKey(accountId:string,outputId:string,resultId:string){return `creatoros:graphic-page-adoption:${JSON.stringify([accountId,outputId,resultId])}`;}
++function readPageAdoption(accountId:string,outputId:string,result:CreativeResult):PageAdoptionAttempt|null{
++  try{
++    const cached:unknown=JSON.parse(window.sessionStorage.getItem(pageAdoptionStorageKey(accountId,outputId,result.resultId))??'null');
++    if(!cached||typeof cached!=='object')return null;
++    const item=cached as Partial<PageAdoptionAttempt>;
++    // SEMANTIC_BOUNDARY_ALLOW: Validate the exact saved request and ownership IDs, not page meaning.
++    if(item.accountId!==accountId||item.outputId!==outputId||item.resultId!==result.resultId||typeof item.expectedVersionId!=='string'||!item.expectedVersionId||typeof item.clientRequestId!=='string'||item.clientRequestId.length<8||item.clientRequestId.length>128||typeof item.digest!=='string')return null;
++    const selected=mediaValue(item.editedValue,'card',result.targetSectionId??undefined);
++    if(!selected||JSON.stringify(item.editedValue)!==JSON.stringify(selected)||item.digest!==JSON.stringify({resultId:result.resultId,selected}))return null;
++    return {...item,editedValue:selected} as PageAdoptionAttempt;
++  }catch{return null;}
++}
++function writePageAdoption(attempt:PageAdoptionAttempt){
++  try{window.sessionStorage.setItem(pageAdoptionStorageKey(attempt.accountId,attempt.outputId,attempt.resultId),JSON.stringify(attempt));}catch{/* Original in-memory request remains available when session storage is unavailable. */}
++}
++function clearPageAdoption(accountId:string,outputId:string,resultId:string){
++  try{window.sessionStorage.removeItem(pageAdoptionStorageKey(accountId,outputId,resultId));}catch{/* In-memory acknowledgement still prevents a second attempt in this session. */}
++}
+ function readSeriesRequests(key:string):SeriesRequest[]{
+   try{
+     const cached:unknown=JSON.parse(window.sessionStorage.getItem(key)??'null');
+@@ -117,7 +137,7 @@
+   const seriesQueue=React.useRef<SeriesRequest[]>(initialSeriesQueue);
+   const [unknownSeries,setUnknownSeries]=React.useState(initialSeriesQueue.length>0);
+   function persistSeriesQueue(){try{if(seriesQueue.current.length)window.sessionStorage.setItem(seriesStorageKey,JSON.stringify(seriesQueue.current));else window.sessionStorage.removeItem(seriesStorageKey);}catch{/* Storage can be disabled; in-memory original requests still remain. */}}
+-  const pageAdoptions=React.useRef<Record<string,{digest:string;id:string;versionId:string}>>({});
++  const pageAdoptions=React.useRef<Record<string,PageAdoptionAttempt>>({});
+   const [cardResult, setCardResult] = React.useState<CreativeResult | null>(null);
+   const [edits, setEdits] = React.useState<Partial<Record<TextKind, { resultId: string; text: string }>>>({});
+   const [cardTextEdits,setCardTextEdits]=React.useState<{resultId:string;cards:GraphicPostCardBrief[]}|null>(null);
+@@ -460,22 +480,27 @@
+     const epoch=scope.current.epoch;setSeriesBusy(true);setError(null);setMessage(null);
+     try{
+       const digest=JSON.stringify({resultId:result.resultId,selected});
+-      let request=pageAdoptions.current[result.resultId];
+-      if(!request||request.digest!==digest){
++      let request=pageAdoptions.current[result.resultId]??readPageAdoption(accountId,outputId,result);
++      if(request&&request.digest!==digest)throw new Error('原采用请求结果尚未确认。请先刷新原候选，输入和图片仍保留。');
++      if(!request){
+         const fresh=await client.getGraphicPost({params:{outputId},query:undefined,body:undefined});
+         if(epoch!==scope.current.epoch||dirtyRef.current)return;
+-        request={digest,id:crypto.randomUUID(),versionId:fresh.currentVersionId};
+-        pageAdoptions.current[result.resultId]=request;
+-      }
+-      await client.adoptResult({params:{resultId:result.resultId},query:undefined,body:{expected:{owner:'graphic_post',versionId:request.versionId},editedValue:selected,clientRequestId:request.id}});
++        request={accountId,outputId,resultId:result.resultId,digest,editedValue:selected,expectedVersionId:fresh.currentVersionId,clientRequestId:crypto.randomUUID()};
++      }
++      pageAdoptions.current[result.resultId]=request;
++      writePageAdoption(request);
++      await client.adoptResult({params:{resultId:request.resultId},query:undefined,body:{expected:{owner:'graphic_post',versionId:request.expectedVersionId},editedValue:request.editedValue,clientRequestId:request.clientRequestId}});
+       if(epoch!==scope.current.epoch)return;
+       delete pageAdoptions.current[result.resultId];
++      clearPageAdoption(accountId,outputId,result.resultId);
+       const latest=await client.getResult({params:{resultId:result.resultId},query:undefined,body:undefined});
+       if(epoch!==scope.current.epoch)return;rememberResult(latest);await onAdopt();
+       if(epoch===scope.current.epoch)setMessage('已采用到这一页，其他页和正文保留。');
+     }catch(reason){if(epoch===scope.current.epoch){
+       // A definite CAS conflict allows a fresh explicit attempt; unknown outcomes retain their exact request.
+-      if(reason&&typeof reason==='object'&&('status' in reason&&reason.status===409))delete pageAdoptions.current[result.resultId];
++      if(reason&&typeof reason==='object'&&('status' in reason&&reason.status===409)){
++        delete pageAdoptions.current[result.resultId];clearPageAdoption(accountId,outputId,result.resultId);
++      }
+       setError(errorText(reason));
+     }}finally{if(epoch===scope.current.epoch)setSeriesBusy(false);}
+   }
+--- a/frontend/src/features/projects/graphic-post-results.test.tsx
++++ b/frontend/src/features/projects/graphic-post-results.test.tsx
+@@ -79,6 +79,35 @@
+   await waitFor(()=>expect(api.adoptResult).toHaveBeenCalledWith({params:{resultId:'result-card'},query:undefined,body:{expected:{owner:'graphic_post',versionId:'fresh-v2'},editedValue:[{...image,cardId:'page-b'}],clientRequestId:expect.any(String)}}));
+   expect(api.getAssetFileDownloadUrl).not.toHaveBeenCalledWith(expect.objectContaining({params:expect.objectContaining({assetFileId:'other-file'})}));
+  });
++ it('采用结果未知后跨remount恢复原完整请求，即使owner已保存并更新当前版本',async()=>{
++  const bound={...card,targetSectionId:'page-b',value:[{...image,cardId:'page-b'}]};
++  api.listResults.mockResolvedValue({items:[bound]});
++  api.getGraphicPost.mockResolvedValueOnce({currentVersionId:'original-v1'}).mockResolvedValue({currentVersionId:'owner-already-v2'});
++  api.adoptResult.mockRejectedValueOnce(new Error('owner saved but wrapper response lost')).mockResolvedValueOnce({status:'adopted'});
++  api.getResult.mockResolvedValue({...bound,status:'adopted'});
++  const series={cards:pages,selectedCardId:'page-b',selectedCardIds:['page-b']};
++  const first=render(<GraphicPostResults {...props} series={series}/>);
++  const adopt=await screen.findByRole('button',{name:'采用到这一页'});await waitFor(()=>expect(adopt).toBeEnabled());fireEvent.click(adopt);
++  await screen.findByRole('alert');const original=api.adoptResult.mock.calls[0][0];first.unmount();
++  render(<GraphicPostResults {...props} currentVersionId="owner-already-v2" series={series}/>);
++  const recover=await screen.findByRole('button',{name:'采用到这一页'});await waitFor(()=>expect(recover).toBeEnabled());fireEvent.click(recover);
++  await waitFor(()=>expect(api.adoptResult).toHaveBeenCalledTimes(2));
++  expect(api.adoptResult.mock.calls[1][0]).toEqual(original);
++  expect(api.getGraphicPost).toHaveBeenCalledTimes(1);
++  await waitFor(()=>expect(props.onAdopt).toHaveBeenCalledOnce());
++ });
++ it('明确409保留候选；remount重新确认可以按新当前版本创建新请求',async()=>{
++  const bound={...card,targetSectionId:'page-b',value:[{...image,cardId:'page-b'}]};
++  api.listResults.mockResolvedValue({items:[bound]});api.getGraphicPost.mockResolvedValueOnce({currentVersionId:'old-v1'}).mockResolvedValue({currentVersionId:'fresh-v2'});
++  api.adoptResult.mockRejectedValueOnce(Object.assign(new Error('conflict'),{status:409})).mockResolvedValueOnce({status:'adopted'});api.getResult.mockResolvedValue({...bound,status:'adopted'});
++  const series={cards:pages,selectedCardId:'page-b',selectedCardIds:['page-b']};
++  const first=render(<GraphicPostResults {...props} series={series}/>);const adopt=await screen.findByRole('button',{name:'采用到这一页'});await waitFor(()=>expect(adopt).toBeEnabled());fireEvent.click(adopt);await screen.findByRole('alert');
++  const original=api.adoptResult.mock.calls[0][0];first.unmount();
++  render(<GraphicPostResults {...props} series={series}/>);const again=await screen.findByRole('button',{name:'采用到这一页'});await waitFor(()=>expect(again).toBeEnabled());fireEvent.click(again);
++  await waitFor(()=>expect(api.adoptResult).toHaveBeenCalledTimes(2));
++  expect(api.adoptResult.mock.calls[1][0].body.expected.versionId).toBe('fresh-v2');
++  expect(api.adoptResult.mock.calls[1][0].body.clientRequestId).not.toBe(original.body.clientRequestId);
++ });
+  it('请求未知后用原请求和原目标恢复，不随新选区重新付费',async()=>{
+   api.createBundle.mockRejectedValueOnce(new Error('connection lost')).mockResolvedValueOnce({bundleId:'recovered',status:'complete',items:[]});
+   const {rerender}=render(<GraphicPostResults {...props} series={{cards:pages,selectedCardId:'page-b',selectedCardIds:['page-a','page-b']}}/>);

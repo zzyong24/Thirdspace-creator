@@ -63,3 +63,29 @@ it.each([401,402,403,404,429,503])("原视频查询 HTTP %s 只对瞬态故障�
  await expect(work).rejects.toMatchObject({outcome:"unknown_result",errorCode:[429,503].includes(status)?"ASSET_RECONCILE_RETRYABLE":"ASSET_RESULT_UNKNOWN",retryAfterMs:[429,503].includes(status)?120000:undefined});
  expect(seen).not.toContain("startAssetCall");
 });
+it("参考图按冻结版本在启动前读取，字节交给图片适配器",async()=>{
+ const seen:string[]=[],refBytes=new Uint8Array([9,8,7]);
+ const referenced={...input,mode:"image_to_image" as const,capability:"image.edit" as const,reference:{assetId:"reference",fileId:"version-1",checksum:"a".repeat(64),mimeType:"image/png"}};
+ await runAssetInWorker(referenced,new AbortController().signal,async(port)=>{
+  seen.push(port);
+  if(port==="reserveAssetCall")return {callId:"call",status:"reserved"};
+  if(port==="resolveAssetCredential")return {provider:"openai",model:"image",baseUrl:null,kind:"image",token:"secret"};
+  if(port==="readAssetReference")return {bytes:refBytes,mimeType:"image/png"};
+  if(port==="startAssetCall")return {callId:"call",status:"started"};
+  if(port==="saveAssetResult")return receipt;
+  throw Error("unexpected");
+ },async(_input,_spec,_signal,options)=>{expect(options.referenceImage).toEqual({bytes:refBytes,mimeType:"image/png"});seen.push("generate");return {assetBytes:new Uint8Array([1,2,3])};});
+ expect(seen.indexOf("readAssetReference")).toBeLessThan(seen.indexOf("startAssetCall"));
+});
+it("参考图不可读时不启动供应商，也不降级为文生图",async()=>{
+ const seen:string[]=[],generate=vi.fn();
+ const referenced={...input,mode:"image_to_image" as const,capability:"image.edit" as const,reference:{assetId:"reference",fileId:"version-1",checksum:"a".repeat(64),mimeType:"image/png"}};
+ await expect(runAssetInWorker(referenced,new AbortController().signal,async(port)=>{
+  seen.push(port);
+  if(port==="reserveAssetCall")return {callId:"call",status:"reserved"};
+  if(port==="resolveAssetCredential")return {provider:"openai",model:"image",baseUrl:null,kind:"image",token:"secret"};
+  if(port==="readAssetReference")throw new Error("参考版本丢失");
+  throw Error("unexpected");
+ },generate)).rejects.toThrow("参考版本丢失");
+ expect(seen).not.toContain("startAssetCall");expect(generate).not.toHaveBeenCalled();
+});

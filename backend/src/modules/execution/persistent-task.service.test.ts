@@ -289,6 +289,15 @@ describe("T-482 持久执行任务状态机", () => {
         idempotencyKey: "retry-1",
       });
       expect(retried?.status).toBe("queued");
+      const retryInput={taskIds:[failedTask.id],command:"retry" as const,idempotencyKey:"retry-1"};
+      expect(await service.command(ctxA,retryInput)).toEqual([retried]);
+      await expect(service.command(ctxA,{...retryInput,command:"cancel"})).rejects.toMatchObject({name:"ConflictError"});
+      const secondClaim=await service.claimNext({workerId:"worker-a",leaseSeconds:30});
+      if(!secondClaim||secondClaim.task.id!==failedTask.id)throw Error("重试原任务未被领取");
+      await service.finish({taskId:failedTask.id,workerId:"worker-a",attempt:secondClaim.task.attempt,status:"failed",errorCode:"UPSTREAM_TIMEOUT",errorMessage:"再次超时"});
+      expect(await service.command(ctxA,retryInput)).toEqual([retried]);
+      expect((await service.get(ctxA,failedTask.id)).status).toBe("failed");
+      await expect(service.command(ctxB,retryInput)).rejects.toMatchObject({name:"OwnershipError"});
     } finally {
       await client.close();
     }

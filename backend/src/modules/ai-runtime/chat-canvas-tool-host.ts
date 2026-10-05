@@ -17,7 +17,7 @@ export function createChatCanvasToolHost(reader:Read,ports:{
   const restored=structuredClone(await reader.read({...execution}));
   if(!ctx.accountId||restored.context.userId!==ctx.userId||restored.context.accountId!==ctx.accountId)throw new Error("画布工具账号与任务不符");
   const selection=restored.hostContext.chatContext.selection;
-  const canvasId=restored.hostContext.chatContext.surface==="canvas"&&selection?.kind==="canvas"?selection.ids[0]:null;
+  const canvasId=restored.hostContext.chatContext.surface==="canvas"&&selection?.kind==="canvas"&&selection.ids.length===1?selection.ids[0]:null;
   const definitions=restored.modelInput.tools.filter(tool=>tool.name==="canvas.read"||tool.name==="canvas.propose");
   if(!definitions.length)return {};
   if(!canvasId)throw new Error("画布工具缺少受信对话定位");

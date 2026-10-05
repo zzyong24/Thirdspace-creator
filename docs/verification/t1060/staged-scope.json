@@ -1,0 +1,26 @@
+{
+  "associated_prerequisites": "原 Codex 预检、旧任务兼容、服务端回执、设置与状态接线",
+  "excluded_work": "文章/画布/ASR/激活/发布旧 WIP",
+  "source_count": 196,
+  "mixed_file_overlays": [
+    "pnpm-lock.yaml",
+    "BACKLOG.md",
+    "ai-worker/package.json",
+    "orchestrator/review-events.ndjson",
+    "orchestrator/events.ndjson",
+    "orchestrator/DECISION_LOG.md",
+    "orchestrator/COMPLEXITY_LEDGER.json",
+    "orchestrator/SCOPE_LEDGER.md",
+    "orchestrator/progress.json",
+    "orchestrator/process/modules.config.json",
+    "ai-worker/src/execution/worker-entry.ts",
+    "ai-worker/src/execution/worker-runtime.ts",
+    "backend/src/modules/ai-runtime/chat-production-composition.ts",
+    "backend/src/modules/ai-runtime/index.ts",
+    "backend/src/modules/execution/worker-supervisor.ts",
+    "backend/src/modules/execution/model-worker-dispatcher.ts",
+    "frontend/src/server/persistence-client.ts",
+    "frontend/src/features/copilot/ai-copilot-content.tsx",
+    "contract/src/internal/execution-worker.ts"
+  ]
+}

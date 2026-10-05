@@ -1,0 +1,88 @@
+{
+  "failures": [],
+  "steps": [
+    "network: deny —— 平台无 OS 级网络沙箱,降级执行:executor 声明不出网 + 子进程 env 收窄(密钥/DB/S3 配置不进沙箱进程树)",
+    "建沙箱 workspaces/actual-rough-render/",
+    "物化输入 3 项(只读)",
+    "执行 video.render(无固定总超时，可由用户取消)",
+    "检测工具链(ffmpeg/ffprobe/Chromium)",
+    "准备 main-16477688c0e00699c6cfa4497a3612d7e83c532062b64b250fed8908128ed548.mp4(h264 2.0s → 高质量 mezzanine)",
+    "准备 main-b1f51a511f1da0cd348b8f8598db32e61cb963e5fc69e2b41485bf99590ed75a.mp4(h264 2.0s → 高质量 mezzanine)",
+    "准备 main-5858997e6ce759c6f19768ac9c9fc20f1cacdc3962004594804df899007712c6.mp4(h264 2.0s → 高质量 mezzanine)",
+    "生成合成模板 index.html",
+    "检查主画面可读面积与人物遮挡安全区",
+    "HyperFrames 高质量渲染(320x180/24fps,4000kbps,1.5s)",
+    "icrosoft YaHei, PingFang SC Mapped fonts: andale mono → jetbrains-mono, archivo black → archivo-black, arial black → montserrat, arial → inter, avenir next → inter, avenir → inter, bebas neue → league-gothic, book antiqua → eb-garamond, calibri → inter, cambria → eb-garamond, candara → inter, consolas → jetbrains-mono, corbel → inter, courier new → jetbrains-mono, courier → jetbrains-mono, dejavu sans mono → jetbrains-mono, dejavu sans → inter, dejavu serif → eb-garamond, din alternate → montserrat, eb garamond → eb-garamond, futura → montserrat, garamond → eb-garamond, geneva → inter, georgia → eb-garamond, helvetica bold → inter, helvetica neue → inter, helvetica → inter, ibm plex mono → ibm-plex-mono, inter, jetbrains mono → jetbrains-mono, lato, league gothic → league-gothic, liberation mono → jetbrains-mono, liberation sans → inter, liberation serif → eb-garamond, lucida console → jetbrains-mono, lucida grande → inter, lucida sans typewriter → jetbrains-mono, lucida sans unicode → inter, lucida sans → inter, menlo → jetbrains-mono, monaco → jetbrains-mono, montserrat, noto sans japanese → noto-sans-jp, noto sans jp → noto-sans-jp, noto sans → inter, nunito, open sans → open-sans, optima → inter, oswald, outfit, palatino linotype → eb-garamond, palatino → eb-garamond, playfair display → playfair-display, poppins, roboto, segoe ui → roboto, sf mono → jetbrains-mono, sf pro display → inter, sf pro rounded → inter, sf pro text → inter, sf pro → inter, source code pro → source-code-pro, space mono → space-mono, tahoma → inter, times new roman → eb-garamond, times → eb-garamond, trebuchet ms → inter, verdana → inter To fix, pick one: 1. Use a mapped font name instead (see list above) 2. Add a @font-face block in your HTML with a local or hosted font file 3. Install the font locally on the render machine (Docker: add to Dockerfile) 4. Add an alias to FONT_ALIAS_MAP in packages/core/src/fonts/aliases.ts (for contributors) Docs: https://hyperframes.heygen.com/docs/fonts",
+    "[INFO] Compiled composition metadata {\"entryFile\":\"index.html\",\"staticDuration\":1.5,\"width\":320,\"height\":180,\"videoCount\":3,\"audioCount\":3,\"renderModeHints\":{\"recommendScreenshot\":false,\"reasons\":[]}}",
+    "[INFO] [Render:trace] {\"renderJobId\":\"2ee1e998-3ad7-4e7a-8705-6ae8ac39cb71\",\"phase\":\"compile\",\"status\":\"checkpoint\",\"elapsedMs\":7462,\"message\":\"composition metadata resolved\",\"width\":320,\"height\":180,\"videoCount\":3,\"audioCount\":3,\"imageCount\":0,\"deviceScaleFactor\":1,\"forceScreenshot\":false,\"compositionHash\":\"37dd5ab3f90b5cac\"}",
+    "\u001b[2K █████░░░░░░░░░░░░░░░░░░░░ 20% Processing audio tracks",
+    "[INFO] [Render:trace] {\"renderJobId\":\"2ee1e998-3ad7-4e7a-8705-6ae8ac39cb71\",\"phase\":\"audio_process\",\"status\":\"start\",\"elapsedMs\":7645,\"audioCount\":3}",
+    "[INFO] [Render:trace] {\"renderJobId\":\"2ee1e998-3ad7-4e7a-8705-6ae8ac39cb71\",\"phase\":\"audio_process\",\"status\":\"end\",\"elapsedMs\":7778,\"durationMs\":133,\"audioCount\":3}",
+    "[WARN] [Render] Audio mix failed — output will be video-only: FFmpeg exited with code 8",
+    "[WARN] [Render] drawElement blank-frame suspect; re-capturing {\"frame\":12,\"bytes\":1122,\"floor\":20000}",
+    "[INFO] [Render:trace] {\"renderJobId\":\"2ee1e998-3ad7-4e7a-8705-6ae8ac39cb71\",\"phase\":\"assemble\",\"status\":\"start\",\"elapsedMs\":22823,\"hasAudio\":false,\"workerCount\":1,\"forceScreenshot\":false,\"totalFrames\":36,\"framesCompleted\":36,\"captureMode\":\"drawelement\",\"captureOperation\":\"encode\"}",
+    "[INFO] [Render:trace] {\"renderJobId\":\"2ee1e998-3ad7-4e7a-8705-6ae8ac39cb71\",\"phase\":\"assemble\",\"status\":\"end\",\"elapsedMs\":22929,\"durationMs\":106,\"hasAudio\":false,\"workerCount\":1,\"forceScreenshot\":false,\"totalFrames\":36,\"framesCompleted\":36,\"captureMode\":\"drawelement\",\"captureOperation\":\"encode\"}",
+    "交付文件无损整理(stream copy + faststart)",
+    "校验正式成片(codec/尺寸/fps/色彩/码率)",
+    "成片可用，平均码率 8kbps 低于建议值 2000kbps；已保留成片并记录质量提醒",
+    "收割产物清单",
+    "完成:1 个产物待确认"
+  ],
+  "manifest": {
+    "taskType": "video.render",
+    "artifacts": [
+      {
+        "path": "final.mp4",
+        "fileName": "final.mp4",
+        "size": 37256,
+        "mimeType": "video/mp4"
+      }
+    ],
+    "summary": "成片 final.mp4(1.5s,320x180/24fps,1 场景)",
+    "meta": {
+      "durationSec": 1.5,
+      "sceneCount": 1,
+      "brollCount": 0,
+      "captionCount": 0,
+      "inputPreparation": [
+        {
+          "file": "main-16477688c0e00699c6cfa4497a3612d7e83c532062b64b250fed8908128ed548.mp4",
+          "sourceCodec": "h264",
+          "strategy": "mezzanine"
+        },
+        {
+          "file": "main-b1f51a511f1da0cd348b8f8598db32e61cb963e5fc69e2b41485bf99590ed75a.mp4",
+          "sourceCodec": "h264",
+          "strategy": "mezzanine"
+        },
+        {
+          "file": "main-5858997e6ce759c6f19768ac9c9fc20f1cacdc3962004594804df899007712c6.mp4",
+          "sourceCodec": "h264",
+          "strategy": "mezzanine"
+        }
+      ],
+      "deliveryQuality": {
+        "targetKbps": 4000,
+        "minimumKbps": 2000,
+        "actualKbps": 8,
+        "status": "warning",
+        "warningCode": "BITRATE_BELOW_RECOMMENDED",
+        "codec": "h264",
+        "profile": "High",
+        "width": 320,
+        "height": 180,
+        "fps": 24,
+        "pixFmt": "yuv420p",
+        "colorSpace": "bt709",
+        "colorPrimaries": "bt709",
+        "colorTransfer": "bt709",
+        "durationSec": 1.5
+      },
+      "visualReview": {
+        "status": "skipped",
+        "summary": "未配置视觉模型，已完成确定性布局与遮挡校验。",
+        "issues": []
+      }
+    }
+  }
+}

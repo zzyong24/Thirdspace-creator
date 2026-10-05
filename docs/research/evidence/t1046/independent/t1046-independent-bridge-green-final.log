@@ -1,0 +1,13 @@
+bun test v1.4.0 (34cbb9a40)
+
+src/embedded/__tests__/independent-native-bridge.test.ts:
+(pass) independent bridge: unknown audio property edit is protected by full beforeTracks, not only visible main state [14.06ms]
+(pass) independent bridge: duplicate in-flight retries command exactly once; Undo cannot be undone by retry ack [2.99ms]
+(pass) independent bridge: same request changing after audio field is rejected even when before/main are identical [0.78ms]
+(pass) independent bridge: apply to saved A while active B, B later edit survives A Undo/Redo and preserves active scene/playhead [0.66ms]
+(pass) independent bridge protocol: apply-tracks from another origin/window/session cannot enter execution queue [0.07ms]
+
+ 5 pass
+ 0 fail
+ 26 expect() calls
+Ran 5 tests across 1 file. [450.00ms]

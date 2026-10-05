@@ -1,0 +1,15 @@
+✔ 按依赖图复制并复用同版本包，缺必需包仍失败 (14.6185ms)
+✔ T1060 两条打包入口保留 ACP 安全文件包与 Codex 平台依赖 (2.042667ms)
+✔ T1060 分层物化识别已声明的 Codex npm alias 并保留 Windows 二进制和 fs-safe binding (9.190417ms)
+✔ T1060 Codex alias 仅接纳精确声明、实际名称版本和目标平台 (21.433583ms)
+✔ T1060 不接纳未声明的通用 npm alias (2.810208ms)
+✔ T1060 普通闭包从真实同名平台包中只选择精确版本和目标 (4.4735ms)
+✔ T1060 原生字节校验允许已存在vendor层，缺失或空字节明确失败 (6.729125ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 222.077125

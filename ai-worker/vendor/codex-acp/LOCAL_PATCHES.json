@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "files": [
+    {
+      "path": "src/CodexAcpClient.ts",
+      "upstreamSha256": "5315c083f0d75340574e808d93775081673616deda907ae14c360b66301afabe",
+      "currentSha256": "c7a7bc5d3ad2700309ea8fea69bc2a73c26b28f94ee02e66b66bfcb3950c91e6",
+      "reason": "CreatorOS权限/回执/CJS宿主兼容"
+    },
+    {
+      "path": "src/CodexAcpServer.ts",
+      "upstreamSha256": "e8f907106e3e4f975eb9d8b9085e0b02844767ab21c317e0f2dba134f5e280a0",
+      "currentSha256": "99f5480d60c67a04e0fa12863a268da7a0550090719f532cbde86a35a16ce664",
+      "reason": "CreatorOS权限/回执/CJS宿主兼容"
+    },
+    {
+      "path": "src/CodexCli.ts",
+      "upstreamSha256": "7eb720413f4207b6e805a8acbfd16d4012efccb94fdf32e6bf984594d1778247",
+      "currentSha256": "c1da0a84f6904a6708f42c4ff659cdb7b6366559582d67983c10d8782fa66937",
+      "reason": "CreatorOS权限/回执/CJS宿主兼容"
+    },
+    {
+      "path": "src/CodexEventHandler.ts",
+      "upstreamSha256": "46bd2098d039bcef76a2353d0f5f9786c2b8b62dd88bacb34c3cb478b3f95c02",
+      "currentSha256": "cbadda667a9e4f1d50230bc80a90700ece50d95dbac264240434db5c1714a28b",
+      "reason": "CreatorOS权限/回执/CJS宿主兼容"
+    },
+    {
+      "path": "src/CodexJsonRpcConnection.ts",
+      "upstreamSha256": "47a2aedbe704b49b850cc61ec29c3653b4d7282a703ca71905e085edb2048529",
+      "currentSha256": "0a22f5aedc255d783339ed7ae871efd4f48b0c8fe739d0fea32a92c011f4569c",
+      "reason": "CreatorOS权限/回执/CJS宿主兼容"
+    },
+    {
+      "path": "src/CreatorOsPolicy.ts",
+      "upstreamSha256": null,
+      "currentSha256": "2b8b41c5eca3f89b56108cef94ce9c422cd05dd7a0ff693f961ed17698c2ec00",
+      "reason": "CreatorOS冻结v1/v2权限；复用Codex 0.159.3 direct_only_tool_namespaces与原ACP单次审批，实际配置精确核验"
+    },
+    {
+      "path": "src/StdUtils.ts",
+      "upstreamSha256": "f668306225aa91c61c6128f7eb1dba3a7079a9cf9d712fc092a91394f61d9689",
+      "currentSha256": "faef09eb3847c9b1e281e2b9e347c8b9a0556d0ba6a03f58008781df2d6e8a62",
+      "reason": "CreatorOS权限/回执/CJS宿主兼容"
+    },
+    {
+      "path": "src/index.ts",
+      "upstreamSha256": "c9cddb3bd3bb653079785debde08991d521cf68e8eded15586b05681280d4693",
+      "currentSha256": "2d4af61b0f5a966b7fad11934d3075c1844d4c66f05aa17cde62284e5de61e1c",
+      "reason": "CreatorOS权限/回执/CJS宿主兼容"
+    }
+  ],
+  "notes": "原许可与固定上游摘要保留。app-server生成类型只用于上游完整类型检查，当前构建取运行闭包，不宣称适配器完整tsc已通过。 v2直接工具配置复用 openai/codex@01fc69f4026735edfdf6789820549727a4867b11 features/src/feature_configs.rs、core/tools/spec_plan.rs；来源摘要见 docs/verification/t1060/real-ai/upstream-direct-namespace-sources.json。"
+}

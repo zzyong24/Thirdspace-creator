@@ -1,0 +1,77 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/ai-worker
+
+ ❯ src/execution/codex-acp-policy.test.ts (9 tests | 2 failed) 19ms
+   × v2 沿锁版联合表只开放图片和当前任务，实际 config/read 必须精确相等 4ms (retry x2)
+   × v2 声明只与原唯一任务 MCP 匹配，argv 不得沿旧布尔值或额外允许项 1ms (retry x2)
+ ❯ src/execution/external-chat-binding.test.ts (2 tests | 1 failed) 10ms
+   × 新绑定纳入冻结载荷，旧载荷仍保留缺字段而不套默认 7ms (retry x2)
+ ❯ src/execution/codex-acp-host.test.ts (4 tests | 1 failed) 498ms
+   × v2 仅许可同一会话真实 MCP start 关联的冻结工具一次；旧 v1 和缺关联继续取消 8ms (retry x2)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/execution/codex-acp-host.test.ts > v2 仅许可同一会话真实 MCP start 关联的冻结工具一次；旧 v1 和缺关联继续取消
+ FAIL  src/execution/codex-acp-host.test.ts > v2 仅许可同一会话真实 MCP start 关联的冻结工具一次；旧 v1 和缺关联继续取消
+ FAIL  src/execution/codex-acp-host.test.ts > v2 仅许可同一会话真实 MCP start 关联的冻结工具一次；旧 v1 和缺关联继续取消
+TypeError: host.createCodexAcpPermissions is not a function
+ ❯ make src/execution/codex-acp-host.test.ts:35:57
+
+ ❯ src/execution/codex-acp-host.test.ts:38:14
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/12]⎯
+
+ FAIL  src/execution/codex-acp-policy.test.ts > v2 沿锁版联合表只开放图片和当前任务，实际 config/read 必须精确相等
+ FAIL  src/execution/codex-acp-policy.test.ts > v2 沿锁版联合表只开放图片和当前任务，实际 config/read 必须精确相等
+ FAIL  src/execution/codex-acp-policy.test.ts > v2 沿锁版联合表只开放图片和当前任务，实际 config/read 必须精确相等
+Error: CODEX_CAPABILITY_UNVERIFIED
+ ❯ unverified vendor/codex-acp/src/CreatorOsPolicy.ts:22:11
+     20| // SEMANTIC_BOUNDARY_ALLOW: 只核验固定权限、协议字段和宿主明确选择，不推断创作意图。
+     21| function unverified(): never {
+     22|     throw new Error("CODEX_CAPABILITY_UNVERIFIED");
+       |           ^
+     23| }
+     24| function record(value: unknown): ObjectValue {
+ ❯ Module.readCreatorOsPolicy vendor/codex-acp/src/CreatorOsPolicy.ts:57:88
+ ❯ src/execution/codex-acp-policy.test.ts:151:52
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/12]⎯
+
+ FAIL  src/execution/codex-acp-policy.test.ts > v2 声明只与原唯一任务 MCP 匹配，argv 不得沿旧布尔值或额外允许项
+ FAIL  src/execution/codex-acp-policy.test.ts > v2 声明只与原唯一任务 MCP 匹配，argv 不得沿旧布尔值或额外允许项
+ FAIL  src/execution/codex-acp-policy.test.ts > v2 声明只与原唯一任务 MCP 匹配，argv 不得沿旧布尔值或额外允许项
+Error: CODEX_CAPABILITY_UNVERIFIED
+ ❯ unverified vendor/codex-acp/src/CreatorOsPolicy.ts:22:11
+     20| // SEMANTIC_BOUNDARY_ALLOW: 只核验固定权限、协议字段和宿主明确选择，不推断创作意图。
+     21| function unverified(): never {
+     22|     throw new Error("CODEX_CAPABILITY_UNVERIFIED");
+       |           ^
+     23| }
+     24| function record(value: unknown): ObjectValue {
+ ❯ Module.readCreatorOsPolicy vendor/codex-acp/src/CreatorOsPolicy.ts:57:88
+ ❯ src/execution/codex-acp-policy.test.ts:166:48
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/12]⎯
+
+ FAIL  src/execution/external-chat-binding.test.ts > 新绑定纳入冻结载荷，旧载荷仍保留缺字段而不套默认
+ FAIL  src/execution/external-chat-binding.test.ts > 新绑定纳入冻结载荷，旧载荷仍保留缺字段而不套默认
+ FAIL  src/execution/external-chat-binding.test.ts > 新绑定纳入冻结载荷，旧载荷仍保留缺字段而不套默认
+AssertionError: expected 'creatoros-acp-readonly-v1' to be 'creatoros-acp-readonly-v2' // Object.is equality
+
+Expected: "creatoros-acp-readonly-v2"
+Received: "creatoros-acp-readonly-v1"
+
+ ❯ src/execution/external-chat-binding.test.ts:7:33
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/12]⎯
+
+
+ Test Files  3 failed (3)
+      Tests  4 failed | 11 passed (15)
+   Start at  19:52:58
+   Duration  772ms (transform 766ms, setup 0ms, import 885ms, tests 528ms, environment 0ms)
+
+undefined
+/Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/ai-worker:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/execution/codex-acp-policy.test.ts src/execution/codex-acp-host.test.ts src/execution/external-chat-binding.test.ts

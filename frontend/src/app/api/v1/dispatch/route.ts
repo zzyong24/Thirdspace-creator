@@ -14,6 +14,7 @@ import {
 import {
   compositeTransport,
   getCliInvocationService,
+  getReportingLocal,
 } from "@/server/persistence-client";
 import {
   AuthenticationError,
@@ -299,6 +300,13 @@ export function safeDispatchErrorDiagnostic(
   };
 }
 
+export function shouldCaptureDispatchFailure(operationId:string,err:unknown):boolean {
+  if(operationId.startsWith("settings.reporting."))return false;
+  const rawCode=(err as {code?:unknown}|null)?.code;
+  const mappedStatus=typeof rawCode==="string" && rawCode in ERROR_HTTP ? ERROR_HTTP[rawCode as ErrorCode] : null;
+  return mappedStatus===null || mappedStatus>=500;
+}
+
 export async function POST(req: Request): Promise<Response> {
   // [RT-H01] 有副作用的 RPC 入口:先挡非本机/跨站请求(DNS rebinding + CSRF)。
   if (!isTrustedLocalRequest(req)) return loopbackForbidden();
@@ -459,6 +467,11 @@ export async function POST(req: Request): Promise<Response> {
       "[CreatorOS] DISPATCH_FAILED",
       JSON.stringify(safeDispatchErrorDiagnostic(id, err)),
     );
+    if (shouldCaptureDispatchFailure(id,err)) {
+      void getReportingLocal()
+        .then(reporting=>reporting.captureDiagnostic(ctx,"operation_failed",ctx.requestId,new Date().toISOString(),id))
+        .catch(()=>undefined);
+    }
     return dispatchErrorResponse(err);
   }
 }

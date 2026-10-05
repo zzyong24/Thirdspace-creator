@@ -1,7 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ENDPOINTS } from "@creatoros/contract";
 
-import { runCliCommand } from "../src/cli";
+import { runCliCommand, serveMcpStdio } from "../src/cli";
+import { EventEmitter } from "node:events";
 
 describe("T-843 creatoros CLI", () => {
   const originalBaseUrl = process.env.CREATOROS_BASE_URL;
@@ -258,4 +259,61 @@ describe("T-843 creatoros CLI", () => {
       ["acct-c", "create-acct-c"],
     ]);
   });
+});
+
+
+describe("T-1060 MCP stdio lifecycle", () => {
+  it.each(["end", "SIGINT", "SIGTERM"])("%s closes only the local MCP server exactly once", async (event) => {
+    const input = new EventEmitter();
+    const signals = new EventEmitter();
+    const server = { connect: vi.fn().mockResolvedValue(undefined), close: vi.fn().mockResolvedValue(undefined) };
+    const transport = {};
+    const waiting = serveMcpStdio(server, transport, input, signals);
+    await Promise.resolve();
+    (event === "end" ? input : signals).emit(event);
+    input.emit("end");
+    signals.emit("SIGINT");
+    signals.emit("SIGTERM");
+    await waiting;
+    expect(server.connect).toHaveBeenCalledWith(transport);
+    expect(server.close).toHaveBeenCalledTimes(1);
+    expect(input.listenerCount("end")).toBe(0);
+    expect(signals.listenerCount("SIGINT")).toBe(0);
+    expect(signals.listenerCount("SIGTERM")).toBe(0);
+  });
+
+  it("connect failure releases owned listeners and local server without pretending ready", async () => {
+    const input = new EventEmitter();
+    const signals = new EventEmitter();
+    const server = { connect: vi.fn().mockRejectedValue(new Error("connect rejected")), close: vi.fn().mockResolvedValue(undefined) };
+    await expect(serveMcpStdio(server, {}, input, signals)).rejects.toThrow("connect rejected");
+    expect(server.close).toHaveBeenCalledTimes(1);
+    expect(input.listenerCount("end")).toBe(0);
+    expect(signals.listenerCount("SIGTERM")).toBe(0);
+  });
+
+  it("close failure is reported and does not leave listeners or repeat close", async () => {
+    const input = new EventEmitter();
+    const signals = new EventEmitter();
+    const server = { connect: vi.fn().mockResolvedValue(undefined), close: vi.fn().mockRejectedValue(new Error("close rejected")) };
+    const waiting = serveMcpStdio(server, {}, input, signals);
+    const result = expect(waiting).rejects.toThrow("close rejected");
+    await Promise.resolve();
+    input.emit("end");
+    await result;
+    expect(server.close).toHaveBeenCalledTimes(1);
+    expect(signals.listenerCount("SIGINT")).toBe(0);
+  });
+});
+
+
+it("T-1060 stdio EOF releases a transport that is still connecting", async () => {
+  const input = new EventEmitter();
+  const signals = new EventEmitter();
+  const server = { connect: vi.fn(() => new Promise<void>(() => {})), close: vi.fn().mockResolvedValue(undefined) };
+  const waiting = serveMcpStdio(server, {}, input, signals);
+  input.emit("end");
+  await waiting;
+  expect(server.close).toHaveBeenCalledTimes(1);
+  expect(signals.listenerCount("SIGTERM")).toBe(0);
 });

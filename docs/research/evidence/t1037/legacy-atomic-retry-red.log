@@ -1,0 +1,27 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/backend
+
+ ❯ src/modules/production/production-editor.integration.test.ts (9 tests | 1 failed) 8240ms
+     × 旧 PUT 非法状态失败零写入，旧删除丢失回执可恢复同一版本 863ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/production/production-editor.integration.test.ts > T-1037 公共制作工程与持久版本 > 旧 PUT 非法状态失败零写入，旧删除丢失回执可恢复同一版本
+ConflictError: 分镜已被其他操作更新，请刷新后再删除，避免覆盖较新的剪辑方案
+ ❯ Object.removeEditingPlanBroll src/modules/production/production.service.ts:369:15
+    367|       if(plan.editorVersion===1)throw new ConflictError("请在工作台选中要移除的片段…
+    368|       if (plan.revision !== body.expectedRevision) {
+    369|         throw new ConflictError(
+       |               ^
+    370|           "分镜已被其他操作更新，请刷新后再删除，避免覆盖较新的剪辑方案",
+    371|         );
+ ❯ src/modules/production/production-editor.integration.test.ts:75:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 8 passed (9)
+   Start at  19:11:42
+   Duration  9.58s (transform 569ms, setup 0ms, import 1.18s, tests 8.24s, environment 0ms)
+

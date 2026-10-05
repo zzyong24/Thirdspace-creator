@@ -84,6 +84,9 @@ vi.mock("next/navigation", () => ({
 // ---------------------------------------------------------------------------
 
 const mockClient = {
+  getAccount: vi.fn(async () => ({status: "active"})),
+  getPreferences: vi.fn<() => Promise<{defaultCreationMode?: string}>>(async () => ({})),
+  createOutput: vi.fn(async ({body}: {body: {title:string; contentType?:string}}) => ({id:"output-mock-1",projectId:"project-mock-1",title:body.title,contentType:body.contentType ?? "video"})),
   createProject: vi.fn(async ({ body }: { body: { title: string } }) => ({
     id: "project-mock-1",
     title: body.title,
@@ -93,6 +96,9 @@ const mockClient = {
 
 vi.mock("@/lib/contract-client", () => ({
   client: {
+    getAccount: () => mockClient.getAccount(),
+    getPreferences: () => mockClient.getPreferences(),
+    createOutput: (input: {body:{title:string;contentType?:string}}) => mockClient.createOutput(input),
     createProject: (input: { body: { title: string } }) =>
       mockClient.createProject(input),
   },
@@ -169,7 +175,9 @@ async function importNewProjectDialog() {
 
 beforeEach(() => {
   resetNext();
+  mockClient.getPreferences.mockReset().mockResolvedValue({});
   mockClient.createProject.mockClear();
+  mockClient.createOutput.mockClear();
 });
 
 afterEach(() => {
@@ -468,6 +476,23 @@ describe("OverlayController", () => {
 // ---------------------------------------------------------------------------
 
 describe("NewProjectDialog (intercepting route shell)", () => {
+  it("移除无效模式偏好读取，保留主题、描述和多选形式", async () => {
+    resetNext({pathname: "/projects/new"});
+    const {NewProjectDialog} = await importNewProjectDialog();
+    render(<NewProjectDialog />);
+    const user = userEvent.setup();
+    await user.type(screen.getByLabelText(/作品主题/), "已经填写的主题");
+    await user.type(screen.getByLabelText("一句话描述"), "需要保留的资料");
+    await user.click(screen.getByLabelText(/图文/));
+    await user.selectOptions(screen.getByLabelText("发布目标"), "xiaohongshu");
+    expect(mockClient.getPreferences).not.toHaveBeenCalled();
+    expect(screen.getByLabelText(/作品主题/)).toHaveValue("已经填写的主题");
+    expect(screen.getByLabelText("一句话描述")).toHaveValue("需要保留的资料");
+    expect(screen.getByLabelText(/图文/)).toBeChecked();
+    expect(screen.getByLabelText(/视频/)).toBeChecked();
+    expect(screen.queryByText(/横屏|竖屏|创作模式/)).not.toBeInTheDocument();
+  });
+
   it("renders the dialog shell above the page content", async () => {
     // The dialog renders only on its own route (/projects/new); that is the
     // route the @modal slot mounts it under.
@@ -501,12 +526,9 @@ describe("NewProjectDialog (intercepting route shell)", () => {
     render(<NewProjectDialog />);
 
     // Fill the required name field and submit (enterAfterCreate defaults true).
-    const name = screen.getByRole("textbox", { name: /项目名称/i });
+    const name = screen.getByRole("textbox", { name: /作品主题/i });
     await userEvent.type(name, "新选题");
-    // [T-293] 画幅改必填(无默认预选):先选画幅,创建按钮才启用。
-    const landscape = screen.getByRole("radio", { name: /横屏/i });
-    landscape.focus();
-    await userEvent.keyboard("{Enter}");
+    window.localStorage.setItem("creatoros:current-account", "account-test");
     const create = screen.getByRole("button", { name: /^创建$/ });
     await userEvent.click(create);
 
@@ -517,6 +539,9 @@ describe("NewProjectDialog (intercepting route shell)", () => {
     expect(mockClient.createProject.mock.calls[0]![0]).toMatchObject({
       body: { title: "新选题" },
     });
+    expect(mockClient.createOutput).toHaveBeenCalledWith(expect.objectContaining({
+      params:{projectId:"project-mock-1"}, body:expect.objectContaining({title:"新选题",contentType:"video",clientRequestId:expect.any(String)}),
+    }));
     // [T-055a] Navigation lands on the *returned* project id's draft
     // workbench (stage routes retired), not a slug guess derived from the name.
     await waitFor(() => {

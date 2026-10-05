@@ -16,6 +16,7 @@ export async function projectExecutionTasks(db:Db,ctx:RequestContext,rows:TaskRo
     const status:AITaskResource["status"]=execution.status==="failed" ? "failed" : execution.status==="cancelled" ? "cancelled" : ["succeeded","partial"].includes(execution.status) ? dto.status : ["queued","retry_wait"].includes(execution.status) ? "queued" : "running";
     return {...dto,status,executionTaskId:execution.id,runtimeStatus:execution.status,
       errorMessage:execution.lastErrorMessage ?? dto.errorMessage,
+      errorCode:execution.lastErrorCode,
     };
   });
 }

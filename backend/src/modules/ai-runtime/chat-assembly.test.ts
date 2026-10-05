@@ -1781,3 +1781,10 @@ it("T-957 账号覆写在原规则后追加偏好时，最终规则仍只保留�
  expect(assembled.system.endsWith(USER_FACING_RESPONSE_POLICY)).toBe(true);
  expect(assembled.system).toContain("用户偏好：简洁");
 });
+
+// 新Canvas工具不能扩散到原无Canvas的合法聊天。
+describe('Canvas 受信单画布范围',()=>{
+ it('原global/project工具不注册Canvas，普通material.generate仍在',async()=>{const {deps}=makeDeps();for(const input of [{surface:'global'},{surface:'project',projectId:'proj-1'}]){const actual=await prepareChatAssembly(ctx,input,deps);expect(Object.keys(actual.tools)).not.toContain('canvas.read');expect(Object.keys(actual.tools)).not.toContain('canvas.propose');expect(Object.keys(actual.tools)).toContain('material.generate');}});
+ it('真实单画布入口选原Canvas Skill且强制先读，再可propose',async()=>{const {deps}=makeDeps();const actual=await prepareChatAssembly(ctx,{surface:'canvas',selection:{kind:'canvas',ids:['actual-canvas'],label:'用户原画布'}},deps);expect(actual.skillId).toBe('chatbox.canvas');expect(actual.forcedTool).toBe('canvas.read');expect(Object.keys(actual.tools)).toContain('canvas.read');expect(Object.keys(actual.tools)).toContain('canvas.propose');});
+ it('多画布与错kind没有可编辑Canvas工具',async()=>{const {deps}=makeDeps();for(const selection of [{kind:'canvas',ids:['a','b']},{kind:'project',ids:['a']}]){const actual=await prepareChatAssembly(ctx,{surface:'canvas',selection},deps);expect(Object.keys(actual.tools)).not.toContain('canvas.read');expect(Object.keys(actual.tools)).not.toContain('canvas.propose');expect(actual.forcedTool).not.toBe('canvas.read');}});
+});

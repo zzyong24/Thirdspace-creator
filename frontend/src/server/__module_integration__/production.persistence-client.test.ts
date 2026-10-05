@@ -65,7 +65,7 @@ describe("production ops registered in the composite transport", () => {
       ).rejects.toThrow();
     }
     // 素材包导出、剪辑方案确认与 B-roll 原子删除均已进入 production 持久化注册表。
-    expect(PRODUCTION_OP_IDS).toHaveLength(9);
+    expect(PRODUCTION_OP_IDS).toHaveLength(18);
   });
 
   it("get → put → segment → export → complete round-trips over the shared store", async () => {

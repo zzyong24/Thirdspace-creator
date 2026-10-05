@@ -1,0 +1,33 @@
+
+ RUN  v4.1.8 /private/tmp/t1048-backend-work/backend
+
+ ❯ src/modules/creative-results/graphic-series-media.test.ts (7 tests | 1 failed) 12ms
+   × 旧历史带孤立cardId的图片保留原位置，不冒充当前规划页 5ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/creative-results/graphic-series-media.test.ts > 旧历史带孤立cardId的图片保留原位置，不冒充当前规划页
+AssertionError: expected [ 'new-one', 'legacy', undefined ] to deeply equal [ Array(3) ]
+
+- Expected
++ Received
+
+  [
+-   "orphan-legacy",
+-   "legacy",
+    "new-one",
++   "legacy",
++   undefined,
+  ]
+
+ ❯ src/modules/creative-results/graphic-series-media.test.ts:36:58
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 6 passed (7)
+   Start at  03:47:18
+   Duration  1.35s (transform 666ms, setup 0ms, import 1.17s, tests 12ms, environment 0ms)
+

@@ -1,0 +1,2791 @@
+{
+  "schema": "complexity-ledger/v1",
+  "entries": [
+    {
+      "task_id": "T-915",
+      "files": [
+        "ai-worker/src/execution/worker-entry.ts"
+      ],
+      "file_sha256": "69d20c1bc07cca8145f357fc8aa13b94a332860e0dcf91b112434fc4b4e988dc",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "DEC-RUNTIME-055 已批准的持久 Worker、正式聊天和封面执行接线；本轮按用户授权删除旧实现并拆分装配，不新增执行权或数据归属。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "ai-worker/src/execution/worker-runtime.ts"
+      ],
+      "file_sha256": "a863a478e8dea9bf45c12d0127edca9ed2f217792dc4603c6eec5d97acba3312",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "DEC-RUNTIME-055 已批准的持久 Worker、正式聊天和封面执行接线；本轮按用户授权删除旧实现并拆分装配，不新增执行权或数据归属。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "ai-worker/src/runtime/ffmpeg-path.test.ts"
+      ],
+      "file_sha256": "9e5db8af74cc762c4faaf977170f4a9dae38e8e396ef325384d8a644570a55e1",
+      "categories": [
+        "native_executable"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "ai-worker/src/runtime/ffmpeg-path.ts"
+      ],
+      "file_sha256": "0886643930e7f4f172e1062d7eda93926f7a763fa779d4de2573c7aba1c2d8c1",
+      "categories": [
+        "language_toolchain",
+        "native_executable"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "backend/scripts/migrate-model-secrets.ts"
+      ],
+      "file_sha256": "d9a90674f4a39f22c9d0a40f58057a541f3655d36e4e8de5d8af6b4e0f612761",
+      "categories": [
+        "credential_store"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "backend/src/errors.ts"
+      ],
+      "file_sha256": "f5e3c0e280e5f5fcce732753fd105abb8b18c3c25acb8daa980b51be01f1f325",
+      "categories": [
+        "native_executable"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "backend/src/index.ts"
+      ],
+      "file_sha256": "1bc0f53266d88bc5cceb37617194a15ea1a88e55a76cff31d85c7406c6a38b5e",
+      "categories": [
+        "credential_store"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "DEC-RUNTIME-055 已确认流式输出经统一 Worker 事件适配。本批复用执行调用账本、租约和私有 IPC 保存展示事件，不赋予流事件执行终态或领域写入权。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "backend/src/modules/ai/ai.repository.ts"
+      ],
+      "file_sha256": "dc6c41fe3c3553e13cc857acd62b221ca1902f6e070c155880945f8f7005f85a",
+      "categories": [
+        "native_executable"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "DEC-RUNTIME-055确认的知识/素材标签候选原子采纳与映射任务取消CAS；独立复核已通过，工具stage与完整T915仍未验收。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。",
+      "prior_file_sha256": "c5fb71547a85c96c2f418b3ac5ea306147a9490fccc3880bcf62ddf736fd18b9"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "backend/src/modules/ai/ai.service.test.ts"
+      ],
+      "file_sha256": "0432d5be896b39a77d9532dc508099551a36945de9a845573aa1b97375eb4fb6",
+      "categories": [
+        "native_executable"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "backend/src/modules/ai/ai.service.ts"
+      ],
+      "file_sha256": "b95e9135fabd086c9e5104d5a1e4c6248891c3a515dd7d15f4e232c3fcd2feae",
+      "categories": [
+        "native_executable"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "DEC-RUNTIME-055 已批准的执行迁移范围：映射素材采纳和取消改经同事务服务；组合根复用既有项目链接端口，不新增进程、凭据保管或工具链。证据见 asset-adoption.md。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "backend/src/modules/ai-runtime/local-env-probe.ts"
+      ],
+      "file_sha256": "c591788a502e1c0bce9ac30acaf8504950fb41b90f41c83f1ae7c8a238e67089",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "backend/src/modules/ai-runtime/local-read-security.test.ts"
+      ],
+      "file_sha256": "8462165cf602acaf00ad04aba540ec712c3cd1223d8e9c419be9df4a3f794ebb",
+      "categories": [
+        "credential_store"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "backend/src/modules/ai-runtime/local-read-security.ts"
+      ],
+      "file_sha256": "336c2e3c6a37fd6bfc8fff367db93a2197282581dc29e828f671206529064b48",
+      "categories": [
+        "credential_store"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "backend/src/modules/ai-runtime/remote-prompt-bundle.ts"
+      ],
+      "file_sha256": "6d4889471063f11d6b629f0c194cd35f9c1c3d33974f34484932351dbafb45c7",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "backend/src/modules/browser-sessions/browser-sessions.service.ts"
+      ],
+      "file_sha256": "2ca0f35806d79af4709846d8011021849560fd38d913c50e70f40264859faf2d",
+      "categories": [
+        "credential_store"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "DEC-RUNTIME-055 / SPEC R-02 已授权版本化会话与受控命名端口。e8b69147 将取消信号传入会话事务并分类网页提交回执，沿用原凭据属主与进程拓扑；独立复核及 61 项回归见 chat-web-read-ports.md。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "backend/src/modules/execution/worker-supervisor.ts"
+      ],
+      "file_sha256": "c858fd67279e4690f50d9a7748137a3b871051b2b8782e4371b71528bf782025",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "DEC-RUNTIME-055 已批准的持久 Worker、正式聊天和封面执行接线；本轮按用户授权删除旧实现并拆分装配，不新增执行权或数据归属。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "backend/src/modules/scheduling/scheduling.repository.ts"
+      ],
+      "file_sha256": "5935f5f42f72fd6860e71b66389d76c51fa1ea0bf262c63a33c78638b4c08d2e",
+      "categories": [
+        "native_executable"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "backend/src/modules/scheduling/scheduling.service.ts"
+      ],
+      "file_sha256": "21a96174990d660bb216be74ef2f4a8c267fb1908df00abf86ce2d4a07aaaaee",
+      "categories": [
+        "native_executable"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "backend/src/modules/settings/model-config-transfer.test.ts"
+      ],
+      "file_sha256": "f53ff2f95ef725be4d62ffb4b954e7d1a2a75ef279592f4307ecf4a6b158b2e6",
+      "categories": [
+        "credential_store"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "backend/src/modules/settings/settings.repository.ts"
+      ],
+      "file_sha256": "d60cc4e32f186ad2a95f885dfb78743ac68f49339cc6cb82dd6f910495744d4b",
+      "categories": [
+        "credential_store"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "backend/src/reset-preserve.ts"
+      ],
+      "file_sha256": "d9d0c90fe6c650aabfdd6e913f386aea3c4f53eb5bc37a615088c9b443952ad1",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "backend/src/schema/activation.ts"
+      ],
+      "file_sha256": "f2b4169caa879ae007609dc83d618fe917ff14fcd05ab1593f02943281533d05",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "backend/src/secret-crypto.test.ts"
+      ],
+      "file_sha256": "baa23b109eb173323ff00695ba1a56f11a1640719627f37c84ad15137c5aa1e8",
+      "categories": [
+        "credential_store",
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "backend/src/secret-crypto.ts"
+      ],
+      "file_sha256": "7cab12086a0a061a284612752fbc1a11a2d411fb69d58e0cc71bf5fdf82689a0",
+      "categories": [
+        "credential_store",
+        "ipc",
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "backend/src/workspace-restore.ts"
+      ],
+      "file_sha256": "64f2f7588aeb858375d446b5e876634859a70d2e81bd4ffe55bfba04864b82a9",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "docs/research/evidence/t915/implementation-progress.json"
+      ],
+      "file_sha256": "5fa744404d07a4f55b10bb9e0b811709db8108fb4317e461225b63ab05e40e64",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "DEC-RUNTIME-055已批准的持久证据、私有Worker端口和后端模型来源核验；独立复核通过，仅登记本批文件复杂度，不代表全量验收。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。",
+      "prior_file_sha256": "61ccfcd1b7bf7fd1cb0dac0161870af42f2cfc45bbb09ca8424c6d64adb8eadd"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/package.json"
+      ],
+      "file_sha256": "3ed80336fb009e6699f978dbc657e48da8309367744bf67c24f4bf35a36ed579",
+      "categories": [
+        "os_signing"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "DEC-RUNTIME-055已批准的生产Worker接线与生命周期、状态投影及条件更新；独立只读复核未发现新阻断，完整T915验收尚未完成。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src/app/api/v1/local/license-sync/route.ts"
+      ],
+      "file_sha256": "373114fb58ce34f8dc4566eb3f30d8ddf75984919567b006867c52c8b463c359",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src/app/api/v1/local/reset-workspace/plan.test.ts"
+      ],
+      "file_sha256": "9b92835079368ba581eebd9da1f0104d2e86fd860f4a1bc3d5157917c7046959",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src/app/api/v1/local/reset-workspace/plan.ts"
+      ],
+      "file_sha256": "3bc6f395c2d9e6bcbd3ad246bcc1ab44e3dae35ca6f9e93c07807ed4a1277ef4",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src/app/api/v1/local/reset-workspace/route.ts"
+      ],
+      "file_sha256": "97a05464f6ce9ce29ea4f850cb903e65ad154a8b914c9116f5713b4553cf4e06",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src/app/api/v1/local/reveal-logs/plan.ts"
+      ],
+      "file_sha256": "db9a24764d9a3b56a8be910228f503161aab42282dc21fb7f1f8960f1949ad2e",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src/app/api/v1/local/reveal-logs/route.ts"
+      ],
+      "file_sha256": "c504f58832a8b094a6b9bb3029f963d4418a9ec64e4ec82b05b8f782c84f099e",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src/app/api/v1/settings-transfer/models/route.ts"
+      ],
+      "file_sha256": "468a85143283b05b97f077e12d1ac9ea50ef9f4d37e3c22cc304b63abc513775",
+      "categories": [
+        "credential_store"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src/instrumentation.ts"
+      ],
+      "file_sha256": "d49a12ce777eaf23cee649a4960538fe51a6b9bb5bcaf791c8dc66392ce0b86e",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src/lib/activation-gate.server.ts"
+      ],
+      "file_sha256": "9a23af34433ef9aa8f0158e52dffb14785a35d4e94c93621e933b0f7e1da1b44",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src/lib/desktop-updater.test.ts"
+      ],
+      "file_sha256": "7c077e710459d2af980a90f8cec996cbecdc1b933a28f4753373a68779389e1e",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src/lib/desktop-updater.ts"
+      ],
+      "file_sha256": "ac9fcb4a2a97920a7472d76fbd3bf7b66a9dd8f94bfcbf6e60bebfb847c459c4",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src/lib/loopback-core.ts"
+      ],
+      "file_sha256": "68d535672ec92aaedede590c0ea01fc0be1b025ffa36dc97fb28fd3bbf38dd42",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src/lib/loopback-guard.server.test.ts"
+      ],
+      "file_sha256": "93a82455326962c45cc08e2e09c44905dd4be512b0ef3d919299b36c2f712d05",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src/lib/shell-license.ts"
+      ],
+      "file_sha256": "1a159799b8f80ba3362cd0369e879cc273e89353c9eb91bfcd7705aac55915fd",
+      "categories": [
+        "ipc",
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src/proxy.test.ts"
+      ],
+      "file_sha256": "981ac2aee8db38e4c827810774811cf2d70ec18483b0c8c477ac3bb333328115",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src/proxy.ts"
+      ],
+      "file_sha256": "9e4ec3a6b87c04fb31941a4f2258bf3113dc9f8e14286a216d0c7bb1f30f0fad",
+      "categories": [
+        "ipc",
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src/server/activation/activation-config.test.ts"
+      ],
+      "file_sha256": "ab3549daff3455a4635f79eec2c6cd28732d8fa5f741c98bf576d8fa43d04b9f",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src/server/activation/activation-config.ts"
+      ],
+      "file_sha256": "85c4c0220dbbf8dbd755910d73d42da89b5a4754fb0573fce22161e9bedbd92d",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src/server/activation/activation-repository.test.ts"
+      ],
+      "file_sha256": "d42d38b5dbe717f2a0c4097ba2da11392fd7d1c92109d2f4495bebe11be146c3",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src/server/activation/activation-repository.ts"
+      ],
+      "file_sha256": "224c27d49a0b554ee1f555e1773da2ca2fe1774a0682b2c61cc5cbe3ed40ed2e",
+      "categories": [
+        "credential_store",
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src/server/activation/activation-service.test.ts"
+      ],
+      "file_sha256": "2a10441d9f30739f4ca23506315c8de5755488e3198ce010bfa5a22f437e5f4d",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src/server/activation/activation-service.ts"
+      ],
+      "file_sha256": "64bd7965a04e6aee3b93f451e8d907530b6cc7b063557ff1d6da14ecf73bcda1",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src/server/activation/channel-runtime.server.ts"
+      ],
+      "file_sha256": "7a8c3ebfc9ccd71bfc9ceecb239319506a7237221a9358b1b8257f057a267600",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src/server/activation/index.ts"
+      ],
+      "file_sha256": "71477b861b102c07e5cc20b2f37725a57f33811889fc8773d02c76805864ec8b",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src/server/activation/is-desktop.ts"
+      ],
+      "file_sha256": "9a6bcb8fbc0affc8437ee53be923b2462bb9ad40dc0a908cb9c34098b9745afa",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src/server/activation/license-file.server.test.ts"
+      ],
+      "file_sha256": "562321c00cfb9481b4274d2890478b53b1f99c6fd2c40e5bbeb80c6f12a2a108",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src/server/activation/license-file.server.ts"
+      ],
+      "file_sha256": "a437fbe1aa64330db0c313a3006e2dace4319865e9ecc69e7ea73f3b58e126ba",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src/server/activation/machine-id.test.ts"
+      ],
+      "file_sha256": "b44ec678b3af98d67f3c635d6d1bb833c0d114c2dacb62959f991ad29c2ac1af",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src/server/activation/machine-id.ts"
+      ],
+      "file_sha256": "4e34497ce317deccb82e514e7b85e89fdd99f64ecfdd7f7301f7f00c2514e25c",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src/server/activation/product-identity.server.test.ts"
+      ],
+      "file_sha256": "b65d754ad6268587f2c0acc11a30fd90fa9342ecc753ca7f80ab58ecf2e3f282",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src/server/activation/product-identity.server.ts"
+      ],
+      "file_sha256": "5b69ae165ede867eebe3b5027d100cf2ea983d840d7c112ef4b31b0e6d22bcec",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src/server/persistence-client.ts"
+      ],
+      "file_sha256": "226a03251f38e06cfa3b29cdc9fdc919bd84a6b71e70b443b9d2feb4a856e991",
+      "categories": [
+        "credential_store",
+        "language_toolchain",
+        "native_executable"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "DEC-RUNTIME-055 已批准的持久 Worker、正式聊天和封面执行接线；本轮按用户授权删除旧实现并拆分装配，不新增执行权或数据归属。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src/server/sidecar-lifecycle.test.ts"
+      ],
+      "file_sha256": "6a23269f225b80f8c594d3bf00370ff994e1034cdef990d045ff9a46c6c30aaf",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src/server/sidecar-lifecycle.ts"
+      ],
+      "file_sha256": "ff0c16362699a75b3bddf80cd32d4002bca95a50510a961178ee8b9c5de0fef3",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src/server/verdict-token-gate.ts"
+      ],
+      "file_sha256": "b067c9ccd1bac905a029d75d64f51a9c7438ae62bd60ea6d178c818c3f1e7d1c",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src-tauri/Cargo.toml"
+      ],
+      "file_sha256": "439c4469fb8a16c37d553e255aa318809724053661a2841e37ca829f35043578",
+      "categories": [
+        "credential_store",
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src-tauri/build.rs"
+      ],
+      "file_sha256": "22075a4a51cdd5f4e34f2737d8aa552a301c298412e75bcf773a0759030f52aa",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src-tauri/capabilities/remote-sidecar.json"
+      ],
+      "file_sha256": "aeb6cc74cae9283b07519402ee792a41c5aabea764602fabca0badc21344e8c4",
+      "categories": [
+        "ipc",
+        "language_toolchain",
+        "os_signing"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src-tauri/src/decoy_gate.rs"
+      ],
+      "file_sha256": "e8554c9e60d9846b4b35981508c7c9eb3e2139da1c56e5fcf38c99c72bc24d74",
+      "categories": [
+        "language_toolchain",
+        "os_signing"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src-tauri/src/entitlement_claim.rs"
+      ],
+      "file_sha256": "475a7a96e0ab77a78602c4d71624ae54776ceab8b9080ec8845bab2f5a1e3f37",
+      "categories": [
+        "credential_store",
+        "ipc",
+        "language_toolchain",
+        "os_signing"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src-tauri/src/lib.rs"
+      ],
+      "file_sha256": "f57804b96aa3253dbb7b8e44b5f70ca53be6a5588d5a971ab4955372f5a1b5a4",
+      "categories": [
+        "credential_store",
+        "installer_deploy",
+        "ipc",
+        "language_toolchain",
+        "os_signing"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "T-915 受控 macOS sidecar 组停止确认修复：仅更换原Child管理与watcher，保留5秒优雅退出，不新增安装、签名、凭据或IPC机制；精确绑定当前文件。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src-tauri/src/license.rs"
+      ],
+      "file_sha256": "0f8dc18f5e9af64aac167e276e1c4a7a225b0272ea6b48b4190f84897b31a3f9",
+      "categories": [
+        "credential_store",
+        "ipc",
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src-tauri/src/logging.rs"
+      ],
+      "file_sha256": "2f31f93557c3177d50bb79e8caa9ae3f3bdf9b1d91a34e5862ad5b0687160196",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src-tauri/src/product_identity.rs"
+      ],
+      "file_sha256": "3582ae89168f94e2534c7b53212cb1fc7c58432f78aafd15102d54a269a02f2b",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src-tauri/src/win_job.rs"
+      ],
+      "file_sha256": "1d6ee2c67dc4bcade11a21080fec714d7e1d18da2f031ffd7a1d1acdd1354f00",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src-tauri/src/workspace_reset.rs"
+      ],
+      "file_sha256": "feadd8108cd7aa34d09c13b03f679362310be54f8ba23416084c08ce53c77056",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src-tauri/tauri.windows.conf.json"
+      ],
+      "file_sha256": "20f79690aa693cfa7251c0807d1b2a77a8375d907f0ddc354c9a2bc43dc61679",
+      "categories": [
+        "installer_deploy"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src-tauri/tests/logdec_cli.rs"
+      ],
+      "file_sha256": "5e2cc77ab5719ee1d31266475e3d25c684ab78bd42ee2bfde94d73c904acf6d8",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "pnpm-lock.yaml"
+      ],
+      "file_sha256": "4d40679f732449d08224ff2c373c2116b1a66889f53c5b16222be0407e943fde",
+      "categories": [
+        "runtime"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "DEC-RUNTIME-055浏览器运行迁移只调整四个已锁定依赖的包归属，无版本升级；独立复核与离线安装通过。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "docs/research/evidence/t915/execution-lease-evidence.json"
+      ],
+      "file_sha256": "bbc99949cf132682ddd44e5ad017a92147fcc30b10799ff5ade6b18dd5121ba9",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅记录已批准父子通信与执行租约的测试证据；没有新增运行机制，不代表生产通信已接线。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "docs/research/evidence/t915/structured-durable-evidence.json"
+      ],
+      "file_sha256": "43d7bc2c67c5126be7ed6f12a431c2021c1476c22842c7c1c856644b9e5d2629",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "记录已批准独立Worker范围中的结构化调用恢复证据与尚未接通的私有通信边界。",
+      "acceptance": "只登记范围与验证限制，不代表完整验收通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "ai-worker/src/execution/structured-worker-generation.ts"
+      ],
+      "file_sha256": "fef182ca79d4df2fd35a048858e0b496004271c25205ccf62f9a34e816220f79",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "DEC-RUNTIME-055 已确认旧公开对话迁入统一 Worker：消息与回复任务原子保存、冻结当轮历史、已结算回复幂等提交。复用现有私有提交协议，不增加规划模型或改变数据属主。",
+      "acceptance": "本条只登记复杂度，不代表完整生产或历史验收通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "docs/research/evidence/t915/structured-worker-evidence.json"
+      ],
+      "file_sha256": "caaafda24fbda0a801b5e8f2fbc1ea3697080f23215c1c65b077f9e8d5380064",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "已确认独立Worker命名通信范围，结构化节点与账本桥接及真实验证证据。",
+      "acceptance": "本条只登记复杂度，不代表完整生产或历史验收通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "docs/research/evidence/t915/publication-adoption-evidence.json"
+      ],
+      "file_sha256": "ee55bbf2936c40100e8e200a018b96e3d1f527f96576c41ee1850d8b22aa46ad",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "记录临时PostgreSQL Unix socket与真实Worker业务回归证据，没有新增产品通信面。",
+      "acceptance": "只登记验证复杂度，不代表完整T915或历史数据验收。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "ai-worker/src/execution/agentic-worker-entry.test.ts"
+      ],
+      "file_sha256": "bcdc1b8629b284735bd28aacde184646839d7b70e238a5736d1c718784ae5902",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "DEC-RUNTIME-055已批准的独立Worker生命周期、冻结权限、真实工具和素材候选接线；本批独立复核并修正缺产物回旧宿主路径。仅登记当前文件复杂度，完整T-915验收尚未完成。",
+      "acceptance": "该记录只绑定实现复杂度，不代表完整T-915或分发包验收通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "docs/research/evidence/t915/durable-pi-worker-evidence.json"
+      ],
+      "file_sha256": "a66e1a0beec0f34dfa2bbb8e6a936b69f7bfc3893a3fa3d98dd62c8eaa77480d",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "已批准R-02私有进程边界的真实测试证据，记录仅测试IPC和生产未接线的明确限制。",
+      "acceptance": "局部证据，不宣称完整验收。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "ai-worker/src/runtime/browser/runtime-load.test.ts"
+      ],
+      "file_sha256": "85be81346084d9adef3aa222710379ecde75465e1f9ca48115554c88a5ff5200",
+      "categories": [
+        "runtime"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "独立浏览器运行依赖闭包的真实子进程加载测试，属于已批准Worker迁移的必要验收；不代表实际浏览器生产调度或安装包通过。",
+      "acceptance": "仅登记本文件复杂度，不替代完整T-915验收。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "backend/src/modules/ai-runtime/agentic-research-worker.fixture.ts"
+      ],
+      "file_sha256": "43da10f1016a367a44b56a8e47e263d563918d101a07c4ff080e2d5962caa79b",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "R-02/R-04已确认的独立Worker研究端口与所属浏览器生命周期测试；独立审查通过，仅登记本文件测试复杂度。",
+      "acceptance": "不代表实际公网、Windows或完整T-915验收通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "backend/src/modules/execution/worker-process-tree.test.ts"
+      ],
+      "file_sha256": "e0ad96bb4dfbc94ed4770514d7661410275d55b186dfebc53b6e197a60e2a453",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "R-02/R-04已确认的独立Worker研究端口与所属浏览器生命周期测试；独立审查通过，仅登记本文件测试复杂度。",
+      "acceptance": "不代表实际公网、Windows或完整T-915验收通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "docs/research/evidence/t915/research-worker-production-evidence.json"
+      ],
+      "file_sha256": "927922c5893136d59bfd42cf213b0009be4eccc194fb5f804184323eb25a7d94",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "R-02/R-04研究Worker私有端口、登录恢复及浏览器生命周期的实际增量证据说明；只是证据文本包含IPC，不新增执行机制。",
+      "acceptance": "完整任务与分发包验收仍待完成。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "docs/research/evidence/t915/script-review-worker-evidence.json"
+      ],
+      "file_sha256": "2e075814dd0db4839e7d4f92e46b76917e05f2fd3e75c8adf2faf126d34bf156",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "证据仅记录已批准双平台范围内现有 Rust windows_ 逻辑测试的真实结果；不引入新语言或工具链，不声称完成 Windows 真机验收。",
+      "acceptance": "仅绑定已审读证据文件的复杂度标记，完整 T-915 验收尚未完成。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "backend/src/modules/ai-runtime/agentic-browser-worker.fixture.ts"
+      ],
+      "file_sha256": "464ae605b1036492a56927815703361f2e5864ea2d234e5591f0f6db0034fd85",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "隔离真实Pi/独立Worker/Chromium浏览器证据与采纳集成夹具，仅DNS与故障注入替身，不新增生产执行权；已审阅实际IPC与生命周期。",
+      "acceptance": "不代表真实公网供应商、Windows或完整T-915验收。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "docs/research/evidence/t915/browser-evidence-evidence.json"
+      ],
+      "file_sha256": "8d6de8d5e7618cc2acb55e9c0339faad2d04efa1097aa895bb50c73b344f15a8",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "本文件仅如实记录已批准私有进程协议的验证证据与缺口，不新增运行时机制。",
+      "acceptance": "证据范围以记录为准，不替代完整T-915验收。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "backend/src/modules/execution/browser-resource-guardian.probe.fixture.ts"
+      ],
+      "file_sha256": "0e3793bc40e3b12df35b24495def6dfb34f25fa829a9f4018adee4df6db0de6f",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "R02/R04宿主崩溃资源回收的限定隔离实验；只启动夹具及临时Chromium，不是生产guardian、不读用户数据或数据库。",
+      "acceptance": "仅登记研究复杂度，不代表持久回执、profile解锁或平台发布通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "backend/src/modules/execution/browser-resource-guardian.probe.test.ts"
+      ],
+      "file_sha256": "4af51f2fe49d2cfbe7abf4fa776539b58b94cfb9b3b7ed0960feea9369a13f52",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "R02/R04宿主崩溃资源回收的限定隔离实验；只启动夹具及临时Chromium，不是生产guardian、不读用户数据或数据库。",
+      "acceptance": "仅登记研究复杂度，不代表持久回执、profile解锁或平台发布通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "ai-worker/src/execution/topic-worker-reads.test.ts"
+      ],
+      "file_sha256": "764c8ea0165c48862b45f32ad0e0dda97a57c3cdb2ecccb7564078289fe48272",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "已批准私有Worker端口的错误与回执验证，属于执行恢复必要证据。",
+      "acceptance": "只登记当前证据的复杂度，不代表完整任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "docs/research/evidence/t915/topic-independent-review.md"
+      ],
+      "file_sha256": "175f3b9b5a8d6c4ef5e8b34d5e99fd5a489d82a0e456a8ed562d04b8b3d30d20",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "已批准私有Worker端口的错误与回执验证，属于执行恢复必要证据。",
+      "acceptance": "只登记当前证据的复杂度，不代表完整任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "backend/src/modules/scheduling/daily-topic-run.service.test.ts"
+      ],
+      "file_sha256": "ef28abc41ad102cdf6e51bb230e32f7b727f87345b486a555932f7c4367b0f78",
+      "categories": [
+        "native_executable"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "每日运行恢复测试核对已有执行映射和终态；不是新增可执行程序能力。",
+      "acceptance": "只登记复杂度，不代表测试或整体任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "ai-worker/src/execution/persistent-stream-writer.ts"
+      ],
+      "file_sha256": "222864b18ef6d11a058635c2bdbc33eeef7871f6ee922c8ea9352962ff82d90d",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "R-05 已确认流式 HTTP 通过 Worker 事件适配，断开订阅不取消任务。此写入器负责有界合并、串行背压与回执校验，是持久流通道必要实现；不新增执行权或规划模型。",
+      "acceptance": "仅登记实现复杂度，不表示完整流式迁移或产品验收通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "docs/research/evidence/t915/stream-event-channel.md"
+      ],
+      "file_sha256": "8e9b1aed3d04f30ba4f8857ea5ac56b25104e80a776d1c92e196f76c77f7bf8b",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "记录本批已批准私有流事件通道的实现、测试和未完成范围；文档不新增IPC能力或改变产品契约。",
+      "acceptance": "仅登记证据文档中的技术标记，不代表整体验收。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "docs/research/evidence/t915/durable-stream-model.md"
+      ],
+      "file_sha256": "d7877a8a4e8bb29b3ad9033a2132b3473e351b2f68fa380a0a7c43f44cb4eea2",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "记录已确认 R-05 流式回执迁移所需的私有端口与真实测试，不新增执行权。",
+      "acceptance": "仅登记证据文档复杂度，不代表完整聊天迁移通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "docs/research/evidence/t915/chat-worker-entry.md"
+      ],
+      "file_sha256": "f299702963ac688cda3e3099e8dc675252d2c59ce3402aa04c73c38dde005d18",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "本证据记录 DEC-RUNTIME-055 已批准的现有 Worker IPC 接线与任务截止时间验证，不引入新的进程或通信机制。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "docs/research/evidence/t915/chat-read-host.md"
+      ],
+      "file_sha256": "53b613905861f10f811c4446fb6820377061c1c533ecc25ef4f9f2aac89e5847",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "登记已提交只读工具回执证据中对既有通信与JSON序列化的说明；未新增进程通信协议。",
+      "acceptance": "只绑定本证据文件复杂度，不补记前置TDD或全任务验收。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "docs/research/evidence/t915/hooks-recovery.md"
+      ],
+      "file_sha256": "be0cfb22939e3f03db10c05bb874eba2416fdeaa3d324a7e6fbb0d41b841637f",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "本文件记录已授权 Worker 命名端口、明确失败恢复与回执丢失验证，不引入新的通信层或产品范围；按具体证据文件登记门卫识别的 IPC 标记。",
+      "acceptance": "只登记说明文件复杂度标记，不代表完整 T-915 验收通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "docs/research/evidence/t915/task-commit.md"
+      ],
+      "file_sha256": "acab93bea04ebeac620f93233e700d83b93bb7377bcd50aeb88e50028526ae70",
+      "categories": [
+        "native_executable"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "此证据文档引用既有 service 注释以说明复杂度哈希重新绑定原因；不包含新本机进程、安装或部署机制。仅登记精确文件的既有术语引用，未增加实现范围。",
+      "acceptance": "记录复杂度标记归属，不代表功能、测试或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "docs/research/evidence/t915/generation-ledger.md"
+      ],
+      "file_sha256": "ebc766c3bdbe6dced9d0a74092159edd383324ffc417e0199da9fc6debbf970b",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "本证据记录既有命名 IPC 共享生成端口及真实账本恢复测试，仅登记说明文档的通信术语；不新增产品范围、通信拓扑、安装或发布。",
+      "acceptance": "只绑定证据文件复杂度，不代表完整 T-915 或 Worker 新生成入口验收。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "docs/research/evidence/t915/generation-worker.md"
+      ],
+      "file_sha256": "31ba51afba16ad92e63d62b735331fcc60adecaae83aaa6888c206fc8f0642f6",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "本文件仅记录已授权 Worker IPC 接线及真实验证，不扩展架构或授权。",
+      "acceptance": "复杂度登记不代表产品或历史验收通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "docs/research/evidence/t915/chat-research-worker.md"
+      ],
+      "file_sha256": "dee7b6a8116322f5d9f6fa9080a705cf5b7cb5ebbd7716580d2ce3dbde4b2615",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "记录已授权 Worker 搜索 IPC 实现与验证，不增加架构或授权范围。",
+      "acceptance": "复杂度登记不代表产品或历史验收通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "docs/research/evidence/t915/chat-web-read-commit.md"
+      ],
+      "file_sha256": "f132007258ff2c0f3cace020a542aa0c2707f86d21e42f35f7b0b484f56081c8",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "登记已授权网页 Worker 接线的证据文档通信术语，未增加产品范围、通信拓扑或发布授权。",
+      "acceptance": "仅登记复杂度，不代表完整迁移或历史验收通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "docs/research/evidence/t915/chat-web-read-entry.md"
+      ],
+      "file_sha256": "160ebc270a42e949928645459a1567ecf5209075d5a3e584ddbe58b7ba9867b4",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "记录已确认 R-02 网页 Worker 命名端口与实际父子进程测试；不新增通信机制或执行权。",
+      "acceptance": "仅登记证据文档复杂度，不代表完整聊天迁移通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "docs/research/evidence/t915/asset-provider-job.md"
+      ],
+      "file_sha256": "02fe5a684b1878b1706d4228950029a2eeb02663626dd6335951d096cfbb08a5",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "登记已授权独立 Worker 的供应商任务号证据说明；仅记载尚未完成的命名端口接线，不新增进程或第二任务系统。",
+      "acceptance": "此条只登记实现复杂度，不代表 IPC 已接通或任务验收完成。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "docs/research/evidence/t915/pending-generated-asset.md"
+      ],
+      "file_sha256": "6ddba142fd426eee78a285fdb58260dc3b70194396f2fa05a6be40d03f1ad21e",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "证据文档记录生成素材持久回执及此前复杂度登记修复；沿用已授权 Worker 与后端单写者边界，没有新增进程拓扑。",
+      "acceptance": "仅登记文档复杂度，不代表 Worker 接线或完整验收完成。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "docs/research/evidence/t915/asset-execution-result.md"
+      ],
+      "file_sha256": "f698f1a504c88a8e2377927608d0e92760820c06ef0e658825bb20384c4e9a1a",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "文档登记已授权素材执行服务与尚待接通的命名端口，不新增架构范围。",
+      "acceptance": "只登记说明文档复杂度，不代表完整迁移或正式验收。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "docs/research/evidence/t915/asset-worker-ports.md"
+      ],
+      "file_sha256": "3b7b779887a957330f771ee4a39d3658df1b84064d41d238771673c4d4714fb8",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "记录现有独立Worker的二进制素材端口与真实子进程证据，不增加进程拓扑或发布范围。",
+      "acceptance": "只登记本批复杂度，不代表生产素材执行或完整验收完成。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "docs/research/evidence/t915/asset-worker-runtime.md"
+      ],
+      "file_sha256": "57e9e7ee14fc4dc6b477d0b7133072f78a7a5ea24a81e3ebdaa99204f9dad32c",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "记录已授权素材Worker和私有端口的实现验证，不增加进程拓扑或发布范围。",
+      "acceptance": "不代表公共入口迁移、商业供应商或完整任务验收。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "ai-worker/src/execution/chat-generation-worker.ts"
+      ],
+      "file_sha256": "540f2f9c8540e4cf4561836b59a9800da8560d04a1bebf9b510c70c09239038b",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "DEC-RUNTIME-055 已批准的持久 Worker、正式聊天和封面执行接线；本轮按用户授权删除旧实现并拆分装配，不新增执行权或数据归属。",
+      "acceptance": "真实 fork 结构化与开场共 35 项测试通过；此记录不代表全场景迁移或性能验收完成。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "docs/research/evidence/t915/chat-diagnosis-migration.md"
+      ],
+      "file_sha256": "3007c5d1772442f58ef4ec037387d1b195e88a1d8c4ac2d5ca02d04eb7f2e5e5",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅记录已授权 Worker 请求边界故障与真实测试证据，没有追加执行层或通信协议。",
+      "acceptance": "文档引用日志，不替代全任务验收。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "docs/research/evidence/t915/chat-script-draft-worker.md"
+      ],
+      "file_sha256": "3d6b8348fffbf0c52f32ed606a5da5f1010917f7aa409416802d2ce9e1f03aec",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "记录已授权整稿 Worker 命名端口的实际实现及验证证据；文档不新增执行机制。",
+      "acceptance": "仅登记复杂度，不代表 T-915 整体或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "docs/research/evidence/t915/asr-request-execution.md"
+      ],
+      "file_sha256": "9874bc4550df6e8bbdf833af06616295296f3e89f8bcda76b19c461d469524e5",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "记录已确认的转写命名端口实现与未完成 IPC 接线边界，文档不新增执行能力。",
+      "acceptance": "仅登记已有重构文档涉及 IPC，不代表产品验收通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "backend/src/modules/execution/execution-asr-ports.service.test.ts"
+      ],
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "使用独占临时子进程验证已确认的 ASR 命名端口与租约结算，不引入生产进程。",
+      "acceptance": "仅登记测试涉及 IPC；实际测试状态以本批原始日志为准。",
+      "file_sha256": "1d3b27cab0bdc09e6ffbd22c0fe22a8dbbe861cfa6361b689d602729ebccd1a2"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "docs/research/evidence/t915/asr-persistent-ledger.md"
+      ],
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "记录已有独立 Worker 架构中的 ASR 命名端口验证及未完成生产编排边界。",
+      "acceptance": "文档与验证登记，不代表全部 T-915 验收通过。",
+      "file_sha256": "690a337c678654d475ea79f5e910e4a75912f43741b657f419af728ded73a860"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "docs/research/evidence/t915/browser-profile-host-owner.md"
+      ],
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "记录统一浏览器租约的宿主持有者与既有Worker私有端口边界，不新增IPC或第二套租约。",
+      "acceptance": "仅登记文档复杂度；生产接线与完整T-915仍未完成。",
+      "file_sha256": "f233d5f92e0bc4b9a2e082187d557859d3d48511894adfd82fa2dfcff2b2e7d4"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "docs/research/evidence/t915/2026-09-07-macos-sidecar-group-stop.md"
+      ],
+      "file_sha256": "4b91fb376a300cf91c2893b9497d0dc6800516c399e996681617a77eb8772490",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "记录已批准桌面进程生命周期修复的既有Rust编译与聚焦测试命令，只是证据文档，不新增工具链或打包机制。",
+      "acceptance": "仅登记证据文档触发的标记，不代表完整T-915或双平台打包通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "ai-worker/src/execution/durable-stream-model.ts"
+      ],
+      "file_sha256": "d0a59322f08e0c432ab01fed57433fcce7fe48f461025d646e7e639c4690f280",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "沿用原模型端口与账本，图片字节在请求中编码为base64，保持原附件范围而不引入新协议通道。",
+      "acceptance": "仅记录实现复杂度，不代表运行验收；用户暂缓测试。"
+    },
+    {
+      "task_id": "T-1036",
+      "files": [
+        "BACKLOG.md"
+      ],
+      "file_sha256": "3e73566acc9a919d6d025ed18d04f56be7b48c0ae2652fcfb6f5aaf31155f510",
+      "categories": [
+        "os_signing"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-T1036-01",
+      "scope_source": "docs/features/t1036-open-source-video-editor-selection.md",
+      "reason": "仅保留旧队列/生成记忆中的既有签名历史，或记录被排除候选的语言路线图；未新增或运行工具链/签名机制。",
+      "acceptance": "只绑定文档标记与准确 hash，不代表产品实现或全局 Gate 通过。"
+    },
+    {
+      "task_id": "T-1036",
+      "files": [
+        "PROJECT.md"
+      ],
+      "file_sha256": "7d5608babec4d73409af05d7e2656082776a1e202d7ae5cf1eae3097b5bd0aac",
+      "categories": [
+        "os_signing"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-T1036-01",
+      "scope_source": "docs/features/t1036-open-source-video-editor-selection.md",
+      "reason": "仅保留旧队列/生成记忆中的既有签名历史，或记录被排除候选的语言路线图；未新增或运行工具链/签名机制。",
+      "acceptance": "只绑定文档标记与准确 hash，不代表产品实现或全局 Gate 通过。"
+    },
+    {
+      "task_id": "T-1036",
+      "files": [
+        "docs/research/t1036-open-source-video-editor-selection.md"
+      ],
+      "file_sha256": "3de9b528cff7437bea7b1dabe58423b39ae57d59c760c42ae3d1f09f48e3165d",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1036-01",
+      "scope_source": "docs/features/t1036-open-source-video-editor-selection.md",
+      "reason": "仅保留旧队列/生成记忆中的既有签名历史，或记录被排除候选的语言路线图；未新增或运行工具链/签名机制。",
+      "acceptance": "只绑定文档标记与准确 hash，不代表产品实现或全局 Gate 通过。"
+    },
+    {
+      "task_id": "T-1037",
+      "files": [
+        "BACKLOG.md"
+      ],
+      "file_sha256": "848602005e5ee01698b2ab158edc0fb52e48e1b53cea8d6655c75dc3ad80fc69",
+      "categories": [
+        "os_signing"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1037-01",
+      "scope_source": "docs/features/t1037-output-production-project.md",
+      "reason": "已评审的作品级制作历史与公开服务接线；仅保留原文件的既有签名历史、凭据与工具链标记，不新增这些机制。具体范围与事务复用见DEC-T1037-01。",
+      "acceptance": "仅登记准确文件hash与任务复杂度，不表示全局门卫、客户端或媒体生成验收通过。"
+    },
+    {
+      "task_id": "T-1037",
+      "files": [
+        "PROJECT.md"
+      ],
+      "file_sha256": "d1e50333146013ee2dfe9d5a644622b573f7d25b48669bb69b13b8ae96bb3c65",
+      "categories": [
+        "os_signing"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1037-01",
+      "scope_source": "docs/features/t1037-output-production-project.md",
+      "reason": "已评审的作品级制作历史与公开服务接线；仅保留原文件的既有签名历史、凭据与工具链标记，不新增这些机制。具体范围与事务复用见DEC-T1037-01。",
+      "acceptance": "仅登记准确文件hash与任务复杂度，不表示全局门卫、客户端或媒体生成验收通过。"
+    },
+    {
+      "task_id": "T-1037",
+      "files": [
+        "backend/src/index.ts"
+      ],
+      "file_sha256": "78729975ead58db32215fb14fd5ec71740269028bd8d2e85c5fab0f6f1b7c379",
+      "categories": [
+        "credential_store"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1037-01",
+      "scope_source": "docs/features/t1037-output-production-project.md",
+      "reason": "已评审的作品级制作历史与公开服务接线；仅保留原文件的既有签名历史、凭据与工具链标记，不新增这些机制。具体范围与事务复用见DEC-T1037-01。",
+      "acceptance": "仅登记准确文件hash与任务复杂度，不表示全局门卫、客户端或媒体生成验收通过。"
+    },
+    {
+      "task_id": "T-1037",
+      "files": [
+        "frontend/src/server/persistence-client.ts"
+      ],
+      "file_sha256": "6c5730db1c887438cdcb910b3d48053e8848c0998fe34421f166d85103c90433",
+      "categories": [
+        "credential_store",
+        "language_toolchain",
+        "native_executable"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1037-01",
+      "scope_source": "docs/features/t1037-output-production-project.md",
+      "reason": "已评审的作品级制作历史与公开服务接线；仅保留原文件的既有签名历史、凭据与工具链标记，不新增这些机制。具体范围与事务复用见DEC-T1037-01。",
+      "acceptance": "仅登记准确文件hash与任务复杂度，不表示全局门卫、客户端或媒体生成验收通过。"
+    },
+    {
+      "task_id": "T-1049",
+      "files": [
+        "frontend/public/reference-editors/doocs-md/static/js/md-configs-l_iJ-wjP.js"
+      ],
+      "file_sha256": "e38414701cd1a9418f29ad670449cc622a09813b0c2ad9a78ca30f5cd47fb3c8",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1049-01",
+      "scope_source": "docs/features/t1049-web-adaptation-contract.md",
+      "reason": "固定且已评审的 Doocs/md 编辑器静态产物；该 bundle 的上游编辑器配置文本命中工具链词项，CreatorOS 未新增本地原生工具链执行能力。",
+      "acceptance": "只登记精确第三方 bundle 哈希与已批准适配范围，不代表功能、构建、发布或用户验收通过。"
+    },
+    {
+      "task_id": "T-1049",
+      "files": [
+        "frontend/public/reference-editors/doocs-md/static/js/md-dist-BQyrk4Ji.js"
+      ],
+      "file_sha256": "aba2e70b966e5da296ba19bb094172bc5d6ef5d18c667a5157f23855d0143bbb",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1049-01",
+      "scope_source": "docs/features/t1049-web-adaptation-contract.md",
+      "reason": "固定且已评审的 Doocs/md 编辑器静态产物；该 bundle 的上游编辑器文本命中工具链词项，CreatorOS 未新增本地原生工具链执行能力。",
+      "acceptance": "只登记精确第三方 bundle 哈希与已批准适配范围，不代表功能、构建、发布或用户验收通过。"
+    },
+    {
+      "task_id": "T-1049",
+      "files": [
+        "frontend/public/reference-editors/doocs-md/static/js/md-prettier-BRk29n7c.js"
+      ],
+      "file_sha256": "69f7651a1a99d41aab744f06b8f468ed7c6d07d2b10f00e51c2a73aae45ef053",
+      "categories": [
+        "language_toolchain",
+        "runtime"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1049-01",
+      "scope_source": "docs/features/t1049-web-adaptation-contract.md",
+      "reason": "固定且已评审的 Doocs/md 编辑器静态产物；格式化器 bundle 命中工具链及 bundler runtime 文件名词项，CreatorOS 未新增本地原生工具链或自定义运行时执行能力。",
+      "acceptance": "只登记精确第三方 bundle 哈希与已批准适配范围，不代表功能、构建、发布或用户验收通过。"
+    },
+    {
+      "task_id": "T-1049",
+      "files": [
+        "frontend/public/reference-editors/doocs-md/static/js/md-ui-Dai5M5YQ.js"
+      ],
+      "file_sha256": "0761c35f3d6299c2f76f2e6f61f36e28ca5ca01edc9bb487fc23429c902e9c21",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1049-01",
+      "scope_source": "docs/features/t1049-web-adaptation-contract.md",
+      "reason": "固定且已评审的 Doocs/md 编辑器静态产物；该 bundle 的上游界面文本命中工具链词项，CreatorOS 未新增本地原生工具链执行能力。",
+      "acceptance": "只登记精确第三方 bundle 哈希与已批准适配范围，不代表功能、构建、发布或用户验收通过。"
+    },
+    {
+      "task_id": "T-1051",
+      "files": [
+        "frontend/src/server/persistence-client.ts"
+      ],
+      "file_sha256": "7693ec53a9ad66ec4e769c57396def804080e31bdfde3aff26776d52810d2351",
+      "categories": [
+        "credential_store",
+        "language_toolchain",
+        "native_executable"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1051-01",
+      "scope_source": "docs/features/t1051-script-first-workbench.md",
+      "reason": "T-1051只在既有组合根注入主脚本读取/校验端口与历史来源端口。Rust、keychain/keyring、daemon标记在HEAD 7cbad74b的同文件已存在（1133、1234-1249、4104、5893行），本任务未修改这些机制、创建语言工具链/原生可执行文件/凭据存储或扩大宿主权限。保留其他任务混合工作树改动；此条只登记本任务必经装配的既有复杂度，不授权其余任务范围。",
+      "prior_file_sha256": "adef0a02647d850917fb9b67f42037109b3de698776426aeeadfe40a653dad13",
+      "acceptance": "登记不代表全仓、其他任务、真实扫码或模型验收通过；T-1051仍待用户视觉签收。"
+    },
+    {
+      "task_id": "T-1052",
+      "files": [
+        "frontend/package.json"
+      ],
+      "file_sha256": "38dabc96e3de289edbebd0beafdd454aef26033946ec15401a6b45d7dbd51432",
+      "prior_file_sha256": "9f38ba93126cf0ce78cfc9e31dfdf2d0da10214ec019a2f85f6acf9593fe61da",
+      "categories": [
+        "os_signing"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1052-01",
+      "scope_source": "docs/features/t1052-noterelay-derived-workbenches.md",
+      "reason": "既有 macOS codesign 打包命令在 HEAD 7cbad74b 同文件已存在。本轮只增加 NoteRelay 静态构建命令和固定网页依赖，未修改签名、entitlement 或安装流程。 保留其他任务混合工作树，不以登记授权范围外变更。",
+      "acceptance": "此条仅登记既有复杂度与准确文件摘要，不代表功能、全仓、浏览器或发布验收通过。"
+    },
+    {
+      "task_id": "T-1052",
+      "files": [
+        "pnpm-lock.yaml"
+      ],
+      "file_sha256": "7a84f8cb7c4932df4d7e9929ad4f042efd2bfe5280b2a89c4110e09e9d87882d",
+      "prior_file_sha256": "1af4e8bb098b4a90df399e2df46740fc656e49cc1f2d32b0fb115486fa6ace15",
+      "categories": [
+        "runtime"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1052-01",
+      "scope_source": "docs/features/t1052-noterelay-derived-workbenches.md",
+      "reason": "既有包元信息中的 Bun/运行时字样在 HEAD 7cbad74b 同文件已存在。本轮锁定 NoteRelay 的网页渲染与 esbuild 构建依赖，不新增应用运行时或原生执行服务。 保留其他任务混合工作树，不以登记授权范围外变更。",
+      "acceptance": "此条仅登记既有复杂度与准确文件摘要，不代表功能、全仓、浏览器或发布验收通过。"
+    },
+    {
+      "task_id": "T-1052",
+      "files": [
+        "reference-editors/README.md"
+      ],
+      "file_sha256": "5acbb3d9fadb852c54fd2b81e35b3cea2755952426733b4bc633d050c7223320",
+      "prior_file_sha256": "2ae096273a60b7e89b114b45e4be83d030e4b14f692eb96dc48faf0a2b9e804a",
+      "categories": [
+        "runtime"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1052-01",
+      "scope_source": "docs/features/t1052-noterelay-derived-workbenches.md",
+      "reason": "既有 OpenCut 重建说明的 Bun 要求在 HEAD 7cbad74b 同文件已存在。本轮新增 NoteRelay 本地静态适配说明及可重建源码核验，不修改 OpenCut 运行时路线。 保留其他任务混合工作树，不以登记授权范围外变更。",
+      "acceptance": "此条仅登记既有复杂度与准确文件摘要，不代表功能、全仓、浏览器或发布验收通过。"
+    },
+    {
+      "task_id": "T-1052",
+      "files": [
+        "docs/verification/t1052/complexity-provenance.json"
+      ],
+      "file_sha256": "18bfa3c1f6382831d3e499635ba57ad1aba24b5a2bc7b7f94176188d848e65f3",
+      "categories": [
+        "os_signing",
+        "runtime"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1052-01",
+      "scope_source": "docs/features/t1052-noterelay-derived-workbenches.md",
+      "reason": "本证据仅逐行引用 HEAD 7cbad74b 的既有依赖/打包/重建标记，并核对本轮准确摘要，不增加对应执行机制或修改原流程。",
+      "acceptance": "只登记范围内的基线来源证据，不作为功能、发布或全仓通过回执。"
+    },
+    {
+      "task_id": "T-1053",
+      "files": [
+        "docs/verification/t1053/doocs-source-rebuild-first-comparison.json"
+      ],
+      "file_sha256": "b37c098686c3e9d65a6923d462ebc5f90a3efc3d5b7774413cbb2cc272f9a11b",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1053-01",
+      "scope_source": "docs/features/t1053-native-editor-style-integration.md",
+      "reason": "本文件属于DEC-T1053-01明确授权的固定开源组件原生化与重建证据。标记来自既有浏览器引擎/Markdown语言高亮/包元信息或实际探针的引用；构建沿原锁定JS依赖。未新增Swift/Rust编译链、应用运行时、IPC宿主服务或独立程序。",
+      "acceptance": "仅登记授权原生接入与准确文件摘要，不代表真实像素/媒体/Clipboard、完整验收、其它任务或全仓通过。"
+    },
+    {
+      "task_id": "T-1053",
+      "files": [
+        "docs/verification/t1053/independent-review/source-delivery-current.json"
+      ],
+      "file_sha256": "57f46c08cae3776d3c8359563dab0a3fe8499cf30efceb9f897e08860ff68220",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1053-01",
+      "scope_source": "docs/features/t1053-native-editor-style-integration.md",
+      "reason": "本文件属于DEC-T1053-01明确授权的固定开源组件原生化与重建证据。标记来自既有浏览器引擎/Markdown语言高亮/包元信息或实际探针的引用；构建沿原锁定JS依赖。未新增Swift/Rust编译链、应用运行时、IPC宿主服务或独立程序。",
+      "acceptance": "仅登记授权原生接入与准确文件摘要，不代表真实像素/媒体/Clipboard、完整验收、其它任务或全仓通过。"
+    },
+    {
+      "task_id": "T-1053",
+      "files": [
+        "docs/verification/t1053/opencut-classic/DELIVERY.json"
+      ],
+      "file_sha256": "6514f3976304e435b2d32f67533a0109e61fe88e1dab97332bd34348c8650809",
+      "categories": [
+        "runtime"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1053-01",
+      "scope_source": "docs/features/t1053-native-editor-style-integration.md",
+      "reason": "本文件属于DEC-T1053-01明确授权的固定开源组件原生化与重建证据。标记来自既有浏览器引擎/Markdown语言高亮/包元信息或实际探针的引用；构建沿原锁定JS依赖。未新增Swift/Rust编译链、应用运行时、IPC宿主服务或独立程序。",
+      "acceptance": "仅登记授权原生接入与准确文件摘要，不代表真实像素/媒体/Clipboard、完整验收、其它任务或全仓通过。"
+    },
+    {
+      "task_id": "T-1053",
+      "files": [
+        "docs/verification/t1053/opencut-classic/dom-probe.ts"
+      ],
+      "file_sha256": "c5a283df36025748ff19ba34023c6452357dc95e529acee7b3d1d4c1d5b7e6d6",
+      "categories": [
+        "runtime"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1053-01",
+      "scope_source": "docs/features/t1053-native-editor-style-integration.md",
+      "reason": "本文件属于DEC-T1053-01明确授权的固定开源组件原生化与重建证据。标记来自既有浏览器引擎/Markdown语言高亮/包元信息或实际探针的引用；构建沿原锁定JS依赖。未新增Swift/Rust编译链、应用运行时、IPC宿主服务或独立程序。",
+      "acceptance": "仅登记授权原生接入与准确文件摘要，不代表真实像素/媒体/Clipboard、完整验收、其它任务或全仓通过。"
+    },
+    {
+      "task_id": "T-1053",
+      "files": [
+        "frontend/public/reference-editors/doocs-md/native/SHA256.json"
+      ],
+      "file_sha256": "fac19db561390b8be77009a18c562477bc8ba17c20b813bf51439b2255814240",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1053-01",
+      "scope_source": "docs/features/t1053-native-editor-style-integration.md",
+      "reason": "本文件属于DEC-T1053-01明确授权的固定开源组件原生化与重建证据。标记来自既有浏览器引擎/Markdown语言高亮/包元信息或实际探针的引用；构建沿原锁定JS依赖。未新增Swift/Rust编译链、应用运行时、IPC宿主服务或独立程序。",
+      "acceptance": "仅登记授权原生接入与准确文件摘要，不代表真实像素/媒体/Clipboard、完整验收、其它任务或全仓通过。"
+    },
+    {
+      "task_id": "T-1053",
+      "files": [
+        "frontend/public/reference-editors/doocs-md/native/chunks/dist-DDDV7C0t.js"
+      ],
+      "file_sha256": "d175913746a301665be9fa17969a835a8a1965570e048640e7606fc5c9d44dc2",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1053-01",
+      "scope_source": "docs/features/t1053-native-editor-style-integration.md",
+      "reason": "本文件属于DEC-T1053-01明确授权的固定开源组件原生化与重建证据。标记来自既有浏览器引擎/Markdown语言高亮/包元信息或实际探针的引用；构建沿原锁定JS依赖。未新增Swift/Rust编译链、应用运行时、IPC宿主服务或独立程序。",
+      "acceptance": "仅登记授权原生接入与准确文件摘要，不代表真实像素/媒体/Clipboard、完整验收、其它任务或全仓通过。"
+    },
+    {
+      "task_id": "T-1053",
+      "files": [
+        "frontend/public/reference-editors/doocs-md/native/chunks/prettier-GzVfHlfC.js"
+      ],
+      "file_sha256": "337d6b42491e0674df523b660ea82259fa197916378dbd32990a96d853f21944",
+      "categories": [
+        "runtime"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1053-01",
+      "scope_source": "docs/features/t1053-native-editor-style-integration.md",
+      "reason": "本文件属于DEC-T1053-01明确授权的固定开源组件原生化与重建证据。标记来自既有浏览器引擎/Markdown语言高亮/包元信息或实际探针的引用；构建沿原锁定JS依赖。未新增Swift/Rust编译链、应用运行时、IPC宿主服务或独立程序。",
+      "acceptance": "仅登记授权原生接入与准确文件摘要，不代表真实像素/媒体/Clipboard、完整验收、其它任务或全仓通过。"
+    },
+    {
+      "task_id": "T-1053",
+      "files": [
+        "frontend/public/reference-editors/doocs-md/native/chunks/render-DsjZRMnM.js"
+      ],
+      "file_sha256": "99704573c2a7bf293981ca76785a4c739f9d14f444c2d4954ebe946d99728c8f",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1053-01",
+      "scope_source": "docs/features/t1053-native-editor-style-integration.md",
+      "reason": "本文件属于DEC-T1053-01明确授权的固定开源组件原生化与重建证据。标记来自既有浏览器引擎/Markdown语言高亮/包元信息或实际探针的引用；构建沿原锁定JS依赖。未新增Swift/Rust编译链、应用运行时、IPC宿主服务或独立程序。",
+      "acceptance": "仅登记授权原生接入与准确文件摘要，不代表真实像素/媒体/Clipboard、完整验收、其它任务或全仓通过。"
+    },
+    {
+      "task_id": "T-1053",
+      "files": [
+        "frontend/public/reference-editors/doocs-md/native/chunks/storage-jiCkQUgy.js"
+      ],
+      "file_sha256": "d96f4ee07bd4ba1c869646bf60e4c33814450337389f929c484112d5114e8b08",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1053-01",
+      "scope_source": "docs/features/t1053-native-editor-style-integration.md",
+      "reason": "本文件属于DEC-T1053-01明确授权的固定开源组件原生化与重建证据。标记来自既有浏览器引擎/Markdown语言高亮/包元信息或实际探针的引用；构建沿原锁定JS依赖。未新增Swift/Rust编译链、应用运行时、IPC宿主服务或独立程序。",
+      "acceptance": "仅登记授权原生接入与准确文件摘要，不代表真实像素/媒体/Clipboard、完整验收、其它任务或全仓通过。"
+    },
+    {
+      "task_id": "T-1053",
+      "files": [
+        "frontend/public/reference-editors/doocs-md/native/native-build-graph.json"
+      ],
+      "file_sha256": "73d35916f387081221bb73aba6c7c7c2045a652bf7aed72bcbd38fc18667bf92",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1053-01",
+      "scope_source": "docs/features/t1053-native-editor-style-integration.md",
+      "reason": "本文件属于DEC-T1053-01明确授权的固定开源组件原生化与重建证据。标记来自既有浏览器引擎/Markdown语言高亮/包元信息或实际探针的引用；构建沿原锁定JS依赖。未新增Swift/Rust编译链、应用运行时、IPC宿主服务或独立程序。",
+      "acceptance": "仅登记授权原生接入与准确文件摘要，不代表真实像素/媒体/Clipboard、完整验收、其它任务或全仓通过。"
+    },
+    {
+      "task_id": "T-1053",
+      "files": [
+        "frontend/public/reference-editors/doocs-md/static/js/md-configs-l_iJ-wjP.js"
+      ],
+      "file_sha256": "e38414701cd1a9418f29ad670449cc622a09813b0c2ad9a78ca30f5cd47fb3c8",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1053-01",
+      "scope_source": "docs/features/t1053-native-editor-style-integration.md",
+      "reason": "保留T1042/T1046/T1049固定源已有的独立页产物及重建说明，只作历史和源码来源；本轮产品编辑入口已转为原生组件。Bun/语言名称为原工具或包内文字，不启用新增应用运行时/语言编译链。",
+      "acceptance": "仅登记授权原生接入与准确文件摘要，不代表真实像素/媒体/Clipboard、完整验收、其它任务或全仓通过。"
+    },
+    {
+      "task_id": "T-1053",
+      "files": [
+        "frontend/public/reference-editors/doocs-md/static/js/md-dist-BQyrk4Ji.js"
+      ],
+      "file_sha256": "aba2e70b966e5da296ba19bb094172bc5d6ef5d18c667a5157f23855d0143bbb",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1053-01",
+      "scope_source": "docs/features/t1053-native-editor-style-integration.md",
+      "reason": "保留T1042/T1046/T1049固定源已有的独立页产物及重建说明，只作历史和源码来源；本轮产品编辑入口已转为原生组件。Bun/语言名称为原工具或包内文字，不启用新增应用运行时/语言编译链。",
+      "acceptance": "仅登记授权原生接入与准确文件摘要，不代表真实像素/媒体/Clipboard、完整验收、其它任务或全仓通过。"
+    },
+    {
+      "task_id": "T-1053",
+      "files": [
+        "frontend/public/reference-editors/doocs-md/static/js/md-prettier-BRk29n7c.js"
+      ],
+      "file_sha256": "69f7651a1a99d41aab744f06b8f468ed7c6d07d2b10f00e51c2a73aae45ef053",
+      "categories": [
+        "runtime"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1053-01",
+      "scope_source": "docs/features/t1053-native-editor-style-integration.md",
+      "reason": "保留T1042/T1046/T1049固定源已有的独立页产物及重建说明，只作历史和源码来源；本轮产品编辑入口已转为原生组件。Bun/语言名称为原工具或包内文字，不启用新增应用运行时/语言编译链。",
+      "acceptance": "仅登记授权原生接入与准确文件摘要，不代表真实像素/媒体/Clipboard、完整验收、其它任务或全仓通过。"
+    },
+    {
+      "task_id": "T-1053",
+      "files": [
+        "frontend/public/reference-editors/doocs-md/static/js/md-ui-Dai5M5YQ.js"
+      ],
+      "file_sha256": "0761c35f3d6299c2f76f2e6f61f36e28ca5ca01edc9bb487fc23429c902e9c21",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1053-01",
+      "scope_source": "docs/features/t1053-native-editor-style-integration.md",
+      "reason": "保留T1042/T1046/T1049固定源已有的独立页产物及重建说明，只作历史和源码来源；本轮产品编辑入口已转为原生组件。Bun/语言名称为原工具或包内文字，不启用新增应用运行时/语言编译链。",
+      "acceptance": "仅登记授权原生接入与准确文件摘要，不代表真实像素/媒体/Clipboard、完整验收、其它任务或全仓通过。"
+    },
+    {
+      "task_id": "T-1053",
+      "files": [
+        "frontend/public/reference-editors/opencut-classic/assets/index-DpYe8P5g.js"
+      ],
+      "file_sha256": "c417c36665be9c278eb476c63a1f1505a82934f4504761921f1da29e97359f0c",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1053-01",
+      "scope_source": "docs/features/t1053-native-editor-style-integration.md",
+      "reason": "保留T1042/T1046/T1049固定源已有的独立页产物及重建说明，只作历史和源码来源；本轮产品编辑入口已转为原生组件。Bun/语言名称为原工具或包内文字，不启用新增应用运行时/语言编译链。",
+      "acceptance": "仅登记授权原生接入与准确文件摘要，不代表真实像素/媒体/Clipboard、完整验收、其它任务或全仓通过。"
+    },
+    {
+      "task_id": "T-1053",
+      "files": [
+        "frontend/public/reference-editors/opencut-classic/native/native.js"
+      ],
+      "file_sha256": "f61b0939ff9a185861dbc7addee2c40ef1b3a0d71cfac81c31c41d1f43a50354",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1053-01",
+      "scope_source": "docs/features/t1053-native-editor-style-integration.md",
+      "reason": "本文件属于DEC-T1053-01明确授权的固定开源组件原生化与重建证据。标记来自既有浏览器引擎/Markdown语言高亮/包元信息或实际探针的引用；构建沿原锁定JS依赖。未新增Swift/Rust编译链、应用运行时、IPC宿主服务或独立程序。",
+      "acceptance": "仅登记授权原生接入与准确文件摘要，不代表真实像素/媒体/Clipboard、完整验收、其它任务或全仓通过。"
+    },
+    {
+      "task_id": "T-1053",
+      "files": [
+        "reference-editors/manifest.json"
+      ],
+      "file_sha256": "de59866e650e8c0c6d40f836c84460eaa219603dcc91b07878377bdceaca3fd0",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1053-01",
+      "scope_source": "docs/features/t1053-native-editor-style-integration.md",
+      "reason": "本文件属于DEC-T1053-01明确授权的固定开源组件原生化与重建证据。标记来自既有浏览器引擎/Markdown语言高亮/包元信息或实际探针的引用；构建沿原锁定JS依赖。未新增Swift/Rust编译链、应用运行时、IPC宿主服务或独立程序。",
+      "acceptance": "仅登记授权原生接入与准确文件摘要，不代表真实像素/媒体/Clipboard、完整验收、其它任务或全仓通过。"
+    },
+    {
+      "task_id": "T-1053",
+      "files": [
+        "reference-editors/opencut-classic/README.md"
+      ],
+      "file_sha256": "7278a81defdeb995b4a7b1ca8794f3abaf0d222dfc4db58af7dc77912200c25e",
+      "categories": [
+        "runtime"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1053-01",
+      "scope_source": "docs/features/t1053-native-editor-style-integration.md",
+      "reason": "保留T1042/T1046/T1049固定源已有的独立页产物及重建说明，只作历史和源码来源；本轮产品编辑入口已转为原生组件。Bun/语言名称为原工具或包内文字，不启用新增应用运行时/语言编译链。",
+      "acceptance": "仅登记授权原生接入与准确文件摘要，不代表真实像素/媒体/Clipboard、完整验收、其它任务或全仓通过。"
+    },
+    {
+      "task_id": "T-1053",
+      "files": [
+        "reference-editors/opencut-classic/REBUILD_CONSISTENCY.json"
+      ],
+      "file_sha256": "f78df6fc00742d5b9614067672dc8868dd2c3b3f6709ac2d0d3db590b61589f5",
+      "categories": [
+        "runtime"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1053-01",
+      "scope_source": "docs/features/t1053-native-editor-style-integration.md",
+      "reason": "保留T1042/T1046/T1049固定源已有的独立页产物及重建说明，只作历史和源码来源；本轮产品编辑入口已转为原生组件。Bun/语言名称为原工具或包内文字，不启用新增应用运行时/语言编译链。",
+      "acceptance": "仅登记授权原生接入与准确文件摘要，不代表真实像素/媒体/Clipboard、完整验收、其它任务或全仓通过。"
+    },
+    {
+      "task_id": "T-1053",
+      "files": [
+        "reference-editors/opencut-classic/native/DELIVERY.json"
+      ],
+      "file_sha256": "c2227ae8a1c4eae396994f5323bafd78b80fb559ae612e50039a57f52d0e6ed0",
+      "categories": [
+        "runtime"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1053-01",
+      "scope_source": "docs/features/t1053-native-editor-style-integration.md",
+      "reason": "本文件属于DEC-T1053-01明确授权的固定开源组件原生化与重建证据。标记来自既有浏览器引擎/Markdown语言高亮/包元信息或实际探针的引用；构建沿原锁定JS依赖。未新增Swift/Rust编译链、应用运行时、IPC宿主服务或独立程序。",
+      "acceptance": "仅登记授权原生接入与准确文件摘要，不代表真实像素/媒体/Clipboard、完整验收、其它任务或全仓通过。"
+    },
+    {
+      "task_id": "T-1053",
+      "files": [
+        "reference-editors/opencut-classic/native/VERIFICATION.md"
+      ],
+      "file_sha256": "44c222af6d7f45157936c83b37c6d6c8314b5b63f1ca0c3826cc8d93ab3b37ef",
+      "categories": [
+        "runtime"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1053-01",
+      "scope_source": "docs/features/t1053-native-editor-style-integration.md",
+      "reason": "本文件属于DEC-T1053-01明确授权的固定开源组件原生化与重建证据。标记来自既有浏览器引擎/Markdown语言高亮/包元信息或实际探针的引用；构建沿原锁定JS依赖。未新增Swift/Rust编译链、应用运行时、IPC宿主服务或独立程序。",
+      "acceptance": "仅登记授权原生接入与准确文件摘要，不代表真实像素/媒体/Clipboard、完整验收、其它任务或全仓通过。"
+    },
+    {
+      "task_id": "T-1053",
+      "files": [
+        "reference-editors/opencut-classic/native/rebuild-native.sh"
+      ],
+      "file_sha256": "ce78f642f07e68703302cbb6c7cd9f7e25dc51969851f7ce9f1c246d49380c72",
+      "categories": [
+        "runtime"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1053-01",
+      "scope_source": "docs/features/t1053-native-editor-style-integration.md",
+      "reason": "本文件属于DEC-T1053-01明确授权的固定开源组件原生化与重建证据。标记来自既有浏览器引擎/Markdown语言高亮/包元信息或实际探针的引用；构建沿原锁定JS依赖。未新增Swift/Rust编译链、应用运行时、IPC宿主服务或独立程序。",
+      "acceptance": "仅登记授权原生接入与准确文件摘要，不代表真实像素/媒体/Clipboard、完整验收、其它任务或全仓通过。"
+    },
+    {
+      "task_id": "T-1053",
+      "files": [
+        "docs/verification/t1053/governance-first.json"
+      ],
+      "file_sha256": "d866f590f5a8bce93b475a4a71ac68149c3909e6a7326eb998d6e7390b308417",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1053-01",
+      "scope_source": "docs/features/t1053-native-editor-style-integration.md",
+      "reason": "实际治理失败列表逐字引用ipc分类名，是前置检查证据；不新增任何进程通信机制。",
+      "acceptance": "仅登记真实失败引用的准确摘要，不作功能或全仓通过证明。"
+    },
+    {
+      "task_id": "T-1055",
+      "files": [
+        "frontend/src/server/persistence-client.ts"
+      ],
+      "file_sha256": "33f6db805c632e930f536888c72fcdf1b16416af0ad31436ee1217b99bf792c0",
+      "categories": [
+        "credential_store",
+        "language_toolchain",
+        "native_executable"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1055-01",
+      "scope_source": "docs/features/t1055-script-derived-content-workbench.md",
+      "reason": "本轮在既有组合根只读注入 publishing/assets 公开端口，扩原主稿上下文、真实 metadata 出处、冻结图片目录与 exact 文件可读性。三个检测标记来自该大文件既有凭据存储、编译链和本地执行器引用；前后源码增量没有新增这些机制，未扩原登录、引擎、运行环境或安装范围。根 before SHA 与隔离交付清单匹配；此条登记精确文件预算，不能授权其它任务或未来机制。",
+      "acceptance": "仅解除本任务组合根既有词汇的预算缺登记；不表示既有边界问题、全局 reconcile、真实浏览器或模型验收通过。"
+    },
+    {
+      "task_id": "T-1058",
+      "files": [
+        "docs/features/t1058-composable-agent-model-research.review.md"
+      ],
+      "file_sha256": "34c0051c1b7d8445520806ed45fe41e42d1866cbe4d37cd64dfb1b02bf970a47",
+      "categories": [
+        "os_signing"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1058-01",
+      "scope_source": "docs/features/t1058-composable-agent-model-research.md",
+      "reason": "本文件是原样保留的独立研究准入回执；仅引用被澄清的激活权限术语，未引入操作系统签名或任何运行时机制。机制新增为0。词法分类不等于产品新增范围；精确哈希变动即须重核。",
+      "acceptance": "只登记研究引用，不批准签名机制、未来合同、真实连接或产品验收。"
+    },
+    {
+      "task_id": "T-1058",
+      "files": [
+        "docs/verification/t1058/spec-review-round-2.json"
+      ],
+      "file_sha256": "ecd3ef2615d638f4484c5e189b3fbb3a7e74f5a1a366c916a09bea8b9e0749e1",
+      "categories": [
+        "os_signing"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1058-01",
+      "scope_source": "docs/features/t1058-composable-agent-model-research.md",
+      "reason": "本文件是原样保留的独立研究准入回执；仅引用被澄清的激活权限术语，未引入操作系统签名或任何运行时机制。机制新增为0。词法分类不等于产品新增范围；精确哈希变动即须重核。",
+      "acceptance": "只登记研究引用，不批准签名机制、未来合同、真实连接或产品验收。"
+    },
+    {
+      "task_id": "T-1058",
+      "files": [
+        "docs/verification/t1058/source-manifest.json"
+      ],
+      "file_sha256": "8cfa9bae6ba573412d0315a1c566efea71d94522941bf39173fe964bb7a92704",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1058-01",
+      "scope_source": "docs/features/t1058-composable-agent-model-research.md",
+      "reason": "只读公开源码抓取清单含现有 Cargo 文件名。此任务未安装、运行、引入或修改语言工具链，机制新增0；登记的是准确文件哈希的研究引用，不覆盖任何产品实现文件。",
+      "acceptance": "仅记录公开源文件元数据，不授权语言工具链或运行时实施。"
+    },
+    {
+      "task_id": "T-1058",
+      "files": [
+        "docs/verification/t1058/delivery-review.md"
+      ],
+      "file_sha256": "1588ca75a74b661b72ff3f216bdf7c72a0a4b348b8265f92318d6d3f6c3185bb",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1058-01",
+      "scope_source": "docs/features/t1058-composable-agent-model-research.md",
+      "reason": "原样保存的独立研究交付审核只引用既有 Cargo 文件名及第三条来源元数据登记，未提出安装、运行或修改语言工具链。机制新增0；没有生产路径或通配授权。",
+      "acceptance": "只登记独立审核原文的研究引用，不授权工具链、运行时或未来产品实施。"
+    },
+    {
+      "task_id": "T-1060",
+      "files": [
+        "ai-worker/vendor/acpx/src/agent-registry.ts"
+      ],
+      "file_sha256": "815d75d89c7e178ac8f8dda275c1047532ad0e9ffc0acfdf1758b7e260e3a6de",
+      "categories": [
+        "runtime"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1060-01",
+      "scope_source": "docs/features/t1060-agent-source-integration.md",
+      "reason": "用户已认可固定开源客户端/适配器源码及必要依赖接入；仅迁移源码闭包，实际宿主固定路径/参数；不引入上游任务、历史或凭据权威。",
+      "acceptance": "来源已核对；编译与实际接通仍待验证，不代表验收通过。"
+    },
+    {
+      "task_id": "T-1060",
+      "files": [
+        "ai-worker/vendor/acpx/src/spawn-command-options.ts"
+      ],
+      "file_sha256": "a1e6221922fbdcbef4dd1046dc234cf28d2fff51d1b129db6757e63b6b28b9ca",
+      "categories": [
+        "native_executable"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1060-01",
+      "scope_source": "docs/features/t1060-agent-source-integration.md",
+      "reason": "用户已认可固定开源客户端/适配器源码及必要依赖接入；仅迁移源码闭包，实际宿主固定路径/参数；不引入上游任务、历史或凭据权威。",
+      "acceptance": "来源已核对；编译与实际接通仍待验证，不代表验收通过。"
+    },
+    {
+      "task_id": "T-1060",
+      "files": [
+        "ai-worker/vendor/codex-acp/package.json"
+      ],
+      "file_sha256": "4c792564680304b0d4cd604baa41a67a0dd50768b6afe15ca982aefce647962f",
+      "categories": [
+        "runtime"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1060-01",
+      "scope_source": "docs/features/t1060-agent-source-integration.md",
+      "reason": "用户已认可固定开源客户端/适配器源码及必要依赖接入；仅迁移源码闭包，实际宿主固定路径/参数；不引入上游任务、历史或凭据权威。",
+      "acceptance": "来源已核对；编译与实际接通仍待验证，不代表验收通过。"
+    },
+    {
+      "task_id": "T-1060",
+      "files": [
+        "ai-worker/vendor/codex-acp/src/CodexElicitationHandler.ts"
+      ],
+      "file_sha256": "36cd147a5c0d090e2d3be5ef707efbd92dc2a7222f97549289a31db88ccd8b24",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1060-01",
+      "scope_source": "docs/features/t1060-agent-source-integration.md",
+      "reason": "用户已认可固定开源客户端/适配器源码及必要依赖接入；仅迁移源码闭包，实际宿主固定路径/参数；不引入上游任务、历史或凭据权威。",
+      "acceptance": "来源已核对；编译与实际接通仍待验证，不代表验收通过。"
+    },
+    {
+      "task_id": "T-1060",
+      "files": [
+        "pnpm-lock.yaml"
+      ],
+      "file_sha256": "bda07a706d06292cc17e354ba5bd9ed138dd8a7447ed0aaff5a76a2ca8955598",
+      "categories": [
+        "runtime"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1060-01",
+      "scope_source": "docs/features/t1060-agent-source-integration.md",
+      "reason": "用户已认可固定开源客户端/适配器源码及必要依赖接入；仅迁移源码闭包，实际宿主固定路径/参数；不引入上游任务、历史或凭据权威。",
+      "acceptance": "来源已核对；编译与实际接通仍待验证，不代表验收通过。"
+    },
+    {
+      "task_id": "T-1060",
+      "files": [
+        "ai-worker/src/execution/worker-entry.ts"
+      ],
+      "file_sha256": "0f2e22bb34e58787e7992998d3dc5e5f084bf344c094897a044fefbfddb43427",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1060-01",
+      "scope_source": "docs/features/t1060-agent-source-integration.md",
+      "reason": "关联已授权接入必须的原 Codex 预检、任务兼容和服务装配；复用原进程通信、状态与凭据接口，只增加外部回合接线/受控环境透传，不新增通信、凭据存储或原生进程权威。工作树旧 WIP 不属于本轮提交。",
+      "acceptance": "精确写集与提交差异独立复核；真实工具、WorkBuddy 和跨平台仍待验。"
+    },
+    {
+      "task_id": "T-1060",
+      "files": [
+        "ai-worker/src/execution/worker-runtime.ts"
+      ],
+      "file_sha256": "1a84096d96c937a376565ea999be5a23c3b75ba3072daaeb821afe61555c7c15",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1060-01",
+      "scope_source": "docs/features/t1060-agent-source-integration.md",
+      "reason": "关联已授权接入必须的原 Codex 预检、任务兼容和服务装配；复用原进程通信、状态与凭据接口，只增加外部回合接线/受控环境透传，不新增通信、凭据存储或原生进程权威。工作树旧 WIP 不属于本轮提交。",
+      "acceptance": "精确写集与提交差异独立复核；真实工具、WorkBuddy 和跨平台仍待验。"
+    },
+    {
+      "task_id": "T-1060",
+      "files": [
+        "backend/src/modules/ai-runtime/request-io.service.ts"
+      ],
+      "file_sha256": "c6b8ebb21ee4007b770ce9a3a5f27f1dee74550376fef6a30466960f0a5e0f4f",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1060-01",
+      "scope_source": "docs/features/t1060-agent-source-integration.md",
+      "reason": "关联已授权接入必须的原 Codex 预检、任务兼容和服务装配；复用原进程通信、状态与凭据接口，只增加外部回合接线/受控环境透传，不新增通信、凭据存储或原生进程权威。工作树旧 WIP 不属于本轮提交。",
+      "acceptance": "精确写集与提交差异独立复核；真实工具、WorkBuddy 和跨平台仍待验。"
+    },
+    {
+      "task_id": "T-1060",
+      "files": [
+        "backend/src/modules/execution/worker-supervisor.ts"
+      ],
+      "file_sha256": "7919f68fe33821224f2789392c31cb9e115c115bc6a1b7d0009cbe1cec69b269",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1060-01",
+      "scope_source": "docs/features/t1060-agent-source-integration.md",
+      "reason": "关联已授权接入必须的原 Codex 预检、任务兼容和服务装配；复用原进程通信、状态与凭据接口，只增加外部回合接线/受控环境透传，不新增通信、凭据存储或原生进程权威。工作树旧 WIP 不属于本轮提交。",
+      "acceptance": "精确写集与提交差异独立复核；真实工具、WorkBuddy 和跨平台仍待验。"
+    },
+    {
+      "task_id": "T-1060",
+      "files": [
+        "frontend/src/server/persistence-client.ts"
+      ],
+      "file_sha256": "3900956a9c102957b52de995ff8f633a9000790f864ab8737416e89a0d5b114c",
+      "categories": [
+        "credential_store",
+        "language_toolchain",
+        "native_executable"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1060-01",
+      "scope_source": "docs/features/t1060-agent-source-integration.md",
+      "reason": "关联已授权接入必须的原 Codex 预检、任务兼容和服务装配；复用原进程通信、状态与凭据接口，只增加外部回合接线/受控环境透传，不新增通信、凭据存储或原生进程权威。工作树旧 WIP 不属于本轮提交。",
+      "acceptance": "精确写集与提交差异独立复核；真实工具、WorkBuddy 和跨平台仍待验。"
+    },
+    {
+      "task_id": "T-1060",
+      "files": [
+        "docs/verification/t1060/verification.md"
+      ],
+      "file_sha256": "220c122bad04df936617aed0e95e6a69484d4834c570cbb1466b0183c705d8d3",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1060-01",
+      "scope_source": "docs/features/t1060-agent-source-integration.md",
+      "reason": "仅记录现有 Rust 模块的隔离验证结果；沿用仓库原生工具链，没有新增运行时或工具链。",
+      "acceptance": "精确写集与提交差异独立复核；真实工具、WorkBuddy 和跨平台仍待验。"
+    },
+    {
+      "task_id": "T-1060",
+      "files": [
+        "docs/verification/t1060/workbuddy-native-review.md"
+      ],
+      "file_sha256": "314ae934e77962d91eac35d2bf54aa6915b3cfd670b232b7a88138c6d431d3e8",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1060-01",
+      "scope_source": "docs/features/t1060-agent-source-integration.md",
+      "reason": "仅记录现有 Rust 模块的隔离验证结果；沿用仓库原生工具链，没有新增运行时或工具链。",
+      "acceptance": "精确写集与提交差异独立复核；真实工具、WorkBuddy 和跨平台仍待验。"
+    },
+    {
+      "task_id": "T-1060",
+      "files": [
+        "docs/verification/t1060/workbuddy-native-test.json"
+      ],
+      "file_sha256": "90dacf98b0fab33b1a47692a7a1df9a8f1ab7d913486109bbb8d5364f328eefd",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1060-01",
+      "scope_source": "docs/features/t1060-agent-source-integration.md",
+      "reason": "仅记录现有 Rust 模块的隔离验证结果；沿用仓库原生工具链，没有新增运行时或工具链。",
+      "acceptance": "精确写集与提交差异独立复核；真实工具、WorkBuddy 和跨平台仍待验。"
+    },
+    {
+      "task_id": "T-1060",
+      "files": [
+        "docs/verification/t1060/governance-repair-review.md"
+      ],
+      "file_sha256": "631be1b520e3c3d53e226f1cfef40cc29ba331de7932164bceede690758624de",
+      "categories": [
+        "ipc",
+        "language_toolchain",
+        "credential_store",
+        "native_executable"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1060-01",
+      "scope_source": "docs/features/t1060-agent-source-integration.md",
+      "reason": "独立只读复核报告引用父提交原有机制的词项，没有新增机制或扩大产品授权。",
+      "acceptance": "只读复核 findings []；真实工具与跨平台仍待验。"
+    },
+    {
+      "task_id": "T-1060",
+      "files": [
+        "docs/verification/t1060/real-ai/upstream-direct-namespace-research.md"
+      ],
+      "file_sha256": "437b3b037135222836dcdbbfa0315c6b0f1fadf05de68bce1cddc6d0e96fcdd3",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1060-02",
+      "scope_source": "docs/features/t1060-agent-source-integration.md",
+      "reason": "真实 AI 验证的只读来源和证据报告；只引用已存在的 Codex Rust 联合配置或 WorkBuddy 发布入口，没有迁入 WorkBuddy 闭源实现、安装/启动其它运行时或引入新工具链。按准确摘要登记研究引用，不扩大原接入机制。",
+      "acceptance": "仅预算归档；真实工具/图片链另以原 Worker 与 backend 记录验收，WorkBuddy 信任和真实跨应用调用仍待验。"
+    },
+    {
+      "task_id": "T-1060",
+      "files": [
+        "docs/verification/t1060/real-ai/upstream-direct-namespace-sources.json"
+      ],
+      "file_sha256": "a172217ddbec20ab6e8728f412fa7cc19c92cb4147dd6785dabd4debecad9b93",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1060-02",
+      "scope_source": "docs/features/t1060-agent-source-integration.md",
+      "reason": "真实 AI 验证的只读来源和证据报告；只引用已存在的 Codex Rust 联合配置或 WorkBuddy 发布入口，没有迁入 WorkBuddy 闭源实现、安装/启动其它运行时或引入新工具链。按准确摘要登记研究引用，不扩大原接入机制。",
+      "acceptance": "仅预算归档；真实工具/图片链另以原 Worker 与 backend 记录验收，WorkBuddy 信任和真实跨应用调用仍待验。"
+    },
+    {
+      "task_id": "T-1060",
+      "files": [
+        "docs/verification/t1060/real-ai/workbuddy-report.md"
+      ],
+      "file_sha256": "f1d4f5a91bee644521feaae50dc9c46df5e09a05751c9ef0935775da5fd425bc",
+      "categories": [
+        "native_executable"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1060-02",
+      "scope_source": "docs/features/t1060-agent-source-integration.md",
+      "reason": "真实 AI 验证的只读来源和证据报告；只引用已存在的 Codex Rust 联合配置或 WorkBuddy 发布入口，没有迁入 WorkBuddy 闭源实现、安装/启动其它运行时或引入新工具链。按准确摘要登记研究引用，不扩大原接入机制。",
+      "acceptance": "仅预算归档；真实工具/图片链另以原 Worker 与 backend 记录验收，WorkBuddy 信任和真实跨应用调用仍待验。"
+    },
+    {
+      "task_id": "T-1060",
+      "files": [
+        "docs/verification/t1060/real-ai/workbuddy-source-hashes.json"
+      ],
+      "file_sha256": "9d50bf66f50aa9b249a7612cfec05f5cbea93be27351655b91dea8a21fa72d3e",
+      "categories": [
+        "native_executable"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1060-02",
+      "scope_source": "docs/features/t1060-agent-source-integration.md",
+      "reason": "真实 AI 验证的只读来源和证据报告；只引用已存在的 Codex Rust 联合配置或 WorkBuddy 发布入口，没有迁入 WorkBuddy 闭源实现、安装/启动其它运行时或引入新工具链。按准确摘要登记研究引用，不扩大原接入机制。",
+      "acceptance": "仅预算归档；真实工具/图片链另以原 Worker 与 backend 记录验收，WorkBuddy 信任和真实跨应用调用仍待验。"
+    }
+  ],
+  "historical_baselines": []
+}

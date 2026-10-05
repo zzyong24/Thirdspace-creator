@@ -13,6 +13,7 @@
 import * as React from "react";
 import { act, cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import {writeAssistantEngine} from "./assistant-engine";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const listTasks = vi.fn();
@@ -85,6 +86,8 @@ vi.mock("./live-chat-session", () => ({
       control: { fetch: vi.fn(), cancel: vi.fn(async () => {}) },
       conversationId: null,
       epoch: 0,
+      executionEngine: "pi",
+      sourceEngines: new Map(),
       get transport() { return initialChatTransport; },
       set transport(value: { body?: unknown } | null) { initialChatTransport ??= value; },
     };
@@ -171,6 +174,59 @@ beforeEach(() => {
 });
 
 describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
+  it("[T-1055] 编导输入区不显示引擎选择和重查控件", () => {
+    render(<AICopilotContent viewModel={VM} />);
+    expect(screen.queryByRole("combobox", {name: "编导引擎"})).toBeNull();
+    expect(screen.queryByRole("button", {name: "重新检查"})).toBeNull();
+  });
+
+  it("[T-1055] CreatorOS 默认引擎不触发本地 Codex 检测", async () => {
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockRejectedValue(Error("检测替身"));
+    render(<AICopilotContent viewModel={VM} />);
+    await act(async () => {});
+    expect(fetchMock.mock.calls.filter(([input]) => String(input) === "/api/chat/engines")).toHaveLength(0);
+  });
+
+  it("[T-1055] 设置更新同步新请求，既有消息重试保留原引擎且不重建 transport", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(JSON.stringify({engines: [{engine: "codex", installed: true, available: true, version: "0.159.3", loginStatus: "authenticated"}]}), {status: 200}));
+    const view = render(<AICopilotContent viewModel={VM} />);
+    const transport = initialChatTransport as unknown as {prepareSendMessagesRequest: (input: Record<string, unknown>) => {body: {executionEngine?: string}}};
+    const prepare = (id: string, trigger = "submit-message") => transport.prepareSendMessagesRequest({body: {}, id: "chat", messages: [{id, role: "user", parts: []}], trigger}).body;
+    expect(prepare("original").executionEngine).toBe("pi");
+    mockStatus = "streaming";
+    view.rerender(<AICopilotContent viewModel={VM} />);
+    act(() => writeAssistantEngine("codex"));
+    await waitFor(() => expect((mockedLiveSession as {executionEngine: string}).executionEngine).toBe("codex"));
+    expect(initialChatTransport).toBe(transport);
+    expect(stop).not.toHaveBeenCalled();
+    expect(prepare("original", "regenerate-message").executionEngine).toBe("pi");
+    expect(prepare("new").executionEngine).toBe("codex");
+  });
+
+  it("[T-1055] Codex 不可用时保留输入并指向真实设置卡", async () => {
+    window.localStorage.setItem("creatoros:assistant-engine:v1", "codex");
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(JSON.stringify({engines: [{engine: "codex", installed: true, available: false, version: null, loginStatus: "unauthenticated"}]}), {status: 200}));
+    const user = userEvent.setup();
+    render(<AICopilotContent viewModel={VM} />);
+    await user.type(screen.getByLabelText("我能帮你做什么"), "保留我的输入");
+    await waitFor(() => expect(screen.getByLabelText("提交提示给 Copilot")).toBeDisabled());
+    expect(screen.getByRole("link", {name: "设置编导引擎"})).toHaveAttribute("href", "/settings?highlight=assistant-engine");
+    expect(screen.getByLabelText("我能帮你做什么")).toHaveValue("保留我的输入");
+    expect(sendMessage).not.toHaveBeenCalled();
+  });
+
+  it("文章配图深链在已有会话仍预填，并提交可信文章与段落锚点", async () => {
+    mockMessages = [{id: "earlier", role: "assistant", parts: [{type: "text", text: "上一轮答复"}]}];
+    mockSearch = "copilot=open&surface=project&fn=material.generate.image&selKind=article_section&selId=section-1" +
+      "&selOutputId=output-1&selVersionId=version-2&selProjectId=project-1" +
+      "&scope=project%3Aproject-1&prefill=" + encodeURIComponent("为此段生成图片");
+    render(<AICopilotContent viewModel={VM} />);
+    await waitFor(() => expect((screen.getByLabelText("我能帮你做什么") as HTMLTextAreaElement).value).toBe("为此段生成图片"));
+    const body = await (initialChatTransport!.body as () => Record<string, unknown>)();
+    expect(body).toMatchObject({chatContext: {projectId: "project-1", selection: {
+      kind: "article_section", ids: ["section-1"], outputId: "output-1", versionId: "version-2",
+    }}});
+  });
   it("[T-473] 深链/嵌入 functionKey 只消费一次，新命令到来才重新武装", () => {
     const command = createOneShotFunctionKey("topic.enrich");
     expect(command.consume()).toBe("topic.enrich");
@@ -1238,14 +1294,17 @@ describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
   });
 
   it("[T-715] 受管额度不足 → 显示充值入口，不显示模型设置或无意义重试", async () => {
-    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
-      new Response(
-        JSON.stringify({
+    // 页面还有独立的引擎状态读取，不能消耗充值接口的回执。
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => {
+      if (String(input) === "/api/v1/local/ai-credits/connect") {
+        return new Response(JSON.stringify({
           openUrl: "https://growth.example/credits/launch#PORTAL_CODE_123",
-        }),
-        { status: 200, headers: { "content-type": "application/json" } },
-      ),
-    );
+        }), {status: 200, headers: {"content-type": "application/json"}});
+      }
+      return new Response(JSON.stringify({engines: []}), {
+        status: 200, headers: {"content-type": "application/json"},
+      });
+    });
     const user = userEvent.setup();
     mockError = new Error("AI 额度不足，请充值后再试。");
     mockMessages = [

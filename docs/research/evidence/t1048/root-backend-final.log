@@ -1,0 +1,9 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/backend
+
+
+ Test Files  16 passed (16)
+      Tests  91 passed (91)
+   Start at  04:06:26
+   Duration  65.35s (transform 3.21s, setup 0ms, import 14.79s, tests 48.05s, environment 2ms)
+

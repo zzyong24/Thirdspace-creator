@@ -1,0 +1,8 @@
+governance-guard HALT (7)
+  ✗ ai-worker/src/execution/worker-entry.ts: unledgered complexity marker ipc; record structured budget entry and default non-essential hardening to a later task
+  ✗ ai-worker/src/execution/worker-runtime.ts: unledgered complexity marker ipc; record structured budget entry and default non-essential hardening to a later task
+  ✗ backend/src/modules/ai-runtime/request-io.service.ts: unledgered complexity marker ipc; record structured budget entry and default non-essential hardening to a later task
+  ✗ backend/src/modules/execution/worker-supervisor.ts: unledgered complexity marker ipc; record structured budget entry and default non-essential hardening to a later task
+  ✗ frontend/src/server/persistence-client.ts: unledgered complexity marker credential_store; record structured budget entry and default non-essential hardening to a later task
+  ✗ frontend/src/server/persistence-client.ts: unledgered complexity marker language_toolchain; record structured budget entry and default non-essential hardening to a later task
+  ✗ frontend/src/server/persistence-client.ts: unledgered complexity marker native_executable; record structured budget entry and default non-essential hardening to a later task

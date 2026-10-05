@@ -1,0 +1,26 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/backend
+
+ ❯ src/modules/production/production-editor.integration.test.ts (8 tests | 1 failed) 7367ms
+     × 冻结 A 后保存 B；提交回执丢失重试同任务，另一请求另一个任务 764ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/production/production-editor.integration.test.ts > T-1037 公共制作工程与持久版本 > 冻结 A 后保存 B；提交回执丢失重试同任务，另一请求另一个任务
+TypeError: s.renderEditor is not a function
+ ❯ src/modules/production/production-editor.integration.test.ts:81:20
+     79|     const s=createProductionService({db,now:()=>now,nextId:p=>`${p}-${…
+     80|     const a=await s.saveEditor(ctx,"video-a",save("request-save-0001")…
+     81|     await expect(s.renderEditor(ctx,"video-a",{revision:1,requestId:"r…
+       |                    ^
+     82|     expect((await s.listEditorRenders(ctx,"video-a",{})).items[0]).toM…
+     83|     await s.saveEditor(ctx,"video-a",{...save("request-save-0002",1),p…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 7 passed (8)
+   Start at  18:45:56
+   Duration  8.72s (transform 558ms, setup 0ms, import 1.20s, tests 7.37s, environment 0ms)
+

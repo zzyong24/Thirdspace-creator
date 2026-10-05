@@ -1,0 +1,36 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/ai-worker
+
+ ❯ src/execution/structured-worker-generation.test.ts (39 tests | 3 failed) 672ms
+   × planning.thesis缺失或坏grounding在模型预留前拒绝 undefined 61ms
+   × planning.thesis缺失或坏grounding在模型预留前拒绝 [] 5ms
+   × planning.thesis缺失或坏grounding在模型预留前拒绝 [42] 18ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/execution/structured-worker-generation.test.ts > planning.thesis缺失或坏grounding在模型预留前拒绝 undefined
+ FAIL  src/execution/structured-worker-generation.test.ts > planning.thesis缺失或坏grounding在模型预留前拒绝 []
+ FAIL  src/execution/structured-worker-generation.test.ts > planning.thesis缺失或坏grounding在模型预留前拒绝 [42]
+AssertionError: expected Error: MODEL_RESULT_UNKNOWN { …(3) } to match object { outcome: 'failed' }
+(2 matching properties omitted from actual)
+
+- Expected
++ Received
+
+- {
+-   "outcome": "failed",
++ GenerationFailure {
++   "outcome": "unknown_result",
+  }
+
+ ❯ src/execution/structured-worker-generation.test.ts:174:517
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 36 passed (39)
+   Start at  05:33:53
+   Duration  2.37s (transform 920ms, setup 0ms, import 1.51s, tests 672ms, environment 0ms)
+

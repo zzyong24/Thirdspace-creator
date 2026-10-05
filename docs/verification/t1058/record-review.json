@@ -1,0 +1,47 @@
+{
+  "task_id": "T-1058",
+  "review_date": "2026-10-04",
+  "scope": "仅核对研究记录与第四条登记；未重审前三条。",
+  "conclusion": "所核对研究记录无阻断问题，不表示真实连接或产品验收通过。",
+  "registration": {
+    "ordinal": 4,
+    "files": [
+      "docs/verification/t1058/delivery-review.md"
+    ],
+    "registered_sha256": "1588ca75a74b661b72ff3f216bdf7c72a0a4b348b8265f92318d6d3f6c3185bb",
+    "actual_sha256": "1588ca75a74b661b72ff3f216bdf7c72a0a4b348b8265f92318d6d3f6c3185bb",
+    "sha_match": true,
+    "single_file": true,
+    "mechanism_increment": 0,
+    "implementation_authorized": false,
+    "wildcard_authorized": false
+  },
+  "checks": [
+    {
+      "record": "docs/verification/t1058/verification.md",
+      "result": "明确区分研究检查和真实验收，保留全仓未全绿及尚未验证事项。"
+    },
+    {
+      "record": "/tmp/t1058-review-audit.log",
+      "result": "实际列出19项其它任务问题，无本任务项，与记录一致。"
+    },
+    {
+      "record": "/tmp/t1058-orchestrator-selfcheck.log",
+      "result": "末尾记载流程包完整性检查成功，与记录的检查范围一致。"
+    },
+    {
+      "record": "docs/verification/t1058/delivery-review.md",
+      "result": "原复核说明当时流程记录尚未归档，当前记录没有冒称原复核已验证这些运行结果。"
+    },
+    {
+      "record": "orchestrator/COMPLEXITY_LEDGER.json",
+      "result": "本任务共4条，第四条仅绑定目标文档，摘要一致；文字明确机制新增0且不授权实施。"
+    }
+  ],
+  "limitations": [
+    "命令退出码和项目记忆同步结果沿用主会话当场登记，本轮未重跑，不另称独立执行证明。",
+    "全仓检查的最终结果以主会话当场结束记录为准；本复核不判定其通过。",
+    "未进行真实连接、生成、测试或运行探针。"
+  ],
+  "findings": []
+}

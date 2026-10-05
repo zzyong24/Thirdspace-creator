@@ -1,0 +1,54 @@
+
+ RUN  v4.1.8 /private/tmp/t1046-backend-work/contract
+
+ ❯ tests/production-native-rough.test.ts (2 tests | 2 failed) 7ms
+   × native proof严格合法且投影120000ticks真实timebase，不保存影子主轨 6ms
+   × native scene selection及采用确认严格独立schema，不改旧bodyhash 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/production-native-rough.test.ts > native proof严格合法且投影120000ticks真实timebase，不保存影子主轨
+ZodError: [
+  {
+    "code": "unrecognized_keys",
+    "keys": [
+      "nativeSources",
+      "sourceTranscripts"
+    ],
+    "path": [],
+    "message": "Unrecognized keys: \"nativeSources\", \"sourceTranscripts\""
+  }
+]
+ ❯ tests/production-native-rough.test.ts:5:92
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  tests/production-native-rough.test.ts > native scene selection及采用确认严格独立schema，不改旧bodyhash
+ZodError: [
+  {
+    "code": "unrecognized_keys",
+    "keys": [
+      "sceneId",
+      "trackId"
+    ],
+    "path": [
+      "selection"
+    ],
+    "message": "Unrecognized keys: \"sceneId\", \"trackId\""
+  }
+]
+ ❯ tests/production-native-rough.test.ts:6:239
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed (2)
+   Start at  23:08:02
+   Duration  888ms (transform 456ms, setup 0ms, import 707ms, tests 7ms, environment 0ms)
+
+undefined
+/private/tmp/t1046-backend-work/contract:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run tests/production-native-rough.test.ts

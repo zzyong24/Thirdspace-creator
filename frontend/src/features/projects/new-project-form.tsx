@@ -1,271 +1,106 @@
 "use client";
 
-/**
- * `NewProjectForm` is the body content for the `/projects/new` overlay
- * and its full-page fallback (Task 11).
- *
- * Contract (locked by `new-project-form.test.tsx`):
- *  - five fields render in the spec order: Project Name → Project Brief
- *    → Target Platform → Content Type → Creation Mode,
- *  - the Project Name field is `required` and the Create button is
- *    disabled until a non-empty trimmed name is present,
- *  - the platform, content type and creation mode selectors are
- *    horizontal radio-card grids; every card is reachable by Tab and
- *    activated by Enter or Space,
- *  - the footer exposes a Cancel button, the EnterAfterCreate checkbox
- *    and the primary Create button,
- *  - Create calls `onCreate(values)` (which may be async). While the
- *    promise is pending the Create/Cancel buttons disable and Create shows
- *    「创建中…」; on success the form resets (local success transition);
- *    on rejection an inline `role="alert"` error renders and the form
- *    values are preserved (user input is never dropped),
- *  - Cancel calls `onCancel()` without firing `onCreate`,
- *  - the component consumes tokens only (no hard-coded colours or
- *    dimensions).
- *
- * Routing, the backdrop mask, focus trap and Escape-to-close are owned
- * by `components/overlays/new-project-dialog.tsx` (Task 8) — this
- * component is a pure form that can be mounted inside either the modal
- * overlay or the full-page fallback.
- */
-
 import * as React from "react";
-
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { describeUserError } from "@/lib/ai-error-humanize";
+import { isAccountRequiredError } from "@/lib/http-transport";
 import { cn } from "@/lib/utils";
-import type { CreationMode } from "@/types/domain";
-
-// ---------------------------------------------------------------------------
-// Public types
-// ---------------------------------------------------------------------------
+import { WorkTypeFields, WorkTypesFields, WORK_CHOICES, type WorkType, type WorkPlatform } from "./work-type-fields";
 
 export interface NewProjectFormValues {
   readonly name: string;
   readonly brief: string;
-  // [T-052 裁决④] 宪法 §8:项目创建唯一的形态区分 = 横竖屏。contentType(视频/
-  // 图文/音频)与项目层目标平台按宪法裁掉(平台归属发布层)。
-  readonly orientation: "portrait" | "landscape";
-  readonly creationMode: CreationMode;
   readonly enterAfterCreate: boolean;
+  readonly contentTypes: readonly WorkType[];
+  /** 单份作品入口仍使用该值。 */
+  readonly contentType?: WorkType;
+  readonly targetPlatform?: WorkPlatform;
 }
 
-// [T-293] 画幅改必填(无默认预选):内部 draft 允许未选态 `""` 强制用户主动选;
-// handleSubmit 收窄后再调 onCreate,故对外输出契约 orientation 仍是干净的两值枚举。
-type OrientationChoice = "" | "portrait" | "landscape";
-type NewProjectFormDraft = Omit<NewProjectFormValues, "orientation"> & {
-  readonly orientation: OrientationChoice;
-};
-
 export interface NewProjectFormProps {
-  /** Initial values used when the dialog re-opens with state to restore. */
+  readonly includeWorkType?: boolean;
+  readonly multipleWorkTypes?: boolean;
+  readonly submitLabel?: string;
+  readonly advancedOpen?: boolean;
   readonly defaultValues?: Partial<NewProjectFormValues>;
-  /**
-   * Fired when the user clicks Create with a valid name. May return a
-   * promise — the form awaits it to drive loading/error state. A rejected
-   * promise surfaces an inline error and preserves the user's input.
-   */
-  readonly onCreate: (
-    values: NewProjectFormValues,
-  ) => void | Promise<void>;
-  /** Fired when the user clicks Cancel. */
+  readonly onCreate: (values: NewProjectFormValues) => void | Promise<void>;
   readonly onCancel: () => void;
-  /** Optional className for the form root. */
   readonly className?: string;
 }
 
-// ---------------------------------------------------------------------------
-// Option catalogues
-// ---------------------------------------------------------------------------
+const EMPTY_DEFAULTS: NewProjectFormValues = {name: "", brief: "", contentTypes: ["video"], enterAfterCreate: true};
 
-interface RadioOption<TValue extends string> {
-  readonly value: TValue;
-  readonly label: string;
-  readonly description?: string;
-  readonly badge?: string;
-}
-
-// [T-052 裁决④] 画幅是宪法允许的唯一形态区分:竖屏(抖音优先)默认。
-const ORIENTATION_OPTIONS: ReadonlyArray<RadioOption<"portrait" | "landscape">> = [
-  { value: "portrait", label: "竖屏 9:16", description: "抖音 / 短视频优先" },
-  { value: "landscape", label: "横屏 16:9", description: "B 站 / 长视频" },
-];
-
-const CREATION_MODE_OPTIONS: ReadonlyArray<RadioOption<CreationMode>> = [
-  {
-    value: "guided",
-    label: "AI 全流程创作",
-    description: "AI 帮你完成从选题到发布的全部工作",
-    badge: "省心",
-  },
-  {
-    value: "flexible",
-    label: "AI 协作创作",
-    description: "你主导创作，AI 提供建议和辅助",
-    badge: "推荐",
-  },
-  {
-    value: "freeform",
-    label: "手动创作",
-    description: "完全由你掌控每一个创作环节",
-    badge: "自由",
-  },
-];
-
-// ---------------------------------------------------------------------------
-// Component
-// ---------------------------------------------------------------------------
-
-const EMPTY_DEFAULTS: NewProjectFormDraft = {
-  name: "",
-  brief: "",
-  orientation: "", // [T-293] 无默认预选,强制用户主动选画幅
-  creationMode: "guided",
-  enterAfterCreate: true,
-};
-
-export function NewProjectForm({
-  defaultValues,
-  onCreate,
-  onCancel,
-  className,
-}: NewProjectFormProps) {
-  // Hold the form state in a single object so the reset path is a single
-  // setter call (no juggling of useState for each field).
-  const initial = React.useMemo<NewProjectFormDraft>(
-    () => ({
-      ...EMPTY_DEFAULTS,
-      ...defaultValues,
-    }),
-    [defaultValues],
-  );
-
-  const [values, setValues] = React.useState<NewProjectFormDraft>(initial);
-  // Submission lifecycle: idle -> submitting -> (idle on success | error on
-  // reject). `errorMsg` carries the inline alert text; values are never reset
-  // on error so the user keeps their input.
-  const [status, setStatus] =
-    React.useState<"idle" | "submitting" | "error">("idle");
+/** 只收集真实创作输入，父层负责创建与路由。失败始终保留输入。 */
+export function NewProjectForm({includeWorkType = false, multipleWorkTypes = true, submitLabel, advancedOpen = false,
+  defaultValues, onCreate, onCancel, className}: NewProjectFormProps) {
+  const initial = React.useMemo<NewProjectFormValues>(() => ({...EMPTY_DEFAULTS, ...defaultValues,
+    contentTypes: defaultValues?.contentTypes ?? [defaultValues?.contentType ?? "video"]}), [defaultValues]);
+  const [values, setValues] = React.useState(initial);
+  const [submitting, setSubmitting] = React.useState(false);
   const [errorMsg, setErrorMsg] = React.useState<string | null>(null);
-  // Keep a ref to the latest callback so the form does not capture stale
-  // closures across renders.
-  const onCreateRef = React.useRef(onCreate);
-  React.useEffect(() => {
-    onCreateRef.current = onCreate;
-  }, [onCreate]);
+  const [needsAccount, setNeedsAccount] = React.useState(false);
+  const canCreate = values.name.trim().length > 0 && values.contentTypes.length > 0 && !submitting;
 
-  const trimmedName = values.name.trim();
-  const submitting = status === "submitting";
-  // [T-293] 画幅必填:未选(orientation==="")时禁用创建。
-  const canCreate =
-    trimmedName.length > 0 && values.orientation !== "" && !submitting;
-
-  const handleSubmit = React.useCallback(
-    async (event: React.FormEvent<HTMLFormElement>) => {
-      event.preventDefault();
-      if (trimmedName.length === 0 || submitting) return;
-      // [T-293] 画幅未选则拒绝提交;此处收窄 orientation 为两值枚举,输出契约干净。
-      if (values.orientation === "") return;
-      const orientation = values.orientation;
-      setStatus("submitting");
-      setErrorMsg(null);
-      try {
-        await onCreateRef.current({
-          ...values,
-          name: trimmedName,
-          orientation,
-        });
-        // Local success transition: reset the form so the next mount starts
-        // clean. The parent is expected to close the dialog/navigate.
-        setValues(EMPTY_DEFAULTS);
-        setStatus("idle");
-      } catch (error) {
-        // Surface the failure inline and PRESERVE the user's input — never
-        // silently swallow a rejected create.
-        setStatus("error");
-        setErrorMsg(describeUserError(error, "创建失败，请稍后重试。"));
-      }
-    },
-    [submitting, trimmedName, values],
-  );
-
-  const handleCancel = React.useCallback(() => {
-    if (submitting) return;
-    // Reset to the last `defaultValues` snapshot so a re-open shows a
-    // fresh form without leaking previous input.
-    setValues(initial);
-    setStatus("idle");
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!canCreate) return;
+    setSubmitting(true);
     setErrorMsg(null);
-    onCancel();
-  }, [initial, onCancel, submitting]);
+    setNeedsAccount(false);
+    try {
+      await onCreate({...values, name: values.name.trim(),
+        contentTypes: WORK_CHOICES.filter(choice => values.contentTypes.includes(choice.id)).map(choice => choice.id)});
+      setValues({...EMPTY_DEFAULTS, contentTypes: values.contentTypes, contentType: values.contentType,
+        targetPlatform: values.targetPlatform, enterAfterCreate: values.enterAfterCreate});
+    } catch (error) {
+      const accountError = isAccountRequiredError(error) || Boolean((error as {needsAccount?: boolean} | null)?.needsAccount);
+      setNeedsAccount(accountError);
+      setErrorMsg(accountError ? "请先添加或选择一个创作账号，再继续创建。" : describeUserError(error, "创建未完成，输入已保留。请重试。"));
+    } finally {
+      setSubmitting(false);
+    }
+  }
 
-  return (
-    <form
-      data-slot="new-project-form"
-      data-form="new-project"
-      noValidate
-      onSubmit={handleSubmit}
-      className={cn("flex flex-col gap-3.5", className)}
-    >
-      <ProjectNameField
-        name={values.name}
-        onChange={(name) => setValues((prev) => ({ ...prev, name }))}
-      />
-      <ProjectBriefField
-        brief={values.brief}
-        onChange={(brief) => setValues((prev) => ({ ...prev, brief }))}
-      />
-      {/* [T-052 裁决④] 内容模板与项目层目标平台按宪法 §8 裁掉;画幅是唯一形态区分。 */}
-      <OrientationSelector
-        value={values.orientation}
-        onChange={(orientation) =>
-          setValues((prev) => ({ ...prev, orientation }))
-        }
-      />
-      <CreationModeSelector
-        value={values.creationMode}
-        onChange={(creationMode) =>
-          setValues((prev) => ({ ...prev, creationMode }))
-        }
-      />
-      <DialogHint />
-      {status === "error" && errorMsg ? (
-        <p
-          role="alert"
-          data-slot="new-project-error"
-          className="rounded-control border border-destructive/30 bg-destructive/10 px-3 py-2 text-[12px] text-destructive"
-        >
-          {errorMsg}
-        </p>
-      ) : null}
-      <FormFooter
-        enterAfterCreate={values.enterAfterCreate}
-        canCreate={canCreate}
-        submitting={submitting}
-        onEnterAfterCreateChange={(enterAfterCreate) =>
-          setValues((prev) => ({ ...prev, enterAfterCreate }))
-        }
-        onCancel={handleCancel}
-      />
-    </form>
-  );
+  return <form data-slot="new-project-form" data-form="new-project" noValidate onSubmit={handleSubmit} className={cn("flex flex-col gap-3.5", className)}>
+    <fieldset disabled={submitting} className="contents">
+      <ProjectNameField name={values.name} label={includeWorkType ? "作品主题" : "项目名称"}
+        onChange={name => setValues(prev => ({...prev, name}))} />
+      {includeWorkType && (multipleWorkTypes ? <WorkTypesFields values={values.contentTypes}
+        onChange={contentTypes => setValues(prev => ({...prev, contentTypes}))} platform={values.targetPlatform ?? ""}
+        onPlatformChange={targetPlatform => setValues(prev => ({...prev, targetPlatform: targetPlatform || undefined}))} disabled={submitting} />
+        : <WorkTypeFields value={values.contentType ?? values.contentTypes[0] ?? "video"}
+          onChange={contentType => setValues(prev => ({...prev, contentType, contentTypes: [contentType]}))}
+          platform={values.targetPlatform ?? ""} onPlatformChange={targetPlatform => setValues(prev => ({...prev, targetPlatform: targetPlatform || undefined}))} disabled={submitting} />)}
+      <details open={includeWorkType ? advancedOpen || undefined : true}>
+        {includeWorkType && <summary className="cursor-pointer text-sm text-muted-foreground">详细设置（可选）</summary>}
+        <div className="mt-2 flex flex-col gap-3.5">
+          <ProjectBriefField brief={values.brief} onChange={brief => setValues(prev => ({...prev, brief}))} />
+          <DialogHint />
+        </div>
+      </details>
+    </fieldset>
+    {errorMsg && <div role="alert" data-slot="new-project-error" className="rounded-control border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs text-destructive">
+      <p>{errorMsg}</p>
+      {needsAccount && <Link href="/accounts" target="_blank" rel="noopener noreferrer" className="mt-2 inline-block font-medium underline">添加或选择账号（新窗口打开，保留当前输入）</Link>}
+    </div>}
+    <FormFooter enterAfterCreate={values.enterAfterCreate} canCreate={canCreate} submitting={submitting}
+      onEnterAfterCreateChange={enterAfterCreate => setValues(prev => ({...prev, enterAfterCreate}))}
+      onCancel={() => {if (!submitting) {setValues(initial);setErrorMsg(null);setNeedsAccount(false);onCancel();}}} submitLabel={submitLabel} />
+  </form>;
 }
-
 export default NewProjectForm;
 
-// ---------------------------------------------------------------------------
-// Field components
-// ---------------------------------------------------------------------------
-
 interface ProjectNameFieldProps {
+  readonly label?: string;
   readonly name: string;
   readonly onChange: (next: string) => void;
 }
 
-function ProjectNameField({ name, onChange }: ProjectNameFieldProps) {
+function ProjectNameField({ name, onChange, label = "项目名称" }: ProjectNameFieldProps) {
   return (
     <div
       data-slot="new-project-name"
@@ -279,7 +114,7 @@ function ProjectNameField({ name, onChange }: ProjectNameFieldProps) {
         htmlFor="new-project-name-input"
         className="text-[13px] font-medium text-foreground"
       >
-        项目名称
+        {label}
         <span aria-hidden="true" className="ml-1 text-destructive">
           *
         </span>
@@ -334,235 +169,19 @@ function ProjectBriefField({ brief, onChange }: ProjectBriefFieldProps) {
   );
 }
 
-// ---------------------------------------------------------------------------
-// Radio card groups
-// ---------------------------------------------------------------------------
-
-interface RadioCardGroupProps<TValue extends string> {
-  readonly testId: string;
-  readonly name: string;
-  readonly section: string;
-  readonly legend: string;
-  readonly options: ReadonlyArray<RadioOption<TValue>>;
-  // [T-293] 当前值允许未选态 `""`(与选项/onChange 的 TValue 解耦):必填但无默认预选。
-  readonly value: TValue | "";
-  readonly onChange: (next: TValue) => void;
-  /** Optional card description formatter. */
-  readonly renderOption?: (option: RadioOption<TValue>) => React.ReactNode;
-  /** [T-293] 必填项:legend 显红色 `*`(同项目名称)。 */
-  readonly required?: boolean;
-}
-
-function RadioCardGroup<TValue extends string>({
-  testId,
-  name,
-  section,
-  legend,
-  options,
-  value,
-  onChange,
-  renderOption,
-  required = false,
-}: RadioCardGroupProps<TValue>) {
-  return (
-    <fieldset
-      data-slot="new-project-radio-group"
-      data-testid={testId}
-      data-name={name}
-      data-form-section
-      data-section={section}
-      className="grid gap-1.5"
-    >
-      <legend className="text-[13px] font-medium text-foreground">
-        {legend}
-        {required ? (
-          <span aria-hidden="true" className="ml-1 text-destructive">
-            *
-          </span>
-        ) : null}
-      </legend>
-      <div
-        role="radiogroup"
-        aria-label={legend}
-        className="grid grid-cols-2 gap-2 sm:grid-cols-3"
-      >
-        {options.map((option) => {
-          const checked = option.value === value;
-          return (
-            <RadioCard
-              key={option.value}
-              name={name}
-              value={option.value}
-              checked={checked}
-              onSelect={() => onChange(option.value)}
-            >
-              {renderOption ? renderOption(option) : option.label}
-            </RadioCard>
-          );
-        })}
-      </div>
-    </fieldset>
-  );
-}
-
-interface RadioCardProps {
-  readonly name: string;
-  readonly value: string;
-  readonly checked: boolean;
-  readonly onSelect: () => void;
-  readonly children: React.ReactNode;
-}
-
-const RadioCard = React.forwardRef<HTMLInputElement, RadioCardProps>(
-  function RadioCard({ name, value, checked, onSelect, children }, ref) {
-    // Use a hidden native radio so screen readers + keyboard semantics
-    // (Arrow keys, Space, Enter) work out of the box, and style a
-    // visible label around it. Clicking the label fires a `change` event
-    // on the radio, which we forward to the parent via `onSelect`.
-    //
-    // We add a `keydown` handler on the wrapping label so that pressing
-    // Enter (which the browser does not treat as a radio toggle) also
-    // activates the card. The native Space-to-check behaviour still
-    // works because the focused radio receives the keydown.
-    const id = `${name}-${value}`;
-    const handleKeyDown = (event: React.KeyboardEvent<HTMLLabelElement>) => {
-      if (event.key === "Enter") {
-        event.preventDefault();
-        onSelect();
-      }
-    };
-    return (
-      <label
-        htmlFor={id}
-        data-slot="new-project-radio-card"
-        data-checked={checked ? "true" : "false"}
-        onKeyDown={handleKeyDown}
-        className={cn(
-          "flex cursor-pointer flex-col gap-0.5 rounded-lg border p-2.5 text-left transition-colors",
-          "focus-within:ring-2 focus-within:ring-ring/50 focus-within:ring-offset-2 focus-within:ring-offset-popover",
-          checked
-            ? "border-primary bg-primary/5"
-            : "border-border bg-background hover:bg-muted/50",
-        )}
-      >
-        <input
-          ref={ref}
-          id={id}
-          type="radio"
-          name={name}
-          value={value}
-          checked={checked}
-          onChange={onSelect}
-          className="sr-only"
-          data-slot="new-project-radio-input"
-        />
-        {children}
-      </label>
-    );
-  },
-);
-
-// ---------------------------------------------------------------------------
-// Concrete selectors
-// ---------------------------------------------------------------------------
-
-// [T-052 裁决④] 画幅选择器 —— 宪法 §8 允许的唯一形态区分(竖屏默认)。
-function OrientationSelector({
-  value,
-  onChange,
-}: {
-  // [T-293] 允许未选态 `""`(必填但无默认预选);选中后回调仍是两值。
-  readonly value: OrientationChoice;
-  readonly onChange: (next: "portrait" | "landscape") => void;
-}) {
-  return (
-    <RadioCardGroup
-      testId="new-project-orientation"
-      name="orientation"
-      section="orientation"
-      legend="画幅"
-      required
-      value={value}
-      onChange={onChange}
-      options={ORIENTATION_OPTIONS.map((o) => ({
-        value: o.value,
-        label: o.label,
-        description: o.description,
-      }))}
-      renderOption={(option) => (
-        <div className="flex flex-col gap-0.5">
-          <span className="text-[13px] font-medium text-foreground">
-            {option.label}
-          </span>
-          {option.description ? (
-            <span className="text-[11px] text-muted-foreground">
-              {option.description}
-            </span>
-          ) : null}
-        </div>
-      )}
-    />
-  );
-}
-
-interface CreationModeSelectorProps {
-  readonly value: CreationMode;
-  readonly onChange: (next: CreationMode) => void;
-}
-
-function CreationModeSelector({ value, onChange }: CreationModeSelectorProps) {
-  return (
-    <RadioCardGroup
-      testId="new-project-creation-mode"
-      name="creation-mode"
-      section="creation-mode"
-      legend="创作模式"
-      value={value}
-      onChange={onChange}
-      options={CREATION_MODE_OPTIONS}
-      renderOption={(option) => (
-        <div className="flex flex-col gap-0.5">
-          <div className="flex items-center justify-between gap-2">
-            <span className="text-[13px] font-medium text-foreground">
-              {option.label}
-            </span>
-            {option.badge ? (
-              <span
-                data-slot="new-project-radio-badge"
-                data-badge={option.badge}
-                className="rounded-full border border-border bg-surface-subtle px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground"
-              >
-                {option.badge}
-              </span>
-            ) : null}
-          </div>
-          {option.description ? (
-            <span className="text-[11px] text-muted-foreground">
-              {option.description}
-            </span>
-          ) : null}
-        </div>
-      )}
-    />
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Hint + footer
-// ---------------------------------------------------------------------------
-
 function DialogHint() {
   return (
     <p
       data-slot="new-project-hint"
       className="text-[11px] text-muted-foreground"
     >
-      提示：项目创建后可继续在「项目工作区」补充更多平台与阶段细节。
+      创建后可在各工作台继续补充内容、调整尺寸和设置发布平台。
     </p>
   );
 }
 
 interface FormFooterProps {
+  readonly submitLabel?: string;
   readonly enterAfterCreate: boolean;
   readonly canCreate: boolean;
   readonly submitting: boolean;
@@ -571,6 +190,7 @@ interface FormFooterProps {
 }
 
 function FormFooter({
+  submitLabel = "创建",
   enterAfterCreate,
   canCreate,
   submitting,
@@ -592,6 +212,7 @@ function FormFooter({
           id="new-project-enter-after-create"
           aria-label="创建后进入工作区"
           checked={enterAfterCreate}
+          disabled={submitting}
           onCheckedChange={(value) =>
             onEnterAfterCreateChange(value === true)
           }
@@ -615,7 +236,7 @@ function FormFooter({
           aria-busy={submitting}
           data-slot="new-project-submit"
         >
-          {submitting ? "创建中…" : "创建"}
+          {submitting ? "创建中…" : submitLabel}
         </Button>
       </div>
     </div>

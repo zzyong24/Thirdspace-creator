@@ -1,0 +1,26 @@
+{
+  "source_commit": "e2b1cd0862c8be1219d63794601c9b1a0accec97",
+  "source_manifest": "v2-source-sha256.json",
+  "source_hashes_match_committed_blobs": true,
+  "real_ai_passed": [
+    "Codex默认文字",
+    "同任务MCP真实项目读取",
+    "同任务原生图片到pending字节/幂等/账号隔离/聊天卡片读回"
+  ],
+  "focused_tests_passed": 46,
+  "worker_build_passed": true,
+  "worker_tsc_passed": true,
+  "global_reconcile": {
+    "errors": 34,
+    "warnings": 1,
+    "added_errors_vs_v1": 0,
+    "passed": false
+  },
+  "not_verified": [
+    "API/Pi脚本及衍生生成",
+    "视频生成",
+    "WorkBuddy首次信任与跨应用",
+    "真界面与正式发行"
+  ],
+  "git_hook_note": "提交成功；当场提示 Can’t find lefthook in PATH，未将未执行的hook记为通过。上述实际命令与独立复核分别留证。"
+}

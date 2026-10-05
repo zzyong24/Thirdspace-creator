@@ -1,0 +1,27 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/backend
+
+ ❯ src/modules/output-scripts/output-scripts.integration.test.ts (4 tests | 1 failed) 10844ms
+   × 视频候选经真实稿件服务采纳：原稿、回执、并发和隔离 5723ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/output-scripts/output-scripts.integration.test.ts > 视频候选经真实稿件服务采纳：原稿、回执、并发和隔离
+Error: Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ src/modules/output-scripts/output-scripts.integration.test.ts:8:35
+      6| import {createOutputScriptsService,type OutputScriptPorts} from "./out…
+      7|
+      8| for(const edited of [false,true]) it(`视频候选经真实稿件服务采纳：${edited?"编辑稿":"原稿…
+       |                                   ^
+      9|   const opened=await createDb();let sequence=0;
+     10|   const ctx:RequestContext={userId:"u-script",accountId:"a-script",req…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 3 passed (4)
+      Tests  1 failed | 53 passed (54)
+   Start at  05:49:12
+   Duration  41.41s (transform 3.87s, setup 0ms, import 6.97s, tests 48.57s, environment 0ms)
+

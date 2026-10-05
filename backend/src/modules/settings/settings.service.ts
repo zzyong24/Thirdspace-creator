@@ -946,7 +946,7 @@ export function createSettingsService(
 }
 
 // [T-363] 导入文件的结构校验(宽容:多余字段忽略;缺必填/形状不对 → ModelConfigImportError
-// → 400,绝不半吞)。settings/baseUrl 等可缺省;capability/provider/modelName 必须非空串。
+// → 400,绝不半吞)。capability 非空;provider/modelName 须为字符串，空串是既有继承占位。
 function parseModelConfigExportFile(file: unknown): {
   models: ModelConfigExportRow[];
 } {
@@ -967,7 +967,7 @@ function parseModelConfigExportFile(file: unknown): {
   }
   const models: ModelConfigExportRow[] = [];
   for (const [i, raw] of o.models.entries()) {
-    if (typeof raw !== "object" || raw === null) {
+    if (typeof raw !== "object" || raw === null || Array.isArray(raw)) {
       throw new ModelConfigImportError(`models[${i}] 不是对象`);
     }
     const r = raw as Record<string, unknown>;
@@ -976,9 +976,9 @@ function parseModelConfigExportFile(file: unknown): {
         ? (r[k] as string).trim()
         : null;
     const capability = str("capability");
-    const provider = str("provider");
-    const modelName = str("modelName");
-    if (!capability || !provider || !modelName) {
+    const provider = typeof r.provider === "string" ? r.provider.trim() : null;
+    const modelName = typeof r.modelName === "string" ? r.modelName.trim() : null;
+    if (!capability || provider === null || modelName === null) {
       throw new ModelConfigImportError(
         `models[${i}] 缺必填字段(capability/provider/modelName)`,
       );

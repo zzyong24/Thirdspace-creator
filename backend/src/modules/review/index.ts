@@ -50,3 +50,11 @@ export {
   buildReviewRuleSeedRows,
   REVIEW_RULE_SEED_COUNTS,
 } from "./review-rules.seed";
+
+export {createWorkReviewsService,type WorkReviewsService,type WorkReviewPorts} from "./work-reviews.service";
+export {createWorkReviewsTransport,WORK_REVIEW_OP_IDS} from "./work-reviews.transport";
+export {createExecutionWorkReviewService} from "./execution-work-review.service";
+export {createWorkReviewTaskPorts,createWorkReviewBusinessAdapter} from "./work-review-task-adapter";
+export {freezeReview,type FrozenReviewContext} from "./work-review-fingerprint";
+
+export {createWorkReviewReader,type ReviewOwners,type ReviewReaderPorts} from "./work-review-read-current";

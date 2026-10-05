@@ -3454,3 +3454,13 @@ T-1017 测试补充（2026-09-30）：用户明确要求测试。本轮覆盖纯
 ## DEC-T1019-DEFAULT-20261002
 
 用户后续明确认可v02八格和方法并要求普通选题默认集成；配置editorialPolicy保留user_approved、认可来源及selection_method。原普通对话选题与持久/每日选题同读当前账号配置，模型返回当前gridVersion、两侧真实格子及gridRelationReason；缺失配对保留研究而不假称已审读推荐。策略认可不升级问题假设、作者测试、入口核验或候选接受状态。新增运营可视化需求完整登记T-1020，依赖T-1019先验收；已有四个本地heartbeat不得报告成系统UI完成。
+
+## DEC-T1062-INTEGRATION-20261005：跨会话合同的整合依据
+
+用户2026-10-05授权汇总CreatorOS相关会话、统一提交、本地打包并逐功能验证。T-1062第三轮独立规格复审PASS[REV:fd99fea0bb12]；未授权push、公开发布或自动合并真实账号资料。各来源的任务编号与事件分叉按来源归档，当前BACKLOG和审计链保留，不把原分支完成记录代签本包。
+
+整合沿root:T-1022共享创作归group、平台事实冻结到真实account与group，空组可创作、归档只读、账号转组不搬旧内容。diagnostics:T-1020已评审发布外部锚采用user+account+platform+externalId；与root组权限共同生效，组读多匹配不得任取首行，真实唯一键和旧资料保留须在新收敛迁移实测。不依据标题/名字猜平台或合并记录。root已有快手手工登记只保留未验证目标身份，不创建核验凭证，采集/发布继续真实verified binding。公众号root规范wechatOfficial与diagnostics历史wechatOfficialAccount保留原事实/冻结输入，明确协议兼容；不把wechatVideo自动猜成公众号。
+
+原生成请求落库丢回执沿真实旧attempt/task与冻结输入恢复；未落库新提交仍要求当前revision，不重写历史digest。三源migration SQL/tag/when原文保留，新增收敛使用真实新receipt和版本物理检查，首次建组与已有转组库分开；不得重播旧membership初始INSERT或伪造旧125receipt。四谱系公共启动与原ID/行数/storageKey/历史回执/二次启动均需当场证据。目前隔离原SQL已复现root与canvas跳过建表，仍为待修真红，不是验收PASS。
+
+本条记录既有确认范围的冲突落实及来源追溯，不声称用户对代码逐项新签字。具体裁决及未验边界见docs/verification/t1062/merge-decisions.md、migration-red-evidence.md；最终安装验收由当场结果和用户实际确认决定。

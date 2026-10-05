@@ -3,7 +3,7 @@ import {randomUUID} from "node:crypto";
 import type {RequestContext} from "@creatoros/contract";
 import {buildChildEnv} from "../execution/child-env";
 /** 单一复用进程、两条实际在途请求；无业务任务、结果缓存或自动未知重试。 */
-export function createRequestIoService(deps:{entryPath:()=>string;timeoutMs?:number;parseInput(input:unknown):unknown;parseResponse(raw:unknown):{type:"ready"}|{type:"result";requestId:string;value:unknown}|{type:"error";requestId:string;message:string}}){
+export function createRequestIoService(deps:{entryPath:()=>string;extraEnv?:Record<string,string>;timeoutMs?:number;parseInput(input:unknown):unknown;parseResponse(raw:unknown):{type:"ready"}|{type:"result";requestId:string;value:unknown}|{type:"error";requestId:string;message:string}}){
  const timeoutMs=deps.timeoutMs??30000;if(!Number.isSafeInteger(timeoutMs)||timeoutMs<=0||timeoutMs>2147483647)throw new Error("REQUEST_IO_DEADLINE_INVALID");
  type Request={id:string;input:unknown;sent:boolean;done:boolean;resolve:(value:unknown)=>void;reject:(error:Error)=>void;timer:ReturnType<typeof setTimeout>;cleanup:()=>void};
  const requests=new Map<string,Request>();let child:ChildProcess|null=null,ready=false,stopped=false,stopping:Promise<void>|null=null;
@@ -13,7 +13,7 @@ export function createRequestIoService(deps:{entryPath:()=>string;timeoutMs?:num
  function pump(){
   if(stopped||!requests.size)return;
   if(!child){
-   let process:ChildProcess;try{process=fork(deps.entryPath(),[],{serialization:"advanced",env:buildChildEnv(),execArgv:[],stdio:["ignore","ignore","ignore","ipc"]});}catch{for(const request of requests.values())finish(request,new Error("REQUEST_IO_UNAVAILABLE"));requests.clear();return;}
+   let process:ChildProcess;try{process=fork(deps.entryPath(),[],{serialization:"advanced",env:buildChildEnv(deps.extraEnv),execArgv:[],stdio:["ignore","ignore","ignore","ipc"]});}catch{for(const request of requests.values())finish(request,new Error("REQUEST_IO_UNAVAILABLE"));requests.clear();return;}
    child=process;
    process.on("error",()=>{terminate(process);});process.once("close",()=>lose(process));
    process.on("message",raw=>{

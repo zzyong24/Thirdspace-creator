@@ -1,0 +1,16 @@
+{
+  "command": "node orchestrator/process/reconcile.mjs",
+  "exitCode": 1,
+  "currentSummary": "35 error(s), 1 warning(s).",
+  "comparedTo": "docs/verification/t1053/reconcile.log",
+  "currentFindingLines": 36,
+  "baselineFindingLines": 36,
+  "newFindings": [
+    "✗ [ERROR] lesson LED-045 RECURRED — 生图幂等恢复门回归：只有 channel-managed 同步生图可在 network/submit 无 HTTP 响应时沿用同一 Idempotency-Key 有界恢复；用户自配中转站与异步视频必须保持一次即停，成功只落一份候选。"
+  ],
+  "removedFindings": [
+    "✗ [ERROR] lesson LED-046 RECURRED — 修复真实安装布局的Worker入口、依赖文件与解析器；先短验证再正式构建，不放宽功能门或盲目重试。"
+  ],
+  "existingFollowup": "T-1015 已登记 LED-045 全仓失败与独立通过差异，原因继续待核实；不称相同数量等于相同错误",
+  "comparison": "只比较当场日志的 error/warning 行；不代表原生编辑器或全仓验收通过"
+}

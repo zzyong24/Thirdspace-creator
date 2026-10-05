@@ -28,6 +28,10 @@ export function createExecutionAssetPorts(deps:Parameters<typeof createExecution
     const value=await deps.readReference(bound.context,bound.reference.assetId,bound.reference.fileId);
     signal?.throwIfAborted();
     if(!value || value.fileId!==bound.reference.fileId || value.checksum!==bound.reference.checksum || value.mimeType!==bound.reference.mimeType || createHash("sha256").update(value.bytes).digest("hex")!==bound.reference.checksum)throw new ConflictError("参考素材版本或字节已变化");
+    await leases.withLease(ref,"admission",async scope=>{
+      const {input}=await bindAssetExecution(scope,callId);
+      if(!input.reference||input.reference.assetId!==bound.reference.assetId||input.reference.fileId!==bound.reference.fileId||input.reference.checksum!==bound.reference.checksum||input.reference.mimeType!==bound.reference.mimeType)throw new ConflictError("参考素材冻结输入已变化");
+    });
     return {bytes:value.bytes,mimeType:value.mimeType};
    }
    if(port==="resolveAssetCredential"){

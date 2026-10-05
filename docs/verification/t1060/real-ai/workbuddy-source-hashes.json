@@ -1,0 +1,71 @@
+[
+  {
+    "application": "/Applications/WorkBuddy.app",
+    "pathInAsar": "package.json",
+    "bytes": 1891,
+    "sha256": "9062a9822bdeea0b19cfef207ff80f87c18a0eebf841c18637028c5e126abd9b",
+    "evidence": "/tmp/t1060-ai-workbuddy/application-source/package.json"
+  },
+  {
+    "application": "/Applications/WorkBuddy.app",
+    "pathInAsar": "main/daemon-app-server-entry.js",
+    "bytes": 1471,
+    "sha256": "bee86537720a42608e3a21b5fc2174ae1cbed0ec78bf822ceee9d0697092fe42",
+    "evidence": "/tmp/t1060-ai-workbuddy/application-source/main__daemon-app-server-entry.js"
+  },
+  {
+    "application": "/Applications/WorkBuddy.app",
+    "pathInAsar": "main/daemon-app-server-main.js",
+    "bytes": 23442,
+    "sha256": "a2cdd9af7826f395f4d5a9fad659495f988cfe947697b421d8056fb8c7c65b97",
+    "evidence": "/tmp/t1060-ai-workbuddy/application-source/main__daemon-app-server-main.js"
+  },
+  {
+    "application": "/Applications/WorkBuddy.app",
+    "pathInAsar": "main/workbuddy-product-config.js",
+    "bytes": 24063,
+    "sha256": "77da59295def2043c8bbfeb32b3b62b9458ac2fe175026812310f2827446ab0c",
+    "evidence": "/tmp/t1060-ai-workbuddy/application-source/main__workbuddy-product-config.js"
+  },
+  {
+    "application": "/Applications/WorkBuddy.app",
+    "pathInAsar": "main/seed-builtin-plugins.js",
+    "bytes": 5373745,
+    "sha256": "fc621383cc3914edb08326e67ccc8fd142331941cd14d5a0fc2b490e67809406",
+    "evidence": "/tmp/t1060-ai-workbuddy/application-source/main__seed-builtin-plugins.js"
+  },
+  {
+    "application": "/Applications/WorkBuddy.app",
+    "pathInAsar": "main/app-instance.js",
+    "bytes": 8291,
+    "sha256": "1919574d965d4b9fa979070ed6e18761a0b5513e2b5efe0b38ef54e9863a1da5",
+    "evidence": "/tmp/t1060-ai-workbuddy/application-source/main__app-instance.js"
+  },
+  {
+    "application": "/Applications/WorkBuddy.app",
+    "pathInAsar": "main/sidecar-entry.js",
+    "bytes": 28320,
+    "sha256": "926e29c29abceb500f464f51501b68c3d1c9ebc972c1ccb2ebcae13272409434",
+    "evidence": "/tmp/t1060-ai-workbuddy/application-source/main__sidecar-entry.js"
+  },
+  {
+    "path": "/Applications/WorkBuddy.app/Contents/Resources/app.asar.unpacked/cli/package.json",
+    "bytes": 8904,
+    "sha256": "e7e655d5273fcf16ebbbe8eb02fdb63fe40a2ebf12d67aa6385766570df5c30b"
+  },
+  {
+    "path": "/Applications/WorkBuddy.app/Contents/Resources/app.asar.unpacked/cli/bin/codebuddy",
+    "bytes": 7127,
+    "sha256": "fc6581a41d99202f2ee7b779f95f4fc54276cf77cc53bbfdea92df0ad38d21ba"
+  },
+  {
+    "path": "/Applications/WorkBuddy.app/Contents/Resources/app.asar.unpacked/cli/product.json",
+    "bytes": 315235,
+    "sha256": "6d046c697b30d4c6beb3626d19ef3b77c55a8a43dba126c3ca841dd78dda38ac"
+  },
+  {
+    "path": "/Applications/WorkBuddy.app/Contents/Resources/app.asar.unpacked/cli/dist/codebuddy.js",
+    "bytes": 21647629,
+    "sha256": "261d7adbf379d7a126aff1148c9d9435153bb7965c1943aa8110861d01f5f21f"
+  }
+]

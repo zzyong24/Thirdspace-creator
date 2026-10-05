@@ -1,0 +1,54 @@
+{
+  "observedAt": "2026-10-04T12:52:52.721Z",
+  "root": "/Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/",
+  "files": [
+    {
+      "path": "backend/src/modules/ai/execution-task-projection.ts",
+      "sha256": "c470ed6c5179f9236804019b5ab0706e07b156ab4713a95b239956dad10bcf36"
+    },
+    {
+      "path": "backend/src/modules/articles/articles.service.ts",
+      "sha256": "8cd293d87b1173e8290b0a46032349bb08c9f1b5a1516fa630456628338c88f9"
+    },
+    {
+      "path": "backend/src/modules/graphic-posts/graphic-posts.service.ts",
+      "sha256": "08cf4cd9cd6b52bfa5709f363ddd2ac2276ccba1af776456c0a00dfecf987774"
+    },
+    {
+      "path": "backend/src/modules/execution/frozen-model-retry.ts",
+      "sha256": "78a764897525ec0a65267e0d32329b85e8b0ffedc6097b6462a6b2c035bdf702"
+    },
+    {
+      "path": "backend/src/modules/execution/persistent-task.service.ts",
+      "sha256": "3b3dba0c770dee3df4b7460139fd60370b8896d4264dc4988a6bf93c7f753c19"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/llm/resolve.ts",
+      "sha256": "5658b654ffc27e8c5ffb517ecd7776754a49a90a7d1375d1a07c27555b4f74ae"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/structured-business-execution.service.ts",
+      "sha256": "32d3be0033d329d5638159127327dc2ede0b7ec5b9d71be0396e0f9a4b68b989"
+    },
+    {
+      "path": "backend/src/application/generation/writing.ts",
+      "sha256": "2c6e9c3361b220f395cc06463a0935f76d387c0620e9d81eee2be36890fc4224"
+    },
+    {
+      "path": "backend/src/application/generation/creative-post.ts",
+      "sha256": "3f03dbd5ccf4d1ce8b1a5edd0191cf7126c0e75d333dfacf865c6eddcadb5776"
+    },
+    {
+      "path": "frontend/src/features/article/article-workbench.tsx",
+      "sha256": "209f9d12f92a3982a56451185715491d0304508193702e6267b756dc2f19e040"
+    },
+    {
+      "path": "docs/features/t957-ai-real-acceptance.md",
+      "sha256": "48f3b6807b03e5ce87b2cec87d3f14c8786fcd09de824ae26483c8d030860677"
+    },
+    {
+      "path": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "sha256": "76d22c8860767ac5de715af3c6e3c2b3079f5e452ebcb22aceca055c574d2822"
+    }
+  ]
+}

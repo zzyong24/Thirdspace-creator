@@ -1,0 +1,40 @@
+
+ RUN  v4.1.8 /private/tmp/t1048-backend-work/backend
+
+ ❯ src/modules/creative-canvas/creative-canvas-series-reference.test.ts (2 tests | 1 failed) 2226ms
+   × 持久精确参考文件而非currentFile，公共生成、原attempt恢复和旧自由画布均保留真实版本 1287ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/creative-canvas/creative-canvas-series-reference.test.ts > 持久精确参考文件而非currentFile，公共生成、原attempt恢复和旧自由画布均保留真实版本
+AssertionError: expected { …(13) } to deeply equal { …(13) }
+
+- Expected
++ Received
+
+@@ -9,7 +9,7 @@
+    "nodeId": "page",
+    "referenceChecksum": "039058c6f2c0cb492c533b0a4d14ef77cc0f78abccced5287d84a1a2011cfb81",
+    "referenceFileId": "file-old",
+    "resultAssetId": null,
+    "taskId": "task-series-attempt-original",
+-   "updatedAt": "2026-10-02T19:42:56.585Z",
++   "updatedAt": "2026-10-02T19:42:56.590Z",
+  }
+
+ ❯ src/modules/creative-canvas/creative-canvas-series-reference.test.ts:20:120
+     18|   expect(link.referenceFileId).toBe('file-old');expect(submitted.get('…
+     19|   expect(getReference).toHaveBeenCalledWith(expect.anything(),'ref','f…
+     20|   expect(await s.generate(ctx,canvas.id,'page',{expectedRevision:saved…
+       |                                                                                                                        ^
+     21|   expect(submitTask).toHaveBeenCalledOnce();
+     22|   await expect(s.generate({...ctx,accountId:'other'},canvas.id,'page',…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 1 passed (2)
+   Start at  03:42:53
+   Duration  3.57s (transform 639ms, setup 0ms, import 1.19s, tests 2.23s, environment 0ms)
+

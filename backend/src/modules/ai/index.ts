@@ -94,3 +94,5 @@ export { createChatTurnCompletionService } from "./chat-turn-completion.service"
 export { createAiTaskSubmissionService } from "./ai-task-submission.service";
 
 export {createGeneratedAssetAdoptionService} from "./generated-asset-adoption.service";
+
+export {type MediaProbeControl} from "./ai-media-probe-control";

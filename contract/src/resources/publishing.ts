@@ -40,6 +40,7 @@ export const publicationRevisionResource = z.object({
   title: z.string(),
   description: z.string(),
   coverAssetId: id.nullable(),
+  coverAssetFileId: id.nullable().optional(),
   category: z.string(),
   series: z.string(),
   platformTags: z.array(z.string()),

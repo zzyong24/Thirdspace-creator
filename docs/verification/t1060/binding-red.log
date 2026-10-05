@@ -1,0 +1,57 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/ai-worker
+
+ ❯ src/execution/external-chat-binding.test.ts (2 tests | 2 failed) 11ms
+   × 新绑定纳入冻结载荷，旧载荷仍保留缺字段而不套默认 6ms (retry x2)
+   × 真实图片候选允许纯图回执，空正文和空候选仍拒绝 4ms (retry x2)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/execution/external-chat-binding.test.ts > 新绑定纳入冻结载荷，旧载荷仍保留缺字段而不套默认
+ FAIL  src/execution/external-chat-binding.test.ts > 新绑定纳入冻结载荷，旧载荷仍保留缺字段而不套默认
+ FAIL  src/execution/external-chat-binding.test.ts > 新绑定纳入冻结载荷，旧载荷仍保留缺字段而不套默认
+ZodError: [
+  {
+    "code": "unrecognized_keys",
+    "keys": [
+      "externalAgentBinding"
+    ],
+    "path": [],
+    "message": "Unrecognized key: \"externalAgentBinding\""
+  }
+]
+ ❯ src/execution/external-chat-binding.test.ts:6:31
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+ FAIL  src/execution/external-chat-binding.test.ts > 真实图片候选允许纯图回执，空正文和空候选仍拒绝
+ FAIL  src/execution/external-chat-binding.test.ts > 真实图片候选允许纯图回执，空正文和空候选仍拒绝
+ FAIL  src/execution/external-chat-binding.test.ts > 真实图片候选允许纯图回执，空正文和空候选仍拒绝
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/execution/external-chat-binding.test.ts:13:83
+     11|  const receipt={schemaVersion:1,engine:'codex',protocolKind:'acp',prot…
+     12|  const image={toolCallId:'provider-image',imageIndex:0,assetId:'asset'…
+     13|  expect(externalChatReceiptSchema.safeParse({...receipt,images:[image]…
+       |                                                                                   ^
+     14|  expect(externalChatReceiptSchema.safeParse({...receipt,images:[]}).su…
+     15| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed (2)
+   Start at  16:46:19
+   Duration  511ms (transform 204ms, setup 0ms, import 337ms, tests 11ms, environment 0ms)
+
+undefined
+/Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/ai-worker:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/execution/external-chat-binding.test.ts

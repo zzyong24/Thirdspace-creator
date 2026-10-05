@@ -106,6 +106,15 @@ describe("ProjectsPage", () => {
     expect(heading.textContent ?? "").toMatch(/项目/);
   });
 
+  it("项目列表只保留新建项目入口，不显示直接创作作品", async () => {
+    await renderProjects();
+    expect(screen.queryByRole("link", { name: /直接创作作品/ })).toBeNull();
+    expect(screen.getByRole("link", { name: /新建项目/ })).toHaveAttribute(
+      "href",
+      "/projects/new",
+    );
+  });
+
   // [T-332 S4·§6.2] 新号零项目:诚实空态 + 「新建项目 / 从选题立项」引导,不渲空表格。
   it("零项目 → 空态引导(新建项目 + 从选题立项),不渲染空列表表头", async () => {
     const { buildProjectsViewModel } = await import("@/fixtures/selectors");
@@ -120,6 +129,8 @@ describe("ProjectsPage", () => {
     ) as HTMLAnchorElement;
     expect(newLink).not.toBeNull();
     expect(newLink.getAttribute("href")).toBe("/projects/new");
+    expect(newLink).toHaveTextContent("新建项目");
+    expect(screen.queryByRole("link", { name: /直接创作作品/ })).toBeNull();
     const topicsLink = container.querySelector(
       '[data-slot="projects-empty-topics"]',
     ) as HTMLAnchorElement;

@@ -1,0 +1,15 @@
+import {createRequire} from 'node:module';
+import {build} from '/Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/frontend/node_modules/esbuild/lib/main.js';
+const require=createRequire('/tmp/t1053-native-canvas/source/package.json');
+const {JSDOM}=require('jsdom');const dom=new JSDOM('<main></main>',{url:'http://creatoros.test'});
+for(const name of ['window','document','Document','HTMLDocument','Element','HTMLElement','ShadowRoot','Node','File','Blob','DOMParser'])globalThis[name]=dom.window[name];
+const images=[];globalThis.Image=class {src='';onload=null;onerror=null;constructor(){images.push(this)}};
+URL.createObjectURL=()=> 'blob:late-native-image';URL.revokeObjectURL=()=>{};
+const compiled=await build({entryPoints:['/tmp/t1053-native-canvas/source/src/native-controller.ts'],format:'cjs',bundle:true,platform:'node',write:false});
+const module={exports:{}};new Function('module','exports',compiled.outputFiles[0].text)(module,module.exports);
+const {NativeController}=module.exports;const root=document.createElement('div'),portal=document.createElement('div');document.body.append(root,portal);let objects=[];
+const host=new NativeController(root,{owner:{accountId:'a',outputId:'o',sourceVersionId:'v'},theme:{mode:'light',tokens:{},fontFamily:'sans-serif',fontSize:'14px',density:'comfortable'},portalContainer:portal,signal:new AbortController().signal,onChanged(){},onError(){},importMedia:async()=>({mediaId:'m'})});
+host.attach({fabricCanvas:{on(){},off(){},getObjects(){return objects}},getJson:()=>({objects}),createImgByElement:async()=>({id:'late-image',type:'image',set(key,value){this[key]=value}}),addBaseType:object=>objects.push(object)},root);
+const importing=host.importFile(new File(['slow'],'slow.png',{type:'image/png'}),'registered-m');await Promise.resolve();await Promise.resolve();
+host.update({disabled:true});const savedSnapshot=await host.request('snapshot');images[0].onload();await importing;
+console.log(JSON.stringify({probe:'实际 Kuaitu controller 保存冻结后在途导入',disabled:host.disabled,savedLayerCount:savedSnapshot.document.objects.length,currentLayerCount:host.snapshot().document.objects.length}));host.close();dom.window.close();

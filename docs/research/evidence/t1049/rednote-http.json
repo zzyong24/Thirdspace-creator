@@ -1,0 +1,16 @@
+{
+  "name": "rednote",
+  "url": "http://127.0.0.1:4196/",
+  "httpStatus": 200,
+  "indexSHA256": "fcad4887834e426d7ab3a8ad639d8d693aa775796947f2522d1d37c344f1bfeb",
+  "moduleAssets": [
+    {
+      "path": "/assets/index-DyVWCSnm.js",
+      "status": 200,
+      "bytes": 712586,
+      "sha256": "8e2c8cd696adaa1e78f5a56686d651da28197b4e7cf02717acdcfa46e72f1bf3"
+    }
+  ],
+  "meaning": "只验证本机参考静态服务与脚本可读；没有执行浏览器 JS 或验证 UI 操作",
+  "firstProbe": "Python 默认代理返回 HTTP 502；本次本机健康读使用直接 loopback，不作为浏览器策略恢复"
+}

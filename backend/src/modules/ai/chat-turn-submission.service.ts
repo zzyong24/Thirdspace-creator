@@ -7,13 +7,13 @@ import { canonicalJson } from "./canonical-json";
 import { z } from "zod";
 import { and, asc, eq, aiConversations, aiMessages, aiTasks, executionTasks, requireAccountId, OwnershipError, type Db } from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
-import { chatWorkerInputSchema } from "@creatoros/contract/execution-worker";
+import { chatWorkerInputSchema,codexAcpBinding } from "@creatoros/contract/execution-worker";
 import { createPersistentTaskService } from "../execution/persistent-task.service";
 import { ConflictError } from "../execution/execution.errors";
 type ChatInput=z.infer<typeof chatWorkerInputSchema>;
 type Message=typeof aiMessages.$inferSelect;
 export type ChatTurnSnapshot={conversation:typeof aiConversations.$inferSelect;messages:Message[];sourceMessage:Message};
-export type ChatTurnAssembly=Omit<ChatInput,"kind"|"operationKey"|"userId"|"accountId"|"groupId"|"groupVersion"|"membershipVersion"|"conversationId"|"sourceMessageId"> & {hostContext?:ChatHostContext};
+export type ChatTurnAssembly=Omit<ChatInput,"kind"|"operationKey"|"userId"|"accountId"|"groupId"|"groupVersion"|"membershipVersion"|"conversationId"|"sourceMessageId"|"externalAgentBinding"> & {hostContext?:ChatHostContext};
 const object=(value:unknown):Record<string,unknown>=>value && typeof value==="object" && !Array.isArray(value)?value as Record<string,unknown>:{};
 export const chatInputDigest=(value:unknown)=>createHash("sha256").update(canonicalJson(value)).digest("hex");
 export const chatHistoryDigest=(snapshot:ChatTurnSnapshot)=>chatInputDigest({
@@ -56,10 +56,18 @@ export function createChatTurnSubmissionService(db:Db,deps:{
     return {taskId:task.id,executionTaskId:execution.id,sourceMessageId:snapshot.sourceMessage.id,replayed:true};
   }
   return {
-    async submit(ctx:RequestContext,request:{conversationId:string;sourceMessageId:string}){
+    async submit(ctx:RequestContext,request:{conversationId:string;sourceMessageId:string;executionEngine?:"pi"|"codex"}){
       await assertWritableWorkspace(db,ctx);
       const snapshot=await readChatTurnSnapshot(db,ctx,request);
-      const replay=await existing(db,ctx,snapshot);if(replay)return replay;
+      const requestedEngine=request.executionEngine===undefined?undefined:z.enum(["pi","codex"]).parse(request.executionEngine);
+      const replay=await existing(db,ctx,snapshot);
+      if(replay){
+        if(requestedEngine!==undefined){
+          const [execution]=await db.select().from(executionTasks).where(eq(executionTasks.id,replay.executionTaskId));
+          if(object(object(execution?.payload).modelInput).executionEngine!==requestedEngine)throw new ConflictError("源消息已绑定另一引擎，请另起新消息");
+        }
+        return replay;
+      }
       if(snapshot.conversation.projectId){
         if(!deps.assertProject)throw new ConflictError("项目归属验证端口未装配");
         await deps.assertProject(ctx,snapshot.conversation.projectId);
@@ -68,14 +76,19 @@ export function createChatTurnSubmissionService(db:Db,deps:{
       const {hostContext:rawHostContext,...assembly}=await deps.assemble(ctx,structuredClone(snapshot));
       // 先通过严格 schema，再统一成数据库 JSON 形态；可选 undefined 不得进入摘要后在落库时消失。
       const hostContext=rawHostContext===undefined?undefined:JSON.parse(JSON.stringify(validateChatHostContext(rawHostContext,{userId:ctx.userId,accountId:ctx.accountId??null,groupId:ctx.groupId,projectId:snapshot.conversation.projectId}))) as ChatHostContext;
-      const modelInput=JSON.parse(JSON.stringify(chatWorkerInputSchema.parse({...assembly,executionEngine:"pi",recoverMissingFinal:true,...(assembly.tools.some(tool=>tool.name==="history.read")?{contextPolicyVersion:2}:{}),kind:"chat.run",operationKey:`chat:${snapshot.sourceMessage.id}`,userId:ctx.userId,accountId:ctx.accountId??null,groupId:ctx.groupId??null,groupVersion:ctx.groupVersion??null,membershipVersion:ctx.membershipVersion??null,conversationId:snapshot.conversation.id,sourceMessageId:snapshot.sourceMessage.id}))) as ChatInput;
+      const modelInput=JSON.parse(JSON.stringify(chatWorkerInputSchema.parse({...assembly,executionEngine:requestedEngine??"pi",...(requestedEngine==="codex"?{externalAgentBinding:codexAcpBinding}:{}),recoverMissingFinal:true,...(assembly.tools.some(tool=>tool.name==="history.read")?{contextPolicyVersion:2}:{}),kind:"chat.run",operationKey:`chat:${snapshot.sourceMessage.id}`,userId:ctx.userId,accountId:ctx.accountId??null,groupId:ctx.groupId??null,groupVersion:ctx.groupVersion??null,membershipVersion:ctx.membershipVersion??null,conversationId:snapshot.conversation.id,sourceMessageId:snapshot.sourceMessage.id}))) as ChatInput;
       return db.transaction(async tx=>{
         const frozenScope=await lockWorkspaceMembership(tx,ctx);
         if(hostContext&&frozenScope.groupId){hostContext.skillSnapshot.groupId=frozenScope.groupId;hostContext.skillSnapshot.groupVersion=frozenScope.groupVersion;hostContext.skillSnapshot.membershipVersion=frozenScope.membershipVersion;}
         modelInput.groupId=frozenScope.groupId;modelInput.groupVersion=frozenScope.groupVersion;modelInput.membershipVersion=frozenScope.membershipVersion;
         const store=tx as unknown as Db;
         const current=await readChatTurnSnapshot(store,ctx,request,true);
-        const winner=await existing(store,ctx,current);if(winner)return winner;
+        const winner=await existing(store,ctx,current);
+        if(winner){
+          const [execution]=await tx.select().from(executionTasks).where(eq(executionTasks.id,winner.executionTaskId));
+          if(object(object(execution?.payload).modelInput).executionEngine!==modelInput.executionEngine)throw new ConflictError("源消息已绑定另一引擎，请另起新消息");
+          return winner;
+        }
         if(chatHistoryDigest(current)!==historyDigest)throw new ConflictError("聊天来源在装配期间改变，请重新提交");
         const taskId=nextId("ai-task"),stamp=now();
         await tx.insert(aiTasks).values({id:taskId,userId:ctx.userId,accountId:frozenScope.accountId,groupId:frozenScope.groupId,groupVersion:frozenScope.groupVersion,membershipVersion:frozenScope.membershipVersion,projectId:current.conversation.projectId,taskType:"copilot.assist",status:"queued",requestedAt:stamp,idempotencyKey:`chat:${current.sourceMessage.id}`,inputData:{kind:"chat.run",conversationId:current.conversation.id,sourceMessageId:current.sourceMessage.id,historyMessageIds:current.messages.map(message=>message.id),historyDigest,modelInputDigest:chatInputDigest(modelInput),...(hostContext?{hostContextDigest:chatHostContextDigest(hostContext)}:{})}});

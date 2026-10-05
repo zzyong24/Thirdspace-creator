@@ -1,0 +1,16 @@
+[
+  {
+    "id": "call_7022bc25-a47f-4f3a-b533-31986585d5b4",
+    "sequence": 1,
+    "kind": "model",
+    "status": "unknown",
+    "started_attempt": 1,
+    "rejection_code": null,
+    "has_provider_job": false,
+    "has_result_text": false,
+    "has_provider_result": false,
+    "result_ref": null,
+    "created_at": "2026-10-02T08:19:53.274Z",
+    "updated_at": "2026-10-02T08:20:03.867Z"
+  }
+]

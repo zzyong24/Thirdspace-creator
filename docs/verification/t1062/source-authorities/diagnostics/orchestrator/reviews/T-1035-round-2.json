@@ -1,0 +1,63 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "recheck",
+  "summary": "REV-001 与 REV-002 均已由本轮规格修订和明确决策销账；这些证据只确认产品方案中的选择已冻结，不代表实现或测试已经通过。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "resolved",
+      "severity": "major",
+      "category": "consistency",
+      "requirement_anchor": {
+        "id": "FR-1035-2",
+        "quote": "预览、播放头、时间轴、当前片段参数同步"
+      },
+      "acceptance_anchor": {
+        "id": "AC-1035-2",
+        "quote": "点击时间轴素材/字幕跳到实际画面；播放头同步字幕与动效；正常/最低窗口选中项、保存和生成可达"
+      },
+      "where": "“工作台长什么样”与现有 frontend/SPEC.md 的 Production Workspace 视觉真相源及布局约束",
+      "failure_mode": "T-1035 明确了左侧编导/素材/效果/字幕、中间预览、右侧参数、底部多轨时间轴的新工作台结构；现有前端范围同时要求 Production Workspace 绑定唯一参考图、不得自由设计新布局，并规定冲突时停止实现。一个实现可严格保留旧参考图结构，另一个可按 T-1035 重排为剪辑工作台，两者都会声称遵守有效规格，却会交付不同的主要布局，并可能使时间轴、选中项、保存或生成在最低窗口下无法按同一标准验收。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "docs/features/t1035-video-production-workbench.md#工作台长什么样；frontend/SPEC.md §2 第5、6、12条、§3 Production Workspace、§5 WorkspacePage",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "clarify",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "在实现前记录唯一的规格优先级结论：明确 T-1035 对 Production Workspace 哪些结构关系构成经批准的替代，以及仍须保留的 AppShell、WorkspacePage 和视觉约束；据此形成一套可验收布局，不增加新功能。",
+      "resolution_evidence": "SPEC-LINE:59:570f903dd0234ff3 明确 T-1035 是制作内部功能与关系的当前权威，只替代旧 Production Workspace 的内部排列，并继续保留 AppShell、Sidebar、TopHeader、WorkspacePage、品牌和通用组件；frontend/specs/decision-log.md D-012 与 frontend/SPEC.md“视频制作更新（2026-10-01）”记录了同一优先级裁决和制作视口范围。",
+      "parent_id": "",
+      "threat_model_id": ""
+    },
+    {
+      "id": "REV-002",
+      "status": "resolved",
+      "severity": "major",
+      "category": "consistency",
+      "requirement_anchor": {
+        "id": "FR-1035-4",
+        "quote": "编导读取当前方案与选区，形成局部修改候选，应用后和手工编辑保持同一结果"
+      },
+      "acceptance_anchor": {
+        "id": "AC-1035-4",
+        "quote": "应用后同一时间轴显示修改，随后手工再改、助手重读最新值"
+      },
+      "where": "“编导助手怎么操作”与“本地未保存”状态之间的快照边界",
+      "failure_mode": "规格同时允许时间轴存在本地未保存修改，并要求工具执行前通过 backend service 读取当前工程、当前项和 revision，但没有规定用户在未保存状态下发出编导指令时，助手应基于屏幕上的本地草稿还是服务端已保存 revision。合理实现之一会忽略用户刚做的手工修改并基于旧稿产候选，另一实现会把客户端草稿作为模型输入；随后应用时可能出现候选覆盖刚改内容、预览与候选依据不一致，或 AC 所要求的“助手重读最新值”在同一步骤中一端成立、一端失败。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "docs/features/t1035-video-production-workbench.md#编导助手怎么操作 第1至4项；#状态和异常体验 “本地未保存”；orchestrator/SYSTEM_ARCHITECTURE.md §2.2",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "在 CONTRACT 前冻结唯一规则：定义未保存状态下编导读取的快照及用户可见提示，并保证候选的依据、预览、precondition 和最终应用指向同一 revision；不得静默使用屏幕内容之外的旧稿。",
+      "resolution_evidence": "SPEC-LINE:83:204bb0e07f6d096b 规定未保存手工修改时显示“保存并交给编导”，先 CAS 保存和回读，再重绑引用并提交模型；失败不提交，未应用候选不采纳，执行期间的新修改另作草稿，且模型依据、候选预览、precondition 与应用目标锚定同一已保存 revision。SPEC-LINE:122:e9fdc084740f3dea 在状态表中同步固定了这一用户可见行为。",
+      "parent_id": "",
+      "threat_model_id": ""
+    }
+  ]
+}

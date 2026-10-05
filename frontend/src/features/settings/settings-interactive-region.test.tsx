@@ -59,6 +59,7 @@ const mockClient = {
 };
 vi.mock("@/lib/contract-client", () => ({
   client: {
+    getReportingStatus: () => Promise.resolve({consentVersion:1,diagnostics:{scope:"diagnostics",accountId:null,accountLabel:null,platform:null,accountActive:true,enabled:false,needsReconsent:false,consentEpoch:0,changedAt:null,queuedCount:0},accounts:[],preparationAvailable:true,uploadAvailable:false}),
     patchPreferences: (input: unknown) => mockClient.patchPreferences(input),
     putModel: (input: unknown) => mockClient.putModel(input),
     putChannelModelCredential: (input: unknown) =>
@@ -1470,6 +1471,16 @@ describe("SettingsDialog — ?highlight 深链定位", () => {
     await new Promise((r) => requestAnimationFrame(() => r(null)));
     await new Promise((r) => setTimeout(r, 0));
   }
+
+  it("[T-1055] assistant-engine 深链落模型页并定位真实引擎卡", async () => {
+    mockSearchParams = new URLSearchParams("highlight=assistant-engine");
+    const doc = renderDialog();
+    await flushRaf();
+    const card = doc.querySelector('[data-highlight="assistant-engine"]');
+    expect(card).not.toBeNull();
+    expect(doc.querySelector('[data-slot="settings-panel"][data-tab-id="models"]')).toHaveAttribute("data-active", "true");
+    expect(screen.getByRole("combobox", {name: "编导引擎"})).toBeInTheDocument();
+  });
 
   it("highlight=text-model → 滚动到文本模型配置卡并加高亮 ring", async () => {
     mockSearchParams = new URLSearchParams("highlight=text-model");

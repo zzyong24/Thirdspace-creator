@@ -141,6 +141,7 @@ function toOutput(row: ContentOutputRow): ContentOutputResource {
     projectId: row.projectId,
     title: row.title,
     contentType: row.contentType as ContentOutputResource["contentType"],
+    targetPlatform: (row.targetPlatform ?? null) as ContentOutputResource["targetPlatform"],
     format: row.format,
     aspectRatio: row.aspectRatio,
     targetDurationSeconds: row.targetDurationSeconds,
@@ -202,6 +203,17 @@ function publicBriefDetailWrite(
 export interface ProjectsTransportDeps {
   service: ProjectsService;
   repo: ProjectRepository;
+  createArticleOutput?: (ctx: RequestContext, projectId: string, input: {
+    title: string;
+    contentRole?: "traffic" | "trust" | "conversion";
+    clientRequestId?: string;
+    targetPlatform?: string;
+  }) => Promise<ContentOutputRow>;
+  createGraphicPostOutput?: (ctx: RequestContext, projectId: string, input: {
+    title: string;
+    targetPlatform?: string;
+    clientRequestId: string;
+  }) => Promise<ContentOutputRow>;
 }
 
 export function createProjectsTransport(
@@ -210,7 +222,7 @@ export function createProjectsTransport(
   return {
     async request(endpoint: Endpoint, input, ctx) {
       if (!ctx) throw new AuthenticationError();
-      const { service, repo } = factory(ctx);
+      const { service, repo, createArticleOutput, createGraphicPostOutput } = factory(ctx);
 
       const { params, query, body } = (input ?? {}) as Input;
       const p = (params ?? {}) as {
@@ -316,8 +328,31 @@ export function createProjectsTransport(
         case "projects.outputs.create":
           return {
             data: toOutput(
-              await service.createOutput(ctx, p.projectId ?? "", {
+              b.contentType === "image"
+                ? await (() => {
+                    if (!createGraphicPostOutput) throw new UnsupportedOperationError("Graphic post output service unavailable");
+                    if (typeof b.clientRequestId !== "string") throw new UnsupportedOperationError("Graphic post create requires clientRequestId");
+                    return createGraphicPostOutput(ctx, p.projectId ?? "", {
+                      title: String(b.title ?? ""),
+                      targetPlatform: b.targetPlatform as string | undefined,
+                      clientRequestId: b.clientRequestId,
+                    });
+                  })()
+                : b.contentType === "article"
+                ? await (() => {
+                    if (!createArticleOutput) throw new UnsupportedOperationError("Article output service unavailable");
+                    return createArticleOutput(ctx, p.projectId ?? "", {
+                      title: String(b.title ?? ""),
+                      contentRole: b.contentRole as "traffic" | "trust" | "conversion" | undefined,
+                      clientRequestId: b.clientRequestId as string | undefined,
+                      targetPlatform: b.targetPlatform as string | undefined,
+                    });
+                  })()
+                : await service.createOutput(ctx, p.projectId ?? "", {
                 title: String(b.title ?? ""),
+                clientRequestId: b.clientRequestId as string | undefined,
+                contentType: b.contentType as "video" | undefined,
+                targetPlatform: b.targetPlatform as string | undefined,
                 contentRole: b.contentRole as
                   | "traffic"
                   | "trust"

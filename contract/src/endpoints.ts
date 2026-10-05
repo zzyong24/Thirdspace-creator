@@ -1,6 +1,12 @@
+import {creativeCanvasOperations} from "./operations/creative-canvas";
+import {workSourcesOperations} from "./operations/work-sources";
+import {workCompositionsOperations,momentsOperations,workReviewsOperations} from "./operations/work-compositions";
 import type { z } from "zod";
 
 import { projectsOperations } from "./operations/projects";
+import { articlesOperations } from "./operations/articles";
+import { graphicPostsOperations } from "./operations/graphic-posts";
+import { creativeResultsOperations } from "./operations/creative-results";
 import { artifactsOperations } from "./operations/artifacts";
 import { knowledgeOperations } from "./operations/knowledge";
 import { taxonomyOperations } from "./operations/taxonomy";
@@ -25,6 +31,7 @@ import { candidateOperations } from "./operations/candidate";
 import { calibrationOperations } from "./operations/calibration";
 import { accountGroupOperations } from "./operations/account-groups";
 import { platformAccountOperations } from "./operations/platform-accounts";
+import { platformCollectionOperations } from "./operations/platform-collection";
 import { contentCalendarOperations } from "./operations/content-calendar";
 import { materialLinksOperations } from "./operations/material-links";
 import { benchmarkOperations } from "./operations/benchmark";
@@ -32,7 +39,6 @@ import { trendSourceOperations } from "./operations/trend-source";
 // [T-235c] 指定抖音收藏夹登记 CRUD(收藏夹跟拍信号源)。
 import { favoritesFolderOperations } from "./operations/favorites-folder";
 import {visualTemplateOperations} from "./operations/visual-templates";
-import {creativeCanvasOperations} from "./operations/creative-canvas";
 // [T-235d] 选题归因读侧(正向归因回流)。
 import { topicAttributionOperations } from "./operations/topic-attribution";
 import { schedulingOperations } from "./operations/scheduling";
@@ -93,7 +99,13 @@ export function defineEndpoint<
 // The complete contract surface — the machine-checkable form of SPEC §13.
 // (`tests/registry.test.ts` asserts this matches §13 exactly.)
 export const ENDPOINTS = {
+  ...creativeCanvasOperations,
+  ...workSourcesOperations,
+  ...workCompositionsOperations,...momentsOperations,...workReviewsOperations,
   ...projectsOperations,
+  ...articlesOperations,
+  ...graphicPostsOperations,
+  ...creativeResultsOperations,
   ...artifactsOperations,
   ...knowledgeOperations,
   ...taxonomyOperations,
@@ -120,6 +132,7 @@ export const ENDPOINTS = {
   ...calibrationOperations,
   ...platformAccountOperations,
   ...accountGroupOperations,
+  ...platformCollectionOperations,
   ...contentCalendarOperations,
   ...materialLinksOperations,
   // [T-212a] 对标源 CRUD(选题/对标强化，SPEC 2026-07-11 §2.1)。

@@ -1,8 +1,9 @@
 import {afterAll,beforeAll,expect,it,vi} from "vitest";
 import {createHash} from "node:crypto";
-import {aiTaskResults,aiTasks,createDb,type Db} from "@creatoros/backend";
-import type {RequestContext,CanvasDocument} from "@creatoros/contract";
+import {aiTaskResults,aiTasks,canvasGenerationLinks,createDb,type Db} from "@creatoros/backend";
+import {ENDPOINTS,type Endpoint,type RequestContext,type CanvasDocument} from "@creatoros/contract";
 import {createCreativeCanvasService} from "./creative-canvas.service";
+import {createCreativeCanvasTransport} from "./creative-canvas.transport";
 
 let db:Db,close:()=>Promise<void>;
 const ctx=(accountId:string):RequestContext=>({userId:"canvas-user",accountId,requestId:`canvas-${accountId}`,source:"user"});
@@ -12,15 +13,18 @@ const checksum=createHash("sha256").update(bytes).digest("hex");
 const imageNode=(id:string,mode:"text_to_image"|"image_to_image"="text_to_image")=>({id,type:"image_generation" as const,position:{x:0,y:0},label:"镜头",prompt:"山间日出",mode,...(mode==="image_to_image"?{referenceAssetId:"image-1"}:{})});
 const videoNode=(id:string)=>({id,type:"video_generation" as const,position:{x:0,y:0},label:"动态镜头",prompt:"日出时缓慢推镜",mode:"image_to_video" as const,referenceAssetId:"image-1",durationSec:6,resolution:"768P" as const});
 const doc=(nodes:CanvasDocument["nodes"]):CanvasDocument=>({schemaVersion:1,viewport:{x:0,y:0,zoom:1},nodes,edges:[]});
-const submit=vi.fn(async(_context:RequestContext,input:{attemptId:string})=>({id:`task-${input.attemptId}`}));
+const submitted=new Map<string,unknown>();
+const submit=vi.fn(async(_context:RequestContext,input:{attemptId:string;inputData?:unknown})=>{submitted.set(`task-${input.attemptId}`,input.inputData);return {id:`task-${input.attemptId}`};});
 const service=(extra:Partial<Parameters<typeof createCreativeCanvasService>[1]>={})=>createCreativeCanvasService(db,{
  now:()=>"2026-09-28T00:00:00.000Z",
  assertProject:async(c,id)=>{if(c.accountId!=="account-a"||id!=="project-a")throw new Error("project not owned");},
  assertMediaAsset:async(c,id,type,fileId)=>{if(c.accountId!=="account-a"||id!=="image-1"||type!=="image"||fileId&&fileId!=="file-1")throw new Error("asset not owned");return {fileId:"file-1",checksum};},
- assertReferenceAsset:async(c,id)=>{await db.select().from(aiTasks).limit(1);if(c.accountId!=="account-a"||id!=="image-1")throw new Error("reference not owned");},
+ assertReferenceAsset:async(c,id)=>{if(c.accountId!=="account-a"||id!=="image-1")throw new Error("reference not owned");},
  getMediaFileDownloadUrl:async(c,id,fileId)=>{if(c.accountId!=="account-a"||id!=="image-1"||fileId!=="file-1")throw new Error("file not owned");return {url:"https://example.invalid/file-1",fileName:"reference.png"};},
  getReference:async(c,id,fileId)=>c.accountId==="account-a"&&id==="image-1"&&(!fileId||fileId==="file-1")?{fileId:"file-1",checksum,mimeType:"image/png",bytes}:null,
  resolveCapability:async(_c,capability)=>({provider:"minimax",model:capability==="video.generate"?"MiniMax-H3":"image-01"}),
+ readTask:async(c,taskId)=>{const task=await db.query.aiTasks.findFirst({where:(table,{eq})=>eq(table.id,taskId)});return task??{id:taskId,userId:c.userId,accountId:c.accountId??null,taskType:'asset.generate',attemptId:taskId.slice(5),projectId:null,inputData:submitted.get(taskId)??{},status:'queued'};},
+ readTaskResults:async(_c,taskId)=>db.query.aiTaskResults.findMany({where:(table,{eq})=>eq(table.aiTaskId,taskId)}),
  submitTask:submit,
  ...extra,
 });
@@ -45,7 +49,7 @@ it("同一次生成复用原 attempt，删节点后仍能在历史读取",async(
  const first=await s.generate(ctx("account-a"),created.id,"gen-1",{expectedRevision:saved.revision,attemptId:"canvas-attempt-0001"});
  const second=await s.generate(ctx("account-a"),created.id,"gen-1",{expectedRevision:saved.revision,attemptId:"canvas-attempt-0001"});
  expect(second.taskId).toBe(first.taskId);expect(first.mediaKind).toBe("image");
- await db.insert(aiTasks).values({id:first.taskId!,userId:"canvas-user",accountId:"account-a",taskType:"asset.generate",idempotencyKey:"canvas-attempt-0001",inputData:{kind:"image",prompt:"山间日出"},requestedAt:"2026-09-28T00:00:00.000Z"});
+ await db.insert(aiTasks).values({id:first.taskId!,userId:"canvas-user",accountId:"account-a",taskType:"asset.generate",idempotencyKey:"canvas-attempt-0001",attemptId:first.attemptId,inputData:submitted.get(first.taskId!) as Record<string,unknown>,requestedAt:"2026-09-28T00:00:00.000Z"});
  await db.insert(aiTaskResults).values({id:"canvas-result-1",aiTaskId:first.taskId!,resultType:"generated_asset",assetId:"generated-image-1",resultData:{}});
  const cleared=await s.save(ctx("account-a"),created.id,{expectedRevision:saved.revision,document:doc([])});
  expect(cleared.document.nodes).toHaveLength(0);
@@ -143,3 +147,29 @@ it("任务已落库但响应丢失后编辑节点，恢复原attempt补link且�
  await expect(s.generate(ctx("account-a"),saved.id,"lost",{expectedRevision:saved.revision,attemptId})).rejects.toThrow("回执丢失");saved=await s.save(ctx("account-a"),saved.id,{expectedRevision:saved.revision,document:doc([{...imageNode("lost"),prompt:"后来编辑的另一版"}])});
  expect(await s.generate(ctx("account-a"),saved.id,"lost",{expectedRevision:saved.revision,attemptId})).toMatchObject({taskId});expect(losingSubmit).toHaveBeenCalledTimes(1);expect(await s.listTasks(ctx("account-a"),saved.id)).toMatchObject([{taskId}]);
 });
+it("任务历史读取不写生成账本，结果只经原AI读取端口投影",async()=>{
+ const s=service(),c=ctx('account-a'),created=await s.create(c,{title:'GET纯读'});
+ const saved=await s.save(c,created.id,{expectedRevision:1,document:doc([imageNode('get-pure')])});
+ const generated=await s.generate(c,created.id,'get-pure',{expectedRevision:saved.revision,attemptId:'pure-read-attempt'});
+ await db.insert(aiTasks).values({id:generated.taskId!,userId:c.userId,accountId:c.accountId!,taskType:'asset.generate',idempotencyKey:'pure-read-attempt',attemptId:generated.attemptId,inputData:submitted.get(generated.taskId!) as Record<string,unknown>,requestedAt:'2026-09-28T00:00:00.000Z'});
+ await db.insert(aiTaskResults).values({id:'pure-read-result',aiTaskId:generated.taskId!,resultType:'generated_asset',assetId:'pure-asset',resultData:{}});
+ const before=await db.select().from(canvasGenerationLinks);
+ expect(await s.listTasks(c,created.id)).toMatchObject([{resultAssetId:'pure-asset'}]);
+ expect(await db.select().from(canvasGenerationLinks)).toEqual(before);
+});
+it("原attempt重放必须匹配完整公开revision，不能用旧回执吃掉新请求",async()=>{
+ const s=service(),c=ctx('account-a'),created=await s.create(c,{title:'严格重放'});
+ const saved=await s.save(c,created.id,{expectedRevision:1,document:doc([imageNode('repeat')])});
+ await s.generate(c,created.id,'repeat',{expectedRevision:saved.revision,attemptId:'strict-replay-attempt'});
+ await expect(s.generate(c,created.id,'repeat',{expectedRevision:saved.revision+1,attemptId:'strict-replay-attempt'})).rejects.toThrow('原提交');
+});
+it("素材验权在画布写事务内运行，原owner不会等待自己的根连接",async()=>{
+ const c=ctx('account-a');let seen:Db|undefined;
+ const s=createCreativeCanvasService(db,{assertProject:async()=>{},assertMediaAsset:async(_c,_id,_type,_file,tx)=>{seen=tx;return {fileId:'exact',checksum};},assertReferenceAsset:async()=>{},getMediaFileDownloadUrl:async()=>({url:'https://example.invalid',fileName:'x'}),getReference:async()=>null,submitTask:submit,readTask:async()=>null,readTaskResults:async()=>[]});
+ const created=await s.create(c,{title:'同事务'});
+ await s.save(c,created.id,{expectedRevision:1,document:doc([{id:'media',type:'image',label:'原文件',position:{x:0,y:0},assetId:'image'}])});
+ expect(seen).toBeDefined();expect(seen).not.toBe(db);
+});
+
+it("公开transport严格解析body与路径，拒绝额外键先于业务写入",async()=>{const t=createCreativeCanvasTransport(service());const before=await service().list(ctx('account-a'));await expect(t.request(ENDPOINTS.createCanvas,{body:{title:'不应创建',unknown:true}} as never,ctx('account-a'))).rejects.toThrow();expect(await service().list(ctx('account-a'))).toEqual(before);await expect(t.request(ENDPOINTS.getCanvas,{params:{canvasId:before[0]!.id,unknown:true}} as never,ctx('account-a'))).rejects.toThrow();});
+it("公开transport使用正式响应schema，合法保存与列表真实可读",async()=>{const t=createCreativeCanvasTransport(service()),created=await t.request(ENDPOINTS.createCanvas,{body:{title:'公开画布'}} as never,ctx('account-a'));const value=(created as {data:unknown}).data as {id:string;revision:number};expect(await t.request(ENDPOINTS.getCanvas,{params:{canvasId:value.id}} as never,ctx('account-a'))).toMatchObject({data:{title:'公开画布',revision:1}});await expect(t.request({id:'unknown'} as Endpoint,{} as never,ctx('account-a'))).rejects.toThrow();});

@@ -712,166 +712,355 @@
     {
       "idx": 101,
       "version": "7",
+      "when": 1790553600000,
+      "tag": "0101_creative_canvas",
+      "breakpoints": true
+    },
+    {
+      "idx": 102,
+      "version": "7",
+      "when": 1790668800000,
+      "tag": "0101_reporting_local_consent",
+      "breakpoints": true
+    },
+    {
+      "idx": 103,
+      "version": "7",
+      "when": 1790755200000,
+      "tag": "0102_publications_account_external_unique",
+      "breakpoints": true
+    },
+    {
+      "idx": 104,
+      "version": "7",
+      "when": 1790755200001,
+      "tag": "0103_platform_collection",
+      "breakpoints": true
+    },
+    {
+      "idx": 105,
+      "version": "7",
+      "when": 1790755200002,
+      "tag": "0104_platform_bind_attempts",
+      "breakpoints": true
+    },
+    {
+      "idx": 106,
+      "version": "7",
+      "when": 1790755200003,
+      "tag": "0105_platform_legacy_backfill",
+      "breakpoints": true
+    },
+    {
+      "idx": 107,
+      "version": "7",
+      "when": 1790755200004,
+      "tag": "0106_platform_work_source_title",
+      "breakpoints": true
+    },
+    {
+      "idx": 108,
+      "version": "7",
+      "when": 1790755200005,
+      "tag": "0107_wechat_articles",
+      "breakpoints": true
+    },
+    {
+      "idx": 109,
+      "version": "7",
+      "when": 1790755200006,
+      "tag": "0108_graphic_posts",
+      "breakpoints": true
+    },
+    {
+      "idx": 110,
+      "version": "7",
+      "when": 1790755200007,
+      "tag": "0109_creative_results",
+      "breakpoints": true
+    },
+    {
+      "idx": 111,
+      "version": "7",
+      "when": 1790755200008,
+      "tag": "0110_article_text_candidates",
+      "breakpoints": true
+    },
+    {
+      "idx": 112,
+      "version": "7",
+      "when": 1790755200009,
+      "tag": "0111_publication_text_candidates",
+      "breakpoints": true
+    },
+    {
+      "idx": 113,
+      "version": "7",
+      "when": 1790755200010,
+      "tag": "0112_creative_result_target_section",
+      "breakpoints": true
+    },
+    {
+      "idx": 114,
+      "version": "7",
+      "when": 1790755200011,
+      "tag": "0113_publication_cover_file",
+      "breakpoints": true
+    },
+    {
+      "idx": 115,
+      "version": "7",
+      "when": 1790755200012,
+      "tag": "0114_production_edit_versions",
+      "breakpoints": true
+    },
+    {
+      "idx": 116,
+      "version": "7",
+      "when": 1790755200013,
+      "tag": "0115_production_render_requests",
+      "breakpoints": true
+    },
+    {
+      "idx": 117,
+      "version": "7",
+      "when": 1790755200014,
+      "tag": "0116_output_creation_requests",
+      "breakpoints": true
+    },
+    {
+      "idx": 118,
+      "version": "7",
+      "when": 1790755200015,
+      "tag": "0117_conversion_reservations",
+      "breakpoints": true
+    },
+    {
+      "idx": 119,
+      "version": "7",
+      "when": 1790755200016,
+      "tag": "0118_execution_control_receipts",
+      "breakpoints": true
+    },
+    {
+      "idx": 120,
+      "version": "7",
+      "when": 1790755200017,
+      "tag": "0119_production_media_requests",
+      "breakpoints": true
+    },
+    {
+      "idx": 121,
+      "version": "7",
+      "when": 1790755200018,
+      "tag": "0120_moments_owner",
+      "breakpoints": true
+    },
+    {
+      "idx": 122,
+      "version": "7",
+      "when": 1790755200019,
+      "tag": "0121_work_composition_owner",
+      "breakpoints": true
+    },
+    {
+      "idx": 123,
+      "version": "7",
+      "when": 1790755200020,
+      "tag": "0122_work_materials",
+      "breakpoints": true
+    },
+    {
+      "idx": 124,
+      "version": "7",
+      "when": 1790755200030,
+      "tag": "0123_work_reviews",
+      "breakpoints": true
+    },
+    {
+      "idx": 125,
+      "version": "7",
+      "when": 1790755200040,
+      "tag": "0124_production_file_bindings",
+      "breakpoints": true
+    },
+    {
+      "idx": 126,
+      "version": "7",
+      "when": 1790755200050,
+      "tag": "0125_creative_canvas_lineage_merge",
+      "breakpoints": true
+    },
+    {
+      "idx": 127,
+      "version": "7",
+      "when": 1790755200060,
+      "tag": "0126_moments_model_candidates",
+      "breakpoints": true
+    },
+    {
+      "idx": 128,
+      "version": "7",
+      "when": 1790755200070,
+      "tag": "0127_publication_cover_requests",
+      "breakpoints": true
+    },
+    {
+      "idx": 129,
+      "version": "7",
       "when": 1790761007000,
       "tag": "0101_topic_rewrite_only",
       "breakpoints": true
     },
     {
-      "idx": 102,
+      "idx": 130,
       "version": "7",
       "when": 1790942400000,
       "tag": "0102_audience_task_workspace",
       "breakpoints": true
     },
     {
-      "idx": 103,
+      "idx": 131,
       "version": "7",
       "when": 1790942400001,
       "tag": "0102_account_groups",
       "breakpoints": true
     },
     {
-      "idx": 104,
+      "idx": 132,
       "version": "7",
       "when": 1790942400002,
       "tag": "0103_group_projects",
       "breakpoints": true
     },
     {
-      "idx": 105,
+      "idx": 133,
       "version": "7",
       "when": 1790942400003,
       "tag": "0104_group_knowledge_positioning",
       "breakpoints": true
     },
     {
-      "idx": 106,
+      "idx": 134,
       "version": "7",
       "when": 1790942400004,
       "tag": "0107_group_resources",
       "breakpoints": true
     },
     {
-      "idx": 107,
+      "idx": 135,
       "version": "7",
       "when": 1790942400005,
       "tag": "0108_group_platform_facts",
       "breakpoints": true
     },
     {
-      "idx": 108,
+      "idx": 136,
       "version": "7",
       "when": 1790942400006,
       "tag": "0105_group_shared_domains",
       "breakpoints": true
     },
     {
-      "idx": 109,
+      "idx": 137,
       "version": "7",
       "when": 1790942400007,
       "tag": "0106_group_tasks_intelligence",
       "breakpoints": true
     },
     {
-      "idx": 110,
+      "idx": 138,
       "version": "7",
       "when": 1790942400008,
       "tag": "0110_group_migration_ledger",
       "breakpoints": true
     },
     {
-      "idx": 111,
+      "idx": 139,
       "version": "7",
       "when": 1790942400009,
       "tag": "0111_group_skill_overlays",
       "breakpoints": true
     },
     {
-      "idx": 112,
+      "idx": 140,
       "version": "7",
       "when": 1790942400010,
       "tag": "0109_group_calendar",
       "breakpoints": true
     },
     {
-      "idx": 113,
+      "idx": 141,
       "version": "7",
       "when": 1790942400011,
       "tag": "0112_group_pending_assets",
       "breakpoints": true
     },
     {
-      "idx": 114,
+      "idx": 142,
       "version": "7",
       "when": 1790942400012,
       "tag": "0114_legacy_shared_group_stamp",
       "breakpoints": true
     },
     {
-      "idx": 115,
+      "idx": 143,
       "version": "7",
       "when": 1790942400013,
       "tag": "0115_group_grant_uses",
       "breakpoints": true
     },
     {
-      "idx": 116,
+      "idx": 144,
       "version": "7",
       "when": 1790942400014,
       "tag": "0113_group_research_sources",
       "breakpoints": true
     },
     {
-      "idx": 117,
+      "idx": 145,
       "version": "7",
       "when": 1790942400015,
       "tag": "0117_group_project_derived",
       "breakpoints": true
     },
     {
-      "idx": 118,
+      "idx": 146,
       "version": "7",
       "when": 1790942400016,
       "tag": "0119_group_transcription_knowledge_adoption",
       "breakpoints": true
     },
     {
-      "idx": 119,
+      "idx": 147,
       "version": "7",
       "when": 1790942400017,
       "tag": "0118_group_audience_facts",
       "breakpoints": true
     },
     {
-      "idx": 120,
+      "idx": 148,
       "version": "7",
       "when": 1790942400018,
       "tag": "0120_group_onboarding_state",
       "breakpoints": true
     },
     {
-      "idx": 121,
+      "idx": 149,
       "version": "7",
       "when": 1790942400019,
       "tag": "0121_group_resource_grant_locks",
       "breakpoints": true
     },
     {
-      "idx": 122,
+      "idx": 150,
       "version": "7",
       "when": 1790942400020,
       "tag": "0122_group_asset_tag_adoption",
       "breakpoints": true
     },
     {
-      "idx": 123,
-      "version": "7",
-      "when": 1790553600000,
-      "tag": "0101_creative_canvas",
-      "breakpoints": true
-    },
-    {
-      "idx": 124,
+      "idx": 151,
       "version": "7",
       "when": 1791043200000,
       "tag": "0102_visual_template_library",

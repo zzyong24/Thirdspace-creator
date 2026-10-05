@@ -596,3 +596,7 @@ export {runTranscribeAsrInWorker} from './execution/transcribe-asr-run';
 
 export * from './prompt/templates/asset-processing';
 export {flywheelOutputSchema,flywheelKnowledgeResultSchema} from './runtime/flywheel-output';
+
+export {runAssetAsrInWorker} from './execution/asset-asr-worker-run';
+
+export {MOMENTS_COMPOSE_TEMPLATE} from "./prompt/moments-compose";

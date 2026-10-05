@@ -26,6 +26,7 @@ import type {
 // PERSISTED_OPS from SETTINGS_OP_IDS (adding the module = registering it).
 
 export const SETTINGS_OP_IDS = [
+  "settings.reporting.get", "settings.reporting.consent.set", "settings.reporting.pending.clear",
   "settings.onboarding.get", "settings.onboarding.patch",
   "settings.onboarding.group.get", "settings.onboarding.group.patch",
   "settings.redfox.get", "settings.redfox.put", "settings.redfox.delete",
@@ -67,6 +68,7 @@ export function createSettingsTransport(
   serviceFactory: (ctx: RequestContext) => SettingsService,
   integrations?: ReturnType<typeof import("./integration-credentials").createIntegrationCredentials>,
   onboarding?: ReturnType<typeof import("./onboarding-state").createOnboardingState>,
+  reporting?: ReturnType<typeof import("./reporting-local").createReportingLocal>,
 ): Transport {
   return {
     async request(endpoint: Endpoint, input, ctx) {
@@ -82,6 +84,16 @@ export function createSettingsTransport(
           if(!onboarding)throw Error("ONBOARDING_SETTINGS_UNAVAILABLE");
           const groupId=(params as {groupId?:string}|undefined)?.groupId??"";
           const data=endpoint.id==="settings.onboarding.group.get"?await onboarding.getGroup(ctx,groupId):await onboarding.patchGroup(ctx,groupId,body as import("@creatoros/contract").OnboardingPatch);
+          return {data,meta:{requestId:ctx.requestId}};
+        }
+        case "settings.reporting.get": case "settings.reporting.consent.set": case "settings.reporting.pending.clear": {
+          if (!reporting) throw Error("REPORTING_LOCAL_UNAVAILABLE");
+          const validated = endpoint.body?.parse(body);
+          const data = endpoint.id === "settings.reporting.get"
+            ? await reporting.status(ctx)
+            : endpoint.id === "settings.reporting.pending.clear"
+              ? await reporting.clearPending(ctx, (validated as {scope:"diagnostics"|"creator"}).scope, (validated as {accountId?:string}).accountId)
+              : await reporting.setConsent(ctx, validated as import("./reporting-local").ReportingConsentInput);
           return {data,meta:{requestId:ctx.requestId}};
         }
         case "settings.onboarding.get": case "settings.onboarding.patch": {

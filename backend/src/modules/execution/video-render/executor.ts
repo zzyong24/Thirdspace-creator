@@ -578,6 +578,7 @@ async function renderWithHyperframesCli(opts: {
       const m = /Capturing frame (\d+)\/(\d+)/.exec(text);
       if (m) opts.onProgress(`捕帧 ${m[1]}/${m[2]}`);
       else if (text.includes("Encoding video")) opts.onProgress("编码中");
+      else if (/audio|Audio|WARN|ERROR/.test(text)) opts.onProgress(redactHyperframesDiagnostic(text).slice(-2000));
     };
     child.stdout.on("data", onData);
     child.stderr.on("data", onData);
@@ -1135,7 +1136,7 @@ export function createVideoRenderExecutor(
               direction: {
                 ...renderProps.direction,
                 beatGraph: renderProps.direction.beatGraph.map((beat) =>
-                  beat.subject.kind === "broll"
+                  beat.subject.kind === "broll" && !renderProps.broll.some(item => item.id && beat.subject.ref === `broll:${item.id}`)
                     ? {
                         ...beat,
                         subject: {
@@ -1148,7 +1149,8 @@ export function createVideoRenderExecutor(
               },
             }
           : {}),
-        talkingHead: { ...renderProps.talkingHead, file: rename(renderProps.talkingHead.file) },
+        talkingHead: { ...renderProps.talkingHead, file: rename(renderProps.talkingHead.file),
+          ...(renderProps.talkingHead.clips ? {clips:renderProps.talkingHead.clips.map(clip=>({...clip,file:rename(clip.file)}))} : {}) },
         broll: renderProps.broll.map((b) => ({ ...b, file: rename(b.file) })),
         scenes: renderProps.scenes.map((s) => ({
           ...s,
@@ -1194,14 +1196,27 @@ export function createVideoRenderExecutor(
       throwIfAborted(signal);
       await reportStep("交付文件无损整理(stream copy + faststart)");
       const finalFile = path.join(sandbox.outDir, "final.mp4");
+      // SEMANTIC_BOUNDARY_ALLOW: 仅落实已保存的主轨实例、入点和时长，不判断语音内容。
+      // 主轨音频直接按冻结区间编译，避免外部引擎静默丢失音轨或重复实例去重。
+      const mainClips=renamedProps.talkingHead.clips;
+      const audioArgs=mainClips?.some(clip=>clip.hasAudio)?(()=>{
+        const inputs=mainClips.flatMap(clip=>["-i",path.join(mediaDir,clip.file)]);
+        const filters=mainClips.map((clip,index)=>{
+          const duration=clip.endSec-clip.startSec;
+          return clip.hasAudio
+            ? `[${index+1}:a]atrim=start=${clip.sourceInSec}:duration=${duration},asetpts=PTS-STARTPTS,aresample=48000,aformat=sample_fmts=fltp:channel_layouts=stereo,apad,atrim=duration=${duration}[a${index}]`
+            : `anullsrc=r=48000:cl=stereo,atrim=duration=${duration}[a${index}]`;
+        });
+        filters.push(mainClips.map((_,index)=>`[a${index}]`).join("")+`concat=n=${mainClips.length}:v=0:a=1[main_audio]`);
+        return [...inputs,"-filter_complex",filters.join(";"),"-map","0:v:0","-map","[main_audio]","-c:v","copy","-c:a","aac","-b:a","192k","-t",String(props.talkingHead.durationSec)];
+      })():["-c","copy"];
       await engine.runFfmpeg(
         ffmpeg,
         [
           "-y",
           "-i",
           rawFile,
-          "-c",
-          "copy",
+          ...audioArgs,
           "-movflags",
           "+faststart",
           finalFile,

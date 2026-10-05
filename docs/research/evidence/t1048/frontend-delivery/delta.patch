@@ -1,0 +1,1098 @@
+--- a/frontend/src/features/projects/graphic-post-workbench.tsx
++++ b/frontend/src/features/projects/graphic-post-workbench.tsx
+@@ -11,7 +11,10 @@
+ import { client } from "@/lib/contract-client";
+ import { describeUserError } from "@/lib/ai-error-humanize";
+ import { GraphicPostResults } from "./graphic-post-results";
+-import { GraphicCardBriefEditor } from "./graphic-card-brief-editor";
++import {GraphicSeriesPanel} from "./graphic-series-panel";
++import {graphicDeliveryImages,setGraphicCover,normalizeGraphicImages} from "./graphic-series-document";
++import {openGraphicPageCanvas} from "@/features/creative-canvas/graphic-page-context";
++import {zipSync,strToU8} from "fflate";
+ import { OutputConversionPanel } from "./output-conversion-panel";
+ import {GraphicDesignWorkbench} from "@/features/reference-editors/graphic-design-workbench";
+ import type {ReferenceEditorMedia} from "@creatoros/contract";
+@@ -39,14 +42,22 @@
+     : <div className="flex h-32 items-center justify-center rounded-md bg-surface-subtle text-xs text-muted-foreground">{unavailable ? "图片版本暂不可读取" : "读取图片中…"}</div>;
+ }
+ 
+-export function GraphicPostWorkbench({ projectId, projectTitle, accountId, initial, initialStartStatus }: {
++type WorkbenchProps = {
+   projectId: string;
+   projectTitle: string;
+   accountId: string;
+   initial: GraphicPostResource;
+   initialStartStatus?: string;
+-}) {
++};
++export function GraphicPostWorkbench(props:WorkbenchProps){return <GraphicPostWorkbenchSession key={`${props.accountId}:${props.initial.outputId}`} {...props}/>;}
++function GraphicPostWorkbenchSession({projectId,projectTitle,accountId,initial,initialStartStatus}:WorkbenchProps) {
+   const router = useRouter();
++  const [selectedCardId,setSelectedCardId]=React.useState<string|null>(initial.current.cardBriefs?.[0]?.cardId??null);
++  const [selectedCardIds,setSelectedCardIds]=React.useState<string[]>(initial.current.cardBriefs?.map(card=>card.cardId)??[]);
++  const [exportBusy,setExportBusy]=React.useState(false);
++  const [canvasBusy,setCanvasBusy]=React.useState(false);
++  const mounted=React.useRef(true);
++  React.useEffect(()=>{mounted.current=true;return()=>{mounted.current=false;};},[]);
+   const [designTarget,setDesignTarget]=React.useState<{kind:"cover"}|{kind:"card";cardId:string}|null>(null);
+   const [state, setState] = React.useState(initial);
+   const [draft, setDraft] = React.useState<GraphicPostDocument>(initial.current);
+@@ -61,17 +72,19 @@
+   const [message, setMessage] = React.useState<string | null>(null);
+   const [startStatus, setStartStatus] = React.useState(initialStartStatus);
+   const [startResolutionMessage, setStartResolutionMessage] = React.useState<string | null>(null);
+-  const [assistantOpen, setAssistantOpen] = React.useState(initialStartStatus === "unknown");
+-  const [bodyCandidateHint, setBodyCandidateHint] = React.useState("生成与查看候选");
+   const startResolved = React.useRef(false);
+   const [preview, setPreview] = React.useState<{ versionId: string; document: GraphicPostDocument } | null>(null);
+   const designSaveRequest=React.useRef<{digest:string;input:Parameters<typeof client.createGraphicPostVersion>[0]["body"]}|null>(null);
+   const saveRequest = React.useRef({ id: crypto.randomUUID(), digest: "" });
+   const dirty = JSON.stringify(draft) !== JSON.stringify(state.current);
++  const draftRef=React.useRef(draft);
++  const stateRef=React.useRef(state);
++  React.useLayoutEffect(()=>{draftRef.current=draft;stateRef.current=state;},[draft,state]);
++  const pageIds=draft.cardBriefs?.map(card=>card.cardId)??[];
++  const activeCardId=selectedCardId&&pageIds.includes(selectedCardId)?selectedCardId:pageIds[0]??null;
++  const activeCardIds=selectedCardIds.filter(id=>pageIds.includes(id));
+ 
+   const onResultListResolved = React.useCallback((bodyResult: CreativeResult | null) => {
+-    setBodyCandidateHint(bodyResult?.status === "queued" || bodyResult?.status === "running" ? "正文生成中" :
+-      bodyResult?.status === "succeeded" ? "正文候选待采用" : bodyResult?.status === "failed" ? "正文生成未完成" : "生成与查看候选");
+     if (initialStartStatus !== "unknown" || startResolved.current) return;
+     startResolved.current = true;
+     setStartStatus(undefined);
+@@ -81,11 +94,14 @@
+     window.history.replaceState(window.history.state, "", url);
+   }, [initialStartStatus]);
+ 
+-  async function refreshPost() {
++  async function refreshPost(expectedDraft?:string) {
++    const snapshot=JSON.stringify(draftRef.current);
++    const replaceDraft=expectedDraft!==undefined?snapshot===expectedDraft:snapshot===JSON.stringify(stateRef.current.current);
+     const latest = await client.getGraphicPost({ params: { outputId: state.outputId }, query: undefined, body: undefined });
++    if(!mounted.current)return;
+     setState(latest);
+-    setDraft(structuredClone(latest.current));
+-    setTagsInput(latest.current.tags.join("、"));
++    if(replaceDraft&&JSON.stringify(draftRef.current)===snapshot){setDraft(structuredClone(latest.current));setTagsInput(latest.current.tags.join("、"));}
++    else setMessage("作品已读回，期间新增的输入已保留；请审阅后保存。");
+     router.refresh();
+   }
+ 
+@@ -93,15 +109,17 @@
+     setAssetBusy(true);
+     try {
+       const rows = await client.listAssets({ params: undefined, query: { page, pageSize: 50, status: "active" }, body: undefined }) as unknown as ImageAsset[];
++      if(!mounted.current)return;
+       const imageRows = rows.filter((asset) => asset.assetType === "image" && asset.currentFileId);
+       setAssets((previous) => page === 1 ? imageRows : [...previous, ...imageRows]);
+       setHasMoreAssets(rows.length === 50);
+       setAssetPage(page);
+       setError(null);
+     } catch (reason) {
++      if(!mounted.current)return;
+       setError(describeUserError(reason, "图片素材暂未读取到，请重试。"));
+     } finally {
+-      setAssetBusy(false);
++      if(mounted.current)setAssetBusy(false);
+     }
+   }, []);
+   React.useEffect(() => { void Promise.resolve().then(() => loadAssets(1)); }, [loadAssets]);
+@@ -116,9 +134,8 @@
+     }]) }));
+     setAssetId("");
+   }
+-  function editImages(next: ImageUse[]) {
+-    setDraft((current) => ({ ...current, imageUses: normalizeImages(next) }));
+-  }
++  function editLegacyImages(next:ImageUse[]){setDraft(current=>normalizeGraphicImages({...current,imageUses:[...next,...current.imageUses.filter(image=>image.role==="card"&&image.cardId)]}));}
++  const legacyImages=draft.imageUses.filter(image=>image.role==="cover"||!image.cardId);
+   async function save(): Promise<boolean> {
+     if (busy) return false;
+     if (!dirty) return true;
+@@ -130,24 +147,27 @@
+         params: { outputId: state.outputId }, query: undefined,
+         body: { expectedCurrentVersionId: state.currentVersionId, document: draft, clientRequestId: saveRequest.current.id },
+       });
+-      await refreshPost();
++      if(!mounted.current)return false;
++      await refreshPost(JSON.stringify(draft));
+       saveRequest.current = { id: crypto.randomUUID(), digest: "" };
+       setMessage("作品已保存。");
+       return true;
+     } catch (reason) {
++      if(!mounted.current)return false;
+       setError(describeUserError(reason, "保存未完成。当前输入已保留，请检查后重试。"));
+       return false;
+     } finally {
+-      setBusy(false);
++      if(mounted.current)setBusy(false);
+     }
+   }
+   async function openVersion(versionId: string) {
+     try {
+       const next = await client.getGraphicPostVersion({ params: { outputId: state.outputId, versionId }, query: undefined, body: undefined });
++      if(!mounted.current)return;
+       setPreview(next);
+       setError(null);
+     } catch (reason) {
+-      setError(describeUserError(reason, "历史版本暂不可读取。"));
++      if(mounted.current)setError(describeUserError(reason, "历史版本暂不可读取。"));
+     }
+   }
+ 
+@@ -160,15 +180,44 @@
+     if(!designSaveRequest.current||designSaveRequest.current.digest!==digest)designSaveRequest.current={digest,input:{expectedCurrentVersionId:state.currentVersionId,document:next,clientRequestId:crypto.randomUUID()}};
+     const input=designSaveRequest.current.input;
+     await client.createGraphicPostVersion({params:{outputId:state.outputId},query:undefined,body:input});
+-    await refreshPost();
++    await refreshPost(JSON.stringify(draft));
+     designSaveRequest.current=null;
++  }
++  async function enterCanvas(cardId:string){
++    if(canvasBusy)return;setCanvasBusy(true);setError(null);
++    try{if(!(await save())||!mounted.current)return;const snapshot=JSON.stringify(draftRef.current);const path=await openGraphicPageCanvas({accountId,projectId,outputId:state.outputId,cardId});if(mounted.current){if(JSON.stringify(draftRef.current)!==snapshot){setMessage("画布已准备好。期间新增的输入已保留，请保存后再次进入。");return;}router.push(path);}}
++    catch(reason){if(mounted.current)setError(describeUserError(reason,"进入画布未完成，当前作品和输入保留。"));}
++    finally{if(mounted.current)setCanvasBusy(false);}
++  }
++  async function exportGroup(){
++    if(exportBusy)return;setExportBusy(true);setError(null);
++    try{
++      if(!(await save())||!mounted.current)return;
++      const latest=await client.getGraphicPost({params:{outputId:state.outputId},query:undefined,body:undefined});
++      if(!mounted.current)return;
++      const images=graphicDeliveryImages(latest.current),files:Record<string,Uint8Array>={};
++      const manifest:{order:number;assetId:string;assetFileId:string;file:string}[]=[];
++      for(const [index,image] of images.entries()){
++        const target=await client.getAssetFileDownloadUrl({params:{assetId:image.assetId,assetFileId:image.assetFileId},query:undefined,body:undefined});
++        const response=await fetch(target.url);if(!response.ok)throw new Error('图片版本暂不可读取，请稍后重新导出。');
++        const blob=await response.blob(),extension=blob.type==='image/jpeg'?'jpg':blob.type==='image/webp'?'webp':blob.type==='image/gif'?'gif':'png';
++        const name=`${String(index+1).padStart(2,'0')}.${extension}`;files[name]=new Uint8Array(await blob.arrayBuffer());manifest.push({order:index+1,assetId:image.assetId,assetFileId:image.assetFileId,file:name});
++      }
++      files['配文.txt']=new Uint8Array(strToU8([latest.current.title,latest.current.body,latest.current.summary,latest.current.tags.map(tag=>`#${tag}`).join(' ')].filter(Boolean).join('\n\n')));
++      files['图片顺序.json']=new Uint8Array(strToU8(JSON.stringify(manifest,null,2)));
++      if(!mounted.current)return;
++      const blob=new Blob([zipSync(files) as BlobPart],{type:'application/zip'}),url=URL.createObjectURL(blob),anchor=document.createElement('a');
++      anchor.href=url;anchor.download='图文作品.zip';anchor.click();window.setTimeout(()=>URL.revokeObjectURL(url),30000);
++      setMessage(`已导出 ${images.length} 张精确图片和配文，封面相同文件只导出一次。`);
++    }catch(reason){if(mounted.current)setError(describeUserError(reason,'导出未完成，作品已保留，请重试。'));}
++    finally{if(mounted.current)setExportBusy(false);}
+   }
+   return <main data-page="graphic-post-workbench" className="mx-auto w-full max-w-6xl space-y-5 p-5 md:p-8">
+     <header className="sticky top-0 z-10 flex flex-wrap items-start justify-between gap-3 border-b border-border bg-background py-4">
+       <div><Link href={`/projects/${encodeURIComponent(projectId)}`} className="text-sm text-muted-foreground hover:text-foreground">← {projectTitle}</Link>
+         <h1 className="mt-2 text-2xl font-semibold">{state.targetPlatform === "xiaohongshu" ? "小红书图文" : "图文作品"}</h1>
+-        <p className="mt-1 text-sm text-muted-foreground">标题、正文、图卡文字与图片顺序在这里编辑。保存后可刷新读回，旧版本仍可查看。</p></div>
+-      <div className="flex flex-wrap items-center gap-3"><span className="text-sm text-muted-foreground">{busy ? "正在保存…" : dirty ? "有未保存的修改" : "修改已保存"}</span><span className="text-xs text-muted-foreground">版本 {state.versions.length}</span><a href="#graphic-history" className="inline-flex min-h-10 items-center text-sm text-primary hover:underline">历史版本</a><Button onClick={() => void save()} disabled={busy || !dirty}>{busy ? "保存中…" : "保存作品"}</Button></div>
++        <p className="mt-1 text-sm text-muted-foreground">逐页规划、生成与核对一组图，再完善首图和配文。</p></div>
++      <div className="flex flex-wrap items-center gap-3"><span className="text-sm text-muted-foreground">{busy ? "正在保存…" : dirty ? "有未保存的修改" : "修改已保存"}</span><span className="text-xs text-muted-foreground">版本 {state.versions.length}</span><a href="#graphic-history" className="inline-flex min-h-10 items-center text-sm text-primary hover:underline">历史版本</a><Button variant="outline" disabled={busy||exportBusy} onClick={()=>void exportGroup()}>{exportBusy?"导出中…":"导出整组"}</Button><Button onClick={() => void save()} disabled={busy || !dirty}>{busy ? "保存中…" : "保存作品"}</Button></div>
+     </header>
+     {error && <p role="alert" className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">{error}</p>}
+     {message && <p role="status" className="rounded-md bg-success-soft p-3 text-sm text-success">{message}</p>}
+@@ -176,42 +225,33 @@
+     {startStatus === "source-unavailable" && <p className="rounded-md bg-surface-subtle p-3 text-sm text-muted-foreground">作品已创建，但所选来源正文暂不可读取。请在下方输入主题或正文，仍可继续保存。</p>}
+     {startStatus === "unknown" && <p className="rounded-md bg-surface-subtle p-3 text-sm text-muted-foreground">作品已创建。首稿提交状态暂未确认；下方候选列表会从服务端读取，手写也可继续。</p>}
+     {startResolutionMessage && <p role="status" className="rounded-md bg-surface-subtle p-3 text-sm text-muted-foreground">{startResolutionMessage}</p>}
+-    <OutputConversionPanel key={`${accountId}:${state.outputId}`} accountId={accountId} projectId={projectId} outputId={state.outputId}
+-      sourceType="image" versionId={state.currentVersionId} dirty={dirty}
+-      fields={{title: state.current.title, body: state.current.body, summary: state.current.summary, tags: state.current.tags}} images={state.current.imageUses} />
+-    <details aria-label="AI 辅助创作" open={assistantOpen} onToggle={event=>setAssistantOpen(event.currentTarget.open)} className="rounded-xl border border-border bg-surface">
+-      <summary className="cursor-pointer rounded-xl px-5 py-4 text-sm font-medium focus-visible:outline-2 focus-visible:outline-primary">AI 辅助创作<span className="ml-3 text-xs font-normal text-muted-foreground">{bodyCandidateHint}</span></summary>
+-      <div className="border-t border-border p-4"><GraphicPostResults accountId={accountId} outputId={state.outputId} targetPlatform={state.targetPlatform}
+-      currentVersionId={state.currentVersionId} manualDraftDirty={dirty} prepareGeneration={save} onAdopt={refreshPost} onResultListResolved={onResultListResolved} />
+-      </div>
+-    </details>
+-    <details aria-label="发布内容" className="rounded-xl border border-border bg-surface">
+-      <summary className="cursor-pointer rounded-xl px-5 py-4 text-sm font-medium focus-visible:outline-2 focus-visible:outline-primary">发布内容<span className="ml-3 text-xs font-normal text-muted-foreground">标题、简介、标签与封面</span></summary>
+-      <div className="border-t border-border p-4"><PublicationResultActions accountId={accountId} outputId={state.outputId} outputType="image"
+-        platform={state.targetPlatform === "xiaohongshu" ? "xiaohongshu" : null} dirty={dirty} /></div>
+-    </details>
+     {currentDesign&&<GraphicDesignWorkbench key={currentDesign.target.kind==='cover'?'cover':currentDesign.target.cardId} projectId={projectId} outputId={state.outputId} title={currentDesign.target.kind==='cover'?`${draft.title||projectTitle} · 封面`:draft.cardBriefs?.find(card=>currentDesign.target.kind==='card'&&card.cardId===currentDesign.target.cardId)?.title||'图卡'} design={currentDesign} onSave={saveDesign} onClose={()=>setDesignTarget(null)}/>}
+-    <section className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-surface p-4" aria-label="图片设计入口"><div className="mr-auto"><h2 className="font-medium">设计封面与图卡</h2><p className="text-sm text-muted-foreground">进入完整画布，直接编排文字、图片和图层。</p></div><Button disabled={busy} onClick={()=>setDesignTarget({kind:'cover'})}>编辑封面</Button>{(draft.cardBriefs??[]).map(card=><Button key={card.cardId} variant="outline" disabled={busy} onClick={()=>setDesignTarget({kind:'card',cardId:card.cardId})}>编辑图卡：{card.title||'未命名'}</Button>)}</section>
++    <GraphicSeriesPanel document={draft} onChange={setDraft} selectedCardId={activeCardId} selectedCardIds={activeCardIds} onSelect={setSelectedCardId} onSelectionChange={setSelectedCardIds} assets={assets} disabled={busy||canvasBusy}
++      onOpenCanvas={cardId=>void enterCanvas(cardId)} onOpenDesign={cardId=>setDesignTarget({kind:'card',cardId})}>
++      <GraphicPostResults key={`${accountId}:${state.outputId}`} accountId={accountId} outputId={state.outputId} targetPlatform={state.targetPlatform} currentVersionId={state.currentVersionId} manualDraftDirty={dirty} prepareGeneration={save} onAdopt={()=>refreshPost()} onResultListResolved={onResultListResolved}
++       series={{cards:draft.cardBriefs??[],selectedCardId:activeCardId,selectedCardIds:activeCardIds}}/>
++    </GraphicSeriesPanel>
+     <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_290px]">
+       <fieldset disabled={busy} aria-busy={busy} aria-label="编辑图文作品" className="min-w-0 space-y-4">
+-        <section className="space-y-4 rounded-xl border border-border bg-surface p-5" aria-label="图文稿件">
++        <section className="space-y-4 rounded-xl border border-border bg-surface p-5" aria-label="图文稿件"><h2 className="font-semibold">内容与交付配文</h2>
+           <label className="block text-sm font-medium">标题<input value={draft.title} onChange={(event) => setDraft({ ...draft, title: event.target.value })} className="mt-2 h-11 w-full rounded-md border border-border bg-background px-3" placeholder="输入作品标题" /></label>
+           <label className="block text-sm font-medium">正文<textarea value={draft.body} onChange={(event) => setDraft({ ...draft, body: event.target.value })} className="mt-2 min-h-72 w-full rounded-md border border-border bg-background p-3 leading-relaxed" placeholder="直接写正文，或粘贴已经准备好的文案" /></label>
+           <label className="block text-sm font-medium">简介或摘要<textarea value={draft.summary} onChange={(event) => setDraft({ ...draft, summary: event.target.value })} className="mt-2 min-h-24 w-full rounded-md border border-border bg-background p-3" placeholder="可选" /></label>
+           <label className="block text-sm font-medium">标签<input value={tagsInput} onChange={(event) => { setTagsInput(event.target.value); setDraft({ ...draft, tags: event.target.value.split(/[、,，\n]+/).map((tag) => tag.trim()).filter(Boolean) }); }} className="mt-2 h-10 w-full rounded-md border border-border bg-background px-3" placeholder="多个标签用顿号分隔" /></label>
+         </section>
+-        <GraphicCardBriefEditor cards={draft.cardBriefs ?? []} disabled={busy}
+-          onChange={cardBriefs => setDraft(current => ({...current, cardBriefs}))} />
++
+         <section className="rounded-xl border border-border bg-surface p-5" aria-label="图文图片">
+-          <div className="flex flex-wrap items-start justify-between gap-2"><div><h2 className="font-semibold">图片与封面</h2><p className="mt-1 text-sm text-muted-foreground">从当前账号的图片素材中选取，调整顺序后保存。图片版本会随作品固定。</p></div><Link href="/assets" className="text-sm text-primary hover:underline">上传图片素材 →</Link></div>
++          <div className="flex flex-wrap items-start justify-between gap-2"><div><h2 className="font-semibold">封面与原照片</h2><p className="mt-1 text-sm text-muted-foreground">没有绑定页的原照片可以继续使用。封面保留独立用途，不会取消原页绑定。</p></div><Link href="/assets" className="text-sm text-primary hover:underline">上传图片素材 →</Link></div>
+           <div className="mt-4 flex gap-2"><select aria-label="选择图片素材" value={assetId} onChange={(event) => setAssetId(event.target.value)} className="min-w-0 flex-1 rounded-md border border-border bg-background px-2 py-2 text-sm"><option value="">选择已有图片</option>{assets.map((asset) => <option key={asset.id} value={asset.id}>{asset.name}</option>)}</select><Button variant="outline" disabled={!assetId} onClick={addImage}>添加图片</Button></div>
+           {hasMoreAssets && <Button variant="ghost" size="sm" disabled={assetBusy} onClick={() => void loadAssets(assetPage + 1)} className="mt-2">{assetBusy ? "读取中…" : "加载更多图片"}</Button>}
+-          {draft.imageUses.length ? <ol className="mt-4 grid gap-3 sm:grid-cols-2">{draft.imageUses.map((image, index) => <li key={`${image.assetId}:${image.assetFileId}`} className="rounded-lg border border-border p-3"><ImagePreview image={image} /><div className="mt-2 flex items-center justify-between text-xs"><span>{image.role === "cover" ? "封面" : `图卡 ${index + 1}`}</span><span>{index + 1} / {draft.imageUses.length}</span></div><div className="mt-2 flex flex-wrap gap-2"><Button size="sm" variant="outline" disabled={index === 0} onClick={() => { const next = [...draft.imageUses]; [next[index - 1], next[index]] = [next[index]!, next[index - 1]!]; editImages(next); }}>上移</Button><Button size="sm" variant="outline" disabled={index === draft.imageUses.length - 1} onClick={() => { const next = [...draft.imageUses]; [next[index], next[index + 1]] = [next[index + 1]!, next[index]!]; editImages(next); }}>下移</Button><Button size="sm" variant="outline" disabled={image.role === "cover"} onClick={() => editImages(draft.imageUses.map((item) => ({ ...item, role: item.assetId === image.assetId && item.assetFileId === image.assetFileId ? "cover" : "card" })))}>设为封面</Button><Button size="sm" variant="ghost" onClick={() => editImages(draft.imageUses.filter((_, position) => position !== index))}>移除</Button></div></li>)}</ol> : <p className="mt-4 text-sm text-muted-foreground">暂无图片。文字可先保存，图片稍后补充。</p>}
++          {draft.imageUses.some(image=>image.role==="cover"||!image.cardId) ? <ol className="mt-4 grid gap-3 sm:grid-cols-2">{legacyImages.map((image, index) => <li key={`${image.role}:${image.cardId??"unbound"}:${image.assetId}:${image.assetFileId}`} className="rounded-lg border border-border p-3"><ImagePreview image={image} /><div className="mt-2 flex items-center justify-between text-xs"><span>{image.role === "cover" ? "封面" : `原照片 ${index + 1}`}</span><span>{index + 1} / {legacyImages.length}</span></div><div className="mt-2 flex flex-wrap gap-2"><Button size="sm" variant="outline" disabled={index === 0||image.role==="cover"||legacyImages[index-1]?.role==="cover"} onClick={() => { const next = [...legacyImages]; [next[index - 1], next[index]] = [next[index]!, next[index - 1]!]; editLegacyImages(next); }}>上移</Button><Button size="sm" variant="outline" disabled={index === legacyImages.length - 1||image.role==="cover"} onClick={() => { const next = [...legacyImages]; [next[index], next[index + 1]] = [next[index + 1]!, next[index]!]; editLegacyImages(next); }}>下移</Button><Button size="sm" variant="outline" disabled={image.role === "cover"} onClick={() => setDraft(current=>setGraphicCover(current,image))}>设为封面</Button><Button size="sm" variant="ghost" onClick={() => editLegacyImages(legacyImages.filter((_, position) => position !== index))}>移除</Button></div></li>)}</ol> : <p className="mt-4 text-sm text-muted-foreground">暂无图片。文字可先保存，图片稍后补充。</p>}
+         </section>
+       </fieldset>
+       <aside className="space-y-4"><section id="graphic-history" className="scroll-mt-48 rounded-xl border border-border bg-surface p-4"><h2 className="font-semibold">历史版本</h2><ol className="mt-3 space-y-2 text-sm">{state.versions.map((version) => <li key={version.id}><button type="button" onClick={() => void openVersion(version.id)} className="text-left text-primary hover:underline">v{version.versionNumber} · {version.createdAt.slice(0, 16).replace("T", " ")}</button></li>)}</ol></section>
+         <section className="rounded-xl border border-border bg-surface p-4"><h2 className="font-semibold">本次依据</h2><p className="mt-2 text-sm text-muted-foreground">{draft.ruleSnapshotRef ? "已记录创作规则" : "此稿暂未记录创作规则"}</p><p className="mt-1 text-sm text-muted-foreground">来源 {draft.sourceRefs.length} 条</p></section></aside>
+     </div>
++    <details aria-label="发布内容" className="rounded-xl border border-border bg-surface"><summary className="cursor-pointer px-5 py-4 text-sm font-medium">首图、简介、话题与审核</summary><div className="border-t border-border p-4"><Button size="sm" variant="outline" disabled={busy} onClick={()=>setDesignTarget({kind:'cover'})}>快图细调封面</Button><PublicationResultActions accountId={accountId} outputId={state.outputId} outputType="image" platform={state.targetPlatform==='xiaohongshu'?'xiaohongshu':null} dirty={dirty}/></div></details>
++    <OutputConversionPanel key={`${accountId}:${state.outputId}`} accountId={accountId} projectId={projectId} outputId={state.outputId} sourceType="image" versionId={state.currentVersionId} dirty={dirty} fields={{title:state.current.title,body:state.current.body,summary:state.current.summary,tags:state.current.tags}} images={state.current.imageUses}/>
+     <Dialog open={Boolean(preview)} onOpenChange={(open) => { if (!open) setPreview(null); }}>
+       <DialogContent className="max-h-[85vh] overflow-y-auto">
+         <DialogHeader><DialogTitle>历史版本预览</DialogTitle></DialogHeader>
+--- a/frontend/src/features/projects/graphic-post-workbench.test.tsx
++++ b/frontend/src/features/projects/graphic-post-workbench.test.tsx
+@@ -1,15 +1,18 @@
+ import * as React from "react";
+ import {afterEach,expect,it,vi} from "vitest";
+-import {cleanup,render,screen,waitFor} from "@testing-library/react";
++import {cleanup,fireEvent,render,screen,waitFor} from "@testing-library/react";
+ import userEvent from "@testing-library/user-event";
+ import type {GraphicPostResource} from "@creatoros/contract";
++import {unzipSync,strFromU8} from "fflate";
+ import {GraphicPostWorkbench} from "./graphic-post-workbench";
+-const api=vi.hoisted(()=>({createGraphicPostVersion:vi.fn(),getGraphicPost:vi.fn(),listAssets:vi.fn(async()=>[])}));
++const api=vi.hoisted(()=>({createGraphicPostVersion:vi.fn(),getGraphicPost:vi.fn(),getAssetFileDownloadUrl:vi.fn(async(_input:{params:{assetId:string;assetFileId:string}})=>({url:"http://example.test/image.png"})),listAssets:vi.fn(async()=>[])}));
++const canvas=vi.hoisted(()=>({openGraphicPageCanvas:vi.fn(),push:vi.fn()}));
+ vi.mock("@/lib/contract-client",()=>({client:api}));
+-vi.mock("next/navigation",()=>({useRouter:()=>({refresh:vi.fn()})}));
+-vi.mock("./graphic-post-results",()=>({GraphicPostResults:()=> <button>读取现有候选</button>}));
++vi.mock("next/navigation",()=>({useRouter:()=>({refresh:vi.fn(),push:canvas.push})}));
++vi.mock("@/features/creative-canvas/graphic-page-context",()=>({openGraphicPageCanvas:canvas.openGraphicPageCanvas}));
++vi.mock("./graphic-post-results",()=>({GraphicPostResults:({onAdopt}:{onAdopt:()=>Promise<void>})=> <button onClick={()=>void onAdopt()}>读取现有候选</button>}));
+ vi.mock("./publication-result-actions",()=>({PublicationResultActions:()=> <button>读取发布内容</button>}));
+-afterEach(()=>{cleanup();vi.clearAllMocks();});
++afterEach(()=>{cleanup();vi.clearAllMocks();vi.restoreAllMocks();vi.unstubAllGlobals();});
+ it("图卡文字编辑与顺序经真实保存操作提交，稳定ID/来源保留且不新增图片",async()=>{
+  const source={kind:"project" as const,id:"p",versionId:"project-version"};
+  const initial:GraphicPostResource={projectId:"p",outputId:"o",targetPlatform:null,artifactId:"artifact",currentVersionId:"v0",versions:[],
+@@ -56,14 +59,67 @@
+  expect(body).toHaveValue("本次编辑不能丢失");
+ });
+ 
+-it("辅助区域可用键盘展开且不卸载既有候选读取控件",async()=>{
++it("统一方向可用键盘展开，候选入口在主工作面且不堆全部页编辑按钮",async()=>{
+  const initial:GraphicPostResource={projectId:"p",outputId:"o",targetPlatform:null,artifactId:"artifact",currentVersionId:"v0",versions:[],
+   current:{schemaVersion:1,title:"图文",body:"正文",summary:"",tags:[],sourceRefs:[],imageUses:[],ruleSnapshotRef:null}};
+  const {container}=render(<GraphicPostWorkbench projectId="p" projectTitle="项目" accountId="a" initial={initial}/>);
+- const details=container.querySelector('details[aria-label="AI 辅助创作"]');
++ const details=screen.getByText("统一方向与参考，可选").closest('details');
+  expect(details).not.toBeNull();
+  expect(details).not.toHaveAttribute("open");
+- expect(details?.querySelector("button")?.textContent).toBe("读取现有候选");
++ expect(screen.getByRole('button',{name:'读取现有候选'})).toBeInTheDocument();
++ expect(container.querySelector('[aria-label="图片设计入口"]')).toBeNull();
+  const summary=details!.querySelector("summary")!;
+  summary.focus();expect(summary).toHaveFocus();
+ });
++
++it('画布进入先保存当前输入，然后把真实目标ID传给scoped helper',async()=>{
++ const initial:GraphicPostResource={projectId:'p',outputId:'o',targetPlatform:null,artifactId:'artifact',currentVersionId:'v0',versions:[],current:{schemaVersion:1,title:'图文',body:'正文',summary:'',tags:[],sourceRefs:[],imageUses:[],ruleSnapshotRef:null,cardBriefs:[{cardId:'real-page',title:'页',body:'内容',sourceRefs:[]}]}};
++ api.createGraphicPostVersion.mockResolvedValue({versionId:'v1'});api.getGraphicPost.mockResolvedValue({...initial,currentVersionId:'v1'});
++ canvas.openGraphicPageCanvas.mockResolvedValue('/canvases/real-canvas?graphicPageContext=handle');
++ render(<GraphicPostWorkbench projectId="p" projectTitle="项目" accountId="a" initial={initial}/>);
++ fireEvent.change(screen.getByRole('textbox',{name:'图卡1正文'}),{target:{value:'修改后内容'}});
++ fireEvent.click(screen.getByRole('button',{name:'进入画布制作这一页'}));
++ await waitFor(()=>expect(canvas.openGraphicPageCanvas).toHaveBeenCalledWith({accountId:'a',projectId:'p',outputId:'o',cardId:'real-page'}));
++ expect(api.createGraphicPostVersion.mock.invocationCallOrder[0]).toBeLessThan(canvas.openGraphicPageCanvas.mock.invocationCallOrder[0]);
++ expect(canvas.push).toHaveBeenCalledWith('/canvases/real-canvas?graphicPageContext=handle');
++});
++
++it('采用回读期间新输入保留；账号/作品切换后的旧保存读回不能覆盖新作品',async()=>{
++ const initial:GraphicPostResource={projectId:'p',outputId:'o',targetPlatform:null,artifactId:'artifact',currentVersionId:'v0',versions:[],current:{schemaVersion:1,title:'图文',body:'已保存',summary:'',tags:[],sourceRefs:[],imageUses:[],ruleSnapshotRef:null}};
++ let resolveRead!:(value:GraphicPostResource)=>void;
++ api.getGraphicPost.mockImplementationOnce(()=>new Promise(resolve=>{resolveRead=resolve;}));
++ const {rerender}=render(<GraphicPostWorkbench projectId="p" projectTitle="项目" accountId="a" initial={initial}/>);
++ fireEvent.click(screen.getByRole('button',{name:'读取现有候选'}));
++ fireEvent.change(screen.getByRole('textbox',{name:'正文'}),{target:{value:'刚输入的新正文'}});
++ resolveRead({...initial,currentVersionId:'v1',current:{...initial.current,body:'采用的服务端正文'}});
++ await waitFor(()=>expect(screen.getByRole('textbox',{name:'正文'})).toHaveValue('刚输入的新正文'));
++ expect(await screen.findByRole('status')).toHaveTextContent('新增的输入已保留');
++ let resolveSave!:(value:unknown)=>void;
++ api.createGraphicPostVersion.mockImplementationOnce(()=>new Promise(resolve=>{resolveSave=resolve;}));
++ fireEvent.click(screen.getByRole('button',{name:'保存作品'}));
++ const other={...initial,outputId:'other',current:{...initial.current,body:'新账号作品'}};
++ rerender(<GraphicPostWorkbench projectId="p" projectTitle="项目" accountId="other-account" initial={other}/>);
++ resolveSave({versionId:'late-old'});
++ await waitFor(()=>expect(screen.getByRole('textbox',{name:'正文'})).toHaveValue('新账号作品'));
++ expect(api.getGraphicPost).toHaveBeenCalledTimes(1);
++});
++
++
++it('导出读取精确文件，封面重复文件只导出一次，真实页序和配文写入zip',async()=>{
++ const a={assetId:'asset-a',assetFileId:'file-a',order:1,role:'card' as const,cardId:'a'},b={assetId:'asset-b',assetFileId:'file-b',order:2,role:'card' as const,cardId:'b'};
++ const initial:GraphicPostResource={projectId:'p',outputId:'o',targetPlatform:null,artifactId:'artifact',currentVersionId:'v0',versions:[],current:{schemaVersion:1,title:'作品标题',body:'作品正文',summary:'摘要',tags:['标签'],sourceRefs:[],ruleSnapshotRef:null,cardBriefs:[{cardId:'a',title:'一',body:'一',sourceRefs:[]},{cardId:'b',title:'二',body:'二',sourceRefs:[]}],imageUses:[{assetId:'asset-b',assetFileId:'file-b',order:0,role:'cover'},b,a]}};
++ api.getGraphicPost.mockResolvedValue(initial);api.getAssetFileDownloadUrl.mockImplementation(async({params})=>({url:`http://example.test/${params.assetFileId}.png`}));
++ const read=vi.fn(async(_url:string)=>({ok:true,blob:async()=>({type:'image/png',arrayBuffer:async()=>new Uint8Array([1,2,3]).buffer})}));vi.stubGlobal('fetch',read);
++ let archive:Blob|undefined;const create=URL.createObjectURL,revoke=URL.revokeObjectURL;
++ URL.createObjectURL=vi.fn(blob=>{archive=blob;return 'blob:archive';});URL.revokeObjectURL=vi.fn();vi.spyOn(HTMLAnchorElement.prototype,'click').mockImplementation(()=>{});
++ try{
++  render(<GraphicPostWorkbench projectId="p" projectTitle="项目" accountId="a" initial={initial}/>);
++  fireEvent.click(screen.getByRole('button',{name:'导出整组'}));await screen.findByText(/已导出 2 张精确图片和配文/);
++  expect(read.mock.calls.map(call=>call[0])).toEqual(['http://example.test/file-b.png','http://example.test/file-a.png']);
++  const buffer=await new Promise<ArrayBuffer>((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result as ArrayBuffer);reader.onerror=reject;reader.readAsArrayBuffer(archive!);});
++  const files=unzipSync(new Uint8Array(buffer));expect(Object.keys(files)).toEqual(['01.png','02.png','配文.txt','图片顺序.json']);
++  expect(strFromU8(files['配文.txt']!)).toBe('作品标题\n\n作品正文\n\n摘要\n\n#标签');
++  expect(JSON.parse(strFromU8(files['图片顺序.json']!)).map((row:{assetFileId:string})=>row.assetFileId)).toEqual(['file-b','file-a']);
++  expect(api.createGraphicPostVersion).not.toHaveBeenCalled();
++ }finally{URL.createObjectURL=create;URL.revokeObjectURL=revoke;}
++});
+--- a/frontend/src/features/projects/graphic-post-results.tsx
++++ b/frontend/src/features/projects/graphic-post-results.tsx
+@@ -10,7 +10,7 @@
+ 
+ const TEXT_KINDS = ["title", "body", "summary", "tags", "cardBriefs"] as const;
+ type TextKind = (typeof TEXT_KINDS)[number];
+-type MediaValue = { assetId: string; assetFileId: string; order: number; role: "cover" | "card" };
++type MediaValue = { assetId: string; assetFileId: string; order: number; role: "cover" | "card"; cardId?:string };
+ const LABEL: Record<TextKind, string> = { title: "标题", body: "正文", summary: "简介", tags: "标签",cardBriefs:"图卡文字" };
+ const STATUS: Record<CreativeResult["status"], string> = {
+   queued: "排队中", running: "生成中", awaiting_confirmation: "待确认", succeeded: "待采纳",
+@@ -39,15 +39,18 @@
+   return "";
+ }
+ 
+-function mediaValue(value: unknown, role: MediaValue["role"]): MediaValue[] | null {
++function mediaValue(value: unknown, role: MediaValue["role"], cardId?:string): MediaValue[] | null {
+   if (!Array.isArray(value) || value.length !== 1) return null;
+   const item = value[0];
+   if (!item || typeof item !== "object" || typeof item.assetId !== "string" || typeof item.assetFileId !== "string" ||
+       item.role !== role || item.order !== 0) return null;
+-  return [{ assetId: item.assetId, assetFileId: item.assetFileId, order: 0, role }];
+-}
+-
+-function MediaPreview({ image, resultId, onPreviewReady }: { image: MediaValue; resultId: string; onPreviewReady: (resultId: string) => void }) {
++  if(cardId && item.cardId!==cardId)return null;
++  return [{ assetId: item.assetId, assetFileId: item.assetFileId, order: 0, role, ...(typeof item.cardId==="string"?{cardId:item.cardId}:{}) }];
++}
++
++type MediaPreviewProps={ image: MediaValue; resultId: string; onPreviewReady: (resultId: string) => void };
++function MediaPreview(props:MediaPreviewProps){return <MediaPreviewSession key={`${props.resultId}:${props.image.assetId}:${props.image.assetFileId}`} {...props}/>;}
++function MediaPreviewSession({ image, resultId, onPreviewReady }:MediaPreviewProps) {
+   const [url, setUrl] = React.useState<string | null>(null);
+   const [error, setError] = React.useState(false);
+   React.useEffect(() => {
+@@ -83,19 +86,38 @@
+     ?? items.find((item) => item.outputType === "image" && item.kind === kind && item.platform === null);
+ }
+ 
+-export function GraphicPostResults({ accountId, outputId, targetPlatform, currentVersionId, manualDraftDirty, prepareGeneration, onAdopt, onResultListResolved }: {
+-  accountId: string;
+-  outputId: string;
+-  targetPlatform: string | null;
+-  currentVersionId: string;
+-  manualDraftDirty: boolean;
+-  prepareGeneration: () => Promise<boolean>;
+-  onAdopt: () => Promise<void>;
+-  onResultListResolved?: (bodyResult: CreativeResult | null) => void;
+-}) {
++type GraphicPostResultsProps={
++  accountId:string;outputId:string;targetPlatform:string|null;currentVersionId:string;manualDraftDirty:boolean;
++  prepareGeneration:()=>Promise<boolean>;onAdopt:()=>Promise<void>;
++  onResultListResolved?:(bodyResult:CreativeResult|null)=>void;
++  series?:{cards:GraphicPostCardBrief[];selectedCardId:string|null;selectedCardIds:string[]};
++};
++type SeriesRequest={items:{kind:'image_card';targetSectionId:string}[];clientRequestId:string};
++function readSeriesRequests(key:string):SeriesRequest[]{
++  try{
++    const cached:unknown=JSON.parse(window.sessionStorage.getItem(key)??'null');
++    // SEMANTIC_BOUNDARY_ALLOW: Validate saved protocol IDs only, never page meaning.
++    if(Array.isArray(cached)&&cached.length&&cached.every(group=>group&&typeof group==='object'&&typeof group.clientRequestId==='string'&&group.clientRequestId.length>=8&&group.clientRequestId.length<=128&&Array.isArray(group.items)&&group.items.length>=1&&group.items.length<=12&&group.items.every((item:unknown)=>item&&typeof item==='object'&&'kind' in item&&item.kind==='image_card'&&'targetSectionId' in item&&typeof item.targetSectionId==='string')))return cached.map(group=>({clientRequestId:group.clientRequestId,items:group.items.map((item:{targetSectionId:string})=>({kind:'image_card',targetSectionId:item.targetSectionId}))}));
++  }catch{/* Unavailable storage does not block creation. */}return [];
++}
++export function GraphicPostResults(props:GraphicPostResultsProps){return <GraphicPostResultsSession key={`${props.accountId}:${props.outputId}`} {...props}/>;}
++function GraphicPostResultsSession({accountId,outputId,targetPlatform,currentVersionId,manualDraftDirty,prepareGeneration,onAdopt,onResultListResolved,series}:GraphicPostResultsProps){
+   const [capabilities, setCapabilities] = React.useState<CreativeCapability[] | null>(null);
+   const [results, setResults] = React.useState<Partial<Record<TextKind, CreativeResult>>>({});
+   const [coverResult, setCoverResult] = React.useState<CreativeResult | null>(null);
++  const [pageResults,setPageResults]=React.useState<Record<string,CreativeResult>>({});
++  const [seriesBundles,setSeriesBundles]=React.useState<CreativeBundle[]>([]);
++  const [seriesBusy,setSeriesBusy]=React.useState(false);
++  const [previewedPages,setPreviewedPages]=React.useState<Record<string,boolean>>({});
++  const scope=React.useRef({accountId,outputId,epoch:0});
++  const dirtyRef=React.useRef(manualDraftDirty);
++  React.useLayoutEffect(()=>{dirtyRef.current=manualDraftDirty;},[manualDraftDirty]);
++  const seriesStorageKey=`creatoros:graphic-series-request:${accountId}:${outputId}`;
++  const [initialSeriesQueue]=React.useState(()=>readSeriesRequests(seriesStorageKey));
++  const seriesQueue=React.useRef<SeriesRequest[]>(initialSeriesQueue);
++  const [unknownSeries,setUnknownSeries]=React.useState(initialSeriesQueue.length>0);
++  function persistSeriesQueue(){try{if(seriesQueue.current.length)window.sessionStorage.setItem(seriesStorageKey,JSON.stringify(seriesQueue.current));else window.sessionStorage.removeItem(seriesStorageKey);}catch{/* Storage can be disabled; in-memory original requests still remain. */}}
++  const pageAdoptions=React.useRef<Record<string,{digest:string;id:string;versionId:string}>>({});
+   const [cardResult, setCardResult] = React.useState<CreativeResult | null>(null);
+   const [edits, setEdits] = React.useState<Partial<Record<TextKind, { resultId: string; text: string }>>>({});
+   const [cardTextEdits,setCardTextEdits]=React.useState<{resultId:string;cards:GraphicPostCardBrief[]}|null>(null);
+@@ -124,6 +146,10 @@
+   const rememberResult = React.useCallback((result: CreativeResult) => {
+     if (result.kind === "cover") {
+       setCoverResult((current) => current && current.resultId !== result.resultId && current.createdAt > result.createdAt ? current : result);
++      return;
++    }
++    if (result.kind === "image_card" && result.targetSectionId) {
++      setPageResults(current=>({...current,[result.resultId]:result}));
+       return;
+     }
+     if (result.kind === "image_card") {
+@@ -167,10 +193,12 @@
+       }
+     }
+     if (settled[2].status === "fulfilled") {
+-      const latestBundle = settled[2].value.items[0] ?? null;
++      setSeriesBundles(settled[2].value.items.filter(item=>item.items.some(part=>part.kind==="image_card"&&part.targetSectionId)));
++      const latestBundle = settled[2].value.items.find(item=>!item.items.some(part=>part.kind==="image_card"&&part.targetSectionId)) ?? null;
+       setBundle(latestBundle);
+-      if (latestBundle) {
+-        const reads = await Promise.allSettled(latestBundle.items.map((item) => client.getResult({ params: { resultId: item.resultId }, query: undefined, body: undefined })));
++      const readableItems=[...(latestBundle?.items??[]),...settled[2].value.items.filter(group=>group.items.some(item=>item.targetSectionId)).flatMap(group=>group.items)];
++      if (readableItems.length) {
++        const reads = await Promise.allSettled(readableItems.map((item) => client.getResult({ params: { resultId: item.resultId }, query: undefined, body: undefined })));
+         if (request !== loadRequest.current) return;
+         for (const read of reads) if (read.status === "fulfilled") rememberResult(read.value);
+       }
+@@ -180,17 +208,20 @@
+   }, [accountId, outputId, rememberResult, onResultListResolved]);
+ 
+   React.useEffect(() => {
++    scope.current={accountId,outputId,epoch:scope.current.epoch+1};
+     let active = true;
+     void Promise.resolve().then(() => { if (active) void load(); });
+-    return () => { active = false; loadRequest.current += 1; };
+-  }, [load]);
++    return () => { active = false; loadRequest.current += 1; scope.current.epoch+=1; };
++  }, [load,accountId,outputId]);
+ 
+   // Every poll has at most one in-flight request; refresh reconstructs from server lists.
+   React.useEffect(() => {
+     const pending = Object.values(results).some((result) => result && ["queued", "running", "awaiting_confirmation"].includes(result.status))
+       || Boolean(coverResult && ["queued", "running"].includes(coverResult.status))
+-      || Boolean(cardResult && ["queued", "running"].includes(cardResult.status));
+-    const bundlePending = bundle?.items.some((item) => ["queued", "running"].includes(item.status));
++      || Boolean(cardResult && ["queued", "running"].includes(cardResult.status))
++      || Object.values(pageResults).some(result=>["queued","running"].includes(result.status));
++    const bundlePending = bundle?.items.some((item) => ["queued", "running"].includes(item.status))
++      || seriesBundles.some(group=>group.items.some(item=>["queued","running"].includes(item.status)));
+     if (!pending && !bundlePending) return;
+     let active = true;
+     const timer = window.setInterval(() => {
+@@ -202,9 +233,15 @@
+           for (const result of Object.values(results)) if (result && ["queued", "running", "awaiting_confirmation"].includes(result.status)) resultIds.add(result.resultId);
+           if (coverResult && ["queued", "running"].includes(coverResult.status)) resultIds.add(coverResult.resultId);
+           if (cardResult && ["queued", "running"].includes(cardResult.status)) resultIds.add(cardResult.resultId);
++          for(const result of Object.values(pageResults))if(["queued","running"].includes(result.status))resultIds.add(result.resultId);
++          for(const group of seriesBundles)for(const item of group.items)if(["queued","running"].includes(item.status))resultIds.add(item.resultId);
+           for (const item of bundle?.items ?? []) if (["queued", "running", "awaiting_confirmation"].includes(item.status)) resultIds.add(item.resultId);
+           const reads = await Promise.allSettled([...resultIds].map((resultId) => client.getResult({ params: { resultId }, query: undefined, body: undefined })));
+           if (active) for (const read of reads) if (read.status === "fulfilled") rememberResult(read.value);
++          if(active && seriesBundles.length){
++            const groups=await Promise.allSettled(seriesBundles.filter(group=>group.items.some(item=>["queued","running"].includes(item.status))).map(group=>client.getBundle({params:{bundleId:group.bundleId},query:undefined,body:undefined})));
++            if(active)setSeriesBundles(current=>current.map(group=>{const read=groups.find(value=>value.status==="fulfilled"&&value.value.bundleId===group.bundleId);return read?.status==="fulfilled"?read.value:group;}));
++          }
+           if (bundle && active) {
+             const latest = await client.getBundle({ params: { bundleId: bundle.bundleId }, query: undefined, body: undefined });
+             if (active) setBundle(latest);
+@@ -217,25 +254,28 @@
+       })();
+     }, 1800);
+     return () => { active = false; window.clearInterval(timer); };
+-  }, [bundle, cardResult, coverResult, rememberResult, results]);
++  }, [bundle, cardResult, coverResult, rememberResult, results,pageResults,seriesBundles]);
+ 
+   async function generateCover() {
++    const epoch=scope.current.epoch;
+     if (coverBusy || cardBusy || busyKind || busyBundle || (coverResult && ["queued", "running"].includes(coverResult.status))) return;
+     setCoverBusy("generate"); setError(null); setMessage(null);
+     try {
+-      if (!(await prepareGeneration())) return;
++      if (!(await prepareGeneration()) || epoch!==scope.current.epoch) return;
+       const clientRequestId = coverRequest.current ?? crypto.randomUUID();
+       coverRequest.current = clientRequestId;
+       const result = await client.generateResult({ params: { outputId }, query: undefined,
+         body: { kind: "cover", clientRequestId } });
++      if(epoch!==scope.current.epoch)return;
+       coverRequest.current = null;
+       rememberResult(result);
+       setMessage("封面已提交生成。图片出现后请预览，再决定是否采纳。");
+-    } catch (reason) { setError(errorText(reason)); }
+-    finally { setCoverBusy(null); }
++    } catch (reason) { if(epoch===scope.current.epoch)setError(errorText(reason)); }
++    finally { if(epoch===scope.current.epoch)setCoverBusy(null); }
+   }
+ 
+   async function adoptCover() {
++    const epoch=scope.current.epoch;
+     const result = coverResult;
+     const selected = mediaValue(result?.value, "cover");
+     if (!result || result.status !== "awaiting_confirmation" || !selected || manualDraftDirty || coverBusy || cardBusy || previewedCoverId !== result.resultId) return;
+@@ -246,31 +286,37 @@
+     try {
+       await client.adoptResult({ params: { resultId: result.resultId }, query: undefined,
+         body: { expected: { owner: "graphic_post", versionId: currentVersionId }, editedValue: selected, clientRequestId: request.id } });
++      if(epoch!==scope.current.epoch)return;
+       coverAdoption.current = null;
+-      rememberResult(await client.getResult({ params: { resultId: result.resultId }, query: undefined, body: undefined }));
++      const latest=await client.getResult({ params: { resultId: result.resultId }, query: undefined, body: undefined });
++      if(epoch!==scope.current.epoch)return;rememberResult(latest);
+       await onAdopt();
++      if(epoch!==scope.current.epoch)return;
+       setMessage("封面已采纳并保存到图文作品。");
+-    } catch (reason) { setError(errorText(reason)); }
+-    finally { setCoverBusy(null); }
++    } catch (reason) { if(epoch===scope.current.epoch)setError(errorText(reason)); }
++    finally { if(epoch===scope.current.epoch)setCoverBusy(null); }
+   }
+ 
+   async function generateCard() {
++    const epoch=scope.current.epoch;
+     if (cardBusy || coverBusy || busyKind || busyBundle || (cardResult && ["queued", "running"].includes(cardResult.status))) return;
+     setCardBusy("generate"); setError(null); setMessage(null);
+     try {
+-      if (!(await prepareGeneration())) return;
++      if (!(await prepareGeneration()) || epoch!==scope.current.epoch) return;
+       const clientRequestId = cardRequest.current ?? crypto.randomUUID();
+       cardRequest.current = clientRequestId;
+       const result = await client.generateResult({ params: { outputId }, query: undefined,
+         body: { kind: "image_card", clientRequestId } });
++      if(epoch!==scope.current.epoch)return;
+       cardRequest.current = null;
+       rememberResult(result);
+       setMessage("图卡已提交生成。请预览候选图，再决定是否采纳到作品。");
+-    } catch (reason) { setError(errorText(reason)); }
+-    finally { setCardBusy(null); }
++    } catch (reason) { if(epoch===scope.current.epoch)setError(errorText(reason)); }
++    finally { if(epoch===scope.current.epoch)setCardBusy(null); }
+   }
+ 
+   async function adoptCard() {
++    const epoch=scope.current.epoch;
+     const result = cardResult;
+     const selected = mediaValue(result?.value, "card");
+     if (!result || result.status !== "awaiting_confirmation" || !selected || manualDraftDirty || cardBusy || coverBusy || previewedCardId !== result.resultId) return;
+@@ -281,31 +327,37 @@
+     try {
+       await client.adoptResult({ params: { resultId: result.resultId }, query: undefined,
+         body: { expected: { owner: "graphic_post", versionId: currentVersionId }, editedValue: selected, clientRequestId: request.id } });
++      if(epoch!==scope.current.epoch)return;
+       cardAdoption.current = null;
+-      rememberResult(await client.getResult({ params: { resultId: result.resultId }, query: undefined, body: undefined }));
++      const latest=await client.getResult({ params: { resultId: result.resultId }, query: undefined, body: undefined });
++      if(epoch!==scope.current.epoch)return;rememberResult(latest);
+       await onAdopt();
++      if(epoch!==scope.current.epoch)return;
+       setMessage("图卡已采纳并追加到图文作品，可继续生成下一张。");
+-    } catch (reason) { setError(errorText(reason)); }
+-    finally { setCardBusy(null); }
++    } catch (reason) { if(epoch===scope.current.epoch)setError(errorText(reason)); }
++    finally { if(epoch===scope.current.epoch)setCardBusy(null); }
+   }
+ 
+   async function generate(kind: TextKind) {
++    const epoch=scope.current.epoch;
+     if (busyKind || busyBundle || (results[kind] && ["queued", "running", "awaiting_confirmation"].includes(results[kind]!.status))) return;
+     setBusyKind(kind); setError(null); setMessage(null);
+     try {
+-      if (!(await prepareGeneration())) return;
++      if (!(await prepareGeneration()) || epoch!==scope.current.epoch) return;
+       const clientRequestId = generationRequests.current[kind] ?? crypto.randomUUID();
+       generationRequests.current[kind] = clientRequestId;
+       const next = await client.generateResult({ params: { outputId }, query: undefined,
+         body: { kind, clientRequestId } });
++      if(epoch!==scope.current.epoch)return;
+       delete generationRequests.current[kind];
+       rememberResult(next);
+       setMessage(`${LABEL[kind]}已提交生成，完成后可在下方审阅。`);
+-    } catch (reason) { setError(errorText(reason)); }
+-    finally { setBusyKind(null); }
++    } catch (reason) { if(epoch===scope.current.epoch)setError(errorText(reason)); }
++    finally { if(epoch===scope.current.epoch)setBusyKind(null); }
+   }
+ 
+   async function adopt(kind: TextKind) {
++    const epoch=scope.current.epoch;
+     const result = results[kind];
+     if (!result || result.status !== "succeeded" || manualDraftDirty || busyKind) return;
+     setBusyKind(kind); setError(null); setMessage(null);
+@@ -320,52 +372,116 @@
+       adoptRequests.current[kind] = request;
+       await client.adoptResult({ params: { resultId: result.resultId }, query: undefined,
+         body: { expected: { owner: "graphic_post", versionId: currentVersionId }, editedValue, clientRequestId: request.id } });
++      if(epoch!==scope.current.epoch)return;
+       delete adoptRequests.current[kind];
+       const latest = await client.getResult({ params: { resultId: result.resultId }, query: undefined, body: undefined });
+-      rememberResult(latest);
++      if(epoch!==scope.current.epoch)return;rememberResult(latest);
+       await onAdopt();
++      if(epoch!==scope.current.epoch)return;
+       setMessage(`${LABEL[kind]}已采纳到作品。`);
+-    } catch (reason) { setError(errorText(reason)); }
+-    finally { setBusyKind(null); }
++    } catch (reason) { if(epoch===scope.current.epoch)setError(errorText(reason)); }
++    finally { if(epoch===scope.current.epoch)setBusyKind(null); }
+   }
+ 
+   async function createAll() {
++    const epoch=scope.current.epoch;
+     const supported = TEXT_KINDS.filter((kind) => pickCapability(capabilities ?? [], kind, targetPlatform)?.state === "supported");
+     if (!supported.length || busyBundle || busyKind || bundle?.items.some((item) => ["queued", "running"].includes(item.status))) return;
+     setBusyBundle(true); setError(null); setMessage(null);
+     try {
+-      if (!(await prepareGeneration())) return;
++      if (!(await prepareGeneration()) || epoch!==scope.current.epoch) return;
+       const clientRequestId = bundleRequest.current ?? crypto.randomUUID();
+       bundleRequest.current = clientRequestId;
+       const next = await client.createBundle({ params: { outputId }, query: undefined,
+         body: { items: supported.map((kind) => ({ kind })), clientRequestId } });
++      if(epoch!==scope.current.epoch)return;
+       bundleRequest.current = null;
+       setBundle(next);
+       const reads = await Promise.allSettled(next.items.map((item) => client.getResult({ params: { resultId: item.resultId }, query: undefined, body: undefined })));
++      if(epoch!==scope.current.epoch)return;
+       for (const read of reads) if (read.status === "fulfilled") rememberResult(read.value);
+       setMessage("已开始备齐可用内容，各项完成后可分别审阅和采用。");
+-    } catch (reason) { setError(errorText(reason)); }
+-    finally { setBusyBundle(false); }
+-  }
+-
+-  async function retry(resultId: string) {
++    } catch (reason) { if(epoch===scope.current.epoch)setError(errorText(reason)); }
++    finally { if(epoch===scope.current.epoch)setBusyBundle(false); }
++  }
++
++  async function retry(resultId: string, originalRequestId?:string) {
+     if (retrying) return;
+-    setRetrying(resultId);
+-    setError(null);
+-    try {
+-      const clientRequestId = retryRequests.current[resultId] ?? crypto.randomUUID();
++    const epoch=scope.current.epoch;
++    setRetrying(resultId);setError(null);
++    try {
++      const clientRequestId = originalRequestId ?? retryRequests.current[resultId] ?? crypto.randomUUID();
+       retryRequests.current[resultId] = clientRequestId;
+       const next = await client.retryResult({ params: { resultId }, query: undefined, body: { clientRequestId } });
+-      delete retryRequests.current[resultId];
+-      rememberResult(next);
++      if(epoch!==scope.current.epoch)return;
++      delete retryRequests.current[resultId];rememberResult(next);
++      const groups=seriesBundles.filter(group=>group.items.some(item=>item.resultId===resultId));
++      const reads=await Promise.allSettled(groups.map(group=>client.getBundle({params:{bundleId:group.bundleId},query:undefined,body:undefined})));
++      if(epoch!==scope.current.epoch)return;
++      setSeriesBundles(current=>current.map(group=>{const read=reads.find(value=>value.status==='fulfilled'&&value.value.bundleId===group.bundleId);return read?.status==='fulfilled'?read.value:group;}));
+       if (bundle) {
+         const latest = await client.getBundle({ params: { bundleId: bundle.bundleId }, query: undefined, body: undefined });
+-        setBundle(latest);
++        if(epoch===scope.current.epoch)setBundle(latest);
+       }
+-    } catch (reason) { setError(errorText(reason)); }
+-    finally { setRetrying(null); }
+-  }
+-
++    } catch (reason) {if(epoch===scope.current.epoch)setError(errorText(reason));}
++    finally {if(epoch===scope.current.epoch)setRetrying(null);}
++  }
++
++  async function generatePages(recover=false) {
++    if(seriesBusy || !series)return;
++    const epoch=scope.current.epoch;
++    setSeriesBusy(true);setError(null);setMessage(null);
++    try {
++      if(!recover && !(await prepareGeneration()))return;
++      if(epoch!==scope.current.epoch)return;
++      const selected=series.cards.filter(card=>series.selectedCardIds.includes(card.cardId));
++      if(!seriesQueue.current.length){
++        for(let offset=0;offset<selected.length;offset+=12)seriesQueue.current.push({items:selected.slice(offset,offset+12).map(card=>({kind:'image_card',targetSectionId:card.cardId})),clientRequestId:crypto.randomUUID()});
++      }
++      // All chunks retain their original target IDs and idempotency keys across an unknown outcome.
++      while(seriesQueue.current.length){
++        persistSeriesQueue();
++        const request=seriesQueue.current[0]!;
++        const next=await client.createBundle({params:{outputId},query:undefined,body:request});
++        if(epoch!==scope.current.epoch)return;
++        seriesQueue.current.shift();persistSeriesQueue();setUnknownSeries(false);
++        setSeriesBundles(current=>[next,...current.filter(group=>group.bundleId!==next.bundleId)]);
++        const reads=await Promise.allSettled(next.items.map(item=>client.getResult({params:{resultId:item.resultId},query:undefined,body:undefined})));
++        if(epoch!==scope.current.epoch)return;
++        for(const read of reads)if(read.status==='fulfilled')rememberResult(read.value);
++      }
++      setMessage('所选页已提交。每页完成后分别预览和采用，其他页仍可编辑。');
++    } catch(reason){if(epoch===scope.current.epoch){setUnknownSeries(Boolean(seriesQueue.current.length));setError(errorText(reason));}}
++    finally {if(epoch===scope.current.epoch)setSeriesBusy(false);}
++  }
++  async function adoptPage(result:CreativeResult){
++    const selected=mediaValue(result.value,'card',result.targetSectionId??undefined);
++    if(!selected||!result.targetSectionId||dirtyRef.current||seriesBusy||!previewedPages[result.resultId])return;
++    const epoch=scope.current.epoch;setSeriesBusy(true);setError(null);setMessage(null);
++    try{
++      const digest=JSON.stringify({resultId:result.resultId,selected});
++      let request=pageAdoptions.current[result.resultId];
++      if(!request||request.digest!==digest){
++        const fresh=await client.getGraphicPost({params:{outputId},query:undefined,body:undefined});
++        if(epoch!==scope.current.epoch||dirtyRef.current)return;
++        request={digest,id:crypto.randomUUID(),versionId:fresh.currentVersionId};
++        pageAdoptions.current[result.resultId]=request;
++      }
++      await client.adoptResult({params:{resultId:result.resultId},query:undefined,body:{expected:{owner:'graphic_post',versionId:request.versionId},editedValue:selected,clientRequestId:request.id}});
++      if(epoch!==scope.current.epoch)return;
++      delete pageAdoptions.current[result.resultId];
++      const latest=await client.getResult({params:{resultId:result.resultId},query:undefined,body:undefined});
++      if(epoch!==scope.current.epoch)return;rememberResult(latest);await onAdopt();
++      if(epoch===scope.current.epoch)setMessage('已采用到这一页，其他页和正文保留。');
++    }catch(reason){if(epoch===scope.current.epoch){
++      // A definite CAS conflict allows a fresh explicit attempt; unknown outcomes retain their exact request.
++      if(reason&&typeof reason==='object'&&('status' in reason&&reason.status===409))delete pageAdoptions.current[result.resultId];
++      setError(errorText(reason));
++    }}finally{if(epoch===scope.current.epoch)setSeriesBusy(false);}
++  }
++  const markPagePreviewed=React.useCallback((resultId:string)=>setPreviewedPages(current=>({...current,[resultId]:true})),[]);
++  const visiblePages=Object.values(pageResults).filter(result=>result.targetSectionId===series?.selectedCardId).sort((a,b)=>b.createdAt.localeCompare(a.createdAt));
++  const selectedPagePending=Object.values(pageResults).some(result=>series?.selectedCardIds.includes(result.targetSectionId??'')&&['queued','running'].includes(result.status));
+   const supportedKinds = TEXT_KINDS.filter((kind) => pickCapability(capabilities ?? [], kind, targetPlatform)?.state === "supported");
+   const bundleInProgress = bundle?.items.some((item) => ["queued", "running"].includes(item.status)) ?? false;
+   const coverCapability = pickCapability(capabilities ?? [], "cover", targetPlatform);
+@@ -374,9 +490,9 @@
+   const selectedCard = mediaValue(cardResult?.value, "card");
+ 
+   return <section aria-label="按结果生成" className="space-y-4 rounded-xl border border-border bg-surface p-5">
+-    <div className="flex flex-wrap items-start justify-between gap-3"><div><h2 className="font-semibold">直接生成需要的结果</h2><p className="mt-1 text-sm text-muted-foreground">每项独立生成。审阅并点击“采用”后，才写入正式作品。</p></div>
++    <div className="flex flex-wrap items-start justify-between gap-3"><div><h2 className="font-semibold">{series?"出图与候选":"直接生成需要的结果"}</h2><p className="mt-1 text-sm text-muted-foreground">每项独立生成。审阅并点击“采用”后，才写入正式作品。</p></div>
+       <div className="flex flex-wrap gap-2"><Button size="sm" variant="ghost" onClick={() => void load()}>刷新能力与候选</Button>
+-      {supportedKinds.length > 0 && <Button variant="outline" disabled={busyBundle || bundleInProgress || Boolean(busyKind)} onClick={() => void createAll()}>{busyBundle || bundleInProgress ? "准备中…" : "一次备齐可用内容"}</Button>}</div>
++      {!series && supportedKinds.length > 0 && <Button variant="outline" disabled={busyBundle || bundleInProgress || Boolean(busyKind)} onClick={() => void createAll()}>{busyBundle || bundleInProgress ? "准备中…" : "一次备齐可用内容"}</Button>}</div>
+     </div>
+     {loading && <p className="text-sm text-muted-foreground">正在读取创作能力与历史候选…</p>}
+     {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
+@@ -385,6 +501,24 @@
+     {bundle && <div className="rounded-lg bg-surface-subtle p-3 text-sm"><strong>最近一次备齐：</strong>{bundle.status === "partial_completed" ? "部分完成" : bundle.status === "complete" ? "已完成" : bundle.status === "failed" ? "未完成" : "处理中"}
+       <ul className="mt-2 flex flex-wrap gap-2">{bundle.items.map((item) => <li key={`${item.kind}:${item.resultId}`} className="rounded-md border border-border px-2 py-1">{TEXT_KINDS.includes(item.kind as TextKind) ? LABEL[item.kind as TextKind] : item.kind}：{STATUS[item.status]}{(item.status === "failed" || item.status === "cancelled") && <button type="button" disabled={Boolean(retrying)} className="ml-2 text-primary underline disabled:opacity-50" onClick={() => void retry(item.resultId)}>{retrying === item.resultId ? "重试中…" : "重试"}</button>}</li>)}</ul>
+     </div>}
++    {series && <div aria-label="当前页图片候选" className="space-y-3">
++      <div className="flex flex-wrap gap-2">
++        {series.cards.length===0 && pickCapability(capabilities??[],'cardBriefs',targetPlatform)?.state==='supported' && <Button disabled={Boolean(busyKind)} onClick={()=>void generate('cardBriefs')}>规划组图</Button>}
++        {series.cards.length>0 && cardCapability?.state==='supported' && <Button disabled={seriesBusy||unknownSeries||selectedPagePending||series.selectedCardIds.length===0} onClick={()=>void generatePages()}>{seriesBusy?'提交中…':`生成所选 ${series.selectedCardIds.length} 页`}</Button>}
++        {unknownSeries && <Button variant="outline" disabled={seriesBusy} onClick={()=>void generatePages(true)}>恢复原组图请求</Button>}
++      </div>
++      {series.cards.length>0&&cardCapability?.state!=='supported'&&<p className="text-xs text-muted-foreground">{capabilityExplanation(cardCapability)}。仍可选用已有图片或进入画布。</p>}
++      {seriesBundles.map(group=><div key={group.bundleId} className="rounded-md bg-surface-subtle p-3 text-xs"><strong>所选页生成：{group.status==='partial_completed'?'部分完成':group.status==='complete'?'已完成':group.status==='failed'?'未完成':'处理中'}</strong><ul className="mt-2 space-y-1">{group.items.map(item=><li key={item.resultId}>{series.cards.find(card=>card.cardId===item.targetSectionId)?.title||'原目标页'}：{STATUS[item.status]}{['failed','cancelled'].includes(item.status)&&<Button size="sm" variant="ghost" disabled={Boolean(retrying)} onClick={()=>void retry(item.resultId)}>只重试这一页</Button>}</li>)}</ul></div>)}
++      {visiblePages.map(result=>{const images=mediaValue(result.value,'card',result.targetSectionId??undefined);return <article key={result.resultId} className="space-y-2 rounded-lg border border-border p-3"><p className="text-xs text-muted-foreground">{STATUS[result.status]} · {result.createdAt.slice(0,16).replace('T',' ')}{resultError(result.errorCode)?` · ${resultError(result.errorCode)}`:''}</p>
++        {images&&['awaiting_confirmation','adopted'].includes(result.status)&&<MediaPreview image={images[0]!} resultId={result.resultId} onPreviewReady={markPagePreviewed}/>}
++        {result.status==='awaiting_confirmation'&&images&&<Button size="sm" disabled={manualDraftDirty||seriesBusy||!previewedPages[result.resultId]} onClick={()=>void adoptPage(result)}>采用到这一页</Button>}
++        {result.status==='awaiting_confirmation'&&!images&&<p className="text-xs text-muted-foreground">候选精确文件或目标页尚未读到，请刷新；不会自动追加到其他页。</p>}
++        {result.retryOf&&!result.taskId&&result.retryRequestId&&<Button size="sm" variant="outline" disabled={Boolean(retrying)} onClick={()=>void retry(result.retryOf!,result.retryRequestId!)}>恢复这次单页重试</Button>}
++        {['failed','cancelled'].includes(result.status)&&<Button size="sm" variant="outline" disabled={Boolean(retrying)||Object.values(pageResults).some(next=>next.retryOf===result.resultId)} onClick={()=>void retry(result.resultId)}>只重试这一页</Button>}
++      </article>;})}
++      {series.selectedCardId&&!visiblePages.length&&<p className="text-xs text-muted-foreground">这一页暂无图片候选。可以生成、使用已有图片，或在画布继续制作。</p>}
++    </div>}
++    <details open={!series||(series.cards.length===0&&Boolean(results.cardBriefs))} className="space-y-3"><summary className="cursor-pointer text-sm font-medium">{series?'规划与配文候选':'文字候选'}</summary>
+     <div className="grid gap-3 md:grid-cols-2">{TEXT_KINDS.map((kind) => {
+       const capability = pickCapability(capabilities ?? [], kind, targetPlatform);
+       const result = results[kind];
+@@ -414,20 +548,21 @@
+         </div>}
+       </div>;
+     })}</div>
+-    <div className="rounded-lg border border-dashed border-border p-3 text-sm"><div className="flex flex-wrap items-start justify-between gap-2"><div><h3 className="font-medium">封面</h3><p className="mt-1 text-xs text-muted-foreground">{capabilityExplanation(coverCapability)}</p></div>
+-      {coverCapability?.state === "supported" && <Button size="sm" variant="outline" disabled={Boolean(coverBusy) || Boolean(cardBusy) || Boolean(busyKind) || busyBundle || Boolean(coverResult && ["queued", "running"].includes(coverResult.status))} onClick={() => void generateCover()}>{coverBusy === "generate" || (coverResult && ["queued", "running"].includes(coverResult.status)) ? "生成中…" : coverResult ? "重新生成封面" : "生成封面"}</Button>}</div>
++    </details>
++    {(!series||coverResult||cardResult) && <div className="rounded-lg border border-dashed border-border p-3 text-sm">{series&&<h3 className="mb-3 font-medium">先前未绑定页的图片候选</h3>}<div className="flex flex-wrap items-start justify-between gap-2"><div><h3 className="font-medium">封面</h3><p className="mt-1 text-xs text-muted-foreground">{capabilityExplanation(coverCapability)}</p></div>
++      {!series && coverCapability?.state === "supported" && <Button size="sm" variant="outline" disabled={Boolean(coverBusy) || Boolean(cardBusy) || Boolean(busyKind) || busyBundle || Boolean(coverResult && ["queued", "running"].includes(coverResult.status))} onClick={() => void generateCover()}>{coverBusy === "generate" || (coverResult && ["queued", "running"].includes(coverResult.status)) ? "生成中…" : coverResult ? "重新生成封面" : "生成封面"}</Button>}</div>
+       {coverResult && <div className="mt-3 space-y-2"><p className="text-xs text-muted-foreground">{coverResult.status === "awaiting_confirmation" ? "待审阅" : coverResult.status === "adopted" ? "已采纳" : coverResult.status === "failed" ? "生成未完成" : coverResult.status === "cancelled" ? "已取消" : "生成中"}{resultError(coverResult.errorCode) ? ` · ${resultError(coverResult.errorCode)}` : ""}</p>
+         {selectedCover && ["awaiting_confirmation", "adopted"].includes(coverResult.status) && <><MediaPreview image={selectedCover[0]!} resultId={coverResult.resultId} onPreviewReady={setPreviewedCoverId} />{coverResult.status === "awaiting_confirmation" && <Button size="sm" disabled={manualDraftDirty || Boolean(coverBusy) || Boolean(cardBusy) || previewedCoverId !== coverResult.resultId} onClick={() => void adoptCover()}>{coverBusy === "adopt" ? "采纳中…" : "采纳这张封面"}</Button>}</>}
+         {coverResult.status === "awaiting_confirmation" && !selectedCover && <p className="text-xs text-muted-foreground">图片结果尚未读到，请刷新候选。正式稿未改变。</p>}
+       </div>}
+-      <div className="mt-4 border-t border-border pt-3"><div className="flex flex-wrap items-start justify-between gap-2"><div><h3 className="font-medium">图卡</h3><p className="mt-1 text-xs text-muted-foreground">{capabilityExplanation(cardCapability)}。每次生成一张；采纳后追加到作品，下方也可从素材库选图并排序。</p></div>
+-        {cardCapability?.state === "supported" && <Button size="sm" variant="outline" disabled={Boolean(cardBusy) || Boolean(coverBusy) || Boolean(busyKind) || busyBundle || Boolean(cardResult && ["queued", "running"].includes(cardResult.status))} onClick={() => void generateCard()}>{cardBusy === "generate" || (cardResult && ["queued", "running"].includes(cardResult.status)) ? "生成中…" : cardResult?.status === "adopted" ? "生成下一张图卡" : cardResult ? "重新生成图卡" : "生成图卡"}</Button>}</div>
++      <div className="mt-4 border-t border-border pt-3"><div className="flex flex-wrap items-start justify-between gap-2"><div><h3 className="font-medium">图卡</h3><p className="mt-1 text-xs text-muted-foreground">{series?"先前生成的图片可继续采用，保持原未绑定页的用途。":`${capabilityExplanation(cardCapability)}。每次生成一张；采纳后追加到作品，下方也可从素材库选图并排序。`}</p></div>
++        {!series && cardCapability?.state === "supported" && <Button size="sm" variant="outline" disabled={Boolean(cardBusy) || Boolean(coverBusy) || Boolean(busyKind) || busyBundle || Boolean(cardResult && ["queued", "running"].includes(cardResult.status))} onClick={() => void generateCard()}>{cardBusy === "generate" || (cardResult && ["queued", "running"].includes(cardResult.status)) ? "生成中…" : cardResult?.status === "adopted" ? "生成下一张图卡" : cardResult ? "重新生成图卡" : "生成图卡"}</Button>}</div>
+         {cardResult && <div className="mt-3 space-y-2"><p className="text-xs text-muted-foreground">{cardResult.status === "awaiting_confirmation" ? "待审阅" : cardResult.status === "adopted" ? "已采纳" : cardResult.status === "failed" ? "生成未完成" : cardResult.status === "cancelled" ? "已取消" : "生成中"}{resultError(cardResult.errorCode) ? ` · ${resultError(cardResult.errorCode)}` : ""}</p>
+           {selectedCard && ["awaiting_confirmation", "adopted"].includes(cardResult.status) && <><MediaPreview image={selectedCard[0]!} resultId={cardResult.resultId} onPreviewReady={setPreviewedCardId} />{cardResult.status === "awaiting_confirmation" && <Button size="sm" disabled={manualDraftDirty || Boolean(cardBusy) || Boolean(coverBusy) || previewedCardId !== cardResult.resultId} onClick={() => void adoptCard()}>{cardBusy === "adopt" ? "采纳中…" : "采纳这张图卡"}</Button>}</>}
+           {cardResult.status === "awaiting_confirmation" && !selectedCard && <p className="text-xs text-muted-foreground">图片结果尚未读到，请刷新候选。正式稿未改变。</p>}
+           {(cardResult.status === "failed" || cardResult.status === "cancelled") && <Button size="sm" variant="outline" disabled={Boolean(retrying)} onClick={() => void retry(cardResult.resultId)}>{retrying === cardResult.resultId ? "重试中…" : "重试图卡"}</Button>}
+         </div>}
+       </div>
+-    </div>
++    </div>}
+   </section>;
+ }
+--- a/frontend/src/features/projects/graphic-post-results.test.tsx
++++ b/frontend/src/features/projects/graphic-post-results.test.tsx
+@@ -3,7 +3,7 @@
+ import { beforeEach, describe, expect, it, vi } from "vitest";
+ 
+ const api = vi.hoisted(() => ({ listCreativeCapabilities: vi.fn(), listResults: vi.fn(), listBundles: vi.fn(),
+-  generateResult: vi.fn(), getResult: vi.fn(), adoptResult: vi.fn(), getAssetFileDownloadUrl: vi.fn() }));
++  generateResult: vi.fn(), getResult: vi.fn(), adoptResult: vi.fn(), getAssetFileDownloadUrl: vi.fn(),createBundle:vi.fn(),getBundle:vi.fn(),retryResult:vi.fn(),getGraphicPost:vi.fn() }));
+ vi.mock("@/lib/contract-client", () => ({ client: api }));
+ 
+ import { GraphicPostResults } from "./graphic-post-results";
+@@ -52,6 +52,81 @@
+   });
+ });
+ 
++describe('组图逐页候选',()=>{
++ const pages=[{cardId:'page-a',title:'第一页',body:'第一',sourceRefs:[]},{cardId:'page-b',title:'第二页',body:'第二',sourceRefs:[]}];
++ beforeEach(()=>{
++  window.sessionStorage.clear();
++  Object.values(api).forEach(mock=>mock.mockReset());props.prepareGeneration.mockClear();props.onAdopt.mockClear();
++  api.listCreativeCapabilities.mockResolvedValue({items:[{outputType:'image',platform:'xiaohongshu',kind:'image_card',state:'supported'}]});
++  api.listResults.mockResolvedValue({items:[]});api.listBundles.mockResolvedValue({items:[]});
++  api.getAssetFileDownloadUrl.mockResolvedValue({url:'http://example.test/exact.png'});
++ });
++ it('选中多页提交同一已有bundle，各项保留真实cardId',async()=>{
++  api.createBundle.mockResolvedValue({bundleId:'bundle',status:'running',items:[]});
++  render(<GraphicPostResults {...props} series={{cards:pages,selectedCardId:'page-b',selectedCardIds:['page-a','page-b']}}/>);
++  fireEvent.click(await screen.findByRole('button',{name:'生成所选 2 页'}));
++  await waitFor(()=>expect(api.createBundle).toHaveBeenCalledWith({params:{outputId:'output'},query:undefined,body:{items:[{kind:'image_card',targetSectionId:'page-a'},{kind:'image_card',targetSectionId:'page-b'}],clientRequestId:expect.any(String)}}));
++  expect(api.generateResult).not.toHaveBeenCalled();
++ });
++ it('候选严格绑定选中页，精确文件cardId经fresh版本采用不丢失',async()=>{
++  const bound={...card,targetSectionId:'page-b',value:[{...image,cardId:'page-b'}]};
++  api.listResults.mockResolvedValue({items:[{...bound,resultId:'other',targetSectionId:'page-a',value:[{...image,cardId:'page-a',assetFileId:'other-file'}]},bound]});
++  api.getGraphicPost.mockResolvedValue({currentVersionId:'fresh-v2'});
++  api.getResult.mockResolvedValue({...bound,status:'adopted'});api.adoptResult.mockResolvedValue({status:'adopted'});
++  render(<GraphicPostResults {...props} series={{cards:pages,selectedCardId:'page-b',selectedCardIds:['page-b']}}/>);
++  const adopt=await screen.findByRole('button',{name:'采用到这一页'});
++  await waitFor(()=>expect(adopt).toBeEnabled());fireEvent.click(adopt);
++  await waitFor(()=>expect(api.adoptResult).toHaveBeenCalledWith({params:{resultId:'result-card'},query:undefined,body:{expected:{owner:'graphic_post',versionId:'fresh-v2'},editedValue:[{...image,cardId:'page-b'}],clientRequestId:expect.any(String)}}));
++  expect(api.getAssetFileDownloadUrl).not.toHaveBeenCalledWith(expect.objectContaining({params:expect.objectContaining({assetFileId:'other-file'})}));
++ });
++ it('请求未知后用原请求和原目标恢复，不随新选区重新付费',async()=>{
++  api.createBundle.mockRejectedValueOnce(new Error('connection lost')).mockResolvedValueOnce({bundleId:'recovered',status:'complete',items:[]});
++  const {rerender}=render(<GraphicPostResults {...props} series={{cards:pages,selectedCardId:'page-b',selectedCardIds:['page-a','page-b']}}/>);
++  fireEvent.click(await screen.findByRole('button',{name:'生成所选 2 页'}));await screen.findByRole('alert');
++  const original=api.createBundle.mock.calls[0][0];
++  rerender(<GraphicPostResults {...props} series={{cards:pages,selectedCardId:'page-a',selectedCardIds:['page-a']}}/>);
++  fireEvent.click(screen.getByRole('button',{name:'恢复原组图请求'}));
++  await waitFor(()=>expect(api.createBundle).toHaveBeenCalledTimes(2));
++  expect(api.createBundle.mock.calls[1][0]).toEqual(original);
++ });
++ it('旧未绑定图片候选仍可审阅采用，但组图模式不生成无target图片',async()=>{
++  api.listResults.mockResolvedValue({items:[card]});
++  render(<GraphicPostResults {...props} series={{cards:pages,selectedCardId:'page-b',selectedCardIds:['page-b']}}/>);
++  expect(await screen.findByRole('button',{name:'采纳这张图卡'})).toBeInTheDocument();
++  expect(screen.queryByRole('button',{name:'重新生成图卡'})).toBeNull();
++  expect(screen.getByText('先前未绑定页的图片候选')).toBeInTheDocument();
++ });
++ it('超过单次12页分组，未知恢复后继续剩余页且不丢13页以后',async()=>{
++  const many=Array.from({length:14},(_,index)=>({cardId:`page-${index}`,title:`页${index}`,body:'正文',sourceRefs:[]}));
++  api.createBundle.mockRejectedValueOnce(new Error('unknown')).mockResolvedValue({bundleId:'ack',status:'complete',items:[]});
++  render(<GraphicPostResults {...props} series={{cards:many,selectedCardId:'page-0',selectedCardIds:many.map(card=>card.cardId)}}/>);
++  fireEvent.click(await screen.findByRole('button',{name:'生成所选 14 页'}));await screen.findByRole('alert');
++  fireEvent.click(screen.getByRole('button',{name:'恢复原组图请求'}));
++  await waitFor(()=>expect(api.createBundle).toHaveBeenCalledTimes(3));
++  expect(api.createBundle.mock.calls[1][0]).toEqual(api.createBundle.mock.calls[0][0]);
++  expect(api.createBundle.mock.calls[2][0].body.items.map((item:{targetSectionId:string})=>item.targetSectionId)).toEqual(['page-12','page-13']);
++ });
++ it('迟到的局部重试在切换账号与作品后不串回新页候选',async()=>{
++  const failed={...card,resultId:'failed',targetSectionId:'page-b',status:'failed',value:null};
++  api.listResults.mockResolvedValueOnce({items:[failed]}).mockResolvedValue({items:[]});
++  let resolveRetry!:(value:unknown)=>void;api.retryResult.mockImplementationOnce(()=>new Promise(resolve=>{resolveRetry=resolve;}));
++  const {rerender}=render(<GraphicPostResults {...props} series={{cards:pages,selectedCardId:'page-b',selectedCardIds:['page-b']}}/>);
++  fireEvent.click(await screen.findByRole('button',{name:'只重试这一页'}));
++  rerender(<GraphicPostResults {...props} accountId="other-account" outputId="other-output" series={{cards:pages,selectedCardId:'page-b',selectedCardIds:['page-b']}}/>);
++  resolveRetry({...card,resultId:'late',targetSectionId:'page-b',outputId:'output'});
++  await waitFor(()=>expect(api.listResults).toHaveBeenCalledTimes(2));
++  expect(screen.queryByRole('button',{name:'采用到这一页'})).toBeNull();
++ });
++ it('服务端未知重试预约恢复原result和原请求号，不提交第三次生图',async()=>{
++  const pending={...card,resultId:'reserved',targetSectionId:'page-b',status:'queued',taskId:null,retryOf:'original-failed',retryRequestId:'original-retry-request',errorCode:'RETRY_SUBMISSION_UNKNOWN',value:null};
++  api.listResults.mockResolvedValue({items:[pending]});api.retryResult.mockResolvedValue({...pending,taskId:'real-task',errorCode:null});
++  render(<GraphicPostResults {...props} series={{cards:pages,selectedCardId:'page-b',selectedCardIds:['page-b']}}/>);
++  fireEvent.click(await screen.findByRole('button',{name:'恢复这次单页重试'}));
++  await waitFor(()=>expect(api.retryResult).toHaveBeenCalledWith({params:{resultId:'original-failed'},query:undefined,body:{clientRequestId:'original-retry-request'}}));
++  expect(api.createBundle).not.toHaveBeenCalled();expect(api.generateResult).not.toHaveBeenCalled();
++ });
++});
++
+ 
+ describe("标签候选刷新与编辑保护", () => {
+   const queued = { resultId: "queued-text", kind: "tags", outputId: "output",
+--- /dev/null
++++ b/frontend/src/features/projects/graphic-series-panel.tsx
+@@ -0,0 +1,78 @@
++"use client";
++import * as React from 'react';
++import Image from 'next/image';
++import Link from 'next/link';
++import type {GraphicPostDocument,GraphicPostCardBrief} from '@creatoros/contract';
++import {Button} from '@/components/ui/button';
++import {Dialog,DialogContent,DialogHeader,DialogTitle} from '@/components/ui/dialog';
++import {client} from '@/lib/contract-client';
++import {deleteGraphicPage,moveGraphicPage,replaceGraphicPageImage,setGraphicCover} from './graphic-series-document';
++
++type ImageUse=GraphicPostDocument['imageUses'][number];
++export type GraphicImageAsset={id:string;name:string;assetType:string;status:string;currentFileId:string|null};
++type GraphicImagePreviewProps={image:Pick<ImageUse,'assetId'|'assetFileId'>;large?:boolean};
++export function GraphicImagePreview(props:GraphicImagePreviewProps){return <GraphicImagePreviewSession key={`${props.image.assetId}:${props.image.assetFileId}`} {...props}/>;}
++function GraphicImagePreviewSession({image,large=false}:GraphicImagePreviewProps){
++ const [url,setUrl]=React.useState<string|null>(null),[error,setError]=React.useState(false);
++ React.useEffect(()=>{let active=true;
++  void client.getAssetFileDownloadUrl({params:{assetId:image.assetId,assetFileId:image.assetFileId},query:undefined,body:undefined})
++   .then(value=>{if(active)setUrl(value.url);}).catch(()=>{if(active)setError(true);});
++  return()=>{active=false;};
++ },[image.assetId,image.assetFileId]);
++ return url?<Image src={url} alt="作品中的精确图片版本" width={640} height={800} unoptimized className={`${large?'max-h-96':'h-36'} w-full rounded-md bg-surface-subtle object-contain`}/>
++  :<div className={`${large?'h-64':'h-36'} flex items-center justify-center rounded-md bg-surface-subtle text-xs text-muted-foreground`}>{error?'图片版本暂不可读取':'读取图片中…'}</div>;
++}
++
++export function GraphicSeriesPanel({document,onChange,selectedCardId,selectedCardIds,onSelect,onSelectionChange,assets,disabled,onOpenCanvas,onOpenDesign,children}:{
++ document:GraphicPostDocument;onChange:(document:GraphicPostDocument)=>void;selectedCardId:string|null;selectedCardIds:string[];
++ onSelect:(cardId:string)=>void;onSelectionChange:(cardIds:string[])=>void;assets:GraphicImageAsset[];disabled:boolean;
++ onOpenCanvas:(cardId:string)=>void;onOpenDesign:(cardId:string)=>void;children?:React.ReactNode;
++}){
++ const cards=document.cardBriefs??[],selected=cards.find(card=>card.cardId===selectedCardId),index=cards.findIndex(card=>card.cardId===selectedCardId);
++ const image=selected?document.imageUses.find(item=>item.role==='card'&&item.cardId===selected.cardId):undefined;
++ const [assetSelection,setAssetSelection]=React.useState<{cardId:string|null;assetId:string}>({cardId:selectedCardId,assetId:''});
++ const assetId=assetSelection.cardId===selectedCardId?assetSelection.assetId:'';
++ function setAssetId(value:string){setAssetSelection({cardId:selectedCardId,assetId:value});}
++ const [deleteTarget,setDeleteTarget]=React.useState<string|null>(null);
++ const deleteOpen=Boolean(deleteTarget&&deleteTarget===selectedCardId);
++ function setDeleteOpen(open:boolean){setDeleteTarget(open?selectedCardId:null);}
++ const selectedAsset=assets.find(asset=>asset.id===assetId&&asset.currentFileId);
++ function edit(patch:Partial<GraphicPostCardBrief>){if(selected)onChange({...document,cardBriefs:cards.map(card=>card.cardId===selected.cardId?{...card,...patch}:card)});}
++ function add(){const cardId=crypto.randomUUID();onChange({...document,cardBriefs:[...cards,{cardId,title:'',body:'',sourceRefs:[]}]});onSelect(cardId);onSelectionChange([...selectedCardIds,cardId]);}
++ return <section aria-label="连续组图工作台" className="space-y-4">
++  <div className="flex flex-wrap items-center justify-between gap-3"><div><h2 className="text-xl font-semibold">一组图，讲清一份内容</h2><p className="mt-1 text-sm text-muted-foreground">先看每页说什么，再逐页出图。重做这一页会保留其他页。</p></div><Button variant="outline" disabled={disabled} onClick={add}>添加一页</Button></div>
++  <div className="grid min-w-0 gap-5 lg:grid-cols-[minmax(240px,0.85fr)_minmax(0,1.15fr)]">
++   <div className="min-w-0 space-y-3 rounded-xl border border-border bg-surface p-4">
++    <div className="flex items-center justify-between gap-2"><h3 className="font-medium">整组预览 · {cards.length} 页</h3>{cards.length>0&&<Button size="sm" variant="ghost" disabled={disabled} onClick={()=>onSelectionChange(selectedCardIds.length===cards.length?[]:cards.map(card=>card.cardId))}>{selectedCardIds.length===cards.length?'取消全选':'选中全部页'}</Button>}</div>
++    {cards.length?<ol className="grid grid-cols-2 gap-3">{cards.map((card,position)=>{const pageImage=document.imageUses.find(item=>item.role==='card'&&item.cardId===card.cardId);return <li key={card.cardId} className={`min-w-0 rounded-lg border p-2 ${card.cardId===selectedCardId?'border-primary bg-primary/5':'border-border'}`}>
++      <button type="button" aria-label={`查看第 ${position+1} 页：${card.title||'未命名'}`} aria-pressed={card.cardId===selectedCardId} onClick={()=>onSelect(card.cardId)} className="block w-full rounded-md text-left focus-visible:outline-2 focus-visible:outline-primary">
++       {pageImage?<GraphicImagePreview image={pageImage}/>:<div className="flex h-36 items-center justify-center rounded-md border border-dashed border-border bg-surface-subtle text-xs text-muted-foreground">尚未出图</div>}
++       <span className="mt-2 block truncate text-sm font-medium">{position+1}. {card.title||'未填写标题'}</span><span className="mt-1 line-clamp-2 block min-h-8 text-xs text-muted-foreground">{card.body||'还没有页内容'}</span>
++      </button>
++      <label className="mt-2 flex min-h-8 items-center gap-2 text-xs"><input type="checkbox" aria-label={`选择第 ${position+1} 页生成`} disabled={disabled} checked={selectedCardIds.includes(card.cardId)} onChange={event=>onSelectionChange(event.target.checked?[...selectedCardIds,card.cardId]:selectedCardIds.filter(id=>id!==card.cardId))}/>生成这一页</label>
++     </li>;})}</ol>:<div className="rounded-lg border border-dashed border-border p-6 text-sm text-muted-foreground">还没有逐页规划。可以先写正文，让 AI 规划组图；也可以直接添加一页或使用已有照片。</div>}
++    <p className="text-xs text-muted-foreground">按页序阅读，检查文字、画面和前后衔接。统一参考能帮助保持风格，仍需逐页核对实际图片。</p>
++   </div>
++   <div className="min-w-0 space-y-4">
++    {selected&&<fieldset disabled={disabled} aria-label="选中页" className="space-y-3 rounded-xl border border-border bg-surface p-4">
++     <div className="flex flex-wrap items-center justify-between gap-2"><h3 className="font-medium">第 {index+1} 页</h3><div className="flex gap-1"><Button size="sm" variant="ghost" aria-label={`图卡${index+1}上移`} disabled={disabled||index===0} onClick={()=>onChange(moveGraphicPage(document,selected.cardId,-1))}>前移</Button><Button size="sm" variant="ghost" aria-label={`图卡${index+1}下移`} disabled={disabled||index===cards.length-1} onClick={()=>onChange(moveGraphicPage(document,selected.cardId,1))}>后移</Button><Button size="sm" variant="ghost" onClick={()=>setDeleteOpen(true)}>删除这一页</Button></div></div>
++     <label className="block text-sm">页标题<input aria-label={`图卡${index+1}标题`} value={selected.title} onChange={event=>edit({title:event.target.value})} className="mt-1 h-10 w-full rounded-md border border-border bg-background px-3"/></label>
++     <label className="block text-sm">页内容<textarea aria-label={`图卡${index+1}正文`} value={selected.body} onChange={event=>edit({body:event.target.value})} rows={4} className="mt-1 w-full rounded-md border border-border bg-background p-3"/></label>
++     <details><summary className="cursor-pointer text-sm text-muted-foreground">这页的画面想法，可选</summary><textarea aria-label="这一页的画面想法" value={selected.visualBrief??''} onChange={event=>edit({visualBrief:event.target.value})} rows={3} className="mt-2 w-full rounded-md border border-border bg-background p-3 text-sm"/></details>
++     {image&&<GraphicImagePreview image={image} large/>}
++     <div className="flex flex-wrap gap-2"><Button size="sm" variant="outline" onClick={()=>onOpenCanvas(selected.cardId)}>进入画布制作这一页</Button>{image&&<><Button size="sm" variant="outline" onClick={()=>onChange(setGraphicCover(document,image))}>用这页作封面</Button><Button size="sm" variant="outline" onClick={()=>onChange({...document,seriesProfile:{visualDirection:document.seriesProfile?.visualDirection??'',aspectRatio:document.seriesProfile?.aspectRatio??'',referenceImage:{assetId:image.assetId,assetFileId:image.assetFileId}}})}>设为统一参考</Button></>}<Button size="sm" variant="ghost" onClick={()=>onOpenDesign(selected.cardId)}>快图细调</Button></div>
++     <div className="flex gap-2"><select aria-label="选择这一页的已有图片" value={assetId} onChange={event=>setAssetId(event.target.value)} className="min-w-0 flex-1 rounded-md border border-border bg-background p-2 text-sm"><option value="">选择已有图片</option>{assets.map(asset=><option key={asset.id} value={asset.id}>{asset.name}</option>)}</select><Button size="sm" variant="outline" disabled={!selectedAsset} onClick={()=>{if(selectedAsset?.currentFileId)onChange(replaceGraphicPageImage(document,selected.cardId,{assetId:selectedAsset.id,assetFileId:selectedAsset.currentFileId}));setAssetId('');}}>使用到这一页</Button></div>
++     <Link href="/assets" className="inline-flex min-h-8 items-center text-xs text-primary hover:underline">上传图片素材 →</Link>
++    </fieldset>}
++    {children}
++   </div>
++  </div>
++  <details className="rounded-xl border border-border bg-surface p-4"><summary className="cursor-pointer text-sm font-medium">统一方向与参考，可选</summary>
++   <div className="mt-3 space-y-3"><label className="block text-sm">这组图的视觉方向<textarea aria-label="统一视觉方向" disabled={disabled} value={document.seriesProfile?.visualDirection??''} onChange={event=>onChange({...document,seriesProfile:{...document.seriesProfile,visualDirection:event.target.value,aspectRatio:document.seriesProfile?.aspectRatio??''}})} rows={3} className="mt-1 w-full rounded-md border border-border bg-background p-3" placeholder="描述你希望整组保持的画面、人物或色彩"/></label>
++    <label className="block text-sm">画幅比例<input aria-label="组图画幅比例" disabled={disabled} value={document.seriesProfile?.aspectRatio??''} onChange={event=>onChange({...document,seriesProfile:{...document.seriesProfile,visualDirection:document.seriesProfile?.visualDirection??'',aspectRatio:event.target.value}})} className="ml-2 h-10 rounded-md border border-border bg-background px-3" placeholder="留空使用模型默认值"/></label>
++    {document.seriesProfile?.referenceImage&&<div className="flex items-start gap-3"><div className="w-32"><GraphicImagePreview image={document.seriesProfile.referenceImage}/></div><div className="space-y-2"><p className="text-xs text-muted-foreground">固定使用这张图片的精确文件版本。</p><Button size="sm" variant="ghost" disabled={disabled} onClick={()=>{const profile=document.seriesProfile!;onChange({...document,seriesProfile:{visualDirection:profile.visualDirection,aspectRatio:profile.aspectRatio}});}}>取消统一参考</Button></div></div>}
++   </div>
++  </details>
++  <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}><DialogContent><DialogHeader><DialogTitle>删除这一页？</DialogTitle></DialogHeader><p className="text-sm text-muted-foreground">会移除这页规划、绑定的作品图片和快图设计。素材库和已保存历史仍保留，封面用途也保留。</p><div className="flex flex-wrap gap-2"><Button variant="outline" onClick={()=>setDeleteOpen(false)}>取消删除</Button><Button disabled={disabled} onClick={()=>{if(selected)onChange(deleteGraphicPage(document,selected.cardId));setDeleteOpen(false);}}>删除页和绑定图片</Button></div></DialogContent></Dialog>
++ </section>;
++}
+--- /dev/null
++++ b/frontend/src/features/projects/graphic-series-panel.test.tsx
+@@ -0,0 +1,24 @@
++import * as React from 'react';
++import {fireEvent,render,screen} from '@testing-library/react';
++import {it,expect,vi} from 'vitest';
++import type {GraphicPostDocument} from '@creatoros/contract';
++import {GraphicSeriesPanel} from './graphic-series-panel';
++vi.mock('@/lib/contract-client',()=>({client:{getAssetFileDownloadUrl:vi.fn(async()=>({url:'http://example.test/exact.png'}))}}));
++const doc:GraphicPostDocument={schemaVersion:1,title:'标题',body:'正文',summary:'',tags:[],sourceRefs:[],ruleSnapshotRef:null,imageUses:[],cardBriefs:[{cardId:'a',title:'第一页',body:'第一',sourceRefs:[]},{cardId:'b',title:'第二页',body:'第二',sourceRefs:[]}]};
++it('网格显示真实空页，只编辑选中页，并按真实ID进入画布',()=>{
++ const onChange=vi.fn(),onOpenCanvas=vi.fn(),onSelect=vi.fn();
++ render(<GraphicSeriesPanel document={doc} onChange={onChange} selectedCardId="b" selectedCardIds={['b']} onSelect={onSelect} onSelectionChange={vi.fn()} assets={[]} disabled={false} onOpenCanvas={onOpenCanvas} onOpenDesign={vi.fn()}/>);
++ expect(screen.getAllByText('尚未出图')).toHaveLength(2);
++ expect(screen.queryByRole('textbox',{name:'图卡1正文'})).toBeNull();
++ expect(screen.getByRole('textbox',{name:'图卡2正文'})).toHaveValue('第二');
++ fireEvent.click(screen.getByRole('button',{name:'进入画布制作这一页'}));expect(onOpenCanvas).toHaveBeenCalledWith('b');
++ fireEvent.click(screen.getByRole('button',{name:'查看第 1 页：第一页'}));expect(onSelect).toHaveBeenCalledWith('a');
++});
++it('删除前明确确认图与设计，取消不改变稿面',()=>{
++ const onChange=vi.fn();
++ render(<GraphicSeriesPanel document={doc} onChange={onChange} selectedCardId="b" selectedCardIds={['b']} onSelect={vi.fn()} onSelectionChange={vi.fn()} assets={[]} disabled={false} onOpenCanvas={vi.fn()} onOpenDesign={vi.fn()}/>);
++ fireEvent.click(screen.getByRole('button',{name:'删除这一页'}));expect(onChange).not.toHaveBeenCalled();
++ fireEvent.click(screen.getByRole('button',{name:'取消删除'}));expect(onChange).not.toHaveBeenCalled();
++ fireEvent.click(screen.getByRole('button',{name:'删除这一页'}));fireEvent.click(screen.getByRole('button',{name:'删除页和绑定图片'}));
++ expect(onChange.mock.calls[0][0].cardBriefs.map((card:{cardId:string})=>card.cardId)).toEqual(['a']);
++});
+--- /dev/null
++++ b/frontend/src/features/projects/graphic-series-document.ts
+@@ -0,0 +1,38 @@
++import type {GraphicPostDocument} from '@creatoros/contract';
++type ImageUse=GraphicPostDocument['imageUses'][number];
++
++// SEMANTIC_BOUNDARY_ALLOW: These operations follow user-selected IDs and order;
++// they neither infer page meaning nor decide visual quality.
++export function normalizeGraphicImages(document:GraphicPostDocument):GraphicPostDocument {
++ const pages=new Map((document.cardBriefs??[]).map((card,index)=>[card.cardId,index]));
++ const cover=document.imageUses.filter(image=>image.role==='cover');
++ const bound=document.imageUses.filter(image=>image.role==='card'&&image.cardId&&pages.has(image.cardId))
++  .sort((a,b)=>pages.get(a.cardId!)!-pages.get(b.cardId!)!);
++ const unbound=document.imageUses.filter(image=>image.role==='card'&&(!image.cardId||!pages.has(image.cardId)));
++ return {...document,imageUses:[...cover,...bound,...unbound].map((image,order)=>({...image,order}))};
++}
++export function graphicDeliveryImages(document:GraphicPostDocument):ImageUse[] {
++ const seen=new Set<string>();
++ return normalizeGraphicImages(document).imageUses.filter(image=>{
++  const key=JSON.stringify([image.assetId,image.assetFileId]);
++  if(seen.has(key))return false;seen.add(key);return true;
++ });
++}
++export function setGraphicCover(document:GraphicPostDocument,image:Pick<ImageUse,'assetId'|'assetFileId'>):GraphicPostDocument {
++ return normalizeGraphicImages({...document,imageUses:[{assetId:image.assetId,assetFileId:image.assetFileId,role:'cover',order:0},...document.imageUses.filter(item=>item.role!=='cover')]});
++}
++export function replaceGraphicPageImage(document:GraphicPostDocument,cardId:string,image:Pick<ImageUse,'assetId'|'assetFileId'>):GraphicPostDocument {
++ if(!document.cardBriefs?.some(card=>card.cardId===cardId))throw new Error('目标页已不存在，请重新读取作品。');
++ return normalizeGraphicImages({...document,imageUses:[...document.imageUses.filter(item=>!(item.role==='card'&&item.cardId===cardId)),{...image,role:'card',cardId,order:0}]});
++}
++export function deleteGraphicPage(document:GraphicPostDocument,cardId:string):GraphicPostDocument {
++ return normalizeGraphicImages({...document,cardBriefs:(document.cardBriefs??[]).filter(card=>card.cardId!==cardId),
++  imageUses:document.imageUses.filter(image=>!(image.role==='card'&&image.cardId===cardId)),
++  ...(document.designs?{designs:document.designs.filter(design=>!(design.target.kind==='card'&&design.target.cardId===cardId))}:{})});
++}
++export function moveGraphicPage(document:GraphicPostDocument,cardId:string,step:number):GraphicPostDocument {
++ const cards=[...(document.cardBriefs??[])],index=cards.findIndex(card=>card.cardId===cardId),target=index+step;
++ if(index<0||target<0||target>=cards.length)return document;
++ [cards[index],cards[target]]=[cards[target]!,cards[index]!];
++ return normalizeGraphicImages({...document,cardBriefs:cards});
++}
+--- /dev/null
++++ b/frontend/src/features/projects/graphic-series-document.test.ts
+@@ -0,0 +1,37 @@
++import {describe,expect,it} from 'vitest';
++import type {GraphicPostDocument} from '@creatoros/contract';
++import {deleteGraphicPage,graphicDeliveryImages,moveGraphicPage,replaceGraphicPageImage,setGraphicCover} from './graphic-series-document';
++
++const first={assetId:'a',assetFileId:'fa',role:'card' as const,cardId:'page-a',order:0};
++const second={assetId:'b',assetFileId:'fb',role:'card' as const,cardId:'page-b',order:1};
++const oldPhoto={assetId:'photo',assetFileId:'photo-v1',role:'card' as const,order:2};
++const doc:GraphicPostDocument={schemaVersion:1,title:'作品',body:'原正文',summary:'',tags:[],sourceRefs:[],ruleSnapshotRef:null,
++ cardBriefs:[{cardId:'page-a',title:'一',body:'一',sourceRefs:[]},{cardId:'page-b',title:'二',body:'二',sourceRefs:[]}],imageUses:[first,second,oldPhoto]};
++describe('组图稿面明确操作',()=>{
++ it('设为封面复制精确用途，原页绑定与其他页不变；交付去重并按页序',()=>{
++  const next=setGraphicCover(doc,second);
++  expect(next.imageUses.filter(image=>image.role==='card').map(({order,...image})=>image)).toEqual([first,second,oldPhoto].map(({order,...image})=>image));
++  expect(next.imageUses[0]).toEqual({assetId:'b',assetFileId:'fb',role:'cover',order:0});
++  expect(graphicDeliveryImages(next).map(image=>image.assetFileId)).toEqual(['fb','fa','photo-v1']);
++  expect(doc.imageUses).toEqual([first,second,oldPhoto]);
++ });
++ it('移动真实页保留身份及文件，派生图片顺序；未知旧照片保留',()=>{
++  const next=moveGraphicPage(doc,'page-b',-1);
++  expect(next.cardBriefs?.map(card=>card.cardId)).toEqual(['page-b','page-a']);
++  expect(graphicDeliveryImages(next).map(image=>image.assetFileId)).toEqual(['fb','fa','photo-v1']);
++ });
++ it('局部替换只动指定页，历史文件对象仍存在且旧照片不被猜页',()=>{
++  const next=replaceGraphicPageImage(doc,'page-a',{assetId:'new',assetFileId:'exact-new'});
++  expect(next.imageUses).toMatchObject([{assetId:'new',assetFileId:'exact-new',cardId:'page-a'},second,oldPhoto]);
++  expect(doc.imageUses[0]).toEqual(first);
++  expect(()=>replaceGraphicPageImage(doc,'missing',{assetId:'new',assetFileId:'new'})).toThrow();
++ });
++ it('删页明确同时移除绑定图及design，保留封面用途、其余页、未绑定照片',()=>{
++  const withDesign={...setGraphicCover(doc,first),designs:[{target:{kind:'card' as const,cardId:'page-a'},document:{editor:'kuaitu' as const,revision:'r',nativeDocument:{},mediaRefs:[]}}]};
++  const next=deleteGraphicPage(withDesign,'page-a');
++  expect(next.cardBriefs?.map(card=>card.cardId)).toEqual(['page-b']);
++  expect(next.designs).toEqual([]);
++  expect(next.imageUses.some(image=>image.role==='card'&&image.cardId==='page-a')).toBe(false);
++  expect(graphicDeliveryImages(next).map(image=>image.assetFileId)).toEqual(['fa','fb','photo-v1']);
++ });
++});

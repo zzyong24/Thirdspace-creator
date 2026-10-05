@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "recheck",
+  "summary": "官方小红书账号开放平台 Scope 文档目前仅开放 basic_info，user_profile 与 read_notes 仍列为规划中。来源工程的浏览器采集只证明技术可行，不能证明 CreatorOS 已获平台访问许可。本轮把自动访问设为 PLATFORM_PERMISSION_REQUIRED，只允许当前阶段的纯解析与用户提供数据；登录/页面采集和双账号真机验收须待平台许可与适用接口核验。独立复审确认设计层 PASS，不代表自动采集已可用或真实账号已验收。",
+  "findings": []
+}

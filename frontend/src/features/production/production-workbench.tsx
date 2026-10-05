@@ -80,7 +80,7 @@ export interface ProductionWorkbenchProps {
   projectTitle: string;
   /** 口播稿全文(稿面当前版本投影);null = 项目还没有脚本(诚实空态)。 */
   scriptText: string | null;
-  /** 项目首个产出 id;null = 还没有产出(状态机接线时懒建)。 */
+  /** 当前选定视频产出 id;null = 空项目保留懒建备料路径。 */
   outputId: string | null;
   /** 服务端读到的 production 状态(outputId 为 null 时也为 null)。 */
   initialStatus: string | null;
@@ -90,6 +90,8 @@ export interface ProductionWorkbenchProps {
   orientation?: "portrait" | "landscape";
   /** 测试注入:读视频时长(默认 <video> metadata)。 */
   readVideoDuration?: (file: File) => Promise<number | null>;
+  /** V1工程的旧分场只读参考，实际片段在可视剪辑中修改。 */
+  editorReadOnly?:boolean;
 }
 
 interface VideoState {
@@ -114,6 +116,7 @@ export function ProductionWorkbench({
   initialSegmentCount,
   orientation,
   readVideoDuration = readVideoDurationViaElement,
+  editorReadOnly=false,
 }: ProductionWorkbenchProps) {
   // 画幅属于“本次制作 revision”，不是只能从立项继承的只读属性。存量项目无值时
   // 维持既有 landscape 行为；用户可在制作页显式切到 portrait。
@@ -947,6 +950,7 @@ export function ProductionWorkbench({
       decisions: VideoDecisions;
       renderProps: VideoRenderProps;
     }) => {
+      if(editorReadOnly){setFlowError("请返回可视剪辑，保存后生成当前版本；旧分场只作为参考。");return;}
       if (renderDispatchBusy) return;
       setFlowError(null);
       setRenderDispatchBusy(true);
@@ -1096,6 +1100,7 @@ export function ProductionWorkbench({
       editingPlanRevision,
       excludedAuto,
       renderDispatchBusy,
+      editorReadOnly,
       segmentCount,
       selectableInventory,
     ],
@@ -1964,7 +1969,8 @@ export function ProductionWorkbench({
                   type="button"
                   aria-label={`移除 ${it.name}`}
                   data-slot="broll-remove"
-                  disabled={brollBusy}
+                  disabled={brollBusy || editorReadOnly}
+                  title={editorReadOnly?"请在可视剪辑中移除具体片段，保留项目素材":undefined}
                   onClick={() => void onRemoveBroll(it.linkId)}
                   className="absolute right-1 top-1 rounded-full bg-black/60 px-1.5 text-xs leading-tight text-white hover:bg-black/80 disabled:opacity-50"
                 >
@@ -2159,7 +2165,7 @@ export function ProductionWorkbench({
                   <button
                     type="button"
                     data-slot="rerender-current-storyboard"
-                    disabled={!video || decisionsBusy || renderDispatchBusy}
+                    disabled={editorReadOnly || !video || decisionsBusy || renderDispatchBusy}
                     onClick={regenerateCurrentStoryboard}
                     className="inline-flex h-8 items-center rounded-control bg-brand px-3 text-xs font-medium text-brand-foreground disabled:opacity-50"
                   >
@@ -2181,7 +2187,7 @@ export function ProductionWorkbench({
               talkingHeadAssetId={video?.assetId ?? null}
               talkingHeadDurationSec={video?.durationSec ?? undefined}
               orientation={renderOrientation}
-              readOnly={decisionsConfirmed && !hasUnavailableBroll}
+              readOnly={editorReadOnly || (decisionsConfirmed && !hasUnavailableBroll)}
               confirming={renderDispatchBusy}
               adjustingMaterials={decisionsBusy}
               onConfirm={(payload) => void onConfirmDecisions(payload)}

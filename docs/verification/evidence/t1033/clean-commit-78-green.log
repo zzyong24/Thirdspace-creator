@@ -1,0 +1,9 @@
+
+ RUN  v4.1.8 /private/tmp/creatoros-t1034-clean-ae78054c/ai-worker
+
+
+ Test Files  3 passed (3)
+      Tests  78 passed (78)
+   Start at  06:35:38
+   Duration  3.80s (transform 967ms, setup 0ms, import 2.32s, tests 958ms, environment 1ms)
+

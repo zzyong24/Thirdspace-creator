@@ -1,0 +1,128 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/ai-worker
+
+ ❯ src/execution/codex-acp-worker-run.test.ts (11 tests | 5 failed) 3243ms
+   × 入场确认异常或返回非 started 都不 prompt，按原账本标未知且关闭宿主和桥 12ms (retry x2)
+   × 原标准 started 通知可得真实 provider turn 时先存原回执，随后断流保留 unknown，不重发 3007ms (retry x2)
+   × 已 reserve 的工作目录或提示预备失败也在原 callId 落 rejected，不能遗留 reserved 1ms (retry x2)
+   × 真实 provider turn 或最终保存回执不一致均保留 unknown，不能再次 prompt 2ms (retry x2)
+   × 客户端关闭失败仍关闭桥，不能覆盖已结算成功或原 unknown 故障 1ms (retry x2)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/execution/codex-acp-worker-run.test.ts > 入场确认异常或返回非 started 都不 prompt，按原账本标未知且关闭宿主和桥
+ FAIL  src/execution/codex-acp-worker-run.test.ts > 入场确认异常或返回非 started 都不 prompt，按原账本标未知且关闭宿主和桥
+ FAIL  src/execution/codex-acp-worker-run.test.ts > 入场确认异常或返回非 started 都不 prompt，按原账本标未知且关闭宿主和桥
+AssertionError: promise resolved "{ callId: 'turn-call-actual' }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "callId": "turn-call-actual",
+  }
+
+ ❯ src/execution/codex-acp-worker-run.test.ts:92:25
+     90|     async()=>({callId:'other-call',status:'started',sessionId}),async(…
+     91|     const f=fixture();f.ports.startExternalChatTurn=start;
+     92|     await expect(f.run()).rejects.toMatchObject({outcome:'unknown_resu…
+       |                         ^
+     93|     expect(f.client.prompt).not.toHaveBeenCalled();
+     94|     expect(f.settlements()).toEqual([{callId,status:'unknown'}]);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/15]⎯
+
+ FAIL  src/execution/codex-acp-worker-run.test.ts > 原标准 started 通知可得真实 provider turn 时先存原回执，随后断流保留 unknown，不重发
+ FAIL  src/execution/codex-acp-worker-run.test.ts > 原标准 started 通知可得真实 provider turn 时先存原回执，随后断流保留 unknown，不重发
+ FAIL  src/execution/codex-acp-worker-run.test.ts > 原标准 started 通知可得真实 provider turn 时先存原回执，随后断流保留 unknown，不重发
+AssertionError: expected [] to have a length of 1 but got +0
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ src/execution/codex-acp-worker-run.test.ts:161:77
+    159|   const running=f.run();const caught=running.catch(error=>error);
+    160|   try{
+    161|     await vi.waitFor(()=>expect(f.called('recordExternalChatProviderTu…
+       |                                                                             ^
+    162|     expect(f.called('recordExternalChatProviderTurn')[0]?.[1]).toEqual…
+    163|   }finally{completion.reject(Error('真实回合后连接断开'));await caught;}
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/15]⎯
+
+ FAIL  src/execution/codex-acp-worker-run.test.ts > 已 reserve 的工作目录或提示预备失败也在原 callId 落 rejected，不能遗留 reserved
+ FAIL  src/execution/codex-acp-worker-run.test.ts > 已 reserve 的工作目录或提示预备失败也在原 callId 落 rejected，不能遗留 reserved
+ FAIL  src/execution/codex-acp-worker-run.test.ts > 已 reserve 的工作目录或提示预备失败也在原 callId 落 rejected，不能遗留 reserved
+AssertionError: expected [] to deeply equal [ Array(1) ]
+
+- Expected
++ Received
+
+- [
+-   {
+-     "callId": "turn-call-actual",
+-     "rejectionCode": "CODEX_WORKSPACE_UNSAFE",
+-     "status": "rejected",
+-   },
+- ]
++ []
+
+ ❯ src/execution/codex-acp-worker-run.test.ts:198:27
+    196|   const f=fixture();boundaries.directory.mockRejectedValueOnce(new Gen…
+    197|   await expect(f.run()).rejects.toMatchObject({outcome:'waiting_user'}…
+    198|   expect(f.settlements()).toEqual([{callId,status:'rejected',rejection…
+       |                           ^
+    199|   expect(boundaries.host).not.toHaveBeenCalled();expect(f.client.promp…
+    200|   const g=fixture();boundaries.prompt.mockImplementationOnce(()=>{thro…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/15]⎯
+
+ FAIL  src/execution/codex-acp-worker-run.test.ts > 真实 provider turn 或最终保存回执不一致均保留 unknown，不能再次 prompt
+ FAIL  src/execution/codex-acp-worker-run.test.ts > 真实 provider turn 或最终保存回执不一致均保留 unknown，不能再次 prompt
+ FAIL  src/execution/codex-acp-worker-run.test.ts > 真实 provider turn 或最终保存回执不一致均保留 unknown，不能再次 prompt
+AssertionError: promise resolved "{ callId: 'turn-call-actual' }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "callId": "turn-call-actual",
+  }
+
+ ❯ src/execution/codex-acp-worker-run.test.ts:211:23
+    209|   expect(f.settlements()).toEqual([{callId,status:'unknown'}]);expect(…
+    210|   const h=fixture();h.ports.recordExternalChatProviderTurn=()=>({callI…
+    211|   await expect(h.run()).rejects.toMatchObject({outcome:'unknown_result…
+       |                       ^
+    212|   expect(h.settlements()).toEqual([{callId,status:'unknown'}]);expect(…
+    213|   const g=fixture();g.ports.settleExternalChatTurn=data=>data.status==…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/15]⎯
+
+ FAIL  src/execution/codex-acp-worker-run.test.ts > 客户端关闭失败仍关闭桥，不能覆盖已结算成功或原 unknown 故障
+ FAIL  src/execution/codex-acp-worker-run.test.ts > 客户端关闭失败仍关闭桥，不能覆盖已结算成功或原 unknown 故障
+ FAIL  src/execution/codex-acp-worker-run.test.ts > 客户端关闭失败仍关闭桥，不能覆盖已结算成功或原 unknown 故障
+Error: 客户端清理失败
+ ❯ src/execution/codex-acp-worker-run.test.ts:219:58
+    217|
+    218| it('客户端关闭失败仍关闭桥，不能覆盖已结算成功或原 unknown 故障',async()=>{
+    219|   const f=fixture();f.client.close.mockRejectedValueOnce(Error('客户端清理失…
+       |                                                          ^
+    220|   expect(await f.run()).toEqual({callId});
+    221|   expect(f.settlements().map(data=>data.status)).toEqual(['settled']);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/15]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  5 failed | 6 passed (11)
+   Start at  17:19:31
+   Duration  4.36s (transform 526ms, setup 0ms, import 928ms, tests 3.24s, environment 0ms)
+

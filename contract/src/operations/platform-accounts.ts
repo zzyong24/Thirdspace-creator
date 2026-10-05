@@ -9,6 +9,9 @@ import {
 import { platformAccountResource, platformAccountCapabilitiesResource,accountBindingStart,accountBindingResource } from "../resources/platform-accounts";
 
 const accountParams = z.object({ accountId: id });
+// New platforms require T-1020's identity-verified bind flow. The legacy manual
+// create operation remains limited to the platforms its backend supports.
+const legacyManualPlatformId = platformId.exclude(["wechatOfficialAccount"]);
 
 // SPEC §13 "平台账号 (platform-account)" group (七步 §7.1, contract v0.4).
 // Stores a secret *reference*, never a raw token.
@@ -31,7 +34,7 @@ export const platformAccountOperations = {
     method: "POST",
     path: "/accounts",
     body: z.object({
-      platform: platformId,
+      platform: legacyManualPlatformId,
       accountHandle: z.string().min(1),
       idempotencyKey:z.string().min(1).max(160).optional(),
       secretReference: z.string().optional(),

@@ -78,6 +78,7 @@ export interface TopHeaderProps {
 export type TopHeaderStage = {
   readonly id: string;
   readonly label: string;
+  readonly href?: string;
   readonly status: "pending" | "in_progress" | "completed" | "skipped";
 };
 
@@ -221,7 +222,9 @@ function ProjectIdentityBlock({
   // (projectWorkspaceHref(id, "script") 也指回它)→ 阶段条高亮与实际渲染面同源:
   // 无子段即视为 "script",不再让 stepper 退回「按 status(项目成熟度)高亮」
   // ——那会把已发布项目(currentStage=review)的稿面高亮成「复盘」。
-  const currentStage = segments[2] ?? "script";
+  const currentStage = segments[2] === "outputs"
+    ? segments[4] === "image" ? "image" : "script"
+    : segments[2] ?? "script";
   return (
     <div
       data-slot="header-project-identity"
@@ -262,7 +265,7 @@ function ProjectIdentityBlock({
           ) : null}
         </div>
       ) : (
-        <div className="flex w-64 min-w-0 shrink-0 flex-col">
+        <div className="flex w-32 min-w-0 shrink-0 flex-col lg:w-64">
           {/* [T-089④] 超长标题(导入作品曾把整篇文案当 title)truncate + title 悬停看全名。 */}
           <span
             className="truncate text-sm font-medium text-foreground"

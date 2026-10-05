@@ -3375,16 +3375,51 @@
           "path": "orchestrator/reviews/T-1062-round-2.json",
           "sha256": "f303452f56ebf595466e71eee46ce20294a846b0a94bc2e4b6b2875ff388eaf0"
         }
+      ],
+      "wip_snapshot": "125bc864d79f64891694ed0d630b6462fc7d7e26"
+    },
+    {
+      "session_id": "01a0f7f2-b7ab-7f21-a333-dbf8684b3941",
+      "title": "CreatorOS 工作台与本地 Codex：继续集成和验收",
+      "repo": "/Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator",
+      "disposition": "接力来源覆盖；不重复拣选",
+      "covered_by": "01a0ffbc-cf31-76d3-b0cf-7b73f2997259"
+    },
+    {
+      "session_id": "01a0ffbc-cf31-76d3-b0cf-7b73f2997259",
+      "title": "CreatorOS 网页版：集成开源工作台并交付验收",
+      "repo": "/Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator",
+      "branch": "codex/user-diagnostics",
+      "head": "bb00d580e2543dc886f145c13f686cf7dc50a4b8",
+      "wip_snapshot": "c53165064167c109368605d78f8c9a8e9978c5f6",
+      "disposition": "纳入明确授权源代码与证据；整合/验收进行中",
+      "path_inventory": "diagnostics-path-review.json",
+      "authority_archive": "source-authorities/diagnostics",
+      "known_candidate_exclusions": [
+        "scripts/workbuddy/__pycache__/package-connector.cpython-314.pyc",
+        "scripts/workbuddy/__pycache__/test_package_connector.cpython-314.pyc"
       ]
+    },
+    {
+      "session_id": "01a105e1-58bd-7eb3-a187-36219849ccd1",
+      "title": "集成封面模板选择功能",
+      "repo": "/Users/zyongzhu/.codex/worktrees/cover-template-library/Thirdspace-creator",
+      "branch": "codex/t1021-canvas-templates",
+      "head": "55a526d609633e2b014e2a70f319125dec8c0fea",
+      "disposition": "合入WIP e8d79d4a；安装包新域组权限与迁移实测待验",
+      "authority_archive": "source-authorities/templates"
     }
   ],
-  "other_sources_pending_inventory": [
-    "codex/user-diagnostics",
-    "codex/t1021-canvas-templates"
-  ],
+  "other_sources_pending_inventory": [],
   "excluded": [
     "其他项目实际媒体和私人素材",
     "tmp/arg0工具目录",
     "真实用户数据库及密钥"
-  ]
+  ],
+  "reference_only": {
+    "session_id": "01a0fffe-4bc5-7473-bdb8-8729bf5382b2",
+    "disposition": "仅粗剪流程研究，不读取或改动媒体/ChatCut项目，不纳入另一项目代码",
+    "evidence": "rough-cut-research.md"
+  },
+  "integration_status": "WIP；最终候选与包尚未冻结，不是功能完成凭据"
 }

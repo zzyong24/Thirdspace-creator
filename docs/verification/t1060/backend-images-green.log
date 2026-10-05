@@ -1,0 +1,133 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/backend
+
+ ❯ src/modules/ai/external-chat-turn.service.test.ts (8 tests | 8 failed) 2253ms
+   × ACP 总用量包含缓存读取时，真实模型回执仍可结算和提交 33ms
+   × 预留、启动、结算与提交全程使用同一真实外部回执；并发回放仅保存一次 11ms
+   × 未知结果、伪造 session/turn、错账号、被改写的源消息都不能提交 10ms
+   × 结算回放不可改写正文或用量；旧 fence 无法预留和提交 13ms
+   × 已结算的外部工具候选进入原会话卡片与事件流，用户仍需在 CreatorOS 采纳 12ms
+   × 原生 thread 与 provider turn 分别持久，缺实际 turn 和变更 ID 都不能结算 14ms
+   × 新任务拒绝原生协议；旧缺绑定任务拒绝切换成 ACP 10ms
+   × 纯图片使用原 pending 收据，只保存一次；错 session、旧租约和伪造引用不能保存或结算 11ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 8 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai/external-chat-turn.service.test.ts > ACP 总用量包含缓存读取时，真实模型回执仍可结算和提交
+TypeError: Cannot read properties of undefined (reading 'now')
+ ❯ createLocalFsObjectStorage src/modules/assets/localfs-object-storage.ts:142:20
+    140| ): ObjectStoragePort {
+    141|   const expiresInMs = cfg.expiresInMs ?? 15 * 60 * 1000;
+    142|   const now = deps.now ?? (() => Date.now());
+       |                    ^
+    143|
+    144|   function sidecarPath(absKey: string): string {
+ ❯ fixture src/modules/ai/external-chat-turn.service.test.ts:32:115
+ ❯ src/modules/ai/external-chat-turn.service.test.ts:39:10
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/8]⎯
+
+ FAIL  src/modules/ai/external-chat-turn.service.test.ts > 预留、启动、结算与提交全程使用同一真实外部回执；并发回放仅保存一次
+TypeError: Cannot read properties of undefined (reading 'now')
+ ❯ createLocalFsObjectStorage src/modules/assets/localfs-object-storage.ts:142:20
+    140| ): ObjectStoragePort {
+    141|   const expiresInMs = cfg.expiresInMs ?? 15 * 60 * 1000;
+    142|   const now = deps.now ?? (() => Date.now());
+       |                    ^
+    143|
+    144|   function sidecarPath(absKey: string): string {
+ ❯ fixture src/modules/ai/external-chat-turn.service.test.ts:32:115
+ ❯ src/modules/ai/external-chat-turn.service.test.ts:53:10
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/8]⎯
+
+ FAIL  src/modules/ai/external-chat-turn.service.test.ts > 未知结果、伪造 session/turn、错账号、被改写的源消息都不能提交
+TypeError: Cannot read properties of undefined (reading 'now')
+ ❯ createLocalFsObjectStorage src/modules/assets/localfs-object-storage.ts:142:20
+    140| ): ObjectStoragePort {
+    141|   const expiresInMs = cfg.expiresInMs ?? 15 * 60 * 1000;
+    142|   const now = deps.now ?? (() => Date.now());
+       |                    ^
+    143|
+    144|   function sidecarPath(absKey: string): string {
+ ❯ fixture src/modules/ai/external-chat-turn.service.test.ts:32:115
+ ❯ src/modules/ai/external-chat-turn.service.test.ts:77:10
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/8]⎯
+
+ FAIL  src/modules/ai/external-chat-turn.service.test.ts > 结算回放不可改写正文或用量；旧 fence 无法预留和提交
+TypeError: Cannot read properties of undefined (reading 'now')
+ ❯ createLocalFsObjectStorage src/modules/assets/localfs-object-storage.ts:142:20
+    140| ): ObjectStoragePort {
+    141|   const expiresInMs = cfg.expiresInMs ?? 15 * 60 * 1000;
+    142|   const now = deps.now ?? (() => Date.now());
+       |                    ^
+    143|
+    144|   function sidecarPath(absKey: string): string {
+ ❯ fixture src/modules/ai/external-chat-turn.service.test.ts:32:115
+ ❯ src/modules/ai/external-chat-turn.service.test.ts:97:10
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/8]⎯
+
+ FAIL  src/modules/ai/external-chat-turn.service.test.ts > 已结算的外部工具候选进入原会话卡片与事件流，用户仍需在 CreatorOS 采纳
+TypeError: Cannot read properties of undefined (reading 'now')
+ ❯ createLocalFsObjectStorage src/modules/assets/localfs-object-storage.ts:142:20
+    140| ): ObjectStoragePort {
+    141|   const expiresInMs = cfg.expiresInMs ?? 15 * 60 * 1000;
+    142|   const now = deps.now ?? (() => Date.now());
+       |                    ^
+    143|
+    144|   function sidecarPath(absKey: string): string {
+ ❯ fixture src/modules/ai/external-chat-turn.service.test.ts:32:115
+ ❯ src/modules/ai/external-chat-turn.service.test.ts:107:10
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/8]⎯
+
+ FAIL  src/modules/ai/external-chat-turn.service.test.ts > 原生 thread 与 provider turn 分别持久，缺实际 turn 和变更 ID 都不能结算
+TypeError: Cannot read properties of undefined (reading 'now')
+ ❯ createLocalFsObjectStorage src/modules/assets/localfs-object-storage.ts:142:20
+    140| ): ObjectStoragePort {
+    141|   const expiresInMs = cfg.expiresInMs ?? 15 * 60 * 1000;
+    142|   const now = deps.now ?? (() => Date.now());
+       |                    ^
+    143|
+    144|   function sidecarPath(absKey: string): string {
+ ❯ fixture src/modules/ai/external-chat-turn.service.test.ts:32:115
+ ❯ src/modules/ai/external-chat-turn.service.test.ts:127:10
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/8]⎯
+
+ FAIL  src/modules/ai/external-chat-turn.service.test.ts > 新任务拒绝原生协议；旧缺绑定任务拒绝切换成 ACP
+TypeError: Cannot read properties of undefined (reading 'now')
+ ❯ createLocalFsObjectStorage src/modules/assets/localfs-object-storage.ts:142:20
+    140| ): ObjectStoragePort {
+    141|   const expiresInMs = cfg.expiresInMs ?? 15 * 60 * 1000;
+    142|   const now = deps.now ?? (() => Date.now());
+       |                    ^
+    143|
+    144|   function sidecarPath(absKey: string): string {
+ ❯ fixture src/modules/ai/external-chat-turn.service.test.ts:32:115
+ ❯ src/modules/ai/external-chat-turn.service.test.ts:148:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/8]⎯
+
+ FAIL  src/modules/ai/external-chat-turn.service.test.ts > 纯图片使用原 pending 收据，只保存一次；错 session、旧租约和伪造引用不能保存或结算
+TypeError: Cannot read properties of undefined (reading 'now')
+ ❯ createLocalFsObjectStorage src/modules/assets/localfs-object-storage.ts:142:20
+    140| ): ObjectStoragePort {
+    141|   const expiresInMs = cfg.expiresInMs ?? 15 * 60 * 1000;
+    142|   const now = deps.now ?? (() => Date.now());
+       |                    ^
+    143|
+    144|   function sidecarPath(absKey: string): string {
+ ❯ fixture src/modules/ai/external-chat-turn.service.test.ts:32:115
+ ❯ src/modules/ai/external-chat-turn.service.test.ts:156:10
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/8]⎯
+
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  8 failed | 3 passed (11)
+   Start at  17:16:30
+   Duration  5.15s (transform 2.79s, setup 0ms, import 5.25s, tests 4.61s, environment 0ms)
+

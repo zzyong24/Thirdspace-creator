@@ -1,7 +1,7 @@
 import {z} from "zod";
 import {assetGenerationInputSchema} from "./asset-generation";
 const callId=z.string().min(1);
-export const coverReferenceSchema=z.object({assetId:z.string().min(1),checksum:z.string().min(1),mimeType:z.string().min(1)}).strict();
+export const coverReferenceSchema=z.object({assetId:z.string().min(1),assetFileId:z.string().min(1).optional(),checksum:z.string().min(1),mimeType:z.string().min(1)}).strict();
 export const coverImagePreparationSchema=z.object({
  input:assetGenerationInputSchema,
  reference:coverReferenceSchema.nullable(),

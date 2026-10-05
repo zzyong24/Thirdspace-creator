@@ -60,6 +60,7 @@ export interface CreateRevisionInput {
   title: string;
   description: string;
   coverAssetId?: string | null;
+  coverAssetFileId?: string | null;
   category?: string;
   series?: string;
   platformTags?: string[];
@@ -107,7 +108,7 @@ export interface PublishingRepository {
   // read resolves project→outputs→publications without an Analytics cross-module
   // join). Empty input → empty list.
   listPublicationIdsByOutputs(outputIds: ReadonlyArray<string>): Promise<string[]>;
-  getPublication(publicationId: string): Promise<PublicationRow>;
+  getPublication(publicationId: string, forUpdate?: boolean): Promise<PublicationRow>;
   createRevision(
     publicationId: string,
     input: CreateRevisionInput,
@@ -189,18 +190,16 @@ export function createPublishingRepository(
   //   · by-id 读(getPublicationRowById)同样上号门(SPEC §4.5:strict 列表 + user 级
   //     详情会留下「列表看不见但 URL 能打开」的裂缝;跨号命中 → OwnershipError 404,
   //     与跨 user 同语义,不泄漏存在性)。
-  //   · **唯一例外 findByExternalKey**(C-09 裁决):(platform, external_id) 是平台事实
-  //     唯一锚,查询保持 user 级(加号过滤会让跨号行不可见 → 重复 INSERT 炸唯一索引、
-  //     破幂等);命中后断言归属号与 ctx 一致,不一致按数据 bug 报错,绝不静默返回。
+  // T-1062 已确认采用 user+account+platform+externalID 的真实平台账号事实锚；组门仍按冻结group过滤。
   const accountGate = factFilter(publications, deps);
 
   // Private ownership gate — a cross-user / unknown id is indistinguishable from a
   // missing one (foundation §2: 404, never reveal existence) → OwnershipError.
   // [T-332 S2] 叠加号一致性门(SPEC §4.5):跨号 by-id 与跨 user 同为 404。
   async function getPublicationRowById(
-    publicationId: string,
+    publicationId: string, forUpdate = false,
   ): Promise<PublicationRow> {
-    const rows = await db
+    const query = db
       .select()
       .from(publications)
       .where(
@@ -210,6 +209,7 @@ export function createPublishingRepository(
           accountGate,
         ),
       );
+    const rows = await (forUpdate ? query.for("update") : query);
     const row = rows[0];
     if (!row) {
       throw new OwnershipError(
@@ -407,6 +407,7 @@ export function createPublishingRepository(
         title: input.title,
         description: input.description ?? "",
         coverAssetId: input.coverAssetId ?? null,
+        coverAssetFileId: input.coverAssetFileId ?? null,
         category: input.category ?? "",
         series: input.series ?? "",
         platformTags: input.platformTags ?? [],
@@ -594,11 +595,10 @@ export function createPublishingRepository(
       return rows[0]??null;
     },
     async findByExternalKey(platform, externalId) {
-      const rows=await db.select().from(publications).where(and(eq(publications.userId,userId),eq(publications.platform,platform),eq(publications.externalId,externalId)));
-      const row=rows[0]??null;
-      if(!row)return null;
-      if((deps.groupId && row.groupId!==deps.groupId)||(deps.accountId && row.accountId!==deps.accountId))throw new OwnershipError("发布记录不属于当前工作区");
-      return getPublicationRowById(row.id);
+      // T-1062 总控裁决：账号级真实事实锚，组总览不对多账号结果任取首行。
+      const rows=await db.select().from(publications).where(and(eq(publications.userId,userId),factFilter(publications,deps),eq(publications.platform,platform),eq(publications.externalId,externalId)));
+      if(!deps.accountId&&rows.length>1)throw new OwnershipError("发布外部ID对应多个真实账号，请选择目标账号");
+      return rows[0]??null;
     },
 
     async reAnchorPublicationOutput(publicationId, newOutputId) {

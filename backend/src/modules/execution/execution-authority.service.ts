@@ -38,6 +38,9 @@ export function createExecutionAuthorityService(db: Db, deps: {now?: () => strin
         await assertFrozenWorkspaceMembership(tx,{userId:task.userId,groupId:task.groupId,accountId:task.accountId,groupVersion:task.groupVersion,membershipVersion:task.membershipVersion},{allowArchived:privateAdmission});
         if(privateAdmission)await assertPrivateCollectorJob(tx as unknown as Db,{...ctx,groupId:task.groupId,accountId:task.accountId,membershipVersion:task.membershipVersion??undefined},jobId as string,collectorKind);
         if (prepared?.modelInput.kind === "model.structured" && (prepared.modelInput.skillSnapshot.userId !== task.userId || prepared.modelInput.skillSnapshot.accountId !== task.accountId || (prepared.modelInput.skillSnapshot.groupId??null)!==task.groupId)) throw new OwnershipError("Skill snapshot owner mismatch");
+        if(task.taskType==="asset.asr"&&!prepared&&!task.executionTaskId)throw new ConflictError("资产ASR必须冻结原输入与预算后绑定");
+        if(prepared?.modelInput.kind==="asset.asr"&&(task.taskType!=="asset.asr"||!isDeepStrictEqual(task.inputData,prepared.modelInput)))throw new ConflictError("资产ASR准备输入与原业务任务不符");
+        if (prepared?.modelInput.kind === "model.structured" && (prepared.modelInput.skillSnapshot.userId !== task.userId || prepared.modelInput.skillSnapshot.accountId !== task.accountId)) throw new OwnershipError("Skill snapshot owner mismatch");
         if (prepared && prepared.requestFingerprint !== task.requestFingerprint) throw new ConflictError("准备输入与原任务指纹不符");
         const browserGrant = prepared?.modelInput.kind === "agentic.run" ? assertFrozenBrowserTaskGrant(task, prepared.modelInput.browserAuthorization) : null;
         if (task.executionTaskId) {

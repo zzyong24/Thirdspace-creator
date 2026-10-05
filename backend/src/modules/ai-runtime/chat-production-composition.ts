@@ -1,8 +1,8 @@
 import type {Db} from "@creatoros/backend";
 import {createChatHostContextReader} from "../ai/chat-host-context.service";
 import {createChatProductionRuntime} from "./chat-production-runtime";
-import {createChatTaskToolHost} from "./chat-task-tool-host";
 import {createChatCanvasToolHost} from "./chat-canvas-tool-host";
+import {createChatTaskToolHost} from "./chat-task-tool-host";
 import {createChatIngestionTaskToolHost,type ChatIngestionToolPorts} from "./chat-ingestion-tool-host";
 import {createChatBusinessGenerationPreparation} from "./chat-business-generation-preparation";
 import {createChatTrendRead,type ChatTrendReadDeps} from "./chat-trend-read";
@@ -36,6 +36,8 @@ export interface ChatProductionServicePorts extends ChatIngestionToolPorts {
  getPositioningDiscovery:RequiredTaskPorts["structured"]["getPositioningDiscovery"];
 }
 export interface ChatProductionCompositionDeps {
+ canvas?:Parameters<typeof createChatCanvasToolHost>[1];
+ externalImageStorage?:ProductionDeps["externalImageStorage"];
  entryPath:string;
  runtime:ChatProductionServicePorts;
  now?:()=>string;
@@ -47,12 +49,12 @@ export interface ChatProductionCompositionDeps {
  trend:ChatTrendReadDeps;
  webRead:ProductionDeps["webRead"];
  onError?:ProductionDeps["onError"];
- canvas?:Parameters<typeof createChatCanvasToolHost>[1];
 }
 /** 装配原持久聊天运行时与全部真实工具；不增加运行时或任务账本。 */
 export function composeChatProduction(db:Db,deps:ChatProductionCompositionDeps){
  const chatRuntime=deps.runtime;
  const hostReader=createChatHostContextReader(db);
+ const canvasTools=deps.canvas?createChatCanvasToolHost(hostReader,deps.canvas):null;
  const ingestionTools=createChatIngestionTaskToolHost(hostReader,chatRuntime);
  const taskTools=createChatTaskToolHost(hostReader,chatRuntime.contextReaders,{
   webRead:true,research:true,
@@ -81,7 +83,6 @@ export function composeChatProduction(db:Db,deps:ChatProductionCompositionDeps){
     getPositioningDiscovery:(c,id)=>chatRuntime.getPositioningDiscovery(c,id),
   },
  });
- const canvasTools=deps.canvas?createChatCanvasToolHost(hostReader,deps.canvas):null;
  return createChatProductionRuntime(db,{
   resolveRedfoxCredential:chatRuntime.resolveRedfoxCredential,
   entryPath:deps.entryPath,workerId:`chat-worker-${process.pid}`,
@@ -90,7 +91,7 @@ export function composeChatProduction(db:Db,deps:ChatProductionCompositionDeps){
   resolveModelCredential:deps.resolveModelCredential,
   resolveFallbackModelCredential:deps.resolveFallbackModelCredential,
   resolveTools:async(c,input,ref,signal)=>Object.assign({},await taskTools(c,input,ref,signal),await ingestionTools(c,input,ref,signal),canvasTools?await canvasTools(c,input,ref,signal):{}),
-  webRead:deps.webRead,
+  webRead:deps.webRead,externalImageStorage:deps.externalImageStorage,
   onError:deps.onError,
  });
 }

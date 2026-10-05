@@ -1,0 +1,187 @@
+{
+  "timestamp": "2026-10-03T10:04:32.714183+00:00",
+  "environment": "隔离本地PGlite，未访问真实工作数据库",
+  "accountId": "acct-ef4eab23-41",
+  "projectId": "project-53f5ffc2-97",
+  "outputs": {
+    "article": "output-53f5ffc2-108",
+    "image": "output-53f5ffc2-117",
+    "video": "output-53f5ffc2-126"
+  },
+  "artifactId": "artifact-53f5ffc2-133",
+  "versionId": "artifactversion-53f5ffc2-136",
+  "saveReadback": true,
+  "rpc": [
+    {
+      "operation": "projects.create",
+      "status": 200
+    },
+    {
+      "operation": "projects.outputs.create",
+      "status": 200
+    },
+    {
+      "operation": "projects.outputs.create",
+      "status": 200
+    },
+    {
+      "operation": "projects.outputs.create",
+      "status": 200
+    },
+    {
+      "operation": "artifacts.create",
+      "status": 200
+    },
+    {
+      "operation": "artifacts.versions.create",
+      "status": 200
+    },
+    {
+      "operation": "artifacts.get",
+      "status": 200
+    },
+    {
+      "operation": "artifacts.versions.list",
+      "status": 200
+    }
+  ],
+  "pages": [
+    {
+      "page": "script",
+      "path": "/projects/project-53f5ffc2-97",
+      "status": 200,
+      "seconds": 9.016,
+      "projectLinks": [
+        {
+          "href": "/projects/project-53f5ffc2-97",
+          "label": "当前项目"
+        },
+        {
+          "href": "/projects/project-53f5ffc2-97",
+          "label": "脚本"
+        },
+        {
+          "href": "/projects/project-53f5ffc2-97/review",
+          "label": "复盘"
+        },
+        {
+          "href": "/projects/project-53f5ffc2-97?view=works",
+          "label": "项目作品与创作"
+        }
+      ],
+      "savedTextRendered": true
+    },
+    {
+      "page": "article",
+      "path": "/projects/project-53f5ffc2-97/article?outputId=output-53f5ffc2-108",
+      "status": 200,
+      "seconds": 1.997,
+      "projectLinks": [
+        {
+          "href": "/projects/project-53f5ffc2-97",
+          "label": "当前项目"
+        },
+        {
+          "href": "/projects/project-53f5ffc2-97",
+          "label": "脚本"
+        },
+        {
+          "href": "/projects/project-53f5ffc2-97/article",
+          "label": "文章"
+        },
+        {
+          "href": "/projects/project-53f5ffc2-97/review",
+          "label": "复盘"
+        },
+        {
+          "href": "/projects/project-53f5ffc2-97",
+          "label": "返回项目稿面"
+        }
+      ]
+    },
+    {
+      "page": "image",
+      "path": "/projects/project-53f5ffc2-97/outputs/output-53f5ffc2-117/image",
+      "status": 200,
+      "seconds": 2.059,
+      "projectLinks": [
+        {
+          "href": "/projects/project-53f5ffc2-97",
+          "label": "当前项目"
+        },
+        {
+          "href": "/projects/project-53f5ffc2-97",
+          "label": "脚本"
+        },
+        {
+          "href": "/projects/project-53f5ffc2-97/image",
+          "label": "图文"
+        },
+        {
+          "href": "/projects/project-53f5ffc2-97/review",
+          "label": "复盘"
+        },
+        {
+          "href": "/projects/project-53f5ffc2-97",
+          "label": "← 脚本优先工作台 · 网页验收"
+        }
+      ]
+    },
+    {
+      "page": "production",
+      "path": "/projects/project-53f5ffc2-97/production?outputId=output-53f5ffc2-126",
+      "status": 200,
+      "seconds": 2.099,
+      "projectLinks": [
+        {
+          "href": "/projects/project-53f5ffc2-97",
+          "label": "当前项目"
+        },
+        {
+          "href": "/projects/project-53f5ffc2-97",
+          "label": "脚本"
+        },
+        {
+          "href": "/projects/project-53f5ffc2-97/production",
+          "label": "制作视频"
+        },
+        {
+          "href": "/projects/project-53f5ffc2-97/review",
+          "label": "复盘"
+        }
+      ]
+    },
+    {
+      "page": "accounts",
+      "path": "/accounts",
+      "status": 200,
+      "seconds": 0.94,
+      "projectLinks": []
+    },
+    {
+      "page": "new",
+      "path": "/projects/new",
+      "status": 200,
+      "seconds": 1.055,
+      "projectLinks": [
+        {
+          "href": "/projects/project-53f5ffc2-97",
+          "label": "脚本优先工作台 · 网页验收进行中未设置立项项目进度0%"
+        }
+      ]
+    },
+    {
+      "page": "user_current_script",
+      "path": "/projects/project-ef4eab23-166",
+      "status": 200,
+      "seconds": 0.162,
+      "projectLinks": []
+    }
+  ],
+  "visualAcceptance": "待用户实测；未执行浏览器自动化",
+  "modelAndQr": "未调用真实模型或发起扫码，未记PASS",
+  "navigationData": {
+    "realOutputsInServerPayload": true,
+    "note": "壳顶栏的服务端首帧按当前 store 规则显示中性 Tab，客户端 CurrentProjectProvider effect 发布真实作品后才展示完整 Tab。HTTP未执行effect，不将首帧HTML当作用户视觉验收。"
+  }
+}

@@ -1,4 +1,5 @@
 import {requireWorkspace,workspaceStamp} from "@creatoros/backend";
+import { createHash } from "node:crypto";
 import type { RequestContext } from "@creatoros/contract";
 import type {
   ProjectRepository,
@@ -229,8 +230,11 @@ export interface CreateProjectCommand {
 }
 
 export interface CreateOutputCommand {
+  clientRequestId?: string;
   title: string;
   contentRole?: "traffic" | "trust" | "conversion";
+  contentType?: "video" | "article" | "image";
+  targetPlatform?: string;
 }
 
 // 数据底座(SPEC §1.3):导入一条真实已发布作品为历史项目的结果 —— 新建(或既有)
@@ -244,8 +248,9 @@ export interface EnsureImportedProjectResult {
 
 export interface ProjectsService {
   /** 组合读取仅取归属校验后的单行，不加载阶段、动态或全部产出。 */
-  getProject(ctx: RequestContext, projectId: string): Promise<ProjectRow>;
+  getProject(ctx: RequestContext, projectId: string, forUpdate?: boolean): Promise<ProjectRow>;
   getOutput(ctx: RequestContext, outputId: string): Promise<ContentOutputRow>;
+  getOutputByCreationRequest(ctx:RequestContext,clientRequestId:string):Promise<ContentOutputRow|null>;
   // [T-332 S2] 所有经 ctx 的入口(读+写)统一断言 requireAccountId(SPEC §4.2:未选号 =
   //   引导态,创作域禁读写);claimOrphanImportedProjects 已随 claimOrphans 全链退役(§4.4)。
   createProject(ctx: RequestContext, cmd: CreateProjectCommand): Promise<ProjectRow>;
@@ -1033,8 +1038,9 @@ export function createProjectsService(
   // 命名 const(非裸 return 对象字面量),让方法间可互调(ensureImportedProject 复用
   // createProject/createOutput,同 ingestion.service 的 `service.createRun` 自引用套路)。
   const service: ProjectsService = {
-    getProject: (ctx, projectId) => repo.get(ctx, projectId),
+    getProject: (ctx, projectId, forUpdate = false) => repo.get(ctx, projectId, forUpdate),
     getOutput: (ctx, outputId) => repo.getOutput(ctx, outputId),
+    getOutputByCreationRequest:async(ctx,key)=>{requireAccountId(ctx.accountId,"projects.getOutputByCreationRequest");if(!repo.findOutputByCreationRequest)throw new OutputStateError("作品创建回执读取服务不可用");return repo.findOutputByCreationRequest(ctx,key);},
     async createProject(ctx, cmd) {
       requireWorkspace(ctx);
       const ts = deps.now();
@@ -1540,11 +1546,12 @@ export function createProjectsService(
       await repo.get(ctx, projectId); // ownership before the UoW
       const ts = deps.now();
       const outputId = deps.nextId("output");
-      const output = await repo.insertOutput(ctx, {
+      const outputRow: ContentOutputRow = {
         id: outputId,
         projectId,
         title: cmd.title,
-        contentType: "video",
+        contentType: cmd.contentType ?? "video",
+        targetPlatform: cmd.targetPlatform ?? null,
         format: "",
         aspectRatio: "",
         targetDurationSeconds: 0,
@@ -1553,7 +1560,7 @@ export function createProjectsService(
         primaryAssetId: null,
         createdAt: ts,
         updatedAt: ts,
-      });
+      };
       // Seed the four output stages (first in_progress/started, rest pending).
       const stageRows: OutputStageRow[] = OUTPUT_STAGES.map((stage, idx) => ({
         id: deps.nextId("ostage"),
@@ -1566,14 +1573,24 @@ export function createProjectsService(
         completedAt: null,
         updatedAt: ts,
       }));
+      const createdActivity = activity(projectId, "output_created", "content_output", outputId, {
+        title: cmd.title, contentRole: cmd.contentRole ?? null,
+      });
+      if (cmd.clientRequestId) {
+        if (!repo.createOutputWithRequest) throw new OutputStateError("作品创建回执服务不可用，请保留输入后重试");
+        // SEMANTIC_BOUNDARY_ALLOW: exact request hashing only detects duplicate
+        // commands; it does not classify or choose creative content.
+        const requestDigest = createHash("sha256").update(JSON.stringify({
+          projectId, title: cmd.title, contentType: cmd.contentType ?? "video",
+          targetPlatform: cmd.targetPlatform ?? null, contentRole: cmd.contentRole ?? null,
+        })).digest("hex");
+        return repo.createOutputWithRequest(ctx, {clientRequestId: cmd.clientRequestId, requestDigest,
+          output: outputRow, stages: stageRows, activity: createdActivity});
+      }
+      if(repo.createOutputAtomic)return repo.createOutputAtomic(ctx,{output:outputRow,stages:stageRows,activity:createdActivity});
+      const output = await repo.insertOutput(ctx, outputRow);
       await repo.insertOutputStages(ctx, stageRows);
-      await repo.appendActivity(
-        ctx,
-        activity(projectId, "output_created", "content_output", outputId, {
-          title: cmd.title,
-          contentRole: cmd.contentRole ?? null,
-        }),
-      );
+      await repo.appendActivity(ctx, createdActivity);
       return output;
     },
 

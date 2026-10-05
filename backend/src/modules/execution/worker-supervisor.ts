@@ -12,6 +12,7 @@ export interface WorkerSupervisorPorts {
 }
 export interface WorkerSupervisorOptions {
   entryPath: string;
+  extraEnv?:Record<string,string>;
   ports: WorkerSupervisorPorts;
   onText?: (execution: ExecutionRef, text: string) => void;
   shutdownGraceMs?: number;
@@ -69,7 +70,7 @@ export function createWorkerSupervisor(options: WorkerSupervisorOptions) {
     if (cleanups.size) return Promise.all([...cleanups.values()]).then(() => start());
     if (ready) return ready;
     stopping = false;
-    const processHandle = fork(options.entryPath, [], {serialization:"advanced", env: buildChildEnv(), execArgv: [], stdio: ["ignore", "ignore", "ignore", "ipc"]});
+    const processHandle = fork(options.entryPath, [], {serialization:"advanced", env: buildChildEnv(options.extraEnv), execArgv: [], stdio: ["ignore", "ignore", "ignore", "ipc"]});
     child = processHandle;
     ready = new Promise((resolve, reject) => {
       let startupTimedOut = false;
@@ -105,7 +106,7 @@ export function createWorkerSupervisor(options: WorkerSupervisorOptions) {
           reply = (async (): Promise<HostMessage> => {
             try {
               const input = workerPortInputSchemas[message.port].parse(message.data);
-              const settlement = ["completeAssetProcessing","settleCoverModel","settleTranscribePostprocess","settleAsrRequest","settleAssetCall","saveAssetResult","recoverAssetResult","recordAssetProviderJob"].includes(message.port) || message.port === "readChatWebReadCache" || message.port === "failChatWebRead" || message.port === "completeChatWebRead" || message.port === "settleChatResearch" || message.port === "failChatGeneration" || message.port === "settleChatGenerationModel" || message.port === "failChatHooks" || message.port === "settleChatHooksModel" || message.port === "commitChatResult" || message.port === "appendStreamEvents" || message.port === "settleTopicRead" || message.port === "settleCall" || message.port === "settleGenerationCall" || message.port === "settleAgenticTool" || message.port === "settleResearchRead" || message.port === "settleBrowserObservation" || message.port === "acknowledgeControl";
+              const settlement = ["completeAssetProcessing","settleCoverModel","settleTranscribePostprocess","settleAssetAsrRequest","settleAsrRequest","settleAssetCall","saveAssetResult","recoverAssetResult","recordAssetProviderJob"].includes(message.port) || message.port === "readChatWebReadCache" || message.port === "failChatWebRead" || message.port === "completeChatWebRead" || message.port === "settleChatResearch" || message.port === "failChatGeneration" || message.port === "settleChatGenerationModel" || message.port === "failChatHooks" || message.port === "settleChatHooksModel" || message.port === "commitChatResult" || message.port === "appendStreamEvents" || message.port === "settleTopicRead" || message.port === "settleCall" || message.port === "settleGenerationCall" || message.port === "settleAgenticTool" || message.port === "settleResearchRead" || message.port === "settleBrowserObservation" || message.port === "acknowledgeControl";
               await options.ports.validate(message.execution, settlement ? "settlement" : "admission");
               // 校验期间可能取消/换租约；本地控制也必须再次检查。
               if (!current || !sameExecution(current.execution, message.execution) || (!settlement && current.cancelTimer)) throw new Error("STALE_EXECUTION");

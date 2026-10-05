@@ -1,0 +1,294 @@
+# CreatorOS 任务看板(BACKLOG)
+
+> **单一执行真相。每个会话必读(SessionStart hook 自动注入)。** 规则见 `CLAUDE.md` 的「任务流程铁律」。
+> 状态:📋 待办 · 🔨 进行中 · ✅ 完成 · ⏸️ 搁置 · ⛔ SPEC 审核 FAIL(没过审不准开工)。
+> 读取顺序:**本看板 → 任务引用的 SPEC → 代码**。
+> 铁律:需求即任务(提了就建);开工从看板顶取;做完改状态+提交;**禁止 P0/P1 分级、禁止多阶段执行**,任务清楚即起 Workflow/并行 subagent 一次做完。
+
+## 🔨 进行中 / 📋 待办(按执行顺序,从上往下取)
+
+| ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
+| --- | --- | --- | --- | --- | --- | --- |
+| T-1060 | 复用开源代码接入 Codex ACP 与 WorkBuddy MCP | 🔨 待办 | PASS[REV:453827cbe2c1] | 待验 | [SPEC](docs/features/t1060-agent-source-integration.md) | 部分通过，见验收记录。 |
+| T-1061 | 修复候选等待状态 | 📋 待办 | 待审 | 待验 | [SPEC](docs/features/t1061-ai-waiting-state-projection.md) | 等待配置误报运行。 |
+| T-1059 | 锁定已有 Codex、WorkBuddy 接入代码与复用路径 | ✅ 待办 | PASS[REV:4f60fff3f89a] | — | [SPEC](docs/features/t1059-existing-agent-integration-reuse.md) | [复用清单](docs/verification/t1059/reuse.md)；无运行时修改。 |
+| T-1058 | 调研可组合模型来源与 Codex、WorkBuddy 双向集成 | ✅ 待办 | PASS[REV:b690a11a2e4a] | — | [SPEC](docs/features/t1058-composable-agent-model-research.md) | [调研报告](docs/verification/t1058/research.md)；无运行时修改。 |
+| T-1057 | 核对并统一本地 Codex 执行与模型配置 | ⏸️ 待办 | CONCERNS[REV:bd24aad65a0b] | 待验 | [SPEC](docs/features/t1057-codex-execution-routing.md) | [研究](docs/verification/t1057/research.md)。 |
+| T-1056 | 统一衍生稿字体并清理页头小字 | 🔨 待办 | PASS[REV:92e1237e8459] | 待验 | [SPEC](docs/features/t1056-derived-workbench-typography.md) | [检查与待验](docs/verification/t1056/verification.md)。 |
+| T-1055 | 整理脚本衍生稿布局并复用主稿内容 | 🔨 待办 | PASS[REV:4e039daeaab0] | 待验 | [SPEC](docs/features/t1055-script-derived-content-workbench.md) | 布局/透传/自动配图已实现，[记录](docs/verification/t1055/verification.md)。 |
+| T-1054 | 去掉项目列表的直接创作作品按钮 | 🔨 待办 | PASS[REV:def25b8ce9da] | 待验 | [SPEC](docs/features/t1054-project-create-entry.md) | 已去掉；[检查记录](docs/verification/t1054/verification.md)。 |
+| T-1053 | 将开源编辑器原生集成并统一 CreatorOS 风格 | 🔨 待办 | PASS[REV:41cab75052c6] | 待验 | [SPEC](docs/features/t1053-native-editor-style-integration.md) | [原生接入及待验项](docs/verification/t1053-native-editors.md)。 |
+| T-1052 | 集成 NoteRelay 的公众号与图文衍生工作面并验证真实交付 | 🔨 待办 | PASS[REV:4abd3070b22a] | 待验 | [SPEC](docs/features/t1052-noterelay-derived-workbenches.md) | [NoteRelay接入及待验项](docs/verification/t1052-noterelay.md)。 |
+| T-1051 | 恢复脚本为主的创作工作台并改为先选平台绑定账号 | 🔨 待办 | PASS[REV:4cfe0db6c72c] | 待验 | [SPEC](docs/features/t1051-script-first-workbench.md) | [脚本主稿、平台选择及待验项](docs/verification/t1051-script-first.md)。 |
+| T-1050 | 简化新建项目并支持多种作品工作台 | 🔨 待办 | PASS[REV:65b9666e38b7] | 待验 | [SPEC](docs/features/t1050-multi-format-project-creation.md) | [多选创建及待验项](docs/verification/t1050-multi-format-creation.md)。 |
+| T-1048 | 复用开源组图方法并接通现有画布逐页创作 | 🔨 待办 | PASS[REV:051674ceacb3] | 待验 | [SPEC](docs/features/t1048-image-series-workbench.md) | 承接用户确认及 T-1047 调研；逐页规划、共享参考、单页重做、整组核对与画布采用回原页，快图保留辅助细调，沿既有候选和版本服务落地。 |
+| T-1046 | 接通 OpenCut 同工程 AI 辅助粗剪与基本视频编辑 | 🔨 待办 | PASS[REV:bebbd1fff573] | 待验 | [SPEC](docs/features/t1046-native-ai-rough-cut.md) | 用户 2026-10-02 明确继续集成；复用 T-850/T-1039 的真实转写、Skill 候选及采纳，把结果落到同一原生时间轴，保留手工编辑。 [真实粗剪验收](docs/research/evidence/t1046/verification.md)：开发工作树已跑通转写、真实模型、同轨采纳及导出；完整依赖基线与正式前端回执绑定待收尾，未冒充安装包完成。 |
+| T-1049 | 集成开源小红书组图与公众号编辑工作台并打磨体验 | 🔨 待办 | PASS[REV:3f29a428474e] | 待验 | [SPEC](docs/features/t1049-open-source-publishing-workbenches.md) | [网页接力与待验项](docs/research/evidence/t1049/web-handoff.md)，执行仍沿已确认范围。 |
+| T-1047 | 调研小红书组图生成、一致性和画布工作流衔接 | ✅ 待办 | — | — | [研究范围](docs/features/t1047-xiaohongshu-image-series-research.md) | 用户纠正图文主线为出图及组图生成；调研官方流程、开源实现与现有画布，快图保留为辅助细调能力。 |
+| T-1042 | 整合多媒体、各类作品工作台与剪辑的完整创作链 | ⏸️ 待办 | PASS[REV:d3fdf41c4dd5] | 待验 | [SPEC](docs/features/t1042-multimedia-workbench-integration.md) | [原始摘要](BACKLOG-details.md#t-1042--看板摘要原文2026-10-04-调研登记前归档)；完整范围沿 SPEC。 |
+| T-1043 | 统一项目创作入口为文章、图文、视频并支持内容互转 | 🔨 待办 | PASS[REV:e2e39b125920] | 待验 | [SPEC](docs/features/t1043-unified-creation-content-conversion.md) | 2026-10-01 用户明确纠正；保留完整稿面，原顶栏加入图文与公众号工作面；同一入口只分三类，平台作为设置；支持真实模型整稿／部分互转与采纳。2026-10-02 补充：交互符合用户体验、视觉排版布局合理，按 DEC-T1043-02 验收。 2026-10-02 用户确认先完成一份内容再自然扩展；以原完整脚本工作台为体验基准，工作流与界面重新讨论后再实施。 |
+| T-1045 | 贯通一鱼多吃的可选内容组合、画布物料与版本审核 | 🔨 待办 | PASS[REV:e74d98e4c140] | 待验 | [SPEC](docs/features/t1045-coherent-multi-channel-work.md) | 用户 2026-10-02 明确要求：视频、公众号、图文、朋友圈可选且任意组合；共享内容依据，作品与画布互联，封面/简介/标签/审核绑定具体稿件与素材版本，改稿后提示受影响内容，保留手工修改，完成连贯旅程。 2026-10-02 用户确认表达组合属于首份内容完成后的扩展，不把组合、来源和版本管理做成创作前置操作；新增体验方案待复核。 |
+| T-1044 | 在统一创作工作台选择并使用本地 Codex | ⏸️ 待办 | PASS[REV:8aaf8465a7a4] | 待验 | [SPEC](docs/features/t1044-local-codex-workbench-integration.md) | 用户已确认；复用 external-agent-bridge 真实回执与候选链，使用随包 Codex 原生 app-server，补真实发现和具体作品上下文，保留原引擎、取消恢复和多账号隔离。 |
+| T-1036 | 开源视频编辑组件选型与兼容验证 | ✅ 待办 | PASS[REV:66f9290599b0] | — | [SPEC](docs/features/t1036-open-source-video-editor-selection.md) | 依赖 T-1035 已评审需求；先核对开源代码、许可、React/Next 与现有 HyperFrames/Asset 适配，用隔离探针选择可实际复用的时间轴/预览能力，不照搬闭源附件。 |
+| T-1037 | 建立作品级制作工程、版本与公共编辑服务 | 🔨 待办 | PASS[REV:03cbb3aedc96] | 待验 | [SPEC](docs/features/t1037-output-production-project.md) | 依赖 T-1036；按具体 video output 绑定脚本、制作素材、方案、任务与成片，统一 revision/CAS/历史/回执及旧方案兼容，先定稿合同并独立评审。 |
+| T-1038 | 集成可视视频制作工作台与同源预览 | 🔨 待办 | PASS[REV:fc5f5d60a46a] | 待验 | [SPEC](docs/features/t1038-visible-video-workbench.md) | 依赖 T-1036/T-1037；复用选定开源组件，实现预览/时间轴/参数联动、素材字幕和卡片编辑、撤销重做，并保留原备料与成品入口。 |
+| T-1039 | 让编导助手读取选区并操控同一剪辑工程 | 📋 待办 | 待审 | 待验 | [SPEC](docs/features/t1039-director-video-editing.md) | 依赖 T-1037/T-1038；复用 Worker 工具循环，读当前工程与选区、形成局部候选、对照预览、逐项应用和撤销，手工修改与助手共享版本。 |
+| T-1040 | 接通私有音效轨与中文字体的预览和最终渲染 | 📋 待办 | 待审 | 待验 | [SPEC](docs/features/t1040-production-sound-fonts.md) | 依赖 T-1037/T-1038；将音效作为账号素材可试听、定位和调音量，字体与真实字重使用同一资源预览和渲染，保留旧无音效方案可用。 |
+| T-1041 | 验收可视制作、编导剪辑与完整成片交付 | 📋 待办 | 待审 | 待验 | [SPEC](docs/features/t1041-video-workbench-acceptance.md) | 依赖 T-1037—T-1040 和现有脚本/采纳回归；从具体视频作品走备料、AI 初稿、手工/助手局部修改、版本保存、渲染、查看与导出，核验旧链和实包。 |
+| T-1035 | 将视频制作改为可看懂、可编辑和预览的工作台 | 🔨 待办 | PASS[REV:e0172a52a112] | 待验 | [SPEC](docs/features/t1035-video-production-workbench.md) | 参考附件与 ChatCut，制作工作台可看、可改、可预览；编导助手读取当前作品与选区，提出局部改动并落实同一时间轴，保留自动生成、版本、素材归属及旧制作流程。 |
+| T-1031 | 修复单项结果不能依次采纳的整稿版本阻断 | 🔨 待办 | PASS[REV:c3570711a777] | 待验 | [SPEC](docs/features/t1031-result-field-adoption.md) | 真实验收发现先采纳标签后封面失效；按字段与冻结正文校验安全保存，保留当前稿、来源和并发冲突，不回写历史整稿。 |
+| T-1032 | 核实真实脚本任务的事实约束执行与最小审校方案 | ✅ 待办 | — | — | [SPEC](docs/features/t1032-script-fact-scope-research.md) | 三轮真实模型仍补写无来源经历、比例和效果；核对冻结提示词及供应商最终消息，区分传递缺陷与模型忽略，不用关键词检测或更多提示词掩盖失败。 |
+| T-1033 | 修复模型请求前坏输入被误报为提交未知 | ✅ 待办 | PASS[REV:a971134781ac] | — | [SPEC](docs/features/t1033-preflight-error-state.md) | 公共 Worker 红测发现准备阶段 Zod/JSON 错误被判 MODEL_RESULT_UNKNOWN；只校准输入边界，保留真正已启动请求的未知回执保护。 |
+| T-1034 | 保留编辑分镜的结构与制作正文 | 🔨 待办 | PASS[REV:d9cc821540d3] | 待验 | [SPEC](docs/features/t1034-edited-script-structure.md) | 真界面发现编辑采用后仅存 Markdown，旧稿面读为整段表格；按明确协议派生分镜结构，保留原文和旧合法保存路径。 |
+| T-1030 | 修复模型配置备份无法导入自身导出文件 | ✅ 待办 | PASS[REV:db00158719fb] | — | [SPEC](docs/features/t1030-model-config-round-trip.md) | T-1029 真实验收发现：默认继承能力的空模型占位行被导出后，导入全文件被必填校验拒绝；恢复合法配置往返，密文与原用户数据归属不变。 |
+| T-1029 | 按平台作品形态重构结果优先创作工作台 | 🔨 待办 | PASS[REV:b53ee98ea79e] | 待验 | [SPEC](docs/features/t1029-outcome-first-platform-workbench.md) | 小红书图文、短视频和公众号长文各有合适的稿面；内容雷达和项目创作均可直接选择封面、正文、简介或标签等结果，规则为可选设置，保留真实来源、账号隔离和候选采纳。 |
+| T-1018 | 设计创作提示词资产、跨平台接入与数据上报的统一架构 | ✅ 待办 | PASS[REV:b379f9d4b12d] | — | [SPEC](docs/features/t1018-creator-platform-architecture.md) | 先盘点本地提示词、小红书抓取、快手、公众号 Skill 与 T-1017 上报方案，再核对开源实现；形成统一领域边界、迁移与任务拆分及各实施 SPEC，交用户审核后才进入代码实施。 |
+| T-1019 | 让创作者保存、复用并版本化提示词 | 📋 待办 | 待审 | 待验 | [SPEC](docs/features/t1019-prompt-library.md) | 依赖 T-1018 审核及 T-993/T-995 画布集成与验收；按账号保存提示词资产，跨画布复用、保留生成血缘，不把系统 Skill 配置当作用户库。 |
+| T-1020 | 建立平台能力合同和账号级指标快照 | ⏸️ 待办 | PASS[REV:8897b55d6f5f] | 待验 | [SPEC](docs/features/t1020-platform-capability-contract.md) | 依赖 T-1018 审核；新增快手、公众号文章平台语义，统一授权、作品目录、账号/作品指标及不可用状态，保持旧平台可用。 |
+| T-1021 | 将本地小红书工程迁入 CreatorOS 账号采集 | 🔨 待办 | PASS[REV:c67b73fd1c91] | 待验 | [SPEC](docs/features/t1021-xiaohongshu-integration.md) | 依赖 T-1020；迁入独立登录、身份核验、全量笔记和数据解析，真实双账号验收，不共享原工程 Cookie/数据库。 |
+| T-1022 | 接入快手真实授权、作品和创作数据 | 🔨 待办 | PASS[REV:bd90a18aaf27] | 待验 | [SPEC](docs/features/t1022-kuaishou-integration.md) | 依赖 T-1020；用户亲自登录本机独立档案，核验身份后自动采集本人作品与可得指标；缺失能力如实不可用。 |
+| T-1023 | 集成本地公众号写作 Skill 与品牌覆盖 | ⏸️ 待办 | PASS[REV:47cfacfe660c] | 待验 | [SPEC](docs/features/t1023-wechat-article-skill.md) | 依赖 T-1020；拆分通用论证方法和月明品牌，项目稿件候选经用户采纳，草稿与发布另行授权。 |
+| T-1024 | 落地故障、作品和粉丝轻量上报及 Growth 运营后台 | 🔨 待办 | PASS[REV:393681b9c2ab] | 待验 | [SPEC](docs/features/t1024-reporting-implementation.md) | 依赖 T-1017/T-1020 与跨仓契约复审；设置页候选偏好默认勾选、主动确认后才有效授权；随后后台自动、不中断创作；Growth 接收与 Ant Design 后台、撤销删除闭环，Activity 改动须专项授权。 |
+| T-1025 | 验收创作资产、平台接入与上报全链路 | 📋 待办 | 待审 | 待验 | [SPEC](docs/features/t1025-creator-platform-acceptance.md) | 依赖 T-1019—T-1024；真实账号、双端实包、旧链回归、跨账号/渠道隔离与云端删除回执均需证据。 |
+| T-1026 | 修复 Copilot 前端引入 Agent SDK 的物理边界回归 | 📋 待办 | 待审 | 待验 | [排查](docs/features/t1026-copilot-sdk-boundary.md) | 2026-09-30 reconcile/boundary-scan 较基线新增 R2 两项；梳理 live-chat-session 的 SDK 职责并迁到允许层，不提高违规基线。 |
+| T-1027 | 修复视频决策未走 material.match 的语义边界回归 | 📋 待办 | 待审 | 待验 | [排查](docs/features/t1027-video-decision-semantic-boundary.md) | 2026-09-30 semantic-boundary-scan 报 video-decisions-runner 未调用 material.match；恢复真实 Skill 选择及调用链回归，不写死内容判断。 |
+| T-1028 | 修复抖音登录态公开读取长时间无返回 | 📋 待办 | 待审 | 待验 | [排查](docs/features/t1028-douyin-status-timeout.md) | 月明水清深账号的安装版 `ingestion.douyin.status` 超过 40 秒未返回；核对浏览器档案租约、超时与取消传播，保证 CLI 和设置页可终止、可诊断。 |
+| T-1017 | 设计用户故障与创作数据的授权上报闭环 | ✅ 待办 | PASS[REV:0ccc72342775] | — | [SPEC](docs/features/t1017-diagnostics-creator-reporting.md) | 复用本地加密日志、问题反馈和分账号定时采集，设计诊断事件、绑定与作品指标上报、服务端告警及用户控制；先完成跨仓契约与数据归属评审。 |
+| T-1016 | 调研 CreatorOS 连接本地 Codex、WorkBuddy 与外部 Agent | ✅ 待办 | — | — | [SPEC](docs/features/t1016-external-agent-research.md) | [调研记录](docs/features/t1016-external-agent-research.md)。 |
+| T-1014 | 核对并清理233项历史对账失败 | ✅ 待办 | — | — | [范围](docs/verification/t1014-reconcile-triage.md) | 按真实证据关闭过期治理项，保留有效缺陷与历史回执；不修改产品运行时。 |
+| T-1015 | 核实剩余教训失败并校准过期回归断言 | 📋 待办 | — | — | [实测清单](docs/verification/t1014-reconcile-triage.md) | 从19条失败命令核对旧断言与真实重试/消费/交互差异；[10-02补充](docs/verification/t1043-unified-creation-content-conversion.md)保留契约和类型差异；[10-03补充](docs/verification/t1051-script-first.md)记录LED-045全仓失败、原命令单独21项通过及不存在的第二文件，覆盖和超时根因待核实。 |
+| T-1004 | 冻结共享能力协议与 NomiFun 迁移依赖 | 📋 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) | T-1003 评审；固定依赖闭包、宿主端口、协议与架构门卫。 |
+| T-1005 | 实现多步计划、连续执行与原任务续跑 | 📋 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) | 依赖 T-1004；模型规划与重规划，保留回执和成本，停止恢复可核验。 |
+| T-1006 | 接入统一工具网关与长结果回读 | 📋 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) | 依赖 T-1004；工具发现、进度、取消、错误和费用共用原执行链。 |
+| T-1007 | 补齐任务文件空间与受控命令执行 | 📋 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) | 依赖 T-1004；文件读写编辑、版本冲突、跨平台运行和进程树取消。 |
+| T-1008 | 迁移 NomiFun 浏览器能力并协调既有采集 | 📋 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) | 依赖 T-1004/1006；唯一profile所有者、多任务并发、跨账号隔离和原采集回归。 |
+| T-1009 | 实现产物版本、隔离预览与原生导出 | 📋 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) | 依赖 T-1006/1007；真实文件交付、HTML/图表预览、图片/PDF及选址导出。 |
+| T-1010 | 装配研究创作报告 Skill 与兼容扩展 | 📋 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) | 依赖 T-1005/1006/1007/1008/1009；按需方法包、锁定版本，自主选工具完成目标。 |
+| T-1011 | 实现对话内计划进度与文件交付交互 | 📋 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) | 依赖 T-1005/1006/1009；同对话查看修改导出，停止/恢复与性能防复发。 |
+| T-1012 | 验收完整多步 Agent 与旧功能兼容 | 📋 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) | 依赖 T-1008/1010/1011；真实模型工具文件全链路、故障恢复、采集及性能。 |
+| T-1013 | 验证双端安装包多步 Agent 与升级兼容 | 📋 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) | 依赖 T-1012；Mac/Windows安装实测，无NomiFun前置，数据升级保留。 |
+| T-998 | 收敛业务代码硬编码模型名 | 📋 待办 | — | — | [T-914 审计](docs/research/2026-09-04-architecture-agent-audit.md) | 区分 provider 适配器(合理)与业务逻辑硬编码(抽配置)；cover-runner、channel-model-config、prompt 模板里散落的模型名收敛为可配。 |
+| T-997 | 修复 ai→ai-runtime 反向依赖边界违反 | 📋 待办 | — | — | [T-914 审计](docs/research/2026-09-04-architecture-agent-audit.md) | ai/script-partial-adoption.service.ts 反向 import ai-runtime，打破 ai 与 ai-；[原说明](BACKLOG-details.md#t-997-triage-description)。 |
+| T-996 | 消除 review/reviews 双模块命名混淆 | 📋 待办 | — | — | [T-914 审计](docs/research/2026-09-04-architecture-agent-audit.md) | review/(review-gate 审核门)与 reviews/(复盘评论领域)职责不同但命名极易混；重命名对齐并更新跨模块引用。 |
+| T-993 | 同步 main 分支到最新(落后 origin/main 573 提交) | 📋 待办 | — | — | — | 本地 main=f330473f 落后 origin/main(77eabca3)573 提交；核清原因后同步，保留 codex/t793-local-package 进行中未提交改动。 |
+| T-992 | 修复 Windows 升级启动运行环境切换拒绝访问 | 🔨 待办 | — | — | [SPEC](docs/features/t992-windows-runtime-upgrade.md) | 用户启动日志os error5；检查旧运行目录、安装指针与升级迁移，保留数据，补既有安装升级验证。 |
+| T-989 | 校正知识图谱错误提示的既有回归断言 | 📋 待办 | — | — | [SPEC](docs/features/t989-knowledge-error-test.md) | T988扩展验证发现原af62ddda及当前均1/9失败；核对错误提示契约后修正，未改该行为。 |
+| T-984 | 本地打包并实测拆分采集修复 | ⏸️ 待办 | — | — | [SPEC](docs/verification/t984-local-collection.md) | 用户明确冻结改动范围；以66264111本地打包、安装、真实采集验证，不扩展恢复架构、不公开发布。 |
+| T-986 | 修复新绑定账号默认采集任务系统标记透传 | ✅ 待办 | — | — | [SPEC](docs/features/t986-bind-collection-flag.md) | 只读审查发现绑定装配丢失 systemManaged，可能导致流量和内容任务待重启才补齐；本轮不扩大改动，待隔离复现与修复。 |
+| T-980 | 纳入助手修复重新运行 V1.2 双端流水线 | 🔨 待办 | — | — | [SPEC](docs/features/t980-release-rerun.md) | 冻结已提交 T-976至T-978 修复，合并发布分支，预检后运行 Mac/Windows 正式构建并核验产物。 |
+| T-979 | 自动化页面慢轮询与切换对象回写防护 | ⬜ 待办 | — | — | [SPEC](docs/features/t979-automation-polling.md) | T-978 排查发现运行历史、步骤和列表轮询未限制在途请求；补慢网与切换对象回归，修复请求堆积及旧响应覆盖风险。 |
+| T-976 | 修复安装版 AI 助手 RedFox 再次失败与脱离对话的任务交互 | 🔨 待办 | — | — | [SPEC](docs/features/t976-chat-inline-redfox.md) | 定位本次原始错误；当前对话持续执行返回结果，不让用户刷新核对；真实链路验收。 |
+| T-957 | 排查 AI 失败、全场景验收并优化 Agent 提示词【用户截图】 | 🔨 待办 | — | — | [SPEC](docs/features/t957-ai-real-acceptance.md) | d18b44d2第五包已安装；双账号同站点等待48.5秒后均读全，隔离/数据保留通过；模型计算、数量稳定性和内部参数表达仍待整改，不标完成。 |
+| T-956 | 修复安装版点击采集一直抓取中【用户实测阻断】 | 🔨 待办 | — | — | [SPEC](docs/features/t956-installed-collection-stuck.md) | 对照真实任务、日志与调度恢复定位阻断，修复后沿实际入口验证终态和结果，保护旧数据。 |
+| T-954 | 接入抖音流量来源并以专家方法改进编导交互【用户要求小改动】 | 🔨 待办 | — | — | [SPEC](docs/features/t954-director-content-loop.md) | 已落实来源方法、稿面诊断和独立流量队列；1005 条隔离恢复与真实页面 smoke 通过。真实模型效果对照、保留样本迁移和安装版验收待完成；明细失败不阻断基础采集。 |
+| T-951 | 修复自动化采集缺 jobRunId 与千条作品采集失败【用户实报】 | ⏸️ 待办 | — | — | [SPEC](docs/features/t951-collection-reliability.md) | 查明原调度绑定、分页和超时恢复，验证公共链路与千条规模，不以吞错冒充成功。 |
+| T-950 | 排查并恢复当前产品缺失历史数据【用户要求恢复】 | ⏸️ 待办 | — | — | [记录](docs/verification/t950-data-recovery.md) | 先核对账号、数据路径和备份；保留现状后恢复可验证的数据，不覆盖新内容。 |
+| T-945 | 排查并修复当前视频渲染再次失败【用户要求看日志】 | ⏸️ 待办 | — | — | [诊断](docs/verification/t945-render-failure.md) | 对齐最新原任务与安装版日志，定位真实失败点并验证修复，不凭历史错误猜测。 |
+| T-943 | 拉取并跑通 JY_IPAgent，调研数字人 API 与 CreatorOS 接入【用户指定仓库】 | ⏸️ 待办 | — | — | [SPEC](docs/features/t943-jy-ipagent-research.md) | 独立部署参考项目，确认数字人实际供应商与本地模型依赖；优先 API 路径，以真实启动和生成证据区分已验证与待凭据。 |
+| T-940 | 补齐应用内签名远程更新闭环【糯米饭对标待落地】 | 📋 待办 | — | — | [缺口与范围](docs/features/t939-positioning-release.md) | 接通包级签名制品托管、下载验签、安装重启与双端升级验收；不把全量更新称为差分，不擅自公开发布。 |
+| T-935 | 修复整稿子任务长时间排队无执行【用户截图慢回复】 | 🔨 待办 | — | — | [排查记录](docs/verification/t935-script-queue.md) | 查真实任务排队与唤醒，恢复原任务，不用新任务掩盖卡住；并完成 T-934 聊天复验。 |
+| T-934 | 统一 CLI 与页面的持久聊天工具入口【T-933 真机验收发现】 | 🔨 待办 | — | — | [实现与验收](docs/verification/t934-cli-chat-unification.md) | CLI 仍走通用回复任务，实际没有搜索和正文回执；复用页面持久聊天装配与 Pi 工具循环，保留归属、幂等和历史，真实搜集复验后方可验收。 |
+| T-933 | 安装并验收本轮Agent Runtime桌面版【用户要求自行检查】 | 🔨 待办 | — | — | [T-932交付](docs/verification/t932-runtime-alignment.md) | 核对已安装候选与签名、启动及实际页面/Skill/聊天链路；通过公开CLI操作，未获本次启动授权前不绕过访问；保留真实验收结果。 |
+| T-919 | 定位并修复本地包主导航卡顿、助手通知刷屏与搜索停滞【用户运行反馈】 | 🔨 待办 | — | — | 复用 T-912/T-909 导航契约与 [T-915 SPEC](docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md) | 读取最新本机日志与运行进程，定位导航阻塞和资源争用；补充切换项目 Tab 丢失在途回复：保留账号/项目隔离的窗口级消息与订阅，避免恢复历史覆；[原说明](BACKLOG-details.md#t-919-triage-description)。 |
+| T-915 | 根治 AI 卡慢、失败不重试与搜索/浏览器缺少自主循环，收敛架构与执行能力【T-914 审查承接·用户 2026-09-04】 | 🔨 待办 | PASS[REV:692283b8bace] | — | [SPEC](docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md) | 保留原执行/恢复改造任务；剩余登录资源迁移、备用模型和运行验收，详见 [历史说明](BACKLOG-details.md#t-915-triage-history)。 |
+| T-916 | 修复工程对账与历史任务证据漂移，恢复可信重构基线【T-914 实测根因·2026-09-04】 | 🔨 待办 | — | — | [审计 A-13](docs/research/2026-09-04-architecture-agent-audit.md) | reconcile 实测 210 errors：模块 write_set/verify、自治声明、旧看板和 receipt 漂移；LED-0；[原说明](BACKLOG-details.md#t-916-triage-description)。 2026-10-02 再验35 errors/1 warning，新增记录见[全仓失败](docs/research/evidence/t1042/complete-editors/global-checks.md)。 |
+| T-917 | 记录 T-915 媒体测试事故并防止测试再次访问真实媒体根【用户接受数据清理，解除恢复前置】 | 📋 待办 | — | — | [事故记录](docs/research/evidence/t915/2026-09-06-media-test-incident.md) | 用户明确要求继续重构，数据恢复不再作为 T-915 阻塞；数据未恢复的事实保留；[原说明](BACKLOG-details.md#t-917-triage-description)。 |
+| T-908 | 真实复测 douyin-transcribe Skill，并对照 CreatorOS 当前抖音抓取链路判断是否需要兼容修复【用户截图与压缩包·2026-08-23】 | 📋 待办 | — | — | — | 隔离检查用户提供的 Skill 压缩包与当前已安装版本，以公开抖音链接实际验证短链解析、作品元数据、视频直链、下载和转写前置链路；同时审计 ；[原说明](BACKLOG-details.md#t-908-triage-description)。 |
+| T-906 | 放大 AI 助手默认窗口并支持拖拽缩放与跨启动尺寸记忆【用户反馈·2026-08-20】 | ⏸️ 待办 | — | 待验 | — | AI 助手默认窗口应明显大于当前尺寸，用户可从右下角手柄拖拽调整大小；每次调整后的宽高保存在本机，下次启动自动恢复，并受最小尺寸与当前屏幕可见范围约束，避免内容不可用或换屏后窗口超出视口。 |
+| T-905 | 调研独立的极简手机口播创作产品，以人设选稿、灵感写稿、实拍与“123321”真人换口型为核心【产品可能性探索·用户 2026-08-20】 | 📋 待办 | — | — | — | 这是独立于 CreatorOS 的新产品探索，不是 CreatorOS 手机版，也不把核心能力定义为传统数字人：用户首次录入行业、人设与对标；[原说明](BACKLOG-details.md#t-905-triage-description)。 |
+| T-884 | 只读诊断用户加密日志中的 ASR 转写失败【用户日志·2026-08-18】 | ⏸️ 待办 | — | — | 复用 T-768 ASR 通用回退、T-639 MiMo ASR 与 T-676 逐字稿队列契约 | 解析用户提供的 `sidecar-2026-08-18.log.enc`，对齐同一次转写任务、输入媒体、ASR provider/模型、配置；[原说明](BACKLOG-details.md#t-884-triage-description)。 |
+| T-883 | 提交并推送 T-881/T-882 候选，触发 GitHub macOS 与 Windows 官方安装包流水线【用户明确授权·2026-08-18】 | ⏸️ 待办 | — | — | 复用 [T-881 验收](orchestrator/T881-FRONTEND-VALIDATION.md)、[T-882 本地包验收](orchestrator/T882-BUILD-VALIDATION.md) | 只提交并发布已通过验收的 B-roll 删除修复候选；冻结检查后将候选安全同步到 `main`，触发 `desktop-release.ym；[原说明](BACKLOG-details.md#t-883-triage-description)。 |
+| T-878 | 让生图模型连接测试正确识别并提示 401/403 鉴权失败【T-877 诊断承接·2026-08-17】 | 📋 待办 | — | — | [T-877 脱敏诊断](docs/research/2026-08-17-dudu-image-auth-failure-diagnosis.md) | 当前真实生图适配器已把 401 分类为 authentication，但 `settings.models.test` 的 `image.g；[原说明](BACKLOG-details.md#t-878-triage-description)。 |
+| T-867 | 恢复 AI 对项目素材与分镜场景的自动语义匹配【用户真机截图·2026-08-17】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-867) | 详情见外置记录。 |
+| T-860 | 修复竖屏素材底边与左下人物框边界重合【用户截图·2026-08-16】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-860) | 详情见外置记录。 |
+| T-859 | 竖屏素材段人物收进左下角，并消除切换白闪【用户预览纠偏·2026-08-16】 | 🔨 待办 | PASS[REV:9895a91a63a8] | 待验 | [详情](BACKLOG-details.md#t-859)  [SPEC](docs/superpowers/specs/2026-08-16-portrait-material-pip-smooth-transition.md) | 详情见外置记录。 |
+| T-858 | 把剪辑方法真正落到 CreatorOS，根治竖屏统一舞台、字幕重点词与动态 PPT【用户明确要求·2026-08-16】 | 🔨 待办 | PASS[REV:2521be715a0a] | 待验 | [详情](BACKLOG-details.md#t-858)  [SPEC](docs/superpowers/specs/2026-08-16-video-direction-stage-and-caption-emphasis.md) | 详情见外置记录。 |
+| T-857 | 构建当前已提交候选的 CreatorOS 1.1.0 Windows 安装包【用户明确要求·2026-08-16】 | ⏸️ 待办 | — | 待验 | [详情](BACKLOG-details.md#t-857) | 详情见外置记录。 |
+| T-856 | 重做竖屏成片的统一舞台、字幕可读性与重点词强调【用户成片截图·2026-08-16】 | ⏸️ 待办 | — | 待验 | [详情](BACKLOG-details.md#t-856) | 详情见外置记录。 |
+| T-855 | 构建包含 T-854 与当前已提交修复的 CreatorOS macOS 本地安装包【用户明确授权·2026-08-16】 | ⏸️ 待办 | — | — | [详情](BACKLOG-details.md#t-855) | 详情见外置记录。 |
+| T-851 | 支持录制“123”短视频生成本人授权的 AI 数字人口播【数字人制作·用户 2026-08-16】 | 📋 待办 | 待审 | 待验 | [详情](BACKLOG-details.md#t-851) | 详情见外置记录。 |
+| T-850 | 支持原始口播粗剪并整合可操作的剪辑工作台 | 🔨 待办 | PASS[REV:82f9301b345d] | 待验 | [SPEC](docs/features/t850-visible-rough-cut-workbench.md) | 2026-10-02 用户要求粗剪、剪辑工作台替换纯黑盒式剪辑，继续参考 ChatCut；与 T-1035—T-1041 共用作品工程、预览和时间轴，支持原片删留、分割修边、逐字稿定位/删选区、候选对照和撤销保存；不再要求先去外部软件粗剪。[范围独立复核](docs/features/t850-visible-rough-cut-workbench.review.md)通过，未交付实现。 2026-10-02 用户要求以 ChatCut 为视频交互标杆，优先集成可核实开源编辑工程，完整播放器/逐字稿/时间轴工作面优先于参数表单。 |
+| T-847 | 补齐 Windows 正式包的 CreatorOS CLI runtime 并重跑 1.1.0 双端流水线【T-846 阻断承接·用户认可 2026-08-16】 | ⏸️ 待办 | — | — | [详情](BACKLOG-details.md#t-847) | 详情见外置记录。 |
+| T-846 | 提交当前批准候选并运行 CreatorOS 1.1.0 macOS/Windows 官方双端构建【用户明确授权·2026-08-16】 | ⏸️ 待办 | — | — | [详情](BACKLOG-details.md#t-846) | 详情见外置记录。 |
+| T-845 | 根治 Windows 用户机成片在 HyperFrames 启动阶段缺失分层模块解析器【T-844 根因修复·用户 2026-08-16】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-845) | 详情见外置记录。 |
+| T-843 | 为 CreatorOS 建立可由 Codex 完整操作的官方 CLI，并复用现有全部业务能力【产品方向·用户 2026-08-15】 | 🔨 待办 | PASS[REV:ea17774db868] | — | [详情](BACKLOG-details.md#t-843)  [SPEC](docs/superpowers/specs/2026-08-15-creatoros-codex-cli.md) | 详情见外置记录。 |
+| T-835 | 取消制作分镜逐字保真失败对整稿候选的阻断，并给出可诊断恢复【用户真机反馈·2026-08-14】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-835) | 详情见外置记录。 |
+| T-833 | 根治结构化节点 schema 兼容报错与多张局部改稿卡无法连续采纳【用户高频真机反馈·2026-08-14】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-833) | 详情见外置记录。 |
+| T-831 | 重排官方渠道模型配置并复核上游图生图能力【官方渠道配置·用户 2026-08-14】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-831) | 详情见外置记录。 |
+| T-829 | 建立并执行上游模型全能力真实兼容矩阵，覆盖渠道托管与用户中转站【用户 Windows 生图/文本回归·2026-08-14】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-829) | 详情见外置记录。 |
+| T-828 | 诊断行业热点出题不可用、Windows 滚动条异常与 DeepMind/Max 模型报错【用户 Windows 真机截图与加密日志·2026-08-13】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-828) | 详情见外置记录。 |
+| T-827 | 根治选题中心来源筛选失效与候选操作按钮无法点击【用户真机截图·2026-08-13】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-827) | 详情见外置记录。 |
+| T-826 | 根治 CreatorOS v1.1 Windows 新安装包安装后无法启动【用户真机日志·2026-08-13】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-826) | 详情见外置记录。 |
+| T-824 | 根治昨日文稿 Skill 与内容动效卡片迭代在标准版成品中无明显效果【用户真实验收失败·2026-08-13】 | 🔨 待办 | PASS[REV:18361dc8c3c3] | 待验 | [详情](BACKLOG-details.md#t-824)  [SPEC](docs/superpowers/specs/2026-08-13-continuous-voiceover-storyboard-pipeline.md) | 详情见外置记录。 |
+| T-823 | 根治架构图等主视觉被信息卡遮挡并修正跨段画面切换滞后【成片真机截图·2026-08-13】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-823) | 详情见外置记录。 |
+| T-821 | 网站内容因未登录或权限不足读取失败时引导用户前往登录保管库【用户截图·2026-08-13】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-821) | 详情见外置记录。 |
+| T-819 | 让编导在普通对话中按自然语言定位并改写当前稿单段【用户真实用法·2026-08-13】 | 🔨 待办 | PASS[REV:0425ab7b87b8] | 待验 | [详情](BACKLOG-details.md#t-819)  [SPEC](docs/superpowers/specs/2026-08-13-natural-language-current-script-section-editing.md) | 详情见外置记录。 |
+| T-820 | 修复选题补卡到项目与文案的数据丢失并保存生成消费血缘【T-811 审计承接·2026-08-13】 | 📋 待办 | — | — | [详情](BACKLOG-details.md#t-820) | 详情见外置记录。 |
+| T-816 | 让当前确认稿成为配图与封面生成的第一内容真相【用户确认·2026-08-13】 | 🔨 待办 | PASS[REV:fb03de3a57d7] | 待验 | [详情](BACKLOG-details.md#t-816)  [SPEC](docs/superpowers/specs/2026-08-13-current-script-truth-and-natural-language-section-editing.md) | 详情见外置记录。 |
+| T-814 | 统一 CreatorOS 多页面 AI 对话体验并保留场景上下文与自由讨论能力【用户体验方向·2026-08-13】 | 📋 待办 | — | — | [详情](BACKLOG-details.md#t-814) | 详情见外置记录。 |
+| T-779 | 根治参考历史作品生成封面时误探本机工具并中断生图【v1.0 回归·用户确认 2026-08-11】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-779) | 详情见外置记录。 |
+| T-773 | 更新 CreatorOS 1.0 最新使用教程、匿名化截图并新建成交型测试版教程【教程交付·用户 2026-08-11】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-773) | 详情见外置记录。 |
+| T-768 | 任何云端 ASR 故障都必须自动回退本地 Whisper【逐字稿可靠性·用户确认 2026-08-11】 | 🔨 待办 | PASS[REV:3eb18966ea59] | 待验 | [详情](BACKLOG-details.md#t-768)  [SPEC](docs/superpowers/specs/2026-08-11-asr-universal-local-fallback.md) | 详情见外置记录。 |
+| T-762 | 根因复盘并设计渠道 ASR 密钥的短时租约闭环【正式版受管能力·用户 2026-08-10】 | 🔨 待办 | — | — | [详情](BACKLOG-details.md#t-762) | 详情见外置记录。 |
+| T-759 | 根治已绑定 B-roll 因 inventory 失配显示空白【正式版制作回归·用户 2026-08-10】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-759) | 详情见外置记录。 |
+| T-754 | 根治 CreatorOS v1.0 官方包启动无限转圈【正式版启动阻断·用户 2026-08-10】 | 🔨 待办 | — | — | [详情](BACKLOG-details.md#t-754) | 详情见外置记录。 |
+| T-748 | 补齐“重新输入激活码”原生命令 ACL 并重打官方包【正式版回归·用户真机 2026-08-09】 | 🔨 待办 | — | — | [详情](BACKLOG-details.md#t-748) | 详情见外置记录。 |
+| T-741 | 下移知识库“记一条经验”入口到录入操作行【正式版细节·用户 2026-08-09】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-741) | 详情见外置记录。 |
+| T-739 | 根治制作视频跨项目灌入 B-roll、无证据改稿偏好与超长复盘卡【正式版回归·用户 2026-08-09】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-739) | 详情见外置记录。 |
+| T-738 | 根治发布物料生成成功后无处查看并恢复卡内查看闭环【正式版回归·用户 2026-08-09】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-738) | 详情见外置记录。 |
+| T-735 | 根治渠道受管模型成功产物被误判失败并建立 C 端稳定性闭环【智溯AI真机 2026-08-09】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-735) | 详情见外置记录。 |
+| T-734 | 根治 Windows 扫码绑定在启动前误依赖缺失 Playwright CLI【抖音账号绑定·用户真机 2026-08-09】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-734) | 详情见外置记录。 |
+| T-733 | 本地模型可用时收起渠道配置误报警并纠正票据不适用状态【模型设置·用户真机 2026-08-09】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-733) | 详情见外置记录。 |
+| T-732 | 根治局部改稿锚点失效后阻断全部 Copilot 对话【AI 对话可用性·用户真机 2026-08-09】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-732) | 详情见外置记录。 |
+| T-730 | 恢复可选“立论点”UI并增加适用场景引导，不重新变成写稿门槛【创作弹性·用户确认 2026-08-09】 | 🔨 待办 | PASS[REV:aeda30778cf2] | 待验 | [详情](BACKLOG-details.md#t-730)  [SPEC](docs/superpowers/specs/2026-08-09-optional-thesis-guidance.md) | 详情见外置记录。 |
+| T-731 | 支持按电商等创作场景生成并自定义创作框架【场景化框架·用户后续 2026-08-09】 | 📋 待办 | — | 待验 | [详情](BACKLOG-details.md#t-731) | 详情见外置记录。 |
+| T-729 | 根治渠道专属包仍跳官方入口并拆分官网、下载、人工反馈与反馈 API【白标完整性·智溯AI真机 2026-08-08】 | 📋 待办 | — | 待验 | [详情](BACKLOG-details.md#t-729) | 详情见外置记录。 |
+| T-726 | 退役项目“论点骨架”并让写稿直接消费 Brief 与素材【创作链瘦身·用户确认 2026-08-08】 | 🔨 待办 | PASS[REV:2809820bf64a] | 待验 | [详情](BACKLOG-details.md#t-726)  [SPEC](docs/superpowers/specs/2026-08-08-thesis-skeleton-retirement.md) | 详情见外置记录。 |
+| T-721 | 根治素材包导出回流造成递归嵌套并恢复大素材库完整可见性【素材数据安全·用户 2026-08-08】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-721) | 详情见外置记录。 |
+| T-720 | 根治特定 Windows 设备抖音内置浏览器页面崩溃导致内容雷达主页验证失败【飞书用户日志·2026-08-08】 | 📋 待办 | — | 待验 | [详情](BACKLOG-details.md#t-720) | 详情见外置记录。 |
+| T-719 | 根治桌面端启动后二次白屏闪烁与首页排期提醒不可用【启动稳定性·用户录屏 2026-08-07】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-719) | 详情见外置记录。 |
+| T-718 | 补齐智溯AI包内品牌并交付完整 Growth 配置后重打本地包【渠道验收失败·用户 2026-08-07】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-718) | 详情见外置记录。 |
+| T-716 | 完善 Copilot 局部改稿、脚本版本回退、附件上下文与素材中心稳定排序【创作编辑闭环·用户 2026-08-06】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-716) | 详情见外置记录。 |
+| T-715 | 在 CreatorOS 增加 Growth AI 额度账户连接、查看与充值入口【额度闭环·用户 2026-08-06】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-715) | 详情见外置记录。 |
+| T-714 | 接入工程教训闭环并迁移旧账本，确保真实踩坑可被后续任务自动复用【工程进化·用户 2026-08-06】 | 📋 待办 | — | 待验 | [详情](BACKLOG-details.md#t-714) | 详情见外置记录。 |
+| T-713 | 构建包含通用智能体语义边界与当前制作修复的 macOS 0.3.0 本地测试包【本地验收·用户 2026-08-06】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-713) | 详情见外置记录。 |
+| T-712 | 优先采用用户上传素材进入 B-roll 时间线、恢复成片预览并收回渠道同步常驻提示【制作体验·本机实测 2026-08-05】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-712) | 详情见外置记录。 |
+| T-709 | 将 macOS Developer ID 签名与 Apple 公证凭据接入 GitHub 正式发布流水线【发布安全·用户 2026-08-05】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-709) | 详情见外置记录。 |
+| T-708 | 全局审计并软化 AI 工具中不合理的创作完整度门禁【工具灵活性·用户 2026-08-05】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-708) | 详情见外置记录。 |
+| T-707 | 将定位前采收敛为 Copilot 主导的自适应编导访谈并直接闭环定位中心【定位精准度·飞书反馈 2026-08-05】 | 🔨 待办 | PASS[REV:06867c4bf60c] | 待验 | [详情](BACKLOG-details.md#t-707)  [SPEC](docs/superpowers/specs/2026-08-01-positioning-pre-interview-workflow.md) | 详情见外置记录。 |
+| T-705 | 根治 macOS 本地包启动后落入 Page Not Found【发布阻断·本机实测 2026-08-05】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-705) | 详情见外置记录。 |
+| T-703 | 根治视频制作从分镜到预览、对话调剪、采纳与再制作的多处断裂并重打本地包【制作闭环·用户 2026-08-05】 | 🔨 待办 | PASS[REV:c1a3920aea71] | 待验 | [详情](BACKLOG-details.md#t-703)  [SPEC](docs/superpowers/specs/2026-08-05-video-production-editing-loop.md) | 详情见外置记录。 |
+| T-702 | 根治审核“应用改写”后分镜稿格式坍缩为 Markdown 表格源码【稿面编辑·用户 2026-08-05】 | 📋 待办 | — | 待验 | [详情](BACKLOG-details.md#t-702) | 详情见外置记录。 |
+| T-695 | 清理应用内硬编码品牌并让白标用户表面保持中性【白标体验·用户 2026-08-04】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-695) | 详情见外置记录。 |
+| T-691 | 补齐 Copilot 单项目全生命周期、跨项目历史与审核改稿工具闭环【Context 契约·用户 2026-08-04】 | 🔨 待办 | PASS[REV:9444ca5b32a9] | 待验 | [详情](BACKLOG-details.md#t-691)  [SPEC](docs/superpowers/specs/2026-08-04-copilot-project-lifecycle-tool-closure.md) | 详情见外置记录。 |
+| T-694 | 建立多渠道专属包工厂、项目级出包 Skill 与安全增量更新闭环【渠道规模化·用户 2026-08-04】 | 🔨 待办 | PASS[REV:2c7be136aea0] | 待验 | [详情](BACKLOG-details.md#t-694)  [SPEC](docs/superpowers/specs/2026-08-04-channel-package-factory-and-incremental-update.md) | 详情见外置记录。 |
+| T-686 | 根治定位前采联网补充直接报错并恢复国内中文公开检索【定位前采·本机实测 2026-08-04】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-686) | 详情见外置记录。 |
+| T-687 | 建立口播联想画面 Skill 并打通图序号引用、项目 B-roll 与成片渲染【视觉创作主链·本机日志 2026-08-04】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-687) | 详情见外置记录。 |
+| T-685 | 排查并根治全流程写稿长度失控及审核不识别已采纳文案卡【创作主链·本机日志 2026-08-04】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-685) | 详情见外置记录。 |
+| T-684 | 根治 Copilot 联网搜素材失败后回退模型记忆并误导配置搜索模型【浏览器检索·用户截图 2026-08-04】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-684) | 详情见外置记录。 |
+| T-683 | 修复 Copilot 在 Windows 无法读取盘符绝对路径与目录授权失效【本地文件读取·用户截图 2026-08-04】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-683) | 详情见外置记录。 |
+| T-679 | 接入 Growth 按激活权益签发的受管模型凭据、真实模型白名单与用户选择【模型服务最小闭环·用户 2026-08-04】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-679) | 详情见外置记录。 |
+| T-678 | 根治内容雷达生成选题继续读取旧定位【定位消费一致性·飞书用户 2026-08-04】 | 📋 待办 | — | 待验 | [详情](BACKLOG-details.md#t-678) | 详情见外置记录。 |
+| T-677 | 优化首页与定位中心切换时整页骨架卡顿 1–2 秒【桌面交互性能·飞书用户 2026-08-03】 | 📋 待办 | — | 待验 | [详情](BACKLOG-details.md#t-677) | 详情见外置记录。 |
+| T-676 | 根治云端 ASR 测试假阳性并接通 StepFun，同时修复 Windows 本地 Whisper 回退【逐字稿阻断·飞书用户 2026-08-03】 | 📋 待办 | — | 待验 | [详情](BACKLOG-details.md#t-676) | 详情见外置记录。 |
+| T-671 | 确定 CreatorOS 代理商业模式与官网价格边界【渠道商业化·用户 2026-08-02/03】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-671) | 详情见外置记录。 |
+| T-670 | 恢复 CreatorOS 部署前真实官网并收口公开商业信息【官网回滚纠偏·用户 2026-08-02/03】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-670) | 详情见外置记录。 |
+| T-666 | 根治定位前采误清空既有定位并改为非破坏草稿切换【定位数据安全·用户 2026-08-02】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-666) | 详情见外置记录。 |
+| T-665 | 支持彻底删除内容雷达信源及其全部归属数据【信源生命周期·用户 2026-08-02】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-665) | 详情见外置记录。 |
+| T-662 | 根治成片把内部结构标签当正文并优化卡片文字重合【视频内容质量·用户 2026-08-02】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-662) | 详情见外置记录。 |
+| T-661 | 根治项目素材未进入制作、采纳后仍转圈及素材包图片无扩展名【制作闭环·用户 2026-08-02】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-661) | 详情见外置记录。 |
+| T-660 | 根治雷达预填逐字稿未解锁下一步及已采纳封面仍被判缺失【项目状态回显·用户 2026-08-02】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-660) | 详情见外置记录。 |
+| T-656 | 收紧桌面授权本地信任链，移除生产冒烟旁路并消除 verdict 私钥明文靶点【安全加固·用户 2026-08-02】 | 🔨 待办 | PASS[REV:5f6970ac76f2] | 待验 | [详情](BACKLOG-details.md#t-656)  [SPEC](docs/superpowers/specs/2026-08-02-desktop-verdict-basic-hardening.md) | 详情见外置记录。 |
+| T-655 | 接通 Seedance 文生视频适配器并修复 `seeddance` 配置报未知 provider【文生视频阻断·用户 2026-08-02】 | 🔨 待办 | — | — | [详情](BACKLOG-details.md#t-655) | 详情见外置记录。 |
+| T-654 | 新增 Qwen 方言 ASR 适配器并接入设置预设【逐字稿质量·用户 2026-08-02】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-654) | 详情见外置记录。 |
+| T-653 | 支持本地自配与渠道子 Key 托管双模式模型供给【模型商业化·跨仓·用户 2026-08-02】 | 📋 待办 | 待审 | 待验 | [详情](BACKLOG-details.md#t-653) | 详情见外置记录。 |
+| T-652 | 重构定位前采为必经的编导式访谈与证据辅助工作流【定位业务流·用户 2026-08-01】 | 🔨 待办 | 待审 | 待验 | [详情](BACKLOG-details.md#t-652) | 详情见外置记录。 |
+| T-650 | 知识倾倒输入框支持拖拽文件直接导入【知识录入体验·用户 2026-08-01】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-650) | 详情见外置记录。 |
+| T-651 | 内容雷达默认按作品真实发布时间倒序【排序语义·用户 2026-08-01】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-651) | 详情见外置记录。 |
+| T-649 | 调研并设计激活后渠道白标：品牌名、应用内 Logo 与系统级图标边界【商业渠道·跨仓·用户 2026-08-01】 | 📋 待办 | — | 待验 | [详情](BACKLOG-details.md#t-649) | 详情见外置记录。 |
+| T-646 | 统一优化结构化 AI 工具为结果优先、分段生成与局部修复【性能与可靠性·用户 2026-08-01】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-646) | 详情见外置记录。 |
+| T-645 | 收敛模型配置项并同步精简 Growth 渠道模板【设置体验·跨仓配置·用户 2026-08-01/02】 | 🔨 待办 | PASS[REV:5dfe24b42eb7] | 待验 | [详情](BACKLOG-details.md#t-645)  [SPEC](docs/superpowers/specs/2026-08-02-capability-scoped-channel-model-authority.md) | 详情见外置记录。 |
+| T-644 | 根治 CreatorOS macOS 客户端持续闪屏【运行态阻断·用户 2026-08-01】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-644) | 详情见外置记录。 |
+| T-643 | 收口 CreatorOS 为输入 Activity 激活码后直接授权，隐藏当前权益领取入口【商业激活主线·用户 2026-08-01】 | 📋 待办 | — | 待验 | [详情](BACKLOG-details.md#t-643) | 详情见外置记录。 |
+| T-642 | 打通内容雷达对标文案→改写策略→选题卡→项目写稿的编导证据链【产品链路·用户 2026-08-01/02】 | 🔨 待办 | CONCERNS[REV:7728c9ed44bd] | 待验 | [详情](BACKLOG-details.md#t-642) | 详情见外置记录。 |
+| T-641 | 根治发布中心“登录多日仍只有一个采集日、发布趋势不出曲线”【线上数据回流·用户 2026-07-31】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-641) | 详情见外置记录。 |
+| T-640 | 配置 Apple Developer ID 签名与公证，并在前序修复全部闭环后统一产出本地安装包【发布·用户 2026-07-31】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-640) | 详情见外置记录。 |
+| T-635 | 把 CreatorOS 正式构建绑定到 Growth 商品的统一 `projectKey`，禁止运行时覆盖产品身份或关闭严格验签 | 🔨 本地实现待验 | PASS[REV:b8add273a494] | 待验 | [详情](BACKLOG-details.md#t-635)  [SPEC](docs/superpowers/specs/2026-07-30-growth-product-identity-binding.md) | 详情见外置记录。 |
+| T-633 | 根治内容雷达生成选题卡失败并恢复创作者中心自动扫码【线上阻断·用户 2026-07-30】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-633) | 详情见外置记录。 |
+| T-632 | 根治“新建定位母版”无效、历史母版无法恢复与逐字稿提取长时间无结果【线上阻断·用户 2026-07-30/31】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-632) | 详情见外置记录。 |
+| T-631 | 根治大视频上传被 10MB 截断并误报 ffmpeg 缺失【线上阻断·用户 2026-07-30】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-631) | 详情见外置记录。 |
+| T-621 | 补齐渠道模型 authority snapshot 生产链路回归【非阻断测试增强·T-606 复核】 | 📋 待办 | — | — | [详情](BACKLOG-details.md#t-621) | 详情见外置记录。 |
+| T-576 | 统一跟进尚未关闭的飞书线上用户反馈【线上支持】 | 🔨 免审 | — | — | [详情](BACKLOG-details.md#t-576) | 详情见外置记录。 |
+| T-575 | 接通 CreatorOS 权益领取、渠道配置与问题反馈【跨系统上线闭环】 | 🔨 本地PASS·待生产E2E | — | 待验 | [详情](BACKLOG-details.md#t-575) | 详情见外置记录。 |
+| T-562 | 根治 CreatorOS 0.2.0 Windows 安装后持续白屏【发布阻断】 | 🔨 免审 | — | 待验 | [详情](BACKLOG-details.md#t-562) | 详情见外置记录。 |
+| T-548 | 根治视频渲染重试后成片脱离项目且制作页实时预览消失【发布阻断·用户 2026-07-26】 | 🔨 待安装版真机 | — | 待验 | [详情](BACKLOG-details.md#t-548) | 详情见外置记录。 |
+| T-538 | 接通渠道签名上下文的产品问题反馈【跨仓契约·上线闭环】 | 🔨 本地PASS·待生产E2E | — | 待验 | [详情](BACKLOG-details.md#t-538) | 详情见外置记录。 |
+| T-536 | 根治“我的收藏”同步错误分类与浏览器档案锁恢复【bug·多账号采集·用户 2026-07-26】 | 🔨 待真实账号只读验收 | — | 待验 | [详情](BACKLOG-details.md#t-536) | 详情见外置记录。 |
+## ⏸️ 暂停池（不自动派发）
+
+> 只保留任务索引；暂停原因与恢复条件见 `orchestrator/events.ndjson` 和详情文档。恢复必须使用 `taskctl start`。
+
+| ID | 状态 | 验收 | 文档 |
+| --- | --- | --- | --- |
+| T-626 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-626) |
+| T-577 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-577) |
+| T-565 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-565) |
+| T-524 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-524) |
+| T-519 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-519) |
+| T-525 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-525) |
+| T-517 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-517) |
+| T-516 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-516) |
+| T-510 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-510) |
+| T-506 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-506) |
+| T-502 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-502) |
+| T-497 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-497) |
+| T-451 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-451) |
+| T-449 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-449) |
+| T-448 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-448) |
+| T-433 S2 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-433-s2) |
+| T-433 S4 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-433-s4) |
+| T-433 S5 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-433-s5) |
+| T-426 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-426) |
+| T-425W | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-425w) |
+| T-413 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-413) |
+| T-417 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-417) |
+| T-418 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-418) |
+| T-420 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-420) |
+| T-399 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-399) |
+| T-399c | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-399c) |
+| T-409 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-409) |
+| T-372 W-spike | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-372-w-spike) |
+| T-372 W-ci | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-372-w-ci) |
+| T-391 H-econ | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-391-h-econ) |
+| T-393 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-393) |
+| T-401 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-401) |
+| T-406 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-406) |
+| T-407 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-407) |
+| T-396 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-396) |
+| T-398 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-398) |
+| T-366c | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-366c) |
+| T-361 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-361) |
+| T-352 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-352) |
+| T-320c | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-320c) |
+| T-350c | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-350c) |
+| T-351 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-351) |
+| T-349d | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-349d) |
+| T-339 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-339) |
+| T-328 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-328) |
+| T-332R | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-332r) |
+| T-336 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-336) |
+| T-335 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-335) |
+| T-337 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-337) |
+| T-337a | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-337a) |
+| T-337b | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-337b) |
+| T-337c | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-337c) |
+| T-337d | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-337d) |
+| T-337e | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-337e) |
+| T-337f | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-337f) |
+| T-337g | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-337g) |
+| T-334 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-334) |
+| T-324 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-324) |
+| T-340 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-340) |
+| T-315 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-315) |
+| T-316 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-316) |
+| T-317 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-317) |
+| T-318 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-318) |
+| T-319 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-319) |
+| T-312 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-312) |
+| T-307 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-307) |
+| T-306 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-306) |
+| T-301 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-301) |
+| T-302 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-302) |
+| T-261 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-261) |
+| T-249 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-249) |
+| T-250 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-250) |
+| T-255b | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-255b) |
+| T-185R | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-185r) |
+| T-136R | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-136r) |
+| T-100 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-100) |
+| T-087 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-087) |
+| T-045 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-045) |
+
+## ✅ 已完成
+
+> ✅ 已完成任务全文已归档到 [BACKLOG-archive.md](BACKLOG-archive.md)(减小本看板体积;单一执行真相仍是本文件)。

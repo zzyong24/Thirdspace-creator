@@ -1,0 +1,80 @@
+
+ RUN  v4.1.8 /private/tmp/t1046-backend-work/ai-worker
+
+ ❯ src/runtime/multimodal-whisper-local.test.ts (21 tests | 1 failed) 79ms
+     × Web frontend cwd 无分层 resolver，使用 execution Worker 所在包真实可解析的依赖路径 16ms (retry x2)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/runtime/multimodal-whisper-local.test.ts > Whisper worker —— Windows 分层 runtime 模块解析 > Web frontend cwd 无分层 resolver，使用 execution Worker 所在包真实可解析的依赖路径
+AssertionError: expected { Object (requireBase) } to deeply equal { Object (requireBase) }
+
+- Expected
++ Received
+
+  {
+-   "requireBase": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/ai-worker/node_modules/@xenova/transformers/src/transformers.js",
++   "requireBase": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-whisper-web-sFKTWO/package.json",
+  }
+
+ ❯ src/runtime/multimodal-whisper-local.test.ts:284:81
+    282|       const dependencyPath=resolve(frontendRoot,"..","ai-worker","node…
+    283|       const resolveDependency=vi.fn((specifier:string)=>{expect(specif…
+    284|       expect(resolveWhisperWorkerRuntime({cwd:frontendRoot,resolveDepe…
+       |                                                                                 ^
+    285|       expect(resolveDependency).toHaveBeenCalledOnce();
+    286|     }finally{rmSync(frontendRoot,{recursive:true,force:true});}
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  src/runtime/multimodal-whisper-local.test.ts > Whisper worker —— Windows 分层 runtime 模块解析 > Web frontend cwd 无分层 resolver，使用 execution Worker 所在包真实可解析的依赖路径
+AssertionError: expected { Object (requireBase) } to deeply equal { Object (requireBase) }
+
+- Expected
++ Received
+
+  {
+-   "requireBase": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/ai-worker/node_modules/@xenova/transformers/src/transformers.js",
++   "requireBase": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-whisper-web-hSqoNv/package.json",
+  }
+
+ ❯ src/runtime/multimodal-whisper-local.test.ts:284:81
+    282|       const dependencyPath=resolve(frontendRoot,"..","ai-worker","node…
+    283|       const resolveDependency=vi.fn((specifier:string)=>{expect(specif…
+    284|       expect(resolveWhisperWorkerRuntime({cwd:frontendRoot,resolveDepe…
+       |                                                                                 ^
+    285|       expect(resolveDependency).toHaveBeenCalledOnce();
+    286|     }finally{rmSync(frontendRoot,{recursive:true,force:true});}
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  src/runtime/multimodal-whisper-local.test.ts > Whisper worker —— Windows 分层 runtime 模块解析 > Web frontend cwd 无分层 resolver，使用 execution Worker 所在包真实可解析的依赖路径
+AssertionError: expected { Object (requireBase) } to deeply equal { Object (requireBase) }
+
+- Expected
++ Received
+
+  {
+-   "requireBase": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/ai-worker/node_modules/@xenova/transformers/src/transformers.js",
++   "requireBase": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-whisper-web-Pe9b2c/package.json",
+  }
+
+ ❯ src/runtime/multimodal-whisper-local.test.ts:284:81
+    282|       const dependencyPath=resolve(frontendRoot,"..","ai-worker","node…
+    283|       const resolveDependency=vi.fn((specifier:string)=>{expect(specif…
+    284|       expect(resolveWhisperWorkerRuntime({cwd:frontendRoot,resolveDepe…
+       |                                                                                 ^
+    285|       expect(resolveDependency).toHaveBeenCalledOnce();
+    286|     }finally{rmSync(frontendRoot,{recursive:true,force:true});}
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 20 passed (21)
+   Start at  00:16:26
+   Duration  1.30s (transform 337ms, setup 0ms, import 1.01s, tests 79ms, environment 0ms)
+
+undefined
+/private/tmp/t1046-backend-work/ai-worker:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/runtime/multimodal-whisper-local.test.ts

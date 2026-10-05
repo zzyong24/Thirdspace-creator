@@ -341,3 +341,10 @@ export const intelligenceMigrationLedgers = pgTable(
     updatedAt: text("updated_at").notNull(),
   },
 );
+
+/** 原执行控制回执，状态修改与回执同事务；不创建执行任务或重置预算。 */
+export const executionControlReceipts=pgTable("execution_control_receipts",{
+ id:text("id").primaryKey(),userId:text("user_id").notNull(),accountId:text("account_id").notNull(),
+ idempotencyKey:text("idempotency_key").notNull(),requestDigest:text("request_digest").notNull(),
+ result:jsonb("result").notNull(),createdAt:text("created_at").notNull(),
+},table=>[uniqueIndex("execution_control_receipts_scope_key_uq").on(table.userId,table.accountId,table.idempotencyKey)]);

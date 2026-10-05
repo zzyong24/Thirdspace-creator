@@ -1,4 +1,4 @@
-import {pgTable,text,integer,jsonb,uniqueIndex,index} from "drizzle-orm/pg-core";
+import {pgTable,text,integer,jsonb,unique,index} from "drizzle-orm/pg-core";
 
 export const creativeCanvases=pgTable("creative_canvases",{
  id:text("id").primaryKey(),userId:text("user_id").notNull(),accountId:text("account_id").notNull(),
@@ -13,7 +13,7 @@ export const canvasGenerationLinks=pgTable("canvas_generation_links",{
  inputJson:jsonb("input_json").notNull(),
  referenceFileId:text("reference_file_id"),referenceChecksum:text("reference_checksum"),
  resultAssetId:text("result_asset_id"),createdAt:text("created_at").notNull(),updatedAt:text("updated_at").notNull(),
-},table=>[uniqueIndex("canvas_generation_links_attempt_idx").on(table.attemptId),uniqueIndex("canvas_generation_links_task_idx").on(table.taskId),index("canvas_generation_links_canvas_idx").on(table.userId,table.accountId,table.canvasId)]);
+},table=>[unique("canvas_generation_links_attempt_id_key").on(table.attemptId),unique("canvas_generation_links_task_id_key").on(table.taskId),index("canvas_generation_links_canvas_idx").on(table.userId,table.accountId,table.canvasId)]);
 
 export const canvasAgentProposals=pgTable("canvas_agent_proposals",{
  id:text("id").primaryKey(),userId:text("user_id").notNull(),accountId:text("account_id").notNull(),canvasId:text("canvas_id").notNull(),

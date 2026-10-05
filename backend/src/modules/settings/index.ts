@@ -80,3 +80,4 @@ export {createIntegrationCredentials,INTEGRATION_CREDENTIALS_DDL} from "./integr
 export {createRedfoxSubmissions} from "./redfox-submissions";
 
 export { createOnboardingState, type OnboardingAccountReader } from "./onboarding-state";
+export { createReportingLocal, REPORTING_CONSENT_VERSION } from "./reporting-local";

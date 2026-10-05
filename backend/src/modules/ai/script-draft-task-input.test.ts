@@ -95,3 +95,15 @@ describe("[T-727] script.draft 任务输入装配", () => {
     ).toThrow(/资料快照校验失败/);
   });
 });
+
+it("转换完整请求及来源约束进入实际脚本任务输入，不被重建丢弃",()=>{
+ const conversion={request:{sourceOutputId:"image",sourceVersionId:"v1",targetType:"video",mode:"whole",clientRequestId:"convert-request",reuseImages:[]},
+  sourceAnchor:{kind:"output_version",sourceOutputId:"image",artifactId:"artifact",versionId:"v1",sourceType:"image",selectionDigest:"a".repeat(64),selection:{mode:"whole"}}};
+ const constraints={factItems:[],sourceRefs:[],ruleSnapshotRef:null};
+ const body="选定正文";
+ const value=buildScriptDraftTaskInputData({artifactId:"target",projectId:"project",outputId:"video",instruction:"转为脚本",sourceSnapshots:[{
+  sourceType:"project_text",sourceId:"source",label:"保存稿",order:0,charCount:body.length,sha256:createHash("sha256").update(body).digest("hex"),body,complete:true}],conversion,conversionConstraints:constraints} as never);
+ expect(value.conversion).toEqual(conversion);expect(value.conversionConstraints).toEqual(constraints);
+ conversion.sourceAnchor.versionId="mutated";
+ expect((value.conversion as typeof conversion).sourceAnchor.versionId).toBe("v1");
+});

@@ -1,0 +1,1784 @@
+{
+  "task": "T-1060",
+  "generated_at": "2026-10-04T08:32:39.263105+00:00",
+  "status": "仅只读源码核对，未安装、编译、运行测试、模型、真实登录或写工作树。",
+  "source_repo": "openclaw/acpx",
+  "source_commit": "27efb1b57b9de22105a91e9154b1d29b51ede8cb",
+  "source_license": "MIT",
+  "source_license_path": "/tmp/t1060-source/acpx/LICENSE",
+  "source_root": "/tmp/t1060-source/acpx",
+  "source_records": "/tmp/t1060-source/acpx/source-records.json",
+  "closure_method": "固定 Git 树 + 静态 import/export from、字面动态 import/require 的递归相对引用扫描；全部源文件未执行，尚未编译。",
+  "closure_entry": "src/acp/client.ts",
+  "source_file_count": 30,
+  "source_files": [
+    {
+      "path": "src/acp/agent-command.ts",
+      "sha256": "a462eee1d52ad25271f793f218acd10a43b1097ee35df027c4657556b50aff91",
+      "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/acp/agent-command.ts",
+      "local_path": "/tmp/t1060-source/acpx/src/acp/agent-command.ts"
+    },
+    {
+      "path": "src/acp/agent-session-id.ts",
+      "sha256": "718fd63fecf4cfed94f8e27df83e1f6ace1ec5893e1f60332b11696ad1e0b4d3",
+      "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/acp/agent-session-id.ts",
+      "local_path": "/tmp/t1060-source/acpx/src/acp/agent-session-id.ts"
+    },
+    {
+      "path": "src/acp/auth-env.ts",
+      "sha256": "d03f290435460c7d84d380e641927022444f940368461a419a07787bff4362af",
+      "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/acp/auth-env.ts",
+      "local_path": "/tmp/t1060-source/acpx/src/acp/auth-env.ts"
+    },
+    {
+      "path": "src/acp/client-process.ts",
+      "sha256": "3d2fd50ed5f1898d2fbf772dd9b25c8147331f164f76e6ca9b057f8403ab2acb",
+      "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/acp/client-process.ts",
+      "local_path": "/tmp/t1060-source/acpx/src/acp/client-process.ts"
+    },
+    {
+      "path": "src/acp/client-protocol.ts",
+      "sha256": "4a564fbf10a4a300a35b967fb5f1fe01b1057bf8191731493fb65d08728ce6f3",
+      "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/acp/client-protocol.ts",
+      "local_path": "/tmp/t1060-source/acpx/src/acp/client-protocol.ts"
+    },
+    {
+      "path": "src/acp/client.ts",
+      "sha256": "2d41420725b3c745542ffe5e20095dfd58036fcd839ceec7f85ad548ddc1ef3d",
+      "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/acp/client.ts",
+      "local_path": "/tmp/t1060-source/acpx/src/acp/client.ts"
+    },
+    {
+      "path": "src/acp/codex-compat.ts",
+      "sha256": "788fa15f4c27b23aca62453ae7f33f037576b22489b95d0330312b9e7075c8db",
+      "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/acp/codex-compat.ts",
+      "local_path": "/tmp/t1060-source/acpx/src/acp/codex-compat.ts"
+    },
+    {
+      "path": "src/acp/command-probe.ts",
+      "sha256": "ce83d60b10319fbf419dbe514a7ffd443a358239acca09fdf6114b62847125b7",
+      "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/acp/command-probe.ts",
+      "local_path": "/tmp/t1060-source/acpx/src/acp/command-probe.ts"
+    },
+    {
+      "path": "src/acp/error-shapes.ts",
+      "sha256": "081a42937361010866c8dcb18a52d9c1dcbda2c12d6c0d40a496673d50979b28",
+      "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/acp/error-shapes.ts",
+      "local_path": "/tmp/t1060-source/acpx/src/acp/error-shapes.ts"
+    },
+    {
+      "path": "src/acp/jsonrpc.ts",
+      "sha256": "6a30dc1a0eacbef8966a6c23da934eaa73edfb58a7242f81a43aca2b1881ccd8",
+      "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/acp/jsonrpc.ts",
+      "local_path": "/tmp/t1060-source/acpx/src/acp/jsonrpc.ts"
+    },
+    {
+      "path": "src/acp/model-config-state.ts",
+      "sha256": "7db4b9c3d72f14f7d3898067b8c6cadf8599d48813b3e8362343f7f9123f09dd",
+      "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/acp/model-config-state.ts",
+      "local_path": "/tmp/t1060-source/acpx/src/acp/model-config-state.ts"
+    },
+    {
+      "path": "src/acp/model-support.ts",
+      "sha256": "42e7d6af096d68d7c7328d91e7d936e7f83f0e80ecad491eb1aec7f1afbb15bc",
+      "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/acp/model-support.ts",
+      "local_path": "/tmp/t1060-source/acpx/src/acp/model-support.ts"
+    },
+    {
+      "path": "src/acp/ndjson-stream.ts",
+      "sha256": "77831d0e218f539565a0f4dd8b5d0c149b660c0bbcd2598a0c91ebcdc31e273b",
+      "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/acp/ndjson-stream.ts",
+      "local_path": "/tmp/t1060-source/acpx/src/acp/ndjson-stream.ts"
+    },
+    {
+      "path": "src/acp/observed-stream.ts",
+      "sha256": "a42bf823467ab5c896455f9d33249311b5f7be4596274c8a03e232ccf589bbdd",
+      "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/acp/observed-stream.ts",
+      "local_path": "/tmp/t1060-source/acpx/src/acp/observed-stream.ts"
+    },
+    {
+      "path": "src/acp/process-descendants.ts",
+      "sha256": "585e4ca9fdf65294cb9942f0bcac5fb948ab31b347c19f05a7b6a3b140807897",
+      "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/acp/process-descendants.ts",
+      "local_path": "/tmp/t1060-source/acpx/src/acp/process-descendants.ts"
+    },
+    {
+      "path": "src/acp/session-control-errors.ts",
+      "sha256": "f371ff551fc07a6741efadb1682ba35e04104346ceb49fcb305d1e7fd027622f",
+      "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/acp/session-control-errors.ts",
+      "local_path": "/tmp/t1060-source/acpx/src/acp/session-control-errors.ts"
+    },
+    {
+      "path": "src/acp/terminal-manager.ts",
+      "sha256": "f07ad56115fc3f43fa056393cbfb3cd337b6794dd44d5726a54db5710f7a3d6b",
+      "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/acp/terminal-manager.ts",
+      "local_path": "/tmp/t1060-source/acpx/src/acp/terminal-manager.ts"
+    },
+    {
+      "path": "src/agent-registry.ts",
+      "sha256": "5d71c2edcd97e674a0a751f709f6692d4bceb69c801f9e784ca58439c9990add",
+      "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/agent-registry.ts",
+      "local_path": "/tmp/t1060-source/acpx/src/agent-registry.ts"
+    },
+    {
+      "path": "src/async-control.ts",
+      "sha256": "4fdf0a85ac240e12300d23ee9e7c4abf70c0fa03b5fabd8c63dd2d816594fc7c",
+      "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/async-control.ts",
+      "local_path": "/tmp/t1060-source/acpx/src/async-control.ts"
+    },
+    {
+      "path": "src/errors.ts",
+      "sha256": "5ea30a461c469b3f33111e1af7ad037fd5887e95e1a63a769571f414615c3e43",
+      "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/errors.ts",
+      "local_path": "/tmp/t1060-source/acpx/src/errors.ts"
+    },
+    {
+      "path": "src/file-read-window.ts",
+      "sha256": "d6422669bf309eea89c55f6a60d845cde6bc48a3c753b6236d65291db4eea1c3",
+      "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/file-read-window.ts",
+      "local_path": "/tmp/t1060-source/acpx/src/file-read-window.ts"
+    },
+    {
+      "path": "src/filesystem.ts",
+      "sha256": "1fb1fab982019c49e45bedc5126fc38adef0d9d41d283b5979a44e340a21f0c6",
+      "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/filesystem.ts",
+      "local_path": "/tmp/t1060-source/acpx/src/filesystem.ts"
+    },
+    {
+      "path": "src/permission-prompt.ts",
+      "sha256": "97e1fec8fab55685caa9f8fbd4ae07bb28f4b49e4b551bcb9eae43281ae3c349",
+      "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/permission-prompt.ts",
+      "local_path": "/tmp/t1060-source/acpx/src/permission-prompt.ts"
+    },
+    {
+      "path": "src/permissions.ts",
+      "sha256": "7cc4d4cec200b8e43b89a1e22db8caa9721c3d199f91c0ab0dcbd5bcd4f458b2",
+      "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/permissions.ts",
+      "local_path": "/tmp/t1060-source/acpx/src/permissions.ts"
+    },
+    {
+      "path": "src/process-identity.ts",
+      "sha256": "09e50670090a49b461c3b34b285f01a3e4b83dc2dfea26f0275ca63e5091d0c1",
+      "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/process-identity.ts",
+      "local_path": "/tmp/t1060-source/acpx/src/process-identity.ts"
+    },
+    {
+      "path": "src/process-liveness.ts",
+      "sha256": "6f0cd62bdc401afe63cbd288972e17f925c3ca43752b9746ac0f7a085ca9e730",
+      "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/process-liveness.ts",
+      "local_path": "/tmp/t1060-source/acpx/src/process-liveness.ts"
+    },
+    {
+      "path": "src/prompt-content.ts",
+      "sha256": "a02bcf1c3a78f59d28d326c1f60997aff4a8f67ec21637c11040a61fc58185c1",
+      "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/prompt-content.ts",
+      "local_path": "/tmp/t1060-source/acpx/src/prompt-content.ts"
+    },
+    {
+      "path": "src/spawn-command-options.ts",
+      "sha256": "a1e6221922fbdcbef4dd1046dc234cf28d2fff51d1b129db6757e63b6b28b9ca",
+      "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/spawn-command-options.ts",
+      "local_path": "/tmp/t1060-source/acpx/src/spawn-command-options.ts"
+    },
+    {
+      "path": "src/types.ts",
+      "sha256": "3e0dbd9b07ecbd9f4a64e13f67206a482477729539dbf17aeb1c81002a10a2ec",
+      "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/types.ts",
+      "local_path": "/tmp/t1060-source/acpx/src/types.ts"
+    },
+    {
+      "path": "src/version.ts",
+      "sha256": "404c86a1eefd6e5c7d19d53f816cf594d3533b416dee7d7dda3645fbfbf1bd35",
+      "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/version.ts",
+      "local_path": "/tmp/t1060-source/acpx/src/version.ts"
+    }
+  ],
+  "relative_edges": [
+    {
+      "from": "src/acp/client.ts",
+      "specifier": "../agent-registry.js",
+      "to": "src/agent-registry.ts"
+    },
+    {
+      "from": "src/acp/client.ts",
+      "specifier": "../async-control.js",
+      "to": "src/async-control.ts"
+    },
+    {
+      "from": "src/acp/client.ts",
+      "specifier": "../errors.js",
+      "to": "src/errors.ts"
+    },
+    {
+      "from": "src/acp/client.ts",
+      "specifier": "../filesystem.js",
+      "to": "src/filesystem.ts"
+    },
+    {
+      "from": "src/acp/client.ts",
+      "specifier": "../permissions.js",
+      "to": "src/permissions.ts"
+    },
+    {
+      "from": "src/acp/client.ts",
+      "specifier": "../prompt-content.js",
+      "to": "src/prompt-content.ts"
+    },
+    {
+      "from": "src/acp/client.ts",
+      "specifier": "../spawn-command-options.js",
+      "to": "src/spawn-command-options.ts"
+    },
+    {
+      "from": "src/acp/client.ts",
+      "specifier": "../types.js",
+      "to": "src/types.ts"
+    },
+    {
+      "from": "src/acp/client.ts",
+      "specifier": "./agent-command.js",
+      "to": "src/acp/agent-command.ts"
+    },
+    {
+      "from": "src/acp/client.ts",
+      "specifier": "./agent-session-id.js",
+      "to": "src/acp/agent-session-id.ts"
+    },
+    {
+      "from": "src/acp/client.ts",
+      "specifier": "./auth-env.js",
+      "to": "src/acp/auth-env.ts"
+    },
+    {
+      "from": "src/acp/client.ts",
+      "specifier": "./client-process.js",
+      "to": "src/acp/client-process.ts"
+    },
+    {
+      "from": "src/acp/client.ts",
+      "specifier": "./client-protocol.js",
+      "to": "src/acp/client-protocol.ts"
+    },
+    {
+      "from": "src/acp/client.ts",
+      "specifier": "./codex-compat.js",
+      "to": "src/acp/codex-compat.ts"
+    },
+    {
+      "from": "src/acp/client.ts",
+      "specifier": "./command-probe.js",
+      "to": "src/acp/command-probe.ts"
+    },
+    {
+      "from": "src/acp/client.ts",
+      "specifier": "./error-shapes.js",
+      "to": "src/acp/error-shapes.ts"
+    },
+    {
+      "from": "src/acp/client.ts",
+      "specifier": "./model-support.js",
+      "to": "src/acp/model-support.ts"
+    },
+    {
+      "from": "src/acp/client.ts",
+      "specifier": "./ndjson-stream.js",
+      "to": "src/acp/ndjson-stream.ts"
+    },
+    {
+      "from": "src/acp/client.ts",
+      "specifier": "./observed-stream.js",
+      "to": "src/acp/observed-stream.ts"
+    },
+    {
+      "from": "src/acp/client.ts",
+      "specifier": "./process-descendants.js",
+      "to": "src/acp/process-descendants.ts"
+    },
+    {
+      "from": "src/acp/client.ts",
+      "specifier": "./session-control-errors.js",
+      "to": "src/acp/session-control-errors.ts"
+    },
+    {
+      "from": "src/acp/client.ts",
+      "specifier": "./terminal-manager.js",
+      "to": "src/acp/terminal-manager.ts"
+    },
+    {
+      "from": "src/acp/agent-command.ts",
+      "specifier": "../errors.js",
+      "to": "src/errors.ts"
+    },
+    {
+      "from": "src/acp/agent-command.ts",
+      "specifier": "../spawn-command-options.js",
+      "to": "src/spawn-command-options.ts"
+    },
+    {
+      "from": "src/acp/agent-command.ts",
+      "specifier": "../types.js",
+      "to": "src/types.ts"
+    },
+    {
+      "from": "src/acp/agent-command.ts",
+      "specifier": "./client-process.js",
+      "to": "src/acp/client-process.ts"
+    },
+    {
+      "from": "src/acp/auth-env.ts",
+      "specifier": "../types.js",
+      "to": "src/types.ts"
+    },
+    {
+      "from": "src/acp/client-protocol.ts",
+      "specifier": "../types.js",
+      "to": "src/types.ts"
+    },
+    {
+      "from": "src/acp/client-protocol.ts",
+      "specifier": "../version.js",
+      "to": "src/version.ts"
+    },
+    {
+      "from": "src/acp/error-shapes.ts",
+      "specifier": "../types.js",
+      "to": "src/types.ts"
+    },
+    {
+      "from": "src/acp/model-support.ts",
+      "specifier": "./agent-command.js",
+      "to": "src/acp/agent-command.ts"
+    },
+    {
+      "from": "src/acp/model-support.ts",
+      "specifier": "./client-process.js",
+      "to": "src/acp/client-process.ts"
+    },
+    {
+      "from": "src/acp/model-support.ts",
+      "specifier": "./model-config-state.js",
+      "to": "src/acp/model-config-state.ts"
+    },
+    {
+      "from": "src/acp/ndjson-stream.ts",
+      "specifier": "../errors.js",
+      "to": "src/errors.ts"
+    },
+    {
+      "from": "src/acp/ndjson-stream.ts",
+      "specifier": "./agent-command.js",
+      "to": "src/acp/agent-command.ts"
+    },
+    {
+      "from": "src/acp/ndjson-stream.ts",
+      "specifier": "./jsonrpc.js",
+      "to": "src/acp/jsonrpc.ts"
+    },
+    {
+      "from": "src/acp/observed-stream.ts",
+      "specifier": "../types.js",
+      "to": "src/types.ts"
+    },
+    {
+      "from": "src/acp/observed-stream.ts",
+      "specifier": "./jsonrpc.js",
+      "to": "src/acp/jsonrpc.ts"
+    },
+    {
+      "from": "src/acp/process-descendants.ts",
+      "specifier": "../process-identity.js",
+      "to": "src/process-identity.ts"
+    },
+    {
+      "from": "src/acp/process-descendants.ts",
+      "specifier": "./client-process.js",
+      "to": "src/acp/client-process.ts"
+    },
+    {
+      "from": "src/acp/session-control-errors.ts",
+      "specifier": "./error-shapes.js",
+      "to": "src/acp/error-shapes.ts"
+    },
+    {
+      "from": "src/acp/terminal-manager.ts",
+      "specifier": "../async-control.js",
+      "to": "src/async-control.ts"
+    },
+    {
+      "from": "src/acp/terminal-manager.ts",
+      "specifier": "../errors.js",
+      "to": "src/errors.ts"
+    },
+    {
+      "from": "src/acp/terminal-manager.ts",
+      "specifier": "../permission-prompt.js",
+      "to": "src/permission-prompt.ts"
+    },
+    {
+      "from": "src/acp/terminal-manager.ts",
+      "specifier": "../spawn-command-options.js",
+      "to": "src/spawn-command-options.ts"
+    },
+    {
+      "from": "src/acp/terminal-manager.ts",
+      "specifier": "../types.js",
+      "to": "src/types.ts"
+    },
+    {
+      "from": "src/acp/terminal-manager.ts",
+      "specifier": "./client-process.js",
+      "to": "src/acp/client-process.ts"
+    },
+    {
+      "from": "src/acp/terminal-manager.ts",
+      "specifier": "./process-descendants.js",
+      "to": "src/acp/process-descendants.ts"
+    },
+    {
+      "from": "src/agent-registry.ts",
+      "specifier": "./acp/client-process.js",
+      "to": "src/acp/client-process.ts"
+    },
+    {
+      "from": "src/agent-registry.ts",
+      "specifier": "./spawn-command-options.js",
+      "to": "src/spawn-command-options.ts"
+    },
+    {
+      "from": "src/errors.ts",
+      "specifier": "./types.js",
+      "to": "src/types.ts"
+    },
+    {
+      "from": "src/filesystem.ts",
+      "specifier": "./async-control.js",
+      "to": "src/async-control.ts"
+    },
+    {
+      "from": "src/filesystem.ts",
+      "specifier": "./errors.js",
+      "to": "src/errors.ts"
+    },
+    {
+      "from": "src/filesystem.ts",
+      "specifier": "./file-read-window.js",
+      "to": "src/file-read-window.ts"
+    },
+    {
+      "from": "src/filesystem.ts",
+      "specifier": "./permission-prompt.js",
+      "to": "src/permission-prompt.ts"
+    },
+    {
+      "from": "src/filesystem.ts",
+      "specifier": "./types.js",
+      "to": "src/types.ts"
+    },
+    {
+      "from": "src/permissions.ts",
+      "specifier": "./errors.js",
+      "to": "src/errors.ts"
+    },
+    {
+      "from": "src/permissions.ts",
+      "specifier": "./permission-prompt.js",
+      "to": "src/permission-prompt.ts"
+    },
+    {
+      "from": "src/permissions.ts",
+      "specifier": "./types.js",
+      "to": "src/types.ts"
+    },
+    {
+      "from": "src/types.ts",
+      "specifier": "./prompt-content.js",
+      "to": "src/prompt-content.ts"
+    },
+    {
+      "from": "src/process-identity.ts",
+      "specifier": "./acp/client-process.js",
+      "to": "src/acp/client-process.ts"
+    },
+    {
+      "from": "src/process-identity.ts",
+      "specifier": "./process-liveness.js",
+      "to": "src/process-liveness.ts"
+    }
+  ],
+  "unresolved_relative_imports": [],
+  "nonliteral_dynamic_imports": [],
+  "excluded_authority_files_found": [],
+  "closure_limits": [
+    "闭包是该固定提交全部可见 import/re-export/字面动态引用的源码闭包，不是编译或运行通过。",
+    "agent-registry 会读取运行时 package.json 并解析已安装的 Agent 包；指定受控可执行命令和绝对 argv，避免命中默认浮动 npx 定义。",
+    "version.ts 沿目录读取 package.json；独立复用目录保留正确 acpx 版本元数据或明确宿主clientInfo，不能把产品版本当 upstream版本。"
+  ],
+  "support_files": [
+    {
+      "repo": "openclaw/acpx",
+      "commit": "27efb1b57b9de22105a91e9154b1d29b51ede8cb",
+      "path": "LICENSE",
+      "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/LICENSE",
+      "sha256": "5c3dd08185d6d0a0045a45b9aea2fd9d85343f7ed5dbe23915e6f15e7b814f2d",
+      "fetched_at": "2026-10-04T07:46:52.463527+00:00",
+      "reused_cache": "/tmp/t1059-source/acpx/LICENSE"
+    },
+    {
+      "repo": "openclaw/acpx",
+      "commit": "27efb1b57b9de22105a91e9154b1d29b51ede8cb",
+      "path": "package.json",
+      "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/package.json",
+      "sha256": "1c403c0d069851f17167830d9bc175717e6eaf0f784bf0e1759547da3f0bd02d",
+      "fetched_at": "2026-10-04T07:46:54.126109+00:00",
+      "reused_cache": "/tmp/t1059-source/acpx/package.json"
+    },
+    {
+      "repo": "openclaw/acpx",
+      "commit": "27efb1b57b9de22105a91e9154b1d29b51ede8cb",
+      "path": "pnpm-lock.yaml",
+      "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/pnpm-lock.yaml",
+      "sha256": "f690474e2888eac608844d801ceef520bab201271edf1474e185330e8eb29b63",
+      "fetched_at": "2026-10-04T07:47:44.156039+00:00",
+      "reused_cache": "/tmp/t1059-source/acpx/pnpm-lock.yaml"
+    },
+    {
+      "repo": "openclaw/acpx",
+      "commit": "27efb1b57b9de22105a91e9154b1d29b51ede8cb",
+      "path": "tsconfig.json",
+      "url": "https://raw.githubusercontent.com/openclaw/acpx/27efb1b57b9de22105a91e9154b1d29b51ede8cb/tsconfig.json",
+      "sha256": "ad372bf51dc101dc5da5fa9be82747759e018a3bb23a71f3761d58409e4e38c5",
+      "fetched_at": "2026-10-04T08:22:18.460737+00:00"
+    }
+  ],
+  "external_direct_imports": {
+    "@agentclientprotocol/sdk": [
+      {
+        "from": "src/acp/client.ts",
+        "specifier": "@agentclientprotocol/sdk"
+      },
+      {
+        "from": "src/acp/client-protocol.ts",
+        "specifier": "@agentclientprotocol/sdk"
+      },
+      {
+        "from": "src/acp/codex-compat.ts",
+        "specifier": "@agentclientprotocol/sdk"
+      },
+      {
+        "from": "src/acp/ndjson-stream.ts",
+        "specifier": "@agentclientprotocol/sdk"
+      },
+      {
+        "from": "src/acp/observed-stream.ts",
+        "specifier": "@agentclientprotocol/sdk"
+      },
+      {
+        "from": "src/acp/terminal-manager.ts",
+        "specifier": "@agentclientprotocol/sdk"
+      },
+      {
+        "from": "src/filesystem.ts",
+        "specifier": "@agentclientprotocol/sdk"
+      },
+      {
+        "from": "src/permissions.ts",
+        "specifier": "@agentclientprotocol/sdk"
+      },
+      {
+        "from": "src/prompt-content.ts",
+        "specifier": "@agentclientprotocol/sdk"
+      },
+      {
+        "from": "src/types.ts",
+        "specifier": "@agentclientprotocol/sdk"
+      },
+      {
+        "from": "src/acp/jsonrpc.ts",
+        "specifier": "@agentclientprotocol/sdk"
+      }
+    ],
+    "@openclaw/fs-safe": [
+      {
+        "from": "src/acp/client.ts",
+        "specifier": "@openclaw/fs-safe/errors"
+      },
+      {
+        "from": "src/filesystem.ts",
+        "specifier": "@openclaw/fs-safe/path"
+      },
+      {
+        "from": "src/filesystem.ts",
+        "specifier": "@openclaw/fs-safe/root"
+      }
+    ]
+  },
+  "external_package_closure": [
+    {
+      "name": "@agentclientprotocol/sdk",
+      "version": "1.5.1",
+      "lock_key": "@agentclientprotocol/sdk@1.5.1(zod@4.6.5)",
+      "license": "Apache-2.0",
+      "metadata_url": "https://registry.npmjs.org/@agentclientprotocol%2Fsdk/1.5.1",
+      "metadata_path": "/tmp/t1060-source/npm/@agentclientprotocol__sdk-1.5.1.json",
+      "metadata_sha256": "cac5f780e7b000f536da89ab581419cdbd958ae55c2649c51936a69f31bc1eab",
+      "dist_integrity": "sha512-nSUIrC1fOR9+ppKfx9KdwjBBND2sAPzFHo4yVQrGbXZHnayUYpwL8CDVR5LSxbapY/oKMOzNP0wvwfyx3PS2KA==",
+      "dependencies": {},
+      "peerDependencies": {
+        "zod": "^3.25.0 || ^4.0.0"
+      },
+      "optionalDependencies": {},
+      "confirmed_at": "2026-10-04T08:28:43.366373+00:00"
+    },
+    {
+      "name": "@openclaw/fs-safe-darwin-arm64",
+      "version": "0.21.3",
+      "lock_key": "@openclaw/fs-safe-darwin-arm64@0.21.3",
+      "license": "MIT",
+      "metadata_url": "https://registry.npmjs.org/@openclaw%2Ffs-safe-darwin-arm64/0.21.3",
+      "metadata_path": "/tmp/t1060-source/npm/@openclaw__fs-safe-darwin-arm64-0.21.3.json",
+      "metadata_sha256": "8b428e68066c5ebc580fc24f250f4b7ebd49fae0695b7a2fb6d55b64de1924dc",
+      "dist_integrity": "sha512-ztAj99tTLFNtphtHNQJntsiNcb74c81Z83qeC86Da2INhXDjZTVk9W/jb1He9owaDo5fi7/oxRbt3MAbPaqRSw==",
+      "dependencies": {},
+      "peerDependencies": {},
+      "optionalDependencies": {},
+      "confirmed_at": "2026-10-04T08:28:44.603303+00:00"
+    },
+    {
+      "name": "@openclaw/fs-safe-darwin-x64",
+      "version": "0.21.3",
+      "lock_key": "@openclaw/fs-safe-darwin-x64@0.21.3",
+      "license": "MIT",
+      "metadata_url": "https://registry.npmjs.org/@openclaw%2Ffs-safe-darwin-x64/0.21.3",
+      "metadata_path": "/tmp/t1060-source/npm/@openclaw__fs-safe-darwin-x64-0.21.3.json",
+      "metadata_sha256": "6ab77887eb80b520d1971019ed8327edb0f635d5104bc36f9424fc2cfe4ad8db",
+      "dist_integrity": "sha512-bxxFN9l5BmaLxDO4hGnMl7LMFkmc4Uj/n7oNZCG407zZCY3wv+I0C3QocH/Nnrz3Of2zXtLElPYc2wqejryJ6Q==",
+      "dependencies": {},
+      "peerDependencies": {},
+      "optionalDependencies": {},
+      "confirmed_at": "2026-10-04T08:28:44.667324+00:00"
+    },
+    {
+      "name": "@openclaw/fs-safe-linux-arm64-gnu",
+      "version": "0.21.3",
+      "lock_key": "@openclaw/fs-safe-linux-arm64-gnu@0.21.3",
+      "license": "MIT",
+      "metadata_url": "https://registry.npmjs.org/@openclaw%2Ffs-safe-linux-arm64-gnu/0.21.3",
+      "metadata_path": "/tmp/t1060-source/npm/@openclaw__fs-safe-linux-arm64-gnu-0.21.3.json",
+      "metadata_sha256": "d260098073f8f160d05e70898782a29c0a771f7ba91cbab508f764abd1838ded",
+      "dist_integrity": "sha512-JPDX4gk6vH/sYzQ6tHse0Zimb7lS0OBeJwT0iLF2BPQ1fobLH5X7iOrQgsqCfhRM0m+Ts6UJT7ebf/63T2uPoA==",
+      "dependencies": {},
+      "peerDependencies": {},
+      "optionalDependencies": {},
+      "confirmed_at": "2026-10-04T08:28:44.599591+00:00"
+    },
+    {
+      "name": "@openclaw/fs-safe-linux-arm64-musl",
+      "version": "0.21.3",
+      "lock_key": "@openclaw/fs-safe-linux-arm64-musl@0.21.3",
+      "license": "MIT",
+      "metadata_url": "https://registry.npmjs.org/@openclaw%2Ffs-safe-linux-arm64-musl/0.21.3",
+      "metadata_path": "/tmp/t1060-source/npm/@openclaw__fs-safe-linux-arm64-musl-0.21.3.json",
+      "metadata_sha256": "bf1581ab5cfc61466f81ceb6fe358aca70adfbb1f43e101a53bf4b7fefbf85b7",
+      "dist_integrity": "sha512-CcqsLepJQTK5Rn6x5tEv3kaDV5jeveQO1HKBwlcJ7tEWhLb9KDRYHiyStqyg10u/O+apMril6Sj5chjPXApciw==",
+      "dependencies": {},
+      "peerDependencies": {},
+      "optionalDependencies": {},
+      "confirmed_at": "2026-10-04T08:28:44.673826+00:00"
+    },
+    {
+      "name": "@openclaw/fs-safe-linux-x64-gnu",
+      "version": "0.21.3",
+      "lock_key": "@openclaw/fs-safe-linux-x64-gnu@0.21.3",
+      "license": "MIT",
+      "metadata_url": "https://registry.npmjs.org/@openclaw%2Ffs-safe-linux-x64-gnu/0.21.3",
+      "metadata_path": "/tmp/t1060-source/npm/@openclaw__fs-safe-linux-x64-gnu-0.21.3.json",
+      "metadata_sha256": "5e1d364a5453d61c086152ea29e2f483716440277bccda78977f53f772a0b9d1",
+      "dist_integrity": "sha512-+Xr7WLr2BCiPfx/xCYzn2Lcf+5IUj04EOUwwWbIGIlB8moXGF2uqe5vMtEifHyhvAqHES56QE3aYXqiLyNrhgQ==",
+      "dependencies": {},
+      "peerDependencies": {},
+      "optionalDependencies": {},
+      "confirmed_at": "2026-10-04T08:28:44.640987+00:00"
+    },
+    {
+      "name": "@openclaw/fs-safe-linux-x64-musl",
+      "version": "0.21.3",
+      "lock_key": "@openclaw/fs-safe-linux-x64-musl@0.21.3",
+      "license": "MIT",
+      "metadata_url": "https://registry.npmjs.org/@openclaw%2Ffs-safe-linux-x64-musl/0.21.3",
+      "metadata_path": "/tmp/t1060-source/npm/@openclaw__fs-safe-linux-x64-musl-0.21.3.json",
+      "metadata_sha256": "12910e9968a4796c69c89df9a67ed3b10b6d7c1a1432e5ec4c7eb42751bbb115",
+      "dist_integrity": "sha512-fI4ij+6v/tk8HAI2X/GWbeeipNr3FsRaroPW1SolgHmrt+N6uTL/jxBFIpAcIfeRWy9hb8Kfd4dT07MV1wOF5A==",
+      "dependencies": {},
+      "peerDependencies": {},
+      "optionalDependencies": {},
+      "confirmed_at": "2026-10-04T08:28:44.643455+00:00"
+    },
+    {
+      "name": "@openclaw/fs-safe-win32-x64-msvc",
+      "version": "0.21.3",
+      "lock_key": "@openclaw/fs-safe-win32-x64-msvc@0.21.3",
+      "license": "MIT",
+      "metadata_url": "https://registry.npmjs.org/@openclaw%2Ffs-safe-win32-x64-msvc/0.21.3",
+      "metadata_path": "/tmp/t1060-source/npm/@openclaw__fs-safe-win32-x64-msvc-0.21.3.json",
+      "metadata_sha256": "e7289e48ada4c4fafec4b42341ae75340f9ba0e0516f2aff4960a7406bbe9bf6",
+      "dist_integrity": "sha512-CuylNHU+zEayp18J/zU7qB1M/7/Jc/nWVigQ2US+EALB1LfGly45ZVSKnK7618z+xfBXpK+5c83n0piiukXH+g==",
+      "dependencies": {},
+      "peerDependencies": {},
+      "optionalDependencies": {},
+      "confirmed_at": "2026-10-04T08:28:46.755092+00:00"
+    },
+    {
+      "name": "@openclaw/fs-safe",
+      "version": "0.21.3",
+      "lock_key": "@openclaw/fs-safe@0.21.3",
+      "license": "MIT",
+      "metadata_url": "https://registry.npmjs.org/@openclaw%2Ffs-safe/0.21.3",
+      "metadata_path": "/tmp/t1060-source/npm/@openclaw__fs-safe-0.21.3.json",
+      "metadata_sha256": "4043a02437ec7d8fcf47b90c6d12eb926a837690e9fec5b883821cacc2be2fb1",
+      "dist_integrity": "sha512-sBm68f4QiZrrqlZxbOlqVIutrmOK/KLZBrwyPIhV7xXJmlPFc6ZET8AggcU3hMDM3dDSUYgA8LUupxwTB2DZsg==",
+      "dependencies": {},
+      "peerDependencies": {},
+      "optionalDependencies": {
+        "jszip": "^3.10.2",
+        "@openclaw/fs-safe-darwin-x64": "0.21.3",
+        "@openclaw/fs-safe-darwin-arm64": "0.21.3",
+        "@openclaw/fs-safe-linux-x64-gnu": "0.21.3",
+        "@openclaw/fs-safe-linux-x64-musl": "0.21.3",
+        "@openclaw/fs-safe-win32-x64-msvc": "0.21.3",
+        "@openclaw/fs-safe-linux-arm64-gnu": "0.21.3",
+        "@openclaw/fs-safe-linux-arm64-musl": "0.21.3"
+      },
+      "confirmed_at": "2026-10-04T08:28:44.603778+00:00"
+    },
+    {
+      "name": "core-util-is",
+      "version": "1.0.3",
+      "lock_key": "core-util-is@1.0.3",
+      "license": "MIT",
+      "metadata_url": "https://registry.npmjs.org/core-util-is/1.0.3",
+      "metadata_path": "/tmp/t1060-source/npm/core-util-is-1.0.3.json",
+      "metadata_sha256": "1966e45a3ccc8d45f764286776ae9b0fe059b918f8fcce2b681e6feb36ad7fea",
+      "dist_integrity": "sha512-ZQBvi1DcpJ4GDqanjucZ2Hj3wEO5pZDS89BWbkcrvdxksJorwUDDZamX9ldFkp9aw2lmBDLgkObEA4DWNJ9FYQ==",
+      "dependencies": {},
+      "peerDependencies": {},
+      "optionalDependencies": {},
+      "confirmed_at": "2026-10-04T08:28:46.058284+00:00"
+    },
+    {
+      "name": "immediate",
+      "version": "3.0.6",
+      "lock_key": "immediate@3.0.6",
+      "license": "MIT",
+      "metadata_url": "https://registry.npmjs.org/immediate/3.0.6",
+      "metadata_path": "/tmp/t1060-source/npm/immediate-3.0.6.json",
+      "metadata_sha256": "ad2be7b2c0ef325ae853c5ca4216349efcd694606a3b31ada737bc00b3719882",
+      "dist_integrity": "sha512-XXOFtyqDjNDAQxVfYxuF7g9Il/IbWmmlQg2MYKOH8ExIT1qg6xc4zyS3HaEEATgs1btfzxq15ciUiY7gjSXRGQ==",
+      "dependencies": {},
+      "peerDependencies": {},
+      "optionalDependencies": {},
+      "confirmed_at": "2026-10-04T08:28:46.731244+00:00"
+    },
+    {
+      "name": "inherits",
+      "version": "2.0.4",
+      "lock_key": "inherits@2.0.4",
+      "license": "ISC",
+      "metadata_url": "https://registry.npmjs.org/inherits/2.0.4",
+      "metadata_path": "/tmp/t1060-source/npm/inherits-2.0.4.json",
+      "metadata_sha256": "bdffe5eeab2fd4263d28eda6112c2ac4bdb3908d93fad298d5f7b66548e932e7",
+      "dist_integrity": "sha512-k/vGaX4/Yla3WzyMCvTQOXYeIHvqOKtnqBduzTHpzpQZzAskKMhZ2K+EnBiSM9zGSoIFeMpXKxa4dYeZIQqewQ==",
+      "dependencies": {},
+      "peerDependencies": {},
+      "optionalDependencies": {},
+      "confirmed_at": "2026-10-04T08:28:46.707281+00:00"
+    },
+    {
+      "name": "isarray",
+      "version": "1.0.0",
+      "lock_key": "isarray@1.0.0",
+      "license": "MIT",
+      "metadata_url": "https://registry.npmjs.org/isarray/1.0.0",
+      "metadata_path": "/tmp/t1060-source/npm/isarray-1.0.0.json",
+      "metadata_sha256": "566bbad706db3711a1be1a2822bd37b200fd273fc118305430f019100e521a15",
+      "dist_integrity": "sha512-VLghIWNM6ELQzo7zwmcg0NmTVyWKYjvIeM83yjp0wRDTmUnrM678fQbcKBo6n2CJEF0szoG//ytg+TKla89ALQ==",
+      "dependencies": {},
+      "peerDependencies": {},
+      "optionalDependencies": {},
+      "confirmed_at": "2026-10-04T08:28:46.775487+00:00"
+    },
+    {
+      "name": "jszip",
+      "version": "3.10.2",
+      "lock_key": "jszip@3.10.2",
+      "license": "(MIT OR GPL-3.0-or-later)",
+      "metadata_url": "https://registry.npmjs.org/jszip/3.10.2",
+      "metadata_path": "/tmp/t1060-source/npm/jszip-3.10.2.json",
+      "metadata_sha256": "9042fb77e205b431157ece8ad7e0f81e341966df6987061d8e6b24ec6b66ee6d",
+      "dist_integrity": "sha512-3l+rb15IOWtUhU0H5MFqES/T6Kh7abYwjosBey/vD6hDt8zoEffkSC5Ws5SGtgVw3gBx2NEbhTeSW1+kWkpyTQ==",
+      "dependencies": {
+        "lie": "~3.3.0",
+        "pako": "~1.0.2",
+        "setimmediate": "^1.0.5",
+        "readable-stream": "~2.3.6"
+      },
+      "peerDependencies": {},
+      "optionalDependencies": {},
+      "confirmed_at": "2026-10-04T08:28:46.805091+00:00"
+    },
+    {
+      "name": "lie",
+      "version": "3.3.0",
+      "lock_key": "lie@3.3.0",
+      "license": "MIT",
+      "metadata_url": "https://registry.npmjs.org/lie/3.3.0",
+      "metadata_path": "/tmp/t1060-source/npm/lie-3.3.0.json",
+      "metadata_sha256": "d7ffc81030a63fb81529a92113f012b6412c65410d3d426703a2b92e62e812dd",
+      "dist_integrity": "sha512-UaiMJzeWRlEujzAuw5LokY1L5ecNQYZKfmyZ9L7wDHb/p5etKaxXhohBcrw0EYby+G/NA52vRSN4N39dxHAIwQ==",
+      "dependencies": {
+        "immediate": "~3.0.5"
+      },
+      "peerDependencies": {},
+      "optionalDependencies": {},
+      "confirmed_at": "2026-10-04T08:28:47.070033+00:00"
+    },
+    {
+      "name": "pako",
+      "version": "1.0.11",
+      "lock_key": "pako@1.0.11",
+      "license": "(MIT AND Zlib)",
+      "metadata_url": "https://registry.npmjs.org/pako/1.0.11",
+      "metadata_path": "/tmp/t1060-source/npm/pako-1.0.11.json",
+      "metadata_sha256": "0c380eb3d27a5a93fc5af301c13b9ff4f3e42085aadd2a5141c0bc9ddc30faad",
+      "dist_integrity": "sha512-4hLB8Py4zZce5s4yd9XzopqwVv/yGNhV1Bl8NTmCq1763HeK2+EwVTv+leGeL13Dnh2wfbqowVPXCIO0z4taYw==",
+      "dependencies": {},
+      "peerDependencies": {},
+      "optionalDependencies": {},
+      "confirmed_at": "2026-10-04T08:28:48.553244+00:00"
+    },
+    {
+      "name": "process-nextick-args",
+      "version": "2.0.1",
+      "lock_key": "process-nextick-args@2.0.1",
+      "license": "MIT",
+      "metadata_url": "https://registry.npmjs.org/process-nextick-args/2.0.1",
+      "metadata_path": "/tmp/t1060-source/npm/process-nextick-args-2.0.1.json",
+      "metadata_sha256": "a87b44a1e710af97cb07a80e882006476fa7ec41df9450945d32de97d756dadb",
+      "dist_integrity": "sha512-3ouUOpQhtgrbOa17J7+uxOTpITYWaGP7/AhoR3+A+/1e9skrzelGi/dXzEYyvbxubEF6Wn2ypscTKiKJFFn1ag==",
+      "dependencies": {},
+      "peerDependencies": {},
+      "optionalDependencies": {},
+      "confirmed_at": "2026-10-04T08:28:48.336018+00:00"
+    },
+    {
+      "name": "readable-stream",
+      "version": "2.3.8",
+      "lock_key": "readable-stream@2.3.8",
+      "license": "MIT",
+      "metadata_url": "https://registry.npmjs.org/readable-stream/2.3.8",
+      "metadata_path": "/tmp/t1060-source/npm/readable-stream-2.3.8.json",
+      "metadata_sha256": "56afc83bacc89eb502015da846934623c1449f7e87150d8e405bef9c76544200",
+      "dist_integrity": "sha512-8p0AUk4XODgIewSi0l8Epjs+EVnWiK7NoDIEGU0HhE7+ZyY8D1IMY7odu5lRrFXGg71L15KG8QrPmum45RTtdA==",
+      "dependencies": {
+        "isarray": "~1.0.0",
+        "inherits": "~2.0.3",
+        "safe-buffer": "~5.1.1",
+        "core-util-is": "~1.0.0",
+        "string_decoder": "~1.1.1",
+        "util-deprecate": "~1.0.1",
+        "process-nextick-args": "~2.0.0"
+      },
+      "peerDependencies": {},
+      "optionalDependencies": {},
+      "confirmed_at": "2026-10-04T08:28:48.602099+00:00"
+    },
+    {
+      "name": "safe-buffer",
+      "version": "5.1.2",
+      "lock_key": "safe-buffer@5.1.2",
+      "license": "MIT",
+      "metadata_url": "https://registry.npmjs.org/safe-buffer/5.1.2",
+      "metadata_path": "/tmp/t1060-source/npm/safe-buffer-5.1.2.json",
+      "metadata_sha256": "6f14e08321df74dcaa744951d09646dc412e96b9e6cc73f815f613d604e2c3ce",
+      "dist_integrity": "sha512-Gd2UZBJDkXlY7GbJxfsE8/nvKkUEU1G38c1siN6QP6a9PT9MmHB8GnpscSmMJSoF8LOIrt8ud/wPtojys4G6+g==",
+      "dependencies": {},
+      "peerDependencies": {},
+      "optionalDependencies": {},
+      "confirmed_at": "2026-10-04T08:28:48.567300+00:00"
+    },
+    {
+      "name": "setimmediate",
+      "version": "1.0.5",
+      "lock_key": "setimmediate@1.0.5",
+      "license": "MIT",
+      "metadata_url": "https://registry.npmjs.org/setimmediate/1.0.5",
+      "metadata_path": "/tmp/t1060-source/npm/setimmediate-1.0.5.json",
+      "metadata_sha256": "06baf3c151a0e01229401d2a01854857185bd025bc40568131d9687464e2c1aa",
+      "dist_integrity": "sha512-MATJdZp8sLqDl/68LfQmbP8zKPLQNV6BIZoIgrscFDQ+RsvK/BxeDQOgyxKKoh0y/8h3BqVFnCqQ/gd+reiIXA==",
+      "dependencies": {},
+      "peerDependencies": {},
+      "optionalDependencies": {},
+      "confirmed_at": "2026-10-04T08:28:48.567364+00:00"
+    },
+    {
+      "name": "string_decoder",
+      "version": "1.1.1",
+      "lock_key": "string_decoder@1.1.1",
+      "license": "MIT",
+      "metadata_url": "https://registry.npmjs.org/string_decoder/1.1.1",
+      "metadata_path": "/tmp/t1060-source/npm/string_decoder-1.1.1.json",
+      "metadata_sha256": "04fbc90652ce27c0651aeb0fd119f8d57a7a68c331927d1a8ca49cd531bec35d",
+      "dist_integrity": "sha512-n/ShnvDi6FHbbVfviro+WojiFzv+s8MPMHBczVePfUpDJLwoLT0ht1l4YwBCbi8pJAveEEdnkHyPyTP/mzRfwg==",
+      "dependencies": {
+        "safe-buffer": "~5.1.0"
+      },
+      "peerDependencies": {},
+      "optionalDependencies": {},
+      "confirmed_at": "2026-10-04T08:28:48.553155+00:00"
+    },
+    {
+      "name": "util-deprecate",
+      "version": "1.0.2",
+      "lock_key": "util-deprecate@1.0.2",
+      "license": "MIT",
+      "metadata_url": "https://registry.npmjs.org/util-deprecate/1.0.2",
+      "metadata_path": "/tmp/t1060-source/npm/util-deprecate-1.0.2.json",
+      "metadata_sha256": "57497c3463ac8194ba5ffbaee85d4b91cd2c931b9f43228347eb11f8744efd38",
+      "dist_integrity": "sha512-EPD5q1uXyFxJpCrLnCc1nHnq3gOa6DZBocAIiI2TaSCA7VCJ1UJDMagCzIkXNsUYfD1daK//LTEQ8xiIbrHtcw==",
+      "dependencies": {},
+      "peerDependencies": {},
+      "optionalDependencies": {},
+      "confirmed_at": "2026-10-04T08:28:49.577034+00:00"
+    },
+    {
+      "name": "zod",
+      "version": "4.6.5",
+      "lock_key": "zod@4.6.5",
+      "license": "MIT",
+      "metadata_url": "https://registry.npmjs.org/zod/4.6.5",
+      "metadata_path": "/tmp/t1060-source/npm/zod-4.6.5.json",
+      "metadata_sha256": "fe675b61cdd5edc59b65bf2e560d4b3eebd7fb36934329cb323e71f5a0798646",
+      "dist_integrity": "sha512-v5l/aFXZQeai4awLbOpSoHecE9UiMrnfx75tEXLjNonXVARxQ5mOeipTjROUchszUNCqnE+hqAMujRsRHsut2Q==",
+      "dependencies": {},
+      "peerDependencies": {},
+      "optionalDependencies": {},
+      "confirmed_at": "2026-10-04T08:28:48.553681+00:00"
+    }
+  ],
+  "external_package_edges": [
+    {
+      "from": "@openclaw/fs-safe@0.21.3",
+      "to": "@openclaw/fs-safe-darwin-arm64@0.21.3",
+      "kind": "optionalDependencies"
+    },
+    {
+      "from": "@openclaw/fs-safe@0.21.3",
+      "to": "@openclaw/fs-safe-darwin-x64@0.21.3",
+      "kind": "optionalDependencies"
+    },
+    {
+      "from": "@openclaw/fs-safe@0.21.3",
+      "to": "@openclaw/fs-safe-linux-arm64-gnu@0.21.3",
+      "kind": "optionalDependencies"
+    },
+    {
+      "from": "@openclaw/fs-safe@0.21.3",
+      "to": "@openclaw/fs-safe-linux-arm64-musl@0.21.3",
+      "kind": "optionalDependencies"
+    },
+    {
+      "from": "@openclaw/fs-safe@0.21.3",
+      "to": "@openclaw/fs-safe-linux-x64-gnu@0.21.3",
+      "kind": "optionalDependencies"
+    },
+    {
+      "from": "@openclaw/fs-safe@0.21.3",
+      "to": "@openclaw/fs-safe-linux-x64-musl@0.21.3",
+      "kind": "optionalDependencies"
+    },
+    {
+      "from": "@openclaw/fs-safe@0.21.3",
+      "to": "@openclaw/fs-safe-win32-x64-msvc@0.21.3",
+      "kind": "optionalDependencies"
+    },
+    {
+      "from": "@openclaw/fs-safe@0.21.3",
+      "to": "jszip@3.10.2",
+      "kind": "optionalDependencies"
+    },
+    {
+      "from": "jszip@3.10.2",
+      "to": "lie@3.3.0",
+      "kind": "dependencies"
+    },
+    {
+      "from": "jszip@3.10.2",
+      "to": "pako@1.0.11",
+      "kind": "dependencies"
+    },
+    {
+      "from": "jszip@3.10.2",
+      "to": "readable-stream@2.3.8",
+      "kind": "dependencies"
+    },
+    {
+      "from": "jszip@3.10.2",
+      "to": "setimmediate@1.0.5",
+      "kind": "dependencies"
+    },
+    {
+      "from": "readable-stream@2.3.8",
+      "to": "core-util-is@1.0.3",
+      "kind": "dependencies"
+    },
+    {
+      "from": "readable-stream@2.3.8",
+      "to": "inherits@2.0.4",
+      "kind": "dependencies"
+    },
+    {
+      "from": "readable-stream@2.3.8",
+      "to": "isarray@1.0.0",
+      "kind": "dependencies"
+    },
+    {
+      "from": "readable-stream@2.3.8",
+      "to": "process-nextick-args@2.0.1",
+      "kind": "dependencies"
+    },
+    {
+      "from": "readable-stream@2.3.8",
+      "to": "safe-buffer@5.1.2",
+      "kind": "dependencies"
+    },
+    {
+      "from": "readable-stream@2.3.8",
+      "to": "string_decoder@1.1.1",
+      "kind": "dependencies"
+    },
+    {
+      "from": "readable-stream@2.3.8",
+      "to": "util-deprecate@1.0.2",
+      "kind": "dependencies"
+    },
+    {
+      "from": "string_decoder@1.1.1",
+      "to": "safe-buffer@5.1.2",
+      "kind": "dependencies"
+    },
+    {
+      "from": "lie@3.3.0",
+      "to": "immediate@3.0.6",
+      "kind": "dependencies"
+    },
+    {
+      "from": "@agentclientprotocol/sdk@1.5.1(zod@4.6.5)",
+      "to": "zod@4.6.5",
+      "kind": "dependencies"
+    }
+  ],
+  "external_package_closure_source": "/tmp/t1060-source/npm/client-external-closure.json",
+  "external_license_selection": [
+    "jszip 3.10.2 声明 MIT OR GPL-3.0-or-later；此复用选择 MIT，须保留对应许可原文。",
+    "pako 1.0.11 声明 MIT AND Zlib；两份许可均需保留。",
+    "inherits 2.0.4 为 ISC；其余许可见逐包字段。",
+    "以上为 npm 声明及固定 lock 解析身份；没有下载执行包或完成再分发许可文件打包。"
+  ],
+  "index_export_suggestion": {
+    "kind": "仅导出原类与必要类型；不重写协议、不缩写客户端。",
+    "code": "export { AcpClient } from \"./src/acp/client.js\";\nexport type { AcpClientOptions } from \"./src/types.js\";",
+    "excluded": [
+      "src/runtime/**",
+      "src/flows*",
+      "file session store",
+      "conversation history",
+      "task manager",
+      "queue/lock authority"
+    ],
+    "package_warning": "公开 package 入口不导出 AcpClient，不依赖不存在的 dist/acp/client.js。"
+  },
+  "codex_acp": {
+    "package": "@agentclientprotocol/codex-acp",
+    "version": "2.1.1",
+    "commit": "68d7d2d5ddfc0ed5746f9f6130892dda685e65dd",
+    "license": "Apache-2.0",
+    "metadata_path": "/tmp/t1060-source/codex-acp-2.1.1-metadata.json",
+    "metadata_sha256": "17373df795cef419d5907e808094c88896dfb56f59d0a23d8b02dab2de285f5d",
+    "source_root": "/tmp/t1060-source/codex-acp",
+    "source_records": "/tmp/t1060-source/codex-acp/source-records.json",
+    "fixed_upstream_lock_path": "/tmp/t1060-source/codex-acp/package-lock.json",
+    "fixed_upstream_lock_sha256": "d1b3c4a9526a98446d63352b2ae062716223f2ab00ca769d5027bf3d5a31a7e7",
+    "external_packages_from_upstream_lock": [
+      {
+        "package_path": "node_modules/@agentclientprotocol/sdk",
+        "name": "@agentclientprotocol/sdk",
+        "version": "1.5.0",
+        "license": "Apache-2.0",
+        "integrity": "sha512-524jwbB2iYWA+kWWyv9fhKbhU89dH/lu9u5EXwVNmfYzopV8BujCDxByBDZhxRUkB7RWIJzISCnwivdDk+bdVg==",
+        "optional": false,
+        "os": null,
+        "cpu": null
+      },
+      {
+        "package_path": "node_modules/@openai/codex",
+        "name": "@openai/codex",
+        "version": "0.159.1",
+        "license": "Apache-2.0",
+        "integrity": "sha512-tCAmvOk40hcmVDefwV4Jae/i5eAMrl7qUCRYUq1uYiQGZoIIVSCa/b3Fs+0uXG46p4jaG2DzqhG/RIunvnOa1g==",
+        "optional": false,
+        "os": null,
+        "cpu": null
+      },
+      {
+        "package_path": "node_modules/@openai/codex-darwin-arm64",
+        "name": "@openai/codex",
+        "version": "0.159.1-darwin-arm64",
+        "license": "Apache-2.0",
+        "integrity": "sha512-asbXtXQerzPO8CL3t/5++Whj00k+NkbE4ngT56pCwx2/5JJVCI0glEjCECGK8rA0v4zb94EAZonxAcfOd+/1MA==",
+        "optional": true,
+        "os": [
+          "darwin"
+        ],
+        "cpu": [
+          "arm64"
+        ]
+      },
+      {
+        "package_path": "node_modules/@openai/codex-darwin-x64",
+        "name": "@openai/codex",
+        "version": "0.159.1-darwin-x64",
+        "license": "Apache-2.0",
+        "integrity": "sha512-aCcslg6PejQSE/FhEFNk5JMQuiUYYTwWK2W/kAIZ18qSHFV0UHqqmSnHDSPOx1xClUGc9RhtAB6y9TO99hHk2Q==",
+        "optional": true,
+        "os": [
+          "darwin"
+        ],
+        "cpu": [
+          "x64"
+        ]
+      },
+      {
+        "package_path": "node_modules/@openai/codex-linux-arm64",
+        "name": "@openai/codex",
+        "version": "0.159.1-linux-arm64",
+        "license": "Apache-2.0",
+        "integrity": "sha512-SUuxUCTWkvmzrCPIpRHMlivwSsL2STeUv6Dqm/TkUwYFfaqAQqZ8uIq8+d3SnYJsXiz1bkoiIdy8CSuptfEBfQ==",
+        "optional": true,
+        "os": [
+          "linux"
+        ],
+        "cpu": [
+          "arm64"
+        ]
+      },
+      {
+        "package_path": "node_modules/@openai/codex-linux-x64",
+        "name": "@openai/codex",
+        "version": "0.159.1-linux-x64",
+        "license": "Apache-2.0",
+        "integrity": "sha512-NmXTe4LDsShovyGYH5Q5AP2S5kRtY6wEWkAMGm28pYGQsjUd1MMSPBK7obnepYgaqX774jDF0w8jpDPmOLSx3w==",
+        "optional": true,
+        "os": [
+          "linux"
+        ],
+        "cpu": [
+          "x64"
+        ]
+      },
+      {
+        "package_path": "node_modules/@openai/codex-win32-arm64",
+        "name": "@openai/codex",
+        "version": "0.159.1-win32-arm64",
+        "license": "Apache-2.0",
+        "integrity": "sha512-6CY7Vkp+2aSkRFIlLBsifbU/jf1s58k9C6FVsW2pk/EpQHT5fPpUWVZqVDxiIlp7EXnCz8eRdSmFNVNuILMfyQ==",
+        "optional": true,
+        "os": [
+          "win32"
+        ],
+        "cpu": [
+          "arm64"
+        ]
+      },
+      {
+        "package_path": "node_modules/@openai/codex-win32-x64",
+        "name": "@openai/codex",
+        "version": "0.159.1-win32-x64",
+        "license": "Apache-2.0",
+        "integrity": "sha512-BUNLYw3oqwnpdV9pWKPccJ7WlbYG36SGPyGBzbnayvEl6D4RwucN7GOl+Qe05WRXI5is+kveieX1pg5uyBSIrg==",
+        "optional": true,
+        "os": [
+          "win32"
+        ],
+        "cpu": [
+          "x64"
+        ]
+      },
+      {
+        "package_path": "node_modules/bundle-name",
+        "name": "bundle-name",
+        "version": "4.1.0",
+        "license": "MIT",
+        "integrity": "sha512-tjwM5exMg6BGRI+kNmTntNsvdZS1X8BFYS6tnJ2hdH0kVxM6/eVZ2xy+FqStSWvYmtfFMDLIxurorHwDKfDz5Q==",
+        "optional": false,
+        "os": null,
+        "cpu": null
+      },
+      {
+        "package_path": "node_modules/default-browser",
+        "name": "default-browser",
+        "version": "5.5.1",
+        "license": "MIT",
+        "integrity": "sha512-m1pAzaJgZ/gssEqlOhJkPJp8Xly7QyW6xcrkUa2KKcDeDSEMP7X8xipU3snUcfisTQx0w1AGae+9UtJSfVnXGw==",
+        "optional": false,
+        "os": null,
+        "cpu": null
+      },
+      {
+        "package_path": "node_modules/default-browser-id",
+        "name": "default-browser-id",
+        "version": "5.0.1",
+        "license": "MIT",
+        "integrity": "sha512-x1VCxdX4t+8wVfd1so/9w+vQ4vx7lKd2Qp5tDRutErwmR85OgmfX7RlLRMWafRMY7hbEiXIbudNrjOAPa/hL8Q==",
+        "optional": false,
+        "os": null,
+        "cpu": null
+      },
+      {
+        "package_path": "node_modules/define-lazy-prop",
+        "name": "define-lazy-prop",
+        "version": "3.0.0",
+        "license": "MIT",
+        "integrity": "sha512-N+MeXYoqr3pOgn8xfyRPREN7gHakLYjhsHhWGT3fWAiL4IkAt0iDw14QiiEm2bE30c5XX5q0FtAA3CK5f9/BUg==",
+        "optional": false,
+        "os": null,
+        "cpu": null
+      },
+      {
+        "package_path": "node_modules/diff",
+        "name": "diff",
+        "version": "9.0.0",
+        "license": "BSD-3-Clause",
+        "integrity": "sha512-svtcdpS8CgJyqAjEQIXdb3OjhFVVYjzGAPO8WGCmRbrml64SPw/jJD4GoE98aR7r25A0XcgrK3F02yw9R/vhQw==",
+        "optional": false,
+        "os": null,
+        "cpu": null
+      },
+      {
+        "package_path": "node_modules/is-docker",
+        "name": "is-docker",
+        "version": "3.0.0",
+        "license": "MIT",
+        "integrity": "sha512-eljcgEDlEns/7AXFosB5K/2nCM4P7FQPkGc/DWLy5rmFEWvZayGrik1d9/QIY5nJ4f9YsVvBkA6kJpHn9rISdQ==",
+        "optional": false,
+        "os": null,
+        "cpu": null
+      },
+      {
+        "package_path": "node_modules/is-in-ssh",
+        "name": "is-in-ssh",
+        "version": "1.0.0",
+        "license": "MIT",
+        "integrity": "sha512-jYa6Q9rH90kR1vKB6NM7qqd1mge3Fx4Dhw5TVlK1MUBqhEOuCagrEHMevNuCcbECmXZ0ThXkRm+Ymr51HwEPAw==",
+        "optional": false,
+        "os": null,
+        "cpu": null
+      },
+      {
+        "package_path": "node_modules/is-inside-container",
+        "name": "is-inside-container",
+        "version": "1.0.0",
+        "license": "MIT",
+        "integrity": "sha512-KIYLCCJghfHZxqjYBE7rEy0OBuTd5xCHS7tHVgvCLkx7StIoaxwNW3hCALgEUjFfeRk+MG/Qxmp/vtETEF3tRA==",
+        "optional": false,
+        "os": null,
+        "cpu": null
+      },
+      {
+        "package_path": "node_modules/is-wsl",
+        "name": "is-wsl",
+        "version": "3.1.1",
+        "license": "MIT",
+        "integrity": "sha512-e6rvdUCiQCAuumZslxRJWR/Doq4VpPR82kqclvcS0efgt430SlGIk05vdCN58+VrzgtIcfNODjozVielycD4Sw==",
+        "optional": false,
+        "os": null,
+        "cpu": null
+      },
+      {
+        "package_path": "node_modules/open",
+        "name": "open",
+        "version": "11.0.4",
+        "license": "MIT",
+        "integrity": "sha512-++Zlftm0kVLPmzC06t6epuWmcRMDbI4z5P3NNX979WA/k23+NtSOynEGzsVfZwguKw2mi5umVgnBlJQMwRz4Pg==",
+        "optional": false,
+        "os": null,
+        "cpu": null
+      },
+      {
+        "package_path": "node_modules/powershell-utils",
+        "name": "powershell-utils",
+        "version": "0.2.1",
+        "license": "MIT",
+        "integrity": "sha512-C+y9x90UElAddDZmV4qOx9W53B61PO7cIqWz2dQsWlwswuq4mr8NEwytdGKboYbQlGZ3awrkTeNvcZiZNHnQ8A==",
+        "optional": false,
+        "os": null,
+        "cpu": null
+      },
+      {
+        "package_path": "node_modules/run-applescript",
+        "name": "run-applescript",
+        "version": "7.1.0",
+        "license": "MIT",
+        "integrity": "sha512-DPe5pVFaAsinSaV6QjQ6gdiedWDcRCbUuiQfQa2wmWV7+xC9bGulGI8+TdRmoFkAPaBXk8CrAbnlY2ISniJ47Q==",
+        "optional": false,
+        "os": null,
+        "cpu": null
+      },
+      {
+        "package_path": "node_modules/vscode-jsonrpc",
+        "name": "vscode-jsonrpc",
+        "version": "9.0.2",
+        "license": "MIT",
+        "integrity": "sha512-SbQSV9yRemARxeXw6LU5sS6Zq0e9/DgCCX5yelH263ZQWukbTk8EF8fjTrr1dziasf4GwlJbvTwFnTrnQFWZXQ==",
+        "optional": false,
+        "os": null,
+        "cpu": null
+      },
+      {
+        "package_path": "node_modules/wsl-utils",
+        "name": "wsl-utils",
+        "version": "1.0.0",
+        "license": "MIT",
+        "integrity": "sha512-Hl0ZOAs672vg+06kfujwRhoS6/jehvULrlFkuF2dRu6pHgA8U06h3xqNIqNNU1LTXPcedxByAR4GS6pwQK0mgA==",
+        "optional": false,
+        "os": null,
+        "cpu": null
+      },
+      {
+        "package_path": "node_modules/wsl-utils/node_modules/powershell-utils",
+        "name": "powershell-utils",
+        "version": "0.1.0",
+        "license": "MIT",
+        "integrity": "sha512-dM0jVuXJPsDN6DvRpea484tCUaMiXWjuCn++HGTqUWzGDjv5tZkEZldAJ/UMlqRYGFrD/etByo4/xOuC/snX2A==",
+        "optional": false,
+        "os": null,
+        "cpu": null
+      },
+      {
+        "package_path": "node_modules/zod",
+        "name": "zod",
+        "version": "4.6.5",
+        "license": "MIT",
+        "integrity": "sha512-v5l/aFXZQeai4awLbOpSoHecE9UiMrnfx75tEXLjNonXVARxQ5mOeipTjROUchszUNCqnE+hqAMujRsRHsut2Q==",
+        "optional": false,
+        "os": null,
+        "cpu": null
+      }
+    ],
+    "external_package_edges": [
+      {
+        "from": "node_modules/open",
+        "to": "node_modules/default-browser",
+        "kind": "dependencies",
+        "declared_range": "^5.5.1"
+      },
+      {
+        "from": "node_modules/open",
+        "to": "node_modules/define-lazy-prop",
+        "kind": "dependencies",
+        "declared_range": "^3.0.0"
+      },
+      {
+        "from": "node_modules/open",
+        "to": "node_modules/is-in-ssh",
+        "kind": "dependencies",
+        "declared_range": "^1.0.0"
+      },
+      {
+        "from": "node_modules/open",
+        "to": "node_modules/is-inside-container",
+        "kind": "dependencies",
+        "declared_range": "^1.0.0"
+      },
+      {
+        "from": "node_modules/open",
+        "to": "node_modules/powershell-utils",
+        "kind": "dependencies",
+        "declared_range": "^0.2.1"
+      },
+      {
+        "from": "node_modules/open",
+        "to": "node_modules/wsl-utils",
+        "kind": "dependencies",
+        "declared_range": "^1.0.0"
+      },
+      {
+        "from": "node_modules/wsl-utils",
+        "to": "node_modules/is-wsl",
+        "kind": "dependencies",
+        "declared_range": "^3.1.0"
+      },
+      {
+        "from": "node_modules/wsl-utils",
+        "to": "node_modules/wsl-utils/node_modules/powershell-utils",
+        "kind": "dependencies",
+        "declared_range": "^0.1.0"
+      },
+      {
+        "from": "node_modules/is-wsl",
+        "to": "node_modules/is-inside-container",
+        "kind": "dependencies",
+        "declared_range": "^1.0.0"
+      },
+      {
+        "from": "node_modules/is-inside-container",
+        "to": "node_modules/is-docker",
+        "kind": "dependencies",
+        "declared_range": "^3.0.0"
+      },
+      {
+        "from": "node_modules/default-browser",
+        "to": "node_modules/bundle-name",
+        "kind": "dependencies",
+        "declared_range": "^4.1.0"
+      },
+      {
+        "from": "node_modules/default-browser",
+        "to": "node_modules/default-browser-id",
+        "kind": "dependencies",
+        "declared_range": "^5.0.0"
+      },
+      {
+        "from": "node_modules/bundle-name",
+        "to": "node_modules/run-applescript",
+        "kind": "dependencies",
+        "declared_range": "^7.0.0"
+      },
+      {
+        "from": "node_modules/@openai/codex",
+        "to": "node_modules/@openai/codex-darwin-arm64",
+        "kind": "optionalDependencies",
+        "declared_range": "npm:@openai/codex@0.159.1-darwin-arm64"
+      },
+      {
+        "from": "node_modules/@openai/codex",
+        "to": "node_modules/@openai/codex-darwin-x64",
+        "kind": "optionalDependencies",
+        "declared_range": "npm:@openai/codex@0.159.1-darwin-x64"
+      },
+      {
+        "from": "node_modules/@openai/codex",
+        "to": "node_modules/@openai/codex-linux-arm64",
+        "kind": "optionalDependencies",
+        "declared_range": "npm:@openai/codex@0.159.1-linux-arm64"
+      },
+      {
+        "from": "node_modules/@openai/codex",
+        "to": "node_modules/@openai/codex-linux-x64",
+        "kind": "optionalDependencies",
+        "declared_range": "npm:@openai/codex@0.159.1-linux-x64"
+      },
+      {
+        "from": "node_modules/@openai/codex",
+        "to": "node_modules/@openai/codex-win32-arm64",
+        "kind": "optionalDependencies",
+        "declared_range": "npm:@openai/codex@0.159.1-win32-arm64"
+      },
+      {
+        "from": "node_modules/@openai/codex",
+        "to": "node_modules/@openai/codex-win32-x64",
+        "kind": "optionalDependencies",
+        "declared_range": "npm:@openai/codex@0.159.1-win32-x64"
+      },
+      {
+        "from": "node_modules/@agentclientprotocol/sdk",
+        "to": "node_modules/zod",
+        "kind": "peerDependencies",
+        "declared_range": "^3.25.0 || ^4.0.0"
+      }
+    ],
+    "shared_sdk": "acpx 固定 SDK 1.5.1；适配器2.1.1固定源码 lock SDK 1.5.0（声明^1.5.0）。1.5.1在其声明范围内，但兼容性仍需主代理实际构建与合同验证。",
+    "policy_facts": [
+      {
+        "fact": "每会话模式有既有 setSessionMode 和 configId=mode。INITIAL_AGENT_MODE 设置新/恢复会话初值；默认 Agent 是 on-request、auto_review、workspaceWrite、网络false，不是受限手动审批模式。",
+        "evidence": [
+          {
+            "path": "src/AgentMode.ts",
+            "line": 65,
+            "url": "https://github.com/agentclientprotocol/codex-acp/blob/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/AgentMode.ts#L65",
+            "local_path": "/tmp/t1060-source/codex-acp/src/AgentMode.ts"
+          },
+          {
+            "path": "src/AgentMode.ts",
+            "line": 96,
+            "url": "https://github.com/agentclientprotocol/codex-acp/blob/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/AgentMode.ts#L96",
+            "local_path": "/tmp/t1060-source/codex-acp/src/AgentMode.ts"
+          },
+          {
+            "path": "src/AgentMode.ts",
+            "line": 144,
+            "url": "https://github.com/agentclientprotocol/codex-acp/blob/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/AgentMode.ts#L144",
+            "local_path": "/tmp/t1060-source/codex-acp/src/AgentMode.ts"
+          },
+          {
+            "path": "src/CodexAcpServer.ts",
+            "line": 709,
+            "url": "https://github.com/agentclientprotocol/codex-acp/blob/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/CodexAcpServer.ts#L709",
+            "local_path": "/tmp/t1060-source/codex-acp/src/CodexAcpServer.ts"
+          },
+          {
+            "path": "src/CodexAcpServer.ts",
+            "line": 1391,
+            "url": "https://github.com/agentclientprotocol/codex-acp/blob/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/CodexAcpServer.ts#L1391",
+            "local_path": "/tmp/t1060-source/codex-acp/src/CodexAcpServer.ts"
+          },
+          {
+            "path": "src/acp/client.ts",
+            "line": 1476,
+            "url": "https://github.com/openclaw/acpx/blob/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/acp/client.ts#L1476",
+            "local_path": "/tmp/t1060-source/acpx/src/acp/client.ts"
+          }
+        ]
+      },
+      {
+        "fact": "现成 read-only 模式是 approvalPolicy=on-request、approvalsReviewer=user、readOnly、networkAccess=false；sendPrompt 每轮把这些真实值传到 turn/start。它仍不是禁用全部原生读取/工具的证明。",
+        "evidence": [
+          {
+            "path": "src/AgentMode.ts",
+            "line": 39,
+            "url": "https://github.com/agentclientprotocol/codex-acp/blob/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/AgentMode.ts#L39",
+            "local_path": "/tmp/t1060-source/codex-acp/src/AgentMode.ts"
+          },
+          {
+            "path": "src/CodexAcpClient.ts",
+            "line": 1065,
+            "url": "https://github.com/agentclientprotocol/codex-acp/blob/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/CodexAcpClient.ts#L1065",
+            "local_path": "/tmp/t1060-source/codex-acp/src/CodexAcpClient.ts"
+          }
+        ]
+      },
+      {
+        "fact": "new/load/resume 传 cwd 和会话 MCP；MCP stdio command/args/env 或 HTTP headers 被映射为 config。acpx fs:false/terminal:false 只关闭客户端托管回调。",
+        "evidence": [
+          {
+            "path": "src/CodexAcpClient.ts",
+            "line": 595,
+            "url": "https://github.com/agentclientprotocol/codex-acp/blob/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/CodexAcpClient.ts#L595",
+            "local_path": "/tmp/t1060-source/codex-acp/src/CodexAcpClient.ts"
+          },
+          {
+            "path": "src/CodexAcpClient.ts",
+            "line": 640,
+            "url": "https://github.com/agentclientprotocol/codex-acp/blob/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/CodexAcpClient.ts#L640",
+            "local_path": "/tmp/t1060-source/codex-acp/src/CodexAcpClient.ts"
+          },
+          {
+            "path": "src/CodexAcpClient.ts",
+            "line": 708,
+            "url": "https://github.com/agentclientprotocol/codex-acp/blob/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/CodexAcpClient.ts#L708",
+            "local_path": "/tmp/t1060-source/codex-acp/src/CodexAcpClient.ts"
+          },
+          {
+            "path": "src/CodexAcpClient.ts",
+            "line": 941,
+            "url": "https://github.com/agentclientprotocol/codex-acp/blob/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/CodexAcpClient.ts#L941",
+            "local_path": "/tmp/t1060-source/codex-acp/src/CodexAcpClient.ts"
+          },
+          {
+            "path": "src/types.ts",
+            "line": 299,
+            "url": "https://github.com/openclaw/acpx/blob/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/types.ts#L299",
+            "local_path": "/tmp/t1060-source/acpx/src/types.ts"
+          }
+        ]
+      },
+      {
+        "fact": "CODEX_CONFIG JSON 仅被并入 thread start/resume config；createSessionConfig 不清空已有MCP、会把工作根设为trusted、额外目录加入workspace-write roots。默认去重会保留已有同名MCP而跳过客户端配置；DISABLE_MCP_CONFIG_FILTERING=true仅关闭去重。",
+        "evidence": [
+          {
+            "path": "src/index.ts",
+            "line": 79,
+            "url": "https://github.com/agentclientprotocol/codex-acp/blob/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/index.ts#L79",
+            "local_path": "/tmp/t1060-source/codex-acp/src/index.ts"
+          },
+          {
+            "path": "src/CodexAcpClient.ts",
+            "line": 848,
+            "url": "https://github.com/agentclientprotocol/codex-acp/blob/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/CodexAcpClient.ts#L848",
+            "local_path": "/tmp/t1060-source/codex-acp/src/CodexAcpClient.ts"
+          },
+          {
+            "path": "src/CodexAcpClient.ts",
+            "line": 883,
+            "url": "https://github.com/agentclientprotocol/codex-acp/blob/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/CodexAcpClient.ts#L883",
+            "local_path": "/tmp/t1060-source/codex-acp/src/CodexAcpClient.ts"
+          },
+          {
+            "path": "src/CodexAcpClient.ts",
+            "line": 1311,
+            "url": "https://github.com/agentclientprotocol/codex-acp/blob/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/CodexAcpClient.ts#L1311",
+            "local_path": "/tmp/t1060-source/codex-acp/src/CodexAcpClient.ts"
+          }
+        ]
+      },
+      {
+        "fact": "stock adapter 无 hooks/plugins/CODEX_HOME/auth.json 管理代码；启动原生进程只给 app-server argv，没有 startup config override 参数。不能把会话config或空MCP数组等同关闭继承的全局MCP/hooks/plugins。generated协议类型含这些功能不等于适配器已控制它们。",
+        "evidence": [
+          {
+            "path": "src/CodexJsonRpcConnection.ts",
+            "line": 15,
+            "url": "https://github.com/agentclientprotocol/codex-acp/blob/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/CodexJsonRpcConnection.ts#L15",
+            "local_path": "/tmp/t1060-source/codex-acp/src/CodexJsonRpcConnection.ts"
+          },
+          {
+            "path": "src/index.ts",
+            "line": 97,
+            "url": "https://github.com/agentclientprotocol/codex-acp/blob/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/index.ts#L97",
+            "local_path": "/tmp/t1060-source/codex-acp/src/index.ts"
+          }
+        ]
+      },
+      {
+        "fact": "acpx agentProcessEnv是overlay，auth-env从process.env复制基底；adapter及原生Codex继承该环境。必须在复用原宿主启动函数处做可信baseEnv过滤，不能仅设置overlay声称未传产品密钥。",
+        "evidence": [
+          {
+            "path": "src/acp/auth-env.ts",
+            "line": 95,
+            "url": "https://github.com/openclaw/acpx/blob/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/acp/auth-env.ts#L95",
+            "local_path": "/tmp/t1060-source/acpx/src/acp/auth-env.ts"
+          },
+          {
+            "path": "src/acp/client.ts",
+            "line": 742,
+            "url": "https://github.com/openclaw/acpx/blob/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/acp/client.ts#L742",
+            "local_path": "/tmp/t1060-source/acpx/src/acp/client.ts"
+          },
+          {
+            "path": "src/CodexJsonRpcConnection.ts",
+            "line": 15,
+            "url": "https://github.com/agentclientprotocol/codex-acp/blob/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/CodexJsonRpcConnection.ts#L15",
+            "local_path": "/tmp/t1060-source/codex-acp/src/CodexJsonRpcConnection.ts"
+          }
+        ]
+      },
+      {
+        "fact": "命令/文件/扩权审批已有CodexApprovalHandler映射，未知选择和异常取消或拒绝；宿主acpx权限回调异常却会回退mode，因此需要明确deny/cancel结果和限制性默认模式。",
+        "evidence": [
+          {
+            "path": "src/permissions/CodexApprovalHandler.ts",
+            "line": 44,
+            "url": "https://github.com/agentclientprotocol/codex-acp/blob/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/permissions/CodexApprovalHandler.ts#L44",
+            "local_path": "/tmp/t1060-source/codex-acp/src/permissions/CodexApprovalHandler.ts"
+          },
+          {
+            "path": "src/permissions/CodexApprovalHandler.ts",
+            "line": 98,
+            "url": "https://github.com/agentclientprotocol/codex-acp/blob/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/permissions/CodexApprovalHandler.ts#L98",
+            "local_path": "/tmp/t1060-source/codex-acp/src/permissions/CodexApprovalHandler.ts"
+          },
+          {
+            "path": "src/acp/client.ts",
+            "line": 2404,
+            "url": "https://github.com/openclaw/acpx/blob/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/acp/client.ts#L2404",
+            "local_path": "/tmp/t1060-source/acpx/src/acp/client.ts"
+          }
+        ]
+      }
+    ],
+    "provider_receipt_facts": [
+      {
+        "fact": "ACP sessionId是真实thread.id；标准成功PromptResponse返回stopReason、usage、quota，未提供可靠providerTurnId。turn/started仅写adapter内部currentTurnId后不发SessionNotification，turn/completed同样不透出一般原生turn回执。不能以sessionId、prompt序号、toolCallId或failure id冒充turnId。",
+        "evidence": [
+          {
+            "path": "src/CodexAcpClient.ts",
+            "line": 708,
+            "url": "https://github.com/agentclientprotocol/codex-acp/blob/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/CodexAcpClient.ts#L708",
+            "local_path": "/tmp/t1060-source/codex-acp/src/CodexAcpClient.ts"
+          },
+          {
+            "path": "src/CodexEventHandler.ts",
+            "line": 518,
+            "url": "https://github.com/agentclientprotocol/codex-acp/blob/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/CodexEventHandler.ts#L518",
+            "local_path": "/tmp/t1060-source/codex-acp/src/CodexEventHandler.ts"
+          },
+          {
+            "path": "src/CodexAcpServer.ts",
+            "line": 3286,
+            "url": "https://github.com/agentclientprotocol/codex-acp/blob/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/CodexAcpServer.ts#L3286",
+            "local_path": "/tmp/t1060-source/codex-acp/src/CodexAcpServer.ts"
+          }
+        ]
+      },
+      {
+        "fact": "普通原生turnId在sendPrompt回调可得，stock仅保存activePrompt/currentTurnId。AIR、typed failure、file-change report等可有局部相关字段，但不能替代每轮可靠启动与终态回执。需要窄的原adapter回执透传补丁。",
+        "evidence": [
+          {
+            "path": "src/CodexAcpServer.ts",
+            "line": 3087,
+            "url": "https://github.com/agentclientprotocol/codex-acp/blob/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/CodexAcpServer.ts#L3087",
+            "local_path": "/tmp/t1060-source/codex-acp/src/CodexAcpServer.ts"
+          },
+          {
+            "path": "src/CodexAcpServer.ts",
+            "line": 3190,
+            "url": "https://github.com/agentclientprotocol/codex-acp/blob/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/CodexAcpServer.ts#L3190",
+            "local_path": "/tmp/t1060-source/codex-acp/src/CodexAcpServer.ts"
+          },
+          {
+            "path": "src/CodexEventHandler.ts",
+            "line": 1017,
+            "url": "https://github.com/agentclientprotocol/codex-acp/blob/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/CodexEventHandler.ts#L1017",
+            "local_path": "/tmp/t1060-source/codex-acp/src/CodexEventHandler.ts"
+          }
+        ]
+      },
+      {
+        "fact": "load/resume是会话续接，不是旧unknown回合的幂等结果查询。未获取旧真实turnId及结果前保持unknown/恢复受阻，禁止重发或allow-new。",
+        "evidence": [
+          {
+            "path": "src/CodexAcpClient.ts",
+            "line": 595,
+            "url": "https://github.com/agentclientprotocol/codex-acp/blob/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/CodexAcpClient.ts#L595",
+            "local_path": "/tmp/t1060-source/codex-acp/src/CodexAcpClient.ts"
+          },
+          {
+            "path": "src/CodexAcpClient.ts",
+            "line": 640,
+            "url": "https://github.com/agentclientprotocol/codex-acp/blob/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/CodexAcpClient.ts#L640",
+            "local_path": "/tmp/t1060-source/codex-acp/src/CodexAcpClient.ts"
+          }
+        ]
+      },
+      {
+        "fact": "图片普通客户端rawOutput保留savedPath/result；有data时发image块，只有savedPath时AIR资源链接与standard过滤路径不同。必须保留原通知，经原资产服务安全读取和候选归属校验。",
+        "evidence": [
+          {
+            "path": "src/tool-calls/reporters/ImageGenerationReporter.ts",
+            "line": 55,
+            "url": "https://github.com/agentclientprotocol/codex-acp/blob/68d7d2d5ddfc0ed5746f9f6130892dda685e65dd/src/tool-calls/reporters/ImageGenerationReporter.ts#L55",
+            "local_path": "/tmp/t1060-source/codex-acp/src/tool-calls/reporters/ImageGenerationReporter.ts"
+          },
+          {
+            "path": "src/acp/client.ts",
+            "line": 2792,
+            "url": "https://github.com/openclaw/acpx/blob/27efb1b57b9de22105a91e9154b1d29b51ede8cb/src/acp/client.ts#L2792",
+            "local_path": "/tmp/t1060-source/acpx/src/acp/client.ts"
+          }
+        ]
+      }
+    ],
+    "minimal_host_adaptation": [
+      "复用完整原AcpClient闭包，入口导出与类型不缩写。",
+      "过滤原客户端子环境基底；冻结可信绝对Agent/adapter/Codex可执行argv与版本，避免npx。",
+      "INITIAL_AGENT_MODE选择真实受限模式，并在每个加载/恢复会话完成后设定冻结mode再prompt；权限回调返回真实deny/cancel，fs/terminal关闭。",
+      "在原CodexJsonRpcConnection/startup宿主参数层透传可信启动覆盖；实际禁用全局MCP/hooks/plugins必须按所选Codex版本的真实配置语义核验，未验证前不宣称隔离完成。",
+      "在原turn started/completed位置透传真实provider thread/turn/status并绑定原execution calls；通知投递与backend持久化回执区分，保留真实SDK/桥处理。",
+      "Windows原codexPath分支使用shell:true，需按现有shell-free宿主合同窄适配，不另造执行器。"
+    ],
+    "credential_copy_decision": "不需要且禁止自写CODEX_HOME credential-copy。若隔离方案必须复制auth.json/凭据才可用，直接不选该方案；不得为通过验证改Agent全局配置。采用Agent自身认证状态接口与既有登录，实际可用性待真实隔离验收。",
+    "implementation_gate_gaps": [
+      "stock startup策略未足以证明关闭继承MCP/hooks/plugins。",
+      "stock成功回执未提供每轮稳定providerTurnId。",
+      "readonly/关闭客户端fs/terminal不是禁用原生工具或OS沙箱的等价证明。",
+      "未运行源码/编译/模型/真实登录，因此不记录真实连接PASS。"
+    ]
+  }
+}

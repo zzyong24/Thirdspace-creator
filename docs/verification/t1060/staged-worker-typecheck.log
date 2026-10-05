@@ -1,0 +1,21 @@
+src/prompt/templates/graphic-post-text.ts(2,9): error TS2305: Module '"@creatoros/contract"' has no exported member 'graphicPostCardBriefs'.
+src/prompt/templates/production-rough-cut.ts(1,9): error TS2305: Module '"@creatoros/contract"' has no exported member 'productionRoughCutModelOutput'.
+src/runtime/graphic-post-text.ts(2,9): error TS2305: Module '"@creatoros/contract"' has no exported member 'outputConversionContext'.
+src/runtime/graphic-post-text.ts(2,34): error TS2305: Module '"@creatoros/contract"' has no exported member 'graphicPostTextKind'.
+src/runtime/graphic-post-text.ts(2,54): error TS2305: Module '"@creatoros/contract"' has no exported member 'graphicPostDocument'.
+src/runtime/graphic-post-text.ts(2,75): error TS2305: Module '"@creatoros/contract"' has no exported member 'graphicPostSourceRef'.
+src/runtime/graphic-post-text.ts(40,118): error TS7006: Parameter 'card' implicitly has an 'any' type.
+src/runtime/multimodal-whisper-local.test.ts(217,94): error TS2353: Object literal may only specify known properties, and 'timestampMode' does not exist in type 'TranscribeAudioOptions'.
+src/runtime/multimodal-whisper-local.test.ts(219,47): error TS2339: Property 'timing' does not exist on type 'GeneratedTranscript'.
+src/runtime/multimodal-whisper-local.test.ts(220,24): error TS2339: Property 'timing' does not exist on type 'GeneratedTranscript'.
+src/runtime/multimodal-whisper-local.ts(1,40): error TS2307: Cannot find module './asr-provider-timing' or its corresponding type declarations.
+src/runtime/multimodal-whisper-local.ts(153,16): error TS2339: Property 'timestampMode' does not exist on type 'TranscribeAudioOptions'.
+src/runtime/multimodal-whisper-local.ts(153,54): error TS2339: Property 'timestampMode' does not exist on type 'TranscribeAudioOptions'.
+src/runtime/multimodal-whisper-local.ts(180,45): error TS2339: Property 'timestampMode' does not exist on type 'TranscribeAudioOptions'.
+src/runtime/multimodal-whisper-local.ts(180,65): error TS2339: Property 'timingAudio' does not exist on type 'TranscribeAudioOptions'.
+src/runtime/multimodal-whisper-local.ts(180,124): error TS2339: Property 'timingAudio' does not exist on type 'TranscribeAudioOptions'.
+src/runtime/multimodal-whisper-local.ts(180,274): error TS2339: Property 'timestampMode' does not exist on type 'TranscribeAudioOptions'.
+src/runtime/multimodal-whisper-local.ts(180,296): error TS2339: Property 'timingAudio' does not exist on type 'TranscribeAudioOptions'.
+src/runtime/multimodal-whisper-local.ts(196,49): error TS2339: Property 'timestampMode' does not exist on type '{ audioBytes: Uint8Array<ArrayBuffer>; signal?: AbortSignal | undefined; executeRequest?: ExecuteAsrRequest | undefined; language?: string | undefined; }'.
+src/runtime/multimodal-whisper-local.ts(196,90): error TS2339: Property 'timestampMode' does not exist on type '{ audioBytes: Uint8Array<ArrayBuffer>; signal?: AbortSignal | undefined; executeRequest?: ExecuteAsrRequest | undefined; language?: string | undefined; }'.
+../contract/src/resources/production-editor.ts(4,65): error TS2307: Cannot find module './production-main-track' or its corresponding type declarations.

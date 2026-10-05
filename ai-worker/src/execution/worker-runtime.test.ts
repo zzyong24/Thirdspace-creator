@@ -4,6 +4,22 @@ import { GenerationFailure } from "./generation-error";
 import { createExecutionWorker } from "./worker-runtime";
 import type { WorkerMessage } from "@creatoros/contract/execution-worker";
 const execution = {executionTaskId: "exec-1", attempt: 1, fenceToken: "lease-1"};
+it("图卡 Skill 进入持久图片 Worker 分支，不落普通结构化文本提交",async()=>{
+ const messages:WorkerMessage[]=[],runCover=vi.fn(async()=>({callId:"image-call",text:"{}"}));
+ const skillSnapshot={snapshotVersion:1,userId:"u",accountId:"a",resolvedAt:"now",platformPolicyVersion:"1",platformPolicy:"候选",
+  skills:[{skillId:"graphic.card-brief",baseVersion:"1",overlayRevision:null,overlayVersion:null,effective:{methodSystem:"",template:"",tools:[],requiredFacets:[],contextRequirements:[],outputSchema:{type:"object"},completionPolicy:null,completionPolicyAdapter:null}}]};
+ const input={kind:"model.structured",operationKey:"graphic.card-brief",capability:"copy.generate",maxOutputTokens:100,
+  skillId:"graphic.card-brief",skillSnapshot,facets:{graphicCardContext:"{}"}};
+ const worker=createExecutionWorker({generate:vi.fn(),generateStructured:vi.fn(),runCover:runCover as never,
+  send(message){messages.push(message);if(message.type==="call")queueMicrotask(()=>worker.receive({version:1,type:"reply",requestId:message.requestId,ok:true,
+   data:message.port==="readTaskContext"?input:message.port==="resolveModelCredential"?{apiFormat:"openai_chat",baseUrl:null,model:"text-model",token:"secret"}:{resultId:"result-1"}}));}});
+ try{worker.receive({version:1,type:"run",requestId:"card-run",execution,deadlineAt:Date.now()+10000});
+  await vi.waitFor(()=>expect(messages.some(message=>message.type==="stopped")).toBe(true));
+  expect(messages.find(message=>message.type==="stopped")).toMatchObject({reason:"completed"});
+  expect(runCover).toHaveBeenCalledOnce();
+  expect(messages.find(message=>message.type==="call"&&message.port==="commitResult")).toMatchObject({data:{outcome:"succeeded",callId:"image-call"}});
+ }finally{worker.close();}
+});
 it.each([false,true])("网页能力声明依赖已装配对话运行器：%s",hasRunner=>{
  const messages:WorkerMessage[]=[];
  const worker=createExecutionWorker({generate:vi.fn(),supportsChatWebRead:true,...(hasRunner?{runChat:vi.fn()}:{}),send:message=>{messages.push(message);}});

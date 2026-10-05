@@ -1,0 +1,52 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/ai-worker
+
+ ❯ src/execution/codex-acp-host.test.ts (3 tests | 3 failed) 411ms
+     × 同时保留原大小写绕过配置和远程代理，并只追加回环地址 407ms
+     × 没有原绕过配置时仅加入回环，不扩大为全网绕过 2ms
+     × 继续沿原环境白名单，不传递额外 Agent 配置或无关变量 0ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/execution/codex-acp-host.test.ts > Codex ACP 回环 MCP 环境 > 同时保留原大小写绕过配置和远程代理，并只追加回环地址
+TypeError: host.codexAcpRuntimeEnvironment is not a function
+ ❯ src/execution/codex-acp-host.test.ts:9:18
+      7|   const source={HTTPS_PROXY:'http://proxy.invalid:8080',HTTP_PROXY:'ht…
+      8|   const before={...source};
+      9|   const env=host.codexAcpRuntimeEnvironment(source);
+       |                  ^
+     10|   expect(env).toMatchObject({HTTPS_PROXY:source.HTTPS_PROXY,HTTP_PROXY…
+     11|   expect(env.NO_PROXY).toBe('corp.invalid,internal.invalid,127.0.0.1,l…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  src/execution/codex-acp-host.test.ts > Codex ACP 回环 MCP 环境 > 没有原绕过配置时仅加入回环，不扩大为全网绕过
+TypeError: host.codexAcpRuntimeEnvironment is not a function
+ ❯ src/execution/codex-acp-host.test.ts:17:18
+     15|  it('没有原绕过配置时仅加入回环，不扩大为全网绕过',async()=>{
+     16|   const host=await import(hostModule);
+     17|   const env=host.codexAcpRuntimeEnvironment({HTTPS_PROXY:'http://proxy…
+       |                  ^
+     18|   expect(env.NO_PROXY).toBe('127.0.0.1,localhost,::1');
+     19|   expect(env.no_proxy).toBe(env.NO_PROXY);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  src/execution/codex-acp-host.test.ts > Codex ACP 回环 MCP 环境 > 继续沿原环境白名单，不传递额外 Agent 配置或无关变量
+TypeError: host.codexAcpRuntimeEnvironment is not a function
+ ❯ src/execution/codex-acp-host.test.ts:24:18
+     22|  it('继续沿原环境白名单，不传递额外 Agent 配置或无关变量',async()=>{
+     23|   const host=await import(hostModule);
+     24|   const env=host.codexAcpRuntimeEnvironment({HOME:'/fixture/home',CODE…
+       |                  ^
+     25|   expect(env).toMatchObject({HOME:'/fixture/home',CODEX_HOME:'/fixture…
+     26|   expect(env).not.toHaveProperty('APP_SERVER_LOGS');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed (3)
+   Start at  18:10:40
+   Duration  636ms (transform 209ms, setup 0ms, import 34ms, tests 411ms, environment 0ms)
+

@@ -1,0 +1,126 @@
+[
+  {
+    "path": "mcp-server/src/cli.ts",
+    "sha256": "83001238852f4a0284be9ce3fee57f72b1adc304654df005917457a4f5ddf14f"
+  },
+  {
+    "path": "mcp-server/src/server.ts",
+    "sha256": "6374d0722a2812893643abe0909680a16a42f9be9ca7cb41d4811081cc02c559"
+  },
+  {
+    "path": "mcp-server/src/dispatch.ts",
+    "sha256": "6d512f7e8c839d49cb528c0fb9db66ced49f92aa1000d289df9bc95654b39465"
+  },
+  {
+    "path": "mcp-server/src/connection.ts",
+    "sha256": "1b00d8e0c338cd57b848a70a01f85ddb39629d21c2d97257581fdd55aa50aa05"
+  },
+  {
+    "path": "mcp-server/scripts/build-runtime.mjs",
+    "sha256": "e63dfbaae826d2893beed77031fc745226ef7d26eac4190d622258b95275f9fe"
+  },
+  {
+    "path": "mcp-server/src/sea-entry.ts",
+    "sha256": "36be1b1c770503983c3bef7df348ceb3b71b39722be8724023dba2672ba0a2ed"
+  },
+  {
+    "path": "frontend/src/app/api/v1/dispatch/route.ts",
+    "sha256": "cf2261e7ad667aed344b4661c234543c31b78968499ad4a1fd8d9bac5f1164fb"
+  },
+  {
+    "path": "frontend/src/lib/request-context.server.ts",
+    "sha256": "7791973e884377c4535150284e8772fbeded68aee92fb32a1434bf7a74a531d6"
+  },
+  {
+    "path": "frontend/src/lib/loopback-core.ts",
+    "sha256": "68d535672ec92aaedede590c0ea01fc0be1b025ffa36dc97fb28fd3bbf38dd42"
+  },
+  {
+    "path": "backend/src/application/transport.ts",
+    "sha256": "f006d4793f52dc08b663aba8e27b0547d8c73b7ccf32afa53b4f225f7a06b92f"
+  },
+  {
+    "path": "backend/src/modules/projects/projects.transport.ts",
+    "sha256": "fede54e5de5ba1fbced54384b45f3716d03f6adf9b08a31b651852de98d7f882"
+  },
+  {
+    "path": "backend/src/modules/projects/projects.service.ts",
+    "sha256": "4ddcc09a12dbcfe990db7ebf16d1e867d4b6144902d48175a59c756ffee3ab55"
+  },
+  {
+    "path": "backend/src/modules/projects/projects.repository.ts",
+    "sha256": "3f6e6fc868af3c9a0824bf49ce40565a3f3f2313f0c409c09256c122774a740e"
+  },
+  {
+    "path": "backend/src/modules/platform-account/platform-account.transport.ts",
+    "sha256": "e92886c029bb979143984b7340454893052da54f6ace5fbb9123d4c9cc62a58b"
+  },
+  {
+    "path": "backend/src/modules/platform-account/platform-account.service.ts",
+    "sha256": "7f1439e891fec1876d2d1d45a7f85d3f223d4bba2dff8df82f24be61a6e0d9bc"
+  },
+  {
+    "path": "backend/src/modules/cli-invocations/cli-invocations.service.ts",
+    "sha256": "72691a6b913e2bd2b0db151acad178312c0ff95e79263a96f3053f7eee5ec178"
+  },
+  {
+    "path": "scripts/workbuddy/package-connector.py",
+    "sha256": "06d9ed799deab36d8e47ac90d41552fbd79338e46c50bba894223dbe892401d4"
+  },
+  {
+    "path": "scripts/workbuddy/mcp.template.json",
+    "sha256": "0ab604578ecc2af9090b8107b641b8ab38fefcbb7f5f74c95627f36a5aad0a3e"
+  },
+  {
+    "path": "scripts/workbuddy/skills/creatoros/SKILL.md",
+    "sha256": "c7b8b7516413bec1eab2e02a35d318d287af581ed3cfaf9bdbb444e1849e2947"
+  },
+  {
+    "path": "/tmp/t1060-ai-business/continue-workbuddy/stdio-real-project.mts",
+    "sha256": "745fba68867fd09caabe1ddbe8bd58e0d45c3ad04b4bee98d78bd824f58d3550"
+  },
+  {
+    "path": "/tmp/t1060-ai-business/continue-workbuddy/build-route.mjs",
+    "sha256": "558e0590c882856e6d37c54696e0e25a4ea94f7df9a7e1a871a1e3309b307ac5"
+  },
+  {
+    "path": "/tmp/t1060-ai-business/continue-workbuddy/persistence-shim.ts",
+    "sha256": "67f9ca9f5afbba904c76880cbaa6af39e0bf7cab8a25309d8a32715869c43623"
+  },
+  {
+    "path": "/tmp/t1060-ai-business/continue-workbuddy/original-route.mjs",
+    "sha256": "a1184f96037bfb226efa71516a3120f0e6e0e7dacb6d53b545688ea54083f4a2"
+  },
+  {
+    "path": "/tmp/t1060-ai-business/continue-workbuddy/stdio-real-project.log",
+    "sha256": "8f9d12955716807e156e23e386f080d2d7c60535cff729e2fdfb64c1e7f5f898"
+  },
+  {
+    "path": "/tmp/t1060-ai-business/continue-workbuddy/stdio-stderr.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/tmp/t1060-ai-business/continue-workbuddy/stdio-evidence.json",
+    "sha256": "4ecdf744a1c5a2064ee3bdd0125321cbc4993244973006f7705a79368a1fd467"
+  },
+  {
+    "path": "/tmp/t1060-ai-business/continue-workbuddy/runtime/CreatorOS连接器/creatoros.cjs",
+    "sha256": "d7646b326d8d7de6ecf09b2faa629198e07c7a796b6277a3d47bdb859a6367c0"
+  },
+  {
+    "path": "/tmp/t1060-ai-business/continue-workbuddy/package/connector-package-audit.json",
+    "sha256": "4721bd160f1e731e250456401beb9353c7545458cdf2f17fd50c869f0eef9d6b"
+  },
+  {
+    "path": "/tmp/t1060-ai-business/continue-workbuddy/report.md",
+    "sha256": "85e793fe4795f1ad8d2bb09b6ddb5e215bafd1a28b40d1304b0863ffc8d6f074"
+  },
+  {
+    "path": "/tmp/t1060-ai-business/continue-workbuddy/environment-presence.json",
+    "sha256": "662b47387cab6fcc25fe2183755932d5bb21c8e50e7e1fe30c9935a87cc842d0"
+  },
+  {
+    "path": "/tmp/t1060-ai-business/continue-workbuddy/route-metafile.json",
+    "sha256": "ec5f03068089007ca1ceb99153d82e60d0805749fac39bb4447dc5484c0f26c6"
+  }
+]

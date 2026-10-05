@@ -1,0 +1,25 @@
+<!doctype html><html><head><meta charset="utf-8"><script src="gsap.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:320px;height:180px;background:#08090a;overflow:hidden;font-family:"Inter","PingFang SC","Microsoft YaHei",sans-serif}
+#root{position:relative;width:320px;height:180px;background:#08090a}
+.clip{position:absolute}
+</style></head><body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="1.5" data-width="320" data-height="180">
+<div id="bg" class="clip" data-start="0.00" data-duration="1.50" data-track-index="0" style="position:absolute;inset:0;background:#08090a;"></div>
+<div id="grid" class="clip" data-start="0.00" data-duration="1.50" data-track-index="1" style="position:absolute;inset:0;opacity:.9;background-image:url(data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%2248%22%20height=%2248%22%20viewBox=%220%200%2048%2048%22%3E%3Cpath%20d=%22M48%200H0V48%22%20fill=%22none%22%20stroke=%22%23ffffff%22%20stroke-opacity=%22.14%22%20stroke-width=%221%22%20stroke-dasharray=%223%207%22/%3E%3C/svg%3E);background-size:48px 48px;"></div>
+<div id="glow" class="clip" data-start="0.00" data-duration="1.50" data-track-index="2" style="position:absolute;inset:0;background:radial-gradient(900px 520px at 24% 36%,#5e6ad222,transparent 60%);"></div>
+<div id="thAmbient" class="clip talking-head-ambient-static" aria-hidden="true" data-start="0" data-duration="1.50" data-track-index="899" style="position:absolute;left:0;top:0;width:320px;height:180px;background:radial-gradient(ellipse at 50% 42%,rgba(94,106,210,.24) 0%,rgba(24,27,48,.18) 38%,transparent 68%),linear-gradient(135deg,#151827 0%,#0d0f18 48%,#171324 100%);"></div>
+<video id="th" class="clip talking-head" src="media/main-16477688c0e00699c6cfa4497a3612d7e83c532062b64b250fed8908128ed548.mp4" preload="auto" data-has-audio="true" data-start="0" data-duration="0.5" data-media-start="1" data-end="0.5" data-track-index="900" style="position:absolute;left:0px;top:0px;width:320px;height:180px;border-radius:0px;object-fit:contain;background:#08090a;z-index:900;border:2px solid #5e6ad2;box-shadow:0 18px 60px rgba(0,0,0,.5),0 0 0 6px #5e6ad21f;"></video>
+<video id="th-1" class="clip talking-head" src="media/main-b1f51a511f1da0cd348b8f8598db32e61cb963e5fc69e2b41485bf99590ed75a.mp4" preload="auto" data-has-audio="true" data-start="0.5" data-duration="0.5" data-media-start="0" data-end="1" data-track-index="900" style="position:absolute;left:0px;top:0px;width:320px;height:180px;border-radius:0px;object-fit:contain;background:#08090a;z-index:900;border:2px solid #5e6ad2;box-shadow:0 18px 60px rgba(0,0,0,.5),0 0 0 6px #5e6ad21f;"></video>
+<video id="th-2" class="clip talking-head" src="media/main-5858997e6ce759c6f19768ac9c9fc20f1cacdc3962004594804df899007712c6.mp4" preload="auto" data-has-audio="true" data-start="1" data-duration="0.5" data-media-start="1" data-end="1.5" data-track-index="900" style="position:absolute;left:0px;top:0px;width:320px;height:180px;border-radius:0px;object-fit:contain;background:#08090a;z-index:900;border:2px solid #5e6ad2;box-shadow:0 18px 60px rgba(0,0,0,.5),0 0 0 6px #5e6ad21f;"></video>
+<div id="pbar" class="clip" data-start="0.00" data-duration="1.50" data-track-index="961" style="position:absolute;left:0;right:0;bottom:0;height:3px;background:rgba(255,255,255,0.05);"><div id="pbarf" style="position:absolute;left:0;top:0;height:100%;width:0;background:#5e6ad2"></div></div>
+</div>
+<script>
+const tl = gsap.timeline({paused:true});
+tl.set(".talking-head",{left:0,top:0,width:320,height:180,borderRadius:0,zIndex:900,autoAlpha:1},0.00);
+tl.set(".talking-head",{scale:1},0.00);
+tl.fromTo("#pbarf",{width:"0%"},{width:"100%",ease:"none",duration:1.50},0);
+window.__timelines = window.__timelines || {};
+window.__timelines["main"] = tl;
+</script></body></html>

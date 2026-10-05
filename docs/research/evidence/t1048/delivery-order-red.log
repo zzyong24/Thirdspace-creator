@@ -1,0 +1,81 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/frontend
+
+(node:89362) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:89361) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ src/features/projects/graphic-series-document.test.ts (5 tests | 2 failed) 25ms
+     × 设为封面复制精确用途，原页绑定与其他页不变；交付去重并按页序 18ms (retry x2)
+   × 两个不同页与未绑定照片使用同文件仍保留每页，只有重复封面用途省去 2ms (retry x2)
+ ❯ src/features/projects/graphic-post-workbench.test.tsx (6 tests | 1 failed) 719ms
+   × 导出读取精确文件，封面重复文件只导出一次，真实页序和配文写入zip 131ms (retry x2)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/features/projects/graphic-post-workbench.test.tsx > 导出读取精确文件，封面重复文件只导出一次，真实页序和配文写入zip
+ FAIL  src/features/projects/graphic-post-workbench.test.tsx > 导出读取精确文件，封面重复文件只导出一次，真实页序和配文写入zip
+ FAIL  src/features/projects/graphic-post-workbench.test.tsx > 导出读取精确文件，封面重复文件只导出一次，真实页序和配文写入zip
+AssertionError: expected [ …(2) ] to deeply equal [ …(2) ]
+
+- Expected
++ Received
+
+  [
+-   "http://example.test/file-a.png",
+    "http://example.test/file-b.png",
++   "http://example.test/file-a.png",
+  ]
+
+ ❯ src/features/projects/graphic-post-workbench.test.tsx:118:46
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/9]⎯
+
+ FAIL  src/features/projects/graphic-series-document.test.ts > 组图稿面明确操作 > 设为封面复制精确用途，原页绑定与其他页不变；交付去重并按页序
+ FAIL  src/features/projects/graphic-series-document.test.ts > 组图稿面明确操作 > 设为封面复制精确用途，原页绑定与其他页不变；交付去重并按页序
+ FAIL  src/features/projects/graphic-series-document.test.ts > 组图稿面明确操作 > 设为封面复制精确用途，原页绑定与其他页不变；交付去重并按页序
+AssertionError: expected [ 'fb', 'fa', 'photo-v1' ] to deeply equal [ 'fa', 'fb', 'photo-v1' ]
+
+- Expected
++ Received
+
+  [
+-   "fa",
+    "fb",
++   "fa",
+    "photo-v1",
+  ]
+
+ ❯ src/features/projects/graphic-series-document.test.ts:15:69
+     13|   expect(next.imageUses.filter(image=>image.role==='card').map(({order…
+     14|   expect(next.imageUses[0]).toEqual({assetId:'b',assetFileId:'fb',role…
+     15|   expect(graphicDeliveryImages(next).map(image=>image.assetFileId)).to…
+       |                                                                     ^
+     16|   expect(doc.imageUses).toEqual([first,second,oldPhoto]);
+     17|  });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/9]⎯
+
+ FAIL  src/features/projects/graphic-series-document.test.ts > 两个不同页与未绑定照片使用同文件仍保留每页，只有重复封面用途省去
+ FAIL  src/features/projects/graphic-series-document.test.ts > 两个不同页与未绑定照片使用同文件仍保留每页，只有重复封面用途省去
+ FAIL  src/features/projects/graphic-series-document.test.ts > 两个不同页与未绑定照片使用同文件仍保留每页，只有重复封面用途省去
+AssertionError: expected [ { assetId: 'a', …(3) } ] to have a length of 3 but got 1
+
+- Expected
++ Received
+
+- 3
++ 1
+
+ ❯ src/features/projects/graphic-series-document.test.ts:39:216
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/9]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  3 failed | 8 passed (11)
+   Start at  03:58:12
+   Duration  2.76s (transform 585ms, setup 391ms, import 1.02s, tests 744ms, environment 1.41s)
+

@@ -1,0 +1,30 @@
+[
+  {
+    "path": "/projects/project-8d660be7-197/production?outputId=output-8d660be7-208",
+    "status": 200,
+    "type": "text/html; charset=utf-8",
+    "bytes": 100226,
+    "nativeEntrypoint": false
+  },
+  {
+    "path": "/projects/project-8d660be7-54/article?outputId=output-8d660be7-79",
+    "status": 200,
+    "type": "text/html; charset=utf-8",
+    "bytes": 85650,
+    "nativeEntrypoint": false
+  },
+  {
+    "path": "/reference-editors/noterelay/native/native.js",
+    "status": 200,
+    "type": "application/javascript; charset=UTF-8",
+    "bytes": 623006,
+    "nativeEntrypoint": false
+  },
+  {
+    "path": "/reference-editors/noterelay/native/native.css",
+    "status": 200,
+    "type": "text/css; charset=UTF-8",
+    "bytes": 29017,
+    "nativeEntrypoint": false
+  }
+]

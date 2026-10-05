@@ -31,6 +31,7 @@ import type { MaterialLinkResource } from "@creatoros/contract";
 export const ASSET_OP_IDS = [
   ...VISUAL_TEMPLATE_OP_IDS,
   "assets.downloadUrl",
+  "assets.fileDownloadUrl",
   "assets.list",
   "assets.uploads.create",
   "assets.uploads.complete",
@@ -153,7 +154,7 @@ export function createAssetsTransport(
       };
 
       const { params, query, body } = (input ?? {}) as Input;
-      const p = (params ?? {}) as { assetId?: string; uploadId?: string };
+      const p = (params ?? {}) as { assetId?: string; assetFileId?: string; uploadId?: string };
       const q = (query ?? {}) as {
         page?: number;
         pageSize?: number;
@@ -214,6 +215,10 @@ export function createAssetsTransport(
         case "assets.downloadUrl": {
           // [T-055d SPEC §7.2] 下载 = 复制:签名 GET URL + 建议保存名。
           const dto = await service.getDownloadUrl(ctx, p.assetId ?? "");
+          return { data: dto, meta: { requestId: ctx.requestId } };
+        }
+        case "assets.fileDownloadUrl": {
+          const dto = await service.getAssetFileDownloadUrl(ctx, p.assetId ?? "", p.assetFileId ?? "");
           return { data: dto, meta: { requestId: ctx.requestId } };
         }
         case "assets.get": {

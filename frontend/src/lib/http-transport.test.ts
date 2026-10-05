@@ -70,6 +70,23 @@ describe("createHttpTransport", () => {
     expect(headersOf(fetchMock)["x-account-id"]).toBe("acct-42");
   });
 
+  it("账号列表和新绑定忽略失效的当前号，按账号读取仍带号", async () => {
+    stubLocalStorage({ [CURRENT_ACCOUNT_KEY]: "acct-stale" });
+    const fetchMock = vi.fn(async (_url: string, _init?: RequestInit) =>
+      new Response(JSON.stringify({ data: [] }), { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+    const transport = createHttpTransport();
+    for (const id of ["accounts.list", "platforms.bind.begin", "ingestion.douyin.login"]) {
+      await transport.request({ id } as Endpoint,
+        id === "ingestion.douyin.login" ? { body: { forceNew: true } } as never : {} as never);
+    }
+    for (const call of fetchMock.mock.calls) {
+      expect(((call[1] as RequestInit).headers as Record<string, string>)["x-account-id"]).toBeUndefined();
+    }
+    await transport.request(endpoint, {} as never);
+    expect(((fetchMock.mock.calls.at(-1)![1] as RequestInit).headers as Record<string, string>)["x-account-id"]).toBe("acct-stale");
+  });
+
   it("localStorage 无当前号 → 不带 x-account-id header(server 退化全局)", async () => {
     stubLocalStorage({});
     const fetchMock = vi.fn(

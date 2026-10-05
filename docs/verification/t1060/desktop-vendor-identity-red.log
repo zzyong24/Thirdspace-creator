@@ -1,0 +1,305 @@
+✔ 按依赖图复制并复用同版本包，缺必需包仍失败 (14.216208ms)
+✔ T1060 两条打包入口保留 ACP 安全文件包与 Codex 平台依赖 (1.111916ms)
+✔ T1060 分层物化识别已声明的 Codex npm alias 并保留 Windows 二进制和 fs-safe binding (9.788167ms)
+✔ T1060 Codex alias 仅接纳精确声明、实际名称版本和目标平台 (18.819041ms)
+✔ T1060 不接纳未声明的通用 npm alias (1.870917ms)
+✔ T1060 普通闭包从真实同名平台包中只选择精确版本和目标 (4.555334ms)
+✔ T1060 原生字节校验允许已存在vendor层，缺失或空字节明确失败 (6.904833ms)
+✖ T1060 既有 frontend/.next/vendor Codex同版本错name不因非空字节而放行 (7.681958ms)
+✖ T1060 既有 frontend/.next/vendor Codex同版本错os不因非空字节而放行 (6.960167ms)
+✖ T1060 既有 frontend/.next/vendor Codex同版本错cpu不因非空字节而放行 (5.75425ms)
+✖ T1060 既有 frontend/.next/vendor Codex同版本缺os不因非空字节而放行 (7.042917ms)
+✖ T1060 既有 frontend/.next/vendor Codex同版本缺cpu不因非空字节而放行 (7.582708ms)
+✔ T1060 合法既有 frontend/.next/vendor Codex alias继续复用并保留转换字节 (7.640625ms)
+✖ T1060 既有 layers/browser/vendor Codex同版本错name不因非空字节而放行 (8.046208ms)
+✖ T1060 既有 layers/browser/vendor Codex同版本错os不因非空字节而放行 (8.220583ms)
+✖ T1060 既有 layers/browser/vendor Codex同版本错cpu不因非空字节而放行 (7.204375ms)
+✖ T1060 既有 layers/browser/vendor Codex同版本缺os不因非空字节而放行 (6.609208ms)
+✖ T1060 既有 layers/browser/vendor Codex同版本缺cpu不因非空字节而放行 (7.902625ms)
+✔ T1060 合法既有 layers/browser/vendor Codex alias继续复用并保留转换字节 (7.401917ms)
+✖ T1060 既有 layers/local-ai/vendor Codex同版本错name不因非空字节而放行 (10.505083ms)
+✖ T1060 既有 layers/local-ai/vendor Codex同版本错os不因非空字节而放行 (7.678666ms)
+✖ T1060 既有 layers/local-ai/vendor Codex同版本错cpu不因非空字节而放行 (7.375625ms)
+✖ T1060 既有 layers/local-ai/vendor Codex同版本缺os不因非空字节而放行 (8.027583ms)
+✖ T1060 既有 layers/local-ai/vendor Codex同版本缺cpu不因非空字节而放行 (6.680833ms)
+✔ T1060 合法既有 layers/local-ai/vendor Codex alias继续复用并保留转换字节 (7.77925ms)
+ℹ tests 25
+ℹ suites 0
+ℹ pass 10
+ℹ fail 15
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 355.0615
+
+✖ failing tests:
+
+test at tools/windows-closure-rat/stage-layered-workers.test.mjs:152:3
+✖ T1060 既有 frontend/.next/vendor Codex同版本错name不因非空字节而放行 (7.681958ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:157:12)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /Codex npm alias 身份不匹配/,
+    operator: 'throws',
+    diff: 'simple'
+  }
+
+test at tools/windows-closure-rat/stage-layered-workers.test.mjs:152:3
+✖ T1060 既有 frontend/.next/vendor Codex同版本错os不因非空字节而放行 (6.960167ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:157:12)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /Codex npm alias 身份不匹配/,
+    operator: 'throws',
+    diff: 'simple'
+  }
+
+test at tools/windows-closure-rat/stage-layered-workers.test.mjs:152:3
+✖ T1060 既有 frontend/.next/vendor Codex同版本错cpu不因非空字节而放行 (5.75425ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:157:12)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /Codex npm alias 身份不匹配/,
+    operator: 'throws',
+    diff: 'simple'
+  }
+
+test at tools/windows-closure-rat/stage-layered-workers.test.mjs:152:3
+✖ T1060 既有 frontend/.next/vendor Codex同版本缺os不因非空字节而放行 (7.042917ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:157:12)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /Codex npm alias 身份不匹配/,
+    operator: 'throws',
+    diff: 'simple'
+  }
+
+test at tools/windows-closure-rat/stage-layered-workers.test.mjs:152:3
+✖ T1060 既有 frontend/.next/vendor Codex同版本缺cpu不因非空字节而放行 (7.582708ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:157:12)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /Codex npm alias 身份不匹配/,
+    operator: 'throws',
+    diff: 'simple'
+  }
+
+test at tools/windows-closure-rat/stage-layered-workers.test.mjs:152:3
+✖ T1060 既有 layers/browser/vendor Codex同版本错name不因非空字节而放行 (8.046208ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:157:12)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /Codex npm alias 身份不匹配/,
+    operator: 'throws',
+    diff: 'simple'
+  }
+
+test at tools/windows-closure-rat/stage-layered-workers.test.mjs:152:3
+✖ T1060 既有 layers/browser/vendor Codex同版本错os不因非空字节而放行 (8.220583ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:157:12)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /Codex npm alias 身份不匹配/,
+    operator: 'throws',
+    diff: 'simple'
+  }
+
+test at tools/windows-closure-rat/stage-layered-workers.test.mjs:152:3
+✖ T1060 既有 layers/browser/vendor Codex同版本错cpu不因非空字节而放行 (7.204375ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:157:12)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /Codex npm alias 身份不匹配/,
+    operator: 'throws',
+    diff: 'simple'
+  }
+
+test at tools/windows-closure-rat/stage-layered-workers.test.mjs:152:3
+✖ T1060 既有 layers/browser/vendor Codex同版本缺os不因非空字节而放行 (6.609208ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:157:12)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /Codex npm alias 身份不匹配/,
+    operator: 'throws',
+    diff: 'simple'
+  }
+
+test at tools/windows-closure-rat/stage-layered-workers.test.mjs:152:3
+✖ T1060 既有 layers/browser/vendor Codex同版本缺cpu不因非空字节而放行 (7.902625ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:157:12)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /Codex npm alias 身份不匹配/,
+    operator: 'throws',
+    diff: 'simple'
+  }
+
+test at tools/windows-closure-rat/stage-layered-workers.test.mjs:152:3
+✖ T1060 既有 layers/local-ai/vendor Codex同版本错name不因非空字节而放行 (10.505083ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:157:12)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /Codex npm alias 身份不匹配/,
+    operator: 'throws',
+    diff: 'simple'
+  }
+
+test at tools/windows-closure-rat/stage-layered-workers.test.mjs:152:3
+✖ T1060 既有 layers/local-ai/vendor Codex同版本错os不因非空字节而放行 (7.678666ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:157:12)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /Codex npm alias 身份不匹配/,
+    operator: 'throws',
+    diff: 'simple'
+  }
+
+test at tools/windows-closure-rat/stage-layered-workers.test.mjs:152:3
+✖ T1060 既有 layers/local-ai/vendor Codex同版本错cpu不因非空字节而放行 (7.375625ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:157:12)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /Codex npm alias 身份不匹配/,
+    operator: 'throws',
+    diff: 'simple'
+  }
+
+test at tools/windows-closure-rat/stage-layered-workers.test.mjs:152:3
+✖ T1060 既有 layers/local-ai/vendor Codex同版本缺os不因非空字节而放行 (8.027583ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:157:12)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /Codex npm alias 身份不匹配/,
+    operator: 'throws',
+    diff: 'simple'
+  }
+
+test at tools/windows-closure-rat/stage-layered-workers.test.mjs:152:3
+✖ T1060 既有 layers/local-ai/vendor Codex同版本缺cpu不因非空字节而放行 (6.680833ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/tools/windows-closure-rat/stage-layered-workers.test.mjs:157:12)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:831:18)
+      at Test.postRun (node:internal/test_runner/test:1330:19)
+      at Test.run (node:internal/test_runner/test:1258:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /Codex npm alias 身份不匹配/,
+    operator: 'throws',
+    diff: 'simple'
+  }

@@ -1,0 +1,34 @@
+[
+  {
+    "mediaId": "787031d2-8be7-4ec1-9462-99ba92949ae4",
+    "source": {
+      "sourceId": "source-38eef9063e8ed883bfc20969483a1ca9465f6f8103ed134be84ebe2c8e399ea6",
+      "assetId": "asset-a1381050-389",
+      "assetFileId": "afile-a1381050-393",
+      "fileDigest": "2375aacd786e3c64eb47a94229821bae6ef94f688377c4fccd4f3dbe0b283def",
+      "probeDigest": "82fafb956107d68e0bb2180360f10143221365ee6bf92bfa3b4f2a200dc3178a",
+      "timebase": {
+        "num": 1,
+        "den": 12800
+      },
+      "durationTicks": 187904,
+      "hasAudio": true
+    }
+  },
+  {
+    "mediaId": "13d34134-9da0-4ae2-8d1e-c8ebefb80530",
+    "source": {
+      "sourceId": "source-2ebb8f3fa231fa416b460b13b2dd1e2be6f2e4c7c94f19e8cce0b0286f4cf1d9",
+      "assetId": "asset-a1381050-389",
+      "assetFileId": "afile-a1381050-393",
+      "fileDigest": "2375aacd786e3c64eb47a94229821bae6ef94f688377c4fccd4f3dbe0b283def",
+      "probeDigest": "82fafb956107d68e0bb2180360f10143221365ee6bf92bfa3b4f2a200dc3178a",
+      "timebase": {
+        "num": 1,
+        "den": 12800
+      },
+      "durationTicks": 187904,
+      "hasAudio": true
+    }
+  }
+]

@@ -1,0 +1,1 @@
+{"mappingStatus":"verified","reason":"原生PCM与输出WAV全部实际帧、时钟原点、偏移和样本覆盖已冻结","outputValidSampleCount":228939,"actualDecodedPcmCount":228939,"verified":true,"timing":null,"lastUnit":{"text":"管。","timestamp":[13.96,17.14]},"audioDigest":"sha256:d1bef350b9ec1ff9da234e61269e440574397a9da2ed9120e617eefde2753446"}

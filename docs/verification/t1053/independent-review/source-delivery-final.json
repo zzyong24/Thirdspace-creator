@@ -1,0 +1,167 @@
+[
+  {
+    "editor": "kuaitu",
+    "sourceArchiveSha256": "caec8830b6d9b11dfc79b47c721aee882d8f58dc0e9ac64c1364ecb70323b994",
+    "publicArchiveExists": true,
+    "publicArchiveMatchesCandidate": true,
+    "sourceCodeFilesCompared": 255,
+    "sourceCodeMismatches": [],
+    "reviewedFiles": [
+      {
+        "path": "src/native-controller.ts",
+        "archiveMatchesReviewedSource": true,
+        "sha256": "9643f341bc0c5de8cff5ef3f40bf07639d2d2c1a378fee98928ce05ce126a924"
+      },
+      {
+        "path": "src/native-entry.ts",
+        "archiveMatchesReviewedSource": true,
+        "sha256": "2f851becf9d053dd0f42f5900c2fddf62e0d15b81988d1ef2c4277ba4e79bc25"
+      },
+      {
+        "path": "src/native-types.ts",
+        "archiveMatchesReviewedSource": true,
+        "sha256": "036de5d49b282ed63296e1d00dd61741a9f0af8c2d5141dd1372b632d7baa6c1"
+      },
+      {
+        "path": "native-controller.test.ts",
+        "archiveMatchesReviewedSource": true,
+        "sha256": "e8da4c60a393f65ed8d773df7350145c44e67f13fb8f2ee392e366001969828c"
+      }
+    ],
+    "nativeFilesCompared": 7,
+    "nativeMismatches": [],
+    "extraPublicNativeFiles": [],
+    "nativeKeyFiles": [
+      {
+        "path": "native.css",
+        "publicMatchesDelivery": true,
+        "sha256": "cd47761c252f0c78ca84955dd10a4fb088c86a592145ece94deb6162cbfb2662"
+      },
+      {
+        "path": "native.js",
+        "publicMatchesDelivery": true,
+        "sha256": "47c8193cde75f04be063e4e0d999b56609721db27a71fa9112f01e059fed4a4d"
+      }
+    ]
+  },
+  {
+    "editor": "opencut-classic",
+    "sourceArchiveSha256": "0da70debcdf5a6656c65847606314f523c29e8f59e83e27e02077521130e9420",
+    "publicArchiveExists": true,
+    "publicArchiveMatchesCandidate": true,
+    "sourceCodeFilesCompared": 688,
+    "sourceCodeMismatches": [],
+    "reviewedFiles": [
+      {
+        "path": "apps/web/src/embedded/native-entry.tsx",
+        "archiveMatchesReviewedSource": true,
+        "sha256": "811f6519c7f8422b8e4221e6031cf574d3b601480bfcb8742692839cbb859e9a"
+      },
+      {
+        "path": "apps/web/src/embedded/native-controller.ts",
+        "archiveMatchesReviewedSource": true,
+        "sha256": "30402f8cc50c8eb791a91c14f33dba53060940ca379c86dae5fd9d420df5928a"
+      },
+      {
+        "path": "apps/web/src/embedded/native-operations.ts",
+        "archiveMatchesReviewedSource": true,
+        "sha256": "b0ab0ed46b9c938da2830ddbb288a72f62a2a0860b9800fe93679f63a526f8de"
+      },
+      {
+        "path": "apps/web/src/embedded/frozen-export.ts",
+        "archiveMatchesReviewedSource": true,
+        "sha256": "76e4614ae0e68e57b48894c8aab7922b19261bd2fd46b350f3af742d2d347973"
+      },
+      {
+        "path": "apps/web/src/media/processing.ts",
+        "archiveMatchesReviewedSource": true,
+        "sha256": "e0bc51b80161432bad55b6c7d6e4a3031a6d13323c47f8eebae90810d3036601"
+      },
+      {
+        "path": "apps/web/scripts/build-native.mjs",
+        "archiveMatchesReviewedSource": true,
+        "sha256": "71c2f29a51a3faad99b80df7506b40dcfd40fdc67d768b79abb3c5a6941ef15a"
+      }
+    ],
+    "nativeFilesCompared": 7,
+    "nativeMismatches": [],
+    "extraPublicNativeFiles": [],
+    "nativeKeyFiles": [
+      {
+        "path": "NATIVE_BUILD_GRAPH.json",
+        "publicMatchesDelivery": true,
+        "sha256": "d1bcbd11d320f80c93e9c4d91c3293375e608b0099046f6d63c28949633f65f5"
+      },
+      {
+        "path": "native.css",
+        "publicMatchesDelivery": true,
+        "sha256": "e8757103e0fd57d164826df1de27070222dc6b2ba23bcd4bb32a3cbbe64ee688"
+      },
+      {
+        "path": "native.js",
+        "publicMatchesDelivery": true,
+        "sha256": "f61b0939ff9a185861dbc7addee2c40ef1b3a0d71cfac81c31c41d1f43a50354"
+      }
+    ]
+  },
+  {
+    "editor": "doocs-md",
+    "sourceArchiveSha256": "60baa6f2656e5038e31bab6c2ff71ddfbaba54a6a7f703796364b78f4f96f3a7",
+    "publicArchiveExists": true,
+    "publicArchiveMatchesCandidate": true,
+    "sourceCodeFilesCompared": 537,
+    "sourceCodeMismatches": [],
+    "reviewedFiles": [
+      {
+        "path": "apps/web/src/native-entry.ts",
+        "archiveMatchesReviewedSource": true,
+        "sha256": "3e19e0314a1300730e2c1193e9611a94d04d1714a15f44a792a61d0e0bceb935"
+      },
+      {
+        "path": "apps/web/src/native-lease.ts",
+        "archiveMatchesReviewedSource": true,
+        "sha256": "7ba3500d5116fe5dc6cac1adeca345fc4df6241a4e21f154f0938fa5d485d0e3"
+      },
+      {
+        "path": "apps/web/src/native-theme.ts",
+        "archiveMatchesReviewedSource": true,
+        "sha256": "7a90033b0846aa4e0a7bc49a2797e84a2cf5a9207175cd8625033cf1bfa2e3ef"
+      },
+      {
+        "path": "apps/web/src/components/editor/EditorPanel.vue",
+        "archiveMatchesReviewedSource": true,
+        "sha256": "80ecf1a543a81a9c97ab30892512718a2e4df00f90958bbe3cc68b5ea5f9c92a"
+      },
+      {
+        "path": "packages/core/src/native-host.ts",
+        "archiveMatchesReviewedSource": true,
+        "sha256": "d383df9d81500575b02040d70aa42b208ae1f1525be7dff1b5e4420edba93be3"
+      },
+      {
+        "path": "apps/web/vite.native.config.ts",
+        "archiveMatchesReviewedSource": true,
+        "sha256": "7418e2cca6db6def4aeadcc4ff0dab0cc8d79458b8ef686e5d019d2735582fca"
+      }
+    ],
+    "nativeFilesCompared": 395,
+    "nativeMismatches": [],
+    "extraPublicNativeFiles": [],
+    "nativeKeyFiles": [
+      {
+        "path": "native-build-graph.json",
+        "publicMatchesDelivery": true,
+        "sha256": "73d35916f387081221bb73aba6c7c7c2045a652bf7aed72bcbd38fc18667bf92"
+      },
+      {
+        "path": "native.css",
+        "publicMatchesDelivery": true,
+        "sha256": "cf6a66b7e51c1b4251b663f7b03edbc1eebd74154993e263d80698e528407e57"
+      },
+      {
+        "path": "native.js",
+        "publicMatchesDelivery": true,
+        "sha256": "5e31ddf1044faf3ac200a08d50fe51b7f40e55a885a592df9387f2891df43adb"
+      }
+    ]
+  }
+]

@@ -64,7 +64,7 @@ export const aiOperations = {
     method: "POST",
     path: "/ai/tasks",
     body: z.object({
-      taskType: z.string().min(1),
+      taskType: z.string().min(1).refine(value=>value!=="asset.asr"&&value!=="production.rough-cut.propose","资产转写或粗剪须从生产预约创建"),
       attemptId: z.string().min(16).max(128),
       retryOfTaskId: id.optional(),
       inputData: z.record(z.string(), z.unknown()).optional(),

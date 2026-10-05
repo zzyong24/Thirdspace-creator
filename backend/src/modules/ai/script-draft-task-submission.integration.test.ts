@@ -1,5 +1,5 @@
 import {beforeAll,afterAll,it,expect,vi} from "vitest";
-import {createDb,projects,artifacts,artifactVersions,aiTasks,eq,type Db} from "@creatoros/backend";
+import {createDb,projects,contentOutputs,artifacts,artifactVersions,aiTasks,eq,type Db} from "@creatoros/backend";
 import {createAiService,type ServiceDeps} from "./ai.service";
 import {createScriptDraftTargetService} from "../artifacts/script-draft-target.service";
 let db:Db,close:()=>Promise<void>,seq=0;
@@ -77,4 +77,25 @@ it("同键不同项目并发只有一个赢家，失败方的稿件和初始版�
  const rows=[...await a.readArtifacts(),...await b.readArtifacts()];expect(rows).toHaveLength(1);
  const task=(results.find(result=>result.status==="fulfilled") as PromiseFulfilledResult<Awaited<ReturnType<typeof a.service.createScriptDraftTask>>>).value;
  expect(rows[0]!.id).toBe(task.inputData.artifactId);
+});
+
+it("同项目两个视频 output 有独立脚本；旧项目任务仍复用无 output 的稿件",async()=>{
+ const f=await fixture();
+ const outputIds=[`video-output-${++seq}`,`video-output-${++seq}`];
+ await db.insert(contentOutputs).values(outputIds.map(id=>({id,projectId:f.input.projectId,title:id,
+  contentType:"video",status:"drafting",createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()})));
+ const now=()=>new Date().toISOString(),nextId=(prefix:string)=>`${prefix}-${++seq}`;
+ const serviceDeps={db,now,nextId,scriptDraftTargets:createScriptDraftTargetService({now,nextId})} as unknown as ServiceDeps;
+ const ai=createAiService(serviceDeps);
+ const first=await ai.createScriptDraftTask(f.ctx,{...f.input,outputId:outputIds[0],attemptId:`script-output-${++seq}-first`});
+ const second=await ai.createScriptDraftTask(f.ctx,{...f.input,outputId:outputIds[1],attemptId:`script-output-${++seq}-second`});
+ const old=await ai.createScriptDraftTask(f.ctx,{...f.input,attemptId:`script-output-${++seq}-legacy`});
+ expect(new Set([first.inputData.artifactId,second.inputData.artifactId,old.inputData.artifactId]).size).toBe(3);
+ const rows=await f.readArtifacts();
+ expect(rows.find(row=>row.id===first.inputData.artifactId)?.contentOutputId).toBe(outputIds[0]);
+ expect(rows.find(row=>row.id===second.inputData.artifactId)?.contentOutputId).toBe(outputIds[1]);
+ expect(rows.find(row=>row.id===old.inputData.artifactId)?.contentOutputId).toBeNull();
+ expect(first.inputData.baseVersionId).toBeTruthy();
+ await expect(ai.createScriptDraftTask({...f.ctx,accountId:"another-account"},
+  {...f.input,outputId:outputIds[0],attemptId:`script-output-${++seq}-cross`})).rejects.toThrow();
 });

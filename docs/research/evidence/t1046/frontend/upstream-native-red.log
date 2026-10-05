@@ -1,0 +1,63 @@
+bun test v1.4.0 (34cbb9a40)
+
+src/embedded/__tests__/native-command.test.ts:
+ 8 | const existing=await import('../../commands/timeline/tracks-snapshot');
+ 9 | // RED 基线明确用真实上游当前命令；实现后只替换为专用scene命令。
+10 | const NativeTracksSnapshotCommand=existing.TracksSnapshotCommand;
+11 | function tracks(id:string){return {main:{id:'main-'+id,type:'video',elements:[{id:'clip-'+id,type:'video',startTime:240000,duration:480000,mediaId:'same-media',trimStart:0,trimEnd:0,params:{position:{x:0,y:0}}}]},overlay:[{id:'text-'+id,type:'text',elements:[{id:'caption-'+id,content:'独立文字',startTime:300000,duration:120000}]}],audio:[]};}
+12 | function setup(){const project:any={metadata:{id:'output-one'},currentSceneId:'scene-a',scenes:[]};let selection={selectedElements:[{trackId:'main-a',elementId:'clip-a'}]};editor={project:{getActive:()=>project,setActiveProject:({project:p}:any)=>Object.assign(project,p)},save:{markDirty(){}},selection:{getSnapshot:()=>structuredClone(selection),applySelectionPatch(){throw Error('不得改选区');},restoreSnapshot(){throw Error('不得改选区');}},timeline:{updateTracks:(t:any)=>editor.scenes.updateSceneTracks({tracks:t})},playback:{getCurrentTime:()=>360000}};editor.scenes=new ScenesManager(editor);editor.scenes.setScenes({scenes:[{id:'scene-a',tracks:tracks('a'),bookmarks:[]},{id:'scene-b',tracks:tracks('b'),bookmarks:[]}],activeSceneId:'scene-a'});editor.command=new CommandManager(editor);return editor;}
+13 | test('采纳命令跨scene撤销只恢复目标scene，其他scene最新编辑、选区和播放头保留',async()=>{const e=setup(),before=structuredClone(e.scenes.getScenes()[0].tracks),after=structuredClone(before);after.main.elements=[];e.command.execute({command:new NativeTracksSnapshotCommand({sceneId:'scene-a',outputId:'output-one',before,after} as any)});await e.scenes.switchToScene({sceneId:'scene-b'});const sceneB=structuredClone(e.scenes.getScenes()[1]);sceneB.tracks.overlay[0].elements[0].content='另场景后来改稿';e.scenes.setScenes({scenes:[e.scenes.getScenes()[0],sceneB]});e.command.undo();expect(e.scenes.getScenes()[0].tracks).toEqual(before);expect(e.scenes.getScenes()[1].tracks.overlay[0].elements[0].content).toBe('另场景后来改稿');expect(e.scenes.getActiveScene().id).toBe('scene-b');expect(e.playback.getCurrentTime()).toBe(360000);expect(e.selection.getSnapshot().selectedElements[0].elementId).toBe('clip-a');e.command.redo();expect(e.scenes.getScenes()[0].tracks).toEqual(after);
+
+error: expect(received).toEqual(expected)
+
+  {
+    "audio": [],
+    "main": {
+-     "elements": [
+-       {
+-         "duration": 480000,
+-         "id": "clip-a",
+-         "mediaId": "same-media",
+-         "params": {
+-           "position": {
+-             "x": 0,
+-             "y": 0,
+-           },
+-         },
+-         "startTime": 240000,
+-         "trimEnd": 0,
+-         "trimStart": 0,
+-         "type": "video",
+-       },
+-     ],
++     "elements": [],
+      "id": "main-a",
+      "type": "video",
+    },
+    "overlay": [
+      {
+        "elements": [
+          {
+            "content": "独立文字",
+            "duration": 120000,
+            "id": "caption-a",
+            "startTime": 300000,
+          },
+        ],
+        "id": "text-a",
+        "type": "text",
+      },
+    ],
+  }
+
+- Expected  - 17
++ Received  + 1
+
+      at <anonymous> (/private/tmp/t1046-ui-work/upstream/opencut-classic-source/apps/web/src/embedded/__tests__/native-command.test.ts:13:587)
+(fail) 采纳命令跨scene撤销只恢复目标scene，其他scene最新编辑、选区和播放头保留 [7.54ms]
+(pass) 已闭合的after不被原生ripple二次重排独立图层 [1.17ms]
+
+ 1 pass
+ 1 fail
+ 3 expect() calls
+Ran 2 tests across 1 file. [434.00ms]

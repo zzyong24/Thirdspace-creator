@@ -1,0 +1,127 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/frontend
+
+(node:59951) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ src/features/copilot/chat-screenshot-card.test.tsx (2 tests | 1 failed) 3043ms
+   × 生成图片使用原预览与待采用服务，不生成空来源链接或自动入库 3036ms (retry x2)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/features/copilot/chat-screenshot-card.test.tsx > 生成图片使用原预览与待采用服务，不生成空来源链接或自动入库
+ FAIL  src/features/copilot/chat-screenshot-card.test.tsx > 生成图片使用原预览与待采用服务，不生成空来源链接或自动入库
+ FAIL  src/features/copilot/chat-screenshot-card.test.tsx > 生成图片使用原预览与待采用服务，不生成空来源链接或自动入库
+TestingLibraryElementError: Unable to find an element with the alt text: 生成图
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"mt-1 flex w-full max-w-[420px] flex-col gap-1.5 rounded-[10px] border border-border bg-surface p-2.5"[39m
+      [33mdata-slot[39m=[32m"chat-screenshot-card"[39m
+    [36m>[39m
+      [36m<span[39m
+        [33mclass[39m=[32m"text-[10px] font-medium uppercase tracking-wide text-brand"[39m
+      [36m>[39m
+        [0m网页截图 · 真证据 ·[0m
+        [0m [0m
+        [0m待确认存入[0m
+      [36m</span>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"flex h-24 w-full items-center justify-center rounded-md border border-dashed border-border text-[11px] text-text-subtle"[39m
+      [36m>[39m
+        [0m缩略图加载中 / 不可用[0m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"min-w-0 truncate text-[12px] text-foreground"[39m
+        [33mtitle[39m=[32m"生成图"[39m
+      [36m>[39m
+        [0m生成图[0m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"flex items-center justify-between gap-2"[39m
+      [36m>[39m
+        [36m<a[39m
+          [33mclass[39m=[32m"inline-flex min-w-0 items-center gap-1 truncate text-[10px] text-brand underline underline-offset-2"[39m
+          [33mdata-slot[39m=[32m"chat-screenshot-source-link"[39m
+          [33mhref[39m=[32m""[39m
+          [33mrel[39m=[32m"noreferrer"[39m
+          [33mtarget[39m=[32m"_blank"[39m
+          [33mtitle[39m=[32m""[39m
+        [36m>[39m
+          [0m🔗 [0m
+        [36m</a>[39m
+        [36m<button[39m
+          [33mclass[39m=[32m"inline-flex h-6 shrink-0 items-center rounded-control bg-brand px-2 text-[10px] font-medium text-brand-foreground hover:bg-brand/90 disabled:opacity-50"[39m
+          [33mdata-slot[39m=[32m"chat-screenshot-save"[39m
+          [33mtype[39m=[32m"button"[39m
+        [36m>[39m
+          [0m存入素材库[0m
+        [36m</button>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+[36m</body>[39m
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"mt-1 flex w-full max-w-[420px] flex-col gap-1.5 rounded-[10px] border border-border bg-surface p-2.5"[39m
+      [33mdata-slot[39m=[32m"chat-screenshot-card"[39m
+    [36m>[39m
+      [36m<span[39m
+        [33mclass[39m=[32m"text-[10px] font-medium uppercase tracking-wide text-brand"[39m
+      [36m>[39m
+        [0m网页截图 · 真证据 ·[0m
+        [0m [0m
+        [0m待确认存入[0m
+      [36m</span>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"flex h-24 w-full items-center justify-center rounded-md border border-dashed border-border text-[11px] text-text-subtle"[39m
+      [36m>[39m
+        [0m缩略图加载中 / 不可用[0m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"min-w-0 truncate text-[12px] text-foreground"[39m
+        [33mtitle[39m=[32m"生成图"[39m
+      [36m>[39m
+        [0m生成图[0m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"flex items-center justify-between gap-2"[39m
+      [36m>[39m
+        [36m<a[39m
+          [33mclass[39m=[32m"inline-flex min-w-0 items-center gap-1 truncate text-[10px] text-brand underline underline-offset-2"[39m
+          [33mdata-slot[39m=[32m"chat-screenshot-source-link"[39m
+          [33mhref[39m=[32m""[39m
+          [33mrel[39m=[32m"noreferrer"[39m
+          [33mtarget[39m=[32m"_blank"[39m
+          [33mtitle[39m=[32m""[39m
+        [36m>[39m
+          [0m🔗 [0m
+        [36m</a>[39m
+        [36m<button[39m
+          [33mclass[39m=[32m"inline-flex h-6 shrink-0 items-center rounded-control bg-brand px-2 text-[10px] font-medium text-brand-foreground hover:bg-brand/90 disabled:opacity-50"[39m
+          [33mdata-slot[39m=[32m"chat-screenshot-save"[39m
+          [33mtype[39m=[32m"button"[39m
+        [36m>[39m
+          [0m存入素材库[0m
+        [36m</button>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+[36m</body>[39m
+ ❯ waitForWrapper ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:86:33
+ ❯ src/features/copilot/chat-screenshot-card.test.tsx:12:22
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 1 passed (2)
+   Start at  17:09:45
+   Duration  4.04s (transform 46ms, setup 189ms, import 23ms, tests 3.04s, environment 623ms)
+

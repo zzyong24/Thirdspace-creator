@@ -156,6 +156,24 @@ const FULL_PLAN: PlanObject = {
 };
 
 describe("[T-271] runCoverGenerate —— 结构化封面方案 + 文案诚实门 + 结构化组装生图", () => {
+  it("T-1029 图文封面只使用入队快照，不重读后来的定位和项目资料", async () => {
+    const {deps, recordCandidate} = makeDeps(FULL_PLAN);
+    const positioningRead = vi.fn(async () => { throw new Error("live context must not be read"); });
+    (deps as {positioning: {getPositioningCenter: typeof positioningRead}}).positioning = {getPositioningCenter: positioningRead};
+    await runCoverGenerate(ctx, {id: "frozen-cover-task", projectId: "p1", inputData: {
+      kind: "cover", outputId: "output-1", topic: "旧标题",
+      coverContextSnapshot: {positioningBrief: "冻结定位", projectBriefHard: "冻结立项", reviewScript: "冻结正文",
+        userMaterialHardBrief: "冻结第一手材料", userMaterialRefBrief: "", knowledgeBrief: "",
+        orientationHint: "竖屏", topic: {title: "冻结主题", angle: "冻结角度"}},
+    }}, deps);
+    expect(positioningRead).not.toHaveBeenCalled();
+    expect(recordCandidate).toHaveBeenCalledTimes(1);
+    const call = runStructuredNode.mock.calls.at(-1) as unknown as [{facets: Record<string, string>}];
+    expect(call[0].facets.positioning).toContain("冻结定位");
+    expect(call[0].facets.scriptClaim).toContain("冻结正文");
+    expect(call[0].facets.userMaterialHard).toContain("冻结第一手材料");
+  });
+
   it("产结构化封面方案 → 结构化组装生图 prompt → 记 generated_asset 候选(带 coverPlan)", async () => {
     const { deps, recordCandidate, resolveModelSpec, resolveMultimodalSpec, createGeneratedAsset } =
       makeDeps(FULL_PLAN);

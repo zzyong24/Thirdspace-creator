@@ -1,0 +1,32 @@
+
+ RUN  v4.1.8 /private/tmp/t1048-frontend-work/frontend
+
+(node:82059) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:82060) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ src/features/projects/graphic-post-workbench.test.tsx (3 tests | 1 failed) 545ms
+   × 辅助区域可用键盘展开且不卸载既有候选读取控件 52ms (retry x2)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/features/projects/graphic-post-workbench.test.tsx > 辅助区域可用键盘展开且不卸载既有候选读取控件
+ FAIL  src/features/projects/graphic-post-workbench.test.tsx > 辅助区域可用键盘展开且不卸载既有候选读取控件
+ FAIL  src/features/projects/graphic-post-workbench.test.tsx > 辅助区域可用键盘展开且不卸载既有候选读取控件
+AssertionError: expected null not to be null
+ ❯ src/features/projects/graphic-post-workbench.test.tsx:64:22
+     62|  const {container}=render(<GraphicPostWorkbench projectId="p" projectT…
+     63|  const details=container.querySelector('details[aria-label="AI 辅助创作"]'…
+     64|  expect(details).not.toBeNull();
+       |                      ^
+     65|  expect(details).not.toHaveAttribute("open");
+     66|  expect(details?.querySelector("button")?.textContent).toBe("读取现有候选");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  1 failed | 4 passed (5)
+   Start at  03:41:42
+   Duration  2.72s (transform 683ms, setup 373ms, import 1.44s, tests 862ms, environment 1.34s)
+

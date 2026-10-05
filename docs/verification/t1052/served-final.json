@@ -1,0 +1,84 @@
+{
+  "timestamp": "2026-10-03T11:52:34.517355+00:00",
+  "kind": "公共 HTTP 真实静态字节与页面健康，未执行浏览器",
+  "static": [
+    {
+      "path": "/reference-editors/noterelay/LICENSE",
+      "status": 200,
+      "bytes": 34523,
+      "sha256": "0d96a4ff68ad6d4b6f1f30f713b18d5184912ba8dd389f86aa7710db079abcb0",
+      "matchesManifest": true
+    },
+    {
+      "path": "/reference-editors/noterelay/THIRD_PARTY_NOTICES.md",
+      "status": 200,
+      "bytes": 3799,
+      "sha256": "f2947cc1979b8e0347731c59abf9cf5201835a03d4cf6194aa817118f0cd9d0d",
+      "matchesManifest": true
+    },
+    {
+      "path": "/reference-editors/noterelay/build-meta.json",
+      "status": 200,
+      "bytes": 124701,
+      "sha256": "d3ea88d6eebf9298870f8e7148f170a0ea0d22d5ff7a50cac103c035dd945640",
+      "matchesManifest": true
+    },
+    {
+      "path": "/reference-editors/noterelay/host.css",
+      "status": 200,
+      "bytes": 1115,
+      "sha256": "45ca13bef5e2627a66650fe7055a6b72785a0872b652e2d6b66ccb426a4d8b36",
+      "matchesManifest": true
+    },
+    {
+      "path": "/reference-editors/noterelay/index.html",
+      "status": 200,
+      "bytes": 584,
+      "sha256": "8be69aa3e183400bddab9c480c5234f2f420a8a3126a54ca40e595d6c66d1197",
+      "matchesManifest": true
+    },
+    {
+      "path": "/reference-editors/noterelay/noterelay.css",
+      "status": 200,
+      "bytes": 28155,
+      "sha256": "6affd5bc57fe8b236035ea2976b1a1148952ce57c7ff672897ed73a537ac1e17",
+      "matchesManifest": true
+    },
+    {
+      "path": "/reference-editors/noterelay/noterelay.js",
+      "status": 200,
+      "bytes": 622477,
+      "sha256": "f46e2b0471729c67dd35d08e6548290caae76b37916ee824f15a4e3b732409ac",
+      "matchesManifest": true
+    },
+    {
+      "path": "/reference-editors/sources/noterelay/source.zip",
+      "status": 200,
+      "bytes": 158447,
+      "sha256": "eb11acd136ea325ae6c0034b6007e196644fe37b234e77eab33fa822f34c9da9",
+      "matchesManifest": true
+    }
+  ],
+  "pages": [
+    {
+      "path": "/projects/project-8d660be7-54",
+      "status": 200,
+      "bytes": 179779
+    },
+    {
+      "path": "/projects/project-8d660be7-54/article?outputId=output-8d660be7-79",
+      "status": 200,
+      "bytes": 85686
+    },
+    {
+      "path": "/projects/project-8d660be7-54/outputs/output-8d660be7-95/image",
+      "status": 200,
+      "bytes": 100147
+    },
+    {
+      "path": "/projects/project-ef4eab23-166",
+      "status": 200,
+      "bytes": 159436
+    }
+  ]
+}

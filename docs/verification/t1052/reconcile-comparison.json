@@ -1,0 +1,11 @@
+{
+  "previousErrors": 36,
+  "currentErrors": 35,
+  "newErrors": [],
+  "absentInCurrentRun": [
+    "✗ [ERROR] lesson LED-045 RECURRED — 生图幂等恢复门回归：只有 channel-managed 同步生图可在 network/submit 无 HTTP 响应时沿用同一 Idempotency-Key 有界恢复；用户自配中转站与异步视频必须保持一次即停，成功只落一份候选。"
+  ],
+  "currentSummary": [
+    "35 error(s), 1 warning(s)."
+  ]
+}

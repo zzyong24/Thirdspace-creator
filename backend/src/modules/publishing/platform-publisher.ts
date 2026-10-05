@@ -10,7 +10,7 @@ import { PublishingUnavailableError } from "./publishing.errors";
 // Determinism + idempotency (plan Open Question 5): the mock's external id is
 // `mock:{platform}:{publicationId}` — stable across re-publishes, so a second
 // publish of the same publication mints the SAME id and hits the
-// `publications(platform, external_id)` partial-unique index, letting the service
+// `publications(user_id, account_id, platform, external_id)` partial-unique index, letting the service
 // return the original row instead of duplicating (SPEC §17/§22). No Date.now /
 // Math.random / crypto.
 

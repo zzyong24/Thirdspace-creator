@@ -24,6 +24,13 @@ const mockClient = {
   loginDouyin: vi.fn(
     (i: unknown): Promise<unknown> => Promise.resolve({ loggedIn: true }),
   ),
+  beginBind: vi.fn((i: unknown): Promise<unknown> => Promise.resolve({
+    status: "bound", accountId: "acct-new", bindAttemptId: "bind-1",
+  })),
+  startCollection: vi.fn((i: unknown): Promise<unknown> => Promise.resolve({
+    attemptId: "run-1", status: "queued",
+  })),
+  getCollection: vi.fn((_i: unknown): Promise<unknown> => Promise.resolve({ status: "complete" })),
 };
 vi.mock("@/lib/contract-client", () => ({
   client: {
@@ -31,12 +38,17 @@ vi.mock("@/lib/contract-client", () => ({
     listAccounts: (i: unknown) => mockClient.listAccounts(i),
     archiveAccount: (i: unknown) => mockClient.archiveAccount(i),
     loginDouyin: (i: unknown) => mockClient.loginDouyin(i),
+    beginBind: (i: unknown) => mockClient.beginBind(i),
+    startCollection: (i: unknown) => mockClient.startCollection(i),
+    getCollection: (i: unknown) => mockClient.getCollection(i),
   },
 }));
 
 import {
   CreateAccountForm,
   AccountRow,
+  ConnectXhsAccount,
+  ConnectKuaishouAccount,
   PLATFORMS,
 } from "./account-manager-interactive-region";
 import { AccountManagerView } from "./account-manager-view";
@@ -63,6 +75,7 @@ const ARCHIVED: PlatformAccountResource = {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  window.localStorage.clear();
 });
 afterEach(() => cleanup());
 

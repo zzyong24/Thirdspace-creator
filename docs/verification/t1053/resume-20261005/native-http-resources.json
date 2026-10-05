@@ -1,0 +1,36 @@
+{
+  "timestamp": "2026-10-04T16:08:54.901838+00:00",
+  "verification": "真实HTTP字节与本地冻结清单；没有浏览器执行或像素检查",
+  "editors": [
+    {
+      "editor": "noterelay",
+      "nativeFiles": 5,
+      "allBytesMatch": true,
+      "nonRuntimePlaceholders": []
+    },
+    {
+      "editor": "doocs-md",
+      "nativeFiles": 394,
+      "allBytesMatch": true,
+      "nonRuntimePlaceholders": [
+        {
+          "file": "upload/.gitkeep",
+          "status": 400,
+          "scope": "空源码目录占位，不是运行期资源"
+        }
+      ]
+    },
+    {
+      "editor": "kuaitu",
+      "nativeFiles": 7,
+      "allBytesMatch": true,
+      "nonRuntimePlaceholders": []
+    },
+    {
+      "editor": "opencut-classic",
+      "nativeFiles": 7,
+      "allBytesMatch": true,
+      "nonRuntimePlaceholders": []
+    }
+  ]
+}

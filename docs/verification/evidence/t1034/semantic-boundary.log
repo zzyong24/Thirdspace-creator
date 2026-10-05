@@ -1,0 +1,2 @@
+语义职责边界门失败：
+- backend/src/modules/ai-runtime/video-decisions-runner.ts 未调用 material.match Skill

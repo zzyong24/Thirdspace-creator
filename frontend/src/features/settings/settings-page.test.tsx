@@ -66,6 +66,7 @@ vi.mock("next/navigation", () => ({
 }));
 vi.mock("@/lib/contract-client", () => ({
   client: {
+    getReportingStatus: vi.fn().mockResolvedValue({consentVersion:1,diagnostics:{scope:"diagnostics",accountId:null,accountLabel:null,platform:null,accountActive:true,enabled:false,needsReconsent:false,consentEpoch:0,changedAt:null,queuedCount:0},accounts:[],preparationAvailable:true,uploadAvailable:false}),
     patchPreferences: vi.fn().mockResolvedValue({}),
     putModel: vi.fn().mockResolvedValue({}),
     putChannelModelCredential: vi.fn().mockResolvedValue({}),
@@ -242,6 +243,7 @@ describe("SettingsPage", () => {
       "偏好",
       "外观",
       "模型配置",
+      "数据服务",
       // T-077a:技能管理页签(SPEC 2026-07-03 §1.1)。
       "技能",
       "存储",

@@ -8,7 +8,7 @@ export function supportsAssetGenerationMode(spec:AssetModelIdentity,mode:AssetGe
  const provider=spec.provider.toLowerCase(),model=spec.model.toLowerCase();
  if(mode==="image_to_image"||mode==="text_to_image")return provider==="openai"||(provider==="minimax"&&["image-01","image-01-live"].includes(model));
  if(mode==="image_to_video")return provider==="minimax"&&["minimax-h3","minimax-h3-max","minimax-hailuo-2.3","minimax-hailuo-2.3-fast","minimax-hailuo-02"].includes(model);
- return provider==="minimax"&&["minimax-h3","minimax-h3-max","minimax-hailuo-2.3","minimax-hailuo-2.3-fast","minimax-hailuo-02"].includes(model);
+ return provider==="minimax"?["minimax-h3","minimax-h3-max","minimax-hailuo-2.3","minimax-hailuo-2.3-fast","minimax-hailuo-02"].includes(model):["omnihi","seedance","seeddance"].includes(provider);
 }
 export function capabilityForAssetMode(mode:AssetGenerationMode):"image.generate"|"image.edit"|"video.generate"{
  return mode==="image_to_image"?"image.edit":mode.endsWith("_image")?"image.generate":"video.generate";

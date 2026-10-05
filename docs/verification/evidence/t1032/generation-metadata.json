@@ -1,0 +1,131 @@
+{
+  "capturedAt": "2026-09-30T21:32:21.887Z",
+  "tasks": [
+    {
+      "taskId": "ai-task-3256c9ab-80",
+      "results": [
+        {
+          "generationSkills": [
+            {
+              "skillId": "script.voiceover.compose",
+              "baseVersion": "v2+methods-operations-2026-09-27",
+              "overlayVersion": null
+            },
+            {
+              "skillId": "script.storyboard.segment",
+              "baseVersion": "v2",
+              "overlayVersion": null
+            }
+          ],
+          "generationPipeline": "voiceover_storyboard_v1",
+          "generationAttempts": [
+            {
+              "kind": "initial",
+              "usage": {
+                "inputTokens": 2732,
+                "totalTokens": 3666,
+                "cachedTokens": 128,
+                "outputTokens": 934
+              },
+              "finishReason": "stop"
+            },
+            {
+              "kind": "initial",
+              "usage": {
+                "inputTokens": 1893,
+                "totalTokens": 4981,
+                "cachedTokens": 128,
+                "outputTokens": 3088
+              },
+              "finishReason": "stop"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "taskId": "ai-task-86115380-110",
+      "results": [
+        {
+          "generationSkills": [
+            {
+              "skillId": "script.voiceover.compose",
+              "baseVersion": "v3+methods-operations-2026-09-27",
+              "overlayVersion": null
+            },
+            {
+              "skillId": "script.storyboard.segment",
+              "baseVersion": "v2",
+              "overlayVersion": null
+            }
+          ],
+          "generationPipeline": "voiceover_storyboard_v1",
+          "generationAttempts": [
+            {
+              "kind": "initial",
+              "usage": {
+                "inputTokens": 2802,
+                "totalTokens": 3564,
+                "cachedTokens": 128,
+                "outputTokens": 762
+              },
+              "finishReason": "stop"
+            },
+            {
+              "kind": "initial",
+              "usage": {
+                "inputTokens": 5862,
+                "totalTokens": 9957,
+                "cachedTokens": 256,
+                "outputTokens": 4095
+              },
+              "finishReason": "stop"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "taskId": "ai-task-6302e9d3-56",
+      "results": [
+        {
+          "generationSkills": [
+            {
+              "skillId": "script.voiceover.compose",
+              "baseVersion": "v3+methods-operations-2026-09-27",
+              "overlayVersion": null
+            },
+            {
+              "skillId": "script.storyboard.segment",
+              "baseVersion": "v2",
+              "overlayVersion": null
+            }
+          ],
+          "generationPipeline": "voiceover_storyboard_v1",
+          "generationAttempts": [
+            {
+              "kind": "initial",
+              "usage": {
+                "inputTokens": 2867,
+                "totalTokens": 3619,
+                "cachedTokens": 0,
+                "outputTokens": 752
+              },
+              "finishReason": "stop"
+            },
+            {
+              "kind": "initial",
+              "usage": {
+                "inputTokens": 1783,
+                "totalTokens": 6286,
+                "cachedTokens": 128,
+                "outputTokens": 4503
+              },
+              "finishReason": "stop"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

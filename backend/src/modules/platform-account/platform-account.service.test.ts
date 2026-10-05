@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { createDb, type Db } from "@creatoros/backend";
-import type { RequestContext } from "@creatoros/contract";
+import { platformId, type RequestContext } from "@creatoros/contract";
 import {
   createPlatformAccountService,
   type PlatformAccountService,
@@ -57,6 +57,15 @@ describe("platform-account service", () => {
       accountHandle: "@b",
     });
     expect(acct.followerBaseline).toBe(0);
+  });
+
+  it("合同支持的每种平台都可建立账号登记，包含抖音、小红书和快手", async () => {
+    for (const platform of platformId.options) {
+      const account = await svc.createAccount(ctxA, {
+        platform, accountHandle: `@${platform}`,
+      });
+      expect(account.platform).toBe(platform);
+    }
   });
 
   it("rejects an invalid platform string with ValidationError", async () => {

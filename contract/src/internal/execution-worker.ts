@@ -1,3 +1,7 @@
+import {assetAsrInput} from './asset-asr';
+import {assetAsrPortInputs} from './asset-asr-ports';
+export * from './asset-asr';
+export * from './asset-asr-ports';
 import {redfoxObservationSchema} from "./redfox";
 export {redfoxInputSchema,redfoxObservationSchema,type RedfoxInput} from "./redfox";
 export {transcribeProfileSchema,transcribeSourceFailureSchema} from "./transcribe-workflow";
@@ -24,7 +28,7 @@ import {chatHooksParentRequestSchema,chatHooksReserveRequestSchema} from "./exec
 export {chatHooksPreparationSchema} from "./execution-chat-hooks";
 export { chatProviderNonTextSchema } from "./chat-provider-content";
 import { chatWorkerInputSchema } from "./chat-worker";
-export { chatWorkerInputSchema, chatToolProviderName } from "./chat-worker";
+export { chatWorkerInputSchema, chatToolProviderName, codexAcpBinding, externalAgentBindingSchema } from "./chat-worker";
 import {appendExecutionStreamSchema} from "./execution-stream";
 export {appendExecutionStreamSchema,readExecutionStreamSchema,executionStreamChunkSchema} from "./execution-stream";
 import {topicReadPortInputSchemas} from "./execution-topic-read";
@@ -68,6 +72,7 @@ export const executionRefSchema = z.object({
 }).strict();
 export type ExecutionRef = z.infer<typeof executionRefSchema>;
 export const workerPortSchema = z.enum([
+ ...Object.keys(assetAsrPortInputs) as Array<keyof typeof assetAsrPortInputs>,
   "settleCoverModel",
   ...Object.keys(transcribeWorkflowPortSchemas) as Array<keyof typeof transcribeWorkflowPortSchemas>,
   ...Object.keys(coverPortInputSchemas) as Array<keyof typeof coverPortInputSchemas>,
@@ -83,6 +88,7 @@ export const workerPortSchema = z.enum([
   "failChatGeneration", "restoreChatGeneration", "resolveChatGenerationCredential", "prepareChatGeneration", "reserveChatGenerationModel", "startChatGenerationModel", "settleChatGenerationModel", "completeChatGeneration",
   "failChatScriptDraft", "restoreChatScriptDraft", "prepareChatScriptDraft", "reserveChatScriptDraftModel", "startChatScriptDraftModel", "settleChatScriptDraftModel", "completeChatScriptDraft",
   "failChatHooks", "restoreChatHooks", "prepareChatHooks", "reserveChatHooksModel", "startChatHooksModel", "settleChatHooksModel", "completeChatHooks",
+  "reserveExternalChatTurn", "prepareExternalChatThread", "startExternalChatTurn", "recordExternalChatProviderTurn", "saveExternalChatImage", "recoverExternalChatImage", "settleExternalChatTurn", "commitExternalChatResult", "listExternalTaskTools", "executeExternalTaskTool",
   "appendStreamEvents", "commitChatResult", "checkChatToolApproval",
   "completeDailyTopicSkip", "commitDailyTopicResult",
   "reserveTopicRead", "startTopicRead", "settleTopicRead", "readTopicRead", "readTopicBrowserSession", "saveTopicBrowserSession",
@@ -93,6 +99,24 @@ export const workerPortSchema = z.enum([
 export type WorkerPort = z.infer<typeof workerPortSchema>;
 const emptyPortInput = z.object({}).strict();
 const operationKeySchema = z.string().min(1).max(256);
+const externalChatEngineSchema=z.enum(["codex","codebuddy"]);
+export const externalChatUsageSchema=z.object({
+  inputTokens:z.number().int().nonnegative().nullable(),
+  outputTokens:z.number().int().nonnegative().nullable(),
+  totalTokens:z.number().int().nonnegative().nullable(),
+  thoughtTokens:z.number().int().nonnegative().nullable().optional(),
+  cachedReadTokens:z.number().int().nonnegative().nullable().optional(),
+  cachedWriteTokens:z.number().int().nonnegative().nullable().optional(),
+}).strict().nullable();
+export const externalChatImageIdentitySchema=z.object({callId:operationKeySchema,sessionId:z.string().min(1).max(512),toolCallId:operationKeySchema,imageIndex:z.number().int().min(0).max(15)}).strict();
+export const externalChatImageReceiptSchema=externalChatImageIdentitySchema.omit({callId:true,sessionId:true}).extend({assetId:z.string().min(1),fileId:z.string().min(1),assetType:z.literal("image"),name:z.string().min(1).max(1000),checksum:z.string().regex(/^[a-f0-9]{64}$/),byteLength:z.number().int().positive().max(30*1024*1024),committedAt:z.string().min(1)}).strict();
+export const externalChatReceiptSchema=z.object({schemaVersion:z.literal(1),engine:externalChatEngineSchema,protocolKind:z.enum(["acp","codex-app-server"]).optional(),providerTurnId:z.string().min(1).max(512).optional(),protocolVersion:z.number().int().positive(),sessionId:z.string().min(1).max(512),turnId:operationKeySchema,stopReason:z.enum(["end_turn","max_tokens","max_turn_requests","refusal","cancelled"]),text:z.string().max(2_000_000),images:z.array(externalChatImageReceiptSchema).max(16).optional(),imageFailures:z.array(z.object({toolCallId:operationKeySchema,imageIndex:z.number().int().min(0).max(15),code:z.string().min(1).max(128)}).strict()).max(16).optional(),usage:externalChatUsageSchema}).strict().refine(value=>Boolean(value.text.trim()||value.images?.length),"外部 Agent 未返回可保存正文或图片");
+export const externalChatStartSchema=z.object({schemaVersion:z.literal(1),engine:externalChatEngineSchema,protocolKind:z.enum(["acp","codex-app-server"]).optional(),providerTurnId:z.string().min(1).max(512).optional(),protocolVersion:z.number().int().positive(),sessionId:z.string().min(1).max(512),turnId:operationKeySchema,status:z.literal("started")}).strict();
+export const externalChatTurnStateSchema=z.object({callId:operationKeySchema,status:z.enum(["reserved","started","settled","unknown","rejected"]),sessionId:z.string().min(1).max(512).optional(),protocolVersion:z.number().int().positive().optional(),protocolKind:z.enum(["acp","codex-app-server"]).optional(),providerTurnId:z.string().min(1).max(512).optional(),receipt:externalChatReceiptSchema.optional()}).strict();
+export const externalTaskToolDefinitionSchema=z.object({name:z.string().min(1).max(256),version:z.string().min(1).max(128),description:z.string(),inputSchema:z.record(z.string(),z.json())}).strict();
+export const externalTaskToolCallSchema=z.object({schemaVersion:z.literal(1),kind:z.literal("external_tool"),turnCallId:operationKeySchema,toolCallId:operationKeySchema,toolName:z.string().min(1).max(256),toolVersion:z.string().min(1).max(128)}).strict();
+export const externalTaskToolListSchema=z.object({tools:z.array(externalTaskToolDefinitionSchema).max(100)}).strict();
+export const externalTaskToolResultSchema=z.object({turnCallId:operationKeySchema,toolCallId:operationKeySchema,callId:operationKeySchema,status:z.enum(["settled","unknown"]),outcome:agenticToolOutcomeSchema.optional()}).strict();
 const tokenCountSchema = z.number().int().nonnegative().optional();
 export const workerUsageSchema = z.object({
   inputTokens: tokenCountSchema, outputTokens: tokenCountSchema, totalTokens: tokenCountSchema,
@@ -127,6 +151,7 @@ export const chatResearchPreparationSchema=z.object({available:z.boolean(),query
 
 /** 每个命名端口都有单独的载荷边界；身份字段不得从 Worker 注入。 */
 export const workerPortInputSchemas = {
+ ...assetAsrPortInputs,
   ...videoPortInputSchemas,
   readProcessingAsset:emptyPortInput,saveMaterialExtraction:materialExtractionSchema,completeAssetProcessing:assetProcessingCompleteSchema,
   ...transcribeWorkflowPortSchemas,
@@ -193,6 +218,20 @@ export const workerPortInputSchemas = {
   appendStreamEvents:appendExecutionStreamSchema,
   checkChatToolApproval:reserveAgenticToolSchema,
   commitChatResult:z.object({lastModelCallId:operationKeySchema,toolCallIds:z.array(operationKeySchema).max(10000).refine(ids=>new Set(ids).size===ids.length,"工具引用不能重复")}).strict(),
+  reserveExternalChatTurn:emptyPortInput,
+  prepareExternalChatThread:z.object({callId:operationKeySchema,sessionId:z.string().min(1).max(512),protocolKind:z.literal("codex-app-server"),protocolVersion:z.literal(1)}).strict(),
+  recordExternalChatProviderTurn:z.object({callId:operationKeySchema,providerTurnId:z.string().min(1).max(512)}).strict(),
+  startExternalChatTurn:z.object({callId:operationKeySchema,sessionId:z.string().min(1).max(512),protocolKind:z.enum(["acp","codex-app-server"]).optional(),protocolVersion:z.number().int().positive()}).strict(),
+  saveExternalChatImage:externalChatImageIdentitySchema.extend({mimeType:z.enum(["image/png","image/jpeg","image/webp"]),bytes:z.instanceof(Uint8Array).refine(bytes=>bytes.byteLength>0&&bytes.byteLength<=30*1024*1024)}).strict(),
+  recoverExternalChatImage:externalChatImageIdentitySchema,
+  settleExternalChatTurn:z.discriminatedUnion("status",[
+    z.object({callId:operationKeySchema,status:z.literal("settled"),receipt:externalChatReceiptSchema}).strict(),
+    z.object({callId:operationKeySchema,status:z.literal("unknown")}).strict(),
+    z.object({callId:operationKeySchema,status:z.literal("rejected"),rejectionCode:z.string().min(1).max(128)}).strict(),
+  ]),
+  commitExternalChatResult:z.object({callId:operationKeySchema}).strict(),
+  listExternalTaskTools:emptyPortInput,
+  executeExternalTaskTool:z.object({turnCallId:operationKeySchema,toolCallId:operationKeySchema,toolName:z.string().min(1).max(256),input:z.json().refine(value=>JSON.stringify(value).length<=1_000_000,"工具参数过大")}).strict(),
   completeDailyTopicSkip: emptyPortInput,
   commitDailyTopicResult: z.object({outcome:z.literal("succeeded"),callId:operationKeySchema,text:z.string().min(1).max(2_000_000)}).strict(),
   ...topicReadPortInputSchemas,
@@ -335,7 +374,7 @@ export const scheduledFlywheelTaskInputSchema=z.discriminatedUnion("sourceKind",
 ]);
 /** 用户单条对标转写的真实业务执行标记，不进入项目转写工作流。 */
 export const benchmarkTranscribeTaskInputSchema=z.object({kind:z.literal("benchmark.transcribe"),workId:z.string().min(1),awemeId:z.string().min(1).max(128),sourceId:z.string().min(1),sourceExternalAccountId:z.string(),configuration:transcribeTaskInputSchema.shape.configuration}).strict();
-export const workerTaskInputSchema=z.union([benchmarkTranscribeTaskInputSchema,scheduledFlywheelTaskInputSchema,transcribeTaskInputSchema,assetGenerationInputSchema,modelGenerationInputSchema,structuredGenerationInputSchema,agenticWorkerInputSchema,chatWorkerInputSchema]);
+export const workerTaskInputSchema=z.union([assetAsrInput,benchmarkTranscribeTaskInputSchema,scheduledFlywheelTaskInputSchema,transcribeTaskInputSchema,assetGenerationInputSchema,modelGenerationInputSchema,structuredGenerationInputSchema,agenticWorkerInputSchema,chatWorkerInputSchema]);
 const structuredUsageSchema=z.object({inputTokens:z.number().nonnegative().nullable(),outputTokens:z.number().nonnegative().nullable(),cachedTokens:z.number().nonnegative().nullable(),totalTokens:z.number().nonnegative().nullable()});
 const completionViolationSchema=z.object({code:z.string(),path:z.string(),message:z.string()});
 export const workerStructuredResultSchema=z.object({
@@ -358,3 +397,13 @@ export const chatCommitReceiptSchema=z.object({resultId:z.string().min(1),aiTask
 export {assetGenerationInputSchema,providerJobSchema,providerJobReadSchema,providerJobRecordSchema} from "./asset-generation";
 
 export {assetCredentialSchema,assetRuntimeOptionsSchema,assetResultReceiptSchema} from "./asset-generation";
+
+export {localCodexStatusSchema,localCodexStatusRequestSchema,localCodexStatusResponseSchema} from "./local-codex-status";
+
+export {momentsModelTaskInput,momentsModelOutput,momentsFrozenProof,momentsRetryReservation,momentsFrozenLineage} from "./moments-model";
+
+export {productionRoughCutTaskInput,type ProductionRoughCutTaskInput} from './production-rough-cut';
+
+export * from "./asset-asr-timing";
+
+export {asrTranscriptSchema} from "./execution-asr";

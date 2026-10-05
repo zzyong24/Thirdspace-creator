@@ -2,8 +2,11 @@ import {chatSubmittedTaskType} from "./chat-task-submission";
 import { z } from "zod";
 /** SEMANTIC_BOUNDARY_ALLOW:仅编码供应商工具标识符，不判断意图。 */
 export const chatToolProviderName = (name: string) => name.replace(/[^a-zA-Z0-9_-]/g, "_");
+export const codexAcpBinding={protocolKind:"acp",clientCommit:"27efb1b57b9de22105a91e9154b1d29b51ede8cb",adapterVersion:"2.1.1",runtimeVersion:"0.159.3",policy:"creatoros-acp-readonly-v2"} as const;
+export const externalAgentBindingSchema=z.object({protocolKind:z.literal(codexAcpBinding.protocolKind),clientCommit:z.literal(codexAcpBinding.clientCommit),adapterVersion:z.literal(codexAcpBinding.adapterVersion),runtimeVersion:z.literal(codexAcpBinding.runtimeVersion),policy:z.enum(["creatoros-acp-readonly-v1","creatoros-acp-readonly-v2"])}).strict();
 export const chatWorkerInputSchema = z.object({
-  executionEngine:z.literal("pi").optional(),
+  executionEngine:z.enum(["pi","codex","codebuddy"]).optional(),
+  externalAgentBinding:externalAgentBindingSchema.optional(),
   recoverMissingFinal:z.boolean().optional(),
   contextPolicyVersion:z.literal(2).optional(),
   kind: z.literal("chat.run"),
@@ -31,6 +34,7 @@ export const chatWorkerInputSchema = z.object({
   }).strict()).max(100),
 }).strict().superRefine((value, ctx) => {
   if(!value.accountId && !value.groupId)ctx.addIssue({code:"custom",message:"聊天缺少组或真实账号范围"});
+  if(value.externalAgentBinding && value.executionEngine!=="codex")ctx.addIssue({code:"custom",message:"ACP绑定与引擎不符",path:["externalAgentBinding"]});
   for(const [index,tool] of value.tools.entries())if(tool.execution==="worker.web-read" && (tool.name!=="web.read" || tool.effect!=="committed"))ctx.addIssue({code:"custom",message:"网页读取声明与工具身份不符",path:["tools",index,"execution"]});
   for(const [index,tool] of value.tools.entries())if(tool.execution==="worker.research" && (tool.name!=="material.gather" || tool.effect!=="none"))ctx.addIssue({code:"custom",message:"研究执行声明与工具身份不符",path:["tools",index,"execution"]});
   for(const [index,tool] of value.tools.entries())if(tool.execution==="worker.redfox" && (tool.name!=="redfox.query" || tool.effect!=="committed"))ctx.addIssue({code:"custom",message:"RedFox执行声明与工具身份不符",path:["tools",index,"execution"]});

@@ -208,6 +208,40 @@ export const accountSkillOverlayVersions = pgTable(
   ],
 );
 
+// T-1024: consent is distinct from the legacy analyticsEnabled preference.
+// An absent row means no grant. Account grants are independent of diagnostics.
+export const reportingConsents = pgTable("reporting_consents", {
+  userId: text("user_id").notNull(),
+  scope: text("scope").notNull(),
+  accountId: text("account_id").notNull().default(""),
+  enabled: boolean("enabled").notNull().default(false),
+  consentVersion: integer("consent_version").notNull(),
+  consentEpoch: integer("consent_epoch").notNull().default(0),
+  accountAlias: text("account_alias"),
+  changedAt: text("changed_at").notNull(),
+}, table => [uniqueIndex("reporting_consents_owner_scope_account").on(table.userId, table.scope, table.accountId)]);
+
+export const reportingOutbox = pgTable("reporting_outbox", {
+  eventId: text("event_id").primaryKey(),
+  userId: text("user_id").notNull(),
+  scope: text("scope").notNull(),
+  accountId: text("account_id").notNull().default(""),
+  workAlias: text("work_alias"),
+  consentEpoch: integer("consent_epoch").notNull(),
+  encryptedPayload: text("encrypted_payload").notNull(),
+  createdAt: text("created_at").notNull(),
+  expiresAt: text("expires_at").notNull(),
+});
+
+export const reportingConsentChanges = pgTable("reporting_consent_changes", {
+  userId: text("user_id").notNull(),
+  changeId: text("change_id").notNull(),
+  scope: text("scope").notNull(),
+  accountId: text("account_id").notNull().default(""),
+  enabled: boolean("enabled").notNull(),
+  changedAt: text("changed_at").notNull(),
+}, table => [uniqueIndex("reporting_consent_changes_owner_id").on(table.userId, table.changeId)]);
+
 export type AccountSkillOverlayRow = InferSelectModel<
   typeof accountSkillOverlays
 >;
@@ -323,5 +357,37 @@ CREATE TABLE IF NOT EXISTS account_skill_overlay_versions (
   updated_by TEXT NOT NULL,
   created_at TEXT NOT NULL,
   UNIQUE (user_id, account_id, skill_id, row_revision)
+);
+CREATE TABLE IF NOT EXISTS reporting_consents (
+  user_id TEXT NOT NULL,
+  scope TEXT NOT NULL CHECK (scope IN ('diagnostics','creator')),
+  account_id TEXT NOT NULL DEFAULT '',
+  enabled BOOLEAN NOT NULL DEFAULT FALSE,
+  consent_version INTEGER NOT NULL,
+  consent_epoch INTEGER NOT NULL DEFAULT 0,
+  account_alias TEXT,
+  changed_at TEXT NOT NULL,
+  PRIMARY KEY (user_id, scope, account_id)
+);
+CREATE TABLE IF NOT EXISTS reporting_outbox (
+  event_id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  scope TEXT NOT NULL,
+  account_id TEXT NOT NULL DEFAULT '',
+  work_alias TEXT,
+  consent_epoch INTEGER NOT NULL,
+  encrypted_payload TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  expires_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS reporting_outbox_owner_scope ON reporting_outbox(user_id,scope,account_id,created_at);
+CREATE TABLE IF NOT EXISTS reporting_consent_changes (
+  user_id TEXT NOT NULL,
+  change_id TEXT NOT NULL,
+  scope TEXT NOT NULL,
+  account_id TEXT NOT NULL DEFAULT '',
+  enabled BOOLEAN NOT NULL,
+  changed_at TEXT NOT NULL,
+  PRIMARY KEY (user_id, change_id)
 );
 `;

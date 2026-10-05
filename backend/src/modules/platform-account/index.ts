@@ -62,3 +62,5 @@ export {createAccountBindingTransport,ACCOUNT_BINDING_OP_IDS} from "./account-bi
 export {createAccountBindingPreparer,type AccountBindingPreparedPlan} from "./account-binding-commit";
 
 export {createGroupResourceAccessService,type GroupResourceAccessService} from "./group-resource-access.service";
+export { createVerifiedAccountBindingPort, VerifiedAccountBindingError,
+  type VerifiedAccountBindingPortDeps } from "./verified-account-binding.port";

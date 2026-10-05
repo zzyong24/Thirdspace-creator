@@ -1,0 +1,10 @@
+{
+  "baseline": "T1059",
+  "baseline_errors": 35,
+  "current_errors": 34,
+  "added": [],
+  "removed": [
+    "✗ [ERROR] lesson LED-046 RECURRED — 修复真实安装布局的Worker入口、依赖文件与解析器；先短验证再正式构建，不放宽功能门或盲目重试。"
+  ],
+  "current_exit_code": 1
+}

@@ -32,6 +32,8 @@ export interface CurrentProjectOverride {
   readonly stage?: string;
   /** [FE-M07] 真实进度百分比(projects.list 的 progressPct,0-100)。同上,避免恒显 0%。 */
   readonly progressPct?: number;
+  /** null 表示作品列表读取失败，空数组表示已确认的旧项目。 */
+  readonly workOutputs?: readonly import("@/features/projects/project-workspaces").WorkspaceOutput[] | null;
 }
 
 // ---------------------------------------------------------------------------

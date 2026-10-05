@@ -1,0 +1,38 @@
+[
+  {
+    "path": "frontend/src/features/article/article-workbench.tsx",
+    "beforeSha256": "d6d3b277a25df7974bb732a28e47544eada13095d3e212eb62f32b81308ce98f"
+  },
+  {
+    "path": "frontend/src/features/article/article-workbench.test.tsx",
+    "beforeSha256": "559b9d72cca30c8044e08f084b70c92fb4be42b176c49a901e8266ec28ad3d3a"
+  },
+  {
+    "path": "frontend/src/features/article/article-workbench-save-race.test.tsx",
+    "beforeSha256": "a8395c6199b91708dc389d38c12ed50caebdfede7733031be0d8034244e45e5e"
+  },
+  {
+    "path": "frontend/src/features/projects/graphic-post-workbench.tsx",
+    "beforeSha256": "c853318e567630a1a83511d3a3efada13fb610ead6453142728bbbab0db20a9e"
+  },
+  {
+    "path": "frontend/src/features/projects/graphic-post-workbench.test.tsx",
+    "beforeSha256": "88b6e9557e59b4ea333225f67b683124a7dfe3305848d81cd29f9a0274b620ee"
+  },
+  {
+    "path": "frontend/src/features/projects/graphic-post-results.tsx",
+    "beforeSha256": "fe414631b3587656cdb75ac48a34677c0b41bdd9698322dfde61879b73d5946d"
+  },
+  {
+    "path": "frontend/src/features/projects/graphic-post-results.test.tsx",
+    "beforeSha256": "4d9bf4a3bf1d733d1710e56525d55f8e443d04f69193909e0fe380e3d2b416d5"
+  },
+  {
+    "path": "frontend/src/features/reference-editors/noterelay/noterelay-editor.tsx",
+    "beforeSha256": "7759d0a386ed446720468234f4ecec0fc8df8f7d5b7a20a0a46fd5d1e23b6acd"
+  },
+  {
+    "path": "frontend/src/features/reference-editors/noterelay/noterelay-editor.test.tsx",
+    "beforeSha256": "d930f99cb7d33b8b432426c4b03fc884f7fc46e40049b9388ddab6fea9b91773"
+  }
+]

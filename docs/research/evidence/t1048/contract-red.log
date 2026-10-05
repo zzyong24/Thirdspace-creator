@@ -1,0 +1,133 @@
+
+ RUN  v4.1.8 /private/tmp/t1048-backend-work/contract
+
+ ❯ tests/graphic-series.test.ts (3 tests | 2 failed) 10ms
+     × 保存页说明、画幅与不可变参考 3ms
+     × 画布持久精确参考文件，不能把无asset的file或文生参考存下 3ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/graphic-series.test.ts > 组图合同向后兼容与精确文件 > 保存页说明、画幅与不可变参考
+ZodError: [
+  {
+    "code": "unrecognized_keys",
+    "keys": [
+      "visualBrief"
+    ],
+    "path": [
+      "cardBriefs",
+      0
+    ],
+    "message": "Unrecognized key: \"visualBrief\""
+  },
+  {
+    "code": "unrecognized_keys",
+    "keys": [
+      "seriesProfile"
+    ],
+    "path": [],
+    "message": "Unrecognized key: \"seriesProfile\""
+  }
+]
+ ❯ tests/graphic-series.test.ts:9:30
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  tests/graphic-series.test.ts > 组图合同向后兼容与精确文件 > 画布持久精确参考文件，不能把无asset的file或文生参考存下
+ZodError: [
+  {
+    "code": "invalid_union",
+    "errors": [
+      [
+        {
+          "code": "invalid_value",
+          "values": [
+            "text"
+          ],
+          "path": [
+            "type"
+          ],
+          "message": "Invalid input: expected \"text\""
+        },
+        {
+          "expected": "string",
+          "code": "invalid_type",
+          "path": [
+            "text"
+          ],
+          "message": "Invalid input: expected string, received undefined"
+        },
+        {
+          "code": "unrecognized_keys",
+          "keys": [
+            "prompt",
+            "mode",
+            "referenceAssetId",
+            "referenceFileId"
+          ],
+          "path": [],
+          "message": "Unrecognized keys: \"prompt\", \"mode\", \"referenceAssetId\", \"referenceFileId\""
+        }
+      ],
+      [
+        {
+          "code": "invalid_value",
+          "values": [
+            "image",
+            "video"
+          ],
+          "path": [
+            "type"
+          ],
+          "message": "Invalid option: expected one of \"image\"|\"video\""
+        },
+        {
+          "expected": "string",
+          "code": "invalid_type",
+          "path": [
+            "assetId"
+          ],
+          "message": "Invalid input: expected string, received undefined"
+        },
+        {
+          "code": "unrecognized_keys",
+          "keys": [
+            "prompt",
+            "mode",
+            "referenceAssetId",
+            "referenceFileId"
+          ],
+          "path": [],
+          "message": "Unrecognized keys: \"prompt\", \"mode\", \"referenceAssetId\", \"referenceFileId\""
+        }
+      ],
+      [
+        {
+          "code": "unrecognized_keys",
+          "keys": [
+            "referenceFileId"
+          ],
+          "path": [],
+          "message": "Unrecognized key: \"referenceFileId\""
+        }
+      ]
+    ],
+    "path": [
+      "nodes",
+      0
+    ],
+    "message": "Invalid input"
+  }
+]
+ ❯ tests/graphic-series.test.ts:14:31
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 1 passed (3)
+   Start at  03:33:32
+   Duration  350ms (transform 87ms, setup 0ms, import 177ms, tests 10ms, environment 0ms)
+

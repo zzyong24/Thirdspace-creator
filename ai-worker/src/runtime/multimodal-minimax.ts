@@ -173,9 +173,9 @@ async function generateVideo(
   opts: GenerateVideoOptions,
   deps: MinimaxAdapterDeps,
 ): Promise<GeneratedAsset> {
-  if (isH3(spec)) return generateH3Video(spec, opts, deps);
-  if (opts.resolution === "2K") throw new MultimodalGenerationError("当前 MiniMax 视频模型不支持 2K", {reason:"response_contract",stage:"submit"});
-  if (opts.durationSec !== undefined && ![6,10].includes(opts.durationSec)) throw new MultimodalGenerationError("当前 MiniMax 视频模型只支持 6 或 10 秒", {reason:"response_contract",stage:"submit"});
+  if (isH3(spec) && !(opts.legacyPlain && spec.model.trim().toLowerCase() === "minimax-h3-max")) return generateH3Video(spec, opts, deps);
+  if (!opts.resumeJobId && opts.firstFrame && opts.resolution === "2K") throw new MultimodalGenerationError("当前 MiniMax 视频模型不支持 2K", {reason:"response_contract",stage:"submit"});
+  if (!opts.resumeJobId && opts.firstFrame && opts.durationSec !== undefined && ![6,10].includes(opts.durationSec)) throw new MultimodalGenerationError("当前 MiniMax 视频模型只支持 6 或 10 秒", {reason:"response_contract",stage:"submit"});
   // 已有 provider job 必须原号续查，不能恢复时重新计费提交。
   let taskId=opts.resumeJobId;
   if(!taskId){
@@ -187,8 +187,8 @@ async function generateVideo(
       model: spec.model, // 如 "MiniMax-Hailuo-2.3" / "T2V-01"
       prompt: opts.prompt,
       prompt_optimizer: true,
-      ...(opts.durationSec ? { duration: opts.durationSec } : {}),
-      ...(opts.resolution ? { resolution: opts.resolution } : {}),
+      ...(!opts.legacyPlain && opts.durationSec ? { duration: opts.durationSec } : {}),
+      ...(!opts.legacyPlain && opts.resolution ? { resolution: opts.resolution } : {}),
       // 首帧由任务冻结的素材版本提供；不允许静默退回文生视频。
       ...(opts.firstFrame ? { first_frame_image: firstFrameDataUrl(opts.firstFrame) } : {}),
     }),
@@ -223,6 +223,7 @@ async function generateH3Video(
   const resolution = opts.resolution ?? "768P";
   const h3Max = spec.model.trim().toLowerCase() === "minimax-h3-max";
   const ratio = opts.aspectRatio ?? "9:16";
+  if (!opts.resumeJobId) {
   if (!prompt || prompt.length > 7_000) {
     throw new MultimodalGenerationError("MiniMax H3 prompt 必须为 1–7000 字", {
       reason: "response_contract",
@@ -246,6 +247,8 @@ async function generateH3Video(
       reason: "response_contract",
       stage: "submit",
     });
+  }
+
   }
 
   let taskId = opts.resumeJobId;

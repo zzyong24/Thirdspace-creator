@@ -1,0 +1,7 @@
+{
+  "status": "PASS",
+  "sourceFiles": 704,
+  "patchFiles": 704,
+  "different": [],
+  "scope": "最终完整源码解包与基于冻结T1046源码的标准patch应用，逐文件SHA256一致"
+}

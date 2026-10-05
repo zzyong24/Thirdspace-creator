@@ -39,6 +39,18 @@ it("同一次当前稿读取绑定提示词与快照，准备不提交或唤醒"
  expect(prepared.result({id:"child"} as never)).toMatchObject({status:"ok",sideEffect:"committed",data:{kind:"material.generate",taskId:"child",kindOf:"video",status:"queued",error:null}});
  await tool.wakeTask!(f.context,"child");expect(f.wakeTask).toHaveBeenCalledExactlyOnceWith(f.context,"child");
 });
+it("文章段落原子生成只冻结当前文章段落，不读取同项目视频脚本",async()=>{
+ const f=await fixture(),tool=f.bound["material.generate"]!;
+ f.restored.hostContext.chatContext.functionKey="material.generate.image";
+ (f.restored.hostContext.chatContext as typeof f.restored.hostContext.chatContext & {selection:unknown}).selection={kind:"article_section",outputId:"article-output",versionId:"article-v3",ids:["section-1"]};
+ const getArticleForImage=vi.fn(async()=>({projectId:"project",outputId:"article-output",artifactId:"article-artifact",currentVersionId:"article-v3",current:{sections:[{sectionId:"section-1",heading:"文章标题",body:"文章真实正文"}],visualBriefs:[{sectionId:"section-1",brief:"解释概念关系"}]}}));
+ (f.readers as typeof f.readers & Pick<ContextReaders,"getArticleForImage">).getArticleForImage=getArticleForImage;
+ await tool.prepareTask!(f.context,{kind:"image",prompt:"概念配图"},f.scope);
+ expect(getArticleForImage).toHaveBeenCalledExactlyOnceWith(f.context,{outputId:"article-output"});
+ expect(f.getArtifactText).not.toHaveBeenCalled();
+ expect(f.prepareTaskCommit).toHaveBeenCalledWith(f.context,{taskType:"asset.generate",attemptId:f.scope.attemptId,inputData:{kind:"image",projectId:"project",prompt:expect.stringContaining("段落原文:文章真实正文"),articleSnapshot:expect.objectContaining({sectionId:"section-1",visualBrief:"解释概念关系"})}});
+ expect(f.prepareTaskCommit.mock.calls[0]?.[1].inputData).not.toHaveProperty("scriptSnapshot");
+});
 it.each(["account","definition","cancel","missing-reader","stale-section","fact-capture"])("素材准备拒绝 %s，不进入提交",async reason=>{
  const f=await fixture(),tool=f.bound["material.generate"]!;
  if(reason==="account")f.restored.context.accountId="other";

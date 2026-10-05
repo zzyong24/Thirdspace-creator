@@ -1,0 +1,8 @@
+{
+  "fixture": "实际旧交付 ESM，7组合法图片属性/响应式来源在修复前失败",
+  "dist": "/tmp/t1053-native-doocs/delivery/native",
+  "nativeJsSha256": "2803b50c8f532a2946c783e8b60cf22f1092257ab70061ef734de037d41db467",
+  "nativeCssSha256": "cef9c1e0c9fe03995e3b4bc47b6d43387dc6c0c308379b53bf743fe930bffc51",
+  "script": "scripts/verify-native-image-variants.mjs",
+  "result": "FAIL，详见 image-seven-families-red.log"
+}

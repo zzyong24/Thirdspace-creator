@@ -1,0 +1,18 @@
+{
+  "mcpServers": {
+    "creatoros": {
+      "type": "stdio",
+      "command": "__CREATOROS_NODE_EXECUTABLE__",
+      "args": [
+        "__CREATOROS_CLI_BUNDLE__",
+        "mcp",
+        "serve",
+        "--connection-file",
+        "__CREATOROS_CONNECTION_FILE__"
+      ],
+      "env": {
+        "CREATOROS_BASE_URL": ""
+      }
+    }
+  }
+}

@@ -1,0 +1,150 @@
+{
+  "files": [
+    {
+      "path": "docs/research/evidence/t1049/control-scope-evidence.json",
+      "bytes": 23315,
+      "sha256": "e3e0318f9596c7b34701a7b4a6fd087afed028d06d8732dc0a10d9c889273ee0"
+    },
+    {
+      "path": "docs/research/evidence/t1049/doocs-LICENSE.txt",
+      "bytes": 477,
+      "sha256": "cfeeb9a8bae22957f5ca9af8c5f7d9e686b34ecf36c9a8d7da6fec0185781069"
+    },
+    {
+      "path": "docs/research/evidence/t1049/doocs-build-after-prepare.log",
+      "bytes": 29726,
+      "sha256": "b83b9fe373046c31b76d31ca255271835b2999b2fadbf0dbfb35a07d4883d960"
+    },
+    {
+      "path": "docs/research/evidence/t1049/doocs-build.log",
+      "bytes": 31065,
+      "sha256": "52bd449d6b52a0aeb1c13412c5ede85f41b278e866207b5793089a759d771d94"
+    },
+    {
+      "path": "docs/research/evidence/t1049/doocs-core-tests.log",
+      "bytes": 226,
+      "sha256": "39d74e885adfe88c931a178e0259a8297d413f12de148d630b4c6aff3fa77f38"
+    },
+    {
+      "path": "docs/research/evidence/t1049/doocs-export-tests.log",
+      "bytes": 526,
+      "sha256": "3ac5774030010d2b15ae68339c44108a4322b85d30bc260eaae7e380468517dc"
+    },
+    {
+      "path": "docs/research/evidence/t1049/doocs-http.json",
+      "bytes": 494,
+      "sha256": "a849d4129382e8967f193b3213ed590b5fbc5ab9a79414d691f42ba1cfe0732c"
+    },
+    {
+      "path": "docs/research/evidence/t1049/doocs-install.log",
+      "bytes": 10689,
+      "sha256": "6b8974ad17006bcf6113a41326d779f77852a0bf54a1aeff38bc95e22344282f"
+    },
+    {
+      "path": "docs/research/evidence/t1049/doocs-prepare.log",
+      "bytes": 60,
+      "sha256": "79eacdff377757d97adb1cce0e0c0954f6fd89b1ef41453defa9ca988d98ebcf"
+    },
+    {
+      "path": "docs/research/evidence/t1049/doocs-preview.log",
+      "bytes": 42,
+      "sha256": "c9e812f196c50a2912d5dc36f5d18d0e02709b2c49acda3c68b98fb94c69364a"
+    },
+    {
+      "path": "docs/research/evidence/t1049/markcard-LICENSE.txt",
+      "bytes": 35149,
+      "sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986"
+    },
+    {
+      "path": "docs/research/evidence/t1049/markcard-build.log",
+      "bytes": 10377,
+      "sha256": "d66c15931ba09d765cd4877afa95f31faba72b2d4ede334c8e52fc610702d62d"
+    },
+    {
+      "path": "docs/research/evidence/t1049/markcard-install.log",
+      "bytes": 3430,
+      "sha256": "195d5570664191f4143098f3f70d5b5ab688da87c559d91ead4ab25a174a7923"
+    },
+    {
+      "path": "docs/research/evidence/t1049/rednote-LICENSE.txt",
+      "bytes": 1056,
+      "sha256": "1126322e2cc8d165adc4c792eeb195717de2bcc7b39be1ce77959d78e87ef685"
+    },
+    {
+      "path": "docs/research/evidence/t1049/rednote-build.log",
+      "bytes": 42940,
+      "sha256": "b9f648cfc3c96bb42544c29cef64fe90239506c4f795b5504c59b36a51d9bef3"
+    },
+    {
+      "path": "docs/research/evidence/t1049/rednote-http.json",
+      "bytes": 616,
+      "sha256": "281bea4f1584c8553786d318bd9e21b0703f5740b3060bccc36c994c22a2c077"
+    },
+    {
+      "path": "docs/research/evidence/t1049/rednote-install.log",
+      "bytes": 2078,
+      "sha256": "51949ddcc7d4d289bf334fca57f3c1df67208a1c1ead41a9552dc857293264dc"
+    },
+    {
+      "path": "docs/research/evidence/t1049/rednote-preview.log",
+      "bytes": 39,
+      "sha256": "91b1ffccda17686bf83eaab9db528571f19b36449fd06e36b120e8ead7a92632"
+    },
+    {
+      "path": "docs/research/evidence/t1049/research-context-plan.json",
+      "bytes": 7662,
+      "sha256": "ce9d4b3e51f44ada459f40df2a7b692ba2d5c541d1e06924240d52033f4d53c4"
+    },
+    {
+      "path": "docs/research/evidence/t1049/review-audit.log",
+      "bytes": 1362,
+      "sha256": "73701f28513784adbc98823d1e830623b70e4a9ce85b6b3e6f341cdaf4a236bd"
+    },
+    {
+      "path": "docs/research/evidence/t1049/review-context.json",
+      "bytes": 8439,
+      "sha256": "b868251b019b588dc1990da24fc04ad703a932218fc96781d43008f6a08da285"
+    },
+    {
+      "path": "docs/research/evidence/t1049/review-input-missing-constitution.json",
+      "bytes": 4313,
+      "sha256": "0d2198575d08bc3dc3f05f2ef55f9237ebf6340567d3e0f3a477c6651286f3ad"
+    },
+    {
+      "path": "docs/research/evidence/t1049/review-input.json",
+      "bytes": 4418,
+      "sha256": "02376ed56c82f0ae92fb54ad17623cadf52c01fafdee9dbc5351b8569f2a4c20"
+    },
+    {
+      "path": "docs/research/evidence/t1049/review-note-missing-constitution.md",
+      "bytes": 1305,
+      "sha256": "0ec0e4e44d5154c4547dac6506457fc11b27b2cb5491b8306bb3901d1375479a"
+    },
+    {
+      "path": "docs/research/evidence/t1049/review-note.md",
+      "bytes": 1905,
+      "sha256": "73230b9959640e5a4d312bff9ae000ab62539f00a805a64789d6afdb75e221fb"
+    },
+    {
+      "path": "docs/research/evidence/t1049/review-recheck-note.md",
+      "bytes": 1519,
+      "sha256": "848265eaa989792f2c3b1c64fa6db1bf5f366433328d9f4215a96d1a327aecfd"
+    },
+    {
+      "path": "docs/research/evidence/t1049/review-recheck.json",
+      "bytes": 5472,
+      "sha256": "06272640d77895da20803eeb84745e15d33c45f0abc5d9059c61dc08f4f88360"
+    },
+    {
+      "path": "docs/research/evidence/t1049/source-provenance.json",
+      "bytes": 10725,
+      "sha256": "349503a13fe7b5951ba6effaebc0fe23f8772ab261889a853bab02bb9fae5209"
+    },
+    {
+      "path": "docs/research/evidence/t1049/spec-revision-1.patch.json",
+      "bytes": 3680,
+      "sha256": "8914a9bf26c7386ecb0e699b2c2749036bc3cd7dd9e3ddd63b3536f18dd055c2"
+    }
+  ],
+  "meaning": "冻结本轮原证据文件，不表示产品验收通过"
+}

@@ -10,10 +10,11 @@ type AssetExecutionScope=Parameters<Parameters<ReturnType<typeof createExecution
 export async function bindAssetExecution(scope:AssetExecutionScope,callId?:string){
   const {task,context,tx}=scope;
   const payload=task.payload as Record<string,unknown>;
-  const cover=(payload.modelInput as {kind?:string;skillId?:string})?.kind==="model.structured"&&(payload.modelInput as {skillId?:string}).skillId==="cover.brief"?await readCoverImageBinding(scope):null;
+  const cover=(payload.modelInput as {kind?:string;skillId?:string})?.kind==="model.structured"&&
+    ["cover.brief","graphic.card-brief"].includes((payload.modelInput as {skillId?:string}).skillId??"")?await readCoverImageBinding(scope):null;
   const input=cover?.input??assetGenerationInputSchema.parse(payload.modelInput);
   const [business]=await tx.select().from(aiTasks).where(and(eq(aiTasks.id,task.ownerId),eq(aiTasks.executionTaskId,task.id),eq(aiTasks.userId,context.userId),workspaceFilter(aiTasks,context)));
-  if(task.kind!=="ai_task" || task.ownerType!=="ai_task" || payload.aiTaskId!==business?.id || business?.taskType!==(cover?"cover.generate":"asset.generate"))throw new ConflictError("素材执行缺少真实任务归属");
+  if(task.kind!=="ai_task" || task.ownerType!=="ai_task" || payload.aiTaskId!==business?.id || business?.taskType!==(cover?(cover.input.operationKey.startsWith("graphic.card-brief")?"graphic.card.generate":"cover.generate"):"asset.generate"))throw new ConflictError("素材执行缺少真实任务归属");
   const businessInput=business.inputData as Record<string,unknown>;
   if(!cover && (
     (businessInput.kind==="video"?"video":"image")!==input.mediaKind

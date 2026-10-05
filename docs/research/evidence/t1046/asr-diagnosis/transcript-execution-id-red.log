@@ -1,0 +1,82 @@
+
+> @creatoros/backend@0.1.0 test /private/tmp/t1046-backend-work/backend
+> vitest run src/modules/production/production-asset-asr.integration.test.ts
+
+
+ RUN  v4.1.8 /private/tmp/t1046-backend-work/backend
+
+stderr | src/modules/production/production-asset-asr.integration.test.ts > T850 正式候选公共Source真实probe/adopt→精确Assets对象物化/抽音→prepared ASR→公共全文get/adopt (v2)
+[run-execution-task] task ai-task-2 失败: Error: fixture临时读取故障
+    at Object.materializeAsset (/private/tmp/t1046-backend-work/backend/src/modules/production/production-asset-asr.integration.test.ts:63:434)
+    at /private/tmp/t1046-backend-work/backend/src/modules/execution/run-execution-task.ts:211:21
+    at materializeInputs (/private/tmp/t1046-backend-work/backend/src/modules/execution/sandbox.ts:134:26)
+    at runExecutionTask (/private/tmp/t1046-backend-work/backend/src/modules/execution/run-execution-task.ts:207:20)
+    at Object.createTask (/private/tmp/t1046-backend-work/backend/src/modules/production/production-asset-asr.integration.test.ts:64:647)
+    at Object.prepare [as prepareEditorSource] (/private/tmp/t1046-backend-work/backend/src/modules/production/production-sources.ts:50:102)
+    at Object.request (/private/tmp/t1046-backend-work/backend/src/modules/production/production.transport.ts:145:71)
+    at /private/tmp/t1046-backend-work/backend/src/modules/production/production-asset-asr.integration.test.ts:67:18
+    at file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20
+
+stderr | src/modules/production/production-asset-asr.integration.test.ts > T850 正式候选公共Source真实probe/adopt→精确Assets对象物化/抽音→prepared ASR→公共全文get/adopt (native)
+[run-execution-task] task ai-task-4 失败: Error: fixture临时读取故障
+    at Object.materializeAsset (/private/tmp/t1046-backend-work/backend/src/modules/production/production-asset-asr.integration.test.ts:63:434)
+    at /private/tmp/t1046-backend-work/backend/src/modules/execution/run-execution-task.ts:211:21
+    at materializeInputs (/private/tmp/t1046-backend-work/backend/src/modules/execution/sandbox.ts:134:26)
+    at runExecutionTask (/private/tmp/t1046-backend-work/backend/src/modules/execution/run-execution-task.ts:207:20)
+    at Object.createTask (/private/tmp/t1046-backend-work/backend/src/modules/production/production-asset-asr.integration.test.ts:64:647)
+    at Object.prepare [as prepareEditorSource] (/private/tmp/t1046-backend-work/backend/src/modules/production/production-sources.ts:50:102)
+    at Object.request (/private/tmp/t1046-backend-work/backend/src/modules/production/production.transport.ts:145:71)
+    at /private/tmp/t1046-backend-work/backend/src/modules/production/production-asset-asr.integration.test.ts:67:18
+    at file:///Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20
+
+ ❯ src/modules/production/production-asset-asr.integration.test.ts (2 tests | 2 failed) 4915ms
+   × T850 正式候选公共Source真实probe/adopt→精确Assets对象物化/抽音→prepared ASR→公共全文get/adopt (v2) 2753ms
+   × T850 正式候选公共Source真实probe/adopt→精确Assets对象物化/抽音→prepared ASR→公共全文get/adopt (native) 2161ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/production/production-asset-asr.integration.test.ts > T850 正式候选公共Source真实probe/adopt→精确Assets对象物化/抽音→prepared ASR→公共全文get/adopt (v2)
+AssertionError: expected { …(7) } to match object { …(2) }
+(5 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "executionTaskId": "exec_ff5d8248-ea19-4de2-b4a6-fc9441aee10f",
++   "executionTaskId": null,
+    "transcript": null,
+  }
+
+ ❯ src/modules/production/production-asset-asr.integration.test.ts:79:24
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/modules/production/production-asset-asr.integration.test.ts > T850 正式候选公共Source真实probe/adopt→精确Assets对象物化/抽音→prepared ASR→公共全文get/adopt (native)
+AssertionError: expected { …(7) } to match object { …(2) }
+(5 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "executionTaskId": "exec_a01f552f-6a32-403f-b7dd-4c1b92d2fe23",
++   "executionTaskId": null,
+    "transcript": null,
+  }
+
+ ❯ src/modules/production/production-asset-asr.integration.test.ts:79:24
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed (2)
+   Start at  00:05:26
+   Duration  8.72s (transform 3.02s, setup 0ms, import 3.63s, tests 4.92s, environment 0ms)
+
+/private/tmp/t1046-backend-work/backend:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @creatoros/backend@0.1.0 test: `vitest run src/modules/production/production-asset-asr.integration.test.ts`
+Exit status 1

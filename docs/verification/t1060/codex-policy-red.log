@@ -1,0 +1,176 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/ai-worker
+
+ ❯ src/execution/codex-acp-policy.test.ts (7 tests | 7 failed) 22ms
+   × 可信配置形成独立 argv，路径含空格仍不拼 shell，禁用项先于会话生效 5ms (retry x2)
+   × 真实 config/read 缺字段或开启功能均拒绝，不能以本地请求证明有效权限 1ms (retry x2)
+   × 只接受 ThreadStartResponse 实際只读与相同工作目录，不信任请求 sandbox 1ms (retry x2)
+   × 原 newSession 保留全局禁用 MCP，查询真实线程全部分页后才返回 10ms (retry x2)
+   × 额外工具、未连接 MCP、缺目录权限回执和分页循环拒绝入场，不枚举模型 3ms (retry x2)
+   × 冲突的全局 MCP 不继承，额外可写根与实际配置不符在创建线程前拒绝 2ms (retry x2)
+   × 回合元数据来自真实原生 ID 和状态，保留原 quota；缺 ID 不造终态 0ms (retry x2)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 7 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/execution/codex-acp-policy.test.ts > 可信配置形成独立 argv，路径含空格仍不拼 shell，禁用项先于会话生效
+ FAIL  src/execution/codex-acp-policy.test.ts > 可信配置形成独立 argv，路径含空格仍不拼 shell，禁用项先于会话生效
+ FAIL  src/execution/codex-acp-policy.test.ts > 可信配置形成独立 argv，路径含空格仍不拼 shell，禁用项先于会话生效
+TypeError: policyApi.readCreatorOsPolicy is not a function
+ ❯ src/execution/codex-acp-policy.test.ts:46:28
+     44|
+     45| it('可信配置形成独立 argv，路径含空格仍不拼 shell，禁用项先于会话生效',() => {
+     46|   const policy = policyApi.readCreatorOsPolicy(environment());
+       |                            ^
+     47|   const argv = policyApi.creatorOsStartupArguments(policy);
+     48|   expect(argv.slice(0,2)).toEqual(['app-server','--stdio']);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/21]⎯
+
+ FAIL  src/execution/codex-acp-policy.test.ts > 真实 config/read 缺字段或开启功能均拒绝，不能以本地请求证明有效权限
+ FAIL  src/execution/codex-acp-policy.test.ts > 真实 config/read 缺字段或开启功能均拒绝，不能以本地请求证明有效权限
+ FAIL  src/execution/codex-acp-policy.test.ts > 真实 config/read 缺字段或开启功能均拒绝，不能以本地请求证明有效权限
+TypeError: policyApi.readCreatorOsPolicy is not a function
+ ❯ src/execution/codex-acp-policy.test.ts:60:28
+     58|
+     59| it('真实 config/read 缺字段或开启功能均拒绝，不能以本地请求证明有效权限',() => {
+     60|   const policy = policyApi.readCreatorOsPolicy(environment());
+       |                            ^
+     61|   expect(() => policyApi.assertCreatorOsConfigResponse(policy,{config:…
+     62|   for (const changed of [{web_search:'enabled'},{features:{}},{approva…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/21]⎯
+
+ FAIL  src/execution/codex-acp-policy.test.ts > 只接受 ThreadStartResponse 实際只读与相同工作目录，不信任请求 sandbox
+ FAIL  src/execution/codex-acp-policy.test.ts > 只接受 ThreadStartResponse 实際只读与相同工作目录，不信任请求 sandbox
+ FAIL  src/execution/codex-acp-policy.test.ts > 只接受 ThreadStartResponse 实際只读与相同工作目录，不信任请求 sandbox
+TypeError: policyApi.assertCreatorOsThreadResponse is not a function
+ ❯ src/execution/codex-acp-policy.test.ts:70:20
+     68|
+     69| it('只接受 ThreadStartResponse 实際只读与相同工作目录，不信任请求 sandbox',() => {
+     70|   expect(policyApi.assertCreatorOsThreadResponse(nativeThread(),'/tmp/…
+       |                    ^
+     71|   for (const changed of [{sandbox:{type:'workspaceWrite',networkAccess…
+     72|     {sandbox:{type:'readOnly',networkAccess:true}},{sandbox:{type:'rea…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/21]⎯
+
+ FAIL  src/execution/codex-acp-policy.test.ts > 原 newSession 保留全局禁用 MCP，查询真实线程全部分页后才返回
+ FAIL  src/execution/codex-acp-policy.test.ts > 原 newSession 保留全局禁用 MCP，查询真实线程全部分页后才返回
+ FAIL  src/execution/codex-acp-policy.test.ts > 原 newSession 保留全局禁用 MCP，查询真实线程全部分页后才返回
+AssertionError: expected { config: { …(7) }, …(2) } to match object { approvalPolicy: 'on-request', …(4) }
+(25 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "approvalPolicy": "on-request",
+-   "approvalsReviewer": "user",
+    "config": {
+      "mcp_servers": {
+        "creatoros_task": {
+          "url": "http://127.0.0.1:1234/mcp",
+-       },
+-       "personal": {
+-         "enabled": false,
+        },
+      },
+    },
+    "cwd": "/tmp/task",
+-   "sandbox": "read-only",
+  }
+
+ ❯ src/execution/codex-acp-policy.test.ts:84:21
+     82|   expect(f.native.configRead).toHaveBeenCalledWith({includeLayers:true…
+     83|   const submitted = f.native.threadStart.mock.calls[0][0];
+     84|   expect(submitted).toMatchObject({approvalPolicy:'on-request',approva…
+       |                     ^
+     85|     config:{mcp_servers:{personal:{enabled:false},creatoros_task:{url:…
+     86|   expect(f.native.listMcpServerStatus).toHaveBeenCalledTimes(2);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/21]⎯
+
+ FAIL  src/execution/codex-acp-policy.test.ts > 额外工具、未连接 MCP、缺目录权限回执和分页循环拒绝入场，不枚举模型
+ FAIL  src/execution/codex-acp-policy.test.ts > 额外工具、未连接 MCP、缺目录权限回执和分页循环拒绝入场，不枚举模型
+ FAIL  src/execution/codex-acp-policy.test.ts > 额外工具、未连接 MCP、缺目录权限回执和分页循环拒绝入场，不枚举模型
+AssertionError: promise resolved "{ sessionId: 'thread-actual', …(6) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "additionalDirectories": [],
++   "collaborationMode": "default",
++   "currentModelId": "gpt-model",
++   "currentServiceTier": null,
++   "modelProvider": "openai",
++   "models": [
++     {},
++   ],
++   "sessionId": "thread-actual",
+  }
+
+ ❯ src/execution/codex-acp-policy.test.ts:98:48
+     96|     [{data:[],nextCursor:null}]]) {
+     97|     const f = clientFixture(pages);
+     98|     await expect(f.client.newSession(f.request)).rejects.toThrow('CODE…
+       |                                                ^
+     99|     expect(f.client.fetchAvailableModels).not.toHaveBeenCalled();
+    100|     vi.unstubAllEnvs();vi.restoreAllMocks();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/21]⎯
+
+ FAIL  src/execution/codex-acp-policy.test.ts > 冲突的全局 MCP 不继承，额外可写根与实际配置不符在创建线程前拒绝
+ FAIL  src/execution/codex-acp-policy.test.ts > 冲突的全局 MCP 不继承，额外可写根与实际配置不符在创建线程前拒绝
+ FAIL  src/execution/codex-acp-policy.test.ts > 冲突的全局 MCP 不继承，额外可写根与实际配置不符在创建线程前拒绝
+AssertionError: promise resolved "{ sessionId: 'thread-actual', …(6) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "additionalDirectories": [],
++   "collaborationMode": "default",
++   "currentModelId": "gpt-model",
++   "currentServiceTier": null,
++   "modelProvider": "openai",
++   "models": [
++     {},
++   ],
++   "sessionId": "thread-actual",
+  }
+
+ ❯ src/execution/codex-acp-policy.test.ts:110:109
+    108| it('冲突的全局 MCP 不继承，额外可写根与实际配置不符在创建线程前拒绝',async() => {
+    109|   const f = clientFixture();
+    110|   await expect(f.client.newSession({...f.request,mcpServers:[{...f.req…
+       |                                                                                                             ^
+    111|   expect(f.native.threadStart).not.toHaveBeenCalled();
+    112|   await expect(f.client.newSession({...f.request,additionalDirectories…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/21]⎯
+
+ FAIL  src/execution/codex-acp-policy.test.ts > 回合元数据来自真实原生 ID 和状态，保留原 quota；缺 ID 不造终态
+ FAIL  src/execution/codex-acp-policy.test.ts > 回合元数据来自真实原生 ID 和状态，保留原 quota；缺 ID 不造终态
+ FAIL  src/execution/codex-acp-policy.test.ts > 回合元数据来自真实原生 ID 和状态，保留原 quota；缺 ID 不造终态
+TypeError: policyApi.creatorOsTurnMeta is not a function
+ ❯ src/execution/codex-acp-policy.test.ts:119:20
+    117|
+    118| it('回合元数据来自真实原生 ID 和状态，保留原 quota；缺 ID 不造终态',() => {
+    119|   expect(policyApi.creatorOsTurnMeta({quota:{remaining:2}},'thread-act…
+       |                    ^
+    120|     quota:{remaining:2},creatoros:{codex:{threadId:'thread-actual',tur…
+    121|   for (const turn of [null,{}, {id:'',status:'completed'},{id:'turn-ac…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/21]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  7 failed (7)
+   Start at  16:54:33
+   Duration  842ms (transform 193ms, setup 0ms, import 416ms, tests 22ms, environment 0ms)
+
