@@ -1,0 +1,221 @@
+{
+  "review_kind": "只读静态 scope 准入建议；不是 scope173 授权或实现验收",
+  "observed_at": "2026-10-05T07:41:24.136040+00:00",
+  "candidate_root": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator",
+  "candidate_head": "e73472827a72b205419eb947124ff8ff7c775c43",
+  "formal_head": "e73472827a72b205419eb947124ff8ff7c775c43",
+  "source_sha256": {
+    "backend/src/modules/artifacts/artifacts.repository.ts": "7377ac4cbfec9ea2c75332060aba087949c3f216f13a12160c2915667d86b4ae",
+    "backend/src/modules/artifacts/artifacts.service.ts": "ca490c2cc23526bf4754f9b375ca8ea5b06acff4b6d865378c7f811a83487e7c",
+    "backend/src/workspace-write.ts": "c75a788ef9e1bcd86f5e620fda6ea19d9a66413d2b184ece342df62a1925a937",
+    "backend/src/modules/projects/projects.repository.ts": "e133d1e127831f503393dfb52e3d0ee1a4dd3e71d58e4016bec6378304541f0c",
+    "backend/src/modules/projects/projects.service.ts": "490378c98f98a9f621058d9fafeee0fd66e7d16536932169b7e3adb511fe0925",
+    "backend/src/modules/projects/project-lock.service.ts": "e0e1683a4cc66de05d3cf52d1024e3c65aff8cb3f1bceeae4f20d2e72fcb4e82",
+    "backend/src/modules/articles/articles.service.ts": "77aa5fd66bb698429b903250637324c5db2c22d3dad6403976b4b28dcc8c12eb",
+    "backend/src/modules/articles/articles.text-results.ts": "3169296619e0add95808147119467f611432ea9dffad446f04414376dc164264",
+    "backend/src/modules/articles/articles.transport.ts": "e580151f10859b957ce14b651763b63672567bbb186b28150fd9bb7fea431156",
+    "backend/src/modules/articles/articles.integration.test.ts": "fa994a344fcb2933449c3ef660f2cf9d5b61b5cd51a01cda0aee6f95c1957059",
+    "backend/src/modules/graphic-posts/graphic-posts.service.ts": "959a0da102ba70570f7c68e7ad54e458c42cb95624bd4677184518f3bbac5b61",
+    "backend/src/modules/graphic-posts/graphic-posts.transport.ts": "97cbc1cdcee5107653baf1b1761eaf8186effc22d587029b1ce30b0f4bfabdf2",
+    "backend/src/modules/graphic-posts/graphic-posts.integration.test.ts": "9a50b94c52a7ba1d091bc759cfaf8ce0c442fd307dbc0c68301e69390f40ba68",
+    "backend/src/modules/ai/ai.service.ts": "3d9a5edbdfac24cb8323ad6b6d8d5a26ecaed7f6ea1facbb6561b2cd1dc58ee5",
+    "backend/src/modules/ai/ai.repository.ts": "5c3e9906f4e1e5460d314225d8be497f7e1447cf880bfe4ead9db623e2f97b48",
+    "backend/src/modules/ai/reconstruct-completion.service.ts": "b949ef3c36009831f89f1f2fd15e3f5f79194c5a6a17726217af44945a04ab91",
+    "backend/src/modules/artifacts/reconstructed-artifact.service.ts": "3885261803e317f30bea245162f7360aa7b814661ccb9dccabb612726fd5f6c9",
+    "backend/src/application/thesis-adoption.ts": "09e486126aade26d1dd24d3313238711788171b6e1462a78a8fd90dc29671547",
+    "backend/package.json": "ee9db46bbe172a6d8f6f634b30733321cbf2c64409659c746991484da356e9bf",
+    "backend/src/db.ts": "15a05f64b00fc5095abb6e96aa3d3039db8f4ff4faa894fb1429e843093cd98f",
+    "backend/vitest.config.ts": "ef37271d6e36a38ac90641cb406afb1ef6e919047e5b09d08b3e0c5108a8ebc8"
+  },
+  "formal_packet_sha256": "ca8802c585abd863758507c81c407478871b685a4255b906f5bd20c39103b64c",
+  "formal_scope_count": 172,
+  "scope_increment": [
+    {
+      "path": "backend/src/modules/artifacts/artifacts.repository.ts",
+      "currently_in_scope": false,
+      "reason": "文章/图文真实新版本写入的唯一锁内收口，当前真实父项目归档状态未检"
+    }
+  ],
+  "already_in_scope_tests": [
+    {
+      "path": "backend/src/modules/articles/articles.integration.test.ts",
+      "currently_in_scope": true
+    },
+    {
+      "path": "backend/src/modules/graphic-posts/graphic-posts.integration.test.ts",
+      "currently_in_scope": true
+    }
+  ],
+  "new_files_required": [],
+  "schema_sql_changes_required": false,
+  "finding": {
+    "id": "ARTIFACT_PARENT_ARCHIVE_APPEND",
+    "status": "静态生产缺口已确认；本审查没有执行 red 测试",
+    "paths": [
+      {
+        "path": "backend/src/modules/articles/articles.service.ts",
+        "lines": [
+          220,
+          229,
+          394,
+          515
+        ]
+      },
+      {
+        "path": "backend/src/modules/graphic-posts/graphic-posts.service.ts",
+        "lines": [
+          290,
+          301,
+          466,
+          521
+        ]
+      },
+      {
+        "path": "backend/src/modules/artifacts/artifacts.repository.ts",
+        "lines": [
+          140,
+          146,
+          148,
+          295,
+          296,
+          313,
+          320,
+          337,
+          357
+        ]
+      }
+    ],
+    "actual_chain": "article/graphic transport→对应 createVersion/adopt→anchor(projects.getOutput + artifact owner read)→artifacts service.createVersion→repository.createVersion→withWorkspaceParentWrite(group SHARE→project/artifact UPDATE)→nested same-connection transaction→receipt lookup→CAS→append/currentVersion pointer",
+    "correction_to_race_premise": "articles/graphic anchor 通过 projects.getOutput 只检查真实 owner/组/父链，不检查 project active。因此除了调用前读→archive提交→锁内追加 race，先顺序归档后新保存/采用也静态可达。",
+    "archive_chain": "projects.service.archiveProject 1428-1442→repository.updateProjectRow 513-522→同 helper group SHARE→project UPDATE→status=archived, archivedAt=ts",
+    "serialization": "archive 与 createVersion 同时锁真实 project，锁已经存在；缺少的是取得该锁之后重读父状态，而非增加一个独立锁/根连接。",
+    "race_timeline": [
+      "A 完成文章/图文 anchor、候选/引用核验，但尚未取得 parent write lock",
+      "B 通过真实 archiveProject 持有 project UPDATE，提交 archivedAt/status",
+      "A 得到已有 project/artifact UPDATE 锁；现实现只再验 group active，仍能插入版本并移动指针"
+    ]
+  },
+  "minimum_patch_design": {
+    "target_methods": [
+      "artifactRepository.createVersion"
+    ],
+    "target_artifact_types": [
+      "wechat_article",
+      "graphic_post"
+    ],
+    "placement": "在现有锁内 nested transaction 已获得真实 artifact 行、原 adoptionKey/sourceDigest/aiTaskId receipt 验证并返回之后，且在新增版本/CAS写入之前；查询同一个 tx 的实际 projects 行（artifact.projectId + userId + workspaceFilter），检查 archivedAt 或 status=archived。保留既有 CAS与 receipt digest不改。",
+    "parent_query": "用现有 tx.select/from(projects)，必须读取真实父而非外层缓存；outer helper已锁父，不再调用 root factory、不新增 Tx→Db cast、不另开独立 Db transaction。",
+    "permission": "真实父缺失/owner或workspace不符继续现有 OwnershipError 路径；合法 owned parent 的 archived 新写拒绝复用既有错误协议并保留用户输入/候选，不能伪成功。",
+    "no_shared_helper_change": "不修改 workspace-write.ts 的通用 parent helper，不在 get/list/version/history/receipt reader 统一要求 active。",
+    "receipt_compatibility": "原同请求 receipt 的 artifactId/adoptionKey/adoptionSourceDigest/aiTaskId 比对继续先于新 archive guard；不重签 digest，不按当前 platform/context 改原请求，不新增版本。组本身 archived 的既有 helper约束不在本轮放宽。",
+    "narrowing_reason": "createVersion 是跨域共享API，文章/图文2类型的 new append 范围最小。若要求全 artifact type 统一归档策略，必须另行审查全部实际 started settlement调用族，不能借本scope顺带泛化。"
+  },
+  "started_settlement_counterexample": {
+    "actual_paths": [
+      "backend/src/modules/ai/reconstruct-completion.service.ts",
+      "backend/src/modules/artifacts/reconstructed-artifact.service.ts",
+      "backend/src/modules/projects/project-lock.service.ts"
+    ],
+    "actual_chain": "commitResult→leases.withLease(ref,settlement)→真实 frozen owner + model executionCall settled receipt + lease/generation验证→materialize(tx)→lockImportedProjectForReconstruction→createArtifact(trend_analysis)→createVersion→同 tx aiTaskResults、executionCalls.resultRef、AI/Execution终态",
+    "risk": "对全部 artifactType 新增 archive hard-fail 会使已开始真实重建在 model settled 后收尾整事务 rollback；当前 imported parent helper仅验owner/source，无project archived检查。",
+    "preservation": "本次仅文章/图文新用户保存/采用，不碰 model/ASR ledger settle、cancel、lease、generation、AI候选保存、历史恢复及原账本重放。原 currentVersion新采用拒绝不得删除已成功候选或伪失败已settled模型。"
+  },
+  "other_callers_reviewed": [
+    {
+      "path": "backend/src/modules/ai/ai.service.ts",
+      "line": 1834,
+      "role": "用户 confirmTask artifact_version 采用；不是模型 ledger 的普通 settlement"
+    },
+    {
+      "path": "backend/src/application/thesis-adoption.ts",
+      "line": 86,
+      "role": "用户 thesis采用，与本轮2artifact types不同；保持原事务/ID"
+    },
+    {
+      "path": "backend/src/modules/articles/articles.text-results.ts",
+      "line": 177,
+      "role": "公众号单字段采用复用 articles.createVersion，可用同一repo guard闭合"
+    }
+  ],
+  "regression_plan": [
+    {
+      "case": "文章/图文顺序归档后新手工保存拒绝",
+      "files": [
+        "backend/src/modules/articles/articles.integration.test.ts",
+        "backend/src/modules/graphic-posts/graphic-posts.integration.test.ts"
+      ],
+      "assertions": [
+        "真实 projects.archiveProject 提交；读取旧稿、旧版本仍成功",
+        "新请求保存失败，artifactVersions数量/currentVersionId/adoption receipt完全不变"
+      ]
+    },
+    {
+      "case": "文章整稿采用与图文字段采用 archive-wins race",
+      "files": [
+        "backend/src/modules/articles/articles.integration.test.ts",
+        "backend/src/modules/graphic-posts/graphic-posts.integration.test.ts"
+      ],
+      "setup": "既有 extraPorts 可包装实际 artifacts factory.createVersion，在取得 parent锁之前只设 deterministic promise barrier；业务完整调用到该点后真实 archiveProject提交，再恢复并委派原 actual service。不能在已持 outer锁时调用 root factory，不能以假成功stub替代真实repo。",
+      "assertions": [
+        "新采用拒绝且候选可保留/读取",
+        "零新增 version，current指针和原内容不变；原 receipt无改变；无孤儿版本"
+      ]
+    },
+    {
+      "case": "write-wins合法顺序",
+      "files": [
+        "backend/src/modules/articles/articles.integration.test.ts",
+        "backend/src/modules/graphic-posts/graphic-posts.integration.test.ts"
+      ],
+      "assertions": [
+        "写在归档前真实提交成功，随后 archive提交；旧版本可读",
+        "新guard不能把正常旧手工/采用/CAS/配图安全降级样例变为全失败"
+      ]
+    },
+    {
+      "case": "原回执在project归档后准确重放",
+      "files": [
+        "backend/src/modules/articles/articles.integration.test.ts",
+        "backend/src/modules/graphic-posts/graphic-posts.integration.test.ts"
+      ],
+      "assertions": [
+        "先真实成功保存/采用，再 archive；相同输入/key/digest回原version且无新增",
+        "同key改变输入继续冲突；归档不得消除旧CAS/来源校验",
+        "原receipt/id/digest保持字节；旧历史get/version/list保留"
+      ]
+    },
+    {
+      "case": "权限父门不回退",
+      "files": [
+        "backend/src/modules/articles/articles.integration.test.ts",
+        "backend/src/modules/graphic-posts/graphic-posts.integration.test.ts"
+      ],
+      "assertions": [
+        "空组真实 ctx 合法新写、同组不同账号共享仍可行；不造假account",
+        "foreign project/artifact跨组拒绝；readonly/grant仅允许历史读不允许新write；归组race仍由原parent锁保障"
+      ]
+    }
+  ],
+  "test_sufficiency": "新增 source1 + 已准入2integration test足以覆盖本次窄文章/图文 guard；若扩大到其他artifact types/共享helper则这2tests不足。真实PGlite tests可验证完整公共service事务结果与归档-before-lock调度；真实Postgres等待/阻塞行为不能仅凭PGlite回归声称已证明。可在2既有文件调用对应actual transport以闭合公开endpoint，不必另加test文件。",
+  "verify_suggested_not_executed": [
+    {
+      "command": "pnpm --filter @creatoros/backend exec vitest run src/modules/articles/articles.integration.test.ts src/modules/graphic-posts/graphic-posts.integration.test.ts",
+      "constraint": "solewriter在授权scope及独立测试DB下执行；当前审查未执行"
+    },
+    {
+      "command": "pnpm --filter @creatoros/backend typecheck",
+      "constraint": "当前审查未执行；记录完整诊断，不删原断言或加cast洗绿"
+    },
+    {
+      "command": "git diff --check",
+      "constraint": "实现后限定真实scope复核；此报告不授权产品编辑"
+    }
+  ],
+  "limitations": [
+    "只读源码追踪，没有跑DB/model/tests，也没有生成TDD红证据",
+    "solewriter仍在原scope typing，HEAD不是最终产品冻结；上述 SHA 只绑定此刻所见",
+    "当前报告不批准scope173或整波验收",
+    "project archive 和group archive是两个不同门，本轮不放宽原group权限",
+    "真实已started跨域结算必须保留，不能仅用2文章/图文tests证明宽泛artifact guard安全"
+  ]
+}

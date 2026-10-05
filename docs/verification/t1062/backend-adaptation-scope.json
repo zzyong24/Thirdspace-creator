@@ -210,7 +210,8 @@
     "backend/src/modules/ai/ai-media-probe-control.ts",
     "backend/src/schema/intelligence.ts",
     "backend/src/modules/ai-runtime/chat-submitted-tool-parameters.ts",
-    "backend/src/modules/execution/execution-chat-script-draft.service.test.ts"
+    "backend/src/modules/execution/execution-chat-script-draft.service.test.ts",
+    "backend/src/modules/artifacts/artifacts.repository.ts"
   ],
   "path_details": [
     {
@@ -2459,6 +2460,21 @@
       "reasons": [
         "27th原恢复测试11红止于真实父project缺失；仅补同user/account/group真实project/artifact与foreign父，贯穿真实ID，保原冻结input/hash/version/费用/ACK/恢复/回滚/零写全部断言，不改生产门。"
       ]
+    },
+    {
+      "path": "backend/src/modules/artifacts/artifacts.repository.ts",
+      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/modules/artifacts/artifacts.repository.ts",
+      "exists": true,
+      "before_sha256": "7377ac4cbfec9ea2c75332060aba087949c3f216f13a12160c2915667d86b4ae",
+      "areas": [
+        "article-graphic-parent-archive-permission"
+      ],
+      "roles": [
+        "implementation"
+      ],
+      "reasons": [
+        "原文章/图文保存/采用共享artifact父锁内没有archivedAt检查；仅wechat_article/graphic_post新append，原receipt重放先行，原group→project→artifact锁/CAS不变。不泛化helper或trend_analysis已started结算，不改schema/SQL。"
+      ]
     }
   ],
   "conditional_write_paths": [
@@ -3977,6 +3993,26 @@
       "modern_probe_17_actual": "已真红→绿，现代group真实account也用group NULLaccount receipt，旧legacy独立保原account",
       "old_resolver_functional_red": "此次真正到resolver:15，原日志保留，不与之前current equality过期断言混称",
       "full_submitted_recovery": "11fail/8pass止于真实project不存在，待fixture修复，无整波PASS"
+    },
+    {
+      "artifact_archive_scope": {
+        "at": "2026-10-05T07:43:04.204729+00:00",
+        "base_sha": "e73472827a72b205419eb947124ff8ff7c775c43",
+        "action": "文章/图文真实父归档缺口静态确认后窄补共享repo既有锁内权限",
+        "previous_step_path_count": 172,
+        "added_paths": [
+          "backend/src/modules/artifacts/artifacts.repository.ts"
+        ],
+        "step_path_count": 173,
+        "independent_review": "docs/verification/t1062/preflight/artifact-parent-archive-scope-review.json",
+        "review_sha256": "c66ed79fed2857acbd70b186856659bc1907ef51692f483b0ae2c733406430aa",
+        "wip_preserved": "docs/verification/t1062/preflight/artifact-parent-archive-paused-wip.json",
+        "reason": "只约束文章/图文新版本写权限，保合法已started模型重建结算，不引全域新门。"
+      },
+      "evidence_type": "静态真实调用链，尚无PG竞争功能红，必须补真实顺序归档/保存采用竞争及零写",
+      "already_started_counterexample": "reconstruct-completion settlement→materialize trend_analysis→artifact createVersion，不能泛化归档门反杀已发生模型结算",
+      "public_tests": "既有articles.integration与graphic-posts.integration已在scope，用于新append拒绝/旧receipt重放/历史读/竞争；不新增测试文件",
+      "implementation_verdict": "pending"
     }
   ],
   "ordered_prerequisites": [
@@ -4019,7 +4055,7 @@
     "gateway_exception": "frontend/src/app/api/v1/dispatch/route.test.ts仅公共CLI网关测试，route.ts仅条件修复；无页面/UI路径"
   },
   "counts": {
-    "required_or_new": 148,
+    "required_or_new": 149,
     "necessary_new": 6,
     "conditional": 23,
     "read_only": 48
@@ -4791,6 +4827,20 @@
       "review_sha256": "d45633f890f4300e67245fa5812685ed3d197465afafdec50b4a4f9e5d910381",
       "wip_preserved": "docs/verification/t1062/preflight/submitted-task-parent-fixture-paused-wip.json",
       "reason": "原public recovery完整验收前置失真修正；生产权限、合同、schema和冻结历史均不变。"
+    },
+    {
+      "at": "2026-10-05T07:43:04.204729+00:00",
+      "base_sha": "e73472827a72b205419eb947124ff8ff7c775c43",
+      "action": "文章/图文真实父归档缺口静态确认后窄补共享repo既有锁内权限",
+      "previous_step_path_count": 172,
+      "added_paths": [
+        "backend/src/modules/artifacts/artifacts.repository.ts"
+      ],
+      "step_path_count": 173,
+      "independent_review": "docs/verification/t1062/preflight/artifact-parent-archive-scope-review.json",
+      "review_sha256": "c66ed79fed2857acbd70b186856659bc1907ef51692f483b0ae2c733406430aa",
+      "wip_preserved": "docs/verification/t1062/preflight/artifact-parent-archive-paused-wip.json",
+      "reason": "只约束文章/图文新版本写权限，保合法已started模型重建结算，不引全域新门。"
     }
   ]
 }

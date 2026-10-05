@@ -1,0 +1,8 @@
+{
+  "stashSha": "4915a0f8bb22113cdcaa1a834cae00e43ca6a3ae",
+  "snapshot": "/tmp/t1062-artifact-parent-scope-pause.json",
+  "pathCount": 95,
+  "head": "e73472827a72b205419eb947124ff8ff7c775c43",
+  "restored": false,
+  "initialPreStashAttempt": "wrong snapshot field name; exited before stash or scope edits, corrected to paths and verified95 hashes"
+}
