@@ -39,7 +39,8 @@
     "node-cron": "^4.5.0",
     "pg": "^8.22.0",
     "zod": "^4.4.3",
-    "tldts": "7.4.2"
+    "tldts": "7.4.2",
+    "image-size": "2.0.4"
   },
   "devDependencies": {
     "@types/node": "20.19.43",

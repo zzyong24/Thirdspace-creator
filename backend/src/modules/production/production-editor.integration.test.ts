@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { createDb, projects, contentOutputs, type Db } from "@creatoros/backend";
+import { createDb, projects, contentOutputs, productions, type Db } from "@creatoros/backend";
 import { ENDPOINTS, type RequestContext } from "@creatoros/contract";
 import { createProductionService } from "./production.service";
 import { createProductionTransport } from "./production.transport";
@@ -149,4 +149,150 @@ describe("T-1037 公共制作工程与持久版本",()=>{
     await expect(s.updateProduction(ctx,"video-a",{recordingConfig:{videoEditingPlan:plan()}})).rejects.toThrow();
     expect((await s.getEditor(ctx,"video-a")).revision).toBe(2);
   });
+});
+
+
+describe("T-1038 同源预览公共接口",()=>{
+  it("未保存预览使用真实模板与权威MIME，没有版本或任务副作用",async()=>{
+    const resolve=vi.fn(async(_ctx:RequestContext,input:{assetId:string})=>({url:"https://media.example/"+input.assetId+"?signed=short",mimeType:"video/mp4"}));
+    const createRender=vi.fn();
+    const s=createProductionService({db,now:()=>now,nextId:p=>`${p}-${++seq}`,assertEditorAsset:async()=>{},resolveEditorMedia:resolve,createEditorRender:createRender});
+    const t=createProductionTransport(()=>s);
+    const result=await t.request(ENDPOINTS.previewProductionEditor,{params:{outputId:"video-a"},query:undefined,body:{expectedRevision:0,requestId:"request-preview-01",plan:plan()}},ctx) as {data:{html:string;durationSec:number;warnings:string[]}};
+    expect(result.data.html).toContain('src="https://media.example/master?signed=short"');
+    expect(result.data.html).toContain("window.__timelines");expect(result.data.durationSec).toBe(20);
+    expect(await s.readProduction(ctx,"video-a")).toBeNull();expect((await s.listEditorVersions(ctx,"video-a",{})).total).toBe(0);expect(createRender).not.toHaveBeenCalled();
+    expect(resolve).toHaveBeenCalledWith(ctx,{projectId:"project-a",assetId:"master"});
+  });
+  it("过期版本、错账号、非视频、坏素材URL均拒绝，保留已保存工程",async()=>{
+    const s=createProductionService({db,now:()=>now,nextId:p=>`${p}-${++seq}`,assertEditorAsset:async()=>{},resolveEditorMedia:async()=>({url:"javascript:alert(1)",mimeType:"video/mp4"})});
+    const body={expectedRevision:0,requestId:"request-preview-02",plan:plan()};
+    await expect(s.previewEditor(ctx,"other-account",body)).rejects.toThrow();
+    await expect(s.previewEditor(ctx,"image",body)).rejects.toThrow();
+    await expect(s.previewEditor(ctx,"video-a",body)).rejects.toThrow();
+    const saved=await s.saveEditor(ctx,"video-a",save("request-save-0088"));
+    await expect(s.previewEditor(ctx,"video-a",body)).rejects.toThrow("版本");
+    expect((await s.getEditor(ctx,"video-a")).plan).toEqual(saved.plan);
+  });
+});
+
+describe("T-850 v2 空工程与来源目录边界",()=>{
+ const empty=()=>({editorVersion:2,mainTrack:{sources:[],clips:[]},overlayDraft:{meta:{title:"粗剪"},scenes:[],captions:[],broll:[],delivery:{width:1920,height:1080,fps:30}},sourceTranscripts:[]});
+ it("公共保存、读取、回执、历史恢复支持空粗剪稿且不能被旧方案覆盖",async()=>{
+  const s=service();const body={expectedRevision:0,requestId:"request-v2-empty-01",plan:empty(),source:"manual" as const};
+  const saved=await s.saveEditor(ctx,"video-a",body);
+  expect(await s.getEditor(ctx,"video-a")).toMatchObject({state:"editable",revision:1,plan:{editorVersion:2,mainTrack:{clips:[]}}});
+  expect(await s.saveEditor(ctx,"video-a",body)).toEqual(saved);
+  const restored=await s.restoreEditor(ctx,"video-a",{expectedRevision:1,sourceRevision:1,requestId:"request-v2-restore-01"});expect(restored.revision).toBe(2);
+  await expect(s.saveEditor(ctx,"video-a",{...save("request-v2-old-overwrite",2)})).rejects.toThrow();
+  await expect(s.updateProduction(ctx,"video-a",{recordingConfig:{videoEditingPlan:plan()}})).rejects.toThrow();
+  expect((await s.getEditor(ctx,"video-a")).revision).toBe(2);
+ });
+ it("普通保存不能伪造来源、探针、转写回执或旧快照，失败不建历史",async()=>{
+  const s=service(),base=empty();
+  const source={sourceId:"s",assetId:"master",assetFileId:"f",fileDigest:"a".repeat(64),probeDigest:"b".repeat(64),timebase:{num:1,den:30},durationTicks:300,hasAudio:true};
+  await expect(s.saveEditor(ctx,"video-a",{expectedRevision:0,requestId:"request-v2-fake-source",source:"manual",plan:{...base,mainTrack:{sources:[source],clips:[]}}})).rejects.toThrow();
+  expect(await s.readProduction(ctx,"video-a")).toBeNull();
+  await s.saveEditor(ctx,"video-a",{expectedRevision:0,requestId:"request-v2-good-empty",source:"manual",plan:base});
+  await expect(s.saveEditor(ctx,"video-a",{expectedRevision:1,requestId:"request-v2-fake-snapshot",source:"manual",plan:{...base,legacySnapshot:{pretend:true}}})).rejects.toThrow();
+  expect((await s.listEditorVersions(ctx,"video-a",{})).total).toBe(1);
+ });
+});
+
+it("T-850 公共预览和冻结渲染读取同一已保存主轨，不取素材当前文件",async()=>{
+ const source={sourceId:"source",assetId:"master",assetFileId:"frozen",fileDigest:"a".repeat(64),probeDigest:"b".repeat(64),timebase:{num:1,den:3},durationTicks:30,hasAudio:true};
+ const draft={editorVersion:2,mainTrack:{sources:[source],clips:[{clipId:"one",sourceId:"source",sourceInTicks:1,sourceOutTicks:4},{clipId:"again",sourceId:"source",sourceInTicks:5,sourceOutTicks:8}]},overlayDraft:{meta:{title:"两段原片"},scenes:[],captions:[],broll:[],delivery:{width:1920,height:1080,fps:30}},sourceTranscripts:[]};
+ // 此为已注册源快照的集成 fixture，不冒充真实探针/ASR 验收。
+ await db.insert(productions).values({id:"production-fixture",userId:"user",contentOutputId:"video-a",recordingConfig:{videoEditingPlan:{...draft,revision:0}},updatedAt:now});
+ const reads:unknown[]=[],checks:unknown[]=[],tasks:unknown[]=[];
+ const owner=createProductionService({db,now:()=>now,nextId:p=>`${p}-${++seq}`,assertEditorAsset:async(_c,input)=>{checks.push(input);},resolveEditorMedia:async(_c,input)=>{reads.push(input);return{url:"/real-owned-file",mimeType:"video/mp4"};},createEditorRender:async(_c,input)=>{tasks.push(input);return{id:"original-render"};}});
+ const saved=await owner.saveEditor(ctx,"video-a",{expectedRevision:0,requestId:"request-v2-two-clips",plan:draft,source:"manual"});
+ const preview=await owner.previewEditor(ctx,"video-a",{expectedRevision:1,requestId:"request-v2-preview",plan:saved.plan});
+ expect(preview.durationSec).toBe(2);expect(preview.html).toContain('data-media-start="0.333333"');expect(reads).toHaveLength(2);expect(reads).toEqual(expect.arrayContaining([expect.objectContaining({assetId:"master",assetFileId:"frozen",fileDigest:source.fileDigest})]));
+ const render=await owner.renderEditor(ctx,"video-a",{revision:1,requestId:"request-v2-render"});expect(render.taskId).toBe("original-render");
+ expect(render.spec.inputs).toHaveLength(2);expect(render.spec.inputs.every(i=>i.assetFileId==="frozen"&&i.fileDigest===source.fileDigest)).toBe(true);expect(render.spec.params.props).toMatchObject({talkingHead:{durationSec:preview.durationSec,clips:[{sourceInSec:1/3},{sourceInSec:5/3}]}});
+ expect(await owner.renderEditor(ctx,"video-a",{revision:1,requestId:"request-v2-render"})).toEqual(render);expect(tasks).toHaveLength(1);
+ expect(checks).toEqual(expect.arrayContaining([expect.objectContaining({assetFileId:"frozen"})]));
+ await expect(owner.previewEditor({...ctx,accountId:"account-b"},"video-a",{expectedRevision:1,requestId:"request-v2-preview",plan:saved.plan})).rejects.toThrow();
+},20000);
+it("T-850 v2新增图层在保存与应用时核验归属，拒绝后原版本保留",async()=>{
+ const owner=service(),empty={editorVersion:2,mainTrack:{sources:[],clips:[]},overlayDraft:{meta:{title:"空工程"},scenes:[],captions:[],broll:[],delivery:{width:1920,height:1080,fps:30}},sourceTranscripts:[]};
+ await owner.saveEditor(ctx,"video-a",{expectedRevision:0,requestId:"request-v2-overlay-base",plan:empty});
+ const broll={id:"foreign",at:0,file:"foreign-asset",durationSec:1,label:"其他账号",big:false,anchor:{kind:"timeline" as const,startUs:0,endUs:1000000}};
+ await expect(owner.saveEditor(ctx,"video-a",{expectedRevision:1,requestId:"request-v2-overlay-save",plan:{...empty,overlayDraft:{...empty.overlayDraft,broll:[broll]}}})).rejects.toThrow("素材");
+ await expect(owner.applyEditor(ctx,"video-a",{expectedRevision:1,requestId:"request-v2-overlay-apply",edits:[{type:"addBroll",broll}]})).rejects.toThrow("素材");
+ expect((await owner.getEditor(ctx,"video-a")).revision).toBe(1);expect((await owner.listEditorVersions(ctx,"video-a",{})).total).toBe(1);
+});
+it("T-850 原片预约恢复原任务，采用真实任务回执原子写来源和主轨，不信客户端时长",async()=>{
+ let creates=0,lose=true;const tasks=new Map<string,import("@creatoros/contract").ExecutionTaskResource>();
+ const probe={fileDigest:"a".repeat(64),probeDigest:"b".repeat(64),timebase:{num:1,den:30},durationTicks:60,hasAudio:true};
+ const owner=createProductionService({db,now:()=>now,nextId:p=>`${p}-${++seq}`,sourcePorts:{assertTaskSettled:async()=>{},
+  readMediaFile:async(_ctx,input)=>{if(input.assetId!=="master"||input.assetFileId!=="frozen")throw Error("越权媒体");return{fileDigest:probe.fileDigest,mimeType:"video/mp4"};},
+  createTask:async(_ctx,input)=>{if(!tasks.size){creates++;tasks.set("original-probe",{id:"original-probe",userId:"user",projectId:"project-a",taskType:"exec.media.probe",execType:"media.probe",status:"awaiting_confirmation",spec:input.spec,manifest:{taskType:"media.probe",artifacts:[],summary:"已完成",meta:{probe}},adoptedAssetIds:[],requestedAt:now,startedAt:now,completedAt:now,errorMessage:null});}if(lose){lose=false;throw Error("探针创建回复丢失");}return{id:"original-probe"};},readTask:async(_c,id)=>tasks.get(id)!,
+ }});
+ const input={assetId:"master",assetFileId:"frozen",requestId:"request-source-probe"};
+ await expect(owner.prepareEditorSource(ctx,"video-a",input)).rejects.toThrow("回复丢失");expect((await owner.getEditorSource(ctx,"video-a",input.requestId)).status).toBe("reserved");
+ const ready=await owner.prepareEditorSource(ctx,"video-a",input);expect(ready).toMatchObject({taskId:"original-probe",status:"succeeded",probe});expect(creates).toBe(1);expect((await owner.getEditor(ctx,"video-a")).state).toBe("empty");
+ await expect(owner.prepareEditorSource(ctx,"video-a",{...input,assetFileId:"other"})).rejects.toThrow();
+ const adopted=await owner.adoptEditorSource(ctx,"video-a",{sourceRequestId:input.requestId,expectedRevision:0,requestId:"request-source-adopt"});expect(adopted.plan).toMatchObject({editorVersion:2,mainTrack:{sources:[{assetFileId:"frozen",durationTicks:60}],clips:[{sourceInTicks:0,sourceOutTicks:60}]}});
+ expect(await owner.adoptEditorSource(ctx,"video-a",{sourceRequestId:input.requestId,expectedRevision:0,requestId:"request-source-adopt"})).toEqual(adopted);
+ await expect(owner.adoptEditorSource(ctx,"video-a",{sourceRequestId:input.requestId,expectedRevision:0,requestId:"request-source-adopt",addWholeClip:false})).rejects.toThrow();
+ await expect(owner.getEditorSource({...ctx,accountId:"account-b"},"video-a",input.requestId)).rejects.toThrow();
+},20000);
+it("T-850 公共原任务重试→真实ffprobe→采用，丢回复不复制任务且文件字节冻结",async()=>{
+ const {execFile}=await import("node:child_process"),{promisify}=await import("node:util"),{readFile,copyFile,stat}=await import("node:fs/promises"),{createHash}=await import("node:crypto");
+ const {createAiService}=await import("../ai/ai.service"),{createExecutionService}=await import("../execution/execution.service"),{runExecutionTask,abortExecutionTask}=await import("../execution/run-execution-task"),{createExecutorRegistry}=await import("../execution/executor-registry"),{createMediaProbeExecutor}=await import("../execution/media-probe");
+ const root=await mkdtemp(join(tmpdir(),"creatoros-public-probe-retry-")),file=join(root,"original.mp4");
+ try{
+  await promisify(execFile)("/opt/homebrew/bin/ffmpeg",["-v","error","-f","lavfi","-i","testsrc2=size=320x180:rate=30","-t","1","-c:v","libx264","-pix_fmt","yuv420p",file]);
+  const fileDigest=createHash("sha256").update(await readFile(file)).digest("hex");
+  // 未使用的领域采纳口明确抛错，不返回虚构领域实体；本测试真正调用原任务 owner。
+  const unavailable=new Proxy({}, {get:()=>()=>{throw Error("该领域端口不属于探针旅程");}});
+  type Deps=Parameters<typeof createAiService>[0];
+  const ai=createAiService({db,now:()=>now,nextId:p=>`${p}-${++seq}`,artifacts:unavailable as Deps["artifacts"],knowledge:unavailable as Deps["knowledge"],candidate:unavailable as Deps["candidate"],learnings:unavailable as Deps["learnings"],publishing:unavailable as Deps["publishing"],materialLinks:unavailable as Deps["materialLinks"],positioning:unavailable as Deps["positioning"],calibration:unavailable as Deps["calibration"]});
+  const registry=createExecutorRegistry();registry.register(createMediaProbeExecutor());
+  const execution=createExecutionService({ai,assets:{createGeneratedAsset:async()=>{throw Error("探针不创建素材");}},hasExecutor:type=>registry.has(type),workspacesRoot:root,abortRun:abortExecutionTask,resolveOutputProjectId:async(_c,id)=>id==="video-a"?"project-a":null});
+  let transient=true;const run=async(task:import("@creatoros/contract").ExecutionTaskResource)=>runExecutionTask(ctx,{id:task.id,inputData:{spec:task.spec},deterministicGeneration:task.deterministicGeneration},{ai,registry,workspacesRoot:root,assets:{materializeAsset:async(_c,id,path,exact)=>{if(id!=="master"||exact?.assetFileId!=="frozen"||exact?.fileDigest!==fileDigest)throw Error("冻结原片不一致");if(transient){transient=false;throw Error("fixture临时读取故障");}await copyFile(file,path);return{size:(await stat(path)).size,mimeType:"video/mp4"};}}});
+  let lost=true;const owner=createProductionService({db,now:()=>now,nextId:p=>`${p}-${++seq}`,sourcePorts:{assertTaskSettled:(c,id,generation,digest,tx)=>ai.probeControl.assertSettled(c,id,generation,digest,tx),readMediaFile:async(_c,input)=>{if(input.assetId!=="master"||input.assetFileId!=="frozen")throw Error("原片身份不一致");return{fileDigest:createHash("sha256").update(await readFile(file)).digest("hex"),mimeType:"video/mp4"};},createTask:async(c,input)=>{const task=await execution.create(c,input);await run(task);return{id:task.id};},readTask:(c,id)=>execution.get(c,id),retryTask:async(c,input)=>{await ai.probeControl.retry(c,input);const task=await execution.get(c,input.taskId);if(task.status==="queued")await run(task);if(lost){lost=false;throw Error("恢复回复丢失");}}}});
+  const transport=createProductionTransport(()=>owner),params={outputId:"video-a"};
+  const prepared=await transport.request(ENDPOINTS.prepareProductionEditorSource,{params,query:undefined,body:{assetId:"master",assetFileId:"frozen",requestId:"public-source-retry"}},ctx) as {data:import("@creatoros/contract").ProductionSourceRequest};expect(prepared.data.status).toBe("failed");
+  const original=await ai.getTask(ctx,prepared.data.taskId!),body={sourceRequestId:"public-source-retry",requestId:"public-retry-command"};
+  await expect(transport.request(ENDPOINTS.retryProductionEditorSource,{params,query:undefined,body},ctx)).rejects.toThrow("回复丢失");
+  const recovered=await transport.request(ENDPOINTS.retryProductionEditorSource,{params,query:undefined,body},ctx) as {data:import("@creatoros/contract").ProductionSourceRequest};expect(recovered.data).toMatchObject({taskId:original.id,status:"succeeded",probe:{fileDigest,durationTicks:15360,hasAudio:false}});
+  const current=await ai.getTask(ctx,original.id);expect(current.inputData).toEqual(original.inputData);expect(current.attemptId).toBe(original.attemptId);expect(current.deterministicGeneration).toBe(1);expect((await ai.listTasks(ctx,{limit:100,offset:0})).total).toBe(1);
+  const adopted=await transport.request(ENDPOINTS.adoptProductionEditorSource,{params,query:undefined,body:{sourceRequestId:body.sourceRequestId,requestId:"public-probe-adopt",expectedRevision:0,addWholeClip:true}},ctx) as {data:import("@creatoros/contract").ProductionEditorVersion};expect(adopted.data.plan).toMatchObject({editorVersion:2,mainTrack:{sources:[{fileDigest,assetFileId:"frozen"}],clips:[{sourceInTicks:0,sourceOutTicks:15360}]}});
+ }finally{await rm(root,{recursive:true,force:true});}
+},20000);
+
+describe('T1042 完整开源剪辑工作台沿原owner保存',()=>{
+ const native=()=>({editorVersion:3,referenceEditor:{editor:'opencut-classic',revision:'cf5e79e919144200294fb9fed22a222592a0aeea',nativeDocument:{metadata:{name:'开源剪辑'},scenes:[{tracks:[{elements:[{type:'media',mediaId:'media-master',trimStart:1,trimEnd:2}]}]}]},mediaRefs:[{mediaId:'media-master',assetId:'master',assetFileId:'exact-file'}]}});
+ it('完整原生JSON沿CAS保存读回、幂等、另一作品和账号隔离',async()=>{
+  const owner=service(),body={expectedRevision:0,requestId:'request-native-001',plan:native()};
+  const first=await owner.saveEditor(ctx,'video-a',body);
+  expect((await service().getEditor(ctx,'video-a'))).toMatchObject({state:'editable',revision:1,plan:{referenceEditor:native().referenceEditor}});
+  expect(await owner.saveEditor(ctx,'video-a',body)).toEqual(first);
+  expect((await owner.getEditor(ctx,'video-b')).state).toBe('empty');
+  await expect(owner.saveEditor(ctx,'other-account',body)).rejects.toThrow();
+  await expect(owner.saveEditor(ctx,'video-a',{...body,requestId:'request-native-002'})).rejects.toThrow();
+ });
+ it('切换明确保留旧历史；旧入口不能覆盖；恢复可返回旧可用渲染路径',async()=>{
+  const owner=service();await owner.saveEditor(ctx,'video-a',save('request-old-00001'));
+  await expect(owner.saveEditor(ctx,'video-a',{expectedRevision:1,requestId:'request-native-003',plan:native()})).rejects.toThrow();
+  await owner.saveEditor(ctx,'video-a',{expectedRevision:1,requestId:'request-native-003',plan:native(),replaceEditor:true});
+  await expect(owner.confirmEditingPlan(ctx,'video-a',{expectedRevision:2,plan:plan()})).rejects.toThrow();
+  await expect(owner.saveEditor(ctx,'video-a',{...save('request-overwrite-001',2)})).rejects.toThrow();
+  const restored=await owner.restoreEditor(ctx,'video-a',{expectedRevision:2,requestId:'request-native-restore',sourceRevision:1});
+  expect(restored.plan.editorVersion).toBe(1);
+  expect((await owner.getEditorVersion(ctx,'video-a',2)).plan.referenceEditor).toEqual(native().referenceEditor);
+ });
+ it('替换同mediaId为别的确切文件需要重核归属，拒绝伪造native媒体',async()=>{
+  const assertions=vi.fn(async(_ctx:unknown,input:{assetFileId?:string})=>{if(input.assetFileId==='foreign')throw Error('越权文件');});
+  const owner=createProductionService({db,now:()=>now,nextId:p=>`${p}-${++seq}`,assertEditorAsset:assertions});
+  await owner.saveEditor(ctx,'video-a',{expectedRevision:0,requestId:'request-native-004',plan:native()});
+  const changed=native();changed.referenceEditor.mediaRefs[0]!.assetFileId='foreign';
+  await expect(owner.saveEditor(ctx,'video-a',{expectedRevision:1,requestId:'request-native-005',plan:changed})).rejects.toThrow('越权文件');
+  const bad=native();bad.referenceEditor.mediaRefs=[];
+  await expect(owner.saveEditor(ctx,'video-a',{expectedRevision:1,requestId:'request-native-006',plan:bad})).rejects.toThrow();
+  expect((await owner.getEditor(ctx,'video-a')).revision).toBe(1);
+ });
 });

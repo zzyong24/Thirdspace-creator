@@ -1,0 +1,40 @@
+{
+  "result": "PASS",
+  "fixture": "两个不同深度源码目录，同锁缓存依赖独立构建后全文件比对",
+  "sourceFiles": 819,
+  "distFiles": 395,
+  "sourceDifferences": [],
+  "distDifferences": [],
+  "lockSha256": "39783fe46a01a7177590f07745c24bfe3f60e0b4b7ba561346168fb949070d08",
+  "entrySha256": "5e31ddf1044faf3ac200a08d50fe51b7f40e55a885a592df9387f2891df43adb",
+  "cssSha256": "cf6a66b7e51c1b4251b663f7b03edbc1eebd74154993e263d80698e528407e57",
+  "graphSha256": "73d35916f387081221bb73aba6c7c7c2045a652bf7aed72bcbd38fc18667bf92",
+  "modules": 2823,
+  "dependencies": 186,
+  "builds": [
+    {
+      "root": "/private/tmp/t1053-native-doocs",
+      "resolved": {
+        "vite": "/private/tmp/t1049-reference-doocs/node_modules/.pnpm/vite@8.3.1_@types+node@26.6.3_esbuild@0.28.2_jiti@2.7.0_less@4.9.1_supports-color@10.2._a1698267a68de54747e65eb7f6ac16f9/node_modules/vite",
+        "vue": "/private/tmp/t1049-reference-doocs/node_modules/.pnpm/vue@3.5.43_typescript@6.0.3/node_modules/vue",
+        "@tailwindcss/vite": "/private/tmp/t1049-reference-doocs/node_modules/.pnpm/@tailwindcss+vite@4.3.3_vite@8.3.1_@types+node@26.6.3_esbuild@0.28.2_jiti@2.7.0_less@4._e43f0168c34a51b2c75058165db6059b/node_modules/@tailwindcss/vite",
+        "@md/core": "/private/tmp/t1053-native-doocs/packages/core",
+        "@md/shared": "/private/tmp/t1053-native-doocs/packages/shared"
+      }
+    },
+    {
+      "root": "/private/tmp/t1053-doocs-source-rebuild/doocs-md-native",
+      "resolved": {
+        "vite": "/private/tmp/t1049-reference-doocs/node_modules/.pnpm/vite@8.3.1_@types+node@26.6.3_esbuild@0.28.2_jiti@2.7.0_less@4.9.1_supports-color@10.2._a1698267a68de54747e65eb7f6ac16f9/node_modules/vite",
+        "vue": "/private/tmp/t1049-reference-doocs/node_modules/.pnpm/vue@3.5.43_typescript@6.0.3/node_modules/vue",
+        "@tailwindcss/vite": "/private/tmp/t1049-reference-doocs/node_modules/.pnpm/@tailwindcss+vite@4.3.3_vite@8.3.1_@types+node@26.6.3_esbuild@0.28.2_jiti@2.7.0_less@4._e43f0168c34a51b2c75058165db6059b/node_modules/@tailwindcss/vite",
+        "@md/core": "/private/tmp/t1053-doocs-source-rebuild/doocs-md-native/packages/core",
+        "@md/shared": "/private/tmp/t1053-doocs-source-rebuild/doocs-md-native/packages/shared"
+      }
+    }
+  ],
+  "notVerified": [
+    "另一个操作系统、CPU架构或Node/pnpm版本",
+    "不同锁文件或不同依赖版本"
+  ]
+}

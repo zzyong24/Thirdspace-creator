@@ -11,14 +11,30 @@
 | --- | --- | --- | --- | --- | --- | --- |
 | T-1060 | 复用开源代码接入 Codex ACP 与 WorkBuddy MCP | 🔨 待办 | PASS[REV:453827cbe2c1] | 待验 | [SPEC](docs/features/t1060-agent-source-integration.md) | 部分通过，见验收记录。 |
 | T-1061 | 修复候选等待状态 | 📋 待办 | 待审 | 待验 | [SPEC](docs/features/t1061-ai-waiting-state-projection.md) | 等待配置误报运行。 |
-| T-1049 | 集成开源小红书组图与公众号编辑工作台并打磨体验 | 📋 待办 | 待审 | 待验 | [SPEC](docs/features/t1049-open-source-publishing-workbenches.md) | 用户 2026-10-03 明确：当前 T-1048/T-1046 收尾后执行；两类都先核实并运行开源工作面，再接原内容、素材、画布、版本与审核，完成真实编辑和交付体验验收。 2026-10-03 最新确认：新会话接力完成 CreatorOS 网页版集成并提供用户直接验收入口；不以安装包或缺隔离模型凭据阻断基本编辑/保存/导出，未验项保留，见 DEC-T1049-01 与[接力说明](docs/research/evidence/t1049/web-handoff.md)。 |
+| T-1059 | 锁定已有 Codex、WorkBuddy 接入代码与复用路径 | ✅ 待办 | PASS[REV:4f60fff3f89a] | — | [SPEC](docs/features/t1059-existing-agent-integration-reuse.md) | [复用清单](docs/verification/t1059/reuse.md)；无运行时修改。 |
+| T-1058 | 调研可组合模型来源与 Codex、WorkBuddy 双向集成 | ✅ 待办 | PASS[REV:b690a11a2e4a] | — | [SPEC](docs/features/t1058-composable-agent-model-research.md) | [调研报告](docs/verification/t1058/research.md)；无运行时修改。 |
+| T-1057 | 核对并统一本地 Codex 执行与模型配置 | ⏸️ 待办 | CONCERNS[REV:bd24aad65a0b] | 待验 | [SPEC](docs/features/t1057-codex-execution-routing.md) | [研究](docs/verification/t1057/research.md)。 |
+| T-1056 | 统一衍生稿字体并清理页头小字 | 🔨 待办 | PASS[REV:92e1237e8459] | 待验 | [SPEC](docs/features/t1056-derived-workbench-typography.md) | [检查与待验](docs/verification/t1056/verification.md)。 |
+| T-1055 | 整理脚本衍生稿布局并复用主稿内容 | 🔨 待办 | PASS[REV:4e039daeaab0] | 待验 | [SPEC](docs/features/t1055-script-derived-content-workbench.md) | 布局/透传/自动配图已实现，[记录](docs/verification/t1055/verification.md)。 |
+| T-1054 | 去掉项目列表的直接创作作品按钮 | 🔨 待办 | PASS[REV:def25b8ce9da] | 待验 | [SPEC](docs/features/t1054-project-create-entry.md) | 已去掉；[检查记录](docs/verification/t1054/verification.md)。 |
+| T-1053 | 将开源编辑器原生集成并统一 CreatorOS 风格 | 🔨 待办 | PASS[REV:41cab75052c6] | 待验 | [SPEC](docs/features/t1053-native-editor-style-integration.md) | [原生接入及待验项](docs/verification/t1053-native-editors.md)。 |
+| T-1052 | 集成 NoteRelay 的公众号与图文衍生工作面并验证真实交付 | 🔨 待办 | PASS[REV:4abd3070b22a] | 待验 | [SPEC](docs/features/t1052-noterelay-derived-workbenches.md) | [NoteRelay接入及待验项](docs/verification/t1052-noterelay.md)。 |
+| T-1051 | 恢复脚本为主的创作工作台并改为先选平台绑定账号 | 🔨 待办 | PASS[REV:4cfe0db6c72c] | 待验 | [SPEC](docs/features/t1051-script-first-workbench.md) | [脚本主稿、平台选择及待验项](docs/verification/t1051-script-first.md)。 |
+| T-1050 | 简化新建项目并支持多种作品工作台 | 🔨 待办 | PASS[REV:65b9666e38b7] | 待验 | [SPEC](docs/features/t1050-multi-format-project-creation.md) | [多选创建及待验项](docs/verification/t1050-multi-format-creation.md)。 |
+| T-1048 | 复用开源组图方法并接通现有画布逐页创作 | 🔨 待办 | PASS[REV:051674ceacb3] | 待验 | [SPEC](docs/features/t1048-image-series-workbench.md) | 承接用户确认及 T-1047 调研；逐页规划、共享参考、单页重做、整组核对与画布采用回原页，快图保留辅助细调，沿既有候选和版本服务落地。 |
+| T-1046 | 接通 OpenCut 同工程 AI 辅助粗剪与基本视频编辑 | 🔨 待办 | PASS[REV:bebbd1fff573] | 待验 | [SPEC](docs/features/t1046-native-ai-rough-cut.md) | 用户 2026-10-02 明确继续集成；复用 T-850/T-1039 的真实转写、Skill 候选及采纳，把结果落到同一原生时间轴，保留手工编辑。 [真实粗剪验收](docs/research/evidence/t1046/verification.md)：开发工作树已跑通转写、真实模型、同轨采纳及导出；完整依赖基线与正式前端回执绑定待收尾，未冒充安装包完成。 |
+| T-1049 | 集成开源小红书组图与公众号编辑工作台并打磨体验 | 🔨 待办 | PASS[REV:3f29a428474e] | 待验 | [SPEC](docs/features/t1049-open-source-publishing-workbenches.md) | [网页接力与待验项](docs/research/evidence/t1049/web-handoff.md)，执行仍沿已确认范围。 |
+| T-1047 | 调研小红书组图生成、一致性和画布工作流衔接 | ✅ 待办 | — | — | [研究范围](docs/features/t1047-xiaohongshu-image-series-research.md) | 用户纠正图文主线为出图及组图生成；调研官方流程、开源实现与现有画布，快图保留为辅助细调能力。 |
+| T-1042 | 整合多媒体、各类作品工作台与剪辑的完整创作链 | ⏸️ 待办 | PASS[REV:d3fdf41c4dd5] | 待验 | [SPEC](docs/features/t1042-multimedia-workbench-integration.md) | [原始摘要](BACKLOG-details.md#t-1042--看板摘要原文2026-10-04-调研登记前归档)；完整范围沿 SPEC。 |
+| T-1043 | 统一项目创作入口为文章、图文、视频并支持内容互转 | 🔨 待办 | PASS[REV:e2e39b125920] | 待验 | [SPEC](docs/features/t1043-unified-creation-content-conversion.md) | 2026-10-01 用户明确纠正；保留完整稿面，原顶栏加入图文与公众号工作面；同一入口只分三类，平台作为设置；支持真实模型整稿／部分互转与采纳。2026-10-02 补充：交互符合用户体验、视觉排版布局合理，按 DEC-T1043-02 验收。 2026-10-02 用户确认先完成一份内容再自然扩展；以原完整脚本工作台为体验基准，工作流与界面重新讨论后再实施。 |
+| T-1045 | 贯通一鱼多吃的可选内容组合、画布物料与版本审核 | 🔨 待办 | PASS[REV:e74d98e4c140] | 待验 | [SPEC](docs/features/t1045-coherent-multi-channel-work.md) | 用户 2026-10-02 明确要求：视频、公众号、图文、朋友圈可选且任意组合；共享内容依据，作品与画布互联，封面/简介/标签/审核绑定具体稿件与素材版本，改稿后提示受影响内容，保留手工修改，完成连贯旅程。 2026-10-02 用户确认表达组合属于首份内容完成后的扩展，不把组合、来源和版本管理做成创作前置操作；新增体验方案待复核。 |
+| T-1044 | 在统一创作工作台选择并使用本地 Codex | ⏸️ 待办 | PASS[REV:8aaf8465a7a4] | 待验 | [SPEC](docs/features/t1044-local-codex-workbench-integration.md) | 用户已确认；复用 external-agent-bridge 真实回执与候选链，使用随包 Codex 原生 app-server，补真实发现和具体作品上下文，保留原引擎、取消恢复和多账号隔离。 |
 | T-1036 | 开源视频编辑组件选型与兼容验证 | ✅ 待办 | PASS[REV:66f9290599b0] | — | [SPEC](docs/features/t1036-open-source-video-editor-selection.md) | 依赖 T-1035 已评审需求；先核对开源代码、许可、React/Next 与现有 HyperFrames/Asset 适配，用隔离探针选择可实际复用的时间轴/预览能力，不照搬闭源附件。 |
 | T-1037 | 建立作品级制作工程、版本与公共编辑服务 | 🔨 待办 | PASS[REV:03cbb3aedc96] | 待验 | [SPEC](docs/features/t1037-output-production-project.md) | 依赖 T-1036；按具体 video output 绑定脚本、制作素材、方案、任务与成片，统一 revision/CAS/历史/回执及旧方案兼容，先定稿合同并独立评审。 |
-| T-1038 | 集成可视视频制作工作台与同源预览 | 📋 待办 | PASS[REV:fc5f5d60a46a] | 待验 | [SPEC](docs/features/t1038-visible-video-workbench.md) | 依赖 T-1036/T-1037；复用选定开源组件，实现预览/时间轴/参数联动、素材字幕和卡片编辑、撤销重做，并保留原备料与成品入口。 |
+| T-1038 | 集成可视视频制作工作台与同源预览 | 🔨 待办 | PASS[REV:fc5f5d60a46a] | 待验 | [SPEC](docs/features/t1038-visible-video-workbench.md) | 依赖 T-1036/T-1037；复用选定开源组件，实现预览/时间轴/参数联动、素材字幕和卡片编辑、撤销重做，并保留原备料与成品入口。 |
 | T-1039 | 让编导助手读取选区并操控同一剪辑工程 | 📋 待办 | 待审 | 待验 | [SPEC](docs/features/t1039-director-video-editing.md) | 依赖 T-1037/T-1038；复用 Worker 工具循环，读当前工程与选区、形成局部候选、对照预览、逐项应用和撤销，手工修改与助手共享版本。 |
 | T-1040 | 接通私有音效轨与中文字体的预览和最终渲染 | 📋 待办 | 待审 | 待验 | [SPEC](docs/features/t1040-production-sound-fonts.md) | 依赖 T-1037/T-1038；将音效作为账号素材可试听、定位和调音量，字体与真实字重使用同一资源预览和渲染，保留旧无音效方案可用。 |
 | T-1041 | 验收可视制作、编导剪辑与完整成片交付 | 📋 待办 | 待审 | 待验 | [SPEC](docs/features/t1041-video-workbench-acceptance.md) | 依赖 T-1037—T-1040 和现有脚本/采纳回归；从具体视频作品走备料、AI 初稿、手工/助手局部修改、版本保存、渲染、查看与导出，核验旧链和实包。 |
-| T-1042 | 整合多媒体、各类作品工作台与剪辑的完整创作链 | 📋 待办 | PASS[REV:91743d51ee0e] | 待验 | [SPEC](docs/features/t1042-multimedia-workbench-integration.md) | 2026-10-01 用户再次确认；复用画布分支与已选开源组件，合并前核对任务撞号与数据库迁移；图片、文章、视频按具体作品生成、编辑、查看和交付，运行集成测试。 |
 | T-1035 | 将视频制作改为可看懂、可编辑和预览的工作台 | 🔨 待办 | PASS[REV:e0172a52a112] | 待验 | [SPEC](docs/features/t1035-video-production-workbench.md) | 参考附件与 ChatCut，制作工作台可看、可改、可预览；编导助手读取当前作品与选区，提出局部改动并落实同一时间轴，保留自动生成、版本、素材归属及旧制作流程。 |
 | T-1031 | 修复单项结果不能依次采纳的整稿版本阻断 | 🔨 待办 | PASS[REV:c3570711a777] | 待验 | [SPEC](docs/features/t1031-result-field-adoption.md) | 真实验收发现先采纳标签后封面失效；按字段与冻结正文校验安全保存，保留当前稿、来源和并发冲突，不回写历史整稿。 |
 | T-1032 | 核实真实脚本任务的事实约束执行与最小审校方案 | ✅ 待办 | — | — | [SPEC](docs/features/t1032-script-fact-scope-research.md) | 三轮真实模型仍补写无来源经历、比例和效果；核对冻结提示词及供应商最终消息，区分传递缺陷与模型忽略，不用关键词检测或更多提示词掩盖失败。 |
@@ -38,9 +54,9 @@
 | T-1027 | 修复视频决策未走 material.match 的语义边界回归 | 📋 待办 | 待审 | 待验 | [排查](docs/features/t1027-video-decision-semantic-boundary.md) | 2026-09-30 semantic-boundary-scan 报 video-decisions-runner 未调用 material.match；恢复真实 Skill 选择及调用链回归，不写死内容判断。 |
 | T-1028 | 修复抖音登录态公开读取长时间无返回 | 📋 待办 | 待审 | 待验 | [排查](docs/features/t1028-douyin-status-timeout.md) | 月明水清深账号的安装版 `ingestion.douyin.status` 超过 40 秒未返回；核对浏览器档案租约、超时与取消传播，保证 CLI 和设置页可终止、可诊断。 |
 | T-1017 | 设计用户故障与创作数据的授权上报闭环 | ✅ 待办 | PASS[REV:0ccc72342775] | — | [SPEC](docs/features/t1017-diagnostics-creator-reporting.md) | 复用本地加密日志、问题反馈和分账号定时采集，设计诊断事件、绑定与作品指标上报、服务端告警及用户控制；先完成跨仓契约与数据归属评审。 |
-| T-1016 | 调研 CreatorOS 连接本地 Codex、WorkBuddy 与外部 Agent | ✅ 待办 | — | — | [SPEC](docs/features/t1016-external-agent-research.md) | 参考 ChatCut 和公开协议，核实双向接入、现有执行边界与可落地方案；本轮仅调研设计。 |
+| T-1016 | 调研 CreatorOS 连接本地 Codex、WorkBuddy 与外部 Agent | ✅ 待办 | — | — | [SPEC](docs/features/t1016-external-agent-research.md) | [调研记录](docs/features/t1016-external-agent-research.md)。 |
 | T-1014 | 核对并清理233项历史对账失败 | ✅ 待办 | — | — | [范围](docs/verification/t1014-reconcile-triage.md) | 按真实证据关闭过期治理项，保留有效缺陷与历史回执；不修改产品运行时。 |
-| T-1015 | 核实剩余教训失败并校准过期回归断言 | 📋 待办 | — | — | [实测清单](docs/verification/t1014-reconcile-triage.md) | 从19条失败命令定位旧版本/源码字符串断言与实际重试、消费、交互差异；保留有效检查，修正后重验。 |
+| T-1015 | 核实剩余教训失败并校准过期回归断言 | 📋 待办 | — | — | [实测清单](docs/verification/t1014-reconcile-triage.md) | 从19条失败命令核对旧断言与真实重试/消费/交互差异；[10-02补充](docs/verification/t1043-unified-creation-content-conversion.md)保留契约和类型差异；[10-03补充](docs/verification/t1051-script-first.md)记录LED-045全仓失败、原命令单独21项通过及不存在的第二文件，覆盖和超时根因待核实。 |
 | T-1004 | 冻结共享能力协议与 NomiFun 迁移依赖 | 📋 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) | T-1003 评审；固定依赖闭包、宿主端口、协议与架构门卫。 |
 | T-1005 | 实现多步计划、连续执行与原任务续跑 | 📋 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) | 依赖 T-1004；模型规划与重规划，保留回执和成本，停止恢复可核验。 |
 | T-1006 | 接入统一工具网关与长结果回读 | 📋 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) | 依赖 T-1004；工具发现、进度、取消、错误和费用共用原执行链。 |
@@ -75,7 +91,7 @@
 | T-933 | 安装并验收本轮Agent Runtime桌面版【用户要求自行检查】 | 🔨 待办 | — | — | [T-932交付](docs/verification/t932-runtime-alignment.md) | 核对已安装候选与签名、启动及实际页面/Skill/聊天链路；通过公开CLI操作，未获本次启动授权前不绕过访问；保留真实验收结果。 |
 | T-919 | 定位并修复本地包主导航卡顿、助手通知刷屏与搜索停滞【用户运行反馈】 | 🔨 待办 | — | — | 复用 T-912/T-909 导航契约与 [T-915 SPEC](docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md) | 读取最新本机日志与运行进程，定位导航阻塞和资源争用；补充切换项目 Tab 丢失在途回复：保留账号/项目隔离的窗口级消息与订阅，避免恢复历史覆；[原说明](BACKLOG-details.md#t-919-triage-description)。 |
 | T-915 | 根治 AI 卡慢、失败不重试与搜索/浏览器缺少自主循环，收敛架构与执行能力【T-914 审查承接·用户 2026-09-04】 | 🔨 待办 | PASS[REV:692283b8bace] | — | [SPEC](docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md) | 保留原执行/恢复改造任务；剩余登录资源迁移、备用模型和运行验收，详见 [历史说明](BACKLOG-details.md#t-915-triage-history)。 |
-| T-916 | 修复工程对账与历史任务证据漂移，恢复可信重构基线【T-914 实测根因·2026-09-04】 | 🔨 待办 | — | — | [审计 A-13](docs/research/2026-09-04-architecture-agent-audit.md) | reconcile 实测 210 errors：模块 write_set/verify、自治声明、旧看板和 receipt 漂移；LED-0；[原说明](BACKLOG-details.md#t-916-triage-description)。 |
+| T-916 | 修复工程对账与历史任务证据漂移，恢复可信重构基线【T-914 实测根因·2026-09-04】 | 🔨 待办 | — | — | [审计 A-13](docs/research/2026-09-04-architecture-agent-audit.md) | reconcile 实测 210 errors：模块 write_set/verify、自治声明、旧看板和 receipt 漂移；LED-0；[原说明](BACKLOG-details.md#t-916-triage-description)。 2026-10-02 再验35 errors/1 warning，新增记录见[全仓失败](docs/research/evidence/t1042/complete-editors/global-checks.md)。 |
 | T-917 | 记录 T-915 媒体测试事故并防止测试再次访问真实媒体根【用户接受数据清理，解除恢复前置】 | 📋 待办 | — | — | [事故记录](docs/research/evidence/t915/2026-09-06-media-test-incident.md) | 用户明确要求继续重构，数据恢复不再作为 T-915 阻塞；数据未恢复的事实保留；[原说明](BACKLOG-details.md#t-917-triage-description)。 |
 | T-908 | 真实复测 douyin-transcribe Skill，并对照 CreatorOS 当前抖音抓取链路判断是否需要兼容修复【用户截图与压缩包·2026-08-23】 | 📋 待办 | — | — | — | 隔离检查用户提供的 Skill 压缩包与当前已安装版本，以公开抖音链接实际验证短链解析、作品元数据、视频直链、下载和转写前置链路；同时审计 ；[原说明](BACKLOG-details.md#t-908-triage-description)。 |
 | T-906 | 放大 AI 助手默认窗口并支持拖拽缩放与跨启动尺寸记忆【用户反馈·2026-08-20】 | ⏸️ 待办 | — | 待验 | — | AI 助手默认窗口应明显大于当前尺寸，用户可从右下角手柄拖拽调整大小；每次调整后的宽高保存在本机，下次启动自动恢复，并受最小尺寸与当前屏幕可见范围约束，避免内容不可用或换屏后窗口超出视口。 |
@@ -91,7 +107,7 @@
 | T-856 | 重做竖屏成片的统一舞台、字幕可读性与重点词强调【用户成片截图·2026-08-16】 | ⏸️ 待办 | — | 待验 | [详情](BACKLOG-details.md#t-856) | 详情见外置记录。 |
 | T-855 | 构建包含 T-854 与当前已提交修复的 CreatorOS macOS 本地安装包【用户明确授权·2026-08-16】 | ⏸️ 待办 | — | — | [详情](BACKLOG-details.md#t-855) | 详情见外置记录。 |
 | T-851 | 支持录制“123”短视频生成本人授权的 AI 数字人口播【数字人制作·用户 2026-08-16】 | 📋 待办 | 待审 | 待验 | [详情](BACKLOG-details.md#t-851) | 详情见外置记录。 |
-| T-850 | 支持只上传未粗剪口播录像，由 AI 理解实拍语义并生成可确认粗剪【制作输入简化·用户 2026-08-16】 | 📋 待办 | 待审 | 待验 | [详情](BACKLOG-details.md#t-850) | 详情见外置记录。 |
+| T-850 | 支持原始口播粗剪并整合可操作的剪辑工作台 | 🔨 待办 | PASS[REV:82f9301b345d] | 待验 | [SPEC](docs/features/t850-visible-rough-cut-workbench.md) | 2026-10-02 用户要求粗剪、剪辑工作台替换纯黑盒式剪辑，继续参考 ChatCut；与 T-1035—T-1041 共用作品工程、预览和时间轴，支持原片删留、分割修边、逐字稿定位/删选区、候选对照和撤销保存；不再要求先去外部软件粗剪。[范围独立复核](docs/features/t850-visible-rough-cut-workbench.review.md)通过，未交付实现。 2026-10-02 用户要求以 ChatCut 为视频交互标杆，优先集成可核实开源编辑工程，完整播放器/逐字稿/时间轴工作面优先于参数表单。 |
 | T-847 | 补齐 Windows 正式包的 CreatorOS CLI runtime 并重跑 1.1.0 双端流水线【T-846 阻断承接·用户认可 2026-08-16】 | ⏸️ 待办 | — | — | [详情](BACKLOG-details.md#t-847) | 详情见外置记录。 |
 | T-846 | 提交当前批准候选并运行 CreatorOS 1.1.0 macOS/Windows 官方双端构建【用户明确授权·2026-08-16】 | ⏸️ 待办 | — | — | [详情](BACKLOG-details.md#t-846) | 详情见外置记录。 |
 | T-845 | 根治 Windows 用户机成片在 HyperFrames 启动阶段缺失分层模块解析器【T-844 根因修复·用户 2026-08-16】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-845) | 详情见外置记录。 |

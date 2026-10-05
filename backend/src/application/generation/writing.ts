@@ -1,3 +1,4 @@
+import {isDeepStrictEqual} from "node:util";
 import {resolveContextDeps} from "../context/registry";
 
 import {createExecutionScriptCheckpointService} from "../../modules/execution";
@@ -9,6 +10,8 @@ import {createScriptBusinessAdapter} from "../../modules/ai-runtime";
 import {preparePlanningContractContext,projectPlanningContractCandidate} from "../../modules/ai-runtime";
 import {prepareReviewContext,projectReviewCandidate} from "../../modules/ai-runtime";
 import {PLANNING_THESIS_TEMPLATE,SCRIPT_DRAFT_TEMPLATE} from "@creatoros/ai-worker";
+import {buildWechatArticleFacets,validateWechatArticleCandidate} from "@creatoros/ai-worker/wechat-article-candidate";
+import {structuredGenerationInputSchema} from "@creatoros/contract/execution-worker";
 import type {createStructuredBusinessExecutionService} from "../../modules/ai-runtime";
 /** 固定业务能力注册；冻结上下文、候选投影与原执行服务保持一致。 */
 export function createWritingBusinessAdapters(ports:{
@@ -23,9 +26,31 @@ artifactOriginReader: import("../../modules/ai-runtime").ContextDeps["artifactOr
 contractReader: import("../../modules/ai-runtime").ContextDeps["contract"];
 reviewScriptSource: Parameters<typeof prepareScriptReviewContext>[2]["scriptSource"];
 reviewGateService: Parameters<typeof prepareScriptReviewContext>[2]["lintRules"];
+articlesService?: Pick<ReturnType<typeof import("../../modules/articles").createArticlesService>,"getArticle"|"getVersion">;
 }){
 const {projectsService,artifactsService,db,generationContext,makeGenerationReaders,makeBriefReader,makeReviewSubjectReader,artifactOriginReader,contractReader,reviewScriptSource,reviewGateService}=ports;
 return {
+...(ports.articlesService ? {"wechat.article-draft":{
+      skillId:"wechat.article-draft",capability:"copy.generate",
+      async prepare(c,task){
+        const input=task.inputData;
+        const outputId=String(input.outputId??"");
+        const article=await ports.articlesService!.getArticle(c,outputId);
+        if(article.projectId!==task.projectId || article.artifactId!==input.artifactId || typeof input.baseVersionId!=="string")throw new Error("ARTICLE_GENERATION_BASE_CHANGED");
+        const frozen=article.currentVersionId===input.baseVersionId?article.current:
+          (await ports.articlesService!.getVersion(c,outputId,input.baseVersionId)).document;
+        // SEMANTIC_BOUNDARY_ALLOW: 只核验历史稿与已冻结输入相等；新稿不能替换本次任务来源。
+        if(!isDeepStrictEqual(frozen,input.current))throw new Error("ARTICLE_GENERATION_BASE_CHANGED");
+        return buildWechatArticleFacets(input);
+      },
+      project(_input,object,execution){
+        const frozen=structuredGenerationInputSchema.parse(execution?.frozenInput);
+        if(frozen.skillId!=="wechat.article-draft" || frozen.capability!=="copy.generate")throw new Error("ARTICLE_GENERATION_FROZEN_TYPE_MISMATCH");
+        const methodInput=JSON.parse(frozen.facets.articleContext??"null");
+        const proposal=validateWechatArticleCandidate(object,methodInput);
+        return {resultType:"wechat_article_candidate",resultData:{proposal}};
+      },
+    }} : {}),
 "script.draft":createScriptBusinessAdapter({
       ...resolveContextDeps(SCRIPT_DRAFT_TEMPLATE.contextRequirements,makeGenerationReaders().contextReaderRegistry),
       positioning:generationContext.positioning,

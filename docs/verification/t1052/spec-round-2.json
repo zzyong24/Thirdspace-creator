@@ -1,0 +1,35 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "recheck",
+  "summary": "REV-001 已销账：FR-04 现在唯一规定 cover、正文、匹配 cardId 与剩余图片的投影顺序、重复处理、稳定原 key 和不回写边界，AC-03 绑定了对应稿件与 ZIP 页序验收。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "resolved",
+      "severity": "major",
+      "category": "completeness",
+      "requirement_anchor": {
+        "id": "FR-04",
+        "quote": "图片用 creatoros-asset:<assetId>:<assetFileId> 从稿件真实 imageUses 建立 allowlist"
+      },
+      "acceptance_anchor": {
+        "id": "AC-03",
+        "quote": "Graphic 的真实素材保持版本引用"
+      },
+      "where": "FR-04 的图文 Markdown 投影与图片引用生成规则",
+      "failure_mode": "GraphicPostDocument 的 body 与 imageUses 是分离字段，imageUses 只有 order/role/cardId；规格只规定从 imageUses 建 allowlist，却未规定怎样把这些引用确定性投影为 NoteRelay 接收的 Markdown 图片节点、放在哪一页/卡片、以及如何形成持久化图片版式所依赖的原 key。NoteRelay RednoteAdapter 只会处理 Markdown 中已经存在的图片 token。一个实现可以仅建 allowlist而不插图，另一个可以按 order 追加图片并改变分页，两者都符合当前文字，却会产生不同的真实素材预览和 PNG/ZIP，导致已确认交付不可唯一验收。",
+      "evidence_kind": "deterministic-check",
+      "evidence_ref": "docs/features/t1052-noterelay-derived-workbenches.md:33; contract/src/resources/graphic-posts.ts:8-15,33-45; /private/tmp/douyin_dl/noterelay-main/src/platforms/rednote/adapter.ts:27-40,47-59",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "在 FR-04 中补一条最小确定性投影规则：明确每个 graphic imageUse 根据 role/order/cardId 映射到哪段 Markdown/哪张卡、生成何种 creatoros-asset 引用与稳定原 key，并规定不得回写或重排 body/cardBriefs；用含 cover、cardId 和无 cardId 的现有稿各绑定一条投影及 PNG/ZIP 页序验收。",
+      "resolution_evidence": "SPEC-LINE:34:208038d24dcbc5c7 明确了 cover→正文→cardBriefs→剩余图片的唯一投影、正文已有图片不重复、order/原数组序、creatoros-asset 节点、稳定原 key 与不回写边界；SPEC-LINE:44:96b1d6f8449a0d9e 将 cover、匹配 cardId、无 cardId、正文已有图片及 ZIP 页序绑定到 AC-03。",
+      "parent_id": "",
+      "threat_model_id": ""
+    }
+  ]
+}

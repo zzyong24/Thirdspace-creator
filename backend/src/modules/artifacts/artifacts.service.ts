@@ -89,7 +89,7 @@ export interface ArtifactsService {
     ctx: RequestContext,
     projectId: string,
   ): Promise<ArtifactRow[]>;
-  getArtifact(ctx: RequestContext, artifactId: string): Promise<ArtifactRow>;
+  getArtifact(ctx: RequestContext, artifactId: string, forUpdate?: boolean): Promise<ArtifactRow>;
   createArtifact(
     ctx: RequestContext,
     input: {
@@ -98,6 +98,8 @@ export interface ArtifactsService {
       artifactType: string;
       stage: string;
       contentOutputId?: string | null;
+      initialContentData?: Record<string, unknown>;
+      initialContentText?: string;
       // F1 (T-030-D4, SPEC §4.5): provenance. Default 'user' (null); auto-fill
       // (reconstruct.project) MUST pass 'reconstructed'.
       origin?: "user" | "reconstructed";
@@ -142,6 +144,14 @@ export interface ArtifactsService {
     ctx: RequestContext,
     artifactId: string,
   ): Promise<ArtifactVersionRow[]>;
+  /** Account-scoped idempotency receipt for callers that must replay before revalidating mutable sources. */
+  getVersionByAdoptionReceipt(
+    ctx: RequestContext,
+    artifactId: string,
+    adoptionKey: string,
+    adoptionSourceDigest: string,
+    expectedAiTaskId?: string | null,
+  ): Promise<ArtifactVersionRow | null>;
   restoreVersion(
     ctx: RequestContext,
     artifactId: string,
@@ -187,8 +197,8 @@ export function createArtifactsService(deps: ServiceDeps): ArtifactsService {
       return repoFor(ctx, "artifacts.listProjectArtifacts").listByProject(projectId);
     },
 
-    async getArtifact(ctx, artifactId) {
-      return repoFor(ctx, "artifacts.getArtifact").requireArtifact(artifactId);
+    async getArtifact(ctx, artifactId, forUpdate = false) {
+      return repoFor(ctx, "artifacts.getArtifact").requireArtifact(artifactId, forUpdate);
     },
 
     async createArtifact(ctx, input) {
@@ -297,6 +307,15 @@ export function createArtifactsService(deps: ServiceDeps): ArtifactsService {
 
     async listVersions(ctx, artifactId) {
       return repoFor(ctx, "artifacts.listVersions").listVersions(artifactId);
+    },
+
+    async getVersionByAdoptionReceipt(ctx, artifactId, adoptionKey, adoptionSourceDigest, expectedAiTaskId = null) {
+      const receipt = await repoFor(ctx, "artifacts.getVersionByAdoptionReceipt").getVersionByAdoptionKey(artifactId, adoptionKey);
+      if (!receipt) return null;
+      if (receipt.adoptionSourceDigest !== adoptionSourceDigest || receipt.aiTaskId !== expectedAiTaskId) {
+        throw new ConflictError("采纳来源与原请求不一致");
+      }
+      return receipt;
     },
 
     async restoreVersion(ctx, artifactId, versionId, expectedCurrentVersionId) {

@@ -10,7 +10,7 @@ export function createTranscribeAudioStorage(objectStorageForCtx:ObjectStorageFo
   async allocate(ctx:RequestContext,bytes:Uint8Array,signal?:AbortSignal){
    requireAccountId(ctx.accountId,'transcribe.audio');signal?.throwIfAborted();
    const storage=await objectStorageForCtx(ctx);signal?.throwIfAborted();
-   const key=await storage.createPresignedUpload({accountId:ctx.accountId,assetType:'audio',mimeType:'audio/mpeg',fileSize:bytes.byteLength,folder:'execution-inputs',fileName:'transcribe.mp3'});signal?.throwIfAborted();
+   const wav=Buffer.from(bytes.subarray(0,12)).toString('ascii');const isWav=wav.startsWith('RIFF')&&wav.endsWith('WAVE');const key=await storage.createPresignedUpload({accountId:ctx.accountId,assetType:'audio',mimeType:isWav?'audio/wav':'audio/mpeg',fileSize:bytes.byteLength,folder:'execution-inputs',fileName:isWav?'transcribe.wav':'transcribe.mp3'});signal?.throwIfAborted();
    return transcribeAudioReceiptSchema.parse({schemaVersion:1,state:'reserved',storageKey:key.storageKey,audioDigest:transcribeAudioDigest(bytes),audioByteLength:bytes.byteLength});
   },
   async read(ctx:RequestContext,raw:unknown,signal?:AbortSignal){
@@ -28,7 +28,7 @@ export function createTranscribeAudioStorage(objectStorageForCtx:ObjectStorageFo
    const receipt=transcribeAudioReceiptSchema.parse(raw);signal?.throwIfAborted();
    if(bytes.byteLength!==receipt.audioByteLength||transcribeAudioDigest(bytes)!==receipt.audioDigest)throw new Error('音频与冻结输入不同');
    const storage=await objectStorageForCtx(ctx);signal?.throwIfAborted();
-   await storage.putObject({storageKey:receipt.storageKey,bytes,mimeType:'audio/mpeg',assetType:'audio'});
+   const wav=Buffer.from(bytes.subarray(0,12)).toString('ascii');await storage.putObject({storageKey:receipt.storageKey,bytes,mimeType:wav.startsWith('RIFF')&&wav.endsWith('WAVE')?'audio/wav':'audio/mpeg',assetType:'audio'});
   },
  };
 }

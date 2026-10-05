@@ -1,3 +1,4 @@
+import {createMediaProbeControl,type MediaProbeControl} from "./ai-media-probe-control";
 import { chatHistoryDigest, createChatTurnSubmissionService, type ChatTurnAssembly, type ChatTurnSnapshot } from "./chat-turn-submission.service";
 import {submitProjectTranscription,type ProjectTranscriptionSubmission} from "./project-transcription-submission";
 import {prepareScriptDraftTaskSubmission,type ScriptDraftSubmissionInput} from "./script-draft-task-submission";
@@ -234,7 +235,7 @@ export interface ServiceDeps {
   prepareChatReply?: (ctx:RequestContext,snapshot:ChatTurnSnapshot)=>Promise<ChatTurnAssembly>;
   assertChatProject?: (ctx:RequestContext,projectId:string)=>Promise<unknown>;
   projectTranscriptionTargets?: {lock(tx:Db,ctx:RequestContext,projectId:string):Promise<unknown>;read(tx:Db,ctx:RequestContext,projectId:string):Promise<{awemeId:string;hasTranscript:boolean}>};
-  scriptDraftTargets?: {ensure(tx:Db,ctx:RequestContext,projectId:string):Promise<string>};
+  scriptDraftTargets?: {ensure(tx:Db,ctx:RequestContext,projectId:string,outputId?:string):Promise<string>};
   db: Db;
   now: () => string;
   nextId: (prefix: string) => string;
@@ -291,6 +292,7 @@ export type ClaimedTaskExecutionResult<T> =
   | { claimed: true; value: T };
 
 export interface AiService {
+  readonly probeControl: MediaProbeControl;
   getExecutionLeaseReference(ctx: RequestContext, taskId: string): { leaseToken: string };
   recordExecutionPlan(ctx: RequestContext, taskId: string, plan: Record<string, unknown>): Promise<void>;
   // T-096:page.scope 传了只列该作用域(入口级历史隔离);不传全量(旧调用不破)。
@@ -436,6 +438,7 @@ export interface AiService {
   // 只清 pending(已采纳 active 绝不误动);越权/不存在 → 静默 no-op(best-effort 语义)。
   discardGeneratedAsset(ctx: RequestContext, assetId: string): Promise<void>;
   getTask(ctx: RequestContext, taskId: string): Promise<AITaskResource>;
+  getAssetResultProof(ctx:RequestContext,input:{taskId:string;resultId:string}):Promise<{task:AITaskResource;result:AITaskResultResource;executionCallId:string|null}>;
   /** 宿主恢复提交时回读首次输入；保持账号隔离，不暴露运行配置。 */
   findTaskByAttempt(ctx: RequestContext, taskType: string, attemptId: string): Promise<AITaskResource | null>;
   /** T-513 server-only worker seam. Never expose this value through DTO/transport/contract. */
@@ -625,6 +628,10 @@ const CANDIDATE_RESULT_TYPES = new Set([
   "calibration_score",
   "candidate",
   "candidate_list",
+  "wechat_article_candidate",
+  "wechat_article_text_candidate",
+  "graphic_post_text_candidate",
+  "publication_text_candidate",
   "execution_manifest",
   "generated_asset",
   "learning_list",
@@ -683,6 +690,7 @@ function runnerUsageForLog(value: unknown): Record<string, number> | null {
 
 export function createAiService(deps: ServiceDeps): AiService {
   const serviceId = Symbol("AiServiceExecutionLease");
+  const probeControl = createMediaProbeControl(deps);
 
   // [T-332 S2 · SPEC §4.2/C-07] 每个经 ctx 的入口都经此建 repo:未选号(0 号 / 引导态)
   // → AccountRequiredError(前端译成「绑定抖音号后开始」,禁建会话/任务、禁读历史)。
@@ -780,6 +788,7 @@ export function createAiService(deps: ServiceDeps): AiService {
   }
 
   return {
+    probeControl,
     async listConversations(ctx, page) {
       const { rows, total } = await repoFor(ctx, "ai.listConversations").listConversations(page);
       return { rows: rows.map(toConversationDto), total };
@@ -1165,6 +1174,9 @@ export function createAiService(deps: ServiceDeps): AiService {
       const accountId = requireAccountId(ctx.accountId, "ai.confirmTask");
       const repo = repoFor(ctx, "ai.confirmTask");
       const task = await repo.requireTask(taskId);
+      if(task.taskType==="script.draft" && typeof (task.inputData as Record<string,unknown>)?.outputId==="string") {
+        throw new ConflictError("作品级视频脚本请在作品工作台采纳，确保版本并发校验");
+      }
       if ((await repo.listResults(taskId)).some(result => result.resultType === "agentic_proposals")) {
         if (!deps.agenticProposals) throw new ConflictError("自主候选采纳服务尚未接入");
         await deps.agenticProposals.confirmTask(ctx, taskId);
@@ -2037,6 +2049,15 @@ export function createAiService(deps: ServiceDeps): AiService {
         errorMessage: errorMessage ?? null,
       });
       if(updated)await logRunnerState(repo, taskId);
+    },
+
+    async getAssetResultProof(ctx,input) {
+      const repo=repoFor(ctx,"ai.getAssetResultProof");
+      const task=await repo.requireTask(input.taskId);
+      const rows=await repo.listResults(input.taskId);
+      const row=rows.find(value=>value.id===input.resultId);
+      if(!row || row.aiTaskId!==task.id || row.resultType!=="generated_asset")throw new ConflictError("生成结果不属于原任务");
+      return {task:(await projectExecutionTasks(deps.db,ctx,[task]))[0]!,result:toResultDto(row),executionCallId:row.executionCallId??null};
     },
 
     async listResults(ctx, taskId) {

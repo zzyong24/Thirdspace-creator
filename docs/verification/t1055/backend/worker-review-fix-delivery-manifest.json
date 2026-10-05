@@ -1,0 +1,33 @@
+{
+  "taskId": "T-1055",
+  "scope": "Worker独立评审整改增量",
+  "rootAnchor": "根已串行整合的首轮T-1055实现",
+  "files": [
+    {
+      "path": "ai-worker/src/runtime/wechat-article-candidate.ts",
+      "beforeSha256": "db602bd83465bd9224b78398e15c40d24b8ffc63a31dde62ba28b6018ba712d6",
+      "afterSha256": "d8d5c8f8c3a7ff4ff75dd899006982975ccc053d759d65f2a46e8d67c925dc3c"
+    },
+    {
+      "path": "ai-worker/src/runtime/wechat-article-candidate.test.ts",
+      "beforeSha256": "bccb42f4a8c81457f620aec8d06b77544cd744a3182e13a117ab60ad0e3600c7",
+      "afterSha256": "845100663716268cbe988f46d5382638a07f1fde35baebc9d2cd8c98eaa64ead"
+    },
+    {
+      "path": "ai-worker/src/prompt/templates/wechat-article-draft.ts",
+      "beforeSha256": "13a41de7f0d8d3c06f8db01dd59b805ed0522ce37a7a19eb6eca32f90e9eaf85",
+      "afterSha256": "d67b480fc37acb104d07588ac8f1c681abf328415410672f4a1e6184263095b6"
+    },
+    {
+      "path": "ai-worker/src/execution/structured-business-schema.ts",
+      "beforeSha256": "48f60849eeb3f97916323bc689e6559998ab884107ac128b47fd5f9a40a3da73",
+      "afterSha256": "3bec1df7366a36864353a2a944914cf0b79255994b65b64a18132262f3d4faae"
+    },
+    {
+      "path": "ai-worker/src/execution/structured-worker-generation.test.ts",
+      "beforeSha256": "67d51fb053fd1fef4ee109fa3d2f3fbae5fbec55d8d1a66df32f798d60688010",
+      "afterSha256": "4772ebe0e0149f82b14f2d201d099126818cf568751e96992e5e975f834b9939"
+    }
+  ],
+  "sourceFrozen": true
+}

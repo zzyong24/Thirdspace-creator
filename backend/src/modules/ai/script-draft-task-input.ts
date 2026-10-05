@@ -1,8 +1,12 @@
 import { createHash } from "node:crypto";
+import {outputConversionContext,type OutputConversionContext} from "@creatoros/contract";
 
 export interface ScriptDraftTaskInput {
+  conversion?:OutputConversionContext;
+  conversionConstraints?:{factItems:unknown[];sourceRefs:Array<{location:string;refs:unknown[]}>;ruleSnapshotRef:unknown};
   artifactId: string;
   projectId: string;
+  outputId?: string;
   topic?: string;
   angle?: string;
   targetDurationSeconds?: number;
@@ -32,9 +36,15 @@ export interface ScriptDraftTaskInput {
 export function buildScriptDraftTaskInputData(
   input: ScriptDraftTaskInput,
 ): Record<string, unknown> {
+  const conversion=input.conversion?outputConversionContext.parse(input.conversion):undefined;
+  if(conversion && (conversion.request.targetType!=="video" || input.draftMode==="verbatim" || !input.sourceSnapshots?.length || !input.conversionConstraints))
+    throw new Error("转换脚本须具有完整来源快照与事实约束");
+  if(!conversion && input.conversionConstraints!==undefined)throw new Error("转换约束缺少完整请求");
   const base: Record<string, unknown> = {
+    ...(conversion?{conversion:structuredClone(conversion),conversionConstraints:structuredClone(input.conversionConstraints)}:{}),
     artifactId: input.artifactId,
     projectId: input.projectId,
+    ...(input.outputId ? {outputId: input.outputId} : {}),
   };
   if (input.draftMode === "verbatim") {
     const sourceRef = input.verbatimSourceRef ?? "";

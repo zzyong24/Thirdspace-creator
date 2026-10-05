@@ -1143,4 +1143,35 @@
 {"ts":"2026-10-01T06:56:58.941Z","actor":"taskctl","action":"start","task":"T-1036","sha_before":"8e57c9acba12","sha_after":"e4ecdc11a6e0"}
 {"ts":"2026-10-01T07:44:57.562Z","actor":"taskctl","action":"complete","task":"T-1036","evidence":"官方组件新安装/React19 Next16 webpack strict构建及短片拖动伸缩、1000片段、同源合成预览通过；docs/research/evidence/t1036/hash-manifest.json。全局reconcile仍32errors/1warning，范围外既有T-1015/T-1026/T-1027及过期review等，保留reconcile.log，不宣称全局或客户端通过。","sha_before":"e4ecdc11a6e0","sha_after":"b37978c1ff03"}
 {"ts":"2026-10-01T07:56:28.957Z","actor":"taskctl","action":"start","task":"T-1037","sha_before":"091eff400869","sha_after":"3e73566acc9a"}
+{"ts":"2026-10-01T11:45:04.819Z","actor":"taskctl","action":"start","task":"T-1038","sha_before":"848602005e5e","sha_after":"7bfd0a0e1e91"}
+{"ts":"2026-10-01T12:34:02.842Z","actor":"taskctl","action":"start","task":"T-1043","sha_before":"896251331f5a","sha_after":"6768feef2a23"}
+{"ts":"2026-10-01T13:42:34.727Z","actor":"taskctl","action":"start","task":"T-1044","sha_before":"ab02a4ce33d8","sha_after":"54e58d74eb1d"}
+{"ts":"2026-10-01T13:59:53.118Z","actor":"research-gate","action":"research_observation","task":"T-1044","failure_family":"codex-native-startup-exit","trigger_kind":"repeated-failure-family","evidence":"docs/research/evidence/t1044/native-isolated-probe-home.log","evidence_sha256":"332259ac405a2b08060be4597ff970fb4c02f0c0f88342fc20d33e1883a9ac92","cost":"normal"}
+{"ts":"2026-10-01T13:59:53.121Z","actor":"research-gate","action":"research_open","task":"T-1044","research_task":"T-1044","card":"docs/research/t1044-native-startup-exit.md","failure_family":"codex-native-startup-exit","trigger_kind":"repeated-failure-family"}
+{"ts":"2026-10-01T14:13:36.894Z","actor":"research-gate","action":"research_resume","task":"T-1044","card":"docs/research/t1044-native-startup-exit.md","card_sha256":"453d708b12d88c8cc07566c972ba2e1be9f655d7983840876c35873254f40c12","decisions":[]}
+{"ts":"2026-10-01T14:13:37.128Z","actor":"taskctl","action":"start","task":"T-1044","sha_before":"ab02a4ce33d8","sha_after":"54e58d74eb1d"}
+{"ts":"2026-10-01T15:03:32.652Z","actor":"research-gate","action":"research_observation","task":"T-1044","failure_family":"codex-native-dynamic-tool-disabled","trigger_kind":"external-capability-unknown","evidence":"docs/research/evidence/t1044/native-dynamic-real-probe.log","evidence_sha256":"b3411b4811292e076efd9500998fa1d52603baedeceebab15bb9c21875b7b100","cost":"normal"}
+{"ts":"2026-10-01T15:03:32.655Z","actor":"research-gate","action":"research_open","task":"T-1044","research_task":"T-1044","card":"docs/research/t1044-native-dynamic-tool-disabled.md","failure_family":"codex-native-dynamic-tool-disabled","trigger_kind":"external-capability-unknown"}
+{"ts":"2026-10-02T00:11:57.525Z","actor":"taskctl","action":"start","task":"T-1045","sha_before":"7e3a36268422","sha_after":"7b70ec5cc843"}
+{"ts":"2026-10-02T00:11:57.777Z","actor":"taskctl","action":"start","task":"T-850","sha_before":"7b70ec5cc843","sha_after":"a0d81d205bab"}
+{"ts":"2026-10-02T07:15:37.376Z","actor":"taskctl","action":"start","task":"T-1042","sha_before":"a0d81d205bab","sha_after":"621d7c164388"}
+{"ts":"2026-10-02T14:32:06.423Z","actor":"taskctl","action":"block","task":"T-1042","reason":"完整开源视频/图文工作台在隔离开发版已实际跑通；SPEC 整体验收仍缺全仓类型、boundary、semantic、reconcile 通过及跨功能/实包证据。根因沿 T-1026、T-1027、T-916 登记，见 docs/research/evidence/t1042/complete-editors/global-checks.md；不记全量完成。","sha_before":"d035a50d1057","sha_after":"584c1ed899b6"}
+{"ts":"2026-10-02T14:50:01.334Z","actor":"taskctl","action":"start","task":"T-1047","sha_before":"7dab59c5f66a","sha_after":"01f8cbbf6966"}
+{"ts":"2026-10-02T15:04:31.298Z","actor":"taskctl","action":"complete","task":"T-1047","evidence":"完成官方实际页面及固定MIT源码核验、现有画布/图卡/素材服务只读审计与用户流程图，见 docs/research/t1047-xiaohongshu-image-series.md 和 docs/research/evidence/t1047；未冒充真实组图生成或登录后发布验收。","sha_before":"c4fec10047b9","sha_after":"b9b3ea196859"}
+{"ts":"2026-10-02T15:04:52.053Z","actor":"taskctl","action":"start","task":"T-1046","sha_before":"81c6f995f997","sha_after":"630c5187899e"}
+{"ts":"2026-10-02T19:29:56.805Z","actor":"taskctl","action":"start","task":"T-1048","sha_before":"911c1c268d4a","sha_after":"7519d95369e6"}
+{"ts":"2026-10-03T03:09:54.244Z","actor":"taskctl","action":"start","task":"T-1049","sha_before":"a83363a623d2","sha_after":"ebb54ea6423c"}
+{"ts":"2026-10-03T08:30:20.229Z","actor":"taskctl","action":"start","task":"T-1050","sha_before":"66a58f360d37","sha_after":"1b2f1e263608"}
+{"ts":"2026-10-03T09:29:28.337Z","actor":"taskctl","action":"start","task":"T-1051","sha_before":"385377cb3afa","sha_after":"83c81061d9a6"}
+{"ts":"2026-10-03T11:06:04.188Z","actor":"taskctl","action":"start","task":"T-1052","sha_before":"be3c48640957","sha_after":"0c9595f5cd17"}
+{"ts":"2026-10-03T12:54:51.329Z","actor":"taskctl","action":"start","task":"T-1053","sha_before":"b6e83b29b23c","sha_after":"54bd1baeb6be"}
+{"ts":"2026-10-03T17:31:06.018Z","actor":"taskctl","action":"start","task":"T-1054","sha_before":"8e9592cf2182","sha_after":"e4e11e73cffd"}
+{"ts":"2026-10-03T18:06:31.871Z","actor":"taskctl","action":"start","task":"T-1055","sha_before":"84020272ce0f","sha_after":"a23ad4bf4e67"}
+{"ts":"2026-10-04T04:30:01.029Z","actor":"taskctl","action":"start","task":"T-1056","sha_before":"040215030dc0","sha_after":"67a387761858"}
+{"ts":"2026-10-04T05:47:10.109Z","actor":"research-gate","action":"research_observation","task":"T-1057","failure_family":"codex-native-permission-contract-drift","trigger_kind":"external-capability-unknown","evidence":"docs/verification/t1057/command-probe-result.json","evidence_sha256":"49dead3db9589026205d7d9e73becef6c4cfff8582789e8cdf39891e9260c0dd","cost":"normal"}
+{"ts":"2026-10-04T05:47:10.114Z","actor":"research-gate","action":"research_open","task":"T-1057","research_task":"T-1057","card":"docs/verification/t1057/permission-research.md","failure_family":"codex-native-permission-contract-drift","trigger_kind":"external-capability-unknown"}
+{"ts":"2026-10-04T06:50:58.562Z","actor":"taskctl","action":"start","task":"T-1058","sha_before":"ed261b31ed82","sha_after":"e766a0670c85"}
+{"ts":"2026-10-04T07:25:20.192Z","actor":"taskctl","action":"complete","task":"T-1058","evidence":"研究提交 5cb369ba；docs/verification/t1058/research.md 与独立交付/记录审核无阻断；research-gate、T1058 governance、暂存 diff 检查通过。仅调研，真实集成未验。全仓 reconcile 35旧错误/1警告，与T1056新增0，保留T1015/T1026/T1027/T916等根因；Git hook缺lefthook未称通过。","sha_before":"64e556debe4c","sha_after":"bf1781a10953"}
+{"ts":"2026-10-04T07:40:37.579Z","actor":"taskctl","action":"start","task":"T-1059","sha_before":"260beaf30f3c","sha_after":"030b09fd268e"}
+{"ts":"2026-10-04T08:06:19.867Z","actor":"taskctl","action":"complete","task":"T-1059","evidence":"04ad6212；固定源码复用清单、82份源码摘要、独立交付 findings=[]、范围检查和研究门通过；无运行时修改。全仓对账仍35 errors/1 warning，与T1058新增0，范围外欠债保留。提交提示lefthook缺失，未称hook运行。","sha_before":"110e7503288f","sha_after":"52f8a321a61b"}
 {"ts":"2026-10-04T08:38:26.047Z","actor":"taskctl","action":"start","task":"T-1060","sha_before":"682c88dc3f68","sha_after":"4e8c2ce5dd63"}

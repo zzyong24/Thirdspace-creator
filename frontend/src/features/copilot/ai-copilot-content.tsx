@@ -3,6 +3,7 @@
 import {useAssistantEngine} from "./use-assistant-engine";
 import {getLiveChatSession} from "./live-chat-session";
 import { ChatToolTrace } from "./chat-tool-trace";
+import {CanvasChatResult} from "@/features/creative-canvas/canvas-chat-result";
 
 /**
  * Copilot 页面负责输入、流式消息、候选卡与原任务控制。
@@ -768,6 +769,9 @@ export function AICopilotContent({
     contextRequest?.selection?.title ??
     embed?.selection?.title ??
     (searchParams?.get("selTitle") || undefined);
+  const articleOutputId = searchParams?.get("selOutputId") || undefined;
+  const articleVersionId = searchParams?.get("selVersionId") || undefined;
+  const articleProjectId = searchParams?.get("selProjectId") || undefined;
   // [T-096] 会话作用域(scope)—— 历史列表/恢复/新对话的归属桶,与 surface(技能装配)解耦。
   // 入口 → scope 总表见 chat-scope.ts:内嵌右栏 = project:<id>;深链选中项目(复盘岛/选题卡
   // brief.fill)归并 project:<id>;一键岛 = surface:<name>;左下角/首页显式 ?scope=global;
@@ -806,6 +810,9 @@ export function AICopilotContent({
   React.useEffect(() => {
     if ((activeRequest?.nonce ?? 0) > 0) setSelectionDismissed(false);
   }, [activeRequest?.nonce]);
+  React.useEffect(() => {
+    if (selKind === "article_section" && articleOutputId && articleVersionId && selId) setSelectionDismissed(false);
+  }, [selKind, articleOutputId, articleVersionId, selId]);
   React.useEffect(() => {
     if (!activeRequest) return;
     if (
@@ -901,6 +908,7 @@ export function AICopilotContent({
         label?: string;
         artifactId?: string;
         versionId?: string;
+        outputId?: string;
         sectionIndex?: number;
         excerpt?: string;
       };
@@ -923,6 +931,9 @@ export function AICopilotContent({
         ...(contextRequest?.selection?.versionId
           ? { versionId: contextRequest.selection.versionId }
           : {}),
+        ...(selKind === "article_section" && articleOutputId && articleVersionId
+          ? { outputId: articleOutputId, versionId: articleVersionId }
+          : {}),
         ...(Number.isInteger(contextRequest?.selection?.sectionIndex)
           ? { sectionIndex: contextRequest!.selection!.sectionIndex }
           : {}),
@@ -935,6 +946,8 @@ export function AICopilotContent({
       // 后端恒 null → 复盘只能账号级泛论)。复盘一键岛(review-analyze-island)正是以 kind=project 打开。
       if (selKind === "project") {
         chatContext.projectId = selId;
+      } else if (selKind === "article_section" && articleProjectId) {
+        chatContext.projectId = articleProjectId;
       }
     } else if (mentionedProject) {
       // T-039b @项目引用:无 URL 选中态时,把 @ 选中的项目当「选中态项目」注入 —— 复用 T-039a 机制
@@ -953,6 +966,9 @@ export function AICopilotContent({
     selKind,
     selId,
     selTitle,
+    articleOutputId,
+    articleVersionId,
+    articleProjectId,
     mentionedProject,
     selectionDismissed,
     embed?.selection?.kind,
@@ -1413,18 +1429,30 @@ export function AICopilotContent({
   // 重进/重渲时会重复入历史;预填只写 input value,机制上不可能重复发)。functionKey 置顶工具
   // 的白名单重排(applyFunctionKey)不受影响 —— 用户发出这条时仍优先调专用工具。
   const prefilledRef = React.useRef(false);
+  const lastPrefillRef = React.useRef<string>("");
+  const lastUrlPrefillIdentityRef = React.useRef<string>("");
+  const urlPrefill = searchParams?.get("prefill") || "";
+  const urlPrefillIdentity = JSON.stringify([urlPrefill, selKind, selId, articleOutputId, articleVersionId]);
   React.useEffect(() => {
+    // 深链也可从已有项目会话打开。每次明确的新建议只填空输入框，
+    // 保留用户正在写的文字，下一次发送仍走链接指定的工具。
+    if (urlPrefill && lastUrlPrefillIdentityRef.current !== urlPrefillIdentity) {
+      lastUrlPrefillIdentityRef.current = urlPrefillIdentity;
+      lastPrefillRef.current = urlPrefill;
+      quickFunctionKeyRef.current = functionKey ?? null;
+      setPrompt((prev) => prev.trim() ? prev : urlPrefill);
+      return;
+    }
     if (prefilledRef.current) return;
     if (messages.length > 0 || streaming) return;
-    // [T-060①] URL ?prefill= 自定义话术优先(按钮语义更细);否则按 fn 查默认词条。
-    const custom = searchParams?.get("prefill") || "";
-    const text = custom || (functionKey ? FUNCTION_KEY_PREFILL[functionKey] : "");
+    // [T-060①] 没有自定义预填时，空会话可使用 fn 的默认话术。
+    const text = urlPrefill || (functionKey ? FUNCTION_KEY_PREFILL[functionKey] : "");
     if (!text) return;
     prefilledRef.current = true;
     // 不覆盖用户已敲的字(预填只填空输入框)。
     setPrompt((prev) => (prev.trim().length > 0 ? prev : text));
     lastPrefillRef.current = text;
-  }, [functionKey, messages.length, streaming]);
+  }, [functionKey, messages.length, streaming, urlPrefill, urlPrefillIdentity]);
 
   // [T-108] 外部对话请求(方案 A)—— 稿面 AI 按钮点击后 embed.request.nonce 自增,本 effect
   // 据 nonce 变化处理该请求。functionKey/selection 已在上方按 request 优先重算(置顶专用工具 +
@@ -1433,7 +1461,6 @@ export function AICopilotContent({
   //      点按钮,直接发;模型据 functionKey 优先调 review.script/calibration.diagnose)。
   //   ② autoSend 缺省:只预填输入框(不覆盖用户已敲的字,延续 T-055b),用户回车才发。
   // nonce 由 Provider 内部计数器生成(SSR 安全,非 Date.now/Random),天然去重(重渲不重复发)。
-  const lastPrefillRef = React.useRef<string>("");
   const handledRequestNonceRef = React.useRef(0);
   React.useEffect(() => {
     const req = activeRequest;
@@ -2982,6 +3009,7 @@ export function AICopilotContent({
                     }
                     // 无专属卡的非 context 工具 → 只渲 trace 行(context.* 已在上方
                     // 全量走注册表渲数据卡,不再落到这里)。
+                    if ((name === "canvas.read" || name === "canvas.propose") && out.kind === name) return <React.Fragment key={key}>{traceRow}<CanvasChatResult result={out as Record<string, unknown>}/></React.Fragment>;
                     return traceRow;
                   })}
                 </li>

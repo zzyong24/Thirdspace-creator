@@ -1,0 +1,30 @@
+{
+  "name": "obsidian-noterelay",
+  "version": "0.1.8",
+  "description": "Preview and copy Obsidian notes for WeChat, Toutiao, Xiaohongshu and X.",
+  "license": "AGPL-3.0-or-later",
+  "type": "module",
+  "scripts": {
+    "dev": "node esbuild.config.mjs",
+    "build": "node esbuild.config.mjs production",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test tests/*.test.mjs",
+    "lint": "eslint .",
+    "check": "npm run typecheck && npm run lint && npm test && npm run build"
+  },
+  "dependencies": {
+    "fflate": "^0.8.3",
+    "html-to-image": "^1.11.13",
+    "markdown-it": "^14.1.1"
+  },
+  "devDependencies": {
+    "@types/markdown-it": "^14.1.2",
+    "@types/node": "^24.0.0",
+    "@typescript-eslint/parser": "^8.65.0",
+    "esbuild": "^0.27.0",
+    "eslint": "^9.39.5",
+    "eslint-plugin-obsidianmd": "^0.4.1",
+    "obsidian": "latest",
+    "typescript": "^5.9.0"
+  }
+}

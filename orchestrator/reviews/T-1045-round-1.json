@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "独立具体合同复核PASS；字段审核触点与整体版本分离、持久成员预约状态及CAS恢复两项阻断已澄清。可进入schema实现与机械核验，不代表实现或画布旅程通过。 Reviewer /root/conversion_audit 本轮只读复核。",
+  "findings": []
+}

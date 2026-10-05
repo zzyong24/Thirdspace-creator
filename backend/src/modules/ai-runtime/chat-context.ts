@@ -23,6 +23,8 @@ export interface ChatSelection {
   label?: string;
   /** T-716:稿面局部改写锚点；只在 script_section selection 使用。 */
   artifactId?: string;
+  /** T-1023 文章配图：明确的文章 output，不能借用 artifactId 或从项目里猜。 */
+  outputId?: string;
   versionId?: string;
   /** 当前稿面中的可见段落序号；只允许在请求版本仍是 currentVersion 时作为安全兜底。 */
   sectionIndex?: number;
@@ -99,6 +101,7 @@ const SELECTION_KIND_LABEL: Record<string, string> = {
   candidate: "候选",
   topic: "选题",
   script_section: "口播稿段落",
+  article_section: "公众号文章段落",
 };
 
 /**

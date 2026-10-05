@@ -1,3 +1,7 @@
+import {assetAsrInput} from './asset-asr';
+import {assetAsrPortInputs} from './asset-asr-ports';
+export * from './asset-asr';
+export * from './asset-asr-ports';
 import {redfoxObservationSchema} from "./redfox";
 export {redfoxInputSchema,redfoxObservationSchema,type RedfoxInput} from "./redfox";
 export {transcribeProfileSchema,transcribeSourceFailureSchema} from "./transcribe-workflow";
@@ -68,6 +72,7 @@ export const executionRefSchema = z.object({
 }).strict();
 export type ExecutionRef = z.infer<typeof executionRefSchema>;
 export const workerPortSchema = z.enum([
+ ...Object.keys(assetAsrPortInputs) as Array<keyof typeof assetAsrPortInputs>,
   "settleCoverModel",
   ...Object.keys(transcribeWorkflowPortSchemas) as Array<keyof typeof transcribeWorkflowPortSchemas>,
   ...Object.keys(coverPortInputSchemas) as Array<keyof typeof coverPortInputSchemas>,
@@ -76,7 +81,7 @@ export const workerPortSchema = z.enum([
   "prepareTranscribePostprocess", "readTranscribePostprocess", "reserveTranscribePostprocess", "startTranscribePostprocess", "settleTranscribePostprocess", "saveTranscribePostprocess",
   "selectTranscribeLocalFallback", "prepareTranscribeAsr", "readTranscribeAudio", "saveTranscribeAudio",
   "reserveAsrRequest", "startAsrRequest", "settleAsrRequest",
-  "resolveAssetCredential", "settleAssetCall", "reserveAssetCall", "startAssetCall", "saveAssetResult", "recoverAssetResult", "readAssetProviderJob", "recordAssetProviderJob",
+  "resolveAssetCredential", "readAssetReference", "settleAssetCall", "reserveAssetCall", "startAssetCall", "saveAssetResult", "recoverAssetResult", "readAssetProviderJob", "recordAssetProviderJob",
   "resolveChatWebReadSearch", "readChatWebReadCache", "failChatWebRead", "prepareChatWebRead", "observeChatWebRead", "restoreChatWebRead", "completeChatWebRead", "readChatWebReadSession", "saveChatWebReadSession",
   "prepareChatRedfox", "settleChatRedfox",
   "prepareChatResearch", "settleChatResearch",
@@ -146,6 +151,7 @@ export const chatResearchPreparationSchema=z.object({available:z.boolean(),query
 
 /** 每个命名端口都有单独的载荷边界；身份字段不得从 Worker 注入。 */
 export const workerPortInputSchemas = {
+ ...assetAsrPortInputs,
   ...videoPortInputSchemas,
   readProcessingAsset:emptyPortInput,saveMaterialExtraction:materialExtractionSchema,completeAssetProcessing:assetProcessingCompleteSchema,
   ...transcribeWorkflowPortSchemas,
@@ -166,6 +172,7 @@ export const workerPortInputSchemas = {
   ...transcribeAudioPortSchemas,
   ...asrPortInputSchemas,
   resolveAssetCredential:providerJobReadSchema,
+  readAssetReference:providerJobReadSchema,
   settleAssetCall:providerJobReadSchema.extend({status:z.enum(["unknown","rejected"])}).strict(),
   reserveAssetCall:emptyPortInput,
   startAssetCall:providerJobReadSchema,
@@ -367,7 +374,7 @@ export const scheduledFlywheelTaskInputSchema=z.discriminatedUnion("sourceKind",
 ]);
 /** 用户单条对标转写的真实业务执行标记，不进入项目转写工作流。 */
 export const benchmarkTranscribeTaskInputSchema=z.object({kind:z.literal("benchmark.transcribe"),workId:z.string().min(1),awemeId:z.string().min(1).max(128),sourceId:z.string().min(1),sourceExternalAccountId:z.string(),configuration:transcribeTaskInputSchema.shape.configuration}).strict();
-export const workerTaskInputSchema=z.union([benchmarkTranscribeTaskInputSchema,scheduledFlywheelTaskInputSchema,transcribeTaskInputSchema,assetGenerationInputSchema,modelGenerationInputSchema,structuredGenerationInputSchema,agenticWorkerInputSchema,chatWorkerInputSchema]);
+export const workerTaskInputSchema=z.union([assetAsrInput,benchmarkTranscribeTaskInputSchema,scheduledFlywheelTaskInputSchema,transcribeTaskInputSchema,assetGenerationInputSchema,modelGenerationInputSchema,structuredGenerationInputSchema,agenticWorkerInputSchema,chatWorkerInputSchema]);
 const structuredUsageSchema=z.object({inputTokens:z.number().nonnegative().nullable(),outputTokens:z.number().nonnegative().nullable(),cachedTokens:z.number().nonnegative().nullable(),totalTokens:z.number().nonnegative().nullable()});
 const completionViolationSchema=z.object({code:z.string(),path:z.string(),message:z.string()});
 export const workerStructuredResultSchema=z.object({
@@ -390,4 +397,13 @@ export const chatCommitReceiptSchema=z.object({resultId:z.string().min(1),aiTask
 export {assetGenerationInputSchema,providerJobSchema,providerJobReadSchema,providerJobRecordSchema} from "./asset-generation";
 
 export {assetCredentialSchema,assetRuntimeOptionsSchema,assetResultReceiptSchema} from "./asset-generation";
+
 export {localCodexStatusSchema,localCodexStatusRequestSchema,localCodexStatusResponseSchema} from "./local-codex-status";
+
+export {momentsModelTaskInput,momentsModelOutput,momentsFrozenProof,momentsRetryReservation,momentsFrozenLineage} from "./moments-model";
+
+export {productionRoughCutTaskInput,type ProductionRoughCutTaskInput} from './production-rough-cut';
+
+export * from "./asset-asr-timing";
+
+export {asrTranscriptSchema} from "./execution-asr";

@@ -260,6 +260,19 @@ describe("analytics repository (user+account-scoped, append-idempotent)", () => 
     });
   });
 
+  it("来源同时含 views=0 和 plays 时保留真实零，与作品目录口径一致", async () => {
+    const repo = makeRepo(db, "zero-play");
+    await repo.seedSnapshots([
+      snapshotRow({ id: "zero-view-baseline", userId: "user-a",
+        capturedAt: "2026-06-19T10:00:00.000Z", rawMetrics: { views: 0, plays: 23 } }),
+      snapshotRow({ id: "zero-view", userId: "user-a",
+        capturedAt: "2026-06-20T10:00:00.000Z", rawMetrics: { views: 0, plays: 23 } }),
+    ]);
+    expect((await repo.getDashboardRollup("user-a", ACCT)).plays).toBe(0);
+    expect(await repo.getDailyPlayTrend("user-a", ACCT, undefined, 7))
+      .toEqual([{ day: "2026-06-20", plays: 0 }]);
+  });
+
   // [T-332 S2] 采集 stamp(strict):appendSnapshot 的 accountId 必填 → metric_snapshots /
   //   metric_values 出生即归号,不存在「无号落 NULL」写路径(schema 已 NOT NULL)。
   it("appendSnapshot stamps account_id onto snapshot and its metric_values (strict)", async () => {

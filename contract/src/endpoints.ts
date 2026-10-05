@@ -1,6 +1,12 @@
+import {creativeCanvasOperations} from "./operations/creative-canvas";
+import {workSourcesOperations} from "./operations/work-sources";
+import {workCompositionsOperations,momentsOperations,workReviewsOperations} from "./operations/work-compositions";
 import type { z } from "zod";
 
 import { projectsOperations } from "./operations/projects";
+import { articlesOperations } from "./operations/articles";
+import { graphicPostsOperations } from "./operations/graphic-posts";
+import { creativeResultsOperations } from "./operations/creative-results";
 import { artifactsOperations } from "./operations/artifacts";
 import { knowledgeOperations } from "./operations/knowledge";
 import { taxonomyOperations } from "./operations/taxonomy";
@@ -24,6 +30,7 @@ import { positioningOperations } from "./operations/positioning";
 import { candidateOperations } from "./operations/candidate";
 import { calibrationOperations } from "./operations/calibration";
 import { platformAccountOperations } from "./operations/platform-accounts";
+import { platformCollectionOperations } from "./operations/platform-collection";
 import { contentCalendarOperations } from "./operations/content-calendar";
 import { materialLinksOperations } from "./operations/material-links";
 import { benchmarkOperations } from "./operations/benchmark";
@@ -90,7 +97,13 @@ export function defineEndpoint<
 // The complete contract surface — the machine-checkable form of SPEC §13.
 // (`tests/registry.test.ts` asserts this matches §13 exactly.)
 export const ENDPOINTS = {
+  ...creativeCanvasOperations,
+  ...workSourcesOperations,
+  ...workCompositionsOperations,...momentsOperations,...workReviewsOperations,
   ...projectsOperations,
+  ...articlesOperations,
+  ...graphicPostsOperations,
+  ...creativeResultsOperations,
   ...artifactsOperations,
   ...knowledgeOperations,
   ...taxonomyOperations,
@@ -116,6 +129,7 @@ export const ENDPOINTS = {
   ...candidateOperations,
   ...calibrationOperations,
   ...platformAccountOperations,
+  ...platformCollectionOperations,
   ...contentCalendarOperations,
   ...materialLinksOperations,
   // [T-212a] 对标源 CRUD(选题/对标强化，SPEC 2026-07-11 §2.1)。

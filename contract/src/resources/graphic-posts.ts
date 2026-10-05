@@ -1,3 +1,5 @@
+import {noteRelayLayout} from "./noterelay-layout";
+import { projectScriptSourceRef,projectScriptContext,scriptMetadataSource,proposedProjectImage } from "./project-script-source";
 import { z } from "zod";
 import { id, iso8601, platformId } from "../primitives";
 import {momentsSourceAnchor,workBasisSourceAnchor} from "./work-source-anchors";
@@ -17,12 +19,13 @@ export const graphicPostSourceRef = z.union([z.object({
   kind: z.enum(["project", "asset", "intelligence"]),
   id,
   versionId: z.string().min(1),
-}).strict(), outputConversionSourceAnchor,momentsSourceAnchor,workBasisSourceAnchor]);
+}).strict(), outputConversionSourceAnchor,momentsSourceAnchor,workBasisSourceAnchor,projectScriptSourceRef]);
 export type GraphicPostSourceRef = z.infer<typeof graphicPostSourceRef>;
 
 /** 图卡文字仍是稿面内容，不能冒充已生成图片。数组顺序是用户明确顺序。 */
 export const graphicPostCardBrief = z.object({
   cardId:id, title:z.string(), body:z.string(), visualBrief:z.string().max(10000).optional(), sourceRefs:z.array(graphicPostSourceRef),
+  proposedImage:proposedProjectImage.optional(),
 }).strict();
 // SEMANTIC_BOUNDARY_ALLOW: 仅拒绝同一稿面重复 ID，不判断图卡内容或创作质量。
 export const graphicPostCardBriefs = z.array(graphicPostCardBrief).refine(cards =>
@@ -31,10 +34,13 @@ export type GraphicPostCardBrief = z.infer<typeof graphicPostCardBrief>;
 
 export const graphicPostDocument = z.object({
   schemaVersion: z.literal(1),
+  nativeLayout: noteRelayLayout.optional(),
   title: z.string(),
   body: z.string(),
   summary: z.string(),
   tags: z.array(z.string()),
+  metadataSource:scriptMetadataSource.optional(),
+  imageMatchWarnings:z.array(z.string()).optional(),
   imageUses: z.array(graphicPostImageUse),
   cardBriefs: graphicPostCardBriefs.optional(),
   seriesProfile: z.object({visualDirection:z.string().max(10000),aspectRatio:z.string().max(32),referenceImage:z.object({assetId:id,assetFileId:id}).strict().optional()}).strict().optional(),
@@ -57,6 +63,7 @@ export const graphicPostResource = z.object({
   artifactId: id,
   currentVersionId: id,
   current: graphicPostDocument,
+  scriptContext:projectScriptContext.optional(),
   versions: z.array(z.object({
     id,
     versionNumber: z.number().int().positive(),

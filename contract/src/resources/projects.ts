@@ -7,6 +7,7 @@ import {
   stageStatus,
   creationMode,
   contentType,
+  platformId,
 } from "../primitives";
 import {
   adaptationStrategy,
@@ -129,6 +130,7 @@ export const contentOutputResource = z.object({
   projectId: id,
   title: z.string(),
   contentType,
+  targetPlatform: platformId.nullable().optional(),
   format: z.string(),
   aspectRatio: z.string(),
   targetDurationSeconds: z.number(),

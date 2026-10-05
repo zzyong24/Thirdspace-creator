@@ -1,6 +1,6 @@
 import { createHash, randomUUID } from "node:crypto";
 import {
-  productionEditorEdit, videoRenderProps,videoRenderDirection,
+  productionLegacyEditorEdit, videoRenderProps,videoRenderDirection,
   type ProductionEditorEdit, type VideoRenderProps, type VideoRenderCard, type VideoRenderCaption, type VideoRenderBroll,
 } from "@creatoros/contract";
 import { ConflictError } from "./production.errors";
@@ -162,7 +162,7 @@ export function prepareEditorPlan(raw:unknown, nextId:()=>string = ()=>`item-${r
 /** 返回新候选；无数据库/任务副作用。服务保存前仍需真实归属与 CAS 校验。 */
 export function applyEditorEdits(raw:EditorPlan, input:ProductionEditorEdit[], nextId:()=>string = ()=>`item-${randomUUID()}`):EditorPlan {
   if(raw.editorVersion!==1) throw new ConflictError("请先保存旧方案，再编辑片段");
-  const plan=prepareEditorPlan(raw), edits=input.map(edit=>productionEditorEdit.parse(edit));
+  const plan=prepareEditorPlan(raw), edits=input.map(edit=>productionLegacyEditorEdit.parse(edit));
   const byId=new Map(items(plan.renderProps).map(entry=>[entry.item.id,entry]));
   const touched=new Set<string>();
   // 全批前值先核对，失败不改任何输入对象。

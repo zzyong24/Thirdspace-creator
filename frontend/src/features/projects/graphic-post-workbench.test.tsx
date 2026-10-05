@@ -5,7 +5,9 @@ import userEvent from "@testing-library/user-event";
 import type {GraphicPostResource} from "@creatoros/contract";
 import {unzipSync,strFromU8} from "fflate";
 import {GraphicPostWorkbench} from "./graphic-post-workbench";
-const api=vi.hoisted(()=>({createGraphicPostVersion:vi.fn(),getGraphicPost:vi.fn(),getAssetFileDownloadUrl:vi.fn(async(_input:{params:{assetId:string;assetFileId:string}})=>({url:"http://example.test/image.png"})),listAssets:vi.fn(async()=>[])}));
+const api=vi.hoisted(()=>({createGraphicPostVersion:vi.fn(),getGraphicPost:vi.fn(),getGraphicPostVersion:vi.fn(),getAssetFileDownloadUrl:vi.fn(async(_input:{params:{assetId:string;assetFileId:string}})=>({url:"http://example.test/image.png"})),listAssets:vi.fn(async()=>[])}));
+vi.mock("@/features/reference-editors/noterelay/noterelay-editor",()=>({NoteRelayEditor:()=> <div>NoteRelay 预览</div>}));
+async function openSeries(){const details=screen.getByText("逐页创作与 AI 辅助").closest("details")!;details.open=true;fireEvent(details,new Event("toggle"));await screen.findByRole("button",{name:"读取现有候选"});}
 const canvas=vi.hoisted(()=>({openGraphicPageCanvas:vi.fn(),push:vi.fn()}));
 vi.mock("@/lib/contract-client",()=>({client:api}));
 vi.mock("next/navigation",()=>({useRouter:()=>({refresh:vi.fn(),push:canvas.push})}));
@@ -13,6 +15,26 @@ vi.mock("@/features/creative-canvas/graphic-page-context",()=>({openGraphicPageC
 vi.mock("./graphic-post-results",()=>({GraphicPostResults:({onAdopt}:{onAdopt:()=>Promise<void>})=> <button onClick={()=>void onAdopt()}>读取现有候选</button>}));
 vi.mock("./publication-result-actions",()=>({PublicationResultActions:()=> <button>读取发布内容</button>}));
 afterEach(()=>{cleanup();vi.clearAllMocks();vi.restoreAllMocks();vi.unstubAllGlobals();});
+it("图文去掉重复页头及版本状态小字，保存和历史仍真实可用",async()=>{
+ const initial:GraphicPostResource={projectId:"p",outputId:"o",targetPlatform:null,artifactId:"artifact",currentVersionId:"v0",versions:[{id:"v0",versionNumber:2,createdAt:"2026-10-04T00:00:00Z",changeSummary:"保存"}],current:{schemaVersion:1,title:"稿件标题",body:"已保存正文",summary:"",tags:[],sourceRefs:[],imageUses:[],ruleSnapshotRef:null}};
+ const {container}=render(<GraphicPostWorkbench projectId="p" projectTitle="项目名称" accountId="a" initial={initial}/>);
+ expect(screen.queryByText("← 项目名称")).not.toBeInTheDocument();
+ expect(screen.queryByRole("heading",{name:"图文作品"})).not.toBeInTheDocument();
+ expect(screen.queryByText(/沿用脚本标题、简介和标签，生成配文/)).not.toBeInTheDocument();
+ expect(screen.queryByText("版本 1")).not.toBeInTheDocument();
+ expect(container.querySelector('main')).toHaveClass("text-sm");
+ expect(screen.getByRole("textbox",{name:"正文"})).toHaveClass("text-sm","leading-relaxed");
+ expect(screen.getByRole("button",{name:"保存作品"})).toBeDisabled();
+ fireEvent.change(screen.getByRole("textbox",{name:"正文"}),{target:{value:"本次修改"}});
+ expect(screen.queryByText("有未保存的修改")).not.toBeInTheDocument();
+ expect(screen.getByRole("button",{name:"保存作品"})).toHaveAttribute("title","有未保存的修改");
+ const history=screen.getByText("历史版本").closest("details")!;
+ expect(history).not.toBeNull();expect(history).not.toHaveAttribute("open");
+ history.open=true;fireEvent(history,new Event("toggle"));
+ api.getGraphicPostVersion.mockResolvedValue({versionId:"v0",document:initial.current});
+ fireEvent.click(screen.getByRole("button",{name:/v2/}));
+ await waitFor(()=>expect(api.getGraphicPostVersion).toHaveBeenCalledWith({params:{outputId:"o",versionId:"v0"},query:undefined,body:undefined}));
+});
 it("图卡文字编辑与顺序经真实保存操作提交，稳定ID/来源保留且不新增图片",async()=>{
  const source={kind:"project" as const,id:"p",versionId:"project-version"};
  const initial:GraphicPostResource={projectId:"p",outputId:"o",targetPlatform:null,artifactId:"artifact",currentVersionId:"v0",versions:[],
@@ -22,6 +44,7 @@ it("图卡文字编辑与顺序经真实保存操作提交，稳定ID/来源保�
  api.createGraphicPostVersion.mockImplementation(async({body})=>({versionId:"v1",document:body.document}));
  api.getGraphicPost.mockImplementation(async()=>({...initial,currentVersionId:"v1",current:api.createGraphicPostVersion.mock.calls[0]![0].body.document}));
  render(<GraphicPostWorkbench projectId="p" projectTitle="项目" accountId="a" initial={initial}/>);
+ await openSeries();
  const user=userEvent.setup();
  const first=screen.getByRole("textbox",{name:"图卡1正文"});
  await user.clear(first);await user.type(first,"用户修改的第一页");
@@ -41,9 +64,10 @@ it("保存期间不接受会被迟到读回覆盖的新编辑；失败保留输�
  let rejectSave!:(error:Error)=>void;
  api.createGraphicPostVersion.mockImplementationOnce(()=>new Promise((_resolve,reject)=>{rejectSave=reject;}));
  render(<GraphicPostWorkbench projectId="p" projectTitle="项目" accountId="a" initial={initial}/>);
+ await openSeries();
  const user=userEvent.setup(),body=screen.getByRole("textbox",{name:"正文"});
  await user.clear(body);await user.type(body,"本次编辑不能丢失");
- expect(screen.getByText("有未保存的修改")).toBeInTheDocument();
+ expect(screen.getByRole("button",{name:"保存作品"})).toHaveAttribute("title","有未保存的修改");
  await user.click(screen.getByRole("button",{name:"保存作品"}));
  expect(body).toBeDisabled();
  expect(screen.getByRole("textbox",{name:"标题"})).toBeDisabled();
@@ -63,6 +87,7 @@ it("统一方向可用键盘展开，候选入口在主工作面且不堆全部�
  const initial:GraphicPostResource={projectId:"p",outputId:"o",targetPlatform:null,artifactId:"artifact",currentVersionId:"v0",versions:[],
   current:{schemaVersion:1,title:"图文",body:"正文",summary:"",tags:[],sourceRefs:[],imageUses:[],ruleSnapshotRef:null}};
  const {container}=render(<GraphicPostWorkbench projectId="p" projectTitle="项目" accountId="a" initial={initial}/>);
+ await openSeries();
  const details=screen.getByText("统一方向与参考，可选").closest('details');
  expect(details).not.toBeNull();
  expect(details).not.toHaveAttribute("open");
@@ -77,6 +102,7 @@ it('画布进入先保存当前输入，然后把真实目标ID传给scoped help
  api.createGraphicPostVersion.mockResolvedValue({versionId:'v1'});api.getGraphicPost.mockResolvedValue({...initial,currentVersionId:'v1'});
  canvas.openGraphicPageCanvas.mockResolvedValue('/canvases/real-canvas?graphicPageContext=handle');
  render(<GraphicPostWorkbench projectId="p" projectTitle="项目" accountId="a" initial={initial}/>);
+ await openSeries();
  fireEvent.change(screen.getByRole('textbox',{name:'图卡1正文'}),{target:{value:'修改后内容'}});
  fireEvent.click(screen.getByRole('button',{name:'进入画布制作这一页'}));
  await waitFor(()=>expect(canvas.openGraphicPageCanvas).toHaveBeenCalledWith({accountId:'a',projectId:'p',outputId:'o',cardId:'real-page'}));
@@ -89,6 +115,7 @@ it('采用回读期间新输入保留；账号/作品切换后的旧保存读回
  let resolveRead!:(value:GraphicPostResource)=>void;
  api.getGraphicPost.mockImplementationOnce(()=>new Promise(resolve=>{resolveRead=resolve;}));
  const {rerender}=render(<GraphicPostWorkbench projectId="p" projectTitle="项目" accountId="a" initial={initial}/>);
+ await openSeries();
  fireEvent.click(screen.getByRole('button',{name:'读取现有候选'}));
  fireEvent.change(screen.getByRole('textbox',{name:'正文'}),{target:{value:'刚输入的新正文'}});
  resolveRead({...initial,currentVersionId:'v1',current:{...initial.current,body:'采用的服务端正文'}});
@@ -114,6 +141,7 @@ it('导出读取精确文件，封面重复文件只导出一次，真实页序�
  URL.createObjectURL=vi.fn(blob=>{archive=blob;return 'blob:archive';});URL.revokeObjectURL=vi.fn();vi.spyOn(HTMLAnchorElement.prototype,'click').mockImplementation(()=>{});
  try{
   render(<GraphicPostWorkbench projectId="p" projectTitle="项目" accountId="a" initial={initial}/>);
+ await openSeries();
   fireEvent.click(screen.getByRole('button',{name:'导出整组'}));await screen.findByText(/已导出 2 张精确图片和配文/);
   expect(read.mock.calls.map(call=>call[0])).toEqual(['http://example.test/file-a.png','http://example.test/file-b.png']);
   const buffer=await new Promise<ArrayBuffer>((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result as ArrayBuffer);reader.onerror=reject;reader.readAsArrayBuffer(archive!);});
@@ -122,4 +150,10 @@ it('导出读取精确文件，封面重复文件只导出一次，真实页序�
   expect(JSON.parse(strFromU8(files['图片顺序.json']!)).map((row:{assetFileId:string})=>row.assetFileId)).toEqual(['file-a','file-b']);
   expect(api.createGraphicPostVersion).not.toHaveBeenCalled();
  }finally{URL.createObjectURL=create;URL.revokeObjectURL=revoke;}
+});
+
+it("图文首次填空脚本信息，保留已有正文，候选入口不藏在逐页设置里",()=>{
+ const initial={projectId:"p",outputId:"o",targetPlatform:null,artifactId:"artifact",currentVersionId:"v0",versions:[],current:{schemaVersion:1 as const,title:"",body:"保留正文",summary:"",tags:[],sourceRefs:[],imageUses:[],ruleSnapshotRef:null},scriptContext:{state:"ready" as const,scriptRef:null,scriptText:"主稿",metadata:{title:"脚本标题",summary:"脚本简介",tags:["标签"]},metadataSource:{kind:"project" as const,projectId:"p",updatedAt:"2026-10-04"}}};
+ render(<GraphicPostWorkbench projectId="p" projectTitle="项目" accountId="a" initial={initial}/>);
+ expect(screen.getByRole("textbox",{name:"标题"})).toHaveValue("脚本标题");expect(screen.getByRole("textbox",{name:"简介或摘要"})).toHaveValue("脚本简介");expect(screen.getByRole("textbox",{name:"标签"})).toHaveValue("标签");expect(screen.getByRole("textbox",{name:"正文"})).toHaveValue("保留正文");expect(screen.getByRole("button",{name:"读取现有候选"})).toBeVisible();
 });

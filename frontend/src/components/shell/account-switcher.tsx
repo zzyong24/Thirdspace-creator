@@ -48,6 +48,7 @@ import {
   listForegroundActivities,
 } from "@/lib/foreground-activity";
 import { cn } from "@/lib/utils";
+import { PLATFORM_LABELS } from "@/features/platform-account/platform-account-labels";
 import {
   Dialog,
   DialogContent,
@@ -126,12 +127,12 @@ export function AccountSwitcher({ collapsed }: { collapsed: boolean }) {
     let alive = true;
     void (async () => {
       try {
-        // 只列抖音号(本期只支持抖音;platform=douyin)。listAccounts 是 user 域内读,
-        // 不需要当前号 —— 即使还没选号也能拉到该 user 的全部抖音号。list op 的 client 返回类型
+        // 列出当前用户所有平台账号。listAccounts 是 user 域内读,
+        // 不需要当前号。list op 的 client 返回类型
         // 推断成单条(本仓 ClientMethod 已知类型缺口),按既有 island 惯例 `as unknown as [] 取。
         const rows = (await client.listAccounts({
           params: undefined,
-          query: { page: 1, pageSize: 100, platform: "douyin" },
+          query: { page: 1, pageSize: 100 },
           body: undefined,
         })) as unknown as ReadonlyArray<{
           readonly id: string;
@@ -246,7 +247,7 @@ export function AccountSwitcher({ collapsed }: { collapsed: boolean }) {
       type="button"
       data-slot="account-switcher-trigger"
       data-testid="account-switcher-trigger"
-      aria-label={`当前抖音号：${triggerLabel}`}
+      aria-label={`当前账号：${triggerLabel}`}
       className={cn(
         "flex cursor-pointer items-center rounded-card border border-border bg-surface text-left transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
         collapsed ? "size-9 justify-center p-0" : "w-full gap-2 px-2.5 py-2",
@@ -262,7 +263,7 @@ export function AccountSwitcher({ collapsed }: { collapsed: boolean }) {
         <>
           <span className="flex min-w-0 flex-1 flex-col">
             <span className="truncate text-[11px] uppercase tracking-wide text-text-subtle">
-              当前抖音号
+              当前账号{current ? ` · ${PLATFORM_LABELS[current.platform] ?? current.platform}` : ""}
             </span>
             <span className="truncate text-sm font-medium text-foreground">
               {triggerLabel}
@@ -295,7 +296,7 @@ export function AccountSwitcher({ collapsed }: { collapsed: boolean }) {
         className="w-60"
         data-testid="account-switcher-menu"
       >
-        <DropdownMenuLabel>切换抖音号</DropdownMenuLabel>
+        <DropdownMenuLabel>切换创作账号</DropdownMenuLabel>
         {state.kind === "error" ? (
           <div
             data-testid="account-switcher-error"
@@ -308,7 +309,7 @@ export function AccountSwitcher({ collapsed }: { collapsed: boolean }) {
             data-testid="account-switcher-empty"
             className="px-2 py-1.5 text-xs text-muted-foreground"
           >
-            还没有绑定抖音号。绑定后即可按号切换工作空间。
+            还没有创作账号。添加后即可按账号切换工作空间。
           </div>
         ) : (
           activeAccounts.map((a) => {
@@ -329,6 +330,7 @@ export function AccountSwitcher({ collapsed }: { collapsed: boolean }) {
                 <span className="min-w-0 flex-1 truncate">
                   {a.accountHandle}
                 </span>
+                <span className="shrink-0 text-xs text-muted-foreground">{PLATFORM_LABELS[a.platform] ?? a.platform}</span>
                 {selected ? (
                   <Check
                     className="size-4 shrink-0 text-brand"
@@ -343,7 +345,7 @@ export function AccountSwitcher({ collapsed }: { collapsed: boolean }) {
         <DropdownMenuItem asChild data-testid="account-switcher-bind">
           <Link href="/accounts" className="flex items-center gap-2">
             <Plus className="size-4 shrink-0" aria-hidden="true" />
-            <span>绑定新抖音号</span>
+            <span>添加创作账号</span>
           </Link>
         </DropdownMenuItem>
       </DropdownMenuContent>
@@ -369,7 +371,7 @@ export function AccountSwitcher({ collapsed }: { collapsed: boolean }) {
           <DialogHeader>
             <DialogTitle>有进行中的操作,切号会离开当前页面</DialogTitle>
             <DialogDescription>
-              切换抖音号 = 切换整个工作区,以下进行中的操作会被打断(后台任务不受影响,完成后仍归原账号):
+              切换账号会切换整个工作区，以下进行中的操作会被打断；后台任务仍归原账号：
             </DialogDescription>
           </DialogHeader>
           {pendingSwitch && pendingSwitch.activities.length > 0 ? (

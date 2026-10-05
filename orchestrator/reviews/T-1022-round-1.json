@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "独立只读评审核对快手官方接口能力、授权及开发者协议。初审指出作品可见性和终页证据未知、OAuth 回调及令牌归属未决定、未经授权浏览器自动采集不可作为替代；修订后复审为设计层 PASS。官方应用审核、scope、回调、真实账号和字段回执尚未具备，快手绑定与采集必须显示 unavailable，不能宣称已接通或已完成真机验收。",
+  "findings": []
+}

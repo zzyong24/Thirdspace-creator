@@ -44,6 +44,18 @@ export enum ErrorCode {
   RetrySourceNotTerminal = "RETRY_SOURCE_NOT_TERMINAL",
   ExecutionClaimInvalid = "EXECUTION_CLAIM_INVALID",
   ModelConfigurationManaged = "MODEL_CONFIGURATION_MANAGED",
+  OutputNotOwned = "OUTPUT_NOT_OWNED",
+  UnsupportedOutputType = "UNSUPPORTED_OUTPUT_TYPE",
+  UnsupportedDeliverable = "UNSUPPORTED_DELIVERABLE",
+  TargetPlatformMismatch = "TARGET_PLATFORM_MISMATCH",
+  OwnerMismatch = "OWNER_MISMATCH",
+  CapabilityUnavailable = "CAPABILITY_UNAVAILABLE",
+  SourceUnavailable = "SOURCE_UNAVAILABLE",
+  CandidateNotReady = "CANDIDATE_NOT_READY",
+  MediaBindingMismatch = "MEDIA_BINDING_MISMATCH",
+  AssetNotConfirmed = "ASSET_NOT_CONFIRMED",
+  VersionConflict = "VERSION_CONFLICT",
+  IdempotencyConflict = "IDEMPOTENCY_CONFLICT",
 }
 
 export const ERROR_HTTP: Record<ErrorCode, number> = {
@@ -67,6 +79,18 @@ export const ERROR_HTTP: Record<ErrorCode, number> = {
   [ErrorCode.RetrySourceNotTerminal]: 409,
   [ErrorCode.ExecutionClaimInvalid]: 400,
   [ErrorCode.ModelConfigurationManaged]: 409,
+  [ErrorCode.OutputNotOwned]: 404,
+  [ErrorCode.UnsupportedOutputType]: 400,
+  [ErrorCode.UnsupportedDeliverable]: 400,
+  [ErrorCode.TargetPlatformMismatch]: 409,
+  [ErrorCode.OwnerMismatch]: 409,
+  [ErrorCode.CapabilityUnavailable]: 503,
+  [ErrorCode.SourceUnavailable]: 424,
+  [ErrorCode.CandidateNotReady]: 409,
+  [ErrorCode.MediaBindingMismatch]: 409,
+  [ErrorCode.AssetNotConfirmed]: 409,
+  [ErrorCode.VersionConflict]: 409,
+  [ErrorCode.IdempotencyConflict]: 409,
 };
 
 // `code` is a free string (domain codes like PROJECT_NOT_FOUND) but every

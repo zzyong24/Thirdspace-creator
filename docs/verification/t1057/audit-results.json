@@ -1,0 +1,26 @@
+[
+  {
+    "i": 0,
+    "chunk_id": "9bfb40",
+    "wall_time_seconds": 0.777729333,
+    "exit_code": 1,
+    "original_token_count": 341,
+    "output": "✗ T-1045: review receipt 已过期：SPEC hash 00947a717d64 != 4a61dd7e0976\nT-1024: review receipt 已过期：constitution hash 已变化\nT-1017: review receipt 已过期：constitution hash 已变化\nT-915: review receipt 已过期：SPEC hash 76d22c886076 != b990a38a0156\nT-859: review receipt 已过期：SPEC hash 4db0a4daa9ba != e6fe3ad73fa9\nT-858: review receipt 已过期：SPEC hash 9027f820a773 != ab768b979e62\nT-824: review receipt 已过期：constitution hash 已变化\nT-819: review receipt 已过期：SPEC hash 4c0f39c41f58 != d89d457083d1\nT-816: review receipt 已过期：SPEC hash b532db470f69 != b9490f4fac3f\nT-768: review receipt 已过期：constitution hash 已变化\nT-726: review receipt 已过期：constitution hash 已变化\nT-703: review receipt 已过期：SPEC hash 6ecdc3a00c87 != 70e49d3ae5a3\nT-691: review receipt 已过期：constitution hash 已变化\nT-694: review receipt 已过期：SPEC hash 678f818f2d18 != 6ea31e784c68\nT-656: review receipt 已过期：constitution hash 已变化\nT-652: 审核列为「待审」；存在未销账问题，不得开工\nT-645: review receipt 已过期：SPEC hash 24659d7d13f3 != c693c9a4ad11\nT-642: 任务 T-642 文档列未链接 receipt 绑定的 SPEC: docs/superpowers/specs/2026-08-01-content-radar-creative-handoff.md\nT-635: review receipt 已过期：constitution hash 已变化\n"
+  },
+  {
+    "i": 1,
+    "chunk_id": "ea2440",
+    "wall_time_seconds": 0.086221042,
+    "exit_code": 0,
+    "original_token_count": 11,
+    "output": "✓ 研究门有效暂停: T-1044, T-1057\n"
+  },
+  {
+    "i": 2,
+    "chunk_id": "84ca2c",
+    "wall_time_seconds": 0.22257375,
+    "exit_code": 0,
+    "original_token_count": 0,
+    "output": ""
+  }
+]

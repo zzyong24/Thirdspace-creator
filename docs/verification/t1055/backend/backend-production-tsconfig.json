@@ -1,0 +1,15 @@
+{
+  "extends": "../backend/tsconfig.json",
+  "include": [
+    "../backend/src/**/*.ts"
+  ],
+  "exclude": [
+    "../backend/src/**/*.test.ts",
+    "../backend/src/**/*.test.tsx"
+  ],
+  "compilerOptions": {
+    "typeRoots": [
+      "../backend/node_modules/@types"
+    ]
+  }
+}

@@ -56,25 +56,39 @@ export function syncCurrentAccountCookie(accountId: string | null): void {
  */
 export function creatorApiHeaders(
   input?: HeadersInit,
+  options: { readonly includeCurrentAccount?: boolean } = {},
 ): Record<string, string> {
   const headers = Object.fromEntries(new Headers(input).entries());
-  const currentAccountId = readCurrentAccountId();
-  syncCurrentAccountCookie(currentAccountId);
   Object.assign(headers, handshakeHeaders());
-  if (currentAccountId) headers["x-account-id"] = currentAccountId;
+  if (options.includeCurrentAccount !== false) {
+    const currentAccountId = readCurrentAccountId();
+    syncCurrentAccountCookie(currentAccountId);
+    if (currentAccountId) headers["x-account-id"] = currentAccountId;
+  } else {
+    delete headers["x-account-id"];
+  }
   return headers;
 }
 
 export function fetchCreatorApi(
   input: RequestInfo | URL,
   init: RequestInit = {},
+  options: { readonly includeCurrentAccount?: boolean } = {},
 ): Promise<Response> {
   return fetch(input, {
     ...init,
-    headers: creatorApiHeaders(init.headers),
+    headers: creatorApiHeaders(init.headers, options),
     credentials: init.credentials ?? "same-origin",
   });
 }
+
+// These operations are user-scoped and validate their target IDs in their own
+// service. A stale current-account selection must not block account recovery
+// or binding another account. Account-owned reads/writes still use the header.
+const USER_SCOPED_OPERATIONS = new Set([
+  "accounts.list", "accounts.create", "accounts.get", "accounts.update", "accounts.archive",
+  "platforms.capabilities.list", "platforms.bind.begin", "platforms.bind.confirm", "platforms.bind.cancel",
+]);
 
 /**
  * [T-332 S3] dispatch 结构化错误的类型化载体。之前只抛裸 Error(message 拼串),调用方
@@ -125,6 +139,8 @@ export function isAccountRequiredError(err: unknown): boolean {
 export function createHttpTransport(baseUrl = "/api/v1"): Transport {
   return {
     async request(endpoint: Endpoint, input) {
+      const forceNewDouyin = endpoint.id === "ingestion.douyin.login" &&
+        (input as { body?: { forceNew?: boolean } } | undefined)?.body?.forceNew === true;
       const res = await fetchCreatorApi(`${baseUrl}/dispatch`, {
         method: "POST",
         headers: { "content-type": "application/json" },
@@ -134,7 +150,7 @@ export function createHttpTransport(baseUrl = "/api/v1"): Transport {
         // auth.
         credentials: "same-origin",
         body: JSON.stringify({ id: endpoint.id, input }),
-      });
+      }, { includeCurrentAccount: !USER_SCOPED_OPERATIONS.has(endpoint.id) && !forceNewDouyin });
       if (!res.ok) {
         // 把后端的错误文案带上。否则前端只看到 "400/409",拿不到 DouyinNotLoggedInError /
         // 阶段交付物缺失 之类的可判定信息 —— 错误处理(未登录引导 / 进入下一步 gate 原因)失效。

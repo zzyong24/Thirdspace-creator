@@ -276,6 +276,18 @@
       "what": "Windows 类型检查子进程默认堆不足造成重复构建失败",
       "check": "node --test tools/windows-closure-rat/build-memory.test.mjs tools/windows-closure-rat/build-production-closure.test.mjs",
       "onFail": "检查实际子进程预算传播；禁止关闭类型检查、无限加内存或污染安装后运行时。"
+    },
+    {
+      "led": "LED-052",
+      "what": "结果按钮提交入口、JSONB键序或整稿版本变化再次阻断独立生成与依次采纳",
+      "check": "pnpm --dir backend exec vitest run src/application/generation/task-wake.test.ts src/application/generation/creative-post.test.ts src/modules/creative-results/creative-results.integration.test.ts src/modules/creative-results/media-adoption.integration.test.ts src/modules/output-scripts/output-scripts.integration.test.ts --maxWorkers=1 --testTimeout=20000 && pnpm --dir frontend exec vitest run src/server/__module_integration__/publication-cover-wiring.persistence-client.test.ts src/features/projects/graphic-post-results.test.tsx src/features/projects/publication-result-actions.test.tsx src/features/article/article-result-actions.test.tsx --maxWorkers=1 --retry=0",
+      "onFail": "普通作品生成走业务准备；聊天任务仍验父回执；快照精确比较忽略对象键序保留数组顺序；独立采纳保留最新其他字段并以真实回执和CAS保存；发布图片接通真实归属端口；同候选排队转完成显示实际内容且保留用户修改。 视频摘要与正式仓库协议一致，回执校验真实候选任务 ID，重复采纳不能覆盖新稿。"
+    },
+    {
+      "led": "LED-053",
+      "what": "原生编辑器覆盖同稿修改、已知冲突不可恢复或迟到导入被误标已保存",
+      "check": "node frontend/scripts/verify-native-editors.mjs && pnpm --dir frontend exec vitest run src/features/reference-editors/native-editor-surface.test.tsx src/features/reference-editors/noterelay/native-bundle.test.ts src/features/reference-editors/noterelay/noterelay-editor.test.tsx src/features/reference-editors/video-reference-workbench.test.tsx src/features/reference-editors/graphic-design-workbench.test.tsx src/features/reference-editors/reference-editor-media.test.ts src/features/article/doocs-article-editor.test.tsx src/features/production/production-editor-entry.test.tsx --retry=0",
+      "onFail": "保留真实稿、原Undo和未知ACK同请求；修完整同稿同步、即时snapshot、409备份读回、回执后后续修改提示、素材精确绑定与可取消Image/引擎等待。实际原引擎/浏览器媒体不能被fixture冒充；不以删正文/合法图层规避。"
     }
   ],
   "program_completion_required": false,
@@ -311,7 +323,11 @@
     "t987-baseline-timing": "node docs/research/t987/verify-baseline.mjs timing",
     "t987-baseline-scope": "node docs/research/t987/verify-baseline.mjs scope",
     "t915-resource-guardian-probe": "node -e \"if(process.platform!=='darwin')process.exit(1)\" && pnpm --filter @creatoros/backend test src/modules/execution/browser-resource-guardian.probe.test.ts",
-    "t988-baseline": "node docs/research/t988/verify-baseline.mjs"
+    "t988-baseline": "node docs/research/t988/verify-baseline.mjs",
+    "t1032-frozen-context": "node docs/research/t1032/verify-evidence.mjs",
+    "t1032-worker-message": "pnpm --dir ai-worker exec vitest run src/execution/structured-worker-generation.test.ts --retry 0 -t \"script.draft 新口播\"",
+    "t1044-native-diagnostic": "node docs/research/t1044/verify-startup.mjs diagnostic",
+    "t1044-native-isolated": "node docs/research/t1044/verify-startup.mjs isolated"
   },
   "execution_mode": "interactive",
   "autonomy_level": "interactive"

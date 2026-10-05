@@ -1,0 +1,675 @@
+diff --git a/frontend/src/features/copilot/assistant-engine.ts b/frontend/src/features/copilot/assistant-engine.ts
+--- a/frontend/src/features/copilot/assistant-engine.ts
++++ b/frontend/src/features/copilot/assistant-engine.ts
+@@ -1,11 +1,45 @@
+-export type AssistantEngine='pi'|'codex';
+-const key='creatoros:assistant-engine:v1';
+-export const assistantEngineEvent='creatoros:assistant-engine-change';
+-export function readAssistantEngine():AssistantEngine{
+- if(typeof window==='undefined')return 'pi';
+- try{return window.localStorage.getItem(key)==='codex'?'codex':'pi';}catch{return 'pi';}
++export type AssistantEngine = "pi" | "codex";
++const key = "creatoros:assistant-engine:v1";
++let sessionFallback: AssistantEngine | null = null;
++export const assistantEngineEvent = "creatoros:assistant-engine-change";
++export const assistantEngineStatusEvent = "creatoros:assistant-engine-status-refresh";
++
++export function readAssistantEngine(): AssistantEngine {
++  if (typeof window === "undefined") return "pi";
++  if (sessionFallback !== null) return sessionFallback;
++  try {return window.localStorage.getItem(key) === "codex" ? "codex" : "pi";}
++  catch {return "pi";}
+ }
+-export function writeAssistantEngine(engine:AssistantEngine){
+- try{window.localStorage.setItem(key,engine);}catch{/* 会话内仍保持用户选择。 */}
+- window.dispatchEvent(new CustomEvent(assistantEngineEvent,{detail:engine}));
++
++export function writeAssistantEngine(engine: AssistantEngine) {
++  if (typeof window === "undefined") return;
++  try {
++    window.localStorage.setItem(key, engine);
++    sessionFallback = null;
++  } catch {
++    // 写入失败也落实当前窗口内的明确选择；刷新后的持久化不能伪装成功。
++    sessionFallback = engine;
++  }
++  window.dispatchEvent(new CustomEvent(assistantEngineEvent, {detail: engine}));
+ }
++
++export function subscribeAssistantEngine(refresh: () => void) {
++  const storage = (event: StorageEvent) => {
++    if (event.key === null || event.key === key) {
++      // 另一个窗口的新选择取代当前窗口保存失败的旧选择。
++      sessionFallback = null;
++      refresh();
++    }
++  };
++  window.addEventListener(assistantEngineEvent, refresh);
++  window.addEventListener("storage", storage);
++  return () => {
++    window.removeEventListener(assistantEngineEvent, refresh);
++    window.removeEventListener("storage", storage);
++  };
++}
++
++/** 设置中的重新检查同时使已打开的编导重新读取真实状态。 */
++export function recheckAssistantEngine() {
++  if (typeof window !== "undefined") window.dispatchEvent(new Event(assistantEngineStatusEvent));
++}
+diff --git a/frontend/src/features/copilot/assistant-engine-selector.tsx b/frontend/src/features/copilot/assistant-engine-selector.tsx
+--- a/frontend/src/features/copilot/assistant-engine-selector.tsx
++++ b/frontend/src/features/copilot/assistant-engine-selector.tsx
+@@ -1,32 +1,24 @@
+-'use client';
+-import * as React from 'react';
+-import {localCodexStatusSchema} from '@creatoros/contract/execution-worker';
+-import {fetchCreatorApi} from '@/lib/http-transport';
+-import {readAssistantEngine,writeAssistantEngine,assistantEngineEvent,type AssistantEngine} from './assistant-engine';
+-export function AssistantEngineSelector({accountId,disabled,onChange}:{accountId:string|null|undefined;disabled:boolean;onChange:(engine:AssistantEngine,available:boolean)=>void}){
+- const [engine,setEngine]=React.useState<AssistantEngine>('pi');
+- const [state,setState]=React.useState<ReturnType<typeof localCodexStatusSchema.parse>|null>(null);
+- const [checking,setChecking]=React.useState(false),[refresh,setRefresh]=React.useState(0);
+- const callback=React.useRef(onChange);callback.current=onChange;
+- React.useEffect(()=>{
+-  const update=()=>setEngine(readAssistantEngine());update();
+-  window.addEventListener(assistantEngineEvent,update);window.addEventListener('storage',update);
+-  return ()=>{window.removeEventListener(assistantEngineEvent,update);window.removeEventListener('storage',update);};
+- },[]);
+- React.useEffect(()=>{
+-  const controller=new AbortController();let current=true;setChecking(true);setState(null);
+-  void fetchCreatorApi('/api/chat/engines',{signal:controller.signal}).then(async response=>{
+-   if(!response.ok)throw Error('status');const result=await response.json() as {engines?:unknown[]};
+-   const parsed=localCodexStatusSchema.safeParse(result.engines?.find(row=>row&&typeof row==='object'&&(row as {engine?:string}).engine==='codex'));
+-   if(!parsed.success)throw Error('status');if(current)setState(parsed.data);
+-  }).catch(()=>{if(current)setState({engine:'codex',installed:false,available:false,version:null,loginStatus:'unchecked',errorCode:'CODEX_STATUS_UNAVAILABLE'});}).finally(()=>{if(current)setChecking(false);});
+-  return ()=>{current=false;controller.abort();};
+- },[accountId,refresh]);
+- const available=engine==='pi'||!!state?.available;
+- React.useEffect(()=>{callback.current(engine,available);},[engine,available]);
+- const status=checking?'正在检查本地 Codex…':state?.available?`本地 Codex 可用${state.version?` · ${state.version}`:''}`:state?.loginStatus==='unauthenticated'?'本地 Codex 尚未登录，请先在 Codex 中登录':state?.errorCode==='CODEX_STATUS_UNAVAILABLE'?'本地 Codex 状态暂未核实':'本地 Codex 当前不可用';
+- return <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+-  <label className="flex items-center gap-2">编导引擎<select aria-label="编导引擎" disabled={disabled} value={engine} onChange={event=>{const selected=event.target.value as AssistantEngine;setEngine(selected);writeAssistantEngine(selected);}} className="rounded-lg border border-border bg-surface px-2 py-1 text-foreground"><option value="pi">CreatorOS</option><option value="codex">本地 Codex</option></select></label>
+-  {engine==='codex'&&<><span role="status">{status}</span><button type="button" disabled={checking||disabled} onClick={()=>setRefresh(value=>value+1)} className="text-brand">重新检查</button></>}
+- </div>;
++"use client";
++
++import {writeAssistantEngine, type AssistantEngine} from "./assistant-engine";
++import {useAssistantEngine} from "./use-assistant-engine";
++
++/** 选择只在设置卡中展示；聊天直接订阅同一偏好和真实可用状态。 */
++export function AssistantEngineSelector() {
++  const {engine, checking, status, recheck} = useAssistantEngine();
++  return <div className="flex w-full flex-col gap-3">
++    <select id="assistant-engine" aria-label="编导引擎" value={engine}
++      onChange={event => writeAssistantEngine(event.target.value as AssistantEngine)}
++      className="h-10 w-full max-w-xs rounded-control border border-border bg-surface px-3 text-sm text-foreground">
++      <option value="pi">CreatorOS</option>
++      <option value="codex">本地 Codex</option>
++    </select>
++    <div className="flex flex-wrap items-center gap-3">
++      <p role="status" className="text-sm text-muted-foreground">{status}</p>
++      {engine === "codex" && <button type="button" disabled={checking} onClick={recheck}
++        className="inline-flex min-h-10 items-center rounded-control border border-border bg-surface px-4 text-sm font-medium text-foreground hover:bg-surface-subtle disabled:opacity-50">
++        重新检查
++      </button>}
++    </div>
++  </div>;
+ }
+diff --git a/frontend/src/features/copilot/use-assistant-engine.ts b/frontend/src/features/copilot/use-assistant-engine.ts
+new file mode 100644
+--- /dev/null
++++ b/frontend/src/features/copilot/use-assistant-engine.ts
+@@ -0,0 +1,78 @@
++"use client";
++
++import * as React from "react";
++import {localCodexStatusSchema} from "@creatoros/contract/execution-worker";
++import {CURRENT_ACCOUNT_KEY, fetchCreatorApi, readCurrentAccountId} from "@/lib/http-transport";
++import {
++  subscribeAssistantEngine,
++  assistantEngineStatusEvent,
++  readAssistantEngine,
++  recheckAssistantEngine,
++} from "./assistant-engine";
++
++type LocalCodexStatus = ReturnType<typeof localCodexStatusSchema.parse>;
++type StatusRead = {key: string; checking: boolean; result: LocalCodexStatus | null};
++
++function subscribeAccount(refresh: () => void) {
++  const storage = (event: StorageEvent) => {
++    if (event.key === null || event.key === CURRENT_ACCOUNT_KEY) refresh();
++  };
++  window.addEventListener("creatoros:accounts-changed", refresh);
++  window.addEventListener("storage", storage);
++  return () => {
++    window.removeEventListener("creatoros:accounts-changed", refresh);
++    window.removeEventListener("storage", storage);
++  };
++}
++
++/** 偏好是原本地真值；状态仍由真实入口读取，界面迁移不创建新的执行器。 */
++export function useAssistantEngine() {
++  const engine = React.useSyncExternalStore(subscribeAssistantEngine, readAssistantEngine, () => "pi" as const);
++  const accountId = React.useSyncExternalStore(subscribeAccount, readCurrentAccountId, () => null);
++  const [refresh, requestRefresh] = React.useReducer(value => value + 1, 0);
++  const [read, setRead] = React.useState<StatusRead | null>(null);
++  const key = JSON.stringify([accountId, engine, refresh]);
++
++  React.useEffect(() => {
++    window.addEventListener(assistantEngineStatusEvent, requestRefresh);
++    return () => window.removeEventListener(assistantEngineStatusEvent, requestRefresh);
++  }, []);
++
++  React.useEffect(() => {
++    if (engine !== "codex") return;
++    const controller = new AbortController();
++    let current = true;
++    void Promise.resolve().then(async () => {
++      if (!current) return;
++      setRead({key, checking: true, result: null});
++      try {
++        const response = await fetchCreatorApi("/api/chat/engines", {signal: controller.signal});
++        if (!response.ok) throw Error("本地编导状态未取得");
++        const body = await response.json() as {engines?: unknown[]};
++        const parsed = localCodexStatusSchema.safeParse(body.engines?.find(
++          row => row && typeof row === "object" && (row as {engine?: string}).engine === "codex",
++        ));
++        if (!parsed.success) throw Error("本地编导状态未取得");
++        if (current) setRead({key, checking: false, result: parsed.data});
++      } catch {
++        if (current) setRead({key, checking: false, result: {
++          engine: "codex", installed: false, available: false, version: null,
++          loginStatus: "unchecked", errorCode: "CODEX_STATUS_UNAVAILABLE",
++        }});
++      }
++    });
++    return () => {current = false; controller.abort();};
++  }, [accountId, engine, key]);
++
++  const result = read?.key === key ? read.result : null;
++  const checking = engine === "codex" && (read?.key !== key || read.checking);
++  const available = engine === "pi" || (!checking && !!result?.available);
++  const status = engine === "pi" ? "使用 CreatorOS 当前模型配置"
++    : checking ? "正在检查本地 Codex…"
++    : result?.available ? `本地 Codex 可用${result.version ? ` · ${result.version}` : ""}`
++    : result?.loginStatus === "unauthenticated" ? "本地 Codex 尚未登录，请先在 Codex 中登录"
++    : result?.errorCode === "CODEX_STATUS_UNAVAILABLE" ? "本地 Codex 状态暂未核实"
++    : "本地 Codex 当前不可用";
++
++  return {engine, accountId, available, checking, status, recheck: recheckAssistantEngine};
++}
+diff --git a/frontend/src/features/copilot/use-assistant-engine.test.tsx b/frontend/src/features/copilot/use-assistant-engine.test.tsx
+new file mode 100644
+--- /dev/null
++++ b/frontend/src/features/copilot/use-assistant-engine.test.tsx
+@@ -0,0 +1,149 @@
++import {StrictMode} from "react";
++import {act, renderHook, waitFor} from "@testing-library/react";
++import {beforeEach, describe, expect, it, vi} from "vitest";
++import {CURRENT_ACCOUNT_KEY} from "@/lib/http-transport";
++import {writeAssistantEngine} from "./assistant-engine";
++import {useAssistantEngine} from "./use-assistant-engine";
++
++const status = (available = true) => new Response(JSON.stringify({engines: [{
++  engine: "codex", installed: true, available, version: "0.159.3", loginStatus: "authenticated",
++}]}), {status: 200});
++const choose = () => window.localStorage.setItem("creatoros:assistant-engine:v1", "codex");
++
++describe("T-1055 共享编导偏好及真实状态", () => {
++  beforeEach(() => writeAssistantEngine("pi"));
++  it("默认 CreatorOS 直接可用，不读取本地 Codex", async () => {
++    const fetch = vi.spyOn(globalThis, "fetch");
++    const {result} = renderHook(() => useAssistantEngine());
++    await act(async () => {});
++    expect(result.current).toMatchObject({engine: "pi", available: true, checking: false});
++    expect(fetch).not.toHaveBeenCalled();
++  });
++
++  it("存量 Codex 偏好从实际 API 读状态，并复用当前账号 header", async () => {
++    choose(); window.localStorage.setItem(CURRENT_ACCOUNT_KEY, "account-a");
++    const fetch = vi.spyOn(globalThis, "fetch").mockResolvedValue(status());
++    const {result} = renderHook(() => useAssistantEngine());
++    expect(result.current).toMatchObject({engine: "codex", available: false, checking: true});
++    await waitFor(() => expect(result.current.available).toBe(true));
++    expect(fetch).toHaveBeenCalledWith("/api/chat/engines", expect.objectContaining({headers: {"x-account-id": "account-a"}, credentials: "same-origin", signal: expect.any(AbortSignal)}));
++    expect(result.current.status).toContain("0.159.3");
++  });
++
++  it("同窗设置变化立即同步，退出 Codex 取消在途状态请求", async () => {
++    const fetch = vi.spyOn(globalThis, "fetch").mockImplementation(() => new Promise(() => {}));
++    const {result} = renderHook(() => useAssistantEngine());
++    act(() => writeAssistantEngine("codex"));
++    await waitFor(() => expect(fetch).toHaveBeenCalledOnce());
++    const signal = fetch.mock.calls[0][1]?.signal;
++    act(() => writeAssistantEngine("pi"));
++    expect(result.current).toMatchObject({engine: "pi", available: true});
++    expect(signal?.aborted).toBe(true);
++  });
++
++  it("跨窗 storage 与账号变更同步；忽略旧账号未遵守取消的晚回执", async () => {
++    choose(); window.localStorage.setItem(CURRENT_ACCOUNT_KEY, "account-a");
++    const pending: Array<(response: Response) => void> = [];
++    const fetch = vi.spyOn(globalThis, "fetch").mockImplementation(() => new Promise(resolve => pending.push(resolve)));
++    const {result} = renderHook(() => useAssistantEngine());
++    await waitFor(() => expect(fetch).toHaveBeenCalledOnce());
++    act(() => {
++      window.localStorage.setItem(CURRENT_ACCOUNT_KEY, "account-b");
++      window.dispatchEvent(new StorageEvent("storage", {key: CURRENT_ACCOUNT_KEY}));
++    });
++    expect(result.current.available).toBe(false);
++    await waitFor(() => expect(fetch).toHaveBeenCalledTimes(2));
++    expect(fetch.mock.calls[0][1]?.signal?.aborted).toBe(true);
++    expect(fetch.mock.calls[1][1]?.headers).toMatchObject({"x-account-id": "account-b"});
++    await act(async () => pending[1](status(false)));
++    expect(result.current.available).toBe(false);
++    await act(async () => pending[0](status(true)));
++    expect(result.current).toMatchObject({accountId: "account-b", available: false});
++    act(() => {
++      window.localStorage.setItem("creatoros:assistant-engine:v1", "pi");
++      window.dispatchEvent(new StorageEvent("storage", {key: "creatoros:assistant-engine:v1"}));
++    });
++    expect(result.current).toMatchObject({engine: "pi", available: true});
++  });
++
++  it("同窗切账号广播重新读取，卸载会取消请求及晚回执", async () => {
++    choose(); window.localStorage.setItem(CURRENT_ACCOUNT_KEY, "account-a");
++    let resolve!: (value: Response) => void;
++    const fetch = vi.spyOn(globalThis, "fetch").mockImplementation(() => new Promise(r => {resolve = r;}));
++    const {result, unmount} = renderHook(() => useAssistantEngine());
++    await waitFor(() => expect(fetch).toHaveBeenCalledOnce());
++    act(() => {
++      window.localStorage.setItem(CURRENT_ACCOUNT_KEY, "account-b");
++      window.dispatchEvent(new CustomEvent("creatoros:accounts-changed"));
++    });
++    await waitFor(() => expect(fetch).toHaveBeenCalledTimes(2));
++    expect(result.current.accountId).toBe("account-b");
++    const signal = fetch.mock.calls[1][1]?.signal;
++    unmount();
++    expect(signal?.aborted).toBe(true);
++    await act(async () => resolve(status()));
++    expect(result.current.available).toBe(false);
++  });
++
++  it("设置重新检查同时刷新打开的聊天，单实例在途请求先取消", async () => {
++    choose();
++    let resolve!: (value: Response) => void;
++    const fetch = vi.spyOn(globalThis, "fetch").mockImplementationOnce(() => new Promise(r => {resolve = r;})).mockImplementation(async () => status());
++    const first = renderHook(() => useAssistantEngine());
++    await waitFor(() => expect(fetch).toHaveBeenCalledOnce());
++    const signal = fetch.mock.calls[0][1]?.signal;
++    const second = renderHook(() => useAssistantEngine());
++    await waitFor(() => expect(second.result.current.available).toBe(true));
++    act(() => second.result.current.recheck());
++    await waitFor(() => expect(fetch).toHaveBeenCalledTimes(4));
++    expect(signal?.aborted).toBe(true);
++    await waitFor(() => expect(first.result.current.available).toBe(true));
++    await act(async () => resolve(status(false)));
++    expect(first.result.current.available).toBe(true);
++  });
++
++  it("真实状态读取失败显示未核实，重新检查可恢复", async () => {
++    choose();
++    const fetch = vi.spyOn(globalThis, "fetch").mockRejectedValueOnce(Error("unavailable")).mockResolvedValue(status());
++    const {result} = renderHook(() => useAssistantEngine());
++    await waitFor(() => expect(result.current.checking).toBe(false));
++    expect(result.current.available).toBe(false);
++    expect(result.current.status).toBe("本地 Codex 状态暂未核实");
++    act(() => result.current.recheck());
++    await waitFor(() => expect(result.current.available).toBe(true));
++    expect(fetch).toHaveBeenCalledTimes(2);
++  });
++
++  it("只写入失败时仍执行会话内选择，另一个窗口的新选择会接管", async () => {
++    const realSetItem = window.localStorage.setItem.bind(window.localStorage);
++    const blockedWrite = vi.spyOn(Object.getPrototypeOf(window.localStorage), "setItem").mockImplementation(() => {throw Error("quota");});
++    vi.spyOn(globalThis, "fetch").mockImplementation(async () => status());
++    const {result} = renderHook(() => useAssistantEngine());
++    act(() => writeAssistantEngine("codex"));
++    expect(blockedWrite).toHaveBeenCalledWith("creatoros:assistant-engine:v1", "codex");
++    await waitFor(() => expect(result.current).toMatchObject({engine: "codex", available: true}));
++    act(() => {
++      realSetItem("creatoros:assistant-engine:v1", "pi");
++      window.dispatchEvent(new StorageEvent("storage", {key: "creatoros:assistant-engine:v1"}));
++    });
++    expect(result.current.engine).toBe("pi");
++  });
++
++  it("不可写的存储仍保留本次会话的真实用户选择", async () => {
++    vi.spyOn(Object.getPrototypeOf(window.localStorage), "setItem").mockImplementation(() => {throw Error("blocked");});
++    vi.spyOn(Object.getPrototypeOf(window.localStorage), "getItem").mockImplementation(() => {throw Error("blocked");});
++    vi.spyOn(globalThis, "fetch").mockResolvedValue(status());
++    const {result} = renderHook(() => useAssistantEngine());
++    act(() => writeAssistantEngine("codex"));
++    await waitFor(() => expect(result.current).toMatchObject({engine: "codex", available: true}));
++    act(() => writeAssistantEngine("pi"));
++    expect(result.current.engine).toBe("pi");
++  });
++
++  it("StrictMode 取消首个挂载请求，不产生重复状态调用", async () => {
++    choose(); const fetch = vi.spyOn(globalThis, "fetch").mockResolvedValue(status());
++    const {result} = renderHook(() => useAssistantEngine(), {wrapper: StrictMode});
++    await waitFor(() => expect(result.current.available).toBe(true));
++    expect(fetch).toHaveBeenCalledOnce();
++  });
++});
+diff --git a/frontend/src/features/copilot/ai-copilot-content.tsx b/frontend/src/features/copilot/ai-copilot-content.tsx
+--- a/frontend/src/features/copilot/ai-copilot-content.tsx
++++ b/frontend/src/features/copilot/ai-copilot-content.tsx
+@@ -1,6 +1,6 @@
+ "use client";
+ 
+-import {AssistantEngineSelector} from "./assistant-engine-selector";
++import {useAssistantEngine} from "./use-assistant-engine";
+ import {getLiveChatSession} from "./live-chat-session";
+ import { ChatToolTrace } from "./chat-tool-trace";
+ import {CanvasChatResult} from "@/features/creative-canvas/canvas-chat-result";
+@@ -792,10 +792,13 @@
+         }
+       : null,
+   });
+-  const sessionAccountId = readCurrentAccountId();
++  const assistantEngine = useAssistantEngine();
++  const sessionAccountId = assistantEngine.accountId;
+   const liveSessionKey = JSON.stringify([sessionAccountId, scope]);
+   const liveSession = getLiveChatSession(liveSessionKey);
+-  const [selectedEngineAvailable,setSelectedEngineAvailable]=React.useState(true);
++  // 新消息取当前设置；sourceEngines 仍冻结旧消息的执行器，transport 不重建。
++  liveSession.executionEngine = assistantEngine.engine;
++  const selectedEngineAvailable = assistantEngine.available;
+   const liveSessionRef = React.useRef(liveSession);
+   liveSessionRef.current = liveSession;
+   // [T-055b] 上下文可摘:用户点掉 chip 后,本面板实例不再注入这份选中态(会话继续,
+@@ -1513,7 +1516,7 @@
+       return;
+     }
+     if(liveSession.executionEngine==="codex"&&attachmentState.ids.length>0){
+-      setComposerLifecycleError("本地 Codex 当前支持文本请求；附件已保留，可选择 CreatorOS 处理附件。");return;
++      setComposerLifecycleError("本地 Codex 当前支持文本请求；附件已保留，请到设置中将编导引擎切换为 CreatorOS 后处理附件。");return;
+     }
+     setComposerLifecycleError(null);
+     requestAttachmentIdsRef.current = [...attachmentState.ids];
+@@ -3119,7 +3122,11 @@
+             className="flex flex-col gap-2.5"
+             data-slot="prompt-form"
+           >
+-            <AssistantEngineSelector accountId={sessionAccountId} disabled={streaming||hasPendingApproval} onChange={(engine,available)=>{liveSession.executionEngine=engine;setSelectedEngineAvailable(available);}} />
++            {assistantEngine.engine === "codex" && !assistantEngine.available && (
++              <p role="status" data-slot="assistant-engine-status" className="text-sm text-muted-foreground">
++                {assistantEngine.status}。<Link href="/settings?highlight=assistant-engine" className="ml-2 text-brand underline underline-offset-4">设置编导引擎</Link>
++              </p>
++            )}
+             {/* @项目引用(T-039b):relative 容器锚定下拉;输入 @ 弹真项目列表,选中插入 chip +
+                 注入 chatContext(等价选中态项目)。下拉在 textarea 上方(bottom-full)。 */}
+             <div className="relative" data-slot="prompt-input-wrap">
+diff --git a/frontend/src/features/copilot/ai-copilot-interactions.test.tsx b/frontend/src/features/copilot/ai-copilot-interactions.test.tsx
+--- a/frontend/src/features/copilot/ai-copilot-interactions.test.tsx
++++ b/frontend/src/features/copilot/ai-copilot-interactions.test.tsx
+@@ -13,6 +13,7 @@
+ import * as React from "react";
+ import { act, cleanup, render, screen, waitFor } from "@testing-library/react";
+ import userEvent from "@testing-library/user-event";
++import {writeAssistantEngine} from "./assistant-engine";
+ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+ 
+ const listTasks = vi.fn();
+@@ -85,6 +86,8 @@
+       control: { fetch: vi.fn(), cancel: vi.fn(async () => {}) },
+       conversationId: null,
+       epoch: 0,
++      executionEngine: "pi",
++      sourceEngines: new Map(),
+       get transport() { return initialChatTransport; },
+       set transport(value: { body?: unknown } | null) { initialChatTransport ??= value; },
+     };
+@@ -171,6 +174,47 @@
+ });
+ 
+ describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
++  it("[T-1055] 编导输入区不显示引擎选择和重查控件", () => {
++    render(<AICopilotContent viewModel={VM} />);
++    expect(screen.queryByRole("combobox", {name: "编导引擎"})).toBeNull();
++    expect(screen.queryByRole("button", {name: "重新检查"})).toBeNull();
++  });
++
++  it("[T-1055] CreatorOS 默认引擎不触发本地 Codex 检测", async () => {
++    const fetchMock = vi.spyOn(globalThis, "fetch").mockRejectedValue(Error("检测替身"));
++    render(<AICopilotContent viewModel={VM} />);
++    await act(async () => {});
++    expect(fetchMock.mock.calls.filter(([input]) => String(input) === "/api/chat/engines")).toHaveLength(0);
++  });
++
++  it("[T-1055] 设置更新同步新请求，既有消息重试保留原引擎且不重建 transport", async () => {
++    vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(JSON.stringify({engines: [{engine: "codex", installed: true, available: true, version: "0.159.3", loginStatus: "authenticated"}]}), {status: 200}));
++    const view = render(<AICopilotContent viewModel={VM} />);
++    const transport = initialChatTransport as unknown as {prepareSendMessagesRequest: (input: Record<string, unknown>) => {body: {executionEngine?: string}}};
++    const prepare = (id: string, trigger = "submit-message") => transport.prepareSendMessagesRequest({body: {}, id: "chat", messages: [{id, role: "user", parts: []}], trigger}).body;
++    expect(prepare("original").executionEngine).toBe("pi");
++    mockStatus = "streaming";
++    view.rerender(<AICopilotContent viewModel={VM} />);
++    act(() => writeAssistantEngine("codex"));
++    await waitFor(() => expect((mockedLiveSession as {executionEngine: string}).executionEngine).toBe("codex"));
++    expect(initialChatTransport).toBe(transport);
++    expect(stop).not.toHaveBeenCalled();
++    expect(prepare("original", "regenerate-message").executionEngine).toBe("pi");
++    expect(prepare("new").executionEngine).toBe("codex");
++  });
++
++  it("[T-1055] Codex 不可用时保留输入并指向真实设置卡", async () => {
++    window.localStorage.setItem("creatoros:assistant-engine:v1", "codex");
++    vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(JSON.stringify({engines: [{engine: "codex", installed: true, available: false, version: null, loginStatus: "unauthenticated"}]}), {status: 200}));
++    const user = userEvent.setup();
++    render(<AICopilotContent viewModel={VM} />);
++    await user.type(screen.getByLabelText("我能帮你做什么"), "保留我的输入");
++    await waitFor(() => expect(screen.getByLabelText("提交提示给 Copilot")).toBeDisabled());
++    expect(screen.getByRole("link", {name: "设置编导引擎"})).toHaveAttribute("href", "/settings?highlight=assistant-engine");
++    expect(screen.getByLabelText("我能帮你做什么")).toHaveValue("保留我的输入");
++    expect(sendMessage).not.toHaveBeenCalled();
++  });
++
+   it("文章配图深链在已有会话仍预填，并提交可信文章与段落锚点", async () => {
+     mockMessages = [{id: "earlier", role: "assistant", parts: [{type: "text", text: "上一轮答复"}]}];
+     mockSearch = "copilot=open&surface=project&fn=material.generate.image&selKind=article_section&selId=section-1" +
+diff --git a/frontend/src/features/settings/assistant-engine-card.tsx b/frontend/src/features/settings/assistant-engine-card.tsx
+new file mode 100644
+--- /dev/null
++++ b/frontend/src/features/settings/assistant-engine-card.tsx
+@@ -0,0 +1,16 @@
++"use client";
++
++import {SectionCard} from "@/components/project/section-card";
++import {AssistantEngineSelector} from "@/features/copilot/assistant-engine-selector";
++import {SettingsFormRow} from "./settings-form-row";
++
++export function AssistantEngineCard() {
++  return <div data-slot="assistant-engine-card" data-highlight="assistant-engine">
++    <SectionCard title="编导引擎" description="设置编导对话使用的引擎，后续新消息按此执行。">
++      <SettingsFormRow label="使用引擎" controlId="assistant-engine"
++        help="本地保存。正在进行的回复和旧消息重试沿用原引擎。">
++        <AssistantEngineSelector />
++      </SettingsFormRow>
++    </SectionCard>
++  </div>;
++}
+diff --git a/frontend/src/features/settings/assistant-engine-card.test.tsx b/frontend/src/features/settings/assistant-engine-card.test.tsx
+new file mode 100644
+--- /dev/null
++++ b/frontend/src/features/settings/assistant-engine-card.test.tsx
+@@ -0,0 +1,39 @@
++import {fireEvent, render, screen, waitFor} from "@testing-library/react";
++import {describe, expect, it, vi} from "vitest";
++import {AssistantEngineCard} from "./assistant-engine-card";
++
++const response = (available = true) => new Response(JSON.stringify({engines: [{
++  engine: "codex", installed: true, available, version: "0.159.3", loginStatus: "authenticated",
++}]}), {status: 200});
++
++describe("T-1055 设置的真实编导引擎卡", () => {
++  it("使用原键保存选择并读取真实 Codex 状态；不需要服务端假偏好", async () => {
++    const fetch = vi.spyOn(globalThis, "fetch").mockResolvedValue(response());
++    const {container} = render(<AssistantEngineCard />);
++    expect(container.querySelector('[data-highlight="assistant-engine"]')).not.toBeNull();
++    const select = screen.getByRole("combobox", {name: "编导引擎"});
++    expect(select).toHaveValue("pi");
++    expect(fetch).not.toHaveBeenCalled();
++    fireEvent.change(select, {target: {value: "codex"}});
++    expect(localStorage.getItem("creatoros:assistant-engine:v1")).toBe("codex");
++    await screen.findByText("本地 Codex 可用 · 0.159.3");
++    expect(screen.getByRole("button", {name: "重新检查"})).toBeEnabled();
++  });
++
++  it("检查中按钮不会并发重复提交，真实失败后允许重查", async () => {
++    localStorage.setItem("creatoros:assistant-engine:v1", "codex");
++    let reject!: (reason: unknown) => void;
++    const fetch = vi.spyOn(globalThis, "fetch").mockImplementationOnce(() => new Promise((_resolve, r) => {reject = r;})).mockResolvedValue(response());
++    render(<AssistantEngineCard />);
++    const recheck = screen.getByRole("button", {name: "重新检查"});
++    expect(recheck).toBeDisabled();
++    await waitFor(() => expect(fetch).toHaveBeenCalledOnce());
++    fireEvent.click(recheck);
++    expect(fetch).toHaveBeenCalledOnce();
++    reject(Error("status read unavailable"));
++    await screen.findByText("本地 Codex 状态暂未核实");
++    fireEvent.click(recheck);
++    await screen.findByText("本地 Codex 可用 · 0.159.3");
++    expect(fetch).toHaveBeenCalledTimes(2);
++  });
++});
+diff --git a/frontend/src/features/settings/settings-model-region.tsx b/frontend/src/features/settings/settings-model-region.tsx
+--- a/frontend/src/features/settings/settings-model-region.tsx
++++ b/frontend/src/features/settings/settings-model-region.tsx
+@@ -4,6 +4,7 @@
+ 
+ import { ChannelConfigRetryButton } from "@/components/shell/channel-config-bootstrap";
+ import { cn } from "@/lib/utils";
++import { AssistantEngineCard } from "./assistant-engine-card";
+ import { ModelConfigTransferCard } from "./model-config-transfer-card";
+ import { ModelConfigurationManual } from "./model-configuration-manual";
+ 
+@@ -58,6 +59,7 @@
+       data-slot="settings-rail"
+       className="flex flex-col gap-card-gap"
+     >
++      <AssistantEngineCard />
+       {modelAuthority?.authority === "channel" ||
+         !viewModel.model.hasSecret ? (
+         <div
+diff --git a/frontend/src/features/settings/settings-interactive-region.tsx b/frontend/src/features/settings/settings-interactive-region.tsx
+--- a/frontend/src/features/settings/settings-interactive-region.tsx
++++ b/frontend/src/features/settings/settings-interactive-region.tsx
+@@ -188,6 +188,7 @@
+ // stepKey(或缺省 highlight)→ 无副作用(不切页签、不报错)。
+ const HIGHLIGHT_TAB: Record<string, string> = {
+   "redfox": "data-services",
++  "assistant-engine": "models",
+   "text-model": "models",
+   "image-model": "models",
+   "video-model": "models",
+diff --git a/frontend/src/features/settings/settings-interactive-region.test.tsx b/frontend/src/features/settings/settings-interactive-region.test.tsx
+--- a/frontend/src/features/settings/settings-interactive-region.test.tsx
++++ b/frontend/src/features/settings/settings-interactive-region.test.tsx
+@@ -1472,6 +1472,16 @@
+     await new Promise((r) => setTimeout(r, 0));
+   }
+ 
++  it("[T-1055] assistant-engine 深链落模型页并定位真实引擎卡", async () => {
++    mockSearchParams = new URLSearchParams("highlight=assistant-engine");
++    const doc = renderDialog();
++    await flushRaf();
++    const card = doc.querySelector('[data-highlight="assistant-engine"]');
++    expect(card).not.toBeNull();
++    expect(doc.querySelector('[data-slot="settings-panel"][data-tab-id="models"]')).toHaveAttribute("data-active", "true");
++    expect(screen.getByRole("combobox", {name: "编导引擎"})).toBeInTheDocument();
++  });
++
+   it("highlight=text-model → 滚动到文本模型配置卡并加高亮 ring", async () => {
+     mockSearchParams = new URLSearchParams("highlight=text-model");
+     const doc = renderDialog();
+diff --git a/frontend/src/features/draft-workbench/draft-workbench-page.tsx b/frontend/src/features/draft-workbench/draft-workbench-page.tsx
+--- a/frontend/src/features/draft-workbench/draft-workbench-page.tsx
++++ b/frontend/src/features/draft-workbench/draft-workbench-page.tsx
+@@ -11,7 +11,6 @@
+  */
+ 
+ import * as React from "react";
+-import Link from "next/link";
+ 
+ import { CoverThumb } from "@/components/resources/cover-thumb";
+ import { ScriptRichEditor } from "@/features/script/script-rich-editor";
+@@ -44,6 +43,9 @@
+ 
+ export function DraftWorkbenchPage({ vm }: { vm: DraftWorkbenchVm }) {
+   const { project, script, scriptArtifactId, thesis, outputId, publishPack, projectCoverAssetId, publishUnlocked, blindPrediction, ammo, scriptReview } = vm;
++  const hasTranscribeAction = Boolean(project.douyinExternalId && project.transcriptState !== "done");
++  const isPublished = publishPack?.outputPublished ?? publishPack?.status === "published";
++  const hasTopbarContent = project.imported || hasTranscribeAction || isPublished;
+   const radarDraftSeed = vm.radarDraftSeed ?? "";
+   const seedHtml = radarDraftSeed
+     .split(/\n+/)
+@@ -75,14 +77,11 @@
+     >
+       {/* ── 顶条(T-075 收窄:标题与阶段条由 shell project-workspace header 统一提供;
+           [T-076] 阶段条两段化「脚本|复盘」,主行动按发布态收敛)。 ── */}
+-      <header
++      {hasTopbarContent && <header
+         data-slot="draft-topbar"
+         className="flex shrink-0 flex-wrap items-center gap-x-4 gap-y-2 border-b border-border bg-surface px-5 py-2"
+       >
+         <div className="ml-auto flex shrink-0 items-center gap-2.5">
+-          <Link href={`/projects/${encodeURIComponent(project.id)}?view=works`} className="rounded-md border border-border bg-surface px-3 py-1.5 text-xs font-medium text-foreground hover:bg-surface-subtle">
+-            项目作品与创作
+-          </Link>
+           {project.imported ? (
+             <span
+               data-slot="draft-imported-badge"
+@@ -101,13 +100,10 @@
+           {/* [T-076 gate-F1] 未发布 → null(顶条只剩 Finder);已发布 → 「看复盘 →」。 */}
+           <DraftPrimaryAction
+             projectId={project.id}
+-            published={
+-              publishPack?.outputPublished ??
+-              publishPack?.status === "published"
+-            }
++            published={isPublished}
+           />
+         </div>
+-      </header>
++      </header>}
+ 
+       {/* ── 主体:左稿面 + 右对话位 ──
+           [T-108] DraftChatRequestProvider 包住左稿面 + 右 rail:左稿面的 AI 按钮(盲预测/审核)
+diff --git a/frontend/src/features/draft-workbench/draft-workbench-page.bug8.test.tsx b/frontend/src/features/draft-workbench/draft-workbench-page.bug8.test.tsx
+--- a/frontend/src/features/draft-workbench/draft-workbench-page.bug8.test.tsx
++++ b/frontend/src/features/draft-workbench/draft-workbench-page.bug8.test.tsx
+@@ -449,3 +449,32 @@
+     ).toBeNull();
+   });
+ });
++
++
++describe("DraftWorkbenchPage — T-1055 顶条仅保留真实动作", () => {
++  it("普通未发布稿删除重复入口及整个空顶条", () => {
++    const {container} = render(<DraftWorkbenchPage vm={baseVm()} />);
++    expect(screen.queryByRole("link", {name: "项目作品与创作"})).toBeNull();
++    expect(container.querySelector('[data-slot="draft-topbar"]')).toBeNull();
++  });
++  it("导入徽标仍在真实顶条，重复入口不出现", () => {
++    const original = baseVm();
++    const vm = baseVm({project: {...original.project, imported: true}});
++    const {container} = render(<DraftWorkbenchPage vm={vm} />);
++    expect(container.querySelector('[data-slot="draft-topbar"]')).not.toBeNull();
++    expect(screen.getByText("真实导入作品")).toBeTruthy();
++    expect(screen.queryByRole("link", {name: "项目作品与创作"})).toBeNull();
++  });
++  it("真实逐字稿任务和已发布复盘顶条保留", () => {
++    const original = baseVm();
++    const vm = baseVm({project: {...original.project, douyinExternalId: "douyin-1", transcriptState: "queued"}});
++    const {container} = render(<DraftWorkbenchPage vm={vm} />);
++    expect(container.querySelector('[data-slot="draft-topbar"] [data-slot="mock-transcribe-now"]')).not.toBeNull();
++  });
++  it("明确未发布不会被旧 published 包状态误判", () => {
++    const vm = baseVm({publishPack: {publicationId: "pub-1", platform: "douyin", status: "published", outputPublished: false,
++      publishedAt: null, title: "标题", description: "简介", tags: [], hasCover: false, coverAssetId: null}});
++    const {container} = render(<DraftWorkbenchPage vm={vm} />);
++    expect(container.querySelector('[data-slot="draft-topbar"]')).toBeNull();
++  });
++});

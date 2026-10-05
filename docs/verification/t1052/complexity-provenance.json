@@ -1,0 +1,59 @@
+[
+  {
+    "file": "frontend/package.json",
+    "category": "os_signing",
+    "priorMatches": [
+      {
+        "line": 41,
+        "text": "\"desktop:codesign\": \"node scripts/desktop/codesign.mjs\","
+      }
+    ],
+    "currentSha256": "38dabc96e3de289edbebd0beafdd454aef26033946ec15401a6b45d7dbd51432"
+  },
+  {
+    "file": "pnpm-lock.yaml",
+    "category": "runtime",
+    "priorMatches": [
+      {
+        "line": 850,
+        "text": "engines: {bun: '>=1', deno: '>=2.7.10', node: '>=16'}"
+      },
+      {
+        "line": 4605,
+        "text": "bun-types: '*'"
+      },
+      {
+        "line": 4653,
+        "text": "bun-types:"
+      },
+      {
+        "line": 4700,
+        "text": "engines: {bun: '>=1', deno: '>=2', node: '>=16'}"
+      },
+      {
+        "line": 5435,
+        "text": "is-bun-module@2.0.0:"
+      },
+      {
+        "line": 12303,
+        "text": "is-bun-module: 2.0.0"
+      },
+      {
+        "line": 13079,
+        "text": "is-bun-module@2.0.0:"
+      }
+    ],
+    "currentSha256": "7a84f8cb7c4932df4d7e9929ad4f042efd2bfe5280b2a89c4110e09e9d87882d"
+  },
+  {
+    "file": "reference-editors/README.md",
+    "category": "runtime",
+    "priorMatches": [
+      {
+        "line": 17,
+        "text": "快图需要 Node 与公开 pnpm8.15.9；OpenCut 需要 Bun，实测 Bun1.4.0。上游细节在各目录 README。程序不下载上游云素材；预览图来源保留于归档。工作台及 MPL/LGPL 对应源同时放在 frontend/public/reference-editors/sources，应用许可页可直接取得。"
+      }
+    ],
+    "currentSha256": "5acbb3d9fadb852c54fd2b81e35b3cea2755952426733b4bc633d050c7223320"
+  }
+]

@@ -19,6 +19,8 @@ export interface ChatToolLabel {
 
 /** 全部 chatbox 白名单工具的中文名 + 一句话用途。 */
 export const CHAT_TOOL_LABELS: Readonly<Record<string, ChatToolLabel>> = {
+  "canvas.read": {name:"读取当前画布",purpose:"读取明确选中的画布节点、连接和保存版本"},
+  "canvas.propose": {name:"保存画布建议",purpose:"保存待用户检查和应用的画布候选操作"},
   "history.read": { name: "读取对话原文", purpose: "按页读回本轮已冻结的历史消息" },
   "tool.result.read": { name: "继续读取执行结果", purpose: "分页读取已完成工具的原始回执，不重复执行" },
   "skill.read": { name: "读取执行方法", purpose: "按需读取本轮 Skill 方法与后续页面" },

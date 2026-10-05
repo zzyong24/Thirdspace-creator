@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/docs/verification/t1053/native-http-resources.py", line 7, in <module>
+    native=manifest[editor]['native']; count=0
+           ~~~~~~~~^^^^^^^^
+KeyError: 'doocs-md'

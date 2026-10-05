@@ -11,7 +11,7 @@ export const chatHostContextSchema = z.object({
   schemaVersion: z.literal(1),
   chatContext: z.object({
     surface: id, functionKey: z.string().optional(), webReadUrl: z.string().optional(), projectId: id.nullable().optional(),
-    selection: z.object({kind:id,ids:z.array(id),label:z.string().optional(),artifactId:id.optional(),versionId:id.optional(),sectionIndex:z.number().int().nonnegative().optional(),excerpt:z.string().optional()}).strict().optional(),
+    selection: z.object({kind:id,ids:z.array(id),label:z.string().optional(),artifactId:id.optional(),outputId:id.optional(),versionId:id.optional(),sectionIndex:z.number().int().nonnegative().optional(),excerpt:z.string().optional()}).strict().optional(),
     assetAliases:z.record(z.string(),id).optional(),diagnosticRef:z.string().optional(),
   }).strict(),
   mediaRoute: z.discriminatedUnion("kind", [z.object({kind:z.literal("douyin.share"),shareInput:z.string(),transcribe:z.boolean()}).strict(),z.object({kind:z.literal("cover.reference")}).strict(),z.object({kind:z.literal("cover.publication_reference")}).strict()]).nullable(),

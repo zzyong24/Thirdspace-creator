@@ -162,3 +162,9 @@ CREATE TABLE IF NOT EXISTS production_render_requests (
 );
 CREATE UNIQUE INDEX IF NOT EXISTS production_render_requests_request_ux ON production_render_requests(production_id,request_id);
 `;
+
+export const productionMediaRequests=pgTable("production_media_requests",{
+ id:text("id").primaryKey(),userId:text("user_id").notNull(),accountId:text("account_id").notNull(),outputId:text("output_id").notNull(),
+ requestId:text("request_id").notNull(),requestDigest:text("request_digest").notNull(),kind:text("kind").notNull(),
+ frozenInput:jsonb("frozen_input").notNull(),taskId:text("task_id"),createdAt:text("created_at").notNull(),
+},t=>[uniqueIndex("production_media_requests_scope_ux").on(t.userId,t.accountId,t.outputId,t.requestId)]);

@@ -6,13 +6,13 @@
  * 读三样真值再交给 ProductionWorkbench 客户端岛:
  *   - 口播稿:稿面同一读路径(resolveScriptArtifactIdFromDb → loadScriptEditorData
  *     的 sections 投影拼纯文本)—— 提词展示 + SRT 相似度校验的基准;
- *   - 项目首个产出 outputId(没有 → null,岛内状态机接线时懒建);
+ *   - 当前选定视频产出 outputId(没有 → null,岛内状态机接线时懒建);
  *   - production 状态 + 已登记分场数(outputs.production.get 是 get-or-create,
  *     首访即落一行 drafting —— 与后端注释语义一致)。
  * 任何读失败诚实降级(null / 0),页面不炸。
  */
 
-import { ProductionWorkbench } from "@/features/production/production-workbench";
+import { ProductionEditorEntry } from "@/features/production/production-editor-entry";
 import Link from "next/link";
 import { selectProductionOutput,resolveProductionScriptArtifactId,type ProductionOutputRef } from "@/features/production/production-output-data";
 import {
@@ -132,7 +132,7 @@ export default async function ProductionRoute({ params,searchParams }: Productio
   if (!session) {
     // SSR 兜底(未登录/测试):渲染诚实空态的工作台,不 301、不编数据。
     return (
-      <ProductionWorkbench
+      <ProductionEditorEntry
         projectId={param}
         projectTitle=""
         scriptText={null}
@@ -223,7 +223,7 @@ export default async function ProductionRoute({ params,searchParams }: Productio
   }
 
   return (
-    <ProductionWorkbench
+    <ProductionEditorEntry
       projectId={projectId}
       projectTitle={project?.title ?? ""}
       scriptText={scriptText}

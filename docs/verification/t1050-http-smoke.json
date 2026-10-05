@@ -1,0 +1,43 @@
+{
+  "timestamp": "2026-10-03T08:42:20.029Z",
+  "environment": "隔离本地 PGlite；未访问真实工作数据库",
+  "accountId": "acct-ef4eab23-41",
+  "accountHandle": "网页体验测试账号（未授权平台）",
+  "projectId": "project-ef4eab23-44",
+  "outputTypes": [
+    "article",
+    "image",
+    "video"
+  ],
+  "outputCount": 3,
+  "retrySameIds": true,
+  "missingAccountStatus": 428,
+  "pages": [
+    {
+      "tab": "article",
+      "status": 200,
+      "path": "/projects/project-ef4eab23-44/article?outputId=output-ef4eab23-55"
+    },
+    {
+      "tab": "image",
+      "status": 200,
+      "path": "/projects/project-ef4eab23-44/outputs/output-ef4eab23-64/image"
+    },
+    {
+      "tab": "script",
+      "status": 200,
+      "path": "/projects/project-ef4eab23-44/outputs/output-ef4eab23-73/video"
+    },
+    {
+      "tab": "production",
+      "status": 200,
+      "path": "/projects/project-ef4eab23-44/production?outputId=output-ef4eab23-73"
+    }
+  ],
+  "visualAcceptance": "待用户实测，不冒充 HTTP 200 为 UI PASS",
+  "finalLayoutReadback": {
+    "method": "getProject直读后的四工作台HTTP200，真实workOutputs仍传给shell",
+    "status": "passed",
+    "note": "Python默认代理502，禁用环境代理后loopback直读正常；不是产品HTTP失败"
+  }
+}

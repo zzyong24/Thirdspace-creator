@@ -1,0 +1,10 @@
+{
+  "url": "http://127.0.0.1:4318/projects",
+  "status": 200,
+  "sha256": "ab879b78c5c50ea5f5864c4c135a63d7167c880bd78d9b5535c62b4e476feec4",
+  "direct_creation_present": true,
+  "new_project_present": true,
+  "bytes": 172655,
+  "transport": "direct localhost",
+  "first_system_proxy_status": 502
+}

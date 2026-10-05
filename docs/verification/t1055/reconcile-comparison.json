@@ -1,0 +1,8 @@
+{
+  "prior": "35 errors / 1 warning",
+  "current": "35 error(s), 1 warning(s).",
+  "added": [],
+  "removed": [],
+  "unchangedCount": 35,
+  "note": "最后 Worker 增量、流程登记与预算登记后完整重跑；原全局债务保留，未降低门卫。真实浏览器/模型仍待验。"
+}

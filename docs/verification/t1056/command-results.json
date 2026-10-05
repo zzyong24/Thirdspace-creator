@@ -1,0 +1,41 @@
+{
+  "components": {
+    "command": "pnpm --dir frontend exec vitest run src/features/article/article-workbench.test.tsx src/features/article/article-workbench-save-race.test.tsx src/features/projects/graphic-post-workbench.test.tsx src/features/projects/graphic-post-results.test.tsx src/features/reference-editors/noterelay/noterelay-editor.test.tsx",
+    "exitCode": 0,
+    "files": 5,
+    "tests": 54
+  },
+  "led047_native": {
+    "exitCode": 0,
+    "files": 10,
+    "tests": 172
+  },
+  "frontend_typecheck": {
+    "command": "pnpm --dir frontend exec tsc --noEmit",
+    "exitCode": 0
+  },
+  "pmem_sync": {
+    "exitCode": 0
+  },
+  "boundary": {
+    "exitCode": 1,
+    "existingRootCauseTask": "T-1026"
+  },
+  "orphan": {
+    "exitCode": 0
+  },
+  "governance": {
+    "exitCode": 0,
+    "errors": 0
+  },
+  "browserVisual": {
+    "state": "pending",
+    "reason": "沿此前限制未运行浏览器自动化；组件和HTTP不等于视觉验收。"
+  },
+  "reconcile": {
+    "command": "node orchestrator/process/reconcile.mjs",
+    "exitCode": 1,
+    "summary": "35 error(s), 1 warning(s).",
+    "addedErrors": 0
+  }
+}

@@ -36,7 +36,9 @@ const PLATFORM_OPTIONS: ReadonlyArray<{ id: string; label: string }> = [
   { id: "douyin", label: "抖音" },
   { id: "bilibili", label: "B 站" },
   { id: "xiaohongshu", label: "小红书" },
+  { id: "kuaishou", label: "快手" },
   { id: "wechatVideo", label: "视频号" },
+  { id: "wechatOfficialAccount", label: "微信公众号" },
   { id: "youtube", label: "YouTube" },
   { id: "x", label: "X" },
 ];

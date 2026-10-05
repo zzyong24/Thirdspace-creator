@@ -1,0 +1,54 @@
+[
+  {
+    "file": "sources/noterelay/source.zip",
+    "httpStatus": 200
+  },
+  {
+    "file": "noterelay/native/THIRD_PARTY_NOTICES.md",
+    "httpStatus": 200
+  },
+  {
+    "file": "sources/doocs-md/native-source.tar.gz",
+    "httpStatus": 200
+  },
+  {
+    "file": "sources/doocs-md/native-patches.diff",
+    "httpStatus": 200
+  },
+  {
+    "file": "doocs-md/native/native-build-graph.json",
+    "httpStatus": 200
+  },
+  {
+    "file": "sources/opencut-classic/native-source.tar.gz",
+    "httpStatus": 200
+  },
+  {
+    "file": "sources/opencut-classic/native-patches.diff",
+    "httpStatus": 200
+  },
+  {
+    "file": "opencut-classic/native/THIRD_PARTY_LICENSES.txt",
+    "httpStatus": 200
+  },
+  {
+    "file": "sources/mediabunny-source.tar.gz",
+    "httpStatus": 200
+  },
+  {
+    "file": "sources/soundtouch-source.tar.gz",
+    "httpStatus": 200
+  },
+  {
+    "file": "sources/kuaitu/native-source.tar.gz",
+    "httpStatus": 200
+  },
+  {
+    "file": "sources/kuaitu/native-patches.diff",
+    "httpStatus": 200
+  },
+  {
+    "file": "kuaitu/native/THIRD_PARTY_NOTICES.txt",
+    "httpStatus": 200
+  }
+]

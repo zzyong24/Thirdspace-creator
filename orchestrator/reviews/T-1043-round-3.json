@@ -1,0 +1,35 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "recheck",
+  "summary": "第三轮增量复核未发现新的关键问题。新增五工作面合同保留原完整稿面并处理无稿、单稿、多稿及旧深链；output_version 以不可变 owner 版本作为来源。REV-001 保持已解决。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "resolved",
+      "severity": "major",
+      "category": "correctness",
+      "requirement_anchor": {
+        "id": "FR-1043-3",
+        "quote": "公共 outputs.conversions.create 输入 sourceOutputId、sourceVersionId、目标类型、可选目标平台、模式 whole/selected、选定 sourceSectionIds/字段、明确复用的 assetId+assetFileId、固定 clientRequestId"
+      },
+      "acceptance_anchor": {
+        "id": "AC-1043-4",
+        "quote": "同请求丢回执和重复刷新无新增目标/任务"
+      },
+      "where": "转换请求创建目标 output 的幂等与并发边界",
+      "failure_mode": "SPEC 声称“公共创建沿既有 output 的 clientRequestId 幂等”，但当前三类目标并无统一保证：video 分支的 projects.outputs.create transport 没有把 clientRequestId 传给 ProjectsService，ProjectsService.createOutput 也不接收或持久化该键，重试会再建一条视频；article 虽按 clientRequestId 找旧 anchor，却不比较标题、平台等完整请求摘要，同键异输入会静默返回旧文章；只有 graphic-post 已有完整 digest、事务和并发 winner。转换在“目标已建立、模型回执未补”或并发重试窗口中因此可能产生重复目标，或把新转换错误绑定到旧文章，无法满足同请求只恢复原 target/result/task。",
+      "evidence_kind": "deterministic-check",
+      "evidence_ref": "contract/src/operations/projects.ts:120-136；backend/src/modules/projects/projects.transport.ts:300-334；backend/src/modules/projects/projects.service.ts:204-209,1443-1475；backend/src/modules/articles/articles.service.ts:127-143；backend/src/modules/graphic-posts/graphic-posts.service.ts:169-204",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "在转换合同中明确并验收三类目标创建的共同后置条件：转换派生的稳定创建键必须端到端传入并持久化；同账号、同键、同完整创建摘要返回同一 targetOutputId，异摘要冲突，并发只有一个 winner。video 需补齐 transport/service/存储链，article 需比较完整摘要并处理并发 winner，graphic-post 保留现有 digest+事务语义；目标创建后再以同一转换请求恢复原 result/task。",
+      "resolution_evidence": "SPEC-LINE:46:e556b07f6add8e8a 明确转换派生的稳定创建键必须由 transport 端到端传入并持久化，同账号、同键、同完整创建摘要返回原 targetOutputId，异摘要冲突，并发只有一个 winner；同时逐类规定 video 补齐 transport/service/持久化、article 比较完整摘要并恢复并发 winner、graphic-post 保留既有事务语义，随后用同一 result 请求账本恢复原 result/task。",
+      "parent_id": "",
+      "threat_model_id": ""
+    }
+  ]
+}

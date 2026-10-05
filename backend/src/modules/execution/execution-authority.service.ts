@@ -28,6 +28,8 @@ export function createExecutionAuthorityService(db: Db, deps: {now?: () => strin
           eq(aiTasks.id, aiTaskId), eq(aiTasks.userId, ctx.userId), eq(aiTasks.accountId, accountId),
         )).for("update");
         if (!task) throw new OwnershipError("AI task not found");
+        if(task.taskType==="asset.asr"&&!prepared&&!task.executionTaskId)throw new ConflictError("资产ASR必须冻结原输入与预算后绑定");
+        if(prepared?.modelInput.kind==="asset.asr"&&(task.taskType!=="asset.asr"||!isDeepStrictEqual(task.inputData,prepared.modelInput)))throw new ConflictError("资产ASR准备输入与原业务任务不符");
         if (prepared?.modelInput.kind === "model.structured" && (prepared.modelInput.skillSnapshot.userId !== task.userId || prepared.modelInput.skillSnapshot.accountId !== task.accountId)) throw new OwnershipError("Skill snapshot owner mismatch");
         if (prepared && prepared.requestFingerprint !== task.requestFingerprint) throw new ConflictError("准备输入与原任务指纹不符");
         const browserGrant = prepared?.modelInput.kind === "agentic.run" ? assertFrozenBrowserTaskGrant(task, prepared.modelInput.browserAuthorization) : null;

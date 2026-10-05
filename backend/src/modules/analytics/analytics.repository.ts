@@ -367,7 +367,7 @@ export function createAnalyticsRepository(
         const key = `${row.publicationId}|${day}`;
         if (byPubDay.has(key)) continue;
         const m = (row.rawMetrics ?? {}) as Record<string, unknown>;
-        byPubDay.set(key, numOf(m, "views") || numOf(m, "plays"));
+        byPubDay.set(key, m.views == null ? numOf(m, "plays") : numOf(m, "views"));
         daysSeen.add(day);
       }
       const sorted = [...daysSeen].sort().slice(-days - 1); // 多取一天做差分基线
@@ -487,10 +487,10 @@ export function createAnalyticsRepository(
 
       // 数据底座(SPEC §1.4):播放量在真采集与演示 fixture 里键名不同 —— 真实抖音
       //   ingestion(douyin-cdp toMetricRecords)写 `views`,演示 fixture 写 `plays`。读侧
-      //   归一:优先取真采集的 `views`,缺失再回退 fixture 的 `plays`(单值取大于 0 者,
-      //   二者本不并存)。其余键(likes/comments/shares/favorites)两侧一致,不需归一。
+      //   归一:优先取真采集的 `views`,仅缺失时回退 fixture 的 `plays`。
+      //   真值 0 不能被 `||` 当作缺失；其余键两侧一致。
       const playsOf = (m: Record<string, unknown>): number =>
-        num(m, "views") || num(m, "plays");
+        m.views == null ? num(m, "plays") : num(m, "views");
 
       for (const snap of latest) {
         const m = (snap.rawMetrics ?? {}) as Record<string, unknown>;

@@ -69,13 +69,15 @@ export interface ArtifactRepository {
   seedVersions(rows: ArtifactVersionRow[]): Promise<void>;
   seedRelations(rows: ArtifactRelationRow[]): Promise<void>;
   listByProject(projectId: string): Promise<ArtifactRow[]>;
-  requireArtifact(artifactId: string): Promise<ArtifactRow>;
+  requireArtifact(artifactId: string, forUpdate?: boolean): Promise<ArtifactRow>;
   create(input: {
     projectId: string;
     title: string;
     artifactType: string;
     stage: string;
     contentOutputId?: string | null;
+    initialContentData?: Record<string, unknown>;
+    initialContentText?: string;
     origin?: "user" | "reconstructed";
   }): Promise<ArtifactRow>;
   createVersion(
@@ -94,6 +96,7 @@ export interface ArtifactRepository {
     },
   ): Promise<ArtifactVersionRow>;
   listVersions(artifactId: string): Promise<ArtifactVersionRow[]>;
+  getVersionByAdoptionKey(artifactId: string, adoptionKey: string): Promise<ArtifactVersionRow | null>;
   getVersion(versionId: string): Promise<ArtifactVersionRow>;
   restore(
     artifactId: string,
@@ -139,8 +142,8 @@ export function createArtifactRepository(
   // 所有 owned-root 读/更新点复用它;子表经 requireArtifact 透传继承。
   const accountGate = eq(artifacts.accountId, deps.accountId);
 
-  async function requireArtifact(artifactId: string): Promise<ArtifactRow> {
-    const rows = await db
+  async function requireArtifact(artifactId: string, forUpdate?: boolean): Promise<ArtifactRow> {
+    const query = db
       .select()
       .from(artifacts)
       .where(
@@ -150,6 +153,7 @@ export function createArtifactRepository(
           accountGate,
         ),
       );
+    const rows = await (forUpdate ? query.for("update") : query);
     const row = rows[0];
     // Cross-user / unknown id is indistinguishable (foundation §2: 404, never
     // reveal existence) → OwnershipError.
@@ -255,7 +259,8 @@ export function createArtifactRepository(
         updatedAt: now,
       });
       const version = await insertVersion(artifactId, 1, {
-        contentText: "",
+        contentText: input.initialContentText ?? "",
+        contentData: input.initialContentData ?? {},
         changeSummary: "初稿",
       });
       await db
@@ -372,6 +377,14 @@ export function createArtifactRepository(
         .from(artifactVersions)
         .where(eq(artifactVersions.artifactId, artifactId))
         .orderBy(asc(artifactVersions.versionNumber));
+    },
+
+    async getVersionByAdoptionKey(artifactId, adoptionKey) {
+      await requireArtifact(artifactId);
+      const [version] = await db.select().from(artifactVersions).where(and(
+        eq(artifactVersions.artifactId, artifactId), eq(artifactVersions.adoptionKey, adoptionKey),
+      )).limit(1);
+      return version ?? null;
     },
 
     async getVersion(versionId) {

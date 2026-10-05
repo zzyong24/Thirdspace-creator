@@ -197,6 +197,10 @@ export const videoRenderTalkingHead = z.object({
   /** 粗剪人物视频时长(秒)= 成片总时长。 */
   durationSec: z.number().positive(),
   hasAudio: z.boolean().default(true),
+  /** 服务端按冻结主轨编译；每个实例使用独立媒体挂载，保留源音画偏移。 */
+  clips: z.array(z.object({clipId:z.string().min(1),file:z.string().min(1),
+    startSec:z.number().nonnegative(),endSec:z.number().positive(),sourceInSec:z.number().nonnegative(),hasAudio:z.boolean()}).strict()
+    .refine(c=>c.endSec>c.startSec)).min(1).optional(),
 });
 export type VideoRenderTalkingHead = z.infer<typeof videoRenderTalkingHead>;
 
@@ -332,6 +336,7 @@ const cardBase = {
   id: z.string().min(1).optional(),
   /** 出现时刻(绝对秒)。 */
   at: z.number().nonnegative(),
+  endSec: z.number().positive().optional(),
   /** [T-295] 动画意图(决策层可选产出;缺省 template 按 kind 派生富动画)。 */
   motion: videoCardMotion.optional(),
   /** [T-794] AI 已声明的内容关系与原文部件；渲染器不得二次猜语义。 */
@@ -508,6 +513,7 @@ export const videoRenderBroll = z.object({
   file: z.string().min(1),
   /** 展示时长(秒);缺省播到所属场景结束。 */
   durationSec: z.number().positive().optional(),
+  mediaStartSec: z.number().nonnegative().optional(),
   /** 画面上的证据标签(禁内部词)。 */
   label: z.string().min(1),
   /** 大幅展示(证据主角);否则中幅卡。 */

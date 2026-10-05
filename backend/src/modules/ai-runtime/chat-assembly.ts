@@ -13,6 +13,7 @@ import type { AssembleChatDeps } from './chat-assembly-types';
 import { formatVerbatimSourceInventory, type CopilotMediaRoute } from './chat-assembly-context';
 import { createChatAssemblyToolDeps } from './chat-assembly-tool-deps';
 const SKILL_PRIMARY_CAPABILITY: Record<string, string> = {
+    "chatbox.canvas":"topic.generate",
     "chatbox.topic": "topic.generate",
     "chatbox.calibration": "calibration.diagnose",
     "chatbox.positioning": "positioning.generate",
@@ -149,8 +150,11 @@ export async function prepareChatAssembly(ctx: RequestContext, chatContext: Chat
         : chatContext.functionKey === "material.generate.video"
             ? "video"
             : undefined;
+    const isArticleImageAction = forcedMaterialKind === "image" && chatContext.selection?.kind === "article_section";
     const forcedToolSequence = mediaRoute?.kind === "cover.publication_reference"
         ? ["context.publications", "cover.generate"]
+        : isArticleImageAction
+            ? ["material.generate"]
         : forcedMaterialKind && chatContext.projectId
             ? ["context.artifact.text", "material.generate"]
             : undefined;
@@ -199,6 +203,7 @@ export async function prepareChatAssembly(ctx: RequestContext, chatContext: Chat
         !baseAllowed.includes(effectiveFunctionKey)
         ? [...baseAllowed, effectiveFunctionKey]
         : baseAllowed;
+    if (isArticleImageAction) allowedNames = ["material.generate"];
     if (routedTool && !allowedNames.includes(routedTool)) {
         allowedNames = [...allowedNames, routedTool];
     }
@@ -208,6 +213,8 @@ export async function prepareChatAssembly(ctx: RequestContext, chatContext: Chat
     if (!hasTrustedScriptPatchAnchor && !hasContextualScriptPatch) {
         allowedNames = allowedNames.filter((name) => name !== "script.patch");
     }
+    // 原无画布上下文的合法聊天保留其工具定义；新画布工具只在受信单画布入口可见。
+    if(chatContext.surface!=="canvas"||chatContext.selection?.kind!=="canvas"||chatContext.selection.ids.length!==1){allowedNames=allowedNames.filter(name=>name!=="canvas.read"&&name!=="canvas.propose");}
     const preferredTools = applyFunctionKey(hasEffectiveScope ? getEffectiveTools(skillId) : getTools(skillId), effectiveFunctionKey).filter((n) => allowedNames.includes(n));
     const toolWhitelist = isScriptPatchAction
         ? ["script.patch"]
@@ -300,7 +307,9 @@ export async function prepareChatAssembly(ctx: RequestContext, chatContext: Chat
     const currentProjectBlock = chatContext.projectId
         ? [
             `【当前项目 —— 你正在为这一个具体项目编导,projectId="${chatContext.projectId}"${currentProjectTitle ? `,标题《${currentProjectTitle}》` : ""}】`,
-            `先调 context.project.lifecycle 读取这个项目从选题卡、稿件、素材、封面、发布、指标、审核到复盘的真状态；需要正文时再调 context.artifact.text,需要审核命中项时调 context.review.report。以上工具都使用可信 projectId="${chatContext.projectId}"。`,
+            isArticleImageAction
+                ? "本轮只为工作台选中的公众号文章段落生成图片候选；执行端会按当前账号重读文章版本、段落正文和视觉简报。不要读取或引用同项目的视频 output_script。"
+                : `先调 context.project.lifecycle 读取这个项目从选题卡、稿件、素材、封面、发布、指标、审核到复盘的真状态；需要正文时再调 context.artifact.text,需要审核命中项时调 context.review.report。以上工具都使用可信 projectId="${chatContext.projectId}"。`,
             `你已经知道这条内容的 projectId 了,**绝不要用 context.projects 列出全站项目去找这一条**——那是全账号清单,不是当前项目。`,
         ].join("\n")
         : "";
@@ -332,7 +341,7 @@ export async function prepareChatAssembly(ctx: RequestContext, chatContext: Chat
         "用户要求原文不改/一字不改/逐字写入时，必须使用 script.draft 的 verbatim 模式与受信 sourceRef；禁止把原文压缩进 extraBrief 后交给写稿模型重写。权限归属、隐私安全、外部发布、破坏性操作、事实不可伪造和候选确认门仍然 fail-closed。",
         "用户可能在一条消息里先交代视频状态、操作背景，再紧接着粘贴完整稿件。仅收到稿件时先正常回应，不自动创建候选；等用户明确要求写入后，稿面只收稿件正文。必须由你理解“对助手说的话”和“面向视频观众的稿件”并用 startAnchor / endAnchor 选择边界，不能把对话说明一起写入，也不能漏掉说明结束后的第一句稿件开场；代码只负责按你选定的精确边界恢复原字符。",
     ].join("\n");
-    const currentScriptPriorityBlock = chatContext.projectId
+    const currentScriptPriorityBlock = chatContext.projectId && !isArticleImageAction
         ? [
             "【当前确认稿优先级】",
             "当用户问当前稿的内容、结构、时长，或要做单段改写、配图、信息卡、封面时，必须先调用 context.artifact.text 读取 output_script 的 currentVersionId 真值。工具返回的 truthPriority=current_confirmed_script、版本、contentHash 与 sections 是‘这条内容现在在说什么’的第一内容真相。",
@@ -346,7 +355,15 @@ export async function prepareChatAssembly(ctx: RequestContext, chatContext: Chat
     // [T-386] 后台任务状态真值块(recentTasks 上方已 best-effort 读取;空列表 → 空串不注)。
     const taskTruthBlock = formatRecentTasksBlock(recentTasks, Date.now());
     const methodCatalogBlock = skillLibrary?.catalog ?? "";
-    const system = isScriptPatchAction
+    const system = isArticleImageAction
+        ? [
+            "【公众号文章段落配图专用回合】",
+            "用户已从文章工作台选定一个真实段落。立即调用 material.generate，kind=image，mediaKind=illustration；只填写画面方案，目标文章和段落由服务端当前真值绑定。不要调用 context.artifact.text，不要读取或引用视频脚本，不要用截图、精确数字图表或假界面冒充事实证据。候选图需用户审看并确认后才会用于文章。",
+            currentProjectBlock,
+            selectionBlock,
+            USER_FACING_RESPONSE_POLICY,
+          ].filter(Boolean).join("\n\n")
+        : isScriptPatchAction
         ? [
             "【局部改稿专用回合】",
             "用户已明确选中一个现有脚本段落。只根据用户本轮修改要求重写该段；不得改动、重写或补写其他段落，也不得要求用户提供 artifactId、versionId、sectionId 等技术字段。",
@@ -393,6 +410,8 @@ export async function prepareChatAssembly(ctx: RequestContext, chatContext: Chat
     // 命中真工具时强制本轮调它,防模型把卡当文本吐 + 谎称已渲卡(弱 tool-calling 模型的常态)。
     const forcedTool = forcedToolSequence?.[0] && toolWhitelist.includes(forcedToolSequence[0])
         ? forcedToolSequence[0]
+        : chatContext.surface==="canvas"&&chatContext.selection?.kind==="canvas"&&chatContext.selection.ids.length===1&&toolWhitelist.includes("canvas.read")
+            ? "canvas.read"
         : routedTool && toolWhitelist.includes(routedTool)
             ? routedTool
             : effectiveFunctionKey && effectiveFunctionKey !== "material.gather" && toolWhitelist.includes(effectiveFunctionKey)

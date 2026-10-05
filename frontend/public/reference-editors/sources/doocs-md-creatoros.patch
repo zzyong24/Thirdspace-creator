@@ -1,0 +1,470 @@
+diff --git a/apps/web/src/App.vue b/apps/web/src/App.vue
+index 619d36b..24a89c6 100644
+--- a/apps/web/src/App.vue
++++ b/apps/web/src/App.vue
+@@ -11,8 +11,7 @@ const uiStore = useUIStore()
+ const { isDark } = storeToRefs(uiStore)
+ 
+ usePlatformEnv()
+-useAccountSyncBootstrap()
+-useDeepLinkImport()
++// No account, cloud sync, or deep-link data is enabled in the CreatorOS embed.
+ useCommandPaletteHotkey()
+ usePreferencesHotkey()
+ </script>
+diff --git a/apps/web/src/bootstrap.ts b/apps/web/src/bootstrap.ts
+index 34a13fa..62e2335 100644
+--- a/apps/web/src/bootstrap.ts
++++ b/apps/web/src/bootstrap.ts
+@@ -7,6 +7,7 @@ import { initStorage } from '@/storage'
+ import { useLocaleStore } from '@/stores/locale'
+ 
+ import AppRoot from './App.vue'
++import { installCreatorOSBridge } from './creatoros-bridge'
+ import { scheduleInitialLoaderFallback } from './lib/bootstrap/dismiss-initial-loader'
+ import { setupComponents } from './lib/bootstrap/setup-components'
+ 
+@@ -23,5 +24,6 @@ export async function bootstrap(): Promise<void> {
+   app.use(createPinia())
+   useLocaleStore()
+   app.mount(`#app`)
++  installCreatorOSBridge()
+   scheduleInitialLoaderFallback()
+ }
+diff --git a/apps/web/src/components/editor/EditorPanel.vue b/apps/web/src/components/editor/EditorPanel.vue
+index 73dc084..fa78c5d 100644
+--- a/apps/web/src/components/editor/EditorPanel.vue
++++ b/apps/web/src/components/editor/EditorPanel.vue
+@@ -25,7 +25,6 @@ import { useRenderStore } from '@/stores/render'
+ import { useThemeStore } from '@/stores/theme'
+ import { useUIStore } from '@/stores/ui'
+ 
+-const SidebarAIToolbar = defineAsyncComponent(() => import('@/components/ai/SidebarAIToolbar.vue'))
+ const SlashCommandMenu = defineAsyncComponent(() => import('@/components/editor/SlashCommandMenu.vue'))
+ const SearchTab = defineAsyncComponent(() => import('@/components/ui/search-tab/SearchTab.vue'))
+ 
+@@ -693,11 +692,6 @@ defineExpose({
+       @execute="(cmd) => codeMirrorView && executeSlashCommand(codeMirrorView, cmd)"
+       @close="closeSlashMenu()"
+     />
+-    <SidebarAIToolbar
+-      v-if="showAIToolbox"
+-      :is-mobile="isMobile"
+-      :show-editor="showEditor"
+-    />
+ 
+     <EditorContextMenu>
+       <div
+diff --git a/apps/web/src/creatoros-bridge.ts b/apps/web/src/creatoros-bridge.ts
+new file mode 100644
+index 0000000..39c9f24
+--- /dev/null
++++ b/apps/web/src/creatoros-bridge.ts
+@@ -0,0 +1,104 @@
++import type { ThemeName, PerThemeSettings } from '@md/shared/configs'
++import { usePostStore } from '@/stores/post'
++import { useEditorStore } from '@/stores/editor'
++import { useThemeStore } from '@/stores/theme'
++import { useCssEditorStore } from '@/stores/cssEditor'
++import { getHtmlContent } from '@/services/export/html-content'
++import { EXPORT_LAYOUT_CSS } from '@/services/export/apply-export-layout'
++import { getStylesToAdd, SHARE_SHELL_VARS_CSS } from '@/services/export/share-styles'
++
++const CHANNEL = 'creatoros-doocs'
++const COMMIT = 'a7c17fc4cda92e3c13aa7e24f06615cfa4219b31'
++const imageUrls = new Map<string, string>()
++let parentOrigin = ''
++function imageKey(assetId: string, fileId: string): string { return `${assetId}:${fileId}` }
++
++export function resolveCreatorOSImages(markdown: string): string {
++  return markdown.replace(/src=(['"])creatoros-asset:([^:\s'"]+):([^\s'"]+)\1/g, (_match, quote: string, assetId: string, fileId: string) => {
++    const blobUrl = imageUrls.get(imageKey(assetId, fileId))
++    return blobUrl ? `src=${quote}${blobUrl}${quote}` : `src=${quote}creatoros-asset:${assetId}:${fileId}${quote}`
++  })
++}
++
++export function installCreatorOSBridge(): void {
++  const postStore = usePostStore()
++  const editorStore = useEditorStore()
++  const themeStore = useThemeStore()
++  const cssStore = useCssEditorStore()
++  let sessionId = ''
++  let initialized = false
++  let lastState = ''
++  const send = (type: string, body: Record<string, unknown> = {}) => window.parent.postMessage({ channel: CHANNEL, type, ...(sessionId ? { sessionId } : {}), ...body }, parentOrigin || '*')
++  const currentLayout = () => ({
++    schemaVersion: 1, editor: 'doocs-md', editorCommit: COMMIT,
++    themeId: String(themeStore.theme),
++    themeSettings: JSON.parse(JSON.stringify(themeStore.themeSettings[themeStore.theme] ?? {})),
++    customCss: cssStore.getCurrentTabContent(),
++    exportOptions: { useIndent: Boolean(themeStore.isUseIndent), useJustify: Boolean(themeStore.isUseJustify) },
++  })
++  const applyLayout = (layout: any) => {
++    if (!layout) return
++    if (layout.themeId) themeStore.theme = layout.themeId as ThemeName
++    if (layout.themeId && layout.themeSettings) themeStore.themeSettings = { ...themeStore.themeSettings, [layout.themeId as ThemeName]: layout.themeSettings as PerThemeSettings }
++    if (typeof layout.customCss === 'string') {
++      const tab = cssStore.cssContentConfig.tabs[0]
++      if (tab) { tab.content = layout.customCss; cssStore.cssContentConfig.active = tab.id; cssStore.setCssEditorValue(layout.customCss) }
++    }
++    if (layout.exportOptions) { themeStore.isUseIndent = layout.exportOptions.useIndent; themeStore.isUseJustify = layout.exportOptions.useJustify }
++    void themeStore.applyCurrentTheme()
++  }
++  const applyDocument = (document: { markdown: string; layout: any }) => {
++    applyLayout(document.layout)
++    const post = postStore.currentPost
++    if (post) postStore.updatePostContent(post.id, document.markdown)
++    editorStore.importContent(document.markdown)
++    lastState = ''
++  }
++  window.addEventListener('message', (event: MessageEvent) => {
++    if (event.source !== window.parent) return
++    const message = event.data
++    if (!message || message.channel !== CHANNEL || typeof message.type !== 'string') return
++    if (message.type === 'init') {
++      if (initialized || typeof message.nonce !== 'string' || message.nonce.length < 16 || event.origin === 'null') return
++      parentOrigin = event.origin
++      sessionId = String(message.sessionId || '')
++      if (!sessionId || !message.document || typeof message.document.markdown !== 'string') return
++      initialized = true
++      applyDocument(message.document)
++      send('initialized', { nonce: message.nonce })
++      return
++    }
++    if (!initialized || event.origin !== parentOrigin || message.sessionId !== sessionId) return
++    if (message.type === 'set-document' && typeof message.document?.markdown === 'string') applyDocument(message.document)
++    if (message.type === 'asset' && typeof message.assetId === 'string' && typeof message.assetFileId === 'string' && message.blob instanceof Blob) {
++      const key = imageKey(message.assetId, message.assetFileId)
++      const prior = imageUrls.get(key)
++      if (prior) URL.revokeObjectURL(prior)
++      imageUrls.set(key, URL.createObjectURL(message.blob))
++      const post = postStore.currentPost
++      if (post) editorStore.importContent(post.content)
++    }
++    if (message.type === 'export-html' && typeof message.nonce === 'string') {
++      void (async () => {
++        const styles = await getStylesToAdd()
++        const html = `<style>${SHARE_SHELL_VARS_CSS}</style>${styles}<style>${EXPORT_LAYOUT_CSS}</style><div id="output">${getHtmlContent({ staticLayout: true })}</div>`
++        send('export-html', { nonce: message.nonce, html, bindings: [...imageUrls].map(([key, url]) => ({ key, url })) })
++      })().catch(() => send('export-html', { nonce: message.nonce, error: '公众号 HTML 生成失败，请先确认编辑器预览正常。' }))
++    }
++  })
++  send('ready')
++  window.setInterval(() => {
++    if (!initialized) return
++    const markdown = editorStore.getContent()
++    const layout = currentLayout()
++    const state = JSON.stringify([markdown, layout])
++    if (state === lastState) return
++    lastState = state
++    send('changed', { markdown, layout })
++  }, 500)
++  window.addEventListener('pagehide', () => {
++    for (const url of imageUrls.values()) URL.revokeObjectURL(url)
++    imageUrls.clear()
++    initialized = false
++  }, { once: true })
++}
+diff --git a/apps/web/src/services/share/client.ts b/apps/web/src/services/share/client.ts
+index 0f7fcd0..3ff8f9a 100644
+--- a/apps/web/src/services/share/client.ts
++++ b/apps/web/src/services/share/client.ts
+@@ -16,10 +16,7 @@ export function isShareProUser(user: Pick<AccountUser, `plan` | `planExpiresAt`>
+ 
+ /** Whether to show share entry in UI. */
+ export function isShareUiEnabled(): boolean {
+-  const flag = import.meta.env.VITE_SHARE_UI_ENABLED
+-  if (flag === `false` || flag === `0`)
+-    return false
+-  return isShareConfigured()
++  return false
+ }
+ 
+ export function getSharePageUrl(id: string): string {
+diff --git a/apps/web/src/services/sync/client.ts b/apps/web/src/services/sync/client.ts
+index 15726f6..2316d77 100644
+--- a/apps/web/src/services/sync/client.ts
++++ b/apps/web/src/services/sync/client.ts
+@@ -11,10 +11,7 @@ export function isSyncConfigured(): boolean {
+ 
+ /** Whether to show cloud sync entry in UI. */
+ export function isSyncUiEnabled(): boolean {
+-  const flag = import.meta.env.VITE_SYNC_UI_ENABLED
+-  if (flag === `false` || flag === `0`)
+-    return false
+-  return isSyncConfigured()
++  return false
+ }
+ 
+ export class SyncClient extends MdApiClient {
+diff --git a/apps/web/src/storage/engine.ts b/apps/web/src/storage/engine.ts
+index 5124443..389ba9e 100644
+--- a/apps/web/src/storage/engine.ts
++++ b/apps/web/src/storage/engine.ts
+@@ -2,6 +2,8 @@
+  * Storage engine interface — fully async with sync read cache after initStorage preload.
+  */
+ export interface StorageEngine {
++  /** Volatile engines must never mirror pending data into localStorage. */
++  volatile?: boolean
+   get: (key: string) => Promise<string | null>
+   set: (key: string, value: string) => Promise<void>
+   remove: (key: string) => Promise<void>
+diff --git a/apps/web/src/storage/engines/memory.ts b/apps/web/src/storage/engines/memory.ts
+new file mode 100644
+index 0000000..d59dbd6
+--- /dev/null
++++ b/apps/web/src/storage/engines/memory.ts
+@@ -0,0 +1,16 @@
++import type { StorageEngine } from '@/storage/engine'
++
++/** Product embed mode: process-memory only; parent CreatorOS owns durable state. */
++export class MemoryStorageEngine implements StorageEngine {
++  readonly volatile = true
++  private values = new Map<string, string>()
++
++  supportsSyncRead(): boolean { return true }
++  getSync(key: string): string | null { return this.values.get(key) ?? null }
++  async get(key: string): Promise<string | null> { return this.getSync(key) }
++  async set(key: string, value: string): Promise<void> { this.values.set(key, value) }
++  async remove(key: string): Promise<void> { this.values.delete(key) }
++  async has(key: string): Promise<boolean> { return this.values.has(key) }
++  async clear(): Promise<void> { this.values.clear() }
++  async keys(): Promise<string[]> { return [...this.values.keys()] }
++}
+diff --git a/apps/web/src/storage/index.ts b/apps/web/src/storage/index.ts
+index ee0f6f0..53b9cd5 100644
+--- a/apps/web/src/storage/index.ts
++++ b/apps/web/src/storage/index.ts
+@@ -1,5 +1,6 @@
+ import { getMeta, setMeta } from '@/storage/db'
+ import { IndexedDBEngine } from '@/storage/engines/indexed-db'
++import { MemoryStorageEngine } from '@/storage/engines/memory'
+ import { LEGACY_EMOJI_PACK_KEY, LOCALSTORAGE_CLEANED_KEY, MIGRATION_V1_KEY } from '@/storage/keys'
+ import { store } from '@/storage/manager'
+ import {
+@@ -8,14 +9,14 @@ import {
+   migrateLegacyThemeSettings,
+   migrateMpProfile,
+ } from '@/storage/migrate/from-local-storage'
+-import { documentRepo, setUseLegacyDocumentStorage } from '@/storage/repositories/documents'
++import { documentRepo, setMemoryDocumentStorage, setUseLegacyDocumentStorage } from '@/storage/repositories/documents'
+ 
+ export type { StorageEngine } from '@/storage/engine'
+ export { IndexedDBEngine, LocalStorageEngine, RestfulStorageEngine } from '@/storage/engines/indexed-db'
+ export { store } from '@/storage/manager'
+ export { clearCacheStore } from '@/storage/migrate/from-local-storage'
+ export { addPrefix } from '@/storage/prefix'
+-export { documentRepo, getLoadedDocuments, isUsingLegacyDocumentStorage } from '@/storage/repositories/documents'
++export { documentRepo, getLoadedDocuments, isUsingLegacyDocumentStorage, isMemoryDocumentStorage } from '@/storage/repositories/documents'
+ export {
+   isStorageQuotaError,
+   parseStoredValue,
+@@ -43,6 +44,15 @@ export function initStorage(): Promise<void> {
+     return readyPromise
+ 
+   readyPromise = (async () => {
++    if (window.location.pathname.includes(`/reference-editors/doocs-md/`)) {
++      setUseLegacyDocumentStorage(false)
++      setMemoryDocumentStorage(true)
++      store.setEngine(new MemoryStorageEngine())
++      await documentRepo.loadAll()
++      initComplete = true
++      return
++    }
++
+     if (typeof indexedDB === `undefined`) {
+       await initLegacyFallback(`IndexedDB unavailable`)
+       return
+diff --git a/apps/web/src/storage/manager.ts b/apps/web/src/storage/manager.ts
+index 8806844..91ad280 100644
+--- a/apps/web/src/storage/manager.ts
++++ b/apps/web/src/storage/manager.ts
+@@ -69,6 +69,8 @@ class StorageManager {
+    * nothing is pending). Called on pagehide and after each successful flush.
+    */
+   private refreshPagehideBackup(): void {
++    if (this.engine.volatile)
++      return
+     if (typeof localStorage === `undefined`)
+       return
+     try {
+diff --git a/apps/web/src/storage/repositories/documents.ts b/apps/web/src/storage/repositories/documents.ts
+index f1379f5..21d883c 100644
+--- a/apps/web/src/storage/repositories/documents.ts
++++ b/apps/web/src/storage/repositories/documents.ts
+@@ -39,6 +39,8 @@ function fromStored(doc: StoredDocument): Post {
+ 
+ let cachedPosts: Post[] | null = null
+ let useLegacyStorage = false
++let useMemoryStorage = false
++let memoryPosts: Post[] = []
+ let writeQueue: Promise<void> = Promise.resolve()
+ 
+ /** Fallback to localStorage bundle when IndexedDB is unavailable. */
+@@ -46,6 +48,14 @@ export function setUseLegacyDocumentStorage(enabled: boolean): void {
+   useLegacyStorage = enabled
+ }
+ 
++export function setMemoryDocumentStorage(enabled: boolean): void {
++  useMemoryStorage = enabled
++  memoryPosts = []
++  cachedPosts = null
++}
++
++export function isMemoryDocumentStorage(): boolean { return useMemoryStorage }
++
+ export function isUsingLegacyDocumentStorage(): boolean {
+   return useLegacyStorage
+ }
+@@ -115,6 +125,8 @@ async function savePostIndexedDB(post: Post): Promise<void> {
+ }
+ 
+ async function loadStoredPosts(): Promise<Post[]> {
++  if (useMemoryStorage)
++    return memoryPosts
+   if (useLegacyStorage)
+     return loadFromLegacy()
+   const db = await getDatabase()
+@@ -156,6 +168,11 @@ export const documentRepo = {
+     if (cachedPosts)
+       return cachedPosts
+ 
++    if (useMemoryStorage) {
++      cachedPosts = [...memoryPosts]
++      return cachedPosts
++    }
++
+     const backup = peekDocumentsPagehideBackup()
+     if (backup) {
+       cachedPosts = await restorePagehideBackup(backup)
+@@ -176,6 +193,15 @@ export const documentRepo = {
+   async savePost(post: Post): Promise<void> {
+     return runSerialized(async () => {
+       try {
++        if (useMemoryStorage) {
++          const all = cachedPosts ?? []
++          const index = all.findIndex(item => item.id === post.id)
++          if (index < 0) all.push(post)
++          else all[index] = post
++          memoryPosts = [...all]
++          cachedPosts = all
++          return
++        }
+         if (useLegacyStorage) {
+           const all = cachedPosts ?? await this.loadAll()
+           const idx = all.findIndex(p => p.id === post.id)
+@@ -200,6 +226,11 @@ export const documentRepo = {
+   async saveAll(posts: Post[]): Promise<void> {
+     return runSerialized(async () => {
+       try {
++        if (useMemoryStorage) {
++          memoryPosts = [...posts]
++          cachedPosts = memoryPosts
++          return
++        }
+         if (useLegacyStorage) {
+           await saveAllLegacy(posts)
+           return
+@@ -217,6 +248,11 @@ export const documentRepo = {
+ 
+   async deletePost(id: string): Promise<void> {
+     return runSerialized(async () => {
++      if (useMemoryStorage) {
++        memoryPosts = (cachedPosts ?? memoryPosts).filter(post => post.id !== id)
++        cachedPosts = memoryPosts
++        return
++      }
+       if (useLegacyStorage) {
+         const all = (cachedPosts ?? await this.loadAll()).filter(p => p.id !== id)
+         await saveAllLegacy(all)
+@@ -231,6 +267,11 @@ export const documentRepo = {
+ 
+   async clear(): Promise<void> {
+     return runSerialized(async () => {
++      if (useMemoryStorage) {
++        memoryPosts = []
++        cachedPosts = []
++        return
++      }
+       if (useLegacyStorage) {
+         await store.remove(LEGACY_POSTS_KEY)
+         cachedPosts = []
+diff --git a/apps/web/src/stores/post.ts b/apps/web/src/stores/post.ts
+index 77858e6..aaadbc2 100644
+--- a/apps/web/src/stores/post.ts
++++ b/apps/web/src/stores/post.ts
+@@ -5,7 +5,7 @@ import { t } from '@/i18n/translate'
+ import { debounce } from '@/lib/debounce'
+ import { normalizePostHistory, toStoredDateTime } from '@/lib/format/datetime'
+ import { postSignature } from '@/lib/post-signature'
+-import { documentRepo, getLoadedDocuments, store } from '@/storage'
++import { documentRepo, getLoadedDocuments, isMemoryDocumentStorage, store } from '@/storage'
+ import { addPrefix } from '@/storage/prefix'
+ import { clearDocumentsPagehideBackup, writeDocumentsPagehideBackup } from '@/storage/repositories/documents-backup'
+ import { useEditorStore } from '@/stores/editor'
+@@ -85,9 +85,9 @@ export const usePostStore = defineStore(`post`, () => {
+     dirtyPostIds.clear()
+     const snapshot = [...posts.value]
+     // IndexedDB writes may not finish before a tab is killed (OAuth redirect).
+-    const backupToken = writeDocumentsPagehideBackup(snapshot)
++    const backupToken = isMemoryDocumentStorage() ? null : writeDocumentsPagehideBackup(snapshot)
+     await documentRepo.saveAll(snapshot)
+-    clearDocumentsPagehideBackup(backupToken)
++    if (backupToken) clearDocumentsPagehideBackup(backupToken)
+   }
+ 
+   // Watching per-post signatures instead of a deep watch on `posts`: the
+diff --git a/apps/web/src/stores/render.ts b/apps/web/src/stores/render.ts
+index 064f9d8..97a9b2b 100644
+--- a/apps/web/src/stores/render.ts
++++ b/apps/web/src/stores/render.ts
+@@ -5,6 +5,7 @@ import { resolveAssetUrl } from '@/services/emoji/urlResolver'
+ import { useCustomComponentStore } from './customComponent'
+ import { useThemeStore } from './theme'
+ import { useUIStore } from './ui'
++import { resolveCreatorOSImages } from '@/creatoros-bridge'
+ 
+ export interface RenderOptions {
+   themeMode?: 'light' | 'dark'
+@@ -145,7 +146,7 @@ export const useRenderStore = defineStore(`render`, () => {
+       assetResolver: resolveAssetUrl,
+     })
+ 
+-    const { html: baseHtml, readingTime: readingTimeResult } = renderMarkdown(content, renderer)
++    const { html: baseHtml, readingTime: readingTimeResult } = renderMarkdown(resolveCreatorOSImages(content), renderer)
+ 
+     readingTime.chars = content.length
+     readingTime.words = readingTimeResult.words
+diff --git a/apps/web/vite.config.ts b/apps/web/vite.config.ts
+index 5bf31ea..e629bac 100644
+--- a/apps/web/vite.config.ts
++++ b/apps/web/vite.config.ts
+@@ -9,7 +9,6 @@ import { visualizer } from 'rollup-plugin-visualizer'
+ import AutoImport from 'unplugin-auto-import/vite'
+ import Components from 'unplugin-vue-components/vite'
+ import { defineConfig, loadEnv } from 'vite'
+-import { VitePluginRadar } from 'vite-plugin-radar'
+ import vueDevTools from 'vite-plugin-vue-devtools'
+ 
+ import { utoolsLocalAssetsPlugin } from './plugins/vite-plugin-utools-local-assets.ts'
+@@ -19,7 +18,8 @@ const isUTools = process.env.SERVER_ENV === `UTOOLS`
+ const isCfWorkers = process.env.CF_WORKERS === `1`
+ const isCfPages = process.env.CF_PAGES === `1`
+ 
+-const base = isNetlify || isCfWorkers || isCfPages ? `/` : isUTools ? `./` : `/md/`
++const isCreatorOSEmbed = process.env.CREATOROS_EMBED === `1`
++const base = isCreatorOSEmbed ? `/reference-editors/doocs-md/` : isNetlify || isCfWorkers || isCfPages ? `/` : isUTools ? `./` : `/md/`
+ 
+ const vueuseAutoImportExclusions = new Set([`toRefs`, `utils`, `toRef`, `toValue`])
+ 
+@@ -122,9 +122,6 @@ export default defineConfig(({ mode }) => {
+       mode === `development` && env.VITE_VUE_DEVTOOLS === `true` && vueDevTools({
+         launchEditor: env.VITE_LAUNCH_EDITOR ?? `code`,
+       }),
+-      !isUTools && VitePluginRadar({
+-        analytics: { id: `G-7NZL3PZ0NK` },
+-      }),
+       ...(process.env.ANALYZE === `true`
+         ? [visualizer({ emitFile: true, filename: `stats.html` }) as Plugin]
+         : []),

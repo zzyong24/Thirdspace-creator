@@ -1947,6 +1947,571 @@
       "acceptance": "仅登记准确文件hash与任务复杂度，不表示全局门卫、客户端或媒体生成验收通过。"
     },
     {
+      "task_id": "T-1049",
+      "files": [
+        "frontend/public/reference-editors/doocs-md/static/js/md-configs-l_iJ-wjP.js"
+      ],
+      "file_sha256": "e38414701cd1a9418f29ad670449cc622a09813b0c2ad9a78ca30f5cd47fb3c8",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1049-01",
+      "scope_source": "docs/features/t1049-web-adaptation-contract.md",
+      "reason": "固定且已评审的 Doocs/md 编辑器静态产物；该 bundle 的上游编辑器配置文本命中工具链词项，CreatorOS 未新增本地原生工具链执行能力。",
+      "acceptance": "只登记精确第三方 bundle 哈希与已批准适配范围，不代表功能、构建、发布或用户验收通过。"
+    },
+    {
+      "task_id": "T-1049",
+      "files": [
+        "frontend/public/reference-editors/doocs-md/static/js/md-dist-BQyrk4Ji.js"
+      ],
+      "file_sha256": "aba2e70b966e5da296ba19bb094172bc5d6ef5d18c667a5157f23855d0143bbb",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1049-01",
+      "scope_source": "docs/features/t1049-web-adaptation-contract.md",
+      "reason": "固定且已评审的 Doocs/md 编辑器静态产物；该 bundle 的上游编辑器文本命中工具链词项，CreatorOS 未新增本地原生工具链执行能力。",
+      "acceptance": "只登记精确第三方 bundle 哈希与已批准适配范围，不代表功能、构建、发布或用户验收通过。"
+    },
+    {
+      "task_id": "T-1049",
+      "files": [
+        "frontend/public/reference-editors/doocs-md/static/js/md-prettier-BRk29n7c.js"
+      ],
+      "file_sha256": "69f7651a1a99d41aab744f06b8f468ed7c6d07d2b10f00e51c2a73aae45ef053",
+      "categories": [
+        "language_toolchain",
+        "runtime"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1049-01",
+      "scope_source": "docs/features/t1049-web-adaptation-contract.md",
+      "reason": "固定且已评审的 Doocs/md 编辑器静态产物；格式化器 bundle 命中工具链及 bundler runtime 文件名词项，CreatorOS 未新增本地原生工具链或自定义运行时执行能力。",
+      "acceptance": "只登记精确第三方 bundle 哈希与已批准适配范围，不代表功能、构建、发布或用户验收通过。"
+    },
+    {
+      "task_id": "T-1049",
+      "files": [
+        "frontend/public/reference-editors/doocs-md/static/js/md-ui-Dai5M5YQ.js"
+      ],
+      "file_sha256": "0761c35f3d6299c2f76f2e6f61f36e28ca5ca01edc9bb487fc23429c902e9c21",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1049-01",
+      "scope_source": "docs/features/t1049-web-adaptation-contract.md",
+      "reason": "固定且已评审的 Doocs/md 编辑器静态产物；该 bundle 的上游界面文本命中工具链词项，CreatorOS 未新增本地原生工具链执行能力。",
+      "acceptance": "只登记精确第三方 bundle 哈希与已批准适配范围，不代表功能、构建、发布或用户验收通过。"
+    },
+    {
+      "task_id": "T-1051",
+      "files": [
+        "frontend/src/server/persistence-client.ts"
+      ],
+      "file_sha256": "7693ec53a9ad66ec4e769c57396def804080e31bdfde3aff26776d52810d2351",
+      "categories": [
+        "credential_store",
+        "language_toolchain",
+        "native_executable"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1051-01",
+      "scope_source": "docs/features/t1051-script-first-workbench.md",
+      "reason": "T-1051只在既有组合根注入主脚本读取/校验端口与历史来源端口。Rust、keychain/keyring、daemon标记在HEAD 7cbad74b的同文件已存在（1133、1234-1249、4104、5893行），本任务未修改这些机制、创建语言工具链/原生可执行文件/凭据存储或扩大宿主权限。保留其他任务混合工作树改动；此条只登记本任务必经装配的既有复杂度，不授权其余任务范围。",
+      "prior_file_sha256": "adef0a02647d850917fb9b67f42037109b3de698776426aeeadfe40a653dad13",
+      "acceptance": "登记不代表全仓、其他任务、真实扫码或模型验收通过；T-1051仍待用户视觉签收。"
+    },
+    {
+      "task_id": "T-1052",
+      "files": [
+        "frontend/package.json"
+      ],
+      "file_sha256": "38dabc96e3de289edbebd0beafdd454aef26033946ec15401a6b45d7dbd51432",
+      "prior_file_sha256": "9f38ba93126cf0ce78cfc9e31dfdf2d0da10214ec019a2f85f6acf9593fe61da",
+      "categories": [
+        "os_signing"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1052-01",
+      "scope_source": "docs/features/t1052-noterelay-derived-workbenches.md",
+      "reason": "既有 macOS codesign 打包命令在 HEAD 7cbad74b 同文件已存在。本轮只增加 NoteRelay 静态构建命令和固定网页依赖，未修改签名、entitlement 或安装流程。 保留其他任务混合工作树，不以登记授权范围外变更。",
+      "acceptance": "此条仅登记既有复杂度与准确文件摘要，不代表功能、全仓、浏览器或发布验收通过。"
+    },
+    {
+      "task_id": "T-1052",
+      "files": [
+        "pnpm-lock.yaml"
+      ],
+      "file_sha256": "7a84f8cb7c4932df4d7e9929ad4f042efd2bfe5280b2a89c4110e09e9d87882d",
+      "prior_file_sha256": "1af4e8bb098b4a90df399e2df46740fc656e49cc1f2d32b0fb115486fa6ace15",
+      "categories": [
+        "runtime"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1052-01",
+      "scope_source": "docs/features/t1052-noterelay-derived-workbenches.md",
+      "reason": "既有包元信息中的 Bun/运行时字样在 HEAD 7cbad74b 同文件已存在。本轮锁定 NoteRelay 的网页渲染与 esbuild 构建依赖，不新增应用运行时或原生执行服务。 保留其他任务混合工作树，不以登记授权范围外变更。",
+      "acceptance": "此条仅登记既有复杂度与准确文件摘要，不代表功能、全仓、浏览器或发布验收通过。"
+    },
+    {
+      "task_id": "T-1052",
+      "files": [
+        "reference-editors/README.md"
+      ],
+      "file_sha256": "5acbb3d9fadb852c54fd2b81e35b3cea2755952426733b4bc633d050c7223320",
+      "prior_file_sha256": "2ae096273a60b7e89b114b45e4be83d030e4b14f692eb96dc48faf0a2b9e804a",
+      "categories": [
+        "runtime"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1052-01",
+      "scope_source": "docs/features/t1052-noterelay-derived-workbenches.md",
+      "reason": "既有 OpenCut 重建说明的 Bun 要求在 HEAD 7cbad74b 同文件已存在。本轮新增 NoteRelay 本地静态适配说明及可重建源码核验，不修改 OpenCut 运行时路线。 保留其他任务混合工作树，不以登记授权范围外变更。",
+      "acceptance": "此条仅登记既有复杂度与准确文件摘要，不代表功能、全仓、浏览器或发布验收通过。"
+    },
+    {
+      "task_id": "T-1052",
+      "files": [
+        "docs/verification/t1052/complexity-provenance.json"
+      ],
+      "file_sha256": "18bfa3c1f6382831d3e499635ba57ad1aba24b5a2bc7b7f94176188d848e65f3",
+      "categories": [
+        "os_signing",
+        "runtime"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1052-01",
+      "scope_source": "docs/features/t1052-noterelay-derived-workbenches.md",
+      "reason": "本证据仅逐行引用 HEAD 7cbad74b 的既有依赖/打包/重建标记，并核对本轮准确摘要，不增加对应执行机制或修改原流程。",
+      "acceptance": "只登记范围内的基线来源证据，不作为功能、发布或全仓通过回执。"
+    },
+    {
+      "task_id": "T-1053",
+      "files": [
+        "docs/verification/t1053/doocs-source-rebuild-first-comparison.json"
+      ],
+      "file_sha256": "b37c098686c3e9d65a6923d462ebc5f90a3efc3d5b7774413cbb2cc272f9a11b",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1053-01",
+      "scope_source": "docs/features/t1053-native-editor-style-integration.md",
+      "reason": "本文件属于DEC-T1053-01明确授权的固定开源组件原生化与重建证据。标记来自既有浏览器引擎/Markdown语言高亮/包元信息或实际探针的引用；构建沿原锁定JS依赖。未新增Swift/Rust编译链、应用运行时、IPC宿主服务或独立程序。",
+      "acceptance": "仅登记授权原生接入与准确文件摘要，不代表真实像素/媒体/Clipboard、完整验收、其它任务或全仓通过。"
+    },
+    {
+      "task_id": "T-1053",
+      "files": [
+        "docs/verification/t1053/independent-review/source-delivery-current.json"
+      ],
+      "file_sha256": "57f46c08cae3776d3c8359563dab0a3fe8499cf30efceb9f897e08860ff68220",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1053-01",
+      "scope_source": "docs/features/t1053-native-editor-style-integration.md",
+      "reason": "本文件属于DEC-T1053-01明确授权的固定开源组件原生化与重建证据。标记来自既有浏览器引擎/Markdown语言高亮/包元信息或实际探针的引用；构建沿原锁定JS依赖。未新增Swift/Rust编译链、应用运行时、IPC宿主服务或独立程序。",
+      "acceptance": "仅登记授权原生接入与准确文件摘要，不代表真实像素/媒体/Clipboard、完整验收、其它任务或全仓通过。"
+    },
+    {
+      "task_id": "T-1053",
+      "files": [
+        "docs/verification/t1053/opencut-classic/DELIVERY.json"
+      ],
+      "file_sha256": "6514f3976304e435b2d32f67533a0109e61fe88e1dab97332bd34348c8650809",
+      "categories": [
+        "runtime"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1053-01",
+      "scope_source": "docs/features/t1053-native-editor-style-integration.md",
+      "reason": "本文件属于DEC-T1053-01明确授权的固定开源组件原生化与重建证据。标记来自既有浏览器引擎/Markdown语言高亮/包元信息或实际探针的引用；构建沿原锁定JS依赖。未新增Swift/Rust编译链、应用运行时、IPC宿主服务或独立程序。",
+      "acceptance": "仅登记授权原生接入与准确文件摘要，不代表真实像素/媒体/Clipboard、完整验收、其它任务或全仓通过。"
+    },
+    {
+      "task_id": "T-1053",
+      "files": [
+        "docs/verification/t1053/opencut-classic/dom-probe.ts"
+      ],
+      "file_sha256": "c5a283df36025748ff19ba34023c6452357dc95e529acee7b3d1d4c1d5b7e6d6",
+      "categories": [
+        "runtime"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1053-01",
+      "scope_source": "docs/features/t1053-native-editor-style-integration.md",
+      "reason": "本文件属于DEC-T1053-01明确授权的固定开源组件原生化与重建证据。标记来自既有浏览器引擎/Markdown语言高亮/包元信息或实际探针的引用；构建沿原锁定JS依赖。未新增Swift/Rust编译链、应用运行时、IPC宿主服务或独立程序。",
+      "acceptance": "仅登记授权原生接入与准确文件摘要，不代表真实像素/媒体/Clipboard、完整验收、其它任务或全仓通过。"
+    },
+    {
+      "task_id": "T-1053",
+      "files": [
+        "frontend/public/reference-editors/doocs-md/native/SHA256.json"
+      ],
+      "file_sha256": "fac19db561390b8be77009a18c562477bc8ba17c20b813bf51439b2255814240",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1053-01",
+      "scope_source": "docs/features/t1053-native-editor-style-integration.md",
+      "reason": "本文件属于DEC-T1053-01明确授权的固定开源组件原生化与重建证据。标记来自既有浏览器引擎/Markdown语言高亮/包元信息或实际探针的引用；构建沿原锁定JS依赖。未新增Swift/Rust编译链、应用运行时、IPC宿主服务或独立程序。",
+      "acceptance": "仅登记授权原生接入与准确文件摘要，不代表真实像素/媒体/Clipboard、完整验收、其它任务或全仓通过。"
+    },
+    {
+      "task_id": "T-1053",
+      "files": [
+        "frontend/public/reference-editors/doocs-md/native/chunks/dist-DDDV7C0t.js"
+      ],
+      "file_sha256": "d175913746a301665be9fa17969a835a8a1965570e048640e7606fc5c9d44dc2",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1053-01",
+      "scope_source": "docs/features/t1053-native-editor-style-integration.md",
+      "reason": "本文件属于DEC-T1053-01明确授权的固定开源组件原生化与重建证据。标记来自既有浏览器引擎/Markdown语言高亮/包元信息或实际探针的引用；构建沿原锁定JS依赖。未新增Swift/Rust编译链、应用运行时、IPC宿主服务或独立程序。",
+      "acceptance": "仅登记授权原生接入与准确文件摘要，不代表真实像素/媒体/Clipboard、完整验收、其它任务或全仓通过。"
+    },
+    {
+      "task_id": "T-1053",
+      "files": [
+        "frontend/public/reference-editors/doocs-md/native/chunks/prettier-GzVfHlfC.js"
+      ],
+      "file_sha256": "337d6b42491e0674df523b660ea82259fa197916378dbd32990a96d853f21944",
+      "categories": [
+        "runtime"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1053-01",
+      "scope_source": "docs/features/t1053-native-editor-style-integration.md",
+      "reason": "本文件属于DEC-T1053-01明确授权的固定开源组件原生化与重建证据。标记来自既有浏览器引擎/Markdown语言高亮/包元信息或实际探针的引用；构建沿原锁定JS依赖。未新增Swift/Rust编译链、应用运行时、IPC宿主服务或独立程序。",
+      "acceptance": "仅登记授权原生接入与准确文件摘要，不代表真实像素/媒体/Clipboard、完整验收、其它任务或全仓通过。"
+    },
+    {
+      "task_id": "T-1053",
+      "files": [
+        "frontend/public/reference-editors/doocs-md/native/chunks/render-DsjZRMnM.js"
+      ],
+      "file_sha256": "99704573c2a7bf293981ca76785a4c739f9d14f444c2d4954ebe946d99728c8f",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1053-01",
+      "scope_source": "docs/features/t1053-native-editor-style-integration.md",
+      "reason": "本文件属于DEC-T1053-01明确授权的固定开源组件原生化与重建证据。标记来自既有浏览器引擎/Markdown语言高亮/包元信息或实际探针的引用；构建沿原锁定JS依赖。未新增Swift/Rust编译链、应用运行时、IPC宿主服务或独立程序。",
+      "acceptance": "仅登记授权原生接入与准确文件摘要，不代表真实像素/媒体/Clipboard、完整验收、其它任务或全仓通过。"
+    },
+    {
+      "task_id": "T-1053",
+      "files": [
+        "frontend/public/reference-editors/doocs-md/native/chunks/storage-jiCkQUgy.js"
+      ],
+      "file_sha256": "d96f4ee07bd4ba1c869646bf60e4c33814450337389f929c484112d5114e8b08",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1053-01",
+      "scope_source": "docs/features/t1053-native-editor-style-integration.md",
+      "reason": "本文件属于DEC-T1053-01明确授权的固定开源组件原生化与重建证据。标记来自既有浏览器引擎/Markdown语言高亮/包元信息或实际探针的引用；构建沿原锁定JS依赖。未新增Swift/Rust编译链、应用运行时、IPC宿主服务或独立程序。",
+      "acceptance": "仅登记授权原生接入与准确文件摘要，不代表真实像素/媒体/Clipboard、完整验收、其它任务或全仓通过。"
+    },
+    {
+      "task_id": "T-1053",
+      "files": [
+        "frontend/public/reference-editors/doocs-md/native/native-build-graph.json"
+      ],
+      "file_sha256": "73d35916f387081221bb73aba6c7c7c2045a652bf7aed72bcbd38fc18667bf92",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1053-01",
+      "scope_source": "docs/features/t1053-native-editor-style-integration.md",
+      "reason": "本文件属于DEC-T1053-01明确授权的固定开源组件原生化与重建证据。标记来自既有浏览器引擎/Markdown语言高亮/包元信息或实际探针的引用；构建沿原锁定JS依赖。未新增Swift/Rust编译链、应用运行时、IPC宿主服务或独立程序。",
+      "acceptance": "仅登记授权原生接入与准确文件摘要，不代表真实像素/媒体/Clipboard、完整验收、其它任务或全仓通过。"
+    },
+    {
+      "task_id": "T-1053",
+      "files": [
+        "frontend/public/reference-editors/doocs-md/static/js/md-configs-l_iJ-wjP.js"
+      ],
+      "file_sha256": "e38414701cd1a9418f29ad670449cc622a09813b0c2ad9a78ca30f5cd47fb3c8",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1053-01",
+      "scope_source": "docs/features/t1053-native-editor-style-integration.md",
+      "reason": "保留T1042/T1046/T1049固定源已有的独立页产物及重建说明，只作历史和源码来源；本轮产品编辑入口已转为原生组件。Bun/语言名称为原工具或包内文字，不启用新增应用运行时/语言编译链。",
+      "acceptance": "仅登记授权原生接入与准确文件摘要，不代表真实像素/媒体/Clipboard、完整验收、其它任务或全仓通过。"
+    },
+    {
+      "task_id": "T-1053",
+      "files": [
+        "frontend/public/reference-editors/doocs-md/static/js/md-dist-BQyrk4Ji.js"
+      ],
+      "file_sha256": "aba2e70b966e5da296ba19bb094172bc5d6ef5d18c667a5157f23855d0143bbb",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1053-01",
+      "scope_source": "docs/features/t1053-native-editor-style-integration.md",
+      "reason": "保留T1042/T1046/T1049固定源已有的独立页产物及重建说明，只作历史和源码来源；本轮产品编辑入口已转为原生组件。Bun/语言名称为原工具或包内文字，不启用新增应用运行时/语言编译链。",
+      "acceptance": "仅登记授权原生接入与准确文件摘要，不代表真实像素/媒体/Clipboard、完整验收、其它任务或全仓通过。"
+    },
+    {
+      "task_id": "T-1053",
+      "files": [
+        "frontend/public/reference-editors/doocs-md/static/js/md-prettier-BRk29n7c.js"
+      ],
+      "file_sha256": "69f7651a1a99d41aab744f06b8f468ed7c6d07d2b10f00e51c2a73aae45ef053",
+      "categories": [
+        "runtime"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1053-01",
+      "scope_source": "docs/features/t1053-native-editor-style-integration.md",
+      "reason": "保留T1042/T1046/T1049固定源已有的独立页产物及重建说明，只作历史和源码来源；本轮产品编辑入口已转为原生组件。Bun/语言名称为原工具或包内文字，不启用新增应用运行时/语言编译链。",
+      "acceptance": "仅登记授权原生接入与准确文件摘要，不代表真实像素/媒体/Clipboard、完整验收、其它任务或全仓通过。"
+    },
+    {
+      "task_id": "T-1053",
+      "files": [
+        "frontend/public/reference-editors/doocs-md/static/js/md-ui-Dai5M5YQ.js"
+      ],
+      "file_sha256": "0761c35f3d6299c2f76f2e6f61f36e28ca5ca01edc9bb487fc23429c902e9c21",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1053-01",
+      "scope_source": "docs/features/t1053-native-editor-style-integration.md",
+      "reason": "保留T1042/T1046/T1049固定源已有的独立页产物及重建说明，只作历史和源码来源；本轮产品编辑入口已转为原生组件。Bun/语言名称为原工具或包内文字，不启用新增应用运行时/语言编译链。",
+      "acceptance": "仅登记授权原生接入与准确文件摘要，不代表真实像素/媒体/Clipboard、完整验收、其它任务或全仓通过。"
+    },
+    {
+      "task_id": "T-1053",
+      "files": [
+        "frontend/public/reference-editors/opencut-classic/assets/index-DpYe8P5g.js"
+      ],
+      "file_sha256": "c417c36665be9c278eb476c63a1f1505a82934f4504761921f1da29e97359f0c",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1053-01",
+      "scope_source": "docs/features/t1053-native-editor-style-integration.md",
+      "reason": "保留T1042/T1046/T1049固定源已有的独立页产物及重建说明，只作历史和源码来源；本轮产品编辑入口已转为原生组件。Bun/语言名称为原工具或包内文字，不启用新增应用运行时/语言编译链。",
+      "acceptance": "仅登记授权原生接入与准确文件摘要，不代表真实像素/媒体/Clipboard、完整验收、其它任务或全仓通过。"
+    },
+    {
+      "task_id": "T-1053",
+      "files": [
+        "frontend/public/reference-editors/opencut-classic/native/native.js"
+      ],
+      "file_sha256": "f61b0939ff9a185861dbc7addee2c40ef1b3a0d71cfac81c31c41d1f43a50354",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1053-01",
+      "scope_source": "docs/features/t1053-native-editor-style-integration.md",
+      "reason": "本文件属于DEC-T1053-01明确授权的固定开源组件原生化与重建证据。标记来自既有浏览器引擎/Markdown语言高亮/包元信息或实际探针的引用；构建沿原锁定JS依赖。未新增Swift/Rust编译链、应用运行时、IPC宿主服务或独立程序。",
+      "acceptance": "仅登记授权原生接入与准确文件摘要，不代表真实像素/媒体/Clipboard、完整验收、其它任务或全仓通过。"
+    },
+    {
+      "task_id": "T-1053",
+      "files": [
+        "reference-editors/manifest.json"
+      ],
+      "file_sha256": "de59866e650e8c0c6d40f836c84460eaa219603dcc91b07878377bdceaca3fd0",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1053-01",
+      "scope_source": "docs/features/t1053-native-editor-style-integration.md",
+      "reason": "本文件属于DEC-T1053-01明确授权的固定开源组件原生化与重建证据。标记来自既有浏览器引擎/Markdown语言高亮/包元信息或实际探针的引用；构建沿原锁定JS依赖。未新增Swift/Rust编译链、应用运行时、IPC宿主服务或独立程序。",
+      "acceptance": "仅登记授权原生接入与准确文件摘要，不代表真实像素/媒体/Clipboard、完整验收、其它任务或全仓通过。"
+    },
+    {
+      "task_id": "T-1053",
+      "files": [
+        "reference-editors/opencut-classic/README.md"
+      ],
+      "file_sha256": "7278a81defdeb995b4a7b1ca8794f3abaf0d222dfc4db58af7dc77912200c25e",
+      "categories": [
+        "runtime"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1053-01",
+      "scope_source": "docs/features/t1053-native-editor-style-integration.md",
+      "reason": "保留T1042/T1046/T1049固定源已有的独立页产物及重建说明，只作历史和源码来源；本轮产品编辑入口已转为原生组件。Bun/语言名称为原工具或包内文字，不启用新增应用运行时/语言编译链。",
+      "acceptance": "仅登记授权原生接入与准确文件摘要，不代表真实像素/媒体/Clipboard、完整验收、其它任务或全仓通过。"
+    },
+    {
+      "task_id": "T-1053",
+      "files": [
+        "reference-editors/opencut-classic/REBUILD_CONSISTENCY.json"
+      ],
+      "file_sha256": "f78df6fc00742d5b9614067672dc8868dd2c3b3f6709ac2d0d3db590b61589f5",
+      "categories": [
+        "runtime"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1053-01",
+      "scope_source": "docs/features/t1053-native-editor-style-integration.md",
+      "reason": "保留T1042/T1046/T1049固定源已有的独立页产物及重建说明，只作历史和源码来源；本轮产品编辑入口已转为原生组件。Bun/语言名称为原工具或包内文字，不启用新增应用运行时/语言编译链。",
+      "acceptance": "仅登记授权原生接入与准确文件摘要，不代表真实像素/媒体/Clipboard、完整验收、其它任务或全仓通过。"
+    },
+    {
+      "task_id": "T-1053",
+      "files": [
+        "reference-editors/opencut-classic/native/DELIVERY.json"
+      ],
+      "file_sha256": "c2227ae8a1c4eae396994f5323bafd78b80fb559ae612e50039a57f52d0e6ed0",
+      "categories": [
+        "runtime"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1053-01",
+      "scope_source": "docs/features/t1053-native-editor-style-integration.md",
+      "reason": "本文件属于DEC-T1053-01明确授权的固定开源组件原生化与重建证据。标记来自既有浏览器引擎/Markdown语言高亮/包元信息或实际探针的引用；构建沿原锁定JS依赖。未新增Swift/Rust编译链、应用运行时、IPC宿主服务或独立程序。",
+      "acceptance": "仅登记授权原生接入与准确文件摘要，不代表真实像素/媒体/Clipboard、完整验收、其它任务或全仓通过。"
+    },
+    {
+      "task_id": "T-1053",
+      "files": [
+        "reference-editors/opencut-classic/native/VERIFICATION.md"
+      ],
+      "file_sha256": "44c222af6d7f45157936c83b37c6d6c8314b5b63f1ca0c3826cc8d93ab3b37ef",
+      "categories": [
+        "runtime"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1053-01",
+      "scope_source": "docs/features/t1053-native-editor-style-integration.md",
+      "reason": "本文件属于DEC-T1053-01明确授权的固定开源组件原生化与重建证据。标记来自既有浏览器引擎/Markdown语言高亮/包元信息或实际探针的引用；构建沿原锁定JS依赖。未新增Swift/Rust编译链、应用运行时、IPC宿主服务或独立程序。",
+      "acceptance": "仅登记授权原生接入与准确文件摘要，不代表真实像素/媒体/Clipboard、完整验收、其它任务或全仓通过。"
+    },
+    {
+      "task_id": "T-1053",
+      "files": [
+        "reference-editors/opencut-classic/native/rebuild-native.sh"
+      ],
+      "file_sha256": "ce78f642f07e68703302cbb6c7cd9f7e25dc51969851f7ce9f1c246d49380c72",
+      "categories": [
+        "runtime"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1053-01",
+      "scope_source": "docs/features/t1053-native-editor-style-integration.md",
+      "reason": "本文件属于DEC-T1053-01明确授权的固定开源组件原生化与重建证据。标记来自既有浏览器引擎/Markdown语言高亮/包元信息或实际探针的引用；构建沿原锁定JS依赖。未新增Swift/Rust编译链、应用运行时、IPC宿主服务或独立程序。",
+      "acceptance": "仅登记授权原生接入与准确文件摘要，不代表真实像素/媒体/Clipboard、完整验收、其它任务或全仓通过。"
+    },
+    {
+      "task_id": "T-1053",
+      "files": [
+        "docs/verification/t1053/governance-first.json"
+      ],
+      "file_sha256": "d866f590f5a8bce93b475a4a71ac68149c3909e6a7326eb998d6e7390b308417",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1053-01",
+      "scope_source": "docs/features/t1053-native-editor-style-integration.md",
+      "reason": "实际治理失败列表逐字引用ipc分类名，是前置检查证据；不新增任何进程通信机制。",
+      "acceptance": "仅登记真实失败引用的准确摘要，不作功能或全仓通过证明。"
+    },
+    {
+      "task_id": "T-1055",
+      "files": [
+        "frontend/src/server/persistence-client.ts"
+      ],
+      "file_sha256": "33f6db805c632e930f536888c72fcdf1b16416af0ad31436ee1217b99bf792c0",
+      "categories": [
+        "credential_store",
+        "language_toolchain",
+        "native_executable"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1055-01",
+      "scope_source": "docs/features/t1055-script-derived-content-workbench.md",
+      "reason": "本轮在既有组合根只读注入 publishing/assets 公开端口，扩原主稿上下文、真实 metadata 出处、冻结图片目录与 exact 文件可读性。三个检测标记来自该大文件既有凭据存储、编译链和本地执行器引用；前后源码增量没有新增这些机制，未扩原登录、引擎、运行环境或安装范围。根 before SHA 与隔离交付清单匹配；此条登记精确文件预算，不能授权其它任务或未来机制。",
+      "acceptance": "仅解除本任务组合根既有词汇的预算缺登记；不表示既有边界问题、全局 reconcile、真实浏览器或模型验收通过。"
+    },
+    {
+      "task_id": "T-1058",
+      "files": [
+        "docs/features/t1058-composable-agent-model-research.review.md"
+      ],
+      "file_sha256": "34c0051c1b7d8445520806ed45fe41e42d1866cbe4d37cd64dfb1b02bf970a47",
+      "categories": [
+        "os_signing"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1058-01",
+      "scope_source": "docs/features/t1058-composable-agent-model-research.md",
+      "reason": "本文件是原样保留的独立研究准入回执；仅引用被澄清的激活权限术语，未引入操作系统签名或任何运行时机制。机制新增为0。词法分类不等于产品新增范围；精确哈希变动即须重核。",
+      "acceptance": "只登记研究引用，不批准签名机制、未来合同、真实连接或产品验收。"
+    },
+    {
+      "task_id": "T-1058",
+      "files": [
+        "docs/verification/t1058/spec-review-round-2.json"
+      ],
+      "file_sha256": "ecd3ef2615d638f4484c5e189b3fbb3a7e74f5a1a366c916a09bea8b9e0749e1",
+      "categories": [
+        "os_signing"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1058-01",
+      "scope_source": "docs/features/t1058-composable-agent-model-research.md",
+      "reason": "本文件是原样保留的独立研究准入回执；仅引用被澄清的激活权限术语，未引入操作系统签名或任何运行时机制。机制新增为0。词法分类不等于产品新增范围；精确哈希变动即须重核。",
+      "acceptance": "只登记研究引用，不批准签名机制、未来合同、真实连接或产品验收。"
+    },
+    {
+      "task_id": "T-1058",
+      "files": [
+        "docs/verification/t1058/source-manifest.json"
+      ],
+      "file_sha256": "8cfa9bae6ba573412d0315a1c566efea71d94522941bf39173fe964bb7a92704",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1058-01",
+      "scope_source": "docs/features/t1058-composable-agent-model-research.md",
+      "reason": "只读公开源码抓取清单含现有 Cargo 文件名。此任务未安装、运行、引入或修改语言工具链，机制新增0；登记的是准确文件哈希的研究引用，不覆盖任何产品实现文件。",
+      "acceptance": "仅记录公开源文件元数据，不授权语言工具链或运行时实施。"
+    },
+    {
+      "task_id": "T-1058",
+      "files": [
+        "docs/verification/t1058/delivery-review.md"
+      ],
+      "file_sha256": "1588ca75a74b661b72ff3f216bdf7c72a0a4b348b8265f92318d6d3f6c3185bb",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1058-01",
+      "scope_source": "docs/features/t1058-composable-agent-model-research.md",
+      "reason": "原样保存的独立研究交付审核只引用既有 Cargo 文件名及第三条来源元数据登记，未提出安装、运行或修改语言工具链。机制新增0；没有生产路径或通配授权。",
+      "acceptance": "只登记独立审核原文的研究引用，不授权工具链、运行时或未来产品实施。"
+    },
+    {
       "task_id": "T-1060",
       "files": [
         "ai-worker/vendor/acpx/src/agent-registry.ts"
@@ -2011,7 +2576,7 @@
       "files": [
         "pnpm-lock.yaml"
       ],
-      "file_sha256": "199cefc3fbe3bc1e949df19e62003b75b20dd6010d01992d96351bb64a3c2297",
+      "file_sha256": "bda07a706d06292cc17e354ba5bd9ed138dd8a7447ed0aaff5a76a2ca8955598",
       "categories": [
         "runtime"
       ],
@@ -2026,7 +2591,7 @@
       "files": [
         "ai-worker/src/execution/worker-entry.ts"
       ],
-      "file_sha256": "cd1e3b9da84facb8d6d53c33579b4f081e2a0ba0cd60c2937e1aadde13cbdab0",
+      "file_sha256": "0f2e22bb34e58787e7992998d3dc5e5f084bf344c094897a044fefbfddb43427",
       "categories": [
         "ipc"
       ],
@@ -2041,7 +2606,7 @@
       "files": [
         "ai-worker/src/execution/worker-runtime.ts"
       ],
-      "file_sha256": "9a3226882a5d0372ff1f53f6c1725fe912b64374b8b094ffa7cf807e5e0b7d61",
+      "file_sha256": "1a84096d96c937a376565ea999be5a23c3b75ba3072daaeb821afe61555c7c15",
       "categories": [
         "ipc"
       ],
@@ -2071,7 +2636,7 @@
       "files": [
         "backend/src/modules/execution/worker-supervisor.ts"
       ],
-      "file_sha256": "a9c5a9a49899e51f95ff7242bf193b0b64c0944dd263693655a5da0a185ad113",
+      "file_sha256": "7919f68fe33821224f2789392c31cb9e115c115bc6a1b7d0009cbe1cec69b269",
       "categories": [
         "ipc"
       ],
@@ -2086,7 +2651,7 @@
       "files": [
         "frontend/src/server/persistence-client.ts"
       ],
-      "file_sha256": "598e303c2ee2fd0d21661bed3c0aadf6b49514cfea68b55661aadddb08146731",
+      "file_sha256": "3900956a9c102957b52de995ff8f633a9000790f864ab8737416e89a0d5b114c",
       "categories": [
         "credential_store",
         "language_toolchain",

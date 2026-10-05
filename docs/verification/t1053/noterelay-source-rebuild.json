@@ -1,0 +1,18 @@
+{
+  "mode": "隔离源码归档重建；依赖使用本机已锁定同版本包，无网络安装",
+  "files": [
+    {
+      "name": "native.js",
+      "sameBytes": true,
+      "packagedSha256": "e0cf56a0063b30645cef4092888d6a44a0fd92942eba495d67478211eebe4e58",
+      "rebuiltSha256": "e0cf56a0063b30645cef4092888d6a44a0fd92942eba495d67478211eebe4e58"
+    },
+    {
+      "name": "native.css",
+      "sameBytes": true,
+      "packagedSha256": "e379e8cc8d1d90e49a09fe2af5ef813d231411fd902cee32bf1be908675612bf",
+      "rebuiltSha256": "e379e8cc8d1d90e49a09fe2af5ef813d231411fd902cee32bf1be908675612bf"
+    }
+  ],
+  "passed": true
+}

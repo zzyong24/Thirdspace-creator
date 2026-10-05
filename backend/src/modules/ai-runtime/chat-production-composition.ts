@@ -1,6 +1,7 @@
 import type {Db} from "@creatoros/backend";
 import {createChatHostContextReader} from "../ai/chat-host-context.service";
 import {createChatProductionRuntime} from "./chat-production-runtime";
+import {createChatCanvasToolHost} from "./chat-canvas-tool-host";
 import {createChatTaskToolHost} from "./chat-task-tool-host";
 import {createChatIngestionTaskToolHost,type ChatIngestionToolPorts} from "./chat-ingestion-tool-host";
 import {createChatBusinessGenerationPreparation} from "./chat-business-generation-preparation";
@@ -35,6 +36,7 @@ export interface ChatProductionServicePorts extends ChatIngestionToolPorts {
  getPositioningDiscovery:RequiredTaskPorts["structured"]["getPositioningDiscovery"];
 }
 export interface ChatProductionCompositionDeps {
+ canvas?:Parameters<typeof createChatCanvasToolHost>[1];
  externalImageStorage?:ProductionDeps["externalImageStorage"];
  entryPath:string;
  runtime:ChatProductionServicePorts;
@@ -51,6 +53,7 @@ export interface ChatProductionCompositionDeps {
 export function composeChatProduction(db:Db,deps:ChatProductionCompositionDeps){
  const chatRuntime=deps.runtime;
  const hostReader=createChatHostContextReader(db);
+ const canvasTools=deps.canvas?createChatCanvasToolHost(hostReader,deps.canvas):null;
  const ingestionTools=createChatIngestionTaskToolHost(hostReader,chatRuntime);
  const taskTools=createChatTaskToolHost(hostReader,chatRuntime.contextReaders,{
   webRead:true,research:true,
@@ -85,7 +88,7 @@ export function composeChatProduction(db:Db,deps:ChatProductionCompositionDeps){
   assertProject:deps.assertProject,
   resolveModelCredential:deps.resolveModelCredential,
   resolveFallbackModelCredential:deps.resolveFallbackModelCredential,
-  resolveTools:async(c,input,ref,signal)=>Object.assign({},await taskTools(c,input,ref,signal),await ingestionTools(c,input,ref,signal)),
+  resolveTools:async(c,input,ref,signal)=>Object.assign({},await taskTools(c,input,ref,signal),await ingestionTools(c,input,ref,signal),canvasTools?await canvasTools(c,input,ref,signal):{}),
   webRead:deps.webRead,externalImageStorage:deps.externalImageStorage,
   onError:deps.onError,
  });

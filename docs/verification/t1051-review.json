@@ -1,0 +1,35 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "recheck",
+  "summary": "REV-001 已销账：FR-03 已明确同类型 createdAt 升序、先排除空正文、类型优先级与当前保存版本读取规则。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "resolved",
+      "severity": "major",
+      "category": "consistency",
+      "requirement_anchor": {
+        "id": "FR-03",
+        "quote": "按原编辑台排序选择当前有内容 output_script、master_script；都无正文时可读同项目 content_outline。同类型按创建顺序"
+      },
+      "acceptance_anchor": {
+        "id": "AC-03",
+        "quote": "脚本修改后旧候选引用旧历史、全新生成取新稿"
+      },
+      "where": "FR-03 主脚本来源装配的同类型多 artifact 选择规则",
+      "failure_mode": "同一项目存在两份都有正文的 output_script（或 master_script）时，一个实现可按创建时间升序取最早稿，另一个可按降序取最新稿；两者都符合“按创建顺序”，但前者会让全新生成继续冻结旧稿，违反 AC-03 的“全新生成取新稿”。文本也未明确排序前还是排序后跳过空正文，因此空的新 artifact 与有正文的旧 artifact 并存时仍可能得到不同结果。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "docs/features/t1051-script-first-workbench.md#要求",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "在 FR-03 明确候选过滤和唯一排序规则：先限定有正文且 currentVersionId 有效的同类型 artifact，再规定按创建时间取最早或最新，并给稳定并列键；选择结果须满足 AC-03 的全新生成取当前新稿。",
+      "resolution_evidence": "SPEC-LINE:25:74a6c9d911dbfd7e 明确同类型固定按 createdAt 升序，先扫描并排除空正文，output_script 优先于 master_script；全新生成读取被选 artifact 的当前保存版本，缺失或不可读时报错。",
+      "parent_id": "",
+      "threat_model_id": ""
+    }
+  ]
+}

@@ -1,3 +1,4 @@
+import {ENDPOINTS} from '@creatoros/contract';
 import type { Endpoint, RequestContext, Transport } from "@creatoros/contract";
 import {
   AuthenticationError,
@@ -103,6 +104,7 @@ export function createAiTransport(
             taskType: string;
             inputData?: Record<string, unknown>;
           };
+          if(b.taskType==="asset.asr"||b.taskType==="production.rough-cut.propose")ENDPOINTS.createAITask.body.parse(body);
           const task = await service.createTask(ctx, b);
           return { data: task, meta: { requestId } };
         }

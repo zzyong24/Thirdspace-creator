@@ -1,0 +1,35 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "recheck",
+  "summary": "修订已用固定卡片顺序统一作品创建、回执列表、首个工作台跳转与直接创作首稿，REV-001 已销账；该单句增量未引入新问题。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "resolved",
+      "severity": "major",
+      "category": "consistency",
+      "requirement_anchor": {
+        "id": "行为-1",
+        "quote": "新建弹层和直接创作页面都采用文章、图文、视频复选卡，明确“可多选”。"
+      },
+      "acceptance_anchor": {
+        "id": "行为-3",
+        "quote": "全部成功后进入首个已选形式的真实工作台"
+      },
+      "where": "行为与边界第 3 条的创建成功跳转",
+      "failure_mode": "用户勾选多个形式后，文本没有说明“首个”按卡片固定顺序、用户勾选先后还是提交时数组顺序确定；两个合理实现会对同一次选择分别进入不同工作台，导致该验收结果无法唯一判定，也会影响直接创作中哪一份作品保留原有首稿能力。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "docs/features/t1050-multi-format-project-creation.md#行为与边界-3",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "为多选形式规定一个唯一且可测试的首项排序规则，并让成功跳转与直接创作首稿都使用同一规则。",
+      "resolution_evidence": "SPEC-LINE:30:db617f561d648d0e 明确按卡片固定顺序“文章 → 图文 → 视频”创建及排列回执，并规定全部成功后进入该顺序首个已选形式；同句将直接创作的首个作品起稿能力绑定到这套顺序。",
+      "parent_id": "",
+      "threat_model_id": ""
+    }
+  ]
+}

@@ -1,0 +1,63 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "recheck",
+  "summary": "REV-001 与 REV-002 保持已解决。本轮新增的宿主独占 turn/start、环境与权限升级拒绝、fork/resume 禁止及 RPC 白名单，明确封闭了 environments=[] 被后续 turn 覆盖的路径；未引入新的阻断问题。真实模型实连与隔离能力仍须按 AC-1044-4 独立验收。",
+  "findings": [
+    {
+      "status": "resolved",
+      "severity": "major",
+      "evidence_kind": "deterministic-check",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "resolution_evidence": "SPEC-LINE:24:7843612f692e8b81 唯一规定随包 @openai/codex@0.159.3 app-server 为执行 artifact，PATH CLI 仅诊断，installed 与 loginStatus 分离，并禁止 CreatorOS 读取、复制、链接或落盘 auth.json；SPEC-LINE:46:147740c59443e801 将随包运行时缺失、版本不匹配、超时和登录不可用分别纳入验收。新增 SPEC-LINE:29:a8b13b30561461af 规定宿主独占构造 turn/start，拒绝 environment、additional directories、permissionProfile 升级及 fork/resume，并以 RPC 白名单阻止模型文本映射到 fs/readFile、命令或其他 RPC。隔离能力仍由 SPEC-LINE:49:89551eb21a12eacf 要求以真实 schema 探针、确定性协议测试和源码佐证，不能用无模型探针冒充真实实连。",
+      "parent_id": "",
+      "threat_model_id": "",
+      "id": "REV-001",
+      "category": "consistency",
+      "requirement_anchor": {
+        "id": "FR-1044-2",
+        "quote": "服务端在宿主用 shell-free argv 及已知工具路径检测可执行文件、版本和锁定 ACP 适配器。认证可通过供应商公开状态命令读取布尔状态，不读取/输出原始凭据。"
+      },
+      "acceptance_anchor": {
+        "id": "AC-1044-1",
+        "quote": "真实检测已安装／缺失／超时／登录不可用，UI 状态与提交失败一致"
+      },
+      "where": "SPEC 第 7、23、24、29、33、36 行与参考分支 Codex 启动及认证实现之间",
+      "failure_mode": "SPEC 同时允许两种不同实现：启动用户机器上的 Codex CLI，或启动应用随包的 @openai/codex runtime。参考实现实际从随包依赖解析并启动 Codex，因此 Codex 的 installed 状态被写死为 true；它还直接读取并复制 ~/.codex/auth.json 到任务目录。若原样复用，无法产生用户所要求的真实“本地 Codex 缺失”状态，并违反“不读取原始凭据”；若改为启动机器 CLI，又没有定义锁定适配器与机器 CLI 的版本兼容关系。两种合理实现会给出不同的发现、认证和提交结果，AC-1044-1 与 Mac 打包验收无法获得唯一判定。",
+      "evidence_ref": "codex/external-agent-bridge@7d2087a8: ai-worker/src/execution/acp-local-agent.ts:89-98,106-128；frontend/src/app/api/chat/engines/route.ts 将 codex.installed 固定为 true",
+      "remedy_type": "clarify",
+      "suggestion": "唯一规定产品实际启动的 Codex artifact、installed/missing 的判定对象，以及运行时取得登录态的允许方式；随后要求发现接口和任务启动共用这一事实源。若仍复用复制 auth.json 的实现，应先由用户或 DEC 明确裁决其与“不读取原始凭据”的冲突。"
+    },
+    {
+      "status": "resolved",
+      "severity": "major",
+      "evidence_kind": "deterministic-check",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "resolution_evidence": "SPEC-LINE:36:6fdcd23b26d597b4 至 SPEC-LINE:40:79ba18a07e2a4b28 为 reserved、started/unknown、settled、rejected/cancelled 规定唯一动作与后置条件；SPEC-LINE:37:51fa1d2a115720f9 明确 started/unknown 只能 thread/read 对账原 turn，禁止再次发送 prompt、turn/start 或工具动作；SPEC-LINE:42:0da9905cf8a13b88 明确无终态证据不得 unknown→settled，历史不可读时保持未知。新增 SPEC-LINE:29:a8b13b30561461af 同时禁止通过 fork/resume 另起回合。",
+      "parent_id": "",
+      "threat_model_id": "",
+      "id": "REV-002",
+      "category": "completeness",
+      "requirement_anchor": {
+        "id": "FR-1044-5",
+        "quote": "恢复通过实际协商能力及持久 sessionId；供应商不能恢复时展示原结果与手动新任务，不盲重放未知副作用。"
+      },
+      "acceptance_anchor": {
+        "id": "AC-1044-3",
+        "quote": "已入场未知回执、会话不支持恢复分别验证；不得重放工具副作用或覆盖原稿。"
+      },
+      "where": "SPEC 第 27、35 行的未知回执恢复合同",
+      "failure_mode": "SPEC 没有规定 started/unknown 外部回合在重试时能否以及如何以同一 executionCall、sessionId 和工具账本继续，也没有规定恢复成功后的 unknown→settled 提交条件。参考 worker 遇到非 reserved 回执会立即返回 ACP_TURN_REQUIRES_RECONCILIATION，启动新 ACP 回合时也未传入已持久化 sessionId。因此实现者既可永久停在待对账，也可新建回合；后者可能重放已到达供应商或工具端的动作，前者无法满足已确认的恢复结果。",
+      "evidence_ref": "codex/external-agent-bridge@7d2087a8: ai-worker/src/execution/external-chat-worker-run.ts:55-75,87-90；runLocalAcpTurn 虽支持 sessionId，但调用方未传入",
+      "remedy_type": "constraint",
+      "suggestion": "补充唯一恢复后置条件：各持久状态在新 attempt 下是继续、等待对账还是手动新建；只有哪些状态可用同一 call/session 恢复；恢复后如何结算原 unknown 回执；任何不能证明未执行的工具调用均不得自动重发。将这些转换绑定 AC-1044-3 的未知回执与不支持恢复用例。"
+    }
+  ]
+}

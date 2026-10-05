@@ -1,0 +1,167 @@
+import {productionRoughCutModelOutput} from '@creatoros/contract';
+import {classificationSchema,materialSummarySchema} from "../prompt/templates/asset-processing";
+import {scriptSourceSimilaritySchema} from "../prompt/templates/script-source-similarity";
+import {topicPreferenceDistillSchema} from "../prompt/templates/topic-preference-distill";
+import {reconstructProjectSchema} from "../prompt/templates/reconstruct-project";
+import {copilotReplySchema,copilotReplyInputSchema} from "../prompt/templates/copilot-assist";
+import {topicArraySchema} from "../prompt/templates/topic-generate";
+import { researchMaterialSchema } from "../prompt/templates/research-gather";
+import { normalizeResearchResult } from "../nodes/research-node";
+import { z } from "zod";
+import type { structuredGenerationInputSchema } from "@creatoros/contract/execution-worker";
+import {
+  planningThesisOutputSchema,
+  planningThesisGroundingSchema,
+} from "./planning-thesis-output";
+import { reviewInsightsSchema } from "../prompt/templates/review-insights";
+import {
+  contractSchema,
+  PLANNING_CONTRACT_SLOTS,
+} from "../prompt/templates/planning-contract";
+import { topicCardSchema } from "../prompt/templates/topic-enrich";
+import { materialMatchSchema } from "../prompt/templates/material-match";
+import { diagnosisSchema } from "../prompt/templates/calibration-diagnose";
+import { calibrationScoreSchema } from "../prompt/templates/calibration-score";
+import { positioningSuggestionSchema } from "../prompt/templates/positioning-generate";
+import { wechatArticleCandidateSchema } from "../prompt/templates/wechat-article-draft";
+import { validateWechatArticleCandidate } from "../runtime/wechat-article-candidate";
+import { graphicPostTextCandidateSchema } from "../prompt/templates/graphic-post-text";
+import { validateGraphicPostTextCandidate } from "../runtime/graphic-post-text";
+import { wechatArticleTextCandidateSchema } from "../prompt/templates/wechat-article-text";
+import { validateWechatArticleTextCandidate } from "../runtime/wechat-article-text";
+import { publicationTextCandidateSchema } from "../prompt/templates/publication-text";
+import { validatePublicationTextCandidate } from "../runtime/publication-text";
+
+/** 固定候选协议与宿主投影保持一致；在有界生成修复内验证，不能保存后才发现无法提交。 */
+export function resolveStructuredBusinessSchema(
+  input: z.infer<typeof structuredGenerationInputSchema>,
+): z.ZodType | undefined {
+  // SEMANTIC_BOUNDARY_ALLOW: 只检查类型、非空结果和冻结真实ID范围，不评判内容、素材或评分质量。
+  switch (input.skillId) {
+    case "production.rough-cut": return productionRoughCutModelOutput;
+    case "publication.text": {
+      const context = JSON.parse(input.facets.publicationContext ?? "null");
+      return publicationTextCandidateSchema.superRefine((value, ctx) => {
+        try { validatePublicationTextCandidate(value, context); }
+        catch (error) { ctx.addIssue({code: "custom", message: error instanceof Error ? error.message : "PUBLICATION_TEXT_CANDIDATE_INVALID"}); }
+      });
+    }
+    case "wechat.article-text": {
+      const context = JSON.parse(input.facets.articleTextContext ?? "null");
+      return wechatArticleTextCandidateSchema.superRefine((value, ctx) => {
+        try { validateWechatArticleTextCandidate(value, context); }
+        catch (error) { ctx.addIssue({code: "custom", message: error instanceof Error ? error.message : "ARTICLE_TEXT_CANDIDATE_INVALID"}); }
+      });
+    }
+    case "graphic.post-text": {
+      const context = JSON.parse(input.facets.graphicPostContext ?? "null");
+      return graphicPostTextCandidateSchema.superRefine((value, ctx) => {
+        try { validateGraphicPostTextCandidate(value, context); }
+        catch (error) { ctx.addIssue({code: "custom", message: error instanceof Error ? error.message : "GRAPHIC_POST_CANDIDATE_INVALID"}); }
+      });
+    }
+    case "wechat.article-draft": {
+      const context = JSON.parse(input.facets.articleContext ?? "null");
+      return wechatArticleCandidateSchema.superRefine((value, ctx) => {
+        try { validateWechatArticleCandidate(value, context); }
+        catch (error) { ctx.addIssue({code: "custom", message: error instanceof Error ? error.message : "ARTICLE_CANDIDATE_INVALID"}); }
+      });
+    }
+    case "asset.classify":return classificationSchema;
+    case "material.extract":return materialSummarySchema;
+    case "reconstruct.project": return reconstructProjectSchema.refine(value=>Boolean(value.research.coreTopic.trim()),"研究重建缺少主题");
+    case "copilot.assist": copilotReplyInputSchema.parse(JSON.parse(input.facets.__copilotReply??"null")); return copilotReplySchema;
+    case "script.source_similarity": return scriptSourceSimilaritySchema;
+    case "topic.preference": return topicPreferenceDistillSchema;
+    case "topic.generate": return topicArraySchema;
+    case "research.gather":
+      z.object({
+        topic: z.string(),
+        projectId: z.string().min(1).nullable(),
+        grounding: z.literal("model_memory"),
+      })
+        .strict()
+        .parse(JSON.parse(input.facets.__researchGather ?? "null"));
+      return researchMaterialSchema.refine((value) => {
+        try {
+          return (
+            normalizeResearchResult(value, "model_memory").items.length > 0
+          );
+        } catch {
+          return false;
+        }
+      }, "至少需要一项清洗后有效的创作素材");
+    case "planning.thesis":
+      planningThesisGroundingSchema.parse(
+        JSON.parse(input.facets.__planningThesisGrounding ?? "null"),
+      );
+      return planningThesisOutputSchema;
+    case "review.insights":
+      return reviewInsightsSchema;
+    case "planning.contract":
+      return contractSchema.refine(
+        (value) =>
+          PLANNING_CONTRACT_SLOTS.some(
+            (slot) => value[slot.title]?.trim() || value[slot.id]?.trim(),
+          ),
+        "至少需要一个已知合同槽正文",
+      );
+    case "topic.enrich":
+      return topicCardSchema.refine(
+        (value) =>
+          Boolean(value.oneLiner?.trim() || value.audiencePain?.trim()),
+        "至少需要一句话选题或观众痛点",
+      );
+    case "material.match": {
+      const ids = new Set(
+        z
+          .object({ assetIds: z.array(z.string()) })
+          .parse(JSON.parse(input.facets.__materialMatchGrounding ?? "null"))
+          .assetIds,
+      );
+      return materialMatchSchema.refine(
+        (value) => value.matches.some((item) => ids.has(item.assetId.trim())),
+        "至少需要一项真实素材",
+      );
+    }
+    case "calibration.diagnose": {
+      const keys = new Set(
+        z
+          .object({ rubricKeys: z.array(z.string()) })
+          .parse(JSON.parse(input.facets.__calibrationDiagnosis ?? "null"))
+          .rubricKeys,
+      );
+      return diagnosisSchema.refine(
+        (value) =>
+          value.dimensions.some(
+            (item) =>
+              keys.has(item.key.trim()) &&
+              typeof item.score === "number" &&
+              Number.isFinite(item.score) &&
+              Math.round(item.score) >= 1 &&
+              Math.round(item.score) <= 5,
+          ),
+        "诊断至少需要一个真实维度评分",
+      );
+    }
+    case "calibration.score": {
+      const keys = new Set(
+        z
+          .object({ rubricKeys: z.array(z.string()) })
+          .parse(JSON.parse(input.facets.__calibrationScore ?? "null"))
+          .rubricKeys,
+      );
+      return calibrationScoreSchema.refine(
+        (value) => value.dimensions.some((item) => keys.has(item.key)),
+        "评分至少需要一个真实预测维度",
+      );
+    }
+    case "positioning.generate":
+      return positioningSuggestionSchema.refine(
+        (value) => Boolean(value.persona?.trim() || value.oneLiner?.trim()),
+        "定位至少需要人设或一句话定位",
+      );
+    default:
+      return undefined;
+  }
+}

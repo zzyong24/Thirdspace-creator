@@ -1,0 +1,101 @@
+{
+  "taskId": "T-1055",
+  "sourceRoot": "/tmp/t1055-backend",
+  "files": [
+    {
+      "path": "ai-worker/src/prompt/templates/graphic-post-text.ts",
+      "beforeSha256": "f312b11541b67a42cf3d3f52ceab3e5dc92d8300b0eae1b4115bc95d1ca8509f",
+      "afterSha256": "a2ee6cff26f80b675b2783d7eae67c9b87ad0e2f33ab695b6756a66b64c5f181"
+    },
+    {
+      "path": "ai-worker/src/prompt/templates/wechat-article-draft.ts",
+      "beforeSha256": "43f06f1c10ee2a67f197ae80295c21c765acda14a51ddcee032f49eefb244d35",
+      "afterSha256": "13a41de7f0d8d3c06f8db01dd59b805ed0522ce37a7a19eb6eca32f90e9eaf85"
+    },
+    {
+      "path": "ai-worker/src/runtime/graphic-post-text.test.ts",
+      "beforeSha256": "c772597681bfc3ae82e776ae4d756d398eb522e841f7cda9f8cb0209e5949e00",
+      "afterSha256": "13b16e260427e751aa85d0f73ddbd22d6501c365c5e4effae264ec817d1957f0"
+    },
+    {
+      "path": "ai-worker/src/runtime/graphic-post-text.ts",
+      "beforeSha256": "0abe41d505580b2db63d856fa00d2bb274423adadc22bc48c377c7711b39e463",
+      "afterSha256": "55df9907ad700a4faf30f5ba3857b0f7d503d0633eeb919c544b7ba1041e3cb0"
+    },
+    {
+      "path": "ai-worker/src/runtime/wechat-article-candidate.test.ts",
+      "beforeSha256": "5252528ded3820c6a1fc0dd81908396332a7fe81a06886a364ecbf3941d1e7cd",
+      "afterSha256": "bccb42f4a8c81457f620aec8d06b77544cd744a3182e13a117ab60ad0e3600c7"
+    },
+    {
+      "path": "ai-worker/src/runtime/wechat-article-candidate.ts",
+      "beforeSha256": "40d37f4432930a262b243ea5fbc53fc832b0605ef4c9d08f80bc462a0a4f0a69",
+      "afterSha256": "db602bd83465bd9224b78398e15c40d24b8ffc63a31dde62ba28b6018ba712d6"
+    },
+    {
+      "path": "backend/src/application/project-script-source.test.ts",
+      "beforeSha256": "0310df521e5bbfed8df5189384fc6b6f8c27453eafdc94fb2bb06c19060b86e7",
+      "afterSha256": "c0fee454730124f51da9ad9c6f52fd907beffb6f06667117fcd2d331f884cab6"
+    },
+    {
+      "path": "backend/src/application/project-script-source.ts",
+      "beforeSha256": "463c70e2b7c9d9bd2069d22fd6c1aac332c17a953c4df4097c19429bd6097e77",
+      "afterSha256": "797081382a940e6d5196a19503dc901bcda2458beb356ca772363f294e8ae761"
+    },
+    {
+      "path": "backend/src/modules/articles/articles.integration.test.ts",
+      "beforeSha256": "c7c6de3ee4b03cc9c64d212c7d3d65cc36fac802c9e6024ea493f962ee9d653d",
+      "afterSha256": "40d5adfbab885f32bf1c4ce9eb55df3cdd1e26cf2cf29da488334bf40d34d85b"
+    },
+    {
+      "path": "backend/src/modules/articles/articles.service.ts",
+      "beforeSha256": "e3b65155754b18e89c4b9a9b4ffd00f9cb178ced220bfcfa307f8481b08d1434",
+      "afterSha256": "8cd293d87b1173e8290b0a46032349bb08c9f1b5a1516fa630456628338c88f9"
+    },
+    {
+      "path": "backend/src/modules/graphic-posts/graphic-posts.integration.test.ts",
+      "beforeSha256": "af4e87f3fd26bfca707e5b7ecde82cbf8468f7da0ddc62c0c4c8e46b168bfb95",
+      "afterSha256": "9a50b94c52a7ba1d091bc759cfaf8ce0c442fd307dbc0c68301e69390f40ba68"
+    },
+    {
+      "path": "backend/src/modules/graphic-posts/graphic-posts.service.ts",
+      "beforeSha256": "5cd69316d79c920095c432498c87bdfcc564255a4759a874d15bc850530adf65",
+      "afterSha256": "08cf4cd9cd6b52bfa5709f363ddd2ac2276ccba1af776456c0a00dfecf987774"
+    },
+    {
+      "path": "backend/src/modules/projects/project-script-source.port.ts",
+      "beforeSha256": "1f447e46459b65ae494ae87c66209782bb67f70d28b0ad959ef2bdc0110dff72",
+      "afterSha256": "f8bf1afd7f522eaec4cbb00073cd089fcebfbec1d5f9b1f41190557cec20a202"
+    },
+    {
+      "path": "contract/src/resources/articles.ts",
+      "beforeSha256": "951e0a6b4c27cc07f16cda4812a3682a61f4fd3d622ef929a9e513f988a93ddb",
+      "afterSha256": "9d5c2222427f27f5adf482d563f23701643ebea684da9df3a5d50ad090ab3137"
+    },
+    {
+      "path": "contract/src/resources/graphic-posts.ts",
+      "beforeSha256": "62e003092c959a9a4385ac5c6c516f819d4be429a5dc3f1e06bce7a9e9bb232a",
+      "afterSha256": "5620709820e5c2367b9064fd36702cb633849750b776d69717f1c340799b19d5"
+    },
+    {
+      "path": "contract/src/resources/project-script-source.ts",
+      "beforeSha256": "c3e6883a354ab3fd178cc8ce5a9637c4884026fd36396c3e30b71a70c1a59301",
+      "afterSha256": "481c9eaa469326c31a561b7c2c9955d6cb1c9474da927b0791729ab5eb4db23d"
+    },
+    {
+      "path": "contract/tests/project-script-source.test.ts",
+      "beforeSha256": "35eead75196fee8e1d3fc0745f16f995bb99c6a992df35d94ca74e0964b68683",
+      "afterSha256": "efa0ffc111f86a09a10350148aebf59d8af1f1d190b3a8726e42479ef24bf88d"
+    },
+    {
+      "path": "frontend/src/server/persistence-client.ts",
+      "beforeSha256": "7693ec53a9ad66ec4e769c57396def804080e31bdfde3aff26776d52810d2351",
+      "afterSha256": "33f6db805c632e930f536888c72fcdf1b16416af0ad31436ee1217b99bf792c0"
+    }
+  ],
+  "sourceFrozen": true,
+  "notes": [
+    "仅此 18 源文件交付；静态课程 JSON 只供隔离类型检查，未交付。",
+    "未写根工作树或控制面；无真实模型或浏览器调用。"
+  ]
+}

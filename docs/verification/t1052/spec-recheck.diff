@@ -1,0 +1,19 @@
+--- before
++++ after
+@@ -31,6 +31,7 @@
+ - FR-02：NoteRelay 静态独立网页在 sandbox opaque-origin iframe 运行，复用原两平台 adapter、内置主题、原分页、HTML 兼容和 PNG/ZIP 渲染能力。新 host 只负责 UI、协议和宿主接口适配；不创建账号/作品数据库、模型运行器、后台图像代理或 Obsidian 依赖。
+ - FR-03：新增共享 `noteRelayLayout` 严格合同，`schemaVersion=1`、`editor=noterelay`、`editorVersion=0.1.8`、themeId、可编辑署名/简介/变量、图文字号/分割标题级别/模板以及按原 key 的图片宽度/圆角设置，其中 themeId 1..128字符、署名0..120字符、简介0..500字符；变量最多32项、key 1..64字符、value最多2000字符、合计UTF-8不超16KiB；字号12..32整数、分割级别1或2、模板default或notes；图片宽度30..100、圆角0..32，映射最多256项且key最多512字符。文章 nativeLayout 兼容现有 doocs-md 并增加此分支；图文文档新增可选 nativeLayout。两者由原版本/CAS/幂等保存，刷新及历史读回恢复。同一稿不把临时 blob/data 图片当正式 asset ID。
+ - FR-04：文章主稿仍是现有 sections、图片精确引用、sourceRefs 和 metadata；图文主稿仍是 body、imageUses、cardBriefs 和 sourceRefs。NoteRelay 收到标题、纯 Markdown 和布局；文章的内部稳定段落标记仅在传给预览时去掉，不回写/重排段落。图片用 `creatoros-asset:<assetId>:<assetFileId>` 从稿件真实 imageUses 建立 allowlist，宿主经现有 asset download port 获取精确文件并传 blob；iframe 不拥有账号令牌或 URL 签名。未登记引用不请求下载，来源/读取错误明确显示。
++  图文投影固定如下：标题与正文构成正文段，保留 body 的 Markdown；已登记的 creatoros-asset 图片节点若已在 body 出现，保持其位置且不重复插入。其余 cover 按 order 升序（同 order 按 imageUses 原数组序）组成最前面的封面段；随后正文段；随后 cardBriefs 原数组顺序各成一段，含该卡 title/body 及同 cardId 的非 cover 图片（按 order/原数组序）；剩余无 cardId 或找不到对应卡的非 cover 图片各成一段，仍按 order/原数组序。段之间用原分页器支持的 Markdown 分割线；段内仍按用户选择的分割标题级别及原 DOM 溢出分页。每张图片节点为 `![图片](creatoros-asset:<assetId>:<assetFileId>)`，原 key 按最终 splitByHeading 的 sectionIndex、段内 imageIndex 和原 source 组成 `<sectionIndex>:<imageIndex>:<source>`；DOM 溢出分页保留此 key。不回写或重排 body/cardBriefs/imageUses；未登记图片不进入可下载投影。
+ - FR-05：双向桥只接收当前 iframe window、opaque origin、当前随机 sessionId 的消息；ready 仅初始化一次，版式变更通过严格 schema 解析后更新当前草稿，无自动正式保存。切作品/账号/版本建立新会话，迟到回复不回写。导出冻结当前正文、版式及素材，稿件/版式改变取消旧结果；导出期间禁重复操作，卸载清理 request 等待与 blob。公众号复制在宿主真实 ClipboardItem 写 text/html 和 text/plain，失败显示真实错误；不支持富文本时明确提供纯文本回退。
+ - FR-06：公众号预览有真实主题选择和可修改署名/变量，使用原排版；HTML 导出与复制使用同一当前稿。小红书预览有实际翻页、主题、字级/分割设置、当前 PNG 复制/下载与完整 ZIP；保留真实图片/画布逐页创作和既有整组图片交付。插件默认演示署名/口号不冒充真实账号：空署名保持空或可见待填，无示例内容灌入稿件。
+ - FR-07：主要内容编辑与 NoteRelay 预览放在生成/转换等辅助操作之前，辅助面可折叠；缺模型仍能编辑、保存、预览和导出。已有 Doocs 稿件的布局和历史不强制改写；旧编辑器保留可选真实入口。无假按钮，失败保留用户正文/版式/素材。
+@@ -40,7 +41,7 @@
+ 
+ - AC-01：实际页面加载自己的 NoteRelay 静态包；依赖图证明调用原 WechatAdapter/RednoteAdapter，主题切换改变原预览，空稿不显示示例正文或虚构账号。
+ - AC-02：编辑当前文章或图文，改 NoteRelay 主题/署名/版式，经原服务保存再读回完全一致；旧 doocs/无 nativeLayout 的历史仍能读取；CAS 冲突不覆盖新稿。
+-- AC-03：真实 article imageUses 精确文件可以预览与写入公众号 HTML；Graphic 的真实素材保持版本引用。伪造、跨会话和迟到消息不修改当前稿或导出；更改后旧导出作废。
++- AC-03：真实 article imageUses 精确文件可以预览与写入公众号 HTML；Graphic 的真实素材保持版本引用；用含 cover、匹配 cardId 与无 cardId 的稿件检查封面→正文→卡片→剩余图片的投影及 ZIP 页序，已有正文图片不重复。伪造、跨会话和迟到消息不修改当前稿或导出；更改后旧导出作废。
+ - AC-04：公众号交付包含已编辑正文、原主题内联样式、纯文回退与可读 HTML；图文原分页内容全量保留，PNG/ZIP 字节和文件名/页序正确。浏览器限制未解除时，真实 PNG 像素/系统剪贴板不得标 PASS。
+ - AC-05：新预览/编辑为主，生成辅助折叠；原脚本首项和动态 Tab、文章候选采纳、图文逐页画布仍可用。缺模型不阻断手工保存/排版；失败信息准确并保留输入。
+ 

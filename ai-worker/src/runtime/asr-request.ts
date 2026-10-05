@@ -19,7 +19,7 @@ export function throwIfAsrAborted(signal?: AbortSignal) {
 const digest = (input: string | Uint8Array) => `sha256:${createHash('sha256').update(input).digest('hex')}`;
 /** 指纹只用于精确恢复相同音频请求，不进行任何语义判断。凭据不进入描述。 */
 export function createAsrRequestExecutor(spec: MultimodalSpec, opts: TranscribeAudioOptions, endpoint: string, protocol: Exclude<AsrRequest["protocol"],"whisper-local.v1">, chunks: Uint8Array[] = [opts.audioBytes]) {
-    const common = { chunks: chunks.map(chunk=>({digest:digest(chunk),byteLength:chunk.byteLength})), protocol, provider: spec.provider, model: spec.model, endpointDigest: digest(endpoint), audioDigest: digest(opts.audioBytes), audioByteLength: opts.audioBytes.byteLength, language: opts.language ?? null };
+    const common = { ...(opts.timestampMode?{timestampMode:opts.timestampMode}:{}),chunks: chunks.map(chunk=>({digest:digest(chunk),byteLength:chunk.byteLength})), protocol, provider: spec.provider, model: spec.model, endpointDigest: digest(endpoint), audioDigest: digest(opts.audioBytes), audioByteLength: opts.audioBytes.byteLength, language: opts.language ?? null };
     return async (chunk: Uint8Array, chunkIndex: number, chunkCount: number, execute: () => Promise<GeneratedTranscript>) => {
         throwIfAsrAborted(opts.signal);
         const request = { ...common, chunkDigest: digest(chunk), chunkByteLength: chunk.byteLength, chunkIndex, chunkCount };
@@ -33,5 +33,5 @@ export function createAsrRequestExecutor(spec: MultimodalSpec, opts: TranscribeA
 /** 在适配器入口冻结输入，等待回执期间调用方修改 Buffer 不得改变已登记请求。 */
 export function snapshotAsrInput(spec: MultimodalSpec, opts: TranscribeAudioOptions) {
     throwIfAsrAborted(opts.signal);
-    return {spec: structuredClone(spec), opts: {...opts, audioBytes: Uint8Array.from(opts.audioBytes)}};
+    return {spec: structuredClone(spec), opts: {...opts,...(opts.timingAudio?{timingAudio:structuredClone(opts.timingAudio)}:{}), audioBytes: Uint8Array.from(opts.audioBytes)}};
 }

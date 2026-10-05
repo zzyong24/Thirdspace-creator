@@ -33,11 +33,12 @@ import {
 function row(
   id: string,
   status: "active" | "archived" = "active",
+  platform = "douyin",
 ) {
   return {
     id,
     userId: "user-a",
-    platform: "douyin",
+    platform,
     accountHandle: `@${id}`,
     secretReference: null,
     followerBaseline: 0,
@@ -68,8 +69,17 @@ describe("AccountSwitcher", () => {
     // trigger 显当前号 handle
     expect(screen.getByTestId("account-switcher-trigger")).toHaveAttribute(
       "aria-label",
-      "当前抖音号：@a",
+      "当前账号：@a",
     );
+  });
+
+  it("小红书账号也可成为当前工作区，并与抖音号一起切换", async () => {
+    listAccounts.mockResolvedValue([row("xhs", "active", "xiaohongshu"), row("dy")]);
+    render(<AccountSwitcher collapsed={false} />);
+    await waitFor(() => expect(window.localStorage.getItem(CURRENT_ACCOUNT_KEY)).toBe("xhs"));
+    expect(screen.getByTestId("account-switcher-trigger")).toHaveAttribute("aria-label", "当前账号：@xhs");
+    expect(screen.getByTestId("account-switcher-trigger").textContent).toContain("小红书");
+    expect(listAccounts).toHaveBeenCalledWith(expect.objectContaining({ query: { page: 1, pageSize: 100 } }));
   });
 
   it("stored 指向已删号 → 清除回落第一个 active(§E ③)", async () => {
@@ -178,7 +188,7 @@ describe("AccountSwitcher", () => {
       await waitFor(() =>
         expect(screen.getByTestId("account-switcher-trigger")).toHaveAttribute(
           "aria-label",
-          "当前抖音号：@a",
+          "当前账号：@a",
         ),
       );
 
@@ -191,7 +201,7 @@ describe("AccountSwitcher", () => {
       expect(window.localStorage.getItem(CURRENT_ACCOUNT_KEY)).toBe("b");
       expect(screen.getByTestId("account-switcher-trigger")).toHaveAttribute(
         "aria-label",
-        "当前抖音号：@b",
+        "当前账号：@b",
       );
       expect(mockRouter.refresh).not.toHaveBeenCalled();
       expect(afterPaint).toHaveLength(1);

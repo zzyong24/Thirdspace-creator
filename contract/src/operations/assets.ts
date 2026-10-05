@@ -42,6 +42,14 @@ export const assetsOperations = {
     response: z.object({ url: z.string(), fileName: z.string() }),
     fr: ["FR-ASSETS-DOWNLOAD-URL"],
   }),
+  getAssetFileDownloadUrl: defineEndpoint({
+    id: "assets.fileDownloadUrl",
+    method: "GET",
+    path: "/assets/:assetId/files/:assetFileId/download-url",
+    params: z.object({assetId: id, assetFileId: id}),
+    response: z.object({url: z.string(), fileName: z.string()}),
+    fr: ["FR-ASSETS-DOWNLOAD-URL"],
+  }),
   createUpload: defineEndpoint({
     id: "assets.uploads.create",
     method: "POST",

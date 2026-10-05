@@ -275,7 +275,7 @@ function ProjectList({
     return (
       <EmptyState
         title="这个账号还没有项目"
-        description="项目按抖音号隔离。新建一个项目,或先去选题池挑一条候选立项。"
+        description="作品归属当前账号。写一句主题就能开始，也可以从选题池挑一条候选立项。"
         action={
           <div className="flex items-center gap-4">
             <Link

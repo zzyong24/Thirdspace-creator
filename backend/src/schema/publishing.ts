@@ -12,7 +12,7 @@ import { pgTable, text, integer, jsonb, uniqueIndex } from "drizzle-orm/pg-core"
 // `Publication` is an external fact-of-record (SPEC §13.3/§22): there is no
 // internal publish queue — statuses mirror external platform reality and the
 // actual side-effect is mocked behind MockPublisher (foundation §4). The
-// (platform, external_id) partial-unique index is the idempotency anchor
+// (user_id, account_id, platform, external_id) partial-unique index is the idempotency anchor
 // (data-model line 865 / rule 10): a re-publish to the same platform reuses the
 // row, never duplicates.
 //
@@ -69,6 +69,7 @@ export const publicationRevisions = pgTable("publication_revisions", {
   title: text("title").notNull(),
   description: text("description").notNull().default(""),
   coverAssetId: text("cover_asset_id"), // nullable — validated via AssetsService
+  coverAssetFileId: text("cover_asset_file_id"), // immutable selected file for result-first cover
   category: text("category").notNull().default(""),
   series: text("series").notNull().default(""),
   platformTags: jsonb("platform_tags").notNull().default([]),
@@ -77,7 +78,7 @@ export const publicationRevisions = pgTable("publication_revisions", {
 });
 
 // Raw DDL applied at db init (pglite has no migration runner wired here yet).
-//   - publications_external_ux: PARTIAL unique on (platform, external_id) WHERE
+//   - publications_external_account_ux: PARTIAL unique on (user_id, account_id, platform, external_id) WHERE
 //     external_id IS NOT NULL (data-model line 865 / rule 10) — the idempotency
 //     anchor for re-publish.
 //   - publications_user_ix / publications_output_ix: user-scoped + per-output
@@ -106,7 +107,7 @@ CREATE TABLE IF NOT EXISTS publications (
 -- 的 account_id 同款 ALTER 兜底,幂等)。
 ALTER TABLE publications ADD COLUMN IF NOT EXISTS hidden_at TEXT;
 ALTER TABLE publications ADD COLUMN IF NOT EXISTS platform_status TEXT;
-CREATE UNIQUE INDEX IF NOT EXISTS publications_external_ux ON publications(platform, external_id) WHERE external_id IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS publications_external_account_ux ON publications(user_id, account_id, platform, external_id) WHERE external_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS publications_user_ix ON publications(user_id);
 CREATE INDEX IF NOT EXISTS publications_output_ix ON publications(content_output_id);
 CREATE TABLE IF NOT EXISTS publication_revisions (

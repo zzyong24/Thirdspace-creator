@@ -29,7 +29,7 @@ import {
 export function copilotDeepLink(
   surface: string,
   functionKey?: string,
-  selection?: { kind: string; id: string; title?: string },
+  selection?: { kind: string; id: string; title?: string; outputId?: string; versionId?: string; projectId?: string },
   /**
    * [T-060①] 自定义预填话术(覆盖 FUNCTION_KEY_PREFILL 的默认词条)—— 按钮语义更细时
    * (如 4 种出题依据各一句)用它;仍然只预填不发送(T-055b 机制)。
@@ -50,6 +50,9 @@ export function copilotDeepLink(
     params.set("selKind", selection.kind);
     params.set("selId", selection.id);
     if (selection.title) params.set("selTitle", selection.title);
+    if (selection.outputId) params.set("selOutputId", selection.outputId);
+    if (selection.versionId) params.set("selVersionId", selection.versionId);
+    if (selection.projectId) params.set("selProjectId", selection.projectId);
   }
   if (prefillText) params.set("prefill", prefillText);
   if (scope) params.set("scope", scope);

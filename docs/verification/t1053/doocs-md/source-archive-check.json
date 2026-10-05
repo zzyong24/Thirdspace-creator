@@ -1,0 +1,8 @@
+{
+  "result": "PASS",
+  "sourceArchive": "/tmp/t1053-native-doocs/delivery/native-source.tar.gz",
+  "sourceFiles": 819,
+  "sourceDifferences": [],
+  "environmentSpecificLinks": [],
+  "sourceArchiveSha256": "60baa6f2656e5038e31bab6c2ff71ddfbaba54a6a7f703796364b78f4f96f3a7"
+}

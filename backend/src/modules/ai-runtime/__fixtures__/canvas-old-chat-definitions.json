@@ -1,0 +1,217 @@
+[
+  {
+    "options": {},
+    "definitions": [
+      {
+        "name": "history.read",
+        "version": "chat-tools-v1:8b8a11655954a9d15f0f408c3b3d4194d641ba2b5dd251e45c5b145ef41702a0",
+        "description": "按原消息索引分页读回当前任务冻结历史中省略的消息。只读当前任务，不能跨账号或对话；不传messageIndex先读取消息目录，messageIndex从0开始，超长内容按nextOffset续读。",
+        "effect": "none",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "messageIndex": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "offset": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "context.projects",
+        "version": "chat-tools-v1:246b830fff76893e99ffde18309b06f4a69a11ce256a78ea2c3674be2f5af6fa",
+        "description": "只读:拉取创作者的项目/作品列表(id/标题/来源/人话阶段/状态/canonical 发布时间),带 total/hasMore 可翻页(offset)。review 只表示“复盘”，不得理解成待审核或未发布；是否发布只看 canonical 发布时间。当用户问「我的项目库 / 最近在做什么 / 最新一条(作品)/ 我有哪些项目 / 全部项目」时调它拿真实数据回答。[T-081] 要盘点/浏览**全量**作品(如「结合我全部内容…」)时置 compact=true:标题截 40 字、单页上限 200,一次拿全,不用逐页翻;只看少量条目/需要完整标题时不置。hasMore=true 时继续带 offset 翻页直到看全,或如实告知还剩多少。",
+        "effect": "none",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "limit": {
+              "type": "number",
+              "description": "本页条数(默认 20,最大 50;compact=true 时默认与上限 200)"
+            },
+            "offset": {
+              "type": "number",
+              "description": "翻页偏移(默认 0;结果带 total/hasMore,可继续翻)"
+            },
+            "compact": {
+              "type": "boolean",
+              "description": "[T-081] 盘点/浏览全量时置 true:标题截 40 字、单页上限放宽到 200,一次拿全,不用反复翻页。"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "material.generate",
+        "version": "chat-tools-v1:c8455afe13b92b5ddf4dc8a5604dbc5d2bc4a68a5c668d5a2775f1a7d3d744bc",
+        "description": "用 AI 生成图片或视频素材(文生图/文生视频)。项目内容配图必须先用 context.artifact.text 读当前确认稿，判断它要替哪一句内容完成什么认知任务，从 sections 中选择服务的唯一 sectionRef，并说明 visualPurpose；执行端会重读当前版本，把该段正文和版本指纹冻结进任务。生成的是 AI 图/视频素材(非真实拍摄/截图)，用户采纳后才进素材中心。事实证据优先真实截图/网页，价格表、架构图、流程图等要求精确文字/数字/节点的信息卡必须把 mediaKind 设为 information_card，本工具会拒绝自由生成；真实公告/仓库截图设为 fact_capture，同样不生成。只有 illustration 适合本工具。图片 prompt 要把一个认知任务落实为一个可见关系，写清主体、动作或关系、环境、构图、光色和画幅；视频 prompt 只写一个连续短镜头，依次交代主体、主要动作、环境、构图与景深、一个平滑运镜、光色材质和平稳结尾，可带克制同步环境音但禁止音乐与人声。默认不要文字、数字、logo、水印、假产品界面、假新闻截图、畸形肢体、重复主体、突变、闪烁或跳帧，禁止万能 AI 海报。创作者定位只影响视觉语言与审美语气，不得改变当前稿主张。要生成封面改用 cover.generate。",
+        "effect": "committed",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "enum": [
+                "image",
+                "video"
+              ],
+              "description": "生成图(image)还是视频(video)。视频异步分钟级,提交后后台跑,不阻塞对话。"
+            },
+            "prompt": {
+              "type": "string",
+              "description": "生成描述。图片必须写清视觉媒介、主体、动作或关系、环境、构图、光线/色彩、画幅和排除项。视频必须只设计一个连续短镜头，按主体、主要动作、环境、构图与景深、单一路径运镜、光线/色彩/材质、平稳收尾的顺序描述；可有克制的同步环境音，不要音乐和人声。默认不出现文字、数字、logo、水印或伪造界面。生成的是 AI 素材、非真实拍摄。"
+            },
+            "style": {
+              "type": "string",
+              "description": "可选风格/画风(如「扁平插画」「写实摄影」「赛博朋克」),会拼进生成 prompt。"
+            },
+            "sectionRef": {
+              "type": "string",
+              "description": "项目内容配图所服务的当前稿段落引用。先调 context.artifact.text，再逐字使用 sections[].sectionRef；不要让用户提供。"
+            },
+            "visualPurpose": {
+              "type": "string",
+              "enum": [
+                "evidence",
+                "mechanism",
+                "comparison",
+                "consequence",
+                "emotion",
+                "analogy"
+              ],
+              "description": "画面承担的单一认知任务。"
+            },
+            "mediaKind": {
+              "type": "string",
+              "enum": [
+                "illustration",
+                "information_card",
+                "fact_capture"
+              ],
+              "description": "illustration=可自由生成的配图；information_card=要求精确文字/数字/节点的信息卡；fact_capture=真实网页/公告/仓库事实截图。后两类不得走自由文生图。"
+            }
+          },
+          "required": [
+            "kind",
+            "prompt"
+          ],
+          "additionalProperties": false
+        }
+      }
+    ]
+  },
+  {
+    "options": {
+      "atomicMaterialGenerate": true
+    },
+    "definitions": [
+      {
+        "name": "history.read",
+        "version": "chat-tools-v1:8b8a11655954a9d15f0f408c3b3d4194d641ba2b5dd251e45c5b145ef41702a0",
+        "description": "按原消息索引分页读回当前任务冻结历史中省略的消息。只读当前任务，不能跨账号或对话；不传messageIndex先读取消息目录，messageIndex从0开始，超长内容按nextOffset续读。",
+        "effect": "none",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "messageIndex": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "offset": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "context.projects",
+        "version": "chat-tools-v1:246b830fff76893e99ffde18309b06f4a69a11ce256a78ea2c3674be2f5af6fa",
+        "description": "只读:拉取创作者的项目/作品列表(id/标题/来源/人话阶段/状态/canonical 发布时间),带 total/hasMore 可翻页(offset)。review 只表示“复盘”，不得理解成待审核或未发布；是否发布只看 canonical 发布时间。当用户问「我的项目库 / 最近在做什么 / 最新一条(作品)/ 我有哪些项目 / 全部项目」时调它拿真实数据回答。[T-081] 要盘点/浏览**全量**作品(如「结合我全部内容…」)时置 compact=true:标题截 40 字、单页上限 200,一次拿全,不用逐页翻;只看少量条目/需要完整标题时不置。hasMore=true 时继续带 offset 翻页直到看全,或如实告知还剩多少。",
+        "effect": "none",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "limit": {
+              "type": "number",
+              "description": "本页条数(默认 20,最大 50;compact=true 时默认与上限 200)"
+            },
+            "offset": {
+              "type": "number",
+              "description": "翻页偏移(默认 0;结果带 total/hasMore,可继续翻)"
+            },
+            "compact": {
+              "type": "boolean",
+              "description": "[T-081] 盘点/浏览全量时置 true:标题截 40 字、单页上限放宽到 200,一次拿全,不用反复翻页。"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "material.generate",
+        "version": "chat-tools-atomic-material-v1:c8455afe13b92b5ddf4dc8a5604dbc5d2bc4a68a5c668d5a2775f1a7d3d744bc",
+        "description": "用 AI 生成图片或视频素材(文生图/文生视频)。项目内容配图必须先用 context.artifact.text 读当前确认稿，判断它要替哪一句内容完成什么认知任务，从 sections 中选择服务的唯一 sectionRef，并说明 visualPurpose；执行端会重读当前版本，把该段正文和版本指纹冻结进任务。生成的是 AI 图/视频素材(非真实拍摄/截图)，用户采纳后才进素材中心。事实证据优先真实截图/网页，价格表、架构图、流程图等要求精确文字/数字/节点的信息卡必须把 mediaKind 设为 information_card，本工具会拒绝自由生成；真实公告/仓库截图设为 fact_capture，同样不生成。只有 illustration 适合本工具。图片 prompt 要把一个认知任务落实为一个可见关系，写清主体、动作或关系、环境、构图、光色和画幅；视频 prompt 只写一个连续短镜头，依次交代主体、主要动作、环境、构图与景深、一个平滑运镜、光色材质和平稳结尾，可带克制同步环境音但禁止音乐与人声。默认不要文字、数字、logo、水印、假产品界面、假新闻截图、畸形肢体、重复主体、突变、闪烁或跳帧，禁止万能 AI 海报。创作者定位只影响视觉语言与审美语气，不得改变当前稿主张。要生成封面改用 cover.generate。",
+        "effect": "committed",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "enum": [
+                "image",
+                "video"
+              ],
+              "description": "生成图(image)还是视频(video)。视频异步分钟级,提交后后台跑,不阻塞对话。"
+            },
+            "prompt": {
+              "type": "string",
+              "description": "生成描述。图片必须写清视觉媒介、主体、动作或关系、环境、构图、光线/色彩、画幅和排除项。视频必须只设计一个连续短镜头，按主体、主要动作、环境、构图与景深、单一路径运镜、光线/色彩/材质、平稳收尾的顺序描述；可有克制的同步环境音，不要音乐和人声。默认不出现文字、数字、logo、水印或伪造界面。生成的是 AI 素材、非真实拍摄。"
+            },
+            "style": {
+              "type": "string",
+              "description": "可选风格/画风(如「扁平插画」「写实摄影」「赛博朋克」),会拼进生成 prompt。"
+            },
+            "sectionRef": {
+              "type": "string",
+              "description": "项目内容配图所服务的当前稿段落引用。先调 context.artifact.text，再逐字使用 sections[].sectionRef；不要让用户提供。"
+            },
+            "visualPurpose": {
+              "type": "string",
+              "enum": [
+                "evidence",
+                "mechanism",
+                "comparison",
+                "consequence",
+                "emotion",
+                "analogy"
+              ],
+              "description": "画面承担的单一认知任务。"
+            },
+            "mediaKind": {
+              "type": "string",
+              "enum": [
+                "illustration",
+                "information_card",
+                "fact_capture"
+              ],
+              "description": "illustration=可自由生成的配图；information_card=要求精确文字/数字/节点的信息卡；fact_capture=真实网页/公告/仓库事实截图。后两类不得走自由文生图。"
+            }
+          },
+          "required": [
+            "kind",
+            "prompt"
+          ],
+          "additionalProperties": false
+        },
+        "execution": "host.task-submit"
+      }
+    ]
+  }
+]

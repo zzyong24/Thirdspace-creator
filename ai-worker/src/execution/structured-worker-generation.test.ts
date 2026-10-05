@@ -5,6 +5,7 @@ import * as structuredNode from "../nodes/structured-node";
 import * as businessSchemas from "./structured-business-schema";
 import { workerSkillSnapshotSchema, type WorkerPort } from "@creatoros/contract/execution-worker";
 import { generateStructuredInWorker } from "./structured-worker-generation";
+import {buildWechatArticleFacets} from "../runtime/wechat-article-candidate";
 
 const input={kind:"model.structured" as const,operationKey:"review",capability:"default",maxOutputTokens:500,skillId:"script.review",facets:{script:"原文片段"},skillSnapshot:{
   snapshotVersion:1 as const,userId:"fixture-user",accountId:"fixture-account",resolvedAt:"2026-09-05T00:00:00.000Z",platformPolicyVersion:"1",platformPolicy:"冻结平台规则",
@@ -40,6 +41,42 @@ async function fixture(content:string|((request:Record<string,any>,index:number)
   };
   const run=()=>generateStructuredInWorker({...input,skillId,...(skillId==="planning.thesis"?{facets:{...input.facets,__planningThesisGrounding:JSON.stringify(["冻结真实材料",...Array(6).fill("")])}}:{}),skillSnapshot:{...input.skillSnapshot,skills:input.skillSnapshot.skills.map(skill=>({...skill,skillId}))}},{apiFormat:"openai_chat",baseUrl:`http://127.0.0.1:${(server.address() as {port:number}).port}/v1`,model:"review-fixture-model",token:"fixture",structuredOutputs:native},new AbortController().signal,call);
   return {run,requests,saved,rows,call,spec:{apiFormat:"openai_chat" as const,baseUrl:`http://127.0.0.1:${(server.address() as {port:number}).port}/v1`,model:"review-fixture-model",token:"fixture"},close:async()=>{server.closeAllConnections();await new Promise<void>(done=>server.close(()=>done()));}};
+}
+
+const articleProjectRef={kind:"project" as const,id:"article-project",versionId:"frozen-project"};
+const articleTitleRef={...articleProjectRef,versionId:"saved-title-source"};
+const articleProposal={
+ proposedTitle:"模型重写的标题",proposedTitleSourceRefs:[articleProjectRef],proposedSummary:"模型重写的简介",proposedSummarySourceRefs:[articleProjectRef],
+ proposedSections:[{op:"insert" as const,sectionId:"real-section",afterSectionId:null,order:0,heading:"正文",body:"合法完整正文",sourceRefs:[articleProjectRef]}],
+ proposedFactItems:[],proposedVisualBriefs:[],sourceRefs:[articleProjectRef],
+};
+const articleFacets=buildWechatArticleFacets({projectId:"article-project",outputId:"article-output",artifactId:"article-artifact",baseVersionId:"saved-version",brief:"基于冻结主稿补正文",
+ current:{schemaVersion:1,title:"人工原标题",summary:"人工原简介",titleSourceRefs:[articleTitleRef],summarySourceRefs:[articleTitleRef],tags:["原标签"],sections:[],factItems:[],visualBriefs:[],imageUses:[]},
+ sourceRefs:[articleProjectRef],sourceMaterials:[{ref:articleProjectRef,label:"冻结原稿",text:"真实正文来源"}],brandProfileVersionId:null,brandProfile:null});
+for(const native of [false,true]){
+ it.each(["changed","empty"] as const)(`T-1055 metadata %s 不反杀正文且实际落账透传原字段/native=${native}`,async mode=>{
+  const candidate={...articleProposal,...(mode==="empty"?{proposedTitle:"",proposedSummary:""}:{})};
+  const f=await fixture(JSON.stringify(candidate),undefined,native,false,"wechat.article-draft");
+  try{
+   const task={...input,skillId:"wechat.article-draft",facets:{...input.facets,...articleFacets},skillSnapshot:{...input.skillSnapshot,skills:input.skillSnapshot.skills.map(skill=>({...skill,skillId:"wechat.article-draft"}))}};
+   const result=await generateStructuredInWorker(task,{...f.spec,structuredOutputs:native},new AbortController().signal,f.call);
+   const object=JSON.parse(result.text).object;
+   expect(object).toMatchObject({proposedTitle:"人工原标题",proposedSummary:"人工原简介",proposedTitleSourceRefs:[articleTitleRef],proposedSummarySourceRefs:[articleTitleRef],proposedSections:articleProposal.proposedSections});
+   expect(f.saved).toEqual([result.text]);expect(f.requests).toHaveLength(1);
+   expect((await generateStructuredInWorker(task,{...f.spec,structuredOutputs:native},new AbortController().signal,f.call)).text).toBe(result.text);
+   expect(f.requests).toHaveLength(1);
+  }finally{await f.close();}
+ });
+ it(`T-1055 无目录旧 ID-only 视觉建议可经公共 Worker 保存/native=${native}`,async()=>{
+  const candidate={...articleProposal,proposedVisualBriefs:[{sectionId:"real-section",brief:"旧视觉建议",proposedAssetId:"legacy-image-id"}]};
+  const f=await fixture(JSON.stringify(candidate),undefined,native,false,"wechat.article-draft");
+  try{
+   const task={...input,skillId:"wechat.article-draft",facets:{...input.facets,...articleFacets},skillSnapshot:{...input.skillSnapshot,skills:input.skillSnapshot.skills.map(skill=>({...skill,skillId:"wechat.article-draft"}))}};
+   const result=await generateStructuredInWorker(task,{...f.spec,structuredOutputs:native},new AbortController().signal,f.call);
+   expect(JSON.parse(result.text).object.proposedVisualBriefs).toEqual(candidate.proposedVisualBriefs);
+   expect(f.saved).toEqual([result.text]);expect(f.requests).toHaveLength(1);
+  }finally{await f.close();}
+ });
 }
 it.each([
   {content:"{}",native:false},

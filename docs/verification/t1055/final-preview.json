@@ -1,0 +1,21 @@
+{
+  "at": "2026-10-03T19:01:55.854368+00:00",
+  "checks": [
+    {
+      "path": "/projects/project-8d660be7-54/article?outputId=output-8d660be7-79",
+      "status": 200,
+      "bytes": 85765
+    },
+    {
+      "path": "/projects/project-8d660be7-54/outputs/output-8d660be7-95/image",
+      "status": 200,
+      "bytes": 113857
+    },
+    {
+      "path": "/settings?tab=models&highlight=assistant-engine",
+      "status": 200,
+      "bytes": 721849
+    }
+  ],
+  "limit": "实际HTTP，不是视觉或真实交互"
+}

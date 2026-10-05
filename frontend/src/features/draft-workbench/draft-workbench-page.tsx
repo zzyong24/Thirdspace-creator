@@ -43,6 +43,9 @@ import { cn } from "@/lib/utils";
 
 export function DraftWorkbenchPage({ vm }: { vm: DraftWorkbenchVm }) {
   const { project, script, scriptArtifactId, thesis, outputId, publishPack, projectCoverAssetId, publishUnlocked, blindPrediction, ammo, scriptReview } = vm;
+  const hasTranscribeAction = Boolean(project.douyinExternalId && project.transcriptState !== "done");
+  const isPublished = publishPack?.outputPublished ?? publishPack?.status === "published";
+  const hasTopbarContent = project.imported || hasTranscribeAction || isPublished;
   const radarDraftSeed = vm.radarDraftSeed ?? "";
   const seedHtml = radarDraftSeed
     .split(/\n+/)
@@ -74,7 +77,7 @@ export function DraftWorkbenchPage({ vm }: { vm: DraftWorkbenchVm }) {
     >
       {/* ── 顶条(T-075 收窄:标题与阶段条由 shell project-workspace header 统一提供;
           [T-076] 阶段条两段化「脚本|复盘」,主行动按发布态收敛)。 ── */}
-      <header
+      {hasTopbarContent && <header
         data-slot="draft-topbar"
         className="flex shrink-0 flex-wrap items-center gap-x-4 gap-y-2 border-b border-border bg-surface px-5 py-2"
       >
@@ -97,13 +100,10 @@ export function DraftWorkbenchPage({ vm }: { vm: DraftWorkbenchVm }) {
           {/* [T-076 gate-F1] 未发布 → null(顶条只剩 Finder);已发布 → 「看复盘 →」。 */}
           <DraftPrimaryAction
             projectId={project.id}
-            published={
-              publishPack?.outputPublished ??
-              publishPack?.status === "published"
-            }
+            published={isPublished}
           />
         </div>
-      </header>
+      </header>}
 
       {/* ── 主体:左稿面 + 右对话位 ──
           [T-108] DraftChatRequestProvider 包住左稿面 + 右 rail:左稿面的 AI 按钮(盲预测/审核)

@@ -3,7 +3,7 @@
 > 本文件由 `node orchestrator/process/pmem.mjs sync` 生成,**勿手改生成段**。
 > 人写的「定位/为什么」改 pmem.mjs 顶部常量与 SYSTEM_ARCHITECTURE.md。
 
-LAST_SYNCED: codex/user-diagnostics @ 6f54c75e
+LAST_SYNCED: codex/user-diagnostics @ 334b6c19
 
 ## 这是什么(定位)
 
@@ -23,8 +23,22 @@ CreatorOS —— 一个编导式的自媒体内容生产系统(非项目管理�
 
 ## 开放任务(欠债)
 
-- [open] T-1037 建立作品级制作工程、版本与公共编辑服务
-- [open] T-1038 集成可视视频制作工作台与同源预览
+- [wip] T-1060 复用开源代码接入 Codex ACP 与 WorkBuddy MCP
+- [open] T-1061 修复候选等待状态
+- [wip] T-1056 统一衍生稿字体并清理页头小字
+- [wip] T-1055 整理脚本衍生稿布局并复用主稿内容
+- [wip] T-1054 去掉项目列表的直接创作作品按钮
+- [wip] T-1053 将开源编辑器原生集成并统一 CreatorOS 风格
+- [wip] T-1052 集成 NoteRelay 的公众号与图文衍生工作面并验证真实交付
+- [wip] T-1051 恢复脚本为主的创作工作台并改为先选平台绑定账号
+- [wip] T-1050 简化新建项目并支持多种作品工作台
+- [wip] T-1048 复用开源组图方法并接通现有画布逐页创作
+- [wip] T-1046 接通 OpenCut 同工程 AI 辅助粗剪与基本视频编辑
+- [wip] T-1049 集成开源小红书组图与公众号编辑工作台并打磨体验
+- [wip] T-1043 统一项目创作入口为文章、图文、视频并支持内容互转
+- [wip] T-1045 贯通一鱼多吃的可选内容组合、画布物料与版本审核
+- [wip] T-1037 建立作品级制作工程、版本与公共编辑服务
+- [wip] T-1038 集成可视视频制作工作台与同源预览
 - [open] T-1039 让编导助手读取选区并操控同一剪辑工程
 - [open] T-1040 接通私有音效轨与中文字体的预览和最终渲染
 - [open] T-1041 验收可视制作、编导剪辑与完整成片交付
@@ -78,7 +92,7 @@ CreatorOS —— 一个编导式的自媒体内容生产系统(非项目管理�
 - [wip] T-859 竖屏素材段人物收进左下角，并消除切换白闪【用户预览纠偏·2026-08-16】
 - [wip] T-858 把剪辑方法真正落到 CreatorOS，根治竖屏统一舞台、字幕重点词与动态 PPT【用户明确要求·2026-08-16】
 - [open] T-851 支持录制“123”短视频生成本人授权的 AI 数字人口播【数字人制作·用户 2026-08-16】
-- [open] T-850 支持只上传未粗剪口播录像，由 AI 理解实拍语义并生成可确认粗剪【制作输入简化·用户 2026-08-16】
+- [wip] T-850 支持原始口播粗剪并整合可操作的剪辑工作台
 - [wip] T-845 根治 Windows 用户机成片在 HyperFrames 启动阶段缺失分层模块解析器【T-844 根因修复·用户 2026-08-16】
 - [wip] T-843 为 CreatorOS 建立可由 Codex 完整操作的官方 CLI，并复用现有全部业务能力【产品方向·用户 2026-08-15】
 - [wip] T-835 取消制作分镜逐字保真失败对整稿候选的阻断，并给出可诊断恢复【用户真机反馈·2026-08-14】
@@ -178,4 +192,4 @@ CreatorOS —— 一个编导式的自媒体内容生产系统(非项目管理�
 
 ## 模块地图(生成自 backend/src/modules)
 
-`ai` · `ai-runtime` · `analytics` · `articles` · `artifacts` · `assets` · `benchmark` · `browser-sessions` · `calibration` · `candidate` · `cli-invocations` · `content-calendar` · `creative-results` · `execution` · `favorites` · `graphic-posts` · `identity` · `ingestion` · `intelligence` · `knowledge` · `learnings` · `material-links` · `notifications` · `output-scripts` · `platform-account` · `platform-collection` · `positioning` · `production` · `projects` · `publishing` · `query-services` · `review` · `reviews` · `scheduling` · `search` · `settings` · `taxonomy` · `topic-attribution` · `trend-sources`
+`ai` · `ai-runtime` · `analytics` · `articles` · `artifacts` · `assets` · `benchmark` · `browser-sessions` · `calibration` · `candidate` · `cli-invocations` · `content-calendar` · `creative-canvas` · `creative-results` · `execution` · `favorites` · `graphic-posts` · `identity` · `ingestion` · `intelligence` · `knowledge` · `learnings` · `material-links` · `moments` · `notifications` · `output-scripts` · `platform-account` · `platform-collection` · `positioning` · `production` · `projects` · `publishing` · `query-services` · `review` · `reviews` · `scheduling` · `search` · `settings` · `taxonomy` · `topic-attribution` · `trend-sources` · `work-compositions`

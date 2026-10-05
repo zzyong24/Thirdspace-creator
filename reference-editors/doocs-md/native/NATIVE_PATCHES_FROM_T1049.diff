@@ -1,0 +1,3333 @@
+--- /dev/null
++++ b/NATIVE_README.md
+@@ -0,0 +1,63 @@
++# Doocs/md 的 CreatorOS 原生组件
++
++原始仓库为 https://github.com/doocs/md ，固定源码提交为 `a7c17fc4cda92e3c13aa7e24f06615cfa4219b31`，原代码许可为 WTFPL。此归档包含完整源码、原锁文件、CreatorOS 原生适配和构建/夹具脚本。原固定来源及历史独立页版本由 CreatorOS 保留；本归档无需读取旧临时工作目录。
++
++用户在 CreatorOS 页面内编辑正文、看公众号预览、调排版和 CSS。真实工作面仍是原 Vue `EditorPanel`、CodeMirror、`PreviewPanel`、`RightSlider`、CSS 编辑器、表格/公式对话框和原 Markdown/HTML 引擎。应用负责正式稿、账号/作品/版本归属、精确素材和 CAS 保存。
++
++```mermaid
++flowchart LR
++  H[CreatorOS 当前作品] --> M[同页 ShadowRoot 原生工作面]
++  M --> E[原 Doocs Vue 与 CodeMirror]
++  E --> R[原 Markdown / 主题 / HTML 引擎]
++  F[用户图片文件] --> U[宿主上传并确认素材归属]
++  U --> A[真实素材 ID 与原 File Blob]
++  A --> E
++  E --> S[Markdown 与原 nativeLayout 回到宿主]
++  S --> H
++```
++
++## 复建与验证
++
++需要满足原 package.json 的 Node 和 pnpm 版本。解压后在源码根运行：
++
++```bash
++pnpm install --frozen-lockfile
++node scripts/build-native.mjs
++node scripts/verify-native-build.mjs
++node scripts/verify-native-dom.mjs
++node scripts/verify-native-dom.mjs --without-process
++node scripts/verify-native-image-variants.mjs
++pnpm --filter @md/web exec vitest run src/native-lease.test.ts
++```
++
++原生配置显式设为 production，并在构建期定义 process.env.NODE_ENV 为 production；浏览器无需 process 兼容对象。构建验证解析实际 JS AST，检查未替换宏为 0；无 process 的实际 ESM 夹具从导入至销毁覆盖原合同。
++
++原生配置显式指向本归档的 `packages/core/src` 与 `packages/shared/src`，不读取旧 `/tmp/t1049` 源码。若复用已有依赖而跳过安装生命周期，先执行 `pnpm --filter @md/web exec wxt prepare`。本轮实际在 Node 25.9.0、相同锁文件/已有依赖缓存下，对两个不同目录独立构建并逐字节核对；不联网重新安装。可再次使用 `node scripts/verify-native-rebuild.mjs <源码目录1> <源码目录2>` 比较完整源和每个产物。
++
++产物在 `apps/web/dist-native/`。将完整目录放到 `/reference-editors/doocs-md/native/`，先把 `native.css` 放入实例 ShadowRoot，再从 `native.js` 加载 `mount`。入口/依赖块/样式引用均是这个目录的本地构建。对应完整源码下载路径为 `/reference-editors/sources/doocs-md/native-source.tar.gz`。
++
++## 宿主接口
++
++`mount(container, options)` 返回 Promise；container 和 portalContainer 必须位于同一 ShadowRoot。options 包含 owner `{accountId,outputId,sourceVersionId}`、theme `{mode,tokens,fontFamily,fontSize,density}`、portalContainer、signal、onChanged、onError 和 importMedia。tokens 是 CreatorOS 的 `--creatoros-*` CSS 变量，颜色直接使用真实 hex 值。importMedia 接收原 File，宿主先注册素材，返回 `{mediaId:'creatoros-asset:<assetId>:<assetFileId>'}`；原生再注册原 Blob 并插入正文。
++
++handle 返回 `request(operation,payload?,{requestId?,signal?}?)`、`update({theme?,disabled?})`、`dispose()`。request 支持：
++
++| 操作 | 输入 | 返回 |
++| --- | --- | --- |
++| load | `{document:{title,markdown,layout?},assets?:[{assetId,assetFileId,blob}]}` | `{markdown,layout}` |
++| asset | `{assetId,assetFileId,blob}` | `{mediaId}` |
++| insert-media | 同 asset | 注册素材并插入精确图片引用，返回 `{mediaId}` |
++| snapshot | 空 | `{markdown,layout}` |
++| export-html | 空 | `{html,bindings:[{key:'assetId:assetFileId',url}]}` |
++
++onChanged 报告 `{markdown,layout}`。内存存储只服务当前实例，不另建正式稿/素材数据库；draft sessionStorage、稳定段落标记、CAS 与资源 ZIP 继续由宿主原合同负责。换 UI theme 不修改稿件版式。同作品 load 保留已核验图片；卸载撤销 Blob URL，串行 lease 确保旧实例关闭后新实例取得写权。
++
++## 本次实际验证边界
++
++构建和全 Web 源类型检查通过；原生 lease 的两个 Vitest 测试通过；Node+jsdom 使用实际 dist-native ESM 完成原组件挂载和宿主合同断言。夹具使用真实 Markdown/HTML 引擎与原 File 身份，图片内容是明确的非像素夹具。ResizeObserver、Range 几何与 scrollIntoView 由夹具模拟；execCommand 返回 false，不能当作 Clipboard 成功。没有运行浏览器自动化。
++
++图片使用惰性 DOM 解析，合法引号、换行、属性中的大于号均保留；img/picture/source 与 SVG image 的未知外链局部占位，精确素材、已注册 Blob 和明确 image MIME 的安全内嵌图继续显示。实际夹具检查了预览与 HTML 导出、原 Markdown 不变及 SVG 其它向量层保留。
++
++真实浏览器的亮暗像素/布局/焦点/层级、图片像素、资源 ZIP 人工质量、系统 Clipboard、远程 MathJax/PlantUML 和复杂图表仍待验。原数学/图表引擎的远程依赖继承上游行为，未在本次夹具中联网验证。DOM 夹具只证明其实际断言，不能代替这些项目。
++
++`native-build-graph.json` 列出实际编译源码和依赖，`licenses/` 包含随 npm 包提供的许可证文件，`LICENSE` 是原项目 WTFPL 许可。两个实际编译 npm 包没有随包许可证文件（measury、qiniu-js），其声明许可保留在构建依赖记录中，不虚构原版权文本。
+--- /dev/null
++++ b/NATIVE_SOURCE.json
+@@ -0,0 +1,16 @@
++{
++  "task": "T-1053",
++  "upstreamRepository": "https://github.com/doocs/md",
++  "upstreamCommit": "a7c17fc4cda92e3c13aa7e24f06615cfa4219b31",
++  "upstreamLicense": "WTFPL",
++  "baseline": "T1049 固定来源的 CreatorOS 独立页适配源码",
++  "nativeEntry": "apps/web/src/native-entry.ts",
++  "buildScript": "scripts/build-native.mjs",
++  "buildConfig": "apps/web/vite.native.config.ts",
++  "output": "apps/web/dist-native/",
++  "hostingBase": "/reference-editors/doocs-md/native/",
++  "sourceDownload": "/reference-editors/sources/doocs-md/native-source.tar.gz",
++  "storageOwner": "CreatorOS 既有宿主服务；native 仅内存存储",
++  "browserAutomation": "未运行，仍禁止",
++  "tddHistory": "保留实际 lease 失败/通过日志；无证据的其它前置 TDD 不声称通过"
++}
+--- /dev/null
++++ b/NATIVE_VERIFY.md
+@@ -0,0 +1,35 @@
++# T-1053 · Doocs 原生候选验证
++
++本次未运行浏览器自动化。独立源码候选由 `/tmp/t1053-native-doocs/` 接续；正式共享 checkout 未由本子代理写入。
++
++| 实际执行 | 结果 | 证据和边界 |
++| --- | --- | --- |
++| 原完整 Web `vue-tsc --project tsconfig.app.json --noEmit` 与 Vite 原生 ESM 构建 | PASS | `build-verified-final.log`，构建脚本先执行类型检查，任一步非零退出即失败 |
++| 原生同文档 lease 两个 Vitest 测试 | PASS，2/2 | `lease-green-final.log`，旧实例完全关闭后替换，等待挂载取消不能取得 lease；原 vitest 配置 __dirname 未来兼容警告保留 |
++| 实际 `dist-native/native.js` 的 Node+jsdom DOM 夹具 | PASS | `dom-final-environment.log`，真实原组件/CodeMirror/HTML 引擎、load/snapshot/export、精确图片和同owner重新加载、代码块字面值、缺图降级、File原对象经宿主回执、迟到上传不改新owner、主题不改nativeLayout、portal/禁用、body不锁、lease/取消/销毁、旧request拒绝、title/lang/head/body/localStorage无外溢 |
++| 构建图、ESM相对依赖与CSS资源路径 | PASS | `artifact-final.log`，2823模块、186依赖、890个静态/动态相对import检查；原Vue/CodeMirror/PreviewPanel/RightSlider/core renderer确实出现在构建图，native.css资源URL都在相同本地发布目录 |
++| 同锁两个独立源码目录复建逐文件比较 | PASS | `rebuild-determinism.json` 与 `build-deterministic-extracted.log`；源码及 395 个产物文件（含自身哈希清单）逐字节一致，不联网重装依赖 |
++| 图片合法属性与响应式来源回归 | PASS | `image-seven-families-red.log` / `image-seven-families-green.log`；reviewer 原 7 族实际 ESM 红绿。最终 DOM 夹具另覆盖 14 组 img/picture、8 组 SVG 图片和 2 组安全 data 图，预览与 HTML 导出都检查且不改原 Markdown |
++| 无 process 的实际 ESM 生命周期 | PASS | `no-process-red.log` / `no-process-green.log`；导入前删除全局 process，从真实挂载至编辑、导出、File回执、换稿和销毁全程无 process，结束后才恢复夹具环境；reviewer 原探针另见 `no-process-reviewer-green.log` |
++| JS AST 生产宏检查 | PASS | `artifact-final.log`：197 个实际 JS 文件解析，未替换 process.env.NODE_ENV 宏为 0；字符串示例不计入宏 |
++| 相对T1049基准补丁空白检查 | PASS | `whitespace-check.json`，逐文件 `git diff --no-index --check`；父会话仍需对集成后的共享diff执行最终门卫 |
++
++DOM 夹具补齐了 jsdom 已有 Window、NodeFilter、HTMLImageElement 等真实 DOM 构造器。它显式模拟 ResizeObserver、空 Range 几何和 scrollIntoView；execCommand 返回 false，没有模拟 Clipboard 成功。图片是带明确 image MIME 的非像素 File/Blob 夹具。Reka 内部标题/描述诊断使用 document ID 查询，不能找到 ShadowRoot 中已有的 DialogTitle/Description，早期构建打开两个文件对话框时记录了相应警告，保留在历史日志；可访问性和真实焦点/层级继续待验，不声称该项全绿。
++
++真实浏览器亮暗像素、布局、宽度/滚动、焦点和层级、系统 Clipboard、图片像素、HTML资源ZIP人工质量、远程 MathJax/PlantUML与复杂图表未获证据，继续待验。服务器静态资源HTTP路由在父会话集成后验证。没有把旧独立页/iframe测试算作本次原生验证。
++
++实际失败日志保留：首次类型检查因临时 node_modules 指向旧源码失败；第一次DOM夹具暴露Blob URL被净化器删除；早期默认示例稿触发图表和公式加载；后续jsdom环境缺失构造器导致的失败也保留。已经修复相应代码或夹具环境，最终PASS只覆盖上述断言。这些日志不能冒充其它前置TDD、独立评审或真机E2E的历史证据。
++
++许可：原项目WTFPL LICENSE随源码和dist交付。构建依赖记录保留186个实际npm包的声明许可和随包许可证文件；measury、qiniu-js两个实际编译包没有随npm包提供独立许可证文件，这一缺口原样记录，不补造版权文本。
++
++## 本轮源码复建差异与修正
++
++第一次归档解压后重建确有差异，不能算可复现 PASS。两边完整运行源码及锁文件相同，旧构建图也相同（2849 模块、193 依赖）；差异来自 Rolldown 输出中依赖缓存的相对路径诊断注释，以及 Tailwind 默认扫描候选工作区中的工具文档等非运行源。原生配置现在在块哈希前通过真实 JS 解析只删除 region 注释；字符串、其它注释及许可证保留。Tailwind 使用 source(none)，显式固定到 Web/shared/core 源目录。构建图的缓存路径、排序与许可文件顺序也统一。打包前清理旧 native 目录，避免旧哈希块残留。
++
++本轮分别在候选与独立解压目录运行原生构建，复用已安装的同锁依赖缓存，@md/core 与 @md/shared 均指向各自解压目录。独立解压目录先执行了原 postinstall 的 wxt prepare。验证脚本核对源文件、锁文件、实际依赖路径、每个构建文件及 SHA 清单，记录在 rebuild-determinism.json；不声称另一个操作系统、CPU架构、Node/pnpm版本或不同依赖也已验证。
++
++独立实现评审暴露了合法 alt 属性中 > 导致图片正则漏检，以及 picture/source 和 SVG image 的外链来源。图片解析现在使用惰性 template，遍历真实 img、picture/source、svg image；精确素材 token/已注册 Blob 继续绑定，未知来源局部占位，保留其它属性、原 SVG 向量层与规范正文。明确 image MIME 的内嵌图仍可用于原数学/图表图片。image-attribute-red.log、image-seven-families-red.log、svg-image-red.log 是实际执行失败；最终绿测只证明夹具断言，不能扩大成真实网络、像素或任意 MathJax/图表质量结论。
++
++## 生产环境启动修正
++
++独立评审在导入前删除 Node 的全局 process 后，旧 library 产物在 Vue 的 process.env.NODE_ENV 处直接 ReferenceError，尚未挂载；本轮已实际复现失败，保留 no-process-red.log。Vite 原生配置现在显式 mode: production，define process.env.NODE_ENV 为字符串 production，由构建替换宏，不注入运行期 process 兼容对象。生产分支裁剪后，最终构建图为 2823 模块、186 依赖；前文“旧构建图 2849/193”只描述上一轮差异排查的历史事实。最终 DOM、图片、lease 与无 process 夹具重跑通过，双目录比较也使用本轮生产产物。
+--- /dev/null
++++ b/apps/web/src/NativeApp.vue
+@@ -0,0 +1,36 @@
++<script setup lang="ts">
++import {defineAsyncComponent} from 'vue'
++import EditorPanel from '@/components/editor/EditorPanel.vue'
++import PreviewPanel from '@/components/editor/PreviewPanel.vue'
++import NativeToolbar from './native-toolbar.vue'
++import NativeMediaDialog from './native-media-dialog.vue'
++import {useCursorSync} from '@/composables/useCursorSync'
++import {useScrollSync} from '@/composables/useScrollSync'
++import {useUIStore} from '@/stores/ui'
++import {getNativeHost} from '@md/core/native-host'
++import {Toaster} from '@/components/ui/sonner'
++const CssEditor=defineAsyncComponent(()=>import('@/components/editor/CssEditor.vue'))
++const RightSlider=defineAsyncComponent(()=>import('@/components/editor/RightSlider.vue'))
++const TableEditDialog=defineAsyncComponent(()=>import('@/components/editor/dialogs/TableEditDialog.vue'))
++const FormulaEditorDialog=defineAsyncComponent(()=>import('@/components/editor/dialogs/FormulaEditorDialog.vue'))
++const TemplateDialog=defineAsyncComponent(()=>import('@/components/editor/dialogs/TemplateDialog.vue'))
++const ConfirmDialog=defineAsyncComponent(()=>import('@/components/shared/confirm-dialog/ConfirmDialog.vue'))
++const ui=useUIStore();const editor=ref<InstanceType<typeof EditorPanel>|null>(null);const preview=ref<InstanceType<typeof PreviewPanel>|null>(null)
++const {handlePreviewContentClick}=useCursorSync(()=>editor.value?.codeMirrorView??null)
++useScrollSync(()=>editor.value?.codeMirrorView??null,()=>preview.value?.previewRef??null,computed(()=>ui.enableScrollSync))
++const host=getNativeHost()!
++</script>
++<template>
++ <div class="creatoros-doocs-native" :class="{dark:ui.isDark}">
++  <NativeToolbar/>
++  <NativeMediaDialog :on-import="file=>editor?.uploadImage(file)"/>
++  <div class="native-content" :class="{'native-edit-only':ui.viewMode==='edit','native-preview-only':ui.viewMode==='preview'}">
++   <div class="native-editor-pane"><EditorPanel ref="editor"/></div>
++   <div class="native-preview-pane"><PreviewPanel ref="preview" :back-light="false" :is-coping="false" :on-content-click="handlePreviewContentClick"/></div>
++   <aside v-if="ui.isOpenRightSlider" class="native-style-pane"><RightSlider/></aside>
++   <aside v-if="ui.isShowCssEditor" class="native-css-pane"><CssEditor/></aside>
++  </div>
++  <TableEditDialog v-if="ui.isShowTableEditDialog"/><FormulaEditorDialog v-if="ui.isShowFormulaEditorDialog"/><TemplateDialog v-if="ui.isShowTemplateDialog"/><ConfirmDialog/>
++  <Teleport :to="host.portal"><Toaster rich-colors position="top-center" :duration="1800" :theme="ui.isDark?'dark':'light'"/></Teleport>
++ </div>
++</template>
+--- a/apps/web/src/assets/index.css
++++ b/apps/web/src/assets/index.css
+@@ -1,7 +1,10 @@
+-@import 'tailwindcss';
++@import 'tailwindcss' source(none);
+ @import 'tw-animate-css';
+ 
+-@source '../../packages/shared/src';
++/* 构建只读取运行源码；归档位置、工具文档与旧产物不会改变 CSS。 */
++@source '..';
++@source '../../../../packages/shared/src';
++@source '../../../../packages/core/src';
+ 
+ @custom-variant dark (&:is(.dark *));
+ 
+--- a/apps/web/src/components/ai/SidebarAIToolbar.vue
++++ b/apps/web/src/components/ai/SidebarAIToolbar.vue
+@@ -1,4 +1,6 @@
+ <script setup lang="ts">
++import {nativeQuery} from '@md/core/native-host'
++
+ import { Bot, Image as ImageIcon, Wand2 } from '@lucide/vue'
+ import { defineAsyncComponent } from 'vue'
+ import { useEditorStore } from '@/stores/editor'
+@@ -124,7 +126,7 @@
+     if (!target)
+       return
+ 
+-    const toolbar = document.querySelector(`.editor-ai-toolbar`)
++    const toolbar = nativeQuery(`.editor-ai-toolbar`)
+ 
+     if (toolbar && toolbar.contains(target))
+       return
+--- a/apps/web/src/components/ai/chat-box/AIAssistantPanel.vue
++++ b/apps/web/src/components/ai/chat-box/AIAssistantPanel.vue
+@@ -1,4 +1,6 @@
+ <script setup lang="ts">
++import {nativeQuery} from '@md/core/native-host'
++
+ import type { QuickCommandRuntime } from '@/stores/quickCommands'
+ import {
+   Check,
+@@ -300,7 +302,7 @@
+ 
+ async function scrollToBottom(force = false) {
+   await nextTick()
+-  const container = document.querySelector(`.chat-container`)
++  const container = nativeQuery(`.chat-container`)
+   if (container) {
+     const isNearBottom = (container.scrollTop + container.clientHeight)
+       >= (container.scrollHeight - 50)
+--- a/apps/web/src/components/ai/image-generator/AIImageGeneratorPanel.vue
++++ b/apps/web/src/components/ai/image-generator/AIImageGeneratorPanel.vue
+@@ -1,4 +1,6 @@
+ <script setup lang="ts">
++import {appendNativeTransient} from '@md/core/native-host'
++
+ import {
+   Copy,
+   Download,
+@@ -312,9 +314,9 @@
+       : `no-prompt`
+     a.download = `ai-image-${index + 1}-${promptPart}.png`
+ 
+-    document.body.appendChild(a)
++    appendNativeTransient(a)
+     a.click()
+-    document.body.removeChild(a)
++    a.remove()
+     window.URL.revokeObjectURL(url)
+     toast.success(t(`ai.image.downloadStarted`))
+   }
+--- a/apps/web/src/components/editor/CssEditor.vue
++++ b/apps/web/src/components/editor/CssEditor.vue
+@@ -1,4 +1,6 @@
+ <script setup lang="ts">
++import {nativeQuery,getNativeHost} from '@md/core/native-host'
++
+ import type { ThemeName } from '@md/shared/configs'
+ import { Check, CheckSquare, CircleHelp, Download, Edit3, Ellipsis, Eye, Plus, X } from '@lucide/vue'
+ import { hljs } from '@md/core/renderer'
+@@ -17,6 +19,8 @@
+ import { useUIStore } from '@/stores/ui'
+ 
+ const { t } = useI18n()
++const native=getNativeHost()
++let nativeAlive=true
+ const confirmStore = useConfirmStore()
+ const cssEditorStore = useCssEditorStore()
+ const uiStore = useUIStore()
+@@ -83,7 +87,8 @@
+ 
+ async function scrollToActiveTab() {
+   await nextTick()
+-  const activeTab = document.querySelector('.cssEditor-wrapper .css-tab-active')
++  if(!nativeAlive||native&&(!native.live||native.signal.aborted))return
++  const activeTab = nativeQuery('.cssEditor-wrapper .css-tab-active')
+   if (activeTab) {
+     activeTab.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })
+   }
+@@ -303,6 +308,10 @@
+ })
+ 
+ onUnmounted(() => {
++  nativeAlive=false
++  cssEditorStore.cssEditor?.destroy()
++  cssEditorStore.cssEditor=null
++  cssEditorStore.setOnTabChangedCallback(null)
+   document.removeEventListener('click', closeContextMenu)
+ })
+ 
+--- a/apps/web/src/components/editor/EditorContextMenu.vue
++++ b/apps/web/src/components/editor/EditorContextMenu.vue
+@@ -1,4 +1,6 @@
+ <script setup lang='ts'>
++import {getNativeHost} from '@md/core/native-host'
++const native=getNativeHost()
+ import {
+   Blocks,
+   Bold,
+@@ -128,6 +130,7 @@
+ 
+ async function pasteFromClipboard() {
+   const text = await readPlainFromClipboard()
++  if(native&&(!native.live||native.signal.aborted))return
+   if (text !== null)
+     editorStore.replaceSelection(text)
+ }
+@@ -174,7 +177,21 @@
+     <ContextMenuTrigger>
+       <slot />
+     </ContextMenuTrigger>
+-    <ContextMenuContent class="w-64 max-h-[80vh] overflow-y-auto">
++    <ContextMenuContent v-if="native" class="w-56">
++      <ContextMenuItem @click="toggleShowUploadImgDialog()">插入图片</ContextMenuItem>
++      <ContextMenuItem @click="openFormulaEditor()">编辑公式</ContextMenuItem>
++      <ContextMenuItem @click="openTableEditDialog()">编辑表格</ContextMenuItem>
++      <ContextMenuSeparator/>
++      <ContextMenuItem @click="addFormat(`${ctrlKey}-B`)">加粗</ContextMenuItem>
++      <ContextMenuItem @click="addFormat(`${ctrlKey}-I`)">斜体</ContextMenuItem>
++      <ContextMenuItem @click="formatContent()">格式化正文</ContextMenuItem>
++      <ContextMenuItem @click="resetStyleConfirm()">恢复默认排版</ContextMenuItem>
++      <ContextMenuItem @click="clearContent()">清空正文</ContextMenuItem>
++      <ContextMenuSeparator/>
++      <ContextMenuItem @click="copyToClipboard()">复制选中文字</ContextMenuItem>
++      <ContextMenuItem @click="pasteFromClipboard()">粘贴文字</ContextMenuItem>
++    </ContextMenuContent>
++    <ContextMenuContent v-else class="w-64 max-h-[80vh] overflow-y-auto">
+       <template v-if="isContextTargetInTable">
+         <ContextMenuItem @click="openTableEditDialog()">
+           <Table class="mr-2 h-4 w-4" />
+--- a/apps/web/src/components/editor/EditorPanel.vue
++++ b/apps/web/src/components/editor/EditorPanel.vue
+@@ -1,4 +1,6 @@
+ <script setup lang="ts">
++import {getNativeHost,ownsNativeFocus} from '@md/core/native-host'
++
+ import type SearchTabType from '@/components/ui/search-tab/SearchTab.vue'
+ import { Compartment, EditorState, Prec } from '@codemirror/state'
+ import { EditorView, keymap, placeholder } from '@codemirror/view'
+@@ -30,6 +32,8 @@
+ 
+ const { t, locale } = useI18n()
+ const uploadHostOptions = useLocalizedUploadHostOptions()
++const nativeHost=getNativeHost();let nativeDisposed=false
++const nativeAlive=()=>!nativeDisposed&&(!nativeHost||nativeHost.live&&!nativeHost.signal.aborted)
+ const editorStore = useEditorStore()
+ const postStore = usePostStore()
+ const renderStore = useRenderStore()
+@@ -62,17 +66,15 @@
+ }
+ 
+ const { editor } = storeToRefs(editorStore)
+-const { isDark, showAIToolbox } = storeToRefs(uiStore)
++const { isDark } = storeToRefs(uiStore)
+ const { posts, currentPostIndex, currentPost } = storeToRefs(postStore)
+ const {
+-  isMobile,
+   enableImageReupload,
+   viewMode,
+ } = storeToRefs(uiStore)
+ 
+ const { toggleShowUploadImgDialog } = uiStore
+ 
+-const showEditor = computed(() => viewMode.value !== `preview`)
+ 
+ const codeMirrorView = shallowRef<EditorView | null>(null)
+ const themeCompartment = new Compartment()
+@@ -164,6 +166,7 @@
+ })
+ 
+ function handleGlobalKeydown(e: KeyboardEvent) {
++  if(!nativeAlive()||!ownsNativeFocus(e))return
+   const editorView = codeMirrorView.value
+   if (e.key === `Escape` && searchTabRef.value?.showSearchTab) {
+     searchTabRef.value.showSearchTab = false
+@@ -174,6 +177,7 @@
+ 
+ // --- Image upload ---
+ async function beforeImageUpload(file: File) {
++  if(nativeHost)return nativeAlive()
+   const checkResult = validateImageFile(file, t)
+   if (!checkResult.ok) {
+     toast.error(checkResult.msg)
+@@ -198,10 +202,9 @@
+     toast.error(t('editorPanel.uploadUnknownError'))
+     return
+   }
+-  setTimeout(() => {
+-    toggleShowUploadImgDialog(false)
+-  }, 1000)
+-  const markdownImage = `![](${imageUrl})`
++  if(!nativeHost)setTimeout(() => { toggleShowUploadImgDialog(false) },1000)
++  if(!nativeAlive())return
++  const markdownImage = nativeHost?`<img src="${imageUrl}" alt="图片">`:`![](${imageUrl})`
+   if (codeMirrorView.value) {
+     codeMirrorView.value.dispatch(codeMirrorView.value.state.replaceSelection(`\n${markdownImage}\n`))
+   }
+@@ -225,6 +228,8 @@
+ ) {
+   try {
+     isImgLoading.value = true
++    if(!nativeAlive())return
++    if(nativeHost){const url=await upload(file);if(!nativeAlive())return;if(cb){const data=await toBase64(file);if(!nativeAlive())return;cb(url,data)}else uploaded(url);return}
+     const useCompression = (await store.get(`useCompression`)) === `true`
+     if (useCompression)
+       file = await compressImage(file)
+@@ -240,6 +245,7 @@
+       return uploaded(url)
+   }
+   catch (err) {
++    if(!nativeAlive())return
+     toast.error(err instanceof Error ? err.message : t('store.uploader.uploadFailed'))
+     cb?.('', '')
+   }
+@@ -365,6 +371,7 @@
+ // --- Image paste handler for CodeMirror ---
+ function createPasteHandler() {
+   return (event: ClipboardEvent, view: EditorView) => {
++    if(!nativeAlive()||!ownsNativeFocus(event))return false
+     const imageFiles = collectClipboardImages(event.clipboardData)
+     if (imageFiles.length > 0) {
+       if (isImgLoading.value)
+@@ -383,7 +390,7 @@
+     }
+ 
+     const text = event.clipboardData?.getData('text/plain')
+-    if (text) {
++    if (text && !nativeHost) {
+       const mdImgRegex = /!\[(.*?)\]\((https?:\/\/[^)]+)\)/g
+       const matches = [...text.matchAll(mdImgRegex)]
+ 
+@@ -455,7 +462,7 @@
+ // --- CodeMirror creation ---
+ function createFormTextArea(dom: HTMLDivElement) {
+   const state = EditorState.create({
+-    doc: posts.value[currentPostIndex.value].content,
++    doc: posts.value[currentPostIndex.value]?.content??'',
+     extensions: [
+       markdownSetup({
+         onSearch: openSearchWithSelection,
+@@ -472,6 +479,7 @@
+       themeCompartment.of(theme(isDark.value)),
+       EditorView.updateListener.of((update) => {
+         if (update.docChanged) {
++          if(!nativeAlive())return
+           scheduleEditorRefresh()
+           clearTimeout(persistTimer.value)
+           persistTimer.value = setTimeout(() => {
+@@ -481,6 +489,7 @@
+       }),
+       EditorView.domEventHandlers({
+         paste: createPasteHandler(),
++        drop: (event)=>{if(!nativeHost||!ownsNativeFocus(event)||!event.dataTransfer?.files.length)return false;event.preventDefault();for(const file of Array.from(event.dataTransfer.files))if(file.type.startsWith('image/'))void uploadImage(file);return true},
+       }),
+       ...createSlashExtension(() => codeMirrorView.value),
+       ...createComponentCompletionExtension(() => localizedAllComponents.value),
+@@ -550,20 +559,27 @@
+         isMacCodeBlock: themeStore.isMacCodeBlock,
+         isShowLineNumber: themeStore.isShowLineNumber,
+       })
+-      themeStore.applyCurrentTheme()
++      if(!nativeAlive())return
++      await themeStore.applyCurrentTheme()
++      if(!nativeAlive())return
+       await nextTick()
++      if(!nativeAlive())return
+ 
+       const editorView = createFormTextArea(editorDom)
+       editor.value = editorView
+       editorStore.registerContentFlush(commitEditorContentToPost)
+ 
+       const content = posts.value[currentPostIndex.value]?.content ?? ``
+-      await preloadMathJaxIfNeeded(content)
++      if(!nativeHost)await preloadMathJaxIfNeeded(content)
++      if(!nativeAlive())return
+ 
+       editorRefresh()
+-      mdLocalToRemote()
++      if(!nativeHost)mdLocalToRemote()
++      nativeHost?.readyResolve?.()
+     }
+     catch (error) {
++      nativeHost?.readyReject?.(error)
++      nativeHost?.onError(error instanceof Error?error.message:'编辑器初始化失败')
+       console.error(`[EditorPanel] Failed to initialize editor`, error)
+     }
+     finally {
+@@ -632,7 +648,9 @@
+ const historyTimer = ref<ReturnType<typeof setTimeout>>()
+ onMounted(() => {
+   historyTimer.value = setInterval(() => {
++    if(!nativeAlive())return
+     const currentPost = posts.value[currentPostIndex.value]
++    if(!currentPost)return
+ 
+     const pre = (currentPost.history || [])[0]?.content
+     if (pre === currentPost.content) {
+@@ -650,6 +668,8 @@
+ })
+ 
+ onUnmounted(() => {
++  nativeDisposed=true
++  codeMirrorView.value?.destroy();codeMirrorView.value=null;editor.value=null
+   editorStore.unregisterContentFlush()
+   window.removeEventListener(MATHJAX_READY_EVENT, handleMathJaxReady)
+   clearTimeout(historyTimer.value)
+--- a/apps/web/src/components/editor/PreviewPanel.vue
++++ b/apps/web/src/components/editor/PreviewPanel.vue
+@@ -1,4 +1,8 @@
+ <script setup lang="ts">
++import {getNativeHost} from '@md/core/native-host'
++
++import {nativeById} from '@md/core/native-host'
++
+ import type { DiagramDownloadOverlay } from '@/lib/preview/diagram-download'
+ import { CONTENT_FONT_LANG } from '@/i18n/constants'
+ import { setupDiagramDownloadOverlay } from '@/lib/preview/diagram-download'
+@@ -13,6 +17,7 @@
+ }>()
+ 
+ const { t } = useI18n()
++const native=getNativeHost();let alive=true
+ const renderStore = useRenderStore()
+ const uiStore = useUIStore()
+ 
+@@ -28,7 +33,8 @@
+ const previewRef = useTemplateRef<HTMLDivElement>(`previewRef`)
+ 
+ async function hydratePreviewDiagrams() {
+-  const outputElement = document.getElementById(`output`)
++  if(!alive||native&&(!native.live||native.signal.aborted))return
++  const outputElement = nativeById(`output`)
+   if (!outputElement)
+     return
+ 
+@@ -38,9 +44,10 @@
+     import(`@md/core/extensions`),
+   ])
+ 
++  if(!alive||native&&(!native.live||native.signal.aborted))return
+   highlightPendingBlocks(hljs, outputElement)
+   hydratePendingInfographicDiagrams(outputElement, {
+-    themeMode: isDark.value ? `dark` : `light`,
++    themeMode: native ? `light` : isDark.value ? `dark` : `light`,
+   })
+ }
+ 
+@@ -79,7 +86,7 @@
+ 
+ onMounted(() => {
+   nextTick(() => {
+-    const outputEl = document.getElementById(`output`)
++    const outputEl = nativeById(`output`)
+     if (outputEl) {
+       diagramOverlay = setupDiagramDownloadOverlay(outputEl)
+       emojiCleanup = setupEmojiHydration(outputEl)
+@@ -91,6 +98,7 @@
+ })
+ 
+ onUnmounted(() => {
++  alive=false
+   diagramOverlay?.cleanup()
+   emojiCleanup?.()
+ })
+@@ -110,7 +118,7 @@
+       <div
+         id="output-wrapper"
+         class="w-full max-w-full"
+-        :class="{ output_night: !backLight }"
++        :class="{ output_night: !native && !backLight }"
+       >
+         <div
+           class="preview border-x shadow-xl mx-auto"
+@@ -134,7 +142,7 @@
+           </div>
+         </div>
+       </div>
+-      <BackTop
++      <BackTop v-if="!native"
+         target="preview"
+         :right="isMobile ? 24 : 20"
+         :bottom="isMobile ? 90 : 20"
+--- a/apps/web/src/components/editor/RightSlider.vue
++++ b/apps/web/src/components/editor/RightSlider.vue
+@@ -6,7 +6,11 @@
+ } from '@md/shared/configs'
+ import type { Format } from 'vue-pick-colors'
+ import { X } from '@lucide/vue'
+-import PickColors from 'vue-pick-colors'
++import {getNativeHost} from '@md/core/native-host'
++const native=getNativeHost()
++const PickColors=defineAsyncComponent(()=>import('vue-pick-colors'))
++let headingTimer:ReturnType<typeof setTimeout>|undefined
++onUnmounted(()=>{clearTimeout(headingTimer)})
+ import { Label } from '@/components/ui/label'
+ import { Switch } from '@/components/ui/switch'
+ import { useEditorRefresh } from '@/composables/useEditorRefresh'
+@@ -51,7 +55,8 @@
+     if (val === `custom`) {
+       uiStore.isShowCssEditor = true
+       nextTick(() => {
+-        setTimeout(() => {
++        headingTimer=setTimeout(() => {
++          if(native&&(!native.live||native.signal.aborted))return
+           cssEditorStore.scrollToHeading(selectedHeadingLevel.value)
+         }, 100)
+       })
+@@ -313,6 +318,7 @@
+           variant="ghost"
+           size="sm"
+           class="h-8 w-full justify-start px-1.5 text-xs text-muted-foreground"
++          v-if="!native"
+           @click="openThemeMarketplace"
+         >
+           {{ t('marketplace.exploreThemes') }}
+@@ -439,8 +445,12 @@
+           {{ t('menu.customPrimaryColor') }}
+         </h2>
+         <div ref="pickColorsContainer">
++          <div v-if="native" class="flex gap-2 items-center">
++            <input type="color" aria-label="自定义主色" :value="/^#[0-9a-f]{6}$/i.test(primaryColor)?primaryColor:'#000000'" @input="colorChanged(($event.target as HTMLInputElement).value)">
++            <input aria-label="主色值" :value="primaryColor" class="w-full rounded border bg-background px-2 py-1" @change="colorChanged(($event.target as HTMLInputElement).value)">
++          </div>
+           <PickColors
+-            v-if="pickColorsContainer" v-model:value="primaryColor" show-alpha :format="format"
++            v-if="!native && pickColorsContainer" v-model:value="primaryColor" show-alpha :format="format"
+             :format-options="formatOptions" :theme="isDark ? 'dark' : 'light'"
+             :popup-container="pickColorsContainer" @change="colorChanged"
+           />
+--- a/apps/web/src/components/editor/editor-header/PostInfo.vue
++++ b/apps/web/src/components/editor/editor-header/PostInfo.vue
+@@ -1,4 +1,6 @@
+ <script setup lang="ts">
++import {nativeQuery} from '@md/core/native-host'
++
+ import type { Post, PostAccount } from '@md/shared/types'
+ import { Check, ChevronDown, ChevronRight, Info, Loader2, Minus } from '@lucide/vue'
+ import { CheckboxIndicator, CheckboxRoot, Primitive } from 'reka-ui'
+@@ -111,12 +113,12 @@
+   const accounts = allAccounts.value.filter(a => ![`ipfs`].includes(a.type))
+   try {
+     auto = {
+-      thumb: document.querySelector<HTMLImageElement>(`#output img`)?.src ?? ``,
++      thumb: nativeQuery<HTMLImageElement>(`#output img`)?.src ?? ``,
+       title: [1, 2, 3, 4, 5, 6]
+-        .map(h => document.querySelector(`#output h${h}`))
++        .map(h => nativeQuery(`#output h${h}`))
+         .find(h => h)
+         ?.textContent ?? ``,
+-      desc: document.querySelector(`#output p`)?.textContent?.trim() ?? ``,
++      desc: nativeQuery(`#output p`)?.textContent?.trim() ?? ``,
+       content: output.value,
+       markdown: editor.value?.state.doc.toString() ?? ``,
+       accounts,
+--- a/apps/web/src/components/editor/editor-header/index.vue
++++ b/apps/web/src/components/editor/editor-header/index.vue
+@@ -1,4 +1,6 @@
+ <script setup lang="ts">
++import {nativeById,appendNativeTransient} from '@md/core/native-host'
++
+ import { Copy, Loader2, Menu, Palette } from '@lucide/vue'
+ import { defineAsyncComponent } from 'vue'
+ import { useEditorRefresh } from '@/composables/useEditorRefresh'
+@@ -75,7 +77,7 @@
+   tempContainer.style.setProperty(`background-color`, `#ffffff`, `important`)
+   tempContainer.style.setProperty(`color`, `#000000`, `important`)
+ 
+-  document.body.appendChild(tempContainer)
++  appendNativeTransient(tempContainer)
+   let successful = false
+ 
+   try {
+@@ -139,7 +141,7 @@
+           toast.warning(t(`toast.asyncContentPending`))
+         }
+ 
+-        const clipboardDiv = document.getElementById(`output`)
++        const clipboardDiv = nativeById(`output`)
+ 
+         if (!clipboardDiv) {
+           toast.error(t(`toast.outputAreaMissing`))
+--- a/apps/web/src/components/editor/post-slider/index.vue
++++ b/apps/web/src/components/editor/post-slider/index.vue
+@@ -1,4 +1,6 @@
+ <script setup lang="ts">
++import {nativeQuery} from '@md/core/native-host'
++
+ import { CheckSquare, ChevronsDownUp, ChevronsUpDown, Download, Ellipsis, FileText, Plus, Regex, Replace, ReplaceAll, Search, Upload, X } from '@lucide/vue'
+ import { CONTENT_FONT_LANG } from '@/i18n/constants'
+ import { formatLocalDateTime } from '@/i18n/translate'
+@@ -297,7 +299,7 @@
+ const historyPreviewCss = computed(() => {
+   if (!isOpenHistoryDialog.value || historyViewMode.value !== `preview`)
+     return ``
+-  const themeStyle = document.querySelector(`#md-theme`) as HTMLStyleElement | null
++  const themeStyle = nativeQuery(`#md-theme`) as HTMLStyleElement | null
+   if (!themeStyle?.textContent)
+     return ``
+   return scopeThemeCss(themeStyle.textContent, HISTORY_PREVIEW_SCOPE)
+--- a/apps/web/src/components/ui/back-top/BackTop.vue
++++ b/apps/web/src/components/ui/back-top/BackTop.vue
+@@ -1,4 +1,6 @@
+ <script setup lang="ts">
++import {nativeById} from '@md/core/native-host'
++
+ import { ArrowUpFromLine } from '@lucide/vue'
+ import { useThrottleFn } from '@vueuse/shared'
+ 
+@@ -50,7 +52,7 @@
+ 
+ onMounted(() => {
+   if (props.target) {
+-    target.value = document.getElementById(props.target)
++    target.value = nativeById(props.target)
+   }
+   else {
+     target.value = window
+--- a/apps/web/src/components/ui/context-menu/ContextMenu.vue
++++ b/apps/web/src/components/ui/context-menu/ContextMenu.vue
+@@ -1,4 +1,5 @@
+ <script setup lang="ts">
++import {isNativeHost} from '@md/core/native-host'
+ import type { ContextMenuRootEmits, ContextMenuRootProps } from 'reka-ui'
+ import { ContextMenuRoot, useForwardPropsEmits } from 'reka-ui'
+ 
+@@ -9,7 +10,7 @@
+ </script>
+ 
+ <template>
+-  <ContextMenuRoot v-bind="forwarded">
++  <ContextMenuRoot v-bind="forwarded" :modal="isNativeHost()?false:props.modal">
+     <slot />
+   </ContextMenuRoot>
+ </template>
+--- a/apps/web/src/components/ui/context-menu/ContextMenuContent.vue
++++ b/apps/web/src/components/ui/context-menu/ContextMenuContent.vue
+@@ -1,4 +1,6 @@
+ <script setup lang="ts">
++import {nativePortal} from '@md/core/native-host'
++
+ import type { ContextMenuContentEmits, ContextMenuContentProps } from 'reka-ui'
+ import type { HTMLAttributes } from 'vue'
+ import {
+@@ -22,7 +24,7 @@
+ </script>
+ 
+ <template>
+-  <ContextMenuPortal>
++  <ContextMenuPortal :to="nativePortal()">
+     <ContextMenuContent
+       v-bind="forwarded"
+       :class="cn(
+--- a/apps/web/src/components/ui/context-menu/ContextMenuPortal.vue
++++ b/apps/web/src/components/ui/context-menu/ContextMenuPortal.vue
+@@ -1,4 +1,6 @@
+ <script setup lang="ts">
++import {nativePortal} from '@md/core/native-host'
++
+ import type { ContextMenuPortalProps } from 'reka-ui'
+ import { ContextMenuPortal } from 'reka-ui'
+ 
+@@ -6,7 +8,7 @@
+ </script>
+ 
+ <template>
+-  <ContextMenuPortal v-bind="props">
++  <ContextMenuPortal v-bind="props" :to="nativePortal()">
+     <slot />
+   </ContextMenuPortal>
+ </template>
+--- a/apps/web/src/components/ui/dialog/Dialog.vue
++++ b/apps/web/src/components/ui/dialog/Dialog.vue
+@@ -1,6 +1,7 @@
+ <script setup lang="ts">
+ import type { DialogRootEmits, DialogRootProps } from 'reka-ui'
+ import { DialogRoot, useForwardPropsEmits } from 'reka-ui'
++import {isNativeHost} from '@md/core/native-host'
+ import { useModalOpenFocusBlur } from '@/lib/a11y/dialog-focus'
+ 
+ const props = defineProps<DialogRootProps>()
+@@ -12,7 +13,7 @@
+ </script>
+ 
+ <template>
+-  <DialogRoot v-bind="forwarded">
++  <DialogRoot v-bind="forwarded" :modal="isNativeHost()?false:props.modal">
+     <slot />
+   </DialogRoot>
+ </template>
+--- a/apps/web/src/components/ui/dialog/DialogContent.vue
++++ b/apps/web/src/components/ui/dialog/DialogContent.vue
+@@ -1,4 +1,6 @@
+ <script setup lang="ts">
++import {nativePortal} from '@md/core/native-host'
++
+ import type { DialogContentEmits, DialogContentProps } from 'reka-ui'
+ import type { HTMLAttributes } from 'vue'
+ import { X } from '@lucide/vue'
+@@ -29,7 +31,7 @@
+ </script>
+ 
+ <template>
+-  <DialogPortal>
++  <DialogPortal :to="nativePortal()">
+     <DialogOverlay
+       class="data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-200 bg-black/80"
+     />
+--- a/apps/web/src/components/ui/dialog/DialogScrollContent.vue
++++ b/apps/web/src/components/ui/dialog/DialogScrollContent.vue
+@@ -1,4 +1,6 @@
+ <script setup lang="ts">
++import {nativePortal} from '@md/core/native-host'
++
+ import type { DialogContentEmits, DialogContentProps } from 'reka-ui'
+ import type { HTMLAttributes } from 'vue'
+ import { X } from '@lucide/vue'
+@@ -29,7 +31,7 @@
+ </script>
+ 
+ <template>
+-  <DialogPortal>
++  <DialogPortal :to="nativePortal()">
+     <DialogOverlay
+       class="data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 grid place-items-center overflow-y-auto bg-black/80"
+     >
+--- a/apps/web/src/components/ui/dropdown-menu/DropdownMenu.vue
++++ b/apps/web/src/components/ui/dropdown-menu/DropdownMenu.vue
+@@ -1,4 +1,5 @@
+ <script setup lang="ts">
++import {isNativeHost} from '@md/core/native-host'
+ import type { DropdownMenuRootEmits, DropdownMenuRootProps } from 'reka-ui'
+ import { DropdownMenuRoot, useForwardPropsEmits } from 'reka-ui'
+ 
+@@ -9,7 +10,7 @@
+ </script>
+ 
+ <template>
+-  <DropdownMenuRoot v-bind="forwarded">
++  <DropdownMenuRoot v-bind="forwarded" :modal="isNativeHost()?false:props.modal">
+     <slot />
+   </DropdownMenuRoot>
+ </template>
+--- a/apps/web/src/components/ui/dropdown-menu/DropdownMenuContent.vue
++++ b/apps/web/src/components/ui/dropdown-menu/DropdownMenuContent.vue
+@@ -1,4 +1,5 @@
+ <script setup lang="ts">
++import {nativePortal} from '@md/core/native-host'
+ import type { DropdownMenuContentEmits, DropdownMenuContentProps } from 'reka-ui'
+ import type { HTMLAttributes } from 'vue'
+ import {
+@@ -27,7 +28,7 @@
+ </script>
+ 
+ <template>
+-  <DropdownMenuPortal>
++  <DropdownMenuPortal :to="nativePortal()">
+     <DropdownMenuContent
+       v-bind="forwarded"
+       :class="cn('z-50 min-w-32 overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-md data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2', props.class)"
+--- a/apps/web/src/components/ui/hover-card/HoverCardContent.vue
++++ b/apps/web/src/components/ui/hover-card/HoverCardContent.vue
+@@ -1,4 +1,6 @@
+ <script setup lang="ts">
++import {nativePortal} from '@md/core/native-host'
++
+ import type { HoverCardContentProps } from 'reka-ui'
+ import type { HTMLAttributes } from 'vue'
+ import {
+@@ -26,7 +28,7 @@
+ </script>
+ 
+ <template>
+-  <HoverCardPortal>
++  <HoverCardPortal :to="nativePortal()">
+     <HoverCardContent
+       v-bind="forwardedProps"
+       :class="
+--- a/apps/web/src/components/ui/menubar/MenubarContent.vue
++++ b/apps/web/src/components/ui/menubar/MenubarContent.vue
+@@ -1,4 +1,6 @@
+ <script setup lang="ts">
++import {nativePortal} from '@md/core/native-host'
++
+ import type { MenubarContentProps } from 'reka-ui'
+ import type { HTMLAttributes } from 'vue'
+ import {
+@@ -28,7 +30,7 @@
+ </script>
+ 
+ <template>
+-  <MenubarPortal>
++  <MenubarPortal :to="nativePortal()">
+     <MenubarContent
+       v-bind="forwardedProps"
+       :class="
+--- a/apps/web/src/components/ui/menubar/MenubarSubContent.vue
++++ b/apps/web/src/components/ui/menubar/MenubarSubContent.vue
+@@ -1,4 +1,6 @@
+ <script setup lang="ts">
++import {nativePortal} from '@md/core/native-host'
++
+ import type { MenubarSubContentEmits, MenubarSubContentProps } from 'reka-ui'
+ import type { HTMLAttributes } from 'vue'
+ import {
+@@ -23,7 +25,7 @@
+ </script>
+ 
+ <template>
+-  <MenubarPortal>
++  <MenubarPortal :to="nativePortal()">
+     <MenubarSubContent
+       v-bind="forwarded"
+       :class="
+--- a/apps/web/src/components/ui/popover/PopoverContent.vue
++++ b/apps/web/src/components/ui/popover/PopoverContent.vue
+@@ -1,4 +1,6 @@
+ <script setup lang="ts">
++import {nativePortal} from '@md/core/native-host'
++
+ import type { PopoverContentEmits, PopoverContentProps } from 'reka-ui'
+ import type { HTMLAttributes } from 'vue'
+ import {
+@@ -32,7 +34,7 @@
+ </script>
+ 
+ <template>
+-  <PopoverPortal>
++  <PopoverPortal :to="nativePortal()">
+     <PopoverContent
+       v-bind="{ ...forwarded, ...$attrs }"
+       :class="
+--- a/apps/web/src/components/ui/select/SelectContent.vue
++++ b/apps/web/src/components/ui/select/SelectContent.vue
+@@ -1,4 +1,6 @@
+ <script setup lang="ts">
++import {nativePortal} from '@md/core/native-host'
++
+ import type { SelectContentEmits, SelectContentProps } from 'reka-ui'
+ import type { HTMLAttributes } from 'vue'
+ import {
+@@ -33,7 +35,7 @@
+ </script>
+ 
+ <template>
+-  <SelectPortal>
++  <SelectPortal :to="nativePortal()">
+     <SelectContent
+       v-bind="{ ...forwarded, ...$attrs }"
+       :class="cn(
+--- a/apps/web/src/components/ui/tooltip/TooltipContent.vue
++++ b/apps/web/src/components/ui/tooltip/TooltipContent.vue
+@@ -1,4 +1,6 @@
+ <script setup lang="ts">
++import {nativePortal} from '@md/core/native-host'
++
+ import type { TooltipContentEmits, TooltipContentProps } from 'reka-ui'
+ import type { HTMLAttributes } from 'vue'
+ import { TooltipContent, TooltipPortal, useForwardPropsEmits } from 'reka-ui'
+@@ -24,7 +26,7 @@
+ </script>
+ 
+ <template>
+-  <TooltipPortal>
++  <TooltipPortal :to="nativePortal()">
+     <TooltipContent v-bind="{ ...forwarded, ...$attrs }" :class="cn('z-50 overflow-hidden rounded-md border bg-popover px-3 py-1.5 text-sm text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2', props.class)">
+       <slot />
+     </TooltipContent>
+--- a/apps/web/src/composables/useCommandPaletteHotkey.ts
++++ b/apps/web/src/composables/useCommandPaletteHotkey.ts
+@@ -1,3 +1,4 @@
++import {ownsNativeFocus} from '@md/core/native-host'
+ import { useUIStore } from '@/stores/ui'
+ 
+ /** Register global command palette shortcut Mod+Shift+. */
+@@ -5,6 +6,7 @@
+   const uiStore = useUIStore()
+ 
+   function onKeydown(event: KeyboardEvent) {
++    if(!ownsNativeFocus(event))return
+     if (!(event.metaKey || event.ctrlKey) || !event.shiftKey)
+       return
+     // Use code so Shift+. (key becomes ">") still matches the period key
+--- a/apps/web/src/composables/useCursorSync.ts
++++ b/apps/web/src/composables/useCursorSync.ts
+@@ -1,3 +1,4 @@
++import {nativeById} from '@md/core/native-host'
+ import type { MaybeRefOrGetter } from 'vue'
+ import { EditorView } from '@codemirror/view'
+ import { findAllMarkdownTables } from '@md/shared/utils/table'
+@@ -177,9 +178,9 @@
+         }
+         catch {}
+         if (targetId) {
+-          const targetEl = document.getElementById(targetId)
++          const targetEl = nativeById(targetId)
+           if (targetEl) {
+-            const container = target.closest(`.preview-wrapper`) || document.getElementById(`preview`)
++            const container = target.closest(`.preview-wrapper`) || nativeById(`preview`)
+             if (container && container.contains(targetEl)) {
+               event.preventDefault()
+               event.stopPropagation()
+--- a/apps/web/src/composables/useEditorDocumentActions.ts
++++ b/apps/web/src/composables/useEditorDocumentActions.ts
+@@ -1,14 +1,17 @@
++import {getNativeHost} from '@md/core/native-host'
+ import { getDefaultContent } from '@/assets/example/default-content'
+ import { t } from '@/i18n/translate'
+ import { useEditorStore } from '@/stores/editor'
+ import { usePostStore } from '@/stores/post'
+ 
+ export function useEditorDocumentActions() {
++  const host=getNativeHost()
+   const editorStore = useEditorStore()
+   const postStore = usePostStore()
+ 
+   async function formatContent() {
+     const doc = await editorStore.formatContent()
++    if(host&&(!host.live||host.signal.aborted))return
+     if (doc && postStore.currentPost)
+       postStore.updatePostContent(postStore.currentPostId, doc)
+     return doc
+--- a/apps/web/src/composables/useEditorRefresh.ts
++++ b/apps/web/src/composables/useEditorRefresh.ts
+@@ -1,3 +1,4 @@
++import {getNativeHost} from '@md/core/native-host'
+ import { useEditorStore } from '@/stores/editor'
+ import { useRenderStore } from '@/stores/render'
+ import { useThemeStore } from '@/stores/theme'
+@@ -15,6 +16,7 @@
+   debounceMs?: number
+   maxWaitMs?: number
+ }) {
++  const native=getNativeHost()
+   const themeStore = useThemeStore()
+   const editorStore = useEditorStore()
+   const renderStore = useRenderStore()
+@@ -35,6 +37,7 @@
+   }
+ 
+   function editorRefresh(options?: { force?: boolean }) {
++    if(native&&(!native.live||native.signal.aborted))return
+     themeStore.updateCodeTheme()
+     const raw = editorStore.getContent()
+     renderStore.render(raw, options)
+--- a/apps/web/src/composables/useImageUploader.ts
++++ b/apps/web/src/composables/useImageUploader.ts
+@@ -1,3 +1,4 @@
++import {getNativeHost} from '@md/core/native-host'
+ import { toBase64 } from '@md/shared/utils/fileHelpers'
+ import { ref } from 'vue'
+ import { t } from '@/i18n/translate'
+@@ -70,6 +71,17 @@
+   }
+ 
+   const upload = async (resource: string | File): Promise<string> => {
++    const host=getNativeHost()
++    if(host){
++      if(!host.live||host.signal.aborted)throw new Error('稿件已关闭')
++      if(typeof resource==='string')throw new Error('请从 CreatorOS 素材库选择图片')
++      const imported=await host.importMedia(resource)
++      if(!host.live||host.signal.aborted)throw new Error('稿件已改变，导入回执未应用')
++      if(!/^creatoros-asset:[^:\s]+:[^\s]+$/.test(imported.mediaId))throw new Error('素材导入没有返回精确素材引用')
++      const match=/^creatoros-asset:([^:\s]+):([^\s]+)$/.exec(imported.mediaId)!;const key=`${match[1]}:${match[2]}`
++      const prior=host.imageUrls.get(key);host.imageBlobs.set(key,resource);host.imageUrls.set(key,URL.createObjectURL(resource));if(prior)URL.revokeObjectURL(prior)
++      return imported.mediaId
++    }
+     isUploading.value = true
+     error.value = null
+ 
+--- a/apps/web/src/composables/useInitialPreviewBoot.ts
++++ b/apps/web/src/composables/useInitialPreviewBoot.ts
+@@ -1,3 +1,4 @@
++import {nativeById} from '@md/core/native-host'
+ import { dismissInitialLoader } from '@/lib/bootstrap/dismiss-initial-loader'
+ import { delay } from '@/lib/delay'
+ import { waitForPreviewReady } from '@/lib/preview/preview-ready'
+@@ -12,12 +13,12 @@
+ async function waitForOutputElement(timeoutMs = OUTPUT_WAIT_TIMEOUT_MS) {
+   const deadline = Date.now() + timeoutMs
+   while (Date.now() < deadline) {
+-    const output = document.getElementById(`output`)
++    const output = nativeById(`output`)
+     if (output)
+       return output
+     await delay(OUTPUT_POLL_INTERVAL_MS)
+   }
+-  return document.getElementById(`output`)
++  return nativeById(`output`)
+ }
+ 
+ /** After first preview render, wait for async diagrams/math before dismissing loader. */
+--- a/apps/web/src/composables/usePreferencesHotkey.ts
++++ b/apps/web/src/composables/usePreferencesHotkey.ts
+@@ -1,3 +1,4 @@
++import {ownsNativeFocus} from '@md/core/native-host'
+ import { useUIStore } from '@/stores/ui'
+ 
+ /** Register global preferences shortcut Mod+, */
+@@ -5,6 +6,7 @@
+   const uiStore = useUIStore()
+ 
+   function onKeydown(event: KeyboardEvent) {
++    if(!ownsNativeFocus(event))return
+     if (!(event.metaKey || event.ctrlKey) || event.shiftKey || event.altKey)
+       return
+     if (event.key !== `,`)
+--- a/apps/web/src/composables/useScrollSync.ts
++++ b/apps/web/src/composables/useScrollSync.ts
+@@ -24,6 +24,9 @@
+   previewContainerRef: MaybeRefOrGetter<HTMLElement | null>,
+   enableScrollSync: Ref<boolean>,
+ ) {
++  const frames=new Set<number>()
++  function scheduleFrame(callback:()=>void){const frame=requestAnimationFrame(()=>{frames.delete(frame);callback()});frames.add(frame)}
++  onUnmounted(()=>{for(const frame of frames)cancelAnimationFrame(frame);frames.clear();teardownMutationObserver()})
+   let isSyncingFromEditor = false
+   let isSyncingFromPreview = false
+   // Filter bounce scroll events via programmatic target values (not a time window):
+@@ -148,14 +151,14 @@
+     if (scroller.scrollTop <= 0) {
+       pendingPreviewScrollTop = 0
+       preview.scrollTop = 0
+-      requestAnimationFrame(() => { isSyncingFromEditor = false })
++      scheduleFrame(() => { isSyncingFromEditor = false })
+       return
+     }
+     if (scroller.scrollTop >= scrollable) {
+       const maxPreviewScrollTop = preview.scrollHeight - preview.clientHeight
+       pendingPreviewScrollTop = maxPreviewScrollTop
+       preview.scrollTop = maxPreviewScrollTop
+-      requestAnimationFrame(() => { isSyncingFromEditor = false })
++      scheduleFrame(() => { isSyncingFromEditor = false })
+       return
+     }
+ 
+@@ -182,7 +185,7 @@
+     const targetScrollTop = Math.min(previewOffsetTops[targetIndex], maxPreviewScrollTop)
+     pendingPreviewScrollTop = targetScrollTop
+     preview.scrollTop = targetScrollTop
+-    requestAnimationFrame(() => { isSyncingFromEditor = false })
++    scheduleFrame(() => { isSyncingFromEditor = false })
+   }
+ 
+   function onPreviewScroll() {
+@@ -209,14 +212,14 @@
+     if (preview.scrollTop <= 0) {
+       pendingEditorScrollTop = 0
+       view.scrollDOM.scrollTop = 0
+-      requestAnimationFrame(() => { isSyncingFromPreview = false })
++      scheduleFrame(() => { isSyncingFromPreview = false })
+       return
+     }
+     if (preview.scrollTop >= previewScrollable) {
+       const maxEditorScrollTop = view.scrollDOM.scrollHeight - view.scrollDOM.clientHeight
+       pendingEditorScrollTop = maxEditorScrollTop
+       view.scrollDOM.scrollTop = maxEditorScrollTop
+-      requestAnimationFrame(() => { isSyncingFromPreview = false })
++      scheduleFrame(() => { isSyncingFromPreview = false })
+       return
+     }
+ 
+@@ -255,7 +258,7 @@
+       pendingEditorScrollTop = targetScrollTop
+       view.scrollDOM.scrollTop = targetScrollTop
+     }
+-    requestAnimationFrame(() => { isSyncingFromPreview = false })
++    scheduleFrame(() => { isSyncingFromPreview = false })
+   }
+ 
+   watchEffect((onCleanup) => {
+--- a/apps/web/src/composables/useSlashCommand.ts
++++ b/apps/web/src/composables/useSlashCommand.ts
+@@ -1,3 +1,4 @@
++import {getNativeHost} from '@md/core/native-host'
+ import type { EditorView as EditorViewType } from '@codemirror/view'
+ import type { SlashCommandItem } from '@/composables/slashCommands'
+ import { Prec } from '@codemirror/state'
+@@ -14,7 +15,7 @@
+   const { locale } = useI18n()
+   const allCommands = computed(() => {
+     void locale.value
+-    return buildSlashCommands()
++    return buildSlashCommands().filter(command=>!getNativeHost()||command.id!=='component')
+   })
+ 
+   const filteredCommands = computed(() => {
+--- a/apps/web/src/creatoros-bridge.ts
++++ b/apps/web/src/creatoros-bridge.ts
+@@ -1,104 +1,3 @@
+-import type { ThemeName, PerThemeSettings } from '@md/shared/configs'
+-import { usePostStore } from '@/stores/post'
+-import { useEditorStore } from '@/stores/editor'
+-import { useThemeStore } from '@/stores/theme'
+-import { useCssEditorStore } from '@/stores/cssEditor'
+-import { getHtmlContent } from '@/services/export/html-content'
+-import { EXPORT_LAYOUT_CSS } from '@/services/export/apply-export-layout'
+-import { getStylesToAdd, SHARE_SHELL_VARS_CSS } from '@/services/export/share-styles'
+-
+-const CHANNEL = 'creatoros-doocs'
+-const COMMIT = 'a7c17fc4cda92e3c13aa7e24f06615cfa4219b31'
+-const imageUrls = new Map<string, string>()
+-let parentOrigin = ''
+-function imageKey(assetId: string, fileId: string): string { return `${assetId}:${fileId}` }
+-
+-export function resolveCreatorOSImages(markdown: string): string {
+-  return markdown.replace(/src=(['"])creatoros-asset:([^:\s'"]+):([^\s'"]+)\1/g, (_match, quote: string, assetId: string, fileId: string) => {
+-    const blobUrl = imageUrls.get(imageKey(assetId, fileId))
+-    return blobUrl ? `src=${quote}${blobUrl}${quote}` : `src=${quote}creatoros-asset:${assetId}:${fileId}${quote}`
+-  })
+-}
+-
+-export function installCreatorOSBridge(): void {
+-  const postStore = usePostStore()
+-  const editorStore = useEditorStore()
+-  const themeStore = useThemeStore()
+-  const cssStore = useCssEditorStore()
+-  let sessionId = ''
+-  let initialized = false
+-  let lastState = ''
+-  const send = (type: string, body: Record<string, unknown> = {}) => window.parent.postMessage({ channel: CHANNEL, type, ...(sessionId ? { sessionId } : {}), ...body }, parentOrigin || '*')
+-  const currentLayout = () => ({
+-    schemaVersion: 1, editor: 'doocs-md', editorCommit: COMMIT,
+-    themeId: String(themeStore.theme),
+-    themeSettings: JSON.parse(JSON.stringify(themeStore.themeSettings[themeStore.theme] ?? {})),
+-    customCss: cssStore.getCurrentTabContent(),
+-    exportOptions: { useIndent: Boolean(themeStore.isUseIndent), useJustify: Boolean(themeStore.isUseJustify) },
+-  })
+-  const applyLayout = (layout: any) => {
+-    if (!layout) return
+-    if (layout.themeId) themeStore.theme = layout.themeId as ThemeName
+-    if (layout.themeId && layout.themeSettings) themeStore.themeSettings = { ...themeStore.themeSettings, [layout.themeId as ThemeName]: layout.themeSettings as PerThemeSettings }
+-    if (typeof layout.customCss === 'string') {
+-      const tab = cssStore.cssContentConfig.tabs[0]
+-      if (tab) { tab.content = layout.customCss; cssStore.cssContentConfig.active = tab.id; cssStore.setCssEditorValue(layout.customCss) }
+-    }
+-    if (layout.exportOptions) { themeStore.isUseIndent = layout.exportOptions.useIndent; themeStore.isUseJustify = layout.exportOptions.useJustify }
+-    void themeStore.applyCurrentTheme()
+-  }
+-  const applyDocument = (document: { markdown: string; layout: any }) => {
+-    applyLayout(document.layout)
+-    const post = postStore.currentPost
+-    if (post) postStore.updatePostContent(post.id, document.markdown)
+-    editorStore.importContent(document.markdown)
+-    lastState = ''
+-  }
+-  window.addEventListener('message', (event: MessageEvent) => {
+-    if (event.source !== window.parent) return
+-    const message = event.data
+-    if (!message || message.channel !== CHANNEL || typeof message.type !== 'string') return
+-    if (message.type === 'init') {
+-      if (initialized || typeof message.nonce !== 'string' || message.nonce.length < 16 || event.origin === 'null') return
+-      parentOrigin = event.origin
+-      sessionId = String(message.sessionId || '')
+-      if (!sessionId || !message.document || typeof message.document.markdown !== 'string') return
+-      initialized = true
+-      applyDocument(message.document)
+-      send('initialized', { nonce: message.nonce })
+-      return
+-    }
+-    if (!initialized || event.origin !== parentOrigin || message.sessionId !== sessionId) return
+-    if (message.type === 'set-document' && typeof message.document?.markdown === 'string') applyDocument(message.document)
+-    if (message.type === 'asset' && typeof message.assetId === 'string' && typeof message.assetFileId === 'string' && message.blob instanceof Blob) {
+-      const key = imageKey(message.assetId, message.assetFileId)
+-      const prior = imageUrls.get(key)
+-      if (prior) URL.revokeObjectURL(prior)
+-      imageUrls.set(key, URL.createObjectURL(message.blob))
+-      const post = postStore.currentPost
+-      if (post) editorStore.importContent(post.content)
+-    }
+-    if (message.type === 'export-html' && typeof message.nonce === 'string') {
+-      void (async () => {
+-        const styles = await getStylesToAdd()
+-        const html = `<style>${SHARE_SHELL_VARS_CSS}</style>${styles}<style>${EXPORT_LAYOUT_CSS}</style><div id="output">${getHtmlContent({ staticLayout: true })}</div>`
+-        send('export-html', { nonce: message.nonce, html, bindings: [...imageUrls].map(([key, url]) => ({ key, url })) })
+-      })().catch(() => send('export-html', { nonce: message.nonce, error: '公众号 HTML 生成失败，请先确认编辑器预览正常。' }))
+-    }
+-  })
+-  send('ready')
+-  window.setInterval(() => {
+-    if (!initialized) return
+-    const markdown = editorStore.getContent()
+-    const layout = currentLayout()
+-    const state = JSON.stringify([markdown, layout])
+-    if (state === lastState) return
+-    lastState = state
+-    send('changed', { markdown, layout })
+-  }, 500)
+-  window.addEventListener('pagehide', () => {
+-    for (const url of imageUrls.values()) URL.revokeObjectURL(url)
+-    imageUrls.clear()
+-    initialized = false
+-  }, { once: true })
+-}
++export {resolveNativeImages as resolveCreatorOSImages} from '@md/core/native-host'
++/** 原生入口直接调用 handle，不接收 window 消息。 */
++export function installCreatorOSBridge():void{}
+--- a/apps/web/src/lib/a11y/dialog-focus.ts
++++ b/apps/web/src/lib/a11y/dialog-focus.ts
+@@ -1,3 +1,4 @@
++import {nativeQueryAll} from '@md/core/native-host'
+ import type { MaybeRefOrGetter } from 'vue'
+ import { computed, mergeProps, toValue, watch } from 'vue'
+ 
+@@ -40,7 +41,7 @@
+     if (isFocusablePageElement(active) && !container.contains(active))
+       active.blur()
+ 
+-    for (const el of document.querySelectorAll<HTMLElement>(`.cm-content`)) {
++    for (const el of nativeQueryAll<HTMLElement>(`.cm-content`)) {
+       if (!container.contains(el) && el === document.activeElement)
+         el.blur()
+     }
+--- a/apps/web/src/lib/bootstrap/dismiss-initial-loader.ts
++++ b/apps/web/src/lib/bootstrap/dismiss-initial-loader.ts
+@@ -1,3 +1,4 @@
++import {nativeById} from '@md/core/native-host'
+ const INITIAL_LOADER_ID = `app-initial-loader`
+ const DISMISS_FALLBACK_MS = 25_000
+ 
+@@ -27,7 +28,7 @@
+ 
+   requestAnimationFrame(() => {
+     requestAnimationFrame(() => {
+-      const loader = document.getElementById(INITIAL_LOADER_ID)
++      const loader = nativeById(INITIAL_LOADER_ID)
+       if (!(loader instanceof HTMLElement))
+         return
+ 
+--- a/apps/web/src/lib/browser/clipboard.ts
++++ b/apps/web/src/lib/browser/clipboard.ts
+@@ -1,3 +1,4 @@
++import {appendNativeTransient} from '@md/core/native-host'
+ import { t } from '@/i18n/translate'
+ 
+ function legacyCopy(text: string): Promise<void> {
+@@ -8,11 +9,11 @@
+       textarea.setAttribute(`readonly`, `true`)
+       textarea.style.position = `fixed`
+       textarea.style.opacity = `0`
+-      document.body.appendChild(textarea)
++      appendNativeTransient(textarea)
+ 
+       textarea.select()
+       const ok = document.execCommand(`copy`)
+-      document.body.removeChild(textarea)
++      textarea.remove()
+ 
+       ok ? resolve() : reject(new Error(`execCommand failed`))
+     }
+--- a/apps/web/src/lib/preview/diagram-download.ts
++++ b/apps/web/src/lib/preview/diagram-download.ts
+@@ -1,3 +1,4 @@
++import {appendNativeTransient} from '@md/core/native-host'
+ /**
+  * Diagram download utilities
+  * Supports downloading SVG diagrams (Mermaid, PlantUML, etc.) as .svg or .png
+@@ -15,9 +16,9 @@
+   a.href = url
+   a.download = filename
+   a.style.display = `none`
+-  document.body.appendChild(a)
++  appendNativeTransient(a)
+   a.click()
+-  document.body.removeChild(a)
++  a.remove()
+ }
+ 
+ function cloneSvg(svgEl: SVGSVGElement): SVGSVGElement {
+--- a/apps/web/src/lib/preview/preview-ready.ts
++++ b/apps/web/src/lib/preview/preview-ready.ts
+@@ -1,3 +1,4 @@
++import {nativeById} from '@md/core/native-host'
+ import { hydratePendingInfographicDiagrams } from '@md/core/extensions'
+ import {
+   isAsyncDiagramPending,
+@@ -49,7 +50,7 @@
+   await nextTick()
+   await nextTick()
+ 
+-  const output = document.getElementById(`output`)
++  const output = nativeById(`output`)
+   if (!output)
+     return false
+ 
+--- a/apps/web/src/modules/build-extension.ts
++++ b/apps/web/src/modules/build-extension.ts
+@@ -1,3 +1,4 @@
++import {nativeQueryAll} from '@md/core/native-host'
+ import type * as vite from 'vite'
+ import type * as wxt from 'wxt'
+ import { writeFile } from 'node:fs/promises'
+@@ -104,7 +105,7 @@
+           // Replace inline script with virtual module served via dev server.
+           // Extension CSP blocks inline scripts, so that's why we're pulling them out.
+           const promises: Promise<void>[] = []
+-          const inlineScripts = document.querySelectorAll(`script[src^=http]`)
++          const inlineScripts = nativeQueryAll(`script[src^=http]`)
+           inlineScripts.forEach((script) => {
+             const url = script.getAttribute(`src`) ?? ``
+             if (url?.startsWith(`http://localhost`)) {
+@@ -170,7 +171,7 @@
+       async handler(html) {
+         const { document } = parseHTML(html)
+         const promises: Promise<void>[] = []
+-        const httpScripts = document.querySelectorAll(`script[src^=http]`)
++        const httpScripts = nativeQueryAll(`script[src^=http]`)
+         if (httpScripts.length > 0) {
+           httpScripts.forEach((script) => {
+             const url = script.getAttribute(`src`) ?? ``
+@@ -197,7 +198,7 @@
+         // Replace inline script with virtual module served via dev server.
+         // Extension CSP blocks inline scripts, so that's why we're pulling them
+         // out.
+-        const inlineScripts = document.querySelectorAll(`script:not([src])`)
++        const inlineScripts = nativeQueryAll(`script:not([src])`)
+         if (inlineScripts.length > 0) {
+           inlineScripts.forEach((script) => {
+             const p = (async () => {
+@@ -237,7 +238,7 @@
+       order: `post`,
+       handler(html) {
+         const { document } = parseHTML(html)
+-        const inlineScripts = document.querySelectorAll(`script[src^='/@id/virtual:']`)
++        const inlineScripts = nativeQueryAll(`script[src^='/@id/virtual:']`)
+         inlineScripts.forEach((script) => {
+           const src = script.getAttribute(`src`)
+           const newSrc = `${server?.origin}${src}`
+--- /dev/null
++++ b/apps/web/src/native-entry.ts
+@@ -0,0 +1,240 @@
++import { createApp, nextTick, watch, type App } from 'vue'
++import { createPinia, setActivePinia, disposePinia } from 'pinia'
++import { getNativeHost, setNativeHost, trackNativeJob, type NativeDomHost } from '@md/core/native-host'
++import { resetThemeInjector } from '@md/core/theme'
++import { initNativeStorage, documentRepo } from '@/storage'
++import { setupI18n, setAppI18n } from '@/i18n'
++import { usePostStore } from '@/stores/post'
++import { useEditorStore } from '@/stores/editor'
++import { useRenderStore } from '@/stores/render'
++import { useThemeStore } from '@/stores/theme'
++import { useCssEditorStore } from '@/stores/cssEditor'
++import { useUIStore } from '@/stores/ui'
++import { getHtmlContent } from '@/services/export/html-content'
++import { getStylesToAdd, SHARE_SHELL_VARS_CSS } from '@/services/export/share-styles'
++import { EXPORT_LAYOUT_CSS } from '@/services/export/apply-export-layout'
++import { NativeLease } from './native-lease'
++import { NativeRequestQueue } from './native-queue'
++import { applyNativeTheme, type NativeTheme } from './native-theme'
++import NativeApp from './NativeApp.vue'
++import './assets/index.css'
++import './assets/less/codemirror-global.less'
++import './assets/less/theme.less'
++import './native.css'
++
++const COMMIT = 'a7c17fc4cda92e3c13aa7e24f06615cfa4219b31'
++const lease = new NativeLease()
++type Asset = { assetId: string; assetFileId: string; blob: Blob }
++type NativeDocument = { title: string; markdown: string; layout?: any }
++type Options = {
++  owner: { accountId: string; outputId: string; sourceVersionId: string }
++  theme: NativeTheme
++  portalContainer: HTMLElement
++  signal: AbortSignal
++  onChanged: (value: unknown) => void
++  onError: (message: string) => void
++  importMedia: (file: File) => Promise<{ mediaId: string }>
++}
++export async function mount(container: HTMLElement, options: Options) {
++  if (options.signal.aborted) throw new Error('挂载已取消')
++  if (!(container.getRootNode() instanceof ShadowRoot) || container.getRootNode() !== options.portalContainer.getRootNode()) {
++    throw new Error('公众号编辑器需要同一组件样式容器')
++  }
++  for (const value of [options.owner?.accountId,options.owner?.outputId,options.owner?.sourceVersionId]) {
++    if (typeof value !== 'string' || !value) throw new Error('稿件归属不完整')
++  }
++  const cancel = new AbortController()
++  const queue = new NativeRequestQueue()
++  let closed = false
++  let app: App | undefined
++  let pinia: ReturnType<typeof createPinia> | undefined
++  let stopChanged: (() => void) | undefined
++  let disposing: Promise<void> | undefined
++  let loading = false
++  let last = ''
++  const host: NativeDomHost = {
++    root: container, portal: options.portalContainer, signal: cancel.signal,
++    mode: options.theme.mode, live: true, imageUrls: new Map(), imageBlobs: new Map(),
++    jobs: new Set(), cleanups: new Set(),
++    importMedia: async (file) => {
++      check()
++      if(!(file instanceof Blob)||!file.type.startsWith('image/')||file.size>25*1024*1024)throw new Error('图片文件无效或超过25 MiB')
++      const result = await trackNativeJob(host, options.importMedia(file))
++      check()
++      if (!/^creatoros-asset:([^:\s]+):([^:\s]+)$/.test(result.mediaId)) throw new Error('素材归属回执无效')
++      return result
++    },
++    onError: message => { if (!closed) options.onError(message) },
++  }
++  host.ready = new Promise<void>((resolve, reject) => { host.readyResolve = resolve; host.readyReject = reject })
++  void host.ready.catch(() => {})
++  function check(signal?: AbortSignal) {
++    if (closed || cancel.signal.aborted || signal?.aborted) throw new Error('稿件已关闭或操作已取消')
++  }
++  function dispose(): Promise<void> {
++    if (disposing) return disposing
++    closed = true
++    host.live = false
++    cancel.abort()
++    host.readyReject?.(new Error('稿件已关闭'))
++    options.signal.removeEventListener('abort', abort)
++    stopChanged?.()
++    for (const cleanup of host.cleanups) { try { cleanup() } catch {} }
++    host.cleanups.clear()
++    app?.unmount()
++    app = undefined
++    if (pinia) {
++      useEditorStore(pinia).editor?.destroy()
++      useEditorStore(pinia).editor = null
++      useCssEditorStore(pinia).cssEditor?.destroy()
++      useCssEditorStore(pinia).cssEditor = null
++      disposePinia(pinia)
++    }
++    disposing = (async () => {
++      await Promise.allSettled([...host.jobs])
++      await queue.settled()
++      await documentRepo.whenIdle()
++      if (getNativeHost() === host) { resetThemeInjector(); setNativeHost(undefined) }
++      for (const url of host.imageUrls.values()) URL.revokeObjectURL(url)
++      host.imageUrls.clear()
++      host.imageBlobs.clear()
++      container.replaceChildren()
++      options.portalContainer.replaceChildren()
++      for (const surface of [container, options.portalContainer]) {
++        surface.removeAttribute('inert')
++        surface.removeAttribute('aria-disabled')
++      }
++      lease.release(dispose)
++    })()
++    return disposing
++  }
++  const abort = () => { void dispose() }
++  options.signal.addEventListener('abort', abort, { once: true })
++  try {
++    await lease.acquire(dispose, options.signal)
++    check()
++    setNativeHost(host)
++    await initNativeStorage()
++    check()
++    const i18n = await setupI18n('zh-CN')
++    check()
++    setAppI18n(i18n)
++    pinia = createPinia()
++    setActivePinia(pinia)
++    app = createApp(NativeApp)
++    app.use(pinia)
++    app.use(i18n)
++    applyNativeTheme([container, options.portalContainer], options.theme)
++    app.mount(container)
++    let startupTimer: ReturnType<typeof setTimeout> | undefined
++    try {
++      await trackNativeJob(host, Promise.race([
++        host.ready,
++        new Promise<never>((_, reject) => { startupTimer = setTimeout(() => reject(new Error('公众号编辑器初始化超时')), 20000) }),
++      ]))
++      check()
++    } finally { clearTimeout(startupTimer) }
++    const post = usePostStore(pinia)
++    const editor = useEditorStore(pinia)
++    const render = useRenderStore(pinia)
++    const theme = useThemeStore(pinia)
++    const css = useCssEditorStore(pinia)
++    post.replacePosts([{ id: options.owner.outputId, title: '', content: '', history: [], createDatetime: new Date(), updateDatetime: new Date() }])
++    post.currentPostId = options.owner.outputId
++    editor.importContent('')
++    const layout = () => ({
++      schemaVersion: 1, editor: 'doocs-md', editorCommit: COMMIT, themeId: String(theme.theme),
++      themeSettings: JSON.parse(JSON.stringify(theme.themeSettings[theme.theme] ?? {})),
++      customCss: css.getCurrentTabContent(),
++      exportOptions: { useIndent: Boolean(theme.isUseIndent), useJustify: Boolean(theme.isUseJustify) },
++    })
++    const snapshot = () => ({ markdown: editor.getContent(), layout: layout() })
++    stopChanged = watch(
++      () => [render.output, theme.theme, JSON.stringify(theme.themeSettings), css.getCurrentTabContent(), theme.isUseIndent, theme.isUseJustify],
++      () => {
++        if (closed || loading) return
++        const state = snapshot()
++        const encoded = JSON.stringify(state)
++        if (encoded !== last) { last = encoded; options.onChanged(state) }
++      }, { flush: 'post' },
++    )
++    function register(image: Asset) {
++      check()
++      if (!image || typeof image.assetId!=='string' || typeof image.assetFileId!=='string' || !/^[^:\s]+$/.test(image.assetId) || !/^[^:\s]+$/.test(image.assetFileId)
++        || !(image.blob instanceof Blob) || !image.blob.type.startsWith('image/') || image.blob.size > 25 * 1024 * 1024) {
++        throw new Error('精确图片素材无效或超过25 MiB')
++      }
++      const key = `${image.assetId}:${image.assetFileId}`
++      const prior = host.imageUrls.get(key)
++      host.imageBlobs.set(key, image.blob)
++      host.imageUrls.set(key, URL.createObjectURL(image.blob))
++      if (prior) URL.revokeObjectURL(prior)
++    }
++    async function execute(operation: string, payload?: any, request?: { requestId?: string; signal?: AbortSignal }) {
++      check(request?.signal)
++      setActivePinia(pinia!)
++      if (operation === 'load') {
++        const doc: NativeDocument = payload?.document ?? payload
++        if (typeof doc?.markdown !== 'string') throw new Error('公众号稿件输入无效')
++        const incoming = doc.layout
++        if (incoming && incoming.editor !== 'doocs-md') throw new Error('版式属于其它编辑器')
++        loading = true
++        try {
++          for (const image of payload?.assets ?? []) register(image)
++          if (incoming) {
++            if (incoming.themeId) theme.theme = incoming.themeId
++            if (incoming.themeId && incoming.themeSettings) theme.themeSettings = { ...theme.themeSettings, [incoming.themeId]: incoming.themeSettings }
++            if (typeof incoming.customCss === 'string') { const tab = css.getCurrentTab(); tab.content = incoming.customCss; css.setCssEditorValue(tab.content) }
++            if (incoming.exportOptions) { theme.isUseIndent = !!incoming.exportOptions.useIndent; theme.isUseJustify = !!incoming.exportOptions.useJustify }
++          }
++          if (post.currentPost) post.currentPost.title = doc.title ?? ''
++          editor.importContent(doc.markdown)
++          editor.flushContentToPostStore()
++          await theme.applyCurrentTheme()
++          check(request?.signal)
++          render.render(doc.markdown, { force: true })
++          await nextTick()
++          check(request?.signal)
++          last = JSON.stringify(snapshot())
++          return snapshot()
++        } finally { loading = false }
++      }
++      if (operation === 'asset' || operation === 'insert-media') {
++        register(payload)
++        if (operation === 'insert-media') editor.insertAtCursor(`\n<img src="creatoros-asset:${payload.assetId}:${payload.assetFileId}" alt="图片">\n`)
++        render.render(editor.getContent(), { force: true })
++        await nextTick()
++        check(request?.signal)
++        return { mediaId: `creatoros-asset:${payload.assetId}:${payload.assetFileId}` }
++      }
++      if (operation === 'snapshot') { editor.flushContentToPostStore(); return snapshot() }
++      if (operation === 'export-html') {
++        const frozen = JSON.stringify(snapshot())
++        await theme.applyCurrentTheme()
++        check(request?.signal)
++        render.render(editor.getContent(), { force: true, themeMode: 'light' })
++        await nextTick()
++        check(request?.signal)
++        const styles = await getStylesToAdd()
++        check(request?.signal)
++        if (JSON.stringify(snapshot()) !== frozen) throw new Error('稿件已改变，请重新导出')
++        const html = `<style>${SHARE_SHELL_VARS_CSS}</style>${styles}<style>${EXPORT_LAYOUT_CSS}</style><div id="output">${getHtmlContent({ staticLayout: true, themeMode: 'light' })}</div>`
++        return { html, bindings: [...host.imageUrls].map(([key, url]) => ({ key, url })) }
++      }
++      throw new Error(`公众号编辑器不支持此操作：${operation}`)
++    }
++    return {
++      request(operation: string, payload?: unknown, request?: { requestId?: string; signal?: AbortSignal }) {
++        return trackNativeJob(host, queue.run(() => execute(operation, payload, request)))
++      },
++      update(value: { theme?: NativeTheme; disabled?: boolean }) {
++        if (closed) return
++        if (value.theme) { host.mode = value.theme.mode; applyNativeTheme([container, options.portalContainer], value.theme); useUIStore(pinia!).isDark = value.theme.mode === 'dark' }
++        if (value.disabled !== undefined) {
++          for (const surface of [container, options.portalContainer]) { surface.toggleAttribute('inert', value.disabled); surface.setAttribute('aria-disabled', String(value.disabled)) }
++        }
++      },
++      dispose,
++    }
++  } catch (error) { await dispose(); throw error }
++}
+--- /dev/null
++++ b/apps/web/src/native-lease.test.ts
+@@ -0,0 +1,15 @@
++import {describe,it,expect} from 'vitest'
++import {NativeLease} from './native-lease'
++describe('Doocs 同文档原生 lease',()=>{
++ it('下个实例要等旧 dispose 完成，并串行替换',async()=>{
++  const lease=new NativeLease(); const log:string[]=[]; let close!:()=>void
++  await lease.acquire(async()=>{log.push('a-close');await new Promise<void>(r=>{close=r});log.push('a-closed')})
++  const acquired=lease.acquire(async()=>{log.push('b-close')}).then(()=>log.push('b'))
++  await Promise.resolve();await Promise.resolve();expect(log).toEqual(['a-close']);close();await acquired
++  expect(log).toEqual(['a-close','a-closed','b']);await lease.close();expect(log[log.length-1]).toBe('b-close')
++ })
++ it('被取消的等待挂载不取得新 lease',async()=>{
++  const lease=new NativeLease();const cancel=new AbortController();cancel.abort()
++  await expect(lease.acquire(async()=>{},cancel.signal)).rejects.toThrow('已取消')
++ })
++})
+--- /dev/null
++++ b/apps/web/src/native-lease.ts
+@@ -0,0 +1,17 @@
++/** 单文档旧单例宿主的明确 lease。新实例只在旧实例完全关闭后取得写权。 */
++export class NativeLease {
++  private tail: Promise<void> = Promise.resolve()
++  private active: (() => Promise<void>) | undefined
++  async acquire(dispose: () => Promise<void>, signal?: AbortSignal): Promise<void> {
++    const job=this.tail.then(async()=>{
++      if(signal?.aborted)throw new Error('挂载已取消')
++      if(this.active){const prior=this.active;this.active=undefined;await prior()}
++      if(signal?.aborted)throw new Error('挂载已取消')
++      this.active=dispose
++    })
++    this.tail=job.catch(()=>{})
++    await job
++  }
++  release(dispose:()=>Promise<void>){if(this.active===dispose)this.active=undefined}
++  async close(){await this.tail;const prior=this.active;this.active=undefined;await prior?.()}
++}
+--- /dev/null
++++ b/apps/web/src/native-media-dialog.vue
+@@ -0,0 +1,26 @@
++<script setup lang="ts">
++import {getNativeHost} from '@md/core/native-host'
++import {useUIStore} from '@/stores/ui'
++const props=defineProps<{onImport:(file:File)=>Promise<void>|undefined}>()
++const ui=useUIStore()
++const host=getNativeHost()!
++const uploading=ref(false)
++async function choose(event:Event){
++ const input=event.target as HTMLInputElement
++ const files=Array.from(input.files??[])
++ input.value=''
++ uploading.value=true
++ try{for(const file of files){if(!host.live||host.signal.aborted)return;await props.onImport(file);if(!host.live||host.signal.aborted)return}ui.isShowUploadImgDialog=false}
++ catch(error){host.onError(error instanceof Error?error.message:'图片导入失败')}
++ finally{if(host.live&&!host.signal.aborted)uploading.value=false}
++}
++</script>
++<template>
++ <Dialog v-model:open="ui.isShowUploadImgDialog">
++  <DialogContent>
++   <DialogHeader><DialogTitle>插入图片</DialogTitle><DialogDescription>选择图片后会先保存到当前作品素材，再插入正文。</DialogDescription></DialogHeader>
++   <input type="file" accept="image/*" multiple :disabled="uploading" aria-label="选择图片文件" @change="choose">
++   <span v-if="uploading" role="status">图片正在保存到作品素材…</span>
++  </DialogContent>
++ </Dialog>
++</template>
+--- /dev/null
++++ b/apps/web/src/native-queue.ts
+@@ -0,0 +1,10 @@
++/** 原模块单例请求串行执行，每次 await 后由操作检查实例与取消状态。 */
++export class NativeRequestQueue {
++  private tail: Promise<unknown> = Promise.resolve()
++  run<T>(job: () => Promise<T>): Promise<T> {
++    const next = this.tail.then(job)
++    this.tail = next.catch(() => {})
++    return next
++  }
++  async settled() { await this.tail }
++}
+--- /dev/null
++++ b/apps/web/src/native-theme.ts
+@@ -0,0 +1,37 @@
++export type NativeTheme = {
++  mode: 'light' | 'dark'
++  tokens: Record<string, string>
++  fontFamily: string
++  fontSize: string
++  density: string
++}
++const aliases: Record<string, string> = {
++  foreground: 'text', background: 'surface', card: 'surface', 'card-foreground': 'text',
++  popover: 'surface', 'popover-foreground': 'text', border: 'border', input: 'border-strong',
++  ring: 'brand', primary: 'brand', 'primary-foreground': 'brand-foreground', accent: 'brand-soft',
++  'accent-foreground': 'text', secondary: 'surface-subtle', 'secondary-foreground': 'text',
++  muted: 'surface-subtle', 'muted-foreground': 'text-muted', destructive: 'danger',
++}
++/** Both surfaces inherit hex colors directly; article styles are scoped to #output. */
++export function applyNativeTheme(surfaces: HTMLElement[], theme: NativeTheme) {
++  for (const surface of surfaces) {
++    surface.classList.toggle('dark', theme.mode === 'dark')
++    surface.setAttribute('data-density', theme.density)
++    for (let i = surface.style.length - 1; i >= 0; i--) {
++      const property = surface.style.item(i)
++      if (property.startsWith('--creatoros-')) surface.style.removeProperty(property)
++    }
++    for (const [key, value] of Object.entries(theme.tokens)) {
++      if (key.startsWith('--creatoros-')) surface.style.setProperty(key, value)
++    }
++    for (const [alias, token] of Object.entries(aliases)) {
++      surface.style.setProperty(`--${alias}`, `var(--creatoros-${token}${alias === 'primary-foreground' ? ',#fff' : ''})`)
++    }
++    surface.style.setProperty('--radius', 'var(--creatoros-radius-control,8px)')
++    surface.style.setProperty('--native-ui-font', theme.fontFamily)
++    surface.style.setProperty('--native-ui-size', theme.fontSize)
++    surface.style.color = 'var(--creatoros-text)'
++    surface.style.fontFamily = theme.fontFamily
++    surface.style.fontSize = theme.fontSize
++  }
++}
+--- /dev/null
++++ b/apps/web/src/native-toolbar.vue
+@@ -0,0 +1,19 @@
++<script setup lang="ts">
++import type {EditorView} from '@codemirror/view'
++import {undo,redo} from '@md/shared/editor'
++import {useEditorStore} from '@/stores/editor'
++import {useUIStore} from '@/stores/ui'
++const editor=useEditorStore();const ui=useUIStore()
++function wrap(prefix:string,suffix=prefix){const view=editor.editor;if(!view)return;const s=view.state.selection.main;view.dispatch(view.state.replaceSelection(`${prefix}${view.state.doc.sliceString(s.from,s.to)||'文字'}${suffix}`));view.focus()}
++function command(action:'undo'|'redo'){if(editor.editor)(action==='undo'?undo:redo)(toRaw(editor.editor) as EditorView)}
++</script>
++<template>
++ <div class="native-toolbar" aria-label="公众号正文编辑工具">
++  <button type="button" @click="command('undo')">撤销</button><button type="button" @click="command('redo')">重做</button>
++  <button type="button" @click="wrap('**')">加粗</button><button type="button" @click="wrap('*')">斜体</button><button type="button" @click="wrap('## ','')">标题</button><button type="button" @click="wrap('- ','')">列表</button><button type="button" @click="wrap('> ','')">引用</button>
++  <select aria-label="编辑预览布局" :value="ui.viewMode" @change="ui.setViewMode(($event.target as HTMLSelectElement).value as 'edit'|'split'|'preview')"><option value="split">编辑与预览</option><option value="edit">只看正文</option><option value="preview">只看预览</option></select>
++  <button type="button" @click="ui.isShowUploadImgDialog=true">插入图片</button>
++  <button type="button" :aria-pressed="ui.isOpenRightSlider" @click="ui.isOpenRightSlider=!ui.isOpenRightSlider">排版设置</button>
++  <button type="button" :aria-pressed="ui.isShowCssEditor" @click="ui.isShowCssEditor=!ui.isShowCssEditor">自定义 CSS</button>
++ </div>
++</template>
+--- /dev/null
++++ b/apps/web/src/native.css
+@@ -0,0 +1,10 @@
++/* Installed only inside the CreatorOS editor ShadowRoot; article theme remains original. */
++:host{display:block;height:100%;min-width:0;color:var(--creatoros-text);font-family:var(--creatoros-font-sans,system-ui)}
++.creatoros-doocs-native{contain:layout paint style;display:flex;flex-direction:column;height:100%;min-height:0;position:relative;isolation:isolate;--foreground:var(--creatoros-text);--background:var(--creatoros-surface);--card:var(--creatoros-surface);--card-foreground:var(--creatoros-text);--popover:var(--creatoros-surface);--popover-foreground:var(--creatoros-text);--border:var(--creatoros-border);--input:var(--creatoros-border-strong);--ring:var(--creatoros-brand);--primary:var(--creatoros-brand);--primary-foreground:var(--creatoros-brand-foreground,#fff);--accent:var(--creatoros-brand-soft);--accent-foreground:var(--creatoros-text);--secondary:var(--creatoros-surface-subtle);--secondary-foreground:var(--creatoros-text);--muted:var(--creatoros-surface-subtle);--muted-foreground:var(--creatoros-text-muted);--radius:var(--creatoros-radius-control,8px);color:var(--creatoros-text);background:var(--creatoros-surface);font:var(--native-ui-size,14px)/1.5 var(--native-ui-font,system-ui)}
++.native-toolbar{display:flex;gap:6px;flex-wrap:wrap;padding:10px;border-bottom:1px solid var(--creatoros-border);flex:0 0 auto}.native-toolbar button,.native-toolbar select{height:32px;border:1px solid var(--creatoros-border);border-radius:var(--creatoros-radius-control,8px);padding:0 10px;color:var(--creatoros-text);background:var(--creatoros-surface);font:inherit}.native-toolbar button:hover,.native-toolbar button[aria-pressed=true]{background:var(--creatoros-brand-soft);color:var(--creatoros-brand)}
++.native-content{display:flex;flex:1 1 auto;min-height:0;min-width:0;overflow:hidden}.native-editor-pane,.native-preview-pane{flex:1 1 45%;min-width:0;min-height:0;overflow:hidden}.native-editor-pane{border-right:1px solid var(--creatoros-border)}.native-style-pane,.native-css-pane{flex:0 0 280px;overflow:auto;border-left:1px solid var(--creatoros-border);min-height:0}.native-edit-only .native-preview-pane,.native-preview-only .native-editor-pane{display:none}.native-editor-pane .codeMirror-wrapper,.native-preview-pane>.relative{height:100%}.creatoros-doocs-native .cm-editor{background:var(--creatoros-surface)!important;color:var(--creatoros-text)!important}.creatoros-doocs-native .cm-gutters{color:var(--creatoros-text-muted)!important}.creatoros-doocs-native .cm-cursor{border-left-color:var(--creatoros-text)!important}.creatoros-doocs-native .cm-activeLine{background:var(--creatoros-surface-subtle)!important}.creatoros-doocs-native .preview-wrapper{padding:18px;background:var(--creatoros-surface-subtle)}.creatoros-doocs-native .preview{background:white!important;color:#181818!important}.creatoros-doocs-native #output-wrapper{min-width:0;height:auto}.creatoros-doocs-native .codeMirror-wrapper{min-height:0}
++[data-density=compact] .native-toolbar{padding:6px;gap:4px}[data-density=compact] .native-toolbar button,[data-density=compact] .native-toolbar select{height:28px}
++[data-native-portal]{position:absolute;inset:0;pointer-events:none;z-index:60;font:var(--native-ui-size,14px)/1.5 var(--native-ui-font,system-ui);color:var(--creatoros-text)}[data-native-portal]>*{pointer-events:auto}[data-native-portal] [role=dialog]{position:absolute}
++@media(max-width:640px){.native-style-pane,.native-css-pane{flex-basis:220px}.native-toolbar{gap:4px}.native-toolbar button{padding:0 7px}}
++
++[data-native-portal]{contain:layout style;--radius:var(--creatoros-radius-control,8px)}[data-native-portal]>.fixed,[data-native-portal] [data-reka-popper-content-wrapper]{position:absolute!important}[data-native-portal] [role=dialog]{max-width:calc(100% - 24px);max-height:calc(100% - 24px)}
+--- a/apps/web/src/services/export/apply-export-layout.ts
++++ b/apps/web/src/services/export/apply-export-layout.ts
+@@ -1,3 +1,4 @@
++import {nativeQuery,nativeById} from '@md/core/native-host'
+ /** Off-screen PNG host; prefixed styles must not match the live preview. */
+ export const PNG_CAPTURE_HOST = `[data-png-export-host]`
+ 
+@@ -131,7 +132,7 @@
+ export function getPngCaptureBackgroundColor(): string {
+   const isDarkApp = document.documentElement.classList.contains(`dark`)
+   const useNightPreview = isDarkApp
+-    && document.getElementById(`output-wrapper`)?.classList.contains(`output_night`)
++    && nativeById(`output-wrapper`)?.classList.contains(`output_night`)
+   return useNightPreview ? `#191919` : `#fff`
+ }
+ 
+@@ -155,7 +156,7 @@
+ 
+ /** Scoped theme + layout styles for off-screen PNG capture. */
+ export async function getPngCaptureStyles(): Promise<string> {
+-  const themeStyle = document.querySelector(`#md-theme`) as HTMLStyleElement
++  const themeStyle = nativeQuery(`#md-theme`) as HTMLStyleElement
+   if (!themeStyle?.textContent)
+     return ``
+ 
+@@ -171,7 +172,7 @@
+     `<style>${getScopedExportLayoutCss(PNG_CAPTURE_HOST)}</style>`,
+   ]
+ 
+-  const hljsLink = document.querySelector(`#hljs`) as HTMLLinkElement
++  const hljsLink = nativeQuery(`#hljs`) as HTMLLinkElement
+   if (hljsLink) {
+     try {
+       const hljsText = await (await fetch(hljsLink.href)).text()
+@@ -183,7 +184,7 @@
+   }
+ 
+   const useNightPreview = isDarkApp
+-    && document.getElementById(`output-wrapper`)?.classList.contains(`output_night`)
++    && nativeById(`output-wrapper`)?.classList.contains(`output_night`)
+   if (useNightPreview) {
+     parts.push(
+       `<style>${PNG_CAPTURE_HOST} .output_night .preview { background-color: #191919; }</style>`,
+--- a/apps/web/src/services/export/clipboard-dom.ts
++++ b/apps/web/src/services/export/clipboard-dom.ts
+@@ -1,3 +1,4 @@
++import {nativeById} from '@md/core/native-host'
+ /**
+  * Pure clipboard HTML transforms used by WeChat copy flow.
+  * Kept free of Pinia/store imports so unit tests can run without app bootstrap.
+@@ -138,7 +139,7 @@
+ }
+ 
+ export function solveWeChatImage(container?: HTMLElement) {
+-  const clipboardDiv = container ?? document.getElementById(`output`)
++  const clipboardDiv = container ?? nativeById(`output`)
+   if (!clipboardDiv)
+     return
+   const images = clipboardDiv.getElementsByTagName(`img`)
+--- a/apps/web/src/services/export/clipboard.ts
++++ b/apps/web/src/services/export/clipboard.ts
+@@ -1,3 +1,4 @@
++import {nativeById} from '@md/core/native-host'
+ import { inlineEmojiImagesAsBase64 } from '@/lib/export/inlineEmojiImages'
+ import { stripUnresolvedAsyncPlaceholders, waitForPreviewReady } from '@/lib/preview/preview-ready'
+ import { useEditorStore } from '@/stores/editor'
+@@ -43,7 +44,7 @@
+  * to currentColor so WeChat reader dark mode can follow text color.
+  */
+ export async function processClipboardContent(primaryColor: string) {
+-  const outputElement = document.getElementById(`output`)
++  const outputElement = nativeById(`output`)
+   if (!outputElement) {
+     return {
+       html: ``,
+--- a/apps/web/src/services/export/html-content.ts
++++ b/apps/web/src/services/export/html-content.ts
+@@ -1,3 +1,4 @@
++import {nativeQuery} from '@md/core/native-host'
+ import { hydratePendingInfographicDiagrams } from '@md/core/extensions'
+ import { applyExportLayout } from './apply-export-layout'
+ 
+@@ -9,7 +10,7 @@
+ 
+ /** Get export HTML content. */
+ export function getHtmlContent(options?: GetHtmlContentOptions): string {
+-  const element = document.querySelector(`#output`)
++  const element = nativeQuery(`#output`)
+   if (!element)
+     return ``
+   const clone = element.cloneNode(true) as HTMLElement
+--- a/apps/web/src/services/export/markdown.ts
++++ b/apps/web/src/services/export/markdown.ts
+@@ -1,3 +1,4 @@
++import {appendNativeTransient} from '@md/core/native-host'
+ import { sanitizeTitle } from '@md/shared/utils/basicHelpers'
+ import { downloadFile } from '@md/shared/utils/fileHelpers'
+ 
+@@ -32,8 +33,8 @@
+   const a = document.createElement(`a`)
+   a.href = url
+   a.download = `posts-${date}.zip`
+-  document.body.appendChild(a)
++  appendNativeTransient(a)
+   a.click()
+-  document.body.removeChild(a)
++  a.remove()
+   URL.revokeObjectURL(url)
+ }
+--- a/apps/web/src/services/export/pdf.ts
++++ b/apps/web/src/services/export/pdf.ts
+@@ -1,3 +1,4 @@
++import {appendNativeTransient} from '@md/core/native-host'
+ import { sanitizeTitle } from '@md/shared/utils/basicHelpers'
+ import { t } from '@/i18n/translate'
+ import { waitForPreviewReady } from '@/lib/preview/preview-ready'
+@@ -313,12 +314,12 @@
+   const iframe = document.createElement(`iframe`)
+   iframe.style.cssText = `position:fixed;width:0;height:0;top:-9999px;left:-9999px;border:none;`
+   iframe.src = url
+-  document.body.appendChild(iframe)
++  appendNativeTransient(iframe)
+ 
+   const removeIframe = () => {
+     URL.revokeObjectURL(url)
+     if (iframe.parentNode)
+-      document.body.removeChild(iframe)
++      iframe.remove()
+   }
+ 
+   iframe.onload = () => {
+--- a/apps/web/src/services/export/png-capture.ts
++++ b/apps/web/src/services/export/png-capture.ts
+@@ -1,3 +1,4 @@
++import {nativeById,appendNativeTransient} from '@md/core/native-host'
+ import { stripUnresolvedAsyncPlaceholders } from '@/lib/preview/preview-ready'
+ import {
+   applyExportLayout,
+@@ -26,13 +27,13 @@
+ export async function createOffScreenPreview(
+   previewDevice: PreviewDevice,
+ ): Promise<OffScreenPreview | null> {
+-  const output = document.getElementById(`output`)
++  const output = nativeById(`output`)
+   if (!output)
+     return null
+ 
+   const isDarkApp = document.documentElement.classList.contains(`dark`)
+   const useNightPreview = isDarkApp
+-    && document.getElementById(`output-wrapper`)?.classList.contains(`output_night`)
++    && nativeById(`output-wrapper`)?.classList.contains(`output_night`)
+   const width = previewDevice === `mobile` ? `375px` : `750px`
+ 
+   const host = document.createElement(`div`)
+@@ -60,7 +61,7 @@
+   preview.appendChild(content)
+   wrapper.appendChild(preview)
+   host.appendChild(wrapper)
+-  document.body.appendChild(host)
++  appendNativeTransient(host)
+ 
+   return {
+     el: preview,
+--- a/apps/web/src/services/export/share-styles.ts
++++ b/apps/web/src/services/export/share-styles.ts
+@@ -1,3 +1,4 @@
++import {nativeQuery} from '@md/core/native-host'
+ /**
+  * Shell CSS variables for export / share / standalone preview.
+  * Normally provided by the app global styles (:root in index.css); theme CSS references
+@@ -10,7 +11,7 @@
+ }`
+ 
+ async function getHljsStyles(): Promise<string> {
+-  const hljsLink = document.querySelector(`#hljs`) as HTMLLinkElement
++  const hljsLink = nativeQuery(`#hljs`) as HTMLLinkElement
+   if (!hljsLink)
+     return ``
+ 
+@@ -44,7 +45,7 @@
+ }
+ 
+ function getThemeStyles(): string {
+-  const themeStyle = document.querySelector(`#md-theme`) as HTMLStyleElement
++  const themeStyle = nativeQuery(`#md-theme`) as HTMLStyleElement
+ 
+   if (!themeStyle || !themeStyle.textContent) {
+     console.warn('[getThemeStyles] theme styles not found')
+@@ -57,7 +58,7 @@
+ 
+ /** Share page styles (fixed light theme, scoped to .share-content). */
+ export async function getShareExportStyles(): Promise<string> {
+-  const themeStyle = document.querySelector(`#md-theme`) as HTMLStyleElement
++  const themeStyle = nativeQuery(`#md-theme`) as HTMLStyleElement
+   if (!themeStyle?.textContent) {
+     console.warn('[getShareExportStyles] theme styles not found')
+     return ``
+--- a/apps/web/src/services/export/wechat-svg.ts
++++ b/apps/web/src/services/export/wechat-svg.ts
+@@ -1,3 +1,4 @@
++import {appendNativeTransient} from '@md/core/native-host'
+ /** WeChat article content column width (px). */
+ export const WECHAT_MAX_WIDTH_PX = 677
+ export const WECHAT_SVG_MAX_WIDTH = `${WECHAT_MAX_WIDTH_PX}px`
+@@ -1339,7 +1340,7 @@
+ 
+   const host = document.createElement(`div`)
+   host.style.cssText = `position:fixed;left:-99999px;top:0;visibility:hidden;pointer-events:none;width:${WECHAT_MAX_WIDTH_PX}px;`
+-  document.body.appendChild(host)
++  appendNativeTransient(host)
+ 
+   try {
+     for (const svg of svgs) {
+--- a/apps/web/src/storage/index.ts
++++ b/apps/web/src/storage/index.ts
+@@ -106,3 +106,10 @@
+ export function isStorageReady(): boolean {
+   return initComplete
+ }
++
++/** 原生 lease 装配的内存引擎；不访问 IndexedDB/迁移或历史独立存储。 */
++export async function initNativeStorage():Promise<void>{
++  setUseLegacyDocumentStorage(false);setMemoryDocumentStorage(true)
++  store.setEngine(new MemoryStorageEngine());await store.clear();await documentRepo.loadAll()
++  initComplete=true;readyPromise=Promise.resolve()
++}
+--- a/apps/web/src/storage/manager.ts
++++ b/apps/web/src/storage/manager.ts
+@@ -1,6 +1,6 @@
+ import type { Ref } from 'vue'
+ import type { StorageEngine } from '@/storage/engine'
+-import { customRef, ref, toRaw, watch } from 'vue'
++import { customRef, ref, toRaw, watch, onScopeDispose, getCurrentScope } from 'vue'
+ import { IndexedDBEngine, LocalStorageEngine, RestfulStorageEngine } from '@/storage/engines/indexed-db'
+ import { isCacheKey } from '@/storage/keys'
+ import { isStorageQuotaError, warnStorageQuota } from '@/storage/quota'
+@@ -14,6 +14,7 @@
+   private engine: StorageEngine = new LocalStorageEngine()
+ 
+   setEngine(engine: StorageEngine): void {
++    this.pendingWrites.clear()
+     this.engine = engine
+   }
+ 
+@@ -202,7 +203,7 @@
+       })
+     }
+ 
+-    Promise.resolve().then(() => {
++    {
+       // Deep watchers fire on every keystroke-level mutation. Serialize eagerly
+       // into the pendingWrites overlay (so sync reads stay current), but
+       // coalesce the actual engine writes; flush on pagehide so the final state
+@@ -233,7 +234,7 @@
+           })
+       }
+ 
+-      watch(
++      const stop=watch(
+         data,
+         () => {
+           try {
+@@ -252,7 +253,8 @@
+         { deep: true },
+       )
+ 
+-      if (typeof window !== `undefined`) {
++      if(getCurrentScope())onScopeDispose(()=>{stop();if(timer)clearTimeout(timer)})
++      if (!this.engine.volatile && typeof window !== `undefined`) {
+         window.addEventListener(`pagehide`, () => {
+           // The async engine flush may not finish before the tab is killed, so
+           // also snapshot pending writes synchronously; restored on next launch.
+@@ -260,7 +262,7 @@
+           this.refreshPagehideBackup()
+         })
+       }
+-    })
++    }
+ 
+     return data
+   }
+--- a/apps/web/src/storage/repositories/documents.ts
++++ b/apps/web/src/storage/repositories/documents.ts
+@@ -164,6 +164,7 @@
+ }
+ 
+ export const documentRepo = {
++  async whenIdle():Promise<void>{await writeQueue},
+   async loadAll(): Promise<Post[]> {
+     if (cachedPosts)
+       return cachedPosts
+--- a/apps/web/src/stores/cssEditor.ts
++++ b/apps/web/src/stores/cssEditor.ts
+@@ -1,3 +1,6 @@
++import {getNativeHost} from '@md/core/native-host'
++import {useUIStore} from '@/stores/ui'
++import {nativeQuery} from '@md/core/native-host'
+ import type { EditorView } from '@codemirror/view'
+ import { Compartment, EditorState } from '@codemirror/state'
+ import { EditorView as CMEditorView } from '@codemirror/view'
+@@ -31,7 +34,7 @@
+ 
+ /** Manages the custom CSS editor and its tab configuration. */
+ export const useCssEditorStore = defineStore(`cssEditor`, () => {
+-  const isDark = useDark()
++  const isDark = getNativeHost() ? computed(()=>useUIStore().isDark) : useDark()
+ 
+   const cssEditor = ref<EditorView | null>(null)
+   const cssEditorThemeCompartment = ref<Compartment | null>(null)
+@@ -113,7 +116,7 @@
+   /** External callback to refresh preview when the active CSS tab changes. */
+   let onTabChangedCallback: ((content: string) => void) | null = null
+ 
+-  const setOnTabChangedCallback = (callback: (content: string) => void) => {
++  const setOnTabChangedCallback = (callback: ((content: string) => void) | null) => {
+     onTabChangedCallback = callback
+   }
+ 
+@@ -180,7 +183,7 @@
+   }
+ 
+   const initCssEditor = (onUpdate: (content: string) => void) => {
+-    const cssEditorDom = document.querySelector<HTMLTextAreaElement>(`#cssEditor`)
++    const cssEditorDom = nativeQuery<HTMLTextAreaElement>(`#cssEditor`)
+     if (!cssEditorDom)
+       return
+ 
+--- a/apps/web/src/stores/editor.ts
++++ b/apps/web/src/stores/editor.ts
+@@ -1,8 +1,11 @@
++import {getNativeHost} from '@md/core/native-host'
+ import type { EditorView } from '@codemirror/view'
+ import { t } from '@/i18n/translate'
+ 
+ /** CodeMirror editor instance and basic document operations. */
+ export const useEditorStore = defineStore(`editor`, () => {
++  const host=getNativeHost()
++  const alive=()=>!host||host.live&&!host.signal.aborted
+   const editor = ref<EditorView | null>(null)
+ 
+   let flushPendingContent: (() => void) | null = null
+@@ -24,9 +27,13 @@
+     if (!editor.value)
+       return
+ 
++    const view=toRaw(editor.value)
++    const frozen=view.state.doc.toString()
+     const { formatDoc } = await import('@md/shared/utils/formatDoc')
+-    const doc = await formatDoc(editor.value.state.doc.toString())
+-    editor.value.dispatch({
++    if(!alive())return
++    const doc = await formatDoc(frozen)
++    if(!alive()||editor.value!==view||view.state.doc.toString()!==frozen)return
++    view.dispatch({
+       changes: { from: 0, to: editor.value.state.doc.length, insert: doc },
+     })
+     return doc
+--- a/apps/web/src/stores/locale.ts
++++ b/apps/web/src/stores/locale.ts
+@@ -1,3 +1,4 @@
++import {nativeQuery,getNativeHost} from '@md/core/native-host'
+ import type { AppLocale } from '@/i18n/types'
+ import { getNextLocale, LOCALE_STORAGE_KEY } from '@/i18n/constants'
+ import { detectInitialLocale } from '@/i18n/detect'
+@@ -6,16 +7,18 @@
+ import { store } from '@/storage'
+ 
+ function syncDocumentLocale(locale: AppLocale) {
++  if(getNativeHost())return
+   document.documentElement.lang = locale
+   document.title = t(`meta.title`)
+ 
+-  const description = document.querySelector(`meta[name="description"]`)
++  const description = nativeQuery(`meta[name="description"]`)
+   if (description)
+     description.setAttribute(`content`, t(`meta.description`))
+ }
+ 
+ /** Sync locale to localStorage for index.html splash before IndexedDB is ready. */
+ function syncLocaleBootCache(locale: AppLocale) {
++  if(getNativeHost())return
+   try {
+     localStorage.setItem(LOCALE_STORAGE_KEY, locale)
+   }
+@@ -33,7 +36,7 @@
+ }
+ 
+ export const useLocaleStore = defineStore(`locale`, () => {
+-  const locale = store.reactive<AppLocale>(LOCALE_STORAGE_KEY, detectInitialLocale())
++  const locale = store.reactive<AppLocale>(LOCALE_STORAGE_KEY, getNativeHost()?'zh-CN':detectInitialLocale())
+ 
+   watch(
+     locale,
+--- a/apps/web/src/stores/post.ts
++++ b/apps/web/src/stores/post.ts
+@@ -1,3 +1,4 @@
++import {getNativeHost} from '@md/core/native-host'
+ import type { Post } from '@/types/post'
+ import { uuidv4 } from '@md/shared/utils/uuid'
+ import { getDefaultContent } from '@/assets/example/default-content'
+@@ -13,7 +14,7 @@
+ export type { Post } from '@/types/post'
+ 
+ function createDefaultPost(): Post {
+-  const content = getDefaultContent()
++  const content = getNativeHost()?'':getDefaultContent()
+   return {
+     id: uuidv4(),
+     title: t('store.post.defaultTitle'),
+@@ -129,7 +130,10 @@
+     persistReady = true
+   })
+ 
++  onScopeDispose(()=>{persistReady=false;persistAll.cancel();persistDirty.cancel();dirtyPostIds.clear()})
++
+   onMounted(() => {
++    if(isMemoryDocumentStorage())return
+     const editorStore = useEditorStore()
+ 
+     const flushToDisk = () => {
+--- a/apps/web/src/stores/render.ts
++++ b/apps/web/src/stores/render.ts
+@@ -1,3 +1,4 @@
++import {getNativeHost} from '@md/core/native-host'
+ import type { RendererAPI } from '@md/shared/types'
+ import { postProcessHtml, renderMarkdown } from '@md/core/utils'
+ import { t } from '@/i18n/translate'
+@@ -5,7 +6,6 @@
+ import { useCustomComponentStore } from './customComponent'
+ import { useThemeStore } from './theme'
+ import { useUIStore } from './ui'
+-import { resolveCreatorOSImages } from '@/creatoros-bridge'
+ 
+ export interface RenderOptions {
+   themeMode?: 'light' | 'dark'
+@@ -15,6 +15,8 @@
+ 
+ /** Markdown rendering, HTML output, and heading extraction. */
+ export const useRenderStore = defineStore(`render`, () => {
++  const host=getNativeHost()
++  const alive=()=>!host||host.live&&!host.signal.aborted
+   const output = ref(``)
+ 
+   const readingTime = reactive({
+@@ -117,6 +119,7 @@
+   }
+ 
+   const render = (content: string, options?: RenderOptions) => {
++    if(!alive())return output.value
+     if (!renderer) {
+       pendingRender = { content, options }
+       return output.value
+@@ -125,7 +128,7 @@
+     const themeStore = useThemeStore()
+     const uiStore = useUIStore()
+     const componentStore = useCustomComponentStore()
+-    const themeMode = options?.themeMode ?? (uiStore.isDark ? `dark` : `light`)
++    const themeMode = options?.themeMode ?? (host ? `light` : uiStore.isDark ? `dark` : `light`)
+     const optionsFingerprint = buildOptionsFingerprint(themeMode, themeStore, componentStore)
+ 
+     if (!options?.force && content === lastContent && optionsFingerprint === lastOptionsFingerprint)
+@@ -146,7 +149,7 @@
+       assetResolver: resolveAssetUrl,
+     })
+ 
+-    const { html: baseHtml, readingTime: readingTimeResult } = renderMarkdown(resolveCreatorOSImages(content), renderer)
++    const { html: baseHtml, readingTime: readingTimeResult } = renderMarkdown(content, renderer)
+ 
+     readingTime.chars = content.length
+     readingTime.words = readingTimeResult.words
+@@ -174,6 +177,7 @@
+     isShowLineNumber?: boolean
+   }) => {
+     initPromise ??= import(`@md/core/renderer`).then(({ initRenderer }) => {
++      if(!alive())throw new Error("稿件已关闭")
+       renderer = initRenderer(options || {})
+       lastOptionsFingerprint = ``
+       lastContent = ``
+@@ -184,6 +188,7 @@
+     })
+ 
+     await initPromise
++    if(!alive())throw new Error("稿件已关闭")
+     flushPendingRender()
+     return renderer
+   }
+--- a/apps/web/src/stores/theme.ts
++++ b/apps/web/src/stores/theme.ts
+@@ -1,3 +1,5 @@
++import {getNativeHost} from '@md/core/native-host'
++import {nativeQuery,appendNativeStyle} from '@md/core/native-host'
+ import type { HeadingLevel, HeadingStyles, HeadingStyleType, PerThemeSettings, PerThemeSettingsMap, ThemeName } from '@md/shared/configs'
+ import { applyTheme } from '@md/core/theme'
+ import { defaultPerThemeSettings, defaultStyleConfig, widthOptions } from '@md/shared/configs'
+@@ -132,8 +134,9 @@
+   }
+ 
+   const updateCodeTheme = () => {
++    if(getNativeHost())return
+     const cssUrl = codeBlockTheme.value
+-    const el = document.querySelector(`#hljs`)
++    const el = nativeQuery(`#hljs`)
+ 
+     if (el) {
+       if (el.getAttribute(`href`) === cssUrl)
+@@ -146,12 +149,14 @@
+       link.setAttribute(`rel`, `stylesheet`)
+       link.setAttribute(`href`, cssUrl)
+       link.setAttribute(`id`, `hljs`)
+-      document.head.appendChild(link)
++      appendNativeStyle(link)
+     }
+   }
+ 
+   const applyCurrentTheme = async () => {
++    const host=getNativeHost()
+     try {
++      if(host&&(!host.live||host.signal.aborted))return
+       const cssEditorStore = useCssEditorStore()
+       const customCSS = cssEditorStore.getCurrentTabContent()
+ 
+@@ -162,6 +167,7 @@
+         themeCSS = useMarketplaceStore().getInstalledThemeCss(theme.value)
+       }
+ 
++      if(host&&(!host.live||host.signal.aborted))return
+       await applyTheme({
+         themeName: theme.value,
+         themeCSS,
+--- a/apps/web/src/stores/ui.ts
++++ b/apps/web/src/stores/ui.ts
+@@ -1,3 +1,4 @@
++import {getNativeHost} from '@md/core/native-host'
+ import type { PdfExportOptions } from '@/services/export'
+ import { DEFAULT_PDF_EXPORT_OPTIONS, normalizePdfExportOptions } from '@/services/export'
+ import { store } from '@/storage'
+@@ -5,7 +6,8 @@
+ 
+ /** Global UI state: dark mode, sidebars, dialogs, view mode, etc. */
+ export const useUIStore = defineStore(`ui`, () => {
+-  const isDark = useDark()
++  const host=getNativeHost()
++  const isDark = host ? ref(host.mode==='dark') : useDark()
+   const toggleDark = useToggle(isDark)
+ 
+   const showAIToolbox = store.reactive(`showAIToolbox`, true)
+@@ -215,7 +217,7 @@
+ 
+   function handleResize() {
+     const wasMobile = isMobile.value
+-    isMobile.value = window.innerWidth <= 768
++    isMobile.value = (host?.root.clientWidth || window.innerWidth) <= 768
+ 
+     if (!wasMobile && isMobile.value && viewMode.value === `split`) {
+       // Desktop → mobile while split: collapse to edit and remember for restore
+@@ -229,12 +231,15 @@
+     }
+   }
+ 
++  let resizeObserver: ResizeObserver | undefined
+   onMounted(() => {
+     handleResize()
+-    window.addEventListener(`resize`, handleResize)
++    if(host){resizeObserver=new ResizeObserver(handleResize);resizeObserver.observe(host.root)}
++    else window.addEventListener(`resize`, handleResize)
+   })
+ 
+   onBeforeUnmount(() => {
++    resizeObserver?.disconnect()
+     window.removeEventListener(`resize`, handleResize)
+   })
+ 
+--- /dev/null
++++ b/apps/web/vite.native.config.ts
+@@ -0,0 +1,24 @@
++import {defineConfig,mergeConfig,parseSync} from 'vite'
++import original from './vite.config'
++import path from 'node:path'
++import {readFileSync,existsSync,readdirSync} from 'node:fs'
++import {fileURLToPath} from 'node:url'
++const web=path.dirname(fileURLToPath(import.meta.url)),root=path.resolve(web,'../..')
++const exports={core:{'':'index','renderer':'renderer/index','extensions':'extensions/index','utils':'utils/index','utils/mathjax':'utils/mathjax','theme':'theme/index','theme/cssVariables':'theme/cssVariables','native-host':'native-host'},shared:{'':'index','configs':'configs/index','constants':'constants/index','types':'types/index','utils':'utils/index','editor':'editor/index'}}
++export default defineConfig(async env=>{
++ const base=typeof original==='function'?await original(env):original
++ return mergeConfig(base,{mode:'production',define:{'process.env.NODE_ENV':JSON.stringify('production')},base:'/reference-editors/doocs-md/native/',resolve:{alias:[...Object.entries(exports).flatMap(([pkg,parts])=>Object.entries(parts).map(([key,value])=>({find:new RegExp(`^@md/${pkg}${key?'/'+key:''}$`),replacement:path.join(root,`packages/${pkg}/src/${value}.ts`)}))),{find:/^@md\/shared\/(utils|editor|configs|types|constants)\/(.+)$/,replacement:path.join(root,'packages/shared/src/$1/$2.ts')},{find:'@',replacement:path.join(web,'src')}]},build:{outDir:'dist-native',emptyOutDir:true,lib:{entry:path.join(web,'src/native-entry.ts'),formats:['es'],fileName:()=> 'native.js',cssFileName:'native'},rolldownOptions:{output:{entryFileNames:'native.js',chunkFileNames:'chunks/[name]-[hash].js',assetFileNames:asset=>asset.names?.some(name=>name.endsWith('.css'))?'native.css':'[name]-[hash][extname]'}}},plugins:[{name:'creatoros-native-style-tokens',enforce:'post',renderChunk(code,chunk){
++ // 在块哈希前只剔除真实注释；字符串中的同样文字不能被改写。
++ const parsed=parseSync(chunk.fileName,code)
++ if(parsed.errors.length)throw new Error('原生构建块解析失败：'+chunk.fileName)
++ const regions=parsed.comments.filter(comment=>comment.type==='Line'&&/^#(?:end)?region(?: |$)/.test(comment.value))
++ let output=code
++ for(const comment of regions.reverse())output=output.slice(0,comment.start)+output.slice(comment.end)
++ return {code:output,map:null}
++ },generateBundle(_options,bundle){
++ const modules=[...new Set(Object.values(bundle).filter(item=>item.type==='chunk').flatMap(item=>Object.keys(item.modules)))].sort()
++ const dependencies=new Map()
++ for(const id of modules){if(!id.includes('node_modules'))continue;let directory=path.dirname(id.split('?')[0]);while(directory!==path.dirname(directory)){const filename=path.join(directory,'package.json');if(existsSync(filename)){try{const pkg=JSON.parse(readFileSync(filename,'utf8'));if(pkg.name&&pkg.version){const key=pkg.name+'@'+pkg.version;if(!dependencies.has(key)){const licenses=readdirSync(directory).filter(name=>/^(licen[cs]e|copying|notice)(?:[.-]|$)/i.test(name)).sort();const delivered=[];for(const name of licenses){try{const content=readFileSync(path.join(directory,name),'utf8');const fileName='licenses/'+pkg.name.replace(/[\/@]/g,'_')+'-'+pkg.version+'-'+name;this.emitFile({type:'asset',fileName,source:content});delivered.push(fileName)}catch{}}dependencies.set(key,{name:pkg.name,version:pkg.version,license:pkg.license??null,licenseFiles:delivered})}break}}catch{}}directory=path.dirname(directory)}}
++ this.emitFile({type:'asset',fileName:'native-build-graph.json',source:JSON.stringify({upstreamCommit:'a7c17fc4cda92e3c13aa7e24f06615cfa4219b31',format:'ESM',entry:'native.js',css:'native.css',modules:modules.map(id=>id.includes('node_modules')?id.replace(/.*node_modules\//,'node_modules/'):id.startsWith(root)?path.relative(root,id):id).sort(),dependencies:[...dependencies.values()].sort((a,b)=>(a.name+'@'+a.version)<(b.name+'@'+b.version)?-1:(a.name+'@'+a.version)>(b.name+'@'+b.version)?1:0)},null,2)+'\n'})
++ for(const output of Object.values(bundle))if(output.type==='asset'&&output.fileName.endsWith('.css'))output.source=String(output.source).replace(/hsl\(var\((--[\w-]+)\)(?:\s*\/\s*[^)]+)?\)/g,(_all,key)=>`var(${key})`)}}]})
++})
+--- a/packages/core/package.json
++++ b/packages/core/package.json
+@@ -6,6 +6,7 @@
+   "sideEffects": false,
+   "exports": {
+     ".": "./src/index.ts",
++    "./native-host": "./src/native-host.ts",
+     "./renderer": "./src/renderer/index.ts",
+     "./extensions": "./src/extensions/index.ts",
+     "./utils": "./src/utils/index.ts",
+--- a/packages/core/src/extensions/infographic.ts
++++ b/packages/core/src/extensions/infographic.ts
+@@ -1,3 +1,4 @@
++import {nativeById,appendNativeTransient,getNativeHost,nativeAlive,trackNativeJob} from '@md/core/native-host'
+ import type { DiagramMessages } from '@md/shared/types'
+ import type { MarkedExtension, Token } from 'marked'
+ import type { InfographicToken } from '../types/marked-tokens'
+@@ -55,7 +56,7 @@
+ 
+   let colorPrimary: string | undefined
+   if (typeof window !== `undefined`) {
+-    colorPrimary = getComputedStyle(document.documentElement)
++    colorPrimary = getComputedStyle(getNativeHost()?.root.querySelector("#output") ?? document.documentElement)
+       .getPropertyValue(`--md-primary-color`)
+       .trim() || undefined
+   }
+@@ -76,12 +77,12 @@
+ }
+ 
+ function getOffscreenRoot(): HTMLDivElement {
+-  let root = document.getElementById(OFFSCREEN_ROOT_ID) as HTMLDivElement | null
++  let root = nativeById(OFFSCREEN_ROOT_ID) as HTMLDivElement | null
+   if (!root) {
+     root = document.createElement(`div`)
+     root.id = OFFSCREEN_ROOT_ID
+     root.style.cssText = `position:fixed;left:-9999px;top:0;width:${OFFSCREEN_WIDTH};visibility:hidden;pointer-events:none;overflow:hidden;`
+-    document.body.appendChild(root)
++    appendNativeTransient(root)
+   }
+   return root
+ }
+@@ -93,7 +94,7 @@
+ }
+ 
+ function applySvgByCacheKey(cacheKey: string, svgHtml: string) {
+-  const el = document.getElementById(`${INFOGRAPHIC_ID_PREFIX}${cacheKey}`)
++  const el = nativeById(`${INFOGRAPHIC_ID_PREFIX}${cacheKey}`)
+   if (el) {
+     el.innerHTML = svgHtml
+     el.setAttribute(MD_DIAGRAM_STATE_ATTR, MD_DIAGRAM_STATE.ready)
+@@ -101,7 +102,7 @@
+ }
+ 
+ function showInfographicError(containerId: string, error: unknown, messages?: DiagramMessages) {
+-  const container = document.getElementById(containerId)
++  const container = nativeById(containerId)
+   if (!container)
+     return
+ 
+@@ -117,20 +118,25 @@
+   if (cached)
+     return cached
+ 
++  const host=getNativeHost()
++  let instance:{destroy:()=>void}|undefined
++  const cleanup=()=>{instance?.destroy();offscreenContainer.remove()}
+   const offscreenContainer = document.createElement(`div`)
++  host?.cleanups.add(cleanup)
+   offscreenContainer.style.width = OFFSCREEN_WIDTH
+   getOffscreenRoot().appendChild(offscreenContainer)
+ 
+   try {
+     const { Infographic, setDefaultFont, setFontExtendFactor, exportToSVG } = await import('@antv/infographic')
++    if(!nativeAlive(host))throw new Error('稿件已关闭')
+ 
+     setFontExtendFactor(1.1)
+     setDefaultFont('-apple-system-font, "system-ui", "Helvetica Neue", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei UI", "Microsoft YaHei", Arial, sans-serif')
+ 
+     const { theme, svgBackground, themeConfig } = resolveInfographicTheme(options)
+ 
+-    const svgHtml = await new Promise<string>((resolve, reject) => {
+-      const instance = new Infographic({
++    const svgHtml = await trackNativeJob(host,new Promise<string>((resolve, reject) => {
++      const renderer = new Infographic({
+         container: offscreenContainer,
+         svg: {
+           style: {
+@@ -144,9 +150,12 @@
+         themeConfig,
+       })
+ 
+-      instance.on(`loaded`, ({ node }) => {
++      instance=renderer
++      renderer.on(`loaded`, ({ node }) => {
++        if(!nativeAlive(host))return
+         exportToSVG(node, { removeIds: true })
+           .then((svg) => {
++            if(!nativeAlive(host))return
+             const html = svgElementToHtml(svg)
+             svgCache.set(cacheKey, html)
+             resolve(html)
+@@ -155,17 +164,18 @@
+       })
+ 
+       try {
+-        instance.render(code)
++        renderer.render(code)
+       }
+       catch (error) {
+         reject(error)
+       }
+-    })
++    }))
+ 
+     return svgHtml
+   }
+   finally {
+-    offscreenContainer.remove()
++    cleanup()
++    host?.cleanups.delete(cleanup)
+   }
+ }
+ 
+@@ -173,6 +183,8 @@
+   if (typeof window === `undefined`)
+     return
+ 
++  const host=getNativeHost()
++  if(!nativeAlive(host))return
+   pendingMeta.set(cacheKey, { code, options })
+ 
+   const cached = svgCache.get(cacheKey)
+@@ -185,17 +197,21 @@
+     return
+ 
+   inFlight.add(cacheKey)
++  const clear=()=>{inFlight.delete(cacheKey);pendingMeta.delete(cacheKey)}
++  host?.cleanups.add(clear)
+ 
+   try {
+     const svgHtml = await renderInfographicSvgHtml(code, options)
+-    applySvgByCacheKey(cacheKey, svgHtml)
++    if(nativeAlive(host))applySvgByCacheKey(cacheKey, svgHtml)
+   }
+   catch (error) {
++    if(!nativeAlive(host))return
+     console.error(`Failed to render Infographic:`, error)
+     showInfographicError(containerId, error, options?.diagramMessages)
+   }
+   finally {
+     inFlight.delete(cacheKey)
++    host?.cleanups.delete(clear)
+   }
+ }
+ 
+--- a/packages/core/src/extensions/mermaid.ts
++++ b/packages/core/src/extensions/mermaid.ts
+@@ -1,3 +1,4 @@
++import {nativeById,getNativeHost,nativeAlive,trackNativeJob} from '@md/core/native-host'
+ import type { DiagramMessages } from '@md/shared/types'
+ import type { MarkedExtension, Token } from 'marked'
+ import type { MermaidToken } from '../types/marked-tokens'
+@@ -60,9 +61,16 @@
+   if (cached)
+     return cached
+ 
++  const host=getNativeHost()
+   const mermaid = await getMermaid()
++  if(!nativeAlive(host))throw new Error("稿件已关闭")
+   mermaid.initialize(getMermaidThemeConfig(themeMode))
+-  const result = await mermaid.render(`mermaid-svg-${cacheKey}`, code)
++  const temporary=host?document.createElement("div"):undefined
++  if(temporary)host!.portal.appendChild(temporary)
++  let result
++  try{result=await trackNativeJob(host,mermaid.render(`mermaid-svg-${cacheKey}`,code,temporary))}
++  finally{temporary?.remove()}
++  if(!nativeAlive(host))throw new Error("稿件已关闭")
+   svgCache.set(cacheKey, result.svg)
+   return result.svg
+ }
+@@ -71,10 +79,12 @@
+   if (typeof window === `undefined`)
+     return
+ 
++  const host=getNativeHost()
+   const handleResult = (svg: string) => {
++    if(!nativeAlive(host))return
+     svgCache.set(cacheKey, svg)
+ 
+-    const el = document.getElementById(id)
++    const el = nativeById(id)
+     if (el) {
+       el.innerHTML = svg
+       el.setAttribute(MD_DIAGRAM_STATE_ATTR, MD_DIAGRAM_STATE.ready)
+@@ -82,8 +92,9 @@
+   }
+ 
+   const handleError = (error: unknown) => {
++    if(!nativeAlive(host))return
+     console.error('Failed to render Mermaid:', error)
+-    const el = document.getElementById(id)
++    const el = nativeById(id)
+     if (el) {
+       const detail = error instanceof Error ? error.message : String(error)
+       const messages = getDiagramMessages()
+--- a/packages/core/src/extensions/plantuml.ts
++++ b/packages/core/src/extensions/plantuml.ts
+@@ -1,3 +1,4 @@
++import {nativeQuery,getNativeHost,nativeAlive} from '@md/core/native-host'
+ import type { DiagramMessages } from '@md/shared/types'
+ import type { MarkedExtension, Token } from 'marked'
+ import type { PlantUMLToken } from '../types/marked-tokens'
+@@ -168,8 +169,10 @@
+   if (options.inlineSvg && options.format === `svg`) {
+     const placeholder = `plantuml-${cacheKey}`
+ 
+-    fetchSvgContent(imageUrl, messages.plantumlError).then((svgContent) => {
+-      const placeholderElement = document.querySelector(`[data-placeholder="${placeholder}"]`) as HTMLElement
++    const host=getNativeHost()
++    fetchSvgContent(imageUrl,messages.plantumlError,host?.signal).then((svgContent) => {
++      if(!nativeAlive(host))return
++      const placeholderElement = nativeQuery(`[data-placeholder="${placeholder}"]`) as HTMLElement
+       if (placeholderElement) {
+         const isError = !isSvgMarkup(svgContent)
+         if (!isError)
+@@ -192,9 +195,9 @@
+   return createPlantUMLHTML(imageUrl, options)
+ }
+ 
+-async function fetchSvgContent(svgUrl: string, errorMessage: string): Promise<string> {
++async function fetchSvgContent(svgUrl: string, errorMessage: string, signal?:AbortSignal): Promise<string> {
+   try {
+-    const response = await fetch(svgUrl)
++    const response = await fetch(svgUrl,{signal})
+     if (!response.ok) {
+       throw new Error(`HTTP ${response.status}`)
+     }
+--- /dev/null
++++ b/packages/core/src/native-host.ts
+@@ -0,0 +1,102 @@
++/** 原生宿主资源由同文档 lease 装配，不修改 DOM 原型。 */
++export interface NativeDomHost {
++  root: HTMLElement
++  portal: HTMLElement
++  signal: AbortSignal
++  mode: 'light' | 'dark'
++  live: boolean
++  ready?: Promise<void>
++  readyResolve?: () => void
++  readyReject?: (error: unknown) => void
++  imageUrls: Map<string, string>
++  imageBlobs: Map<string, Blob>
++  jobs: Set<Promise<unknown>>
++  cleanups: Set<() => void>
++  importMedia: (file: File) => Promise<{ mediaId: string }>
++  onError: (message: string) => void
++}
++let active: NativeDomHost | undefined
++export function setNativeHost(host?: NativeDomHost) { active = host }
++export function getNativeHost() { return active }
++export function isNativeHost() { return !!active }
++export function nativeAlive(host = active) { return !host || host.live && !host.signal.aborted }
++export function nativeQuery<T extends Element = Element>(selector: string): T | null {
++  if (!active) return document.querySelector<T>(selector)
++  return nativeAlive(active) ? active.root.querySelector<T>(selector) ?? active.portal.querySelector<T>(selector) : null
++}
++export function nativeQueryAll<T extends Element = Element>(selector: string): NodeListOf<T> {
++  return active ? active.root.querySelectorAll<T>(nativeAlive(active) ? selector : ':not(*)') : document.querySelectorAll<T>(selector)
++}
++export function nativeById(id: string): HTMLElement | null {
++  return nativeQuery<HTMLElement>(`[id="${id.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"]`)
++}
++export function appendNativeStyle<T extends Node>(node: T): T {
++  if (!nativeAlive()) throw new Error('稿件已关闭')
++  return (active ? active.root : document.head).appendChild(node)
++}
++export function appendNativeTransient<T extends Node>(node: T): T {
++  if (!nativeAlive()) throw new Error('稿件已关闭')
++  return (active ? active.portal : document.body).appendChild(node)
++}
++export function nativePortal() { return active?.portal }
++export function ownsNativeFocus(event?: Event) {
++  if (!active) return true
++  if (!nativeAlive(active)) return false
++  const path = event?.composedPath() ?? []
++  const root = active.root.getRootNode() as Document | ShadowRoot
++  const focused = root.activeElement
++  return path.some(node => node instanceof Node && (active!.root.contains(node) || active!.portal.contains(node)))
++    || !!focused && (active.root.contains(focused) || active.portal.contains(focused))
++}
++/** Abort releases the lease; the original continuation must also check its captured host. */
++export function trackNativeJob<T>(host: NativeDomHost | undefined, job: Promise<T>): Promise<T> {
++  if (!host) return job
++  let abort!: () => void
++  const cancelled = new Promise<never>((_, reject) => {
++    abort = () => reject(new Error('稿件已关闭或操作已取消'))
++    if (!nativeAlive(host)) abort()
++    else host.signal.addEventListener('abort', abort, { once: true })
++  })
++  const result = Promise.race([job, cancelled])
++  host.jobs.add(result)
++  void result.finally(() => {
++    host.signal.removeEventListener('abort', abort)
++    host.jobs.delete(result)
++  }).catch(() => {})
++  return result
++}
++
++const MISSING_IMAGE = `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="360" height="72"><rect width="360" height="72" fill="#f1f1f1"/><text x="16" y="42" font-size="14" fill="#555">图片未绑定作品素材</text></svg>')}`
++/** SEMANTIC_BOUNDARY_ALLOW: only resolve exact verified asset IDs; no content or creative choice. */
++export function resolveNativeImages(html: string): string {
++  const host = getNativeHost()
++  if (!host) return html
++  const registered = new Set(host.imageUrls.values())
++  // 只在图片槽保留明确 image MIME 的内嵌图，供原公式/图表使用。
++  const inlineImage = /^data:image\/(?:png|jpeg|gif|webp|avif|bmp|svg\+xml)(?:;[^,]*)?,/i
++  const resolve = (raw: string) => {
++    const match = /^creatoros-asset:([^:\s]+):([^:\s]+)$/.exec(raw)
++    return match ? host.imageUrls.get(`${match[1]}:${match[2]}`) ?? MISSING_IMAGE
++      : registered.has(raw) || inlineImage.test(raw) ? raw : MISSING_IMAGE
++  }
++
++  // template 的 HTML 解析器处理合法引号/换行/实体，且其内容在检查前保持惰性。
++  const template = host.root.ownerDocument.createElement('template')
++  template.innerHTML = html
++  // 图片候选全部退回同一已核验 img；保留 picture/source 结构及 media/type。
++  for (const source of template.content.querySelectorAll('picture source')) {
++    source.removeAttribute('srcset')
++    source.removeAttribute('src')
++  }
++  for (const image of template.content.querySelectorAll('img')) {
++    image.removeAttribute('srcset')
++    image.setAttribute('src', resolve(image.getAttribute('src') ?? ''))
++  }
++  for (const image of template.content.querySelectorAll('svg image')) {
++    image.removeAttribute('srcset')
++    if (image.hasAttribute('href')) image.setAttribute('href', resolve(image.getAttribute('href') ?? ''))
++    if (image.hasAttribute('xlink:href')) image.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', resolve(image.getAttribute('xlink:href') ?? ''))
++    if (!image.hasAttribute('href') && !image.hasAttribute('xlink:href')) image.setAttribute('href', MISSING_IMAGE)
++  }
++  return template.innerHTML
++}
+--- a/packages/core/src/theme/componentDarkVars.ts
++++ b/packages/core/src/theme/componentDarkVars.ts
+@@ -1,3 +1,4 @@
++import {nativeById,appendNativeStyle} from '@md/core/native-host'
+ /**
+  * Dark-mode CSS variables for built-in components.
+  *
+@@ -26,10 +27,10 @@
+ export function initComponentDarkVars(): void {
+   if (typeof document === `undefined`)
+     return
+-  if (document.getElementById(`md-comp-dark`))
++  if (nativeById(`md-comp-dark`))
+     return
+   const style = document.createElement(`style`)
+   style.id = `md-comp-dark`
+   style.textContent = COMP_DARK_VARS_CSS
+-  document.head.appendChild(style)
++  appendNativeStyle(style)
+ }
+--- a/packages/core/src/theme/themeInjector.ts
++++ b/packages/core/src/theme/themeInjector.ts
+@@ -1,3 +1,5 @@
++import {isNativeHost} from '@md/core/native-host'
++import {appendNativeStyle} from '@md/core/native-host'
+ /** Manages the injected theme <style> element */
+ 
+ export class ThemeInjector {
+@@ -8,9 +10,9 @@
+     if (!this.styleElement) {
+       this.styleElement = document.createElement(`style`)
+       this.styleElement.id = this.styleId
+-      document.head.appendChild(this.styleElement)
++      appendNativeStyle(this.styleElement)
+     }
+-    this.styleElement.textContent = cssContent
++    this.styleElement.textContent = isNativeHost()?'#output{--foreground:0 0% 3.9%;--blockquote-background:#f7f7f7;}'+cssContent.replace(/:root/g,'#output').replace(/@import\s+[^;]+;/g,''):cssContent
+   }
+ 
+   remove(): void {
+@@ -33,3 +35,5 @@
+   }
+   return injectorInstance
+ }
++
++export function resetThemeInjector(){injectorInstance?.remove();injectorInstance=null}
+--- a/packages/core/src/utils/markdownHelpers.ts
++++ b/packages/core/src/utils/markdownHelpers.ts
+@@ -1,3 +1,4 @@
++import {resolveNativeImages,isNativeHost} from '../native-host'
+ import type { RendererAPI } from '@md/shared/types'
+ import type { ReadTimeResults } from '@md/shared/utils/readingTime'
+ import DOMPurify from 'isomorphic-dompurify'
+@@ -15,6 +16,7 @@
+  * HTML comments are removed by DOMPurify, so span placeholders are used instead.
+  */
+ export function sanitizeHtml(html: string): string {
++  html=resolveNativeImages(html)
+   const protectedContents: string[] = []
+ 
+   // Protect infographic blocks (comment delimiters avoid nested-div issues)
+@@ -35,7 +37,7 @@
+     },
+   )
+ 
+-  html = DOMPurify.sanitize(html, { ADD_TAGS: [`mp-common-profile`] })
++  html = DOMPurify.sanitize(html, { ADD_TAGS: [`mp-common-profile`], ...(isNativeHost()?{ALLOWED_URI_REGEXP:/^(?:(?:https?|ftp|ftps|mailto|tel|callto|sms|cid|xmpp|blob):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i}:{}) })
+ 
+   html = html.replace(
+     PROTECTED_SPAN_REGEX,
+--- a/packages/core/src/utils/mathjax.ts
++++ b/packages/core/src/utils/mathjax.ts
+@@ -1,3 +1,4 @@
++import {nativeById,appendNativeStyle,getNativeHost,nativeAlive,trackNativeJob} from '@md/core/native-host'
+ /// <reference path="../mathjax.d.ts" />
+ 
+ export const MATHJAX_CDN_URL = `https://cdn-doocs.oss-cn-shenzhen.aliyuncs.com/npm/mathjax@3/es5/tex-svg.js`
+@@ -26,7 +27,7 @@
+ }
+ 
+ function removeMathJaxScript() {
+-  document.getElementById(MATHJAX_SCRIPT_ID)?.remove()
++  nativeById(MATHJAX_SCRIPT_ID)?.remove()
+ }
+ 
+ function appendMathJaxScript(): HTMLScriptElement {
+@@ -35,7 +36,7 @@
+   const script = document.createElement(`script`)
+   script.id = MATHJAX_SCRIPT_ID
+   script.src = getMathJaxScriptUrl()
+-  document.head.appendChild(script)
++  appendNativeStyle(script)
+   return script
+ }
+ 
+@@ -49,7 +50,12 @@
+   if (loadPromise)
+     return loadPromise
+ 
+-  loadPromise = new Promise<void>((resolve, reject) => {
++  const host=getNativeHost()
++  const previousMathJax=window.MathJax
++  let nativeScript:HTMLScriptElement|undefined
++  const cleanup=()=>{if(!host)return;nativeScript?.remove();if(nativeScript){nativeScript.onload=null;nativeScript.onerror=null}window.MathJax=previousMathJax;loadPromise=null;readyEventDispatched=false}
++  host?.cleanups.add(cleanup)
++  loadPromise = trackNativeJob(host,new Promise<void>((resolve, reject) => {
+     Object.assign(window, {
+       MathJax: {
+         tex: { tags: `ams` },
+@@ -65,27 +71,31 @@
+     })
+ 
+     const script = appendMathJaxScript()
++    nativeScript=script
+     script.onload = () => {
+-      waitForMathJaxStartup().then(resolve).catch((error) => {
++      if(!nativeAlive(host))return
++      waitForMathJaxStartup().then(()=>{if(nativeAlive(host))resolve()}).catch((error) => {
+         removeMathJaxScript()
+         loadPromise = null
+         reject(error)
+       })
+     }
+     script.onerror = () => {
++      if(!nativeAlive(host))return
+       removeMathJaxScript()
+       loadPromise = null
+       reject(new Error(`Failed to load MathJax`))
+     }
+-  })
++  }))
+ 
+   return loadPromise
+ }
+ 
+ export function ensureMathJaxLoaded(): Promise<void> {
++  const host=getNativeHost()
+   const wasReady = isMathJaxReady()
+   return loadMathJax().then(() => {
+-    if (typeof window === `undefined` || wasReady || readyEventDispatched)
++    if (!nativeAlive(host)||typeof window === `undefined` || wasReady || readyEventDispatched)
+       return
+     readyEventDispatched = true
+     window.dispatchEvent(new CustomEvent(MATHJAX_READY_EVENT))
+--- a/packages/shared/src/editor/history.ts
++++ b/packages/shared/src/editor/history.ts
+@@ -1,9 +1,9 @@
+ import type { Compartment } from '@codemirror/state'
+ import type { EditorView } from '@codemirror/view'
+-import { history } from '@codemirror/commands'
++import { history,undo,redo } from '@codemirror/commands'
+ import { Transaction } from '@codemirror/state'
+ 
+-export { history }
++export { history,undo,redo }
+ 
+ export function replaceDocumentWithoutHistory(view: EditorView, content: string) {
+   view.dispatch({
+--- /dev/null
++++ b/scripts/build-native.mjs
+@@ -0,0 +1,18 @@
++import {spawnSync} from 'node:child_process'
++import {cpSync,mkdirSync,readFileSync,writeFileSync,readdirSync,statSync} from 'node:fs'
++import {createHash} from 'node:crypto'
++import {fileURLToPath} from 'node:url'
++import path from 'node:path'
++const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..')
++const web=path.join(root,'apps/web')
++function run(program,args,cwd=web){const result=spawnSync(program,args,{cwd,stdio:'inherit'});if(result.status!==0)throw new Error(`${program} ${args.join(' ')} failed (${result.status})`)}
++run(path.join(web,'node_modules/.bin/vue-tsc'),['--project','tsconfig.app.json','--noEmit'])
++run(path.join(web,'node_modules/.bin/vite'),['build','--config','vite.native.config.ts','--mode','production'])
++const output=path.join(web,'dist-native')
++cpSync(path.join(root,'LICENSE'),path.join(output,'LICENSE'))
++const hashes={}
++function scan(directory){for(const name of readdirSync(directory).sort()){const file=path.join(directory,name);if(statSync(file).isDirectory())scan(file);else if(name!=='SHA256.json')hashes[path.relative(output,file)]=createHash('sha256').update(readFileSync(file)).digest('hex')}}
++scan(output)
++writeFileSync(path.join(output,'SHA256.json'),JSON.stringify({upstream:{repository:'https://github.com/doocs/md',commit:'a7c17fc4cda92e3c13aa7e24f06615cfa4219b31',license:'WTFPL'},entry:'native.js',css:'native.css',files:hashes},null,2)+'\n')
++if(process.argv[2]){const target=path.resolve(process.argv[2]);mkdirSync(target,{recursive:true});cpSync(output,target,{recursive:true})}
++console.log(`Doocs 原生ESM构建完成：${output}`)
+--- /dev/null
++++ b/scripts/package-native.py
+@@ -0,0 +1,43 @@
++#!/usr/bin/env python3
++"""打包完整对应源、相对指定基准的补丁和可核验交付元数据。"""
++from pathlib import Path
++import argparse,hashlib,tarfile,gzip,json,difflib,shutil,subprocess,os
++parser=argparse.ArgumentParser();parser.add_argument('--baseline',required=True);parser.add_argument('--output',default='delivery');args=parser.parse_args()
++root=Path(__file__).resolve().parent.parent;baseline=Path(args.baseline).resolve();out=(root/args.output).resolve();out.mkdir(parents=True,exist_ok=True)
++excluded={'node_modules','dist','dist-native','.git','.claude','.wxt','.cache','native-evidence',out.name,'__pycache__'}
++def sources(directory):
++ return {p.relative_to(directory).as_posix():p for p in directory.rglob('*') if not any(part in excluded for part in p.relative_to(directory).parts) and (p.is_file() or p.is_symlink()) and not p.name.endswith(('.tsbuildinfo','.log','.DS_Store'))}
++current=sources(root);prior=sources(baseline);patch=[];changed=[];whitespace=[]
++for name in sorted(current.keys()|prior.keys()):
++ a=prior.get(name);b=current.get(name)
++ if a and b and (os.readlink(a)==os.readlink(b) if a.is_symlink() and b.is_symlink() else not a.is_symlink() and not b.is_symlink() and a.read_bytes()==b.read_bytes()):continue
++ changed.append(name)
++ try:
++  left=a.read_text().splitlines(keepends=True) if a else [];right=b.read_text().splitlines(keepends=True) if b else []
++  patch.extend(difflib.unified_diff(left,right,fromfile='a/'+name if a else '/dev/null',tofile='b/'+name if b else '/dev/null'))
++ except UnicodeDecodeError:raise RuntimeError('需单独交付二进制改动：'+name)
++ if b and not b.is_symlink():
++  check=subprocess.run(['git','diff','--no-index','--check',str(a) if a else '/dev/null',str(b)],text=True,capture_output=True)
++  if check.stdout or check.stderr:whitespace.append({'path':name,'exit':check.returncode,'stdout':check.stdout,'stderr':check.stderr})
++(out/'NATIVE_PATCHES_FROM_T1049.diff').write_text(''.join(patch))
++(out/'whitespace-check.json').write_text(json.dumps({'result':'PASS' if not whitespace else 'FAIL','changedFiles':len(changed),'findings':whitespace},ensure_ascii=False,indent=2)+'\n')
++if whitespace:raise RuntimeError('补丁空白检查失败')
++archive=out/'native-source.tar.gz'
++with archive.open('wb') as raw,gzip.GzipFile(filename='',fileobj=raw,mode='wb',mtime=0) as compressed,tarfile.open(fileobj=compressed,mode='w') as tar:
++ for name,p in sorted(current.items()):
++  info=tar.gettarinfo(str(p),arcname='doocs-md-native/'+name);info.uid=0;info.gid=0;info.uname='';info.gname='';info.mtime=0
++  if info.issym() and (Path(info.linkname).is_absolute() or 't1049-reference-doocs' in info.linkname):raise RuntimeError('源码含环境专用链接：'+name)
++  if info.isfile():
++   with p.open('rb') as data:tar.addfile(info,data)
++  else:tar.addfile(info)
++# 每次只保留本轮构建，避免不同哈希旧块残留。
++if (out/'native').exists():shutil.rmtree(out/'native')
++shutil.copytree(root/'apps/web/dist-native',out/'native')
++shutil.copy2(root/'NATIVE_VERIFY.md',out/'VERIFY.md')
++shutil.copy2(root/'LICENSE',out/'LICENSE');shutil.copy2(root/'NATIVE_README.md',out/'README.md');shutil.copy2(root/'scripts/build-native.mjs',out/'build-native.mjs');shutil.copytree(root/'native-evidence',out/'evidence',dirs_exist_ok=True)
++sha=lambda p:hashlib.sha256(p.read_bytes()).hexdigest()
++dist=json.loads((root/'apps/web/dist-native/SHA256.json').read_text());graph=json.loads((root/'apps/web/dist-native/native-build-graph.json').read_text())
++metadata={'task':'T-1053','upstream':dist['upstream'],'sourceArchive':{'path':'native-source.tar.gz','sha256':sha(archive),'sourceFiles':len(current),'download':'/reference-editors/sources/doocs-md/native-source.tar.gz'},'patch':{'path':'NATIVE_PATCHES_FROM_T1049.diff','sha256':sha(out/'NATIVE_PATCHES_FROM_T1049.diff'),'baseline':'T1049 固定来源适配源码','changedFiles':changed},'dist':{'path':'native','base':'/reference-editors/doocs-md/native/','entry':'native.js','entrySha256':dist['files']['native.js'],'css':'native.css','cssSha256':dist['files']['native.css'],'filesSha256':'native/SHA256.json','modules':len(graph['modules']),'dependencies':len(graph['dependencies'])},'licensesWithoutFiles':[p for p in graph['dependencies'] if not p['licenseFiles']],'verification':{'buildTypecheck':'evidence/build-verified-final.log','actualDistDOM':'evidence/dom-final-environment.log','ESMAndCSS':'evidence/artifact-final.log','leaseTests':'evidence/lease-green-final.log','whitespace':'whitespace-check.json','rebuildDeterminism':'evidence/rebuild-determinism.json','independentBuild':'evidence/build-deterministic-extracted.log','imageSevenFamiliesRed':'evidence/image-seven-families-red.log','imageSevenFamiliesGreen':'evidence/image-seven-families-green.log','svgImageRed':'evidence/svg-image-red.log','noProcessRed':'evidence/no-process-red.log','noProcessGreen':'evidence/no-process-green.log','noProcessReviewer':'evidence/no-process-reviewer-green.log'},'unverified':['浏览器像素、布局、焦点与层级','系统 Clipboard','图片像素及资源 ZIP 人工质量','远程 MathJax/PlantUML、复杂图表','集成服务器 HTTP 静态路由','其它前置TDD红测缺失；不声称补拍历史证据']}
++(out/'native-delivery.json').write_text(json.dumps(metadata,ensure_ascii=False,indent=2)+'\n')
++(out/'SHA256.json').write_text(json.dumps({p.name:sha(p) for p in out.iterdir() if p.is_file() and p.name!='SHA256.json'},ensure_ascii=False,indent=2)+'\n')
++print(json.dumps({'output':str(out),'archive':str(archive),'archiveSHA256':sha(archive),'entrySHA256':dist['files']['native.js'],'cssSHA256':dist['files']['native.css'],'sourceFiles':len(current),'changedFiles':len(changed)},ensure_ascii=False,indent=2))
+--- /dev/null
++++ b/scripts/verify-native-build.mjs
+@@ -0,0 +1,23 @@
++import assert from 'node:assert/strict'
++import {parseSync} from '../apps/web/node_modules/vite/dist/node/index.js'
++import {readFileSync,readdirSync,statSync,existsSync} from 'node:fs'
++import path from 'node:path'
++import {fileURLToPath} from 'node:url'
++const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../apps/web/dist-native')
++const css=readFileSync(path.join(root,'native.css'),'utf8')
++const graph=JSON.parse(readFileSync(path.join(root,'native-build-graph.json'),'utf8'))
++for(const module of ['apps/web/src/components/editor/EditorPanel.vue','apps/web/src/components/editor/PreviewPanel.vue','apps/web/src/components/editor/RightSlider.vue','packages/core/src/renderer/index.ts'])assert.ok(graph.modules.includes(module),module)
++assert.equal(existsSync(path.join(root,'index.html')),false)
++assert.equal(/hsl\(var\(--(?:foreground|background|primary|border|accent)/.test(css),false)
++const checked=[],unresolvedProductionMacros=[];let parsedJs=0
++const propertyName=node=>!node?.computed&&node?.property?.type==='Identifier'?node.property.name:node?.property?.type==='Literal'?node.property.value:undefined
++function checkMacros(node,file){
++ if(!node||typeof node!=='object')return
++ if(node.type==='MemberExpression'&&propertyName(node)==='NODE_ENV'&&node.object?.type==='MemberExpression'&&propertyName(node.object)==='env'&&node.object.object?.type==='Identifier'&&node.object.object.name==='process')unresolvedProductionMacros.push({file,start:node.start})
++ for(const value of Object.values(node))if(Array.isArray(value))value.forEach(child=>checkMacros(child,file));else if(value&&typeof value==='object')checkMacros(value,file)
++}
++function scan(directory){for(const name of readdirSync(directory)){const file=path.join(directory,name);if(statSync(file).isDirectory())scan(file);else if(name.endsWith('.js')){const text=readFileSync(file,'utf8'),parsed=parseSync(file,text);assert.equal(parsed.errors.length,0,file);parsedJs++;checkMacros(parsed.program,path.relative(root,file));for(const match of text.matchAll(/(?:from\s*|import\s*\()\s*["']([^"']+)["']/g)){const specifier=match[1];if(specifier.startsWith('.')){assert.ok(existsSync(path.resolve(directory,specifier)),specifier);checked.push(specifier)}else assert.equal(/^(https?:|\/)/.test(specifier),false,specifier)}}}}
++scan(root)
++assert.deepEqual(unresolvedProductionMacros,[],'所有真实JS生产宏必须由构建替换；字符串示例不算宏')
++for(const match of css.matchAll(/url\(\s*["']?([^"')\s]+)/g)){const url=match[1];if(url.startsWith('data:')||url.startsWith('#'))continue;if(url.startsWith('/reference-editors/doocs-md/native/'))assert.ok(existsSync(path.join(root,url.slice('/reference-editors/doocs-md/native/'.length))),url);else {assert.equal(/^(https?:|\/)/.test(url),false,url);assert.ok(existsSync(path.join(root,url)),url)}}
++console.log(JSON.stringify({result:'PASS',fixture:'构建文件与ESM相对依赖/CSS URL检查',entry:'native.js',css:'native.css',base:'/reference-editors/doocs-md/native/',modules:graph.modules.length,dependencies:graph.dependencies.length,checkedImports:checked.length,parsedJs,unresolvedProductionMacros:unresolvedProductionMacros.length,notVerified:['服务器HTTP静态路由由主会话集成后验证','真实浏览器像素']},null,2))
+--- /dev/null
++++ b/scripts/verify-native-dom.mjs
+@@ -0,0 +1,161 @@
++import assert from 'node:assert/strict'
++import {createRequire} from 'node:module'
++import {File} from 'node:buffer'
++import {readFileSync} from 'node:fs'
++const withoutProcess=process.argv.includes('--without-process'),nodeProcess=globalThis.process
++const require=createRequire(new URL('../packages/core/package.json',import.meta.url))
++const {JSDOM}=require('jsdom')
++const dom=new JSDOM('<!doctype html><html lang="zh-CN"><head><title>CreatorOS 夹具标题</title></head><body><input id="outside"><div id="host"></div></body></html>',{url:'https://fixture.local/projects/owner/output',pretendToBeVisual:true})
++const w=dom.window
++for(const key of ['window','document','Window','NodeFilter','Text','DocumentFragment','Selection','CSSStyleSheet','HTMLButtonElement','HTMLAnchorElement','Node','Element','HTMLElement','SVGElement','ShadowRoot','Document','MutationObserver','CustomEvent','Event','MouseEvent','KeyboardEvent','Range','DOMParser','FileReader','Image','HTMLInputElement','HTMLTextAreaElement','HTMLSelectElement','HTMLCanvasElement','HTMLImageElement','XMLSerializer'])Object.defineProperty(globalThis,key,{value:key==='window'?w:key==='document'?w.document:w[key],configurable:true,writable:true})
++Object.defineProperty(globalThis,'navigator',{value:w.navigator,configurable:true})
++Object.defineProperty(globalThis,'File',{value:File,configurable:true})
++Object.defineProperty(globalThis,'localStorage',{value:w.localStorage,configurable:true})
++Object.defineProperty(globalThis,'sessionStorage',{value:w.sessionStorage,configurable:true})
++globalThis.getComputedStyle=w.getComputedStyle.bind(w)
++globalThis.requestAnimationFrame=w.requestAnimationFrame.bind(w)
++globalThis.cancelAnimationFrame=w.cancelAnimationFrame.bind(w)
++globalThis.ResizeObserver=class{observe(){}unobserve(){}disconnect(){}}
++w.ResizeObserver=globalThis.ResizeObserver
++w.matchMedia=()=>({matches:false,addEventListener(){},removeEventListener(){},addListener(){},removeListener(){}})
++w.Range.prototype.getClientRects=()=>[]
++w.Range.prototype.getBoundingClientRect=()=>({left:0,right:0,top:0,bottom:0,width:0,height:0})
++w.HTMLElement.prototype.scrollIntoView=()=>{}
++document.execCommand=()=>false
++const shadow=document.getElementById('host').attachShadow({mode:'open'})
++const style=document.createElement('style');style.textContent=readFileSync(new URL('../apps/web/dist-native/native.css',import.meta.url),'utf8');shadow.appendChild(style)
++function surfaces(){const container=document.createElement('div'),portal=document.createElement('div');container.style.height='600px';portal.dataset.nativePortal='';shadow.append(container,portal);return {container,portal}}
++const tokens={'--creatoros-text':'#111111','--creatoros-surface':'#ffffff','--creatoros-surface-subtle':'#f3f3f3','--creatoros-border':'#dddddd','--creatoros-border-strong':'#bbbbbb','--creatoros-brand':'#3333dd','--creatoros-brand-soft':'#eeeeff','--creatoros-text-muted':'#666666','--creatoros-brand-foreground':'#ffffff'}
++const theme={mode:'light',tokens,fontFamily:'sans-serif',fontSize:'14px',density:'comfortable'}
++const title=document.title,lang=document.documentElement.lang,head=document.head.innerHTML,bodyChildren=document.body.children.length
++if(withoutProcess){delete globalThis.process;assert.equal(typeof globalThis.process,'undefined')}
++const module=await import('../apps/web/dist-native/native.js')
++assert.equal(typeof module.mount,'function')
++const changed=[],errors=[],imports=[]
++let deferImports=false,lateReceipt
++const pause=()=>new Promise(resolve=>setTimeout(resolve,30))
++const first=surfaces(),owner={accountId:'account-fixture',outputId:'output-fixture',sourceVersionId:'source-fixture'}
++const cancel=new AbortController()
++const handle=await module.mount(first.container,{owner,theme,portalContainer:first.portal,signal:cancel.signal,onChanged:value=>changed.push(value),onError:value=>errors.push(value),importMedia:async file=>{imports.push(file);if(deferImports)return await new Promise(resolve=>{lateReceipt=resolve});return {mediaId:'creatoros-asset:import-asset:import-file'}}})
++assert.equal(first.container.querySelectorAll('.cm-editor').length,1)
++assert.ok(first.container.querySelector('#output'))
++assert.equal(first.container.querySelector('iframe'),null)
++assert.equal(document.title,title);assert.equal(document.documentElement.lang,lang);assert.equal(document.head.innerHTML,head)
++const markdown='<!-- creatoros-paragraph:p-1 -->\n\n# 真实原生正文\n\n段落文字。\n\n<img src="creatoros-asset:asset-1:file-1" alt="素材">\n\n```html\n<img src="https://fixture.invalid/literal.png">\n```'
++const layout={schemaVersion:1,editor:'doocs-md',editorCommit:'a7c17fc4cda92e3c13aa7e24f06615cfa4219b31',themeId:'grace',themeSettings:{primaryColor:'#c05050',fontFamily:'sans-serif',fontSize:'16px',codeBlockTheme:'none',headingStyles:{},isShowLineNumber:true,isMacCodeBlock:true},customCss:'p { letter-spacing:1px; }',exportOptions:{useIndent:true,useJustify:false}}
++const blob=new Blob(['image-fixture'],{type:'image/png'})
++await handle.request('load',{document:{title:'原生稿件',markdown,layout},assets:[{assetId:'asset-1',assetFileId:'file-1',blob}]})
++const initial=await handle.request('snapshot')
++assert.equal(initial.markdown,markdown);assert.equal(initial.layout.themeId,'grace');assert.equal(initial.layout.customCss,layout.customCss)
++const exact=first.container.querySelector('#output img');assert.ok(exact.src.startsWith('blob:'))
++assert.ok(first.container.querySelector('#output code').textContent.includes('https://fixture.invalid/literal.png'))
++const priorUrl=exact.src
++await handle.request('load',{document:{title:'更新',markdown:markdown+'\n\n保持图片',layout}})
++assert.equal(first.container.querySelector('#output img').src,priorUrl)
++const beforeTheme=await handle.request('snapshot')
++handle.update({theme:{...theme,mode:'dark',density:'compact',tokens:{...tokens,'--creatoros-surface':'#101010'}}})
++assert.equal(first.portal.style.getPropertyValue('--creatoros-surface'),'#101010');assert.ok(first.portal.classList.contains('dark'))
++assert.deepEqual(await handle.request('snapshot'),beforeTheme)
++handle.update({disabled:true});assert.ok(first.container.hasAttribute('inert'));assert.ok(first.portal.hasAttribute('inert'));handle.update({disabled:false})
++const exported=await handle.request('export-html')
++assert.ok(exported.html.includes('真实原生正文'));assert.ok(exported.bindings.some(binding=>binding.key==='asset-1:file-1'&&binding.url===priorUrl))
++await handle.request('load',{document:{title:'缺图',markdown:'<img src="https://fixture.invalid/no-fetch.png" srcset="https://fixture.invalid/large.png 2x">'}})
++assert.ok(first.container.querySelector('#output img').src.startsWith('data:image/svg+xml'))
++assert.equal(first.container.querySelector('#output img').hasAttribute('srcset'),false)
++// 实际 ESM 路径覆盖 HTML 合法属性族；DOM 解析不能依赖标签正则。
++const imageCases=[
++ {markdown:'<img alt="合法 a > b" title="保留 title" data-fixture="kept" src="https://fixture.invalid/attribute-bypass.png" srcset="https://fixture.invalid/x.png 2x">',alt:'合法 a > b'},
++ {markdown:"<img alt='单引号 a > b' src='https://fixture.invalid/single.png' srcset='https://fixture.invalid/x.png 2x'>",alt:'单引号 a > b'},
++ {markdown:'<img\n alt="换行 a > b"\n src="https://fixture.invalid/line.png"\n srcset="https://fixture.invalid/x.png 2x">',alt:'换行 a > b'},
++ {markdown:'<img alt="实体 a &gt; b" src="creatoros-asset:asset-1:file-1" srcset="https://fixture.invalid/x.png 2x">',alt:'实体 a > b',registered:true},
++ {markdown:"<img alt='精确单引号 a > b' src='creatoros-asset:asset-1:file-1'>",alt:'精确单引号 a > b',registered:true},
++ {markdown:`<img alt="已注册 Blob a > b" src="${priorUrl}">`,alt:'已注册 Blob a > b',registered:true},
++ {markdown:'<img alt="未知 Blob a > b" src="blob:https://fixture.invalid/unregistered">',alt:'未知 Blob a > b'},
++ {markdown:'<img alt="未知素材 a > b" src="creatoros-asset:unknown:file">',alt:'未知素材 a > b'},
++ {markdown:'<img alt="缺少 src a > b">',alt:'缺少 src a > b'},
++ {markdown:'<img alt="裸属性 a > b" src=https://fixture.invalid/bare.png srcset=https://fixture.invalid/x.png>',alt:'裸属性 a > b'},
++ {markdown:'<img alt="精确双引号 a > b" src="creatoros-asset:asset-1:file-1" srcset="https://fixture.invalid/x.png 2x">',alt:'精确双引号 a > b',registered:true},
++ {markdown:'<picture><source srcset="https://fixture.invalid/source.webp 1x, https://fixture.invalid/source2.webp 2x" type="image/webp"><img src="creatoros-asset:asset-1:file-1" alt="合法回退图"></picture>',alt:'合法回退图',registered:true},
++ {markdown:'<picture><source media="screen and (width > 1px)" srcset="https://fixture.invalid/gt-source.webp 2x"><img src="creatoros-asset:asset-1:file-1" alt="合法回退图"></picture>',alt:'合法回退图',registered:true},
++ {markdown:'<picture><source src="https://fixture.invalid/source.png" media="screen and (width > 1px)" srcset="https://fixture.invalid/gt-source.webp 2x"><img src="creatoros-asset:asset-1:file-1" alt="合法回退图"></picture>',alt:'合法回退图',registered:true},
++
++]
++for(const entry of imageCases){
++ await handle.request('load',{document:{title:'合法图片属性',markdown:entry.markdown}})
++ const image=first.container.querySelector('#output img');assert.ok(image)
++ assert.equal(image.alt,entry.alt);assert.equal(image.hasAttribute('srcset'),false)
++ for(const source of first.container.querySelectorAll('#output picture source')){assert.equal(source.hasAttribute('srcset'),false);assert.equal(source.hasAttribute('src'),false)}
++ if(entry.registered)assert.equal(image.src,priorUrl);else assert.ok(image.src.startsWith('data:image/svg+xml'))
++ if(entry.markdown.includes('data-fixture')){assert.equal(image.dataset.fixture,'kept');assert.equal(image.title,'保留 title')}
++ assert.equal((await handle.request('snapshot')).markdown,entry.markdown)
++ const output=await handle.request('export-html'),fragment=document.createElement('template');fragment.innerHTML=output.html
++ const exportedImage=fragment.content.querySelector('img');assert.ok(exportedImage)
++ for(const source of fragment.content.querySelectorAll('picture source')){assert.equal(source.hasAttribute('srcset'),false);assert.equal(source.hasAttribute('src'),false)}
++ assert.equal(exportedImage.hasAttribute('srcset'),false);assert.equal(exportedImage.getAttribute('alt'),entry.alt)
++ if(entry.registered)assert.equal(exportedImage.getAttribute('src'),priorUrl);else assert.ok(exportedImage.getAttribute('src').startsWith('data:image/svg+xml'))
++}
++const rasterData='data:image/png;base64,aW1hZ2UtZml4dHVyZQ=='
++const vectorData='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg"><path d="M0 0L10 10"/></svg>')
++const svgCases=[
++ {attribute:'href="https://fixture.invalid/svg-image.png" data-note="a > b"'},
++ {attribute:"href='https://fixture.invalid/svg-single.png' data-note='a > b'"},
++ {attribute:'xlink:href="https://fixture.invalid/svg-xlink.png" data-note="a > b"'},
++ {attribute:'href="creatoros-asset:asset-1:file-1" data-note="a > b"',url:priorUrl},
++ {attribute:"xlink:href='creatoros-asset:asset-1:file-1' data-note='a > b'",url:priorUrl},
++ {attribute:`href="${priorUrl}"`,url:priorUrl},
++ {attribute:`href="${rasterData}"`,url:rasterData},
++ {attribute:`href="${vectorData}"`,url:vectorData},
++]
++for(const entry of svgCases){
++ const input=`<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><path data-kept-vector="yes" d="M0 0L10 10"/><image ${entry.attribute} width="100" height="80"/></svg>`
++ await handle.request('load',{document:{title:'SVG精确图片',markdown:input}})
++ for(const surface of [first.container.querySelector('#output'),(()=>{const fragment=document.createElement('template');return handle.request('export-html').then(output=>{fragment.innerHTML=output.html;return fragment.content})})()]){
++  const rendered=await surface,image=rendered.querySelector('svg image');assert.ok(image)
++  const url=image.getAttribute('href')??image.getAttribute('xlink:href')
++  if(entry.url)assert.equal(url,entry.url);else assert.ok(url?.startsWith('data:image/svg+xml'))
++  assert.equal(image.getAttribute('width'),'100');assert.equal(image.getAttribute('height'),'80')
++  assert.ok(rendered.querySelector('svg path[data-kept-vector="yes"]'),'SVG其它向量层应保留')
++ }
++ assert.equal((await handle.request('snapshot')).markdown,input)
++}
++// 安全内嵌图留在图片槽，保持原引擎数学/图表图像能力。
++for(const url of [rasterData,vectorData]){
++ await handle.request('load',{document:{title:'内嵌图',markdown:`<img src="${url}" alt="内嵌图">`}})
++ assert.equal(first.container.querySelector('#output img').getAttribute('src'),url)
++}
++await handle.request('load',{document:{title:'恢复',markdown,layout}})
++const tool=Array.from(first.container.querySelectorAll('.native-toolbar button')).find(button=>button.textContent==='加粗');tool.click()
++await new Promise(resolve=>setTimeout(resolve,340))
++assert.ok(changed.length>0);assert.ok(changed.at(-1).markdown.includes('**文字**'))
++const openMedia=()=>Array.from(first.container.querySelectorAll('.native-toolbar button')).find(button=>button.textContent==='插入图片').click()
++openMedia();await pause()
++const fileInput=first.portal.querySelector('input[type=file]');assert.ok(fileInput)
++const file=new File(['actual-file-fixture'],'fixture.png',{type:'image/png'})
++Object.defineProperty(fileInput,'files',{value:[file],configurable:true})
++fileInput.dispatchEvent(new Event('change',{bubbles:true}));await pause()
++assert.equal(imports.length,1);assert.equal(imports[0],file)
++assert.ok((await handle.request('snapshot')).markdown.includes('creatoros-asset:import-asset:import-file'))
++assert.ok(Array.from(first.container.querySelectorAll('#output img')).some(image=>image.src.startsWith('blob:')))
++assert.equal(document.body.hasAttribute('inert'),false);assert.equal(document.body.style.pointerEvents,'')
++deferImports=true;openMedia();await pause()
++const slowInput=first.portal.querySelector('input[type=file]')
++Object.defineProperty(slowInput,'files',{value:[file],configurable:true})
++slowInput.dispatchEvent(new Event('change',{bubbles:true}));await pause();assert.equal(typeof lateReceipt,'function')
++assert.equal(localStorage.length,0)
++assert.equal(document.body.children.length,bodyChildren)
++const second=surfaces(),secondCancel=new AbortController()
++const replacement=await module.mount(second.container,{owner:{...owner,outputId:'output-2'},theme,portalContainer:second.portal,signal:secondCancel.signal,onChanged:()=>{},onError:value=>errors.push(value),importMedia:async()=>({mediaId:'creatoros-asset:a:b'})})
++assert.equal(first.container.children.length,0)
++await assert.rejects(handle.request('snapshot'),/已关闭/)
++assert.equal(second.container.querySelectorAll('.cm-editor').length,1)
++await replacement.request('load',{document:{title:'新稿',markdown:'新作品内容'}})
++lateReceipt({mediaId:'creatoros-asset:late-old-asset:late-old-file'});await pause()
++assert.equal((await replacement.request('snapshot')).markdown,'新作品内容')
++secondCancel.abort();await replacement.dispose()
++assert.equal(second.container.children.length,0);assert.equal(second.portal.children.length,0)
++await assert.rejects(replacement.request('snapshot'),/已关闭/)
++assert.equal(document.title,title);assert.equal(document.head.innerHTML,head);assert.equal(localStorage.length,0)
++assert.deepEqual(errors,[])
++console.log(JSON.stringify({result:'PASS',fixture:withoutProcess?'Node + jsdom actual ESM without process global':'Node + jsdom actual dist-native ESM',checks:['原Vue/CodeMirror/PreviewPanel挂载','load/snapshot/export-html真实引擎','精确图片/同owner重新加载保留','稳定段落标记/代码块原字面值','缺图占位及srcset过滤','HTML合法属性/精确素材/已注册Blob/未知引用/picture响应式来源/load与export','SVG href/xlink:href精确图片/旁边向量层/安全内嵌图','UI主题与nativeLayout独立','portal tokens和禁用','change回调','真实File先经宿主回执再插图','迟到上传回执不改新owner','弹层不锁body','同文档lease替换','取消/销毁/旧request拒绝','标题/lang/head/body/持久存储无外溢'],notVerified:['真实浏览器像素/布局/焦点层级','系统Clipboard','图片像素与HTML资源ZIP的人工质量','远程MathJax/PlantUML及复杂图表'],stubs:['ResizeObserver','Range空几何','scrollIntoView','execCommand=false（不模拟Clipboard成功）'],imports:imports.length,changes:changed.length,imageCases:imageCases.length,svgCases:svgCases.length},null,2))
++if(withoutProcess){assert.equal(typeof globalThis.process,'undefined');globalThis.process=nodeProcess}
++w.close()
+--- /dev/null
++++ b/scripts/verify-native-image-variants.mjs
+@@ -0,0 +1,125 @@
++import assert from 'node:assert/strict'
++import {createRequire} from 'node:module'
++import {File} from 'node:buffer'
++import {readFileSync} from 'node:fs'
++import {pathToFileURL} from 'node:url'
++import path from 'node:path'
++const dist=process.argv[2]?pathToFileURL(path.resolve(process.argv[2])+'/'):new URL('../apps/web/dist-native/',import.meta.url)
++const require=createRequire(new URL('../packages/core/package.json',import.meta.url))
++const {JSDOM}=require('jsdom')
++const dom=new JSDOM('<!doctype html><html lang="zh-CN"><head><title>CreatorOS 夹具标题</title></head><body><input id="outside"><div id="host"></div></body></html>',{url:'https://fixture.local/projects/owner/output',pretendToBeVisual:true})
++const w=dom.window
++for(const key of ['window','document','Window','NodeFilter','Text','DocumentFragment','Selection','CSSStyleSheet','HTMLButtonElement','HTMLAnchorElement','Node','Element','HTMLElement','SVGElement','ShadowRoot','Document','MutationObserver','CustomEvent','Event','MouseEvent','KeyboardEvent','Range','DOMParser','FileReader','Image','HTMLInputElement','HTMLTextAreaElement','HTMLSelectElement','HTMLCanvasElement','HTMLImageElement','XMLSerializer'])Object.defineProperty(globalThis,key,{value:key==='window'?w:key==='document'?w.document:w[key],configurable:true,writable:true})
++Object.defineProperty(globalThis,'navigator',{value:w.navigator,configurable:true})
++Object.defineProperty(globalThis,'File',{value:File,configurable:true})
++Object.defineProperty(globalThis,'localStorage',{value:w.localStorage,configurable:true})
++Object.defineProperty(globalThis,'sessionStorage',{value:w.sessionStorage,configurable:true})
++globalThis.getComputedStyle=w.getComputedStyle.bind(w)
++globalThis.requestAnimationFrame=w.requestAnimationFrame.bind(w)
++globalThis.cancelAnimationFrame=w.cancelAnimationFrame.bind(w)
++globalThis.ResizeObserver=class{observe(){}unobserve(){}disconnect(){}}
++w.ResizeObserver=globalThis.ResizeObserver
++w.matchMedia=()=>({matches:false,addEventListener(){},removeEventListener(){},addListener(){},removeListener(){}})
++w.Range.prototype.getClientRects=()=>[]
++w.Range.prototype.getBoundingClientRect=()=>({left:0,right:0,top:0,bottom:0,width:0,height:0})
++w.HTMLElement.prototype.scrollIntoView=()=>{}
++document.execCommand=()=>false
++const shadow=document.getElementById('host').attachShadow({mode:'open'})
++const style=document.createElement('style');style.textContent=readFileSync(new URL('native.css',dist),'utf8');shadow.appendChild(style)
++function surfaces(){const container=document.createElement('div'),portal=document.createElement('div');container.style.height='600px';portal.dataset.nativePortal='';shadow.append(container,portal);return {container,portal}}
++const tokens={'--creatoros-text':'#111111','--creatoros-surface':'#ffffff','--creatoros-surface-subtle':'#f3f3f3','--creatoros-border':'#dddddd','--creatoros-border-strong':'#bbbbbb','--creatoros-brand':'#3333dd','--creatoros-brand-soft':'#eeeeff','--creatoros-text-muted':'#666666','--creatoros-brand-foreground':'#ffffff'}
++const theme={mode:'light',tokens,fontFamily:'sans-serif',fontSize:'14px',density:'comfortable'}
++const title=document.title,lang=document.documentElement.lang,head=document.head.innerHTML,bodyChildren=document.body.children.length
++const module=await import(new URL('native.js',dist).href)
++assert.equal(typeof module.mount,'function')
++const changed=[],errors=[],imports=[]
++let deferImports=false,lateReceipt
++const pause=()=>new Promise(resolve=>setTimeout(resolve,30))
++const first=surfaces(),owner={accountId:'account-fixture',outputId:'output-fixture',sourceVersionId:'source-fixture'}
++const cancel=new AbortController()
++const handle=await module.mount(first.container,{owner,theme,portalContainer:first.portal,signal:cancel.signal,onChanged:value=>changed.push(value),onError:value=>errors.push(value),importMedia:async file=>{imports.push(file);if(deferImports)return await new Promise(resolve=>{lateReceipt=resolve});return {mediaId:'creatoros-asset:import-asset:import-file'}}})
++assert.equal(first.container.querySelectorAll('.cm-editor').length,1)
++assert.ok(first.container.querySelector('#output'))
++assert.equal(first.container.querySelector('iframe'),null)
++assert.equal(document.title,title);assert.equal(document.documentElement.lang,lang);assert.equal(document.head.innerHTML,head)
++const markdown='<!-- creatoros-paragraph:p-1 -->\n\n# 真实原生正文\n\n段落文字。\n\n<img src="creatoros-asset:asset-1:file-1" alt="素材">\n\n```html\n<img src="https://fixture.invalid/literal.png">\n```'
++const layout={schemaVersion:1,editor:'doocs-md',editorCommit:'a7c17fc4cda92e3c13aa7e24f06615cfa4219b31',themeId:'grace',themeSettings:{primaryColor:'#c05050',fontFamily:'sans-serif',fontSize:'16px',codeBlockTheme:'none',headingStyles:{},isShowLineNumber:true,isMacCodeBlock:true},customCss:'p { letter-spacing:1px; }',exportOptions:{useIndent:true,useJustify:false}}
++const blob=new Blob(['image-fixture'],{type:'image/png'})
++await handle.request('load',{document:{title:'原生稿件',markdown,layout},assets:[{assetId:'asset-1',assetFileId:'file-1',blob}]})
++const initial=await handle.request('snapshot')
++assert.equal(initial.markdown,markdown);assert.equal(initial.layout.themeId,'grace');assert.equal(initial.layout.customCss,layout.customCss)
++const exact=first.container.querySelector('#output img');assert.ok(exact.src.startsWith('blob:'))
++assert.ok(first.container.querySelector('#output code').textContent.includes('https://fixture.invalid/literal.png'))
++const priorUrl=exact.src
++await handle.request('load',{document:{title:'更新',markdown:markdown+'\n\n保持图片',layout}})
++assert.equal(first.container.querySelector('#output img').src,priorUrl)
++const beforeTheme=await handle.request('snapshot')
++handle.update({theme:{...theme,mode:'dark',density:'compact',tokens:{...tokens,'--creatoros-surface':'#101010'}}})
++assert.equal(first.portal.style.getPropertyValue('--creatoros-surface'),'#101010');assert.ok(first.portal.classList.contains('dark'))
++assert.deepEqual(await handle.request('snapshot'),beforeTheme)
++handle.update({disabled:true});assert.ok(first.container.hasAttribute('inert'));assert.ok(first.portal.hasAttribute('inert'));handle.update({disabled:false})
++const exported=await handle.request('export-html')
++assert.ok(exported.html.includes('真实原生正文'));assert.ok(exported.bindings.some(binding=>binding.key==='asset-1:file-1'&&binding.url===priorUrl))
++await handle.request('load',{document:{title:'缺图',markdown:'<img src="https://fixture.invalid/no-fetch.png" srcset="https://fixture.invalid/large.png 2x">'}})
++assert.ok(first.container.querySelector('#output img').src.startsWith('data:image/svg+xml'))
++assert.equal(first.container.querySelector('#output img').hasAttribute('srcset'),false)
++
++const variants=[
++ ['double-gt','<img alt="合法 a > b" src="https://fixture.invalid/double.png">'],
++ ['single-gt',"<img alt='合法 a > b' src='https://fixture.invalid/single.png'>"],
++ ['newline','<img\n alt="合法属性"\n src="https://fixture.invalid/newline.png"\n srcset="https://fixture.invalid/newline2.png 2x">'],
++ ['known-gt','<img alt="合法 a > b" src="creatoros-asset:asset-1:file-1">'],
++ ['gt-srcset','<img alt="合法 a > b" src="creatoros-asset:asset-1:file-1" srcset="https://fixture.invalid/srcset.png 2x">'],
++ ['picture','<picture><source srcset="https://fixture.invalid/source.webp 1x, https://fixture.invalid/source2.webp 2x" type="image/webp"><img src="creatoros-asset:asset-1:file-1" alt="合法回退图"></picture>'],
++ ['source-gt','<picture><source media="screen and (width > 1px)" srcset="https://fixture.invalid/gt-source.webp 2x"><img src="creatoros-asset:asset-1:file-1" alt="合法回退图"></picture>'],
++]
++const checks=[]
++for(const[name,input]of variants){
++ await handle.request('load',{document:{title:name,markdown:input}})
++ const snapshot=await handle.request('snapshot')
++ const element=first.container.querySelector('#output')
++ const imgs=Array.from(element.querySelectorAll('img')).map(img=>({src:img.getAttribute('src'),srcset:img.getAttribute('srcset'),alt:img.getAttribute('alt')}))
++ const sources=Array.from(element.querySelectorAll('picture source')).map(source=>({src:source.getAttribute('src'),srcset:source.getAttribute('srcset')}))
++ const outside=imgs.concat(sources).some(row=>/https?:/.test((row.src??'')+' '+(row.srcset??'')))
++ checks.push({name,unknownNetworkSourcePresent:outside,markdownUnchanged:snapshot.markdown===input,imgs,sources})
++}
++console.log(JSON.stringify({probe:'实际 PreviewPanel 图片属性和 picture/source 边界',checks},null,2))
++assert.ok(checks.every(check=>!check.unknownNetworkSourcePresent),'任一图片响应式来源必须精确绑定或安全降级')
++assert.ok(checks.find(check=>check.name==='known-gt').imgs[0].src.startsWith('blob:'),'合法已绑定图和含大于号的属性必须保留')
++assert.ok(checks.every(check=>check.markdownUnchanged),'安全预览不能改写规范Markdown正文')
++
++await handle.request('load',{document:{title:'恢复',markdown,layout}})
++const tool=Array.from(first.container.querySelectorAll('.native-toolbar button')).find(button=>button.textContent==='加粗');const notificationsBefore=changed.length;tool.click();const immediate=await handle.request('snapshot');console.log(JSON.stringify({probe:'CodeMirror即时改动和通知间隔',notifiedBefore:notificationsBefore,notifiedImmediately:changed.length,currentSnapshotHasNewText:immediate.markdown.includes('**文字**')}));
++await new Promise(resolve=>setTimeout(resolve,340))
++assert.ok(changed.length>0);assert.ok(changed.at(-1).markdown.includes('**文字**'))
++const openMedia=()=>Array.from(first.container.querySelectorAll('.native-toolbar button')).find(button=>button.textContent==='插入图片').click()
++openMedia();await pause()
++const fileInput=first.portal.querySelector('input[type=file]');assert.ok(fileInput)
++const file=new File(['actual-file-fixture'],'fixture.png',{type:'image/png'})
++Object.defineProperty(fileInput,'files',{value:[file],configurable:true})
++fileInput.dispatchEvent(new Event('change',{bubbles:true}));await pause()
++assert.equal(imports.length,1);assert.equal(imports[0],file)
++assert.ok((await handle.request('snapshot')).markdown.includes('creatoros-asset:import-asset:import-file'))
++assert.ok(Array.from(first.container.querySelectorAll('#output img')).some(image=>image.src.startsWith('blob:')))
++assert.equal(document.body.hasAttribute('inert'),false);assert.equal(document.body.style.pointerEvents,'')
++deferImports=true;openMedia();await pause()
++const slowInput=first.portal.querySelector('input[type=file]')
++Object.defineProperty(slowInput,'files',{value:[file],configurable:true})
++slowInput.dispatchEvent(new Event('change',{bubbles:true}));await pause();assert.equal(typeof lateReceipt,'function')
++assert.equal(localStorage.length,0)
++assert.equal(document.body.children.length,bodyChildren)
++const second=surfaces(),secondCancel=new AbortController()
++const replacement=await module.mount(second.container,{owner:{...owner,outputId:'output-2'},theme,portalContainer:second.portal,signal:secondCancel.signal,onChanged:()=>{},onError:value=>errors.push(value),importMedia:async()=>({mediaId:'creatoros-asset:a:b'})})
++assert.equal(first.container.children.length,0)
++await assert.rejects(handle.request('snapshot'),/已关闭/)
++assert.equal(second.container.querySelectorAll('.cm-editor').length,1)
++await replacement.request('load',{document:{title:'新稿',markdown:'新作品内容'}})
++lateReceipt({mediaId:'creatoros-asset:late-old-asset:late-old-file'});await pause()
++assert.equal((await replacement.request('snapshot')).markdown,'新作品内容')
++secondCancel.abort();await replacement.dispose()
++assert.equal(second.container.children.length,0);assert.equal(second.portal.children.length,0)
++await assert.rejects(replacement.request('snapshot'),/已关闭/)
++assert.equal(document.title,title);assert.equal(document.head.innerHTML,head);assert.equal(localStorage.length,0)
++assert.deepEqual(errors,[])
++console.log(JSON.stringify({result:'PASS',fixture:'Node + jsdom actual dist-native ESM',checks:['原Vue/CodeMirror/PreviewPanel挂载','load/snapshot/export-html真实引擎','精确图片/同owner重新加载保留','稳定段落标记/代码块原字面值','缺图占位及srcset过滤','UI主题与nativeLayout独立','portal tokens和禁用','change回调','真实File先经宿主回执再插图','迟到上传回执不改新owner','弹层不锁body','同文档lease替换','取消/销毁/旧request拒绝','标题/lang/head/body/持久存储无外溢'],notVerified:['真实浏览器像素/布局/焦点层级','系统Clipboard','图片像素与HTML资源ZIP的人工质量','远程MathJax/PlantUML及复杂图表'],stubs:['ResizeObserver','Range空几何','scrollIntoView','execCommand=false（不模拟Clipboard成功）'],imports:imports.length,changes:changed.length},null,2))
++w.close()
+--- /dev/null
++++ b/scripts/verify-native-rebuild.mjs
+@@ -0,0 +1,38 @@
++import assert from 'node:assert/strict'
++import {readFileSync,readdirSync,lstatSync,readlinkSync,realpathSync} from 'node:fs'
++import {createHash} from 'node:crypto'
++import path from 'node:path'
++const [first,second]=process.argv.slice(2).map(value=>realpathSync(value))
++assert.ok(first&&second,'提供两个独立源码根目录')
++const sha=value=>createHash('sha256').update(value).digest('hex')
++const excluded=new Set(['node_modules','dist','dist-native','.git','.claude','.wxt','.cache','native-evidence','delivery','__pycache__'])
++function tree(root,source=false){
++ const files={}
++ function walk(directory){for(const name of readdirSync(directory).sort()){
++  if(source&&(excluded.has(name)||/\.(?:tsbuildinfo|log|DS_Store)$/.test(name)))continue
++  const file=path.join(directory,name),stat=lstatSync(file),key=path.relative(root,file)
++  if(stat.isSymbolicLink())files[key]=sha('symlink:'+readlinkSync(file))
++  else if(stat.isDirectory())walk(file)
++  else if(stat.isFile())files[key]=sha(readFileSync(file))
++ }}
++ walk(root);return files
++}
++function evidence(root){
++ const dist=path.join(root,'apps/web/dist-native'),files=tree(dist),source=tree(root,true)
++ const manifest=JSON.parse(readFileSync(path.join(dist,'SHA256.json'),'utf8')),graph=JSON.parse(readFileSync(path.join(dist,'native-build-graph.json'),'utf8'))
++ assert.equal(manifest.upstream.license,'WTFPL')
++ for(const [file,hash] of Object.entries(manifest.files))assert.equal(files[file],hash,file)
++ const resolved={}
++ for(const name of ['vite','vue','@tailwindcss/vite','@md/core','@md/shared'])resolved[name]=realpathSync(path.join(root,'apps/web/node_modules',name))
++ assert.equal(resolved['@md/core'],realpathSync(path.join(root,'packages/core')))
++ assert.equal(resolved['@md/shared'],realpathSync(path.join(root,'packages/shared')))
++ return {root,files,source,lockSha256:sha(readFileSync(path.join(root,'pnpm-lock.yaml'))),resolved,modules:graph.modules.length,dependencies:graph.dependencies.length}
++}
++const a=evidence(first),b=evidence(second)
++const mismatches=(x,y)=>[...new Set([...Object.keys(x),...Object.keys(y)])].sort().filter(key=>x[key]!==y[key])
++const sourceDifferences=mismatches(a.source,b.source),distDifferences=mismatches(a.files,b.files)
++assert.deepEqual(sourceDifferences,[],'两目录归档源码必须一致')
++assert.deepEqual(distDifferences,[],'两目录全部原生构建文件及哈希必须逐字节一致')
++assert.equal(a.lockSha256,b.lockSha256)
++for(const name of ['vite','vue','@tailwindcss/vite'])assert.equal(a.resolved[name],b.resolved[name])
++console.log(JSON.stringify({result:'PASS',fixture:'两个不同深度源码目录，同锁缓存依赖独立构建后全文件比对',sourceFiles:Object.keys(a.source).length,distFiles:Object.keys(a.files).length,sourceDifferences,distDifferences,lockSha256:a.lockSha256,entrySha256:a.files['native.js'],cssSha256:a.files['native.css'],graphSha256:a.files['native-build-graph.json'],modules:a.modules,dependencies:a.dependencies,builds:[{root:a.root,resolved:a.resolved},{root:b.root,resolved:b.resolved}],notVerified:['另一个操作系统、CPU架构或Node/pnpm版本','不同锁文件或不同依赖版本']},null,2))

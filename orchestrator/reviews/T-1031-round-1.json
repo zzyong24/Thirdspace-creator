@@ -1,0 +1,1 @@
+{"schema":"spec-review-round/v2","review_kind":"initial","summary":"独立只读评审 PASS，无阻断项。目标字段与冻结正文相同才合并，expected 当前版本 CAS 和原领域归属保留。必须验证确认后保存冲突与正式保存回执重放；task succeeded 不能直接当作已保存，expected 历史稿构造需稳定，空文章正文 sectionId 需确定。来源引用按真实 ID/版本合并且保留当前内容与图片。","findings":[]}

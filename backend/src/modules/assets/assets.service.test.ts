@@ -402,6 +402,22 @@ describe("assets.service — [T-219] pending 截图 → 确认门 commitPendingA
     });
   });
 
+  it("按账号与精确文件版本读取已抽取文档来源，不把图片或未抽取文档交给写作", async () => {
+    const document = await service.createGeneratedAsset(ctxA, {assetType: "document", name: "真实项目文档",
+      bytes: new TextEncoder().encode("正文"), mimeType: "text/plain"});
+    await expect(service.readDocumentFileSource(ctxA, document.id, document.currentFileId!)).rejects.toBeInstanceOf(ConflictError);
+    await service.updateFileExtraction(ctxA, document.id, {extractedText: "可核验的正文", extractStatus: "done"});
+    await expect(service.readDocumentFileSource(ctxA, document.id, document.currentFileId!)).resolves.toEqual({
+      label: "真实项目文档", text: "可核验的正文",
+    });
+    await expect(service.readDocumentFileSource({...ctxA, accountId: "another-account"}, document.id, document.currentFileId!))
+      .rejects.toBeInstanceOf(OwnershipError);
+    await expect(service.readDocumentFileSource(ctxA, document.id, "other-file-id")).rejects.toBeInstanceOf(OwnershipError);
+    const image = await service.createGeneratedAsset(ctxA, {assetType: "image", name: "非文档",
+      bytes: new Uint8Array([1]), mimeType: "image/png"});
+    await expect(service.readDocumentFileSource(ctxA, image.id, image.currentFileId!)).rejects.toBeInstanceOf(ConflictError);
+  });
+
   it("commitPendingAsset 越权 / 不存在 → OwnershipError(404)", async () => {
     const asset = await service.createGeneratedAsset(ctxA, {
       assetType: "image",
@@ -596,3 +612,21 @@ describe("assets.service — per-account strict (T-332 S2)", () => {
     });
   });
 });
+describe("T-850 精确媒体文件物化",()=>{
+ it("指定历史文件不回退当前文件，缺失与字节变化明确拒绝",async()=>{
+  const {createHash}=await import("node:crypto");const bytes=new Uint8Array([7,8,9]);
+  const asset=await service.createGeneratedAsset(ctxA,{assetType:"video",name:"冻结原片",bytes,mimeType:"video/mp4"});
+  storage.copyObjectToFile=async(_key,dest)=>{await fs.writeFile(dest,bytes);};
+  const fileId=asset.currentFileId!,root=await fs.mkdtemp(path.join(os.tmpdir(),"frozen-source-")),target=path.join(root,"source.mp4");
+  const fileDigest=createHash("sha256").update(bytes).digest("hex");
+  try{
+   await expect(service.materializeAsset(ctxA,asset.id,target,{assetFileId:fileId,fileDigest})).resolves.toMatchObject({size:3});
+   await expect(service.materializeAsset(ctxA,asset.id,target,{assetFileId:"missing-file",fileDigest})).rejects.toThrow();
+   await expect(service.materializeAsset(ctxA,asset.id,target,{assetFileId:fileId,fileDigest:"0".repeat(64)})).rejects.toThrow();
+   await expect(service.materializeAsset(ctxB,asset.id,target,{assetFileId:fileId,fileDigest})).rejects.toThrow();
+  }finally{await fs.rm(root,{recursive:true,force:true});}
+ });
+});
+
+// 原两条公共下载路径必须保留可读文件名，不把 ext helper 返回值当完整名。
+it("实际生成素材的普通与精确版本下载均返回完整文件名",async()=>{storage=createMockObjectStorage({nextKey:()=>"uploads/objkey-actual.mp4"});service=createAssetsService(createAssetRepository(db,deterministicDeps()),async()=>storage,deterministicDeps());const asset=await service.createGeneratedAsset(ctxA,{assetType:"video",name:"final.mp4",bytes:new Uint8Array([1,2,3]),mimeType:"video/mp4"});const ordinary=await service.getDownloadUrl(ctxA,asset.id);const exact=await service.getAssetFileDownloadUrl(ctxA,asset.id,asset.currentFileId!);expect(ordinary.fileName).not.toBe(".mp4");expect(exact.fileName).not.toBe(".mp4");expect(ordinary.fileName).toMatch(/.+\.mp4$/);expect(exact.fileName).toMatch(/.+\.mp4$/);});

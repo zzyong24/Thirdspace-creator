@@ -1,0 +1,67 @@
+[
+  {
+    "path": "frontend/src/features/copilot/assistant-engine.ts",
+    "beforeSha256": "b392b196029b96e6267adaa2313ef65e8aab565768872c398b5dd26605c3be3d",
+    "afterSha256": "06ec2bfddc3907b469c06eeeaa6e72735298720ec62fc2a50553288a7d3c5e38"
+  },
+  {
+    "path": "frontend/src/features/copilot/assistant-engine-selector.tsx",
+    "beforeSha256": "5c3ad0c7ce9211ed13d929e987454a586defc5231225c22076edfed37f8b645f",
+    "afterSha256": "21f557430c4e2674ded3399b5b5db2d02b4404fb4484f1122becb8d83c6adedf"
+  },
+  {
+    "path": "frontend/src/features/copilot/use-assistant-engine.ts",
+    "beforeSha256": null,
+    "afterSha256": "8051dcc26899d118b8c7d6d996cb1d418f451f0025636df5b648efcc0387ec02"
+  },
+  {
+    "path": "frontend/src/features/copilot/use-assistant-engine.test.tsx",
+    "beforeSha256": null,
+    "afterSha256": "bac65883572536ce84e23e1402f30ace532304432ff12ad712585b10cb90b575"
+  },
+  {
+    "path": "frontend/src/features/copilot/ai-copilot-content.tsx",
+    "beforeSha256": "5ec6093ad8230f51c557af32821cbb763d8fafa4ae62039a00ff988a818efb47",
+    "afterSha256": "237dd0e34cc31b278643c802420903baab129a2f594de287d6f2f027bc4fdbec"
+  },
+  {
+    "path": "frontend/src/features/copilot/ai-copilot-interactions.test.tsx",
+    "beforeSha256": "58c2dfe7e89dc77ee500178ff75884192f2f65e4eac7057f9916b17e56ca7350",
+    "afterSha256": "1163a6ac91751e73401f67b48141989b4564daabc57687243bbcaefe802eb4e5"
+  },
+  {
+    "path": "frontend/src/features/settings/assistant-engine-card.tsx",
+    "beforeSha256": null,
+    "afterSha256": "e35c37c8d723cf3b43da05117f23702ac046523aac753c6d56351c35fabcd7b1"
+  },
+  {
+    "path": "frontend/src/features/settings/assistant-engine-card.test.tsx",
+    "beforeSha256": null,
+    "afterSha256": "2c70fccbdd69e9b37a0259d463a9b4f419614e39d798dedf2c4b47ea1de1bd83"
+  },
+  {
+    "path": "frontend/src/features/settings/settings-model-region.tsx",
+    "beforeSha256": "f14b0a0f3e3bcc61fc7405d492d733d2904a53ff5f8f4e5f67616f5b70550d69",
+    "afterSha256": "4ef708709adff5ace4c01387c1d44a6456dd026f4bac84fc059d08550bfa3079"
+  },
+  {
+    "path": "frontend/src/features/settings/settings-interactive-region.tsx",
+    "beforeSha256": "d88d2a67017d40aac3c9cfe574230c2849c2a0e3f78915aa06c7f8c302961512",
+    "afterSha256": "44a07451639fd9f963c476b6db7e9a290333be74b8e502ac10c5f7eb69672779"
+  },
+  {
+    "path": "frontend/src/features/settings/settings-interactive-region.test.tsx",
+    "beforeSha256": "72ed9503d52c54ca131916752e44e79fb0e2625de77122f24105090a39eb7679",
+    "afterSha256": "2694069ebd421bdf78f47a460e5dc96ca6f84f6ae38f46e12a23389b08c4b281"
+  },
+  {
+    "path": "frontend/src/features/draft-workbench/draft-workbench-page.tsx",
+    "beforeSha256": "f1d9eb594fda6134c7efcd9ec1a480aa3a2c5321ac4d7ec5034770b61758e347",
+    "afterSha256": "b98d29738093a29cc19686f3fd7031c5df8db8a04acb664ac486a2a65127b1b6"
+  },
+  {
+    "path": "frontend/src/features/draft-workbench/draft-workbench-page.bug8.test.tsx",
+    "beforeSha256": "5c0b419912208c26f54c5f589ac5389fdfaa6d17ab0b3c0e469805311c4a6781",
+    "afterSha256": "75eaa3999e7501575db247a57f444923a4014288ac059fa958da3a5fde041a65"
+  }
+]

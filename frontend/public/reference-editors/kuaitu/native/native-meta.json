@@ -1,0 +1,16 @@
+{
+  "source": "https://github.com/ikuaitu/vue-fabric-editor",
+  "commit": "b3bdcfb0bd6d8f98e7483cf561ac03ba56c0d889",
+  "sourceArchiveSha256": "6c953a34d6e9deb2a53897da3e346ed292a9869bebcf9f3b4e8585a7d3858294",
+  "entry": "src/native-entry.ts",
+  "interface": "creatoros.native-editor@1",
+  "files": {
+    "native.js": "47c8193cde75f04be063e4e0d999b56609721db27a71fa9112f01e059fed4a4d",
+    "native.css": "cd47761c252f0c78ca84955dd10a4fb088c86a592145ece94deb6162cbfb2662",
+    "native-graph.json": "cacadcee9346e8b7303291a12bb67accfc718f4d03715fca81bf712ebe9a2ec5",
+    "LICENSE": "ab11c1e29b8beda3d49d39a1fb4cf476a88de23a1194c24382323f086d4cddcc",
+    "THIRD_PARTY_NOTICES.txt": "69f45a329625e6768f00696650e7033ddf5c1bcd6f87f311cd4573ba6d0a78d1"
+  },
+  "moduleCount": 1096,
+  "verification": "类型与生命周期夹具另列；不声明真实浏览器像素或 PNG"
+}

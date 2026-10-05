@@ -42,10 +42,12 @@ export const EFFECTIVE_SKILL_SNAPSHOT_MAX_BYTES = 256 * 1024;
  */
 export const REGISTERED_SKILL_TASK_TYPES = [
   "agentic.research", "agentic.material", "agentic.collect",
-  "asset.classify", "material.extract",
+  "asset.classify",
+  "material.extract",
   "benchmark.teardown",
   "calibration.diagnose",
   "calibration.score",
+  "chatbox.canvas",
   "chatbox.calibration",
   "chatbox.distill",
   "chatbox.positioning",
@@ -86,12 +88,22 @@ export const REGISTERED_SKILL_TASK_TYPES = [
   "video.director",
   "video.scenes",
   "video.subtitles",
+  "wechat.article-draft",
+  "wechat.article-text",
+  "graphic.post-text",
+  "graphic.card-brief",
+  "publication.text",
+  "work.review",
+  "production.rough-cut",
 ] as const;
 
 const REGISTERED_SKILLS = new Set<string>(REGISTERED_SKILL_TASK_TYPES);
 const TASK_ALIASES: Readonly<Record<string, readonly string[]>> = {
+  "production.rough-cut.propose": ["production.rough-cut"],
+  "moments.draft": ["moments.compose"],
   "review.analyze": ["review.insights"],
   "cover.generate": ["cover.brief"],
+  "graphic.card.generate": ["graphic.card-brief"],
   "publish.platform_adapt": ["platform.adapt"],
   "research.gather_material": ["research.gather"],
   "script.generate": [
@@ -124,6 +136,8 @@ const TASK_ALIASES: Readonly<Record<string, readonly string[]>> = {
   "scheduled.topic.daily": ["topic.generate", "trend.extract"],
 };
 const NON_SKILL_TASK_TYPES = new Set([
+  // 原资产音频识别透传事实，不执行创作选择；配置、预算与供应商证明仍由原ASR执行核验。
+  "asset.asr",
   "scheduled.self.traffic",
   "agentic.research",
   "asset.classify",
@@ -135,6 +149,9 @@ const NON_SKILL_TASK_TYPES = new Set([
   "exec.agentic.research",
   "exec.echo.manifest",
   "exec.video.render",
+  // 真实媒体探针只读文件元数据，不调用模型或进行创作判断。
+  "exec.media.probe",
+  "media.probe",
   "material.extract",
   "scheduled.comments",
   // 内容雷达聚合作业只扫描到期来源并排 source_sync 持久子任务，本身不调用 Skill。
@@ -158,6 +175,7 @@ const VIDEO_KIND_TO_SKILL: Readonly<Record<string, string>> = {
 };
 export const CHAT_METHOD_SKILL_IDS = ["method.research", "method.positioning", "method.topic", "method.planning", "method.writing", "method.visual", "method.publishing", "method.review", "method.knowledge", "method.guide", "method.redfox.topic-research", "method.redfox.benchmark", "method.operations.review"] as const;
 const CHAT_SURFACE_TO_SKILL: Readonly<Record<string, string>> = {
+  canvas:"chatbox.canvas",
   calibration: "chatbox.calibration",
   distill: "chatbox.distill",
   "knowledge-distill": "chatbox.distill",

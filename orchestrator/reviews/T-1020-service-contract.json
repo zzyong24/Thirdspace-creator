@@ -1,0 +1,16 @@
+{
+  "task": "T-1020",
+  "reviewKind": "independent-service-contract",
+  "verdict": "PASS_DESIGN_ONLY",
+  "reviewedAt": "2026-09-30",
+  "reviewer": "platform_contract_review",
+  "scope": "可导入类型、正反例、信任边界与终页证据设计；不包含运行时服务 Gate 或真实平台验收",
+  "files": {
+    "contract/src/resources/platform-capabilities.ts": "ae08df86a6360378cfe84dc75f272a9ecaf4be5dbcbf2b6641569b2c8abe5a21",
+    "contract/src/primitives.ts": "0b299d6113bf4f35deffb537330e3960a31d7d2188b24220d5026a83eb53d3a0",
+    "contract/src/operations/platform-accounts.ts": "068569cf6fc3e5cd942fe338e145bd602d9f26beda42e89d54bf53ed10898884",
+    "frontend/src/types/domain.ts": "a8995debcd32584ea920ee58dd51b7ebd567350c54574f36c91e9d002ccc1c01",
+    "docs/features/t1020-service-contract-review.md": "53ac2c0fb53a078ad932106e6c6489cb0a9fa9bd374b54416ccfdb1959dc5ed2"
+  },
+  "remainingGate": "backend service port 的持久租约、二次扫描、探测差集、非公开安全水位、四维迁移和真实账号隔离仍须执行"
+}

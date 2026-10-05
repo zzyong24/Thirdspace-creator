@@ -1,3 +1,5 @@
+import {MOMENTS_COMPOSE_TEMPLATE} from "./moments-compose";
+import {PRODUCTION_ROUGH_CUT_TEMPLATE} from './templates/production-rough-cut';
 import { REDFOX_METHODS } from "./redfox-methods";
 import { AGENTIC_BUSINESS_TEMPLATES } from "./templates/agentic-business";
 import { BUSINESS_METHOD_TEMPLATES, withBusinessMethod } from "./business-methods";
@@ -56,6 +58,7 @@ import { RECONSTRUCT_PROJECT_TEMPLATE } from "./templates/reconstruct-project";
 import { POSITIONING_GENERATE_TEMPLATE } from "./templates/positioning-generate";
 import { TOPIC_ENRICH_TEMPLATE } from "./templates/topic-enrich";
 import { MATERIAL_MATCH_TEMPLATE } from "./templates/material-match";
+import { CHATBOX_CANVAS_TEMPLATE } from "./templates/chatbox-canvas";
 import { CHATBOX_TOPIC_TEMPLATE } from "./templates/chatbox-turn";
 import { KNOWLEDGE_CLASSIFY_TEMPLATE } from "./templates/knowledge-classify";
 import { KNOWLEDGE_DISTILL_TEMPLATE } from "./templates/knowledge-distill";
@@ -90,6 +93,12 @@ import {
   CHATBOX_DISTILL_TEMPLATE,
 } from "./templates/chatbox-surfaces";
 import { CREATOROS_GUIDE_TEMPLATE } from "./templates/creatoros-guide";
+import {WORK_REVIEW_TEMPLATE} from "./templates/work-review";
+import { WECHAT_ARTICLE_DRAFT_TEMPLATE } from "./templates/wechat-article-draft";
+import { GRAPHIC_POST_TEXT_TEMPLATE } from "./templates/graphic-post-text";
+import { WECHAT_ARTICLE_TEXT_TEMPLATE } from "./templates/wechat-article-text";
+import { GRAPHIC_CARD_BRIEF_TEMPLATE } from "./templates/graphic-card-brief";
+import { PUBLICATION_TEXT_TEMPLATE } from "./templates/publication-text";
 
 const REGISTRY = new Map<string, PromptTemplate>();
 // T-513 official management truth: account/runtime overrides never mutate this map.
@@ -114,9 +123,17 @@ const SCHEMA_OVERRIDES = new Map<string, SchemaValidator>();
 
 /** 全部内置 skill(三位一体)。 */
 const BUILTIN_TEMPLATES: readonly PromptTemplate[] = [
+  PRODUCTION_ROUGH_CUT_TEMPLATE,
   ...AGENTIC_BUSINESS_TEMPLATES,
   COPILOT_ASSIST_TEMPLATE,
   CREATOROS_GUIDE_TEMPLATE,
+  WECHAT_ARTICLE_DRAFT_TEMPLATE,
+  WORK_REVIEW_TEMPLATE,
+  MOMENTS_COMPOSE_TEMPLATE,
+  GRAPHIC_POST_TEXT_TEMPLATE,
+  WECHAT_ARTICLE_TEXT_TEMPLATE,
+  GRAPHIC_CARD_BRIEF_TEMPLATE,
+  PUBLICATION_TEXT_TEMPLATE,
   TOPIC_GENERATE_TEMPLATE,
   SCRIPT_DRAFT_TEMPLATE,
   SCRIPT_STORYBOARD_SEGMENT_TEMPLATE,
@@ -141,6 +158,7 @@ const BUILTIN_TEMPLATES: readonly PromptTemplate[] = [
   POSITIONING_GENERATE_TEMPLATE,
   TOPIC_ENRICH_TEMPLATE,
   MATERIAL_MATCH_TEMPLATE,
+  CHATBOX_CANVAS_TEMPLATE,
   CHATBOX_TOPIC_TEMPLATE,
   // T-062c 知识倾倒场:倒入原文 → 判 {knowledgeType,title,tags,summary} 候选(确认门采纳才落库)。
   KNOWLEDGE_CLASSIFY_TEMPLATE,

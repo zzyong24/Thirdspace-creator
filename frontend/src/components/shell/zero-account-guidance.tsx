@@ -2,7 +2,7 @@
  * [T-332 S4] 0 个绑定账号的全局引导态(SPEC §4.2:未选号 = 引导态,创作域禁读写;
  * 0 号时所有 per-account 页面显示绑定引导,不是各页各自的干瘪空态/报错)。
  *
- * 由 (creator) layout 判定:该 user 名下没有任何 active 抖音号,且当前路径是
+ * 由 (creator) layout 判定:该 user 名下没有任何 active 平台账号,且当前路径是
  * per-account 创作域页面 → 用本引导整页替换 children(壳/侧栏保留,导航不锁死)。
  * 账号管理、设置等 user 级页面放行(否则用户没入口去绑号,死锁)。
  *
@@ -10,7 +10,6 @@
  */
 
 import * as React from "react";
-import Link from "next/link";
 
 /**
  * user 级页面前缀白名单 —— 0 号也放行(绑号入口 / 共享配置 / 激活)。
@@ -58,26 +57,26 @@ export function ZeroAccountGuidance() {
         @
       </span>
       <h1 className="font-heading text-xl font-semibold text-foreground">
-        先绑定一个抖音号,再开始创作
+        先添加一个创作账号，再开始创作
       </h1>
       <p className="max-w-md text-sm text-muted-foreground">
-        工作区按抖音号完全隔离：定位、选题、项目、知识库、素材和发布数据都归属于具体账号。绑定后系统会自动建好该账号的日常采集任务。
+        定位、选题、项目、知识库、素材和作品数据按账号隔离。添加账号后即可开始创作；平台授权和自动采集能力以账号页显示的实际状态为准。
       </p>
-      <Link
+      <a
         href="/accounts"
         data-testid="zero-account-bind-link"
         className="mt-2 inline-flex h-10 items-center justify-center rounded-card bg-brand px-5 text-sm font-medium text-brand-foreground transition-colors hover:bg-brand/90"
       >
-        去绑定抖音号
-      </Link>
+        去添加账号
+      </a>
       {/* [T-348] 次级动作:回首页看完整上手引导(0 号首页已恢复 OnboardingCard 有序引导流)。 */}
-      <Link
+      <a
         href="/"
         data-testid="zero-account-home-link"
         className="text-xs font-medium text-brand underline-offset-4 hover:underline"
       >
         或回首页看完整上手引导
-      </Link>
+      </a>
     </main>
   );
 }

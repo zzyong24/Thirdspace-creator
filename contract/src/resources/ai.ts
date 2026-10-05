@@ -49,6 +49,7 @@ export type AIMessageResource = z.infer<typeof aiMessageResource>;
 
 // AITask extends BaseEntity (declares its own timestamp fields explicitly).
 export const aiTaskResource = z.object({
+  deterministicGeneration: z.number().int().min(0).max(Number.MAX_SAFE_INTEGER).optional(),
   id,
   userId: id,
   projectId: id.nullable(),
@@ -57,6 +58,7 @@ export const aiTaskResource = z.object({
   status: aiTaskStatus,
   executionTaskId: id.optional(),
   runtimeStatus: z.string().optional(),
+  errorCode: z.string().nullable().optional(),
   authorizationStatus: z.enum(["awaiting_authorization", "authorized_pending"]).optional(),
   inputData: z.record(z.string(), z.unknown()),
   modelKey: z.string(),

@@ -250,3 +250,12 @@ describe("图卡文字候选审阅",()=>{
   expect(body).toHaveValue("手工改过的正文");expect(await screen.findByRole("alert")).toBeInTheDocument();expect(props.onAdopt).not.toHaveBeenCalled();
  });
 });
+
+it("基于脚本快速生成只请求正文和图卡，元数据再生成折叠",async()=>{
+ api.listCreativeCapabilities.mockResolvedValue({items:["title","body","summary","tags","cardBriefs"].map(kind=>({outputType:"image",platform:"xiaohongshu",kind,state:"supported"}))});
+ api.createBundle.mockResolvedValue({bundleId:"draft",status:"complete",items:[]});
+ render(<GraphicPostResults {...props} scriptDerived series={{cards:[],selectedCardId:null,selectedCardIds:[]}}/>);
+ fireEvent.click(await screen.findByRole("button",{name:"根据脚本生成图文"}));
+ await waitFor(()=>expect(api.createBundle).toHaveBeenCalledWith({params:{outputId:"output"},query:undefined,body:{items:[{kind:"body"},{kind:"cardBriefs"}],clientRequestId:expect.any(String)}}));
+ expect(screen.getByText("重新生成标题、简介与标签").closest("details")).not.toHaveAttribute("open");expect(screen.queryByRole("button",{name:"生成标题"})).toBeNull();
+});

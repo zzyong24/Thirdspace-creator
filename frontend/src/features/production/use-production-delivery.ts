@@ -6,10 +6,11 @@ import type {ProductionStatus} from "./production-flow";
 interface DeliveryInput {
  projectId:string;outputId:string|null;status:string|null;finalVideoAssetId:string|null;renderOrientation:"portrait"|"landscape";
  readVideoDuration(file:File):Promise<number|null>;ensureOutputId():Promise<string>;advanceStatus(target:ProductionStatus):Promise<string|null>;
+ renderDimensions?:{width:number;height:number};
  setFinalVideoAssetId:React.Dispatch<React.SetStateAction<string|null>>;
 }
 /** 成品上传及素材包导出使用现有业务端口；发布覆盖门与逐步状态推进保持原语义。 */
-export function useProductionDelivery({projectId,outputId,status,finalVideoAssetId,renderOrientation,readVideoDuration,ensureOutputId,advanceStatus,setFinalVideoAssetId}:DeliveryInput){
+export function useProductionDelivery({projectId,outputId,status,finalVideoAssetId,renderOrientation,readVideoDuration,ensureOutputId,advanceStatus,setFinalVideoAssetId,renderDimensions}:DeliveryInput){
   const [method, setMethod] = React.useState<"creatoros" | "upload">(
     "creatoros",
   );
@@ -125,9 +126,9 @@ export function useProductionDelivery({projectId,outputId,status,finalVideoAsset
           body: {
             format: "mp4",
             resolution:
-              renderOrientation === "portrait" ? "1080x1920" : "1920x1080",
+              renderDimensions ? `${renderDimensions.width}x${renderDimensions.height}` : renderOrientation === "portrait" ? "1080x1920" : "1920x1080",
             aspectRatio:
-              renderOrientation === "portrait" ? "9:16" : "16:9",
+              renderDimensions ? `${renderDimensions.width}:${renderDimensions.height}` : renderOrientation === "portrait" ? "9:16" : "16:9",
           },
         })) as unknown as { id: string };
         await client.completeExport({
@@ -154,6 +155,7 @@ export function useProductionDelivery({projectId,outputId,status,finalVideoAsset
       readVideoDuration,
       advanceStatus,
       renderOrientation,
+      renderDimensions,
       hasExistingFinal,
       outputId,
       pubLocked,

@@ -77,6 +77,7 @@ function toRevisionResource(
     title: row.title,
     description: row.description,
     coverAssetId: row.coverAssetId ?? null,
+    coverAssetFileId: row.coverAssetFileId ?? null,
     category: row.category,
     series: row.series,
     platformTags: (row.platformTags ?? []) as string[],

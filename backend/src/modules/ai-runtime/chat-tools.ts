@@ -3,6 +3,8 @@ import {createLegacyScriptRange, legacyScriptHash} from "../artifacts";
 import { buildChatToolResultReader, buildChatHistoryReader, type ChatHistoryReader, type ChatToolResultReader } from "./chat-tool-result-reader";
 import { buildChatSkillReadTool, type ChatSkillLibrary } from "./chat-skill-library";
 import {prepareMaterialGeneration,type MaterialGenerationInput} from "./material-generation-preparation";
+import type {ArticleImageAnchor,ArticleImageReadable,ArticleImageSnapshot} from "./material-generation-preparation";
+import type {ChatSelection} from "./chat-context";
 import { createHash } from "node:crypto";
 import { jsonSchema, type Tool, type ToolSet } from "ai";
 // [T-239a] 统一工具门:所有工具经 defineChatTool 包装(错误信封/结果预算/审计打点),
@@ -55,6 +57,9 @@ function safeFinalSourceUrl(value: string | undefined): string | undefined {
 // 路由在请求期解析(resolveModelSpec + assembleCreativeContext)后注入,故工具本身无副作用、
 // 不碰持久化、不直连模块 repo —— 可单测(注入 fake 的 generate/enrich 实现即可)。
 export interface ChatToolDeps {
+  boundCanvasId?:string;
+  readCanvas?:()=>Promise<{id:string;title:string;projectId:string|null;revision:number;document:unknown}>;
+  proposeCanvas?:(baseRevision:number,operations:unknown)=>Promise<{id:string;canvasId:string;baseRevision:number;operations:unknown[]}>;
   skillLibrary?: ChatSkillLibrary;
   readToolResult?: ChatToolResultReader;
   readHistory?: ChatHistoryReader;
@@ -77,6 +82,9 @@ export interface ChatToolDeps {
   boundProjectId?: string;
   /** T-836：来自快捷按钮的可信媒体类型；模型不得把“生成图片”改成视频，反之亦然。 */
   forcedMaterialKind?: "image" | "video";
+  /** T-1023：文章配图深链的用户选择；执行时再读当前文章并核验账号/版本/段落。 */
+  articleImageSelection?: ChatSelection;
+  getArticleForImage?: (input:{outputId:string})=>Promise<ArticleImageReadable>;
   /**
    * [T-716] 稿面按钮随可信 ChatContext 绑定的局部改稿锚点。锚点不是模型要推理/复述的
    * 参数：模型只负责产 replacementText，execute 必须用这里的 artifact/version/section/
@@ -504,6 +512,8 @@ export interface ChatToolDeps {
     kind: "image" | "video";
     prompt: string;
     style?: string;
+    articleImageAnchor?: ArticleImageAnchor;
+    articleSnapshot?: ArticleImageSnapshot;
   }) => Promise<{ taskId: string }>;
   /**
    * [T-271] cover.generate 核心 —— **不直接生成**(封面链先跑结构化文案方案再生图,分钟级不能阻塞
@@ -2541,6 +2551,11 @@ const MATERIAL_GENERATE_PARAMS = jsonSchema<MaterialGenerationInput>({
 // [T-271] cover.generate 入参 —— 全可选:封面锚「当前项目」(缺省用项目对话的 projectId + 选中标题)。
 // 封面文案的接地来源(核心信息/口播稿/素材)由 runner 从项目上下文读,不靠模型传 —— 故无 prompt 入参
 // (与 material.generate 的裸 prompt 透传相反,这正是封面链接地的核心)。
+const CANVAS_READ_PARAMS=jsonSchema<Record<string,never>>({type:"object",properties:{},required:[],additionalProperties:false});
+const CANVAS_PROPOSE_PARAMS=jsonSchema<{baseRevision:number;operations:unknown[]}>({
+  type:"object",properties:{baseRevision:{type:"integer",minimum:1,description:"逐字使用 canvas.read 返回的 revision"},operations:{type:"array",minItems:1,maxItems:100,items:{type:"object",additionalProperties:true},description:"操作数组，每项含唯一 operationId 与 type；可用 addNode(tempId,node)、updateNode(nodeId,patch)、moveNode(nodeId,position)、deleteNode(nodeId)、connect(source,target)、disconnect(edgeId)。节点引用须来自 canvas.read。"}},required:["baseRevision","operations"],additionalProperties:false,
+});
+
 const COVER_GENERATE_PARAMS = jsonSchema<{
   projectId?: string;
   topic?: string;
@@ -4038,6 +4053,24 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
     // [T-084c] AI 生成素材:文生图/文生视频。execute **不直接生成**(视频异步分钟级不能阻塞
     // 对话回合)—— dispatch 既有 asset.generate task,立即返回 taskId;前端 ChatGenerateCard
     // 轮询 → 完成渲缩略图 + 采纳。未配生图/生视频模型 → task cancelled,卡内诚实「去设置」。
+    "canvas.read":defineChatTool("canvas.read",{
+      description:"只读当前账号已选创作画布。先读取真实节点 ID、连接与 revision，再提出操作建议；不要猜测画布内容。",
+      inputSchema:CANVAS_READ_PARAMS,
+      execute:async()=>{
+        if(!deps.boundCanvasId||!deps.readCanvas)return {kind:"canvas.read",canvasId:null,revision:null,title:null,projectId:null,nodes:[],edges:[],error:"当前对话未绑定可读取的画布"};
+        const canvas=await deps.readCanvas();const doc=canvas.document as {nodes?:unknown[];edges?:unknown[]};
+        return {kind:"canvas.read",canvasId:canvas.id,revision:canvas.revision,title:canvas.title,projectId:canvas.projectId,nodes:doc.nodes??[],edges:doc.edges??[],error:null};
+      },
+    },deps.humanizeError),
+    "canvas.propose":defineChatTool("canvas.propose",{
+      description:"为当前画布保存候选操作，供用户逐项查看并手动应用。必须先调用 canvas.read，使用它返回的 revision 与真实节点 ID。此工具只写候选，不改画布、不自动生成图片或视频。",
+      inputSchema:CANVAS_PROPOSE_PARAMS,
+      execute:async(input)=>{
+        if(!deps.boundCanvasId||!deps.proposeCanvas)return {kind:"canvas.propose",proposalId:null,canvasId:null,baseRevision:null,operations:[],error:"当前对话未绑定可编辑的画布"};
+        const result=await deps.proposeCanvas(input.baseRevision,input.operations);
+        return {kind:"canvas.propose",proposalId:result.id,canvasId:result.canvasId,baseRevision:result.baseRevision,operations:result.operations,error:null};
+      },
+    },deps.humanizeError),
     "material.generate": defineChatTool("material.generate", {
       description:
         "用 AI 生成图片或视频素材(文生图/文生视频)。项目内容配图必须先用 context.artifact.text 读当前确认稿，判断它要替哪一句内容完成什么认知任务，从 sections 中选择服务的唯一 sectionRef，并说明 visualPurpose；执行端会重读当前版本，把该段正文和版本指纹冻结进任务。生成的是 AI 图/视频素材(非真实拍摄/截图)，用户采纳后才进素材中心。事实证据优先真实截图/网页，价格表、架构图、流程图等要求精确文字/数字/节点的信息卡必须把 mediaKind 设为 information_card，本工具会拒绝自由生成；真实公告/仓库截图设为 fact_capture，同样不生成。只有 illustration 适合本工具。图片 prompt 要把一个认知任务落实为一个可见关系，写清主体、动作或关系、环境、构图、光色和画幅；视频 prompt 只写一个连续短镜头，依次交代主体、主要动作、环境、构图与景深、一个平滑运镜、光色材质和平稳结尾，可带克制同步环境音但禁止音乐与人声。默认不要文字、数字、logo、水印、假产品界面、假新闻截图、畸形肢体、重复主体、突变、闪烁或跳帧，禁止万能 AI 海报。创作者定位只影响视觉语言与审美语气，不得改变当前稿主张。要生成封面改用 cover.generate。",
@@ -4047,7 +4080,7 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
         const signal=(callOptions as {abortSignal?:AbortSignal}|undefined)?.abortSignal;
         try {
           const prepared=await prepareMaterialGeneration(input,{
-            boundProjectId,forcedMaterialKind:deps.forcedMaterialKind,getArtifactText:deps.getArtifactText,signal,
+            boundProjectId,forcedMaterialKind:deps.forcedMaterialKind,getArtifactText:deps.getArtifactText,getArticleForImage:deps.getArticleForImage,articleImageSelection:deps.articleImageSelection,signal,
           });
           signal?.throwIfAborted();
           const {taskId}=await deps.dispatchGenerateAsset(prepared);
@@ -4997,6 +5030,8 @@ export const ALL_CHAT_TOOL_NAMES: readonly string[] = [
   "context.learnings",
   "context.candidates",
   "context.predictions",
+  "canvas.read",
+  "canvas.propose",
 ];
 
 // ── [T-240③] 场景工具白名单(「场景」一等机制的静态层)────────────────────────────────
@@ -5064,6 +5099,7 @@ const CREATION_TOOL_NAMES: readonly string[] = [
  * 返回 null,调用方回落全量(向后兼容兜底)。导出供单测锚定映射表。
  */
 export const SURFACE_TOOL_SCOPES: Readonly<Record<string, readonly string[]>> = {
+  canvas:["creatoros.guide","canvas.read","canvas.propose",...MATERIAL_TOOL_NAMES,...CONTEXT_TOOL_NAMES],
   // 选题页:创作产出 + 素材 + 全量只读。无单条作品语境 → 不给 review.analyze/review.script。
   topics: [
     "creatoros.guide",

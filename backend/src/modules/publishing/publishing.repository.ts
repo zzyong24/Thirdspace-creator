@@ -26,7 +26,7 @@ export interface RepoDeps {
   //   ctx.accountId 后注入(未选号 → AccountRequiredError,引导态,不再有「null = 全量」
   //   退化)。写路径 create 一律 stamp 本号;读路径(列表/聚合/by-id)一律
   //   eq(account_id, deps.accountId) —— 无任何 OR-IS-NULL lenient 分支(用户拍板 ②:
-  //   清库重来,不存在待兼容的存量 NULL 行)。唯一例外是 findByExternalKey(见其注释)。
+  //   清库重来,不存在待兼容的存量 NULL 行)。findByExternalKey 同样按号查询。
   accountId: string;
 }
 
@@ -55,6 +55,7 @@ export interface CreateRevisionInput {
   title: string;
   description: string;
   coverAssetId?: string | null;
+  coverAssetFileId?: string | null;
   category?: string;
   series?: string;
   platformTags?: string[];
@@ -102,7 +103,7 @@ export interface PublishingRepository {
   // read resolves project→outputs→publications without an Analytics cross-module
   // join). Empty input → empty list.
   listPublicationIdsByOutputs(outputIds: ReadonlyArray<string>): Promise<string[]>;
-  getPublication(publicationId: string): Promise<PublicationRow>;
+  getPublication(publicationId: string, forUpdate?: boolean): Promise<PublicationRow>;
   createRevision(
     publicationId: string,
     input: CreateRevisionInput,
@@ -181,18 +182,17 @@ export function createPublishingRepository(
   //   · by-id 读(getPublicationRowById)同样上号门(SPEC §4.5:strict 列表 + user 级
   //     详情会留下「列表看不见但 URL 能打开」的裂缝;跨号命中 → OwnershipError 404,
   //     与跨 user 同语义,不泄漏存在性)。
-  //   · **唯一例外 findByExternalKey**(C-09 裁决):(platform, external_id) 是平台事实
-  //     唯一锚,查询保持 user 级(加号过滤会让跨号行不可见 → 重复 INSERT 炸唯一索引、
-  //     破幂等);命中后断言归属号与 ctx 一致,不一致按数据 bug 报错,绝不静默返回。
+  //   · [T-1020] findByExternalKey 同样使用 user+account 门，外部 ID 只在
+  //     当前平台账号内唯一；不同账号的相同字符串是两条独立事实。
   const accountGate = eq(publications.accountId, deps.accountId);
 
   // Private ownership gate — a cross-user / unknown id is indistinguishable from a
   // missing one (foundation §2: 404, never reveal existence) → OwnershipError.
   // [T-332 S2] 叠加号一致性门(SPEC §4.5):跨号 by-id 与跨 user 同为 404。
   async function getPublicationRowById(
-    publicationId: string,
+    publicationId: string, forUpdate = false,
   ): Promise<PublicationRow> {
-    const rows = await db
+    const query = db
       .select()
       .from(publications)
       .where(
@@ -202,6 +202,7 @@ export function createPublishingRepository(
           accountGate,
         ),
       );
+    const rows = await (forUpdate ? query.for("update") : query);
     const row = rows[0];
     if (!row) {
       throw new OwnershipError(
@@ -393,6 +394,7 @@ export function createPublishingRepository(
         title: input.title,
         description: input.description ?? "",
         coverAssetId: input.coverAssetId ?? null,
+        coverAssetFileId: input.coverAssetFileId ?? null,
         category: input.category ?? "",
         series: input.series ?? "",
         platformTags: input.platformTags ?? [],
@@ -568,29 +570,20 @@ export function createPublishingRepository(
     },
 
     async findByExternalKey(platform, externalId) {
-      // [T-332 S2 / C-09 裁决] 查询保持 user 级:(platform, external_id) 是平台事实唯一锚
-      //   (一个抖音作品在平台上只属于一个号),加号过滤会让跨号行不可见 → 重复 INSERT
-      //   炸唯一索引、破幂等。命中后断言归属号与当前 ctx 一致 —— 不一致说明采集/登记链
-      //   在错误的号 ctx 下触碰了别号的作品,是数据 bug,必须炸出来,绝不静默返回。
+      // [T-1020] 平台 external_id 只在 user+account+platform 下唯一。
+      //   账号 A 的同号 ID 不能命中账号 B 的 publication，也不能影响 B 的导入幂等。
       const rows = await db
         .select()
         .from(publications)
         .where(
           and(
             eq(publications.userId, userId),
+            eq(publications.accountId, deps.accountId),
             eq(publications.platform, platform),
             eq(publications.externalId, externalId),
           ),
         );
-      const row = rows[0] ?? null;
-      if (row && row.accountId !== deps.accountId) {
-        throw new Error(
-          `publishing 数据 bug:外键 (${platform}, ${externalId}) 命中行归属号与当前 ctx 不一致 —— ` +
-            `publication ${row.id} 属号 ${row.accountId},当前 ctx 号 ${deps.accountId}。` +
-            `平台唯一锚不可能跨号双属,说明采集/登记在错误的账号上下文下运行,请排查调用链。`,
-        );
-      }
-      return row;
+      return rows[0] ?? null;
     },
 
     async reAnchorPublicationOutput(publicationId, newOutputId) {

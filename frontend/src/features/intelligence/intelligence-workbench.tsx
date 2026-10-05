@@ -1865,6 +1865,12 @@ function ItemDetail({
                 ? dateLabel(detail.item.publishedAt)
                 : `发布时间未知 · 收录于 ${dateLabel(detail.item.capturedAt)}`}
             </p>
+            <Link
+              href={`/projects/create?sourceItemId=${encodeURIComponent(detail.item.id)}`}
+              className="mt-3 inline-flex items-center rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90"
+            >
+              {detail.item.type === "video" ? "用这条创作视频 →" : "用这条创作图文 →"}
+            </Link>
           </div>
           <a
             href={detail.item.canonicalUrl}

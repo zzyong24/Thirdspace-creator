@@ -1,0 +1,30 @@
+{
+  "passed": true,
+  "verification": "四类原生交付文件集、摘要、对应源码、生产宏语法检查及共享合同；不代表浏览器执行/像素验收",
+  "editors": [
+    {
+      "editor": "noterelay",
+      "files": 5,
+      "sourceArchive": "sources/noterelay/source.zip",
+      "sourceArchiveSha256": "07f7376e868b26691340224ba46bd82d40df80752d5a837cc9e3898ff10faf5f"
+    },
+    {
+      "editor": "doocs-md",
+      "files": 395,
+      "sourceArchive": "sources/doocs-md/native-source.tar.gz",
+      "sourceArchiveSha256": "60baa6f2656e5038e31bab6c2ff71ddfbaba54a6a7f703796364b78f4f96f3a7"
+    },
+    {
+      "editor": "kuaitu",
+      "files": 7,
+      "sourceArchive": "sources/kuaitu/native-source.tar.gz",
+      "sourceArchiveSha256": "caec8830b6d9b11dfc79b47c721aee882d8f58dc0e9ac64c1364ecb70323b994"
+    },
+    {
+      "editor": "opencut-classic",
+      "files": 7,
+      "sourceArchive": "sources/opencut-classic/native-source.tar.gz",
+      "sourceArchiveSha256": "0da70debcdf5a6656c65847606314f523c29e8f59e83e27e02077521130e9420"
+    }
+  ]
+}

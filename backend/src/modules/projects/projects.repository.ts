@@ -5,6 +5,7 @@ import {
   projectStages,
   projectTargetPlatforms,
   contentOutputs,
+  outputCreateRequests,
   outputStages,
   tasks,
 } from "./projects.db-schema";
@@ -13,6 +14,17 @@ import {
 // canonical 定义都在共享基座 @creatoros/backend(与 db.ts 的 schema 联合同源),这里只
 // 为「按 project 收敛删除」引用它们的列 —— 不改这些模块的服务/契约(T-102 禁区)。
 import {
+  workReviewReports,
+  workReviewConfirmations,
+  workReviewRequests,
+  workMaterialAssociations,
+  workMaterialReceipts,
+  workDependencies,
+  workCompositions,
+  workCompositionVersions,
+  workCompositionRequests,
+  momentsAnchors,
+  momentsRequests,
   artifacts,
   artifactVersions,
   artifactRelations,
@@ -55,7 +67,10 @@ import {
   searchDocuments,
 } from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
-import { OwnershipError, requireAccountId } from "./projects.errors";
+import { OwnershipError, OutputStateError, requireAccountId } from "./projects.errors";
+// Physical project deletion already clears child schemas in one transaction;
+// these new output-owned rows must be removed before their parent output.
+import { graphicPostAnchors, graphicPostTextCandidates } from "../graphic-posts/graphic-posts.schema";
 
 // Projects repository (foundation §5.2) — user-scoped queries ONLY. Every method
 // takes `ctx: RequestContext` first. Every ROOT query filters
@@ -69,7 +84,11 @@ export type ProjectRow = typeof projects.$inferSelect;
 export type ActivityRow = typeof projectActivities.$inferSelect;
 export type StageRow = typeof projectStages.$inferSelect;
 export type TargetPlatformRow = typeof projectTargetPlatforms.$inferSelect;
-export type ContentOutputRow = typeof contentOutputs.$inferSelect;
+// Legacy fixtures and historical service ports omit the additive nullable target.
+// Database reads still return the column; callers normalize absence to null.
+export type ContentOutputRow = Omit<typeof contentOutputs.$inferSelect, "targetPlatform"> & {
+  targetPlatform?: string | null;
+};
 export type OutputStageRow = typeof outputStages.$inferSelect;
 export type TaskRow = typeof tasks.$inferSelect;
 
@@ -91,7 +110,7 @@ export interface ProjectRepository {
   listImported(ctx: RequestContext): Promise<ProjectRow[]>;
   // [T-332 S2] claimOrphanImportedProjects 已退役(SPEC §4.4):清库世界没有孤儿,
   // 新数据出生即带号(绑定即建号绑定 job),不存在「先落 NULL 再认领」的窗口。
-  get(ctx: RequestContext, projectId: string): Promise<ProjectRow>;
+  get(ctx: RequestContext, projectId: string, forUpdate?: boolean): Promise<ProjectRow>;
   insertProject(ctx: RequestContext, row: ProjectRow): Promise<ProjectRow>;
   // 数据底座(SPEC §1.3):按平台引用查既有 imported 项目(幂等键
   // (userId, platform, externalId))。命中返回该 project row,否则 null。匹配
@@ -182,6 +201,10 @@ export interface ProjectRepository {
     ctx: RequestContext,
     row: ContentOutputRow,
   ): Promise<ContentOutputRow>;
+  /** 单事务创建 output、阶段和活动；旧无请求键调用保持兼容。 */
+  findOutputByCreationRequest?(ctx:RequestContext,clientRequestId:string):Promise<ContentOutputRow|null>;
+  createOutputAtomic?(ctx:RequestContext,input:{output:ContentOutputRow;stages:OutputStageRow[];activity:ActivityRow}):Promise<ContentOutputRow>;
+  createOutputWithRequest?(ctx: RequestContext, input: {clientRequestId: string; requestDigest: string; output: ContentOutputRow; stages: OutputStageRow[]; activity: ActivityRow}): Promise<ContentOutputRow>;
   listOutputs(
     ctx: RequestContext,
     projectId: string,
@@ -250,8 +273,8 @@ export function createProjectRepository(db: Db): ProjectRepository {
 
   // Resolve + ownership-check a project; cross-user/missing is indistinguishable
   // (foundation §2: 404, never reveal existence) → OwnershipError.
-  async function get(ctx: RequestContext, projectId: string): Promise<ProjectRow> {
-    const rows = await db
+  async function get(ctx: RequestContext, projectId: string, forUpdate = false): Promise<ProjectRow> {
+    const query = db
       .select()
       .from(projects)
       .where(
@@ -261,6 +284,7 @@ export function createProjectRepository(db: Db): ProjectRepository {
           accountGate(ctx),
         ),
       );
+    const rows = await (forUpdate ? query.for("update") : query);
     const row = rows[0];
     if (!row) throw new OwnershipError(`Project not found: ${projectId}`);
     return row;
@@ -481,7 +505,37 @@ export function createProjectRepository(db: Db): ProjectRepository {
       const target = await get(ctx, projectId);
       // 一个事务包裹整条级联:全成或全不成(pglite/node-postgres 同一 Drizzle API)。
       await db.transaction(async (tx) => {
+        // 项目写入与删除共用根锁，避免收集子键后并发创建留下孤儿。
+        const [lockedProject] = await tx.select().from(projects).where(and(
+          eq(projects.id, projectId), eq(projects.userId, ctx.userId), accountGate(ctx),
+        )).for("update");
+        if (!lockedProject) throw new OwnershipError("项目不存在");
+        const compositionRows = await tx.select({id:workCompositions.id}).from(workCompositions)
+          .where(and(eq(workCompositions.projectId, projectId), eq(workCompositions.userId, ctx.userId), eq(workCompositions.accountId, requireAccountId(ctx.accountId))));
+        const compositionIds = compositionRows.map(row=>row.id);
+        if (compositionIds.length) {
+          await tx.delete(workReviewRequests).where(inArray(workReviewRequests.compositionId, compositionIds));
+          await tx.delete(workReviewConfirmations).where(inArray(workReviewConfirmations.compositionId, compositionIds));
+          await tx.delete(workReviewReports).where(inArray(workReviewReports.compositionId, compositionIds));
+          await tx.delete(workMaterialAssociations).where(inArray(workMaterialAssociations.compositionId, compositionIds));
+          await tx.delete(workMaterialReceipts).where(inArray(workMaterialReceipts.compositionId, compositionIds));
+          await tx.delete(workDependencies).where(inArray(workDependencies.compositionId, compositionIds));
+          await tx.delete(workCompositionVersions).where(inArray(workCompositionVersions.compositionId, compositionIds));
+          await tx.delete(workCompositionRequests).where(inArray(workCompositionRequests.compositionId, compositionIds));
+          await tx.delete(workCompositions).where(inArray(workCompositions.id, compositionIds));
+        }
+        const momentsRows = await tx.select({id:momentsAnchors.id}).from(momentsAnchors)
+          .where(and(eq(momentsAnchors.projectId, projectId), eq(momentsAnchors.userId, ctx.userId), eq(momentsAnchors.accountId, requireAccountId(ctx.accountId))));
+        const momentsIds = momentsRows.map(row=>row.id);
+        if (momentsIds.length) {
+          await tx.delete(momentsRequests).where(inArray(momentsRequests.targetId, momentsIds));
+          await tx.delete(momentsAnchors).where(inArray(momentsAnchors.id, momentsIds));
+        }
+        // 未提交 create 回执还没有目标 ID，按冻结输入与账号清理。
+        await tx.delete(workCompositionRequests).where(and(eq(workCompositionRequests.userId, ctx.userId), eq(workCompositionRequests.accountId, requireAccountId(ctx.accountId)), sql`${workCompositionRequests.input}->>'projectId' = ${projectId}`));
+        await tx.delete(momentsRequests).where(and(eq(momentsRequests.userId, ctx.userId), eq(momentsRequests.accountId, requireAccountId(ctx.accountId)), sql`${momentsRequests.input}->>'projectId' = ${projectId}`));
         // ── 先解析派生子键(删除孙表要用到) ──────────────────────────────
+        await tx.delete(outputCreateRequests).where(eq(outputCreateRequests.projectId, projectId));
         // 该项目下的 content_output ids。
         const outputRows = await tx
           .select({ id: contentOutputs.id })
@@ -718,6 +772,8 @@ export function createProjectRepository(db: Db): ProjectRepository {
         }
         // output 阶段行 + outputs 本身。
         if (outputIds.length > 0) {
+          await tx.delete(graphicPostTextCandidates).where(inArray(graphicPostTextCandidates.outputId, outputIds));
+          await tx.delete(graphicPostAnchors).where(inArray(graphicPostAnchors.outputId, outputIds));
           await tx
             .delete(outputStages)
             .where(inArray(outputStages.contentOutputId, outputIds));
@@ -1152,6 +1208,41 @@ export function createProjectRepository(db: Db): ProjectRepository {
           .values(rows)
           .onConflictDoNothing();
       }
+    },
+
+    async findOutputByCreationRequest(ctx,clientRequestId){
+      const accountId=requireAccountId(ctx.accountId,"projects.findOutputByCreationRequest");
+      const [receipt]=await db.select().from(outputCreateRequests).where(and(eq(outputCreateRequests.userId,ctx.userId),eq(outputCreateRequests.accountId,accountId),eq(outputCreateRequests.clientRequestId,clientRequestId)));
+      return receipt?getOutput(ctx,receipt.outputId):null;
+    },
+    async createOutputAtomic(ctx,input) {
+      return db.transaction(async tx=>{
+        await createProjectRepository(tx as unknown as Db).get(ctx,input.output.projectId,true);
+        const [output]=await tx.insert(contentOutputs).values(input.output).returning();
+        if(input.stages.length)await tx.insert(outputStages).values(input.stages);
+        await tx.insert(projectActivities).values(input.activity);
+        return output!;
+      });
+    },
+    async createOutputWithRequest(ctx, input) {
+      const accountId = requireAccountId(ctx.accountId, "projects.createOutput");
+      return db.transaction(async tx => {
+        const scoped = createProjectRepository(tx as unknown as Db);
+        await scoped.get(ctx, input.output.projectId, true);
+        const [inserted] = await tx.insert(outputCreateRequests).values({
+          userId: ctx.userId, accountId, clientRequestId: input.clientRequestId, requestDigest: input.requestDigest,
+          projectId: input.output.projectId, outputId: input.output.id, createdAt: input.output.createdAt,
+        }).onConflictDoNothing().returning();
+        if (!inserted) {
+          const [receipt] = await tx.select().from(outputCreateRequests).where(and(eq(outputCreateRequests.userId, ctx.userId), eq(outputCreateRequests.accountId, accountId), eq(outputCreateRequests.clientRequestId, input.clientRequestId)));
+          if (!receipt || receipt.requestDigest !== input.requestDigest) throw new OutputStateError("同一创建请求不能修改作品内容");
+          return scoped.getOutput(ctx, receipt.outputId);
+        }
+        const [output] = await tx.insert(contentOutputs).values(input.output).returning();
+        if (input.stages.length) await tx.insert(outputStages).values(input.stages);
+        await tx.insert(projectActivities).values(input.activity);
+        return output!;
+      });
     },
 
     async insertOutput(ctx, row) {

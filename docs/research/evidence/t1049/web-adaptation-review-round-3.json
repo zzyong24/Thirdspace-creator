@@ -1,0 +1,91 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "recheck",
+  "summary": "基于最新适配合同独立复核闭合正文图片来源旁路；同时保留既有 REV-001/002 销账证据。本轮 PASS 只代表文档范围已满足实现前约束，不代表集成或网页验收通过。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "resolved",
+      "severity": "major",
+      "category": "data-integrity",
+      "requirement_anchor": {
+        "id": "REQ-SPEC-L29",
+        "quote": "无法保真双向转换时保留原稿与原生文档，明确显示限制；不靠静默丢段落、图片或未知图层完成迁移。"
+      },
+      "acceptance_anchor": {
+        "id": "AC-SPEC-L59-RECOVERY",
+        "quote": "完成真实中文内容与图片导入、编辑、主题或页顺序修改、保存、刷新恢复、局部失败继续、版本冲突恢复、真实导出文件读回。"
+      },
+      "where": "docs/features/t1049-open-source-publishing-workbenches.md 第 57-59 行的保存读回、局部失败与版本冲突验收",
+      "failure_mode": "规格没有规定局部失败或版本冲突发生后，正式版本、原生文档、成功页和失败页各自应保持什么状态。一个实现可以保存成功子集并覆盖正式版本，另一个实现可以保持旧正式版本并等待整组重试；两者都可声称“继续/恢复”，但前者可能把新旧页或正文与图片版本静默混合，无法据此判定是否满足保留原稿和不静默丢失的已确认要求。系统架构要求修改当前领域状态前重新读取当前根实体并校验冲突，但没有替该 SPEC 定义冲突发生后的用户可见恢复结果。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "docs/features/t1049-open-source-publishing-workbenches.md#L29,L57-L59; orchestrator/SYSTEM_ARCHITECTURE.md#2.2",
+      "risk_class": "data-loss",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "补一条最小后置条件：失败或冲突时哪一版仍是正式真值、哪些成功结果可保留、失败项如何显式标记，以及用户完成何种明确采用动作后才更新正式版本；绑定保存后刷新读回与冲突恢复旅程。",
+      "resolution_evidence": "SPEC-LINE:46:0f5720187bade146 规定原作品 owner 当前版本为正式真值并绑定原生文档源版本；SPEC-LINE:48:3b8ea8efdc45db1a 规定失败前正式版本不变、候选与失败页分别保留、明确采用只修改目标且整体保存必须读回；SPEC-LINE:50:ab34630634a04d5d 规定正文与排版附件部分失败及未知回执的状态；SPEC-LINE:52:98c245fdad355a08 规定冲突保留本地草稿与候选、展示当前正式版本、重新读回后以新 CAS 保存，并禁止静默拼接。由此冻结 failure mode 中两种不兼容实现的选择空间，并与 SYSTEM_ARCHITECTURE.md 2.2 的当前真值和冲突边界一致。",
+      "parent_id": "",
+      "threat_model_id": ""
+    },
+    {
+      "id": "REV-002",
+      "status": "resolved",
+      "severity": "major",
+      "category": "testability",
+      "requirement_anchor": {
+        "id": "REQ-SPEC-L41-EXPORT",
+        "quote": "能复制的排版 HTML、下载文件或原发布物料必须携带真实图片引用与实际样式，不能只展示漂亮预览。"
+      },
+      "acceptance_anchor": {
+        "id": "AC-SPEC-L59-EXPORT",
+        "quote": "真实导出文件读回；小红书检验三页连续内容及单页重做，公众号检验段落结构、图片与实际排版输出。"
+      },
+      "where": "docs/features/t1049-open-source-publishing-workbenches.md 第 41、59 行的交付物与导出验收",
+      "failure_mode": "“排版 HTML、下载文件或原发布物料”允许多种交付形式，但验收又要求“真实导出文件读回”，且没有分别规定小红书与公众号至少必须产出哪一种可读回工件。公众号实现若只提供可复制 HTML、或小红书实现只提供单页图片/预览，都可能满足一处文字却无法执行另一处验收；不同实现会形成不兼容的完成标准。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "docs/features/t1049-open-source-publishing-workbenches.md#L41,L59",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "clarify",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "分别列明两类工作台的最低交付物类型及读回断言：小红书需能按确认页序读回整组实际图片工件；公众号需明确可复制 HTML、下载文件或发布物料中哪一项是必验工件，并验证正文结构、真实图片引用与实际样式。",
+      "resolution_evidence": "SPEC-LINE:56:042bd9ffbb2ccb47 将小红书最低交付物限定为按确认页序命名、可读回的整组 PNG/JPG 与 ZIP，并明确三页、文字/图片、顺序、尺寸、完整性及单页重做断言；SPEC-LINE:58:3fe582575b259868 将公众号最低交付物限定为带实际样式的 HTML 与含必要图片资源的 ZIP，并明确解压读回、结构、中文、配图、版本与精确文件绑定。两类完成标准已分别唯一化。",
+      "parent_id": "",
+      "threat_model_id": ""
+    },
+    {
+      "id": "REV-003",
+      "status": "resolved",
+      "severity": "major",
+      "category": "security",
+      "requirement_anchor": {
+        "id": "REQ-WEB-IMG-ASSET",
+        "quote": "正文图片只接受通过 Assets 归属校验的 CreatorOS 文件。"
+      },
+      "acceptance_anchor": {
+        "id": "AC-WEB-IMG-SOURCE",
+        "quote": "正文导入、粘贴、保存和预览拒绝绕过 Assets 校验的图片来源。"
+      },
+      "where": "docs/features/t1049-web-adaptation-contract.md 第 17、32、36、41 行",
+      "failure_mode": "CSP 若允许 data: 或正文解析器容忍任意图片 src，导入或粘贴内容可能绕过 CreatorOS Assets 归属校验并进入预览或正式文章。",
+      "evidence_kind": "external-fact",
+      "evidence_ref": "docs/research/evidence/t1049/web-adaptation-contract-review.md",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "new-evidence",
+      "origin_ref": "EVIDENCE-SHA256:6bffd9affb47eaabc2aa277bd6edba6c81efe651b57dc0430f88b23a32d966ec:docs/research/evidence/t1049/web-adaptation-contract-review.md",
+      "suggestion": "正文图片仅接受 Assets 所有权已验证的 CreatorOS 占位符，并明确拒绝其它图片 src；CSP 的 self 只服务打包 UI，data: 不允许用于图片。",
+      "resolution_evidence": "合同第 17、32 行规定导入/粘贴/保存拒绝 data/blob/http(s)/相对/站内路径；第 36、41 行规定真实 Blob 仅由宿主校验后注入，预览仅映射经验证占位符，img-src 不含 data 且 self 只供静态 UI。独立合同复核记录于 EVIDENCE-SHA256。",
+      "parent_id": "",
+      "threat_model_id": ""
+    }
+  ]
+}

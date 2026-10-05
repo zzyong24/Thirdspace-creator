@@ -1,6 +1,8 @@
 import { adoptPublicationDraft,type AdoptPublicationDraftInput } from "./publication-draft-adoption.service";
 import type { RequestContext } from "@creatoros/contract";
 import type { Db } from "@creatoros/backend";
+import {and,eq} from "drizzle-orm";
+import {publicationRevisions} from "../../schema/publishing";
 import {
   createPublishingRepository,
   type PublishingRepository,
@@ -23,7 +25,7 @@ import { createUnavailablePublisher, type PlatformPublisherPort } from "./platfo
 //
 // `Publication` is an external fact-of-record (SPEC §13.3/§22): publish/remove is
 // IDEMPOTENT — a same-status transition is a no-op, and a re-publish that mints the
-// same `(platform, external_id)` returns the original row (the partial-unique
+// same `(user_id, account_id, platform, external_id)` returns the original row (the partial-unique
 // index is the anchor; the MockPublisher's deterministic id makes the re-publish
 // land on it).
 //
@@ -154,6 +156,7 @@ export interface PublishingService {
   getPublication(
     ctx: RequestContext,
     publicationId: string,
+    forUpdate?: boolean,
   ): Promise<PublicationRow>;
   createRevision(
     ctx: RequestContext,
@@ -162,6 +165,7 @@ export interface PublishingService {
       title: string;
       description: string;
       coverAssetId?: string | null;
+      coverAssetFileId?: string | null;
       category?: string;
       series?: string;
       platformTags?: string[];
@@ -206,7 +210,7 @@ export interface PublishingService {
     externalSourceRef: { platform: string; externalId: string },
   ): Promise<PublicationRow | null>;
   // 数据底座(SPEC §1.3):为一条真实已发布作品落 publication(直接 published +
-  //   external_id=aweme_id)。幂等:同 (platform, external_id) 已存在则返回既有(不重复
+  //   external_id=aweme_id)。幂等:同 (user_id, account_id, platform, external_id) 已存在则返回既有(不重复
   //   建)—— ingestion 的 ensureImportedProject 也先查,这里是第二道防线(partial-unique
   //   external key 锚)。ingestion 经注入端口调本方法(不跨模块直连 repo,守 SPEC §22)。
   createImportedPublication(
@@ -500,8 +504,8 @@ export function createPublishingService(deps: ServiceDeps): PublishingService {
       return repo.setCurrentRevision(pub.id, rev.id);
     },
 
-    async getPublication(ctx, publicationId) {
-      return repoFor(ctx).getPublication(publicationId);
+    async getPublication(ctx, publicationId, forUpdate=false) {
+      return repoFor(ctx).getPublication(publicationId,forUpdate);
     },
 
     async createRevision(ctx, publicationId, body) {
@@ -518,7 +522,17 @@ export function createPublishingService(deps: ServiceDeps): PublishingService {
           );
         }
       }
-      const rev = await repo.createRevision(publicationId, body);
+      const publication = await repo.getPublication(publicationId);
+      const [previous] = publication.currentRevisionId
+        ? await deps.db.select().from(publicationRevisions).where(and(eq(publicationRevisions.id,publication.currentRevisionId),
+          eq(publicationRevisions.publicationId,publication.id),eq(publicationRevisions.userId,ctx.userId)))
+        : [];
+      // 旧公开文字body没有封面字段；省略保留原精确pair，显式null才解除。
+      const coverAssetId = body.coverAssetId === undefined ? previous?.coverAssetId ?? null : body.coverAssetId;
+      const coverAssetFileId = body.coverAssetFileId === undefined
+        ? (previous?.coverAssetId === coverAssetId ? previous?.coverAssetFileId ?? null : null)
+        : body.coverAssetFileId;
+      const rev = await repo.createRevision(publicationId, {...body, coverAssetId, coverAssetFileId});
       await repo.setCurrentRevision(publicationId, rev.id);
       return rev;
     },
@@ -728,13 +742,20 @@ export function createPublishingService(deps: ServiceDeps): PublishingService {
         input.externalId,
       );
       if (existing) {
+        // 原canonical稿锁后回读；晚到元数据不得覆盖并发真实封面/人工稿。
+        return deps.db.transaction(async transaction => {
+        const repo = createPublishingRepository(transaction as unknown as Db, {
+          now: deps.now, nextId: deps.nextId, userId: ctx.userId,
+          accountId: requireAccountId(ctx.accountId, "publishing"),
+        });
+        const locked = await repo.getPublication(existing.id, true);
         // T-400:重复采集是修复历史空元数据的机会。只补空值，绝不覆盖用户已经
         // 修改过的标题/链接；revision 仍保持 append-only。
-        let reconciled = existing;
+        let reconciled = locked;
         const incomingUrl = input.externalUrl?.trim() ?? "";
-        if (!(existing.externalUrl?.trim() ?? "") && incomingUrl) {
+        if (!(locked.externalUrl?.trim() ?? "") && incomingUrl) {
           reconciled = await repo.updatePublicationStatus(existing.id, {
-            status: existing.status,
+            status: locked.status,
             externalUrl: incomingUrl,
           });
         }
@@ -746,6 +767,7 @@ export function createPublishingService(deps: ServiceDeps): PublishingService {
               title: incomingTitle,
               description: current?.description ?? "",
               coverAssetId: current?.coverAssetId ?? null,
+              coverAssetFileId: current?.coverAssetFileId ?? null,
               category: current?.category ?? "",
               series: current?.series ?? "",
               platformTags: (current?.platformTags ?? []) as string[],
@@ -754,10 +776,11 @@ export function createPublishingService(deps: ServiceDeps): PublishingService {
                 unknown
               >,
             });
-            reconciled = await repo.setCurrentRevision(existing.id, revision.id);
+            reconciled = await repo.setCurrentRevision(existing.id, revision.id, locked.currentRevisionId);
           }
         }
         return reconciled;
+        });
       }
       try {
         return await repo.createImportedPublication(outputId, {

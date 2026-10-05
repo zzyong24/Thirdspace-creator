@@ -51,3 +51,10 @@ export {
   type PublicationResource,
   type PublicationRevisionResource,
 } from "./publishing.schema";
+export {createPublicationResultsService,type PublicationResultsService} from "./publication-results.service";
+export {createPublicationCreativeResultAdapter,combinePublicationResultAdapters} from "./publication-results.creative-adapter";
+export {createPublicationCoverCreativeResultAdapter,type PublicationCoverPorts} from "./publication-cover.creative-adapter";
+
+export {createPublicationCoverService,type PublicationCoverService} from "./publication-cover.service";
+export type {PublicationCoverSavePorts} from "./publication-cover.ports";
+export {withPublicationManualRevisionLock} from "./publication-cover.manual-lock";

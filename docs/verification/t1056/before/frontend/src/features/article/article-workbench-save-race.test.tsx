@@ -1,0 +1,42 @@
+import * as React from 'react';
+import type {ArticleDocument} from '@creatoros/contract';
+import {it,expect,vi,afterEach} from 'vitest';
+import {render,screen,fireEvent,waitFor,cleanup} from '@testing-library/react';
+const api=vi.hoisted(()=>({getArticle:vi.fn(),createArticleVersion:vi.fn(),getArticleVersion:vi.fn(),generateArticleCandidate:vi.fn(),listMaterialLinks:vi.fn(async()=>[])}));
+vi.mock('@/lib/contract-client',()=>({client:api}));
+vi.mock('./doocs-article-editor',()=>({DoocsArticleEditor:({value,onChange}:{value:ArticleDocument;onChange:(document:ArticleDocument)=>void})=><button onClick={()=>onChange({...value,title:'保存期间的新标题'})}>辅助编辑器继续编辑</button>}));
+import {ArticleWorkbench} from './article-workbench';
+afterEach(()=>{cleanup();vi.clearAllMocks();sessionStorage.clear();});
+it('主生成先保存；辅助编辑器在回执期间新增输入不丢且不拿旧稿继续生成',async()=>{
+ const doc={schemaVersion:1,title:'原标题',summary:'',sections:[],factItems:[],visualBriefs:[],imageUses:[]};
+ const initial={outputId:'o',artifactId:'art',currentVersionId:'v1',current:doc,versions:[]};
+ api.getArticle.mockResolvedValueOnce(initial);
+ let finish!:(value:unknown)=>void;
+ api.createArticleVersion.mockImplementationOnce(()=>new Promise(resolve=>{finish=resolve;}));
+ api.getArticleVersion.mockImplementation(async()=>({versionId:'v2',document:api.createArticleVersion.mock.calls[0][0].body.document}));
+ api.getArticle.mockImplementation(async()=>({...initial,currentVersionId:'v2',current:api.createArticleVersion.mock.calls[0][0].body.document}));
+ render(<ArticleWorkbench projectId="p" projectTitle="项目" accountId="a" initialOutputs={[{id:'o',title:'文章'}]}/>);await screen.findByText('当前稿件');
+ const detail=screen.getByText('使用 Doocs 编辑器（保留原版式）').closest('details')!;detail.open=true;fireEvent(detail,new Event('toggle'));await screen.findByRole('button',{name:'辅助编辑器继续编辑'});
+ fireEvent.change(screen.getByRole('textbox',{name:'标题'}),{target:{value:'准备生成的标题'}});
+ fireEvent.click(screen.getByRole('button',{name:'根据脚本扩写文章'}));await waitFor(()=>expect(api.createArticleVersion).toHaveBeenCalledOnce());
+ fireEvent.click(screen.getByRole('button',{name:'辅助编辑器继续编辑'}));finish({versionId:'v2'});
+ await waitFor(()=>expect(screen.getByRole('textbox',{name:'标题'})).toHaveValue('保存期间的新标题'));
+ await waitFor(()=>expect(screen.getByRole('button',{name:'保存修改'})).toBeEnabled());
+ expect(api.generateArticleCandidate).not.toHaveBeenCalled();
+ expect(screen.getByText(/保存期间的新编辑仍保留/)).toHaveAttribute('role','status');
+});
+it.each(['concurrent','recover'])('保存 %s 分支同样保留回执等待期间的新输入',async(mode)=>{
+ const doc={schemaVersion:1,title:'原标题',summary:'',sections:[],factItems:[],visualBriefs:[],imageUses:[]};
+ const initial={outputId:'o',artifactId:'art',currentVersionId:'v1',current:doc,versions:[]};
+ api.getArticle.mockResolvedValueOnce(initial);
+ let finish!:(value:unknown)=>void;api.createArticleVersion.mockImplementationOnce(()=>new Promise(resolve=>{finish=resolve;}));
+ api.getArticleVersion.mockImplementation(async()=>({versionId:'v2',document:api.createArticleVersion.mock.calls[0][0].body.document}));
+ api.getArticle.mockImplementation(async()=>({...initial,currentVersionId:mode==='concurrent'?'v3':'v2',current:api.createArticleVersion.mock.calls[0][0].body.document}));
+ render(<ArticleWorkbench projectId="p" projectTitle="项目" accountId="a" initialOutputs={[{id:'o',title:'文章'}]}/>);await screen.findByText('当前稿件');
+ const detail=screen.getByText('使用 Doocs 编辑器（保留原版式）').closest('details')!;detail.open=true;fireEvent(detail,new Event('toggle'));await screen.findByRole('button',{name:'辅助编辑器继续编辑'});
+ fireEvent.change(screen.getByRole('textbox',{name:'标题'}),{target:{value:'准备生成的标题'}});
+ if(mode==='recover'){const prior={...doc,title:'上一笔标题'};sessionStorage.setItem('creatoros:article:request:a:o',JSON.stringify({clientRequestId:'prior-request',payloadDigest:JSON.stringify({outputId:'o',expectedCurrentVersionId:'v1',document:prior}),body:{expectedCurrentVersionId:'v1',document:prior}}));}
+ fireEvent.click(screen.getByRole('button',{name:'根据脚本扩写文章'}));await waitFor(()=>expect(api.createArticleVersion).toHaveBeenCalledOnce());
+ fireEvent.click(screen.getByRole('button',{name:'辅助编辑器继续编辑'}));finish({versionId:'v2'});
+ await screen.findByRole('alert');expect(screen.getByRole('textbox',{name:'标题'})).toHaveValue('保存期间的新标题');expect(api.generateArticleCandidate).not.toHaveBeenCalled();
+});

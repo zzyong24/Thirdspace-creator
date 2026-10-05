@@ -1,3 +1,7 @@
+import {createExecutionMomentsModelService} from "../moments";
+import {createAssetAsrPortInvoker} from './asset-asr-port-invoker';
+import type {createAssetAsrOwner} from './asset-asr-owner.service';
+import {assetAsrPortInputs,type AssetAsrPort} from '@creatoros/contract/execution-worker';
 import {localCodexWorkerEnv} from "./local-codex-worker-env";
 import {createExternalChatTurnService} from "../ai/external-chat-turn.service";
 import {createExternalTaskToolService} from "../ai/external-task-tool.service";
@@ -33,6 +37,7 @@ import {createExecutionBrowserSessionService} from "./execution-browser-session.
 import {createExecutionScriptLocalService} from "./execution-script-local.service";
 import {createExecutionScriptCheckpointService} from "./execution-script-checkpoint.service";
 import {createScriptPartialFinalizationService} from "../ai/script-partial-finalization.service";
+import {createExecutionWorkReviewService} from "../review";
 import {createExecutionReviewReportService} from "../review/execution-review-report.service";
 import type {BrowserSessionsService} from "../browser-sessions";
 import {createExecutionResearchEvidenceService} from "./execution-research-evidence.service";
@@ -65,7 +70,7 @@ interface WorkerDispatcherDeps {
   /** 现有队列领取前有界恢复已提交任务的准备；不得直接执行模型。 */
   recoverPendingPreparation?(signal:AbortSignal):Promise<void>;
 }
-export interface ModelWorkerDispatcherDeps extends WorkerDispatcherDeps, ExecutionCandidateDeps {assetProcessing?:Parameters<typeof createExecutionAssetProcessingService>[1];video?:Pick<Parameters<typeof createExecutionVideoService>[1],"resolveModelSpec">;transcribeWorkflow?:Omit<TranscribeWorkflowDeps,"now">;transcribeSource?:TranscribeSourceDeps;cover?:CoverExecutionPorts;transcribePostprocess?:Pick<Parameters<typeof createExecutionTranscribePostprocessService>[1],"resolveModelSpec"|"readContext"|"maxOutputTokens">;transcribePreparation?:Pick<Parameters<typeof createExecutionTranscribePreparationService>[1],"resolveSpec"|"prepareSpec">;transcribeAudioStorage?:Parameters<typeof createExecutionTranscribeAudioService>[1]["objectStorageForCtx"];resolveAssetCredential?:Parameters<typeof createExecutionAssetPorts>[0]["resolveCredential"];assetStorage?:Parameters<typeof createExecutionAssetPorts>[0]["objectStorageForCtx"];browserSessions?:Pick<BrowserSessionsService,"getStateVersioned"|"saveStateVersioned">;dailyTopicPorts?:DailyTopicCompletionPorts}
+export interface ModelWorkerDispatcherDeps extends WorkerDispatcherDeps, ExecutionCandidateDeps {assetAsr?:ReturnType<typeof createAssetAsrOwner>;assetProcessing?:Parameters<typeof createExecutionAssetProcessingService>[1];video?:Pick<Parameters<typeof createExecutionVideoService>[1],"resolveModelSpec">;transcribeWorkflow?:Omit<TranscribeWorkflowDeps,"now">;transcribeSource?:TranscribeSourceDeps;cover?:CoverExecutionPorts;transcribePostprocess?:Pick<Parameters<typeof createExecutionTranscribePostprocessService>[1],"resolveModelSpec"|"readContext"|"maxOutputTokens">;transcribePreparation?:Pick<Parameters<typeof createExecutionTranscribePreparationService>[1],"resolveSpec"|"prepareSpec">;transcribeAudioStorage?:Parameters<typeof createExecutionTranscribeAudioService>[1]["objectStorageForCtx"];resolveAssetCredential?:Parameters<typeof createExecutionAssetPorts>[0]["resolveCredential"];readAssetReference?:Parameters<typeof createExecutionAssetPorts>[0]["readReference"];assetStorage?:Parameters<typeof createExecutionAssetPorts>[0]["objectStorageForCtx"];browserSessions?:Pick<BrowserSessionsService,"getStateVersioned"|"saveStateVersioned">;dailyTopicPorts?:DailyTopicCompletionPorts}
 export type ChatWorkerDispatcherDeps = WorkerDispatcherDeps & {externalImageStorage?:import("../assets").ObjectStorageForCtx;resolveRedfoxCredential?:Parameters<typeof createExecutionChatToolPorts>[1]["resolveRedfoxCredential"];resolveFallbackModelCredential?(context:RequestContext):Promise<unknown|null>;webRead?:Parameters<typeof createExecutionChatToolPorts>[1]["webRead"]} & (
  {tools:Record<string,ChatBackendTool>;resolveTools?:never} |
  {tools?:never;resolveTools(context:RequestContext,input:Awaited<ReturnType<typeof readExecutionChatTask>>["input"],execution:ExecutionRef,signal:AbortSignal):Promise<Record<string,ChatBackendTool>>}
@@ -88,6 +93,7 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
   const browserProfiles=createExecutionBrowserProfileLeaseService(db,{now});
   const activeWorkers=new Map<string,{ref:ExecutionRef;supervisor:ReturnType<typeof createWorkerSupervisor>}>();
   const calls=createExecutionWorkerCallPorts(db,{now,budget:deps.budget});
+  const assetAsr=deps.executionMode==="model"&&deps.assetAsr?createAssetAsrPortInvoker(deps.assetAsr):null;
   const checkpoints=createExecutionCheckpointService(db,{now});
   const streamEvents=createExecutionStreamService(db,{now});
   const generation=createExecutionGenerationPorts(db,{now,budget:deps.budget});
@@ -101,7 +107,7 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
   const transcribePostprocess=deps.executionMode==="model"&&deps.transcribePostprocess?createExecutionTranscribePostprocessService(db,{now,budget:deps.budget,...deps.transcribePostprocess}):null;
   const transcribeWorkflow=deps.executionMode==="model"&&deps.transcribeWorkflow&&transcribePostprocess?createExecutionTranscribeWorkflowService(db,{...deps.transcribeWorkflow,now,postprocess:transcribePostprocess}):null;
   const transcribeSource=deps.executionMode==="model"&&deps.transcribeSource?createExecutionTranscribeSourceService(db,{...deps.transcribeSource,now}):null;
-  const assetPorts=deps.executionMode==="model" && deps.assetStorage ? createExecutionAssetPorts({db,now,budget:deps.budget,objectStorageForCtx:deps.assetStorage,resolveCredential:deps.resolveAssetCredential}) : null;
+  const assetPorts=deps.executionMode==="model" && deps.assetStorage ? createExecutionAssetPorts({db,now,budget:deps.budget,objectStorageForCtx:deps.assetStorage,resolveCredential:deps.resolveAssetCredential,readReference:deps.readAssetReference}) : null;
   const cover=deps.executionMode==="model" && deps.cover ? createExecutionCoverService(db,{now,budget:deps.budget,...deps.cover}) : null;
   const video=deps.executionMode==="model" && deps.video ? createExecutionVideoService(db,{now,budget:deps.budget,...deps.video}) : null;
   const candidates=deps.executionMode==="model"?createExecutionCandidateService(db,deps):null;
@@ -113,6 +119,8 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
   const preferences=deps.executionMode==="model"?createTopicPreferenceCompletionService(db,{now}):null;
   const reconstructions=deps.executionMode==="model"?createReconstructCompletionService(db,{now}):null;
   const copilotReplies=deps.executionMode==="model"?createCopilotReplyCompletionService(db,{now}):null;
+  const momentsModels=deps.executionMode==="model"?createExecutionMomentsModelService(db,{now,nextId:()=>crypto.randomUUID()}):null;
+  const workReviews=deps.executionMode==="model"?createExecutionWorkReviewService(db,{now}):null;
   const reviewReports=deps.executionMode==="model"?createExecutionReviewReportService(db,{now}):null;
   const agentModels=deps.executionMode==="agentic.run"?createExecutionAgenticModelPorts(db,{now,budget:deps.budget}):null;
   const resolveGenerationCredential=async(context:RequestContext,capability:string,ref:ExecutionRef,signal?:AbortSignal)=>{
@@ -203,7 +211,7 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
         if(!asrPorts)throw new Error("ASR_PORT_UNAVAILABLE");
         return asrPorts.invoke(ref,port,raw);
       }
-      if(["resolveAssetCredential","settleAssetCall","reserveAssetCall","startAssetCall","saveAssetResult","recoverAssetResult","readAssetProviderJob","recordAssetProviderJob"].includes(port)){
+      if(["resolveAssetCredential","readAssetReference","settleAssetCall","reserveAssetCall","startAssetCall","saveAssetResult","recoverAssetResult","readAssetProviderJob","recordAssetProviderJob"].includes(port)){
         if(!assetPorts)throw new Error("ASSET_STORAGE_UNAVAILABLE");
         const scope=activeTools.get(executionKey(ref));if(!scope)throw new Error("STALE_EXECUTION");
         const settlement=["settleAssetCall","saveAssetResult","recoverAssetResult","recordAssetProviderJob"].includes(port);
@@ -375,6 +383,7 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
         // 凭据解析期间可能取消，返回私有凭据前再检查当前执行。
         return modelIdentity.pin(ref,input.capability,credential);
       }
+      if(Object.hasOwn(assetAsrPortInputs,port)){const scope=activeTools.get(executionKey(ref));if(!assetAsr||!scope)throw new Error("ASSET_ASR_PORT_UNAVAILABLE");const work=assetAsr(ref,port as AssetAsrPort,raw,port==="settleAssetAsrRequest"?undefined:scope.controller.signal);scope.pending.add(work);try{return await work;}finally{scope.pending.delete(work);}}
       if(port==="commitResult"){
         const input=workerPortInputSchemas.commitResult.parse(raw);
         if(input.outcome!=="succeeded"){
@@ -386,6 +395,8 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
         if(skillId==="reconstruct.project"&&reconstructions){const scope=activeTools.get(executionKey(ref));if(!scope)throw new Error('RECONSTRUCT_SCOPE_UNAVAILABLE');const work=reconstructions.commitResult(ref,input,scope.controller.signal);scope.pending.add(work);try{return await work;}finally{scope.pending.delete(work);}}
         if(skillId==="topic.preference"&&preferences){const scope=activeTools.get(executionKey(ref));if(!scope)throw new Error('PREFERENCE_SCOPE_UNAVAILABLE');const work=preferences.commitResult(ref,input,scope.controller.signal);scope.pending.add(work);try{return await work;}finally{scope.pending.delete(work);}}
         if(skillId==="script.source_similarity"&&similarities){const scope=activeTools.get(executionKey(ref));if(!scope)throw new Error("STALE_EXECUTION");const work=similarities.commitResult(ref,input,scope.controller.signal);scope.pending.add(work);try{return await work;}finally{scope.pending.delete(work);}}
+        if(skillId==="moments.compose"&&momentsModels)return momentsModels.commitResult(ref,input);
+        if(skillId==="work.review" && workReviews)return workReviews.commitResult(ref,input);
         if(skillId==="script.review" && reviewReports)return reviewReports.commitResult(ref,input);
         if(skillId==="copilot.assist" && copilotReplies)return copilotReplies.commitResult(ref,input);
         return candidates.commitResult(ref,input);

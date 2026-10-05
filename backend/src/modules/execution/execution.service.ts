@@ -1,3 +1,4 @@
+import type {MediaProbeControl} from "../ai";
 // 执行层 service(T-255a,脑手分离)。存储**复用 ai_tasks 六态 + 步骤流 + 结果表**
 // (评估结论:字段全够 —— spec 进 input_data、manifest 进 ai_task_results、进度走
 // AITaskStep,免新表/迁移;taskType 命名空间 `exec.*` 隔离读写),经注入的 AI 端口
@@ -46,6 +47,7 @@ function assetTypeForMime(mimeType: string | null): string {
 }
 
 export interface ExecutionAiServicePort {
+  probeControl?:Pick<MediaProbeControl,"cancel">;
   createTask(
     ctx: RequestContext,
     body: { taskType: string; inputData?: Record<string, unknown>;attemptId?:string },
@@ -99,7 +101,7 @@ export interface ExecutionServiceDeps {
   loopTypeOf?: (taskType: string) => LoopType | null;
   workspacesRoot: string;
   /** discard 时中止 in-flight executor(run-execution-task.abortExecutionTask)。 */
-  abortRun: (taskId: string) => boolean;
+  abortRun: (taskId: string,generation?:number) => boolean;
   resolveOutputProjectId?: (ctx:RequestContext,outputId:string)=>Promise<string|null>;
 }
 
@@ -318,11 +320,11 @@ export function createExecutionService(
         task.status,
       );
       if (!terminal) {
-        await deps.ai.cancelTask(ctx, taskId);
-        deps.abortRun(taskId);
+        if(task.taskType === "exec.media.probe"){if(!deps.ai.probeControl)throw new ConflictError("媒体取消服务尚未接入");await deps.ai.probeControl.cancel(ctx,taskId,task.deterministicGeneration ?? 0);deps.abortRun(taskId,task.deterministicGeneration ?? 0);}
+        else{await deps.ai.cancelTask(ctx, taskId);deps.abortRun(taskId);}
       }
-      // 丢弃即清沙箱(幂等;终态任务重复 discard 也只是再清一次空目录)。
-      await cleanupSandbox(deps.workspacesRoot, taskId).catch(() => {});
+      // 只清读取时对应的轮次；旧取消不可中止、清理新重试。
+      await cleanupSandbox(deps.workspacesRoot, task.taskType === "exec.media.probe" ? `${taskId}-probe-${task.deterministicGeneration ?? 0}` : taskId).catch(() => {});
       return toDto(ctx, await deps.ai.getTask(ctx, taskId));
     },
   };

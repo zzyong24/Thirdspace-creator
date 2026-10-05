@@ -1,0 +1,15 @@
+{
+  "status": "PASS",
+  "outputs": 7,
+  "different": [],
+  "scope": "production define修正后最终源码归档新目录通过交付脚本及已有冻结锁依赖树重建；7产物逐字节一致，未fresh安装或声称跨OS复现",
+  "files": {
+    "native.css": "e8757103e0fd57d164826df1de27070222dc6b2ba23bcd4bb32a3cbbe64ee688",
+    "native.js": "f61b0939ff9a185861dbc7addee2c40ef1b3a0d71cfac81c31c41d1f43a50354",
+    "NATIVE_BUILD_GRAPH.json": "d1bcbd11d320f80c93e9c4d91c3293375e608b0099046f6d63c28949633f65f5",
+    "THIRD_PARTY_LICENSES.txt": "d3e59d1b80d9ebcccfc76f84dc51d976ed113749afec53d51c02f6832eafe51f",
+    "THIRD_PARTY_LICENSES.json": "becfab856e0610ccbc14f1abf05d38c25593b60ada26f553dac667fcd471e8ad",
+    "LICENSE.opencut": "8117f9bb64534f7530fc6139b014fd1c1465f7981f93d1871789150fa3f59d3d",
+    "effects/preview.jpg": "b318cede7bbe27bfbf1b8b94d41f65b6f52d5f2650ce3a153d03b76c2a1c0190"
+  }
+}

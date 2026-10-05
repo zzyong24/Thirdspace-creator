@@ -52,7 +52,7 @@ describe("ZeroAccountGuidance", () => {
     render(<ZeroAccountGuidance />);
     expect(screen.getByTestId("zero-account-guidance")).toBeInTheDocument();
     expect(
-      screen.getByText("先绑定一个抖音号,再开始创作"),
+      screen.getByText("先添加一个创作账号，再开始创作"),
     ).toBeInTheDocument();
     expect(screen.getByTestId("zero-account-bind-link")).toHaveAttribute(
       "href",

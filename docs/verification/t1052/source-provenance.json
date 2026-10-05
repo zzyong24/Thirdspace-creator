@@ -1,0 +1,200 @@
+{
+  "source": "/private/tmp/douyin_dl/noterelay-main",
+  "version": "0.1.8",
+  "license": "AGPL-3.0-or-later",
+  "snapshotSha256": "a91b976a2fe25453dafb22d9b407ee6a5508e889da5083fe2901b395f28f5667",
+  "algorithm": "sorted relative UTF-8 path + NUL + bytes + NUL",
+  "files": [
+    {
+      "path": "LICENSE",
+      "sha256": "0d96a4ff68ad6d4b6f1f30f713b18d5184912ba8dd389f86aa7710db079abcb0"
+    },
+    {
+      "path": "THIRD_PARTY_NOTICES.md",
+      "sha256": "f2947cc1979b8e0347731c59abf9cf5201835a03d4cf6194aa817118f0cd9d0d"
+    },
+    {
+      "path": "package-lock.json",
+      "sha256": "8cd8c4b158d8d598825dacde3fd230c0bcb50ab34af0a26cbabc589c73fe43c8"
+    },
+    {
+      "path": "package.json",
+      "sha256": "62b823bb32c74bdae9e2190a736619266ee8b0f25db7bc79d9f35a04bea217c7"
+    },
+    {
+      "path": "src/assets.d.ts",
+      "sha256": "1445c907863d00c7d8db69a4e7576355dd973dece109baf8953479153718feae"
+    },
+    {
+      "path": "src/core/accountPreferences.ts",
+      "sha256": "4ed877fa041a84b2f422923209582b2a4a7d0ed2dd2aa554042920be70e2ba09"
+    },
+    {
+      "path": "src/core/accountVariables.ts",
+      "sha256": "2289dcf5f9255f57bebf1eb4471ceb81b0d7b31dfe01f192e3bbc0662f11b4f3"
+    },
+    {
+      "path": "src/core/avatar.ts",
+      "sha256": "d4c01ccb9fc51cc2b21114ba4fba7447d65b49bd421350c499a3881d562fd646"
+    },
+    {
+      "path": "src/core/clipboard.ts",
+      "sha256": "060f2692c09b5eff5f8d135d489ce5033baf8a8a1bd219e3a75665ade0d5e1ac"
+    },
+    {
+      "path": "src/core/dom.ts",
+      "sha256": "85297a5f0382f937877930222e6888718ac1b956f4492aeefc12968fbb71e11e"
+    },
+    {
+      "path": "src/core/html.ts",
+      "sha256": "a265ba16274a79262736c95f1401031f51db776f79b8708c25811d116464bddc"
+    },
+    {
+      "path": "src/core/imageData.ts",
+      "sha256": "b18346850b6b38b86ec996d406981ea17f1e346e74e3624d358b911afb48e6d5"
+    },
+    {
+      "path": "src/core/markdown.ts",
+      "sha256": "3af6a2c4f5dc87274e2f0fcd077dfe0c3d6d4e371e220f64738a2a7f570906f6"
+    },
+    {
+      "path": "src/core/platforms.ts",
+      "sha256": "cf9ec380f1de27ef8429ed8799570e3a660d1a4dfef7fb9edbe77a0dbf616a65"
+    },
+    {
+      "path": "src/defaults.ts",
+      "sha256": "674ca18875135ed75422277a129bc770ba7b0a9a24ba72f5f0a2fbb6d7674df1"
+    },
+    {
+      "path": "src/main.ts",
+      "sha256": "798d3c8bbeb973a73f363e45f88c86e25ffac0e5a5d56f2d50dd1d5124e8a6bf"
+    },
+    {
+      "path": "src/platforms/platform.ts",
+      "sha256": "6ec97e9a857a0d1e4fe77f61481d5d2e982d4db7b21facc5ed98725530a5ceaf"
+    },
+    {
+      "path": "src/platforms/rednote/adapter.ts",
+      "sha256": "fc32287758fe67cc1034bb4966f78d0ca75ccbc7d441f77c834ba38cd0b7deb4"
+    },
+    {
+      "path": "src/platforms/rednote/domPaginate.ts",
+      "sha256": "756064c3226f8be9814116f07b4369460ce8a12338d3c7e0e1660aeaef65f673"
+    },
+    {
+      "path": "src/platforms/rednote/noteToRedThemes.ts",
+      "sha256": "c21b7cbb0150ab11f433d4438bc887e5f8bd04a0ddc1e004986d2eedb8ac064a"
+    },
+    {
+      "path": "src/platforms/rednote/paginate.ts",
+      "sha256": "b50114da8cd3bf47344e756445ea842525b06a5b8ba17c53b8d71da948f6388f"
+    },
+    {
+      "path": "src/platforms/rednote/presets.ts",
+      "sha256": "661e7a1defe6300c7d1bf1cc4cba2b3c80d84a6f0720ba329de0118da1770440"
+    },
+    {
+      "path": "src/platforms/toutiao/adapter.ts",
+      "sha256": "ffea2e9bf5de0436c4eac9829bf990255bad60f483834ad68d9a6e99b9b800e0"
+    },
+    {
+      "path": "src/platforms/wechat/adapter.ts",
+      "sha256": "4c76617be05e6058fa168064dd83615576136f540b2a12ba0aec8a7f10b52ed2"
+    },
+    {
+      "path": "src/platforms/wechat/customTheme.ts",
+      "sha256": "949dc5b5c20175a05359acddc250799b2a7607cd52557f77ad9f43d1ece37acd"
+    },
+    {
+      "path": "src/platforms/wechat/wenote/markdownParser.ts",
+      "sha256": "29633e6b827803ac64511ada9d0c5efeb4128f05e94fabaced213bdaed834877"
+    },
+    {
+      "path": "src/platforms/wechat/wenote/themeCss.ts",
+      "sha256": "d9f2d0a94407a6743fab76236355887a48cef95d28bda836d55f7174fb1282c8"
+    },
+    {
+      "path": "src/platforms/wechat/wenote/types.ts",
+      "sha256": "ae22bc0780f0ed4accb34f157f75624f7057dec8cf75765a35b5e9fb9bd759a9"
+    },
+    {
+      "path": "src/platforms/wechat/wenote/wechatCompat.ts",
+      "sha256": "55593e3de43a8e3a0e1bcd07c5f05ce133bf71c8cb4d71115c00b8702a804464"
+    },
+    {
+      "path": "src/platforms/wechat/wenote/wechatRenderer.ts",
+      "sha256": "15ff76a8538ddff46f55bf7ce7962d4a8e7dcfff8ec2753f21c58cfaaa8dc3ee"
+    },
+    {
+      "path": "src/platforms/x/adapter.ts",
+      "sha256": "7a79f0d6d6212c2e65e8f9f3be77defaa83bea0892f264b9e89d906c5131890e"
+    },
+    {
+      "path": "src/themes/builtins.ts",
+      "sha256": "ab3888a73aa6ebd5eee52432c7d83618a8c278edeadc22d60158575a7e97474e"
+    },
+    {
+      "path": "src/themes/themeService.ts",
+      "sha256": "2e1685a33ba1588dd47add5aadb462ee7b01081be4acd4038ee0d80c6070cc3a"
+    },
+    {
+      "path": "src/types.ts",
+      "sha256": "daa026048cd061de4ca60d5b34d963815c4156142cc7266272a4248d9e9e7881"
+    },
+    {
+      "path": "src/ui/customWechatThemesModal.ts",
+      "sha256": "2b678f5c5a2fd93b3d5cfc555ce47f9ed3a4d3bc384a0963ab73dee4b1cb66c3"
+    },
+    {
+      "path": "src/ui/infoModals.ts",
+      "sha256": "cad37d7993a426290f62389d7b2c625db2a4d9a7d9c8c290868784c081279006"
+    },
+    {
+      "path": "src/ui/noteRelayView.ts",
+      "sha256": "c5a7a6e7d3d8df1a397a1bcf65ccfc892e20761f1b1d4c154b256e4fa152b92f"
+    },
+    {
+      "path": "src/ui/openSettings.ts",
+      "sha256": "c2f660e3648f1143be991ad5f62c42f73f852129a69e58d8951a5cdc3ac15132"
+    },
+    {
+      "path": "src/ui/rednoteBackgroundModal.ts",
+      "sha256": "4dbcf8a43f83d55eeb6b2a95955d39d02e76a500f684b2ba4fc31b601b98d613"
+    },
+    {
+      "path": "src/ui/settingsTab.ts",
+      "sha256": "888ac104e1e915db285d1dd9451409e4169b882e7911f18a532e1754145d676c"
+    },
+    {
+      "path": "styles.css",
+      "sha256": "6affd5bc57fe8b236035ea2976b1a1148952ce57c7ff672897ed73a537ac1e17"
+    }
+  ],
+  "upstreamLock": {
+    "markdown-it": {
+      "version": "14.3.0",
+      "integrity": "sha512-RCEsPjR+sr0x+AuYp601tKTkgFG4YEPLCzHST3cQ/fhlJkqAkz1L2/Qbp1j9qw5SBwQHFBoW8+hoN5xssOF0Tw==",
+      "resolved": "https://registry.npmmirror.com/markdown-it/-/markdown-it-14.3.0.tgz",
+      "license": "MIT"
+    },
+    "html-to-image": {
+      "version": "1.11.13",
+      "integrity": "sha512-cuOPoI7WApyhBElTTb9oqsawRvZ0rHhaHwghRLlTuffoD1B2aDemlCruLeZrUIIdvG7gs9xeELEPm6PhuASqrg==",
+      "resolved": "https://registry.npmmirror.com/html-to-image/-/html-to-image-1.11.13.tgz",
+      "license": "MIT"
+    },
+    "fflate": {
+      "version": "0.8.3",
+      "integrity": "sha512-tbZNuJrLwGUp3zshBtdy4W+ORxZuIh8a5ilyIEQDC5rY1f3U20JMry0Ll3WBzU58EZKsEuJFXhb5gwv8CsPvgA==",
+      "resolved": "https://registry.npmmirror.com/fflate/-/fflate-0.8.3.tgz",
+      "license": "MIT"
+    },
+    "esbuild": {
+      "version": "0.27.7",
+      "integrity": "sha512-IxpibTjyVnmrIQo5aqNpCgoACA/dTKLTlhMHihVHhdkxKyPO1uBBthumT0rdHmcsk9uMonIWS0m4FljWzILh3w==",
+      "resolved": "https://registry.npmmirror.com/esbuild/-/esbuild-0.27.7.tgz",
+      "license": "MIT"
+    }
+  },
+  "scriptsExecuted": false
+}

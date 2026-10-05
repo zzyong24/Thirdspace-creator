@@ -185,3 +185,8 @@ export {createHostBrowserProfileLifecycle,type HostBrowserProfileIdentity} from 
 
 export {isTaskDrainStopping,type TaskDrainControl} from "./task-drain-control";
 export {createDesktopHostProcessRecovery,type HostProcessRecovery} from './host-browser-process-recovery';
+export {createFrozenModelRetryPort} from "./frozen-model-retry";
+
+export {createAssetAsrOwner} from './asset-asr-owner.service';
+
+export {createExecutionGenerationPorts} from "./execution-generation-ports.service";

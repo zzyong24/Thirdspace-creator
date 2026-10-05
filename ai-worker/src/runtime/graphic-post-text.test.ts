@@ -19,3 +19,12 @@ it("连续规划保留原稿真实页来源及画面说明，不能生成其他�
  expect(validateGraphicPostTextCandidate({kind:"cardBriefs",value},{...input,current}).value).toEqual(value);
  expect(()=>validateGraphicPostTextCandidate({kind:"cardBriefs",value:[{...value[0],sourceRefs:[{...inherited,id:"unbound"}]}]},{...input,current})).toThrow("GRAPHIC_POST_SOURCE_REF_UNBOUND");
 });
+
+it("T-1055 图卡只采用冻结 exact 图片pair，既有选图不让模型重选",()=>{
+ const image={assetId:"real-image",assetFileId:"real-file",name:"实际图片",description:"真实描述"};
+ const raw={...input,imageLibrary:[image]};
+ const value=[{cardId:"one",title:"标题",body:"正文",sourceRefs:[source],proposedImage:{assetId:image.assetId,assetFileId:image.assetFileId}}];
+ expect(validateGraphicPostTextCandidate({kind:"cardBriefs",value},raw).value).toEqual(value);
+ expect(()=>validateGraphicPostTextCandidate({kind:"cardBriefs",value:[{...value[0],proposedImage:{assetId:image.assetId,assetFileId:"fake"}}]},raw)).toThrow("GRAPHIC_POST_IMAGE_PAIR_UNBOUND");
+ expect(JSON.parse(buildGraphicPostFacets(raw).graphicPostContext!).imageLibrary).toEqual([image]);
+});

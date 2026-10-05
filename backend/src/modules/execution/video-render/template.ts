@@ -72,6 +72,8 @@ export interface TemplateOptions {
   gsapSrc?: string;
   /** 媒体文件前缀(executor 把预处理后的素材落到工程 media/)。 */
   mediaPrefix?: string;
+  /** 预览只通过固定 src 位置绑定真实短时URL，用户文本不会被替换。 */
+  mediaUrls?: ReadonlyMap<string,string>;
   /**
    * 已按资产权威 MIME 判定为图片的 B-roll 文件名。
    * B-roll 契约为兼容旧任务没有 kind 字段，不能靠 assetId/扩展名猜类型；
@@ -479,6 +481,7 @@ export function assertVideoLayoutSafety(props: VideoRenderProps): void {
     }
     if (
       timeline.some((segment) => !segment.hasMainVisual) &&
+      !props.talkingHead.clips &&
       !props.captions.some((caption) => caption.cn.trim())
     ) {
       throw new Error("横屏无主视觉时间窗缺少可溯字幕，不能生成居中人物或空舞台");
@@ -794,14 +797,18 @@ function scheduleLandscapeSpeakerTimeline(
 ): void {
   const timeline = resolveLandscapeSpeakerTimeline(props);
   timeline.forEach((segment, index) => {
-    if (index > 0 && timeline[index - 1]!.state === segment.state) return;
+    if (index > 0 && timeline[index - 1]!.state === segment.state &&
+      (!props.talkingHead.clips || timeline[index - 1]!.hasMainVisual === segment.hasMainVisual)) return;
     if (segment.state === "hidden") {
       ctx.tweens.push(
         `tl.set("#th",{autoAlpha:0},${fmt(segment.startSec)});`,
       );
       return;
     }
-    const box = layout.thRight;
+    // 用户保存的主轨本身就是可安全输出的画面；无可选图层时直接展示原片。
+    const box = props.talkingHead.clips && !segment.hasMainVisual
+      ? {left:0,top:0,width:props.delivery.width,height:props.delivery.height,borderRadius:0}
+      : layout.thRight;
     ctx.tweens.push(
       `tl.set("#th",{left:${box.left},top:${box.top},width:${box.width},height:${box.height},borderRadius:${box.borderRadius},zIndex:900,autoAlpha:1},${fmt(segment.startSec)});`,
     );
@@ -1672,6 +1679,7 @@ function renderCardBase(
   card: VideoRenderCard,
   mediaPrefix: string,
   motion: VideoCardMotion,
+  mediaUrl?: (file:string)=>string,
 ): CardBox {
   switch (card.kind) {
     case "stat": {
@@ -1816,7 +1824,7 @@ function renderCardBase(
         style: `${CARD_BASE}padding:10px;width:320px;`,
         inner:
           `<div style="width:300px;height:176px;border-radius:8px;overflow:hidden;background:${TK.bg};border:1px solid ${TK.border};display:flex;align-items:center;justify-content:center">` +
-          `<img src="${esc(mediaPrefix + card.file)}" style="max-width:100%;max-height:100%;object-fit:contain"></div>` +
+          `<img src="${esc(mediaUrl?.(card.file) ?? mediaPrefix + card.file)}" style="max-width:100%;max-height:100%;object-fit:contain"></div>` +
           `<div style="color:${TK.fg2};font-size:19px;font-weight:600;margin-top:8px;text-align:center">${esc(card.label)}</div>`,
       };
   }
@@ -1827,11 +1835,11 @@ function renderCardBase(
  * 钩子绝对定位(.ovl,不占 flow):strike→红删除线、metaphor→底部绿线;非 compare 的 bar 补顶部生长条
  * (compare 的两条在 renderCardBase 各侧内)。motionTween 按 motion 选中这些钩子做 GSAP 动画。
  */
-function renderCard(card: VideoRenderCard, mediaPrefix: string, portrait = false): CardBox {
+function renderCard(card: VideoRenderCard, mediaPrefix: string, portrait = false, mediaUrl?: (file:string)=>string): CardBox {
   const visualSentence = renderVisualSentence(card, portrait);
   if (visualSentence) return visualSentence;
   const motion = resolveMotion(card);
-  const box = renderCardBase(card, mediaPrefix, motion);
+  const box = renderCardBase(card, mediaPrefix, motion, mediaUrl);
   let inner = box.inner;
   let height = box.height;
   if (motion === "bar" && card.kind !== "compare") {
@@ -1985,8 +1993,10 @@ export function generateVideoRenderHtml(
 ): string {
   const gsapSrc = options.gsapSrc ?? "gsap.min.js";
   const mediaPrefix = options.mediaPrefix ?? "media/";
+  const mediaUrl=(file:string)=>options.mediaUrls?.get(file) ?? mediaPrefix+file;
   const imageFiles = options.imageFiles ?? new Set<string>();
-  const DUR = f2(props.talkingHead.durationSec);
+  const DUR = props.talkingHead.clips ? props.talkingHead.durationSec : f2(props.talkingHead.durationSec);
+  const mediaTime = props.talkingHead.clips ? (value:number)=>String(Number(value.toFixed(6))) : fmt;
   const { width, height, fps } = props.delivery;
   const visualOnly = options.visualOnly === true;
   void fps; // fps 由渲染命令行控制;合成本身以秒为时钟
@@ -2039,7 +2049,8 @@ export function generateVideoRenderHtml(
     });
   });
   const initialMode = modes[0] ?? "pip";
-  const initPos = resolveHeadBox(L, initialMode);
+  const initPos = props.talkingHead.clips && width>=height && !resolveLandscapeSpeakerTimeline(props)[0]?.hasMainVisual
+    ? {left:0,top:0,width,height,borderRadius:0} : resolveHeadBox(L, initialMode);
   // 横屏统一预铺低成本静态氛围底：前景人物仍完整 contain 展示。不能用第二路全长视频
   // 加大半径动态 blur 承接空窗——它会让 Chromium 每个输出帧重复合成重媒体，真实 157 秒
   // 回归已使捕帧吞吐下降约 31.5%。静态渐变不创造内容，只避免素材前后退回纯黑舞台。
@@ -2053,14 +2064,12 @@ export function generateVideoRenderHtml(
     const headChrome = isPortraitDelivery
       ? "border:0;box-shadow:none;"
       : `border:2px solid ${TK.accent};box-shadow:0 18px 60px rgba(0,0,0,.5),0 0 0 6px ${TK.accent}1f;`;
-    ctx.clips.push(
-      `<video id="th" class="clip" src="${esc(mediaPrefix + props.talkingHead.file)}" preload="auto"${props.talkingHead.hasAudio ? ' data-has-audio="true"' : ""} data-start="0" data-duration="${fmt(DUR)}" data-track-index="900" ` +
-      // [T-291] 口播头改 object-fit:contain(完整不裁,治「脸没在框」)+ 深色底补边。
-      // 原 cover+object-position:center 20% 会裁掉竖屏源上下大半、位置写死猜测无人脸检测 → 脸出框。
-      // 合 video-editing skill 铁律「不随意裁切口播画面」。深色 letterbox 是「保完整」的可接受代价。
-      `style="position:absolute;left:${initPos.left}px;top:${initPos.top}px;width:${initPos.width}px;height:${initPos.height}px;border-radius:${initPos.borderRadius}px;object-fit:contain;background:#08090a;` +
-        `z-index:900;${headChrome}"></video>`,
-    );
+    const heads=props.talkingHead.clips??[{clipId:"legacy",file:props.talkingHead.file,startSec:0,endSec:DUR,sourceInSec:0,hasAudio:props.talkingHead.hasAudio}];
+    heads.forEach((head,index)=>ctx.clips.push(
+      `<video id="${index===0?"th":`th-${index}`}" class="clip${props.talkingHead.clips?" talking-head":""}" src="${esc(mediaUrl(head.file))}" preload="auto"${head.hasAudio?' data-has-audio="true"':""} data-start="${props.talkingHead.clips?mediaTime(head.startSec):"0"}" data-duration="${mediaTime(head.endSec-head.startSec)}"${props.talkingHead.clips?` data-media-start="${mediaTime(head.sourceInSec)}" data-end="${mediaTime(head.endSec)}"`:""} data-track-index="900" `+
+      `style="position:absolute;left:${initPos.left}px;top:${initPos.top}px;width:${initPos.width}px;height:${initPos.height}px;border-radius:${initPos.borderRadius}px;object-fit:contain;background:#08090a;z-index:900;${headChrome}"></video>`
+    ));
+
   }
   // 形态切换 tween:在模式变化的场景边界前 0.7s 开始(首场景不切)
   for (let i = 1; i < props.scenes.length; i++) {
@@ -2219,7 +2228,7 @@ export function generateVideoRenderHtml(
           if (supersededInsideMainVisual) continue;
           cardStart = Math.max(item.at, activeEnd);
         }
-        const box = renderCard(item.card, mediaPrefix, props.delivery.height > props.delivery.width);
+        const box = renderCard(item.card, mediaPrefix, props.delivery.height > props.delivery.width, mediaUrl);
         // 信息卡是当前口播 beat 的主视觉，不是左上角的小标签。每个 beat 复用同一
         // 信息舞台并替换上一个，避免卡片沿 flow 越堆越散、大片区域仍然空黑。
         const stageWidth = Math.max(1, rightEdge - L.contentX);
@@ -2253,7 +2262,7 @@ export function generateVideoRenderHtml(
         const nextAfterCardStart = flowItems
           .slice(itemIndex + 1)
           .find((candidate) => candidate.at > cardStart + 0.05)?.at;
-        const cardEnd = cardDirectionBeat
+        const naturalCardEnd = cardDirectionBeat
           ? Math.min(scene.endSec, cardDirectionBeat.endSec)
           : Math.min(
               scene.endSec,
@@ -2261,6 +2270,7 @@ export function generateVideoRenderHtml(
                 ? nextAfterCardStart ?? scene.endSec
                 : nextOccludingAt ?? scene.endSec,
             );
+        const cardEnd=Math.min(naturalCardEnd,item.card.endSec??naturalCardEnd);
         // 下一段真实主画面马上进场时，不闪一张不到 1.2 秒、来不及阅读的信息卡。
         // 该时间段会由后续真实素材承接；信息卡只服务真正的空镜与语义节拍。
         if (cardEnd - cardStart < 1.2) continue;
@@ -2489,13 +2499,13 @@ export function generateVideoRenderHtml(
             : `border:1px solid ${TK.border};`);
         if (isImage) {
           ctx.clips.push(
-            `<img id="${mediaId}" class="clip" src="${esc(mediaPrefix + b.file)}" alt="${esc(b.label)}" ` +
+            `<img id="${mediaId}" class="clip" src="${esc(mediaUrl(b.file))}" alt="${esc(b.label)}" ` +
               `data-start="${fmt(brollStart)}" data-duration="${fmt(brollDur)}" data-track-index="${nextTrack(ctx)}" style="${mediaStyle}">`,
           );
         } else {
           // 保持既有 video 标记形状与属性顺序，避免无意义改动历史快照/HyperFrames 协议。
           ctx.clips.push(
-            `<video id="${mediaId}" class="clip" src="${esc(mediaPrefix + b.file)}" aria-label="${esc(b.label)}" muted preload="auto" data-start="${fmt(brollStart)}" data-duration="${fmt(brollDur)}" data-track-index="${nextTrack(ctx)}" ` +
+            `<video id="${mediaId}" class="clip" src="${esc(mediaUrl(b.file))}" aria-label="${esc(b.label)}" muted preload="auto"${b.mediaStartSec!==undefined?` data-media-start="${mediaTime(b.mediaStartSec)}"`:""} data-start="${fmt(brollStart)}" data-duration="${fmt(brollDur)}" data-track-index="${nextTrack(ctx)}" ` +
               `style="${mediaStyle}"></video>`,
           );
         }
@@ -2583,12 +2593,12 @@ html,body{width:${width}px;height:${height}px;background:${TK.bg};overflow:hidde
 #root{position:relative;width:${width}px;height:${height}px;background:${TK.bg}}
 .clip{position:absolute}
 </style></head><body>
-<div id="root" data-composition-id="main" data-start="0" data-duration="${fmt(DUR)}" data-width="${width}" data-height="${height}">
+<div id="root" data-composition-id="main" data-start="0" data-duration="${mediaTime(DUR)}" data-width="${width}" data-height="${height}">
 ${ctx.clips.join("\n")}
 </div>
 <script>
 const tl = gsap.timeline({paused:true});
-${ctx.tweens.join("\n")}
+${(props.talkingHead.clips?ctx.tweens.map(t=>t.replaceAll("\"#th\"","\".talking-head\"")):ctx.tweens).join("\n")}
 window.__timelines = window.__timelines || {};
 window.__timelines["main"] = tl;
 </script></body></html>`;
@@ -2602,7 +2612,7 @@ export function collectMediaFiles(
   videos: string[];
   images: string[];
 } {
-  const videos: string[] = [props.talkingHead.file];
+  const videos: string[] = props.talkingHead.clips ? props.talkingHead.clips.map(c=>c.file) : [props.talkingHead.file];
   const images: string[] = [];
   for (const b of props.broll) {
     const mimeType = inputMimeTypes.get(b.file)?.split(";", 1)[0]?.toLowerCase();

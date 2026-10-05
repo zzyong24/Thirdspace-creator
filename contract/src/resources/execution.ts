@@ -16,6 +16,7 @@ import { id, iso8601, aiTaskStatus } from "../primitives";
 export const executionTaskType = z.enum([
   "echo.manifest",
   "video.render",
+  "media.probe",
   "agentic.research",
   "agentic.collect",
   "agentic.material",
@@ -26,6 +27,8 @@ export type ExecutionTaskType = z.infer<typeof executionTaskType>;
 // mountAs 是相对路径(服务端有路径穿越防护 + 敏感文件 denylist 双重校验)。
 export const executionTaskInput = z.object({
   assetId: id,
+  assetFileId: id.optional(),
+  fileDigest: z.string().regex(/^[a-f0-9]{64}$/).optional(),
   mountAs: z.string().min(1),
 });
 export type ExecutionTaskInput = z.infer<typeof executionTaskInput>;
@@ -102,6 +105,7 @@ export type ExecutionManifest = z.infer<typeof executionManifest>;
 // 执行任务 DTO —— ai_tasks 行(taskType=`exec.<type>`)+ spec(input_data.spec)+
 // 最新 manifest(结果表投影)+ 采纳落库的资产 id(execution_adopted 结果投影)。
 export const executionTaskResource = z.object({
+  deterministicGeneration: z.number().int().min(0).max(Number.MAX_SAFE_INTEGER).optional(),
   id,
   userId: id,
   projectId: id.nullable(),

@@ -47,3 +47,5 @@ export {
 export {lockAccountForSupply} from "./platform-account.service";
 
 export {createBrowserProfileAuthority} from "./browser-profile-authority.service";
+export { createVerifiedAccountBindingPort, VerifiedAccountBindingError,
+  type VerifiedAccountBindingPortDeps } from "./verified-account-binding.port";

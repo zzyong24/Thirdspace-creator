@@ -1,0 +1,10 @@
+import {z} from 'zod';
+import {transcribeConfigurationSchema} from './transcribe-task';
+import {assetAsrStoredAudio,assetAsrEffectivePlan,assetAsrAggregate,assetAsrRequest,assetAsrTranscript} from './asset-asr';
+const id=z.string().min(1).max(256),empty=z.object({}).strict(),call=z.object({callId:id}).strict();
+const rejected=z.union([z.literal(400),z.literal(401),z.literal(402),z.literal(403),z.literal(404),z.literal(405),z.literal(413),z.literal(415),z.literal(422),z.literal(429)]);
+export const assetAsrPortInputs={prepareAssetAsrAudio:empty,readAssetAsrAudio:empty,prepareAssetAsr:empty,reserveAssetAsrRequest:z.object({request:assetAsrRequest}).strict(),startAssetAsrRequest:call,settleAssetAsrRequest:z.discriminatedUnion('status',[call.extend({status:z.literal('settled'),result:assetAsrTranscript}).strict(),call.extend({status:z.literal('unknown')}).strict(),call.extend({status:z.literal('rejected'),rejectionStatus:rejected.optional()}).strict()]),selectAssetAsrLocalFallback:empty,completeAssetAsr:empty};
+export type AssetAsrPort=keyof typeof assetAsrPortInputs;
+const audio=assetAsrStoredAudio.extend({bytes:z.instanceof(Uint8Array).refine(b=>b.byteLength>0&&b.byteLength<=2147483647)}).strict();
+const receipt=z.object({callId:id,status:z.enum(['reserved','started','settled','rejected','unknown']),result:assetAsrTranscript.optional(),rejectionStatus:rejected.optional()}).strict();
+export const assetAsrPortOutputs={prepareAssetAsrAudio:audio,readAssetAsrAudio:audio,prepareAssetAsr:z.union([z.object({spec:transcribeConfigurationSchema.extend({token:z.string()}).strict(),plan:assetAsrEffectivePlan,audio}).strict(),z.object({spec:z.null(),plan:assetAsrEffectivePlan,audio,result:assetAsrTranscript}).strict()]),reserveAssetAsrRequest:receipt,startAssetAsrRequest:receipt,settleAssetAsrRequest:receipt,selectAssetAsrLocalFallback:assetAsrEffectivePlan,completeAssetAsr:assetAsrAggregate};

@@ -1,0 +1,227 @@
+{
+  "taskId": "T-1055",
+  "codeFiles": 44,
+  "baseline": "本轮动代码前的根源码快照；before SHA 串行整合已校验；before=null 为新增文件",
+  "files": [
+    {
+      "path": "ai-worker/src/execution/structured-business-schema.ts",
+      "beforeSha256": "48f60849eeb3f97916323bc689e6559998ab884107ac128b47fd5f9a40a3da73",
+      "afterSha256": "3bec1df7366a36864353a2a944914cf0b79255994b65b64a18132262f3d4faae"
+    },
+    {
+      "path": "ai-worker/src/execution/structured-worker-generation.test.ts",
+      "beforeSha256": "67d51fb053fd1fef4ee109fa3d2f3fbae5fbec55d8d1a66df32f798d60688010",
+      "afterSha256": "4772ebe0e0149f82b14f2d201d099126818cf568751e96992e5e975f834b9939"
+    },
+    {
+      "path": "ai-worker/src/prompt/templates/graphic-post-text.ts",
+      "beforeSha256": "f312b11541b67a42cf3d3f52ceab3e5dc92d8300b0eae1b4115bc95d1ca8509f",
+      "afterSha256": "a2ee6cff26f80b675b2783d7eae67c9b87ad0e2f33ab695b6756a66b64c5f181"
+    },
+    {
+      "path": "ai-worker/src/prompt/templates/wechat-article-draft.ts",
+      "beforeSha256": "43f06f1c10ee2a67f197ae80295c21c765acda14a51ddcee032f49eefb244d35",
+      "afterSha256": "d67b480fc37acb104d07588ac8f1c681abf328415410672f4a1e6184263095b6"
+    },
+    {
+      "path": "ai-worker/src/runtime/graphic-post-text.test.ts",
+      "beforeSha256": "c772597681bfc3ae82e776ae4d756d398eb522e841f7cda9f8cb0209e5949e00",
+      "afterSha256": "13b16e260427e751aa85d0f73ddbd22d6501c365c5e4effae264ec817d1957f0"
+    },
+    {
+      "path": "ai-worker/src/runtime/graphic-post-text.ts",
+      "beforeSha256": "0abe41d505580b2db63d856fa00d2bb274423adadc22bc48c377c7711b39e463",
+      "afterSha256": "55df9907ad700a4faf30f5ba3857b0f7d503d0633eeb919c544b7ba1041e3cb0"
+    },
+    {
+      "path": "ai-worker/src/runtime/wechat-article-candidate.test.ts",
+      "beforeSha256": "5252528ded3820c6a1fc0dd81908396332a7fe81a06886a364ecbf3941d1e7cd",
+      "afterSha256": "845100663716268cbe988f46d5382638a07f1fde35baebc9d2cd8c98eaa64ead"
+    },
+    {
+      "path": "ai-worker/src/runtime/wechat-article-candidate.ts",
+      "beforeSha256": "40d37f4432930a262b243ea5fbc53fc832b0605ef4c9d08f80bc462a0a4f0a69",
+      "afterSha256": "d8d5c8f8c3a7ff4ff75dd899006982975ccc053d759d65f2a46e8d67c925dc3c"
+    },
+    {
+      "path": "backend/src/application/project-script-source.test.ts",
+      "beforeSha256": "0310df521e5bbfed8df5189384fc6b6f8c27453eafdc94fb2bb06c19060b86e7",
+      "afterSha256": "c0fee454730124f51da9ad9c6f52fd907beffb6f06667117fcd2d331f884cab6"
+    },
+    {
+      "path": "backend/src/application/project-script-source.ts",
+      "beforeSha256": "463c70e2b7c9d9bd2069d22fd6c1aac332c17a953c4df4097c19429bd6097e77",
+      "afterSha256": "797081382a940e6d5196a19503dc901bcda2458beb356ca772363f294e8ae761"
+    },
+    {
+      "path": "backend/src/modules/articles/articles.integration.test.ts",
+      "beforeSha256": "c7c6de3ee4b03cc9c64d212c7d3d65cc36fac802c9e6024ea493f962ee9d653d",
+      "afterSha256": "40d5adfbab885f32bf1c4ce9eb55df3cdd1e26cf2cf29da488334bf40d34d85b"
+    },
+    {
+      "path": "backend/src/modules/articles/articles.service.ts",
+      "beforeSha256": "e3b65155754b18e89c4b9a9b4ffd00f9cb178ced220bfcfa307f8481b08d1434",
+      "afterSha256": "8cd293d87b1173e8290b0a46032349bb08c9f1b5a1516fa630456628338c88f9"
+    },
+    {
+      "path": "backend/src/modules/graphic-posts/graphic-posts.integration.test.ts",
+      "beforeSha256": "af4e87f3fd26bfca707e5b7ecde82cbf8468f7da0ddc62c0c4c8e46b168bfb95",
+      "afterSha256": "9a50b94c52a7ba1d091bc759cfaf8ce0c442fd307dbc0c68301e69390f40ba68"
+    },
+    {
+      "path": "backend/src/modules/graphic-posts/graphic-posts.service.ts",
+      "beforeSha256": "5cd69316d79c920095c432498c87bdfcc564255a4759a874d15bc850530adf65",
+      "afterSha256": "08cf4cd9cd6b52bfa5709f363ddd2ac2276ccba1af776456c0a00dfecf987774"
+    },
+    {
+      "path": "backend/src/modules/projects/project-script-source.port.ts",
+      "beforeSha256": "1f447e46459b65ae494ae87c66209782bb67f70d28b0ad959ef2bdc0110dff72",
+      "afterSha256": "f8bf1afd7f522eaec4cbb00073cd089fcebfbec1d5f9b1f41190557cec20a202"
+    },
+    {
+      "path": "contract/src/resources/articles.ts",
+      "beforeSha256": "951e0a6b4c27cc07f16cda4812a3682a61f4fd3d622ef929a9e513f988a93ddb",
+      "afterSha256": "9d5c2222427f27f5adf482d563f23701643ebea684da9df3a5d50ad090ab3137"
+    },
+    {
+      "path": "contract/src/resources/graphic-posts.ts",
+      "beforeSha256": "62e003092c959a9a4385ac5c6c516f819d4be429a5dc3f1e06bce7a9e9bb232a",
+      "afterSha256": "5620709820e5c2367b9064fd36702cb633849750b776d69717f1c340799b19d5"
+    },
+    {
+      "path": "contract/src/resources/project-script-source.ts",
+      "beforeSha256": "c3e6883a354ab3fd178cc8ce5a9637c4884026fd36396c3e30b71a70c1a59301",
+      "afterSha256": "481c9eaa469326c31a561b7c2c9955d6cb1c9474da927b0791729ab5eb4db23d"
+    },
+    {
+      "path": "contract/tests/project-script-source.test.ts",
+      "beforeSha256": "35eead75196fee8e1d3fc0745f16f995bb99c6a992df35d94ca74e0964b68683",
+      "afterSha256": "efa0ffc111f86a09a10350148aebf59d8af1f1d190b3a8726e42479ef24bf88d"
+    },
+    {
+      "path": "frontend/src/features/article/article-workbench-save-race.test.tsx",
+      "beforeSha256": null,
+      "afterSha256": "a8395c6199b91708dc389d38c12ed50caebdfede7733031be0d8034244e45e5e"
+    },
+    {
+      "path": "frontend/src/features/article/article-workbench.test.tsx",
+      "beforeSha256": "a5c4ebbce0c5c332a3c1ea79c0709804a5af94c604b5f755c7a8f28e01968e60",
+      "afterSha256": "559b9d72cca30c8044e08f084b70c92fb4be42b176c49a901e8266ec28ad3d3a"
+    },
+    {
+      "path": "frontend/src/features/article/article-workbench.tsx",
+      "beforeSha256": "d3633198eb5c616076d652f47016295f6290b0aaecd82044b236c5ac7a2cfe59",
+      "afterSha256": "d6d3b277a25df7974bb732a28e47544eada13095d3e212eb62f32b81308ce98f"
+    },
+    {
+      "path": "frontend/src/features/copilot/ai-copilot-content.tsx",
+      "beforeSha256": "5ec6093ad8230f51c557af32821cbb763d8fafa4ae62039a00ff988a818efb47",
+      "afterSha256": "237dd0e34cc31b278643c802420903baab129a2f594de287d6f2f027bc4fdbec"
+    },
+    {
+      "path": "frontend/src/features/copilot/ai-copilot-interactions.test.tsx",
+      "beforeSha256": "58c2dfe7e89dc77ee500178ff75884192f2f65e4eac7057f9916b17e56ca7350",
+      "afterSha256": "1163a6ac91751e73401f67b48141989b4564daabc57687243bbcaefe802eb4e5"
+    },
+    {
+      "path": "frontend/src/features/copilot/assistant-engine-selector.tsx",
+      "beforeSha256": "5c3ad0c7ce9211ed13d929e987454a586defc5231225c22076edfed37f8b645f",
+      "afterSha256": "21f557430c4e2674ded3399b5b5db2d02b4404fb4484f1122becb8d83c6adedf"
+    },
+    {
+      "path": "frontend/src/features/copilot/assistant-engine.ts",
+      "beforeSha256": "b392b196029b96e6267adaa2313ef65e8aab565768872c398b5dd26605c3be3d",
+      "afterSha256": "06ec2bfddc3907b469c06eeeaa6e72735298720ec62fc2a50553288a7d3c5e38"
+    },
+    {
+      "path": "frontend/src/features/copilot/use-assistant-engine.test.tsx",
+      "beforeSha256": null,
+      "afterSha256": "bac65883572536ce84e23e1402f30ace532304432ff12ad712585b10cb90b575"
+    },
+    {
+      "path": "frontend/src/features/copilot/use-assistant-engine.ts",
+      "beforeSha256": null,
+      "afterSha256": "8051dcc26899d118b8c7d6d996cb1d418f451f0025636df5b648efcc0387ec02"
+    },
+    {
+      "path": "frontend/src/features/draft-workbench/draft-workbench-page.bug8.test.tsx",
+      "beforeSha256": "5c0b419912208c26f54c5f589ac5389fdfaa6d17ab0b3c0e469805311c4a6781",
+      "afterSha256": "75eaa3999e7501575db247a57f444923a4014288ac059fa958da3a5fde041a65"
+    },
+    {
+      "path": "frontend/src/features/draft-workbench/draft-workbench-page.tsx",
+      "beforeSha256": "f1d9eb594fda6134c7efcd9ec1a480aa3a2c5321ac4d7ec5034770b61758e347",
+      "afterSha256": "b98d29738093a29cc19686f3fd7031c5df8db8a04acb664ac486a2a65127b1b6"
+    },
+    {
+      "path": "frontend/src/features/projects/graphic-post-results.test.tsx",
+      "beforeSha256": "03dff47bba5d6e40272bb733f4414b6c2abc81a561d85a0aab72dfdbaed7f8df",
+      "afterSha256": "4d9bf4a3bf1d733d1710e56525d55f8e443d04f69193909e0fe380e3d2b416d5"
+    },
+    {
+      "path": "frontend/src/features/projects/graphic-post-results.tsx",
+      "beforeSha256": "52cde47cc13b33900ebccba8d865e418e3c8d4a7f0865ef6900c4f66212ae5f9",
+      "afterSha256": "fe414631b3587656cdb75ac48a34677c0b41bdd9698322dfde61879b73d5946d"
+    },
+    {
+      "path": "frontend/src/features/projects/graphic-post-workbench.test.tsx",
+      "beforeSha256": "39613a9c4b3057f7544005b3e87b02dddb6b20342191e4a895b2f3bd3bcf594c",
+      "afterSha256": "88b6e9557e59b4ea333225f67b683124a7dfe3305848d81cd29f9a0274b620ee"
+    },
+    {
+      "path": "frontend/src/features/projects/graphic-post-workbench.tsx",
+      "beforeSha256": "66f742db7a154629aeea432979d943a5bf88b660ed7e4e83b1d95a9bb1da1b4a",
+      "afterSha256": "c853318e567630a1a83511d3a3efada13fb610ead6453142728bbbab0db20a9e"
+    },
+    {
+      "path": "frontend/src/features/projects/script-derived-metadata.test.ts",
+      "beforeSha256": null,
+      "afterSha256": "3171a5eeac7f5d14461f13545bb0b61fc5a4812e8ef0793e367c1d163e2369d5"
+    },
+    {
+      "path": "frontend/src/features/projects/script-derived-metadata.ts",
+      "beforeSha256": null,
+      "afterSha256": "ed4de012f71b850d00dd912ce54a7e34ef9f4d9880f68a9a59c4f7990aa3cde3"
+    },
+    {
+      "path": "frontend/src/features/reference-editors/noterelay/noterelay-editor.test.tsx",
+      "beforeSha256": "29526bd064ce9d4edd85f52acf4bb3ebe15de9d98a4caf387c4f4a7d148dff7f",
+      "afterSha256": "d930f99cb7d33b8b432426c4b03fc884f7fc46e40049b9388ddab6fea9b91773"
+    },
+    {
+      "path": "frontend/src/features/reference-editors/noterelay/noterelay-editor.tsx",
+      "beforeSha256": "967c4e15cd7e665708a7c730b31edfe965f84b6ad8b02ebc670cd79afb33077d",
+      "afterSha256": "7759d0a386ed446720468234f4ecec0fc8df8f7d5b7a20a0a46fd5d1e23b6acd"
+    },
+    {
+      "path": "frontend/src/features/settings/assistant-engine-card.test.tsx",
+      "beforeSha256": null,
+      "afterSha256": "2c70fccbdd69e9b37a0259d463a9b4f419614e39d798dedf2c4b47ea1de1bd83"
+    },
+    {
+      "path": "frontend/src/features/settings/assistant-engine-card.tsx",
+      "beforeSha256": null,
+      "afterSha256": "e35c37c8d723cf3b43da05117f23702ac046523aac753c6d56351c35fabcd7b1"
+    },
+    {
+      "path": "frontend/src/features/settings/settings-interactive-region.test.tsx",
+      "beforeSha256": "72ed9503d52c54ca131916752e44e79fb0e2625de77122f24105090a39eb7679",
+      "afterSha256": "2694069ebd421bdf78f47a460e5dc96ca6f84f6ae38f46e12a23389b08c4b281"
+    },
+    {
+      "path": "frontend/src/features/settings/settings-interactive-region.tsx",
+      "beforeSha256": "d88d2a67017d40aac3c9cfe574230c2849c2a0e3f78915aa06c7f8c302961512",
+      "afterSha256": "44a07451639fd9f963c476b6db7e9a290333be74b8e502ac10c5f7eb69672779"
+    },
+    {
+      "path": "frontend/src/features/settings/settings-model-region.tsx",
+      "beforeSha256": "f14b0a0f3e3bcc61fc7405d492d733d2904a53ff5f8f4e5f67616f5b70550d69",
+      "afterSha256": "4ef708709adff5ace4c01387c1d44a6456dd026f4bac84fc059d08550bfa3079"
+    },
+    {
+      "path": "frontend/src/server/persistence-client.ts",
+      "beforeSha256": "7693ec53a9ad66ec4e769c57396def804080e31bdfde3aff26776d52810d2351",
+      "afterSha256": "33f6db805c632e930f536888c72fcdf1b16416af0ad31436ee1217b99bf792c0"
+    }
+  ]
+}

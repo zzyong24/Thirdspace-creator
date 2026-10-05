@@ -1,0 +1,33 @@
+{
+  "sourceArchive": "/Users/zyongzhu/.codex/worktrees/user-diagnostics/Thirdspace-creator/frontend/public/reference-editors/sources/noterelay/source.zip",
+  "rebuildDirectory": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1052-source-rebuild-ubbcho3k",
+  "dependencySource": "归档 package.json 固定版本，使用本机已安装的同版本包建立隔离链接；未执行原插件安装脚本",
+  "sourceIndependent": true,
+  "buildExit": 0,
+  "files": [
+    {
+      "name": "noterelay.js",
+      "bytes": 622477,
+      "sha256": "f46e2b0471729c67dd35d08e6548290caae76b37916ee824f15a4e3b732409ac",
+      "sameAsServed": true
+    },
+    {
+      "name": "noterelay.css",
+      "bytes": 28155,
+      "sha256": "6affd5bc57fe8b236035ea2976b1a1148952ce57c7ff672897ed73a537ac1e17",
+      "sameAsServed": true
+    },
+    {
+      "name": "host.css",
+      "bytes": 1115,
+      "sha256": "45ca13bef5e2627a66650fe7055a6b72785a0872b652e2d6b66ccb426a4d8b36",
+      "sameAsServed": true
+    },
+    {
+      "name": "index.html",
+      "bytes": 584,
+      "sha256": "8be69aa3e183400bddab9c480c5234f2f420a8a3126a54ca40e595d6c66d1197",
+      "sameAsServed": true
+    }
+  ]
+}

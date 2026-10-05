@@ -1,8 +1,9 @@
+import {optionalScriptContext,optionalProjectImageLibrary,type ProjectScriptSourcePorts } from "../projects/project-script-source.port";
 import { createHash } from "node:crypto";
 import { isDeepStrictEqual } from "node:util";
 import { and, eq, type Db, requireAccountId } from "@creatoros/backend";
 import {
-  outputConversionContext,type OutputConversionContext,
+  projectImageSource,outputConversionContext,type OutputConversionContext,
   workCommitReceipt,type WorkCommitReceipt,ErrorCode,graphicPostCardBriefs,type GraphicPostTextValue, graphicPostDocument, graphicPostTextKind, graphicPostSourceRef,
   type GraphicPostDocument, type GraphicPostResource, type GraphicPostSourceRef,
   type GraphicPostTextCandidate, type GraphicPostTextKind,
@@ -47,7 +48,7 @@ function digest(value: unknown): string {
   return `sha256:${createHash("sha256").update(JSON.stringify(value)).digest("hex")}`;
 }
 
-export interface GraphicPostPeerPorts {
+export interface GraphicPostPeerPorts extends ProjectScriptSourcePorts {
   resumeGeneration?: (ctx:RequestContext,input:{taskId:string;clientRequestId:string})=>Promise<{id:string}>;
   resolveConversionSource?: (ctx:RequestContext,input:OutputConversionContext)=>Promise<FrozenConversionSource>;
   findGenerationByAttempt?: (ctx:RequestContext,attemptId:string)=>Promise<{id:string;status:string;inputData:Record<string,unknown>}|null>;
@@ -136,7 +137,7 @@ export function createGraphicPostsService(db: Db, deps: GraphicPostPeerPorts & {
     return { versionId: version.id, document: graphicPostDocument.parse(version.contentData) };
   }
 
-  async function assertDocument(ctx: RequestContext, projectId: string, doc: GraphicPostDocument, prior?: GraphicPostDocument) {
+  async function assertDocument(ctx: RequestContext, projectId: string, doc: GraphicPostDocument, prior?: GraphicPostDocument,validatedImageFiles?:ReadonlySet<string>) {
     if(doc.seriesProfile?.referenceImage){
       const ref=doc.seriesProfile.referenceImage;
       // SEMANTIC_BOUNDARY_ALLOW: exact account/file ownership only, not style matching.
@@ -152,6 +153,10 @@ export function createGraphicPostsService(db: Db, deps: GraphicPostPeerPorts & {
     }
     if (doc.tags.some(tag => !tag.trim()) || new Set(doc.tags).size !== doc.tags.length) {
       throw new GraphicPostValidation("标签不能为空或重复");
+    }
+    if(doc.metadataSource&&!isDeepStrictEqual(doc.metadataSource,prior?.metadataSource)){
+      if(!deps.assertScriptMetadataSource)throw new GraphicPostValidation("当前无法核验元数据来源，请重新读取脚本发布物料。");
+      await deps.assertScriptMetadataSource(ctx,doc.metadataSource,projectId);
     }
     if (doc.imageUses.some((use, index) => use.order !== index) || doc.imageUses.filter(use => use.role === "cover").length > 1) {
       throw new GraphicPostValidation("图片顺序或封面选择无效");
@@ -169,7 +174,7 @@ export function createGraphicPostsService(db: Db, deps: GraphicPostPeerPorts & {
       }
       // Historical file references stay immutable and can survive a later asset removal.
       const unchanged = prior?.imageUses.some(old => old.role === use.role && old.cardId === use.cardId && old.assetId === use.assetId && old.assetFileId === use.assetFileId);
-      if (!unchanged) await deps.assertAssetFile(ctx, use.assetId, use.assetFileId, true);
+      if (!unchanged&&!validatedImageFiles?.has(JSON.stringify([use.assetId,use.assetFileId]))) await deps.assertAssetFile(ctx, use.assetId, use.assetFileId, true);
     }
     const locations = [{refs: doc.sourceRefs, priorRefs: prior?.sourceRefs},
       ...(doc.cardBriefs ?? []).map(card => ({refs: card.sourceRefs,
@@ -188,6 +193,9 @@ export function createGraphicPostsService(db: Db, deps: GraphicPostPeerPorts & {
           if (project.updatedAt !== ref.versionId) throw new GraphicPostConflict("来源项目版本已变化");
         } else if (ref.kind === "asset") {
           await deps.assertAssetFile(ctx, ref.id, ref.versionId, true);
+        } else if (ref.kind === "project_script") {
+          if (!deps.assertProjectScriptSource) throw new GraphicPostValidation("当前无法核验主脚本来源版本");
+          await deps.assertProjectScriptSource(ctx, ref, projectId);
         } else if (ref.kind === "output_version") {
           if (!deps.assertOutputVersionSource) throw new GraphicPostValidation("当前无法核验作品来源版本");
           await deps.assertOutputVersionSource(ctx, ref, projectId);
@@ -264,8 +272,9 @@ export function createGraphicPostsService(db: Db, deps: GraphicPostPeerPorts & {
       const { row, output, artifact } = await anchor(ctx, outputId);
       const versions = await deps.artifacts(db).listVersions(ctx, artifact.id);
       const current = await documentFor(ctx, outputId);
+      const scriptContext=await optionalScriptContext(ctx,row.projectId,deps);
       return {
-        projectId: row.projectId, outputId, targetPlatform: output.targetPlatform as GraphicPostResource["targetPlatform"],
+        ...(scriptContext?{scriptContext}:{}),projectId: row.projectId, outputId, targetPlatform: output.targetPlatform as GraphicPostResource["targetPlatform"],
         artifactId: artifact.id, currentVersionId: current.versionId, current: current.document,
         versions: versions.map(v => ({id: v.id, versionNumber: v.versionNumber, createdAt: v.createdAt, changeSummary: v.changeSummary})),
       };
@@ -337,6 +346,17 @@ export function createGraphicPostsService(db: Db, deps: GraphicPostPeerPorts & {
         catch(error){const winner=await deps.findGenerationByAttempt(ctx,input.clientRequestId);if(winner)return result(winner);throw error;}
         return result({id:task.id,inputData:taskInput});
       }
+      const generationIntent = {outputId, kind: input.kind, targetPlatform: input.targetPlatform ?? output.targetPlatform ?? null,
+        sourceItemId: input.sourceItemId ?? null, ruleOverrides};
+      const priorTask = await deps.findGenerationByAttempt?.(ctx, input.clientRequestId);
+      if (priorTask) {
+        const frozen = priorTask.inputData;
+        const originalIntent = frozen.generationIntent ?? {outputId:frozen.outputId,kind:frozen.kind,targetPlatform:frozen.targetPlatform ?? null,
+          sourceItemId: ((frozen.sourceRefs ?? []) as Array<{kind:string;id:string}>).find(ref=>ref.kind==="intelligence")?.id ?? null, ruleOverrides:frozen.ruleOverrides ?? {}};
+        if (frozen.conversion || !isDeepStrictEqual(originalIntent, generationIntent)) throw new GraphicPostConflict("同请求已对应另一图文、字段或资料选择");
+        const candidate = await this.getTextCandidate(ctx, priorTask.id);
+        return {taskId:priorTask.id,candidateId:priorTask.id,status:candidate.status};
+      }
       if (input.targetPlatform && output.targetPlatform && input.targetPlatform !== output.targetPlatform) {
         throw new GraphicPostConflict("作品目标平台与生成请求不一致");
       }
@@ -347,6 +367,8 @@ export function createGraphicPostsService(db: Db, deps: GraphicPostPeerPorts & {
       const projectRef: GraphicPostSourceRef = {kind: "project", id: row.projectId, versionId: project.updatedAt};
       const sourceRefs: GraphicPostSourceRef[] = [projectRef];
       const sourceMaterials: Array<{ref:GraphicPostSourceRef;label:string;text:string}> = [{ref: projectRef, label: "当前项目", text: [project.title, project.brief, JSON.stringify(project.briefDetail ?? {})].filter(Boolean).join("\n")}];
+      const mainScript = await deps.readProjectScript?.(ctx, row.projectId);
+      if (mainScript) {sourceRefs.push(mainScript.ref);sourceMaterials.push(mainScript);}
       if (input.sourceItemId) {
         if (!deps.resolveSourceItem) throw new GraphicPostValidation("当前无法读取雷达来源");
         const source = await deps.resolveSourceItem(ctx, input.sourceItemId);
@@ -360,7 +382,9 @@ export function createGraphicPostsService(db: Db, deps: GraphicPostPeerPorts & {
       const task = await deps.submitTextGeneration(ctx, {attemptId: input.clientRequestId, projectId: row.projectId, inputData: {
         projectId: row.projectId, outputId, targetPlatform,
         artifactId: artifact.id, baseVersionId: current.versionId,
-        kind: input.kind, brief: project.brief.trim() || project.title, current: current.document,
+        kind: input.kind, brief: project.brief.trim() || project.title, current: current.document, generationIntent,
+        editingInstruction: mainScript ? "以已保存主脚本或大纲为依据扩写、润色并补充图文结构，保留事实边界和人工稿；正文与图卡沿用已有标题、简介及标签，仅生成候选。" : "依据项目简介及所选资料生成指定图文字段候选。",
+        ...(input.kind==="cardBriefs"?await optionalProjectImageLibrary(ctx,row.projectId,deps):{}),
         sourceRefs, sourceMaterials, ruleSnapshotRef, ruleGuidance: rules?.guidance ?? "", ruleOverrides,
       }});
       if (task.status === "awaiting_confirmation") {
@@ -420,6 +444,11 @@ export function createGraphicPostsService(db: Db, deps: GraphicPostPeerPorts & {
       const result = generation.results.find(v => v.resultType === "graphic_post_text_candidate");
       if (!result || result.resultData.kind !== kind) throw new GraphicPostConflict("生成任务缺少图文候选回执");
       const value = parseTextCandidateValue(kind,result.resultData.value);
+      if(kind==="cardBriefs"){
+        const library=projectImageSource.array().parse(taskInput.imageLibrary??[]);
+        // SEMANTIC_BOUNDARY_ALLOW: 只核验模型建议的 exact pair 在本轮真实目录，不替模型选图。
+        for(const card of graphicPostCardBriefs.parse(value))if(card.proposedImage&&!library.some(image=>image.assetId===card.proposedImage!.assetId&&image.assetFileId===card.proposedImage!.assetFileId))throw new GraphicPostValidation("图卡候选图片不属于本次真实目录。");
+      }
       await db.insert(graphicPostTextCandidates).values({
         id: candidateId, outputId, projectId: row.projectId, artifactId: artifact.id,
         userId: owner.userId, accountId: owner.accountId, baseVersionId, kind,
@@ -452,13 +481,42 @@ export function createGraphicPostsService(db: Db, deps: GraphicPostPeerPorts & {
         throw new GraphicPostConflict("要采用的字段已修改，请重新生成或审读候选");
       }
       const parsedValue=parseTextCandidateValue(input.kind,input.editedValue);
-      const editedValue=input.kind==="cardBriefs"?graphicPostCardBriefs.parse(parsedValue).map(card=>({...card,
-        sourceRefs:mergeSourceRefs(card.sourceRefs,candidate.sourceRefs)})):parsedValue;
+      const imageUses=prior.document.imageUses.map(image=>({...image}));
+      const imageMatchWarnings:string[]=[];
+      const validatedImageFiles=new Set<string>();
+      let imageSnapshotAvailable=true;
+      let editedValue=parsedValue;
+      if(input.kind==="cardBriefs"){
+        const original=graphicPostCardBriefs.parse(candidate.value),edited=graphicPostCardBriefs.parse(parsedValue);
+        if(deps.readProjectImageLibrary||original.some(card=>card.proposedImage)){
+          try{const task=await deps.readTextGeneration!(ctx,candidateId);if(typeof task.inputData.imageLibraryMessage==="string")imageMatchWarnings.push(task.inputData.imageLibraryMessage);}
+          catch{imageSnapshotAvailable=false;imageMatchWarnings.push("本次配图来源暂不可读取，已跳过新图片；图卡文字已保留。");}
+        }
+        for(const card of edited){
+          const image=card.proposedImage;
+          // SEMANTIC_BOUNDARY_ALLOW: 用户可编辑图卡文字或取消建议图，不能把模型已审读文件身份换成另一文件。
+          if(image&&!isDeepStrictEqual(image,original.find(value=>value.cardId===card.cardId)?.proposedImage))throw new GraphicPostValidation("采用的配图身份已改变，请在作品中单独换图。");
+          if(image&&imageSnapshotAvailable&&!imageUses.some(use=>use.role==="card"&&use.cardId===card.cardId)){
+            try{
+              if(deps.assertProjectImageFile)await deps.assertProjectImageFile(ctx,image.assetId,image.assetFileId,row.projectId);
+              else await deps.assertAssetFile(ctx,image.assetId,image.assetFileId,true);
+              validatedImageFiles.add(JSON.stringify([image.assetId,image.assetFileId]));
+              imageUses.push({...image,role:"card",cardId:card.cardId,order:imageUses.length});
+            }catch{imageMatchWarnings.push(`“${card.title||"图卡"}”的匹配图片已不可用，已跳过；图卡文字已保留。`);}
+          }
+        }
+        editedValue=edited.map(card=>{
+          const next={...card,sourceRefs:mergeSourceRefs(card.sourceRefs,candidate.sourceRefs)};
+          delete next.proposedImage;
+          return next;
+        });
+      }
       const document = graphicPostDocument.parse({...prior.document, [input.kind]: editedValue,
+        imageUses,...(input.kind==="cardBriefs"&&(imageMatchWarnings.length||prior.document.imageMatchWarnings!==undefined)?{imageMatchWarnings}:{}),
         sourceRefs: mergeSourceRefs(prior.document.sourceRefs, candidate.sourceRefs),
         ruleSnapshotRef: candidate.ruleSnapshotRef,
       });
-      await assertDocument(ctx, row.projectId, document, prior.document);
+      await assertDocument(ctx, row.projectId, document, prior.document,validatedImageFiles);
       const version = await deps.artifacts(db).createVersion(ctx, artifact.id, {
         expectedCurrentVersionId: input.expectedCurrentVersionId, contentData: document,
         contentText: [document.title, document.body, document.summary].filter(Boolean).join("\n\n"),
@@ -506,6 +564,9 @@ export function createGraphicPostsService(db: Db, deps: GraphicPostPeerPorts & {
             if (project.id !== row.projectId || project.updatedAt !== ref.versionId) unavailable("原项目来源版本已变化");
           } else if (ref.kind === "asset") {
             await deps.assertAssetFile(ctx, ref.id, ref.versionId, true);
+          } else if (ref.kind === "project_script") {
+            if (!deps.assertProjectScriptSource) throw new GraphicPostValidation("当前无法核验原主脚本版本");
+            await deps.assertProjectScriptSource(ctx, ref, row.projectId);
           } else if (ref.kind === "output_version") {
             if (!deps.assertOutputVersionSource) throw new GraphicPostValidation("当前无法核验原作品来源版本");
             await deps.assertOutputVersionSource(ctx, ref, output.projectId);

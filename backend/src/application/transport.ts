@@ -1,3 +1,4 @@
+import {CREATIVE_CANVAS_OP_IDS} from "../modules/creative-canvas";
 import type {Transport} from "@creatoros/contract";
 import {UnsupportedOperationError} from "../persistence-transport";
 import {TAXONOMY_OP_IDS} from "../modules/taxonomy";
@@ -21,6 +22,7 @@ import {POSITIONING_OP_IDS} from "../modules/positioning";
 import {CANDIDATE_OP_IDS} from "../modules/candidate";
 import {CALIBRATION_OP_IDS} from "../modules/calibration";
 import {PLATFORM_ACCOUNT_OP_IDS} from "../modules/platform-account";
+import {PLATFORM_COLLECTION_OP_IDS} from "../modules/platform-collection";
 import {SCHEDULING_OP_IDS} from "../modules/scheduling";
 import {CONTENT_CALENDAR_OP_IDS} from "../modules/content-calendar";
 import {MATERIAL_LINKS_OP_IDS} from "../modules/material-links";
@@ -30,6 +32,13 @@ import {FAVORITES_OP_IDS} from "../modules/favorites";
 import {TOPIC_ATTRIBUTION_OP_IDS} from "../modules/topic-attribution";
 import {QUERY_SERVICES_OP_IDS} from "../modules/query-services";
 import {PROJECT_OP_IDS} from "../modules/projects";
+import {ARTICLE_OP_IDS} from "../modules/articles";
+import {GRAPHIC_POST_OP_IDS} from "../modules/graphic-posts";
+import {WORK_REVIEW_OP_IDS} from "../modules/review";
+import {MOMENTS_OP_IDS} from "../modules/moments";
+import {WORK_SOURCE_OP_IDS} from "../modules/work-compositions";
+import {WORK_COMPOSITION_OP_IDS} from "../modules/work-compositions";
+import {CREATIVE_RESULT_OP_IDS} from "../modules/creative-results";
 
 /** 公开操作只由登记的领域 transport 负责；读取宿主实例之前先拒绝未知操作。 */
 const operations = {
@@ -54,6 +63,7 @@ const operations = {
   candidate: CANDIDATE_OP_IDS,
   calibration: CALIBRATION_OP_IDS,
   platformAccount: PLATFORM_ACCOUNT_OP_IDS,
+  platformCollection: PLATFORM_COLLECTION_OP_IDS,
   scheduling: SCHEDULING_OP_IDS,
   contentCalendar: CONTENT_CALENDAR_OP_IDS,
   materialLinks: MATERIAL_LINKS_OP_IDS,
@@ -63,6 +73,14 @@ const operations = {
   topicAttribution: TOPIC_ATTRIBUTION_OP_IDS,
   queryServices: QUERY_SERVICES_OP_IDS,
   projects: PROJECT_OP_IDS,
+  articles: ARTICLE_OP_IDS,
+  graphicPosts: GRAPHIC_POST_OP_IDS,
+  creativeResults: CREATIVE_RESULT_OP_IDS,
+  moments: MOMENTS_OP_IDS,
+  workCompositions: WORK_COMPOSITION_OP_IDS,
+  workSources: WORK_SOURCE_OP_IDS,
+  workReviews: WORK_REVIEW_OP_IDS,
+  creativeCanvas: CREATIVE_CANVAS_OP_IDS,
 } as const;
 export type ApplicationTransports = {[K in keyof typeof operations]:Transport};
 

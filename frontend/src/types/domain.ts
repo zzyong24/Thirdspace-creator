@@ -177,7 +177,9 @@ export type PlatformId =
   | "bilibili"
   | "douyin"
   | "xiaohongshu"
+  | "kuaishou"
   | "wechatVideo"
+  | "wechatOfficialAccount"
   | "x";
 
 export type ContentType = "video" | "image" | "audio" | "article";

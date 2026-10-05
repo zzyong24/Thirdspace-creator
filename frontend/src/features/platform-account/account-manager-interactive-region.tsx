@@ -24,6 +24,7 @@ import { useRouter } from "next/navigation";
 
 import { client } from "@/lib/contract-client";
 import { notifyAccountsChanged } from "@/lib/account-events";
+import { CURRENT_ACCOUNT_KEY, syncCurrentAccountCookie } from "@/lib/http-transport";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -38,6 +39,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import type { PlatformAccountResource } from "@creatoros/backend/modules/platform-account";
+import { PLATFORM_LABELS } from "./platform-account-labels";
 
 // [T-136§D-bind⑥ · 用户 2026-07-06 报障][T-201c 只隐藏不移除] 隐藏账号是破坏性动作(影响该号
 // 定位/选题/项目归属),必须打字二次确认(防误点)。要求逐字键入此句才放行「确认隐藏」。
@@ -48,15 +50,6 @@ const REMOVE_CONFIRM_PHRASE = "我已确认隐藏该账户";
 // 非抖音号行正确显示标签,但 UI 不再提供多平台选择/筛选。
 const PLATFORMS = ["douyin"] as const;
 type PlatformId = (typeof PLATFORMS)[number];
-
-const PLATFORM_LABELS: Record<string, string> = {
-  youtube: "YouTube",
-  bilibili: "B站",
-  douyin: "抖音",
-  xiaohongshu: "小红书",
-  wechatVideo: "视频号",
-  x: "X",
-};
 
 // Shared island mutation seam: a `pending` guard blocks concurrent writes; on success
 // it calls router.refresh() so the server re-reads the persisted rows.
@@ -92,14 +85,26 @@ type ScanFeedback =
   | { kind: "success"; text: string }
   | { kind: "error"; text: string };
 
-export function CreateAccountForm() {
+type ScanProps = {readonly onBusyChange?: (busy: boolean) => void};
+function useScanLifetime(onBusyChange: ScanProps["onBusyChange"]) {
+  const mounted = React.useRef(true), inFlight = React.useRef(false);
+  React.useEffect(() => {mounted.current = true; return () => {mounted.current = false;};}, []);
+  return {
+    begin() {if (!mounted.current || inFlight.current) return false; inFlight.current = true; onBusyChange?.(true); return true;},
+    current: () => mounted.current,
+    end() {inFlight.current = false; if (mounted.current) onBusyChange?.(false);},
+  };
+}
+
+export function CreateAccountForm({onBusyChange}: ScanProps = {}) {
   const router = useRouter();
   const [phase, setPhase] = React.useState<ScanPhase>("idle");
   const [feedback, setFeedback] = React.useState<ScanFeedback>({ kind: "none" });
   const busy = phase !== "idle";
+  const lifetime = useScanLifetime(onBusyChange);
 
   const scan = React.useCallback(() => {
-    if (busy) return;
+    if (!lifetime.begin()) return;
     setPhase("scanning");
     setFeedback({ kind: "none" });
     void (async () => {
@@ -113,6 +118,7 @@ export function CreateAccountForm() {
           query: undefined,
           body: { forceNew: true },
         })) as { loggedIn?: boolean };
+        if (!lifetime.current()) return;
         if (res.loggedIn) {
           // 登录成功 → 后端 upsert 按 secUid 去重 + 占位号合并;refresh 读回真实号。
           setPhase("refreshing");
@@ -131,6 +137,7 @@ export function CreateAccountForm() {
           });
         }
       } catch (err) {
+        if (!lifetime.current()) return;
         // [T-330] 诚实失败内联可见(沿 T-209 模式):后端 forceNew 链的明确错误(如「扫码
         // 成功但读不回账号身份」)透传给用户,不吞成笼统文案;无 message 才退化通用提示。
         const msg =
@@ -139,10 +146,11 @@ export function CreateAccountForm() {
             : "扫码登录失败，请重试。";
         setFeedback({ kind: "error", text: msg });
       } finally {
-        setPhase("idle");
+        if (lifetime.current()) setPhase("idle");
+        lifetime.end();
       }
     })();
-  }, [busy, router]);
+  }, [lifetime, router]);
 
   const scanLabel = busy
     ? phase === "scanning"
@@ -192,6 +200,107 @@ export function CreateAccountForm() {
   );
 }
 
+function ConnectLocalAccount({ platform, label, onBusyChange }: ScanProps & {
+  readonly platform: "xiaohongshu" | "kuaishou"; readonly label: string;
+}) {
+  const router = useRouter();
+  const [busy, setBusy] = React.useState(false);
+  const [feedback, setFeedback] = React.useState("");
+  const [boundAccountId, setBoundAccountId] = React.useState<string | null>(null);
+  const lifetime = useScanLifetime(onBusyChange);
+  const connect = React.useCallback(() => {
+    if (!lifetime.begin()) return;
+    setBusy(true);
+    setBoundAccountId(null);
+    setFeedback("请在弹出的本机浏览器窗口登录，完成后会自动读取作品目录。");
+    void (async () => {
+      try {
+        const result = await client.beginBind({ params: undefined, query: undefined,
+          body: { platform, clientRequestId: crypto.randomUUID() } });
+        if (!lifetime.current()) return;
+        if (result.status !== "bound" || !result.accountId) throw new Error("账号身份尚未核验，请重试扫码");
+        setBoundAccountId(result.accountId);
+        setFeedback(`${label}账号已绑定，作品与数据正在后台读取。`);
+        notifyAccountsChanged();
+        router.refresh();
+      } catch (error) {
+        if (lifetime.current()) setFeedback(error instanceof Error && error.message ? error.message : `${label}绑定失败，请重试登录。`);
+      } finally { if (lifetime.current()) setBusy(false); lifetime.end(); }
+    })();
+  }, [lifetime, router, platform, label]);
+  const viewWorks = React.useCallback(() => {
+    if (!boundAccountId) return;
+    try {
+      window.localStorage.setItem(CURRENT_ACCOUNT_KEY, boundAccountId);
+      syncCurrentAccountCookie(boundAccountId);
+      notifyAccountsChanged({ source: "account-management", routeRefreshScheduled: true });
+      router.push("/accounts/works");
+      router.refresh();
+    } catch {
+      setFeedback("无法保存当前账号，请在左下角切换账号后查看作品。");
+    }
+  }, [boundAccountId, router]);
+  return <div className="flex flex-col gap-2" data-testid={`bind-${platform}-region`}>
+    <div className="flex flex-wrap items-center gap-2">
+      <Button type="button" data-testid={`bind-${platform}-scan`} disabled={busy} onClick={connect}>
+        {busy ? "等待登录核验…" : `扫码绑定${label}号`}
+      </Button>
+      <span className="text-xs text-muted-foreground">每个账号使用独立的本机登录档案；登录后自动同步，此后每 6 小时检查是否需要更新。</span>
+    </div>
+    {feedback ? <p role="status" aria-live="polite" className="text-xs text-muted-foreground">{feedback}</p> : null}
+    {boundAccountId ? <Button type="button" variant="outline" size="sm"
+      data-testid={`view-${platform}-works`} onClick={viewWorks}>切换到该账号并查看作品</Button> : null}
+  </div>;
+}
+
+export function ConnectXhsAccount(props: ScanProps = {}) {
+  return <ConnectLocalAccount platform="xiaohongshu" label="小红书" {...props} />;
+}
+export function ConnectKuaishouAccount(props: ScanProps = {}) {
+  return <ConnectLocalAccount platform="kuaishou" label="快手" {...props} />;
+}
+
+function SyncLocalAccount({ accountId, selected }: { readonly accountId: string; readonly selected: boolean }) {
+  const router = useRouter();
+  const [busy, setBusy] = React.useState(false);
+  const [message, setMessage] = React.useState("");
+  const sync = React.useCallback(() => {
+    if (busy || !selected) return;
+    setBusy(true);
+    setMessage("正在读取作品目录…");
+    void (async () => {
+      try {
+        const run = await client.startCollection({ params: { accountId }, query: undefined,
+          body: { capability: "workCatalog", clientRequestId: crypto.randomUUID() } });
+        for (let i = 0; i < 180; i++) {
+          await new Promise((resolve) => setTimeout(resolve, 2000));
+          const current = await client.getCollection({ params: { accountId, attemptId: run.attemptId },
+            query: undefined, body: undefined });
+          if (current.status === "queued" || current.status === "running") continue;
+          if (current.status === "complete") {
+            setMessage("作品目录已更新，作品数据继续在后台读取。");
+            router.refresh();
+          } else {
+            setMessage(current.status === "needsAuth" ? "登录已失效，请重新扫码绑定。" :
+              "本次目录未完整读取，已保留上次完整结果，请稍后重试。");
+          }
+          return;
+        }
+        setMessage("读取时间较长，可稍后打开作品页查看进度。");
+      } catch (error) {
+        setMessage(error instanceof Error && error.message ? error.message : "同步未完成，请稍后重试。");
+      } finally { setBusy(false); }
+    })();
+  }, [accountId, busy, router, selected]);
+  return <span className="flex items-center gap-2">
+    <Button type="button" variant="outline" size="sm" data-testid="sync-xhs" disabled={busy || !selected}
+      title={selected ? undefined : "请先在左下角切换到该账号"} onClick={sync}>
+      {busy ? "同步中…" : "同步作品与数据"}
+    </Button>
+    {message ? <span role="status" className="text-xs text-muted-foreground">{message}</span> : null}
+  </span>;
+}
+
 // [T-136§D-bind⑤+⑥] 账号行(极简)—— 真实抖音昵称 + 抖音号 ID(若已回填)+「隐藏」。
 // 删掉:「未配置密钥」徽标、涨粉基线输入 + 「保存基线」按钮(用户看不懂的多平台矩阵老字段)。
 // [T-201c] 「隐藏」复用 archiveAccount(status→archived,可逆/诚实,永不硬删;数据按 id 锚点原地保留)。
@@ -201,9 +310,11 @@ export function CreateAccountForm() {
 export function AccountRow({
   account,
   isOnlyAccount = false,
+  selectedAccountId = null,
 }: {
   readonly account: PlatformAccountResource;
   readonly isOnlyAccount?: boolean;
+  readonly selectedAccountId?: string | null;
 }) {
   const { pending, run } = useMutation();
   const [open, setOpen] = React.useState(false);
@@ -256,7 +367,7 @@ export function AccountRow({
             data-slot="account-external-id"
             className="shrink-0 font-mono text-[11px] text-muted-foreground"
           >
-            抖音号 {externalId}
+            {PLATFORM_LABELS[account.platform] ?? account.platform}号 {externalId}
           </span>
         ) : null}
         {account.status === "archived" ? (
@@ -265,6 +376,8 @@ export function AccountRow({
           </Badge>
         ) : null}
       </span>
+      {account.platform === "xiaohongshu" || account.platform === "kuaishou"
+        ? <SyncLocalAccount accountId={account.id} selected={selectedAccountId === account.id} /> : null}
       {isOnlyAccount ? (
         // ① 末号保护:唯一 active 号不准隐藏(否则没号可切、数据全落 NULL 退化)。[T-201c]
         <Button
@@ -273,7 +386,7 @@ export function AccountRow({
           size="sm"
           data-testid="account-remove"
           disabled
-          title="至少保留一个抖音号，不能隐藏最后一个"
+          title="至少保留一个账号，不能隐藏最后一个"
         >
           隐藏
         </Button>
@@ -293,7 +406,7 @@ export function AccountRow({
           </DialogTrigger>
           <DialogContent data-testid="account-remove-dialog">
             <DialogHeader>
-              <DialogTitle>隐藏抖音号「{account.accountHandle}」</DialogTitle>
+              <DialogTitle>隐藏账号「{account.accountHandle}」</DialogTitle>
               <DialogDescription>
                 隐藏后该号从列表消失（可逆，不删历史数据）。此操作影响该号名下的定位/选题/项目归属。
                 如确认，请在下方逐字键入「{REMOVE_CONFIRM_PHRASE}」。

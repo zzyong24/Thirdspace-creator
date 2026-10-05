@@ -1,4 +1,5 @@
 import { type UIMessage } from "ai";
+import type {ArticleImageReadable} from "./material-generation-preparation";
 import type { RequestContext } from "@creatoros/contract";
 import { type ContextDeps } from "./creative-context";
 import { type ChatContext, type RecentTaskTruth } from "./chat-context";
@@ -169,6 +170,8 @@ export interface ContextReaders {
         projectId: string;
         artifactType: string;
     }) => Promise<ArtifactTextRaw | null>;
+    /** T-1023：文章配图执行时按当前账号重读专用文章 output，不从视频脚本猜正文。 */
+    getArticleForImage?: (ctx: RequestContext, opts: {outputId: string}) => Promise<ArticleImageReadable>;
     /**
      * [T-099c] context.knowledge.text —— 某知识条目长文正文全文(transcript/reference/note 当前修订正文,
      * 与 knowledge.detail 的 note 同读法)。**返回原始全文**;窗口截断(§3)在工具 execute 侧强制。

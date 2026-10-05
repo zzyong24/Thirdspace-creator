@@ -1,6 +1,18 @@
 CreatorOS — Proprietary Software License / 专有软件许可声明
 Copyright © 2026 朱志勇(月明水清深) / Zhu Zhiyong. All rights reserved. 保留一切权利。
 
+
+第三方开源组件例外 / Third-party open-source exception
+本声明仅适用于 CreatorOS 自有部分。随软件独立分发的第三方开源组件按其原许可证使用，
+本声明不限制这些许可证授予的复制、修改、分发、调试或为修改而进行逆向工程的权利。
+尤其是 reference-editors 与 frontend/public/reference-editors 中的独立工作台及对应依赖，
+其来源、许可和可重建源码见 reference-editors/README.md 与工作台的 THIRD_PARTY_LICENSES/
+THIRD_PARTY_NOTICES 文件。用户可以替换这部分依赖并重建独立工作台。
+This notice applies to CreatorOS-owned portions only. Separately distributed third-party
+open-source components remain governed by their respective licenses. Nothing here limits
+copying, modification, redistribution, debugging, or reverse engineering for modifications
+where permitted by those licenses. See reference-editors/README.md and bundled notices.
+
 ================================================================================
 English
 ================================================================================

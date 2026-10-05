@@ -1,0 +1,8 @@
+{
+  "command": "node orchestrator/process/backlog-health.mjs",
+  "exit_code": 2,
+  "result": "FAIL",
+  "observed_backlog_kb": 60.1,
+  "runaway_limit_kb": 60,
+  "error": "本轮增加任务及回执后，BACKLOG.md 超过失控线；仅缩短本会话 T-1051—T-1053 的摘要，保留原状态及完整 SPEC/验证文档，不删除或归档任务。"
+}

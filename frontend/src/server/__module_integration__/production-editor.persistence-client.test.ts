@@ -11,6 +11,13 @@ vi.mock("@creatoros/backend/modules/ai",async importOriginal=>{
   const real=await importOriginal<typeof import("@creatoros/backend/modules/ai")>();
   return {...real,createAiService:(...args:Parameters<typeof real.createAiService>)=>{const service=real.createAiService(...args);captured.ai=service;return service;}};
 });
+// 内存存储协议不供浏览器执行；测试仅把签名URL表示替为HTTP，真实Asset/文件归属仍走原服务。
+vi.mock("@creatoros/backend/modules/assets",async importOriginal=>{
+  const real=await importOriginal<typeof import("@creatoros/backend/modules/assets")>();
+  return {...real,createMockObjectStorage:(...args:Parameters<typeof real.createMockObjectStorage>)=>{
+    const storage=real.createMockObjectStorage(...args);return {...storage,getSignedUrl:async(key:string)=>`https://fixture-media.example/${encodeURIComponent(key)}`};
+  }};
+});
 import {compositeTransport,__resetPersistenceForTests} from "@/server/persistence-client";
 import {canonicalDataset} from "@/fixtures/canonical";
 const owner:RequestContext={userId:canonicalDataset.user.id,accountId:`acct-of-${canonicalDataset.user.id}`,requestId:"editor-root",source:"user"};
@@ -35,6 +42,11 @@ it("公共组合根保存不启动，冻结生成走既有运行器，重试复�
   asset=candidates.find(candidate=>!firstPage.data.some(row=>row.entityId===candidate.id))!;
   expect(asset).toBeDefined();
   const plan={renderProps:{meta:{title:"冻结A"},talkingHead:{file:asset.id,durationSec:10},scenes:[{id:"s",title:"正文",label:"正文",startSec:0,endSec:10,cards:[]}],captions:[],broll:[]}};
+  const beforePreview=(await call(ENDPOINTS.getProductionEditor.id,{outputId:output.id})).data;
+  const preview=(await call(ENDPOINTS.previewProductionEditor.id,{outputId:output.id},{expectedRevision:0,requestId:"request-preview-root",plan})).data;
+  expect(preview.durationSec).toBe(10);expect(preview.html).toContain("window.__timelines");
+  expect((await call(ENDPOINTS.getProductionEditor.id,{outputId:output.id})).data).toEqual(beforePreview);
+  expect(captured.runs).toHaveLength(0);
   const saved=(await call(ENDPOINTS.saveProductionEditor.id,{outputId:output.id},{expectedRevision:0,requestId:"request-save-root-1",plan,source:"manual"})).data;
   expect(captured.runs).toHaveLength(0);
   const rendered=(await call(ENDPOINTS.renderProductionEditor.id,{outputId:output.id},{revision:1,requestId:"request-render-root-1"})).data;

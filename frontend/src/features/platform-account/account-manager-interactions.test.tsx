@@ -22,17 +22,29 @@ const mockClient = {
   loginDouyin: vi.fn(
     (i: unknown): Promise<unknown> => Promise.resolve({ loggedIn: true }),
   ),
+  beginBind: vi.fn((i: unknown): Promise<unknown> => Promise.resolve({
+    status: "bound", accountId: "acct-new", bindAttemptId: "bind-1",
+  })),
+  startCollection: vi.fn((i: unknown): Promise<unknown> => Promise.resolve({
+    attemptId: "run-1", status: "queued",
+  })),
+  getCollection: vi.fn((_i: unknown): Promise<unknown> => Promise.resolve({ status: "complete" })),
 };
 vi.mock("@/lib/contract-client", () => ({
   client: {
     archiveAccount: (i: unknown) => mockClient.archiveAccount(i),
     loginDouyin: (i: unknown) => mockClient.loginDouyin(i),
+    beginBind: (i: unknown) => mockClient.beginBind(i),
+    startCollection: (i: unknown) => mockClient.startCollection(i),
+    getCollection: (i: unknown) => mockClient.getCollection(i),
   },
 }));
 
 import {
   CreateAccountForm,
   AccountRow,
+  ConnectXhsAccount,
+  ConnectKuaishouAccount,
   PLATFORMS,
 } from "./account-manager-interactive-region";
 import { AccountManagerView } from "./account-manager-view";
@@ -59,6 +71,7 @@ const ARCHIVED: PlatformAccountResource = {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  window.localStorage.clear();
 });
 afterEach(() => cleanup());
 
@@ -78,6 +91,21 @@ describe("account-manager 极简版 island wiring", () => {
     const arg = mockClient.loginDouyin.mock.calls[0]![0] as { body: unknown };
     expect(arg.body).toEqual({ forceNew: true });
     await waitFor(() => expect(mockRouter.refresh).toHaveBeenCalled());
+  });
+
+  it("小红书和快手扫码入口各自调用真实绑定操作", async () => {
+    render(<><ConnectXhsAccount /><ConnectKuaishouAccount /></>);
+    fireEvent.click(screen.getByTestId("bind-xiaohongshu-scan"));
+    await waitFor(() => expect(mockClient.beginBind).toHaveBeenCalledTimes(1));
+    expect((mockClient.beginBind.mock.calls[0]![0] as { body: { platform: string } }).body.platform).toBe("xiaohongshu");
+    fireEvent.click(screen.getByTestId("bind-kuaishou-scan"));
+    await waitFor(() => expect(mockClient.beginBind).toHaveBeenCalledTimes(2));
+    expect((mockClient.beginBind.mock.calls[1]![0] as { body: { platform: string } }).body.platform).toBe("kuaishou");
+    await waitFor(() => expect(mockRouter.refresh).toHaveBeenCalledTimes(2));
+    fireEvent.click(screen.getByTestId("view-xiaohongshu-works"));
+    expect(window.localStorage.getItem("creatoros:current-account")).toBe("acct-new");
+    expect(document.cookie).toContain("creatoros_current_account=acct-new");
+    expect(mockRouter.push).toHaveBeenCalledWith("/accounts/works");
   });
 
   // [T-330] 后端诚实失败(如「扫码成功但读不回账号身份」)→ 错误 message 内联透传给用户,
@@ -209,6 +237,33 @@ describe("account-manager 极简版 island wiring", () => {
 });
 
 describe("account-manager 极简版 view", () => {
+  it("作品目录入口只出现在已接入目录的小红书和快手账号", () => {
+    const xhs = { ...DOUYIN, id: "acct-x", platform: "xiaohongshu" as const };
+    const kuaishou = { ...DOUYIN, id: "acct-k", platform: "kuaishou" as const };
+    const accounts = [DOUYIN, xhs, kuaishou];
+    const { rerender } = render(
+      <AccountManagerView viewModel={{ accounts, selectedAccountId: DOUYIN.id }} />,
+    );
+    expect(screen.queryByRole("link", { name: "查看当前账号作品与数据" })).toBeNull();
+    rerender(<AccountManagerView viewModel={{ accounts, selectedAccountId: xhs.id }} />);
+    expect(screen.getByRole("link", { name: "查看当前账号作品与数据" })).toHaveAttribute("href", "/accounts/works");
+    rerender(<AccountManagerView viewModel={{ accounts, selectedAccountId: kuaishou.id }} />);
+    expect(screen.getByRole("link", { name: "查看当前账号作品与数据" })).toHaveAttribute("href", "/accounts/works");
+  });
+
+  it("已绑定账号显示已绑定，不把平台接入状态误写成待账号核验", () => {
+    const xhs = { ...DOUYIN, id: "acct-x", platform: "xiaohongshu" as const };
+    render(<AccountManagerView viewModel={{
+      accounts: [DOUYIN, xhs],
+      capabilities: [{ platform: "xiaohongshu", capability: "bind", supported: true,
+        authState: "authorized", runtimeState: "ready", reasonCode: null, lastVerifiedAt: null }],
+    }} />);
+    const platform = document.querySelector('[data-testid="platform-capability-overview"] [data-platform="xiaohongshu"]');
+    expect(platform?.textContent).toContain("账号绑定已绑定");
+    expect(platform?.textContent).not.toContain("待账号核验");
+    expect(document.querySelector('[data-testid="platform-capability-overview"] [data-platform="douyin"]')?.textContent).toContain("账号绑定已绑定");
+  });
+
   // 删了平台筛选 tab(全部/抖音):整页无 tab 按钮。
   it("无平台筛选 tab(全部/抖音)", () => {
     render(<AccountManagerView viewModel={{ accounts: [DOUYIN] }} />);
@@ -238,8 +293,44 @@ describe("account-manager 极简版 view", () => {
   it("无号时显空态引导扫码", () => {
     render(<AccountManagerView viewModel={{ accounts: [] }} />);
     const empty = screen.getByTestId("account-empty-state");
-    expect(empty.textContent).toContain("扫码绑定新抖音号");
+    expect(empty.textContent).toContain("选择平台后扫码");
     // 扫码主按钮仍在(空态也能扫码绑定)。
-    expect(screen.getByTestId("bind-douyin-scan")).toBeTruthy();
+    expect(screen.getByRole("button", {name:"绑定账号"})).toBeTruthy();
+  });
+});
+
+
+describe("T-1051 先选平台再授权", () => {
+  it("首屏只有绑定入口，选平台前不显示扫码或启动登录", () => {
+    render(<AccountManagerView viewModel={{accounts:[],selectedAccountId:null}} />);
+    expect(screen.queryByTestId("bind-douyin-scan")).toBeNull();
+    expect(screen.queryByTestId("bind-xiaohongshu-scan")).toBeNull();
+    fireEvent.click(screen.getByRole("button",{name:"绑定账号"}));
+    expect(screen.getByRole("dialog")).toBeVisible();
+    expect(mockClient.loginDouyin).not.toHaveBeenCalled();
+    expect(mockClient.beginBind).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button",{name:"小红书"}));
+    expect(screen.getByTestId("bind-xiaohongshu-scan")).toBeVisible();
+    expect(screen.queryByTestId("bind-douyin-scan")).toBeNull();
+    expect(mockClient.beginBind).not.toHaveBeenCalled();
+  });
+  it("授权中不能关闭切平台或重复发起，失败后可返回重选", async () => {
+    let reject!: (reason: Error)=>void;
+    mockClient.beginBind.mockImplementationOnce(()=>new Promise((_resolve,fail)=>{reject=fail;}));
+    render(<AccountManagerView viewModel={{accounts:[],selectedAccountId:null}} />);
+    fireEvent.click(screen.getByRole("button",{name:"绑定账号"}));
+    fireEvent.click(screen.getByRole("button",{name:"快手"}));
+    fireEvent.click(screen.getByTestId("bind-kuaishou-scan"));
+    expect(screen.getByRole("button",{name:"返回选择平台"})).toBeDisabled();
+    expect(screen.queryByRole("button",{name:"关闭"})).toBeNull();
+    fireEvent.keyDown(screen.getByRole("dialog"),{key:"Escape"});
+    expect(screen.getByRole("dialog")).toBeVisible();
+    fireEvent.click(screen.getByTestId("bind-kuaishou-scan"));
+    expect(mockClient.beginBind).toHaveBeenCalledOnce();
+    reject(new Error("身份未核验，请重试"));
+    await screen.findByText("身份未核验，请重试");
+    expect(screen.getByRole("button",{name:"返回选择平台"})).toBeEnabled();
+    fireEvent.click(screen.getByRole("button",{name:"返回选择平台"}));
+    expect(screen.getByRole("button",{name:"抖音"})).toBeVisible();
   });
 });

@@ -288,10 +288,13 @@ describe("publishing.repository — strict account isolation (T-332 S2)", () => 
     // 本号命中:正常返回。
     const hit = await repo2.findByExternalKey("douyin", "aweme-xkey");
     expect(hit?.id).toBe(imported.id);
-    // 跨号命中:平台唯一锚不可能跨号双属 → 数据 bug,诚实抛错,绝不静默返回。
-    await expect(
-      repo1.findByExternalKey("douyin", "aweme-xkey"),
-    ).rejects.toThrow(/归属号与当前 ctx 不一致/);
+    // 跨号同 external ID 是两条独立平台事实；查询不会碰到别号行。
+    await expect(repo1.findByExternalKey("douyin", "aweme-xkey")).resolves.toBeNull();
+    const own = await repo1.createImportedPublication("out-imp-1", {
+      platform: "douyin", accountReference: "douyin 导入", externalId: "aweme-xkey",
+    });
+    expect(own.id).not.toBe(imported.id);
+    await expect(repo1.findByExternalKey("douyin", "aweme-xkey")).resolves.toMatchObject({ id: own.id });
     // 未命中:诚实 null(不是错)。
     await expect(
       repo1.findByExternalKey("douyin", "aweme-missing"),

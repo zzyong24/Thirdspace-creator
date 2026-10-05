@@ -198,6 +198,8 @@ describe("[T-513] requiredSkillIdsForTask 确定性注册表", () => {
     for (const taskType of [
       "exec.echo.manifest",
       "exec.video.render",
+      "exec.media.probe",
+      "media.probe",
       "exec.agentic.research",
       "exec.agentic.collect",
       "exec.agentic.material",
@@ -526,3 +528,5 @@ describe("T-944 官方编导方法到聊天读取链路", () => {
     expect(createChatSkillLibrary(next, ctx).read({skillId: "method.writing"}).text).toContain("账号下一版写法");
   });
 });
+
+it("T850真实资产ASR只做音频转写，明确登记无创作Skill而保留未知任务拒绝",()=>{expect(requiredSkillIdsForTask("asset.asr",{})).toEqual([]);});
