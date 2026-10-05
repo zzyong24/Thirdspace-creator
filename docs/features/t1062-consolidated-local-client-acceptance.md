@@ -74,3 +74,5 @@ BUILD集成和验证→SHIP本地包。上游来源为主树、`codex/user-diagn
 实现写集仅增 `backend/src/modules/production/production.repository.ts` 与既有 `backend/src/modules/production/production-native-public.integration.test.ts`。已发生隔离公开 get→native read→save→重入回归：修复前 7 项中 3 项失败，候选修复后 7 项通过；纯组、同组平台筛选、旧账号 nullable/初始组、跨用户/组/账号零写入、幂等及已有错误行拒绝均有断言。该证据不等于完整浏览器或安装版通过。原 18 检查命令与顺序保留，另重跑此后端公共链回归。
 
 旧画布浏览器夹具应按已确认的新组工作区公开 API 创建真实归组资源；历史孤立 account 资料仍须显式迁移，不新增按当前成员关系开放旧资料的捷径。被 T-995 清除的私人截图不恢复，图片与视频解码验收使用可追溯的中性有效媒体。
+
+素材预览补充：真实浏览器中素材卡已有 `currentFileId`，但未交给要求 exact 文件的 `MediaPreview`，合法图片/视频因此只显示占位。实现范围另精确增加 `frontend/src/features/creative-canvas/canvas-asset-picker.tsx`，仅补传真实 `currentFileId`；权限、素材内容、插入行为及预览授权不变。既有 `canvas-editor.test.tsx` 的真实组件回归已出现 RED 1 项失败、候选 GREEN 27 项通过；不代签浏览器解码或安装版。

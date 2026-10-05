@@ -3521,3 +3521,5 @@ T-1017 测试补充（2026-09-30）：用户明确要求测试。本轮覆盖纯
 用户已授权本地候选整合、修复、提交、打包与逐功能验收。本次公开浏览器发现 production 首载遗漏父 groupId；增加两个精确后端路径落实既有共享组域及父归属合同，不改变产品方向、服务协议、SQL、归属规则或发布范围。独立候选审查后，先保存前端 WIP 全部字节，释放旧 lease，再提交控制面范围补充、同步隔离工作树并重新 claim；禁止在活跃 lease 上漂移 modules.config。
 
 修复新 production 只承接已锁定真实父项目 groupId；旧 nullable 及错误行拒绝保留。候选有真实公共接口红/绿 7 项回归，完整 18 检查与安装版仍待发生。旧单账号浏览器夹具更新为公开真实组归属，不修改跨组、保存、刷新或媒体解码断言；旧孤立资料使用既有显式迁移，不隐式归组。此条记录授权范围内的实现依赖调整，不声称用户对代码另签确认。
+
+素材预览同范围补充：追加唯一 `frontend/src/features/creative-canvas/canvas-asset-picker.tsx`，将已有真实 `currentFileId` 交给 exact 文件预览，不新增 API/owner 或媒体副本。真实组件 RED/GREEN 已保留，原图片 naturalWidth/视频 readyState 及跨组断言继续通过实际浏览器验证；当前无 active lease，补充独评后再提交该控制面增量与同步 writer，避免模块边界漂移。

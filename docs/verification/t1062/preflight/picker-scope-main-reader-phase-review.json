@@ -1,0 +1,102 @@
+{
+  "schema": "t1062-picker-one-path-and-main-ledger-phase-independent-review/v1",
+  "verdict": "BOUNDED_GO_EXACT_SINGLE_PICKER_SCOPE_AND_TWO_FIELD_CURRENT_MAIN_PHASE_RESTORE",
+  "manifest_sha256": "77544e1be10a78c61eb6d37e27420a4d653875d698934d855f76db48bfd79bed",
+  "exact_controls": [
+    {
+      "path": "docs/features/t1062-consolidated-local-client-acceptance.md",
+      "before_sha256": "7e64fc92bd8b0a0ef3f001e156e2bfd7395787f35c3914ef36a77cb77d3fa16b",
+      "after_sha256": "33576f81caf91a3f6a80f4c0d89485d1b8d139787c81c9a065403e0e5dbb9318",
+      "before_exact": true,
+      "after_exact": true,
+      "old_prefix_exact": true
+    },
+    {
+      "path": "orchestrator/DECISION_LOG.md",
+      "before_sha256": "31e12c1bd461f25cc51e99e78243fb87420ce3563cf6641710692f9c8c83178a",
+      "after_sha256": "77edb1f6f234f954c7e9c8271d4edf4bfd33850b5e80718daf863bc883e00863",
+      "before_exact": true,
+      "after_exact": true,
+      "old_prefix_exact": true
+    },
+    {
+      "path": "orchestrator/process/modules.config.json",
+      "before_sha256": "4e27a869b0538edbacf55217e97b1c24e8ffd5cf508d98e3a5dc86e80c9a1431",
+      "after_sha256": "270f44ac5cc5409188c7f418368c908e6c4d50fd8ca97a8aba4cd4af50b9f584",
+      "before_exact": true,
+      "after_exact": true,
+      "old_prefix_exact": null
+    }
+  ],
+  "module_delta": {
+    "pointer": "/modules/T-1062/step_write_set/integration",
+    "before": 575,
+    "after": 576,
+    "added": [
+      "frontend/src/features/creative-canvas/canvas-asset-picker.tsx"
+    ],
+    "removed": [],
+    "all_other_json_values_exact": true,
+    "original18_changed": false
+  },
+  "scope_opinion": "素材卡现有currentFileId补传给已要求exact文件的MediaPreview，落实已有真实预览流程，不新增资源/权限/复制媒体/API或发布范围。准确增加manifest唯一picker路径；不能误称它此前就在567/module573中。此次只评控制准入，不替producer的实际picker patch独评或组件/浏览器验收。",
+  "ledger_phase": {
+    "candidate_path": "/tmp/t1062-picker-exact-scope-addendum/ledger-current-main-after.json",
+    "candidate_sha256": "876798cb906c50d83172454a9a751258d11baef6cb0c2cfab681f5d627822f76",
+    "delta_sha256": "9248a9d706e5e7a786f8a7cc2589b3de27b172ff32af98fe4444cd196a803896",
+    "before_sha256": "fc0018122506e1aedd3122444aae8c35ef55de98fe7abe0253da3f9f883e0f07",
+    "entry_count": 150,
+    "diffs": [
+      {
+        "pointer": "/entries/126/file_sha256",
+        "before": "533b768da72ae091d6ba8123e8b880c4c649f3a582f1960b925a6b6632082a82",
+        "after": "3b167095bf486a8c68b8107d6e329fdd435fec08de62ef8102a29199ee69d1a5"
+      },
+      {
+        "pointer": "/entries/127/file_sha256",
+        "before": "8ff3a0c95af845a3efbb72f24c420fb2c6d7c409f998233cf386afc41355e9e5",
+        "after": "6eccee0312ffe08a327952383366f003c09522c132c6a38dd0f274521948a93e"
+      }
+    ],
+    "all_other_entries_values_exact": true,
+    "current_MAIN_actual": [
+      {
+        "path": "docs/verification/t1062/frontend-native-adaptation-scope.json",
+        "current_MAIN_sha256": "3b167095bf486a8c68b8107d6e329fdd435fec08de62ef8102a29199ee69d1a5",
+        "ledger_candidate_sha_exact": true,
+        "MAIN_bytes_exact_bb565": true
+      },
+      {
+        "path": "docs/verification/t1062/frontend-native-transfer.json",
+        "current_MAIN_sha256": "6eccee0312ffe08a327952383366f003c09522c132c6a38dd0f274521948a93e",
+        "ledger_candidate_sha_exact": true,
+        "MAIN_bytes_exact_bb565": true
+      }
+    ],
+    "independent_reconstruction_exact": true,
+    "opinion": "仅当前MAIN实际reader阶段将126/127恢复原批准exact bb565的fileSHA；其余150entry身份/类别/理由/预算/旧675cdd项完整保留，文件也与此前已审876798历史字节相同。既有fc001 writer实际source阶段独评及claim失败历史不洗改。新candidateFF/actualscope应用后再依据新实际readers重绑，不将MAIN历史控制文件冒充writer currentbytes。"
+  },
+  "replan_actual_observation": {
+    "writer_head": "8649d12fadce7d219a0a57a1eca9526cbb26f6b6",
+    "wip_count": 163,
+    "status_counts": {
+      " M": 131,
+      " D": 12,
+      "??": 20
+    },
+    "reviewed_three_control_paths_disjoint_from_WIP": true,
+    "current_MAIN_integration_lease_absent": true,
+    "retained_stash_commit_exists": true,
+    "picker_before_sha256": "dbcb8f525703fdd6f04f17c07cf5882397fda5f27b9e18a1641f4a5bae8918ed"
+  },
+  "replan_conditions": [
+    "新控制commit除本审三控制文件、精确876798ledger、独评/实际重新编译context外不得有未知产品或别的WIP；这些新增context/review bytes由ROOT逐项实核。",
+    "FF仅触与163 WIP disjoint的已审控制路径；前后163逐path bytes/status/mode/12absence与备份manifest精确一致。保留cd30085 stash及独立备份，不drop/pop，无需重新丢掉和恢复WIP。",
+    "真实新commit及module576/base绑定后重新context compile/claim；新writer scope/transfer/source/receipt按实际新阶段重绑，旧history/provider快照不改。",
+    "picker正式apply前仍须existing before dbcb8f与已审after4ee7/hash相符，不以控制新增作patch自动批准。"
+  ],
+  "limitations": [
+    "仅静态控制候选与当前reader/WIP状态复核，未改repo、提交、FF、stash或claim。",
+    "完整18/installed/听审仍pending；该scope/ledger phase准入不等于任何功能验收PASS。"
+  ]
+}

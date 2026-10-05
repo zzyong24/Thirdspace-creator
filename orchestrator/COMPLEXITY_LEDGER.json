@@ -1924,7 +1924,7 @@
       "files": [
         "docs/verification/t1062/frontend-native-adaptation-scope.json"
       ],
-      "file_sha256": "533b768da72ae091d6ba8123e8b880c4c649f3a582f1960b925a6b6632082a82",
+      "file_sha256": "3b167095bf486a8c68b8107d6e329fdd435fec08de62ef8102a29199ee69d1a5",
       "categories": [
         "runtime",
         "language_toolchain"
@@ -1941,7 +1941,7 @@
       "files": [
         "docs/verification/t1062/frontend-native-transfer.json"
       ],
-      "file_sha256": "8ff3a0c95af845a3efbb72f24c420fb2c6d7c409f998233cf386afc41355e9e5",
+      "file_sha256": "6eccee0312ffe08a327952383366f003c09522c132c6a38dd0f274521948a93e",
       "categories": [
         "runtime",
         "language_toolchain"
