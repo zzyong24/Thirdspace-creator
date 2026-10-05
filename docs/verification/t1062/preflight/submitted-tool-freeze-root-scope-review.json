@@ -1,0 +1,137 @@
+{
+  "schema": "t1062-submitted-tool-freeze-root-scope-review/v1",
+  "reviewed_at": "2026-10-05T07:07:21.029965+00:00",
+  "review_mode": "read_only_no_db_no_model_no_network",
+  "candidate": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator",
+  "observed_head": "066aa5e5d9c218c252e05d496d95a2da0b4d063a",
+  "decision": "IN_BUDGET_ONE_ADDITIONAL_PRODUCTION_SOURCE_WITH_EXISTING_TEST_SCOPE_REWRITE",
+  "scope_target": "backend/src/modules/ai-runtime/chat-submitted-tool-parameters.ts",
+  "summary": "The current reference-media tool contract is authorized and must remain. The existing failing test first compares every current definition to the pre-reference frozen fixture, so that assertion is stale. Separately, static source analysis proves the submitted-task resolver rejects the exact old atomic material version before it can return the old parser; that recovery compatibility gap is real but was not directly reached by the supplied failing test.",
+  "findings": [
+    {
+      "id": "F1",
+      "severity": "blocking_for_old_submitted_recovery",
+      "classification": "static_deterministic_not_observed_in_supplied_test",
+      "evidence": [
+        "chat-submitted-tool-parameters.ts:8-16 rebuilds today definition and requires exact current version/effect/execution",
+        "frozen fixture old atomic material version is chat-tools-atomic-material-v1:c8455afe... and has no referenceAssetId",
+        "current chat-tools.ts adds referenceAssetId and a changed description, so chat-tool-definitions.ts:76 necessarily derives a different SHA version"
+      ],
+      "minimum_outcome": "Given an exact frozen definition, resolve the matching historical parser only when the complete frozen definition matches an immutable compatibility entry; otherwise reject. Do not compare only names or ignore the version hash."
+    },
+    {
+      "id": "F2",
+      "severity": "test_contract_error",
+      "classification": "observed_first_failure",
+      "evidence": [
+        "/tmp/t1062-canvas-host-current-green1.log reports 7 cases/1 failure at chat-canvas-tool-host.test.ts:13",
+        "Line 13 calls expect(current.definitions).toEqual(entry.definitions) before resolveSubmittedChatToolParameters is invoked"
+      ],
+      "minimum_outcome": "Replace the obsolete all-current-equals-old assertion with two explicit contracts: today material definition includes the authorized reference field and has its own derived version; old frozen definitions/JSON/version/schema remain byte-unchanged and are independently restorable."
+    }
+  ],
+  "authorization_basis": {
+    "source": "docs/features/t993-creator-canvas.md",
+    "lines": [
+      25,
+      57,
+      125
+    ],
+    "commit": "c9ed15fbf8b2f1e557a6e2ba6cb0e54c0c256409",
+    "meaning": "The accepted product contract explicitly requires reference image generation and first-frame video through the shared asset.generate chain, with owner validation and frozen file identity. Reverting current description/schema/version to the old fixture would regress authorized behavior."
+  },
+  "exact_write_set_recommendation": {
+    "additional_production_sources": [
+      "backend/src/modules/ai-runtime/chat-submitted-tool-parameters.ts"
+    ],
+    "additional_test_sources": [],
+    "existing_in_scope_test_to_correct": [
+      "backend/src/modules/ai-runtime/chat-canvas-tool-host.test.ts"
+    ],
+    "existing_regression_to_run_unchanged": [
+      "backend/src/modules/execution/execution-chat-script-draft.service.test.ts"
+    ],
+    "why_one_source_is_sufficient": "The parent snapshot already stores the complete frozen definition. The resolver is the sole conversion point from that definition to a production-order parser. It can hold a small generic immutable compatibility registry of complete definition + historical schema/parser pairs and try exact complete-definition equality after the current exact match fails. No execution host, DB service, schema, SDK, IPC, or lifecycle change is needed.",
+    "implementation_boundary": [
+      "Current path: rebuild today definition and accept only complete equality, returning today parser.",
+      "Legacy path: compare canonical/deep equality against complete immutable historical definitions, then return the paired historical production-order parser and schema. The registry entry may contain the historical material definition as data; control flow must not branch on tool name.",
+      "Unknown version, changed description/schema/effect/execution, extra tool, or foreign definition remains rejected.",
+      "Keep submitted-task-preparation.service.ts checks unchanged: parent owner/workspace, original call ID/digest, attempt ID, settled receipt, exact schema equality, binding validation, task ID/result kind, and deadlines.",
+      "Do not recompute or overwrite the historical digest and do not accept today referenceAssetId under the old version."
+    ]
+  },
+  "required_tests": [
+    "Old frozen JSON and old material version/schema remain unchanged and resolve to a parser that accepts the old legal object and rejects referenceAssetId/additional properties.",
+    "Today material definition still contains referenceAssetId, has the new version, and its parser accepts only the new legal contract.",
+    "Mutate each of name/version/description/parameters/effect/execution on an old entry: every mutation rejects. Include unknown/extra tool rejection.",
+    "The existing full submitted-task recovery regression keeps the original inputDigest and task ID, preserves owner/workspace and receipt validation, and does not create a second task/call.",
+    "Run the originally failing seven-case canvas host file plus the submitted-task recovery file. Do not delete the old fixture or update its JSON/hash to current bytes."
+  ],
+  "probe_note": {
+    "status": "not_executed_to_resolver",
+    "reason": "The attempted standalone no-DB TS import failed during dependency module resolution (ERR_PACKAGE_PATH_NOT_EXPORTED) before calling the resolver. It is retained as negative harness evidence only and is not claimed as a resolver red. The supplied test also short-circuits before the resolver."
+  },
+  "out_of_scope": [
+    "The known modern account/group receipt unique-key correction is separate.",
+    "No current reference-media rollback.",
+    "No model, SDK, IPC, database migration, tool lifecycle, or new compatibility fallback beyond exact frozen definitions."
+  ],
+  "evidence_bindings": [
+    {
+      "path": "/tmp/t1062-tool-freeze-scope-pause.json",
+      "sha256": "009f3e8cbbead90096888444c236069fd7f5b7d5e16e719ecc0a8fc807eb23d3"
+    },
+    {
+      "path": "/tmp/t1062-canvas-host-current-green1.log",
+      "sha256": "e9f11c53628fed3852083d4c2e403b3392dcda0927640803f4a08712a141b812"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/backend/src/modules/ai-runtime/chat-submitted-tool-parameters.ts",
+      "sha256": "eee5fd513eb9d2711baf3dd508be6545f8aef729eaaa467f4fda3ca13957f758"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/backend/src/modules/ai-runtime/chat-tool-definitions.ts",
+      "sha256": "eb2592bf30c07cc57db4c13b109c9c3f1485eb3fd01e87deb7cf87f62e3f1bfd"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/backend/src/modules/ai-runtime/chat-tools.ts",
+      "sha256": "6dfe61459b0634555de3d1d352bec976dfe3cf9ba74fab20ee6e0563aa48ab69"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/backend/src/modules/ai-runtime/chat-tool-parameters.ts",
+      "sha256": "03e2ba3e4af1fc0a3eb61ccde02984600c39abd63b9b7a54488f991ad9ae5f7a"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/backend/src/modules/execution/submitted-task-preparation.service.ts",
+      "sha256": "bb06c74de6e9106d629c6fe3809f82b572513b4a40fb5c537f4cb5d8c3df6894"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/backend/src/modules/ai-runtime/chat-canvas-tool-host.test.ts",
+      "sha256": "c17a8ec68607134116d61261659bda2e0c8a5d4b91aafa34b481e1e23673d397"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/backend/src/modules/execution/execution-chat-script-draft.service.test.ts",
+      "sha256": "6a50541645dc98ea3e52ad40af686f6faab0382921f6a340cb901bef4540d5ef"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/backend/src/modules/ai-runtime/__fixtures__/canvas-old-chat-definitions.json",
+      "sha256": "afa46e4a8d3268162e62486d82470d890b56e1a20846ae8028617b0b9af244a9"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/docs/features/t993-creator-canvas.md",
+      "sha256": "695d85ada9870bd66a404a887fbc7f605e263bc75a5ab18e45e2c7d1a289fba9"
+    },
+    {
+      "path": "/tmp/t1062-resolver-old-material-probe.ts",
+      "sha256": "753ce777bec196c551ad78935de299c4a44d7107d370bf7ca9a75ea9621f9578"
+    },
+    {
+      "path": "/tmp/t1062-resolver-old-material-probe.stdout.json",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/tmp/t1062-resolver-old-material-probe.stderr.log",
+      "sha256": "f863fda9ebbe7ff301bd058e7bbfe10b683f1071cc03c49ea65715cc18ebfd5a"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+isolated roots=/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-writer-check-JPScAq
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/backend
+
+
+ Test Files  2 passed (2)
+      Tests  28 passed (28)
+   Start at  15:00:34
+   Duration  52.84s (transform 5.33s, setup 0ms, import 8.22s, tests 52.59s, environment 0ms)
+
+{"cmd":"pnpm","args":["-C","backend","exec","vitest","run","src/modules/ai/ai-media-probe-control.test.ts","src/modules/production/production-rough-cut.integration.test.ts"],"exit":0,"signal":null,"isolated":"/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-writer-check-JPScAq"}

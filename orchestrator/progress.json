@@ -2659,7 +2659,8 @@
           "backend/src/application/generation/moments-model-runtime.ts",
           "backend/src/application/generation/transactional-task-runtime.ts",
           "backend/src/modules/ai/ai-media-probe-control.ts",
-          "backend/src/schema/intelligence.ts"
+          "backend/src/schema/intelligence.ts",
+          "backend/src/modules/ai-runtime/chat-submitted-tool-parameters.ts"
         ]
       },
       "step_read_set": {},

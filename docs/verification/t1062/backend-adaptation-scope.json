@@ -208,7 +208,8 @@
     "backend/src/application/generation/moments-model-runtime.ts",
     "backend/src/application/generation/transactional-task-runtime.ts",
     "backend/src/modules/ai/ai-media-probe-control.ts",
-    "backend/src/schema/intelligence.ts"
+    "backend/src/schema/intelligence.ts",
+    "backend/src/modules/ai-runtime/chat-submitted-tool-parameters.ts"
   ],
   "path_details": [
     {
@@ -2427,6 +2428,21 @@
       "reasons": [
         "真实空group Source公共链因probe要求account失败；仅组范围/原同tx准入与executionControlReceipts ORM对齐0128，保留历史account key/digest/收尾围栏，不改SQL或模型。"
       ]
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/chat-submitted-tool-parameters.ts",
+      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/modules/ai-runtime/chat-submitted-tool-parameters.ts",
+      "exists": true,
+      "before_sha256": "eee5fd513eb9d2711baf3dd508be6545f8aef729eaaa467f4fda3ca13957f758",
+      "areas": [
+        "submitted-task-frozen-tool-recovery"
+      ],
+      "roles": [
+        "implementation"
+      ],
+      "reasons": [
+        "保留T993已授权参考图当前定义；在既有解析器内用完整不可变历史definition精确兼容旧冻结参数，不忽略hash、不按业务名称分支。旧恢复实际缺口本轮仅静态证据，先补真实窄红，不把旧过期current equality失败当resolver实跑红。"
+      ]
     }
   ],
   "conditional_write_paths": [
@@ -3906,6 +3922,26 @@
       "source_red_log": "docs/verification/t1062/preflight/rough-v3-empty-group-source-red.log",
       "actual_red_exit": 1,
       "default_local_asr_status": "R3真实默认worker PASS；见preflight/asr-default-worker，公共粗剪和安装版未验"
+    },
+    {
+      "submitted_tool_scope": {
+        "at": "2026-10-05T07:10:24.653963+00:00",
+        "base_sha": "066aa5e5d9c218c252e05d496d95a2da0b4d063a",
+        "action": "旧当前工具定义断言真实红后独立区分当前新合同与旧冻结恢复依赖，精确补一个resolver",
+        "previous_step_path_count": 170,
+        "added_paths": [
+          "backend/src/modules/ai-runtime/chat-submitted-tool-parameters.ts"
+        ],
+        "step_path_count": 171,
+        "independent_review": "docs/verification/t1062/preflight/submitted-tool-freeze-root-scope-review.json",
+        "review_sha256": "d60e9bceed1fcb0ef9f362e55594095b9e7edf7c36d6486e7eed67024eb6974b",
+        "wip_preserved": "docs/verification/t1062/preflight/submitted-tool-freeze-paused-wip.json",
+        "reason": "保留当前参考图能力与真实旧执行冻结；不改原frozen JSON/hash、DB、SDK/IPC或生命周期。"
+      },
+      "actual_red": "旧current全定义强等断言失败；尚未调用resolver",
+      "legacy_resolver_gap": "静态确定性发现，真实执行红需后续补",
+      "probe_28_actual_public": "已通过旧迁移NULLfreeze与Source真实retry回归，modern真实account组receipt唯一键族仍待修/验",
+      "implementation_verdict": "pending"
     }
   ],
   "ordered_prerequisites": [
@@ -3948,7 +3984,7 @@
     "gateway_exception": "frontend/src/app/api/v1/dispatch/route.test.ts仅公共CLI网关测试，route.ts仅条件修复；无页面/UI路径"
   },
   "counts": {
-    "required_or_new": 146,
+    "required_or_new": 147,
     "necessary_new": 6,
     "conditional": 23,
     "read_only": 48
@@ -4570,6 +4606,24 @@
         "保留原10项断言；native-v3-group必须在既有完整rough公共链组合通过。"
       ],
       "executed_this_audit": false
+    },
+    {
+      "label": "旧submitted冻结工具恢复与当前参考图合同完整回归",
+      "argv": [
+        "pnpm",
+        "-C",
+        "backend",
+        "test",
+        "src/modules/ai-runtime/chat-canvas-tool-host.test.ts",
+        "src/modules/execution/execution-chat-script-draft.service.test.ts",
+        "--maxWorkers=1"
+      ],
+      "phase": "after_adaptation",
+      "environment_rule": "仅既有隔离fixture，不调用供应商/用户库；旧frozen JSON/hash不改，完整definition未知/篡改/extra拒绝，当前referenceAssetId新能力保留，旧版本不得接新参数；真实submitted恢复digest/owner/task/receipt不变。",
+      "preconditions": [
+        "不能把之前过期current equality红当真实resolver红；保留原历史artifact/断言语义。"
+      ],
+      "executed_this_audit": false
     }
   ],
   "source_path_validation": {
@@ -4674,6 +4728,20 @@
       "review_sha256": "4741fbff5c8cabc031e9beab0d528a650b2a68cb19cf87b00c6f0e1040208deb",
       "wip_preserved": "docs/verification/t1062/preflight/probe-control-paused-wip.json",
       "reason": "已授权组工作区与粗剪原公共Source链适配；不改SQL、历史digest/key、进程、IPC或供应商。"
+    },
+    {
+      "at": "2026-10-05T07:10:24.653963+00:00",
+      "base_sha": "066aa5e5d9c218c252e05d496d95a2da0b4d063a",
+      "action": "旧当前工具定义断言真实红后独立区分当前新合同与旧冻结恢复依赖，精确补一个resolver",
+      "previous_step_path_count": 170,
+      "added_paths": [
+        "backend/src/modules/ai-runtime/chat-submitted-tool-parameters.ts"
+      ],
+      "step_path_count": 171,
+      "independent_review": "docs/verification/t1062/preflight/submitted-tool-freeze-root-scope-review.json",
+      "review_sha256": "d60e9bceed1fcb0ef9f362e55594095b9e7edf7c36d6486e7eed67024eb6974b",
+      "wip_preserved": "docs/verification/t1062/preflight/submitted-tool-freeze-paused-wip.json",
+      "reason": "保留当前参考图能力与真实旧执行冻结；不改原frozen JSON/hash、DB、SDK/IPC或生命周期。"
     }
   ]
 }

@@ -1,0 +1,66 @@
+isolated roots=/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-writer-check-e3ZMOV
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/backend
+
+ ❯ src/modules/ai-runtime/chat-canvas-tool-host.test.ts (7 tests | 1 failed) 35ms
+   × 原冻结global工具version/hash/schema不因注册Canvas改变，原atomic参数仍可恢复 12ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai-runtime/chat-canvas-tool-host.test.ts > 原冻结global工具version/hash/schema不因注册Canvas改变，原atomic参数仍可恢复
+AssertionError: expected [ Array(3) ] to deeply equal [ Array(3) ]
+
+- Expected
++ Received
+
+@@ -42,11 +42,11 @@
+        "type": "object",
+      },
+      "version": "chat-tools-v1:246b830fff76893e99ffde18309b06f4a69a11ce256a78ea2c3674be2f5af6fa",
+    },
+    {
+-     "description": "用 AI 生成图片或视频素材(文生图/文生视频)。项目内容配图必须先用 context.artifact.text 读当前确认稿，判断它要替哪一句内容完成什么认知任务，从 sections 中选择服务的唯一 sectionRef，并说明 visualPurpose；执行端会重读当前版本，把该段正文和版本指纹冻结进任务。生成的是 AI 图/视频素材(非真实拍摄/截图)，用户采纳后才进素材中心。事实证据优先真实截图/网页，价格表、架构图、流程图等要求精确文字/数字/节点的信息卡必须把 mediaKind 设为 information_card，本工具会拒绝自由生成；真实公告/仓库截图设为 fact_capture，同样不生成。只有 illustration 适合本工具。图片 prompt 要把一个认知任务落实为一个可见关系，写清主体、动作或关系、环境、构图、光色和画幅；视频 prompt 只写一个连续短镜头，依次交代主体、主要动作、环境、构图与景深、一个平滑运镜、光色材质和平稳结尾，可带克制同步环境音但禁止音乐与人声。默认不要文字、数字、logo、水印、假产品界面、假新闻截图、畸形肢体、重复主体、突变、闪烁或跳帧，禁止万能 AI 海报。创作者定位只影响视觉语言与审美语气，不得改变当前稿主张。要生成封面改用 cover.generate。",
++     "description": "支持文生图、参考图生图、文生视频、首帧图生视频。仅当用户指定当前账号已有图片时传 referenceAssetId；服务端核实图片归属和模型能力，不会忽略参考图降级生成。用 AI 生成图片或视频素材(文生图/文生视频)。项目内容配图必须先用 context.artifact.text 读当前确认稿，判断它要替哪一句内容完成什么认知任务，从 sections 中选择服务的唯一 sectionRef，并说明 visualPurpose；执行端会重读当前版本，把该段正文和版本指纹冻结进任务。生成的是 AI 图/视频素材(非真实拍摄/截图)，用户采纳后才进素材中心。事实证据优先真实截图/网页，价格表、架构图、流程图等要求精确文字/数字/节点的信息卡必须把 mediaKind 设为 information_card，本工具会拒绝自由生成；真实公告/仓库截图设为 fact_capture，同样不生成。只有 illustration 适合本工具。图片 prompt 要把一个认知任务落实为一个可见关系，写清主体、动作或关系、环境、构图、光色和画幅；视频 prompt 只写一个连续短镜头，依次交代主体、主要动作、环境、构图与景深、一个平滑运镜、光色材质和平稳结尾，可带克制同步环境音但禁止音乐与人声。默认不要文字、数字、logo、水印、假产品界面、假新闻截图、畸形肢体、重复主体、突变、闪烁或跳帧，禁止万能 AI 海报。创作者定位只影响视觉语言与审美语气，不得改变当前稿主张。要生成封面改用 cover.generate。",
+      "effect": "committed",
+      "name": "material.generate",
+      "parameters": {
+        "additionalProperties": false,
+        "properties": {
+@@ -67,10 +67,14 @@
+            ],
+            "type": "string",
+          },
+          "prompt": {
+            "description": "生成描述。图片必须写清视觉媒介、主体、动作或关系、环境、构图、光线/色彩、画幅和排除项。视频必须只设计一个连续短镜头，按主体、主要动作、环境、构图与景深、单一路径运镜、光线/色彩/材质、平稳收尾的顺序描述；可有克制的同步环境音，不要音乐和人声。默认不出现文字、数字、logo、水印或伪造界面。生成的是 AI 素材、非真实拍摄。",
++           "type": "string",
++         },
++         "referenceAssetId": {
++           "description": "可选的当前账号素材库真实图片 ID。图片生成时作为参考图，视频生成时作为首帧；仅在用户明确指定已有素材时传入。",
+            "type": "string",
+          },
+          "sectionRef": {
+            "description": "项目内容配图所服务的当前稿段落引用。先调 context.artifact.text，再逐字使用 sections[].sectionRef；不要让用户提供。",
+            "type": "string",
+@@ -96,8 +100,8 @@
+          "kind",
+          "prompt",
+        ],
+        "type": "object",
+      },
+-     "version": "chat-tools-v1:c8455afe13b92b5ddf4dc8a5604dbc5d2bc4a68a5c668d5a2775f1a7d3d744bc",
++     "version": "chat-tools-v1:6c29dff5de8a3767123cb832a90000c0c888396bb5ae6d4f8a62f9af0952e756",
+    },
+  ]
+
+ ❯ src/modules/ai-runtime/chat-canvas-tool-host.test.ts:13:258
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 6 passed (7)
+   Start at  15:02:46
+   Duration  2.43s (transform 1.20s, setup 0ms, import 2.24s, tests 35ms, environment 0ms)
+
+{"cmd":"pnpm","args":["-C","backend","exec","vitest","run","src/modules/ai-runtime/chat-canvas-tool-host.test.ts"],"exit":1,"signal":null,"isolated":"/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-writer-check-e3ZMOV"}

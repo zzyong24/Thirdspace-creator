@@ -1,0 +1,187 @@
+{
+  "task": "T-1062",
+  "kind": "旧probe迁移兼容修复独立只读复核",
+  "observed_at_utc": "2026-10-05T07:05:08.242872+00:00",
+  "root": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator",
+  "head": "066aa5e5d9c218c252e05d496d95a2da0b4d063a",
+  "source_hashes": [
+    {
+      "path": "backend/src/modules/ai/ai-media-probe-control.ts",
+      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/backend/src/modules/ai/ai-media-probe-control.ts",
+      "sha256": "360e27d83863329fb77f0a3f2109c3ee4108a6aff88e863b4d2d877ddca0d304"
+    },
+    {
+      "path": "backend/src/schema/intelligence.ts",
+      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/backend/src/schema/intelligence.ts",
+      "sha256": "2ac7b3d136452ce7759847175a62f5a303e9e92b03af4b001eb0945cfe587fcc"
+    },
+    {
+      "path": "backend/src/modules/ai/ai-media-probe-control.test.ts",
+      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/backend/src/modules/ai/ai-media-probe-control.test.ts",
+      "sha256": "88d7eaddd4b86ac4e2d154277fee8c8d37027260b2282ca63f481ff99cb86a86"
+    },
+    {
+      "path": "backend/src/modules/production/production-rough-cut.integration.test.ts",
+      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/backend/src/modules/production/production-rough-cut.integration.test.ts",
+      "sha256": "cb6bfb87529d5d59776a925c75024ae5e6d3b3c0dba100e69cf3f6a5fc4cb235"
+    },
+    {
+      "path": "backend/src/modules/ai/ai.service.ts",
+      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/backend/src/modules/ai/ai.service.ts",
+      "sha256": "3d9a5edbdfac24cb8323ad6b6d8d5a26ecaed7f6ea1facbb6561b2cd1dc58ee5"
+    },
+    {
+      "path": "backend/src/modules/ai/ai.repository.ts",
+      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/backend/src/modules/ai/ai.repository.ts",
+      "sha256": "5c3e9906f4e1e5460d314225d8be497f7e1447cf880bfe4ead9db623e2f97b48"
+    },
+    {
+      "path": "backend/src/modules/platform-account/membership-lock.service.ts",
+      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/backend/src/modules/platform-account/membership-lock.service.ts",
+      "sha256": "27d59f591636b8fd4b6ce3a09f485e7966274bac01744e724fd00882ca426fa4"
+    },
+    {
+      "path": "backend/src/modules/scheduling/private-collector-admission.service.ts",
+      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/backend/src/modules/scheduling/private-collector-admission.service.ts",
+      "sha256": "89f0d5bfdac9f21a8ba54396ce9ce05ee963cf7694b04b3e2d98203babd14551"
+    },
+    {
+      "path": "backend/src/modules/production/production-sources.ts",
+      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/backend/src/modules/production/production-sources.ts",
+      "sha256": "733340cf0cec782be3285f9056da79d22f691152367ca115984c0b72a609a998"
+    },
+    {
+      "path": "backend/src/modules/production/production-editor.repository.ts",
+      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/backend/src/modules/production/production-editor.repository.ts",
+      "sha256": "df5f294629aac2b38e671cc3bd22d3c2c1077d6391e1ba4d885aad0b55f1b463"
+    },
+    {
+      "path": "backend/src/modules/execution/run-execution-task.ts",
+      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/backend/src/modules/execution/run-execution-task.ts",
+      "sha256": "5d32a5f0bcc4e46f6e552bb263205dd62bc966210aedeba51e1b878022c87a95"
+    },
+    {
+      "path": "backend/drizzle/0128_workspace_convergence.sql",
+      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/backend/drizzle/0128_workspace_convergence.sql",
+      "sha256": "60cac883f02fa7fcd83051264bd6a63ec49132369c7c983b36e34e979a2f7713"
+    },
+    {
+      "path": "backend/src/modules/ai/canonical-json.ts",
+      "absolute_path": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator/backend/src/modules/ai/canonical-json.ts",
+      "sha256": "26de0ae0bf2a1bf4640c1a66075f76b4f7012f2ee005044bf1b36748aa69b595"
+    }
+  ],
+  "verdict": "先前迁移NULL版本准入finding已闭合；当前另有现代group非空account新receipt分桶缺口，不能作两probe源码最终闭包PASS。其余权限/旧generation/Source父门保持，非整波批准。",
+  "original_finding": {
+    "id": "PROBE-LEGACY-BACKFILLED-ADMISSION",
+    "status": "闭合（旧来源证明+真实公开回归日志，未由本审查重跑）",
+    "source_line": 40,
+    "evidence": [
+      "必须accountId非空、groupId精确grp_legacy_originalAccount、groupVersion和membershipVersion均NULL；任意custom group/新缺freeze不匹配",
+      "原c531创建协议canonical字段(userId,accountId,taskType,inputData,retryOfTaskId)不含group，旧account:taskType:attempt key逐字核；或精确account旧retry receipt原digest/taskId/安全整数generation持久证据",
+      "legacy只传临时originalAdmission groupId:null给原lock，不写DB；当前真实平台账号active/member仍在原legacy组，frozen.groupId必须等原snapshot.groupId",
+      "原task的group/account/version/key/fingerprint/input/费用未restamp；旧NULL数据不伪造版本",
+      "真实红日志原样保留；最新2files28PASS=probe16+rough公共12，含迁移旧task首次claim/retry、双account旧receipt与未知legacy出处拒绝、新组缺freeze拒绝"
+    ]
+  },
+  "frozen_reference": {
+    "git_ref": "c5316506",
+    "path": "backend/src/modules/ai/ai.service.ts",
+    "git_blob": "8dd61e178553e8928d174a62b2f1af571e2b21e7",
+    "source_sha256": "10b5089875d9a7613a846ffe010cf781c0cb832373a20cea3cb70c84e48b374c",
+    "exact_original_fingerprint_and_key_literal_check": true,
+    "original_fingerprint_lines": [
+      907,
+      912
+    ],
+    "original_key_line": 914
+  },
+  "checks": [
+    {
+      "name": "不误放新group缺版本",
+      "status": "静态与新增负向测试匹配",
+      "detail": "只有grp_legacy_exactAccount+双NULL且旧创建/receipt证据才临时legacy准入；新组groupVersionNULL/未知旧出处仍走原frozen拒绝。既有16测试含缺版本与未知legacy拒绝；需保留此断言。"
+    },
+    {
+      "name": "原account仅当前仍原legacy组",
+      "status": "静态成立",
+      "detail": "原membership lock(null group, original account)拒非active账号/已转非legacy组/归档；再比较实际frozen.groupId与原snapshot.groupId，缺member/freeze不匹配拒绝。未查当前页面platform来猜旧owner。",
+      "remaining_evidence": "新增case用真实platform/member原legacy组，但未当场测试legacy账号已转新组、离组及账户archive族，静态门在现有helper；不得声称族全验。"
+    },
+    {
+      "name": "原digest/key不改",
+      "status": "静态核对c531成立",
+      "detail": "c531原canonical/key字段一致；retry requestDigest原5机械字段/算法未增group；priorReceipt精确task原account优先，不在group多旧行取first；旧receipt同号返回不重排。legacy proof不写任何被冻结字段。",
+      "remaining_evidence": "通过durable旧receipt佐证但创建fingerprint不匹配的独立positive case目前没有专门执行覆盖；应保留未知receipt内容/错task/错digest拒绝。"
+    },
+    {
+      "name": "Source retry公共链",
+      "status": "原pending已补实际公开回归",
+      "detail": "native-v3-group首次由真实probe claim/markFailed形成failed；经ENDPOINTS.retryProductionEditorSource→owner.sourcePorts.retryTask→probeControl.retry→ExecutionService.get→runExecutionTask，成功generation1并同request重入回读一致；再Source.adopt/v3模型候选/host ledger/安全无音轨降级。",
+      "limitations": "初次故障是明示fixture交接失败，不冒称真实ffmpeg损坏；第二次实际probe/公共链由日志覆盖。真实丢回复异常throw的专项并非此新case，仍由原control重入+公共同号回读共同支撑。"
+    },
+    {
+      "name": "旧generation/归档started/父门",
+      "status": "静态未放宽",
+      "detail": "assertProbe模型/lease gate不变，generation/status围栏不变；started事实收尾不要求当前active，claim/newretry仍admission；Source采用经owner.commit→workspace写门/父锁，assertSettled使用原tx；成功结算只证明事实不授予归档新采用写权。"
+    },
+    {
+      "name": "ORM对齐0128",
+      "status": "静态成立",
+      "detail": "account nullable+group列；旧accountunique保留；group partialunique仅group!=NULL && account==NULL；原索引名/SQL未变。"
+    }
+  ],
+  "remaining_findings": [
+    {
+      "id": "PROBE-MODERN-GROUP-ACCOUNT-RECEIPT-SCOPE",
+      "status": "当前字节仍存在，已立即发ROOT/writer",
+      "severity": "真实组共享幂等边界；不应以28PASS遗漏族视作闭合",
+      "source": "backend/src/modules/ai/ai-media-probe-control.ts",
+      "line": 69,
+      "source_sha256": "360e27d83863329fb77f0a3f2109c3ee4108a6aff88e863b4d2d877ddca0d304",
+      "actual_branch_present": true,
+      "code_branch": "task.accountId非NULL就写{accountId:task.accountId,groupId:task.groupId}，没有要求migratedLegacyOrigin",
+      "actual_production_reachability": [
+        "AiService新协议idempotencyKey使用group namespace并fingerprint包含groupId",
+        "AiRepository.createTask/createTaskIfAbsent使用lockWorkspaceMembership冻结accountId；现代group ctx含真实account时会写非NULLaccount和非NULL版本",
+        "其exec.media.probe失败任务经control.retry通过正式frozen admission，走当前所有account保留分支",
+        "同group不同account两个现代task用相同requestId，旧account unique分桶，各可成功；group partialunique因account非NULL不覆盖"
+      ],
+      "impact": "新group共享同request碰撞只能在accountNULL fixture显示安全，现代带account任务会退回旧account桶；不是伪造账号才能触达。",
+      "minimal_fix": "只真正groupIdNULL旧account入口或明确migratedLegacyOrigin证明的task新receipt保account；其余现代group新receipt一律真实group+accountNULL，旧exactaccount历史回读保持。不要改DDL或改旧digest/key。",
+      "required_regression": "两个真实active平台account/membership同一group的新协议exec.media.probe task，非NULL版本/key group namespace，shared requestId并发只提交一个group NULLaccount receipt；败方task原failed且domain409。不同group相同req独立，迁移legacy原account仍同旧key/原receipt。"
+    }
+  ],
+  "still_missing_evidence": [
+    "实际read-only grant借用task/Source父项权限公共族未在这16+12明确构造，静态owner/workspace门未放宽；保留待验证",
+    "legacy原账号已离开原legacy组/账户archive的negative独立case未实际发生，本审查不补PASS",
+    "旧receipt来源证明fallback独立positive/坏digest/task negative尚无专门case",
+    "当前28日志没有逐源码SHA冻结manifest；本报告SHA是审查时当前bytes，sole writer继续改动后须重新绑定实际验证"
+  ],
+  "logs": [
+    {
+      "path": "/tmp/t1062-probe-migrated-legacy-null-versions-functional-red.log",
+      "sha256": "97c33249f85477319996cb7bd2f0952163a7994da88e5abe77df1feb4762c1a9",
+      "exit_from_log": 1,
+      "test_summary": [
+        "\n\n Test Files  1 failed (1)",
+        "      Tests  1 failed | 15 skipped (16)"
+      ],
+      "reviewer_execution": false
+    },
+    {
+      "path": "/tmp/t1062-probe-migrated-legacy-and-source-v3-public-green1.log",
+      "sha256": "644752f1e99e9a156de3cc80c3997f355f54714dac02a5f58916102ea3344b3c",
+      "exit_from_log": 0,
+      "test_summary": [
+        "\n\n Test Files  2 passed (2)",
+        "      Tests  28 passed (28)"
+      ],
+      "reviewer_execution": false
+    }
+  ],
+  "reviewer_did_not_run_db_models_tests_tsc": true,
+  "repo_or_control_edit": false,
+  "not_whole_wave_approval": true,
+  "source_drift_during_report": []
+}
