@@ -1,3 +1,4 @@
+import {repairConvergenceSchema,inspectMigrationConvergence} from './migration-convergence';
 import {backupBeforeGroupUpgrade,backupPostgresBeforeGroupUpgrade,verifyGroupUpgradeCounts} from "./group-upgrade-backup";
 import * as publicationCoverSchema from "./schema/publication-cover";
 import * as creativeCanvasSchema from "./schema/creative-canvas";
@@ -73,8 +74,6 @@ import { dirname, resolve, isAbsolute, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { homedir } from "node:os";
 import { rename } from "node:fs/promises";
-import { readFileSync } from "node:fs";
-import { sql } from "drizzle-orm";
 
 // Versioned migrations live in backend/drizzle (baseline 0000_init derived from the
 // per-module *_DDL). The pglite (tests) and node-postgres (runtime) migrators apply this
@@ -83,20 +82,6 @@ const MIGRATIONS_FOLDER = resolve(
   dirname(fileURLToPath(import.meta.url)),
   "../drizzle",
 );
-
-// 部分旧装机的迁移 journal 已越过 0101，但实际未建画布表。只在缺表时重放
-// 0101 的幂等 DDL；沿用迁移文件本身，避免运行时和版本化迁移出现两份定义。
-async function ensureCreativeCanvasSchema(db: Db): Promise<void> {
-  const result = await db.execute(sql.raw(
-    "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_name IN ('creative_canvases', 'canvas_generation_links', 'canvas_agent_proposals')",
-  ));
-  if (result.rows.length === 3) return;
-  const migration = readFileSync(join(MIGRATIONS_FOLDER, "0101_creative_canvas.sql"), "utf8");
-  const statements = migration.split("--> statement-breakpoint").map((part) => part.trim()).filter(Boolean);
-  await db.transaction(async (tx) => {
-    for (const statement of statements) await tx.execute(sql.raw(statement));
-  });
-}
 
 // Shared DDL/schema union applied at every createDb(). Each module's tables join
 // here as they land (foundation §1: one pglite store, shared db factory).
@@ -222,84 +207,8 @@ async function migrateOpenedDb(client: PGlite): Promise<Db> {
   // per-module client.exec(*_DDL) sequence — the schema is now built by the migration.
   await inspectCanvasMigrationLineage(db, MIGRATIONS_FOLDER);
   await migratePglite(db, { migrationsFolder: MIGRATIONS_FOLDER });
-  await ensureCreativeCanvasSchema(db);
+  await repairConvergenceSchema(db,MIGRATIONS_FOLDER);
   await assertCanvasMigrationConverged(db, MIGRATIONS_FOLDER);
-    // [T-033 fixup] 老 pglite(< 2026-07-08 build 前的 .dmg 装的)schema 不带 publications.platform_status 列,
-    // 旧 journal 也没记 0029 → migrator 不会跑 → 启动 SSR list 报「column 不存在」500。
-    // 这里用 information_schema 查列存不存在,缺就 ALTER TABLE 加(IF NOT EXISTS 兜幂等)。
-    // 不动 journal(保留 migrator 单一真源),这是 T-033 加列后的启动兼容层。
-    const colCheck = await client.query<{ exists: boolean }>(
-      "SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'publications' AND column_name = 'platform_status') AS exists",
-    );
-    if (!colCheck.rows[0]?.exists) {
-      await client.exec(
-        "ALTER TABLE publications ADD COLUMN IF NOT EXISTS platform_status TEXT",
-      );
-    }
-    // [T-200 fixup] 同款兜底:老 pglite 无 scheduled_job.account_id 列(0030 前的装机),
-    // migrator 若因 journal 不同步没跑 0030 → 建/读 job 报「column 不存在」。缺就补(幂等)。
-    const acctColCheck = await client.query<{ exists: boolean }>(
-      "SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'scheduled_job' AND column_name = 'account_id') AS exists",
-    );
-    if (!acctColCheck.rows[0]?.exists) {
-      await client.exec(
-        "ALTER TABLE scheduled_job ADD COLUMN IF NOT EXISTS account_id TEXT",
-      );
-    }
-    // [T-201b fixup] 同款兜底:老 pglite 无 platform_accounts.external_account_id 列(0031 前装机),
-    // migrator 若因 journal 不同步没跑 0031 → 身份解析读该列报「column 不存在」。缺就补(幂等);
-    // 并把旧 handle 唯一索引换成 sec_uid 身份唯一(与 0031 一致,幂等 DROP/CREATE IF)。
-    const extColCheck = await client.query<{ exists: boolean }>(
-      "SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'platform_accounts' AND column_name = 'external_account_id') AS exists",
-    );
-    if (!extColCheck.rows[0]?.exists) {
-      await client.exec(
-        "ALTER TABLE platform_accounts ADD COLUMN IF NOT EXISTS external_account_id TEXT",
-      );
-      await client.exec("DROP INDEX IF EXISTS platform_accounts_handle_ux");
-      await client.exec(
-        "CREATE UNIQUE INDEX IF NOT EXISTS platform_accounts_external_ux ON platform_accounts(user_id, platform, external_account_id)",
-      );
-    }
-    // [T-235d-distill fixup] 同款兜底:老 pglite 无 favorites_items 蒸馏链三列(0039 前装机),
-    // migrator 若因 journal 不同步没跑 0039 → 收藏夹蒸馏链读写报「column 不存在」。缺就补(幂等)。
-    const favDistillColCheck = await client.query<{ exists: boolean }>(
-      "SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'favorites_items' AND column_name = 'distill_status') AS exists",
-    );
-    if (!favDistillColCheck.rows[0]?.exists) {
-      await client.exec(
-        "ALTER TABLE favorites_items ADD COLUMN IF NOT EXISTS transcript TEXT",
-      );
-      await client.exec(
-        "ALTER TABLE favorites_items ADD COLUMN IF NOT EXISTS distill_status TEXT",
-      );
-      await client.exec(
-        "ALTER TABLE favorites_items ADD COLUMN IF NOT EXISTS distill_result JSONB NOT NULL DEFAULT '{}'::jsonb",
-      );
-      await client.exec(
-        "CREATE INDEX IF NOT EXISTS ix_favorites_items_distill ON favorites_items (user_id, distill_status)",
-      );
-    }
-    // [T-326 DATA-H02 fixup] 同款兜底:老装机若因 journal 不同步没跑 0041(账号维度唯一键),
-    // 代码侧 onConflict target 已改为含 account_id → PG 报「no unique or exclusion constraint
-    // matching the ON CONFLICT specification」。缺 _v2 索引就补(先建新后删旧,与 0041 同序、幂等)。
-    const acctUxCheck = await client.query<{ exists: boolean }>(
-      "SELECT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'ux_topic_preferences_identity_v2') AS exists",
-    );
-    if (!acctUxCheck.rows[0]?.exists) {
-      await client.exec(
-        "CREATE UNIQUE INDEX IF NOT EXISTS ux_favorites_folders_identity_v2 ON favorites_folders (user_id, account_id, name) NULLS NOT DISTINCT",
-      );
-      await client.exec("DROP INDEX IF EXISTS ux_favorites_folders_identity");
-      await client.exec(
-        "CREATE UNIQUE INDEX IF NOT EXISTS ux_favorites_items_identity_v2 ON favorites_items (user_id, account_id, aweme_id) NULLS NOT DISTINCT",
-      );
-      await client.exec("DROP INDEX IF EXISTS ux_favorites_items_identity");
-      await client.exec(
-        "CREATE UNIQUE INDEX IF NOT EXISTS ux_topic_preferences_identity_v2 ON topic_preferences (user_id, account_id, keyword, direction) NULLS NOT DISTINCT",
-      );
-      await client.exec("DROP INDEX IF EXISTS ux_topic_preferences_identity");
-    }
   return db;
 }
 
@@ -352,7 +261,9 @@ export async function createDb(options: CreateDbOptions = {}): Promise<{
 
   // ── 迁移阶段 ────────────────────────────────────────────────────────────────
   try {
-    const backup=await backupBeforeGroupUpgrade(client,{dataDir});
+    const probe=drizzle(client,{schema});
+    const upgrade=await inspectMigrationConvergence(probe,MIGRATIONS_FOLDER);
+    const backup=await backupBeforeGroupUpgrade(client,{dataDir,convergence:upgrade.needsUpgrade});
     const db = await migrateOpenedDb(client);
     if(backup)await verifyGroupUpgradeCounts(client,backup);
     return { db, client };
@@ -415,12 +326,14 @@ export async function createRuntimeDb(
   try{
     // 同一库的并发启动共用升级互斥；保持同一个连接直到备份、迁移与计数校验完成。
     await guard.query("SELECT pg_advisory_lock(1022,1)");
+    const upgradeDb=drizzlePg(guard,{schema});
+    const upgrade=await inspectMigrationConvergence(upgradeDb as unknown as Db,MIGRATIONS_FOLDER);
     const client={query:async<T>(query:string)=>{const result=await guard.query(query);return {rows:result.rows as T[]};}};
-    const backup=await backupPostgresBeforeGroupUpgrade(client as never,connectionString);
-    await inspectCanvasMigrationLineage(db as unknown as Db, MIGRATIONS_FOLDER);
-    await migratePg(db, { migrationsFolder: MIGRATIONS_FOLDER });
-    await ensureCreativeCanvasSchema(db as unknown as Db);
-    await assertCanvasMigrationConverged(db as unknown as Db,MIGRATIONS_FOLDER);
+    const backup=await backupPostgresBeforeGroupUpgrade(client as never,connectionString,{convergence:upgrade.needsUpgrade});
+    await inspectCanvasMigrationLineage(upgradeDb as unknown as Db, MIGRATIONS_FOLDER);
+    await migratePg(upgradeDb, { migrationsFolder: MIGRATIONS_FOLDER });
+    await repairConvergenceSchema(upgradeDb as unknown as Db,MIGRATIONS_FOLDER);
+    await assertCanvasMigrationConverged(upgradeDb as unknown as Db,MIGRATIONS_FOLDER);
     if(backup)await verifyGroupUpgradeCounts(client as never,backup);
   }catch(error){
     try{await guard.query("SELECT pg_advisory_unlock(1022,1)");}finally{guard.release();}

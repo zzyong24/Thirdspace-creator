@@ -1,0 +1,2852 @@
+{
+  "root": {
+    "ref": "125bc864",
+    "journalSha256": "f4b8b8e659b04d8ac464b2db6551f0a2f4cf6fc20977b32544e0a18cb7e0aa83",
+    "entries": [
+      {
+        "idx": 0,
+        "version": "7",
+        "when": 1782378989510,
+        "tag": "0000_init",
+        "breakpoints": true,
+        "hash": "389dce30cb081f39c868443481db23dd739a75c571f73302d377bca0ba91c4de"
+      },
+      {
+        "idx": 1,
+        "version": "7",
+        "when": 1782379000000,
+        "tag": "0001_model_secret_value",
+        "breakpoints": true,
+        "hash": "7ee69734aea0b900036aedf05acf3e4ae3c1c78988013af2f84898037148ec54"
+      },
+      {
+        "idx": 2,
+        "version": "7",
+        "when": 1782379100000,
+        "tag": "0002_storage_configs",
+        "breakpoints": true,
+        "hash": "6c37d1f5cc7bd48765405f5382d1926072ff5d46a92e82c6c2905725ce0d39eb"
+      },
+      {
+        "idx": 3,
+        "version": "7",
+        "when": 1782379200000,
+        "tag": "0003_positioning_facets_rules",
+        "breakpoints": true,
+        "hash": "5ec8eddf99f26883953e1a1002e29a6d55bac52d19e31b345f63782919902a3f"
+      },
+      {
+        "idx": 4,
+        "version": "7",
+        "when": 1782379300000,
+        "tag": "0004_candidate_card",
+        "breakpoints": true,
+        "hash": "a6c1aad0b6c8f10e240e7db2874c651f034e7d9bcf72e205dc8ee8dcf0fb00b6"
+      },
+      {
+        "idx": 5,
+        "version": "7",
+        "when": 1782379400000,
+        "tag": "0005_project_brief_detail",
+        "breakpoints": true,
+        "hash": "a658d6f7f7e0fd43bf2468e91cd545b3965b44550064bef8f35361cb2436f654"
+      },
+      {
+        "idx": 6,
+        "version": "7",
+        "when": 1782379500000,
+        "tag": "0006_calibration_rule_suggestions",
+        "breakpoints": true,
+        "hash": "f784180835244f7b221c0e76da4fd086f5e74e4b02ce761bb57b485f58276c9c"
+      },
+      {
+        "idx": 7,
+        "version": "7",
+        "when": 1782379600000,
+        "tag": "0007_ai_task_steps",
+        "breakpoints": true,
+        "hash": "d3134ae00cf022b53b1889c832dcbc04badc3a4878591ab09603067a59dd91bb"
+      },
+      {
+        "idx": 8,
+        "version": "7",
+        "when": 1782379700000,
+        "tag": "0008_project_source_platformref",
+        "breakpoints": true,
+        "hash": "75779580fe08f36ffdd90b747e247a4dba74ad5b41522d8b6d472e652651a095"
+      },
+      {
+        "idx": 9,
+        "version": "7",
+        "when": 1782379800000,
+        "tag": "0009_scheduled_job_and_run",
+        "breakpoints": true,
+        "hash": "e9195aea23c4e7320d75a6f93817d5e00313966ea03cdd865716c53fa09a2629"
+      },
+      {
+        "idx": 10,
+        "version": "7",
+        "when": 1782379900000,
+        "tag": "0010_artifacts_origin",
+        "breakpoints": true,
+        "hash": "8eb6d84e6154bebf6567db92fc930106f3bf007bd05f9d1a9a57ae12a8fbd401"
+      },
+      {
+        "idx": 11,
+        "version": "7",
+        "when": 1782380000000,
+        "tag": "0011_audience_signals_publication",
+        "breakpoints": true,
+        "hash": "062c595342f8645b1747fe09b5b42a5ae66a6e655d35ae067af877bc1f17d395"
+      },
+      {
+        "idx": 12,
+        "version": "7",
+        "when": 1782380100000,
+        "tag": "0012_douyin_throttle_state",
+        "breakpoints": true,
+        "hash": "f055cba43a20b32eb3b85a7bdbfa5bb776d8c07d5d17e4311df675f518736775"
+      },
+      {
+        "idx": 13,
+        "version": "7",
+        "when": 1782380200000,
+        "tag": "0013_skill_config_overrides",
+        "breakpoints": true,
+        "hash": "7ff4fa6304cb05207d30d018c461b3eca0ac957f97a6f5de2d9991bfa3a1a6fc"
+      },
+      {
+        "idx": 14,
+        "version": "7",
+        "when": 1782380300000,
+        "tag": "0014_audience_signals_like_count",
+        "breakpoints": true,
+        "hash": "a6b6e91aa5ec7d352b23abeee3c98f2590ebc9d48003131643df70a63fbdec53"
+      },
+      {
+        "idx": 15,
+        "version": "7",
+        "when": 1782380300001,
+        "tag": "0015_retire_thesis_contract",
+        "breakpoints": true,
+        "hash": "f210a6bf105babf8749673e1765d558184d9917ae7bd29f3a1fba2e5f5b3926e"
+      },
+      {
+        "idx": 16,
+        "version": "7",
+        "when": 1782380400000,
+        "tag": "0016_audience_signals_external_id",
+        "breakpoints": true,
+        "hash": "7c40f3280ae26e3785c08eb45f274abd71f4eca1183c4e8967c9d8aa553ed5b8"
+      },
+      {
+        "idx": 17,
+        "version": "7",
+        "when": 1782380400001,
+        "tag": "0017_publication_hidden_at",
+        "breakpoints": true,
+        "hash": "e6b12e92fd6cb8d92bafaa5340107b1dd96d3b0aaf1e28a38271cce70743c525"
+      },
+      {
+        "idx": 18,
+        "version": "7",
+        "when": 1782380500000,
+        "tag": "0018_knowledge_source_note",
+        "breakpoints": true,
+        "hash": "58746cb65a67030fe985fb7e3cd26542bd9469718233fcc2d0ee20ca86f0ea05"
+      },
+      {
+        "idx": 19,
+        "version": "7",
+        "when": 1782380600000,
+        "tag": "0019_ai_conversation_scope",
+        "breakpoints": true,
+        "hash": "7b053288ec4572087c91a0f5557786ee38c30c30d02f7a15672a3db7913a2417"
+      },
+      {
+        "idx": 20,
+        "version": "7",
+        "when": 1782380700000,
+        "tag": "0020_review_gate",
+        "breakpoints": true,
+        "hash": "06b58a4a40f27d22d38168bbafb9db5f122c73ca90cfc96e8bd63458ef752969"
+      },
+      {
+        "idx": 21,
+        "version": "7",
+        "when": 1782380800000,
+        "tag": "0021_learnings_project_id",
+        "breakpoints": true,
+        "hash": "4c9d3fbac08da0b9946b0ad06636793dc4ac1dfa63b7a1c1962a0c42f91051f8"
+      },
+      {
+        "idx": 22,
+        "version": "7",
+        "when": 1782380900000,
+        "tag": "0022_ai_messages_parts",
+        "breakpoints": true,
+        "hash": "95860f32dcdb9baef59fd1ea0cccea62c0cc3166b578af35fdda5c12a428dd24"
+      },
+      {
+        "idx": 23,
+        "version": "7",
+        "when": 1782381000000,
+        "tag": "0023_material_link_priority",
+        "breakpoints": true,
+        "hash": "35eafe944740b7b24949d16b50c5534d6a533f78a8c91a78a3c073e077ea7383"
+      },
+      {
+        "idx": 24,
+        "version": "7",
+        "when": 1782381100000,
+        "tag": "0024_asset_file_extraction",
+        "breakpoints": true,
+        "hash": "830c57308b6416fa27ce16e873c050eb20b2c73c779aa41741d41073937fc268"
+      },
+      {
+        "idx": 25,
+        "version": "7",
+        "when": 1782381200000,
+        "tag": "0025_multi_account_ownership",
+        "breakpoints": true,
+        "hash": "9a2dbb9d65f780f9e0e40e25626e398d85af25ff522dd2727675612658ec3d49"
+      },
+      {
+        "idx": 26,
+        "version": "7",
+        "when": 1782381300000,
+        "tag": "0026_job_run_progress",
+        "breakpoints": true,
+        "hash": "672f20ae70ef431bad9411d0aaf536ec330bd267de4aa214df16d87a20fc2afb"
+      },
+      {
+        "idx": 27,
+        "version": "7",
+        "when": 1782381400000,
+        "tag": "0027_activation_state",
+        "breakpoints": true,
+        "hash": "13cbbaa4690ca05c2657d55f3c6b0f8065940359f5f0855a19e860a5dd675aaa"
+      },
+      {
+        "idx": 28,
+        "version": "7",
+        "when": 1782381500000,
+        "tag": "0028_skill_config_override_versions",
+        "breakpoints": true,
+        "hash": "0d83fd1e3f46a58f0d84509c6d9db84c7265e60138bae0ece44f6f2a57bed926"
+      },
+      {
+        "idx": 29,
+        "version": "7",
+        "when": 1782381510000,
+        "tag": "0029_publication_platform_status",
+        "breakpoints": true,
+        "hash": "457e53978ff309a93c1ac10719e0bd4dd6020335daf05d925673b34d03e45654"
+      },
+      {
+        "idx": 30,
+        "version": "7",
+        "when": 1782381520000,
+        "tag": "0030_scheduled_job_account",
+        "breakpoints": true,
+        "hash": "84777f0e3805e253a4215bc049983c8b82fb5621da45cab06d08fb7578b62186"
+      },
+      {
+        "idx": 31,
+        "version": "7",
+        "when": 1782381530000,
+        "tag": "0031_platform_account_external_id",
+        "breakpoints": true,
+        "hash": "7d386c87fba6eba8a9cb91cf5f9c4a52acf4c494b5004064ca1bb79c0970e53e"
+      },
+      {
+        "idx": 32,
+        "version": "7",
+        "when": 1782381540000,
+        "tag": "0032_benchmark_sources_works",
+        "breakpoints": true,
+        "hash": "98a7326aab2513dc1ec92bbdd4a8c917eaa0126d5a4f80b5dcbd72a7afb50c23"
+      },
+      {
+        "idx": 33,
+        "version": "7",
+        "when": 1782381550000,
+        "tag": "0033_topic_preferences",
+        "breakpoints": true,
+        "hash": "e90e83dfc42f277228e02e54e3af5138beaa8e207e386dc29324e6a1b07dc67d"
+      },
+      {
+        "idx": 34,
+        "version": "7",
+        "when": 1782381560000,
+        "tag": "0034_positioning_statement_change_reason",
+        "breakpoints": true,
+        "hash": "57e4fe78a616714b6f3561028e7e125216c583814d131b90a448d90206b68e3f"
+      },
+      {
+        "idx": 35,
+        "version": "7",
+        "when": 1782381570000,
+        "tag": "0035_trend_sources_darkhorse",
+        "breakpoints": true,
+        "hash": "cc29ae3c882f845c102d43c8b6f1c5c57fa397571063e48c248140a25482d402"
+      },
+      {
+        "idx": 36,
+        "version": "7",
+        "when": 1782381580000,
+        "tag": "0036_topic_attributions",
+        "breakpoints": true,
+        "hash": "8569ad530e3da15df8646d7dac7e5a7dab7e8c7fdb283fc67063ae45d55aad9c"
+      },
+      {
+        "idx": 37,
+        "version": "7",
+        "when": 1782381590000,
+        "tag": "0037_ai_messages_usage",
+        "breakpoints": true,
+        "hash": "244138e142703181e28cc701b97322bdc13fb719adfd2ce4815f56c0ac20fd09"
+      },
+      {
+        "idx": 38,
+        "version": "7",
+        "when": 1782381600000,
+        "tag": "0038_favorites_folders",
+        "breakpoints": true,
+        "hash": "bd8e56e6afe749150b22f78e34949c9f94140f46fb625fe5e3885946fcc6fd0e"
+      },
+      {
+        "idx": 39,
+        "version": "7",
+        "when": 1782381610000,
+        "tag": "0039_favorites_distill",
+        "breakpoints": true,
+        "hash": "6f88d4b5a66c4cd384bdb01d7172616078f5fabcc1b09fc34f049e3443dc9031"
+      },
+      {
+        "idx": 40,
+        "version": "7",
+        "when": 1782381620000,
+        "tag": "0040_backfill_imported_publication_revision",
+        "breakpoints": true,
+        "hash": "c6bc974bf72ff5386e0fb2d3193b0d7b6bf3eec68018319ce5477aceaa2ed856"
+      },
+      {
+        "idx": 41,
+        "version": "7",
+        "when": 1782381630000,
+        "tag": "0041_account_scoped_unique_identity",
+        "breakpoints": true,
+        "hash": "fa546ae37dca6da2db56c867be7fac288e20018b261278f45bf801750d42fbb9"
+      },
+      {
+        "idx": 42,
+        "version": "7",
+        "when": 1782381640000,
+        "tag": "0042_account_isolation_notnull",
+        "breakpoints": true,
+        "hash": "184fb122be28b1c6b145a53ab4c78a640add69753fe990459b173e959df34f87"
+      },
+      {
+        "idx": 43,
+        "version": "7",
+        "when": 1782381650000,
+        "tag": "0043_notifications_account_stamp",
+        "breakpoints": true,
+        "hash": "b8362decbb29f0f4de7b92cff01584888ca90317c0f689b21104e1db789381f1"
+      },
+      {
+        "idx": 44,
+        "version": "7",
+        "when": 1782381660000,
+        "tag": "0044_benchmark_works_transcript",
+        "breakpoints": true,
+        "hash": "5b8460ecc416e0677edd9b65b89036b38372a517178ef4141d0bc2473aa7989f"
+      },
+      {
+        "idx": 45,
+        "version": "7",
+        "when": 1782381670000,
+        "tag": "0045_learnings_evidence_strength",
+        "breakpoints": true,
+        "hash": "029271f68b8ffdbfecfaa4d4ff4873f080268d7523091cfa80453d9618247923"
+      },
+      {
+        "idx": 46,
+        "version": "7",
+        "when": 1782381680000,
+        "tag": "0046_scheduled_job_unique_source",
+        "breakpoints": true,
+        "hash": "5fac07ae25bad43d1deb644425eb65880c0aaecd1f28e624ef2e6d7e333e2de4"
+      },
+      {
+        "idx": 47,
+        "version": "7",
+        "when": 1782381690000,
+        "tag": "0047_browser_sessions",
+        "breakpoints": true,
+        "hash": "c87f38c1d4acf140ce691f3ef137fbb7b2ab0d48ceead46246e396f6db658235"
+      },
+      {
+        "idx": 48,
+        "version": "7",
+        "when": 1784300000000,
+        "tag": "0048_browser_sessions_drop_migrated",
+        "breakpoints": true,
+        "hash": "beac75017e944d86f3deadbe81ba93215802e53966a8011fc830e0f6c3ced9cb"
+      },
+      {
+        "idx": 49,
+        "version": "7",
+        "when": 1784310000000,
+        "tag": "0049_activation_security_mirror",
+        "breakpoints": true,
+        "hash": "b6f8a1df11ab477532b44991ebef37b7aa3a6a47dbef251d450ca82ec6ba5ea2"
+      },
+      {
+        "idx": 50,
+        "version": "7",
+        "when": 1784820000000,
+        "tag": "0050_content_intelligence",
+        "breakpoints": true,
+        "hash": "b241490c7de4858ace783885da1b7831a63418f181c555177d7e32c1fe6123f3"
+      },
+      {
+        "idx": 51,
+        "version": "7",
+        "when": 1784823600000,
+        "tag": "0051_content_intelligence_project_provenance",
+        "breakpoints": true,
+        "hash": "9cfa671b7fc6022b80565097fa72b148ed8a60f6a1714498afe8bf64b75d0b16"
+      },
+      {
+        "idx": 52,
+        "version": "7",
+        "when": 1784827200000,
+        "tag": "0052_intelligence_source_memberships",
+        "breakpoints": true,
+        "hash": "9be75617f6369512305e4352436a1f2d3563136e209abdfcab4c92e8bc2a6364"
+      },
+      {
+        "idx": 53,
+        "version": "7",
+        "when": 1784913600000,
+        "tag": "0053_account_skill_overlays",
+        "breakpoints": true,
+        "hash": "4c7a0cdd0938e665b8a1cdd40142e521542a8d4f49ef32e3b79f038a8f9c6f0f"
+      },
+      {
+        "idx": 54,
+        "version": "7",
+        "when": 1784917200000,
+        "tag": "0054_ai_task_execution_ownership",
+        "breakpoints": true,
+        "hash": "07f3fb9931d185dc5b6a3d44db732d1adf63d8488d76106ea2ce7afe6f17fe61"
+      },
+      {
+        "idx": 55,
+        "version": "7",
+        "when": 1785081600000,
+        "tag": "0055_automation_task_active_owner",
+        "breakpoints": true,
+        "hash": "b2d44a75b2c20c0bd9c67100b6b3c87849f747ac0bb1849f5882601eec4719ee"
+      },
+      {
+        "idx": 56,
+        "version": "7",
+        "when": 1785085200000,
+        "tag": "0056_asset_upload_atomic_identity",
+        "breakpoints": true,
+        "hash": "2865e7d1a5d62d847e833b8c55c24e777bdba1f3652fca1a3ff88216a4eb021f"
+      },
+      {
+        "idx": 57,
+        "version": "7",
+        "when": 1785088800000,
+        "tag": "0057_knowledge_file_workspace",
+        "breakpoints": true,
+        "hash": "05a8a0f01e40f698422e0f04e0773fd856cf40c7bd526a7cd3eb8767909d25ca"
+      },
+      {
+        "idx": 58,
+        "version": "7",
+        "when": 1785092400000,
+        "tag": "0058_source_sync_active_owner",
+        "breakpoints": true,
+        "hash": "2b03251605a9d56a6dd9220baad85b60fdae029006c7438ee1462cd5ab45ddaa"
+      },
+      {
+        "idx": 59,
+        "version": "7",
+        "when": 1785096000000,
+        "tag": "0059_unify_content_radar_automation",
+        "breakpoints": true,
+        "hash": "3333bf58fe8bdfd76dad384f34464ff7c514453cb91cc973f7ff91e98d3fae8b"
+      },
+      {
+        "idx": 60,
+        "version": "7",
+        "when": 1785099600000,
+        "tag": "0060_retire_self_detail_automation",
+        "breakpoints": true,
+        "hash": "22b0fefa413aa4c8c09c1f0d9a4ffc67b885a92603edd14419cf986a73763b53"
+      },
+      {
+        "idx": 61,
+        "version": "7",
+        "when": 1785103200000,
+        "tag": "0061_project_schedule_calendar",
+        "breakpoints": true,
+        "hash": "eabb4445cee98b89be7110c585242a3ba14365c2a250e6e20616f5d854f8ffca"
+      },
+      {
+        "idx": 62,
+        "version": "7",
+        "when": 1785106800000,
+        "tag": "0062_normalize_scheduling_timestamps",
+        "breakpoints": true,
+        "hash": "518c5ce15c9cf4cfcda4e883f61e01fe81623bb87d91bc98021f549cabf0f2f7"
+      },
+      {
+        "idx": 63,
+        "version": "7",
+        "when": 1785110400000,
+        "tag": "0063_learning_adoption_dedupe",
+        "breakpoints": true,
+        "hash": "bc2dc50d55ef663b1411ef5c8f5c552a3c0393ee7f231bf53c8a3b9e33cbafae"
+      },
+      {
+        "idx": 64,
+        "version": "7",
+        "when": 1785114000000,
+        "tag": "0064_positioning_master_version_floor",
+        "breakpoints": true,
+        "hash": "65784078113781f3cc461d5520f69a9b555d78dee9407bed80a21e09cc65eb28"
+      },
+      {
+        "idx": 65,
+        "version": "7",
+        "when": 1785117600000,
+        "tag": "0065_positioning_master_snapshot",
+        "breakpoints": true,
+        "hash": "00456246881d97c974106d50db00f9b3d3aa74369c110e68ea6a6922c20047a2"
+      },
+      {
+        "idx": 66,
+        "version": "7",
+        "when": 1785542400000,
+        "tag": "0066_positioning_discovery_sessions",
+        "breakpoints": true,
+        "hash": "bb74087d912487640b7b84fb7dcbcd79a479adc3783712cbd744859a7024212e"
+      },
+      {
+        "idx": 67,
+        "version": "7",
+        "when": 1785628800000,
+        "tag": "0067_channel_model_credentials",
+        "breakpoints": true,
+        "hash": "45aaa6283171089a020dba4e96f74dc05d3b1b65ed6bc3a7113df603a0dc76ec"
+      },
+      {
+        "idx": 68,
+        "version": "7",
+        "when": 1786752000000,
+        "tag": "0068_cli_invocations",
+        "breakpoints": true,
+        "hash": "05b73f87445a2d3e5eb42738be94deceff72c4628b3cf81a550d8e5058f1a9f2"
+      },
+      {
+        "idx": 69,
+        "version": "7",
+        "when": 1788566400000,
+        "tag": "0069_execution_authority_mapping",
+        "breakpoints": true,
+        "hash": "695c632f3807ae973e3278a1d832ed9ea2d7f3cb36967228058f5eceacfcc9fb"
+      },
+      {
+        "idx": 70,
+        "version": "7",
+        "when": 1788652800000,
+        "tag": "0070_execution_fence",
+        "breakpoints": true,
+        "hash": "2b5822bc41a9638e9af53fc14fbdbe7b4db48146a68c8913d4f42e56a96d8f06"
+      },
+      {
+        "idx": 71,
+        "version": "7",
+        "when": 1788652800001,
+        "tag": "0071_execution_call_ledger",
+        "breakpoints": true,
+        "hash": "aa752b0639a6717a5b980e69151545fcbb4fae05a426f277175466abdbb789a6"
+      },
+      {
+        "idx": 72,
+        "version": "7",
+        "when": 1788652800002,
+        "tag": "0072_execution_call_result",
+        "breakpoints": true,
+        "hash": "e691f86b4c989e9ebdf83e2546a9a8e8e2a569c9a6cee882a68b288261f73edb"
+      },
+      {
+        "idx": 73,
+        "version": "7",
+        "when": 1788652800003,
+        "tag": "0073_execution_retry_schedule",
+        "breakpoints": true,
+        "hash": "1ffca3e1b0135d3a9d064f5bd0eaf1b3889540b0a774d27248693184f1ac995d"
+      },
+      {
+        "idx": 74,
+        "version": "7",
+        "when": 1788652800004,
+        "tag": "0074_execution_candidate_receipt",
+        "breakpoints": true,
+        "hash": "34adf1f086c13a3791021557711ca85cc9eb5bd0d57652d4b4f7ef4bad365584"
+      },
+      {
+        "idx": 75,
+        "version": "7",
+        "when": 1788652800005,
+        "tag": "0075_execution_provider_receipt",
+        "breakpoints": true,
+        "hash": "f54d3f23c8289825cea193b29d10afe25feb973df2657d5e87581a377c24bcb2"
+      },
+      {
+        "idx": 76,
+        "version": "7",
+        "when": 1788652800006,
+        "tag": "0076_publication_draft_adoption",
+        "breakpoints": true,
+        "hash": "6f4d509689b6618a6526fa5fedf4dc483601984435908ebe65cd1bb2dd4a76fd"
+      },
+      {
+        "idx": 77,
+        "version": "7",
+        "when": 1788652800007,
+        "tag": "0077_artifact_version_adoption",
+        "breakpoints": true,
+        "hash": "6bbcc3dfe3cef46c76acfbd8227b45746c9977afc89cbc8d38e6e19ad41f7e12"
+      },
+      {
+        "idx": 78,
+        "version": "7",
+        "when": 1788652800008,
+        "tag": "0078_proposal_adoption_receipts",
+        "breakpoints": true,
+        "hash": "9894237836f7bd6f5d740036d003291bb6558e980236017eb647cbc9c6a5d912"
+      },
+      {
+        "idx": 79,
+        "version": "7",
+        "when": 1788652800009,
+        "tag": "0079_agentic_tool_execution_claim",
+        "breakpoints": true,
+        "hash": "8110c0332eea020f54c33b98b98550f81b10b60000e515df192dccae0bc28300"
+      },
+      {
+        "idx": 80,
+        "version": "7",
+        "when": 1788652800010,
+        "tag": "0080_execution_evidence",
+        "breakpoints": true,
+        "hash": "5c50fb27e089c8e9988ec3e8c85638eb10d163a59ebf14c8f5e9cef988ffb743"
+      },
+      {
+        "idx": 81,
+        "version": "7",
+        "when": 1788652800011,
+        "tag": "0081_execution_browser_profile_leases",
+        "breakpoints": true,
+        "hash": "4949f25acecdd67b027bf06b7e87707b0a6401f28dcf782b3c1a6856e6b70c5b"
+      },
+      {
+        "idx": 82,
+        "version": "7",
+        "when": 1788652800012,
+        "tag": "0082_scheduled_child_active_owner",
+        "breakpoints": true,
+        "hash": "518609ea53b833b7b2df3ea460387baf478d14fc5a2816d64f3a62f4242141dd"
+      },
+      {
+        "idx": 83,
+        "version": "7",
+        "when": 1788652800013,
+        "tag": "0083_execution_stream_events",
+        "breakpoints": true,
+        "hash": "af0ef9b37a8f07c51280c0a6ac7e2af1736a2b7e24c21502ea64aff5d0280380"
+      },
+      {
+        "idx": 84,
+        "version": "7",
+        "when": 1788652800014,
+        "tag": "0084_execution_call_parent",
+        "breakpoints": true,
+        "hash": "21dabcdd1d22c7af8333fd6750cce0d70d22f375c4fc5186e7e7452440b080f1"
+      },
+      {
+        "idx": 85,
+        "version": "7",
+        "when": 1788652800015,
+        "tag": "0085_pending_document_commits",
+        "breakpoints": true,
+        "hash": "277859b7d6e4a295294fc5ab63e32b22a235e5486eede7270f338a823ab8c27c"
+      },
+      {
+        "idx": 86,
+        "version": "7",
+        "when": 1788652800016,
+        "tag": "0086_execution_evidence_metadata",
+        "breakpoints": true,
+        "hash": "27d6fec892fea3f93a81ac8e8b9e3fe264a364e84929cb69725c09cffa88c90b"
+      },
+      {
+        "idx": 87,
+        "version": "7",
+        "when": 1788652800017,
+        "tag": "0087_execution_provider_job",
+        "breakpoints": true,
+        "hash": "82242de20052d2eed864469068d8379a3965351d1d50a114c9f73dfc3e4b89eb"
+      },
+      {
+        "idx": 88,
+        "version": "7",
+        "when": 1788652800018,
+        "tag": "0088_pending_generated_asset_commits",
+        "breakpoints": true,
+        "hash": "7dfc1e79ab145959056ad0e1c547de832d607f0933923a8ea3a89b2307e447d8"
+      },
+      {
+        "idx": 89,
+        "version": "7",
+        "when": 1788652800019,
+        "tag": "0089_project_transcription_requests",
+        "breakpoints": true,
+        "hash": "e43b018faa7f9d13d8dfc66744bf3fecb8178fc3b438d74bbfe9e2526968eb4a"
+      },
+      {
+        "idx": 90,
+        "version": "7",
+        "when": 1788652800020,
+        "tag": "0090_execution_call_accounting_basis",
+        "breakpoints": true,
+        "hash": "f112b27f3f7896e1bffcdfcd3417d72883f0fdd58984a539ae1e8b1f3505c84c"
+      },
+      {
+        "idx": 91,
+        "version": "7",
+        "when": 1788652800021,
+        "tag": "0091_browser_profile_host_owner",
+        "breakpoints": true,
+        "hash": "685afcca70cbc19d30161c36b284570b2911ad2146f2cd0a36b57f7afe4e2bef"
+      },
+      {
+        "idx": 92,
+        "version": "7",
+        "when": 1788854400000,
+        "tag": "0092_page_read_revision",
+        "breakpoints": true,
+        "hash": "faa3826b15d81ded0336383242672b874844f15c73f302258973447591f977ea"
+      },
+      {
+        "idx": 93,
+        "version": "7",
+        "when": 1788912000000,
+        "tag": "0093_positioning_current_statement",
+        "breakpoints": true,
+        "hash": "9131cf16c0c6febae18849ca6ceab9d31a160e16bebb58cafdcfaba0a5049438"
+      },
+      {
+        "idx": 94,
+        "version": "7",
+        "when": 1789084800000,
+        "tag": "0094_publication_traffic",
+        "breakpoints": true,
+        "hash": "a143eb6cb1b4515cba879cf1c0e0a6f2436a25484057ea30729158c526abe9c5"
+      },
+      {
+        "idx": 95,
+        "version": "7",
+        "when": 1789257600000,
+        "tag": "0095_redfox_credentials",
+        "breakpoints": true,
+        "hash": "03370712f2b68941113ed610429f1c6caee092fa0eb64e091464ee1007df1454"
+      },
+      {
+        "idx": 96,
+        "version": "7",
+        "when": 1789257600001,
+        "tag": "0096_publication_sync_state",
+        "breakpoints": true,
+        "hash": "73d6b3f08d96397634645368794f412eaa93840b5aa69884ae6245c1b7faf08e"
+      },
+      {
+        "idx": 97,
+        "version": "7",
+        "when": 1789257600002,
+        "tag": "0097_onboarding_state",
+        "breakpoints": true,
+        "hash": "489d56fb031f4e078942251e5972a093f04e41f11a86a76332cb6c55cb4d8631"
+      },
+      {
+        "idx": 98,
+        "version": "7",
+        "when": 1789344000000,
+        "tag": "0098_separate_collection_jobs",
+        "breakpoints": true,
+        "hash": "ab402ac8bfe4da8fddea05ac5d03042fb090a660411f8d1b34c8b578536673c8"
+      },
+      {
+        "idx": 99,
+        "version": "7",
+        "when": 1789344000001,
+        "tag": "0099_stagger_collection_jobs",
+        "breakpoints": true,
+        "hash": "9ac0be194976afafb7289ff157b61eb1b30af1433d43abfa4ec90011bf80ee5e"
+      },
+      {
+        "idx": 100,
+        "version": "7",
+        "when": 1789430400001,
+        "tag": "0100_traffic_unavailable",
+        "breakpoints": true,
+        "hash": "39d47dff9a5d634b24aee9af4b1894c70505cf7969e80136592b87d05c302ec1"
+      },
+      {
+        "idx": 101,
+        "version": "7",
+        "when": 1790761007000,
+        "tag": "0101_topic_rewrite_only",
+        "breakpoints": true,
+        "hash": "ade9a63285a7dcf94cb9c5db0ae7b19a14beec5863c43d788bcdb7d668c02c5b"
+      },
+      {
+        "idx": 102,
+        "version": "7",
+        "when": 1790942400000,
+        "tag": "0102_audience_task_workspace",
+        "breakpoints": true,
+        "hash": "760d25af66cd6c7ba03c831aff088dc426dbe4c075b60174e9054fff13933484"
+      },
+      {
+        "idx": 103,
+        "version": "7",
+        "when": 1790942400001,
+        "tag": "0102_account_groups",
+        "breakpoints": true,
+        "hash": "fd2b8a424f5763e3b7c4cbc03991864181ae21c1f166de2a445f9f40504edba4"
+      },
+      {
+        "idx": 104,
+        "version": "7",
+        "when": 1790942400002,
+        "tag": "0103_group_projects",
+        "breakpoints": true,
+        "hash": "3302bb056f323e1f3dcea93cba293eea5a203cf477369370e0902841c5e3c6f2"
+      },
+      {
+        "idx": 105,
+        "version": "7",
+        "when": 1790942400003,
+        "tag": "0104_group_knowledge_positioning",
+        "breakpoints": true,
+        "hash": "76df3a2dc8a4ab770919bb8c9b6a28d82f177abf8c939018b8ba502cb93b64fc"
+      },
+      {
+        "idx": 106,
+        "version": "7",
+        "when": 1790942400004,
+        "tag": "0107_group_resources",
+        "breakpoints": true,
+        "hash": "9f2f96642844e661b6b42cbb4a528e33e8557c8a2cd8a8a2615ea4cb9e58d65c"
+      },
+      {
+        "idx": 107,
+        "version": "7",
+        "when": 1790942400005,
+        "tag": "0108_group_platform_facts",
+        "breakpoints": true,
+        "hash": "1bbd62cdbd05bc9a7ff54b7eb7209cb0f7f913d5768f864b5f64587c08e4c9d1"
+      },
+      {
+        "idx": 108,
+        "version": "7",
+        "when": 1790942400006,
+        "tag": "0105_group_shared_domains",
+        "breakpoints": true,
+        "hash": "e3a854f0ffacac2fdb67195edc8ed78d291e098d64b6295e5bbddc655aae0530"
+      },
+      {
+        "idx": 109,
+        "version": "7",
+        "when": 1790942400007,
+        "tag": "0106_group_tasks_intelligence",
+        "breakpoints": true,
+        "hash": "d940cb7fe134b41cd05bf8b141e2bab05db689506aeba0b5f4b4e7122aa851c3"
+      },
+      {
+        "idx": 110,
+        "version": "7",
+        "when": 1790942400008,
+        "tag": "0110_group_migration_ledger",
+        "breakpoints": true,
+        "hash": "287c871366d3520655e29c90024031cf14890fc2f621920c54356d0d1d6203ca"
+      },
+      {
+        "idx": 111,
+        "version": "7",
+        "when": 1790942400009,
+        "tag": "0111_group_skill_overlays",
+        "breakpoints": true,
+        "hash": "9dcdb83f9413c61b19d99854c4a5c25c66ff03cd91976a3e6401b86baa59a42d"
+      },
+      {
+        "idx": 112,
+        "version": "7",
+        "when": 1790942400010,
+        "tag": "0109_group_calendar",
+        "breakpoints": true,
+        "hash": "4c6d51a44c8562530da1e5d40548b88db4579d74c60b96e44f843ef3c6d81558"
+      },
+      {
+        "idx": 113,
+        "version": "7",
+        "when": 1790942400011,
+        "tag": "0112_group_pending_assets",
+        "breakpoints": true,
+        "hash": "42b9444b769b69a804f19cd54b286b521bf96f5572e6ea0f95dd25a3b582dcc2"
+      },
+      {
+        "idx": 114,
+        "version": "7",
+        "when": 1790942400012,
+        "tag": "0114_legacy_shared_group_stamp",
+        "breakpoints": true,
+        "hash": "5b57f73888f56a24e76e7d15558a1d42d3e7a26fa7e64fe88f1aaf9c0f6609d1"
+      },
+      {
+        "idx": 115,
+        "version": "7",
+        "when": 1790942400013,
+        "tag": "0115_group_grant_uses",
+        "breakpoints": true,
+        "hash": "2f15de7815e9bf60b710185d0fd985a28cc1457b0f944c1948fc820ed1ec4406"
+      },
+      {
+        "idx": 116,
+        "version": "7",
+        "when": 1790942400014,
+        "tag": "0113_group_research_sources",
+        "breakpoints": true,
+        "hash": "77ac7f2f06beb28e36930d6d992fafe3979f79c2fe27d1bd6fffeb9c4a97277e"
+      },
+      {
+        "idx": 117,
+        "version": "7",
+        "when": 1790942400015,
+        "tag": "0117_group_project_derived",
+        "breakpoints": true,
+        "hash": "409f4339849f6874703a6857f8be1d0af727783691bda24a95718da0c1dbb83f"
+      },
+      {
+        "idx": 118,
+        "version": "7",
+        "when": 1790942400016,
+        "tag": "0119_group_transcription_knowledge_adoption",
+        "breakpoints": true,
+        "hash": "1f2c692f44b7699e7c1395b5cfa4e410d98a3b9280a2d7d48f357f962de5dc33"
+      },
+      {
+        "idx": 119,
+        "version": "7",
+        "when": 1790942400017,
+        "tag": "0118_group_audience_facts",
+        "breakpoints": true,
+        "hash": "cc40e4b1a61416a8aac4a5abae591977c48c3cca4379cac1b004385c33124ab0"
+      },
+      {
+        "idx": 120,
+        "version": "7",
+        "when": 1790942400018,
+        "tag": "0120_group_onboarding_state",
+        "breakpoints": true,
+        "hash": "80f1b9a7067d47ef68dcd15949167b09bbbedc2ac00ed971cb45688d880bfdee"
+      },
+      {
+        "idx": 121,
+        "version": "7",
+        "when": 1790942400019,
+        "tag": "0121_group_resource_grant_locks",
+        "breakpoints": true,
+        "hash": "eac87876acdd5d3b3826f0579241e94c8fae37961f86d4400a8a24252a94c0ae"
+      },
+      {
+        "idx": 122,
+        "version": "7",
+        "when": 1790942400020,
+        "tag": "0122_group_asset_tag_adoption",
+        "breakpoints": true,
+        "hash": "eae4d89ea5cf1da7b2699d5f8e5c3122cb286b8df03c2757f23a6ee34a533a9c"
+      }
+    ]
+  },
+  "diagnostic": {
+    "ref": "c5316506",
+    "journalSha256": "a49f4aa66b203379a898265b5f91c3ad9f9f07c004a694a4981411221e37d920",
+    "entries": [
+      {
+        "idx": 0,
+        "version": "7",
+        "when": 1782378989510,
+        "tag": "0000_init",
+        "breakpoints": true,
+        "hash": "389dce30cb081f39c868443481db23dd739a75c571f73302d377bca0ba91c4de"
+      },
+      {
+        "idx": 1,
+        "version": "7",
+        "when": 1782379000000,
+        "tag": "0001_model_secret_value",
+        "breakpoints": true,
+        "hash": "7ee69734aea0b900036aedf05acf3e4ae3c1c78988013af2f84898037148ec54"
+      },
+      {
+        "idx": 2,
+        "version": "7",
+        "when": 1782379100000,
+        "tag": "0002_storage_configs",
+        "breakpoints": true,
+        "hash": "6c37d1f5cc7bd48765405f5382d1926072ff5d46a92e82c6c2905725ce0d39eb"
+      },
+      {
+        "idx": 3,
+        "version": "7",
+        "when": 1782379200000,
+        "tag": "0003_positioning_facets_rules",
+        "breakpoints": true,
+        "hash": "5ec8eddf99f26883953e1a1002e29a6d55bac52d19e31b345f63782919902a3f"
+      },
+      {
+        "idx": 4,
+        "version": "7",
+        "when": 1782379300000,
+        "tag": "0004_candidate_card",
+        "breakpoints": true,
+        "hash": "a6c1aad0b6c8f10e240e7db2874c651f034e7d9bcf72e205dc8ee8dcf0fb00b6"
+      },
+      {
+        "idx": 5,
+        "version": "7",
+        "when": 1782379400000,
+        "tag": "0005_project_brief_detail",
+        "breakpoints": true,
+        "hash": "a658d6f7f7e0fd43bf2468e91cd545b3965b44550064bef8f35361cb2436f654"
+      },
+      {
+        "idx": 6,
+        "version": "7",
+        "when": 1782379500000,
+        "tag": "0006_calibration_rule_suggestions",
+        "breakpoints": true,
+        "hash": "f784180835244f7b221c0e76da4fd086f5e74e4b02ce761bb57b485f58276c9c"
+      },
+      {
+        "idx": 7,
+        "version": "7",
+        "when": 1782379600000,
+        "tag": "0007_ai_task_steps",
+        "breakpoints": true,
+        "hash": "d3134ae00cf022b53b1889c832dcbc04badc3a4878591ab09603067a59dd91bb"
+      },
+      {
+        "idx": 8,
+        "version": "7",
+        "when": 1782379700000,
+        "tag": "0008_project_source_platformref",
+        "breakpoints": true,
+        "hash": "75779580fe08f36ffdd90b747e247a4dba74ad5b41522d8b6d472e652651a095"
+      },
+      {
+        "idx": 9,
+        "version": "7",
+        "when": 1782379800000,
+        "tag": "0009_scheduled_job_and_run",
+        "breakpoints": true,
+        "hash": "e9195aea23c4e7320d75a6f93817d5e00313966ea03cdd865716c53fa09a2629"
+      },
+      {
+        "idx": 10,
+        "version": "7",
+        "when": 1782379900000,
+        "tag": "0010_artifacts_origin",
+        "breakpoints": true,
+        "hash": "8eb6d84e6154bebf6567db92fc930106f3bf007bd05f9d1a9a57ae12a8fbd401"
+      },
+      {
+        "idx": 11,
+        "version": "7",
+        "when": 1782380000000,
+        "tag": "0011_audience_signals_publication",
+        "breakpoints": true,
+        "hash": "062c595342f8645b1747fe09b5b42a5ae66a6e655d35ae067af877bc1f17d395"
+      },
+      {
+        "idx": 12,
+        "version": "7",
+        "when": 1782380100000,
+        "tag": "0012_douyin_throttle_state",
+        "breakpoints": true,
+        "hash": "f055cba43a20b32eb3b85a7bdbfa5bb776d8c07d5d17e4311df675f518736775"
+      },
+      {
+        "idx": 13,
+        "version": "7",
+        "when": 1782380200000,
+        "tag": "0013_skill_config_overrides",
+        "breakpoints": true,
+        "hash": "7ff4fa6304cb05207d30d018c461b3eca0ac957f97a6f5de2d9991bfa3a1a6fc"
+      },
+      {
+        "idx": 14,
+        "version": "7",
+        "when": 1782380300000,
+        "tag": "0014_audience_signals_like_count",
+        "breakpoints": true,
+        "hash": "a6b6e91aa5ec7d352b23abeee3c98f2590ebc9d48003131643df70a63fbdec53"
+      },
+      {
+        "idx": 15,
+        "version": "7",
+        "when": 1782380300001,
+        "tag": "0015_retire_thesis_contract",
+        "breakpoints": true,
+        "hash": "f210a6bf105babf8749673e1765d558184d9917ae7bd29f3a1fba2e5f5b3926e"
+      },
+      {
+        "idx": 16,
+        "version": "7",
+        "when": 1782380400000,
+        "tag": "0016_audience_signals_external_id",
+        "breakpoints": true,
+        "hash": "7c40f3280ae26e3785c08eb45f274abd71f4eca1183c4e8967c9d8aa553ed5b8"
+      },
+      {
+        "idx": 17,
+        "version": "7",
+        "when": 1782380400001,
+        "tag": "0017_publication_hidden_at",
+        "breakpoints": true,
+        "hash": "e6b12e92fd6cb8d92bafaa5340107b1dd96d3b0aaf1e28a38271cce70743c525"
+      },
+      {
+        "idx": 18,
+        "version": "7",
+        "when": 1782380500000,
+        "tag": "0018_knowledge_source_note",
+        "breakpoints": true,
+        "hash": "58746cb65a67030fe985fb7e3cd26542bd9469718233fcc2d0ee20ca86f0ea05"
+      },
+      {
+        "idx": 19,
+        "version": "7",
+        "when": 1782380600000,
+        "tag": "0019_ai_conversation_scope",
+        "breakpoints": true,
+        "hash": "7b053288ec4572087c91a0f5557786ee38c30c30d02f7a15672a3db7913a2417"
+      },
+      {
+        "idx": 20,
+        "version": "7",
+        "when": 1782380700000,
+        "tag": "0020_review_gate",
+        "breakpoints": true,
+        "hash": "06b58a4a40f27d22d38168bbafb9db5f122c73ca90cfc96e8bd63458ef752969"
+      },
+      {
+        "idx": 21,
+        "version": "7",
+        "when": 1782380800000,
+        "tag": "0021_learnings_project_id",
+        "breakpoints": true,
+        "hash": "4c9d3fbac08da0b9946b0ad06636793dc4ac1dfa63b7a1c1962a0c42f91051f8"
+      },
+      {
+        "idx": 22,
+        "version": "7",
+        "when": 1782380900000,
+        "tag": "0022_ai_messages_parts",
+        "breakpoints": true,
+        "hash": "95860f32dcdb9baef59fd1ea0cccea62c0cc3166b578af35fdda5c12a428dd24"
+      },
+      {
+        "idx": 23,
+        "version": "7",
+        "when": 1782381000000,
+        "tag": "0023_material_link_priority",
+        "breakpoints": true,
+        "hash": "35eafe944740b7b24949d16b50c5534d6a533f78a8c91a78a3c073e077ea7383"
+      },
+      {
+        "idx": 24,
+        "version": "7",
+        "when": 1782381100000,
+        "tag": "0024_asset_file_extraction",
+        "breakpoints": true,
+        "hash": "830c57308b6416fa27ce16e873c050eb20b2c73c779aa41741d41073937fc268"
+      },
+      {
+        "idx": 25,
+        "version": "7",
+        "when": 1782381200000,
+        "tag": "0025_multi_account_ownership",
+        "breakpoints": true,
+        "hash": "9a2dbb9d65f780f9e0e40e25626e398d85af25ff522dd2727675612658ec3d49"
+      },
+      {
+        "idx": 26,
+        "version": "7",
+        "when": 1782381300000,
+        "tag": "0026_job_run_progress",
+        "breakpoints": true,
+        "hash": "672f20ae70ef431bad9411d0aaf536ec330bd267de4aa214df16d87a20fc2afb"
+      },
+      {
+        "idx": 27,
+        "version": "7",
+        "when": 1782381400000,
+        "tag": "0027_activation_state",
+        "breakpoints": true,
+        "hash": "13cbbaa4690ca05c2657d55f3c6b0f8065940359f5f0855a19e860a5dd675aaa"
+      },
+      {
+        "idx": 28,
+        "version": "7",
+        "when": 1782381500000,
+        "tag": "0028_skill_config_override_versions",
+        "breakpoints": true,
+        "hash": "0d83fd1e3f46a58f0d84509c6d9db84c7265e60138bae0ece44f6f2a57bed926"
+      },
+      {
+        "idx": 29,
+        "version": "7",
+        "when": 1782381510000,
+        "tag": "0029_publication_platform_status",
+        "breakpoints": true,
+        "hash": "457e53978ff309a93c1ac10719e0bd4dd6020335daf05d925673b34d03e45654"
+      },
+      {
+        "idx": 30,
+        "version": "7",
+        "when": 1782381520000,
+        "tag": "0030_scheduled_job_account",
+        "breakpoints": true,
+        "hash": "84777f0e3805e253a4215bc049983c8b82fb5621da45cab06d08fb7578b62186"
+      },
+      {
+        "idx": 31,
+        "version": "7",
+        "when": 1782381530000,
+        "tag": "0031_platform_account_external_id",
+        "breakpoints": true,
+        "hash": "7d386c87fba6eba8a9cb91cf5f9c4a52acf4c494b5004064ca1bb79c0970e53e"
+      },
+      {
+        "idx": 32,
+        "version": "7",
+        "when": 1782381540000,
+        "tag": "0032_benchmark_sources_works",
+        "breakpoints": true,
+        "hash": "98a7326aab2513dc1ec92bbdd4a8c917eaa0126d5a4f80b5dcbd72a7afb50c23"
+      },
+      {
+        "idx": 33,
+        "version": "7",
+        "when": 1782381550000,
+        "tag": "0033_topic_preferences",
+        "breakpoints": true,
+        "hash": "e90e83dfc42f277228e02e54e3af5138beaa8e207e386dc29324e6a1b07dc67d"
+      },
+      {
+        "idx": 34,
+        "version": "7",
+        "when": 1782381560000,
+        "tag": "0034_positioning_statement_change_reason",
+        "breakpoints": true,
+        "hash": "57e4fe78a616714b6f3561028e7e125216c583814d131b90a448d90206b68e3f"
+      },
+      {
+        "idx": 35,
+        "version": "7",
+        "when": 1782381570000,
+        "tag": "0035_trend_sources_darkhorse",
+        "breakpoints": true,
+        "hash": "cc29ae3c882f845c102d43c8b6f1c5c57fa397571063e48c248140a25482d402"
+      },
+      {
+        "idx": 36,
+        "version": "7",
+        "when": 1782381580000,
+        "tag": "0036_topic_attributions",
+        "breakpoints": true,
+        "hash": "8569ad530e3da15df8646d7dac7e5a7dab7e8c7fdb283fc67063ae45d55aad9c"
+      },
+      {
+        "idx": 37,
+        "version": "7",
+        "when": 1782381590000,
+        "tag": "0037_ai_messages_usage",
+        "breakpoints": true,
+        "hash": "244138e142703181e28cc701b97322bdc13fb719adfd2ce4815f56c0ac20fd09"
+      },
+      {
+        "idx": 38,
+        "version": "7",
+        "when": 1782381600000,
+        "tag": "0038_favorites_folders",
+        "breakpoints": true,
+        "hash": "bd8e56e6afe749150b22f78e34949c9f94140f46fb625fe5e3885946fcc6fd0e"
+      },
+      {
+        "idx": 39,
+        "version": "7",
+        "when": 1782381610000,
+        "tag": "0039_favorites_distill",
+        "breakpoints": true,
+        "hash": "6f88d4b5a66c4cd384bdb01d7172616078f5fabcc1b09fc34f049e3443dc9031"
+      },
+      {
+        "idx": 40,
+        "version": "7",
+        "when": 1782381620000,
+        "tag": "0040_backfill_imported_publication_revision",
+        "breakpoints": true,
+        "hash": "c6bc974bf72ff5386e0fb2d3193b0d7b6bf3eec68018319ce5477aceaa2ed856"
+      },
+      {
+        "idx": 41,
+        "version": "7",
+        "when": 1782381630000,
+        "tag": "0041_account_scoped_unique_identity",
+        "breakpoints": true,
+        "hash": "fa546ae37dca6da2db56c867be7fac288e20018b261278f45bf801750d42fbb9"
+      },
+      {
+        "idx": 42,
+        "version": "7",
+        "when": 1782381640000,
+        "tag": "0042_account_isolation_notnull",
+        "breakpoints": true,
+        "hash": "184fb122be28b1c6b145a53ab4c78a640add69753fe990459b173e959df34f87"
+      },
+      {
+        "idx": 43,
+        "version": "7",
+        "when": 1782381650000,
+        "tag": "0043_notifications_account_stamp",
+        "breakpoints": true,
+        "hash": "b8362decbb29f0f4de7b92cff01584888ca90317c0f689b21104e1db789381f1"
+      },
+      {
+        "idx": 44,
+        "version": "7",
+        "when": 1782381660000,
+        "tag": "0044_benchmark_works_transcript",
+        "breakpoints": true,
+        "hash": "5b8460ecc416e0677edd9b65b89036b38372a517178ef4141d0bc2473aa7989f"
+      },
+      {
+        "idx": 45,
+        "version": "7",
+        "when": 1782381670000,
+        "tag": "0045_learnings_evidence_strength",
+        "breakpoints": true,
+        "hash": "029271f68b8ffdbfecfaa4d4ff4873f080268d7523091cfa80453d9618247923"
+      },
+      {
+        "idx": 46,
+        "version": "7",
+        "when": 1782381680000,
+        "tag": "0046_scheduled_job_unique_source",
+        "breakpoints": true,
+        "hash": "5fac07ae25bad43d1deb644425eb65880c0aaecd1f28e624ef2e6d7e333e2de4"
+      },
+      {
+        "idx": 47,
+        "version": "7",
+        "when": 1782381690000,
+        "tag": "0047_browser_sessions",
+        "breakpoints": true,
+        "hash": "c87f38c1d4acf140ce691f3ef137fbb7b2ab0d48ceead46246e396f6db658235"
+      },
+      {
+        "idx": 48,
+        "version": "7",
+        "when": 1784300000000,
+        "tag": "0048_browser_sessions_drop_migrated",
+        "breakpoints": true,
+        "hash": "beac75017e944d86f3deadbe81ba93215802e53966a8011fc830e0f6c3ced9cb"
+      },
+      {
+        "idx": 49,
+        "version": "7",
+        "when": 1784310000000,
+        "tag": "0049_activation_security_mirror",
+        "breakpoints": true,
+        "hash": "b6f8a1df11ab477532b44991ebef37b7aa3a6a47dbef251d450ca82ec6ba5ea2"
+      },
+      {
+        "idx": 50,
+        "version": "7",
+        "when": 1784820000000,
+        "tag": "0050_content_intelligence",
+        "breakpoints": true,
+        "hash": "b241490c7de4858ace783885da1b7831a63418f181c555177d7e32c1fe6123f3"
+      },
+      {
+        "idx": 51,
+        "version": "7",
+        "when": 1784823600000,
+        "tag": "0051_content_intelligence_project_provenance",
+        "breakpoints": true,
+        "hash": "9cfa671b7fc6022b80565097fa72b148ed8a60f6a1714498afe8bf64b75d0b16"
+      },
+      {
+        "idx": 52,
+        "version": "7",
+        "when": 1784827200000,
+        "tag": "0052_intelligence_source_memberships",
+        "breakpoints": true,
+        "hash": "9be75617f6369512305e4352436a1f2d3563136e209abdfcab4c92e8bc2a6364"
+      },
+      {
+        "idx": 53,
+        "version": "7",
+        "when": 1784913600000,
+        "tag": "0053_account_skill_overlays",
+        "breakpoints": true,
+        "hash": "4c7a0cdd0938e665b8a1cdd40142e521542a8d4f49ef32e3b79f038a8f9c6f0f"
+      },
+      {
+        "idx": 54,
+        "version": "7",
+        "when": 1784917200000,
+        "tag": "0054_ai_task_execution_ownership",
+        "breakpoints": true,
+        "hash": "07f3fb9931d185dc5b6a3d44db732d1adf63d8488d76106ea2ce7afe6f17fe61"
+      },
+      {
+        "idx": 55,
+        "version": "7",
+        "when": 1785081600000,
+        "tag": "0055_automation_task_active_owner",
+        "breakpoints": true,
+        "hash": "b2d44a75b2c20c0bd9c67100b6b3c87849f747ac0bb1849f5882601eec4719ee"
+      },
+      {
+        "idx": 56,
+        "version": "7",
+        "when": 1785085200000,
+        "tag": "0056_asset_upload_atomic_identity",
+        "breakpoints": true,
+        "hash": "2865e7d1a5d62d847e833b8c55c24e777bdba1f3652fca1a3ff88216a4eb021f"
+      },
+      {
+        "idx": 57,
+        "version": "7",
+        "when": 1785088800000,
+        "tag": "0057_knowledge_file_workspace",
+        "breakpoints": true,
+        "hash": "05a8a0f01e40f698422e0f04e0773fd856cf40c7bd526a7cd3eb8767909d25ca"
+      },
+      {
+        "idx": 58,
+        "version": "7",
+        "when": 1785092400000,
+        "tag": "0058_source_sync_active_owner",
+        "breakpoints": true,
+        "hash": "2b03251605a9d56a6dd9220baad85b60fdae029006c7438ee1462cd5ab45ddaa"
+      },
+      {
+        "idx": 59,
+        "version": "7",
+        "when": 1785096000000,
+        "tag": "0059_unify_content_radar_automation",
+        "breakpoints": true,
+        "hash": "3333bf58fe8bdfd76dad384f34464ff7c514453cb91cc973f7ff91e98d3fae8b"
+      },
+      {
+        "idx": 60,
+        "version": "7",
+        "when": 1785099600000,
+        "tag": "0060_retire_self_detail_automation",
+        "breakpoints": true,
+        "hash": "22b0fefa413aa4c8c09c1f0d9a4ffc67b885a92603edd14419cf986a73763b53"
+      },
+      {
+        "idx": 61,
+        "version": "7",
+        "when": 1785103200000,
+        "tag": "0061_project_schedule_calendar",
+        "breakpoints": true,
+        "hash": "eabb4445cee98b89be7110c585242a3ba14365c2a250e6e20616f5d854f8ffca"
+      },
+      {
+        "idx": 62,
+        "version": "7",
+        "when": 1785106800000,
+        "tag": "0062_normalize_scheduling_timestamps",
+        "breakpoints": true,
+        "hash": "518c5ce15c9cf4cfcda4e883f61e01fe81623bb87d91bc98021f549cabf0f2f7"
+      },
+      {
+        "idx": 63,
+        "version": "7",
+        "when": 1785110400000,
+        "tag": "0063_learning_adoption_dedupe",
+        "breakpoints": true,
+        "hash": "bc2dc50d55ef663b1411ef5c8f5c552a3c0393ee7f231bf53c8a3b9e33cbafae"
+      },
+      {
+        "idx": 64,
+        "version": "7",
+        "when": 1785114000000,
+        "tag": "0064_positioning_master_version_floor",
+        "breakpoints": true,
+        "hash": "65784078113781f3cc461d5520f69a9b555d78dee9407bed80a21e09cc65eb28"
+      },
+      {
+        "idx": 65,
+        "version": "7",
+        "when": 1785117600000,
+        "tag": "0065_positioning_master_snapshot",
+        "breakpoints": true,
+        "hash": "00456246881d97c974106d50db00f9b3d3aa74369c110e68ea6a6922c20047a2"
+      },
+      {
+        "idx": 66,
+        "version": "7",
+        "when": 1785542400000,
+        "tag": "0066_positioning_discovery_sessions",
+        "breakpoints": true,
+        "hash": "bb74087d912487640b7b84fb7dcbcd79a479adc3783712cbd744859a7024212e"
+      },
+      {
+        "idx": 67,
+        "version": "7",
+        "when": 1785628800000,
+        "tag": "0067_channel_model_credentials",
+        "breakpoints": true,
+        "hash": "45aaa6283171089a020dba4e96f74dc05d3b1b65ed6bc3a7113df603a0dc76ec"
+      },
+      {
+        "idx": 68,
+        "version": "7",
+        "when": 1786752000000,
+        "tag": "0068_cli_invocations",
+        "breakpoints": true,
+        "hash": "05b73f87445a2d3e5eb42738be94deceff72c4628b3cf81a550d8e5058f1a9f2"
+      },
+      {
+        "idx": 69,
+        "version": "7",
+        "when": 1788566400000,
+        "tag": "0069_execution_authority_mapping",
+        "breakpoints": true,
+        "hash": "695c632f3807ae973e3278a1d832ed9ea2d7f3cb36967228058f5eceacfcc9fb"
+      },
+      {
+        "idx": 70,
+        "version": "7",
+        "when": 1788652800000,
+        "tag": "0070_execution_fence",
+        "breakpoints": true,
+        "hash": "2b5822bc41a9638e9af53fc14fbdbe7b4db48146a68c8913d4f42e56a96d8f06"
+      },
+      {
+        "idx": 71,
+        "version": "7",
+        "when": 1788652800001,
+        "tag": "0071_execution_call_ledger",
+        "breakpoints": true,
+        "hash": "aa752b0639a6717a5b980e69151545fcbb4fae05a426f277175466abdbb789a6"
+      },
+      {
+        "idx": 72,
+        "version": "7",
+        "when": 1788652800002,
+        "tag": "0072_execution_call_result",
+        "breakpoints": true,
+        "hash": "e691f86b4c989e9ebdf83e2546a9a8e8e2a569c9a6cee882a68b288261f73edb"
+      },
+      {
+        "idx": 73,
+        "version": "7",
+        "when": 1788652800003,
+        "tag": "0073_execution_retry_schedule",
+        "breakpoints": true,
+        "hash": "1ffca3e1b0135d3a9d064f5bd0eaf1b3889540b0a774d27248693184f1ac995d"
+      },
+      {
+        "idx": 74,
+        "version": "7",
+        "when": 1788652800004,
+        "tag": "0074_execution_candidate_receipt",
+        "breakpoints": true,
+        "hash": "34adf1f086c13a3791021557711ca85cc9eb5bd0d57652d4b4f7ef4bad365584"
+      },
+      {
+        "idx": 75,
+        "version": "7",
+        "when": 1788652800005,
+        "tag": "0075_execution_provider_receipt",
+        "breakpoints": true,
+        "hash": "f54d3f23c8289825cea193b29d10afe25feb973df2657d5e87581a377c24bcb2"
+      },
+      {
+        "idx": 76,
+        "version": "7",
+        "when": 1788652800006,
+        "tag": "0076_publication_draft_adoption",
+        "breakpoints": true,
+        "hash": "6f4d509689b6618a6526fa5fedf4dc483601984435908ebe65cd1bb2dd4a76fd"
+      },
+      {
+        "idx": 77,
+        "version": "7",
+        "when": 1788652800007,
+        "tag": "0077_artifact_version_adoption",
+        "breakpoints": true,
+        "hash": "6bbcc3dfe3cef46c76acfbd8227b45746c9977afc89cbc8d38e6e19ad41f7e12"
+      },
+      {
+        "idx": 78,
+        "version": "7",
+        "when": 1788652800008,
+        "tag": "0078_proposal_adoption_receipts",
+        "breakpoints": true,
+        "hash": "9894237836f7bd6f5d740036d003291bb6558e980236017eb647cbc9c6a5d912"
+      },
+      {
+        "idx": 79,
+        "version": "7",
+        "when": 1788652800009,
+        "tag": "0079_agentic_tool_execution_claim",
+        "breakpoints": true,
+        "hash": "8110c0332eea020f54c33b98b98550f81b10b60000e515df192dccae0bc28300"
+      },
+      {
+        "idx": 80,
+        "version": "7",
+        "when": 1788652800010,
+        "tag": "0080_execution_evidence",
+        "breakpoints": true,
+        "hash": "5c50fb27e089c8e9988ec3e8c85638eb10d163a59ebf14c8f5e9cef988ffb743"
+      },
+      {
+        "idx": 81,
+        "version": "7",
+        "when": 1788652800011,
+        "tag": "0081_execution_browser_profile_leases",
+        "breakpoints": true,
+        "hash": "4949f25acecdd67b027bf06b7e87707b0a6401f28dcf782b3c1a6856e6b70c5b"
+      },
+      {
+        "idx": 82,
+        "version": "7",
+        "when": 1788652800012,
+        "tag": "0082_scheduled_child_active_owner",
+        "breakpoints": true,
+        "hash": "518609ea53b833b7b2df3ea460387baf478d14fc5a2816d64f3a62f4242141dd"
+      },
+      {
+        "idx": 83,
+        "version": "7",
+        "when": 1788652800013,
+        "tag": "0083_execution_stream_events",
+        "breakpoints": true,
+        "hash": "af0ef9b37a8f07c51280c0a6ac7e2af1736a2b7e24c21502ea64aff5d0280380"
+      },
+      {
+        "idx": 84,
+        "version": "7",
+        "when": 1788652800014,
+        "tag": "0084_execution_call_parent",
+        "breakpoints": true,
+        "hash": "21dabcdd1d22c7af8333fd6750cce0d70d22f375c4fc5186e7e7452440b080f1"
+      },
+      {
+        "idx": 85,
+        "version": "7",
+        "when": 1788652800015,
+        "tag": "0085_pending_document_commits",
+        "breakpoints": true,
+        "hash": "277859b7d6e4a295294fc5ab63e32b22a235e5486eede7270f338a823ab8c27c"
+      },
+      {
+        "idx": 86,
+        "version": "7",
+        "when": 1788652800016,
+        "tag": "0086_execution_evidence_metadata",
+        "breakpoints": true,
+        "hash": "27d6fec892fea3f93a81ac8e8b9e3fe264a364e84929cb69725c09cffa88c90b"
+      },
+      {
+        "idx": 87,
+        "version": "7",
+        "when": 1788652800017,
+        "tag": "0087_execution_provider_job",
+        "breakpoints": true,
+        "hash": "82242de20052d2eed864469068d8379a3965351d1d50a114c9f73dfc3e4b89eb"
+      },
+      {
+        "idx": 88,
+        "version": "7",
+        "when": 1788652800018,
+        "tag": "0088_pending_generated_asset_commits",
+        "breakpoints": true,
+        "hash": "7dfc1e79ab145959056ad0e1c547de832d607f0933923a8ea3a89b2307e447d8"
+      },
+      {
+        "idx": 89,
+        "version": "7",
+        "when": 1788652800019,
+        "tag": "0089_project_transcription_requests",
+        "breakpoints": true,
+        "hash": "e43b018faa7f9d13d8dfc66744bf3fecb8178fc3b438d74bbfe9e2526968eb4a"
+      },
+      {
+        "idx": 90,
+        "version": "7",
+        "when": 1788652800020,
+        "tag": "0090_execution_call_accounting_basis",
+        "breakpoints": true,
+        "hash": "f112b27f3f7896e1bffcdfcd3417d72883f0fdd58984a539ae1e8b1f3505c84c"
+      },
+      {
+        "idx": 91,
+        "version": "7",
+        "when": 1788652800021,
+        "tag": "0091_browser_profile_host_owner",
+        "breakpoints": true,
+        "hash": "685afcca70cbc19d30161c36b284570b2911ad2146f2cd0a36b57f7afe4e2bef"
+      },
+      {
+        "idx": 92,
+        "version": "7",
+        "when": 1788854400000,
+        "tag": "0092_page_read_revision",
+        "breakpoints": true,
+        "hash": "faa3826b15d81ded0336383242672b874844f15c73f302258973447591f977ea"
+      },
+      {
+        "idx": 93,
+        "version": "7",
+        "when": 1788912000000,
+        "tag": "0093_positioning_current_statement",
+        "breakpoints": true,
+        "hash": "9131cf16c0c6febae18849ca6ceab9d31a160e16bebb58cafdcfaba0a5049438"
+      },
+      {
+        "idx": 94,
+        "version": "7",
+        "when": 1789084800000,
+        "tag": "0094_publication_traffic",
+        "breakpoints": true,
+        "hash": "a143eb6cb1b4515cba879cf1c0e0a6f2436a25484057ea30729158c526abe9c5"
+      },
+      {
+        "idx": 95,
+        "version": "7",
+        "when": 1789257600000,
+        "tag": "0095_redfox_credentials",
+        "breakpoints": true,
+        "hash": "03370712f2b68941113ed610429f1c6caee092fa0eb64e091464ee1007df1454"
+      },
+      {
+        "idx": 96,
+        "version": "7",
+        "when": 1789257600001,
+        "tag": "0096_publication_sync_state",
+        "breakpoints": true,
+        "hash": "73d6b3f08d96397634645368794f412eaa93840b5aa69884ae6245c1b7faf08e"
+      },
+      {
+        "idx": 97,
+        "version": "7",
+        "when": 1789257600002,
+        "tag": "0097_onboarding_state",
+        "breakpoints": true,
+        "hash": "489d56fb031f4e078942251e5972a093f04e41f11a86a76332cb6c55cb4d8631"
+      },
+      {
+        "idx": 98,
+        "version": "7",
+        "when": 1789344000000,
+        "tag": "0098_separate_collection_jobs",
+        "breakpoints": true,
+        "hash": "ab402ac8bfe4da8fddea05ac5d03042fb090a660411f8d1b34c8b578536673c8"
+      },
+      {
+        "idx": 99,
+        "version": "7",
+        "when": 1789344000001,
+        "tag": "0099_stagger_collection_jobs",
+        "breakpoints": true,
+        "hash": "9ac0be194976afafb7289ff157b61eb1b30af1433d43abfa4ec90011bf80ee5e"
+      },
+      {
+        "idx": 100,
+        "version": "7",
+        "when": 1789430400001,
+        "tag": "0100_traffic_unavailable",
+        "breakpoints": true,
+        "hash": "39d47dff9a5d634b24aee9af4b1894c70505cf7969e80136592b87d05c302ec1"
+      },
+      {
+        "idx": 101,
+        "version": "7",
+        "when": 1790668800000,
+        "tag": "0101_reporting_local_consent",
+        "breakpoints": true,
+        "hash": "957594a3a49141c1ccd1b57a4c526acda961a6fe16cc890e4725847163b7ee08"
+      },
+      {
+        "idx": 102,
+        "version": "7",
+        "when": 1790755200000,
+        "tag": "0102_publications_account_external_unique",
+        "breakpoints": true,
+        "hash": "7e593b93324adf434431e503e42fe87e935f9d3fb3276152bc8d8c6cae9d1410"
+      },
+      {
+        "idx": 103,
+        "version": "7",
+        "when": 1790755200001,
+        "tag": "0103_platform_collection",
+        "breakpoints": true,
+        "hash": "7c87f0a7d659a8c373c99d5c906eb14a8650ed5b9abb44c18b66874b95ce05d2"
+      },
+      {
+        "idx": 104,
+        "version": "7",
+        "when": 1790755200002,
+        "tag": "0104_platform_bind_attempts",
+        "breakpoints": true,
+        "hash": "90cd8c3ae24f8e863ec3a6082eef4fb55b7c3763ebbeb5bc704529f914ed5e17"
+      },
+      {
+        "idx": 105,
+        "version": "7",
+        "when": 1790755200003,
+        "tag": "0105_platform_legacy_backfill",
+        "breakpoints": true,
+        "hash": "c3c6f33fa439562fb1be1ad4db0c976482bee2de22fd16b73bc2dc18a6eeafd7"
+      },
+      {
+        "idx": 106,
+        "version": "7",
+        "when": 1790755200004,
+        "tag": "0106_platform_work_source_title",
+        "breakpoints": true,
+        "hash": "7cb3c48a02503723f2cb7269c0ed1dad6c1bb3d3a221721055c3ed5f811e1795"
+      },
+      {
+        "idx": 107,
+        "version": "7",
+        "when": 1790755200005,
+        "tag": "0107_wechat_articles",
+        "breakpoints": true,
+        "hash": "c0feb2b0ab99676bd1942581a7a4897d8af858e096d2d0beda2e6375b82f25f5"
+      },
+      {
+        "idx": 108,
+        "version": "7",
+        "when": 1790755200006,
+        "tag": "0108_graphic_posts",
+        "breakpoints": true,
+        "hash": "bd7235916037bbf6f04a6e8b39a0a0cc500b8e91fc11d4f9c07bbb7ab0dc4638"
+      },
+      {
+        "idx": 109,
+        "version": "7",
+        "when": 1790755200007,
+        "tag": "0109_creative_results",
+        "breakpoints": true,
+        "hash": "f4cd7953e07cfc199a133c84ed83dff9f9df411cccca12e41c2918bcea5e2c35"
+      },
+      {
+        "idx": 110,
+        "version": "7",
+        "when": 1790755200008,
+        "tag": "0110_article_text_candidates",
+        "breakpoints": true,
+        "hash": "162939d577e6b8352384fb63afddec691256f252ea9f3851bb8e49e07e79963b"
+      },
+      {
+        "idx": 111,
+        "version": "7",
+        "when": 1790755200009,
+        "tag": "0111_publication_text_candidates",
+        "breakpoints": true,
+        "hash": "10903212052a5dceb911ec4159bdfb21acbf3a5c5c99f790a4f0fa378b841ce9"
+      },
+      {
+        "idx": 112,
+        "version": "7",
+        "when": 1790755200010,
+        "tag": "0112_creative_result_target_section",
+        "breakpoints": true,
+        "hash": "f3718325fb16c83d8bd46984c4935c316990ac8a5e3948689c45636775b64636"
+      },
+      {
+        "idx": 113,
+        "version": "7",
+        "when": 1790755200011,
+        "tag": "0113_publication_cover_file",
+        "breakpoints": true,
+        "hash": "e9b9c838d8edfe8f8054e479459527ca74b947d6d356ce0bdf033bdb7ad9d49a"
+      },
+      {
+        "idx": 114,
+        "version": "7",
+        "when": 1790755200012,
+        "tag": "0114_production_edit_versions",
+        "breakpoints": true,
+        "hash": "f394b58e660fb7d1c7b9cfe497592fceba54048b4eb8b841cb45d788813e07e3"
+      },
+      {
+        "idx": 115,
+        "version": "7",
+        "when": 1790755200013,
+        "tag": "0115_production_render_requests",
+        "breakpoints": true,
+        "hash": "93bcb64a9035ef9af6a876cf33aae66ce44e1a1f9148716a6124099358ccf6c7"
+      },
+      {
+        "idx": 116,
+        "version": "7",
+        "when": 1790755200014,
+        "tag": "0116_output_creation_requests",
+        "breakpoints": true,
+        "hash": "47695d97f504398589fe12ac4f9c4015cef83d79792299ca3dc7f9949ad41a25"
+      },
+      {
+        "idx": 117,
+        "version": "7",
+        "when": 1790755200015,
+        "tag": "0117_conversion_reservations",
+        "breakpoints": true,
+        "hash": "43ad39e53da3c520606f47b772d82c95bb0dbbc801db246408f894e89e32e272"
+      },
+      {
+        "idx": 118,
+        "version": "7",
+        "when": 1790755200016,
+        "tag": "0118_execution_control_receipts",
+        "breakpoints": true,
+        "hash": "2b0e0668f9ccfe50afad3cdbfb8f55a9a5c28fcbcb0b4e48b98f9c3341a3f8fd"
+      },
+      {
+        "idx": 119,
+        "version": "7",
+        "when": 1790755200017,
+        "tag": "0119_production_media_requests",
+        "breakpoints": true,
+        "hash": "15174b5eab3b326e826b3426145a11f2adfe51d54c550f735d06674b0f9cb76c"
+      },
+      {
+        "idx": 120,
+        "version": "7",
+        "when": 1790755200018,
+        "tag": "0120_moments_owner",
+        "breakpoints": true,
+        "hash": "03e17e11eb7a484c5a0bb72565e074fe45164a9d59755cab35de1e271beb0d98"
+      },
+      {
+        "idx": 121,
+        "version": "7",
+        "when": 1790755200019,
+        "tag": "0121_work_composition_owner",
+        "breakpoints": true,
+        "hash": "66e33087d2831a6a332a9f312ff7a3cbb5c81ceec2a3be130a8131462a5cedca"
+      },
+      {
+        "idx": 122,
+        "version": "7",
+        "when": 1790755200020,
+        "tag": "0122_work_materials",
+        "breakpoints": true,
+        "hash": "2a19f1b0554e7ed707a294e5b4c1fdc7e7108d6ee1ac6cbc0abc8152af42c5cf"
+      },
+      {
+        "idx": 123,
+        "version": "7",
+        "when": 1790755200030,
+        "tag": "0123_work_reviews",
+        "breakpoints": true,
+        "hash": "019fc704a12b4a7e75bbdd22561ac80bdb14ee1a45faa2d5fbd584a04b6d4b99"
+      },
+      {
+        "idx": 124,
+        "version": "7",
+        "when": 1790755200040,
+        "tag": "0124_production_file_bindings",
+        "breakpoints": true,
+        "hash": "07b068d5474755913314f78e5420d6c874f44b7601b54d3f8b56c6e21318b6d2"
+      },
+      {
+        "idx": 125,
+        "version": "7",
+        "when": 1790755200050,
+        "tag": "0125_creative_canvas_lineage_merge",
+        "breakpoints": true,
+        "hash": "c5f2ed12b96c73c5357e06c1f455bc6fbb5f154e9d298be36c879739acb373d6"
+      },
+      {
+        "idx": 126,
+        "version": "7",
+        "when": 1790755200060,
+        "tag": "0126_moments_model_candidates",
+        "breakpoints": true,
+        "hash": "90246742d3c1caa53dac3150b2107e4ec37ebeb42be2ec0787e01ba75be877c8"
+      },
+      {
+        "idx": 127,
+        "version": "7",
+        "when": 1790755200070,
+        "tag": "0127_publication_cover_requests",
+        "breakpoints": true,
+        "hash": "84cf94b84254ae25d82393e87831e34bc9ccfa9ecdee1d98ea11dbdbbff7307f"
+      }
+    ]
+  },
+  "canvas": {
+    "ref": "55a526d6",
+    "journalSha256": "c09c7da9c60327105df62f28d536967652567822a75364da9940958b85c9d84f",
+    "entries": [
+      {
+        "idx": 0,
+        "version": "7",
+        "when": 1782378989510,
+        "tag": "0000_init",
+        "breakpoints": true,
+        "hash": "389dce30cb081f39c868443481db23dd739a75c571f73302d377bca0ba91c4de"
+      },
+      {
+        "idx": 1,
+        "version": "7",
+        "when": 1782379000000,
+        "tag": "0001_model_secret_value",
+        "breakpoints": true,
+        "hash": "7ee69734aea0b900036aedf05acf3e4ae3c1c78988013af2f84898037148ec54"
+      },
+      {
+        "idx": 2,
+        "version": "7",
+        "when": 1782379100000,
+        "tag": "0002_storage_configs",
+        "breakpoints": true,
+        "hash": "6c37d1f5cc7bd48765405f5382d1926072ff5d46a92e82c6c2905725ce0d39eb"
+      },
+      {
+        "idx": 3,
+        "version": "7",
+        "when": 1782379200000,
+        "tag": "0003_positioning_facets_rules",
+        "breakpoints": true,
+        "hash": "5ec8eddf99f26883953e1a1002e29a6d55bac52d19e31b345f63782919902a3f"
+      },
+      {
+        "idx": 4,
+        "version": "7",
+        "when": 1782379300000,
+        "tag": "0004_candidate_card",
+        "breakpoints": true,
+        "hash": "a6c1aad0b6c8f10e240e7db2874c651f034e7d9bcf72e205dc8ee8dcf0fb00b6"
+      },
+      {
+        "idx": 5,
+        "version": "7",
+        "when": 1782379400000,
+        "tag": "0005_project_brief_detail",
+        "breakpoints": true,
+        "hash": "a658d6f7f7e0fd43bf2468e91cd545b3965b44550064bef8f35361cb2436f654"
+      },
+      {
+        "idx": 6,
+        "version": "7",
+        "when": 1782379500000,
+        "tag": "0006_calibration_rule_suggestions",
+        "breakpoints": true,
+        "hash": "f784180835244f7b221c0e76da4fd086f5e74e4b02ce761bb57b485f58276c9c"
+      },
+      {
+        "idx": 7,
+        "version": "7",
+        "when": 1782379600000,
+        "tag": "0007_ai_task_steps",
+        "breakpoints": true,
+        "hash": "d3134ae00cf022b53b1889c832dcbc04badc3a4878591ab09603067a59dd91bb"
+      },
+      {
+        "idx": 8,
+        "version": "7",
+        "when": 1782379700000,
+        "tag": "0008_project_source_platformref",
+        "breakpoints": true,
+        "hash": "75779580fe08f36ffdd90b747e247a4dba74ad5b41522d8b6d472e652651a095"
+      },
+      {
+        "idx": 9,
+        "version": "7",
+        "when": 1782379800000,
+        "tag": "0009_scheduled_job_and_run",
+        "breakpoints": true,
+        "hash": "e9195aea23c4e7320d75a6f93817d5e00313966ea03cdd865716c53fa09a2629"
+      },
+      {
+        "idx": 10,
+        "version": "7",
+        "when": 1782379900000,
+        "tag": "0010_artifacts_origin",
+        "breakpoints": true,
+        "hash": "8eb6d84e6154bebf6567db92fc930106f3bf007bd05f9d1a9a57ae12a8fbd401"
+      },
+      {
+        "idx": 11,
+        "version": "7",
+        "when": 1782380000000,
+        "tag": "0011_audience_signals_publication",
+        "breakpoints": true,
+        "hash": "062c595342f8645b1747fe09b5b42a5ae66a6e655d35ae067af877bc1f17d395"
+      },
+      {
+        "idx": 12,
+        "version": "7",
+        "when": 1782380100000,
+        "tag": "0012_douyin_throttle_state",
+        "breakpoints": true,
+        "hash": "f055cba43a20b32eb3b85a7bdbfa5bb776d8c07d5d17e4311df675f518736775"
+      },
+      {
+        "idx": 13,
+        "version": "7",
+        "when": 1782380200000,
+        "tag": "0013_skill_config_overrides",
+        "breakpoints": true,
+        "hash": "7ff4fa6304cb05207d30d018c461b3eca0ac957f97a6f5de2d9991bfa3a1a6fc"
+      },
+      {
+        "idx": 14,
+        "version": "7",
+        "when": 1782380300000,
+        "tag": "0014_audience_signals_like_count",
+        "breakpoints": true,
+        "hash": "a6b6e91aa5ec7d352b23abeee3c98f2590ebc9d48003131643df70a63fbdec53"
+      },
+      {
+        "idx": 15,
+        "version": "7",
+        "when": 1782380300001,
+        "tag": "0015_retire_thesis_contract",
+        "breakpoints": true,
+        "hash": "f210a6bf105babf8749673e1765d558184d9917ae7bd29f3a1fba2e5f5b3926e"
+      },
+      {
+        "idx": 16,
+        "version": "7",
+        "when": 1782380400000,
+        "tag": "0016_audience_signals_external_id",
+        "breakpoints": true,
+        "hash": "7c40f3280ae26e3785c08eb45f274abd71f4eca1183c4e8967c9d8aa553ed5b8"
+      },
+      {
+        "idx": 17,
+        "version": "7",
+        "when": 1782380400001,
+        "tag": "0017_publication_hidden_at",
+        "breakpoints": true,
+        "hash": "e6b12e92fd6cb8d92bafaa5340107b1dd96d3b0aaf1e28a38271cce70743c525"
+      },
+      {
+        "idx": 18,
+        "version": "7",
+        "when": 1782380500000,
+        "tag": "0018_knowledge_source_note",
+        "breakpoints": true,
+        "hash": "58746cb65a67030fe985fb7e3cd26542bd9469718233fcc2d0ee20ca86f0ea05"
+      },
+      {
+        "idx": 19,
+        "version": "7",
+        "when": 1782380600000,
+        "tag": "0019_ai_conversation_scope",
+        "breakpoints": true,
+        "hash": "7b053288ec4572087c91a0f5557786ee38c30c30d02f7a15672a3db7913a2417"
+      },
+      {
+        "idx": 20,
+        "version": "7",
+        "when": 1782380700000,
+        "tag": "0020_review_gate",
+        "breakpoints": true,
+        "hash": "06b58a4a40f27d22d38168bbafb9db5f122c73ca90cfc96e8bd63458ef752969"
+      },
+      {
+        "idx": 21,
+        "version": "7",
+        "when": 1782380800000,
+        "tag": "0021_learnings_project_id",
+        "breakpoints": true,
+        "hash": "4c9d3fbac08da0b9946b0ad06636793dc4ac1dfa63b7a1c1962a0c42f91051f8"
+      },
+      {
+        "idx": 22,
+        "version": "7",
+        "when": 1782380900000,
+        "tag": "0022_ai_messages_parts",
+        "breakpoints": true,
+        "hash": "95860f32dcdb9baef59fd1ea0cccea62c0cc3166b578af35fdda5c12a428dd24"
+      },
+      {
+        "idx": 23,
+        "version": "7",
+        "when": 1782381000000,
+        "tag": "0023_material_link_priority",
+        "breakpoints": true,
+        "hash": "35eafe944740b7b24949d16b50c5534d6a533f78a8c91a78a3c073e077ea7383"
+      },
+      {
+        "idx": 24,
+        "version": "7",
+        "when": 1782381100000,
+        "tag": "0024_asset_file_extraction",
+        "breakpoints": true,
+        "hash": "830c57308b6416fa27ce16e873c050eb20b2c73c779aa41741d41073937fc268"
+      },
+      {
+        "idx": 25,
+        "version": "7",
+        "when": 1782381200000,
+        "tag": "0025_multi_account_ownership",
+        "breakpoints": true,
+        "hash": "9a2dbb9d65f780f9e0e40e25626e398d85af25ff522dd2727675612658ec3d49"
+      },
+      {
+        "idx": 26,
+        "version": "7",
+        "when": 1782381300000,
+        "tag": "0026_job_run_progress",
+        "breakpoints": true,
+        "hash": "672f20ae70ef431bad9411d0aaf536ec330bd267de4aa214df16d87a20fc2afb"
+      },
+      {
+        "idx": 27,
+        "version": "7",
+        "when": 1782381400000,
+        "tag": "0027_activation_state",
+        "breakpoints": true,
+        "hash": "13cbbaa4690ca05c2657d55f3c6b0f8065940359f5f0855a19e860a5dd675aaa"
+      },
+      {
+        "idx": 28,
+        "version": "7",
+        "when": 1782381500000,
+        "tag": "0028_skill_config_override_versions",
+        "breakpoints": true,
+        "hash": "0d83fd1e3f46a58f0d84509c6d9db84c7265e60138bae0ece44f6f2a57bed926"
+      },
+      {
+        "idx": 29,
+        "version": "7",
+        "when": 1782381510000,
+        "tag": "0029_publication_platform_status",
+        "breakpoints": true,
+        "hash": "457e53978ff309a93c1ac10719e0bd4dd6020335daf05d925673b34d03e45654"
+      },
+      {
+        "idx": 30,
+        "version": "7",
+        "when": 1782381520000,
+        "tag": "0030_scheduled_job_account",
+        "breakpoints": true,
+        "hash": "84777f0e3805e253a4215bc049983c8b82fb5621da45cab06d08fb7578b62186"
+      },
+      {
+        "idx": 31,
+        "version": "7",
+        "when": 1782381530000,
+        "tag": "0031_platform_account_external_id",
+        "breakpoints": true,
+        "hash": "7d386c87fba6eba8a9cb91cf5f9c4a52acf4c494b5004064ca1bb79c0970e53e"
+      },
+      {
+        "idx": 32,
+        "version": "7",
+        "when": 1782381540000,
+        "tag": "0032_benchmark_sources_works",
+        "breakpoints": true,
+        "hash": "98a7326aab2513dc1ec92bbdd4a8c917eaa0126d5a4f80b5dcbd72a7afb50c23"
+      },
+      {
+        "idx": 33,
+        "version": "7",
+        "when": 1782381550000,
+        "tag": "0033_topic_preferences",
+        "breakpoints": true,
+        "hash": "e90e83dfc42f277228e02e54e3af5138beaa8e207e386dc29324e6a1b07dc67d"
+      },
+      {
+        "idx": 34,
+        "version": "7",
+        "when": 1782381560000,
+        "tag": "0034_positioning_statement_change_reason",
+        "breakpoints": true,
+        "hash": "57e4fe78a616714b6f3561028e7e125216c583814d131b90a448d90206b68e3f"
+      },
+      {
+        "idx": 35,
+        "version": "7",
+        "when": 1782381570000,
+        "tag": "0035_trend_sources_darkhorse",
+        "breakpoints": true,
+        "hash": "cc29ae3c882f845c102d43c8b6f1c5c57fa397571063e48c248140a25482d402"
+      },
+      {
+        "idx": 36,
+        "version": "7",
+        "when": 1782381580000,
+        "tag": "0036_topic_attributions",
+        "breakpoints": true,
+        "hash": "8569ad530e3da15df8646d7dac7e5a7dab7e8c7fdb283fc67063ae45d55aad9c"
+      },
+      {
+        "idx": 37,
+        "version": "7",
+        "when": 1782381590000,
+        "tag": "0037_ai_messages_usage",
+        "breakpoints": true,
+        "hash": "244138e142703181e28cc701b97322bdc13fb719adfd2ce4815f56c0ac20fd09"
+      },
+      {
+        "idx": 38,
+        "version": "7",
+        "when": 1782381600000,
+        "tag": "0038_favorites_folders",
+        "breakpoints": true,
+        "hash": "bd8e56e6afe749150b22f78e34949c9f94140f46fb625fe5e3885946fcc6fd0e"
+      },
+      {
+        "idx": 39,
+        "version": "7",
+        "when": 1782381610000,
+        "tag": "0039_favorites_distill",
+        "breakpoints": true,
+        "hash": "6f88d4b5a66c4cd384bdb01d7172616078f5fabcc1b09fc34f049e3443dc9031"
+      },
+      {
+        "idx": 40,
+        "version": "7",
+        "when": 1782381620000,
+        "tag": "0040_backfill_imported_publication_revision",
+        "breakpoints": true,
+        "hash": "c6bc974bf72ff5386e0fb2d3193b0d7b6bf3eec68018319ce5477aceaa2ed856"
+      },
+      {
+        "idx": 41,
+        "version": "7",
+        "when": 1782381630000,
+        "tag": "0041_account_scoped_unique_identity",
+        "breakpoints": true,
+        "hash": "fa546ae37dca6da2db56c867be7fac288e20018b261278f45bf801750d42fbb9"
+      },
+      {
+        "idx": 42,
+        "version": "7",
+        "when": 1782381640000,
+        "tag": "0042_account_isolation_notnull",
+        "breakpoints": true,
+        "hash": "184fb122be28b1c6b145a53ab4c78a640add69753fe990459b173e959df34f87"
+      },
+      {
+        "idx": 43,
+        "version": "7",
+        "when": 1782381650000,
+        "tag": "0043_notifications_account_stamp",
+        "breakpoints": true,
+        "hash": "b8362decbb29f0f4de7b92cff01584888ca90317c0f689b21104e1db789381f1"
+      },
+      {
+        "idx": 44,
+        "version": "7",
+        "when": 1782381660000,
+        "tag": "0044_benchmark_works_transcript",
+        "breakpoints": true,
+        "hash": "5b8460ecc416e0677edd9b65b89036b38372a517178ef4141d0bc2473aa7989f"
+      },
+      {
+        "idx": 45,
+        "version": "7",
+        "when": 1782381670000,
+        "tag": "0045_learnings_evidence_strength",
+        "breakpoints": true,
+        "hash": "029271f68b8ffdbfecfaa4d4ff4873f080268d7523091cfa80453d9618247923"
+      },
+      {
+        "idx": 46,
+        "version": "7",
+        "when": 1782381680000,
+        "tag": "0046_scheduled_job_unique_source",
+        "breakpoints": true,
+        "hash": "5fac07ae25bad43d1deb644425eb65880c0aaecd1f28e624ef2e6d7e333e2de4"
+      },
+      {
+        "idx": 47,
+        "version": "7",
+        "when": 1782381690000,
+        "tag": "0047_browser_sessions",
+        "breakpoints": true,
+        "hash": "c87f38c1d4acf140ce691f3ef137fbb7b2ab0d48ceead46246e396f6db658235"
+      },
+      {
+        "idx": 48,
+        "version": "7",
+        "when": 1784300000000,
+        "tag": "0048_browser_sessions_drop_migrated",
+        "breakpoints": true,
+        "hash": "beac75017e944d86f3deadbe81ba93215802e53966a8011fc830e0f6c3ced9cb"
+      },
+      {
+        "idx": 49,
+        "version": "7",
+        "when": 1784310000000,
+        "tag": "0049_activation_security_mirror",
+        "breakpoints": true,
+        "hash": "b6f8a1df11ab477532b44991ebef37b7aa3a6a47dbef251d450ca82ec6ba5ea2"
+      },
+      {
+        "idx": 50,
+        "version": "7",
+        "when": 1784820000000,
+        "tag": "0050_content_intelligence",
+        "breakpoints": true,
+        "hash": "b241490c7de4858ace783885da1b7831a63418f181c555177d7e32c1fe6123f3"
+      },
+      {
+        "idx": 51,
+        "version": "7",
+        "when": 1784823600000,
+        "tag": "0051_content_intelligence_project_provenance",
+        "breakpoints": true,
+        "hash": "9cfa671b7fc6022b80565097fa72b148ed8a60f6a1714498afe8bf64b75d0b16"
+      },
+      {
+        "idx": 52,
+        "version": "7",
+        "when": 1784827200000,
+        "tag": "0052_intelligence_source_memberships",
+        "breakpoints": true,
+        "hash": "9be75617f6369512305e4352436a1f2d3563136e209abdfcab4c92e8bc2a6364"
+      },
+      {
+        "idx": 53,
+        "version": "7",
+        "when": 1784913600000,
+        "tag": "0053_account_skill_overlays",
+        "breakpoints": true,
+        "hash": "4c7a0cdd0938e665b8a1cdd40142e521542a8d4f49ef32e3b79f038a8f9c6f0f"
+      },
+      {
+        "idx": 54,
+        "version": "7",
+        "when": 1784917200000,
+        "tag": "0054_ai_task_execution_ownership",
+        "breakpoints": true,
+        "hash": "07f3fb9931d185dc5b6a3d44db732d1adf63d8488d76106ea2ce7afe6f17fe61"
+      },
+      {
+        "idx": 55,
+        "version": "7",
+        "when": 1785081600000,
+        "tag": "0055_automation_task_active_owner",
+        "breakpoints": true,
+        "hash": "b2d44a75b2c20c0bd9c67100b6b3c87849f747ac0bb1849f5882601eec4719ee"
+      },
+      {
+        "idx": 56,
+        "version": "7",
+        "when": 1785085200000,
+        "tag": "0056_asset_upload_atomic_identity",
+        "breakpoints": true,
+        "hash": "2865e7d1a5d62d847e833b8c55c24e777bdba1f3652fca1a3ff88216a4eb021f"
+      },
+      {
+        "idx": 57,
+        "version": "7",
+        "when": 1785088800000,
+        "tag": "0057_knowledge_file_workspace",
+        "breakpoints": true,
+        "hash": "05a8a0f01e40f698422e0f04e0773fd856cf40c7bd526a7cd3eb8767909d25ca"
+      },
+      {
+        "idx": 58,
+        "version": "7",
+        "when": 1785092400000,
+        "tag": "0058_source_sync_active_owner",
+        "breakpoints": true,
+        "hash": "2b03251605a9d56a6dd9220baad85b60fdae029006c7438ee1462cd5ab45ddaa"
+      },
+      {
+        "idx": 59,
+        "version": "7",
+        "when": 1785096000000,
+        "tag": "0059_unify_content_radar_automation",
+        "breakpoints": true,
+        "hash": "3333bf58fe8bdfd76dad384f34464ff7c514453cb91cc973f7ff91e98d3fae8b"
+      },
+      {
+        "idx": 60,
+        "version": "7",
+        "when": 1785099600000,
+        "tag": "0060_retire_self_detail_automation",
+        "breakpoints": true,
+        "hash": "22b0fefa413aa4c8c09c1f0d9a4ffc67b885a92603edd14419cf986a73763b53"
+      },
+      {
+        "idx": 61,
+        "version": "7",
+        "when": 1785103200000,
+        "tag": "0061_project_schedule_calendar",
+        "breakpoints": true,
+        "hash": "eabb4445cee98b89be7110c585242a3ba14365c2a250e6e20616f5d854f8ffca"
+      },
+      {
+        "idx": 62,
+        "version": "7",
+        "when": 1785106800000,
+        "tag": "0062_normalize_scheduling_timestamps",
+        "breakpoints": true,
+        "hash": "518c5ce15c9cf4cfcda4e883f61e01fe81623bb87d91bc98021f549cabf0f2f7"
+      },
+      {
+        "idx": 63,
+        "version": "7",
+        "when": 1785110400000,
+        "tag": "0063_learning_adoption_dedupe",
+        "breakpoints": true,
+        "hash": "bc2dc50d55ef663b1411ef5c8f5c552a3c0393ee7f231bf53c8a3b9e33cbafae"
+      },
+      {
+        "idx": 64,
+        "version": "7",
+        "when": 1785114000000,
+        "tag": "0064_positioning_master_version_floor",
+        "breakpoints": true,
+        "hash": "65784078113781f3cc461d5520f69a9b555d78dee9407bed80a21e09cc65eb28"
+      },
+      {
+        "idx": 65,
+        "version": "7",
+        "when": 1785117600000,
+        "tag": "0065_positioning_master_snapshot",
+        "breakpoints": true,
+        "hash": "00456246881d97c974106d50db00f9b3d3aa74369c110e68ea6a6922c20047a2"
+      },
+      {
+        "idx": 66,
+        "version": "7",
+        "when": 1785542400000,
+        "tag": "0066_positioning_discovery_sessions",
+        "breakpoints": true,
+        "hash": "bb74087d912487640b7b84fb7dcbcd79a479adc3783712cbd744859a7024212e"
+      },
+      {
+        "idx": 67,
+        "version": "7",
+        "when": 1785628800000,
+        "tag": "0067_channel_model_credentials",
+        "breakpoints": true,
+        "hash": "45aaa6283171089a020dba4e96f74dc05d3b1b65ed6bc3a7113df603a0dc76ec"
+      },
+      {
+        "idx": 68,
+        "version": "7",
+        "when": 1786752000000,
+        "tag": "0068_cli_invocations",
+        "breakpoints": true,
+        "hash": "05b73f87445a2d3e5eb42738be94deceff72c4628b3cf81a550d8e5058f1a9f2"
+      },
+      {
+        "idx": 69,
+        "version": "7",
+        "when": 1788566400000,
+        "tag": "0069_execution_authority_mapping",
+        "breakpoints": true,
+        "hash": "695c632f3807ae973e3278a1d832ed9ea2d7f3cb36967228058f5eceacfcc9fb"
+      },
+      {
+        "idx": 70,
+        "version": "7",
+        "when": 1788652800000,
+        "tag": "0070_execution_fence",
+        "breakpoints": true,
+        "hash": "2b5822bc41a9638e9af53fc14fbdbe7b4db48146a68c8913d4f42e56a96d8f06"
+      },
+      {
+        "idx": 71,
+        "version": "7",
+        "when": 1788652800001,
+        "tag": "0071_execution_call_ledger",
+        "breakpoints": true,
+        "hash": "aa752b0639a6717a5b980e69151545fcbb4fae05a426f277175466abdbb789a6"
+      },
+      {
+        "idx": 72,
+        "version": "7",
+        "when": 1788652800002,
+        "tag": "0072_execution_call_result",
+        "breakpoints": true,
+        "hash": "e691f86b4c989e9ebdf83e2546a9a8e8e2a569c9a6cee882a68b288261f73edb"
+      },
+      {
+        "idx": 73,
+        "version": "7",
+        "when": 1788652800003,
+        "tag": "0073_execution_retry_schedule",
+        "breakpoints": true,
+        "hash": "1ffca3e1b0135d3a9d064f5bd0eaf1b3889540b0a774d27248693184f1ac995d"
+      },
+      {
+        "idx": 74,
+        "version": "7",
+        "when": 1788652800004,
+        "tag": "0074_execution_candidate_receipt",
+        "breakpoints": true,
+        "hash": "34adf1f086c13a3791021557711ca85cc9eb5bd0d57652d4b4f7ef4bad365584"
+      },
+      {
+        "idx": 75,
+        "version": "7",
+        "when": 1788652800005,
+        "tag": "0075_execution_provider_receipt",
+        "breakpoints": true,
+        "hash": "f54d3f23c8289825cea193b29d10afe25feb973df2657d5e87581a377c24bcb2"
+      },
+      {
+        "idx": 76,
+        "version": "7",
+        "when": 1788652800006,
+        "tag": "0076_publication_draft_adoption",
+        "breakpoints": true,
+        "hash": "6f4d509689b6618a6526fa5fedf4dc483601984435908ebe65cd1bb2dd4a76fd"
+      },
+      {
+        "idx": 77,
+        "version": "7",
+        "when": 1788652800007,
+        "tag": "0077_artifact_version_adoption",
+        "breakpoints": true,
+        "hash": "6bbcc3dfe3cef46c76acfbd8227b45746c9977afc89cbc8d38e6e19ad41f7e12"
+      },
+      {
+        "idx": 78,
+        "version": "7",
+        "when": 1788652800008,
+        "tag": "0078_proposal_adoption_receipts",
+        "breakpoints": true,
+        "hash": "9894237836f7bd6f5d740036d003291bb6558e980236017eb647cbc9c6a5d912"
+      },
+      {
+        "idx": 79,
+        "version": "7",
+        "when": 1788652800009,
+        "tag": "0079_agentic_tool_execution_claim",
+        "breakpoints": true,
+        "hash": "8110c0332eea020f54c33b98b98550f81b10b60000e515df192dccae0bc28300"
+      },
+      {
+        "idx": 80,
+        "version": "7",
+        "when": 1788652800010,
+        "tag": "0080_execution_evidence",
+        "breakpoints": true,
+        "hash": "5c50fb27e089c8e9988ec3e8c85638eb10d163a59ebf14c8f5e9cef988ffb743"
+      },
+      {
+        "idx": 81,
+        "version": "7",
+        "when": 1788652800011,
+        "tag": "0081_execution_browser_profile_leases",
+        "breakpoints": true,
+        "hash": "4949f25acecdd67b027bf06b7e87707b0a6401f28dcf782b3c1a6856e6b70c5b"
+      },
+      {
+        "idx": 82,
+        "version": "7",
+        "when": 1788652800012,
+        "tag": "0082_scheduled_child_active_owner",
+        "breakpoints": true,
+        "hash": "518609ea53b833b7b2df3ea460387baf478d14fc5a2816d64f3a62f4242141dd"
+      },
+      {
+        "idx": 83,
+        "version": "7",
+        "when": 1788652800013,
+        "tag": "0083_execution_stream_events",
+        "breakpoints": true,
+        "hash": "af0ef9b37a8f07c51280c0a6ac7e2af1736a2b7e24c21502ea64aff5d0280380"
+      },
+      {
+        "idx": 84,
+        "version": "7",
+        "when": 1788652800014,
+        "tag": "0084_execution_call_parent",
+        "breakpoints": true,
+        "hash": "21dabcdd1d22c7af8333fd6750cce0d70d22f375c4fc5186e7e7452440b080f1"
+      },
+      {
+        "idx": 85,
+        "version": "7",
+        "when": 1788652800015,
+        "tag": "0085_pending_document_commits",
+        "breakpoints": true,
+        "hash": "277859b7d6e4a295294fc5ab63e32b22a235e5486eede7270f338a823ab8c27c"
+      },
+      {
+        "idx": 86,
+        "version": "7",
+        "when": 1788652800016,
+        "tag": "0086_execution_evidence_metadata",
+        "breakpoints": true,
+        "hash": "27d6fec892fea3f93a81ac8e8b9e3fe264a364e84929cb69725c09cffa88c90b"
+      },
+      {
+        "idx": 87,
+        "version": "7",
+        "when": 1788652800017,
+        "tag": "0087_execution_provider_job",
+        "breakpoints": true,
+        "hash": "82242de20052d2eed864469068d8379a3965351d1d50a114c9f73dfc3e4b89eb"
+      },
+      {
+        "idx": 88,
+        "version": "7",
+        "when": 1788652800018,
+        "tag": "0088_pending_generated_asset_commits",
+        "breakpoints": true,
+        "hash": "7dfc1e79ab145959056ad0e1c547de832d607f0933923a8ea3a89b2307e447d8"
+      },
+      {
+        "idx": 89,
+        "version": "7",
+        "when": 1788652800019,
+        "tag": "0089_project_transcription_requests",
+        "breakpoints": true,
+        "hash": "e43b018faa7f9d13d8dfc66744bf3fecb8178fc3b438d74bbfe9e2526968eb4a"
+      },
+      {
+        "idx": 90,
+        "version": "7",
+        "when": 1788652800020,
+        "tag": "0090_execution_call_accounting_basis",
+        "breakpoints": true,
+        "hash": "f112b27f3f7896e1bffcdfcd3417d72883f0fdd58984a539ae1e8b1f3505c84c"
+      },
+      {
+        "idx": 91,
+        "version": "7",
+        "when": 1788652800021,
+        "tag": "0091_browser_profile_host_owner",
+        "breakpoints": true,
+        "hash": "685afcca70cbc19d30161c36b284570b2911ad2146f2cd0a36b57f7afe4e2bef"
+      },
+      {
+        "idx": 92,
+        "version": "7",
+        "when": 1788854400000,
+        "tag": "0092_page_read_revision",
+        "breakpoints": true,
+        "hash": "faa3826b15d81ded0336383242672b874844f15c73f302258973447591f977ea"
+      },
+      {
+        "idx": 93,
+        "version": "7",
+        "when": 1788912000000,
+        "tag": "0093_positioning_current_statement",
+        "breakpoints": true,
+        "hash": "9131cf16c0c6febae18849ca6ceab9d31a160e16bebb58cafdcfaba0a5049438"
+      },
+      {
+        "idx": 94,
+        "version": "7",
+        "when": 1789084800000,
+        "tag": "0094_publication_traffic",
+        "breakpoints": true,
+        "hash": "a143eb6cb1b4515cba879cf1c0e0a6f2436a25484057ea30729158c526abe9c5"
+      },
+      {
+        "idx": 95,
+        "version": "7",
+        "when": 1789257600000,
+        "tag": "0095_redfox_credentials",
+        "breakpoints": true,
+        "hash": "03370712f2b68941113ed610429f1c6caee092fa0eb64e091464ee1007df1454"
+      },
+      {
+        "idx": 96,
+        "version": "7",
+        "when": 1789257600001,
+        "tag": "0096_publication_sync_state",
+        "breakpoints": true,
+        "hash": "73d6b3f08d96397634645368794f412eaa93840b5aa69884ae6245c1b7faf08e"
+      },
+      {
+        "idx": 97,
+        "version": "7",
+        "when": 1789257600002,
+        "tag": "0097_onboarding_state",
+        "breakpoints": true,
+        "hash": "489d56fb031f4e078942251e5972a093f04e41f11a86a76332cb6c55cb4d8631"
+      },
+      {
+        "idx": 98,
+        "version": "7",
+        "when": 1789344000000,
+        "tag": "0098_separate_collection_jobs",
+        "breakpoints": true,
+        "hash": "ab402ac8bfe4da8fddea05ac5d03042fb090a660411f8d1b34c8b578536673c8"
+      },
+      {
+        "idx": 99,
+        "version": "7",
+        "when": 1789344000001,
+        "tag": "0099_stagger_collection_jobs",
+        "breakpoints": true,
+        "hash": "9ac0be194976afafb7289ff157b61eb1b30af1433d43abfa4ec90011bf80ee5e"
+      },
+      {
+        "idx": 100,
+        "version": "7",
+        "when": 1789430400001,
+        "tag": "0100_traffic_unavailable",
+        "breakpoints": true,
+        "hash": "39d47dff9a5d634b24aee9af4b1894c70505cf7969e80136592b87d05c302ec1"
+      },
+      {
+        "idx": 101,
+        "version": "7",
+        "when": 1790553600000,
+        "tag": "0101_creative_canvas",
+        "breakpoints": true,
+        "hash": "6c971231adfc0a1771577f21a6c51a885fb24201f8029cc293ee5195576ab7f2"
+      },
+      {
+        "idx": 102,
+        "version": "7",
+        "when": 1791043200000,
+        "tag": "0102_visual_template_library",
+        "breakpoints": true,
+        "hash": "9d72015dad67b2a626b4b6c42e87c8112fa66eb7c6224d2bad14d0c7b22e6ecf"
+      }
+    ]
+  }
+}

@@ -29,11 +29,13 @@ it('旧版完整schema经正式迁移保留父子ID、媒体键和各表记录�
  const root=await mkdtemp(join(tmpdir(),'creatoros-group-full-upgrade-'));cleanup.push(()=>rm(root,{recursive:true,force:true}));
  const migrations=join(root,'legacy');await cp(new URL('../drizzle',import.meta.url),migrations,{recursive:true});
  const journalPath=join(migrations,'meta','_journal.json');const journal=JSON.parse(await readFile(journalPath,'utf8'));journal.entries=journal.entries.filter((e:any)=>e.when<1790942400001);await writeFile(journalPath,JSON.stringify(journal));
+ await mkdir(join(root,'media'),{recursive:true});await mkdir(join(root,'media','old-a'),{recursive:true});await writeFile(join(root,'media','old-a','original.mp4'),'media');
  const dataDir=join(root,'db'),old=new PGlite(dataDir);await old.waitReady;await migrate(drizzle(old),{migrationsFolder:migrations});
  const time='2026-10-04T00:00:00Z';await old.query("INSERT INTO platform_accounts (id,user_id,platform,account_handle,created_at,updated_at) VALUES ('old-a','old-user','douyin','旧账号',$1,$1)",[time]);
  await old.query("INSERT INTO projects(id,user_id,account_id,title,status,current_stage,creation_mode,started_at,created_at,updated_at) VALUES ('old-project','old-user','old-a','原项目','active','script','manual',$1,$1,$1)",[time]);
  await old.query("INSERT INTO assets(id,user_id,account_id,asset_type,name,created_at,updated_at) VALUES ('old-asset','old-user','old-a','video','原视频',$1,$1)",[time]);
  await old.query("INSERT INTO asset_files(id,asset_id,version_number,storage_key,mime_type,file_size,created_at) VALUES ('old-file','old-asset',1,'old-a/original.mp4','video/mp4',5,$1)",[time]);
+ await old.query("INSERT INTO storage_configs(user_id,backend,root_path,created_at,updated_at) VALUES('old-user','local',$1,$2,$2)",[join(root,'media'),time]);
  await old.close();
  const upgraded=await createDb({dataDir});cleanup.push(()=>upgraded.client.close());
  expect((await upgraded.client.query("SELECT id,group_id FROM projects WHERE id='old-project'")).rows).toEqual([{id:'old-project',group_id:'grp_legacy_old-a'}]);

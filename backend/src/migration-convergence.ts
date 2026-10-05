@@ -1,0 +1,99 @@
+import {PGlite} from '@electric-sql/pglite';
+import {createHash} from 'node:crypto';
+import {readFileSync} from 'node:fs';
+import {join} from 'node:path';
+import {sql} from 'drizzle-orm';
+import type {Db} from './db';
+import lineages from './migration-convergence-lineages.json';
+
+/** SEMANTIC_BOUNDARY_ALLOW: 只识别冻结迁移身份和PostgreSQL物理catalog，不判断内容或猜测归属。 */
+export const CONVERGENCE_WHEN=1791043200001;
+type QueryDb=Pick<Db,'execute'>;
+type Identity={hash:string;when:number};
+type Catalog=Record<'columns'|'constraints'|'indexes'|'functions'|'triggers'|'sequences',Record<string,unknown>[]>;
+export const catalogQueries={
+ columns:"SELECT table_name,column_name,udt_name,is_nullable,column_default FROM information_schema.columns WHERE table_schema='public' ORDER BY table_name,column_name",
+ constraints:"SELECT t.relname AS table_name,c.conname AS name,c.contype AS type,pg_get_constraintdef(c.oid,true) AS definition,c.convalidated AS validated FROM pg_constraint c JOIN pg_class t ON t.oid=c.conrelid JOIN pg_namespace n ON n.oid=t.relnamespace WHERE n.nspname='public' ORDER BY t.relname,c.conname",
+ indexes:"SELECT t.relname AS table_name,i.relname AS name,pg_get_indexdef(i.oid) AS definition,x.indisvalid AS valid FROM pg_index x JOIN pg_class t ON t.oid=x.indrelid JOIN pg_class i ON i.oid=x.indexrelid JOIN pg_namespace n ON n.oid=t.relnamespace WHERE n.nspname='public' AND NOT x.indisprimary AND NOT EXISTS(SELECT 1 FROM pg_constraint c WHERE c.conindid=i.oid AND c.conrelid=x.indrelid AND c.contype IN ('p','u','x')) ORDER BY t.relname,i.relname",
+ functions:"SELECT p.proname AS name,pg_get_functiondef(p.oid) AS definition FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace WHERE n.nspname='public' ORDER BY p.proname",
+ triggers:"SELECT t.relname AS table_name,g.tgname AS name,pg_get_triggerdef(g.oid,true) AS definition FROM pg_trigger g JOIN pg_class t ON t.oid=g.tgrelid JOIN pg_namespace n ON n.oid=t.relnamespace WHERE n.nspname='public' AND NOT g.tgisinternal ORDER BY t.relname,g.tgname",
+ sequences:"SELECT s.sequencename AS name,s.data_type,s.start_value::text,s.min_value::text,s.max_value::text,s.increment_by::text,s.cycle,s.cache_size::text,t.relname AS owner_table,a.attname AS owner_column FROM pg_sequences s JOIN pg_class seq ON seq.relname=s.sequencename JOIN pg_namespace ns ON ns.oid=seq.relnamespace AND ns.nspname=s.schemaname LEFT JOIN pg_depend d ON d.objid=seq.oid AND d.classid='pg_class'::regclass AND d.refclassid='pg_class'::regclass AND d.deptype IN ('a','i') LEFT JOIN pg_class t ON t.oid=d.refobjid LEFT JOIN pg_attribute a ON a.attrelid=t.oid AND a.attnum=d.refobjsubid WHERE s.schemaname='public' ORDER BY s.sequencename",
+};
+const id=(i:Identity)=>`${i.hash}:${i.when}`;
+const fail=(detail:string):never=>{throw new Error(`CREATIVE_CANVAS_MIGRATION_LINEAGE_UNKNOWN: ${detail}`);};
+const incompatible=(detail:string):never=>{throw new Error(`CREATIVE_CANVAS_MIGRATION_SCHEMA_INCOMPATIBLE: ${detail}`);};
+const sha=(s:string)=>createHash('sha256').update(s).digest('hex');
+const sourceEntries=Object.values(lineages).flatMap(l=>l.entries);
+const entries=new Map(sourceEntries.map(i=>[id(i),i]));
+const cache=new Map<string,Promise<Catalog>>();
+const repairable=new Set(['reporting_consents','reporting_outbox','reporting_consent_changes','creative_canvases','canvas_generation_links','canvas_agent_proposals']);
+async function rows(db:QueryDb,query:string){return(await db.execute(sql.raw(query))).rows as Record<string,unknown>[];}
+export async function readCatalog(db:QueryDb):Promise<Catalog>{const result={} as Catalog;for(const [key,query] of Object.entries(catalogQueries) as Array<[keyof Catalog,string]>)result[key]=await rows(db,query);return result;}
+async function readLedger(db:QueryDb):Promise<Identity[]>{
+ if(!(await rows(db,"SELECT to_regclass('drizzle.__drizzle_migrations') IS NOT NULL AS present"))[0]?.present)return[];
+ const cols=await rows(db,"SELECT column_name,udt_name FROM information_schema.columns WHERE table_schema='drizzle' AND table_name='__drizzle_migrations'");
+ for(const [name,type] of [['id','int4'],['hash','text'],['created_at','int8']])if(!cols.some(r=>r.column_name===name&&r.udt_name===type))fail('账本结构未知');
+ return(await rows(db,'SELECT hash,created_at FROM drizzle.__drizzle_migrations ORDER BY created_at,id')).map(r=>{const when=Number(r.created_at);if(typeof r.hash!=='string'||!Number.isSafeInteger(when)||when<0)fail('账本身份类型无效');return{hash:r.hash as string,when};});
+}
+function sourceSQL(folder:string,item:Identity){for(const [name,lineage]of Object.entries(lineages)){const entry=lineage.entries.find(e=>id(e)===id(item));if(entry){const raw=readFileSync(join(folder,'lineages',name,entry.tag+'.sql'),'utf8');if(sha(raw)!==item.hash)fail(`归档SQL校验失败 ${name}/${entry.tag}`);return raw;}}return fail('没有冻结SQL来源');}
+const validatedFolders=new Set<string>();
+function validateSources(folder:string){
+ if(validatedFolders.has(folder))return;
+ for(const [name,lineage]of Object.entries(lineages)){
+  const journal=readFileSync(join(folder,'lineages',name,'meta','_journal.json'),'utf8');if(sha(journal)!==lineage.journalSha256)fail(`冻结journal校验失败 ${name}`);
+  for(const entry of lineage.entries){const content=readFileSync(join(folder,'lineages',name,entry.tag+'.sql'),'utf8');if(sha(content)!==entry.hash)fail(`冻结SQL校验失败 ${name}/${entry.tag}`);}
+ }
+ const normal=JSON.parse(readFileSync(join(folder,'meta','_journal.json'),'utf8'));const common=lineages.root.entries.slice(0,101);
+ if(normal.entries.length!==102||normal.entries[101].tag!=='0128_workspace_convergence'||normal.entries[101].when!==CONVERGENCE_WHEN)fail('当前主journal不符合共同前缀+真实新收敛版本');
+ for(let i=0;i<common.length;i++){const entry=normal.entries[i];if(entry.tag!==common[i]!.tag||entry.when!==common[i]!.when||sha(readFileSync(join(folder,entry.tag+'.sql'),'utf8'))!==common[i]!.hash)fail('共同旧迁移tag/SQL/时间漂移');}
+ validatedFolders.add(folder);
+}
+function convergenceSQL(folder:string){return readFileSync(join(folder,'0128_workspace_convergence.sql'),'utf8');}
+function convergenceIdentity(folder:string){return{hash:sha(convergenceSQL(folder)),when:CONVERGENCE_WHEN};}
+function assertKnownPrefixes(history:Identity[],folder:string){
+ const newIdentity=convergenceIdentity(folder),seen=new Set(history.map(id));
+ for(const item of history)if(!entries.has(id(item))&&id(item)!==id(newIdentity))fail('未知hash/时间或未来迁移，原库保留');
+ const common=lineages.root.entries.slice(0,101);let commonCount=0;for(const item of common){if(seen.has(id(item)))commonCount++;else break;}
+ for(const item of common.slice(commonCount))if(seen.has(id(item)))fail('共同历史不是完整前缀');
+ if(history.some(i=>!common.some(c=>id(c)===id(i)))&&commonCount!==101)fail('分支历史缺少共同0000–0100前缀');
+ for(const lineage of Object.values(lineages)){let gap=false;for(const item of lineage.entries.slice(101)){if(seen.has(id(item))){if(gap)fail('已知分支历史不是完整前缀');}else gap=true;}}
+ return seen.has(id(newIdentity));
+}
+function normalize(c:Catalog){const result={} as Catalog;for(const [key,values]of Object.entries(c) as Array<[keyof Catalog,Record<string,unknown>[]]>)result[key]=values.map(({ordinal_position,...r})=>r).sort((a,b)=>JSON.stringify(a).localeCompare(JSON.stringify(b)));return result;}
+function expectedCatalog(history:Identity[],folder:string,converged:boolean){
+ const identities=converged?[...entries.values()].map(i=>({hash:i.hash,when:i.when})):Array.from(new Map(history.filter(i=>entries.has(id(i))).map(i=>[id(i),i])).values());
+ const key=sha(JSON.stringify(identities.map(id).sort())+String(converged)+convergenceIdentity(folder).hash);
+ let expected=cache.get(key);if(!expected){expected=(async()=>{// 只在全新隔离内存参考库执行原SQL；绝不在用户原库重放旧分组INSERT。
+ const c=new PGlite();try{
+  for(const item of identities.sort((a,b)=>a.when-b.when))await c.exec(sourceSQL(folder,item));
+  if(converged)await c.exec(`BEGIN;\n${convergenceSQL(folder)}\nCOMMIT;`);
+  const cat={} as Catalog;for(const [key,query]of Object.entries(catalogQueries) as Array<[keyof Catalog,string]>)cat[key]=(await c.query<Record<string,unknown>>(query)).rows;return normalize(cat);
+ }finally{await c.close();}})();cache.set(key,expected);}return expected;
+}
+function assertCatalog(actual:Catalog,expected:Catalog,allowRepair:boolean){
+ const actualTables=new Set(actual.columns.map(r=>r.table_name));const expectedTables=new Set(expected.columns.map(r=>r.table_name));
+ for(const t of expectedTables)if(!actualTables.has(t)&&!(allowRepair&&repairable.has(String(t))))incompatible(`缺少已记账表 ${String(t)}`);
+ const missing=new Set([...expectedTables].filter(t=>!actualTables.has(t)));
+ for(const [kind,wanted]of Object.entries(expected) as Array<[keyof Catalog,Record<string,unknown>[]]>){
+  const checked=wanted.filter(r=>!missing.has(r.table_name));
+  for(const row of checked){const matches=actual[kind].filter(r=>r.table_name===row.table_name&&r.name===row.name&&(kind!=='columns'||r.column_name===row.column_name));if(!matches.some(r=>JSON.stringify(r)===JSON.stringify(row)))incompatible(`${kind}不兼容 ${String(row.table_name??'public')}.${String(row.name??row.column_name)}`);}
+  // 同一已知表的额外列/约束/索引/触发器会改变契约，拒绝；独立无关用户表保留。
+  for(const row of actual[kind])if(expectedTables.has(row.table_name)&&!wanted.some(r=>JSON.stringify(r)===JSON.stringify(row)))incompatible(`未知${kind} ${String(row.table_name)}.${String(row.name??row.column_name)}`);
+  // 无表归属的函数与序列：同名必须精确一致，额外独立对象不删除。
+ }
+}
+export async function inspectMigrationConvergence(db:QueryDb,folder:string){
+ validateSources(folder);
+ const history=await readLedger(db),converged=assertKnownPrefixes(history,folder),actual=normalize(await readCatalog(db));
+ if(!history.length){if(actual.columns.length)fail('已有物理表但没有可核验历史');return{history,converged:false,needsUpgrade:true};}
+ const expected=await expectedCatalog(history,folder,converged);assertCatalog(actual,expected,true);
+ const needsRepair=[...repairable].some(t=>expected.columns.some(r=>r.table_name===t)&&!actual.columns.some(r=>r.table_name===t));
+ return{history,converged,needsUpgrade:!converged||needsRepair};
+}
+/** migrate之后只认可新迁移真实执行的回执，并核全量结构；不伪造旧125回执。 */
+export async function assertMigrationConverged(db:QueryDb,folder:string){const history=await readLedger(db);if(!history.some(i=>id(i)===id(convergenceIdentity(folder))))fail('收敛迁移没有真实新版本回执');assertCatalog(normalize(await readCatalog(db)),await expectedCatalog(history,folder,true),false);}
+/** 有新回执却缺六张可恢复表时，在事务内执行同一版本DDL并保留真实repair执行收据。 */
+export async function repairConvergenceSchema(db:Db,folder:string){const status=await inspectMigrationConvergence(db,folder);if(!status.converged||!status.needsUpgrade)return;await db.transaction(async tx=>{
+ for(const statement of convergenceSQL(folder).split('--> statement-breakpoint').map(s=>s.trim()).filter(Boolean))await tx.execute(sql.raw(statement));
+ const receipt=convergenceIdentity(folder);await tx.execute(sql`INSERT INTO drizzle.__drizzle_migrations(hash,created_at) VALUES(${receipt.hash},${receipt.when})`);
+ });}

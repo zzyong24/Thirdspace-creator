@@ -1,0 +1,4162 @@
+{
+  "task": "T-1062",
+  "status": "migration_candidate_verified_not_installed_or_service_acceptance",
+  "base": "11784cc22a29ac8232cdb675e078432f0dca6680",
+  "head": null,
+  "headBinding": "本文件由包含它的唯一最终候选提交绑定；实际HEAD与本文件SHA在/tmp/t1062-migration-convergence-result.json提交后记录，避免自引用hash",
+  "worktree": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator",
+  "branch": "codex/t1062-migration-candidate",
+  "boundaryFiles": [
+    {
+      "path": "backend/drizzle/0128_workspace_convergence.sql",
+      "beforeSha256": null,
+      "afterSha256": "60cac883f02fa7fcd83051264bd6a63ec49132369c7c983b36e34e979a2f7713"
+    },
+    {
+      "path": "backend/drizzle/lineages/README.md",
+      "beforeSha256": null,
+      "afterSha256": "5e76f8feaf4aaadce01b18e41a7ee6eb81a9db202e8045c1e4874e3763d98288"
+    },
+    {
+      "path": "backend/drizzle/lineages/build-convergence.cjs",
+      "beforeSha256": null,
+      "afterSha256": "b36bfe19bb0590553b32f74ba48132e53140139b46a600b1bbef3c92de510a1a"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0000_init.sql",
+      "beforeSha256": null,
+      "afterSha256": "389dce30cb081f39c868443481db23dd739a75c571f73302d377bca0ba91c4de"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0001_model_secret_value.sql",
+      "beforeSha256": null,
+      "afterSha256": "7ee69734aea0b900036aedf05acf3e4ae3c1c78988013af2f84898037148ec54"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0002_storage_configs.sql",
+      "beforeSha256": null,
+      "afterSha256": "6c37d1f5cc7bd48765405f5382d1926072ff5d46a92e82c6c2905725ce0d39eb"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0003_positioning_facets_rules.sql",
+      "beforeSha256": null,
+      "afterSha256": "5ec8eddf99f26883953e1a1002e29a6d55bac52d19e31b345f63782919902a3f"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0004_candidate_card.sql",
+      "beforeSha256": null,
+      "afterSha256": "a6c1aad0b6c8f10e240e7db2874c651f034e7d9bcf72e205dc8ee8dcf0fb00b6"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0005_project_brief_detail.sql",
+      "beforeSha256": null,
+      "afterSha256": "a658d6f7f7e0fd43bf2468e91cd545b3965b44550064bef8f35361cb2436f654"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0006_calibration_rule_suggestions.sql",
+      "beforeSha256": null,
+      "afterSha256": "f784180835244f7b221c0e76da4fd086f5e74e4b02ce761bb57b485f58276c9c"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0007_ai_task_steps.sql",
+      "beforeSha256": null,
+      "afterSha256": "d3134ae00cf022b53b1889c832dcbc04badc3a4878591ab09603067a59dd91bb"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0008_project_source_platformref.sql",
+      "beforeSha256": null,
+      "afterSha256": "75779580fe08f36ffdd90b747e247a4dba74ad5b41522d8b6d472e652651a095"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0009_scheduled_job_and_run.sql",
+      "beforeSha256": null,
+      "afterSha256": "e9195aea23c4e7320d75a6f93817d5e00313966ea03cdd865716c53fa09a2629"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0010_artifacts_origin.sql",
+      "beforeSha256": null,
+      "afterSha256": "8eb6d84e6154bebf6567db92fc930106f3bf007bd05f9d1a9a57ae12a8fbd401"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0011_audience_signals_publication.sql",
+      "beforeSha256": null,
+      "afterSha256": "062c595342f8645b1747fe09b5b42a5ae66a6e655d35ae067af877bc1f17d395"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0012_douyin_throttle_state.sql",
+      "beforeSha256": null,
+      "afterSha256": "f055cba43a20b32eb3b85a7bdbfa5bb776d8c07d5d17e4311df675f518736775"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0013_skill_config_overrides.sql",
+      "beforeSha256": null,
+      "afterSha256": "7ff4fa6304cb05207d30d018c461b3eca0ac957f97a6f5de2d9991bfa3a1a6fc"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0014_audience_signals_like_count.sql",
+      "beforeSha256": null,
+      "afterSha256": "a6b6e91aa5ec7d352b23abeee3c98f2590ebc9d48003131643df70a63fbdec53"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0015_retire_thesis_contract.sql",
+      "beforeSha256": null,
+      "afterSha256": "f210a6bf105babf8749673e1765d558184d9917ae7bd29f3a1fba2e5f5b3926e"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0016_audience_signals_external_id.sql",
+      "beforeSha256": null,
+      "afterSha256": "7c40f3280ae26e3785c08eb45f274abd71f4eca1183c4e8967c9d8aa553ed5b8"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0017_publication_hidden_at.sql",
+      "beforeSha256": null,
+      "afterSha256": "e6b12e92fd6cb8d92bafaa5340107b1dd96d3b0aaf1e28a38271cce70743c525"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0018_knowledge_source_note.sql",
+      "beforeSha256": null,
+      "afterSha256": "58746cb65a67030fe985fb7e3cd26542bd9469718233fcc2d0ee20ca86f0ea05"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0019_ai_conversation_scope.sql",
+      "beforeSha256": null,
+      "afterSha256": "7b053288ec4572087c91a0f5557786ee38c30c30d02f7a15672a3db7913a2417"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0020_review_gate.sql",
+      "beforeSha256": null,
+      "afterSha256": "06b58a4a40f27d22d38168bbafb9db5f122c73ca90cfc96e8bd63458ef752969"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0021_learnings_project_id.sql",
+      "beforeSha256": null,
+      "afterSha256": "4c9d3fbac08da0b9946b0ad06636793dc4ac1dfa63b7a1c1962a0c42f91051f8"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0022_ai_messages_parts.sql",
+      "beforeSha256": null,
+      "afterSha256": "95860f32dcdb9baef59fd1ea0cccea62c0cc3166b578af35fdda5c12a428dd24"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0023_material_link_priority.sql",
+      "beforeSha256": null,
+      "afterSha256": "35eafe944740b7b24949d16b50c5534d6a533f78a8c91a78a3c073e077ea7383"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0024_asset_file_extraction.sql",
+      "beforeSha256": null,
+      "afterSha256": "830c57308b6416fa27ce16e873c050eb20b2c73c779aa41741d41073937fc268"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0025_multi_account_ownership.sql",
+      "beforeSha256": null,
+      "afterSha256": "9a2dbb9d65f780f9e0e40e25626e398d85af25ff522dd2727675612658ec3d49"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0026_job_run_progress.sql",
+      "beforeSha256": null,
+      "afterSha256": "672f20ae70ef431bad9411d0aaf536ec330bd267de4aa214df16d87a20fc2afb"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0027_activation_state.sql",
+      "beforeSha256": null,
+      "afterSha256": "13cbbaa4690ca05c2657d55f3c6b0f8065940359f5f0855a19e860a5dd675aaa"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0028_skill_config_override_versions.sql",
+      "beforeSha256": null,
+      "afterSha256": "0d83fd1e3f46a58f0d84509c6d9db84c7265e60138bae0ece44f6f2a57bed926"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0029_publication_platform_status.sql",
+      "beforeSha256": null,
+      "afterSha256": "457e53978ff309a93c1ac10719e0bd4dd6020335daf05d925673b34d03e45654"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0030_scheduled_job_account.sql",
+      "beforeSha256": null,
+      "afterSha256": "84777f0e3805e253a4215bc049983c8b82fb5621da45cab06d08fb7578b62186"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0031_platform_account_external_id.sql",
+      "beforeSha256": null,
+      "afterSha256": "7d386c87fba6eba8a9cb91cf5f9c4a52acf4c494b5004064ca1bb79c0970e53e"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0032_benchmark_sources_works.sql",
+      "beforeSha256": null,
+      "afterSha256": "98a7326aab2513dc1ec92bbdd4a8c917eaa0126d5a4f80b5dcbd72a7afb50c23"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0033_topic_preferences.sql",
+      "beforeSha256": null,
+      "afterSha256": "e90e83dfc42f277228e02e54e3af5138beaa8e207e386dc29324e6a1b07dc67d"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0034_positioning_statement_change_reason.sql",
+      "beforeSha256": null,
+      "afterSha256": "57e4fe78a616714b6f3561028e7e125216c583814d131b90a448d90206b68e3f"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0035_trend_sources_darkhorse.sql",
+      "beforeSha256": null,
+      "afterSha256": "cc29ae3c882f845c102d43c8b6f1c5c57fa397571063e48c248140a25482d402"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0036_topic_attributions.sql",
+      "beforeSha256": null,
+      "afterSha256": "8569ad530e3da15df8646d7dac7e5a7dab7e8c7fdb283fc67063ae45d55aad9c"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0037_ai_messages_usage.sql",
+      "beforeSha256": null,
+      "afterSha256": "244138e142703181e28cc701b97322bdc13fb719adfd2ce4815f56c0ac20fd09"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0038_favorites_folders.sql",
+      "beforeSha256": null,
+      "afterSha256": "bd8e56e6afe749150b22f78e34949c9f94140f46fb625fe5e3885946fcc6fd0e"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0039_favorites_distill.sql",
+      "beforeSha256": null,
+      "afterSha256": "6f88d4b5a66c4cd384bdb01d7172616078f5fabcc1b09fc34f049e3443dc9031"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0040_backfill_imported_publication_revision.sql",
+      "beforeSha256": null,
+      "afterSha256": "c6bc974bf72ff5386e0fb2d3193b0d7b6bf3eec68018319ce5477aceaa2ed856"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0041_account_scoped_unique_identity.sql",
+      "beforeSha256": null,
+      "afterSha256": "fa546ae37dca6da2db56c867be7fac288e20018b261278f45bf801750d42fbb9"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0042_account_isolation_notnull.sql",
+      "beforeSha256": null,
+      "afterSha256": "184fb122be28b1c6b145a53ab4c78a640add69753fe990459b173e959df34f87"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0043_notifications_account_stamp.sql",
+      "beforeSha256": null,
+      "afterSha256": "b8362decbb29f0f4de7b92cff01584888ca90317c0f689b21104e1db789381f1"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0044_benchmark_works_transcript.sql",
+      "beforeSha256": null,
+      "afterSha256": "5b8460ecc416e0677edd9b65b89036b38372a517178ef4141d0bc2473aa7989f"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0045_learnings_evidence_strength.sql",
+      "beforeSha256": null,
+      "afterSha256": "029271f68b8ffdbfecfaa4d4ff4873f080268d7523091cfa80453d9618247923"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0046_scheduled_job_unique_source.sql",
+      "beforeSha256": null,
+      "afterSha256": "5fac07ae25bad43d1deb644425eb65880c0aaecd1f28e624ef2e6d7e333e2de4"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0047_browser_sessions.sql",
+      "beforeSha256": null,
+      "afterSha256": "c87f38c1d4acf140ce691f3ef137fbb7b2ab0d48ceead46246e396f6db658235"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0048_browser_sessions_drop_migrated.sql",
+      "beforeSha256": null,
+      "afterSha256": "beac75017e944d86f3deadbe81ba93215802e53966a8011fc830e0f6c3ced9cb"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0049_activation_security_mirror.sql",
+      "beforeSha256": null,
+      "afterSha256": "b6f8a1df11ab477532b44991ebef37b7aa3a6a47dbef251d450ca82ec6ba5ea2"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0050_content_intelligence.sql",
+      "beforeSha256": null,
+      "afterSha256": "b241490c7de4858ace783885da1b7831a63418f181c555177d7e32c1fe6123f3"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0051_content_intelligence_project_provenance.sql",
+      "beforeSha256": null,
+      "afterSha256": "9cfa671b7fc6022b80565097fa72b148ed8a60f6a1714498afe8bf64b75d0b16"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0052_intelligence_source_memberships.sql",
+      "beforeSha256": null,
+      "afterSha256": "9be75617f6369512305e4352436a1f2d3563136e209abdfcab4c92e8bc2a6364"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0053_account_skill_overlays.sql",
+      "beforeSha256": null,
+      "afterSha256": "4c7a0cdd0938e665b8a1cdd40142e521542a8d4f49ef32e3b79f038a8f9c6f0f"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0054_ai_task_execution_ownership.sql",
+      "beforeSha256": null,
+      "afterSha256": "07f3fb9931d185dc5b6a3d44db732d1adf63d8488d76106ea2ce7afe6f17fe61"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0055_automation_task_active_owner.sql",
+      "beforeSha256": null,
+      "afterSha256": "b2d44a75b2c20c0bd9c67100b6b3c87849f747ac0bb1849f5882601eec4719ee"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0056_asset_upload_atomic_identity.sql",
+      "beforeSha256": null,
+      "afterSha256": "2865e7d1a5d62d847e833b8c55c24e777bdba1f3652fca1a3ff88216a4eb021f"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0057_knowledge_file_workspace.sql",
+      "beforeSha256": null,
+      "afterSha256": "05a8a0f01e40f698422e0f04e0773fd856cf40c7bd526a7cd3eb8767909d25ca"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0058_source_sync_active_owner.sql",
+      "beforeSha256": null,
+      "afterSha256": "2b03251605a9d56a6dd9220baad85b60fdae029006c7438ee1462cd5ab45ddaa"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0059_unify_content_radar_automation.sql",
+      "beforeSha256": null,
+      "afterSha256": "3333bf58fe8bdfd76dad384f34464ff7c514453cb91cc973f7ff91e98d3fae8b"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0060_retire_self_detail_automation.sql",
+      "beforeSha256": null,
+      "afterSha256": "22b0fefa413aa4c8c09c1f0d9a4ffc67b885a92603edd14419cf986a73763b53"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0061_project_schedule_calendar.sql",
+      "beforeSha256": null,
+      "afterSha256": "eabb4445cee98b89be7110c585242a3ba14365c2a250e6e20616f5d854f8ffca"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0062_normalize_scheduling_timestamps.sql",
+      "beforeSha256": null,
+      "afterSha256": "518c5ce15c9cf4cfcda4e883f61e01fe81623bb87d91bc98021f549cabf0f2f7"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0063_learning_adoption_dedupe.sql",
+      "beforeSha256": null,
+      "afterSha256": "bc2dc50d55ef663b1411ef5c8f5c552a3c0393ee7f231bf53c8a3b9e33cbafae"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0064_positioning_master_version_floor.sql",
+      "beforeSha256": null,
+      "afterSha256": "65784078113781f3cc461d5520f69a9b555d78dee9407bed80a21e09cc65eb28"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0065_positioning_master_snapshot.sql",
+      "beforeSha256": null,
+      "afterSha256": "00456246881d97c974106d50db00f9b3d3aa74369c110e68ea6a6922c20047a2"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0066_positioning_discovery_sessions.sql",
+      "beforeSha256": null,
+      "afterSha256": "bb74087d912487640b7b84fb7dcbcd79a479adc3783712cbd744859a7024212e"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0067_channel_model_credentials.sql",
+      "beforeSha256": null,
+      "afterSha256": "45aaa6283171089a020dba4e96f74dc05d3b1b65ed6bc3a7113df603a0dc76ec"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0068_cli_invocations.sql",
+      "beforeSha256": null,
+      "afterSha256": "05b73f87445a2d3e5eb42738be94deceff72c4628b3cf81a550d8e5058f1a9f2"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0069_execution_authority_mapping.sql",
+      "beforeSha256": null,
+      "afterSha256": "695c632f3807ae973e3278a1d832ed9ea2d7f3cb36967228058f5eceacfcc9fb"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0070_execution_fence.sql",
+      "beforeSha256": null,
+      "afterSha256": "2b5822bc41a9638e9af53fc14fbdbe7b4db48146a68c8913d4f42e56a96d8f06"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0071_execution_call_ledger.sql",
+      "beforeSha256": null,
+      "afterSha256": "aa752b0639a6717a5b980e69151545fcbb4fae05a426f277175466abdbb789a6"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0072_execution_call_result.sql",
+      "beforeSha256": null,
+      "afterSha256": "e691f86b4c989e9ebdf83e2546a9a8e8e2a569c9a6cee882a68b288261f73edb"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0073_execution_retry_schedule.sql",
+      "beforeSha256": null,
+      "afterSha256": "1ffca3e1b0135d3a9d064f5bd0eaf1b3889540b0a774d27248693184f1ac995d"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0074_execution_candidate_receipt.sql",
+      "beforeSha256": null,
+      "afterSha256": "34adf1f086c13a3791021557711ca85cc9eb5bd0d57652d4b4f7ef4bad365584"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0075_execution_provider_receipt.sql",
+      "beforeSha256": null,
+      "afterSha256": "f54d3f23c8289825cea193b29d10afe25feb973df2657d5e87581a377c24bcb2"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0076_publication_draft_adoption.sql",
+      "beforeSha256": null,
+      "afterSha256": "6f4d509689b6618a6526fa5fedf4dc483601984435908ebe65cd1bb2dd4a76fd"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0077_artifact_version_adoption.sql",
+      "beforeSha256": null,
+      "afterSha256": "6bbcc3dfe3cef46c76acfbd8227b45746c9977afc89cbc8d38e6e19ad41f7e12"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0078_proposal_adoption_receipts.sql",
+      "beforeSha256": null,
+      "afterSha256": "9894237836f7bd6f5d740036d003291bb6558e980236017eb647cbc9c6a5d912"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0079_agentic_tool_execution_claim.sql",
+      "beforeSha256": null,
+      "afterSha256": "8110c0332eea020f54c33b98b98550f81b10b60000e515df192dccae0bc28300"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0080_execution_evidence.sql",
+      "beforeSha256": null,
+      "afterSha256": "5c50fb27e089c8e9988ec3e8c85638eb10d163a59ebf14c8f5e9cef988ffb743"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0081_execution_browser_profile_leases.sql",
+      "beforeSha256": null,
+      "afterSha256": "4949f25acecdd67b027bf06b7e87707b0a6401f28dcf782b3c1a6856e6b70c5b"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0082_scheduled_child_active_owner.sql",
+      "beforeSha256": null,
+      "afterSha256": "518609ea53b833b7b2df3ea460387baf478d14fc5a2816d64f3a62f4242141dd"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0083_execution_stream_events.sql",
+      "beforeSha256": null,
+      "afterSha256": "af0ef9b37a8f07c51280c0a6ac7e2af1736a2b7e24c21502ea64aff5d0280380"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0084_execution_call_parent.sql",
+      "beforeSha256": null,
+      "afterSha256": "21dabcdd1d22c7af8333fd6750cce0d70d22f375c4fc5186e7e7452440b080f1"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0085_pending_document_commits.sql",
+      "beforeSha256": null,
+      "afterSha256": "277859b7d6e4a295294fc5ab63e32b22a235e5486eede7270f338a823ab8c27c"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0086_execution_evidence_metadata.sql",
+      "beforeSha256": null,
+      "afterSha256": "27d6fec892fea3f93a81ac8e8b9e3fe264a364e84929cb69725c09cffa88c90b"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0087_execution_provider_job.sql",
+      "beforeSha256": null,
+      "afterSha256": "82242de20052d2eed864469068d8379a3965351d1d50a114c9f73dfc3e4b89eb"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0088_pending_generated_asset_commits.sql",
+      "beforeSha256": null,
+      "afterSha256": "7dfc1e79ab145959056ad0e1c547de832d607f0933923a8ea3a89b2307e447d8"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0089_project_transcription_requests.sql",
+      "beforeSha256": null,
+      "afterSha256": "e43b018faa7f9d13d8dfc66744bf3fecb8178fc3b438d74bbfe9e2526968eb4a"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0090_execution_call_accounting_basis.sql",
+      "beforeSha256": null,
+      "afterSha256": "f112b27f3f7896e1bffcdfcd3417d72883f0fdd58984a539ae1e8b1f3505c84c"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0091_browser_profile_host_owner.sql",
+      "beforeSha256": null,
+      "afterSha256": "685afcca70cbc19d30161c36b284570b2911ad2146f2cd0a36b57f7afe4e2bef"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0092_page_read_revision.sql",
+      "beforeSha256": null,
+      "afterSha256": "faa3826b15d81ded0336383242672b874844f15c73f302258973447591f977ea"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0093_positioning_current_statement.sql",
+      "beforeSha256": null,
+      "afterSha256": "9131cf16c0c6febae18849ca6ceab9d31a160e16bebb58cafdcfaba0a5049438"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0094_publication_traffic.sql",
+      "beforeSha256": null,
+      "afterSha256": "a143eb6cb1b4515cba879cf1c0e0a6f2436a25484057ea30729158c526abe9c5"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0095_redfox_credentials.sql",
+      "beforeSha256": null,
+      "afterSha256": "03370712f2b68941113ed610429f1c6caee092fa0eb64e091464ee1007df1454"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0096_publication_sync_state.sql",
+      "beforeSha256": null,
+      "afterSha256": "73d6b3f08d96397634645368794f412eaa93840b5aa69884ae6245c1b7faf08e"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0097_onboarding_state.sql",
+      "beforeSha256": null,
+      "afterSha256": "489d56fb031f4e078942251e5972a093f04e41f11a86a76332cb6c55cb4d8631"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0098_separate_collection_jobs.sql",
+      "beforeSha256": null,
+      "afterSha256": "ab402ac8bfe4da8fddea05ac5d03042fb090a660411f8d1b34c8b578536673c8"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0099_stagger_collection_jobs.sql",
+      "beforeSha256": null,
+      "afterSha256": "9ac0be194976afafb7289ff157b61eb1b30af1433d43abfa4ec90011bf80ee5e"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0100_traffic_unavailable.sql",
+      "beforeSha256": null,
+      "afterSha256": "39d47dff9a5d634b24aee9af4b1894c70505cf7969e80136592b87d05c302ec1"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0101_creative_canvas.sql",
+      "beforeSha256": null,
+      "afterSha256": "6c971231adfc0a1771577f21a6c51a885fb24201f8029cc293ee5195576ab7f2"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/0102_visual_template_library.sql",
+      "beforeSha256": null,
+      "afterSha256": "9d72015dad67b2a626b4b6c42e87c8112fa66eb7c6224d2bad14d0c7b22e6ecf"
+    },
+    {
+      "path": "backend/drizzle/lineages/canvas/meta/_journal.json",
+      "beforeSha256": null,
+      "afterSha256": "c09c7da9c60327105df62f28d536967652567822a75364da9940958b85c9d84f"
+    },
+    {
+      "path": "backend/drizzle/lineages/catalog-query.json",
+      "beforeSha256": null,
+      "afterSha256": "d8263298acfc16b515f318660324671a8e0b8844b023a1a32b1656f5558276d1"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0000_init.sql",
+      "beforeSha256": null,
+      "afterSha256": "389dce30cb081f39c868443481db23dd739a75c571f73302d377bca0ba91c4de"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0001_model_secret_value.sql",
+      "beforeSha256": null,
+      "afterSha256": "7ee69734aea0b900036aedf05acf3e4ae3c1c78988013af2f84898037148ec54"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0002_storage_configs.sql",
+      "beforeSha256": null,
+      "afterSha256": "6c37d1f5cc7bd48765405f5382d1926072ff5d46a92e82c6c2905725ce0d39eb"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0003_positioning_facets_rules.sql",
+      "beforeSha256": null,
+      "afterSha256": "5ec8eddf99f26883953e1a1002e29a6d55bac52d19e31b345f63782919902a3f"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0004_candidate_card.sql",
+      "beforeSha256": null,
+      "afterSha256": "a6c1aad0b6c8f10e240e7db2874c651f034e7d9bcf72e205dc8ee8dcf0fb00b6"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0005_project_brief_detail.sql",
+      "beforeSha256": null,
+      "afterSha256": "a658d6f7f7e0fd43bf2468e91cd545b3965b44550064bef8f35361cb2436f654"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0006_calibration_rule_suggestions.sql",
+      "beforeSha256": null,
+      "afterSha256": "f784180835244f7b221c0e76da4fd086f5e74e4b02ce761bb57b485f58276c9c"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0007_ai_task_steps.sql",
+      "beforeSha256": null,
+      "afterSha256": "d3134ae00cf022b53b1889c832dcbc04badc3a4878591ab09603067a59dd91bb"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0008_project_source_platformref.sql",
+      "beforeSha256": null,
+      "afterSha256": "75779580fe08f36ffdd90b747e247a4dba74ad5b41522d8b6d472e652651a095"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0009_scheduled_job_and_run.sql",
+      "beforeSha256": null,
+      "afterSha256": "e9195aea23c4e7320d75a6f93817d5e00313966ea03cdd865716c53fa09a2629"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0010_artifacts_origin.sql",
+      "beforeSha256": null,
+      "afterSha256": "8eb6d84e6154bebf6567db92fc930106f3bf007bd05f9d1a9a57ae12a8fbd401"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0011_audience_signals_publication.sql",
+      "beforeSha256": null,
+      "afterSha256": "062c595342f8645b1747fe09b5b42a5ae66a6e655d35ae067af877bc1f17d395"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0012_douyin_throttle_state.sql",
+      "beforeSha256": null,
+      "afterSha256": "f055cba43a20b32eb3b85a7bdbfa5bb776d8c07d5d17e4311df675f518736775"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0013_skill_config_overrides.sql",
+      "beforeSha256": null,
+      "afterSha256": "7ff4fa6304cb05207d30d018c461b3eca0ac957f97a6f5de2d9991bfa3a1a6fc"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0014_audience_signals_like_count.sql",
+      "beforeSha256": null,
+      "afterSha256": "a6b6e91aa5ec7d352b23abeee3c98f2590ebc9d48003131643df70a63fbdec53"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0015_retire_thesis_contract.sql",
+      "beforeSha256": null,
+      "afterSha256": "f210a6bf105babf8749673e1765d558184d9917ae7bd29f3a1fba2e5f5b3926e"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0016_audience_signals_external_id.sql",
+      "beforeSha256": null,
+      "afterSha256": "7c40f3280ae26e3785c08eb45f274abd71f4eca1183c4e8967c9d8aa553ed5b8"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0017_publication_hidden_at.sql",
+      "beforeSha256": null,
+      "afterSha256": "e6b12e92fd6cb8d92bafaa5340107b1dd96d3b0aaf1e28a38271cce70743c525"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0018_knowledge_source_note.sql",
+      "beforeSha256": null,
+      "afterSha256": "58746cb65a67030fe985fb7e3cd26542bd9469718233fcc2d0ee20ca86f0ea05"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0019_ai_conversation_scope.sql",
+      "beforeSha256": null,
+      "afterSha256": "7b053288ec4572087c91a0f5557786ee38c30c30d02f7a15672a3db7913a2417"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0020_review_gate.sql",
+      "beforeSha256": null,
+      "afterSha256": "06b58a4a40f27d22d38168bbafb9db5f122c73ca90cfc96e8bd63458ef752969"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0021_learnings_project_id.sql",
+      "beforeSha256": null,
+      "afterSha256": "4c9d3fbac08da0b9946b0ad06636793dc4ac1dfa63b7a1c1962a0c42f91051f8"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0022_ai_messages_parts.sql",
+      "beforeSha256": null,
+      "afterSha256": "95860f32dcdb9baef59fd1ea0cccea62c0cc3166b578af35fdda5c12a428dd24"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0023_material_link_priority.sql",
+      "beforeSha256": null,
+      "afterSha256": "35eafe944740b7b24949d16b50c5534d6a533f78a8c91a78a3c073e077ea7383"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0024_asset_file_extraction.sql",
+      "beforeSha256": null,
+      "afterSha256": "830c57308b6416fa27ce16e873c050eb20b2c73c779aa41741d41073937fc268"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0025_multi_account_ownership.sql",
+      "beforeSha256": null,
+      "afterSha256": "9a2dbb9d65f780f9e0e40e25626e398d85af25ff522dd2727675612658ec3d49"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0026_job_run_progress.sql",
+      "beforeSha256": null,
+      "afterSha256": "672f20ae70ef431bad9411d0aaf536ec330bd267de4aa214df16d87a20fc2afb"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0027_activation_state.sql",
+      "beforeSha256": null,
+      "afterSha256": "13cbbaa4690ca05c2657d55f3c6b0f8065940359f5f0855a19e860a5dd675aaa"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0028_skill_config_override_versions.sql",
+      "beforeSha256": null,
+      "afterSha256": "0d83fd1e3f46a58f0d84509c6d9db84c7265e60138bae0ece44f6f2a57bed926"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0029_publication_platform_status.sql",
+      "beforeSha256": null,
+      "afterSha256": "457e53978ff309a93c1ac10719e0bd4dd6020335daf05d925673b34d03e45654"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0030_scheduled_job_account.sql",
+      "beforeSha256": null,
+      "afterSha256": "84777f0e3805e253a4215bc049983c8b82fb5621da45cab06d08fb7578b62186"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0031_platform_account_external_id.sql",
+      "beforeSha256": null,
+      "afterSha256": "7d386c87fba6eba8a9cb91cf5f9c4a52acf4c494b5004064ca1bb79c0970e53e"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0032_benchmark_sources_works.sql",
+      "beforeSha256": null,
+      "afterSha256": "98a7326aab2513dc1ec92bbdd4a8c917eaa0126d5a4f80b5dcbd72a7afb50c23"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0033_topic_preferences.sql",
+      "beforeSha256": null,
+      "afterSha256": "e90e83dfc42f277228e02e54e3af5138beaa8e207e386dc29324e6a1b07dc67d"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0034_positioning_statement_change_reason.sql",
+      "beforeSha256": null,
+      "afterSha256": "57e4fe78a616714b6f3561028e7e125216c583814d131b90a448d90206b68e3f"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0035_trend_sources_darkhorse.sql",
+      "beforeSha256": null,
+      "afterSha256": "cc29ae3c882f845c102d43c8b6f1c5c57fa397571063e48c248140a25482d402"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0036_topic_attributions.sql",
+      "beforeSha256": null,
+      "afterSha256": "8569ad530e3da15df8646d7dac7e5a7dab7e8c7fdb283fc67063ae45d55aad9c"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0037_ai_messages_usage.sql",
+      "beforeSha256": null,
+      "afterSha256": "244138e142703181e28cc701b97322bdc13fb719adfd2ce4815f56c0ac20fd09"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0038_favorites_folders.sql",
+      "beforeSha256": null,
+      "afterSha256": "bd8e56e6afe749150b22f78e34949c9f94140f46fb625fe5e3885946fcc6fd0e"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0039_favorites_distill.sql",
+      "beforeSha256": null,
+      "afterSha256": "6f88d4b5a66c4cd384bdb01d7172616078f5fabcc1b09fc34f049e3443dc9031"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0040_backfill_imported_publication_revision.sql",
+      "beforeSha256": null,
+      "afterSha256": "c6bc974bf72ff5386e0fb2d3193b0d7b6bf3eec68018319ce5477aceaa2ed856"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0041_account_scoped_unique_identity.sql",
+      "beforeSha256": null,
+      "afterSha256": "fa546ae37dca6da2db56c867be7fac288e20018b261278f45bf801750d42fbb9"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0042_account_isolation_notnull.sql",
+      "beforeSha256": null,
+      "afterSha256": "184fb122be28b1c6b145a53ab4c78a640add69753fe990459b173e959df34f87"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0043_notifications_account_stamp.sql",
+      "beforeSha256": null,
+      "afterSha256": "b8362decbb29f0f4de7b92cff01584888ca90317c0f689b21104e1db789381f1"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0044_benchmark_works_transcript.sql",
+      "beforeSha256": null,
+      "afterSha256": "5b8460ecc416e0677edd9b65b89036b38372a517178ef4141d0bc2473aa7989f"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0045_learnings_evidence_strength.sql",
+      "beforeSha256": null,
+      "afterSha256": "029271f68b8ffdbfecfaa4d4ff4873f080268d7523091cfa80453d9618247923"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0046_scheduled_job_unique_source.sql",
+      "beforeSha256": null,
+      "afterSha256": "5fac07ae25bad43d1deb644425eb65880c0aaecd1f28e624ef2e6d7e333e2de4"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0047_browser_sessions.sql",
+      "beforeSha256": null,
+      "afterSha256": "c87f38c1d4acf140ce691f3ef137fbb7b2ab0d48ceead46246e396f6db658235"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0048_browser_sessions_drop_migrated.sql",
+      "beforeSha256": null,
+      "afterSha256": "beac75017e944d86f3deadbe81ba93215802e53966a8011fc830e0f6c3ced9cb"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0049_activation_security_mirror.sql",
+      "beforeSha256": null,
+      "afterSha256": "b6f8a1df11ab477532b44991ebef37b7aa3a6a47dbef251d450ca82ec6ba5ea2"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0050_content_intelligence.sql",
+      "beforeSha256": null,
+      "afterSha256": "b241490c7de4858ace783885da1b7831a63418f181c555177d7e32c1fe6123f3"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0051_content_intelligence_project_provenance.sql",
+      "beforeSha256": null,
+      "afterSha256": "9cfa671b7fc6022b80565097fa72b148ed8a60f6a1714498afe8bf64b75d0b16"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0052_intelligence_source_memberships.sql",
+      "beforeSha256": null,
+      "afterSha256": "9be75617f6369512305e4352436a1f2d3563136e209abdfcab4c92e8bc2a6364"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0053_account_skill_overlays.sql",
+      "beforeSha256": null,
+      "afterSha256": "4c7a0cdd0938e665b8a1cdd40142e521542a8d4f49ef32e3b79f038a8f9c6f0f"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0054_ai_task_execution_ownership.sql",
+      "beforeSha256": null,
+      "afterSha256": "07f3fb9931d185dc5b6a3d44db732d1adf63d8488d76106ea2ce7afe6f17fe61"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0055_automation_task_active_owner.sql",
+      "beforeSha256": null,
+      "afterSha256": "b2d44a75b2c20c0bd9c67100b6b3c87849f747ac0bb1849f5882601eec4719ee"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0056_asset_upload_atomic_identity.sql",
+      "beforeSha256": null,
+      "afterSha256": "2865e7d1a5d62d847e833b8c55c24e777bdba1f3652fca1a3ff88216a4eb021f"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0057_knowledge_file_workspace.sql",
+      "beforeSha256": null,
+      "afterSha256": "05a8a0f01e40f698422e0f04e0773fd856cf40c7bd526a7cd3eb8767909d25ca"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0058_source_sync_active_owner.sql",
+      "beforeSha256": null,
+      "afterSha256": "2b03251605a9d56a6dd9220baad85b60fdae029006c7438ee1462cd5ab45ddaa"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0059_unify_content_radar_automation.sql",
+      "beforeSha256": null,
+      "afterSha256": "3333bf58fe8bdfd76dad384f34464ff7c514453cb91cc973f7ff91e98d3fae8b"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0060_retire_self_detail_automation.sql",
+      "beforeSha256": null,
+      "afterSha256": "22b0fefa413aa4c8c09c1f0d9a4ffc67b885a92603edd14419cf986a73763b53"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0061_project_schedule_calendar.sql",
+      "beforeSha256": null,
+      "afterSha256": "eabb4445cee98b89be7110c585242a3ba14365c2a250e6e20616f5d854f8ffca"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0062_normalize_scheduling_timestamps.sql",
+      "beforeSha256": null,
+      "afterSha256": "518c5ce15c9cf4cfcda4e883f61e01fe81623bb87d91bc98021f549cabf0f2f7"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0063_learning_adoption_dedupe.sql",
+      "beforeSha256": null,
+      "afterSha256": "bc2dc50d55ef663b1411ef5c8f5c552a3c0393ee7f231bf53c8a3b9e33cbafae"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0064_positioning_master_version_floor.sql",
+      "beforeSha256": null,
+      "afterSha256": "65784078113781f3cc461d5520f69a9b555d78dee9407bed80a21e09cc65eb28"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0065_positioning_master_snapshot.sql",
+      "beforeSha256": null,
+      "afterSha256": "00456246881d97c974106d50db00f9b3d3aa74369c110e68ea6a6922c20047a2"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0066_positioning_discovery_sessions.sql",
+      "beforeSha256": null,
+      "afterSha256": "bb74087d912487640b7b84fb7dcbcd79a479adc3783712cbd744859a7024212e"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0067_channel_model_credentials.sql",
+      "beforeSha256": null,
+      "afterSha256": "45aaa6283171089a020dba4e96f74dc05d3b1b65ed6bc3a7113df603a0dc76ec"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0068_cli_invocations.sql",
+      "beforeSha256": null,
+      "afterSha256": "05b73f87445a2d3e5eb42738be94deceff72c4628b3cf81a550d8e5058f1a9f2"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0069_execution_authority_mapping.sql",
+      "beforeSha256": null,
+      "afterSha256": "695c632f3807ae973e3278a1d832ed9ea2d7f3cb36967228058f5eceacfcc9fb"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0070_execution_fence.sql",
+      "beforeSha256": null,
+      "afterSha256": "2b5822bc41a9638e9af53fc14fbdbe7b4db48146a68c8913d4f42e56a96d8f06"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0071_execution_call_ledger.sql",
+      "beforeSha256": null,
+      "afterSha256": "aa752b0639a6717a5b980e69151545fcbb4fae05a426f277175466abdbb789a6"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0072_execution_call_result.sql",
+      "beforeSha256": null,
+      "afterSha256": "e691f86b4c989e9ebdf83e2546a9a8e8e2a569c9a6cee882a68b288261f73edb"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0073_execution_retry_schedule.sql",
+      "beforeSha256": null,
+      "afterSha256": "1ffca3e1b0135d3a9d064f5bd0eaf1b3889540b0a774d27248693184f1ac995d"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0074_execution_candidate_receipt.sql",
+      "beforeSha256": null,
+      "afterSha256": "34adf1f086c13a3791021557711ca85cc9eb5bd0d57652d4b4f7ef4bad365584"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0075_execution_provider_receipt.sql",
+      "beforeSha256": null,
+      "afterSha256": "f54d3f23c8289825cea193b29d10afe25feb973df2657d5e87581a377c24bcb2"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0076_publication_draft_adoption.sql",
+      "beforeSha256": null,
+      "afterSha256": "6f4d509689b6618a6526fa5fedf4dc483601984435908ebe65cd1bb2dd4a76fd"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0077_artifact_version_adoption.sql",
+      "beforeSha256": null,
+      "afterSha256": "6bbcc3dfe3cef46c76acfbd8227b45746c9977afc89cbc8d38e6e19ad41f7e12"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0078_proposal_adoption_receipts.sql",
+      "beforeSha256": null,
+      "afterSha256": "9894237836f7bd6f5d740036d003291bb6558e980236017eb647cbc9c6a5d912"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0079_agentic_tool_execution_claim.sql",
+      "beforeSha256": null,
+      "afterSha256": "8110c0332eea020f54c33b98b98550f81b10b60000e515df192dccae0bc28300"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0080_execution_evidence.sql",
+      "beforeSha256": null,
+      "afterSha256": "5c50fb27e089c8e9988ec3e8c85638eb10d163a59ebf14c8f5e9cef988ffb743"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0081_execution_browser_profile_leases.sql",
+      "beforeSha256": null,
+      "afterSha256": "4949f25acecdd67b027bf06b7e87707b0a6401f28dcf782b3c1a6856e6b70c5b"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0082_scheduled_child_active_owner.sql",
+      "beforeSha256": null,
+      "afterSha256": "518609ea53b833b7b2df3ea460387baf478d14fc5a2816d64f3a62f4242141dd"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0083_execution_stream_events.sql",
+      "beforeSha256": null,
+      "afterSha256": "af0ef9b37a8f07c51280c0a6ac7e2af1736a2b7e24c21502ea64aff5d0280380"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0084_execution_call_parent.sql",
+      "beforeSha256": null,
+      "afterSha256": "21dabcdd1d22c7af8333fd6750cce0d70d22f375c4fc5186e7e7452440b080f1"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0085_pending_document_commits.sql",
+      "beforeSha256": null,
+      "afterSha256": "277859b7d6e4a295294fc5ab63e32b22a235e5486eede7270f338a823ab8c27c"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0086_execution_evidence_metadata.sql",
+      "beforeSha256": null,
+      "afterSha256": "27d6fec892fea3f93a81ac8e8b9e3fe264a364e84929cb69725c09cffa88c90b"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0087_execution_provider_job.sql",
+      "beforeSha256": null,
+      "afterSha256": "82242de20052d2eed864469068d8379a3965351d1d50a114c9f73dfc3e4b89eb"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0088_pending_generated_asset_commits.sql",
+      "beforeSha256": null,
+      "afterSha256": "7dfc1e79ab145959056ad0e1c547de832d607f0933923a8ea3a89b2307e447d8"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0089_project_transcription_requests.sql",
+      "beforeSha256": null,
+      "afterSha256": "e43b018faa7f9d13d8dfc66744bf3fecb8178fc3b438d74bbfe9e2526968eb4a"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0090_execution_call_accounting_basis.sql",
+      "beforeSha256": null,
+      "afterSha256": "f112b27f3f7896e1bffcdfcd3417d72883f0fdd58984a539ae1e8b1f3505c84c"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0091_browser_profile_host_owner.sql",
+      "beforeSha256": null,
+      "afterSha256": "685afcca70cbc19d30161c36b284570b2911ad2146f2cd0a36b57f7afe4e2bef"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0092_page_read_revision.sql",
+      "beforeSha256": null,
+      "afterSha256": "faa3826b15d81ded0336383242672b874844f15c73f302258973447591f977ea"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0093_positioning_current_statement.sql",
+      "beforeSha256": null,
+      "afterSha256": "9131cf16c0c6febae18849ca6ceab9d31a160e16bebb58cafdcfaba0a5049438"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0094_publication_traffic.sql",
+      "beforeSha256": null,
+      "afterSha256": "a143eb6cb1b4515cba879cf1c0e0a6f2436a25484057ea30729158c526abe9c5"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0095_redfox_credentials.sql",
+      "beforeSha256": null,
+      "afterSha256": "03370712f2b68941113ed610429f1c6caee092fa0eb64e091464ee1007df1454"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0096_publication_sync_state.sql",
+      "beforeSha256": null,
+      "afterSha256": "73d6b3f08d96397634645368794f412eaa93840b5aa69884ae6245c1b7faf08e"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0097_onboarding_state.sql",
+      "beforeSha256": null,
+      "afterSha256": "489d56fb031f4e078942251e5972a093f04e41f11a86a76332cb6c55cb4d8631"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0098_separate_collection_jobs.sql",
+      "beforeSha256": null,
+      "afterSha256": "ab402ac8bfe4da8fddea05ac5d03042fb090a660411f8d1b34c8b578536673c8"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0099_stagger_collection_jobs.sql",
+      "beforeSha256": null,
+      "afterSha256": "9ac0be194976afafb7289ff157b61eb1b30af1433d43abfa4ec90011bf80ee5e"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0100_traffic_unavailable.sql",
+      "beforeSha256": null,
+      "afterSha256": "39d47dff9a5d634b24aee9af4b1894c70505cf7969e80136592b87d05c302ec1"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0101_reporting_local_consent.sql",
+      "beforeSha256": null,
+      "afterSha256": "957594a3a49141c1ccd1b57a4c526acda961a6fe16cc890e4725847163b7ee08"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0102_publications_account_external_unique.sql",
+      "beforeSha256": null,
+      "afterSha256": "7e593b93324adf434431e503e42fe87e935f9d3fb3276152bc8d8c6cae9d1410"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0103_platform_collection.sql",
+      "beforeSha256": null,
+      "afterSha256": "7c87f0a7d659a8c373c99d5c906eb14a8650ed5b9abb44c18b66874b95ce05d2"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0104_platform_bind_attempts.sql",
+      "beforeSha256": null,
+      "afterSha256": "90cd8c3ae24f8e863ec3a6082eef4fb55b7c3763ebbeb5bc704529f914ed5e17"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0105_platform_legacy_backfill.sql",
+      "beforeSha256": null,
+      "afterSha256": "c3c6f33fa439562fb1be1ad4db0c976482bee2de22fd16b73bc2dc18a6eeafd7"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0106_platform_work_source_title.sql",
+      "beforeSha256": null,
+      "afterSha256": "7cb3c48a02503723f2cb7269c0ed1dad6c1bb3d3a221721055c3ed5f811e1795"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0107_wechat_articles.sql",
+      "beforeSha256": null,
+      "afterSha256": "c0feb2b0ab99676bd1942581a7a4897d8af858e096d2d0beda2e6375b82f25f5"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0108_graphic_posts.sql",
+      "beforeSha256": null,
+      "afterSha256": "bd7235916037bbf6f04a6e8b39a0a0cc500b8e91fc11d4f9c07bbb7ab0dc4638"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0109_creative_results.sql",
+      "beforeSha256": null,
+      "afterSha256": "f4cd7953e07cfc199a133c84ed83dff9f9df411cccca12e41c2918bcea5e2c35"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0110_article_text_candidates.sql",
+      "beforeSha256": null,
+      "afterSha256": "162939d577e6b8352384fb63afddec691256f252ea9f3851bb8e49e07e79963b"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0111_publication_text_candidates.sql",
+      "beforeSha256": null,
+      "afterSha256": "10903212052a5dceb911ec4159bdfb21acbf3a5c5c99f790a4f0fa378b841ce9"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0112_creative_result_target_section.sql",
+      "beforeSha256": null,
+      "afterSha256": "f3718325fb16c83d8bd46984c4935c316990ac8a5e3948689c45636775b64636"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0113_publication_cover_file.sql",
+      "beforeSha256": null,
+      "afterSha256": "e9b9c838d8edfe8f8054e479459527ca74b947d6d356ce0bdf033bdb7ad9d49a"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0114_production_edit_versions.sql",
+      "beforeSha256": null,
+      "afterSha256": "f394b58e660fb7d1c7b9cfe497592fceba54048b4eb8b841cb45d788813e07e3"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0115_production_render_requests.sql",
+      "beforeSha256": null,
+      "afterSha256": "93bcb64a9035ef9af6a876cf33aae66ce44e1a1f9148716a6124099358ccf6c7"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0116_output_creation_requests.sql",
+      "beforeSha256": null,
+      "afterSha256": "47695d97f504398589fe12ac4f9c4015cef83d79792299ca3dc7f9949ad41a25"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0117_conversion_reservations.sql",
+      "beforeSha256": null,
+      "afterSha256": "43ad39e53da3c520606f47b772d82c95bb0dbbc801db246408f894e89e32e272"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0118_execution_control_receipts.sql",
+      "beforeSha256": null,
+      "afterSha256": "2b0e0668f9ccfe50afad3cdbfb8f55a9a5c28fcbcb0b4e48b98f9c3341a3f8fd"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0119_production_media_requests.sql",
+      "beforeSha256": null,
+      "afterSha256": "15174b5eab3b326e826b3426145a11f2adfe51d54c550f735d06674b0f9cb76c"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0120_moments_owner.sql",
+      "beforeSha256": null,
+      "afterSha256": "03e17e11eb7a484c5a0bb72565e074fe45164a9d59755cab35de1e271beb0d98"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0121_work_composition_owner.sql",
+      "beforeSha256": null,
+      "afterSha256": "66e33087d2831a6a332a9f312ff7a3cbb5c81ceec2a3be130a8131462a5cedca"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0122_work_materials.sql",
+      "beforeSha256": null,
+      "afterSha256": "2a19f1b0554e7ed707a294e5b4c1fdc7e7108d6ee1ac6cbc0abc8152af42c5cf"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0123_work_reviews.sql",
+      "beforeSha256": null,
+      "afterSha256": "019fc704a12b4a7e75bbdd22561ac80bdb14ee1a45faa2d5fbd584a04b6d4b99"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0124_production_file_bindings.sql",
+      "beforeSha256": null,
+      "afterSha256": "07b068d5474755913314f78e5420d6c874f44b7601b54d3f8b56c6e21318b6d2"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0125_creative_canvas_lineage_merge.sql",
+      "beforeSha256": null,
+      "afterSha256": "c5f2ed12b96c73c5357e06c1f455bc6fbb5f154e9d298be36c879739acb373d6"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0126_moments_model_candidates.sql",
+      "beforeSha256": null,
+      "afterSha256": "90246742d3c1caa53dac3150b2107e4ec37ebeb42be2ec0787e01ba75be877c8"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/0127_publication_cover_requests.sql",
+      "beforeSha256": null,
+      "afterSha256": "84cf94b84254ae25d82393e87831e34bc9ccfa9ecdee1d98ea11dbdbbff7307f"
+    },
+    {
+      "path": "backend/drizzle/lineages/diagnostic/meta/_journal.json",
+      "beforeSha256": null,
+      "afterSha256": "a49f4aa66b203379a898265b5f91c3ad9f9f07c004a694a4981411221e37d920"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0000_init.sql",
+      "beforeSha256": null,
+      "afterSha256": "389dce30cb081f39c868443481db23dd739a75c571f73302d377bca0ba91c4de"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0001_model_secret_value.sql",
+      "beforeSha256": null,
+      "afterSha256": "7ee69734aea0b900036aedf05acf3e4ae3c1c78988013af2f84898037148ec54"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0002_storage_configs.sql",
+      "beforeSha256": null,
+      "afterSha256": "6c37d1f5cc7bd48765405f5382d1926072ff5d46a92e82c6c2905725ce0d39eb"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0003_positioning_facets_rules.sql",
+      "beforeSha256": null,
+      "afterSha256": "5ec8eddf99f26883953e1a1002e29a6d55bac52d19e31b345f63782919902a3f"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0004_candidate_card.sql",
+      "beforeSha256": null,
+      "afterSha256": "a6c1aad0b6c8f10e240e7db2874c651f034e7d9bcf72e205dc8ee8dcf0fb00b6"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0005_project_brief_detail.sql",
+      "beforeSha256": null,
+      "afterSha256": "a658d6f7f7e0fd43bf2468e91cd545b3965b44550064bef8f35361cb2436f654"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0006_calibration_rule_suggestions.sql",
+      "beforeSha256": null,
+      "afterSha256": "f784180835244f7b221c0e76da4fd086f5e74e4b02ce761bb57b485f58276c9c"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0007_ai_task_steps.sql",
+      "beforeSha256": null,
+      "afterSha256": "d3134ae00cf022b53b1889c832dcbc04badc3a4878591ab09603067a59dd91bb"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0008_project_source_platformref.sql",
+      "beforeSha256": null,
+      "afterSha256": "75779580fe08f36ffdd90b747e247a4dba74ad5b41522d8b6d472e652651a095"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0009_scheduled_job_and_run.sql",
+      "beforeSha256": null,
+      "afterSha256": "e9195aea23c4e7320d75a6f93817d5e00313966ea03cdd865716c53fa09a2629"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0010_artifacts_origin.sql",
+      "beforeSha256": null,
+      "afterSha256": "8eb6d84e6154bebf6567db92fc930106f3bf007bd05f9d1a9a57ae12a8fbd401"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0011_audience_signals_publication.sql",
+      "beforeSha256": null,
+      "afterSha256": "062c595342f8645b1747fe09b5b42a5ae66a6e655d35ae067af877bc1f17d395"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0012_douyin_throttle_state.sql",
+      "beforeSha256": null,
+      "afterSha256": "f055cba43a20b32eb3b85a7bdbfa5bb776d8c07d5d17e4311df675f518736775"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0013_skill_config_overrides.sql",
+      "beforeSha256": null,
+      "afterSha256": "7ff4fa6304cb05207d30d018c461b3eca0ac957f97a6f5de2d9991bfa3a1a6fc"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0014_audience_signals_like_count.sql",
+      "beforeSha256": null,
+      "afterSha256": "a6b6e91aa5ec7d352b23abeee3c98f2590ebc9d48003131643df70a63fbdec53"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0015_retire_thesis_contract.sql",
+      "beforeSha256": null,
+      "afterSha256": "f210a6bf105babf8749673e1765d558184d9917ae7bd29f3a1fba2e5f5b3926e"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0016_audience_signals_external_id.sql",
+      "beforeSha256": null,
+      "afterSha256": "7c40f3280ae26e3785c08eb45f274abd71f4eca1183c4e8967c9d8aa553ed5b8"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0017_publication_hidden_at.sql",
+      "beforeSha256": null,
+      "afterSha256": "e6b12e92fd6cb8d92bafaa5340107b1dd96d3b0aaf1e28a38271cce70743c525"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0018_knowledge_source_note.sql",
+      "beforeSha256": null,
+      "afterSha256": "58746cb65a67030fe985fb7e3cd26542bd9469718233fcc2d0ee20ca86f0ea05"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0019_ai_conversation_scope.sql",
+      "beforeSha256": null,
+      "afterSha256": "7b053288ec4572087c91a0f5557786ee38c30c30d02f7a15672a3db7913a2417"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0020_review_gate.sql",
+      "beforeSha256": null,
+      "afterSha256": "06b58a4a40f27d22d38168bbafb9db5f122c73ca90cfc96e8bd63458ef752969"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0021_learnings_project_id.sql",
+      "beforeSha256": null,
+      "afterSha256": "4c9d3fbac08da0b9946b0ad06636793dc4ac1dfa63b7a1c1962a0c42f91051f8"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0022_ai_messages_parts.sql",
+      "beforeSha256": null,
+      "afterSha256": "95860f32dcdb9baef59fd1ea0cccea62c0cc3166b578af35fdda5c12a428dd24"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0023_material_link_priority.sql",
+      "beforeSha256": null,
+      "afterSha256": "35eafe944740b7b24949d16b50c5534d6a533f78a8c91a78a3c073e077ea7383"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0024_asset_file_extraction.sql",
+      "beforeSha256": null,
+      "afterSha256": "830c57308b6416fa27ce16e873c050eb20b2c73c779aa41741d41073937fc268"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0025_multi_account_ownership.sql",
+      "beforeSha256": null,
+      "afterSha256": "9a2dbb9d65f780f9e0e40e25626e398d85af25ff522dd2727675612658ec3d49"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0026_job_run_progress.sql",
+      "beforeSha256": null,
+      "afterSha256": "672f20ae70ef431bad9411d0aaf536ec330bd267de4aa214df16d87a20fc2afb"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0027_activation_state.sql",
+      "beforeSha256": null,
+      "afterSha256": "13cbbaa4690ca05c2657d55f3c6b0f8065940359f5f0855a19e860a5dd675aaa"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0028_skill_config_override_versions.sql",
+      "beforeSha256": null,
+      "afterSha256": "0d83fd1e3f46a58f0d84509c6d9db84c7265e60138bae0ece44f6f2a57bed926"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0029_publication_platform_status.sql",
+      "beforeSha256": null,
+      "afterSha256": "457e53978ff309a93c1ac10719e0bd4dd6020335daf05d925673b34d03e45654"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0030_scheduled_job_account.sql",
+      "beforeSha256": null,
+      "afterSha256": "84777f0e3805e253a4215bc049983c8b82fb5621da45cab06d08fb7578b62186"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0031_platform_account_external_id.sql",
+      "beforeSha256": null,
+      "afterSha256": "7d386c87fba6eba8a9cb91cf5f9c4a52acf4c494b5004064ca1bb79c0970e53e"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0032_benchmark_sources_works.sql",
+      "beforeSha256": null,
+      "afterSha256": "98a7326aab2513dc1ec92bbdd4a8c917eaa0126d5a4f80b5dcbd72a7afb50c23"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0033_topic_preferences.sql",
+      "beforeSha256": null,
+      "afterSha256": "e90e83dfc42f277228e02e54e3af5138beaa8e207e386dc29324e6a1b07dc67d"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0034_positioning_statement_change_reason.sql",
+      "beforeSha256": null,
+      "afterSha256": "57e4fe78a616714b6f3561028e7e125216c583814d131b90a448d90206b68e3f"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0035_trend_sources_darkhorse.sql",
+      "beforeSha256": null,
+      "afterSha256": "cc29ae3c882f845c102d43c8b6f1c5c57fa397571063e48c248140a25482d402"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0036_topic_attributions.sql",
+      "beforeSha256": null,
+      "afterSha256": "8569ad530e3da15df8646d7dac7e5a7dab7e8c7fdb283fc67063ae45d55aad9c"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0037_ai_messages_usage.sql",
+      "beforeSha256": null,
+      "afterSha256": "244138e142703181e28cc701b97322bdc13fb719adfd2ce4815f56c0ac20fd09"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0038_favorites_folders.sql",
+      "beforeSha256": null,
+      "afterSha256": "bd8e56e6afe749150b22f78e34949c9f94140f46fb625fe5e3885946fcc6fd0e"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0039_favorites_distill.sql",
+      "beforeSha256": null,
+      "afterSha256": "6f88d4b5a66c4cd384bdb01d7172616078f5fabcc1b09fc34f049e3443dc9031"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0040_backfill_imported_publication_revision.sql",
+      "beforeSha256": null,
+      "afterSha256": "c6bc974bf72ff5386e0fb2d3193b0d7b6bf3eec68018319ce5477aceaa2ed856"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0041_account_scoped_unique_identity.sql",
+      "beforeSha256": null,
+      "afterSha256": "fa546ae37dca6da2db56c867be7fac288e20018b261278f45bf801750d42fbb9"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0042_account_isolation_notnull.sql",
+      "beforeSha256": null,
+      "afterSha256": "184fb122be28b1c6b145a53ab4c78a640add69753fe990459b173e959df34f87"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0043_notifications_account_stamp.sql",
+      "beforeSha256": null,
+      "afterSha256": "b8362decbb29f0f4de7b92cff01584888ca90317c0f689b21104e1db789381f1"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0044_benchmark_works_transcript.sql",
+      "beforeSha256": null,
+      "afterSha256": "5b8460ecc416e0677edd9b65b89036b38372a517178ef4141d0bc2473aa7989f"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0045_learnings_evidence_strength.sql",
+      "beforeSha256": null,
+      "afterSha256": "029271f68b8ffdbfecfaa4d4ff4873f080268d7523091cfa80453d9618247923"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0046_scheduled_job_unique_source.sql",
+      "beforeSha256": null,
+      "afterSha256": "5fac07ae25bad43d1deb644425eb65880c0aaecd1f28e624ef2e6d7e333e2de4"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0047_browser_sessions.sql",
+      "beforeSha256": null,
+      "afterSha256": "c87f38c1d4acf140ce691f3ef137fbb7b2ab0d48ceead46246e396f6db658235"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0048_browser_sessions_drop_migrated.sql",
+      "beforeSha256": null,
+      "afterSha256": "beac75017e944d86f3deadbe81ba93215802e53966a8011fc830e0f6c3ced9cb"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0049_activation_security_mirror.sql",
+      "beforeSha256": null,
+      "afterSha256": "b6f8a1df11ab477532b44991ebef37b7aa3a6a47dbef251d450ca82ec6ba5ea2"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0050_content_intelligence.sql",
+      "beforeSha256": null,
+      "afterSha256": "b241490c7de4858ace783885da1b7831a63418f181c555177d7e32c1fe6123f3"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0051_content_intelligence_project_provenance.sql",
+      "beforeSha256": null,
+      "afterSha256": "9cfa671b7fc6022b80565097fa72b148ed8a60f6a1714498afe8bf64b75d0b16"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0052_intelligence_source_memberships.sql",
+      "beforeSha256": null,
+      "afterSha256": "9be75617f6369512305e4352436a1f2d3563136e209abdfcab4c92e8bc2a6364"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0053_account_skill_overlays.sql",
+      "beforeSha256": null,
+      "afterSha256": "4c7a0cdd0938e665b8a1cdd40142e521542a8d4f49ef32e3b79f038a8f9c6f0f"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0054_ai_task_execution_ownership.sql",
+      "beforeSha256": null,
+      "afterSha256": "07f3fb9931d185dc5b6a3d44db732d1adf63d8488d76106ea2ce7afe6f17fe61"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0055_automation_task_active_owner.sql",
+      "beforeSha256": null,
+      "afterSha256": "b2d44a75b2c20c0bd9c67100b6b3c87849f747ac0bb1849f5882601eec4719ee"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0056_asset_upload_atomic_identity.sql",
+      "beforeSha256": null,
+      "afterSha256": "2865e7d1a5d62d847e833b8c55c24e777bdba1f3652fca1a3ff88216a4eb021f"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0057_knowledge_file_workspace.sql",
+      "beforeSha256": null,
+      "afterSha256": "05a8a0f01e40f698422e0f04e0773fd856cf40c7bd526a7cd3eb8767909d25ca"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0058_source_sync_active_owner.sql",
+      "beforeSha256": null,
+      "afterSha256": "2b03251605a9d56a6dd9220baad85b60fdae029006c7438ee1462cd5ab45ddaa"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0059_unify_content_radar_automation.sql",
+      "beforeSha256": null,
+      "afterSha256": "3333bf58fe8bdfd76dad384f34464ff7c514453cb91cc973f7ff91e98d3fae8b"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0060_retire_self_detail_automation.sql",
+      "beforeSha256": null,
+      "afterSha256": "22b0fefa413aa4c8c09c1f0d9a4ffc67b885a92603edd14419cf986a73763b53"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0061_project_schedule_calendar.sql",
+      "beforeSha256": null,
+      "afterSha256": "eabb4445cee98b89be7110c585242a3ba14365c2a250e6e20616f5d854f8ffca"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0062_normalize_scheduling_timestamps.sql",
+      "beforeSha256": null,
+      "afterSha256": "518c5ce15c9cf4cfcda4e883f61e01fe81623bb87d91bc98021f549cabf0f2f7"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0063_learning_adoption_dedupe.sql",
+      "beforeSha256": null,
+      "afterSha256": "bc2dc50d55ef663b1411ef5c8f5c552a3c0393ee7f231bf53c8a3b9e33cbafae"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0064_positioning_master_version_floor.sql",
+      "beforeSha256": null,
+      "afterSha256": "65784078113781f3cc461d5520f69a9b555d78dee9407bed80a21e09cc65eb28"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0065_positioning_master_snapshot.sql",
+      "beforeSha256": null,
+      "afterSha256": "00456246881d97c974106d50db00f9b3d3aa74369c110e68ea6a6922c20047a2"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0066_positioning_discovery_sessions.sql",
+      "beforeSha256": null,
+      "afterSha256": "bb74087d912487640b7b84fb7dcbcd79a479adc3783712cbd744859a7024212e"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0067_channel_model_credentials.sql",
+      "beforeSha256": null,
+      "afterSha256": "45aaa6283171089a020dba4e96f74dc05d3b1b65ed6bc3a7113df603a0dc76ec"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0068_cli_invocations.sql",
+      "beforeSha256": null,
+      "afterSha256": "05b73f87445a2d3e5eb42738be94deceff72c4628b3cf81a550d8e5058f1a9f2"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0069_execution_authority_mapping.sql",
+      "beforeSha256": null,
+      "afterSha256": "695c632f3807ae973e3278a1d832ed9ea2d7f3cb36967228058f5eceacfcc9fb"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0070_execution_fence.sql",
+      "beforeSha256": null,
+      "afterSha256": "2b5822bc41a9638e9af53fc14fbdbe7b4db48146a68c8913d4f42e56a96d8f06"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0071_execution_call_ledger.sql",
+      "beforeSha256": null,
+      "afterSha256": "aa752b0639a6717a5b980e69151545fcbb4fae05a426f277175466abdbb789a6"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0072_execution_call_result.sql",
+      "beforeSha256": null,
+      "afterSha256": "e691f86b4c989e9ebdf83e2546a9a8e8e2a569c9a6cee882a68b288261f73edb"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0073_execution_retry_schedule.sql",
+      "beforeSha256": null,
+      "afterSha256": "1ffca3e1b0135d3a9d064f5bd0eaf1b3889540b0a774d27248693184f1ac995d"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0074_execution_candidate_receipt.sql",
+      "beforeSha256": null,
+      "afterSha256": "34adf1f086c13a3791021557711ca85cc9eb5bd0d57652d4b4f7ef4bad365584"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0075_execution_provider_receipt.sql",
+      "beforeSha256": null,
+      "afterSha256": "f54d3f23c8289825cea193b29d10afe25feb973df2657d5e87581a377c24bcb2"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0076_publication_draft_adoption.sql",
+      "beforeSha256": null,
+      "afterSha256": "6f4d509689b6618a6526fa5fedf4dc483601984435908ebe65cd1bb2dd4a76fd"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0077_artifact_version_adoption.sql",
+      "beforeSha256": null,
+      "afterSha256": "6bbcc3dfe3cef46c76acfbd8227b45746c9977afc89cbc8d38e6e19ad41f7e12"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0078_proposal_adoption_receipts.sql",
+      "beforeSha256": null,
+      "afterSha256": "9894237836f7bd6f5d740036d003291bb6558e980236017eb647cbc9c6a5d912"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0079_agentic_tool_execution_claim.sql",
+      "beforeSha256": null,
+      "afterSha256": "8110c0332eea020f54c33b98b98550f81b10b60000e515df192dccae0bc28300"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0080_execution_evidence.sql",
+      "beforeSha256": null,
+      "afterSha256": "5c50fb27e089c8e9988ec3e8c85638eb10d163a59ebf14c8f5e9cef988ffb743"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0081_execution_browser_profile_leases.sql",
+      "beforeSha256": null,
+      "afterSha256": "4949f25acecdd67b027bf06b7e87707b0a6401f28dcf782b3c1a6856e6b70c5b"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0082_scheduled_child_active_owner.sql",
+      "beforeSha256": null,
+      "afterSha256": "518609ea53b833b7b2df3ea460387baf478d14fc5a2816d64f3a62f4242141dd"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0083_execution_stream_events.sql",
+      "beforeSha256": null,
+      "afterSha256": "af0ef9b37a8f07c51280c0a6ac7e2af1736a2b7e24c21502ea64aff5d0280380"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0084_execution_call_parent.sql",
+      "beforeSha256": null,
+      "afterSha256": "21dabcdd1d22c7af8333fd6750cce0d70d22f375c4fc5186e7e7452440b080f1"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0085_pending_document_commits.sql",
+      "beforeSha256": null,
+      "afterSha256": "277859b7d6e4a295294fc5ab63e32b22a235e5486eede7270f338a823ab8c27c"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0086_execution_evidence_metadata.sql",
+      "beforeSha256": null,
+      "afterSha256": "27d6fec892fea3f93a81ac8e8b9e3fe264a364e84929cb69725c09cffa88c90b"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0087_execution_provider_job.sql",
+      "beforeSha256": null,
+      "afterSha256": "82242de20052d2eed864469068d8379a3965351d1d50a114c9f73dfc3e4b89eb"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0088_pending_generated_asset_commits.sql",
+      "beforeSha256": null,
+      "afterSha256": "7dfc1e79ab145959056ad0e1c547de832d607f0933923a8ea3a89b2307e447d8"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0089_project_transcription_requests.sql",
+      "beforeSha256": null,
+      "afterSha256": "e43b018faa7f9d13d8dfc66744bf3fecb8178fc3b438d74bbfe9e2526968eb4a"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0090_execution_call_accounting_basis.sql",
+      "beforeSha256": null,
+      "afterSha256": "f112b27f3f7896e1bffcdfcd3417d72883f0fdd58984a539ae1e8b1f3505c84c"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0091_browser_profile_host_owner.sql",
+      "beforeSha256": null,
+      "afterSha256": "685afcca70cbc19d30161c36b284570b2911ad2146f2cd0a36b57f7afe4e2bef"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0092_page_read_revision.sql",
+      "beforeSha256": null,
+      "afterSha256": "faa3826b15d81ded0336383242672b874844f15c73f302258973447591f977ea"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0093_positioning_current_statement.sql",
+      "beforeSha256": null,
+      "afterSha256": "9131cf16c0c6febae18849ca6ceab9d31a160e16bebb58cafdcfaba0a5049438"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0094_publication_traffic.sql",
+      "beforeSha256": null,
+      "afterSha256": "a143eb6cb1b4515cba879cf1c0e0a6f2436a25484057ea30729158c526abe9c5"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0095_redfox_credentials.sql",
+      "beforeSha256": null,
+      "afterSha256": "03370712f2b68941113ed610429f1c6caee092fa0eb64e091464ee1007df1454"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0096_publication_sync_state.sql",
+      "beforeSha256": null,
+      "afterSha256": "73d6b3f08d96397634645368794f412eaa93840b5aa69884ae6245c1b7faf08e"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0097_onboarding_state.sql",
+      "beforeSha256": null,
+      "afterSha256": "489d56fb031f4e078942251e5972a093f04e41f11a86a76332cb6c55cb4d8631"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0098_separate_collection_jobs.sql",
+      "beforeSha256": null,
+      "afterSha256": "ab402ac8bfe4da8fddea05ac5d03042fb090a660411f8d1b34c8b578536673c8"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0099_stagger_collection_jobs.sql",
+      "beforeSha256": null,
+      "afterSha256": "9ac0be194976afafb7289ff157b61eb1b30af1433d43abfa4ec90011bf80ee5e"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0100_traffic_unavailable.sql",
+      "beforeSha256": null,
+      "afterSha256": "39d47dff9a5d634b24aee9af4b1894c70505cf7969e80136592b87d05c302ec1"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0101_topic_rewrite_only.sql",
+      "beforeSha256": null,
+      "afterSha256": "ade9a63285a7dcf94cb9c5db0ae7b19a14beec5863c43d788bcdb7d668c02c5b"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0102_account_groups.sql",
+      "beforeSha256": null,
+      "afterSha256": "fd2b8a424f5763e3b7c4cbc03991864181ae21c1f166de2a445f9f40504edba4"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0102_audience_task_workspace.sql",
+      "beforeSha256": null,
+      "afterSha256": "760d25af66cd6c7ba03c831aff088dc426dbe4c075b60174e9054fff13933484"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0103_group_projects.sql",
+      "beforeSha256": null,
+      "afterSha256": "3302bb056f323e1f3dcea93cba293eea5a203cf477369370e0902841c5e3c6f2"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0104_group_knowledge_positioning.sql",
+      "beforeSha256": null,
+      "afterSha256": "76df3a2dc8a4ab770919bb8c9b6a28d82f177abf8c939018b8ba502cb93b64fc"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0105_group_shared_domains.sql",
+      "beforeSha256": null,
+      "afterSha256": "e3a854f0ffacac2fdb67195edc8ed78d291e098d64b6295e5bbddc655aae0530"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0106_group_tasks_intelligence.sql",
+      "beforeSha256": null,
+      "afterSha256": "d940cb7fe134b41cd05bf8b141e2bab05db689506aeba0b5f4b4e7122aa851c3"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0107_group_resources.sql",
+      "beforeSha256": null,
+      "afterSha256": "9f2f96642844e661b6b42cbb4a528e33e8557c8a2cd8a8a2615ea4cb9e58d65c"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0108_group_platform_facts.sql",
+      "beforeSha256": null,
+      "afterSha256": "1bbd62cdbd05bc9a7ff54b7eb7209cb0f7f913d5768f864b5f64587c08e4c9d1"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0109_group_calendar.sql",
+      "beforeSha256": null,
+      "afterSha256": "4c6d51a44c8562530da1e5d40548b88db4579d74c60b96e44f843ef3c6d81558"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0110_group_migration_ledger.sql",
+      "beforeSha256": null,
+      "afterSha256": "287c871366d3520655e29c90024031cf14890fc2f621920c54356d0d1d6203ca"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0111_group_skill_overlays.sql",
+      "beforeSha256": null,
+      "afterSha256": "9dcdb83f9413c61b19d99854c4a5c25c66ff03cd91976a3e6401b86baa59a42d"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0112_group_pending_assets.sql",
+      "beforeSha256": null,
+      "afterSha256": "42b9444b769b69a804f19cd54b286b521bf96f5572e6ea0f95dd25a3b582dcc2"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0113_group_research_sources.sql",
+      "beforeSha256": null,
+      "afterSha256": "77ac7f2f06beb28e36930d6d992fafe3979f79c2fe27d1bd6fffeb9c4a97277e"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0114_legacy_shared_group_stamp.sql",
+      "beforeSha256": null,
+      "afterSha256": "5b57f73888f56a24e76e7d15558a1d42d3e7a26fa7e64fe88f1aaf9c0f6609d1"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0115_group_grant_uses.sql",
+      "beforeSha256": null,
+      "afterSha256": "2f15de7815e9bf60b710185d0fd985a28cc1457b0f944c1948fc820ed1ec4406"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0117_group_project_derived.sql",
+      "beforeSha256": null,
+      "afterSha256": "409f4339849f6874703a6857f8be1d0af727783691bda24a95718da0c1dbb83f"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0118_group_audience_facts.sql",
+      "beforeSha256": null,
+      "afterSha256": "cc40e4b1a61416a8aac4a5abae591977c48c3cca4379cac1b004385c33124ab0"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0119_group_transcription_knowledge_adoption.sql",
+      "beforeSha256": null,
+      "afterSha256": "1f2c692f44b7699e7c1395b5cfa4e410d98a3b9280a2d7d48f357f962de5dc33"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0120_group_onboarding_state.sql",
+      "beforeSha256": null,
+      "afterSha256": "80f1b9a7067d47ef68dcd15949167b09bbbedc2ac00ed971cb45688d880bfdee"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0121_group_resource_grant_locks.sql",
+      "beforeSha256": null,
+      "afterSha256": "eac87876acdd5d3b3826f0579241e94c8fae37961f86d4400a8a24252a94c0ae"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/0122_group_asset_tag_adoption.sql",
+      "beforeSha256": null,
+      "afterSha256": "eae4d89ea5cf1da7b2699d5f8e5c3122cb286b8df03c2757f23a6ee34a533a9c"
+    },
+    {
+      "path": "backend/drizzle/lineages/root/meta/_journal.json",
+      "beforeSha256": null,
+      "afterSha256": "f4b8b8e659b04d8ac464b2db6551f0a2f4cf6fc20977b32544e0a18cb7e0aa83"
+    },
+    {
+      "path": "backend/drizzle/meta/_journal.json",
+      "beforeSha256": "ee0ffb9d10549aa7d38b7b474877bee8932057d5262712c4996ec39f2f02be8d",
+      "afterSha256": "7e97c6390fb14872864383797f98e8c8e698ef762cbec4f72990ebb0ab89917c"
+    },
+    {
+      "path": "backend/src/creative-canvas-migration-lineage.ts",
+      "beforeSha256": "d1c6988b069b235a834b811e3f297941ea91c03572bd1f7698d5695926be5558",
+      "afterSha256": "c9743441d7a85e7d2d378eda2dc409165397460f75a78b0931f7275c93f71058"
+    },
+    {
+      "path": "backend/src/db.creative-canvas-lineage.test.ts",
+      "beforeSha256": "5c5850a9d4068b674691696eb75949dfeb31352ac2b79a2f35a3ab1ff5237622",
+      "afterSha256": "0551d080e2e12fb8f0fdacc17c80719f193c4a782369e46293f42d7f7b6ac8ff"
+    },
+    {
+      "path": "backend/src/db.ts",
+      "beforeSha256": "fb4925439f9a209e6963d213ce56963a62aed1061885935d5d7eee58493556f1",
+      "afterSha256": "15a05f64b00fc5095abb6e96aa3d3039db8f4ff4faa894fb1429e843093cd98f"
+    },
+    {
+      "path": "backend/src/group-upgrade-backup.integration.test.ts",
+      "beforeSha256": "2c7d0353f3db7726f7f7528f040a414afb5d786a2cb3b8501a7da1c4746591c8",
+      "afterSha256": "660ae6174539561db538f80b9c315f53382814d045a8406b2b7d707d16ab301d"
+    },
+    {
+      "path": "backend/src/group-upgrade-backup.ts",
+      "beforeSha256": "b7d633aa4b15795193b4e3304892c90b0fa7c685fea11debec1ccb20392c37d5",
+      "afterSha256": "7e9b108534cf3294f506e1e0426b5f9a7a400eca25e446360cbdb81ac9497c1d"
+    },
+    {
+      "path": "backend/src/migration-convergence-lineages.json",
+      "beforeSha256": null,
+      "afterSha256": "f794af700b711094c50bf5ad4c7f0eeb2ac36ff1fb9ae8958a8ffb4cb5c338c7"
+    },
+    {
+      "path": "backend/src/migration-convergence.test.ts",
+      "beforeSha256": null,
+      "afterSha256": "f7ae5b6fb08eabd629e454dfc63782ec4c2491a0a32ffa5218533c7d74b45034"
+    },
+    {
+      "path": "backend/src/migration-convergence.ts",
+      "beforeSha256": null,
+      "afterSha256": "a70d2245e392e368e92b39f02da0cb6c04d82e13a49916aa178a8a08cd6ce212"
+    }
+  ],
+  "resultFileShaBinding": "self SHA仅写外部/tmp最终回执",
+  "sourceLineages": [
+    {
+      "lineage": "root",
+      "sourceCommit": "125bc864d79f64891694ed0d630b6462fc7d7e26",
+      "entries": 123,
+      "journalSha256": "f4b8b8e659b04d8ac464b2db6551f0a2f4cf6fc20977b32544e0a18cb7e0aa83",
+      "allOriginalSqlHashesVerified": true
+    },
+    {
+      "lineage": "diagnostic",
+      "sourceCommit": "c53165064167c109368605d78f8c9a8e9978c5f6",
+      "entries": 128,
+      "journalSha256": "a49f4aa66b203379a898265b5f91c3ad9f9f07c004a694a4981411221e37d920",
+      "allOriginalSqlHashesVerified": true
+    },
+    {
+      "lineage": "canvas",
+      "sourceCommit": "55a526d609633e2b014e2a70f319125dec8c0fea",
+      "entries": 103,
+      "journalSha256": "c09c7da9c60327105df62f28d536967652567822a75364da9940958b85c9d84f",
+      "allOriginalSqlHashesVerified": true
+    }
+  ],
+  "historicalUnionIdentities": 152,
+  "mainJournal": {
+    "commonEntries": 101,
+    "newTag": "0128_workspace_convergence",
+    "newWhen": 1791043200001,
+    "newSqlSha256": "60cac883f02fa7fcd83051264bd6a63ec49132369c7c983b36e34e979a2f7713",
+    "totalEntries": 102,
+    "oldTagsSqlWhenRawPreservedInArchives": true,
+    "noUserDatabaseOldGroupSqlReplay": true,
+    "noFabricatedDiag125Receipt": true
+  },
+  "commands": [
+    {
+      "command": "pnpm install --frozen-lockfile",
+      "exit": 0,
+      "note": "独立安装，未共享node_modules；pnpm报告unrs-resolver构建脚本未运行。"
+    },
+    {
+      "command": "pnpm -C backend exec vitest run src/db.creative-canvas-upgrade.test.ts",
+      "exit": 1,
+      "log": "/tmp/t1062-first-public-runtime.log",
+      "failure": "42601 cannot insert multiple commands into a prepared statement"
+    },
+    {
+      "command": "pnpm -C backend exec vitest run src/db.creative-canvas-upgrade.test.ts",
+      "exit": 1,
+      "log": "/tmp/t1062-second-public-runtime.log",
+      "failure": "42830 no unique constraint matching given keys for referenced production_edit_versions"
+    },
+    {
+      "command": "pnpm -C backend exec vitest run src/db.creative-canvas-upgrade.test.ts",
+      "exit": 1,
+      "log": "/tmp/t1062-third-public-runtime.log",
+      "failure": "同一42830：FK延后仍漏独立唯一索引，触发Packet两次受阻停止"
+    },
+    {
+      "command": "git diff --check",
+      "exit": 0
+    },
+    {
+      "command": "pnpm -C backend exec vitest run src/migration-convergence.test.ts (index TDD red)",
+      "exit": 1,
+      "log": "/tmp/t1062-index-tdd-red.log",
+      "scope": "当场新增索引回归红；不回填原实现历史红测"
+    },
+    {
+      "command": "pnpm -C backend exec vitest run src/migration-convergence.test.ts src/db.creative-canvas-upgrade.test.ts",
+      "exit": 0,
+      "log": "/tmp/t1062-index-and-runtime-green-2.log",
+      "scope": "2 tests实际green"
+    },
+    {
+      "command": "pnpm -C backend exec vitest run (Packet六文件首轮)",
+      "exit": 1,
+      "log": "/tmp/t1062-six-regressions-first.log",
+      "scope": "旧lineage默认5秒超时导致cleanup竞态；改为有限120秒并保留全部断言，不删除数据检查"
+    },
+    {
+      "command": "pnpm -C backend exec vitest run src/db.creative-canvas-lineage.test.ts",
+      "exit": 0,
+      "log": "/tmp/t1062-old-lineage-regression.log",
+      "scope": "11测试，含安装版common101+canvas0101 prefix正向及unknown/future/不兼容catalog拒绝"
+    },
+    {
+      "command": "pnpm -C backend exec vitest run src/migration-convergence.test.ts",
+      "exit": 1,
+      "log": "/tmp/t1062-pglite-pg-four-baselines.log",
+      "scope": "5 PGlite测试通过，PG old name[]驱动解码导致4失败"
+    },
+    {
+      "command": "隔离PG name[]/text[]最小区分probe",
+      "exit": 0,
+      "log": "/tmp/t1062-pg-array-decoding-probe.log",
+      "scope": "OID1003文本 vs OID1009数组；strict sameColumns/列序/列数不削弱"
+    },
+    {
+      "command": "pnpm -C backend exec vitest run src/migration-convergence.test.ts",
+      "exit": 1,
+      "log": "/tmp/t1062-eight-baselines-second.log",
+      "scope": "PG升级和全catalog/原行验证通过；3旧PG恢复夹具缺--dbname，修argv"
+    },
+    {
+      "command": "pnpm -C backend exec vitest run src/migration-convergence.test.ts",
+      "exit": 0,
+      "log": "/tmp/t1062-eight-baselines-third.log",
+      "scope": "9 tests：索引+8完整基线通过"
+    },
+    {
+      "command": "pnpm -C backend exec vitest run src/migration-convergence.test.ts src/db.creative-canvas-lineage.test.ts src/db.creative-canvas-upgrade.test.ts src/group-upgrade-backup.integration.test.ts src/db.migrate-error.test.ts src/db.driver.test.ts",
+      "exit": 0,
+      "log": "/tmp/t1062-six-regressions-final.log",
+      "files": 6,
+      "tests": 43,
+      "scope": "最终原Packet命令，包括追加孤立旧资料/转组/partial group unique边界"
+    },
+    {
+      "command": "pnpm -C backend typecheck",
+      "exit": 2,
+      "log": "/tmp/t1062-backend-typecheck-after.log",
+      "migrationScopeDiagnostics": 0,
+      "allBackendDiagnostics": 105,
+      "note": "范围外诊断不统一归类为历史债，交给root逐项审计；本迁移写集0条"
+    },
+    {
+      "command": "git diff --check",
+      "exit": 0
+    },
+    {
+      "command": "git diff --cached --check (首个候选暂存相对base)",
+      "exit": 2,
+      "note": "已保留中间9caf与空格检查失误，未作为最终diff通过"
+    },
+    {
+      "command": "pnpm -C backend exec vitest run src/migration-convergence.test.ts src/db.creative-canvas-lineage.test.ts src/db.creative-canvas-upgrade.test.ts src/group-upgrade-backup.integration.test.ts src/db.migrate-error.test.ts src/db.driver.test.ts",
+      "exit": 0,
+      "log": "/tmp/t1062-six-regressions-final-bytes.log",
+      "files": 6,
+      "tests": 43,
+      "newSqlSha256": "60cac883f02fa7fcd83051264bd6a63ec49132369c7c983b36e34e979a2f7713",
+      "scope": "最终0128实际bytes重验；包含public工厂8基线/安装prefix/全部边界"
+    }
+  ],
+  "engineMatrix": [
+    {
+      "engine": "pglite",
+      "origin": "fresh",
+      "historicalBaseline": null,
+      "publicFactory": "createDb",
+      "publicOpenCount": 2,
+      "status": "PASS",
+      "fullCatalogEqualAcrossAllEight": true,
+      "newRealConvergenceReceiptCount": 1,
+      "originalReceiptRowsPreserved": false,
+      "allExistingPublicTableCountsPreserved": false,
+      "allOriginalPublicBusinessColumnsCompared": false,
+      "fullDumpShaVerifiedAndRestored": false,
+      "testCase": "完整fresh原账本 public createDb 双启",
+      "note": "fresh没有旧行/旧备份；该缺项不冒充恢复测试"
+    },
+    {
+      "engine": "pglite",
+      "origin": "root",
+      "historicalBaseline": "原root完整归档journal+原SQL，经原Drizzle对应migrator实际建库",
+      "publicFactory": "createDb",
+      "publicOpenCount": 2,
+      "status": "PASS",
+      "fullCatalogEqualAcrossAllEight": true,
+      "newRealConvergenceReceiptCount": 1,
+      "originalReceiptRowsPreserved": true,
+      "allExistingPublicTableCountsPreserved": true,
+      "allOriginalPublicBusinessColumnsCompared": true,
+      "fullDumpShaVerifiedAndRestored": true,
+      "testCase": "完整root原账本 public createDb 双启",
+      "note": null
+    },
+    {
+      "engine": "pglite",
+      "origin": "diagnostic",
+      "historicalBaseline": "原diagnostic完整归档journal+原SQL，经原Drizzle对应migrator实际建库",
+      "publicFactory": "createDb",
+      "publicOpenCount": 2,
+      "status": "PASS",
+      "fullCatalogEqualAcrossAllEight": true,
+      "newRealConvergenceReceiptCount": 1,
+      "originalReceiptRowsPreserved": true,
+      "allExistingPublicTableCountsPreserved": true,
+      "allOriginalPublicBusinessColumnsCompared": true,
+      "fullDumpShaVerifiedAndRestored": true,
+      "testCase": "完整diagnostic原账本 public createDb 双启",
+      "note": null
+    },
+    {
+      "engine": "pglite",
+      "origin": "canvas",
+      "historicalBaseline": "原canvas完整归档journal+原SQL，经原Drizzle对应migrator实际建库",
+      "publicFactory": "createDb",
+      "publicOpenCount": 2,
+      "status": "PASS",
+      "fullCatalogEqualAcrossAllEight": true,
+      "newRealConvergenceReceiptCount": 1,
+      "originalReceiptRowsPreserved": true,
+      "allExistingPublicTableCountsPreserved": true,
+      "allOriginalPublicBusinessColumnsCompared": true,
+      "fullDumpShaVerifiedAndRestored": true,
+      "testCase": "完整canvas原账本 public createDb 双启",
+      "note": null
+    },
+    {
+      "engine": "postgres",
+      "origin": "fresh",
+      "historicalBaseline": null,
+      "publicFactory": "createRuntimeDb",
+      "publicOpenCount": 2,
+      "status": "PASS",
+      "fullCatalogEqualAcrossAllEight": true,
+      "newRealConvergenceReceiptCount": 1,
+      "originalReceiptRowsPreserved": false,
+      "allExistingPublicTableCountsPreserved": false,
+      "allOriginalPublicBusinessColumnsCompared": false,
+      "fullDumpShaVerifiedAndRestored": false,
+      "testCase": "真实隔离PostgreSQL fresh双启/完整恢复",
+      "note": "fresh没有旧行/旧备份；该缺项不冒充恢复测试"
+    },
+    {
+      "engine": "postgres",
+      "origin": "root",
+      "historicalBaseline": "原root完整归档journal+原SQL，经原Drizzle对应migrator实际建库",
+      "publicFactory": "createRuntimeDb",
+      "publicOpenCount": 2,
+      "status": "PASS",
+      "fullCatalogEqualAcrossAllEight": true,
+      "newRealConvergenceReceiptCount": 1,
+      "originalReceiptRowsPreserved": true,
+      "allExistingPublicTableCountsPreserved": true,
+      "allOriginalPublicBusinessColumnsCompared": true,
+      "fullDumpShaVerifiedAndRestored": true,
+      "testCase": "真实隔离PostgreSQL root双启/完整恢复",
+      "note": null
+    },
+    {
+      "engine": "postgres",
+      "origin": "diagnostic",
+      "historicalBaseline": "原diagnostic完整归档journal+原SQL，经原Drizzle对应migrator实际建库",
+      "publicFactory": "createRuntimeDb",
+      "publicOpenCount": 2,
+      "status": "PASS",
+      "fullCatalogEqualAcrossAllEight": true,
+      "newRealConvergenceReceiptCount": 1,
+      "originalReceiptRowsPreserved": true,
+      "allExistingPublicTableCountsPreserved": true,
+      "allOriginalPublicBusinessColumnsCompared": true,
+      "fullDumpShaVerifiedAndRestored": true,
+      "testCase": "真实隔离PostgreSQL diagnostic双启/完整恢复",
+      "note": null
+    },
+    {
+      "engine": "postgres",
+      "origin": "canvas",
+      "historicalBaseline": "原canvas完整归档journal+原SQL，经原Drizzle对应migrator实际建库",
+      "publicFactory": "createRuntimeDb",
+      "publicOpenCount": 2,
+      "status": "PASS",
+      "fullCatalogEqualAcrossAllEight": true,
+      "newRealConvergenceReceiptCount": 1,
+      "originalReceiptRowsPreserved": true,
+      "allExistingPublicTableCountsPreserved": true,
+      "allOriginalPublicBusinessColumnsCompared": true,
+      "fullDumpShaVerifiedAndRestored": true,
+      "testCase": "真实隔离PostgreSQL canvas双启/完整恢复",
+      "note": null
+    }
+  ],
+  "installedPrefix": {
+    "resourceEvidence": "/tmp/t1062-installed-migration-resource-baseline.json",
+    "prefixEntries": 102,
+    "lastTag": "0101_creative_canvas",
+    "lastWhen": 1790553600000,
+    "lastHash": "6c971231adfc0a1771577f21a6c51a885fb24201f8029cc293ee5195576ab7f2",
+    "publicPositiveTests": [
+      "backend/src/db.creative-canvas-lineage.test.ts: 原normalmigrator从canvas谱系合125，真实历史数据/回执与二次启动保持",
+      "backend/src/db.creative-canvas-lineage.test.ts: 原normalmigrator从both谱系合125，真实历史数据/回执与二次启动保持"
+    ],
+    "scope": "相同原journal/hash/when的隔离prefix实际升级；没有操作现装App或真实库"
+  },
+  "dataEvidence": {
+    "seededCommonFamilies": [
+      "platform_accounts",
+      "projects",
+      "assets",
+      "asset_files",
+      "storage_configs",
+      "content_outputs",
+      "productions",
+      "production_segments",
+      "ai_tasks"
+    ],
+    "rootTransferFamilies": [
+      "account_groups archived version9/current active version5",
+      "account_group_memberships: past left membership6 + moved current membership7，无gm_legacy",
+      "account_group_migrations frozen before_image/input_hash/after_digest",
+      "assets显式NULL旧孤立归属保留"
+    ],
+    "diagnosticSeededNewFamilies": [
+      "creative_results: 同组两个旧account复用request key全部保留",
+      "creative_canvases/link/proposal: ID/revision7/input_digest/input_json/task指针",
+      "work_compositions/work_composition_versions/work_material_receipts: snapshot/request_digest",
+      "production_media_requests: task/sourceFile/storageKey/frozen_input/request_digest",
+      "production_edit_versions: revision8/request_digest/plan_digest/native beforeDigest/sourceFile",
+      "orphan canvas: 无真实旧account/父ID保留groupNULL"
+    ],
+    "canvasSeededNewFamilies": [
+      "creative_canvases/link/proposal",
+      "orphan canvas groupNULL",
+      "visual_template_favorites: 原snapshot/revision4/assetFileId"
+    ],
+    "newPhysicalUniqueness": "account=NULL新共享写user/group/请求键唯一，同键不同group允许、同group重复23505；原非NULLaccount unique完整保留",
+    "catalogChecks": [
+      "列type/nullability/default",
+      "PK/unique/check/FK及validated",
+      "独立索引定义/predicate/valid，FK引用索引不漏",
+      "函数/触发器精确定义",
+      "sequence参数及ownership，不重置last_value"
+    ],
+    "backupChecks": [
+      "PGlite完整dump + SHA后重开原业务行",
+      "PG custom PGDMP + SHA + pg_restore新随机库：原字段/count/ledger精确相同",
+      "迁移前后所有旧public表count相等；二次public启动全schema/rows/ledger幂等",
+      "既有组域manifest保存实际membershipHistory/groups，不拿当前成员关系重映旧独立资料"
+    ],
+    "derivedCounterLimit": "page_read_revision只比较row count，旧派生通知version可因升级UPDATE触发正常增长；不要求旧值逐值不变，二次启动业务快照保持",
+    "noUserMediaOrRealDataUsed": true
+  },
+  "notAcceptedOrPending": [
+    "下一wave schema/services/contract组域适配未实施，当前产品公共创作服务不能据此称完整group可用",
+    "真实安装版App/真实用户库升级和用户功能验收未执行",
+    "隔离media为明示合成fixture，未执行真实ASR/模型/粗剪/导出或费用调用",
+    "文章/图文/朋友圈、publication cover/file binding、work review等未逐族seed旧业务行；物理列/约束/默认值和空表count进入全catalog，不能称所有历史业务行族已验",
+    "实际用户并发写入期间的备份一致性及跨进程PG启动并发未专项执行；代码同guard连接advisory lock覆盖升级，但不声称全并发业务验收",
+    "不改变旧account非NULL回执身份或强加全group unique导致历史撞键；下一writer应按已审合同account=NULL新共享写，孤立行等显式归组"
+  ],
+  "failureHistory": {
+    "originalPausedResult": {
+      "task": "T-1062",
+      "status": "paused_by_parent_after_two_same_family_failures",
+      "base": "11784cc22a29ac8232cdb675e078432f0dca6680",
+      "head": "11784cc22a29ac8232cdb675e078432f0dca6680",
+      "worktree": "/Users/zyongzhu/.codex/worktrees/t1062-migration-convergence/Thirdspace-creator",
+      "branch": "codex/t1062-migration-candidate",
+      "boundaryFiles": [
+        {
+          "path": "backend/drizzle/0128_workspace_convergence.sql",
+          "beforeSha256": null,
+          "afterSha256": "e20ea935757300c389777875e374f106a63d7f53fa54f0bb7e75757c04e82135"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0000_init.sql",
+          "beforeSha256": null,
+          "afterSha256": "389dce30cb081f39c868443481db23dd739a75c571f73302d377bca0ba91c4de"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0001_model_secret_value.sql",
+          "beforeSha256": null,
+          "afterSha256": "7ee69734aea0b900036aedf05acf3e4ae3c1c78988013af2f84898037148ec54"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0002_storage_configs.sql",
+          "beforeSha256": null,
+          "afterSha256": "6c37d1f5cc7bd48765405f5382d1926072ff5d46a92e82c6c2905725ce0d39eb"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0003_positioning_facets_rules.sql",
+          "beforeSha256": null,
+          "afterSha256": "5ec8eddf99f26883953e1a1002e29a6d55bac52d19e31b345f63782919902a3f"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0004_candidate_card.sql",
+          "beforeSha256": null,
+          "afterSha256": "a6c1aad0b6c8f10e240e7db2874c651f034e7d9bcf72e205dc8ee8dcf0fb00b6"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0005_project_brief_detail.sql",
+          "beforeSha256": null,
+          "afterSha256": "a658d6f7f7e0fd43bf2468e91cd545b3965b44550064bef8f35361cb2436f654"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0006_calibration_rule_suggestions.sql",
+          "beforeSha256": null,
+          "afterSha256": "f784180835244f7b221c0e76da4fd086f5e74e4b02ce761bb57b485f58276c9c"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0007_ai_task_steps.sql",
+          "beforeSha256": null,
+          "afterSha256": "d3134ae00cf022b53b1889c832dcbc04badc3a4878591ab09603067a59dd91bb"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0008_project_source_platformref.sql",
+          "beforeSha256": null,
+          "afterSha256": "75779580fe08f36ffdd90b747e247a4dba74ad5b41522d8b6d472e652651a095"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0009_scheduled_job_and_run.sql",
+          "beforeSha256": null,
+          "afterSha256": "e9195aea23c4e7320d75a6f93817d5e00313966ea03cdd865716c53fa09a2629"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0010_artifacts_origin.sql",
+          "beforeSha256": null,
+          "afterSha256": "8eb6d84e6154bebf6567db92fc930106f3bf007bd05f9d1a9a57ae12a8fbd401"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0011_audience_signals_publication.sql",
+          "beforeSha256": null,
+          "afterSha256": "062c595342f8645b1747fe09b5b42a5ae66a6e655d35ae067af877bc1f17d395"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0012_douyin_throttle_state.sql",
+          "beforeSha256": null,
+          "afterSha256": "f055cba43a20b32eb3b85a7bdbfa5bb776d8c07d5d17e4311df675f518736775"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0013_skill_config_overrides.sql",
+          "beforeSha256": null,
+          "afterSha256": "7ff4fa6304cb05207d30d018c461b3eca0ac957f97a6f5de2d9991bfa3a1a6fc"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0014_audience_signals_like_count.sql",
+          "beforeSha256": null,
+          "afterSha256": "a6b6e91aa5ec7d352b23abeee3c98f2590ebc9d48003131643df70a63fbdec53"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0015_retire_thesis_contract.sql",
+          "beforeSha256": null,
+          "afterSha256": "f210a6bf105babf8749673e1765d558184d9917ae7bd29f3a1fba2e5f5b3926e"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0016_audience_signals_external_id.sql",
+          "beforeSha256": null,
+          "afterSha256": "7c40f3280ae26e3785c08eb45f274abd71f4eca1183c4e8967c9d8aa553ed5b8"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0017_publication_hidden_at.sql",
+          "beforeSha256": null,
+          "afterSha256": "e6b12e92fd6cb8d92bafaa5340107b1dd96d3b0aaf1e28a38271cce70743c525"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0018_knowledge_source_note.sql",
+          "beforeSha256": null,
+          "afterSha256": "58746cb65a67030fe985fb7e3cd26542bd9469718233fcc2d0ee20ca86f0ea05"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0019_ai_conversation_scope.sql",
+          "beforeSha256": null,
+          "afterSha256": "7b053288ec4572087c91a0f5557786ee38c30c30d02f7a15672a3db7913a2417"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0020_review_gate.sql",
+          "beforeSha256": null,
+          "afterSha256": "06b58a4a40f27d22d38168bbafb9db5f122c73ca90cfc96e8bd63458ef752969"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0021_learnings_project_id.sql",
+          "beforeSha256": null,
+          "afterSha256": "4c9d3fbac08da0b9946b0ad06636793dc4ac1dfa63b7a1c1962a0c42f91051f8"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0022_ai_messages_parts.sql",
+          "beforeSha256": null,
+          "afterSha256": "95860f32dcdb9baef59fd1ea0cccea62c0cc3166b578af35fdda5c12a428dd24"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0023_material_link_priority.sql",
+          "beforeSha256": null,
+          "afterSha256": "35eafe944740b7b24949d16b50c5534d6a533f78a8c91a78a3c073e077ea7383"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0024_asset_file_extraction.sql",
+          "beforeSha256": null,
+          "afterSha256": "830c57308b6416fa27ce16e873c050eb20b2c73c779aa41741d41073937fc268"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0025_multi_account_ownership.sql",
+          "beforeSha256": null,
+          "afterSha256": "9a2dbb9d65f780f9e0e40e25626e398d85af25ff522dd2727675612658ec3d49"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0026_job_run_progress.sql",
+          "beforeSha256": null,
+          "afterSha256": "672f20ae70ef431bad9411d0aaf536ec330bd267de4aa214df16d87a20fc2afb"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0027_activation_state.sql",
+          "beforeSha256": null,
+          "afterSha256": "13cbbaa4690ca05c2657d55f3c6b0f8065940359f5f0855a19e860a5dd675aaa"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0028_skill_config_override_versions.sql",
+          "beforeSha256": null,
+          "afterSha256": "0d83fd1e3f46a58f0d84509c6d9db84c7265e60138bae0ece44f6f2a57bed926"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0029_publication_platform_status.sql",
+          "beforeSha256": null,
+          "afterSha256": "457e53978ff309a93c1ac10719e0bd4dd6020335daf05d925673b34d03e45654"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0030_scheduled_job_account.sql",
+          "beforeSha256": null,
+          "afterSha256": "84777f0e3805e253a4215bc049983c8b82fb5621da45cab06d08fb7578b62186"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0031_platform_account_external_id.sql",
+          "beforeSha256": null,
+          "afterSha256": "7d386c87fba6eba8a9cb91cf5f9c4a52acf4c494b5004064ca1bb79c0970e53e"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0032_benchmark_sources_works.sql",
+          "beforeSha256": null,
+          "afterSha256": "98a7326aab2513dc1ec92bbdd4a8c917eaa0126d5a4f80b5dcbd72a7afb50c23"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0033_topic_preferences.sql",
+          "beforeSha256": null,
+          "afterSha256": "e90e83dfc42f277228e02e54e3af5138beaa8e207e386dc29324e6a1b07dc67d"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0034_positioning_statement_change_reason.sql",
+          "beforeSha256": null,
+          "afterSha256": "57e4fe78a616714b6f3561028e7e125216c583814d131b90a448d90206b68e3f"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0035_trend_sources_darkhorse.sql",
+          "beforeSha256": null,
+          "afterSha256": "cc29ae3c882f845c102d43c8b6f1c5c57fa397571063e48c248140a25482d402"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0036_topic_attributions.sql",
+          "beforeSha256": null,
+          "afterSha256": "8569ad530e3da15df8646d7dac7e5a7dab7e8c7fdb283fc67063ae45d55aad9c"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0037_ai_messages_usage.sql",
+          "beforeSha256": null,
+          "afterSha256": "244138e142703181e28cc701b97322bdc13fb719adfd2ce4815f56c0ac20fd09"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0038_favorites_folders.sql",
+          "beforeSha256": null,
+          "afterSha256": "bd8e56e6afe749150b22f78e34949c9f94140f46fb625fe5e3885946fcc6fd0e"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0039_favorites_distill.sql",
+          "beforeSha256": null,
+          "afterSha256": "6f88d4b5a66c4cd384bdb01d7172616078f5fabcc1b09fc34f049e3443dc9031"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0040_backfill_imported_publication_revision.sql",
+          "beforeSha256": null,
+          "afterSha256": "c6bc974bf72ff5386e0fb2d3193b0d7b6bf3eec68018319ce5477aceaa2ed856"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0041_account_scoped_unique_identity.sql",
+          "beforeSha256": null,
+          "afterSha256": "fa546ae37dca6da2db56c867be7fac288e20018b261278f45bf801750d42fbb9"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0042_account_isolation_notnull.sql",
+          "beforeSha256": null,
+          "afterSha256": "184fb122be28b1c6b145a53ab4c78a640add69753fe990459b173e959df34f87"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0043_notifications_account_stamp.sql",
+          "beforeSha256": null,
+          "afterSha256": "b8362decbb29f0f4de7b92cff01584888ca90317c0f689b21104e1db789381f1"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0044_benchmark_works_transcript.sql",
+          "beforeSha256": null,
+          "afterSha256": "5b8460ecc416e0677edd9b65b89036b38372a517178ef4141d0bc2473aa7989f"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0045_learnings_evidence_strength.sql",
+          "beforeSha256": null,
+          "afterSha256": "029271f68b8ffdbfecfaa4d4ff4873f080268d7523091cfa80453d9618247923"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0046_scheduled_job_unique_source.sql",
+          "beforeSha256": null,
+          "afterSha256": "5fac07ae25bad43d1deb644425eb65880c0aaecd1f28e624ef2e6d7e333e2de4"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0047_browser_sessions.sql",
+          "beforeSha256": null,
+          "afterSha256": "c87f38c1d4acf140ce691f3ef137fbb7b2ab0d48ceead46246e396f6db658235"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0048_browser_sessions_drop_migrated.sql",
+          "beforeSha256": null,
+          "afterSha256": "beac75017e944d86f3deadbe81ba93215802e53966a8011fc830e0f6c3ced9cb"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0049_activation_security_mirror.sql",
+          "beforeSha256": null,
+          "afterSha256": "b6f8a1df11ab477532b44991ebef37b7aa3a6a47dbef251d450ca82ec6ba5ea2"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0050_content_intelligence.sql",
+          "beforeSha256": null,
+          "afterSha256": "b241490c7de4858ace783885da1b7831a63418f181c555177d7e32c1fe6123f3"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0051_content_intelligence_project_provenance.sql",
+          "beforeSha256": null,
+          "afterSha256": "9cfa671b7fc6022b80565097fa72b148ed8a60f6a1714498afe8bf64b75d0b16"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0052_intelligence_source_memberships.sql",
+          "beforeSha256": null,
+          "afterSha256": "9be75617f6369512305e4352436a1f2d3563136e209abdfcab4c92e8bc2a6364"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0053_account_skill_overlays.sql",
+          "beforeSha256": null,
+          "afterSha256": "4c7a0cdd0938e665b8a1cdd40142e521542a8d4f49ef32e3b79f038a8f9c6f0f"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0054_ai_task_execution_ownership.sql",
+          "beforeSha256": null,
+          "afterSha256": "07f3fb9931d185dc5b6a3d44db732d1adf63d8488d76106ea2ce7afe6f17fe61"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0055_automation_task_active_owner.sql",
+          "beforeSha256": null,
+          "afterSha256": "b2d44a75b2c20c0bd9c67100b6b3c87849f747ac0bb1849f5882601eec4719ee"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0056_asset_upload_atomic_identity.sql",
+          "beforeSha256": null,
+          "afterSha256": "2865e7d1a5d62d847e833b8c55c24e777bdba1f3652fca1a3ff88216a4eb021f"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0057_knowledge_file_workspace.sql",
+          "beforeSha256": null,
+          "afterSha256": "05a8a0f01e40f698422e0f04e0773fd856cf40c7bd526a7cd3eb8767909d25ca"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0058_source_sync_active_owner.sql",
+          "beforeSha256": null,
+          "afterSha256": "2b03251605a9d56a6dd9220baad85b60fdae029006c7438ee1462cd5ab45ddaa"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0059_unify_content_radar_automation.sql",
+          "beforeSha256": null,
+          "afterSha256": "3333bf58fe8bdfd76dad384f34464ff7c514453cb91cc973f7ff91e98d3fae8b"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0060_retire_self_detail_automation.sql",
+          "beforeSha256": null,
+          "afterSha256": "22b0fefa413aa4c8c09c1f0d9a4ffc67b885a92603edd14419cf986a73763b53"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0061_project_schedule_calendar.sql",
+          "beforeSha256": null,
+          "afterSha256": "eabb4445cee98b89be7110c585242a3ba14365c2a250e6e20616f5d854f8ffca"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0062_normalize_scheduling_timestamps.sql",
+          "beforeSha256": null,
+          "afterSha256": "518c5ce15c9cf4cfcda4e883f61e01fe81623bb87d91bc98021f549cabf0f2f7"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0063_learning_adoption_dedupe.sql",
+          "beforeSha256": null,
+          "afterSha256": "bc2dc50d55ef663b1411ef5c8f5c552a3c0393ee7f231bf53c8a3b9e33cbafae"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0064_positioning_master_version_floor.sql",
+          "beforeSha256": null,
+          "afterSha256": "65784078113781f3cc461d5520f69a9b555d78dee9407bed80a21e09cc65eb28"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0065_positioning_master_snapshot.sql",
+          "beforeSha256": null,
+          "afterSha256": "00456246881d97c974106d50db00f9b3d3aa74369c110e68ea6a6922c20047a2"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0066_positioning_discovery_sessions.sql",
+          "beforeSha256": null,
+          "afterSha256": "bb74087d912487640b7b84fb7dcbcd79a479adc3783712cbd744859a7024212e"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0067_channel_model_credentials.sql",
+          "beforeSha256": null,
+          "afterSha256": "45aaa6283171089a020dba4e96f74dc05d3b1b65ed6bc3a7113df603a0dc76ec"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0068_cli_invocations.sql",
+          "beforeSha256": null,
+          "afterSha256": "05b73f87445a2d3e5eb42738be94deceff72c4628b3cf81a550d8e5058f1a9f2"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0069_execution_authority_mapping.sql",
+          "beforeSha256": null,
+          "afterSha256": "695c632f3807ae973e3278a1d832ed9ea2d7f3cb36967228058f5eceacfcc9fb"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0070_execution_fence.sql",
+          "beforeSha256": null,
+          "afterSha256": "2b5822bc41a9638e9af53fc14fbdbe7b4db48146a68c8913d4f42e56a96d8f06"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0071_execution_call_ledger.sql",
+          "beforeSha256": null,
+          "afterSha256": "aa752b0639a6717a5b980e69151545fcbb4fae05a426f277175466abdbb789a6"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0072_execution_call_result.sql",
+          "beforeSha256": null,
+          "afterSha256": "e691f86b4c989e9ebdf83e2546a9a8e8e2a569c9a6cee882a68b288261f73edb"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0073_execution_retry_schedule.sql",
+          "beforeSha256": null,
+          "afterSha256": "1ffca3e1b0135d3a9d064f5bd0eaf1b3889540b0a774d27248693184f1ac995d"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0074_execution_candidate_receipt.sql",
+          "beforeSha256": null,
+          "afterSha256": "34adf1f086c13a3791021557711ca85cc9eb5bd0d57652d4b4f7ef4bad365584"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0075_execution_provider_receipt.sql",
+          "beforeSha256": null,
+          "afterSha256": "f54d3f23c8289825cea193b29d10afe25feb973df2657d5e87581a377c24bcb2"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0076_publication_draft_adoption.sql",
+          "beforeSha256": null,
+          "afterSha256": "6f4d509689b6618a6526fa5fedf4dc483601984435908ebe65cd1bb2dd4a76fd"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0077_artifact_version_adoption.sql",
+          "beforeSha256": null,
+          "afterSha256": "6bbcc3dfe3cef46c76acfbd8227b45746c9977afc89cbc8d38e6e19ad41f7e12"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0078_proposal_adoption_receipts.sql",
+          "beforeSha256": null,
+          "afterSha256": "9894237836f7bd6f5d740036d003291bb6558e980236017eb647cbc9c6a5d912"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0079_agentic_tool_execution_claim.sql",
+          "beforeSha256": null,
+          "afterSha256": "8110c0332eea020f54c33b98b98550f81b10b60000e515df192dccae0bc28300"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0080_execution_evidence.sql",
+          "beforeSha256": null,
+          "afterSha256": "5c50fb27e089c8e9988ec3e8c85638eb10d163a59ebf14c8f5e9cef988ffb743"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0081_execution_browser_profile_leases.sql",
+          "beforeSha256": null,
+          "afterSha256": "4949f25acecdd67b027bf06b7e87707b0a6401f28dcf782b3c1a6856e6b70c5b"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0082_scheduled_child_active_owner.sql",
+          "beforeSha256": null,
+          "afterSha256": "518609ea53b833b7b2df3ea460387baf478d14fc5a2816d64f3a62f4242141dd"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0083_execution_stream_events.sql",
+          "beforeSha256": null,
+          "afterSha256": "af0ef9b37a8f07c51280c0a6ac7e2af1736a2b7e24c21502ea64aff5d0280380"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0084_execution_call_parent.sql",
+          "beforeSha256": null,
+          "afterSha256": "21dabcdd1d22c7af8333fd6750cce0d70d22f375c4fc5186e7e7452440b080f1"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0085_pending_document_commits.sql",
+          "beforeSha256": null,
+          "afterSha256": "277859b7d6e4a295294fc5ab63e32b22a235e5486eede7270f338a823ab8c27c"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0086_execution_evidence_metadata.sql",
+          "beforeSha256": null,
+          "afterSha256": "27d6fec892fea3f93a81ac8e8b9e3fe264a364e84929cb69725c09cffa88c90b"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0087_execution_provider_job.sql",
+          "beforeSha256": null,
+          "afterSha256": "82242de20052d2eed864469068d8379a3965351d1d50a114c9f73dfc3e4b89eb"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0088_pending_generated_asset_commits.sql",
+          "beforeSha256": null,
+          "afterSha256": "7dfc1e79ab145959056ad0e1c547de832d607f0933923a8ea3a89b2307e447d8"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0089_project_transcription_requests.sql",
+          "beforeSha256": null,
+          "afterSha256": "e43b018faa7f9d13d8dfc66744bf3fecb8178fc3b438d74bbfe9e2526968eb4a"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0090_execution_call_accounting_basis.sql",
+          "beforeSha256": null,
+          "afterSha256": "f112b27f3f7896e1bffcdfcd3417d72883f0fdd58984a539ae1e8b1f3505c84c"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0091_browser_profile_host_owner.sql",
+          "beforeSha256": null,
+          "afterSha256": "685afcca70cbc19d30161c36b284570b2911ad2146f2cd0a36b57f7afe4e2bef"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0092_page_read_revision.sql",
+          "beforeSha256": null,
+          "afterSha256": "faa3826b15d81ded0336383242672b874844f15c73f302258973447591f977ea"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0093_positioning_current_statement.sql",
+          "beforeSha256": null,
+          "afterSha256": "9131cf16c0c6febae18849ca6ceab9d31a160e16bebb58cafdcfaba0a5049438"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0094_publication_traffic.sql",
+          "beforeSha256": null,
+          "afterSha256": "a143eb6cb1b4515cba879cf1c0e0a6f2436a25484057ea30729158c526abe9c5"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0095_redfox_credentials.sql",
+          "beforeSha256": null,
+          "afterSha256": "03370712f2b68941113ed610429f1c6caee092fa0eb64e091464ee1007df1454"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0096_publication_sync_state.sql",
+          "beforeSha256": null,
+          "afterSha256": "73d6b3f08d96397634645368794f412eaa93840b5aa69884ae6245c1b7faf08e"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0097_onboarding_state.sql",
+          "beforeSha256": null,
+          "afterSha256": "489d56fb031f4e078942251e5972a093f04e41f11a86a76332cb6c55cb4d8631"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0098_separate_collection_jobs.sql",
+          "beforeSha256": null,
+          "afterSha256": "ab402ac8bfe4da8fddea05ac5d03042fb090a660411f8d1b34c8b578536673c8"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0099_stagger_collection_jobs.sql",
+          "beforeSha256": null,
+          "afterSha256": "9ac0be194976afafb7289ff157b61eb1b30af1433d43abfa4ec90011bf80ee5e"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0100_traffic_unavailable.sql",
+          "beforeSha256": null,
+          "afterSha256": "39d47dff9a5d634b24aee9af4b1894c70505cf7969e80136592b87d05c302ec1"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0101_creative_canvas.sql",
+          "beforeSha256": null,
+          "afterSha256": "6c971231adfc0a1771577f21a6c51a885fb24201f8029cc293ee5195576ab7f2"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/0102_visual_template_library.sql",
+          "beforeSha256": null,
+          "afterSha256": "9d72015dad67b2a626b4b6c42e87c8112fa66eb7c6224d2bad14d0c7b22e6ecf"
+        },
+        {
+          "path": "backend/drizzle/lineages/canvas/meta/_journal.json",
+          "beforeSha256": null,
+          "afterSha256": "c09c7da9c60327105df62f28d536967652567822a75364da9940958b85c9d84f"
+        },
+        {
+          "path": "backend/drizzle/lineages/catalog-query.json",
+          "beforeSha256": null,
+          "afterSha256": "678f76e1464527bb3afd370c8e9a1f3e4b6ded40602e252bf84f764ab880403b"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0000_init.sql",
+          "beforeSha256": null,
+          "afterSha256": "389dce30cb081f39c868443481db23dd739a75c571f73302d377bca0ba91c4de"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0001_model_secret_value.sql",
+          "beforeSha256": null,
+          "afterSha256": "7ee69734aea0b900036aedf05acf3e4ae3c1c78988013af2f84898037148ec54"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0002_storage_configs.sql",
+          "beforeSha256": null,
+          "afterSha256": "6c37d1f5cc7bd48765405f5382d1926072ff5d46a92e82c6c2905725ce0d39eb"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0003_positioning_facets_rules.sql",
+          "beforeSha256": null,
+          "afterSha256": "5ec8eddf99f26883953e1a1002e29a6d55bac52d19e31b345f63782919902a3f"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0004_candidate_card.sql",
+          "beforeSha256": null,
+          "afterSha256": "a6c1aad0b6c8f10e240e7db2874c651f034e7d9bcf72e205dc8ee8dcf0fb00b6"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0005_project_brief_detail.sql",
+          "beforeSha256": null,
+          "afterSha256": "a658d6f7f7e0fd43bf2468e91cd545b3965b44550064bef8f35361cb2436f654"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0006_calibration_rule_suggestions.sql",
+          "beforeSha256": null,
+          "afterSha256": "f784180835244f7b221c0e76da4fd086f5e74e4b02ce761bb57b485f58276c9c"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0007_ai_task_steps.sql",
+          "beforeSha256": null,
+          "afterSha256": "d3134ae00cf022b53b1889c832dcbc04badc3a4878591ab09603067a59dd91bb"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0008_project_source_platformref.sql",
+          "beforeSha256": null,
+          "afterSha256": "75779580fe08f36ffdd90b747e247a4dba74ad5b41522d8b6d472e652651a095"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0009_scheduled_job_and_run.sql",
+          "beforeSha256": null,
+          "afterSha256": "e9195aea23c4e7320d75a6f93817d5e00313966ea03cdd865716c53fa09a2629"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0010_artifacts_origin.sql",
+          "beforeSha256": null,
+          "afterSha256": "8eb6d84e6154bebf6567db92fc930106f3bf007bd05f9d1a9a57ae12a8fbd401"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0011_audience_signals_publication.sql",
+          "beforeSha256": null,
+          "afterSha256": "062c595342f8645b1747fe09b5b42a5ae66a6e655d35ae067af877bc1f17d395"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0012_douyin_throttle_state.sql",
+          "beforeSha256": null,
+          "afterSha256": "f055cba43a20b32eb3b85a7bdbfa5bb776d8c07d5d17e4311df675f518736775"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0013_skill_config_overrides.sql",
+          "beforeSha256": null,
+          "afterSha256": "7ff4fa6304cb05207d30d018c461b3eca0ac957f97a6f5de2d9991bfa3a1a6fc"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0014_audience_signals_like_count.sql",
+          "beforeSha256": null,
+          "afterSha256": "a6b6e91aa5ec7d352b23abeee3c98f2590ebc9d48003131643df70a63fbdec53"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0015_retire_thesis_contract.sql",
+          "beforeSha256": null,
+          "afterSha256": "f210a6bf105babf8749673e1765d558184d9917ae7bd29f3a1fba2e5f5b3926e"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0016_audience_signals_external_id.sql",
+          "beforeSha256": null,
+          "afterSha256": "7c40f3280ae26e3785c08eb45f274abd71f4eca1183c4e8967c9d8aa553ed5b8"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0017_publication_hidden_at.sql",
+          "beforeSha256": null,
+          "afterSha256": "e6b12e92fd6cb8d92bafaa5340107b1dd96d3b0aaf1e28a38271cce70743c525"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0018_knowledge_source_note.sql",
+          "beforeSha256": null,
+          "afterSha256": "58746cb65a67030fe985fb7e3cd26542bd9469718233fcc2d0ee20ca86f0ea05"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0019_ai_conversation_scope.sql",
+          "beforeSha256": null,
+          "afterSha256": "7b053288ec4572087c91a0f5557786ee38c30c30d02f7a15672a3db7913a2417"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0020_review_gate.sql",
+          "beforeSha256": null,
+          "afterSha256": "06b58a4a40f27d22d38168bbafb9db5f122c73ca90cfc96e8bd63458ef752969"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0021_learnings_project_id.sql",
+          "beforeSha256": null,
+          "afterSha256": "4c9d3fbac08da0b9946b0ad06636793dc4ac1dfa63b7a1c1962a0c42f91051f8"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0022_ai_messages_parts.sql",
+          "beforeSha256": null,
+          "afterSha256": "95860f32dcdb9baef59fd1ea0cccea62c0cc3166b578af35fdda5c12a428dd24"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0023_material_link_priority.sql",
+          "beforeSha256": null,
+          "afterSha256": "35eafe944740b7b24949d16b50c5534d6a533f78a8c91a78a3c073e077ea7383"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0024_asset_file_extraction.sql",
+          "beforeSha256": null,
+          "afterSha256": "830c57308b6416fa27ce16e873c050eb20b2c73c779aa41741d41073937fc268"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0025_multi_account_ownership.sql",
+          "beforeSha256": null,
+          "afterSha256": "9a2dbb9d65f780f9e0e40e25626e398d85af25ff522dd2727675612658ec3d49"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0026_job_run_progress.sql",
+          "beforeSha256": null,
+          "afterSha256": "672f20ae70ef431bad9411d0aaf536ec330bd267de4aa214df16d87a20fc2afb"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0027_activation_state.sql",
+          "beforeSha256": null,
+          "afterSha256": "13cbbaa4690ca05c2657d55f3c6b0f8065940359f5f0855a19e860a5dd675aaa"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0028_skill_config_override_versions.sql",
+          "beforeSha256": null,
+          "afterSha256": "0d83fd1e3f46a58f0d84509c6d9db84c7265e60138bae0ece44f6f2a57bed926"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0029_publication_platform_status.sql",
+          "beforeSha256": null,
+          "afterSha256": "457e53978ff309a93c1ac10719e0bd4dd6020335daf05d925673b34d03e45654"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0030_scheduled_job_account.sql",
+          "beforeSha256": null,
+          "afterSha256": "84777f0e3805e253a4215bc049983c8b82fb5621da45cab06d08fb7578b62186"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0031_platform_account_external_id.sql",
+          "beforeSha256": null,
+          "afterSha256": "7d386c87fba6eba8a9cb91cf5f9c4a52acf4c494b5004064ca1bb79c0970e53e"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0032_benchmark_sources_works.sql",
+          "beforeSha256": null,
+          "afterSha256": "98a7326aab2513dc1ec92bbdd4a8c917eaa0126d5a4f80b5dcbd72a7afb50c23"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0033_topic_preferences.sql",
+          "beforeSha256": null,
+          "afterSha256": "e90e83dfc42f277228e02e54e3af5138beaa8e207e386dc29324e6a1b07dc67d"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0034_positioning_statement_change_reason.sql",
+          "beforeSha256": null,
+          "afterSha256": "57e4fe78a616714b6f3561028e7e125216c583814d131b90a448d90206b68e3f"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0035_trend_sources_darkhorse.sql",
+          "beforeSha256": null,
+          "afterSha256": "cc29ae3c882f845c102d43c8b6f1c5c57fa397571063e48c248140a25482d402"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0036_topic_attributions.sql",
+          "beforeSha256": null,
+          "afterSha256": "8569ad530e3da15df8646d7dac7e5a7dab7e8c7fdb283fc67063ae45d55aad9c"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0037_ai_messages_usage.sql",
+          "beforeSha256": null,
+          "afterSha256": "244138e142703181e28cc701b97322bdc13fb719adfd2ce4815f56c0ac20fd09"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0038_favorites_folders.sql",
+          "beforeSha256": null,
+          "afterSha256": "bd8e56e6afe749150b22f78e34949c9f94140f46fb625fe5e3885946fcc6fd0e"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0039_favorites_distill.sql",
+          "beforeSha256": null,
+          "afterSha256": "6f88d4b5a66c4cd384bdb01d7172616078f5fabcc1b09fc34f049e3443dc9031"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0040_backfill_imported_publication_revision.sql",
+          "beforeSha256": null,
+          "afterSha256": "c6bc974bf72ff5386e0fb2d3193b0d7b6bf3eec68018319ce5477aceaa2ed856"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0041_account_scoped_unique_identity.sql",
+          "beforeSha256": null,
+          "afterSha256": "fa546ae37dca6da2db56c867be7fac288e20018b261278f45bf801750d42fbb9"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0042_account_isolation_notnull.sql",
+          "beforeSha256": null,
+          "afterSha256": "184fb122be28b1c6b145a53ab4c78a640add69753fe990459b173e959df34f87"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0043_notifications_account_stamp.sql",
+          "beforeSha256": null,
+          "afterSha256": "b8362decbb29f0f4de7b92cff01584888ca90317c0f689b21104e1db789381f1"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0044_benchmark_works_transcript.sql",
+          "beforeSha256": null,
+          "afterSha256": "5b8460ecc416e0677edd9b65b89036b38372a517178ef4141d0bc2473aa7989f"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0045_learnings_evidence_strength.sql",
+          "beforeSha256": null,
+          "afterSha256": "029271f68b8ffdbfecfaa4d4ff4873f080268d7523091cfa80453d9618247923"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0046_scheduled_job_unique_source.sql",
+          "beforeSha256": null,
+          "afterSha256": "5fac07ae25bad43d1deb644425eb65880c0aaecd1f28e624ef2e6d7e333e2de4"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0047_browser_sessions.sql",
+          "beforeSha256": null,
+          "afterSha256": "c87f38c1d4acf140ce691f3ef137fbb7b2ab0d48ceead46246e396f6db658235"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0048_browser_sessions_drop_migrated.sql",
+          "beforeSha256": null,
+          "afterSha256": "beac75017e944d86f3deadbe81ba93215802e53966a8011fc830e0f6c3ced9cb"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0049_activation_security_mirror.sql",
+          "beforeSha256": null,
+          "afterSha256": "b6f8a1df11ab477532b44991ebef37b7aa3a6a47dbef251d450ca82ec6ba5ea2"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0050_content_intelligence.sql",
+          "beforeSha256": null,
+          "afterSha256": "b241490c7de4858ace783885da1b7831a63418f181c555177d7e32c1fe6123f3"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0051_content_intelligence_project_provenance.sql",
+          "beforeSha256": null,
+          "afterSha256": "9cfa671b7fc6022b80565097fa72b148ed8a60f6a1714498afe8bf64b75d0b16"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0052_intelligence_source_memberships.sql",
+          "beforeSha256": null,
+          "afterSha256": "9be75617f6369512305e4352436a1f2d3563136e209abdfcab4c92e8bc2a6364"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0053_account_skill_overlays.sql",
+          "beforeSha256": null,
+          "afterSha256": "4c7a0cdd0938e665b8a1cdd40142e521542a8d4f49ef32e3b79f038a8f9c6f0f"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0054_ai_task_execution_ownership.sql",
+          "beforeSha256": null,
+          "afterSha256": "07f3fb9931d185dc5b6a3d44db732d1adf63d8488d76106ea2ce7afe6f17fe61"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0055_automation_task_active_owner.sql",
+          "beforeSha256": null,
+          "afterSha256": "b2d44a75b2c20c0bd9c67100b6b3c87849f747ac0bb1849f5882601eec4719ee"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0056_asset_upload_atomic_identity.sql",
+          "beforeSha256": null,
+          "afterSha256": "2865e7d1a5d62d847e833b8c55c24e777bdba1f3652fca1a3ff88216a4eb021f"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0057_knowledge_file_workspace.sql",
+          "beforeSha256": null,
+          "afterSha256": "05a8a0f01e40f698422e0f04e0773fd856cf40c7bd526a7cd3eb8767909d25ca"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0058_source_sync_active_owner.sql",
+          "beforeSha256": null,
+          "afterSha256": "2b03251605a9d56a6dd9220baad85b60fdae029006c7438ee1462cd5ab45ddaa"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0059_unify_content_radar_automation.sql",
+          "beforeSha256": null,
+          "afterSha256": "3333bf58fe8bdfd76dad384f34464ff7c514453cb91cc973f7ff91e98d3fae8b"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0060_retire_self_detail_automation.sql",
+          "beforeSha256": null,
+          "afterSha256": "22b0fefa413aa4c8c09c1f0d9a4ffc67b885a92603edd14419cf986a73763b53"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0061_project_schedule_calendar.sql",
+          "beforeSha256": null,
+          "afterSha256": "eabb4445cee98b89be7110c585242a3ba14365c2a250e6e20616f5d854f8ffca"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0062_normalize_scheduling_timestamps.sql",
+          "beforeSha256": null,
+          "afterSha256": "518c5ce15c9cf4cfcda4e883f61e01fe81623bb87d91bc98021f549cabf0f2f7"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0063_learning_adoption_dedupe.sql",
+          "beforeSha256": null,
+          "afterSha256": "bc2dc50d55ef663b1411ef5c8f5c552a3c0393ee7f231bf53c8a3b9e33cbafae"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0064_positioning_master_version_floor.sql",
+          "beforeSha256": null,
+          "afterSha256": "65784078113781f3cc461d5520f69a9b555d78dee9407bed80a21e09cc65eb28"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0065_positioning_master_snapshot.sql",
+          "beforeSha256": null,
+          "afterSha256": "00456246881d97c974106d50db00f9b3d3aa74369c110e68ea6a6922c20047a2"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0066_positioning_discovery_sessions.sql",
+          "beforeSha256": null,
+          "afterSha256": "bb74087d912487640b7b84fb7dcbcd79a479adc3783712cbd744859a7024212e"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0067_channel_model_credentials.sql",
+          "beforeSha256": null,
+          "afterSha256": "45aaa6283171089a020dba4e96f74dc05d3b1b65ed6bc3a7113df603a0dc76ec"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0068_cli_invocations.sql",
+          "beforeSha256": null,
+          "afterSha256": "05b73f87445a2d3e5eb42738be94deceff72c4628b3cf81a550d8e5058f1a9f2"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0069_execution_authority_mapping.sql",
+          "beforeSha256": null,
+          "afterSha256": "695c632f3807ae973e3278a1d832ed9ea2d7f3cb36967228058f5eceacfcc9fb"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0070_execution_fence.sql",
+          "beforeSha256": null,
+          "afterSha256": "2b5822bc41a9638e9af53fc14fbdbe7b4db48146a68c8913d4f42e56a96d8f06"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0071_execution_call_ledger.sql",
+          "beforeSha256": null,
+          "afterSha256": "aa752b0639a6717a5b980e69151545fcbb4fae05a426f277175466abdbb789a6"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0072_execution_call_result.sql",
+          "beforeSha256": null,
+          "afterSha256": "e691f86b4c989e9ebdf83e2546a9a8e8e2a569c9a6cee882a68b288261f73edb"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0073_execution_retry_schedule.sql",
+          "beforeSha256": null,
+          "afterSha256": "1ffca3e1b0135d3a9d064f5bd0eaf1b3889540b0a774d27248693184f1ac995d"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0074_execution_candidate_receipt.sql",
+          "beforeSha256": null,
+          "afterSha256": "34adf1f086c13a3791021557711ca85cc9eb5bd0d57652d4b4f7ef4bad365584"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0075_execution_provider_receipt.sql",
+          "beforeSha256": null,
+          "afterSha256": "f54d3f23c8289825cea193b29d10afe25feb973df2657d5e87581a377c24bcb2"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0076_publication_draft_adoption.sql",
+          "beforeSha256": null,
+          "afterSha256": "6f4d509689b6618a6526fa5fedf4dc483601984435908ebe65cd1bb2dd4a76fd"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0077_artifact_version_adoption.sql",
+          "beforeSha256": null,
+          "afterSha256": "6bbcc3dfe3cef46c76acfbd8227b45746c9977afc89cbc8d38e6e19ad41f7e12"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0078_proposal_adoption_receipts.sql",
+          "beforeSha256": null,
+          "afterSha256": "9894237836f7bd6f5d740036d003291bb6558e980236017eb647cbc9c6a5d912"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0079_agentic_tool_execution_claim.sql",
+          "beforeSha256": null,
+          "afterSha256": "8110c0332eea020f54c33b98b98550f81b10b60000e515df192dccae0bc28300"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0080_execution_evidence.sql",
+          "beforeSha256": null,
+          "afterSha256": "5c50fb27e089c8e9988ec3e8c85638eb10d163a59ebf14c8f5e9cef988ffb743"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0081_execution_browser_profile_leases.sql",
+          "beforeSha256": null,
+          "afterSha256": "4949f25acecdd67b027bf06b7e87707b0a6401f28dcf782b3c1a6856e6b70c5b"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0082_scheduled_child_active_owner.sql",
+          "beforeSha256": null,
+          "afterSha256": "518609ea53b833b7b2df3ea460387baf478d14fc5a2816d64f3a62f4242141dd"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0083_execution_stream_events.sql",
+          "beforeSha256": null,
+          "afterSha256": "af0ef9b37a8f07c51280c0a6ac7e2af1736a2b7e24c21502ea64aff5d0280380"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0084_execution_call_parent.sql",
+          "beforeSha256": null,
+          "afterSha256": "21dabcdd1d22c7af8333fd6750cce0d70d22f375c4fc5186e7e7452440b080f1"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0085_pending_document_commits.sql",
+          "beforeSha256": null,
+          "afterSha256": "277859b7d6e4a295294fc5ab63e32b22a235e5486eede7270f338a823ab8c27c"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0086_execution_evidence_metadata.sql",
+          "beforeSha256": null,
+          "afterSha256": "27d6fec892fea3f93a81ac8e8b9e3fe264a364e84929cb69725c09cffa88c90b"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0087_execution_provider_job.sql",
+          "beforeSha256": null,
+          "afterSha256": "82242de20052d2eed864469068d8379a3965351d1d50a114c9f73dfc3e4b89eb"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0088_pending_generated_asset_commits.sql",
+          "beforeSha256": null,
+          "afterSha256": "7dfc1e79ab145959056ad0e1c547de832d607f0933923a8ea3a89b2307e447d8"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0089_project_transcription_requests.sql",
+          "beforeSha256": null,
+          "afterSha256": "e43b018faa7f9d13d8dfc66744bf3fecb8178fc3b438d74bbfe9e2526968eb4a"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0090_execution_call_accounting_basis.sql",
+          "beforeSha256": null,
+          "afterSha256": "f112b27f3f7896e1bffcdfcd3417d72883f0fdd58984a539ae1e8b1f3505c84c"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0091_browser_profile_host_owner.sql",
+          "beforeSha256": null,
+          "afterSha256": "685afcca70cbc19d30161c36b284570b2911ad2146f2cd0a36b57f7afe4e2bef"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0092_page_read_revision.sql",
+          "beforeSha256": null,
+          "afterSha256": "faa3826b15d81ded0336383242672b874844f15c73f302258973447591f977ea"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0093_positioning_current_statement.sql",
+          "beforeSha256": null,
+          "afterSha256": "9131cf16c0c6febae18849ca6ceab9d31a160e16bebb58cafdcfaba0a5049438"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0094_publication_traffic.sql",
+          "beforeSha256": null,
+          "afterSha256": "a143eb6cb1b4515cba879cf1c0e0a6f2436a25484057ea30729158c526abe9c5"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0095_redfox_credentials.sql",
+          "beforeSha256": null,
+          "afterSha256": "03370712f2b68941113ed610429f1c6caee092fa0eb64e091464ee1007df1454"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0096_publication_sync_state.sql",
+          "beforeSha256": null,
+          "afterSha256": "73d6b3f08d96397634645368794f412eaa93840b5aa69884ae6245c1b7faf08e"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0097_onboarding_state.sql",
+          "beforeSha256": null,
+          "afterSha256": "489d56fb031f4e078942251e5972a093f04e41f11a86a76332cb6c55cb4d8631"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0098_separate_collection_jobs.sql",
+          "beforeSha256": null,
+          "afterSha256": "ab402ac8bfe4da8fddea05ac5d03042fb090a660411f8d1b34c8b578536673c8"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0099_stagger_collection_jobs.sql",
+          "beforeSha256": null,
+          "afterSha256": "9ac0be194976afafb7289ff157b61eb1b30af1433d43abfa4ec90011bf80ee5e"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0100_traffic_unavailable.sql",
+          "beforeSha256": null,
+          "afterSha256": "39d47dff9a5d634b24aee9af4b1894c70505cf7969e80136592b87d05c302ec1"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0101_reporting_local_consent.sql",
+          "beforeSha256": null,
+          "afterSha256": "957594a3a49141c1ccd1b57a4c526acda961a6fe16cc890e4725847163b7ee08"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0102_publications_account_external_unique.sql",
+          "beforeSha256": null,
+          "afterSha256": "7e593b93324adf434431e503e42fe87e935f9d3fb3276152bc8d8c6cae9d1410"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0103_platform_collection.sql",
+          "beforeSha256": null,
+          "afterSha256": "7c87f0a7d659a8c373c99d5c906eb14a8650ed5b9abb44c18b66874b95ce05d2"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0104_platform_bind_attempts.sql",
+          "beforeSha256": null,
+          "afterSha256": "90cd8c3ae24f8e863ec3a6082eef4fb55b7c3763ebbeb5bc704529f914ed5e17"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0105_platform_legacy_backfill.sql",
+          "beforeSha256": null,
+          "afterSha256": "c3c6f33fa439562fb1be1ad4db0c976482bee2de22fd16b73bc2dc18a6eeafd7"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0106_platform_work_source_title.sql",
+          "beforeSha256": null,
+          "afterSha256": "7cb3c48a02503723f2cb7269c0ed1dad6c1bb3d3a221721055c3ed5f811e1795"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0107_wechat_articles.sql",
+          "beforeSha256": null,
+          "afterSha256": "c0feb2b0ab99676bd1942581a7a4897d8af858e096d2d0beda2e6375b82f25f5"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0108_graphic_posts.sql",
+          "beforeSha256": null,
+          "afterSha256": "bd7235916037bbf6f04a6e8b39a0a0cc500b8e91fc11d4f9c07bbb7ab0dc4638"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0109_creative_results.sql",
+          "beforeSha256": null,
+          "afterSha256": "f4cd7953e07cfc199a133c84ed83dff9f9df411cccca12e41c2918bcea5e2c35"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0110_article_text_candidates.sql",
+          "beforeSha256": null,
+          "afterSha256": "162939d577e6b8352384fb63afddec691256f252ea9f3851bb8e49e07e79963b"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0111_publication_text_candidates.sql",
+          "beforeSha256": null,
+          "afterSha256": "10903212052a5dceb911ec4159bdfb21acbf3a5c5c99f790a4f0fa378b841ce9"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0112_creative_result_target_section.sql",
+          "beforeSha256": null,
+          "afterSha256": "f3718325fb16c83d8bd46984c4935c316990ac8a5e3948689c45636775b64636"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0113_publication_cover_file.sql",
+          "beforeSha256": null,
+          "afterSha256": "e9b9c838d8edfe8f8054e479459527ca74b947d6d356ce0bdf033bdb7ad9d49a"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0114_production_edit_versions.sql",
+          "beforeSha256": null,
+          "afterSha256": "f394b58e660fb7d1c7b9cfe497592fceba54048b4eb8b841cb45d788813e07e3"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0115_production_render_requests.sql",
+          "beforeSha256": null,
+          "afterSha256": "93bcb64a9035ef9af6a876cf33aae66ce44e1a1f9148716a6124099358ccf6c7"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0116_output_creation_requests.sql",
+          "beforeSha256": null,
+          "afterSha256": "47695d97f504398589fe12ac4f9c4015cef83d79792299ca3dc7f9949ad41a25"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0117_conversion_reservations.sql",
+          "beforeSha256": null,
+          "afterSha256": "43ad39e53da3c520606f47b772d82c95bb0dbbc801db246408f894e89e32e272"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0118_execution_control_receipts.sql",
+          "beforeSha256": null,
+          "afterSha256": "2b0e0668f9ccfe50afad3cdbfb8f55a9a5c28fcbcb0b4e48b98f9c3341a3f8fd"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0119_production_media_requests.sql",
+          "beforeSha256": null,
+          "afterSha256": "15174b5eab3b326e826b3426145a11f2adfe51d54c550f735d06674b0f9cb76c"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0120_moments_owner.sql",
+          "beforeSha256": null,
+          "afterSha256": "03e17e11eb7a484c5a0bb72565e074fe45164a9d59755cab35de1e271beb0d98"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0121_work_composition_owner.sql",
+          "beforeSha256": null,
+          "afterSha256": "66e33087d2831a6a332a9f312ff7a3cbb5c81ceec2a3be130a8131462a5cedca"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0122_work_materials.sql",
+          "beforeSha256": null,
+          "afterSha256": "2a19f1b0554e7ed707a294e5b4c1fdc7e7108d6ee1ac6cbc0abc8152af42c5cf"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0123_work_reviews.sql",
+          "beforeSha256": null,
+          "afterSha256": "019fc704a12b4a7e75bbdd22561ac80bdb14ee1a45faa2d5fbd584a04b6d4b99"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0124_production_file_bindings.sql",
+          "beforeSha256": null,
+          "afterSha256": "07b068d5474755913314f78e5420d6c874f44b7601b54d3f8b56c6e21318b6d2"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0125_creative_canvas_lineage_merge.sql",
+          "beforeSha256": null,
+          "afterSha256": "c5f2ed12b96c73c5357e06c1f455bc6fbb5f154e9d298be36c879739acb373d6"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0126_moments_model_candidates.sql",
+          "beforeSha256": null,
+          "afterSha256": "90246742d3c1caa53dac3150b2107e4ec37ebeb42be2ec0787e01ba75be877c8"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/0127_publication_cover_requests.sql",
+          "beforeSha256": null,
+          "afterSha256": "84cf94b84254ae25d82393e87831e34bc9ccfa9ecdee1d98ea11dbdbbff7307f"
+        },
+        {
+          "path": "backend/drizzle/lineages/diagnostic/meta/_journal.json",
+          "beforeSha256": null,
+          "afterSha256": "a49f4aa66b203379a898265b5f91c3ad9f9f07c004a694a4981411221e37d920"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0000_init.sql",
+          "beforeSha256": null,
+          "afterSha256": "389dce30cb081f39c868443481db23dd739a75c571f73302d377bca0ba91c4de"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0001_model_secret_value.sql",
+          "beforeSha256": null,
+          "afterSha256": "7ee69734aea0b900036aedf05acf3e4ae3c1c78988013af2f84898037148ec54"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0002_storage_configs.sql",
+          "beforeSha256": null,
+          "afterSha256": "6c37d1f5cc7bd48765405f5382d1926072ff5d46a92e82c6c2905725ce0d39eb"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0003_positioning_facets_rules.sql",
+          "beforeSha256": null,
+          "afterSha256": "5ec8eddf99f26883953e1a1002e29a6d55bac52d19e31b345f63782919902a3f"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0004_candidate_card.sql",
+          "beforeSha256": null,
+          "afterSha256": "a6c1aad0b6c8f10e240e7db2874c651f034e7d9bcf72e205dc8ee8dcf0fb00b6"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0005_project_brief_detail.sql",
+          "beforeSha256": null,
+          "afterSha256": "a658d6f7f7e0fd43bf2468e91cd545b3965b44550064bef8f35361cb2436f654"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0006_calibration_rule_suggestions.sql",
+          "beforeSha256": null,
+          "afterSha256": "f784180835244f7b221c0e76da4fd086f5e74e4b02ce761bb57b485f58276c9c"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0007_ai_task_steps.sql",
+          "beforeSha256": null,
+          "afterSha256": "d3134ae00cf022b53b1889c832dcbc04badc3a4878591ab09603067a59dd91bb"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0008_project_source_platformref.sql",
+          "beforeSha256": null,
+          "afterSha256": "75779580fe08f36ffdd90b747e247a4dba74ad5b41522d8b6d472e652651a095"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0009_scheduled_job_and_run.sql",
+          "beforeSha256": null,
+          "afterSha256": "e9195aea23c4e7320d75a6f93817d5e00313966ea03cdd865716c53fa09a2629"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0010_artifacts_origin.sql",
+          "beforeSha256": null,
+          "afterSha256": "8eb6d84e6154bebf6567db92fc930106f3bf007bd05f9d1a9a57ae12a8fbd401"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0011_audience_signals_publication.sql",
+          "beforeSha256": null,
+          "afterSha256": "062c595342f8645b1747fe09b5b42a5ae66a6e655d35ae067af877bc1f17d395"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0012_douyin_throttle_state.sql",
+          "beforeSha256": null,
+          "afterSha256": "f055cba43a20b32eb3b85a7bdbfa5bb776d8c07d5d17e4311df675f518736775"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0013_skill_config_overrides.sql",
+          "beforeSha256": null,
+          "afterSha256": "7ff4fa6304cb05207d30d018c461b3eca0ac957f97a6f5de2d9991bfa3a1a6fc"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0014_audience_signals_like_count.sql",
+          "beforeSha256": null,
+          "afterSha256": "a6b6e91aa5ec7d352b23abeee3c98f2590ebc9d48003131643df70a63fbdec53"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0015_retire_thesis_contract.sql",
+          "beforeSha256": null,
+          "afterSha256": "f210a6bf105babf8749673e1765d558184d9917ae7bd29f3a1fba2e5f5b3926e"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0016_audience_signals_external_id.sql",
+          "beforeSha256": null,
+          "afterSha256": "7c40f3280ae26e3785c08eb45f274abd71f4eca1183c4e8967c9d8aa553ed5b8"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0017_publication_hidden_at.sql",
+          "beforeSha256": null,
+          "afterSha256": "e6b12e92fd6cb8d92bafaa5340107b1dd96d3b0aaf1e28a38271cce70743c525"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0018_knowledge_source_note.sql",
+          "beforeSha256": null,
+          "afterSha256": "58746cb65a67030fe985fb7e3cd26542bd9469718233fcc2d0ee20ca86f0ea05"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0019_ai_conversation_scope.sql",
+          "beforeSha256": null,
+          "afterSha256": "7b053288ec4572087c91a0f5557786ee38c30c30d02f7a15672a3db7913a2417"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0020_review_gate.sql",
+          "beforeSha256": null,
+          "afterSha256": "06b58a4a40f27d22d38168bbafb9db5f122c73ca90cfc96e8bd63458ef752969"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0021_learnings_project_id.sql",
+          "beforeSha256": null,
+          "afterSha256": "4c9d3fbac08da0b9946b0ad06636793dc4ac1dfa63b7a1c1962a0c42f91051f8"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0022_ai_messages_parts.sql",
+          "beforeSha256": null,
+          "afterSha256": "95860f32dcdb9baef59fd1ea0cccea62c0cc3166b578af35fdda5c12a428dd24"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0023_material_link_priority.sql",
+          "beforeSha256": null,
+          "afterSha256": "35eafe944740b7b24949d16b50c5534d6a533f78a8c91a78a3c073e077ea7383"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0024_asset_file_extraction.sql",
+          "beforeSha256": null,
+          "afterSha256": "830c57308b6416fa27ce16e873c050eb20b2c73c779aa41741d41073937fc268"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0025_multi_account_ownership.sql",
+          "beforeSha256": null,
+          "afterSha256": "9a2dbb9d65f780f9e0e40e25626e398d85af25ff522dd2727675612658ec3d49"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0026_job_run_progress.sql",
+          "beforeSha256": null,
+          "afterSha256": "672f20ae70ef431bad9411d0aaf536ec330bd267de4aa214df16d87a20fc2afb"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0027_activation_state.sql",
+          "beforeSha256": null,
+          "afterSha256": "13cbbaa4690ca05c2657d55f3c6b0f8065940359f5f0855a19e860a5dd675aaa"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0028_skill_config_override_versions.sql",
+          "beforeSha256": null,
+          "afterSha256": "0d83fd1e3f46a58f0d84509c6d9db84c7265e60138bae0ece44f6f2a57bed926"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0029_publication_platform_status.sql",
+          "beforeSha256": null,
+          "afterSha256": "457e53978ff309a93c1ac10719e0bd4dd6020335daf05d925673b34d03e45654"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0030_scheduled_job_account.sql",
+          "beforeSha256": null,
+          "afterSha256": "84777f0e3805e253a4215bc049983c8b82fb5621da45cab06d08fb7578b62186"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0031_platform_account_external_id.sql",
+          "beforeSha256": null,
+          "afterSha256": "7d386c87fba6eba8a9cb91cf5f9c4a52acf4c494b5004064ca1bb79c0970e53e"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0032_benchmark_sources_works.sql",
+          "beforeSha256": null,
+          "afterSha256": "98a7326aab2513dc1ec92bbdd4a8c917eaa0126d5a4f80b5dcbd72a7afb50c23"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0033_topic_preferences.sql",
+          "beforeSha256": null,
+          "afterSha256": "e90e83dfc42f277228e02e54e3af5138beaa8e207e386dc29324e6a1b07dc67d"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0034_positioning_statement_change_reason.sql",
+          "beforeSha256": null,
+          "afterSha256": "57e4fe78a616714b6f3561028e7e125216c583814d131b90a448d90206b68e3f"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0035_trend_sources_darkhorse.sql",
+          "beforeSha256": null,
+          "afterSha256": "cc29ae3c882f845c102d43c8b6f1c5c57fa397571063e48c248140a25482d402"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0036_topic_attributions.sql",
+          "beforeSha256": null,
+          "afterSha256": "8569ad530e3da15df8646d7dac7e5a7dab7e8c7fdb283fc67063ae45d55aad9c"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0037_ai_messages_usage.sql",
+          "beforeSha256": null,
+          "afterSha256": "244138e142703181e28cc701b97322bdc13fb719adfd2ce4815f56c0ac20fd09"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0038_favorites_folders.sql",
+          "beforeSha256": null,
+          "afterSha256": "bd8e56e6afe749150b22f78e34949c9f94140f46fb625fe5e3885946fcc6fd0e"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0039_favorites_distill.sql",
+          "beforeSha256": null,
+          "afterSha256": "6f88d4b5a66c4cd384bdb01d7172616078f5fabcc1b09fc34f049e3443dc9031"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0040_backfill_imported_publication_revision.sql",
+          "beforeSha256": null,
+          "afterSha256": "c6bc974bf72ff5386e0fb2d3193b0d7b6bf3eec68018319ce5477aceaa2ed856"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0041_account_scoped_unique_identity.sql",
+          "beforeSha256": null,
+          "afterSha256": "fa546ae37dca6da2db56c867be7fac288e20018b261278f45bf801750d42fbb9"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0042_account_isolation_notnull.sql",
+          "beforeSha256": null,
+          "afterSha256": "184fb122be28b1c6b145a53ab4c78a640add69753fe990459b173e959df34f87"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0043_notifications_account_stamp.sql",
+          "beforeSha256": null,
+          "afterSha256": "b8362decbb29f0f4de7b92cff01584888ca90317c0f689b21104e1db789381f1"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0044_benchmark_works_transcript.sql",
+          "beforeSha256": null,
+          "afterSha256": "5b8460ecc416e0677edd9b65b89036b38372a517178ef4141d0bc2473aa7989f"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0045_learnings_evidence_strength.sql",
+          "beforeSha256": null,
+          "afterSha256": "029271f68b8ffdbfecfaa4d4ff4873f080268d7523091cfa80453d9618247923"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0046_scheduled_job_unique_source.sql",
+          "beforeSha256": null,
+          "afterSha256": "5fac07ae25bad43d1deb644425eb65880c0aaecd1f28e624ef2e6d7e333e2de4"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0047_browser_sessions.sql",
+          "beforeSha256": null,
+          "afterSha256": "c87f38c1d4acf140ce691f3ef137fbb7b2ab0d48ceead46246e396f6db658235"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0048_browser_sessions_drop_migrated.sql",
+          "beforeSha256": null,
+          "afterSha256": "beac75017e944d86f3deadbe81ba93215802e53966a8011fc830e0f6c3ced9cb"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0049_activation_security_mirror.sql",
+          "beforeSha256": null,
+          "afterSha256": "b6f8a1df11ab477532b44991ebef37b7aa3a6a47dbef251d450ca82ec6ba5ea2"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0050_content_intelligence.sql",
+          "beforeSha256": null,
+          "afterSha256": "b241490c7de4858ace783885da1b7831a63418f181c555177d7e32c1fe6123f3"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0051_content_intelligence_project_provenance.sql",
+          "beforeSha256": null,
+          "afterSha256": "9cfa671b7fc6022b80565097fa72b148ed8a60f6a1714498afe8bf64b75d0b16"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0052_intelligence_source_memberships.sql",
+          "beforeSha256": null,
+          "afterSha256": "9be75617f6369512305e4352436a1f2d3563136e209abdfcab4c92e8bc2a6364"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0053_account_skill_overlays.sql",
+          "beforeSha256": null,
+          "afterSha256": "4c7a0cdd0938e665b8a1cdd40142e521542a8d4f49ef32e3b79f038a8f9c6f0f"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0054_ai_task_execution_ownership.sql",
+          "beforeSha256": null,
+          "afterSha256": "07f3fb9931d185dc5b6a3d44db732d1adf63d8488d76106ea2ce7afe6f17fe61"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0055_automation_task_active_owner.sql",
+          "beforeSha256": null,
+          "afterSha256": "b2d44a75b2c20c0bd9c67100b6b3c87849f747ac0bb1849f5882601eec4719ee"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0056_asset_upload_atomic_identity.sql",
+          "beforeSha256": null,
+          "afterSha256": "2865e7d1a5d62d847e833b8c55c24e777bdba1f3652fca1a3ff88216a4eb021f"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0057_knowledge_file_workspace.sql",
+          "beforeSha256": null,
+          "afterSha256": "05a8a0f01e40f698422e0f04e0773fd856cf40c7bd526a7cd3eb8767909d25ca"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0058_source_sync_active_owner.sql",
+          "beforeSha256": null,
+          "afterSha256": "2b03251605a9d56a6dd9220baad85b60fdae029006c7438ee1462cd5ab45ddaa"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0059_unify_content_radar_automation.sql",
+          "beforeSha256": null,
+          "afterSha256": "3333bf58fe8bdfd76dad384f34464ff7c514453cb91cc973f7ff91e98d3fae8b"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0060_retire_self_detail_automation.sql",
+          "beforeSha256": null,
+          "afterSha256": "22b0fefa413aa4c8c09c1f0d9a4ffc67b885a92603edd14419cf986a73763b53"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0061_project_schedule_calendar.sql",
+          "beforeSha256": null,
+          "afterSha256": "eabb4445cee98b89be7110c585242a3ba14365c2a250e6e20616f5d854f8ffca"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0062_normalize_scheduling_timestamps.sql",
+          "beforeSha256": null,
+          "afterSha256": "518c5ce15c9cf4cfcda4e883f61e01fe81623bb87d91bc98021f549cabf0f2f7"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0063_learning_adoption_dedupe.sql",
+          "beforeSha256": null,
+          "afterSha256": "bc2dc50d55ef663b1411ef5c8f5c552a3c0393ee7f231bf53c8a3b9e33cbafae"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0064_positioning_master_version_floor.sql",
+          "beforeSha256": null,
+          "afterSha256": "65784078113781f3cc461d5520f69a9b555d78dee9407bed80a21e09cc65eb28"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0065_positioning_master_snapshot.sql",
+          "beforeSha256": null,
+          "afterSha256": "00456246881d97c974106d50db00f9b3d3aa74369c110e68ea6a6922c20047a2"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0066_positioning_discovery_sessions.sql",
+          "beforeSha256": null,
+          "afterSha256": "bb74087d912487640b7b84fb7dcbcd79a479adc3783712cbd744859a7024212e"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0067_channel_model_credentials.sql",
+          "beforeSha256": null,
+          "afterSha256": "45aaa6283171089a020dba4e96f74dc05d3b1b65ed6bc3a7113df603a0dc76ec"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0068_cli_invocations.sql",
+          "beforeSha256": null,
+          "afterSha256": "05b73f87445a2d3e5eb42738be94deceff72c4628b3cf81a550d8e5058f1a9f2"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0069_execution_authority_mapping.sql",
+          "beforeSha256": null,
+          "afterSha256": "695c632f3807ae973e3278a1d832ed9ea2d7f3cb36967228058f5eceacfcc9fb"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0070_execution_fence.sql",
+          "beforeSha256": null,
+          "afterSha256": "2b5822bc41a9638e9af53fc14fbdbe7b4db48146a68c8913d4f42e56a96d8f06"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0071_execution_call_ledger.sql",
+          "beforeSha256": null,
+          "afterSha256": "aa752b0639a6717a5b980e69151545fcbb4fae05a426f277175466abdbb789a6"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0072_execution_call_result.sql",
+          "beforeSha256": null,
+          "afterSha256": "e691f86b4c989e9ebdf83e2546a9a8e8e2a569c9a6cee882a68b288261f73edb"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0073_execution_retry_schedule.sql",
+          "beforeSha256": null,
+          "afterSha256": "1ffca3e1b0135d3a9d064f5bd0eaf1b3889540b0a774d27248693184f1ac995d"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0074_execution_candidate_receipt.sql",
+          "beforeSha256": null,
+          "afterSha256": "34adf1f086c13a3791021557711ca85cc9eb5bd0d57652d4b4f7ef4bad365584"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0075_execution_provider_receipt.sql",
+          "beforeSha256": null,
+          "afterSha256": "f54d3f23c8289825cea193b29d10afe25feb973df2657d5e87581a377c24bcb2"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0076_publication_draft_adoption.sql",
+          "beforeSha256": null,
+          "afterSha256": "6f4d509689b6618a6526fa5fedf4dc483601984435908ebe65cd1bb2dd4a76fd"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0077_artifact_version_adoption.sql",
+          "beforeSha256": null,
+          "afterSha256": "6bbcc3dfe3cef46c76acfbd8227b45746c9977afc89cbc8d38e6e19ad41f7e12"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0078_proposal_adoption_receipts.sql",
+          "beforeSha256": null,
+          "afterSha256": "9894237836f7bd6f5d740036d003291bb6558e980236017eb647cbc9c6a5d912"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0079_agentic_tool_execution_claim.sql",
+          "beforeSha256": null,
+          "afterSha256": "8110c0332eea020f54c33b98b98550f81b10b60000e515df192dccae0bc28300"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0080_execution_evidence.sql",
+          "beforeSha256": null,
+          "afterSha256": "5c50fb27e089c8e9988ec3e8c85638eb10d163a59ebf14c8f5e9cef988ffb743"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0081_execution_browser_profile_leases.sql",
+          "beforeSha256": null,
+          "afterSha256": "4949f25acecdd67b027bf06b7e87707b0a6401f28dcf782b3c1a6856e6b70c5b"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0082_scheduled_child_active_owner.sql",
+          "beforeSha256": null,
+          "afterSha256": "518609ea53b833b7b2df3ea460387baf478d14fc5a2816d64f3a62f4242141dd"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0083_execution_stream_events.sql",
+          "beforeSha256": null,
+          "afterSha256": "af0ef9b37a8f07c51280c0a6ac7e2af1736a2b7e24c21502ea64aff5d0280380"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0084_execution_call_parent.sql",
+          "beforeSha256": null,
+          "afterSha256": "21dabcdd1d22c7af8333fd6750cce0d70d22f375c4fc5186e7e7452440b080f1"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0085_pending_document_commits.sql",
+          "beforeSha256": null,
+          "afterSha256": "277859b7d6e4a295294fc5ab63e32b22a235e5486eede7270f338a823ab8c27c"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0086_execution_evidence_metadata.sql",
+          "beforeSha256": null,
+          "afterSha256": "27d6fec892fea3f93a81ac8e8b9e3fe264a364e84929cb69725c09cffa88c90b"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0087_execution_provider_job.sql",
+          "beforeSha256": null,
+          "afterSha256": "82242de20052d2eed864469068d8379a3965351d1d50a114c9f73dfc3e4b89eb"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0088_pending_generated_asset_commits.sql",
+          "beforeSha256": null,
+          "afterSha256": "7dfc1e79ab145959056ad0e1c547de832d607f0933923a8ea3a89b2307e447d8"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0089_project_transcription_requests.sql",
+          "beforeSha256": null,
+          "afterSha256": "e43b018faa7f9d13d8dfc66744bf3fecb8178fc3b438d74bbfe9e2526968eb4a"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0090_execution_call_accounting_basis.sql",
+          "beforeSha256": null,
+          "afterSha256": "f112b27f3f7896e1bffcdfcd3417d72883f0fdd58984a539ae1e8b1f3505c84c"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0091_browser_profile_host_owner.sql",
+          "beforeSha256": null,
+          "afterSha256": "685afcca70cbc19d30161c36b284570b2911ad2146f2cd0a36b57f7afe4e2bef"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0092_page_read_revision.sql",
+          "beforeSha256": null,
+          "afterSha256": "faa3826b15d81ded0336383242672b874844f15c73f302258973447591f977ea"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0093_positioning_current_statement.sql",
+          "beforeSha256": null,
+          "afterSha256": "9131cf16c0c6febae18849ca6ceab9d31a160e16bebb58cafdcfaba0a5049438"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0094_publication_traffic.sql",
+          "beforeSha256": null,
+          "afterSha256": "a143eb6cb1b4515cba879cf1c0e0a6f2436a25484057ea30729158c526abe9c5"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0095_redfox_credentials.sql",
+          "beforeSha256": null,
+          "afterSha256": "03370712f2b68941113ed610429f1c6caee092fa0eb64e091464ee1007df1454"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0096_publication_sync_state.sql",
+          "beforeSha256": null,
+          "afterSha256": "73d6b3f08d96397634645368794f412eaa93840b5aa69884ae6245c1b7faf08e"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0097_onboarding_state.sql",
+          "beforeSha256": null,
+          "afterSha256": "489d56fb031f4e078942251e5972a093f04e41f11a86a76332cb6c55cb4d8631"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0098_separate_collection_jobs.sql",
+          "beforeSha256": null,
+          "afterSha256": "ab402ac8bfe4da8fddea05ac5d03042fb090a660411f8d1b34c8b578536673c8"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0099_stagger_collection_jobs.sql",
+          "beforeSha256": null,
+          "afterSha256": "9ac0be194976afafb7289ff157b61eb1b30af1433d43abfa4ec90011bf80ee5e"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0100_traffic_unavailable.sql",
+          "beforeSha256": null,
+          "afterSha256": "39d47dff9a5d634b24aee9af4b1894c70505cf7969e80136592b87d05c302ec1"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0101_topic_rewrite_only.sql",
+          "beforeSha256": null,
+          "afterSha256": "ade9a63285a7dcf94cb9c5db0ae7b19a14beec5863c43d788bcdb7d668c02c5b"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0102_account_groups.sql",
+          "beforeSha256": null,
+          "afterSha256": "fd2b8a424f5763e3b7c4cbc03991864181ae21c1f166de2a445f9f40504edba4"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0102_audience_task_workspace.sql",
+          "beforeSha256": null,
+          "afterSha256": "760d25af66cd6c7ba03c831aff088dc426dbe4c075b60174e9054fff13933484"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0103_group_projects.sql",
+          "beforeSha256": null,
+          "afterSha256": "3302bb056f323e1f3dcea93cba293eea5a203cf477369370e0902841c5e3c6f2"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0104_group_knowledge_positioning.sql",
+          "beforeSha256": null,
+          "afterSha256": "76df3a2dc8a4ab770919bb8c9b6a28d82f177abf8c939018b8ba502cb93b64fc"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0105_group_shared_domains.sql",
+          "beforeSha256": null,
+          "afterSha256": "e3a854f0ffacac2fdb67195edc8ed78d291e098d64b6295e5bbddc655aae0530"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0106_group_tasks_intelligence.sql",
+          "beforeSha256": null,
+          "afterSha256": "d940cb7fe134b41cd05bf8b141e2bab05db689506aeba0b5f4b4e7122aa851c3"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0107_group_resources.sql",
+          "beforeSha256": null,
+          "afterSha256": "9f2f96642844e661b6b42cbb4a528e33e8557c8a2cd8a8a2615ea4cb9e58d65c"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0108_group_platform_facts.sql",
+          "beforeSha256": null,
+          "afterSha256": "1bbd62cdbd05bc9a7ff54b7eb7209cb0f7f913d5768f864b5f64587c08e4c9d1"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0109_group_calendar.sql",
+          "beforeSha256": null,
+          "afterSha256": "4c6d51a44c8562530da1e5d40548b88db4579d74c60b96e44f843ef3c6d81558"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0110_group_migration_ledger.sql",
+          "beforeSha256": null,
+          "afterSha256": "287c871366d3520655e29c90024031cf14890fc2f621920c54356d0d1d6203ca"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0111_group_skill_overlays.sql",
+          "beforeSha256": null,
+          "afterSha256": "9dcdb83f9413c61b19d99854c4a5c25c66ff03cd91976a3e6401b86baa59a42d"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0112_group_pending_assets.sql",
+          "beforeSha256": null,
+          "afterSha256": "42b9444b769b69a804f19cd54b286b521bf96f5572e6ea0f95dd25a3b582dcc2"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0113_group_research_sources.sql",
+          "beforeSha256": null,
+          "afterSha256": "77ac7f2f06beb28e36930d6d992fafe3979f79c2fe27d1bd6fffeb9c4a97277e"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0114_legacy_shared_group_stamp.sql",
+          "beforeSha256": null,
+          "afterSha256": "5b57f73888f56a24e76e7d15558a1d42d3e7a26fa7e64fe88f1aaf9c0f6609d1"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0115_group_grant_uses.sql",
+          "beforeSha256": null,
+          "afterSha256": "2f15de7815e9bf60b710185d0fd985a28cc1457b0f944c1948fc820ed1ec4406"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0117_group_project_derived.sql",
+          "beforeSha256": null,
+          "afterSha256": "409f4339849f6874703a6857f8be1d0af727783691bda24a95718da0c1dbb83f"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0118_group_audience_facts.sql",
+          "beforeSha256": null,
+          "afterSha256": "cc40e4b1a61416a8aac4a5abae591977c48c3cca4379cac1b004385c33124ab0"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0119_group_transcription_knowledge_adoption.sql",
+          "beforeSha256": null,
+          "afterSha256": "1f2c692f44b7699e7c1395b5cfa4e410d98a3b9280a2d7d48f357f962de5dc33"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0120_group_onboarding_state.sql",
+          "beforeSha256": null,
+          "afterSha256": "80f1b9a7067d47ef68dcd15949167b09bbbedc2ac00ed971cb45688d880bfdee"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0121_group_resource_grant_locks.sql",
+          "beforeSha256": null,
+          "afterSha256": "eac87876acdd5d3b3826f0579241e94c8fae37961f86d4400a8a24252a94c0ae"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/0122_group_asset_tag_adoption.sql",
+          "beforeSha256": null,
+          "afterSha256": "eae4d89ea5cf1da7b2699d5f8e5c3122cb286b8df03c2757f23a6ee34a533a9c"
+        },
+        {
+          "path": "backend/drizzle/lineages/root/meta/_journal.json",
+          "beforeSha256": null,
+          "afterSha256": "f4b8b8e659b04d8ac464b2db6551f0a2f4cf6fc20977b32544e0a18cb7e0aa83"
+        },
+        {
+          "path": "backend/src/migration-convergence-lineages.json",
+          "beforeSha256": null,
+          "afterSha256": "f794af700b711094c50bf5ad4c7f0eeb2ac36ff1fb9ae8958a8ffb4cb5c338c7"
+        },
+        {
+          "path": "backend/src/migration-convergence.ts",
+          "beforeSha256": null,
+          "afterSha256": "0407a2af7b8c4af0ddfb4c5b76685edc86ede102ff8bbc0614376575f13ffd6e"
+        },
+        {
+          "path": "backend/drizzle/meta/_journal.json",
+          "beforeSha256": "ee0ffb9d10549aa7d38b7b474877bee8932057d5262712c4996ec39f2f02be8d",
+          "afterSha256": "7e97c6390fb14872864383797f98e8c8e698ef762cbec4f72990ebb0ab89917c"
+        },
+        {
+          "path": "backend/src/creative-canvas-migration-lineage.ts",
+          "beforeSha256": "d1c6988b069b235a834b811e3f297941ea91c03572bd1f7698d5695926be5558",
+          "afterSha256": "1503b0a550ea7711e31970983740ffbb9fbfd0d3610c1293f390b6573b296d30"
+        },
+        {
+          "path": "backend/src/db.creative-canvas-lineage.test.ts",
+          "beforeSha256": "5c5850a9d4068b674691696eb75949dfeb31352ac2b79a2f35a3ab1ff5237622",
+          "afterSha256": "d84c4f0974dd6d8b1bb3441893738f0274e8d9d744db3cc218a7be46163a6878"
+        },
+        {
+          "path": "backend/src/db.ts",
+          "beforeSha256": "fb4925439f9a209e6963d213ce56963a62aed1061885935d5d7eee58493556f1",
+          "afterSha256": "15a05f64b00fc5095abb6e96aa3d3039db8f4ff4faa894fb1429e843093cd98f"
+        },
+        {
+          "path": "backend/src/group-upgrade-backup.ts",
+          "beforeSha256": "b7d633aa4b15795193b4e3304892c90b0fa7c685fea11debec1ccb20392c37d5",
+          "afterSha256": "53e51ce1a76901d3acc240bfb4d3cb0eff59b415fc1b1d59318e28f06dd3ce65"
+        },
+        {
+          "path": "docs/verification/t1062/migration-convergence-result.json",
+          "beforeSha256": null,
+          "afterSha256": "10d8a6a5317fa046b273822f9313ff5faef5bffe085ec650e5d1d2090e2f860e"
+        }
+      ],
+      "commands": [
+        {
+          "command": "pnpm install --frozen-lockfile",
+          "exit": 0,
+          "note": "独立安装，未共享node_modules；pnpm报告unrs-resolver构建脚本未运行。"
+        },
+        {
+          "command": "pnpm -C backend exec vitest run src/db.creative-canvas-upgrade.test.ts",
+          "exit": 1,
+          "log": "/tmp/t1062-first-public-runtime.log",
+          "failure": "42601 cannot insert multiple commands into a prepared statement"
+        },
+        {
+          "command": "pnpm -C backend exec vitest run src/db.creative-canvas-upgrade.test.ts",
+          "exit": 1,
+          "log": "/tmp/t1062-second-public-runtime.log",
+          "failure": "42830 no unique constraint matching given keys for referenced production_edit_versions"
+        },
+        {
+          "command": "pnpm -C backend exec vitest run src/db.creative-canvas-upgrade.test.ts",
+          "exit": 1,
+          "log": "/tmp/t1062-third-public-runtime.log",
+          "failure": "同一42830：FK延后仍漏独立唯一索引，触发Packet两次受阻停止"
+        },
+        {
+          "command": "git diff --check",
+          "exit": 0
+        }
+      ],
+      "rootCause": "catalog索引提取用NOT EXISTS任意pg_constraint.conindid，误把被FK引用但不由PK/UNIQUE/EXCLUDE约束拥有的独立唯一索引排除；production_edit_versions复合唯一索引未生成。需将排除限于本表p/u/x约束，再重新生成catalog/0128。",
+      "implementedButUnverified": [
+        "冻结root125bc864/diagnosticc5316506/canvas55a526d6的原journal与SQL原文/hash归档",
+        "common0000–0100 +真实新0128(when1791043200001)主账本，旧分支原文保留于lineages避免最高时间跳过",
+        "known prefixes、hash/time/catalog检查与版本化Canvas assertion",
+        "PG升级在同一guard连接持锁、备份/迁移/校验，迁移失败不隔离空库",
+        "PGlite/PG已组库的收敛备份触发，复用完整dump/SHA/counts",
+        "新创作物理groupId与nullableaccount，以及首次组初始化/静态legacy/父链回填候选SQL"
+      ],
+      "notExecuted": [
+        "四完整基线fresh/root/diagnostic/canvas的public createDb两次与seed冻结资料保真",
+        "随机隔离PostgreSQL数据库升级/restore/并发锁验证",
+        "Packet六测试完整命令",
+        "严格catalog约束/default/index/trigger全量绿色证据",
+        "迁移失败的备份实际恢复/媒体引用测试"
+      ],
+      "restrictions": [
+        "未触碰真实用户DB/media/ChatCut",
+        "未修改schema/services/粗剪合同/控制面/task/lease，未merge/push",
+        "本候选为失败待修证据，不能进入打包或作为runtime验收通过",
+        "PK/FK/unique索引盘点需要修复；序列详细参数/所有新创作唯一scope与父链闭包仍未实证，下一轮必须检查",
+        "历史已有legacy fixups被新的严格catalog路径取代，兼容性未完成验证",
+        "后续group service writer尚未适配，不能声称新group产品链可用"
+      ],
+      "sourceProbe": {
+        "file": "/tmp/t1062-migration-skip-probe-result.json",
+        "scope": "父会话原SQL+Drizzle隔离PGlite skip红证据，仅证明旧普通migrator跳过风险，不是本实现验收"
+      },
+      "commit": {
+        "exit": 0,
+        "merge": false,
+        "pushed": false,
+        "hookNote": "commit输出Can't find lefthook in PATH；没有声称hook检查通过。"
+      },
+      "clean": false,
+      "rejectedLocalCommit": "1ea8b3cb8e2ed6e098ca13dc3351953bb147240a",
+      "gitState": "原单次本地失败提交在root暂停消息到达前创建，随后soft reset到授权base；全部WIP保持暂存，无merge/push，原提交SHA仍可恢复。"
+    },
+    "twoFkFailureLogs": [
+      "/tmp/t1062-second-public-runtime.log",
+      "/tmp/t1062-third-public-runtime.log"
+    ],
+    "researchGate": {
+      "by": "root",
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/orchestrator/research/t1062-index-catalog",
+      "probeResults": "PGlite及随机PG实测：旧索引遗漏、修正保留standalone unique/predicate、FK成功、重复23505；root正式resume/start/重compile后继续"
+    },
+    "prematureLocalCommit": "1ea8b3cb8e2ed6e098ca13dc3351953bb147240a",
+    "timing": "root暂停消息到达前创建失败本地提交；到达后soft reset到base，保留WIP/原SHA/reflog；未push/merge",
+    "finalCandidateReplacesFailedWip": true,
+    "preFinalWhitespaceCheck": {
+      "intermediateCommit": "9caf5412f36a0db6654e047794907fdc819d7987",
+      "baseWideStagedCheckExit": 2,
+      "finding": "新0128 line3103 DO块行尾空格；此前unstaged diff-check0未覆盖已stage全新文件",
+      "commandMistake": "检查和commit同shell按新行执行，未以成功退出码阻止commit，因此有中间本地提交；未交付该SHA",
+      "corrected": "仅新增0128 trimEnd，并同步新增生成器；三份原SQL归档不动",
+      "previous43TestsSqlSha256": "2b3719f7eafce0cd1925441a6639dcb0a51da79d1678632e7ee1df8b42503409",
+      "previous43TestsLog": "/tmp/t1062-six-regressions-final.log",
+      "final43TestsSqlSha256": "60cac883f02fa7fcd83051264bd6a63ec49132369c7c983b36e34e979a2f7713",
+      "final43TestsLog": "/tmp/t1062-six-regressions-final-bytes.log",
+      "finalOriginalHashesUnchanged": true,
+      "candidateWillBeAmendedSingleCommit": true
+    }
+  },
+  "permissions": {
+    "realDbOrMediaTouched": false,
+    "userAppTouched": false,
+    "modelsRun": false,
+    "controlPlaneEdited": false,
+    "schemaOrServicesEdited": false,
+    "merged": false,
+    "pushed": false
+  },
+  "typecheckComparison": {
+    "kind": "只读TS API以原base blob覆盖允许写集的虚拟编译，不更动原base文件",
+    "result": "/tmp/t1062-typecheck-compare-result.json",
+    "log": "/tmp/t1062-typecheck-compare.log",
+    "beforeCount": 106,
+    "afterCount": 106,
+    "introduced": [],
+    "note": "实际pnpm typecheck 105诊断及本写集0条是正式记录；此API比较不冒充全backend类型通过，也不统一把范围外项叫历史债"
+  },
+  "finalSourceOriginalHashesVerified": true
+}

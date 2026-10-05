@@ -1,9 +1,8 @@
+import {inspectMigrationConvergence,assertMigrationConverged,CONVERGENCE_WHEN} from './migration-convergence';
 import {sql} from 'drizzle-orm';
-import {readMigrationFiles} from 'drizzle-orm/migrator';
 import type {Db} from './db';
 /** SEMANTIC_BOUNDARY_ALLOW: 只核迁移账本/hash/时间/物理schema，不判断创作内容或选择。 */
 export const LEGACY_CANVAS_MIGRATION={hash:'6c971231adfc0a1771577f21a6c51a885fb24201f8029cc293ee5195576ab7f2',when:1790553600000} as const;
-const mergeWhen=1790755200050;
 type QueryDb=Pick<Db,'execute'>;
 class CanvasMigrationError extends Error{
  constructor(readonly code:'CREATIVE_CANVAS_MIGRATION_LINEAGE_UNKNOWN'|'CREATIVE_CANVAS_MIGRATION_SCHEMA_INCOMPATIBLE',detail:string){super(`${code}: ${detail}`);this.name='CanvasMigrationError';}
@@ -31,14 +30,16 @@ const indexList=Object.keys(indexes).map(name=>`'${name}'`).join(',');
 async function rows(db:QueryDb,query:string){return(await db.execute(sql.raw(query))).rows as Record<string,unknown>[];}
 function identity(hash:unknown,when:unknown){if(typeof hash!=='string'||(typeof when!=='number'&&typeof when!=='string'))unknown('账本身份字段类型不正确');const time=Number(when);if(!Number.isSafeInteger(time)||time<0)unknown('账本时间不是安全整数');return{hash:hash as string,when:time};}
 async function ledger(db:QueryDb){const exists=await rows(db,"SELECT to_regclass('drizzle.__drizzle_migrations') IS NOT NULL AS present");if(!exists[0]?.present)return[];const columns=await rows(db,"SELECT column_name,udt_name FROM information_schema.columns WHERE table_schema='drizzle' AND table_name='__drizzle_migrations'");for(const [name,type]of [['id','int4'],['hash','text'],['created_at','int8']])if(!columns.some(row=>row.column_name===name&&row.udt_name===type))unknown('迁移账本结构未知，保留原库');return(await rows(db,'SELECT hash,created_at FROM drizzle.__drizzle_migrations ORDER BY created_at,id')).map(row=>identity(row.hash,row.created_at));}
-function knownMigrations(folder:string){const migrations=readMigrationFiles({migrationsFolder:folder});if(!migrations.some(item=>item.folderMillis===mergeWhen))unknown('当前唯一正常迁移目录缺少正式125');return migrations.map(item=>({hash:item.hash,when:item.folderMillis}));}
 function sameColumns(value:unknown,expected:string[]){return Array.isArray(value)&&JSON.stringify(value)===JSON.stringify(expected);}
 async function assertStructures(db:QueryDb,requireAll:boolean){
+ const newVersion=(await ledger(db)).some(item=>item.when===CONVERGENCE_WHEN);
  const columns=await rows(db,`SELECT table_name,column_name,udt_name,is_nullable,column_default FROM information_schema.columns WHERE table_schema='public' AND table_name IN (${tableList})`);
- const indexRows=await rows(db,`SELECT t.relname AS table_name,idx.relname AS index_name,i.indisprimary,i.indisunique,i.indisvalid,(i.indpred IS NULL AND i.indexprs IS NULL) AS plain,ARRAY(SELECT a.attname FROM unnest(i.indkey::smallint[]) WITH ORDINALITY AS k(attnum,position) JOIN pg_attribute a ON a.attrelid=t.oid AND a.attnum=k.attnum ORDER BY k.position) AS columns FROM pg_index i JOIN pg_class t ON t.oid=i.indrelid JOIN pg_namespace ns ON ns.oid=t.relnamespace JOIN pg_class idx ON idx.oid=i.indexrelid WHERE ns.nspname='public' AND (t.relname IN (${tableList}) OR idx.relname IN (${indexList}))`);
+ const indexRows=await rows(db,`SELECT t.relname AS table_name,idx.relname AS index_name,i.indisprimary,i.indisunique,i.indisvalid,(i.indpred IS NULL AND i.indexprs IS NULL) AS plain,ARRAY(SELECT a.attname::text FROM unnest(i.indkey::smallint[]) WITH ORDINALITY AS k(attnum,position) JOIN pg_attribute a ON a.attrelid=t.oid AND a.attnum=k.attnum ORDER BY k.position) AS columns FROM pg_index i JOIN pg_class t ON t.oid=i.indrelid JOIN pg_namespace ns ON ns.oid=t.relnamespace JOIN pg_class idx ON idx.oid=i.indexrelid WHERE ns.nspname='public' AND (t.relname IN (${tableList}) OR idx.relname IN (${indexList}))`);
  for(const [table,spec] of Object.entries(structures)){
   const actual=columns.filter(row=>row.table_name===table);if(!actual.length){if(requireAll)incompatible(`正式125后缺表 ${table}`);continue;}
-  for(const [name,column]of Object.entries(spec.columns)){
+  for(const [name,original]of Object.entries(spec.columns)){
+   const canvasGroupVersion=newVersion&&(table.startsWith('canvas_')||table==='creative_canvases');
+   const column=canvasGroupVersion&&name==='account_id'?optionalText:original;
    const value=actual.find(row=>row.column_name===name);if(!value||value.udt_name!==column.type||value.is_nullable!==(column.nullable?'YES':'NO')||(column.default!==undefined&&value.column_default!==column.default))incompatible(`不兼容列 ${table}.${name}`);
   }
   const valid=indexRows.filter(row=>row.table_name===table&&row.indisvalid===true&&row.plain===true);
@@ -57,18 +58,6 @@ async function assertStructures(db:QueryDb,requireAll:boolean){
  return new Set(columns.map(row=>row.table_name)).size;
 }
 /** 原迁移器之前仅只读检查完整账本、已存在表与约束。绝不重放旧SQL或修改回执。 */
-export async function inspectCanvasMigrationLineage(db:QueryDb,folder:string){
- const known=knownMigrations(folder),history=await ledger(db),targetIndexes:number[]=[],seen=new Set<string>();let canvas=false;
- for(const item of history){const key=`${item.hash}:${item.when}`;if(seen.has(key))continue;seen.add(key);const index=known.findIndex(m=>m.hash===item.hash&&m.when===item.when);
-  if(index>=0){targetIndexes.push(index);continue;}if(item.hash===LEGACY_CANVAS_MIGRATION.hash&&item.when===LEGACY_CANVAS_MIGRATION.when){canvas=true;continue;}unknown('迁移hash/时间未知，保留原库与历史');
- }
- for(let index=0;index<targetIndexes.length;index++)if(targetIndexes[index]!==index)unknown('正常迁移账本不是完整前缀');
- if(canvas&&targetIndexes.length<101)unknown('画布0101缺少共同0000–0100真实前缀');
- const count=await assertStructures(db,false);if(!history.length&&count)unknown('已有相关表但缺少可核验迁移历史');
- const reporting=targetIndexes.length>=102;
- return{kind:canvas?(reporting?'combined':'canvas'):reporting?'reporting':history.length?'common_prefix':'fresh',ledgerCount:history.length} as const;
-}
-/** 正常migrate完成后仅检查正式125回执及统一物理schema；不执行任何补表SQL。 */
-export async function assertCanvasMigrationConverged(db:QueryDb,folder:string){
- const expected=knownMigrations(folder).find(item=>item.when===mergeWhen)!;const history=await ledger(db);if(!history.some(item=>item.hash===expected.hash&&item.when===expected.when))unknown('正常迁移未留下正式125真实回执');await assertStructures(db,true);
-}
+export async function inspectCanvasMigrationLineage(db:QueryDb,folder:string){return inspectMigrationConvergence(db,folder);}
+/** 正常migrate后检查新收敛真实回执和全量catalog，并保留原125的六表严格断言；不伪造125回执。 */
+export async function assertCanvasMigrationConverged(db:QueryDb,folder:string){await assertMigrationConverged(db,folder);await assertStructures(db,true);}

@@ -1,0 +1,902 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1782378989510,
+      "tag": "0000_init",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1782379000000,
+      "tag": "0001_model_secret_value",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1782379100000,
+      "tag": "0002_storage_configs",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1782379200000,
+      "tag": "0003_positioning_facets_rules",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1782379300000,
+      "tag": "0004_candidate_card",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1782379400000,
+      "tag": "0005_project_brief_detail",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1782379500000,
+      "tag": "0006_calibration_rule_suggestions",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1782379600000,
+      "tag": "0007_ai_task_steps",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1782379700000,
+      "tag": "0008_project_source_platformref",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1782379800000,
+      "tag": "0009_scheduled_job_and_run",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1782379900000,
+      "tag": "0010_artifacts_origin",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1782380000000,
+      "tag": "0011_audience_signals_publication",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1782380100000,
+      "tag": "0012_douyin_throttle_state",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1782380200000,
+      "tag": "0013_skill_config_overrides",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1782380300000,
+      "tag": "0014_audience_signals_like_count",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1782380300001,
+      "tag": "0015_retire_thesis_contract",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1782380400000,
+      "tag": "0016_audience_signals_external_id",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1782380400001,
+      "tag": "0017_publication_hidden_at",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1782380500000,
+      "tag": "0018_knowledge_source_note",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1782380600000,
+      "tag": "0019_ai_conversation_scope",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1782380700000,
+      "tag": "0020_review_gate",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1782380800000,
+      "tag": "0021_learnings_project_id",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1782380900000,
+      "tag": "0022_ai_messages_parts",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1782381000000,
+      "tag": "0023_material_link_priority",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1782381100000,
+      "tag": "0024_asset_file_extraction",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1782381200000,
+      "tag": "0025_multi_account_ownership",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1782381300000,
+      "tag": "0026_job_run_progress",
+      "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1782381400000,
+      "tag": "0027_activation_state",
+      "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1782381500000,
+      "tag": "0028_skill_config_override_versions",
+      "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1782381510000,
+      "tag": "0029_publication_platform_status",
+      "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1782381520000,
+      "tag": "0030_scheduled_job_account",
+      "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1782381530000,
+      "tag": "0031_platform_account_external_id",
+      "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1782381540000,
+      "tag": "0032_benchmark_sources_works",
+      "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1782381550000,
+      "tag": "0033_topic_preferences",
+      "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1782381560000,
+      "tag": "0034_positioning_statement_change_reason",
+      "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1782381570000,
+      "tag": "0035_trend_sources_darkhorse",
+      "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1782381580000,
+      "tag": "0036_topic_attributions",
+      "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1782381590000,
+      "tag": "0037_ai_messages_usage",
+      "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1782381600000,
+      "tag": "0038_favorites_folders",
+      "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1782381610000,
+      "tag": "0039_favorites_distill",
+      "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1782381620000,
+      "tag": "0040_backfill_imported_publication_revision",
+      "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1782381630000,
+      "tag": "0041_account_scoped_unique_identity",
+      "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "7",
+      "when": 1782381640000,
+      "tag": "0042_account_isolation_notnull",
+      "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "7",
+      "when": 1782381650000,
+      "tag": "0043_notifications_account_stamp",
+      "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "7",
+      "when": 1782381660000,
+      "tag": "0044_benchmark_works_transcript",
+      "breakpoints": true
+    },
+    {
+      "idx": 45,
+      "version": "7",
+      "when": 1782381670000,
+      "tag": "0045_learnings_evidence_strength",
+      "breakpoints": true
+    },
+    {
+      "idx": 46,
+      "version": "7",
+      "when": 1782381680000,
+      "tag": "0046_scheduled_job_unique_source",
+      "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1782381690000,
+      "tag": "0047_browser_sessions",
+      "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1784300000000,
+      "tag": "0048_browser_sessions_drop_migrated",
+      "breakpoints": true
+    },
+    {
+      "idx": 49,
+      "version": "7",
+      "when": 1784310000000,
+      "tag": "0049_activation_security_mirror",
+      "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1784820000000,
+      "tag": "0050_content_intelligence",
+      "breakpoints": true
+    },
+    {
+      "idx": 51,
+      "version": "7",
+      "when": 1784823600000,
+      "tag": "0051_content_intelligence_project_provenance",
+      "breakpoints": true
+    },
+    {
+      "idx": 52,
+      "version": "7",
+      "when": 1784827200000,
+      "tag": "0052_intelligence_source_memberships",
+      "breakpoints": true
+    },
+    {
+      "idx": 53,
+      "version": "7",
+      "when": 1784913600000,
+      "tag": "0053_account_skill_overlays",
+      "breakpoints": true
+    },
+    {
+      "idx": 54,
+      "version": "7",
+      "when": 1784917200000,
+      "tag": "0054_ai_task_execution_ownership",
+      "breakpoints": true
+    },
+    {
+      "idx": 55,
+      "version": "7",
+      "when": 1785081600000,
+      "tag": "0055_automation_task_active_owner",
+      "breakpoints": true
+    },
+    {
+      "idx": 56,
+      "version": "7",
+      "when": 1785085200000,
+      "tag": "0056_asset_upload_atomic_identity",
+      "breakpoints": true
+    },
+    {
+      "idx": 57,
+      "version": "7",
+      "when": 1785088800000,
+      "tag": "0057_knowledge_file_workspace",
+      "breakpoints": true
+    },
+    {
+      "idx": 58,
+      "version": "7",
+      "when": 1785092400000,
+      "tag": "0058_source_sync_active_owner",
+      "breakpoints": true
+    },
+    {
+      "idx": 59,
+      "version": "7",
+      "when": 1785096000000,
+      "tag": "0059_unify_content_radar_automation",
+      "breakpoints": true
+    },
+    {
+      "idx": 60,
+      "version": "7",
+      "when": 1785099600000,
+      "tag": "0060_retire_self_detail_automation",
+      "breakpoints": true
+    },
+    {
+      "idx": 61,
+      "version": "7",
+      "when": 1785103200000,
+      "tag": "0061_project_schedule_calendar",
+      "breakpoints": true
+    },
+    {
+      "idx": 62,
+      "version": "7",
+      "when": 1785106800000,
+      "tag": "0062_normalize_scheduling_timestamps",
+      "breakpoints": true
+    },
+    {
+      "idx": 63,
+      "version": "7",
+      "when": 1785110400000,
+      "tag": "0063_learning_adoption_dedupe",
+      "breakpoints": true
+    },
+    {
+      "idx": 64,
+      "version": "7",
+      "when": 1785114000000,
+      "tag": "0064_positioning_master_version_floor",
+      "breakpoints": true
+    },
+    {
+      "idx": 65,
+      "version": "7",
+      "when": 1785117600000,
+      "tag": "0065_positioning_master_snapshot",
+      "breakpoints": true
+    },
+    {
+      "idx": 66,
+      "version": "7",
+      "when": 1785542400000,
+      "tag": "0066_positioning_discovery_sessions",
+      "breakpoints": true
+    },
+    {
+      "idx": 67,
+      "version": "7",
+      "when": 1785628800000,
+      "tag": "0067_channel_model_credentials",
+      "breakpoints": true
+    },
+    {
+      "idx": 68,
+      "version": "7",
+      "when": 1786752000000,
+      "tag": "0068_cli_invocations",
+      "breakpoints": true
+    },
+    {
+      "idx": 69,
+      "version": "7",
+      "when": 1788566400000,
+      "tag": "0069_execution_authority_mapping",
+      "breakpoints": true
+    },
+    {
+      "idx": 70,
+      "version": "7",
+      "when": 1788652800000,
+      "tag": "0070_execution_fence",
+      "breakpoints": true
+    },
+    {
+      "idx": 71,
+      "version": "7",
+      "when": 1788652800001,
+      "tag": "0071_execution_call_ledger",
+      "breakpoints": true
+    },
+    {
+      "idx": 72,
+      "version": "7",
+      "when": 1788652800002,
+      "tag": "0072_execution_call_result",
+      "breakpoints": true
+    },
+    {
+      "idx": 73,
+      "version": "7",
+      "when": 1788652800003,
+      "tag": "0073_execution_retry_schedule",
+      "breakpoints": true
+    },
+    {
+      "idx": 74,
+      "version": "7",
+      "when": 1788652800004,
+      "tag": "0074_execution_candidate_receipt",
+      "breakpoints": true
+    },
+    {
+      "idx": 75,
+      "version": "7",
+      "when": 1788652800005,
+      "tag": "0075_execution_provider_receipt",
+      "breakpoints": true
+    },
+    {
+      "idx": 76,
+      "version": "7",
+      "when": 1788652800006,
+      "tag": "0076_publication_draft_adoption",
+      "breakpoints": true
+    },
+    {
+      "idx": 77,
+      "version": "7",
+      "when": 1788652800007,
+      "tag": "0077_artifact_version_adoption",
+      "breakpoints": true
+    },
+    {
+      "idx": 78,
+      "version": "7",
+      "when": 1788652800008,
+      "tag": "0078_proposal_adoption_receipts",
+      "breakpoints": true
+    },
+    {
+      "idx": 79,
+      "version": "7",
+      "when": 1788652800009,
+      "tag": "0079_agentic_tool_execution_claim",
+      "breakpoints": true
+    },
+    {
+      "idx": 80,
+      "version": "7",
+      "when": 1788652800010,
+      "tag": "0080_execution_evidence",
+      "breakpoints": true
+    },
+    {
+      "idx": 81,
+      "version": "7",
+      "when": 1788652800011,
+      "tag": "0081_execution_browser_profile_leases",
+      "breakpoints": true
+    },
+    {
+      "idx": 82,
+      "version": "7",
+      "when": 1788652800012,
+      "tag": "0082_scheduled_child_active_owner",
+      "breakpoints": true
+    },
+    {
+      "idx": 83,
+      "version": "7",
+      "when": 1788652800013,
+      "tag": "0083_execution_stream_events",
+      "breakpoints": true
+    },
+    {
+      "idx": 84,
+      "version": "7",
+      "when": 1788652800014,
+      "tag": "0084_execution_call_parent",
+      "breakpoints": true
+    },
+    {
+      "idx": 85,
+      "version": "7",
+      "when": 1788652800015,
+      "tag": "0085_pending_document_commits",
+      "breakpoints": true
+    },
+    {
+      "idx": 86,
+      "version": "7",
+      "when": 1788652800016,
+      "tag": "0086_execution_evidence_metadata",
+      "breakpoints": true
+    },
+    {
+      "idx": 87,
+      "version": "7",
+      "when": 1788652800017,
+      "tag": "0087_execution_provider_job",
+      "breakpoints": true
+    },
+    {
+      "idx": 88,
+      "version": "7",
+      "when": 1788652800018,
+      "tag": "0088_pending_generated_asset_commits",
+      "breakpoints": true
+    },
+    {
+      "idx": 89,
+      "version": "7",
+      "when": 1788652800019,
+      "tag": "0089_project_transcription_requests",
+      "breakpoints": true
+    },
+    {
+      "idx": 90,
+      "version": "7",
+      "when": 1788652800020,
+      "tag": "0090_execution_call_accounting_basis",
+      "breakpoints": true
+    },
+    {
+      "idx": 91,
+      "version": "7",
+      "when": 1788652800021,
+      "tag": "0091_browser_profile_host_owner",
+      "breakpoints": true
+    },
+    {
+      "idx": 92,
+      "version": "7",
+      "when": 1788854400000,
+      "tag": "0092_page_read_revision",
+      "breakpoints": true
+    },
+    {
+      "idx": 93,
+      "version": "7",
+      "when": 1788912000000,
+      "tag": "0093_positioning_current_statement",
+      "breakpoints": true
+    },
+    {
+      "idx": 94,
+      "version": "7",
+      "when": 1789084800000,
+      "tag": "0094_publication_traffic",
+      "breakpoints": true
+    },
+    {
+      "idx": 95,
+      "version": "7",
+      "when": 1789257600000,
+      "tag": "0095_redfox_credentials",
+      "breakpoints": true
+    },
+    {
+      "idx": 96,
+      "version": "7",
+      "when": 1789257600001,
+      "tag": "0096_publication_sync_state",
+      "breakpoints": true
+    },
+    {
+      "idx": 97,
+      "version": "7",
+      "when": 1789257600002,
+      "tag": "0097_onboarding_state",
+      "breakpoints": true
+    },
+    {
+      "idx": 98,
+      "version": "7",
+      "when": 1789344000000,
+      "tag": "0098_separate_collection_jobs",
+      "breakpoints": true
+    },
+    {
+      "idx": 99,
+      "version": "7",
+      "when": 1789344000001,
+      "tag": "0099_stagger_collection_jobs",
+      "breakpoints": true
+    },
+    {
+      "idx": 100,
+      "version": "7",
+      "when": 1789430400001,
+      "tag": "0100_traffic_unavailable",
+      "breakpoints": true
+    },
+    {
+      "idx": 101,
+      "version": "7",
+      "when": 1790668800000,
+      "tag": "0101_reporting_local_consent",
+      "breakpoints": true
+    },
+    {
+      "idx": 102,
+      "version": "7",
+      "when": 1790755200000,
+      "tag": "0102_publications_account_external_unique",
+      "breakpoints": true
+    },
+    {
+      "idx": 103,
+      "version": "7",
+      "when": 1790755200001,
+      "tag": "0103_platform_collection",
+      "breakpoints": true
+    },
+    {
+      "idx": 104,
+      "version": "7",
+      "when": 1790755200002,
+      "tag": "0104_platform_bind_attempts",
+      "breakpoints": true
+    },
+    {
+      "idx": 105,
+      "version": "7",
+      "when": 1790755200003,
+      "tag": "0105_platform_legacy_backfill",
+      "breakpoints": true
+    },
+    {
+      "idx": 106,
+      "version": "7",
+      "when": 1790755200004,
+      "tag": "0106_platform_work_source_title",
+      "breakpoints": true
+    },
+    {
+      "idx": 107,
+      "version": "7",
+      "when": 1790755200005,
+      "tag": "0107_wechat_articles",
+      "breakpoints": true
+    },
+    {
+      "idx": 108,
+      "version": "7",
+      "when": 1790755200006,
+      "tag": "0108_graphic_posts",
+      "breakpoints": true
+    },
+    {
+      "idx": 109,
+      "version": "7",
+      "when": 1790755200007,
+      "tag": "0109_creative_results",
+      "breakpoints": true
+    },
+    {
+      "idx": 110,
+      "version": "7",
+      "when": 1790755200008,
+      "tag": "0110_article_text_candidates",
+      "breakpoints": true
+    },
+    {
+      "idx": 111,
+      "version": "7",
+      "when": 1790755200009,
+      "tag": "0111_publication_text_candidates",
+      "breakpoints": true
+    },
+    {
+      "idx": 112,
+      "version": "7",
+      "when": 1790755200010,
+      "tag": "0112_creative_result_target_section",
+      "breakpoints": true
+    },
+    {
+      "idx": 113,
+      "version": "7",
+      "when": 1790755200011,
+      "tag": "0113_publication_cover_file",
+      "breakpoints": true
+    },
+    {
+      "idx": 114,
+      "version": "7",
+      "when": 1790755200012,
+      "tag": "0114_production_edit_versions",
+      "breakpoints": true
+    },
+    {
+      "idx": 115,
+      "version": "7",
+      "when": 1790755200013,
+      "tag": "0115_production_render_requests",
+      "breakpoints": true
+    },
+    {
+      "idx": 116,
+      "version": "7",
+      "when": 1790755200014,
+      "tag": "0116_output_creation_requests",
+      "breakpoints": true
+    },
+    {
+      "idx": 117,
+      "version": "7",
+      "when": 1790755200015,
+      "tag": "0117_conversion_reservations",
+      "breakpoints": true
+    },
+    {
+      "idx": 118,
+      "version": "7",
+      "when": 1790755200016,
+      "tag": "0118_execution_control_receipts",
+      "breakpoints": true
+    },
+    {
+      "idx": 119,
+      "version": "7",
+      "when": 1790755200017,
+      "tag": "0119_production_media_requests",
+      "breakpoints": true
+    },
+    {
+      "idx": 120,
+      "version": "7",
+      "when": 1790755200018,
+      "tag": "0120_moments_owner",
+      "breakpoints": true
+    },
+    {
+      "idx": 121,
+      "version": "7",
+      "when": 1790755200019,
+      "tag": "0121_work_composition_owner",
+      "breakpoints": true
+    },
+    {
+      "idx": 122,
+      "version": "7",
+      "when": 1790755200020,
+      "tag": "0122_work_materials",
+      "breakpoints": true
+    },
+    {
+      "idx": 123,
+      "version": "7",
+      "when": 1790755200030,
+      "tag": "0123_work_reviews",
+      "breakpoints": true
+    },
+    {
+      "idx": 124,
+      "version": "7",
+      "when": 1790755200040,
+      "tag": "0124_production_file_bindings",
+      "breakpoints": true
+    },
+    {
+      "idx": 125,
+      "version": "7",
+      "when": 1790755200050,
+      "tag": "0125_creative_canvas_lineage_merge",
+      "breakpoints": true
+    },
+    {
+      "idx": 126,
+      "version": "7",
+      "when": 1790755200060,
+      "tag": "0126_moments_model_candidates",
+      "breakpoints": true
+    },
+    {
+      "idx": 127,
+      "version": "7",
+      "when": 1790755200070,
+      "tag": "0127_publication_cover_requests",
+      "breakpoints": true
+    }
+  ]
+}
