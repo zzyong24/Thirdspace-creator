@@ -452,6 +452,11 @@ export interface AiService {
     ctx: RequestContext,
     taskId: string,
   ): Promise<Record<string, unknown>>;
+  /** 仅server-only：同一次真实任务读取的冻结归属与运行快照，不进入DTO/transport。 */
+  getTaskExecutionRuntime(ctx:RequestContext,taskId:string):Promise<{
+    owner:{userId:string;accountId:string|null;groupId:string|null;groupVersion:number|null;membershipVersion:number|null};
+    runtimeData:Record<string,unknown>;
+  }>;
   /**
    * T-735 server-only：保存异步多模态 provider checkpoint。固定键写入，不能覆盖
    * skillSnapshot/modelAuthority，也不通过 transport/DTO 暴露。
@@ -1966,6 +1971,13 @@ export function createAiService(deps: ServiceDeps): AiService {
         "ai.getTaskRuntimeData",
       ).requireTask(taskId);
       return (task.runtimeData ?? {}) as Record<string, unknown>;
+    },
+
+    async getTaskExecutionRuntime(ctx,taskId) {
+      const task=await repoFor(ctx,"ai.getTaskExecutionRuntime").requireTask(taskId);
+      return {owner:{userId:task.userId,accountId:task.accountId??null,groupId:task.groupId??null,
+        groupVersion:task.groupVersion??null,membershipVersion:task.membershipVersion??null},
+        runtimeData:(task.runtimeData??{}) as Record<string,unknown>};
     },
 
     async putMultimodalProviderCheckpoint(ctx, taskId, checkpoint) {

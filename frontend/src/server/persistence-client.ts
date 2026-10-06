@@ -2941,6 +2941,49 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       }),
     );
   };
+  // 确定性执行使用真实任务冻结归属；collection的signal-only闭包仍沿上方原ctx wrapper。
+  const runExecutionWithFrozenSkills=async(ctx:RequestContext,taskId:string,
+    execute:(signal:AbortSignal,executionContext:RequestContext)=>Promise<void>):Promise<void>=>{
+    const {owner,runtimeData}=await aiService.getTaskExecutionRuntime(ctx,taskId);
+    // SEMANTIC_BOUNDARY_ALLOW:只核真实服务已授权的旧账号范围，不推断内容或当前成员归属。
+    const legacy=!ctx.groupId&&!!ctx.accountId&&owner.accountId===ctx.accountId&&
+      (owner.groupId===null||owner.groupId===`grp_legacy_${owner.accountId}`);
+    const executionContext:RequestContext={userId:owner.userId,accountId:owner.accountId,
+      requestId:ctx.requestId,source:ctx.source,
+      ...(legacy?{}:{groupId:owner.groupId,groupVersion:owner.groupVersion??undefined,membershipVersion:owner.membershipVersion??undefined})};
+    try{
+      const raw=runtimeData.skillSnapshot;
+      if(!raw)throw new Error(`[T-513] AI task ${taskId} 缺少冻结的 Skill snapshot`);
+      const snapshot=parseEffectiveSkillSnapshot(JSON.stringify(raw));
+      const mismatch=()=>{throw new Error(`[T-513] AI task ${taskId} 的 Skill snapshot 属主不匹配`);};
+      if(snapshot.userId!==owner.userId||snapshot.accountId!==owner.accountId)mismatch();
+      const stamp=snapshot as EffectiveSkillSnapshotV1 & Record<string,unknown>;
+      const validVersion=(value:unknown)=>value===null||(typeof value==="number"&&Number.isSafeInteger(value)&&value>0);
+      if(legacy){
+        if(stamp.groupId!=null&&stamp.groupId!==owner.groupId)mismatch();
+        for(const field of ["groupVersion","membershipVersion"] as const){
+          if(Object.hasOwn(stamp,field)&&stamp[field]!==undefined&&!validVersion(stamp[field]))mismatch();
+          if(stamp[field]!=null&&stamp[field]!==owner[field])mismatch();
+        }
+      }else{
+        if(!owner.groupId||!Object.hasOwn(stamp,"groupId")||stamp.groupId!==owner.groupId||
+          !Object.hasOwn(stamp,"groupVersion")||!Object.hasOwn(stamp,"membershipVersion")||
+          !validVersion(stamp.groupVersion)||stamp.groupVersion===null||stamp.groupVersion!==owner.groupVersion||
+          !validVersion(stamp.membershipVersion)||stamp.membershipVersion!==owner.membershipVersion)mismatch();
+      }
+      const liveModelAuthority=pinModelAuthority(await readChannelModelAuthority());
+      if(!matchesPinnedModelAuthority(runtimeData,liveModelAuthority)){
+        await aiService.cancelTask(executionContext,taskId,"模型配置已变化，请重新发起");return;
+      }
+      await taskModelAuthorityScope.run(liveModelAuthority,()=>runWithEffectiveSkillSnapshot(snapshot,async()=>{
+        const execution=await aiService.runClaimedTaskExecution(executionContext,taskId,async({signal})=>execute(signal,executionContext));
+        if(!execution.claimed)return;
+      }));
+    }catch(error){
+      const message=error instanceof Error?error.message:String(error);
+      await aiService.markFailed(executionContext,taskId,message).catch(()=>undefined);
+    }
+  };
   const aiBase = createAiTransport(() => createPublicMomentsAiAdapter(aiService));
   function assertOutputVersionSource(context:RequestContext, ref:OutputConversionSourceAnchor, projectId:string):Promise<void> {
     return createConversionSourceService({projects:projectsService,articles:articlesService,graphicPosts:graphicPostsService,
@@ -4151,12 +4194,14 @@ dispatchIntelligenceRun});
   // HTTP 立即返回,UI 轮询 execution.tasks.get / ai.tasks.steps.list。
   const dispatchExecution=(ctx:RequestContext,task:{id?:string;spec?:unknown;deterministicGeneration?:number})=>{
           const executionTaskId = task.id!;
+          const probe=(task.spec as {taskType?:string})?.taskType==="media.probe";
+          const agentic=agenticBusiness.supports(`exec.${(task.spec as {taskType?:string}|undefined)?.taskType}`);
           const runDeterministic=()=>runExecutionTask(ctx,{id:executionTaskId,inputData:{spec:task.spec},deterministicGeneration:task.deterministicGeneration},{ai:aiService,assets:{materializeAsset:(c,id,path,exact)=>assetsService.materializeAsset(c,id,path,exact)},registry:executorRegistry,workspacesRoot:executionWorkspacesRoot});
-          const pending=(task.spec as {taskType?:string})?.taskType === "media.probe" ? runDeterministic() : agenticBusiness.supports(`exec.${(task.spec as {taskType?:string}|undefined)?.taskType}`)
+          const pending=probe ? runDeterministic() : agentic
             ? (agenticWorker ? agenticBusiness.prepare(ctx,executionTaskId).then(()=>{agenticWorker.start();}) : Promise.reject(new Error("自主执行服务未就绪，请修复或更新应用")))
-            : runTaskWithEffectiveSkillSnapshot(ctx, executionTaskId, () =>
+            : runExecutionWithFrozenSkills(ctx, executionTaskId, (_signal,executionContext) =>
             runExecutionTask(
-              ctx,
+              executionContext,
               { id: executionTaskId, inputData: { spec: task.spec },deterministicGeneration:task.deterministicGeneration },
               {
                 ai: aiService,
@@ -4172,8 +4217,9 @@ dispatchIntelligenceRun});
           void pending.catch(async (error) => {
             const message =
               error instanceof Error ? error.message : String(error);
-            if((task.spec as {taskType?:string})?.taskType === "media.probe")await aiService.probeControl.markFailed(ctx,executionTaskId,task.deterministicGeneration ?? 0,message).catch(()=>undefined);
-            else await aiService.markFailed(ctx,executionTaskId,message).catch(()=>undefined);
+            if(probe)await aiService.probeControl.markFailed(ctx,executionTaskId,task.deterministicGeneration ?? 0,message).catch(()=>undefined);
+            else if(agentic)await aiService.markFailed(ctx,executionTaskId,message).catch(()=>undefined);
+            else console.error("[execution] 冻结任务归属读取失败，未以当前筛选写入任务",message);
           });
   };
   const execution: Transport = {
