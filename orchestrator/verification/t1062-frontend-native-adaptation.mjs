@@ -292,28 +292,36 @@ const prepareLocalAsr=async deadline=>{
  fs.writeFileSync(seamManifestPath,JSON.stringify({originalWorkerPath:state.originalSibling,originalWorkerSHA256:state.builtSHA,gatePath,output:networkOutput,cacheRoot:env.CREATOROS_WHISPER_CACHE_DIR},null,2)+'\n',{flag:'wx',mode:0o600});state.ownedManifest=true;
  fs.writeFileSync(workerPath,seamWrapper.bytes,{flag:'wx',mode:state.builtMode});state.installed=true;report.workerSeamState=state;save();
  const readyOutPath=path.join(isolated,'zero-task-ready.stdout.log'),readyErrPath=path.join(isolated,'zero-task-ready.stderr.log'),readyOut=fs.openSync(readyOutPath,'wx'),readyErr=fs.openSync(readyErrPath,'wx'),messages=[];
+ let readyLogsReleased=false;const releaseReadyLogs=()=>{if(readyLogsReleased)return;readyLogsReleased=true;fs.closeSync(readyOut);fs.closeSync(readyErr);};
  let readyReceipt;
  try{readyReceipt=await new Promise((resolve,rejectReady)=>{
   const remaining=deadline-Date.now();if(remaining<3000){rejectReady(Error('原#12剩余预算不足真实ready与关闭'));return;}
   const child=fork(workerPath,[],{cwd:path.join(root,'frontend'),env:browserEnv,serialization:'advanced',execArgv:[],stdio:['ignore',readyOut,readyErr,'ipc']}),startedAt=new Date().toISOString();
-  let actualReady=null,exitCode=null,exitSignal=null,closed=false,promiseFinished=false,failure=null,termTimer=null,killTimer=null;const stopActions=[];
+  let actualReady=null,exitCode=null,exitSignal=null,closed=false,promiseFinished=false,failure=null,spawned=false,spawnError=false,termTimer=null,killTimer=null;const stopActions=[];
   state.childClosePending=true;
   const clear=()=>{clearTimeout(startupTimer);clearTimeout(termTimer);clearTimeout(killTimer);clearTimeout(capTimer);};
   const signal=kind=>{if(closed)return;stopActions.push({signal:kind,at:new Date().toISOString(),pid:child.pid??null,accepted:child.kill(kind)});};
   const stop=reason=>{if(failure)return;failure=reason;signal('SIGTERM');termTimer=setTimeout(()=>{signal('SIGKILL');},Math.min(1000,Math.max(1,deadline-Date.now()-1000)));};
   const startupTimer=setTimeout(()=>stop('同wrapper真实worker ready超时'),Math.min(15000,remaining-2000));
   const capTimer=setTimeout(()=>{if(closed)return;signal('SIGKILL');failure=failure??'原#12总预算耗尽且child关闭未完成';promiseFinished=true;report.inputInitialization.push({kind:'actual_same_wrapper_zero_task_ready_not_model_acceptance',status:'CLOSE_PENDING_FAIL_CLOSED',startedAt,finishedAt:new Date().toISOString(),messages,stopActions,childClosePending:true,taskMessagesSent:0});save();rejectReady(Error(failure));},remaining);
-  child.on('error',error=>stop('真实worker启动失败: '+error.message));
+  child.on('spawn',()=>{spawned=true;});
+  child.on('error',error=>{spawnError=true;stop('真实worker启动失败: '+error.message);});
   child.on('message',message=>{messages.push(message);if(!actualReady&&message?.version===1&&message.type==='ready'&&Array.isArray(message.capabilities)&&message.capabilities.includes('asset.asr')){actualReady=message;if(child.connected)child.disconnect();}});
-  child.on('exit',(code,signal)=>{exitCode=code;exitSignal=signal;});
-  child.on('close',()=>{
-   closed=true;state.childClosePending=false;clear();state.actualChildCloseAt=new Date().toISOString();
-   if(promiseFinished){fs.closeSync(readyOut);fs.closeSync(readyErr);return;}
-   promiseFinished=true;
-   const receipt={kind:'actual_same_wrapper_zero_task_ready_not_model_acceptance',startedAt,finishedAt:state.actualChildCloseAt,messages,code:exitCode,signal:exitSignal,stopActions,actualChildClosed:true,taskMessagesSent:0,originalWorkerSHA256:state.builtSHA,wrapperSHA256:seamWrapper.sha256,gateSHA256:seamGate.sha256,ipcOptions:{serialization:'advanced',execArgv:[],cwd:path.join(root,'frontend')}};
-   if(failure||!actualReady||exitCode!==0||Date.now()>deadline){report.inputInitialization.push({...receipt,status:'READY_OR_CLOSE_FAILED'});save();rejectReady(Error(failure??'真实零任务ready/关闭/原预算失败'));}else resolve(receipt);
+  child.on('exit',(code,signal)=>{
+   exitCode=code;exitSignal=signal;closed=true;state.childClosePending=false;clear();releaseReadyLogs();state.actualChildExitAt=new Date().toISOString();
+   if(promiseFinished)return;promiseFinished=true;
+   const receipt={kind:'actual_same_wrapper_zero_task_ready_not_model_acceptance',startedAt,finishedAt:state.actualChildExitAt,messages,code:exitCode,signal:exitSignal,stopActions,actualChildExited:true,closeEventRequired:false,taskMessagesSent:0,originalWorkerSHA256:state.builtSHA,wrapperSHA256:seamWrapper.sha256,gateSHA256:seamGate.sha256,ipcOptions:{serialization:'advanced',execArgv:[],cwd:path.join(root,'frontend')}};
+   if(failure||!actualReady||exitCode!==0||Date.now()>deadline){report.inputInitialization.push({...receipt,status:'READY_OR_EXIT_FAILED'});save();rejectReady(Error(failure??'真实零任务ready/退出/原预算失败'));}else resolve(receipt);
   });
- });}finally{if(!state.childClosePending){fs.closeSync(readyOut);fs.closeSync(readyErr);}}
+  child.on('close',()=>{
+   state.actualChildCloseEventAt=new Date().toISOString();
+   if(spawned||!spawnError||closed)return;
+   state.childClosePending=false;clear();releaseReadyLogs();
+   if(promiseFinished)return;promiseFinished=true;
+   const receipt={kind:'actual_same_wrapper_zero_task_ready_not_model_acceptance',startedAt,finishedAt:state.actualChildCloseEventAt,messages,code:null,signal:null,stopActions,actualChildExited:false,spawned:false,spawnError:true,closeAfterSpawnError:true,taskMessagesSent:0,originalWorkerSHA256:state.builtSHA,wrapperSHA256:seamWrapper.sha256,gateSHA256:seamGate.sha256,ipcOptions:{serialization:'advanced',execArgv:[],cwd:path.join(root,'frontend')}};
+   report.inputInitialization.push({...receipt,status:'SPAWN_ERROR_CLOSE_WITHOUT_EXIT'});save();rejectReady(Error(failure??'真实worker启动失败且未产生exit'));
+  });
+ });}finally{releaseReadyLogs();}
  report.inputInitialization.push({...readyReceipt,stdoutPath:readyOutPath,stderrPath:readyErrPath,stdoutSha256:sha(fs.readFileSync(readyOutPath)),stderrSha256:sha(fs.readFileSync(readyErrPath))});
  if(sha(fs.readFileSync(state.originalSibling))!==state.builtSHA||sha(fs.readFileSync(workerPath))!==seamWrapper.sha256)reject('ready后original/options/wrapper漂移');
  if(Date.now()>=deadline)reject('ready完成后原#12预算已耗尽');

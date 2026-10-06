@@ -1135,3 +1135,4 @@
 {"ts":"2026-10-06T00:37:40.963Z","actor":"research-gate","action":"research_open","task":"T-1062","research_task":"T-1062","card":"docs/research/t1062-local-word-timing/RESEARCH.md","failure_family":"t1062-local-word-timing-delivery","trigger_kind":"high-cost-feedback-loop"}
 {"ts":"2026-10-06T01:07:04.394Z","actor":"research-gate","action":"research_resume","task":"T-1062","card":"docs/research/t1062-local-word-timing/RESEARCH.md","card_sha256":"e3a986e75c120a5977717d86ed38b1b82a4f856c7bad9b7963b125a431fa82f4","decisions":[]}
 {"ts":"2026-10-06T04:23:02.763Z","actor":"taskctl","action":"start","task":"T-1062","sha_before":"68afe3a9e073","sha_after":"f640e332ac1d"}
+{"ts":"2026-10-06T06:10:37.809Z","actor":"taskctl","action":"block","task":"T-1066","reason":"并行用户会话新登记全系统超时修复同号T-1066；本分支独立本地出包8路径尚未实施，转T-1067继续，保留原审核和事件，不覆盖他会话或扩大T-1062。","sha_before":"7c306778e325","sha_after":"35d6bb6cefdd"}

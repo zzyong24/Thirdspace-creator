@@ -4,10 +4,10 @@
     "work_branch": "main"
   },
   "summary": {
-    "verticals": 58,
+    "verticals": 59,
     "tasks_done": 38,
-    "tasks_total": 149,
-    "tasks_pending": 111,
+    "tasks_total": 150,
+    "tasks_pending": 112,
     "verticals_complete": 3
   },
   "verticals": [
@@ -3062,7 +3062,26 @@
           "docs/verification/t1062/frontend-native-transfer.json",
           "docs/verification/t1062/frontend-native-adaptation-scope-independent-review.json",
           "orchestrator/verification/t1062-frontend-native-adaptation.mjs",
-          "docs/verification/t1062/frontend-native-adaptation-result.json"
+          "docs/verification/t1062/frontend-native-adaptation-result.json",
+          "backend/src/modules/production/production.repository.ts",
+          "backend/src/modules/production/production-native-public.integration.test.ts",
+          "frontend/src/features/creative-canvas/canvas-asset-picker.tsx",
+          "frontend/tests/e2e/wechat-article-workbench.spec.ts",
+          "frontend/src/app/(creator)/layout.tsx",
+          "frontend/src/app/(creator)/shell-router.tsx",
+          "frontend/src/components/shell/account-switcher.tsx",
+          "frontend/src/components/shell/workspace-initialization.tsx",
+          "frontend/src/components/shell/workspace-initialization.test.tsx",
+          "frontend/src/components/shell/account-switcher.test.tsx",
+          "frontend/src/server/persistence-client.ts",
+          "frontend/src/lib/http-transport.ts",
+          "frontend/src/components/overlays/overlay-routing.test.tsx",
+          "contract/src/internal/asset-asr-timing.ts",
+          "contract/src/internal/asset-asr.ts",
+          "backend/src/modules/production/production-asr-pcm.ts",
+          "backend/src/modules/production/production-asr-timing.ts",
+          "backend/src/modules/production/production-precise-asr-mapping.test.ts",
+          "backend/src/modules/production/production-precise-asr.integration.test.ts"
         ]
       },
       "step_read_set": {
@@ -3858,6 +3877,97 @@
           "orchestrator/verification/t1062-frontend-native-adaptation.mjs"
         ]
       },
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "T-1067",
+      "archetype": [
+        "orchestration"
+      ],
+      "task_id": "T-1067",
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "frontend/next.config.ts",
+        "frontend/scripts/desktop/build-sidecar.mjs",
+        "frontend/scripts/desktop/package.mjs",
+        "frontend/scripts/desktop/node-runtime.mjs",
+        "frontend/scripts/desktop/fetch-ffmpeg.mjs",
+        "frontend/scripts/desktop/package-local.mjs",
+        "frontend/scripts/desktop/package-local.test.mjs",
+        "frontend/scripts/desktop/execution-worker-runtime.mjs"
+      ],
+      "read_set": [
+        "docs/features/t1067-local-package-build-only.md",
+        "docs/features/t1067-local-package-build-only.review.md",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "PROJECT_CONTEXT.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/process/modules.config.example.json",
+        "orchestrator/process/progress.mjs",
+        "orchestrator/process/harness/verify-task.sh",
+        ".agents/skills/packaging-creatoros-release/SKILL.md",
+        ".agents/skills/packaging-creatoros-channel/SKILL.md",
+        "frontend/package.json",
+        "frontend/vitest.config.ts",
+        "frontend/src-tauri/tauri.conf.json",
+        "frontend/src-tauri/Cargo.toml",
+        "frontend/src-tauri/Cargo.lock",
+        "ai-worker/package.json",
+        "ai-worker/scripts/build.mjs",
+        "ai-worker/src/execution/codex-app-server.ts",
+        "frontend/scripts/desktop/creatoros-cli-runtime.mjs",
+        "frontend/scripts/desktop/verdict-key-material.mjs",
+        "frontend/scripts/desktop/verdict-artifact-hardening.mjs",
+        "frontend/scripts/desktop/client-config-release.mjs",
+        "frontend/scripts/desktop/license-project-key.mjs",
+        "frontend/scripts/desktop/tauri-signing-config.mjs",
+        "frontend/scripts/desktop/notarize.mjs",
+        "frontend/scripts/desktop/macos-runtime-compat.mjs",
+        "frontend/scripts/desktop/macos-runtime-signing.mjs",
+        "frontend/scripts/desktop/platform-paths.mjs",
+        "tools/windows-closure-rat/stage-layered-workers.mjs",
+        "tools/windows-closure-rat/creatoros-module-resolver.cjs",
+        ".github/workflows/desktop-release.yml",
+        "pnpm-lock.yaml",
+        "frontend/scripts/desktop/package-local.test.mjs",
+        "frontend/scripts/desktop/desktop-release-workflow.test.mjs",
+        "frontend/scripts/desktop/notarize.test.mjs",
+        "frontend/scripts/desktop/tauri-signing-config.test.mjs",
+        "frontend/scripts/desktop/node-runtime.test.mjs",
+        "frontend/scripts/desktop/build-sidecar.test.mjs",
+        "frontend/scripts/desktop/execution-worker-runtime.test.mjs",
+        "frontend/scripts/desktop/verdict-artifact-hardening.test.mjs",
+        "frontend/scripts/desktop/verdict-key-material.test.mjs",
+        "frontend/scripts/desktop/license-project-key.test.mjs",
+        "frontend/scripts/desktop/client-config-release.test.mjs",
+        "frontend/scripts/desktop/macos-runtime-compat.test.mjs",
+        "frontend/scripts/desktop/startup-safety-contract.test.mjs",
+        "tools/windows-closure-rat/creatoros-cli-runtime.test.mjs",
+        "tools/windows-closure-rat/stage-layered-workers.test.mjs",
+        "package.json",
+        "frontend/src/test/setup.ts",
+        "frontend/src/instrumentation.ts",
+        "frontend/src-tauri/src/lib.rs",
+        "frontend/src-tauri/placeholder-dist/index.html",
+        "frontend/src/server/verdict-token-gate.ts",
+        "frontend/src/server/ingestion/douyin-cdp.ts"
+      ],
+      "exclusive_resources": [
+        "creatoros-local-package-source"
+      ],
+      "step_write_set": {},
+      "step_read_set": {},
       "step_exclusive_resources": {},
       "commits": {}
     }

@@ -1,0 +1,34 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "recheck",
+  "summary": "完整复审T1066 SPEC SHA34c70c553ee3b08f70fbe0722d652c985940d9a7962375ae5bf755938fb6cfd8与固定完整8路径patch 0daae7c7c932b21689942291f76907e1d2f58d81eb858417997dd1a48fbb88be，8 before/after实际匹配MAIN、独立git apply --check0。沿实际已record初轮CONCERNS03a44833887f的major REV-001，不把追加blocker报告改成首次历史。显式源与copy后dest新增isFile/size>0闭同反例，独立重跑同12组合原patchRED1/新patchGREEN0全部row通过；原断言/default1/explicit0及Node25/Verdict/secret/worker路径/Codex/CLI/签名公证边界保持。无新finding，原范围8、T1062原18/commit先及next保护顺序保留。只准规格与当前固定八源准入，全部包装tests/装配/真实DMG/安装/model/listening仍待验。完整独评 /var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1066-r2-independent-actual-fme30bvh/t1066-complete-r2-review.json SHA4385f892d46368bd32df3fb0c66575e86fcb3a978dda801fb6862e3c70a922a6。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "resolved",
+      "severity": "major",
+      "category": "correctness",
+      "requirement_anchor": {
+        "id": "T1066-RESOURCE-INTEGRITY",
+        "quote": "HTTP错误、空缓存/空下载和缺必需资源仍报真实失败，不造工具或绕过激活。"
+      },
+      "acceptance_anchor": {
+        "id": "T1066-EMPTY-MEDIA-RESOURCE",
+        "quote": "核对原断言未删、额外验证显式0仍可选、空资源/版本/包外路径/凭证错误仍拒绝"
+      },
+      "where": "固定 local-minimal.patch 的 frontend/scripts/desktop/fetch-ffmpeg.mjs ensureStaticBinary 显式 BUNDLE_SRC 分支及 build-sidecar.mjs bundleMediaTools build-only 分支",
+      "failure_mode": "CREATOROS_PACKAGE_BUILD_ONLY=1 且 CREATOROS_FFMPEG_BUNDLE_SRC 或 CREATOROS_FFPROBE_BUNDLE_SRC 指向已存在0字节普通文件时，ensureStaticBinary显式分支仅exists即return；bundleMediaTools真实copy后仍只exists，并由新build-only条件跳过-version。因此空工具可进入sidecar，违反完整SPEC保留空资源拒绝的已确认要求。该结论是完整静态调用链反例，不冒充已运行构建。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "local-minimal.patch SHA256 d4e454dd7ab48f270540b445d874fb027c1679189649e28b3cfde53b68987586；固定fetch候选SHA f516ad4c0c348e1a225f1ba67bc4adf2375ce674d111fe1264385052e21034a8的显式源exists→return；固定sidecar候选SHA779683433f2467908a7000fab4c7a864669f5b1445cdb6a80ed5885437675bfa的copy/exists且build-only跳过-version。SPEC第13行和最后实际验证段明确保留空资源拒绝。",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "SPEC:T-1066:必须产生的行为与必须实际验证及关闭",
+      "suggestion": "在已批准8路径内补确定性普通文件且非零长度校验，至少覆盖两种显式源及copy后的实际文件；保留build-only跳过启动探针与取消人为deadline。用有意义隔离回归确认显式0B工具拒绝、非空资源允许进入装配，以及原缓存/下载空资源拒绝。无需恢复10MB阈值或新增生产范围。",
+      "resolution_evidence": "固定新8路径patch SHA0daae7c7c932b21689942291f76907e1d2f58d81eb858417997dd1a48fbb88be；fetch显式两个工具statSync.isFile且size>0，sidecar copy后的实际dest同样检查；独立重跑公共两个ensure函数*flag1/0*empty/directory/nonempty共12：原patch真实exit1，新patch真实exit0，全部新row满足；独立实际结果 /var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1066-r2-independent-actual-fme30bvh/independent-actual-resource-results.json SHAaf739a85338f338fa9a08512778c7afb59396fdc1643851a5b7cc5464e0eedef。全部原断言保留，sidecar真实装配仍待正式构建。",
+      "parent_id": ""
+    }
+  ]
+}

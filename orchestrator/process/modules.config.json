@@ -3269,6 +3269,90 @@
           "orchestrator/verification/t1062-frontend-native-adaptation.mjs"
         ]
       }
+    },
+    "T-1067": {
+      "task_id": "T-1067",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "write_set": [
+        "frontend/next.config.ts",
+        "frontend/scripts/desktop/build-sidecar.mjs",
+        "frontend/scripts/desktop/package.mjs",
+        "frontend/scripts/desktop/node-runtime.mjs",
+        "frontend/scripts/desktop/fetch-ffmpeg.mjs",
+        "frontend/scripts/desktop/package-local.mjs",
+        "frontend/scripts/desktop/package-local.test.mjs",
+        "frontend/scripts/desktop/execution-worker-runtime.mjs"
+      ],
+      "read_set": [
+        "docs/features/t1067-local-package-build-only.md",
+        "docs/features/t1067-local-package-build-only.review.md",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "PROJECT_CONTEXT.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/process/modules.config.example.json",
+        "orchestrator/process/progress.mjs",
+        "orchestrator/process/harness/verify-task.sh",
+        ".agents/skills/packaging-creatoros-release/SKILL.md",
+        ".agents/skills/packaging-creatoros-channel/SKILL.md",
+        "frontend/package.json",
+        "frontend/vitest.config.ts",
+        "frontend/src-tauri/tauri.conf.json",
+        "frontend/src-tauri/Cargo.toml",
+        "frontend/src-tauri/Cargo.lock",
+        "ai-worker/package.json",
+        "ai-worker/scripts/build.mjs",
+        "ai-worker/src/execution/codex-app-server.ts",
+        "frontend/scripts/desktop/creatoros-cli-runtime.mjs",
+        "frontend/scripts/desktop/verdict-key-material.mjs",
+        "frontend/scripts/desktop/verdict-artifact-hardening.mjs",
+        "frontend/scripts/desktop/client-config-release.mjs",
+        "frontend/scripts/desktop/license-project-key.mjs",
+        "frontend/scripts/desktop/tauri-signing-config.mjs",
+        "frontend/scripts/desktop/notarize.mjs",
+        "frontend/scripts/desktop/macos-runtime-compat.mjs",
+        "frontend/scripts/desktop/macos-runtime-signing.mjs",
+        "frontend/scripts/desktop/platform-paths.mjs",
+        "tools/windows-closure-rat/stage-layered-workers.mjs",
+        "tools/windows-closure-rat/creatoros-module-resolver.cjs",
+        ".github/workflows/desktop-release.yml",
+        "pnpm-lock.yaml",
+        "frontend/scripts/desktop/package-local.test.mjs",
+        "frontend/scripts/desktop/desktop-release-workflow.test.mjs",
+        "frontend/scripts/desktop/notarize.test.mjs",
+        "frontend/scripts/desktop/tauri-signing-config.test.mjs",
+        "frontend/scripts/desktop/node-runtime.test.mjs",
+        "frontend/scripts/desktop/build-sidecar.test.mjs",
+        "frontend/scripts/desktop/execution-worker-runtime.test.mjs",
+        "frontend/scripts/desktop/verdict-artifact-hardening.test.mjs",
+        "frontend/scripts/desktop/verdict-key-material.test.mjs",
+        "frontend/scripts/desktop/license-project-key.test.mjs",
+        "frontend/scripts/desktop/client-config-release.test.mjs",
+        "frontend/scripts/desktop/macos-runtime-compat.test.mjs",
+        "frontend/scripts/desktop/startup-safety-contract.test.mjs",
+        "tools/windows-closure-rat/creatoros-cli-runtime.test.mjs",
+        "tools/windows-closure-rat/stage-layered-workers.test.mjs",
+        "package.json",
+        "frontend/src/test/setup.ts",
+        "frontend/src/instrumentation.ts",
+        "frontend/src-tauri/src/lib.rs",
+        "frontend/src-tauri/placeholder-dist/index.html",
+        "frontend/src/server/verdict-token-gate.ts",
+        "frontend/src/server/ingestion/douyin-cdp.ts"
+      ],
+      "exclusive_resources": [
+        "creatoros-local-package-source"
+      ],
+      "verify_commands": {
+        "implementation": "pnpm -C frontend exec vitest run scripts/desktop/package-local.test.mjs scripts/desktop/desktop-release-workflow.test.mjs scripts/desktop/notarize.test.mjs scripts/desktop/tauri-signing-config.test.mjs && pnpm -C frontend exec vitest run scripts/desktop/node-runtime.test.mjs scripts/desktop/build-sidecar.test.mjs scripts/desktop/execution-worker-runtime.test.mjs scripts/desktop/verdict-artifact-hardening.test.mjs scripts/desktop/verdict-key-material.test.mjs scripts/desktop/license-project-key.test.mjs scripts/desktop/client-config-release.test.mjs scripts/desktop/macos-runtime-compat.test.mjs scripts/desktop/startup-safety-contract.test.mjs && node --test tools/windows-closure-rat/creatoros-cli-runtime.test.mjs tools/windows-closure-rat/stage-layered-workers.test.mjs && git diff --check"
+      }
     }
   }
 }

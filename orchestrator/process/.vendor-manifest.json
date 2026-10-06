@@ -1,6 +1,6 @@
 {
   "schema": "orchestrator-engine-vendor/v1",
-  "skill_version": "3.27.3",
+  "skill_version": "3.27.4",
   "files": {
     "anti-check.mjs": "96ffbbace4cdf3645643b8847d3e953c3a97e6b2c8e0cf1b9db1921ad8f415b8",
     "asset-check.config.example.json": "9f2309013bfe95b9960b891ccd74c40571645f0166c43d3b788c9b07bc4d54bc",
@@ -53,6 +53,7 @@
     "strict-receipts-migrate.mjs": "a88d60084739e2805f1d45f8774f7ccffed50711efdd57e7644f821805fa20c0",
     "taskctl.mjs": "f5d9660c87023b1320ba3703bd3b7ef6df9044356b271f6751d0343ea366e65d",
     "test-integrity.config.example.json": "0561bb0fdd83c0e879a6202a17c41f1cce4597a3d748eb6810a0f70e86d88a24",
-    "test-integrity.mjs": "1ec83518dd4cc513ce0557622c2107b5de1c0a555532c6a16a877b4074a40f70"
+    "test-integrity.mjs": "1ec83518dd4cc513ce0557622c2107b5de1c0a555532c6a16a877b4074a40f70",
+    "timeout-budget.mjs": "2a838a325eb513143194d7a916f91a4448531c1e4b3b62e92dc002758d01d6ca"
   }
 }
