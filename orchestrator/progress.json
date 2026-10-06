@@ -2552,7 +2552,7 @@
       "archetype": [
         "orchestration"
       ],
-      "task_id": "T-1066",
+      "task_id": "T-1066-worker",
       "tasks": [
         {
           "step": "implementation",
@@ -2584,7 +2584,7 @@
       "archetype": [
         "orchestration"
       ],
-      "task_id": "T-1066",
+      "task_id": "T-1066-frontend",
       "tasks": [
         {
           "step": "implementation",
@@ -2616,7 +2616,7 @@
       "archetype": [
         "orchestration"
       ],
-      "task_id": "T-1066",
+      "task_id": "T-1066-tooling",
       "tasks": [
         {
           "step": "implementation",

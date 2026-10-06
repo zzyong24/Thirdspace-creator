@@ -1931,7 +1931,7 @@
       "depends_on": []
     },
     "T-1066-worker": {
-      "task_id": "T-1066",
+      "task_id": "T-1066-worker",
       "archetype": [
         "orchestration"
       ],
@@ -1957,7 +1957,7 @@
       "depends_on": []
     },
     "T-1066-frontend": {
-      "task_id": "T-1066",
+      "task_id": "T-1066-frontend",
       "archetype": [
         "orchestration"
       ],
@@ -1983,7 +1983,7 @@
       "depends_on": []
     },
     "T-1066-tooling": {
-      "task_id": "T-1066",
+      "task_id": "T-1066-tooling",
       "archetype": [
         "orchestration"
       ],
