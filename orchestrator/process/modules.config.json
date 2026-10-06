@@ -1832,6 +1832,7 @@
       ],
       "tasks": [
         "installed-compatibility",
+        "installed-contract-bootstrap",
         "integration"
       ],
       "read_set": [
@@ -1880,7 +1881,8 @@
       ],
       "verify_commands": {
         "integration": "node orchestrator/verification/t1062-frontend-native-adaptation.mjs",
-        "installed-compatibility": "node orchestrator/verification/t1062-installed-migration-compatibility.mjs --evidence-root /Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/installed-db-ledger-clone-oqk19ypa"
+        "installed-compatibility": "node orchestrator/verification/t1062-installed-migration-compatibility.mjs --evidence-root /Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/installed-db-ledger-clone-oqk19ypa",
+        "installed-contract-bootstrap": "pnpm -C contract exec vitest run tests/endpoint-bootstrap.test.ts tests/registry.test.ts tests/client.test.ts"
       },
       "step_write_set": {
         "integration": [
@@ -2761,6 +2763,52 @@
           "backend/drizzle/lineages/installed-external/0100_traffic_unavailable.sql",
           "backend/drizzle/lineages/installed-external/0101_external_agent_connections.sql",
           "backend/drizzle/lineages/installed-external/meta/_journal.json"
+        ],
+        "installed-contract-bootstrap": [
+          "contract/src/endpoints.ts",
+          "contract/src/endpoint-definition.ts",
+          "contract/src/operations/account-groups.ts",
+          "contract/src/operations/ai.ts",
+          "contract/src/operations/analytics.ts",
+          "contract/src/operations/articles.ts",
+          "contract/src/operations/artifacts.ts",
+          "contract/src/operations/assets.ts",
+          "contract/src/operations/auth.ts",
+          "contract/src/operations/benchmark.ts",
+          "contract/src/operations/calibration.ts",
+          "contract/src/operations/candidate.ts",
+          "contract/src/operations/content-calendar.ts",
+          "contract/src/operations/creative-canvas.ts",
+          "contract/src/operations/creative-results.ts",
+          "contract/src/operations/execution.ts",
+          "contract/src/operations/favorites-folder.ts",
+          "contract/src/operations/graphic-posts.ts",
+          "contract/src/operations/ingestion.ts",
+          "contract/src/operations/intelligence.ts",
+          "contract/src/operations/knowledge.ts",
+          "contract/src/operations/learnings.ts",
+          "contract/src/operations/material-links.ts",
+          "contract/src/operations/notifications.ts",
+          "contract/src/operations/pages.ts",
+          "contract/src/operations/platform-accounts.ts",
+          "contract/src/operations/platform-collection.ts",
+          "contract/src/operations/positioning.ts",
+          "contract/src/operations/production.ts",
+          "contract/src/operations/projects.ts",
+          "contract/src/operations/publishing.ts",
+          "contract/src/operations/review-gate.ts",
+          "contract/src/operations/reviews.ts",
+          "contract/src/operations/scheduling.ts",
+          "contract/src/operations/search.ts",
+          "contract/src/operations/settings.ts",
+          "contract/src/operations/taxonomy.ts",
+          "contract/src/operations/topic-attribution.ts",
+          "contract/src/operations/trend-source.ts",
+          "contract/src/operations/visual-templates.ts",
+          "contract/src/operations/work-compositions.ts",
+          "contract/src/operations/work-sources.ts",
+          "contract/tests/endpoint-bootstrap.test.ts",
+          "docs/verification/t1062/installed-contract-bootstrap-implementation.md"
         ]
       },
       "step_read_set": {
@@ -3566,6 +3614,14 @@
           "backend/drizzle/**",
           "orchestrator/verification/t1062-installed-migration-compatibility.mjs",
           "docs/verification/t1062/installed-history-implementation.md"
+        ],
+        "installed-contract-bootstrap": [
+          "docs/features/t1062-consolidated-local-client-acceptance.md",
+          "orchestrator/SYSTEM_ARCHITECTURE.md",
+          "contract/src/**",
+          "contract/tests/**",
+          "contract/package.json",
+          "docs/verification/t1062/installed-contract-bootstrap-implementation.md"
         ]
       }
     },

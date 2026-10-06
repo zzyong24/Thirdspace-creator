@@ -3583,3 +3583,8 @@ Pattern-Ref: product-to-code-orchestrator/templates/DECISION_LOG_TEMPLATE.md
 ## DEC-T1062-INSTALLED-HISTORY-IMPLEMENTATION-20261006：落实已有旧库兼容要求
 
 Owner=agent 的机械实现选择，非用户typed capability，也不重置规格复审轮次。原批准SPEC cfbaf9不变：当前用户旧库保留与真实历史核验已在范围内。安装失败发现4个已执行旧身份，精确SQL和实际clone结构共同证明来源；新增archive-only，不引入历史业务代码。采用原三canonical加实际账本supplemental subset的参考catalog，原0128与fresh凭证行为不变，unknown/前缀/结构拒绝保持。完整105项单源不存在；两份非祖先来源如实标注为实际账本对应SQL。独立实现/scope评审不作为第四规格轮次，旧评审/研究事件不删除。公共工厂RED/GREEN及21回归实际发生，安装全功能仍待验。
+
+
+## DEC-T1062-INSTALLED-CONTRACT-BOOTSTRAP-20261006：消除原合同初始化循环
+
+Owner=agent 的机械实现选择，非用户typed capability或新规格复审。原已批准SPEC cfbaf9的真实安装和逐功能可用性覆盖本次修复。当前真实包账号/组成功但页面报creativeCanvasOperations初始化TDZ；独立Agent确认原源码直接操作入口亦实际exit1，不依赖混淆。原注册表与定义反向边移为叶子定义，原定义字节、公共重导出、操作schema/ID/注册顺序（含原重复展开）保留；40操作仅改定义import。43精确产品路径独立substep，不改原integration592、迁移283、原18或历史receipt，不放宽打包/安全/凭据。独评前不写产品；新回归、全合同与新包真实入口仍须现场验证。

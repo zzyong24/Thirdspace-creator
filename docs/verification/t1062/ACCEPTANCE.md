@@ -83,3 +83,14 @@ sync 实际 exit 0；reconcile 实际 exit 1，共 36 错误/1 告警，未写�
 
 
 独立implementation/scope评审已现场封存，空findings，不新启SPEC复审。评审独查原SPEC cfbaf9、283精确新scope/integration592、361原hash/mode、281 during-run字节绑定、完整三Gitjournal+274SQL及实际test/clone receipts；未打开DB或签安装/模型/听审。私有报告 installed-history-implementation-independent-final-a0sx5ugu/implementation-scope-review.json，SHA256 69cbc0757d5910df475c5ac3c6a597187f3551be11e6656243634a280e70ae93。
+
+
+## 2026-10-06 兼容修复新包的实际安装与页面失败
+
+新冻结候选005141ef3d775ab30998ed9a4531825526ebd1ac，固定入口实际exit0、四项基础44测试通过，构建前后源码干净。新DMG `/Users/zyongzhu/Downloads/CreatorOS-1.2.0.dmg`，SHA25679df24001e931ec833f84088473f096793c5223a1668c4b71723892c92ee8d05，662066662字节；镜像与包内签名exit0，277补充迁移文件全与源码逐字节相同。仍是本地ad-hoc未公证包，不是功能完成版。
+
+另一次六根离线备份grqklp0m及最后source/copy封闭检查实际exit0；安装前再次封闭检查exit0，原App另存、旧失败包另存，未恢复/重置用户库或激活。新包已实际安装启动，App47648、server47826、127.0.0.1:50227。动态CLI404操作、full访问、旧账号/组列表分别3项真实成功，原当前组null保留。旧迁移启动问题已解除。
+
+真实浏览器tab3客户端报creativeCanvasOperations初始化TDZ，页面不可用；A01安装/CLI部分有证据，但整体页面功能失败，A02及后续UI未通过，真实ASR/语义与业务夹具没有执行。退出打包冻结，落实原SPEC启动可用性的内部contract初始化修复；新包再次安装全功能仍待验，不将CLI成功代签页面。
+
+本次最终reconcile实际exit1，36错误/1告警，scope authorization与complexity guard通过；原始stdout SHA d1080ca226870c8aff0c2a574efa34aa3b9ed195b751f8259b59efd2a2ab5b73，私有final-fix-reconcile-receipt.json保留。未改基线或删历史失败。
