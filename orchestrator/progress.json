@@ -5,9 +5,9 @@
   },
   "summary": {
     "verticals": 59,
-    "tasks_done": 40,
-    "tasks_total": 154,
-    "tasks_pending": 114,
+    "tasks_done": 42,
+    "tasks_total": 155,
+    "tasks_pending": 113,
     "verticals_complete": 3
   },
   "verticals": [
@@ -2452,6 +2452,10 @@
           "status": "done"
         },
         {
+          "step": "installed-render-skill-owner",
+          "status": "pending"
+        },
+        {
           "step": "integration",
           "status": "pending"
         }
@@ -3443,6 +3447,12 @@
           "backend/src/modules/production/production-overlay-capture.ts",
           "backend/src/modules/production/production-native-public.integration.test.ts",
           "docs/verification/t1062/installed-overlay-capture-implementation.md"
+        ],
+        "installed-render-skill-owner": [
+          "backend/src/modules/ai/ai.service.ts",
+          "frontend/src/server/persistence-client.ts",
+          "frontend/src/server/__module_integration__/production-editor.persistence-client.test.ts",
+          "docs/verification/t1062/installed-render-skill-owner-implementation.md"
         ]
       },
       "step_read_set": {
@@ -4304,6 +4314,33 @@
           "contract/src/operations/production.ts",
           "contract/src/resources/production-editor.ts",
           "backend/src/modules/production/production.transport.ts"
+        ],
+        "installed-render-skill-owner": [
+          "docs/features/t1062-installed-render-skill-owner.md",
+          "docs/features/t1062-consolidated-local-client-acceptance.md",
+          "orchestrator/SYSTEM_ARCHITECTURE.md",
+          "backend/src/modules/ai/ai.service.ts",
+          "frontend/src/server/persistence-client.ts",
+          "frontend/src/server/__module_integration__/production-editor.persistence-client.test.ts",
+          "backend/src/modules/ai/ai.repository.ts",
+          "backend/src/modules/ai-runtime/effective-skill-snapshot.ts",
+          "backend/src/modules/ai/ai.task-execution.integration.test.ts",
+          "backend/src/schema/ai.ts",
+          "backend/src/workspace-scope.ts",
+          "backend/src/workspace-write.ts",
+          "backend/src/application/scheduling/collection-execution.ts",
+          "backend/src/application/scheduling/collection-execution.test.ts",
+          "backend/src/modules/production/production-native-public.integration.test.ts",
+          "backend/src/modules/production/production-video-material-owner.test.ts",
+          "backend/src/modules/production/production-video-material-hooks.test.ts",
+          "frontend/src/server/__module_integration__/production-video-material-root.persistence-client.test.ts",
+          "frontend/src/server/task-model-authority.test.ts",
+          "backend/package.json",
+          "backend/vitest.config.ts",
+          "frontend/package.json",
+          "frontend/vitest.config.ts",
+          "contract/src/resources/production-editor.ts",
+          "contract/src/operations/production.ts"
         ]
       },
       "step_exclusive_resources": {},

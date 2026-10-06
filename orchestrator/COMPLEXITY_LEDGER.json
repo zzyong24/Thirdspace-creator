@@ -2511,6 +2511,22 @@
       "reason": "原OpenCut构建工具/Bun argv及source/产物回执随已批准实际current交付更新；保留历史失败，不新增产品runtime。",
       "review": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/integration-complexity-readonly-review-g3hiqp92/independent-review.json",
       "acceptance": "仅本7文件/11类别当前精确SHA的既有机制预算重绑，独立只读报告SHA256 cab28137d8183a5c55ba2f7b8009c0a650522f29985c0480a501dc04e1364e0f；旧entries原样保留，不自动授权新hash，不代签claim、重新原18、全局Gate、安装功能或用户验收。"
+    },
+    {
+      "task_id": "T-1062",
+      "files": [
+        "backend/src/modules/ai/ai.service.ts"
+      ],
+      "file_sha256": "3d9a5edbdfac24cb8323ad6b6d8d5a26ecaed7f6ea1facbb6561b2cd1dc58ee5",
+      "categories": [
+        "native_executable"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1062-INSTALLED-RENDER-OWNER-20261006",
+      "scope_source": "docs/features/t1062-installed-render-skill-owner.md",
+      "reason": "仅372/1934行既有系统daemon注释命中；复用已有后台调度/任务执行，不新增原生程序、进程或runtime。仅此当前SHA预算，不授权未来机制。",
+      "review": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/render-owner-exact-ledger-independent-review-n2wm2jvn/readonly-ledger-review.json",
+      "acceptance": "独立静态报告SHA f445d4e5732867cba4913a0e737e10d9381d7f6f0f5cb589bb3b7d3c6acfd481；保全部旧entry/基线/失败，不签生产实现或测试。"
     }
   ],
   "historical_baselines": []

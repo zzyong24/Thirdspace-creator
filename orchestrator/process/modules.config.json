@@ -1835,6 +1835,7 @@
         "installed-contract-bootstrap",
         "installed-cli-receipt",
         "installed-overlay-capture",
+        "installed-render-skill-owner",
         "integration"
       ],
       "read_set": [
@@ -1894,6 +1895,17 @@
         "installed-overlay-capture": [
           "env DATABASE_URL= PGLITE_DATA_DIR= pnpm -C backend exec vitest run src/modules/production/production-native-public.integration.test.ts src/modules/production/production-video-material-owner.test.ts src/modules/production/production-video-material-hooks.test.ts --maxWorkers=1 --retry=0 --testTimeout=120000 --hookTimeout=120000",
           "env DATABASE_URL= PGLITE_DATA_DIR= pnpm -C frontend exec vitest run src/server/__module_integration__/production-video-material-root.persistence-client.test.ts --maxWorkers=1 --retry=0 --testTimeout=120000 --hookTimeout=120000"
+        ],
+        "installed-render-skill-owner": [
+          "python3 /Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/run-render-owner-isolated-checks-20261006.py root",
+          "python3 /Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/run-render-owner-isolated-checks-20261006.py backend",
+          "python3 /Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/run-render-owner-isolated-checks-20261006.py material-root",
+          "python3 /Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/run-render-owner-isolated-checks-20261006.py model",
+          "python3 /Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/run-render-owner-isolated-checks-20261006.py collection",
+          "python3 /Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/run-render-owner-isolated-checks-20261006.py backend-types",
+          "python3 /Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/run-render-owner-isolated-checks-20261006.py frontend-types",
+          "python3 /Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/run-render-owner-isolated-checks-20261006.py boundary",
+          "python3 /Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/run-render-owner-isolated-checks-20261006.py semantic"
         ]
       },
       "step_write_set": {
@@ -2835,6 +2847,12 @@
           "backend/src/modules/production/production-overlay-capture.ts",
           "backend/src/modules/production/production-native-public.integration.test.ts",
           "docs/verification/t1062/installed-overlay-capture-implementation.md"
+        ],
+        "installed-render-skill-owner": [
+          "backend/src/modules/ai/ai.service.ts",
+          "frontend/src/server/persistence-client.ts",
+          "frontend/src/server/__module_integration__/production-editor.persistence-client.test.ts",
+          "docs/verification/t1062/installed-render-skill-owner-implementation.md"
         ]
       },
       "step_read_set": {
@@ -3696,6 +3714,33 @@
           "contract/src/operations/production.ts",
           "contract/src/resources/production-editor.ts",
           "backend/src/modules/production/production.transport.ts"
+        ],
+        "installed-render-skill-owner": [
+          "docs/features/t1062-installed-render-skill-owner.md",
+          "docs/features/t1062-consolidated-local-client-acceptance.md",
+          "orchestrator/SYSTEM_ARCHITECTURE.md",
+          "backend/src/modules/ai/ai.service.ts",
+          "frontend/src/server/persistence-client.ts",
+          "frontend/src/server/__module_integration__/production-editor.persistence-client.test.ts",
+          "backend/src/modules/ai/ai.repository.ts",
+          "backend/src/modules/ai-runtime/effective-skill-snapshot.ts",
+          "backend/src/modules/ai/ai.task-execution.integration.test.ts",
+          "backend/src/schema/ai.ts",
+          "backend/src/workspace-scope.ts",
+          "backend/src/workspace-write.ts",
+          "backend/src/application/scheduling/collection-execution.ts",
+          "backend/src/application/scheduling/collection-execution.test.ts",
+          "backend/src/modules/production/production-native-public.integration.test.ts",
+          "backend/src/modules/production/production-video-material-owner.test.ts",
+          "backend/src/modules/production/production-video-material-hooks.test.ts",
+          "frontend/src/server/__module_integration__/production-video-material-root.persistence-client.test.ts",
+          "frontend/src/server/task-model-authority.test.ts",
+          "backend/package.json",
+          "backend/vitest.config.ts",
+          "frontend/package.json",
+          "frontend/vitest.config.ts",
+          "contract/src/resources/production-editor.ts",
+          "contract/src/operations/production.ts"
         ]
       }
     },

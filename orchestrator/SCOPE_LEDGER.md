@@ -18,3 +18,6 @@
 | 2026-10-06 | T-1062 安装 CLI 失败回执装配候选 | T1062-CLI-RECEIPT / 原 FR-CLI-05/06 | 0 | 0 | 0（只传原 public receipt，不改 operation/DTO） | 0 | 0 | pending：静态六路径准入待根会话复核；原592/283/45保持，原状态机与安全边界不改；未实现、未签测试或新包 |
 
 T-1062 installed-overlay-capture：既有空组共享创作的叠层捕获内部落实，1既有生产+1既有测试+1实施说明；新增领域/表/公开操作/DTO/角色均0。原各step与801历史保持，当前独立write_set共3，不使用旧18签新字节。
+
+
+| 2026-10-06 | T-1062 安装渲染冻结归属实现 | T1062-INSTALLED-RENDER-OWNER | 0 | 0 | 0（server-only sibling，公共操作签名/权限规则不变） | 0 | 0 | 静态准入exact4；旧daemon注释预算，不新增runtime/process；实现/新包/成片未验 |
