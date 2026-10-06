@@ -14,4 +14,3 @@
 限定生产写集：backend/src/migration-convergence.ts、backend/src/migration-convergence.test.ts、backend/src/migration-convergence-installed-lineages.json；三完整新增archive backend/drizzle/lineages/installed-keyring、installed-workbench、installed-external 内每个原SQL与meta/_journal.json；backend/drizzle/lineages/README.md补来源证据。控制/SPEC/研究/验收文件按原T-1062准入，原产品只读边界不扩。
 
 实施前独立复核本增量与精确scope。真实RED须复现原工厂拒绝这些身份，GREEN须经公共createDb升级并二次启动保留原全部账本、ID/行数及文件引用；新增旧凭证/asr/工作台/外部连接中性夹具字段保留。旧四基线及unknown/schema漂移/原前缀/损坏冻结拒绝仍运行；fresh不增加legacy结构。实际备份clone的公共工厂升级先于重包，再按固定入口重新打包并安装测首页、groups/accounts及全部功能，不以参考内存探针代签安装验收。
-
