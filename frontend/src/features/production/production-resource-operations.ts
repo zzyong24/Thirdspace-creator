@@ -1,3 +1,4 @@
+import { executionTimeoutMs } from "@creatoros/contract/timeout-policy";
 import {client} from "@/lib/contract-client";
 const POLL_MS = 4000;
 // [FE-H01] 后台长任务轮询退避上限:决策/渲染都是分钟级(MiniMax 下更久),不能设「最多轮
@@ -166,7 +167,7 @@ export async function readVideoDurationViaElement(file: File): Promise<number | 
         URL.revokeObjectURL(url);
         resolve(v);
       };
-      const timer = setTimeout(() => done(null), 10_000);
+      const timer = setTimeout(() => done(null), executionTimeoutMs(10_000));
       el.onloadedmetadata = () => {
         clearTimeout(timer);
         done(Number.isFinite(el.duration) ? el.duration : null);

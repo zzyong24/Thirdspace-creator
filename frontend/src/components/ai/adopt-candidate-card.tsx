@@ -26,6 +26,7 @@
  */
 
 import * as React from "react";
+import { TaskObservationNotice, useTaskObservation } from "@/components/ai/task-observation";
 import { useRouter } from "next/navigation";
 
 import { SectionCard } from "@/components/project/section-card";
@@ -92,6 +93,8 @@ export function AdoptCandidateCard<T>({
   doneLabel,
 }: AdoptCandidateCardProps<T>) {
   const router = useRouter();
+  const observation = useTaskObservation(`${taskType}:${String(inputData.projectId ?? "")}`);
+  const { pause: pauseObservation, capture: captureObservation } = observation;
   const [phase, setPhase] = React.useState<Phase>("idle");
   const [items, setItems] = React.useState<T[]>([]);
   // CollabField(COLLAB-02):保留原始 items(用于 patch)+ 人删掉的下标 —— 采纳前可逐条筛掉。
@@ -115,8 +118,9 @@ export function AdoptCandidateCard<T>({
   const claimedRef = React.useRef(false);
 
   React.useEffect(
-    () => () => {
-      cancelledRef.current = true;
+    () => {
+      cancelledRef.current = false;
+      return () => { cancelledRef.current = true; };
     },
     [],
   );
@@ -149,10 +153,12 @@ export function AdoptCandidateCard<T>({
   // hydration (resuming a queued/running task found server-side) drive the same machine.
   const pollUntilDone = React.useCallback(
     async (id: string) => {
-      for (let i = 0; i < MAX_POLLS; i++) {
-        if (cancelledRef.current) return;
+      const isCurrent = captureObservation();
+      for (let i = 0; ; i++) {
+        if (i > 0 && i % MAX_POLLS === 0 && !await pauseObservation()) return;
+        if (cancelledRef.current || !isCurrent()) return;
         await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS));
-        if (cancelledRef.current) return;
+        if (cancelledRef.current || !isCurrent()) return;
         // 拉实时步骤事件喂步骤日志(辅助信息,拉失败不影响主轮询)。
         try {
           const stepRows = (await client.listTaskSteps({
@@ -164,7 +170,7 @@ export function AdoptCandidateCard<T>({
             text: string;
             kind: string;
           }>;
-          if (!cancelledRef.current && Array.isArray(stepRows))
+          if (!cancelledRef.current && isCurrent() && Array.isArray(stepRows))
             setSteps(stepRows);
         } catch {
           /* 步骤是辅助信息 */
@@ -174,6 +180,7 @@ export function AdoptCandidateCard<T>({
           query: undefined,
           body: undefined,
         })) as { status: string };
+        if (cancelledRef.current || !isCurrent()) return;
         if (status.status === "awaiting_confirmation") {
           await enterReview(id);
           return;
@@ -183,9 +190,8 @@ export function AdoptCandidateCard<T>({
           return;
         }
       }
-      setPhase("error"); // budget exhausted
     },
-    [enterReview],
+    [enterReview, pauseObservation, captureObservation],
   );
 
   const start = React.useCallback(async () => {
@@ -322,7 +328,8 @@ export function AdoptCandidateCard<T>({
             </button>
           ) : null}
 
-          {phase === "running" ? (
+          <TaskObservationNotice {...observation} />
+          {phase === "running" && !observation.paused ? (
             <div data-slot="adopt-running" className="flex flex-col gap-2">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <span className="size-3.5 animate-spin rounded-full border-2 border-brand border-t-transparent" />

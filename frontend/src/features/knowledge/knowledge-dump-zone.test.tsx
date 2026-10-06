@@ -343,3 +343,27 @@ describe("KnowledgeDumpZone — 文件导入闭环(T-547)", () => {
     expect(mockRouter.refresh).not.toHaveBeenCalled();
   });
 });
+
+it("T-1066 两分钟观察结束保留文件与任务，继续查询不重复上传和解析", async () => {
+  vi.useFakeTimers();
+  const { act, screen } = await import("@testing-library/react");
+  try {
+    getAsset.mockResolvedValue({ id: "asset-slow", extractStatus: "running", extractedText: null });
+    getTask.mockResolvedValue({ id: "task-1", status: "running" });
+    const { container } = render(<KnowledgeDumpZone />);
+    const file = new File(["slow PDF"], "慢解析.pdf", { type: "application/pdf" });
+    fireEvent.change(container.querySelector('input[type="file"]')!, { target: { files: [file] } });
+    fireEvent.click(screen.getByRole("button", { name: /确认导入|开始导入/ }));
+    await act(async () => { await vi.advanceTimersByTimeAsync(120_000); });
+    expect(screen.getByRole("button", { name: "继续查询原任务" })).toBeTruthy();
+    expect(container.textContent).not.toContain("正文解析超时");
+    expect(createAITask).toHaveBeenCalledTimes(1);
+    expect(createUpload).toHaveBeenCalledTimes(1);
+    getAsset.mockResolvedValue({ id: "asset-slow", extractStatus: "done", extractedText: "迟到正文" });
+    fireEvent.click(screen.getByRole("button", { name: "继续查询原任务" }));
+    await act(async () => { await vi.advanceTimersByTimeAsync(500); });
+    expect(createKnowledge).toHaveBeenCalledWith(expect.objectContaining({ body: expect.objectContaining({ content: "迟到正文" }) }));
+    expect(createAITask).toHaveBeenCalledTimes(1);
+    expect(createUpload).toHaveBeenCalledTimes(1);
+  } finally { vi.useRealTimers(); }
+});

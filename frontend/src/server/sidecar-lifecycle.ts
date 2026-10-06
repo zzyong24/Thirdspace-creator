@@ -1,3 +1,4 @@
+import { executionTimeoutMs } from "@creatoros/contract/timeout-policy";
 /**
  * [T-365/T-362] sidecar 生命周期守护 —— 进程泄漏与库半写的 sidecar 侧双保险。
  *
@@ -6,7 +7,7 @@
  * 其一带 headless Chrome 树);孤儿/硬杀还并发写同一 PGlite → WAL 半写库损坏。
  *
  * 双保险分工(macOS/Linux,POSIX):
- *   壳侧(lib.rs):spawn 进程组 + 退出 killpg(SIGTERM → 5s → SIGKILL)——正常退出路径。
+ *   壳侧(lib.rs):spawn 进程组 + 退出 killpg(SIGTERM → 130s → SIGKILL)——正常退出路径。
  *   本模块(sidecar 侧):
  *     ① SIGTERM/SIGINT handler → 优雅退出(先 flush PGlite 再退)——接住壳侧的 SIGTERM;
  *     ② 孤儿自检:轮询 `process.ppid === 1`(父死被 init 收养)→ 同一条优雅退出——
@@ -30,7 +31,7 @@
  *
  * PGlite flush:persistence-client 装配完成后把 `dispose`(client.close(),flush WAL)挂在
  * `globalThis.__creatorosDisposePersistence`;这里若见到就调(没见到 = 库还没开,直接退)。
- * 观测永不伤主链路:全程 best-effort,优雅流程 3s 兜底强退。
+ * 观测永不伤主链路:全程 best-effort,优雅流程 120s 兜底强退。
  */
 
 export interface LifecycleProcess {
@@ -55,7 +56,7 @@ export interface LifecycleProcess {
  */
 export const SHUTDOWN_SENTINEL = "__CREATOROS_SHUTDOWN__";
 
-const GRACE_TIMEOUT_MS = 3_000;
+const GRACE_TIMEOUT_MS = executionTimeoutMs(3_000);
 const ORPHAN_POLL_MS = 2_000;
 
 let exiting = false;
@@ -123,7 +124,7 @@ export function installSidecarLifecycle(
     const stdin = proc.stdin;
     if (stdin) {
       // 停机哨兵:壳侧 kill 序列第①步写 `${SHUTDOWN_SENTINEL}\n` → 优雅退出(flush 库),
-      //   壳侧等 5s 后才 TerminateJobObject 硬杀 —— 与 macOS「SIGTERM → 5s → SIGKILL」同构。
+      //   壳侧等 130s 后才 TerminateJobObject 硬杀 —— 与 macOS「SIGTERM → 130s → SIGKILL」同构。
       stdin.on("data", (chunk) => {
         if (String(chunk).includes(SHUTDOWN_SENTINEL)) {
           void beginGracefulExit(proc, "收到壳侧停机哨兵(stdin)", log);

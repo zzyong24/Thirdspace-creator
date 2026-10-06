@@ -1,3 +1,4 @@
+import { executionTimeoutMs } from "@creatoros/contract/timeout-policy";
 import type {Page} from '@playwright/test';
 import {parseTrafficTables} from '@creatoros/backend/modules/analytics';
 import {DouyinNotLoggedInError} from './douyin-errors';
@@ -25,11 +26,11 @@ export function readTrafficPageState():false|'available'|'unavailable'{
 /** 只读实际作品详情页的流量分析表；不猜测未验证的私有 API。 */
 export async function readDouyinTrafficPage(page:Page,externalId:string,signal?:AbortSignal){
  if(!/^\d{10,25}$/.test(externalId))throw new Error('抖音作品标识无效');
- signal?.throwIfAborted();page.setDefaultTimeout(15_000);
- await page.goto(`https://creator.douyin.com/creator-micro/work-management/work-detail/${externalId}?enter_from=operation`,{waitUntil:'domcontentloaded',timeout:30_000});
+ signal?.throwIfAborted();page.setDefaultTimeout(executionTimeoutMs(15_000));
+ await page.goto(`https://creator.douyin.com/creator-micro/work-management/work-detail/${externalId}?enter_from=operation`,{waitUntil:'domcontentloaded',timeout:executionTimeoutMs(30_000)});
  try{
   await page.getByRole('tab',{name:'流量分析',exact:true}).click();
-  const ready=await page.waitForFunction(readTrafficPageState,undefined,{timeout:30_000});
+  const ready=await page.waitForFunction(readTrafficPageState,undefined,{timeout:executionTimeoutMs(30_000)});
   signal?.throwIfAborted();
   if(!page.url().includes(`/work-detail/${externalId}`))throw new Error('流量来源作品上下文已变化');
   if(await ready?.jsonValue()==='unavailable'){

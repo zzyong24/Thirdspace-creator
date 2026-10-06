@@ -2421,7 +2421,7 @@ pub struct ReqwestHttp {
 impl LicenseHttp for ReqwestHttp {
     fn post(&self, url: &str, body_json: &str) -> Result<LicenseHttpResponse, String> {
         let client = reqwest::blocking::Client::builder()
-            .timeout(self.timeout)
+            .timeout(self.timeout.max(std::time::Duration::from_secs(120)))
             .build()
             .map_err(|e| format!("http client 构建失败: {e}"))?;
         let resp = client
@@ -2505,7 +2505,7 @@ pub fn run_chain_and_persist(ctx: &ShellLicenseCtx, op: LicenseOp<'_>) -> GateDe
     let _guard = ctx.chain_lock.lock().unwrap();
     let config = LicenseConfig::from_env(ctx.machine_id.clone());
     let http = ReqwestHttp {
-        timeout: std::time::Duration::from_secs(10),
+        timeout: std::time::Duration::from_secs(120),
     };
     let clock = SystemClock;
     let points_owned = prod_points(ctx);
@@ -2568,7 +2568,7 @@ pub fn sync_mirror_to_sidecar(ctx: &ShellLicenseCtx, snap: &LicenseSnapshot) {
     })
     .to_string();
     let client = match reqwest::blocking::Client::builder()
-        .timeout(std::time::Duration::from_secs(5))
+        .timeout(std::time::Duration::from_secs(120))
         .build()
     {
         Ok(c) => c,
@@ -2648,7 +2648,7 @@ pub fn refresh_client_config_sidecar(ctx: &ShellLicenseCtx, trigger: ClientConfi
         return;
     }
     let client = match reqwest::blocking::Client::builder()
-        .timeout(std::time::Duration::from_secs(15))
+        .timeout(std::time::Duration::from_secs(120))
         .build()
     {
         Ok(client) => client,
@@ -2758,7 +2758,8 @@ pub fn startup_license_task(ctx: std::sync::Arc<ShellLicenseCtx>) {
         );
         // 等 sidecar 就绪 → 补同步展示副本(TCP 通后再缓 1s 让 Next 路由热身,best-effort)。
         let addr = format!("127.0.0.1:{}", ctx.sidecar_port);
-        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(90);
+        // 覆盖原启动总等待 30 分钟，并留结算余量；不改变心跳节奏。
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30 * 60 + 10);
         while std::time::Instant::now() < deadline {
             if std::net::TcpStream::connect(&addr).is_ok() {
                 std::thread::sleep(std::time::Duration::from_secs(1));
@@ -3226,7 +3227,7 @@ pub async fn license_latest_version(
     tauri::async_runtime::spawn_blocking(move || {
         let config = LicenseConfig::from_env(ctx.machine_id.clone());
         let http = ReqwestHttp {
-            timeout: std::time::Duration::from_secs(10),
+            timeout: std::time::Duration::from_secs(120),
         };
         let key = ctx.master_key_b64.as_deref().and_then(derive_license_key);
         let existing = read_snapshot_file(&license_file_path(&ctx.app_data_dir), key.as_ref());

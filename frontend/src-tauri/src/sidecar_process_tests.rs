@@ -198,3 +198,21 @@ fn concurrent_watch_and_stop_share_one_result() {
     owned.stop().unwrap();
     assert!(owned.0.lock().unwrap().child.is_none());
 }
+
+#[test]
+fn t1066_native_outer_allows_slow_inner_flush_and_signals_immediately() {
+    let mut port = FakePort { stops_after: Some(120_000), ..Default::default() };
+    assert!(GRACE >= Duration::from_secs(130));
+    assert!(FORCE >= Duration::from_secs(120));
+    stop_group(&mut port, GRACE, FORCE).unwrap();
+    assert_eq!(port.signals, vec![libc::SIGTERM]);
+    assert!(port.elapsed() < GRACE);
+}
+
+#[test]
+fn t1066_native_hung_cleanup_is_bounded_after_inner_flush_budget() {
+    let mut port = FakePort::default();
+    assert!(stop_group(&mut port, GRACE, FORCE).is_err());
+    assert_eq!(port.signals, vec![libc::SIGTERM, libc::SIGKILL]);
+    assert_eq!(port.elapsed(), GRACE + FORCE);
+}

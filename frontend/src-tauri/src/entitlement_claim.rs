@@ -532,7 +532,7 @@ struct PlainResponse {
 
 fn post_json(url: &url::Url, body: &str) -> Result<PlainResponse, String> {
     let client = reqwest::blocking::Client::builder()
-        .timeout(Duration::from_secs(10))
+        .timeout(Duration::from_secs(120))
         .redirect(reqwest::redirect::Policy::none())
         .build()
         .map_err(|_| "无法初始化领取网络连接".to_string())?;
@@ -613,7 +613,7 @@ fn consume_http(base_url: &str, path: &str, body: &str) -> Result<LicenseHttpRes
         .join(path)
         .map_err(|_| "授权服务路径无效".to_string())?;
     let client = reqwest::blocking::Client::builder()
-        .timeout(Duration::from_secs(10))
+        .timeout(Duration::from_secs(120))
         .redirect(reqwest::redirect::Policy::none())
         .build()
         .map_err(|_| "无法初始化授权网络连接".to_string())?;

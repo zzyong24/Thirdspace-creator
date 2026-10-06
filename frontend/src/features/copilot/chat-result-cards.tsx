@@ -15,6 +15,7 @@
  */
 
 import * as React from "react";
+import { TaskObservationNotice, useTaskObservation } from "@/components/ai/task-observation";
 import { useRouter } from "next/navigation";
 import {TaskRuntimeActions,taskRuntimeStatus,type RuntimeTask} from "@/components/ai/task-runtime-actions";
 import { client } from "@/lib/contract-client";
@@ -80,14 +81,17 @@ export function ChatDiagnosisCard({
   readonly pollIntervalMs?: number;
 }) {
   const router = useRouter();
+  const observation = useTaskObservation();
+  const { pause: pauseObservation, capture: captureObservation } = observation;
   const [phase, setPhase] = React.useState<LockPhase>("idle");
   const taskRef=React.useRef<{id:string}|null>(null),subjectRef=React.useRef<string|null>(blindPredict?.outputId??null),attemptRef=React.useRef<string|null>(null);
   const [runtimeTask,setRuntimeTask]=React.useState<RuntimeTask|null>(null);
   // 卸载后停止在 await 链里 setState(与旧盲预测行同款长任务守卫)。
   const cancelledRef = React.useRef(false);
   React.useEffect(
-    () => () => {
-      cancelledRef.current = true;
+    () => {
+      cancelledRef.current = false;
+      return () => { cancelledRef.current = true; };
     },
     [],
   );
@@ -99,6 +103,7 @@ export function ChatDiagnosisCard({
     if (!blindPredict || phase === "locking" || phase === "locked") return;
     setPhase("locking");
     void (async () => {
+      const isCurrent = captureObservation();
       try {
         // 1. 确保有 ContentOutput 挂点(纯站内项目可能还没走制作)。
         let subjectId = subjectRef.current;
@@ -122,15 +127,17 @@ export function ChatDiagnosisCard({
         })) as { id: string };
         taskRef.current=task;
         // 3. 轮询到 awaiting_confirmation → confirmTask 铸 draft Prediction → 拿 predictionId。
-        for (let i = 0; i < 75; i++) {
-          if (cancelledRef.current) return;
+        for (let i = 0; ; i++) {
+          if (i > 0 && i % 75 === 0 && !await pauseObservation()) return;
+          if (cancelledRef.current || !isCurrent()) return;
           await new Promise((r) => setTimeout(r, pollIntervalMs));
-          if (cancelledRef.current) return;
+          if (cancelledRef.current || !isCurrent()) return;
           const status = (await client.getTask({
             params: { taskId: task.id },
             query: undefined,
             body: undefined,
           })) as RuntimeTask;
+          if (cancelledRef.current || !isCurrent()) return;
           setRuntimeTask(status);
           if(status.executionTaskId&&["paused","waiting_user","unknown_result","failed","cancelled","blocked"].includes(taskRuntimeStatus(status))){setPhase("error");return;}
           if (status.status === "awaiting_confirmation") {
@@ -142,7 +149,7 @@ export function ChatDiagnosisCard({
               query: undefined,
               body: undefined,
             });
-            if (cancelledRef.current) return;
+            if (cancelledRef.current || !isCurrent()) return;
             // listPredictions 客户端直返数组(isList,createdAt desc)—— 与稿面
             // readBlindPrediction 同款读法。
             const raw = await client.listPredictions({
@@ -167,23 +174,22 @@ export function ChatDiagnosisCard({
                 body: undefined,
               });
             }
-            if (!cancelledRef.current) {
+            if (!cancelledRef.current && isCurrent()) {
               setPhase(draft ? "locked" : "error");
               router.refresh();
             }
             return;
           }
           if (status.status === "cancelled" || status.status === "failed") {
-            if (!cancelledRef.current) setPhase("error");
+            if (!cancelledRef.current && isCurrent()) setPhase("error");
             return;
           }
         }
-        if (!cancelledRef.current) setPhase("error");
       } catch {
-        if (!cancelledRef.current) setPhase("error");
+        if (!cancelledRef.current && isCurrent()) setPhase("error");
       }
     })();
-  }, [blindPredict, phase, router, pollIntervalMs]);
+  }, [blindPredict, phase, router, pollIntervalMs, pauseObservation, captureObservation]);
 
   if (!diagnosis || diagnosis.dimensions.length === 0) return null;
   return (
@@ -231,6 +237,7 @@ export function ChatDiagnosisCard({
           优先修改：{diagnosis.priorityFixes.join("；")}
         </p>
       ) : null}
+      <TaskObservationNotice {...observation} />
       {blindPredict ? (
         // [T-103a] 盲预测确认门:锁定前是候选(可继续追问重生);点「锁定」= immutable。
         phase === "locked" ? (

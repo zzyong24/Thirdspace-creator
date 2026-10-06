@@ -1,3 +1,4 @@
+import { executionTimeoutMs } from "@creatoros/contract/timeout-policy";
 import {runAccountGroupStartup} from '@creatoros/backend/application/workspace/startup';
 import {hasLegacyDouyinCredentialEvidence} from '@creatoros/backend/application/workspace/credential-evidence';
 import {createTaxonomyEntityAccess} from "@creatoros/backend/application/taxonomy-entity-access";
@@ -3210,7 +3211,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     let current = url;
     let discoveredFeed = false;
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 15_000);
+    const timer = setTimeout(() => controller.abort(), executionTimeoutMs(15_000));
     try {
       for (let hop = 0; hop <= 6; hop += 1) {
         await assertUrlAllowed(current);

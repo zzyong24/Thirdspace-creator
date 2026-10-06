@@ -151,3 +151,36 @@ describe("ChatThesisCard(可选论点骨架,T-730)", () => {
     });
   });
 });
+
+it("T-1066 观察到期保留原任务，继续查询可读取慢完成结果", async () => {
+  vi.useFakeTimers();
+  try {
+    getTask.mockResolvedValue({ status: "running" });
+    const { act } = await import("@testing-library/react");
+    render(<ChatThesisCard taskId="task-slow-original" error={null} />);
+    await act(async () => { await vi.advanceTimersByTimeAsync(360_000); });
+    expect(document.querySelector('[data-slot="chat-thesis-error"]')).toBeNull();
+    expect(screen.getByRole("button", { name: "继续查询原任务" })).toBeTruthy();
+    getTask.mockResolvedValue({ status: "awaiting_confirmation" });
+    fireEvent.click(screen.getByRole("button", { name: "继续查询原任务" }));
+    await act(async () => { await vi.advanceTimersByTimeAsync(4_000); });
+    expect(document.querySelector('[data-slot="chat-thesis-review"]')).toBeTruthy();
+    expect(getTask.mock.calls.every(call => call[0].params.taskId === "task-slow-original")).toBe(true);
+  } finally { vi.useRealTimers(); }
+});
+
+it("T-1066 在途读取不叠加，卸载后迟到结果不再读取候选", async () => {
+  vi.useFakeTimers();
+  try {
+    const { act } = await import("@testing-library/react");
+    let resolve!: (value: unknown) => void;
+    getTask.mockReturnValue(new Promise(r => { resolve = r; }));
+    const { unmount } = render(<ChatThesisCard taskId="task-inflight" error={null} />);
+    await act(async () => { await vi.advanceTimersByTimeAsync(100_000); });
+    expect(getTask).toHaveBeenCalledTimes(1);
+    unmount();
+    await act(async () => { resolve({ status: "awaiting_confirmation" }); await vi.advanceTimersByTimeAsync(4_000); });
+    expect(listTaskResults).not.toHaveBeenCalled();
+    expect(getTask).toHaveBeenCalledTimes(1);
+  } finally { vi.useRealTimers(); }
+});

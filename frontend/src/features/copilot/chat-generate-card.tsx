@@ -15,6 +15,7 @@
  */
 
 import * as React from "react";
+import { TaskObservationNotice, useTaskObservation } from "@/components/ai/task-observation";
 import { useRouter } from "next/navigation";
 
 import { client } from "@/lib/contract-client";
@@ -135,6 +136,8 @@ export function ChatGenerateCard({
   materialRole?: "broll" | "cover";
 }) {
   const router = useRouter();
+  const observation = useTaskObservation(taskId);
+  const { pause: pauseObservation, capture: captureObservation } = observation;
   const [phase, setPhase] = React.useState<Phase>(
     error || !taskId ? "error" : "running",
   );
@@ -193,13 +196,15 @@ export function ChatGenerateCard({
     if (!taskId || error) return;
     let abandoned = false;
     void (async () => {
-      for (let i = 0; i < MAX_POLLS; i++) {
-        if (abandoned) return;
+      const isCurrent = captureObservation();
+      for (let i = 0; ; i++) {
+        if (i > 0 && i % MAX_POLLS === 0 && !await pauseObservation()) return;
+        if (abandoned || !isCurrent()) return;
         // 首次立即查：用户重进项目时任务往往已终态，不能先虚假转圈 4 秒；
         // 后续轮次再按间隔等待。
         if (i > 0) {
           await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS));
-          if (abandoned) return;
+          if (abandoned || !isCurrent()) return;
         }
         let status: string;
         try {
@@ -208,6 +213,7 @@ export function ChatGenerateCard({
             query: undefined,
             body: undefined,
           })) as { status: string };
+          if (abandoned || !isCurrent()) return;
           status = t.status;
         } catch {
           continue; // 单次拉取失败不终止(下轮再试)
@@ -221,7 +227,7 @@ export function ChatGenerateCard({
             })) as unknown as Array<{ resultData: Record<string, unknown> }>;
             const last = results[results.length - 1];
             const got = last ? parseGenerated(last.resultData) : null;
-            if (abandoned) return;
+            if (abandoned || !isCurrent()) return;
             if (got) {
               setCandidate(got);
               setPhase("review");
@@ -234,7 +240,7 @@ export function ChatGenerateCard({
           return;
         }
         if (status === "succeeded") {
-          if (!abandoned) setPhase("done");
+          if (!abandoned && isCurrent()) setPhase("done");
           return;
         }
         if (status === "cancelled" || status === "failed") {
@@ -251,20 +257,19 @@ export function ChatGenerateCard({
           } catch {
             /* 原因读取失败不影响错误主态(兜底老文案) */
           }
-          if (!abandoned) {
+          if (!abandoned && isCurrent()) {
             if (detail) setFailDetail(detail);
             setPhase("error");
           }
           return;
         }
       }
-      if (!abandoned) setPhase("error"); // 轮询预算耗尽
     })();
     return () => {
       abandoned = true;
     };
     // taskId 稳定;错误态不轮询。
-  }, [taskId, error]);
+  }, [taskId, error, pauseObservation, captureObservation]);
 
   const adopt = React.useCallback(async () => {
     if (!taskId) return;
@@ -308,7 +313,8 @@ export function ChatGenerateCard({
         {aliasLabel ? ` · 可引用为 ${aliasLabel}` : ""}
       </span>
 
-      {phase === "running" ? (
+      <TaskObservationNotice {...observation} />
+      {phase === "running" && !observation.paused ? (
         <div
           data-slot="chat-generate-running"
           className="flex items-center gap-2 text-[12px] text-muted-foreground"

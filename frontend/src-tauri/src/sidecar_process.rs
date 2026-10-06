@@ -5,8 +5,9 @@ use std::sync::Mutex;
 use std::time::{Duration, Instant};
 
 const POLL: Duration = Duration::from_millis(150);
-const GRACE: Duration = Duration::from_secs(5);
-const FORCE: Duration = Duration::from_secs(2);
+// sidecar 内部落盘 120 秒，壳侧另留 10 秒结算余量。
+const GRACE: Duration = Duration::from_secs(130);
+const FORCE: Duration = Duration::from_secs(120);
 
 pub(crate) struct OwnedSidecar(Mutex<State>);
 struct State {
