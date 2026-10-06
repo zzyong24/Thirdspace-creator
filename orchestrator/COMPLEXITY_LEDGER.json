@@ -2561,6 +2561,25 @@
       "reason": "独立逐类核对：命中原daemon/keychain/keyring/Rust注释及既有组合根装配，与85f基点marker字节相同；本次只经真实任务service读取冻结owner/runtime并按原claim/executor执行，不新增进程、凭据存储或工具链。",
       "review": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/render-owner-final-implementation-independent-review-o5demg3a/final-implementation-review.json",
       "acceptance": "只重绑当前精确已独评源SHA，原entries/基线/失败全保留；独评报告SHA fc86cc4ffeae09e75c01cdf8be4b69fa2bcd0ab91914fef0c63c0aeef4f83147。不代签安装、MP4、跨筛选执行恢复或全局通过。"
+    },
+    {
+      "task_id": "T-1068",
+      "files": [
+        "frontend/src-tauri/src/lib.rs"
+      ],
+      "file_sha256": "a14f90e620d7f7cacd9dbb610d44576f86409696341bba16f579c16a1b58f0f5",
+      "categories": [
+        "credential_store",
+        "installer_deploy",
+        "ipc",
+        "language_toolchain",
+        "os_signing"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-T1068-LOOPBACK-PROXY",
+      "scope_source": "docs/features/t1068-local-client-startup.md",
+      "reason": "登记2e3ee1de既有宿主文件精确复杂度基线；本任务只让固定127.0.0.1首页探测client直连，不修改凭据、IPC、安装或签名机制，不授权新增这些机制。源内容变更后需重绑精确hash并独立核验窄diff。",
+      "acceptance": "只登记预算；不代表实现、打包、安装或原生窗口验收通过。"
     }
   ],
   "historical_baselines": []
