@@ -1,3 +1,4 @@
+import {executionTimeoutMs} from "@creatoros/contract/timeout-policy";
 import {
   topicReadReservationSchema,
   topicReadReceiptSchema,
@@ -87,7 +88,7 @@ export function createTopicWorkerReads(deps: {
           Accept:
             "application/rss+xml, application/atom+xml, application/xml, text/xml, */*",
         },
-        signal: AbortSignal.any([signal, AbortSignal.timeout(15000)]),
+        signal: AbortSignal.any([signal, AbortSignal.timeout(executionTimeoutMs())]),
       });
       if (response.status >= 300 && response.status < 400) {
         const location = response.headers.get("location");

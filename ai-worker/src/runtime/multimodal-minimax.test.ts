@@ -117,7 +117,7 @@ function deps(fetchImpl: typeof fetch): MinimaxAdapterDeps {
   return {
     fetch: fetchImpl,
     sleep: async () => {}, // 即时,零成本
-    pollIntervalMs: 0,
+    pollIntervalMs: 5000,
     maxPollAttempts: 10,
   };
 }

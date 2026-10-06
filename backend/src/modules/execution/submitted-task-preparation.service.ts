@@ -1,3 +1,4 @@
+import {executionTimeoutMs, remainingDeadlineMs} from "@creatoros/contract/timeout-policy";
 import {workspaceFilter} from "../../workspace-scope";
 import {executionBudgetSchema,isContinuousExecutionBudget,type ExecutionBudget} from "@creatoros/contract/execution-worker";
 import {isDeepStrictEqual} from "node:util";
@@ -19,7 +20,7 @@ export function createSubmittedTaskPreparationService(db:Db,deps:{
  fail(context:RequestContext,taskId:string,message:string):Promise<unknown>;
  resolveToolParameters?(definition:z.infer<typeof chatWorkerInputSchema>["tools"][number]):Promise<{schema:Record<string,unknown>;parameters:z.ZodType}>;
 }){
- if(!Number.isSafeInteger(deps.deadlineMs)||deps.deadlineMs<1)throw new Error("准备期限无效");
+ const preparationBudgetMs=executionTimeoutMs(deps.deadlineMs);
  const now=deps.now??Date.now,controller=new AbortController(),active=new Map<string,Promise<void>>();
  // 轮询游标只用于公平扫描；重启丢失游标不改变持久重试次数、截止时间或原任务 ID。
  let cursor:string|undefined;
@@ -50,7 +51,9 @@ export function createSubmittedTaskPreparationService(db:Db,deps:{
    const binding=createAgenticToolBinding({[definition.name]:{version:definition.version,effect:definition.effect,execution:definition.execution,parameters}}).forCall(parent,calls,call);
    const receipt=workerToolResultReceiptSchema.parse(JSON.parse(call.resultText??"")),result=agenticToolOutcomeSchema.parse(receipt.output),data=object(result.data);
    if(binding.validationOutcome || binding.executionToolName!==definition.name || receipt.toolCallId!==binding.toolCallId || receipt.toolName!==binding.toolName || result.status!=="ok" || result.sideEffect!=="committed" || result.error || data.kind!==chatSubmittedTaskResultKind(definition.name) || data.taskId!==task.id)throw new Error("子任务没有真实成功回执");
-   const stamp=now(),continuous=isContinuousExecutionBudget(parent.executionBudget),deadlineAt=continuous?parent.deadlineAt:new Date(Date.parse(task.requestedAt)+deps.deadlineMs).toISOString();
+   const recordedPreparation=runtime.hostTaskPreparation===undefined?undefined:recoverySchema.parse(runtime.hostTaskPreparation);
+   // 只归一新预算；历史恢复记录的绝对截止时间必须保持，不能重新延长。
+   const stamp=now(),continuous=isContinuousExecutionBudget(parent.executionBudget),deadlineAt=continuous?parent.deadlineAt:recordedPreparation?recordedPreparation.deadlineAt:new Date(Date.parse(task.requestedAt)+preparationBudgetMs).toISOString();
    if(deadlineAt!==null && stamp>=Date.parse(deadlineAt))return task.executionTaskId?null:{failed:"任务准备已超过原定期限，请重新发起"};
    const inheritedBudget=continuous?executionBudgetSchema.parse({...executionBudgetSchema.parse(parent.executionBudget),deadlineMs:deadlineAt===null?null:Date.parse(deadlineAt)-Date.parse(task.requestedAt)}):undefined;
    if(task.executionTaskId){
@@ -71,7 +74,9 @@ export function createSubmittedTaskPreparationService(db:Db,deps:{
  async function run(context:RequestContext,taskId:string,signal:AbortSignal){
   signal.throwIfAborted();const claim=await claimed(context,taskId,signal);signal.throwIfAborted();if(!claim)return;
   if("failed" in claim){await deps.fail(context,taskId,claim.failed!);return;}
-  const bounded=AbortSignal.any([signal,AbortSignal.timeout(claim.deadlineAt===null?deps.deadlineMs:Math.max(1,Math.min(deps.deadlineMs,Date.parse(claim.deadlineAt)-now())))]);
+  const remaining=remainingDeadlineMs(claim.deadlineAt===null?null:Date.parse(claim.deadlineAt),now());
+  if(remaining===0){await deps.fail(context,taskId,"任务准备已超过原定期限，请重新发起");return;}
+  const bounded=remaining===undefined?signal:AbortSignal.any([signal,AbortSignal.timeout(remaining)]);
   try{await (claim.inheritedBudget ? deps.prepare(context,taskId,bounded,claim.inheritedBudget) : deps.prepare(context,taskId,bounded));bounded.throwIfAborted();}
   catch(error){
    if(signal.aborted)throw error;

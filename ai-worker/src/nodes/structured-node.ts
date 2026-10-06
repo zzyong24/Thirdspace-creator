@@ -1,3 +1,4 @@
+import {executionTimeoutMs} from "@creatoros/contract/timeout-policy";
 import { StructuredOutputError } from "./structured-output-error";
 export { StructuredOutputError } from "./structured-output-error";
 import { findGenerationFailure } from "../execution/generation-error";
@@ -64,7 +65,7 @@ export interface RunStructuredNodeInput<T> {
   /** 限制单次响应 token，避免小型结构化任务被超长输出拖慢。 */
   maxOutputTokens?: number;
   /**
-   * 单次模型请求时限。默认 90 秒；长结构节点可显式放宽，运行时仍会限制在
+   * 单次模型请求时限。默认 120 秒；长结构节点可显式放宽，运行时仍会限制在
    * 15–180 秒，防止端点挂起让任务永久 running。
    */
   timeoutMs?: number;
@@ -224,10 +225,10 @@ export function isStructuredResponseParseError(error: unknown): boolean {
 // 模型端点挂起(不响应也不报错)→ `await` 永不 settle → 调它的 AI 任务(script.review 审核 /
 // topic.enrich 补全 / calibration.diagnose 等)永远卡 running,前端一直转圈。加 AbortSignal.timeout
 // 把「挂起」变成「reject(TimeoutError)」→ 调用方的 try/catch 接住 → 任务进入真实失败终态。
-// 默认 90s；少数长结构节点可在调用处显式放宽，但不允许无界挂起。
-const DEFAULT_MODEL_CALL_TIMEOUT_MS = 90_000;
-const MIN_MODEL_CALL_TIMEOUT_MS = 15_000;
-// 普通节点仍默认 90 秒。制作视频的 scenes/cards 会显式请求 10 分钟，因为官方渠道
+// 默认 120s；少数长结构节点可在调用处显式放宽，但不允许无界挂起。
+const DEFAULT_MODEL_CALL_TIMEOUT_MS = 120_000;
+const MIN_MODEL_CALL_TIMEOUT_MS = 120_000;
+// 普通节点仍默认 120 秒。制作视频的 scenes/cards 会显式请求 10 分钟，因为官方渠道
 // 在真实 Windows 日志中仅 scenes 就需要 101 秒；这里给这些少数长任务留出空间，同时
 // 仍保留 15 分钟硬上界，防止断开的端点让后台任务永久 running。
 const MAX_MODEL_CALL_TIMEOUT_MS = 900_000;
@@ -240,7 +241,7 @@ export function resolveStructuredNodeTimeoutMs(
   }
   return Math.min(
     MAX_MODEL_CALL_TIMEOUT_MS,
-    Math.max(MIN_MODEL_CALL_TIMEOUT_MS, Math.round(requestedMs)),
+    executionTimeoutMs(Math.max(MIN_MODEL_CALL_TIMEOUT_MS, Math.round(requestedMs))),
   );
 }
 

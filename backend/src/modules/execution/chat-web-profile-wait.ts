@@ -1,3 +1,4 @@
+import {executionTimeoutMs} from "@creatoros/contract/timeout-policy";
 import { setTimeout as delay } from "node:timers/promises";
 import { BrowserProfileBusyError } from "./execution-browser-profile-lease.service";
 
@@ -7,7 +8,7 @@ export async function waitForChatWebProfile<T>(
   signal: AbortSignal,
   options: { timeoutMs?: number; pollMs?: number } = {},
 ): Promise<T> {
-  const started = performance.now(), deadline = started + (options.timeoutMs ?? 60_000);
+  const started = performance.now(), deadline = started + (executionTimeoutMs(options.timeoutMs));
   let waited = false;
   for (;;) {
     signal.throwIfAborted();

@@ -1,3 +1,4 @@
+import {executionTimeoutMs} from "@creatoros/contract/timeout-policy";
 import {createHash} from "node:crypto";
 import {setTimeout as delay} from "node:timers/promises";
 import {z} from "zod";
@@ -36,7 +37,7 @@ export function createScriptSimilarityEvaluator(deps:SourcePorts&{ai:Pick<AiServ
   const attemptId=`script-sim:${createHash("sha256").update(JSON.stringify([ctx.userId,ctx.accountId,body])).digest("hex")}`;
   const created=await deps.ai.createTask(ctx,{taskType:"script.source_similarity",attemptId,inputData:body});
   if(["queued","running"].includes(created.status)){await deps.prepare(ctx,created.id);await deps.wake();}
-  const until=Date.now()+(deps.waitMs??120000);
+  const until=Date.now()+(executionTimeoutMs(deps.waitMs));
   while(true){
    const task=await deps.ai.getTask(ctx,created.id);
    if(task.status==="succeeded"){

@@ -1,3 +1,4 @@
+import {executionTimeoutMs} from "@creatoros/contract/timeout-policy";
 import type { GuardedLaunchOptions } from "./chromium-guard";
 
 import { isSafeWebDomain,webDomainFromUrl } from "./web-domain";
@@ -219,6 +220,7 @@ async function realOpenWebContext(
     return launchWithBrowser(sel => {
       options.signal?.throwIfAborted();
       return chromium.launchPersistentContext(authDir, {
+          timeout: executionTimeoutMs(180_000),
       headless,
       viewport: { width: 1440, height: 900 },
       ...chromiumSandboxOpts(),
@@ -228,6 +230,8 @@ async function realOpenWebContext(
       });
     });
   }, { ...options, label: "登录浏览器窗口" });
+  ctx.setDefaultTimeout(executionTimeoutMs());
+  ctx.setDefaultNavigationTimeout(executionTimeoutMs());
   return ctx as unknown as WebSessionCapableContext;
 }
 
@@ -250,13 +254,13 @@ export async function loginWeb(
   opts: { authDir: string; url: string; domain: string; timeoutSec?: number },
   deps: WebSessionDeps = {},
 ): Promise<{ loggedIn: boolean }> {
-  const timeoutSec = opts.timeoutSec ?? 300;
+  const timeoutSec = executionTimeoutMs(opts.timeoutSec === undefined ? undefined : opts.timeoutSec * 1000, 300_000) / 1000;
   const ctx = await openSessionContext(opts.authDir, false, deps);
   const cookieUrl = `https://${opts.domain}`;
   try {
     const page = ctx.pages()[0] ?? (await ctx.newPage());
     await page
-      .goto(opts.url, { waitUntil: "domcontentloaded", timeout: 30_000 })
+      .goto(opts.url, { waitUntil: "domcontentloaded", timeout: executionTimeoutMs() })
       .catch(() => {}); // 打不开也不阻断登录窗口(用户可手动导航)
     for (let i = 0; i < timeoutSec; i++) {
       const cookies = await ctx.cookies(cookieUrl).catch(() => [] as CookieLike[]);
@@ -327,7 +331,7 @@ export async function openWebLoginWindow(
   const ctx = await openSessionContext(opts.authDir, false, deps); // 有头,让用户自己登
   const page = ctx.pages()[0] ?? (await ctx.newPage());
   await page
-    .goto(opts.url, { waitUntil: "domcontentloaded", timeout: 30_000 })
+    .goto(opts.url, { waitUntil: "domcontentloaded", timeout: executionTimeoutMs() })
     .catch(() => {}); // 打不开也不阻断(用户可在窗口里手动导航)
   let settled = false;
   const closeOnce = async (): Promise<void> => {

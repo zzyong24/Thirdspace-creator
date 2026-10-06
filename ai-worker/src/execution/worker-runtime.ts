@@ -1,3 +1,4 @@
+import {executionTimeoutMs, remainingDeadlineMs} from "@creatoros/contract/timeout-policy";
 import type {runVideoDecisionsInWorker} from "./video-decisions-worker";
 import type {runAssetProcessingInWorker} from "./asset-processing-worker";
 import type {runTranscribeInWorker} from "./transcribe-worker-run";
@@ -60,7 +61,11 @@ export function createExecutionWorker(deps: WorkerDependencies) {
     const requestId = randomUUID();
     return new Promise((resolve, reject) => {
       const onAbort = () => { cleanup(); reject(new Error("WORKER_CANCELLED")); };
-      const timer = setTimeout(() => {cleanup(); reject(new Error("HOST_PORT_TIMEOUT"));}, ["executeAgenticTool","acquireTranscribeProfile","acquireTranscribeChannel","readChatWebReadSession"].includes(port) && active && sameExecution(active.execution,execution) ? active.deadlineAt===null ? 600000 : Math.max(1,active.deadlineAt-Date.now()) : 30000);
+      // 每个端口共享原领取任务的绝对deadline；continuous由原取消/心跳/租约监督。
+      // 素材准备含登录取流、抽音和保存，不能再由独立30秒限误杀。
+      const waitMs = active && sameExecution(active.execution, execution)
+        ? remainingDeadlineMs(active.deadlineAt) : executionTimeoutMs();
+      const timer = waitMs === undefined ? undefined : setTimeout(() => {cleanup(); reject(new Error("HOST_PORT_TIMEOUT"));}, waitMs);
       const cleanup = () => {clearTimeout(timer); signal?.removeEventListener("abort", onAbort); pending.delete(requestId);};
       pending.set(requestId, {resolve, reject, cleanup});
       signal?.addEventListener("abort", onAbort, {once: true});

@@ -1,3 +1,4 @@
+import {executionTimeoutMs} from "@creatoros/contract/timeout-policy";
 import {workspaceFilter,assertWritableWorkspace} from "../../workspace-scope";
 import {requireAccountId} from "./benchmark.errors";
 import {createHash,randomUUID} from 'node:crypto';
@@ -103,7 +104,7 @@ export function createBenchmarkTranscriptionService(db:Db,deps:BenchmarkTranscri
    const [work]=await db.select().from(benchmarkWorks).where(workWhere(ctx,workId));if(!work)throw new Error('BENCHMARK_WORK_NOT_FOUND');
    if(work.transcript?.trim())return {status:'reused' as const,transcript:work.transcript};
    const mapped=await service.submit(ctx,workId);if(deps.wake)deps.wake();else void service.run(ctx,mapped.aiTaskId).catch(()=>{});
-   const expires=Date.now()+Math.max(0,options.waitMs??120000);
+   const expires=Date.now()+executionTimeoutMs(options.waitMs);
    while(!shutdown.signal.aborted){
     const task=await tasks.get(ctx,mapped.executionTaskId);
     if(task.status==='succeeded'){

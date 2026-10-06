@@ -1,3 +1,4 @@
+import {executionTimeoutMs} from "@creatoros/contract/timeout-policy";
 // runExecutionTask —— 执行层编排(T-255a,live dispatch 范式:persistence-client 在
 // execution.tasks.create 后 `void runExecutionTask(...)` 后台跑,HTTP 立即返回,UI 轮询)。
 //
@@ -88,7 +89,7 @@ async function withExecutionDeadline<T>(
             const err = new ExecutionTimeoutError(timeoutSec);
             controller.abort(err);
             reject(err);
-          }, timeoutSec * 1000);
+          }, executionTimeoutMs(timeoutSec * 1000));
         });
   // 丢弃中止:executor 若不响应 signal(挂死),这条 race 腿保证编排立即收尾
   // (任务由 discard 落 cancelled;悬空的 work promise 无人等待,进程内自然回收)。

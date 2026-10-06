@@ -1,3 +1,4 @@
+import {executionTimeoutMs} from "@creatoros/contract/timeout-policy";
 import { fork, type ChildProcess } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { workerMessageSchema, workerPortInputSchemas, sameExecution, type ExecutionRef, type HostMessage, type WorkerPort } from "@creatoros/contract/execution-worker";
@@ -62,7 +63,7 @@ export function createWorkerSupervisor(options: WorkerSupervisorOptions) {
     const run = current;
     if (!current.cancelTimer) current.cancelTimer = setTimeout(() => {
       if (child === handle && current === run) void forceStop(handle).catch(() => {});
-    }, options.shutdownGraceMs ?? 5000);
+    }, executionTimeoutMs(options.shutdownGraceMs));
   };
   const start = (): Promise<string[]> => {
     if (cleanupFailure) return Promise.reject(cleanupFailure);
@@ -76,7 +77,7 @@ export function createWorkerSupervisor(options: WorkerSupervisorOptions) {
       const startupTimer = setTimeout(() => {
         startupTimedOut = true;
         void forceStop(processHandle).then(() => reject(new Error("WORKER_START_TIMEOUT")), reject);
-      }, options.startupTimeoutMs ?? 15000);
+      }, executionTimeoutMs(options.startupTimeoutMs));
       processHandle.on("error", () => {clearTimeout(startupTimer); reject(new Error("WORKER_START_FAILED"));});
       processHandle.on("exit", () => {
         clearTimeout(startupTimer);
@@ -194,7 +195,7 @@ export function createWorkerSupervisor(options: WorkerSupervisorOptions) {
       let rejectCleanup!: (error: Error) => void;
       const failed = new Promise<never>((_resolve, reject) => { rejectCleanup = reject; });
       let cleanup: Promise<void> | undefined;
-      const killTimer = setTimeout(() => { cleanup = forceStop(handle); void cleanup.catch(rejectCleanup); }, options.shutdownGraceMs ?? 5000);
+      const killTimer = setTimeout(() => { cleanup = forceStop(handle); void cleanup.catch(rejectCleanup); }, executionTimeoutMs(options.shutdownGraceMs));
       try { await Promise.race([exited, failed]); await cleanup; await Promise.all([...cleanups.values()]); if (cleanupFailure) throw cleanupFailure; }
       finally { clearTimeout(killTimer); }
     },

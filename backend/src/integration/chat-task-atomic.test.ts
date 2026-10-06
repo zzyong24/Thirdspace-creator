@@ -172,7 +172,7 @@ it("停止等待在途准备收口，停止后不再重领；并发回读共用�
  await expect(recovery.prepare(f.ctx,id)).rejects.toThrow();expect(prepare).toHaveBeenCalledTimes(1);
 });
 
-it.each(["stop","deadline"])("实际纯准备挂起后 %s 能收口，迟到读取不能再创建执行映射",async reason=>{
+it.each(["stop","continuous"])("实际纯准备挂起后 %s 保留原取消权，迟到读取不能再创建执行映射",async reason=>{
  const {createStructuredBusinessExecutionService}=await import("../modules/ai-runtime/structured-business-execution.service");
  const f=await fixture(),result=await f.host.execute(f.ref,{callId:f.call.callId}),id=(result.data as any).taskId;
  const [child]=await db.select().from(aiTasks).where(eq(aiTasks.id,id));
@@ -180,9 +180,9 @@ it.each(["stop","deadline"])("实际纯准备挂起后 %s 能收口，迟到读�
  let release!:()=>void;const prepare=vi.fn(async()=>{await new Promise<void>(r=>{release=r;});return {};});
  const business=createStructuredBusinessExecutionService(db,{budget,maxOutputTokens:128,adapters:{"planning.thesis":{skillId:"planning.thesis",capability:"planning.thesis",prepare,project:()=>{throw new Error("unused");}}}});
  await business.recoverQueued(async()=>{});expect(prepare).not.toHaveBeenCalled();
- const recovery=createSubmittedTaskPreparationService(db,{deadlineMs:reason==="deadline"?1000:60000,prepare:(c,id,signal)=>business.prepare(c,id,signal),fail:f.ai.markFailed});
+ const recovery=createSubmittedTaskPreparationService(db,{deadlineMs:120000,prepare:(c,id,signal)=>business.prepare(c,id,signal),fail:f.ai.markFailed});
  let preparationError:unknown;const work=recovery.prepare(f.ctx,id).catch(error=>{preparationError=error;});let stopped=false;
- try{await vi.waitFor(()=>expect(release,String(preparationError)).toBeDefined());const stop=(reason==="stop"?recovery.stop():work).then(()=>{stopped=true;});await vi.waitFor(()=>expect(stopped).toBe(true),{timeout:2500});release();await stop;await work;await Promise.resolve();const [current]=await db.select().from(aiTasks).where(eq(aiTasks.id,id));expect(current!.executionTaskId).toBeNull();expect(current!.status).toBe(reason==="deadline"?"failed":"queued");}
+ try{await vi.waitFor(()=>expect(release,String(preparationError)).toBeDefined());const stop=(reason==="stop"?recovery.stop():(async()=>{await new Promise(resolve=>setTimeout(resolve,1500));expect(stopped).toBe(false);return recovery.stop();})()).then(()=>{stopped=true;});await vi.waitFor(()=>expect(stopped).toBe(true),{timeout:2500});release();await stop;await work;await Promise.resolve();const [current]=await db.select().from(aiTasks).where(eq(aiTasks.id,id));expect(current!.executionTaskId).toBeNull();expect(current!.status).toBe("queued");}
  finally{release?.();await work;await recovery.stop();}
 });
 
