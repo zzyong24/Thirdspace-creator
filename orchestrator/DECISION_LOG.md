@@ -3600,3 +3600,17 @@ Owner=agent 的机械控制记录，非用户 typed capability，不开启规格
 独立只读报告 `/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/integration-complexity-readonly-review-g3hiqp92/independent-review.json`，SHA256 `cab28137d8183a5c55ba2f7b8009c0a650522f29985c0480a501dc04e1364e0f`。本次只追加7文件的11既有类别当前SHA预算；原entries、历史baseline、SPEC、任务、scope、guard、markers和产品字节均原样保留。不扩大Rust/Bun工具链、凭据存储、二进制或进程权限；persistence-client仅为原PUBLIC-PORT-WIRING准入的同transaction公开父项目归属接线。
 
 本条不把此前claim失败改签成功，不签Owner=user或新能力许可。ROOT独占控制面正常应用候选、前置校验及提交后才能正常claim原integration；仅治理记录变更无需重包，实际228安装包与后续控制HEAD身份区分。原18历史成功、missing/FAIL和当前安装验收仍按真实证据，不代签全局Gate、安装功能、模型、听审或用户验收。
+
+
+## DEC-T1062-INSTALLED-CLI-RECEIPT-20261006：保留同一失败终态的公开回执
+
+Owner=agent 的既有合同落实候选。当前为静态设计与精确准入候选，未应用、未 claim、未实现、未跑新测试；根会话复核并按正常控制提交和租约准入后才允许改产品。原批准 SPEC cfbaf9 不变，不消费 DEC-106201 或开启新规格周期。原 CLI FR-CLI-05、FR-CLI-06 与 API-CLI-002 已要求真实失败、原 requestId、失败不自动重试以及非零失败退出；T1062 的真实安装与逐功能验收覆盖本次装配修复。
+
+真实安装记录显示：第一次业务拒绝 HTTP409，随后素材关联已完成，再查同一 key/input 的失败 invocation 却被 gateway 映为 HTTP200，CLI 丢失已有 receipt 后输出 ok:true/data:null，source 回读仍404。服务端原状态机不重执是正确的，保留全部旧失败原始证据。只准入三个生产文件和三个既有测试文件，共六条精确路径；gateway 将 failed receipt 映为非2xx，DispatchClient 与 CLI 只保留已有公开 receipt 的原 status、requestId、taskId/targetRefs 与既有布尔状态及 meta.requestId。失败不重执，running、未知结果、成功缓存和结果过期语义不改；不投影数据库 errorCode，不新增 DTO、SQL、operation、身份或权限机制。
+
+原 integration592、installed-compatibility283、installed-contract-bootstrap45 路径与原验证命令逐项保持。六路径使用独立 installed-cli-receipt step，原 integration801 快照中两个 MCP 文件的旧记录保留为历史，不能签成新字节通过。预览/渲染问题不进入本候选。要求先取得真实公共调用链 RED，再执行最小修复与 GREEN、类型、旧安全/幂等回归和重新打包安装实测；本条不预签任何实际测试、安装或用户功能验收。
+
+
+## DEC-T1062-INSTALLED-OVERLAY-CAPTURE-20261006：落实纯组剪辑叠层证明
+
+Owner=agent 的既有行为实现选择；原SPEC cfbaf9、用户空组共享创作/本地安装验收授权与原592/283/45、801及Original18不变，不新开规格周期或用户typed capability。实际228包纯组手工save/get3成功，preview/render真实428未创建render任务；捕获仍requireAccountId是直接原因。新增独立3路径step（1生产、1既有测试、1说明），复用workspaceFilter与真实getEditor父授权，捕获/明细group取真实production并精确匹配，即便空明细亦不豁免。legacy仅保原无group+真实账号null/初始组边界，显式组没有null/账号兜底。可空版本metadata缺已验证值时保NULL，不能声称withWorkspaceWrite核验ctx epoch或据此授权。原v1摘要、exact文件、lineage、保存可选失败安全行为均保留。独立静态审查与实际RED/GREEN、公共调用、新包仍需分别记录；不改变旧数据库或平台账号操作。

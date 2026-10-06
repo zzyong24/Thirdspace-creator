@@ -1833,6 +1833,8 @@
       "tasks": [
         "installed-compatibility",
         "installed-contract-bootstrap",
+        "installed-cli-receipt",
+        "installed-overlay-capture",
         "integration"
       ],
       "read_set": [
@@ -1882,7 +1884,17 @@
       "verify_commands": {
         "integration": "node orchestrator/verification/t1062-frontend-native-adaptation.mjs",
         "installed-compatibility": "node orchestrator/verification/t1062-installed-migration-compatibility.mjs --evidence-root /Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/installed-db-ledger-clone-oqk19ypa",
-        "installed-contract-bootstrap": "pnpm -C contract exec vitest run tests/endpoint-bootstrap.test.mjs tests/registry.test.ts tests/client.test.ts"
+        "installed-contract-bootstrap": "pnpm -C contract exec vitest run tests/endpoint-bootstrap.test.mjs tests/registry.test.ts tests/client.test.ts",
+        "installed-cli-receipt": [
+          "env DATABASE_URL= PGLITE_DATA_DIR= pnpm -C frontend exec vitest run src/app/api/v1/dispatch/route.test.ts --maxWorkers=1 --retry=0 --testTimeout=120000 --hookTimeout=120000",
+          "pnpm -C mcp-server exec vitest run tests/dispatch.test.ts tests/cli.test.ts --maxWorkers=1 --retry=0 --testTimeout=120000 --hookTimeout=120000",
+          "pnpm -C mcp-server typecheck",
+          "pnpm -C frontend typecheck"
+        ],
+        "installed-overlay-capture": [
+          "env DATABASE_URL= PGLITE_DATA_DIR= pnpm -C backend exec vitest run src/modules/production/production-native-public.integration.test.ts src/modules/production/production-video-material-owner.test.ts src/modules/production/production-video-material-hooks.test.ts --maxWorkers=1 --retry=0 --testTimeout=120000 --hookTimeout=120000",
+          "env DATABASE_URL= PGLITE_DATA_DIR= pnpm -C frontend exec vitest run src/server/__module_integration__/production-video-material-root.persistence-client.test.ts --maxWorkers=1 --retry=0 --testTimeout=120000 --hookTimeout=120000"
+        ]
       },
       "step_write_set": {
         "integration": [
@@ -2810,6 +2822,19 @@
           "contract/tests/endpoint-bootstrap.test.mjs",
           "docs/verification/t1062/installed-contract-bootstrap-implementation.md",
           "contract/vitest.config.ts"
+        ],
+        "installed-cli-receipt": [
+          "frontend/src/app/api/v1/dispatch/route.ts",
+          "mcp-server/src/dispatch.ts",
+          "mcp-server/src/cli.ts",
+          "frontend/src/app/api/v1/dispatch/route.test.ts",
+          "mcp-server/tests/dispatch.test.ts",
+          "mcp-server/tests/cli.test.ts"
+        ],
+        "installed-overlay-capture": [
+          "backend/src/modules/production/production-overlay-capture.ts",
+          "backend/src/modules/production/production-native-public.integration.test.ts",
+          "docs/verification/t1062/installed-overlay-capture-implementation.md"
         ]
       },
       "step_read_set": {
@@ -3623,6 +3648,54 @@
           "contract/tests/**",
           "contract/package.json",
           "docs/verification/t1062/installed-contract-bootstrap-implementation.md"
+        ],
+        "installed-cli-receipt": [
+          "docs/features/t1062-consolidated-local-client-acceptance.md",
+          "docs/superpowers/specs/2026-08-15-creatoros-codex-cli.md",
+          "docs/verification/t1062/installed-cli-receipt-implementation.md",
+          "orchestrator/SYSTEM_ARCHITECTURE.md",
+          "backend/src/modules/cli-invocations/**",
+          "backend/src/db.ts",
+          "backend/src/schema/**",
+          "contract/src/**",
+          "frontend/src/app/api/v1/dispatch/**",
+          "frontend/src/server/**",
+          "frontend/src/test/**",
+          "frontend/vitest.config.ts",
+          "frontend/package.json",
+          "frontend/tsconfig.json",
+          "mcp-server/src/**",
+          "mcp-server/tests/**",
+          "mcp-server/vitest.config.ts",
+          "mcp-server/package.json",
+          "mcp-server/tsconfig.json",
+          "orchestrator/process/modules.config.json",
+          "docs/verification/t1062/frontend-native-adaptation-scope.json",
+          "orchestrator/verification/t1062-frontend-native-adaptation.mjs"
+        ],
+        "installed-overlay-capture": [
+          "docs/features/t1062-consolidated-local-client-acceptance.md",
+          "orchestrator/SYSTEM_ARCHITECTURE.md",
+          "backend/src/modules/production/production-overlay-capture.ts",
+          "backend/src/modules/production/production-native-public.integration.test.ts",
+          "backend/src/modules/production/production.service.ts",
+          "backend/src/modules/production/production-editor.repository.ts",
+          "backend/src/modules/production/production-preview.ts",
+          "backend/src/schema/production.ts",
+          "backend/src/schema/production-file-bindings.ts",
+          "backend/src/workspace-scope.ts",
+          "backend/src/workspace-write.ts",
+          "frontend/src/server/persistence-client.ts",
+          "backend/src/modules/production/production-video-material-owner.test.ts",
+          "backend/src/modules/production/production-video-material-hooks.test.ts",
+          "frontend/src/server/__module_integration__/production-video-material-root.persistence-client.test.ts",
+          "backend/package.json",
+          "backend/vitest.config.ts",
+          "docs/verification/t1062/installed-overlay-capture-implementation.md",
+          "contract/src/workspace-operation-scope.ts",
+          "contract/src/operations/production.ts",
+          "contract/src/resources/production-editor.ts",
+          "backend/src/modules/production/production.transport.ts"
         ]
       }
     },
