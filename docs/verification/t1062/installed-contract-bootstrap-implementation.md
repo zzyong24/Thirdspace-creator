@@ -30,3 +30,10 @@ flowchart LR
 独立复核同意将唯一新测试改为Node ESM的endpoint-bootstrap.test.mjs，保留全部42独立子进程入口与全部断言，只移除as const类型语法并把新子进程/外层观察预算设120000/135000。不加跨层Node类型、不改TS生产检查或忽略错误，不移植其他会话的运行时222预算。原TS实际RED/GREEN、类型失败和完整源码字节保存在私有目录及own stash bf7642fa；正常释放旧租约、提交精确测试路径控制后重新claim再恢复已审候选。43产品/44 substep数量与原592/283保持。
 
 新mjs的type/fullsuite、新包与实际页面都需重新验证；原TS测试版本已发生结果不能称mjs版本当场RED。公共初始化协议和全部断言保留的字节差异另独立核对，不删除历史失败。
+
+
+## 新回归文件的精确发现配置
+
+mjs版本现场contract/frontend typecheck均exit0；完整测试实际仅61文件325项，因为旧Vitest include只匹配.ts。该结果只证明原suite，不签新42回归。独立只读复核同意另准入既有contract/vitest.config.ts一条路径，只在原include数组追加精确tests/endpoint-bootstrap.test.mjs，保留原.ts glob、Node环境和其他配置，不删测试或扩通配范围。
+
+当前精确产品写集44=42源+1mjs+1测试配置，substep45含本说明；原integration592、compat283、SPECcfbaf9与原18不变。已hash核验私有保存43候选，并保留own stash5d5c854f，正常释放/控制提交/重新claim后恢复，仅对新配置执行上述独审的增补。要求当前完整实际62文件367项且真包含新42，原focused真3文件49项；当前新观察尚未发生。

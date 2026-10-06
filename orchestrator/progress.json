@@ -3420,7 +3420,8 @@
           "contract/src/operations/work-compositions.ts",
           "contract/src/operations/work-sources.ts",
           "contract/tests/endpoint-bootstrap.test.mjs",
-          "docs/verification/t1062/installed-contract-bootstrap-implementation.md"
+          "docs/verification/t1062/installed-contract-bootstrap-implementation.md",
+          "contract/vitest.config.ts"
         ]
       },
       "step_read_set": {

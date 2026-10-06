@@ -3588,3 +3588,6 @@ Owner=agent 的机械实现选择，非用户typed capability，也不重置规�
 ## DEC-T1062-INSTALLED-CONTRACT-BOOTSTRAP-20261006：消除原合同初始化循环
 
 Owner=agent 的机械实现选择，非用户typed capability或新规格复审。原已批准SPEC cfbaf9的真实安装和逐功能可用性覆盖本次修复。当前真实包账号/组成功但页面报creativeCanvasOperations初始化TDZ；独立Agent确认原源码直接操作入口亦实际exit1，不依赖混淆。原注册表与定义反向边移为叶子定义，原定义字节、公共重导出、操作schema/ID/注册顺序（含原重复展开）保留；40操作仅改定义import。43精确产品路径独立substep，不改原integration592、迁移283、原18或历史receipt，不放宽打包/安全/凭据。独评前不写产品；新回归、全合同与新包真实入口仍须现场验证。
+
+
+同一DEC-T1062-INSTALLED-CONTRACT-BOOTSTRAP的测试发现校正：Node ESM新回归改为mjs后，旧Vitest仅匹配.ts，实际61/325不覆盖新42。独立复核准入既有config只追加精确mjs路径；当前44产品/45step，所有原测试/合同/范围保持，须重新实际62/367和3/49。Owner仍agent的机械测试装配，无新用户capability/规格周期。
