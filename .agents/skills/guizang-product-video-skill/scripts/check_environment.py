@@ -12,7 +12,8 @@ import subprocess
 import sys
 
 
-def run(args, cwd=None, timeout=30):
+def run(args, cwd=None, timeout=120):
+    timeout=max(120, timeout) # 执行预算下限；并非poll或媒体时长。
     try:
         p=subprocess.run(args,cwd=cwd,capture_output=True,text=True,timeout=timeout)
         return {'ok':p.returncode==0,'stdout':p.stdout.strip(),'stderr':p.stderr.strip(),'output':(p.stdout+p.stderr).strip()}
@@ -88,14 +89,14 @@ console.log(JSON.stringify(result));'''
     # Always recheck browser execution, even when package metadata is cached.
     if not missing and (a.engine=='browser' or not cached):
         if a.engine=='browser':
-            result=run([paths['node'],'-e',"const {chromium}=require('playwright');(async()=>{const b=await chromium.launch({headless:true});const p=await b.newPage();await p.setContent('<p>ready</p>');if(await p.textContent('p')!=='ready')throw Error('DOM failed');await b.close();})().catch(e=>{console.error(e.message);process.exit(1)});"],project)
+            result=run([paths['node'],'-e',"const {chromium}=require('playwright');async function close(b){let timer;try{await Promise.race([b.close(),new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('browser-close-timeout')),120000)})]);}finally{clearTimeout(timer);}};(async()=>{const b=await chromium.launch({headless:true});const p=await b.newPage();p.setDefaultTimeout(120000);p.setDefaultNavigationTimeout(120000);await p.setContent('<p>ready</p>');if(await p.textContent('p')!=='ready')throw Error('DOM failed');await close(b);})().catch(e=>{console.error(e.message);process.exit(1)});"],project,570)
             browser={'launched':result['ok'],'playwrightVersion':modules['playwright']['version']}
             if not result['ok']:
                 cached=False
                 missing.append('browser-launch');warnings.append(result['output'][:1200])
         else:
             # Invoke the resolved local CLI: no npx package fetching on the ready path.
-            result=run([paths['node'],hf['cli'],'doctor','--json'],project,60)
+            result=run([paths['node'],hf['cli'],'doctor','--json'],project,120)
             try:
                 payload=json.loads(result.get('stdout',result['output']))
                 failed,optional=hyperframes_failures(payload)

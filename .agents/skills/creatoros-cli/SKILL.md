@@ -93,6 +93,8 @@ Describe the write or confirm operation again. Use the exact schema and explicit
 
 When a call returns a `taskId`, record its account and request ID. Use the same task ID for `tasks get` or `tasks wait`. A timeout or interrupted terminal does not cancel the backend job and must not trigger a replacement task.
 
+项目等待规范：`tasks wait --timeout` 的显式正超时最短 120 秒，省略表示持续观察。两分钟是下限，不是转录或生成的总预算；等待结束保留原 taskId 和账号，不取消后台任务、不重建重复任务。`--poll-interval` 是轮询间隔，不放大到两分钟。
+
 On success, read back and report the current version ID/version, account, project, output/artifact, preserved source or asset associations that the public contract exposes, and current production state. State unknown fields honestly. Do not automatically start image, storyboard, render, or publish work; wait for a separate explicit user request.
 
 ## Error posture

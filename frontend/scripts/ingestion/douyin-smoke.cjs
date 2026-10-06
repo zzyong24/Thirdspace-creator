@@ -17,10 +17,12 @@ const WORK_LIST_HINT = "/creator/pc/work_list";
 
 (async () => {
   console.log("connecting CDP:", CDP_URL);
-  const browser = await chromium.connectOverCDP(CDP_URL);
+  const browser = await chromium.connectOverCDP(CDP_URL, { timeout: 120_000 });
   try {
     const context = browser.contexts()[0] || (await browser.newContext());
     const page = context.pages()[0] || (await context.newPage());
+  page.setDefaultTimeout(120_000);
+  page.setDefaultNavigationTimeout(120_000);
     const workJsons = [];
     page.on("response", async (resp) => {
       if (resp.url().includes(WORK_LIST_HINT)) {

@@ -15,6 +15,8 @@ const outfile = process.argv[2] || "docs/positioning-redesign/edit-current.png";
   });
   if (!login.ok()) throw new Error("login failed: " + login.status());
   const page = await context.newPage();
+  page.setDefaultTimeout(120_000);
+  page.setDefaultNavigationTimeout(120_000);
   await page.goto(BASE + "/positioning", { waitUntil: "networkidle" });
   await page.waitForTimeout(1000);
   // Click the hero 编辑 button (opens the draft drawer). Fall back to 新建定位版本.

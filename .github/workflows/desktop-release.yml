@@ -884,7 +884,7 @@ jobs:
           } finally {
             if (-not $app.HasExited) {
               $null = $app.CloseMainWindow()
-              if (-not $app.WaitForExit(10000)) {
+              if (-not $app.WaitForExit(120000)) {
                 Stop-Process -Id $app.Id -Force -ErrorAction SilentlyContinue
               }
             }
@@ -906,7 +906,7 @@ jobs:
           if ($uninstall.ExitCode -ne 0) {
             throw "[T-557] NSIS 静默卸载失败(exit=$($uninstall.ExitCode))"
           }
-          for ($i = 0; $i -lt 50 -and (Test-Path $installDir); $i++) {
+          for ($i = 0; $i -lt 600 -and (Test-Path $installDir); $i++) {
             Start-Sleep -Milliseconds 200
           }
           if (Test-Path (Join-Path $installDir "runtime-images")) {
@@ -1303,7 +1303,7 @@ jobs:
             }
             if ($app -and -not $app.HasExited) {
               $null = $app.CloseMainWindow()
-              if (-not $app.WaitForExit(10000)) {
+              if (-not $app.WaitForExit(120000)) {
                 Stop-Process -Id $app.Id -Force -ErrorAction SilentlyContinue
               }
             }

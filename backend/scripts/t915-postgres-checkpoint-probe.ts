@@ -18,7 +18,7 @@ try {
   const task=await tasks.enqueue(ctx,{kind:"ai_task",ownerType:"ai_task",ownerId:randomUUID(),idempotencyKey:randomUUID(),payload:{}});
   const claim=await tasks.claimTask({taskId:task.id,workerId:"first"});assert.ok(claim);
   const ref={executionTaskId:task.id,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken};
-  const budget={maxCalls:10,maxTokens:1000,deadlineMs:60000};
+  const budget={maxCalls:10,maxTokens:1000,deadlineMs:120_000};
   const ledger=createExecutionCallLedgerService(first.db,{budget});
   const services=[first,second].map(c=>createExecutionCheckpointService(c.db));
   async function settle(key:string){

@@ -241,6 +241,9 @@ async function waitForTask(
 ): Promise<{ sourceOperation: string; requestId: string | null; task: unknown }> {
   const pollSeconds = positiveNumberFlag(args, "--poll-interval") ?? 2;
   const timeoutSeconds = positiveNumberFlag(args, "--timeout");
+  if (timeoutSeconds !== null && timeoutSeconds < 120) {
+    throw new Error("--timeout 最短为 120 秒；省略表示持续观察，等待结束不会取消后台任务。");
+  }
   const startedAt = Date.now();
   while (true) {
     const current = await readTask(client, taskId, accountId, groupId);
@@ -292,6 +295,7 @@ export async function runCliCommand(args: string[]): Promise<unknown> {
   if (group === "help" || hasFlag(args, "--help")) {
     return {
       ok: true,
+      taskWaitFlags: "tasks wait <taskId>：--timeout 最短 120 秒，省略表示持续观察；--poll-interval 是轮询间隔。等待结束不取消后台任务，应继续观察原 taskId。",
       usage: "creatoros status | access status|revoke | operations list|describe <op> | call <op> --input <json|@file|-> [--group <id>|--use-default-group] [--account <id>|--use-default-account] | tasks get|wait <taskId> --group <id> [--account <id>] | accounts list|current|use <id> | groups list|current|use <id> | douyin status|login|refresh|import | mcp serve",
       writeFlags: "--apply --idempotency-key <key>",
       impactFlags: "--confirm-impact <真实账号或实体ID>",

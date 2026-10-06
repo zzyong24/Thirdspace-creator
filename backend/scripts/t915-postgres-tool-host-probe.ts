@@ -21,7 +21,7 @@ try {
  const ref={executionTaskId:task.id,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken};
  let executions=0;
  const output={status:"ok" as const,summary:"真实调用回执",evidence:[],error:null,continuation:null,sideEffect:"none" as const};
- const deps={budget:{maxCalls:10,maxTokens:100000,deadlineMs:60000},tools:{"material.search":{version:"1",parameters:z.object({query:z.string()}),effect:"none" as const,execute:async()=>{executions++;await new Promise(resolve=>setTimeout(resolve,100));return output;}}}};
+ const deps={budget:{maxCalls:10,maxTokens:100000,deadlineMs:120_000},tools:{"material.search":{version:"1",parameters:z.object({query:z.string()}),effect:"none" as const,execute:async()=>{executions++;await new Promise(resolve=>setTimeout(resolve,100));return output;}}}};
  const ledger=createExecutionCallLedgerService(first.db,deps);
  const ports=[first,second].map(connection=>createExecutionAgenticToolPorts(connection.db,deps));
  const model=await ledger.reserve(ref,{kind:"model",operationKey:"model",inputDigest:"sha256:"+"a".repeat(64),reservedTokens:20});

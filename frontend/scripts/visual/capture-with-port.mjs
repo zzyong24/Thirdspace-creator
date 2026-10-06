@@ -64,9 +64,9 @@ async function main() {
   // wait for server
   const start = Date.now();
   let ready = false;
-  while (Date.now() - start < 30_000) {
+  while (Date.now() - start < 120_000) {
     try {
-      const res = await fetch(BASE_URL, { redirect: "manual" });
+      const res = await fetch(BASE_URL, { redirect: "manual", signal: AbortSignal.timeout(Math.max(1, start + 120_000 - Date.now())) });
       if (res.status >= 200 && res.status < 600) {
         ready = true;
         break;
@@ -98,13 +98,15 @@ async function main() {
     return route.continue();
   });
   const page = await context.newPage();
+  page.setDefaultTimeout(120_000);
+  page.setDefaultNavigationTimeout(120_000);
   const url = `${BASE_URL}${pathArg}`;
   console.log(`[capture-with-port] ${nameArg} → ${url}`);
   await page.goto(url, {
     waitUntil: "domcontentloaded",
-    timeout: 30_000,
+    timeout: 120_000,
   });
-  await page.waitForLoadState("load", { timeout: 10_000 }).catch(() => {});
+  await page.waitForLoadState("load", { timeout: 120_000 }).catch(() => {});
   await page.waitForTimeout(800);
   const outPath = join(OUT_DIR, `shared-${nameArg}.png`);
   await page.screenshot({ path: outPath, fullPage: false });

@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { executionTimeoutMs, configureProbePage, withinExecution } from "./timeout-policy.mjs";
 // [T-147 P6 / T-164] sidecar bundle JS 混淆 —— 抬业余逆向门槛 + 防篡改重打包。
 // SPEC: docs/superpowers/specs/2026-07-06-desktop-hardening-p6-design.md §3.1。
 //
@@ -672,7 +673,7 @@ export function buildSmokeSidecarEnv(
 export async function smokeBootAfterObfuscation(opts = {}) {
   const { spawn } = await import("node:child_process");
   const net = await import("node:net");
-  const timeoutMs = opts.timeoutMs ?? 60_000;
+  const timeoutMs = executionTimeoutMs(opts.timeoutMs); // readiness独立步骤预算；后续HTTP/浏览器另有执行预算。
 
   const serverJs = join(SIDECAR, "frontend", "server.js");
   const libDir = join(SIDECAR, "lib");
@@ -728,6 +729,8 @@ export async function smokeBootAfterObfuscation(opts = {}) {
     while (Date.now() < deadline) {
       const ok = await new Promise((res) => {
         const s = net.connect(port, "127.0.0.1");
+        // 共享readiness绝对deadline；不得为最后一次尝试重新启动两分钟。
+        s.setTimeout(Math.max(1, deadline - Date.now()), () => { s.destroy(); res(false); });
         s.on("connect", () => {
           s.destroy();
           res(true);
@@ -789,7 +792,7 @@ export async function smokeBootAfterObfuscation(opts = {}) {
     // 因此可分发包必须用真实 Chromium 跑一遍客户端，任何 pageerror 都 fail-fast。
     const browserProbe = await browserHydrationProbe({
       url: `http://127.0.0.1:${port}/`,
-      timeoutMs: Math.min(timeoutMs, 30_000),
+      timeoutMs,
     });
 
     return {
@@ -815,10 +818,12 @@ export async function smokeBootAfterObfuscation(opts = {}) {
  * @param {{url:string,timeoutMs:number}} opts
  */
 export async function browserHydrationProbe({ url, timeoutMs }) {
+  timeoutMs = executionTimeoutMs(timeoutMs);
   const { chromium } = await import("@playwright/test");
   const browser = await chromium.launch({ headless: true });
   try {
     const page = await browser.newPage();
+    configureProbePage(page, timeoutMs);
     const pageErrors = [];
     page.on("pageerror", (error) => pageErrors.push(error?.stack ?? error?.message ?? String(error)));
     await page.goto(url, { waitUntil: "networkidle", timeout: timeoutMs });
@@ -835,7 +840,7 @@ export async function browserHydrationProbe({ url, timeoutMs }) {
     }
     return { hydrated: true };
   } finally {
-    await browser.close();
+    await withinExecution(browser.close());
   }
 }
 
@@ -847,6 +852,7 @@ async function httpProbe(url, method, body) {
     const req = http.request(
       {
         hostname: u.hostname,
+        signal: AbortSignal.timeout(120_000),
         port: u.port,
         path: u.pathname + u.search,
         method,
