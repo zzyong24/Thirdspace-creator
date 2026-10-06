@@ -1,6 +1,6 @@
 # 本地客户端逐项验收表
 
-2026-10-06 更新：当前安装源为98c558bb，真实出包及重备份后安装已完成。CLI旧失败回放与纯组预览已实测成功；真实render仍因Skill归属守卫失败，未生成MP4。用户授权的临时本地Whisper已返回真实word44及timingReceipt，原ASR设置已完整恢复。Skill167已给出可采用删留候选，用户采用、原生操作与最终功能验收未签。本表保留全部旧包/失败/隔离修复记录。
+2026-10-06 更新：当前安装源为98c558bb，真实出包及重备份后安装已完成。CLI旧失败回放与纯组预览已实测成功；真实render仍因Skill归属守卫失败，未生成MP4。用户授权的临时本地Whisper已返回真实word44及timingReceipt，原ASR设置已完整恢复。Skill167已给出可采用删留候选，用户明确批准s1后真实采用并回读工程6，预览8.16秒成功；原生操作、MP4与最终功能验收未签。本表保留全部旧包/失败/隔离修复记录。
 
 当前已安装候选 SHA：`98c558bb9c793502ccfa156163b4c94ca7907c65`。DMG：`/Users/zyongzhu/Downloads/CreatorOS-1.2.0.dmg`，SHA256 `2a3ef71054be75aef1fe0785b6f1931bbc34b23b3cc0a896c951f0a237494b84`，662,033,572字节。固定入口实际exit0、四基本检查44项通过、四处1.2.0；构建前后干净。镜像、严格签名及277迁移字节核验0，本地ad-hoc未Apple公证。新备份b7_i6qn0封闭SHA ee3293ea8142e1104530bf61f47e71afb3182fc5aa154588b0d0574fbea22f34；预安装再closure/保存旧App/新App严格签名/启动均0。App9699/server10107，CLI installed/full/404操作；启动初始CONNECTION_STALE记录保留。当前包仍不能宣布全功能通过。
 用户最新确认：没有专用 macOS 测试用户，使用当前登录用户与当前安装的 CreatorOS App 进行安装版验收。安装前先完整备份应用和现用数据；不再依赖专用用户前置条件。此确认不代表功能已通过。
@@ -26,11 +26,11 @@
 | A17 | 视频导入/原片 | 包内选择实际视频，probe/预览/音频可用；保存刷新源引用不变，原片字节不被覆盖 | 部分：中性H264/AAC原片真实upload→关联→probe/adopt进入production169，来源引用/时长14.924854s可读，原字节e6c0f4e保持。原生选择器/回放待验 | 待用户操作 |
 | A18 | 真实转写 | 从导入文件实际ASR得到文本/时间码；校验时长和词句范围，缺有效时间码明确降级 | 部分：原SenseVoiceSmall全文/缺词时间失败保留；用户临时Whisper授权后实际任务128/runtime成功，44个word token及providerEvidence.timingReceipt、整数有序且位于原源范围；adopt/get revision4保原clip并保历史text。原模型设置全恢复深等；原生听审待验 | 待用户操作 |
 | A19 | Skill粗剪语义 | 真实内容中完整重录、口误重复、长停顿分别产删留理由/不确定性；强调/自然停顿保留 | 部分：真实MiniMax/Skill167在whole原片/word44上成功，s1可采用删0–6.76秒废弃试讲/口误，s2review保完整重录、s3keep结尾；pauseGaps为空，未签停顿压缩。旧199仅review_only保留；新候选未自动采用 | 待用户操作 |
-| A20 | 粗剪对照与采用 | 可对照每项候选及影响清单，明确采用一次进入同一原生时间轴；逐词/整段能力分别记录 | 待验：新候选165/base5和真实删留影响已整理并请求用户明确采用，仍未粗剪adopt；ASR采用仅将转写入工程，不能代签粗剪/原生对照 | 待用户操作 |
+| A20 | 粗剪对照与采用 | 可对照每项候选及影响清单，明确采用一次进入同一原生时间轴；逐词/整段能力分别记录 | 部分：用户明确批准s1，安装版真实adopt成功，工程5→6并回读完全相等；候选只有s1 adopted:true，保留第二遍正确介绍和结尾，原生对照/撤销仍待验 | 待用户操作 |
 | A21 | 原生编辑与撤销 | 手工增删/修剪/移动后Ctrl-Z/Ctrl-Shift-Z恢复；模型候选与手动编辑共用真实工程 | 待验 | 待用户操作 |
 | A22 | 字幕与叠层 | 粗剪影响字幕/音频/叠层的关系采用前可见；不静默错位，不把缺联动称完整等效 | 待验 | 待用户操作 |
 | A23 | 速度/音高 | 检查用户选择变速与保音高的真实预览/导出结果；不硬编码1.13为默认 | 部分：原片实际H264/AAC/音频48k，原速字节保持。变速/保音高预览和导出未发生 | 待用户操作 |
-| A24 | 保存刷新与导出 | 原生工程保存、关闭重开、预览一致；实际MP4 probe H264/AAC/时长与回放正确 | 功能仍失败：旧save3/preview/render428保留；98c纯组save/get3/preview7.5成功，render新task111在执行前Skill归属failed、startedAt:null/manifest:null/无MP4。ASR保存4及whole原片保存5回读0；正确冻结owner修复/新包待验 | 待用户操作 |
+| A24 | 保存刷新与导出 | 原生工程保存、关闭重开、预览一致；实际MP4 probe H264/AAC/时长与回放正确 | 功能仍失败：旧save3/preview/render428保留；98c纯组save/get3/preview7.5成功，render新task111在执行前Skill归属failed、startedAt:null/manifest:null/无MP4。ASR保存4及whole原片保存5回读0；用户粗剪采用6/preview8.16秒无警告0，MP4仍待正确冻结owner修复的新包验证 | 待用户操作 |
 | A25 | 设置/模型配置 | 配置保存/读回/取消/错误分层和脱敏；缺模型保留手工编辑，不打印密钥 | 部分：按用户临时Whisper授权公开完整PUT只改ASR provider/model，其他行/字段深等；models.test实际whisper-local/small/warn仅证明解析路径，真实词转写另验；成功后原完整模型列表恢复深等，secret值未读/未提交。原生取消与错误UI待验 | 待用户操作 |
 | A26 | 采集/发布兼容 | 原有五平台登录/采集/草稿入口按真实能力核验；未经授权不实际对外发布 | 待验 | 待用户操作 |
 | A27 | 升级与重启 | fresh/root/diagnostic/canvas四种隔离旧库升级两次；表/约束/行数/ID/storageKey保持 | 部分：实际21迁移回归/旧备份副本公共升级双启保原132表、105旧ledger+1新迁移；228新包277资源逐字节核验。升级原生功能仍待验 | 待用户操作 |
@@ -142,3 +142,17 @@ sync 实际 exit 0；reconcile 实际 exit 1，共 36 错误/1 告警，未写�
 Skill真实MiniMax任务167/execution exec_604973a1-0989-4e67-8c89-8d2492438952成功，candidate165/base5：s1 remove actionable，17个真实tokens，0..6.76秒预算300/修正200的废弃试讲；s2 review保第二遍预算200完整重录，7.3..11.94；s3 keep结尾12..14.9。pauseGaps为空，不凭原生成边界编切点或签停顿压缩；当前get仍因存在历史text泛化显示“全文没有时间码”，不能把它与选中word44实际删留混为一谈，该提示准确性仍待核。影响清单与用户明确采用问题已发，未代签采用；预计剩余8.16秒仅为原ticks机械差值，实际MP4尚不存在。后续必须修复render并新包实测；原生UI/撤销/听审/最终用户验收持续待验。
 
 真实私有证据：local-package-installed-repairs-actual-20261006、installation-installed-repairs-actual-20261006失败保留、offline-backup-real-provenance-journal-b7_i6qn0、installation-installed-repairs-retry-actual-20261006、installed-repairs-public-acceptance-20261006、workspace-fixture-drift-readonly-rcvxw9v0。原Speccfb、Original18/801与旧红Gate不重签；未push/tag/Release。T-1062仍进行中。
+
+## 2026-10-06 用户明确采用粗剪及调整出包顺序
+
+用户回复“采用此候选继续验收”。动态描述采用合同并立即回读工程5、原候选165/base5后，仅提交s1及当前expectedRevision5，稳定请求t1062-installed-repairs-user-adopt-s1-20261006。安装版真实adopt/read editor/read candidate均exit0：工程6 source=assistant，保存plan与公共get完整一致，s1 adopted:true而s2/s3均false；mainTrack仅保源86528..190976，timebase1/12800对应8.16秒，sources/sourceTranscripts与采用前精确相同。没有虚构停顿听审确认或自动压缩；revision6公开preview实际0，durationSec8.16、warnings[]。
+
+采用后exact公共原片重新下载实际HTTP200，232847字节、SHA256 e6c0f4e72741e8f37b369d9511311569df8ef6c4e07009f3c746c632fb0e2073，与导入原片完全一致。私有证据rough-human-adoption-saved-checkpoint.json SHA719ee6d2e7fc4fb52971fdaefb380c3292eaef85a21ab4507e6a7ea4c607ffbc，以及rough-rev6-preview、original-exact-after-human-adoption-checkpoint.json。两个读调用最初使用错误params实际404、随后按动态合同纠正成功，原始回执保留；不伪装第一次成功，不涉及业务写入。MP4未生成，原生播放/听审/撤销未代签。
+
+另有6项公开中性资料当前回读成功：主脚本/画布/总览/分析与先前DTO精确相等，文章与图文仅实际主脚本创建后的动态scriptContext从empty变ready，其余字段相等。一次按旧receipt文件名误选create请求，已恢复的中性组302中新建中性project200，写入回执保留；其本组get成功，另组get404。未删除该测试资料或称全为只读，没有真实内容被修改。
+
+用户随后要求“先快速把本地打包打起来，然后解决启动超时启动不了的问题，方便我也来做测试，然后再修复现有问题”。已登记T-1068启动范围；粗剪历史全文警告修正后置，不作为本次包前置。当前导出窄口实现的公开隔离root25项通过；扩展backend四文件6失败/57通过，与修复前85f基点实际同命令逐项失败完全一致，相关四测试及workspace-write字节相同（私有基点对比SHA7323329ec2b2198042428a68e940a64f766c1453f55b6bc9be1957ab9aec246a）。不将旧失败删除或写成全绿，也不把这些源码回归当作新包启动或功能验收。
+
+导出冻结owner窄口最终独评GO/findings[]，报告fc86cc4ffeae09e75c01cdf8be4b69fa2bcd0ab91914fef0c63c0aeef4f83147；实现exact4提交861df69feba9a31d53d670e3553e61a2dfd6b2b1（parent85f），ROOT真实FF、精确4路径task-preflight及正常progress done均exit0。最终root25/25及frontend type实际0；素材root1/model3/collection4通过；原基点六红、旧backend类型及边界/语义失败均保留，新test TS2367已同等断言修正并实测闭合。append-only ledger保全部旧entry，仅重绑独评准确生产SHA。只关闭installed-render-skill-owner子步骤，T-1062整体及安装MP4仍未完成。
+
+T-1068排查范围经独立same-family真实审查，正式reviewctl receipt9e131ffd9caf，taskctl实际start0，未手改任务状态。当前已运行98c服务的首页真实GET200 text/html、68033字节、无not-found、5.585秒；这不是冷启动或原生窗口证据，不能写启动超时修复通过。按用户最新顺序，完成本地冻结出包后再优先验证fresh安装/启动并定位真实故障，其余修复后置。

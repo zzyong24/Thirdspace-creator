@@ -1,0 +1,60 @@
+{
+  "schema": "readonly-independent-review/v1",
+  "observedAt": "2026-10-06T12:00:21.447678+00:00",
+  "reviewer": "installed_lineage_inventory",
+  "headObserved": "85f0a49fa748a62fba5f66a10cced508acfa5ce4",
+  "decision": "GO_STATIC_SCOPE_ONLY_IMPLEMENTATION_WRITE_SET_PENDING_ACTUAL_STARTUP_EVIDENCE",
+  "findings": [],
+  "evidence": [
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/features/t1068-local-client-startup.md",
+      "sha256": "98b8f9ac67dd2814fbfacf8cc811c786b9ed3a8a4ec930d381739625bc6efd4e"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src-tauri/src/lib.rs",
+      "sha256": "a14f90e620d7f7cacd9dbb610d44576f86409696341bba16f579c16a1b58f0f5"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/instrumentation.ts",
+      "sha256": "d49a12ce777eaf23cee649a4960538fe51a6b9bb5bcaf791c8dc66392ce0b86e"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/scripts/desktop/startup-safety-contract.test.mjs",
+      "sha256": "61069d2977fd3ce8f0d6e1a152db49b9cb03df2daa898d29fb56ee2d9c3d0fc2"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG.md",
+      "sha256": "7464f8ac200b25cb5d63d37be6a5085b67d39e08f3bcac22bcb3e8613c781de3"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/orchestrator/SYSTEM_ARCHITECTURE.md",
+      "sha256": "3efbb0394b8bcc9eb3c9ad7e8c9364df51e336006b862e02ac71fd6c9327971e"
+    }
+  ],
+  "scopeAssessment": [
+    "用户最新顺序先冻结当前已准入修复并出本地包，粗剪提示全部后置，范围说明与该顺序一致。",
+    "范围保留当前用户安装授权、fresh离线备份及旧App，未扩push/tag/Release/生产授权。",
+    "构建、服务端口、公共CLI、首页与原生窗口分别验收，原工程6保存不能反证用户启动失败。",
+    "未指定猜测根因或产品写集；根因明确后精确写集、宿主资源属主、DEC及独评仍为实际实施前置。",
+    "没有改鉴权、数据归属、数据库或媒体；没有第二启动服务或假完成信号。"
+  ],
+  "staticMechanism": [
+    "Rust wait_until_ready启动单个后台等待线程，以现有sidecar进程句柄和启动信号通道协作。",
+    "退出信号优先于Ready和TimedOut；Ready同时要求instrumentation_verified与首页成功HTML探测。",
+    "启动完成哨兵仅stdout包含SIDECAR_STARTUP_SENTINEL时转成Verified；stderr和普通stdout不更新进展。",
+    "当前常量idle=300s/max=1800s/probe=15s/interval=750ms，仅为代码事实，不认定它们是本次故障根因。",
+    "wait loop先消费信号，收到Verified后才GET首页；HTTP失败/非成功/非HTML/空页/notfound不视为Ready。",
+    "Ready仅调度现有main窗口导航；退出/超时保留静态splash并尝试渲染失败；现有退出资源owner维持。"
+  ],
+  "notApproved": [
+    "未批准任何产品或控制写集，未运行测试/构建/安装/启动/CLI/MCP/模型。",
+    "未取得本次失败日志、触发时间、退出码、完成信号或原生窗口操作证据。",
+    "未签修复完成、Gate运行通过、包成功、安装成功、客户端可启动或全功能验收。"
+  ],
+  "requiredNextEvidence": [
+    "ROOT固定入口构建实际退出码、冻结HEAD和产物资源/签名绑定。",
+    "fresh离线备份后准确安装候选，记录实际App/sidecar身份、cwd、存活/退出及就绪信号，避免秘密输出。",
+    "实际首页/public业务读取与原生窗口证据分别报告；从实际失败定位后再提出最小exact write_set与回归。"
+  ],
+  "repositoryMutations": false
+}

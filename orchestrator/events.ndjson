@@ -1142,3 +1142,4 @@
 {"ts":"2026-10-06T08:34:00.790Z","actor":"research-gate","action":"research_open","task":"T-1062","research_task":"T-1062","card":"docs/research/t1062-installed-migration-history/RESEARCH.md","failure_family":"installed-historical-migration-identities","trigger_kind":"high-cost-feedback-loop"}
 {"ts":"2026-10-06T08:34:01.018Z","actor":"research-gate","action":"research_resume","task":"T-1062","card":"docs/research/t1062-installed-migration-history/RESEARCH.md","card_sha256":"f03ddf2a5fa4827faa212704e861f5d7849a6ae19f2e5018e2c96433592601d2","decisions":[]}
 {"ts":"2026-10-06T08:41:01.757Z","actor":"taskctl","action":"start","task":"T-1062","sha_before":"2c1b6aae8e68","sha_after":"3f19dcf9a483"}
+{"ts":"2026-10-06T12:04:03.173Z","actor":"taskctl","action":"start","task":"T-1068","sha_before":"00e4852145a6","sha_after":"86139570d705"}

@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "本家族独立子代理 /root/installed_lineage_inventory 已实际只读评审 T-1068 本地客户端启动超时排查与修复范围，SPEC SHA256=98b8f9ac67dd2814fbfacf8cc811c786b9ed3a8a4ec930d381739625bc6efd4e。先冻结并快速出包、再新鲜备份后安装及实际启动取证，根因明确后补精确实现写集、DEC与独立评审的范围成立，findings为空。SPEC范围静态通过；控制准入及产品修复尚未实施，本次未运行打包、安装、测试、客户端或模型，不代表启动、原生UI或全功能验收通过。原真实范围报告 SHA256=42b978b786f68ee9d7a2fc010c5c063b867af0dcf09cc7c0f77226d7f4e58e81。评审者为本家族独立子代理，未声明跨家族评审。",
+  "findings": []
+}
