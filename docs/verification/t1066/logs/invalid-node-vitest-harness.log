@@ -1,0 +1,644 @@
+file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1848
+		validateTags(runner.config, suiteTags);
+		                    ^
+
+TypeError: Cannot read properties of undefined (reading 'config')
+    at initSuite (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1848:23)
+    at createSuiteCollector (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1709:2)
+    at Object.suiteFn (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1951:10)
+    at chain (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:599:14)
+    at file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/frontend/scripts/desktop/build-sidecar.test.mjs:37:1
+    at ModuleJob.run (node:internal/modules/esm/module_job:437:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:639:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)
+
+Node.js v25.9.0
+✖ frontend/scripts/desktop/build-sidecar.test.mjs (569.385667ms)
+file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1848
+		validateTags(runner.config, suiteTags);
+		                    ^
+
+TypeError: Cannot read properties of undefined (reading 'config')
+    at initSuite (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1848:23)
+    at createSuiteCollector (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1709:2)
+    at Object.suiteFn (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1951:10)
+    at chain (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:599:14)
+    at file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/frontend/scripts/desktop/build-timing.test.mjs:7:1
+    at ModuleJob.run (node:internal/modules/esm/module_job:437:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:639:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)
+
+Node.js v25.9.0
+✖ frontend/scripts/desktop/build-timing.test.mjs (524.609125ms)
+file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1848
+		validateTags(runner.config, suiteTags);
+		                    ^
+
+TypeError: Cannot read properties of undefined (reading 'config')
+    at initSuite (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1848:23)
+    at createSuiteCollector (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1709:2)
+    at Object.suiteFn (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1951:10)
+    at chain (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:599:14)
+    at file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/frontend/scripts/desktop/bytecode.test.mjs:24:1
+
+Node.js v25.9.0
+✖ frontend/scripts/desktop/bytecode.test.mjs (1406.226666ms)
+node:fs:436
+    return binding.readFileUtf8(path, stringToFlags(options.flag));
+                   ^
+
+Error: ENOENT: no such file or directory, open '/Users/zyongzhu/.codex/worktrees/t1066-tooling/.github/workflows/channel-package.yml'
+    at readFileSync (node:fs:436:20)
+    at file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/frontend/scripts/desktop/channel-package-workflow.test.mjs:6:18
+    at ModuleJob.run (node:internal/modules/esm/module_job:437:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:639:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/zyongzhu/.codex/worktrees/t1066-tooling/.github/workflows/channel-package.yml'
+}
+
+Node.js v25.9.0
+✖ frontend/scripts/desktop/channel-package-workflow.test.mjs (521.577208ms)
+file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1848
+		validateTags(runner.config, suiteTags);
+		                    ^
+
+TypeError: Cannot read properties of undefined (reading 'config')
+    at initSuite (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1848:23)
+    at createSuiteCollector (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1709:2)
+    at Object.suiteFn (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1951:10)
+    at chain (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:599:14)
+    at file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/frontend/scripts/desktop/client-config-release.test.mjs:7:1
+    at ModuleJob.run (node:internal/modules/esm/module_job:437:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:639:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)
+
+Node.js v25.9.0
+✖ frontend/scripts/desktop/client-config-release.test.mjs (516.804875ms)
+file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1631
+		throw new Error(`Vitest failed to find ${message}. One of the following is possible:` + "\n- \"vitest\" is imported directly without running \"vitest\" command" + "\n- \"vitest\" is imported inside \"globalSetup\" (to fix this, use \"setupFiles\" instead, because \"globalSetup\" runs in a different context)" + "\n- \"vitest\" is imported inside Vite / Vitest config file" + "\n- Otherwise, it might be a Vitest bug. Please report it to https://github.com/vitest-dev/vitest/issues\n");
+		      ^
+
+Error: Vitest failed to find the current suite. One of the following is possible:
+- "vitest" is imported directly without running "vitest" command
+- "vitest" is imported inside "globalSetup" (to fix this, use "setupFiles" instead, because "globalSetup" runs in a different context)
+- "vitest" is imported inside Vite / Vitest config file
+- Otherwise, it might be a Vitest bug. Please report it to https://github.com/vitest-dev/vitest/issues
+
+    at assert (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1631:9)
+    at getCurrentSuite (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1666:2)
+    at Object.<anonymous> (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1563:2)
+    at chain (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:599:14)
+    at file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/frontend/scripts/desktop/collect-user-installers.test.mjs:23:1
+    at ModuleJob.run (node:internal/modules/esm/module_job:437:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:639:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)
+
+Node.js v25.9.0
+✖ frontend/scripts/desktop/collect-user-installers.test.mjs (533.257917ms)
+file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1848
+		validateTags(runner.config, suiteTags);
+		                    ^
+
+TypeError: Cannot read properties of undefined (reading 'config')
+    at initSuite (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1848:23)
+    at createSuiteCollector (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1709:2)
+    at Object.suiteFn (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1951:10)
+    at chain (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:599:14)
+    at file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/frontend/scripts/desktop/decoy.test.mjs:17:1
+    at ModuleJob.run (node:internal/modules/esm/module_job:437:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:639:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)
+
+Node.js v25.9.0
+✖ frontend/scripts/desktop/decoy.test.mjs (547.802958ms)
+node:fs:436
+    return binding.readFileUtf8(path, stringToFlags(options.flag));
+                   ^
+
+Error: ENOENT: no such file or directory, open '/Users/zyongzhu/.codex/worktrees/t1066-tooling/.github/workflows/desktop-release.yml'
+    at readFileSync (node:fs:436:20)
+    at file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/frontend/scripts/desktop/desktop-release-workflow.test.mjs:5:18
+    at ModuleJob.run (node:internal/modules/esm/module_job:437:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:639:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/zyongzhu/.codex/worktrees/t1066-tooling/.github/workflows/desktop-release.yml'
+}
+
+Node.js v25.9.0
+✖ frontend/scripts/desktop/desktop-release-workflow.test.mjs (522.827875ms)
+file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1848
+		validateTags(runner.config, suiteTags);
+		                    ^
+
+TypeError: Cannot read properties of undefined (reading 'config')
+    at initSuite (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1848:23)
+    at createSuiteCollector (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1709:2)
+    at Object.suiteFn (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1951:10)
+    at chain (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:599:14)
+    at file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/frontend/scripts/desktop/dmg-install-guide.test.mjs:15:1
+    at ModuleJob.run (node:internal/modules/esm/module_job:437:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:639:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)
+
+Node.js v25.9.0
+✖ frontend/scripts/desktop/dmg-install-guide.test.mjs (561.098916ms)
+file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1848
+		validateTags(runner.config, suiteTags);
+		                    ^
+
+TypeError: Cannot read properties of undefined (reading 'config')
+    at initSuite (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1848:23)
+    at createSuiteCollector (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1709:2)
+    at Object.suiteFn (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1951:10)
+    at chain (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:599:14)
+    at file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/frontend/scripts/desktop/execution-worker-runtime.test.mjs:8:1
+    at ModuleJob.run (node:internal/modules/esm/module_job:437:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:639:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)
+
+Node.js v25.9.0
+✖ frontend/scripts/desktop/execution-worker-runtime.test.mjs (554.127458ms)
+file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1848
+		validateTags(runner.config, suiteTags);
+		                    ^
+
+TypeError: Cannot read properties of undefined (reading 'config')
+    at initSuite (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1848:23)
+    at createSuiteCollector (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1709:2)
+    at Object.suiteFn (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1951:10)
+    at chain (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:599:14)
+    at file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/frontend/scripts/desktop/license-project-key.test.mjs:5:1
+    at ModuleJob.run (node:internal/modules/esm/module_job:437:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:639:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)
+
+Node.js v25.9.0
+✖ frontend/scripts/desktop/license-project-key.test.mjs (556.562875ms)
+file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1848
+		validateTags(runner.config, suiteTags);
+		                    ^
+
+TypeError: Cannot read properties of undefined (reading 'config')
+    at initSuite (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1848:23)
+    at createSuiteCollector (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1709:2)
+    at Object.suiteFn (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1951:10)
+    at chain (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:599:14)
+    at file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/frontend/scripts/desktop/macos-runtime-compat.test.mjs:11:1
+    at ModuleJob.run (node:internal/modules/esm/module_job:437:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:639:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)
+
+Node.js v25.9.0
+✖ frontend/scripts/desktop/macos-runtime-compat.test.mjs (567.89125ms)
+file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1848
+		validateTags(runner.config, suiteTags);
+		                    ^
+
+TypeError: Cannot read properties of undefined (reading 'config')
+    at initSuite (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1848:23)
+    at createSuiteCollector (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1709:2)
+    at Object.suiteFn (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1951:10)
+    at chain (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:599:14)
+    at file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/frontend/scripts/desktop/macos-runtime-signing.test.mjs:9:1
+    at ModuleJob.run (node:internal/modules/esm/module_job:437:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:639:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)
+
+Node.js v25.9.0
+✖ frontend/scripts/desktop/macos-runtime-signing.test.mjs (411.556084ms)
+file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1848
+		validateTags(runner.config, suiteTags);
+		                    ^
+
+TypeError: Cannot read properties of undefined (reading 'config')
+    at initSuite (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1848:23)
+    at createSuiteCollector (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1709:2)
+    at Object.suiteFn (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1951:10)
+    at chain (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:599:14)
+    at file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/frontend/scripts/desktop/node-runtime.test.mjs:9:1
+    at ModuleJob.run (node:internal/modules/esm/module_job:437:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:639:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)
+
+Node.js v25.9.0
+✖ frontend/scripts/desktop/node-runtime.test.mjs (392.757166ms)
+file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1848
+		validateTags(runner.config, suiteTags);
+		                    ^
+
+TypeError: Cannot read properties of undefined (reading 'config')
+    at initSuite (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1848:23)
+    at createSuiteCollector (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1709:2)
+    at Object.suiteFn (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1951:10)
+    at chain (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:599:14)
+    at file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/frontend/scripts/desktop/notarize.test.mjs:5:1
+    at ModuleJob.run (node:internal/modules/esm/module_job:437:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:639:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)
+
+Node.js v25.9.0
+✖ frontend/scripts/desktop/notarize.test.mjs (354.340375ms)
+file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1848
+		validateTags(runner.config, suiteTags);
+		                    ^
+
+TypeError: Cannot read properties of undefined (reading 'config')
+    at initSuite (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1848:23)
+    at createSuiteCollector (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1709:2)
+    at Object.suiteFn (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1951:10)
+    at chain (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:599:14)
+    at file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/frontend/scripts/desktop/obfuscate.test.mjs:23:1
+
+Node.js v25.9.0
+✖ frontend/scripts/desktop/obfuscate.test.mjs (964.122417ms)
+file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1848
+		validateTags(runner.config, suiteTags);
+		                    ^
+
+TypeError: Cannot read properties of undefined (reading 'config')
+    at initSuite (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1848:23)
+    at createSuiteCollector (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1709:2)
+    at Object.suiteFn (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1951:10)
+    at chain (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:599:14)
+    at file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/frontend/scripts/desktop/package-brand-surface.test.mjs:10:1
+    at ModuleJob.run (node:internal/modules/esm/module_job:437:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:639:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)
+
+Node.js v25.9.0
+✖ frontend/scripts/desktop/package-brand-surface.test.mjs (317.731209ms)
+file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1848
+		validateTags(runner.config, suiteTags);
+		                    ^
+
+TypeError: Cannot read properties of undefined (reading 'config')
+    at initSuite (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1848:23)
+    at createSuiteCollector (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1709:2)
+    at Object.suiteFn (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1951:10)
+    at chain (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:599:14)
+    at file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/frontend/scripts/desktop/package-flavor.test.mjs:41:1
+    at ModuleJob.run (node:internal/modules/esm/module_job:437:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:639:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)
+
+Node.js v25.9.0
+✖ frontend/scripts/desktop/package-flavor.test.mjs (435.718458ms)
+file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1848
+		validateTags(runner.config, suiteTags);
+		                    ^
+
+TypeError: Cannot read properties of undefined (reading 'config')
+    at initSuite (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1848:23)
+    at createSuiteCollector (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1709:2)
+    at Object.suiteFn (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1951:10)
+    at chain (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:599:14)
+    at file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/frontend/scripts/desktop/package-local.test.mjs:18:1
+    at ModuleJob.run (node:internal/modules/esm/module_job:437:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:639:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)
+
+Node.js v25.9.0
+✖ frontend/scripts/desktop/package-local.test.mjs (326.847208ms)
+file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1848
+		validateTags(runner.config, suiteTags);
+		                    ^
+
+TypeError: Cannot read properties of undefined (reading 'config')
+    at initSuite (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1848:23)
+    at createSuiteCollector (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1709:2)
+    at Object.suiteFn (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1951:10)
+    at chain (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:599:14)
+    at file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/frontend/scripts/desktop/platform-paths.test.mjs:7:1
+    at ModuleJob.run (node:internal/modules/esm/module_job:437:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:639:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)
+
+Node.js v25.9.0
+✖ frontend/scripts/desktop/platform-paths.test.mjs (568.288709ms)
+file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1848
+		validateTags(runner.config, suiteTags);
+		                    ^
+
+TypeError: Cannot read properties of undefined (reading 'config')
+    at initSuite (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1848:23)
+    at createSuiteCollector (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1709:2)
+    at Object.suiteFn (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1951:10)
+    at chain (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:599:14)
+    at file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/frontend/scripts/desktop/product-identity.test.mjs:16:1
+    at ModuleJob.run (node:internal/modules/esm/module_job:437:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:639:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)
+
+Node.js v25.9.0
+✖ frontend/scripts/desktop/product-identity.test.mjs (467.706ms)
+file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1848
+		validateTags(runner.config, suiteTags);
+		                    ^
+
+TypeError: Cannot read properties of undefined (reading 'config')
+    at initSuite (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1848:23)
+    at createSuiteCollector (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1709:2)
+    at Object.suiteFn (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1951:10)
+    at chain (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:599:14)
+    at file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/frontend/scripts/desktop/release.test.mjs:14:1
+    at ModuleJob.run (node:internal/modules/esm/module_job:437:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:639:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)
+
+Node.js v25.9.0
+✖ frontend/scripts/desktop/release.test.mjs (447.697708ms)
+file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1631
+		throw new Error(`Vitest failed to find ${message}. One of the following is possible:` + "\n- \"vitest\" is imported directly without running \"vitest\" command" + "\n- \"vitest\" is imported inside \"globalSetup\" (to fix this, use \"setupFiles\" instead, because \"globalSetup\" runs in a different context)" + "\n- \"vitest\" is imported inside Vite / Vitest config file" + "\n- Otherwise, it might be a Vitest bug. Please report it to https://github.com/vitest-dev/vitest/issues\n");
+		      ^
+
+Error: Vitest failed to find the current suite. One of the following is possible:
+- "vitest" is imported directly without running "vitest" command
+- "vitest" is imported inside "globalSetup" (to fix this, use "setupFiles" instead, because "globalSetup" runs in a different context)
+- "vitest" is imported inside Vite / Vitest config file
+- Otherwise, it might be a Vitest bug. Please report it to https://github.com/vitest-dev/vitest/issues
+
+    at assert (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1631:9)
+    at getCurrentSuite (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1666:2)
+    at afterEach (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:752:9)
+    at file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/frontend/scripts/desktop/runtime-inventory.test.mjs:27:1
+    at ModuleJob.run (node:internal/modules/esm/module_job:437:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:639:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)
+
+Node.js v25.9.0
+✖ frontend/scripts/desktop/runtime-inventory.test.mjs (416.9735ms)
+file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1848
+		validateTags(runner.config, suiteTags);
+		                    ^
+
+TypeError: Cannot read properties of undefined (reading 'config')
+    at initSuite (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1848:23)
+    at createSuiteCollector (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1709:2)
+    at Object.suiteFn (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1951:10)
+    at chain (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:599:14)
+    at file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/frontend/scripts/desktop/runtime-layer-keys.test.mjs:59:1
+    at ModuleJob.run (node:internal/modules/esm/module_job:437:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:639:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)
+
+Node.js v25.9.0
+✖ frontend/scripts/desktop/runtime-layer-keys.test.mjs (397.896792ms)
+file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1631
+		throw new Error(`Vitest failed to find ${message}. One of the following is possible:` + "\n- \"vitest\" is imported directly without running \"vitest\" command" + "\n- \"vitest\" is imported inside \"globalSetup\" (to fix this, use \"setupFiles\" instead, because \"globalSetup\" runs in a different context)" + "\n- \"vitest\" is imported inside Vite / Vitest config file" + "\n- Otherwise, it might be a Vitest bug. Please report it to https://github.com/vitest-dev/vitest/issues\n");
+		      ^
+
+Error: Vitest failed to find the current suite. One of the following is possible:
+- "vitest" is imported directly without running "vitest" command
+- "vitest" is imported inside "globalSetup" (to fix this, use "setupFiles" instead, because "globalSetup" runs in a different context)
+- "vitest" is imported inside Vite / Vitest config file
+- Otherwise, it might be a Vitest bug. Please report it to https://github.com/vitest-dev/vitest/issues
+
+    at assert (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1631:9)
+    at getCurrentSuite (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1666:2)
+    at afterEach (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:752:9)
+    at file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/frontend/scripts/desktop/runtime-prune-rat.test.mjs:27:1
+    at ModuleJob.run (node:internal/modules/esm/module_job:437:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:639:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)
+
+Node.js v25.9.0
+✖ frontend/scripts/desktop/runtime-prune-rat.test.mjs (401.058875ms)
+node:fs:436
+    return binding.readFileUtf8(path, stringToFlags(options.flag));
+                   ^
+
+Error: ENOENT: no such file or directory, open '/Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/src/instrumentation.ts'
+    at readFileSync (node:fs:436:20)
+    at file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/frontend/scripts/desktop/startup-safety-contract.test.mjs:5:25
+    at ModuleJob.run (node:internal/modules/esm/module_job:437:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:639:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/src/instrumentation.ts'
+}
+
+Node.js v25.9.0
+✖ frontend/scripts/desktop/startup-safety-contract.test.mjs (350.685958ms)
+file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1848
+		validateTags(runner.config, suiteTags);
+		                    ^
+
+TypeError: Cannot read properties of undefined (reading 'config')
+    at initSuite (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1848:23)
+    at createSuiteCollector (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1709:2)
+    at Object.suiteFn (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1951:10)
+    at chain (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:599:14)
+    at file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/frontend/scripts/desktop/tauri-signing-config.test.mjs:5:1
+    at ModuleJob.run (node:internal/modules/esm/module_job:437:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:639:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)
+
+Node.js v25.9.0
+✖ frontend/scripts/desktop/tauri-signing-config.test.mjs (349.188125ms)
+file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1848
+		validateTags(runner.config, suiteTags);
+		                    ^
+
+TypeError: Cannot read properties of undefined (reading 'config')
+    at initSuite (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1848:23)
+    at createSuiteCollector (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1709:2)
+    at Object.suiteFn (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1951:10)
+    at chain (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:599:14)
+    at file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/frontend/scripts/desktop/update-hosting-probe.test.mjs:4:1
+    at ModuleJob.run (node:internal/modules/esm/module_job:437:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:639:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)
+
+Node.js v25.9.0
+✖ frontend/scripts/desktop/update-hosting-probe.test.mjs (366.517375ms)
+file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1631
+		throw new Error(`Vitest failed to find ${message}. One of the following is possible:` + "\n- \"vitest\" is imported directly without running \"vitest\" command" + "\n- \"vitest\" is imported inside \"globalSetup\" (to fix this, use \"setupFiles\" instead, because \"globalSetup\" runs in a different context)" + "\n- \"vitest\" is imported inside Vite / Vitest config file" + "\n- Otherwise, it might be a Vitest bug. Please report it to https://github.com/vitest-dev/vitest/issues\n");
+		      ^
+
+Error: Vitest failed to find the current suite. One of the following is possible:
+- "vitest" is imported directly without running "vitest" command
+- "vitest" is imported inside "globalSetup" (to fix this, use "setupFiles" instead, because "globalSetup" runs in a different context)
+- "vitest" is imported inside Vite / Vitest config file
+- Otherwise, it might be a Vitest bug. Please report it to https://github.com/vitest-dev/vitest/issues
+
+    at assert (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1631:9)
+    at getCurrentSuite (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1666:2)
+    at afterEach (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:752:9)
+    at file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/frontend/scripts/desktop/verdict-artifact-hardening.test.mjs:38:1
+
+Node.js v25.9.0
+✖ frontend/scripts/desktop/verdict-artifact-hardening.test.mjs (323.574125ms)
+file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1848
+		validateTags(runner.config, suiteTags);
+		                    ^
+
+TypeError: Cannot read properties of undefined (reading 'config')
+    at initSuite (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1848:23)
+    at createSuiteCollector (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1709:2)
+    at Object.suiteFn (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1951:10)
+    at chain (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:599:14)
+    at file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/frontend/scripts/desktop/verdict-key-material.test.mjs:26:1
+    at ModuleJob.run (node:internal/modules/esm/module_job:437:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:639:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)
+
+Node.js v25.9.0
+✖ frontend/scripts/desktop/verdict-key-material.test.mjs (303.974541ms)
+file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1848
+		validateTags(runner.config, suiteTags);
+		                    ^
+
+TypeError: Cannot read properties of undefined (reading 'config')
+    at initSuite (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1848:23)
+    at createSuiteCollector (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1709:2)
+    at Object.suiteFn (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1951:10)
+    at chain (file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:599:14)
+    at file:///Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/frontend/scripts/desktop/windows-runtime-config.test.mjs:10:1
+    at ModuleJob.run (node:internal/modules/esm/module_job:437:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:639:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)
+
+Node.js v25.9.0
+✖ frontend/scripts/desktop/windows-runtime-config.test.mjs (279.890666ms)
+ℹ tests 31
+ℹ suites 0
+ℹ pass 0
+ℹ fail 31
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1586.578333
+
+✖ failing tests:
+
+test at frontend/scripts/desktop/build-sidecar.test.mjs:1:1
+✖ frontend/scripts/desktop/build-sidecar.test.mjs (569.385667ms)
+  'test failed'
+
+test at frontend/scripts/desktop/build-timing.test.mjs:1:1
+✖ frontend/scripts/desktop/build-timing.test.mjs (524.609125ms)
+  'test failed'
+
+test at frontend/scripts/desktop/bytecode.test.mjs:1:1
+✖ frontend/scripts/desktop/bytecode.test.mjs (1406.226666ms)
+  'test failed'
+
+test at frontend/scripts/desktop/channel-package-workflow.test.mjs:1:1
+✖ frontend/scripts/desktop/channel-package-workflow.test.mjs (521.577208ms)
+  'test failed'
+
+test at frontend/scripts/desktop/client-config-release.test.mjs:1:1
+✖ frontend/scripts/desktop/client-config-release.test.mjs (516.804875ms)
+  'test failed'
+
+test at frontend/scripts/desktop/collect-user-installers.test.mjs:1:1
+✖ frontend/scripts/desktop/collect-user-installers.test.mjs (533.257917ms)
+  'test failed'
+
+test at frontend/scripts/desktop/decoy.test.mjs:1:1
+✖ frontend/scripts/desktop/decoy.test.mjs (547.802958ms)
+  'test failed'
+
+test at frontend/scripts/desktop/desktop-release-workflow.test.mjs:1:1
+✖ frontend/scripts/desktop/desktop-release-workflow.test.mjs (522.827875ms)
+  'test failed'
+
+test at frontend/scripts/desktop/dmg-install-guide.test.mjs:1:1
+✖ frontend/scripts/desktop/dmg-install-guide.test.mjs (561.098916ms)
+  'test failed'
+
+test at frontend/scripts/desktop/execution-worker-runtime.test.mjs:1:1
+✖ frontend/scripts/desktop/execution-worker-runtime.test.mjs (554.127458ms)
+  'test failed'
+
+test at frontend/scripts/desktop/license-project-key.test.mjs:1:1
+✖ frontend/scripts/desktop/license-project-key.test.mjs (556.562875ms)
+  'test failed'
+
+test at frontend/scripts/desktop/macos-runtime-compat.test.mjs:1:1
+✖ frontend/scripts/desktop/macos-runtime-compat.test.mjs (567.89125ms)
+  'test failed'
+
+test at frontend/scripts/desktop/macos-runtime-signing.test.mjs:1:1
+✖ frontend/scripts/desktop/macos-runtime-signing.test.mjs (411.556084ms)
+  'test failed'
+
+test at frontend/scripts/desktop/node-runtime.test.mjs:1:1
+✖ frontend/scripts/desktop/node-runtime.test.mjs (392.757166ms)
+  'test failed'
+
+test at frontend/scripts/desktop/notarize.test.mjs:1:1
+✖ frontend/scripts/desktop/notarize.test.mjs (354.340375ms)
+  'test failed'
+
+test at frontend/scripts/desktop/obfuscate.test.mjs:1:1
+✖ frontend/scripts/desktop/obfuscate.test.mjs (964.122417ms)
+  'test failed'
+
+test at frontend/scripts/desktop/package-brand-surface.test.mjs:1:1
+✖ frontend/scripts/desktop/package-brand-surface.test.mjs (317.731209ms)
+  'test failed'
+
+test at frontend/scripts/desktop/package-flavor.test.mjs:1:1
+✖ frontend/scripts/desktop/package-flavor.test.mjs (435.718458ms)
+  'test failed'
+
+test at frontend/scripts/desktop/package-local.test.mjs:1:1
+✖ frontend/scripts/desktop/package-local.test.mjs (326.847208ms)
+  'test failed'
+
+test at frontend/scripts/desktop/platform-paths.test.mjs:1:1
+✖ frontend/scripts/desktop/platform-paths.test.mjs (568.288709ms)
+  'test failed'
+
+test at frontend/scripts/desktop/product-identity.test.mjs:1:1
+✖ frontend/scripts/desktop/product-identity.test.mjs (467.706ms)
+  'test failed'
+
+test at frontend/scripts/desktop/release.test.mjs:1:1
+✖ frontend/scripts/desktop/release.test.mjs (447.697708ms)
+  'test failed'
+
+test at frontend/scripts/desktop/runtime-inventory.test.mjs:1:1
+✖ frontend/scripts/desktop/runtime-inventory.test.mjs (416.9735ms)
+  'test failed'
+
+test at frontend/scripts/desktop/runtime-layer-keys.test.mjs:1:1
+✖ frontend/scripts/desktop/runtime-layer-keys.test.mjs (397.896792ms)
+  'test failed'
+
+test at frontend/scripts/desktop/runtime-prune-rat.test.mjs:1:1
+✖ frontend/scripts/desktop/runtime-prune-rat.test.mjs (401.058875ms)
+  'test failed'
+
+test at frontend/scripts/desktop/startup-safety-contract.test.mjs:1:1
+✖ frontend/scripts/desktop/startup-safety-contract.test.mjs (350.685958ms)
+  'test failed'
+
+test at frontend/scripts/desktop/tauri-signing-config.test.mjs:1:1
+✖ frontend/scripts/desktop/tauri-signing-config.test.mjs (349.188125ms)
+  'test failed'
+
+test at frontend/scripts/desktop/update-hosting-probe.test.mjs:1:1
+✖ frontend/scripts/desktop/update-hosting-probe.test.mjs (366.517375ms)
+  'test failed'
+
+test at frontend/scripts/desktop/verdict-artifact-hardening.test.mjs:1:1
+✖ frontend/scripts/desktop/verdict-artifact-hardening.test.mjs (323.574125ms)
+  'test failed'
+
+test at frontend/scripts/desktop/verdict-key-material.test.mjs:1:1
+✖ frontend/scripts/desktop/verdict-key-material.test.mjs (303.974541ms)
+  'test failed'
+
+test at frontend/scripts/desktop/windows-runtime-config.test.mjs:1:1
+✖ frontend/scripts/desktop/windows-runtime-config.test.mjs (279.890666ms)
+  'test failed'

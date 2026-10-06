@@ -11,7 +11,7 @@ import {executionTimeoutMs, completionWaitMs} from "@creatoros/contract/timeout-
 //   ② 并发防抖:同一 profile 并发 launch(如「状态探针 headless」撞上「登录弹窗 headed」)
 //      按 profile 串行化;且 profile 上还有**我们自己在用**的活 context(如跨请求保持打开的
 //      登录窗)时跳过杀进程/清锁 —— 否则预检会把活窗户的锁删掉、把活进程杀掉。
-//   ③ 失败诚实:launch 包超时(默认 120s)+ 失败抛人话 BrowserLaunchError,沿既有错误通道
+//   ③ 失败诚实:launch 包超时(默认 370s，覆盖两次180s启动及余量)+ 失败抛人话 BrowserLaunchError,沿既有错误通道
 //      回 UI(各调用方 route 已渲错误态),不再静默挂死。
 //
 // 附:--no-sandbox 警告横幅根因 —— 仓库代码从没传过它,是 Playwright 默认

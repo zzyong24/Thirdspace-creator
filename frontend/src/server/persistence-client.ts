@@ -4585,7 +4585,7 @@ FAVORITES_PROMOTE_PER_RUN
       ...(cfg.displayModelKey?{displayModelKey:cfg.displayModelKey}:{})};
   };
 
-  const workerBudget={maxCalls:6,maxTokens:1_000_000,deadlineMs:600_000};
+  const workerBudget={maxCalls:6,maxTokens:1_000_000,deadlineMs:1_800_000};
   const {readArtifactContentData,thesisReader,contractReader,outlineReader,artifactOriginReader}=createArtifactContextReaders(artifactsService);
   const generationContext={positioning:{getPositioningCenter:(c:RequestContext)=>positioningService.readPositioningCenter(c)},learnings:{getSuggestions:(c:RequestContext,options:{limit?:number})=>learningsService.getSuggestions(c,options)}};
   const reviewScriptSource: Parameters<typeof prepareScriptReviewContext>[2]["scriptSource"] = {
@@ -4881,7 +4881,7 @@ FAVORITES_PROMOTE_PER_RUN
         },
       }),
   });
-  const agenticBudget={maxCalls:8,maxTokens:20000,deadlineMs:600_000};
+  const agenticBudget={maxCalls:8,maxTokens:20000,deadlineMs:1_800_000};
   const agenticBusiness=createAgenticBusinessExecutionService(db,{
     definitions:{
       "exec.agentic.collect":{taskType:"agentic.collect",systemPrompt:DEFAULT_AGENTIC_SYSTEM_PROMPT,capability:"agentic.collect",tools:collectionWorkerTools.definitions},

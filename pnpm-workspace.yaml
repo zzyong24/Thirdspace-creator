@@ -18,3 +18,4 @@ onlyBuiltDependencies:
   - onnxruntime-node
 patchedDependencies:
   '@earendil-works/pi-ai@0.80.7': patches/@earendil-works__pi-ai@0.80.7.patch
+  hyperframes@0.7.54: patches/hyperframes@0.7.54.patch

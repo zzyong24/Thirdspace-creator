@@ -9,6 +9,10 @@ patchedDependencies:
     hash: 3272f5bc69752f8d4017676cd31ca9bad6302658d746c85f8c5606b974088325
     path: patches/@earendil-works__pi-ai@0.80.7.patch
 
+  hyperframes@0.7.54:
+    hash: 15761c896a52b54f07273e5031b38c4480484a466917f4cc65badf472149d5c0
+    path: patches/hyperframes@0.7.54.patch
+
 importers:
 
   .: {}
@@ -105,7 +109,7 @@ importers:
         version: 3.15.0
       hyperframes:
         specifier: 0.7.54
-        version: 0.7.54(@modelcontextprotocol/sdk@1.29.0(zod@4.4.3))
+        version: 0.7.54(patch_hash=15761c896a52b54f07273e5031b38c4480484a466917f4cc65badf472149d5c0)(@modelcontextprotocol/sdk@1.29.0(zod@4.4.3))
       node-cron:
         specifier: ^4.5.0
         version: 4.5.0
@@ -227,7 +231,7 @@ importers:
         version: 3.15.0
       hyperframes:
         specifier: 0.7.54
-        version: 0.7.54(@modelcontextprotocol/sdk@1.29.0(zod@4.4.3))
+        version: 0.7.54(patch_hash=15761c896a52b54f07273e5031b38c4480484a466917f4cc65badf472149d5c0)(@modelcontextprotocol/sdk@1.29.0(zod@4.4.3))
       lucide-react:
         specifier: 1.18.0
         version: 1.18.0(react@19.2.4)
@@ -12949,7 +12953,7 @@ snapshots:
 
   human-signals@8.0.1: {}
 
-  hyperframes@0.7.54(@modelcontextprotocol/sdk@1.29.0(zod@4.4.3)):
+  hyperframes@0.7.54(patch_hash=15761c896a52b54f07273e5031b38c4480484a466917f4cc65badf472149d5c0)(@modelcontextprotocol/sdk@1.29.0(zod@4.4.3)):
     dependencies:
       '@hono/node-server': 1.19.14(hono@4.12.25)
       '@puppeteer/browsers': 3.0.6

@@ -1,0 +1,8 @@
+import {expect,it} from 'vitest';
+import {createDb,executionTasks,eq} from '@creatoros/backend';
+import {createPersistentTaskService} from './persistent-task.service';
+const ctx={userId:'timeout-fixture',accountId:'timeout-account',requestId:'fixture',source:'user' as const};
+const budget={maxCalls:1,maxTokens:100,deadlineMs:1000};
+function input(key:string){return {kind:'source_sync' as const,ownerType:'source' as const,ownerId:key,idempotencyKey:key,payload:{sourceId:key},executionBudget:budget};}
+it('新任务通过正式持久入队口冻结至少两分钟期限',async()=>{const f=await createDb();try{const service=createPersistentTaskService(f.db,{now:()=> '2026-10-06T00:00:00.000Z'});const task=await service.enqueue(ctx,input('new'));const [stored]=await f.db.select().from(executionTasks).where(eq(executionTasks.id,task.id));if(!stored)throw Error("持久任务未保存");expect(stored.deadlineAt).toBe('2026-10-06T00:02:00.000Z');}finally{await f.client.close();}});
+it('读取与认领历史原期限不会获得新的两分钟',async()=>{const f=await createDb();let now='2026-10-06T00:00:00.000Z';try{const service=createPersistentTaskService(f.db,{now:()=>now});const task=await service.enqueue(ctx,input('legacy'));await f.db.update(executionTasks).set({deadlineAt:'2026-10-06T00:00:01.000Z',executionBudget:budget}).where(eq(executionTasks.id,task.id));now='2026-10-06T00:00:03.000Z';await service.get(ctx,task.id);const [stored]=await f.db.select().from(executionTasks).where(eq(executionTasks.id,task.id));if(!stored)throw Error("持久任务未保存");expect(stored.deadlineAt).toBe('2026-10-06T00:00:01.000Z');expect(await service.claimTask({taskId:task.id,workerId:'fixture'})).toBeNull();}finally{await f.client.close();}});

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import * as fs from "node:fs/promises";
 import * as os from "node:os";
 import * as path from "node:path";
@@ -160,11 +160,15 @@ describe("runExecutionTask (echo.manifest end-to-end)", () => {
   });
 
   it("times out a hung executor via Promise.race + abort signal", async () => {
+    vi.useFakeTimers({toFake:["setTimeout", "clearTimeout"]});
+    let entered!: () => void;
+    const running = new Promise<void>(resolve => { entered = resolve; });
     const registry = createExecutorRegistry();
     let sawAbort = false;
     registry.register({
       taskType: "echo.manifest",
       async run(_sandbox, _params, { signal }) {
+        entered();
         await new Promise<void>((resolve) => {
           signal.addEventListener("abort", () => {
             sawAbort = true;
@@ -175,7 +179,7 @@ describe("runExecutionTask (echo.manifest end-to-end)", () => {
       },
     });
     const ai = makeFakeAi();
-    await runExecutionTask(
+    const pending = runExecutionTask(
       ctx,
       {
         id: "t-timeout",
@@ -189,8 +193,15 @@ describe("runExecutionTask (echo.manifest end-to-end)", () => {
       },
       depsWith(registry, ai),
     );
+    try {
+      await running;
+      await vi.advanceTimersByTimeAsync(119_999);
+      expect(sawAbort).toBe(false);
+      await vi.advanceTimersByTimeAsync(1);
+      await pending;
+    } finally { vi.useRealTimers(); }
     expect(sawAbort).toBe(true);
-    expect(ai.failures[0]).toContain("执行超时");
+    expect(ai.failures[0]).toContain("执行超时(>120s)");
   }, 10_000);
 
   it("[T-841 RED] video.render without a fixed total timeout may finish after an arbitrary delay", async () => {

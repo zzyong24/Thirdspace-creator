@@ -789,3 +789,13 @@ T991：Windows 源码编译成功后，TypeScript 检查在约 2 GiB V8 堆耗�
 - **GuardCheck**: `node docs/verification/t1022/run-archive-guard.mjs`；缺隔离PG配置必须失败，不能skip成绿。
 - **Outcome(T+N)**: 当场负向RED 3 FAIL/4 PASS后修复，作者86条及追加56条通过；增量及test-only按SHA集成，独立最终复验B1 PASS，4个不同测试文件62条通过（两次PG运行不累加），组合22文件ROOT/候选匹配；原FAIL证据保留。
 - **Ref**: T-1022；docs/verification/t1022/startup-permission-review-initial-fail.md；archive-admission-freeze.json。
+
+## LED-053 — 执行预算必须从完整内部流程向外计算
+
+- **Date**: 2026-10-06 · **Stage**: BUILD · **Severity**: high · **Status**: active
+- **WhatFailed**: 安装版素材准备约31秒失败；Worker固定30秒普通宿主等待包住匿名请求、登录导航、重试与抽音。前端观察窗口到期又把后台仍运行的任务显示为失败。
+- **RootCause**: 把端口等待、业务总预算、观察窗口和库默认混用；只改外部配置不能覆盖SDK内部30秒默认。新增预算没有在正式持久创建口首次冻结下限。
+- **GuardRule**: 新正执行/有限观察至少120秒，原长预算保留；独立外层大于全部内部墙钟预算，计入串行尝试、退避、排队、启动和清理余量。同一原绝对deadline向内传播且到期立即结束，历史不续期；continuous沿原归属、取消和心跳。观察结束保留原ID，不能伪造失败或重建任务。间隔/授权TTL/输入长度和取消后强杀宽限分开。依赖默认及单位、0禁用逐消费者检查。
+- **GuardCheck**: `node tools/timeout-policy/verify.mjs`；reconcile.config.json LED-053。含正式Worker→ASR准备、真实沙箱执行、PGlite持久入队/历史claim、前端原任务观察、CLI等待、依赖补丁及真实CLI解析；完整渲染导出证据另存。
+- **Outcome(T+N)**: 当场旧30秒红测失败；修复后31秒、125秒和超过10分钟continuous慢成功，取消/原deadline仍停止。新持久入队1秒旧预算红测失败，修复后冻结两分钟且历史过期不认领。依赖公共CLI实际隔离导出成功。全部222条原清单有归属；真实供应商、Windows与安装版未冒充通过，全局既有Gate失败保留。
+- **Ref**: docs/engineering/timeout-policy.md；docs/verification/t1066/REPORT.md；通用Skill 3.27.4。

@@ -1126,3 +1126,6 @@
 {"ts":"2026-10-06T06:12:25.668Z","actor":"taskctl","action":"start","task":"T-1066-worker","sha_before":"c38f727d8afa","sha_after":"1f3dc17d1d2b"}
 {"ts":"2026-10-06T06:12:25.797Z","actor":"taskctl","action":"start","task":"T-1066-frontend","sha_before":"1f3dc17d1d2b","sha_after":"750d001c1bce"}
 {"ts":"2026-10-06T06:12:25.930Z","actor":"taskctl","action":"start","task":"T-1066-tooling","sha_before":"750d001c1bce","sha_after":"c3d763602cdd"}
+{"ts":"2026-10-06T06:37:50.935Z","actor":"taskctl","action":"complete","task":"T-1066-worker","evidence":"a08afe1d；Worker端口慢准备31s/125s/continuous601s红绿37项、聚焦108+86项、主集成Worker32项通过；全局reconcile仍运行且既有治理/类型欠债如实保留，源码分区交主任务统一验收","sha_before":"c3d763602cdd","sha_after":"90a5dd5b0aac"}
+{"ts":"2026-10-06T06:49:39.438Z","actor":"taskctl","action":"complete","task":"T-1066-frontend","evidence":"2193d98b；源码分区307项、观察组件67项、LED047157项、Rust隔离生命周期12项及真实本地Chromium31s慢读取/取消通过；新预算装配由主任务统一，完整Cargo基线缺打包binary及安装版视觉待验；全局基线失败保留","sha_before":"90a5dd5b0aac","sha_after":"ce33aad8ac82"}
+{"ts":"2026-10-06T07:15:36.831Z","actor":"taskctl","action":"complete","task":"T-1066-tooling","evidence":"分区候选 3c6db27f 已合并 a0f1e812；桌面定向 6 文件 89 测试通过；工具 CLI/MCP/构建隔离证据见 disposition；reconcile 保留全局 35 个既有失败，未宣称全绿。","sha_before":"ce33aad8ac82","sha_after":"e5a60e0cf009"}

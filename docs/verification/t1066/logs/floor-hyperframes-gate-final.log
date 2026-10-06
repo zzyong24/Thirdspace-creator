@@ -1,0 +1,14 @@
+✔ detects short request, browser default and abort timer consumers (17.199167ms)
+✔ does not turn polling, sleeps, TTL or shared remaining deadline into execution budgets (2.772291ms)
+✔ accepts normalized defaults and longer outer budget instead of bare numeric replacement (1.327959ms)
+✔ 锁定实际安装的同版本补丁，依赖升级必须重新核对内部等待 (1225.051416ms)
+✔ 实际安装的归一入口保留零值、拒绝非法值并明确覆盖页面默认 (4.541959ms)
+✔ 真实公共CLI拒绝一秒浏览器超时，错误单位为秒 (605.184041ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2287.530292

@@ -1,0 +1,128 @@
+
+> creatoros-frontend@1.2.0 test /Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/frontend
+> vitest run scripts/desktop
+
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/frontend
+
+(node:12057) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:12055) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:12052) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:12054) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:12060) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:12058) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:12056) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:12059) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:12053) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:12061) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:12051) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ scripts/desktop/startup-safety-contract.test.mjs (11 tests | 1 failed) 30ms
+     × T-734 routes Douyin login through Chrome then bundled Chromium without a CLI preflight 14ms (retry x2)
+(node:12089) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:12088) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:12090) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:12092) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:12091) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:12095) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:12093) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:12096) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:12098) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:12100) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:12099) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:12103) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:12105) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:12104) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:12106) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:12109) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:12108) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:12111) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:12112) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  scripts/desktop/startup-safety-contract.test.mjs > T-535 desktop startup safety contract > T-734 routes Douyin login through Chrome then bundled Chromium without a CLI preflight
+ FAIL  scripts/desktop/startup-safety-contract.test.mjs > T-535 desktop startup safety contract > T-734 routes Douyin login through Chrome then bundled Chromium without a CLI preflight
+ FAIL  scripts/desktop/startup-safety-contract.test.mjs > T-535 desktop startup safety contract > T-734 routes Douyin login through Chrome then bundled Chromium without a CLI preflight
+AssertionError: expected 'async function openContext(authDir: s…' to contain 'launchWithBrowser((selection)'
+
+- Expected
++ Received
+
+- launchWithBrowser((selection)
++ async function openContext(authDir: string, headless: false, signal?: AbortSignal): Promise<ExclusiveBrowserSession>;
++ async function openContext(authDir: string, headless: boolean, signal?: AbortSignal): Promise<ReadBrowserSession>;
++ async function openContext(authDir: string, headless: boolean, signal?: AbortSignal): Promise<ReadBrowserSession> {
++   signal?.throwIfAborted();
++   if (!readSessionRegistry[readSessionKey]) {
++     const pending = (async () => {
++       const { acquireHostBrowserProfile, resolveHostBrowserProfile } = await import('./host-browser-profile-lifecycle');
++       const { openDouyinProfileContext } = await import('@creatoros/ai-worker/browser/douyin-profile-context');
++       const { createSharedReadBrowserSessionPool } = await import('@creatoros/ai-worker/browser/shared-read-browser-session');
++       return createSharedReadBrowserSessionPool({
++         authorize: resolveHostBrowserProfile, open: async (identity, headless, hostSignal) => {
++           const lease = await acquireHostBrowserProfile(identity.authDir, hostSignal);
++           return openDouyinProfileContext(lease.authDir, headless, {
++             signal: hostSignal, onStopped: lease.onStopped
++           });
++         }
++       });
++     })();
++     readSessionRegistry[readSessionKey] = pending;
++     void pending.catch(() => {
++       if (readSessionRegistry[readSessionKey] === pending)
++         delete readSessionRegistry[readSessionKey];
++     });
++   }
++   const pool = await readSessionRegistry[readSessionKey]!;
++   return headless ? pool.checkoutRead(authDir, signal) : pool.checkoutExclusive(authDir, signal);
++ }
++
++ async function isLoggedIn
+
+ ❯ scripts/desktop/startup-safety-contract.test.mjs:116:25
+    114|     )?.[0];
+    115|     expect(openContext).toBeTruthy();
+    116|     expect(openContext).toContain("launchWithBrowser((selection)");
+       |                         ^
+    117|     expect(openContext).not.toContain("ensureChromiumInstalled()");
+    118|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+
+ Test Files  1 failed | 30 passed (31)
+      Tests  1 failed | 235 passed (236)
+   Start at  14:20:52
+   Duration  16.10s (transform 2.86s, setup 9.65s, import 4.62s, tests 13.35s, environment 37.20s)
+
+ ELIFECYCLE  Test failed. See above for more details.

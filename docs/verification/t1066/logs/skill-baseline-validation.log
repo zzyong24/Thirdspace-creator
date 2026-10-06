@@ -1,0 +1,38 @@
+[ERROR] content.personal-path decisions/agent-kernel-references.md:17 - 文件包含具体用户目录：/Users/zyongzhu/；改为配置参数、环境变量或平台目录解析
+[WARNING] layer.root-markdown AGENTS_TEMPLATE.md - 根目录 Markdown 应移入 references，或说明其必须位于根目录的产品职责
+[WARNING] layer.root-markdown CHANGELOG.md - 根目录 Markdown 应移入 references，或说明其必须位于根目录的产品职责
+[WARNING] content.duplicate-exact prompts/question-budget.md:3 - 与 prompts/default-assumptions.md:3 重复；只保留一处完整规则，其余位置改为链接
+[WARNING] content.duplicate-exact templates/BUSINESS_FLOW_TEMPLATE.md:29 - 与 templates/BACKEND_SPEC_TEMPLATE.md:27 重复；只保留一处完整规则，其余位置改为链接
+[WARNING] content.duplicate-exact templates/BUSINESS_FLOW_TEMPLATE.md:56 - 与 templates/BACKEND_SPEC_TEMPLATE.md:54 重复；只保留一处完整规则，其余位置改为链接
+[WARNING] content.duplicate-exact templates/COMPONENTS_SPEC_TEMPLATE.md:20 - 与 templates/BUSINESS_FLOW_TEMPLATE.md:22 重复；只保留一处完整规则，其余位置改为链接
+[WARNING] content.duplicate-exact templates/COMPONENTS_SPEC_TEMPLATE.md:27 - 与 templates/BACKEND_SPEC_TEMPLATE.md:27 重复；只保留一处完整规则，其余位置改为链接
+[WARNING] content.duplicate-exact templates/DEFAULT_ASSUMPTIONS_TEMPLATE.md:20 - 与 templates/BUSINESS_FLOW_TEMPLATE.md:22 重复；只保留一处完整规则，其余位置改为链接
+[WARNING] content.duplicate-exact templates/DEFAULT_ASSUMPTIONS_TEMPLATE.md:27 - 与 templates/BACKEND_SPEC_TEMPLATE.md:27 重复；只保留一处完整规则，其余位置改为链接
+[WARNING] content.duplicate-exact templates/IA_SPEC_TEMPLATE.md:21 - 与 templates/BUSINESS_FLOW_TEMPLATE.md:22 重复；只保留一处完整规则，其余位置改为链接
+[WARNING] content.duplicate-exact templates/IA_SPEC_TEMPLATE.md:28 - 与 templates/BACKEND_SPEC_TEMPLATE.md:27 重复；只保留一处完整规则，其余位置改为链接
+[WARNING] content.duplicate-exact templates/INTEGRATION_REPORT_TEMPLATE.md:20 - 与 templates/BUSINESS_FLOW_TEMPLATE.md:22 重复；只保留一处完整规则，其余位置改为链接
+[WARNING] content.duplicate-exact templates/INTEGRATION_REPORT_TEMPLATE.md:27 - 与 templates/BACKEND_SPEC_TEMPLATE.md:27 重复；只保留一处完整规则，其余位置改为链接
+[WARNING] content.duplicate-exact templates/LIGHT_DOMAIN_MODEL_TEMPLATE.md:21 - 与 templates/BUSINESS_FLOW_TEMPLATE.md:22 重复；只保留一处完整规则，其余位置改为链接
+[WARNING] content.duplicate-exact templates/LIGHT_DOMAIN_MODEL_TEMPLATE.md:28 - 与 templates/BACKEND_SPEC_TEMPLATE.md:27 重复；只保留一处完整规则，其余位置改为链接
+[WARNING] content.duplicate-exact templates/MOCK_DATA_SPEC_TEMPLATE.md:33 - 与 templates/BACKEND_SPEC_TEMPLATE.md:27 重复；只保留一处完整规则，其余位置改为链接
+[WARNING] content.duplicate-exact templates/MODULE_WORKFLOW_SPEC_TEMPLATE.md:22 - 与 templates/BUSINESS_FLOW_TEMPLATE.md:22 重复；只保留一处完整规则，其余位置改为链接
+[WARNING] content.duplicate-exact templates/MODULE_WORKFLOW_SPEC_TEMPLATE.md:29 - 与 templates/BACKEND_SPEC_TEMPLATE.md:27 重复；只保留一处完整规则，其余位置改为链接
+[WARNING] content.duplicate-exact templates/PROJECT_CONTEXT_TEMPLATE.md:19 - 与 templates/BUSINESS_FLOW_TEMPLATE.md:22 重复；只保留一处完整规则，其余位置改为链接
+[WARNING] content.duplicate-exact templates/PROJECT_CONTEXT_TEMPLATE.md:26 - 与 templates/BACKEND_SPEC_TEMPLATE.md:27 重复；只保留一处完整规则，其余位置改为链接
+[WARNING] content.duplicate-exact templates/RELEASE_REVIEW_TEMPLATE.md:20 - 与 templates/BUSINESS_FLOW_TEMPLATE.md:22 重复；只保留一处完整规则，其余位置改为链接
+[WARNING] content.duplicate-exact templates/RELEASE_REVIEW_TEMPLATE.md:27 - 与 templates/BACKEND_SPEC_TEMPLATE.md:27 重复；只保留一处完整规则，其余位置改为链接
+[WARNING] content.duplicate-exact templates/SERVICE_CONTRACT_TEMPLATE.md:24 - 与 templates/BACKEND_SPEC_TEMPLATE.md:20 重复；只保留一处完整规则，其余位置改为链接
+[WARNING] content.duplicate-exact templates/SERVICE_CONTRACT_TEMPLATE.md:31 - 与 templates/BACKEND_SPEC_TEMPLATE.md:27 重复；只保留一处完整规则，其余位置改为链接
+[WARNING] content.duplicate-exact templates/TEST_PLAN_TEMPLATE.md:25 - 与 templates/BUSINESS_FLOW_TEMPLATE.md:22 重复；只保留一处完整规则，其余位置改为链接
+[WARNING] content.duplicate-exact templates/TEST_PLAN_TEMPLATE.md:32 - 与 templates/BACKEND_SPEC_TEMPLATE.md:27 重复；只保留一处完整规则，其余位置改为链接
+[WARNING] content.duplicate-exact templates/UI_RULES_TEMPLATE.md:22 - 与 templates/BUSINESS_FLOW_TEMPLATE.md:22 重复；只保留一处完整规则，其余位置改为链接
+[WARNING] content.duplicate-exact templates/UI_RULES_TEMPLATE.md:29 - 与 templates/BACKEND_SPEC_TEMPLATE.md:27 重复；只保留一处完整规则，其余位置改为链接
+[WARNING] content.duplicate-near process/harness/evaluator.md:62 - 与 process/harness/README.md:112 高度相似；合并内容，并从另一处链接过去
+[ERROR] content.history CHANGELOG.md - 正式文档包含修改记录或单次修复叙述；只保留当前通用规则
+[ERROR] compatibility.host-coupling CHANGELOG.md:386 - 发现宿主专用执行要求；核对是否应改为能力描述或明确声明宿主依赖
+[ERROR] compatibility.host-coupling CHANGELOG.md:386 - 发现宿主专用执行要求；核对是否应改为能力描述或明确声明宿主依赖
+[ERROR] compatibility.host-specific-path decisions/assets/modules/MOD-002-configurable-llm-adapter/files/anthropic-adapter.ts - 通用 Skill 包含宿主品牌路径；将适配器移出通用包或明确改为宿主专用 Skill
+[WARNING] compatibility.undeclared README.md - 存在平台相关脚本，但 README 没有说明支持平台
+[ERROR] readme.section-missing README.md - README 没有讲清“安装”相关内容
+[WARNING] readme.boundary-missing README.md - README 没有单独说明适用边界、数据或权限
+FAIL：6 个错误，31 个警告；SKILL.md 共 63 行

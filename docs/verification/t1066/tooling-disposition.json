@@ -1,0 +1,3567 @@
+{
+  "partition": "T-1066-tooling",
+  "sourceRoot": "/Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator",
+  "baseSha": "b86020f6c9c9884c71bf613bcb9f089793b6067a",
+  "originalRecords": [
+    {
+      "id": "TO-145",
+      "file": "mcp-server/src/cli.ts",
+      "originalLine": 249,
+      "originalPolicy": "timeoutSeconds=positiveNumberFlag(args,\"--timeout\"); elapsed>=timeoutSeconds*1000",
+      "status": "已调整",
+      "newPolicy": "默认无限持续观察保留；显式--timeout<120秒明确拒绝，提示继续观察原任务ID；到期不取消后台",
+      "evidence": [
+        {
+          "line": 46,
+          "source": "\"--timeout\","
+        },
+        {
+          "line": 243,
+          "source": "const timeoutSeconds = positiveNumberFlag(args, \"--timeout\");"
+        },
+        {
+          "line": 244,
+          "source": "if (timeoutSeconds !== null && timeoutSeconds < 120) {"
+        },
+        {
+          "line": 245,
+          "source": "throw new Error(\"--timeout 最短为 120 秒；省略表示持续观察，等待结束不会取消后台任务。\");"
+        },
+        {
+          "line": 252,
+          "source": "if (timeoutSeconds !== null && Date.now() - startedAt >= timeoutSeconds * 1000) {"
+        },
+        {
+          "line": 253,
+          "source": "throw new Error(`等待任务 ${taskId} 超过 ${timeoutSeconds} 秒；后台任务没有被取消。`);"
+        },
+        {
+          "line": 255,
+          "source": "await new Promise((resolve) => setTimeout(resolve, pollSeconds * 1000));"
+        },
+        {
+          "line": 298,
+          "source": "taskWaitFlags: \"tasks wait <taskId>：--timeout 最短 120 秒，省略表示持续观察；--poll-interval 是轮询间隔。等待结束不取消后台任务，应继续观察原 taskId。\","
+        }
+      ],
+      "verification": [
+        "Node行为回归10 PASS（含真实隔离Worker/进程fixture与预算归一）",
+        "CLI实际命令入口假时钟14 PASS",
+        "Skill Python12 PASS",
+        "MCP TypeScript PASS",
+        "桌面受影响6文件89 PASS；桌面全量235PASS/1既有startup-safety静态字符串断言FAIL，未改断言/生产文件",
+        "25个变更JS语法check PASS；git diff --check PASS",
+        "规定的Node desktop通配入口FAIL：这些用例为Vitest，Node runner未建立Vitest suite且工作目录预期frontend；正确pnpm入口结果见前述"
+      ],
+      "limitations": "静态脚本/安全fixture；未启动远程CI/真实安装包/模型/用户浏览器profile。依赖内不可配置短限单列交主集成。"
+    },
+    {
+      "id": "TO-146",
+      "file": ".agents/skills/guizang-product-video-skill/scripts/check_environment.py",
+      "originalLine": 17,
+      "originalPolicy": "subprocess.run(timeout=run.default30)",
+      "status": "已调整",
+      "newPolicy": "run默认及调用归一最低120秒；含真实浏览器启动180秒/两个动作各120秒/关闭120秒的run单独570秒并留30秒余量",
+      "evidence": [
+        {
+          "line": 15,
+          "source": "def run(args, cwd=None, timeout=120):"
+        },
+        {
+          "line": 16,
+          "source": "timeout=max(120, timeout) # 执行预算下限；并非poll或媒体时长。"
+        },
+        {
+          "line": 18,
+          "source": "p=subprocess.run(args,cwd=cwd,capture_output=True,text=True,timeout=timeout)"
+        },
+        {
+          "line": 20,
+          "source": "except (OSError,subprocess.TimeoutExpired) as e:return {'ok':False,'output':str(e)}"
+        },
+        {
+          "line": 92,
+          "source": "result=run([paths['node'],'-e',\"const {chromium}=require('playwright');async function close(b){let timer;try{await Promise.race([b.close(),new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('browser-close-timeout')),120000)})]);}finally{clearTimeout(timer);}};(async()=>{const b=await chromium.launch({headless:true});const p=await b.newPage();p.setDefaultTimeout(120000);p.setDefaultNavigationTimeout(120000);await p.setContent('<p>ready</p>');if(await p.textContent('p')!=='ready')throw Error('DOM failed');await close(b);})().catch(e=>{console.error(e.message);process.exit(1)});\"],project,570)"
+        }
+      ],
+      "verification": [
+        "Node行为回归10 PASS（含真实隔离Worker/进程fixture与预算归一）",
+        "CLI实际命令入口假时钟14 PASS",
+        "Skill Python12 PASS",
+        "MCP TypeScript PASS",
+        "桌面受影响6文件89 PASS；桌面全量235PASS/1既有startup-safety静态字符串断言FAIL，未改断言/生产文件",
+        "25个变更JS语法check PASS；git diff --check PASS",
+        "规定的Node desktop通配入口FAIL：这些用例为Vitest，Node runner未建立Vitest suite且工作目录预期frontend；正确pnpm入口结果见前述"
+      ],
+      "limitations": "静态脚本/安全fixture；未启动远程CI/真实安装包/模型/用户浏览器profile。依赖内不可配置短限单列交主集成。"
+    },
+    {
+      "id": "TO-147",
+      "file": ".agents/skills/guizang-product-video-skill/scripts/check_environment.py",
+      "originalLine": 98,
+      "originalPolicy": "run(hyperframes doctor,timeout=60)",
+      "status": "已调整",
+      "newPolicy": "doctor子进程执行120秒；HyperFrames库中内层未覆写短探针另交主集成pnpm patch",
+      "evidence": [
+        {
+          "line": 15,
+          "source": "def run(args, cwd=None, timeout=120):"
+        },
+        {
+          "line": 16,
+          "source": "timeout=max(120, timeout) # 执行预算下限；并非poll或媒体时长。"
+        },
+        {
+          "line": 18,
+          "source": "p=subprocess.run(args,cwd=cwd,capture_output=True,text=True,timeout=timeout)"
+        },
+        {
+          "line": 20,
+          "source": "except (OSError,subprocess.TimeoutExpired) as e:return {'ok':False,'output':str(e)}"
+        },
+        {
+          "line": 92,
+          "source": "result=run([paths['node'],'-e',\"const {chromium}=require('playwright');async function close(b){let timer;try{await Promise.race([b.close(),new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('browser-close-timeout')),120000)})]);}finally{clearTimeout(timer);}};(async()=>{const b=await chromium.launch({headless:true});const p=await b.newPage();p.setDefaultTimeout(120000);p.setDefaultNavigationTimeout(120000);await p.setContent('<p>ready</p>');if(await p.textContent('p')!=='ready')throw Error('DOM failed');await close(b);})().catch(e=>{console.error(e.message);process.exit(1)});\"],project,570)"
+        }
+      ],
+      "verification": [
+        "Node行为回归10 PASS（含真实隔离Worker/进程fixture与预算归一）",
+        "CLI实际命令入口假时钟14 PASS",
+        "Skill Python12 PASS",
+        "MCP TypeScript PASS",
+        "桌面受影响6文件89 PASS；桌面全量235PASS/1既有startup-safety静态字符串断言FAIL，未改断言/生产文件",
+        "25个变更JS语法check PASS；git diff --check PASS",
+        "规定的Node desktop通配入口FAIL：这些用例为Vitest，Node runner未建立Vitest suite且工作目录预期frontend；正确pnpm入口结果见前述"
+      ],
+      "limitations": "静态脚本/安全fixture；未启动远程CI/真实安装包/模型/用户浏览器profile。依赖内不可配置短限单列交主集成。"
+    },
+    {
+      "id": "TO-148",
+      "file": ".github/workflows/channel-package.yml",
+      "originalLine": 29,
+      "originalPolicy": "timeout-minutes: 10",
+      "status": "保留更长预算",
+      "newPolicy": "保留原10分钟，已≥120秒；该策略是独立job/观察/既有高预算，未缩短。",
+      "evidence": [
+        {
+          "line": 29,
+          "source": "timeout-minutes: 10"
+        },
+        {
+          "line": 95,
+          "source": "timeout-minutes: 300"
+        },
+        {
+          "line": 367,
+          "source": "if (-not $app.WaitForExit(120000)) { Stop-Process -Id $app.Id -Force -ErrorAction SilentlyContinue }"
+        }
+      ],
+      "verification": [
+        "Node行为回归10 PASS（含真实隔离Worker/进程fixture与预算归一）",
+        "CLI实际命令入口假时钟14 PASS",
+        "Skill Python12 PASS",
+        "MCP TypeScript PASS",
+        "桌面受影响6文件89 PASS；桌面全量235PASS/1既有startup-safety静态字符串断言FAIL，未改断言/生产文件",
+        "25个变更JS语法check PASS；git diff --check PASS",
+        "规定的Node desktop通配入口FAIL：这些用例为Vitest，Node runner未建立Vitest suite且工作目录预期frontend；正确pnpm入口结果见前述"
+      ],
+      "limitations": "静态脚本/安全fixture；未启动远程CI/真实安装包/模型/用户浏览器profile。依赖内不可配置短限单列交主集成。"
+    },
+    {
+      "id": "TO-149",
+      "file": ".github/workflows/channel-package.yml",
+      "originalLine": 95,
+      "originalPolicy": "timeout-minutes: 300",
+      "status": "保留更长预算",
+      "newPolicy": "保留原300分钟，已≥120秒；该策略是独立job/观察/既有高预算，未缩短。",
+      "evidence": [
+        {
+          "line": 29,
+          "source": "timeout-minutes: 10"
+        },
+        {
+          "line": 95,
+          "source": "timeout-minutes: 300"
+        },
+        {
+          "line": 367,
+          "source": "if (-not $app.WaitForExit(120000)) { Stop-Process -Id $app.Id -Force -ErrorAction SilentlyContinue }"
+        }
+      ],
+      "verification": [
+        "Node行为回归10 PASS（含真实隔离Worker/进程fixture与预算归一）",
+        "CLI实际命令入口假时钟14 PASS",
+        "Skill Python12 PASS",
+        "MCP TypeScript PASS",
+        "桌面受影响6文件89 PASS；桌面全量235PASS/1既有startup-safety静态字符串断言FAIL，未改断言/生产文件",
+        "25个变更JS语法check PASS；git diff --check PASS",
+        "规定的Node desktop通配入口FAIL：这些用例为Vitest，Node runner未建立Vitest suite且工作目录预期frontend；正确pnpm入口结果见前述"
+      ],
+      "limitations": "静态脚本/安全fixture；未启动远程CI/真实安装包/模型/用户浏览器profile。依赖内不可配置短限单列交主集成。"
+    },
+    {
+      "id": "TO-150",
+      "file": ".github/workflows/channel-package.yml",
+      "originalLine": 293,
+      "originalPolicy": "600次×sleep0.5s",
+      "status": "保留更长预算",
+      "newPolicy": "保留原300秒，已≥120秒；该策略是独立job/观察/既有高预算，未缩短。",
+      "evidence": [
+        {
+          "line": 29,
+          "source": "timeout-minutes: 10"
+        },
+        {
+          "line": 95,
+          "source": "timeout-minutes: 300"
+        },
+        {
+          "line": 367,
+          "source": "if (-not $app.WaitForExit(120000)) { Stop-Process -Id $app.Id -Force -ErrorAction SilentlyContinue }"
+        }
+      ],
+      "verification": [
+        "Node行为回归10 PASS（含真实隔离Worker/进程fixture与预算归一）",
+        "CLI实际命令入口假时钟14 PASS",
+        "Skill Python12 PASS",
+        "MCP TypeScript PASS",
+        "桌面受影响6文件89 PASS；桌面全量235PASS/1既有startup-safety静态字符串断言FAIL，未改断言/生产文件",
+        "25个变更JS语法check PASS；git diff --check PASS",
+        "规定的Node desktop通配入口FAIL：这些用例为Vitest，Node runner未建立Vitest suite且工作目录预期frontend；正确pnpm入口结果见前述"
+      ],
+      "limitations": "静态脚本/安全fixture；未启动远程CI/真实安装包/模型/用户浏览器profile。依赖内不可配置短限单列交主集成。"
+    },
+    {
+      "id": "TO-151",
+      "file": ".github/workflows/channel-package.yml",
+      "originalLine": 351,
+      "originalPolicy": "1500次×sleep200ms",
+      "status": "保留更长预算",
+      "newPolicy": "保留原300秒，已≥120秒；该策略是独立job/观察/既有高预算，未缩短。",
+      "evidence": [
+        {
+          "line": 29,
+          "source": "timeout-minutes: 10"
+        },
+        {
+          "line": 95,
+          "source": "timeout-minutes: 300"
+        },
+        {
+          "line": 367,
+          "source": "if (-not $app.WaitForExit(120000)) { Stop-Process -Id $app.Id -Force -ErrorAction SilentlyContinue }"
+        }
+      ],
+      "verification": [
+        "Node行为回归10 PASS（含真实隔离Worker/进程fixture与预算归一）",
+        "CLI实际命令入口假时钟14 PASS",
+        "Skill Python12 PASS",
+        "MCP TypeScript PASS",
+        "桌面受影响6文件89 PASS；桌面全量235PASS/1既有startup-safety静态字符串断言FAIL，未改断言/生产文件",
+        "25个变更JS语法check PASS；git diff --check PASS",
+        "规定的Node desktop通配入口FAIL：这些用例为Vitest，Node runner未建立Vitest suite且工作目录预期frontend；正确pnpm入口结果见前述"
+      ],
+      "limitations": "静态脚本/安全fixture；未启动远程CI/真实安装包/模型/用户浏览器profile。依赖内不可配置短限单列交主集成。"
+    },
+    {
+      "id": "TO-152",
+      "file": ".github/workflows/channel-package.yml",
+      "originalLine": 367,
+      "originalPolicy": "app.WaitForExit(10000)",
+      "status": "已调整",
+      "newPolicy": "正执行/观察预算升120秒；保留原poll、sleep间隔及媒体输入长度。",
+      "evidence": [
+        {
+          "line": 29,
+          "source": "timeout-minutes: 10"
+        },
+        {
+          "line": 95,
+          "source": "timeout-minutes: 300"
+        },
+        {
+          "line": 367,
+          "source": "if (-not $app.WaitForExit(120000)) { Stop-Process -Id $app.Id -Force -ErrorAction SilentlyContinue }"
+        }
+      ],
+      "verification": [
+        "Node行为回归10 PASS（含真实隔离Worker/进程fixture与预算归一）",
+        "CLI实际命令入口假时钟14 PASS",
+        "Skill Python12 PASS",
+        "MCP TypeScript PASS",
+        "桌面受影响6文件89 PASS；桌面全量235PASS/1既有startup-safety静态字符串断言FAIL，未改断言/生产文件",
+        "25个变更JS语法check PASS；git diff --check PASS",
+        "规定的Node desktop通配入口FAIL：这些用例为Vitest，Node runner未建立Vitest suite且工作目录预期frontend；正确pnpm入口结果见前述"
+      ],
+      "limitations": "静态脚本/安全fixture；未启动远程CI/真实安装包/模型/用户浏览器profile。依赖内不可配置短限单列交主集成。"
+    },
+    {
+      "id": "TO-153",
+      "file": ".github/workflows/commit-activity.yml",
+      "originalLine": 21,
+      "originalPolicy": "timeout-minutes: 10",
+      "status": "保留更长预算",
+      "newPolicy": "保留原10分钟，已≥120秒；该策略是独立job/观察/既有高预算，未缩短。",
+      "evidence": [
+        {
+          "line": 21,
+          "source": "timeout-minutes: 10"
+        }
+      ],
+      "verification": [
+        "Node行为回归10 PASS（含真实隔离Worker/进程fixture与预算归一）",
+        "CLI实际命令入口假时钟14 PASS",
+        "Skill Python12 PASS",
+        "MCP TypeScript PASS",
+        "桌面受影响6文件89 PASS；桌面全量235PASS/1既有startup-safety静态字符串断言FAIL，未改断言/生产文件",
+        "25个变更JS语法check PASS；git diff --check PASS",
+        "规定的Node desktop通配入口FAIL：这些用例为Vitest，Node runner未建立Vitest suite且工作目录预期frontend；正确pnpm入口结果见前述"
+      ],
+      "limitations": "静态脚本/安全fixture；未启动远程CI/真实安装包/模型/用户浏览器profile。依赖内不可配置短限单列交主集成。"
+    },
+    {
+      "id": "TO-154",
+      "file": ".github/workflows/desktop-release.yml",
+      "originalLine": 58,
+      "originalPolicy": "timeout-minutes: 5",
+      "status": "保留更长预算",
+      "newPolicy": "保留原5分钟，已≥120秒；该策略是独立job/观察/既有高预算，未缩短。",
+      "evidence": [
+        {
+          "line": 58,
+          "source": "timeout-minutes: 5"
+        },
+        {
+          "line": 84,
+          "source": "timeout-minutes: 180"
+        },
+        {
+          "line": 483,
+          "source": "# [T-454] 反转 T-446 校验:必须携带 tar,不能带展开目录(否则 NSIS 慢到 90min timeout)"
+        },
+        {
+          "line": 887,
+          "source": "if (-not $app.WaitForExit(120000)) {"
+        },
+        {
+          "line": 960,
+          "source": "timeout-minutes: 90"
+        },
+        {
+          "line": 984,
+          "source": "timeout-minutes: 180"
+        },
+        {
+          "line": 1306,
+          "source": "if (-not $app.WaitForExit(120000)) {"
+        },
+        {
+          "line": 1356,
+          "source": "timeout-minutes: 10"
+        }
+      ],
+      "verification": [
+        "Node行为回归10 PASS（含真实隔离Worker/进程fixture与预算归一）",
+        "CLI实际命令入口假时钟14 PASS",
+        "Skill Python12 PASS",
+        "MCP TypeScript PASS",
+        "桌面受影响6文件89 PASS；桌面全量235PASS/1既有startup-safety静态字符串断言FAIL，未改断言/生产文件",
+        "25个变更JS语法check PASS；git diff --check PASS",
+        "规定的Node desktop通配入口FAIL：这些用例为Vitest，Node runner未建立Vitest suite且工作目录预期frontend；正确pnpm入口结果见前述"
+      ],
+      "limitations": "静态脚本/安全fixture；未启动远程CI/真实安装包/模型/用户浏览器profile。依赖内不可配置短限单列交主集成。"
+    },
+    {
+      "id": "TO-155",
+      "file": ".github/workflows/desktop-release.yml",
+      "originalLine": 84,
+      "originalPolicy": "timeout-minutes: 180",
+      "status": "保留更长预算",
+      "newPolicy": "保留原180分钟，已≥120秒；该策略是独立job/观察/既有高预算，未缩短。",
+      "evidence": [
+        {
+          "line": 58,
+          "source": "timeout-minutes: 5"
+        },
+        {
+          "line": 84,
+          "source": "timeout-minutes: 180"
+        },
+        {
+          "line": 483,
+          "source": "# [T-454] 反转 T-446 校验:必须携带 tar,不能带展开目录(否则 NSIS 慢到 90min timeout)"
+        },
+        {
+          "line": 887,
+          "source": "if (-not $app.WaitForExit(120000)) {"
+        },
+        {
+          "line": 960,
+          "source": "timeout-minutes: 90"
+        },
+        {
+          "line": 984,
+          "source": "timeout-minutes: 180"
+        },
+        {
+          "line": 1306,
+          "source": "if (-not $app.WaitForExit(120000)) {"
+        },
+        {
+          "line": 1356,
+          "source": "timeout-minutes: 10"
+        }
+      ],
+      "verification": [
+        "Node行为回归10 PASS（含真实隔离Worker/进程fixture与预算归一）",
+        "CLI实际命令入口假时钟14 PASS",
+        "Skill Python12 PASS",
+        "MCP TypeScript PASS",
+        "桌面受影响6文件89 PASS；桌面全量235PASS/1既有startup-safety静态字符串断言FAIL，未改断言/生产文件",
+        "25个变更JS语法check PASS；git diff --check PASS",
+        "规定的Node desktop通配入口FAIL：这些用例为Vitest，Node runner未建立Vitest suite且工作目录预期frontend；正确pnpm入口结果见前述"
+      ],
+      "limitations": "静态脚本/安全fixture；未启动远程CI/真实安装包/模型/用户浏览器profile。依赖内不可配置短限单列交主集成。"
+    },
+    {
+      "id": "TO-156",
+      "file": ".github/workflows/desktop-release.yml",
+      "originalLine": 529,
+      "originalPolicy": "installWatch.Elapsed >300s",
+      "status": "保留更长预算",
+      "newPolicy": "保留原300秒，已≥120秒；该策略是独立job/观察/既有高预算，未缩短。",
+      "evidence": [
+        {
+          "line": 58,
+          "source": "timeout-minutes: 5"
+        },
+        {
+          "line": 84,
+          "source": "timeout-minutes: 180"
+        },
+        {
+          "line": 483,
+          "source": "# [T-454] 反转 T-446 校验:必须携带 tar,不能带展开目录(否则 NSIS 慢到 90min timeout)"
+        },
+        {
+          "line": 887,
+          "source": "if (-not $app.WaitForExit(120000)) {"
+        },
+        {
+          "line": 960,
+          "source": "timeout-minutes: 90"
+        },
+        {
+          "line": 984,
+          "source": "timeout-minutes: 180"
+        },
+        {
+          "line": 1306,
+          "source": "if (-not $app.WaitForExit(120000)) {"
+        },
+        {
+          "line": 1356,
+          "source": "timeout-minutes: 10"
+        }
+      ],
+      "verification": [
+        "Node行为回归10 PASS（含真实隔离Worker/进程fixture与预算归一）",
+        "CLI实际命令入口假时钟14 PASS",
+        "Skill Python12 PASS",
+        "MCP TypeScript PASS",
+        "桌面受影响6文件89 PASS；桌面全量235PASS/1既有startup-safety静态字符串断言FAIL，未改断言/生产文件",
+        "25个变更JS语法check PASS；git diff --check PASS",
+        "规定的Node desktop通配入口FAIL：这些用例为Vitest，Node runner未建立Vitest suite且工作目录预期frontend；正确pnpm入口结果见前述"
+      ],
+      "limitations": "静态脚本/安全fixture；未启动远程CI/真实安装包/模型/用户浏览器profile。依赖内不可配置短限单列交主集成。"
+    },
+    {
+      "id": "TO-157",
+      "file": ".github/workflows/desktop-release.yml",
+      "originalLine": 726,
+      "originalPolicy": "3000次×sleep0.2s",
+      "status": "保留更长预算",
+      "newPolicy": "保留原600秒，已≥120秒；该策略是独立job/观察/既有高预算，未缩短。",
+      "evidence": [
+        {
+          "line": 58,
+          "source": "timeout-minutes: 5"
+        },
+        {
+          "line": 84,
+          "source": "timeout-minutes: 180"
+        },
+        {
+          "line": 483,
+          "source": "# [T-454] 反转 T-446 校验:必须携带 tar,不能带展开目录(否则 NSIS 慢到 90min timeout)"
+        },
+        {
+          "line": 887,
+          "source": "if (-not $app.WaitForExit(120000)) {"
+        },
+        {
+          "line": 960,
+          "source": "timeout-minutes: 90"
+        },
+        {
+          "line": 984,
+          "source": "timeout-minutes: 180"
+        },
+        {
+          "line": 1306,
+          "source": "if (-not $app.WaitForExit(120000)) {"
+        },
+        {
+          "line": 1356,
+          "source": "timeout-minutes: 10"
+        }
+      ],
+      "verification": [
+        "Node行为回归10 PASS（含真实隔离Worker/进程fixture与预算归一）",
+        "CLI实际命令入口假时钟14 PASS",
+        "Skill Python12 PASS",
+        "MCP TypeScript PASS",
+        "桌面受影响6文件89 PASS；桌面全量235PASS/1既有startup-safety静态字符串断言FAIL，未改断言/生产文件",
+        "25个变更JS语法check PASS；git diff --check PASS",
+        "规定的Node desktop通配入口FAIL：这些用例为Vitest，Node runner未建立Vitest suite且工作目录预期frontend；正确pnpm入口结果见前述"
+      ],
+      "limitations": "静态脚本/安全fixture；未启动远程CI/真实安装包/模型/用户浏览器profile。依赖内不可配置短限单列交主集成。"
+    },
+    {
+      "id": "TO-158",
+      "file": ".github/workflows/desktop-release.yml",
+      "originalLine": 804,
+      "originalPolicy": "600次×sleep200ms",
+      "status": "保留更长预算",
+      "newPolicy": "保留原120秒，已≥120秒；该策略是独立job/观察/既有高预算，未缩短。",
+      "evidence": [
+        {
+          "line": 58,
+          "source": "timeout-minutes: 5"
+        },
+        {
+          "line": 84,
+          "source": "timeout-minutes: 180"
+        },
+        {
+          "line": 483,
+          "source": "# [T-454] 反转 T-446 校验:必须携带 tar,不能带展开目录(否则 NSIS 慢到 90min timeout)"
+        },
+        {
+          "line": 887,
+          "source": "if (-not $app.WaitForExit(120000)) {"
+        },
+        {
+          "line": 960,
+          "source": "timeout-minutes: 90"
+        },
+        {
+          "line": 984,
+          "source": "timeout-minutes: 180"
+        },
+        {
+          "line": 1306,
+          "source": "if (-not $app.WaitForExit(120000)) {"
+        },
+        {
+          "line": 1356,
+          "source": "timeout-minutes: 10"
+        }
+      ],
+      "verification": [
+        "Node行为回归10 PASS（含真实隔离Worker/进程fixture与预算归一）",
+        "CLI实际命令入口假时钟14 PASS",
+        "Skill Python12 PASS",
+        "MCP TypeScript PASS",
+        "桌面受影响6文件89 PASS；桌面全量235PASS/1既有startup-safety静态字符串断言FAIL，未改断言/生产文件",
+        "25个变更JS语法check PASS；git diff --check PASS",
+        "规定的Node desktop通配入口FAIL：这些用例为Vitest，Node runner未建立Vitest suite且工作目录预期frontend；正确pnpm入口结果见前述"
+      ],
+      "limitations": "静态脚本/安全fixture；未启动远程CI/真实安装包/模型/用户浏览器profile。依赖内不可配置短限单列交主集成。"
+    },
+    {
+      "id": "TO-159",
+      "file": ".github/workflows/desktop-release.yml",
+      "originalLine": 887,
+      "originalPolicy": "app.WaitForExit(10000)",
+      "status": "已调整",
+      "newPolicy": "正执行/观察预算升120秒；保留原poll、sleep间隔及媒体输入长度。",
+      "evidence": [
+        {
+          "line": 58,
+          "source": "timeout-minutes: 5"
+        },
+        {
+          "line": 84,
+          "source": "timeout-minutes: 180"
+        },
+        {
+          "line": 483,
+          "source": "# [T-454] 反转 T-446 校验:必须携带 tar,不能带展开目录(否则 NSIS 慢到 90min timeout)"
+        },
+        {
+          "line": 887,
+          "source": "if (-not $app.WaitForExit(120000)) {"
+        },
+        {
+          "line": 960,
+          "source": "timeout-minutes: 90"
+        },
+        {
+          "line": 984,
+          "source": "timeout-minutes: 180"
+        },
+        {
+          "line": 1306,
+          "source": "if (-not $app.WaitForExit(120000)) {"
+        },
+        {
+          "line": 1356,
+          "source": "timeout-minutes: 10"
+        }
+      ],
+      "verification": [
+        "Node行为回归10 PASS（含真实隔离Worker/进程fixture与预算归一）",
+        "CLI实际命令入口假时钟14 PASS",
+        "Skill Python12 PASS",
+        "MCP TypeScript PASS",
+        "桌面受影响6文件89 PASS；桌面全量235PASS/1既有startup-safety静态字符串断言FAIL，未改断言/生产文件",
+        "25个变更JS语法check PASS；git diff --check PASS",
+        "规定的Node desktop通配入口FAIL：这些用例为Vitest，Node runner未建立Vitest suite且工作目录预期frontend；正确pnpm入口结果见前述"
+      ],
+      "limitations": "静态脚本/安全fixture；未启动远程CI/真实安装包/模型/用户浏览器profile。依赖内不可配置短限单列交主集成。"
+    },
+    {
+      "id": "TO-160",
+      "file": ".github/workflows/desktop-release.yml",
+      "originalLine": 909,
+      "originalPolicy": "50次×sleep200ms",
+      "status": "已调整",
+      "newPolicy": "正执行/观察预算升120秒；保留原poll、sleep间隔及媒体输入长度。",
+      "evidence": [
+        {
+          "line": 58,
+          "source": "timeout-minutes: 5"
+        },
+        {
+          "line": 84,
+          "source": "timeout-minutes: 180"
+        },
+        {
+          "line": 483,
+          "source": "# [T-454] 反转 T-446 校验:必须携带 tar,不能带展开目录(否则 NSIS 慢到 90min timeout)"
+        },
+        {
+          "line": 887,
+          "source": "if (-not $app.WaitForExit(120000)) {"
+        },
+        {
+          "line": 960,
+          "source": "timeout-minutes: 90"
+        },
+        {
+          "line": 984,
+          "source": "timeout-minutes: 180"
+        },
+        {
+          "line": 1306,
+          "source": "if (-not $app.WaitForExit(120000)) {"
+        },
+        {
+          "line": 1356,
+          "source": "timeout-minutes: 10"
+        }
+      ],
+      "verification": [
+        "Node行为回归10 PASS（含真实隔离Worker/进程fixture与预算归一）",
+        "CLI实际命令入口假时钟14 PASS",
+        "Skill Python12 PASS",
+        "MCP TypeScript PASS",
+        "桌面受影响6文件89 PASS；桌面全量235PASS/1既有startup-safety静态字符串断言FAIL，未改断言/生产文件",
+        "25个变更JS语法check PASS；git diff --check PASS",
+        "规定的Node desktop通配入口FAIL：这些用例为Vitest，Node runner未建立Vitest suite且工作目录预期frontend；正确pnpm入口结果见前述"
+      ],
+      "limitations": "静态脚本/安全fixture；未启动远程CI/真实安装包/模型/用户浏览器profile。依赖内不可配置短限单列交主集成。"
+    },
+    {
+      "id": "TO-161",
+      "file": ".github/workflows/desktop-release.yml",
+      "originalLine": 960,
+      "originalPolicy": "timeout-minutes: 90",
+      "status": "保留更长预算",
+      "newPolicy": "保留原90分钟，已≥120秒；该策略是独立job/观察/既有高预算，未缩短。",
+      "evidence": [
+        {
+          "line": 58,
+          "source": "timeout-minutes: 5"
+        },
+        {
+          "line": 84,
+          "source": "timeout-minutes: 180"
+        },
+        {
+          "line": 483,
+          "source": "# [T-454] 反转 T-446 校验:必须携带 tar,不能带展开目录(否则 NSIS 慢到 90min timeout)"
+        },
+        {
+          "line": 887,
+          "source": "if (-not $app.WaitForExit(120000)) {"
+        },
+        {
+          "line": 960,
+          "source": "timeout-minutes: 90"
+        },
+        {
+          "line": 984,
+          "source": "timeout-minutes: 180"
+        },
+        {
+          "line": 1306,
+          "source": "if (-not $app.WaitForExit(120000)) {"
+        },
+        {
+          "line": 1356,
+          "source": "timeout-minutes: 10"
+        }
+      ],
+      "verification": [
+        "Node行为回归10 PASS（含真实隔离Worker/进程fixture与预算归一）",
+        "CLI实际命令入口假时钟14 PASS",
+        "Skill Python12 PASS",
+        "MCP TypeScript PASS",
+        "桌面受影响6文件89 PASS；桌面全量235PASS/1既有startup-safety静态字符串断言FAIL，未改断言/生产文件",
+        "25个变更JS语法check PASS；git diff --check PASS",
+        "规定的Node desktop通配入口FAIL：这些用例为Vitest，Node runner未建立Vitest suite且工作目录预期frontend；正确pnpm入口结果见前述"
+      ],
+      "limitations": "静态脚本/安全fixture；未启动远程CI/真实安装包/模型/用户浏览器profile。依赖内不可配置短限单列交主集成。"
+    },
+    {
+      "id": "TO-162",
+      "file": ".github/workflows/desktop-release.yml",
+      "originalLine": 984,
+      "originalPolicy": "timeout-minutes: 180",
+      "status": "保留更长预算",
+      "newPolicy": "保留原180分钟，已≥120秒；该策略是独立job/观察/既有高预算，未缩短。",
+      "evidence": [
+        {
+          "line": 58,
+          "source": "timeout-minutes: 5"
+        },
+        {
+          "line": 84,
+          "source": "timeout-minutes: 180"
+        },
+        {
+          "line": 483,
+          "source": "# [T-454] 反转 T-446 校验:必须携带 tar,不能带展开目录(否则 NSIS 慢到 90min timeout)"
+        },
+        {
+          "line": 887,
+          "source": "if (-not $app.WaitForExit(120000)) {"
+        },
+        {
+          "line": 960,
+          "source": "timeout-minutes: 90"
+        },
+        {
+          "line": 984,
+          "source": "timeout-minutes: 180"
+        },
+        {
+          "line": 1306,
+          "source": "if (-not $app.WaitForExit(120000)) {"
+        },
+        {
+          "line": 1356,
+          "source": "timeout-minutes: 10"
+        }
+      ],
+      "verification": [
+        "Node行为回归10 PASS（含真实隔离Worker/进程fixture与预算归一）",
+        "CLI实际命令入口假时钟14 PASS",
+        "Skill Python12 PASS",
+        "MCP TypeScript PASS",
+        "桌面受影响6文件89 PASS；桌面全量235PASS/1既有startup-safety静态字符串断言FAIL，未改断言/生产文件",
+        "25个变更JS语法check PASS；git diff --check PASS",
+        "规定的Node desktop通配入口FAIL：这些用例为Vitest，Node runner未建立Vitest suite且工作目录预期frontend；正确pnpm入口结果见前述"
+      ],
+      "limitations": "静态脚本/安全fixture；未启动远程CI/真实安装包/模型/用户浏览器profile。依赖内不可配置短限单列交主集成。"
+    },
+    {
+      "id": "TO-163",
+      "file": ".github/workflows/desktop-release.yml",
+      "originalLine": 1105,
+      "originalPolicy": "installWatch.Elapsed >300s",
+      "status": "保留更长预算",
+      "newPolicy": "保留原300秒，已≥120秒；该策略是独立job/观察/既有高预算，未缩短。",
+      "evidence": [
+        {
+          "line": 58,
+          "source": "timeout-minutes: 5"
+        },
+        {
+          "line": 84,
+          "source": "timeout-minutes: 180"
+        },
+        {
+          "line": 483,
+          "source": "# [T-454] 反转 T-446 校验:必须携带 tar,不能带展开目录(否则 NSIS 慢到 90min timeout)"
+        },
+        {
+          "line": 887,
+          "source": "if (-not $app.WaitForExit(120000)) {"
+        },
+        {
+          "line": 960,
+          "source": "timeout-minutes: 90"
+        },
+        {
+          "line": 984,
+          "source": "timeout-minutes: 180"
+        },
+        {
+          "line": 1306,
+          "source": "if (-not $app.WaitForExit(120000)) {"
+        },
+        {
+          "line": 1356,
+          "source": "timeout-minutes: 10"
+        }
+      ],
+      "verification": [
+        "Node行为回归10 PASS（含真实隔离Worker/进程fixture与预算归一）",
+        "CLI实际命令入口假时钟14 PASS",
+        "Skill Python12 PASS",
+        "MCP TypeScript PASS",
+        "桌面受影响6文件89 PASS；桌面全量235PASS/1既有startup-safety静态字符串断言FAIL，未改断言/生产文件",
+        "25个变更JS语法check PASS；git diff --check PASS",
+        "规定的Node desktop通配入口FAIL：这些用例为Vitest，Node runner未建立Vitest suite且工作目录预期frontend；正确pnpm入口结果见前述"
+      ],
+      "limitations": "静态脚本/安全fixture；未启动远程CI/真实安装包/模型/用户浏览器profile。依赖内不可配置短限单列交主集成。"
+    },
+    {
+      "id": "TO-164",
+      "file": ".github/workflows/desktop-release.yml",
+      "originalLine": 1185,
+      "originalPolicy": "600次×sleep200ms",
+      "status": "保留更长预算",
+      "newPolicy": "保留原120秒，已≥120秒；该策略是独立job/观察/既有高预算，未缩短。",
+      "evidence": [
+        {
+          "line": 58,
+          "source": "timeout-minutes: 5"
+        },
+        {
+          "line": 84,
+          "source": "timeout-minutes: 180"
+        },
+        {
+          "line": 483,
+          "source": "# [T-454] 反转 T-446 校验:必须携带 tar,不能带展开目录(否则 NSIS 慢到 90min timeout)"
+        },
+        {
+          "line": 887,
+          "source": "if (-not $app.WaitForExit(120000)) {"
+        },
+        {
+          "line": 960,
+          "source": "timeout-minutes: 90"
+        },
+        {
+          "line": 984,
+          "source": "timeout-minutes: 180"
+        },
+        {
+          "line": 1306,
+          "source": "if (-not $app.WaitForExit(120000)) {"
+        },
+        {
+          "line": 1356,
+          "source": "timeout-minutes: 10"
+        }
+      ],
+      "verification": [
+        "Node行为回归10 PASS（含真实隔离Worker/进程fixture与预算归一）",
+        "CLI实际命令入口假时钟14 PASS",
+        "Skill Python12 PASS",
+        "MCP TypeScript PASS",
+        "桌面受影响6文件89 PASS；桌面全量235PASS/1既有startup-safety静态字符串断言FAIL，未改断言/生产文件",
+        "25个变更JS语法check PASS；git diff --check PASS",
+        "规定的Node desktop通配入口FAIL：这些用例为Vitest，Node runner未建立Vitest suite且工作目录预期frontend；正确pnpm入口结果见前述"
+      ],
+      "limitations": "静态脚本/安全fixture；未启动远程CI/真实安装包/模型/用户浏览器profile。依赖内不可配置短限单列交主集成。"
+    },
+    {
+      "id": "TO-165",
+      "file": ".github/workflows/desktop-release.yml",
+      "originalLine": 1306,
+      "originalPolicy": "app.WaitForExit(10000)",
+      "status": "已调整",
+      "newPolicy": "正执行/观察预算升120秒；保留原poll、sleep间隔及媒体输入长度。",
+      "evidence": [
+        {
+          "line": 58,
+          "source": "timeout-minutes: 5"
+        },
+        {
+          "line": 84,
+          "source": "timeout-minutes: 180"
+        },
+        {
+          "line": 483,
+          "source": "# [T-454] 反转 T-446 校验:必须携带 tar,不能带展开目录(否则 NSIS 慢到 90min timeout)"
+        },
+        {
+          "line": 887,
+          "source": "if (-not $app.WaitForExit(120000)) {"
+        },
+        {
+          "line": 960,
+          "source": "timeout-minutes: 90"
+        },
+        {
+          "line": 984,
+          "source": "timeout-minutes: 180"
+        },
+        {
+          "line": 1306,
+          "source": "if (-not $app.WaitForExit(120000)) {"
+        },
+        {
+          "line": 1356,
+          "source": "timeout-minutes: 10"
+        }
+      ],
+      "verification": [
+        "Node行为回归10 PASS（含真实隔离Worker/进程fixture与预算归一）",
+        "CLI实际命令入口假时钟14 PASS",
+        "Skill Python12 PASS",
+        "MCP TypeScript PASS",
+        "桌面受影响6文件89 PASS；桌面全量235PASS/1既有startup-safety静态字符串断言FAIL，未改断言/生产文件",
+        "25个变更JS语法check PASS；git diff --check PASS",
+        "规定的Node desktop通配入口FAIL：这些用例为Vitest，Node runner未建立Vitest suite且工作目录预期frontend；正确pnpm入口结果见前述"
+      ],
+      "limitations": "静态脚本/安全fixture；未启动远程CI/真实安装包/模型/用户浏览器profile。依赖内不可配置短限单列交主集成。"
+    },
+    {
+      "id": "TO-166",
+      "file": ".github/workflows/desktop-release.yml",
+      "originalLine": 1356,
+      "originalPolicy": "timeout-minutes: 10",
+      "status": "保留更长预算",
+      "newPolicy": "保留原10分钟，已≥120秒；该策略是独立job/观察/既有高预算，未缩短。",
+      "evidence": [
+        {
+          "line": 58,
+          "source": "timeout-minutes: 5"
+        },
+        {
+          "line": 84,
+          "source": "timeout-minutes: 180"
+        },
+        {
+          "line": 483,
+          "source": "# [T-454] 反转 T-446 校验:必须携带 tar,不能带展开目录(否则 NSIS 慢到 90min timeout)"
+        },
+        {
+          "line": 887,
+          "source": "if (-not $app.WaitForExit(120000)) {"
+        },
+        {
+          "line": 960,
+          "source": "timeout-minutes: 90"
+        },
+        {
+          "line": 984,
+          "source": "timeout-minutes: 180"
+        },
+        {
+          "line": 1306,
+          "source": "if (-not $app.WaitForExit(120000)) {"
+        },
+        {
+          "line": 1356,
+          "source": "timeout-minutes: 10"
+        }
+      ],
+      "verification": [
+        "Node行为回归10 PASS（含真实隔离Worker/进程fixture与预算归一）",
+        "CLI实际命令入口假时钟14 PASS",
+        "Skill Python12 PASS",
+        "MCP TypeScript PASS",
+        "桌面受影响6文件89 PASS；桌面全量235PASS/1既有startup-safety静态字符串断言FAIL，未改断言/生产文件",
+        "25个变更JS语法check PASS；git diff --check PASS",
+        "规定的Node desktop通配入口FAIL：这些用例为Vitest，Node runner未建立Vitest suite且工作目录预期frontend；正确pnpm入口结果见前述"
+      ],
+      "limitations": "静态脚本/安全fixture；未启动远程CI/真实安装包/模型/用户浏览器profile。依赖内不可配置短限单列交主集成。"
+    },
+    {
+      "id": "TO-167",
+      "file": ".github/workflows/harness.yml",
+      "originalLine": 29,
+      "originalPolicy": "timeout-minutes: 340",
+      "status": "保留更长预算",
+      "newPolicy": "保留原340分钟，已≥120秒；该策略是独立job/观察/既有高预算，未缩短。",
+      "evidence": [
+        {
+          "line": 29,
+          "source": "timeout-minutes: 340"
+        }
+      ],
+      "verification": [
+        "Node行为回归10 PASS（含真实隔离Worker/进程fixture与预算归一）",
+        "CLI实际命令入口假时钟14 PASS",
+        "Skill Python12 PASS",
+        "MCP TypeScript PASS",
+        "桌面受影响6文件89 PASS；桌面全量235PASS/1既有startup-safety静态字符串断言FAIL，未改断言/生产文件",
+        "25个变更JS语法check PASS；git diff --check PASS",
+        "规定的Node desktop通配入口FAIL：这些用例为Vitest，Node runner未建立Vitest suite且工作目录预期frontend；正确pnpm入口结果见前述"
+      ],
+      "limitations": "静态脚本/安全fixture；未启动远程CI/真实安装包/模型/用户浏览器profile。依赖内不可配置短限单列交主集成。"
+    },
+    {
+      "id": "TO-168",
+      "file": ".github/workflows/verify.yml",
+      "originalLine": 30,
+      "originalPolicy": "timeout-minutes: 40",
+      "status": "保留更长预算",
+      "newPolicy": "保留原40分钟，已≥120秒；该策略是独立job/观察/既有高预算，未缩短。",
+      "evidence": [
+        {
+          "line": 30,
+          "source": "timeout-minutes: 40"
+        },
+        {
+          "line": 82,
+          "source": "timeout-minutes: 40"
+        }
+      ],
+      "verification": [
+        "Node行为回归10 PASS（含真实隔离Worker/进程fixture与预算归一）",
+        "CLI实际命令入口假时钟14 PASS",
+        "Skill Python12 PASS",
+        "MCP TypeScript PASS",
+        "桌面受影响6文件89 PASS；桌面全量235PASS/1既有startup-safety静态字符串断言FAIL，未改断言/生产文件",
+        "25个变更JS语法check PASS；git diff --check PASS",
+        "规定的Node desktop通配入口FAIL：这些用例为Vitest，Node runner未建立Vitest suite且工作目录预期frontend；正确pnpm入口结果见前述"
+      ],
+      "limitations": "静态脚本/安全fixture；未启动远程CI/真实安装包/模型/用户浏览器profile。依赖内不可配置短限单列交主集成。"
+    },
+    {
+      "id": "TO-169",
+      "file": ".github/workflows/verify.yml",
+      "originalLine": 82,
+      "originalPolicy": "timeout-minutes: 40",
+      "status": "保留更长预算",
+      "newPolicy": "保留原40分钟，已≥120秒；该策略是独立job/观察/既有高预算，未缩短。",
+      "evidence": [
+        {
+          "line": 30,
+          "source": "timeout-minutes: 40"
+        },
+        {
+          "line": 82,
+          "source": "timeout-minutes: 40"
+        }
+      ],
+      "verification": [
+        "Node行为回归10 PASS（含真实隔离Worker/进程fixture与预算归一）",
+        "CLI实际命令入口假时钟14 PASS",
+        "Skill Python12 PASS",
+        "MCP TypeScript PASS",
+        "桌面受影响6文件89 PASS；桌面全量235PASS/1既有startup-safety静态字符串断言FAIL，未改断言/生产文件",
+        "25个变更JS语法check PASS；git diff --check PASS",
+        "规定的Node desktop通配入口FAIL：这些用例为Vitest，Node runner未建立Vitest suite且工作目录预期frontend；正确pnpm入口结果见前述"
+      ],
+      "limitations": "静态脚本/安全fixture；未启动远程CI/真实安装包/模型/用户浏览器profile。依赖内不可配置短限单列交主集成。"
+    },
+    {
+      "id": "TO-170",
+      "file": "ai-worker/scripts/browser-runtime-probe.mjs",
+      "originalLine": 31,
+      "originalPolicy": "setTimeout(child.kill SIGTERM,30000)",
+      "status": "已调整",
+      "newPolicy": "子进程内启动180秒+连接/建页/三个动作/抽取各120秒+两次关闭各120秒=1170秒；外层1200秒留30秒，不缩短长内层",
+      "evidence": [
+        {
+          "line": 1,
+          "source": "import { withinExecution } from \"../../frontend/scripts/desktop/timeout-policy.mjs\";"
+        },
+        {
+          "line": 27,
+          "source": "browser=await chromium.connect(server.wsEndpoint(), { timeout: 120_000 });"
+        },
+        {
+          "line": 29,
+          "source": "page.setDefaultTimeout(120_000);"
+        },
+        {
+          "line": 30,
+          "source": "page.setDefaultNavigationTimeout(120_000);"
+        },
+        {
+          "line": 45,
+          "source": "const timer=setTimeout(()=>child.kill(\"SIGTERM\"),1200_000);"
+        },
+        {
+          "line": 49,
+          "source": "finally{clearTimeout(timer);}"
+        }
+      ],
+      "verification": [
+        "Node行为回归10 PASS（含真实隔离Worker/进程fixture与预算归一）",
+        "CLI实际命令入口假时钟14 PASS",
+        "Skill Python12 PASS",
+        "MCP TypeScript PASS",
+        "桌面受影响6文件89 PASS；桌面全量235PASS/1既有startup-safety静态字符串断言FAIL，未改断言/生产文件",
+        "25个变更JS语法check PASS；git diff --check PASS",
+        "规定的Node desktop通配入口FAIL：这些用例为Vitest，Node runner未建立Vitest suite且工作目录预期frontend；正确pnpm入口结果见前述"
+      ],
+      "limitations": "静态脚本/安全fixture；未启动远程CI/真实安装包/模型/用户浏览器profile。依赖内不可配置短限单列交主集成。"
+    },
+    {
+      "id": "TO-171",
+      "file": "ai-worker/scripts/t829-model-compatibility.ts",
+      "originalLine": 59,
+      "originalPolicy": "AbortSignal.timeout(30_000)",
+      "status": "已调整",
+      "newPolicy": "网络请求120秒",
+      "evidence": [
+        {
+          "line": 59,
+          "source": "signal: AbortSignal.timeout(120_000),"
+        },
+        {
+          "line": 103,
+          "source": "const timeoutMs = Math.max("
+        },
+        {
+          "line": 105,
+          "source": "Math.min(2_147_483_647, Number(process.env.T829_TIMEOUT_MS ?? 120_000) || 120_000),"
+        },
+        {
+          "line": 145,
+          "source": "abortSignal: AbortSignal.timeout(timeoutMs),"
+        },
+        {
+          "line": 173,
+          "source": "abortSignal: AbortSignal.timeout(timeoutMs),"
+        },
+        {
+          "line": 206,
+          "source": "timeoutMs,"
+        },
+        {
+          "line": 237,
+          "source": "if (delayMs > 0) await new Promise((resolve) => setTimeout(resolve, delayMs));"
+        }
+      ],
+      "verification": [
+        "Node行为回归10 PASS（含真实隔离Worker/进程fixture与预算归一）",
+        "CLI实际命令入口假时钟14 PASS",
+        "Skill Python12 PASS",
+        "MCP TypeScript PASS",
+        "桌面受影响6文件89 PASS；桌面全量235PASS/1既有startup-safety静态字符串断言FAIL，未改断言/生产文件",
+        "25个变更JS语法check PASS；git diff --check PASS",
+        "规定的Node desktop通配入口FAIL：这些用例为Vitest，Node runner未建立Vitest suite且工作目录预期frontend；正确pnpm入口结果见前述"
+      ],
+      "limitations": "静态脚本/安全fixture；未启动远程CI/真实安装包/模型/用户浏览器profile。依赖内不可配置短限单列交主集成。"
+    },
+    {
+      "id": "TO-172",
+      "file": "ai-worker/scripts/t829-model-compatibility.ts",
+      "originalLine": 145,
+      "originalPolicy": "AbortSignal.timeout(timeoutMs=clamp(T829_TIMEOUT_MS,5000,60000))",
+      "status": "已调整",
+      "newPolicy": "可配置默认最低120秒，取消原60秒顶帽，最大Node定时器安全整数2147483647ms",
+      "evidence": [
+        {
+          "line": 59,
+          "source": "signal: AbortSignal.timeout(120_000),"
+        },
+        {
+          "line": 103,
+          "source": "const timeoutMs = Math.max("
+        },
+        {
+          "line": 105,
+          "source": "Math.min(2_147_483_647, Number(process.env.T829_TIMEOUT_MS ?? 120_000) || 120_000),"
+        },
+        {
+          "line": 145,
+          "source": "abortSignal: AbortSignal.timeout(timeoutMs),"
+        },
+        {
+          "line": 173,
+          "source": "abortSignal: AbortSignal.timeout(timeoutMs),"
+        },
+        {
+          "line": 206,
+          "source": "timeoutMs,"
+        },
+        {
+          "line": 237,
+          "source": "if (delayMs > 0) await new Promise((resolve) => setTimeout(resolve, delayMs));"
+        }
+      ],
+      "verification": [
+        "Node行为回归10 PASS（含真实隔离Worker/进程fixture与预算归一）",
+        "CLI实际命令入口假时钟14 PASS",
+        "Skill Python12 PASS",
+        "MCP TypeScript PASS",
+        "桌面受影响6文件89 PASS；桌面全量235PASS/1既有startup-safety静态字符串断言FAIL，未改断言/生产文件",
+        "25个变更JS语法check PASS；git diff --check PASS",
+        "规定的Node desktop通配入口FAIL：这些用例为Vitest，Node runner未建立Vitest suite且工作目录预期frontend；正确pnpm入口结果见前述"
+      ],
+      "limitations": "静态脚本/安全fixture；未启动远程CI/真实安装包/模型/用户浏览器profile。依赖内不可配置短限单列交主集成。"
+    },
+    {
+      "id": "TO-173",
+      "file": "ai-worker/scripts/t829-model-compatibility.ts",
+      "originalLine": 173,
+      "originalPolicy": "AbortSignal.timeout(timeoutMs=clamp(T829_TIMEOUT_MS,5000,60000))",
+      "status": "已调整",
+      "newPolicy": "同一model兼容性执行预算最低120秒，保留更长用户配置",
+      "evidence": [
+        {
+          "line": 59,
+          "source": "signal: AbortSignal.timeout(120_000),"
+        },
+        {
+          "line": 103,
+          "source": "const timeoutMs = Math.max("
+        },
+        {
+          "line": 105,
+          "source": "Math.min(2_147_483_647, Number(process.env.T829_TIMEOUT_MS ?? 120_000) || 120_000),"
+        },
+        {
+          "line": 145,
+          "source": "abortSignal: AbortSignal.timeout(timeoutMs),"
+        },
+        {
+          "line": 173,
+          "source": "abortSignal: AbortSignal.timeout(timeoutMs),"
+        },
+        {
+          "line": 206,
+          "source": "timeoutMs,"
+        },
+        {
+          "line": 237,
+          "source": "if (delayMs > 0) await new Promise((resolve) => setTimeout(resolve, delayMs));"
+        }
+      ],
+      "verification": [
+        "Node行为回归10 PASS（含真实隔离Worker/进程fixture与预算归一）",
+        "CLI实际命令入口假时钟14 PASS",
+        "Skill Python12 PASS",
+        "MCP TypeScript PASS",
+        "桌面受影响6文件89 PASS；桌面全量235PASS/1既有startup-safety静态字符串断言FAIL，未改断言/生产文件",
+        "25个变更JS语法check PASS；git diff --check PASS",
+        "规定的Node desktop通配入口FAIL：这些用例为Vitest，Node runner未建立Vitest suite且工作目录预期frontend；正确pnpm入口结果见前述"
+      ],
+      "limitations": "静态脚本/安全fixture；未启动远程CI/真实安装包/模型/用户浏览器profile。依赖内不可配置短限单列交主集成。"
+    },
+    {
+      "id": "TO-174",
+      "file": "backend/scripts/t891-cover-reliability-probe.ts",
+      "originalLine": 129,
+      "originalPolicy": "init.signal ?? AbortSignal.timeout(requestTimeoutMs)",
+      "status": "已调整",
+      "newPolicy": "原默认300秒与上限900秒保留，动态配置下限60升120秒",
+      "evidence": [
+        {
+          "line": 28,
+          "source": "const requestTimeoutMs = Math.max("
+        },
+        {
+          "line": 32,
+          "source": "Number(process.env.T859_REQUEST_TIMEOUT_MS ?? 300_000) || 300_000,"
+        },
+        {
+          "line": 129,
+          "source": "const signal = init?.signal ?? AbortSignal.timeout(requestTimeoutMs);"
+        },
+        {
+          "line": 203,
+          "source": "requestTimeoutMs,"
+        }
+      ],
+      "verification": [
+        "Node行为回归10 PASS（含真实隔离Worker/进程fixture与预算归一）",
+        "CLI实际命令入口假时钟14 PASS",
+        "Skill Python12 PASS",
+        "MCP TypeScript PASS",
+        "桌面受影响6文件89 PASS；桌面全量235PASS/1既有startup-safety静态字符串断言FAIL，未改断言/生产文件",
+        "25个变更JS语法check PASS；git diff --check PASS",
+        "规定的Node desktop通配入口FAIL：这些用例为Vitest，Node runner未建立Vitest suite且工作目录预期frontend；正确pnpm入口结果见前述"
+      ],
+      "limitations": "静态脚本/安全fixture；未启动远程CI/真实安装包/模型/用户浏览器profile。依赖内不可配置短限单列交主集成。"
+    },
+    {
+      "id": "TO-175",
+      "file": "backend/scripts/t915-postgres-checkpoint-probe.ts",
+      "originalLine": 21,
+      "originalPolicy": "budget.deadlineMs:60000",
+      "status": "已调整",
+      "newPolicy": "共享agent预算声明120秒；内部步骤须跟随原绝对预算，由主核心分区负责传播",
+      "evidence": [
+        {
+          "line": 21,
+          "source": "const budget={maxCalls:10,maxTokens:1000,deadlineMs:120_000};"
+        }
+      ],
+      "verification": [
+        "Node行为回归10 PASS（含真实隔离Worker/进程fixture与预算归一）",
+        "CLI实际命令入口假时钟14 PASS",
+        "Skill Python12 PASS",
+        "MCP TypeScript PASS",
+        "桌面受影响6文件89 PASS；桌面全量235PASS/1既有startup-safety静态字符串断言FAIL，未改断言/生产文件",
+        "25个变更JS语法check PASS；git diff --check PASS",
+        "规定的Node desktop通配入口FAIL：这些用例为Vitest，Node runner未建立Vitest suite且工作目录预期frontend；正确pnpm入口结果见前述"
+      ],
+      "limitations": "静态脚本/安全fixture；未启动远程CI/真实安装包/模型/用户浏览器profile。依赖内不可配置短限单列交主集成。"
+    },
+    {
+      "id": "TO-176",
+      "file": "backend/scripts/t915-postgres-research-evidence-probe.ts",
+      "originalLine": 22,
+      "originalPolicy": "budget.deadlineMs:60000",
+      "status": "已调整",
+      "newPolicy": "共享agent预算声明120秒，同一budget传播不是独立外层等待帽",
+      "evidence": [
+        {
+          "line": 22,
+          "source": "const deps={budget:{maxCalls:30,maxTokens:100000,deadlineMs:120_000},tools:{\"web.read\":{version:\"1\",effect:\"none\" as const,parameters:z.object({url:z.string(),offset:z.number().int().nonnegative().default(0),snapshotId:z.string().optional(),evidenceRef:z.string().optional()})}}};"
+        }
+      ],
+      "verification": [
+        "Node行为回归10 PASS（含真实隔离Worker/进程fixture与预算归一）",
+        "CLI实际命令入口假时钟14 PASS",
+        "Skill Python12 PASS",
+        "MCP TypeScript PASS",
+        "桌面受影响6文件89 PASS；桌面全量235PASS/1既有startup-safety静态字符串断言FAIL，未改断言/生产文件",
+        "25个变更JS语法check PASS；git diff --check PASS",
+        "规定的Node desktop通配入口FAIL：这些用例为Vitest，Node runner未建立Vitest suite且工作目录预期frontend；正确pnpm入口结果见前述"
+      ],
+      "limitations": "静态脚本/安全fixture；未启动远程CI/真实安装包/模型/用户浏览器profile。依赖内不可配置短限单列交主集成。"
+    },
+    {
+      "id": "TO-177",
+      "file": "backend/scripts/t915-postgres-tool-host-probe.ts",
+      "originalLine": 24,
+      "originalPolicy": "budget.deadlineMs:60000",
+      "status": "已调整",
+      "newPolicy": "共享agent预算声明120秒，同一budget传播不是独立外层等待帽",
+      "evidence": [
+        {
+          "line": 24,
+          "source": "const deps={budget:{maxCalls:10,maxTokens:100000,deadlineMs:120_000},tools:{\"material.search\":{version:\"1\",parameters:z.object({query:z.string()}),effect:\"none\" as const,execute:async()=>{executions++;await new Promise(resolve=>setTimeout(resolve,100));return output;}}}};"
+        }
+      ],
+      "verification": [
+        "Node行为回归10 PASS（含真实隔离Worker/进程fixture与预算归一）",
+        "CLI实际命令入口假时钟14 PASS",
+        "Skill Python12 PASS",
+        "MCP TypeScript PASS",
+        "桌面受影响6文件89 PASS；桌面全量235PASS/1既有startup-safety静态字符串断言FAIL，未改断言/生产文件",
+        "25个变更JS语法check PASS；git diff --check PASS",
+        "规定的Node desktop通配入口FAIL：这些用例为Vitest，Node runner未建立Vitest suite且工作目录预期frontend；正确pnpm入口结果见前述"
+      ],
+      "limitations": "静态脚本/安全fixture；未启动远程CI/真实安装包/模型/用户浏览器profile。依赖内不可配置短限单列交主集成。"
+    },
+    {
+      "id": "TO-178",
+      "file": "channel-partners/智溯科技/growth-product-config.json",
+      "originalLine": 95,
+      "originalPolicy": "models.default[minimax-m3].settings.timeoutMs=3000000",
+      "status": "保留更长预算",
+      "newPolicy": "保留原3000秒（50分钟），已≥120秒；该策略是独立job/观察/既有高预算，未缩短。",
+      "evidence": [
+        {
+          "line": 95,
+          "source": "\"timeoutMs\": 3000000,"
+        }
+      ],
+      "verification": [
+        "Node行为回归10 PASS（含真实隔离Worker/进程fixture与预算归一）",
+        "CLI实际命令入口假时钟14 PASS",
+        "Skill Python12 PASS",
+        "MCP TypeScript PASS",
+        "桌面受影响6文件89 PASS；桌面全量235PASS/1既有startup-safety静态字符串断言FAIL，未改断言/生产文件",
+        "25个变更JS语法check PASS；git diff --check PASS",
+        "规定的Node desktop通配入口FAIL：这些用例为Vitest，Node runner未建立Vitest suite且工作目录预期frontend；正确pnpm入口结果见前述"
+      ],
+      "limitations": "静态脚本/安全fixture；未启动远程CI/真实安装包/模型/用户浏览器profile。依赖内不可配置短限单列交主集成。"
+    },
+    {
+      "id": "TO-179",
+      "file": "docker-compose.yml",
+      "originalLine": 18,
+      "originalPolicy": "healthcheck.timeout: 3s",
+      "status": "已调整",
+      "newPolicy": "正执行/观察预算升120秒；保留原poll、sleep间隔及媒体输入长度。",
+      "evidence": [
+        {
+          "line": 18,
+          "source": "timeout: 120s"
+        },
+        {
+          "line": 38,
+          "source": "timeout: 120s"
+        }
+      ],
+      "verification": [
+        "Node行为回归10 PASS（含真实隔离Worker/进程fixture与预算归一）",
+        "CLI实际命令入口假时钟14 PASS",
+        "Skill Python12 PASS",
+        "MCP TypeScript PASS",
+        "桌面受影响6文件89 PASS；桌面全量235PASS/1既有startup-safety静态字符串断言FAIL，未改断言/生产文件",
+        "25个变更JS语法check PASS；git diff --check PASS",
+        "规定的Node desktop通配入口FAIL：这些用例为Vitest，Node runner未建立Vitest suite且工作目录预期frontend；正确pnpm入口结果见前述"
+      ],
+      "limitations": "静态脚本/安全fixture；未启动远程CI/真实安装包/模型/用户浏览器profile。依赖内不可配置短限单列交主集成。"
+    },
+    {
+      "id": "TO-180",
+      "file": "docker-compose.yml",
+      "originalLine": 38,
+      "originalPolicy": "healthcheck.timeout: 3s",
+      "status": "已调整",
+      "newPolicy": "正执行/观察预算升120秒；保留原poll、sleep间隔及媒体输入长度。",
+      "evidence": [
+        {
+          "line": 18,
+          "source": "timeout: 120s"
+        },
+        {
+          "line": 38,
+          "source": "timeout: 120s"
+        }
+      ],
+      "verification": [
+        "Node行为回归10 PASS（含真实隔离Worker/进程fixture与预算归一）",
+        "CLI实际命令入口假时钟14 PASS",
+        "Skill Python12 PASS",
+        "MCP TypeScript PASS",
+        "桌面受影响6文件89 PASS；桌面全量235PASS/1既有startup-safety静态字符串断言FAIL，未改断言/生产文件",
+        "25个变更JS语法check PASS；git diff --check PASS",
+        "规定的Node desktop通配入口FAIL：这些用例为Vitest，Node runner未建立Vitest suite且工作目录预期frontend；正确pnpm入口结果见前述"
+      ],
+      "limitations": "静态脚本/安全fixture；未启动远程CI/真实安装包/模型/用户浏览器profile。依赖内不可配置短限单列交主集成。"
+    },
+    {
+      "id": "TO-181",
+      "file": "frontend/scripts/desktop/build-sidecar.mjs",
+      "originalLine": 804,
+      "originalPolicy": "spawnSync(... timeout:20_000)",
+      "status": "已调整",
+      "newPolicy": "正执行/观察预算升120秒；保留原poll、sleep间隔及媒体输入长度。",
+      "evidence": [
+        {
+          "line": 804,
+          "source": "timeout: 120_000,"
+        }
+      ],
+      "verification": [
+        "Node行为回归10 PASS（含真实隔离Worker/进程fixture与预算归一）",
+        "CLI实际命令入口假时钟14 PASS",
+        "Skill Python12 PASS",
+        "MCP TypeScript PASS",
+        "桌面受影响6文件89 PASS；桌面全量235PASS/1既有startup-safety静态字符串断言FAIL，未改断言/生产文件",
+        "25个变更JS语法check PASS；git diff --check PASS",
+        "规定的Node desktop通配入口FAIL：这些用例为Vitest，Node runner未建立Vitest suite且工作目录预期frontend；正确pnpm入口结果见前述"
+      ],
+      "limitations": "静态脚本/安全fixture；未启动远程CI/真实安装包/模型/用户浏览器profile。依赖内不可配置短限单列交主集成。"
+    },
+    {
+      "id": "TO-182",
+      "file": "frontend/scripts/desktop/execution-worker-runtime.mjs",
+      "originalLine": 42,
+      "originalPolicy": "spawnSync(... timeout:30000)",
+      "status": "已调整",
+      "newPolicy": "普通分层依赖验证执行120秒；CREATOROS_PACKAGE_BUILD_ONLY=1统一跳过额外探针，覆盖两个consumer，不影响入口编译/组装资源检查",
+      "evidence": [
+        {
+          "line": 44,
+          "source": "cwd:root,encoding:\"utf8\",timeout:120_000,"
+        }
+      ],
+      "verification": [
+        "Node行为回归10 PASS（含真实隔离Worker/进程fixture与预算归一）",
+        "CLI实际命令入口假时钟14 PASS",
+        "Skill Python12 PASS",
+        "MCP TypeScript PASS",
+        "桌面受影响6文件89 PASS；桌面全量235PASS/1既有startup-safety静态字符串断言FAIL，未改断言/生产文件",
+        "25个变更JS语法check PASS；git diff --check PASS",
+        "规定的Node desktop通配入口FAIL：这些用例为Vitest，Node runner未建立Vitest suite且工作目录预期frontend；正确pnpm入口结果见前述"
+      ],
+      "limitations": "静态脚本/安全fixture；未启动远程CI/真实安装包/模型/用户浏览器profile。依赖内不可配置短限单列交主集成。"
+    },
+    {
+      "id": "TO-183",
+      "file": "frontend/scripts/desktop/node-runtime.mjs",
+      "originalLine": 31,
+      "originalPolicy": "spawnSync(... timeout:5_000)",
+      "status": "已调整",
+      "newPolicy": "正执行/观察预算升120秒；保留原poll、sleep间隔及媒体输入长度。",
+      "evidence": [
+        {
+          "line": 31,
+          "source": "timeout: 120_000,"
+        }
+      ],
+      "verification": [
+        "Node行为回归10 PASS（含真实隔离Worker/进程fixture与预算归一）",
+        "CLI实际命令入口假时钟14 PASS",
+        "Skill Python12 PASS",
+        "MCP TypeScript PASS",
+        "桌面受影响6文件89 PASS；桌面全量235PASS/1既有startup-safety静态字符串断言FAIL，未改断言/生产文件",
+        "25个变更JS语法check PASS；git diff --check PASS",
+        "规定的Node desktop通配入口FAIL：这些用例为Vitest，Node runner未建立Vitest suite且工作目录预期frontend；正确pnpm入口结果见前述"
+      ],
+      "limitations": "静态脚本/安全fixture；未启动远程CI/真实安装包/模型/用户浏览器profile。依赖内不可配置短限单列交主集成。"
+    },
+    {
+      "id": "TO-184",
+      "file": "frontend/scripts/desktop/obfuscate.mjs",
+      "originalLine": 726,
+      "originalPolicy": "opts.timeoutMs??60_000 / Date.now deadline",
+      "status": "已调整",
+      "newPolicy": "readiness独立执行默认/参数floor120秒；不充当后续串行HTTP/浏览器总预算；TCP与readiness共绝对deadline",
+      "evidence": [
+        {
+          "line": 2,
+          "source": "import { executionTimeoutMs, configureProbePage, withinExecution } from \"./timeout-policy.mjs\";"
+        },
+        {
+          "line": 670,
+          "source": "* @param {{timeoutMs?:number}} opts"
+        },
+        {
+          "line": 676,
+          "source": "const timeoutMs = executionTimeoutMs(opts.timeoutMs); // readiness独立步骤预算；后续HTTP/浏览器另有执行预算。"
+        },
+        {
+          "line": 727,
+          "source": "const deadline = Date.now() + timeoutMs;"
+        },
+        {
+          "line": 729,
+          "source": "while (Date.now() < deadline) {"
+        },
+        {
+          "line": 732,
+          "source": "// 共享readiness绝对deadline；不得为最后一次尝试重新启动两分钟。"
+        },
+        {
+          "line": 733,
+          "source": "s.setTimeout(Math.max(1, deadline - Date.now()), () => { s.destroy(); res(false); });"
+        },
+        {
+          "line": 745,
+          "source": "await new Promise((r) => setTimeout(r, 150));"
+        },
+        {
+          "line": 795,
+          "source": "timeoutMs,"
+        },
+        {
+          "line": 818,
+          "source": "* @param {{url:string,timeoutMs:number}} opts"
+        },
+        {
+          "line": 820,
+          "source": "export async function browserHydrationProbe({ url, timeoutMs }) {"
+        },
+        {
+          "line": 821,
+          "source": "timeoutMs = executionTimeoutMs(timeoutMs);"
+        },
+        {
+          "line": 826,
+          "source": "configureProbePage(page, timeoutMs);"
+        },
+        {
+          "line": 829,
+          "source": "await page.goto(url, { waitUntil: \"networkidle\", timeout: timeoutMs });"
+        },
+        {
+          "line": 831,
+          "source": "await page.waitForTimeout(750);"
+        },
+        {
+          "line": 832,
+          "source": "const bodyText = await page.locator(\"body\").innerText({ timeout: timeoutMs });"
+        },
+        {
+          "line": 855,
+          "source": "signal: AbortSignal.timeout(120_000),"
+        }
+      ],
+      "verification": [
+        "Node行为回归10 PASS（含真实隔离Worker/进程fixture与预算归一）",
+        "CLI实际命令入口假时钟14 PASS",
+        "Skill Python12 PASS",
+        "MCP TypeScript PASS",
+        "桌面受影响6文件89 PASS；桌面全量235PASS/1既有startup-safety静态字符串断言FAIL，未改断言/生产文件",
+        "25个变更JS语法check PASS；git diff --check PASS",
+        "规定的Node desktop通配入口FAIL：这些用例为Vitest，Node runner未建立Vitest suite且工作目录预期frontend；正确pnpm入口结果见前述"
+      ],
+      "limitations": "静态脚本/安全fixture；未启动远程CI/真实安装包/模型/用户浏览器profile。依赖内不可配置短限单列交主集成。"
+    },
+    {
+      "id": "TO-185",
+      "file": "frontend/scripts/desktop/obfuscate.mjs",
+      "originalLine": 824,
+      "originalPolicy": "page.goto timeoutMs=min(smokeBudget,30_000)",
+      "status": "已调整",
+      "newPolicy": "取消30秒Math.min帽；导航消费归一floor120秒，Page导航/动作默认同样120秒，启动180秒保留",
+      "evidence": [
+        {
+          "line": 2,
+          "source": "import { executionTimeoutMs, configureProbePage, withinExecution } from \"./timeout-policy.mjs\";"
+        },
+        {
+          "line": 670,
+          "source": "* @param {{timeoutMs?:number}} opts"
+        },
+        {
+          "line": 676,
+          "source": "const timeoutMs = executionTimeoutMs(opts.timeoutMs); // readiness独立步骤预算；后续HTTP/浏览器另有执行预算。"
+        },
+        {
+          "line": 727,
+          "source": "const deadline = Date.now() + timeoutMs;"
+        },
+        {
+          "line": 729,
+          "source": "while (Date.now() < deadline) {"
+        },
+        {
+          "line": 732,
+          "source": "// 共享readiness绝对deadline；不得为最后一次尝试重新启动两分钟。"
+        },
+        {
+          "line": 733,
+          "source": "s.setTimeout(Math.max(1, deadline - Date.now()), () => { s.destroy(); res(false); });"
+        },
+        {
+          "line": 745,
+          "source": "await new Promise((r) => setTimeout(r, 150));"
+        },
+        {
+          "line": 795,
+          "source": "timeoutMs,"
+        },
+        {
+          "line": 818,
+          "source": "* @param {{url:string,timeoutMs:number}} opts"
+        },
+        {
+          "line": 820,
+          "source": "export async function browserHydrationProbe({ url, timeoutMs }) {"
+        },
+        {
+          "line": 821,
+          "source": "timeoutMs = executionTimeoutMs(timeoutMs);"
+        },
+        {
+          "line": 826,
+          "source": "configureProbePage(page, timeoutMs);"
+        },
+        {
+          "line": 829,
+          "source": "await page.goto(url, { waitUntil: \"networkidle\", timeout: timeoutMs });"
+        },
+        {
+          "line": 831,
+          "source": "await page.waitForTimeout(750);"
+        },
+        {
+          "line": 832,
+          "source": "const bodyText = await page.locator(\"body\").innerText({ timeout: timeoutMs });"
+        },
+        {
+          "line": 855,
+          "source": "signal: AbortSignal.timeout(120_000),"
+        }
+      ],
+      "verification": [
+        "Node行为回归10 PASS（含真实隔离Worker/进程fixture与预算归一）",
+        "CLI实际命令入口假时钟14 PASS",
+        "Skill Python12 PASS",
+        "MCP TypeScript PASS",
+        "桌面受影响6文件89 PASS；桌面全量235PASS/1既有startup-safety静态字符串断言FAIL，未改断言/生产文件",
+        "25个变更JS语法check PASS；git diff --check PASS",
+        "规定的Node desktop通配入口FAIL：这些用例为Vitest，Node runner未建立Vitest suite且工作目录预期frontend；正确pnpm入口结果见前述"
+      ],
+      "limitations": "静态脚本/安全fixture；未启动远程CI/真实安装包/模型/用户浏览器profile。依赖内不可配置短限单列交主集成。"
+    },
+    {
+      "id": "TO-186",
+      "file": "frontend/scripts/desktop/obfuscate.mjs",
+      "originalLine": 827,
+      "originalPolicy": "body.innerText timeoutMs=min(smokeBudget,30_000)",
+      "status": "已调整",
+      "newPolicy": "body.innerText floor120秒，与导航独立步骤；无更短外层",
+      "evidence": [
+        {
+          "line": 2,
+          "source": "import { executionTimeoutMs, configureProbePage, withinExecution } from \"./timeout-policy.mjs\";"
+        },
+        {
+          "line": 670,
+          "source": "* @param {{timeoutMs?:number}} opts"
+        },
+        {
+          "line": 676,
+          "source": "const timeoutMs = executionTimeoutMs(opts.timeoutMs); // readiness独立步骤预算；后续HTTP/浏览器另有执行预算。"
+        },
+        {
+          "line": 727,
+          "source": "const deadline = Date.now() + timeoutMs;"
+        },
+        {
+          "line": 729,
+          "source": "while (Date.now() < deadline) {"
+        },
+        {
+          "line": 732,
+          "source": "// 共享readiness绝对deadline；不得为最后一次尝试重新启动两分钟。"
+        },
+        {
+          "line": 733,
+          "source": "s.setTimeout(Math.max(1, deadline - Date.now()), () => { s.destroy(); res(false); });"
+        },
+        {
+          "line": 745,
+          "source": "await new Promise((r) => setTimeout(r, 150));"
+        },
+        {
+          "line": 795,
+          "source": "timeoutMs,"
+        },
+        {
+          "line": 818,
+          "source": "* @param {{url:string,timeoutMs:number}} opts"
+        },
+        {
+          "line": 820,
+          "source": "export async function browserHydrationProbe({ url, timeoutMs }) {"
+        },
+        {
+          "line": 821,
+          "source": "timeoutMs = executionTimeoutMs(timeoutMs);"
+        },
+        {
+          "line": 826,
+          "source": "configureProbePage(page, timeoutMs);"
+        },
+        {
+          "line": 829,
+          "source": "await page.goto(url, { waitUntil: \"networkidle\", timeout: timeoutMs });"
+        },
+        {
+          "line": 831,
+          "source": "await page.waitForTimeout(750);"
+        },
+        {
+          "line": 832,
+          "source": "const bodyText = await page.locator(\"body\").innerText({ timeout: timeoutMs });"
+        },
+        {
+          "line": 855,
+          "source": "signal: AbortSignal.timeout(120_000),"
+        }
+      ],
+      "verification": [
+        "Node行为回归10 PASS（含真实隔离Worker/进程fixture与预算归一）",
+        "CLI实际命令入口假时钟14 PASS",
+        "Skill Python12 PASS",
+        "MCP TypeScript PASS",
+        "桌面受影响6文件89 PASS；桌面全量235PASS/1既有startup-safety静态字符串断言FAIL，未改断言/生产文件",
+        "25个变更JS语法check PASS；git diff --check PASS",
+        "规定的Node desktop通配入口FAIL：这些用例为Vitest，Node runner未建立Vitest suite且工作目录预期frontend；正确pnpm入口结果见前述"
+      ],
+      "limitations": "静态脚本/安全fixture；未启动远程CI/真实安装包/模型/用户浏览器profile。依赖内不可配置短限单列交主集成。"
+    },
+    {
+      "id": "TO-187",
+      "file": "frontend/scripts/desktop/package.mjs",
+      "originalLine": 272,
+      "originalPolicy": "spawnSync TLS fetch timeout:30_000",
+      "status": "已调整",
+      "newPolicy": "子TLS fetch AbortSignal120秒，外层Node150秒留启动/结算30秒；两个站点串行各有独立完整150秒",
+      "evidence": [
+        {
+          "line": 267,
+          "source": "\"fetch(process.argv[1],{signal:AbortSignal.timeout(120000)}).then(r=>{console.log('TLS_OK='+r.status);process.exit(r.ok?0:1)}).catch(e=>{console.error(e.cause?.code||e);process.exit(2)})\","
+        },
+        {
+          "line": 272,
+          "source": "timeout: 150_000, // 子请求120s + Node启动/结算30s"
+        }
+      ],
+      "verification": [
+        "Node行为回归10 PASS（含真实隔离Worker/进程fixture与预算归一）",
+        "CLI实际命令入口假时钟14 PASS",
+        "Skill Python12 PASS",
+        "MCP TypeScript PASS",
+        "桌面受影响6文件89 PASS；桌面全量235PASS/1既有startup-safety静态字符串断言FAIL，未改断言/生产文件",
+        "25个变更JS语法check PASS；git diff --check PASS",
+        "规定的Node desktop通配入口FAIL：这些用例为Vitest，Node runner未建立Vitest suite且工作目录预期frontend；正确pnpm入口结果见前述"
+      ],
+      "limitations": "静态脚本/安全fixture；未启动远程CI/真实安装包/模型/用户浏览器profile。依赖内不可配置短限单列交主集成。"
+    },
+    {
+      "id": "TO-188",
+      "file": "frontend/scripts/desktop/verify-handshake-gate.mjs",
+      "originalLine": 76,
+      "originalPolicy": "waitReady ms=30000 / deadline",
+      "status": "已调整",
+      "newPolicy": "readiness150秒绝对deadline，与HTTP观察共享；原绝对deadline最后不足120秒不重置",
+      "evidence": [
+        {
+          "line": 77,
+          "source": "const deadline = Date.now() + ms;"
+        },
+        {
+          "line": 78,
+          "source": "while (Date.now() < deadline) {"
+        },
+        {
+          "line": 85,
+          "source": "signal: AbortSignal.timeout(Math.max(1, deadline - Date.now())) // 共用readiness绝对deadline，不能重置,"
+        },
+        {
+          "line": 89,
+          "source": "await new Promise((r) => setTimeout(r, 500));"
+        },
+        {
+          "line": 107,
+          "source": "signal: AbortSignal.timeout(120_000),"
+        }
+      ],
+      "verification": [
+        "Node行为回归10 PASS（含真实隔离Worker/进程fixture与预算归一）",
+        "CLI实际命令入口假时钟14 PASS",
+        "Skill Python12 PASS",
+        "MCP TypeScript PASS",
+        "桌面受影响6文件89 PASS；桌面全量235PASS/1既有startup-safety静态字符串断言FAIL，未改断言/生产文件",
+        "25个变更JS语法check PASS；git diff --check PASS",
+        "规定的Node desktop通配入口FAIL：这些用例为Vitest，Node runner未建立Vitest suite且工作目录预期frontend；正确pnpm入口结果见前述"
+      ],
+      "limitations": "静态脚本/安全fixture；未启动远程CI/真实安装包/模型/用户浏览器profile。依赖内不可配置短限单列交主集成。"
+    },
+    {
+      "id": "TO-189",
+      "file": "frontend/scripts/desktop/verify-handshake-gate.mjs",
+      "originalLine": 85,
+      "originalPolicy": "AbortSignal.timeout(1500)",
+      "status": "已调整",
+      "newPolicy": "移除1.5秒独立请求上限，使用readiness绝对deadline剩余值，原120+余量不在每次poll重置",
+      "evidence": [
+        {
+          "line": 77,
+          "source": "const deadline = Date.now() + ms;"
+        },
+        {
+          "line": 78,
+          "source": "while (Date.now() < deadline) {"
+        },
+        {
+          "line": 85,
+          "source": "signal: AbortSignal.timeout(Math.max(1, deadline - Date.now())) // 共用readiness绝对deadline，不能重置,"
+        },
+        {
+          "line": 89,
+          "source": "await new Promise((r) => setTimeout(r, 500));"
+        },
+        {
+          "line": 107,
+          "source": "signal: AbortSignal.timeout(120_000),"
+        }
+      ],
+      "verification": [
+        "Node行为回归10 PASS（含真实隔离Worker/进程fixture与预算归一）",
+        "CLI实际命令入口假时钟14 PASS",
+        "Skill Python12 PASS",
+        "MCP TypeScript PASS",
+        "桌面受影响6文件89 PASS；桌面全量235PASS/1既有startup-safety静态字符串断言FAIL，未改断言/生产文件",
+        "25个变更JS语法check PASS；git diff --check PASS",
+        "规定的Node desktop通配入口FAIL：这些用例为Vitest，Node runner未建立Vitest suite且工作目录预期frontend；正确pnpm入口结果见前述"
+      ],
+      "limitations": "静态脚本/安全fixture；未启动远程CI/真实安装包/模型/用户浏览器profile。依赖内不可配置短限单列交主集成。"
+    },
+    {
+      "id": "TO-190",
+      "file": "frontend/scripts/desktop/verify-handshake-gate.mjs",
+      "originalLine": 107,
+      "originalPolicy": "AbortSignal.timeout(6000)",
+      "status": "已调整",
+      "newPolicy": "接口HTTP执行120秒，Signal一直覆盖response body读取",
+      "evidence": [
+        {
+          "line": 77,
+          "source": "const deadline = Date.now() + ms;"
+        },
+        {
+          "line": 78,
+          "source": "while (Date.now() < deadline) {"
+        },
+        {
+          "line": 85,
+          "source": "signal: AbortSignal.timeout(Math.max(1, deadline - Date.now())) // 共用readiness绝对deadline，不能重置,"
+        },
+        {
+          "line": 89,
+          "source": "await new Promise((r) => setTimeout(r, 500));"
+        },
+        {
+          "line": 107,
+          "source": "signal: AbortSignal.timeout(120_000),"
+        }
+      ],
+      "verification": [
+        "Node行为回归10 PASS（含真实隔离Worker/进程fixture与预算归一）",
+        "CLI实际命令入口假时钟14 PASS",
+        "Skill Python12 PASS",
+        "MCP TypeScript PASS",
+        "桌面受影响6文件89 PASS；桌面全量235PASS/1既有startup-safety静态字符串断言FAIL，未改断言/生产文件",
+        "25个变更JS语法check PASS；git diff --check PASS",
+        "规定的Node desktop通配入口FAIL：这些用例为Vitest，Node runner未建立Vitest suite且工作目录预期frontend；正确pnpm入口结果见前述"
+      ],
+      "limitations": "静态脚本/安全fixture；未启动远程CI/真实安装包/模型/用户浏览器profile。依赖内不可配置短限单列交主集成。"
+    },
+    {
+      "id": "TO-191",
+      "file": "frontend/scripts/t712-video-regression-loop.ts",
+      "originalLine": 405,
+      "originalPolicy": "poll(aiTask,12*60_000)",
+      "status": "保留更长预算",
+      "newPolicy": "保留原12分钟，已≥120秒；该策略是独立job/观察/既有高预算，未缩短。",
+      "evidence": [
+        {
+          "line": 167,
+          "source": "return new Promise((resolve) => setTimeout(resolve, ms));"
+        },
+        {
+          "line": 363,
+          "source": "const poll = async (endpoint: unknown, taskId: string, timeoutMs: number): Promise<Json> => {"
+        },
+        {
+          "line": 364,
+          "source": "const deadline = Date.now() + timeoutMs;"
+        },
+        {
+          "line": 365,
+          "source": "while (Date.now() < deadline) {"
+        },
+        {
+          "line": 477,
+          "source": "constraints: { timeoutSec: null, network: \"deny\", maxOutputMB: 2048 },"
+        }
+      ],
+      "verification": [
+        "Node行为回归10 PASS（含真实隔离Worker/进程fixture与预算归一）",
+        "CLI实际命令入口假时钟14 PASS",
+        "Skill Python12 PASS",
+        "MCP TypeScript PASS",
+        "桌面受影响6文件89 PASS；桌面全量235PASS/1既有startup-safety静态字符串断言FAIL，未改断言/生产文件",
+        "25个变更JS语法check PASS；git diff --check PASS",
+        "规定的Node desktop通配入口FAIL：这些用例为Vitest，Node runner未建立Vitest suite且工作目录预期frontend；正确pnpm入口结果见前述"
+      ],
+      "limitations": "静态脚本/安全fixture；未启动远程CI/真实安装包/模型/用户浏览器profile。依赖内不可配置短限单列交主集成。"
+    },
+    {
+      "id": "TO-192",
+      "file": "frontend/scripts/t712-video-regression-loop.ts",
+      "originalLine": 484,
+      "originalPolicy": "poll(renderTask,35*60_000)",
+      "status": "保留更长预算",
+      "newPolicy": "保留原35分钟，已≥120秒；该策略是独立job/观察/既有高预算，未缩短。",
+      "evidence": [
+        {
+          "line": 167,
+          "source": "return new Promise((resolve) => setTimeout(resolve, ms));"
+        },
+        {
+          "line": 363,
+          "source": "const poll = async (endpoint: unknown, taskId: string, timeoutMs: number): Promise<Json> => {"
+        },
+        {
+          "line": 364,
+          "source": "const deadline = Date.now() + timeoutMs;"
+        },
+        {
+          "line": 365,
+          "source": "while (Date.now() < deadline) {"
+        },
+        {
+          "line": 477,
+          "source": "constraints: { timeoutSec: null, network: \"deny\", maxOutputMB: 2048 },"
+        }
+      ],
+      "verification": [
+        "Node行为回归10 PASS（含真实隔离Worker/进程fixture与预算归一）",
+        "CLI实际命令入口假时钟14 PASS",
+        "Skill Python12 PASS",
+        "MCP TypeScript PASS",
+        "桌面受影响6文件89 PASS；桌面全量235PASS/1既有startup-safety静态字符串断言FAIL，未改断言/生产文件",
+        "25个变更JS语法check PASS；git diff --check PASS",
+        "规定的Node desktop通配入口FAIL：这些用例为Vitest，Node runner未建立Vitest suite且工作目录预期frontend；正确pnpm入口结果见前述"
+      ],
+      "limitations": "静态脚本/安全fixture；未启动远程CI/真实安装包/模型/用户浏览器profile。依赖内不可配置短限单列交主集成。"
+    },
+    {
+      "id": "TO-193",
+      "file": "frontend/scripts/visual/capture-current.mjs",
+      "originalLine": 79,
+      "originalPolicy": "waitForServer default120_000 / elapsed deadline",
+      "status": "已调整",
+      "newPolicy": "原默认120秒保留；执行观察共绝对deadline，child fetch新增剩余Signal使单次网络不能无界穿过外层",
+      "evidence": [
+        {
+          "line": 36,
+          "source": "import { setTimeout as sleep } from \"node:timers/promises\";"
+        },
+        {
+          "line": 79,
+          "source": "async function waitForServer(url, timeoutMs = 120_000) {"
+        },
+        {
+          "line": 81,
+          "source": "timeoutMs = Math.max(120_000, timeoutMs);"
+        },
+        {
+          "line": 82,
+          "source": "const deadline = start + timeoutMs;"
+        },
+        {
+          "line": 83,
+          "source": "while (Date.now() < deadline) {"
+        },
+        {
+          "line": 85,
+          "source": "const res = await fetch(url, { redirect: \"manual\", signal: AbortSignal.timeout(Math.max(1, deadline - Date.now())) });"
+        },
+        {
+          "line": 94,
+          "source": "throw new Error(`Dev server at ${url} did not become ready within ${timeoutMs}ms`);"
+        },
+        {
+          "line": 108,
+          "source": "await waitForServer(BASE_URL);"
+        },
+        {
+          "line": 151,
+          "source": "await waitForServer(BASE_URL, 120_000).catch(() => {"
+        },
+        {
+          "line": 170,
+          "source": "page.setDefaultTimeout(120_000);"
+        },
+        {
+          "line": 171,
+          "source": "page.setDefaultNavigationTimeout(120_000);"
+        },
+        {
+          "line": 197,
+          "source": "timeout: 120_000,"
+        },
+        {
+          "line": 203,
+          "source": "await page.waitForLoadState(\"load\", { timeout: 120_000 }).catch(() => {});"
+        },
+        {
+          "line": 204,
+          "source": "await page.waitForTimeout(500);"
+        }
+      ],
+      "verification": [
+        "Node行为回归10 PASS（含真实隔离Worker/进程fixture与预算归一）",
+        "CLI实际命令入口假时钟14 PASS",
+        "Skill Python12 PASS",
+        "MCP TypeScript PASS",
+        "桌面受影响6文件89 PASS；桌面全量235PASS/1既有startup-safety静态字符串断言FAIL，未改断言/生产文件",
+        "25个变更JS语法check PASS；git diff --check PASS",
+        "规定的Node desktop通配入口FAIL：这些用例为Vitest，Node runner未建立Vitest suite且工作目录预期frontend；正确pnpm入口结果见前述"
+      ],
+      "limitations": "静态脚本/安全fixture；未启动远程CI/真实安装包/模型/用户浏览器profile。依赖内不可配置短限单列交主集成。"
+    },
+    {
+      "id": "TO-194",
+      "file": "frontend/scripts/visual/capture-current.mjs",
+      "originalLine": 149,
+      "originalPolicy": "waitForServer(BASE_URL,5_000)",
+      "status": "已调整",
+      "newPolicy": "复用dev服务器观察原5秒升120秒，shareddeadline Signal",
+      "evidence": [
+        {
+          "line": 36,
+          "source": "import { setTimeout as sleep } from \"node:timers/promises\";"
+        },
+        {
+          "line": 79,
+          "source": "async function waitForServer(url, timeoutMs = 120_000) {"
+        },
+        {
+          "line": 81,
+          "source": "timeoutMs = Math.max(120_000, timeoutMs);"
+        },
+        {
+          "line": 82,
+          "source": "const deadline = start + timeoutMs;"
+        },
+        {
+          "line": 83,
+          "source": "while (Date.now() < deadline) {"
+        },
+        {
+          "line": 85,
+          "source": "const res = await fetch(url, { redirect: \"manual\", signal: AbortSignal.timeout(Math.max(1, deadline - Date.now())) });"
+        },
+        {
+          "line": 94,
+          "source": "throw new Error(`Dev server at ${url} did not become ready within ${timeoutMs}ms`);"
+        },
+        {
+          "line": 108,
+          "source": "await waitForServer(BASE_URL);"
+        },
+        {
+          "line": 151,
+          "source": "await waitForServer(BASE_URL, 120_000).catch(() => {"
+        },
+        {
+          "line": 170,
+          "source": "page.setDefaultTimeout(120_000);"
+        },
+        {
+          "line": 171,
+          "source": "page.setDefaultNavigationTimeout(120_000);"
+        },
+        {
+          "line": 197,
+          "source": "timeout: 120_000,"
+        },
+        {
+          "line": 203,
+          "source": "await page.waitForLoadState(\"load\", { timeout: 120_000 }).catch(() => {});"
+        },
+        {
+          "line": 204,
+          "source": "await page.waitForTimeout(500);"
+        }
+      ],
+      "verification": [
+        "Node行为回归10 PASS（含真实隔离Worker/进程fixture与预算归一）",
+        "CLI实际命令入口假时钟14 PASS",
+        "Skill Python12 PASS",
+        "MCP TypeScript PASS",
+        "桌面受影响6文件89 PASS；桌面全量235PASS/1既有startup-safety静态字符串断言FAIL，未改断言/生产文件",
+        "25个变更JS语法check PASS；git diff --check PASS",
+        "规定的Node desktop通配入口FAIL：这些用例为Vitest，Node runner未建立Vitest suite且工作目录预期frontend；正确pnpm入口结果见前述"
+      ],
+      "limitations": "静态脚本/安全fixture；未启动远程CI/真实安装包/模型/用户浏览器profile。依赖内不可配置短限单列交主集成。"
+    },
+    {
+      "id": "TO-195",
+      "file": "frontend/scripts/visual/capture-current.mjs",
+      "originalLine": 193,
+      "originalPolicy": "page.goto timeout:30_000",
+      "status": "已调整",
+      "newPolicy": "正执行/观察预算升120秒；保留原poll、sleep间隔及媒体输入长度。",
+      "evidence": [
+        {
+          "line": 36,
+          "source": "import { setTimeout as sleep } from \"node:timers/promises\";"
+        },
+        {
+          "line": 79,
+          "source": "async function waitForServer(url, timeoutMs = 120_000) {"
+        },
+        {
+          "line": 81,
+          "source": "timeoutMs = Math.max(120_000, timeoutMs);"
+        },
+        {
+          "line": 82,
+          "source": "const deadline = start + timeoutMs;"
+        },
+        {
+          "line": 83,
+          "source": "while (Date.now() < deadline) {"
+        },
+        {
+          "line": 85,
+          "source": "const res = await fetch(url, { redirect: \"manual\", signal: AbortSignal.timeout(Math.max(1, deadline - Date.now())) });"
+        },
+        {
+          "line": 94,
+          "source": "throw new Error(`Dev server at ${url} did not become ready within ${timeoutMs}ms`);"
+        },
+        {
+          "line": 108,
+          "source": "await waitForServer(BASE_URL);"
+        },
+        {
+          "line": 151,
+          "source": "await waitForServer(BASE_URL, 120_000).catch(() => {"
+        },
+        {
+          "line": 170,
+          "source": "page.setDefaultTimeout(120_000);"
+        },
+        {
+          "line": 171,
+          "source": "page.setDefaultNavigationTimeout(120_000);"
+        },
+        {
+          "line": 197,
+          "source": "timeout: 120_000,"
+        },
+        {
+          "line": 203,
+          "source": "await page.waitForLoadState(\"load\", { timeout: 120_000 }).catch(() => {});"
+        },
+        {
+          "line": 204,
+          "source": "await page.waitForTimeout(500);"
+        }
+      ],
+      "verification": [
+        "Node行为回归10 PASS（含真实隔离Worker/进程fixture与预算归一）",
+        "CLI实际命令入口假时钟14 PASS",
+        "Skill Python12 PASS",
+        "MCP TypeScript PASS",
+        "桌面受影响6文件89 PASS；桌面全量235PASS/1既有startup-safety静态字符串断言FAIL，未改断言/生产文件",
+        "25个变更JS语法check PASS；git diff --check PASS",
+        "规定的Node desktop通配入口FAIL：这些用例为Vitest，Node runner未建立Vitest suite且工作目录预期frontend；正确pnpm入口结果见前述"
+      ],
+      "limitations": "静态脚本/安全fixture；未启动远程CI/真实安装包/模型/用户浏览器profile。依赖内不可配置短限单列交主集成。"
+    },
+    {
+      "id": "TO-196",
+      "file": "frontend/scripts/visual/capture-current.mjs",
+      "originalLine": 199,
+      "originalPolicy": "waitForLoadState timeout:10_000",
+      "status": "已调整",
+      "newPolicy": "正执行/观察预算升120秒；保留原poll、sleep间隔及媒体输入长度。",
+      "evidence": [
+        {
+          "line": 36,
+          "source": "import { setTimeout as sleep } from \"node:timers/promises\";"
+        },
+        {
+          "line": 79,
+          "source": "async function waitForServer(url, timeoutMs = 120_000) {"
+        },
+        {
+          "line": 81,
+          "source": "timeoutMs = Math.max(120_000, timeoutMs);"
+        },
+        {
+          "line": 82,
+          "source": "const deadline = start + timeoutMs;"
+        },
+        {
+          "line": 83,
+          "source": "while (Date.now() < deadline) {"
+        },
+        {
+          "line": 85,
+          "source": "const res = await fetch(url, { redirect: \"manual\", signal: AbortSignal.timeout(Math.max(1, deadline - Date.now())) });"
+        },
+        {
+          "line": 94,
+          "source": "throw new Error(`Dev server at ${url} did not become ready within ${timeoutMs}ms`);"
+        },
+        {
+          "line": 108,
+          "source": "await waitForServer(BASE_URL);"
+        },
+        {
+          "line": 151,
+          "source": "await waitForServer(BASE_URL, 120_000).catch(() => {"
+        },
+        {
+          "line": 170,
+          "source": "page.setDefaultTimeout(120_000);"
+        },
+        {
+          "line": 171,
+          "source": "page.setDefaultNavigationTimeout(120_000);"
+        },
+        {
+          "line": 197,
+          "source": "timeout: 120_000,"
+        },
+        {
+          "line": 203,
+          "source": "await page.waitForLoadState(\"load\", { timeout: 120_000 }).catch(() => {});"
+        },
+        {
+          "line": 204,
+          "source": "await page.waitForTimeout(500);"
+        }
+      ],
+      "verification": [
+        "Node行为回归10 PASS（含真实隔离Worker/进程fixture与预算归一）",
+        "CLI实际命令入口假时钟14 PASS",
+        "Skill Python12 PASS",
+        "MCP TypeScript PASS",
+        "桌面受影响6文件89 PASS；桌面全量235PASS/1既有startup-safety静态字符串断言FAIL，未改断言/生产文件",
+        "25个变更JS语法check PASS；git diff --check PASS",
+        "规定的Node desktop通配入口FAIL：这些用例为Vitest，Node runner未建立Vitest suite且工作目录预期frontend；正确pnpm入口结果见前述"
+      ],
+      "limitations": "静态脚本/安全fixture；未启动远程CI/真实安装包/模型/用户浏览器profile。依赖内不可配置短限单列交主集成。"
+    },
+    {
+      "id": "TO-197",
+      "file": "frontend/scripts/visual/capture-with-port.mjs",
+      "originalLine": 67,
+      "originalPolicy": "elapsed<30_000 server readiness",
+      "status": "已调整",
+      "newPolicy": "server readiness30升120秒，网络取response body共绝对deadline",
+      "evidence": [
+        {
+          "line": 16,
+          "source": "import { setTimeout as sleep } from \"node:timers/promises\";"
+        },
+        {
+          "line": 69,
+          "source": "const res = await fetch(BASE_URL, { redirect: \"manual\", signal: AbortSignal.timeout(Math.max(1, start + 120_000 - Date.now())) });"
+        },
+        {
+          "line": 101,
+          "source": "page.setDefaultTimeout(120_000);"
+        },
+        {
+          "line": 102,
+          "source": "page.setDefaultNavigationTimeout(120_000);"
+        },
+        {
+          "line": 107,
+          "source": "timeout: 120_000,"
+        },
+        {
+          "line": 109,
+          "source": "await page.waitForLoadState(\"load\", { timeout: 120_000 }).catch(() => {});"
+        },
+        {
+          "line": 110,
+          "source": "await page.waitForTimeout(800);"
+        }
+      ],
+      "verification": [
+        "Node行为回归10 PASS（含真实隔离Worker/进程fixture与预算归一）",
+        "CLI实际命令入口假时钟14 PASS",
+        "Skill Python12 PASS",
+        "MCP TypeScript PASS",
+        "桌面受影响6文件89 PASS；桌面全量235PASS/1既有startup-safety静态字符串断言FAIL，未改断言/生产文件",
+        "25个变更JS语法check PASS；git diff --check PASS",
+        "规定的Node desktop通配入口FAIL：这些用例为Vitest，Node runner未建立Vitest suite且工作目录预期frontend；正确pnpm入口结果见前述"
+      ],
+      "limitations": "静态脚本/安全fixture；未启动远程CI/真实安装包/模型/用户浏览器profile。依赖内不可配置短限单列交主集成。"
+    },
+    {
+      "id": "TO-198",
+      "file": "frontend/scripts/visual/capture-with-port.mjs",
+      "originalLine": 105,
+      "originalPolicy": "page.goto timeout:30_000",
+      "status": "已调整",
+      "newPolicy": "正执行/观察预算升120秒；保留原poll、sleep间隔及媒体输入长度。",
+      "evidence": [
+        {
+          "line": 16,
+          "source": "import { setTimeout as sleep } from \"node:timers/promises\";"
+        },
+        {
+          "line": 69,
+          "source": "const res = await fetch(BASE_URL, { redirect: \"manual\", signal: AbortSignal.timeout(Math.max(1, start + 120_000 - Date.now())) });"
+        },
+        {
+          "line": 101,
+          "source": "page.setDefaultTimeout(120_000);"
+        },
+        {
+          "line": 102,
+          "source": "page.setDefaultNavigationTimeout(120_000);"
+        },
+        {
+          "line": 107,
+          "source": "timeout: 120_000,"
+        },
+        {
+          "line": 109,
+          "source": "await page.waitForLoadState(\"load\", { timeout: 120_000 }).catch(() => {});"
+        },
+        {
+          "line": 110,
+          "source": "await page.waitForTimeout(800);"
+        }
+      ],
+      "verification": [
+        "Node行为回归10 PASS（含真实隔离Worker/进程fixture与预算归一）",
+        "CLI实际命令入口假时钟14 PASS",
+        "Skill Python12 PASS",
+        "MCP TypeScript PASS",
+        "桌面受影响6文件89 PASS；桌面全量235PASS/1既有startup-safety静态字符串断言FAIL，未改断言/生产文件",
+        "25个变更JS语法check PASS；git diff --check PASS",
+        "规定的Node desktop通配入口FAIL：这些用例为Vitest，Node runner未建立Vitest suite且工作目录预期frontend；正确pnpm入口结果见前述"
+      ],
+      "limitations": "静态脚本/安全fixture；未启动远程CI/真实安装包/模型/用户浏览器profile。依赖内不可配置短限单列交主集成。"
+    },
+    {
+      "id": "TO-199",
+      "file": "frontend/scripts/visual/capture-with-port.mjs",
+      "originalLine": 107,
+      "originalPolicy": "waitForLoadState timeout:10_000",
+      "status": "已调整",
+      "newPolicy": "正执行/观察预算升120秒；保留原poll、sleep间隔及媒体输入长度。",
+      "evidence": [
+        {
+          "line": 16,
+          "source": "import { setTimeout as sleep } from \"node:timers/promises\";"
+        },
+        {
+          "line": 69,
+          "source": "const res = await fetch(BASE_URL, { redirect: \"manual\", signal: AbortSignal.timeout(Math.max(1, start + 120_000 - Date.now())) });"
+        },
+        {
+          "line": 101,
+          "source": "page.setDefaultTimeout(120_000);"
+        },
+        {
+          "line": 102,
+          "source": "page.setDefaultNavigationTimeout(120_000);"
+        },
+        {
+          "line": 107,
+          "source": "timeout: 120_000,"
+        },
+        {
+          "line": 109,
+          "source": "await page.waitForLoadState(\"load\", { timeout: 120_000 }).catch(() => {});"
+        },
+        {
+          "line": 110,
+          "source": "await page.waitForTimeout(800);"
+        }
+      ],
+      "verification": [
+        "Node行为回归10 PASS（含真实隔离Worker/进程fixture与预算归一）",
+        "CLI实际命令入口假时钟14 PASS",
+        "Skill Python12 PASS",
+        "MCP TypeScript PASS",
+        "桌面受影响6文件89 PASS；桌面全量235PASS/1既有startup-safety静态字符串断言FAIL，未改断言/生产文件",
+        "25个变更JS语法check PASS；git diff --check PASS",
+        "规定的Node desktop通配入口FAIL：这些用例为Vitest，Node runner未建立Vitest suite且工作目录预期frontend；正确pnpm入口结果见前述"
+      ],
+      "limitations": "静态脚本/安全fixture；未启动远程CI/真实安装包/模型/用户浏览器profile。依赖内不可配置短限单列交主集成。"
+    },
+    {
+      "id": "TO-200",
+      "file": "mcp-server/scripts/build-runtime.mjs",
+      "originalLine": 26,
+      "originalPolicy": "spawnSync CLI smoke timeout20_000",
+      "status": "已调整",
+      "newPolicy": "正执行/观察预算升120秒；保留原poll、sleep间隔及媒体输入长度。",
+      "evidence": [
+        {
+          "line": 26,
+          "source": "timeout: 120_000,"
+        }
+      ],
+      "verification": [
+        "Node行为回归10 PASS（含真实隔离Worker/进程fixture与预算归一）",
+        "CLI实际命令入口假时钟14 PASS",
+        "Skill Python12 PASS",
+        "MCP TypeScript PASS",
+        "桌面受影响6文件89 PASS；桌面全量235PASS/1既有startup-safety静态字符串断言FAIL，未改断言/生产文件",
+        "25个变更JS语法check PASS；git diff --check PASS",
+        "规定的Node desktop通配入口FAIL：这些用例为Vitest，Node runner未建立Vitest suite且工作目录预期frontend；正确pnpm入口结果见前述"
+      ],
+      "limitations": "静态脚本/安全fixture；未启动远程CI/真实安装包/模型/用户浏览器profile。依赖内不可配置短限单列交主集成。"
+    },
+    {
+      "id": "TO-201",
+      "file": "mcp-server/scripts/smoke.mjs",
+      "originalLine": 53,
+      "originalPolicy": "request: setTimeout reject(...,30_000)",
+      "status": "已调整",
+      "newPolicy": "正执行/观察预算升120秒；保留原poll、sleep间隔及媒体输入长度。",
+      "evidence": [
+        {
+          "line": 53,
+          "source": "setTimeout(() => {"
+        },
+        {
+          "line": 56,
+          "source": "reject(new Error(`timeout waiting for ${method}`));"
+        }
+      ],
+      "verification": [
+        "Node行为回归10 PASS（含真实隔离Worker/进程fixture与预算归一）",
+        "CLI实际命令入口假时钟14 PASS",
+        "Skill Python12 PASS",
+        "MCP TypeScript PASS",
+        "桌面受影响6文件89 PASS；桌面全量235PASS/1既有startup-safety静态字符串断言FAIL，未改断言/生产文件",
+        "25个变更JS语法check PASS；git diff --check PASS",
+        "规定的Node desktop通配入口FAIL：这些用例为Vitest，Node runner未建立Vitest suite且工作目录预期frontend；正确pnpm入口结果见前述"
+      ],
+      "limitations": "静态脚本/安全fixture；未启动远程CI/真实安装包/模型/用户浏览器profile。依赖内不可配置短限单列交主集成。"
+    },
+    {
+      "id": "TO-208",
+      "file": "tools/windows-closure-rat/inspect-installed-webview.mjs",
+      "originalLine": 12,
+      "originalPolicy": "Date.now()+30_000 discovery deadline",
+      "status": "已调整",
+      "newPolicy": "CDP target discovery30升120秒，三个host串行观察共享绝对deadline，耗尽即停止",
+      "evidence": [
+        {
+          "line": 12,
+          "source": "const deadline = Date.now() + 120_000;"
+        },
+        {
+          "line": 15,
+          "source": "while (Date.now() < deadline) {"
+        },
+        {
+          "line": 17,
+          "source": "if (Date.now() >= deadline) break;"
+        },
+        {
+          "line": 19,
+          "source": "targets = await fetch(`http://${host}:${port}/json/list`, { signal: AbortSignal.timeout(Math.max(1, deadline - Date.now())) }).then("
+        },
+        {
+          "line": 33,
+          "source": "await new Promise((done) => setTimeout(done, 200));"
+        },
+        {
+          "line": 51,
+          "source": "const timer = setTimeout("
+        },
+        {
+          "line": 58,
+          "source": "clearTimeout(timer);"
+        },
+        {
+          "line": 66,
+          "source": "clearTimeout(timer);"
+        },
+        {
+          "line": 99,
+          "source": "const timer = setTimeout("
+        },
+        {
+          "line": 106,
+          "source": "clearTimeout(timer);"
+        }
+      ],
+      "verification": [
+        "Node行为回归10 PASS（含真实隔离Worker/进程fixture与预算归一）",
+        "CLI实际命令入口假时钟14 PASS",
+        "Skill Python12 PASS",
+        "MCP TypeScript PASS",
+        "桌面受影响6文件89 PASS；桌面全量235PASS/1既有startup-safety静态字符串断言FAIL，未改断言/生产文件",
+        "25个变更JS语法check PASS；git diff --check PASS",
+        "规定的Node desktop通配入口FAIL：这些用例为Vitest，Node runner未建立Vitest suite且工作目录预期frontend；正确pnpm入口结果见前述"
+      ],
+      "limitations": "静态脚本/安全fixture；未启动远程CI/真实安装包/模型/用户浏览器profile。依赖内不可配置短限单列交主集成。"
+    },
+    {
+      "id": "TO-209",
+      "file": "tools/windows-closure-rat/inspect-installed-webview.mjs",
+      "originalLine": 50,
+      "originalPolicy": "setTimeout reject 10_000",
+      "status": "已调整",
+      "newPolicy": "CDP连接120秒，超时关闭socket，成功/错误清理timer",
+      "evidence": [
+        {
+          "line": 12,
+          "source": "const deadline = Date.now() + 120_000;"
+        },
+        {
+          "line": 15,
+          "source": "while (Date.now() < deadline) {"
+        },
+        {
+          "line": 17,
+          "source": "if (Date.now() >= deadline) break;"
+        },
+        {
+          "line": 19,
+          "source": "targets = await fetch(`http://${host}:${port}/json/list`, { signal: AbortSignal.timeout(Math.max(1, deadline - Date.now())) }).then("
+        },
+        {
+          "line": 33,
+          "source": "await new Promise((done) => setTimeout(done, 200));"
+        },
+        {
+          "line": 51,
+          "source": "const timer = setTimeout("
+        },
+        {
+          "line": 58,
+          "source": "clearTimeout(timer);"
+        },
+        {
+          "line": 66,
+          "source": "clearTimeout(timer);"
+        },
+        {
+          "line": 99,
+          "source": "const timer = setTimeout("
+        },
+        {
+          "line": 106,
+          "source": "clearTimeout(timer);"
+        }
+      ],
+      "verification": [
+        "Node行为回归10 PASS（含真实隔离Worker/进程fixture与预算归一）",
+        "CLI实际命令入口假时钟14 PASS",
+        "Skill Python12 PASS",
+        "MCP TypeScript PASS",
+        "桌面受影响6文件89 PASS；桌面全量235PASS/1既有startup-safety静态字符串断言FAIL，未改断言/生产文件",
+        "25个变更JS语法check PASS；git diff --check PASS",
+        "规定的Node desktop通配入口FAIL：这些用例为Vitest，Node runner未建立Vitest suite且工作目录预期frontend；正确pnpm入口结果见前述"
+      ],
+      "limitations": "静态脚本/安全fixture；未启动远程CI/真实安装包/模型/用户浏览器profile。依赖内不可配置短限单列交主集成。"
+    },
+    {
+      "id": "TO-210",
+      "file": "tools/windows-closure-rat/inspect-installed-webview.mjs",
+      "originalLine": 98,
+      "originalPolicy": "setTimeout reject 10_000",
+      "status": "已调整",
+      "newPolicy": "DOM读取120秒，超时关闭socket，响应清理timer",
+      "evidence": [
+        {
+          "line": 12,
+          "source": "const deadline = Date.now() + 120_000;"
+        },
+        {
+          "line": 15,
+          "source": "while (Date.now() < deadline) {"
+        },
+        {
+          "line": 17,
+          "source": "if (Date.now() >= deadline) break;"
+        },
+        {
+          "line": 19,
+          "source": "targets = await fetch(`http://${host}:${port}/json/list`, { signal: AbortSignal.timeout(Math.max(1, deadline - Date.now())) }).then("
+        },
+        {
+          "line": 33,
+          "source": "await new Promise((done) => setTimeout(done, 200));"
+        },
+        {
+          "line": 51,
+          "source": "const timer = setTimeout("
+        },
+        {
+          "line": 58,
+          "source": "clearTimeout(timer);"
+        },
+        {
+          "line": 66,
+          "source": "clearTimeout(timer);"
+        },
+        {
+          "line": 99,
+          "source": "const timer = setTimeout("
+        },
+        {
+          "line": 106,
+          "source": "clearTimeout(timer);"
+        }
+      ],
+      "verification": [
+        "Node行为回归10 PASS（含真实隔离Worker/进程fixture与预算归一）",
+        "CLI实际命令入口假时钟14 PASS",
+        "Skill Python12 PASS",
+        "MCP TypeScript PASS",
+        "桌面受影响6文件89 PASS；桌面全量235PASS/1既有startup-safety静态字符串断言FAIL，未改断言/生产文件",
+        "25个变更JS语法check PASS；git diff --check PASS",
+        "规定的Node desktop通配入口FAIL：这些用例为Vitest，Node runner未建立Vitest suite且工作目录预期frontend；正确pnpm入口结果见前述"
+      ],
+      "limitations": "静态脚本/安全fixture；未启动远程CI/真实安装包/模型/用户浏览器profile。依赖内不可配置短限单列交主集成。"
+    },
+    {
+      "id": "TO-211",
+      "file": "tools/windows-closure-rat/runtime-smoke.mjs",
+      "originalLine": 204,
+      "originalPolicy": "setTimeout(process.exit(2),30000)",
+      "status": "已调整",
+      "newPolicy": "Worker线程模块加载120秒",
+      "evidence": [
+        {
+          "line": 205,
+          "source": "const timer = setTimeout(() => { console.error(\"worker-timeout\"); process.exit(2); }, 120_000);"
+        },
+        {
+          "line": 207,
+          "source": "clearTimeout(timer);"
+        },
+        {
+          "line": 212,
+          "source": "worker.once(\"error\", (error) => { clearTimeout(timer); console.error(error); process.exit(4); });"
+        },
+        {
+          "line": 221,
+          "source": "timeout: 150_000,"
+        },
+        {
+          "line": 257,
+          "source": "timeout: 120_000,"
+        },
+        {
+          "line": 279,
+          "source": "timeout: 120_000,"
+        },
+        {
+          "line": 296,
+          "source": "page.setDefaultTimeout(120_000);"
+        },
+        {
+          "line": 297,
+          "source": "page.setDefaultNavigationTimeout(120_000);"
+        },
+        {
+          "line": 424,
+          "source": "const deadline = Date.now() + 150_000;"
+        },
+        {
+          "line": 425,
+          "source": "while (Date.now() < deadline) {"
+        },
+        {
+          "line": 428,
+          "source": "const response = await fetch(`http://127.0.0.1:${port}/`, { signal: AbortSignal.timeout(Math.max(1, deadline - Date.now())) });"
+        },
+        {
+          "line": 436,
+          "source": "await new Promise((resolveWait) => setTimeout(resolveWait, 200));"
+        },
+        {
+          "line": 464,
+          "source": "setTimeout(() => resolveWait(false), 120_000),"
+        }
+      ],
+      "verification": [
+        "Node行为回归10 PASS（含真实隔离Worker/进程fixture与预算归一）",
+        "CLI实际命令入口假时钟14 PASS",
+        "Skill Python12 PASS",
+        "MCP TypeScript PASS",
+        "桌面受影响6文件89 PASS；桌面全量235PASS/1既有startup-safety静态字符串断言FAIL，未改断言/生产文件",
+        "25个变更JS语法check PASS；git diff --check PASS",
+        "规定的Node desktop通配入口FAIL：这些用例为Vitest，Node runner未建立Vitest suite且工作目录预期frontend；正确pnpm入口结果见前述"
+      ],
+      "limitations": "静态脚本/安全fixture；未启动远程CI/真实安装包/模型/用户浏览器profile。依赖内不可配置短限单列交主集成。"
+    },
+    {
+      "id": "TO-212",
+      "file": "tools/windows-closure-rat/runtime-smoke.mjs",
+      "originalLine": 220,
+      "originalPolicy": "spawnSync timeout:35_000",
+      "status": "已调整",
+      "newPolicy": "外层Node150秒覆盖Worker120秒+启动结束30秒",
+      "evidence": [
+        {
+          "line": 205,
+          "source": "const timer = setTimeout(() => { console.error(\"worker-timeout\"); process.exit(2); }, 120_000);"
+        },
+        {
+          "line": 207,
+          "source": "clearTimeout(timer);"
+        },
+        {
+          "line": 212,
+          "source": "worker.once(\"error\", (error) => { clearTimeout(timer); console.error(error); process.exit(4); });"
+        },
+        {
+          "line": 221,
+          "source": "timeout: 150_000,"
+        },
+        {
+          "line": 257,
+          "source": "timeout: 120_000,"
+        },
+        {
+          "line": 279,
+          "source": "timeout: 120_000,"
+        },
+        {
+          "line": 296,
+          "source": "page.setDefaultTimeout(120_000);"
+        },
+        {
+          "line": 297,
+          "source": "page.setDefaultNavigationTimeout(120_000);"
+        },
+        {
+          "line": 424,
+          "source": "const deadline = Date.now() + 150_000;"
+        },
+        {
+          "line": 425,
+          "source": "while (Date.now() < deadline) {"
+        },
+        {
+          "line": 428,
+          "source": "const response = await fetch(`http://127.0.0.1:${port}/`, { signal: AbortSignal.timeout(Math.max(1, deadline - Date.now())) });"
+        },
+        {
+          "line": 436,
+          "source": "await new Promise((resolveWait) => setTimeout(resolveWait, 200));"
+        },
+        {
+          "line": 464,
+          "source": "setTimeout(() => resolveWait(false), 120_000),"
+        }
+      ],
+      "verification": [
+        "Node行为回归10 PASS（含真实隔离Worker/进程fixture与预算归一）",
+        "CLI实际命令入口假时钟14 PASS",
+        "Skill Python12 PASS",
+        "MCP TypeScript PASS",
+        "桌面受影响6文件89 PASS；桌面全量235PASS/1既有startup-safety静态字符串断言FAIL，未改断言/生产文件",
+        "25个变更JS语法check PASS；git diff --check PASS",
+        "规定的Node desktop通配入口FAIL：这些用例为Vitest，Node runner未建立Vitest suite且工作目录预期frontend；正确pnpm入口结果见前述"
+      ],
+      "limitations": "静态脚本/安全fixture；未启动远程CI/真实安装包/模型/用户浏览器profile。依赖内不可配置短限单列交主集成。"
+    },
+    {
+      "id": "TO-213",
+      "file": "tools/windows-closure-rat/runtime-smoke.mjs",
+      "originalLine": 256,
+      "originalPolicy": "spawnSync HyperFrames --help timeout:30_000",
+      "status": "已调整",
+      "newPolicy": "正执行/观察预算升120秒；保留原poll、sleep间隔及媒体输入长度。",
+      "evidence": [
+        {
+          "line": 205,
+          "source": "const timer = setTimeout(() => { console.error(\"worker-timeout\"); process.exit(2); }, 120_000);"
+        },
+        {
+          "line": 207,
+          "source": "clearTimeout(timer);"
+        },
+        {
+          "line": 212,
+          "source": "worker.once(\"error\", (error) => { clearTimeout(timer); console.error(error); process.exit(4); });"
+        },
+        {
+          "line": 221,
+          "source": "timeout: 150_000,"
+        },
+        {
+          "line": 257,
+          "source": "timeout: 120_000,"
+        },
+        {
+          "line": 279,
+          "source": "timeout: 120_000,"
+        },
+        {
+          "line": 296,
+          "source": "page.setDefaultTimeout(120_000);"
+        },
+        {
+          "line": 297,
+          "source": "page.setDefaultNavigationTimeout(120_000);"
+        },
+        {
+          "line": 424,
+          "source": "const deadline = Date.now() + 150_000;"
+        },
+        {
+          "line": 425,
+          "source": "while (Date.now() < deadline) {"
+        },
+        {
+          "line": 428,
+          "source": "const response = await fetch(`http://127.0.0.1:${port}/`, { signal: AbortSignal.timeout(Math.max(1, deadline - Date.now())) });"
+        },
+        {
+          "line": 436,
+          "source": "await new Promise((resolveWait) => setTimeout(resolveWait, 200));"
+        },
+        {
+          "line": 464,
+          "source": "setTimeout(() => resolveWait(false), 120_000),"
+        }
+      ],
+      "verification": [
+        "Node行为回归10 PASS（含真实隔离Worker/进程fixture与预算归一）",
+        "CLI实际命令入口假时钟14 PASS",
+        "Skill Python12 PASS",
+        "MCP TypeScript PASS",
+        "桌面受影响6文件89 PASS；桌面全量235PASS/1既有startup-safety静态字符串断言FAIL，未改断言/生产文件",
+        "25个变更JS语法check PASS；git diff --check PASS",
+        "规定的Node desktop通配入口FAIL：这些用例为Vitest，Node runner未建立Vitest suite且工作目录预期frontend；正确pnpm入口结果见前述"
+      ],
+      "limitations": "静态脚本/安全fixture；未启动远程CI/真实安装包/模型/用户浏览器profile。依赖内不可配置短限单列交主集成。"
+    },
+    {
+      "id": "TO-214",
+      "file": "tools/windows-closure-rat/runtime-smoke.mjs",
+      "originalLine": 278,
+      "originalPolicy": "spawnSync ffmpeg/ffprobe -version timeout:30_000",
+      "status": "已调整",
+      "newPolicy": "正执行/观察预算升120秒；保留原poll、sleep间隔及媒体输入长度。",
+      "evidence": [
+        {
+          "line": 205,
+          "source": "const timer = setTimeout(() => { console.error(\"worker-timeout\"); process.exit(2); }, 120_000);"
+        },
+        {
+          "line": 207,
+          "source": "clearTimeout(timer);"
+        },
+        {
+          "line": 212,
+          "source": "worker.once(\"error\", (error) => { clearTimeout(timer); console.error(error); process.exit(4); });"
+        },
+        {
+          "line": 221,
+          "source": "timeout: 150_000,"
+        },
+        {
+          "line": 257,
+          "source": "timeout: 120_000,"
+        },
+        {
+          "line": 279,
+          "source": "timeout: 120_000,"
+        },
+        {
+          "line": 296,
+          "source": "page.setDefaultTimeout(120_000);"
+        },
+        {
+          "line": 297,
+          "source": "page.setDefaultNavigationTimeout(120_000);"
+        },
+        {
+          "line": 424,
+          "source": "const deadline = Date.now() + 150_000;"
+        },
+        {
+          "line": 425,
+          "source": "while (Date.now() < deadline) {"
+        },
+        {
+          "line": 428,
+          "source": "const response = await fetch(`http://127.0.0.1:${port}/`, { signal: AbortSignal.timeout(Math.max(1, deadline - Date.now())) });"
+        },
+        {
+          "line": 436,
+          "source": "await new Promise((resolveWait) => setTimeout(resolveWait, 200));"
+        },
+        {
+          "line": 464,
+          "source": "setTimeout(() => resolveWait(false), 120_000),"
+        }
+      ],
+      "verification": [
+        "Node行为回归10 PASS（含真实隔离Worker/进程fixture与预算归一）",
+        "CLI实际命令入口假时钟14 PASS",
+        "Skill Python12 PASS",
+        "MCP TypeScript PASS",
+        "桌面受影响6文件89 PASS；桌面全量235PASS/1既有startup-safety静态字符串断言FAIL，未改断言/生产文件",
+        "25个变更JS语法check PASS；git diff --check PASS",
+        "规定的Node desktop通配入口FAIL：这些用例为Vitest，Node runner未建立Vitest suite且工作目录预期frontend；正确pnpm入口结果见前述"
+      ],
+      "limitations": "静态脚本/安全fixture；未启动远程CI/真实安装包/模型/用户浏览器profile。依赖内不可配置短限单列交主集成。"
+    },
+    {
+      "id": "TO-215",
+      "file": "tools/windows-closure-rat/runtime-smoke.mjs",
+      "originalLine": 365,
+      "originalPolicy": "spawnSync render timeout:120_000",
+      "status": "已调整",
+      "newPolicy": "取消独立spawnSync120秒帽（Node缺省无限契约）；显式HyperFrames各步骤默认120/300/600秒且更长可配置值保留，避免未知多帧串行重试被外层先杀；CI整体deadline保持",
+      "evidence": [
+        {
+          "line": 205,
+          "source": "const timer = setTimeout(() => { console.error(\"worker-timeout\"); process.exit(2); }, 120_000);"
+        },
+        {
+          "line": 207,
+          "source": "clearTimeout(timer);"
+        },
+        {
+          "line": 212,
+          "source": "worker.once(\"error\", (error) => { clearTimeout(timer); console.error(error); process.exit(4); });"
+        },
+        {
+          "line": 221,
+          "source": "timeout: 150_000,"
+        },
+        {
+          "line": 257,
+          "source": "timeout: 120_000,"
+        },
+        {
+          "line": 279,
+          "source": "timeout: 120_000,"
+        },
+        {
+          "line": 296,
+          "source": "page.setDefaultTimeout(120_000);"
+        },
+        {
+          "line": 297,
+          "source": "page.setDefaultNavigationTimeout(120_000);"
+        },
+        {
+          "line": 424,
+          "source": "const deadline = Date.now() + 150_000;"
+        },
+        {
+          "line": 425,
+          "source": "while (Date.now() < deadline) {"
+        },
+        {
+          "line": 428,
+          "source": "const response = await fetch(`http://127.0.0.1:${port}/`, { signal: AbortSignal.timeout(Math.max(1, deadline - Date.now())) });"
+        },
+        {
+          "line": 436,
+          "source": "await new Promise((resolveWait) => setTimeout(resolveWait, 200));"
+        },
+        {
+          "line": 464,
+          "source": "setTimeout(() => resolveWait(false), 120_000),"
+        }
+      ],
+      "verification": [
+        "Node行为回归10 PASS（含真实隔离Worker/进程fixture与预算归一）",
+        "CLI实际命令入口假时钟14 PASS",
+        "Skill Python12 PASS",
+        "MCP TypeScript PASS",
+        "桌面受影响6文件89 PASS；桌面全量235PASS/1既有startup-safety静态字符串断言FAIL，未改断言/生产文件",
+        "25个变更JS语法check PASS；git diff --check PASS",
+        "规定的Node desktop通配入口FAIL：这些用例为Vitest，Node runner未建立Vitest suite且工作目录预期frontend；正确pnpm入口结果见前述"
+      ],
+      "limitations": "静态脚本/安全fixture；未启动远程CI/真实安装包/模型/用户浏览器profile。依赖内不可配置短限单列交主集成。"
+    },
+    {
+      "id": "TO-216",
+      "file": "tools/windows-closure-rat/runtime-smoke.mjs",
+      "originalLine": 422,
+      "originalPolicy": "Date.now()+120_000",
+      "status": "已调整",
+      "newPolicy": "readiness原120升150秒，fetch/HTMLbody共享同一绝对deadline，原deadline不足120秒不重新floor",
+      "evidence": [
+        {
+          "line": 205,
+          "source": "const timer = setTimeout(() => { console.error(\"worker-timeout\"); process.exit(2); }, 120_000);"
+        },
+        {
+          "line": 207,
+          "source": "clearTimeout(timer);"
+        },
+        {
+          "line": 212,
+          "source": "worker.once(\"error\", (error) => { clearTimeout(timer); console.error(error); process.exit(4); });"
+        },
+        {
+          "line": 221,
+          "source": "timeout: 150_000,"
+        },
+        {
+          "line": 257,
+          "source": "timeout: 120_000,"
+        },
+        {
+          "line": 279,
+          "source": "timeout: 120_000,"
+        },
+        {
+          "line": 296,
+          "source": "page.setDefaultTimeout(120_000);"
+        },
+        {
+          "line": 297,
+          "source": "page.setDefaultNavigationTimeout(120_000);"
+        },
+        {
+          "line": 424,
+          "source": "const deadline = Date.now() + 150_000;"
+        },
+        {
+          "line": 425,
+          "source": "while (Date.now() < deadline) {"
+        },
+        {
+          "line": 428,
+          "source": "const response = await fetch(`http://127.0.0.1:${port}/`, { signal: AbortSignal.timeout(Math.max(1, deadline - Date.now())) });"
+        },
+        {
+          "line": 436,
+          "source": "await new Promise((resolveWait) => setTimeout(resolveWait, 200));"
+        },
+        {
+          "line": 464,
+          "source": "setTimeout(() => resolveWait(false), 120_000),"
+        }
+      ],
+      "verification": [
+        "Node行为回归10 PASS（含真实隔离Worker/进程fixture与预算归一）",
+        "CLI实际命令入口假时钟14 PASS",
+        "Skill Python12 PASS",
+        "MCP TypeScript PASS",
+        "桌面受影响6文件89 PASS；桌面全量235PASS/1既有startup-safety静态字符串断言FAIL，未改断言/生产文件",
+        "25个变更JS语法check PASS；git diff --check PASS",
+        "规定的Node desktop通配入口FAIL：这些用例为Vitest，Node runner未建立Vitest suite且工作目录预期frontend；正确pnpm入口结果见前述"
+      ],
+      "limitations": "静态脚本/安全fixture；未启动远程CI/真实安装包/模型/用户浏览器profile。依赖内不可配置短限单列交主集成。"
+    },
+    {
+      "id": "TO-217",
+      "file": "tools/windows-closure-rat/runtime-smoke.mjs",
+      "originalLine": 462,
+      "originalPolicy": "Promise.race exit vs setTimeout10_000",
+      "status": "已调整",
+      "newPolicy": "正执行/观察预算升120秒；保留原poll、sleep间隔及媒体输入长度。",
+      "evidence": [
+        {
+          "line": 205,
+          "source": "const timer = setTimeout(() => { console.error(\"worker-timeout\"); process.exit(2); }, 120_000);"
+        },
+        {
+          "line": 207,
+          "source": "clearTimeout(timer);"
+        },
+        {
+          "line": 212,
+          "source": "worker.once(\"error\", (error) => { clearTimeout(timer); console.error(error); process.exit(4); });"
+        },
+        {
+          "line": 221,
+          "source": "timeout: 150_000,"
+        },
+        {
+          "line": 257,
+          "source": "timeout: 120_000,"
+        },
+        {
+          "line": 279,
+          "source": "timeout: 120_000,"
+        },
+        {
+          "line": 296,
+          "source": "page.setDefaultTimeout(120_000);"
+        },
+        {
+          "line": 297,
+          "source": "page.setDefaultNavigationTimeout(120_000);"
+        },
+        {
+          "line": 424,
+          "source": "const deadline = Date.now() + 150_000;"
+        },
+        {
+          "line": 425,
+          "source": "while (Date.now() < deadline) {"
+        },
+        {
+          "line": 428,
+          "source": "const response = await fetch(`http://127.0.0.1:${port}/`, { signal: AbortSignal.timeout(Math.max(1, deadline - Date.now())) });"
+        },
+        {
+          "line": 436,
+          "source": "await new Promise((resolveWait) => setTimeout(resolveWait, 200));"
+        },
+        {
+          "line": 464,
+          "source": "setTimeout(() => resolveWait(false), 120_000),"
+        }
+      ],
+      "verification": [
+        "Node行为回归10 PASS（含真实隔离Worker/进程fixture与预算归一）",
+        "CLI实际命令入口假时钟14 PASS",
+        "Skill Python12 PASS",
+        "MCP TypeScript PASS",
+        "桌面受影响6文件89 PASS；桌面全量235PASS/1既有startup-safety静态字符串断言FAIL，未改断言/生产文件",
+        "25个变更JS语法check PASS；git diff --check PASS",
+        "规定的Node desktop通配入口FAIL：这些用例为Vitest，Node runner未建立Vitest suite且工作目录预期frontend；正确pnpm入口结果见前述"
+      ],
+      "limitations": "静态脚本/安全fixture；未启动远程CI/真实安装包/模型/用户浏览器profile。依赖内不可配置短限单列交主集成。"
+    },
+    {
+      "id": "TO-218",
+      "file": "tools/windows-closure-rat/worker-smoke.mjs",
+      "originalLine": 25,
+      "originalPolicy": "within(readyPromise,readyTimeoutMs=30000)",
+      "status": "已调整",
+      "newPolicy": "ready默认/动态短值归一120秒，真实Worker握手原结果/异常保留",
+      "evidence": [
+        {
+          "line": 2,
+          "source": "import { executionTimeoutMs } from '../../frontend/scripts/desktop/timeout-policy.mjs';"
+        },
+        {
+          "line": 6,
+          "source": "try { return await Promise.race([promise,new Promise(resolve=>{timer=timers.setTimeout(()=>resolve(null),milliseconds);})]); }"
+        },
+        {
+          "line": 7,
+          "source": "finally { timers.clearTimeout(timer); }"
+        },
+        {
+          "line": 11,
+          "source": "export async function smokeWorker({entry,execPath=process.execPath,cwd,env,readyTimeoutMs=120_000,stopTimeoutMs=120_000,timers=globalThis}) {"
+        },
+        {
+          "line": 12,
+          "source": "readyTimeoutMs=executionTimeoutMs(readyTimeoutMs);"
+        },
+        {
+          "line": 13,
+          "source": "stopTimeoutMs=executionTimeoutMs(stopTimeoutMs);"
+        },
+        {
+          "line": 28,
+          "source": "}),readyTimeoutMs,timers);"
+        },
+        {
+          "line": 32,
+          "source": "const stopped=await within(closed,stopTimeoutMs,timers);"
+        },
+        {
+          "line": 35,
+          "source": "await within(closed,stopTimeoutMs,timers);"
+        }
+      ],
+      "verification": [
+        "Node行为回归10 PASS（含真实隔离Worker/进程fixture与预算归一）",
+        "CLI实际命令入口假时钟14 PASS",
+        "Skill Python12 PASS",
+        "MCP TypeScript PASS",
+        "桌面受影响6文件89 PASS；桌面全量235PASS/1既有startup-safety静态字符串断言FAIL，未改断言/生产文件",
+        "25个变更JS语法check PASS；git diff --check PASS",
+        "规定的Node desktop通配入口FAIL：这些用例为Vitest，Node runner未建立Vitest suite且工作目录预期frontend；正确pnpm入口结果见前述"
+      ],
+      "limitations": "静态脚本/安全fixture；未启动远程CI/真实安装包/模型/用户浏览器profile。依赖内不可配置短限单列交主集成。"
+    },
+    {
+      "id": "TO-219",
+      "file": "tools/windows-closure-rat/worker-smoke.mjs",
+      "originalLine": 29,
+      "originalPolicy": "within(closed,stopTimeoutMs=5000)",
+      "status": "已调整",
+      "newPolicy": "退出默认/动态短值归一120秒，首次disconnect即时发出；强杀后的收集再120秒，不延迟请求用户取消",
+      "evidence": [
+        {
+          "line": 2,
+          "source": "import { executionTimeoutMs } from '../../frontend/scripts/desktop/timeout-policy.mjs';"
+        },
+        {
+          "line": 6,
+          "source": "try { return await Promise.race([promise,new Promise(resolve=>{timer=timers.setTimeout(()=>resolve(null),milliseconds);})]); }"
+        },
+        {
+          "line": 7,
+          "source": "finally { timers.clearTimeout(timer); }"
+        },
+        {
+          "line": 11,
+          "source": "export async function smokeWorker({entry,execPath=process.execPath,cwd,env,readyTimeoutMs=120_000,stopTimeoutMs=120_000,timers=globalThis}) {"
+        },
+        {
+          "line": 12,
+          "source": "readyTimeoutMs=executionTimeoutMs(readyTimeoutMs);"
+        },
+        {
+          "line": 13,
+          "source": "stopTimeoutMs=executionTimeoutMs(stopTimeoutMs);"
+        },
+        {
+          "line": 28,
+          "source": "}),readyTimeoutMs,timers);"
+        },
+        {
+          "line": 32,
+          "source": "const stopped=await within(closed,stopTimeoutMs,timers);"
+        },
+        {
+          "line": 35,
+          "source": "await within(closed,stopTimeoutMs,timers);"
+        }
+      ],
+      "verification": [
+        "Node行为回归10 PASS（含真实隔离Worker/进程fixture与预算归一）",
+        "CLI实际命令入口假时钟14 PASS",
+        "Skill Python12 PASS",
+        "MCP TypeScript PASS",
+        "桌面受影响6文件89 PASS；桌面全量235PASS/1既有startup-safety静态字符串断言FAIL，未改断言/生产文件",
+        "25个变更JS语法check PASS；git diff --check PASS",
+        "规定的Node desktop通配入口FAIL：这些用例为Vitest，Node runner未建立Vitest suite且工作目录预期frontend；正确pnpm入口结果见前述"
+      ],
+      "limitations": "静态脚本/安全fixture；未启动远程CI/真实安装包/模型/用户浏览器profile。依赖内不可配置短限单列交主集成。"
+    },
+    {
+      "id": "TO-220",
+      "file": "tools/windows-runtime-rat/run.ps1",
+      "originalLine": 24,
+      "originalPolicy": "Wait-File $Seconds=20 deadline",
+      "status": "已调整",
+      "newPolicy": "Wait-File默认及参数floor120秒，poll200ms保持",
+      "evidence": [
+        {
+          "line": 22,
+          "source": "function Wait-File {"
+        },
+        {
+          "line": 25,
+          "source": "$deadline = (Get-Date).AddSeconds($Seconds)"
+        },
+        {
+          "line": 26,
+          "source": "while ((Get-Date) -lt $deadline) {"
+        },
+        {
+          "line": 33,
+          "source": "function Wait-LogPattern {"
+        },
+        {
+          "line": 36,
+          "source": "$deadline = (Get-Date).AddSeconds($Seconds)"
+        },
+        {
+          "line": 37,
+          "source": "while ((Get-Date) -lt $deadline) {"
+        },
+        {
+          "line": 142,
+          "source": "Wait-File $offlineResult"
+        },
+        {
+          "line": 171,
+          "source": "Wait-File $webResult"
+        },
+        {
+          "line": 189,
+          "source": "Wait-File $cacheResult"
+        },
+        {
+          "line": 229,
+          "source": "Wait-File $proxyResult 120"
+        },
+        {
+          "line": 263,
+          "source": "Wait-LogPattern $tamperLog \"\\]i007: Exit code:\" 120"
+        }
+      ],
+      "verification": [
+        "Node行为回归10 PASS（含真实隔离Worker/进程fixture与预算归一）",
+        "CLI实际命令入口假时钟14 PASS",
+        "Skill Python12 PASS",
+        "MCP TypeScript PASS",
+        "桌面受影响6文件89 PASS；桌面全量235PASS/1既有startup-safety静态字符串断言FAIL，未改断言/生产文件",
+        "25个变更JS语法check PASS；git diff --check PASS",
+        "规定的Node desktop通配入口FAIL：这些用例为Vitest，Node runner未建立Vitest suite且工作目录预期frontend；正确pnpm入口结果见前述"
+      ],
+      "limitations": "静态脚本/安全fixture；未启动远程CI/真实安装包/模型/用户浏览器profile。依赖内不可配置短限单列交主集成。"
+    },
+    {
+      "id": "TO-221",
+      "file": "tools/windows-runtime-rat/run.ps1",
+      "originalLine": 34,
+      "originalPolicy": "Wait-LogPattern $Seconds=60",
+      "status": "已调整",
+      "newPolicy": "Wait-LogPattern默认及参数floor120秒，poll250ms保持",
+      "evidence": [
+        {
+          "line": 22,
+          "source": "function Wait-File {"
+        },
+        {
+          "line": 25,
+          "source": "$deadline = (Get-Date).AddSeconds($Seconds)"
+        },
+        {
+          "line": 26,
+          "source": "while ((Get-Date) -lt $deadline) {"
+        },
+        {
+          "line": 33,
+          "source": "function Wait-LogPattern {"
+        },
+        {
+          "line": 36,
+          "source": "$deadline = (Get-Date).AddSeconds($Seconds)"
+        },
+        {
+          "line": 37,
+          "source": "while ((Get-Date) -lt $deadline) {"
+        },
+        {
+          "line": 142,
+          "source": "Wait-File $offlineResult"
+        },
+        {
+          "line": 171,
+          "source": "Wait-File $webResult"
+        },
+        {
+          "line": 189,
+          "source": "Wait-File $cacheResult"
+        },
+        {
+          "line": 229,
+          "source": "Wait-File $proxyResult 120"
+        },
+        {
+          "line": 263,
+          "source": "Wait-LogPattern $tamperLog \"\\]i007: Exit code:\" 120"
+        }
+      ],
+      "verification": [
+        "Node行为回归10 PASS（含真实隔离Worker/进程fixture与预算归一）",
+        "CLI实际命令入口假时钟14 PASS",
+        "Skill Python12 PASS",
+        "MCP TypeScript PASS",
+        "桌面受影响6文件89 PASS；桌面全量235PASS/1既有startup-safety静态字符串断言FAIL，未改断言/生产文件",
+        "25个变更JS语法check PASS；git diff --check PASS",
+        "规定的Node desktop通配入口FAIL：这些用例为Vitest，Node runner未建立Vitest suite且工作目录预期frontend；正确pnpm入口结果见前述"
+      ],
+      "limitations": "静态脚本/安全fixture；未启动远程CI/真实安装包/模型/用户浏览器profile。依赖内不可配置短限单列交主集成。"
+    },
+    {
+      "id": "TO-222",
+      "file": "tools/windows-runtime-rat/run.ps1",
+      "originalLine": 227,
+      "originalPolicy": "Wait-File $proxyResult 30",
+      "status": "已调整",
+      "newPolicy": "proxy结果观察120秒，并统一经Wait-File floor处理",
+      "evidence": [
+        {
+          "line": 22,
+          "source": "function Wait-File {"
+        },
+        {
+          "line": 25,
+          "source": "$deadline = (Get-Date).AddSeconds($Seconds)"
+        },
+        {
+          "line": 26,
+          "source": "while ((Get-Date) -lt $deadline) {"
+        },
+        {
+          "line": 33,
+          "source": "function Wait-LogPattern {"
+        },
+        {
+          "line": 36,
+          "source": "$deadline = (Get-Date).AddSeconds($Seconds)"
+        },
+        {
+          "line": 37,
+          "source": "while ((Get-Date) -lt $deadline) {"
+        },
+        {
+          "line": 142,
+          "source": "Wait-File $offlineResult"
+        },
+        {
+          "line": 171,
+          "source": "Wait-File $webResult"
+        },
+        {
+          "line": 189,
+          "source": "Wait-File $cacheResult"
+        },
+        {
+          "line": 229,
+          "source": "Wait-File $proxyResult 120"
+        },
+        {
+          "line": 263,
+          "source": "Wait-LogPattern $tamperLog \"\\]i007: Exit code:\" 120"
+        }
+      ],
+      "verification": [
+        "Node行为回归10 PASS（含真实隔离Worker/进程fixture与预算归一）",
+        "CLI实际命令入口假时钟14 PASS",
+        "Skill Python12 PASS",
+        "MCP TypeScript PASS",
+        "桌面受影响6文件89 PASS；桌面全量235PASS/1既有startup-safety静态字符串断言FAIL，未改断言/生产文件",
+        "25个变更JS语法check PASS；git diff --check PASS",
+        "规定的Node desktop通配入口FAIL：这些用例为Vitest，Node runner未建立Vitest suite且工作目录预期frontend；正确pnpm入口结果见前述"
+      ],
+      "limitations": "静态脚本/安全fixture；未启动远程CI/真实安装包/模型/用户浏览器profile。依赖内不可配置短限单列交主集成。"
+    }
+  ],
+  "newPolicies": [
+    {
+      "file": "frontend/scripts/desktop/timeout-policy.mjs",
+      "policy": "脚本数值floor/非法拒绝/剩余deadline/页面默认/执行等待工具；node入口有floor与过期deadline验证"
+    },
+    {
+      "file": "frontend/scripts/visual/design-shot.cjs",
+      "policy": "Page动作/导航隐式30秒显式120秒"
+    },
+    {
+      "file": "frontend/scripts/visual/theme-shot.cjs",
+      "policy": "Page动作/导航隐式30秒显式120秒"
+    },
+    {
+      "file": "frontend/scripts/visual/edit-shot.cjs",
+      "policy": "Page动作/导航隐式30秒显式120秒"
+    },
+    {
+      "file": "frontend/scripts/visual/measure-shell.mjs",
+      "policy": "Page动作/导航隐式30秒显式120秒"
+    },
+    {
+      "file": "frontend/scripts/ingestion/douyin-smoke.cjs",
+      "policy": "CDP显式120秒，Page动作/导航120秒"
+    },
+    {
+      "file": ".agents/skills/guizang-product-video-skill/assets/starter/render.mjs",
+      "policy": "独立复制的模板Page动作/导航默认120秒，等待媒体时长不修改"
+    },
+    {
+      "file": ".agents/skills/creatoros-cli/SKILL.md",
+      "policy": "原taskId观察/最短120秒/不取消后台/interval区别沉淀"
+    },
+    {
+      "file": "frontend/scripts/desktop/obfuscate.mjs",
+      "policy": "新增HTTP probe120秒与浏览器关闭回收120秒；ready socket共享deadline"
+    },
+    {
+      "file": "ai-worker/scripts/browser-runtime-probe.mjs",
+      "policy": "closeResources收回引用避免反复重试重置预算；单次close120秒，server.close超时强杀浏览器进程"
+    },
+    {
+      "file": ".agents/skills/guizang-product-video-skill/scripts/check_environment.py",
+      "policy": "内嵌JS浏览器动作120秒，关闭120秒；外层Python570秒覆盖启动180+动作240+关闭120+结算30"
+    },
+    {
+      "file": "tools/windows-closure-rat/render-probe-policy.mjs",
+      "policy": "HyperFrames env floor覆盖并保留更长默认，外层取消无依据固定帽；明确内部库固定等待交持久patch"
+    }
+  ],
+  "hyperframesLibraryFindings": "/tmp/creatoros-t1066-hyperframes-short-limits.json",
+  "verification": [
+    "Node行为回归10 PASS（含真实隔离Worker/进程fixture与预算归一）",
+    "CLI实际命令入口假时钟14 PASS",
+    "Skill Python12 PASS",
+    "MCP TypeScript PASS",
+    "桌面受影响6文件89 PASS；桌面全量235PASS/1既有startup-safety静态字符串断言FAIL，未改断言/生产文件",
+    "25个变更JS语法check PASS；git diff --check PASS",
+    "规定的Node desktop通配入口FAIL：这些用例为Vitest，Node runner未建立Vitest suite且工作目录预期frontend；正确pnpm入口结果见前述"
+  ]
+}

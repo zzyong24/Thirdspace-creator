@@ -112,7 +112,7 @@ describe("createBrowserScrapeAdapter(T-126b) —— 导航→解析→自截图�
     ]);
     expect(savedSlugs.length).toBe(1); // 截图存证被调用
     expect(gotoOptions).toEqual([
-      { waitUntil: "domcontentloaded", timeout: 20_000 },
+      { waitUntil: "domcontentloaded", timeout: 120_000 },
     ]);
   });
 

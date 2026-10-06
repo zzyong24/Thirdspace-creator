@@ -35,6 +35,7 @@ export { reserveAgenticToolSchema, settleAgenticToolSchema, agenticToolReservati
 import { saveExecutionCheckpointSchema } from "./execution-checkpoint";
 export { saveExecutionCheckpointSchema, executionCheckpointSchema, checkpointToolCallSchema, workerToolResultReceiptSchema } from "./execution-checkpoint";
 import { z } from "zod";
+import { executionTimeoutMs } from "../timeout-policy";
 
 /** 后端冻结的任务总预算；null 仅由 continuous 策略显式授权，单次请求仍独立限时。 */
 export const executionBudgetSchema = z.union([
@@ -58,6 +59,11 @@ export function executionAttemptAvailable(value:unknown,attempt:number,legacyMax
 }
 export function executionBudgetDeadline(budget:ExecutionBudget,startedAt:string):string|null {
   return budget.deadlineMs === null ? null : new Date(Date.parse(startedAt)+budget.deadlineMs).toISOString();
+}
+
+/** 仅用于新执行首次冻结期限；历史回退使用 executionBudgetDeadline，不能延长旧总预算。 */
+export function newExecutionBudgetDeadline(budget:ExecutionBudget,startedAt:string):string|null {
+  return budget.deadlineMs === null ? null : new Date(Date.parse(startedAt)+executionTimeoutMs(budget.deadlineMs)).toISOString();
 }
 
 /** 私有父子进程协议；用户身份由后端任务记录恢复，不在 Worker 消息中指定。 */

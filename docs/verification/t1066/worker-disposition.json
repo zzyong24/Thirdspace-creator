@@ -1,0 +1,899 @@
+{
+  "task": "T-1066-worker",
+  "base": "b86020f6c9c9884c71bf613bcb9f089793b6067a",
+  "records": [
+    {
+      "id": "TO-001",
+      "originalFile": "ai-worker/src/execution/browser-worker-session.ts",
+      "originalLine": 42,
+      "status": "调整",
+      "newPolicy": "单操作外层130s，覆盖内部浏览器/VM120s及10s余量；signal即时取消",
+      "location": "ai-worker/src/execution/browser-worker-session.ts",
+      "verification": [
+        "/tmp/creatoros-t1066-worker-floor-final.json",
+        "/tmp/creatoros-t1066-worker-targeted-green.log",
+        "/tmp/creatoros-t1066-backend-targeted-green.log"
+      ],
+      "limits": "逐条静态消费者核对与分区聚焦回归；并非每条都跑真实供应商或安装版E2E"
+    },
+    {
+      "id": "TO-002",
+      "originalFile": "ai-worker/src/execution/browser-worker-session.ts",
+      "originalLine": 462,
+      "status": "调整",
+      "newPolicy": "页面内target可见轮询总等待120s，25ms间隔保留",
+      "location": "ai-worker/src/execution/browser-worker-session.ts",
+      "verification": [
+        "/tmp/creatoros-t1066-worker-floor-final.json",
+        "/tmp/creatoros-t1066-worker-targeted-green.log",
+        "/tmp/creatoros-t1066-backend-targeted-green.log"
+      ],
+      "limits": "逐条静态消费者核对与分区聚焦回归；并非每条都跑真实供应商或安装版E2E"
+    },
+    {
+      "id": "TO-003",
+      "originalFile": "ai-worker/src/execution/durable-pi-stream.ts",
+      "originalLine": 81,
+      "status": "保留符合规则",
+      "newPolicy": "原模型无进展180s≥120，进展会重置而非总deadline；保留",
+      "location": "ai-worker/src/execution/durable-pi-stream.ts",
+      "verification": [
+        "/tmp/creatoros-t1066-worker-floor-final.json",
+        "/tmp/creatoros-t1066-worker-targeted-green.log",
+        "/tmp/creatoros-t1066-backend-targeted-green.log"
+      ],
+      "limits": "逐条静态消费者核对与分区聚焦回归；并非每条都跑真实供应商或安装版E2E"
+    },
+    {
+      "id": "TO-004",
+      "originalFile": "ai-worker/src/execution/intelligence-generation-worker.ts",
+      "originalLine": 81,
+      "status": "保留符合规则",
+      "newPolicy": "原单模型180s≥120；父任务共享signal；保留",
+      "location": "ai-worker/src/execution/intelligence-generation-worker.ts",
+      "verification": [
+        "/tmp/creatoros-t1066-worker-floor-final.json",
+        "/tmp/creatoros-t1066-worker-targeted-green.log",
+        "/tmp/creatoros-t1066-backend-targeted-green.log"
+      ],
+      "limits": "逐条静态消费者核对与分区聚焦回归；并非每条都跑真实供应商或安装版E2E"
+    },
+    {
+      "id": "TO-005",
+      "originalFile": "ai-worker/src/execution/intelligence-generation-worker.ts",
+      "originalLine": 101,
+      "status": "保留符合规则",
+      "newPolicy": "原单模型180s≥120，空输出额外尝试仍受原父任务signal；保留",
+      "location": "ai-worker/src/execution/intelligence-generation-worker.ts",
+      "verification": [
+        "/tmp/creatoros-t1066-worker-floor-final.json",
+        "/tmp/creatoros-t1066-worker-targeted-green.log",
+        "/tmp/creatoros-t1066-backend-targeted-green.log"
+      ],
+      "limits": "逐条静态消费者核对与分区聚焦回归；并非每条都跑真实供应商或安装版E2E"
+    },
+    {
+      "id": "TO-006",
+      "originalFile": "ai-worker/src/execution/redfox-client.ts",
+      "originalLine": 16,
+      "status": "调整",
+      "newPolicy": "单次执行/请求/观察等待归一最低120s，原较长值不缩短；保持原signal/权限/资源归属",
+      "location": "ai-worker/src/execution/redfox-client.ts",
+      "verification": [
+        "/tmp/creatoros-t1066-worker-floor-final.json",
+        "/tmp/creatoros-t1066-worker-targeted-green.log",
+        "/tmp/creatoros-t1066-backend-targeted-green.log"
+      ],
+      "limits": "逐条静态消费者核对与分区聚焦回归；并非每条都跑真实供应商或安装版E2E"
+    },
+    {
+      "id": "TO-007",
+      "originalFile": "ai-worker/src/execution/research-browser-sessions.ts",
+      "originalLine": 65,
+      "status": "调整",
+      "newPolicy": "单次执行/请求/观察等待归一最低120s，原较长值不缩短；保持原signal/权限/资源归属",
+      "location": "ai-worker/src/execution/research-browser-sessions.ts",
+      "verification": [
+        "/tmp/creatoros-t1066-worker-floor-final.json",
+        "/tmp/creatoros-t1066-worker-targeted-green.log",
+        "/tmp/creatoros-t1066-backend-targeted-green.log"
+      ],
+      "limits": "逐条静态消费者核对与分区聚焦回归；并非每条都跑真实供应商或安装版E2E"
+    },
+    {
+      "id": "TO-008",
+      "originalFile": "ai-worker/src/execution/research-browser-sessions.ts",
+      "originalLine": 165,
+      "status": "调整",
+      "newPolicy": "单次执行/请求/观察等待归一最低120s，原较长值不缩短；保持原signal/权限/资源归属",
+      "location": "ai-worker/src/execution/research-browser-sessions.ts",
+      "verification": [
+        "/tmp/creatoros-t1066-worker-floor-final.json",
+        "/tmp/creatoros-t1066-worker-targeted-green.log",
+        "/tmp/creatoros-t1066-backend-targeted-green.log"
+      ],
+      "limits": "逐条静态消费者核对与分区聚焦回归；并非每条都跑真实供应商或安装版E2E"
+    },
+    {
+      "id": "TO-009",
+      "originalFile": "ai-worker/src/execution/research-worker-tools.ts",
+      "originalLine": 78,
+      "status": "调整",
+      "newPolicy": "单次执行/请求/观察等待归一最低120s，原较长值不缩短；保持原signal/权限/资源归属",
+      "location": "ai-worker/src/execution/research-worker-tools.ts",
+      "verification": [
+        "/tmp/creatoros-t1066-worker-floor-final.json",
+        "/tmp/creatoros-t1066-worker-targeted-green.log",
+        "/tmp/creatoros-t1066-backend-targeted-green.log"
+      ],
+      "limits": "逐条静态消费者核对与分区聚焦回归；并非每条都跑真实供应商或安装版E2E"
+    },
+    {
+      "id": "TO-010",
+      "originalFile": "ai-worker/src/execution/research-worker-tools.ts",
+      "originalLine": 81,
+      "status": "调整",
+      "newPolicy": "单次执行/请求/观察等待归一最低120s，原较长值不缩短；保持原signal/权限/资源归属",
+      "location": "ai-worker/src/execution/research-worker-tools.ts",
+      "verification": [
+        "/tmp/creatoros-t1066-worker-floor-final.json",
+        "/tmp/creatoros-t1066-worker-targeted-green.log",
+        "/tmp/creatoros-t1066-backend-targeted-green.log"
+      ],
+      "limits": "逐条静态消费者核对与分区聚焦回归；并非每条都跑真实供应商或安装版E2E"
+    },
+    {
+      "id": "TO-011",
+      "originalFile": "ai-worker/src/execution/research-worker-tools.ts",
+      "originalLine": 225,
+      "status": "调整",
+      "newPolicy": "单次执行/请求/观察等待归一最低120s，原较长值不缩短；保持原signal/权限/资源归属",
+      "location": "ai-worker/src/execution/research-worker-tools.ts",
+      "verification": [
+        "/tmp/creatoros-t1066-worker-floor-final.json",
+        "/tmp/creatoros-t1066-worker-targeted-green.log",
+        "/tmp/creatoros-t1066-backend-targeted-green.log"
+      ],
+      "limits": "逐条静态消费者核对与分区聚焦回归；并非每条都跑真实供应商或安装版E2E"
+    },
+    {
+      "id": "TO-012",
+      "originalFile": "ai-worker/src/execution/topic-worker-reads.ts",
+      "originalLine": 90,
+      "status": "调整",
+      "newPolicy": "单次执行/请求/观察等待归一最低120s，原较长值不缩短；保持原signal/权限/资源归属",
+      "location": "ai-worker/src/execution/topic-worker-reads.ts",
+      "verification": [
+        "/tmp/creatoros-t1066-worker-floor-final.json",
+        "/tmp/creatoros-t1066-worker-targeted-green.log",
+        "/tmp/creatoros-t1066-backend-targeted-green.log"
+      ],
+      "limits": "逐条静态消费者核对与分区聚焦回归；并非每条都跑真实供应商或安装版E2E"
+    },
+    {
+      "id": "TO-013",
+      "originalFile": "ai-worker/src/execution/worker-runtime.ts",
+      "originalLine": 63,
+      "status": "调整",
+      "newPolicy": "所有端口继承同一原持久execution绝对deadline；continuous不再给10分钟小外帽，原心跳/租约/取消监督保留",
+      "location": "ai-worker/src/execution/worker-runtime.ts",
+      "verification": [
+        "/tmp/creatoros-t1066-worker-floor-final.json",
+        "/tmp/creatoros-t1066-worker-targeted-green.log",
+        "/tmp/creatoros-t1066-backend-targeted-green.log"
+      ],
+      "limits": "逐条静态消费者核对与分区聚焦回归；并非每条都跑真实供应商或安装版E2E"
+    },
+    {
+      "id": "TO-014",
+      "originalFile": "ai-worker/src/execution/worker-runtime.ts",
+      "originalLine": 63,
+      "status": "调整",
+      "newPolicy": "移除所有普通端口固定30s，跟随原execution剩余预算；无活动任务兜底120s",
+      "location": "ai-worker/src/execution/worker-runtime.ts",
+      "verification": [
+        "/tmp/creatoros-t1066-worker-floor-final.json",
+        "/tmp/creatoros-t1066-worker-targeted-green.log",
+        "/tmp/creatoros-t1066-backend-targeted-green.log"
+      ],
+      "limits": "逐条静态消费者核对与分区聚焦回归；并非每条都跑真实供应商或安装版E2E"
+    },
+    {
+      "id": "TO-015",
+      "originalFile": "ai-worker/src/execution/worker-runtime.ts",
+      "originalLine": 75,
+      "status": "调整",
+      "newPolicy": "原持久绝对deadline耗尽立即停止，不能被两分钟下限延长",
+      "location": "ai-worker/src/execution/worker-runtime.ts",
+      "verification": [
+        "/tmp/creatoros-t1066-worker-floor-final.json",
+        "/tmp/creatoros-t1066-worker-targeted-green.log",
+        "/tmp/creatoros-t1066-backend-targeted-green.log"
+      ],
+      "limits": "逐条静态消费者核对与分区聚焦回归；并非每条都跑真实供应商或安装版E2E"
+    },
+    {
+      "id": "TO-016",
+      "originalFile": "ai-worker/src/nodes/script-node.ts",
+      "originalLine": 12,
+      "status": "保留符合规则",
+      "newPolicy": "原script draft150s≥120保留",
+      "location": "ai-worker/src/nodes/script-node.ts",
+      "verification": [
+        "/tmp/creatoros-t1066-worker-floor-final.json",
+        "/tmp/creatoros-t1066-worker-targeted-green.log",
+        "/tmp/creatoros-t1066-backend-targeted-green.log"
+      ],
+      "limits": "逐条静态消费者核对与分区聚焦回归；并非每条都跑真实供应商或安装版E2E"
+    },
+    {
+      "id": "TO-017",
+      "originalFile": "ai-worker/src/nodes/script-pipeline.ts",
+      "originalLine": 12,
+      "status": "保留符合规则",
+      "newPolicy": "原script pipeline150s≥120保留",
+      "location": "ai-worker/src/nodes/script-pipeline.ts",
+      "verification": [
+        "/tmp/creatoros-t1066-worker-floor-final.json",
+        "/tmp/creatoros-t1066-worker-targeted-green.log",
+        "/tmp/creatoros-t1066-backend-targeted-green.log"
+      ],
+      "limits": "逐条静态消费者核对与分区聚焦回归；并非每条都跑真实供应商或安装版E2E"
+    },
+    {
+      "id": "TO-018",
+      "originalFile": "ai-worker/src/nodes/structured-node.ts",
+      "originalLine": 228,
+      "status": "调整",
+      "newPolicy": "通用模型默认/下限120s，150s/600s覆盖与原900s上限保留；非有限值沿旧fallback，负数沿旧下限归一",
+      "location": "ai-worker/src/nodes/structured-node.ts",
+      "verification": [
+        "/tmp/creatoros-t1066-worker-floor-final.json",
+        "/tmp/creatoros-t1066-worker-targeted-green.log",
+        "/tmp/creatoros-t1066-backend-targeted-green.log"
+      ],
+      "limits": "逐条静态消费者核对与分区聚焦回归；并非每条都跑真实供应商或安装版E2E"
+    },
+    {
+      "id": "TO-019",
+      "originalFile": "ai-worker/src/runtime/browser/browser-pool.ts",
+      "originalLine": 249,
+      "status": "保留符合规则",
+      "newPolicy": "浏览器池已有绝对deadline原样保留，不重新放大剩余预算",
+      "location": "ai-worker/src/runtime/browser/browser-pool.ts",
+      "verification": [
+        "/tmp/creatoros-t1066-worker-floor-final.json",
+        "/tmp/creatoros-t1066-worker-targeted-green.log",
+        "/tmp/creatoros-t1066-backend-targeted-green.log"
+      ],
+      "limits": "逐条静态消费者核对与分区聚焦回归；并非每条都跑真实供应商或安装版E2E"
+    },
+    {
+      "id": "TO-020",
+      "originalFile": "ai-worker/src/runtime/browser/chromium-guard.ts",
+      "originalLine": 168,
+      "status": "调整",
+      "newPolicy": "清理/队列默认370s，可配正预算下限120s，原清理能力和owner不变",
+      "location": "ai-worker/src/runtime/browser/chromium-guard.ts",
+      "verification": [
+        "/tmp/creatoros-t1066-worker-floor-final.json",
+        "/tmp/creatoros-t1066-worker-targeted-green.log",
+        "/tmp/creatoros-t1066-backend-targeted-green.log"
+      ],
+      "limits": "逐条静态消费者核对与分区聚焦回归；并非每条都跑真实供应商或安装版E2E"
+    },
+    {
+      "id": "TO-021",
+      "originalFile": "ai-worker/src/runtime/browser/chromium-guard.ts",
+      "originalLine": 247,
+      "status": "调整",
+      "newPolicy": "guarded启动外层至少370s，覆盖Chrome及内置浏览器两次原180s启动+10s结算",
+      "location": "ai-worker/src/runtime/browser/chromium-guard.ts",
+      "verification": [
+        "/tmp/creatoros-t1066-worker-floor-final.json",
+        "/tmp/creatoros-t1066-worker-targeted-green.log",
+        "/tmp/creatoros-t1066-backend-targeted-green.log"
+      ],
+      "limits": "逐条静态消费者核对与分区聚焦回归；并非每条都跑真实供应商或安装版E2E"
+    },
+    {
+      "id": "TO-022",
+      "originalFile": "ai-worker/src/runtime/browser/chromium-guard.ts",
+      "originalLine": 355,
+      "status": "调整",
+      "newPolicy": "profile租约等待默认370s/显式预算最低120s，取消立即退出，不按时间清理活资源",
+      "location": "ai-worker/src/runtime/browser/chromium-guard.ts",
+      "verification": [
+        "/tmp/creatoros-t1066-worker-floor-final.json",
+        "/tmp/creatoros-t1066-worker-targeted-green.log",
+        "/tmp/creatoros-t1066-backend-targeted-green.log"
+      ],
+      "limits": "逐条静态消费者核对与分区聚焦回归；并非每条都跑真实供应商或安装版E2E"
+    },
+    {
+      "id": "TO-023",
+      "originalFile": "ai-worker/src/runtime/browser/navigation-retry.ts",
+      "originalLine": 36,
+      "status": "调整",
+      "newPolicy": "单次执行/请求/观察等待归一最低120s，原较长值不缩短；保持原signal/权限/资源归属",
+      "location": "ai-worker/src/runtime/browser/navigation-retry.ts",
+      "verification": [
+        "/tmp/creatoros-t1066-worker-floor-final.json",
+        "/tmp/creatoros-t1066-worker-targeted-green.log",
+        "/tmp/creatoros-t1066-backend-targeted-green.log"
+      ],
+      "limits": "逐条静态消费者核对与分区聚焦回归；并非每条都跑真实供应商或安装版E2E"
+    },
+    {
+      "id": "TO-024",
+      "originalFile": "ai-worker/src/runtime/browser/search-browser.ts",
+      "originalLine": 35,
+      "status": "调整",
+      "newPolicy": "单次执行/请求/观察等待归一最低120s，原较长值不缩短；保持原signal/权限/资源归属",
+      "location": "ai-worker/src/runtime/browser/search-browser.ts",
+      "verification": [
+        "/tmp/creatoros-t1066-worker-floor-final.json",
+        "/tmp/creatoros-t1066-worker-targeted-green.log",
+        "/tmp/creatoros-t1066-backend-targeted-green.log"
+      ],
+      "limits": "逐条静态消费者核对与分区聚焦回归；并非每条都跑真实供应商或安装版E2E"
+    },
+    {
+      "id": "TO-025",
+      "originalFile": "ai-worker/src/runtime/browser/web-capture.ts",
+      "originalLine": 80,
+      "status": "调整",
+      "newPolicy": "单次执行/请求/观察等待归一最低120s，原较长值不缩短；保持原signal/权限/资源归属",
+      "location": "ai-worker/src/runtime/browser/web-capture.ts",
+      "verification": [
+        "/tmp/creatoros-t1066-worker-floor-final.json",
+        "/tmp/creatoros-t1066-worker-targeted-green.log",
+        "/tmp/creatoros-t1066-backend-targeted-green.log"
+      ],
+      "limits": "逐条静态消费者核对与分区聚焦回归；并非每条都跑真实供应商或安装版E2E"
+    },
+    {
+      "id": "TO-026",
+      "originalFile": "ai-worker/src/runtime/browser/web-reader.ts",
+      "originalLine": 63,
+      "status": "调整",
+      "newPolicy": "单次执行/请求/观察等待归一最低120s，原较长值不缩短；保持原signal/权限/资源归属",
+      "location": "ai-worker/src/runtime/browser/web-reader.ts",
+      "verification": [
+        "/tmp/creatoros-t1066-worker-floor-final.json",
+        "/tmp/creatoros-t1066-worker-targeted-green.log",
+        "/tmp/creatoros-t1066-backend-targeted-green.log"
+      ],
+      "limits": "逐条静态消费者核对与分区聚焦回归；并非每条都跑真实供应商或安装版E2E"
+    },
+    {
+      "id": "TO-027",
+      "originalFile": "ai-worker/src/runtime/browser/web-reader.ts",
+      "originalLine": 623,
+      "status": "调整",
+      "newPolicy": "单次执行/请求/观察等待归一最低120s，原较长值不缩短；保持原signal/权限/资源归属",
+      "location": "ai-worker/src/runtime/browser/web-reader.ts",
+      "verification": [
+        "/tmp/creatoros-t1066-worker-floor-final.json",
+        "/tmp/creatoros-t1066-worker-targeted-green.log",
+        "/tmp/creatoros-t1066-backend-targeted-green.log"
+      ],
+      "limits": "逐条静态消费者核对与分区聚焦回归；并非每条都跑真实供应商或安装版E2E"
+    },
+    {
+      "id": "TO-028",
+      "originalFile": "ai-worker/src/runtime/browser/web-session.ts",
+      "originalLine": 253,
+      "status": "调整",
+      "newPolicy": "登录有限总等待默认300s不缩短，显式配置最低120s，1s轮询间隔保留",
+      "location": "ai-worker/src/runtime/browser/web-session.ts",
+      "verification": [
+        "/tmp/creatoros-t1066-worker-floor-final.json",
+        "/tmp/creatoros-t1066-worker-targeted-green.log",
+        "/tmp/creatoros-t1066-backend-targeted-green.log"
+      ],
+      "limits": "逐条静态消费者核对与分区聚焦回归；并非每条都跑真实供应商或安装版E2E"
+    },
+    {
+      "id": "TO-029",
+      "originalFile": "ai-worker/src/runtime/browser/web-session.ts",
+      "originalLine": 259,
+      "status": "调整",
+      "newPolicy": "单次执行/请求/观察等待归一最低120s，原较长值不缩短；保持原signal/权限/资源归属",
+      "location": "ai-worker/src/runtime/browser/web-session.ts",
+      "verification": [
+        "/tmp/creatoros-t1066-worker-floor-final.json",
+        "/tmp/creatoros-t1066-worker-targeted-green.log",
+        "/tmp/creatoros-t1066-backend-targeted-green.log"
+      ],
+      "limits": "逐条静态消费者核对与分区聚焦回归；并非每条都跑真实供应商或安装版E2E"
+    },
+    {
+      "id": "TO-030",
+      "originalFile": "ai-worker/src/runtime/browser/web-session.ts",
+      "originalLine": 330,
+      "status": "调整",
+      "newPolicy": "单次执行/请求/观察等待归一最低120s，原较长值不缩短；保持原signal/权限/资源归属",
+      "location": "ai-worker/src/runtime/browser/web-session.ts",
+      "verification": [
+        "/tmp/creatoros-t1066-worker-floor-final.json",
+        "/tmp/creatoros-t1066-worker-targeted-green.log",
+        "/tmp/creatoros-t1066-backend-targeted-green.log"
+      ],
+      "limits": "逐条静态消费者核对与分区聚焦回归；并非每条都跑真实供应商或安装版E2E"
+    },
+    {
+      "id": "TO-031",
+      "originalFile": "ai-worker/src/runtime/chat/chat-pi-loop.ts",
+      "originalLine": 52,
+      "status": "保留符合规则",
+      "newPolicy": "单次执行/请求/观察等待归一最低120s，原较长值不缩短；保持原signal/权限/资源归属",
+      "location": "ai-worker/src/runtime/chat/chat-pi-loop.ts",
+      "verification": [
+        "/tmp/creatoros-t1066-worker-floor-final.json",
+        "/tmp/creatoros-t1066-worker-targeted-green.log",
+        "/tmp/creatoros-t1066-backend-targeted-green.log"
+      ],
+      "limits": "逐条静态消费者核对与分区聚焦回归；并非每条都跑真实供应商或安装版E2E"
+    },
+    {
+      "id": "TO-032",
+      "originalFile": "ai-worker/src/runtime/douyin-transcribe-detail.ts",
+      "originalLine": 69,
+      "status": "调整",
+      "newPolicy": "单次执行/请求/观察等待归一最低120s，原较长值不缩短；保持原signal/权限/资源归属",
+      "location": "ai-worker/src/runtime/douyin-transcribe-detail.ts",
+      "verification": [
+        "/tmp/creatoros-t1066-worker-floor-final.json",
+        "/tmp/creatoros-t1066-worker-targeted-green.log",
+        "/tmp/creatoros-t1066-backend-targeted-green.log"
+      ],
+      "limits": "逐条静态消费者核对与分区聚焦回归；并非每条都跑真实供应商或安装版E2E"
+    },
+    {
+      "id": "TO-033",
+      "originalFile": "ai-worker/src/runtime/douyin-transcribe-source.ts",
+      "originalLine": 159,
+      "status": "调整",
+      "newPolicy": "单次执行/请求/观察等待归一最低120s，原较长值不缩短；保持原signal/权限/资源归属",
+      "location": "ai-worker/src/runtime/douyin-transcribe-source.ts",
+      "verification": [
+        "/tmp/creatoros-t1066-worker-floor-final.json",
+        "/tmp/creatoros-t1066-worker-targeted-green.log",
+        "/tmp/creatoros-t1066-backend-targeted-green.log"
+      ],
+      "limits": "逐条静态消费者核对与分区聚焦回归；并非每条都跑真实供应商或安装版E2E"
+    },
+    {
+      "id": "TO-034",
+      "originalFile": "ai-worker/src/runtime/multimodal-minimax.ts",
+      "originalLine": 54,
+      "status": "调整",
+      "newPolicy": "生产5分钟保持，所有注入maxPollAttempts按120s名义总预算归一下限，真实5s周期不改",
+      "location": "ai-worker/src/runtime/multimodal-minimax.ts",
+      "verification": [
+        "/tmp/creatoros-t1066-worker-floor-final.json",
+        "/tmp/creatoros-t1066-worker-targeted-green.log",
+        "/tmp/creatoros-t1066-backend-targeted-green.log"
+      ],
+      "limits": "逐条静态消费者核对与分区聚焦回归；并非每条都跑真实供应商或安装版E2E"
+    },
+    {
+      "id": "TO-035",
+      "originalFile": "ai-worker/src/runtime/multimodal-minimax.ts",
+      "originalLine": 55,
+      "status": "调整",
+      "newPolicy": "H3生产20分钟保持，动态尝试次数120s名义下限，原任务signal即时生效",
+      "location": "ai-worker/src/runtime/multimodal-minimax.ts",
+      "verification": [
+        "/tmp/creatoros-t1066-worker-floor-final.json",
+        "/tmp/creatoros-t1066-worker-targeted-green.log",
+        "/tmp/creatoros-t1066-backend-targeted-green.log"
+      ],
+      "limits": "逐条静态消费者核对与分区聚焦回归；并非每条都跑真实供应商或安装版E2E"
+    },
+    {
+      "id": "TO-036",
+      "originalFile": "ai-worker/src/runtime/multimodal-omnihi.ts",
+      "originalLine": 29,
+      "status": "调整",
+      "newPolicy": "生产10分钟保持，动态尝试次数120s名义下限，原任务signal即时生效",
+      "location": "ai-worker/src/runtime/multimodal-omnihi.ts",
+      "verification": [
+        "/tmp/creatoros-t1066-worker-floor-final.json",
+        "/tmp/creatoros-t1066-worker-targeted-green.log",
+        "/tmp/creatoros-t1066-backend-targeted-green.log"
+      ],
+      "limits": "逐条静态消费者核对与分区聚焦回归；并非每条都跑真实供应商或安装版E2E"
+    },
+    {
+      "id": "TO-037",
+      "originalFile": "ai-worker/src/runtime/search-factory.ts",
+      "originalLine": 89,
+      "status": "调整",
+      "newPolicy": "单次执行/请求/观察等待归一最低120s，原较长值不缩短；保持原signal/权限/资源归属",
+      "location": "ai-worker/src/runtime/search-factory.ts",
+      "verification": [
+        "/tmp/creatoros-t1066-worker-floor-final.json",
+        "/tmp/creatoros-t1066-worker-targeted-green.log",
+        "/tmp/creatoros-t1066-backend-targeted-green.log"
+      ],
+      "limits": "逐条静态消费者核对与分区聚焦回归；并非每条都跑真实供应商或安装版E2E"
+    },
+    {
+      "id": "TO-038",
+      "originalFile": "ai-worker/src/runtime/video-decisions-runner.ts",
+      "originalLine": 1271,
+      "status": "保留符合规则",
+      "newPolicy": "原video结构化600s≥120保留",
+      "location": "ai-worker/src/runtime/video-decisions-runner.ts",
+      "verification": [
+        "/tmp/creatoros-t1066-worker-floor-final.json",
+        "/tmp/creatoros-t1066-worker-targeted-green.log",
+        "/tmp/creatoros-t1066-backend-targeted-green.log"
+      ],
+      "limits": "逐条静态消费者核对与分区聚焦回归；并非每条都跑真实供应商或安装版E2E"
+    },
+    {
+      "id": "TO-039",
+      "originalFile": "backend/src/modules/ai-runtime/chat-production-composition.ts",
+      "originalLine": 85,
+      "status": "保留符合规则",
+      "newPolicy": "原chat600s持久预算由契约新初始化下限/旧截止不延长，保留任务控制",
+      "location": "backend/src/modules/ai-runtime/chat-production-composition.ts",
+      "verification": [
+        "/tmp/creatoros-t1066-worker-floor-final.json",
+        "/tmp/creatoros-t1066-worker-targeted-green.log",
+        "/tmp/creatoros-t1066-backend-targeted-green.log"
+      ],
+      "limits": "逐条静态消费者核对与分区聚焦回归；并非每条都跑真实供应商或安装版E2E"
+    },
+    {
+      "id": "TO-040",
+      "originalFile": "backend/src/modules/ai-runtime/chat-trend-read.ts",
+      "originalLine": 60,
+      "status": "调整",
+      "newPolicy": "按实际信源数量并发3个的串行批次组合740s/源+10s余量；列表120s、搜索500s分别受原父signal",
+      "location": "backend/src/modules/ai-runtime/chat-trend-read.ts",
+      "verification": [
+        "/tmp/creatoros-t1066-worker-floor-final.json",
+        "/tmp/creatoros-t1066-worker-targeted-green.log",
+        "/tmp/creatoros-t1066-backend-targeted-green.log"
+      ],
+      "limits": "逐条静态消费者核对与分区聚焦回归；并非每条都跑真实供应商或安装版E2E"
+    },
+    {
+      "id": "TO-041",
+      "originalFile": "backend/src/modules/ai-runtime/chat-trend-read.ts",
+      "originalLine": 72,
+      "status": "调整",
+      "newPolicy": "单源740s，覆盖370启动+导航120+可能二次导航120+selector120+10余量",
+      "location": "backend/src/modules/ai-runtime/chat-trend-read.ts",
+      "verification": [
+        "/tmp/creatoros-t1066-worker-floor-final.json",
+        "/tmp/creatoros-t1066-worker-targeted-green.log",
+        "/tmp/creatoros-t1066-backend-targeted-green.log"
+      ],
+      "limits": "逐条静态消费者核对与分区聚焦回归；并非每条都跑真实供应商或安装版E2E"
+    },
+    {
+      "id": "TO-042",
+      "originalFile": "backend/src/modules/ai-runtime/local-environment-host.ts",
+      "originalLine": 16,
+      "status": "调整",
+      "newPolicy": "单次执行/请求/观察等待归一最低120s，原较长值不缩短；保持原signal/权限/资源归属",
+      "location": "backend/src/modules/ai-runtime/local-environment-host.ts",
+      "verification": [
+        "/tmp/creatoros-t1066-worker-floor-final.json",
+        "/tmp/creatoros-t1066-worker-targeted-green.log",
+        "/tmp/creatoros-t1066-backend-targeted-green.log"
+      ],
+      "limits": "逐条静态消费者核对与分区聚焦回归；并非每条都跑真实供应商或安装版E2E"
+    },
+    {
+      "id": "TO-043",
+      "originalFile": "backend/src/modules/ai-runtime/request-io.service.ts",
+      "originalLine": 7,
+      "status": "调整",
+      "newPolicy": "单执行默认/动态>=120s，从实际在途槽获得时开始；外层含前方完整deadline+回收宽限+冷启动+执行+10s余量",
+      "location": "backend/src/modules/ai-runtime/request-io.service.ts",
+      "verification": [
+        "/tmp/creatoros-t1066-worker-floor-final.json",
+        "/tmp/creatoros-t1066-worker-targeted-green.log",
+        "/tmp/creatoros-t1066-backend-targeted-green.log"
+      ],
+      "limits": "逐条静态消费者核对与分区聚焦回归；并非每条都跑真实供应商或安装版E2E"
+    },
+    {
+      "id": "TO-044",
+      "originalFile": "backend/src/modules/ai-runtime/request-io.service.ts",
+      "originalLine": 45,
+      "status": "调整",
+      "newPolicy": "取消请求立即返回并发送cancel；无ACK回收宽限120s，保留真实在途槽直至ACK/进程关闭",
+      "location": "backend/src/modules/ai-runtime/request-io.service.ts",
+      "verification": [
+        "/tmp/creatoros-t1066-worker-floor-final.json",
+        "/tmp/creatoros-t1066-worker-targeted-green.log",
+        "/tmp/creatoros-t1066-backend-targeted-green.log"
+      ],
+      "limits": "逐条静态消费者核对与分区聚焦回归；并非每条都跑真实供应商或安装版E2E"
+    },
+    {
+      "id": "TO-045",
+      "originalFile": "backend/src/modules/ai-runtime/script-similarity-business-adapter.ts",
+      "originalLine": 39,
+      "status": "调整",
+      "newPolicy": "单次执行/请求/观察等待归一最低120s，原较长值不缩短；保持原signal/权限/资源归属",
+      "location": "backend/src/modules/ai-runtime/script-similarity-business-adapter.ts",
+      "verification": [
+        "/tmp/creatoros-t1066-worker-floor-final.json",
+        "/tmp/creatoros-t1066-worker-targeted-green.log",
+        "/tmp/creatoros-t1066-backend-targeted-green.log"
+      ],
+      "limits": "逐条静态消费者核对与分区聚焦回归；并非每条都跑真实供应商或安装版E2E"
+    },
+    {
+      "id": "TO-046",
+      "originalFile": "backend/src/modules/assets/localfs-object-storage.ts",
+      "originalLine": 99,
+      "status": "调整",
+      "newPolicy": "单次执行/请求/观察等待归一最低120s，原较长值不缩短；保持原signal/权限/资源归属",
+      "location": "backend/src/modules/assets/localfs-object-storage.ts",
+      "verification": [
+        "/tmp/creatoros-t1066-worker-floor-final.json",
+        "/tmp/creatoros-t1066-worker-targeted-green.log",
+        "/tmp/creatoros-t1066-backend-targeted-green.log"
+      ],
+      "limits": "逐条静态消费者核对与分区聚焦回归；并非每条都跑真实供应商或安装版E2E"
+    },
+    {
+      "id": "TO-047",
+      "originalFile": "backend/src/modules/benchmark/benchmark-transcription.service.ts",
+      "originalLine": 106,
+      "status": "调整",
+      "newPolicy": "单次执行/请求/观察等待归一最低120s，原较长值不缩短；保持原signal/权限/资源归属",
+      "location": "backend/src/modules/benchmark/benchmark-transcription.service.ts",
+      "verification": [
+        "/tmp/creatoros-t1066-worker-floor-final.json",
+        "/tmp/creatoros-t1066-worker-targeted-green.log",
+        "/tmp/creatoros-t1066-backend-targeted-green.log"
+      ],
+      "limits": "逐条静态消费者核对与分区聚焦回归；并非每条都跑真实供应商或安装版E2E"
+    },
+    {
+      "id": "TO-048",
+      "originalFile": "backend/src/modules/execution/chat-web-profile-wait.ts",
+      "originalLine": 10,
+      "status": "调整",
+      "newPolicy": "单次执行/请求/观察等待归一最低120s，原较长值不缩短；保持原signal/权限/资源归属",
+      "location": "backend/src/modules/execution/chat-web-profile-wait.ts",
+      "verification": [
+        "/tmp/creatoros-t1066-worker-floor-final.json",
+        "/tmp/creatoros-t1066-worker-targeted-green.log",
+        "/tmp/creatoros-t1066-backend-targeted-green.log"
+      ],
+      "limits": "逐条静态消费者核对与分区聚焦回归；并非每条都跑真实供应商或安装版E2E"
+    },
+    {
+      "id": "TO-049",
+      "originalFile": "backend/src/modules/execution/host-browser-process-recovery.ts",
+      "originalLine": 19,
+      "status": "调整",
+      "newPolicy": "单次执行/请求/观察等待归一最低120s，原较长值不缩短；保持原signal/权限/资源归属",
+      "location": "backend/src/modules/execution/host-browser-process-recovery.ts",
+      "verification": [
+        "/tmp/creatoros-t1066-worker-floor-final.json",
+        "/tmp/creatoros-t1066-worker-targeted-green.log",
+        "/tmp/creatoros-t1066-backend-targeted-green.log"
+      ],
+      "limits": "逐条静态消费者核对与分区聚焦回归；并非每条都跑真实供应商或安装版E2E"
+    },
+    {
+      "id": "TO-050",
+      "originalFile": "backend/src/modules/execution/host-browser-profile-lifecycle.ts",
+      "originalLine": 31,
+      "status": "调整",
+      "newPolicy": "单次执行/请求/观察等待归一最低120s，原较长值不缩短；保持原signal/权限/资源归属",
+      "location": "backend/src/modules/execution/host-browser-profile-lifecycle.ts",
+      "verification": [
+        "/tmp/creatoros-t1066-worker-floor-final.json",
+        "/tmp/creatoros-t1066-worker-targeted-green.log",
+        "/tmp/creatoros-t1066-backend-targeted-green.log"
+      ],
+      "limits": "逐条静态消费者核对与分区聚焦回归；并非每条都跑真实供应商或安装版E2E"
+    },
+    {
+      "id": "TO-051",
+      "originalFile": "backend/src/modules/execution/submitted-task-preparation.service.ts",
+      "originalLine": 74,
+      "status": "调整",
+      "newPolicy": "只归一新准备预算>=120s，历史hostTaskPreparation绝对deadline及继承parent截止原样；continuous仅继承原signal，不新加阶段总帽",
+      "location": "backend/src/modules/execution/submitted-task-preparation.service.ts",
+      "verification": [
+        "/tmp/creatoros-t1066-worker-floor-final.json",
+        "/tmp/creatoros-t1066-worker-targeted-green.log",
+        "/tmp/creatoros-t1066-backend-targeted-green.log"
+      ],
+      "limits": "逐条静态消费者核对与分区聚焦回归；并非每条都跑真实供应商或安装版E2E"
+    },
+    {
+      "id": "TO-052",
+      "originalFile": "backend/src/modules/execution/worker-process-tree.ts",
+      "originalLine": 7,
+      "status": "调整",
+      "newPolicy": "单次执行/请求/观察等待归一最低120s，原较长值不缩短；保持原signal/权限/资源归属",
+      "location": "backend/src/modules/execution/worker-process-tree.ts",
+      "verification": [
+        "/tmp/creatoros-t1066-worker-floor-final.json",
+        "/tmp/creatoros-t1066-worker-targeted-green.log",
+        "/tmp/creatoros-t1066-backend-targeted-green.log"
+      ],
+      "limits": "逐条静态消费者核对与分区聚焦回归；并非每条都跑真实供应商或安装版E2E"
+    },
+    {
+      "id": "TO-053",
+      "originalFile": "backend/src/modules/execution/worker-process-tree.ts",
+      "originalLine": 28,
+      "status": "调整",
+      "newPolicy": "单次执行/请求/观察等待归一最低120s，原较长值不缩短；保持原signal/权限/资源归属",
+      "location": "backend/src/modules/execution/worker-process-tree.ts",
+      "verification": [
+        "/tmp/creatoros-t1066-worker-floor-final.json",
+        "/tmp/creatoros-t1066-worker-targeted-green.log",
+        "/tmp/creatoros-t1066-backend-targeted-green.log"
+      ],
+      "limits": "逐条静态消费者核对与分区聚焦回归；并非每条都跑真实供应商或安装版E2E"
+    },
+    {
+      "id": "TO-054",
+      "originalFile": "backend/src/modules/execution/worker-process-tree.ts",
+      "originalLine": 77,
+      "status": "调整",
+      "newPolicy": "整树kill后退出确认总等待120s，25ms观察间隔保留；身份核验/不误杀规则保留",
+      "location": "backend/src/modules/execution/worker-process-tree.ts",
+      "verification": [
+        "/tmp/creatoros-t1066-worker-floor-final.json",
+        "/tmp/creatoros-t1066-worker-targeted-green.log",
+        "/tmp/creatoros-t1066-backend-targeted-green.log"
+      ],
+      "limits": "逐条静态消费者核对与分区聚焦回归；并非每条都跑真实供应商或安装版E2E"
+    },
+    {
+      "id": "TO-055",
+      "originalFile": "backend/src/modules/execution/worker-supervisor.ts",
+      "originalLine": 63,
+      "status": "调整",
+      "newPolicy": "cancel信号立即发送、stop立即SIGTERM，退出回收宽限最低120s，超时才强杀原handle",
+      "location": "backend/src/modules/execution/worker-supervisor.ts",
+      "verification": [
+        "/tmp/creatoros-t1066-worker-floor-final.json",
+        "/tmp/creatoros-t1066-worker-targeted-green.log",
+        "/tmp/creatoros-t1066-backend-targeted-green.log"
+      ],
+      "limits": "逐条静态消费者核对与分区聚焦回归；并非每条都跑真实供应商或安装版E2E"
+    },
+    {
+      "id": "TO-056",
+      "originalFile": "backend/src/modules/execution/worker-supervisor.ts",
+      "originalLine": 76,
+      "status": "调整",
+      "newPolicy": "启动及动态覆盖最低120s，后端原execution deadline仍共有权威",
+      "location": "backend/src/modules/execution/worker-supervisor.ts",
+      "verification": [
+        "/tmp/creatoros-t1066-worker-floor-final.json",
+        "/tmp/creatoros-t1066-worker-targeted-green.log",
+        "/tmp/creatoros-t1066-backend-targeted-green.log"
+      ],
+      "limits": "逐条静态消费者核对与分区聚焦回归；并非每条都跑真实供应商或安装版E2E"
+    },
+    {
+      "id": "TO-057",
+      "originalFile": "backend/src/modules/intelligence/intelligence-generation-bridge.ts",
+      "originalLine": 36,
+      "status": "保留符合规则",
+      "newPolicy": "原intelligence-generation600s预算及model节点覆盖保留，实际所有port继承同一原deadline",
+      "location": "backend/src/modules/intelligence/intelligence-generation-bridge.ts",
+      "verification": [
+        "/tmp/creatoros-t1066-worker-floor-final.json",
+        "/tmp/creatoros-t1066-worker-targeted-green.log",
+        "/tmp/creatoros-t1066-backend-targeted-green.log"
+      ],
+      "limits": "逐条静态消费者核对与分区聚焦回归；并非每条都跑真实供应商或安装版E2E"
+    },
+    {
+      "id": "TO-058",
+      "originalFile": "backend/src/modules/search/knowledge-search-runtime.service.ts",
+      "originalLine": 7,
+      "status": "调整",
+      "newPolicy": "移除重复backfill短外帽；embedding IO持有冷启/队列/执行完整期限，领域只传运行时stop取消",
+      "location": "backend/src/modules/search/knowledge-search-runtime.service.ts",
+      "verification": [
+        "/tmp/creatoros-t1066-worker-floor-final.json",
+        "/tmp/creatoros-t1066-worker-targeted-green.log",
+        "/tmp/creatoros-t1066-backend-targeted-green.log"
+      ],
+      "limits": "逐条静态消费者核对与分区聚焦回归；并非每条都跑真实供应商或安装版E2E"
+    },
+    {
+      "id": "TO-059",
+      "originalFile": "backend/src/modules/search/knowledge-search-runtime.service.ts",
+      "originalLine": 8,
+      "status": "调整",
+      "newPolicy": "移除query重复8s短外帽；embedding IO持有动态全流程期限，慢150s成功仍返回语义结果",
+      "location": "backend/src/modules/search/knowledge-search-runtime.service.ts",
+      "verification": [
+        "/tmp/creatoros-t1066-worker-floor-final.json",
+        "/tmp/creatoros-t1066-worker-targeted-green.log",
+        "/tmp/creatoros-t1066-backend-targeted-green.log"
+      ],
+      "limits": "逐条静态消费者核对与分区聚焦回归；并非每条都跑真实供应商或安装版E2E"
+    },
+    {
+      "id": "TO-060",
+      "originalFile": "backend/src/secret-crypto.ts",
+      "originalLine": 148,
+      "status": "调整",
+      "newPolicy": "同步FD key就绪等待由3s调整120s，10ms轮询保留；同步API阻塞主线程风险如实保留（此候选不改密钥接口）",
+      "location": "backend/src/secret-crypto.ts",
+      "verification": [
+        "/tmp/creatoros-t1066-worker-floor-final.json",
+        "/tmp/creatoros-t1066-worker-targeted-green.log",
+        "/tmp/creatoros-t1066-backend-targeted-green.log"
+      ],
+      "limits": "逐条静态消费者核对与分区聚焦回归；并非每条都跑真实供应商或安装版E2E"
+    }
+  ],
+  "newFindings": [
+    {
+      "id": "NEW-W-01",
+      "location": "ai-worker/src/runtime/browser/{web-reader,web-capture,web-session}.ts; execution/{research-worker-tools,browser-worker-session}.ts",
+      "policy": "真实context/page默认action/navigation120s；保留原launch180s且显式配置，guardedLaunch组合370s"
+    },
+    {
+      "id": "NEW-W-02",
+      "location": "backend/src/modules/execution/run-execution-task.ts",
+      "policy": "显式constraints.timeoutSec单次消费>=120s，null continuous语义/取消即时保留"
+    },
+    {
+      "id": "NEW-W-03",
+      "location": "backend/src/modules/execution/video-render/executor.ts",
+      "policy": "HyperFrames launch/navigation/playerReady/renderReady显式>=120s；protocol/process300s与原编码/stream600s保留；FFMPEG_PROCESS_TIMEOUT_MS为实际库键"
+    },
+    {
+      "id": "NEW-W-04",
+      "location": "backend/src/modules/execution/transcribe-stage-error.ts; intelligence/intelligence-transcript-bridge.ts; execution/claimed-asr-stage.service.ts",
+      "policy": "只安全翻译AbortError/TimeoutError为原deadline耗尽/素材超时/中止，人话提示兼容原runner仅投影name，不泄漏原错误正文"
+    },
+    {
+      "id": "NEW-W-05",
+      "location": "backend/src/modules/ai-runtime/request-io.service.ts",
+      "policy": "提交payload冻结，动态等待含前方请求完整deadline/取消回收；子请求单执行deadline自槽位发放时开始"
+    }
+  ],
+  "summary": {
+    "originalRecords": 60,
+    "explicitShortFloorFindings": 0,
+    "sourceFilesChecked": 872
+  },
+  "evidence": {
+    "red": "/tmp/creatoros-t1066-worker-red.log（公共Worker→真实boundASR阶段，31s/125s/continuous601s旧码3失败，取消/截止2通过）",
+    "green": [
+      "/tmp/creatoros-t1066-worker-targeted-green.log（108通过）",
+      "/tmp/creatoros-t1066-backend-targeted-green.log（86通过）",
+      "/tmp/creatoros-t1066-poll-tests.log（44通过）",
+      "/tmp/creatoros-t1066-backend-new-tests-final.log（5通过）",
+      "/tmp/creatoros-t1066-knowledge-tests.log（2通过）",
+      "/tmp/creatoros-t1066-topic-browser-final.log（本地真实浏览器2通过）",
+      "/tmp/creatoros-t1066-submitted-continuous-tests.log（真实DB公共原子提交→纯准备：stop/continuous2通过，46未选用）",
+      "/tmp/creatoros-t1066-worker-lifecycle-final.log（最终37通过）"
+    ],
+    "typecheck": "ai-worker通过；backend12处错误均baseline重复（baseline另缺tmp相对contract依赖，不作新增产品失败）",
+    "broadTests": "ai-worker全量961通过44失败；基线4文件40失败，另4文件3失败15通过；全量真实浏览器取消偶发30s测试上限，聚焦复跑2通过；不称全绿",
+    "notExecuted": "未跑真实供应商/用户数据/安装版转录，不覆盖父治理Gate"
+  },
+  "risks": [
+    "同步FD key轮询120s会在故障下阻塞线程；符合用户数值要求但仍应记录后续非阻塞接口改善",
+    "旧广域测试包含既有schema/legacy-interface问题，不能将全量失败都归此任务；有基线实际对照日志",
+    "原共享task绝对预算可以小于独立步骤名义总和，这是合法总预算权威；新默认应由主会话按实际串行链组合，旧budget不延长"
+  ]
+}

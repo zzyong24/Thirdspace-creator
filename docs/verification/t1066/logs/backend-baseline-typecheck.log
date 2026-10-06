@@ -1,0 +1,15 @@
+../../../../../../../tmp/creatoros-t1066-worker-baseline/backend/src/application/queries/daily-report.test.ts(3,31): error TS2307: Cannot find module '../../../../contract/src/operations/pages' or its corresponding type declarations.
+../../../../../../../tmp/creatoros-t1066-worker-baseline/backend/src/modules/ai-runtime/asset-business-execution.service.test.ts(40,44): error TS2345: Argument of type 'Mock<() => Promise<void>>' is not assignable to parameter of type '(() => boolean) | undefined'.
+  Type 'Mock<() => Promise<void>>' is not assignable to type '() => boolean'.
+    Type 'Promise<void>' is not assignable to type 'boolean'.
+../../../../../../../tmp/creatoros-t1066-worker-baseline/backend/src/modules/ai-runtime/chat-assembly.test.ts(1521,33): error TS2353: Object literal may only specify known properties, and 'captureScreenshotPort' does not exist in type 'Partial<AssembleChatDeps>'.
+../../../../../../../tmp/creatoros-t1066-worker-baseline/backend/src/modules/ai-runtime/chat-assembly.test.ts(1546,33): error TS2353: Object literal may only specify known properties, and 'readWebUrlPort' does not exist in type 'Partial<AssembleChatDeps>'.
+../../../../../../../tmp/creatoros-t1066-worker-baseline/backend/src/modules/ai-runtime/signal-quality.test.ts(10,40): error TS2307: Cannot find module './topic-task-adapter' or its corresponding type declarations.
+../../../../../../../tmp/creatoros-t1066-worker-baseline/backend/src/modules/ai-runtime/transcribe-runner.test.ts(15,3): error TS2305: Module '"./transcribe-runner"' has no exported member 'runTranscribe'.
+../../../../../../../tmp/creatoros-t1066-worker-baseline/backend/src/modules/ai-runtime/transcribe-runner.test.ts(18,8): error TS2305: Module '"./transcribe-runner"' has no exported member 'TranscribeRunnerDeps'.
+../../../../../../../tmp/creatoros-t1066-worker-baseline/backend/src/modules/ai-runtime/transcribe-runner.test.ts(558,27): error TS7006: Parameter 'e' implicitly has an 'any' type.
+../../../../../../../tmp/creatoros-t1066-worker-baseline/backend/src/modules/ai-runtime/transcribe-runner.test.ts(561,23): error TS7006: Parameter 'ms' implicitly has an 'any' type.
+../../../../../../../tmp/creatoros-t1066-worker-baseline/backend/src/modules/ai-runtime/transcribe-runner.test.ts(600,27): error TS7006: Parameter 'e' implicitly has an 'any' type.
+../../../../../../../tmp/creatoros-t1066-worker-baseline/backend/src/modules/ai-runtime/transcribe-runner.test.ts(753,27): error TS7019: Rest parameter 'args' implicitly has an 'any[]' type.
+../../../../../../../tmp/creatoros-t1066-worker-baseline/backend/src/modules/ai-runtime/transcribe-runner.test.ts(754,25): error TS7019: Rest parameter 'args' implicitly has an 'any[]' type.
+../../../../../../../tmp/creatoros-t1066-worker-baseline/backend/src/modules/execution/asset-worker-runtime.integration.test.ts(82,70): error TS2339: Property 'legacy' does not exist on type 'Preparation'.

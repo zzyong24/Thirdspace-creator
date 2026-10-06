@@ -86,7 +86,7 @@ async function withExecutionDeadline<T>(
       ? null
       : new Promise<never>((_, reject) => {
           timer = setTimeout(() => {
-            const err = new ExecutionTimeoutError(timeoutSec);
+            const err = new ExecutionTimeoutError(executionTimeoutMs(timeoutSec * 1000) / 1000);
             controller.abort(err);
             reject(err);
           }, executionTimeoutMs(timeoutSec * 1000));
@@ -208,7 +208,7 @@ export async function runExecutionTask(
     await step(
       spec.constraints.timeoutSec === null
         ? `执行 ${spec.taskType}(无固定总超时，可由用户取消)`
-        : `执行 ${spec.taskType}(超时 ${spec.constraints.timeoutSec}s)`,
+        : `执行 ${spec.taskType}(超时 ${executionTimeoutMs(spec.constraints.timeoutSec * 1000) / 1000}s)`,
     );
     const result = await withExecutionDeadline(
       executor.run(

@@ -5,10 +5,10 @@
   },
   "summary": {
     "verticals": 62,
-    "tasks_done": 38,
+    "tasks_done": 41,
     "tasks_total": 153,
-    "tasks_pending": 115,
-    "verticals_complete": 3
+    "tasks_pending": 112,
+    "verticals_complete": 6
   },
   "verticals": [
     {
@@ -2523,7 +2523,10 @@
         "orchestrator/process/**",
         "docker-compose.yml",
         "channel-partners/**",
-        "contract/tests/**"
+        "contract/tests/**",
+        "pnpm-workspace.yaml",
+        "pnpm-lock.yaml",
+        "patches/**"
       ],
       "read_set": [
         "docs/features/t1066-timeout-policy.md",
@@ -2539,7 +2542,10 @@
         "orchestrator/**",
         ".agents/**",
         "docker-compose.yml",
-        "channel-partners/**"
+        "channel-partners/**",
+        "pnpm-workspace.yaml",
+        "pnpm-lock.yaml",
+        "patches/**"
       ],
       "exclusive_resources": [],
       "step_write_set": {},
@@ -2556,7 +2562,7 @@
       "tasks": [
         {
           "step": "implementation",
-          "status": "pending"
+          "status": "done"
         }
       ],
       "blocked_reason": null,
@@ -2577,7 +2583,9 @@
       "step_write_set": {},
       "step_read_set": {},
       "step_exclusive_resources": {},
-      "commits": {}
+      "commits": {
+        "implementation": "a08afe1d"
+      }
     },
     {
       "id": "T-1066-frontend",
@@ -2588,7 +2596,7 @@
       "tasks": [
         {
           "step": "implementation",
-          "status": "pending"
+          "status": "done"
         }
       ],
       "blocked_reason": null,
@@ -2609,7 +2617,9 @@
       "step_write_set": {},
       "step_read_set": {},
       "step_exclusive_resources": {},
-      "commits": {}
+      "commits": {
+        "implementation": "2193d98b"
+      }
     },
     {
       "id": "T-1066-tooling",
@@ -2620,7 +2630,7 @@
       "tasks": [
         {
           "step": "implementation",
-          "status": "pending"
+          "status": "done"
         }
       ],
       "blocked_reason": null,
@@ -2657,7 +2667,9 @@
       "step_write_set": {},
       "step_read_set": {},
       "step_exclusive_resources": {},
-      "commits": {}
+      "commits": {
+        "implementation": "a0f1e812"
+      }
     }
   ],
   "leases": {}

@@ -1,0 +1,43 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/t1066-frontend/Thirdspace-creator/frontend
+
+(node:91650) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ src/features/copilot/chat-thesis-card.test.tsx (6 tests | 1 failed) 71ms
+   × T-1066 观察到期保留原任务，继续查询可读取慢完成结果 9ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/features/copilot/chat-thesis-card.test.tsx > T-1066 观察到期保留原任务，继续查询可读取慢完成结果
+AssertionError: expected <div …(2)><p …(1)></p></div> to be null
+
+- Expected:
+null
+
++ Received:
+<div
+  class="flex flex-col gap-1"
+  data-slot="chat-thesis-error"
+>
+  <p
+    class="text-[12px] leading-relaxed text-destructive"
+  >
+    没能梳理出论点骨架。当前托管文本模型（MiniMax）可能暂时不可用、任务被重启中断，或本次生成失败；可以直接重试，也可以跳过论点骨架继续写稿。
+  </p>
+</div>
+
+ ❯ src/features/copilot/chat-thesis-card.test.tsx:162:71
+    160|     render(<ChatThesisCard taskId="task-slow-original" error={null} />…
+    161|     await act(async () => { await vi.advanceTimersByTimeAsync(360_000)…
+    162|     expect(document.querySelector('[data-slot="chat-thesis-error"]')).…
+       |                                                                       ^
+    163|     expect(screen.getByRole("button", { name: "继续查询原任务" })).toBeTruthy…
+    164|     getTask.mockResolvedValue({ status: "awaiting_confirmation" });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 5 passed (6)
+   Start at  14:15:27
+   Duration  1.19s (transform 50ms, setup 170ms, import 26ms, tests 71ms, environment 568ms)

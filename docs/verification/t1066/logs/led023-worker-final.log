@@ -1,0 +1,8 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/t1066-timeout-policy/Thirdspace-creator/ai-worker
+
+
+ Test Files  1 passed (1)
+      Tests  26 passed (26)
+   Start at  15:34:48
+   Duration  1.38s (transform 527ms, setup 0ms, import 1.16s, tests 75ms, environment 0ms)

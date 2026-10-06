@@ -20,6 +20,12 @@
   ],
   "lessons": [
     {
+      "led": "LED-053",
+      "what": "固定30秒宿主端口先于合法转录准备中止，观察到期误报失败，SDK隐式等待与首次预算未归一",
+      "check": "node tools/timeout-policy/verify.mjs",
+      "onFail": "超时预算回归：正执行最低两分钟；独立外层覆盖完整内部预算；原绝对期限/continuous/即时取消保持；前端保留原任务ID；HyperFrames同版本补丁与实际CLI配置必须一致。公共链回归失败不能用词法扫描替代。"
+    },
+    {
       "led": "LED-052",
       "what": "归档组的执行豁免被账号ID存在条件扩大到普通生成和同步任务",
       "check": "node docs/verification/t1022/run-archive-guard.mjs",

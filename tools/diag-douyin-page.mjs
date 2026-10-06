@@ -71,10 +71,12 @@ async function main() {
     ],
   });
 
+  ctx.setDefaultTimeout(120_000);
+  ctx.setDefaultNavigationTimeout(120_000);
   const page = ctx.pages()[0] ?? (await ctx.newPage());
 
   console.log(`[diag] 打开 ${DATA_CENTER_URL}`);
-  await page.goto(DATA_CENTER_URL, { waitUntil: "domcontentloaded", timeout: 60_000 });
+  await page.goto(DATA_CENTER_URL, { waitUntil: "domcontentloaded", timeout: 120_000 });
 
   console.log("[diag] 等 Garfish 微前端加载(15 秒)…");
   await page.waitForTimeout(15_000);

@@ -1,0 +1,606 @@
+
+ RUN  v4.1.8 /tmp/creatoros-t1066-worker-baseline/ai-worker
+
+ ❯ src/execution/chat-web-read-recovery.test.ts (2 tests | 2 failed) 89ms
+   × 恢复先接管全部网页父调用并完成原观察，再进入模型边界 26ms
+   × 网页恢复回执身份不符时拒绝新模型与后续提交 59ms
+stderr | src/execution/structured-worker-generation.test.ts > script.review固定完整性门拒绝空/残缺输出，不借宽松旧snapshot造pass：{"content":"{}","native":false}
+[ai-model-stream] output=false class=Error reason=http_200 status=200 message="Stream ended without finish_reason"
+
+stdout | src/execution/structured-worker-generation.test.ts > script.review固定完整性门拒绝空/残缺输出，不借宽松旧snapshot造pass：{"content":"{}","native":false}
+[structured-node] template=script.review status=error durationMs=269 path=text_compat modelCalls=1 inputTokens=0 outputTokens=0
+
+stdout | src/execution/generation-replay.test.ts > 仅已确认坏输出可投影为节点失败，未知、篡改和多余回执仍拒绝
+[structured-node] template=test.replay status=error durationMs=1 path=text_compat modelCalls=1 inputTokens=0 outputTokens=0
+
+stdout | src/execution/generation-replay.test.ts > 仅已确认坏输出可投影为节点失败，未知、篡改和多余回执仍拒绝
+[structured-node] template=test.replay recovery=format remaining=1
+
+stdout | src/execution/generation-replay.test.ts > 仅已确认坏输出可投影为节点失败，未知、篡改和多余回执仍拒绝
+[structured-node] template=test.replay status=error durationMs=5 path=text_compat modelCalls=2 inputTokens=0 outputTokens=0
+
+ ❯ src/execution/generation-replay.test.ts (10 tests | 1 failed) 4174ms
+   × 仅已确认坏输出可投影为节点失败，未知、篡改和多余回执仍拒绝 124ms
+stderr | src/execution/structured-worker-generation.test.ts > script.review固定完整性门拒绝空/残缺输出，不借宽松旧snapshot造pass：{"content":"{}","native":true}
+[ai-model-stream] output=false class=Error reason=http_200 status=200 message="Stream ended without finish_reason"
+
+stdout | src/execution/structured-worker-generation.test.ts > script.review固定完整性门拒绝空/残缺输出，不借宽松旧snapshot造pass：{"content":"{}","native":true}
+[structured-node] template=script.review status=error durationMs=135 path=structured modelCalls=1 inputTokens=0 outputTokens=0
+
+stderr | src/execution/structured-worker-generation.test.ts > script.review固定完整性门拒绝空/残缺输出，不借宽松旧snapshot造pass：{"content":"{\"verdict\":\"pass\",\"summary\":\"   \",\"findings\":[]}","native":false}
+[ai-model-stream] output=false class=Error reason=http_200 status=200 message="Stream ended without finish_reason"
+
+stdout | src/execution/structured-worker-generation.test.ts > script.review固定完整性门拒绝空/残缺输出，不借宽松旧snapshot造pass：{"content":"{\"verdict\":\"pass\",\"summary\":\"   \",\"findings\":[]}","native":false}
+[structured-node] template=script.review status=error durationMs=12 path=text_compat modelCalls=1 inputTokens=0 outputTokens=0
+
+stderr | src/execution/structured-worker-generation.test.ts > script.review固定完整性门拒绝空/残缺输出，不借宽松旧snapshot造pass：{"content":"{\"verdict\":\"pass\",\"summary\":\"结论\"}","native":false}
+[ai-model-stream] output=false class=Error reason=http_200 status=200 message="Stream ended without finish_reason"
+
+stdout | src/execution/structured-worker-generation.test.ts > script.review固定完整性门拒绝空/残缺输出，不借宽松旧snapshot造pass：{"content":"{\"verdict\":\"pass\",\"summary\":\"结论\"}","native":false}
+[structured-node] template=script.review status=error durationMs=11 path=text_compat modelCalls=1 inputTokens=0 outputTokens=0
+
+stderr | src/execution/structured-worker-generation.test.ts > script.review固定完整性门拒绝空/残缺输出，不借宽松旧snapshot造pass：{"content":"","reasoning":"{}","native":false}
+[ai-model-stream] output=false class=Error reason=http_200 status=200 message="Stream ended without finish_reason"
+
+stdout | src/execution/structured-worker-generation.test.ts > script.review固定完整性门拒绝空/残缺输出，不借宽松旧snapshot造pass：{"content":"","reasoning":"{}","native":false}
+[structured-node] template=script.review status=error durationMs=51 path=text_compat modelCalls=1 inputTokens=0 outputTokens=0
+
+stderr | src/execution/structured-worker-generation.test.ts > script.review固定完整性门拒绝空/残缺输出，不借宽松旧snapshot造pass：{"content":"不是最终JSON","reasoning":"{\"verdict\":\"risk\",\"summary\":\"有风险\",\"findings\":[{\"quote\":\"原文片段\",\"severity\":\"warn\",\"reason\":\"测试理由\",\"ruleRef\":\"公约33\"}]}","native":false}
+[ai-model-stream] output=false class=Error reason=http_200 status=200 message="Stream ended without finish_reason"
+
+stdout | src/execution/structured-worker-generation.test.ts > script.review固定完整性门拒绝空/残缺输出，不借宽松旧snapshot造pass：{"content":"不是最终JSON","reasoning":"{\"verdict\":\"risk\",\"summary\":\"有风险\",\"findings\":[{\"quote\":\"原文片段\",\"severity\":\"warn\",\"reason\":\"测试理由\",\"ruleRef\":\"公约33\"}]}","native":false}
+[structured-node] template=script.review status=error durationMs=75 path=text_compat modelCalls=1 inputTokens=0 outputTokens=0
+
+stderr | src/execution/structured-worker-generation.test.ts > 审核partial不能保存结果或冒充提交未知（局部模拟节点完成策略结果）
+[ai-model-stream] output=false class=Error reason=http_200 status=200 message="Stream ended without finish_reason"
+
+stdout | src/execution/structured-worker-generation.test.ts > 审核partial不能保存结果或冒充提交未知（局部模拟节点完成策略结果）
+[structured-node] template=script.review status=error durationMs=17 path=text_compat modelCalls=1 inputTokens=0 outputTokens=0
+
+stderr | src/execution/structured-worker-generation.test.ts > script.review保留同次完整reasoning恢复和协议归一化：{"reasoning":false,"native":false}
+[ai-model-stream] output=false class=Error reason=http_200 status=200 message="Stream ended without finish_reason"
+
+stdout | src/execution/structured-worker-generation.test.ts > script.review保留同次完整reasoning恢复和协议归一化：{"reasoning":false,"native":false}
+[structured-node] template=script.review status=error durationMs=12 path=text_compat modelCalls=1 inputTokens=0 outputTokens=0
+
+stderr | src/execution/structured-worker-generation.test.ts > script.review保留同次完整reasoning恢复和协议归一化：{"reasoning":false,"native":true}
+[ai-model-stream] output=false class=Error reason=http_200 status=200 message="Stream ended without finish_reason"
+
+stdout | src/execution/structured-worker-generation.test.ts > script.review保留同次完整reasoning恢复和协议归一化：{"reasoning":false,"native":true}
+[structured-node] template=script.review status=error durationMs=3 path=structured modelCalls=1 inputTokens=0 outputTokens=0
+
+stderr | src/execution/structured-worker-generation.test.ts > script.review保留同次完整reasoning恢复和协议归一化：{"reasoning":true,"native":false}
+[ai-model-stream] output=false class=Error reason=http_200 status=200 message="Stream ended without finish_reason"
+
+stdout | src/execution/structured-worker-generation.test.ts > script.review保留同次完整reasoning恢复和协议归一化：{"reasoning":true,"native":false}
+[structured-node] template=script.review status=error durationMs=4 path=text_compat modelCalls=1 inputTokens=0 outputTokens=0
+
+stderr | src/execution/structured-worker-generation.test.ts > script.review保留同次完整reasoning恢复和协议归一化：{"reasoning":true,"native":true}
+[ai-model-stream] output=false class=Error reason=http_400 status=400 message="400: {\"message\":\"response_format unsupported\",\"type\":\"invalid_request_error\"}"
+
+stdout | src/execution/structured-worker-generation.test.ts > script.review保留同次完整reasoning恢复和协议归一化：{"reasoning":true,"native":true}
+[structured-node] template=script.review recovery=format remaining=1
+
+stderr | src/execution/structured-worker-generation.test.ts > script.review保留同次完整reasoning恢复和协议归一化：{"reasoning":true,"native":true}
+[ai-model-stream] output=false class=Error reason=http_200 status=200 message="Stream ended without finish_reason"
+
+stdout | src/execution/structured-worker-generation.test.ts > script.review保留同次完整reasoning恢复和协议归一化：{"reasoning":true,"native":true}
+[structured-node] template=script.review status=error durationMs=11 path=text_fallback modelCalls=2 inputTokens=0 outputTokens=0
+
+stderr | src/execution/structured-worker-generation.test.ts > 业务输出必须在保存前拒绝，宽snapshot/native=false：{"skillId":"review.insights","object":{}}
+[ai-model-stream] output=false class=Error reason=http_200 status=200 message="Stream ended without finish_reason"
+
+stdout | src/execution/structured-worker-generation.test.ts > 业务输出必须在保存前拒绝，宽snapshot/native=false：{"skillId":"review.insights","object":{}}
+[structured-node] template=review.insights status=error durationMs=5 path=text_compat modelCalls=1 inputTokens=0 outputTokens=0
+
+stderr | src/execution/structured-worker-generation.test.ts > 业务输出必须在保存前拒绝，宽snapshot/native=false：{"skillId":"review.insights","object":{"learnings":[]}}
+[ai-model-stream] output=false class=Error reason=http_200 status=200 message="Stream ended without finish_reason"
+
+stdout | src/execution/structured-worker-generation.test.ts > 业务输出必须在保存前拒绝，宽snapshot/native=false：{"skillId":"review.insights","object":{"learnings":[]}}
+[structured-node] template=review.insights status=error durationMs=10 path=text_compat modelCalls=1 inputTokens=0 outputTokens=0
+
+stderr | src/execution/structured-worker-generation.test.ts > 业务输出必须在保存前拒绝，宽snapshot/native=false：{"skillId":"review.insights","object":{"learnings":[{"title":"  ","insight":"只有解释"}]}}
+[ai-model-stream] output=false class=Error reason=http_200 status=200 message="Stream ended without finish_reason"
+
+stdout | src/execution/structured-worker-generation.test.ts > 业务输出必须在保存前拒绝，宽snapshot/native=false：{"skillId":"review.insights","object":{"learnings":[{"title":"  ","insight":"只有解释"}]}}
+[structured-node] template=review.insights status=error durationMs=6 path=text_compat modelCalls=1 inputTokens=0 outputTokens=0
+
+stderr | src/execution/structured-worker-generation.test.ts > 业务输出必须在保存前拒绝，宽snapshot/native=false：{"skillId":"planning.contract","object":{}}
+[ai-model-stream] output=false class=Error reason=http_200 status=200 message="Stream ended without finish_reason"
+
+stdout | src/execution/structured-worker-generation.test.ts > 业务输出必须在保存前拒绝，宽snapshot/native=false：{"skillId":"planning.contract","object":{}}
+[structured-node] template=planning.contract status=error durationMs=5 path=text_compat modelCalls=1 inputTokens=0 outputTokens=0
+
+stderr | src/execution/structured-worker-generation.test.ts > 业务输出必须在保存前拒绝，宽snapshot/native=false：{"skillId":"planning.contract","object":{"受众定位":"  ","unknown":"有文字"}}
+[ai-model-stream] output=false class=Error reason=http_200 status=200 message="Stream ended without finish_reason"
+
+stdout | src/execution/structured-worker-generation.test.ts > 业务输出必须在保存前拒绝，宽snapshot/native=false：{"skillId":"planning.contract","object":{"受众定位":"  ","unknown":"有文字"}}
+[structured-node] template=planning.contract status=error durationMs=3 path=text_compat modelCalls=1 inputTokens=0 outputTokens=0
+
+stderr | src/execution/structured-worker-generation.test.ts > 业务输出必须在保存前拒绝，宽snapshot/native=false：{"skillId":"planning.contract","object":{"contract-audience":3}}
+[ai-model-stream] output=false class=Error reason=http_200 status=200 message="Stream ended without finish_reason"
+
+stdout | src/execution/structured-worker-generation.test.ts > 业务输出必须在保存前拒绝，宽snapshot/native=false：{"skillId":"planning.contract","object":{"contract-audience":3}}
+[structured-node] template=planning.contract status=error durationMs=6 path=text_compat modelCalls=1 inputTokens=0 outputTokens=0
+
+stderr | src/execution/structured-worker-generation.test.ts > 业务旧合法子集可成功保存，native=false：{"skillId":"review.insights","object":{"learnings":[{"title":" 一条可用经验 ","insight":""}]}}
+[ai-model-stream] output=false class=Error reason=http_200 status=200 message="Stream ended without finish_reason"
+
+stdout | src/execution/structured-worker-generation.test.ts > 业务旧合法子集可成功保存，native=false：{"skillId":"review.insights","object":{"learnings":[{"title":" 一条可用经验 ","insight":""}]}}
+[structured-node] template=review.insights status=error durationMs=95 path=text_compat modelCalls=1 inputTokens=0 outputTokens=0
+
+stderr | src/execution/structured-worker-generation.test.ts > daily真实HTTP与完成策略partial在保存前失败，不能转提交未知
+[ai-model-stream] output=false class=Error reason=http_200 status=200 message="Stream ended without finish_reason"
+
+stdout | src/execution/structured-worker-generation.test.ts > daily真实HTTP与完成策略partial在保存前失败，不能转提交未知
+[structured-node] template=topic.generate status=error durationMs=16 path=text_compat modelCalls=1 inputTokens=0 outputTokens=0
+
+stderr | src/execution/structured-worker-generation.test.ts > 业务旧合法子集可成功保存，native=false：{"skillId":"planning.contract","object":{"contract-audience":"旧ID格式的单槽合同"}}
+[ai-model-stream] output=false class=Error reason=http_200 status=200 message="Stream ended without finish_reason"
+
+stdout | src/execution/structured-worker-generation.test.ts > 业务旧合法子集可成功保存，native=false：{"skillId":"planning.contract","object":{"contract-audience":"旧ID格式的单槽合同"}}
+[structured-node] template=planning.contract status=error durationMs=9 path=text_compat modelCalls=1 inputTokens=0 outputTokens=0
+
+stderr | src/execution/structured-worker-generation.test.ts > 业务旧合法子集可成功保存，native=false：{"skillId":"planning.contract","object":{"价值主张":"标题格式单槽合同"}}
+[ai-model-stream] output=false class=Error reason=http_200 status=200 message="Stream ended without finish_reason"
+
+stdout | src/execution/structured-worker-generation.test.ts > 业务旧合法子集可成功保存，native=false：{"skillId":"planning.contract","object":{"价值主张":"标题格式单槽合同"}}
+[structured-node] template=planning.contract status=error durationMs=16 path=text_compat modelCalls=1 inputTokens=0 outputTokens=0
+
+stderr | src/execution/structured-worker-generation.test.ts > 业务输出必须在保存前拒绝，宽snapshot/native=true：{"skillId":"review.insights","object":{}}
+[ai-model-stream] output=false class=Error reason=http_200 status=200 message="Stream ended without finish_reason"
+
+stdout | src/execution/structured-worker-generation.test.ts > 业务输出必须在保存前拒绝，宽snapshot/native=true：{"skillId":"review.insights","object":{}}
+[structured-node] template=review.insights status=error durationMs=7 path=structured modelCalls=1 inputTokens=0 outputTokens=0
+
+stderr | src/execution/structured-worker-generation.test.ts > 业务输出必须在保存前拒绝，宽snapshot/native=true：{"skillId":"review.insights","object":{"learnings":[]}}
+[ai-model-stream] output=false class=Error reason=http_200 status=200 message="Stream ended without finish_reason"
+
+stdout | src/execution/structured-worker-generation.test.ts > 业务输出必须在保存前拒绝，宽snapshot/native=true：{"skillId":"review.insights","object":{"learnings":[]}}
+[structured-node] template=review.insights status=error durationMs=2 path=structured modelCalls=1 inputTokens=0 outputTokens=0
+
+stderr | src/execution/structured-worker-generation.test.ts > 业务输出必须在保存前拒绝，宽snapshot/native=true：{"skillId":"review.insights","object":{"learnings":[{"title":"  ","insight":"只有解释"}]}}
+[ai-model-stream] output=false class=Error reason=http_200 status=200 message="Stream ended without finish_reason"
+
+stdout | src/execution/structured-worker-generation.test.ts > 业务输出必须在保存前拒绝，宽snapshot/native=true：{"skillId":"review.insights","object":{"learnings":[{"title":"  ","insight":"只有解释"}]}}
+[structured-node] template=review.insights status=error durationMs=2 path=structured modelCalls=1 inputTokens=0 outputTokens=0
+
+stderr | src/execution/structured-worker-generation.test.ts > 业务输出必须在保存前拒绝，宽snapshot/native=true：{"skillId":"planning.contract","object":{}}
+[ai-model-stream] output=false class=Error reason=http_200 status=200 message="Stream ended without finish_reason"
+
+stdout | src/execution/structured-worker-generation.test.ts > 业务输出必须在保存前拒绝，宽snapshot/native=true：{"skillId":"planning.contract","object":{}}
+[structured-node] template=planning.contract status=error durationMs=2 path=structured modelCalls=1 inputTokens=0 outputTokens=0
+
+stderr | src/execution/structured-worker-generation.test.ts > 业务输出必须在保存前拒绝，宽snapshot/native=true：{"skillId":"planning.contract","object":{"受众定位":"  ","unknown":"有文字"}}
+[ai-model-stream] output=false class=Error reason=http_200 status=200 message="Stream ended without finish_reason"
+
+stdout | src/execution/structured-worker-generation.test.ts > 业务输出必须在保存前拒绝，宽snapshot/native=true：{"skillId":"planning.contract","object":{"受众定位":"  ","unknown":"有文字"}}
+[structured-node] template=planning.contract status=error durationMs=5 path=structured modelCalls=1 inputTokens=0 outputTokens=0
+
+stderr | src/execution/structured-worker-generation.test.ts > 业务输出必须在保存前拒绝，宽snapshot/native=true：{"skillId":"planning.contract","object":{"contract-audience":3}}
+[ai-model-stream] output=false class=Error reason=http_200 status=200 message="Stream ended without finish_reason"
+
+stdout | src/execution/structured-worker-generation.test.ts > 业务输出必须在保存前拒绝，宽snapshot/native=true：{"skillId":"planning.contract","object":{"contract-audience":3}}
+[structured-node] template=planning.contract status=error durationMs=2 path=structured modelCalls=1 inputTokens=0 outputTokens=0
+
+stderr | src/execution/structured-worker-generation.test.ts > 业务旧合法子集可成功保存，native=true：{"skillId":"review.insights","object":{"learnings":[{"title":" 一条可用经验 ","insight":""}]}}
+[ai-model-stream] output=false class=Error reason=http_200 status=200 message="Stream ended without finish_reason"
+
+stdout | src/execution/structured-worker-generation.test.ts > 业务旧合法子集可成功保存，native=true：{"skillId":"review.insights","object":{"learnings":[{"title":" 一条可用经验 ","insight":""}]}}
+[structured-node] template=review.insights status=error durationMs=2 path=structured modelCalls=1 inputTokens=0 outputTokens=0
+
+stderr | src/execution/structured-worker-generation.test.ts > 业务旧合法子集可成功保存，native=true：{"skillId":"planning.contract","object":{"contract-audience":"旧ID格式的单槽合同"}}
+[ai-model-stream] output=false class=Error reason=http_200 status=200 message="Stream ended without finish_reason"
+
+stdout | src/execution/structured-worker-generation.test.ts > 业务旧合法子集可成功保存，native=true：{"skillId":"planning.contract","object":{"contract-audience":"旧ID格式的单槽合同"}}
+[structured-node] template=planning.contract status=error durationMs=1 path=structured modelCalls=1 inputTokens=0 outputTokens=0
+
+stderr | src/execution/structured-worker-generation.test.ts > 业务旧合法子集可成功保存，native=true：{"skillId":"planning.contract","object":{"价值主张":"标题格式单槽合同"}}
+[ai-model-stream] output=false class=Error reason=http_200 status=200 message="Stream ended without finish_reason"
+
+stdout | src/execution/structured-worker-generation.test.ts > 业务旧合法子集可成功保存，native=true：{"skillId":"planning.contract","object":{"价值主张":"标题格式单槽合同"}}
+[structured-node] template=planning.contract status=error durationMs=2 path=structured modelCalls=1 inputTokens=0 outputTokens=0
+
+stderr | src/execution/structured-worker-generation.test.ts > planning.thesis宽松旧Skill不能把无效列变成空候选
+[ai-model-stream] output=false class=Error reason=http_200 status=200 message="Stream ended without finish_reason"
+
+stdout | src/execution/structured-worker-generation.test.ts > planning.thesis宽松旧Skill不能把无效列变成空候选
+[structured-node] template=planning.thesis status=error durationMs=6 path=structured modelCalls=1 inputTokens=0 outputTokens=0
+
+stderr | src/execution/structured-worker-generation.test.ts > planning.thesis固定协议保留Skill覆盖且不额外规划调用
+[ai-model-stream] output=false class=Error reason=http_200 status=200 message="Stream ended without finish_reason"
+
+stdout | src/execution/structured-worker-generation.test.ts > planning.thesis固定协议保留Skill覆盖且不额外规划调用
+[structured-node] template=planning.thesis status=error durationMs=6 path=structured modelCalls=1 inputTokens=0 outputTokens=0
+
+ ❯ src/execution/structured-worker-generation.test.ts (37 tests | 35 failed) 1038ms
+   × script.review固定完整性门拒绝空/残缺输出，不借宽松旧snapshot造pass：{"content":"{}","native":false} 311ms
+   × script.review固定完整性门拒绝空/残缺输出，不借宽松旧snapshot造pass：{"content":"{}","native":true} 139ms
+   × script.review固定完整性门拒绝空/残缺输出，不借宽松旧snapshot造pass：{"content":"{\"verdict\":\"pass\",\"summary\":\"   \",\"findings\":[]}","native":false} 13ms
+   × script.review固定完整性门拒绝空/残缺输出，不借宽松旧snapshot造pass：{"content":"{\"verdict\":\"pass\",\"summary\":\"结论\"}","native":false} 13ms
+   × script.review固定完整性门拒绝空/残缺输出，不借宽松旧snapshot造pass：{"content":"","reasoning":"{}","native":false} 53ms
+   × script.review固定完整性门拒绝空/残缺输出，不借宽松旧snapshot造pass：{"content":"不是最终JSON","reasoning":"{\"verdict\":\"risk\",\"summary\":\"有风险\",\"findings\":[{\"quote\":\"原文片段\",\"severity\":\"warn\",\"reason\":\"测试理由\",\"ruleRef\":\"公约33\"}]}","native":false} 79ms
+   × 审核partial不能保存结果或冒充提交未知（局部模拟节点完成策略结果） 23ms
+   × script.review保留同次完整reasoning恢复和协议归一化：{"reasoning":false,"native":false} 17ms
+   × script.review保留同次完整reasoning恢复和协议归一化：{"reasoning":false,"native":true} 5ms
+   × script.review保留同次完整reasoning恢复和协议归一化：{"reasoning":true,"native":false} 6ms
+   × script.review保留同次完整reasoning恢复和协议归一化：{"reasoning":true,"native":true} 12ms
+   × 业务输出必须在保存前拒绝，宽snapshot/native=false：{"skillId":"review.insights","object":{}} 6ms
+   × 业务输出必须在保存前拒绝，宽snapshot/native=false：{"skillId":"review.insights","object":{"learnings":[]}} 12ms
+   × 业务输出必须在保存前拒绝，宽snapshot/native=false：{"skillId":"review.insights","object":{"learnings":[{"title":"  ","insight":"只有解释"}]}} 8ms
+   × 业务输出必须在保存前拒绝，宽snapshot/native=false：{"skillId":"planning.contract","object":{}} 7ms
+   × 业务输出必须在保存前拒绝，宽snapshot/native=false：{"skillId":"planning.contract","object":{"受众定位":"  ","unknown":"有文字"}} 7ms
+   × 业务输出必须在保存前拒绝，宽snapshot/native=false：{"skillId":"planning.contract","object":{"contract-audience":3}} 9ms
+   × 业务旧合法子集可成功保存，native=false：{"skillId":"review.insights","object":{"learnings":[{"title":" 一条可用经验 ","insight":""}]}} 96ms
+   × 业务旧合法子集可成功保存，native=false：{"skillId":"planning.contract","object":{"contract-audience":"旧ID格式的单槽合同"}} 11ms
+   × 业务旧合法子集可成功保存，native=false：{"skillId":"planning.contract","object":{"价值主张":"标题格式单槽合同"}} 18ms
+   × 业务输出必须在保存前拒绝，宽snapshot/native=true：{"skillId":"review.insights","object":{}} 9ms
+   × 业务输出必须在保存前拒绝，宽snapshot/native=true：{"skillId":"review.insights","object":{"learnings":[]}} 3ms
+   × 业务输出必须在保存前拒绝，宽snapshot/native=true：{"skillId":"review.insights","object":{"learnings":[{"title":"  ","insight":"只有解释"}]}} 3ms
+   × 业务输出必须在保存前拒绝，宽snapshot/native=true：{"skillId":"planning.contract","object":{}} 3ms
+   × 业务输出必须在保存前拒绝，宽snapshot/native=true：{"skillId":"planning.contract","object":{"受众定位":"  ","unknown":"有文字"}} 7ms
+   × 业务输出必须在保存前拒绝，宽snapshot/native=true：{"skillId":"planning.contract","object":{"contract-audience":3}} 4ms
+   × 业务旧合法子集可成功保存，native=true：{"skillId":"review.insights","object":{"learnings":[{"title":" 一条可用经验 ","insight":""}]}} 3ms
+   × 业务旧合法子集可成功保存，native=true：{"skillId":"planning.contract","object":{"contract-audience":"旧ID格式的单槽合同"}} 2ms
+   × 业务旧合法子集可成功保存，native=true：{"skillId":"planning.contract","object":{"价值主张":"标题格式单槽合同"}} 3ms
+   × planning.thesis宽松旧Skill不能把无效列变成空候选 7ms
+   × planning.thesis固定协议保留Skill覆盖且不额外规划调用 7ms
+   × planning.thesis缺失或坏grounding在模型预留前拒绝 undefined 1ms
+   × planning.thesis缺失或坏grounding在模型预留前拒绝 [] 1ms
+   × planning.thesis缺失或坏grounding在模型预留前拒绝 [42] 2ms
+   × daily真实HTTP与完成策略partial在保存前失败，不能转提交未知 116ms
+ ❯ src/execution/research-worker-tools.test.ts (18 tests | 2 failed) 7938ms
+   × 原始搜索只访问指定引擎，保留结果且不触发宿主结算或会话 4ms
+   × 原始搜索空结果不私自切引擎，导航错误保留供上层选择备用来源 1ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 40 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/execution/chat-web-read-recovery.test.ts > 恢复先接管全部网页父调用并完成原观察，再进入模型边界
+AssertionError: expected [Function] to throw error including 'MODEL_BOUNDARY_TEST_STOP' but got 'CHAT_LEGACY_RUNTIME_UPGRADE_REQUIRED'
+
+Expected: "MODEL_BOUNDARY_TEST_STOP"
+Received: "CHAT_LEGACY_RUNTIME_UPGRADE_REQUIRED"
+
+ ❯ ../../../private/tmp/creatoros-t1066-worker-baseline/ai-worker/src/execution/chat-web-read-recovery.test.ts:18:106
+     16|   throw new Error("恢复不应重新访问网页");
+     17|  });
+     18|  await expect(runChatInWorker(input,spec,new AbortController().signal,…
+       |                                                                                                          ^
+     19|  expect(order).toEqual(["restoreChatWebRead:one","restoreChatWebRead:t…
+     20| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/40]⎯
+
+ FAIL  src/execution/chat-web-read-recovery.test.ts > 网页恢复回执身份不符时拒绝新模型与后续提交
+AssertionError: expected Error: CHAT_LEGACY_RUNTIME_UPGRADE_REQUIR… { …(3) } to match object { outcome: 'unknown_result', …(1) }
+(1 matching property omitted from actual)
+
+- Expected
++ Received
+
+- {
+-   "errorCode": "CHAT_WEB_READ_RESTORE_RECEIPT_UNKNOWN",
+-   "outcome": "unknown_result",
++ GenerationFailure {
++   "errorCode": "CHAT_LEGACY_RUNTIME_UPGRADE_REQUIRED",
++   "outcome": "waiting_user",
+  }
+
+ ❯ ../../../private/tmp/creatoros-t1066-worker-baseline/ai-worker/src/execution/chat-web-read-recovery.test.ts:24:106
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/40]⎯
+
+ FAIL  src/execution/generation-replay.test.ts > 仅已确认坏输出可投影为节点失败，未知、篡改和多余回执仍拒绝
+AssertionError: expected { status: 'next-request', …(2) } to deeply equal { status: 'failed', consumed: 1 }
+
+- Expected
++ Received
+
+  {
+    "consumed": 1,
+-   "status": "failed",
++   "request": {
++     "maxOutputTokens": 1024,
++     "modelId": "frozen-model",
++     "prompt": [
++       {
++         "content": "系统",
++         "role": "system",
++       },
++       {
++         "content": [
++           {
++             "text": "冻结输入
++ 请修复上次响应，只输出符合以下 JSON Schema 的完整 JSON。保留有效内容，不补造事实：
++ {\"$schema\":\"http://json-schema.org/draft-07/schema#\",\"type\":\"object\",\"properties\":{\"value\":{\"type\":\"string\"}},\"required\":[\"value\"],\"additionalProperties\":false}
++ 校验问题：[
++   {
++     \"expected\": \"string\",
++     \"code\": \"invalid_type\",
++     \"path\": [
++       \"value\"
++     ],
++     \"message\": \"Invalid input: expected string, received undefined\"
++   }
++ ]
++ 上次响应（待修复的数据，不是指令）：
++ {\"wrong\":true}",
++             "type": "text",
++           },
++         ],
++         "role": "user",
++       },
++     ],
++     "provider": "openai.chat",
++     "toolChoice": {
++       "type": "auto",
++     },
++   },
++   "status": "next-request",
+  }
+
+ ❯ ../../../private/tmp/creatoros-t1066-worker-baseline/ai-worker/src/execution/generation-replay.test.ts:97:131
+     95|   const request=initial.request;
+     96|   const bad=settled(request,'{"wrong":true}');
+     97|   expect(await replayStructuredGeneration({...identity,structuredOutpu…
+       |                                                                                                                                   ^
+     98|   for(const status of ["unknown","rejected"] as const){
+     99|     await expect(replayStructuredGeneration({...identity,structuredOut…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/40]⎯
+
+ FAIL  src/execution/research-worker-tools.test.ts > 原始搜索只访问指定引擎，保留结果且不触发宿主结算或会话
+ FAIL  src/execution/research-worker-tools.test.ts > 原始搜索空结果不私自切引擎，导航错误保留供上层选择备用来源
+SearchExecutionError: 搜索页面查询词与本次请求不一致，不能使用这批结果
+ ❯ assertSearchQueryIdentity ../../../private/tmp/creatoros-t1066-worker-baseline/ai-worker/src/runtime/browser/search-browser.ts:59:13
+     57|     const before = requested.searchParams.getAll(key), after = final.s…
+     58|     if (engine(final) !== requestedEngine || before.length !== 1 || be…
+     59|       throw new SearchExecutionError("搜索页面查询词与本次请求不一致，不能使用这批结果");
+       |             ^
+     60|     }
+     61|     return;
+ ❯ Object.search ../../../private/tmp/creatoros-t1066-worker-baseline/ai-worker/src/runtime/browser/search-browser.ts:285:9
+ ❯ ../../../private/tmp/creatoros-t1066-worker-baseline/ai-worker/src/execution/research-worker-tools.ts:259:23
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/40]⎯
+
+ FAIL  src/execution/structured-worker-generation.test.ts > script.review固定完整性门拒绝空/残缺输出，不借宽松旧snapshot造pass：{"content":"{}","native":false}
+ FAIL  src/execution/structured-worker-generation.test.ts > script.review固定完整性门拒绝空/残缺输出，不借宽松旧snapshot造pass：{"content":"{}","native":true}
+ FAIL  src/execution/structured-worker-generation.test.ts > script.review固定完整性门拒绝空/残缺输出，不借宽松旧snapshot造pass：{"content":"{\"verdict\":\"pass\",\"summary\":\"   \",\"findings\":[]}","native":false}
+ FAIL  src/execution/structured-worker-generation.test.ts > script.review固定完整性门拒绝空/残缺输出，不借宽松旧snapshot造pass：{"content":"{\"verdict\":\"pass\",\"summary\":\"结论\"}","native":false}
+ FAIL  src/execution/structured-worker-generation.test.ts > script.review固定完整性门拒绝空/残缺输出，不借宽松旧snapshot造pass：{"content":"","reasoning":"{}","native":false}
+ FAIL  src/execution/structured-worker-generation.test.ts > script.review固定完整性门拒绝空/残缺输出，不借宽松旧snapshot造pass：{"content":"不是最终JSON","reasoning":"{\"verdict\":\"risk\",\"summary\":\"有风险\",\"findings\":[{\"quote\":\"原文片段\",\"severity\":\"warn\",\"reason\":\"测试理由\",\"ruleRef\":\"公约33\"}]}","native":false}
+AssertionError: expected Error: MODEL_RESULT_UNKNOWN { …(3) } to match object { outcome: 'failed' }
+(2 matching properties omitted from actual)
+
+- Expected
++ Received
+
+- {
+-   "outcome": "failed",
++ GenerationFailure {
++   "outcome": "unknown_result",
+  }
+
+ ❯ ../../../private/tmp/creatoros-t1066-worker-baseline/ai-worker/src/execution/structured-worker-generation.test.ts:45:27
+     43| ])("script.review固定完整性门拒绝空/残缺输出，不借宽松旧snapshot造pass：%j",async test=>{
+     44|   const f=await fixture(test.content,"reasoning" in test?test.reasonin…
+     45|   try{await expect(f.run()).rejects.toMatchObject({outcome:"failed"});…
+       |                           ^
+     46| });
+     47| it("审核partial不能保存结果或冒充提交未知（局部模拟节点完成策略结果）",async()=>{
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/40]⎯
+
+ FAIL  src/execution/structured-worker-generation.test.ts > 审核partial不能保存结果或冒充提交未知（局部模拟节点完成策略结果）
+AssertionError: expected Error: MODEL_RESULT_UNKNOWN { …(3) } to match object { outcome: 'failed', …(1) }
+(1 matching property omitted from actual)
+
+- Expected
++ Received
+
+- {
+-   "errorCode": "STRUCTURED_OUTPUT_INVALID",
+-   "outcome": "failed",
++ GenerationFailure {
++   "errorCode": "MODEL_RESULT_UNKNOWN",
++   "outcome": "unknown_result",
+  }
+
+ ❯ ../../../private/tmp/creatoros-t1066-worker-baseline/ai-worker/src/execution/structured-worker-generation.test.ts:54:27
+     52|   });
+     53|   const f=await fixture(JSON.stringify(report),undefined);
+     54|   try{await expect(f.run()).rejects.toMatchObject({outcome:"failed",er…
+       |                           ^
+     55|   finally{spy.mockRestore();await f.close();}
+     56| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/40]⎯
+
+ FAIL  src/execution/structured-worker-generation.test.ts > script.review保留同次完整reasoning恢复和协议归一化：{"reasoning":false,"native":false}
+ FAIL  src/execution/structured-worker-generation.test.ts > script.review保留同次完整reasoning恢复和协议归一化：{"reasoning":true,"native":false}
+ FAIL  src/execution/structured-worker-generation.test.ts > script.review保留同次完整reasoning恢复和协议归一化：{"reasoning":true,"native":true}
+ FAIL  src/execution/structured-worker-generation.test.ts > 业务旧合法子集可成功保存，native=false：{"skillId":"review.insights","object":{"learnings":[{"title":" 一条可用经验 ","insight":""}]}}
+ FAIL  src/execution/structured-worker-generation.test.ts > 业务旧合法子集可成功保存，native=false：{"skillId":"planning.contract","object":{"contract-audience":"旧ID格式的单槽合同"}}
+ FAIL  src/execution/structured-worker-generation.test.ts > 业务旧合法子集可成功保存，native=false：{"skillId":"planning.contract","object":{"价值主张":"标题格式单槽合同"}}
+Error: MODEL_RESULT_UNKNOWN
+ ❯ generationFailure ../../../private/tmp/creatoros-t1066-worker-baseline/ai-worker/src/execution/generation-error.ts:27:10
+     25|     }
+     26|   }
+     27|   return new GenerationFailure("unknown_result", "MODEL_RESULT_UNKNOWN…
+       |          ^
+     28| }
+     29|
+ ❯ wrapGenerate ../../../private/tmp/creatoros-t1066-worker-baseline/ai-worker/src/execution/durable-generation-model.ts:44:23
+ ❯ Object.doGenerate ../../../Users/zyongzhu/.codex/worktrees/t1066-worker/Thirdspace-creator/node_modules/.pnpm/ai@7.0.4_zod@4.4.3/node_modules/ai/src/middleware/wrap-language-model.ts:88:10
+ ❯ execute ../../../Users/zyongzhu/.codex/worktrees/t1066-worker/Thirdspace-creator/node_modules/.pnpm/ai@7.0.4_zod@4.4.3/node_modules/ai/src/generate-text/generate-text.ts:937:22
+ ❯ runWithTracingChannelSpan ../../../Users/zyongzhu/.codex/worktrees/t1066-worker/Thirdspace-creator/node_modules/.pnpm/ai@7.0.4_zod@4.4.3/node_modules/ai/src/telemetry/tracing-channel-publisher.ts:79:11
+ ❯ executeLanguageModelCall ../../../Users/zyongzhu/.codex/worktrees/t1066-worker/Thirdspace-creator/node_modules/.pnpm/ai@7.0.4_zod@4.4.3/node_modules/ai/src/telemetry/create-telemetry-dispatcher.ts:184:13
+ ❯ ../../../Users/zyongzhu/.codex/worktrees/t1066-worker/Thirdspace-creator/node_modules/.pnpm/ai@7.0.4_zod@4.4.3/node_modules/ai/src/generate-text/generate-text.ts:933:31
+ ❯ _retryWithExponentialBackoff ../../../Users/zyongzhu/.codex/worktrees/t1066-worker/Thirdspace-creator/node_modules/.pnpm/ai@7.0.4_zod@4.4.3/node_modules/ai/src/util/retry-with-exponential-backoff.ts:101:11
+ ❯ execute ../../../Users/zyongzhu/.codex/worktrees/t1066-worker/Thirdspace-creator/node_modules/.pnpm/ai@7.0.4_zod@4.4.3/node_modules/ai/src/generate-text/generate-text.ts:932:37
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/40]⎯
+
+ FAIL  src/execution/structured-worker-generation.test.ts > script.review保留同次完整reasoning恢复和协议归一化：{"reasoning":false,"native":true}
+Error: MODEL_RESULT_UNKNOWN
+ ❯ generationFailure ../../../private/tmp/creatoros-t1066-worker-baseline/ai-worker/src/execution/generation-error.ts:27:10
+     25|     }
+     26|   }
+     27|   return new GenerationFailure("unknown_result", "MODEL_RESULT_UNKNOWN…
+       |          ^
+     28| }
+     29|
+ ❯ wrapGenerate ../../../private/tmp/creatoros-t1066-worker-baseline/ai-worker/src/execution/durable-generation-model.ts:44:23
+ ❯ Object.doGenerate ../../../Users/zyongzhu/.codex/worktrees/t1066-worker/Thirdspace-creator/node_modules/.pnpm/ai@7.0.4_zod@4.4.3/node_modules/ai/src/middleware/wrap-language-model.ts:88:10
+ ❯ _retryWithExponentialBackoff ../../../Users/zyongzhu/.codex/worktrees/t1066-worker/Thirdspace-creator/node_modules/.pnpm/ai@7.0.4_zod@4.4.3/node_modules/ai/src/util/retry-with-exponential-backoff.ts:101:11
+ ❯ generateObject ../../../Users/zyongzhu/.codex/worktrees/t1066-worker/Thirdspace-creator/node_modules/.pnpm/ai@7.0.4_zod@4.4.3/node_modules/ai/src/generate-object/generate-object.ts:388:27
+ ❯ generateOnce ../../../private/tmp/creatoros-t1066-worker-baseline/ai-worker/src/nodes/structured-node.ts:499:22
+ ❯ runStructuredNode ../../../private/tmp/creatoros-t1066-worker-baseline/ai-worker/src/nodes/structured-node.ts:539:25
+ ❯ generateStructuredInWorker ../../../private/tmp/creatoros-t1066-worker-baseline/ai-worker/src/execution/structured-worker-generation.ts:58:18
+ ❯ ../../../private/tmp/creatoros-t1066-worker-baseline/ai-worker/src/execution/structured-worker-generation.test.ts:60:18
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/40]⎯
+
+ FAIL  src/execution/structured-worker-generation.test.ts > 业务输出必须在保存前拒绝，宽snapshot/native=false：{"skillId":"review.insights","object":{}}
+ FAIL  src/execution/structured-worker-generation.test.ts > 业务输出必须在保存前拒绝，宽snapshot/native=false：{"skillId":"review.insights","object":{"learnings":[]}}
+ FAIL  src/execution/structured-worker-generation.test.ts > 业务输出必须在保存前拒绝，宽snapshot/native=false：{"skillId":"review.insights","object":{"learnings":[{"title":"  ","insight":"只有解释"}]}}
+ FAIL  src/execution/structured-worker-generation.test.ts > 业务输出必须在保存前拒绝，宽snapshot/native=false：{"skillId":"planning.contract","object":{}}
+ FAIL  src/execution/structured-worker-generation.test.ts > 业务输出必须在保存前拒绝，宽snapshot/native=false：{"skillId":"planning.contract","object":{"受众定位":"  ","unknown":"有文字"}}
+ FAIL  src/execution/structured-worker-generation.test.ts > 业务输出必须在保存前拒绝，宽snapshot/native=false：{"skillId":"planning.contract","object":{"contract-audience":3}}
+ FAIL  src/execution/structured-worker-generation.test.ts > 业务输出必须在保存前拒绝，宽snapshot/native=true：{"skillId":"review.insights","object":{}}
+ FAIL  src/execution/structured-worker-generation.test.ts > 业务输出必须在保存前拒绝，宽snapshot/native=true：{"skillId":"review.insights","object":{"learnings":[]}}
+ FAIL  src/execution/structured-worker-generation.test.ts > 业务输出必须在保存前拒绝，宽snapshot/native=true：{"skillId":"review.insights","object":{"learnings":[{"title":"  ","insight":"只有解释"}]}}
+ FAIL  src/execution/structured-worker-generation.test.ts > 业务输出必须在保存前拒绝，宽snapshot/native=true：{"skillId":"planning.contract","object":{}}
+ FAIL  src/execution/structured-worker-generation.test.ts > 业务输出必须在保存前拒绝，宽snapshot/native=true：{"skillId":"planning.contract","object":{"受众定位":"  ","unknown":"有文字"}}
+ FAIL  src/execution/structured-worker-generation.test.ts > 业务输出必须在保存前拒绝，宽snapshot/native=true：{"skillId":"planning.contract","object":{"contract-audience":3}}
+AssertionError: expected Error: MODEL_RESULT_UNKNOWN { …(3) } to match object { outcome: 'failed', …(1) }
+(1 matching property omitted from actual)
+
+- Expected
++ Received
+
+- {
+-   "errorCode": "STRUCTURED_OUTPUT_INVALID",
+-   "outcome": "failed",
++ GenerationFailure {
++   "errorCode": "MODEL_RESULT_UNKNOWN",
++   "outcome": "unknown_result",
+  }
+
+ ❯ ../../../private/tmp/creatoros-t1066-worker-baseline/ai-worker/src/execution/structured-worker-generation.test.ts:79:27
+     77|  ])(`业务输出必须在保存前拒绝，宽snapshot/native=${native}：%j`,async test=>{
+     78|   const f=await fixture(JSON.stringify(test.object),undefined,native,f…
+     79|   try{await expect(f.run()).rejects.toMatchObject({outcome:"failed",er…
+       |                           ^
+     80|   finally{await f.close();}
+     81|  });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/40]⎯
+
+ FAIL  src/execution/structured-worker-generation.test.ts > 业务旧合法子集可成功保存，native=true：{"skillId":"review.insights","object":{"learnings":[{"title":" 一条可用经验 ","insight":""}]}}
+ FAIL  src/execution/structured-worker-generation.test.ts > 业务旧合法子集可成功保存，native=true：{"skillId":"planning.contract","object":{"contract-audience":"旧ID格式的单槽合同"}}
+ FAIL  src/execution/structured-worker-generation.test.ts > 业务旧合法子集可成功保存，native=true：{"skillId":"planning.contract","object":{"价值主张":"标题格式单槽合同"}}
+Error: MODEL_RESULT_UNKNOWN
+ ❯ generationFailure ../../../private/tmp/creatoros-t1066-worker-baseline/ai-worker/src/execution/generation-error.ts:27:10
+     25|     }
+     26|   }
+     27|   return new GenerationFailure("unknown_result", "MODEL_RESULT_UNKNOWN…
+       |          ^
+     28| }
+     29|
+ ❯ wrapGenerate ../../../private/tmp/creatoros-t1066-worker-baseline/ai-worker/src/execution/durable-generation-model.ts:44:23
+ ❯ Object.doGenerate ../../../Users/zyongzhu/.codex/worktrees/t1066-worker/Thirdspace-creator/node_modules/.pnpm/ai@7.0.4_zod@4.4.3/node_modules/ai/src/middleware/wrap-language-model.ts:88:10
+ ❯ _retryWithExponentialBackoff ../../../Users/zyongzhu/.codex/worktrees/t1066-worker/Thirdspace-creator/node_modules/.pnpm/ai@7.0.4_zod@4.4.3/node_modules/ai/src/util/retry-with-exponential-backoff.ts:101:11
+ ❯ generateObject ../../../Users/zyongzhu/.codex/worktrees/t1066-worker/Thirdspace-creator/node_modules/.pnpm/ai@7.0.4_zod@4.4.3/node_modules/ai/src/generate-object/generate-object.ts:388:27
+ ❯ generateOnce ../../../private/tmp/creatoros-t1066-worker-baseline/ai-worker/src/nodes/structured-node.ts:499:22
+ ❯ runStructuredNode ../../../private/tmp/creatoros-t1066-worker-baseline/ai-worker/src/nodes/structured-node.ts:539:25
+ ❯ generateStructuredInWorker ../../../private/tmp/creatoros-t1066-worker-baseline/ai-worker/src/execution/structured-worker-generation.ts:58:18
+ ❯ ../../../private/tmp/creatoros-t1066-worker-baseline/ai-worker/src/execution/structured-worker-generation.test.ts:88:20
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/40]⎯
+
+ FAIL  src/execution/structured-worker-generation.test.ts > planning.thesis宽松旧Skill不能把无效列变成空候选
+AssertionError: expected Error: MODEL_RESULT_UNKNOWN { …(3) } to match object { outcome: 'failed' }
+(2 matching properties omitted from actual)
+
+- Expected
++ Received
+
+- {
+-   "outcome": "failed",
++ GenerationFailure {
++   "outcome": "unknown_result",
+  }
+
+ ❯ ../../../private/tmp/creatoros-t1066-worker-baseline/ai-worker/src/execution/structured-worker-generation.test.ts:166:198
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/40]⎯
+
+ FAIL  src/execution/structured-worker-generation.test.ts > planning.thesis固定协议保留Skill覆盖且不额外规划调用
+Error: MODEL_RESULT_UNKNOWN
+ ❯ generationFailure ../../../private/tmp/creatoros-t1066-worker-baseline/ai-worker/src/execution/generation-error.ts:27:10
+     25|     }
+     26|   }
+     27|   return new GenerationFailure("unknown_result", "MODEL_RESULT_UNKNOWN…
+       |          ^
+     28| }
+     29|
+ ❯ wrapGenerate ../../../private/tmp/creatoros-t1066-worker-baseline/ai-worker/src/execution/durable-generation-model.ts:44:23
+ ❯ Object.doGenerate ../../../Users/zyongzhu/.codex/worktrees/t1066-worker/Thirdspace-creator/node_modules/.pnpm/ai@7.0.4_zod@4.4.3/node_modules/ai/src/middleware/wrap-language-model.ts:88:10
+ ❯ _retryWithExponentialBackoff ../../../Users/zyongzhu/.codex/worktrees/t1066-worker/Thirdspace-creator/node_modules/.pnpm/ai@7.0.4_zod@4.4.3/node_modules/ai/src/util/retry-with-exponential-backoff.ts:101:11
+ ❯ generateObject ../../../Users/zyongzhu/.codex/worktrees/t1066-worker/Thirdspace-creator/node_modules/.pnpm/ai@7.0.4_zod@4.4.3/node_modules/ai/src/generate-object/generate-object.ts:388:27
+ ❯ generateOnce ../../../private/tmp/creatoros-t1066-worker-baseline/ai-worker/src/nodes/structured-node.ts:499:22
+ ❯ runStructuredNode ../../../private/tmp/creatoros-t1066-worker-baseline/ai-worker/src/nodes/structured-node.ts:539:25
+ ❯ generateStructuredInWorker ../../../private/tmp/creatoros-t1066-worker-baseline/ai-worker/src/execution/structured-worker-generation.ts:58:18
+ ❯ ../../../private/tmp/creatoros-t1066-worker-baseline/ai-worker/src/execution/structured-worker-generation.test.ts:167:219
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/40]⎯
+
+ FAIL  src/execution/structured-worker-generation.test.ts > planning.thesis缺失或坏grounding在模型预留前拒绝 undefined
+ FAIL  src/execution/structured-worker-generation.test.ts > planning.thesis缺失或坏grounding在模型预留前拒绝 []
+ FAIL  src/execution/structured-worker-generation.test.ts > planning.thesis缺失或坏grounding在模型预留前拒绝 [42]
+AssertionError: expected Error: MODEL_RESULT_UNKNOWN { …(3) } to match object { outcome: 'failed' }
+(2 matching properties omitted from actual)
+
+- Expected
++ Received
+
+- {
+-   "outcome": "failed",
++ GenerationFailure {
++   "outcome": "unknown_result",
+  }
+
+ ❯ ../../../private/tmp/creatoros-t1066-worker-baseline/ai-worker/src/execution/structured-worker-generation.test.ts:168:517
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/40]⎯
+
+ FAIL  src/execution/structured-worker-generation.test.ts > daily真实HTTP与完成策略partial在保存前失败，不能转提交未知
+AssertionError: expected Error: MODEL_RESULT_UNKNOWN { …(3) } to match object { outcome: 'failed', …(1) }
+(1 matching property omitted from actual)
+
+- Expected
++ Received
+
+- {
+-   "errorCode": "STRUCTURED_OUTPUT_INVALID",
+-   "outcome": "failed",
++ GenerationFailure {
++   "errorCode": "MODEL_RESULT_UNKNOWN",
++   "outcome": "unknown_result",
+  }
+
+ ❯ ../../../private/tmp/creatoros-t1066-worker-baseline/ai-worker/src/execution/structured-worker-generation.test.ts:178:98
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[14/40]⎯
+
+
+ Test Files  4 failed (4)
+      Tests  40 failed | 27 passed (67)
+   Start at  14:21:33
+   Duration  10.33s (transform 8.24s, setup 0ms, import 13.97s, tests 13.24s, environment 0ms)

@@ -1,0 +1,393 @@
+   Compiling proc-macro2 v1.0.106
+   Compiling unicode-ident v1.0.24
+   Compiling quote v1.0.46
+   Compiling libc v0.2.186
+   Compiling serde_core v1.0.228
+   Compiling find-msvc-tools v0.1.9
+   Compiling shlex v2.0.1
+   Compiling icu_normalizer_data v2.2.0
+   Compiling zmij v1.0.21
+   Compiling icu_properties_data v2.2.0
+   Compiling siphasher v1.0.3
+   Compiling cc v1.2.66
+   Compiling cfg-if v1.0.4
+   Compiling phf_shared v0.13.1
+   Compiling fastrand v2.4.1
+   Compiling stable_deref_trait v1.2.1
+   Compiling memchr v2.8.2
+   Compiling phf_generator v0.13.1
+   Compiling version_check v0.9.5
+   Compiling smallvec v1.15.2
+   Compiling serde v1.0.228
+   Compiling itoa v1.0.18
+   Compiling thiserror v2.0.18
+   Compiling typeid v1.0.3
+   Compiling num-conv v0.2.2
+   Compiling time-core v0.1.9
+   Compiling phf_codegen v0.13.1
+   Compiling writeable v0.6.3
+   Compiling strsim v0.11.1
+   Compiling litemap v0.8.2
+   Compiling ident_case v1.0.1
+   Compiling serde_json v1.0.150
+   Compiling generic-array v0.14.7
+   Compiling parking_lot_core v0.9.12
+   Compiling thiserror v1.0.69
+   Compiling utf8_iter v1.0.4
+   Compiling getrandom v0.4.3
+   Compiling erased-serde v0.4.10
+    Checking bitflags v2.13.0
+   Compiling semver v1.0.28
+   Compiling scopeguard v1.2.0
+   Compiling new_debug_unreachable v1.0.6
+   Compiling anyhow v1.0.103
+   Compiling lock_api v0.4.14
+   Compiling syn v2.0.118
+   Compiling string_cache_codegen v0.6.1
+   Compiling winnow v1.0.3
+   Compiling precomputed-hash v0.1.1
+   Compiling web_atoms v0.2.5
+   Compiling toml_parser v1.1.2+spec-1.1.0
+   Compiling serde_spanned v1.1.1
+   Compiling ctor-proc-macro v0.0.7
+   Compiling toml_writer v1.1.1+spec-1.1.0
+   Compiling log v0.4.33
+   Compiling dtoa v1.0.11
+   Compiling percent-encoding v2.3.2
+   Compiling autocfg v1.5.1
+   Compiling dtoa-short v0.3.5
+   Compiling form_urlencoded v1.2.2
+   Compiling tendril v0.5.1
+   Compiling toml_datetime v1.1.1+spec-1.1.0
+   Compiling indexmap v1.9.3
+   Compiling selectors v0.36.1
+   Compiling aho-corasick v1.1.4
+   Compiling regex-syntax v0.8.11
+   Compiling unic-common v0.9.0
+   Compiling unic-char-range v0.9.0
+   Compiling camino v1.2.4
+   Compiling uuid v1.23.4
+   Compiling byteorder v1.5.0
+   Compiling synstructure v0.13.2
+   Compiling darling_core v0.23.0
+   Compiling alloc-no-stdlib v2.0.4
+   Compiling serde_derive_internals v0.29.1
+   Compiling alloc-stdlib v0.2.4
+   Compiling unic-char-property v0.9.0
+   Compiling unic-ucd-version v0.9.0
+   Compiling toml v1.1.2+spec-1.1.0
+   Compiling regex-automata v0.4.14
+   Compiling parking_lot v0.12.5
+   Compiling zerofrom-derive v0.1.7
+   Compiling yoke-derive v0.8.2
+   Compiling serde_derive v1.0.228
+   Compiling zerovec-derive v0.11.3
+   Compiling displaydoc v0.2.6
+   Compiling phf_macros v0.13.1
+   Compiling thiserror-impl v2.0.18
+   Compiling darling_macro v0.23.0
+   Compiling thiserror-impl v1.0.69
+   Compiling string_cache v0.9.0
+   Compiling zerofrom v0.1.8
+   Compiling derive_more-impl v2.1.1
+   Compiling cssparser-macros v0.6.1
+   Compiling phf v0.13.1
+   Compiling servo_arc v0.4.3
+   Compiling darling v0.23.0
+   Compiling deranged v0.5.8
+   Compiling equivalent v1.0.2
+   Compiling hashbrown v0.12.3
+   Compiling powerfmt v0.2.0
+   Compiling schemars v0.8.22
+   Compiling bit-vec v0.8.0
+   Compiling derive_more v2.1.1
+   Compiling rustc-hash v2.1.3
+   Compiling fnv v1.0.7
+   Compiling hashbrown v0.17.1
+   Compiling cfb v0.7.3
+   Compiling bit-set v0.8.0
+   Compiling time v0.3.53
+   Compiling indexmap v2.14.0
+   Compiling regex v1.12.4
+   Compiling schemars_derive v0.8.22
+   Compiling unic-ucd-ident v0.9.0
+   Compiling brotli-decompressor v5.0.3
+   Compiling quick-xml v0.41.0
+   Compiling dyn-clone v1.0.20
+   Compiling yoke v0.8.3
+   Compiling dunce v1.0.5
+   Compiling foldhash v0.2.0
+   Compiling same-file v1.0.6
+   Compiling base64 v0.22.1
+   Compiling bytes v1.12.0
+   Compiling base64 v0.21.7
+   Compiling walkdir v2.5.0
+   Compiling http v1.4.2
+   Compiling brotli v8.0.4
+   Compiling serde-untagged v0.1.9
+   Compiling infer v0.19.0
+   Compiling cssparser v0.36.0
+   Compiling serde_with_macros v3.21.0
+   Compiling markup5ever v0.38.0
+   Compiling html5ever v0.38.0
+   Compiling ctor v0.8.0
+   Compiling glob v0.3.3
+   Compiling serde_with v3.21.0
+    Checking getrandom v0.2.17
+   Compiling objc2-exception-helper v0.1.1
+   Compiling rustc_version v0.4.1
+   Compiling objc2 v0.6.4
+    Checking objc2-encode v4.1.0
+    Checking once_cell v1.21.4
+   Compiling toml_datetime v0.7.5+spec-1.1.0
+   Compiling winnow v0.7.15
+   Compiling option-ext v0.2.0
+    Checking pin-project-lite v0.2.17
+   Compiling dirs-sys v0.5.0
+   Compiling embed-resource v3.0.11
+   Compiling heck v0.5.0
+   Compiling tauri-winres v0.3.6
+   Compiling dirs v6.0.0
+    Checking typenum v1.20.1
+   Compiling crc32fast v1.5.0
+   Compiling swift-rs v1.0.7
+   Compiling jsonptr v0.6.3
+   Compiling cargo-platform v0.1.9
+   Compiling zerovec v0.11.6
+   Compiling zerotrie v0.2.4
+   Compiling json-patch v3.0.1
+   Compiling cargo_metadata v0.19.2
+   Compiling plist v1.10.0
+   Compiling toml v0.9.12+spec-1.1.0
+   Compiling cargo_toml v0.22.3
+   Compiling dom_query v0.27.0
+    Checking rand_core v0.6.4
+    Checking mio v1.2.1
+    Checking socket2 v0.6.4
+    Checking subtle v2.6.1
+    Checking tokio v1.52.3
+    Checking core-foundation-sys v0.8.7
+    Checking crypto-common v0.1.7
+    Checking core-foundation v0.10.1
+   Compiling zeroize_derive v1.5.0
+   Compiling time-macros v0.2.31
+    Checking tinystr v0.8.3
+   Compiling potential_utf v0.1.5
+    Checking icu_locale_core v2.2.0
+   Compiling icu_collections v2.2.0
+   Compiling simd-adler32 v0.3.9
+    Checking zeroize v1.9.0
+    Checking raw-window-handle v0.6.2
+   Compiling adler2 v2.0.1
+   Compiling crossbeam-utils v0.8.22
+   Compiling miniz_oxide v0.8.9
+   Compiling block-buffer v0.10.4
+    Checking dpi v0.1.2
+   Compiling digest v0.10.7
+    Checking icu_provider v2.2.0
+   Compiling cpufeatures v0.2.17
+   Compiling cookie v0.18.1
+    Checking icu_properties v2.2.0
+    Checking icu_normalizer v2.2.0
+    Checking futures-core v0.3.32
+    Checking block2 v0.6.2
+    Checking objc2-core-foundation v0.3.2
+   Compiling flate2 v1.1.9
+   Compiling sha2 v0.10.9
+   Compiling fdeflate v0.3.7
+   Compiling foreign-types-macros v0.2.3
+    Checking idna_adapter v1.2.2
+    Checking idna v1.1.0
+    Checking foreign-types-shared v0.3.1
+   Compiling bitflags v1.3.2
+    Checking url v2.5.8
+    Checking foreign-types v0.5.0
+   Compiling png v0.17.16
+    Checking objc2-foundation v0.3.2
+    Checking crossbeam-channel v0.5.16
+    Checking dispatch2 v0.3.1
+    Checking core-graphics-types v0.2.0
+    Checking errno v0.3.14
+   Compiling ring v0.17.14
+   Compiling tauri-runtime v2.11.3
+   Compiling urlpattern v0.3.0
+   Compiling wry v0.55.1
+   Compiling zerocopy v0.8.53
+    Checking futures-sink v0.3.32
+   Compiling ico v0.5.0
+    Checking core-graphics v0.25.0
+   Compiling getrandom v0.3.4
+    Checking unicode-segmentation v1.13.3
+   Compiling tauri-runtime-wry v2.11.4
+    Checking png v0.18.1
+    Checking keyboard-types v0.7.0
+    Checking rustls-pki-types v1.15.0
+    Checking tauri-utils v2.9.3
+   Compiling serialize-to-javascript-impl v0.1.2
+    Checking untrusted v0.9.0
+    Checking http-body v1.0.1
+   Compiling futures-macro v0.3.32
+   Compiling serde_repr v0.1.20
+    Checking serialize-to-javascript v0.1.2
+   Compiling rustls v0.23.41
+    Checking mime v0.3.17
+    Checking embed_plist v1.2.2
+    Checking futures-io v0.3.32
+   Compiling httparse v1.10.1
+    Checking slab v0.4.12
+    Checking futures-task v0.3.32
+    Checking tracing-core v0.1.36
+    Checking futures-util v0.3.32
+   Compiling tracing-attributes v0.1.31
+   Compiling rustix v1.1.4
+    Checking try-lock v0.2.5
+    Checking tower-service v0.3.3
+    Checking want v0.3.1
+    Checking futures-channel v0.3.32
+    Checking atomic-waker v1.1.2
+    Checking sync_wrapper v1.0.2
+    Checking tower-layer v0.3.3
+    Checking ipnet v2.12.0
+   Compiling signal-hook v0.3.18
+    Checking tracing v0.1.44
+    Checking webpki-roots v1.0.8
+    Checking signal-hook-registry v1.4.8
+    Checking security-framework-sys v2.17.0
+    Checking inout v0.1.4
+   Compiling curve25519-dalek v4.1.3
+    Checking cipher v0.4.4
+    Checking hyper v1.10.1
+    Checking security-framework v3.7.0
+    Checking http-body-util v0.1.3
+    Checking universal-hash v0.5.1
+    Checking os_pipe v1.2.3
+    Checking opaque-debug v0.3.1
+   Compiling rfd v0.16.0
+    Checking polyval v0.6.2
+    Checking sigchld v0.2.4
+    Checking tokio-util v0.7.18
+    Checking filetime v0.2.29
+    Checking open v5.3.6
+    Checking rustls-webpki v0.103.13
+    Checking ryu v1.0.23
+    Checking signature v2.2.0
+    Checking tinyvec_macros v0.1.1
+    Checking ed25519 v2.2.3
+    Checking tinyvec v1.11.0
+    Checking serde_urlencoded v0.7.1
+    Checking shared_child v1.1.1
+    Checking ghash v0.5.1
+    Checking aes v0.8.4
+    Checking xattr v1.6.1
+    Checking tempfile v3.27.0
+    Checking ctr v0.9.2
+    Checking tar v0.4.46
+    Checking hmac v0.12.1
+    Checking aead v0.5.2
+    Checking encoding_rs v0.8.35
+    Checking ryu-js v1.0.3
+    Checking minisign-verify v0.2.5
+    Checking aes-gcm v0.10.3
+    Checking ed25519-dalek v2.2.0
+    Checking serde_json_canonicalizer v0.3.2
+    Checking hkdf v0.12.4
+    Checking unicode-normalization v0.1.25
+    Checking secmem-proc v0.3.8
+    Checking x25519-dalek v2.0.1
+    Checking secrecy v0.8.0
+    Checking keyring v3.6.3
+    Checking machine-uid v0.5.4
+    Checking obfstr v0.4.6
+    Checking httpdate v1.0.3
+    Checking hyper-util v0.1.20
+    Checking tower v0.5.3
+    Checking tower-http v0.6.11
+   Compiling ppv-lite86 v0.2.21
+   Compiling rand_chacha v0.3.1
+   Compiling rand v0.8.6
+    Checking tokio-rustls v0.26.4
+    Checking rustls-platform-verifier v0.7.0
+    Checking hyper-rustls v0.27.9
+    Checking reqwest v0.13.4
+    Checking reqwest v0.12.28
+   Compiling tauri-plugin v2.6.3
+   Compiling tauri-build v2.6.3
+   Compiling tauri-codegen v2.6.3
+   Compiling tauri v2.11.5
+   Compiling tauri-macros v2.6.3
+   Compiling tauri-plugin-fs v2.5.2
+   Compiling tauri-plugin-opener v2.5.4
+   Compiling tauri-plugin-updater v2.10.1
+   Compiling tauri-plugin-dialog v2.7.3
+   Compiling tauri-plugin-shell v2.3.5
+   Compiling tauri-plugin-process v2.3.1
+   Compiling creatoros-desktop v1.2.0 (/Users/zyongzhu/.codex/worktrees/t1066-frontend/Thirdspace-creator/frontend/src-tauri)
+    Checking objc2-app-kit v0.3.2
+    Checking objc2-web-kit v0.3.2
+    Checking tao v0.35.3
+    Checking muda v0.19.3
+    Checking window-vibrancy v0.6.0
+    Checking objc2-osa-kit v0.3.2
+    Checking osakit v0.3.1
+error: failed to run custom build command for `creatoros-desktop v1.2.0 (/Users/zyongzhu/.codex/worktrees/t1066-frontend/Thirdspace-creator/frontend/src-tauri)`
+
+Caused by:
+  process didn't exit successfully: `/Users/zyongzhu/.codex/worktrees/t1066-frontend/Thirdspace-creator/frontend/src-tauri/target/debug/build/creatoros-desktop-30f2302fda0a6a44/build-script-build` (exit status: 101)
+  --- stdout
+  cargo:rerun-if-env-changed=CREATOROS_ENTITLEMENT_CLAIM_ENABLED
+  cargo:rerun-if-env-changed=CREATOROS_PRODUCT_FEEDBACK_SUBMIT_ENABLED
+  cargo:rerun-if-env-changed=GROWTH_ENTITLEMENT_API_ORIGIN
+  cargo:rerun-if-env-changed=CREATOROS_FEEDBACK_OFFICIAL_ORIGINS
+  cargo:rerun-if-env-changed=CREATOROS_CLIENT_CONFIG_PULL_ENABLED
+  cargo:rerun-if-env-changed=CREATOROS_GROWTH_CLIENT_CONFIG_ORIGIN
+  cargo:rerun-if-env-changed=CREATOROS_GROWTH_CONFIG_PUBLIC_KEY_B64
+  cargo:rerun-if-env-changed=CREATOROS_GROWTH_CONFIG_KEY_ID
+  cargo:rerun-if-env-changed=CREATOROS_MODEL_CONFIGURATION_AUTHORITY
+  cargo:rustc-env=CREATOROS_BUILTIN_ENTITLEMENT_CLAIM_ENABLED=0
+  cargo:rustc-env=CREATOROS_BUILTIN_PRODUCT_FEEDBACK_SUBMIT_ENABLED=0
+  cargo:rustc-env=CREATOROS_BUILTIN_CLIENT_CONFIG_PULL_ENABLED=0
+  cargo:rustc-env=CREATOROS_BUILTIN_MODEL_CONFIGURATION_AUTHORITY=local
+  cargo:rustc-env=CREATOROS_BUILTIN_GROWTH_ENTITLEMENT_API_ORIGIN=
+  cargo:rustc-env=CREATOROS_BUILTIN_FEEDBACK_OFFICIAL_ORIGINS=
+  cargo:rustc-env=CREATOROS_BUILTIN_GROWTH_CLIENT_CONFIG_ORIGIN=
+  cargo:rustc-env=CREATOROS_BUILTIN_GROWTH_CONFIG_PUBLIC_KEY_B64=
+  cargo:rustc-env=CREATOROS_BUILTIN_GROWTH_CONFIG_KEY_ID=
+  cargo:rerun-if-env-changed=CREATOROS_VERDICT_SIGNING_KEY_B64
+  cargo:rerun-if-changed=/Users/zyongzhu/.codex/worktrees/t1066-frontend/Thirdspace-creator/frontend/src-tauri/../product-identity.json
+  cargo:rerun-if-env-changed=CREATOROS_PACKAGE_IDENTITY_PATH
+  cargo:rerun-if-env-changed=CREATOROS_LICENSE_PROJECT_KEY
+  cargo:rustc-env=CREATOROS_BUILTIN_LICENSE_PROJECT_KEY=
+  cargo:rustc-env=CREATOROS_BUILTIN_PRODUCT_REF=creatoros
+  cargo:rustc-env=CREATOROS_BUILTIN_APP_IDENTIFIER=cloud.aitongban.creatoros
+  cargo:rustc-env=CREATOROS_BUILTIN_PACKAGE_DISPLAY_NAME=CreatorOS
+  cargo:rustc-env=CREATOROS_BUILTIN_KEYCHAIN_SERVICE=com.creatoros.desktop
+  cargo:rustc-env=CREATOROS_BUILTIN_PACKAGE_REF=creatoros-official
+  cargo:rustc-env=CREATOROS_BUILTIN_EXPECTED_CHANNEL_REF=official
+  cargo:rustc-env=CREATOROS_BUILTIN_PRODUCT_MANIFEST_JSON={"schema":"thirdspace-product-manifest/v1","productRef":"creatoros","appIdentifier":"cloud.aitongban.creatoros","projectKey":"creatoros"}
+  cargo:rustc-env=CREATOROS_SIDECAR_SHA256=
+  cargo:rerun-if-changed=sidecar.tar.gz
+  cargo:rustc-env=CREATOROS_SIDECAR_ENTRY_SHA256=
+  cargo:rerun-if-changed=sidecar/frontend/server.js
+  cargo:rerun-if-changed=sidecar
+  cargo:rerun-if-env-changed=TAURI_CONFIG
+  cargo:rustc-check-cfg=cfg(desktop)
+  cargo:rustc-cfg=desktop
+  cargo:rustc-check-cfg=cfg(mobile)
+  cargo:rerun-if-changed=/Users/zyongzhu/.codex/worktrees/t1066-frontend/Thirdspace-creator/frontend/src-tauri/tauri.conf.json
+  cargo:rustc-env=TAURI_ANDROID_PACKAGE_NAME_APP_NAME=creatoros
+  cargo:rustc-env=TAURI_ANDROID_PACKAGE_NAME_PREFIX=cloud_aitongban
+  cargo:rustc-check-cfg=cfg(dev)
+  cargo:rustc-cfg=dev
+  cargo:PERMISSION_FILES_PATH=/Users/zyongzhu/.codex/worktrees/t1066-frontend/Thirdspace-creator/frontend/src-tauri/target/debug/build/creatoros-desktop-36dd54f8435c1076/out/app-manifest/__app__-permission-files
+  cargo:rerun-if-changed=permissions
+  cargo:PERMISSION_FILES_PATH=/Users/zyongzhu/.codex/worktrees/t1066-frontend/Thirdspace-creator/frontend/src-tauri/target/debug/build/creatoros-desktop-36dd54f8435c1076/out/app-manifest/__app__-permission-files
+  cargo:rerun-if-changed=capabilities
+  cargo:rerun-if-env-changed=REMOVE_UNUSED_COMMANDS
+  cargo:rustc-env=TAURI_ENV_TARGET_TRIPLE=aarch64-apple-darwin
+
+  --- stderr
+
+  thread 'main' (596479) panicked at build.rs:404:6:
+  tauri_build 失败: resource path `binaries/creatoros-server-aarch64-apple-darwin` doesn't exist
+  note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+warning: build failed, waiting for other jobs to finish...

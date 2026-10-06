@@ -1893,7 +1893,10 @@
         "orchestrator/**",
         ".agents/**",
         "docker-compose.yml",
-        "channel-partners/**"
+        "channel-partners/**",
+        "pnpm-workspace.yaml",
+        "pnpm-lock.yaml",
+        "patches/**"
       ],
       "write_set": [
         "docs/features/t1066-timeout-policy.md",
@@ -1920,12 +1923,15 @@
         "orchestrator/process/**",
         "docker-compose.yml",
         "channel-partners/**",
-        "contract/tests/**"
+        "contract/tests/**",
+        "pnpm-workspace.yaml",
+        "pnpm-lock.yaml",
+        "patches/**"
       ],
       "verify_commands": {
         "implementation": [
-          "node --experimental-strip-types tools/timeout-policy/check.mjs",
-          "pnpm --dir contract exec vitest run tests/timeout-policy.test.ts --retry=0"
+          "node tools/timeout-policy/verify.mjs",
+          "node tools/timeout-policy/inventory.mjs --verify-files"
         ]
       },
       "depends_on": []
@@ -2019,7 +2025,7 @@
       ],
       "verify_commands": {
         "implementation": [
-          "node --test frontend/scripts/desktop/*.test.mjs"
+          "pnpm --dir frontend test scripts/desktop/obfuscate.test.mjs scripts/desktop/node-runtime.test.mjs scripts/desktop/execution-worker-runtime.test.mjs scripts/desktop/desktop-release-workflow.test.mjs scripts/desktop/channel-package-workflow.test.mjs scripts/desktop/build-sidecar.test.mjs"
         ]
       },
       "depends_on": []

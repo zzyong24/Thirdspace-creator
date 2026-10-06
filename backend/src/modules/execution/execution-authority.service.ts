@@ -2,7 +2,7 @@ import {PRIVATE_COLLECTION_SOURCE_KINDS,assertPrivateCollectorJob} from '../sche
 import {requireWorkspace} from "../../workspace-scope";
 import {assertFrozenWorkspaceMembership} from "../platform-account/membership-lock.service";
 import {workspaceFilter} from "../../workspace-scope";
-import {executionBudgetSchema, executionBudgetDeadline} from "@creatoros/contract/execution-worker";
+import {executionBudgetSchema, newExecutionBudgetDeadline} from "@creatoros/contract/execution-worker";
 import { assertFrozenBrowserTaskGrant } from "./browser-task-grant";
 import { isDeepStrictEqual } from "node:util";
 import { z } from "zod";
@@ -62,7 +62,7 @@ export function createExecutionAuthorityService(db: Db, deps: {now?: () => strin
           id: executionTaskId, userId: task.userId, accountId: task.accountId,groupId:task.groupId,groupVersion:task.groupVersion??undefined,membershipVersion:task.membershipVersion??undefined,
           kind: "ai_task", ownerType: "ai_task", ownerId: task.id,
           idempotencyKey: `ai:${task.id}`, payload: {aiTaskId: task.id, ...(prepared ? {modelInput:prepared.modelInput} : {})},
-          ...(prepared ? {priority:prepared.priority??0,executionBudget:prepared.budget,deadlineAt:executionBudgetDeadline(prepared.budget,browserGrant?.grantedAt ?? task.requestedAt)} : {}),
+          ...(prepared ? {priority:prepared.priority??0,executionBudget:prepared.budget,deadlineAt:newExecutionBudgetDeadline(prepared.budget,browserGrant?.grantedAt ?? task.requestedAt)} : {}),
           createdAt: stamp, updatedAt: stamp,
         });
         await tx.update(aiTasks).set({executionTaskId}).where(eq(aiTasks.id, task.id));
