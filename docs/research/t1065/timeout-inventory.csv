@@ -1,0 +1,223 @@
+﻿id,scope,recordType,file,line,duration,is30s,category,effect,risk,note,expression
+TO-001,产品运行时,显式执行控制点,ai-worker/src/execution/browser-worker-session.ts,42,5秒每次浏览器操作,False,停止等待,reject deadline；实际Playwright/evaluate命令不一定自动取消,中,硬编码；两处waitForURL431/441也5000，属于同一浏览器操作策略执行点而非新增独立上限。,"Promise.race operation,timer5000"
+TO-002,产品运行时,显式执行控制点,ai-worker/src/execution/browser-worker-session.ts,462,4.5秒页面内等待target可见,False,停止等待,页面内轮询reject；外层5秒再包一层,低,硬编码；25ms不是超时。,Date.now()-started>4500
+TO-003,产品运行时,显式执行控制点,ai-worker/src/execution/durable-pi-stream.ts,81,3分钟无模型进展,False,无进展中止,中止Agent模型流；每次进展重置,中,硬编码；健康持续进展没有这条总时限。,"idle.abort(...),180000"
+TO-004,产品运行时,显式执行控制点,ai-worker/src/execution/intelligence-generation-worker.ts,81,3分钟每次热点选题模型调用,False,单次请求,中止generateText；maxRetries=0,中,硬编码；上层intelligence-generation-bridge传timeoutMs600000并不替换此180000。,AbortSignal.timeout(180000)
+TO-005,产品运行时,显式执行控制点,ai-worker/src/execution/intelligence-generation-worker.ts,101,3分钟每次口播初稿模型调用,False,单次请求,中止generateText；空正文最多另一轮，每轮新3分钟,中,硬编码；与热点选题是独立执行点。,AbortSignal.timeout(180000)
+TO-006,产品运行时,显式执行控制点,ai-worker/src/execution/redfox-client.ts,16,30秒每次Redfox请求,True,单次请求,中止fetch；网络/限流失败有限重试,中,硬编码；300*2^attempt为重试退避，非deadline。,AbortSignal.timeout(30000)
+TO-007,产品运行时,显式执行控制点,ai-worker/src/execution/research-browser-sessions.ts,65,5秒,False,停止等待,只停止URL安全guard等待，实际guard Promise可能仍在,中,硬编码。,BROWSER_GUARD_TIMEOUT timer5000
+TO-008,产品运行时,显式执行控制点,ai-worker/src/execution/research-browser-sessions.ts,165,10秒,False,单次请求,研究页面导航超时后dispose并transient失败,中,硬编码。,page.goto timeout:10000
+TO-009,产品运行时,显式执行控制点,ai-worker/src/execution/research-worker-tools.ts,78,15秒,False,生命周期,研究浏览器启动超时,中,deps.launchServer可替代；固定默认实现，与chromium-guard独立入口。,chromium.launchServer timeout:15000
+TO-010,产品运行时,显式执行控制点,ai-worker/src/execution/research-worker-tools.ts,81,15秒,False,生命周期,连接研究浏览器失败,中,deps.connect可替代。,chromium.connect timeout:15000
+TO-011,产品运行时,显式执行控制点,ai-worker/src/execution/research-worker-tools.ts,225,15秒检索参数,False,单次请求,"浏览器检索仍Math.max(15s,20s)=20s",低,225与259复用相同research搜索策略；duration是请求参数，实际浏览器导航更长。,search options timeoutMs:15000
+TO-012,产品运行时,显式执行控制点,ai-worker/src/execution/topic-worker-reads.ts,90,15秒单次选题信源读取,False,单次请求,中止单次读取，try/catch可记录失败信源,中,硬编码；与searchFactory默认不同外层信号。,AbortSignal.timeout(15000)
+TO-013,产品运行时,显式执行控制点,ai-worker/src/execution/worker-runtime.ts,63,continuous为10分钟；有任务deadline为剩余时长,False,停止业务,豁免port仍有HOST_PORT_TIMEOUT,高,不可独立配置；continuous没有总deadline仍在单port加10分钟；同一行的互斥另一策略，非普通30秒使用点。,exempt ports: active.deadlineAt===null?600000:remaining
+TO-014,产品运行时,显式执行控制点,ai-worker/src/execution/worker-runtime.ts,63,30秒固定,True,停止业务,HOST_PORT_TIMEOUT；丢弃pending等候，宿主可能仍在执行；上层failed/unknown并清理中止,高,不可配置；除executeAgenticTool/acquireTranscribeProfile/acquireTranscribeChannel/readChatWebReadSession四项，其余所有端口。当前intelligence-transcript-bridge.ts:97-110与claimed-asr-stage.service.ts:57-67的prepareTranscribeItem仍在宿主取流+抽音；同受30秒。心跳只续租不续此timer；普通transcribe-worker-run迁移不代表雷达链迁移。,ordinary ports: 30000
+TO-015,产品运行时,显式执行控制点,ai-worker/src/execution/worker-runtime.ts,75,继承持久任务deadline；null禁用,False,停止业务,controller.abort，取消模型和工作，deadline已经过则立即abort,中,同一deadline由worker-supervisor.ts:163、ledger/lease/admission/result守边界共同执行；这些均不是新增独立默认。,deadlineAt-Date.now()
+TO-016,产品运行时,显式默认或覆盖策略,ai-worker/src/nodes/script-node.ts,12,150秒,False,单次请求,脚本draft模型节点覆盖通用90秒,中,调用处253。,SCRIPT_DRAFT_MODEL_TIMEOUT_MS=150_000
+TO-017,产品运行时,显式默认或覆盖策略,ai-worker/src/nodes/script-pipeline.ts,12,150秒,False,单次请求,脚本pipeline两处模型节点覆盖通用90秒,中,调用处102/151共用同一常量。,SCRIPT_PIPELINE_MODEL_TIMEOUT_MS=150_000
+TO-018,产品运行时,显式默认或覆盖策略,ai-worker/src/nodes/structured-node.ts,228,默认90秒，15秒下限，15分钟硬上限,False,单次请求,generateObject/generateText AbortSignal.timeout；每次调用各自计时,中,timeoutMs参数可配；0也clamp为15秒，不代表禁用。两处API执行点445/507复用同一策略，不重复计数。,"default90_000,min15_000,max900_000"
+TO-019,产品运行时,显式执行控制点,ai-worker/src/runtime/browser/browser-pool.ts,249,可选借用浏览器池排队deadline,False,停止等待,取消排队等待，不杀其他正常浏览器任务,低,deadlineAt可配，不给则无此时限；223先检查。,options.deadlineAt-Date.now()
+TO-020,产品运行时,显式执行控制点,ai-worker/src/runtime/browser/chromium-guard.ts,168,15秒默认等待旧浏览器清理,False,停止等待,reject BrowserCleanupPendingError；可重试cleanup,中,参数可配；旧清理仍在。,opts.queueTimeoutMs??DEFAULT_LAUNCH_TIMEOUT_MS
+TO-021,产品运行时,显式执行控制点,ai-worker/src/runtime/browser/chromium-guard.ts,247,15秒浏览器启动默认,False,生命周期,reject BrowserLaunchError，启动竞态后保持清理追踪,中,313真正timer执行；参数可配；不许声称超时已清掉浏览器。,opts.timeoutMs??DEFAULT_LAUNCH_TIMEOUT_MS=15000
+TO-022,产品运行时,显式执行控制点,ai-worker/src/runtime/browser/chromium-guard.ts,355,默认15秒或启动timeoutMs，等待占用profile租约,False,停止等待,reject BrowserLaunchError locked；旧queue仍在,中,queueTimeoutMs可配。,opts.queueTimeoutMs??timeoutMs
+TO-023,产品运行时,显式执行控制点,ai-worker/src/runtime/browser/navigation-retry.ts,36,60秒每次导航默认，可重试多轮,False,单次请求,page.goto超时可退避再导航,中,timeoutMs可配；调用45；不是多轮总时限。与抖音明确覆盖60秒单列定义/覆盖关系。,opts.timeoutMs??60_000
+TO-024,产品运行时,显式默认或覆盖策略,ai-worker/src/runtime/browser/search-browser.ts,35,至少20秒，随检索timeoutMs放宽,False,单次请求,Playwright导航失败；可切换其他检索路径,中,调用263；20秒为下限不是绝对上限；硬编码下限。,"Math.max(opts.timeoutMs,NAV_TIMEOUT_MS=20000)"
+TO-025,产品运行时,显式默认或覆盖策略,ai-worker/src/runtime/browser/web-capture.ts,80,20秒截图导航,False,单次请求,page.goto超时后capture失败,中,260使用常量；信号取消则关闭context。,NAV_TIMEOUT_MS=20000
+TO-026,产品运行时,显式默认或覆盖策略,ai-worker/src/runtime/browser/web-reader.ts,63,30秒每次网页正文导航,True,单次请求,page.goto超时，可能换页面/登录态读取或返回失败,中,调用566/594使用同一常量；不可配，不重复计算两次使用。,NAV_TIMEOUT_MS=30_000
+TO-027,产品运行时,显式执行控制点,ai-worker/src/runtime/browser/web-reader.ts,623,8秒,False,停止等待,等主体selector结束；catch忽略继续提取正文,低,硬编码；不hard-fail全文读取。,waitForSelector(...timeout:8_000)
+TO-028,产品运行时,显式执行控制点,ai-worker/src/runtime/browser/web-session.ts,253,默认300轮、每轮至少1秒，约5分钟且cookie/读状态额外耗时,False,停止业务,未发现sessioncookie则loggedIn:false并关闭ctx,中,timeoutSec可配；0立即失败；并非严格墙钟5分钟。,timeoutSec??300;for(i<timeoutSec)...wait1s
+TO-029,产品运行时,显式执行控制点,ai-worker/src/runtime/browser/web-session.ts,259,30秒登录页面初次导航,True,停止等待,忽略导航超时，用户可在登录窗口手动导航,低,同步网页登录入口首次导航，catch忽略后允许手动导航；与同文件330共享30秒取值但为独立执行控制点。,goto(...timeout:30_000)
+TO-030,产品运行时,显式执行控制点,ai-worker/src/runtime/browser/web-session.ts,330,30秒登录页面初次导航,True,停止等待,忽略导航超时，用户可在登录窗口手动导航,低,异步登录窗口入口首次导航，catch忽略后允许手动导航；与259共享30秒取值但为独立执行控制点。,openWebLoginWindow: goto(...timeout:30_000)
+TO-031,产品运行时,显式执行控制点,ai-worker/src/runtime/chat/chat-pi-loop.ts,52,3分钟无模型进展,False,无进展中止,中止聊天当前模型流；每次heartbeat重置,中,硬编码；非普通10秒worker心跳。,"idle.abort(...),180_000"
+TO-032,产品运行时,显式执行控制点,ai-worker/src/runtime/douyin-transcribe-detail.ts,69,60秒每次详情页导航,False,单次请求,重试导航，最终转取流失败,中,调用generic navigation-retry；后续3000仅就绪等待。需30秒外层宿主port可先将60秒导航误杀。,gotoWithRetry(...timeoutMs:60000)
+TO-033,产品运行时,显式默认或覆盖策略,ai-worker/src/runtime/douyin-transcribe-source.ts,159,30秒单次匿名取流,True,单次请求,iesdouyin fetch中止；归一net-timeout后可回退登录详情,中,硬编码；183signal任一先到生效；并非总转写30秒。,IESDOUYIN_FETCH_TIMEOUT_MS=30_000
+TO-034,产品运行时,显式默认或覆盖策略,ai-worker/src/runtime/multimodal-minimax.ts,54,60轮×5秒约5分钟；网络耗时另加,False,停止等待,抛poll timeout，已提交供应商任务不因此取消,中,deps可注入；真实Worker asset-worker-run.ts:19覆盖成120轮约10分钟，model-probe-worker-entry.ts:30也120，但RequestIO30秒先到。非硬墙钟总上限。,"maxPollAttempts:60,pollIntervalMs:5000"
+TO-035,产品运行时,显式默认或覆盖策略,ai-worker/src/runtime/multimodal-minimax.ts,55,240轮×5秒约20分钟；网络耗时另加,False,停止等待,H3供应商任务停止本地轮询，供应商任务仍可能继续,中,可注入；asset-worker-run.ts:19仍240；asset任务已jobKnown可recoverable保持原job恢复。,h3MaxPollAttempts:240
+TO-036,产品运行时,显式默认或覆盖策略,ai-worker/src/runtime/multimodal-omnihi.ts,29,120轮×5秒约10分钟；网络耗时另加,False,停止等待,抛poll timeout，本地停止等候原视频任务,中,可注入；asset-worker-run.ts:18同120；未对远端任务发取消，原job可恢复。,"maxPollAttempts:120,pollIntervalMs5000"
+TO-037,产品运行时,显式默认或覆盖策略,ai-worker/src/runtime/search-factory.ts,89,10秒默认每次检索请求,False,单次请求,search-http.ts:37中止fetch与完整body读取；适配器抛SearchExecutionError,中,opts.timeoutMs可配；bocha/tavily/serpapi/rss复用；browser provider另有20秒导航下限，不把复用点重复算独立策略。,DEFAULT_TIMEOUT_MS=10_000
+TO-038,产品运行时,显式默认或覆盖策略,ai-worker/src/runtime/video-decisions-runner.ts,1271,10分钟每次长视频结构节点,False,单次请求,scenes/cards单次模型请求超时,中,调用处2013/2081共用；2960可继续继承input.timeoutMs。不是渲染进程总耗时上限。,VIDEO_LONG_STRUCTURED_TIMEOUT_MS=600_000
+TO-039,产品运行时,显式默认或覆盖策略,backend/src/modules/ai-runtime/chat-production-composition.ts,85,10分钟默认后端聊天预算,False,停止业务,无budget时补持久任务deadline；持续任务可覆盖null,中,此为组合根fallback，不可据此推断所有当前聊天都有10分钟。,budget.deadlineMs:600000
+TO-040,产品运行时,显式执行控制点,backend/src/modules/ai-runtime/chat-trend-read.ts,60,45秒整轮热点原始信源读取,False,停止等待,停止读取剩余信源，保留已取得结果/检索依据,中,硬编码；不直接取消整个创作任务。,AbortSignal.timeout(45_000)
+TO-041,产品运行时,显式执行控制点,backend/src/modules/ai-runtime/chat-trend-read.ts,72,20秒单信源读取,False,单次请求,单源失败catch，保留其他信源,低,硬编码；外层45秒更短剩余时长先到。,AbortSignal.timeout(20_000)
+TO-042,产品运行时,显式执行控制点,backend/src/modules/ai-runtime/local-environment-host.ts,16,3秒工具版本探测,False,单次请求,catch保留安装路径，版本不可读,低,硬编码；不阻断已确认路径的工具运行。,exec version timeout3000
+TO-043,产品运行时,显式默认或覆盖策略,backend/src/modules/ai-runtime/request-io.service.ts,7,默认30秒，涵盖排队+启动+模型/embedding,True,停止业务,REQUEST_IO_DEADLINE，给子进程cancel，1秒未ACK则整进程kill影响其他在途请求,高,timeoutMs必须正整数<=2147483647，0不能禁用；model-probe和embedding复用；io入口各按同一deadline计时，非新增独立30秒。,deps.timeoutMs??30000
+TO-044,产品运行时,显式执行控制点,backend/src/modules/ai-runtime/request-io.service.ts,45,1秒取消ACK宽限,False,生命周期,kill共用IO进程，其他在途REQUEST_IO_UNKNOWN,中,硬编码；运行中最多2槽，因此一个超时可能连带另一个。,"setTimeout(terminate,1000)"
+TO-045,产品运行时,显式执行控制点,backend/src/modules/ai-runtime/script-similarity-business-adapter.ts,39,默认2分钟同步等待独立相似度任务,False,停止等待,仅返回尚未完成，独立任务继续，不重建任务,中,waitMs可配；此同步结果用于采纳操作，健康慢任务会让采纳暂时失败。,deps.waitMs??120000
+TO-046,产品运行时,显式执行控制点,backend/src/modules/assets/localfs-object-storage.ts,99,15秒媒体元信息探测,False,单次请求,探测失败EMPTY_PROBE，保存文件继续,低,硬编码；元信息时长/尺寸保持null。,exec ffprobe timeout15000
+TO-047,产品运行时,显式执行控制点,backend/src/modules/benchmark/benchmark-transcription.service.ts,106,默认2分钟同步等待benchmark转写,False,停止等待,抛BenchmarkTranscriptionPending含原任务ID，任务仍运行,低,waitMs可配，0停止当前等待；非转写总时限。,options.waitMs??120000
+TO-048,产品运行时,显式执行控制点,backend/src/modules/execution/chat-web-profile-wait.ts,10,60秒默认等网页登录资源租约,False,停止等待,仍busy则抛原错误，任务失败/等待用户,中,可配；poll250ms不是时限。,options.timeoutMs??60_000
+TO-049,产品运行时,显式执行控制点,backend/src/modules/execution/host-browser-process-recovery.ts,19,5秒每次OS宿主进程快照,False,生命周期,kill ps/Powershell，验证失败，不视为无占用,低,硬编码；Unix两次快照分别5秒。,timeout:5000
+TO-050,产品运行时,显式执行控制点,backend/src/modules/execution/host-browser-profile-lifecycle.ts,31,60秒默认等profile资源释放,False,停止等待,仍占用则BrowserProfileBusyError，停止等候,中,可配；poll250ms不超时。,deps.waitTimeoutMs??60_000
+TO-051,产品运行时,显式执行控制点,backend/src/modules/execution/submitted-task-preparation.service.ts,74,每次prepare上限deps.deadlineMs；也受父任务deadline,False,停止业务,中止子任务准备；continuous可重试，非continuous达到上限失败,中,deps必传；claim父continuous deadline=null仍每次prepare有deps.deadlineMs。总deadline另由requestedAt+deps.deadlineMs或父deadline定义54，属共享同策略。,"AbortSignal.timeout(min(deps.deadlineMs,remaining))"
+TO-052,产品运行时,显式执行控制点,backend/src/modules/execution/worker-process-tree.ts,7,3秒每次OS进程快照,False,生命周期,终止ps，清理流程拒绝把未知当已退出,低,硬编码；多轮快照各有3秒。,exec ps timeout:3000
+TO-053,产品运行时,显式执行控制点,backend/src/modules/execution/worker-process-tree.ts,28,10秒Windows进程树终止命令,False,生命周期,taskkill超时清理失败,低,硬编码。,taskkill timeout:10000
+TO-054,产品运行时,显式执行控制点,backend/src/modules/execution/worker-process-tree.ts,77,40次检查约1秒等待+每次ps耗时,False,生命周期,无法确认进程树退出则WORKER_TREE_EXIT_TIMEOUT,低,硬编码；约1秒并非墙钟硬上限；snapshot可能40×3s。,round<40;delay25ms
+TO-055,产品运行时,显式执行控制点,backend/src/modules/execution/worker-supervisor.ts,63,5秒取消/停机宽限,False,生命周期,cancel无响应强制清进程树；stop197同值,中,可配；两执行点复用同一shutdownGraceMs，不重复独立计数。,options.shutdownGraceMs??5000
+TO-056,产品运行时,显式执行控制点,backend/src/modules/execution/worker-supervisor.ts,76,15秒Worker启动默认,False,生命周期,整树forceStop后WORKER_START_TIMEOUT,中,可配；包含Worker导入/模型模块cold start。,options.startupTimeoutMs??15000
+TO-057,产品运行时,显式默认或覆盖策略,backend/src/modules/intelligence/intelligence-generation-bridge.ts,36,默认10分钟预算/结构生成声明,False,停止业务,未配置任务预算则ledger补deadline，旧任务启用10分钟,中,fixed bridge budget；continuous已给deadline=null则不新增总上限；worker专用intel实际generateText仍3分钟，不是10分钟。,budget.deadlineMs:600000;timeoutMs600000 at56
+TO-058,产品运行时,显式默认或覆盖策略,backend/src/modules/search/knowledge-search-runtime.service.ts,7,2分钟全回填批次,False,停止业务,中止本次embedding回填，可后台下次续,中,41使用常量；低于120秒前RequestIO子调用30秒可能先超时。,BACKFILL_DEADLINE_MS=120_000
+TO-059,产品运行时,显式默认或覆盖策略,backend/src/modules/search/knowledge-search-runtime.service.ts,8,8秒检索embedding,False,单次请求,中止query embedding，降级其他搜索,低,97使用常量；硬编码。,QUERY_EMBEDDING_DEADLINE_MS=8_000
+TO-060,产品运行时,显式执行控制点,backend/src/secret-crypto.ts,148,3秒master key pipe读取循环名义上限,False,停止等待,未读到则文件/后备路径；阻塞readSync可超时不生效,中,硬编码；win直接跳过；mac/Linux遇真正阻塞readSync会越过墙钟时限。,deadline=Date.now()+3000
+TO-061,产品运行时,契约上界,contract/src/internal/execution-worker.ts,41,持久任务正数预算最大约23.15天；continuous=null无总期限,False,契约声明,持久ledger/lease/ports/admission/outcome共同校验deadline；Worker与supervisor执行,中,纯契约上界单列；受调用者显式deadlineMs；59计算deadline，startedAt可能requestedAt/createdAt故排队耗时也计。不是统一23天默认。,"deadlineMs.positive().max(2_000_000_000), continuous nullable"
+TO-062,产品运行时,显式默认或覆盖策略,contract/src/resources/execution.ts,42,普通执行默认10分钟、最大1小时；video.render/agentic允许null,False,停止业务,run-execution-task.ts:87计时abort+reject；agentic映射持久deadline,中,用户可配，0禁止；agentic.* preprocess缺省null，video.render需显式null否则仍默认600；execution.schema.ts:126复用default600不是新增策略。,timeoutSec.default(600).max(3600)
+TO-063,产品运行时,显式执行控制点,frontend/src-tauri/src/cli_access.rs,328,5秒,False,system_wait,Windows PATH更新广播最多等5秒，忽略广播结果继续,低,仅CLI注册系统环境消息，非业务任务取消。,"SendMessageTimeoutW(...SMTO_ABORTIFHUNG,5_000)"
+TO-064,产品运行时,显式执行控制点,frontend/src-tauri/src/entitlement_claim.rs,535,10秒,False,request_abort,权益领取会话单次HTTP超时报可重试连接错误,中,固定10秒；不应和权益确认有效期混为一谈。,reqwest Client.timeout(Duration::from_secs(10))
+TO-065,产品运行时,显式执行控制点,frontend/src-tauri/src/entitlement_claim.rs,616,10秒,False,request_abort,授权消费恢复单次HTTP超时报可重试连接错误,中,固定10秒；不应和权益确认有效期混为一谈。,reqwest Client.timeout(Duration::from_secs(10))
+TO-066,产品运行时,显式执行控制点,frontend/src-tauri/src/lib.rs,675,15秒,False,request_abort,单次本地页面可用探测失败返回false，继续外层watchdog,低,实际渲染page/HTML响应时间受限；固定。,reqwest Client::timeout(STARTUP_PROBE_TIMEOUT=15s)
+TO-067,产品运行时,显式执行控制点,frontend/src-tauri/src/lib.rs,749,无进度5分钟或总30分钟,False,startup_wait,返回TimedOut并保留splash显示启动失败，阻止导航；此等待分支本身不杀sidecar,中,两个条件构成同一启动watchdog；源码cfg(test)全部排除；固定值。,"startup_watchdog_elapsed(sinceProgress, idle_timeout=5min, elapsed,max_timeout=30min)"
+TO-068,产品运行时,显式执行控制点,frontend/src-tauri/src/license.rs,2424,10秒,False,request_abort,授权校验/激活HTTP单次超时，授权链执行重试/宽限规则,中,固定生产10秒；run_chain最多3次尝试，所以单次10秒不是整个授权链总上限。,ReqwestHttp::post Client.timeout(self.timeout); run_chain production=10s
+TO-069,产品运行时,显式执行控制点,frontend/src-tauri/src/license.rs,2571,5秒,False,request_abort,授权展示副本同步到sidecar超时记日志，授权放行不受影响,低,best-effort；固定。,Client.timeout(Duration::from_secs(5))
+TO-070,产品运行时,显式执行控制点,frontend/src-tauri/src/license.rs,2651,15秒,False,request_abort,sidecar config.pull超时标retryable，主界面/授权不阻塞,低,best-effort；固定。,Client.timeout(Duration::from_secs(15))
+TO-071,产品运行时,显式执行控制点,frontend/src-tauri/src/license.rs,2761,90秒,False,startup_wait,等sidecar就绪的展示副本补同步/首次配置刷新不再等，进入授权心跳循环,中,不kill业务；sidecar启动慢超过90秒可能跳过补同步与在此绑定的后续配置刷新循环。,deadline=Instant::now()+Duration::from_secs(90)
+TO-072,产品运行时,显式执行控制点,frontend/src-tauri/src/license.rs,3229,10秒,False,request_abort,检查新版本HTTP单次失败/重试，最终返回人话错误,低,同Http实现独立检查更新调用配置；与授权链用途分开。,ReqwestHttp {timeout:Duration::from_secs(10)} for latest-version
+TO-073,产品运行时,显式执行控制点,frontend/src-tauri/src/sidecar_process.rs,115,5秒,False,lifecycle_cleanup,macOS停机SIGTERM后5秒尚未停止执行则SIGKILL整组,中,仅关机清理；固定，不能与合法任务的固定截止混为一谈。,grace_end=elapsed+GRACE(5s)
+TO-074,产品运行时,显式执行控制点,frontend/src-tauri/src/sidecar_process.rs,126,2秒,False,lifecycle_cleanup,强制停止后2秒未确认全组停止返回清理错误,低,仅停机后的确认等待，不再新增业务取消。,force_end=elapsed+FORCE(2s)
+TO-075,产品运行时,显式执行控制点,frontend/src-tauri/src/win_job.rs,102,5秒,False,lifecycle_cleanup,Windows停机等5秒未退出则TerminateJobObject整进程树,中,Grace参数可传，实际调用固定5秒；只关机路径。,"WaitForSingleObject(process,grace_timeout_ms); lib.rs calls shutdown(5_000)"
+TO-076,产品运行时,显式执行控制点,frontend/src-tauri/src/win_job.rs,110,5秒,False,lifecycle_cleanup,强杀后5秒未确认退出返回错误，然后关闭Job句柄兜底,低,独立的强杀确认等待。,"WaitForSingleObject(process,5_000) after TerminateJobObject"
+TO-077,产品运行时,显式执行控制点,frontend/src/components/ai/adopt-candidate-card.tsx,152,至少300秒,False,ui_wait_budget,候选卡片置error，后台AI任务不取消,高,每次网络读取耗时另加；不是wall-clock硬截止。配置pollIntervalMs的卡片可注入间隔但轮数固定。,MAX_POLLS=75 × POLL_INTERVAL_MS=4000
+TO-078,产品运行时,显式执行控制点,frontend/src/features/copilot/chat-douyin-share-card.tsx,163,默认约360秒加读取耗时,False,ui_wait_budget,停止导入任务查询；最后读取仍未终态可置queryFailed，后台不取消,高,每次网络读取耗时另加；不是wall-clock硬截止。配置pollIntervalMs的卡片可注入间隔但轮数固定。,MAX_POLLS=90 × pollIntervalMs(default4000)
+TO-079,产品运行时,显式执行控制点,frontend/src/features/copilot/chat-generate-card.tsx,196,至少356秒加读取耗时,False,ui_wait_budget,轮询预算耗尽卡片置error，后台视频生成不取消,高,每次网络读取耗时另加；不是wall-clock硬截止。配置pollIntervalMs的卡片可注入间隔但轮数固定。,MAX_POLLS=90; 89×4000ms waits
+TO-080,产品运行时,显式执行控制点,frontend/src/features/copilot/chat-publish-package-card.tsx,101,默认至少720秒,False,ui_wait_budget,卡片置error，明确说明后台可能仍执行；后台不取消,中,每次网络读取耗时另加；不是wall-clock硬截止。配置pollIntervalMs的卡片可注入间隔但轮数固定。,MAX_POLLS=180 × pollIntervalMs(default4000)
+TO-081,产品运行时,显式执行控制点,frontend/src/features/copilot/chat-result-cards.tsx,125,默认至少300秒,False,ui_wait_budget,盲预测卡片置error，后台诊断不取消,高,每次网络读取耗时另加；不是wall-clock硬截止。配置pollIntervalMs的卡片可注入间隔但轮数固定。,75 × pollIntervalMs(default4000)
+TO-082,产品运行时,显式执行控制点,frontend/src/features/copilot/chat-review-report-card.tsx,86,默认至少225秒,False,ui_wait_budget,审核卡片置error并显示审核超时，后台审核不取消,高,每次网络读取耗时另加；不是wall-clock硬截止。配置pollIntervalMs的卡片可注入间隔但轮数固定。,75 × pollIntervalMs(default3000)
+TO-083,产品运行时,显式执行控制点,frontend/src/features/copilot/chat-script-draft-card.tsx,147,默认至少360秒,False,ui_wait_budget,整稿候选卡片置error，后台生成不取消,高,每次网络读取耗时另加；不是wall-clock硬截止。配置pollIntervalMs的卡片可注入间隔但轮数固定。,MAX_POLLS=90 × pollIntervalMs(default4000)
+TO-084,产品运行时,显式执行控制点,frontend/src/features/copilot/chat-thesis-card.tsx,100,默认至少360秒,False,ui_wait_budget,论点树卡片置error，后台生成不取消,高,每次网络读取耗时另加；不是wall-clock硬截止。配置pollIntervalMs的卡片可注入间隔但轮数固定。,MAX_POLLS=90 × pollIntervalMs(default4000)
+TO-085,产品运行时,显式执行控制点,frontend/src/features/copilot/execution-task-card.tsx,155,至少1800秒,False,ui_wait_budget,停止自动查询，保留当前任务状态；后台执行不取消,中,每次网络读取耗时另加；不是wall-clock硬截止。配置pollIntervalMs的卡片可注入间隔但轮数固定。,MAX_POLLS=450 × POLL_INTERVAL_MS=4000
+TO-086,产品运行时,显式执行控制点,frontend/src/features/draft-workbench/content-direction-actions.tsx,42,10秒,False,ui_wait_budget,读取当前稿件超时则本次不发送诊断；读请求继续,中,固定，未abort实际请求。,"Promise.race(readAnchor,setTimeout(reject,10000))"
+TO-087,产品运行时,显式执行控制点,frontend/src/features/draft-workbench/draft-chat-request.tsx,116,4秒,False,ui_wait_budget,最多等4秒保存后仍打开AI对话；保存继续后台执行,中,允许降级打开；可能诊断到尚未保存的旧稿。,"Promise.race(flushSave,setTimeout(resolve,4000))"
+TO-088,产品运行时,显式执行控制点,frontend/src/features/draft-workbench/draft-chat-request.tsx,128,10秒,False,ui_wait_budget,停止等待保存，本次诊断不发送；不取消保存本身,中,固定；读写可能仍在后台完成。,"Promise.race(fn(),setTimeout(reject,10000))"
+TO-089,产品运行时,显式执行控制点,frontend/src/features/draft-workbench/script-review-gate.tsx,187,6秒,False,ui_wait_budget,抛createOutput超时；实际创建请求继续，可能晚到完成,高,固定，未取消真实创建，有误导重复重试风险。,"Promise.race(createOutput(),setTimeout(reject,6000))"
+TO-090,产品运行时,显式执行控制点,frontend/src/features/intelligence/use-source-runs.ts,17,至少120秒,False,ui_wait_budget,停止同步进度监听，清转圈，提示后台仍运行；后台不取消,低,每次网络读取耗时另加；不是wall-clock硬截止。配置pollIntervalMs的卡片可注入间隔但轮数固定。,120 ×1_000ms
+TO-091,产品运行时,显式执行控制点,frontend/src/features/knowledge/knowledge-dump-zone.tsx,87,至少60秒,False,ui_wait_budget,抛正文解析超时，原文件保留但这次不入知识库；后台解析不取消,高,每次网络读取耗时另加；不是wall-clock硬截止。配置pollIntervalMs的卡片可注入间隔但轮数固定。,DOCUMENT_EXTRACT_MAX_POLLS=120 × DOCUMENT_EXTRACT_POLL_MS=500
+TO-092,产品运行时,显式执行控制点,frontend/src/features/production/production-resource-operations.ts,169,10秒,False,ui_wait_budget,视频metadata未返回则时长返回null并回收objectURL，后续诚实无时长,低,降级，不直接失败整条上传/生成。,"setTimeout(() => done(null),10_000)"
+TO-093,产品运行时,显式执行控制点,frontend/src/server/activation/ai-credit-link.server.ts,131,10秒,False,request_abort,创建AI额度入口会话超过10秒abort；返回可重试的服务不可用错误,中,固定值，无运行配置；信号持续覆盖响应体读取。,AbortSignal.timeout(10_000)
+TO-094,产品运行时,显式执行控制点,frontend/src/server/activation/client-config.server.ts,507,10秒,False,request_abort,受管配置服务HTTP请求超过10秒abort；返回可重试的服务不可用错误,中,固定值，无运行配置；信号持续覆盖响应体读取。,AbortSignal.timeout(10_000)
+TO-095,产品运行时,显式执行控制点,frontend/src/server/activation/license-client.ts,106,默认10秒，可注入,False,request_abort,授权HTTP请求abort，映射networkFailure并由授权链处理宽限,中,options.timeoutMs可配置；0是立即触发，未定义无期限语义。,"setTimeout(() => controller.abort(), timeoutMs); timeoutMs=options.timeoutMs ?? 10_000"
+TO-096,产品运行时,显式执行控制点,frontend/src/server/activation/managed-credential-lease.server.ts,144,10秒,False,request_abort,领取ASR凭证超过10秒abort；返回可重试的服务不可用错误,中,固定值，无运行配置；信号持续覆盖响应体读取。,AbortSignal.timeout(10_000)
+TO-097,产品运行时,显式执行控制点,frontend/src/server/feedback/product-feedback.server.ts,409,10秒,False,request_abort,反馈授权服务HTTP请求超过10秒abort；返回可重试的服务不可用错误,中,固定值，无运行配置；信号持续覆盖响应体读取。,AbortSignal.timeout(10_000)
+TO-098,产品运行时,依赖默认控制点,frontend/src/server/ingestion/douhot-cdp.ts,195,库默认180秒（Playwright 1.60.0）,False,library_default,浏览器未就绪则库启动失败，guard负责清理,中,主代理已核coreBundle.js:4357 DEFAULT_PLAYWRIGHT_LAUNCH_TIMEOUT=3*60*1e3；外层guard可能更短，见ai-worker审计。,chromium.launchPersistentContext(...); no timeout override
+TO-099,产品运行时,显式执行控制点,frontend/src/server/ingestion/douhot-cdp.ts,299,60秒,False,browser_navigation,扫码首页导航超时；扫码首页吞导航错误，采集页面向上失败,中,固定；Playwright timeout=0通常禁用但当前未传0。,"page.goto(...,{timeout:60_000})"
+TO-100,产品运行时,显式执行控制点,frontend/src/server/ingestion/douhot-cdp.ts,303,默认300轮×1秒，另加探测耗时,False,login_wait,登录等待耗尽返回loggedIn:false并关闭页面,中,可注入；非严格300秒wall-clock，0即时停止等待。,for(elapsed=0; elapsed<timeoutSec; elapsed++); timeoutSec=options.timeoutSec ??300
+TO-101,产品运行时,显式执行控制点,frontend/src/server/ingestion/douhot-cdp.ts,333,最多60轮×250ms≈15秒，另加DOM读取耗时,False,bounded_readiness_wait,关键词输入框未出现则抛DouhotSearchInputUnavailableError，整次榜单采集失败,中,固定轮数；可见后fill/press有库默认另计。,"for(attempt=0;attempt<60;attempt++), waitForTimeout(250)"
+TO-102,产品运行时,依赖默认控制点,frontend/src/server/ingestion/douhot-cdp.ts,337,库默认30秒（Playwright 1.60.0）,True,library_default,输入/回车动作超时向上传播、榜单采集失败,中,主代理已核本机及安装版playwright-core@1.60.0 coreBundle.js:4356 DEFAULT_PLAYWRIGHT_TIMEOUT=3e4；当前context/page未另设默认（抖音流量页15s为独立页，不影响本处）。debug模式可为0。,input.fill(keyword)
+TO-103,产品运行时,依赖默认控制点,frontend/src/server/ingestion/douhot-cdp.ts,338,库默认30秒（Playwright 1.60.0）,True,library_default,输入/回车动作超时向上传播、榜单采集失败,中,主代理已核本机及安装版playwright-core@1.60.0 coreBundle.js:4356 DEFAULT_PLAYWRIGHT_TIMEOUT=3e4；当前context/page未另设默认（抖音流量页15s为独立页，不影响本处）。debug模式可为0。,"input.press(""Enter"")"
+TO-104,产品运行时,显式执行控制点,frontend/src/server/ingestion/douhot-cdp.ts,419,60秒,False,browser_navigation,热点宝首页导航超时；扫码首页吞导航错误，采集页面向上失败,中,固定；Playwright timeout=0通常禁用但当前未传0。,"page.goto(...,{timeout:60_000})"
+TO-105,产品运行时,显式执行控制点,frontend/src/server/ingestion/douhot-cdp.ts,437,60秒,False,browser_navigation,低粉爆款榜单导航超时；扫码首页吞导航错误，采集页面向上失败,中,固定；Playwright timeout=0通常禁用但当前未传0。,"page.goto(...,{timeout:60_000})"
+TO-106,产品运行时,依赖默认控制点,frontend/src/server/ingestion/douyin-cdp.ts,692,库默认30秒（Playwright 1.60.0）,True,library_default,扫码导航超时被catch忽略，再继续登录检查,低,主代理已核本机及安装版playwright-core@1.60.0 coreBundle.js:4356 DEFAULT_PLAYWRIGHT_TIMEOUT=3e4；当前context/page未另设默认（抖音流量页15s为独立页，不影响本处）。debug模式可为0。,"page.goto(...,{waitUntil:""domcontentloaded""}); no timeout override"
+TO-107,产品运行时,显式执行控制点,frontend/src/server/ingestion/douyin-cdp.ts,695,默认240轮×1秒，另加探测耗时,False,login_wait,扫码等候轮数耗尽返回false，finally关闭浏览器会话,中,不是精确4分钟wall-clock；opts.timeoutSec可注入，0不等待立即false。,for(i=0; i<timeoutSec; i++); timeoutSec=opts.timeoutSec ??240
+TO-108,产品运行时,依赖默认控制点,frontend/src/server/ingestion/douyin-cdp.ts,713,库默认30秒（Playwright 1.60.0）,True,library_default,扫码导航超时被catch忽略，再继续登录检查,低,主代理已核本机及安装版playwright-core@1.60.0 coreBundle.js:4356 DEFAULT_PLAYWRIGHT_TIMEOUT=3e4；当前context/page未另设默认（抖音流量页15s为独立页，不影响本处）。debug模式可为0。,"page.goto(...,{waitUntil:""domcontentloaded""}); no timeout override"
+TO-109,产品运行时,显式执行控制点,frontend/src/server/ingestion/douyin-cdp.ts,935,每次导航60秒,False,browser_navigation,自身作品指标导航单次超时抛错；helper可有重试，单次不是整个采集任务总上限,中,固定调用值；helper定义不重复计数；每个独立调用点一条。,"gotoWithRetry(...,{timeoutMs:60_000})"
+TO-110,产品运行时,显式执行控制点,frontend/src/server/ingestion/douyin-cdp.ts,1080,每次导航60秒,False,browser_navigation,对标账号指标导航单次超时抛错；helper可有重试，单次不是整个采集任务总上限,中,固定调用值；helper定义不重复计数；每个独立调用点一条。,"gotoWithRetry(...,{timeoutMs:60_000})"
+TO-111,产品运行时,显式执行控制点,frontend/src/server/ingestion/douyin-cdp.ts,1267,每次导航60秒,False,browser_navigation,用户作品列表首屏导航单次超时抛错；helper可有重试，单次不是整个采集任务总上限,中,固定调用值；helper定义不重复计数；每个独立调用点一条。,"gotoWithRetry(...,{timeoutMs:60_000})"
+TO-112,产品运行时,显式执行控制点,frontend/src/server/ingestion/douyin-cdp.ts,1320,每次导航60秒,False,browser_navigation,用户作品列表回退页导航单次超时抛错；helper可有重试，单次不是整个采集任务总上限,中,固定调用值；helper定义不重复计数；每个独立调用点一条。,"gotoWithRetry(...,{timeoutMs:60_000})"
+TO-113,产品运行时,显式执行控制点,frontend/src/server/ingestion/douyin-cdp.ts,1428,每次导航60秒,False,browser_navigation,用户资料页导航单次超时抛错；helper可有重试，单次不是整个采集任务总上限,中,固定调用值；helper定义不重复计数；每个独立调用点一条。,"gotoWithRetry(...,{timeoutMs:60_000})"
+TO-114,产品运行时,显式执行控制点,frontend/src/server/ingestion/douyin-cdp.ts,1596,每次导航60秒,False,browser_navigation,黑马搜索导航单次超时抛错；helper可有重试，单次不是整个采集任务总上限,中,固定调用值；helper定义不重复计数；每个独立调用点一条。,"gotoWithRetry(...,{timeoutMs:60_000})"
+TO-115,产品运行时,显式执行控制点,frontend/src/server/ingestion/douyin-cdp.ts,1716,10秒,False,request_abort,分享页解析请求abort并向上抛出；可进入登录态取流回退,中,固定；外部signal可更早取消。,"AbortSignal.timeout(10_000), optionally AbortSignal.any(deps.signal,...)"
+TO-116,产品运行时,显式执行控制点,frontend/src/server/ingestion/douyin-cdp.ts,1931,每次导航60秒,False,browser_navigation,单条作品导入导航单次超时抛错；helper可有重试，单次不是整个采集任务总上限,中,固定调用值；helper定义不重复计数；每个独立调用点一条。,"gotoWithRetry(...,{timeoutMs:60_000})"
+TO-117,产品运行时,显式执行控制点,frontend/src/server/ingestion/douyin-cdp.ts,2172,每次导航60秒,False,browser_navigation,评论管理导航单次超时抛错；helper可有重试，单次不是整个采集任务总上限,中,固定调用值；helper定义不重复计数；每个独立调用点一条。,"gotoWithRetry(...,{timeoutMs:60_000})"
+TO-118,产品运行时,显式执行控制点,frontend/src/server/ingestion/douyin-cdp.ts,2645,默认5秒,False,browser_action,标记按钮点击超时；silent=true返回false继续，silent=false抛错,中,opts.timeout可注入；默认5秒被多个投稿列表/刷新/收面板按钮复用。,locator.click({timeout:opts.timeout ??5_000})
+TO-119,产品运行时,依赖默认控制点,frontend/src/server/ingestion/douyin-cdp.ts,2683,库默认30秒（Playwright 1.60.0）,True,library_default,仅DOUYIN_EXPORT_DEBUG=1调试截图；超时catch吞掉,低,已读本机依赖coreBundle.js:56807-56818，page.screenshot传timeout=this._timeoutSettings.timeout(options)；:53897-53906默认30秒，当前export未setDefaultTimeout；debug为0。仅DOUYIN_EXPORT_DEBUG=1辅助诊断。,page.screenshot({path}); no timeout override
+TO-120,产品运行时,显式执行控制点,frontend/src/server/ingestion/douyin-cdp.ts,2782,每次导航60秒,False,browser_navigation,作品数据导出页面导航单次超时抛错；helper可有重试，单次不是整个采集任务总上限,中,固定调用值；helper定义不重复计数；每个独立调用点一条。,"gotoWithRetry(...,{timeoutMs:60_000})"
+TO-121,产品运行时,显式执行控制点,frontend/src/server/ingestion/douyin-cdp.ts,2793,3秒,False,browser_action,首次关闭引导modal，失败吞掉继续,低,独立调用覆盖helper默认值，helper与调用点不是同一控制点重复。,click timeout override=3_000
+TO-122,产品运行时,显式执行控制点,frontend/src/server/ingestion/douyin-cdp.ts,2802,2秒,False,browser_action,重试关闭引导modal，失败吞掉继续,低,独立调用覆盖helper默认值，helper与调用点不是同一控制点重复。,click timeout override=2_000
+TO-123,产品运行时,显式执行控制点,frontend/src/server/ingestion/douyin-cdp.ts,2822,8秒,False,browser_action,投稿作品tab点击；最后一次失败保留错误并后续导出失败,中,独立调用覆盖helper默认值，helper与调用点不是同一控制点重复。,click timeout override=8_000
+TO-124,产品运行时,显式执行控制点,frontend/src/server/ingestion/douyin-cdp.ts,2830,每轮15次×1秒，最多3轮；另加点击/DOM耗时,False,bounded_readiness_wait,投稿列表子tab仍不可见则DouyinExportError，停止导出,高,上限按轮数实现；不是严格45秒，3次8秒点击可能使总耗时更长。,"waitForVisibleByCharCodes(...,{tries:15,intervalMs:1_000}); outer up to3 attempts"
+TO-125,产品运行时,显式执行控制点,frontend/src/server/ingestion/douyin-cdp.ts,2853,6轮×1秒，另加DOM耗时,False,bounded_readiness_wait,停止等导出按钮就绪；返回false当前调用忽略并继续,低,不是强制整任务失败；后续下载仍可能超时。,"waitForVisibleByCharCodes(...,{tries:6,intervalMs:1_000})"
+TO-126,产品运行时,显式执行控制点,frontend/src/server/ingestion/douyin-cdp.ts,2873,4秒,False,browser_action,日期选择器点击；失败降级默认时间范围,低,独立调用覆盖helper默认值，helper与调用点不是同一控制点重复。,click timeout override=4_000
+TO-127,产品运行时,显式执行控制点,frontend/src/server/ingestion/douyin-cdp.ts,2890,4秒,False,browser_action,全部时间范围点击；失败重试/降级,低,独立调用覆盖helper默认值，helper与调用点不是同一控制点重复。,click timeout override=4_000
+TO-128,产品运行时,显式执行控制点,frontend/src/server/ingestion/douyin-cdp.ts,2916,默认180秒,False,download_wait,导出文件事件未出现则抛错误，整次导出失败,高,deps.downloadTimeoutMs可注入；0可禁用Playwright该等待；平台长时间生成可能误伤。,"page.waitForEvent(""download"",{timeout:downloadTimeoutMs}); deps.downloadTimeoutMs ??180_000"
+TO-129,产品运行时,显式执行控制点,frontend/src/server/ingestion/douyin-cdp.ts,2935,5秒,False,browser_action,导出数据按钮；失败将导致未触发下载等待,中,独立调用覆盖helper默认值，helper与调用点不是同一控制点重复。,click timeout override=5_000
+TO-130,产品运行时,显式执行控制点,frontend/src/server/ingestion/douyin-cdp.ts,3165,每次导航60秒,False,browser_navigation,收藏页面导航单次超时抛错；helper可有重试，单次不是整个采集任务总上限,中,固定调用值；helper定义不重复计数；每个独立调用点一条。,"gotoWithRetry(...,{timeoutMs:60_000})"
+TO-131,产品运行时,显式执行控制点,frontend/src/server/ingestion/douyin-cover-backfill.ts,43,30秒,True,request_abort,中断单张封面下载；DouyinCoverDownloadError；整批其余作品继续,低,固定30秒；只失败单作品封面，不证明本次ASR原任务同因。,AbortSignal.timeout(COVER_IMAGE_FETCH_TIMEOUT_MS=30_000)
+TO-132,产品运行时,显式执行控制点,frontend/src/server/ingestion/douyin-request-gateway.ts,355,默认15分钟,False,admission_guard,若冷却剩余大于阈值，立即拒绝准入；不会等待到15分钟后才取消,低,deps.maxAcquireWaitMs可注入；不含串行排队总时长；0会拒绝任意正冷却。,remain > this.maxAcquireWaitMs; default 15*60*1000
+TO-133,产品运行时,显式执行控制点,frontend/src/server/ingestion/douyin-traffic.ts,28,15秒,False,browser_action_default,流量分析tab及展开动作的默认超时；动作超时整次读取失败,中,设置作用于本页后续动作；两处click复用此策略，不重复。,page.setDefaultTimeout(15_000)
+TO-134,产品运行时,显式执行控制点,frontend/src/server/ingestion/douyin-traffic.ts,29,30秒,True,browser_navigation,单作品流量来源详情页导航超时向上失败,高,固定30秒，无进度续期。,"page.goto(...,{timeout:30_000})"
+TO-135,产品运行时,显式执行控制点,frontend/src/server/ingestion/douyin-traffic.ts,32,30秒,True,bounded_readiness_wait,流量页面异步状态未就绪则失败；慢加载亦触发,高,固定30秒，独立于上一步导航30秒。,"page.waitForFunction(readTrafficPageState,...,{timeout:30_000})"
+TO-136,产品运行时,显式执行控制点,frontend/src/server/persistence-client.ts,1650,15分钟,False,login_wait,待确认网页登录窗口超时关闭；取消此次登录handle,中,不写登录成功；固定，无界面延长选项。,"setTimeout(cancelPendingLogin, 15*60*1000)"
+TO-137,产品运行时,显式执行控制点,frontend/src/server/persistence-client.ts,3213,15秒,False,request_abort,整个RSS/Atom请求及最多6跳重定向/发现feed超过15秒abort,中,固定总请求预算；普通大响应/弱网可能失败。,"setTimeout(() => controller.abort(), 15_000)"
+TO-138,产品运行时,预算装配或声明,frontend/src/server/persistence-client.ts,3861,30分钟,False,execution_budget_configuration,内容雷达/对标转写运行预算；传入后端执行服务/runtime进行冻结和超时处理,中,本文件装配点；真正timer/kill控制在backend/ai-worker，跨审计合并时需标配置与执行而非重复同一策略。固定，无环境注入。,asrResourceDeps.budget.deadlineMs=1_800_000
+TO-139,产品运行时,预算装配或声明,frontend/src/server/persistence-client.ts,3879,30分钟,False,execution_budget_configuration,定时飞轮执行预算；传入后端执行服务/runtime进行冻结和超时处理,中,本文件装配点；真正timer/kill控制在backend/ai-worker，跨审计合并时需标配置与执行而非重复同一策略。固定，无环境注入。,scheduledFlywheel.budget.deadlineMs=1_800_000
+TO-140,产品运行时,预算装配或声明,frontend/src/server/persistence-client.ts,4587,10分钟,False,execution_budget_configuration,通用结构业务/封面/ModelWorker/提交准备预算；单一常量复用；传入后端执行服务/runtime进行冻结和超时处理,中,本文件装配点；真正timer/kill控制在backend/ai-worker，跨审计合并时需标配置与执行而非重复同一策略。固定，无环境注入。,workerBudget.deadlineMs=600_000
+TO-141,产品运行时,预算装配或声明,frontend/src/server/persistence-client.ts,4707,30分钟,False,execution_budget_configuration,手动转写业务预算；传入后端执行服务/runtime进行冻结和超时处理,中,本文件装配点；真正timer/kill控制在backend/ai-worker，跨审计合并时需标配置与执行而非重复同一策略。固定，无环境注入。,transcribeBusiness.budget.deadlineMs=1_800_000
+TO-142,产品运行时,预算装配或声明,frontend/src/server/persistence-client.ts,4727,30分钟,False,execution_budget_configuration,素材业务预算；传入后端执行服务/runtime进行冻结和超时处理,中,本文件装配点；真正timer/kill控制在backend/ai-worker，跨审计合并时需标配置与执行而非重复同一策略。固定，无环境注入。,assetBusiness.budget.deadlineMs=1_800_000
+TO-143,产品运行时,预算装配或声明,frontend/src/server/persistence-client.ts,4883,10分钟,False,execution_budget_configuration,自主采集/素材/研究业务与agentic worker预算；单一常量复用；传入后端执行服务/runtime进行冻结和超时处理,中,本文件装配点；真正timer/kill控制在backend/ai-worker，跨审计合并时需标配置与执行而非重复同一策略。固定，无环境注入。,agenticBudget.deadlineMs=600_000
+TO-144,产品运行时,显式执行控制点,frontend/src/server/sidecar-lifecycle.ts,77,3秒,False,lifecycle_cleanup,退出时数据库flush/close未完成也强制sidecar进程exit,中,仅关机路径；不是运行中任务30秒预算，不应无差别删除。,"setTimeout(() => proc.exit(0), GRACE_TIMEOUT_MS=3_000)"
+TO-145,产品运行时,显式执行控制点,mcp-server/src/cli.ts,249,默认无上限，--timeout指定正数秒,False,cli_wait_budget,仅CLI停止等待并报后台任务没有被取消；保留任务ID、后台继续,低,--timeout未提供/null表示无限；0/负数/NaN拒绝，不表示无限；--poll-interval默认2秒是轮询不是超时。,"timeoutSeconds=positiveNumberFlag(args,""--timeout""); elapsed>=timeoutSeconds*1000"
+TO-146,构建与开发治理工具,显式执行控制点,.agents/skills/guizang-product-video-skill/scripts/check_environment.py,17,默认30秒,True,技能开发探针,依赖版本/FFmpeg/Node/浏览器探针超时后杀子进程并记ok:false,低,15默认；多调用同一策略不重复。非产品业务runtime,subprocess.run(timeout=run.default30)
+TO-147,构建与开发治理工具,显式执行控制点,.agents/skills/guizang-product-video-skill/scripts/check_environment.py,98,60秒,False,技能开发探针,doctor探针超时杀进程并记失败,低,明确覆盖30s默认的独立调用预算,"run(hyperframes doctor,timeout=60)"
+TO-148,构建与开发治理工具,显式执行控制点,.github/workflows/channel-package.yml,29,10分钟,False,CI作业,超时终止对应job,中,T1063未修改,timeout-minutes: 10
+TO-149,构建与开发治理工具,显式执行控制点,.github/workflows/channel-package.yml,95,300分钟,False,CI作业,超时终止对应job,中,T1063未修改,timeout-minutes: 300
+TO-150,构建与开发治理工具,显式执行控制点,.github/workflows/channel-package.yml,293,300秒,False,停止等待,渠道包启动校验失败,中,名义轮询等待预算，单轮读取时间额外；T1063未修改,600次×sleep0.5s
+TO-151,构建与开发治理工具,显式执行控制点,.github/workflows/channel-package.yml,351,300秒,False,停止等待,渠道包启动校验失败,中,名义轮询等待预算，单轮读取时间额外；T1063未修改,1500次×sleep200ms
+TO-152,构建与开发治理工具,显式执行控制点,.github/workflows/channel-package.yml,367,10秒,False,生命周期清理,超过退出等待则强杀临时验证app,低,,app.WaitForExit(10000)
+TO-153,构建与开发治理工具,显式执行控制点,.github/workflows/commit-activity.yml,21,10分钟,False,CI作业,超时终止对应job,中,T1063未修改,timeout-minutes: 10
+TO-154,构建与开发治理工具,显式执行控制点,.github/workflows/desktop-release.yml,58,5分钟,False,CI作业,超时终止plan job,中,T1063 d514e90d移除；GitHub平台仍有自身隐式上限,timeout-minutes: 5
+TO-155,构建与开发治理工具,显式执行控制点,.github/workflows/desktop-release.yml,84,180分钟,False,CI作业,超时终止build job,高,T1063 d514e90d移除；GitHub平台仍有自身隐式上限,timeout-minutes: 180
+TO-156,构建与开发治理工具,显式执行控制点,.github/workflows/desktop-release.yml,529,300秒,False,校验时间预算,安装完成后仍判检查失败,高,不是中途杀安装进程；T1063验证变可选continue-on-error,installWatch.Elapsed >300s
+TO-157,构建与开发治理工具,显式执行控制点,.github/workflows/desktop-release.yml,726,600秒,False,停止等待,启动未就绪则验证失败,高,循环内读取耗时不计入名义预算；T1063验证可选continue-on-error,3000次×sleep0.2s
+TO-158,构建与开发治理工具,显式执行控制点,.github/workflows/desktop-release.yml,804,120秒,False,停止等待,启动未就绪则验证失败,高,循环内读取耗时不计入名义预算；T1063验证可选continue-on-error,600次×sleep200ms
+TO-159,构建与开发治理工具,显式执行控制点,.github/workflows/desktop-release.yml,887,10秒,False,生命周期清理,优雅退出未完成则强杀验证app,低,仅CI临时安装，不是用户任务超时,app.WaitForExit(10000)
+TO-160,构建与开发治理工具,显式执行控制点,.github/workflows/desktop-release.yml,909,10秒,False,停止等待,卸载目录未清除则验证失败,中,T1063验证可选continue-on-error,50次×sleep200ms
+TO-161,构建与开发治理工具,显式执行控制点,.github/workflows/desktop-release.yml,960,90分钟,False,CI作业,超时终止windows-runtime-rat job,中,T1063 d514e90d移除；GitHub平台仍有自身隐式上限,timeout-minutes: 90
+TO-162,构建与开发治理工具,显式执行控制点,.github/workflows/desktop-release.yml,984,180分钟,False,CI作业,超时终止windows-closure-rat job,中,T1063 d514e90d移除；GitHub平台仍有自身隐式上限,timeout-minutes: 180
+TO-163,构建与开发治理工具,显式执行控制点,.github/workflows/desktop-release.yml,1105,300秒,False,校验时间预算,安装完成后仍判检查失败,高,不是中途杀安装进程；T1063验证变可选continue-on-error,installWatch.Elapsed >300s
+TO-164,构建与开发治理工具,显式执行控制点,.github/workflows/desktop-release.yml,1185,120秒,False,停止等待,启动未就绪则验证失败,高,循环内读取耗时不计入名义预算；T1063验证可选continue-on-error,600次×sleep200ms
+TO-165,构建与开发治理工具,显式执行控制点,.github/workflows/desktop-release.yml,1306,10秒,False,生命周期清理,优雅退出未完成则强杀验证app,低,仅CI临时安装，不是用户任务超时,app.WaitForExit(10000)
+TO-166,构建与开发治理工具,显式执行控制点,.github/workflows/desktop-release.yml,1356,10分钟,False,CI作业,超时终止draft-release job,中,T1063 d514e90d移除；GitHub平台仍有自身隐式上限,timeout-minutes: 10
+TO-167,构建与开发治理工具,显式执行控制点,.github/workflows/harness.yml,29,340分钟,False,CI作业,超时终止对应job,中,T1063未修改,timeout-minutes: 340
+TO-168,构建与开发治理工具,显式执行控制点,.github/workflows/verify.yml,30,40分钟,False,CI作业,超时终止对应job,中,T1063未修改,timeout-minutes: 40
+TO-169,构建与开发治理工具,显式执行控制点,.github/workflows/verify.yml,82,40分钟,False,CI作业,超时终止对应job,中,T1063未修改,timeout-minutes: 40
+TO-170,构建与开发治理工具,显式执行控制点,ai-worker/scripts/browser-runtime-probe.mjs,31,30秒,True,开发探针,中止浏览器运行时探针子进程,低,,"setTimeout(child.kill SIGTERM,30000)"
+TO-171,构建与开发治理工具,显式执行控制点,ai-worker/scripts/t829-model-compatibility.ts,59,30秒,True,开发探针,中止模型列表探测请求,低,,AbortSignal.timeout(30_000)
+TO-172,构建与开发治理工具,显式执行控制点,ai-worker/scripts/t829-model-compatibility.ts,145,默认60秒，5~60秒,False,开发探针,中止模型流式兼容探测,低,103/105定义同一默认预算，不另算；0和NaN回到60s,"AbortSignal.timeout(timeoutMs=clamp(T829_TIMEOUT_MS,5000,60000))"
+TO-173,构建与开发治理工具,显式执行控制点,ai-worker/scripts/t829-model-compatibility.ts,173,默认60秒，5~60秒,False,开发探针,中止模型工具调用兼容探测,低,103/105定义同一默认预算，不另算；0和NaN回到60s,"AbortSignal.timeout(timeoutMs=clamp(T829_TIMEOUT_MS,5000,60000))"
+TO-174,构建与开发治理工具,显式执行控制点,backend/scripts/t891-cover-reliability-probe.ts,129,默认300秒，60~900秒,False,开发探针,中止单次封面可靠性探测网络请求,低,28配置；显式signal覆盖默认；0/NaN回默认300s,init.signal ?? AbortSignal.timeout(requestTimeoutMs)
+TO-175,构建与开发治理工具,预算装配或声明,backend/scripts/t915-postgres-checkpoint-probe.ts,21,60秒,False,开发预算配置,为Tool Host/Postgres验证传入总预算,低,预算由实际host消费；不是生产默认定义,budget.deadlineMs:60000
+TO-176,构建与开发治理工具,预算装配或声明,backend/scripts/t915-postgres-research-evidence-probe.ts,22,60秒,False,开发预算配置,为Tool Host/Postgres验证传入总预算,低,预算由实际host消费；不是生产默认定义,budget.deadlineMs:60000
+TO-177,构建与开发治理工具,预算装配或声明,backend/scripts/t915-postgres-tool-host-probe.ts,24,60秒,False,开发预算配置,为Tool Host/Postgres验证传入总预算,低,预算由实际host消费；不是生产默认定义,budget.deadlineMs:60000
+TO-178,构建与开发治理工具,预算装配或声明,channel-partners/智溯科技/growth-product-config.json,95,3000秒（50分钟）,False,渠道配置,渠道配置给MiniMax M3模型设置请求预算,中,静态模板是否装入用户账号需运行配置核对；不重复生产模型引擎通用策略,models.default[minimax-m3].settings.timeoutMs=3000000
+TO-179,构建与开发治理工具,显式执行控制点,docker-compose.yml,18,3秒,False,开发健康检查,单次开发依赖健康探针超时记失败,低,interval5s/retries10为健康检查策略，不是业务30秒,healthcheck.timeout: 3s
+TO-180,构建与开发治理工具,显式执行控制点,docker-compose.yml,38,3秒,False,开发健康检查,单次开发依赖健康探针超时记失败,低,interval5s/retries10为健康检查策略，不是业务30秒,healthcheck.timeout: 3s
+TO-181,构建与开发治理工具,显式执行控制点,frontend/scripts/desktop/build-sidecar.mjs,804,20秒,False,构建探针,HyperFrames --help探针被终止，构建判失败,中,T1063删除timeout，build-only跳过探针,spawnSync(... timeout:20_000)
+TO-182,构建与开发治理工具,显式执行控制点,frontend/scripts/desktop/execution-worker-runtime.mjs,42,30秒,True,构建探针,分层Worker外部依赖解析超时导致打包失败,中,配置定义只计一项；复用调用于build-sidecar:457、1115；T1063保留此timeout，仅457调用加build-only保护，1124仍无保护（分层runtime才spawn）,spawnSync(... timeout:30000)
+TO-183,构建与开发治理工具,显式执行控制点,frontend/scripts/desktop/node-runtime.mjs,31,5秒,False,构建探针,探测Node版本超时则候选视为不可用,低,T1063已删timeout,spawnSync(... timeout:5_000)
+TO-184,构建与开发治理工具,显式执行控制点,frontend/scripts/desktop/obfuscate.mjs,726,默认60秒，可配置,False,停止等待,未准备好则冒烟失败，finally清理临时sidecar,高,TCP connect无单次超时，外层预算不保证准时退出；T1063 build-only跳过整个smoke,opts.timeoutMs??60_000 / Date.now deadline
+TO-185,构建与开发治理工具,显式执行控制点,frontend/scripts/desktop/obfuscate.mjs,824,上限30秒,True,浏览器动作,浏览器导航超时抛错、冒烟失败,高,792限制预算；零值传入Playwright可表示关闭但上层ready零值立即失败；T1063 build-only跳过,"page.goto timeoutMs=min(smokeBudget,30_000)"
+TO-186,构建与开发治理工具,显式执行控制点,frontend/scripts/desktop/obfuscate.mjs,827,上限30秒,True,浏览器动作,读DOM超时抛错、冒烟失败,中,与导航为两个独立等待点；T1063 build-only跳过,"body.innerText timeoutMs=min(smokeBudget,30_000)"
+TO-187,构建与开发治理工具,显式执行控制点,frontend/scripts/desktop/package.mjs,272,30秒,True,构建探针,HTTPS探针被终止；两个站都失败则出包失败,高,两个站同策略复用只记一项；T1063删timeout且build-only不执行TLS探针,spawnSync TLS fetch timeout:30_000
+TO-188,构建与开发治理工具,显式执行控制点,frontend/scripts/desktop/verify-handshake-gate.mjs,76,30秒,True,停止等待,独立安全握手验证停止等启动、判失败,中,此门是手工/开发验证工具；T1063未修改,waitReady ms=30000 / deadline
+TO-189,构建与开发治理工具,显式执行控制点,frontend/scripts/desktop/verify-handshake-gate.mjs,85,1.5秒,False,单次请求,中止单次就绪HTTP请求、循环继续,低,,AbortSignal.timeout(1500)
+TO-190,构建与开发治理工具,显式执行控制点,frontend/scripts/desktop/verify-handshake-gate.mjs,107,6秒,False,单次请求,中止单次路由探针，记状态0,中,,AbortSignal.timeout(6000)
+TO-191,构建与开发治理工具,显式执行控制点,frontend/scripts/t712-video-regression-loop.ts,405,12分钟,False,回归工具等待,停止等待AI回归任务，当前轮失败,低,不会取消原任务，可能继续下一轮,"poll(aiTask,12*60_000)"
+TO-192,构建与开发治理工具,显式执行控制点,frontend/scripts/t712-video-regression-loop.ts,484,35分钟,False,回归工具等待,停止等待渲染回归任务，当前轮失败,低,不会取消原任务；constraints.timeoutSec:null明确无总超时,"poll(renderTask,35*60_000)"
+TO-193,构建与开发治理工具,显式执行控制点,frontend/scripts/visual/capture-current.mjs,79,默认120秒,False,停止等待,启动开发服后等待过限，截图脚本失败,低,fetch无单次abort预算不严格,waitForServer default120_000 / elapsed deadline
+TO-194,构建与开发治理工具,显式执行控制点,frontend/scripts/visual/capture-current.mjs,149,5秒,False,停止等待,复用现有开发服探测失败则退出,低,独立调用预算不同于boot路径120s,"waitForServer(BASE_URL,5_000)"
+TO-195,构建与开发治理工具,显式执行控制点,frontend/scripts/visual/capture-current.mjs,193,30秒,True,浏览器动作,截图导航超时，当前route记失败,低,非安装版业务,page.goto timeout:30_000
+TO-196,构建与开发治理工具,显式执行控制点,frontend/scripts/visual/capture-current.mjs,199,10秒,False,停止等待,停止等load，catch忽略后继续截图,低,,waitForLoadState timeout:10_000
+TO-197,构建与开发治理工具,显式执行控制点,frontend/scripts/visual/capture-with-port.mjs,67,30秒,True,停止等待,开发服未响应则脚本失败,低,fetch无单次abort，预算不严格,elapsed<30_000 server readiness
+TO-198,构建与开发治理工具,显式执行控制点,frontend/scripts/visual/capture-with-port.mjs,105,30秒,True,浏览器动作,截图导航超时失败,低,,page.goto timeout:30_000
+TO-199,构建与开发治理工具,显式执行控制点,frontend/scripts/visual/capture-with-port.mjs,107,10秒,False,停止等待,catch忽略继续截图,低,,waitForLoadState timeout:10_000
+TO-200,构建与开发治理工具,显式执行控制点,mcp-server/scripts/build-runtime.mjs,26,20秒,False,构建探针,杀冒烟子进程并使CLI构建失败,中,CLI构建验证，不是用户CLI请求上限,spawnSync CLI smoke timeout20_000
+TO-201,构建与开发治理工具,显式执行控制点,mcp-server/scripts/smoke.mjs,53,30秒,True,开发探针,MCP冒烟脚本停止等待回复并reject；不代表业务任务取消,低,每个method复用同一请求等待策略；仅手工验收脚本,"request: setTimeout reject(...,30_000)"
+TO-202,构建与开发治理工具,显式执行控制点,orchestrator/process/render-t802-samples.mjs,27,3分钟,False,治理验证,中止样例渲染命令并使回归脚本失败,中,开发样例验收,execFileSync timeout180_000
+TO-203,构建与开发治理工具,显式执行控制点,orchestrator/process/research-gate.mjs,231,4分钟,False,治理验证,中止研究卡声明的调查命令并记录失败,中,项目vendored治理脚手架，非产品Worker,spawnSync timeout240_000
+TO-204,构建与开发治理工具,显式执行控制点,orchestrator/process/t802-scene-graph-loop.ts,217,3分钟,False,治理验证,中止场景图验证渲染命令,中,开发回归,execFileSync timeout180_000
+TO-205,构建与开发治理工具,显式执行控制点,orchestrator/process/verify-t842-opening-preview.mjs,161,5分钟,False,治理验证,中止回归渲染命令,中,开发回归,timeout300_000
+TO-206,构建与开发治理工具,显式执行控制点,orchestrator/process/verify-t858-unified-stage-preview.mjs,236,10分钟,False,治理验证,中止统一舞台验证渲染命令,中,开发回归,timeout600_000
+TO-207,构建与开发治理工具,显式执行控制点,tools/diag-douyin-page.mjs,77,60秒,False,浏览器动作,手工抖音诊断导航抛错,低,80/254 waitForTimeout仅延时，不计,page.goto timeout:60_000
+TO-208,构建与开发治理工具,显式执行控制点,tools/windows-closure-rat/inspect-installed-webview.mjs,12,30秒,True,停止等待,停止等待WebView2 target，验证失败,中,fetch没有单次abort，30秒不是严格封顶；T1063变可选验证,Date.now()+30_000 discovery deadline
+TO-209,构建与开发治理工具,显式执行控制点,tools/windows-closure-rat/inspect-installed-webview.mjs,50,10秒,False,停止等待,CDP连接超时拒绝Promise并报错,中,T1063变可选验证；超时后socket清理路径不足,setTimeout reject 10_000
+TO-210,构建与开发治理工具,显式执行控制点,tools/windows-closure-rat/inspect-installed-webview.mjs,98,10秒,False,停止等待,CDP DOM读取超时拒绝Promise并报错,中,T1063变可选验证；超时后socket清理路径不足,setTimeout reject 10_000
+TO-211,构建与开发治理工具,显式执行控制点,tools/windows-closure-rat/runtime-smoke.mjs,204,30秒,True,工具校验,Whisper模块Worker未返回则探针进程退出失败,中,独立RAT保留；T1063 build-only绕开runtime-smoke,"setTimeout(process.exit(2),30000)"
+TO-212,构建与开发治理工具,显式执行控制点,tools/windows-closure-rat/runtime-smoke.mjs,220,35秒,False,工具校验,终止外层Whisper探针进程,中,独立RAT保留；T1063 build-only绕开runtime-smoke,spawnSync timeout:35_000
+TO-213,构建与开发治理工具,显式执行控制点,tools/windows-closure-rat/runtime-smoke.mjs,256,30秒,True,工具校验,终止CLI探针并判失败,中,独立RAT保留；T1063 build-only绕开runtime-smoke,spawnSync HyperFrames --help timeout:30_000
+TO-214,构建与开发治理工具,显式执行控制点,tools/windows-closure-rat/runtime-smoke.mjs,278,30秒,True,工具校验,终止工具版本探针并判失败,中,独立RAT保留；T1063 build-only绕开runtime-smoke,spawnSync ffmpeg/ffprobe -version timeout:30_000
+TO-215,构建与开发治理工具,显式执行控制点,tools/windows-closure-rat/runtime-smoke.mjs,365,120秒,False,工具校验,终止临时视频渲染并判失败,中,独立RAT保留；T1063 build-only绕开runtime-smoke,spawnSync render timeout:120_000
+TO-216,构建与开发治理工具,显式执行控制点,tools/windows-closure-rat/runtime-smoke.mjs,422,120秒,False,工具校验,主页面未好则验收失败,中,独立RAT保留；T1063 build-only绕开runtime-smoke。ffmpeg/ffprobe共用策略；fetch无单次abort使120秒不严格封顶,Date.now()+120_000
+TO-217,构建与开发治理工具,显式执行控制点,tools/windows-closure-rat/runtime-smoke.mjs,462,10秒,False,生命周期清理,先优雅关闭，再强杀临时sidecar,中,独立RAT保留；T1063 build-only绕开runtime-smoke,Promise.race exit vs setTimeout10_000
+TO-218,构建与开发治理工具,显式执行控制点,tools/windows-closure-rat/worker-smoke.mjs,25,默认30秒，可调用参数配置,True,停止等待,Worker未握手判失败并断开IPC,中,同一函数复用7类Worker；定义/使用不重复；T1063 build-only闭包不执行runtime-smoke,"within(readyPromise,readyTimeoutMs=30000)"
+TO-219,构建与开发治理工具,显式执行控制点,tools/windows-closure-rat/worker-smoke.mjs,29,默认5秒，可配置,False,生命周期清理,先断IPC，退出未完成则SIGKILL；再等同一5秒确认,低,32为同一stop预算复用，不重复为策略,"within(closed,stopTimeoutMs=5000)"
+TO-220,构建与开发治理工具,显式执行控制点,tools/windows-runtime-rat/run.ps1,24,默认20秒，可参数配置,False,停止等待,RAT等输出文件超时抛错,低,默认多调用共用策略,Wait-File $Seconds=20 deadline
+TO-221,构建与开发治理工具,显式执行控制点,tools/windows-runtime-rat/run.ps1,34,默认60秒，可参数配置,False,停止等待,RAT等日志信号超时抛错,低,261显式60s同一策略不重复,Wait-LogPattern $Seconds=60
+TO-222,构建与开发治理工具,显式执行控制点,tools/windows-runtime-rat/run.ps1,227,30秒,True,停止等待,系统代理RAT输出文件未到则抛错,低,明确覆盖generic默认20s，为独立调用预算,Wait-File $proxyResult 30

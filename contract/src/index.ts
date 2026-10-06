@@ -8,6 +8,7 @@ export * from "./transport";
 export * from "./client";
 export * from "./local-platform";
 export * from "./cli-policy";
+export * from "./timeout-policy";
 export * from "./version";
 
 export {

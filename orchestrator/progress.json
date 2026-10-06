@@ -4,77 +4,141 @@
     "work_branch": "main"
   },
   "summary": {
-    "verticals": 58,
+    "verticals": 62,
     "tasks_done": 38,
-    "tasks_total": 149,
-    "tasks_pending": 111,
+    "tasks_total": 153,
+    "tasks_pending": 115,
     "verticals_complete": 3
   },
   "verticals": [
     {
-      "id": "T-1062",
-      "task_id": "T-1062",
-      "archetype": [
-        "orchestration"
-      ],
-      "tasks": [
-        {
-          "step": "integration",
-          "status": "pending"
-        }
-      ],
-      "depends_on": [],
-      "blocked_reason": null
-    },
-    {
       "id": "T-1022",
-      "task_id": "T-1022",
       "archetype": [
         "user-authored",
         "derived-computed",
         "orchestration"
       ],
+      "task_id": "T-1022",
       "tasks": [
         {
           "step": "implementation",
           "status": "pending"
         }
       ],
+      "blocked_reason": null,
       "depends_on": [],
-      "blocked_reason": null
+      "step_depends_on": {},
+      "write_set": [
+        "docs/features/t1022-account-group-workspace.md",
+        "docs/features/t1022-account-group-workspace/**",
+        "docs/features/t1022-account-group-workspace.review.md",
+        "orchestrator/reviews/T-1022-round-1.json",
+        "orchestrator/reviews/T-1022-round-2.json",
+        "orchestrator/reviews/T-1022-round-3.json",
+        "AGENTS.md",
+        ".agents/skills/oil-ui-pro/**",
+        "backend/src/**",
+        "backend/drizzle/**",
+        "frontend/src/**",
+        "frontend/tests/**",
+        "ai-worker/src/**",
+        "contract/src/**",
+        "contract/tests/**",
+        "mcp-server/**",
+        "docs/verification/t1022/**",
+        "orchestrator/DECISION_LOG.md"
+      ],
+      "read_set": [
+        "docs/features/t1022-account-group-workspace.md",
+        "docs/features/t1022-account-group-workspace/**",
+        "docs/产品定位.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "contract/src/**",
+        "backend/src/schema/**",
+        "backend/src/modules/platform-account/**",
+        "backend/src/modules/analytics/**",
+        "backend/src/modules/ai-runtime/**",
+        "backend/src/application/queries/**",
+        "frontend/src/components/shell/**",
+        "frontend/src/features/platform-account/**",
+        "frontend/src/features/dashboard/**",
+        "frontend/src/features/review/**",
+        "backend/src/**",
+        "frontend/src/**",
+        "ai-worker/src/**",
+        "mcp-server/**",
+        "contract/tests/**",
+        "backend/drizzle/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
     },
     {
       "id": "T-1021",
-      "task_id": "T-1021",
       "archetype": [
         "reference-config",
         "user-authored",
         "ai-generated"
       ],
+      "task_id": "T-1021",
       "tasks": [
         {
           "step": "design",
           "status": "pending"
         }
       ],
+      "blocked_reason": null,
       "depends_on": [],
-      "blocked_reason": null
-    },
-    {
-      "id": "T-1003",
-      "task_id": "T-1003",
-      "archetype": [
-        "orchestration"
+      "step_depends_on": {},
+      "write_set": [
+        "docs/features/t1021-cover-template-library.md",
+        "docs/features/t1021-cover-template-library/**",
+        "docs/features/t1021-cover-template-library.review.md",
+        "orchestrator/reviews/T-1021-round-1.json",
+        "orchestrator/reviews/T-1021-round-2.json",
+        "orchestrator/reviews/T-1021-round-3.json",
+        "orchestrator/DECISION_LOG.md"
       ],
-      "tasks": [
-        {
-          "step": "review",
-          "status": "done",
-          "evidence": "SPEC review PASS 2a4b24cc771e; docs/verification/t1003-spec.md"
-        }
+      "read_set": [
+        "docs/features/t1021-cover-template-library.md",
+        "docs/features/t1021-cover-template-library/**",
+        "docs/features/t1022-account-group-workspace/UI_RULES.md",
+        ".agents/skills/oil-ui-pro/**",
+        "frontend/src/styles/tokens.css",
+        "frontend/src/components/ui/**",
+        "frontend/src/features/assets/**",
+        "contract/src/operations/settings.ts",
+        "contract/src/resources/settings.ts",
+        "docs/产品定位.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "backend/src/modules/assets/**",
+        "backend/src/modules/execution/execution-cover.service.ts",
+        "backend/src/modules/ai-runtime/cover-business-adapter.ts",
+        "backend/src/modules/ai-runtime/chat-cover-task-host.ts",
+        "ai-worker/src/runtime/cover-plan.ts",
+        "frontend/src/features/copilot/chat-generate-card.tsx",
+        "frontend/src/features/draft-workbench/draft-workbench-page.tsx",
+        "contract/src/operations/assets.ts",
+        "frontend/src/features/draft-workbench/publish-package-cta.tsx",
+        "frontend/src/features/draft-workbench/draft-workbench-data.ts",
+        "frontend/src/features/draft-workbench/draft-chat-request.tsx",
+        "frontend/src/features/publishing-center/**",
+        "frontend/src/features/copilot/chat-publish-package-card.tsx",
+        "frontend/src/app/(creator)/projects/[projectId]/publishing/page.tsx",
+        "backend/src/modules/publishing/**",
+        "backend/src/modules/ai/ai.service.ts",
+        "backend/src/application/chat/generation-tasks.ts",
+        "contract/src/operations/publishing.ts",
+        "contract/src/resources/publishing.ts"
       ],
-      "depends_on": [],
-      "blocked_reason": null
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
     },
     {
       "id": "T-988",
@@ -106,7 +170,15 @@
         "frontend/src/server/dashboard-query-projection.ts",
         "backend/src/application/queries/**",
         "backend/src/modules/query-services/**",
-        "orchestrator/LESSON_LEDGER.md"
+        "orchestrator/LESSON_LEDGER.md",
+        "backend/src/modules/publishing/publishing.service.ts",
+        "backend/src/modules/publishing/publishing.service.test.ts",
+        "frontend/src/server/dashboard-query-projection.test.ts",
+        "frontend/src/server/persistence-client.ts",
+        "frontend/src/features/intelligence/collection-import-dialogs.tsx",
+        "frontend/src/features/knowledge/knowledge-graph-view.tsx",
+        "frontend/src/app/(creator)/loading.tsx",
+        "frontend/src/app/(creator)/daily-report/loading.tsx"
       ],
       "read_set": [
         "docs/features/t988-home-navigation-copy.md",
@@ -2217,39 +2289,375 @@
       "commits": {}
     },
     {
-      "id": "T-1016",
-      "task_id": "T-1016",
+      "id": "T-1003",
       "archetype": [
         "orchestration"
       ],
+      "task_id": "T-1003",
+      "tasks": [
+        {
+          "step": "review",
+          "status": "done"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "orchestrator/reviews/T-1003-round-1.json"
+      ],
+      "read_set": [
+        "docs/产品定位.md",
+        "docs/features/t1003-agent-workbench.md"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "T-1016",
+      "archetype": [
+        "orchestration"
+      ],
+      "task_id": "T-1016",
       "tasks": [
         {
           "step": "research",
           "status": "done"
         }
       ],
+      "blocked_reason": null,
       "depends_on": [],
-      "read_set": [],
-      "write_set": [],
+      "step_depends_on": {},
+      "write_set": [
+        "BACKLOG.md",
+        "docs/features/t1016-external-agent-research.md",
+        "docs/research/2026-09-27-external-local-agents.md",
+        "docs/research/evidence/t1016-local-probe.json",
+        "docs/research/evidence/t1016-reconcile.txt"
+      ],
+      "read_set": [
+        "docs/features/t1016-external-agent-research.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "backend/src/modules/execution/**",
+        "mcp-server/**",
+        "ai-worker/src/**",
+        "contract/**"
+      ],
       "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
       "commits": {}
     },
     {
       "id": "T-1019",
-      "task_id": "T-1019",
       "archetype": [
         "ai-generated",
         "user-authored"
       ],
+      "task_id": "T-1019",
       "tasks": [
         {
           "step": "implementation",
-          "status": "pending",
-          "evidence": null
+          "status": "pending"
         }
       ],
+      "blocked_reason": null,
       "depends_on": [],
-      "blocked_reason": null
+      "step_depends_on": {},
+      "write_set": [
+        "docs/features/audience-task-topics/**",
+        "backend/src/modules/candidate/**",
+        "backend/src/schema/candidate.ts",
+        "backend/src/index.ts",
+        "backend/drizzle/**",
+        "backend/src/modules/ai/ai.service.ts",
+        "backend/src/modules/ai/topic-candidate-adoption.service.ts",
+        "backend/src/modules/ai/daily-topic-completion.service.ts",
+        "backend/src/application/generation/discovery.ts",
+        "ai-worker/src/nodes/topic-node.ts",
+        "ai-worker/src/prompt/templates/topic-generate.ts",
+        "contract/src/resources/audience-task.ts",
+        "contract/src/resources/candidate.ts",
+        "contract/src/operations/candidate.ts",
+        "contract/src/internal/execution-topic-read.ts",
+        "frontend/src/features/topics/**",
+        "frontend/src/server/persistence-client.ts",
+        "docs/verification/**",
+        "orchestrator/reviews/**",
+        "backend/src/modules/ai-runtime/topic-business-adapter.ts",
+        "backend/src/modules/ai-runtime/daily-topic-business-adapter.ts",
+        "backend/src/modules/execution/execution-topic-read.service.ts",
+        "ai-worker/src/execution/**",
+        "contract/src/index.ts",
+        "contract/src/cli-policy.ts",
+        "ai-worker/src/prompt/registry.ts",
+        "ai-worker/src/prompt/templates/topic-query-plan.ts",
+        "backend/src/modules/ai-runtime/effective-skill-snapshot.ts",
+        "backend/src/modules/ai-runtime/effective-skill-snapshot.test.ts",
+        "frontend/src/components/ai/adopt-candidate-card.tsx",
+        "frontend/tests/e2e/audience-task-topics.spec.ts",
+        "contract/tests/registry.test.ts",
+        "contract/tests/execution-topic-read.test.ts",
+        "contract/tests/cli-policy.test.ts",
+        "backend/src/modules/ai-runtime/topic-business-adapter.test.ts",
+        "backend/src/modules/ai-runtime/chat-business-generation-preparation.ts",
+        "backend/src/modules/ai-runtime/chat-production-composition.ts"
+      ],
+      "read_set": [
+        "docs/features/audience-task-topics/**",
+        "backend/src/modules/candidate/**",
+        "backend/src/modules/ai-runtime/**",
+        "backend/src/modules/ai/**",
+        "backend/src/modules/execution/execution-topic-read.service.test.ts",
+        "backend/src/modules/execution/execution-topic-read.service.ts",
+        "backend/src/application/generation/**",
+        "ai-worker/src/**",
+        "contract/src/**",
+        "frontend/src/features/topics/**",
+        "frontend/src/components/ai/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "T-1062",
+      "archetype": [
+        "orchestration"
+      ],
+      "task_id": "T-1062",
+      "tasks": [
+        {
+          "step": "integration",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "BACKLOG.md",
+        "BACKLOG-details.md",
+        "PROJECT.md",
+        "docs/**",
+        "orchestrator/**",
+        "backend/**",
+        "frontend/**",
+        "contract/**",
+        "ai-worker/**",
+        "mcp-server/**",
+        ".agents/**",
+        "vendor/**",
+        "pnpm-lock.yaml",
+        "package.json",
+        "LICENSE",
+        "AGENTS.md"
+      ],
+      "read_set": [
+        "BACKLOG.md",
+        "BACKLOG-details.md",
+        "PROJECT.md",
+        "PROJECT_CONTEXT.md",
+        "PRODUCT_SPEC.md",
+        "docs/**",
+        "orchestrator/**",
+        "backend/**",
+        "frontend/**",
+        "contract/**",
+        "ai-worker/**",
+        "mcp-server/**",
+        ".agents/**",
+        "pnpm-lock.yaml",
+        "package.json",
+        "LICENSE"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "T-1066",
+      "archetype": [
+        "orchestration"
+      ],
+      "task_id": "T-1066",
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "docs/features/t1066-timeout-policy.md",
+        "docs/features/t1066-timeout-policy.review.md",
+        "docs/verification/t1066/**",
+        "docs/engineering/timeout-policy.md",
+        "contract/src/**",
+        "contract/package.json",
+        "backend/src/**",
+        "backend/scripts/**",
+        "ai-worker/src/**",
+        "ai-worker/scripts/**",
+        "frontend/src/**",
+        "frontend/src-tauri/**",
+        "frontend/scripts/**",
+        "mcp-server/**",
+        "tools/**",
+        ".github/**",
+        ".agents/**",
+        "AGENTS.md",
+        "orchestrator/LESSON_LEDGER.md",
+        "orchestrator/DECISION_LOG.md",
+        "orchestrator/COMPLEXITY_LEDGER.json",
+        "orchestrator/process/**",
+        "docker-compose.yml",
+        "channel-partners/**",
+        "contract/tests/**"
+      ],
+      "read_set": [
+        "docs/features/t1066-timeout-policy.md",
+        "docs/research/t1065/**",
+        "contract/src/**",
+        "backend/src/**",
+        "ai-worker/src/**",
+        "frontend/src/**",
+        "frontend/src-tauri/**",
+        "frontend/scripts/**",
+        "tools/**",
+        ".github/**",
+        "orchestrator/**",
+        ".agents/**",
+        "docker-compose.yml",
+        "channel-partners/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "T-1066-worker",
+      "archetype": [
+        "orchestration"
+      ],
+      "task_id": "T-1066",
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "ai-worker/src/**",
+        "backend/src/**"
+      ],
+      "read_set": [
+        "contract/src/timeout-policy.ts",
+        "docs/features/t1066-timeout-policy.md",
+        "docs/research/t1065/**",
+        "ai-worker/src/**",
+        "backend/src/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "T-1066-frontend",
+      "archetype": [
+        "orchestration"
+      ],
+      "task_id": "T-1066",
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "frontend/src/**",
+        "frontend/src-tauri/**"
+      ],
+      "read_set": [
+        "contract/src/timeout-policy.ts",
+        "docs/features/t1066-timeout-policy.md",
+        "docs/research/t1065/**",
+        "frontend/src/**",
+        "frontend/src-tauri/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "T-1066-tooling",
+      "archetype": [
+        "orchestration"
+      ],
+      "task_id": "T-1066",
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "frontend/scripts/**",
+        "backend/scripts/**",
+        "ai-worker/scripts/**",
+        "mcp-server/**",
+        "tools/windows-closure-rat/**",
+        "tools/windows-runtime-rat/**",
+        ".agents/**",
+        ".github/**",
+        "docker-compose.yml",
+        "channel-partners/**"
+      ],
+      "read_set": [
+        "contract/src/timeout-policy.ts",
+        "docs/features/t1066-timeout-policy.md",
+        "docs/research/t1065/**",
+        "frontend/scripts/**",
+        "backend/scripts/**",
+        "ai-worker/scripts/**",
+        "mcp-server/**",
+        "tools/windows-closure-rat/**",
+        "tools/windows-runtime-rat/**",
+        ".agents/**",
+        ".github/**",
+        "docker-compose.yml",
+        "channel-partners/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
     }
   ],
   "leases": {}

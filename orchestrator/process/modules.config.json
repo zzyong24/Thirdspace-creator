@@ -1725,7 +1725,7 @@
         "docs/features/t1003-agent-workbench.md"
       ],
       "write_set": [
-        "orchestrator/reviews/T-1003-round-*.json"
+        "orchestrator/reviews/T-1003-round-1.json"
       ],
       "verify_commands": {
         "review": "node orchestrator/process/reviewctl.mjs context T-1003"
@@ -1772,7 +1772,8 @@
         "backend/src/modules/candidate/**",
         "backend/src/modules/ai-runtime/**",
         "backend/src/modules/ai/**",
-        "backend/src/modules/execution/execution-topic-read*",
+        "backend/src/modules/execution/execution-topic-read.service.test.ts",
+        "backend/src/modules/execution/execution-topic-read.service.ts",
         "backend/src/application/generation/**",
         "ai-worker/src/**",
         "contract/src/**",
@@ -1869,6 +1870,159 @@
       "verify_commands": {
         "integration": "git diff --check"
       }
+    },
+    "T-1066": {
+      "task_id": "T-1066",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "read_set": [
+        "docs/features/t1066-timeout-policy.md",
+        "docs/research/t1065/**",
+        "contract/src/**",
+        "backend/src/**",
+        "ai-worker/src/**",
+        "frontend/src/**",
+        "frontend/src-tauri/**",
+        "frontend/scripts/**",
+        "tools/**",
+        ".github/**",
+        "orchestrator/**",
+        ".agents/**",
+        "docker-compose.yml",
+        "channel-partners/**"
+      ],
+      "write_set": [
+        "docs/features/t1066-timeout-policy.md",
+        "docs/features/t1066-timeout-policy.review.md",
+        "docs/verification/t1066/**",
+        "docs/engineering/timeout-policy.md",
+        "contract/src/**",
+        "contract/package.json",
+        "backend/src/**",
+        "backend/scripts/**",
+        "ai-worker/src/**",
+        "ai-worker/scripts/**",
+        "frontend/src/**",
+        "frontend/src-tauri/**",
+        "frontend/scripts/**",
+        "mcp-server/**",
+        "tools/**",
+        ".github/**",
+        ".agents/**",
+        "AGENTS.md",
+        "orchestrator/LESSON_LEDGER.md",
+        "orchestrator/DECISION_LOG.md",
+        "orchestrator/COMPLEXITY_LEDGER.json",
+        "orchestrator/process/**",
+        "docker-compose.yml",
+        "channel-partners/**",
+        "contract/tests/**"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "node --experimental-strip-types tools/timeout-policy/check.mjs",
+          "pnpm --dir contract exec vitest run tests/timeout-policy.test.ts --retry=0"
+        ]
+      },
+      "depends_on": []
+    },
+    "T-1066-worker": {
+      "task_id": "T-1066",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "read_set": [
+        "contract/src/timeout-policy.ts",
+        "docs/features/t1066-timeout-policy.md",
+        "docs/research/t1065/**",
+        "ai-worker/src/**",
+        "backend/src/**"
+      ],
+      "write_set": [
+        "ai-worker/src/**",
+        "backend/src/**"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "pnpm --dir ai-worker exec vitest run src/execution/worker-runtime.test.ts --retry=0"
+        ]
+      },
+      "depends_on": []
+    },
+    "T-1066-frontend": {
+      "task_id": "T-1066",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "read_set": [
+        "contract/src/timeout-policy.ts",
+        "docs/features/t1066-timeout-policy.md",
+        "docs/research/t1065/**",
+        "frontend/src/**",
+        "frontend/src-tauri/**"
+      ],
+      "write_set": [
+        "frontend/src/**",
+        "frontend/src-tauri/**"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "pnpm --dir frontend exec vitest run src/features/knowledge/knowledge-dump-zone.test.tsx --retry=0"
+        ]
+      },
+      "depends_on": []
+    },
+    "T-1066-tooling": {
+      "task_id": "T-1066",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "read_set": [
+        "contract/src/timeout-policy.ts",
+        "docs/features/t1066-timeout-policy.md",
+        "docs/research/t1065/**",
+        "frontend/scripts/**",
+        "backend/scripts/**",
+        "ai-worker/scripts/**",
+        "mcp-server/**",
+        "tools/windows-closure-rat/**",
+        "tools/windows-runtime-rat/**",
+        ".agents/**",
+        ".github/**",
+        "docker-compose.yml",
+        "channel-partners/**"
+      ],
+      "write_set": [
+        "frontend/scripts/**",
+        "backend/scripts/**",
+        "ai-worker/scripts/**",
+        "mcp-server/**",
+        "tools/windows-closure-rat/**",
+        "tools/windows-runtime-rat/**",
+        ".agents/**",
+        ".github/**",
+        "docker-compose.yml",
+        "channel-partners/**"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "node --test frontend/scripts/desktop/*.test.mjs"
+        ]
+      },
+      "depends_on": []
     }
   }
 }
