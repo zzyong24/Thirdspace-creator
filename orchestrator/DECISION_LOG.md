@@ -3591,3 +3591,12 @@ Owner=agent 的机械实现选择，非用户typed capability或新规格复审�
 
 
 同一DEC-T1062-INSTALLED-CONTRACT-BOOTSTRAP的测试发现校正：Node ESM新回归改为mjs后，旧Vitest仅匹配.ts，实际61/325不覆盖新42。独立复核准入既有config只追加精确mjs路径；当前44产品/45step，所有原测试/合同/范围保持，须重新实际62/367和3/49。Owner仍agent的机械测试装配，无新用户capability/规格周期。
+
+
+## DEC-T1062-INTEGRATION-COMPLEXITY-REBIND-20261006：已有整合字节的机械预算重绑
+
+Owner=agent 的机械控制记录，非用户 typed capability，不开启规格新周期。用户既有整合、修复、提交、本地打包及当前 App 逐功能验证授权、原 SPEC cfbaf9、原 integration592/801 和原18均不变。正常 claim 的11项拒绝已保留；7个当前文件全与既有67b4a27f整合提交相同，后续本地打包/历史兼容/合同 bootstrap 并未改变它们，复杂度账本旧SHA未同步。
+
+独立只读报告 `/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/integration-complexity-readonly-review-g3hiqp92/independent-review.json`，SHA256 `cab28137d8183a5c55ba2f7b8009c0a650522f29985c0480a501dc04e1364e0f`。本次只追加7文件的11既有类别当前SHA预算；原entries、历史baseline、SPEC、任务、scope、guard、markers和产品字节均原样保留。不扩大Rust/Bun工具链、凭据存储、二进制或进程权限；persistence-client仅为原PUBLIC-PORT-WIRING准入的同transaction公开父项目归属接线。
+
+本条不把此前claim失败改签成功，不签Owner=user或新能力许可。ROOT独占控制面正常应用候选、前置校验及提交后才能正常claim原integration；仅治理记录变更无需重包，实际228安装包与后续控制HEAD身份区分。原18历史成功、missing/FAIL和当前安装验收仍按真实证据，不代签全局Gate、安装功能、模型、听审或用户验收。

@@ -2395,6 +2395,122 @@
       "scope_source": "docs/features/t1062-consolidated-local-client-acceptance.md",
       "reason": "机械兼容归档提及已执行旧keyring SQL及中性字段夹具；无新凭据库、权限、原生程序或凭证读写协议。原SQL仅在内存参考库执行，用户库不重放；fresh现行NOT NULL凭证结构保持，真正设置/Keychain路径不改。",
       "acceptance": "只登记准确文件的必要历史识别复杂度；真实21迁移与132表副本双启证据另存，不代表安装或全局通过。"
+    },
+    {
+      "task_id": "T-1062",
+      "files": [
+        "docs/verification/t1062/frontend-native-adaptation-scope-independent-review.json"
+      ],
+      "file_sha256": "4efb30ab9eaf5b0d3b7d543df8790f363d7d562ef64985532d115a7b6142b5e9",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1062-INTEGRATION-20261005 / DEC-T1062-ROUGH-20261005 / DEC-T1062-INTEGRATION-COMPLEXITY-REBIND-20261006",
+      "scope_source": "docs/features/t1062-consolidated-local-client-acceptance.md",
+      "reason": "既有独立metadata/来源审查中的Rust语言包及Bun构建证据文字，不新增产品language toolchain；该文件是独评本身，不能将其中引用升级为安装或功能PASS。",
+      "review": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/integration-complexity-readonly-review-g3hiqp92/independent-review.json",
+      "acceptance": "仅本7文件/11类别当前精确SHA的既有机制预算重绑，独立只读报告SHA256 cab28137d8183a5c55ba2f7b8009c0a650522f29985c0480a501dc04e1364e0f；旧entries原样保留，不自动授权新hash，不代签claim、重新原18、全局Gate、安装功能或用户验收。"
+    },
+    {
+      "task_id": "T-1062",
+      "files": [
+        "docs/verification/t1062/frontend-native-adaptation-scope.json"
+      ],
+      "file_sha256": "0b9c830edda09b5edeebca070843eb9b0948b7a92fee1ad67477405411bed53d",
+      "categories": [
+        "runtime",
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1062-INTEGRATION-20261005 / DEC-T1062-ROUGH-20261005 / DEC-T1062-INTEGRATION-COMPLEXITY-REBIND-20261006",
+      "scope_source": "docs/features/t1062-consolidated-local-client-acceptance.md",
+      "reason": "仅追随已批准source application与801/587、原18及ROOT治理三文件转移的实际证据字段；原工具链/媒体/native范围不变，旧失败及missing历史保留。",
+      "review": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/integration-complexity-readonly-review-g3hiqp92/independent-review.json",
+      "acceptance": "仅本7文件/11类别当前精确SHA的既有机制预算重绑，独立只读报告SHA256 cab28137d8183a5c55ba2f7b8009c0a650522f29985c0480a501dc04e1364e0f；旧entries原样保留，不自动授权新hash，不代签claim、重新原18、全局Gate、安装功能或用户验收。"
+    },
+    {
+      "task_id": "T-1062",
+      "files": [
+        "docs/verification/t1062/frontend-native-transfer.json"
+      ],
+      "file_sha256": "d13332e91c0ec1583a0e68e896191c923dfb465dc1a980cfda77feb509e97900",
+      "categories": [
+        "runtime",
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1062-INTEGRATION-20261005 / DEC-T1062-ROUGH-20261005 / DEC-T1062-INTEGRATION-COMPLEXITY-REBIND-20261006",
+      "scope_source": "docs/features/t1062-consolidated-local-client-acceptance.md",
+      "reason": "仅追随已批准source application与801/587、原18及ROOT治理三文件转移的真实交接字段；不新增runtime、工具链或进程权限，旧字段历史保留。",
+      "review": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/integration-complexity-readonly-review-g3hiqp92/independent-review.json",
+      "acceptance": "仅本7文件/11类别当前精确SHA的既有机制预算重绑，独立只读报告SHA256 cab28137d8183a5c55ba2f7b8009c0a650522f29985c0480a501dc04e1364e0f；旧entries原样保留，不自动授权新hash，不代签claim、重新原18、全局Gate、安装功能或用户验收。"
+    },
+    {
+      "task_id": "T-1062",
+      "files": [
+        "frontend/public/reference-editors/opencut-classic/native/native.js"
+      ],
+      "file_sha256": "ad5e817d260c9fa1686dd606db2151a96c96822d74ab2917956a02e04013769c",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1062-INTEGRATION-20261005 / DEC-T1062-ROUGH-20261005 / DEC-T1062-INTEGRATION-COMPLEXITY-REBIND-20261006",
+      "scope_source": "docs/features/t1062-consolidated-local-client-acceptance.md",
+      "reason": "原OpenCut媒体sample机器精度修复后的既有真实编译产物；Rust返回值错误字符串沿旧引擎，不是新增Rust运行/编译器。",
+      "review": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/integration-complexity-readonly-review-g3hiqp92/independent-review.json",
+      "acceptance": "仅本7文件/11类别当前精确SHA的既有机制预算重绑，独立只读报告SHA256 cab28137d8183a5c55ba2f7b8009c0a650522f29985c0480a501dc04e1364e0f；旧entries原样保留，不自动授权新hash，不代签claim、重新原18、全局Gate、安装功能或用户验收。"
+    },
+    {
+      "task_id": "T-1062",
+      "files": [
+        "frontend/src/server/persistence-client.ts"
+      ],
+      "file_sha256": "b59cffa4d7848168efab2f47a6264275c22c88599b6d95b18533f120afac3a09",
+      "categories": [
+        "credential_store",
+        "language_toolchain",
+        "native_executable"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1062-INTEGRATION-20261005 / DEC-T1062-ROUGH-20261005 / DEC-T1062-INTEGRATION-COMPLEXITY-REBIND-20261006",
+      "scope_source": "docs/features/t1062-consolidated-local-client-acceptance.md",
+      "reason": "唯一后续diff补同transaction公开projects.getProject作为assertProjectOwned（DEC-T1062-PUBLIC-PORT-WIRING-20261006）；凭据resolver、toolchain装配和resolveExecutablePath/worker dispatcher均沿既有机制，不新增存储/安装/执行拓扑。",
+      "review": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/integration-complexity-readonly-review-g3hiqp92/independent-review.json",
+      "acceptance": "仅本7文件/11类别当前精确SHA的既有机制预算重绑，独立只读报告SHA256 cab28137d8183a5c55ba2f7b8009c0a650522f29985c0480a501dc04e1364e0f；旧entries原样保留，不自动授权新hash，不代签claim、重新原18、全局Gate、安装功能或用户验收。"
+    },
+    {
+      "task_id": "T-1062",
+      "files": [
+        "reference-editors/manifest.json"
+      ],
+      "file_sha256": "fb49cd1de0de2a42056a5bbc166617b4411d5d34e9c2d023c6ec49fbf0a8a0ea",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1062-INTEGRATION-20261005 / DEC-T1062-ROUGH-20261005 / DEC-T1062-INTEGRATION-COMPLEXITY-REBIND-20261006",
+      "scope_source": "docs/features/t1062-consolidated-local-client-acceptance.md",
+      "reason": "原四native封存归档/bundle/许可证及当前重建来源hash清单更新；Rust语言包名称是既有引用，不新增系统toolchain。",
+      "review": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/integration-complexity-readonly-review-g3hiqp92/independent-review.json",
+      "acceptance": "仅本7文件/11类别当前精确SHA的既有机制预算重绑，独立只读报告SHA256 cab28137d8183a5c55ba2f7b8009c0a650522f29985c0480a501dc04e1364e0f；旧entries原样保留，不自动授权新hash，不代签claim、重新原18、全局Gate、安装功能或用户验收。"
+    },
+    {
+      "task_id": "T-1062",
+      "files": [
+        "reference-editors/opencut-classic/native/DELIVERY.json"
+      ],
+      "file_sha256": "57ce560b04c9042d49dc16645b0df3fdd8a0ae20e250af5fb75522c7e62d2998",
+      "categories": [
+        "runtime"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1062-INTEGRATION-20261005 / DEC-T1062-ROUGH-20261005 / DEC-T1062-INTEGRATION-COMPLEXITY-REBIND-20261006",
+      "scope_source": "docs/features/t1062-consolidated-local-client-acceptance.md",
+      "reason": "原OpenCut构建工具/Bun argv及source/产物回执随已批准实际current交付更新；保留历史失败，不新增产品runtime。",
+      "review": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/integration-complexity-readonly-review-g3hiqp92/independent-review.json",
+      "acceptance": "仅本7文件/11类别当前精确SHA的既有机制预算重绑，独立只读报告SHA256 cab28137d8183a5c55ba2f7b8009c0a650522f29985c0480a501dc04e1364e0f；旧entries原样保留，不自动授权新hash，不代签claim、重新原18、全局Gate、安装功能或用户验收。"
     }
   ],
   "historical_baselines": []
