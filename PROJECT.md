@@ -3,7 +3,7 @@
 > 本文件由 `node orchestrator/process/pmem.mjs sync` 生成,**勿手改生成段**。
 > 人写的「定位/为什么」改 pmem.mjs 顶部常量与 SYSTEM_ARCHITECTURE.md。
 
-LAST_SYNCED: codex/t793-local-package @ ebd63d98
+LAST_SYNCED: codex/t1062-integrated-client @ 83ca67b4
 
 ## 这是什么(定位)
 
@@ -23,8 +23,10 @@ CreatorOS —— 一个编导式的自媒体内容生产系统(非项目管理�
 
 ## 开放任务(欠债)
 
+- [wip] T-1067 落实本地客户端优先出包并移除人为构建超时
+- [wip] T-1062 汇总各会话改动统一提交并打包本地客户端，逐项验收含Skill粗剪
+- [wip] T-1063 修正流程工具误拒合法字面方括号文件路径
 - [wip] T-1024 紧急排查充值50元后Growth受管Omni模型仍报余额不足
-- [wip] T-1022 按账号组统一多平台工作区、绑定管理、首页与复盘
 - [open] T-1023 修正既有任务绑定glob导致的progress生成阻断
 - [wip] T-1021 CreatorOS封面与小红书图文双模板库、行业分类及私人收藏
 - [open] T-1020 统一可视化推荐、作品承接与科学运营观测
@@ -169,4 +171,4 @@ CreatorOS —— 一个编导式的自媒体内容生产系统(非项目管理�
 
 ## 模块地图(生成自 backend/src/modules)
 
-`ai` · `ai-runtime` · `analytics` · `artifacts` · `assets` · `benchmark` · `browser-sessions` · `calibration` · `candidate` · `cli-invocations` · `content-calendar` · `execution` · `favorites` · `identity` · `ingestion` · `intelligence` · `knowledge` · `learnings` · `material-links` · `notifications` · `platform-account` · `positioning` · `production` · `projects` · `publishing` · `query-services` · `review` · `reviews` · `scheduling` · `search` · `settings` · `taxonomy` · `topic-attribution` · `trend-sources`
+`ai` · `ai-runtime` · `analytics` · `articles` · `artifacts` · `assets` · `benchmark` · `browser-sessions` · `calibration` · `candidate` · `cli-invocations` · `content-calendar` · `creative-canvas` · `creative-results` · `execution` · `favorites` · `graphic-posts` · `identity` · `ingestion` · `intelligence` · `knowledge` · `learnings` · `material-links` · `moments` · `notifications` · `output-scripts` · `platform-account` · `platform-collection` · `positioning` · `production` · `projects` · `publishing` · `query-services` · `review` · `reviews` · `scheduling` · `search` · `settings` · `taxonomy` · `topic-attribution` · `trend-sources` · `work-compositions`

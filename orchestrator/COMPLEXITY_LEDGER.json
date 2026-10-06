@@ -2305,6 +2305,36 @@
       "reason": "四native既有归档/bundle/许可证hash清单中的Rust语言包名称。仅准入已审原Skill/native源码锁定产物在本任务的精确文件字节；不引入runtime/toolchain/安装或进程权限。 本次仅NoteRelay顶层bundleFiles.native.js指向已交付真实脚本SHA；原4项bundle、归档SHA、31native源码、414交付产物及语言包文本不变。",
       "review": "docs/verification/t1062/frontend-native-adaptation-scope-independent-review.json",
       "acceptance": "本精确SHA已由e9bf42665706ca8c1e994a80793493bf27ed085a312ca82e175cc1191fa1ba3d独立批准，实际应用回执9a8df5ea9f1bf456c6698dc1d5ed0ce37b98bb16b42535f5892b4995a98cb8a1；保留原预算历史，仅追加同一既有language_toolchain说明，不代表原18/安装/听审或任务PASS。"
+    },
+    {
+      "task_id": "T-1067",
+      "files": [
+        "frontend/next.config.ts"
+      ],
+      "file_sha256": "460a815ff21dc257ce8dda4e9963180b75b33cd8d85b0cd84b3fcf0c94be18f7",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "scope_source": "docs/features/t1067-local-package-build-only.md",
+      "reason": "沿用既有Tauri/Rust工具链；此任务只按已审精确8路径移除人为探针deadline、分离额外验证，不新增语言或工具链。",
+      "review": "PASS[REV:ebe1b789bc56]",
+      "acceptance": "仅绑定已审before/after精确字节的既有工具链说明；不代表构建、安装或逐功能验收通过。"
+    },
+    {
+      "task_id": "T-1067",
+      "files": [
+        "frontend/next.config.ts"
+      ],
+      "file_sha256": "402337e866b36ef7d82edd141c6e265c4b08a64c619c2f04e2931cdfd9bb6ee7",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "scope_source": "docs/features/t1067-local-package-build-only.md",
+      "reason": "沿用既有Tauri/Rust工具链；此任务只按已审精确8路径移除人为探针deadline、分离额外验证，不新增语言或工具链。",
+      "review": "PASS[REV:ebe1b789bc56]",
+      "acceptance": "仅绑定已审before/after精确字节的既有工具链说明；不代表构建、安装或逐功能验收通过。"
     }
   ],
   "historical_baselines": []
