@@ -160,3 +160,14 @@ flowchart LR
 ```
 
 验收输入恢复补充：旧TMP中的五份build/lock/网络声明及独评回执已实际缺失，经过授权私有归档全扫描仍无法恢复相同字节，必须保留missing历史，不重造旧SHA或追溯签字。同字节模型7、固定视频及manifest、wrapper/gate/cache与旧4快照已核对备份后恢复。四编辑器从既有真实源码归档和配套工具/lock在全新TMP完整production复建，完整31来源、414输出、12旧chunk删除及真实import图仍验证；只有当前新构建原字节吻合后才能给新的CURRENT回执。新NoteRelay web lock由实际npm产生并与原web依赖完整配套，当前ASR声明另绑定原wrapper/gate/model7和真实worker/eval路径并重新独评。CURRENT scope/transfer只重绑新当场证据，原缺失引用移入历史保留；不改原18命令/顺序/预算、frozenTmp、网络隔离、真实ready或源输入，不借丢回执减门。
+
+
+## R6.1 完整重采样计数的实测修正（2026-10-06）
+
+同固定普通AAC与随包b6.0的必要实现回归当场反证上一节ceil唯一值：完整701个resampler输出帧、117个独立WAV重分帧及477866字节PCM一致为N238933；D_dec716800和S716393保持独立，首输出PTS0、末flush16样本且PTS238917。原ceil238934守卫正确拒绝并使公共word仍text；实际FAIL及完整argv/toolpair/raw/frame/WAV/PCM摘要保留于private的aac-v2-r6-failure-6bb4bd15-20261006/current-fail-receipt.json，SHA81ccc79e07b809d9040ed8b9fa460e7f1efce3c6cee909b96ae2736c6b34b2af。不得改签此失败或把R6静态GO称作实际词级成功。
+
+新增双域严格R6族的完整输出计数规则以本节为准，旧v1与已固定R5 shape/摘要不变。只在完整priming/edit/全部decoded首PTS0及连续、实际无trim/pad/async/first_pts/seek/截时的完整aresample链、实际首输出PTS0/全部输出帧连续/完整退出与末flush、独立完整WAV/PCM格式/长度/摘要及实际toolpair/argv都闭合时，以BigInt A=D_dec*outputSampleRate、B=sourceSampleRate，计算lower=A/B及upper=(A+B-1)/B，核对实际全部N在lower..upper闭区间。整除时唯一个值；48k→16k非整除至多两个相邻整数。新增明确outputCountPolicy=observed-full-output-floor-ceil/v1与严格countEvidence保存精确缩放rational、lower/upper/actual retained N，并从现场D_dec/rates机械重算纳入摘要；字段缺失、伪造、区间外、未完成或相互矛盾均整份全文降级。公式不能产生或修剪N，两个相邻整数规则不能替代完整时钟与输出证据；完整N原样保留。
+
+每个真实provider端点仍严格sourceSample=3n及原冻结timebase BigInt精确转换，同时守真实呈现S和视频边界/整数tick。D_dec/N及计数区间都不能扩大可剪域；禁止pin/clamp、按容器秒插值、舍入词、丢坏词、补样本或假称呈现域外样本静音。首PTS0也不能单独证明映射，完整priming/edit/decoded/resampler链缺任一就text；实际模型词界与听感仍须后验。技术固定说明MD989f0134ac427337e679853c8b6050bfdc921e8cfc6c27c1de2942169eca9f90、JSON2d6cd0ad5bcdfb036ffb4beddf4a8c3bccfba8af918a8d14cbe062dee29544c5；它只修正被实测反证的ceil假设，不新增媒体研究输入或版本白名单。
+
+准入仍同六既有路径、module592/required586+conditional1=587/source801/protected214/readonly8/native31/output414/delete12，正常原word/gap/原声20及偏移全文手工显式保存、Original18全部argv/顺序/预算与22浏览器用例不减。计数验收覆盖整除唯一值、floor/ceil、上下越界/伪造bounds、partial/drop flush/独立WAV或PCM矛盾，以及原双域/偏移/旧PCM/预算/digest公共调用负例；机械参数化单测不得冒充新增真实媒体支持。当前R6候选仍保持旧ceil失败，待完整SPEC第三轮独评及控制提交/干净claim后再实现，不预签绿测、真实模型、浏览器、包、安装、听审或用户验收。

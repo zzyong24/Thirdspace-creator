@@ -3571,3 +3571,10 @@ Pattern-Ref: product-to-code-orchestrator/templates/DECISION_LOG_TEMPLATE.md
 本轮沿用户实际“同意”的 DEC-106201 复审及已授权六条实现范围继续，不新增授权用途或复审周期。安装包既有 b6.0 实测保留末帧完整1024样本而不返回 discard sideData，R5 按严格证据正常降为全文。保留该真实失败，新增严格独立 v2 证据族，记录真实缺失字段；可呈现音轨 S、完整已解码 D_dec 与实际全部输出 N 分别闭合，不把呈现域外407样本称静音或工具已报告padding。完整音频不裁切，每词按精确整数换算同时守真实 S 与视频边界；旧 v1/R5 schema 和六路径、原声20、正常word、偏移全文手工与原18不减。实际 N 尚待实现实测，不追溯签通过。
 
 完整 SPEC 候选 0862053580d275458d434265e950d097332a894509af3c290d97fb6cdc5fed38、技术提案 8a1a8bc0657f93fc65116639ca30e19f25a672ffdade269ba897647ec6abe2ac 已由现有团队另一 Agent 独立静态复审，真实报告 a29b69619408937916896393892a2f1a0e1c4476dd882fe42c3ff2fcc5649da2，cycle2 round2 packet 保留。旧 TMP 五份权威缺失明确保留，CURRENT 四源真实复建、web lock 和 ASR 只准新当场证据及独评后重绑，不能重签历史或缩减验收。模块592不变；实现、完整浏览器、统一产品提交、安装及用户听审仍待验。
+
+
+## DEC-T1062-AAC-OBSERVED-COUNT-20261006：按完整实际输出验证整数计数
+
+沿 DEC-106201 用户实际“同意”的同一次 cycle2，round3 仅修正同六源内计数验证，不新启周期或扩用途。实际 b6 完整无补裁输出 N238933、D_dec716800、S716393，原唯一 ceil238934 的两项失败及原日志保留。完整原点、帧连续、实际flush、WAV/PCM与工具摘要闭合后，以精确 BigInt floor..ceil 最多两个相邻整数核对实际 N；不生成、不补、不裁样本。词级精确3n与整数时基仍同时守 S 和视频范围，未知或越域整份全文降级，旧v1/R5不变。
+
+完整 SPEC cfbaf9e80e6c8b005899c9be2f06d080e66cc119a14be381b721850a4fd36a1c 已由另一 Agent 独立复核，报告8019a65cd05d18c7375dc392c561c13deb391ae55248892f8592effee006338e，合法空 finding recheck packet168c0b4a93a7ec89f9464484ff7a1fbb10ad8d9a9127bcd32d6b53b34f975a2e。592/587/801/214/8/31/414/12、Original18、22cases与原声20均不减；目前只允许实现和必须实际验证，未签真实模型、浏览器、出包、安装与听审。
