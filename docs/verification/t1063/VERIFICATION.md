@@ -24,4 +24,9 @@
 
 ## 实际构建
 
-Windows重跑、安装包下载及SHA256：尚未执行，等待必要远端动作授权。Mac未实跑；公证链、安装/启动/卸载均未验证；Windows Authenticode未接入，不描述为已签名。未执行tag、GitHub Release、main推送、公开分发、Activity/Growth更新、用户放量或本机安装。
+Windows重跑、安装包下载及SHA256：本轮继续处理中。已回读人类在源会话01a105f7-b4c1-7993-bbf1-704987276e1f / turn 01a10f5a-25ad-7bc2-b3ea-652771001d9f的原始明确请求“改完之后，再去重新跑一下Windows的流水线”，按该既有授权执行必要的独立候选分支推送和Windows手动构建；不是把另一会话的消息当作新增人类授权。不会推送main、创建tag/Release或修改Mac整合树。证据见authorization.json。Mac未实跑；公证链、安装/启动/卸载均未验证；Windows Authenticode未接入，不描述为已签名。未执行tag、GitHub Release、main推送、公开分发、Activity/Growth更新、用户放量或本机安装。
+
+
+## 本轮继续的冻结检查（2026-10-06）
+
+重新读取GitHub，main仍d84d10af，最新desktop-release仍9月15日的成功run34976587686；本轮新运行尚未提交时没有虚构run URL。四处版本重新核对均1.2.0；基础4文件43项再次实际通过，actionlint1.7.12与受改动脚本语法检查通过。候选仅应用出包链整改与会话诊断/治理工件，不包含T-1066运行时修改。项目引擎已按支持入口更新3.27.4，历史T-979非法状态阻断strict receipt migration如实保留，更新入口已实际完成全量reconcile：234 errors / 0 warnings，根因主要为既有自治配置、write_set/verify缺失及历史证据漂移，由既有T-916承接，不描述为全绿。

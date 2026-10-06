@@ -3363,3 +3363,11 @@ T983来源状态补充：真实页面对照证明部分旧作品只有正常指�
 用户本轮明确要求取消Windows和Mac出包人为超时及阻断检查，并重跑Windows；随后澄清所指版本就是1.2.0。此确认覆盖DEC-T974中的旧发布硬门及packaging技能默认冻结限制：制品路径保留真实编译、资源组装与实际签名/公证；额外类型、课程、运行时、渲染、安装、启动、卸载、清单验收默认不运行，安装包生成后先上传，可显式选运行额外验收且失败仅留报告。没有执行的验收记not-run，不伪报PASS。项目不设置出包job timeout或自动取消在途构建；GitHub平台自身硬上限仍存在。
 
 改动只在codex/t1063-release-pipeline隔离树，基于远端已发布1.2.0代码，不纳入T-1062候选，不触碰真实账号、激活、用户媒体或安装的CreatorOS.app。远端推送新分支和workflow_dispatch须明确授权；不推main，不新增版本/tag/Release、不更新生产下载。
+
+
+## DEC-T1063-RESUME — 回读既有人类授权后继续Windows制品构建（2026-10-06）
+
+T-1063前段已经修改并提交出包链，但没有实际新的Windows run。现在回读源会话的人类原始请求及精确turn，确认其明确要求改完后重跑Windows；必要候选分支推送和workflow_dispatch按已有授权执行，原始证据见docs/verification/t1063/authorization.json。仅codex/t1063-release-pipeline候选、only=windows与默认关闭额外安装验收；main、版本、tag、Release及真实用户放量不变。原技能双平台main发布路径按用户Windows专门任务收窄，运行与制品日志如实保留，失败仍按T-1063已授权出包链范围处理；产品逻辑、签名与权限规则不作为出包修复范围。未把T-1066运行时修复并入或宣称安装生效。
+
+
+T-1063验收分类复核：独立review_spec只读确认它是workflow/构建脚本任务，无页面交互与frontend-journey-contract；按BACKLOG_TEMPLATE“非UI任务为—”仅纠正该行验收元数据，状态仍由taskctl按实际run/制品证据完成。此纠正不免除SPEC的非空setup、精确SHA、版本/体积/hash、检查与失败记录；未执行的Windows安装/GUI/卸载、Mac实跑仍明确未执行。此规则不应用于实际更改UI观察行为的T-1066。证据见docs/verification/t1063/acceptance-classification.json。
