@@ -1,0 +1,8 @@
+✗ reconcile failed — 234 error(s), 0 warning(s).
+  ✗ autonomy preflight: L2/L3/L4 prose claim requires reconcile.config execution_mode=autonomous + autonomy_level; otherwise downgrade to interactive
+  ✗ autonomy preflight: projects: missing write_set
+  ✗ autonomy preflight: projects:repo missing verify command
+  ✗ autonomy preflight: projects:flow missing verify command
+  ✗ autonomy preflight: projects:frontend missing verify command
+  … 229 more error(s) omitted.
+Run `node orchestrator/process/reconcile.mjs` for the full report.

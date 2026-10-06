@@ -1,0 +1,3192 @@
+Refreshing run status every 30 seconds. Press Ctrl+C to quit.
+
+* codex/t1063-release-pipeline desktop-release · 37440775757
+Triggered via workflow_dispatch about 5 minutes ago
+
+JOBS
+✓ plan in 4s (ID 112193718432)
+  ✓ Set up job
+  ✓ Run all='[{"os":"macos-latest","updater_target":"darwin-aarch64"},{"os":"windows-latest","updater_target":"windows-x86_64"}]'
+  ✓ Complete job
+- windows-runtime-rat in 0s (ID 112193720209)
+- windows-closure-rat in 0s (ID 112193720538)
+* build (windows-latest, windows-x86_64) (ID 112193758217)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run pnpm/action-setup@v4
+  ✓ Run actions/setup-node@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run Swatinem/rust-cache@v2
+  ✓ 安装依赖
+  ✓ 恢复 Windows Next 编译缓存
+  ✓ 缓存 Windows 媒体工具
+  - 导入 macOS Developer ID 与公证凭据(T-709)
+  - 计算 Runtime Node/V8 与 verdict 公钥指纹(T-487)
+  - 恢复 clean Runtime Image(T-487)
+  - 校验命中缓存的 Node/V8 ABI 与 verdict 公钥(T-487)
+  - 安装 macOS host Playwright Chromium(T-749)
+  - 构建 clean Runtime Image(T-487,仅 cache miss)
+  - 保存 clean Runtime Image(T-487)
+  ✓ 安装 Windows production closure 的 Chromium
+  * 构建并接入 Windows production closure(T-675)
+  * 读版本号
+  * 校验发布包领取关闭与反馈配置(T-635)
+  * 打包(release.mjs 全链)
+  * 收集用户安装包(T-492)
+  * 上传已生成的安装包（额外验收不阻断）
+  * 校验 Windows 安装包 tarball 化(T-454·反转 T-446,setup.exe 只带 sidecar.tar.gz)
+  * 校验 Chromium 已打进 sidecar(防 warn 静默跳过违反 T-284)
+  * Windows 安装期 runtime 原生冒烟(T-487)
+  * 校验 updater 产物 + .sig 齐(SPEC §15 验收 9)
+  * macOS Developer ID、公证与 Gatekeeper 门(T-709)
+  * macOS sidecar 可搬运归档与解压后签名门(T-705)
+  * macOS 真启动与主页面加载冒烟(T-663)
+  * 上传 T-635 产品身份与 release attestation（非发布产物）
+  * Windows 安装后真启动与主页面加载冒烟(T-562)
+  * Windows 主动卸载清理冒烟(T-557)
+  * 上传 T-675 Windows production closure 正式证据
+  * 清理 macOS 一次性签名钥匙串(T-709)
+  * Post 缓存 Windows 媒体工具
+  * Post 恢复 Windows Next 编译缓存
+  * Post Run Swatinem/rust-cache@v2
+  * Post Run actions/setup-node@v4
+  * Post Run pnpm/action-setup@v4
+  * Post Run actions/checkout@v4
+
+ANNOTATIONS
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+plan: .github#1
+
+Refreshing run status every 30 seconds. Press Ctrl+C to quit.
+
+* codex/t1063-release-pipeline desktop-release · 37440775757
+Triggered via workflow_dispatch about 6 minutes ago
+
+JOBS
+✓ plan in 4s (ID 112193718432)
+  ✓ Set up job
+  ✓ Run all='[{"os":"macos-latest","updater_target":"darwin-aarch64"},{"os":"windows-latest","updater_target":"windows-x86_64"}]'
+  ✓ Complete job
+- windows-runtime-rat in 0s (ID 112193720209)
+- windows-closure-rat in 0s (ID 112193720538)
+* build (windows-latest, windows-x86_64) (ID 112193758217)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run pnpm/action-setup@v4
+  ✓ Run actions/setup-node@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run Swatinem/rust-cache@v2
+  ✓ 安装依赖
+  ✓ 恢复 Windows Next 编译缓存
+  ✓ 缓存 Windows 媒体工具
+  - 导入 macOS Developer ID 与公证凭据(T-709)
+  - 计算 Runtime Node/V8 与 verdict 公钥指纹(T-487)
+  - 恢复 clean Runtime Image(T-487)
+  - 校验命中缓存的 Node/V8 ABI 与 verdict 公钥(T-487)
+  - 安装 macOS host Playwright Chromium(T-749)
+  - 构建 clean Runtime Image(T-487,仅 cache miss)
+  - 保存 clean Runtime Image(T-487)
+  ✓ 安装 Windows production closure 的 Chromium
+  * 构建并接入 Windows production closure(T-675)
+  * 读版本号
+  * 校验发布包领取关闭与反馈配置(T-635)
+  * 打包(release.mjs 全链)
+  * 收集用户安装包(T-492)
+  * 上传已生成的安装包（额外验收不阻断）
+  * 校验 Windows 安装包 tarball 化(T-454·反转 T-446,setup.exe 只带 sidecar.tar.gz)
+  * 校验 Chromium 已打进 sidecar(防 warn 静默跳过违反 T-284)
+  * Windows 安装期 runtime 原生冒烟(T-487)
+  * 校验 updater 产物 + .sig 齐(SPEC §15 验收 9)
+  * macOS Developer ID、公证与 Gatekeeper 门(T-709)
+  * macOS sidecar 可搬运归档与解压后签名门(T-705)
+  * macOS 真启动与主页面加载冒烟(T-663)
+  * 上传 T-635 产品身份与 release attestation（非发布产物）
+  * Windows 安装后真启动与主页面加载冒烟(T-562)
+  * Windows 主动卸载清理冒烟(T-557)
+  * 上传 T-675 Windows production closure 正式证据
+  * 清理 macOS 一次性签名钥匙串(T-709)
+  * Post 缓存 Windows 媒体工具
+  * Post 恢复 Windows Next 编译缓存
+  * Post Run Swatinem/rust-cache@v2
+  * Post Run actions/setup-node@v4
+  * Post Run pnpm/action-setup@v4
+  * Post Run actions/checkout@v4
+
+ANNOTATIONS
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+plan: .github#1
+
+Refreshing run status every 30 seconds. Press Ctrl+C to quit.
+
+* codex/t1063-release-pipeline desktop-release · 37440775757
+Triggered via workflow_dispatch about 7 minutes ago
+
+JOBS
+✓ plan in 4s (ID 112193718432)
+  ✓ Set up job
+  ✓ Run all='[{"os":"macos-latest","updater_target":"darwin-aarch64"},{"os":"windows-latest","updater_target":"windows-x86_64"}]'
+  ✓ Complete job
+- windows-runtime-rat in 0s (ID 112193720209)
+- windows-closure-rat in 0s (ID 112193720538)
+* build (windows-latest, windows-x86_64) (ID 112193758217)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run pnpm/action-setup@v4
+  ✓ Run actions/setup-node@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run Swatinem/rust-cache@v2
+  ✓ 安装依赖
+  ✓ 恢复 Windows Next 编译缓存
+  ✓ 缓存 Windows 媒体工具
+  - 导入 macOS Developer ID 与公证凭据(T-709)
+  - 计算 Runtime Node/V8 与 verdict 公钥指纹(T-487)
+  - 恢复 clean Runtime Image(T-487)
+  - 校验命中缓存的 Node/V8 ABI 与 verdict 公钥(T-487)
+  - 安装 macOS host Playwright Chromium(T-749)
+  - 构建 clean Runtime Image(T-487,仅 cache miss)
+  - 保存 clean Runtime Image(T-487)
+  ✓ 安装 Windows production closure 的 Chromium
+  * 构建并接入 Windows production closure(T-675)
+  * 读版本号
+  * 校验发布包领取关闭与反馈配置(T-635)
+  * 打包(release.mjs 全链)
+  * 收集用户安装包(T-492)
+  * 上传已生成的安装包（额外验收不阻断）
+  * 校验 Windows 安装包 tarball 化(T-454·反转 T-446,setup.exe 只带 sidecar.tar.gz)
+  * 校验 Chromium 已打进 sidecar(防 warn 静默跳过违反 T-284)
+  * Windows 安装期 runtime 原生冒烟(T-487)
+  * 校验 updater 产物 + .sig 齐(SPEC §15 验收 9)
+  * macOS Developer ID、公证与 Gatekeeper 门(T-709)
+  * macOS sidecar 可搬运归档与解压后签名门(T-705)
+  * macOS 真启动与主页面加载冒烟(T-663)
+  * 上传 T-635 产品身份与 release attestation（非发布产物）
+  * Windows 安装后真启动与主页面加载冒烟(T-562)
+  * Windows 主动卸载清理冒烟(T-557)
+  * 上传 T-675 Windows production closure 正式证据
+  * 清理 macOS 一次性签名钥匙串(T-709)
+  * Post 缓存 Windows 媒体工具
+  * Post 恢复 Windows Next 编译缓存
+  * Post Run Swatinem/rust-cache@v2
+  * Post Run actions/setup-node@v4
+  * Post Run pnpm/action-setup@v4
+  * Post Run actions/checkout@v4
+
+ANNOTATIONS
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+plan: .github#1
+
+Refreshing run status every 30 seconds. Press Ctrl+C to quit.
+
+* codex/t1063-release-pipeline desktop-release · 37440775757
+Triggered via workflow_dispatch about 7 minutes ago
+
+JOBS
+✓ plan in 4s (ID 112193718432)
+  ✓ Set up job
+  ✓ Run all='[{"os":"macos-latest","updater_target":"darwin-aarch64"},{"os":"windows-latest","updater_target":"windows-x86_64"}]'
+  ✓ Complete job
+- windows-runtime-rat in 0s (ID 112193720209)
+- windows-closure-rat in 0s (ID 112193720538)
+* build (windows-latest, windows-x86_64) (ID 112193758217)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run pnpm/action-setup@v4
+  ✓ Run actions/setup-node@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run Swatinem/rust-cache@v2
+  ✓ 安装依赖
+  ✓ 恢复 Windows Next 编译缓存
+  ✓ 缓存 Windows 媒体工具
+  - 导入 macOS Developer ID 与公证凭据(T-709)
+  - 计算 Runtime Node/V8 与 verdict 公钥指纹(T-487)
+  - 恢复 clean Runtime Image(T-487)
+  - 校验命中缓存的 Node/V8 ABI 与 verdict 公钥(T-487)
+  - 安装 macOS host Playwright Chromium(T-749)
+  - 构建 clean Runtime Image(T-487,仅 cache miss)
+  - 保存 clean Runtime Image(T-487)
+  ✓ 安装 Windows production closure 的 Chromium
+  * 构建并接入 Windows production closure(T-675)
+  * 读版本号
+  * 校验发布包领取关闭与反馈配置(T-635)
+  * 打包(release.mjs 全链)
+  * 收集用户安装包(T-492)
+  * 上传已生成的安装包（额外验收不阻断）
+  * 校验 Windows 安装包 tarball 化(T-454·反转 T-446,setup.exe 只带 sidecar.tar.gz)
+  * 校验 Chromium 已打进 sidecar(防 warn 静默跳过违反 T-284)
+  * Windows 安装期 runtime 原生冒烟(T-487)
+  * 校验 updater 产物 + .sig 齐(SPEC §15 验收 9)
+  * macOS Developer ID、公证与 Gatekeeper 门(T-709)
+  * macOS sidecar 可搬运归档与解压后签名门(T-705)
+  * macOS 真启动与主页面加载冒烟(T-663)
+  * 上传 T-635 产品身份与 release attestation（非发布产物）
+  * Windows 安装后真启动与主页面加载冒烟(T-562)
+  * Windows 主动卸载清理冒烟(T-557)
+  * 上传 T-675 Windows production closure 正式证据
+  * 清理 macOS 一次性签名钥匙串(T-709)
+  * Post 缓存 Windows 媒体工具
+  * Post 恢复 Windows Next 编译缓存
+  * Post Run Swatinem/rust-cache@v2
+  * Post Run actions/setup-node@v4
+  * Post Run pnpm/action-setup@v4
+  * Post Run actions/checkout@v4
+
+ANNOTATIONS
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+plan: .github#1
+
+Refreshing run status every 30 seconds. Press Ctrl+C to quit.
+
+* codex/t1063-release-pipeline desktop-release · 37440775757
+Triggered via workflow_dispatch about 8 minutes ago
+
+JOBS
+✓ plan in 4s (ID 112193718432)
+  ✓ Set up job
+  ✓ Run all='[{"os":"macos-latest","updater_target":"darwin-aarch64"},{"os":"windows-latest","updater_target":"windows-x86_64"}]'
+  ✓ Complete job
+- windows-runtime-rat in 0s (ID 112193720209)
+- windows-closure-rat in 0s (ID 112193720538)
+* build (windows-latest, windows-x86_64) (ID 112193758217)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run pnpm/action-setup@v4
+  ✓ Run actions/setup-node@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run Swatinem/rust-cache@v2
+  ✓ 安装依赖
+  ✓ 恢复 Windows Next 编译缓存
+  ✓ 缓存 Windows 媒体工具
+  - 导入 macOS Developer ID 与公证凭据(T-709)
+  - 计算 Runtime Node/V8 与 verdict 公钥指纹(T-487)
+  - 恢复 clean Runtime Image(T-487)
+  - 校验命中缓存的 Node/V8 ABI 与 verdict 公钥(T-487)
+  - 安装 macOS host Playwright Chromium(T-749)
+  - 构建 clean Runtime Image(T-487,仅 cache miss)
+  - 保存 clean Runtime Image(T-487)
+  ✓ 安装 Windows production closure 的 Chromium
+  * 构建并接入 Windows production closure(T-675)
+  * 读版本号
+  * 校验发布包领取关闭与反馈配置(T-635)
+  * 打包(release.mjs 全链)
+  * 收集用户安装包(T-492)
+  * 上传已生成的安装包（额外验收不阻断）
+  * 校验 Windows 安装包 tarball 化(T-454·反转 T-446,setup.exe 只带 sidecar.tar.gz)
+  * 校验 Chromium 已打进 sidecar(防 warn 静默跳过违反 T-284)
+  * Windows 安装期 runtime 原生冒烟(T-487)
+  * 校验 updater 产物 + .sig 齐(SPEC §15 验收 9)
+  * macOS Developer ID、公证与 Gatekeeper 门(T-709)
+  * macOS sidecar 可搬运归档与解压后签名门(T-705)
+  * macOS 真启动与主页面加载冒烟(T-663)
+  * 上传 T-635 产品身份与 release attestation（非发布产物）
+  * Windows 安装后真启动与主页面加载冒烟(T-562)
+  * Windows 主动卸载清理冒烟(T-557)
+  * 上传 T-675 Windows production closure 正式证据
+  * 清理 macOS 一次性签名钥匙串(T-709)
+  * Post 缓存 Windows 媒体工具
+  * Post 恢复 Windows Next 编译缓存
+  * Post Run Swatinem/rust-cache@v2
+  * Post Run actions/setup-node@v4
+  * Post Run pnpm/action-setup@v4
+  * Post Run actions/checkout@v4
+
+ANNOTATIONS
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+plan: .github#1
+
+Refreshing run status every 30 seconds. Press Ctrl+C to quit.
+
+* codex/t1063-release-pipeline desktop-release · 37440775757
+Triggered via workflow_dispatch about 8 minutes ago
+
+JOBS
+✓ plan in 4s (ID 112193718432)
+  ✓ Set up job
+  ✓ Run all='[{"os":"macos-latest","updater_target":"darwin-aarch64"},{"os":"windows-latest","updater_target":"windows-x86_64"}]'
+  ✓ Complete job
+- windows-runtime-rat in 0s (ID 112193720209)
+- windows-closure-rat in 0s (ID 112193720538)
+* build (windows-latest, windows-x86_64) (ID 112193758217)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run pnpm/action-setup@v4
+  ✓ Run actions/setup-node@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run Swatinem/rust-cache@v2
+  ✓ 安装依赖
+  ✓ 恢复 Windows Next 编译缓存
+  ✓ 缓存 Windows 媒体工具
+  - 导入 macOS Developer ID 与公证凭据(T-709)
+  - 计算 Runtime Node/V8 与 verdict 公钥指纹(T-487)
+  - 恢复 clean Runtime Image(T-487)
+  - 校验命中缓存的 Node/V8 ABI 与 verdict 公钥(T-487)
+  - 安装 macOS host Playwright Chromium(T-749)
+  - 构建 clean Runtime Image(T-487,仅 cache miss)
+  - 保存 clean Runtime Image(T-487)
+  ✓ 安装 Windows production closure 的 Chromium
+  * 构建并接入 Windows production closure(T-675)
+  * 读版本号
+  * 校验发布包领取关闭与反馈配置(T-635)
+  * 打包(release.mjs 全链)
+  * 收集用户安装包(T-492)
+  * 上传已生成的安装包（额外验收不阻断）
+  * 校验 Windows 安装包 tarball 化(T-454·反转 T-446,setup.exe 只带 sidecar.tar.gz)
+  * 校验 Chromium 已打进 sidecar(防 warn 静默跳过违反 T-284)
+  * Windows 安装期 runtime 原生冒烟(T-487)
+  * 校验 updater 产物 + .sig 齐(SPEC §15 验收 9)
+  * macOS Developer ID、公证与 Gatekeeper 门(T-709)
+  * macOS sidecar 可搬运归档与解压后签名门(T-705)
+  * macOS 真启动与主页面加载冒烟(T-663)
+  * 上传 T-635 产品身份与 release attestation（非发布产物）
+  * Windows 安装后真启动与主页面加载冒烟(T-562)
+  * Windows 主动卸载清理冒烟(T-557)
+  * 上传 T-675 Windows production closure 正式证据
+  * 清理 macOS 一次性签名钥匙串(T-709)
+  * Post 缓存 Windows 媒体工具
+  * Post 恢复 Windows Next 编译缓存
+  * Post Run Swatinem/rust-cache@v2
+  * Post Run actions/setup-node@v4
+  * Post Run pnpm/action-setup@v4
+  * Post Run actions/checkout@v4
+
+ANNOTATIONS
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+plan: .github#1
+
+Refreshing run status every 30 seconds. Press Ctrl+C to quit.
+
+* codex/t1063-release-pipeline desktop-release · 37440775757
+Triggered via workflow_dispatch about 9 minutes ago
+
+JOBS
+✓ plan in 4s (ID 112193718432)
+  ✓ Set up job
+  ✓ Run all='[{"os":"macos-latest","updater_target":"darwin-aarch64"},{"os":"windows-latest","updater_target":"windows-x86_64"}]'
+  ✓ Complete job
+- windows-runtime-rat in 0s (ID 112193720209)
+- windows-closure-rat in 0s (ID 112193720538)
+* build (windows-latest, windows-x86_64) (ID 112193758217)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run pnpm/action-setup@v4
+  ✓ Run actions/setup-node@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run Swatinem/rust-cache@v2
+  ✓ 安装依赖
+  ✓ 恢复 Windows Next 编译缓存
+  ✓ 缓存 Windows 媒体工具
+  - 导入 macOS Developer ID 与公证凭据(T-709)
+  - 计算 Runtime Node/V8 与 verdict 公钥指纹(T-487)
+  - 恢复 clean Runtime Image(T-487)
+  - 校验命中缓存的 Node/V8 ABI 与 verdict 公钥(T-487)
+  - 安装 macOS host Playwright Chromium(T-749)
+  - 构建 clean Runtime Image(T-487,仅 cache miss)
+  - 保存 clean Runtime Image(T-487)
+  ✓ 安装 Windows production closure 的 Chromium
+  ✓ 构建并接入 Windows production closure(T-675)
+  ✓ 读版本号
+  - 校验发布包领取关闭与反馈配置(T-635)
+  * 打包(release.mjs 全链)
+  * 收集用户安装包(T-492)
+  * 上传已生成的安装包（额外验收不阻断）
+  * 校验 Windows 安装包 tarball 化(T-454·反转 T-446,setup.exe 只带 sidecar.tar.gz)
+  * 校验 Chromium 已打进 sidecar(防 warn 静默跳过违反 T-284)
+  * Windows 安装期 runtime 原生冒烟(T-487)
+  * 校验 updater 产物 + .sig 齐(SPEC §15 验收 9)
+  * macOS Developer ID、公证与 Gatekeeper 门(T-709)
+  * macOS sidecar 可搬运归档与解压后签名门(T-705)
+  * macOS 真启动与主页面加载冒烟(T-663)
+  * 上传 T-635 产品身份与 release attestation（非发布产物）
+  * Windows 安装后真启动与主页面加载冒烟(T-562)
+  * Windows 主动卸载清理冒烟(T-557)
+  * 上传 T-675 Windows production closure 正式证据
+  * 清理 macOS 一次性签名钥匙串(T-709)
+  * Post 缓存 Windows 媒体工具
+  * Post 恢复 Windows Next 编译缓存
+  * Post Run Swatinem/rust-cache@v2
+  * Post Run actions/setup-node@v4
+  * Post Run pnpm/action-setup@v4
+  * Post Run actions/checkout@v4
+
+ANNOTATIONS
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+plan: .github#1
+
+Refreshing run status every 30 seconds. Press Ctrl+C to quit.
+
+* codex/t1063-release-pipeline desktop-release · 37440775757
+Triggered via workflow_dispatch about 9 minutes ago
+
+JOBS
+✓ plan in 4s (ID 112193718432)
+  ✓ Set up job
+  ✓ Run all='[{"os":"macos-latest","updater_target":"darwin-aarch64"},{"os":"windows-latest","updater_target":"windows-x86_64"}]'
+  ✓ Complete job
+- windows-runtime-rat in 0s (ID 112193720209)
+- windows-closure-rat in 0s (ID 112193720538)
+* build (windows-latest, windows-x86_64) (ID 112193758217)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run pnpm/action-setup@v4
+  ✓ Run actions/setup-node@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run Swatinem/rust-cache@v2
+  ✓ 安装依赖
+  ✓ 恢复 Windows Next 编译缓存
+  ✓ 缓存 Windows 媒体工具
+  - 导入 macOS Developer ID 与公证凭据(T-709)
+  - 计算 Runtime Node/V8 与 verdict 公钥指纹(T-487)
+  - 恢复 clean Runtime Image(T-487)
+  - 校验命中缓存的 Node/V8 ABI 与 verdict 公钥(T-487)
+  - 安装 macOS host Playwright Chromium(T-749)
+  - 构建 clean Runtime Image(T-487,仅 cache miss)
+  - 保存 clean Runtime Image(T-487)
+  ✓ 安装 Windows production closure 的 Chromium
+  ✓ 构建并接入 Windows production closure(T-675)
+  ✓ 读版本号
+  - 校验发布包领取关闭与反馈配置(T-635)
+  * 打包(release.mjs 全链)
+  * 收集用户安装包(T-492)
+  * 上传已生成的安装包（额外验收不阻断）
+  * 校验 Windows 安装包 tarball 化(T-454·反转 T-446,setup.exe 只带 sidecar.tar.gz)
+  * 校验 Chromium 已打进 sidecar(防 warn 静默跳过违反 T-284)
+  * Windows 安装期 runtime 原生冒烟(T-487)
+  * 校验 updater 产物 + .sig 齐(SPEC §15 验收 9)
+  * macOS Developer ID、公证与 Gatekeeper 门(T-709)
+  * macOS sidecar 可搬运归档与解压后签名门(T-705)
+  * macOS 真启动与主页面加载冒烟(T-663)
+  * 上传 T-635 产品身份与 release attestation（非发布产物）
+  * Windows 安装后真启动与主页面加载冒烟(T-562)
+  * Windows 主动卸载清理冒烟(T-557)
+  * 上传 T-675 Windows production closure 正式证据
+  * 清理 macOS 一次性签名钥匙串(T-709)
+  * Post 缓存 Windows 媒体工具
+  * Post 恢复 Windows Next 编译缓存
+  * Post Run Swatinem/rust-cache@v2
+  * Post Run actions/setup-node@v4
+  * Post Run pnpm/action-setup@v4
+  * Post Run actions/checkout@v4
+
+ANNOTATIONS
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+plan: .github#1
+
+Refreshing run status every 30 seconds. Press Ctrl+C to quit.
+
+* codex/t1063-release-pipeline desktop-release · 37440775757
+Triggered via workflow_dispatch about 10 minutes ago
+
+JOBS
+✓ plan in 4s (ID 112193718432)
+  ✓ Set up job
+  ✓ Run all='[{"os":"macos-latest","updater_target":"darwin-aarch64"},{"os":"windows-latest","updater_target":"windows-x86_64"}]'
+  ✓ Complete job
+- windows-runtime-rat in 0s (ID 112193720209)
+- windows-closure-rat in 0s (ID 112193720538)
+* build (windows-latest, windows-x86_64) (ID 112193758217)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run pnpm/action-setup@v4
+  ✓ Run actions/setup-node@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run Swatinem/rust-cache@v2
+  ✓ 安装依赖
+  ✓ 恢复 Windows Next 编译缓存
+  ✓ 缓存 Windows 媒体工具
+  - 导入 macOS Developer ID 与公证凭据(T-709)
+  - 计算 Runtime Node/V8 与 verdict 公钥指纹(T-487)
+  - 恢复 clean Runtime Image(T-487)
+  - 校验命中缓存的 Node/V8 ABI 与 verdict 公钥(T-487)
+  - 安装 macOS host Playwright Chromium(T-749)
+  - 构建 clean Runtime Image(T-487,仅 cache miss)
+  - 保存 clean Runtime Image(T-487)
+  ✓ 安装 Windows production closure 的 Chromium
+  ✓ 构建并接入 Windows production closure(T-675)
+  ✓ 读版本号
+  - 校验发布包领取关闭与反馈配置(T-635)
+  * 打包(release.mjs 全链)
+  * 收集用户安装包(T-492)
+  * 上传已生成的安装包（额外验收不阻断）
+  * 校验 Windows 安装包 tarball 化(T-454·反转 T-446,setup.exe 只带 sidecar.tar.gz)
+  * 校验 Chromium 已打进 sidecar(防 warn 静默跳过违反 T-284)
+  * Windows 安装期 runtime 原生冒烟(T-487)
+  * 校验 updater 产物 + .sig 齐(SPEC §15 验收 9)
+  * macOS Developer ID、公证与 Gatekeeper 门(T-709)
+  * macOS sidecar 可搬运归档与解压后签名门(T-705)
+  * macOS 真启动与主页面加载冒烟(T-663)
+  * 上传 T-635 产品身份与 release attestation（非发布产物）
+  * Windows 安装后真启动与主页面加载冒烟(T-562)
+  * Windows 主动卸载清理冒烟(T-557)
+  * 上传 T-675 Windows production closure 正式证据
+  * 清理 macOS 一次性签名钥匙串(T-709)
+  * Post 缓存 Windows 媒体工具
+  * Post 恢复 Windows Next 编译缓存
+  * Post Run Swatinem/rust-cache@v2
+  * Post Run actions/setup-node@v4
+  * Post Run pnpm/action-setup@v4
+  * Post Run actions/checkout@v4
+
+ANNOTATIONS
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+plan: .github#1
+
+Refreshing run status every 30 seconds. Press Ctrl+C to quit.
+
+* codex/t1063-release-pipeline desktop-release · 37440775757
+Triggered via workflow_dispatch about 10 minutes ago
+
+JOBS
+✓ plan in 4s (ID 112193718432)
+  ✓ Set up job
+  ✓ Run all='[{"os":"macos-latest","updater_target":"darwin-aarch64"},{"os":"windows-latest","updater_target":"windows-x86_64"}]'
+  ✓ Complete job
+- windows-runtime-rat in 0s (ID 112193720209)
+- windows-closure-rat in 0s (ID 112193720538)
+* build (windows-latest, windows-x86_64) (ID 112193758217)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run pnpm/action-setup@v4
+  ✓ Run actions/setup-node@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run Swatinem/rust-cache@v2
+  ✓ 安装依赖
+  ✓ 恢复 Windows Next 编译缓存
+  ✓ 缓存 Windows 媒体工具
+  - 导入 macOS Developer ID 与公证凭据(T-709)
+  - 计算 Runtime Node/V8 与 verdict 公钥指纹(T-487)
+  - 恢复 clean Runtime Image(T-487)
+  - 校验命中缓存的 Node/V8 ABI 与 verdict 公钥(T-487)
+  - 安装 macOS host Playwright Chromium(T-749)
+  - 构建 clean Runtime Image(T-487,仅 cache miss)
+  - 保存 clean Runtime Image(T-487)
+  ✓ 安装 Windows production closure 的 Chromium
+  ✓ 构建并接入 Windows production closure(T-675)
+  ✓ 读版本号
+  - 校验发布包领取关闭与反馈配置(T-635)
+  * 打包(release.mjs 全链)
+  * 收集用户安装包(T-492)
+  * 上传已生成的安装包（额外验收不阻断）
+  * 校验 Windows 安装包 tarball 化(T-454·反转 T-446,setup.exe 只带 sidecar.tar.gz)
+  * 校验 Chromium 已打进 sidecar(防 warn 静默跳过违反 T-284)
+  * Windows 安装期 runtime 原生冒烟(T-487)
+  * 校验 updater 产物 + .sig 齐(SPEC §15 验收 9)
+  * macOS Developer ID、公证与 Gatekeeper 门(T-709)
+  * macOS sidecar 可搬运归档与解压后签名门(T-705)
+  * macOS 真启动与主页面加载冒烟(T-663)
+  * 上传 T-635 产品身份与 release attestation（非发布产物）
+  * Windows 安装后真启动与主页面加载冒烟(T-562)
+  * Windows 主动卸载清理冒烟(T-557)
+  * 上传 T-675 Windows production closure 正式证据
+  * 清理 macOS 一次性签名钥匙串(T-709)
+  * Post 缓存 Windows 媒体工具
+  * Post 恢复 Windows Next 编译缓存
+  * Post Run Swatinem/rust-cache@v2
+  * Post Run actions/setup-node@v4
+  * Post Run pnpm/action-setup@v4
+  * Post Run actions/checkout@v4
+
+ANNOTATIONS
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+plan: .github#1
+
+Refreshing run status every 30 seconds. Press Ctrl+C to quit.
+
+* codex/t1063-release-pipeline desktop-release · 37440775757
+Triggered via workflow_dispatch about 11 minutes ago
+
+JOBS
+✓ plan in 4s (ID 112193718432)
+  ✓ Set up job
+  ✓ Run all='[{"os":"macos-latest","updater_target":"darwin-aarch64"},{"os":"windows-latest","updater_target":"windows-x86_64"}]'
+  ✓ Complete job
+- windows-runtime-rat in 0s (ID 112193720209)
+- windows-closure-rat in 0s (ID 112193720538)
+* build (windows-latest, windows-x86_64) (ID 112193758217)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run pnpm/action-setup@v4
+  ✓ Run actions/setup-node@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run Swatinem/rust-cache@v2
+  ✓ 安装依赖
+  ✓ 恢复 Windows Next 编译缓存
+  ✓ 缓存 Windows 媒体工具
+  - 导入 macOS Developer ID 与公证凭据(T-709)
+  - 计算 Runtime Node/V8 与 verdict 公钥指纹(T-487)
+  - 恢复 clean Runtime Image(T-487)
+  - 校验命中缓存的 Node/V8 ABI 与 verdict 公钥(T-487)
+  - 安装 macOS host Playwright Chromium(T-749)
+  - 构建 clean Runtime Image(T-487,仅 cache miss)
+  - 保存 clean Runtime Image(T-487)
+  ✓ 安装 Windows production closure 的 Chromium
+  ✓ 构建并接入 Windows production closure(T-675)
+  ✓ 读版本号
+  - 校验发布包领取关闭与反馈配置(T-635)
+  * 打包(release.mjs 全链)
+  * 收集用户安装包(T-492)
+  * 上传已生成的安装包（额外验收不阻断）
+  * 校验 Windows 安装包 tarball 化(T-454·反转 T-446,setup.exe 只带 sidecar.tar.gz)
+  * 校验 Chromium 已打进 sidecar(防 warn 静默跳过违反 T-284)
+  * Windows 安装期 runtime 原生冒烟(T-487)
+  * 校验 updater 产物 + .sig 齐(SPEC §15 验收 9)
+  * macOS Developer ID、公证与 Gatekeeper 门(T-709)
+  * macOS sidecar 可搬运归档与解压后签名门(T-705)
+  * macOS 真启动与主页面加载冒烟(T-663)
+  * 上传 T-635 产品身份与 release attestation（非发布产物）
+  * Windows 安装后真启动与主页面加载冒烟(T-562)
+  * Windows 主动卸载清理冒烟(T-557)
+  * 上传 T-675 Windows production closure 正式证据
+  * 清理 macOS 一次性签名钥匙串(T-709)
+  * Post 缓存 Windows 媒体工具
+  * Post 恢复 Windows Next 编译缓存
+  * Post Run Swatinem/rust-cache@v2
+  * Post Run actions/setup-node@v4
+  * Post Run pnpm/action-setup@v4
+  * Post Run actions/checkout@v4
+
+ANNOTATIONS
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+plan: .github#1
+
+Refreshing run status every 30 seconds. Press Ctrl+C to quit.
+
+* codex/t1063-release-pipeline desktop-release · 37440775757
+Triggered via workflow_dispatch about 11 minutes ago
+
+JOBS
+✓ plan in 4s (ID 112193718432)
+  ✓ Set up job
+  ✓ Run all='[{"os":"macos-latest","updater_target":"darwin-aarch64"},{"os":"windows-latest","updater_target":"windows-x86_64"}]'
+  ✓ Complete job
+- windows-runtime-rat in 0s (ID 112193720209)
+- windows-closure-rat in 0s (ID 112193720538)
+* build (windows-latest, windows-x86_64) (ID 112193758217)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run pnpm/action-setup@v4
+  ✓ Run actions/setup-node@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run Swatinem/rust-cache@v2
+  ✓ 安装依赖
+  ✓ 恢复 Windows Next 编译缓存
+  ✓ 缓存 Windows 媒体工具
+  - 导入 macOS Developer ID 与公证凭据(T-709)
+  - 计算 Runtime Node/V8 与 verdict 公钥指纹(T-487)
+  - 恢复 clean Runtime Image(T-487)
+  - 校验命中缓存的 Node/V8 ABI 与 verdict 公钥(T-487)
+  - 安装 macOS host Playwright Chromium(T-749)
+  - 构建 clean Runtime Image(T-487,仅 cache miss)
+  - 保存 clean Runtime Image(T-487)
+  ✓ 安装 Windows production closure 的 Chromium
+  ✓ 构建并接入 Windows production closure(T-675)
+  ✓ 读版本号
+  - 校验发布包领取关闭与反馈配置(T-635)
+  * 打包(release.mjs 全链)
+  * 收集用户安装包(T-492)
+  * 上传已生成的安装包（额外验收不阻断）
+  * 校验 Windows 安装包 tarball 化(T-454·反转 T-446,setup.exe 只带 sidecar.tar.gz)
+  * 校验 Chromium 已打进 sidecar(防 warn 静默跳过违反 T-284)
+  * Windows 安装期 runtime 原生冒烟(T-487)
+  * 校验 updater 产物 + .sig 齐(SPEC §15 验收 9)
+  * macOS Developer ID、公证与 Gatekeeper 门(T-709)
+  * macOS sidecar 可搬运归档与解压后签名门(T-705)
+  * macOS 真启动与主页面加载冒烟(T-663)
+  * 上传 T-635 产品身份与 release attestation（非发布产物）
+  * Windows 安装后真启动与主页面加载冒烟(T-562)
+  * Windows 主动卸载清理冒烟(T-557)
+  * 上传 T-675 Windows production closure 正式证据
+  * 清理 macOS 一次性签名钥匙串(T-709)
+  * Post 缓存 Windows 媒体工具
+  * Post 恢复 Windows Next 编译缓存
+  * Post Run Swatinem/rust-cache@v2
+  * Post Run actions/setup-node@v4
+  * Post Run pnpm/action-setup@v4
+  * Post Run actions/checkout@v4
+
+ANNOTATIONS
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+plan: .github#1
+
+Refreshing run status every 30 seconds. Press Ctrl+C to quit.
+
+* codex/t1063-release-pipeline desktop-release · 37440775757
+Triggered via workflow_dispatch about 12 minutes ago
+
+JOBS
+✓ plan in 4s (ID 112193718432)
+  ✓ Set up job
+  ✓ Run all='[{"os":"macos-latest","updater_target":"darwin-aarch64"},{"os":"windows-latest","updater_target":"windows-x86_64"}]'
+  ✓ Complete job
+- windows-runtime-rat in 0s (ID 112193720209)
+- windows-closure-rat in 0s (ID 112193720538)
+* build (windows-latest, windows-x86_64) (ID 112193758217)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run pnpm/action-setup@v4
+  ✓ Run actions/setup-node@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run Swatinem/rust-cache@v2
+  ✓ 安装依赖
+  ✓ 恢复 Windows Next 编译缓存
+  ✓ 缓存 Windows 媒体工具
+  - 导入 macOS Developer ID 与公证凭据(T-709)
+  - 计算 Runtime Node/V8 与 verdict 公钥指纹(T-487)
+  - 恢复 clean Runtime Image(T-487)
+  - 校验命中缓存的 Node/V8 ABI 与 verdict 公钥(T-487)
+  - 安装 macOS host Playwright Chromium(T-749)
+  - 构建 clean Runtime Image(T-487,仅 cache miss)
+  - 保存 clean Runtime Image(T-487)
+  ✓ 安装 Windows production closure 的 Chromium
+  ✓ 构建并接入 Windows production closure(T-675)
+  ✓ 读版本号
+  - 校验发布包领取关闭与反馈配置(T-635)
+  * 打包(release.mjs 全链)
+  * 收集用户安装包(T-492)
+  * 上传已生成的安装包（额外验收不阻断）
+  * 校验 Windows 安装包 tarball 化(T-454·反转 T-446,setup.exe 只带 sidecar.tar.gz)
+  * 校验 Chromium 已打进 sidecar(防 warn 静默跳过违反 T-284)
+  * Windows 安装期 runtime 原生冒烟(T-487)
+  * 校验 updater 产物 + .sig 齐(SPEC §15 验收 9)
+  * macOS Developer ID、公证与 Gatekeeper 门(T-709)
+  * macOS sidecar 可搬运归档与解压后签名门(T-705)
+  * macOS 真启动与主页面加载冒烟(T-663)
+  * 上传 T-635 产品身份与 release attestation（非发布产物）
+  * Windows 安装后真启动与主页面加载冒烟(T-562)
+  * Windows 主动卸载清理冒烟(T-557)
+  * 上传 T-675 Windows production closure 正式证据
+  * 清理 macOS 一次性签名钥匙串(T-709)
+  * Post 缓存 Windows 媒体工具
+  * Post 恢复 Windows Next 编译缓存
+  * Post Run Swatinem/rust-cache@v2
+  * Post Run actions/setup-node@v4
+  * Post Run pnpm/action-setup@v4
+  * Post Run actions/checkout@v4
+
+ANNOTATIONS
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+plan: .github#1
+
+Refreshing run status every 30 seconds. Press Ctrl+C to quit.
+
+* codex/t1063-release-pipeline desktop-release · 37440775757
+Triggered via workflow_dispatch about 13 minutes ago
+
+JOBS
+✓ plan in 4s (ID 112193718432)
+  ✓ Set up job
+  ✓ Run all='[{"os":"macos-latest","updater_target":"darwin-aarch64"},{"os":"windows-latest","updater_target":"windows-x86_64"}]'
+  ✓ Complete job
+- windows-runtime-rat in 0s (ID 112193720209)
+- windows-closure-rat in 0s (ID 112193720538)
+* build (windows-latest, windows-x86_64) (ID 112193758217)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run pnpm/action-setup@v4
+  ✓ Run actions/setup-node@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run Swatinem/rust-cache@v2
+  ✓ 安装依赖
+  ✓ 恢复 Windows Next 编译缓存
+  ✓ 缓存 Windows 媒体工具
+  - 导入 macOS Developer ID 与公证凭据(T-709)
+  - 计算 Runtime Node/V8 与 verdict 公钥指纹(T-487)
+  - 恢复 clean Runtime Image(T-487)
+  - 校验命中缓存的 Node/V8 ABI 与 verdict 公钥(T-487)
+  - 安装 macOS host Playwright Chromium(T-749)
+  - 构建 clean Runtime Image(T-487,仅 cache miss)
+  - 保存 clean Runtime Image(T-487)
+  ✓ 安装 Windows production closure 的 Chromium
+  ✓ 构建并接入 Windows production closure(T-675)
+  ✓ 读版本号
+  - 校验发布包领取关闭与反馈配置(T-635)
+  * 打包(release.mjs 全链)
+  * 收集用户安装包(T-492)
+  * 上传已生成的安装包（额外验收不阻断）
+  * 校验 Windows 安装包 tarball 化(T-454·反转 T-446,setup.exe 只带 sidecar.tar.gz)
+  * 校验 Chromium 已打进 sidecar(防 warn 静默跳过违反 T-284)
+  * Windows 安装期 runtime 原生冒烟(T-487)
+  * 校验 updater 产物 + .sig 齐(SPEC §15 验收 9)
+  * macOS Developer ID、公证与 Gatekeeper 门(T-709)
+  * macOS sidecar 可搬运归档与解压后签名门(T-705)
+  * macOS 真启动与主页面加载冒烟(T-663)
+  * 上传 T-635 产品身份与 release attestation（非发布产物）
+  * Windows 安装后真启动与主页面加载冒烟(T-562)
+  * Windows 主动卸载清理冒烟(T-557)
+  * 上传 T-675 Windows production closure 正式证据
+  * 清理 macOS 一次性签名钥匙串(T-709)
+  * Post 缓存 Windows 媒体工具
+  * Post 恢复 Windows Next 编译缓存
+  * Post Run Swatinem/rust-cache@v2
+  * Post Run actions/setup-node@v4
+  * Post Run pnpm/action-setup@v4
+  * Post Run actions/checkout@v4
+
+ANNOTATIONS
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+plan: .github#1
+
+Refreshing run status every 30 seconds. Press Ctrl+C to quit.
+
+* codex/t1063-release-pipeline desktop-release · 37440775757
+Triggered via workflow_dispatch about 13 minutes ago
+
+JOBS
+✓ plan in 4s (ID 112193718432)
+  ✓ Set up job
+  ✓ Run all='[{"os":"macos-latest","updater_target":"darwin-aarch64"},{"os":"windows-latest","updater_target":"windows-x86_64"}]'
+  ✓ Complete job
+- windows-runtime-rat in 0s (ID 112193720209)
+- windows-closure-rat in 0s (ID 112193720538)
+* build (windows-latest, windows-x86_64) (ID 112193758217)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run pnpm/action-setup@v4
+  ✓ Run actions/setup-node@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run Swatinem/rust-cache@v2
+  ✓ 安装依赖
+  ✓ 恢复 Windows Next 编译缓存
+  ✓ 缓存 Windows 媒体工具
+  - 导入 macOS Developer ID 与公证凭据(T-709)
+  - 计算 Runtime Node/V8 与 verdict 公钥指纹(T-487)
+  - 恢复 clean Runtime Image(T-487)
+  - 校验命中缓存的 Node/V8 ABI 与 verdict 公钥(T-487)
+  - 安装 macOS host Playwright Chromium(T-749)
+  - 构建 clean Runtime Image(T-487,仅 cache miss)
+  - 保存 clean Runtime Image(T-487)
+  ✓ 安装 Windows production closure 的 Chromium
+  ✓ 构建并接入 Windows production closure(T-675)
+  ✓ 读版本号
+  - 校验发布包领取关闭与反馈配置(T-635)
+  * 打包(release.mjs 全链)
+  * 收集用户安装包(T-492)
+  * 上传已生成的安装包（额外验收不阻断）
+  * 校验 Windows 安装包 tarball 化(T-454·反转 T-446,setup.exe 只带 sidecar.tar.gz)
+  * 校验 Chromium 已打进 sidecar(防 warn 静默跳过违反 T-284)
+  * Windows 安装期 runtime 原生冒烟(T-487)
+  * 校验 updater 产物 + .sig 齐(SPEC §15 验收 9)
+  * macOS Developer ID、公证与 Gatekeeper 门(T-709)
+  * macOS sidecar 可搬运归档与解压后签名门(T-705)
+  * macOS 真启动与主页面加载冒烟(T-663)
+  * 上传 T-635 产品身份与 release attestation（非发布产物）
+  * Windows 安装后真启动与主页面加载冒烟(T-562)
+  * Windows 主动卸载清理冒烟(T-557)
+  * 上传 T-675 Windows production closure 正式证据
+  * 清理 macOS 一次性签名钥匙串(T-709)
+  * Post 缓存 Windows 媒体工具
+  * Post 恢复 Windows Next 编译缓存
+  * Post Run Swatinem/rust-cache@v2
+  * Post Run actions/setup-node@v4
+  * Post Run pnpm/action-setup@v4
+  * Post Run actions/checkout@v4
+
+ANNOTATIONS
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+plan: .github#1
+
+Refreshing run status every 30 seconds. Press Ctrl+C to quit.
+
+* codex/t1063-release-pipeline desktop-release · 37440775757
+Triggered via workflow_dispatch about 14 minutes ago
+
+JOBS
+✓ plan in 4s (ID 112193718432)
+  ✓ Set up job
+  ✓ Run all='[{"os":"macos-latest","updater_target":"darwin-aarch64"},{"os":"windows-latest","updater_target":"windows-x86_64"}]'
+  ✓ Complete job
+- windows-runtime-rat in 0s (ID 112193720209)
+- windows-closure-rat in 0s (ID 112193720538)
+* build (windows-latest, windows-x86_64) (ID 112193758217)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run pnpm/action-setup@v4
+  ✓ Run actions/setup-node@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run Swatinem/rust-cache@v2
+  ✓ 安装依赖
+  ✓ 恢复 Windows Next 编译缓存
+  ✓ 缓存 Windows 媒体工具
+  - 导入 macOS Developer ID 与公证凭据(T-709)
+  - 计算 Runtime Node/V8 与 verdict 公钥指纹(T-487)
+  - 恢复 clean Runtime Image(T-487)
+  - 校验命中缓存的 Node/V8 ABI 与 verdict 公钥(T-487)
+  - 安装 macOS host Playwright Chromium(T-749)
+  - 构建 clean Runtime Image(T-487,仅 cache miss)
+  - 保存 clean Runtime Image(T-487)
+  ✓ 安装 Windows production closure 的 Chromium
+  ✓ 构建并接入 Windows production closure(T-675)
+  ✓ 读版本号
+  - 校验发布包领取关闭与反馈配置(T-635)
+  * 打包(release.mjs 全链)
+  * 收集用户安装包(T-492)
+  * 上传已生成的安装包（额外验收不阻断）
+  * 校验 Windows 安装包 tarball 化(T-454·反转 T-446,setup.exe 只带 sidecar.tar.gz)
+  * 校验 Chromium 已打进 sidecar(防 warn 静默跳过违反 T-284)
+  * Windows 安装期 runtime 原生冒烟(T-487)
+  * 校验 updater 产物 + .sig 齐(SPEC §15 验收 9)
+  * macOS Developer ID、公证与 Gatekeeper 门(T-709)
+  * macOS sidecar 可搬运归档与解压后签名门(T-705)
+  * macOS 真启动与主页面加载冒烟(T-663)
+  * 上传 T-635 产品身份与 release attestation（非发布产物）
+  * Windows 安装后真启动与主页面加载冒烟(T-562)
+  * Windows 主动卸载清理冒烟(T-557)
+  * 上传 T-675 Windows production closure 正式证据
+  * 清理 macOS 一次性签名钥匙串(T-709)
+  * Post 缓存 Windows 媒体工具
+  * Post 恢复 Windows Next 编译缓存
+  * Post Run Swatinem/rust-cache@v2
+  * Post Run actions/setup-node@v4
+  * Post Run pnpm/action-setup@v4
+  * Post Run actions/checkout@v4
+
+ANNOTATIONS
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+plan: .github#1
+
+Refreshing run status every 30 seconds. Press Ctrl+C to quit.
+
+* codex/t1063-release-pipeline desktop-release · 37440775757
+Triggered via workflow_dispatch about 14 minutes ago
+
+JOBS
+✓ plan in 4s (ID 112193718432)
+  ✓ Set up job
+  ✓ Run all='[{"os":"macos-latest","updater_target":"darwin-aarch64"},{"os":"windows-latest","updater_target":"windows-x86_64"}]'
+  ✓ Complete job
+- windows-runtime-rat in 0s (ID 112193720209)
+- windows-closure-rat in 0s (ID 112193720538)
+* build (windows-latest, windows-x86_64) (ID 112193758217)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run pnpm/action-setup@v4
+  ✓ Run actions/setup-node@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run Swatinem/rust-cache@v2
+  ✓ 安装依赖
+  ✓ 恢复 Windows Next 编译缓存
+  ✓ 缓存 Windows 媒体工具
+  - 导入 macOS Developer ID 与公证凭据(T-709)
+  - 计算 Runtime Node/V8 与 verdict 公钥指纹(T-487)
+  - 恢复 clean Runtime Image(T-487)
+  - 校验命中缓存的 Node/V8 ABI 与 verdict 公钥(T-487)
+  - 安装 macOS host Playwright Chromium(T-749)
+  - 构建 clean Runtime Image(T-487,仅 cache miss)
+  - 保存 clean Runtime Image(T-487)
+  ✓ 安装 Windows production closure 的 Chromium
+  ✓ 构建并接入 Windows production closure(T-675)
+  ✓ 读版本号
+  - 校验发布包领取关闭与反馈配置(T-635)
+  * 打包(release.mjs 全链)
+  * 收集用户安装包(T-492)
+  * 上传已生成的安装包（额外验收不阻断）
+  * 校验 Windows 安装包 tarball 化(T-454·反转 T-446,setup.exe 只带 sidecar.tar.gz)
+  * 校验 Chromium 已打进 sidecar(防 warn 静默跳过违反 T-284)
+  * Windows 安装期 runtime 原生冒烟(T-487)
+  * 校验 updater 产物 + .sig 齐(SPEC §15 验收 9)
+  * macOS Developer ID、公证与 Gatekeeper 门(T-709)
+  * macOS sidecar 可搬运归档与解压后签名门(T-705)
+  * macOS 真启动与主页面加载冒烟(T-663)
+  * 上传 T-635 产品身份与 release attestation（非发布产物）
+  * Windows 安装后真启动与主页面加载冒烟(T-562)
+  * Windows 主动卸载清理冒烟(T-557)
+  * 上传 T-675 Windows production closure 正式证据
+  * 清理 macOS 一次性签名钥匙串(T-709)
+  * Post 缓存 Windows 媒体工具
+  * Post 恢复 Windows Next 编译缓存
+  * Post Run Swatinem/rust-cache@v2
+  * Post Run actions/setup-node@v4
+  * Post Run pnpm/action-setup@v4
+  * Post Run actions/checkout@v4
+
+ANNOTATIONS
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+plan: .github#1
+
+Refreshing run status every 30 seconds. Press Ctrl+C to quit.
+
+* codex/t1063-release-pipeline desktop-release · 37440775757
+Triggered via workflow_dispatch about 15 minutes ago
+
+JOBS
+✓ plan in 4s (ID 112193718432)
+  ✓ Set up job
+  ✓ Run all='[{"os":"macos-latest","updater_target":"darwin-aarch64"},{"os":"windows-latest","updater_target":"windows-x86_64"}]'
+  ✓ Complete job
+- windows-runtime-rat in 0s (ID 112193720209)
+- windows-closure-rat in 0s (ID 112193720538)
+* build (windows-latest, windows-x86_64) (ID 112193758217)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run pnpm/action-setup@v4
+  ✓ Run actions/setup-node@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run Swatinem/rust-cache@v2
+  ✓ 安装依赖
+  ✓ 恢复 Windows Next 编译缓存
+  ✓ 缓存 Windows 媒体工具
+  - 导入 macOS Developer ID 与公证凭据(T-709)
+  - 计算 Runtime Node/V8 与 verdict 公钥指纹(T-487)
+  - 恢复 clean Runtime Image(T-487)
+  - 校验命中缓存的 Node/V8 ABI 与 verdict 公钥(T-487)
+  - 安装 macOS host Playwright Chromium(T-749)
+  - 构建 clean Runtime Image(T-487,仅 cache miss)
+  - 保存 clean Runtime Image(T-487)
+  ✓ 安装 Windows production closure 的 Chromium
+  ✓ 构建并接入 Windows production closure(T-675)
+  ✓ 读版本号
+  - 校验发布包领取关闭与反馈配置(T-635)
+  * 打包(release.mjs 全链)
+  * 收集用户安装包(T-492)
+  * 上传已生成的安装包（额外验收不阻断）
+  * 校验 Windows 安装包 tarball 化(T-454·反转 T-446,setup.exe 只带 sidecar.tar.gz)
+  * 校验 Chromium 已打进 sidecar(防 warn 静默跳过违反 T-284)
+  * Windows 安装期 runtime 原生冒烟(T-487)
+  * 校验 updater 产物 + .sig 齐(SPEC §15 验收 9)
+  * macOS Developer ID、公证与 Gatekeeper 门(T-709)
+  * macOS sidecar 可搬运归档与解压后签名门(T-705)
+  * macOS 真启动与主页面加载冒烟(T-663)
+  * 上传 T-635 产品身份与 release attestation（非发布产物）
+  * Windows 安装后真启动与主页面加载冒烟(T-562)
+  * Windows 主动卸载清理冒烟(T-557)
+  * 上传 T-675 Windows production closure 正式证据
+  * 清理 macOS 一次性签名钥匙串(T-709)
+  * Post 缓存 Windows 媒体工具
+  * Post 恢复 Windows Next 编译缓存
+  * Post Run Swatinem/rust-cache@v2
+  * Post Run actions/setup-node@v4
+  * Post Run pnpm/action-setup@v4
+  * Post Run actions/checkout@v4
+
+ANNOTATIONS
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+plan: .github#1
+
+Refreshing run status every 30 seconds. Press Ctrl+C to quit.
+
+* codex/t1063-release-pipeline desktop-release · 37440775757
+Triggered via workflow_dispatch about 15 minutes ago
+
+JOBS
+✓ plan in 4s (ID 112193718432)
+  ✓ Set up job
+  ✓ Run all='[{"os":"macos-latest","updater_target":"darwin-aarch64"},{"os":"windows-latest","updater_target":"windows-x86_64"}]'
+  ✓ Complete job
+- windows-runtime-rat in 0s (ID 112193720209)
+- windows-closure-rat in 0s (ID 112193720538)
+* build (windows-latest, windows-x86_64) (ID 112193758217)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run pnpm/action-setup@v4
+  ✓ Run actions/setup-node@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run Swatinem/rust-cache@v2
+  ✓ 安装依赖
+  ✓ 恢复 Windows Next 编译缓存
+  ✓ 缓存 Windows 媒体工具
+  - 导入 macOS Developer ID 与公证凭据(T-709)
+  - 计算 Runtime Node/V8 与 verdict 公钥指纹(T-487)
+  - 恢复 clean Runtime Image(T-487)
+  - 校验命中缓存的 Node/V8 ABI 与 verdict 公钥(T-487)
+  - 安装 macOS host Playwright Chromium(T-749)
+  - 构建 clean Runtime Image(T-487,仅 cache miss)
+  - 保存 clean Runtime Image(T-487)
+  ✓ 安装 Windows production closure 的 Chromium
+  ✓ 构建并接入 Windows production closure(T-675)
+  ✓ 读版本号
+  - 校验发布包领取关闭与反馈配置(T-635)
+  * 打包(release.mjs 全链)
+  * 收集用户安装包(T-492)
+  * 上传已生成的安装包（额外验收不阻断）
+  * 校验 Windows 安装包 tarball 化(T-454·反转 T-446,setup.exe 只带 sidecar.tar.gz)
+  * 校验 Chromium 已打进 sidecar(防 warn 静默跳过违反 T-284)
+  * Windows 安装期 runtime 原生冒烟(T-487)
+  * 校验 updater 产物 + .sig 齐(SPEC §15 验收 9)
+  * macOS Developer ID、公证与 Gatekeeper 门(T-709)
+  * macOS sidecar 可搬运归档与解压后签名门(T-705)
+  * macOS 真启动与主页面加载冒烟(T-663)
+  * 上传 T-635 产品身份与 release attestation（非发布产物）
+  * Windows 安装后真启动与主页面加载冒烟(T-562)
+  * Windows 主动卸载清理冒烟(T-557)
+  * 上传 T-675 Windows production closure 正式证据
+  * 清理 macOS 一次性签名钥匙串(T-709)
+  * Post 缓存 Windows 媒体工具
+  * Post 恢复 Windows Next 编译缓存
+  * Post Run Swatinem/rust-cache@v2
+  * Post Run actions/setup-node@v4
+  * Post Run pnpm/action-setup@v4
+  * Post Run actions/checkout@v4
+
+ANNOTATIONS
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+plan: .github#1
+
+Refreshing run status every 30 seconds. Press Ctrl+C to quit.
+
+* codex/t1063-release-pipeline desktop-release · 37440775757
+Triggered via workflow_dispatch about 16 minutes ago
+
+JOBS
+✓ plan in 4s (ID 112193718432)
+  ✓ Set up job
+  ✓ Run all='[{"os":"macos-latest","updater_target":"darwin-aarch64"},{"os":"windows-latest","updater_target":"windows-x86_64"}]'
+  ✓ Complete job
+- windows-runtime-rat in 0s (ID 112193720209)
+- windows-closure-rat in 0s (ID 112193720538)
+* build (windows-latest, windows-x86_64) (ID 112193758217)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run pnpm/action-setup@v4
+  ✓ Run actions/setup-node@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run Swatinem/rust-cache@v2
+  ✓ 安装依赖
+  ✓ 恢复 Windows Next 编译缓存
+  ✓ 缓存 Windows 媒体工具
+  - 导入 macOS Developer ID 与公证凭据(T-709)
+  - 计算 Runtime Node/V8 与 verdict 公钥指纹(T-487)
+  - 恢复 clean Runtime Image(T-487)
+  - 校验命中缓存的 Node/V8 ABI 与 verdict 公钥(T-487)
+  - 安装 macOS host Playwright Chromium(T-749)
+  - 构建 clean Runtime Image(T-487,仅 cache miss)
+  - 保存 clean Runtime Image(T-487)
+  ✓ 安装 Windows production closure 的 Chromium
+  ✓ 构建并接入 Windows production closure(T-675)
+  ✓ 读版本号
+  - 校验发布包领取关闭与反馈配置(T-635)
+  * 打包(release.mjs 全链)
+  * 收集用户安装包(T-492)
+  * 上传已生成的安装包（额外验收不阻断）
+  * 校验 Windows 安装包 tarball 化(T-454·反转 T-446,setup.exe 只带 sidecar.tar.gz)
+  * 校验 Chromium 已打进 sidecar(防 warn 静默跳过违反 T-284)
+  * Windows 安装期 runtime 原生冒烟(T-487)
+  * 校验 updater 产物 + .sig 齐(SPEC §15 验收 9)
+  * macOS Developer ID、公证与 Gatekeeper 门(T-709)
+  * macOS sidecar 可搬运归档与解压后签名门(T-705)
+  * macOS 真启动与主页面加载冒烟(T-663)
+  * 上传 T-635 产品身份与 release attestation（非发布产物）
+  * Windows 安装后真启动与主页面加载冒烟(T-562)
+  * Windows 主动卸载清理冒烟(T-557)
+  * 上传 T-675 Windows production closure 正式证据
+  * 清理 macOS 一次性签名钥匙串(T-709)
+  * Post 缓存 Windows 媒体工具
+  * Post 恢复 Windows Next 编译缓存
+  * Post Run Swatinem/rust-cache@v2
+  * Post Run actions/setup-node@v4
+  * Post Run pnpm/action-setup@v4
+  * Post Run actions/checkout@v4
+
+ANNOTATIONS
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+plan: .github#1
+
+Refreshing run status every 30 seconds. Press Ctrl+C to quit.
+
+* codex/t1063-release-pipeline desktop-release · 37440775757
+Triggered via workflow_dispatch about 16 minutes ago
+
+JOBS
+✓ plan in 4s (ID 112193718432)
+  ✓ Set up job
+  ✓ Run all='[{"os":"macos-latest","updater_target":"darwin-aarch64"},{"os":"windows-latest","updater_target":"windows-x86_64"}]'
+  ✓ Complete job
+- windows-runtime-rat in 0s (ID 112193720209)
+- windows-closure-rat in 0s (ID 112193720538)
+* build (windows-latest, windows-x86_64) (ID 112193758217)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run pnpm/action-setup@v4
+  ✓ Run actions/setup-node@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run Swatinem/rust-cache@v2
+  ✓ 安装依赖
+  ✓ 恢复 Windows Next 编译缓存
+  ✓ 缓存 Windows 媒体工具
+  - 导入 macOS Developer ID 与公证凭据(T-709)
+  - 计算 Runtime Node/V8 与 verdict 公钥指纹(T-487)
+  - 恢复 clean Runtime Image(T-487)
+  - 校验命中缓存的 Node/V8 ABI 与 verdict 公钥(T-487)
+  - 安装 macOS host Playwright Chromium(T-749)
+  - 构建 clean Runtime Image(T-487,仅 cache miss)
+  - 保存 clean Runtime Image(T-487)
+  ✓ 安装 Windows production closure 的 Chromium
+  ✓ 构建并接入 Windows production closure(T-675)
+  ✓ 读版本号
+  - 校验发布包领取关闭与反馈配置(T-635)
+  * 打包(release.mjs 全链)
+  * 收集用户安装包(T-492)
+  * 上传已生成的安装包（额外验收不阻断）
+  * 校验 Windows 安装包 tarball 化(T-454·反转 T-446,setup.exe 只带 sidecar.tar.gz)
+  * 校验 Chromium 已打进 sidecar(防 warn 静默跳过违反 T-284)
+  * Windows 安装期 runtime 原生冒烟(T-487)
+  * 校验 updater 产物 + .sig 齐(SPEC §15 验收 9)
+  * macOS Developer ID、公证与 Gatekeeper 门(T-709)
+  * macOS sidecar 可搬运归档与解压后签名门(T-705)
+  * macOS 真启动与主页面加载冒烟(T-663)
+  * 上传 T-635 产品身份与 release attestation（非发布产物）
+  * Windows 安装后真启动与主页面加载冒烟(T-562)
+  * Windows 主动卸载清理冒烟(T-557)
+  * 上传 T-675 Windows production closure 正式证据
+  * 清理 macOS 一次性签名钥匙串(T-709)
+  * Post 缓存 Windows 媒体工具
+  * Post 恢复 Windows Next 编译缓存
+  * Post Run Swatinem/rust-cache@v2
+  * Post Run actions/setup-node@v4
+  * Post Run pnpm/action-setup@v4
+  * Post Run actions/checkout@v4
+
+ANNOTATIONS
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+plan: .github#1
+
+Refreshing run status every 30 seconds. Press Ctrl+C to quit.
+
+* codex/t1063-release-pipeline desktop-release · 37440775757
+Triggered via workflow_dispatch about 17 minutes ago
+
+JOBS
+✓ plan in 4s (ID 112193718432)
+  ✓ Set up job
+  ✓ Run all='[{"os":"macos-latest","updater_target":"darwin-aarch64"},{"os":"windows-latest","updater_target":"windows-x86_64"}]'
+  ✓ Complete job
+- windows-runtime-rat in 0s (ID 112193720209)
+- windows-closure-rat in 0s (ID 112193720538)
+* build (windows-latest, windows-x86_64) (ID 112193758217)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run pnpm/action-setup@v4
+  ✓ Run actions/setup-node@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run Swatinem/rust-cache@v2
+  ✓ 安装依赖
+  ✓ 恢复 Windows Next 编译缓存
+  ✓ 缓存 Windows 媒体工具
+  - 导入 macOS Developer ID 与公证凭据(T-709)
+  - 计算 Runtime Node/V8 与 verdict 公钥指纹(T-487)
+  - 恢复 clean Runtime Image(T-487)
+  - 校验命中缓存的 Node/V8 ABI 与 verdict 公钥(T-487)
+  - 安装 macOS host Playwright Chromium(T-749)
+  - 构建 clean Runtime Image(T-487,仅 cache miss)
+  - 保存 clean Runtime Image(T-487)
+  ✓ 安装 Windows production closure 的 Chromium
+  ✓ 构建并接入 Windows production closure(T-675)
+  ✓ 读版本号
+  - 校验发布包领取关闭与反馈配置(T-635)
+  * 打包(release.mjs 全链)
+  * 收集用户安装包(T-492)
+  * 上传已生成的安装包（额外验收不阻断）
+  * 校验 Windows 安装包 tarball 化(T-454·反转 T-446,setup.exe 只带 sidecar.tar.gz)
+  * 校验 Chromium 已打进 sidecar(防 warn 静默跳过违反 T-284)
+  * Windows 安装期 runtime 原生冒烟(T-487)
+  * 校验 updater 产物 + .sig 齐(SPEC §15 验收 9)
+  * macOS Developer ID、公证与 Gatekeeper 门(T-709)
+  * macOS sidecar 可搬运归档与解压后签名门(T-705)
+  * macOS 真启动与主页面加载冒烟(T-663)
+  * 上传 T-635 产品身份与 release attestation（非发布产物）
+  * Windows 安装后真启动与主页面加载冒烟(T-562)
+  * Windows 主动卸载清理冒烟(T-557)
+  * 上传 T-675 Windows production closure 正式证据
+  * 清理 macOS 一次性签名钥匙串(T-709)
+  * Post 缓存 Windows 媒体工具
+  * Post 恢复 Windows Next 编译缓存
+  * Post Run Swatinem/rust-cache@v2
+  * Post Run actions/setup-node@v4
+  * Post Run pnpm/action-setup@v4
+  * Post Run actions/checkout@v4
+
+ANNOTATIONS
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+plan: .github#1
+
+Refreshing run status every 30 seconds. Press Ctrl+C to quit.
+
+* codex/t1063-release-pipeline desktop-release · 37440775757
+Triggered via workflow_dispatch about 17 minutes ago
+
+JOBS
+✓ plan in 4s (ID 112193718432)
+  ✓ Set up job
+  ✓ Run all='[{"os":"macos-latest","updater_target":"darwin-aarch64"},{"os":"windows-latest","updater_target":"windows-x86_64"}]'
+  ✓ Complete job
+- windows-runtime-rat in 0s (ID 112193720209)
+- windows-closure-rat in 0s (ID 112193720538)
+* build (windows-latest, windows-x86_64) (ID 112193758217)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run pnpm/action-setup@v4
+  ✓ Run actions/setup-node@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run Swatinem/rust-cache@v2
+  ✓ 安装依赖
+  ✓ 恢复 Windows Next 编译缓存
+  ✓ 缓存 Windows 媒体工具
+  - 导入 macOS Developer ID 与公证凭据(T-709)
+  - 计算 Runtime Node/V8 与 verdict 公钥指纹(T-487)
+  - 恢复 clean Runtime Image(T-487)
+  - 校验命中缓存的 Node/V8 ABI 与 verdict 公钥(T-487)
+  - 安装 macOS host Playwright Chromium(T-749)
+  - 构建 clean Runtime Image(T-487,仅 cache miss)
+  - 保存 clean Runtime Image(T-487)
+  ✓ 安装 Windows production closure 的 Chromium
+  ✓ 构建并接入 Windows production closure(T-675)
+  ✓ 读版本号
+  - 校验发布包领取关闭与反馈配置(T-635)
+  * 打包(release.mjs 全链)
+  * 收集用户安装包(T-492)
+  * 上传已生成的安装包（额外验收不阻断）
+  * 校验 Windows 安装包 tarball 化(T-454·反转 T-446,setup.exe 只带 sidecar.tar.gz)
+  * 校验 Chromium 已打进 sidecar(防 warn 静默跳过违反 T-284)
+  * Windows 安装期 runtime 原生冒烟(T-487)
+  * 校验 updater 产物 + .sig 齐(SPEC §15 验收 9)
+  * macOS Developer ID、公证与 Gatekeeper 门(T-709)
+  * macOS sidecar 可搬运归档与解压后签名门(T-705)
+  * macOS 真启动与主页面加载冒烟(T-663)
+  * 上传 T-635 产品身份与 release attestation（非发布产物）
+  * Windows 安装后真启动与主页面加载冒烟(T-562)
+  * Windows 主动卸载清理冒烟(T-557)
+  * 上传 T-675 Windows production closure 正式证据
+  * 清理 macOS 一次性签名钥匙串(T-709)
+  * Post 缓存 Windows 媒体工具
+  * Post 恢复 Windows Next 编译缓存
+  * Post Run Swatinem/rust-cache@v2
+  * Post Run actions/setup-node@v4
+  * Post Run pnpm/action-setup@v4
+  * Post Run actions/checkout@v4
+
+ANNOTATIONS
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+plan: .github#1
+
+Refreshing run status every 30 seconds. Press Ctrl+C to quit.
+
+* codex/t1063-release-pipeline desktop-release · 37440775757
+Triggered via workflow_dispatch about 18 minutes ago
+
+JOBS
+✓ plan in 4s (ID 112193718432)
+  ✓ Set up job
+  ✓ Run all='[{"os":"macos-latest","updater_target":"darwin-aarch64"},{"os":"windows-latest","updater_target":"windows-x86_64"}]'
+  ✓ Complete job
+- windows-runtime-rat in 0s (ID 112193720209)
+- windows-closure-rat in 0s (ID 112193720538)
+* build (windows-latest, windows-x86_64) (ID 112193758217)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run pnpm/action-setup@v4
+  ✓ Run actions/setup-node@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run Swatinem/rust-cache@v2
+  ✓ 安装依赖
+  ✓ 恢复 Windows Next 编译缓存
+  ✓ 缓存 Windows 媒体工具
+  - 导入 macOS Developer ID 与公证凭据(T-709)
+  - 计算 Runtime Node/V8 与 verdict 公钥指纹(T-487)
+  - 恢复 clean Runtime Image(T-487)
+  - 校验命中缓存的 Node/V8 ABI 与 verdict 公钥(T-487)
+  - 安装 macOS host Playwright Chromium(T-749)
+  - 构建 clean Runtime Image(T-487,仅 cache miss)
+  - 保存 clean Runtime Image(T-487)
+  ✓ 安装 Windows production closure 的 Chromium
+  ✓ 构建并接入 Windows production closure(T-675)
+  ✓ 读版本号
+  - 校验发布包领取关闭与反馈配置(T-635)
+  * 打包(release.mjs 全链)
+  * 收集用户安装包(T-492)
+  * 上传已生成的安装包（额外验收不阻断）
+  * 校验 Windows 安装包 tarball 化(T-454·反转 T-446,setup.exe 只带 sidecar.tar.gz)
+  * 校验 Chromium 已打进 sidecar(防 warn 静默跳过违反 T-284)
+  * Windows 安装期 runtime 原生冒烟(T-487)
+  * 校验 updater 产物 + .sig 齐(SPEC §15 验收 9)
+  * macOS Developer ID、公证与 Gatekeeper 门(T-709)
+  * macOS sidecar 可搬运归档与解压后签名门(T-705)
+  * macOS 真启动与主页面加载冒烟(T-663)
+  * 上传 T-635 产品身份与 release attestation（非发布产物）
+  * Windows 安装后真启动与主页面加载冒烟(T-562)
+  * Windows 主动卸载清理冒烟(T-557)
+  * 上传 T-675 Windows production closure 正式证据
+  * 清理 macOS 一次性签名钥匙串(T-709)
+  * Post 缓存 Windows 媒体工具
+  * Post 恢复 Windows Next 编译缓存
+  * Post Run Swatinem/rust-cache@v2
+  * Post Run actions/setup-node@v4
+  * Post Run pnpm/action-setup@v4
+  * Post Run actions/checkout@v4
+
+ANNOTATIONS
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+plan: .github#1
+
+Refreshing run status every 30 seconds. Press Ctrl+C to quit.
+
+* codex/t1063-release-pipeline desktop-release · 37440775757
+Triggered via workflow_dispatch about 19 minutes ago
+
+JOBS
+✓ plan in 4s (ID 112193718432)
+  ✓ Set up job
+  ✓ Run all='[{"os":"macos-latest","updater_target":"darwin-aarch64"},{"os":"windows-latest","updater_target":"windows-x86_64"}]'
+  ✓ Complete job
+- windows-runtime-rat in 0s (ID 112193720209)
+- windows-closure-rat in 0s (ID 112193720538)
+* build (windows-latest, windows-x86_64) (ID 112193758217)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run pnpm/action-setup@v4
+  ✓ Run actions/setup-node@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run Swatinem/rust-cache@v2
+  ✓ 安装依赖
+  ✓ 恢复 Windows Next 编译缓存
+  ✓ 缓存 Windows 媒体工具
+  - 导入 macOS Developer ID 与公证凭据(T-709)
+  - 计算 Runtime Node/V8 与 verdict 公钥指纹(T-487)
+  - 恢复 clean Runtime Image(T-487)
+  - 校验命中缓存的 Node/V8 ABI 与 verdict 公钥(T-487)
+  - 安装 macOS host Playwright Chromium(T-749)
+  - 构建 clean Runtime Image(T-487,仅 cache miss)
+  - 保存 clean Runtime Image(T-487)
+  ✓ 安装 Windows production closure 的 Chromium
+  ✓ 构建并接入 Windows production closure(T-675)
+  ✓ 读版本号
+  - 校验发布包领取关闭与反馈配置(T-635)
+  * 打包(release.mjs 全链)
+  * 收集用户安装包(T-492)
+  * 上传已生成的安装包（额外验收不阻断）
+  * 校验 Windows 安装包 tarball 化(T-454·反转 T-446,setup.exe 只带 sidecar.tar.gz)
+  * 校验 Chromium 已打进 sidecar(防 warn 静默跳过违反 T-284)
+  * Windows 安装期 runtime 原生冒烟(T-487)
+  * 校验 updater 产物 + .sig 齐(SPEC §15 验收 9)
+  * macOS Developer ID、公证与 Gatekeeper 门(T-709)
+  * macOS sidecar 可搬运归档与解压后签名门(T-705)
+  * macOS 真启动与主页面加载冒烟(T-663)
+  * 上传 T-635 产品身份与 release attestation（非发布产物）
+  * Windows 安装后真启动与主页面加载冒烟(T-562)
+  * Windows 主动卸载清理冒烟(T-557)
+  * 上传 T-675 Windows production closure 正式证据
+  * 清理 macOS 一次性签名钥匙串(T-709)
+  * Post 缓存 Windows 媒体工具
+  * Post 恢复 Windows Next 编译缓存
+  * Post Run Swatinem/rust-cache@v2
+  * Post Run actions/setup-node@v4
+  * Post Run pnpm/action-setup@v4
+  * Post Run actions/checkout@v4
+
+ANNOTATIONS
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+plan: .github#1
+
+Refreshing run status every 30 seconds. Press Ctrl+C to quit.
+
+* codex/t1063-release-pipeline desktop-release · 37440775757
+Triggered via workflow_dispatch about 19 minutes ago
+
+JOBS
+✓ plan in 4s (ID 112193718432)
+  ✓ Set up job
+  ✓ Run all='[{"os":"macos-latest","updater_target":"darwin-aarch64"},{"os":"windows-latest","updater_target":"windows-x86_64"}]'
+  ✓ Complete job
+- windows-runtime-rat in 0s (ID 112193720209)
+- windows-closure-rat in 0s (ID 112193720538)
+* build (windows-latest, windows-x86_64) (ID 112193758217)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run pnpm/action-setup@v4
+  ✓ Run actions/setup-node@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run Swatinem/rust-cache@v2
+  ✓ 安装依赖
+  ✓ 恢复 Windows Next 编译缓存
+  ✓ 缓存 Windows 媒体工具
+  - 导入 macOS Developer ID 与公证凭据(T-709)
+  - 计算 Runtime Node/V8 与 verdict 公钥指纹(T-487)
+  - 恢复 clean Runtime Image(T-487)
+  - 校验命中缓存的 Node/V8 ABI 与 verdict 公钥(T-487)
+  - 安装 macOS host Playwright Chromium(T-749)
+  - 构建 clean Runtime Image(T-487,仅 cache miss)
+  - 保存 clean Runtime Image(T-487)
+  ✓ 安装 Windows production closure 的 Chromium
+  ✓ 构建并接入 Windows production closure(T-675)
+  ✓ 读版本号
+  - 校验发布包领取关闭与反馈配置(T-635)
+  * 打包(release.mjs 全链)
+  * 收集用户安装包(T-492)
+  * 上传已生成的安装包（额外验收不阻断）
+  * 校验 Windows 安装包 tarball 化(T-454·反转 T-446,setup.exe 只带 sidecar.tar.gz)
+  * 校验 Chromium 已打进 sidecar(防 warn 静默跳过违反 T-284)
+  * Windows 安装期 runtime 原生冒烟(T-487)
+  * 校验 updater 产物 + .sig 齐(SPEC §15 验收 9)
+  * macOS Developer ID、公证与 Gatekeeper 门(T-709)
+  * macOS sidecar 可搬运归档与解压后签名门(T-705)
+  * macOS 真启动与主页面加载冒烟(T-663)
+  * 上传 T-635 产品身份与 release attestation（非发布产物）
+  * Windows 安装后真启动与主页面加载冒烟(T-562)
+  * Windows 主动卸载清理冒烟(T-557)
+  * 上传 T-675 Windows production closure 正式证据
+  * 清理 macOS 一次性签名钥匙串(T-709)
+  * Post 缓存 Windows 媒体工具
+  * Post 恢复 Windows Next 编译缓存
+  * Post Run Swatinem/rust-cache@v2
+  * Post Run actions/setup-node@v4
+  * Post Run pnpm/action-setup@v4
+  * Post Run actions/checkout@v4
+
+ANNOTATIONS
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+plan: .github#1
+
+Refreshing run status every 30 seconds. Press Ctrl+C to quit.
+
+* codex/t1063-release-pipeline desktop-release · 37440775757
+Triggered via workflow_dispatch about 20 minutes ago
+
+JOBS
+✓ plan in 4s (ID 112193718432)
+  ✓ Set up job
+  ✓ Run all='[{"os":"macos-latest","updater_target":"darwin-aarch64"},{"os":"windows-latest","updater_target":"windows-x86_64"}]'
+  ✓ Complete job
+- windows-runtime-rat in 0s (ID 112193720209)
+- windows-closure-rat in 0s (ID 112193720538)
+* build (windows-latest, windows-x86_64) (ID 112193758217)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run pnpm/action-setup@v4
+  ✓ Run actions/setup-node@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run Swatinem/rust-cache@v2
+  ✓ 安装依赖
+  ✓ 恢复 Windows Next 编译缓存
+  ✓ 缓存 Windows 媒体工具
+  - 导入 macOS Developer ID 与公证凭据(T-709)
+  - 计算 Runtime Node/V8 与 verdict 公钥指纹(T-487)
+  - 恢复 clean Runtime Image(T-487)
+  - 校验命中缓存的 Node/V8 ABI 与 verdict 公钥(T-487)
+  - 安装 macOS host Playwright Chromium(T-749)
+  - 构建 clean Runtime Image(T-487,仅 cache miss)
+  - 保存 clean Runtime Image(T-487)
+  ✓ 安装 Windows production closure 的 Chromium
+  ✓ 构建并接入 Windows production closure(T-675)
+  ✓ 读版本号
+  - 校验发布包领取关闭与反馈配置(T-635)
+  * 打包(release.mjs 全链)
+  * 收集用户安装包(T-492)
+  * 上传已生成的安装包（额外验收不阻断）
+  * 校验 Windows 安装包 tarball 化(T-454·反转 T-446,setup.exe 只带 sidecar.tar.gz)
+  * 校验 Chromium 已打进 sidecar(防 warn 静默跳过违反 T-284)
+  * Windows 安装期 runtime 原生冒烟(T-487)
+  * 校验 updater 产物 + .sig 齐(SPEC §15 验收 9)
+  * macOS Developer ID、公证与 Gatekeeper 门(T-709)
+  * macOS sidecar 可搬运归档与解压后签名门(T-705)
+  * macOS 真启动与主页面加载冒烟(T-663)
+  * 上传 T-635 产品身份与 release attestation（非发布产物）
+  * Windows 安装后真启动与主页面加载冒烟(T-562)
+  * Windows 主动卸载清理冒烟(T-557)
+  * 上传 T-675 Windows production closure 正式证据
+  * 清理 macOS 一次性签名钥匙串(T-709)
+  * Post 缓存 Windows 媒体工具
+  * Post 恢复 Windows Next 编译缓存
+  * Post Run Swatinem/rust-cache@v2
+  * Post Run actions/setup-node@v4
+  * Post Run pnpm/action-setup@v4
+  * Post Run actions/checkout@v4
+
+ANNOTATIONS
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+plan: .github#1
+
+Refreshing run status every 30 seconds. Press Ctrl+C to quit.
+
+* codex/t1063-release-pipeline desktop-release · 37440775757
+Triggered via workflow_dispatch about 20 minutes ago
+
+JOBS
+✓ plan in 4s (ID 112193718432)
+  ✓ Set up job
+  ✓ Run all='[{"os":"macos-latest","updater_target":"darwin-aarch64"},{"os":"windows-latest","updater_target":"windows-x86_64"}]'
+  ✓ Complete job
+- windows-runtime-rat in 0s (ID 112193720209)
+- windows-closure-rat in 0s (ID 112193720538)
+* build (windows-latest, windows-x86_64) (ID 112193758217)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run pnpm/action-setup@v4
+  ✓ Run actions/setup-node@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run Swatinem/rust-cache@v2
+  ✓ 安装依赖
+  ✓ 恢复 Windows Next 编译缓存
+  ✓ 缓存 Windows 媒体工具
+  - 导入 macOS Developer ID 与公证凭据(T-709)
+  - 计算 Runtime Node/V8 与 verdict 公钥指纹(T-487)
+  - 恢复 clean Runtime Image(T-487)
+  - 校验命中缓存的 Node/V8 ABI 与 verdict 公钥(T-487)
+  - 安装 macOS host Playwright Chromium(T-749)
+  - 构建 clean Runtime Image(T-487,仅 cache miss)
+  - 保存 clean Runtime Image(T-487)
+  ✓ 安装 Windows production closure 的 Chromium
+  ✓ 构建并接入 Windows production closure(T-675)
+  ✓ 读版本号
+  - 校验发布包领取关闭与反馈配置(T-635)
+  * 打包(release.mjs 全链)
+  * 收集用户安装包(T-492)
+  * 上传已生成的安装包（额外验收不阻断）
+  * 校验 Windows 安装包 tarball 化(T-454·反转 T-446,setup.exe 只带 sidecar.tar.gz)
+  * 校验 Chromium 已打进 sidecar(防 warn 静默跳过违反 T-284)
+  * Windows 安装期 runtime 原生冒烟(T-487)
+  * 校验 updater 产物 + .sig 齐(SPEC §15 验收 9)
+  * macOS Developer ID、公证与 Gatekeeper 门(T-709)
+  * macOS sidecar 可搬运归档与解压后签名门(T-705)
+  * macOS 真启动与主页面加载冒烟(T-663)
+  * 上传 T-635 产品身份与 release attestation（非发布产物）
+  * Windows 安装后真启动与主页面加载冒烟(T-562)
+  * Windows 主动卸载清理冒烟(T-557)
+  * 上传 T-675 Windows production closure 正式证据
+  * 清理 macOS 一次性签名钥匙串(T-709)
+  * Post 缓存 Windows 媒体工具
+  * Post 恢复 Windows Next 编译缓存
+  * Post Run Swatinem/rust-cache@v2
+  * Post Run actions/setup-node@v4
+  * Post Run pnpm/action-setup@v4
+  * Post Run actions/checkout@v4
+
+ANNOTATIONS
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+plan: .github#1
+
+Refreshing run status every 30 seconds. Press Ctrl+C to quit.
+
+* codex/t1063-release-pipeline desktop-release · 37440775757
+Triggered via workflow_dispatch about 21 minutes ago
+
+JOBS
+✓ plan in 4s (ID 112193718432)
+  ✓ Set up job
+  ✓ Run all='[{"os":"macos-latest","updater_target":"darwin-aarch64"},{"os":"windows-latest","updater_target":"windows-x86_64"}]'
+  ✓ Complete job
+- windows-runtime-rat in 0s (ID 112193720209)
+- windows-closure-rat in 0s (ID 112193720538)
+* build (windows-latest, windows-x86_64) (ID 112193758217)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run pnpm/action-setup@v4
+  ✓ Run actions/setup-node@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run Swatinem/rust-cache@v2
+  ✓ 安装依赖
+  ✓ 恢复 Windows Next 编译缓存
+  ✓ 缓存 Windows 媒体工具
+  - 导入 macOS Developer ID 与公证凭据(T-709)
+  - 计算 Runtime Node/V8 与 verdict 公钥指纹(T-487)
+  - 恢复 clean Runtime Image(T-487)
+  - 校验命中缓存的 Node/V8 ABI 与 verdict 公钥(T-487)
+  - 安装 macOS host Playwright Chromium(T-749)
+  - 构建 clean Runtime Image(T-487,仅 cache miss)
+  - 保存 clean Runtime Image(T-487)
+  ✓ 安装 Windows production closure 的 Chromium
+  ✓ 构建并接入 Windows production closure(T-675)
+  ✓ 读版本号
+  - 校验发布包领取关闭与反馈配置(T-635)
+  * 打包(release.mjs 全链)
+  * 收集用户安装包(T-492)
+  * 上传已生成的安装包（额外验收不阻断）
+  * 校验 Windows 安装包 tarball 化(T-454·反转 T-446,setup.exe 只带 sidecar.tar.gz)
+  * 校验 Chromium 已打进 sidecar(防 warn 静默跳过违反 T-284)
+  * Windows 安装期 runtime 原生冒烟(T-487)
+  * 校验 updater 产物 + .sig 齐(SPEC §15 验收 9)
+  * macOS Developer ID、公证与 Gatekeeper 门(T-709)
+  * macOS sidecar 可搬运归档与解压后签名门(T-705)
+  * macOS 真启动与主页面加载冒烟(T-663)
+  * 上传 T-635 产品身份与 release attestation（非发布产物）
+  * Windows 安装后真启动与主页面加载冒烟(T-562)
+  * Windows 主动卸载清理冒烟(T-557)
+  * 上传 T-675 Windows production closure 正式证据
+  * 清理 macOS 一次性签名钥匙串(T-709)
+  * Post 缓存 Windows 媒体工具
+  * Post 恢复 Windows Next 编译缓存
+  * Post Run Swatinem/rust-cache@v2
+  * Post Run actions/setup-node@v4
+  * Post Run pnpm/action-setup@v4
+  * Post Run actions/checkout@v4
+
+ANNOTATIONS
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+plan: .github#1
+
+Refreshing run status every 30 seconds. Press Ctrl+C to quit.
+
+* codex/t1063-release-pipeline desktop-release · 37440775757
+Triggered via workflow_dispatch about 21 minutes ago
+
+JOBS
+✓ plan in 4s (ID 112193718432)
+  ✓ Set up job
+  ✓ Run all='[{"os":"macos-latest","updater_target":"darwin-aarch64"},{"os":"windows-latest","updater_target":"windows-x86_64"}]'
+  ✓ Complete job
+- windows-runtime-rat in 0s (ID 112193720209)
+- windows-closure-rat in 0s (ID 112193720538)
+* build (windows-latest, windows-x86_64) (ID 112193758217)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run pnpm/action-setup@v4
+  ✓ Run actions/setup-node@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run Swatinem/rust-cache@v2
+  ✓ 安装依赖
+  ✓ 恢复 Windows Next 编译缓存
+  ✓ 缓存 Windows 媒体工具
+  - 导入 macOS Developer ID 与公证凭据(T-709)
+  - 计算 Runtime Node/V8 与 verdict 公钥指纹(T-487)
+  - 恢复 clean Runtime Image(T-487)
+  - 校验命中缓存的 Node/V8 ABI 与 verdict 公钥(T-487)
+  - 安装 macOS host Playwright Chromium(T-749)
+  - 构建 clean Runtime Image(T-487,仅 cache miss)
+  - 保存 clean Runtime Image(T-487)
+  ✓ 安装 Windows production closure 的 Chromium
+  ✓ 构建并接入 Windows production closure(T-675)
+  ✓ 读版本号
+  - 校验发布包领取关闭与反馈配置(T-635)
+  * 打包(release.mjs 全链)
+  * 收集用户安装包(T-492)
+  * 上传已生成的安装包（额外验收不阻断）
+  * 校验 Windows 安装包 tarball 化(T-454·反转 T-446,setup.exe 只带 sidecar.tar.gz)
+  * 校验 Chromium 已打进 sidecar(防 warn 静默跳过违反 T-284)
+  * Windows 安装期 runtime 原生冒烟(T-487)
+  * 校验 updater 产物 + .sig 齐(SPEC §15 验收 9)
+  * macOS Developer ID、公证与 Gatekeeper 门(T-709)
+  * macOS sidecar 可搬运归档与解压后签名门(T-705)
+  * macOS 真启动与主页面加载冒烟(T-663)
+  * 上传 T-635 产品身份与 release attestation（非发布产物）
+  * Windows 安装后真启动与主页面加载冒烟(T-562)
+  * Windows 主动卸载清理冒烟(T-557)
+  * 上传 T-675 Windows production closure 正式证据
+  * 清理 macOS 一次性签名钥匙串(T-709)
+  * Post 缓存 Windows 媒体工具
+  * Post 恢复 Windows Next 编译缓存
+  * Post Run Swatinem/rust-cache@v2
+  * Post Run actions/setup-node@v4
+  * Post Run pnpm/action-setup@v4
+  * Post Run actions/checkout@v4
+
+ANNOTATIONS
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+plan: .github#1
+
+Refreshing run status every 30 seconds. Press Ctrl+C to quit.
+
+* codex/t1063-release-pipeline desktop-release · 37440775757
+Triggered via workflow_dispatch about 22 minutes ago
+
+JOBS
+✓ plan in 4s (ID 112193718432)
+  ✓ Set up job
+  ✓ Run all='[{"os":"macos-latest","updater_target":"darwin-aarch64"},{"os":"windows-latest","updater_target":"windows-x86_64"}]'
+  ✓ Complete job
+- windows-runtime-rat in 0s (ID 112193720209)
+- windows-closure-rat in 0s (ID 112193720538)
+* build (windows-latest, windows-x86_64) (ID 112193758217)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run pnpm/action-setup@v4
+  ✓ Run actions/setup-node@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run Swatinem/rust-cache@v2
+  ✓ 安装依赖
+  ✓ 恢复 Windows Next 编译缓存
+  ✓ 缓存 Windows 媒体工具
+  - 导入 macOS Developer ID 与公证凭据(T-709)
+  - 计算 Runtime Node/V8 与 verdict 公钥指纹(T-487)
+  - 恢复 clean Runtime Image(T-487)
+  - 校验命中缓存的 Node/V8 ABI 与 verdict 公钥(T-487)
+  - 安装 macOS host Playwright Chromium(T-749)
+  - 构建 clean Runtime Image(T-487,仅 cache miss)
+  - 保存 clean Runtime Image(T-487)
+  ✓ 安装 Windows production closure 的 Chromium
+  ✓ 构建并接入 Windows production closure(T-675)
+  ✓ 读版本号
+  - 校验发布包领取关闭与反馈配置(T-635)
+  * 打包(release.mjs 全链)
+  * 收集用户安装包(T-492)
+  * 上传已生成的安装包（额外验收不阻断）
+  * 校验 Windows 安装包 tarball 化(T-454·反转 T-446,setup.exe 只带 sidecar.tar.gz)
+  * 校验 Chromium 已打进 sidecar(防 warn 静默跳过违反 T-284)
+  * Windows 安装期 runtime 原生冒烟(T-487)
+  * 校验 updater 产物 + .sig 齐(SPEC §15 验收 9)
+  * macOS Developer ID、公证与 Gatekeeper 门(T-709)
+  * macOS sidecar 可搬运归档与解压后签名门(T-705)
+  * macOS 真启动与主页面加载冒烟(T-663)
+  * 上传 T-635 产品身份与 release attestation（非发布产物）
+  * Windows 安装后真启动与主页面加载冒烟(T-562)
+  * Windows 主动卸载清理冒烟(T-557)
+  * 上传 T-675 Windows production closure 正式证据
+  * 清理 macOS 一次性签名钥匙串(T-709)
+  * Post 缓存 Windows 媒体工具
+  * Post 恢复 Windows Next 编译缓存
+  * Post Run Swatinem/rust-cache@v2
+  * Post Run actions/setup-node@v4
+  * Post Run pnpm/action-setup@v4
+  * Post Run actions/checkout@v4
+
+ANNOTATIONS
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+plan: .github#1
+
+Refreshing run status every 30 seconds. Press Ctrl+C to quit.
+
+* codex/t1063-release-pipeline desktop-release · 37440775757
+Triggered via workflow_dispatch about 22 minutes ago
+
+JOBS
+✓ plan in 4s (ID 112193718432)
+  ✓ Set up job
+  ✓ Run all='[{"os":"macos-latest","updater_target":"darwin-aarch64"},{"os":"windows-latest","updater_target":"windows-x86_64"}]'
+  ✓ Complete job
+- windows-runtime-rat in 0s (ID 112193720209)
+- windows-closure-rat in 0s (ID 112193720538)
+* build (windows-latest, windows-x86_64) (ID 112193758217)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run pnpm/action-setup@v4
+  ✓ Run actions/setup-node@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run Swatinem/rust-cache@v2
+  ✓ 安装依赖
+  ✓ 恢复 Windows Next 编译缓存
+  ✓ 缓存 Windows 媒体工具
+  - 导入 macOS Developer ID 与公证凭据(T-709)
+  - 计算 Runtime Node/V8 与 verdict 公钥指纹(T-487)
+  - 恢复 clean Runtime Image(T-487)
+  - 校验命中缓存的 Node/V8 ABI 与 verdict 公钥(T-487)
+  - 安装 macOS host Playwright Chromium(T-749)
+  - 构建 clean Runtime Image(T-487,仅 cache miss)
+  - 保存 clean Runtime Image(T-487)
+  ✓ 安装 Windows production closure 的 Chromium
+  ✓ 构建并接入 Windows production closure(T-675)
+  ✓ 读版本号
+  - 校验发布包领取关闭与反馈配置(T-635)
+  * 打包(release.mjs 全链)
+  * 收集用户安装包(T-492)
+  * 上传已生成的安装包（额外验收不阻断）
+  * 校验 Windows 安装包 tarball 化(T-454·反转 T-446,setup.exe 只带 sidecar.tar.gz)
+  * 校验 Chromium 已打进 sidecar(防 warn 静默跳过违反 T-284)
+  * Windows 安装期 runtime 原生冒烟(T-487)
+  * 校验 updater 产物 + .sig 齐(SPEC §15 验收 9)
+  * macOS Developer ID、公证与 Gatekeeper 门(T-709)
+  * macOS sidecar 可搬运归档与解压后签名门(T-705)
+  * macOS 真启动与主页面加载冒烟(T-663)
+  * 上传 T-635 产品身份与 release attestation（非发布产物）
+  * Windows 安装后真启动与主页面加载冒烟(T-562)
+  * Windows 主动卸载清理冒烟(T-557)
+  * 上传 T-675 Windows production closure 正式证据
+  * 清理 macOS 一次性签名钥匙串(T-709)
+  * Post 缓存 Windows 媒体工具
+  * Post 恢复 Windows Next 编译缓存
+  * Post Run Swatinem/rust-cache@v2
+  * Post Run actions/setup-node@v4
+  * Post Run pnpm/action-setup@v4
+  * Post Run actions/checkout@v4
+
+ANNOTATIONS
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+plan: .github#1
+
+Refreshing run status every 30 seconds. Press Ctrl+C to quit.
+
+* codex/t1063-release-pipeline desktop-release · 37440775757
+Triggered via workflow_dispatch about 23 minutes ago
+
+JOBS
+✓ plan in 4s (ID 112193718432)
+  ✓ Set up job
+  ✓ Run all='[{"os":"macos-latest","updater_target":"darwin-aarch64"},{"os":"windows-latest","updater_target":"windows-x86_64"}]'
+  ✓ Complete job
+- windows-runtime-rat in 0s (ID 112193720209)
+- windows-closure-rat in 0s (ID 112193720538)
+* build (windows-latest, windows-x86_64) (ID 112193758217)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run pnpm/action-setup@v4
+  ✓ Run actions/setup-node@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run Swatinem/rust-cache@v2
+  ✓ 安装依赖
+  ✓ 恢复 Windows Next 编译缓存
+  ✓ 缓存 Windows 媒体工具
+  - 导入 macOS Developer ID 与公证凭据(T-709)
+  - 计算 Runtime Node/V8 与 verdict 公钥指纹(T-487)
+  - 恢复 clean Runtime Image(T-487)
+  - 校验命中缓存的 Node/V8 ABI 与 verdict 公钥(T-487)
+  - 安装 macOS host Playwright Chromium(T-749)
+  - 构建 clean Runtime Image(T-487,仅 cache miss)
+  - 保存 clean Runtime Image(T-487)
+  ✓ 安装 Windows production closure 的 Chromium
+  ✓ 构建并接入 Windows production closure(T-675)
+  ✓ 读版本号
+  - 校验发布包领取关闭与反馈配置(T-635)
+  * 打包(release.mjs 全链)
+  * 收集用户安装包(T-492)
+  * 上传已生成的安装包（额外验收不阻断）
+  * 校验 Windows 安装包 tarball 化(T-454·反转 T-446,setup.exe 只带 sidecar.tar.gz)
+  * 校验 Chromium 已打进 sidecar(防 warn 静默跳过违反 T-284)
+  * Windows 安装期 runtime 原生冒烟(T-487)
+  * 校验 updater 产物 + .sig 齐(SPEC §15 验收 9)
+  * macOS Developer ID、公证与 Gatekeeper 门(T-709)
+  * macOS sidecar 可搬运归档与解压后签名门(T-705)
+  * macOS 真启动与主页面加载冒烟(T-663)
+  * 上传 T-635 产品身份与 release attestation（非发布产物）
+  * Windows 安装后真启动与主页面加载冒烟(T-562)
+  * Windows 主动卸载清理冒烟(T-557)
+  * 上传 T-675 Windows production closure 正式证据
+  * 清理 macOS 一次性签名钥匙串(T-709)
+  * Post 缓存 Windows 媒体工具
+  * Post 恢复 Windows Next 编译缓存
+  * Post Run Swatinem/rust-cache@v2
+  * Post Run actions/setup-node@v4
+  * Post Run pnpm/action-setup@v4
+  * Post Run actions/checkout@v4
+
+ANNOTATIONS
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+plan: .github#1
+
+Refreshing run status every 30 seconds. Press Ctrl+C to quit.
+
+* codex/t1063-release-pipeline desktop-release · 37440775757
+Triggered via workflow_dispatch about 24 minutes ago
+
+JOBS
+✓ plan in 4s (ID 112193718432)
+  ✓ Set up job
+  ✓ Run all='[{"os":"macos-latest","updater_target":"darwin-aarch64"},{"os":"windows-latest","updater_target":"windows-x86_64"}]'
+  ✓ Complete job
+- windows-runtime-rat in 0s (ID 112193720209)
+- windows-closure-rat in 0s (ID 112193720538)
+* build (windows-latest, windows-x86_64) (ID 112193758217)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run pnpm/action-setup@v4
+  ✓ Run actions/setup-node@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run Swatinem/rust-cache@v2
+  ✓ 安装依赖
+  ✓ 恢复 Windows Next 编译缓存
+  ✓ 缓存 Windows 媒体工具
+  - 导入 macOS Developer ID 与公证凭据(T-709)
+  - 计算 Runtime Node/V8 与 verdict 公钥指纹(T-487)
+  - 恢复 clean Runtime Image(T-487)
+  - 校验命中缓存的 Node/V8 ABI 与 verdict 公钥(T-487)
+  - 安装 macOS host Playwright Chromium(T-749)
+  - 构建 clean Runtime Image(T-487,仅 cache miss)
+  - 保存 clean Runtime Image(T-487)
+  ✓ 安装 Windows production closure 的 Chromium
+  ✓ 构建并接入 Windows production closure(T-675)
+  ✓ 读版本号
+  - 校验发布包领取关闭与反馈配置(T-635)
+  * 打包(release.mjs 全链)
+  * 收集用户安装包(T-492)
+  * 上传已生成的安装包（额外验收不阻断）
+  * 校验 Windows 安装包 tarball 化(T-454·反转 T-446,setup.exe 只带 sidecar.tar.gz)
+  * 校验 Chromium 已打进 sidecar(防 warn 静默跳过违反 T-284)
+  * Windows 安装期 runtime 原生冒烟(T-487)
+  * 校验 updater 产物 + .sig 齐(SPEC §15 验收 9)
+  * macOS Developer ID、公证与 Gatekeeper 门(T-709)
+  * macOS sidecar 可搬运归档与解压后签名门(T-705)
+  * macOS 真启动与主页面加载冒烟(T-663)
+  * 上传 T-635 产品身份与 release attestation（非发布产物）
+  * Windows 安装后真启动与主页面加载冒烟(T-562)
+  * Windows 主动卸载清理冒烟(T-557)
+  * 上传 T-675 Windows production closure 正式证据
+  * 清理 macOS 一次性签名钥匙串(T-709)
+  * Post 缓存 Windows 媒体工具
+  * Post 恢复 Windows Next 编译缓存
+  * Post Run Swatinem/rust-cache@v2
+  * Post Run actions/setup-node@v4
+  * Post Run pnpm/action-setup@v4
+  * Post Run actions/checkout@v4
+
+ANNOTATIONS
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+plan: .github#1
+
+Refreshing run status every 30 seconds. Press Ctrl+C to quit.
+
+* codex/t1063-release-pipeline desktop-release · 37440775757
+Triggered via workflow_dispatch about 24 minutes ago
+
+JOBS
+✓ plan in 4s (ID 112193718432)
+  ✓ Set up job
+  ✓ Run all='[{"os":"macos-latest","updater_target":"darwin-aarch64"},{"os":"windows-latest","updater_target":"windows-x86_64"}]'
+  ✓ Complete job
+- windows-runtime-rat in 0s (ID 112193720209)
+- windows-closure-rat in 0s (ID 112193720538)
+* build (windows-latest, windows-x86_64) (ID 112193758217)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run pnpm/action-setup@v4
+  ✓ Run actions/setup-node@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run Swatinem/rust-cache@v2
+  ✓ 安装依赖
+  ✓ 恢复 Windows Next 编译缓存
+  ✓ 缓存 Windows 媒体工具
+  - 导入 macOS Developer ID 与公证凭据(T-709)
+  - 计算 Runtime Node/V8 与 verdict 公钥指纹(T-487)
+  - 恢复 clean Runtime Image(T-487)
+  - 校验命中缓存的 Node/V8 ABI 与 verdict 公钥(T-487)
+  - 安装 macOS host Playwright Chromium(T-749)
+  - 构建 clean Runtime Image(T-487,仅 cache miss)
+  - 保存 clean Runtime Image(T-487)
+  ✓ 安装 Windows production closure 的 Chromium
+  ✓ 构建并接入 Windows production closure(T-675)
+  ✓ 读版本号
+  - 校验发布包领取关闭与反馈配置(T-635)
+  * 打包(release.mjs 全链)
+  * 收集用户安装包(T-492)
+  * 上传已生成的安装包（额外验收不阻断）
+  * 校验 Windows 安装包 tarball 化(T-454·反转 T-446,setup.exe 只带 sidecar.tar.gz)
+  * 校验 Chromium 已打进 sidecar(防 warn 静默跳过违反 T-284)
+  * Windows 安装期 runtime 原生冒烟(T-487)
+  * 校验 updater 产物 + .sig 齐(SPEC §15 验收 9)
+  * macOS Developer ID、公证与 Gatekeeper 门(T-709)
+  * macOS sidecar 可搬运归档与解压后签名门(T-705)
+  * macOS 真启动与主页面加载冒烟(T-663)
+  * 上传 T-635 产品身份与 release attestation（非发布产物）
+  * Windows 安装后真启动与主页面加载冒烟(T-562)
+  * Windows 主动卸载清理冒烟(T-557)
+  * 上传 T-675 Windows production closure 正式证据
+  * 清理 macOS 一次性签名钥匙串(T-709)
+  * Post 缓存 Windows 媒体工具
+  * Post 恢复 Windows Next 编译缓存
+  * Post Run Swatinem/rust-cache@v2
+  * Post Run actions/setup-node@v4
+  * Post Run pnpm/action-setup@v4
+  * Post Run actions/checkout@v4
+
+ANNOTATIONS
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+plan: .github#1
+
+Refreshing run status every 30 seconds. Press Ctrl+C to quit.
+
+* codex/t1063-release-pipeline desktop-release · 37440775757
+Triggered via workflow_dispatch about 25 minutes ago
+
+JOBS
+✓ plan in 4s (ID 112193718432)
+  ✓ Set up job
+  ✓ Run all='[{"os":"macos-latest","updater_target":"darwin-aarch64"},{"os":"windows-latest","updater_target":"windows-x86_64"}]'
+  ✓ Complete job
+- windows-runtime-rat in 0s (ID 112193720209)
+- windows-closure-rat in 0s (ID 112193720538)
+* build (windows-latest, windows-x86_64) (ID 112193758217)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run pnpm/action-setup@v4
+  ✓ Run actions/setup-node@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run Swatinem/rust-cache@v2
+  ✓ 安装依赖
+  ✓ 恢复 Windows Next 编译缓存
+  ✓ 缓存 Windows 媒体工具
+  - 导入 macOS Developer ID 与公证凭据(T-709)
+  - 计算 Runtime Node/V8 与 verdict 公钥指纹(T-487)
+  - 恢复 clean Runtime Image(T-487)
+  - 校验命中缓存的 Node/V8 ABI 与 verdict 公钥(T-487)
+  - 安装 macOS host Playwright Chromium(T-749)
+  - 构建 clean Runtime Image(T-487,仅 cache miss)
+  - 保存 clean Runtime Image(T-487)
+  ✓ 安装 Windows production closure 的 Chromium
+  ✓ 构建并接入 Windows production closure(T-675)
+  ✓ 读版本号
+  - 校验发布包领取关闭与反馈配置(T-635)
+  * 打包(release.mjs 全链)
+  * 收集用户安装包(T-492)
+  * 上传已生成的安装包（额外验收不阻断）
+  * 校验 Windows 安装包 tarball 化(T-454·反转 T-446,setup.exe 只带 sidecar.tar.gz)
+  * 校验 Chromium 已打进 sidecar(防 warn 静默跳过违反 T-284)
+  * Windows 安装期 runtime 原生冒烟(T-487)
+  * 校验 updater 产物 + .sig 齐(SPEC §15 验收 9)
+  * macOS Developer ID、公证与 Gatekeeper 门(T-709)
+  * macOS sidecar 可搬运归档与解压后签名门(T-705)
+  * macOS 真启动与主页面加载冒烟(T-663)
+  * 上传 T-635 产品身份与 release attestation（非发布产物）
+  * Windows 安装后真启动与主页面加载冒烟(T-562)
+  * Windows 主动卸载清理冒烟(T-557)
+  * 上传 T-675 Windows production closure 正式证据
+  * 清理 macOS 一次性签名钥匙串(T-709)
+  * Post 缓存 Windows 媒体工具
+  * Post 恢复 Windows Next 编译缓存
+  * Post Run Swatinem/rust-cache@v2
+  * Post Run actions/setup-node@v4
+  * Post Run pnpm/action-setup@v4
+  * Post Run actions/checkout@v4
+
+ANNOTATIONS
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+plan: .github#1
+
+Refreshing run status every 30 seconds. Press Ctrl+C to quit.
+
+* codex/t1063-release-pipeline desktop-release · 37440775757
+Triggered via workflow_dispatch about 25 minutes ago
+
+JOBS
+✓ plan in 4s (ID 112193718432)
+  ✓ Set up job
+  ✓ Run all='[{"os":"macos-latest","updater_target":"darwin-aarch64"},{"os":"windows-latest","updater_target":"windows-x86_64"}]'
+  ✓ Complete job
+- windows-runtime-rat in 0s (ID 112193720209)
+- windows-closure-rat in 0s (ID 112193720538)
+* build (windows-latest, windows-x86_64) (ID 112193758217)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run pnpm/action-setup@v4
+  ✓ Run actions/setup-node@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run Swatinem/rust-cache@v2
+  ✓ 安装依赖
+  ✓ 恢复 Windows Next 编译缓存
+  ✓ 缓存 Windows 媒体工具
+  - 导入 macOS Developer ID 与公证凭据(T-709)
+  - 计算 Runtime Node/V8 与 verdict 公钥指纹(T-487)
+  - 恢复 clean Runtime Image(T-487)
+  - 校验命中缓存的 Node/V8 ABI 与 verdict 公钥(T-487)
+  - 安装 macOS host Playwright Chromium(T-749)
+  - 构建 clean Runtime Image(T-487,仅 cache miss)
+  - 保存 clean Runtime Image(T-487)
+  ✓ 安装 Windows production closure 的 Chromium
+  ✓ 构建并接入 Windows production closure(T-675)
+  ✓ 读版本号
+  - 校验发布包领取关闭与反馈配置(T-635)
+  * 打包(release.mjs 全链)
+  * 收集用户安装包(T-492)
+  * 上传已生成的安装包（额外验收不阻断）
+  * 校验 Windows 安装包 tarball 化(T-454·反转 T-446,setup.exe 只带 sidecar.tar.gz)
+  * 校验 Chromium 已打进 sidecar(防 warn 静默跳过违反 T-284)
+  * Windows 安装期 runtime 原生冒烟(T-487)
+  * 校验 updater 产物 + .sig 齐(SPEC §15 验收 9)
+  * macOS Developer ID、公证与 Gatekeeper 门(T-709)
+  * macOS sidecar 可搬运归档与解压后签名门(T-705)
+  * macOS 真启动与主页面加载冒烟(T-663)
+  * 上传 T-635 产品身份与 release attestation（非发布产物）
+  * Windows 安装后真启动与主页面加载冒烟(T-562)
+  * Windows 主动卸载清理冒烟(T-557)
+  * 上传 T-675 Windows production closure 正式证据
+  * 清理 macOS 一次性签名钥匙串(T-709)
+  * Post 缓存 Windows 媒体工具
+  * Post 恢复 Windows Next 编译缓存
+  * Post Run Swatinem/rust-cache@v2
+  * Post Run actions/setup-node@v4
+  * Post Run pnpm/action-setup@v4
+  * Post Run actions/checkout@v4
+
+ANNOTATIONS
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+plan: .github#1
+
+Refreshing run status every 30 seconds. Press Ctrl+C to quit.
+
+* codex/t1063-release-pipeline desktop-release · 37440775757
+Triggered via workflow_dispatch about 26 minutes ago
+
+JOBS
+✓ plan in 4s (ID 112193718432)
+  ✓ Set up job
+  ✓ Run all='[{"os":"macos-latest","updater_target":"darwin-aarch64"},{"os":"windows-latest","updater_target":"windows-x86_64"}]'
+  ✓ Complete job
+- windows-runtime-rat in 0s (ID 112193720209)
+- windows-closure-rat in 0s (ID 112193720538)
+* build (windows-latest, windows-x86_64) (ID 112193758217)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run pnpm/action-setup@v4
+  ✓ Run actions/setup-node@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run Swatinem/rust-cache@v2
+  ✓ 安装依赖
+  ✓ 恢复 Windows Next 编译缓存
+  ✓ 缓存 Windows 媒体工具
+  - 导入 macOS Developer ID 与公证凭据(T-709)
+  - 计算 Runtime Node/V8 与 verdict 公钥指纹(T-487)
+  - 恢复 clean Runtime Image(T-487)
+  - 校验命中缓存的 Node/V8 ABI 与 verdict 公钥(T-487)
+  - 安装 macOS host Playwright Chromium(T-749)
+  - 构建 clean Runtime Image(T-487,仅 cache miss)
+  - 保存 clean Runtime Image(T-487)
+  ✓ 安装 Windows production closure 的 Chromium
+  ✓ 构建并接入 Windows production closure(T-675)
+  ✓ 读版本号
+  - 校验发布包领取关闭与反馈配置(T-635)
+  * 打包(release.mjs 全链)
+  * 收集用户安装包(T-492)
+  * 上传已生成的安装包（额外验收不阻断）
+  * 校验 Windows 安装包 tarball 化(T-454·反转 T-446,setup.exe 只带 sidecar.tar.gz)
+  * 校验 Chromium 已打进 sidecar(防 warn 静默跳过违反 T-284)
+  * Windows 安装期 runtime 原生冒烟(T-487)
+  * 校验 updater 产物 + .sig 齐(SPEC §15 验收 9)
+  * macOS Developer ID、公证与 Gatekeeper 门(T-709)
+  * macOS sidecar 可搬运归档与解压后签名门(T-705)
+  * macOS 真启动与主页面加载冒烟(T-663)
+  * 上传 T-635 产品身份与 release attestation（非发布产物）
+  * Windows 安装后真启动与主页面加载冒烟(T-562)
+  * Windows 主动卸载清理冒烟(T-557)
+  * 上传 T-675 Windows production closure 正式证据
+  * 清理 macOS 一次性签名钥匙串(T-709)
+  * Post 缓存 Windows 媒体工具
+  * Post 恢复 Windows Next 编译缓存
+  * Post Run Swatinem/rust-cache@v2
+  * Post Run actions/setup-node@v4
+  * Post Run pnpm/action-setup@v4
+  * Post Run actions/checkout@v4
+
+ANNOTATIONS
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+plan: .github#1
+
+Refreshing run status every 30 seconds. Press Ctrl+C to quit.
+
+* codex/t1063-release-pipeline desktop-release · 37440775757
+Triggered via workflow_dispatch about 26 minutes ago
+
+JOBS
+✓ plan in 4s (ID 112193718432)
+  ✓ Set up job
+  ✓ Run all='[{"os":"macos-latest","updater_target":"darwin-aarch64"},{"os":"windows-latest","updater_target":"windows-x86_64"}]'
+  ✓ Complete job
+- windows-runtime-rat in 0s (ID 112193720209)
+- windows-closure-rat in 0s (ID 112193720538)
+* build (windows-latest, windows-x86_64) (ID 112193758217)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run pnpm/action-setup@v4
+  ✓ Run actions/setup-node@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run Swatinem/rust-cache@v2
+  ✓ 安装依赖
+  ✓ 恢复 Windows Next 编译缓存
+  ✓ 缓存 Windows 媒体工具
+  - 导入 macOS Developer ID 与公证凭据(T-709)
+  - 计算 Runtime Node/V8 与 verdict 公钥指纹(T-487)
+  - 恢复 clean Runtime Image(T-487)
+  - 校验命中缓存的 Node/V8 ABI 与 verdict 公钥(T-487)
+  - 安装 macOS host Playwright Chromium(T-749)
+  - 构建 clean Runtime Image(T-487,仅 cache miss)
+  - 保存 clean Runtime Image(T-487)
+  ✓ 安装 Windows production closure 的 Chromium
+  ✓ 构建并接入 Windows production closure(T-675)
+  ✓ 读版本号
+  - 校验发布包领取关闭与反馈配置(T-635)
+  * 打包(release.mjs 全链)
+  * 收集用户安装包(T-492)
+  * 上传已生成的安装包（额外验收不阻断）
+  * 校验 Windows 安装包 tarball 化(T-454·反转 T-446,setup.exe 只带 sidecar.tar.gz)
+  * 校验 Chromium 已打进 sidecar(防 warn 静默跳过违反 T-284)
+  * Windows 安装期 runtime 原生冒烟(T-487)
+  * 校验 updater 产物 + .sig 齐(SPEC §15 验收 9)
+  * macOS Developer ID、公证与 Gatekeeper 门(T-709)
+  * macOS sidecar 可搬运归档与解压后签名门(T-705)
+  * macOS 真启动与主页面加载冒烟(T-663)
+  * 上传 T-635 产品身份与 release attestation（非发布产物）
+  * Windows 安装后真启动与主页面加载冒烟(T-562)
+  * Windows 主动卸载清理冒烟(T-557)
+  * 上传 T-675 Windows production closure 正式证据
+  * 清理 macOS 一次性签名钥匙串(T-709)
+  * Post 缓存 Windows 媒体工具
+  * Post 恢复 Windows Next 编译缓存
+  * Post Run Swatinem/rust-cache@v2
+  * Post Run actions/setup-node@v4
+  * Post Run pnpm/action-setup@v4
+  * Post Run actions/checkout@v4
+
+ANNOTATIONS
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+plan: .github#1
+
+Refreshing run status every 30 seconds. Press Ctrl+C to quit.
+
+* codex/t1063-release-pipeline desktop-release · 37440775757
+Triggered via workflow_dispatch about 27 minutes ago
+
+JOBS
+✓ plan in 4s (ID 112193718432)
+  ✓ Set up job
+  ✓ Run all='[{"os":"macos-latest","updater_target":"darwin-aarch64"},{"os":"windows-latest","updater_target":"windows-x86_64"}]'
+  ✓ Complete job
+- windows-runtime-rat in 0s (ID 112193720209)
+- windows-closure-rat in 0s (ID 112193720538)
+* build (windows-latest, windows-x86_64) (ID 112193758217)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run pnpm/action-setup@v4
+  ✓ Run actions/setup-node@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run Swatinem/rust-cache@v2
+  ✓ 安装依赖
+  ✓ 恢复 Windows Next 编译缓存
+  ✓ 缓存 Windows 媒体工具
+  - 导入 macOS Developer ID 与公证凭据(T-709)
+  - 计算 Runtime Node/V8 与 verdict 公钥指纹(T-487)
+  - 恢复 clean Runtime Image(T-487)
+  - 校验命中缓存的 Node/V8 ABI 与 verdict 公钥(T-487)
+  - 安装 macOS host Playwright Chromium(T-749)
+  - 构建 clean Runtime Image(T-487,仅 cache miss)
+  - 保存 clean Runtime Image(T-487)
+  ✓ 安装 Windows production closure 的 Chromium
+  ✓ 构建并接入 Windows production closure(T-675)
+  ✓ 读版本号
+  - 校验发布包领取关闭与反馈配置(T-635)
+  * 打包(release.mjs 全链)
+  * 收集用户安装包(T-492)
+  * 上传已生成的安装包（额外验收不阻断）
+  * 校验 Windows 安装包 tarball 化(T-454·反转 T-446,setup.exe 只带 sidecar.tar.gz)
+  * 校验 Chromium 已打进 sidecar(防 warn 静默跳过违反 T-284)
+  * Windows 安装期 runtime 原生冒烟(T-487)
+  * 校验 updater 产物 + .sig 齐(SPEC §15 验收 9)
+  * macOS Developer ID、公证与 Gatekeeper 门(T-709)
+  * macOS sidecar 可搬运归档与解压后签名门(T-705)
+  * macOS 真启动与主页面加载冒烟(T-663)
+  * 上传 T-635 产品身份与 release attestation（非发布产物）
+  * Windows 安装后真启动与主页面加载冒烟(T-562)
+  * Windows 主动卸载清理冒烟(T-557)
+  * 上传 T-675 Windows production closure 正式证据
+  * 清理 macOS 一次性签名钥匙串(T-709)
+  * Post 缓存 Windows 媒体工具
+  * Post 恢复 Windows Next 编译缓存
+  * Post Run Swatinem/rust-cache@v2
+  * Post Run actions/setup-node@v4
+  * Post Run pnpm/action-setup@v4
+  * Post Run actions/checkout@v4
+
+ANNOTATIONS
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+plan: .github#1
+
+Refreshing run status every 30 seconds. Press Ctrl+C to quit.
+
+* codex/t1063-release-pipeline desktop-release · 37440775757
+Triggered via workflow_dispatch about 27 minutes ago
+
+JOBS
+✓ plan in 4s (ID 112193718432)
+  ✓ Set up job
+  ✓ Run all='[{"os":"macos-latest","updater_target":"darwin-aarch64"},{"os":"windows-latest","updater_target":"windows-x86_64"}]'
+  ✓ Complete job
+- windows-runtime-rat in 0s (ID 112193720209)
+- windows-closure-rat in 0s (ID 112193720538)
+* build (windows-latest, windows-x86_64) (ID 112193758217)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run pnpm/action-setup@v4
+  ✓ Run actions/setup-node@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run Swatinem/rust-cache@v2
+  ✓ 安装依赖
+  ✓ 恢复 Windows Next 编译缓存
+  ✓ 缓存 Windows 媒体工具
+  - 导入 macOS Developer ID 与公证凭据(T-709)
+  - 计算 Runtime Node/V8 与 verdict 公钥指纹(T-487)
+  - 恢复 clean Runtime Image(T-487)
+  - 校验命中缓存的 Node/V8 ABI 与 verdict 公钥(T-487)
+  - 安装 macOS host Playwright Chromium(T-749)
+  - 构建 clean Runtime Image(T-487,仅 cache miss)
+  - 保存 clean Runtime Image(T-487)
+  ✓ 安装 Windows production closure 的 Chromium
+  ✓ 构建并接入 Windows production closure(T-675)
+  ✓ 读版本号
+  - 校验发布包领取关闭与反馈配置(T-635)
+  * 打包(release.mjs 全链)
+  * 收集用户安装包(T-492)
+  * 上传已生成的安装包（额外验收不阻断）
+  * 校验 Windows 安装包 tarball 化(T-454·反转 T-446,setup.exe 只带 sidecar.tar.gz)
+  * 校验 Chromium 已打进 sidecar(防 warn 静默跳过违反 T-284)
+  * Windows 安装期 runtime 原生冒烟(T-487)
+  * 校验 updater 产物 + .sig 齐(SPEC §15 验收 9)
+  * macOS Developer ID、公证与 Gatekeeper 门(T-709)
+  * macOS sidecar 可搬运归档与解压后签名门(T-705)
+  * macOS 真启动与主页面加载冒烟(T-663)
+  * 上传 T-635 产品身份与 release attestation（非发布产物）
+  * Windows 安装后真启动与主页面加载冒烟(T-562)
+  * Windows 主动卸载清理冒烟(T-557)
+  * 上传 T-675 Windows production closure 正式证据
+  * 清理 macOS 一次性签名钥匙串(T-709)
+  * Post 缓存 Windows 媒体工具
+  * Post 恢复 Windows Next 编译缓存
+  * Post Run Swatinem/rust-cache@v2
+  * Post Run actions/setup-node@v4
+  * Post Run pnpm/action-setup@v4
+  * Post Run actions/checkout@v4
+
+ANNOTATIONS
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+plan: .github#1
+
+Refreshing run status every 30 seconds. Press Ctrl+C to quit.
+
+* codex/t1063-release-pipeline desktop-release · 37440775757
+Triggered via workflow_dispatch about 28 minutes ago
+
+JOBS
+✓ plan in 4s (ID 112193718432)
+  ✓ Set up job
+  ✓ Run all='[{"os":"macos-latest","updater_target":"darwin-aarch64"},{"os":"windows-latest","updater_target":"windows-x86_64"}]'
+  ✓ Complete job
+- windows-runtime-rat in 0s (ID 112193720209)
+- windows-closure-rat in 0s (ID 112193720538)
+* build (windows-latest, windows-x86_64) (ID 112193758217)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run pnpm/action-setup@v4
+  ✓ Run actions/setup-node@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run Swatinem/rust-cache@v2
+  ✓ 安装依赖
+  ✓ 恢复 Windows Next 编译缓存
+  ✓ 缓存 Windows 媒体工具
+  - 导入 macOS Developer ID 与公证凭据(T-709)
+  - 计算 Runtime Node/V8 与 verdict 公钥指纹(T-487)
+  - 恢复 clean Runtime Image(T-487)
+  - 校验命中缓存的 Node/V8 ABI 与 verdict 公钥(T-487)
+  - 安装 macOS host Playwright Chromium(T-749)
+  - 构建 clean Runtime Image(T-487,仅 cache miss)
+  - 保存 clean Runtime Image(T-487)
+  ✓ 安装 Windows production closure 的 Chromium
+  ✓ 构建并接入 Windows production closure(T-675)
+  ✓ 读版本号
+  - 校验发布包领取关闭与反馈配置(T-635)
+  * 打包(release.mjs 全链)
+  * 收集用户安装包(T-492)
+  * 上传已生成的安装包（额外验收不阻断）
+  * 校验 Windows 安装包 tarball 化(T-454·反转 T-446,setup.exe 只带 sidecar.tar.gz)
+  * 校验 Chromium 已打进 sidecar(防 warn 静默跳过违反 T-284)
+  * Windows 安装期 runtime 原生冒烟(T-487)
+  * 校验 updater 产物 + .sig 齐(SPEC §15 验收 9)
+  * macOS Developer ID、公证与 Gatekeeper 门(T-709)
+  * macOS sidecar 可搬运归档与解压后签名门(T-705)
+  * macOS 真启动与主页面加载冒烟(T-663)
+  * 上传 T-635 产品身份与 release attestation（非发布产物）
+  * Windows 安装后真启动与主页面加载冒烟(T-562)
+  * Windows 主动卸载清理冒烟(T-557)
+  * 上传 T-675 Windows production closure 正式证据
+  * 清理 macOS 一次性签名钥匙串(T-709)
+  * Post 缓存 Windows 媒体工具
+  * Post 恢复 Windows Next 编译缓存
+  * Post Run Swatinem/rust-cache@v2
+  * Post Run actions/setup-node@v4
+  * Post Run pnpm/action-setup@v4
+  * Post Run actions/checkout@v4
+
+ANNOTATIONS
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+plan: .github#1
+
+Refreshing run status every 30 seconds. Press Ctrl+C to quit.
+
+* codex/t1063-release-pipeline desktop-release · 37440775757
+Triggered via workflow_dispatch about 28 minutes ago
+
+JOBS
+✓ plan in 4s (ID 112193718432)
+  ✓ Set up job
+  ✓ Run all='[{"os":"macos-latest","updater_target":"darwin-aarch64"},{"os":"windows-latest","updater_target":"windows-x86_64"}]'
+  ✓ Complete job
+- windows-runtime-rat in 0s (ID 112193720209)
+- windows-closure-rat in 0s (ID 112193720538)
+* build (windows-latest, windows-x86_64) (ID 112193758217)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run pnpm/action-setup@v4
+  ✓ Run actions/setup-node@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run Swatinem/rust-cache@v2
+  ✓ 安装依赖
+  ✓ 恢复 Windows Next 编译缓存
+  ✓ 缓存 Windows 媒体工具
+  - 导入 macOS Developer ID 与公证凭据(T-709)
+  - 计算 Runtime Node/V8 与 verdict 公钥指纹(T-487)
+  - 恢复 clean Runtime Image(T-487)
+  - 校验命中缓存的 Node/V8 ABI 与 verdict 公钥(T-487)
+  - 安装 macOS host Playwright Chromium(T-749)
+  - 构建 clean Runtime Image(T-487,仅 cache miss)
+  - 保存 clean Runtime Image(T-487)
+  ✓ 安装 Windows production closure 的 Chromium
+  ✓ 构建并接入 Windows production closure(T-675)
+  ✓ 读版本号
+  - 校验发布包领取关闭与反馈配置(T-635)
+  * 打包(release.mjs 全链)
+  * 收集用户安装包(T-492)
+  * 上传已生成的安装包（额外验收不阻断）
+  * 校验 Windows 安装包 tarball 化(T-454·反转 T-446,setup.exe 只带 sidecar.tar.gz)
+  * 校验 Chromium 已打进 sidecar(防 warn 静默跳过违反 T-284)
+  * Windows 安装期 runtime 原生冒烟(T-487)
+  * 校验 updater 产物 + .sig 齐(SPEC §15 验收 9)
+  * macOS Developer ID、公证与 Gatekeeper 门(T-709)
+  * macOS sidecar 可搬运归档与解压后签名门(T-705)
+  * macOS 真启动与主页面加载冒烟(T-663)
+  * 上传 T-635 产品身份与 release attestation（非发布产物）
+  * Windows 安装后真启动与主页面加载冒烟(T-562)
+  * Windows 主动卸载清理冒烟(T-557)
+  * 上传 T-675 Windows production closure 正式证据
+  * 清理 macOS 一次性签名钥匙串(T-709)
+  * Post 缓存 Windows 媒体工具
+  * Post 恢复 Windows Next 编译缓存
+  * Post Run Swatinem/rust-cache@v2
+  * Post Run actions/setup-node@v4
+  * Post Run pnpm/action-setup@v4
+  * Post Run actions/checkout@v4
+
+ANNOTATIONS
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+plan: .github#1
+
+Refreshing run status every 30 seconds. Press Ctrl+C to quit.
+
+* codex/t1063-release-pipeline desktop-release · 37440775757
+Triggered via workflow_dispatch about 29 minutes ago
+
+JOBS
+✓ plan in 4s (ID 112193718432)
+  ✓ Set up job
+  ✓ Run all='[{"os":"macos-latest","updater_target":"darwin-aarch64"},{"os":"windows-latest","updater_target":"windows-x86_64"}]'
+  ✓ Complete job
+- windows-runtime-rat in 0s (ID 112193720209)
+- windows-closure-rat in 0s (ID 112193720538)
+* build (windows-latest, windows-x86_64) (ID 112193758217)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run pnpm/action-setup@v4
+  ✓ Run actions/setup-node@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run Swatinem/rust-cache@v2
+  ✓ 安装依赖
+  ✓ 恢复 Windows Next 编译缓存
+  ✓ 缓存 Windows 媒体工具
+  - 导入 macOS Developer ID 与公证凭据(T-709)
+  - 计算 Runtime Node/V8 与 verdict 公钥指纹(T-487)
+  - 恢复 clean Runtime Image(T-487)
+  - 校验命中缓存的 Node/V8 ABI 与 verdict 公钥(T-487)
+  - 安装 macOS host Playwright Chromium(T-749)
+  - 构建 clean Runtime Image(T-487,仅 cache miss)
+  - 保存 clean Runtime Image(T-487)
+  ✓ 安装 Windows production closure 的 Chromium
+  ✓ 构建并接入 Windows production closure(T-675)
+  ✓ 读版本号
+  - 校验发布包领取关闭与反馈配置(T-635)
+  * 打包(release.mjs 全链)
+  * 收集用户安装包(T-492)
+  * 上传已生成的安装包（额外验收不阻断）
+  * 校验 Windows 安装包 tarball 化(T-454·反转 T-446,setup.exe 只带 sidecar.tar.gz)
+  * 校验 Chromium 已打进 sidecar(防 warn 静默跳过违反 T-284)
+  * Windows 安装期 runtime 原生冒烟(T-487)
+  * 校验 updater 产物 + .sig 齐(SPEC §15 验收 9)
+  * macOS Developer ID、公证与 Gatekeeper 门(T-709)
+  * macOS sidecar 可搬运归档与解压后签名门(T-705)
+  * macOS 真启动与主页面加载冒烟(T-663)
+  * 上传 T-635 产品身份与 release attestation（非发布产物）
+  * Windows 安装后真启动与主页面加载冒烟(T-562)
+  * Windows 主动卸载清理冒烟(T-557)
+  * 上传 T-675 Windows production closure 正式证据
+  * 清理 macOS 一次性签名钥匙串(T-709)
+  * Post 缓存 Windows 媒体工具
+  * Post 恢复 Windows Next 编译缓存
+  * Post Run Swatinem/rust-cache@v2
+  * Post Run actions/setup-node@v4
+  * Post Run pnpm/action-setup@v4
+  * Post Run actions/checkout@v4
+
+ANNOTATIONS
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+plan: .github#1
+
+Refreshing run status every 30 seconds. Press Ctrl+C to quit.
+
+* codex/t1063-release-pipeline desktop-release · 37440775757
+Triggered via workflow_dispatch about 30 minutes ago
+
+JOBS
+✓ plan in 4s (ID 112193718432)
+  ✓ Set up job
+  ✓ Run all='[{"os":"macos-latest","updater_target":"darwin-aarch64"},{"os":"windows-latest","updater_target":"windows-x86_64"}]'
+  ✓ Complete job
+- windows-runtime-rat in 0s (ID 112193720209)
+- windows-closure-rat in 0s (ID 112193720538)
+* build (windows-latest, windows-x86_64) (ID 112193758217)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run pnpm/action-setup@v4
+  ✓ Run actions/setup-node@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run Swatinem/rust-cache@v2
+  ✓ 安装依赖
+  ✓ 恢复 Windows Next 编译缓存
+  ✓ 缓存 Windows 媒体工具
+  - 导入 macOS Developer ID 与公证凭据(T-709)
+  - 计算 Runtime Node/V8 与 verdict 公钥指纹(T-487)
+  - 恢复 clean Runtime Image(T-487)
+  - 校验命中缓存的 Node/V8 ABI 与 verdict 公钥(T-487)
+  - 安装 macOS host Playwright Chromium(T-749)
+  - 构建 clean Runtime Image(T-487,仅 cache miss)
+  - 保存 clean Runtime Image(T-487)
+  ✓ 安装 Windows production closure 的 Chromium
+  ✓ 构建并接入 Windows production closure(T-675)
+  ✓ 读版本号
+  - 校验发布包领取关闭与反馈配置(T-635)
+  * 打包(release.mjs 全链)
+  * 收集用户安装包(T-492)
+  * 上传已生成的安装包（额外验收不阻断）
+  * 校验 Windows 安装包 tarball 化(T-454·反转 T-446,setup.exe 只带 sidecar.tar.gz)
+  * 校验 Chromium 已打进 sidecar(防 warn 静默跳过违反 T-284)
+  * Windows 安装期 runtime 原生冒烟(T-487)
+  * 校验 updater 产物 + .sig 齐(SPEC §15 验收 9)
+  * macOS Developer ID、公证与 Gatekeeper 门(T-709)
+  * macOS sidecar 可搬运归档与解压后签名门(T-705)
+  * macOS 真启动与主页面加载冒烟(T-663)
+  * 上传 T-635 产品身份与 release attestation（非发布产物）
+  * Windows 安装后真启动与主页面加载冒烟(T-562)
+  * Windows 主动卸载清理冒烟(T-557)
+  * 上传 T-675 Windows production closure 正式证据
+  * 清理 macOS 一次性签名钥匙串(T-709)
+  * Post 缓存 Windows 媒体工具
+  * Post 恢复 Windows Next 编译缓存
+  * Post Run Swatinem/rust-cache@v2
+  * Post Run actions/setup-node@v4
+  * Post Run pnpm/action-setup@v4
+  * Post Run actions/checkout@v4
+
+ANNOTATIONS
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+plan: .github#1
+
+Refreshing run status every 30 seconds. Press Ctrl+C to quit.
+
+* codex/t1063-release-pipeline desktop-release · 37440775757
+Triggered via workflow_dispatch about 30 minutes ago
+
+JOBS
+✓ plan in 4s (ID 112193718432)
+  ✓ Set up job
+  ✓ Run all='[{"os":"macos-latest","updater_target":"darwin-aarch64"},{"os":"windows-latest","updater_target":"windows-x86_64"}]'
+  ✓ Complete job
+- windows-runtime-rat in 0s (ID 112193720209)
+- windows-closure-rat in 0s (ID 112193720538)
+* build (windows-latest, windows-x86_64) (ID 112193758217)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run pnpm/action-setup@v4
+  ✓ Run actions/setup-node@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run Swatinem/rust-cache@v2
+  ✓ 安装依赖
+  ✓ 恢复 Windows Next 编译缓存
+  ✓ 缓存 Windows 媒体工具
+  - 导入 macOS Developer ID 与公证凭据(T-709)
+  - 计算 Runtime Node/V8 与 verdict 公钥指纹(T-487)
+  - 恢复 clean Runtime Image(T-487)
+  - 校验命中缓存的 Node/V8 ABI 与 verdict 公钥(T-487)
+  - 安装 macOS host Playwright Chromium(T-749)
+  - 构建 clean Runtime Image(T-487,仅 cache miss)
+  - 保存 clean Runtime Image(T-487)
+  ✓ 安装 Windows production closure 的 Chromium
+  ✓ 构建并接入 Windows production closure(T-675)
+  ✓ 读版本号
+  - 校验发布包领取关闭与反馈配置(T-635)
+  ✓ 打包(release.mjs 全链)
+  ✓ 收集用户安装包(T-492)
+  ✓ 上传已生成的安装包（额外验收不阻断）
+  - 校验 Windows 安装包 tarball 化(T-454·反转 T-446,setup.exe 只带 sidecar.tar.gz)
+  - 校验 Chromium 已打进 sidecar(防 warn 静默跳过违反 T-284)
+  - Windows 安装期 runtime 原生冒烟(T-487)
+  - 校验 updater 产物 + .sig 齐(SPEC §15 验收 9)
+  - macOS Developer ID、公证与 Gatekeeper 门(T-709)
+  - macOS sidecar 可搬运归档与解压后签名门(T-705)
+  - macOS 真启动与主页面加载冒烟(T-663)
+  ✓ 上传 T-635 产品身份与 release attestation（非发布产物）
+  - Windows 安装后真启动与主页面加载冒烟(T-562)
+  - Windows 主动卸载清理冒烟(T-557)
+  ✓ 上传 T-675 Windows production closure 正式证据
+  - 清理 macOS 一次性签名钥匙串(T-709)
+  * Post 缓存 Windows 媒体工具
+  * Post 恢复 Windows Next 编译缓存
+  * Post Run Swatinem/rust-cache@v2
+  * Post Run actions/setup-node@v4
+  * Post Run pnpm/action-setup@v4
+  * Post Run actions/checkout@v4
+
+ANNOTATIONS
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+plan: .github#1
+
+Refreshing run status every 30 seconds. Press Ctrl+C to quit.
+
+* codex/t1063-release-pipeline desktop-release · 37440775757
+Triggered via workflow_dispatch about 31 minutes ago
+
+JOBS
+✓ plan in 4s (ID 112193718432)
+  ✓ Set up job
+  ✓ Run all='[{"os":"macos-latest","updater_target":"darwin-aarch64"},{"os":"windows-latest","updater_target":"windows-x86_64"}]'
+  ✓ Complete job
+- windows-runtime-rat in 0s (ID 112193720209)
+- windows-closure-rat in 0s (ID 112193720538)
+* build (windows-latest, windows-x86_64) (ID 112193758217)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run pnpm/action-setup@v4
+  ✓ Run actions/setup-node@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run Swatinem/rust-cache@v2
+  ✓ 安装依赖
+  ✓ 恢复 Windows Next 编译缓存
+  ✓ 缓存 Windows 媒体工具
+  - 导入 macOS Developer ID 与公证凭据(T-709)
+  - 计算 Runtime Node/V8 与 verdict 公钥指纹(T-487)
+  - 恢复 clean Runtime Image(T-487)
+  - 校验命中缓存的 Node/V8 ABI 与 verdict 公钥(T-487)
+  - 安装 macOS host Playwright Chromium(T-749)
+  - 构建 clean Runtime Image(T-487,仅 cache miss)
+  - 保存 clean Runtime Image(T-487)
+  ✓ 安装 Windows production closure 的 Chromium
+  ✓ 构建并接入 Windows production closure(T-675)
+  ✓ 读版本号
+  - 校验发布包领取关闭与反馈配置(T-635)
+  ✓ 打包(release.mjs 全链)
+  ✓ 收集用户安装包(T-492)
+  ✓ 上传已生成的安装包（额外验收不阻断）
+  - 校验 Windows 安装包 tarball 化(T-454·反转 T-446,setup.exe 只带 sidecar.tar.gz)
+  - 校验 Chromium 已打进 sidecar(防 warn 静默跳过违反 T-284)
+  - Windows 安装期 runtime 原生冒烟(T-487)
+  - 校验 updater 产物 + .sig 齐(SPEC §15 验收 9)
+  - macOS Developer ID、公证与 Gatekeeper 门(T-709)
+  - macOS sidecar 可搬运归档与解压后签名门(T-705)
+  - macOS 真启动与主页面加载冒烟(T-663)
+  ✓ 上传 T-635 产品身份与 release attestation（非发布产物）
+  - Windows 安装后真启动与主页面加载冒烟(T-562)
+  - Windows 主动卸载清理冒烟(T-557)
+  ✓ 上传 T-675 Windows production closure 正式证据
+  - 清理 macOS 一次性签名钥匙串(T-709)
+  ✓ Post 缓存 Windows 媒体工具
+  * Post 恢复 Windows Next 编译缓存
+  * Post Run Swatinem/rust-cache@v2
+  * Post Run actions/setup-node@v4
+  * Post Run pnpm/action-setup@v4
+  * Post Run actions/checkout@v4
+
+ANNOTATIONS
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+plan: .github#1
+
+Refreshing run status every 30 seconds. Press Ctrl+C to quit.
+
+* codex/t1063-release-pipeline desktop-release · 37440775757
+Triggered via workflow_dispatch about 31 minutes ago
+
+JOBS
+✓ plan in 4s (ID 112193718432)
+  ✓ Set up job
+  ✓ Run all='[{"os":"macos-latest","updater_target":"darwin-aarch64"},{"os":"windows-latest","updater_target":"windows-x86_64"}]'
+  ✓ Complete job
+- windows-runtime-rat in 0s (ID 112193720209)
+- windows-closure-rat in 0s (ID 112193720538)
+* build (windows-latest, windows-x86_64) (ID 112193758217)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run pnpm/action-setup@v4
+  ✓ Run actions/setup-node@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run Swatinem/rust-cache@v2
+  ✓ 安装依赖
+  ✓ 恢复 Windows Next 编译缓存
+  ✓ 缓存 Windows 媒体工具
+  - 导入 macOS Developer ID 与公证凭据(T-709)
+  - 计算 Runtime Node/V8 与 verdict 公钥指纹(T-487)
+  - 恢复 clean Runtime Image(T-487)
+  - 校验命中缓存的 Node/V8 ABI 与 verdict 公钥(T-487)
+  - 安装 macOS host Playwright Chromium(T-749)
+  - 构建 clean Runtime Image(T-487,仅 cache miss)
+  - 保存 clean Runtime Image(T-487)
+  ✓ 安装 Windows production closure 的 Chromium
+  ✓ 构建并接入 Windows production closure(T-675)
+  ✓ 读版本号
+  - 校验发布包领取关闭与反馈配置(T-635)
+  ✓ 打包(release.mjs 全链)
+  ✓ 收集用户安装包(T-492)
+  ✓ 上传已生成的安装包（额外验收不阻断）
+  - 校验 Windows 安装包 tarball 化(T-454·反转 T-446,setup.exe 只带 sidecar.tar.gz)
+  - 校验 Chromium 已打进 sidecar(防 warn 静默跳过违反 T-284)
+  - Windows 安装期 runtime 原生冒烟(T-487)
+  - 校验 updater 产物 + .sig 齐(SPEC §15 验收 9)
+  - macOS Developer ID、公证与 Gatekeeper 门(T-709)
+  - macOS sidecar 可搬运归档与解压后签名门(T-705)
+  - macOS 真启动与主页面加载冒烟(T-663)
+  ✓ 上传 T-635 产品身份与 release attestation（非发布产物）
+  - Windows 安装后真启动与主页面加载冒烟(T-562)
+  - Windows 主动卸载清理冒烟(T-557)
+  ✓ 上传 T-675 Windows production closure 正式证据
+  - 清理 macOS 一次性签名钥匙串(T-709)
+  ✓ Post 缓存 Windows 媒体工具
+  ✓ Post 恢复 Windows Next 编译缓存
+  * Post Run Swatinem/rust-cache@v2
+  * Post Run actions/setup-node@v4
+  * Post Run pnpm/action-setup@v4
+  * Post Run actions/checkout@v4
+
+ANNOTATIONS
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+plan: .github#1
+
+Refreshing run status every 30 seconds. Press Ctrl+C to quit.
+
+* codex/t1063-release-pipeline desktop-release · 37440775757
+Triggered via workflow_dispatch about 32 minutes ago
+
+JOBS
+✓ plan in 4s (ID 112193718432)
+  ✓ Set up job
+  ✓ Run all='[{"os":"macos-latest","updater_target":"darwin-aarch64"},{"os":"windows-latest","updater_target":"windows-x86_64"}]'
+  ✓ Complete job
+- windows-runtime-rat in 0s (ID 112193720209)
+- windows-closure-rat in 0s (ID 112193720538)
+* build (windows-latest, windows-x86_64) (ID 112193758217)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run pnpm/action-setup@v4
+  ✓ Run actions/setup-node@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run Swatinem/rust-cache@v2
+  ✓ 安装依赖
+  ✓ 恢复 Windows Next 编译缓存
+  ✓ 缓存 Windows 媒体工具
+  - 导入 macOS Developer ID 与公证凭据(T-709)
+  - 计算 Runtime Node/V8 与 verdict 公钥指纹(T-487)
+  - 恢复 clean Runtime Image(T-487)
+  - 校验命中缓存的 Node/V8 ABI 与 verdict 公钥(T-487)
+  - 安装 macOS host Playwright Chromium(T-749)
+  - 构建 clean Runtime Image(T-487,仅 cache miss)
+  - 保存 clean Runtime Image(T-487)
+  ✓ 安装 Windows production closure 的 Chromium
+  ✓ 构建并接入 Windows production closure(T-675)
+  ✓ 读版本号
+  - 校验发布包领取关闭与反馈配置(T-635)
+  ✓ 打包(release.mjs 全链)
+  ✓ 收集用户安装包(T-492)
+  ✓ 上传已生成的安装包（额外验收不阻断）
+  - 校验 Windows 安装包 tarball 化(T-454·反转 T-446,setup.exe 只带 sidecar.tar.gz)
+  - 校验 Chromium 已打进 sidecar(防 warn 静默跳过违反 T-284)
+  - Windows 安装期 runtime 原生冒烟(T-487)
+  - 校验 updater 产物 + .sig 齐(SPEC §15 验收 9)
+  - macOS Developer ID、公证与 Gatekeeper 门(T-709)
+  - macOS sidecar 可搬运归档与解压后签名门(T-705)
+  - macOS 真启动与主页面加载冒烟(T-663)
+  ✓ 上传 T-635 产品身份与 release attestation（非发布产物）
+  - Windows 安装后真启动与主页面加载冒烟(T-562)
+  - Windows 主动卸载清理冒烟(T-557)
+  ✓ 上传 T-675 Windows production closure 正式证据
+  - 清理 macOS 一次性签名钥匙串(T-709)
+  ✓ Post 缓存 Windows 媒体工具
+  ✓ Post 恢复 Windows Next 编译缓存
+  * Post Run Swatinem/rust-cache@v2
+  * Post Run actions/setup-node@v4
+  * Post Run pnpm/action-setup@v4
+  * Post Run actions/checkout@v4
+
+ANNOTATIONS
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+plan: .github#1
+
+Refreshing run status every 30 seconds. Press Ctrl+C to quit.
+
+* codex/t1063-release-pipeline desktop-release · 37440775757
+Triggered via workflow_dispatch about 32 minutes ago
+
+JOBS
+✓ plan in 4s (ID 112193718432)
+  ✓ Set up job
+  ✓ Run all='[{"os":"macos-latest","updater_target":"darwin-aarch64"},{"os":"windows-latest","updater_target":"windows-x86_64"}]'
+  ✓ Complete job
+- windows-runtime-rat in 0s (ID 112193720209)
+- windows-closure-rat in 0s (ID 112193720538)
+* build (windows-latest, windows-x86_64) (ID 112193758217)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run pnpm/action-setup@v4
+  ✓ Run actions/setup-node@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run Swatinem/rust-cache@v2
+  ✓ 安装依赖
+  ✓ 恢复 Windows Next 编译缓存
+  ✓ 缓存 Windows 媒体工具
+  - 导入 macOS Developer ID 与公证凭据(T-709)
+  - 计算 Runtime Node/V8 与 verdict 公钥指纹(T-487)
+  - 恢复 clean Runtime Image(T-487)
+  - 校验命中缓存的 Node/V8 ABI 与 verdict 公钥(T-487)
+  - 安装 macOS host Playwright Chromium(T-749)
+  - 构建 clean Runtime Image(T-487,仅 cache miss)
+  - 保存 clean Runtime Image(T-487)
+  ✓ 安装 Windows production closure 的 Chromium
+  ✓ 构建并接入 Windows production closure(T-675)
+  ✓ 读版本号
+  - 校验发布包领取关闭与反馈配置(T-635)
+  ✓ 打包(release.mjs 全链)
+  ✓ 收集用户安装包(T-492)
+  ✓ 上传已生成的安装包（额外验收不阻断）
+  - 校验 Windows 安装包 tarball 化(T-454·反转 T-446,setup.exe 只带 sidecar.tar.gz)
+  - 校验 Chromium 已打进 sidecar(防 warn 静默跳过违反 T-284)
+  - Windows 安装期 runtime 原生冒烟(T-487)
+  - 校验 updater 产物 + .sig 齐(SPEC §15 验收 9)
+  - macOS Developer ID、公证与 Gatekeeper 门(T-709)
+  - macOS sidecar 可搬运归档与解压后签名门(T-705)
+  - macOS 真启动与主页面加载冒烟(T-663)
+  ✓ 上传 T-635 产品身份与 release attestation（非发布产物）
+  - Windows 安装后真启动与主页面加载冒烟(T-562)
+  - Windows 主动卸载清理冒烟(T-557)
+  ✓ 上传 T-675 Windows production closure 正式证据
+  - 清理 macOS 一次性签名钥匙串(T-709)
+  ✓ Post 缓存 Windows 媒体工具
+  ✓ Post 恢复 Windows Next 编译缓存
+  * Post Run Swatinem/rust-cache@v2
+  * Post Run actions/setup-node@v4
+  * Post Run pnpm/action-setup@v4
+  * Post Run actions/checkout@v4
+
+ANNOTATIONS
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+plan: .github#1
+
+Refreshing run status every 30 seconds. Press Ctrl+C to quit.
+
+* codex/t1063-release-pipeline desktop-release · 37440775757
+Triggered via workflow_dispatch about 33 minutes ago
+
+JOBS
+✓ plan in 4s (ID 112193718432)
+  ✓ Set up job
+  ✓ Run all='[{"os":"macos-latest","updater_target":"darwin-aarch64"},{"os":"windows-latest","updater_target":"windows-x86_64"}]'
+  ✓ Complete job
+- windows-runtime-rat in 0s (ID 112193720209)
+- windows-closure-rat in 0s (ID 112193720538)
+* build (windows-latest, windows-x86_64) (ID 112193758217)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run pnpm/action-setup@v4
+  ✓ Run actions/setup-node@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run Swatinem/rust-cache@v2
+  ✓ 安装依赖
+  ✓ 恢复 Windows Next 编译缓存
+  ✓ 缓存 Windows 媒体工具
+  - 导入 macOS Developer ID 与公证凭据(T-709)
+  - 计算 Runtime Node/V8 与 verdict 公钥指纹(T-487)
+  - 恢复 clean Runtime Image(T-487)
+  - 校验命中缓存的 Node/V8 ABI 与 verdict 公钥(T-487)
+  - 安装 macOS host Playwright Chromium(T-749)
+  - 构建 clean Runtime Image(T-487,仅 cache miss)
+  - 保存 clean Runtime Image(T-487)
+  ✓ 安装 Windows production closure 的 Chromium
+  ✓ 构建并接入 Windows production closure(T-675)
+  ✓ 读版本号
+  - 校验发布包领取关闭与反馈配置(T-635)
+  ✓ 打包(release.mjs 全链)
+  ✓ 收集用户安装包(T-492)
+  ✓ 上传已生成的安装包（额外验收不阻断）
+  - 校验 Windows 安装包 tarball 化(T-454·反转 T-446,setup.exe 只带 sidecar.tar.gz)
+  - 校验 Chromium 已打进 sidecar(防 warn 静默跳过违反 T-284)
+  - Windows 安装期 runtime 原生冒烟(T-487)
+  - 校验 updater 产物 + .sig 齐(SPEC §15 验收 9)
+  - macOS Developer ID、公证与 Gatekeeper 门(T-709)
+  - macOS sidecar 可搬运归档与解压后签名门(T-705)
+  - macOS 真启动与主页面加载冒烟(T-663)
+  ✓ 上传 T-635 产品身份与 release attestation（非发布产物）
+  - Windows 安装后真启动与主页面加载冒烟(T-562)
+  - Windows 主动卸载清理冒烟(T-557)
+  ✓ 上传 T-675 Windows production closure 正式证据
+  - 清理 macOS 一次性签名钥匙串(T-709)
+  ✓ Post 缓存 Windows 媒体工具
+  ✓ Post 恢复 Windows Next 编译缓存
+  ✓ Post Run Swatinem/rust-cache@v2
+  * Post Run actions/setup-node@v4
+  * Post Run pnpm/action-setup@v4
+  * Post Run actions/checkout@v4
+
+ANNOTATIONS
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+plan: .github#1
+
+Refreshing run status every 30 seconds. Press Ctrl+C to quit.
+
+* codex/t1063-release-pipeline desktop-release · 37440775757
+Triggered via workflow_dispatch about 33 minutes ago
+
+JOBS
+✓ plan in 4s (ID 112193718432)
+  ✓ Set up job
+  ✓ Run all='[{"os":"macos-latest","updater_target":"darwin-aarch64"},{"os":"windows-latest","updater_target":"windows-x86_64"}]'
+  ✓ Complete job
+- windows-runtime-rat in 0s (ID 112193720209)
+- windows-closure-rat in 0s (ID 112193720538)
+* build (windows-latest, windows-x86_64) (ID 112193758217)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run pnpm/action-setup@v4
+  ✓ Run actions/setup-node@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run Swatinem/rust-cache@v2
+  ✓ 安装依赖
+  ✓ 恢复 Windows Next 编译缓存
+  ✓ 缓存 Windows 媒体工具
+  - 导入 macOS Developer ID 与公证凭据(T-709)
+  - 计算 Runtime Node/V8 与 verdict 公钥指纹(T-487)
+  - 恢复 clean Runtime Image(T-487)
+  - 校验命中缓存的 Node/V8 ABI 与 verdict 公钥(T-487)
+  - 安装 macOS host Playwright Chromium(T-749)
+  - 构建 clean Runtime Image(T-487,仅 cache miss)
+  - 保存 clean Runtime Image(T-487)
+  ✓ 安装 Windows production closure 的 Chromium
+  ✓ 构建并接入 Windows production closure(T-675)
+  ✓ 读版本号
+  - 校验发布包领取关闭与反馈配置(T-635)
+  ✓ 打包(release.mjs 全链)
+  ✓ 收集用户安装包(T-492)
+  ✓ 上传已生成的安装包（额外验收不阻断）
+  - 校验 Windows 安装包 tarball 化(T-454·反转 T-446,setup.exe 只带 sidecar.tar.gz)
+  - 校验 Chromium 已打进 sidecar(防 warn 静默跳过违反 T-284)
+  - Windows 安装期 runtime 原生冒烟(T-487)
+  - 校验 updater 产物 + .sig 齐(SPEC §15 验收 9)
+  - macOS Developer ID、公证与 Gatekeeper 门(T-709)
+  - macOS sidecar 可搬运归档与解压后签名门(T-705)
+  - macOS 真启动与主页面加载冒烟(T-663)
+  ✓ 上传 T-635 产品身份与 release attestation（非发布产物）
+  - Windows 安装后真启动与主页面加载冒烟(T-562)
+  - Windows 主动卸载清理冒烟(T-557)
+  ✓ 上传 T-675 Windows production closure 正式证据
+  - 清理 macOS 一次性签名钥匙串(T-709)
+  ✓ Post 缓存 Windows 媒体工具
+  ✓ Post 恢复 Windows Next 编译缓存
+  ✓ Post Run Swatinem/rust-cache@v2
+  * Post Run actions/setup-node@v4
+  * Post Run pnpm/action-setup@v4
+  * Post Run actions/checkout@v4
+
+ANNOTATIONS
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+plan: .github#1
+
+Refreshing run status every 30 seconds. Press Ctrl+C to quit.
+
+* codex/t1063-release-pipeline desktop-release · 37440775757
+Triggered via workflow_dispatch about 34 minutes ago
+
+JOBS
+✓ plan in 4s (ID 112193718432)
+  ✓ Set up job
+  ✓ Run all='[{"os":"macos-latest","updater_target":"darwin-aarch64"},{"os":"windows-latest","updater_target":"windows-x86_64"}]'
+  ✓ Complete job
+- windows-runtime-rat in 0s (ID 112193720209)
+- windows-closure-rat in 0s (ID 112193720538)
+* build (windows-latest, windows-x86_64) (ID 112193758217)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run pnpm/action-setup@v4
+  ✓ Run actions/setup-node@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run Swatinem/rust-cache@v2
+  ✓ 安装依赖
+  ✓ 恢复 Windows Next 编译缓存
+  ✓ 缓存 Windows 媒体工具
+  - 导入 macOS Developer ID 与公证凭据(T-709)
+  - 计算 Runtime Node/V8 与 verdict 公钥指纹(T-487)
+  - 恢复 clean Runtime Image(T-487)
+  - 校验命中缓存的 Node/V8 ABI 与 verdict 公钥(T-487)
+  - 安装 macOS host Playwright Chromium(T-749)
+  - 构建 clean Runtime Image(T-487,仅 cache miss)
+  - 保存 clean Runtime Image(T-487)
+  ✓ 安装 Windows production closure 的 Chromium
+  ✓ 构建并接入 Windows production closure(T-675)
+  ✓ 读版本号
+  - 校验发布包领取关闭与反馈配置(T-635)
+  ✓ 打包(release.mjs 全链)
+  ✓ 收集用户安装包(T-492)
+  ✓ 上传已生成的安装包（额外验收不阻断）
+  - 校验 Windows 安装包 tarball 化(T-454·反转 T-446,setup.exe 只带 sidecar.tar.gz)
+  - 校验 Chromium 已打进 sidecar(防 warn 静默跳过违反 T-284)
+  - Windows 安装期 runtime 原生冒烟(T-487)
+  - 校验 updater 产物 + .sig 齐(SPEC §15 验收 9)
+  - macOS Developer ID、公证与 Gatekeeper 门(T-709)
+  - macOS sidecar 可搬运归档与解压后签名门(T-705)
+  - macOS 真启动与主页面加载冒烟(T-663)
+  ✓ 上传 T-635 产品身份与 release attestation（非发布产物）
+  - Windows 安装后真启动与主页面加载冒烟(T-562)
+  - Windows 主动卸载清理冒烟(T-557)
+  ✓ 上传 T-675 Windows production closure 正式证据
+  - 清理 macOS 一次性签名钥匙串(T-709)
+  ✓ Post 缓存 Windows 媒体工具
+  ✓ Post 恢复 Windows Next 编译缓存
+  ✓ Post Run Swatinem/rust-cache@v2
+  * Post Run actions/setup-node@v4
+  * Post Run pnpm/action-setup@v4
+  * Post Run actions/checkout@v4
+
+ANNOTATIONS
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+plan: .github#1
+
+✓ codex/t1063-release-pipeline desktop-release · 37440775757
+Triggered via workflow_dispatch about 34 minutes ago
+
+JOBS
+✓ plan in 4s (ID 112193718432)
+  ✓ Set up job
+  ✓ Run all='[{"os":"macos-latest","updater_target":"darwin-aarch64"},{"os":"windows-latest","updater_target":"windows-x86_64"}]'
+  ✓ Complete job
+- windows-runtime-rat in 0s (ID 112193720209)
+- windows-closure-rat in 0s (ID 112193720538)
+✓ build (windows-latest, windows-x86_64) in 34m17s (ID 112193758217)
+  ✓ Set up job
+  ✓ Run actions/checkout@v4
+  ✓ Run pnpm/action-setup@v4
+  ✓ Run actions/setup-node@v4
+  ✓ Run dtolnay/rust-toolchain@stable
+  ✓ Run Swatinem/rust-cache@v2
+  ✓ 安装依赖
+  ✓ 恢复 Windows Next 编译缓存
+  ✓ 缓存 Windows 媒体工具
+  - 导入 macOS Developer ID 与公证凭据(T-709)
+  - 计算 Runtime Node/V8 与 verdict 公钥指纹(T-487)
+  - 恢复 clean Runtime Image(T-487)
+  - 校验命中缓存的 Node/V8 ABI 与 verdict 公钥(T-487)
+  - 安装 macOS host Playwright Chromium(T-749)
+  - 构建 clean Runtime Image(T-487,仅 cache miss)
+  - 保存 clean Runtime Image(T-487)
+  ✓ 安装 Windows production closure 的 Chromium
+  ✓ 构建并接入 Windows production closure(T-675)
+  ✓ 读版本号
+  - 校验发布包领取关闭与反馈配置(T-635)
+  ✓ 打包(release.mjs 全链)
+  ✓ 收集用户安装包(T-492)
+  ✓ 上传已生成的安装包（额外验收不阻断）
+  - 校验 Windows 安装包 tarball 化(T-454·反转 T-446,setup.exe 只带 sidecar.tar.gz)
+  - 校验 Chromium 已打进 sidecar(防 warn 静默跳过违反 T-284)
+  - Windows 安装期 runtime 原生冒烟(T-487)
+  - 校验 updater 产物 + .sig 齐(SPEC §15 验收 9)
+  - macOS Developer ID、公证与 Gatekeeper 门(T-709)
+  - macOS sidecar 可搬运归档与解压后签名门(T-705)
+  - macOS 真启动与主页面加载冒烟(T-663)
+  ✓ 上传 T-635 产品身份与 release attestation（非发布产物）
+  - Windows 安装后真启动与主页面加载冒烟(T-562)
+  - Windows 主动卸载清理冒烟(T-557)
+  ✓ 上传 T-675 Windows production closure 正式证据
+  - 清理 macOS 一次性签名钥匙串(T-709)
+  ✓ Post 缓存 Windows 媒体工具
+  ✓ Post 恢复 Windows Next 编译缓存
+  ✓ Post Run Swatinem/rust-cache@v2
+  ✓ Post Run actions/setup-node@v4
+  ✓ Post Run pnpm/action-setup@v4
+  ✓ Post Run actions/checkout@v4
+  ✓ Complete job
+- draft-release (ID 112206728128)
+
+ANNOTATIONS
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+plan: .github#1
+
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/cache@v4, actions/checkout@v4, actions/setup-node@v4, actions/upload-artifact@v4, pnpm/action-setup@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+build (windows-latest, windows-x86_64): .github#3
+
+! [运行容量] 运行文件数 6258 超过容量参考值 3500；请查看文件清单与安装运行验收。
+build (windows-latest, windows-x86_64): .github#1118
+

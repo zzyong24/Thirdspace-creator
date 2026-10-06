@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 1,
+  "pipeline": "desktop:package",
+  "startedAt": "2026-10-06T09:16:11.561Z",
+  "generatedAt": "2026-10-06T09:37:23.612Z",
+  "summary": {
+    "stepCount": 8,
+    "passed": 8,
+    "failed": 0,
+    "totalDurationMs": 1270966
+  },
+  "steps": [
+    {
+      "name": "sidecar 二进制化",
+      "status": "passed",
+      "exitCode": 0,
+      "startedAt": "2026-10-06T09:16:12.523Z",
+      "endedAt": "2026-10-06T09:16:12.621Z",
+      "durationMs": 98
+    },
+    {
+      "name": "sidecar JS 混淆(§3.1)",
+      "status": "passed",
+      "exitCode": 0,
+      "startedAt": "2026-10-06T09:16:12.722Z",
+      "endedAt": "2026-10-06T09:23:17.421Z",
+      "durationMs": 424699
+    },
+    {
+      "name": "sidecar 反 AI 诱饵注入(T-399a)",
+      "status": "passed",
+      "exitCode": 0,
+      "startedAt": "2026-10-06T09:23:17.423Z",
+      "endedAt": "2026-10-06T09:23:17.848Z",
+      "durationMs": 425
+    },
+    {
+      "name": "sidecar 版权/专有声明盖章",
+      "status": "passed",
+      "exitCode": 0,
+      "startedAt": "2026-10-06T09:23:17.849Z",
+      "endedAt": "2026-10-06T09:23:18.477Z",
+      "durationMs": 628
+    },
+    {
+      "name": "tauri build(含 updater 签名/占位)",
+      "status": "passed",
+      "exitCode": 0,
+      "startedAt": "2026-10-06T09:23:18.478Z",
+      "endedAt": "2026-10-06T09:37:22.250Z",
+      "durationMs": 843772
+    },
+    {
+      "name": "代码签名",
+      "status": "passed",
+      "exitCode": 0,
+      "startedAt": "2026-10-06T09:37:22.266Z",
+      "endedAt": "2026-10-06T09:37:22.587Z",
+      "durationMs": 321
+    },
+    {
+      "name": "公证",
+      "status": "passed",
+      "exitCode": 0,
+      "startedAt": "2026-10-06T09:37:22.588Z",
+      "endedAt": "2026-10-06T09:37:22.724Z",
+      "durationMs": 136
+    },
+    {
+      "name": "T-635 ProductManifest 与 release attestation",
+      "status": "passed",
+      "exitCode": 0,
+      "startedAt": "2026-10-06T09:37:22.725Z",
+      "endedAt": "2026-10-06T09:37:23.612Z",
+      "durationMs": 887
+    }
+  ]
+}
