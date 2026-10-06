@@ -2449,7 +2449,7 @@
         },
         {
           "step": "installed-overlay-capture",
-          "status": "pending"
+          "status": "done"
         },
         {
           "step": "integration",
@@ -4310,7 +4310,8 @@
       "commits": {
         "installed-compatibility": "b0a6559dc89fb3b7930e638396a651e81245b409",
         "installed-contract-bootstrap": "f0ada07d7",
-        "installed-cli-receipt": "d68dfbcf6a77ebd7782e0ee86addea61b38f6c66"
+        "installed-cli-receipt": "d68dfbcf6a77ebd7782e0ee86addea61b38f6c66",
+        "installed-overlay-capture": "3754e07fb3dfa65997ab0d21596fa2e884ab9a2c"
       }
     },
     {

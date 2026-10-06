@@ -119,3 +119,12 @@ sync 实际 exit 0；reconcile 实际 exit 1，共 36 错误/1 告警，未写�
 ### CLI失败回放实现闭合（2026-10-06）
 
 真实源码提交d68dfbcf6a77ebd7782e0ee86addea61b38f6c66，ROOT逐文件核对独评六个最终hash、父提交918b0a1c和干净writer后正常FF；progress工具已正常关闭installed-cli-receipt。真实node:http→POST→PGlite→素材关联→DispatchClient→CLI链先复现失败，修复后原26项路由、36项客户端测试及frontend/mcp类型检查均exit0；成功分页meta另先RED2后GREEN。独评回执cli-receipt-independent-implementation-review-kvjnl7ad/independent-review.json SHA256 1fc03d6dd270cea153fa28d3774c790bc362fd85d5ec59e20884fcf11904b958。旧失败不重执、请求编号不变。running/unknown/TTL分支为隔离库状态夹具，非真实worker自然转换。Git提交成功但提示未找到lefthook，未签自动hook通过。新源码尚未打包安装；原801/Original18历史不覆盖本六源新字节。
+
+
+### 纯组叠层捕获修复闭合与下一包冻结（2026-10-06）
+
+源码3754e07fb3dfa65997ab0d21596fa2e884ab9a2c仅获准3路径，ROOT核最终字节、父4615cd87与干净writer后正常FF及progress done；integration仍待验，T-1062仍进行中。实际公开捕获RED20项12失败8通过（首fixture导入错误单列保留），最终原native/owner/hooks三文件44项及完整组合根1项通过；最终执行两源与pre/post相同。新fixture两处类型错误已仅在追加区域修正，原类型诊断(31,260)、两条既有copilot R2及既有video runtime语义失败全部保留，未改源码/guard/基线洗绿。独评final-implementation-review.json SHA256 2d80d74a26eb9cda1146382d745d52761c4ebca931a0356dea0e9515c686e99b，实施证据final-evidence.json SHA256 30c441699179583adfbc503cffe92be16031d19cbe8635a8bcfff2d0e345c4c4。没有签新包、原生界面、模型或MP4。
+
+当前228 App已精确SIGTERM停妥，其两个子进程自然退出；仅另停两项已核idle runtime占用，未停Codex父或PG、未取消/确认后台任务。新六根离线备份offline-backup-real-provenance-journal-vjy8rndl实际20337 exit0，六lsof无占用、目录/偏好/最终closure均真实通过，closure SHA256 fc0bd0b2c5053a71f00134aaeb975e1f96b29760cf3de30abfd385ea177c971f。系统provenance原值与副本观察值单独封存，没有声称物理属性全等。队列与待确认投影原样保留；五组execution公开列表当场无queued/running，AI历史仅观察前100/4431，已见两scheduled queued/noexecution，不声称所有历史任务终态。原wms备份没有新neutral数据，下一安装只绑定本次新备份并重新验证完整性。
+
+用户随后明确选择“临时使用本地 Whisper 验证自动粗剪”，授权当前ASR临时配置及验证后恢复原设置。尚未执行此设置变更或本地模型调用；必须动态公开描述/回读、完整保留可写字段与opaque密钥引用且绝不发送原secret，验证真实词时间码后再产候选。全文不冒充词级，候选未经用户核对不采纳。研究官方SiliconFlow接口仅承诺全文，不能因上游本地SenseVoice有timestamp功能就声称云合同支持。所有实际ASR/模型、剪辑MP4和原生功能继续待验。
