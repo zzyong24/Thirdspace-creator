@@ -1568,6 +1568,34 @@
       "verify_commands": {
         "implementation": "node --test tools/windows-closure-rat/*.test.mjs"
       }
+    },
+    "T-1065": {
+      "task_id": "T-1065",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "audit"
+      ],
+      "read_set": [
+        "docs/features/t1065-timeout-audit.md",
+        "frontend/**",
+        "backend/**",
+        "ai-worker/**",
+        "contract/**",
+        "mcp-server/**",
+        "tools/**",
+        ".github/**"
+      ],
+      "write_set": [
+        "docs/research/t1065/**"
+      ],
+      "verify_commands": {
+        "audit": [
+          "python3 docs/research/t1065/scan_timeouts.py --verify"
+        ]
+      },
+      "depends_on": []
     }
   }
 }

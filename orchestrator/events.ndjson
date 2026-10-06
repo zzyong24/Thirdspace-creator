@@ -1102,3 +1102,7 @@
 {"ts":"2026-09-15T06:35:11.346Z","actor":"taskctl","action":"complete","task":"T-990","evidence":"Mac run34932675118 success并完成公证/真启动/DMG校验；Windows经T991修复后run34935220088 success并真安装/启动/卸载通过；双端源SHA差异为Windows构建内存修复和记录，详见t990-dual-release及t991-windows-memory；全局T916既有233条漂移保留","sha_before":"da5e6a6aea81","sha_after":"6eda5536f9d3"}
 {"ts":"2026-09-15T07:11:46.575Z","actor":"taskctl","action":"start","task":"T-992","sha_before":"650f3c017774","sha_after":"a7efcc3d8589"}
 {"ts":"2026-10-06T03:59:47.553Z","actor":"taskctl","action":"start","task":"T-1063","sha_before":"776fc875f645","sha_after":"ed37949b4853"}
+{"ts":"2026-10-06T04:46:04.275Z","actor":"taskctl","action":"start","task":"T-1065","sha_before":"0a523e8ea1c3","sha_after":"f6ac0e36d37e"}
+{"ts":"2026-10-06T04:51:52.857Z","actor":"taskctl","action":"start","task":"T-1064","sha_before":"b961cfdccafc","sha_after":"93b2f919f8ef"}
+{"ts":"2026-10-06T04:51:52.978Z","actor":"taskctl","action":"complete","task":"T-1064","evidence":"docs/verification/t1064-aborterror-diagnosis.md；公开CLI与安装版源码和隔离复现证据闭环，仅诊断。","sha_before":"93b2f919f8ef","sha_after":"df1bd66b7cf8"}
+{"ts":"2026-10-06T04:57:43.430Z","actor":"taskctl","action":"complete","task":"T-1065","evidence":"docs/research/t1065/REPORT.md；211条控制规则另11声明，33条30秒，2155文件hash与统计校验通过。只读审计；同一隔离树reconcile既有234失败归T-916等，不代称全局全绿。","sha_before":"df1bd66b7cf8","sha_after":"3658bee8d45a"}

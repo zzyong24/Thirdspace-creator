@@ -3,7 +3,7 @@
 > 本文件由 `node orchestrator/process/pmem.mjs sync` 生成,**勿手改生成段**。
 > 人写的「定位/为什么」改 pmem.mjs 顶部常量与 SYSTEM_ARCHITECTURE.md。
 
-LAST_SYNCED: HEAD @ d84d10af
+LAST_SYNCED: codex/t1063-release-pipeline @ d514e90d
 
 ## 这是什么(定位)
 
@@ -23,6 +23,7 @@ CreatorOS —— 一个编导式的自媒体内容生产系统(非项目管理�
 
 ## 开放任务(欠债)
 
+- [wip] T-1065 全盘审计系统所有超时限制与固定30秒上限
 - [wip] T-1063 取消双端出包人为超时与阻断检查并重跑 Windows 流水线
 - [wip] T-992 修复 Windows 升级启动运行环境切换拒绝访问
 - [open] T-989 校正知识图谱错误提示的既有回归断言
