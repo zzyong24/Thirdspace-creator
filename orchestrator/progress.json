@@ -2441,7 +2441,7 @@
         },
         {
           "step": "installed-contract-bootstrap",
-          "status": "pending"
+          "status": "done"
         },
         {
           "step": "integration",
@@ -4239,7 +4239,8 @@
       },
       "step_exclusive_resources": {},
       "commits": {
-        "installed-compatibility": "b0a6559dc89fb3b7930e638396a651e81245b409"
+        "installed-compatibility": "b0a6559dc89fb3b7930e638396a651e81245b409",
+        "installed-contract-bootstrap": "f0ada07d7"
       }
     },
     {
