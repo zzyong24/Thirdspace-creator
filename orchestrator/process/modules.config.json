@@ -3827,6 +3827,49 @@
       "verify_commands": {
         "implementation": "pnpm -C frontend exec vitest run scripts/desktop/package-local.test.mjs scripts/desktop/desktop-release-workflow.test.mjs scripts/desktop/notarize.test.mjs scripts/desktop/tauri-signing-config.test.mjs && pnpm -C frontend exec vitest run scripts/desktop/node-runtime.test.mjs scripts/desktop/build-sidecar.test.mjs scripts/desktop/execution-worker-runtime.test.mjs scripts/desktop/verdict-artifact-hardening.test.mjs scripts/desktop/verdict-key-material.test.mjs scripts/desktop/license-project-key.test.mjs scripts/desktop/client-config-release.test.mjs scripts/desktop/macos-runtime-compat.test.mjs scripts/desktop/startup-safety-contract.test.mjs && node --test tools/windows-closure-rat/creatoros-cli-runtime.test.mjs tools/windows-closure-rat/stage-layered-workers.test.mjs && git diff --check"
       }
+    },
+    "T-1068": {
+      "task_id": "T-1068",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "write_set": [
+        "frontend/src-tauri/src/lib.rs",
+        "orchestrator/verification/t1068-loopback-proxy.mjs",
+        "docs/verification/t1068/loopback-proxy.md"
+      ],
+      "read_set": [
+        "docs/features/t1068-local-client-startup.md",
+        "docs/features/t1068-local-client-startup.review.md",
+        "docs/verification/t1068/loopback-proxy-scope-review.json",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "PROJECT_CONTEXT.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "orchestrator/DECISION_LOG.md",
+        "orchestrator/process/modules.config.json",
+        "frontend/src-tauri/src/lib.rs",
+        "frontend/src-tauri/Cargo.toml",
+        "frontend/src-tauri/Cargo.lock",
+        "frontend/src/instrumentation.ts",
+        "frontend/scripts/desktop/startup-safety-contract.test.mjs",
+        "orchestrator/verification/t1068-loopback-proxy.mjs",
+        "docs/verification/t1068/loopback-proxy.md"
+      ],
+      "exclusive_resources": [
+        "creatoros-local-package-source"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "node orchestrator/verification/t1068-loopback-proxy.mjs --reqwest-rlib frontend/src-tauri/target/release-fast/deps/libreqwest-0c823a957d001fe8.rlib",
+          "pnpm -C frontend exec vitest run scripts/desktop/startup-safety-contract.test.mjs",
+          "git diff --check"
+        ]
+      }
     }
   }
 }

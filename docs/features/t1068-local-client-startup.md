@@ -25,3 +25,15 @@ flowchart LR
 ```
 
 当前状态：范围已登记，启动根因及修复写集待实际证据；不代表修复完成或Gate通过。
+
+## 2026-10-06 实际故障与精确修复补充
+
+用户再次报告当前f0f70a5a安装包原生窗口超时。实际加密日志经官方解码器只读解码退出0：12:55:26.693Z发出完成哨兵，13:00:27.423Z宿主看门狗超时。服务与直接首页成功不等于原生窗口成功，保留用户实测失败。
+
+重新启动同一安装版后，实际端口61485的同版本reqwest探测：原builder返回502/非HTML，1543ms；仅增加no_proxy返回200/HTML68033字节，39ms。另一次中性本机HTTP夹具复现原builder502与直连200。系统HTTP/HTTPS/SOCKS代理启用，调用者代理环境存在；未读取实际App完整环境或代理地址、凭据，不把调用者环境当App环境证明。证据目录位于本地验收根的t1068-live-proxy-default-1791293134419869000、t1068-live-proxy-no_proxy-1791293136015511000及t1068-native-timeout-current-zby6s25j。
+
+精确产品写集仅`frontend/src-tauri/src/lib.rs`，在既有build_sidecar_probe_client增加no_proxy，让固定127.0.0.1本地启动探测直连。其他HTTP客户端、系统代理、模型网络、鉴权/verdict、完成哨兵、真实2xx HTML/非空及not-found判定、退出优先、15秒探测和两项看门狗保持原行为。本次不扩大为超时规则重构。
+
+验证写集`orchestrator/verification/t1068-loopback-proxy.mjs`：抽取实际Rust启动函数，在私有目录用当前reqwest编译库编译并运行；每种代理环境在独立子进程设置，不污染父进程。覆盖真实本机代理返回502而本地正常、原defaultbuilder对照、配置NO_PROXY空或其他主机、代理环境大小写、直接HTML、重定向、404/500/空正文/非HTML/not-found、完成哨兵与真实退出优先。不访问用户库、激活密钥、凭据或模型。该夹具不是安装版证据；修复后另按原条款冻结出包、备份安装和真实启动。
+
+事实回写`docs/verification/t1068/loopback-proxy.md`；控制写集仅本SPEC、原review及该评审输入、BACKLOG本行、orchestrator/DECISION_LOG.md、modules.config.json及由正式工具生成的progress/events。原T1062 SPEC及旧验收失败不改写成通过。用户本次请求已授权修复与本地重包，不另要相同授权。

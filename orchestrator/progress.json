@@ -4,9 +4,9 @@
     "work_branch": "main"
   },
   "summary": {
-    "verticals": 59,
-    "tasks_done": 42,
-    "tasks_total": 155,
+    "verticals": 60,
+    "tasks_done": 43,
+    "tasks_total": 156,
     "tasks_pending": 113,
     "verticals_complete": 3
   },
@@ -4434,6 +4434,52 @@
         "frontend/src-tauri/placeholder-dist/index.html",
         "frontend/src/server/verdict-token-gate.ts",
         "frontend/src/server/ingestion/douyin-cdp.ts"
+      ],
+      "exclusive_resources": [
+        "creatoros-local-package-source"
+      ],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "T-1068",
+      "archetype": [
+        "orchestration"
+      ],
+      "task_id": "T-1068",
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "frontend/src-tauri/src/lib.rs",
+        "orchestrator/verification/t1068-loopback-proxy.mjs",
+        "docs/verification/t1068/loopback-proxy.md"
+      ],
+      "read_set": [
+        "docs/features/t1068-local-client-startup.md",
+        "docs/features/t1068-local-client-startup.review.md",
+        "docs/verification/t1068/loopback-proxy-scope-review.json",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "PROJECT_CONTEXT.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "orchestrator/DECISION_LOG.md",
+        "orchestrator/process/modules.config.json",
+        "frontend/src-tauri/src/lib.rs",
+        "frontend/src-tauri/Cargo.toml",
+        "frontend/src-tauri/Cargo.lock",
+        "frontend/src/instrumentation.ts",
+        "frontend/scripts/desktop/startup-safety-contract.test.mjs",
+        "orchestrator/verification/t1068-loopback-proxy.mjs",
+        "docs/verification/t1068/loopback-proxy.md"
       ],
       "exclusive_resources": [
         "creatoros-local-package-source"

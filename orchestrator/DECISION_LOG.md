@@ -3623,3 +3623,7 @@ Owner=agent 的既有行为实现选择；原SPEC cfbaf9、用户空组共享创
 同一次真实requireTask先授权后返回row owner/runtime；旧getTaskRuntimeData扁平值保持。Skill核真实owner/own stamp有效shape；执行、claim、物化和失败结算共用原归属，旧collection ctx/闭包成对保持。legacy缺stamp仅原服务范围兼容读取，初始组membershipVersion NULL原admission仍拒绝，普通/显式group不补版本或别名。公共跨filter回放只读原task，无重新dispatch入口保待验，不新入口/不删fingerprint，不阻断本次空组render修复。
 
 独立step exact4、freshpacket/正常隔离writer claim、公共组合根实际RED后修复GREEN、原回归及独立实现审查后正常提交整合。root测试独立tmp workspaces/隔离DB，不触用户默认工作目录；原18/801/全局红/失败task111保留。新增ai.service现有daemon注释精确预算3d9a5e，独评f445d4e不授权未来机制；实现后仅ROOT据真实独评追加新hash。重新包安装成片按fresh真实计划/版本核验，历史7.5不作新成片预期。
+
+## DEC-T1068-LOOPBACK-PROXY — 本地启动探测直连（2026-10-06）
+
+用户要求修复已安装包启动超时并尽快交付可测试客户端。同一实际服务原reqwest builder返回代理502，no_proxy返回正常HTML；完成哨兵已在真实日志出现。仅在固定127.0.0.1启动探测client禁用代理，保留全部启动完成、页面、verdict与退出检查和超时常量。其他网络遵循原代理设置。正常评审和夹具回归后再冻结打包、备份及安装。原生窗口此前失败，不由公开CLI/HTTP成功覆盖。
