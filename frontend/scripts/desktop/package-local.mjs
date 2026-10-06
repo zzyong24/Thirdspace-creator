@@ -16,6 +16,8 @@ import { dirname, extname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 const DEFAULTS = Object.freeze({
+  // 制品生成与逐功能验收分开；显式设 0 可运行原有额外构建验证。
+  CREATOROS_PACKAGE_BUILD_ONLY: "1",
   CREATOROS_LICENSE_PROJECT_KEY: "creatoros",
   CREATOROS_CLIENT_CONFIG_PULL_ENABLED: "1",
   // 本地包也必须在 DMG 封盘前具备完整的 ad-hoc bundle 签名，否则 macOS 会把

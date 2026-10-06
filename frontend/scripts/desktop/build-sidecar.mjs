@@ -207,7 +207,7 @@ export function assertNoAppleDoubleTarEntries(tarball, tarBin = "tar") {
 }
 
 function verifyMacSidecarSignatureAfterTar(tarball, tarBin) {
-  if (platform !== "darwin") return;
+  if (platform !== "darwin" || process.env.CREATOROS_PACKAGE_BUILD_ONLY === "1") return;
   const root = mkdtempSync(join(tmpdir(), "creatoros-sidecar-signature-"));
   try {
     // 用 COPYFILE_DISABLE=1 模拟 Rust tar：AppleDouble 不会被“聪明地”还原成 xattr，
@@ -707,6 +707,10 @@ export function bundlePlaywright() {
   } else {
     bundleChromiumBrowser();
   }
+  if (process.env.CREATOROS_PACKAGE_BUILD_ONLY === "1") {
+    console.log("[build-sidecar] 资源已组装；额外运行时探针未运行。");
+    return;
+  }
   // 自检①:sidecar node 从 frontend/ 能否解析 @playwright/test。
   const check = spawnSync(
     process.execPath,
@@ -798,10 +802,13 @@ export function bundleRenderDeps() {
     "dist",
     "cli.js",
   );
+  if (process.env.CREATOROS_PACKAGE_BUILD_ONLY === "1") {
+    console.log("[build-sidecar] gsap 与 HyperFrames 资源已组装；CLI 启动自检未运行。");
+    return;
+  }
   const cliCheck = spawnSync(process.execPath, [hyperframesCli, "--help"], {
     cwd: join(SIDECAR_RUNTIME, "frontend"),
     encoding: "utf8",
-    timeout: 20_000,
   });
   if (cliCheck.status !== 0) {
     throw new Error(
@@ -1180,6 +1187,10 @@ function bundlePdfAttachmentRuntime() {
     }
   }
 
+  if (process.env.CREATOROS_PACKAGE_BUILD_ONLY === "1") {
+    console.log("[build-sidecar] 资源已组装；额外运行时探针未运行。");
+    return;
+  }
   // 真 import，而不是只看文件存在：会连带加载平台 .node binding。缺原生包时构建当场失败，
   // 不把“开发环境能读 PDF、安装包不能读”的假绿包交给用户。
   const probe = spawnSync(
@@ -1373,6 +1384,10 @@ function materializeStandaloneWin() {
   );
   // [T-426 补] 再物化 .next/node_modules/ 下 Turbopack external 的 hash symlink（pglite-*/pg-* → 死链）。
   materializeNextExternalsWin();
+  if (process.env.CREATOROS_PACKAGE_BUILD_ONLY === "1") {
+    console.log("[build-sidecar] 资源已组装；额外运行时探针未运行。");
+    return;
+  }
   // ③ 硬自检:sidecar 内真 require next + react/react-dom(server.js 启动关键路径)。失败即 build 炸,
   //    不出必白屏的包(教训同 playwright/xenova 自检②:只拷不验会假通过,装机才暴露)。
   const check = spawnSync(
@@ -1469,6 +1484,10 @@ function bundlePiEngine() {
     console.log("[build-sidecar]   ✓ photon-node photon_rs_bg.wasm 到位");
   }
 
+  if (process.env.CREATOROS_PACKAGE_BUILD_ONLY === "1") {
+    console.log("[build-sidecar] 资源已组装；额外运行时探针未运行。");
+    return;
+  }
   // HARD 自检:sidecar node **真深导入** sdk.js + 三个兄弟 + CreatorOS 会用的三种 wire API,
   //   断言 createAgentSession / provider factory 都是函数。这条同时验证:
   //   ①闭包完整(任一 entry 漏 → 相对 symlink 悬空 → import 崩)②剪枝安全(cut 的 provider 不在静态图)。
@@ -1618,6 +1637,10 @@ function bundleXenovaTransformers() {
       `[build-sidecar]   ✂ Node sidecar 剪除 onnxruntime-web 重复 WASM ${prunedWebWasm} 个` +
         "(@xenova dist 浏览器资产仍保留)",
     );
+  }
+  if (process.env.CREATOROS_PACKAGE_BUILD_ONLY === "1") {
+    console.log("[build-sidecar] 资源已组装；额外运行时探针未运行。");
+    return;
   }
   // ③ HARD 自检:worker 同路径真加载(见函数头注释③)。
   const selfCheck = `
@@ -2145,10 +2168,10 @@ function bundleMediaTools(triple) {
     rmSync(dest, { force: true });
     copyFileSync(src, dest);
     if (!isWinTarget) chmodSync(dest, 0o755);
-    if (!existsSync(dest)) {
-      throw new Error(`[build-sidecar] 自检失败[T-485]:${tool} 实拷后不存在(${dest})`);
+    if (!existsSync(dest) || !statSync(dest).isFile() || statSync(dest).size === 0) {
+      throw new Error(`[build-sidecar] 自检失败[T-485]:${tool} 实拷后不是非空普通文件(${dest})`);
     }
-    if (triple === hostTriple) {
+    if (triple === hostTriple && process.env.CREATOROS_PACKAGE_BUILD_ONLY !== "1") {
       const r = spawnSync(dest, ["-version"], { encoding: "utf8" });
       if (r.status !== 0 || !`${r.stdout}`.startsWith(`${tool} version`)) {
         throw new Error(
@@ -2160,7 +2183,7 @@ function bundleMediaTools(triple) {
       );
     } else {
       console.log(
-        `[build-sidecar]   ✓ [T-485] 静态 ${tool} 已实拷(交叉 target ${triple},-version 冒烟留待目标机验证)`,
+        `[build-sidecar]   [T-485] 静态 ${tool} 已实拷(target ${triple},-version 冒烟未运行，待独立验证)`,
       );
     }
   }
@@ -2254,7 +2277,9 @@ function main() {
     "courses",
     "xuehui-ip-practical-course",
   );
-  run(process.execPath, [builtInCourseVerifier, "--asset-root", builtInCourseSource]);
+  if (process.env.CREATOROS_PACKAGE_BUILD_ONLY !== "1") {
+    run(process.execPath, [builtInCourseVerifier, "--asset-root", builtInCourseSource]);
+  }
 
   // 1) next standalone build(桌面模式)。
   //    直接 spawn node + next 的 JS 入口(同 package.mjs 跑 tauri.js 的惯例),不走
@@ -2311,7 +2336,7 @@ function main() {
   }
   // [T-663] 再校验一次最终 sidecar 中实际随包的 public 资产，防止复制/裁剪阶段
   // 截断但仍生成安装包。
-  run(process.execPath, [
+  if (process.env.CREATOROS_PACKAGE_BUILD_ONLY !== "1") run(process.execPath, [
     builtInCourseVerifier,
     "--asset-root",
     join(

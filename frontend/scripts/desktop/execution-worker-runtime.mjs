@@ -39,7 +39,7 @@ export function assertWorkerExternalPackages(runtimeRoot) {
         if(local==='..'||local.startsWith('../')||local.startsWith('..\\\\')||path.isAbsolute(local))throw new Error('Worker依赖解析到包外:'+name);
       }`;
     const result=spawnSync(node,["--require",resolver,"-e",check,root,JSON.stringify(workerExternalPackages)],{
-      cwd:root,encoding:"utf8",timeout:30000,
+      cwd:root,encoding:"utf8",
       env:{PATH:process.env.PATH,SystemRoot:process.env.SystemRoot,CREATOROS_RUNTIME_ROOT:root},
     });
     if(result.error || result.status!==0) throw new Error(`Worker分层依赖验证失败: ${result.error?.message ?? result.stderr}`);

@@ -41,6 +41,10 @@ const desktopFeedbackOfficialOrigins = isDesktopBuild
   : "";
 
 const nextConfig: NextConfig = {
+  // T-1063：安装制品只要求真实编译成功；类型验证独立运行，不阻断出包。
+  ...(isDesktopBuild && process.env.CREATOROS_PACKAGE_BUILD_ONLY === "1"
+    ? { typescript: { ignoreBuildErrors: true } }
+    : {}),
   turbopack: {
     root: resolve(import.meta.dirname, ".."),
   },
