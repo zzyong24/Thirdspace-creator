@@ -1,0 +1,17 @@
+# T-1062 安装历史兼容实现依据
+
+该文保存实际安装失败后的实现方案，不替代已批准SPEC或新启规格复审。既有SPEC要求当前用户旧资料保留和安全迁移；本次无服务、归属、凭证配置、fresh结构或发布标准变化。
+
+三份原始历史源中，仅888e1为三授权来源HEAD的共同祖先；另外两份不具此祖先关系，仅以实际旧账本的exact身份及完整原SQL作为机械兼容档案，不引入其业务实现、功能或用户文件。完整旧账本105条并非单一历史journal，三档案不得合成为历史单源。
+
+## 安装实测后的实现限定
+
+
+实际安装旧库在备份副本有105条账本：原共同101条加4项真实已执行SQL。三份完整历史来源分别为888e1b1ab8dcc31bd0d33c9bf19248bd84e87549（70条）、8718370e0568c1b0aaf38cba8c1351322fdbe032（102条）、fd4f3eb796bb384f2f6a679339426a85f3e58d9f（102条）。未找到105条单一journal，不制造合成旧journal。完整冻结每份原journal/SQL及hash/when/commit，其中新增身份仅0068_keyring_only_credentials、0069_asr_usage_intents、0101_workbench_artifact_lineage、0101_external_agent_connections。
+
+保留原三份来源及0128 SQL/hash/when字节不变。supplemental身份仅依真实已执行账本参与兼容参考catalog，原3canonical union保持，fresh及原四基线不带未执行的legacy字段。共同行为仍要求完整0000—0100前缀；新来源按其相对于原共同身份的真实新增序列检查前缀，keyring第二项缺第一项仍拒绝。全部archived journal及SQL精确校验；未知hash/when、未来迁移、已知表额外/错误结构继续拒绝；独立旧表保留。原SQL只在内存参考库执行，用户旧库只执行既有真实新0128收敛DDL，不重放旧SQL、伪造回执、重建或改变用户配置/资料归属。当前fresh凭证协议不被旧keyring nullable字段重启。
+
+限定生产写集：backend/src/migration-convergence.ts、backend/src/migration-convergence.test.ts、backend/src/migration-convergence-installed-lineages.json；三完整新增archive backend/drizzle/lineages/installed-keyring、installed-workbench、installed-external 内每个原SQL与meta/_journal.json；backend/drizzle/lineages/README.md补来源证据。控制/SPEC/研究/验收文件按原T-1062准入，原产品只读边界不扩。
+
+实施前独立复核本增量与精确scope。真实RED须复现原工厂拒绝这些身份，GREEN须经公共createDb升级并二次启动保留原全部账本、ID/行数及文件引用；新增旧凭证/asr/工作台/外部连接中性夹具字段保留。旧四基线及unknown/schema漂移/原前缀/损坏冻结拒绝仍运行；fresh不增加legacy结构。实际备份clone的公共工厂升级先于重包，再按固定入口重新打包并安装测首页、groups/accounts及全部功能，不以参考内存探针代签安装验收。
+

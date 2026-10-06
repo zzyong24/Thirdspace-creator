@@ -117,3 +117,73 @@ it('新account=NULL组回执按group唯一，历史account非NULL撞键完整保
   const indexes=(await readCatalog(db)).indexes.filter(r=>r.table_name==='visual_template_mutation_receipts');expect(indexes.some(r=>String(r.definition).includes('group_id')&&String(r.definition).includes('account_id IS NULL'))).toBe(true);
  }finally{await client.close();}
 });
+
+import installedSources from './migration-convergence-installed-lineages.json';
+import frozenSources from './migration-convergence-lineages.json';
+import {inspectMigrationConvergence} from './migration-convergence';
+import {cp} from 'node:fs/promises';
+/** SEMANTIC_BOUNDARY_ALLOW: 测试夹具按真实SQL身份组合执行，不声称存在合成105条的历史journal。 */
+async function installedFixture(root:string,subset:'all'|'keyring'|'workbench'|'external'|'asr-without-keyring'='all'){
+ const legacy=new Map(frozenSources.root.entries.slice(0,101).map(e=>[e.hash+':'+e.when,{...e,source:'root'}]));
+ for(const [name,source]of Object.entries(installedSources)){
+  if(subset!=='all'&&!(subset==='keyring'&&name==='installed-keyring')&&!(subset==='workbench'&&name==='installed-workbench')&&!(subset==='external'&&name==='installed-external')&&!(subset==='asr-without-keyring'&&name==='installed-keyring'))continue;
+  for(const e of source.entries){if(subset==='asr-without-keyring'&&e.tag==='0068_keyring_only_credentials')continue;legacy.set(e.hash+':'+e.when,{...e,source:name});}
+ }
+ const fixture=join(root,'fixture-sql');await mkdir(join(fixture,'meta'),{recursive:true});
+ const sorted=[...legacy.values()].sort((a,b)=>a.when-b.when);
+ for(const e of sorted)await writeFile(join(fixture,e.tag+'.sql'),await readFile(join(folder,'lineages',e.source,e.tag+'.sql')));
+ await writeFile(join(fixture,'meta','_journal.json'),JSON.stringify({version:'7',dialect:'postgresql',entries:sorted.map(({hash,source,...e},idx)=>({...e,idx}))}));
+ const dataDir=join(root,'db'),old=new PGlite(dataDir);try{await migrate(drizzle(old),{migrationsFolder:fixture});await seed(old as Client,root);
+const time='2026-10-01T00:00:00Z';
+ if(await hasCol(old as Client,'model_configurations','keyring_ref')){
+  await old.query("INSERT INTO model_configurations(id,user_id,capability,provider,model_name,settings,keyring_ref,credential_migration_state,rotated_at) VALUES('legacy-model','old-user','fixture-capability','fixture-provider','fixture-model','{}','fixture-keyring-ref','migrated',$1)",[time]);
+  await old.query("INSERT INTO channel_model_credentials(user_id,scope_id,service_id,encrypted_secret,updated_at,keyring_ref,service_type,credential_status,migration_state,rotated_at) VALUES('old-user','fixture-scope','fixture-service',NULL,$1,'fixture-keyring-ref','legacy','migration_pending','pending',$1)",[time]);
+ }
+ if(await has(old as Client,'asr_usage_intents'))await old.query("INSERT INTO asr_usage_intents(id,user_id,account_scope,intent_id,idempotency_key,request_fingerprint,service_id,duration_seconds,byte_length,charged_units,created_at,updated_at) VALUES('old-asr-intent','old-user','old-account','old-intent','old-intent-key','frozen-intent-digest','qwen-asr-main',37,19,25000,$1,$1)",[time]);
+ if(await has(old as Client,'external_agent_connections'))await old.query("INSERT INTO external_agent_connections(id,user_id,idempotency_key,client_kind,account_id,allowed_ops,revision,credential_hash,credential_expires_at,created_at,updated_at) VALUES('old-connection','old-user','old-pair-key','codex','old-account','[\"fixture.read\"]','7','fixture-hash-not-secret','2026-10-08T00:00:00Z',$1,$1)",[time]);
+ if(await has(old as Client,'workbench_artifact_lineages')){
+  await old.query("INSERT INTO ai_conversations(id,user_id,account_id,title,created_at,updated_at) VALUES('old-lineage-conversation','old-user','old-account','fixture conversation',$1,$1)",[time]);
+  await old.query("INSERT INTO execution_tasks(id,user_id,account_id,kind,owner_type,owner_id,status,idempotency_key,created_at,updated_at) VALUES('old-lineage-task','old-user','old-account','intelligence_transcribe','intelligence-item','old-owner','succeeded','old-lineage-key',$1,$1)",[time]);
+  await old.query("INSERT INTO execution_calls(id,execution_task_id,sequence,operation_key,kind,input_digest,status,reserved_tokens,created_at,updated_at) VALUES('old-lineage-call','old-lineage-task',1,'fixture.read','fixture','frozen-call-digest','succeeded',0,$1,$1)",[time]);
+  await old.query("INSERT INTO workbench_artifact_lineages(id,user_id,account_id,conversation_id,artifact_id,current_version,pending_metadata,pending_source,pending_html_resources,created_at,updated_at) VALUES('old-lineage','old-user','old-account','old-lineage-conversation','old-artifact',3,'{\"digest\":\"frozen-meta\"}','{\"storageKey\":\"source-original.mp4\"}','[]',$1,$1)",[time]);
+  await old.query("INSERT INTO workbench_artifact_lineage_versions(id,lineage_id,artifact_id,version,task_id,operation_id,request_digest,metadata,source,created_at) VALUES('old-lineage-version','old-lineage','old-artifact',3,'old-lineage-task','old-lineage-call','frozen-version-digest','{\"revision\":3}','{\"fileId\":\"old-file\"}',$1)",[time]);
+ }
+return{dataDir,before:await snapshot(old as Client)}}finally{await old.close()}
+}
+it.each(['all','keyring','workbench','external'] as const)('已执行历史%s subset public createDb升级双启，原值和ledger保持，参考缓存互不混淆',async subset=>{
+ const root=await newRoot();const {dataDir,before}=await installedFixture(root,subset);
+ const first=await createDb({dataDir});let after:Awaited<ReturnType<typeof snapshot>>,cat:Awaited<ReturnType<typeof readCatalog>>;
+ try{
+  const current=await snapshot(first.client as Client,before.columns);expect(current.rows).toEqual(before.rows);expect(current.counts).toEqual(before.counts);for(const receipt of before.ledger)expect(current.ledger).toContainEqual(receipt);
+  expect(current.ledger.filter(r=>Number(r.created_at)===CONVERGENCE_WHEN)).toHaveLength(1);
+  cat=await readCatalog(first.db);const keyring=cat.columns.find(c=>c.table_name==='channel_model_credentials'&&c.column_name==='encrypted_secret');expect(keyring?.is_nullable).toBe(subset==='all'||subset==='keyring'?'YES':'NO');
+  expect(cat.columns.some(c=>c.table_name==='model_configurations'&&c.column_name==='keyring_ref')).toBe(subset==='all'||subset==='keyring');
+  expect(await has(first.client as Client,'asr_usage_intents')).toBe(subset==='all'||subset==='keyring');
+  expect(await has(first.client as Client,'workbench_artifact_lineages')).toBe(subset==='all'||subset==='workbench');
+  expect(await has(first.client as Client,'external_agent_connections')).toBe(subset==='all'||subset==='external');
+  after=await snapshot(first.client as Client);
+ }finally{await first.client.close()}
+ const second=await createDb({dataDir});try{expect(await snapshot(second.client as Client)).toEqual(after!);expect(await readCatalog(second.db)).toEqual(cat!)}finally{await second.client.close()}
+});
+it('全新库保持现行凭证结构，不因兼容旧安装而带入未执行的legacy字段',async()=>{const {client,db}=await createDb();try{const cat=await readCatalog(db);expect(cat.columns.some(c=>c.table_name==='model_configurations'&&c.column_name==='keyring_ref')).toBe(false);expect(cat.columns.find(c=>c.table_name==='channel_model_credentials'&&c.column_name==='encrypted_secret')?.is_nullable).toBe('NO');for(const t of ['asr_usage_intents','workbench_artifact_lineages','external_agent_connections'])expect(await has(client as Client,t)).toBe(false)}finally{await client.close()}});
+it.each(['unknown','future','common-hole','supplemental-hole','schema-drift'] as const)('补充兼容仍拒绝%s且零旧数据/回执改写',async kind=>{
+ const root=await newRoot();const {dataDir}=await installedFixture(root,kind==='supplemental-hole'?'asr-without-keyring':'all');
+ const c=new PGlite(dataDir);let before:Awaited<ReturnType<typeof snapshot>>;try{
+  if(kind==='unknown')await c.query('INSERT INTO drizzle.__drizzle_migrations(hash,created_at) VALUES($1,$2)',['0'.repeat(64),1790553600000]);
+  if(kind==='future')await c.query('INSERT INTO drizzle.__drizzle_migrations(hash,created_at) VALUES($1,$2)',['f'.repeat(64),CONVERGENCE_WHEN+1]);
+  if(kind==='common-hole')await c.query('DELETE FROM drizzle.__drizzle_migrations WHERE hash=$1',[frozenSources.root.entries[68]!.hash]);
+  if(kind==='schema-drift')await c.exec('ALTER TABLE model_configurations ADD COLUMN unexplained_legacy_flag text');
+  before=await snapshot(c as Client);
+ }finally{await c.close()}
+ await expect(createDb({dataDir})).rejects.toThrow(kind==='schema-drift'?'SCHEMA_INCOMPATIBLE':'LINEAGE_UNKNOWN');
+ const kept=new PGlite(dataDir);try{expect(await snapshot(kept as Client)).toEqual(before!)}finally{await kept.close()}
+});
+it('补充冻结SQL或journal损坏时拒绝，不接受仅身份白名单',async()=>{
+ const root=await newRoot(),copy=join(root,'drizzle');await cp(folder,copy,{recursive:true});
+ const c=new PGlite();try{
+  const target=join(copy,'lineages','installed-keyring','0068_keyring_only_credentials.sql');const raw=await readFile(target);await writeFile(target,Buffer.concat([raw,Buffer.from('\n-- changed')]));
+  await expect(inspectMigrationConvergence(drizzle(c) as never,copy)).rejects.toThrow('冻结SQL校验失败');
+  await writeFile(target,raw);await writeFile(join(copy,'lineages','installed-external','meta','_journal.json'),'{}');
+  await expect(inspectMigrationConvergence(drizzle(c) as never,copy)).rejects.toThrow('冻结journal校验失败');
+ }finally{await c.close()}
+});

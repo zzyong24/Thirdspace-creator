@@ -1,0 +1,53 @@
+{
+  "schema": "t1062-installed-history-cause/v1",
+  "unknownIdentities": [
+    {
+      "hash": "3d41f73f21964c7428b707f0cdef7126fcb4cf82e96028b491a056dc50c291eb",
+      "when": 1786233600000
+    },
+    {
+      "hash": "7ae4c24734cba45b8544b02622a8f59a0bddebf9f8d15bbdd07f7bf6ad9c39a4",
+      "when": 1786237200000
+    },
+    {
+      "hash": "e4a8e08ec392d781ba6401d6f6389ec0fcaf4fb18a06aa51945864ce63951113",
+      "when": 1789963200000
+    },
+    {
+      "hash": "0984bb32f6a86684d19a81561c53893eaaa86350399e9494dd95c133b65b7e18",
+      "when": 1790553600000
+    }
+  ],
+  "matchedGitSql": [
+    {
+      "oid": "ab4ccc65b91654c095e72e0a865ecce9e694aadd",
+      "path": "backend/drizzle/0101_external_agent_connections.sql",
+      "sha256": "0984bb32f6a86684d19a81561c53893eaaa86350399e9494dd95c133b65b7e18"
+    },
+    {
+      "oid": "6c46c91e19f0144b561f8797c56eb16f0f8b5a08",
+      "path": "backend/drizzle/0101_workbench_artifact_lineage.sql",
+      "sha256": "e4a8e08ec392d781ba6401d6f6389ec0fcaf4fb18a06aa51945864ce63951113"
+    },
+    {
+      "oid": "5dd9ec2d907b4ff30e3d8726ad8b2c9f3623fb97",
+      "path": "backend/drizzle/0068_keyring_only_credentials.sql",
+      "sha256": "3d41f73f21964c7428b707f0cdef7126fcb4cf82e96028b491a056dc50c291eb"
+    },
+    {
+      "oid": "b8a25abd1454fec76b935464b341e9d2baa49daf",
+      "path": "backend/drizzle/0069_asr_usage_intents.sql",
+      "sha256": "7ae4c24734cba45b8544b02622a8f59a0bddebf9f8d15bbdd07f7bf6ad9c39a4"
+    }
+  ],
+  "allUnknownMatchedExactSql": true,
+  "knownCommonCount": 101,
+  "backupContentAndStatUnchanged": true,
+  "ledgerObservationSha256": "9d8b3e8c17932f76325d1ab7ed19336ebfdb46f6932fe50641888d5d54152c9e",
+  "catalogProbeSha256": "d0112f107d3533487acfc7da454627148869d1c1de293823709f3e867b300141",
+  "catalogMissing": [],
+  "catalogExtras": [],
+  "referenceConvergenceExecuted": true,
+  "actualDatabaseOpenedByProbe": false,
+  "probeScope": "private backup clone SQL reads; reference memory receives unchanged0128"
+}

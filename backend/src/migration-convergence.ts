@@ -5,6 +5,7 @@ import {join} from 'node:path';
 import {sql} from 'drizzle-orm';
 import type {Db} from './db';
 import lineages from './migration-convergence-lineages.json';
+import installedLineages from './migration-convergence-installed-lineages.json';
 
 /** SEMANTIC_BOUNDARY_ALLOW: 只识别冻结迁移身份和PostgreSQL物理catalog，不判断内容或猜测归属。 */
 export const CONVERGENCE_WHEN=1791043200001;
@@ -23,8 +24,11 @@ const id=(i:Identity)=>`${i.hash}:${i.when}`;
 const fail=(detail:string):never=>{throw new Error(`CREATIVE_CANVAS_MIGRATION_LINEAGE_UNKNOWN: ${detail}`);};
 const incompatible=(detail:string):never=>{throw new Error(`CREATIVE_CANVAS_MIGRATION_SCHEMA_INCOMPATIBLE: ${detail}`);};
 const sha=(s:string)=>createHash('sha256').update(s).digest('hex');
+const allLineages={...lineages,...installedLineages};
 const sourceEntries=Object.values(lineages).flatMap(l=>l.entries);
-const entries=new Map(sourceEntries.map(i=>[id(i),i]));
+const canonicalEntries=new Map(sourceEntries.map(i=>[id(i),i]));
+const installedEntries=Object.values(installedLineages).flatMap(l=>l.entries).filter(i=>!canonicalEntries.has(id(i)));
+const entries=new Map([...sourceEntries,...installedEntries].map(i=>[id(i),i]));
 const cache=new Map<string,Promise<Catalog>>();
 const repairable=new Set(['reporting_consents','reporting_outbox','reporting_consent_changes','creative_canvases','canvas_generation_links','canvas_agent_proposals']);
 async function rows(db:QueryDb,query:string){return(await db.execute(sql.raw(query))).rows as Record<string,unknown>[];}
@@ -35,11 +39,11 @@ async function readLedger(db:QueryDb):Promise<Identity[]>{
  for(const [name,type] of [['id','int4'],['hash','text'],['created_at','int8']])if(!cols.some(r=>r.column_name===name&&r.udt_name===type))fail('账本结构未知');
  return(await rows(db,'SELECT hash,created_at FROM drizzle.__drizzle_migrations ORDER BY created_at,id')).map(r=>{const when=Number(r.created_at);if(typeof r.hash!=='string'||!Number.isSafeInteger(when)||when<0)fail('账本身份类型无效');return{hash:r.hash as string,when};});
 }
-function sourceSQL(folder:string,item:Identity){for(const [name,lineage]of Object.entries(lineages)){const entry=lineage.entries.find(e=>id(e)===id(item));if(entry){const raw=readFileSync(join(folder,'lineages',name,entry.tag+'.sql'),'utf8');if(sha(raw)!==item.hash)fail(`归档SQL校验失败 ${name}/${entry.tag}`);return raw;}}return fail('没有冻结SQL来源');}
+function sourceSQL(folder:string,item:Identity){for(const [name,lineage]of Object.entries(allLineages)){const entry=lineage.entries.find(e=>id(e)===id(item));if(entry){const raw=readFileSync(join(folder,'lineages',name,entry.tag+'.sql'),'utf8');if(sha(raw)!==item.hash)fail(`归档SQL校验失败 ${name}/${entry.tag}`);return raw;}}return fail('没有冻结SQL来源');}
 const validatedFolders=new Set<string>();
 function validateSources(folder:string){
  if(validatedFolders.has(folder))return;
- for(const [name,lineage]of Object.entries(lineages)){
+ for(const [name,lineage]of Object.entries(allLineages)){
   const journal=readFileSync(join(folder,'lineages',name,'meta','_journal.json'),'utf8');if(sha(journal)!==lineage.journalSha256)fail(`冻结journal校验失败 ${name}`);
   for(const entry of lineage.entries){const content=readFileSync(join(folder,'lineages',name,entry.tag+'.sql'),'utf8');if(sha(content)!==entry.hash)fail(`冻结SQL校验失败 ${name}/${entry.tag}`);}
  }
@@ -57,11 +61,14 @@ function assertKnownPrefixes(history:Identity[],folder:string){
  for(const item of common.slice(commonCount))if(seen.has(id(item)))fail('共同历史不是完整前缀');
  if(history.some(i=>!common.some(c=>id(c)===id(i)))&&commonCount!==101)fail('分支历史缺少共同0000–0100前缀');
  for(const lineage of Object.values(lineages)){let gap=false;for(const item of lineage.entries.slice(101)){if(seen.has(id(item))){if(gap)fail('已知分支历史不是完整前缀');}else gap=true;}}
+ // 补充来源保留完整真实journal；只检查相对于原三源新增的真实顺序，不按数组位置假定共同前缀长度。
+ for(const lineage of Object.values(installedLineages)){let gap=false;for(const item of lineage.entries.filter(e=>!canonicalEntries.has(id(e)))){if(seen.has(id(item))){if(gap)fail('已知补充历史不是完整前缀');}else gap=true;}}
  return seen.has(id(newIdentity));
 }
 function normalize(c:Catalog){const result={} as Catalog;for(const [key,values]of Object.entries(c) as Array<[keyof Catalog,Record<string,unknown>[]]>)result[key]=values.map(({ordinal_position,...r})=>r).sort((a,b)=>JSON.stringify(a).localeCompare(JSON.stringify(b)));return result;}
 function expectedCatalog(history:Identity[],folder:string,converged:boolean){
- const identities=converged?[...entries.values()].map(i=>({hash:i.hash,when:i.when})):Array.from(new Map(history.filter(i=>entries.has(id(i))).map(i=>[id(i),i])).values());
+ // 已执行的补充身份才参与该库的参考catalog；fresh不启用历史keyring等协议。缓存摘要绑定实际subset。
+ const identities=converged?Array.from(new Map([...canonicalEntries.values(),...history.filter(i=>entries.has(id(i))&&!canonicalEntries.has(id(i)))].map(i=>[id(i),{hash:i.hash,when:i.when}])).values()):Array.from(new Map(history.filter(i=>entries.has(id(i))).map(i=>[id(i),i])).values());
  const key=sha(JSON.stringify(identities.map(id).sort())+String(converged)+convergenceIdentity(folder).hash);
  let expected=cache.get(key);if(!expected){expected=(async()=>{// 只在全新隔离内存参考库执行原SQL；绝不在用户原库重放旧分组INSERT。
  const c=new PGlite();try{

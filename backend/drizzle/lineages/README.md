@@ -11,3 +11,10 @@
 复现生成：在本树自己的 frozen install 后运行 `node backend/drizzle/lineages/build-convergence.cjs "$PWD"`。生成器始终使用三个原归档的 152 项并集，不使用已缩减的主 journal；在 `/tmp` 留 common/target catalog。生成只适用于 BUILD，已经保存新收敛回执的发布版本不可再改此 SQL。
 
 实际验证见 `docs/verification/t1062/migration-convergence-result.json`。这些隔离数据库测试不代替真实用户库升级、安装版验收或下一轮服务组归属适配。
+
+
+## 实际已安装旧库的补充来源
+
+为T-1062当前用户旧库的机械兼容，完整冻结三份真实原journal及SQL：installed-keyring=888e1b1ab8dcc31bd0d33c9bf19248bd84e87549（70项），installed-workbench=8718370e0568c1b0aaf38cba8c1351322fdbe032（102项），installed-external=fd4f3eb796bb384f2f6a679339426a85f3e58d9f（102项）。只有keyring来源是原三授权HEAD的共同祖先；其余两份是实际账本对应历史SQL，archive-only，不带入其业务代码。没有单一105项历史journal，不制造合成来源。身份/hash/when固定于migration-convergence-installed-lineages.json，原3来源及0128不变。
+
+相对原3union，新增4个身份。它们只在该账本已经真实执行时加入参考catalog；fresh及其他旧基线不启用未执行的legacy结构或凭证协议。原SQL仅在内存参考库运行；用户库只执行原0128。共同及原分支前缀、补充真实新增序列、未知身份/未来版本和全量物理catalog继续严格校验。测试中组合105身份是明确中性夹具，不冒称历史journal。

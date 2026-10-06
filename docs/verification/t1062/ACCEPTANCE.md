@@ -60,3 +60,23 @@ sync 实际 exit 0；reconcile 实际 exit 1，共 36 错误/1 告警，未写�
 当前旧 App 与其运行服务已正常停止。首份实际备份因 macOS 自动生成 provenance、重写 quarantine 出现属性差异而失败，部分副本和日志保留；不能作为完整备份。源前后内容未漂移，实际内容、权限、ACL 等一致。修订备份只对不可原样恢复的系统 provenance 单独保存源原值与副本观察值；其他属性仍精确验证，全部源 before/after 仍严格比较。修订辅助脚本须独立复核并实际完成六个精确根和最后封闭检查后才允许替换 App。本条不代表备份或安装已完成。
 
 完整日志、测试原始回执、实际包和校验结果保存在用户私有目录 `/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl`，不将用户数据或备份写入 Git。
+
+
+## 2026-10-06 安装后真实失败与隔离核因
+
+六个精确根的离线备份与最终封闭检查实际完成，源前后未漂移；系统 provenance 原值单独封存，未声称副本物理属性全等。原 App 另行保留，本次 DMG App 已替换安装并启动；严格签名校验 exit 0。实际安装 App PID 25410、其 sidecar PID 25662、127.0.0.1:59253；CLI 404 条操作来自新运行时，访问状态 full。以上只证明安装和运行，不能写功能通过。
+
+账号列表、账号组列表均实际 HTTP 500；主页实际 ERROR 3666842164。新加密日志经官方解码器解码，错误是 `CREATIVE_CANVAS_MIGRATION_LINEAGE_UNKNOWN`。数据库已打开，未被判损坏、隔离或重建。A01 功能失败，A02—A27 因启动业务不可用尚未继续；真实 ASR/语义模型及中性业务夹具均未执行。
+
+只将已核验备份的 db 复制到新私有研究目录后打开副本；原库和不可变备份未作为诊断数据库打开。副本账本105条，其中4条在当前三源以外，全部精确匹配 Git 中真实 SQL blob：0068_keyring_only_credentials、0069_asr_usage_intents、0101_workbench_artifact_lineage、0101_external_agent_connections。旧安装 App 的102条资源历史全部已覆盖，不能将问题说成旧包资源不匹配。备份1988项内容与stat前后相同。完整私有记录 `installed-db-ledger-clone-oqk19ypa/receipt.json`、`git-migration-identity-search.json`，观察结果 SHA256 `9d8b3e8c17932f76325d1ab7ed19336ebfdb46f6932fe50641888d5d54152c9e`。不放宽未知身份守卫、不伪造账本、不重放原数据写入。修复及重新打包/安装仍待验。
+
+
+## 2026-10-06 历史兼容修复的真实隔离验证
+
+修复只落实既有SPEC的旧库可核验升级要求，SPEC原hash cfbaf9保留，没有新规格轮次、typed capability或用户授权记录。实际旧账本对应SQL完整冻结，不把两份非祖先来源声称为原授权HEAD祖先，也不导入其业务功能。实现及边界说明见 installed-history-implementation.md。
+
+原公共createDb在备份副本现场RED，错误与安装版相同。修复后同一副本公共createDb升级和两次启动实际 exit 0：132张原表的行数、原字段行摘要完全相同；105条旧ledger的id/hash/when全部保留，仅新增真实0128一条；二次启动全快照相同。不可变备份1988项的内容/mode/size/mtime/link升级后仍相同，未打开原库或不可变备份作为数据库。
+
+迁移测试1文件21项实际全通过：原fresh/root/diagnostic/canvas四PGlite及四隔离PG基线、4补充subset缓存隔离、fresh现行凭证结构、unknown/future/common-hole/supplemental-hole/schema-drift拒绝、冻结SQL/journal损坏拒绝。274补充SQL及3完整原journal逐字节匹配各Git来源；原三归档、0128、main journal、原18 runner等361项hash/mode保持。源码观察在测试执行中发生，记录为during-execution而非伪造pre-run；最终当前字节逐项匹配，安装功能未重签。
+
+后端typecheck候选实际exit2，仅production-native-public.integration.test.ts(31,260) TS2322；原打包基点0d W也实际exit2同一条，测试文件SHA 9f15d664b5092d79624fc7210976326a0d1279df952231b3d9517ab42a4b03af相同；新兼容路径没有类型错误。既有失败沿T-1018保留，未改断言消错。新包、真实安装及用户功能验收仍待验。机器证据见 installed-migration-compatibility-result.json；原始失败/成功、源码观察、私有库行摘要仅留用户私有目录。
