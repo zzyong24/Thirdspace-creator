@@ -7,7 +7,7 @@ import {
   type Endpoint,
 } from "@creatoros/contract";
 import { createCreatorOsMcpServer } from "./server";
-import { DispatchClient, DispatchError, type DispatchInput } from "./dispatch";
+import { DispatchClient, DispatchError, invocationReceipt, type DispatchInput } from "./dispatch";
 import {
   ConnectionError,
   discoverConnection,
@@ -154,6 +154,11 @@ function envelopeMeta(value: unknown): JsonObject | null {
   const meta = (value as { meta?: unknown }).meta;
   if (!meta || typeof meta !== "object") return null;
   return meta as JsonObject;
+}
+
+function envelopeReceiptFields(value: unknown) {
+  const receipt = invocationReceipt(value);
+  return receipt ? { receipt, requestId: receipt.requestId, meta: { ...envelopeMeta(value), requestId: receipt.requestId } } : {};
 }
 
 async function selectedAccountId(args: string[]): Promise<string | undefined> {
@@ -401,7 +406,7 @@ export async function runCliCommand(args: string[]): Promise<unknown> {
   if (group === "groups" && action === "list") {
     const {client}=await clientFor(args);
     const envelope=await client.dispatch("accountGroups.list", {query:{}});
-    return {ok:true,operation:"accountGroups.list",data:envelopeData(envelope),meta:envelopeMeta(envelope)};
+    return {ok:true,operation:"accountGroups.list",data:envelopeData(envelope),meta:envelopeMeta(envelope),...envelopeReceiptFields(envelope)};
   }
   if (group === "groups" && action === "use") {
     if (!target) throw new Error("groups use 缺少 groupId。");
@@ -423,6 +428,7 @@ export async function runCliCommand(args: string[]): Promise<unknown> {
       accountId: null,
       data: envelopeData(envelope),
       meta: envelopeMeta(envelope),
+      ...envelopeReceiptFields(envelope),
       error: null,
     };
   }
@@ -455,6 +461,7 @@ export async function runCliCommand(args: string[]): Promise<unknown> {
       groupId: groupId ?? null,
       data: envelopeData(envelope),
       meta: envelopeMeta(envelope),
+      ...envelopeReceiptFields(envelope),
       error: null,
     };
   }
@@ -484,6 +491,7 @@ export async function runCliCommand(args: string[]): Promise<unknown> {
       accountId: accountId ?? null,
       data: envelopeData(envelope),
       meta: envelopeMeta(envelope),
+      ...envelopeReceiptFields(envelope),
       error: null,
     };
   }
@@ -524,6 +532,7 @@ export async function runCliCommand(args: string[]): Promise<unknown> {
       groupId: groupId ?? null,
       data: envelopeData(envelope),
       meta: envelopeMeta(envelope),
+      ...envelopeReceiptFields(envelope),
       error: null,
     };
   }
@@ -570,6 +579,7 @@ export async function runCliCommand(args: string[]): Promise<unknown> {
       groupId: groupId ?? null,
       data: envelopeData(envelope),
       meta: envelopeMeta(envelope),
+      ...envelopeReceiptFields(envelope),
       error: null,
     };
   }
@@ -598,6 +608,7 @@ export async function runCliCommand(args: string[]): Promise<unknown> {
       accountId: accountId ?? null,
       data: envelopeData(envelope),
       meta: envelopeMeta(envelope),
+      ...envelopeReceiptFields(envelope),
       error: null,
     };
   }
@@ -642,7 +653,7 @@ export async function main(args = process.argv.slice(2)): Promise<void> {
         ? `HTTP_${error.status}`
         : "CLI_ERROR";
     const message = error instanceof Error ? error.message : String(error);
-    process.stdout.write(`${JSON.stringify({ ok: false, error: { code, message } }, null, 2)}\n`);
+    process.stdout.write(`${JSON.stringify({ ok: false, error: { code, message }, ...(error instanceof DispatchError ? envelopeReceiptFields(error) : {}) }, null, 2)}\n`);
     process.exitCode = error instanceof ConnectionError ? 3 : error instanceof DispatchError ? 4 : 2;
   }
 }

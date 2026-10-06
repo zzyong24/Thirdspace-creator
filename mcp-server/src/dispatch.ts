@@ -44,15 +44,45 @@ export interface DispatchCallOptions {
   confirmImpact?: string;
 }
 
+// SEMANTIC_BOUNDARY_ALLOW: 仅校验并投影既有公开幂等回执字段，不推断业务结果、权限或创作选择。
+export function invocationReceipt(envelope: unknown) {
+  if (!envelope || typeof envelope !== "object" || Array.isArray(envelope)) return undefined;
+  const value = (envelope as { receipt?: unknown }).receipt;
+  if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
+  const receipt = value as Record<string, unknown>;
+  if (receipt.duplicate !== true || typeof receipt.requestId !== "string" || typeof receipt.status !== "string"
+    || !(receipt.taskId === null || typeof receipt.taskId === "string")
+    || !Array.isArray(receipt.targetRefs) || !receipt.targetRefs.every((ref) => typeof ref === "string")
+    || typeof receipt.resultExpired !== "boolean" || typeof receipt.outcomeUnknown !== "boolean"
+    || typeof receipt.manualReconcileRequired !== "boolean") return undefined;
+  return {
+    duplicate: true as const,
+    requestId: receipt.requestId,
+    status: receipt.status,
+    taskId: receipt.taskId,
+    targetRefs: receipt.targetRefs.filter((ref): ref is string => typeof ref === "string"),
+    resultExpired: receipt.resultExpired,
+    outcomeUnknown: receipt.outcomeUnknown,
+    manualReconcileRequired: receipt.manualReconcileRequired,
+  };
+}
+
 /** dispatch 失败时抛出,携带 HTTP status + 服务端错误信息(结构化或纯串)。 */
 export class DispatchError extends Error {
+  declare readonly receipt?: NonNullable<ReturnType<typeof invocationReceipt>>;
+  declare readonly requestId?: string;
   constructor(
     public readonly status: number,
     public readonly opId: string,
     message: string,
+    receipt?: NonNullable<ReturnType<typeof invocationReceipt>>,
   ) {
     super(`dispatch ${opId} failed (${status}): ${message}`);
     this.name = "DispatchError";
+    if (receipt) {
+      this.receipt = receipt;
+      this.requestId = receipt.requestId;
+    }
   }
 }
 
@@ -198,12 +228,18 @@ export class DispatchClient {
   private async unwrap(res: Response, opId: string): Promise<unknown> {
     if (!res.ok) {
       let message = "unknown error";
+      let receipt: ReturnType<typeof invocationReceipt>;
       try {
-        message = extractErrorMessage(await res.json());
+        const body: unknown = await res.json();
+        receipt = invocationReceipt(body);
+        message = extractErrorMessage(body);
+        if (receipt && message === "unknown error") {
+          message = `原调用状态为 ${receipt.status}，请求编号 ${receipt.requestId}。`;
+        }
       } catch {
         /* 非 JSON body,忽略 */
       }
-      throw new DispatchError(res.status, opId, message);
+      throw new DispatchError(res.status, opId, message, receipt);
     }
     return res.json();
   }

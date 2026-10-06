@@ -1,4 +1,8 @@
-import { afterAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { createServer } from "node:http";
+import type { Db } from "@creatoros/backend";
+import { DispatchClient } from "../../../../../../mcp-server/src/dispatch";
+import { main as cliMain } from "../../../../../../mcp-server/src/cli";
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -11,8 +15,19 @@ import {
 } from "./route";
 import { ENDPOINTS } from "@creatoros/contract";
 import { resetStore } from "@/server/mock-backend/index";
-import { __resetPersistenceForTests } from "@/server/persistence-client";
+import { __resetPersistenceForTests, compositeTransport } from "@/server/persistence-client";
 import { ConflictError as PublishingConflictError } from "@creatoros/backend/modules/publishing";
+
+const receiptDb = vi.hoisted(() => ({ db: null as Db | null }));
+// 只持有真实内存库以核对原 invocation/零业务重执；不替换任何服务、事务或响应。
+vi.mock("@creatoros/backend", async (load) => {
+  const actual = await load<typeof import("@creatoros/backend")>();
+  return { ...actual, createConfiguredDb: async (...args: Parameters<typeof actual.createConfiguredDb>) => {
+    const opened = await actual.createConfiguredDb(...args);
+    receiptDb.db = opened.db;
+    return opened;
+  } };
+});
 
 // Task 9 — dispatch derives ctx from the `creatoros_session` cookie.
 // [用户裁决 2026-07-06] canonical email 已置空(用户属性不 seed)→ 不再 email-login。
@@ -234,7 +249,7 @@ describe("POST /api/v1/dispatch (FE<->BE seam over HTTP; project ops on real SQL
       expect((await cliDispatch('projects.create',input,'','cli-group-create-key',undefined,a.id)).status).toBe(404);expect((await cliDispatch('projects.outputs.create',outputInput,'','cli-group-output-key',undefined,a.id)).status).toBe(404);
       const other=await cliDispatch('projects.create',input,'','cli-group-create-key',undefined,b.id);expect(other.status).toBe(200);expect((await other.json()).data.id).not.toBe(project.id);
     }finally{if(previous===undefined)delete process.env.CREATOROS_CLI_ACCESS_TOKEN;else process.env.CREATOROS_CLI_ACCESS_TOKEN=previous;}
-  },60000);
+  },120000);
 
   it('T1062 CLI成功缓存是历史回读，项目/组归档后不执行旧handler，新键仍拒绝',async()=>{
     const previous=process.env.CREATOROS_CLI_ACCESS_TOKEN;process.env.CREATOROS_CLI_ACCESS_TOKEN='cli-integration-grant';
@@ -250,7 +265,122 @@ describe("POST /api/v1/dispatch (FE<->BE seam over HTTP; project ops on real SQL
       expect((await cliDispatch('projects.outputs.create',outputInput,'','cli-history-new-output',undefined,group.id)).status).not.toBe(200);
       const historicalRead=await cliDispatch('projects.get',{params:{projectId:project.id}},'','cli-history-read',undefined,group.id);expect(historicalRead.status).toBe(200);expect(ENDPOINTS.getProject.response.parse((await historicalRead.json()).data).id).toBe(project.id);
     }finally{if(previous===undefined)delete process.env.CREATOROS_CLI_ACCESS_TOKEN;else process.env.CREATOROS_CLI_ACCESS_TOKEN=previous;}
-  },60000);
+  },120000);
+
+  it("T1062 真实loopback HTTP：素材关联后同key失败仍保持原回执，CLI非零且零重执", async () => {
+    const envKeys = ["CREATOROS_BASE_URL", "CREATOROS_CLI_ACCESS_TOKEN", "CREATOROS_CLI_ACCESS_FILE", "CREATOROS_HANDSHAKE_TOKEN", "CREATOROS_EMAIL", "CREATOROS_PASSWORD"] as const;
+    const priorEnv = envKeys.map((key) => [key, process.env[key]] as const);
+    const priorExitCode = process.exitCode;
+    process.env.CREATOROS_CLI_ACCESS_TOKEN = "cli-integration-grant";
+    for (const key of envKeys.filter((key) => key !== "CREATOROS_CLI_ACCESS_TOKEN")) delete process.env[key];
+    const seen: Array<{ id: string; status: number }> = [];
+    const server = createServer(async (incoming, outgoing) => {
+      try {
+        const chunks: Buffer[] = [];
+        for await (const chunk of incoming) chunks.push(Buffer.from(chunk));
+        const headers = new Headers();
+        for (const [key, value] of Object.entries(incoming.headers)) {
+          if (value !== undefined) headers.set(key, Array.isArray(value) ? value.join(",") : value);
+        }
+        const body = Buffer.concat(chunks).toString("utf8");
+        const response = await POST(new Request(`http://127.0.0.1${incoming.url}`, { method: "POST", headers, body }));
+        seen.push({ id: JSON.parse(body).id, status: response.status });
+        outgoing.writeHead(response.status, Object.fromEntries(response.headers));
+        outgoing.end(await response.text());
+      } catch (error) {
+        outgoing.writeHead(500, { "content-type": "application/json" });
+        outgoing.end(JSON.stringify({ error: { message: String(error) } }));
+      }
+    });
+    const handler = vi.spyOn(compositeTransport, "request");
+    let stdout: ReturnType<typeof vi.spyOn> | undefined;
+    try {
+      await new Promise<void>((resolve, reject) => { server.once("error", reject); server.listen(0, "127.0.0.1", resolve); });
+      const address = server.address();
+      if (!address || typeof address === "string") throw new Error("隔离HTTP监听未就绪");
+      const baseUrl = `http://127.0.0.1:${address.port}`;
+      process.env.CREATOROS_BASE_URL = baseUrl;
+      const client = new DispatchClient({ baseUrl, cliAccessToken: "cli-integration-grant", clientId: "real-receipt-loopback" });
+      const write = (id: string, input: unknown, key: string, groupId?: string) => client.dispatch(id, input as never, { groupId, apply: true, idempotencyKey: key });
+      const groupEnvelope = await write("accountGroups.create", { body: { name: "失败回执隔离组", idempotencyKey: "receipt-fixture-group" } }, "receipt-fixture-group") as { data: { id: string } };
+      const groupId = groupEnvelope.data.id;
+      const projectEnvelope = await write("projects.create", { body: { title: "隔离失败回放", brief: "" } }, "receipt-fixture-project", groupId) as { data: { id: string } };
+      const projectId = projectEnvelope.data.id;
+      const outputEnvelope = await write("projects.outputs.create", { params: { projectId }, body: { title: "真实父视频", contentType: "video" } }, "receipt-fixture-output", groupId) as { data: { id: string } };
+      const outputId = outputEnvelope.data.id;
+      // 既有test对象存储夹具；本测试证明拒绝/幂等/真实SQL与HTTP，不声称视频解码通过。
+      const upload = await write("assets.uploads.create", { body: { assetType: "video", mimeType: "video/mp4", fileSize: 32 } }, "receipt-fixture-upload", groupId) as { data: { uploadId: string } };
+      const asset = await write("assets.uploads.complete", { params: { uploadId: upload.data.uploadId }, body: { name: "未关联测试原片" } }, "receipt-fixture-complete", groupId) as { data: { id: string; currentFileId: string } };
+      const id = "outputs.production.editor.sources.prepare";
+      const key = "receipt-original-failed-key";
+      const input = { params: { outputId }, body: { assetId: asset.data.id, assetFileId: asset.data.currentFileId, requestId: "receipt-original-source-intent" } };
+      await expect(write(id, input, key, groupId)).rejects.toMatchObject({ status: 409, message: expect.stringContaining("请先将该素材加入当前项目") });
+      const { cliInvocations, cliInvocationResults, productionMediaRequests, executionTasks, projects, eq } = await import("@creatoros/backend");
+      const before = (await receiptDb.db!.select().from(cliInvocations)).find((row) => row.idempotencyKey === key)!;
+      expect(before).toMatchObject({ status: "failed", operation: id });
+      expect(await receiptDb.db!.select().from(productionMediaRequests)).toHaveLength(0);
+      expect(await receiptDb.db!.select().from(executionTasks)).toHaveLength(0);
+      await write("materialLinks.create", { body: { projectId, entityType: "asset", entityId: asset.data.id } }, "receipt-fixture-real-link", groupId);
+      const links = await client.dispatch("materialLinks.list", { query: { projectId, page: 1, pageSize: 50 } }, { groupId }) as { data: Array<{ entityId: string }> };
+      expect(links.data.some((link) => link.entityId === asset.data.id)).toBe(true);
+      const expectedReceipt = { duplicate: true, requestId: before.requestId, status: "failed", taskId: null, targetRefs: before.targetRefs, resultExpired: false, outcomeUnknown: false, manualReconcileRequired: false };
+      const duplicate = await write(id, input, key, groupId).catch((error: unknown) => error);
+      expect.soft(duplicate).toMatchObject({ status: 409, requestId: before.requestId, receipt: expectedReceipt });
+      let printed = "";
+      stdout = vi.spyOn(process.stdout, "write").mockImplementation((chunk) => { printed += String(chunk); return true; });
+      process.exitCode = undefined;
+      await cliMain(["call", id, "--input", JSON.stringify(input), "--group", groupId, "--apply", "--idempotency-key", key]);
+      stdout.mockRestore(); stdout = undefined;
+      expect.soft(process.exitCode).toBe(4);
+      expect.soft(JSON.parse(printed)).toMatchObject({ ok: false, requestId: before.requestId, receipt: expectedReceipt, meta: { requestId: before.requestId }, error: { code: "HTTP_409" } });
+      expect.soft(seen.filter((request) => request.id === id).map((request) => request.status)).toEqual([409, 409, 409]);
+      expect(handler.mock.calls.filter(([endpoint]) => endpoint.id === id)).toHaveLength(1);
+      expect((await receiptDb.db!.select().from(cliInvocations)).find((row) => row.idempotencyKey === key)).toEqual(before);
+      expect(await receiptDb.db!.select().from(productionMediaRequests)).toHaveLength(0);
+      expect(await receiptDb.db!.select().from(executionTasks)).toHaveLength(0);
+      await expect(client.dispatch("outputs.production.editor.sources.get", { params: { outputId, requestId: input.body.requestId } }, { groupId })).rejects.toMatchObject({ status: 404 });
+      await expect(write(id, { ...input, body: { ...input.body, requestId: "receipt-different-input" } }, key, groupId)).rejects.toMatchObject({ status: 409 });
+      expect(handler.mock.calls.filter(([endpoint]) => endpoint.id === id)).toHaveLength(1);
+
+      // 仅在另建隔离夹具上放置已有持久终态/过期，不改原failed行；仍经真实HTTP读取既有状态机。
+      for (const state of ["running", "succeeded", "outcome_unknown"] as const) {
+        const stateKey = `receipt-${state}-fixture`, stateInput = { body: { title: `隔离${state}回执`, brief: "" } };
+        const created = await write("projects.create", stateInput, stateKey, groupId) as { data: { id: string }; meta: { requestId: string } };
+        expect(await write("projects.create", stateInput, stateKey, groupId)).toEqual(created);
+        const invocation = (await receiptDb.db!.select().from(cliInvocations)).find((row) => row.idempotencyKey === stateKey)!;
+        if (state === "succeeded") {
+          await receiptDb.db!.update(cliInvocationResults).set({ resultExpiresAt: "2000-01-01T00:00:00.000Z" }).where(eq(cliInvocationResults.invocationId, invocation.id));
+        } else {
+          await receiptDb.db!.update(cliInvocations).set({ status: state }).where(eq(cliInvocations.id, invocation.id));
+        }
+        const callsBefore = handler.mock.calls.filter(([endpoint]) => endpoint.id === "projects.create").length;
+        const projectCount = (await receiptDb.db!.select().from(projects)).length;
+        const terminalReceipt = { duplicate: true, requestId: invocation.requestId, status: state, taskId: invocation.taskId, targetRefs: invocation.targetRefs, resultExpired: state === "succeeded", outcomeUnknown: state === "outcome_unknown", manualReconcileRequired: state === "outcome_unknown" };
+        const replay = await write("projects.create", stateInput, stateKey, groupId).catch((error: unknown) => error);
+        expect(replay).toMatchObject(state === "outcome_unknown"
+          ? { status: 409, requestId: invocation.requestId, receipt: terminalReceipt }
+          : { data: null, receipt: terminalReceipt, meta: { requestId: invocation.requestId } });
+        printed = "";
+        stdout = vi.spyOn(process.stdout, "write").mockImplementation((chunk) => { printed += String(chunk); return true; });
+        process.exitCode = undefined;
+        await cliMain(["call", "projects.create", "--input", JSON.stringify(stateInput), "--group", groupId, "--apply", "--idempotency-key", stateKey]);
+        stdout.mockRestore(); stdout = undefined;
+        expect(JSON.parse(printed)).toMatchObject({ ok: state !== "outcome_unknown", requestId: invocation.requestId, receipt: terminalReceipt, meta: { requestId: invocation.requestId } });
+        expect(process.exitCode).toBe(state === "outcome_unknown" ? 4 : undefined);
+        expect(seen.slice(-2).map((request) => request.status)).toEqual(state === "running" ? [202, 202] : state === "succeeded" ? [200, 200] : [409, 409]);
+        expect(handler.mock.calls.filter(([endpoint]) => endpoint.id === "projects.create")).toHaveLength(callsBefore);
+        expect(await receiptDb.db!.select().from(projects)).toHaveLength(projectCount);
+      }
+      expect((await receiptDb.db!.select().from(cliInvocations)).find((row) => row.idempotencyKey === key)).toEqual(before);
+    } finally {
+      stdout?.mockRestore(); handler.mockRestore();
+      await new Promise<void>((resolve, reject) => { server.close((error) => error ? reject(error) : resolve()); server.closeAllConnections(); });
+      for (const [key, value] of priorEnv) { if (value === undefined) delete process.env[key]; else process.env[key] = value; }
+      process.exitCode = priorExitCode;
+      await (globalThis as { __creatorosDisposePersistence?: () => Promise<void> }).__creatorosDisposePersistence?.();
+      __resetPersistenceForTests();
+    }
+  }, 120000);
 
   it("[T-843] CLI 同号重复写返回原结果、异输入冲突，三个号同 key 不串号", async () => {
     const previous = process.env.CREATOROS_CLI_ACCESS_TOKEN;

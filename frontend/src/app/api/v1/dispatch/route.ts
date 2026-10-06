@@ -471,7 +471,8 @@ export async function POST(req: Request): Promise<Response> {
         return NextResponse.json(begin.response);
       }
       if (begin.kind === "receipt") {
-        const status = begin.receipt.outcomeUnknown ? 409 : begin.receipt.status === "running" ? 202 : 200;
+        const status = begin.receipt.outcomeUnknown || begin.receipt.status === "failed"
+          ? 409 : begin.receipt.status === "running" ? 202 : 200;
         return NextResponse.json(
           { data: null, receipt: begin.receipt, meta: { requestId: begin.receipt.requestId } },
           { status },

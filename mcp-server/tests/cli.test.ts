@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ENDPOINTS } from "@creatoros/contract";
 
-import { runCliCommand, serveMcpStdio } from "../src/cli";
+import { main, runCliCommand, serveMcpStdio } from "../src/cli";
 import { EventEmitter } from "node:events";
 
 describe("T-843 creatoros CLI", () => {
@@ -20,6 +20,51 @@ describe("T-843 creatoros CLI", () => {
     if (originalToken === undefined) delete process.env.CREATOROS_CLI_ACCESS_TOKEN;
     else process.env.CREATOROS_CLI_ACCESS_TOKEN = originalToken;
     globalThis.fetch = originalFetch;
+  });
+
+  it.each(["failed", "outcome_unknown"])("T1062 main保留%s原公开回执并非零退出，不泄露audit字段", async (status) => {
+    const receipt = { duplicate: true, requestId: "original-request", status, taskId: "original-task", targetRefs: ["original-output"], resultExpired: false, outcomeUnknown: status === "outcome_unknown", manualReconcileRequired: status === "outcome_unknown" };
+    globalThis.fetch = vi.fn(async () => new Response(JSON.stringify({ data: null, receipt: { ...receipt, errorCode: "private-audit-error", secret: "not-public" }, meta: { requestId: receipt.requestId, token: "not-public" } }), { status: 409, headers: { "content-type": "application/json" } })) as typeof fetch;
+    const previousExitCode = process.exitCode;
+    let printed = "";
+    const stdout = vi.spyOn(process.stdout, "write").mockImplementation((chunk) => { printed += String(chunk); return true; });
+    try {
+      process.exitCode = undefined;
+      await main(["call", "projects.create", "--input", "{}", "--apply", "--idempotency-key", "same-original-key"]);
+      const result = JSON.parse(printed);
+      expect(result).toMatchObject({ ok: false, requestId: receipt.requestId, receipt, meta: { requestId: receipt.requestId }, error: { code: "HTTP_409" } });
+      expect(result.receipt).toEqual(receipt);
+      expect(result.meta).toEqual({ requestId: receipt.requestId });
+      expect(process.exitCode).toBe(4);
+      expect(globalThis.fetch).toHaveBeenCalledTimes(1);
+    } finally { stdout.mockRestore(); process.exitCode = previousExitCode; }
+  });
+
+  it.each([
+    { status: "running", http: 202, expired: false },
+    { status: "succeeded", http: 200, expired: true },
+  ])("T1062 $status重复回执仍可读，data:null不丢失真实终态/任务/过期标记", async ({ status, http, expired }) => {
+    const receipt = { duplicate: true, requestId: "original-request", status, taskId: "original-task", targetRefs: ["original-output"], resultExpired: expired, outcomeUnknown: false, manualReconcileRequired: false };
+    globalThis.fetch = vi.fn(async () => new Response(JSON.stringify({ data: null, receipt: { ...receipt, secret: "not-public" }, meta: { requestId: receipt.requestId, page: 2, pageSize: 10, total: 23 } }), { status: http, headers: { "content-type": "application/json" } })) as typeof fetch;
+    const result = await runCliCommand(["call", "projects.create", "--input", "{}", "--apply", "--idempotency-key", "same-original-key"]);
+    expect(result).toMatchObject({ ok: true, data: null, receipt, requestId: receipt.requestId, meta: { requestId: receipt.requestId, page: 2, pageSize: 10, total: 23 } });
+    expect(result).not.toHaveProperty("receipt.secret");
+    expect(globalThis.fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("T1062 成功业务缓存保持原输出，普通失败维持既有错误结构", async () => {
+    globalThis.fetch = vi.fn(async () => new Response(JSON.stringify({ data: { id: "original-project" }, meta: { requestId: "original-success" } }), { status: 200 })) as typeof fetch;
+    const args = ["call", "projects.create", "--input", "{}", "--apply", "--idempotency-key", "same-original-key"];
+    expect(await runCliCommand(args)).toEqual({ ok: true, operation: "projects.create", requestId: "original-success", groupId: null, accountId: null, data: { id: "original-project" }, meta: { requestId: "original-success" }, error: null });
+    globalThis.fetch = vi.fn(async () => new Response(JSON.stringify({ error: { message: "ordinary forbidden" } }), { status: 403 })) as typeof fetch;
+    const previousExitCode = process.exitCode;
+    let printed = "";
+    const stdout = vi.spyOn(process.stdout, "write").mockImplementation((chunk) => { printed += String(chunk); return true; });
+    try {
+      await main(args);
+      expect(JSON.parse(printed)).toEqual({ ok: false, error: { code: "HTTP_403", message: expect.stringContaining("ordinary forbidden") } });
+      expect(process.exitCode).toBe(4);
+    } finally { stdout.mockRestore(); process.exitCode = previousExitCode; }
   });
 
   it("稳定列出当前全部 contract operations 并展示 contract policy", async () => {

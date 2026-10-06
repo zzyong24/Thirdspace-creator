@@ -120,6 +120,50 @@ describe("DispatchClient(登录模式)", () => {
 });
 
 describe("DispatchClient(T-046 免登录模式)", () => {
+  it.each(["failed", "outcome_unknown"])("T1062 非2xx保留%s公开回执与原编号，只解析一次且不重试", async (status) => {
+    const receipt = { duplicate: true, requestId: "original-invocation", status, taskId: "original-task", targetRefs: ["original-output"], resultExpired: false, outcomeUnknown: status === "outcome_unknown", manualReconcileRequired: status === "outcome_unknown" };
+    const response = jsonResponse({ data: null, receipt: { ...receipt, errorCode: "private-audit-code", secret: "not-public" }, meta: { requestId: receipt.requestId, privateToken: "not-public" } }, { status: 409 });
+    const json = vi.spyOn(response, "json");
+    const fetchImpl = vi.fn(async () => response);
+    const client = new DispatchClient({ baseUrl: "http://127.0.0.1:43127", fetchImpl: fetchImpl as typeof fetch });
+    const error = await client.dispatch("projects.create").catch((value: unknown) => value);
+    expect(error).toBeInstanceOf(DispatchError);
+    expect(error).toMatchObject({ status: 409, requestId: receipt.requestId, receipt });
+    expect(error).not.toHaveProperty("receipt.errorCode");
+    expect(error).not.toHaveProperty("receipt.secret");
+    expect(error).not.toHaveProperty("meta.privateToken");
+    expect(json).toHaveBeenCalledTimes(1);
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([
+    { status: "running", http: 202, expired: false },
+    { status: "succeeded", http: 200, expired: true },
+  ])("T1062 $status回执保留原公开成功HTTP语义，不重发业务", async ({ status, http, expired }) => {
+    const receipt = { duplicate: true, requestId: "original-invocation", status, taskId: "original-task", targetRefs: ["original-output"], resultExpired: expired, outcomeUnknown: false, manualReconcileRequired: false };
+    const body = { data: null, receipt, meta: { requestId: receipt.requestId } };
+    const fetchImpl = vi.fn(async () => jsonResponse(body, { status: http }));
+    const client = new DispatchClient({ baseUrl: "http://127.0.0.1:43127", fetchImpl: fetchImpl as typeof fetch });
+    expect(await client.dispatch("projects.create")).toEqual(body);
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+  });
+
+  it("T1062 非JSON与畸形receipt保持普通失败，不透传任意正文", async () => {
+    for (const response of [
+      new Response("unstructured server failure", { status: 503 }),
+      jsonResponse({ error: { message: "original failure" }, receipt: { duplicate: true, requestId: "bad", status: "failed", secret: "not-public" }, meta: { requestId: "not-a-proven-receipt" } }, { status: 409 }),
+    ]) {
+      const fetchImpl = vi.fn(async () => response);
+      const client = new DispatchClient({ baseUrl: "http://127.0.0.1:43127", fetchImpl: fetchImpl as typeof fetch });
+      const error = await client.dispatch("projects.create").catch((value: unknown) => value);
+      expect(error).toBeInstanceOf(DispatchError);
+      expect(error).not.toHaveProperty("receipt");
+      expect(error).not.toHaveProperty("requestId");
+      expect(error).not.toHaveProperty("secret");
+      expect(fetchImpl).toHaveBeenCalledTimes(1);
+    }
+  });
+
   it("无凭据:不 login,直接裸调 dispatch(无 cookie 头)", async () => {
     const fetchImpl = vi.fn(async (_url: any, _init?: any) =>
       jsonResponse({ data: [], meta: { requestId: "r3" } }),
