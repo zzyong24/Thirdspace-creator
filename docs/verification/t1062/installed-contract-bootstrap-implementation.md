@@ -21,3 +21,12 @@ flowchart LR
  B -->|修复后| C[原样提取的定义叶子]
  A --> C
 ```
+
+
+## 真实回归与测试语言校正
+
+正常控制提交40477d19及root-installed-contract租约后先新增TS回归：42个真实fresh Node ESM入口实际RED40失败/2通过；42生产源按独立方案实现后新回归+原registry/client实际49通过，完整合同62文件367通过。contract typecheck实际exit2仅新增TS Node harness缺node:child_process/node:url/process声明，未把它写为类型全绿。
+
+独立复核同意将唯一新测试改为Node ESM的endpoint-bootstrap.test.mjs，保留全部42独立子进程入口与全部断言，只移除as const类型语法并把新子进程/外层观察预算设120000/135000。不加跨层Node类型、不改TS生产检查或忽略错误，不移植其他会话的运行时222预算。原TS实际RED/GREEN、类型失败和完整源码字节保存在私有目录及own stash bf7642fa；正常释放旧租约、提交精确测试路径控制后重新claim再恢复已审候选。43产品/44 substep数量与原592/283保持。
+
+新mjs的type/fullsuite、新包与实际页面都需重新验证；原TS测试版本已发生结果不能称mjs版本当场RED。公共初始化协议和全部断言保留的字节差异另独立核对，不删除历史失败。

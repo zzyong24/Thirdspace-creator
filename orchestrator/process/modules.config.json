@@ -1882,7 +1882,7 @@
       "verify_commands": {
         "integration": "node orchestrator/verification/t1062-frontend-native-adaptation.mjs",
         "installed-compatibility": "node orchestrator/verification/t1062-installed-migration-compatibility.mjs --evidence-root /Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/installed-db-ledger-clone-oqk19ypa",
-        "installed-contract-bootstrap": "pnpm -C contract exec vitest run tests/endpoint-bootstrap.test.ts tests/registry.test.ts tests/client.test.ts"
+        "installed-contract-bootstrap": "pnpm -C contract exec vitest run tests/endpoint-bootstrap.test.mjs tests/registry.test.ts tests/client.test.ts"
       },
       "step_write_set": {
         "integration": [
@@ -2807,7 +2807,7 @@
           "contract/src/operations/visual-templates.ts",
           "contract/src/operations/work-compositions.ts",
           "contract/src/operations/work-sources.ts",
-          "contract/tests/endpoint-bootstrap.test.ts",
+          "contract/tests/endpoint-bootstrap.test.mjs",
           "docs/verification/t1062/installed-contract-bootstrap-implementation.md"
         ]
       },

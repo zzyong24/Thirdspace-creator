@@ -3419,7 +3419,7 @@
           "contract/src/operations/visual-templates.ts",
           "contract/src/operations/work-compositions.ts",
           "contract/src/operations/work-sources.ts",
-          "contract/tests/endpoint-bootstrap.test.ts",
+          "contract/tests/endpoint-bootstrap.test.mjs",
           "docs/verification/t1062/installed-contract-bootstrap-implementation.md"
         ]
       },
