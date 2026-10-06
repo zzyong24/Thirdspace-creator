@@ -156,3 +156,27 @@ Skill真实MiniMax任务167/execution exec_604973a1-0989-4e67-8c89-8d2492438952�
 导出冻结owner窄口最终独评GO/findings[]，报告fc86cc4ffeae09e75c01cdf8be4b69fa2bcd0ab91914fef0c63c0aeef4f83147；实现exact4提交861df69feba9a31d53d670e3553e61a2dfd6b2b1（parent85f），ROOT真实FF、精确4路径task-preflight及正常progress done均exit0。最终root25/25及frontend type实际0；素材root1/model3/collection4通过；原基点六红、旧backend类型及边界/语义失败均保留，新test TS2367已同等断言修正并实测闭合。append-only ledger保全部旧entry，仅重绑独评准确生产SHA。只关闭installed-render-skill-owner子步骤，T-1062整体及安装MP4仍未完成。
 
 T-1068排查范围经独立same-family真实审查，正式reviewctl receipt9e131ffd9caf，taskctl实际start0，未手改任务状态。当前已运行98c服务的首页真实GET200 text/html、68033字节、无not-found、5.585秒；这不是冷启动或原生窗口证据，不能写启动超时修复通过。按用户最新顺序，完成本地冻结出包后再优先验证fresh安装/启动并定位真实故障，其余修复后置。
+
+
+## 2026-10-06 f0新包实际安装启动和粗剪MP4闭环
+
+按用户先出包、启动可测试后再修其余问题的顺序，冻结f0f70a5a3a726931a78b50013c4c79be572a2ff4候选真实本地构建exit0，原四项打包基本检查通过、构建前后HEAD与干净状态相同。Downloads/CreatorOS-1.2.0.dmg为662173447字节、SHA256 36c510b4d3a87ea3b270bf70727298a0dfcbee396e7f3e94a61f5a2c1b43dbef；镜像verify、只读挂载、deep/strict签名及277迁移资源均实际通过。签名是本地ad-hoc，未公证；不是全功能验收。
+
+旧App9699和其server10107仅由精确App SIGTERM自然退出。第一次备份vl6i_73g实际exit1，在复制前被另三项目进程的75条txt/REG共享库映射误拦；其原PENDING文件、raw观察和失败保持，不伪写无占用或停止其它项目。一次性私有四工具只在原r2内存对象中换精确appdata观察，完整原mac/内容/身份/副本/closure及prefs守卫不动；实际3PID完整25映射各自冻结身份和文件dev/inode，例外真实标为shared_txt_mappings_observed_only，不声称OS读写冻结。28有限正负检查exit0，独评9e7b5ae77d14b26df236030ee3dbb4f1e1c28e56ba9ab9e0c36a28ac647c8abe，四源manifest d9d3d8e9e919fbf53b78628ad2ea14e689006eaff33c6f4e74e3c5895610d6ed。
+
+新鲜备份tq9qdok9六观察/目录/偏好/closure实际exit0，closure SHA256 7d87aa6519cd2951eb149a5e3befe99f611d650bbdb3025b8468e3be786c4447。新安装器绑定此fresh backup和f0 source，安装前再完整closure0、stage-copy/签名/三个源文件hash/版本/旧App rename保全/安装签名/open均0，actual58083 exit0；未恢复或重置用户库、激活或媒体。旧App位于私有installation-render-owner-final-actual-20261006/previous-installed-candidate/CreatorOS.app。
+
+实际App47035，新的server47277。first状态CONNECTION_STALE保留，second及third公开status、full access、operations均0；third的实际server监听56616首页GET200、text/html、68076字节、无not-found，探测13.396秒。新进程实际映射路径及tarball-stamp SHA7c1cd97e90c76790cb24eb6ec69a34ace91e34d0d8f638f4d66650eb79fd2d75与安装archive相同。私有startup-f0-first/second/third receipts及f0-current-installed-runtime-binding-20261006.json均保留。首次binding尝试将进程标题误当可执行路径失败，未写成功证据；随后以lsof真实映射核对成功。此轮服务与HTTP首页可用，尚无原生窗口/点击证据，用户窗口确认问题已发；本次没有观察到启动超时，不宣布其根因已解决或T-1068完成。
+
+新包公开读取采用后的editor6与旧安装采用结果整DTO相同。立即按动态render合同和当前revision6，以独立意图t1062-f0-user-adopt-s1-render-20261006提交；原111失败/key/revision3均保留，不用旧key掩盖失败。新任务ai-task-33ff4e5b-100真实started并产final.mp4；继续落实用户已明确“采用此候选继续验收”中的保存/导出授权，通过公开execution.tasks.confirm保存已有确定性渲染产物，无新语义选择或模型调用。公开最终readback succeeded，asset-33ff4e5b-144/currentFile afile-33ff4e5b-145，render attempt同步关联同一资产。
+
+实际exact成片HTTP200、199098字节、SHA256 a72af1826b27bc566fb7b839c4c0813aa3cc04bb0cde6164e1ec04f41f3e1558。安装随包ffprobe及ffmpeg完整映射音视频解码均exit0/stderr空：H264 640×360/30fps、245帧、容器8.166667秒；AAC48k双声道8.160000秒，符合原8.16秒时间轴。中性低复杂度视频仍有原BITRATE_BELOW_RECOMMENDED警告，视觉模型未配置而skipped，不能写审美/听审PASS。再次公开get editor6完整plan不变，公开exact原片125/134实际下载232847字节、SHA e6c0f4e72741e8f37b369d9511311569df8ef6c4e07009f3c746c632fb0e2073仍完全相同。私有f0-export-download-checkpoint.json、f0-export-decode-checkpoint.json、f0-source-editor-task-after-export-checkpoint.json和全部原公开回执封存。原生播放/撤销/试听/停顿压缩与最终用户验收仍待验。
+
+```mermaid
+flowchart LR
+ A[新包已安装并保留旧应用] --> B[服务和首页已验证]
+ B --> C[用户检查实际客户端窗口]
+ B --> D[采用后的粗剪已保存并导出]
+ D --> E[原片不变且成片完整解码]
+ B --> F[继续修复提示误报等剩余问题]
+```
