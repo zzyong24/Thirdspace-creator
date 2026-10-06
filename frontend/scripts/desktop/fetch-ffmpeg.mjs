@@ -67,6 +67,7 @@ function assetRunnableOnHost(asset) {
 
 /** -version 冒烟:exit 0 且 stdout 以工具名 version 开头。跑不动(交叉平台)→ null。 */
 function smokeTest(binPath, asset, tool) {
+  if (process.env.CREATOROS_PACKAGE_BUILD_ONLY === "1") return null;
   if (!assetRunnableOnHost(asset)) return null;
   const r = spawnSync(binPath, ["-version"], { encoding: "utf8" });
   return r.status === 0 && `${r.stdout}`.startsWith(`${tool} version`);
@@ -110,7 +111,7 @@ function ensureStaticBinary(tool, triple) {
   if (existsSync(cached)) {
     const ok = smokeTest(cached, asset, tool);
     if (ok !== false) {
-      console.log(`[fetch-ffmpeg] 缓存命中:${cached}${ok === null ? "(交叉平台,跳过 -version 冒烟)" : ""}`);
+      console.log(`[fetch-ffmpeg] 缓存命中:${cached}${ok === null ? "(-version 冒烟未运行)" : ""}`);
       return cached;
     }
     console.warn(`[fetch-ffmpeg] ⚠ 缓存的 ${asset} -version 冒烟失败(下载残缺?)→ 删除重下`);
@@ -133,7 +134,7 @@ function ensureStaticBinary(tool, triple) {
   }
   // 尺寸下限硬校验:四个资产均 >40MB;截断/错误页(几 KB)绝不放行。
   const size = statSync(part).size;
-  if (size < 10 * 1024 * 1024) {
+  if (size === 0 || (process.env.CREATOROS_PACKAGE_BUILD_ONLY !== "1" && size < 10 * 1024 * 1024)) {
     rmSync(part, { force: true });
     throw new Error(`[fetch-ffmpeg] 下载产物过小(${size} bytes)—— 疑为截断/错误响应,已丢弃`);
   }
@@ -148,7 +149,7 @@ function ensureStaticBinary(tool, triple) {
   }
   console.log(
     `[fetch-ffmpeg] ✓ ${asset} 就绪(${(size / 1024 / 1024).toFixed(1)}MB)→ ${cached}` +
-      (ok === null ? "(交叉平台产物,-version 冒烟留待目标机验证 —— 诚实标注)" : ""),
+      (ok === null ? "(-version 冒烟未运行)" : ""),
   );
   return cached;
 }

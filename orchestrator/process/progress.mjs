@@ -54,7 +54,7 @@ function isSafeRepoPattern(value) {
   if (value.startsWith('/') || value.startsWith('~') || value.includes('\\') || /[\0\r\n:]/.test(value)) return false;
   const recursive = value.endsWith('/**');
   const base = recursive ? value.slice(0, -3) : value;
-  if (!base || base.endsWith('/') || /[*?[\]{}]/.test(base)) return false;
+  if (!base || base.endsWith('/') || /[*?{}]/.test(base) || (recursive && (base.includes('[') || base.includes(']')))) return false;
   return base.split('/').every(part => part && part !== '.' && part !== '..');
 }
 

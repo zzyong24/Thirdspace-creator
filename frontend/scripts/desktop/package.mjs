@@ -46,6 +46,7 @@ console.log(
 );
 
 const FRONTEND = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
+const buildOnly = process.env.CREATOROS_PACKAGE_BUILD_ONLY === "1";
 const packageIdentity = process.env.CREATOROS_PACKAGE_IDENTITY_PATH?.trim()
   ? JSON.parse(readFileSync(process.env.CREATOROS_PACKAGE_IDENTITY_PATH.trim(), "utf8"))
   : null;
@@ -269,7 +270,6 @@ function verifyPackagedTlsRuntime() {
       ],
       {
         encoding: "utf8",
-        timeout: 30_000,
         env: {
           ...process.env,
           SSL_CERT_FILE: missingCert,
@@ -436,7 +436,7 @@ step("sidecar 版权/专有声明盖章", process.execPath, [join("scripts", "de
 //    §3.1 验收闸 / gate ④:ready-probe 只证 boot,冒烟证运行时没被混淆炸。失败 → fail-fast + 回滚
 //    (回滚 = 重跑 build-sidecar 拿干净源;此处仅 fail,提示重建)。
 //    可分发打包入口必须执行，禁止环境变量跳过后继续产包。
-step(
+if (!buildOnly) step(
   "混淆后运行时冒烟(真起 sidecar)",
   process.execPath,
   [join("scripts", "desktop", "obfuscate.mjs"), "--smoke-only"],
@@ -504,7 +504,7 @@ step("tauri build(含 updater 签名/占位)", process.execPath, tauriBuildArgs,
   CREATOROS_ALLOW_VERDICT_SIGNING_KEY: "1",
 });
 
-await measuredAsync("T-656 verdict 最终产物泄漏扫描", async () => {
+if (!buildOnly) await measuredAsync("T-656 verdict 最终产物泄漏扫描", async () => {
   if (platform !== "darwin" && platform !== "win32") return;
   const targetDir = join(FRONTEND, "src-tauri", "target", CARGO_PROFILE_DIR);
   const bundleDir = join(targetDir, "bundle");
@@ -535,7 +535,13 @@ await measuredAsync("T-656 verdict 最终产物泄漏扫描", async () => {
   });
 });
 
-measured("最终安装包 TLS 自包含校验", verifyPackagedTlsRuntime);
+if (!buildOnly) measured("最终安装包 TLS 自包含校验", verifyPackagedTlsRuntime);
+if (buildOnly) {
+  const manifest = readManifest(manifestPathForProfile(CARGO_PROFILE_DIR));
+  manifest.validation = { status: "not-run", reason: "T-1063 制品生成与额外质量验证分开" };
+  writeManifest(manifest, manifestPathForProfile(CARGO_PROFILE_DIR));
+  console.log("[desktop:package] 额外冒烟、TLS 与产物扫描未运行；安装包继续构建，不声明已验收。");
+}
 
 // 4) [T-164 P6 / T-640] 代码签名(未配 env → skip 退 0 + 标 signed:false)。
 step(
@@ -553,7 +559,9 @@ step(
   { CREATOROS_CARGO_PROFILE_DIR: CARGO_PROFILE_DIR },
 );
 
-const productIdentityEvidence = measured(
+const productIdentityEvidence = (() => {
+try {
+return measured(
   "T-635 ProductManifest 与 release attestation",
   () => {
     const targetDir = join(
@@ -602,15 +610,21 @@ const productIdentityEvidence = measured(
     return evidence;
   },
 );
+} catch (error) {
+  if (!buildOnly) throw error;
+  console.warn(`[desktop:package] 额外产品身份报告生成失败：${error.message}；安装制品仍已生成。`);
+  return null;
+}
+})();
 
 console.log(
   `\n[desktop:package] ✅ 完成。产物在 src-tauri/target/${CARGO_PROFILE_DIR}/bundle/(macos/*.app + dmg/*.dmg)。`,
 );
 console.log("[desktop:package] 签名/公证状态见 bundle/creatoros-release-manifest.json(未配证书则 signed:false)。");
 console.log(
-  `[desktop:package] T-635 产品身份清单：${productIdentityEvidence.manifestPath}`,
+  `[desktop:package] T-635 产品身份清单：${productIdentityEvidence?.manifestPath ?? "未生成"}`,
 );
 console.log(
-  `[desktop:package] T-635 release attestation：${productIdentityEvidence.attestationPath}`,
+  `[desktop:package] T-635 release attestation：${productIdentityEvidence?.attestationPath ?? "未生成"}`,
 );
 console.log(`[desktop:package] 阶段耗时报告:${BUILD_TIMING_REPORT}`);

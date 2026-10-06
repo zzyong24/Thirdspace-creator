@@ -192,9 +192,9 @@ test("official Windows release and RAT are wired to the same guarded closure", (
   assert.match(workflow, /firstLaunchMilliseconds/);
   assert.match(workflow, /Windows 首次启动超过 45 秒/);
   assert.ok(
-    workflow.indexOf("Windows 主动卸载清理冒烟") <
-      workflow.indexOf("上传已通过 T-675 真安装与首启验证的 Windows 安装包"),
-    "Windows 正式安装包必须在卸载 Gate 通过后上传",
+    workflow.indexOf("上传已生成的安装包（额外验收不阻断）") <
+      workflow.indexOf("Windows 主动卸载清理冒烟"),
+    "Windows 安装制品在可选卸载验收前上传",
   );
   assert.match(packageSource, /CREATOROS_PRODUCTION_CLOSURE/);
   assert.match(packageSource, /跳过依赖旧 node_modules 布局的 V8 字节码步骤/);

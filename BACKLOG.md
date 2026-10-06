@@ -9,6 +9,7 @@
 
 | ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
 | --- | --- | --- | --- | --- | --- | --- |
+| T-1063 | 取消双端出包人为超时与阻断检查并重跑 Windows 流水线 | 🔨 待办 | PASS[REV:245946205971] | 待验 | [SPEC](docs/features/t1063-release-pipeline.md) | 用户2026-10-06独立委派；先核对“1.12版本”真实失败运行；仅修改流水线和必要打包脚本，生成制品与额外验证分离；重跑Windows并核实安装包，不新增版本/tag/Release，不触碰T-1062与真实用户数据。 |
 | T-992 | 修复 Windows 升级启动运行环境切换拒绝访问 | 🔨 待办 | — | — | [SPEC](docs/features/t992-windows-runtime-upgrade.md) | 用户启动日志os error5；检查旧运行目录、安装指针与升级迁移，保留数据，补既有安装升级验证。启动容忍分支已实现；CI 里那步 cargo test 已撤（插在 sidecar 产出前，必然 build.rs panic，run 34942593764），守护改为本地 reconcile guard；仍缺真机 Windows 升级验证。 |
 | T-990 | 纳入采集与页面性能修复运行 V1.2 双端流水线 | ✅ 待办 | — | — | [SPEC](docs/features/t990-dual-release.md) | 冻结已提交T983/T985/T987/T988修复，预检并运行Windows/macOS正式构建，核验并下载产物。 |
 | T-988 | 修复首页与连续点击导航卡顿并清理界面技术话术 | ✅ 待办 | — | — | [SPEC](docs/features/t988-home-navigation-copy.md) | 复现首页与连点请求，立即响应并合并重复导航；清理PATCH/真持久等用户界面术语，保护实时数据并本机验证。 |

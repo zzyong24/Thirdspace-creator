@@ -1101,3 +1101,4 @@
 {"ts":"2026-09-15T06:35:11.211Z","actor":"taskctl","action":"resume","task":"T-990","reason":"T991 5a5f61dd修复后Windows run34935220088成功，真安装/首页加载/卸载通过，原构建阻断已解除","sha_before":"863ffaa029a6","sha_after":"da5e6a6aea81"}
 {"ts":"2026-09-15T06:35:11.346Z","actor":"taskctl","action":"complete","task":"T-990","evidence":"Mac run34932675118 success并完成公证/真启动/DMG校验；Windows经T991修复后run34935220088 success并真安装/启动/卸载通过；双端源SHA差异为Windows构建内存修复和记录，详见t990-dual-release及t991-windows-memory；全局T916既有233条漂移保留","sha_before":"da5e6a6aea81","sha_after":"6eda5536f9d3"}
 {"ts":"2026-09-15T07:11:46.575Z","actor":"taskctl","action":"start","task":"T-992","sha_before":"650f3c017774","sha_after":"a7efcc3d8589"}
+{"ts":"2026-10-06T03:59:47.553Z","actor":"taskctl","action":"start","task":"T-1063","sha_before":"776fc875f645","sha_after":"ed37949b4853"}

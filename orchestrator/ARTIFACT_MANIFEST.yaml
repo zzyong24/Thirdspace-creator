@@ -825,3 +825,16 @@ open_items:
     owner: "user+agent"
     revisit_trigger: "Before release: user authorizes a real New API model call, or explicitly accepts the external E2E risk."
     status: "open"
+
+# T-1063 独立流水线任务；不覆盖产品全局阶段与既有失败。
+task_evidence:
+  T-1063:
+    spec: "docs/features/t1063-release-pipeline.md"
+    review: "docs/features/t1063-release-pipeline.review.md"
+    decision: "DEC-T1063"
+    implementation: "draft"
+    packaging_checks: "pass"
+    windows_build: "not-run"
+    macos_build: "not-run"
+    global_reconcile: "fail"
+    evidence: "docs/verification/t1063/VERIFICATION.md"

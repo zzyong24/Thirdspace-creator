@@ -1,0 +1,1 @@
+{"schema": "spec-review-round/v2", "review_kind": "initial", "summary": "独立评审无阻断/重大问题；远端push授权在重跑前确认，用户明确修改流水线授权覆盖技能默认冻结限制。", "findings": []}
