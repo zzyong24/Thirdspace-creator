@@ -1,0 +1,70 @@
+{
+  "schema": "t1062-aac-physical-mapping-experiment-result/v1",
+  "reviewed_at": "2026-10-06T00:45:25.344914Z",
+  "status": "NO_GO_FOR_IMPLEMENTATION_YET",
+  "scope": "单次有界ffprobe/ffmpeg物理观测；无ASR、模型、DB、网络、仓库写入或用户媒体",
+  "inputs": {
+    "normal_aac_sha256": "e6c0f4e72741e8f37b369d9511311569df8ef6c4e07009f3c746c632fb0e2073",
+    "offset_aac_sha256": "0b22998e8238f35c9c3447c01234ce03f0ee03770db229c53f1e3de9f6905914",
+    "pcm_control_sha256": "f6a03da1ff973b8a9dfaf29850a8b1eb1311b030157070967986407a53d46ca1"
+  },
+  "execution": {
+    "first_failed_attempt": {
+      "directory": "/tmp/t1062-aac-physical-mapping-experiment",
+      "reason": "ffmpeg 9.0.1不接受aresample resampler=swresample枚举；所有失败原始stderr保留，未产出PCM"
+    },
+    "bounded_second_attempt": {
+      "directory": "/tmp/t1062-aac-physical-mapping-experiment-r2",
+      "manifest_sha256": "c641c1318fb9cb53fe6d98f28f9d9ac41519efd0c511b8f2c096616e8e2b5420",
+      "all_command_exits": 0,
+      "source_drift": []
+    }
+  },
+  "observations": {
+    "normal": {
+      "input": "AAC 48kHz；stream start=0；首packet pts=-1024且skip_samples=1024；末packet pts=715776、duration=617且discard_padding=407",
+      "decoded": "700 frames，首pts=0，末pts=715776/617 samples，总计716393 samples，与源PCM控制总样本相同",
+      "resampled": "ashowinfo 701 frames，首pts=0；末尾包含17-sample flush frame；总计238798 samples；WAV SHA b5eaa80678d6d26ed90f155a13e637115becfa0091c49dbbc4fcd34d48c8803e",
+      "clock_relation": "716393/3=238797.666…，输出采用238798样本；该头尾取整必须进入receipt，不能只用duration比例"
+    },
+    "offset": {
+      "input": "AAC stream start_pts=52976 (1.103667s)，未见packet skip/discard side-data；视频start=1.0s，实际音频相对视频约0.103667s",
+      "decoded": "701 frames，总nb_samples=717824；最后frame申报1024 samples而packet尾duration仍617，不能由容器duration推断有效尾样本",
+      "resampled": "ashowinfo首pts=1659，输出总239275 samples并有17-sample flush；WAV容器重置start，无法据此宣称nonzero映射闭合",
+      "conclusion": "nonzero仍必须manual；本次证据不足以交付真实word→source clock映射"
+    },
+    "pcm_control": {
+      "decoded_samples": 716393,
+      "resampled_samples": 238798,
+      "tail_flush_samples": 17,
+      "note": "样本计数与normal AAC一致，但PCM内容SHA不同是AAC有损编码的预期，不能用bytes相等作映射标准"
+    }
+  },
+  "family_admission": {
+    "potentially_supported": "仅codec=aac、源视频与有效解码音频零起点、packet side-data完整、解码后首PTS=0、有效解码样本连续、单声道16k输出逐frame证据完整，且具体provider词边界可精确换算为整数source tick的输入族",
+    "still_unknown": [
+      "不同AAC encoder/profile/container/edit-list与不同skip/discard组合",
+      "末帧duration与decoded nb_samples不一致的普遍处理规则",
+      "resampler版本/配置变化的头尾flush与舍入",
+      "真实provider词边界是否全部满足16k sample→1/12800 source tick的整数条件（仅sample index为5的倍数时4n/5为整数）"
+    ],
+    "fallback": "任一条件未知即mappingStatus=unverified；保留全文转写/保存可用，粗剪原声精确试听、确认和采用不得开放。nonzero起点保持manual。"
+  },
+  "contract_scope": {
+    "compatibility": "assetAsrPcmMappingReceipt v1 export/schema保持原样；新增显式v2 schema与union消费入口，不能暗改v1为union",
+    "required_existing_consumer": "contract/src/internal/asset-asr.ts audioEvidence.mappingReceipt当前显式为v1 optional，必须纳入scope并严格解析v1|v2 roundtrip",
+    "worker_constraint": "asset-asr-worker-run只能在严格verified v1/v2解析成功后传timingAudio；禁止type assertion绕过strict parse",
+    "minimum_potential_production_paths": [
+      "contract/src/internal/asset-asr-timing.ts",
+      "contract/src/internal/asset-asr.ts",
+      "backend/src/modules/production/production-asr-pcm.ts",
+      "backend/src/modules/production/production-asr-timing.ts",
+      "backend/src/modules/production/production-asset-asr-media.ts"
+    ]
+  },
+  "decision": {
+    "ordinary_zero_start": "物理观测证明候选A有可行基础，但尚未闭合跨AAC family规则与真实provider边界整数性，因此不能进入实现PASS",
+    "offset": "NO_GO；保持manual。若需要当前冻结E2E可达，须另走真实word但粗剪manual，或SPEC/DEC独评全文text/save手工流程",
+    "next_evidence": "先冻结v2所支持的精确AAC family，并以实际公共服务无模型fixture验证strict contract roundtrip、side-data缺失拒绝、末帧/flush计算、source tick整数拒绝；之后真实AAC回归仍须用原固定fixture与真实provider单次验证。"
+  }
+}

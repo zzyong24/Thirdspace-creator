@@ -109,3 +109,30 @@ Original18 Attempt10 的两条真实原声/ASR旅程已完成公共上传、exac
 本次权限只新增上述两个生产路径及一条既有unit测试，共三个 EXACT 既有路径：T-1062 integration module 583→586，required owned 577→580，加既有 active conditional 1 后有效产品 578→581；source snapshot 795 不增，protected 217 仅移出这三个路径成为 214，explicit readonly 9 仅移出 `http-transport.ts` 成为 8，其原测试仍只读。其他保护、原7首载路径、backend/contract/native闭包、31 source members、414 outputs、12删除、原6 native旅程、词级 ASR、原声20检查、旧失败及安装/听审待验状态保持。
 
 仅 TMP 产生候选与有界隔离公开 service/transport 红→绿证据，来源函数从当前冻结字节机械抽取而非改测试接口；这不替代完整 frontend composite dispatch、浏览器、真实 ASR 或安装验收。两生产源、一测试源与本3控制须由其他 Agent 独立评审，先逐字节保护全部 WIP、释放旧 public lease、提交控制增量、同步干净 writer，再以新控制 HEAD claim并逐字节恢复；禁止在活跃 lease 上修改 modules.config。最终正式元数据只重绑新增3权限、当前 source bytes/回执、214保护和8只读，原18 argv/预算/断言不改。
+
+
+## 普通 AAC 的可信词级时间映射与偏移手工流程（2026-10-06）
+
+Original18 Attempt13 中22条真实浏览器旅程20通过、2失败：两项真实默认ASR完成全文，但原word请求都降级text。只读取证定位旧PCM-only入口令AAC先抽成MP3，缺mappingReceipt时Worker不传timingAudio；不能把全文成功等同词级通过。Research同族已实际暂停、两次有界区分实验、独立复核与登记的只读校验完成并恢复，完整失败、原声和所有源码仍保留。具体证据见docs/research/t1062-local-word-timing/RESEARCH.md；研究恢复只关闭未知机制，不证明实现或安装通过。
+
+只在内部媒体证据协议新增独立严格v2，原v1 schema/export/PCM回执摘要和行为保持。asset-asr.ts必须显式strict v1|v2 union消费，不靠类型断言或删字段绕过。精确支持族为MOV/MP4、AAC-LC、单声道48k、视频与有效音频零起点，真实ISO BMFF音轨仅一条rate1 priming edit、movie/media timescale48000、media_time1024；全部packet/skip/discard、已消费priming的解码帧、实际重采样ashowinfo输出帧及独立WAV样本/PCM摘要必须闭合。中间packet/frame1024，最后有效D在1..1024且discard=1024-D；D、完整有效源S和输出N均逐真实输入取得，不能固定夹具的617/716393/238798。无empty edit、gap或未知字段推断；其它族保持旧全文与手工。
+
+完整音频输出保留所有N样本（实证N=ceil(S/3)），禁止atrim、把末端N钉到S、按容器总秒数插值或四舍五入词边界。源skip已经由decoder消费一次，不能二次从解码S扣1024。sourceFrames用源48k验证；outputFrames来自aresample链的ashowinfo，独立WAV ffprobe重新分帧只对总数N。音频证据域S/48000可略长于视频源durationTicks*timebase，不截短音频或拒绝合法全文；每个真实provider start/end严格用n*48000/16000及源timebase的BigInt有理数换算，须同时在音频S和视频范围内且为整数tick。任一端点、身份、完整性、顺序或原回执不符，整份word映射降为text，不能只丢坏词或补时间。
+
+每次冻结实际resolver给出的ffmpeg及ffprobe的realpath、binary SHA、完整-version回执摘要、平台和完整shell-free argv与pair digest；只有现场packet/edit/frame/count/PTS/PCM行为全闭合才verified。Homebrew9.0.1是实验实例，安装包b6.0是现有工具来源，均不作为唯一版本/路径白名单；未知版本行为沿旧text降级。打包脚本、下载机制和权限不改，最终实际安装包必须重新验证真实ASR。代码只验证机械身份、时钟、范围和摘要，删留语义仍由可配置Skill与用户决定（SEMANTIC_BOUNDARY_ALLOW）。
+
+精确新增6条既有路径：contract/src/internal/asset-asr-timing.ts、contract/src/internal/asset-asr.ts、backend/src/modules/production/production-asr-pcm.ts、backend/src/modules/production/production-asr-timing.ts、backend/src/modules/production/production-precise-asr-mapping.test.ts、backend/src/modules/production/production-precise-asr.integration.test.ts。既有extractVerifiedNativePcm入口内分派AAC；production-asset-asr-media.ts保持只读，真实差异若证明确需改调用才另独评准入，不提前扩大。module586→592、required580→586，加已有conditional1为587；source795→801，原protected214/readonly8/native31/output414/delete12不减。原owned的t1062-group-native-rough.spec.ts只落实下述偏移完整旅程。
+
+普通AAC原word断言、真实多tokens/可操作gap、原声20项自然播放/取消/dirty/重新核对/明确采用、完整source/digest/CAS和保存刷新都保留，不换原固定AAC或用PCM替代。偏移用例仍在真实UI请求word，但应真实成功全文、无tokens/无伪gap并显示手工提示；零语义粗剪候选、零自动采用；用户显式保存原转写及原生手工修改/保存/reload，公开回读完整plan、revision、mediaRefs、source身份和exact下载摘要相等。它验证已承诺的安全降级，不声称非零映射或精确试听可用。22case、Original18 argv/顺序/预算都保留，原normal不能改为容许text。
+
+先独立评审本SPEC/DEC和精确module候选，保全176条WIP字节/mode/12删除，释放旧public lease，再提交控制增量、干净writer FF/claim和精确恢复，之后方可改实现。新增真实零起点AAC的内部strict roundtrip、物理抽音与公开ASR/word采用红→绿；原AAC偏移负例、旧PCM、预算回退、partial/缺side-data/非整数/越域/digest拒绝和原完整公共调用保持。追加两既有测试的真实执行，不删断言；无当场RED不补签。候选及元数据须由其他Agent独审，完整Original18、统一产品提交、安装/听审及用户验收继续待验。
+
+```mermaid
+flowchart LR
+ A[完整原AAC] --> B[真实解码与重采样证据]
+ B --> C{全部词边界合法}
+ C -->|是| D[词句与停顿候选]
+ C -->|否或偏移| E[全文与手工编辑]
+ D --> F[用户核对并采用后保存]
+ E --> G[手工修改保存并刷新核对]
+```

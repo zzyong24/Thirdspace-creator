@@ -1,0 +1,21 @@
+{
+  "utc": "2026-10-06T04:22:27.266136+00:00",
+  "task_id": "T-1062",
+  "actual_user_question": "本地下一步就是应用修复、重新验证、提交并打包。是否同意我开启这次复审并继续执行？",
+  "actual_user_response": "同意",
+  "authorization_kind": "process-review-cycle",
+  "cycle_id": "DEC-106201",
+  "allowed_change_ids": [
+    "T1062-PARENT-MEDIA-PUBLIC-COMPAT",
+    "T1062-FIRST-ROOT-READY",
+    "T1062-PUBLIC-PORT-FREEZE",
+    "T1062-AAC-INTERNAL-V2",
+    "T1062-OFFSET-MANUAL-JOURNEY"
+  ],
+  "nonce": "0d2280dc-a611-4158-91b4-e9c3548119ee",
+  "max_cycles": 1,
+  "owner": "user",
+  "status": "active",
+  "not_windows_push_authorization": true,
+  "before_preconditions_verified": true
+}

@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "对当前完整T-1062候选SPEC（SHA256 2ec2896b9aa8489e1f938ee68278c0864c033d81bc080e06a8d1215710fbf732）进行一次完整静态审核：封闭四来源与旧迁移/归属/时间码合同继续保持；锁定父组创建、素材exact文件、首载统一根与合法旧入口恢复、公共同事务owner及冻结传输补充均落实已确认用户结果。新增AAC internal v2只在每次真实packet/edit/decoded/resampler/WAV/toolpair证据闭合的参数化零起点族交付，旧v1与外部API/owner/CAS/原账本不变；不裁音频、pin端点、舍入词或伪造gap，逐真实词边界守音频及视频双域，未知原全文/手工保存保持。普通AAC词级及完整听审采用不减，offset-B由误混word前置改为完整实际text/manual/save/readback验收，22case和原18 argv/顺序/预算保持。SPEC/DEC纯追加、integration只增加6精确必要既有路径，media入口仍只读，计数592/586+1=587/801/214/8/31/414/12闭合。当前未发现阻断该完整规格的finding；此packet只作未授权新cycle的待记录输入，旧cycle三轮及REV-001/REV-002销账历史原样保留，不追溯重签。Research真实resume关闭机制未知，taskstart因旧receipt过期实际拒绝；本静态审核不代签未来实现、真实ASR、完整Original18、安装或用户听审。",
+  "findings": []
+}

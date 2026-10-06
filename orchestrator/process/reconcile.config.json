@@ -322,7 +322,9 @@
     "t988-baseline": "node docs/research/t988/verify-baseline.mjs",
     "t1062-index-catalog": "node orchestrator/research/t1062-index-catalog/probe.cjs",
     "t1062-asr-tail-clock-evidence": "node --max-old-space-size=512 /tmp/t1062-asr-timing-observation/verify-r2.cjs evidence /tmp/t1062-asr-timing-observation/capture-one",
-    "t1062-asr-tail-clock-timing": "node --max-old-space-size=512 /tmp/t1062-asr-timing-observation/verify-r2.cjs timing /tmp/t1062-asr-timing-observation/capture-one"
+    "t1062-asr-tail-clock-timing": "node --max-old-space-size=512 /tmp/t1062-asr-timing-observation/verify-r2.cjs timing /tmp/t1062-asr-timing-observation/capture-one",
+    "t1062-aac-delivery-cause": "node docs/research/t1062-local-word-timing/verify-evidence.mjs cause",
+    "t1062-aac-delivery-physics": "node docs/research/t1062-local-word-timing/verify-evidence.mjs physics"
   },
   "execution_mode": "interactive",
   "autonomy_level": "interactive"

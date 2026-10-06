@@ -3538,3 +3538,29 @@ T-1017 测试补充（2026-09-30）：用户明确要求测试。本轮覆盖纯
 项目 owner 只由同一 transaction 的公开 projects service 返回真实父行，素材仍由真实 assets 与 materialLinks 服务校验；HTTP 只恢复既有 user-scope/forceNewDouyin 与显式冻结空 scope，不从当前根补身份。生产各候选及 SPEC/DEC/module 由其他 Agent 独审；保全 WIP后释放租约、提交三路径控制增量、FF同步并干净 claim 后才允许应用。控制3路径使 module586/owned580+conditional1=effective581，snapshot795保持；protected214、explicitreadonly8仅对应上述三保护移出及HTTP唯一readonly移出，HTTP原测试仍只读。
 
 保留实际两ASR首次save404、原17两红和所有原18失败。TMP公开调用集成红/绿仅证明真实service/transport及命名事务装配，不称浏览器、词级ASR、安装或听感通过。本记录落实已确认服务归属和可用性，不声称用户对这两行代码另签确认；完整原18及用户安装验收仍待发生。
+
+
+## DEC-T1062-AAC-TIMING-20261006：原 AAC 可验证时间映射与完整手工降级
+
+沿用户已经授权的ChatCut式Skill粗剪、整合修复和逐功能验收，Attempt13真实全文成功而词级失败。Research定位前置PCM-only/AAC→MP3 unverified，两个有界证据与只读校验闭合；新增独立内部v2标准零起点AAC物理receipt与显式strict union，旧v1及真实父/文件/组、请求/CAS/取消/账本保留。支持族由实际每文件packet/edit/decoder/resampler/WAV与实际工具链身份证明，参数化D/S/N，完整N输出不裁切、不pin端点；词边界精确换算且音频与视频双域拒绝，任一失败保全文，不做剪辑语义选择。无新公开API、IA、归属、SQL、模型配置或费用选择。
+
+偏移Original22旅程按原安全降级合同仍请求word，取得真实text/无tokens/手工提示，零粗剪模型候选或自动采用；显式保存全文与真实手工修改，保存刷新核完整工程、revision/mediaRefs/source/exact摘要。普通AAC原word/真实gap/原声20采用旅程仍严格，Original18 argv与预算不变。精确6路径、module592/owned586+conditional1=587/source801等边界见SPEC；完整实现独评/TDD/公开链/安装听审待发生，不把Research恢复或静态评审称功能PASS。本条落实既有用户授权，后续一次性评审周期另需真实用户流程授权，不虚签Owner=user。
+
+
+## DEC-106201 — 用户批准 T-1062 一次新规格复审（2026-10-06）
+
+```text
+ID: DEC-106201
+Authorization-Kind: process-review-cycle
+Task-ID: T-1062
+Previous-Spec-SHA256: 00088921686a37da277f0bf04f0165ae83bcb93760d230566d68d9bc270bf05f
+Previous-Constitution-SHA256: 86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800
+Allowed-Change-IDs: T1062-PARENT-MEDIA-PUBLIC-COMPAT, T1062-FIRST-ROOT-READY, T1062-PUBLIC-PORT-FREEZE, T1062-AAC-INTERNAL-V2, T1062-OFFSET-MANUAL-JOURNEY
+Max-Cycles: 1
+Nonce: 0d2280dc-a611-4158-91b4-e9c3548119ee
+Owner: user
+Status: active
+Pattern-Ref: product-to-code-orchestrator/templates/DECISION_LOG_TEMPLATE.md
+```
+
+用户在本会话对“是否同意我开启这次复审并继续执行？”实际回复“同意”。本授权仅绑定上述五项已有产品范围内的补充与一次复审，继续修复、提交、本地打包及安装后逐项验证；不替代实际测试，不授权 Windows 分支推送或公开发布。授权原文见 `docs/verification/t1062/review-cycle-user-authorization.json`。原三轮及已销账问题保留。

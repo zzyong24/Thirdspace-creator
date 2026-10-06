@@ -2467,7 +2467,13 @@
           "frontend/src/components/shell/account-switcher.test.tsx",
           "frontend/src/server/persistence-client.ts",
           "frontend/src/lib/http-transport.ts",
-          "frontend/src/components/overlays/overlay-routing.test.tsx"
+          "frontend/src/components/overlays/overlay-routing.test.tsx",
+          "contract/src/internal/asset-asr-timing.ts",
+          "contract/src/internal/asset-asr.ts",
+          "backend/src/modules/production/production-asr-pcm.ts",
+          "backend/src/modules/production/production-asr-timing.ts",
+          "backend/src/modules/production/production-precise-asr-mapping.test.ts",
+          "backend/src/modules/production/production-precise-asr.integration.test.ts"
         ]
       },
       "step_read_set": {

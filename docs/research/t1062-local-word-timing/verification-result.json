@@ -1,0 +1,28 @@
+[
+  {
+    "utc": "2026-10-06T01:03:08.409339+00:00",
+    "argv": [
+      "node",
+      "docs/research/t1062-local-word-timing/verify-evidence.mjs",
+      "cause"
+    ],
+    "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+    "exit": 0,
+    "stdout": "{\"result\":\"PASS_RECORDED_PUBLIC_ROOT_CAUSE\",\"tasks\":2,\"source_baselines\":11,\"model_calls\":0,\"production_or_acceptance_pass\":false}\n",
+    "stderr": "",
+    "verification_only": true
+  },
+  {
+    "utc": "2026-10-06T01:03:08.552857+00:00",
+    "argv": [
+      "node",
+      "docs/research/t1062-local-word-timing/verify-evidence.mjs",
+      "physics"
+    ],
+    "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+    "exit": 0,
+    "stdout": "{\"result\":\"PASS_RECORDED_PHYSICAL_MECHANISM\",\"source_frames\":700,\"resampler_frames\":701,\"wav_frames\":234,\"S\":716393,\"N\":238798,\"offset_supported\":false,\"model_calls\":0,\"production_or_acceptance_pass\":false}\n",
+    "stderr": "",
+    "verification_only": true
+  }
+]
