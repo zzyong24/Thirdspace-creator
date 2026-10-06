@@ -2580,6 +2580,55 @@
       "scope_source": "docs/features/t1068-local-client-startup.md",
       "reason": "登记2e3ee1de既有宿主文件精确复杂度基线；本任务只让固定127.0.0.1首页探测client直连，不修改凭据、IPC、安装或签名机制，不授权新增这些机制。源内容变更后需重绑精确hash并独立核验窄diff。",
       "acceptance": "只登记预算；不代表实现、打包、安装或原生窗口验收通过。"
+    },
+    {
+      "task_id": "T-1068",
+      "decision": "DEC-T1068-LOOPBACK-PROXY",
+      "scope_source": "docs/features/t1068-local-client-startup.md",
+      "acceptance": "只登记已独评精确字节预算；不签完整功能或人工验收。",
+      "files": [
+        "frontend/src-tauri/src/lib.rs"
+      ],
+      "file_sha256": "2fa0e36c47f2255e6b7776da6094ca8c6bc1e7df82c532bfd878c23fe9bddfae",
+      "categories": [
+        "credential_store",
+        "installer_deploy",
+        "ipc",
+        "language_toolchain",
+        "os_signing"
+      ],
+      "disposition": "baseline-migrated",
+      "reason": "独立报告ee3325fe已核69b6be8仅两注释和no_proxy，原凭据/安装/IPC/签名整字节不变；追加最终精确hash不授权新增机制。"
+    },
+    {
+      "task_id": "T-1068",
+      "decision": "DEC-T1068-LOOPBACK-PROXY",
+      "scope_source": "docs/features/t1068-local-client-startup.md",
+      "acceptance": "只登记已独评精确字节预算；不签完整功能或人工验收。",
+      "files": [
+        "orchestrator/verification/t1068-loopback-proxy.mjs"
+      ],
+      "file_sha256": "c0ed7a93d7ad091fecd755cf86d3fcf367adaab803270571a4a621b73e77d82c",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "reason": "已准入隔离本机代理回归；复用当前Rust/reqwest库编译真实函数，无新长期工具链、运行时、凭据或服务。"
+    },
+    {
+      "task_id": "T-1068",
+      "decision": "DEC-T1068-LOOPBACK-PROXY",
+      "scope_source": "docs/features/t1068-local-client-startup.md",
+      "acceptance": "只登记已独评精确字节预算；不签完整功能或人工验收。",
+      "files": [
+        "docs/verification/t1068/loopback-proxy.md"
+      ],
+      "file_sha256": "ff7436cf81d64343763d30583ef706a8457fab3884c1ee0aecb2d5d7d6d95b40",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "reason": "实测文档引用真实Rust与依赖库，记录红绿、旧失败及待安装；不引入产品机制。"
     }
   ],
   "historical_baselines": []
