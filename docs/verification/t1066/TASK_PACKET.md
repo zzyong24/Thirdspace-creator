@@ -168,5 +168,5 @@ write_set（允许修改）：
 
 ## 10. 版本锚
 
-- git HEAD:`a0f1e812`
-- BACKLOG.md sha256(前 12 位):`b3191755287a`
+- git HEAD:`38fa41fe`
+- BACKLOG.md sha256(前 12 位):`9bc203cac91f`

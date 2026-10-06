@@ -2495,7 +2495,7 @@
           "status": "pending"
         }
       ],
-      "blocked_reason": null,
+      "blocked_reason": "源码已交付；真实前端观察结束与原任务继续查询旅程回执待验，见docs/verification/t1066/closure-review.json；不改分类绕验收门。",
       "depends_on": [],
       "step_depends_on": {},
       "write_set": [
