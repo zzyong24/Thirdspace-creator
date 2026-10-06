@@ -28,7 +28,7 @@ import { stageExecutionWorkerRuntime,assertExecutionWorkerRuntime,assertWorkerEx
 //   - 未签名/未公证(证书=用户的,P6 补)。
 
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, rmSync, cpSync, chmodSync, copyFileSync, lstatSync, readdirSync, readlinkSync, realpathSync, symlinkSync, writeFileSync, readFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, rmSync, cpSync, chmodSync, copyFileSync, lstatSync, statSync, readdirSync, readlinkSync, realpathSync, symlinkSync, writeFileSync, readFileSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createRequire } from "node:module";
