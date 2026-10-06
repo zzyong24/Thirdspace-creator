@@ -9,7 +9,7 @@
 
 | ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
 | --- | --- | --- | --- | --- | --- | --- |
-| T-1067 | 落实本地客户端优先出包并移除人为构建超时 | 🔨 待办 | PASS[REV:ebe1b789bc56] | — | [SPEC](docs/features/t1067-local-package-build-only.md) | 用户已授权双端优先出包；并行会话T-1066同号后本地8路径补充单独使用本编号，原本地评审/事件保留；T-1062原18和候选提交后顺序实施，不push、不发布。 |
+| T-1067 | 落实本地客户端优先出包并移除人为构建超时 | ✅ 待办 | PASS[REV:ebe1b789bc56] | — | [SPEC](docs/features/t1067-local-package-build-only.md) | 用户已授权双端优先出包；并行会话T-1066同号后本地8路径补充单独使用本编号，原本地评审/事件保留；T-1062原18和候选提交后顺序实施，不push、不发布。 |
 | T-1066 | 落实本地客户端优先出包并移除人为构建超时 | ⏸️ 待办 | PASS[REV:0d40d8466937] | — | [SPEC](docs/features/t1066-local-package-build-only.md) | 用户2026-10-06明确Windows和Mac均优先生成安装包；精确移植本地打包8路径，独立执行额外质量验证，保留真实编译、资源、凭证和路径校验；不push、不发布、不改变T-1062粗剪与原18验收。 |
 | T-1062 | 汇总各会话改动统一提交并打包本地客户端，逐项验收含Skill粗剪 | 🔨 待办 | PASS[REV:5912ba60da16] | 待验 | [SPEC](docs/features/t1062-consolidated-local-client-acceptance.md) · [测试预算补充](docs/features/t1062-backend-test-harness.md) | 用户2026-10-05授权汇总提交、本地打包及逐功能验证；盘点账号组、画布模板、文章图文、Codex与剪辑分支，核对ChatCut粗剪流程；不push或公开发布，不代签用户验收。 用户随后确认使用当前 macOS 登录用户与现有 App 直接验收；先备份应用和当前数据，再安装本地候选，只创建中性验收夹具，不重置激活或自动归组真实资料。 |
 | T-1063 | 修正流程工具误拒合法字面方括号文件路径 | 🔨 待办 | PASS[REV:4d99824da112] | 待验 | [SPEC](docs/features/t1063-orchestrator-literal-path-boundary.md) | T-1062已准入前端范围含7个Next动态路由文件；3.27.2的progress及candidate校验误将字面方括号当glob，阻断必要整合。保持精确路径及原隔离边界，经独立评审、公共工具回归和受支持技能升级后解除，不扩目录通配符、不公开发布。 |
@@ -23,7 +23,7 @@
 | T-1018 | 清理本轮测试暴露的全局类型与边界欠债 | 📋 待办 | — | 待验 | [实测证据](docs/verification/t1017-rewrite-first.md) | 后端旧测试 API/类型漂移、contract旧快照/资产/cover断言、live-chat-session SDK 边界与 video-decisions-runner 语义门仍失败；与 T-1015 历史教训对账联动，不混入 T-1017。 本轮T-1022再次实测原12项后端类型、3项契约及边界/语义旧失败，见docs/features/t1022-account-group-workspace/VERIFICATION.md。 |
 | T-1016 | 调研 CreatorOS 连接本地 Codex、WorkBuddy 与外部 Agent | ✅ 待办 | — | — | [SPEC](docs/features/t1016-external-agent-research.md) | 参考 ChatCut 和公开协议，核实双向接入、现有执行边界与可落地方案；本轮仅调研设计。 |
 | T-1014 | 核对并清理233项历史对账失败 | ✅ 待办 | — | — | [范围](docs/verification/t1014-reconcile-triage.md) | 按真实证据关闭过期治理项，保留有效缺陷与历史回执；不修改产品运行时。 |
-| T-1015 | 核实剩余教训失败并校准过期回归断言 | 📋 待办 | — | — | [实测清单](docs/verification/t1014-reconcile-triage.md) | 从19条失败命令定位旧版本/源码字符串断言与实际重试、消费、交互差异；保留有效检查，修正后重验。 本轮T-1022收尾reconcile仍15项既有LED失败，日志docs/verification/t1022/logs/reconcile-final.log；新增LED-052及LED-047通过。 本轮T-1063按受支持方式升级至3.27.3后，原对账实测35错误/1警告；完整结果及原失败见[维护证据](docs/verification/t1063/tool-upgrade-result.json)。LED-052缺显式隔离PG环境不得skip，LED-049需按原命令继续核因；范围内问题由T-1062修复验收，未改基线或旧回执。 |
+| T-1015 | 核实剩余教训失败并校准过期回归断言 | 📋 待办 | — | — | [实测清单](docs/verification/t1014-reconcile-triage.md) | 从19条失败命令定位旧版本/源码字符串断言与实际重试、消费、交互差异；保留有效检查，修正后重验。 本轮T-1022收尾reconcile仍15项既有LED失败，日志docs/verification/t1022/logs/reconcile-final.log；新增LED-052及LED-047通过。 本轮T-1063按受支持方式升级至3.27.3后，原对账实测35错误/1警告；完整结果及原失败见[维护证据](docs/verification/t1063/tool-upgrade-result.json)。LED-052缺显式隔离PG环境不得skip，LED-049需按原命令继续核因；范围内问题由T-1062修复验收，未改基线或旧回执。 2026-10-06 T-1067 收尾实际36错误/1告警，完整原始记录见T-1062验收表；T-734旧字符串断言在67b基点同样失败，六输入字节相同，未删断言；T-1067固定8路径之外，全局各失败保留核因。 |
 | T-1004 | 冻结共享能力协议与 NomiFun 迁移依赖 | 📋 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) | T-1003 评审；固定依赖闭包、宿主端口、协议与架构门卫。 |
 | T-1005 | 实现多步计划、连续执行与原任务续跑 | 📋 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) | 依赖 T-1004；模型规划与重规划，保留回执和成本，停止恢复可核验。 |
 | T-1006 | 接入统一工具网关与长结果回读 | 📋 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) | 依赖 T-1004；工具发现、进度、取消、错误和费用共用原执行链。 |

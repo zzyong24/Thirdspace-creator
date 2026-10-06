@@ -1137,3 +1137,4 @@
 {"ts":"2026-10-06T04:23:02.763Z","actor":"taskctl","action":"start","task":"T-1062","sha_before":"68afe3a9e073","sha_after":"f640e332ac1d"}
 {"ts":"2026-10-06T06:10:37.809Z","actor":"taskctl","action":"block","task":"T-1066","reason":"并行用户会话新登记全系统超时修复同号T-1066；本分支独立本地出包8路径尚未实施，转T-1067继续，保留原审核和事件，不覆盖他会话或扩大T-1062。","sha_before":"7c306778e325","sha_after":"35d6bb6cefdd"}
 {"ts":"2026-10-06T07:31:43.595Z","actor":"taskctl","action":"start","task":"T-1067","sha_before":"fd9cdfce17be","sha_after":"7b982759c6b7"}
+{"ts":"2026-10-06T08:12:27.869Z","actor":"taskctl","action":"complete","task":"T-1067","evidence":"精确8路径83ca67b及单行import修正0d254bee；原15文件149PASS/1T734既有基点同失败，最终相关63PASS；固定入口实际DMG成功、hdiutil和镜像内签名0。sync0/reconcile1：36错误1告警如实保留，固定8路径外T1015/T1018核因，不称全绿；docs/verification/t1062/ACCEPTANCE.md。安装及逐功能验收仍由T1062进行。","sha_before":"150b942712bb","sha_after":"3f19dcf9a483"}
