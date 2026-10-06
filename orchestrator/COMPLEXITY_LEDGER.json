@@ -1897,6 +1897,20 @@
       "scope_source": "docs/features/t1065-timeout-audit.md",
       "reason": "用户2026-10-06授权全系统只读超时审计。IPC和签名均为被审既有实现的词法引用；Python仅用于离线源码检索与清单一致性校验，不进入产品、CI或打包依赖。本任务新增产品运行复杂度为0。",
       "acceptance": "只登记审计文档与离线检索辅助脚本的范围；不授权架构、服务契约、超时行为或发布变更，不代表真实业务E2E或历史质量门通过。"
+    },
+    {
+      "task_id": "T-1065",
+      "files": [
+        "docs/features/t1065-timeout-audit.md"
+      ],
+      "file_sha256": "60bde3cec0679633114a1c609eadff8dcdc6b464edc95ebcf33bc69b675b06ad",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "scope_source": "docs/features/t1065-timeout-audit.md",
+      "reason": "范围声明列举现有JS/TS、Rust、Python、shell、YAML被审文件类型；审计不新增产品语言或运行工具链。用户2026-10-06明确授权全系统只读盘点。",
+      "acceptance": "仅绑定只读范围声明的词法标记，不授权产品行为、架构或发布变更。"
     }
   ],
   "historical_baselines": []
