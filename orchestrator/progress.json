@@ -2445,7 +2445,7 @@
         },
         {
           "step": "installed-cli-receipt",
-          "status": "pending"
+          "status": "done"
         },
         {
           "step": "installed-overlay-capture",
@@ -4309,7 +4309,8 @@
       "step_exclusive_resources": {},
       "commits": {
         "installed-compatibility": "b0a6559dc89fb3b7930e638396a651e81245b409",
-        "installed-contract-bootstrap": "f0ada07d7"
+        "installed-contract-bootstrap": "f0ada07d7",
+        "installed-cli-receipt": "d68dfbcf6a77ebd7782e0ee86addea61b38f6c66"
       }
     },
     {
