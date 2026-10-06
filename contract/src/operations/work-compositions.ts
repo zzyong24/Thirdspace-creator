@@ -1,5 +1,5 @@
 import {z} from "zod";
-import {defineEndpoint} from "../endpoints";
+import {defineEndpoint} from "../endpoint-definition";
 import {id, iso8601, paginationQuery} from "../primitives";
 import {workRequestId, workFingerprint, workRevision, workOwnerVersion, workContentSource, workCommitReceipt} from "../resources/work-sources";
 import {workBasisVersion, workBasisSaveBody} from "../resources/work-basis";

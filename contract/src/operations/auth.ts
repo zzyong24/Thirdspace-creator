@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { defineEndpoint } from "../endpoints";
+import { defineEndpoint } from "../endpoint-definition";
 import { userResource } from "../resources/settings";
 
 // Identity / auth operations (P2 — 用户注册真账号). Most of the auth surface

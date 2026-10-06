@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { defineEndpoint } from "../endpoints";
+import { defineEndpoint } from "../endpoint-definition";
 import { id, paginationQuery } from "../primitives";
 import { materialLinkResource } from "../resources/material-links";
 

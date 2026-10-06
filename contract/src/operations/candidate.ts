@@ -1,6 +1,6 @@
 import { topicWorkspaceResource, topicWorkspaceConfig, topicFeedbackReason } from "../resources/audience-task";
 import { z } from "zod";
-import { defineEndpoint } from "../endpoints";
+import { defineEndpoint } from "../endpoint-definition";
 import {
   id,
   iso8601,

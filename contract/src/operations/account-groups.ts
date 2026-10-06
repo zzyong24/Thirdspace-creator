@@ -1,5 +1,5 @@
 import {z} from "zod";
-import {defineEndpoint} from "../endpoints";
+import {defineEndpoint} from "../endpoint-definition";
 import {id,paginationQuery} from "../primitives";
 import {accountGroupResource,groupMemberResource,groupTransferPreview,groupMigrationSelection,groupMigrationPreview,groupMigrationResource,groupResourceGrantResource,groupResourceRevokePreview} from "../resources/account-groups";
 const params=z.object({groupId:id});const version=z.number().int().positive();const key=z.string().min(1).max(160);

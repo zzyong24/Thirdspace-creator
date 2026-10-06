@@ -1,6 +1,6 @@
 import {z} from "zod";
 import {publicationResource,publicationRevisionResource} from "../resources/publishing";
-import {defineEndpoint} from "../endpoints";
+import {defineEndpoint} from "../endpoint-definition";
 import {canvasDocumentSchema,creativeCanvasResource,canvasGenerationLinkResource,canvasProposalResource,canvasGenerationCapabilitiesResource} from "../resources/creative-canvas";
 
 import {canvasMaterialSelectorParams,canvasMaterialSelectionResource} from "../resources/canvas-material-selection";

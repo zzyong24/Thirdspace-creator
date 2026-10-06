@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { defineEndpoint } from "../endpoints";
+import { defineEndpoint } from "../endpoint-definition";
 import { id, platformId } from "../primitives";
 import {outputConversionRequest,outputConversionReceipt} from "../resources/output-conversions";
 import {articleCandidateSection} from "../resources/articles";

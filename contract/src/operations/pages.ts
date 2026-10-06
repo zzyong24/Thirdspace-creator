@@ -1,7 +1,7 @@
 import {groupWorkspaceQuery,groupDashboardPage} from "../pages/group-workspace";
 import { dailyReportPage, dailyReportQuery } from "../pages/daily-report";
 import { z } from "zod";
-import { defineEndpoint } from "../endpoints";
+import { defineEndpoint } from "../endpoint-definition";
 import { id } from "../primitives";
 import { dashboardPage } from "../pages/dashboard";
 import { projectOverviewPage } from "../pages/project-overview";

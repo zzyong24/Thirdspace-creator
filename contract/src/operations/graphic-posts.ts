@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { defineEndpoint } from "../endpoints";
+import { defineEndpoint } from "../endpoint-definition";
 import { id, platformId } from "../primitives";
 import { contentOutputResource } from "../resources/projects";
 import { graphicPostTextValue, graphicPostDocument, graphicPostResource, graphicPostWriteResult, graphicPostTextCandidate, graphicPostTextKind } from "../resources/graphic-posts";

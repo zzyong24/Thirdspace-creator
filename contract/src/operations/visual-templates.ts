@@ -1,5 +1,5 @@
 import {z} from "zod";
-import {defineEndpoint} from "../endpoints";
+import {defineEndpoint} from "../endpoint-definition";
 import {visualTemplateResource,visualTemplateInputSchema,visualModeSchema} from "../resources/visual-templates";
 const id=z.string().min(1).max(128),attemptId=z.string().min(16).max(128);
 export const visualTemplateOperations={

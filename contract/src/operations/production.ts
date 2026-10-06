@@ -3,7 +3,7 @@ import {productionConversionPrepareBody,productionConversionAdoptBody,production
 import {productionTranscriptCreateBody,productionTranscriptAdoptBody,productionTranscriptRequest} from '../resources/production-transcripts';
 import {productionSourceRetryBody,productionSourcePrepareBody,productionSourceAdoptBody,productionSourceRequest} from "../resources/production-editor";
 import { z } from "zod";
-import { defineEndpoint } from "../endpoints";
+import { defineEndpoint } from "../endpoint-definition";
 import { id, iso8601 } from "../primitives";
 import {
   productionResource,

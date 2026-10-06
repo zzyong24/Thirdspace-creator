@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { defineEndpoint } from "../endpoints";
+import { defineEndpoint } from "../endpoint-definition";
 import { id, iso8601, paginationQuery, assetType } from "../primitives";
 import { assetResource, assetFileResource } from "../resources/assets";
 import {assetDeleteImpactPreview} from "../resources/account-groups";
