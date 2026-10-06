@@ -3627,3 +3627,7 @@ Owner=agent 的既有行为实现选择；原SPEC cfbaf9、用户空组共享创
 ## DEC-T1068-LOOPBACK-PROXY — 本地启动探测直连（2026-10-06）
 
 用户要求修复已安装包启动超时并尽快交付可测试客户端。同一实际服务原reqwest builder返回代理502，no_proxy返回正常HTML；完成哨兵已在真实日志出现。仅在固定127.0.0.1启动探测client禁用代理，保留全部启动完成、页面、verdict与退出检查和超时常量。其他网络遵循原代理设置。正常评审和夹具回归后再冻结打包、备份及安装。原生窗口此前失败，不由公开CLI/HTTP成功覆盖。
+
+### DEC-T1068-LOOPBACK-PROXY 收尾路由澄清
+
+独立host分类报告efe4acc8确认本任务无UI页面设计或journey contract；初始验收待验误选UI路径，纠正单行非UI验收—，仍以两次真实HTTP原生窗口完成事件及用户已显示正常首页为收尾证据。ROOT是唯一实际writer，正式工具release原并行lease再普通claim/done记录实际集成；不更改门卫或全局mode，不伪造历史准入。固定打包入口实际自动安装，之前已备份；私有planned installer未执行，事实另列。完整T1062和原T734/全局红仍保留。

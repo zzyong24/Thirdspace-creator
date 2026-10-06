@@ -2629,6 +2629,36 @@
       ],
       "disposition": "in-budget",
       "reason": "实测文档引用真实Rust与依赖库，记录红绿、旧失败及待安装；不引入产品机制。"
+    },
+    {
+      "task_id": "T-1068",
+      "files": [
+        "docs/verification/t1068/loopback-proxy.md"
+      ],
+      "file_sha256": "e7271f982cd7c74a93fa575149e297220de069153c87e01681a9cc0d51ebef5b",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1068-LOOPBACK-PROXY",
+      "scope_source": "docs/features/t1068-local-client-startup.md",
+      "reason": "同一已准入实测文档追加真实新包/原生加载及用户确认；无产品或工具链机制新增，保留旧失败及自动安装事实。",
+      "acceptance": "仅事实文档复杂度绑定，不签T1062完整验收。"
+    },
+    {
+      "task_id": "T-1068",
+      "files": [
+        "docs/verification/t1068/loopback-proxy.md"
+      ],
+      "file_sha256": "53f7a0943e6e4e25d61172fcca3297315804366bb5265a901a14e80f73b84aa7",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1068-LOOPBACK-PROXY",
+      "scope_source": "docs/features/t1068-local-client-startup.md",
+      "reason": "同一实测文档追加实际reconcile失败及与旧结果对比，不新增产品机制；范围外LED-027根因待查已登记T-1018。",
+      "acceptance": "仅事实文档复杂度绑定，不签T1062完整验收。"
     }
   ],
   "historical_baselines": []
