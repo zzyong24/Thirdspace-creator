@@ -80,3 +80,6 @@ sync 实际 exit 0；reconcile 实际 exit 1，共 36 错误/1 告警，未写�
 迁移测试1文件21项实际全通过：原fresh/root/diagnostic/canvas四PGlite及四隔离PG基线、4补充subset缓存隔离、fresh现行凭证结构、unknown/future/common-hole/supplemental-hole/schema-drift拒绝、冻结SQL/journal损坏拒绝。274补充SQL及3完整原journal逐字节匹配各Git来源；原三归档、0128、main journal、原18 runner等361项hash/mode保持。源码观察在测试执行中发生，记录为during-execution而非伪造pre-run；最终当前字节逐项匹配，安装功能未重签。
 
 后端typecheck候选实际exit2，仅production-native-public.integration.test.ts(31,260) TS2322；原打包基点0d W也实际exit2同一条，测试文件SHA 9f15d664b5092d79624fc7210976326a0d1279df952231b3d9517ab42a4b03af相同；新兼容路径没有类型错误。既有失败沿T-1018保留，未改断言消错。新包、真实安装及用户功能验收仍待验。机器证据见 installed-migration-compatibility-result.json；原始失败/成功、源码观察、私有库行摘要仅留用户私有目录。
+
+
+独立implementation/scope评审已现场封存，空findings，不新启SPEC复审。评审独查原SPEC cfbaf9、283精确新scope/integration592、361原hash/mode、281 during-run字节绑定、完整三Gitjournal+274SQL及实际test/clone receipts；未打开DB或签安装/模型/听审。私有报告 installed-history-implementation-independent-final-a0sx5ugu/implementation-scope-review.json，SHA256 69cbc0757d5910df475c5ac3c6a597187f3551be11e6656243634a280e70ae93。

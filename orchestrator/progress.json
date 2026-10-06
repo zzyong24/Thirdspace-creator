@@ -2437,7 +2437,7 @@
       "tasks": [
         {
           "step": "installed-compatibility",
-          "status": "pending"
+          "status": "done"
         },
         {
           "step": "integration",
@@ -4179,7 +4179,9 @@
         ]
       },
       "step_exclusive_resources": {},
-      "commits": {}
+      "commits": {
+        "installed-compatibility": "b0a6559dc89fb3b7930e638396a651e81245b409"
+      }
     },
     {
       "id": "T-1067",
@@ -4273,10 +4275,5 @@
       "commits": {}
     }
   ],
-  "leases": {
-    "T-1062:installed-compatibility": {
-      "agent": "root-installed-history",
-      "since": "2026-10-06T08:42:28.801Z"
-    }
-  }
+  "leases": {}
 }

@@ -2335,6 +2335,66 @@
       "reason": "沿用既有Tauri/Rust工具链；此任务只按已审精确8路径移除人为探针deadline、分离额外验证，不新增语言或工具链。",
       "review": "PASS[REV:ebe1b789bc56]",
       "acceptance": "仅绑定已审before/after精确字节的既有工具链说明；不代表构建、安装或逐功能验收通过。"
+    },
+    {
+      "task_id": "T-1062",
+      "files": [
+        "backend/drizzle/lineages/README.md"
+      ],
+      "file_sha256": "9f339fe5d565ce4afe5eab2b2deb5d909a8a15d055f9ae37400365ffe868d524",
+      "categories": [
+        "credential_store"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1062-INSTALLED-HISTORY-IMPLEMENTATION-20261006",
+      "scope_source": "docs/features/t1062-consolidated-local-client-acceptance.md",
+      "reason": "机械兼容归档提及已执行旧keyring SQL及中性字段夹具；无新凭据库、权限、原生程序或凭证读写协议。原SQL仅在内存参考库执行，用户库不重放；fresh现行NOT NULL凭证结构保持，真正设置/Keychain路径不改。",
+      "acceptance": "只登记准确文件的必要历史识别复杂度；真实21迁移与132表副本双启证据另存，不代表安装或全局通过。"
+    },
+    {
+      "task_id": "T-1062",
+      "files": [
+        "backend/src/migration-convergence-installed-lineages.json"
+      ],
+      "file_sha256": "c726dc72cb6a5034a7586d67011dc797c664ff6ce51e325a9bc6a07c9c350b8a",
+      "categories": [
+        "credential_store"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1062-INSTALLED-HISTORY-IMPLEMENTATION-20261006",
+      "scope_source": "docs/features/t1062-consolidated-local-client-acceptance.md",
+      "reason": "机械兼容归档提及已执行旧keyring SQL及中性字段夹具；无新凭据库、权限、原生程序或凭证读写协议。原SQL仅在内存参考库执行，用户库不重放；fresh现行NOT NULL凭证结构保持，真正设置/Keychain路径不改。",
+      "acceptance": "只登记准确文件的必要历史识别复杂度；真实21迁移与132表副本双启证据另存，不代表安装或全局通过。"
+    },
+    {
+      "task_id": "T-1062",
+      "files": [
+        "backend/src/migration-convergence.test.ts"
+      ],
+      "file_sha256": "f5d45ce8bb4ed2e9b428e42cd1e85830e52c7d76cfcd92a7310b303a83eba533",
+      "categories": [
+        "credential_store"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1062-INSTALLED-HISTORY-IMPLEMENTATION-20261006",
+      "scope_source": "docs/features/t1062-consolidated-local-client-acceptance.md",
+      "reason": "机械兼容归档提及已执行旧keyring SQL及中性字段夹具；无新凭据库、权限、原生程序或凭证读写协议。原SQL仅在内存参考库执行，用户库不重放；fresh现行NOT NULL凭证结构保持，真正设置/Keychain路径不改。",
+      "acceptance": "只登记准确文件的必要历史识别复杂度；真实21迁移与132表副本双启证据另存，不代表安装或全局通过。"
+    },
+    {
+      "task_id": "T-1062",
+      "files": [
+        "backend/src/migration-convergence.ts"
+      ],
+      "file_sha256": "20cef5f0d9602a99474e15f05bb3707e74936b3e0492c2a06580b4220acba247",
+      "categories": [
+        "credential_store"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1062-INSTALLED-HISTORY-IMPLEMENTATION-20261006",
+      "scope_source": "docs/features/t1062-consolidated-local-client-acceptance.md",
+      "reason": "机械兼容归档提及已执行旧keyring SQL及中性字段夹具；无新凭据库、权限、原生程序或凭证读写协议。原SQL仅在内存参考库执行，用户库不重放；fresh现行NOT NULL凭证结构保持，真正设置/Keychain路径不改。",
+      "acceptance": "只登记准确文件的必要历史识别复杂度；真实21迁移与132表副本双启证据另存，不代表安装或全局通过。"
     }
   ],
   "historical_baselines": []

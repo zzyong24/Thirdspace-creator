@@ -10,3 +10,5 @@
 
 说明：AM activate/status 的 signed `channelConfig` 是上游既有 operation 的消费契约，不在 Creator
 新增服务 operation；IssueFeedbackDialog、激活页、设置页与 opener 都是既有 surface 重接线。
+
+| 2026-10-06 | T-1062 安装旧历史机械兼容 | T1062-MIGRATION | 0 | 0（用户库无新增legacy表，仅校验已执行历史；原0128范围不扩） | 0 | 0 | 0 | in-budget：3完整archive+4精确旧身份，无新凭据库；fresh/真实凭证/归属/服务不变，21回归和副本双启已实测，安装待验 |
