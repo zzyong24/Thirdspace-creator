@@ -136,3 +136,27 @@ flowchart LR
  D --> F[用户核对并采用后保存]
  E --> G[手工修改保存并刷新核对]
 ```
+
+
+### 随包工具实测后的有效呈现与完整解码双范围补充（2026-10-06）
+
+同一普通 AAC 输入、默认随包静态 FFmpeg/ffprobe 6.0 实测显示：首 priming 已消费，完整解码700帧、716800样本，但单一ISO edit、音轨duration_ts和完整packet有效终点都是716393；末packet长度617且没有discard sideData，末decoded帧仍有1024样本。旧严格R5因此真实降级全文，原失败完整保留。不能把最后407样本称为已证明静音、捏造discard sideData、裁掉音频，或以开发机9.0.1结果代签安装包。
+
+在同六个精确已有路径中追加独立strict R6 internal v2证据形状，以明确的decodedDomainProtocol区分；旧v1及已经形成的R5 v2形状、字段含义保持。有效呈现S与完整解码D_dec分别保存完整证明；末discard缺失必须保存null/absent，D_dec-S只能称呈现域外解码覆盖。完整PCM、resampler和WAV全部保留，不trim/pad/async/first_pts；输出N必须来自实际全部帧、WAV与PCM闭合，要求N=ceil(D_dec/3)，未实测前不能填写推论值为PASS。
+
+仅接纳原MOV/MP4 AAC-LC mono48k、有效音视频原点0、单非空rate1且media_time1024的族。完整packet除末条外1024、首skip1024只消费一次，中间没有未知sideData；完整decoded每帧1024、从0连续、数量=packet-1，所有起点逐packet吻合。必须同时有S=音轨duration_ts=ISO edit长度=末packet起点+实际L，D_dec=完整帧和=末frame终点，D_dec-S=1024-L且差异只覆盖最后一帧的0..1023样本；任何矛盾、缺字段或多处差异返回旧全文。实测工具realpath、binary SHA/version、platform和完整argv逐次绑定，不加版本或路径白名单。
+
+provider实际边界n仍以BigInt有理数映射3n及原冻结timebase，同时严格落在有效呈现S和冻结视频durationTicks内；完整物理解码D_dec及输出N不能作为可剪范围。所有实际词必须合法，任一失败整份降级，不钉端点、不舍入、不丢坏词。外部API、worker/provider/SDK、模型及语义选择、数据归属、数据库和原账本不变。普通AAC原词级/原声20及偏移全文/手工保存两完整旅程保留，同一固定媒体与随包6.0实际公共映射红→绿、完整Original18/22、真实模型、安装及用户听审仍必须当场验证。
+
+```mermaid
+flowchart LR
+ A[完整源packet与编辑表] --> S[有效呈现范围]
+ A --> D[完整解码范围]
+ D --> N[保留全部实际转写输入]
+ N --> W[供应商真实词边界]
+ W --> G{同时位于呈现与视频范围}
+ G -->|全部合法| Y[词级核对与明确采纳]
+ G -->|任一不合法| T[全文与手工保存]
+```
+
+验收输入恢复补充：旧TMP中的五份build/lock/网络声明及独评回执已实际缺失，经过授权私有归档全扫描仍无法恢复相同字节，必须保留missing历史，不重造旧SHA或追溯签字。同字节模型7、固定视频及manifest、wrapper/gate/cache与旧4快照已核对备份后恢复。四编辑器从既有真实源码归档和配套工具/lock在全新TMP完整production复建，完整31来源、414输出、12旧chunk删除及真实import图仍验证；只有当前新构建原字节吻合后才能给新的CURRENT回执。新NoteRelay web lock由实际npm产生并与原web依赖完整配套，当前ASR声明另绑定原wrapper/gate/model7和真实worker/eval路径并重新独评。CURRENT scope/transfer只重绑新当场证据，原缺失引用移入历史保留；不改原18命令/顺序/预算、frozenTmp、网络隔离、真实ready或源输入，不借丢回执减门。
