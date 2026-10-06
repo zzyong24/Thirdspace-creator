@@ -42953,3 +42953,173 @@
  import qs from 'qs';
  import proIcon from '@/assets/icon/proIcon.png';
  
+
+--- a/src/native-types.ts
++++ b/src/native-types.ts
+@@ -3,9 +3,9 @@
+   fontFamily: string; fontSize: string; density: string;
+ }
+ export interface NativeOptions {
+-  owner: {accountId: string; outputId: string; sourceVersionId: string};
++  owner: {groupId:string|null;accountId:string|null;projectId:string;outputId:string;sourceVersionId:string};
+   theme: NativeTheme; portalContainer: HTMLElement; signal: AbortSignal;
+-  onChanged: () => void; onError: (message: string) => void;
++  onChanged: (event?:{kind:'native-context';contextEpoch:number;outputId:string;sceneId:string|null;selectedElements:unknown[];documentChanged:boolean}) => void; onError: (message: string) => void;
+   importMedia: (file: File) => Promise<{mediaId: string}>;
+ }
+ export const missingPixel = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGP4//8/AwAI/AL+p5qgoAAAAABJRU5ErkJggg==';
+@@ -54,3 +54,5 @@
+ export function isTextTarget(target: EventTarget | null) {
+   return target instanceof Element && !!target.closest('input,textarea,select,[contenteditable="true"]');
+ }
++
++export function nativeOwnerKey(owner: NativeOptions['owner']) { return JSON.stringify([owner.groupId?['group',owner.groupId]:['account',owner.accountId],owner.projectId,owner.outputId,owner.sourceVersionId]); }
+--- a/src/native-entry.ts
++++ b/src/native-entry.ts
+@@ -16,6 +16,7 @@
+ const activeOwners=new Set<NativeController>();
+ export async function mount(container:HTMLElement,options:NativeOptions){
+   if(!(container instanceof HTMLElement)||options.signal.aborted)throw Error('图片工作台挂载已取消');
++  if(!options.owner.projectId||!options.owner.outputId||!options.owner.sourceVersionId||(!options.owner.groupId&&!options.owner.accountId))throw Error('作品归属缺失。');
+   const host=markRaw(new NativeController(container,options));
+   activeOwners.add(host);
+   const app=createApp(Home,{nativeHost:host});
+--- a/src/native-controller.ts
++++ b/src/native-controller.ts
+@@ -6,7 +6,7 @@
+   editor?: NativeEngine;
+   workspaceEl?: HTMLElement;
+   disposed = false; disabled = false; loading = false; locked = false;
+-  private epoch = 0; private baseline = ''; private timer?: ReturnType<typeof setTimeout>;
++  private epoch = 0; private observedDocument = ''; private observedSelection = ''; private contextEpoch = 0; private baseline = ''; private timer?: ReturnType<typeof setTimeout>;
+   private timers = new Set<ReturnType<typeof setTimeout>>();
+   private cleanup = new Set<() => void>(); private jobs = new Set<() => void>(); private urls = new Set<string>();
+   private known = new Map<string, string>(); private knownReferences=new Set<string>(); private sequence: Promise<unknown> = Promise.resolve();
+@@ -38,23 +38,37 @@
+     this.check(); this.editor = editor; this.workspaceEl = workspaceEl;
+     const publish = () => this.publish();
+     const canvas = editor.fabricCanvas;
++    const selection = () => this.observeContext();
++    for (const name of ['selection:created','selection:updated','selection:cleared']) canvas?.on(name,selection);
++    this.cleanup.add(()=>{for(const name of ['selection:created','selection:updated','selection:cleared'])canvas?.off(name,selection);});
+     const events = ['object:added','object:modified','object:removed','text:changed','path:created','after:render'];
+     events.forEach(event => canvas?.on(event, publish));
+     const setTextarea=(event: any)=>{if(event.target){event.target.hiddenTextareaContainer=this.root;this.themeSelection(event.target);}};
+     canvas?.on('object:added',setTextarea);
+     this.cleanup.add(()=>canvas?.off('object:added',setTextarea));
+     this.cleanup.add(() => events.forEach(event => canvas?.off(event, publish)));
+-    this.baseline = JSON.stringify(editor.getJson()); this.readyResolve();
++    this.baseline = JSON.stringify(editor.getJson()); this.observedDocument=this.baseline;this.observedSelection=JSON.stringify(canvas?.getActiveObjects?.().map(object=>object.id)??[]); this.readyResolve();
+   }
+   fail(e: unknown) {this.readyReject(e); this.error(e);}
+   error(e: unknown) {if (!this.disposed) this.options.onError(e instanceof Error ? e.message : String(e));}
++  private syncObservedContext(){this.observedDocument=JSON.stringify(this.snapshot().document);this.observedSelection=JSON.stringify(this.editor?.fabricCanvas?.getActiveObjects?.().map(object=>object.id)??[]);}
++  private observeContext(){
++    if(this.disposed||this.loading||this.locked||!this.editor)return;
++    // SEMANTIC_BOUNDARY_ALLOW: 精确文档与选区变化只使过期请求失效，不做创作取舍。
++    const json=JSON.stringify(restoreMissing(this.editor.getJson()));
++    const selected=this.editor.fabricCanvas?.getActiveObjects?.().map(object=>object.id)??[];const selection=JSON.stringify(selected);
++    const documentChanged=json!==this.observedDocument;if(!documentChanged&&selection===this.observedSelection)return;
++    this.observedDocument=json;this.observedSelection=selection;this.contextEpoch++;
++    this.options.onChanged({kind:'native-context',contextEpoch:this.contextEpoch,outputId:this.options.owner.outputId,sceneId:null,selectedElements:selected,documentChanged});
++  }
+   publish() {
+     if (this.disposed || this.loading || this.locked || !this.editor) return;
++    this.observeContext();
+     clearTimeout(this.timer);
+     this.timer = setTimeout(() => {if (this.disposed || this.loading || this.locked || !this.editor) return;
+       const json = JSON.stringify(restoreMissing(this.editor.getJson()));
+       // SEMANTIC_BOUNDARY_ALLOW: exact JSON comparison deduplicates render events only.
+-      if (json !== this.baseline) {this.baseline = json; this.options.onChanged();}
++      if (json !== this.baseline) {this.baseline = json;}
+     }, 180);
+   }
+   themeSelection(object:any){const color=this.currentTheme?.tokens['--creatoros-brand'];if(color)object.set?.({borderColor:color,cornerStrokeColor:color,cornerColor:color});if(object.getObjects)object.getObjects().forEach((child:any)=>this.themeSelection(child));}
+@@ -229,7 +243,7 @@
+           const stop=()=>{clean();reject(Error('已切换作品，原读取停止'));};
+           const timer=setTimeout(()=>{clean();reject(Error('图层读取超时，原稿已保留'));},30000);this.timers.add(timer);signals.forEach(current=>current.addEventListener('abort',stop,{once:true}));
+           Promise.resolve(this.editor!.loadJSON(doc,()=>{clean();try{this.check(epoch,signal);resolve();}catch(error){reject(error);}})).catch(error=>{clean();reject(error);});
+-        });this.check(epoch,signal);this.editor!.getPlugin('HistoryPlugin')?.clearAndSaveState?.();this.baseline=JSON.stringify(this.snapshot().document);
++        });this.check(epoch,signal);this.editor!.getPlugin('HistoryPlugin')?.clearAndSaveState?.();this.baseline=JSON.stringify(this.snapshot().document);this.syncObservedContext();
+       }finally{if(epoch===this.epoch || this.disposed)this.loading=false;clearTimeout(this.timer);}return this.snapshot();
+     })();return this.ownedJob(work,epoch,signal);
+   }
+@@ -239,9 +253,9 @@
+     this.check();this.advanceEpoch();this.editor!.clear();this.editor!.setSize(width,height);this.editor!.getPlugin('HistoryPlugin')?.clearAndSaveState?.();this.publish();
+   }
+   request(operation:string,payload?:any,options?:{requestId?:string;signal?:AbortSignal}):Promise<any>{
+-    this.check(this.epoch,options?.signal);const id=options?.requestId;if(id&&this.requests.has(id))return this.requests.get(id)!;
+-    const result=this.sequence.then(async()=>{await this.ready;this.check(this.epoch,options?.signal);
+-      switch(operation){case 'load':{this.title=typeof payload?.title==='string'?payload.title:'图文设计';if(payload?.document!=null)return this.loadDocument(payload.document,true,options?.signal);const w=Number(payload?.width)||900,h=Number(payload?.height)||1200;if(w<1||h<1||w>10000||h>10000)throw Error('图文尺寸超出范围');this.advanceEpoch();this.editor!.clear();this.editor!.setSize(w,h);this.editor!.getPlugin('HistoryPlugin')?.clearAndSaveState?.();this.baseline=JSON.stringify(this.snapshot().document);return this.snapshot();}
++    const issuedEpoch=this.epoch,issuedContext=this.contextEpoch;this.check(issuedEpoch,options?.signal);const id=options?.requestId===undefined?undefined:`${issuedEpoch}:${issuedContext}:${operation}:${options.requestId}`;if(id&&this.requests.has(id))return this.requests.get(id)!;
++    const result=this.sequence.then(async()=>{await this.ready;this.check(issuedEpoch,options?.signal);if(issuedContext!==this.contextEpoch)throw Error('编辑上下文已变化，原请求停止');
++      switch(operation){case 'load':{this.title=typeof payload?.title==='string'?payload.title:'图文设计';if(payload?.document!=null)return this.loadDocument(payload.document,true,options?.signal);const w=Number(payload?.width)||900,h=Number(payload?.height)||1200;if(w<1||h<1||w>10000||h>10000)throw Error('图文尺寸超出范围');this.loading=true;try{this.advanceEpoch();this.editor!.clear();this.editor!.setSize(w,h);this.editor!.getPlugin('HistoryPlugin')?.clearAndSaveState?.();this.baseline=JSON.stringify(this.snapshot().document);this.syncObservedContext();return this.snapshot();}finally{this.loading=false;clearTimeout(this.timer);}}
+         case 'snapshot':{const epoch=this.epoch;const release=this.lock();try{await this.registerImages(epoch,options?.signal);this.check(epoch,options?.signal);return this.snapshot();}finally{release();}}
+         case 'insert-media':if(typeof payload?.mediaId!=='string'||!payload.mediaId)throw Error('图片缺少素材关联');return this.importFile(payload.file,payload.mediaId,options?.signal);
+         case 'export': {if(payload?.format!=='png')throw Error('暂支持 PNG 导出');const epoch=this.epoch;const resume=this.lock();try{await this.registerImages(epoch,options?.signal);this.check(epoch,options?.signal);const result=await this.editor!.previewDocument();this.check(epoch,options?.signal);const response=await fetch(result.dataUrl);this.check(epoch,options?.signal);const blob=await response.blob();this.check(epoch,options?.signal);return {blob,document:restoreMissing(result.document),fileName:`${this.title.replace(/[\\/:*?"<>|]/g,'_').slice(0,100)||'图文设计'}.png`};}finally{resume();}}
+--- a/native-controller.test.ts
++++ b/native-controller.test.ts
+@@ -1,13 +1,13 @@
+ import {beforeEach,afterEach,describe,it,expect,vi} from 'vitest';
+ import {NativeController} from './src/native-controller';
+-import {missingPixel} from './src/native-types';
++import {missingPixel,nativeOwnerKey,type NativeOptions} from './src/native-types';
+ import {referenceEditorDocument} from '@creatoros/contract';
+ import {fabric} from 'fabric';
+-function setup(){
++function setup(ownerOverrides:Partial<NativeOptions['owner']>={}){
+   const outer=document.createElement('div');document.body.append(outer);const shadow=outer.attachShadow({mode:'open'});const root=document.createElement('div'),portal=document.createElement('div');shadow.append(root,portal);
+-  const abort=new AbortController();const options={owner:{accountId:'a',outputId:'o',sourceVersionId:'v'},theme:{mode:'dark' as const,tokens:{'--creatoros-panel':'#181b23','--creatoros-brand':'#7c5cff'},fontFamily:'system-ui',fontSize:'14px',density:'compact'},portalContainer:portal,signal:abort.signal,onChanged:vi.fn(),onError:vi.fn(),importMedia:vi.fn(async()=>({mediaId:'m'}))};
++  const abort=new AbortController();const options={owner:{groupId:null,projectId:'project-fixture',accountId:'a',outputId:'o',sourceVersionId:'v',...ownerOverrides},theme:{mode:'dark' as const,tokens:{'--creatoros-panel':'#181b23','--creatoros-brand':'#7c5cff'},fontFamily:'system-ui',fontSize:'14px',density:'compact'},portalContainer:portal,signal:abort.signal,onChanged:vi.fn(),onError:vi.fn(),importMedia:vi.fn(async()=>({mediaId:'m'}))};
+   let documentValue:any={objects:[{id:'workspace',type:'rect',fill:'#fff',width:900,height:1200}]};const handlers=new Map<string,Set<Function>>();
+-  const canvas={on:vi.fn((name:string,fn:Function)=>{if(!handlers.has(name))handlers.set(name,new Set());handlers.get(name)!.add(fn);}),off:vi.fn((name:string,fn:Function)=>handlers.get(name)?.delete(fn)),getObjects:()=>documentValue.objects,requestRenderAll:vi.fn()};
++  const canvas={on:vi.fn((name:string,fn:Function)=>{if(!handlers.has(name))handlers.set(name,new Set());handlers.get(name)!.add(fn);}),off:vi.fn((name:string,fn:Function)=>handlers.get(name)?.delete(fn)),getObjects:()=>documentValue.objects,getActiveObjects:():Array<{id:string}>=>[],requestRenderAll:vi.fn()};
+   const editor:any={getJson:()=>JSON.parse(JSON.stringify(documentValue)),fabricCanvas:canvas,loadJSON:vi.fn((doc:any,callback:()=>void)=>{documentValue=doc;callback();}),getPlugin:()=>({clearAndSaveState:vi.fn()}),clear:()=>{documentValue.objects=documentValue.objects.filter((o:any)=>o.id==='workspace');},setSize:(w:number,h:number)=>Object.assign(documentValue.objects[0],{width:w,height:h}),previewDocument:vi.fn(async()=>({dataUrl:'data:image/png;base64,AA==',document:documentValue}))};
+   const host=new NativeController(root,options);host.attach(editor,root);return {host,root,portal,abort,options,editor,canvas,handlers};
+ }
+@@ -63,3 +63,12 @@
+   it('公开 loadJSON 原引擎等待回调时卸载结清作业、timer 和 signal，迟到回调不回写',async()=>{const s=setup();let late!:()=>void;s.editor.loadJSON.mockImplementation((_doc:any,callback:()=>void)=>{late=callback;return Promise.resolve();});const job=s.host.request('load',{document:{objects:[{type:'textbox',id:'text',text:'等待原引擎'}]}});const result=job.then(()=>null,error=>error);await vi.waitFor(()=>expect(s.editor.loadJSON).toHaveBeenCalled());s.host.close();expect(await result).toBeInstanceOf(Error);expect((s.host as any).jobs.size).toBe(0);expect((s.host as any).timers.size).toBe(0);late();await Promise.resolve();expect(s.options.onChanged).not.toHaveBeenCalled();expect(s.options.onError).not.toHaveBeenCalled();});
+   it('重新设置尺寸需要真实确认，并保持被拒绝的原图层',async()=>{const s=setup();await s.host.request('load',{document:{objects:[{id:'workspace',type:'rect',width:900,height:1200},{id:'text',type:'textbox',text:'保留'}]}});const resetting=s.host.reset(600,800);expect(s.portal.querySelector('[role="alertdialog"]')).not.toBeNull();(s.portal.querySelector('button') as HTMLButtonElement).click();await resetting;expect((await s.host.request('snapshot')).document.objects).toHaveLength(2);expect(fetch).not.toHaveBeenCalled();s.host.close();});
+ });
++
++describe('T1062 实际controller owner/context请求候选（Fabric是明确夹具）',()=>{
++ it('纯组可空account，同组平台筛选不改变原mount identity，不同组/父/版本不能混用',async()=>{const s=setup({groupId:'group-a',accountId:null});try{const original={...s.options.owner};expect(nativeOwnerKey(original)).toBe(nativeOwnerKey({...original,accountId:'platform-b'}));expect(nativeOwnerKey(original)).not.toBe(nativeOwnerKey({...original,groupId:'group-b'}));expect(nativeOwnerKey(original)).not.toBe(nativeOwnerKey({...original,projectId:'foreign'}));expect(nativeOwnerKey(original)).not.toBe(nativeOwnerKey({...original,sourceVersionId:'other'}));expect((await s.host.request('snapshot')).document).toBeDefined();expect(s.options.owner).toEqual(original);}finally{s.host.close();}});
++ it('同一真实dirty同步事件只提升一次context，迟到排队snapshot拒绝而原文保留',async()=>{const s=setup();try{const pending=s.host.request('snapshot',undefined,{requestId:'issued-before-edit'});s.editor.getJson=()=>({objects:[{id:'text',type:'textbox',text:'真实后来修改'}]});for(const callback of s.handlers.get('object:modified')??[])callback();for(const callback of s.handlers.get('after:render')??[])callback();await expect(pending).rejects.toThrow('上下文已变化');expect(s.options.onChanged).toHaveBeenCalledTimes(1);expect(s.options.onChanged.mock.calls[0][0]).toMatchObject({kind:'native-context',documentChanged:true,outputId:'o'});expect((await s.host.request('snapshot')).document.objects[0].text).toBe('真实后来修改');}finally{s.host.close();}});
++ it('真实selection更新使旧snapshot失效但不标正文dirty；重复selection不重复事件',async()=>{const s=setup();try{const pending=s.host.request('snapshot');s.canvas.getActiveObjects=()=>[{id:'selected-real'}];for(const callback of s.handlers.get('selection:updated')??[])callback();for(const callback of s.handlers.get('selection:updated')??[])callback();await expect(pending).rejects.toThrow('上下文已变化');expect(s.options.onChanged).toHaveBeenCalledTimes(1);expect(s.options.onChanged.mock.calls[0][0]).toMatchObject({documentChanged:false,selectedElements:['selected-real']});}finally{s.host.close();}});
++ it('取消在途真实controller导出请求，迟到PNG不fetch、不发布；原图层仍可读',async()=>{const s=setup();let finish!:(value:unknown)=>void;const cancel=new AbortController();try{s.editor.previewDocument.mockImplementation(()=>new Promise(resolve=>finish=resolve));const pending=s.host.request('export',{format:'png'},{signal:cancel.signal});const rejected=pending.catch(error=>error);await vi.waitFor(()=>expect(s.editor.previewDocument).toHaveBeenCalled());cancel.abort();expect(await rejected).toBeInstanceOf(Error);finish({dataUrl:'data:image/png;base64,AA==',document:{objects:[]}});await Promise.resolve();await Promise.resolve();expect(fetch).not.toHaveBeenCalled();expect((await s.host.request('snapshot')).document.objects[0].id).toBe('workspace');}finally{s.host.close();}});
++});
++
++it.each(['loaded document','blank load'])('T1062 %s 后首render同步observed基线，不伪dirty或改原snapshot',async(mode)=>{const s=setup();try{const oldClear=s.editor.clear;s.editor.clear=()=>{oldClear();for(const callback of s.handlers.get('object:removed')??[])callback();for(const callback of s.handlers.get('after:render')??[])callback();};const load=s.editor.loadJSON.getMockImplementation()!;s.editor.loadJSON.mockImplementation((document:unknown,callback:()=>void)=>load(document,()=>{for(const target of s.canvas.getObjects())for(const fn of s.handlers.get('object:added')??[])fn({target});for(const fn of s.handlers.get('after:render')??[])fn();callback();}));s.options.onChanged.mockClear();await s.host.request('load',mode==='loaded document'?{document:{objects:[{id:'workspace',type:'rect',width:900,height:1200},{id:'text',type:'textbox',text:'原文'}]}}:{width:900,height:1200});expect(s.options.onChanged).not.toHaveBeenCalled();const before=await s.host.request('snapshot');s.options.onChanged.mockClear();for(const callback of s.handlers.get('after:render')??[])callback();expect(s.options.onChanged).not.toHaveBeenCalled();expect(await s.host.request('snapshot')).toEqual(before);}finally{s.host.close();}});
+--- a/packages/core/Editor.ts
++++ b/packages/core/Editor.ts
+@@ -38,8 +38,9 @@
+     [propName: string]: AsyncSeriesHook<any, any>;
+   } = {};
+-
++
+-  init(canvas: fabric.Canvas, options: {root: HTMLElement; workspaceEl: HTMLElement; host: any}) {
+-    this.host=options.host;this.root=options.root;this.workspaceEl=options.workspaceEl;
++  init(canvas: fabric.Canvas, options?: {root: HTMLElement; workspaceEl: HTMLElement; host: any}) {
++    this.host=options?.host;this.root=options?.root ?? canvas.wrapperEl;
++    this.workspaceEl=options?.workspaceEl ?? document.getElementById('workspace') ?? canvas.wrapperEl;
+     this.canvas = canvas;
+     this._initContextMenu();
+     this._bindContextMenu();
+@@ -128,9 +129,14 @@
+   private _bindingHotkeys(plugin: IPluginTempl) {
+     plugin?.hotkeys?.forEach((keyName: string) => {
+       // 支持 keyup
+-      const handler=(e: KeyboardEvent)=>{if(this.host.accepts(e)){e.preventDefault();plugin.hotkeyEvent?.(keyName,e);}};
+-      hotkeys(keyName, {keyup:true,element:this.root},handler);
+-      hotkeys(keyName, {keyup:true,element:this.host.options.portalContainer},handler);
++      const handler=(e: KeyboardEvent)=>{
++        if(this.host){if(this.host.accepts(e)){e.preventDefault();plugin.hotkeyEvent?.(keyName,e);}}
++        else plugin.hotkeyEvent?.(keyName,e);
++      };
++      if(this.host){
++        hotkeys(keyName, {keyup:true,element:this.root},handler);
++        hotkeys(keyName, {keyup:true,element:this.host.options.portalContainer},handler);
++      }else hotkeys(keyName,{keyup:true},handler);
+       this.bindings.push({key:keyName,handler});
+     });
+   }

@@ -1,4 +1,5 @@
 "use client";
+import {useCreationClient,useCreationScope,creationScopeKey} from "@/lib/creation-workspace-scope";
 import * as React from "react";
 import Link from "next/link";
 import {MomentsImage} from "./moments-image";
@@ -8,8 +9,10 @@ import {client} from "@/lib/contract-client";
 import {Button} from "@/components/ui/button";
 import {describeUserError} from "@/lib/ai-error-humanize";
 
-export function MomentsWorkbench(props:{initial:MomentsResource;accountId:string}){return <ScopedMomentsWorkbench key={`${props.accountId}:${props.initial.momentsId}`} {...props}/>;}
-function ScopedMomentsWorkbench({initial,accountId}:{initial:MomentsResource;accountId:string}){
+export function MomentsWorkbench(props:{initial:MomentsResource;accountId:string|null}){const workspaceSelection=useCreationScope();return <ScopedMomentsWorkbench key={`${creationScopeKey(workspaceSelection)}:${props.initial.momentsId}`} {...props}/>;}
+function ScopedMomentsWorkbench({initial,accountId}:{initial:MomentsResource;accountId:string|null}){
+ const client=useCreationClient();
+
  const[state,setState]=React.useState(initial),[draft,setDraft]=React.useState(initial.current),[busy,setBusy]=React.useState(false),[modelBusy,setModelBusy]=React.useState(false),[error,setError]=React.useState<string|null>(null),[message,setMessage]=React.useState<string|null>(null),[pending,setPending]=React.useState<MomentsSaveBody|null>(null),[assets,setAssets]=React.useState<Array<{id:string;name:string;currentFileId:string|null}>>([]),[assetId,setAssetId]=React.useState(""),[assetPage,setAssetPage]=React.useState(0),[assetLoading,setAssetLoading]=React.useState(false),[more,setMore]=React.useState(true);
  const active=React.useRef(true),inFlight=React.useRef(false),assetInFlight=React.useRef(false),key=`creatoros-moments-save:${accountId}:${initial.momentsId}`,dirty=JSON.stringify(draft)!==JSON.stringify(state.current);
  React.useEffect(()=>{active.current=true;void Promise.resolve().then(()=>{if(!active.current)return;try{const parsed=momentsSaveBody.safeParse(JSON.parse(localStorage.getItem(key)??"null"));if(parsed.success){setPending(parsed.data);setDraft(parsed.data.document);}}catch{}});return()=>{active.current=false;};},[key]);

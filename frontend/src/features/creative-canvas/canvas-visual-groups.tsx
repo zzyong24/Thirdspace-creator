@@ -1,4 +1,5 @@
 "use client";
+import {useCreationClient} from "@/lib/creation-workspace-scope";
 import {useEffect,useRef,useState} from "react";
 import {ArrowDown,ArrowUp,BookOpen,Check,Download,RefreshCw,X} from "lucide-react";
 import type {CanvasDocument,CanvasVisualGroup} from "@creatoros/contract";
@@ -13,6 +14,8 @@ type Output={id:string;title:string};type Publication={id:string;currentRevision
 type Props={document:CanvasDocument;projectId:string|null;projectTitle:string|null;links:GroupTaskLink[];tasks:Record<string,GroupTaskView>;busyGroup:string|null;busyPublishing:boolean;onPatch:(id:string,patch:Partial<CanvasVisualGroup>)=>void;onGenerate:(id:string,nodeId?:string)=>void;onAdopt:(id:string,selections:MaterialSelection[],target:MaterialTarget)=>Promise<{publicationId:string;revisionId:string}|null>;onDownload:(assetId:string)=>void;onClose:()=>void;onSelectNode:(id:string)=>void;onOpenTemplates:()=>void;onCreateOutput:()=>Promise<string|null>;onInspectNode:(id:string)=>void};
 function errorText(e:unknown){return e instanceof Error?e.message:"读取失败，请重试";}
 export function CanvasVisualGroups({document,projectId,projectTitle,links,tasks,busyGroup,busyPublishing,onPatch,onGenerate,onAdopt,onDownload,onClose,onSelectNode,onOpenTemplates,onCreateOutput,onInspectNode}:Props){
+ const client=useCreationClient();
+
  const groups=document.visualGroups??[];
  const [groupId,setGroupId]=useState(groups[groups.length-1]?.id??""),[outputs,setOutputs]=useState<Output[]>([]),[outputId,setOutputId]=useState(""),[platform,setPlatform]=useState("xiaohongshu"),[publications,setPublications]=useState<Publication[]>([]),[publicationId,setPublicationId]=useState(""),[title,setTitle]=useState(""),[excluded,setExcluded]=useState<Set<string>>(new Set()),[chosen,setChosen]=useState<Record<string,string>>({}),[error,setError]=useState(""),[notice,setNotice]=useState(""),[loading,setLoading]=useState(false),[readVersion,setReadVersion]=useState(0),[creating,setCreating]=useState(false);
  const epoch=useRef(0),group=groups.find(g=>g.id===groupId)??groups[0];

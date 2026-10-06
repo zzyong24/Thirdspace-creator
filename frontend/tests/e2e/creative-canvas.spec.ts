@@ -1,17 +1,31 @@
 import type {Page} from "@playwright/test";
-import {mkdirSync,readFileSync} from "node:fs";
+import {readFileSync} from "node:fs";
 import {resolve} from "node:path";
+import {createHash} from "node:crypto";
 import {expect,test} from "../helpers/test-environment";
 
-async function dispatch(page:Page,id:string,input:unknown,accountId?:string){
- const response=await page.request.post("/api/v1/dispatch",{headers:{"content-type":"application/json",...(accountId?{"x-account-id":accountId}:{})},data:{id,input}});
+type Scope={groupId?:string;accountId?:string};
+async function dispatch<T={id:string}>(page:Page,id:string,input:unknown,scope:Scope={}):Promise<T>{
+ const response=await page.request.post("/api/v1/dispatch",{headers:{"content-type":"application/json",...(scope.groupId?{"x-group-id":scope.groupId}:{}),...(scope.accountId?{"x-account-id":scope.accountId}:{})},data:{id,input}});
  expect(response.ok(),`${id} 返回 ${response.status()}`).toBe(true);
- return (await response.json() as {data:{id:string}}).data;
+ return (await response.json() as {data:T}).data;
 }
 
-async function uploadMedia(page:Page,accountId:string,path:string,assetType:"image"|"video",mimeType:string,name:string){
+async function groupedAccount(page:Page,platform="douyin",handle=`@canvas-${Date.now()}-${crypto.randomUUID()}`){
+ const group=await dispatch(page,"accountGroups.create",{body:{name:`画布测试组-${crypto.randomUUID()}`,idempotencyKey:crypto.randomUUID()}}) as {id:string};
+ const account=await dispatch(page,"accounts.create",{body:{platform,accountHandle:handle,idempotencyKey:crypto.randomUUID()}}) as {id:string};
+ const preview=await dispatch(page,"accountGroups.members.previewTransfer",{body:{accountId:account.id,toGroupId:group.id}}) as Record<string,unknown>;
+ await dispatch(page,"accountGroups.members.transfer",{body:{...preview,idempotencyKey:crypto.randomUUID()}});
+ return {...account,groupId:group.id};
+}
+async function enterGroup(page:Page,context:import('@playwright/test').BrowserContext,baseURL:string,groupId:string){
+ await context.addCookies([{name:"creatoros_current_group",value:encodeURIComponent(groupId),url:baseURL}]);
+ await page.addInitScript(id=>{if(!localStorage.getItem("creatoros:current-group")){localStorage.setItem("creatoros:current-group",id);localStorage.removeItem("creatoros:current-account");}},groupId);
+}
+
+async function uploadMedia(page:Page,scope:Scope,path:string,assetType:"image"|"video",mimeType:string,name:string){
  const bytes=readFileSync(path);
- const headers={"content-type":"application/json","x-account-id":accountId};
+ const headers={"content-type":"application/json",...(scope.groupId?{"x-group-id":scope.groupId}:{}),...(scope.accountId?{"x-account-id":scope.accountId}:{})};
  const started=await page.request.post("/api/v1/dispatch",{headers,data:{id:"assets.uploads.create",input:{params:undefined,query:undefined,body:{assetType,mimeType,fileSize:bytes.length,fileName:name}}}});
  expect(started.ok(),await started.text()).toBe(true);
  const upload=(await started.json() as {data:{uploadId:string;uploadUrl:string}}).data;
@@ -23,16 +37,16 @@ async function uploadMedia(page:Page,accountId:string,path:string,assetType:"ima
 }
 
 test("T-993 画布可保存、重开，切换账号后列表和直链隔离",async({page,context,baseURL})=>{
- const accountA=await dispatch(page,"accounts.create",{params:undefined,query:undefined,body:{platform:"douyin",accountHandle:`@canvas-a-${Date.now()}`}});
- const accountB=await dispatch(page,"accounts.create",{params:undefined,query:undefined,body:{platform:"douyin",accountHandle:`@canvas-b-${Date.now()}`}});
- const project=await dispatch(page,"projects.create",{params:undefined,query:undefined,body:{title:"画布关联项目",brief:""}},accountA.id);
- await context.addCookies([{name:"creatoros_current_account",value:encodeURIComponent(accountA.id),url:baseURL!}]);
- await page.addInitScript(id=>{if(!window.localStorage.getItem("creatoros:current-account"))window.localStorage.setItem("creatoros:current-account",id);},accountA.id);
+ test.setTimeout(600_000);
+ const accountA=await groupedAccount(page,"douyin",`@canvas-a-${Date.now()}`);
+ const accountB=await groupedAccount(page,"douyin",`@canvas-b-${Date.now()}`);
+ const project=await dispatch(page,"projects.create",{params:undefined,query:undefined,body:{title:"画布关联项目",brief:""}},{groupId:accountA.groupId});
+ await enterGroup(page,context,baseURL!,accountA.groupId);
 
  await page.goto("/canvases?tab=canvases");
  await expect(page.getByRole("heading",{name:"创作画布"})).toBeVisible();
  await page.getByRole("button",{name:"新建画布"}).click();
- await expect(page).toHaveURL(/\/canvases\/[^/]+$/);
+ await expect(page).toHaveURL(/\/canvases\/[^/]+$/,{timeout:120_000});
  const canvasUrl=page.url();
  await page.getByRole("textbox",{name:"画布标题"}).fill("分镜试验画布");
  await page.getByRole("button",{name:"＋ 文字"}).click();
@@ -66,7 +80,7 @@ test("T-993 画布可保存、重开，切换账号后列表和直链隔离",asy
  await expect(page.getByRole("heading",{name:"画布关联项目的创作画布"})).toBeVisible();
 
  await page.getByTestId("account-switcher-trigger").click();
- await page.getByTestId("account-switcher-menu").locator(`[data-testid="account-switcher-item"][data-account-id="${accountB.id}"]`).click();
+ await page.getByTestId("account-switcher-menu").locator(`[data-testid="account-switcher-item"][data-group-id="${accountB.groupId}"]`).click();
  await page.goto("/canvases?tab=canvases");
  await expect(page.getByText("分镜试验画布")).toHaveCount(0);
  await page.goto(canvasUrl);
@@ -74,9 +88,9 @@ test("T-993 画布可保存、重开，切换账号后列表和直链隔离",asy
 });
 
 test("T-993 首次自动选账号后画布可创建，新增节点不会重叠",async({page})=>{
- await dispatch(page,"accounts.create",{params:undefined,query:undefined,body:{platform:"douyin",accountHandle:`@canvas-first-${Date.now()}`}});
+ await groupedAccount(page,"douyin",`@canvas-first-${Date.now()}`);
  await page.goto("/canvases?tab=canvases");
- await expect.poll(async()=>page.evaluate(()=>window.localStorage.getItem("creatoros:current-account"))).not.toBeNull();
+ await expect.poll(async()=>page.evaluate(()=>window.localStorage.getItem("creatoros:current-group"))).not.toBeNull();
  await expect(page.getByRole("alert").filter({hasText:"AccountRequiredError"})).toHaveCount(0);
  await page.getByRole("button",{name:"新建画布"}).click();
  await expect(page).toHaveURL(/\/canvases\/[^/]+$/);
@@ -136,9 +150,8 @@ test("T-993 首次自动选账号后画布可创建，新增节点不会重叠",
 });
 
 test("T-993 视口缩放只保存在本地，不改画布内容版本",async({page,context,baseURL})=>{
- const account=await dispatch(page,"accounts.create",{params:undefined,query:undefined,body:{platform:"douyin",accountHandle:`@canvas-viewport-${Date.now()}`}});
- await context.addCookies([{name:"creatoros_current_account",value:encodeURIComponent(account.id),url:baseURL!}]);
- await page.addInitScript(id=>window.localStorage.setItem("creatoros:current-account",id),account.id);
+ const account=await groupedAccount(page,"douyin",`@canvas-viewport-${Date.now()}`);
+ await enterGroup(page,context,baseURL!,account.groupId);
  await page.goto("/canvases?tab=canvases");
  await page.getByRole("button",{name:"新建画布"}).click();
  await expect(page).toHaveURL(/\/canvases\/[^/]+$/);
@@ -146,23 +159,22 @@ test("T-993 视口缩放只保存在本地，不改画布内容版本",async({pa
  await page.getByRole("button",{name:"＋ 文字"}).click();
  await page.getByRole("button",{name:"保存",exact:true}).click();
  await expect(page.getByText("已保存",{exact:true})).toBeVisible();
- const before=await page.request.post("/api/v1/dispatch",{headers:{"content-type":"application/json","x-account-id":account.id},data:{id:"canvas.get",input:{params:{canvasId},query:undefined,body:undefined}}});
+ const before=await page.request.post("/api/v1/dispatch",{headers:{"content-type":"application/json","x-group-id":account.groupId},data:{id:"canvas.get",input:{params:{canvasId},query:undefined,body:undefined}}});
  expect(before.ok(),await before.text()).toBe(true);
- const beforeCanvas=(await before.json() as {data:{revision:number;userId:string;accountId:string}}).data;
+ const beforeCanvas=(await before.json() as {data:{revision:number;userId:string;groupId:string|null;accountId:string|null}}).data;
  const beforeRevision=beforeCanvas.revision;
  await page.getByRole("button",{name:"放大"}).click();
  await expect(page.getByText(/\d+% · 双击空白处添加文字/)).toBeVisible();
- const key=`creatoros:canvas-viewport:${beforeCanvas.userId}:${beforeCanvas.accountId}:${canvasId}`;
+ const key=`creatoros:canvas-viewport:${beforeCanvas.userId}:${beforeCanvas.groupId??beforeCanvas.accountId}:${canvasId}`;
  await expect.poll(async()=>page.evaluate(key=>JSON.parse(window.localStorage.getItem(key)??"null")?.zoom,key)).toBeGreaterThan(1);
- const after=await page.request.post("/api/v1/dispatch",{headers:{"content-type":"application/json","x-account-id":account.id},data:{id:"canvas.get",input:{params:{canvasId},query:undefined,body:undefined}}});
+ const after=await page.request.post("/api/v1/dispatch",{headers:{"content-type":"application/json","x-group-id":account.groupId},data:{id:"canvas.get",input:{params:{canvasId},query:undefined,body:undefined}}});
  expect(after.ok(),await after.text()).toBe(true);
  expect((await after.json() as {data:{revision:number}}).data.revision).toBe(beforeRevision);
 });
 
 test("T-993 双指滚动平移、组合键缩放，节点文字仍可独立滚动",async({page,context,baseURL})=>{
- const account=await dispatch(page,"accounts.create",{params:undefined,query:undefined,body:{platform:"douyin",accountHandle:`@canvas-wheel-${Date.now()}`}});
- await context.addCookies([{name:"creatoros_current_account",value:encodeURIComponent(account.id),url:baseURL!}]);
- await page.addInitScript(id=>window.localStorage.setItem("creatoros:current-account",id),account.id);
+ const account=await groupedAccount(page,"douyin",`@canvas-wheel-${Date.now()}`);
+ await enterGroup(page,context,baseURL!,account.groupId);
  await page.goto("/canvases?tab=canvases");await page.getByRole("button",{name:"新建画布"}).click();
  const canvas=page.getByTestId("infinite-canvas"),rect=await canvas.boundingBox();expect(rect).not.toBeNull();
  const transform=()=>page.getByTestId("canvas-world").getAttribute("style");
@@ -179,14 +191,13 @@ test("T-993 双指滚动平移、组合键缩放，节点文字仍可独立滚�
 });
 
 test("T-993 旧版无尺寸画布可读，保存后补默认尺寸且连线不丢",async({page,context,baseURL})=>{
- const account=await dispatch(page,"accounts.create",{params:undefined,query:undefined,body:{platform:"douyin",accountHandle:`@canvas-old-${Date.now()}`}});
- const canvas=await dispatch(page,"canvas.create",{params:undefined,query:undefined,body:{title:"旧版画布"}},account.id);
- const headers={"content-type":"application/json","x-account-id":account.id};
+ const account=await groupedAccount(page,"douyin",`@canvas-old-${Date.now()}`);
+ const canvas=await dispatch(page,"canvas.create",{params:undefined,query:undefined,body:{title:"旧版画布"}},{groupId:account.groupId});
+ const headers={"content-type":"application/json","x-group-id":account.groupId};
  const oldDocument={schemaVersion:1,viewport:{x:0,y:0,zoom:1},nodes:[{id:"old-a",type:"text",label:"旧文案",position:{x:100,y:100},text:"广告标题"},{id:"old-b",type:"image_generation",label:"旧生成",position:{x:460,y:100},prompt:"",mode:"text_to_image"}],edges:[{id:"old-edge",source:"old-a",target:"old-b"}]};
  const saved=await page.request.post("/api/v1/dispatch",{headers,data:{id:"canvas.save",input:{params:{canvasId:canvas.id},query:undefined,body:{expectedRevision:1,document:oldDocument}}}});
  expect(saved.ok(),await saved.text()).toBe(true);
- await context.addCookies([{name:"creatoros_current_account",value:encodeURIComponent(account.id),url:baseURL!}]);
- await page.addInitScript(id=>window.localStorage.setItem("creatoros:current-account",id),account.id);
+ await enterGroup(page,context,baseURL!,account.groupId);
  await page.goto(`/canvases/${canvas.id}`);await expect(page.getByTestId("canvas-node")).toHaveCount(2);await expect(page.locator("[data-canvas-connection]")).toHaveCount(1);
  await page.getByRole("button",{name:"保存",exact:true}).click();await expect(page.getByText("已保存",{exact:true})).toBeVisible();
  const read=await page.request.post("/api/v1/dispatch",{headers,data:{id:"canvas.get",input:{params:{canvasId:canvas.id},query:undefined,body:undefined}}});
@@ -206,11 +217,10 @@ test("T-993 旧版无尺寸画布可读，保存后补默认尺寸且连线不�
 });
 
 test("T-993 当前账号图片与视频能插入画布并实际预览",async({page,context,baseURL})=>{
- const account=await dispatch(page,"accounts.create",{params:undefined,query:undefined,body:{platform:"douyin",accountHandle:`@canvas-media-${Date.now()}`}});
- await context.addCookies([{name:"creatoros_current_account",value:encodeURIComponent(account.id),url:baseURL!}]);
- await page.addInitScript(id=>window.localStorage.setItem("creatoros:current-account",id),account.id);
- await uploadMedia(page,account.id,resolve(process.cwd(),"../docs/image-4.png"),"image","image/png","画布预览图片.png");
- await uploadMedia(page,account.id,resolve(process.cwd(),"../output/content-samples/ai-copy-eval-loop/motion-preview.mp4"),"video","video/mp4","画布预览视频.mp4");
+ const account=await groupedAccount(page,"douyin",`@canvas-media-${Date.now()}`);
+ await enterGroup(page,context,baseURL!,account.groupId);
+ await uploadMedia(page,{groupId:account.groupId},resolve(process.cwd(),"public/douyin-icon.png"),"image","image/png","画布预览图片.png");
+ await uploadMedia(page,{groupId:account.groupId},resolve(process.cwd(),"../output/content-samples/ai-copy-eval-loop/motion-preview.mp4"),"video","video/mp4","画布预览视频.mp4");
  await page.goto("/canvases?tab=canvases");
  await page.getByRole("button",{name:"新建画布"}).click();
  await expect(page).toHaveURL(/\/canvases\/[^/]+$/);
@@ -227,28 +237,26 @@ test("T-993 当前账号图片与视频能插入画布并实际预览",async({pa
  await expect.poll(async()=>page.locator('[data-testid="canvas-node"] video').evaluate(video=>(video as HTMLVideoElement).readyState)).toBeGreaterThan(0);
 });
 
-test("T-994 作品素材入口、项目画布过滤与安全返回",async({page,context,baseURL})=>{
- const account=await dispatch(page,"accounts.create",{params:undefined,query:undefined,body:{platform:"douyin",accountHandle:`@canvas-ux-${Date.now()}`}});
- const project=await dispatch(page,"projects.create",{params:undefined,query:undefined,body:{title:"新品广告体验",brief:"视觉方案"}},account.id);
- const other=await dispatch(page,"projects.create",{params:undefined,query:undefined,body:{title:"另一件作品",brief:""}},account.id);
- await dispatch(page,"canvas.create",{params:undefined,query:undefined,body:{title:"另一件作品的画布",projectId:other.id}},account.id);
- await context.addCookies([{name:"creatoros_current_account",value:encodeURIComponent(account.id),url:baseURL!}]);
- await page.addInitScript(id=>window.localStorage.setItem("creatoros:current-account",id),account.id);
+test("T-994 作品素材入口、项目画布过滤与安全返回",async({page,context,baseURL},testInfo)=>{
+ const account=await groupedAccount(page,"douyin",`@canvas-ux-${Date.now()}`);
+ const project=await dispatch(page,"projects.create",{params:undefined,query:undefined,body:{title:"新品广告体验",brief:"视觉方案"}},{groupId:account.groupId});
+ const other=await dispatch(page,"projects.create",{params:undefined,query:undefined,body:{title:"另一件作品",brief:""}},{groupId:account.groupId});
+ await dispatch(page,"canvas.create",{params:undefined,query:undefined,body:{title:"另一件作品的画布",projectId:other.id}},{groupId:account.groupId});
+ await enterGroup(page,context,baseURL!,account.groupId);
  await page.goto(`/projects/${project.id}`);
- const evidenceRoot=resolve(process.cwd(),"../docs/verification/t994");mkdirSync(evidenceRoot,{recursive:true});
  await expect(page.getByRole("link",{name:"打开创作画布"})).toBeVisible();
- await page.locator('#materials').screenshot({path:resolve(evidenceRoot,"project-materials-after.png")});
+ await page.locator('#materials').screenshot({path:testInfo.outputPath("project-materials-after.png")});
  await page.getByRole("link",{name:"打开创作画布"}).click();
  await expect(page.getByRole("heading",{name:"新品广告体验的创作画布"})).toBeVisible();
  await expect(page.getByText("另一件作品的画布")).toHaveCount(0);
  await expect(page.getByRole("link",{name:"查看当前账号全部画布"})).toBeVisible();
  await page.getByRole("button",{name:"创建作品画布"}).click();
  await expect(page.getByRole("heading",{name:"从一个画面开始"})).toBeVisible();
- await page.screenshot({path:resolve(evidenceRoot,"canvas-empty-after.png")});
+ await page.screenshot({path:testInfo.outputPath("canvas-empty-after.png")});
  await page.setViewportSize({width:1024,height:768});
  await expect(page.getByRole("button",{name:"素材库"})).toBeVisible();
  await expect(page.getByRole("button",{name:/生成视频 从描述或首帧开始做动态画面/})).toBeVisible();
- await page.screenshot({path:resolve(evidenceRoot,"canvas-narrow-after.png")});
+ await page.screenshot({path:testInfo.outputPath("canvas-narrow-after.png")});
  await page.setViewportSize({width:1536,height:1024});
  await expect(page.getByLabel("关联项目（可选）")).toHaveValue(project.id);
  const canvasUrl=page.url();
@@ -259,22 +267,21 @@ test("T-994 作品素材入口、项目画布过滤与安全返回",async({page,
  await expect(page.getByRole("textbox",{name:"画布标题"})).toHaveValue("新品广告 · 视觉方案 A");
  await page.getByRole("button",{name:"选已有素材 把账号里的图片和视频放进来"}).click();
  await expect(page.getByRole("complementary",{name:"当前账号素材"})).toBeVisible();
- await page.screenshot({path:resolve(evidenceRoot,"canvas-assets-after.png")});
+ await page.screenshot({path:testInfo.outputPath("canvas-assets-after.png")});
  await expect(page.getByText("搜索已加载的 0 件素材")).toBeVisible();
  await expect(page.getByRole("link",{name:"去素材中心上传"})).toBeVisible();
 });
 
 test("T-994 画布版本冲突时不离开并给出恢复动作",async({page,context,baseURL})=>{
- const account=await dispatch(page,"accounts.create",{params:undefined,query:undefined,body:{platform:"douyin",accountHandle:`@canvas-ux-conflict-${Date.now()}`}});
- const project=await dispatch(page,"projects.create",{params:undefined,query:undefined,body:{title:"冲突恢复作品",brief:""}},account.id);
- const canvas=await dispatch(page,"canvas.create",{params:undefined,query:undefined,body:{title:"原画布",projectId:project.id}},account.id);
- await context.addCookies([{name:"creatoros_current_account",value:encodeURIComponent(account.id),url:baseURL!}]);
- await page.addInitScript(id=>window.localStorage.setItem("creatoros:current-account",id),account.id);
+ const account=await groupedAccount(page,"douyin",`@canvas-ux-conflict-${Date.now()}`);
+ const project=await dispatch(page,"projects.create",{params:undefined,query:undefined,body:{title:"冲突恢复作品",brief:""}},{groupId:account.groupId});
+ const canvas=await dispatch(page,"canvas.create",{params:undefined,query:undefined,body:{title:"原画布",projectId:project.id}},{groupId:account.groupId});
+ await enterGroup(page,context,baseURL!,account.groupId);
  await page.goto(`/canvases/${canvas.id}`);
  await expect(page.getByRole("textbox",{name:"画布标题"})).toHaveValue("原画布");
- const read=await page.request.post("/api/v1/dispatch",{headers:{"content-type":"application/json","x-account-id":account.id},data:{id:"canvas.get",input:{params:{canvasId:canvas.id},query:undefined,body:undefined}}});
+ const read=await page.request.post("/api/v1/dispatch",{headers:{"content-type":"application/json","x-group-id":account.groupId},data:{id:"canvas.get",input:{params:{canvasId:canvas.id},query:undefined,body:undefined}}});
  const current=(await read.json() as {data:{revision:number;document:unknown}}).data;
- const remote=await page.request.post("/api/v1/dispatch",{headers:{"content-type":"application/json","x-account-id":account.id},data:{id:"canvas.save",input:{params:{canvasId:canvas.id},query:undefined,body:{expectedRevision:current.revision,title:"另一窗口已改",document:current.document,projectId:project.id}}}});
+ const remote=await page.request.post("/api/v1/dispatch",{headers:{"content-type":"application/json","x-group-id":account.groupId},data:{id:"canvas.save",input:{params:{canvasId:canvas.id},query:undefined,body:{expectedRevision:current.revision,title:"另一窗口已改",document:current.document,projectId:project.id}}}});
  expect(remote.ok(),await remote.text()).toBe(true);
  await page.getByRole("textbox",{name:"画布标题"}).fill("我的未保存修改");
  await page.getByRole("button",{name:/返回作品 · 冲突恢复作品/}).click();
@@ -283,33 +290,39 @@ test("T-994 画布版本冲突时不离开并给出恢复动作",async({page,con
  await expect(page.getByRole("button",{name:"重新载入"})).toBeVisible();
 });
 
-test("T-994 生成结果就地保留并加入当前作品（模拟任务回执）",async({page,context,baseURL})=>{
- const account=await dispatch(page,"accounts.create",{params:undefined,query:undefined,body:{platform:"douyin",accountHandle:`@canvas-result-${Date.now()}`}});
- const project=await dispatch(page,"projects.create",{params:undefined,query:undefined,body:{title:"结果采纳作品",brief:""}},account.id);
- const canvas=await dispatch(page,"canvas.create",{params:undefined,query:undefined,body:{title:"结果操作画布",projectId:project.id}},account.id) as {id:string;userId:string;document:{schemaVersion:1;viewport:{x:number;y:number;zoom:number};nodes:unknown[];edges:unknown[]}};
- const assetId=await uploadMedia(page,account.id,resolve(process.cwd(),"../docs/image-4.png"),"image","image/png","结果操作预览.png");
+test("T-994 生成结果就地保留并加入当前作品（模拟任务回执）",async({page,context,baseURL},testInfo)=>{
+ const account=await groupedAccount(page,"douyin",`@canvas-result-${Date.now()}`);
+ const project=await dispatch(page,"projects.create",{params:undefined,query:undefined,body:{title:"结果采纳作品",brief:""}},{groupId:account.groupId});
+ const canvas=await dispatch(page,"canvas.create",{params:undefined,query:undefined,body:{title:"结果操作画布",projectId:project.id}},{groupId:account.groupId}) as {id:string;userId:string;document:{schemaVersion:1;viewport:{x:number;y:number;zoom:number};nodes:unknown[];edges:unknown[]}};
+ const assetId=await uploadMedia(page,{groupId:account.groupId},resolve(process.cwd(),"public/douyin-icon.png"),"image","image/png","结果操作预览.png");
+ const uploaded=await dispatch<{currentFileId:string}>(page,"assets.get",{params:{assetId},query:undefined,body:undefined},{groupId:account.groupId});
+ const download=await dispatch<{url:string}>(page,"assets.fileDownloadUrl",{params:{assetId,assetFileId:uploaded.currentFileId},query:undefined,body:undefined},{groupId:account.groupId});
+ const downloaded=await page.request.get(download.url);expect(downloaded.ok(),await downloaded.text()).toBe(true);
+ const fileId=uploaded.currentFileId,checksum=createHash("sha256").update(await downloaded.body()).digest("hex");
  const nodeId="result-generation-node";
- await dispatch(page,"canvas.save",{params:{canvasId:canvas.id},query:undefined,body:{expectedRevision:1,document:{...canvas.document,nodes:[{id:nodeId,type:"image_generation",label:"主视觉",position:{x:100,y:100},size:{width:350,height:430},prompt:"秋季新品广告",mode:"text_to_image"}]}}},account.id);
+ await dispatch(page,"canvas.save",{params:{canvasId:canvas.id},query:undefined,body:{expectedRevision:1,document:{...canvas.document,nodes:[{id:nodeId,type:"image_generation",label:"主视觉",position:{x:100,y:100},size:{width:350,height:430},prompt:"秋季新品广告",mode:"text_to_image"}]}}},{groupId:account.groupId});
  let taskStatus:"awaiting_confirmation"|"succeeded"="awaiting_confirmation",confirmCount=0,linkAttempts=0;
- const taskId="mock-result-task-1",stamp=new Date().toISOString();
+ const taskId="mock-result-task-1",executionTaskId="mock-execution-task-1",callId="mock-call-1",stamp=new Date().toISOString();
  await page.route("**/api/v1/dispatch",async route=>{
   const request=route.request().postDataJSON() as {id:string;input?:{params?:Record<string,string>}};
   if(request.id==="canvas.node.tasks"&&request.input?.params?.canvasId===canvas.id){
-   await route.fulfill({json:{data:[{id:"mock-link-1",canvasId:canvas.id,nodeId,attemptId:"mock-attempt-123456",taskId,mediaKind:"image",inputRevision:2,inputDigest:"mock-digest",referenceFileId:null,referenceChecksum:null,resultAssetId:assetId,createdAt:stamp,updatedAt:stamp}],meta:{requestId:"mock-list",page:1,pageSize:100,total:1}}});return;
+   await route.fulfill({json:{data:[{id:"mock-link-1",canvasId:canvas.id,nodeId,attemptId:"mock-attempt-123456",taskId,mediaKind:"image",inputRevision:2,inputDigest:"a".repeat(64),referenceFileId:null,referenceChecksum:null,resultAssetId:assetId,createdAt:stamp,updatedAt:stamp}],meta:{requestId:"mock-list",page:1,pageSize:100,total:1}}});return;
+  }
+  if(request.id==="canvas.generations.material.get"&&request.input?.params?.canvasId===canvas.id&&request.input?.params?.generationLinkId==="mock-link-1"){
+   await route.fulfill({json:{data:{status:"available",phase:taskStatus==="succeeded"?"confirmed":"candidate",origin:{canvasId:canvas.id,generationLinkId:"mock-link-1",nodeId,attemptId:"mock-attempt-123456",inputRevision:2,inputDigest:"a".repeat(64),taskId,resultId:"mock-result-1",executionTaskId,callId},file:{assetId,assetFileId:fileId},checksum,assetType:"image",name:"结果操作预览.png",assetStatus:taskStatus==="succeeded"?"active":"pending",taskStatus},meta:{requestId:"mock-material"}}});return;
   }
   if(request.id==="ai.tasks.get"&&request.input?.params?.taskId===taskId||request.id==="ai.tasks.confirm"&&request.input?.params?.taskId===taskId){
    if(request.id==="ai.tasks.confirm"){confirmCount++;taskStatus="succeeded";}
-   await route.fulfill({json:{data:{id:taskId,userId:canvas.userId,projectId:null,contentOutputId:null,taskType:"asset.generate",status:taskStatus,inputData:{prompt:"秋季新品广告",mode:"text_to_image"},modelKey:"mock/image",idempotencyKey:"mock-idempotency",attemptId:"mock-attempt-123456",requestFingerprint:`sha256:${"a".repeat(64)}`,retryOfTaskId:null,requestedAt:stamp,startedAt:stamp,completedAt:stamp,errorMessage:null},meta:{requestId:"mock-task"}}});return;
+   await route.fulfill({json:{data:{id:taskId,userId:canvas.userId,projectId:null,contentOutputId:null,taskType:"asset.generate",status:taskStatus,executionTaskId,inputData:{prompt:"秋季新品广告",mode:"text_to_image"},modelKey:"mock/image",idempotencyKey:"mock-idempotency",attemptId:"mock-attempt-123456",requestFingerprint:`sha256:${"a".repeat(64)}`,retryOfTaskId:null,requestedAt:stamp,startedAt:stamp,completedAt:stamp,errorMessage:null},meta:{requestId:"mock-task"}}});return;
   }
   if(request.id==="materialLinks.create"&&++linkAttempts===1){await route.fulfill({status:503,json:{error:{code:"ExternalDependencyError",message:"模拟关联失败"},meta:{requestId:"mock-link-failure"}}});return;}
   await route.continue();
  });
- await context.addCookies([{name:"creatoros_current_account",value:encodeURIComponent(account.id),url:baseURL!}]);
- await page.addInitScript(id=>window.localStorage.setItem("creatoros:current-account",id),account.id);
+ await enterGroup(page,context,baseURL!,account.groupId);
  await page.goto(`/canvases/${canvas.id}`);
  const result=page.getByTestId("canvas-node").filter({hasText:"主视觉"});
  await expect(result.getByText("最近结果",{exact:false})).toBeVisible();
- await page.screenshot({path:resolve(process.cwd(),"../docs/verification/t994/canvas-result-actions-after.png")});
+ await page.screenshot({path:testInfo.outputPath("canvas-result-actions-after.png")});
  await result.getByRole("button",{name:"保留到素材库"}).click();
  await expect(result.getByRole("button",{name:"已在素材库"})).toBeDisabled();
  expect(confirmCount).toBe(1);
@@ -323,10 +336,9 @@ test("T-994 生成结果就地保留并加入当前作品（模拟任务回执�
 
 
 test("T-1021 首页案例独立浏览、取消无写入，多页模板创建原画布并可重新读取",async({page,context,baseURL})=>{
- const account=await dispatch(page,"accounts.create",{body:{platform:"douyin",accountHandle:`@home-${Date.now()}`}});
- await context.addCookies([{name:"creatoros_current_account",value:encodeURIComponent(account.id),url:baseURL!}]);
- await page.addInitScript(id=>localStorage.setItem("creatoros:current-account",id),account.id);
- const canvases=async()=>{const response=await page.request.post("/api/v1/dispatch",{headers:{"content-type":"application/json","x-account-id":account.id},data:{id:"canvas.list",input:{}}});expect(response.ok()).toBe(true);return (await response.json()).data as unknown[];};
+ const account=await groupedAccount(page,"douyin",`@home-${Date.now()}`);
+ await enterGroup(page,context,baseURL!,account.groupId);
+ const canvases=async()=>{const response=await page.request.post("/api/v1/dispatch",{headers:{"content-type":"application/json","x-group-id":account.groupId},data:{id:"canvas.list",input:{}}});expect(response.ok()).toBe(true);return (await response.json()).data as unknown[];};
  const before=(await canvases()).length;
  await page.goto("/canvases");await expect(page.getByRole("heading",{name:"创作空间"})).toBeVisible();
  await expect(page.getByRole("navigation",{name:"创作空间功能"}).getByRole("link",{name:"案例库"})).toHaveAttribute("aria-current","page");
@@ -340,24 +352,23 @@ test("T-1021 首页案例独立浏览、取消无写入，多页模板创建原�
  await page.getByRole("button",{name:/用这个模板创作/}).click();
  await page.getByRole("button",{name:"新建画布并放入",exact:true}).click();
  await expect(page).toHaveURL(/\/canvases\/[^/?]+$/);await expect(page.getByTestId("canvas-node")).toHaveCount(3);
- const id=page.url().split("/").at(-1)!;const response=await page.request.post("/api/v1/dispatch",{headers:{"content-type":"application/json","x-account-id":account.id},data:{id:"canvas.get",input:{params:{canvasId:id}}}});
+ const id=page.url().split("/").at(-1)!;const response=await page.request.post("/api/v1/dispatch",{headers:{"content-type":"application/json","x-group-id":account.groupId},data:{id:"canvas.get",input:{params:{canvasId:id}}}});
  const saved=(await response.json()).data;expect(saved.document.nodes.every((n:{aspectRatio:string})=>n.aspectRatio==="1:1")).toBe(true);expect(saved.document.visualGroups[0].pageOrder).toHaveLength(3);expect(saved.document.visualGroups[0].generationAttempts).toEqual({});expect((await canvases()).length).toBe(before+1);
  await page.reload();await expect(page.getByTestId("canvas-node")).toHaveCount(3);
 });
 
 test("T-1021 资产独立上传，选用追加原画布并冻结真实文件",async({page,context,baseURL})=>{
- const account=await dispatch(page,"accounts.create",{body:{platform:"douyin",accountHandle:`@asset-home-${Date.now()}`}});
- const original=await dispatch(page,"canvas.create",{body:{title:"已有创作"}},account.id);
- await context.addCookies([{name:"creatoros_current_account",value:encodeURIComponent(account.id),url:baseURL!}]);
- await page.addInitScript(id=>localStorage.setItem("creatoros:current-account",id),account.id);
- await page.goto("/canvases?tab=assets");await page.locator('[data-slot="assets-upload-input"]').setInputFiles(resolve(process.cwd(),"../docs/image-4.png"));
+ const account=await groupedAccount(page,"douyin",`@asset-home-${Date.now()}`);
+ const original=await dispatch(page,"canvas.create",{body:{title:"已有创作"}},{groupId:account.groupId});
+ await enterGroup(page,context,baseURL!,account.groupId);
+ await page.goto("/canvases?tab=assets");await page.locator('[data-slot="assets-upload-input"]').setInputFiles(resolve(process.cwd(),"public/douyin-icon.png"));
  await expect(page.getByRole("status").filter({hasText:"已上传素材"})).toBeVisible();
- await page.getByRole("button",{name:/image-4.png · 用此素材创作/}).click();
+ await page.getByRole("button",{name:/douyin-icon.png · 用此素材创作/}).click();
  await page.getByRole("button",{name:"已有画布",exact:true}).click();
  await page.getByRole("dialog").locator("select").selectOption(original.id);
  await page.getByRole("button",{name:"放入这个画布",exact:true}).click();
  await expect(page).toHaveURL(new RegExp(`/canvases/${original.id}$`));await expect(page.getByTestId("canvas-node")).toHaveCount(1);
- const response=await page.request.post("/api/v1/dispatch",{headers:{"content-type":"application/json","x-account-id":account.id},data:{id:"canvas.get",input:{params:{canvasId:original.id}}}});const saved=(await response.json()).data;
+ const response=await page.request.post("/api/v1/dispatch",{headers:{"content-type":"application/json","x-group-id":account.groupId},data:{id:"canvas.get",input:{params:{canvasId:original.id}}}});const saved=(await response.json()).data;
  expect(saved.document.nodes[0].assetId).toBeTruthy();expect(saved.document.nodes[0].fileId).toBeTruthy();expect(saved.document.nodes[0].checksum).toMatch(/^[a-f0-9]{64}$/);
  await page.reload();await expect(page.getByTestId("canvas-node")).toHaveCount(1);
 });

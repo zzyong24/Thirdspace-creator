@@ -1,4 +1,5 @@
 "use client";
+import {useCreationClient,useCreationScope,creationScopeKey} from "@/lib/creation-workspace-scope";
 
 import * as React from "react";
 import Link from "next/link";
@@ -31,6 +32,8 @@ function normalizeImages(images: ImageUse[]): ImageUse[] {
 }
 
 function ImagePreview({ image }: { image: ImageUse }) {
+ const client=useCreationClient();
+
   const [url, setUrl] = React.useState<string | null>(null);
   const [unavailable, setUnavailable] = React.useState(false);
   React.useEffect(() => {
@@ -48,12 +51,14 @@ function ImagePreview({ image }: { image: ImageUse }) {
 type WorkbenchProps = {
   projectId: string;
   projectTitle: string;
-  accountId: string;
+  accountId:string|null;
   initial: GraphicPostResource;
   initialStartStatus?: string;
 };
-export function GraphicPostWorkbench(props:WorkbenchProps){return <GraphicPostWorkbenchSession key={`${props.accountId}:${props.initial.outputId}`} {...props}/>;}
+export function GraphicPostWorkbench(props:WorkbenchProps){const workspaceSelection=useCreationScope();return <GraphicPostWorkbenchSession key={`${creationScopeKey(workspaceSelection)}:${props.initial.outputId}`} {...props}/>;}
 function GraphicPostWorkbenchSession({projectId,projectTitle,accountId,initial,initialStartStatus}:WorkbenchProps) {
+ const client=useCreationClient();
+
   const router = useRouter();
   const [selectedCardId,setSelectedCardId]=React.useState<string|null>(initial.current.cardBriefs?.[0]?.cardId??null);
   const [selectedCardIds,setSelectedCardIds]=React.useState<string[]>(initial.current.cardBriefs?.map(card=>card.cardId)??[]);
@@ -250,7 +255,7 @@ function GraphicPostWorkbenchSession({projectId,projectTitle,accountId,initial,i
           {draft.imageUses.some(image=>image.role==="cover"||!image.cardId) ? <ol className="mt-4 grid gap-3 sm:grid-cols-2">{legacyImages.map((image, index) => <li key={`${image.role}:${image.cardId??"unbound"}:${image.assetId}:${image.assetFileId}`} className="rounded-lg border border-border p-3"><ImagePreview image={image} /><div className="mt-2 flex items-center justify-between text-xs"><span>{image.role === "cover" ? "封面" : `原照片 ${index + 1}`}</span><span>{index + 1} / {legacyImages.length}</span></div><div className="mt-2 flex flex-wrap gap-2"><Button size="sm" variant="outline" disabled={index === 0||image.role==="cover"||legacyImages[index-1]?.role==="cover"} onClick={() => { const next = [...legacyImages]; [next[index - 1], next[index]] = [next[index]!, next[index - 1]!]; editLegacyImages(next); }}>上移</Button><Button size="sm" variant="outline" disabled={index === legacyImages.length - 1||image.role==="cover"} onClick={() => { const next = [...legacyImages]; [next[index], next[index + 1]] = [next[index + 1]!, next[index]!]; editLegacyImages(next); }}>下移</Button><Button size="sm" variant="outline" disabled={image.role === "cover"} onClick={() => setDraft(current=>setGraphicCover(current,image))}>设为封面</Button><Button size="sm" variant="ghost" onClick={() => editLegacyImages(legacyImages.filter((_, position) => position !== index))}>移除</Button></div></li>)}</ol> : <p className="mt-4 text-sm text-muted-foreground">暂无图片。文字可先保存，图片稍后补充。</p>}
         </div></details>
       </fieldset>
-      <aside className="min-w-0 space-y-4">    <NoteRelayEditor accountId={accountId} outputId={state.outputId} sourceVersionId={state.currentVersionId} platform="rednote" value={draft} disabled={busy} onLayoutChange={layout=>setDraft(current=>({...current,nativeLayout:layout}))}/><details id="graphic-history" className="scroll-mt-48 rounded-xl border border-border bg-surface p-4"><summary className="cursor-pointer text-sm font-medium">历史版本</summary><ol className="mt-3 space-y-2 text-sm">{state.versions.map((version) => <li key={version.id}><button type="button" onClick={() => void openVersion(version.id)} className="text-left text-primary hover:underline">v{version.versionNumber} · {version.createdAt.slice(0, 16).replace("T", " ")}</button></li>)}</ol></details></aside>
+      <aside className="min-w-0 space-y-4">    <NoteRelayEditor projectId={projectId} accountId={accountId} outputId={state.outputId} sourceVersionId={state.currentVersionId} platform="rednote" value={draft} disabled={busy} onLayoutChange={layout=>setDraft(current=>({...current,nativeLayout:layout}))}/><details id="graphic-history" className="scroll-mt-48 rounded-xl border border-border bg-surface p-4"><summary className="cursor-pointer text-sm font-medium">历史版本</summary><ol className="mt-3 space-y-2 text-sm">{state.versions.map((version) => <li key={version.id}><button type="button" onClick={() => void openVersion(version.id)} className="text-left text-primary hover:underline">v{version.versionNumber} · {version.createdAt.slice(0, 16).replace("T", " ")}</button></li>)}</ol></details></aside>
     </div>
     <details aria-label="发布内容" className="rounded-xl border border-border bg-surface"><summary className="cursor-pointer px-5 py-4 text-sm font-medium">首图、简介、话题与审核</summary><div className="border-t border-border p-4"><Button size="sm" variant="outline" disabled={busy} onClick={()=>setDesignTarget({kind:'cover'})}>快图细调封面</Button><PublicationResultActions accountId={accountId} outputId={state.outputId} outputType="image" platform={state.targetPlatform==='xiaohongshu'?'xiaohongshu':null} dirty={dirty}/></div></details>
 

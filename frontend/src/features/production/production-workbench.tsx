@@ -1,4 +1,5 @@
 "use client";
+import {useCreationClient,useCreationScope,creationScopeKey} from "@/lib/creation-workspace-scope";
 
 /**
  * [T-254c] 制作视频工作台(SPEC 2026-07-11 §3.1 工作流 / §3.3 tab UI)。
@@ -107,7 +108,7 @@ interface SrtState {
   lines: SrtLine[];
 }
 
-export function ProductionWorkbench({
+function ProductionWorkbenchSession({
   projectId,
   projectTitle,
   scriptText,
@@ -118,6 +119,8 @@ export function ProductionWorkbench({
   readVideoDuration = readVideoDurationViaElement,
   editorReadOnly=false,
 }: ProductionWorkbenchProps) {
+ const client=useCreationClient();
+
   // 画幅属于“本次制作 revision”，不是只能从立项继承的只读属性。存量项目无值时
   // 维持既有 landscape 行为；用户可在制作页显式切到 portrait。
   const [renderOrientation, setRenderOrientation] = React.useState<
@@ -721,7 +724,7 @@ export function ProductionWorkbench({
                 ? { manualMaterialAssignments }
                 : {}),
             },
-        })) as unknown as WireAITask;
+        },client)) as unknown as WireAITask;
         // 新任务创建成功才切走旧确认卡。历史 plan/render/final 都在服务端与现有 state
         // 保留；这里只把“当前正在编辑的候选”切到新任务。
         setDecisionsConfirmed(false);
@@ -750,7 +753,7 @@ export function ProductionWorkbench({
 
   const loadDecisionResult = React.useCallback(
     async (taskId: string): Promise<boolean> => {
-      const data=await readVideoDecisionCandidate(taskId);
+      const data=await readVideoDecisionCandidate(taskId,client);
       if(!data)return false;
       if (!data.decisions) return false;
       setDecisions(data.decisions as VideoDecisions);
@@ -2341,3 +2344,5 @@ export function ProductionWorkbench({
 /**
  * [T-294] B-roll 素材缩略:assetId → 签名 URL → 视频/图片缩略;取不到 URL 显类型占位。
  */
+
+export function ProductionWorkbench(props:Parameters<typeof ProductionWorkbenchSession>[0]){const selection=useCreationScope();return <ProductionWorkbenchSession key={creationScopeKey(selection)+":"+(props.projectId)} {...props}/>;}

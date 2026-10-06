@@ -17,7 +17,7 @@ const native={metadata:{id:'output',name:'测试稿'},currentSceneId:'scene',sce
 const plan={editorVersion:3,referenceEditor:{editor:'opencut-classic',revision:'cf5e79e919144200294fb9fed22a222592a0aeea',nativeDocument:native,mediaRefs:[{mediaId:'media',assetId:'asset',assetFileId:'file'}]},nativeSources:[{mediaId:'media',source}],sourceTranscripts:[]};
 const initial:any={outputId:'output',projectId:'project',productionId:'production',revision:1,state:'editable',plan,unsupportedFields:[]};
 let local:any;
-beforeEach(()=>{vi.clearAllMocks();sessionStorage.clear();local=structuredClone(native);h.missing=false;h.failApply=false;localStorage.setItem('creatoros:current-account','account');document.cookie='creatoros_current_account=account';h.client.getOutput.mockResolvedValue({});h.client.saveProductionEditor.mockImplementation(async({body}:any)=>({revision:2,productionId:'production',plan:body.plan}));h.client.getProductionEditorVersion.mockResolvedValue({plan});h.request.mockImplementation(async(op:string,payload:any)=>{if(op==='load')return {};if(op==='snapshot')return{document:local,mediaMetadata:local.mediaMetadata};if(op==='context')return{document:local,mediaMetadata:local.mediaMetadata,outputId:'output',sceneId:'scene',trackId:'main',selectedElements:[{trackId:'main',elementId:'clip'},{trackId:'other-overlay',elementId:'overlay'}]};if(op==='apply-tracks'){if(h.failApply){h.failApply=false;throw Error('未知ACK');}local.scenes[0].tracks=structuredClone(payload.afterTracks);return{applied:true,sceneId:'scene'};}});});
+beforeEach(()=>{vi.clearAllMocks();sessionStorage.clear();local=structuredClone(native);h.missing=false;h.failApply=false;localStorage.setItem('creatoros:current-account','account');document.cookie='creatoros_current_account=account';h.client.getOutput.mockResolvedValue({});h.client.saveProductionEditor.mockImplementation(async({body}:any)=>({revision:2,productionId:'production',plan:body.plan}));h.client.getProductionEditorVersion.mockResolvedValue({plan});h.request.mockImplementation(async(op:string,payload:any)=>{if(op==='load')return {};if(op==='snapshot')return{document:local,mediaMetadata:local.mediaMetadata};if(op==='context')return{document:local,mediaMetadata:local.mediaMetadata,contextEpoch:7,outputId:'output',sceneId:'scene',trackId:'main',selectedElements:[{trackId:'main',elementId:'clip'},{trackId:'other-overlay',elementId:'overlay'}]};if(op==='apply-tracks'){if(h.failApply){h.failApply=false;throw Error('未知ACK');}local.scenes[0].tracks=structuredClone(payload.afterTracks);return{applied:true,sceneId:'scene'};}});});
 afterEach(cleanup);
 async function open(){render(<VideoReferenceWorkbench initial={initial} title="真实粗剪" onOriginal={()=>{}} onSaved={h.saved}/>);await waitFor(()=>expect(screen.getByRole('button',{name:'保存工程'})).not.toBeDisabled());}
 it('保存期间完成的在途导入在回执后仍是未保存修改',async()=>{
@@ -47,3 +47,67 @@ it('正常采用后的自动项目/scene时间变化不标dirty，明确采用�
 it.each(['clean','undo','media'])('恢复真实已应用但ACK丢失的原回执，%s只保留真实差异而不重复apply',async kind=>{
  const baseRequest=h.request.getMockImplementation()!,receipts=new Set<string>();h.request.mockImplementation(async(op:string,payload:any,options:any)=>{if(op!=='apply-tracks')return baseRequest(op,payload);if(receipts.has(options.requestId))return{applied:true,sceneId:'scene'};receipts.add(options.requestId);local.scenes[0].tracks=structuredClone(payload.afterTracks);local.metadata.updatedAt='自动项目保存时间';local.scenes[0].updatedAt='自动场景保存时间';h.changed?.();throw Error('应用已完成但ACK未知');});h.rough=null;await open();fireEvent.click(screen.getByRole('button',{name:'AI 辅助粗剪'}));await waitFor(()=>expect(h.rough).toBeTruthy());const after:any=structuredClone(plan);after.revision=2;after.referenceEditor.nativeDocument.scenes[0].tracks.main.elements=[];await expect(h.rough.onSaved({productionId:'production',revision:2,plan:after,requestId:'lost-adopt'},{requestId:'lost-adopt',expectedRevision:1})).rejects.toThrow('ACK未知');if(kind==='undo')local.scenes[0].tracks=structuredClone(tracks);if(kind==='media')local.mediaMetadata[0].unknownEditable='用户后续编辑';fireEvent.click(await screen.findByRole('button',{name:'恢复原剪辑回执'}));if(kind==='clean'){await screen.findByText('已采用到当前时间轴，可继续编辑或撤销。');expect(screen.queryByText(/有未保存修改/)).toBeNull();}else{await screen.findByText(/本地后续修改或撤销已保留/);expect(screen.getByText(/有未保存修改/)).toBeInTheDocument();if(kind==='undo')expect(local.scenes[0].tracks).toEqual(tracks);if(kind==='media')expect(local.mediaMetadata[0].unknownEditable).toBe('用户后续编辑');}const applies=h.request.mock.calls.filter(c=>c[0]==='apply-tracks');expect(applies[1]).toEqual(applies[0]);expect(receipts.size).toBe(1);
 });
+
+// T1062_COMPONENT_PORT_SEAM: 仅本文件既有业务spies；真实scope/epoch/signal/lifecycle不替换。
+vi.mock("@/lib/creation-workspace-scope", async importOriginal => {
+  const actual = await importOriginal<typeof import("@/lib/creation-workspace-scope")>();
+  const {client: componentPorts} = await import("@/lib/contract-client");
+  type Workspace = ReturnType<typeof actual.createCreationWorkspace>;
+  type Operation = ReturnType<Workspace["capture"]>;
+  const views = new WeakMap<Workspace, Workspace>();
+  function portClient(base: Operation["client"], capture: () => Operation): Operation["client"] {
+    const methods = new Map<PropertyKey, unknown>();
+    return new Proxy(base, {
+      get(target, key, receiver) {
+        const port = Reflect.get(componentPorts, key);
+        const original = Reflect.get(target, key, receiver);
+        if (typeof port !== "function") return original;
+        if (!methods.has(key)) methods.set(key, async (...args: unknown[]) => {
+          const operation = capture();
+          operation.assertCurrent();
+          try { return await Reflect.apply(Reflect.get(componentPorts, key), componentPorts, args); }
+          finally { operation.assertCurrent(); }
+        });
+        return methods.get(key);
+      },
+    });
+  }
+  function view(workspace: Workspace): Workspace {
+    const cached = views.get(workspace);
+    if (cached) return cached;
+    const client = portClient(workspace.client, () => workspace.capture());
+    const capture = (): Operation => {
+      const operation = workspace.capture();
+      return Object.freeze({...operation, client: portClient(operation.client, () => operation)});
+    };
+    const proxy = new Proxy(workspace, {
+      get(target, key) {
+        if (key === "client") return client;
+        if (key === "capture") return capture;
+        // Reflect读取原对象getter，signal/epoch始终是原factory当前值；不spread workspace。
+        return Reflect.get(target, key, target);
+      },
+    });
+    views.set(workspace, proxy);
+    return proxy;
+  }
+  return {
+    ...actual,
+    createCreationWorkspace: (...args: Parameters<typeof actual.createCreationWorkspace>) => view(actual.createCreationWorkspace(...args)),
+    useCreationWorkspace: (scope: Parameters<typeof actual.useCreationWorkspace>[0]) => view(actual.useCreationWorkspace(scope)),
+    useCreationClient: () => view(actual.useCreationWorkspace(actual.useCreationScope())).client,
+  };
+});
+// T1062_COMPONENT_PORT_SEAM_END
+
+// T1062_UNIT_SCOPE_FIXTURE: 显式合成单测选择；不是当前用户/生产default。
+import {beforeEach as t1062ScopeBeforeEach, afterEach as t1062ScopeAfterEach} from "vitest";
+t1062ScopeBeforeEach(() => {
+  window.localStorage.removeItem("creatoros:current-group");
+  window.localStorage.setItem("creatoros:current-account", "account");
+});
+t1062ScopeAfterEach(() => {
+  window.localStorage.removeItem("creatoros:current-group");
+  window.localStorage.removeItem("creatoros:current-account");
+});
+// T1062_UNIT_SCOPE_FIXTURE_END

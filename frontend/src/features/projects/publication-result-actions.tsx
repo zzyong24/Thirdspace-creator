@@ -5,6 +5,7 @@ import Image from "next/image";
 import type { CreativeCapability, CreativeResult } from "@creatoros/contract";
 
 import { Button } from "@/components/ui/button";
+import {useCreationClient,useCreationScope} from "@/lib/creation-workspace-scope";
 import { client } from "@/lib/contract-client";
 import { describeUserError } from "@/lib/ai-error-humanize";
 
@@ -39,6 +40,7 @@ function coverValue(value: unknown): CoverUse[] | null {
 }
 
 function CoverPreview({ image, resultId, onReady }: { image: CoverUse; resultId: string; onReady: (id: string) => void }) {
+  const client=useCreationClient();
   const [url, setUrl] = React.useState<string | null>(null);
   const [failed, setFailed] = React.useState(false);
   React.useEffect(() => {
@@ -73,12 +75,13 @@ function abilityText(cap: CreativeCapability | undefined) {
 }
 
 export function PublicationResultActions({ accountId, outputId, outputType, platform, dirty = false }: {
-  accountId: string;
+  accountId:string|null;
   outputId: string;
   outputType: "image" | "video";
   platform: Platform | null;
   dirty?: boolean;
 }) {
+  const client=useCreationClient(),workspaceSelection=useCreationScope();
   const [capabilities, setCapabilities] = React.useState<CreativeCapability[]>([]);
   const [results, setResults] = React.useState<Partial<Record<Kind, CreativeResult>>>({});
   const [coverResult, setCoverResult] = React.useState<CreativeResult | null>(null);
@@ -125,7 +128,7 @@ export function PublicationResultActions({ accountId, outputId, outputType, plat
     if (!platform) return;
     const serial = ++loadSerial.current;
     const reads = await Promise.allSettled([
-      client.listCreativeCapabilities({ params: undefined, query: { accountId, outputId }, body: undefined }),
+      client.listCreativeCapabilities({ params: undefined, query:{...(!workspaceSelection.groupId&&accountId?{accountId}:{}),outputId}, body: undefined }),
       client.listResults({ params: { outputId }, query: { pageSize: 50 }, body: undefined }),
       loadPublication(),
     ]);

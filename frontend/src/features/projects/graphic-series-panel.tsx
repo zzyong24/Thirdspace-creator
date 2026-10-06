@@ -1,4 +1,5 @@
 "use client";
+import {useCreationClient} from "@/lib/creation-workspace-scope";
 import * as React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -13,6 +14,8 @@ export type GraphicImageAsset={id:string;name:string;assetType:string;status:str
 type GraphicImagePreviewProps={image:Pick<ImageUse,'assetId'|'assetFileId'>;large?:boolean};
 export function GraphicImagePreview(props:GraphicImagePreviewProps){return <GraphicImagePreviewSession key={`${props.image.assetId}:${props.image.assetFileId}`} {...props}/>;}
 function GraphicImagePreviewSession({image,large=false}:GraphicImagePreviewProps){
+ const client=useCreationClient();
+
  const [url,setUrl]=React.useState<string|null>(null),[error,setError]=React.useState(false);
  React.useEffect(()=>{let active=true;
   void client.getAssetFileDownloadUrl({params:{assetId:image.assetId,assetFileId:image.assetFileId},query:undefined,body:undefined})

@@ -91,3 +91,17 @@ describe("T-1050 多形式创建会话", () => {
     await expect(session.create(input)).rejects.toMatchObject({needsAccount: true});
   });
 });
+
+
+describe("T-1062 纯组创建（TMP候选，未运行）",()=>{
+ it("空组无需平台账号，同组切平台不中止；跨组不续写",async()=>{
+  let group="group-a",account:string|null=null;
+  const ports={readGroupId:()=>group,readAccountId:()=>account,verifyGroup:vi.fn(async()=>{}),verifyAccount:vi.fn(async()=>{}),createProject:vi.fn(async()=>({id:"p",title:"主题"})),createOutput:vi.fn(async(_id:string,body:{contentType:string;title:string})=>{account="platform-b";return {id:body.contentType,projectId:"p",...body};})};
+  const session=createProjectCreationSession(ports);const result=await session.create(input);expect(result.groupId).toBe("group-a");expect(result.accountId).toBeNull();expect(ports.verifyAccount).not.toHaveBeenCalled();expect(ports.createOutput).toHaveBeenCalledTimes(3);
+  group="group-b";await expect(session.create(input)).rejects.toThrow("账号组已切换");expect(ports.createProject).toHaveBeenCalledOnce();
+ });
+ it("组验证期间切组，零项目写入",async()=>{
+  let group="a";const ports={readGroupId:()=>group,readAccountId:()=>null,verifyGroup:vi.fn(async()=>{group="b";}),verifyAccount:vi.fn(async()=>{}),createProject:vi.fn(async()=>({id:"p",title:"主题"})),createOutput:vi.fn()};
+  await expect(createProjectCreationSession(ports).create(input)).rejects.toThrow();expect(ports.createProject).not.toHaveBeenCalled();
+ });
+});

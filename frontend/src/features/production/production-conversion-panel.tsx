@@ -1,4 +1,5 @@
 "use client";
+import {useCreationClient} from "@/lib/creation-workspace-scope";
 import * as React from "react";
 import {ENDPOINTS,type ProductionEditorDocument,type ProductionSourceRequest} from "@creatoros/contract";
 import {client} from "@/lib/contract-client";
@@ -10,6 +11,8 @@ type Source=NonNullable<typeof ENDPOINTS.prepareProductionEditorSource.body>["_o
 type State={expectedRevision:number;source:Source|null;prepare:Prepare|null;adopt:Adopt|null;mode:"capture-current-original"|"explicit-replace-main"};
 const button="rounded border px-3 py-2 text-sm disabled:opacity-40";
 function ConversionContents({document,onSaved}:{document:ProductionEditorDocument;onSaved:()=>void}){
+ const client=useCreationClient();
+
  const key=`production-conversion:${document.projectId}:${document.outputId}`;
  const [saved,setSaved]=React.useState<State>({expectedRevision:document.revision,source:null,prepare:null,adopt:null,mode:"capture-current-original"}),[candidate,setCandidate]=React.useState<Candidate|null>(null),[probe,setProbe]=React.useState<ProductionSourceRequest|null>(null),[busy,setBusy]=React.useState(false),[error,setError]=React.useState<string|null>(null),[canRestart,setCanRestart]=React.useState(false);
  const active=React.useRef(true),flight=React.useRef(false);

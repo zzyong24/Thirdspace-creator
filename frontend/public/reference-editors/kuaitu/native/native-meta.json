@@ -1,16 +1,23 @@
 {
   "source": "https://github.com/ikuaitu/vue-fabric-editor",
   "commit": "b3bdcfb0bd6d8f98e7483cf561ac03ba56c0d889",
-  "sourceArchiveSha256": "6c953a34d6e9deb2a53897da3e346ed292a9869bebcf9f3b4e8585a7d3858294",
+  "sourceArchiveSha256": "781c55a73582faaf595100acfc0132414349b6800dad7b85d44d9bcc50f90c45",
   "entry": "src/native-entry.ts",
   "interface": "creatoros.native-editor@1",
   "files": {
-    "native.js": "47c8193cde75f04be063e4e0d999b56609721db27a71fa9112f01e059fed4a4d",
     "native.css": "cd47761c252f0c78ca84955dd10a4fb088c86a592145ece94deb6162cbfb2662",
-    "native-graph.json": "cacadcee9346e8b7303291a12bb67accfc718f4d03715fca81bf712ebe9a2ec5",
+    "favicon.ico": "c2db3148f3b014737591afb33ac0091517e78af2d9c73601af1d7292892a4809",
     "LICENSE": "ab11c1e29b8beda3d49d39a1fb4cf476a88de23a1194c24382323f086d4cddcc",
-    "THIRD_PARTY_NOTICES.txt": "69f45a329625e6768f00696650e7033ddf5c1bcd6f87f311cd4573ba6d0a78d1"
+    "native.js": "f67b3668caee708e44cf22b50181ebd1a74ee602c2872a9d46e3acc7a5e975a2",
+    "THIRD_PARTY_NOTICES.txt": "69f45a329625e6768f00696650e7033ddf5c1bcd6f87f311cd4573ba6d0a78d1",
+    "native-graph.json": "1c62eabf57d7c4d9321d3e4a313db1ae3505ffefb8111d90c61e0daee6efa0ef"
   },
   "moduleCount": 1096,
-  "verification": "类型与生命周期夹具另列；不声明真实浏览器像素或 PNG"
+  "verification": "实际core4/native35与构建0，真实Canvas/contract环境另列；不声明浏览器像素、PNG听感或安装",
+  "upstreamSourceArchiveSha256": "6c953a34d6e9deb2a53897da3e346ed292a9869bebcf9f3b4e8585a7d3858294",
+  "nativeArchiveSha256": "781c55a73582faaf595100acfc0132414349b6800dad7b85d44d9bcc50f90c45",
+  "t1062CandidateManifest": {
+    "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r8-nzjmtyxt/source-manifest-final.json",
+    "sha256": "246e63a02753b7a90760611506a82341d8457462a996aed8463f7f91eccdc153"
+  }
 }

@@ -1,8 +1,8 @@
 "use client";
 import * as React from "react";
 import type {ProductionEditorDocument} from "@creatoros/contract";
-import {client} from "@/lib/contract-client";
-import {useNativeAccount} from "@/features/reference-editors/use-native-account";
+import {useCreationWorkspace} from "@/lib/creation-workspace-scope";
+import {useNativeWorkspace} from "@/features/reference-editors/use-native-account";
 import {ProductionWorkbench,type ProductionWorkbenchProps} from "./production-workbench";
 import {RoughCutWorkbench} from "./rough-cut-workbench";
 import {ProductionConversionPanel} from "./production-conversion-panel";
@@ -11,10 +11,11 @@ import {ProductionVisualEditor} from "./production-visual-editor";
 
 /** 当前作品的工程入口；旧备料可达，首次转换明确保存并留存原件。 */
 function EditorContents(props:ProductionWorkbenchProps) {
+  const scope=useNativeWorkspace(),workspace=useCreationWorkspace(scope),client=workspace.client;
   const [rough,setRough]=React.useState(false);
   const [reference,setReference]=React.useState(true);
   const [document,setDocument]=React.useState<ProductionEditorDocument|null>(null),[error,setError]=React.useState<string|null>(null),[prepare,setPrepare]=React.useState(false),[epoch,setEpoch]=React.useState(0);
-  React.useEffect(()=>{if(!props.outputId)return;let cancelled=false;void client.getProductionEditor({params:{outputId:props.outputId},query:undefined,body:undefined}).then(data=>{if(!cancelled){setDocument(data);setError(null);}}).catch(e=>{if(!cancelled)setError(e instanceof Error?e.message:"制作工程读取失败");});return()=>{cancelled=true;};},[props.outputId,epoch]);
+  React.useEffect(()=>{if(!props.outputId)return;let cancelled=false;void client.getProductionEditor({params:{outputId:props.outputId},query:undefined,body:undefined}).then(data=>{if(!cancelled){setDocument(data);setError(null);}}).catch(e=>{if(!cancelled)setError(e instanceof Error?e.message:"制作工程读取失败");});return()=>{cancelled=true;};},[props.outputId,epoch,client]);
   if(!props.outputId)return <ProductionWorkbench {...props}/>;
   if(error&&!document)return <div role="alert">{error}<button className="ml-2 rounded border px-3 py-2" onClick={()=>setEpoch(e=>e+1)}>重试读取</button></div>;
   if(!document)return <p className="p-4 text-sm text-muted-foreground">正在读取当前视频的制作工程…</p>;
@@ -32,6 +33,6 @@ function EditorContents(props:ProductionWorkbenchProps) {
 }
 
 export function ProductionEditorEntry(props:ProductionWorkbenchProps){
- const accountId=useNativeAccount();
- return <EditorContents key={`${accountId??'missing'}:${props.projectId}:${props.outputId??'empty'}`} {...props}/>;
+ const scope=useNativeWorkspace();
+ return <EditorContents key={`${scope.groupId?`group:${scope.groupId}`:`account:${scope.accountId??'missing'}`}:${props.projectId}:${props.outputId??'empty'}`} {...props}/>;
 }

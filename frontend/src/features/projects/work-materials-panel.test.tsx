@@ -26,3 +26,67 @@ it('旧缓存无ACK但原已提交回执明确成功，只读原稿面',async()=
 
 it('独立回归：已卸载的原回执晚到，不复活新窗口已完成并清除的恢复记录',async()=>{localStorage.setItem('work-material:account-a:composition-a',JSON.stringify({command}));let resolve!:(v:unknown)=>void;const receipt={compositionId:'composition-a',operation:'materials.attach',input:body,status:'committed'};api.getWorkCompositionRequest.mockImplementationOnce(()=>new Promise(r=>resolve=r)).mockResolvedValue(receipt);const first=render(<WorkMaterialsPanel composition={composition} accountId="account-a"/>);fireEvent.click(await screen.findByText('读取并恢复原材料请求'));await waitFor(()=>expect(api.getWorkCompositionRequest).toHaveBeenCalledTimes(1));first.unmount();render(<WorkMaterialsPanel composition={composition} accountId="account-a"/>);fireEvent.click(await screen.findByText('读取并恢复原材料请求'));await waitFor(()=>expect(localStorage.getItem('work-material:account-a:composition-a')).toBeNull());resolve(receipt);await Promise.resolve();await Promise.resolve();expect(localStorage.getItem('work-material:account-a:composition-a')).toBeNull();expect(api.attachWorkCompositionMaterial).not.toHaveBeenCalled();});
 it('独立回归：缓存已ACK但原回执缺失，只读核对且保留原请求',async()=>{localStorage.setItem('work-material:account-a:composition-a',JSON.stringify({command,ack:true}));api.getWorkCompositionRequest.mockRejectedValue(Object.assign(Error('原回执不可见'),{code:'NotFoundError'}));render(<WorkMaterialsPanel composition={composition} accountId="account-a"/>);fireEvent.click(await screen.findByText('读取已保存材料与稿件'));await screen.findByRole('alert');expect(api.attachWorkCompositionMaterial).not.toHaveBeenCalled();expect(api.listWorkCompositionMaterials).not.toHaveBeenCalled();expect(JSON.parse(localStorage.getItem('work-material:account-a:composition-a')!).command.body).toEqual(body);});
+
+// T1062_COMPONENT_PORT_SEAM: 仅本文件既有业务spies；真实scope/epoch/signal/lifecycle不替换。
+vi.mock("@/lib/creation-workspace-scope", async importOriginal => {
+  const actual = await importOriginal<typeof import("@/lib/creation-workspace-scope")>();
+  const {client: componentPorts} = await import("@/lib/contract-client");
+  type Workspace = ReturnType<typeof actual.createCreationWorkspace>;
+  type Operation = ReturnType<Workspace["capture"]>;
+  const views = new WeakMap<Workspace, Workspace>();
+  function portClient(base: Operation["client"], capture: () => Operation): Operation["client"] {
+    const methods = new Map<PropertyKey, unknown>();
+    return new Proxy(base, {
+      get(target, key, receiver) {
+        const port = Reflect.get(componentPorts, key);
+        const original = Reflect.get(target, key, receiver);
+        if (typeof port !== "function") return original;
+        if (!methods.has(key)) methods.set(key, async (...args: unknown[]) => {
+          const operation = capture();
+          operation.assertCurrent();
+          try { return await Reflect.apply(Reflect.get(componentPorts, key), componentPorts, args); }
+          finally { operation.assertCurrent(); }
+        });
+        return methods.get(key);
+      },
+    });
+  }
+  function view(workspace: Workspace): Workspace {
+    const cached = views.get(workspace);
+    if (cached) return cached;
+    const client = portClient(workspace.client, () => workspace.capture());
+    const capture = (): Operation => {
+      const operation = workspace.capture();
+      return Object.freeze({...operation, client: portClient(operation.client, () => operation)});
+    };
+    const proxy = new Proxy(workspace, {
+      get(target, key) {
+        if (key === "client") return client;
+        if (key === "capture") return capture;
+        // Reflect读取原对象getter，signal/epoch始终是原factory当前值；不spread workspace。
+        return Reflect.get(target, key, target);
+      },
+    });
+    views.set(workspace, proxy);
+    return proxy;
+  }
+  return {
+    ...actual,
+    createCreationWorkspace: (...args: Parameters<typeof actual.createCreationWorkspace>) => view(actual.createCreationWorkspace(...args)),
+    useCreationWorkspace: (scope: Parameters<typeof actual.useCreationWorkspace>[0]) => view(actual.useCreationWorkspace(scope)),
+    useCreationClient: () => view(actual.useCreationWorkspace(actual.useCreationScope())).client,
+  };
+});
+// T1062_COMPONENT_PORT_SEAM_END
+
+// T1062_UNIT_SCOPE_FIXTURE: 显式合成单测选择；不是当前用户/生产default。
+import {beforeEach as t1062ScopeBeforeEach, afterEach as t1062ScopeAfterEach} from "vitest";
+t1062ScopeBeforeEach(() => {
+  window.localStorage.removeItem("creatoros:current-group");
+  window.localStorage.setItem("creatoros:current-account", "account-a");
+});
+t1062ScopeAfterEach(() => {
+  window.localStorage.removeItem("creatoros:current-group");
+  window.localStorage.removeItem("creatoros:current-account");
+});
+// T1062_UNIT_SCOPE_FIXTURE_END

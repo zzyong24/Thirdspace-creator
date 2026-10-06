@@ -1,4 +1,5 @@
 "use client";
+import {useCreationWorkspace,useCreationScope,creationScopeKey} from "@/lib/creation-workspace-scope";
 
 // Adapted from basketikun/infinite-canvas, web/src/components/canvas/canvas-node.tsx
 // and web/src/pages/canvas/project.tsx at dab19adc0847e32e39b7fc8ff90cb392561fb826.
@@ -16,23 +17,29 @@ export type CanvasCapability={mode:"text_to_image"|"image_to_image"|"text_to_vid
 export const defaultSize=(type:CanvasNode["type"])=>type==="text"?{width:280,height:200}:type==="image"||type==="video"?{width:380,height:300}:{width:350,height:430};
 
 export function MediaPreview({assetId,fileId,type,requestedRatio,expectedChecksum}:{assetId:string;fileId?:string;type:"image"|"video";requestedRatio?:string;expectedChecksum?:string}){
- const [url,setUrl]=useState(""),[dimensions,setDimensions]=useState<{width:number;height:number}|null>(null);
+ const workspace=useCreationWorkspace(useCreationScope()),client=workspace.client;
+ const mediaKey=JSON.stringify([creationScopeKey(workspace.scope),assetId,fileId??null,expectedChecksum??null]);
+
+ const [media,setMedia]=useState<{key:string;url:string}>({key:"",url:""}),[dimensions,setDimensions]=useState<{width:number;height:number}|null>(null);
+ const url=media.key===mediaKey?media.url:"";
  useEffect(()=>{
-  const scope=JSON.stringify([readCurrentGroupId(),readCurrentAccountId()]);let live=true,blobUrl="";const controller=new AbortController();
+  let live=true,blobUrl="";const controller=new AbortController();
+  const setUrl=(url:string)=>setMedia({key:mediaKey,url});
   queueMicrotask(()=>{if(live){setUrl("");setDimensions(null);}});
-  void (fileId?client.getAssetFileDownloadUrl({params:{assetId,assetFileId:fileId},query:undefined,body:undefined}):client.getDownloadUrl({params:{assetId},query:undefined,body:undefined})).then(async response=>{
-   if(!live||scope!==JSON.stringify([readCurrentGroupId(),readCurrentAccountId()]))return;
+  if(!fileId)return()=>{live=false;controller.abort();};
+  void client.getAssetFileDownloadUrl({params:{assetId,assetFileId:fileId},query:undefined,body:undefined}).then(async response=>{
+   if(!live)return;workspace.assertCurrent();
    if(!expectedChecksum){setUrl(response.url);return;}
    // SEMANTIC_BOUNDARY_ALLOW: 仅校验用户已保存样图的文件完整性，不做风格或创作选择。
    const file=await fetch(response.url,{signal:controller.signal});if(!file.ok)throw Error("私人样图读取失败");
    const bytes=await file.arrayBuffer();
    const digest=Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256",bytes)),value=>value.toString(16).padStart(2,"0")).join("");
    if(digest!==expectedChecksum)throw Error("私人样图版本已变化");
-   if(!live||scope!==JSON.stringify([readCurrentGroupId(),readCurrentAccountId()]))return;
+   if(!live)return;workspace.assertCurrent();
    blobUrl=URL.createObjectURL(new Blob([bytes],{type:file.headers.get("content-type")??"image/png"}));setUrl(blobUrl);
   }).catch(()=>{if(live)setUrl("");});
   return()=>{live=false;controller.abort();if(blobUrl)URL.revokeObjectURL(blobUrl);};
- },[assetId,fileId,expectedChecksum]);
+ },[mediaKey,client,workspace]);
  if(!url)return <div className="flex min-h-32 flex-1 items-center justify-center rounded-lg bg-muted/60 text-xs text-muted-foreground">预览暂不可用</div>;
  // Blob URLs are short-lived, account-scoped media links and must be loaded directly.
  // eslint-disable-next-line @next/next/no-img-element

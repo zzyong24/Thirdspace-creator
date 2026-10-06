@@ -40,7 +40,7 @@ export default async function DraftWorkbenchRoute({
     notFound();
   }
 
-  const sessionClient = createServerClient(session.ctx);
+  const sessionClient = createServerClient({...session.ctx,accountId:session.ctx.groupId?null:session.ctx.accountId});
   const resolvedId = await resolveProjectIdParam(projectId, sessionClient);
   const scoped = sessionClient as unknown as DraftWorkbenchClient;
   if (view === "works") {
@@ -63,7 +63,7 @@ export default async function DraftWorkbenchRoute({
         accountPlatform = account.platform;
       } catch { /* 项目仍可创作，平台须由用户明确选择。 */ }
     }
-    return <ProjectOutputHome projectId={overview.projectId} projectTitle={overview.projectTitle} initialOutputs={overview.outputs} accountId={session.ctx.accountId} accountPlatform={accountPlatform} />;
+    return <ProjectOutputHome projectId={overview.projectId} projectTitle={overview.projectTitle} initialOutputs={overview.outputs} accountId={session.ctx.groupId?null:session.ctx.accountId} accountPlatform={accountPlatform} />;
   }
   let vm: Awaited<ReturnType<typeof buildDraftWorkbenchVm>> | null = null;
   let crossAccount = false;

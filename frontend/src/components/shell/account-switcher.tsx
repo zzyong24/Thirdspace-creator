@@ -3,9 +3,12 @@ import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronsUpDown, Plus, Check, Layers } from "lucide-react";
-import { client } from "@/lib/contract-client";
-import { readCurrentAccountId, readCurrentGroupId, writeCurrentGroupId } from "@/lib/http-transport";
-import { useAccountsChanged } from "@/lib/account-events";
+import { ENDPOINTS, requestListWithMeta, type Transport } from "@creatoros/contract";
+import { fetchCreatorApi, HttpTransportError } from "@/lib/http-transport";
+import { readCreationScope, creationScopeKey, type CreationScope } from "@/lib/creation-workspace-scope";
+import { useWorkspaceInitialization, isWorkspaceRecoveryPath } from "./workspace-initialization";
+import { readCurrentAccountId, readCurrentGroupId, writeCurrentGroupId, CURRENT_GROUP_KEY, syncCurrentGroupCookie } from "@/lib/http-transport";
+import { useAccountsChanged, notifyAccountsChanged } from "@/lib/account-events";
 import { hasForegroundActivity, listForegroundActivities } from "@/lib/foreground-activity";
 import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -13,6 +16,8 @@ import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { resolveCurrentGroup, type SwitcherGroup } from "./account-switcher-logic";
+export const WORKSPACE_INITIALIZATION_TIMEOUT_MS = 15_000;
+
 type LoadState = {kind:"loading"}|{kind:"ready";groups:readonly SwitcherGroup[]}|{kind:"error"};
 
 /** 保留原侧栏底部位置；组选中是工作区，平台账号只作具体操作目标。 */
@@ -20,44 +25,137 @@ export function AccountSwitcher({collapsed}:{collapsed:boolean}) {
   const router=useRouter(), routerRef=React.useRef(router);
   // eslint-disable-next-line react-hooks/refs -- 最新router只供异步事件消费，不参与视图
   routerRef.current=router;
+  const initialization=useWorkspaceInitialization(), initializationRef=React.useRef(initialization);
+  // 最新context只供事件消费，避免状态更新重建load/重新读取列表。
+  // eslint-disable-next-line react-hooks/refs -- 最新context只供异步事件消费，不参与视图
+  initializationRef.current=initialization;
   const alive=React.useRef(false), epoch=React.useRef(0), inFlight=React.useRef(false), reload=React.useRef(false), frame=React.useRef<number|null>(null);
+  const firstReady=React.useRef(false), refreshRequired=React.useRef(false), refreshFailed=React.useRef(false), controller=React.useRef<AbortController|null>(null);
+  const [refreshPending,startRefresh]=React.useTransition();
+  const refreshCompletion=React.useRef<{epoch:number;scope:CreationScope;timer:ReturnType<typeof setTimeout>;cancelWait:()=>void}|null>(null);
   const [state,setState]=React.useState<LoadState>({kind:"loading"}),[currentId,setCurrentId]=React.useState<string|null>(null);
   const [pendingSwitch,setPendingSwitch]=React.useState<{id:string;activities:readonly string[]}|null>(null);
+  const cancelInitialRefresh=React.useCallback(()=>{
+    const pending=refreshCompletion.current;
+    if(pending){refreshCompletion.current=null;clearTimeout(pending.timer);pending.cancelWait();}
+  },[]);
+  const refreshInitialScope=React.useCallback((scope:CreationScope,version:number)=>{
+    cancelInitialRefresh();refreshRequired.current=true;refreshFailed.current=false;
+    initializationRef.current?.synchronizing();
+    let cancelWait!:()=>void;
+    const cancelled=new Promise<void>(resolve=>{cancelWait=resolve;});
+    const waiting={epoch:version,scope,timer:setTimeout(()=>{
+      if(refreshCompletion.current!==waiting||version!==epoch.current||!alive.current)return;
+      cancelInitialRefresh();epoch.current++;refreshFailed.current=true;
+      setState({kind:"error"});initializationRef.current?.fail("工作区页面打开超时，请重试。");
+    },WORKSPACE_INITIALIZATION_TIMEOUT_MS),cancelWait};
+    refreshCompletion.current=waiting;
+    startRefresh(async()=>{
+      try{
+        // Next持有实际刷新生命周期；cancel仅释放旧世代等待，不取消RSC网络或队列。
+        await Promise.race([Promise.resolve(routerRef.current.refresh()),cancelled]);
+      }catch(error){
+        if(refreshCompletion.current!==waiting||version!==epoch.current||!alive.current)return;
+        cancelInitialRefresh();epoch.current++;refreshFailed.current=true;
+        setState({kind:"error"});initializationRef.current?.fail(error instanceof Error?error.message:"工作区页面暂不可用，请重试。");
+      }
+    });
+  },[cancelInitialRefresh]);
   const load=React.useCallback(()=>{
     epoch.current++;
-    if(inFlight.current){reload.current=true;return;}
+    if(inFlight.current){reload.current=true;controller.current?.abort();return;}
+    cancelInitialRefresh();
     inFlight.current=true;
+    initializationRef.current?.begin();
     void(async()=>{
       do {
         reload.current=false;
-        const version=epoch.current;
+        const version=epoch.current, abort=new AbortController();controller.current=abort;
+        const timer=setTimeout(()=>abort.abort(new Error("工作区读取超时，请重试。")),WORKSPACE_INITIALIZATION_TIMEOUT_MS);
         try {
-          const groups=(await client.listAccountGroups({params:undefined,query:{page:1,pageSize:100},body:undefined})) as unknown as SwitcherGroup[];
+          const transport:Transport={async request(endpoint,input){
+            const response=await fetchCreatorApi("/api/v1/dispatch",{method:"POST",headers:{"content-type":"application/json"},credentials:"same-origin",signal:abort.signal,body:JSON.stringify({id:endpoint.id,input})},{groupId:null,accountId:null});
+            abort.signal.throwIfAborted();
+            const envelope=await response.json();abort.signal.throwIfAborted();
+            if(!response.ok){const error=envelope?.error;throw new HttpTransportError(typeof error?.message==="string"?error.message:typeof error==="string"?error:`请求未完成（${response.status}）`,{status:response.status,code:error?.code,details:error?.details});}
+            return envelope;
+          }};
+          const groups:SwitcherGroup[]=[];let complete=false;
+          for(let page=1;page<=20;page++){
+            const result=await requestListWithMeta(transport,ENDPOINTS.listAccountGroups,{params:undefined,query:{page,pageSize:100},body:undefined});
+            abort.signal.throwIfAborted();
+            groups.push(...result.data);
+            if(groups.length===result.meta.total){complete=true;break;}
+            if(groups.length>result.meta.total||result.data.length===0)throw new Error("账号组列表未完整返回，请重试。");
+          }
+          if(!complete)throw new Error("账号组列表超过当前可读取的范围，请重试。");
           if(!alive.current||version!==epoch.current)continue;
-          const selected=resolveCurrentGroup(groups??[],readCurrentGroupId(),readCurrentAccountId());
-          // writeCurrentGroupId同步cookie并发送一次scope事件，不再叠加旧账号通知。
-          if(selected.shouldPersist){writeCurrentGroupId(selected.currentId,'account-switcher');routerRef.current.refresh();}
-          setCurrentId(selected.currentId);setState({kind:"ready",groups:groups??[]});
-        }catch{if(alive.current&&version===epoch.current)setState({kind:"error"});}
+          const selected=resolveCurrentGroup(groups,readCurrentGroupId(),readCurrentAccountId());
+          const wasReady=firstReady.current||initializationRef.current?.isReady();
+          // 已放行的工作台只更新菜单；重试/筛选不能自动换根或清掉脏稿。
+          if(wasReady){setCurrentId(readCurrentGroupId());setState({kind:"ready",groups});continue;}
+          if(selected.shouldPersist){
+            if(selected.currentId===null&&initializationRef.current?.preservesInitialAccount(readCurrentAccountId())){
+              // 清理失效组意图时保原真实旧账号，不能以初始化门删除合法入口。
+              try{window.localStorage.removeItem(CURRENT_GROUP_KEY);}catch{/* 原storage不可用语义保持 */}
+              syncCurrentGroupCookie(null);
+              notifyAccountsChanged({source:"account-switcher",routeRefreshScheduled:true});
+            }else writeCurrentGroupId(selected.currentId,'account-switcher');
+          }
+          setCurrentId(selected.currentId);setState({kind:"ready",groups});
+          const scope=readCreationScope();
+          if(selected.shouldPersist||refreshRequired.current){
+            refreshInitialScope(scope,version);
+          }else{firstReady.current=true;initializationRef.current?.complete(scope);}
+        }catch(error){
+          if(alive.current&&version===epoch.current){epoch.current++;setState({kind:"error"});initializationRef.current?.fail(error instanceof Error?error.message:"账号组列表暂不可用，请重试。");}
+        }finally{clearTimeout(timer);if(controller.current===abort)controller.current=null;}
       }while(alive.current&&reload.current);
       inFlight.current=false;
     })();
-  },[]);
+  },[cancelInitialRefresh,refreshInitialScope]);
+  const retry=React.useCallback(()=>{
+    const pathname=window.location.pathname;
+    const recovery=isWorkspaceRecoveryPath(pathname);
+    if(refreshFailed.current&&!firstReady.current&&!initializationRef.current?.isReady()&&!recovery&&!hasForegroundActivity()){
+      // 创作尚未开放，真实重载绕过挂起的Next refresh队列；已放行/恢复页仍保原任务。
+      epoch.current++;controller.current?.abort();cancelInitialRefresh();
+      if(frame.current!==null){window.cancelAnimationFrame(frame.current);frame.current=null;}
+      window.location.reload();return;
+    }
+    load();
+  },[load,cancelInitialRefresh]);
+  React.useEffect(()=>{
+    if(refreshPending)return;
+    const pending=refreshCompletion.current;
+    if(!pending||!alive.current||pending.epoch!==epoch.current)return;
+    if(creationScopeKey(pending.scope)!==creationScopeKey(readCreationScope()))return;
+    cancelInitialRefresh();refreshRequired.current=false;refreshFailed.current=false;
+    firstReady.current=true;initializationRef.current?.complete(pending.scope);
+  },[refreshPending,state,cancelInitialRefresh]);
   React.useEffect(()=>{
     alive.current=true;load();
-    return()=>{alive.current=false;
+    const unregister=initializationRef.current?.registerRetry(retry);
+    return()=>{alive.current=false;unregister?.();
       // eslint-disable-next-line react-hooks/exhaustive-deps -- 请求世代不是DOM节点；卸载必须推进以拒绝旧响应
-      epoch.current++;
+      epoch.current++;controller.current?.abort();
+      cancelInitialRefresh();
       if(frame.current!==null)window.cancelAnimationFrame(frame.current);
     };
-  },[load]);
+  },[load,retry,cancelInitialRefresh]);
   useAccountsChanged(detail=>{if(detail.source!=="account-switcher")load();});
   const performSwitch=React.useCallback((id:string)=>{
-    epoch.current++;
+    const version=++epoch.current;
+    const wasReady=firstReady.current||initializationRef.current?.isReady();
+    if(!wasReady){cancelInitialRefresh();controller.current?.abort();}
     writeCurrentGroupId(id,'account-switcher');setCurrentId(id);
     if(frame.current!==null)window.cancelAnimationFrame(frame.current);
-    frame.current=window.requestAnimationFrame(()=>{frame.current=null;if(alive.current)routerRef.current.refresh();});
-  },[]);
+    frame.current=window.requestAnimationFrame(()=>{
+      frame.current=null;if(!alive.current)return;
+      if(wasReady)routerRef.current.refresh();
+      else if(version===epoch.current)refreshInitialScope(readCreationScope(),version);
+    });
+  },[cancelInitialRefresh,refreshInitialScope]);
   function select(id:string){if(id===currentId)return;if(hasForegroundActivity()){setPendingSwitch({id,activities:listForegroundActivities()});return;}performSwitch(id);}
   const groups=state.kind==="ready"?state.groups.filter(group=>group.status==="active"):[];
   const current=groups.find(group=>group.id===currentId);
@@ -74,7 +172,7 @@ export function AccountSwitcher({collapsed}:{collapsed:boolean}) {
         <DropdownMenuSeparator/><DropdownMenuItem asChild data-testid="account-switcher-bind"><Link href="/accounts"><Plus className="mr-2 size-4" aria-hidden="true"/>账号组与绑定账号</Link></DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
-    {state.kind==="error"&&<div className="text-xs text-muted-foreground" data-testid="account-switcher-error"><span>账号组列表暂不可用</span><button className="ml-1 text-brand" onClick={load}>重试</button></div>}
+    {state.kind==="error"&&<div className="text-xs text-muted-foreground" data-testid="account-switcher-error"><span>账号组列表暂不可用</span><button className="ml-1 text-brand" onClick={retry}>重试</button></div>}
     <Dialog open={pendingSwitch!==null} onOpenChange={open=>{if(!open)setPendingSwitch(null);}}><DialogContent data-testid="account-switch-confirm"><DialogHeader><DialogTitle>有进行中的操作，切组会离开当前页面</DialogTitle><DialogDescription>切换账号组会离开当前工作区。后台任务继续在创建时的账号组运行。</DialogDescription></DialogHeader>
       <ul className="list-disc pl-5 text-sm" data-testid="account-switch-confirm-activities">{pendingSwitch?.activities.map(activity=><li key={activity}>{activity}</li>)}</ul><DialogFooter><Button variant="outline" data-testid="account-switch-cancel" onClick={()=>setPendingSwitch(null)}>留在当前账号组</Button><Button data-testid="account-switch-confirm-action" onClick={()=>{const target=pendingSwitch;setPendingSwitch(null);if(target)performSwitch(target.id);}}>仍要切换</Button></DialogFooter>
     </DialogContent></Dialog>

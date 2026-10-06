@@ -15,6 +15,8 @@ import { useRouter } from "next/navigation";
 import { UploadCloud } from "lucide-react";
 
 import { client } from "@/lib/contract-client";
+import {useCreationWorkspace,type CreationOperation} from "@/lib/creation-workspace-scope";
+import {useNativeWorkspace} from "@/features/reference-editors/use-native-account";
 // [T-076] classify-asset 随 production 前端退役迁入稿面(弹药区是它的消费点)。
 import { classifyFile } from "./classify-asset";
 // [T-146] 上传链抽成共用函数(AmmoDumpZone 与稿面「＋上传素材」CTA 共用,不重造)。
@@ -33,43 +35,53 @@ interface PendingFile {
 export async function assignTagsBestEffort(
   assetId: string,
   tagNames: readonly string[],
+  operation?: CreationOperation,
 ): Promise<void> {
   if (tagNames.length === 0) return;
+  const api=operation?.client??client;
+  operation?.assertCurrent();
   try {
-    const listed = (await client.listTags({
+    const listed = (await api.listTags({
       params: undefined,
       query: { page: 1, pageSize: 200 },
       body: undefined,
     })) as unknown as ReadonlyArray<{ id: string; name: string }>;
+    operation?.assertCurrent();
     const byName = new Map(
       (Array.isArray(listed) ? listed : []).map((t) => [t.name, t.id]),
     );
     const tagIds: string[] = [];
     for (const name of tagNames) {
+      operation?.assertCurrent();
       const hit = byName.get(name);
       if (hit) {
         tagIds.push(hit);
         continue;
       }
-      const created = (await client.createTag({
+      const created = (await api.createTag({
         params: undefined,
         query: undefined,
         body: { name, kind: "asset-usage" },
       })) as unknown as { id: string };
+      operation?.assertCurrent();
       tagIds.push(created.id);
     }
-    await client.assignTags({
+    operation?.assertCurrent();
+    await api.assignTags({
       params: undefined,
       query: undefined,
       body: { entityType: "asset", entityId: assetId, tagIds },
     });
+    operation?.assertCurrent();
   } catch {
+    operation?.assertCurrent();
     /* 标签是增强,失败不阻断入库 */
   }
 }
 
 export function AmmoDumpZone({ projectId }: { projectId: string }) {
-  const router = useRouter();
+  const router = useRouter(),scope=useNativeWorkspace(),workspace=useCreationWorkspace(scope);
+  const alive=React.useRef(true);React.useEffect(()=>{alive.current=true;return()=>{alive.current=false;};},[]);
   const inputRef = React.useRef<HTMLInputElement>(null);
   const [dragActive, setDragActive] = React.useState(false);
   const [pending, setPending] = React.useState<ReadonlyArray<PendingFile>>([]);
@@ -77,13 +89,15 @@ export function AmmoDumpZone({ projectId }: { projectId: string }) {
   const busyRef = React.useRef(false);
 
   const uploadOne = React.useCallback(
-    async (key: string, file: File) => {
+    async (key: string, file: File,operation:CreationOperation) => {
       try {
         // [T-146] 上传链走共用 uploadFileToProject(createUpload → PUT → complete →
         //   materialLink → 标签 → asset.classify/material.extract),两处同源不重造。
-        await uploadFileToProject(projectId, file);
+        await uploadFileToProject(projectId,file,operation);
+        operation.assertCurrent();if(!alive.current)return;
         setPending((prev) => prev.filter((p) => p.key !== key));
       } catch {
+        if(!alive.current)return;
         setPending((prev) =>
           prev.map((p) => (p.key === key ? { ...p, phase: "error" } : p)),
         );
@@ -95,6 +109,7 @@ export function AmmoDumpZone({ projectId }: { projectId: string }) {
   const enqueue = React.useCallback(
     (files: ReadonlyArray<File>) => {
       if (files.length === 0 || busyRef.current) return;
+      const operation=workspace.capture();operation.assertCurrent();
       const queued = files.map((file) => ({
         file,
         item: {
@@ -107,14 +122,10 @@ export function AmmoDumpZone({ projectId }: { projectId: string }) {
       setPending((prev) => [...prev, ...queued.map((q) => q.item)]);
       busyRef.current = true;
       void (async () => {
-        for (const q of queued) {
-          await uploadOne(q.item.key, q.file);
-        }
-        busyRef.current = false;
-        router.refresh();
+        try{for(const q of queued){operation.assertCurrent();await uploadOne(q.item.key,q.file,operation);}operation.assertCurrent();if(alive.current)router.refresh();}catch{/* 切组停止整批，不将剩余文件交给新组。 */}finally{busyRef.current=false;}
       })();
     },
-    [uploadOne, router],
+    [uploadOne,router,workspace],
   );
 
   return (

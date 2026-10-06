@@ -1,4 +1,5 @@
 "use client";
+import {useCreationClient,useCreationScope} from "@/lib/creation-workspace-scope";
 
 import * as React from "react";
 import { OutputConversionPanel } from "./output-conversion-panel";
@@ -72,10 +73,12 @@ export function VideoOutputWorkbench({ projectId, projectTitle, outputId, output
   outputId: string;
   outputTitle: string;
   targetPlatform: string | null;
-  accountId: string;
+  accountId:string|null;
   sourceItemId?: string;
   initialStartStatus?: string;
 }) {
+ const client=useCreationClient(),workspaceSelection=useCreationScope();
+
   const [script, setScript] = React.useState<ScriptArtifact | null>(null);
   const [draft, setDraft] = React.useState("");
   const [capability, setCapability] = React.useState<CreativeCapability | null>(null);
@@ -110,7 +113,7 @@ export function VideoOutputWorkbench({ projectId, projectTitle, outputId, output
   const refreshResults = React.useCallback(async () => {
     const serial = ++resultReadSerial.current;
     const [abilities, results] = await Promise.allSettled([
-      client.listCreativeCapabilities({ params: undefined, query: { accountId, outputId }, body: undefined }),
+      client.listCreativeCapabilities({ params: undefined, query:{...(!workspaceSelection.groupId&&accountId?{accountId}:{}),outputId}, body: undefined }),
       client.listResults({ params: { outputId }, query: { pageSize: 50 }, body: undefined }),
     ]);
     if (serial !== resultReadSerial.current) return;

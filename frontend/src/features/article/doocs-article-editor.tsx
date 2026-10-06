@@ -4,6 +4,8 @@ import * as React from "react";
 import { zipSync, strToU8 } from "fflate";
 import { articleDocument } from "@creatoros/contract";
 import { Button } from "@/components/ui/button";
+import {useCreationWorkspace,creationScopeKey} from "@/lib/creation-workspace-scope";
+import {useNativeWorkspace} from "@/features/reference-editors/use-native-account";
 import { client } from "@/lib/contract-client";
 import {NativeEditorSurface,type NativeEditorHandle} from "@/features/reference-editors/native-editor-surface";
 import {uploadEditorMedia} from "@/features/reference-editors/reference-editor-media";
@@ -11,7 +13,8 @@ import { parseArticleMarkdown, serializeArticleMarkdown, type MarkdownSection } 
 
 type ArticleDocument = import("@creatoros/contract").ArticleDocument;
 type Props = {
-  accountId: string;
+  accountId:string|null;
+  projectId:string;
   outputId: string;
   sourceVersionId: string;
   value: ArticleDocument;
@@ -20,7 +23,7 @@ type Props = {
   onSave: (document: ArticleDocument) => Promise<boolean>;
 };
 type EditorValue = {markdown?: string; layout?: unknown; html?: string; error?: string; bindings?: Array<{key: string; url: string}>};
-type StoredCheckpoint = { accountId: string; outputId: string; sourceVersionId: string; updatedAt: number; document: ArticleDocument; markdown: string; layout?: ArticleDocument["nativeLayout"] };
+type StoredCheckpoint = {accountId:string|null;groupId?:string|null; outputId: string; sourceVersionId: string; updatedAt: number; document: ArticleDocument; markdown: string; layout?: ArticleDocument["nativeLayout"] };
 
 const assetClient = client as unknown as {
   getAssetFileDownloadUrl(input: { params: { assetId: string; assetFileId: string }; query: undefined; body: undefined }): Promise<{ url: string; fileName: string }>;
@@ -48,8 +51,11 @@ function documentFromSnapshot(document:ArticleDocument,snapshot:EditorValue,regi
  }),nativeLayout:snapshot.layout??undefined});
 }
 
-export function DoocsArticleEditor(props:Props){return <DoocsEditorSession key={`${props.accountId}:${props.outputId}:${props.sourceVersionId}`} {...props}/>;}
-function DoocsEditorSession({ accountId, outputId, sourceVersionId, value, savedDocument, onChange, onSave }: Props) {
+export function DoocsArticleEditor(props:Props){const scope=useNativeWorkspace();return <DoocsEditorSession key={`${creationScopeKey(scope)}:${props.outputId}`} {...props}/>;}
+function DoocsEditorSession({accountId,projectId,outputId, sourceVersionId, value, savedDocument, onChange, onSave }: Props) {
+  const scope=useNativeWorkspace(),workspace=useCreationWorkspace(scope),assetClient=workspace.client;
+  const [mountVersion]=React.useState(sourceVersionId);
+  const storageOwner=scope.groupId?creationScopeKey(scope):scope.accountId??accountId??"missing";
   const editorRef = React.useRef<NativeEditorHandle>(null);
   const alive=React.useRef(true),loadSequence=React.useRef(0),controller=React.useRef<AbortController|null>(null);
   const imported=React.useRef(new Map<string,{assetId:string;assetFileId:string}>());
@@ -71,21 +77,21 @@ function DoocsEditorSession({ accountId, outputId, sourceVersionId, value, saved
   React.useLayoutEffect(()=>{currentDocuments.current={value,savedDocument};});
 
   function readCheckpoint() {
-    const raw = sessionStorage.getItem(checkpointKey(accountId, outputId));
+    const raw = sessionStorage.getItem(checkpointKey(storageOwner,outputId));
     if (!raw) return;
     try {
       const saved = JSON.parse(raw) as StoredCheckpoint;
-      if (saved.accountId !== accountId || saved.outputId !== outputId || Date.now() - saved.updatedAt > 24 * 60 * 60 * 1000) {
-        sessionStorage.removeItem(checkpointKey(accountId, outputId)); return;
+      if ((saved.groupId??null)!==scope.groupId||!scope.groupId&&saved.accountId!==accountId || saved.outputId !== outputId || Date.now() - saved.updatedAt > 24 * 60 * 60 * 1000) {
+        sessionStorage.removeItem(checkpointKey(storageOwner,outputId)); return;
       }
       const parsed = articleDocument.safeParse(saved.document);
-      if (!parsed.success) { sessionStorage.removeItem(checkpointKey(accountId, outputId)); return; }
+      if (!parsed.success) { sessionStorage.removeItem(checkpointKey(storageOwner,outputId)); return; }
       setCheckpoint({ ...saved, document: parsed.data, markdown: typeof saved.markdown === "string" ? saved.markdown : serializeArticleMarkdown(sectionsForEditor(parsed.data)) });
       const stale = saved.sourceVersionId !== sourceVersionId;
       if (!stale && typeof saved.markdown === "string") setDraftMarkdown(saved.markdown);
       if (!stale) setDraftLayout(saved.layout);
       setCheckpointConflict(stale);
-    } catch { sessionStorage.removeItem(checkpointKey(accountId, outputId)); }
+    } catch { sessionStorage.removeItem(checkpointKey(storageOwner,outputId)); }
   }
 
 
@@ -130,7 +136,7 @@ function DoocsEditorSession({ accountId, outputId, sourceVersionId, value, saved
   React.useEffect(() => {
     if (!editorReady||checkpoint) return;
     const timer = window.setTimeout(() => {
-      try { sessionStorage.setItem(checkpointKey(accountId, outputId), JSON.stringify({ accountId, outputId, sourceVersionId, updatedAt: Date.now(), document: value, markdown: draftMarkdown, layout: draftLayout } satisfies StoredCheckpoint)); }
+      try { sessionStorage.setItem(checkpointKey(storageOwner,outputId), JSON.stringify({groupId:scope.groupId,accountId:scope.accountId,outputId,sourceVersionId, updatedAt: Date.now(), document: value, markdown: draftMarkdown, layout: draftLayout } satisfies StoredCheckpoint)); }
       catch { setStatus("未保存草稿仍在编辑器内存中；浏览器刷新后无法恢复。"); }
     }, 500);
     return () => clearTimeout(timer);
@@ -158,7 +164,7 @@ function DoocsEditorSession({ accountId, outputId, sourceVersionId, value, saved
       if(!alive.current||editorRef.current!==active||before!==editorFingerprint(currentDocuments.current.value))throw new Error('当前稿件已改变，请核对后再次保存。');
       const next=documentFromSnapshot(currentDocuments.current.value,snapshot,imported.current);
       setDraftMarkdown(snapshot.markdown!);setDraftLayout(next.nativeLayout);setNativeEcho(editorFingerprint(next));onChange(next);
-      if(await onSave(next)){if(!alive.current)return;sessionStorage.removeItem(checkpointKey(accountId,outputId));setCheckpoint(null);setStatus('正文与排版已保存并读回正式版本。');}
+      if(await onSave(next)){if(!alive.current)return;sessionStorage.removeItem(checkpointKey(storageOwner,outputId));setCheckpoint(null);setStatus('正文与排版已保存并读回正式版本。');}
     }catch(reason){if(alive.current)setError(reason instanceof Error?reason.message:'文章保存未完成。');}
     finally{if(alive.current)setBusy(false);}
   }
@@ -224,11 +230,11 @@ function DoocsEditorSession({ accountId, outputId, sourceVersionId, value, saved
       {checkpointConflict ? <><span>标签页保存了旧版本草稿。当前正式稿已变化，请比较内容；旧草稿只读，不可直接覆盖当前版本。</span>
         <details className="mt-2"><summary className="cursor-pointer">查看旧草稿</summary><p className="mt-2 font-medium">{checkpoint.document.title}</p><pre className="mt-2 max-h-56 overflow-auto whitespace-pre-wrap rounded bg-surface p-2">{checkpoint.markdown}</pre></details></> : "发现此标签页上次未保存的草稿。"}
       {!checkpointConflict && <Button className="ml-3" size="sm" variant="outline" onClick={restoreCheckpoint}>恢复未保存草稿</Button>}
-      <Button className="ml-2" size="sm" variant="ghost" onClick={() => { sessionStorage.removeItem(checkpointKey(accountId, outputId)); setCheckpoint(null); setCheckpointConflict(false); }}>放弃旧草稿并继续当前稿</Button>
+      <Button className="ml-2" size="sm" variant="ghost" onClick={() => { sessionStorage.removeItem(checkpointKey(storageOwner,outputId)); setCheckpoint(null); setCheckpointConflict(false); }}>放弃旧草稿并继续当前稿</Button>
     </div>}
-    <div className="h-[700px] min-h-0 overflow-hidden rounded-md border bg-surface"><NativeEditorSurface ref={editorRef} editor="doocs-md" owner={{accountId,outputId,sourceVersionId}} disabled={busy||syncing} onReady={()=>{readCheckpoint();setEditorReady(true);void initializeEditor().catch(reason=>{if(alive.current)setError(reason.message);});}} onChanged={receiveChanged} onError={setError} onImport={async file=>{
-      const output=await client.getOutput({params:{outputId},query:undefined,body:undefined});if(!alive.current)throw new Error('已离开当前稿件');
-      const ref=await uploadEditorMedia(output.projectId,outputId,file);if(!alive.current)throw new Error('已离开当前稿件');
+    <div className="h-[700px] min-h-0 overflow-hidden rounded-md border bg-surface"><NativeEditorSurface ref={editorRef} editor="doocs-md" owner={{groupId:scope.groupId,accountId:scope.accountId,projectId,outputId,sourceVersionId:mountVersion}} disabled={busy||syncing} onReady={()=>{readCheckpoint();setEditorReady(true);void initializeEditor().catch(reason=>{if(alive.current)setError(reason.message);});}} onChanged={receiveChanged} onError={setError} onImport={async file=>{
+      const output=await workspace.client.getOutput({params:{outputId},query:undefined,body:undefined});if(!alive.current)throw new Error('已离开当前稿件');
+      const ref=await uploadEditorMedia(output.projectId,outputId,file,workspace.capture());if(!alive.current)throw new Error('已离开当前稿件');
       imported.current.set(`${ref.assetId}:${ref.assetFileId}`,{assetId:ref.assetId,assetFileId:ref.assetFileId});
       return {mediaId:`creatoros-asset:${ref.assetId}:${ref.assetFileId}`};
     }}/></div>

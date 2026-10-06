@@ -1,3 +1,9 @@
+# T-1062 当前原生候选
+
+当前source与输出以本次candidate及校验清单为准，真实原命令记录见 VERIFY.md/VERIFICATION.md。宿主18、浏览器视觉、试听与安装尚未执行。
+
+## 原T-1053说明（历史保留）
+
 # T-1053 OpenCut 原生候选交付
 
 本目录交给主会话串行集成。未写共享 checkout、任务状态、根 manifest，也未提交共享 WIP。

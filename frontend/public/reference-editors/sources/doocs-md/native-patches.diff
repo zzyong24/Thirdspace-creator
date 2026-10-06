@@ -3331,3 +3331,159 @@
 +assert.equal(a.lockSha256,b.lockSha256)
 +for(const name of ['vite','vue','@tailwindcss/vite'])assert.equal(a.resolved[name],b.resolved[name])
 +console.log(JSON.stringify({result:'PASS',fixture:'两个不同深度源码目录，同锁缓存依赖独立构建后全文件比对',sourceFiles:Object.keys(a.source).length,distFiles:Object.keys(a.files).length,sourceDifferences,distDifferences,lockSha256:a.lockSha256,entrySha256:a.files['native.js'],cssSha256:a.files['native.css'],graphSha256:a.files['native-build-graph.json'],modules:a.modules,dependencies:a.dependencies,builds:[{root:a.root,resolved:a.resolved},{root:b.root,resolved:b.resolved}],notVerified:['另一个操作系统、CPU架构或Node/pnpm版本','不同锁文件或不同依赖版本']},null,2))
+
+--- a/apps/web/src/native-entry.ts
++++ b/apps/web/src/native-entry.ts
+@@ -1,3 +1,5 @@
++import {Compartment,StateEffect} from '@codemirror/state'
++import {EditorView} from '@codemirror/view'
+ import { createApp, nextTick, watch, type App } from 'vue'
+ import { createPinia, setActivePinia, disposePinia } from 'pinia'
+ import { getNativeHost, setNativeHost, trackNativeJob, type NativeDomHost } from '@md/core/native-host'
+@@ -13,7 +15,8 @@
+ import { getHtmlContent } from '@/services/export/html-content'
+ import { getStylesToAdd, SHARE_SHELL_VARS_CSS } from '@/services/export/share-styles'
+ import { EXPORT_LAYOUT_CSS } from '@/services/export/apply-export-layout'
+-import { NativeLease } from './native-lease'
++import {NativeLease,assertNativeOwner,assertNativeRequestContext,type NativeOwner} from './native-lease'
++export {nativeOwnerKey} from './native-lease'
+ import { NativeRequestQueue } from './native-queue'
+ import { applyNativeTheme, type NativeTheme } from './native-theme'
+ import NativeApp from './NativeApp.vue'
+@@ -27,7 +30,7 @@
+ type Asset = { assetId: string; assetFileId: string; blob: Blob }
+ type NativeDocument = { title: string; markdown: string; layout?: any }
+ type Options = {
+-  owner: { accountId: string; outputId: string; sourceVersionId: string }
++  owner: NativeOwner
+   theme: NativeTheme
+   portalContainer: HTMLElement
+   signal: AbortSignal
+@@ -40,7 +43,8 @@
+   if (!(container.getRootNode() instanceof ShadowRoot) || container.getRootNode() !== options.portalContainer.getRootNode()) {
+     throw new Error('公众号编辑器需要同一组件样式容器')
+   }
+-  for (const value of [options.owner?.accountId,options.owner?.outputId,options.owner?.sourceVersionId]) {
++  assertNativeOwner(options.owner)
++  for (const value of [options.owner?.projectId,options.owner?.outputId,options.owner?.sourceVersionId]) {
+     if (typeof value !== 'string' || !value) throw new Error('稿件归属不完整')
+   }
+   const cancel = new AbortController()
+@@ -51,7 +55,7 @@
+   let stopChanged: (() => void) | undefined
+   let disposing: Promise<void> | undefined
+   let loading = false
+-  let last = ''
++  let last = ''; let contextEpoch=0
+   const host: NativeDomHost = {
+     root: container, portal: options.portalContainer, signal: cancel.signal,
+     mode: options.theme.mode, live: true, imageUrls: new Map(), imageBlobs: new Map(),
+@@ -149,14 +153,22 @@
+       exportOptions: { useIndent: Boolean(theme.isUseIndent), useJustify: Boolean(theme.isUseJustify) },
+     })
+     const snapshot = () => ({ markdown: editor.getContent(), layout: layout() })
++    function changed(documentChanged:boolean,selectedElements:unknown[]=[]){
++      if(closed||loading)return;const state=snapshot();last=JSON.stringify(state);contextEpoch++;
++      options.onChanged({...state,kind:'native-context',contextEpoch,outputId:options.owner.outputId,sceneId:null,selectedElements,documentChanged})
++    }
++    const view=editor.editor
++    if(view){const contextExtension=new Compartment();view.dispatch({effects:StateEffect.appendConfig.of(contextExtension.of(EditorView.updateListener.of(update=>{
++      if(update.docChanged||update.selectionSet)changed(update.docChanged,update.state.selection.ranges.map(range=>({from:range.from,to:range.to})))
++    })))});host.cleanups.add(()=>{if(editor.editor===view)view.dispatch({effects:contextExtension.reconfigure([])})})}
+     stopChanged = watch(
+       () => [render.output, theme.theme, JSON.stringify(theme.themeSettings), css.getCurrentTabContent(), theme.isUseIndent, theme.isUseJustify],
+       () => {
+         if (closed || loading) return
+         const state = snapshot()
+         const encoded = JSON.stringify(state)
+-        if (encoded !== last) { last = encoded; options.onChanged(state) }
+-      }, { flush: 'post' },
++        if (encoded !== last) changed(true)
++      }, { flush: 'sync' },
+     )
+     function register(image: Asset) {
+       check()
+@@ -174,6 +186,7 @@
+       check(request?.signal)
+       setActivePinia(pinia!)
+       if (operation === 'load') {
++        contextEpoch++
+         const doc: NativeDocument = payload?.document ?? payload
+         if (typeof doc?.markdown !== 'string') throw new Error('公众号稿件输入无效')
+         const incoming = doc.layout
+@@ -224,8 +237,15 @@
+       throw new Error(`公众号编辑器不支持此操作：${operation}`)
+     }
+     return {
+-      request(operation: string, payload?: unknown, request?: { requestId?: string; signal?: AbortSignal }) {
+-        return trackNativeJob(host, queue.run(() => execute(operation, payload, request)))
++      async request(operation: string, payload?: unknown, request?: { requestId?: string; signal?: AbortSignal }) {
++        const issuedEpoch=contextEpoch
++        check(request?.signal)
++        return trackNativeJob(host, queue.run(async()=>{
++          check(request?.signal);assertNativeRequestContext(issuedEpoch,contextEpoch,request?.signal)
++          const result=await execute(operation,payload,request);check(request?.signal)
++          if((operation==='snapshot'||operation==='export-html')&&issuedEpoch!==contextEpoch)throw new Error('稿件上下文已变化，原结果停止')
++          return result
++        }))
+       },
+       update(value: { theme?: NativeTheme; disabled?: boolean }) {
+         if (closed) return
+@@ -238,3 +258,4 @@
+     }
+   } catch (error) { await dispose(); throw error }
+ }
++
+--- a/apps/web/src/native-lease.ts
++++ b/apps/web/src/native-lease.ts
+@@ -15,3 +15,9 @@
+   release(dispose:()=>Promise<void>){if(this.active===dispose)this.active=undefined}
+   async close(){await this.tail;const prior=this.active;this.active=undefined;await prior?.()}
+ }
++
++export type NativeOwner={groupId:string|null;accountId:string|null;projectId:string;outputId:string;sourceVersionId:string};
++export function nativeOwnerKey(owner:NativeOwner){return JSON.stringify([owner.groupId?['group',owner.groupId]:['account',owner.accountId],owner.projectId,owner.outputId,owner.sourceVersionId]);}
++export function assertNativeOwner(owner:NativeOwner){if(!owner.projectId||!owner.outputId||!owner.sourceVersionId||(!owner.groupId&&!owner.accountId))throw new Error('稿件归属不完整');}
++
++export function assertNativeRequestContext(expected:number,current:number,signal?:AbortSignal){if(signal?.aborted||expected!==current)throw new Error('稿件上下文已变化，原请求停止');}
+--- a/apps/web/src/native-lease.test.ts
++++ b/apps/web/src/native-lease.test.ts
+@@ -1,5 +1,6 @@
++import {NativeRequestQueue} from './native-queue'
+ import {describe,it,expect} from 'vitest'
+-import {NativeLease} from './native-lease'
++import {NativeLease,nativeOwnerKey,assertNativeOwner,assertNativeRequestContext} from './native-lease'
+ describe('Doocs 同文档原生 lease',()=>{
+  it('下个实例要等旧 dispose 完成，并串行替换',async()=>{
+   const lease=new NativeLease(); const log:string[]=[]; let close!:()=>void
+@@ -13,3 +14,8 @@
+   await expect(lease.acquire(async()=>{},cancel.signal)).rejects.toThrow('已取消')
+  })
+ })
++
++describe('T1062 公众号 owner/真实queue guard候选（不代替原DOM验证）',()=>{
++ it('组归属可空account且平台切换key稳定，空根/错父/新原基点不伪装同一owner',()=>{const owner={groupId:'group-a',accountId:null,projectId:'project',outputId:'output',sourceVersionId:'original-version'};expect(()=>assertNativeOwner(owner)).not.toThrow();expect(nativeOwnerKey(owner)).toBe(nativeOwnerKey({...owner,accountId:'platform-account'}));expect(nativeOwnerKey(owner)).not.toBe(nativeOwnerKey({...owner,groupId:'group-b'}));expect(nativeOwnerKey(owner)).not.toBe(nativeOwnerKey({...owner,sourceVersionId:'new-version'}));expect(()=>assertNativeOwner({...owner,groupId:null,accountId:null})).toThrow('归属');expect(()=>assertNativeOwner({...owner,projectId:''})).toThrow('归属');});
++ it('真实queue迟到操作由entry共用guard拒绝，取消后不执行旧snapshot读取',async()=>{const queue=new NativeRequestQueue();let release!:()=>void,epoch=1,reads=0;const first=queue.run(()=>new Promise<void>(resolve=>release=resolve));const issued=epoch;const stale=queue.run(async()=>{assertNativeRequestContext(issued,epoch);reads++;return 'snapshot'});const observed=stale.catch(error=>error);await Promise.resolve();epoch++;release();await first;expect(await observed).toBeInstanceOf(Error);expect(reads).toBe(0);const signal=new AbortController();signal.abort();await expect(queue.run(async()=>{assertNativeRequestContext(epoch,epoch,signal.signal);reads++;})).rejects.toThrow('上下文');expect(reads).toBe(0);await queue.settled();});
++});
+--- a/scripts/verify-native-dom.mjs
++++ b/scripts/verify-native-dom.mjs
+@@ -34,7 +34,7 @@
+ const changed=[],errors=[],imports=[]
+ let deferImports=false,lateReceipt
+ const pause=()=>new Promise(resolve=>setTimeout(resolve,30))
+-const first=surfaces(),owner={accountId:'account-fixture',outputId:'output-fixture',sourceVersionId:'source-fixture'}
++const first=surfaces(),owner={groupId:null,projectId:'project-fixture',accountId:'account-fixture',outputId:'output-fixture',sourceVersionId:'source-fixture'}
+ const cancel=new AbortController()
+ const handle=await module.mount(first.container,{owner,theme,portalContainer:first.portal,signal:cancel.signal,onChanged:value=>changed.push(value),onError:value=>errors.push(value),importMedia:async file=>{imports.push(file);if(deferImports)return await new Promise(resolve=>{lateReceipt=resolve});return {mediaId:'creatoros-asset:import-asset:import-file'}}})
+ assert.equal(first.container.querySelectorAll('.cm-editor').length,1)
+--- a/scripts/verify-native-image-variants.mjs
++++ b/scripts/verify-native-image-variants.mjs
+@@ -35,7 +35,7 @@
+ const changed=[],errors=[],imports=[]
+ let deferImports=false,lateReceipt
+ const pause=()=>new Promise(resolve=>setTimeout(resolve,30))
+-const first=surfaces(),owner={accountId:'account-fixture',outputId:'output-fixture',sourceVersionId:'source-fixture'}
++const first=surfaces(),owner={groupId:null,projectId:'project-fixture',accountId:'account-fixture',outputId:'output-fixture',sourceVersionId:'source-fixture'}
+ const cancel=new AbortController()
+ const handle=await module.mount(first.container,{owner,theme,portalContainer:first.portal,signal:cancel.signal,onChanged:value=>changed.push(value),onError:value=>errors.push(value),importMedia:async file=>{imports.push(file);if(deferImports)return await new Promise(resolve=>{lateReceipt=resolve});return {mediaId:'creatoros-asset:import-asset:import-file'}}})
+ assert.equal(first.container.querySelectorAll('.cm-editor').length,1)

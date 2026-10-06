@@ -1,3 +1,4 @@
+import {creationScopeKey,readCreationScope,type CreationScope} from '@/lib/creation-workspace-scope';
 import type {CanvasDocument,CanvasNode,CanvasVisualGroup,CreativeCanvasResource,VisualTemplate} from '@creatoros/contract';
 import {createTemplatePlan,type TemplatePlanInput} from './canvas-template-plan';
 import type {CanvasAssetOption} from './canvas-asset-picker';
@@ -10,8 +11,8 @@ export class CanvasHomeTransfer{
  creationUnknown=false;
  private busy=false;
  private plan:{nodes:CanvasNode[];group?:CanvasVisualGroup}|null=null;
- constructor(private accountId:string,private seed:HomeSeed,private port:HomeTransferPort,private currentAccount:()=>string|null,private nextId:()=>string,private isActive:()=>boolean=()=>true){}
- private owned(canvas?:CreativeCanvasResource){if(!this.isActive())throw new Error("已离开创作空间，请重新选择");if(this.currentAccount()!==this.accountId)throw new Error('账号已切换，请重新选择模板或素材');if(canvas&&canvas.accountId!==this.accountId)throw new Error('画布不属于当前账号');}
+ constructor(private accountId:string|null,private seed:HomeSeed,private port:HomeTransferPort,private currentAccount:()=>string|null,private nextId:()=>string,private isActive:()=>boolean=()=>true,private workspaceScope?:CreationScope){}
+ private owned(canvas?:CreativeCanvasResource){if(!this.isActive())throw new Error("已离开创作空间，请重新选择");if(this.workspaceScope?creationScopeKey(readCreationScope())!==creationScopeKey(this.workspaceScope):this.currentAccount()!==this.accountId)throw new Error('账号已切换，请重新选择模板或素材');if(canvas&&(this.workspaceScope?.groupId?canvas.groupId!==this.workspaceScope.groupId:canvas.accountId!==this.accountId))throw new Error('画布不属于当前账号');}
  async run(destination:HomeDestination):Promise<CreativeCanvasResource>{
   if(this.busy)throw new Error('正在放入画布，请稍候');
   if(this.creationUnknown)throw new Error('创建结果待核对，请查看画布库，确认后再继续');

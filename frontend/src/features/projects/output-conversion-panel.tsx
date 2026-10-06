@@ -1,9 +1,9 @@
 "use client";
+import {useCreationClient,useCreationScope,creationScopeKey,readCreationScope} from "@/lib/creation-workspace-scope";
 import * as React from "react";
 import Link from "next/link";
 import {ENDPOINTS,articleCandidateSection,graphicPostCardBriefs,outputConversionRequest,type OutputConversionRequest,type OutputConversionReceipt,type CreativeCapability,type CreativeResult} from "@creatoros/contract";
 import {client} from "@/lib/contract-client";
-import {readCurrentAccountId} from "@/lib/http-transport";
 import {Button} from "@/components/ui/button";
 import {describeUserError} from "@/lib/ai-error-humanize";
 
@@ -18,25 +18,28 @@ function destination(projectId:string,outputId:string,type:SourceType){const bas
 function storeRequest(key:string,request:OutputConversionRequest|null){try{if(request)sessionStorage.setItem(key,JSON.stringify(request));else sessionStorage.removeItem(key);}catch{/* 会话存储不可用时仍可在当前页面继续。 */}}
 
 type OutputConversionPanelProps={
- accountId:string;projectId:string;outputId:string;sourceType:SourceType;versionId:string;dirty:boolean;
+ accountId:string|null;projectId:string;outputId:string;sourceType:SourceType;versionId:string;dirty:boolean;
  fields:Partial<Record<SourceField,string|string[]>>;sections?:readonly {sectionId:string;heading:string;body:string}[];
  images?:readonly {assetId:string;assetFileId:string}[];
 };
 export function OutputConversionPanel(props:OutputConversionPanelProps){
- // 保存版本更新保留原转换；账号、项目、作品或类型切换建立独立交互寿命。
- return <OutputConversionPanelScope key={JSON.stringify([props.accountId,props.projectId,props.outputId,props.sourceType])} {...props}/>;
+ const selection=useCreationScope(),workspaceKey=creationScopeKey(selection);
+ // 同一组内切平台不重建；切换账号或组时立即结束旧轮询、采用和请求寿命。
+ return <OutputConversionPanelScope key={JSON.stringify([workspaceKey,props.projectId,props.outputId,props.sourceType])} {...props} workspaceKey={workspaceKey} groupId={selection.groupId}/>;
 }
-function OutputConversionPanelScope({accountId,projectId,outputId,sourceType,versionId,dirty,fields,sections=[],images=[]}:OutputConversionPanelProps){
+function OutputConversionPanelScope({accountId,projectId,outputId,sourceType,versionId,dirty,fields,sections=[],images=[],workspaceKey,groupId}:OutputConversionPanelProps&{workspaceKey:string;groupId:string|null}){
+ const client=useCreationClient();
+
  const [open,setOpen]=React.useState(false),[target,setTarget]=React.useState<SourceType>(sourceType==="image"?"article":"image");
  const [mode,setMode]=React.useState<"whole"|"selected">("whole"),[selectedFields,setSelectedFields]=React.useState<SourceField[]>([]),[selectedSections,setSelectedSections]=React.useState<string[]>([]);
  const [range,setRange]=React.useState<{field:"body"|"script";start:number;end:number}|null>(null),[selectedTargets,setSelectedTargets]=React.useState<string[]>([...wholeFields[target]]),[selectedImages,setSelectedImages]=React.useState<Array<{assetId:string;assetFileId:string}>>([]);
  const [abilities,setAbilities]=React.useState<CreativeCapability[]>([]),[original,setOriginal]=React.useState<OutputConversionRequest|null>(null),[receipt,setReceipt]=React.useState<OutputConversionReceipt|null>(null);
  const [results,setResults]=React.useState<CreativeResult[]>([]),[edits,setEdits]=React.useState<Record<string,unknown>>({}),[facts,setFacts]=React.useState<Record<string,Array<{id:string;text:string}>>>({}),[includeFacts,setIncludeFacts]=React.useState<Record<string,boolean>>({});
  const [error,setError]=React.useState<string|null>(null),[busy,setBusy]=React.useState<string|null>(null);
- const scope=JSON.stringify([accountId,projectId,outputId,sourceType]),serial=React.useRef(0),pollInFlight=React.useRef(false),mounted=React.useRef(false);
+ const scope=JSON.stringify([workspaceKey,projectId,outputId,sourceType]),serial=React.useRef(0),pollInFlight=React.useRef(false),mounted=React.useRef(false);
  // 沿用原账号/作品缓存键，既有丢回执请求仍可恢复；缓存不授予跨作用域执行权。
- const key=`creatoros-output-conversion:${accountId}:${outputId}`,panelId=React.useId();
- const current=(token?:number)=>mounted.current&&readCurrentAccountId()===accountId&&(token===undefined||serial.current===token);
+ const key=groupId?`creatoros-output-conversion:group:${groupId}:${outputId}`:`creatoros-output-conversion:${accountId}:${outputId}`,panelId=React.useId();
+ const current=(token?:number)=>{const actual=readCreationScope();return mounted.current&&creationScopeKey(actual)===workspaceKey&&(groupId?actual.groupId===groupId&&actual.accountId===null:!!accountId&&actual.groupId===null&&actual.accountId===accountId)&&(token===undefined||serial.current===token);};
  React.useEffect(()=>{mounted.current=true;return()=>{mounted.current=false;serial.current++;};},[]);
  const adoptionAttempts=React.useRef<Record<string,{signature:string;body:Parameters<typeof client.adoptResult>[0]["body"]}>>({}),retryAttempts=React.useRef<Record<string,string>>({});
  async function read(next:OutputConversionReceipt,token:number){
@@ -59,7 +62,7 @@ function OutputConversionPanelScope({accountId,projectId,outputId,sourceType,ver
  }
  React.useEffect(()=>{
    if(!open||!current())return;let alive=true;const token=serial.current;
-   void client.listCreativeCapabilities({params:undefined,query:{accountId,projectId},body:undefined}).then(value=>{if(alive&&current())setAbilities(value.items);}).catch(()=>{if(alive&&current())setError("暂时无法读取模型能力，原稿仍可编辑。");});
+   void client.listCreativeCapabilities({params:undefined,query:{...(groupId?{}:{accountId:accountId??undefined}),projectId},body:undefined}).then(value=>{if(alive&&current())setAbilities(value.items);}).catch(()=>{if(alive&&current())setError("暂时无法读取模型能力，原稿仍可编辑。");});
    void Promise.resolve().then(()=>{if(!alive||!current(token))return;try {const saved=outputConversionRequest.safeParse(JSON.parse(sessionStorage.getItem(key)??"null"));if(saved.success&&saved.data.sourceOutputId===outputId){setOriginal(saved.data);setTarget(saved.data.targetType);setMode(saved.data.mode);setSelectedImages(saved.data.reuseImages);if(saved.data.mode==="selected"){setSelectedFields(saved.data.sourceFields);setSelectedSections(saved.data.sourceSectionIds);setSelectedTargets(saved.data.targetFields);const first=saved.data.textRanges[0];setRange(first?{field:first.field,start:first.start,end:first.end}:null);}void client.getOutputConversion({params:{clientRequestId:saved.data.clientRequestId},query:undefined,body:undefined}).then(value=>alive&&current(token)?read(value,token):undefined).catch(()=>{if(alive&&current())setError("上次转换的回执暂未读到，可用原请求恢复。");});}}catch{/* 空会话没有恢复请求。 */}});
    return ()=>{alive=false;};
  },[open,scope,accountId,projectId,key,outputId]);

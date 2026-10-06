@@ -31,7 +31,7 @@ export default async function ProjectArticlePage({ params, searchParams }: {
   if (!session) notFound();
   const { projectId } = await params;
   const requestedOutputId = (await searchParams)?.outputId;
-  const scoped = createServerClient(session.ctx);
+  const scoped = createServerClient({...session.ctx,accountId:session.ctx.groupId?null:session.ctx.accountId});
   let project: ProjectRow;
   let outputs: OutputRow[];
   let brandStatement: BrandStatementRow | null = null;
@@ -43,11 +43,11 @@ export default async function ProjectArticlePage({ params, searchParams }: {
   }
   const articles = outputs.filter(output => output.contentType === "article");
   if (requestedOutputId && !articles.some(output => output.id === requestedOutputId)) notFound();
-  if (!requestedOutputId && articles.length !== 1) {
-    return <ProjectOutputHome projectId={project.id} projectTitle={project.title} accountId={session.ctx.accountId}
+  if (!requestedOutputId && articles.length > 1) {
+    return <ProjectOutputHome projectId={project.id} projectTitle={project.title} accountId={session.ctx.groupId?null:session.ctx.accountId}
       initialOutputs={articles} initialType="article" />;
   }
-  if (!requestedOutputId) redirect(`/projects/${encodeURIComponent(project.id)}/article?outputId=${encodeURIComponent(articles[0]!.id)}`);
+  if (!requestedOutputId && articles.length === 1) redirect(`/projects/${encodeURIComponent(project.id)}/article?outputId=${encodeURIComponent(articles[0]!.id)}`);
   try {
     const positioning = await scoped.getPositioningCenter({ params: undefined, query: undefined, body: undefined }) as unknown as {
       currentStatement: BrandStatementRow | null;
@@ -57,12 +57,12 @@ export default async function ProjectArticlePage({ params, searchParams }: {
     // 定位中心暂不可读时，文章仍可使用中性方法创作。
   }
   return <ArticleWorkbench
-    key={requestedOutputId ?? articles[0]!.id}
+    key={requestedOutputId ?? articles[0]?.id ?? "new"}
     projectId={project.id}
     projectTitle={project.title}
-    accountId={session.ctx.accountId}
+    accountId={session.ctx.groupId?null:session.ctx.accountId}
     initialOutputs={articles}
-    initialOutputId={requestedOutputId ?? articles[0]!.id}
+    initialOutputId={requestedOutputId ?? articles[0]?.id}
     activeBrandProfile={brandStatement ? { id: brandStatement.id, versionNumber: brandStatement.versionNumber,
       oneLiner: brandStatement.oneLiner } : null}
   />;

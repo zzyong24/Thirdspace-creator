@@ -24,19 +24,24 @@ import { usePathname, useRouter } from "next/navigation";
 import { NewProjectForm } from "@/features/projects/new-project-form";
 import { cn } from "@/lib/utils";
 
+import {useCreationScope,creationScopeKey} from "@/lib/creation-workspace-scope";
 import { createBrowserProjectCreationSession } from "@/features/projects/project-creation";
 
 const DIALOG_TITLE = "新建项目";
 
 export function NewProjectDialog() {
   const router = useRouter();
-  const creationRef = React.useRef(createBrowserProjectCreationSession());
+  const creationRef=React.useRef<ReturnType<typeof createBrowserProjectCreationSession>|null>(null),generation=React.useRef(0),alive=React.useRef(false),activeRoute=React.useRef(false);
+  const scope=useCreationScope(),scopeKey=creationScopeKey(scope);
+  const dispose=React.useCallback(()=>{generation.current++;const old=creationRef.current;creationRef.current=null;old?.dispose();},[]);
   // Render only while the route is actually /projects/new. The dialog lives
   // in the `@modal` parallel slot; after `onCreate` navigates to a workspace,
   // the modal slot can briefly linger on a soft navigation, so this gate
   // ensures the dialog disappears the moment the route changes.
   const pathname = usePathname();
   const isActiveRoute = pathname === "/projects/new";
+  activeRoute.current=isActiveRoute;
+  React.useEffect(()=>{alive.current=true;if(!isActiveRoute)dispose();return()=>{alive.current=false;dispose();};},[isActiveRoute,scopeKey,dispose]);
 
   const dialogRef = React.useRef<HTMLDivElement | null>(null);
   const closeButtonRef = React.useRef<HTMLButtonElement | null>(null);
@@ -52,6 +57,7 @@ export function NewProjectDialog() {
   }, []);
 
   const close = React.useCallback(() => {
+    activeRoute.current=false;dispose();
     if (hasBackgroundRoute) {
       router.back();
       return;
@@ -69,7 +75,7 @@ export function NewProjectDialog() {
     const query = params.toString();
     const target = query.length > 0 ? `/projects?${query}` : "/projects";
     router.replace(target, { scroll: false });
-  }, [hasBackgroundRoute, router]);
+  }, [hasBackgroundRoute,router,dispose]);
 
   // Initial focus + focus trap + Escape handler.
   React.useEffect(() => {
@@ -168,18 +174,18 @@ export function NewProjectDialog() {
             <X className="size-4" aria-hidden="true" />
           </button>
         </header>
-        <NewProjectForm
+        <NewProjectForm key={scopeKey}
           includeWorkType
           advancedOpen
           onCreate={async (values) => {
-            const result = await creationRef.current.create(values);
-            router.refresh();
-            if (values.enterAfterCreate) {
-              router.replace(`/projects/${encodeURIComponent(result.project.id)}`, {scroll: false});
-              return;
-            }
-            creationRef.current = createBrowserProjectCreationSession();
-            close();
+            const captured=creationRef.current??(creationRef.current=createBrowserProjectCreationSession()),epoch=generation.current;
+            const current=()=>{if(!alive.current||!activeRoute.current||epoch!==generation.current||creationRef.current!==captured)return false;try{captured.assertCurrent();return true;}catch{return false;}};
+            try{const result=await captured.create(values);if(!current())return;
+              router.refresh();
+              if(values.enterAfterCreate){dispose();activeRoute.current=false;router.replace(`/projects/${encodeURIComponent(result.project.id)}`,{scroll:false});return;}
+              close();
+            }catch(error){if(current())throw error;}
+
           }}
           onCancel={close}
         />

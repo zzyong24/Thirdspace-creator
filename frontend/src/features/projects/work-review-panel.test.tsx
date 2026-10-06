@@ -12,7 +12,7 @@ function show(){const view=render(<WorkReviewPanel composition={composition} acc
 beforeEach(()=>{localStorage.clear();Object.values(api).forEach(fn=>fn.mockReset());api.getWorkReviewStatus.mockResolvedValue(status);api.getWorkReview.mockResolvedValue(waitingReport);});afterEach(cleanup);
 it("人工确认使用明确读取的指纹，不把人工确认显示成模型核验",async()=>{show();fireEvent.click(screen.getByRole("button",{name:"读取当前审核状态"}));await screen.findByText("尚未确认");api.confirmWorkReview.mockResolvedValue({});api.getWorkReviewStatus.mockResolvedValue({...status,state:"confirmed_current"});fireEvent.click(screen.getByRole("button",{name:"我已核对，确认当前内容"}));await screen.findByText("当前内容已确认");expect(api.confirmWorkReview.mock.calls[0][0].body).toMatchObject({mode:"manual",scope:status.scope,expectedFingerprint:status.currentFingerprint,historicalBasis:[]});expect(screen.getByText(/模型核验：尚未完成/)).toBeInTheDocument();});
 it("审核回复丢失后卸载恢复完整原请求，不重复产生新请求号",async()=>{const view=show();fireEvent.click(screen.getByRole("button",{name:"读取当前审核状态"}));await screen.findByText("尚未确认");api.createWorkReview.mockRejectedValue(Error("回复丢失"));fireEvent.click(screen.getByRole("button",{name:"生成模型审核候选"}));await screen.findByRole("alert");const original=api.createWorkReview.mock.calls[0][0];view.unmount();show();fireEvent.click(await screen.findByRole("button",{name:"恢复原审核请求"}));await waitFor(()=>expect(api.createWorkReview).toHaveBeenCalledTimes(2));expect(api.createWorkReview.mock.calls[1][0]).toEqual(original);});
-it("确认期间改稿被原CAS拒绝，可以读取新范围，不陷入无效恢复",async()=>{show();fireEvent.click(screen.getByRole("button",{name:"读取当前审核状态"}));await screen.findByText("尚未确认");api.confirmWorkReview.mockRejectedValue({code:ErrorCode.ConflictError});fireEvent.click(screen.getByRole("button",{name:"我已核对，确认当前内容"}));await screen.findByRole("alert");expect(screen.queryByRole("button",{name:"恢复原审核请求"})).not.toBeInTheDocument();expect(screen.getByRole("button",{name:"读取当前审核状态"})).toBeEnabled();expect(localStorage.length).toBe(0);});
+it("确认期间改稿被原CAS拒绝，可以读取新范围，不陷入无效恢复",async()=>{show();fireEvent.click(screen.getByRole("button",{name:"读取当前审核状态"}));await screen.findByText("尚未确认");api.confirmWorkReview.mockRejectedValue({code:ErrorCode.ConflictError});fireEvent.click(screen.getByRole("button",{name:"我已核对，确认当前内容"}));await screen.findByRole("alert");expect(screen.queryByRole("button",{name:"恢复原审核请求"})).not.toBeInTheDocument();expect(screen.getByRole("button",{name:"读取当前审核状态"})).toBeEnabled();expect(localStorage.getItem("work-review:account-a:work-a")).toBeNull();expect(localStorage.getItem("work-review:account-a:work-a:confirm")).toBeNull();expect(localStorage.getItem("work-review:account-a:work-a:resume")).toBeNull();expect(localStorage.getItem("creatoros:current-account")).toBe("account-a");});
 it("模型回复未确认不阻断人工核对，人工确认保留原模型恢复号",async()=>{show();fireEvent.click(screen.getByRole("button",{name:"读取当前审核状态"}));await screen.findByText("尚未确认");api.createWorkReview.mockRejectedValue(Error("模型配置暂不可用"));fireEvent.click(screen.getByRole("button",{name:"生成模型审核候选"}));await screen.findByRole("alert");const original=api.createWorkReview.mock.calls[0][0].body;expect(screen.getByRole("button",{name:"我已核对，确认当前内容"})).toBeEnabled();api.confirmWorkReview.mockResolvedValue({});api.getWorkReviewStatus.mockResolvedValue({...status,state:"confirmed_current"});fireEvent.click(screen.getByRole("button",{name:"我已核对，确认当前内容"}));await screen.findByText("当前内容已确认");expect(screen.getByRole("button",{name:"恢复原审核请求"})).toBeEnabled();expect(JSON.parse(localStorage.getItem("work-review:account-a:work-a")!).body).toEqual(original);});
 it("用户仅选朋友圈正文时，不夹带配图或整个组合的审核范围",async()=>{show();fireEvent.change(screen.getByRole("combobox",{name:"核对范围"}),{target:{value:"moments:text"}});fireEvent.click(screen.getByRole("button",{name:"读取当前审核状态"}));await screen.findByText("尚未确认");expect(api.getWorkReviewStatus.mock.calls[0][0].body.scope).toEqual({kind:"field",compositionId:"work-a",member:{kind:"moments",momentsId:"moments-a"},target:{kind:"moments_field",momentsId:"moments-a",field:"text"}});});
 
@@ -41,3 +41,67 @@ it("原ACK成功后缓存写删失败，不掩盖成功且不重发command",asyn
  api.getWorkReviewStatus.mockResolvedValue({...status,latestReport:waitingReport});api.listExecutionTasks.mockResolvedValue([waitingExecution]);api.commandExecutionTasks.mockResolvedValue({tasks:[{...waitingExecution,status:"queued",runtimeStatus:undefined}]});const originalSet=localStorage.setItem;let writes=0;const deniedWrite=vi.spyOn(localStorage,"setItem").mockImplementation(function(this:Storage,key,value){if(++writes>1)throw new DOMException("缓存满","QuotaExceededError");originalSet.call(this,key,value);});const deniedRemove=vi.spyOn(localStorage,"removeItem").mockImplementation(()=>{throw new DOMException("不能删缓存","SecurityError");});
  try{show();fireEvent.click(screen.getByRole("button",{name:"读取当前审核状态"}));await screen.findByRole("button",{name:"继续原审核任务"});fireEvent.click(screen.getByRole("button",{name:"继续原审核任务"}));await screen.findByText("已核对原审核继续回执，沿用原任务和剩余预算。");expect(api.commandExecutionTasks).toHaveBeenCalledTimes(1);expect(screen.queryByRole("button",{name:"恢复原审核继续请求"})).not.toBeInTheDocument();}finally{deniedWrite.mockRestore();deniedRemove.mockRestore();}
 });
+
+// T1062_COMPONENT_PORT_SEAM: 仅本文件既有业务spies；真实scope/epoch/signal/lifecycle不替换。
+vi.mock("@/lib/creation-workspace-scope", async importOriginal => {
+  const actual = await importOriginal<typeof import("@/lib/creation-workspace-scope")>();
+  const {client: componentPorts} = await import("@/lib/contract-client");
+  type Workspace = ReturnType<typeof actual.createCreationWorkspace>;
+  type Operation = ReturnType<Workspace["capture"]>;
+  const views = new WeakMap<Workspace, Workspace>();
+  function portClient(base: Operation["client"], capture: () => Operation): Operation["client"] {
+    const methods = new Map<PropertyKey, unknown>();
+    return new Proxy(base, {
+      get(target, key, receiver) {
+        const port = Reflect.get(componentPorts, key);
+        const original = Reflect.get(target, key, receiver);
+        if (typeof port !== "function") return original;
+        if (!methods.has(key)) methods.set(key, async (...args: unknown[]) => {
+          const operation = capture();
+          operation.assertCurrent();
+          try { return await Reflect.apply(Reflect.get(componentPorts, key), componentPorts, args); }
+          finally { operation.assertCurrent(); }
+        });
+        return methods.get(key);
+      },
+    });
+  }
+  function view(workspace: Workspace): Workspace {
+    const cached = views.get(workspace);
+    if (cached) return cached;
+    const client = portClient(workspace.client, () => workspace.capture());
+    const capture = (): Operation => {
+      const operation = workspace.capture();
+      return Object.freeze({...operation, client: portClient(operation.client, () => operation)});
+    };
+    const proxy = new Proxy(workspace, {
+      get(target, key) {
+        if (key === "client") return client;
+        if (key === "capture") return capture;
+        // Reflect读取原对象getter，signal/epoch始终是原factory当前值；不spread workspace。
+        return Reflect.get(target, key, target);
+      },
+    });
+    views.set(workspace, proxy);
+    return proxy;
+  }
+  return {
+    ...actual,
+    createCreationWorkspace: (...args: Parameters<typeof actual.createCreationWorkspace>) => view(actual.createCreationWorkspace(...args)),
+    useCreationWorkspace: (scope: Parameters<typeof actual.useCreationWorkspace>[0]) => view(actual.useCreationWorkspace(scope)),
+    useCreationClient: () => view(actual.useCreationWorkspace(actual.useCreationScope())).client,
+  };
+});
+// T1062_COMPONENT_PORT_SEAM_END
+
+// T1062_UNIT_SCOPE_FIXTURE: 显式合成单测选择；不是当前用户/生产default。
+import {beforeEach as t1062ScopeBeforeEach, afterEach as t1062ScopeAfterEach} from "vitest";
+t1062ScopeBeforeEach(() => {
+  window.localStorage.removeItem("creatoros:current-group");
+  window.localStorage.setItem("creatoros:current-account", "account-a");
+});
+t1062ScopeAfterEach(() => {
+  window.localStorage.removeItem("creatoros:current-group");
+  window.localStorage.removeItem("creatoros:current-account");
+});
+// T1062_UNIT_SCOPE_FIXTURE_END

@@ -1,13 +1,15 @@
 'use client';
 import * as React from 'react';
 import {noteRelayLayout,type NoteRelayLayout,type ArticleDocument,type GraphicPostDocument} from '@creatoros/contract';
+import {useCreationWorkspace,creationScopeKey} from '@/lib/creation-workspace-scope';
+import {useNativeWorkspace} from '../use-native-account';
 import {client} from '@/lib/contract-client';
 import {Button} from '@/components/ui/button';
 import {Input} from '@/components/ui/input';
 import {Select,SelectContent,SelectItem,SelectTrigger,SelectValue} from '@/components/ui/select';
 import {NativeEditorSurface,type NativeEditorHandle} from '../native-editor-surface';
 import {projectArticle,projectGraphic,defaultLayout,assetSource} from './projection';
-type Props={accountId:string;outputId:string;sourceVersionId:string;platform:'wechat'|'rednote';value:ArticleDocument|GraphicPostDocument;onLayoutChange:(layout:NoteRelayLayout)=>void;disabled?:boolean};
+type Props={accountId:string|null;projectId:string;outputId:string;sourceVersionId:string;platform:'wechat'|'rednote';value:ArticleDocument|GraphicPostDocument;onLayoutChange:(layout:NoteRelayLayout)=>void;disabled?:boolean};
 type Metadata={themes:Array<{id:string;name:string}>;images:Array<{key:string;label:string}>;pageIndex:number;pageCount:number;selectedImage:string};
 type ExportAction='copy-html'|'html'|'copy-text'|'copy-png'|'png'|'zip';
 type Delivery={blob:Blob;plainText?:string;filename?:string};
@@ -15,8 +17,10 @@ const empty:Metadata={themes:[],images:[],pageIndex:0,pageCount:0,selectedImage:
 function Choice({label,value,items,onChange,disabled}:{label:string;value:string;items:Array<{id:string;name:string}>;onChange:(value:string)=>void;disabled?:boolean}){
  return <label className="space-y-1 text-xs text-muted-foreground"><span>{label}</span><Select value={value} onValueChange={onChange} disabled={disabled}><SelectTrigger aria-label={label} className="min-w-32"><SelectValue/></SelectTrigger><SelectContent>{items.map(item=><SelectItem key={item.id} value={item.id}>{item.name}</SelectItem>)}</SelectContent></Select></label>;
 }
-export function NoteRelayEditor(props:Props){return <NoteRelayEditorSession key={`${props.accountId}:${props.outputId}:${props.sourceVersionId}`} {...props}/>;}
+export function NoteRelayEditor(props:Props){const scope=useNativeWorkspace();return <NoteRelayEditorSession key={`${creationScopeKey(scope)}:${props.outputId}`} {...props}/>;}
 function NoteRelayEditorSession(props:Props){
+ const scope=useNativeWorkspace(),workspace=useCreationWorkspace(scope),client=workspace.client;
+ const [mountVersion]=React.useState(props.sourceVersionId);
  const {platform,value,onLayoutChange,disabled}=props;
  const editor=React.useRef<NativeEditorHandle>(null),alive=React.useRef(true),ready=React.useRef(false),assets=React.useRef(new Map<string,Blob>()),sequence=React.useRef(0),loading=React.useRef<AbortController|null>(null);
  const [rendered,setRendered]=React.useState(''),[busy,setBusy]=React.useState(false),[error,setError]=React.useState<string|null>(null),[assetError,setAssetError]=React.useState<string|null>(null),[message,setMessage]=React.useState<string|null>(null),[epoch,setEpoch]=React.useState(0),[meta,setMeta]=React.useState(empty);
@@ -64,7 +68,7 @@ function NoteRelayEditorSession(props:Props){
     {(platform==='wechat'?[['html','导出 HTML'],['copy-text','复制纯文本']]:[['copy-png','复制当前页'],['png','下载当前页']]).map(([action,label])=><Button key={action} variant="ghost" disabled={!loaded||locked} onClick={()=>void deliver(action as ExportAction)}>{label}</Button>)}
     <Button variant="ghost" disabled={busy} onClick={()=>{ready.current=false;setRendered('');setEpoch(n=>n+1);}}>重新加载预览</Button></div></details>
    </div></div>
-  <div className="h-[min(850px,75dvh)] min-h-[420px] overflow-hidden rounded-lg border border-border"><NativeEditorSurface key={epoch} ref={editor} editor="noterelay" owner={{accountId:props.accountId,outputId:props.outputId,sourceVersionId:props.sourceVersionId}} disabled={locked} onReady={()=>{ready.current=true;void initialize();}} onChanged={v=>{if(v&&typeof v==='object')setMeta(v as Metadata);}} onImport={async()=>{throw new Error('请从当前稿件选择图片');}} onError={setError}/></div>
+  <div className="h-[min(850px,75dvh)] min-h-[420px] overflow-hidden rounded-lg border border-border"><NativeEditorSurface key={epoch} ref={editor} editor="noterelay" owner={{groupId:scope.groupId,accountId:scope.accountId,projectId:props.projectId,outputId:props.outputId,sourceVersionId:mountVersion}} disabled={locked} onReady={()=>{ready.current=true;void initialize();}} onChanged={v=>{if(v&&typeof v==='object')setMeta(v as Metadata);}} onImport={async()=>{throw new Error('请从当前稿件选择图片');}} onError={setError}/></div>
   {platform==='rednote'&&<div className="flex flex-wrap items-center gap-3"><Button variant="outline" disabled={!loaded||locked||meta.pageIndex<=0} onClick={()=>request('page',{index:meta.pageIndex-1})}>上一页</Button><span className="text-sm text-muted-foreground">{meta.pageCount?meta.pageIndex+1:0} / {meta.pageCount}</span><Button variant="outline" disabled={!loaded||locked||meta.pageIndex>=meta.pageCount-1} onClick={()=>request('page',{index:meta.pageIndex+1})}>下一页</Button>
 </div>}
   <details className="rounded-lg border border-border"><summary className="cursor-pointer px-4 py-3 text-sm font-medium">排版设置</summary><div className="space-y-4 border-t border-border p-4">
@@ -76,7 +80,7 @@ function NoteRelayEditorSession(props:Props){
     <Choice label="分页" value={String(layout.splitHeading)} items={[{id:'1',name:'一级标题'},{id:'2',name:'二级标题'}]} disabled={locked} onChange={v=>change({splitHeading:Number(v) as 1|2})}/>
     <Choice label="卡片模板" value={layout.templateId} items={[{id:'default',name:'标准卡片'},{id:'notes',name:'笔记卡片'}]} disabled={locked} onChange={v=>change({templateId:v as 'default'|'notes'})}/></>}
   </div>
-  {platform==='wechat'&&<details><summary className="cursor-pointer text-sm text-muted-foreground">栏目、日期等文章变量（可选）</summary><div className="mt-3 grid gap-3 sm:grid-cols-3">{['栏目名','日期','副标题','关键词','标签'].map(name=><label key={name} className="space-y-1 text-xs text-muted-foreground">{name}<Input value={layout.variables[name]??''} aria-label={name} maxLength={2000} disabled={locked} onChange={e=>change({variables:{...layout.variables,[name]:e.target.value}})}/></label>)}</div></details>}
+  {platform==='wechat'&&<details><summary className="cursor-pointer text-sm text-muted-foreground">栏目、日期等文章变量（可选）</summary><div className="mt-3 grid gap-3 sm:grid-cols-3">{['栏目名','日期','副标题','关键词','标签'].map(name=><label key={name} className="space-y-1 text-xs text-muted-foreground">{name}<Input value={layout.variables[name]??''} aria-label={`文章变量${name}`} maxLength={2000} disabled={locked} onChange={e=>change({variables:{...layout.variables,[name]:e.target.value}})}/></label>)}</div></details>}
   {platform==='rednote'&&<div className="flex flex-wrap items-center gap-3">
    {meta.images.length>0&&<><Choice label="正文图片" value={meta.selectedImage} items={meta.images.map(i=>({id:i.key,name:i.label}))} disabled={!loaded||locked} onChange={key=>request('select-image',{key})}/>
     <Choice label="图片宽度" value={String(layout.imageWidths[meta.selectedImage]??'auto')} items={[{id:'auto',name:'自适应'},...Array.from(new Set([50,75,100,...(layout.imageWidths[meta.selectedImage]!==undefined?[layout.imageWidths[meta.selectedImage]]:[])])).map(n=>({id:String(n),name:`${n}%`}))]} disabled={locked} onChange={v=>{const imageWidths={...layout.imageWidths};if(v==='auto')delete imageWidths[meta.selectedImage];else imageWidths[meta.selectedImage]=Number(v);change({imageWidths});}}/>

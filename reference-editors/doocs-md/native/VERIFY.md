@@ -1,3 +1,22 @@
+# T-1062 原生 TMP 实际验证记录
+
+源码候选：`246e63a02753b7a90760611506a82341d8457462a996aed8463f7f91eccdc153`；成员31，归档 `0cabb0e4960ee1b4a50e0533782ba9a735c1ed1b66ce22cfc81dd7d3bd4fa583`。
+
+本节仅记录本次实际命令。JSDOM/合成音频夹具不能作为真实浏览器、听感、ASR、安装通过。
+
+- exit 0；`node scripts/build-native.mjs`；日志 `/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r4-build-_mj76bbr/commands/doocs-md-production-build-r6.log`；SHA `139bec3f96a4a5581a5312635159251e6f1505d0afb7e852464610defa6197db`。
+- exit 0；`node scripts/verify-native-dom.mjs --without-process`；日志 `/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r4-build-_mj76bbr/commands/doocs-md-verify-dom-no-process-r6.log`；SHA `67ae8af6b3acb90dda5f6b8f0bde32fbb02a458b8dd33a33b8cb5c6aa8598b0f`。
+- exit 0；`node scripts/verify-native-dom.mjs`；日志 `/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r4-build-_mj76bbr/commands/doocs-md-verify-dom-r6.log`；SHA `0eba2d22778266ece4e0d1e48f2c237cc1334829d93de1862406dc59590ce28f`。
+- exit 0；`node scripts/verify-native-image-variants.mjs`；日志 `/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r4-build-_mj76bbr/commands/doocs-md-verify-image-variants-r6.log`；SHA `f1f5ada429957b0b980a67285862e9d7b98eed8512172d148683312610ccfe58`。
+- exit 0；`./node_modules/.bin/vitest run src/native-lease.test.ts`；日志 `/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r4-build-_mj76bbr/commands/doocs-md-verify-native-lease-r6.log`；SHA `029a9d8629bdfbd167719bdc4cfebfb9820b602f56e49d3970070d1f5cf2526c`。
+
+Kuaitu：core4/native35；Doocs lease4；OpenCut主回归18、resource14、DOM38。按editor各自对应，不合并重复执行计数。
+全部历史失败保存在独立TMP，未覆盖。宿主18与安装/试听尚未执行。
+
+---
+
+下列内容是原T-1053历史记录，原字节以before SHA绑定；其中旧PASS不代表本次新源码的新执行。
+
 # T-1053 · Doocs 原生候选验证
 
 本次未运行浏览器自动化。独立源码候选由 `/tmp/t1053-native-doocs/` 接续；正式共享 checkout 未由本子代理写入。

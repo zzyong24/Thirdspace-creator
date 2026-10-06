@@ -1,4 +1,5 @@
 "use client";
+import {useCreationScope,useCreationWorkspace} from "@/lib/creation-workspace-scope";
 import * as React from "react";
 import {client} from "@/lib/contract-client";
 import {uploadProductionAsset,type WireProduction} from "./production-resource-operations";
@@ -11,6 +12,9 @@ interface DeliveryInput {
 }
 /** 成品上传及素材包导出使用现有业务端口；发布覆盖门与逐步状态推进保持原语义。 */
 export function useProductionDelivery({projectId,outputId,status,finalVideoAssetId,renderOrientation,readVideoDuration,ensureOutputId,advanceStatus,setFinalVideoAssetId,renderDimensions}:DeliveryInput){
+ const workspace=useCreationWorkspace(useCreationScope()),client=workspace.client;
+ const lifetime=React.useRef(0),alive=React.useRef(false);React.useEffect(()=>{alive.current=true;lifetime.current++;return()=>{alive.current=false;lifetime.current++;};},[workspace,projectId,outputId]);
+
   const [method, setMethod] = React.useState<"creatoros" | "upload">(
     "creatoros",
   );
@@ -60,6 +64,7 @@ export function useProductionDelivery({projectId,outputId,status,finalVideoAsset
 
   const onFinalFile = React.useCallback(
     async (file: File) => {
+      const operation=workspace.capture(),generation=lifetime.current;const check=()=>{operation.assertCurrent();if(!alive.current||generation!==lifetime.current)throw new DOMException("作品已变化","AbortError");};const current=()=>{try{check();return true;}catch{return false;}};check();const client=operation.client;
       setFinalError(null);
       setFinalNotice(null);
       // 基本校验(§5.1⑤):格式收窄 mp4/mov + 可读时长探针,坏文件诚实拒收不直登 ready。
@@ -73,7 +78,7 @@ export function useProductionDelivery({projectId,outputId,status,finalVideoAsset
       }
       setFinalBusy(true);
       try {
-        const durationSec = await readVideoDuration(file);
+        const durationSec=await readVideoDuration(file);check();
         if (durationSec == null || durationSec <= 0) {
           setFinalError(
             "读不出有效时长(文件可能损坏或不是视频)—— 已拒收,请检查文件后重试。",
@@ -108,12 +113,12 @@ export function useProductionDelivery({projectId,outputId,status,finalVideoAsset
           projectId,
           file,
           "video",
-          "final",
+          "final",operation,
         );
         // 状态机跳转语义(SPEC §5 待决点 1,选「补记中间态」):后端 putProduction 只接受
         // 相邻 +1(跨步 → ConflictError),不为本路径开非相邻跳 —— 复用 statusStepsTo 依次
         // PUT recording→editing→rendering(advanceStatus 内部逐步),语义零改动。
-        const productionId = await advanceStatus("rendering");
+        check();const productionId=await advanceStatus("rendering");check();
         if (!productionId) {
           throw new Error("production 状态机推进失败,请重试");
         }
@@ -136,18 +141,18 @@ export function useProductionDelivery({projectId,outputId,status,finalVideoAsset
           query: undefined,
           body: { resultAssetId: assetId },
         });
-        await advanceStatus("ready");
+        await advanceStatus("ready");check();
         setFinalVideoAssetId(assetId);
         setReplaceOk(false);
         setFinalNotice(
           `成品「${file.name}」已登记为本项目成片(export ready)。盲预测 / 发布物料 / 登记发布照常可用。`,
         );
       } catch (err) {
-        setFinalError(
+        if(!current())return;setFinalError(
           err instanceof Error ? err.message : "成品上传失败,请重试",
         );
       } finally {
-        setFinalBusy(false);
+        if(current())setFinalBusy(false);
       }
     },
     [
@@ -158,7 +163,7 @@ export function useProductionDelivery({projectId,outputId,status,finalVideoAsset
       renderDimensions,
       hasExistingFinal,
       outputId,
-      pubLocked,
+      pubLocked,workspace,
     ],
   );
 
@@ -204,11 +209,12 @@ export function useProductionDelivery({projectId,outputId,status,finalVideoAsset
   }, [projectId]);
 
   const onExportMaterials = React.useCallback(async () => {
+    const operation=workspace.capture(),generation=lifetime.current;const check=()=>{operation.assertCurrent();if(!alive.current||generation!==lifetime.current)throw new DOMException("作品已变化","AbortError");};const current=()=>{try{check();return true;}catch{return false;}};check();const client=operation.client;
     setExportBusy(true);
     setExportError(null);
     setExportDone(null);
     try {
-      const oid = await ensureOutputId();
+      const oid = await ensureOutputId();check();
       const prod = (await client.getOutputProduction({
         params: { outputId: oid },
         query: undefined,
@@ -224,7 +230,7 @@ export function useProductionDelivery({projectId,outputId,status,finalVideoAsset
         fileCount: number;
         hasDecisions: boolean;
       };
-      setExportDone(res);
+      check();setExportDone(res);
       // 经既有签名下载 URL 通道触发浏览器下载。
       const a = document.createElement("a");
       a.href = res.downloadUrl;
@@ -233,13 +239,13 @@ export function useProductionDelivery({projectId,outputId,status,finalVideoAsset
       a.click();
       a.remove();
     } catch (err) {
-      setExportError(
+      if(!current())return;setExportError(
         err instanceof Error ? err.message : "素材包导出失败,请重试",
       );
     } finally {
-      setExportBusy(false);
+      if(current())setExportBusy(false);
     }
-  }, [ensureOutputId]);
+  }, [ensureOutputId,workspace]);
 
   return {method,setMethod,finalBusy,finalError,finalNotice,setFinalNotice,replaceOk,setReplaceOk,pubLocked,exportBusy,exportError,exportDone,estBytes,hasExistingFinal,onFinalFile,onExportMaterials};
 }

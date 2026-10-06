@@ -85,3 +85,67 @@ async function chooseTimedWord(){fireEvent.click(screen.getByText('按词句剪�
 it('独立父层词剪：原公共apply精确冻结所选实例/真token/Unicode摘要，丢ACK后读旧receipt再当前工程不重复写',async()=>{setup();api.applyProductionEditor.mockRejectedValueOnce(Error('词剪保存回复丢失'));const initial=timedDocument(),first=render(<RoughCutWorkbench initial={initial} onPrepare={()=>{}}/>);await chooseTimedWord();fireEvent.click(screen.getByRole('button',{name:'删除所选词句对应音视频并保存'}));await waitFor(()=>expect(api.applyProductionEditor).toHaveBeenCalledOnce());const original=api.applyProductionEditor.mock.calls[0]![0];expect(original.body).toMatchObject({expectedRevision:1,edits:[{type:'removeTranscriptRange',clipId:'repeat',transcriptId:'saved-transcript',granularity:'word',tokenIds:['real-word'],expectedItemDigest:expect.stringMatching(/^sha256:[a-f0-9]{64}$/),transcriptDigest:expect.stringMatching(/^sha256:[a-f0-9]{64}$/)}]});await waitFor(()=>expect(screen.getAllByText('词剪保存回复丢失').length).toBeGreaterThan(0));expect(screen.getByLabelText('选择剪切词句 1')).toBeChecked();expect(JSON.parse(sessionStorage.getItem('rough-cut:video')!).pending.body).toEqual(original.body);first.unmount();const newer=timedDocument();newer.revision=8;api.getProductionEditorReceipt.mockResolvedValue({productionId:'production',revision:2,requestId:original.body.requestId,plan:initial.plan});const latest=timedDocument();latest.revision=9;api.getProductionEditor.mockResolvedValue(latest);render(<RoughCutWorkbench initial={newer} onPrepare={()=>{}}/>);fireEvent.click(await screen.findByRole('button',{name:'恢复上次保存请求'}));await waitFor(()=>expect(screen.getAllByText(/已保存版本 9/).length).toBeGreaterThan(0));expect(api.getProductionEditorReceipt.mock.calls.at(-1)![0].params).toEqual({outputId:'video',requestId:original.body.requestId});expect(api.applyProductionEditor).toHaveBeenCalledOnce();expect(api.getProductionEditor).toHaveBeenCalledOnce();});
 it('独立父层词剪：计算两份摘要仍在途时卸载，晚到摘要零receipt GET/零apply/零恢复缓存',async()=>{setup();const pending:Array<(v:ArrayBuffer)=>void>=[];const digest=vi.fn(()=>new Promise<ArrayBuffer>(resolve=>pending.push(resolve)));vi.stubGlobal('crypto',{randomUUID:()=>webcrypto.randomUUID(),subtle:{digest}});const first=render(<RoughCutWorkbench initial={timedDocument()} onPrepare={()=>{}}/>);await chooseTimedWord();fireEvent.click(screen.getByRole('button',{name:'删除所选词句对应音视频并保存'}));await waitFor(()=>expect(digest).toHaveBeenCalledTimes(2));first.unmount();for(const finish of pending)finish(new Uint8Array(32).buffer);await Promise.resolve();await Promise.resolve();await Promise.resolve();expect(api.getProductionEditorReceipt).not.toHaveBeenCalled();expect(api.applyProductionEditor).not.toHaveBeenCalled();expect(JSON.parse(sessionStorage.getItem('rough-cut:video')!).pending).toBeNull();});
 it('独立父层词剪：重复原片明确实例的真词定位换算至成片1.2秒，零编辑写',async()=>{setup();api.previewProductionEditor.mockResolvedValue({html:'<!DOCTYPE html><html><body><div></div></body></html>',durationSec:2,warnings:[]});render(<RoughCutWorkbench initial={timedDocument()} onPrepare={()=>{}}/>);await chooseTimedWord();const iframe=await screen.findByTitle('粗剪成片预览') as HTMLIFrameElement;const args=JSON.parse(iframe.srcdoc.match(/\.\.\.(\[[^\]]*\])\);<\/script>/)![1]!);const post=vi.spyOn(iframe.contentWindow!,'postMessage');await waitFor(()=>{fireEvent(window,new MessageEvent('message',{source:iframe.contentWindow,data:{channelId:args[0],commandId:0,type:'ready'}}));expect(screen.getByRole('button',{name:'播放'})).toBeEnabled();});fireEvent.click(screen.getByRole('button',{name:'定位词句 1'}));expect(screen.getByRole('button',{name:'选中片段 repeat'})).toHaveAttribute('aria-pressed','true');expect(post).toHaveBeenCalledWith(expect.objectContaining({channelId:args[0],type:'seek',time:1.2}),'*');expect(api.applyProductionEditor).not.toHaveBeenCalled();});
+
+// T1062_COMPONENT_PORT_SEAM: 仅本文件既有业务spies；真实scope/epoch/signal/lifecycle不替换。
+vi.mock("@/lib/creation-workspace-scope", async importOriginal => {
+  const actual = await importOriginal<typeof import("@/lib/creation-workspace-scope")>();
+  const {client: componentPorts} = await import("@/lib/contract-client");
+  type Workspace = ReturnType<typeof actual.createCreationWorkspace>;
+  type Operation = ReturnType<Workspace["capture"]>;
+  const views = new WeakMap<Workspace, Workspace>();
+  function portClient(base: Operation["client"], capture: () => Operation): Operation["client"] {
+    const methods = new Map<PropertyKey, unknown>();
+    return new Proxy(base, {
+      get(target, key, receiver) {
+        const port = Reflect.get(componentPorts, key);
+        const original = Reflect.get(target, key, receiver);
+        if (typeof port !== "function") return original;
+        if (!methods.has(key)) methods.set(key, async (...args: unknown[]) => {
+          const operation = capture();
+          operation.assertCurrent();
+          try { return await Reflect.apply(Reflect.get(componentPorts, key), componentPorts, args); }
+          finally { operation.assertCurrent(); }
+        });
+        return methods.get(key);
+      },
+    });
+  }
+  function view(workspace: Workspace): Workspace {
+    const cached = views.get(workspace);
+    if (cached) return cached;
+    const client = portClient(workspace.client, () => workspace.capture());
+    const capture = (): Operation => {
+      const operation = workspace.capture();
+      return Object.freeze({...operation, client: portClient(operation.client, () => operation)});
+    };
+    const proxy = new Proxy(workspace, {
+      get(target, key) {
+        if (key === "client") return client;
+        if (key === "capture") return capture;
+        // Reflect读取原对象getter，signal/epoch始终是原factory当前值；不spread workspace。
+        return Reflect.get(target, key, target);
+      },
+    });
+    views.set(workspace, proxy);
+    return proxy;
+  }
+  return {
+    ...actual,
+    createCreationWorkspace: (...args: Parameters<typeof actual.createCreationWorkspace>) => view(actual.createCreationWorkspace(...args)),
+    useCreationWorkspace: (scope: Parameters<typeof actual.useCreationWorkspace>[0]) => view(actual.useCreationWorkspace(scope)),
+    useCreationClient: () => view(actual.useCreationWorkspace(actual.useCreationScope())).client,
+  };
+});
+// T1062_COMPONENT_PORT_SEAM_END
+
+// T1062_UNIT_SCOPE_FIXTURE: 显式合成单测选择；不是当前用户/生产default。
+import {beforeEach as t1062ScopeBeforeEach, afterEach as t1062ScopeAfterEach} from "vitest";
+t1062ScopeBeforeEach(() => {
+  window.localStorage.removeItem("creatoros:current-group");
+  window.localStorage.setItem("creatoros:current-account", "account-a");
+});
+t1062ScopeAfterEach(() => {
+  window.localStorage.removeItem("creatoros:current-group");
+  window.localStorage.removeItem("creatoros:current-account");
+});
+// T1062_UNIT_SCOPE_FIXTURE_END

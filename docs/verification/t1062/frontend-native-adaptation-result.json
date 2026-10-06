@@ -2,9 +2,9 @@
   "schema": "t1062-frontend-native-adaptation-result/v1",
   "task": "T-1062",
   "step": "integration",
-  "status": "NOT_EXECUTED",
-  "verification18": "pending",
-  "product_application": "pending",
+  "status": "ACTUAL_ORIGINAL18_PASSED_INSTALLATION_PENDING",
+  "verification18": "passed",
+  "product_application": "actual_applied",
   "native_R8_TMP_actual_static_evidence": {
     "absolute_path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r8-nzjmtyxt/r8-final-execution-provider-binding.json",
     "sha256": "c8bf73244faef88a4ebaee8a2b7415d111db654bd7b9462c6a3a032bd0aaddb0"
@@ -21,5 +21,748 @@
     "failed": 2,
     "backend_not_started_due_to_shell_and": true
   },
-  "does_not_complete_task": true
+  "does_not_complete_task": true,
+  "prior_not_executed_historical": {
+    "schema": "t1062-frontend-native-adaptation-result/v1",
+    "task": "T-1062",
+    "step": "integration",
+    "status": "NOT_EXECUTED",
+    "verification18": "pending",
+    "product_application": "pending",
+    "native_R8_TMP_actual_static_evidence": {
+      "absolute_path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r8-nzjmtyxt/r8-final-execution-provider-binding.json",
+      "sha256": "c8bf73244faef88a4ebaee8a2b7415d111db654bd7b9462c6a3a032bd0aaddb0"
+    },
+    "installed_WK_hearing": "pending",
+    "global_reconcile_preserved": {
+      "errors": 35,
+      "warnings": 1
+    },
+    "LED049_existing_T1015_test_drift": {
+      "frontend_files": 7,
+      "cases": 79,
+      "passed": 77,
+      "failed": 2,
+      "backend_not_started_due_to_shell_and": true
+    },
+    "does_not_complete_task": true
+  },
+  "actual_original18": {
+    "status": "ACTUAL_ORIGINAL18_ALL18_EXIT0_SOURCE801_UNCHANGED",
+    "actual_report": {
+      "absolute_path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/frontend-original18-actual-full-pass-20261006/verification-result.json",
+      "sha256": "940f8915e07d42deed034d575e17177f8da586b1eb8acdf1a05eab0622808144"
+    },
+    "raw_log_index": {
+      "absolute_path": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-actual18-final-controls-0stqvb2x/actual-original18-raw-log-index.json",
+      "sha256": "9154cdb48b5be5c2af6ee59f09e019add8494023f7f5ccf77e6cde59174c40b4"
+    },
+    "actual_head": "9615f124b9a45056568ec6c8aed92388dbfff870",
+    "runner_sha256": "f4f71ac133b0df198d45e693f24cd05dc4f4f70895d0090569e30aad30462921",
+    "verification_scope_sha256": "ef6fa4d0b40dc82f2d7866a41c82306595bc7a3125dff02170bc850213ee23a9",
+    "commands": [
+      {
+        "label": "original-01",
+        "declaredArgv": [
+          "git",
+          "diff",
+          "--check"
+        ],
+        "actualArgv": [
+          "git",
+          "diff",
+          "--check"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-frontend-native-delivery/Thirdspace-creator",
+        "startedAt": "2026-10-06T07:05:29.526Z",
+        "finishedAt": "2026-10-06T07:05:29.820Z",
+        "exit": 0,
+        "signal": null,
+        "error": null,
+        "stdoutPath": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1062-frontend-native-verify-CjBYge/01.stdout.log",
+        "stderrPath": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1062-frontend-native-verify-CjBYge/01.stderr.log",
+        "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "label": "original-02",
+        "declaredArgv": [
+          "pnpm",
+          "-C",
+          "contract",
+          "typecheck"
+        ],
+        "actualArgv": [
+          "pnpm",
+          "-C",
+          "contract",
+          "typecheck"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-frontend-native-delivery/Thirdspace-creator",
+        "startedAt": "2026-10-06T07:05:29.823Z",
+        "finishedAt": "2026-10-06T07:05:34.609Z",
+        "exit": 0,
+        "signal": null,
+        "error": null,
+        "stdoutPath": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1062-frontend-native-verify-CjBYge/02.stdout.log",
+        "stderrPath": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1062-frontend-native-verify-CjBYge/02.stderr.log",
+        "stdoutSha256": "33fde09b05e41acec11a96be20f15315781854faf0d22cc97359717da249ff77",
+        "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "label": "original-03",
+        "declaredArgv": [
+          "pnpm",
+          "-C",
+          "frontend",
+          "typecheck"
+        ],
+        "actualArgv": [
+          "pnpm",
+          "-C",
+          "frontend",
+          "typecheck"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-frontend-native-delivery/Thirdspace-creator",
+        "startedAt": "2026-10-06T07:05:34.612Z",
+        "finishedAt": "2026-10-06T07:05:46.710Z",
+        "exit": 0,
+        "signal": null,
+        "error": null,
+        "stdoutPath": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1062-frontend-native-verify-CjBYge/03.stdout.log",
+        "stderrPath": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1062-frontend-native-verify-CjBYge/03.stderr.log",
+        "stdoutSha256": "a58d2ce53366de2274e0c4429ab8df9ef21152083526acb76947eb090110abd3",
+        "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "label": "original-04",
+        "declaredArgv": [
+          "node",
+          "frontend/scripts/verify-native-editors.mjs"
+        ],
+        "actualArgv": [
+          "node",
+          "frontend/scripts/verify-native-editors.mjs"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-frontend-native-delivery/Thirdspace-creator",
+        "startedAt": "2026-10-06T07:05:46.714Z",
+        "finishedAt": "2026-10-06T07:05:49.824Z",
+        "exit": 0,
+        "signal": null,
+        "error": null,
+        "stdoutPath": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1062-frontend-native-verify-CjBYge/04.stdout.log",
+        "stderrPath": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1062-frontend-native-verify-CjBYge/04.stderr.log",
+        "stdoutSha256": "da94383da26060afb6ee79fb9235c505c17e7f82ce3f2a055f9a17d3670687d2",
+        "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "label": "original-05",
+        "declaredArgv": [
+          "node",
+          "frontend/scripts/build-noterelay.mjs",
+          "--verify"
+        ],
+        "actualArgv": [
+          "node",
+          "frontend/scripts/build-noterelay.mjs",
+          "--verify"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-frontend-native-delivery/Thirdspace-creator",
+        "startedAt": "2026-10-06T07:05:49.829Z",
+        "finishedAt": "2026-10-06T07:05:49.987Z",
+        "exit": 0,
+        "signal": null,
+        "error": null,
+        "stdoutPath": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1062-frontend-native-verify-CjBYge/05.stdout.log",
+        "stderrPath": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1062-frontend-native-verify-CjBYge/05.stderr.log",
+        "stdoutSha256": "5e0fe7a16f79e6803cd84290f00ff74f831624e8d2b1d35265145bc8d28234be",
+        "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "label": "original-06",
+        "declaredArgv": [
+          "pnpm",
+          "-C",
+          "frontend",
+          "test",
+          "src/features/reference-editors/native-editor-surface.test.tsx",
+          "src/features/reference-editors/graphic-design-workbench.test.tsx",
+          "src/features/reference-editors/video-reference-workbench.test.tsx",
+          "src/features/reference-editors/noterelay/noterelay-editor.test.tsx",
+          "src/features/reference-editors/native-source-panel.test.tsx",
+          "src/features/article/doocs-article-editor.test.tsx",
+          "--maxWorkers=1"
+        ],
+        "actualArgv": [
+          "pnpm",
+          "-C",
+          "frontend",
+          "test",
+          "src/features/reference-editors/native-editor-surface.test.tsx",
+          "src/features/reference-editors/graphic-design-workbench.test.tsx",
+          "src/features/reference-editors/video-reference-workbench.test.tsx",
+          "src/features/reference-editors/noterelay/noterelay-editor.test.tsx",
+          "src/features/reference-editors/native-source-panel.test.tsx",
+          "src/features/article/doocs-article-editor.test.tsx",
+          "--maxWorkers=1"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-frontend-native-delivery/Thirdspace-creator",
+        "startedAt": "2026-10-06T07:05:49.991Z",
+        "finishedAt": "2026-10-06T07:06:00.158Z",
+        "exit": 0,
+        "signal": null,
+        "error": null,
+        "stdoutPath": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1062-frontend-native-verify-CjBYge/06.stdout.log",
+        "stderrPath": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1062-frontend-native-verify-CjBYge/06.stderr.log",
+        "stdoutSha256": "8382dbb8cff2b1f6e38d7d94990d8903b14ca20e92509a92b6cc206ab5a38c42",
+        "stderrSha256": "c29df540fb5caf7620a1221d9e06f4aab65efc3d14279ef20db2b550858d9d7f"
+      },
+      {
+        "label": "original-07",
+        "declaredArgv": [
+          "pnpm",
+          "-C",
+          "frontend",
+          "test",
+          "src/features/creative-canvas/canvas-editor.test.tsx",
+          "src/features/creative-canvas/canvas-template-library.test.tsx",
+          "src/features/creative-canvas/canvas-home-transfer.test.ts",
+          "src/features/creative-canvas/canvas-material-picker.test.tsx",
+          "src/features/creative-canvas/work-canvas-context.test.tsx",
+          "src/features/creative-canvas/graphic-page-context.test.tsx",
+          "--maxWorkers=1"
+        ],
+        "actualArgv": [
+          "pnpm",
+          "-C",
+          "frontend",
+          "test",
+          "src/features/creative-canvas/canvas-editor.test.tsx",
+          "src/features/creative-canvas/canvas-template-library.test.tsx",
+          "src/features/creative-canvas/canvas-home-transfer.test.ts",
+          "src/features/creative-canvas/canvas-material-picker.test.tsx",
+          "src/features/creative-canvas/work-canvas-context.test.tsx",
+          "src/features/creative-canvas/graphic-page-context.test.tsx",
+          "--maxWorkers=1"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-frontend-native-delivery/Thirdspace-creator",
+        "startedAt": "2026-10-06T07:06:00.162Z",
+        "finishedAt": "2026-10-06T07:06:11.748Z",
+        "exit": 0,
+        "signal": null,
+        "error": null,
+        "stdoutPath": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1062-frontend-native-verify-CjBYge/07.stdout.log",
+        "stderrPath": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1062-frontend-native-verify-CjBYge/07.stderr.log",
+        "stdoutSha256": "d6fb56b103a792df134a8bfab92776acb3ebb5af7920ef769ce47e01e0a5fda5",
+        "stderrSha256": "86b85a54bd549aa1f480fe23b25208516b8f72b6f77696da94fa137be43bd6a8"
+      },
+      {
+        "label": "original-08",
+        "declaredArgv": [
+          "pnpm",
+          "-C",
+          "frontend",
+          "test",
+          "src/features/projects/graphic-post-results.test.tsx",
+          "src/features/projects/video-output-workbench.test.tsx",
+          "src/features/projects/moments-model-panel.test.tsx",
+          "src/features/projects/output-conversion-panel.test.tsx",
+          "src/features/projects/output-conversion-lifecycle.test.tsx",
+          "src/features/projects/work-materials-panel.test.tsx",
+          "src/features/projects/work-materials-client.test.ts",
+          "src/features/projects/work-review-panel.test.tsx",
+          "src/features/projects/work-editing-recovery.test.tsx",
+          "src/features/article/article-workbench.test.tsx",
+          "src/features/article/article-workbench-save-race.test.tsx",
+          "src/features/article/article-result-actions.test.tsx",
+          "--maxWorkers=1"
+        ],
+        "actualArgv": [
+          "pnpm",
+          "-C",
+          "frontend",
+          "test",
+          "src/features/projects/graphic-post-results.test.tsx",
+          "src/features/projects/video-output-workbench.test.tsx",
+          "src/features/projects/moments-model-panel.test.tsx",
+          "src/features/projects/output-conversion-panel.test.tsx",
+          "src/features/projects/output-conversion-lifecycle.test.tsx",
+          "src/features/projects/work-materials-panel.test.tsx",
+          "src/features/projects/work-materials-client.test.ts",
+          "src/features/projects/work-review-panel.test.tsx",
+          "src/features/projects/work-editing-recovery.test.tsx",
+          "src/features/article/article-workbench.test.tsx",
+          "src/features/article/article-workbench-save-race.test.tsx",
+          "src/features/article/article-result-actions.test.tsx",
+          "--maxWorkers=1"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-frontend-native-delivery/Thirdspace-creator",
+        "startedAt": "2026-10-06T07:06:11.751Z",
+        "finishedAt": "2026-10-06T07:06:35.997Z",
+        "exit": 0,
+        "signal": null,
+        "error": null,
+        "stdoutPath": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1062-frontend-native-verify-CjBYge/08.stdout.log",
+        "stderrPath": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1062-frontend-native-verify-CjBYge/08.stderr.log",
+        "stdoutSha256": "d273fac8a4d5bf5c3ffc7eeec4d48c75fd832ebb1273abc1e33778f45442c9f0",
+        "stderrSha256": "1b89241f530dea1370855f9ba498b82048df1d3e5c39460f6e20319a69376f6f"
+      },
+      {
+        "label": "original-09",
+        "declaredArgv": [
+          "pnpm",
+          "-C",
+          "frontend",
+          "test",
+          "src/features/copilot/copilot-attachment-picker.test.tsx",
+          "--maxWorkers=1"
+        ],
+        "actualArgv": [
+          "pnpm",
+          "-C",
+          "frontend",
+          "test",
+          "src/features/copilot/copilot-attachment-picker.test.tsx",
+          "--maxWorkers=1"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-frontend-native-delivery/Thirdspace-creator",
+        "startedAt": "2026-10-06T07:06:36.001Z",
+        "finishedAt": "2026-10-06T07:06:37.649Z",
+        "exit": 0,
+        "signal": null,
+        "error": null,
+        "stdoutPath": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1062-frontend-native-verify-CjBYge/09.stdout.log",
+        "stderrPath": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1062-frontend-native-verify-CjBYge/09.stderr.log",
+        "stdoutSha256": "9cac79c13c6520f7c4b3b1d0224b4e069baaf39c086f27754d09c3d403675fb9",
+        "stderrSha256": "1ba5e642a88da161a55a5a8add2d8482d8c5cbc4e6830c697577637a743c2196"
+      },
+      {
+        "label": "original-10",
+        "declaredArgv": [
+          "pnpm",
+          "-C",
+          "frontend",
+          "test",
+          "src/features/production/production-editor-entry.test.tsx",
+          "src/features/production/rough-cut-workbench.test.tsx",
+          "src/features/production/production-transcript-panel.test.tsx",
+          "src/features/production/production-rough-candidate-panel.test.tsx",
+          "src/features/reference-editors/native-rough-view.test.ts",
+          "--maxWorkers=1"
+        ],
+        "actualArgv": [
+          "pnpm",
+          "-C",
+          "frontend",
+          "test",
+          "src/features/production/production-editor-entry.test.tsx",
+          "src/features/production/rough-cut-workbench.test.tsx",
+          "src/features/production/production-transcript-panel.test.tsx",
+          "src/features/production/production-rough-candidate-panel.test.tsx",
+          "src/features/reference-editors/native-rough-view.test.ts",
+          "--maxWorkers=1"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-frontend-native-delivery/Thirdspace-creator",
+        "startedAt": "2026-10-06T07:06:37.654Z",
+        "finishedAt": "2026-10-06T07:06:46.667Z",
+        "exit": 0,
+        "signal": null,
+        "error": null,
+        "stdoutPath": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1062-frontend-native-verify-CjBYge/10.stdout.log",
+        "stderrPath": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1062-frontend-native-verify-CjBYge/10.stderr.log",
+        "stdoutSha256": "ee37421d9e41e2d5c5942310e97a0868a06cd9c0bee9b5c35051e4d3665e3b46",
+        "stderrSha256": "cbf466d66518cdf408844fec2b24bd0f025b81d580f98eda946f4ec3bf1b0df1"
+      },
+      {
+        "label": "original-11",
+        "declaredArgv": [
+          "pnpm",
+          "-C",
+          "frontend",
+          "test",
+          "src/lib/creation-workspace-scope.test.ts",
+          "src/features/production/native-gap-audio-player.test.tsx",
+          "src/features/draft-workbench/upload-to-project.test.ts",
+          "--maxWorkers=1"
+        ],
+        "actualArgv": [
+          "pnpm",
+          "-C",
+          "frontend",
+          "test",
+          "src/lib/creation-workspace-scope.test.ts",
+          "src/features/production/native-gap-audio-player.test.tsx",
+          "src/features/draft-workbench/upload-to-project.test.ts",
+          "--maxWorkers=1"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-frontend-native-delivery/Thirdspace-creator",
+        "startedAt": "2026-10-06T07:06:46.670Z",
+        "finishedAt": "2026-10-06T07:06:50.899Z",
+        "exit": 0,
+        "signal": null,
+        "error": null,
+        "stdoutPath": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1062-frontend-native-verify-CjBYge/11.stdout.log",
+        "stderrPath": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1062-frontend-native-verify-CjBYge/11.stderr.log",
+        "stdoutSha256": "84ffc373df3952f8df8758feb28d4d5d82801e8f291dd78ed25f75f80b807d6e",
+        "stderrSha256": "9bcb3896a985b61c66b38171af673a7e0db69b66bfe28ebf270498f9f2164e33"
+      },
+      {
+        "label": "original-12",
+        "declaredArgv": [
+          "pnpm",
+          "-C",
+          "frontend",
+          "exec",
+          "playwright",
+          "test",
+          "tests/e2e/t1062-group-native-rough.spec.ts",
+          "tests/e2e/creative-canvas.spec.ts",
+          "tests/e2e/wechat-article-workbench.spec.ts",
+          "--project=e2e"
+        ],
+        "actualArgv": [
+          "pnpm",
+          "-C",
+          "frontend",
+          "exec",
+          "playwright",
+          "test",
+          "tests/e2e/t1062-group-native-rough.spec.ts",
+          "tests/e2e/creative-canvas.spec.ts",
+          "tests/e2e/wechat-article-workbench.spec.ts",
+          "--project=e2e",
+          "--config",
+          "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1062-frontend-native-verify-CjBYge/playwright.config.ts"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-frontend-native-delivery/Thirdspace-creator",
+        "startedAt": "2026-10-06T07:07:03.644Z",
+        "finishedAt": "2026-10-06T07:10:39.760Z",
+        "exit": 0,
+        "signal": null,
+        "error": null,
+        "stdoutPath": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1062-frontend-native-verify-CjBYge/12.stdout.log",
+        "stderrPath": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1062-frontend-native-verify-CjBYge/12.stderr.log",
+        "stdoutSha256": "c3cb848e08ad3e4500ad5eb08d788cb45c41d51f25169d15617695664db9684a",
+        "stderrSha256": "636ad53fdd31632a20c3d97517f5c8d08bda8127bd6f4fbc7e74ce64445f85c7"
+      },
+      {
+        "label": "original-13",
+        "declaredArgv": [
+          "pnpm",
+          "-C",
+          "frontend",
+          "test",
+          "src/features/projects/project-creation.test.ts",
+          "src/features/projects/graphic-series-panel.test.tsx",
+          "src/features/production/production-conversion-panel.test.tsx",
+          "src/features/production/production-workbench.test.tsx",
+          "src/features/production/video-decision-preview.test.tsx",
+          "src/features/creative-canvas/infinite-canvas-node-reference.test.tsx",
+          "--maxWorkers=1"
+        ],
+        "actualArgv": [
+          "pnpm",
+          "-C",
+          "frontend",
+          "test",
+          "src/features/projects/project-creation.test.ts",
+          "src/features/projects/graphic-series-panel.test.tsx",
+          "src/features/production/production-conversion-panel.test.tsx",
+          "src/features/production/production-workbench.test.tsx",
+          "src/features/production/video-decision-preview.test.tsx",
+          "src/features/creative-canvas/infinite-canvas-node-reference.test.tsx",
+          "--maxWorkers=1"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-frontend-native-delivery/Thirdspace-creator",
+        "startedAt": "2026-10-06T07:10:39.767Z",
+        "finishedAt": "2026-10-06T07:10:48.547Z",
+        "exit": 0,
+        "signal": null,
+        "error": null,
+        "stdoutPath": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1062-frontend-native-verify-CjBYge/13.stdout.log",
+        "stderrPath": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1062-frontend-native-verify-CjBYge/13.stderr.log",
+        "stdoutSha256": "3a10ad27bc1c4b95638422dc373ec88529998270ca34b1e7a2d02649a3c40bcb",
+        "stderrSha256": "79467c2b01ee9a3a7d482a0fb633bf6900ffe33200f5a6d6ff7f7d8cb0a43300"
+      },
+      {
+        "label": "readonly-original-1",
+        "declaredArgv": [
+          "pnpm",
+          "-C",
+          "frontend",
+          "test",
+          "src/features/group-workspace/group-workspace.test.tsx",
+          "--maxWorkers=1"
+        ],
+        "actualArgv": [
+          "pnpm",
+          "-C",
+          "frontend",
+          "test",
+          "src/features/group-workspace/group-workspace.test.tsx",
+          "--maxWorkers=1"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-frontend-native-delivery/Thirdspace-creator",
+        "startedAt": "2026-10-06T07:10:48.550Z",
+        "finishedAt": "2026-10-06T07:10:51.158Z",
+        "exit": 0,
+        "signal": null,
+        "error": null,
+        "stdoutPath": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1062-frontend-native-verify-CjBYge/14.stdout.log",
+        "stderrPath": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1062-frontend-native-verify-CjBYge/14.stderr.log",
+        "stdoutSha256": "b85c0b2af54995bd15fa8dd98680d1ba04d3c35bad0bba85bf7826ed33907deb",
+        "stderrSha256": "e3e278cf93b0b3cbb73b496055e65272be93b0f0ec4d1820cee7de62b7883da3"
+      },
+      {
+        "label": "readonly-original-2",
+        "declaredArgv": [
+          "pnpm",
+          "-C",
+          "frontend",
+          "test",
+          "src/lib/account-events.test.ts",
+          "--maxWorkers=1"
+        ],
+        "actualArgv": [
+          "pnpm",
+          "-C",
+          "frontend",
+          "test",
+          "src/lib/account-events.test.ts",
+          "--maxWorkers=1"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-frontend-native-delivery/Thirdspace-creator",
+        "startedAt": "2026-10-06T07:10:51.161Z",
+        "finishedAt": "2026-10-06T07:10:53.172Z",
+        "exit": 0,
+        "signal": null,
+        "error": null,
+        "stdoutPath": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1062-frontend-native-verify-CjBYge/15.stdout.log",
+        "stderrPath": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1062-frontend-native-verify-CjBYge/15.stderr.log",
+        "stdoutSha256": "8eed48ef9f254965d362e2b13b4c58de6a440ea311acb21a8a3af4f6142aed36",
+        "stderrSha256": "389aaac48729054fe0a408aa753509d3f126f827294d8ff0e434f284fcef92b1"
+      },
+      {
+        "label": "readonly-original-3",
+        "declaredArgv": [
+          "pnpm",
+          "-C",
+          "frontend",
+          "test",
+          "src/lib/contract-client-owner.test.ts",
+          "--maxWorkers=1"
+        ],
+        "actualArgv": [
+          "pnpm",
+          "-C",
+          "frontend",
+          "test",
+          "src/lib/contract-client-owner.test.ts",
+          "--maxWorkers=1"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-frontend-native-delivery/Thirdspace-creator",
+        "startedAt": "2026-10-06T07:10:53.177Z",
+        "finishedAt": "2026-10-06T07:10:55.696Z",
+        "exit": 0,
+        "signal": null,
+        "error": null,
+        "stdoutPath": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1062-frontend-native-verify-CjBYge/16.stdout.log",
+        "stderrPath": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1062-frontend-native-verify-CjBYge/16.stderr.log",
+        "stdoutSha256": "3dd7214c88aff2be7eff3118086b96b82221af71cb6afe28de8158b07da4c1bc",
+        "stderrSha256": "3f44e1904e357623eada5a02bdf32929f6fc4cc566f0d1dbf0838d7337939a75"
+      },
+      {
+        "label": "readonly-original-4",
+        "declaredArgv": [
+          "pnpm",
+          "-C",
+          "frontend",
+          "test",
+          "src/lib/http-transport.test.ts",
+          "--maxWorkers=1"
+        ],
+        "actualArgv": [
+          "pnpm",
+          "-C",
+          "frontend",
+          "test",
+          "src/lib/http-transport.test.ts",
+          "--maxWorkers=1"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-frontend-native-delivery/Thirdspace-creator",
+        "startedAt": "2026-10-06T07:10:55.703Z",
+        "finishedAt": "2026-10-06T07:10:57.703Z",
+        "exit": 0,
+        "signal": null,
+        "error": null,
+        "stdoutPath": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1062-frontend-native-verify-CjBYge/17.stdout.log",
+        "stderrPath": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1062-frontend-native-verify-CjBYge/17.stderr.log",
+        "stdoutSha256": "1a09c8318e38ffbe32e2dff03896486f23298d5b8b5537474719c40895e9a23f",
+        "stderrSha256": "ad84612a3b0ce12c9a6db20a99b83fab17397b25c7e97f965a205e43fc977119"
+      },
+      {
+        "label": "LED-047-original",
+        "declaredArgv": [
+          "pnpm",
+          "--dir",
+          "frontend",
+          "exec",
+          "vitest",
+          "run",
+          "src/features/copilot/ai-copilot-interactions.test.tsx",
+          "src/features/knowledge/knowledge-dump-zone.test.tsx",
+          "src/features/topics/topics-interactions.test.tsx",
+          "src/components/overlays/overlay-routing.test.tsx",
+          "src/lib/copilot-navigation.test.ts",
+          "src/features/copilot/chat-tool-trace.test.tsx",
+          "src/features/automations/run-controls.test.tsx",
+          "src/features/automations/cadence.test.ts",
+          "--retry=0"
+        ],
+        "actualArgv": [
+          "pnpm",
+          "--dir",
+          "frontend",
+          "exec",
+          "vitest",
+          "run",
+          "src/features/copilot/ai-copilot-interactions.test.tsx",
+          "src/features/knowledge/knowledge-dump-zone.test.tsx",
+          "src/features/topics/topics-interactions.test.tsx",
+          "src/components/overlays/overlay-routing.test.tsx",
+          "src/lib/copilot-navigation.test.ts",
+          "src/features/copilot/chat-tool-trace.test.tsx",
+          "src/features/automations/run-controls.test.tsx",
+          "src/features/automations/cadence.test.ts",
+          "--retry=0"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-frontend-native-delivery/Thirdspace-creator",
+        "startedAt": "2026-10-06T07:10:57.706Z",
+        "finishedAt": "2026-10-06T07:11:07.519Z",
+        "exit": 0,
+        "signal": null,
+        "error": null,
+        "stdoutPath": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1062-frontend-native-verify-CjBYge/18.stdout.log",
+        "stderrPath": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1062-frontend-native-verify-CjBYge/18.stderr.log",
+        "stdoutSha256": "4760c2293793456320efab79144e8d60d0b5e6473e9d464c7ea0478d58ee076a",
+        "stderrSha256": "b51e5c1d01c1b582e1799198d56d499077d11dfdf2fb808763478e59841eb2df"
+      }
+    ],
+    "source_count": 801,
+    "product_count": 587,
+    "protected_count": 214,
+    "changed_since_previous_observation": [
+      {
+        "path": "frontend/src/features/production/native-gap-audio-player.test.tsx",
+        "before_sha256": "1195318afff2c727f5351dff258721483b1262815d90a3f1b53a67c4e48878ed",
+        "after_sha256": "8e5a833a38ee16169d6f4fafdb83dee72ba39463ff53b4639b9e48d1fbd842b3"
+      },
+      {
+        "path": "frontend/src/features/production/native-gap-audio-player.tsx",
+        "before_sha256": "f7ce08ec62c6ac3adaa575bdef3aaf63af9b215ee5d8c7e257b9b040ffc306e7",
+        "after_sha256": "fc4bb59c234ed5746dd75651972bb3f4852792c421ff2c3c19425b249d482d55"
+      },
+      {
+        "path": "frontend/tests/e2e/creative-canvas.spec.ts",
+        "before_sha256": "3a7b12a68fd9b0e08157d48e36b3d03f770cdb14837254084a49de5223086c25",
+        "after_sha256": "67169c2d5e6d909006fbc2cd90c5875c37c7672d5d9ed1c6f9487fe5f9a626fc"
+      },
+      {
+        "path": "frontend/tests/e2e/t1062-group-native-rough.spec.ts",
+        "before_sha256": "7f94c54d5ab166fd03a4a0b806f7e2a473e1b9d713a88abeec56660db60c8a0b",
+        "after_sha256": "528289d5e59bddf83a95a27fc0d7d129c37cf82579d65c70dd76197b110da609"
+      },
+      {
+        "path": "contract/src/internal/asset-asr-timing.ts",
+        "before_sha256": "15e409baf9a15144cb7933c6c2403cc42eb08a4be4e24be5a681bd8bb937691e",
+        "after_sha256": "795f14c4d8ea17e20a6febb8a3a579f39d61fb39f6ebdd1e0e1c6b1f4d2bd1a7"
+      },
+      {
+        "path": "backend/src/modules/production/production-asr-timing.ts",
+        "before_sha256": "3bdce060a068c7100d997916335b44e09ef19c2e159c2af800195f7d4a334230",
+        "after_sha256": "555f76719dfcc9416126d77974e4a66e468de1775946532c2a3c5b6f91a92f8d"
+      }
+    ],
+    "actual_incremental_applications": [
+      {
+        "absolute_path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/frontend-bigint-syntax-compatibility-20261006/actual-application.json",
+        "sha256": "89c136a92cc9782891794b54039c44eb4e510aa19181243d14506eadb0c219ea"
+      },
+      {
+        "absolute_path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/original22-real-ui-preconditions-20261006/actual-application.json",
+        "sha256": "fc3661b7b7c6e02f6917e42eacfc230cff9e6cedcec57e9c73a31bdf11747da4"
+      },
+      {
+        "absolute_path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/host-audio-sample-precision-root-actual-application-20261006/application-result.json",
+        "sha256": "b2abd416786fdf1ba87ca4e6a2550978f81dc748de5f8138230c094ae645d4d4"
+      }
+    ],
+    "independent_incremental_reviews": [
+      {
+        "absolute_path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-bigint-syntax-independent-review-8n4fq8ph/independent-bigint-syntax-review.json",
+        "sha256": "c02f19297d35bc9742e9f2069e2bd2356a75e10ac01edc4e0069ed1c5ccc26d9"
+      },
+      {
+        "absolute_path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-original22-ui-preconditions-independent-review-0hwqbgwd/independent-original22-ui-preconditions-review.json",
+        "sha256": "363bc18bdee3ff5f8957b116c39502f5869777a3307f7cc5aeb5a5334dfbdaa4"
+      },
+      {
+        "absolute_path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-host-sample-coordinate-independent-review-qagwzw6j/independent-host-sample-coordinate-review.json",
+        "sha256": "223c1c9fd24ccff21a1747306d734fce535a811d3bf25cdb06f05f7555086018"
+      }
+    ],
+    "installation_passed": false,
+    "hearing_passed": false,
+    "semantic_model_quality_passed": false,
+    "loopback_rough_model_protocol_not_real_semantic_model": true,
+    "nativeGate": {
+      "status": "NOT_EXECUTED_BY_THIS_RUNNER",
+      "required": [
+        "kuaitu",
+        "doocs-md",
+        "opencut-classic",
+        "noterelay"
+      ],
+      "currentBuildAndDependencyAndExactOutputProof": null
+    },
+    "native_four_builds_note": "当次18不执行四编辑器重建；现有同归档四源独立构建408代码产物匹配+保留6旧交付metadata的有界证据另行保留，完整414一致性失败不转PASS"
+  },
+  "actual_root_control_transition_after_original18": {
+    "actual_transition": {
+      "absolute_path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/actual18-postpass-root-control-transition-20261006/actual-transition-control-difference.json",
+      "sha256": "2682a55159a7b7aa9f3ed8ffb67d9459a675bbb330b6b312db3ea810770ff911"
+    },
+    "verified_original18_head": "9615f124b9a45056568ec6c8aed92388dbfff870",
+    "current_root_control_head": "e6d947c24dc217ff263df94e649f369330f8f2fb",
+    "current_lease_base": "e6d947c24dc217ff263df94e649f369330f8f2fb",
+    "all587_product_source_unchanged": true,
+    "runtime_sources798_unchanged": true,
+    "three_protected_root_control_changes": [
+      {
+        "path": "orchestrator/context/T-1062.md",
+        "before_verified_sha256": "67aa4c3bead8d909f8a035e5777c843527be739eea5292c096f6a76bd4bea0d3",
+        "actual_sha256": "9dc4ddc0251081708ffdbe63c951ba70bb3202043caba809a1bd56bf4920efe2",
+        "matches_new_root_control_commit": true
+      },
+      {
+        "path": "orchestrator/process/modules.config.json",
+        "before_verified_sha256": "5ec0bbb1fa9e2b0be75a10e2d7610f61d977d59da302dd799818808884e8bc2a",
+        "actual_sha256": "4ebd92d80c120624cb2ee29e1a2213db83745714d401f2b2a7612ae5191a69a7",
+        "matches_new_root_control_commit": true
+      },
+      {
+        "path": "orchestrator/progress.json",
+        "before_verified_sha256": "eabe3a4694a679f6154013ad0b26ccce5428eb7c67d76cb8a4f1cd2cb1a6b257",
+        "actual_sha256": "d4f4d5047d9298613b24ab1eb6eb0fd3ce22895650edd96b1683171a9001b007",
+        "matches_new_root_control_commit": true
+      }
+    ],
+    "product_or_test_assertion_changes": false,
+    "original18_reexecuted_at_current_head": false,
+    "new_root_control_commit_only_not_a_new_product_contract": true,
+    "prior_original18_reader_snapshot": {
+      "absolute_path": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-actual18-final-controls-0stqvb2x/source-801-current-after-actual-original18.json",
+      "sha256": "0b2dee64a3abec1199912fffdb49062d0b47052251f81e3e06c67769d7155920"
+    }
+  }
 }

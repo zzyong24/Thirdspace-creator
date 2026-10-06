@@ -1,4 +1,5 @@
 "use client";
+import {useCreationWorkspace,useCreationScope} from "@/lib/creation-workspace-scope";
 
 /**
  * `AssetUploadButton` — the "＋上传素材" control (module 07 E2 + Plan D1). A
@@ -40,6 +41,9 @@ function assetTypeForFile(file: File): AssetType {
 }
 
 export function AssetUploadButton({onUploaded,accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.md,.txt,.srt,.vtt"}:{onUploaded?:()=>void;accept?:string}={}) {
+ const workspace=useCreationWorkspace(useCreationScope());
+ const alive=React.useRef(false);React.useEffect(()=>{alive.current=true;return()=>{alive.current=false;};},[]);
+
   const router = useRouter();
   const [pending, startTransition] = React.useTransition();
   const inputRef = React.useRef<HTMLInputElement>(null);
@@ -61,8 +65,11 @@ export function AssetUploadButton({onUploaded,accept="image/*,video/*,audio/*,.p
         );
         return;
       }
+      const operation=workspace.capture(),client=operation.client;
+      const current=()=>{if(!alive.current)return false;try{operation.assertCurrent();return true;}catch{return false;}};
       startTransition(async () => {
         try {
+          operation.assertCurrent();
           const upload = (await client.createUpload({
             params: undefined,
             query: undefined,
@@ -83,8 +90,9 @@ export function AssetUploadButton({onUploaded,accept="image/*,video/*,audio/*,.p
             const put = await fetch(upload.uploadUrl, {
               method: "PUT",
               headers: { "content-type": mimeType },
-              body: file,
+              body: file,signal:operation.signal,
             });
+            operation.assertCurrent();
             if (!put.ok) {
               setUploadStatus(`上传失败「${file.name}」(${put.status})。`);
               return;
@@ -110,10 +118,12 @@ export function AssetUploadButton({onUploaded,accept="image/*,video/*,audio/*,.p
               })
               .catch(() => undefined);
           }
+          operation.assertCurrent();if(!alive.current)return;
           setUploadStatus(`已上传素材「${file.name}」。`);
           onUploaded?.();
           router.refresh();
         } catch (err) {
+          if(!current())return;
           // [T-049 B5] 全链兜底:任一步抛错都给用户可见反馈,不再静默吞掉。
           // [T-133] 走人话收口,绝不把裸 err.message 截给用户(dev 会进 console 排查)。
           setUploadStatus(
@@ -122,7 +132,7 @@ export function AssetUploadButton({onUploaded,accept="image/*,video/*,audio/*,.p
         }
       });
     },
-    [router,onUploaded],
+    [router,onUploaded,workspace],
   );
 
   return (

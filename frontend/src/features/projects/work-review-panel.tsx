@@ -1,4 +1,5 @@
 "use client";
+import {useCreationClient,useCreationScope,creationScopeKey} from "@/lib/creation-workspace-scope";
 import * as React from "react";
 import {ENDPOINTS,ErrorCode,workReviewScope,type WorkCompositionResource,type WorkReviewScope,type WorkReviewStatus,type WorkFieldTarget} from "@creatoros/contract";
 import {client} from "@/lib/contract-client";
@@ -8,8 +9,10 @@ type Command={operation:"create";body:NonNullable<typeof ENDPOINTS.createWorkRev
 type ResumeCommand={reportId:string;taskId:string;executionTaskId:string;scope:WorkReviewScope;waitingAttempt:number;waitingUpdatedAt:string;body:NonNullable<typeof ENDPOINTS.commandExecutionTasks.body>["_output"];acknowledged:boolean};
 const names={video:"视频",article:"公众号",image:"图文",moments:"朋友圈"};
 const states={not_reviewed:"尚未确认",running:"模型审核进行中",waiting_user:"模型审核等待处理配置或权限",awaiting_confirmation:"报告已生成，等待核对",needs_changes:"报告中有待修改内容",confirmed_current:"当前内容已确认",basis_updated:"内容或依据已更新，需要重新核对"};
-export function WorkReviewPanel(props:{composition:WorkCompositionResource;accountId:string;disabled:boolean}){return <ScopedReviewPanel key={`${props.accountId}:${props.composition.compositionId}`} {...props}/>;}
-function ScopedReviewPanel({composition,accountId,disabled}:{composition:WorkCompositionResource;accountId:string;disabled:boolean}){
+export function WorkReviewPanel(props:{composition:WorkCompositionResource;accountId:string|null;disabled:boolean}){const workspaceSelection=useCreationScope();return <ScopedReviewPanel key={`${creationScopeKey(workspaceSelection)}:${props.composition.compositionId}`} {...props}/>;}
+function ScopedReviewPanel({composition,accountId,disabled}:{composition:WorkCompositionResource;accountId:string|null;disabled:boolean}){
+ const client=useCreationClient(),workspaceSelection=useCreationScope();
+
  const [choice,setChoice]=React.useState("composition"),[status,setStatus]=React.useState<WorkReviewStatus|null>(null),[busy,setBusy]=React.useState(false),[pendingCommands,setPendingCommands]=React.useState<Partial<Record<Command["operation"],Command>>>({}),[error,setError]=React.useState<string|null>(null),[message,setMessage]=React.useState<string|null>(null);
  const [resumePending,setResumePending]=React.useState<ResumeCommand|null>(null),[cacheWarning,setCacheWarning]=React.useState<string|null>(null);
  const active=React.useRef(true),inFlight=React.useRef(false),storageKey=`work-review:${accountId}:${composition.compositionId}`;
@@ -35,10 +38,10 @@ function ScopedReviewPanel({composition,accountId,disabled}:{composition:WorkCom
  }
  function cacheResume(command:ResumeCommand|null){try{if(command)localStorage.setItem(`${storageKey}:resume`,JSON.stringify(command));else localStorage.removeItem(`${storageKey}:resume`);}catch{if(active.current)setCacheWarning("本地恢复缓存不可用，当前会话仍保留原请求；关闭页面前请核对原任务状态。");}}
  async function readOriginalExecution(taskId:string,executionTaskId:string){
-  const wire:unknown=await client.listExecutionTasks({params:undefined,query:{accountId,kind:"ai_task",ownerId:taskId,page:1,pageSize:100},body:undefined});
+  const wire:unknown=await client.listExecutionTasks({params:undefined,query:{...(workspaceSelection.groupId?{projectId:composition.projectId}:accountId?{accountId}:{}),kind:"ai_task",ownerId:taskId,page:1,pageSize:100},body:undefined});
   const rows=ENDPOINTS.listExecutionTasks.response.array().parse(wire);
   const execution=rows.find(item=>"ownerId" in item&&item.id===executionTaskId);
-  if(!execution||!("ownerId" in execution)||execution.accountId!==accountId||execution.kind!=="ai_task"||execution.ownerType!=="ai_task"||execution.ownerId!==taskId)throw Error("原审核执行身份不匹配，请刷新核对。");
+  if(!execution||!("ownerId" in execution)||(!workspaceSelection.groupId&&execution.accountId!==accountId)||execution.kind!=="ai_task"||execution.ownerType!=="ai_task"||execution.ownerId!==taskId)throw Error("原审核执行身份不匹配，请刷新核对。");
   return execution;
  }
  async function resumeOriginal(){
@@ -46,12 +49,12 @@ function ScopedReviewPanel({composition,accountId,disabled}:{composition:WorkCom
   let command=resumePending;
   try{
    if(!command){const current=status?.latestReport;if(current?.status!=="waiting_user"||!current.taskId||!current.executionTaskId)throw Error("请先读取原审核等待状态。");const execution=await readOriginalExecution(current.taskId,current.executionTaskId);
-    if(execution.id!==current.executionTaskId||execution.accountId!==accountId||execution.kind!=="ai_task"||execution.ownerType!=="ai_task"||execution.ownerId!==current.taskId)throw Error("原审核执行身份不匹配，请刷新核对。");
+    if(execution.id!==current.executionTaskId||(!workspaceSelection.groupId&&execution.accountId!==accountId)||execution.kind!=="ai_task"||execution.ownerType!=="ai_task"||execution.ownerId!==current.taskId)throw Error("原审核执行身份不匹配，请刷新核对。");
     if((execution.runtimeStatus??execution.status)!=="waiting_user"){const latest=await client.getWorkReviewStatus({params:undefined,query:undefined,body:{scope}});if(active.current)setStatus(latest);return;}
     command={reportId:current.reportId,taskId:current.taskId,executionTaskId:current.executionTaskId,scope,waitingAttempt:execution.attempt,waitingUpdatedAt:execution.updatedAt,body:{taskIds:[execution.id],command:"resume",idempotencyKey:crypto.randomUUID()},acknowledged:false};
     if(active.current)setResumePending(command);cacheResume(command);
    }
-   if(!command.acknowledged){const originalReport=await client.getWorkReview({params:{reportId:command.reportId},query:undefined,body:undefined});if(originalReport.reportId!==command.reportId||originalReport.taskId!==command.taskId||originalReport.executionTaskId!==command.executionTaskId||JSON.stringify(workReviewScope.parse(originalReport.snapshot.scope))!==JSON.stringify(command.scope))throw Error("原审核报告与继续请求不匹配，请刷新核对。");const execution=await readOriginalExecution(command.taskId,command.executionTaskId);if(execution.id!==command.executionTaskId||execution.accountId!==accountId||execution.kind!=="ai_task"||execution.ownerType!=="ai_task"||execution.ownerId!==command.taskId)throw Error("原审核执行身份不匹配，请刷新核对。");
+   if(!command.acknowledged){const originalReport=await client.getWorkReview({params:{reportId:command.reportId},query:undefined,body:undefined});if(originalReport.reportId!==command.reportId||originalReport.taskId!==command.taskId||originalReport.executionTaskId!==command.executionTaskId||JSON.stringify(workReviewScope.parse(originalReport.snapshot.scope))!==JSON.stringify(command.scope))throw Error("原审核报告与继续请求不匹配，请刷新核对。");const execution=await readOriginalExecution(command.taskId,command.executionTaskId);if(execution.id!==command.executionTaskId||(!workspaceSelection.groupId&&execution.accountId!==accountId)||execution.kind!=="ai_task"||execution.ownerType!=="ai_task"||execution.ownerId!==command.taskId)throw Error("原审核执行身份不匹配，请刷新核对。");
     const receipt=await client.commandExecutionTasks({params:undefined,query:undefined,body:command.body});if(!receipt.tasks.some(task=>task.id===command!.executionTaskId&&task.accountId===accountId&&task.ownerType==="ai_task"&&task.ownerId===command!.taskId))throw Error("原审核继续回执身份不匹配，保留原请求。");
     command={...command,acknowledged:true};if(active.current)setResumePending(command);cacheResume(command);
    }

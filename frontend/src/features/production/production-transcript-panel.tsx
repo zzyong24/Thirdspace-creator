@@ -1,4 +1,5 @@
 "use client";
+import {useCreationClient} from "@/lib/creation-workspace-scope";
 import * as React from "react";
 import {ENDPOINTS,productionPlanV2,type ProductionEditorDocument,type ProductionEditorVersion,type ProductionPlanV2} from "@creatoros/contract";
 import {client} from "@/lib/contract-client";
@@ -19,6 +20,8 @@ function useTranscriptPlan(raw:ProductionEditorDocument["plan"],view?:Production
  return React.useMemo(()=>view??productionPlanV2.parse(raw),[raw,view]);
 }
 function TranscriptContents({document,disabled,run,onSaved,planView,prepareDocument,onRecoverConflict}:Parameters<typeof ProductionTranscriptPanel>[0]){
+ const client=useCreationClient();
+
  const plan=useTranscriptPlan(document.plan,planView),sources=plan.mainTrack.sources.filter(source=>source.hasAudio),key=`production-transcript:${document.projectId}:${document.outputId}`;
  const [sourceId,setSourceId]=React.useState(sources[0]?.sourceId??""),[granularity,setGranularity]=React.useState<"text"|"segment"|"word">("text"),[request,setRequest]=React.useState<TranscriptRequest|null>(null),[pending,setPending]=React.useState<Pending|null>(null),[original,setOriginal]=React.useState<CreateBody|null>(null),[error,setError]=React.useState<string|null>(null);
  const [conflict,setConflict]=React.useState(false),[task,setTask]=React.useState<AITaskResource|null>(null),[diagnosticError,setDiagnosticError]=React.useState<string|null>(null);

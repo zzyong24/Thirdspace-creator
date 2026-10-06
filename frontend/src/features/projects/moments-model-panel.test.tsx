@@ -41,3 +41,67 @@ it("另稿件合法失败候选恢复缓存不得重试或创建任务",async()=
 
 it('独立回归：原候选资格读取期间卸载，零迟到 retry',async()=>{localStorage.setItem('moments-model:account-a:moments-a',JSON.stringify({candidateId:'candidate-a',pending:{kind:'retry',candidateId:'candidate-a',body:{clientRequestId:'original-retry'}}}));let resolve!:(value:unknown)=>void;api.getMomentsCandidate.mockImplementation(()=>new Promise(r=>resolve=r));const view=show();fireEvent.click(await screen.findByRole('button',{name:'恢复原候选请求'}));await waitFor(()=>expect(api.getMomentsCandidate).toHaveBeenCalledOnce());view.unmount();resolve({...candidate,status:'failed',value:null});await Promise.resolve();await Promise.resolve();expect(api.retryMomentsCandidate).not.toHaveBeenCalled();});
 it('独立回归：合法失败候选重试资格读完后使用原完整 requestId',async()=>{const pending={kind:'retry',candidateId:'candidate-a',body:{clientRequestId:'original-retry'}};localStorage.setItem('moments-model:account-a:moments-a',JSON.stringify({candidateId:'candidate-a',pending}));api.getMomentsCandidate.mockResolvedValue({...candidate,status:'failed',value:null});api.retryMomentsCandidate.mockResolvedValue(candidate);show();fireEvent.click(await screen.findByRole('button',{name:'恢复原候选请求'}));await screen.findByRole('textbox',{name:'朋友圈短文候选'});expect(api.getMomentsCandidate.mock.invocationCallOrder[0]).toBeLessThan(api.retryMomentsCandidate.mock.invocationCallOrder[0]!);expect(api.retryMomentsCandidate.mock.calls[0][0]).toEqual({params:{candidateId:'candidate-a'},query:undefined,body:{clientRequestId:'original-retry'}});});
+
+// T1062_COMPONENT_PORT_SEAM: 仅本文件既有业务spies；真实scope/epoch/signal/lifecycle不替换。
+vi.mock("@/lib/creation-workspace-scope", async importOriginal => {
+  const actual = await importOriginal<typeof import("@/lib/creation-workspace-scope")>();
+  const {client: componentPorts} = await import("@/lib/contract-client");
+  type Workspace = ReturnType<typeof actual.createCreationWorkspace>;
+  type Operation = ReturnType<Workspace["capture"]>;
+  const views = new WeakMap<Workspace, Workspace>();
+  function portClient(base: Operation["client"], capture: () => Operation): Operation["client"] {
+    const methods = new Map<PropertyKey, unknown>();
+    return new Proxy(base, {
+      get(target, key, receiver) {
+        const port = Reflect.get(componentPorts, key);
+        const original = Reflect.get(target, key, receiver);
+        if (typeof port !== "function") return original;
+        if (!methods.has(key)) methods.set(key, async (...args: unknown[]) => {
+          const operation = capture();
+          operation.assertCurrent();
+          try { return await Reflect.apply(Reflect.get(componentPorts, key), componentPorts, args); }
+          finally { operation.assertCurrent(); }
+        });
+        return methods.get(key);
+      },
+    });
+  }
+  function view(workspace: Workspace): Workspace {
+    const cached = views.get(workspace);
+    if (cached) return cached;
+    const client = portClient(workspace.client, () => workspace.capture());
+    const capture = (): Operation => {
+      const operation = workspace.capture();
+      return Object.freeze({...operation, client: portClient(operation.client, () => operation)});
+    };
+    const proxy = new Proxy(workspace, {
+      get(target, key) {
+        if (key === "client") return client;
+        if (key === "capture") return capture;
+        // Reflect读取原对象getter，signal/epoch始终是原factory当前值；不spread workspace。
+        return Reflect.get(target, key, target);
+      },
+    });
+    views.set(workspace, proxy);
+    return proxy;
+  }
+  return {
+    ...actual,
+    createCreationWorkspace: (...args: Parameters<typeof actual.createCreationWorkspace>) => view(actual.createCreationWorkspace(...args)),
+    useCreationWorkspace: (scope: Parameters<typeof actual.useCreationWorkspace>[0]) => view(actual.useCreationWorkspace(scope)),
+    useCreationClient: () => view(actual.useCreationWorkspace(actual.useCreationScope())).client,
+  };
+});
+// T1062_COMPONENT_PORT_SEAM_END
+
+// T1062_UNIT_SCOPE_FIXTURE: 显式合成单测选择；不是当前用户/生产default。
+import {beforeEach as t1062ScopeBeforeEach, afterEach as t1062ScopeAfterEach} from "vitest";
+t1062ScopeBeforeEach(() => {
+  window.localStorage.removeItem("creatoros:current-group");
+  window.localStorage.setItem("creatoros:current-account", "account-a");
+});
+t1062ScopeAfterEach(() => {
+  window.localStorage.removeItem("creatoros:current-group");
+  window.localStorage.removeItem("creatoros:current-account");
+});
+// T1062_UNIT_SCOPE_FIXTURE_END

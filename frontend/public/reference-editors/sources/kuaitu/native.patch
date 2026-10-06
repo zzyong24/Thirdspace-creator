@@ -18,23 +18,23 @@
 +
 +## 原生改动
 +
-+- 每实例直接 controller、串行 request、真实 DOM refs、精确 JSON 脏状态去重；卸载中断等待、迟到回执校验、清理 timer/observer/listener/URL/原插件/Fabric。最后一个实例释放共享 filter backend，单个 Image 的 GPU texture 由原 Fabric.dispose 清理。
++- 每实例直接 controller、串行 request、真实 DOM refs、精确 JSON 脏状态去重；公开 importFile/loadDocument 的上传与图片解码通过受管作业，epoch/owner/request abort 和卸载立即结清、清 src/handler、移除回执 listener，迟到回执不创建 URL/图层；卸载中断等待、迟到回执校验、清理 timer/observer/listener/URL/原插件/Fabric。最后一个实例释放共享 filter backend，单个 Image 的 GPU texture 由原 Fabric.dispose 清理。
 +- 原快捷键绑定实例 root/portal，文本输入和编辑器外部保留本来行为；图片导入、拖放、粘贴、替换和裁剪结果先调用 importMedia，再附真实 mediaId。生成图片在 snapshot/export 前确认素材回执。
 +- JSON 图层保持原结构；已有 exact blob 图片按宿主映射载入。缺失/任意外链图片与图案函数以安全空图展示、提醒缺失，snapshot 为宿主已核实的缺图保留原 scheme 和真实 creatorosMediaId；未知引用保留合同允许的安全 PNG 与原 source/MissingMediaId 元数据，避免合法剩余图层无法保存；图案恢复原资源字段；不执行源函数、不访问任意外链、不丢其余合法图层。
 +- 导出只锁本实例 root/portal；使用原 previewDocument 同次捕获 PNG 与 JSON。保留原 JSON/SVG/PNG、预览与 Clipboard 按钮，文件交付在实例 portal；不锁应用 body。
 +- 原程序式 UI 提示/确认/预览改为实例 portal。原 ViewUI Modal 仍复用实际组件，在实例 Teleport 内，禁用 body 滚动副作用，ESC 检查当前实例焦点。实际 Fabric 文本编辑隐藏 textarea 位于当前 root。
-+- 原云“创建设计”改为同稿 reset/尺寸和实际确认。删掉原全页 lang/hash/router/session 路径。CSS 构建以 AST 将 html/body/:root 改为 ShadowRoot :host；UI 使用 CreatorOS tokens，作品自身颜色/字体不被 UI theme 写入。
++- 原云“创建设计”改为同稿 reset/尺寸和实际确认。删掉原全页 lang/hash/router/session 路径。CSS 构建以 AST 将 html/body/:root 改为 ShadowRoot :host；UI 使用 CreatorOS tokens，作品自身颜色/字体不被 UI theme 写入。实际 Fabric 选框和控制点从公共 --creatoros-brand 读取，真实 Rect.toObject 前后相等回归通过。
 +
 +## 重建
 +
 +按已有 `pnpm-lock.yaml` 安装冻结依赖（`--frozen-lockfile --ignore-scripts`，原离线准备使用 pnpm 8.15.9）。
 +执行 `node native-build.mjs`。构建写 native.js/native.css、实际模块图、源码与产物 hash、LICENSE/完整声明。
-+运行命令自身使用当前 Node、现有 Vite，不获取新运行时或依赖。
++运行命令自身使用当前 Node、现有 Vite，不获取新运行时或依赖。独立静态 ESM 构建在编译期固定 process.env.NODE_ENV 为 production，避免 Vue 库模式把 Node 环境全局留给浏览器。CommonJS strictRequires 固定为 true，保留原依赖按需求值顺序，避免自动循环检测因转换次序造成重建字节漂移。
 +
 +## 验证边界
 +
-+当前新宿主 TS 文件检查通过；Vite 实际原组件/引擎构建通过；controller 和原 Editor/Resize/Workspace 生命周期 JSDOM 夹具 13 项通过。
-+第一次 controller 回归暴露缺图恢复额外添加空 data 的问题，已修复；两项异步夹具等待时序与一项 destroy 夹具漏 canvas 已分别修复，原失败日志保留。
++当前新宿主 TS 文件检查通过；Vite 实际原组件/引擎构建通过；controller 和原 Editor/Resize/Workspace 生命周期 JSDOM 夹具 29 项通过。
++真实 Fabric5 enlivenPatterns/Pattern 边界回归确认无 type 的 fill/stroke 与画布 background/overlay 外链及函数字符串被阻断，正常 data 图案和纯色保留；本次图层两项及画布一项真实红测日志保留。第一次 controller 回归暴露缺图恢复额外添加空 data 的问题，已修复；两项异步夹具等待时序与一项 destroy 夹具漏 canvas 已分别修复，原失败日志保留。
 +原生 PNG 渲染、真实浏览器像素、系统 Clipboard 和完整实际 Fabric 交互尚未运行，不能把上述夹具当作真机证据。
 +原初次广泛 TypeScript 读取了既有 upstream core 类型错误；新宿主通过窄的真实 engine port 单独检查，未宣称全部 upstream TypeScript 全绿。
 --- /dev/null
@@ -40157,14 +40157,15 @@
 +writeFileSync(path.join(output,'native-meta.json'),JSON.stringify({source:'https://github.com/ikuaitu/vue-fabric-editor',commit:'b3bdcfb0bd6d8f98e7483cf561ac03ba56c0d889',sourceArchiveSha256:'6c953a34d6e9deb2a53897da3e346ed292a9869bebcf9f3b4e8585a7d3858294',entry:'src/native-entry.ts',interface:'creatoros.native-editor@1',files,moduleCount:graph.modules.length,verification:'类型与生命周期夹具另列；不声明真实浏览器像素或 PNG'},null,2)+'\n');
 --- /dev/null
 +++ b/native-controller.test.ts
-@@ -0,0 +1,27 @@
+@@ -0,0 +1,65 @@
 +import {beforeEach,afterEach,describe,it,expect,vi} from 'vitest';
 +import {NativeController} from './src/native-controller';
 +import {missingPixel} from './src/native-types';
 +import {referenceEditorDocument} from '@creatoros/contract';
++import {fabric} from 'fabric';
 +function setup(){
 +  const outer=document.createElement('div');document.body.append(outer);const shadow=outer.attachShadow({mode:'open'});const root=document.createElement('div'),portal=document.createElement('div');shadow.append(root,portal);
-+  const abort=new AbortController();const options={owner:{accountId:'a',outputId:'o',sourceVersionId:'v'},theme:{mode:'dark' as const,tokens:{'--card':'#181b23','--primary':'#7c5cff'},fontFamily:'system-ui',fontSize:'14px',density:'compact'},portalContainer:portal,signal:abort.signal,onChanged:vi.fn(),onError:vi.fn(),importMedia:vi.fn(async()=>({mediaId:'m'}))};
++  const abort=new AbortController();const options={owner:{accountId:'a',outputId:'o',sourceVersionId:'v'},theme:{mode:'dark' as const,tokens:{'--creatoros-panel':'#181b23','--creatoros-brand':'#7c5cff'},fontFamily:'system-ui',fontSize:'14px',density:'compact'},portalContainer:portal,signal:abort.signal,onChanged:vi.fn(),onError:vi.fn(),importMedia:vi.fn(async()=>({mediaId:'m'}))};
 +  let documentValue:any={objects:[{id:'workspace',type:'rect',fill:'#fff',width:900,height:1200}]};const handlers=new Map<string,Set<Function>>();
 +  const canvas={on:vi.fn((name:string,fn:Function)=>{if(!handlers.has(name))handlers.set(name,new Set());handlers.get(name)!.add(fn);}),off:vi.fn((name:string,fn:Function)=>handlers.get(name)?.delete(fn)),getObjects:()=>documentValue.objects,requestRenderAll:vi.fn()};
 +  const editor:any={getJson:()=>JSON.parse(JSON.stringify(documentValue)),fabricCanvas:canvas,loadJSON:vi.fn((doc:any,callback:()=>void)=>{documentValue=doc;callback();}),getPlugin:()=>({clearAndSaveState:vi.fn()}),clear:()=>{documentValue.objects=documentValue.objects.filter((o:any)=>o.id==='workspace');},setSize:(w:number,h:number)=>Object.assign(documentValue.objects[0],{width:w,height:h}),previewDocument:vi.fn(async()=>({dataUrl:'data:image/png;base64,AA==',document:documentValue}))};
@@ -40174,15 +40175,52 @@
 +afterEach(()=>{vi.unstubAllGlobals();document.body.replaceChildren();});
 +describe('实际原生 controller，Fabric 为明确夹具',()=>{
 +  it('主题只改容器和 portal，原图层没有改变',async()=>{const s=setup();const before=await s.host.request('snapshot');s.host.update({theme:{...s.options.theme,mode:'light',tokens:{'--card':'#fff'}}});expect(s.root.style.getPropertyValue('--card')).toBe('#fff');expect(s.portal.style.getPropertyValue('--card')).toBe('#fff');expect(await s.host.request('snapshot')).toEqual(before);expect(document.documentElement.style.getPropertyValue('--card')).toBe('');s.host.close();});
++  it('公共 creatoros brand 改实际 Fabric 选框/控制点，规范 JSON 完全不变',async()=>{const s=setup();const rect=new fabric.Rect({fill:'#fff',width:100,height:200});s.canvas.getObjects=()=>[rect as any];s.editor.getJson=()=>({objects:[rect.toObject(['id','data'])]});const canonical=(await s.host.request('snapshot')).document;s.host.update({theme:{...s.options.theme,mode:'light',tokens:{'--creatoros-brand':'#6d4aff','--creatoros-panel':'#fff'}}});expect(rect.borderColor).toBe('#6d4aff');expect(rect.cornerStrokeColor).toBe('#6d4aff');expect(rect.cornerColor).toBe('#6d4aff');expect((s.canvas as any).selectionBorderColor).toBe('#6d4aff');expect((await s.host.request('snapshot')).document).toEqual(canonical);s.host.update({theme:{...s.options.theme,mode:'dark',tokens:{'--creatoros-brand':'#9c85ff'}}});expect(rect.borderColor).toBe('#9c85ff');expect(rect.cornerColor).toBe('#9c85ff');expect((await s.host.request('snapshot')).document).toEqual(canonical);s.host.close();});
 +  it('拥有实际 shadow 焦点才接受快捷键，文本框和外部输入不截获',()=>{const s=setup();s.root.focus();expect(s.host.accepts(new KeyboardEvent('keydown'))).toBe(true);const input=document.createElement('input');s.root.append(input);input.focus();const event=new KeyboardEvent('keydown',{bubbles:true,composed:true});input.addEventListener('keydown',e=>expect(s.host.accepts(e)).toBe(false));input.dispatchEvent(event);const external=document.createElement('input');document.body.append(external);external.focus();expect(s.host.accepts(new KeyboardEvent('keydown'))).toBe(false);s.host.close();});
 +  it('未知外链和精确引用缺失保留原结构，不请求外链',async()=>{const s=setup();const doc={objects:[{type:'image',id:'image1',left:35,width:700,src:'https://bad.example/private.png'},{type:'group',id:'group1',objects:[{type:'image',id:'image2',src:'creatoros-media://missing',data:{creatorosMediaId:'missing'}}]}]};await s.host.loadDocument(doc,false);expect(s.editor.loadJSON.mock.calls[0][0].objects[0].src).toBe(missingPixel);const saved=(await s.host.request('snapshot')).document;expect(saved.objects[0].src).toBe(missingPixel);expect(saved.objects[0].data.creatorosMissingSource).toBe(doc.objects[0].src);expect(saved.objects[0].width).toBe(700);expect(saved.objects[1].objects[0].data.creatorosMissingMediaId).toBe('missing');expect(fetch).not.toHaveBeenCalled();expect(s.portal.textContent).toContain('2 张图片');s.host.close();});
 +  it('load 使用宿主精确 blob 映射，本地 JSON 不得把未知 blob 当素材',async()=>{const s=setup();await s.host.request('load',{document:{objects:[{type:'image',id:'one',src:'blob:exact-parent',data:{creatorosMediaId:'m'}}]}});await s.host.loadDocument({objects:[{type:'image',id:'two',src:'blob:rogue',data:{creatorosMediaId:'m'}}]},false);expect(s.editor.loadJSON.mock.calls[1][0].objects[0].src).toBe('blob:exact-parent');expect(fetch).not.toHaveBeenCalled();s.host.close();});
 +  it('JSON pattern 函数和外链不交原引擎执行，snapshot 保留原模式结构',async()=>{const s=setup();const doc={objects:[{type:'rect',id:'r',fill:{type:'pattern',source:'function () { window.bad=1; return null; }'}},{type:'rect',id:'r2',stroke:{type:'pattern',source:'https://bad.example/pattern.png'}}]};await s.host.request('load',{document:doc});expect(s.editor.loadJSON.mock.calls[0][0].objects[0].fill.source).toBe(missingPixel);expect((await s.host.request('snapshot')).document).toEqual(doc);expect(fetch).not.toHaveBeenCalled();s.host.close();});
++  it.each([
++    {name:'无 type 的 fill/stroke 外链',fill:{source:'https://bad.example/x.png',repeat:'repeat-x'},stroke:{source:'file:///private/bad.png',offsetX:4},missing:true},
++    {name:'无 type 的 fill/stroke 函数字符串',fill:{source:'function () { window.bad=1; return null; }'},stroke:{source:'function () { return new Image(); }',repeat:'no-repeat'},missing:true},
++    {name:'正常无 type/data 图案及合法纯色',fill:{source:missingPixel,repeat:'repeat-x'},stroke:{type:'pattern',source:missingPixel,offsetX:4},missing:false},
++  ])('$name 按真实 Fabric5 enlivenPatterns 边界处理',async({fill,stroke,missing})=>{
++    const s=setup();const sourceDoc={objects:[{type:'rect',id:'pattern',fill,stroke},{type:'rect',id:'color',fill:'rgb(1, 2, 3)',stroke:'#fff'},{type:'rect',id:'gradient',fill:{type:'linear',colorStops:[{offset:0,color:'#f00'}]},stroke:{source:0}}]};
++    const seen:string[]=[];const loadImage=vi.spyOn(fabric.util,'loadImage').mockImplementation((src:any,callback:any)=>{seen.push(src);callback({src},false);});
++    const original=s.editor.loadJSON.getMockImplementation()!;let patterns:any[]=[];
++    s.editor.loadJSON.mockImplementation((doc:any,callback:()=>void)=>{fabric.util.enlivenPatterns([doc.objects[0].fill,doc.objects[0].stroke,doc.objects[1].fill,doc.objects[1].stroke,doc.objects[2].fill,doc.objects[2].stroke],(result:any[])=>{patterns=result;original(doc,callback);});});
++    try{await s.host.loadDocument(sourceDoc,false);expect(seen).toEqual([missingPixel,missingPixel]);expect(patterns[0]).toBeInstanceOf(fabric.Pattern);expect(patterns[1]).toBeInstanceOf(fabric.Pattern);expect(patterns[0].source.src).toBe(missingPixel);expect(patterns.slice(2)).toEqual([sourceDoc.objects[1].fill,sourceDoc.objects[1].stroke,sourceDoc.objects[2].fill,sourceDoc.objects[2].stroke]);const engineDoc=s.editor.loadJSON.mock.calls[0][0];if(missing)expect(engineDoc.objects[0].data.creatorosMissingPatterns).toEqual([{key:'fill',source:fill.source},{key:'stroke',source:stroke.source}]);else expect(engineDoc.objects[0].data).toBeUndefined();expect((await s.host.request('snapshot')).document).toEqual(sourceDoc);expect(fetch).not.toHaveBeenCalled();}finally{loadImage.mockRestore();s.host.close();}
++  });
++  it.each([
++    {name:'画布 background/overlay 未声明 type 的外链及函数字符串',background:{source:'https://bad.example/background.png',repeat:'repeat'},overlay:{source:'function () { return window.bad; }'},seen:[missingPixel,missingPixel]},
++    {name:'画布背景纯色与正常 data 图案',background:'#fff',overlay:{source:missingPixel,repeat:'no-repeat'},seen:[missingPixel]},
++  ])('$name 按真实 Canvas _initPattern 边界处理',async({background,overlay,seen:expected})=>{
++    const s=setup();const sourceDoc={objects:[{type:'rect',id:'color',fill:'#111'}],background,overlay};const seen:string[]=[];
++    const loadImage=vi.spyOn(fabric.util,'loadImage').mockImplementation((src:any,callback:any)=>{seen.push(src);callback({src},false);});const original=s.editor.loadJSON.getMockImplementation()!;
++    const native:any=fabric.StaticCanvas.prototype;const canvas:any={set(key:string,value:any){this[key]=value;},_initGradient:native._initGradient,_initPattern:native._initPattern};
++    s.editor.loadJSON.mockImplementation((doc:any,callback:()=>void)=>{native.__setBgOverlayColor.call(canvas,'backgroundColor',doc.background,()=>{});native.__setBgOverlayColor.call(canvas,'overlayColor',doc.overlay,()=>{});original(doc,callback);});
++    try{await s.host.loadDocument(sourceDoc,false);expect(seen).toEqual(expected);expect(canvas.overlayColor).toBeInstanceOf(fabric.Pattern);expect(canvas.overlayColor.source.src).toBe(missingPixel);expect((await s.host.request('snapshot')).document).toEqual(sourceDoc);expect(fetch).not.toHaveBeenCalled();}finally{loadImage.mockRestore();s.host.close();}
++  });
++  it('缺图图案元数据只恢复自身画笔槽，不触碰 prototype',async()=>{const s=setup();const prototype:any=Object.prototype;const source=prototype.source;try{await s.host.loadDocument({objects:[{type:'rect',id:'r',fill:'#fff',data:{creatorosMissingPatterns:[{key:'__proto__',source:'https://bad.example/poison'},{key:'constructor',source:'function () {}'}]}}]},false);await s.host.request('snapshot');expect(prototype.source).toBe(source);}finally{s.host.close();}});
 +  it('缺失图片保存真实原合同通过，原引用保留并在重开后继续提醒缺失',async()=>{const s=setup();await s.host.loadDocument({objects:[{type:'image',id:'missing',left:99,width:700,src:'creatoros-media://gone',data:{creatorosMediaId:'gone'}},{type:'textbox',id:'text',text:'仍可编辑'}]},false);const snapshot=await s.host.request('snapshot');expect(referenceEditorDocument.safeParse({editor:'kuaitu',revision:'b3bdcfb0bd6d8f98e7483cf561ac03ba56c0d889',nativeDocument:snapshot.document,mediaRefs:[]}).success).toBe(true);expect(snapshot.document.objects[0].data.creatorosMissingSource).toBe('creatoros-media://gone');await s.host.request('load',{document:snapshot.document});const readBack=await s.host.request('snapshot');expect(readBack).toEqual(snapshot);expect(readBack.document.objects[1].text).toBe('仍可编辑');expect(fetch).not.toHaveBeenCalled();s.host.close();});
 +  it('宿主真实已知缺图保留原 scheme 和身份，不把占位像素上传或写成 blob',async()=>{const s=setup();const doc={objects:[{type:'image',id:'missing',left:99,width:700,src:'creatoros-media://real-ref',data:{creatorosMediaId:'real-ref'}},{type:'textbox',id:'text',text:'仍可编辑'}]};await s.host.request('load',{document:doc});expect(s.editor.loadJSON.mock.calls[0][0].objects[0].src).toBe(missingPixel);const snapshot=await s.host.request('snapshot');expect(snapshot.document.objects[0]).toMatchObject({src:'creatoros-media://real-ref',data:{creatorosMediaId:'real-ref',creatorosMissingKnownRef:true},left:99,width:700});expect(referenceEditorDocument.safeParse({editor:'kuaitu',revision:'b3bdcfb0bd6d8f98e7483cf561ac03ba56c0d889',nativeDocument:snapshot.document,mediaRefs:[{mediaId:'real-ref',assetId:'asset',assetFileId:'file'}]}).success).toBe(true);await s.host.request('load',{document:snapshot.document});expect(await s.host.request('snapshot')).toEqual(snapshot);expect(s.options.importMedia).not.toHaveBeenCalled();expect(fetch).not.toHaveBeenCalled();s.host.close();});
 +  it('导出锁只拦本实例；返回冻结的 PNG 与图层，释放后还能编辑',async()=>{const s=setup();let done!:(value:any)=>void;s.editor.previewDocument.mockImplementation(()=>new Promise(resolve=>done=resolve));const exporting=s.host.request('export',{format:'png'});await vi.waitFor(()=>expect(s.editor.previewDocument).toHaveBeenCalled());expect(s.host.locked).toBe(true);const external=document.createElement('button');document.body.append(external);const callback=vi.fn();external.onclick=callback;external.click();expect(callback).toHaveBeenCalledOnce();done({dataUrl:'data:image/png;base64,AA==',document:{objects:[{type:'rect',id:'frozen',fill:'pink'}]}});const result=await exporting;expect(result.blob).toBeInstanceOf(Blob);expect(result.document.objects[0].id).toBe('frozen');expect(s.host.locked).toBe(false);s.host.close();});
 +  it('卸载在途导出及时拒绝；迟到结果不继续读取文件',async()=>{const s=setup();let done!:(value:any)=>void;s.editor.previewDocument.mockImplementation(()=>new Promise(resolve=>done=resolve));const exporting=s.host.request('export',{format:'png'});await vi.waitFor(()=>expect(s.editor.previewDocument).toHaveBeenCalled());s.host.close();await expect(exporting).rejects.toThrow('原操作停止');done({dataUrl:'data:image/png;base64,AA==',document:{objects:[]}});await Promise.resolve();expect(fetch).not.toHaveBeenCalled();expect(s.portal.childElementCount).toBe(0);});
 +  it('多次销毁移除事件/portal/notice 和等待任务，重新挂载独立',()=>{vi.useFakeTimers();const first=setup();first.host.notice('信息');first.host.publish();first.host.close();first.host.close();expect(Array.from(first.handlers.values()).every(set=>set.size===0)).toBe(true);expect(first.portal.childElementCount).toBe(0);vi.runAllTimers();expect(first.options.onChanged).not.toHaveBeenCalled();const second=setup();expect(second.host.disposed).toBe(false);expect(second.options.owner).toEqual(first.options.owner);second.host.close();vi.useRealTimers();});
++  it.each(['registered importFile','upload importFile','public loadJSON','request loadJSON'])('%s 慢图卸载结清公开调用，清 src/handler 并释放 URL',async(kind)=>{
++    const images:any[]=[];class SlowImage{src='';onload:any=null;onerror:any=null;constructor(){images.push(this);}}
++    vi.stubGlobal('Image',SlowImage);const created:string[]=[];const revoked:string[]=[];const create=vi.spyOn(URL,'createObjectURL').mockImplementation(()=>{const src=`blob:slow-${created.length}`;created.push(src);return src;});const revoke=vi.spyOn(URL,'revokeObjectURL').mockImplementation(src=>{revoked.push(src);});const s=setup();s.editor.createImgByElement=vi.fn();s.editor.addBaseType=vi.fn();let settled=false;
++    const file=new File(['slow'],'slow.png',{type:'image/png'});const doc={objects:[{type:'image',id:'slow',src:missingPixel}]};
++    const job=kind==='registered importFile'?s.host.importFile(file,'registered'):kind==='upload importFile'?s.host.importFile(file):kind==='public loadJSON'?s.host.loadDocument(doc,false):s.host.request('load',{document:doc});
++    const result=job.then(()=>{settled=true;return null;},error=>{settled=true;return error;});
++    try{await vi.waitFor(()=>expect(images).toHaveLength(1));const late=images[0].onload;s.host.close();expect(images[0].src).toBe('');expect(images[0].onload).toBeNull();expect(images[0].onerror).toBeNull();await vi.waitFor(()=>expect(settled).toBe(true));expect(await result).toBeInstanceOf(Error);expect(revoked).toEqual(created);expect((s.host as any).jobs.size).toBe(0);late?.();expect(s.editor.createImgByElement).not.toHaveBeenCalled();expect(s.editor.loadJSON).not.toHaveBeenCalled();expect(s.options.onChanged).not.toHaveBeenCalled();}finally{s.host.close();create.mockRestore();revoke.mockRestore();}
++  });
++  it.each(['epoch replacement','owner abort','request abort'])('%s 中断公开插图，迟到解码不创建 Fabric 图层',async(kind)=>{
++    const images:any[]=[];class SlowImage{src='';onload:any=null;onerror:any=null;constructor(){images.push(this);}}vi.stubGlobal('Image',SlowImage);const revoked:string[]=[];const create=vi.spyOn(URL,'createObjectURL').mockReturnValue('blob:interrupt');const revoke=vi.spyOn(URL,'revokeObjectURL').mockImplementation(src=>revoked.push(src));const s=setup();s.editor.createImgByElement=vi.fn();s.editor.addBaseType=vi.fn();const requestAbort=new AbortController();const file=new File(['slow'],'slow.png',{type:'image/png'});const job=kind==='request abort'?s.host.request('insert-media',{file,mediaId:'real'},{signal:requestAbort.signal}):s.host.importFile(file,'real');const result=job.then(()=>null,error=>error);
++    try{await vi.waitFor(()=>expect(images).toHaveLength(1));const late=images[0].onload;if(kind==='epoch replacement')await s.host.loadDocument({objects:[{type:'textbox',id:'current',text:'新脚本'}]},false);else if(kind==='owner abort')s.abort.abort();else requestAbort.abort();expect(await result).toBeInstanceOf(Error);expect(images[0].src).toBe('');expect(images[0].onload).toBeNull();expect(images[0].onerror).toBeNull();expect((s.host as any).jobs.size).toBe(0);expect(revoked).toEqual(['blob:interrupt']);late?.();expect(s.editor.createImgByElement).not.toHaveBeenCalled();expect(s.editor.addBaseType).not.toHaveBeenCalled();if(kind==='epoch replacement')expect((await s.host.request('snapshot')).document.objects[0].text).toBe('新脚本');}finally{s.host.close();create.mockRestore();revoke.mockRestore();}
++  });
++  it('卸载在途素材回执结清 importFile，迟到上传回执不创建 URL/图层',async()=>{const s=setup();let uploaded!:(value:any)=>void;s.options.importMedia.mockImplementation(()=>new Promise(resolve=>uploaded=resolve));const create=vi.spyOn(URL,'createObjectURL');s.editor.createImgByElement=vi.fn();const file=new File(['slow'],'slow.png',{type:'image/png'});const result=s.host.importFile(file).then(()=>null,error=>error);try{await vi.waitFor(()=>expect(s.options.importMedia).toHaveBeenCalled());s.abort.abort();expect(await result).toBeInstanceOf(Error);expect((s.host as any).jobs.size).toBe(0);uploaded({mediaId:'late-real'});await Promise.resolve();await Promise.resolve();expect(create).not.toHaveBeenCalled();expect(s.editor.createImgByElement).not.toHaveBeenCalled();}finally{s.host.close();create.mockRestore();}});
++  it('公开 loadJSON 原引擎等待回调时卸载结清作业、timer 和 signal，迟到回调不回写',async()=>{const s=setup();let late!:()=>void;s.editor.loadJSON.mockImplementation((_doc:any,callback:()=>void)=>{late=callback;return Promise.resolve();});const job=s.host.request('load',{document:{objects:[{type:'textbox',id:'text',text:'等待原引擎'}]}});const result=job.then(()=>null,error=>error);await vi.waitFor(()=>expect(s.editor.loadJSON).toHaveBeenCalled());s.host.close();expect(await result).toBeInstanceOf(Error);expect((s.host as any).jobs.size).toBe(0);expect((s.host as any).timers.size).toBe(0);late();await Promise.resolve();expect(s.options.onChanged).not.toHaveBeenCalled();expect(s.options.onError).not.toHaveBeenCalled();});
 +  it('重新设置尺寸需要真实确认，并保持被拒绝的原图层',async()=>{const s=setup();await s.host.request('load',{document:{objects:[{id:'workspace',type:'rect',width:900,height:1200},{id:'text',type:'textbox',text:'保留'}]}});const resetting=s.host.reset(600,800);expect(s.portal.querySelector('[role="alertdialog"]')).not.toBeNull();(s.portal.querySelector('button') as HTMLButtonElement).click();await resetting;expect((await s.host.request('snapshot')).document.objects).toHaveLength(2);expect(fetch).not.toHaveBeenCalled();s.host.close();});
 +});
 --- /dev/null
@@ -40221,11 +40259,11 @@
 +import svgLoader from 'vite-svg-loader';
 +import {resolve} from 'node:path';
 +export default defineConfig({
-+  base:'./',envPrefix:'APP_',
++  base:'./',envPrefix:'APP_',define:{'process.env.NODE_ENV':JSON.stringify('production')},
 +  plugins:[vue(),vueJsx(),vueSetupExtend(),svgLoader(),autoImports({imports:['vue'],dts:false,eslintrc:{enabled:false}}),{name:'creatoros-native-graph',generateBundle(){const modules=Array.from(this.getModuleIds()).filter((name)=>!name.startsWith('\0')).map(name=>name.startsWith(__dirname)?name.slice(__dirname.length+1):name.replace(/^.*\/node_modules\//,'node_modules/')).sort();this.emitFile({type:'asset',fileName:'native-graph.json',source:JSON.stringify({entry:'src/native-entry.ts',modules},null,2)+'\n'});}}],
 +  resolve:{extensions:['.ts','.tsx','.js','.mjs','.vue','.json','.less','.css'],alias:[{find:/^@kuaitu\/core$/,replacement:resolve(__dirname,'packages/core/index.ts')},{find:/^@\//,replacement:resolve(__dirname,'src')+'/'},{find:/^~/,replacement:''},{find:/^vue-i18n$/,replacement:'vue-i18n/dist/vue-i18n.cjs.js'}]},
 +  css:{preprocessorOptions:{less:{javascriptEnabled:true,additionalData:`@import '${resolve(__dirname,'src/styles/variable.less')}';`}},postcss:{plugins:[{postcssPlugin:'creatoros-shadow-root',Rule(rule:any){if(rule.selector)rule.selector=rule.selector.replace(/(^|[\s,>+~])(html|body|:root)(?=$|[\s,.#:[>+~])/g,'$1:host');}}]}},
-+  build:{target:'es2022',outDir:'native-dist',emptyOutDir:true,assetsInlineLimit:8192,lib:{entry:resolve(__dirname,'src/native-entry.ts'),formats:['es'],fileName:()=> 'native.js'},rollupOptions:{output:{chunkFileNames:'chunks/[name]-[hash].js',assetFileNames:asset=>asset.name?.endsWith('.css')?'native.css':'assets/[name]-[hash][extname]'}}},
++  build:{target:'es2022',commonjsOptions:{strictRequires:true},outDir:'native-dist',emptyOutDir:true,assetsInlineLimit:8192,lib:{entry:resolve(__dirname,'src/native-entry.ts'),formats:['es'],fileName:()=> 'native.js'},rollupOptions:{output:{chunkFileNames:'chunks/[name]-[hash].js',assetFileNames:asset=>asset.name?.endsWith('.css')?'native.css':'assets/[name]-[hash][extname]'}}},
 +});
 --- a/package.json
 +++ b/package.json
@@ -42310,7 +42348,7 @@
    allowComposition: true,
 --- /dev/null
 +++ b/src/native-controller.ts
-@@ -0,0 +1,218 @@
+@@ -0,0 +1,254 @@
 +import type {NativeEngine} from './native-engine';
 +import type { NativeOptions, NativeTheme } from './native-types';
 +import { deepActive, isTextTarget, missingPixel, restoreMissing, walkImages, walkObjects } from './native-types';
@@ -42321,7 +42359,7 @@
 +  disposed = false; disabled = false; loading = false; locked = false;
 +  private epoch = 0; private baseline = ''; private timer?: ReturnType<typeof setTimeout>;
 +  private timers = new Set<ReturnType<typeof setTimeout>>();
-+  private cleanup = new Set<() => void>(); private urls = new Set<string>();
++  private cleanup = new Set<() => void>(); private jobs = new Set<() => void>(); private urls = new Set<string>();
 +  private known = new Map<string, string>(); private knownReferences=new Set<string>(); private sequence: Promise<unknown> = Promise.resolve();
 +  private requests = new Map<string, Promise<any>>(); private title = '图文设计';private currentTheme?:NativeTheme;
 +  private spinNode?: HTMLElement;
@@ -42370,7 +42408,7 @@
 +      if (json !== this.baseline) {this.baseline = json; this.options.onChanged();}
 +    }, 180);
 +  }
-+  themeSelection(object:any){const color=this.currentTheme?.tokens['--primary'];if(color)object.set?.({borderColor:color,cornerStrokeColor:color});if(object.getObjects)object.getObjects().forEach((child:any)=>this.themeSelection(child));}
++  themeSelection(object:any){const color=this.currentTheme?.tokens['--creatoros-brand'];if(color)object.set?.({borderColor:color,cornerStrokeColor:color,cornerColor:color});if(object.getObjects)object.getObjects().forEach((child:any)=>this.themeSelection(child));}
 +  updateTheme(theme: NativeTheme) {
 +    this.currentTheme=theme;
 +    for (const node of [this.root, this.options.portalContainer]) {
@@ -42378,7 +42416,7 @@
 +      node.style.fontFamily = theme.fontFamily; node.style.fontSize = theme.fontSize;
 +      node.dataset.theme = theme.mode; node.dataset.density = theme.density;node.style.setProperty('--native-control-height',theme.density==='compact'?'28px':'32px');
 +    }
-+    if(this.editor?.fabricCanvas){this.editor.fabricCanvas.selectionBorderColor=theme.tokens['--primary']||'#7c5cff';this.editor.fabricCanvas.getObjects().forEach(object=>this.themeSelection(object));this.editor.fabricCanvas.requestRenderAll();}
++    if(this.editor?.fabricCanvas){this.editor.fabricCanvas.selectionBorderColor=theme.tokens['--creatoros-brand']||'#6d4aff';this.editor.fabricCanvas.getObjects().forEach(object=>this.themeSelection(object));this.editor.fabricCanvas.requestRenderAll();}
 +  }
 +  update(value: {theme?: NativeTheme; disabled?: boolean}) {
 +    if (this.disposed) return; if (value.theme) this.updateTheme(value.theme);
@@ -42426,22 +42464,50 @@
 +    const release = () => {for(const name of names){this.root.removeEventListener(name,stop,true);this.options.portalContainer.removeEventListener(name,stop,true);} overlay.remove(); this.locked = false; this.cleanup.delete(release); this.publish();};
 +    this.cleanup.add(release); return release;
 +  }
-+  async readImage(file: File, epoch: number) {
-+    this.check(epoch); if(!file.type.startsWith('image/') || !file.size || file.size > 40*1024*1024) throw Error('请选择 40 MB 以内的图片');
-+    const answer = await this.options.importMedia(file); this.check(epoch);
-+    if (!answer || typeof answer.mediaId !== 'string' || !answer.mediaId) throw Error('图片尚未获得素材归属回执');
-+    const src = URL.createObjectURL(file); this.urls.add(src); this.known.set(answer.mediaId,src);
-+    const image = new Image(); await new Promise<void>((resolve,reject) => {image.onload=()=>resolve();image.onerror=()=>reject(Error('图片加载失败'));image.src=src;}); this.check(epoch);
-+    return {image, mediaId:answer.mediaId, src};
++  private advanceEpoch(){this.epoch++;for(const cancel of Array.from(this.jobs))cancel();return this.epoch;}
++  private ownedJob<T>(work:Promise<T>,epoch:number,signal?:AbortSignal):Promise<T>{
++    return new Promise((resolve,reject)=>{
++      let done=false;const signals=Array.from(new Set([this.signal,signal].filter((value):value is AbortSignal=>!!value)));
++      const finish=(value:unknown,failed:boolean)=>{if(done)return;done=true;this.jobs.delete(cancel);signals.forEach(current=>current.removeEventListener('abort',cancel));if(failed)reject(value);else resolve(value as T);};
++      const cancel=()=>finish(Error('已切换作品，原编辑操作停止'),true);
++      this.jobs.add(cancel);signals.forEach(current=>current.addEventListener('abort',cancel,{once:true}));
++      work.then(value=>{try{this.check(epoch,signal);finish(value,false);}catch(error){finish(error,true);}},error=>finish(error,true));
++      try{this.check(epoch,signal);}catch(error){finish(error,true);}
++    });
 +  }
-+  async importFile(file: File, mediaId?: string) {
-+    const epoch = this.epoch; this.check(epoch); await this.ready; this.check(epoch);
-+    if(this.disabled || this.locked) throw Error('当前设计正在处理，请稍后插入图片');
-+    let image: HTMLImageElement, id: string;
-+    if(mediaId){if(!file.type.startsWith('image/') || !file.size || file.size>40*1024*1024)throw Error('图片文件无效'); const src=URL.createObjectURL(file);this.urls.add(src);this.known.set(mediaId,src);image=new Image();await new Promise<void>((r,j)=>{image.onload=()=>r();image.onerror=()=>j(Error('图片加载失败'));image.src=src;});this.check(epoch);id=mediaId;}
-+    else {const loaded = await this.readImage(file,epoch);image=loaded.image;id=loaded.mediaId;}
-+    const object = await this.editor!.createImgByElement(image);this.check(epoch);if(this.locked)throw Error('当前设计正在导出，请重新插入图片');
-+    object.set('data',{creatorosMediaId:id});this.editor!.addBaseType(object,{scale:true});this.publish();return this.snapshot();
++  private decodeImage(src:string,epoch:number,signal?:AbortSignal):Promise<HTMLImageElement>{
++    return new Promise((resolve,reject)=>{
++      const image=new Image();let done=false;const signals=Array.from(new Set([this.signal,signal].filter((value):value is AbortSignal=>!!value)));
++      const finish=(error?:unknown)=>{if(done)return;done=true;image.onload=null;image.onerror=null;this.jobs.delete(cancel);signals.forEach(current=>current.removeEventListener('abort',cancel));
++        if(error){if(typeof image.removeAttribute==='function')image.removeAttribute('src');else image.src='';reject(error);}else resolve(image);};
++      const cancel=()=>finish(Error('已切换作品，原编辑操作停止'));
++      image.onload=()=>{try{this.check(epoch,signal);finish();}catch(error){finish(error);}};image.onerror=()=>finish(Error('图片加载失败'));
++      this.jobs.add(cancel);signals.forEach(current=>current.addEventListener('abort',cancel,{once:true}));
++      try{this.check(epoch,signal);image.src=src;}catch(error){finish(error);}
++    });
++  }
++  async readImage(file: File, epoch: number,signal?:AbortSignal) {
++    this.check(epoch,signal); if(!file.type.startsWith('image/') || !file.size || file.size > 40*1024*1024) throw Error('请选择 40 MB 以内的图片');
++    const answer = await this.ownedJob(this.options.importMedia(file),epoch,signal); this.check(epoch,signal);
++    if (!answer || typeof answer.mediaId !== 'string' || !answer.mediaId) throw Error('图片尚未获得素材归属回执');
++    const src = URL.createObjectURL(file); this.urls.add(src);
++    try{const image=await this.decodeImage(src,epoch,signal);this.check(epoch,signal);this.known.set(answer.mediaId,src);return {image,mediaId:answer.mediaId,src};}
++    catch(error){if(this.urls.delete(src))URL.revokeObjectURL(src);throw error;}
++  }
++  importFile(file: File, mediaId?: string,signal?:AbortSignal):Promise<any> {
++    const epoch=this.epoch;const work=(async()=>{
++      this.check(epoch,signal);await this.ready;this.check(epoch,signal);
++      if(this.disabled || this.locked) throw Error('当前设计正在处理，请稍后插入图片');
++      let image:HTMLImageElement,id:string;
++      if(mediaId){
++        if(!file.type.startsWith('image/') || !file.size || file.size>40*1024*1024)throw Error('图片文件无效');
++        const src=URL.createObjectURL(file);this.urls.add(src);
++        try{image=await this.decodeImage(src,epoch,signal);this.check(epoch,signal);this.known.set(mediaId,src);id=mediaId;}
++        catch(error){if(this.urls.delete(src))URL.revokeObjectURL(src);throw error;}
++      }else{const loaded=await this.readImage(file,epoch,signal);image=loaded.image;id=loaded.mediaId;}
++      const object=await this.editor!.createImgByElement(image);this.check(epoch,signal);if(this.locked)throw Error('当前设计正在导出，请重新插入图片');
++      object.set('data',{creatorosMediaId:id});this.editor!.addBaseType(object,{scale:true});this.publish();return this.snapshot();
++    })();return this.ownedJob(work,epoch,signal);
 +  }
 +  async replaceImage(object: any, file: File) {
 +    const epoch = this.epoch; const loaded = await this.readImage(file,epoch);this.check(epoch);
@@ -42452,13 +42518,13 @@
 +    delete object.data.creatorosMissingSource;delete object.data.creatorosMissingMediaId;delete object.data.creatorosMissingDataPresent;delete object.data.creatorosMissingKnownRef;this.editor!.fabricCanvas!.renderAll();this.publish();
 +  }
 +  snapshot() {this.check();return {document:restoreMissing(this.editor!.getJson())};}
-+  private async registerImages(epoch: number) {
++  private async registerImages(epoch: number,signal?:AbortSignal) {
 +    const native=this.editor!.getJson();const images:any[]=[];walkImages(native,item=>images.push(item));
-+    for(const item of images){this.check(epoch);const src=String(item.src||'');if(item.data?.creatorosMissingSource)continue;
++    for(const item of images){this.check(epoch,signal);const src=String(item.src||'');if(item.data?.creatorosMissingSource)continue;
 +      if(item.data?.creatorosMediaId && this.known.get(item.data.creatorosMediaId)===src)continue;
 +      if(!/^data:image\//.test(src)){if(item.data?.creatorosMediaId)continue;throw Error('图片缺少原素材关联，请替换后保存');}
-+      const response=await fetch(src);this.check(epoch);const blob=await response.blob();this.check(epoch);
-+      const loaded=await this.readImage(new File([blob],`${item.id||'generated'}.png`,{type:blob.type}),epoch);this.check(epoch);
++      const response=await fetch(src);this.check(epoch,signal);const blob=await response.blob();this.check(epoch,signal);
++      const loaded=await this.readImage(new File([blob],`${item.id||'generated'}.png`,{type:blob.type}),epoch,signal);this.check(epoch,signal);
 +      const find=(objects:any[]):any=>{for(const object of objects){if(object.id===item.id)return object;if(object.getObjects){const found=find(object.getObjects());if(found)return found;}}};
 +      const object=find(this.editor!.fabricCanvas!.getObjects());if(!object)throw Error('图片图层已切换，请重新保存');
 +      object.set('data',{...(object.data||{}),creatorosMediaId:loaded.mediaId});
@@ -42474,10 +42540,10 @@
 +    else{const result=await this.request('snapshot');this.check();const text=JSON.stringify(result.document,null,2);if(kind==='clipboard'){await navigator.clipboard.writeText(text);this.check();this.notice('图层 JSON 已复制');return;}blob=new Blob([text],{type:'application/json'});extension='json';}
 +    const src=URL.createObjectURL(blob!);this.urls.add(src);const anchor=document.createElement('a');anchor.href=src;anchor.download=`${this.title.replace(/[\\/:*?"<>|]/g,'_')}.${extension!}`;this.options.portalContainer.append(anchor);anchor.click();anchor.remove();
 +  }
-+  private async sanitize(input: any, trusted: boolean, epoch: number) {
++  private async sanitize(input: any, trusted: boolean, epoch: number,signal?:AbortSignal) {
 +    const value=JSON.parse(JSON.stringify(input));if(!value||!Array.isArray(value.objects))throw Error('图层稿件格式不正确');
 +    const images: any[]=[];walkImages(value,item=>images.push(item));let missing=0;
-+    for(const item of images){this.check(epoch); const src=typeof item.src==='string'?item.src:'';const id=item.data?.creatorosMediaId;
++    for(const item of images){this.check(epoch,signal); const src=typeof item.src==='string'?item.src:'';const id=item.data?.creatorosMediaId;
 +      if(typeof item.data?.creatorosMissingSource==='string' && src===missingPixel){
 +        const exact=typeof id==='string' && item.data.creatorosMissingSource===`creatoros-media://${id}`;
 +        if(trusted&&exact)this.knownReferences.add(id);
@@ -42488,46 +42554,54 @@
 +      if(id && this.known.has(id)){item.src=this.known.get(id);delete item.data.creatorosMissingSource;delete item.data.creatorosMissingMediaId;delete item.data.creatorosMissingKnownRef;continue;}
 +      if(trusted && id && src.startsWith('blob:')){this.known.set(id,src);this.knownReferences.add(id);delete item.data.creatorosMissingSource;delete item.data.creatorosMissingMediaId;delete item.data.creatorosMissingKnownRef;continue;}
 +      if(trusted && typeof id==='string' && src===`creatoros-media://${id}`)this.knownReferences.add(id);
-+      if(/^data:image\//.test(src)){try{const response=await fetch(src);this.check(epoch);const blob=await response.blob();this.check(epoch);const loaded=await this.readImage(new File([blob],`${item.id||'image'}.png`,{type:blob.type}),epoch);item.src=loaded.src;item.data={...(item.data||{}),creatorosMediaId:loaded.mediaId};continue;}catch(e){this.check(epoch);this.error(e);}}
++      if(/^data:image\//.test(src)){try{const response=await fetch(src);this.check(epoch,signal);const blob=await response.blob();this.check(epoch,signal);const loaded=await this.readImage(new File([blob],`${item.id||'image'}.png`,{type:blob.type}),epoch,signal);item.src=loaded.src;item.data={...(item.data||{}),creatorosMediaId:loaded.mediaId};continue;}catch(e){this.check(epoch,signal);this.error(e);}}
 +      item.data={...(item.data||{}),creatorosMissingDataPresent:Object.prototype.hasOwnProperty.call(item,'data'),creatorosMissingSource:src,creatorosMissingKnownRef:typeof id==='string'&&this.knownReferences.has(id)&&src===`creatoros-media://${id}`};
 +      if(id&&!item.data.creatorosMissingKnownRef){item.data.creatorosMissingMediaId=id;delete item.data.creatorosMediaId;}
 +      item.src=missingPixel; missing++;
 +    }
-+    walkObjects(value,item=>{const patterns:any[]=[];for(const key of ['fill','stroke']){
-+      const pattern=item[key];if(pattern?.type!=='pattern'||typeof pattern.source!=='string')continue;
-+      // Function sources and external URL sources are unsupported input resources, never executable instructions.
-+      if(/^data:image\/(png|jpeg|webp|gif);base64,/.test(pattern.source))continue;
++    const sanitizePaint=(item:any,keys:string[])=>{const patterns:any[]=[];for(const key of keys){
++      const pattern=item[key];if(!pattern || typeof pattern!=='object' || !pattern.source)continue;
++      // SEMANTIC_BOUNDARY_ALLOW: match Fabric5 enlivenPatterns/_initPattern's truthy source rule regardless of type; validate resources only.
++      // External URLs and function strings never reach Fabric's image loader. Preserve pure colors and gradients.
++      if(typeof pattern.source==='string' && /^data:image\/(png|jpeg|webp|gif);base64,/.test(pattern.source))continue;
 +      patterns.push({key,source:pattern.source});pattern.source=missingPixel;missing++;
-+    }if(patterns.length)item.data={...(item.data||{}),creatorosPatternDataPresent:Object.prototype.hasOwnProperty.call(item,'data'),creatorosMissingPatterns:patterns};});
++    }if(patterns.length)item.data={...(item.data||{}),creatorosPatternDataPresent:Object.prototype.hasOwnProperty.call(item,'data'),creatorosMissingPatterns:patterns};};
++    walkObjects(value,item=>sanitizePaint(item,['fill','stroke']));
++    sanitizePaint(value,['background','overlay']);
 +    if(missing)this.notice(`${missing} 张图片缺少原始素材，图层结构已保留，请替换图片。`,'error');return value;
 +  }
-+  async loadDocument(input: any, trusted = false) {
-+    const epoch=++this.epoch;await this.ready;this.check(epoch);this.loading=true;clearTimeout(this.timer);
-+    try {const doc=await this.sanitize(input,trusted,epoch);this.check(epoch);
-+      await new Promise<void>((resolve,reject)=>{const timer=setTimeout(()=>reject(Error('图层读取超时，原稿已保留')),30000);this.timers.add(timer);
-+        const stop=()=>{clearTimeout(timer);this.timers.delete(timer);reject(Error('已切换作品，原读取停止'));};this.signal.addEventListener('abort',stop,{once:true});
-+        Promise.resolve(this.editor!.loadJSON(doc,()=>{clearTimeout(timer);this.timers.delete(timer);this.signal.removeEventListener('abort',stop);try{this.check(epoch);resolve();}catch(e){reject(e);}})).catch(e=>{clearTimeout(timer);this.timers.delete(timer);this.signal.removeEventListener('abort',stop);reject(e);});
-+      });this.check(epoch);this.editor!.getPlugin('HistoryPlugin')?.clearAndSaveState?.();this.baseline=JSON.stringify(this.snapshot().document);
-+    }finally{this.loading=false;clearTimeout(this.timer);}return this.snapshot();
++  loadDocument(input:any,trusted=false,signal?:AbortSignal):Promise<any>{
++    const epoch=this.advanceEpoch();const work=(async()=>{
++      await this.ready;this.check(epoch,signal);this.loading=true;clearTimeout(this.timer);
++      try{const doc=await this.sanitize(input,trusted,epoch,signal);this.check(epoch,signal);
++        await new Promise<void>((resolve,reject)=>{
++          const signals=Array.from(new Set([this.signal,signal].filter((value):value is AbortSignal=>!!value)));
++          const clean=()=>{clearTimeout(timer);this.timers.delete(timer);signals.forEach(current=>current.removeEventListener('abort',stop));};
++          const stop=()=>{clean();reject(Error('已切换作品，原读取停止'));};
++          const timer=setTimeout(()=>{clean();reject(Error('图层读取超时，原稿已保留'));},30000);this.timers.add(timer);signals.forEach(current=>current.addEventListener('abort',stop,{once:true}));
++          Promise.resolve(this.editor!.loadJSON(doc,()=>{clean();try{this.check(epoch,signal);resolve();}catch(error){reject(error);}})).catch(error=>{clean();reject(error);});
++        });this.check(epoch,signal);this.editor!.getPlugin('HistoryPlugin')?.clearAndSaveState?.();this.baseline=JSON.stringify(this.snapshot().document);
++      }finally{if(epoch===this.epoch || this.disposed)this.loading=false;clearTimeout(this.timer);}return this.snapshot();
++    })();return this.ownedJob(work,epoch,signal);
 +  }
 +  async importJson(file: File) {const epoch=this.epoch;const text=await file.text();this.check(epoch);const resume=this.lock();try{await this.loadDocument(JSON.parse(text),false);this.options.onChanged();}finally{resume();}}
 +  async reset(width:number,height:number){if(!Number.isFinite(width)||!Number.isFinite(height)||width<1||height<1||width>10000||height>10000)throw Error('尺寸应为 1 至 10000');
 +    if(this.editor!.fabricCanvas!.getObjects().some(o=>o.id!=='workspace') && !(await this.confirm('重新创建设计','将清空当前图层并设置新尺寸。尚未保存的修改会被移除。')))return;
-+    this.check();this.epoch++;this.editor!.clear();this.editor!.setSize(width,height);this.editor!.getPlugin('HistoryPlugin')?.clearAndSaveState?.();this.publish();
++    this.check();this.advanceEpoch();this.editor!.clear();this.editor!.setSize(width,height);this.editor!.getPlugin('HistoryPlugin')?.clearAndSaveState?.();this.publish();
 +  }
 +  request(operation:string,payload?:any,options?:{requestId?:string;signal?:AbortSignal}):Promise<any>{
 +    this.check(this.epoch,options?.signal);const id=options?.requestId;if(id&&this.requests.has(id))return this.requests.get(id)!;
 +    const result=this.sequence.then(async()=>{await this.ready;this.check(this.epoch,options?.signal);
-+      switch(operation){case 'load':{this.title=typeof payload?.title==='string'?payload.title:'图文设计';if(payload?.document!=null)return this.loadDocument(payload.document,true);const w=Number(payload?.width)||900,h=Number(payload?.height)||1200;if(w<1||h<1||w>10000||h>10000)throw Error('图文尺寸超出范围');this.epoch++;this.editor!.clear();this.editor!.setSize(w,h);this.editor!.getPlugin('HistoryPlugin')?.clearAndSaveState?.();this.baseline=JSON.stringify(this.snapshot().document);return this.snapshot();}
-+        case 'snapshot':{const epoch=this.epoch;const release=this.lock();try{await this.registerImages(epoch);this.check(epoch,options?.signal);return this.snapshot();}finally{release();}}
-+        case 'insert-media':if(typeof payload?.mediaId!=='string'||!payload.mediaId)throw Error('图片缺少素材关联');return this.importFile(payload.file,payload.mediaId);
-+        case 'export': {if(payload?.format!=='png')throw Error('暂支持 PNG 导出');const epoch=this.epoch;const resume=this.lock();try{await this.registerImages(epoch);this.check(epoch,options?.signal);const result=await this.editor!.previewDocument();this.check(epoch,options?.signal);const response=await fetch(result.dataUrl);this.check(epoch,options?.signal);const blob=await response.blob();this.check(epoch,options?.signal);return {blob,document:restoreMissing(result.document),fileName:`${this.title.replace(/[\\/:*?"<>|]/g,'_').slice(0,100)||'图文设计'}.png`};}finally{resume();}}
++      switch(operation){case 'load':{this.title=typeof payload?.title==='string'?payload.title:'图文设计';if(payload?.document!=null)return this.loadDocument(payload.document,true,options?.signal);const w=Number(payload?.width)||900,h=Number(payload?.height)||1200;if(w<1||h<1||w>10000||h>10000)throw Error('图文尺寸超出范围');this.advanceEpoch();this.editor!.clear();this.editor!.setSize(w,h);this.editor!.getPlugin('HistoryPlugin')?.clearAndSaveState?.();this.baseline=JSON.stringify(this.snapshot().document);return this.snapshot();}
++        case 'snapshot':{const epoch=this.epoch;const release=this.lock();try{await this.registerImages(epoch,options?.signal);this.check(epoch,options?.signal);return this.snapshot();}finally{release();}}
++        case 'insert-media':if(typeof payload?.mediaId!=='string'||!payload.mediaId)throw Error('图片缺少素材关联');return this.importFile(payload.file,payload.mediaId,options?.signal);
++        case 'export': {if(payload?.format!=='png')throw Error('暂支持 PNG 导出');const epoch=this.epoch;const resume=this.lock();try{await this.registerImages(epoch,options?.signal);this.check(epoch,options?.signal);const result=await this.editor!.previewDocument();this.check(epoch,options?.signal);const response=await fetch(result.dataUrl);this.check(epoch,options?.signal);const blob=await response.blob();this.check(epoch,options?.signal);return {blob,document:restoreMissing(result.document),fileName:`${this.title.replace(/[\\/:*?"<>|]/g,'_').slice(0,100)||'图文设计'}.png`};}finally{resume();}}
 +        default:throw Error('当前编辑器不支持此操作');}
 +    });this.sequence=result.catch(()=>undefined);const signals=[this.signal,options?.signal].filter((value):value is AbortSignal=>!!value);
 +    const exposed=new Promise<any>((resolve,reject)=>{const cancel=()=>reject(Error('已切换作品，原操作停止'));signals.forEach(signal=>signal.addEventListener('abort',cancel,{once:true}));result.then(resolve,reject).finally(()=>signals.forEach(signal=>signal.removeEventListener('abort',cancel))).catch(()=>{});});
 +    if(id){this.requests.set(id,exposed);void exposed.finally(()=>this.requests.delete(id)).catch(()=>{});}return exposed;
 +  }
-+  close(){if(this.disposed)return;this.disposed=true;this.epoch++;this.abort.abort();clearTimeout(this.timer);this.timers.forEach(clearTimeout);this.timers.clear();this.readyReject(Error('图片编辑器已关闭'));this.cleanup.forEach(fn=>{try{fn();}catch{}});this.cleanup.clear();this.urls.forEach(URL.revokeObjectURL);this.urls.clear();this.spinNode?.remove();this.known.clear();this.knownReferences.clear();this.editor=undefined;}
++  close(){if(this.disposed)return;this.disposed=true;this.advanceEpoch();this.abort.abort();clearTimeout(this.timer);this.timers.forEach(clearTimeout);this.timers.clear();this.readyReject(Error('图片编辑器已关闭'));this.cleanup.forEach(fn=>{try{fn();}catch{}});this.cleanup.clear();this.urls.forEach(URL.revokeObjectURL);this.urls.clear();this.spinNode?.remove();this.known.clear();this.knownReferences.clear();this.editor=undefined;}
 +}
 --- /dev/null
 +++ b/src/native-engine.ts
@@ -42631,7 +42705,7 @@
 +[data-creatoros-editor="kuaitu"] svg :is([fill="#305ef4"],[fill="#305EF4"]){fill:var(--primary);}
 --- /dev/null
 +++ b/src/native-types.ts
-@@ -0,0 +1,51 @@
+@@ -0,0 +1,56 @@
 +export interface NativeTheme {
 +  mode: 'light' | 'dark'; tokens: Record<string, string>;
 +  fontFamily: string; fontSize: string; density: string;
@@ -42667,12 +42741,17 @@
 +      if(id&&!known){item.data.creatorosMissingMediaId=id;delete item.data.creatorosMediaId;}
 +    }
 +  });
-+  walkObjects(clone,item=>{
++  const restorePaint=(item:any)=>{
 +    if(!Array.isArray(item.data?.creatorosMissingPatterns))return;
-+    for(const missing of item.data.creatorosMissingPatterns)if(item[missing.key])item[missing.key].source=missing.source;
++    for(const missing of item.data.creatorosMissingPatterns){
++      // SEMANTIC_BOUNDARY_ALLOW: metadata may only restore own Fabric paint slots; never prototype keys.
++      if(!missing || !['fill','stroke','background','overlay'].includes(missing.key) || !Object.prototype.hasOwnProperty.call(item,missing.key))continue;
++      const paint=item[missing.key];if(paint&&typeof paint==='object')paint.source=missing.source;
++    }
 +    const {creatorosMissingPatterns,creatorosPatternDataPresent,...data}=item.data;
 +    if(!creatorosPatternDataPresent && Object.keys(data).length===0)delete item.data;else item.data=data;
-+  });
++  };
++  restorePaint(clone);walkObjects(clone,restorePaint);
 +  return clone;
 +}
 +export function deepActive(root: Document | ShadowRoot): Element | null {
@@ -42874,3 +42953,173 @@
  import qs from 'qs';
  import proIcon from '@/assets/icon/proIcon.png';
  
+
+--- a/src/native-types.ts
++++ b/src/native-types.ts
+@@ -3,9 +3,9 @@
+   fontFamily: string; fontSize: string; density: string;
+ }
+ export interface NativeOptions {
+-  owner: {accountId: string; outputId: string; sourceVersionId: string};
++  owner: {groupId:string|null;accountId:string|null;projectId:string;outputId:string;sourceVersionId:string};
+   theme: NativeTheme; portalContainer: HTMLElement; signal: AbortSignal;
+-  onChanged: () => void; onError: (message: string) => void;
++  onChanged: (event?:{kind:'native-context';contextEpoch:number;outputId:string;sceneId:string|null;selectedElements:unknown[];documentChanged:boolean}) => void; onError: (message: string) => void;
+   importMedia: (file: File) => Promise<{mediaId: string}>;
+ }
+ export const missingPixel = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGP4//8/AwAI/AL+p5qgoAAAAABJRU5ErkJggg==';
+@@ -54,3 +54,5 @@
+ export function isTextTarget(target: EventTarget | null) {
+   return target instanceof Element && !!target.closest('input,textarea,select,[contenteditable="true"]');
+ }
++
++export function nativeOwnerKey(owner: NativeOptions['owner']) { return JSON.stringify([owner.groupId?['group',owner.groupId]:['account',owner.accountId],owner.projectId,owner.outputId,owner.sourceVersionId]); }
+--- a/src/native-entry.ts
++++ b/src/native-entry.ts
+@@ -16,6 +16,7 @@
+ const activeOwners=new Set<NativeController>();
+ export async function mount(container:HTMLElement,options:NativeOptions){
+   if(!(container instanceof HTMLElement)||options.signal.aborted)throw Error('图片工作台挂载已取消');
++  if(!options.owner.projectId||!options.owner.outputId||!options.owner.sourceVersionId||(!options.owner.groupId&&!options.owner.accountId))throw Error('作品归属缺失。');
+   const host=markRaw(new NativeController(container,options));
+   activeOwners.add(host);
+   const app=createApp(Home,{nativeHost:host});
+--- a/src/native-controller.ts
++++ b/src/native-controller.ts
+@@ -6,7 +6,7 @@
+   editor?: NativeEngine;
+   workspaceEl?: HTMLElement;
+   disposed = false; disabled = false; loading = false; locked = false;
+-  private epoch = 0; private baseline = ''; private timer?: ReturnType<typeof setTimeout>;
++  private epoch = 0; private observedDocument = ''; private observedSelection = ''; private contextEpoch = 0; private baseline = ''; private timer?: ReturnType<typeof setTimeout>;
+   private timers = new Set<ReturnType<typeof setTimeout>>();
+   private cleanup = new Set<() => void>(); private jobs = new Set<() => void>(); private urls = new Set<string>();
+   private known = new Map<string, string>(); private knownReferences=new Set<string>(); private sequence: Promise<unknown> = Promise.resolve();
+@@ -38,23 +38,37 @@
+     this.check(); this.editor = editor; this.workspaceEl = workspaceEl;
+     const publish = () => this.publish();
+     const canvas = editor.fabricCanvas;
++    const selection = () => this.observeContext();
++    for (const name of ['selection:created','selection:updated','selection:cleared']) canvas?.on(name,selection);
++    this.cleanup.add(()=>{for(const name of ['selection:created','selection:updated','selection:cleared'])canvas?.off(name,selection);});
+     const events = ['object:added','object:modified','object:removed','text:changed','path:created','after:render'];
+     events.forEach(event => canvas?.on(event, publish));
+     const setTextarea=(event: any)=>{if(event.target){event.target.hiddenTextareaContainer=this.root;this.themeSelection(event.target);}};
+     canvas?.on('object:added',setTextarea);
+     this.cleanup.add(()=>canvas?.off('object:added',setTextarea));
+     this.cleanup.add(() => events.forEach(event => canvas?.off(event, publish)));
+-    this.baseline = JSON.stringify(editor.getJson()); this.readyResolve();
++    this.baseline = JSON.stringify(editor.getJson()); this.observedDocument=this.baseline;this.observedSelection=JSON.stringify(canvas?.getActiveObjects?.().map(object=>object.id)??[]); this.readyResolve();
+   }
+   fail(e: unknown) {this.readyReject(e); this.error(e);}
+   error(e: unknown) {if (!this.disposed) this.options.onError(e instanceof Error ? e.message : String(e));}
++  private syncObservedContext(){this.observedDocument=JSON.stringify(this.snapshot().document);this.observedSelection=JSON.stringify(this.editor?.fabricCanvas?.getActiveObjects?.().map(object=>object.id)??[]);}
++  private observeContext(){
++    if(this.disposed||this.loading||this.locked||!this.editor)return;
++    // SEMANTIC_BOUNDARY_ALLOW: 精确文档与选区变化只使过期请求失效，不做创作取舍。
++    const json=JSON.stringify(restoreMissing(this.editor.getJson()));
++    const selected=this.editor.fabricCanvas?.getActiveObjects?.().map(object=>object.id)??[];const selection=JSON.stringify(selected);
++    const documentChanged=json!==this.observedDocument;if(!documentChanged&&selection===this.observedSelection)return;
++    this.observedDocument=json;this.observedSelection=selection;this.contextEpoch++;
++    this.options.onChanged({kind:'native-context',contextEpoch:this.contextEpoch,outputId:this.options.owner.outputId,sceneId:null,selectedElements:selected,documentChanged});
++  }
+   publish() {
+     if (this.disposed || this.loading || this.locked || !this.editor) return;
++    this.observeContext();
+     clearTimeout(this.timer);
+     this.timer = setTimeout(() => {if (this.disposed || this.loading || this.locked || !this.editor) return;
+       const json = JSON.stringify(restoreMissing(this.editor.getJson()));
+       // SEMANTIC_BOUNDARY_ALLOW: exact JSON comparison deduplicates render events only.
+-      if (json !== this.baseline) {this.baseline = json; this.options.onChanged();}
++      if (json !== this.baseline) {this.baseline = json;}
+     }, 180);
+   }
+   themeSelection(object:any){const color=this.currentTheme?.tokens['--creatoros-brand'];if(color)object.set?.({borderColor:color,cornerStrokeColor:color,cornerColor:color});if(object.getObjects)object.getObjects().forEach((child:any)=>this.themeSelection(child));}
+@@ -229,7 +243,7 @@
+           const stop=()=>{clean();reject(Error('已切换作品，原读取停止'));};
+           const timer=setTimeout(()=>{clean();reject(Error('图层读取超时，原稿已保留'));},30000);this.timers.add(timer);signals.forEach(current=>current.addEventListener('abort',stop,{once:true}));
+           Promise.resolve(this.editor!.loadJSON(doc,()=>{clean();try{this.check(epoch,signal);resolve();}catch(error){reject(error);}})).catch(error=>{clean();reject(error);});
+-        });this.check(epoch,signal);this.editor!.getPlugin('HistoryPlugin')?.clearAndSaveState?.();this.baseline=JSON.stringify(this.snapshot().document);
++        });this.check(epoch,signal);this.editor!.getPlugin('HistoryPlugin')?.clearAndSaveState?.();this.baseline=JSON.stringify(this.snapshot().document);this.syncObservedContext();
+       }finally{if(epoch===this.epoch || this.disposed)this.loading=false;clearTimeout(this.timer);}return this.snapshot();
+     })();return this.ownedJob(work,epoch,signal);
+   }
+@@ -239,9 +253,9 @@
+     this.check();this.advanceEpoch();this.editor!.clear();this.editor!.setSize(width,height);this.editor!.getPlugin('HistoryPlugin')?.clearAndSaveState?.();this.publish();
+   }
+   request(operation:string,payload?:any,options?:{requestId?:string;signal?:AbortSignal}):Promise<any>{
+-    this.check(this.epoch,options?.signal);const id=options?.requestId;if(id&&this.requests.has(id))return this.requests.get(id)!;
+-    const result=this.sequence.then(async()=>{await this.ready;this.check(this.epoch,options?.signal);
+-      switch(operation){case 'load':{this.title=typeof payload?.title==='string'?payload.title:'图文设计';if(payload?.document!=null)return this.loadDocument(payload.document,true,options?.signal);const w=Number(payload?.width)||900,h=Number(payload?.height)||1200;if(w<1||h<1||w>10000||h>10000)throw Error('图文尺寸超出范围');this.advanceEpoch();this.editor!.clear();this.editor!.setSize(w,h);this.editor!.getPlugin('HistoryPlugin')?.clearAndSaveState?.();this.baseline=JSON.stringify(this.snapshot().document);return this.snapshot();}
++    const issuedEpoch=this.epoch,issuedContext=this.contextEpoch;this.check(issuedEpoch,options?.signal);const id=options?.requestId===undefined?undefined:`${issuedEpoch}:${issuedContext}:${operation}:${options.requestId}`;if(id&&this.requests.has(id))return this.requests.get(id)!;
++    const result=this.sequence.then(async()=>{await this.ready;this.check(issuedEpoch,options?.signal);if(issuedContext!==this.contextEpoch)throw Error('编辑上下文已变化，原请求停止');
++      switch(operation){case 'load':{this.title=typeof payload?.title==='string'?payload.title:'图文设计';if(payload?.document!=null)return this.loadDocument(payload.document,true,options?.signal);const w=Number(payload?.width)||900,h=Number(payload?.height)||1200;if(w<1||h<1||w>10000||h>10000)throw Error('图文尺寸超出范围');this.loading=true;try{this.advanceEpoch();this.editor!.clear();this.editor!.setSize(w,h);this.editor!.getPlugin('HistoryPlugin')?.clearAndSaveState?.();this.baseline=JSON.stringify(this.snapshot().document);this.syncObservedContext();return this.snapshot();}finally{this.loading=false;clearTimeout(this.timer);}}
+         case 'snapshot':{const epoch=this.epoch;const release=this.lock();try{await this.registerImages(epoch,options?.signal);this.check(epoch,options?.signal);return this.snapshot();}finally{release();}}
+         case 'insert-media':if(typeof payload?.mediaId!=='string'||!payload.mediaId)throw Error('图片缺少素材关联');return this.importFile(payload.file,payload.mediaId,options?.signal);
+         case 'export': {if(payload?.format!=='png')throw Error('暂支持 PNG 导出');const epoch=this.epoch;const resume=this.lock();try{await this.registerImages(epoch,options?.signal);this.check(epoch,options?.signal);const result=await this.editor!.previewDocument();this.check(epoch,options?.signal);const response=await fetch(result.dataUrl);this.check(epoch,options?.signal);const blob=await response.blob();this.check(epoch,options?.signal);return {blob,document:restoreMissing(result.document),fileName:`${this.title.replace(/[\\/:*?"<>|]/g,'_').slice(0,100)||'图文设计'}.png`};}finally{resume();}}
+--- a/native-controller.test.ts
++++ b/native-controller.test.ts
+@@ -1,13 +1,13 @@
+ import {beforeEach,afterEach,describe,it,expect,vi} from 'vitest';
+ import {NativeController} from './src/native-controller';
+-import {missingPixel} from './src/native-types';
++import {missingPixel,nativeOwnerKey,type NativeOptions} from './src/native-types';
+ import {referenceEditorDocument} from '@creatoros/contract';
+ import {fabric} from 'fabric';
+-function setup(){
++function setup(ownerOverrides:Partial<NativeOptions['owner']>={}){
+   const outer=document.createElement('div');document.body.append(outer);const shadow=outer.attachShadow({mode:'open'});const root=document.createElement('div'),portal=document.createElement('div');shadow.append(root,portal);
+-  const abort=new AbortController();const options={owner:{accountId:'a',outputId:'o',sourceVersionId:'v'},theme:{mode:'dark' as const,tokens:{'--creatoros-panel':'#181b23','--creatoros-brand':'#7c5cff'},fontFamily:'system-ui',fontSize:'14px',density:'compact'},portalContainer:portal,signal:abort.signal,onChanged:vi.fn(),onError:vi.fn(),importMedia:vi.fn(async()=>({mediaId:'m'}))};
++  const abort=new AbortController();const options={owner:{groupId:null,projectId:'project-fixture',accountId:'a',outputId:'o',sourceVersionId:'v',...ownerOverrides},theme:{mode:'dark' as const,tokens:{'--creatoros-panel':'#181b23','--creatoros-brand':'#7c5cff'},fontFamily:'system-ui',fontSize:'14px',density:'compact'},portalContainer:portal,signal:abort.signal,onChanged:vi.fn(),onError:vi.fn(),importMedia:vi.fn(async()=>({mediaId:'m'}))};
+   let documentValue:any={objects:[{id:'workspace',type:'rect',fill:'#fff',width:900,height:1200}]};const handlers=new Map<string,Set<Function>>();
+-  const canvas={on:vi.fn((name:string,fn:Function)=>{if(!handlers.has(name))handlers.set(name,new Set());handlers.get(name)!.add(fn);}),off:vi.fn((name:string,fn:Function)=>handlers.get(name)?.delete(fn)),getObjects:()=>documentValue.objects,requestRenderAll:vi.fn()};
++  const canvas={on:vi.fn((name:string,fn:Function)=>{if(!handlers.has(name))handlers.set(name,new Set());handlers.get(name)!.add(fn);}),off:vi.fn((name:string,fn:Function)=>handlers.get(name)?.delete(fn)),getObjects:()=>documentValue.objects,getActiveObjects:():Array<{id:string}>=>[],requestRenderAll:vi.fn()};
+   const editor:any={getJson:()=>JSON.parse(JSON.stringify(documentValue)),fabricCanvas:canvas,loadJSON:vi.fn((doc:any,callback:()=>void)=>{documentValue=doc;callback();}),getPlugin:()=>({clearAndSaveState:vi.fn()}),clear:()=>{documentValue.objects=documentValue.objects.filter((o:any)=>o.id==='workspace');},setSize:(w:number,h:number)=>Object.assign(documentValue.objects[0],{width:w,height:h}),previewDocument:vi.fn(async()=>({dataUrl:'data:image/png;base64,AA==',document:documentValue}))};
+   const host=new NativeController(root,options);host.attach(editor,root);return {host,root,portal,abort,options,editor,canvas,handlers};
+ }
+@@ -63,3 +63,12 @@
+   it('公开 loadJSON 原引擎等待回调时卸载结清作业、timer 和 signal，迟到回调不回写',async()=>{const s=setup();let late!:()=>void;s.editor.loadJSON.mockImplementation((_doc:any,callback:()=>void)=>{late=callback;return Promise.resolve();});const job=s.host.request('load',{document:{objects:[{type:'textbox',id:'text',text:'等待原引擎'}]}});const result=job.then(()=>null,error=>error);await vi.waitFor(()=>expect(s.editor.loadJSON).toHaveBeenCalled());s.host.close();expect(await result).toBeInstanceOf(Error);expect((s.host as any).jobs.size).toBe(0);expect((s.host as any).timers.size).toBe(0);late();await Promise.resolve();expect(s.options.onChanged).not.toHaveBeenCalled();expect(s.options.onError).not.toHaveBeenCalled();});
+   it('重新设置尺寸需要真实确认，并保持被拒绝的原图层',async()=>{const s=setup();await s.host.request('load',{document:{objects:[{id:'workspace',type:'rect',width:900,height:1200},{id:'text',type:'textbox',text:'保留'}]}});const resetting=s.host.reset(600,800);expect(s.portal.querySelector('[role="alertdialog"]')).not.toBeNull();(s.portal.querySelector('button') as HTMLButtonElement).click();await resetting;expect((await s.host.request('snapshot')).document.objects).toHaveLength(2);expect(fetch).not.toHaveBeenCalled();s.host.close();});
+ });
++
++describe('T1062 实际controller owner/context请求候选（Fabric是明确夹具）',()=>{
++ it('纯组可空account，同组平台筛选不改变原mount identity，不同组/父/版本不能混用',async()=>{const s=setup({groupId:'group-a',accountId:null});try{const original={...s.options.owner};expect(nativeOwnerKey(original)).toBe(nativeOwnerKey({...original,accountId:'platform-b'}));expect(nativeOwnerKey(original)).not.toBe(nativeOwnerKey({...original,groupId:'group-b'}));expect(nativeOwnerKey(original)).not.toBe(nativeOwnerKey({...original,projectId:'foreign'}));expect(nativeOwnerKey(original)).not.toBe(nativeOwnerKey({...original,sourceVersionId:'other'}));expect((await s.host.request('snapshot')).document).toBeDefined();expect(s.options.owner).toEqual(original);}finally{s.host.close();}});
++ it('同一真实dirty同步事件只提升一次context，迟到排队snapshot拒绝而原文保留',async()=>{const s=setup();try{const pending=s.host.request('snapshot',undefined,{requestId:'issued-before-edit'});s.editor.getJson=()=>({objects:[{id:'text',type:'textbox',text:'真实后来修改'}]});for(const callback of s.handlers.get('object:modified')??[])callback();for(const callback of s.handlers.get('after:render')??[])callback();await expect(pending).rejects.toThrow('上下文已变化');expect(s.options.onChanged).toHaveBeenCalledTimes(1);expect(s.options.onChanged.mock.calls[0][0]).toMatchObject({kind:'native-context',documentChanged:true,outputId:'o'});expect((await s.host.request('snapshot')).document.objects[0].text).toBe('真实后来修改');}finally{s.host.close();}});
++ it('真实selection更新使旧snapshot失效但不标正文dirty；重复selection不重复事件',async()=>{const s=setup();try{const pending=s.host.request('snapshot');s.canvas.getActiveObjects=()=>[{id:'selected-real'}];for(const callback of s.handlers.get('selection:updated')??[])callback();for(const callback of s.handlers.get('selection:updated')??[])callback();await expect(pending).rejects.toThrow('上下文已变化');expect(s.options.onChanged).toHaveBeenCalledTimes(1);expect(s.options.onChanged.mock.calls[0][0]).toMatchObject({documentChanged:false,selectedElements:['selected-real']});}finally{s.host.close();}});
++ it('取消在途真实controller导出请求，迟到PNG不fetch、不发布；原图层仍可读',async()=>{const s=setup();let finish!:(value:unknown)=>void;const cancel=new AbortController();try{s.editor.previewDocument.mockImplementation(()=>new Promise(resolve=>finish=resolve));const pending=s.host.request('export',{format:'png'},{signal:cancel.signal});const rejected=pending.catch(error=>error);await vi.waitFor(()=>expect(s.editor.previewDocument).toHaveBeenCalled());cancel.abort();expect(await rejected).toBeInstanceOf(Error);finish({dataUrl:'data:image/png;base64,AA==',document:{objects:[]}});await Promise.resolve();await Promise.resolve();expect(fetch).not.toHaveBeenCalled();expect((await s.host.request('snapshot')).document.objects[0].id).toBe('workspace');}finally{s.host.close();}});
++});
++
++it.each(['loaded document','blank load'])('T1062 %s 后首render同步observed基线，不伪dirty或改原snapshot',async(mode)=>{const s=setup();try{const oldClear=s.editor.clear;s.editor.clear=()=>{oldClear();for(const callback of s.handlers.get('object:removed')??[])callback();for(const callback of s.handlers.get('after:render')??[])callback();};const load=s.editor.loadJSON.getMockImplementation()!;s.editor.loadJSON.mockImplementation((document:unknown,callback:()=>void)=>load(document,()=>{for(const target of s.canvas.getObjects())for(const fn of s.handlers.get('object:added')??[])fn({target});for(const fn of s.handlers.get('after:render')??[])fn();callback();}));s.options.onChanged.mockClear();await s.host.request('load',mode==='loaded document'?{document:{objects:[{id:'workspace',type:'rect',width:900,height:1200},{id:'text',type:'textbox',text:'原文'}]}}:{width:900,height:1200});expect(s.options.onChanged).not.toHaveBeenCalled();const before=await s.host.request('snapshot');s.options.onChanged.mockClear();for(const callback of s.handlers.get('after:render')??[])callback();expect(s.options.onChanged).not.toHaveBeenCalled();expect(await s.host.request('snapshot')).toEqual(before);}finally{s.host.close();}});
+--- a/packages/core/Editor.ts
++++ b/packages/core/Editor.ts
+@@ -38,8 +38,9 @@
+     [propName: string]: AsyncSeriesHook<any, any>;
+   } = {};
+-
++
+-  init(canvas: fabric.Canvas, options: {root: HTMLElement; workspaceEl: HTMLElement; host: any}) {
+-    this.host=options.host;this.root=options.root;this.workspaceEl=options.workspaceEl;
++  init(canvas: fabric.Canvas, options?: {root: HTMLElement; workspaceEl: HTMLElement; host: any}) {
++    this.host=options?.host;this.root=options?.root ?? canvas.wrapperEl;
++    this.workspaceEl=options?.workspaceEl ?? document.getElementById('workspace') ?? canvas.wrapperEl;
+     this.canvas = canvas;
+     this._initContextMenu();
+     this._bindContextMenu();
+@@ -128,9 +129,14 @@
+   private _bindingHotkeys(plugin: IPluginTempl) {
+     plugin?.hotkeys?.forEach((keyName: string) => {
+       // 支持 keyup
+-      const handler=(e: KeyboardEvent)=>{if(this.host.accepts(e)){e.preventDefault();plugin.hotkeyEvent?.(keyName,e);}};
+-      hotkeys(keyName, {keyup:true,element:this.root},handler);
+-      hotkeys(keyName, {keyup:true,element:this.host.options.portalContainer},handler);
++      const handler=(e: KeyboardEvent)=>{
++        if(this.host){if(this.host.accepts(e)){e.preventDefault();plugin.hotkeyEvent?.(keyName,e);}}
++        else plugin.hotkeyEvent?.(keyName,e);
++      };
++      if(this.host){
++        hotkeys(keyName, {keyup:true,element:this.root},handler);
++        hotkeys(keyName, {keyup:true,element:this.host.options.portalContainer},handler);
++      }else hotkeys(keyName,{keyup:true},handler);
+       this.bindings.push({key:keyName,handler});
+     });
+   }

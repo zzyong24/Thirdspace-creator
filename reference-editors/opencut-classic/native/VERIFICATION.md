@@ -1,3 +1,23 @@
+# T-1062 原生 TMP 实际验证记录
+
+源码候选：`246e63a02753b7a90760611506a82341d8457462a996aed8463f7f91eccdc153`；成员31，归档 `3cd56aa533804be27842c007d8660dfb94d9b5a0c46011172faab41661a54fa6`。
+
+本节仅记录本次实际命令。JSDOM/合成音频夹具不能作为真实浏览器、听感、ASR、安装通过。
+
+- exit 0；`/tmp/t1062-native-build-preflight/build-tools-bun/node_modules/@oven/bun-darwin-aarch64/bin/bun apps/web/scripts/build-native.mjs`；日志 `/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r4-build-_mj76bbr/commands/opencut-classic-production-build-r6.log`；SHA `bbab7607cbc949b0031ac7ab60f543ff0e74159d5026ce38a1ad114e013cc6e8`。
+- exit 0；`/tmp/t1062-native-build-preflight/build-tools-bun/node_modules/@oven/bun-darwin-aarch64/bin/bun test src/embedded/__tests__/native-lifecycle.test.ts src/embedded/__tests__/native-command.test.ts src/embedded/__tests__/host-boundary.test.ts`；日志 `/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r4-build-_mj76bbr/commands/opencut-classic-verify-native-tests-r6.log`；SHA `735231a2af5737f058fd90af75af5c180721d91252405819355f2c6ed72b43d3`。
+- exit 0；`/tmp/t1062-native-build-preflight/build-tools-bun/node_modules/@oven/bun-darwin-aarch64/bin/bun test src/embedded/__tests__/native-resources.test.ts`；日志 `/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r4-build-_mj76bbr/commands/opencut-classic-verify-resource-tests-r6.log`；SHA `088a42438f6fe60f6839b202b960b5b6825920079fba4fa3f4c99e5e7b92eb3e`。
+- exit 0；`/tmp/t1062-native-build-preflight/build-tools-bun/node_modules/@oven/bun-darwin-aarch64/bin/bun ../../node_modules/typescript/bin/tsc --noEmit --project tsconfig.embedded.json`；日志 `/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r4-build-_mj76bbr/commands/opencut-classic-verify-typecheck-r6.log`；SHA `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`。
+- exit 0；`/usr/bin/env CREATOROS_TEST_TYPESCRIPT_MODULE=/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r4-build-_mj76bbr/clones/opencut-classic/node_modules/typescript/lib/typescript.js /tmp/t1062-native-build-preflight/build-tools-bun/node_modules/@oven/bun-darwin-aarch64/bin/bun /var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r4-build-_mj76bbr/physical-providers/check-process-globals.ts /var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r4-build-_mj76bbr/clones/opencut-classic/apps/web/native-dist/native.js /var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r4-build-_mj76bbr/opencut-physical-process-ast-r6-result.json`；日志 `/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r4-build-_mj76bbr/commands/opencut-physical-process-ast-r6.log`；SHA `64ea2c865a72f96ec4de67af54fe718426ddab391c4c50e01819af441b51a70a`。
+- exit 0；`/usr/bin/env CREATOROS_TEST_JSDOM_MODULE=/Users/zyongzhu/.codex/worktrees/t1062-frontend-native-delivery/Thirdspace-creator/frontend/node_modules/jsdom/lib/api.js CREATOROS_NATIVE_FIXTURE_MODULE=/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r4-build-_mj76bbr/clones/opencut-classic/apps/web/native-dom-fixture-dist/native.js /tmp/t1062-native-build-preflight/build-tools-bun/node_modules/@oven/bun-darwin-aarch64/bin/bun /var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r4-build-_mj76bbr/physical-providers/dom-probe-r6.ts`；日志 `/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r4-build-_mj76bbr/commands/opencut-physical-dom-r6-jsdom29.log`；SHA `0471c486c86ed8acde2b6029785fec9ac3d499806511cdc69c4148988dce4daa`。
+
+Kuaitu：core4/native35；Doocs lease4；OpenCut主回归18、resource14、DOM38。按editor各自对应，不合并重复执行计数。
+全部历史失败保存在独立TMP，未覆盖。宿主18与安装/试听尚未执行。
+
+---
+
+下列内容是原T-1053历史记录，原字节以before SHA绑定；其中旧PASS不代表本次新源码的新执行。
+
 # T-1053 原生视频候选验证记录
 
 ## 最终结果

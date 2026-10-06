@@ -1,4 +1,5 @@
 "use client";
+import {useCreationClient,useCreationScope,creationScopeKey} from "@/lib/creation-workspace-scope";
 import * as React from "react";
 import {useRouter} from "next/navigation";
 import Link from "next/link";
@@ -20,16 +21,18 @@ function parseCommand(raw:unknown):Command|null{
  const schema=value.operation==="create"?ENDPOINTS.createWorkComposition.body:value.operation==="selection"?ENDPOINTS.saveWorkCompositionSelection.body:value.operation==="basis"?ENDPOINTS.saveWorkCompositionBasis.body:value.operation==="member"?ENDPOINTS.createWorkCompositionMember.body:value.operation==="bind"?ENDPOINTS.bindWorkCompositionMember.body:null;
  const result=schema?.safeParse(value.body);return result?.success&&(value.operation==="create"||typeof value.compositionId==="string")?{compositionId:value.compositionId,operation:value.operation,body:result.data}:null;
 }
-async function execute(command:Command){const params={compositionId:command.compositionId!};switch(command.operation){
- case "create":return client.createWorkComposition({params:undefined,query:undefined,body:ENDPOINTS.createWorkComposition.body!.parse(command.body)});
- case "selection":return client.saveWorkCompositionSelection({params,query:undefined,body:ENDPOINTS.saveWorkCompositionSelection.body!.parse(command.body)});
- case "basis":return client.saveWorkCompositionBasis({params,query:undefined,body:ENDPOINTS.saveWorkCompositionBasis.body!.parse(command.body)});
- case "member":return client.createWorkCompositionMember({params,query:undefined,body:ENDPOINTS.createWorkCompositionMember.body!.parse(command.body)});
- case "bind":return client.bindWorkCompositionMember({params,query:undefined,body:ENDPOINTS.bindWorkCompositionMember.body!.parse(command.body)});
+async function execute(command:Command,clientPort:typeof client){const params={compositionId:command.compositionId!};switch(command.operation){
+ case "create":return clientPort.createWorkComposition({params:undefined,query:undefined,body:ENDPOINTS.createWorkComposition.body!.parse(command.body)});
+ case "selection":return clientPort.saveWorkCompositionSelection({params,query:undefined,body:ENDPOINTS.saveWorkCompositionSelection.body!.parse(command.body)});
+ case "basis":return clientPort.saveWorkCompositionBasis({params,query:undefined,body:ENDPOINTS.saveWorkCompositionBasis.body!.parse(command.body)});
+ case "member":return clientPort.createWorkCompositionMember({params,query:undefined,body:ENDPOINTS.createWorkCompositionMember.body!.parse(command.body)});
+ case "bind":return clientPort.bindWorkCompositionMember({params,query:undefined,body:ENDPOINTS.bindWorkCompositionMember.body!.parse(command.body)});
 }}
-type WorkCompositionWorkbenchProps={projectId:string;projectTitle:string;accountId:string;initial:WorkCompositionResource[];initialSelectedId?:string;outputs:ProjectWorkOutput[]};
-export function WorkCompositionWorkbench(props:WorkCompositionWorkbenchProps){return <ScopedWorkCompositionWorkbench key={`${props.accountId}:${props.projectId}`} {...props}/>;}
+type WorkCompositionWorkbenchProps={projectId:string;projectTitle:string;accountId:string|null;initial:WorkCompositionResource[];initialSelectedId?:string;outputs:ProjectWorkOutput[]};
+export function WorkCompositionWorkbench(props:WorkCompositionWorkbenchProps){const workspaceSelection=useCreationScope();return <ScopedWorkCompositionWorkbench key={`${creationScopeKey(workspaceSelection)}:${props.projectId}`} {...props}/>;}
 function ScopedWorkCompositionWorkbench({projectId,projectTitle,accountId,initial,initialSelectedId,outputs}:WorkCompositionWorkbenchProps){
+ const client=useCreationClient();
+
  const [compositions,setCompositions]=React.useState(initial),[selectedId,setSelectedId]=React.useState(initialSelectedId??initial[0]?.compositionId??""),[title,setTitle]=React.useState(projectTitle),[busy,setBusy]=React.useState(false),[error,setError]=React.useState<string|null>(null),[message,setMessage]=React.useState<string|null>(null),[pending,setPending]=React.useState<Command|null>(null),[basisState,setBasis]=React.useState<WorkBasisDocument|null>(null),[basisLoaded,setBasisLoaded]=React.useState(""),[basisOwnerId,setBasisOwnerId]=React.useState(""),[savedBasis,setSavedBasis]=React.useState<WorkBasisDocument|null>(null),[basisError,setBasisError]=React.useState(false),[basisReload,setBasisReload]=React.useState(0),[sourceBusy,setSourceBusy]=React.useState(false),[basisDirty,setBasisDirty]=React.useState(false),[selection,setSelection]=React.useState<WorkSelection>((initial.find(item=>item.compositionId===initialSelectedId)??initial[0])?.current.selection??[]),[existingId,setExistingId]=React.useState<Record<string,string>>({});
  const current=compositions.find(item=>item.compositionId===selectedId)??null,storageKey=`creatoros-work-command:${accountId}:${projectId}`,active=React.useRef(true),inFlight=React.useRef(false),basisLoad=React.useRef(0);
  React.useEffect(()=>{active.current=true;void Promise.resolve().then(()=>{if(!active.current)return;try{const restored=parseCommand(JSON.parse(localStorage.getItem(storageKey)??"null"));setPending(restored);if(restored?.operation==="selection"){setSelection(ENDPOINTS.saveWorkCompositionSelection.body!.parse(restored.body).selection);}if(restored?.operation==="basis"){setSelectedId(restored.compositionId!);setBasis(ENDPOINTS.saveWorkCompositionBasis.body!.parse(restored.body).document);setBasisOwnerId(restored.compositionId!);setBasisDirty(true);}}catch{}});return()=>{active.current=false;};},[storageKey]);
@@ -41,7 +44,7 @@ function ScopedWorkCompositionWorkbench({projectId,projectTitle,accountId,initia
  React.useEffect(()=>{const warn=(event:BeforeUnloadEvent)=>{if(basisDirty||pending){event.preventDefault();event.returnValue="";}};window.addEventListener("beforeunload",warn);return()=>window.removeEventListener("beforeunload",warn);},[basisDirty,pending]);
  function updateCurrent(value:WorkCompositionResource){if(value.compositionId!==selectedId)setSelection(value.current.selection);setCompositions(previous=>previous.some(item=>item.compositionId===value.compositionId)?previous.map(item=>item.compositionId===value.compositionId?value:item):[...previous,value]);setSelectedId(value.compositionId);}
  async function submit(command:Command){if(inFlight.current)return;inFlight.current=true;setBusy(true);setError(null);setMessage(null);setPending(command);try{localStorage.setItem(storageKey,JSON.stringify(command));}catch{setMessage("当前窗口会保留原请求；浏览器存储不可用，离开页面前请确认保存结果。");}
-  try{const result=await execute(command);if(!active.current)return;if(command.operation==="basis")setBasisDirty(false);updateCurrent(result.composition);if(command.operation==="selection")setSelection(result.composition.current.selection);setPending(null);try{localStorage.removeItem(storageKey);}catch{}setMessage(command.operation==="selection"?"表达选择已保存，已有稿件继续保留。":"已保存，可刷新读回。");}
+  try{const result=await execute(command,client);if(!active.current)return;if(command.operation==="basis")setBasisDirty(false);updateCurrent(result.composition);if(command.operation==="selection")setSelection(result.composition.current.selection);setPending(null);try{localStorage.removeItem(storageKey);}catch{}setMessage(command.operation==="selection"?"表达选择已保存，已有稿件继续保留。":"已保存，可刷新读回。");}
   catch(reason){if(!active.current)return;const code=(reason as {code?:string})?.code;if(["ConflictError","CONFLICT","VERSION_CONFLICT","OwnershipError","ValidationError"].includes(code??"")){setPending(null);try{localStorage.removeItem(storageKey);}catch{}}setError(describeUserError(reason,"未确认保存结果。请恢复原请求，手工输入已保留。"));}
   finally{inFlight.current=false;if(active.current)setBusy(false);}
  }

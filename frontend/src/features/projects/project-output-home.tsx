@@ -1,11 +1,12 @@
 "use client";
+import {useCreationWorkspace,useCreationScope,creationScopeKey,type CreationOperation} from "@/lib/creation-workspace-scope";
 
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { NewProjectForm, type NewProjectFormValues } from "./new-project-form";
-import { client } from "@/lib/contract-client";
+import { client as legacyClient } from "@/lib/contract-client";
 import { describeUserError } from "@/lib/ai-error-humanize";
 
 export interface ProjectWorkOutput {
@@ -23,10 +24,12 @@ export function recommendedWorkChoice(_platform: string | null | undefined): Wor
   return "video";
 }
 
-export async function submitInitialGraphicBody(accountId: string | null | undefined, outputId: string, sourceItemId?: string): Promise<"submitted" | "unavailable" | "source-unavailable" | "unknown"> {
-  if (!accountId) return "unavailable";
+export async function submitInitialGraphicBody(accountId: string | null | undefined, outputId: string, sourceItemId?: string,operation?:CreationOperation): Promise<"submitted" | "unavailable" | "source-unavailable" | "unknown"> {
+  const client=operation?.client??legacyClient;
+  if (!operation?.scope.groupId&&!accountId) return "unavailable";
+  operation?.assertCurrent();
   try {
-    const capabilities = await client.listCreativeCapabilities({ params: undefined, query: { accountId, outputId }, body: undefined });
+    const capabilities = await client.listCreativeCapabilities({ params: undefined, query: { ...(!operation?.scope.groupId&&accountId?{accountId}:{}), outputId }, body: undefined });
     const body = capabilities.items.find((item) => item.outputType === "image" && item.kind === "body" && item.platform === "xiaohongshu")
       ?? capabilities.items.find((item) => item.outputType === "image" && item.kind === "body" && item.platform === null);
     if (body?.state !== "supported") return "unavailable";
@@ -37,16 +40,19 @@ export async function submitInitialGraphicBody(accountId: string | null | undefi
     return "submitted";
   } catch (error) {
     if (sourceItemId && (error as { code?: unknown })?.code === "SOURCE_UNAVAILABLE") return "source-unavailable";
+    operation?.assertCurrent();
     // Network acknowledgement can be lost after a task is persisted. The result list
     // on the workbench remains authoritative after navigation.
-    return "unknown";
+    operation?.assertCurrent();return "unknown";
   }
 }
 
-export async function submitInitialVideoScript(accountId: string | null | undefined, output: ProjectWorkOutput, sourceItemId?: string): Promise<"submitted" | "unavailable" | "source-unavailable" | "unknown"> {
-  if (!accountId) return "unavailable";
+export async function submitInitialVideoScript(accountId: string | null | undefined, output: ProjectWorkOutput, sourceItemId?: string,operation?:CreationOperation): Promise<"submitted" | "unavailable" | "source-unavailable" | "unknown"> {
+  const client=operation?.client??legacyClient;
+  if (!operation?.scope.groupId&&!accountId) return "unavailable";
+  operation?.assertCurrent();
   try {
-    const capabilities = await client.listCreativeCapabilities({ params: undefined, query: { accountId, outputId: output.id }, body: undefined });
+    const capabilities = await client.listCreativeCapabilities({ params: undefined, query: { ...(!operation?.scope.groupId&&accountId?{accountId}:{}), outputId: output.id }, body: undefined });
     const script = capabilities.items.find((item) => item.outputType === "video" && item.kind === "script" && item.platform === output.targetPlatform)
       ?? capabilities.items.find((item) => item.outputType === "video" && item.kind === "script" && item.platform === null);
     if (script?.state !== "supported") return "unavailable";
@@ -57,7 +63,7 @@ export async function submitInitialVideoScript(accountId: string | null | undefi
     return "submitted";
   } catch (error) {
     if (sourceItemId && (error as { code?: unknown })?.code === "SOURCE_UNAVAILABLE") return "source-unavailable";
-    return "unknown";
+    operation?.assertCurrent();return "unknown";
   }
 }
 
@@ -75,7 +81,7 @@ function outputLabel(output: ProjectWorkOutput): string {
   return platform ? `${platform} · ${kind}` : kind;
 }
 
-export function ProjectOutputHome({ projectId, projectTitle, initialOutputs, accountId, accountPlatform, initialType }: {
+function ProjectOutputHomeSession({ projectId, projectTitle, initialOutputs, accountId, accountPlatform, initialType }: {
   projectId: string;
   projectTitle: string;
   initialOutputs: readonly ProjectWorkOutput[];
@@ -83,6 +89,9 @@ export function ProjectOutputHome({ projectId, projectTitle, initialOutputs, acc
   accountPlatform?: string | null;
   initialType?: WorkType;
 }) {
+ const workspace=useCreationWorkspace(useCreationScope());
+ const alive=React.useRef(false);React.useEffect(()=>{alive.current=true;return()=>{alive.current=false;};},[workspace,projectId]);
+
   const router = useRouter();
   const [outputs, setOutputs] = React.useState<readonly ProjectWorkOutput[]>(initialOutputs);
   const request = React.useRef({ id: crypto.randomUUID(), digest: "" });
@@ -95,6 +104,7 @@ export function ProjectOutputHome({ projectId, projectTitle, initialOutputs, acc
   }, [projectId, router]);
 
   async function createWork(values: NewProjectFormValues) {
+    const operation=workspace.capture(),client=operation.client;const check=()=>{operation.assertCurrent();if(!alive.current)throw new DOMException("页面已离开","AbortError");};check();
     const choice = WORK_CHOICES.find(item => item.id === (values.contentType ?? "video"))!;
     const targetPlatform = values.targetPlatform;
     const trimmedTitle = values.name.trim();
@@ -106,17 +116,17 @@ export function ProjectOutputHome({ projectId, projectTitle, initialOutputs, acc
         params: { projectId }, query: undefined,
         body: { title: trimmedTitle, contentType: choice.contentType, ...(targetPlatform ? {targetPlatform} : {}), clientRequestId: request.current.id },
       }) as ProjectWorkOutput;
-      setOutputs((current) => current.some(item => item.id === created.id) ? current : [...current, created]);
+      check();setOutputs((current) => current.some(item => item.id === created.id) ? current : [...current, created]);
       request.current = { id: crypto.randomUUID(), digest: "" };
-      const initialStatus = created.contentType === "image" ? await submitInitialGraphicBody(accountId, created.id)
-        : created.contentType === "video" ? await submitInitialVideoScript(accountId, created) : "submitted";
-      const href = workDestination(projectId, created);
+      const initialStatus = created.contentType === "image" ? await submitInitialGraphicBody(accountId, created.id,undefined,operation)
+        : created.contentType === "video" ? await submitInitialVideoScript(accountId, created,undefined,operation) : "submitted";
+      check();const href = workDestination(projectId, created);
       if (values.enterAfterCreate) {
         router.push(initialStatus !== "submitted" ? `${href}?start=${initialStatus}` : href);
         router.refresh();
       }
     } catch (reason) {
-      throw new Error(describeUserError(reason, "创建作品未完成，请重试。"));
+      check();throw new Error(describeUserError(reason, "创建作品未完成，请重试。"));
     }
   }
 
@@ -143,3 +153,5 @@ export function ProjectOutputHome({ projectId, projectTitle, initialOutputs, acc
     </section>
   </main>;
 }
+
+export function ProjectOutputHome(props:Parameters<typeof ProjectOutputHomeSession>[0]){const selection=useCreationScope();return <ProjectOutputHomeSession key={creationScopeKey(selection)+":"+(props.projectId)} {...props}/>;}

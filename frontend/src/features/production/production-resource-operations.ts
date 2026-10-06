@@ -1,3 +1,4 @@
+import {createCreationWorkspace,readCreationScope,type CreationOperation} from "@/lib/creation-workspace-scope";
 import {client} from "@/lib/contract-client";
 const POLL_MS = 4000;
 // [FE-H01] 后台长任务轮询退避上限:决策/渲染都是分钟级(MiniMax 下更久),不能设「最多轮
@@ -279,8 +280,10 @@ export async function uploadProductionAsset(
   file: File,
   assetType: "video" | "subtitle" | "image",
   // [T-294] 用料链 role 可覆盖:B-roll 素材传 "broll"(缺省按类型:video=clip / 其它=reference)。
-  role?: string,
+  role?:string,captured?:CreationOperation,
 ): Promise<string> {
+  const workspace=captured?null:createCreationWorkspace(readCreationScope());workspace?.activate();const operation=captured??workspace!.capture(),client=operation.client;
+  try{operation.assertCurrent();
   const mimeType =
     file.type ||
     (assetType === "video"
@@ -303,16 +306,16 @@ export async function uploadProductionAsset(
     const put = await fetch(upload.uploadUrl, {
       method: "PUT",
       headers: { "content-type": mimeType },
-      body: file,
+      body:file,signal:operation.signal,
     });
-    if (!put.ok) throw new Error(`上传失败(PUT ${put.status})`);
+    operation.assertCurrent();if (!put.ok) throw new Error(`上传失败(PUT ${put.status})`);
   }
   const asset = (await client.completeUpload({
     params: { uploadId: upload.uploadId },
     query: undefined,
     body: { name: file.name },
   })) as unknown as WireAsset;
-  if (!asset?.id) throw new Error("上传完成但没有返回 asset id");
+  operation.assertCurrent();if (!asset?.id) throw new Error("上传完成但没有返回 asset id");
   // 用料链是制作页后续读取的真入口；登记失败必须让用户看到，不能假报“已上传可用”。
   await client.createMaterialLink({
     params: undefined,
@@ -325,7 +328,8 @@ export async function uploadProductionAsset(
       stage: "production",
     },
   });
-  return asset.id;
+  operation.assertCurrent();return asset.id;
+  }finally{workspace?.dispose();}
 }
 
 // ── 组件 ──────────────────────────────────────────────────────────────────────

@@ -1,4 +1,5 @@
 "use client";
+import {useCreationClient,useCreationScope,creationScopeKey,readCreationScope} from "@/lib/creation-workspace-scope";
 
 import {useCallback,useEffect,useMemo,useRef,useState} from "react";
 import Link from "next/link";
@@ -10,6 +11,9 @@ import {readCurrentAccountId} from "@/lib/http-transport";
 import type {CreativeCanvasResource} from "@creatoros/contract";
 
 export function CanvasLibrary({embedded=false}:{embedded?:boolean}={}){
+ const client=useCreationClient(),workspaceSelection=useCreationScope(),workspaceKey=creationScopeKey(workspaceSelection);
+ const readCurrentAccountId=()=>{const selected=readCreationScope();return selected.groupId??selected.accountId;};
+
  const router=useRouter(),params=useSearchParams(),projectId=params.get("projectId");
  const [items,setItems]=useState<CreativeCanvasResource[]>([]),[projectNames,setProjectNames]=useState<Record<string,string>>({}),[projectTitle,setProjectTitle]=useState<string|null>(null),[loading,setLoading]=useState(true),[error,setError]=useState(""),[creating,setCreating]=useState(false),[accountReady,setAccountReady]=useState(false);
  const refreshId=useRef(0),alive=useRef(true);
@@ -25,14 +29,14 @@ export function CanvasLibrary({embedded=false}:{embedded?:boolean}={}){
     projectId?client.getProject({params:{projectId},query:undefined,body:undefined}):Promise.resolve(null),
    ]);
    if(id!==refreshId.current||!alive.current||accountId!==readCurrentAccountId())return;
-   setItems((canvases as unknown as CreativeCanvasResource[]).filter(item=>item.accountId===accountId));
+   setItems((canvases as unknown as CreativeCanvasResource[]).filter(item=>workspaceSelection.groupId?item.groupId===workspaceSelection.groupId:item.accountId===accountId));
    if(project)setProjectTitle(project.title);
    try{const projects=await client.listProjects({params:undefined,query:{page:1,pageSize:100},body:undefined});if(id===refreshId.current)setProjectNames(Object.fromEntries((projects as unknown as Array<{id:string;title:string}>).map(item=>[item.id,item.title])));}catch{if(id===refreshId.current)setProjectNames({});}
   }catch(e){if(id===refreshId.current)setError(projectId?"作品或画布暂时无法读取，请返回作品重试。":e instanceof Error?e.message:"画布读取失败");}
   finally{if(id===refreshId.current)setLoading(false);}
  },[projectId]);
  useEffect(()=>{alive.current=true;queueMicrotask(()=>{if(alive.current)void refresh();});return()=>{alive.current=false;refreshId.current++;};},[refresh]);
- useAccountsChanged(useCallback(()=>{setItems([]);void refresh();},[refresh]));
+ useAccountsChanged(useCallback(()=>{if(creationScopeKey(readCreationScope())===workspaceKey)return;setItems([]);void refresh();},[refresh]));
  const visible=useMemo(()=>projectId?items.filter(item=>item.projectId===projectId):items,[items,projectId]);
  async function create(){
   if(creating||!accountReady||(projectId&&!projectTitle))return;const accountId=readCurrentAccountId(),epoch=refreshId.current;setCreating(true);setError("");

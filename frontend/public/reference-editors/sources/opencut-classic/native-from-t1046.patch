@@ -3,15 +3,15 @@
 @@ -0,0 +1,13 @@
 +{
 +  "status": "PASS",
-+  "scope": "同一Bun 1.4.0与现有冻结锁依赖树的连续生产构建，未声称fresh依赖安装或跨OS位复现",
++  "scope": "显式production mode与NODE_ENV定义；同一Bun1.4.0与现有冻结锁依赖树连续生产构建，未声称fresh依赖安装或跨OS位复现",
 +  "files": {
-+    "LICENSE.opencut": "8117f9bb64534f7530fc6139b014fd1c1465f7981f93d1871789150fa3f59d3d",
-+    "NATIVE_BUILD_GRAPH.json": "eb96ad60a39f6d02ca5a0252a4b04bd2c336732de0433cf6661a5a01ca93529e",
-+    "THIRD_PARTY_LICENSES.json": "becfab856e0610ccbc14f1abf05d38c25593b60ada26f553dac667fcd471e8ad",
-+    "THIRD_PARTY_LICENSES.txt": "d3e59d1b80d9ebcccfc76f84dc51d976ed113749afec53d51c02f6832eafe51f",
-+    "effects/preview.jpg": "b318cede7bbe27bfbf1b8b94d41f65b6f52d5f2650ce3a153d03b76c2a1c0190",
 +    "native.css": "e8757103e0fd57d164826df1de27070222dc6b2ba23bcd4bb32a3cbbe64ee688",
-+    "native.js": "fe56232f3e2ce56e15f4da2c3ce188317605870056bfedfeacf594efe0d2fba3"
++    "native.js": "f61b0939ff9a185861dbc7addee2c40ef1b3a0d71cfac81c31c41d1f43a50354",
++    "NATIVE_BUILD_GRAPH.json": "d1bcbd11d320f80c93e9c4d91c3293375e608b0099046f6d63c28949633f65f5",
++    "THIRD_PARTY_LICENSES.txt": "d3e59d1b80d9ebcccfc76f84dc51d976ed113749afec53d51c02f6832eafe51f",
++    "THIRD_PARTY_LICENSES.json": "becfab856e0610ccbc14f1abf05d38c25593b60ada26f553dac667fcd471e8ad",
++    "LICENSE.opencut": "8117f9bb64534f7530fc6139b014fd1c1465f7981f93d1871789150fa3f59d3d",
++    "effects/preview.jpg": "b318cede7bbe27bfbf1b8b94d41f65b6f52d5f2650ce3a153d03b76c2a1c0190"
 +  }
 +}
 --- a/README.creatoros.md
@@ -55,7 +55,7 @@
 -使用 Bun1.4.0（首次安装实测）/Node25.9.0，可用默认公开 npm registry。source archive 排除 node_modules、环境文件、服务器/认证页面、analytics及测试harness。原始完整 source 链接与提交保留。
 +## 重建
 +
-+本次实际工具链 Bun 1.4.0、Vite 6.4.3、TypeScript 6.0.2（原锁依赖）。
++本次实际工具链 Bun 1.4.0、Vite 6.4.3、TypeScript 6.0.2（原锁依赖）。原生Vite Library构建显式设置生产mode，并将process.env.NODE_ENV定义为production常量，避免浏览器依赖不存在的Node全局。
  
  ```bash
  bun install --frozen-lockfile --ignore-scripts
@@ -86,7 +86,7 @@
 +## 本轮证据与限制
  
 -本次不下载、打包 Google 字体二进制或其预览图；只展示浏览器系统字体，默认 Arial。原站未实现收藏/我的字体页及云音效、贴纸搜索、未来占位工具在嵌入稿面隐藏。效果预览图片源自固定上游 public/effects/preview.jpg，未新增第三方图。完整来源与素材来源仍应随源码保留。
-+类型与生产构建通过，原采纳/冻结/归属/lease回归13项68断言通过；慢资源取消3项12断言通过。原四区、同轨文字、Undo/Redo、真实Select与复选上下文菜单、焦点/外部点击、通知作用域和跨owner清理的JSDOM探针使用明确命名的compositor/Canvas fixture，不能证明WebGPU、真实像素、MP4或系统剪贴板。
++类型与生产构建通过，原采纳/冻结/归属/lease回归13项68断言通过；慢资源取消3项12断言通过。最终生产JS没有未替换的process.env.NODE_ENV或未守卫的全局process引用。原四区、同轨文字、Undo/Redo、真实Select与复选上下文菜单、焦点/外部点击、通知作用域和跨owner清理的JSDOM探针先移除process全局，再使用明确命名的compositor/Canvas fixture，不能证明WebGPU、真实像素、MP4或系统剪贴板。
  
 -## 实测边界
 -
@@ -109,7 +109,7 @@
 +原生产bundle两次JSDOM探针因环境没有WebGPU失败，原日志保留。连续生产重建记录见 `NATIVE_REBUILD_CONSISTENCY.json`；只说明同一已安装锁依赖树的重建，不声称跨OS/全工具链位复现。原opencut-wasm 0.2.10没有GPU device或compositor销毁API；dispose释放所有当前纹理并缩小/移除canvas，但其模块GPU初始化对象仍保留至浏览器文档关闭，不能声称完全free设备。
 --- a/UPSTREAM.json
 +++ b/UPSTREAM.json
-@@ -21,8 +21,26 @@
+@@ -21,8 +21,28 @@
      }
    },
    "protocol": {
@@ -137,7 +137,9 @@
 +    ],
 +    "nativeProjectVersion": 31,
 +    "browserVerification": "pending",
-+    "gpuDeviceDisposeApi": "not-provided-by-opencut-wasm-0.2.10"
++    "gpuDeviceDisposeApi": "not-provided-by-opencut-wasm-0.2.10",
++    "viteMode": "production",
++    "browserNodeEnvDefinition": "production"
 +  }
 +}
 --- /dev/null
@@ -194,7 +196,7 @@
 +`;
 +writeFileSync(source,css);
 +const {referenceLicenses}=await import('../reference-license-plugin.ts');
-+await build({configFile:false,root:app,base:'./',plugins:[...(domFixture?[{name:'explicit-dom-compositor-fixture',enforce:'pre',resolveId(id){if(id.endsWith('compositor/wasm-compositor'))return resolve(app,'src/embedded/__fixtures__/dom-compositor.ts');}}]:[]),{name:'native-radix-shadow-focus',enforce:'pre',transform(code,id){if(!id.includes('/@radix-ui/')||!id.includes('/dist/')||!code.includes('document.activeElement'))return;return {code:`import {nativeActiveElement as __nativeActiveElement} from ${JSON.stringify(resolve(app,'src/embedded/native-host.ts'))};\n`+code.replace(/document\.activeElement/g,'__nativeActiveElement()'),map:null};}},{name:'native-sonner-boundary',enforce:'pre',transform(code,id){if(!id.includes('/sonner/')||!id.endsWith('/index.mjs'))return;let scoped=code.replace(sonnerMatches[0][0],'').replace(/document\.activeElement/g,'__nativeActiveElement()').replace('window.removeEventListener("visibilitychange"','document.removeEventListener("visibilitychange"').replace(/document\.addEventListener\("keydown",(\w+)\)/g,'__nativeAddKeydown($1)').replace(/document\.removeEventListener\("keydown",(\w+)\)/g,'__nativeRemoveKeydown($1)');if(scoped===code||scoped.includes(sonnerMatches[0][0]))throw Error('通知库原生边界适配失败。');return {code:`import {nativeActiveElement as __nativeActiveElement,ownsNativeEvent,nativeFocused} from ${JSON.stringify(resolve(app,'src/embedded/native-host.ts'))};\nconst __nativeKeydowns=new Map();function __nativeAddKeydown(handler){const scoped=event=>{if(ownsNativeEvent(event)||nativeFocused())handler(event);};__nativeKeydowns.set(handler,scoped);document.addEventListener('keydown',scoped);}function __nativeRemoveKeydown(handler){const scoped=__nativeKeydowns.get(handler);if(scoped)document.removeEventListener('keydown',scoped);__nativeKeydowns.delete(handler);};\n`+scoped+`\nObject.assign(${sonnerToast},{nativeReset(){${sonnerStore}.toasts=[];${sonnerStore}.dismissedToasts.clear();}});`,map:null};}},react(),tailwindcss(),wasm(),referenceLicenses(),{name:'native-rendered-module-graph',generateBundle(_options,bundle){const modules=[];for(const output of Object.values(bundle)){if(output.type!=='chunk')continue;for(const [id,module] of Object.entries(output.modules)){if(module.renderedLength===0||id.includes('/node_modules/'))continue;modules.push({module:id.startsWith('\0')?id:relative(app,id.split('?')[0]).replace(/^.*apps\/web\//,''),renderedLength:module.renderedLength});}}this.emitFile({type:'asset',fileName:'NATIVE_BUILD_GRAPH.json',source:JSON.stringify({fixture:domFixture,entry:'src/embedded/native-entry.tsx',moduleCount:modules.length,modules:modules.sort((a,b)=>a.module.localeCompare(b.module))},null,2)});}}],resolve:{alias:{...(domFixture?{'@/services/renderer/compositor/wasm-compositor':resolve(app,'src/embedded/__fixtures__/dom-compositor.ts')}:{}),'@':resolve(app,'src'),...Object.fromEntries(['focus-guards','focus-scope','dismissable-layer'].map(name=>['@radix-ui/react-'+name,resolve(app,'src/embedded/radix/'+name+'.tsx')])), 'aria-hidden':resolve(app,'src/embedded/radix/aria-hidden.ts'),'react-remove-scroll':resolve(app,'src/embedded/radix/remove-scroll.tsx'),'next/image':resolve(app,'src/embedded/next-image.tsx'),'next/link':resolve(app,'src/embedded/next-link.tsx'),'next/navigation':resolve(app,'src/embedded/next-navigation.ts')}},build:{outDir:domFixture?'native-dom-fixture-dist':'native-dist',emptyOutDir:true,target:'esnext',lib:{entry:resolve(app,'src/embedded/native-entry.tsx'),formats:['es'],fileName:()=> 'native.js',cssFileName:'native'},rollupOptions:{output:{assetFileNames:asset=>asset.names?.some(name=>name.endsWith('.css'))?'native.css':'assets/[name]-[hash][extname]'}}},css:{postcss:{plugins:[]}}});
++await build({configFile:false,root:app,base:'./',mode:'production',define:{'process.env.NODE_ENV':JSON.stringify('production')},plugins:[...(domFixture?[{name:'explicit-dom-compositor-fixture',enforce:'pre',resolveId(id){if(id.endsWith('compositor/wasm-compositor'))return resolve(app,'src/embedded/__fixtures__/dom-compositor.ts');}}]:[]),{name:'native-radix-shadow-focus',enforce:'pre',transform(code,id){if(!id.includes('/@radix-ui/')||!id.includes('/dist/')||!code.includes('document.activeElement'))return;return {code:`import {nativeActiveElement as __nativeActiveElement} from ${JSON.stringify(resolve(app,'src/embedded/native-host.ts'))};\n`+code.replace(/document\.activeElement/g,'__nativeActiveElement()'),map:null};}},{name:'native-sonner-boundary',enforce:'pre',transform(code,id){if(!id.includes('/sonner/')||!id.endsWith('/index.mjs'))return;let scoped=code.replace(sonnerMatches[0][0],'').replace(/document\.activeElement/g,'__nativeActiveElement()').replace('window.removeEventListener("visibilitychange"','document.removeEventListener("visibilitychange"').replace(/document\.addEventListener\("keydown",(\w+)\)/g,'__nativeAddKeydown($1)').replace(/document\.removeEventListener\("keydown",(\w+)\)/g,'__nativeRemoveKeydown($1)');if(scoped===code||scoped.includes(sonnerMatches[0][0]))throw Error('通知库原生边界适配失败。');return {code:`import {nativeActiveElement as __nativeActiveElement,ownsNativeEvent,nativeFocused} from ${JSON.stringify(resolve(app,'src/embedded/native-host.ts'))};\nconst __nativeKeydowns=new Map();function __nativeAddKeydown(handler){const scoped=event=>{if(ownsNativeEvent(event)||nativeFocused())handler(event);};__nativeKeydowns.set(handler,scoped);document.addEventListener('keydown',scoped);}function __nativeRemoveKeydown(handler){const scoped=__nativeKeydowns.get(handler);if(scoped)document.removeEventListener('keydown',scoped);__nativeKeydowns.delete(handler);};\n`+scoped+`\nObject.assign(${sonnerToast},{nativeReset(){${sonnerStore}.toasts=[];${sonnerStore}.dismissedToasts.clear();}});`,map:null};}},react(),tailwindcss(),wasm(),referenceLicenses(),{name:'native-rendered-module-graph',generateBundle(_options,bundle){const modules=[];for(const output of Object.values(bundle)){if(output.type!=='chunk')continue;for(const [id,module] of Object.entries(output.modules)){if(module.renderedLength===0||id.includes('/node_modules/'))continue;modules.push({module:id.startsWith('\0')?id:relative(app,id.split('?')[0]).replace(/^.*apps\/web\//,''),renderedLength:module.renderedLength});}}this.emitFile({type:'asset',fileName:'NATIVE_BUILD_GRAPH.json',source:JSON.stringify({fixture:domFixture,entry:'src/embedded/native-entry.tsx',moduleCount:modules.length,modules:modules.sort((a,b)=>a.module.localeCompare(b.module))},null,2)});}}],resolve:{alias:{...(domFixture?{'@/services/renderer/compositor/wasm-compositor':resolve(app,'src/embedded/__fixtures__/dom-compositor.ts')}:{}),'@':resolve(app,'src'),...Object.fromEntries(['focus-guards','focus-scope','dismissable-layer'].map(name=>['@radix-ui/react-'+name,resolve(app,'src/embedded/radix/'+name+'.tsx')])), 'aria-hidden':resolve(app,'src/embedded/radix/aria-hidden.ts'),'react-remove-scroll':resolve(app,'src/embedded/radix/remove-scroll.tsx'),'next/image':resolve(app,'src/embedded/next-image.tsx'),'next/link':resolve(app,'src/embedded/next-link.tsx'),'next/navigation':resolve(app,'src/embedded/next-navigation.ts')}},build:{outDir:domFixture?'native-dom-fixture-dist':'native-dist',emptyOutDir:true,target:'esnext',lib:{entry:resolve(app,'src/embedded/native-entry.tsx'),formats:['es'],fileName:()=> 'native.js',cssFileName:'native'},rollupOptions:{output:{assetFileNames:asset=>asset.names?.some(name=>name.endsWith('.css'))?'native.css':'assets/[name]-[hash][extname]'}}},css:{postcss:{plugins:[]}}});
 +const output=resolve(app,domFixture?'native-dom-fixture-dist':'native-dist');
 +for(const name of readdirSync(output))if(name.endsWith('.css')){const dest=resolve(output,name);const built=postcss.parse(readFileSync(dest,'utf8'));built.walkRules(rule=>{rule.selector=rule.selector.replace(/:root/g,':host').replace(/\bhtml\b/g,':host').replace(/\bbody\b/g,'[data-native-root]');});writeFileSync(dest,built.toString());}
 +console.log('原生 ESM / CSS 已生成，未执行浏览器或MP4导出。');
@@ -3927,3 +3929,282 @@
  	URL.revokeObjectURL(url);
  }
  
+
+--- a/apps/web/src/embedded/native-host.ts
++++ b/apps/web/src/embedded/native-host.ts
+@@ -1,15 +1,43 @@
+ import type {NativeLifetime} from './native-lifecycle';
+ export type NativeTheme={mode:'light'|'dark';tokens:Record<string,string>;fontFamily:string;fontSize:string;density:string};
+-export type NativeOwner={accountId:string;outputId:string;sourceVersionId:string};
+-export type NativeHost={container:HTMLElement;portalContainer:HTMLElement;owner:NativeOwner;theme:NativeTheme;lifetime:NativeLifetime;disabled:boolean;onChanged:()=>void;onError:(message:string)=>void;importMedia:(file:File)=>Promise<{mediaId:string}>};
++export type NativeOwner={groupId:string|null;accountId:string|null;projectId:string;outputId:string;sourceVersionId:string};
++export type NativeContextEvent={kind:'native-context';contextEpoch:number;outputId:string;sceneId:string|null;selectedElements:unknown[];documentChanged:boolean};
++export function nativeOwnerKey(owner:NativeOwner){return JSON.stringify([owner.groupId?["group",owner.groupId]:["account",owner.accountId],owner.projectId,owner.outputId,owner.sourceVersionId]);}
++export type NativeHost={container:HTMLElement;portalContainer:HTMLElement;owner:NativeOwner;theme:NativeTheme;lifetime:NativeLifetime;disabled:boolean;onDocumentChanged?:()=>void;readPreviewPlaying?:()=>boolean;onChanged:(event?:NativeContextEvent)=>void;onError:(message:string)=>void;importMedia:(file:File)=>Promise<{mediaId:string}>};
+ let host:NativeHost|null=null;
+-export function installNativeHost(value:NativeHost){if(host)throw Error('旧剪辑实例尚未销毁。');host=value;return()=>{if(host===value)host=null;};}
++export function installNativeHost(value:NativeHost){if(host)throw Error('旧剪辑实例尚未销毁。');contextController.abort();contextController=new AbortController();contextEpoch=0;lastNativeContext={sceneId:null,selectedElements:[],documentChanged:false};host=value;return()=>{if(host===value){contextController.abort();host=null;}};}
+ export function nativeHost(){if(!host)throw Error('剪辑组件尚未挂载。');return host;}
+ export function currentNativeHost(){return host;}
+-export function nativeChanged(){if(host&&!host.lifetime.signal.aborted)host.onChanged();}
++export function nativeChanged(){if(host&&!host.lifetime.signal.aborted){if(host.onDocumentChanged)host.onDocumentChanged();else invalidateNativeContext({...lastNativeContext,documentChanged:true});}}
+ export function nativePortal(){return nativeHost().portalContainer;}
+ export function nativeActiveElement():Element|null{const root=host?.container.getRootNode();return root instanceof ShadowRoot?root.activeElement:document.activeElement;}
+ export function ownsNativeEvent(event:Event){if(!host||host.lifetime.signal.aborted||host.disabled)return false;const path=event.composedPath();return path.includes(host.container)||path.includes(host.portalContainer)||path.some(node=>node instanceof Node&&(host!.container.contains(node)||host!.portalContainer.contains(node)));}
+ export function nativeFocused(){if(!host||host.lifetime.signal.aborted||host.disabled)return false;const active=nativeActiveElement();return !!active&&(host.container.contains(active)||host.portalContainer.contains(active));}
+ const appliedTokens=new WeakMap<HTMLElement,Set<string>>();
+ export function applyNativeTheme(target:HTMLElement,theme:NativeTheme){const next=new Set(Object.keys(theme.tokens).filter(key=>/^--creatoros-[a-z0-9-]+$/i.test(key)));for(const key of appliedTokens.get(target)??[])if(!next.has(key))target.style.removeProperty(key);for(const key of next)target.style.setProperty(key,theme.tokens[key]);appliedTokens.set(target,next);target.style.fontFamily=theme.fontFamily;target.style.fontSize=theme.fontSize;target.dataset.density=theme.density;target.classList.toggle('dark',theme.mode==='dark');target.dataset.theme=theme.mode;}
++
++let lastNativeContext={sceneId:null as string|null,selectedElements:[] as unknown[],documentChanged:false};let contextEpoch=0;let contextController=new AbortController();
++export function currentNativeContextEpoch(){return contextEpoch;}
++export function currentNativeContextSignal(){return contextController.signal;}
++export function invalidateNativeContext(value:Omit<NativeContextEvent,'kind'|'contextEpoch'|'outputId'>){contextController.abort();contextController=new AbortController();contextEpoch++;lastNativeContext=value;const h=currentNativeHost();if(h&&!h.lifetime.signal.aborted)h.onChanged({kind:'native-context',contextEpoch,outputId:h.owner.outputId,...value});}
++
++export type NativeContextPort={
++ read:()=>{documentFingerprint:string;sceneId:string;selectedElements:unknown[];playing:boolean};
++ onDocument:(listener:()=>void)=>()=>void;onSelection:(listener:()=>void)=>()=>void;onSeek:(listener:()=>void)=>()=>void;onPlayback:(listener:()=>void)=>()=>void;
++};
++// SEMANTIC_BOUNDARY_ALLOW: exact document/selection/state changes invalidate local stale operations only.
++export function bindNativeContext(port:NativeContextPort){
++ const h=nativeHost();let previous=port.read();let live=true;
++ const observe=(seek=false)=>{if(!live||h.lifetime.signal.aborted)return;const next=port.read();const documentChanged=next.documentFingerprint!==previous.documentFingerprint;
++  const changed=seek||documentChanged||next.sceneId!==previous.sceneId||JSON.stringify(next.selectedElements)!==JSON.stringify(previous.selectedElements)||next.playing!==previous.playing;previous=next;
++  if(changed)invalidateNativeContext({sceneId:next.sceneId,selectedElements:next.selectedElements,documentChanged});
++ };
++ const document=()=>observe();const playing=()=>port.read().playing;h.onDocumentChanged=document;h.readPreviewPlaying=playing;
++ const stops=[port.onDocument(document),port.onSelection(()=>observe()),port.onSeek(()=>observe(true)),port.onPlayback(()=>observe())];
++ return()=>{if(!live)return;live=false;stops.forEach(stop=>stop());if(h.onDocumentChanged===document)delete h.onDocumentChanged;if(h.readPreviewPlaying===playing)delete h.readPreviewPlaying;};
++}
++
++// SEMANTIC_BOUNDARY_ALLOW: 显式宿主请求暂停真实预览，不选择/变速/更改工程。
++export function pauseNativePlaybackForContext(playback:{pause:()=>void},assertCurrent:()=>void){assertCurrent();playback.pause();assertCurrent();return currentNativeContextEpoch();}
++// 原声仅在原预览已暂停时读取。read回调才分配Input；不暗暂停并沿用旧epoch。
++export function withNativeOriginalAudioPreviewGuard<T>(read:()=>T|Promise<T>,manual:()=>T):T|Promise<T>{const h=nativeHost();h.lifetime.assertCurrent();if(h.readPreviewPlaying?.()===true)return manual();return read();}
+--- a/apps/web/src/embedded/native-entry.tsx
++++ b/apps/web/src/embedded/native-entry.tsx
+@@ -13,11 +13,11 @@
+ import {cancelPendingMediaImports} from './media-registration';
+ import './native.css';
+ const lease=new DocumentLease();
+-export type NativeOptions={owner:NativeOwner;theme:NativeTheme;portalContainer:HTMLElement;signal:AbortSignal;onChanged:()=>void;onError:(message:string)=>void;importMedia:(file:File)=>Promise<{mediaId:string}>};
++export type NativeOptions={owner:NativeOwner;theme:NativeTheme;portalContainer:HTMLElement;signal:AbortSignal;onChanged:NativeHost['onChanged'];onError:(message:string)=>void;importMedia:(file:File)=>Promise<{mediaId:string}>};
+ function NativeApp({loaded,generation,exporting,theme}:{loaded:boolean;generation:number;exporting:boolean;theme:NativeTheme}){return <TooltipProvider><Toaster theme={theme.mode} position="bottom-right" toastOptions={{className:'native-toast'}}/>{loaded?<div key={generation} className="native-workbench"><EditorRuntimeBindings/><EditorHeader/><div className="min-h-0 min-w-0 flex-1"><EditorLayout/></div></div>:<div className="native-loading" role="status">正在载入视频稿…</div>}{exporting&&<div role="status" aria-live="polite" className="native-export-status">正在导出当前稿，完成后可以继续编辑…</div>}</TooltipProvider>;}
+ export async function mount(container:HTMLElement,options:NativeOptions){
+  if(!(container instanceof HTMLElement)||!(options.portalContainer instanceof HTMLElement)||container.getRootNode()!==options.portalContainer.getRootNode())throw Error('剪辑容器与弹层容器必须属于同一工作面。');
+- if(!options.owner.accountId||!options.owner.outputId||!options.owner.sourceVersionId)throw Error('剪辑作品归属缺失。');
++ if(!options.owner.projectId||!options.owner.outputId||!options.owner.sourceVersionId||(!options.owner.groupId&&!options.owner.accountId))throw Error('作品归属缺失。');
+  const life=new NativeLifetime(options.signal);let release=()=>{},uninstall=()=>{},root:Root|null=null,closing:Promise<void>|null=null,ownsLease=false;let controller:ReturnType<typeof createNativeController>|null=null;
+  const dispose=():Promise<void>=>{if(closing)return closing;closing=Promise.resolve().then(async()=>{if(root){flushSync(()=>root!.unmount());root=null;}const coreClosed=controller?destroyNativeCore():Promise.resolve();await life.drain();await coreClosed;if(controller){controller.clear();controller=null;toast.dismiss();(toast as typeof toast&{nativeReset?:()=>void}).nativeReset?.();}uninstall();if(ownsLease){options.portalContainer.replaceChildren();container.replaceChildren();container.inert=false;options.portalContainer.inert=false;}release();});life.cancel();if(controller){advanceEditEpoch();cancelPendingMediaImports('作品已切换。');}return closing;};
+  try{release=await lease.acquire(life.signal,dispose);ownsLease=true;life.assertCurrent();const host:NativeHost={container,portalContainer:options.portalContainer,owner:Object.freeze({...options.owner}),theme:options.theme,lifetime:life,disabled:false,onChanged:options.onChanged,onError:options.onError,importMedia:options.importMedia};uninstall=installNativeHost(host);container.dataset.nativeRoot='opencut';options.portalContainer.dataset.nativePortal='opencut';container.tabIndex=0;container.inert=false;options.portalContainer.inert=false;applyNativeTheme(container,host.theme);applyNativeTheme(options.portalContainer,host.theme);root=createRoot(container);let loaded=false,exporting=false,generation=0;const render=()=>{if(!root||life.signal.aborted)return;flushSync(()=>root!.render(<NativeApp loaded={loaded} exporting={exporting} generation={generation} theme={host.theme}/>));};controller=createNativeController(state=>{const wasLoaded=loaded;loaded=state.loaded;exporting=state.exporting??false;if(loaded&&!wasLoaded)generation++;render();});render();
+--- a/apps/web/src/embedded/native-controller.ts
++++ b/apps/web/src/embedded/native-controller.ts
+@@ -15,19 +15,31 @@
+ import {ZERO_MEDIA_TIME} from '@/wasm';
+ import {exportFrozenSnapshot} from './frozen-export';
+ import {advanceEditEpoch} from './edit-lock';
+-import {NativePatchReplay,readNativeContext,seekNative} from './native-operations';
+-import {nativeHost} from './native-host';
++import {NativePatchReplay,readNativeContext,seekNative,nativeJson,canonicalNative} from './native-operations';
++import {nativeHost,currentNativeContextEpoch,invalidateNativeContext,bindNativeContext,pauseNativePlaybackForContext} from './native-host';
++import {readOriginalAudioRange,type OriginalAudioRangeRequest} from './media-registration';
+ import {useAssetsPanelStore} from '@/components/editor/panels/assets/assets-panel-store';
+ import {useTimelineStore} from '@/timeline/timeline-store';
+ import {useKeybindingsStore} from '@/actions/keybindings-store';
+ export async function destroyNativeCore(){const old=EditorCore.getInstance();old.playback.pause();old.save.stop();const audioClosed=old.audio.dispose();old.playback.dispose();old.media.clearAllAssets();await audioClosed;await videoCache.drain();clearImageSources();wasmCompositor.dispose();resetMediaRegistration();storageService.hostReset();EditorCore.reset();useTimelineStore.setState({expandedElementIds:new Set()});useAssetsPanelStore.setState({activeTab:'media',highlightMediaId:null});useKeybindingsStore.setState({overlayDepth:0,openOverlayIds:[],isLoadingProject:false,isRecording:false});}
+ function hydrateDocument(document:any,outputId:string):TProject{if(!document||document.version!==CURRENT_PROJECT_VERSION||!Array.isArray(document.scenes)||!document.settings?.fps||!document.metadata||document.metadata.id!==outputId)throw Error('此剪辑工程版本或作品归属不匹配，请保留原稿另建新稿。');const copy=structuredClone(document);copy.metadata.createdAt=new Date(copy.metadata.createdAt);copy.metadata.updatedAt=new Date(copy.metadata.updatedAt);copy.scenes=copy.scenes.map((scene:any)=>({...scene,createdAt:new Date(scene.createdAt),updatedAt:new Date(scene.updatedAt)}));return copy;}
+ export function createNativeController(view:(state:{loaded:boolean;exporting?:boolean;error?:string})=>void){
+- const host=nativeHost(),life=host.lifetime;let loaded=false,queue=Promise.resolve();let requestSignal:AbortSignal|undefined;const check=()=>{life.assertCurrent();if(requestSignal?.aborted)throw new DOMException('原操作已停止。','AbortError');};const replay=new NativePatchReplay(),responses=new Map<string,Promise<any>>();
+- async function load(payload:any){check();if(payload?.outputId!==host.owner.outputId||!Array.isArray(payload.media))throw Error('作品和素材输入缺失或不属于当前稿件。');advanceEditEpoch();loaded=false;view({loaded:false});await destroyNativeCore();check();const editor=EditorCore.getInstance();editor.save.pause();const scene=buildDefaultScene({name:'主画面',isMain:true});const project=payload.document?hydrateDocument(payload.document,payload.outputId):{metadata:{id:payload.outputId,name:payload.title||'视频稿',duration:ZERO_MEDIA_TIME,createdAt:new Date(),updatedAt:new Date()},scenes:[scene],currentSceneId:scene.id,settings:{fps:DEFAULT_FPS,canvasSize:DEFAULT_CANVAS_SIZE,canvasSizeMode:'preset' as const,lastCustomCanvasSize:null,originalCanvasSize:null,background:{type:'color' as const,color:'#000000'}},version:CURRENT_PROJECT_VERSION};
++ const host=nativeHost(),life=host.lifetime;let loaded=false,queue=Promise.resolve();let stopContext:Array<()=>void>=[];
++ const detachContext=()=>{stopContext.forEach(stop=>stop());stopContext=[];};
++ function bindContext(editor:EditorCore){
++  detachContext();
++  // 只排除与原storage同义的scene autosave updatedAt，正文/轨道/settings/media仍完整比较。
++  const fingerprint=()=>canonicalNative(nativeJson({scenes:editor.scenes.getScenes().map(({updatedAt,...scene})=>scene),settings:editor.project.getActive().settings,media:editor.media.getAssets().map(asset=>({id:asset.id,name:asset.name,type:asset.type,size:asset.file.size,lastModified:asset.file.lastModified,width:asset.width,height:asset.height,duration:asset.duration,fps:asset.fps,hasAudio:asset.hasAudio}))}));
++  const stop=bindNativeContext({read:()=>({documentFingerprint:fingerprint(),sceneId:editor.scenes.getActiveScene().id,selectedElements:editor.selection.getSelectedElements(),playing:editor.playback.getIsPlaying()}),
++   onDocument:listener=>{const stopTimeline=editor.timeline.subscribe(listener),stopScenes=editor.scenes.subscribe(listener);return()=>{stopTimeline();stopScenes();};},
++   onSelection:listener=>editor.selection.subscribe(listener),onSeek:listener=>editor.playback.onSeek(listener),onPlayback:listener=>editor.playback.subscribe(listener)});
++  stopContext=[stop];
++ }
++ let requestSignal:AbortSignal|undefined;const check=()=>{life.assertCurrent();if(requestSignal?.aborted)throw new DOMException('原操作已停止。','AbortError');};const replay=new NativePatchReplay(),responses=new Map<string,Promise<any>>();
++ async function load(payload:any){check();if(payload?.outputId!==host.owner.outputId||!Array.isArray(payload.media))throw Error('作品和素材输入缺失或不属于当前稿件。');detachContext();invalidateNativeContext({sceneId:null,selectedElements:[],documentChanged:false});advanceEditEpoch();loaded=false;view({loaded:false});await destroyNativeCore();check();const editor=EditorCore.getInstance();editor.save.pause();const scene=buildDefaultScene({name:'主画面',isMain:true});const project=payload.document?hydrateDocument(payload.document,payload.outputId):{metadata:{id:payload.outputId,name:payload.title||'视频稿',duration:ZERO_MEDIA_TIME,createdAt:new Date(),updatedAt:new Date()},scenes:[scene],currentSceneId:scene.id,settings:{fps:DEFAULT_FPS,canvasSize:DEFAULT_CANVAS_SIZE,canvasSizeMode:'preset' as const,lastCustomCanvasSize:null,originalCanvasSize:null,background:{type:'color' as const,color:'#000000'}},version:CURRENT_PROJECT_VERSION};
+   await storageService.saveProject({project});check();for(const item of payload.media){check();if(typeof item?.mediaId!=='string'||!item.mediaId||!(item.file instanceof File)||!['video','audio','image'].includes(item.type))throw Error('素材缺少真实文件、ID或类型。');rememberMediaFile(item.file,item.mediaId);await storageService.saveMediaAsset({projectId:payload.outputId,mediaAsset:{...item,id:item.mediaId,file:item.file,url:URL.createObjectURL(item.file),name:item.name||item.file.name} as MediaAsset});check();}
+-  await initializeGpuRenderer();check();editor.renderer.setDegraded(!isGpuAvailable());await editor.project.loadProject({id:payload.outputId});check();storageService.hostLoaded();loaded=true;view({loaded:true});return{editor:'opencut-classic',documentVersion:CURRENT_PROJECT_VERSION};
++  await initializeGpuRenderer();check();editor.renderer.setDegraded(!isGpuAvailable());await editor.project.loadProject({id:payload.outputId});check();storageService.hostLoaded();loaded=true;bindContext(editor);invalidateNativeContext({sceneId:editor.scenes.getActiveScene().id,selectedElements:editor.selection.getSelectedElements(),documentChanged:false});view({loaded:true});return{editor:'opencut-classic',documentVersion:CURRENT_PROJECT_VERSION};
+  }
+- async function operate(operation:string,payload:any,requestId:string,signal?:AbortSignal){check();if(signal?.aborted)throw new DOMException('原操作已停止。','AbortError');if(operation==='load')return load(payload);if(!loaded)throw Error('请先载入当前作品。');const editor=EditorCore.getInstance();if(operation==='snapshot'||operation==='context'){await editor.save.flush();check();return operation==='context'?readNativeContext(editor,storageService.snapshot()):storageService.snapshot();}if(operation==='seek')return seekNative(editor,payload,check);if(operation==='apply-tracks')return replay.apply(editor,requestId,payload,check);if(operation==='export'){view({loaded:true,exporting:true});try{return await exportFrozenSnapshot(editor,payload?.format==='webm'?'webm':'mp4',()=>life.signal.aborted||!!signal?.aborted);}finally{if(!life.signal.aborted)view({loaded:true,exporting:false});}}if(operation==='insert-media'){if(!(payload?.file instanceof File)||typeof payload.mediaId!=='string'||!payload.mediaId)throw Error('素材文件与ID缺失。');rememberMediaFile(payload.file,payload.mediaId);const assets=await processMediaAssets({files:[payload.file],signal});check();if(assets.length!==1)throw Error('此素材无法处理。');const asset=await editor.media.addMediaAsset({projectId:host.owner.outputId,asset:assets[0]});check();if(!asset)throw Error('加入素材失败。');return{mediaId:asset.id};}throw Error('此编辑操作尚不支持。');}
+- return {request(operation:string,payload?:unknown,options?:{requestId?:string;signal?:AbortSignal}){life.assertCurrent();const requestId=options?.requestId??crypto.randomUUID();if(requestId.length>256||!requestId)throw Error('编辑回执ID无效。');const prior=operation==='apply-tracks'?undefined:responses.get(requestId);if(prior)return prior;const result=life.run(()=>{const task=queue.then(async()=>{requestSignal=options?.signal;check();const data=await operate(operation,payload,requestId,options?.signal);check();if(options?.signal?.aborted)throw new DOMException('原操作已停止。','AbortError');return{operation,...data};});queue=task.then(()=>{},()=>{});return task;});if(operation!=='apply-tracks'){responses.set(requestId,result);if(responses.size>100)responses.delete(responses.keys().next().value!);}return result;},clear(){loaded=false;responses.clear();advanceEditEpoch();}};
++ async function operate(operation:string,payload:any,requestId:string,signal?:AbortSignal){check();if(signal?.aborted)throw new DOMException('原操作已停止。','AbortError');if(operation==='load')return load(payload);if(!loaded)throw Error('请先载入当前作品。');const editor=EditorCore.getInstance();if(operation==='read-original-audio-range')return readOriginalAudioRange(payload,signal,()=>{check();const p=payload as OriginalAudioRangeRequest;const active=editor.scenes.getActiveScene();if(active.id!==p.sceneId||![active.tracks.main,...active.tracks.overlay,...active.tracks.audio].some(t=>t.elements.some(e=>e.id===p.clipId)))throw Error('原场景或片段已改变。');});if(operation==='snapshot'||operation==='context'){if(operation==='context'&&payload?.pausePlayback===true)pauseNativePlaybackForContext(editor.playback,check);await editor.save.flush();check();return operation==='context'?{...readNativeContext(editor,storageService.snapshot()),contextEpoch:currentNativeContextEpoch()}:storageService.snapshot();}if(operation==='seek')return seekNative(editor,payload,check);if(operation==='apply-tracks')return replay.apply(editor,requestId,payload,check);if(operation==='export'){view({loaded:true,exporting:true});try{return await exportFrozenSnapshot(editor,payload?.format==='webm'?'webm':'mp4',()=>life.signal.aborted||!!signal?.aborted);}finally{if(!life.signal.aborted)view({loaded:true,exporting:false});}}if(operation==='insert-media'){if(!(payload?.file instanceof File)||typeof payload.mediaId!=='string'||!payload.mediaId)throw Error('素材文件与ID缺失。');rememberMediaFile(payload.file,payload.mediaId);const assets=await processMediaAssets({files:[payload.file],signal});check();if(assets.length!==1)throw Error('此素材无法处理。');const asset=await editor.media.addMediaAsset({projectId:host.owner.outputId,asset:assets[0]});check();if(!asset)throw Error('加入素材失败。');return{mediaId:asset.id};}throw Error('此编辑操作尚不支持。');}
++ return {request(operation:string,payload?:unknown,options?:{requestId?:string;signal?:AbortSignal}){life.assertCurrent();const issuedEpoch=currentNativeContextEpoch();const requestId=options?.requestId??crypto.randomUUID();const cacheKey=`${issuedEpoch}:${operation}:${requestId}`;if(requestId.length>256||!requestId)throw Error('编辑回执ID无效。');const prior=operation==='apply-tracks'?undefined:responses.get(cacheKey);if(prior)return prior;const result=life.run(()=>{const task=queue.then(async()=>{requestSignal=options?.signal;check();if(issuedEpoch!==currentNativeContextEpoch())throw new DOMException('时间轴上下文已改变。','AbortError');const data=await operate(operation,payload,requestId,options?.signal);check();if(options?.signal?.aborted)throw new DOMException('原操作已停止。','AbortError');return{operation,...data};});queue=task.then(()=>{},()=>{});return task;});if(operation!=='apply-tracks'){responses.set(cacheKey,result);if(responses.size>100)responses.delete(responses.keys().next().value!);}return result;},clear(){detachContext();loaded=false;responses.clear();invalidateNativeContext({sceneId:null,selectedElements:[],documentChanged:false});advanceEditEpoch();}};
+ }
+--- a/apps/web/src/embedded/media-registration.ts
++++ b/apps/web/src/embedded/media-registration.ts
+@@ -1,3 +1,5 @@
++import {Input,BlobSource,ALL_FORMATS,AudioBufferSink} from 'mediabunny';
++import {nativeOwnerKey,currentNativeContextEpoch,currentNativeContextSignal,type NativeOwner,withNativeOriginalAudioPreviewGuard} from './native-host';
+ import {assertEditable} from './edit-lock';
+ import {nativeHost} from './native-host';
+ import {abortable} from './native-lifecycle';
+@@ -8,3 +10,46 @@
+ export function rememberMediaFile(file:File,id:string){if(!(file instanceof File)||!id)throw Error('素材文件或真实ID缺失。');files.set(file,id);}
+ export function getRegisteredMediaId(file:File){const id=files.get(file);if(!id)throw Error('素材尚未保存至作品。');return id;}
+ export async function registerMediaFile(file:File):Promise<string>{assertEditable();const h=nativeHost(),known=files.get(file);if(known)return known;const controller=new AbortController();pending.add(controller);const abort=()=>controller.abort();h.lifetime.signal.addEventListener('abort',abort,{once:true});const timer=setTimeout(abort,60000);try{return await h.lifetime.run(async()=>{const receipt=await abortable(h.importMedia(file),controller.signal);h.lifetime.assertCurrent();assertEditable();if(typeof receipt?.mediaId!=='string'||!receipt.mediaId)throw Error('素材上传未返回真实ID。');rememberMediaFile(file,receipt.mediaId);return receipt.mediaId;});}finally{clearTimeout(timer);pending.delete(controller);h.lifetime.signal.removeEventListener('abort',abort);}}
++
++export type OriginalAudioRangeRequest={owner:NativeOwner;clipId:string;sceneId:string;contextEpoch:number;nonce:string;file:File;assetFileId:string;sourceId:string;sourceStartSeconds:number;sourceEndSeconds:number};
++// SEMANTIC_BOUNDARY_ALLOW: 原文件连续样本/时钟/身份机械校验；不选择口误、停顿或创作内容。
++export async function readOriginalAudioRange(p:OriginalAudioRangeRequest,signal:AbortSignal|undefined,assertSceneAndClip:()=>void){
++ const host=nativeHost(),epoch=currentNativeContextEpoch(),contextSignal=currentNativeContextSignal();
++ const base={owner:{...p.owner},clipId:p.clipId,sceneId:p.sceneId,contextEpoch:p.contextEpoch,nonce:p.nonce,assetFileId:p.assetFileId,sourceId:p.sourceId,rangeStartSeconds:p.sourceStartSeconds,rangeEndSeconds:p.sourceEndSeconds};
++ const manual=(reason:string,videoFirstTimestamp:number|null=null,audioFirstTimestamp:number|null=null)=>({...base,status:'manual_review' as const,reason,videoFirstTimestamp,audioFirstTimestamp,chunks:[]});
++ const assert=()=>{host.lifetime.assertCurrent();assertSceneAndClip();if(signal?.aborted||contextSignal.aborted||epoch!==currentNativeContextEpoch())throw new DOMException('原声复核上下文已改变。','AbortError');};
++ assert();if(nativeOwnerKey(p.owner)!==nativeOwnerKey(host.owner)||p.contextEpoch!==epoch)throw new Error('原声复核归属或场景已改变。');
++ if(!(p.file instanceof File)||!p.assetFileId||!p.sourceId||!p.nonce||!Number.isFinite(p.sourceStartSeconds)||!Number.isFinite(p.sourceEndSeconds)||p.sourceStartSeconds<0||p.sourceEndSeconds<=p.sourceStartSeconds)return manual('原文件或区间未能验证，请逐项手动复核。');
++ return withNativeOriginalAudioPreviewGuard(async()=>{
++ const input=new Input({formats:ALL_FORMATS,source:new BlobSource(p.file)});const abort=()=>{if(!input.disposed)input.dispose();};
++ for(const s of [signal,contextSignal,host.lifetime.signal])s?.addEventListener('abort',abort,{once:true});
++ let videoFirst:number|null=null,audioFirst:number|null=null;
++ try{
++  const video=await input.getPrimaryVideoTrack();assert();const audio=await input.getPrimaryAudioTrack();assert();
++  if(video){videoFirst=await video.getFirstTimestamp();assert();}if(audio){audioFirst=await audio.getFirstTimestamp();assert();}
++  // 视频零点与 AAC 负预滚是两个事实；绝不以音轨首PTS或固定延迟重签 source zero。
++  if(!audio)return manual('此文件没有可解码音轨，保留手动复核。',videoFirst,audioFirst);
++  if(videoFirst!==0)return manual('此文件视频零点与 source 秒映射未证，保留本项手动复核。',videoFirst,audioFirst);
++  const chunks:Array<{buffer:AudioBuffer;timestamp:number}>=[];let sampleRate:number|undefined,channels:number|undefined,coveredStart:number|undefined,coveredEnd:number|undefined;
++  const sink=new AudioBufferSink(audio);
++  // 从原 Blob 的真实区间API连续读取；不读取retimed预览，也不为每个gap解码到全片末尾。
++  for await(const wrapped of sink.buffers(p.sourceStartSeconds,p.sourceEndSeconds)){
++   assert();const b=wrapped.buffer,t=wrapped.timestamp;
++   if(!Number.isFinite(t)||!Number.isSafeInteger(b.length)||b.length<=0||!Number.isFinite(b.sampleRate)||b.sampleRate<=0||b.numberOfChannels<1)return manual('解码样本维度未证。',videoFirst,audioFirst);
++   if(sampleRate!==undefined&&(sampleRate!==b.sampleRate||channels!==b.numberOfChannels))return manual('音轨采样率或通道变化，保留手动复核。',videoFirst,audioFirst);
++   sampleRate=b.sampleRate;channels=b.numberOfChannels;
++   let first=Math.max(0,Math.floor((p.sourceStartSeconds-t)*sampleRate));let end=Math.min(b.length,Math.ceil((p.sourceEndSeconds-t)*sampleRate));
++   if(coveredEnd!==undefined)first=Math.max(first,Math.ceil((coveredEnd-t)*sampleRate-1e-7));
++   if(end<=first)continue;
++   const start=t+first/sampleRate,finish=t+end/sampleRate;
++   if(coveredEnd!==undefined&&start-coveredEnd>1/sampleRate+1e-9)return manual('原声区间缺少连续样本，保留手动复核。',videoFirst,audioFirst);
++   const cropped=new AudioBuffer({length:end-first,numberOfChannels:channels,sampleRate});
++   for(let channel=0;channel<channels;channel++)cropped.copyToChannel(b.getChannelData(channel).subarray(first,end),channel);
++   chunks.push({buffer:cropped,timestamp:start});coveredStart??=start;coveredEnd=finish;
++  }
++  assert();if(!sampleRate||coveredStart===undefined||coveredEnd===undefined||coveredStart>p.sourceStartSeconds+1e-9||coveredEnd<p.sourceEndSeconds-1e-9)return manual('原声起止样本覆盖未证，保留本项手动复核。',videoFirst,audioFirst);
++  return {...base,status:'decoded' as const,videoFirstTimestamp:videoFirst,audioFirstTimestamp:audioFirst,chunks};
++ }catch(error){assert();return manual('本项原声解码不可用，保留手动复核。',videoFirst,audioFirst);}
++ finally{for(const s of [signal,contextSignal,host.lifetime.signal])s?.removeEventListener('abort',abort);abort();}
++ },()=>manual('预览仍在播放，请先暂停并重新读取选区。'));
++}
+--- a/apps/web/src/embedded/__tests__/host-boundary.test.ts
++++ b/apps/web/src/embedded/__tests__/host-boundary.test.ts
+@@ -1,11 +1,11 @@
+ import {test,expect,beforeAll,beforeEach,afterEach} from 'bun:test';
+ import {NativeLifetime} from '../native-lifecycle';
+-import {installNativeHost,nativeHost,nativeChanged} from '../native-host';
++import {installNativeHost,nativeHost,nativeChanged,nativeOwnerKey,currentNativeContextEpoch,currentNativeContextSignal,invalidateNativeContext,bindNativeContext,type NativeContextPort,pauseNativePlaybackForContext,withNativeOriginalAudioPreviewGuard} from '../native-host';
+ let StorageService:typeof import('../../services/storage/service').StorageService;let register:typeof import('../media-registration');
+ let changedEvents=0;let detach=()=>{};
+ const root=()=>({inert:false,style:{},contains(){return false;}} as unknown as HTMLElement);
+ beforeAll(async()=>{Object.assign(globalThis,{window:{},AudioBuffer:class{},indexedDB:new Proxy({},{get(){throw Error('No browser database permitted');}})});register=await import('../media-registration');({StorageService}=await import('../../services/storage/service'));});
+-beforeEach(()=>{register.resetMediaRegistration();detach=installNativeHost({container:root(),portalContainer:root(),owner:{accountId:'account-fixture',outputId:'output-one',sourceVersionId:'version-fixture'},theme:{mode:'dark',tokens:{},fontFamily:'system-ui',fontSize:'14px',density:'comfortable'},lifetime:new NativeLifetime(new AbortController().signal),disabled:false,onChanged(){changedEvents++;},onError(){},importMedia:async()=>new Promise(()=>{})});});
++beforeEach(()=>{register.resetMediaRegistration();detach=installNativeHost({container:root(),portalContainer:root(),owner:{groupId:null,projectId:'project-fixture',accountId:'account-fixture',outputId:'output-one',sourceVersionId:'version-fixture'},theme:{mode:'dark',tokens:{},fontFamily:'system-ui',fontSize:'14px',density:'comfortable'},lifetime:new NativeLifetime(new AbortController().signal),disabled:false,onChanged(){changedEvents++;},onError(){},importMedia:async()=>new Promise(()=>{})});});
+ afterEach(()=>{nativeHost().lifetime.cancel();register.resetMediaRegistration();detach();});
+ function owner(outputId:string){nativeHost().owner={...nativeHost().owner,outputId};}
+ test('原生变更直接报告host回调；不建立窗口消息监听',()=>{const before=changedEvents;nativeChanged();expect(changedEvents).toBe(before+1);expect(Object.keys(window)).toHaveLength(0);});
+@@ -66,3 +66,31 @@
+  await storage.saveMediaAsset({projectId:'output-clean',mediaAsset:{...asset,url:'blob:temp-two'}});expect(changedEvents).toBe(before+3);
+  await storage.deleteMediaAsset({projectId:'output-clean',id:'asset-clean'});expect(changedEvents).toBe(before+4);
+ });
++
++test('T1062 同组平台owner key稳定，实际native-context变化同步abort旧范围且未产生试听确认',()=>{
++ const owner={...nativeHost().owner,groupId:'group-real',accountId:null};expect(nativeOwnerKey(owner)).toBe(nativeOwnerKey({...owner,accountId:'platform-other'}));expect(nativeOwnerKey(owner)).not.toBe(nativeOwnerKey({...owner,projectId:'foreign'}));expect(nativeOwnerKey(owner)).not.toBe(nativeOwnerKey({...owner,groupId:'foreign'}));
++ const received:unknown[]=[];nativeHost().onChanged=event=>received.push(event);const oldSignal=currentNativeContextSignal(),oldEpoch=currentNativeContextEpoch();invalidateNativeContext({sceneId:'scene-real',selectedElements:[{elementId:'clip-real'}],documentChanged:false});expect(oldSignal.aborted).toBe(true);expect(currentNativeContextSignal().aborted).toBe(false);expect(currentNativeContextEpoch()).toBe(oldEpoch+1);expect(received).toEqual([{kind:'native-context',contextEpoch:oldEpoch+1,outputId:'output-one',sceneId:'scene-real',selectedElements:[{elementId:'clip-real'}],documentChanged:false}]);expect(received[0]).not.toHaveProperty('reviewed');expect(received[0]).not.toHaveProperty('played');
++});
++test('T1062 原storage相同内容/时间戳save不假造新的context epoch',async()=>{const storage=new StorageService();const p={metadata:{id:'output-one',createdAt:new Date(0),updatedAt:new Date(0)},scenes:[],settings:{},version:31};await storage.saveProject({project:p as any});storage.hostLoaded();const epoch=currentNativeContextEpoch();await storage.saveProject({project:{...p,metadata:{...p.metadata,updatedAt:new Date(1000)}} as any});await storage.saveProject({project:p as any});expect(currentNativeContextEpoch()).toBe(epoch);});
++
++test('T1062 实际context relay连续播放帧不刷epoch；离散seek/state/selection/真实document各一次，重复storage通知无新增',()=>{
++ let state={documentFingerprint:'original',sceneId:'scene-one',selectedElements:[] as unknown[],playing:true};const listeners=new Map<string,()=>void>();const on=(name:string)=>(callback:()=>void)=>{listeners.set(name,callback);return()=>listeners.delete(name);};
++ const port:NativeContextPort={read:()=>structuredClone(state),onDocument:on('document'),onSelection:on('selection'),onSeek:on('seek'),onPlayback:on('playback')};const stop=bindNativeContext(port);const events:unknown[]=[];nativeHost().onChanged=event=>events.push(event);const epoch=currentNativeContextEpoch();
++ for(let i=0;i<60;i++)listeners.get('playback')?.();expect(currentNativeContextEpoch()).toBe(epoch);expect(events).toEqual([]);
++ listeners.get('seek')?.();expect(currentNativeContextEpoch()).toBe(epoch+1);expect(events[0]).toMatchObject({documentChanged:false});state={...state,playing:false};listeners.get('playback')?.();expect(currentNativeContextEpoch()).toBe(epoch+2);
++ state={...state,selectedElements:[{elementId:'clip-one'}]};listeners.get('selection')?.();expect(currentNativeContextEpoch()).toBe(epoch+3);state={...state,documentFingerprint:'actual-edit'};listeners.get('document')?.();expect(currentNativeContextEpoch()).toBe(epoch+4);nativeChanged();listeners.get('document')?.();expect(currentNativeContextEpoch()).toBe(epoch+4);expect(events[3]).toMatchObject({documentChanged:true});stop();expect(listeners.size).toBe(0);expect(nativeHost().onDocumentChanged).toBeUndefined();
++});
++
++test('T1062 context显式pause先触发实际playing失效再返回暂停后epoch；原声playing保护零read且不暗暂停',async()=>{
++ let state={documentFingerprint:'original',sceneId:'scene-one',selectedElements:[] as unknown[],playing:true};const listeners=new Map<string,()=>void>();const on=(name:string)=>(callback:()=>void)=>{listeners.set(name,callback);return()=>listeners.delete(name);};const stop=bindNativeContext({read:()=>structuredClone(state),onDocument:on('document'),onSelection:on('selection'),onSeek:on('seek'),onPlayback:on('playback')});let pauses=0,inputsAndDecodes=0;
++ const playback={pause(){pauses++;state={...state,playing:false};listeners.get('playback')?.();}};const before=currentNativeContextEpoch(),oldSignal=currentNativeContextSignal();
++ try{const guarded=await withNativeOriginalAudioPreviewGuard<'decoded'|'manual_review'>(()=>{inputsAndDecodes++;return 'decoded';},()=> 'manual_review');expect(guarded).toBe('manual_review');expect(inputsAndDecodes).toBe(0);expect(pauses).toBe(0);expect(state.playing).toBe(true);expect(currentNativeContextEpoch()).toBe(before);
++  const pausedEpoch=pauseNativePlaybackForContext(playback,()=>nativeHost().lifetime.assertCurrent());expect(pauses).toBe(1);expect(state.playing).toBe(false);expect(oldSignal.aborted).toBe(true);expect(pausedEpoch).toBe(before+1);expect(pausedEpoch).toBe(currentNativeContextEpoch());
++  const decoded=await withNativeOriginalAudioPreviewGuard<'decoded'|'manual_review'>(()=>{inputsAndDecodes++;return 'decoded';},()=> 'manual_review');expect(decoded).toBe('decoded');expect(inputsAndDecodes).toBe(1);expect(currentNativeContextEpoch()).toBe(pausedEpoch);
++  state={...state,playing:true};listeners.get('playback')?.();expect(currentNativeContextEpoch()).toBe(pausedEpoch+1);expect(await withNativeOriginalAudioPreviewGuard<'decoded'|'manual_review'>(()=>{inputsAndDecodes++;return 'decoded';},()=> 'manual_review')).toBe('manual_review');expect(inputsAndDecodes).toBe(1);
++ }finally{stop();}
++});
++test('T1062 显式pause保留Abort；已暂停再次pause不伪造新epoch，取消不得继续read',async()=>{
++ let state={documentFingerprint:'original',sceneId:'scene-one',selectedElements:[] as unknown[],playing:false};const listeners=new Map<string,()=>void>();const on=(name:string)=>(callback:()=>void)=>{listeners.set(name,callback);return()=>listeners.delete(name);};const stop=bindNativeContext({read:()=>structuredClone(state),onDocument:on('document'),onSelection:on('selection'),onSeek:on('seek'),onPlayback:on('playback')});let pauses=0,reads=0;const playback={pause(){pauses++;listeners.get('playback')?.();}};const epoch=currentNativeContextEpoch();
++ try{expect(pauseNativePlaybackForContext(playback,()=>nativeHost().lifetime.assertCurrent())).toBe(epoch);expect(currentNativeContextEpoch()).toBe(epoch);expect(pauses).toBe(1);const canceled=new AbortController();canceled.abort();expect(()=>pauseNativePlaybackForContext(playback,()=>canceled.signal.throwIfAborted())).toThrow();expect(pauses).toBe(1);nativeHost().lifetime.cancel();await expect(Promise.resolve().then(()=>withNativeOriginalAudioPreviewGuard<'decoded'|'manual_review'>(()=>{reads++;return 'decoded';},()=> 'manual_review'))).rejects.toMatchObject({name:'AbortError'});expect(reads).toBe(0);}finally{stop();}
++});
+--- a/apps/web/src/embedded/__tests__/native-resources.test.ts
++++ b/apps/web/src/embedded/__tests__/native-resources.test.ts
+@@ -1,16 +1,46 @@
+ import {test,expect,beforeAll,mock} from 'bun:test';
+-import {installNativeHost} from '../native-host';
++import {installNativeHost,nativeHost,currentNativeContextEpoch,invalidateNativeContext} from '../native-host';
+ import {NativeLifetime} from '../native-lifecycle';
++
++// 合成PCM块仅校验真实range实现的机械覆盖/取消；不宣称浏览器AAC解码或真人试听证据。
++class RangeFixtureBuffer {
++ readonly length:number;readonly sampleRate:number;readonly numberOfChannels:number;readonly duration:number;private data:Float32Array[];
++ constructor(options:{length:number;sampleRate:number;numberOfChannels:number}){this.length=options.length;this.sampleRate=options.sampleRate;this.numberOfChannels=options.numberOfChannels;this.duration=this.length/this.sampleRate;this.data=Array.from({length:this.numberOfChannels},()=>new Float32Array(this.length));}
++ getChannelData(channel:number){return this.data[channel];}copyToChannel(values:Float32Array,channel:number){this.data[channel].set(values);}
++}
++let rangeBlocks:Array<{buffer:AudioBuffer;timestamp:number}>=[],videoFirst:number|null=0,audioFirst=0,rangeDisposeCount=0,rangeStarts:Array<[number|undefined,number|undefined]>=[],waitRange=false;
++let rejectRead:((error:Error)=>void)|undefined,finishRead:(()=>void)|undefined;
++class RangeInput {
++ disposed=false;constructor(_options:unknown){}async getPrimaryVideoTrack(){return videoFirst===null?null:{getFirstTimestamp:async()=>videoFirst};}async getPrimaryAudioTrack(){return{input:this,getFirstTimestamp:async()=>audioFirst};}
++ dispose(){if(this.disposed)return;this.disposed=true;rangeDisposeCount++;rejectRead?.(new Error('Input has been disposed.'));}
++}
++mock.module('mediabunny',()=>({ALL_FORMATS:[],BlobSource:class{constructor(_file:File){}},Input:RangeInput,AudioBufferSink:class{
++ constructor(private track:{input:RangeInput}){}async *buffers(start?:number,end?:number){rangeStarts.push([start,end]);if(waitRange)await new Promise<void>((resolve,reject)=>{finishRead=resolve;rejectRead=reject;});for(const block of rangeBlocks){if(this.track.input.disposed)throw new Error('Input disposed');yield block;}}
++}}));
++
+ // 此入口只测慢图片/上传取消，视频解码端口不用Bun不能加载的WebAssembly冒充真实解码。
+ mock.module('@/media/mediabunny',()=>({readVideoFile:async()=>{throw Error('此fixture不执行视频解码');}}));
+ const {processMediaAssets}=await import('@/media/processing');
+ import {advanceEditEpoch} from '../edit-lock';
+-import {registerMediaFile,getRegisteredMediaId,resetMediaRegistration} from '../media-registration';
++import {registerMediaFile,getRegisteredMediaId,resetMediaRegistration,readOriginalAudioRange,type OriginalAudioRangeRequest} from '../media-registration';
+ import {showMediaUploadToast} from '@/media/upload-toast';
+ let images:any[]=[];let created:string[]=[];let revoked:string[]=[];let frameId=0;const frames=new Map<number,()=>void>();
+ class PendingImage{onload:any=null;onerror:any=null;src='';removeAttribute(name:string){if(name==='src')this.src='';}remove(){}}
+ beforeAll(()=>{Object.assign(globalThis,{window:{Image:class extends PendingImage{constructor(){super();images.push(this);}}},AudioBuffer:class{},requestAnimationFrame:(callback:()=>void)=>{const id=++frameId;frames.set(id,callback);return id;},cancelAnimationFrame:(id:number)=>frames.delete(id)});URL.createObjectURL=()=>{const url=`blob:fixture-${created.length}`;created.push(url);return url;};URL.revokeObjectURL=url=>revoked.push(url);});
+-function fixture(importMedia:(file:File)=>Promise<{mediaId:string}>=async()=>({mediaId:'registered'})){const parent=new AbortController(),lifetime=new NativeLifetime(parent.signal),detach=installNativeHost({container:{inert:false} as HTMLElement,portalContainer:{inert:false} as HTMLElement,owner:{accountId:'account-fixture',outputId:'output-fixture',sourceVersionId:'version-fixture'},theme:{mode:'dark',tokens:{},fontFamily:'system-ui',fontSize:'14px',density:'comfortable'},lifetime,disabled:false,onChanged(){},onError(){},importMedia});return{lifetime,detach};}
++function fixture(importMedia:(file:File)=>Promise<{mediaId:string}>=async()=>({mediaId:'registered'})){const parent=new AbortController(),lifetime=new NativeLifetime(parent.signal),detach=installNativeHost({container:{inert:false} as HTMLElement,portalContainer:{inert:false} as HTMLElement,owner:{groupId:null,projectId:'project-fixture',accountId:'account-fixture',outputId:'output-fixture',sourceVersionId:'version-fixture'},theme:{mode:'dark',tokens:{},fontFamily:'system-ui',fontSize:'14px',density:'comfortable'},lifetime,disabled:false,onChanged(){},onError(){},importMedia});return{lifetime,detach};}
+ test('慢图片解码取消释放临时Image与BlobURL，寿命排空后不能返回素材',async()=>{const host=fixture();images=[];created=[];revoked=[];try{const pending=processMediaAssets({files:[new File(['fixture'],'slow.png',{type:'image/png'})]});const observed=pending.catch(error=>error);await Promise.resolve();expect(images).toHaveLength(1);host.lifetime.cancel();advanceEditEpoch();expect((await observed).name).toBe('AbortError');await host.lifetime.drain();expect(images[0].src).toBe('');expect(images[0].onload).toBeNull();expect(images[0].onerror).toBeNull();expect(new Set(revoked)).toEqual(new Set(created));}finally{host.lifetime.cancel();host.detach();resetMediaRegistration();}});
+ test('换稿后迟到素材上传回执不注册到当前编辑器',async()=>{let finish!:(receipt:{mediaId:string})=>void;const host=fixture(()=>new Promise(resolve=>finish=resolve));const file=new File(['fixture'],'late.png',{type:'image/png'});try{const pending=registerMediaFile(file);const observed=pending.catch(error=>error);host.lifetime.cancel();expect((await observed).name).toBe('AbortError');await host.lifetime.drain();finish({mediaId:'late-owner'});await Promise.resolve();expect(()=>getRegisteredMediaId(file)).toThrow('尚未保存');}finally{host.detach();resetMediaRegistration();}});
+ test('上传提示等待绘制时换稿会取消RAF且不启动旧导入',async()=>{const host=fixture();let starts=0;try{const pending=showMediaUploadToast({filesCount:1,promise:async()=>{starts++;return{uploadedCount:1};}});const observed=pending.catch(error=>error);expect(frames.size).toBe(1);host.lifetime.cancel();expect((await observed).name).toBe('AbortError');await host.lifetime.drain();expect(frames.size).toBe(0);expect(starts).toBe(0);}finally{host.detach();resetMediaRegistration();}});
++
++function block(timestamp:number,values:number[],sampleRate=8){const buffer=new RangeFixtureBuffer({length:values.length,numberOfChannels:1,sampleRate});buffer.copyToChannel(Float32Array.from(values),0);return{timestamp,buffer:buffer as unknown as AudioBuffer};}
++function rangeFixture(){const host=fixture();const oldAudioBuffer=globalThis.AudioBuffer;Object.assign(globalThis,{AudioBuffer:RangeFixtureBuffer});rangeBlocks=[];videoFirst=0;audioFirst=0;rangeDisposeCount=0;rangeStarts=[];waitRange=false;rejectRead=undefined;finishRead=undefined;
++ const p:OriginalAudioRangeRequest={owner:{...nativeHost().owner},clipId:'clip-exact',sceneId:'scene-exact',contextEpoch:currentNativeContextEpoch(),nonce:'nonce-exact',assetFileId:'asset-file-exact',sourceId:'source-exact',file:new File(['synthetic-not-media'],'fixture.bin'),sourceStartSeconds:.25,sourceEndSeconds:.75};
++ return{...host,p,restore(){host.lifetime.cancel();host.detach();Object.assign(globalThis,{AudioBuffer:oldAudioBuffer});resetMediaRegistration();}};
++}
++test('T1062 实际range实现逐样本裁剪连续块并echo完整本地身份，decode不等于已听/采纳',async()=>{const f=rangeFixture();try{rangeBlocks=[block(0,[0,1,2,3]),block(.5,[4,5,6,7])];const response=await readOriginalAudioRange(f.p,undefined,()=>{});expect(response.status).toBe('decoded');expect(rangeStarts).toEqual([[.25,.75]]);expect(response).toMatchObject({owner:f.p.owner,nonce:f.p.nonce,clipId:f.p.clipId,sceneId:f.p.sceneId,contextEpoch:f.p.contextEpoch,assetFileId:f.p.assetFileId,sourceId:f.p.sourceId,rangeStartSeconds:.25,rangeEndSeconds:.75,videoFirstTimestamp:0,audioFirstTimestamp:0});expect(response.chunks.map(c=>c.timestamp)).toEqual([.25,.5]);expect(response.chunks.flatMap(c=>Array.from(c.buffer.getChannelData(0)))).toEqual([2,3,4,5]);expect(response).not.toHaveProperty('reviewed');expect(response).not.toHaveProperty('played');expect(rangeDisposeCount).toBe(1);}finally{f.restore();}});
++test('T1062 合成负音频PTS不是视频zero；相邻解码重叠去重但不补零',async()=>{const f=rangeFixture();try{audioFirst=-.25;rangeBlocks=[block(-.25,[-2,-1,0,1,2,3]),block(.375,[3,4,5,6])];const response=await readOriginalAudioRange(f.p,undefined,()=>{});expect(response.status).toBe('decoded');expect(response.audioFirstTimestamp).toBe(-.25);expect(response.videoFirstTimestamp).toBe(0);expect(response.chunks.flatMap(c=>Array.from(c.buffer.getChannelData(0)))).toEqual([2,3,4,5]);expect(rangeDisposeCount).toBe(1);}finally{f.restore();}});
++for(const mode of ['nonzero video','missing first coverage','hole','sample-rate change'] as const)test(`T1062 ${mode}仅该范围manual且Input释放，不伪造音频`,async()=>{const f=rangeFixture();try{if(mode==='nonzero video'){videoFirst=1;audioFirst=1.125;rangeBlocks=[block(1,[0,1,2,3])];}else if(mode==='missing first coverage')rangeBlocks=[block(.5,[4,5,6,7])];else if(mode==='hole'){f.p.sourceStartSeconds=0;f.p.sourceEndSeconds=1;rangeBlocks=[block(0,[0,1,2,3]),block(.75,[6,7])];}else rangeBlocks=[block(0,[0,1,2,3]),block(.5,[4,5,6,7],16)];const response=await readOriginalAudioRange(f.p,undefined,()=>{});expect(response.status).toBe('manual_review');expect(response.chunks).toEqual([]);expect(response).not.toHaveProperty('reviewed');expect(rangeDisposeCount).toBe(1);if(mode==='nonzero video')expect(rangeStarts).toEqual([]);}finally{f.restore();}});
++for(const kind of ['request cancel','context seek','owner dispose'] as const)test(`T1062 ${kind}取消真实range实现；迟到块不得返回decoded/假完成`,async()=>{const f=rangeFixture();const signal=new AbortController();try{waitRange=true;rangeBlocks=[block(0,[0,1,2,3,4,5,6,7])];const pending=readOriginalAudioRange(f.p,signal.signal,()=>{});const observed=pending.catch(error=>error);for(let i=0;i<20&&!finishRead;i++)await Promise.resolve();expect(finishRead).toBeDefined();if(kind==='request cancel')signal.abort();else if(kind==='context seek')invalidateNativeContext({sceneId:'scene-exact',selectedElements:[],documentChanged:false});else f.lifetime.cancel();const error=await observed;expect(error.name).toBe('AbortError');expect(rangeDisposeCount).toBe(1);finishRead?.();await Promise.resolve();expect(error).not.toHaveProperty('chunks');}finally{f.restore();}});
++test('T1062 foreign本地owner或当前真实scene/clip proof失败在读取Input之前拒绝',async()=>{const f=rangeFixture();try{await expect(readOriginalAudioRange({...f.p,owner:{...f.p.owner,projectId:'foreign-parent'}},undefined,()=>{})).rejects.toThrow('归属');await expect(readOriginalAudioRange(f.p,undefined,()=>{throw Error('真实scene或clip已改变');})).rejects.toThrow('已改变');expect(rangeStarts).toEqual([]);expect(rangeDisposeCount).toBe(0);}finally{f.restore();}});
++
++test('T1062 纯组NULLaccount原声读取保持同group owner，平台账号筛选不改实际本地root',async()=>{const f=rangeFixture();try{nativeHost().owner={...nativeHost().owner,groupId:'group-a',accountId:null};f.p.owner={...nativeHost().owner};rangeBlocks=[block(0,[0,1,2,3,4,5,6,7])];const response=await readOriginalAudioRange(f.p,undefined,()=>{});expect(response.status).toBe('decoded');expect(response.owner).toEqual(f.p.owner);expect(response.owner.accountId).toBeNull();expect(nativeHost().owner).toEqual(f.p.owner);expect(rangeDisposeCount).toBe(1);}finally{f.restore();}});
+--- a/apps/web/src/embedded/native-controller.ts
++++ b/apps/web/src/embedded/native-controller.ts
+@@ -28,10 +28,10 @@
+  const detachContext=()=>{stopContext.forEach(stop=>stop());stopContext=[];};
+  function bindContext(editor:EditorCore){
+   detachContext();
+-  // 只排除与原storage同义的scene autosave updatedAt，正文/轨道/settings/media仍完整比较。
+-  const fingerprint=()=>canonicalNative(nativeJson({scenes:editor.scenes.getScenes().map(({updatedAt,...scene})=>scene),settings:editor.project.getActive().settings,media:editor.media.getAssets().map(asset=>({id:asset.id,name:asset.name,type:asset.type,size:asset.file.size,lastModified:asset.file.lastModified,width:asset.width,height:asset.height,duration:asset.duration,fps:asset.fps,hasAudio:asset.hasAudio}))}));
++  // 只排除与原storage同义的project/scene autosave updatedAt，metadata/正文/轨道/settings/media仍完整比较。
++  const fingerprint=()=>canonicalNative(nativeJson({metadata:(({updatedAt,...metadata})=>metadata)(editor.project.getActive().metadata),scenes:editor.scenes.getScenes().map(({updatedAt,...scene})=>scene),settings:editor.project.getActive().settings,media:editor.media.getAssets().map(asset=>({id:asset.id,name:asset.name,type:asset.type,size:asset.file.size,lastModified:asset.file.lastModified,width:asset.width,height:asset.height,duration:asset.duration,fps:asset.fps,hasAudio:asset.hasAudio}))}));
+   const stop=bindNativeContext({read:()=>({documentFingerprint:fingerprint(),sceneId:editor.scenes.getActiveScene().id,selectedElements:editor.selection.getSelectedElements(),playing:editor.playback.getIsPlaying()}),
+-   onDocument:listener=>{const stopTimeline=editor.timeline.subscribe(listener),stopScenes=editor.scenes.subscribe(listener);return()=>{stopTimeline();stopScenes();};},
++   onDocument:listener=>{const stopTimeline=editor.timeline.subscribe(listener),stopScenes=editor.scenes.subscribe(listener),stopProject=editor.project.subscribe(listener);return()=>{stopTimeline();stopScenes();stopProject();};},
+    onSelection:listener=>editor.selection.subscribe(listener),onSeek:listener=>editor.playback.onSeek(listener),onPlayback:listener=>editor.playback.subscribe(listener)});
+   stopContext=[stop];
+  }

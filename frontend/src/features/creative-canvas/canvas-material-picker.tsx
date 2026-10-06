@@ -1,4 +1,5 @@
 'use client';
+import {useCreationClient,useCreationScope,creationScopeKey,readCreationScope} from '@/lib/creation-workspace-scope';
 import * as React from 'react';
 import Link from 'next/link';
 import {ENDPOINTS,canvasMaterialSelectionResource,type CanvasMaterialSelection,type WorkAssetFile} from '@creatoros/contract';
@@ -7,19 +8,21 @@ import {Button} from '@/components/ui/button';
 import {readCurrentAccountId} from '@/lib/http-transport';
 type Exact=Extract<CanvasMaterialSelection,{status:'available'}>;
 type Choice={file:WorkAssetFile;name:string;origin:Exact['origin']};
-type Props={projectId:string;compositionId:string;accountId:string;disabled?:boolean;onSelect:(value:Choice)=>void};
-export function CanvasMaterialPicker(props:Props){return <Contents key={`${props.accountId}:${props.compositionId}`} {...props}/>;}
+type Props={projectId:string;compositionId:string;accountId:string|null;disabled?:boolean;onSelect:(value:Choice)=>void};
+export function CanvasMaterialPicker(props:Props){const workspaceSelection=useCreationScope();return <Contents key={`${creationScopeKey(workspaceSelection)}:${props.compositionId}`} {...props}/>;}
 function Contents({projectId,compositionId,accountId,disabled=false,onSelect}:Props){
+ const client=useCreationClient(),workspaceSelection=useCreationScope(),workspaceKey=creationScopeKey(workspaceSelection);
+
  const live=React.useRef(true),flight=React.useRef(false),scope=React.useRef(0);
  const [open,setOpen]=React.useState(false),[busy,setBusy]=React.useState(false),[error,setError]=React.useState(''),[warning,setWarning]=React.useState(''),[canvases,setCanvases]=React.useState<{id:string;title:string}[]>([]),[canvasId,setCanvasId]=React.useState(''),[links,setLinks]=React.useState<{id:string;nodeId:string;inputRevision:number;createdAt:string}[]>([]),[linkId,setLinkId]=React.useState(''),[selection,setSelection]=React.useState<CanvasMaterialSelection|null>(null),[url,setUrl]=React.useState(''),[fileName,setFileName]=React.useState(''),[pending,setPending]=React.useState<{canvasId:string;linkId:string;taskId:string;ack:boolean}|null>(null);
- const key=`creatoros-canvas-confirm:${accountId}:${compositionId}`;
+ const key=`creatoros-canvas-confirm:${workspaceKey}:${compositionId}`;
  React.useEffect(()=>{live.current=true;void Promise.resolve().then(()=>{if(!live.current)return;try{const value=JSON.parse(localStorage.getItem(key)??'null');if(value&&typeof value.canvasId==='string'&&typeof value.linkId==='string'&&typeof value.taskId==='string'){setPending({...value,ack:value.ack===true});setCanvasId(value.canvasId);setLinkId(value.linkId);}}catch{}});return()=>{live.current=false;scope.current++;};},[key]);
  function remember(value:typeof pending){if(!live.current)return;setPending(value);try{if(value)localStorage.setItem(key,JSON.stringify(value));else localStorage.removeItem(key);}catch{setWarning('浏览器存储不可用，原保留请求仍在本窗口；离开前请核对结果。');}}
  async function run(action:()=>Promise<void>){if(flight.current)return;flight.current=true;setBusy(true);setError('');try{await action();}catch(reason){if(live.current)setError(reason instanceof Error?reason.message:'画布文件暂不可读取，请保留原选择。');}finally{flight.current=false;if(live.current)setBusy(false);}}
- function assertAccount(){if(readCurrentAccountId()!==accountId)throw Error('当前账号已变化，请从对应作品重新选择画布文件');}
+ function assertAccount(){if(creationScopeKey(readCreationScope())!==workspaceKey)throw Error('当前账号已变化，请从对应作品重新选择画布文件');}
  function check(value:CanvasMaterialSelection,c:string,g:string){const origin=value.status==='available'?value.origin:value;if(origin.canvasId!==c||origin.generationLinkId!==g)throw Error('原生成回执不属于本次选择');return value;}
  async function read(c=canvasId,g=linkId){assertAccount();const generation=scope.current,value=check(canvasMaterialSelectionResource.parse(await client.getCanvasGenerationMaterial({params:{canvasId:c,generationLinkId:g},query:undefined,body:undefined})),c,g);if(!live.current||generation!==scope.current)return null;assertAccount();setSelection(value);setUrl('');setFileName('');if(value.status==='available'){const response=await client.getAssetFileDownloadUrl({params:{assetId:value.file.assetId,assetFileId:value.file.assetFileId},query:undefined,body:undefined});if(!live.current||generation!==scope.current)return null;assertAccount();setUrl(response.url);setFileName(response.fileName);}return value;}
- async function load(){assertAccount();const generation=scope.current;const values=ENDPOINTS.listCanvases.response.array().parse(await client.listCanvases({params:undefined,query:undefined,body:undefined}));if(live.current&&generation===scope.current){assertAccount();setCanvases(values.filter(v=>v.accountId===accountId&&v.projectId===projectId).map(v=>({id:v.id,title:v.title})));}}
+ async function load(){assertAccount();const generation=scope.current;const values=ENDPOINTS.listCanvases.response.array().parse(await client.listCanvases({params:undefined,query:undefined,body:undefined}));if(live.current&&generation===scope.current){assertAccount();setCanvases(values.filter(v=>(workspaceSelection.groupId?v.groupId===workspaceSelection.groupId:v.accountId===accountId)&&v.projectId===projectId).map(v=>({id:v.id,title:v.title})));}}
  async function chooseCanvas(id:string){assertAccount();scope.current++;setCanvasId(id);setLinks([]);setLinkId('');setSelection(null);setUrl('');if(!id)return;const generation=scope.current,rows=ENDPOINTS.listCanvasNodeTasks.response.array().parse(await client.listCanvasNodeTasks({params:{canvasId:id},query:undefined,body:undefined}));if(live.current&&generation===scope.current){assertAccount();setLinks(rows);}}
  async function confirm(recover=false){const p=recover?pending:null,c=p?.canvasId??canvasId,g=p?.linkId??linkId;const current=await read(c,g);if(!current||!live.current)return;if(current.status!=='available')throw Error(current.reason);if(p&&current.origin.taskId!==p.taskId)throw Error('原保留请求与任务回执不符');if(current.phase==='confirmed'){remember(null);return;}
  if(p?.ack)throw Error('原保留回复已收到，但正式状态尚未确认。请继续只读核对。');const command=p??{canvasId:c,linkId:g,taskId:current.origin.taskId,ack:false};remember(command);

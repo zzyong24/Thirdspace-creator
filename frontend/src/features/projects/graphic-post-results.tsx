@@ -1,4 +1,5 @@
 "use client";
+import {useCreationClient,useCreationScope,creationScopeKey,readCreationScope} from "@/lib/creation-workspace-scope";
 
 import * as React from "react";
 import Image from "next/image";
@@ -53,6 +54,8 @@ function mediaValue(value: unknown, role: MediaValue["role"], cardId?:string): M
 type MediaPreviewProps={ image: MediaValue; resultId: string; onPreviewReady: (resultId: string) => void; label?:string };
 function MediaPreview(props:MediaPreviewProps){return <MediaPreviewSession key={`${props.resultId}:${props.image.assetId}:${props.image.assetFileId}`} {...props}/>;}
 function MediaPreviewSession({ image, resultId, onPreviewReady, label }:MediaPreviewProps) {
+ const client=useCreationClient(),workspaceSelection=useCreationScope();
+
   const [url, setUrl] = React.useState<string | null>(null);
   const [error, setError] = React.useState(false);
   React.useEffect(() => {
@@ -89,22 +92,22 @@ function pickCapability(items: readonly CreativeCapability[], kind: CreativeKind
 }
 
 type GraphicPostResultsProps={
-  accountId:string;outputId:string;targetPlatform:string|null;currentVersionId:string;manualDraftDirty:boolean;
+  accountId:string|null;outputId:string;targetPlatform:string|null;currentVersionId:string;manualDraftDirty:boolean;
   prepareGeneration:()=>Promise<boolean>;onAdopt:()=>Promise<void>;
   onResultListResolved?:(bodyResult:CreativeResult|null)=>void;
   scriptDerived?:boolean;
   series?:{cards:GraphicPostCardBrief[];selectedCardId:string|null;selectedCardIds:string[]};
 };
 type SeriesRequest={items:{kind:'image_card';targetSectionId:string}[];clientRequestId:string};
-type PageAdoptionAttempt={accountId:string;outputId:string;resultId:string;digest:string;editedValue:MediaValue[];expectedVersionId:string;clientRequestId:string};
-function pageAdoptionStorageKey(accountId:string,outputId:string,resultId:string){return `creatoros:graphic-page-adoption:${JSON.stringify([accountId,outputId,resultId])}`;}
-function readPageAdoption(accountId:string,outputId:string,result:CreativeResult):PageAdoptionAttempt|null{
+type PageAdoptionAttempt={accountId:string|null;groupId?:string|null;outputId:string;resultId:string;digest:string;editedValue:MediaValue[];expectedVersionId:string;clientRequestId:string};
+function pageAdoptionStorageKey(accountId:string|null,outputId:string,resultId:string){return `creatoros:graphic-page-adoption:${JSON.stringify([readCreationScope().groupId?creationScopeKey(readCreationScope()):accountId,outputId,resultId])}`;}
+function readPageAdoption(accountId:string|null,outputId:string,result:CreativeResult):PageAdoptionAttempt|null{
   try{
     const cached:unknown=JSON.parse(window.sessionStorage.getItem(pageAdoptionStorageKey(accountId,outputId,result.resultId))??'null');
     if(!cached||typeof cached!=='object')return null;
     const item=cached as Partial<PageAdoptionAttempt>;
     // SEMANTIC_BOUNDARY_ALLOW: Validate the exact saved request and ownership IDs, not page meaning.
-    if(item.accountId!==accountId||item.outputId!==outputId||item.resultId!==result.resultId||typeof item.expectedVersionId!=='string'||!item.expectedVersionId||typeof item.clientRequestId!=='string'||item.clientRequestId.length<8||item.clientRequestId.length>128||typeof item.digest!=='string')return null;
+    if((item.groupId??null)!==readCreationScope().groupId||item.accountId!==accountId||item.outputId!==outputId||item.resultId!==result.resultId||typeof item.expectedVersionId!=='string'||!item.expectedVersionId||typeof item.clientRequestId!=='string'||item.clientRequestId.length<8||item.clientRequestId.length>128||typeof item.digest!=='string')return null;
     const selected=mediaValue(item.editedValue,'card',result.targetSectionId??undefined);
     if(!selected||JSON.stringify(item.editedValue)!==JSON.stringify(selected)||item.digest!==JSON.stringify({resultId:result.resultId,selected}))return null;
     return {...item,editedValue:selected} as PageAdoptionAttempt;
@@ -113,7 +116,7 @@ function readPageAdoption(accountId:string,outputId:string,result:CreativeResult
 function writePageAdoption(attempt:PageAdoptionAttempt){
   try{window.sessionStorage.setItem(pageAdoptionStorageKey(attempt.accountId,attempt.outputId,attempt.resultId),JSON.stringify(attempt));}catch{/* Original in-memory request remains available when session storage is unavailable. */}
 }
-function clearPageAdoption(accountId:string,outputId:string,resultId:string){
+function clearPageAdoption(accountId:string|null,outputId:string,resultId:string){
   try{window.sessionStorage.removeItem(pageAdoptionStorageKey(accountId,outputId,resultId));}catch{/* In-memory acknowledgement still prevents a second attempt in this session. */}
 }
 function readSeriesRequests(key:string):SeriesRequest[]{
@@ -123,8 +126,10 @@ function readSeriesRequests(key:string):SeriesRequest[]{
     if(Array.isArray(cached)&&cached.length&&cached.every(group=>group&&typeof group==='object'&&typeof group.clientRequestId==='string'&&group.clientRequestId.length>=8&&group.clientRequestId.length<=128&&Array.isArray(group.items)&&group.items.length>=1&&group.items.length<=12&&group.items.every((item:unknown)=>item&&typeof item==='object'&&'kind' in item&&item.kind==='image_card'&&'targetSectionId' in item&&typeof item.targetSectionId==='string')))return cached.map(group=>({clientRequestId:group.clientRequestId,items:group.items.map((item:{targetSectionId:string})=>({kind:'image_card',targetSectionId:item.targetSectionId}))}));
   }catch{/* Unavailable storage does not block creation. */}return [];
 }
-export function GraphicPostResults(props:GraphicPostResultsProps){return <GraphicPostResultsSession key={`${props.accountId}:${props.outputId}`} {...props}/>;}
+export function GraphicPostResults(props:GraphicPostResultsProps){const workspaceSelection=useCreationScope();return <GraphicPostResultsSession key={`${creationScopeKey(workspaceSelection)}:${props.outputId}`} {...props}/>;}
 function GraphicPostResultsSession({accountId,outputId,targetPlatform,currentVersionId,manualDraftDirty,prepareGeneration,onAdopt,onResultListResolved,series,scriptDerived=false}:GraphicPostResultsProps){
+ const client=useCreationClient(),workspaceSelection=useCreationScope();
+
   const [capabilities, setCapabilities] = React.useState<CreativeCapability[] | null>(null);
   const [results, setResults] = React.useState<Partial<Record<TextKind, CreativeResult>>>({});
   const [coverResult, setCoverResult] = React.useState<CreativeResult | null>(null);
@@ -135,7 +140,7 @@ function GraphicPostResultsSession({accountId,outputId,targetPlatform,currentVer
   const scope=React.useRef({accountId,outputId,epoch:0});
   const dirtyRef=React.useRef(manualDraftDirty);
   React.useLayoutEffect(()=>{dirtyRef.current=manualDraftDirty;},[manualDraftDirty]);
-  const seriesStorageKey=`creatoros:graphic-series-request:${accountId}:${outputId}`;
+  const seriesStorageKey=`creatoros:graphic-series-request:${workspaceSelection.groupId?creationScopeKey(workspaceSelection):accountId}:${outputId}`;
   const [initialSeriesQueue]=React.useState(()=>readSeriesRequests(seriesStorageKey));
   const seriesQueue=React.useRef<SeriesRequest[]>(initialSeriesQueue);
   const [unknownSeries,setUnknownSeries]=React.useState(initialSeriesQueue.length>0);
@@ -192,7 +197,7 @@ function GraphicPostResultsSession({accountId,outputId,targetPlatform,currentVer
   const load = React.useCallback(async () => {
     const request = ++loadRequest.current;
     const settled = await Promise.allSettled([
-      client.listCreativeCapabilities({ params: undefined, query: { accountId, outputId }, body: undefined }),
+      client.listCreativeCapabilities({ params: undefined, query:{...(!workspaceSelection.groupId&&accountId?{accountId}:{}),outputId}, body: undefined }),
       client.listResults({ params: { outputId }, query: { pageSize: 50 }, body: undefined }),
       client.listBundles({ params: { outputId }, query: { pageSize: 20 }, body: undefined }),
     ]);
@@ -488,7 +493,7 @@ function GraphicPostResultsSession({accountId,outputId,targetPlatform,currentVer
       if(!request){
         const fresh=await client.getGraphicPost({params:{outputId},query:undefined,body:undefined});
         if(epoch!==scope.current.epoch||dirtyRef.current)return;
-        request={accountId,outputId,resultId:result.resultId,digest,editedValue:selected,expectedVersionId:fresh.currentVersionId,clientRequestId:crypto.randomUUID()};
+        request={accountId,groupId:workspaceSelection.groupId,outputId,resultId:result.resultId,digest,editedValue:selected,expectedVersionId:fresh.currentVersionId,clientRequestId:crypto.randomUUID()};
       }
       pageAdoptions.current[result.resultId]=request;
       writePageAdoption(request);

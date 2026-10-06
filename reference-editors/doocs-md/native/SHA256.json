@@ -1,10 +1,7 @@
 {
-  "native-source.tar.gz": "60baa6f2656e5038e31bab6c2ff71ddfbaba54a6a7f703796364b78f4f96f3a7",
-  "NATIVE_PATCHES_FROM_T1049.diff": "57b2a7211781e836019a586cefd278fe057e21439135efacb22929e8b2def87d",
-  "LICENSE": "cfeeb9a8bae22957f5ca9af8c5f7d9e686b34ecf36c9a8d7da6fec0185781069",
-  "native-delivery.json": "1cf084b4e391a49f9802dd3d9baeac4f7d67db53b43576c68aebea1f83511f5a",
-  "VERIFY.md": "ad42a5ecb436d2e8d833051d95e71662e88b37bcaec6b94db0e4537b1b51cedb",
-  "README.md": "d1d699593b642a89270c558839c1b4491dfcdd8813b5f884c5cbb4b1463ab875",
-  "build-native.mjs": "e2311c02592dfa03954a6b41d821e698a645e851e52c80c4ebf48475e7dde57b",
-  "whitespace-check.json": "6d0565d44a7497282fd51d213970b74e192a813ec358398eca0714ca75050ee3"
+  "native-source.tar.gz": "0cabb0e4960ee1b4a50e0533782ba9a735c1ed1b66ce22cfc81dd7d3bd4fa583",
+  "NATIVE_PATCHES_FROM_T1049.diff": "d91dec8b68d8a2c7564f45df4ba828dd1a8b139d2c58c583336a489ac1a3555a",
+  "native-delivery.json": "82fb9cbb156b0d84a88144c3c663bc8bf34da321655f3e89c34866a093e3a0d9",
+  "VERIFY.md": "58a5321a2b22e49bc7366fd99b60dc382bac61d99a75192ffa2fe8609ea87c95",
+  "README.md": "c6116368591fc7dd1d1bdea15b6be5bc47b0f9b007a15e30abe3740338c6c9c3"
 }

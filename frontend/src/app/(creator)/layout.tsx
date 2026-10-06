@@ -30,6 +30,7 @@ import * as React from "react";
 import { redirect } from "next/navigation";
 
 import { ShellRouter, type ShellUser } from "./shell-router";
+import { WorkspaceInitializationProvider, WorkspaceInitializationBoundary } from "@/components/shell/workspace-initialization";
 import { GlobalSearchHotkey } from "@/components/shell/global-search-hotkey";
 import { LicenseHeartbeatBridge } from "@/components/shell/license-heartbeat-bridge";
 import { ChannelConfigBootstrap } from "@/components/shell/channel-config-bootstrap";
@@ -174,6 +175,7 @@ export default async function CreatorLayout({
       {/* [T-257] 外链处理已上移到根 layout(app/layout.tsx),覆盖 (creator) 外的页面;此处不再重复挂,避免双监听外链开两次。 */}
       {/* [T-530] 品牌名经 Provider 注入(server → client 只读;props 链被 ShellRouter
           隔断,沿 CurrentProjectProvider 同款上下文注入模式)。 */}
+      <WorkspaceInitializationProvider initialScope={{groupId:session.ctx.groupId??null,accountId:session.ctx.groupId?null:session.ctx.accountId??null}}>
       <SidebarBrandNameProvider
         brandName={brandName}
         bugFeedbackUrl={bugFeedbackUrl}
@@ -189,7 +191,8 @@ export default async function CreatorLayout({
       {/* The @modal parallel slot renders intercepting-route overlays
           (currently `/projects/new`). It is rendered above the AppShell
           so the dialog appears above the page chrome. */}
-      {modal}
+      <WorkspaceInitializationBoundary surface="overlay">{modal}</WorkspaceInitializationBoundary>
+      </WorkspaceInitializationProvider>
     </>
   );
 }

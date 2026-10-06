@@ -1,3 +1,20 @@
+# T-1062 原生 TMP 实际验证记录
+
+源码候选：`246e63a02753b7a90760611506a82341d8457462a996aed8463f7f91eccdc153`；成员31，归档 `781c55a73582faaf595100acfc0132414349b6800dad7b85d44d9bcc50f90c45`。
+
+本节仅记录本次实际命令。JSDOM/合成音频夹具不能作为真实浏览器、听感、ASR、安装通过。
+
+- exit 0；`./node_modules/.bin/vitest run`；日志 `/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r8-nzjmtyxt/commands/kuaitu-core-r8.log`；SHA `51f3a4cea9156043cdb24336b30a843d89b4305b64064bceed718964db5bd3bb`。
+- exit 0；`./packages/core/node_modules/.bin/vitest run native-controller.test.ts native-core-lifecycle.test.ts --config native.vite.config.ts --environment jsdom --poolOptions.threads.singleThread`；日志 `/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r8-nzjmtyxt/commands/kuaitu-native-r8.log`；SHA `7e818ccb507a355da3bb821641a4fd887224c168bd52bfeb10b9eabbfaec8f65`。
+- exit 0；`/opt/homebrew/opt/node/bin/node native-build.mjs`；日志 `/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r8-nzjmtyxt/commands/kuaitu-build-r8.log`；SHA `be7426d2ae73707cfa8672cd7b40b4347db0a9964601188025220d435c313d95`。
+
+Kuaitu：core4/native35；Doocs lease4；OpenCut主回归18、resource14、DOM38。按editor各自对应，不合并重复执行计数。
+全部历史失败保存在独立TMP，未覆盖。宿主18与安装/试听尚未执行。
+
+---
+
+下列内容是原T-1053历史记录，原字节以before SHA绑定；其中旧PASS不代表本次新源码的新执行。
+
 # 快图原生候选交接（T-1053）
 
 固定上游 commit：`b3bdcfb0bd6d8f98e7483cf561ac03ba56c0d889`。所有改动仅在临时目录；CreatorOS 共享 checkout 未写入。

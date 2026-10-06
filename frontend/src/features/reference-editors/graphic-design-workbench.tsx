@@ -1,5 +1,8 @@
 "use client";
 import * as React from 'react';
+import {useCreationWorkspace} from '@/lib/creation-workspace-scope';
+import {useNativeWorkspace} from './use-native-account';
+import {isNativeContextEvent} from './native-editor-contract';
 import type {GraphicPostDocument,ReferenceEditorMedia} from '@creatoros/contract';
 import {referenceEditorDocument} from '@creatoros/contract';
 import {NativeEditorSurface,type NativeEditorHandle,type EditorSnapshot,type EditorExport} from './native-editor-surface';
@@ -9,7 +12,8 @@ import {Dialog,DialogContent,DialogTitle} from '@/components/ui/dialog';
 type Design=NonNullable<GraphicPostDocument['designs']>[number];
 // SEMANTIC_BOUNDARY_ALLOW: 只比较全部持久化图层字段，不决定内容与布局。
 function canonical(value:unknown):string{if(Array.isArray(value))return `[${value.map(canonical).join(',')}]`;if(value&&typeof value==='object')return `{${Object.keys(value).sort().filter(k=>(value as Record<string,unknown>)[k]!==undefined).map(k=>`${JSON.stringify(k)}:${canonical((value as Record<string,unknown>)[k])}`).join(',')}}`;return JSON.stringify(value);}
-export function GraphicDesignWorkbench({accountId,sourceVersionId,projectId,outputId,title,design,onSave,onClose,onReload}:{accountId:string;sourceVersionId:string;projectId:string;outputId:string;title:string;design:Design;onSave:(design:Design,image?:ReferenceEditorMedia)=>Promise<void>;onClose:()=>void;onReload?:()=>Promise<void>}){
+export function GraphicDesignWorkbench({accountId,sourceVersionId,projectId,outputId,title,design,onSave,onClose,onReload}:{accountId:string|null;sourceVersionId:string;projectId:string;outputId:string;title:string;design:Design;onSave:(design:Design,image?:ReferenceEditorMedia)=>Promise<void>;onClose:()=>void;onReload?:()=>Promise<void>}){
+ const scope=useNativeWorkspace(),workspace=useCreationWorkspace(scope);
  const [mountVersion]=React.useState(sourceVersionId);
  const [savePending,setSavePending]=React.useState(false);
  const pendingSave=React.useRef<{design:Design;image?:ReferenceEditorMedia;result?:EditorExport}|null>(null);
@@ -18,7 +22,7 @@ export function GraphicDesignWorkbench({accountId,sourceVersionId,projectId,outp
  const [busy,setBusy]=React.useState(false),[ready,setReady]=React.useState(false),[dirty,setDirty]=React.useState(false),[error,setError]=React.useState<string|null>(null),[message,setMessage]=React.useState<string|null>(null);
  const [closeConfirm,setCloseConfirm]=React.useState(false);const controller=React.useRef(new AbortController()),revoke=React.useRef<(()=>void)|null>(null);
  React.useEffect(()=>{alive.current=true;const abort=new AbortController();controller.current=abort;return()=>{alive.current=false;abort.abort();revoke.current?.();};},[]);
- async function load(){setBusy(true);try{const hydration=Object.keys(design.document.nativeDocument).length?await hydrateGraphicDocument(design.document,controller.current.signal):{document:null,revoke:()=>{}};if(!alive.current){hydration.revoke();return;}revoke.current?.();revoke.current=hydration.revoke;await frame.current!.request('load',{document:hydration.document,title});if(alive.current){setReady(true);setDirty(false);}}catch(e){if(alive.current)setError(e instanceof Error?e.message:'原稿加载失败，请保留稿件后重试');}finally{if(alive.current)setBusy(false);}}
+ async function load(){setBusy(true);try{const hydration=Object.keys(design.document.nativeDocument).length?await hydrateGraphicDocument(design.document,controller.current.signal,workspace.capture()):{document:null,revoke:()=>{}};if(!alive.current){hydration.revoke();return;}revoke.current?.();revoke.current=hydration.revoke;await frame.current!.request('load',{document:hydration.document,title});if(alive.current){setReady(true);setDirty(false);}}catch(e){if(alive.current)setError(e instanceof Error?e.message:'原稿加载失败，请保留稿件后重试');}finally{if(alive.current)setBusy(false);}}
  async function save(exportImage:boolean){if(busy||!ready||conflict)return;setBusy(true);setError(null);try{
   // 保存回执未知时沿用同一份冻结稿和已上传文件，避免再导出/上传改变请求。
   if(!pendingSave.current){
@@ -26,7 +30,7 @@ export function GraphicDesignWorkbench({accountId,sourceVersionId,projectId,outp
    else{const snapshot=await frame.current!.request<EditorSnapshot>('snapshot');if(!alive.current)return;const document=referenceEditorDocument.parse(freezeGraphicDocument(snapshot.document,media.current));pendingSave.current={design:{...design,document}};}
   }
   setSavePending(true);const pending=pendingSave.current;
-  if(pending.result&&!pending.image)pending.image=await uploadEditorMedia(projectId,outputId,new File([pending.result.blob],pending.result.fileName,{type:'image/png'}));
+  if(pending.result&&!pending.image)pending.image=await uploadEditorMedia(projectId,outputId,new File([pending.result.blob],pending.result.fileName,{type:'image/png'}),workspace.capture());
   if(!alive.current)return;await onSave(pending.design,pending.image);if(!alive.current)return;pendingSave.current=null;
   // 保存回执只证明冻结稿已落库；在途的合法图片导入仍可能产生后续图层。
   let changed=true;try{const live=await frame.current!.request<EditorSnapshot>('snapshot');changed=canonical(freezeGraphicDocument(live.document,media.current))!==canonical(pending.design.document);}catch{/* 无法核对时保留未保存提示，已确认的服务回执不再重发。 */}
@@ -39,6 +43,6 @@ export function GraphicDesignWorkbench({accountId,sourceVersionId,projectId,outp
   {error&&<p role="alert" className="border-b p-3 text-sm text-destructive">{error}<button className="ml-3 underline" disabled={busy||!!savePending||conflict} onClick={()=>void load()}>重新读取原稿</button></p>}{message&&<p role="status" className="p-2 text-sm">{message}</p>}
   {closeConfirm&&<div className="flex flex-wrap items-center gap-3 border-b bg-surface-subtle p-3"><p>设计尚未保存。保存后可继续回到这张图。</p><Button disabled={busy||conflict} onClick={()=>void save(false).then(()=>{if(alive.current)setCloseConfirm(false);})}>先保存设计</Button><Button variant="outline" onClick={()=>setCloseConfirm(false)}>继续编辑</Button><Button variant="ghost" disabled={busy||!!savePending} onClick={onClose}>放弃本次修改并返回</Button></div>}
   <details className="border-b px-4 py-2 text-xs text-muted-foreground"><summary className="cursor-pointer">开源来源与许可</summary><a href="/reference-editors/NOTICE.html" className="underline" target="_blank" rel="noreferrer">快图来源与许可</a></details>
-  <div className="min-h-0 flex-1 overflow-hidden"><NativeEditorSurface ref={frame} editor="kuaitu" owner={{accountId,outputId,sourceVersionId:mountVersion}} disabled={busy||!!savePending} onReady={()=>void load()} onChanged={()=>{if(ready&&!busy)setDirty(true);}} onError={setError} onImport={async file=>{const ref=await uploadEditorMedia(projectId,outputId,file);if(!alive.current)throw Error('已离开当前稿件');media.current=[...media.current,ref];return{mediaId:ref.mediaId};}}/></div>
+  <div className="min-h-0 flex-1 overflow-hidden"><NativeEditorSurface ref={frame} editor="kuaitu" owner={{groupId:scope.groupId,accountId:scope.accountId,projectId,outputId,sourceVersionId:mountVersion}} disabled={busy||!!savePending} onReady={()=>void load()} onChanged={value=>{if(isNativeContextEvent(value)&&!value.documentChanged)return;if(ready&&!busy)setDirty(true);}} onError={setError} onImport={async file=>{const ref=await uploadEditorMedia(projectId,outputId,file,workspace.capture());if(!alive.current)throw Error('已离开当前稿件');media.current=[...media.current,ref];return{mediaId:ref.mediaId};}}/></div>
  </DialogContent></Dialog>;
 }

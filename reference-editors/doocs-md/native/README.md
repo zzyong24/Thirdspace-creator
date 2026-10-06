@@ -1,3 +1,9 @@
+# T-1062 当前原生候选
+
+当前source与输出以本次candidate及校验清单为准，真实原命令记录见 VERIFY.md/VERIFICATION.md。宿主18、浏览器视觉、试听与安装尚未执行。
+
+## 原T-1053说明（历史保留）
+
 # Doocs/md 的 CreatorOS 原生组件
 
 原始仓库为 https://github.com/doocs/md ，固定源码提交为 `a7c17fc4cda92e3c13aa7e24f06615cfa4219b31`，原代码许可为 WTFPL。此归档包含完整源码、原锁文件、CreatorOS 原生适配和构建/夹具脚本。原固定来源及历史独立页版本由 CreatorOS 保留；本归档无需读取旧临时工作目录。

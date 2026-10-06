@@ -1,9 +1,12 @@
 "use client";
+import {useCreationClient} from "@/lib/creation-workspace-scope";
 import * as React from "react";
 import {client} from "@/lib/contract-client";
 import {aggregateAutoBroll,assetRefsFromScriptContentData,type AutoBrollItem} from "./production-flow";
 /** 库存失败只影响该来源；不把历史候选快照冒充当前可用素材。 */
 export function useProductionMaterialInventory(projectId:string){
+ const client=useCreationClient();
+
   const [brollItems, setBrollItems] = React.useState<
     ReadonlyArray<{ linkId: string; assetId: string; kind: string; name: string }>
   >([]);

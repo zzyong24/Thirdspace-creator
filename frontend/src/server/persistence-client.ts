@@ -1947,7 +1947,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       // 事务里的跨模块读取复用同一连接，避免PGlite等待自身事务外的查询。
       // 各模块公开service保留真实归属校验；不打开第二个数据库。
       const scopedAssets=transaction?createAssetsService(createAssetRepository(transaction,deps),objectStorageForStore(transaction),deps):assetsService;
-      const scopedLinks=transaction?createMaterialLinksService({db:transaction,...deps}):materialLinksService;
+      const scopedLinks=transaction?createMaterialLinksService({db:transaction,...deps,
+        assertProjectOwned:(context,id)=>createProjectsService(createProjectRepository(transaction),deps).getProject(context,id),
+      }):materialLinksService;
       await scopedAssets.getAsset(ctx,assetId);
       if(assetFileId){await scopedAssets.assertAssetFileOwned(ctx,assetId,assetFileId,false);}
       for(let page=1;;page++) {

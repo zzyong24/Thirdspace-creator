@@ -5,7 +5,7 @@ import {NativeEditorSurface} from './native-editor-surface';
 import type {NativeEditorHandle,NativeEditorOptions} from './native-editor-contract';
 const h=vi.hoisted(()=>({load:vi.fn(),mount:vi.fn(),request:vi.fn(),update:vi.fn(),dispose:vi.fn()}));
 vi.mock('./native-editor-loader',()=>({loadNativeEditor:h.load}));
-const owner={accountId:'account',outputId:'output',sourceVersionId:'version'};
+const owner={groupId:null,accountId:'account',projectId:'project',outputId:'output',sourceVersionId:'version'};
 let options:NativeEditorOptions;
 const props={editor:'kuaitu' as const,owner,onReady:vi.fn(),onChanged:vi.fn(),onError:vi.fn(),onImport:vi.fn(async()=>({mediaId:'real-media'}))};
 beforeEach(()=>{vi.clearAllMocks();document.documentElement.classList.remove('dark');document.documentElement.style.setProperty('--creatoros-surface','#ffffff');document.documentElement.style.setProperty('--creatoros-font-sans','sans-serif');h.load.mockResolvedValue({mount:h.mount});h.mount.mockImplementation(async(container:HTMLElement,value:NativeEditorOptions)=>{options=value;container.textContent='真实挂载点（引擎夹具）';return{request:h.request,update:h.update,dispose:h.dispose};});h.dispose.mockResolvedValue(undefined);h.request.mockResolvedValue({document:{value:'original'}});});
@@ -40,4 +40,20 @@ it('同ID在途请求拒绝重复；超时重试后旧回执不能消费新请�
  let secondFinished=false;const second=ref.current!.request('apply-tracks',{}, {requestId:'receipt'}).then(value=>{secondFinished=true;return value;});
  await act(async()=>{await Promise.resolve();replies[0]!({old:true});await Promise.resolve();});expect(secondFinished).toBe(false);
  await act(async()=>replies[1]!({applied:true}));expect(await second).toEqual({applied:true});
+});
+
+it('同组切平台保留原生实例与完整父根；跨组才销毁',async()=>{
+ const groupOwner={groupId:'group-a',accountId:'platform-a',projectId:'project',outputId:'output',sourceVersionId:'version'};
+ const view=render(<NativeEditorSurface {...props} owner={groupOwner}/>);await connect(view.container);const first=options;
+ expect(options.owner).toEqual({...groupOwner,accountId:null});
+ view.rerender(<NativeEditorSurface {...props} owner={{...groupOwner,accountId:'platform-b'}}/>);
+ expect(h.mount).toHaveBeenCalledOnce();expect(first.signal.aborted).toBe(false);
+ view.rerender(<NativeEditorSurface {...props} owner={{...groupOwner,groupId:'group-b'}}/>);
+ await waitFor(()=>expect(first.signal.aborted).toBe(true));
+});
+it('宿主取消真实透传请求signal，而非只丢弃解码结果',async()=>{
+ let nativeSignal:AbortSignal|null=null;h.request.mockImplementation((_operation,_payload,value)=>{nativeSignal=value.signal;return new Promise(()=>{});});
+ const ref=React.createRef<NativeEditorHandle>(),view=render(<NativeEditorSurface {...props} ref={ref}/>);await connect(view.container);
+ const controller=new AbortController(),promise=ref.current!.request('read-original-audio-range',{}, {signal:controller.signal});const rejected=expect(promise).rejects.toThrow('已停止');
+ await act(async()=>{await Promise.resolve();controller.abort();});await rejected;expect((nativeSignal as AbortSignal|null)?.aborted).toBe(true);
 });

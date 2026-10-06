@@ -9,7 +9,7 @@ import type {Delivery} from './host-port';
 
 type Theme = {mode: 'light' | 'dark'; tokens: Record<string, string>; fontFamily: string; fontSize: string; density: string};
 type Options = {
-  owner: {accountId: string; outputId: string; sourceVersionId: string}; theme: Theme;
+  owner: {groupId:string|null;accountId:string|null;projectId:string;outputId:string;sourceVersionId:string}; theme: Theme;
   portalContainer: HTMLElement; signal: AbortSignal;
   onChanged(value?: unknown): void; onError(message: string): void;
 };
@@ -17,6 +17,7 @@ type DocumentInput = {platform: 'wechat' | 'rednote'; title: string; markdown: s
 const placeholder = 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';
 export async function mount(container: HTMLElement, options: Options) {
   options.signal.throwIfAborted();
+  if(!options.owner.projectId||!options.owner.outputId||!options.owner.sourceVersionId||(!options.owner.groupId&&!options.owner.accountId))throw Error('作品归属缺失。');
   const lifetime = new AbortController();
   const abort = () => lifetime.abort();
   options.signal.addEventListener('abort', abort, {once: true});
@@ -25,7 +26,7 @@ export async function mount(container: HTMLElement, options: Options) {
   container.append(preview);
   const adapters = {wechat: new WechatAdapter(), rednote: new RednoteAdapter()};
   let input: DocumentInput | undefined, context: RenderContext | undefined, root: HTMLElement | undefined;
-  let renderLifetime = new AbortController(), epoch = 0, selectedImage = '', disabled = false;
+  let contextEpoch=0;let contextLifetime=new AbortController();let renderLifetime = new AbortController(), epoch = 0, selectedImage = '', disabled = false;
   const operations = new Set<Promise<unknown>>();
   const requests = new Set<string>();
   let urls = new Map<string, string>(), assets = new Map<string, Blob>();
@@ -36,7 +37,7 @@ export async function mount(container: HTMLElement, options: Options) {
       pageIndex: Number(root?.dataset.activeIndex ?? 0), pageCount: cards.length,
       selectedImage, images: root ? Array.from(root.querySelectorAll<HTMLImageElement>('img[data-noterelay-image-key]')).map((image, index) => ({key: image.dataset.noterelayImageKey!, label: image.alt || `图片 ${index + 1}`})) : []};
   }
-  function notify() {if (!lifetime.signal.aborted) options.onChanged(metadata());}
+  function notify(documentChanged=false) {if (!lifetime.signal.aborted) {contextLifetime.abort();contextLifetime=new AbortController();contextEpoch++;options.onChanged({...metadata(),kind:'native-context',contextEpoch,outputId:options.owner.outputId,sceneId:null,selectedElements:selectedImage?[selectedImage]:[],documentChanged});}}
   async function render(next: DocumentInput) {
     const parsedLayout = noteRelayLayout.parse(next.layout);
     for (const image of next.images ?? []) {
@@ -91,10 +92,10 @@ export async function mount(container: HTMLElement, options: Options) {
     const images = metadata().images;
     if (!images.some(image => image.key === selectedImage)) selectedImage = images[0]?.key ?? '';
     if (selectedImage && next.platform === 'rednote') adapters.rednote.revealImage(root, selectedImage);
-    notify(); return metadata();
+    notify(true); return metadata();
   }
-  async function execute(operation: string, payload?: unknown) {
-    assert();
+  async function execute(operation: string, payload?: unknown, requestSignal?:AbortSignal) {
+    assert();requestSignal?.throwIfAborted();
     if (operation === 'load') {
       const next = payload as DocumentInput;
       if (!next || typeof next.title !== 'string' || typeof next.markdown !== 'string' || !['wechat', 'rednote'].includes(next.platform)) throw new Error('稿件输入无效');
@@ -111,9 +112,11 @@ export async function mount(container: HTMLElement, options: Options) {
     if (operation === 'select-image') {selectedImage = (payload as {key: string}).key; adapters.rednote.revealImage(root, selectedImage); notify(); return metadata();}
     if (operation === 'export') {
       if (!input.markdown.trim()) throw new Error('先填写正文，再交付作品');
-      const frozenEpoch = epoch, frozenContext = context, frozenRoot = root, platform = input.platform;
+      const frozenEpoch = epoch, frozenContextEpoch=contextEpoch, frozenContext = context, frozenRoot = root, platform = input.platform;
       let result: Delivery | undefined;
-      const exportContext = {...frozenContext, onDeliver: (value: Delivery) => {result = value;}};
+      const frozenContextLifetime=contextLifetime;const exportLifetime=new AbortController();const stop=()=>exportLifetime.abort();requestSignal?.addEventListener('abort',stop,{once:true});frozenContextLifetime.signal.addEventListener('abort',stop,{once:true});frozenContext.signal?.addEventListener('abort',stop,{once:true});
+      const exportContext = {...frozenContext,signal:exportLifetime.signal,onDeliver:(value:Delivery)=>{assert();requestSignal?.throwIfAborted();if(contextEpoch!==frozenContextEpoch)throw new Error('上下文已改变');result=value;}};
+      try {
       const action = (payload as {action: string}).action;
       if (platform === 'wechat') await adapters.wechat.copy(exportContext);
       else if (action === 'zip') await adapters.rednote.downloadAll(exportContext, frozenRoot);
@@ -121,8 +124,9 @@ export async function mount(container: HTMLElement, options: Options) {
       else if (action === 'copy-png') await adapters.rednote.copy(exportContext, frozenRoot);
       else throw new Error('未知交付操作');
       assert(); frozenContext.signal?.throwIfAborted();
-      if (epoch !== frozenEpoch || !result) throw new Error('稿件已改变，请重新导出');
+      if (epoch !== frozenEpoch || contextEpoch!==frozenContextEpoch || !result) throw new Error('稿件已改变，请重新导出');
       return result;
+      } finally {requestSignal?.removeEventListener('abort',stop);frozenContextLifetime.signal.removeEventListener('abort',stop);frozenContext.signal?.removeEventListener('abort',stop);}
     }
     throw new Error('不支持此编辑操作');
   }
@@ -135,14 +139,15 @@ export async function mount(container: HTMLElement, options: Options) {
       if (operation === 'export' && exporting) return Promise.reject(new Error('前次导出尚未结束，请稍候重试'));
       if (operation === 'export') exporting = true;
       requests.add(requestId);
-      const promise = execute(operation, payload).then(result => {assert(); requestOptions?.signal?.throwIfAborted(); return result;});
+      const issuedEpoch=contextEpoch;
+      const promise = execute(operation,payload,requestOptions?.signal).then(result => {assert(); requestOptions?.signal?.throwIfAborted();if(['snapshot','export'].includes(operation)&&issuedEpoch!==contextEpoch)throw new Error('稿件上下文已改变');return result;});
       operations.add(promise);
       void promise.finally(() => {operations.delete(promise); requests.delete(requestId); if (operation === 'export') exporting = false;}).catch(() => undefined);
       return promise;
     },
     update(value: {theme?: Theme; disabled?: boolean}) {disabled = value.disabled ?? disabled; container.inert = disabled;},
     async dispose() {
-      lifetime.abort(); renderLifetime.abort(); epoch++;
+      lifetime.abort(); renderLifetime.abort();contextLifetime.abort();epoch++;contextEpoch++;
       options.signal.removeEventListener('abort', abort);
       await Promise.allSettled([...operations]);
       for (const url of urls.values()) URL.revokeObjectURL(url);
@@ -150,3 +155,5 @@ export async function mount(container: HTMLElement, options: Options) {
     },
   };
 }
+
+export function nativeOwnerKey(owner:Options['owner']) { return JSON.stringify([owner.groupId?['group',owner.groupId]:['account',owner.accountId],owner.projectId,owner.outputId,owner.sourceVersionId]); }

@@ -6,9 +6,9 @@ import { resolveSession } from "@/lib/session.server";
 /** 图文工作面只读取既有作品，访问页面不会建立新稿。 */
 export default async function ProjectImagePage({params}: {params: Promise<{projectId: string}>}) {
   const session = await resolveSession();
-  if (!session?.ctx.accountId) notFound();
+  if(!session||(!session.ctx.groupId&&!session.ctx.accountId))notFound();
   const {projectId} = await params;
-  const scoped = createServerClient(session.ctx);
+  const scoped = createServerClient({...session.ctx,accountId:session.ctx.groupId?null:session.ctx.accountId});
   let project: Awaited<ReturnType<typeof scoped.getProject>>;
   let outputs: ProjectWorkOutput[];
   try {
@@ -17,7 +17,7 @@ export default async function ProjectImagePage({params}: {params: Promise<{proje
   } catch { notFound(); }
   const images = outputs.filter(output => output.contentType === "image");
   if (images.length !== 1) return <ProjectOutputHome projectId={project.id} projectTitle={project.title}
-    accountId={session.ctx.accountId} initialOutputs={images} initialType="image" />;
+    accountId={session.ctx.groupId?null:session.ctx.accountId} initialOutputs={images} initialType="image" />;
   // 将唯一真实作品写入深链；编导与刷新都绑定同一 output。
   redirect(`/projects/${encodeURIComponent(project.id)}/outputs/${encodeURIComponent(images[0]!.id)}/image`);
 }

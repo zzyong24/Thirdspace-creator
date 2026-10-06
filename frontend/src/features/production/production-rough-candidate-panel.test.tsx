@@ -46,3 +46,67 @@ it('native只读planView生成携带真实scene/track，先保存且不改docume
  const prepare=vi.fn().mockResolvedValue({...native,revision:5});api.getProductionRoughCut.mockRejectedValueOnce(Object.assign(Error('不存在'),{code:'OwnershipError',status:404}));api.createProductionRoughCut.mockResolvedValue({candidateId:'new',taskId:'task',baseRevision:5});api.getProductionRoughCut.mockResolvedValueOnce({...candidate,baseRevision:5});
  const Panel=ProductionRoughCandidatePanel as React.ComponentType<any>;render(<Panel document={native} planView={base.plan} nativeScope={{sceneId:scene.id,trackId:scene.tracks.main.id,scene}} prepareDocument={prepare} accountId='account-a' disabled={false} onSaved={vi.fn()}/>);await open();fireEvent.click(screen.getByLabelText('选择片段 1'));fireEvent.change(screen.getByLabelText('粗剪要求'),{target:{value:'删除开头重复段'}});fireEvent.click(screen.getByRole('button',{name:'生成粗剪建议'}));await waitFor(()=>expect(api.createProductionRoughCut).toHaveBeenCalledOnce());expect(prepare).toHaveBeenCalledOnce();expect(api.createProductionRoughCut.mock.calls[0][0].body).toMatchObject({expectedRevision:5,selection:{clipIds:['original'],sceneId:'native-scene',trackId:'native-main'}});expect(native.plan!.editorVersion).toBe(3);
 });
+
+// T1062_COMPONENT_PORT_SEAM: 仅本文件既有业务spies；真实scope/epoch/signal/lifecycle不替换。
+vi.mock("@/lib/creation-workspace-scope", async importOriginal => {
+  const actual = await importOriginal<typeof import("@/lib/creation-workspace-scope")>();
+  const {client: componentPorts} = await import("@/lib/contract-client");
+  type Workspace = ReturnType<typeof actual.createCreationWorkspace>;
+  type Operation = ReturnType<Workspace["capture"]>;
+  const views = new WeakMap<Workspace, Workspace>();
+  function portClient(base: Operation["client"], capture: () => Operation): Operation["client"] {
+    const methods = new Map<PropertyKey, unknown>();
+    return new Proxy(base, {
+      get(target, key, receiver) {
+        const port = Reflect.get(componentPorts, key);
+        const original = Reflect.get(target, key, receiver);
+        if (typeof port !== "function") return original;
+        if (!methods.has(key)) methods.set(key, async (...args: unknown[]) => {
+          const operation = capture();
+          operation.assertCurrent();
+          try { return await Reflect.apply(Reflect.get(componentPorts, key), componentPorts, args); }
+          finally { operation.assertCurrent(); }
+        });
+        return methods.get(key);
+      },
+    });
+  }
+  function view(workspace: Workspace): Workspace {
+    const cached = views.get(workspace);
+    if (cached) return cached;
+    const client = portClient(workspace.client, () => workspace.capture());
+    const capture = (): Operation => {
+      const operation = workspace.capture();
+      return Object.freeze({...operation, client: portClient(operation.client, () => operation)});
+    };
+    const proxy = new Proxy(workspace, {
+      get(target, key) {
+        if (key === "client") return client;
+        if (key === "capture") return capture;
+        // Reflect读取原对象getter，signal/epoch始终是原factory当前值；不spread workspace。
+        return Reflect.get(target, key, target);
+      },
+    });
+    views.set(workspace, proxy);
+    return proxy;
+  }
+  return {
+    ...actual,
+    createCreationWorkspace: (...args: Parameters<typeof actual.createCreationWorkspace>) => view(actual.createCreationWorkspace(...args)),
+    useCreationWorkspace: (scope: Parameters<typeof actual.useCreationWorkspace>[0]) => view(actual.useCreationWorkspace(scope)),
+    useCreationClient: () => view(actual.useCreationWorkspace(actual.useCreationScope())).client,
+  };
+});
+// T1062_COMPONENT_PORT_SEAM_END
+
+// T1062_UNIT_SCOPE_FIXTURE: 显式合成单测选择；不是当前用户/生产default。
+import {beforeEach as t1062ScopeBeforeEach, afterEach as t1062ScopeAfterEach} from "vitest";
+t1062ScopeBeforeEach(() => {
+  window.localStorage.removeItem("creatoros:current-group");
+  window.localStorage.setItem("creatoros:current-account", "account-a");
+});
+t1062ScopeAfterEach(() => {
+  window.localStorage.removeItem("creatoros:current-group");
+  window.localStorage.removeItem("creatoros:current-account");
+});
+// T1062_UNIT_SCOPE_FIXTURE_END

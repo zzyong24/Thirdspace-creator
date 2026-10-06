@@ -66,7 +66,7 @@ export function creatorApiHeaders(
 ): Record<string, string> {
   const headers = Object.fromEntries(new Headers(input).entries());
   const options=scope??{};
-  if (scope !== undefined && ("groupId" in scope || "accountId" in scope)) {
+  if (scope !== undefined && ("groupId" in scope || "accountId" in scope || !("includeCurrentAccount" in scope))) {
     Object.assign(headers, handshakeHeaders());
     delete headers["x-group-id"];
     delete headers["x-account-id"];
@@ -171,7 +171,7 @@ export function createHttpTransport(baseUrl = "/api/v1", scope?: FrozenWorkspace
         // auth.
         credentials: "same-origin",
         body: JSON.stringify({ id: endpoint.id, input }),
-      }, frozenScope);
+      }, USER_SCOPED_OPERATIONS.has(endpoint.id) || forceNewDouyin ? {groupId:null,accountId:null} : frozenScope);
       if (!res.ok) {
         // 把后端的错误文案带上。否则前端只看到 "400/409",拿不到 DouyinNotLoggedInError /
         // 阶段交付物缺失 之类的可判定信息 —— 错误处理(未登录引导 / 进入下一步 gate 原因)失效。

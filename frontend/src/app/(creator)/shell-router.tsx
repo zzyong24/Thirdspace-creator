@@ -17,6 +17,7 @@
  * resolver never branches on cookies or auth state.
  */
 
+import { WorkspaceInitializationBoundary } from "@/components/shell/workspace-initialization";
 import * as React from "react";
 import { usePathname } from "next/navigation";
 
@@ -408,17 +409,19 @@ export function ShellRouter({
       contentFill={isContentFillRoute(pathname)}
       overlayMasked={hasInterceptingModal || overlayMasked}
     >
-      {children}
+      <WorkspaceInitializationBoundary allowRecovery>{children}</WorkspaceInitializationBoundary>
       {/* The Copilot overlay controller is wrapped in a Suspense boundary
           because it consumes `useSearchParams()`, which Next.js requires
           during prerender. The fallback is `null` so the panel only
           appears on the client, after hydration. */}
+      <WorkspaceInitializationBoundary surface="overlay">
       <React.Suspense fallback={null}>
         <OverlayController>
           <AICopilotDialog pathname={pathname} />
           <CopilotOverlayBridge />
         </OverlayController>
       </React.Suspense>
+      </WorkspaceInitializationBoundary>
     </AppShell>
   );
 }

@@ -1,7 +1,7 @@
 import {afterEach,beforeEach,expect,it,vi} from 'vitest';
 import {render,screen,fireEvent,waitFor,cleanup} from '@testing-library/react';
 const f=vi.hoisted(()=>({phase:'confirmed' as 'candidate'|'confirmed',account:'a',read:vi.fn(),confirm:vi.fn(),task:vi.fn(),download:vi.fn(),getAsset:vi.fn()}));
-vi.mock('@/lib/http-transport',()=>({readCurrentAccountId:()=>f.account}));
+vi.mock("@/lib/http-transport", async importOriginal => ({...await importOriginal<typeof import("@/lib/http-transport")>(), readCurrentAccountId:()=>f.account}));
 vi.mock('@/lib/contract-client',()=>({client:{listCanvases:async()=>[{id:'canvas-a',userId:'u',accountId:'a',projectId:'project-a',title:'原画布',revision:2,document:{schemaVersion:1,viewport:{x:0,y:0,zoom:1},nodes:[],edges:[]},createdAt:'2026-10-02T00:00:00Z',updatedAt:'2026-10-02T00:00:00Z',archivedAt:null}],listCanvasNodeTasks:async()=>[{id:'link-a',canvasId:'canvas-a',nodeId:'node-a',attemptId:'attempt-00000000001',taskId:'task-a',mediaKind:'image',inputRevision:2,inputDigest:'a'.repeat(64),referenceFileId:null,referenceChecksum:null,resultAssetId:'asset-a',createdAt:'2026-10-02T00:00:00Z',updatedAt:'2026-10-02T00:00:00Z'}],getCanvasGenerationMaterial:(...a:unknown[])=>f.read(...a),confirmTask:(...a:unknown[])=>f.confirm(...a),getTask:(...a:unknown[])=>f.task(...a),getAssetFileDownloadUrl:(...a:unknown[])=>f.download(...a),getAsset:(...a:unknown[])=>f.getAsset(...a)}}));
 import {CanvasMaterialPicker} from './canvas-material-picker';
 const origin={canvasId:'canvas-a',generationLinkId:'link-a',nodeId:'node-a',attemptId:'attempt-00000000001',inputRevision:2,inputDigest:'a'.repeat(64),taskId:'task-a',resultId:'result-a',executionTaskId:'exec-a',callId:'call-a'};
@@ -15,7 +15,73 @@ it('candidate必须原confirm并读回confirmed；确认不自动用于作品',a
 it('confirm回复丢失刷新后沿原selector已确认状态恢复，不再confirm，不生成新任务',async()=>{f.phase='candidate';f.confirm.mockImplementation(async()=>{f.phase='confirmed';throw Error('回复丢失');});const selected=vi.fn();const view=render(<CanvasMaterialPicker {...props} onSelect={selected}/>);await pick();await screen.findByText(/生成候选/);fireEvent.click(screen.getByRole('button',{name:'确认保留原结果'}));await screen.findByText('回复丢失');view.unmount();render(<CanvasMaterialPicker {...props} onSelect={selected}/>);fireEvent.click(await screen.findByRole('button',{name:'核对并继续原保留请求'}));await waitFor(()=>expect(screen.queryByRole('button',{name:'核对并继续原保留请求'})).toBeNull());expect(f.confirm).toHaveBeenCalledOnce();expect(selected).not.toHaveBeenCalled();});
 it('confirm已ACK但刷新失败，remount只读核对，不能再次confirm',async()=>{f.phase='candidate';let reads=0;f.read.mockImplementation(async()=>{reads++;if(reads===3)throw Error('读取失败');return exact();});f.confirm.mockResolvedValue({status:'succeeded'});const view=render(<CanvasMaterialPicker {...props} onSelect={vi.fn()}/>);await pick();await screen.findByText(/生成候选/);fireEvent.click(screen.getByRole('button',{name:'确认保留原结果'}));await screen.findByRole('button',{name:'只读核对原保留结果'});view.unmount();render(<CanvasMaterialPicker {...props} onSelect={vi.fn()}/>);fireEvent.click(await screen.findByRole('button',{name:'只读核对原保留结果'}));await screen.findByText(/原保留回复已收到/);expect(f.confirm).toHaveBeenCalledOnce();});
 it('原任务资格读取未完成时卸载，迟到task不能触发原confirm',async()=>{f.phase='candidate';let finish!:(v:unknown)=>void;f.task.mockImplementation(()=>new Promise(r=>{finish=r;}));const view=render(<CanvasMaterialPicker {...props} onSelect={vi.fn()}/>);await pick();await screen.findByText(/生成候选/);fireEvent.click(screen.getByRole('button',{name:'确认保留原结果'}));await waitFor(()=>expect(f.task).toHaveBeenCalledOnce());view.unmount();finish({taskType:'asset.generate',executionTaskId:'exec-a'});await Promise.resolve();expect(f.confirm).not.toHaveBeenCalled();});
-it('原任务资格读取期间账号变化，迟到task不能confirm',async()=>{f.phase='candidate';let finish!:(v:unknown)=>void;f.task.mockImplementation(()=>new Promise(r=>{finish=r;}));render(<CanvasMaterialPicker {...props} onSelect={vi.fn()}/>);await pick();await screen.findByText(/生成候选/);fireEvent.click(screen.getByRole('button',{name:'确认保留原结果'}));await waitFor(()=>expect(f.task).toHaveBeenCalledOnce());f.account='b';finish({taskType:'asset.generate',executionTaskId:'exec-a'});await screen.findByText(/当前账号已变化/);expect(f.confirm).not.toHaveBeenCalled();});
+it('原任务资格读取期间账号变化，迟到task不能confirm',async()=>{f.phase='candidate';let finish!:(v:unknown)=>void;f.task.mockImplementation(()=>new Promise(r=>{finish=r;}));render(<CanvasMaterialPicker {...props} onSelect={vi.fn()}/>);await pick();await screen.findByText(/生成候选/);fireEvent.click(screen.getByRole('button',{name:'确认保留原结果'}));await waitFor(()=>expect(f.task).toHaveBeenCalledOnce());selectAccount('b');finish({taskType:'asset.generate',executionTaskId:'exec-a'});await screen.findByText(/工作区已切换/);expect(f.confirm).not.toHaveBeenCalled();});
 it('selector返回另canvas/link身份拒绝，零下载和formal写',async()=>{f.read.mockResolvedValue({...exact(),origin:{...origin,generationLinkId:'foreign'}});render(<CanvasMaterialPicker {...props} onSelect={vi.fn()}/>);await pick();await screen.findByText('原生成回执不属于本次选择');expect(f.download).not.toHaveBeenCalled();expect(f.confirm).not.toHaveBeenCalled();});
 
 it('浏览器存储满仍继续原确认并提示当前窗口恢复限制',async()=>{f.phase='candidate';vi.spyOn(localStorage,'setItem').mockImplementation(()=>{throw new DOMException('Quota','QuotaExceededError');});render(<CanvasMaterialPicker {...props} onSelect={vi.fn()}/>);await pick();await screen.findByText(/生成候选/);fireEvent.click(screen.getByRole('button',{name:'确认保留原结果'}));await screen.findByText(/原任务已确认保留/);await screen.findByText(/浏览器存储不可用/);expect(f.confirm).toHaveBeenCalledOnce();});
+
+function selectAccount(account:string){f.account=account;window.localStorage.setItem("creatoros:current-account",account);}
+
+// T1062_COMPONENT_PORT_SEAM: 仅本文件既有业务spies；真实scope/epoch/signal/lifecycle不替换。
+vi.mock("@/lib/creation-workspace-scope", async importOriginal => {
+  const actual = await importOriginal<typeof import("@/lib/creation-workspace-scope")>();
+  const {client: componentPorts} = await import("@/lib/contract-client");
+  type Workspace = ReturnType<typeof actual.createCreationWorkspace>;
+  type Operation = ReturnType<Workspace["capture"]>;
+  const views = new WeakMap<Workspace, Workspace>();
+  function portClient(base: Operation["client"], capture: () => Operation): Operation["client"] {
+    const methods = new Map<PropertyKey, unknown>();
+    return new Proxy(base, {
+      get(target, key, receiver) {
+        const port = Reflect.get(componentPorts, key);
+        const original = Reflect.get(target, key, receiver);
+        if (typeof port !== "function") return original;
+        if (!methods.has(key)) methods.set(key, async (...args: unknown[]) => {
+          const operation = capture();
+          operation.assertCurrent();
+          try { return await Reflect.apply(Reflect.get(componentPorts, key), componentPorts, args); }
+          finally { operation.assertCurrent(); }
+        });
+        return methods.get(key);
+      },
+    });
+  }
+  function view(workspace: Workspace): Workspace {
+    const cached = views.get(workspace);
+    if (cached) return cached;
+    const client = portClient(workspace.client, () => workspace.capture());
+    const capture = (): Operation => {
+      const operation = workspace.capture();
+      return Object.freeze({...operation, client: portClient(operation.client, () => operation)});
+    };
+    const proxy = new Proxy(workspace, {
+      get(target, key) {
+        if (key === "client") return client;
+        if (key === "capture") return capture;
+        // Reflect读取原对象getter，signal/epoch始终是原factory当前值；不spread workspace。
+        return Reflect.get(target, key, target);
+      },
+    });
+    views.set(workspace, proxy);
+    return proxy;
+  }
+  return {
+    ...actual,
+    createCreationWorkspace: (...args: Parameters<typeof actual.createCreationWorkspace>) => view(actual.createCreationWorkspace(...args)),
+    useCreationWorkspace: (scope: Parameters<typeof actual.useCreationWorkspace>[0]) => view(actual.useCreationWorkspace(scope)),
+    useCreationClient: () => view(actual.useCreationWorkspace(actual.useCreationScope())).client,
+  };
+});
+// T1062_COMPONENT_PORT_SEAM_END
+
+// T1062_UNIT_SCOPE_FIXTURE: 显式合成单测选择；不是当前用户/生产default。
+import {beforeEach as t1062ScopeBeforeEach, afterEach as t1062ScopeAfterEach} from "vitest";
+t1062ScopeBeforeEach(() => {
+  window.localStorage.removeItem("creatoros:current-group");
+  window.localStorage.setItem("creatoros:current-account", "a");
+});
+t1062ScopeAfterEach(() => {
+  window.localStorage.removeItem("creatoros:current-group");
+  window.localStorage.removeItem("creatoros:current-account");
+});
+// T1062_UNIT_SCOPE_FIXTURE_END

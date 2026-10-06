@@ -4,6 +4,10 @@ import {afterEach,beforeEach,expect,it,vi} from "vitest";
 import type {MomentsResource,WorkCompositionResource} from "@creatoros/contract";
 const api=vi.hoisted(()=>({createMomentsVersion:vi.fn(),getMoments:vi.fn(),getMomentsVersion:vi.fn(),listAssets:vi.fn(),createMaterialLink:vi.fn(),getAssetFileDownloadUrl:vi.fn(),getWorkCompositionBasisVersion:vi.fn(),saveWorkCompositionBasis:vi.fn(),saveWorkCompositionSelection:vi.fn(),getWorkComposition:vi.fn(),selectWorkSource:vi.fn()}));
 vi.mock("@/lib/contract-client",()=>({client:api}));
+// 真实作品材料组件使用App Router；本文件只提供稳定导航端口，不替换业务组件。
+const navigation=vi.hoisted(()=>({push:vi.fn()}));
+vi.mock("next/navigation",()=>({useRouter:()=>navigation}));
+beforeEach(()=>navigation.push.mockReset());
 import {MomentsWorkbench} from "./moments-workbench";
 import {WorkCompositionWorkbench} from "./work-composition-workbench";
 import {projectWorkspaceId} from "./project-workspaces";
@@ -46,7 +50,7 @@ it("项目引用失败保留正文且不加入未连接图片",async()=>{
  fireEvent.change(screen.getByRole("textbox",{name:"朋友圈正文"}),{target:{value:"原编辑"}});
  fireEvent.click(screen.getByRole("button",{name:"选择已有图片"}));await screen.findByRole("option",{name:"真实图片"});
  fireEvent.change(screen.getByRole("combobox",{name:"选择朋友圈配图"}),{target:{value:"image-a"}});fireEvent.click(screen.getByRole("button",{name:"加入配图"}));
- await screen.findByRole("alert");expect(screen.getByRole("textbox",{name:"朋友圈正文"})).toHaveValue("原编辑");expect(screen.getByText(/0 张配图/)).toBeInTheDocument();
+ await screen.findByRole("alert");expect(screen.getByRole("textbox",{name:"朋友圈正文"})).toHaveValue("原编辑");expect(screen.getByText(/^已记录来源 0 项 · 0 张配图$/)).toBeInTheDocument();
 });
 it("明确版本冲突可读最新基线，仍保留用户编辑",async()=>{
  api.createMomentsVersion.mockRejectedValueOnce({code:"VERSION_CONFLICT"});render(<MomentsWorkbench initial={initial} accountId="account-a"/>);
@@ -123,3 +127,67 @@ it("来源显示实际保存范围，移除只在明确保存后生效且保留�
  fireEvent.click(screen.getByRole("button",{name:"保存共享依据"}));await waitFor(()=>expect(api.saveWorkCompositionBasis).toHaveBeenCalledTimes(1));
  expect(api.saveWorkCompositionBasis.mock.calls[0][0].body.document).toMatchObject({topic:"保留手工主题",sourceRefs:[]});
 });
+
+// T1062_COMPONENT_PORT_SEAM: 仅本文件既有业务spies；真实scope/epoch/signal/lifecycle不替换。
+vi.mock("@/lib/creation-workspace-scope", async importOriginal => {
+  const actual = await importOriginal<typeof import("@/lib/creation-workspace-scope")>();
+  const {client: componentPorts} = await import("@/lib/contract-client");
+  type Workspace = ReturnType<typeof actual.createCreationWorkspace>;
+  type Operation = ReturnType<Workspace["capture"]>;
+  const views = new WeakMap<Workspace, Workspace>();
+  function portClient(base: Operation["client"], capture: () => Operation): Operation["client"] {
+    const methods = new Map<PropertyKey, unknown>();
+    return new Proxy(base, {
+      get(target, key, receiver) {
+        const port = Reflect.get(componentPorts, key);
+        const original = Reflect.get(target, key, receiver);
+        if (typeof port !== "function") return original;
+        if (!methods.has(key)) methods.set(key, async (...args: unknown[]) => {
+          const operation = capture();
+          operation.assertCurrent();
+          try { return await Reflect.apply(Reflect.get(componentPorts, key), componentPorts, args); }
+          finally { operation.assertCurrent(); }
+        });
+        return methods.get(key);
+      },
+    });
+  }
+  function view(workspace: Workspace): Workspace {
+    const cached = views.get(workspace);
+    if (cached) return cached;
+    const client = portClient(workspace.client, () => workspace.capture());
+    const capture = (): Operation => {
+      const operation = workspace.capture();
+      return Object.freeze({...operation, client: portClient(operation.client, () => operation)});
+    };
+    const proxy = new Proxy(workspace, {
+      get(target, key) {
+        if (key === "client") return client;
+        if (key === "capture") return capture;
+        // Reflect读取原对象getter，signal/epoch始终是原factory当前值；不spread workspace。
+        return Reflect.get(target, key, target);
+      },
+    });
+    views.set(workspace, proxy);
+    return proxy;
+  }
+  return {
+    ...actual,
+    createCreationWorkspace: (...args: Parameters<typeof actual.createCreationWorkspace>) => view(actual.createCreationWorkspace(...args)),
+    useCreationWorkspace: (scope: Parameters<typeof actual.useCreationWorkspace>[0]) => view(actual.useCreationWorkspace(scope)),
+    useCreationClient: () => view(actual.useCreationWorkspace(actual.useCreationScope())).client,
+  };
+});
+// T1062_COMPONENT_PORT_SEAM_END
+
+// T1062_UNIT_SCOPE_FIXTURE: 显式合成单测选择；不是当前用户/生产default。
+import {beforeEach as t1062ScopeBeforeEach, afterEach as t1062ScopeAfterEach} from "vitest";
+t1062ScopeBeforeEach(() => {
+  window.localStorage.removeItem("creatoros:current-group");
+  window.localStorage.setItem("creatoros:current-account", "account-a");
+});
+t1062ScopeAfterEach(() => {
+  window.localStorage.removeItem("creatoros:current-group");
+  window.localStorage.removeItem("creatoros:current-account");
+});
+// T1062_UNIT_SCOPE_FIXTURE_END

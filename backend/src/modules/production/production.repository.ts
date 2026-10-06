@@ -105,12 +105,12 @@ function productionRepository(db:Db,deps:RepoDeps,locked:boolean):ProductionRepo
   // projects,strict eq(accountId))。跨 user / 跨号 / 不存在同貌 → OwnershipError 404
   // (§4.5 号一致性门);未选号 → AccountRequiredError(引导态)。production 的所有读写
   // 都收敛过这道门(by-productionId / by-exportId 先解析出 contentOutputId 再过门)。
-  async function requireOwnedOutput(outputId: string): Promise<void> {
+  async function requireOwnedOutput(outputId: string): Promise<{ groupId: string | null } | undefined> {
     requireWorkspace(deps);
     if(!locked&&deps.assertOutputOwned){const owned=await deps.assertOutputOwned(outputId);if(owned===null||owned===false)throw new OwnershipError("产出不存在");return;}
     if(!locked&&deps.groupId)throw new OwnershipError("产出归属验证不可用");
     const rows = await db
-      .select({ id: contentOutputs.id })
+      .select({ id: contentOutputs.id, groupId: projects.groupId })
       .from(contentOutputs)
       .innerJoin(projects, eq(contentOutputs.projectId, projects.id))
       .where(
@@ -125,6 +125,7 @@ function productionRepository(db:Db,deps:RepoDeps,locked:boolean):ProductionRepo
         `OwnershipError: content output not found: ${outputId}`,
       );
     }
+    return rows[0];
   }
 
   // Private ownership gate — a cross-user / unknown id is indistinguishable from
@@ -186,7 +187,8 @@ function productionRepository(db:Db,deps:RepoDeps,locked:boolean):ProductionRepo
       // makes the row at-most-one per output (data-model 0..1), so a second call
       // returns the SAME id (idempotent — backs the initial GET load).
       // [T-332 S2] 父锚门先行:不能给不属于当前号(或不存在)的 output 建 production。
-      await requireOwnedOutput(outputId);
+      const ownedOutput = await requireOwnedOutput(outputId);
+      if (!ownedOutput) throw new OwnershipError("产出归属验证不可用");
       const existing = await db
         .select()
         .from(productions)
@@ -209,6 +211,8 @@ function productionRepository(db:Db,deps:RepoDeps,locked:boolean):ProductionRepo
         .values({
           id,
           userId,
+          // 已有组/父锁事务中的真实父归属；legacy nullable 原样保留，不从筛选账号推断。
+          groupId: ownedOutput.groupId,
           contentOutputId: outputId,
           productionMode: "remote_recording",
           status: "drafting",

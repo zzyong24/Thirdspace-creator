@@ -4,8 +4,8 @@
   "moduleCount": 426,
   "modules": [
     {
-      "module": "../../../../../../__vite-plugin-wasm-helper",
-      "renderedLength": 1154
+      "module": "../../../../../../../../../../__vite-plugin-wasm-helper",
+      "renderedLength": 1158
     },
     {
       "module": "\u0000commonjsHelpers.js",
@@ -425,7 +425,7 @@
     },
     {
       "module": "src/components/ui/button.tsx",
-      "renderedLength": 1963
+      "renderedLength": 1961
     },
     {
       "module": "src/components/ui/color-picker.tsx",
@@ -637,19 +637,19 @@
     },
     {
       "module": "src/embedded/media-registration.ts",
-      "renderedLength": 1442
+      "renderedLength": 5954
     },
     {
       "module": "src/embedded/native-controller.ts",
-      "renderedLength": 6261
+      "renderedLength": 9001
     },
     {
       "module": "src/embedded/native-entry.tsx",
-      "renderedLength": 4765
+      "renderedLength": 4817
     },
     {
       "module": "src/embedded/native-host.ts",
-      "renderedLength": 1855
+      "renderedLength": 4610
     },
     {
       "module": "src/embedded/native-lifecycle.ts",

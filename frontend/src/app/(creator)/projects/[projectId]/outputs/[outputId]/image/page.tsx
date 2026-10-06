@@ -9,10 +9,10 @@ export default async function GraphicPostPage({ params, searchParams }: {
   searchParams?: Promise<{ start?: string }>;
 }) {
   const session = await resolveSession();
-  if (!session?.ctx.accountId) notFound();
+  if(!session||(!session.ctx.groupId&&!session.ctx.accountId))notFound();
   const { projectId, outputId } = await params;
   const initialStartStatus = (await searchParams)?.start;
-  const scoped = createServerClient(session.ctx);
+  const scoped = createServerClient({...session.ctx,accountId:session.ctx.groupId?null:(session.ctx.accountId??null)});
   let project: Awaited<ReturnType<typeof scoped.getProject>>;
   let post: Awaited<ReturnType<typeof scoped.getGraphicPost>>;
   try {
@@ -23,6 +23,6 @@ export default async function GraphicPostPage({ params, searchParams }: {
   } catch {
     notFound();
   }
-  return <GraphicPostWorkbench projectId={project.id} projectTitle={project.title} accountId={session.ctx.accountId}
+  return <GraphicPostWorkbench projectId={project.id} projectTitle={project.title} accountId={session.ctx.groupId?null:(session.ctx.accountId??null)}
     initial={post} initialStartStatus={initialStartStatus} />;
 }

@@ -30,11 +30,12 @@ export const NativeEditorSurface = React.forwardRef<NativeEditorHandle, Props>(f
       if (!handle) throw new Error('编辑器尚未准备好');
       options?.signal?.throwIfAborted();
       const requestId = options?.requestId ?? crypto.randomUUID();
+      const requestController=new AbortController();
       if (pending.current.has(requestId)) throw new Error('原编辑请求仍在确认，请等待回复');
       return new Promise<T>((resolve, reject) => {
         const requests = pending.current;
         const cleanup = () => {clearTimeout(timer); options?.signal?.removeEventListener('abort', abort); if (requests.get(requestId) === entry) requests.delete(requestId);};
-        const fail = (error: Error) => {cleanup(); reject(error);};
+        const fail = (error: Error) => {requestController.abort(); cleanup(); reject(error);};
         const abort = () => fail(new Error('编辑操作已停止，当前输入已保留'));
         const timer = setTimeout(() => fail(new Error('编辑操作尚未确认，当前内容已保留，请重试')), 120000);
         const entry = {reject: fail, cleanup};
@@ -42,7 +43,7 @@ export const NativeEditorSurface = React.forwardRef<NativeEditorHandle, Props>(f
         options?.signal?.addEventListener('abort', abort, {once: true});
         void Promise.resolve().then(() => {
           if (active.current !== handle || requests.get(requestId) !== entry) throw new Error('已切换作品，原操作停止');
-          return handle.request<T>(operation, payload, {...options, requestId});
+          return handle.request<T>(operation, payload, {...options, requestId,signal:requestController.signal});
         }).then(result => {
           if (requests.get(requestId) !== entry) return;
           if (active.current !== handle) {fail(new Error('已切换作品，原操作停止')); return;}
@@ -53,7 +54,8 @@ export const NativeEditorSurface = React.forwardRef<NativeEditorHandle, Props>(f
     update: options => active.current?.update(options),
     dispose: async () => {const handle = active.current; active.current = null; for (const request of pending.current.values()) request.reject(new Error('已离开当前作品')); await handle?.dispose();},
   }), []);
-  const {accountId, outputId, sourceVersionId} = props.owner;
+  const {groupId=null,accountId,projectId,outputId,sourceVersionId}=props.owner;
+  const effectiveAccountId=groupId?null:accountId;
   const editor = props.editor;
   const themeReady = theme !== null;
   React.useEffect(() => {
@@ -61,7 +63,7 @@ export const NativeEditorSurface = React.forwardRef<NativeEditorHandle, Props>(f
     const controller = new AbortController();
     const requests = pending.current;
     const importForOwner = callbacks.current.onImport;
-    const isCurrent = () => !controller.signal.aborted && callbacks.current.editor === editor && callbacks.current.owner.accountId === accountId && callbacks.current.owner.outputId === outputId && callbacks.current.owner.sourceVersionId === sourceVersionId;
+    const isCurrent = () => !controller.signal.aborted && callbacks.current.editor === editor && (callbacks.current.owner.groupId??null) === groupId && (groupId||callbacks.current.owner.accountId===effectiveAccountId) && callbacks.current.owner.projectId===projectId && callbacks.current.owner.outputId === outputId && callbacks.current.owner.sourceVersionId === sourceVersionId;
     const element = host.current;
     const shadow = element.shadowRoot ?? element.attachShadow({mode: 'open'});
     const container = document.createElement('div');
@@ -92,7 +94,7 @@ export const NativeEditorSurface = React.forwardRef<NativeEditorHandle, Props>(f
         const [module] = await Promise.all([loadNativeEditor(editor), cssReady]);
         controller.signal.throwIfAborted();
         mounted = await module.mount(container, {
-          owner: {accountId, outputId, sourceVersionId}, theme: latestTheme.current!, portalContainer: portals, signal: controller.signal,
+          owner: {groupId,accountId:effectiveAccountId,projectId,outputId,sourceVersionId}, theme: latestTheme.current!, portalContainer: portals, signal: controller.signal,
           onChanged: value => {if (isCurrent()) callbacks.current.onChanged(value);},
           onError: message => {if (isCurrent()) callbacks.current.onError(message);},
           importMedia: async file => {if (!isCurrent()) throw new Error('已切换作品'); const result = await importForOwner(file); if (!isCurrent()) throw new Error('已切换作品'); return result;},
@@ -116,7 +118,7 @@ export const NativeEditorSurface = React.forwardRef<NativeEditorHandle, Props>(f
       for (const node of [container, portals, css, baseStyle]) node.remove();
     };
   // Theme 变化由 update 处理，不能重建时间轴或丢失图层。
-  }, [editor, accountId, outputId, sourceVersionId, themeReady]);
+  }, [editor,groupId,effectiveAccountId,projectId,outputId,sourceVersionId,themeReady]);
   React.useEffect(() => {
     if (theme && host.current) {applyNativeEditorTheme(host.current, theme); active.current?.update({theme, disabled: props.disabled});}
   }, [theme, props.disabled]);

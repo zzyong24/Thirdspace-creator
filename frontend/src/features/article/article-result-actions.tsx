@@ -1,4 +1,5 @@
 "use client";
+import {useCreationClient,useCreationScope} from "@/lib/creation-workspace-scope";
 
 import * as React from "react";
 import Image from "next/image";
@@ -39,6 +40,8 @@ const coverValue = (value: unknown): CoverUse[] | null => mediaValue(value, "cov
 const cardValue = (value: unknown): CardUse[] | null => mediaValue(value, "card");
 
 function MediaPreview({ image, resultId, onReady }: { image: CoverUse | CardUse; resultId: string; onReady: (id: string) => void }) {
+ const client=useCreationClient(),workspaceSelection=useCreationScope();
+
   const [url, setUrl] = React.useState<string | null>(null);
   const [error, setError] = React.useState(false);
   React.useEffect(() => {
@@ -66,7 +69,7 @@ function abilityText(item: CreativeCapability | undefined) {
 }
 
 export function ArticleResultActions({ accountId, outputId, currentVersionId, dirty, bodyReplaceBlocked, sections, onAdopt }: {
-  accountId: string;
+  accountId:string|null;
   outputId: string;
   currentVersionId: string;
   dirty: boolean;
@@ -74,6 +77,8 @@ export function ArticleResultActions({ accountId, outputId, currentVersionId, di
   sections: readonly { sectionId: string; heading: string }[];
   onAdopt: () => Promise<void>;
 }) {
+ const client=useCreationClient(),workspaceSelection=useCreationScope();
+
   const [capabilities, setCapabilities] = React.useState<CreativeCapability[] | null>(null);
   const [results, setResults] = React.useState<Partial<Record<Kind, CreativeResult>>>({});
   const [coverResult, setCoverResult] = React.useState<CreativeResult | null>(null);
@@ -120,7 +125,7 @@ export function ArticleResultActions({ accountId, outputId, currentVersionId, di
   const load = React.useCallback(async () => {
     const current = ++serial.current;
     const reads = await Promise.allSettled([
-      client.listCreativeCapabilities({ params: undefined, query: { accountId, outputId }, body: undefined }),
+      client.listCreativeCapabilities({ params: undefined, query:{...(!workspaceSelection.groupId&&accountId?{accountId}:{}),outputId}, body: undefined }),
       client.listResults({ params: { outputId }, query: { pageSize: 50 }, body: undefined }),
     ]);
     if (current !== serial.current) return;

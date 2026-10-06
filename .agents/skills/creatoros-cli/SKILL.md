@@ -18,7 +18,7 @@ Operate the user's installed CreatorOS through its public CLI. Treat CreatorOS a
 - Use only the installed `creatoros` command and public operations it reports. Never connect to the database, private routes, browser state, connection files, credential stores, or CreatorOS internal source code.
 - Discover the command for the current OS user. Never reuse a path copied from a developer, another user, or an earlier conversation.
 - Run `operations list` and `operations describe <operation>` dynamically. Never assume a copied operation inventory or remembered schema is current.
-- Every account-scoped CLI call must carry the explicitly selected real `accountId`. Never use the saved default account for automation.
+- Every platform-account-scoped CLI call must carry the explicitly selected real `accountId`. Never use the saved default account for automation.
 - Read operations may run when needed. A write, model call, import, publish, delete, login, collection, generation, or confirmation requires the user's explicit current intent and the CLI's required execution flags.
 - AI output is a candidate. Do not save it until the user sees the proposed result and explicitly asks to adopt, save, or apply it.
 - Never claim success from submission, queueing, or candidate generation. Claim success only after the saved object and its current version can be read back.
@@ -44,14 +44,14 @@ Run `creatoros operations list`. Before every selected operation, run `creatoros
 
 Use the fixed CLI conveniences `accounts list`, `tasks get`, and `tasks wait` only as documented in the reference. Do not invent flags or operation names.
 
-### 3. Lock account and project context
+### 3. Lock workspace and project context
 
 List the accounts and relevant projects visible to the authorized user.
 
 - Continue automatically only when the result is unique or the user has explicitly named a uniquely identifiable account/project in the current request.
 - When more than one result is plausible, show concise choices and wait for the user to select. Do not pick the first, newest, or similarly named item.
-- Bind the chosen `accountId` and `projectId` to every read, candidate, write, task wait, confirmation, and read-back in this run.
-- Stop if any response belongs to a different account or project.
+- Bind the chosen workspace (`groupId`, with nullable `accountId`) and `projectId` to every read, candidate, write, task wait, confirmation, and read-back in this run.
+- Stop if any response belongs to a different workspace, parent project, or explicitly chosen platform account.
 
 ### 4. Read current truth
 
@@ -60,7 +60,7 @@ Read the selected project, its positioning, relevant sources/assets, current pro
 The current saved script version is the highest-priority content context. Do not treat a prior chat message, earlier draft, research note, cached candidate, or old task result as the latest script. Record at least:
 
 ```text
-accountId, projectId, outputId, artifactId, baseVersionId,
+groupId, accountId (nullable for a group), projectId, outputId, artifactId, baseVersionId,
 positioning, currentScript, relevantSources, currentAssets,
 currentProductionState, userRequest
 ```
@@ -87,7 +87,7 @@ Immediately before writing, read the current version again.
 - Full draft: if the base version changed, stop and regenerate or ask the user to resolve the conflict.
 - Local patch: use a stable block ID plus unchanged original text, or an exact original excerpt that is still unique. If it moved ambiguously, changed, disappeared, or repeats, stop. Never fuzzy-match and never fall back to overwriting the full draft.
 
-Describe the write or confirm operation again. Use the exact schema and explicit `--account`, `--apply`, a stable idempotency key, and `--confirm-impact` when the reported policy requires it. Reuse the same idempotency key when recovering an uncertain response.
+Describe the write or confirm operation again. Use the exact schema and explicit workspace flags from the reference (`--group` for a shared group; `--account` additionally for a platform target), `--apply`, a stable idempotency key, and `--confirm-impact` when the reported policy requires it. Reuse the same idempotency key when recovering an uncertain response.
 
 ### 7. Wait and prove completion
 
@@ -106,3 +106,15 @@ On success, read back and report the current version ID/version, account, projec
 - Version conflict: preserve the candidate, show the conflict, and require a fresh candidate or deterministic rebind.
 
 Keep explanations concise and user-facing. Include request/task IDs when available so CreatorOS support can trace a failure.
+
+## 账号组与原账号入口
+
+当前用户已确认以账号组作为共享创作工作区。对其已授权的读写和恢复，保留本会话授权，不因旧安装审计的“账号专用”描述再次要求选择虚假账号；此说明不代替当前安装版能力发现和实际验收。
+
+- 先 `groups list` 读取真实组；只有组唯一或用户明确指定时自动绑定，否则展示选择。自动化显式传同一 `--group <groupId>`，不自动采用 `groups current` 或保存默认。
+- 纯组创作可以没有平台账号，此时 `accountId` 为 NULL，省略 `--account`；组 ID 不能填进 account 字段。平台筛选不会改变共享草稿、项目或素材的组归属。
+- 项目、output、artifact 与保存版本仍须沿公开回读核对真实父关系。选中组不替代目标实体权限；任务、候选和未知回执沿提交时冻结的组、父根、版本、请求 ID 与幂等键恢复，不按当前平台筛选重新签名或新建。
+- 平台登录、采集、发布等账号目标继续使用真实 `--account`，并核对目标确实属于所选组。没有目标账号时让用户明确选择，不能取首个账号或造账号。
+- `operations describe` 现有 schema、effect、confirmation、asyncTask/idempotency 与 contractVersion 是动态事实；不要杜撰 `workspaceScope` 输出字段。只有安装版实际回读的终态与保存版本才是完成证据。
+
+详细命令和恢复示例见 [references/cli.md](references/cli.md)。

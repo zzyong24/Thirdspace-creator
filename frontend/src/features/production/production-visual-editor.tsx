@@ -1,4 +1,5 @@
 "use client";
+import {useCreationClient} from "@/lib/creation-workspace-scope";
 import * as React from "react";
 import {Timeline,type TimelineState} from "@xzdarcy/react-timeline-editor";
 import "@xzdarcy/react-timeline-editor/dist/react-timeline-editor.css";
@@ -15,6 +16,8 @@ const button="rounded-md border px-3 py-1.5 text-sm disabled:opacity-40";
 const requestId=()=>crypto.randomUUID();
 const signature=(p:unknown)=>JSON.stringify(p);
 export function ProductionVisualEditor({initial,onPrepare}:{initial:ProductionEditorDocument;onPrepare:()=>void}) {
+ const client=useCreationClient();
+
   const [documentState,setDocument]=React.useState(initial),[draft,setDraft]=React.useState(initial.plan as DraftPlan),[selected,setSelected]=React.useState<string|null>(null);
   const [past,setPast]=React.useState<DraftPlan[]>([]),[future,setFuture]=React.useState<DraftPlan[]>([]),[error,setError]=React.useState<string|null>(null),[busy,setBusy]=React.useState(false);
   const [preview,setPreview]=React.useState<{data:ProductionEditorPreview;channel:string}|null>(null),[previewError,setPreviewError]=React.useState<string|null>(null),[previewEpoch,setPreviewEpoch]=React.useState(0);

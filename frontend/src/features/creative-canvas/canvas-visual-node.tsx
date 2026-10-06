@@ -1,4 +1,5 @@
 "use client";
+import {useCreationClient} from "@/lib/creation-workspace-scope";
 
 import {useEffect,useState} from "react";
 import {Handle,NodeResizer,Position,type Node,type NodeProps} from "@xyflow/react";
@@ -26,6 +27,8 @@ export type CanvasVisualData={
 export type CanvasVisualFlowNode=Node<CanvasVisualData,"canvasVisual">;
 
 export function MediaPreview({assetId,type,canvasId,nodeId,revision}:{assetId:string;type:"image"|"video";canvasId?:string;nodeId?:string;revision?:number}){
+ const client=useCreationClient();
+
  const [url,setUrl]=useState("");
  useEffect(()=>{let live=true;const request=canvasId&&nodeId?client.getCanvasNodePreview({params:{canvasId,nodeId},query:undefined,body:undefined}):client.getDownloadUrl({params:{assetId},query:undefined,body:undefined});void request.then(response=>{if(live)setUrl(response.url);}).catch(()=>{if(live)setUrl("");});return()=>{live=false;};},[assetId,canvasId,nodeId,revision]);
  if(!url)return <div className="flex min-h-32 flex-1 items-center justify-center rounded-lg bg-muted/60 text-xs text-muted-foreground">预览暂不可用</div>;

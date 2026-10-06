@@ -4,6 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import Image from "next/image";
 
+import {useCreationClient,useCreationScope,creationScopeKey} from "@/lib/creation-workspace-scope";
 import { client } from "@/lib/contract-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -77,6 +78,23 @@ type ArticleClient = {
 const articleClient = client as unknown as ArticleClient;
 
 function requestId(): string { return crypto.randomUUID(); }
+
+// SEMANTIC_BOUNDARY_ALLOW: 仅规范化 JSON 协议对象的字段顺序，用于核对同一版本的完整回执；
+// 先按真实 wire JSON 序列化规则省略非 JSON 的 undefined，再排序对象键；不删除实际 JSON 字段、
+// 不改变数组顺序，也不参与文章内容或创作取舍。
+function canonicalJson(value: unknown): string {
+  const serialized = JSON.stringify(value);
+  if (serialized === undefined) return "undefined";
+  const canonicalize = (jsonValue: unknown): string => {
+    if (Array.isArray(jsonValue)) return `[${jsonValue.map(canonicalize).join(",")}]`;
+    if (jsonValue !== null && typeof jsonValue === "object") {
+      const record = jsonValue as Record<string, unknown>;
+      return `{${Object.keys(record).sort().map(key => `${JSON.stringify(key)}:${canonicalize(record[key])}`).join(",")}}`;
+    }
+    return JSON.stringify(jsonValue);
+  };
+  return canonicalize(JSON.parse(serialized));
+}
 function tokenFor(ref: { current: { id: string; payload: string } }, payload: unknown): string {
   const serialized = JSON.stringify(payload);
   if (ref.current.payload !== serialized) ref.current = { id: requestId(), payload: serialized };
@@ -104,6 +122,7 @@ function sectionLabel(document: ArticleDocument, sectionId: string): string {
 }
 
 function ArticleImagePreview({ image, label, candidate = false }: { image: ImageUse; label: string; candidate?: boolean }) {
+  const articleClient=useCreationClient() as unknown as ArticleClient;
   const [src, setSrc] = React.useState<string | null>(null);
   const [unavailable, setUnavailable] = React.useState(false);
   React.useEffect(() => {
@@ -122,6 +141,7 @@ function ArticleImagePreview({ image, label, candidate = false }: { image: Image
 }
 
 function ArticleCoverDisplay({ image }: { image: CoverImageUse }) {
+  const articleClient=useCreationClient() as unknown as ArticleClient;
   const [url, setUrl] = React.useState<string | null>(null);
   const [unavailable, setUnavailable] = React.useState(false);
   React.useEffect(() => {
@@ -136,7 +156,7 @@ function ArticleCoverDisplay({ image }: { image: CoverImageUse }) {
       : <p className="text-xs text-muted-foreground">{unavailable ? "此封面图片暂无法读取" : "正在读取封面图片…"}</p>}</figure>;
 }
 
-export function ArticleWorkbench({ projectId, projectTitle, accountId, initialOutputs, initialOutputId, activeBrandProfile = null }: {
+function ArticleWorkbenchSession({ projectId, projectTitle, accountId, initialOutputs, initialOutputId, activeBrandProfile = null }: {
   projectId: string;
   projectTitle: string;
   accountId?: string | null;
@@ -147,6 +167,7 @@ export function ArticleWorkbench({ projectId, projectTitle, accountId, initialOu
   initialOutputId?: string;
   activeBrandProfile?: { id: string; versionNumber: number; oneLiner: string } | null;
 }) {
+  const scope=useCreationScope(),articleClient=useCreationClient() as unknown as ArticleClient,workspaceOwner=creationScopeKey(scope);
   const [outputs, setOutputs] = React.useState(initialOutputs);
   const [outputId, setOutputId] = React.useState(initialOutputId
     ? initialOutputs.some(output => output.id === initialOutputId) ? initialOutputId : ""
@@ -203,7 +224,7 @@ export function ArticleWorkbench({ projectId, projectTitle, accountId, initialOu
     try {
       const loaded = await articleClient.getArticle({ params: { outputId: id }, query: undefined, body: undefined });
       if (serial !== loadSerial.current) return;
-      const key = `${accountId ?? "anonymous"}:${id}`;
+      const key = `${workspaceOwner}:${id}`;
       const current = structuredClone(loaded.current);
       const initial = firstLoads.current.has(key) ? current : fillScriptMetadata(current, loaded.scriptContext);
       firstLoads.current.add(key);
@@ -351,7 +372,7 @@ export function ArticleWorkbench({ projectId, projectTitle, accountId, initialOu
     const beforeSaveDigest = JSON.stringify(draftRef.current);
     setBusy("save"); setError(null); setMessage(null);
     try {
-      const storageKey = `creatoros:article:request:${accountId ?? "anonymous"}:${state.outputId}`;
+      const storageKey = `creatoros:article:request:${workspaceOwner}:${state.outputId}`;
       const payload = { outputId: state.outputId, expectedCurrentVersionId: state.currentVersionId, document: documentToSave };
       const payloadDigest = JSON.stringify(payload);
       let request = sessionStorage.getItem(storageKey);
@@ -369,7 +390,7 @@ export function ArticleWorkbench({ projectId, projectTitle, accountId, initialOu
       const result = await articleClient.createArticleVersion({ params: { outputId: state.outputId }, query: undefined,
         body: { ...requestValue.body, clientRequestId: requestValue.clientRequestId } });
       const exact = await articleClient.getArticleVersion({ params: { outputId: state.outputId, versionId: result.versionId }, query: undefined, body: undefined });
-      if (exact.versionId !== result.versionId || JSON.stringify(exact.document) !== JSON.stringify(requestValue.body.document)) {
+      if (exact.versionId !== result.versionId || canonicalJson(exact.document) !== canonicalJson(requestValue.body.document)) {
         throw new Error("保存回执与指定版本读回不一致，未清理恢复记录。");
       }
       const latest = await articleClient.getArticle({ params: { outputId: state.outputId }, query: undefined, body: undefined });
@@ -517,8 +538,8 @@ export function ArticleWorkbench({ projectId, projectTitle, accountId, initialOu
             </>}
           </div>}
         </fieldset>
-        <div className="min-w-0 space-y-4">        {accountId && <NoteRelayEditor accountId={accountId} outputId={state.outputId} sourceVersionId={state.currentVersionId} platform="wechat" value={draft} disabled={Boolean(busy)} onLayoutChange={layout=>setDraft(current=>current?{...current,nativeLayout:layout}:current)}/>}
-        <LazyDisclosure label="使用 Doocs 编辑器（保留原版式）">{()=>accountId && <DoocsArticleEditor key={`${accountId}:${state.outputId}:${state.currentVersionId}`} accountId={accountId}
+        <div className="min-w-0 space-y-4">        {(scope.groupId||accountId) && <NoteRelayEditor projectId={projectId} accountId={accountId??null} outputId={state.outputId} sourceVersionId={state.currentVersionId} platform="wechat" value={draft} disabled={Boolean(busy)} onLayoutChange={layout=>setDraft(current=>current?{...current,nativeLayout:layout}:current)}/>}
+        <LazyDisclosure label="使用 Doocs 编辑器（保留原版式）">{()=>(scope.groupId||accountId) && <DoocsArticleEditor projectId={projectId} key={`${workspaceOwner}:${state.outputId}`} accountId={accountId??null}
           outputId={state.outputId} sourceVersionId={state.currentVersionId} value={draft} savedDocument={state.current} onChange={setDraft} onSave={save} />}</LazyDisclosure>
 </div></div>
       </section>
@@ -553,10 +574,10 @@ export function ArticleWorkbench({ projectId, projectTitle, accountId, initialOu
 
 
 
-      {accountId && <OutputConversionPanel key={`${accountId}:${state.outputId}`} accountId={accountId} projectId={projectId} outputId={state.outputId}
+      {(scope.groupId||accountId) && <OutputConversionPanel key={`${workspaceOwner}:${state.outputId}`} accountId={accountId??null} projectId={projectId} outputId={state.outputId}
         sourceType="article" versionId={state.currentVersionId} dirty={dirty} fields={{title: state.current.title, summary: state.current.summary}}
         sections={state.current.sections} images={[...state.current.imageUses, ...(state.current.coverImageUse ? [state.current.coverImageUse] : [])]} />}
-      {accountId && <ArticleResultActions key={state.outputId} accountId={accountId} outputId={state.outputId}
+      {(scope.groupId||accountId) && <ArticleResultActions key={state.outputId} accountId={accountId??null} outputId={state.outputId}
         currentVersionId={state.currentVersionId} dirty={JSON.stringify(draft) !== JSON.stringify(state.current)}
         bodyReplaceBlocked={draft.imageUses.length > 0 || draft.visualBriefs.length > 0}
         sections={draft.sections.map((section) => ({ sectionId: section.sectionId, heading: section.heading }))}
@@ -606,3 +627,5 @@ export function ArticleWorkbench({ projectId, projectTitle, accountId, initialOu
     </>}
   </main>;
 }
+
+export function ArticleWorkbench(props:Parameters<typeof ArticleWorkbenchSession>[0]){const selection=useCreationScope();return <ArticleWorkbenchSession key={creationScopeKey(selection)+":"+(props.projectId+":"+(props.initialOutputId??""))} {...props}/>;}

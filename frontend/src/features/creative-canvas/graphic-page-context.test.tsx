@@ -4,7 +4,7 @@ import {beforeEach,afterEach,it,expect,vi} from 'vitest';
 import {render,screen,waitFor,fireEvent,cleanup,act} from '@testing-library/react';
 const f=vi.hoisted(()=>({account:'a',params:new URLSearchParams(),get:vi.fn(),version:vi.fn(),save:vi.fn(),material:vi.fn(),url:vi.fn(),createCanvas:vi.fn(),saveCanvas:vi.fn(),getCanvas:vi.fn()}));
 vi.mock('next/navigation',()=>({useSearchParams:()=>f.params}));
-vi.mock('@/lib/http-transport',()=>({readCurrentAccountId:()=>f.account}));
+vi.mock("@/lib/http-transport", async importOriginal => ({...await importOriginal<typeof import("@/lib/http-transport")>(), readCurrentAccountId:()=>f.account}));
 vi.mock('@/lib/contract-client',()=>({client:{getGraphicPost:(...args:unknown[])=>f.get(...args),getGraphicPostVersion:(...args:unknown[])=>f.version(...args),createGraphicPostVersion:(...args:unknown[])=>f.save(...args),getCanvasGenerationMaterial:(...args:unknown[])=>f.material(...args),getAssetFileDownloadUrl:(...args:unknown[])=>f.url(...args),createCanvas:(...args:unknown[])=>f.createCanvas(...args),saveCanvas:(...args:unknown[])=>f.saveCanvas(...args),getCanvas:(...args:unknown[])=>f.getCanvas(...args)}}));
 import {CanvasWorkContext} from './work-canvas-context';
 import {openGraphicPageCanvas} from './graphic-page-context';
@@ -30,3 +30,67 @@ it('明确CAS冲突后重新读取允许新请求，未知回执仍由另一案�
 it('返回原组图沿编辑器保存路径；保存失败留在画布',async()=>{cache();const onLeave=vi.fn().mockRejectedValue(Error('画布保存失败'));render(<CanvasWorkContext {...{accountId:'a',projectId:'p',canvasId:'canvas',onLeave}}/>);fireEvent.click(await screen.findByRole('link',{name:'返回原组图'}));await waitFor(()=>expect(onLeave).toHaveBeenCalledWith('/projects/p/outputs/o/image'));expect(await screen.findByRole('alert')).toHaveTextContent('画布保存失败');});
 
 it('补上此前无图的首个页也按明确页序保存，旧无绑定照片保留',async()=>{cache();const now=post();now.current.imageUses=[{assetId:'other',assetFileId:'other-file',order:0,role:'card',cardId:'page-b'},{assetId:'legacy',assetFileId:'legacy-file',order:1,role:'card',cardId:undefined as unknown as string}];f.get.mockResolvedValue(now);f.version.mockResolvedValue({versionId:'v1',document:now.current});const value=JSON.parse(sessionStorage.getItem('creatoros-graphic-page:a:handle')!);value.expectedFile=null;sessionStorage.setItem('creatoros-graphic-page:a:handle',JSON.stringify(value));view();fireEvent.click(await screen.findByRole('button',{name:'采用到这一页'}));fireEvent.click(screen.getByRole('button',{name:'确认替换这一页'}));await waitFor(()=>expect(f.save).toHaveBeenCalledOnce());expect(f.save.mock.calls[0]![0].body.document.imageUses.map((use:{assetId:string})=>use.assetId)).toEqual(['new','other','legacy']);});
+
+// T1062_COMPONENT_PORT_SEAM: 仅本文件既有业务spies；真实scope/epoch/signal/lifecycle不替换。
+vi.mock("@/lib/creation-workspace-scope", async importOriginal => {
+  const actual = await importOriginal<typeof import("@/lib/creation-workspace-scope")>();
+  const {client: componentPorts} = await import("@/lib/contract-client");
+  type Workspace = ReturnType<typeof actual.createCreationWorkspace>;
+  type Operation = ReturnType<Workspace["capture"]>;
+  const views = new WeakMap<Workspace, Workspace>();
+  function portClient(base: Operation["client"], capture: () => Operation): Operation["client"] {
+    const methods = new Map<PropertyKey, unknown>();
+    return new Proxy(base, {
+      get(target, key, receiver) {
+        const port = Reflect.get(componentPorts, key);
+        const original = Reflect.get(target, key, receiver);
+        if (typeof port !== "function") return original;
+        if (!methods.has(key)) methods.set(key, async (...args: unknown[]) => {
+          const operation = capture();
+          operation.assertCurrent();
+          try { return await Reflect.apply(Reflect.get(componentPorts, key), componentPorts, args); }
+          finally { operation.assertCurrent(); }
+        });
+        return methods.get(key);
+      },
+    });
+  }
+  function view(workspace: Workspace): Workspace {
+    const cached = views.get(workspace);
+    if (cached) return cached;
+    const client = portClient(workspace.client, () => workspace.capture());
+    const capture = (): Operation => {
+      const operation = workspace.capture();
+      return Object.freeze({...operation, client: portClient(operation.client, () => operation)});
+    };
+    const proxy = new Proxy(workspace, {
+      get(target, key) {
+        if (key === "client") return client;
+        if (key === "capture") return capture;
+        // Reflect读取原对象getter，signal/epoch始终是原factory当前值；不spread workspace。
+        return Reflect.get(target, key, target);
+      },
+    });
+    views.set(workspace, proxy);
+    return proxy;
+  }
+  return {
+    ...actual,
+    createCreationWorkspace: (...args: Parameters<typeof actual.createCreationWorkspace>) => view(actual.createCreationWorkspace(...args)),
+    useCreationWorkspace: (scope: Parameters<typeof actual.useCreationWorkspace>[0]) => view(actual.useCreationWorkspace(scope)),
+    useCreationClient: () => view(actual.useCreationWorkspace(actual.useCreationScope())).client,
+  };
+});
+// T1062_COMPONENT_PORT_SEAM_END
+
+// T1062_UNIT_SCOPE_FIXTURE: 显式合成单测选择；不是当前用户/生产default。
+import {beforeEach as t1062ScopeBeforeEach, afterEach as t1062ScopeAfterEach} from "vitest";
+t1062ScopeBeforeEach(() => {
+  window.localStorage.removeItem("creatoros:current-group");
+  window.localStorage.setItem("creatoros:current-account", "a");
+});
+t1062ScopeAfterEach(() => {
+  window.localStorage.removeItem("creatoros:current-group");
+  window.localStorage.removeItem("creatoros:current-account");
+});
+// T1062_UNIT_SCOPE_FIXTURE_END

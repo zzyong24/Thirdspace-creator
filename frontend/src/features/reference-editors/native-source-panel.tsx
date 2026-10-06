@@ -1,4 +1,5 @@
 "use client";
+import {useCreationClient} from "@/lib/creation-workspace-scope";
 import * as React from 'react';
 import {ENDPOINTS,type ProductionEditorDocument,type ProductionEditorVersion,type ReferenceEditorMedia,type ProductionSourceRequest} from '@creatoros/contract';
 import {client} from '@/lib/contract-client';
@@ -10,6 +11,8 @@ type Pending={kind:'prepare';body:Prepare;mediaId:string}|{kind:'retry';body:Ret
 type Original={requestId:string;mediaId:string};
 const button='rounded border px-3 py-2 text-sm disabled:opacity-40';
 export function NativeSourcePanel({document,media,metadata,disabled,prepareDocument,onSaved,onRecoverConflict}:{document:ProductionEditorDocument;media:ReferenceEditorMedia[];metadata:Array<Record<string,unknown>>;disabled:boolean;prepareDocument:PrepareNativeDocument;onSaved:(version:ProductionEditorVersion,action?:SavedNativeAction)=>Promise<void>;onRecoverConflict:()=>Promise<void>}){
+ const client=useCreationClient();
+
  const key=`native-source:${document.projectId}:${document.outputId}`,live=React.useRef(true),flight=React.useRef(false);
  const [mediaId,setMediaId]=React.useState(media[0]?.mediaId??''),[original,setOriginal]=React.useState<Original|null>(null),[pending,setPending]=React.useState<Pending|null>(null),[result,setResult]=React.useState<ProductionSourceRequest|null>(null),[error,setError]=React.useState<string|null>(null),[conflict,setConflict]=React.useState(false);
  React.useEffect(()=>{live.current=true;let active=true;void Promise.resolve().then(()=>{if(!active)return;try{const cached=JSON.parse(sessionStorage.getItem(key)??'null');if(!cached)return;const o=cached.original;if(o&&typeof o.requestId==='string'&&media.some(m=>m.mediaId===o.mediaId)){setOriginal(o);setMediaId(o.mediaId);}const p=cached.pending;if(p&&media.some(m=>m.mediaId===p.mediaId)){const schema=p.kind==='prepare'?ENDPOINTS.prepareProductionEditorSource.body:p.kind==='adopt'?ENDPOINTS.adoptProductionEditorSource.body:p.kind==='retry'?ENDPOINTS.retryProductionEditorSource.body:null;if(schema)setPending({...p,body:schema.parse(p.body)});}}catch{/* 无效恢复记录不发请求。 */}});return()=>{active=false;live.current=false;};},[key]);

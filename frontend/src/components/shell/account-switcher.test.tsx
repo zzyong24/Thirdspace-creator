@@ -5,15 +5,19 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const router={refresh:vi.fn()};
 const list=vi.fn();
 vi.mock("next/navigation",()=>({useRouter:()=>router}));
-vi.mock("@/lib/contract-client",()=>({client:{listAccountGroups:(input:unknown)=>list(input)}}));
+
 import { AccountSwitcher } from "./account-switcher";
 import {TooltipProvider} from '@/components/ui/tooltip';
 import { CURRENT_ACCOUNT_KEY, CURRENT_GROUP_KEY, CURRENT_GROUP_COOKIE } from "@/lib/http-transport";
 import { beginForegroundActivity, resetForegroundActivitiesForTest } from "@/lib/foreground-activity";
 import { notifyAccountsChanged } from "@/lib/account-events";
-const group=(id:string,members:unknown[]=[])=>({id,userId:"u",name:`组${id}`,status:"active",version:1,members});
-beforeEach(()=>{vi.clearAllMocks();localStorage.clear();document.cookie=`${CURRENT_GROUP_COOKIE}=; Path=/; Max-Age=0`;resetForegroundActivitiesForTest();});
-afterEach(cleanup);
+const group=(id:string,members:Array<{accountId:string;leftAt:string|null}>=[])=>({id,userId:"u",name:`组${id}`,status:"active",version:1,createdAt:"2026-10-05T00:00:00Z",updatedAt:"2026-10-05T00:00:00Z",members:members.map(member=>({...member,id:`m-${id}`,groupId:id,platform:"douyin",accountHandle:"legacy",status:"active",version:1,joinedAt:"2026-10-05T00:00:00Z"}))});
+const fetcher=vi.fn(async(_url:unknown,init?:RequestInit)=>{
+ const request=JSON.parse(init?.body as string);const rows=await list(request.input);
+ return new Response(JSON.stringify({data:rows,meta:{requestId:"r",page:request.input.query.page,pageSize:100,total:rows.length}}),{status:200});
+});
+beforeEach(()=>{vi.clearAllMocks();vi.stubGlobal("fetch",fetcher);localStorage.clear();document.cookie=`${CURRENT_GROUP_COOKIE}=; Path=/; Max-Age=0`;resetForegroundActivitiesForTest();});
+afterEach(()=>{cleanup();vi.unstubAllGlobals();});
 describe("账号组全局切换",()=>{
  it("窄窗折叠侧栏仍能用鼠标打开并切换真实账号组",async()=>{
   const user=userEvent.setup();localStorage.setItem(CURRENT_GROUP_KEY,'a');list.mockResolvedValue([group('a'),group('b')]);
