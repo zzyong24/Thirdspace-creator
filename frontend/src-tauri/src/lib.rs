@@ -672,6 +672,9 @@ fn build_sidecar_probe_client(
     timeout: Duration,
 ) -> Result<reqwest::blocking::Client, reqwest::Error> {
     reqwest::blocking::Client::builder()
+        // 本地启动探测必须直连，避免系统/环境代理把正常首页变成代理502。
+        // 此client只用于固定127.0.0.1探测，不改变其它网络请求的代理设置。
+        .no_proxy()
         .timeout(timeout)
         .redirect(reqwest::redirect::Policy::limited(2))
         .build()
