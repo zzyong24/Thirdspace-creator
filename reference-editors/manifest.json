@@ -73,27 +73,28 @@
     "native": {
       "deliveryMode": "native",
       "sourceArchive": "sources/opencut-classic/native-source.tar.gz",
-      "sourceArchiveSha256": "bfed0110822c6f4a80348548be1e713b09b33be95ec1c8e420e1aa0f5934652d",
+      "sourceArchiveSha256": "3a1442e9b0150710f7f284ea4c4773124d78f8e252d5b906d6e140cdec34bb44",
       "patch": "sources/opencut-classic/native-patches.diff",
-      "patchSha256": "06e5e93212ed4fdb1d4b9076b9ad17fc9c6b2fdb73eb228e5ccd32426185da51",
+      "patchSha256": "22b311b811cb788c704f24e78e954f7921bc791f5e650830092debf933f8e195",
       "bundleFiles": {
         "LICENSE.opencut": "8117f9bb64534f7530fc6139b014fd1c1465f7981f93d1871789150fa3f59d3d",
-        "NATIVE_BUILD_GRAPH.json": "d7453091e4e5b8b5958b76ced69ee98485efead2edce8658da64e7f7708b0359",
+        "NATIVE_BUILD_GRAPH.json": "6629699c0e7899fe016ab0fb38d74db902ece5f68bded1eeafba1ec6a8aabeba",
         "THIRD_PARTY_LICENSES.json": "becfab856e0610ccbc14f1abf05d38c25593b60ada26f553dac667fcd471e8ad",
         "THIRD_PARTY_LICENSES.txt": "d3e59d1b80d9ebcccfc76f84dc51d976ed113749afec53d51c02f6832eafe51f",
         "effects/preview.jpg": "b318cede7bbe27bfbf1b8b94d41f65b6f52d5f2650ce3a153d03b76c2a1c0190",
-        "native.css": "e8757103e0fd57d164826df1de27070222dc6b2ba23bcd4bb32a3cbbe64ee688",
-        "native.js": "ad5e817d260c9fa1686dd606db2151a96c96822d74ab2917956a02e04013769c"
+        "native.css": "a0bad44d377687bc240c1cf59742b3ffa12b5ba282d00d3912846587fc12b31f",
+        "native.js": "79c8fc5a9b7ce45f5abf66b91579a33365370edf1b044f740e83d4c5d7ebbc9f"
       },
       "t1062CandidateManifest": {
         "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r8-nzjmtyxt/source-manifest-final.json",
         "sha256": "246e63a02753b7a90760611506a82341d8457462a996aed8463f7f91eccdc153"
       },
-      "verificationStatus": "TMP_CURRENT_TITLE_REGRESSION_RED_GREEN_AND_BUILD0_NOT_HOST18_OR_INSTALL",
+      "verificationStatus": "T1069_CURRENT_SOURCE_BUILD_AND_FIXTURE_NOT_BROWSER_OR_INSTALL",
       "t1062TitleRepairCurrentManifest": {
         "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-attempt9-group-native-fix-imixc7dc/native31-current-binding.json",
         "sha256": "944f259e707c9579a321ede8b2655e51f3e3b36c9841fd0f16b640edc73d28b6"
-      }
+      },
+      "t1069ReconstructionEvidence": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1069-native-source/delivery-candidate/full-reconstruction-result.json"
     }
   },
   "noterelay": {

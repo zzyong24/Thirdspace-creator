@@ -2903,6 +2903,22 @@
       "reason": "独立当前生成闭包复核：已有语言/运行时标记不变，只重绑已准入native交付的精确当前SHA；原预算与历史保留，无新增机制。",
       "review": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1069-final-spec-review/current-native-delivery-budget-review.json",
       "acceptance": "独评报告SHA256 467c22af7fa5b10101bb42f3f45aece9fafda98838d86fc6a6dfd1847dac8a13；仅机械预算，不代签真实功能、性能、扫码、安装或用户验收。"
+    },
+    {
+      "task_id": "T-1062",
+      "files": [
+        "reference-editors/manifest.json"
+      ],
+      "file_sha256": "69bda55a03e42d4d30c67f4d091c0282ce6b09d5bf90ed230cec26c053681bc5",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1069-INSTALLED-MEDIA-AND-BINDING",
+      "scope_source": "docs/features/t1062-consolidated-local-client-acceptance.md",
+      "reason": "独立完整diff与11项交付字节核验：仅已有OpenCut产物SHA/状态/证据引用更新；唯一Rust许可证名称与HEAD相同，无新增语言、工具链或执行机制。",
+      "review": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1069-final-spec-review/current-candidate-scope-inventory.json",
+      "acceptance": "仅此精确SHA母integration准入预算；独评报告SHA 02730c1d1df3bad50c6be14cff3c26cebec0d914c1a19a46b02f5ab923598686。原claim拒绝保留，不代签功能、扫码、性能、安装或任务完成。"
     }
   ],
   "historical_baselines": []

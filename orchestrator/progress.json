@@ -4665,10 +4665,5 @@
       "commits": {}
     }
   ],
-  "leases": {
-    "T-1069:implementation": {
-      "agent": "root",
-      "since": "2026-10-07T03:34:20.561Z"
-    }
-  }
+  "leases": {}
 }
