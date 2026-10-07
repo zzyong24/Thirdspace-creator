@@ -1,10 +1,11 @@
 import * as React from 'react';
 import {afterEach,beforeEach,expect,it,vi} from 'vitest';
 import {act,cleanup,fireEvent,render,screen,waitFor} from '@testing-library/react';
-const h=vi.hoisted(()=>({pathname:'/projects/p/production',mounts:0,unmounts:0,replace:vi.fn(),dispose:vi.fn(),backup:vi.fn(),dirty:true,save:vi.fn()}));
+const h=vi.hoisted(()=>({pathname:'/projects/p/production',mounts:0,unmounts:0,replace:vi.fn(),dispose:vi.fn(),backup:vi.fn(),dirty:true,save:vi.fn(),identity:null as any}));
 vi.mock('next/navigation',()=>({usePathname:()=>h.pathname,useRouter:()=>({replace:h.replace})}));
 vi.mock('@/app/(creator)/projects/[projectId]/stage-chat-wrapper',()=>({StageChatWrapper:({children}:any)=><div>{children}</div>}));
 vi.mock('@/features/production/production-editor-entry',()=>({ProductionEditorSession:(props:any)=>{
+ h.identity=props.sessionIdentity;
  React.useEffect(()=>{h.mounts++;props.onLeaveControl({readState:()=>({dirty:h.dirty,busy:false,pending:false,imports:0,ready:true}),saveForLeave:h.save,recoverOriginalReceipt:vi.fn(),exportLocalBackup:h.backup,dispose:h.dispose});return()=>{h.unmounts++;props.onLeaveControl(null);};},[]);
  return <div data-testid="session">{props.outputId}</div>;
 }}));
@@ -21,9 +22,10 @@ beforeEach(()=>{vi.clearAllMocks();h.pathname='/projects/p/production';h.mounts=
 afterEach(cleanup);
 it('直接离开项目到账号页、浏览器历史返回保留同一会话；别的项目不能显示旧稿',async()=>{
  const view=render(<View/>);await screen.findByTestId('session');expect(h.mounts).toBe(1);
+ const identity=h.identity;expect(identity).toMatchObject({scopeKey:'group:g',projectId:'p',outputId:'v',generation:expect.any(Number)});
  h.pathname='/accounts';view.rerender(<View/>);expect(screen.getByTestId('session').closest('[data-video-session-outlet]')).toHaveAttribute('hidden');expect(h.unmounts).toBe(0);
  h.pathname='/projects/other/production';view.rerender(<View/>);expect(screen.getByTestId('session').closest('[data-video-session-outlet]')).toHaveAttribute('hidden');
- h.pathname='/projects/p/production';view.rerender(<View/>);expect(screen.getByTestId('session').closest('[data-video-session-outlet]')).not.toHaveAttribute('hidden');expect(h.mounts).toBe(1);
+ h.pathname='/projects/p/production';view.rerender(<View/>);expect(screen.getByTestId('session').closest('[data-video-session-outlet]')).not.toHaveAttribute('hidden');expect(h.mounts).toBe(1);expect(h.identity).toBe(identity);
 });
 it('更换作品先保留旧会话，保存并实际释放后才挂新作品',async()=>{
  const view=render(<View/>);await screen.findByTestId('session');view.rerender(<View outputId="other"/>);await screen.findByRole('dialog');expect(screen.getByTestId('session')).toHaveTextContent('v');

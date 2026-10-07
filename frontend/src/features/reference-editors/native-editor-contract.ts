@@ -31,3 +31,8 @@ export type NativeEditorOptions = {
 export type NativeEditorModule = {mount(container: HTMLElement, options: NativeEditorOptions): Promise<NativeEditorHandle>};
 export type EditorSnapshot = {document: Record<string, unknown>; mediaMetadata?: Array<Record<string, unknown>>};
 export type EditorExport = EditorSnapshot & {blob: Blob; fileName: string};
+
+export type NativeEditorContext=EditorSnapshot&{documentVersion?:31;contextEpoch:number;outputId:string;sceneId:string;trackId:string;selectedElements:Array<{trackId:string;elementId:string}>;playheadTick:number;ticksPerSecond:120000};
+export type NativePreviewMedia={mediaId:string;assetId:string;assetFileId:string;file:File;name:string;type:string;size:number;lastModified:number;width?:number;height?:number;duration?:number;fps?:number;hasAudio?:boolean};
+export type NativePreviewSceneRequest={owner:NativeEditorOwner;targetSceneId:string;baseContextEpoch:number;beforeDigest:string;candidateDigest:string;tracks:Record<string,unknown>;media:NativePreviewMedia[]};
+export type NativePreviewSceneResult={operation:'preview-scene';blob:Blob;fileName:string;sceneId:string;candidateDigest:string;contextEpoch:number;documentVersion:31};

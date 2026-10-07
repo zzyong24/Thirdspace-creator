@@ -9,7 +9,7 @@ import {Input} from '@/components/ui/input';
 import {Select,SelectContent,SelectItem,SelectTrigger,SelectValue} from '@/components/ui/select';
 import {NativeEditorSurface,type NativeEditorHandle} from '../native-editor-surface';
 import {projectArticle,projectGraphic,defaultLayout,assetSource} from './projection';
-type Props={accountId:string|null;projectId:string;outputId:string;sourceVersionId:string;platform:'wechat'|'rednote';value:ArticleDocument|GraphicPostDocument;onLayoutChange:(layout:NoteRelayLayout)=>void;disabled?:boolean};
+type Props={accountId:string|null;projectId:string;outputId:string;sourceVersionId:string;platform:'wechat'|'rednote';value:ArticleDocument|GraphicPostDocument;onLayoutChange:(layout:NoteRelayLayout)=>void;disabled?:boolean;readOnlyCandidate?:boolean;onPreviewReady?:(metadata:{pageCount:number;pageIndex:number})=>void};
 type Metadata={themes:Array<{id:string;name:string}>;images:Array<{key:string;label:string}>;pageIndex:number;pageCount:number;selectedImage:string};
 type ExportAction='copy-html'|'html'|'copy-text'|'copy-png'|'png'|'zip';
 type Delivery={blob:Blob;plainText?:string;filename?:string};
@@ -21,9 +21,10 @@ export function NoteRelayEditor(props:Props){const scope=useNativeWorkspace();re
 function NoteRelayEditorSession(props:Props){
  const scope=useNativeWorkspace(),workspace=useCreationWorkspace(scope),client=workspace.client;
  const [mountVersion]=React.useState(props.sourceVersionId);
- const {platform,value,onLayoutChange,disabled}=props;
+ const {platform,value,onLayoutChange,disabled,readOnlyCandidate}=props;
  const editor=React.useRef<NativeEditorHandle>(null),alive=React.useRef(true),ready=React.useRef(false),assets=React.useRef(new Map<string,Blob>()),sequence=React.useRef(0),loading=React.useRef<AbortController|null>(null);
  const [rendered,setRendered]=React.useState(''),[busy,setBusy]=React.useState(false),[error,setError]=React.useState<string|null>(null),[assetError,setAssetError]=React.useState<string|null>(null),[message,setMessage]=React.useState<string|null>(null),[epoch,setEpoch]=React.useState(0),[meta,setMeta]=React.useState(empty);
+ const onPreviewReady=React.useRef(props.onPreviewReady);onPreviewReady.current=props.onPreviewReady;
  const projection=React.useMemo(()=>platform==='wechat'?projectArticle(value as ArticleDocument):projectGraphic(value as GraphicPostDocument),[platform,value]);
  const layout=value.nativeLayout?.editor==='noterelay'?value.nativeLayout:defaultLayout(platform);
  const digest=JSON.stringify({projection,layout}),latest=React.useRef({projection,layout,platform,digest});
@@ -41,13 +42,13 @@ function NoteRelayEditorSession(props:Props){
    if(generation!==sequence.current||snapshot.digest!==latest.current.digest||editor.current!==active||!alive.current)return;
    setAssetError(failures.length?`有 ${failures.length} 张图片无法读取；正文和版式仍可保存，请重新选图后导出。`:null);
    const result=await active.request<Metadata>('load',{platform:snapshot.platform,title:snapshot.projection.title,markdown:snapshot.projection.markdown,layout:snapshot.layout,images},{signal:abort.signal});
-   if(generation===sequence.current&&snapshot.digest===latest.current.digest&&alive.current){setMeta(result);setRendered(snapshot.digest);}
+   if(generation===sequence.current&&snapshot.digest===latest.current.digest&&alive.current){setMeta(result);setRendered(snapshot.digest);onPreviewReady.current?.({pageCount:result.pageCount,pageIndex:result.pageIndex});}
   }catch(reason){if(!abort.signal.aborted&&alive.current)setError(reason instanceof Error?reason.message:'预览未完成');}
  },[]);
  React.useEffect(()=>{const assetCache=assets.current;const renderSequence=sequence;alive.current=true;return()=>{alive.current=false;ready.current=false;renderSequence.current++;loading.current?.abort();assetCache.clear();};},[]);
  React.useEffect(()=>{if(ready.current)void initialize();},[digest,initialize]);
- const loaded=rendered===digest,locked=busy||disabled;
- function change(patch:Partial<NoteRelayLayout>){const parsed=noteRelayLayout.safeParse({...layout,...patch});if(parsed.success)onLayoutChange(parsed.data);else setError('版式设置超出范围，当前稿件已保留。');}
+ const loaded=rendered===digest,locked=busy||disabled,layoutLocked=locked||readOnlyCandidate;
+ function change(patch:Partial<NoteRelayLayout>){if(readOnlyCandidate)return;const parsed=noteRelayLayout.safeParse({...layout,...patch});if(parsed.success)onLayoutChange(parsed.data);else setError('版式设置超出范围，当前稿件已保留。');}
  function request(operation:string,payload:unknown){const active=editor.current;void active?.request<Metadata>(operation,payload).then(value=>{if(alive.current&&editor.current===active)setMeta(value);}).catch(reason=>{if(alive.current&&editor.current===active)setError(reason.message);});}
  async function deliver(action:ExportAction){
   const active=editor.current;if(busy||!loaded||!active)return;setBusy(true);setError(null);setMessage(null);const frozen=latest.current.digest;
@@ -73,19 +74,19 @@ function NoteRelayEditorSession(props:Props){
 </div>}
   <details className="rounded-lg border border-border"><summary className="cursor-pointer px-4 py-3 text-sm font-medium">排版设置</summary><div className="space-y-4 border-t border-border p-4">
   <div className="flex flex-wrap items-end gap-3 rounded-lg bg-surface-subtle p-3">
-   <Choice label="排版主题" value={layout.themeId} items={meta.themes} disabled={locked} onChange={themeId=>change({themeId})}/>
-   <label className="space-y-1 text-xs text-muted-foreground">署名<Input aria-label="署名" value={layout.authorName} maxLength={120} disabled={locked} onChange={e=>change({authorName:e.target.value})}/></label>
-   <label className="space-y-1 text-xs text-muted-foreground">简介<Input aria-label="简介" value={layout.authorBio} maxLength={500} disabled={locked} onChange={e=>change({authorBio:e.target.value})}/></label>
-   {platform==='rednote'&&<><label className="space-y-1 text-xs text-muted-foreground">字号<Input aria-label="字号" type="number" min={12} max={32} className="w-20" value={layout.fontSize} disabled={locked} onChange={e=>{const n=Number(e.target.value);if(Number.isInteger(n)&&n>=12&&n<=32)change({fontSize:n});}}/></label>
-    <Choice label="分页" value={String(layout.splitHeading)} items={[{id:'1',name:'一级标题'},{id:'2',name:'二级标题'}]} disabled={locked} onChange={v=>change({splitHeading:Number(v) as 1|2})}/>
-    <Choice label="卡片模板" value={layout.templateId} items={[{id:'default',name:'标准卡片'},{id:'notes',name:'笔记卡片'}]} disabled={locked} onChange={v=>change({templateId:v as 'default'|'notes'})}/></>}
+   <Choice label="排版主题" value={layout.themeId} items={meta.themes} disabled={layoutLocked} onChange={themeId=>change({themeId})}/>
+   <label className="space-y-1 text-xs text-muted-foreground">署名<Input aria-label="署名" value={layout.authorName} maxLength={120} disabled={layoutLocked} onChange={e=>change({authorName:e.target.value})}/></label>
+   <label className="space-y-1 text-xs text-muted-foreground">简介<Input aria-label="简介" value={layout.authorBio} maxLength={500} disabled={layoutLocked} onChange={e=>change({authorBio:e.target.value})}/></label>
+   {platform==='rednote'&&<><label className="space-y-1 text-xs text-muted-foreground">字号<Input aria-label="字号" type="number" min={12} max={32} className="w-20" value={layout.fontSize} disabled={layoutLocked} onChange={e=>{const n=Number(e.target.value);if(Number.isInteger(n)&&n>=12&&n<=32)change({fontSize:n});}}/></label>
+    <Choice label="分页" value={String(layout.splitHeading)} items={[{id:'1',name:'一级标题'},{id:'2',name:'二级标题'}]} disabled={layoutLocked} onChange={v=>change({splitHeading:Number(v) as 1|2})}/>
+    <Choice label="卡片模板" value={layout.templateId} items={[{id:'default',name:'标准卡片'},{id:'notes',name:'笔记卡片'}]} disabled={layoutLocked} onChange={v=>change({templateId:v as 'default'|'notes'})}/></>}
   </div>
-  {platform==='wechat'&&<details><summary className="cursor-pointer text-sm text-muted-foreground">栏目、日期等文章变量（可选）</summary><div className="mt-3 grid gap-3 sm:grid-cols-3">{['栏目名','日期','副标题','关键词','标签'].map(name=><label key={name} className="space-y-1 text-xs text-muted-foreground">{name}<Input value={layout.variables[name]??''} aria-label={`文章变量${name}`} maxLength={2000} disabled={locked} onChange={e=>change({variables:{...layout.variables,[name]:e.target.value}})}/></label>)}</div></details>}
+  {platform==='wechat'&&<details><summary className="cursor-pointer text-sm text-muted-foreground">栏目、日期等文章变量（可选）</summary><div className="mt-3 grid gap-3 sm:grid-cols-3">{['栏目名','日期','副标题','关键词','标签'].map(name=><label key={name} className="space-y-1 text-xs text-muted-foreground">{name}<Input value={layout.variables[name]??''} aria-label={`文章变量${name}`} maxLength={2000} disabled={layoutLocked} onChange={e=>change({variables:{...layout.variables,[name]:e.target.value}})}/></label>)}</div></details>}
   {platform==='rednote'&&<div className="flex flex-wrap items-center gap-3">
    {meta.images.length>0&&<><Choice label="正文图片" value={meta.selectedImage} items={meta.images.map(i=>({id:i.key,name:i.label}))} disabled={!loaded||locked} onChange={key=>request('select-image',{key})}/>
-    <Choice label="图片宽度" value={String(layout.imageWidths[meta.selectedImage]??'auto')} items={[{id:'auto',name:'自适应'},...Array.from(new Set([50,75,100,...(layout.imageWidths[meta.selectedImage]!==undefined?[layout.imageWidths[meta.selectedImage]]:[])])).map(n=>({id:String(n),name:`${n}%`}))]} disabled={locked} onChange={v=>{const imageWidths={...layout.imageWidths};if(v==='auto')delete imageWidths[meta.selectedImage];else imageWidths[meta.selectedImage]=Number(v);change({imageWidths});}}/>
-    <label className="space-y-1 text-xs text-muted-foreground">宽度 %<Input aria-label="图片自定义宽度" type="number" className="w-20" min={30} max={100} value={layout.imageWidths[meta.selectedImage]??100} disabled={locked} onChange={e=>{const n=Number(e.target.value);if(n>=30&&n<=100)change({imageWidths:{...layout.imageWidths,[meta.selectedImage]:n}});}}/></label>
-    <label className="space-y-1 text-xs text-muted-foreground">图片圆角<Input aria-label="图片圆角" type="number" className="w-20" min={0} max={32} value={layout.imageRadii[meta.selectedImage]??0} disabled={locked} onChange={e=>{const n=Number(e.target.value);if(n>=0&&n<=32)change({imageRadii:{...layout.imageRadii,[meta.selectedImage]:n}});}}/></label></>}
+    <Choice label="图片宽度" value={String(layout.imageWidths[meta.selectedImage]??'auto')} items={[{id:'auto',name:'自适应'},...Array.from(new Set([50,75,100,...(layout.imageWidths[meta.selectedImage]!==undefined?[layout.imageWidths[meta.selectedImage]]:[])])).map(n=>({id:String(n),name:`${n}%`}))]} disabled={layoutLocked} onChange={v=>{const imageWidths={...layout.imageWidths};if(v==='auto')delete imageWidths[meta.selectedImage];else imageWidths[meta.selectedImage]=Number(v);change({imageWidths});}}/>
+    <label className="space-y-1 text-xs text-muted-foreground">宽度 %<Input aria-label="图片自定义宽度" type="number" className="w-20" min={30} max={100} value={layout.imageWidths[meta.selectedImage]??100} disabled={layoutLocked} onChange={e=>{const n=Number(e.target.value);if(n>=30&&n<=100)change({imageWidths:{...layout.imageWidths,[meta.selectedImage]:n}});}}/></label>
+    <label className="space-y-1 text-xs text-muted-foreground">图片圆角<Input aria-label="图片圆角" type="number" className="w-20" min={0} max={32} value={layout.imageRadii[meta.selectedImage]??0} disabled={layoutLocked} onChange={e=>{const n=Number(e.target.value);if(n>=0&&n<=32)change({imageRadii:{...layout.imageRadii,[meta.selectedImage]:n}});}}/></label></>}
   </div>}
   </div></details>
   {(error||assetError)&&<p role="alert" className="text-sm text-destructive">{error||assetError}</p>}{message&&<p role="status" className="text-sm text-success">{message}</p>}

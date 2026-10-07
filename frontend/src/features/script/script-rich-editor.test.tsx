@@ -31,6 +31,9 @@ const mockCreateArtifactVersion = vi.fn(
   (input: unknown): Promise<unknown> => Promise.resolve({ id: "av-new", input }),
 );
 // [T-247] 偏好读(autosaveEnabled → 失焦自动保存)。缺省 false = 不自动保存。
+const mockGetArtifact=vi.fn(),mockListArtifactVersions=vi.fn();
+const mockEnsureScript=vi.hoisted(()=>vi.fn());
+vi.mock('./ensure-script-artifact',()=>({ensureScriptArtifact:(...args:unknown[])=>mockEnsureScript(...args)}));
 const mockGetPreferences = vi.fn(
   (): Promise<unknown> => Promise.resolve({ autosaveEnabled: false }),
 );
@@ -39,6 +42,7 @@ vi.mock("@/lib/contract-client", () => ({
     createArtifactVersion: (input: unknown) =>
       mockCreateArtifactVersion(input),
     getPreferences: () => mockGetPreferences(),
+    getArtifact:(input:unknown)=>mockGetArtifact(input),listArtifactVersions:(input:unknown)=>mockListArtifactVersions(input),
   },
 }));
 
@@ -414,9 +418,23 @@ describe("ScriptRichEditor (TipTap)", () => {
 });
 
 let strictFlush: () => Promise<void>;
-function FlushProbe() { strictFlush = useDraftChatRequest().flushSaveStrict; return null; }
+let prepareScript:ReturnType<typeof useDraftChatRequest>['prepareScriptForCreation'];
+function FlushProbe() { const port=useDraftChatRequest();strictFlush = port.flushSaveStrict;prepareScript=port.prepareScriptForCreation; return null; }
 describe("真实富文本编辑器严格保存", () => {
-  it("实际落库失败向调用者 reject，保留正文并可重试", async () => {
+  it('联合按钮首次ensure真实ID保留在ref，每次冻结当前HTML并读回精确版本',async()=>{
+    mockEnsureScript.mockResolvedValue({artifactId:'first-real'});mockCreateArtifactVersion.mockImplementation(async()=>({id:'version-real'}));
+    mockGetArtifact.mockResolvedValue({id:'first-real',projectId:'project-real',currentVersionId:'version-real'});
+    mockListArtifactVersions.mockImplementation(async()=>{const input=mockCreateArtifactVersion.mock.calls.at(-1)![0] as any;return [{id:'version-real',artifactId:'first-real',contentText:input.body.contentText,contentData:input.body.contentData}];});
+    let editor:Editor|null=null;
+    render(<DraftChatRequestProvider><FlushProbe/><ScriptRichEditor projectId="project-real" initialHtml="<p>脚本当前真值</p>" onEditorReady={e=>{editor=e;}}/></DraftChatRequestProvider>);
+    await findProseMirror();let source:unknown;
+    await act(async()=>{source=await prepareScript();});expect(source).toEqual({kind:'project_script',id:'first-real',versionId:'version-real'});
+    await act(async()=>{editor!.commands.insertContent('下一次修改');source=await prepareScript();});
+    expect(mockEnsureScript).toHaveBeenCalledOnce();expect(mockCreateArtifactVersion).toHaveBeenCalledTimes(2);
+    expect(mockCreateArtifactVersion.mock.calls[1][0]).toMatchObject({params:{artifactId:'first-real'},body:{contentData:{html:editor!.getHTML()},contentText:editor!.getText()}});
+    expect(mockGetArtifact).toHaveBeenCalledWith({params:{artifactId:'first-real'},query:undefined,body:undefined});
+  });
+  it("落库响应未知保留正文，读取原版本恢复且不重复追加", async () => {
     let editor: Editor | null = null;
     render(<DraftChatRequestProvider><FlushProbe /><ScriptRichEditor artifactId="a1" initialHtml="<p>原稿</p>" onEditorReady={e => { editor = e; }} /></DraftChatRequestProvider>);
     await findProseMirror();
@@ -425,8 +443,10 @@ describe("真实富文本编辑器严格保存", () => {
     await act(async () => { await expect(strictFlush()).rejects.toThrow("写库失败"); });
     expect(editor!.getText()).toContain("尚未保存");
     expect(document.querySelector('[data-save-status="dirty"]')).not.toBeNull();
+    const frozen=(mockCreateArtifactVersion.mock.calls[0][0] as any).body;
+    mockGetArtifact.mockResolvedValue({id:'a1',currentVersionId:'saved-original'});mockListArtifactVersions.mockResolvedValue([{id:'saved-original',artifactId:'a1',contentText:frozen.contentText,contentData:frozen.contentData}]);
     await act(async () => { await strictFlush(); });
-    expect(mockCreateArtifactVersion).toHaveBeenCalledTimes(2);
+    expect(mockCreateArtifactVersion).toHaveBeenCalledTimes(1);
     expect(document.querySelector('[data-save-status="saved"]')).not.toBeNull();
   });
   it("保存中再次 flush 等待同一次写入，期间新增文字保留且拒绝旧稿诊断", async () => {

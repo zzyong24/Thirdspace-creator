@@ -160,6 +160,10 @@ import {
 } from "@/lib/ai-error-humanize";
 import { openAiCreditCenter } from "@/lib/open-ai-credit-center";
 import { client } from "@/lib/contract-client";
+import {useDraftChatRequest} from "@/features/draft-workbench/draft-chat-request";
+import {workCreationProposalResult,type WorkEditorTarget,type WorkCreationTarget} from "@creatoros/contract";
+import {ChatWorkEditorCard} from "./chat-work-editor-card";
+import {ChatWorkCreationCard} from "./chat-work-creation-card";
 import { creatorApiHeaders } from "@/lib/http-transport";
 import type { BasePageViewModel } from "@/types/view-models";
 import {
@@ -319,6 +323,8 @@ export interface AICopilotContentProps {
         readonly excerpt?: string;
       };
       readonly nonce: number;
+      readonly creationTarget?:WorkCreationTarget;
+      readonly onCreationSettled?:()=>void;
     } | null;
   };
 }
@@ -992,6 +998,13 @@ export function AICopilotContent({
   // chatContext.functionKey(服务端 applyFunctionKey 置顶 + forcedTool 第 0 步强制),
   // **读后即清**(一次性)—— 不污染后续自由对话轮次。放 ref 不放 state:body 是
   // Resolvable(每次请求求值),ref 更新不重建 transport(重建会打断进行中的流)。
+  const draftEditor=useDraftChatRequest();
+  const preparedTargets=React.useRef<{editorTarget?:WorkEditorTarget;creationTarget?:WorkCreationTarget}>({});
+  const preparedReceipt=React.useRef<{sourceMessageId?:string;conversationId?:string;chatContext:Record<string,unknown>;executionEngine?:string}|null>(null);
+  const receiptStorageKey=`creatoros:t1070:turn:${liveSessionKey}`;
+  React.useEffect(()=>{try{const stored=sessionStorage.getItem(receiptStorageKey);preparedReceipt.current=stored?JSON.parse(stored):null;}catch{preparedReceipt.current=null;}},[receiptStorageKey]);
+  const preparationPending=React.useRef(false);
+  const sendPreparedRef=React.useRef<(text:string,request?:EmbeddedDraftChatRequest|null)=>Promise<void>>(async()=>{});
   const quickFunctionKeyRef = React.useRef<string | null>(null);
   // [T-813] 搜索卡「阅读全文」的一次性执行锚。和 functionKey 同轮消费，服务端在浏览器
   // 抓取前把 web.read 绑定到这个 URL，模型不能换成另一条搜索结果。
@@ -1043,12 +1056,14 @@ export function AICopilotContent({
             requestedFn === "web.read" ? quickWebReadUrlRef.current : null;
           quickWebReadUrlRef.current = null;
           const latestChatContext = chatContextBodyRef.current.chatContext;
+          const frozenTargets=preparedTargets.current;
           const chatContext = requestedFn
             ? { ...latestChatContext, functionKey: requestedFn }
             : latestChatContext;
           return {
             chatContext: {
               ...chatContext,
+              ...frozenTargets,
               ...(webReadUrl ? { webReadUrl } : {}),
               ...(Object.keys(assetAliasRegistryRef.current.aliases).length
                 ? { assetAliases: assetAliasRegistryRef.current.aliases }
@@ -1069,6 +1084,8 @@ export function AICopilotContent({
           const res = await liveSession.control.fetch(input as RequestInfo, init);
           try {
             const cid = res.headers.get("x-conversation-id");
+            const sourceMessageId=res.headers.get("x-source-message-id");
+            if(sourceMessageId&&preparedReceipt.current&&liveSession.epoch===epoch){preparedReceipt.current={...preparedReceipt.current,sourceMessageId,...(cid?{conversationId:cid}:{})};sessionStorage.setItem(receiptStorageKey,JSON.stringify(preparedReceipt.current));const executionEngine=preparedReceipt.current.executionEngine;if(executionEngine==="codex"||executionEngine==="pi")liveSession.sourceEngines.set(sourceMessageId,executionEngine);}
             if (cid && liveSession.epoch === epoch) captureConversationId(cid);
           } catch {
             /* 读头失败不影响流式 */
@@ -1423,6 +1440,13 @@ export function AICopilotContent({
         mode: "required",
       };
     }
+    const receipt=preparedReceipt.current;
+    if(receipt&&(receipt.chatContext.editorTarget||receipt.chatContext.creationTarget)){
+      if(receipt.sourceMessageId)return regenerate({messageId:receipt.sourceMessageId,body:{chatContext:receipt.chatContext,...(receipt.executionEngine?{executionEngine:receipt.executionEngine}:{})}});
+      const id=receipt.conversationId??conversationIdRef.current;
+      if(!id){setComposerLifecycleError("原请求结果尚未确认，请保留当前对话并等待原任务回执。");return Promise.resolve();}
+      return client.listMessages({params:{conversationId:id},query:undefined,body:undefined}).then(rows=>{setMessages(toUIMessages(rows as unknown as WireAIMessage[]));setComposerLifecycleError("已读取原对话回执。原请求未重复提交，请核对任务与候选状态。");});
+    }
     return regenerate();
   }, [messages, regenerate]);
 
@@ -1463,6 +1487,20 @@ export function AICopilotContent({
   //      点按钮,直接发;模型据 functionKey 优先调 review.script/calibration.diagnose)。
   //   ② autoSend 缺省:只预填输入框(不覆盖用户已敲的字,延续 T-055b),用户回车才发。
   // nonce 由 Provider 内部计数器生成(SSR 安全,非 Date.now/Random),天然去重(重渲不重复发)。
+  React.useLayoutEffect(()=>{sendPreparedRef.current=async(text,request)=>{
+    if(preparationPending.current)throw Error("当前稿件仍在准备，请等待原保存结束。");
+    preparationPending.current=true;setComposerLifecycleError(null);
+    try{const editorTarget=request?.creationTarget?undefined:await draftEditor.prepareEditorTurn();const targets={...(editorTarget?{editorTarget}:{}),...(request?.creationTarget?{creationTarget:request.creationTarget}:{})};preparedTargets.current=targets;
+      if(!targets.editorTarget&&!targets.creationTarget){preparedReceipt.current=null;sessionStorage.removeItem(receiptStorageKey);await sendMessage({text});return;}
+      const requestedFn=quickFunctionKeyRef.current??entryFunctionKeyRef.current?.consume()??null;quickFunctionKeyRef.current=null;
+      const webReadUrl=requestedFn==="web.read"?quickWebReadUrlRef.current:null;quickWebReadUrlRef.current=null;
+      const frozenContext={...chatContextBodyRef.current.chatContext,...targets,...(requestedFn?{functionKey:requestedFn}:{}),...(webReadUrl?{webReadUrl}:{}),...(Object.keys(assetAliasRegistryRef.current.aliases).length?{assetAliases:assetAliasRegistryRef.current.aliases}:{})};
+      if(targets.editorTarget||targets.creationTarget){preparedReceipt.current={chatContext:frozenContext,executionEngine:liveSession.executionEngine};sessionStorage.setItem(receiptStorageKey,JSON.stringify(preparedReceipt.current));}
+      await sendMessage({text},{body:{chatContext:frozenContext}});
+    }catch(cause){setComposerLifecycleError(cause instanceof Error?cause.message:"稿件尚未准备好，本次未发送。");throw cause;}finally{preparationPending.current=false;}
+  };});
+  const settledCreation=React.useRef(new Set<string>());
+  React.useEffect(()=>{const request=embed?.request,target=request?.creationTarget;if(!target||!request?.onCreationSettled||settledCreation.current.has(target.clientRequestId))return;const settled=messages.some(message=>message.role==="assistant"&&message.parts.some(part=>{if(!isToolUIPart(part)||getToolName(part)!=="work.creation.propose"||part.state!=="output-available")return false;const result=workCreationProposalResult.safeParse(part.output);return result.success&&result.data.target.clientRequestId===target.clientRequestId;}));if(settled){settledCreation.current.add(target.clientRequestId);request.onCreationSettled();}},[messages,embed?.request]);
   const handledRequestNonceRef = React.useRef(0);
   React.useEffect(() => {
     const req = activeRequest;
@@ -1485,7 +1523,7 @@ export function AICopilotContent({
       beginComposerRequest(req);
       quickFunctionKeyRef.current = req.functionKey ?? null;
       setPrompt("");
-      const pending = Promise.resolve(sendMessage({ text }));
+      const pending = sendPreparedRef.current(text,req);
       // sendMessage Promise 只代表请求已提交，不代表流、工具和候选卡成功。附件等本轮资源
       // 可在 settle 后释放，但稿面锚点由上面的成功 effect 负责消费。
       void pending.catch(() => undefined);
@@ -1570,10 +1608,10 @@ export function AICopilotContent({
     }
     // useChat 正常返回 Promise；测试 seam 或兼容适配器可能返回 void。统一包成 Promise，
     // 既保证附件 ids 活到 transport 读取本轮 body，又不让旧适配器触发 finally 崩溃。
-    const pending = Promise.resolve(sendMessage({ text: value }));
+    const pending = sendPreparedRef.current(value,explicitRequest);
     setPrompt("");
     attachmentPickerRef.current?.clear();
-    void pending.finally(() => {
+    void pending.catch(()=>{setPrompt(value);}).finally(() => {
       requestAttachmentIdsRef.current = [];
     });
   }, [
@@ -2498,6 +2536,8 @@ export function AICopilotContent({
                     const traceRow = (
                       <ChatToolTrace key={`${key}-trace`} label={traceLabel} input={part.input} output={out} />
                     );
+                    if((name==="work.editor.read"||name==="work.editor.propose")&&(out.kind==="work.editor.context"||out.kind==="work.editor.candidate"))return <React.Fragment key={key}>{traceRow}<ChatWorkEditorCard result={out} toolCallId={part.toolCallId}/></React.Fragment>;
+                    if((name==="work.creation.read"||name==="work.creation.propose")&&(out.kind==="work.creation.read"||out.kind==="work.creation.propose"))return <React.Fragment key={key}>{traceRow}<ChatWorkCreationCard result={out} toolCallId={part.toolCallId}/></React.Fragment>;
                     if(name==="research.autonomous" && out.kind==="research.autonomous"){
                       const research=out as {taskId?:string|null;error?:string|null};
                       return <React.Fragment key={key}>{traceRow}{research.taskId?<ExecutionTaskCard taskId={research.taskId}/>:<div className="text-sm text-error">{research.error||"自主调研任务未提交，请重试。"}</div>}</React.Fragment>;
@@ -2668,7 +2708,7 @@ export function AICopilotContent({
                             if (streaming) return;
                             quickFunctionKeyRef.current = "web.read";
                             quickWebReadUrlRef.current = url;
-                            void sendMessage({ text: `请阅读全文：${url}` });
+                            void sendPreparedRef.current(`请阅读全文：${url}`).catch(()=>{});
                           }}
                         />
                       );
@@ -2750,7 +2790,7 @@ export function AICopilotContent({
                             // 的自动重读不再被流式期直接丢弃(原「点了还得手动再发」的确切根因)。极窄
                             // 竞态下 sendMessage 由 useChat 自行排队/处理,不在这里静默 drop。
                             onDecision={(text) => {
-                              void sendMessage({ text });
+                              void sendPreparedRef.current(text).catch(()=>{});
                             }}
                           />
                         </React.Fragment>

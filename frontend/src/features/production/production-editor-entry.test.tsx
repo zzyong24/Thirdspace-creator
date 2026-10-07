@@ -13,7 +13,7 @@ const props={projectId:"project-a",projectTitle:"验收",scriptText:null,outputI
 afterEach(()=>{cleanup();api.getProductionEditor.mockReset();});
 it("切换作品立即隐藏旧工程，新作品读取失败显示错误",async()=>{api.getProductionEditor.mockResolvedValueOnce({outputId:"output-a",state:"empty",revision:0,plan:null});const view=render(<ProductionEditorEntry {...props}/>);await screen.findByText("开源剪辑 output-a");let reject!:(value:Error)=>void;api.getProductionEditor.mockImplementation(()=>new Promise((_r,j)=>{reject=j;}));view.rerender(<ProductionEditorEntry {...props} outputId="output-b"/>);expect(screen.queryByText("开源剪辑 output-a")).not.toBeInTheDocument();await waitFor(()=>expect(api.getProductionEditor).toHaveBeenCalledTimes(2));reject(Error("新作品读取失败"));await screen.findByRole("alert");expect(screen.getByRole("alert")).toHaveTextContent("新作品读取失败");});
 
-it("开源工作台默认打开且原粗剪与返回入口可达",async()=>{api.getProductionEditor.mockResolvedValue({outputId:"output-a",state:"empty",revision:0,plan:null});render(<ProductionEditorEntry {...props}/>);await screen.findByText("开源剪辑 output-a");fireEvent.click(screen.getByRole("button",{name:"原方案与粗剪"}));await screen.findByText("粗剪 output-a");fireEvent.click(screen.getByRole("button",{name:"返回剪辑工作台"}));await screen.findByText("开源剪辑 output-a");});
+it("开源工作台默认打开且原粗剪与返回入口可达",async()=>{api.getProductionEditor.mockResolvedValue({outputId:"output-a",state:"editable",revision:1,plan:{editorVersion:2}});render(<ProductionEditorEntry {...props}/>);await screen.findByText("开源剪辑 output-a");fireEvent.click(screen.getByRole("button",{name:"原方案与粗剪"}));await screen.findByText("粗剪 output-a");fireEvent.click(screen.getByRole("button",{name:"返回剪辑工作台"}));await screen.findByText("开源剪辑 output-a");});
 
 // T1062_COMPONENT_PORT_SEAM: 仅本文件既有业务spies；真实scope/epoch/signal/lifecycle不替换。
 vi.mock("@/lib/creation-workspace-scope", async importOriginal => {
@@ -80,7 +80,7 @@ t1062ScopeAfterEach(() => {
 // T1062_UNIT_SCOPE_FIXTURE_END
 
 it("切回原制作页再返回保留同一剪辑实例，不用重新加载替代未保存稿",async()=>{
- api.nativeDisposed.mockClear();api.getProductionEditor.mockResolvedValue({outputId:"output-a",projectId:"project-a",state:"empty",revision:0,plan:null});render(<ProductionEditorEntry {...props}/>);
+ api.nativeDisposed.mockClear();api.getProductionEditor.mockResolvedValue({outputId:"output-a",projectId:"project-a",state:"editable",revision:1,plan:{editorVersion:2}});render(<ProductionEditorEntry {...props}/>);
  await screen.findByText("开源剪辑 output-a");fireEvent.click(screen.getByRole("button",{name:"原方案与粗剪"}));await screen.findByText("粗剪 output-a");expect(api.nativeDisposed).not.toHaveBeenCalled();
  fireEvent.click(screen.getByRole("button",{name:"返回剪辑工作台"}));expect(api.getProductionEditor).toHaveBeenCalledTimes(1);
 });

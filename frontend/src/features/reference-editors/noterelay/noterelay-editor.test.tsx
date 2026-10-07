@@ -44,3 +44,9 @@ it("预览先于折叠排版设置，主复制操作为正常尺寸且实例不�
  expect(screen.getByRole("button",{name:"复制公众号文章"})).not.toHaveAttribute("data-size","sm");
  const count=h.request.mock.calls.filter(call=>call[0]==="load").length;fireEvent.click(screen.getByText("排版设置"));expect(h.request.mock.calls.filter(call=>call[0]==="load")).toHaveLength(count);
 });
+
+it('候选模式禁止版式回写，同时真实page/export端口保持可用',async()=>{
+ const onLayoutChange=vi.fn();h.request.mockImplementation(async(op:string)=>op==='load'?{themes:[],images:[],selectedImage:'',pageIndex:0,pageCount:3}:op==='page'?{themes:[],images:[],selectedImage:'',pageIndex:1,pageCount:3}:{blob:new Blob(['png'],{type:'image/png'})});
+ render(<NoteRelayEditor projectId="p" accountId="a" outputId="o" sourceVersionId="tool-1" platform="rednote" value={{schemaVersion:1,title:'候选',body:'正文',summary:'',tags:[],sourceRefs:[],imageUses:[],visualBriefs:[],cardBriefs:[]} as any} readOnlyCandidate onLayoutChange={onLayoutChange}/>);
+ await waitFor(()=>expect(screen.getByRole('button',{name:'下一页'})).not.toBeDisabled());fireEvent.click(screen.getByRole('button',{name:'下一页'}));await waitFor(()=>expect(h.request).toHaveBeenCalledWith('page',{index:1}));settings();expect(screen.getByRole('textbox',{name:'署名'})).toBeDisabled();fireEvent.change(screen.getByRole('textbox',{name:'署名'}),{target:{value:'不得写回'}});expect(onLayoutChange).not.toHaveBeenCalled();
+});

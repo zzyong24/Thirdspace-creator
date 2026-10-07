@@ -1,10 +1,12 @@
 "use client";
 
 import * as React from "react";
-import { GitBranch, Search, Upload, Loader2 } from "lucide-react";
+import { GitBranch, Search, Upload, Loader2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { useDraftChatRequest } from "./draft-chat-request";
+import {useCreationClient,useCreationScope,creationScopeKey} from "@/lib/creation-workspace-scope";
+import {prepareWorkCreationRequest,type WorkCreationRequestState} from "./work-creation-request";
 import { uploadFileToProject } from "./upload-to-project";
 
 // T-730：恢复可选“先梳理观点”入口；它不是写稿前置，用户仍可直接进入稿面。
@@ -17,7 +19,33 @@ import { uploadFileToProject } from "./upload-to-project";
 const UPLOAD_ACCEPT = "image/*,video/*,.pdf,.doc,.docx,.md,.txt";
 
 export function CreationFlowCtas({ projectId }: { projectId: string }) {
-  const { openChat } = useDraftChatRequest();
+  const { openChat,prepareScriptForCreation } = useDraftChatRequest();
+  const client=useCreationClient(),scope=useCreationScope(),scopeKey=creationScopeKey(scope);
+  const storageKey=`creatoros:t1070:creation:${scopeKey}:${projectId}`;
+  const intent=React.useRef<WorkCreationRequestState|null>(null),currentScope=React.useRef(scopeKey),mounted=React.useRef(true);
+  currentScope.current=scopeKey;
+  const [creating,setCreating]=React.useState(false),[submitted,setSubmitted]=React.useState(false),[creationError,setCreationError]=React.useState<string|null>(null);
+  React.useEffect(()=>{mounted.current=true;return()=>{mounted.current=false;};},[]);
+  React.useEffect(()=>{try{const previous=sessionStorage.getItem(storageKey);intent.current=previous?JSON.parse(previous):null;setSubmitted(Boolean(intent.current?.completed));}catch{intent.current=null;}},[storageKey]);
+  function settledCallback(frozen:WorkCreationRequestState,frozenScope:string){return()=>{if(currentScope.current===frozenScope&&intent.current===frozen){sessionStorage.removeItem(storageKey);intent.current=null;if(mounted.current){setSubmitted(false);setCreationError(null);}}};}
+  async function createPair(){if(creating)return;if(intent.current?.completed){const frozen=intent.current;openChat({prefill:"",autoSend:false,creationTarget:frozen.creationTarget,onCreationSettled:settledCallback(frozen,scopeKey)});setCreationError("原生成已提交，正在编导中读取原任务结果。请保留原请求，不要重复生成。");return;}setCreating(true);setCreationError(null);const frozenScope=scopeKey;try{
+    const source=await prepareScriptForCreation();
+    if(currentScope.current!==frozenScope||!mounted.current)throw Error("工作区已切换，请回原项目恢复。");
+    if(!intent.current){const previous=sessionStorage.getItem(storageKey);if(previous)intent.current=JSON.parse(previous);}
+    if(intent.current&&JSON.stringify(intent.current.source)!==JSON.stringify(source)){
+      const original=intent.current;
+      await prepareWorkCreationRequest(client,original,()=>sessionStorage.setItem(storageKey,JSON.stringify(original)));
+      if(currentScope.current!==frozenScope||!mounted.current)throw Error("工作区已切换，原组合已保留。");
+      sessionStorage.removeItem(storageKey);intent.current=null;
+      throw Error("原组合预约已恢复，原作品保留。当前脚本已有新版本，本次未生成；请再次点击确认当前脚本。");
+    }
+    intent.current??={clientRequestId:crypto.randomUUID(),projectId,source};
+    const frozen=intent.current,persist=()=>sessionStorage.setItem(storageKey,JSON.stringify(frozen));persist();
+    const creationTarget=await prepareWorkCreationRequest(client,frozen,persist);
+    if(currentScope.current!==frozenScope||!mounted.current)throw Error("工作区已切换，原组合已保留。");
+    frozen.completed=true;frozen.creationTarget=creationTarget;persist();setSubmitted(true);
+    openChat({onCreationSettled:settledCallback(frozen,frozenScope),prefill:"请使用已确认脚本与同一创作方法，一起生成完整文章和图文候选。我会分别预览采纳，再继续微调。不要生成视频、语音或插画。",creationTarget,autoSend:true});
+  }catch(cause){if(mounted.current)setCreationError(cause instanceof Error?cause.message:"准备未完成，原预约已保留。");}finally{if(mounted.current)setCreating(false);}}
   const router = useRouter();
   const inputRef = React.useRef<HTMLInputElement>(null);
   // 上传态:idle → uploading(转圈)→ done(短暂✓)/ error(短暂✗),给用户反馈。
@@ -54,7 +82,8 @@ export function CreationFlowCtas({ projectId }: { projectId: string }) {
       aria-label="创作流引导"
       className="flex flex-wrap items-center gap-2 rounded-card border border-border bg-surface-subtle px-3 py-2"
     >
-      <span className="text-xs font-medium text-foreground">先准备创作素材</span>
+      <Button type="button" disabled={creating} onClick={()=>void createPair()} className="min-h-11 gap-2"><Sparkles className="size-4"/>{creating?"正在保存并准备…":submitted?"查看原文章和图文生成":creationError?"恢复原请求 · 一键生成文章和图文":"一键生成文章和图文"}</Button>
+      {creationError?<p role="alert" className="w-full text-sm text-destructive">{creationError}</p>:null}
 
       {/* [T-146] ＋上传素材(最高优先级):把自己的 PDF/Word/MD 资料上传进当前项目弹药库。 */}
       <input

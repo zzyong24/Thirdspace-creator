@@ -13,7 +13,7 @@ function reverseObjectKeysDeep<T>(value: T): T {
  if (value !== null && typeof value === 'object') return Object.fromEntries(Object.entries(value as Record<string,unknown>).reverse().map(([key,item])=>[key,reverseObjectKeysDeep(item)])) as T;
  return value;
 }
-it('主生成先保存；辅助编辑器在回执期间新增输入不丢且不拿旧稿继续生成',async()=>{
+it('编导发送前的原保存；辅助编辑器在回执期间新增输入不丢且不拿旧稿继续生成',async()=>{
  const doc={schemaVersion:1,title:'原标题',summary:'',sections:[],factItems:[],visualBriefs:[],imageUses:[]};
  const initial={outputId:'o',artifactId:'art',currentVersionId:'v1',current:doc,versions:[]};
  api.getArticle.mockResolvedValueOnce(initial);
@@ -24,7 +24,7 @@ it('主生成先保存；辅助编辑器在回执期间新增输入不丢且不�
  render(<ArticleWorkbench projectId="p" projectTitle="项目" accountId="a" initialOutputs={[{id:'o',title:'文章'}]}/>);await screen.findByText('当前稿件');
  const detail=screen.getByText('使用 Doocs 编辑器（保留原版式）').closest('details')!;detail.open=true;fireEvent(detail,new Event('toggle'));await screen.findByRole('button',{name:'辅助编辑器继续编辑'});
  fireEvent.change(screen.getByRole('textbox',{name:'标题'}),{target:{value:'准备生成的标题'}});
- fireEvent.click(screen.getByRole('button',{name:'根据脚本扩写文章'}));await waitFor(()=>expect(api.createArticleVersion).toHaveBeenCalledOnce());
+ fireEvent.click(screen.getByRole('button',{name:'保存修改'}));await waitFor(()=>expect(api.createArticleVersion).toHaveBeenCalledOnce());
  fireEvent.click(screen.getByRole('button',{name:'辅助编辑器继续编辑'}));finish({versionId:'v2'});
  await waitFor(()=>expect(screen.getByRole('textbox',{name:'标题'})).toHaveValue('保存期间的新标题'));
  await waitFor(()=>expect(screen.getByRole('button',{name:'保存修改'})).toBeEnabled());
@@ -42,7 +42,7 @@ it.each(['concurrent','recover'])('保存 %s 分支同样保留回执等待期�
  const detail=screen.getByText('使用 Doocs 编辑器（保留原版式）').closest('details')!;detail.open=true;fireEvent(detail,new Event('toggle'));await screen.findByRole('button',{name:'辅助编辑器继续编辑'});
  fireEvent.change(screen.getByRole('textbox',{name:'标题'}),{target:{value:'准备生成的标题'}});
  if(mode==='recover'){const prior={...doc,title:'上一笔标题'};sessionStorage.setItem('creatoros:article:request:account:a:o',JSON.stringify({clientRequestId:'prior-request',payloadDigest:JSON.stringify({outputId:'o',expectedCurrentVersionId:'v1',document:prior}),body:{expectedCurrentVersionId:'v1',document:prior}}));}
- fireEvent.click(screen.getByRole('button',{name:'根据脚本扩写文章'}));await waitFor(()=>expect(api.createArticleVersion).toHaveBeenCalledOnce());
+ fireEvent.click(screen.getByRole('button',{name:'保存修改'}));await waitFor(()=>expect(api.createArticleVersion).toHaveBeenCalledOnce());
  fireEvent.click(screen.getByRole('button',{name:'辅助编辑器继续编辑'}));finish({versionId:'v2'});
  await screen.findByRole('alert');expect(screen.getByRole('textbox',{name:'标题'})).toHaveValue('保存期间的新标题');expect(api.generateArticleCandidate).not.toHaveBeenCalled();
 });

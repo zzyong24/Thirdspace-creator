@@ -31,9 +31,11 @@ export function DraftChatRail({
 }) {
   // [T-108] 稿面 AI 按钮(盲预测/审核)发起的对话请求 —— 透传进 embed.request,让常驻 rail
   // 据 request.nonce 变化预填输入框 + 置 functionKey + 注入 content_output(不开全局弹层)。
-  const { request } = useDraftChatRequest();
+  const { request,readEditorState } = useDraftChatRequest();
+  const editorState=readEditorState();
   return (
     <div className="flex h-full min-h-0 flex-col p-4">
+      {editorState?.target?<p role="status" className="mb-2 rounded-lg bg-surface-subtle px-3 py-2 text-sm">当前{editorState.target.contentType==="article"?"文章":editorState.target.contentType==="image"?"图文":"视频"} · {editorState.dirty?"发送前将保存当前修改":"已保存稿与选区"}</p>:null}
       <React.Suspense fallback={null}>
         <AICopilotContent
           embed={{
@@ -42,7 +44,7 @@ export function DraftChatRail({
             persistKey: `project:${projectId}`,
             title: "编导对话",
             // [T-054 组B] 规范 §2:可见文案不夹生英文机制词,「hook」改「钩子」。
-            subtitle: "聊定位、改钩子、搜素材都在这里",
+            subtitle: "基于当前稿与选区持续调整，预览后再采纳",
             // [T-103a] 稿面盲预测:诊断卡长确认门,锁定走既有端点链铸 immutable Prediction。
             blindPredict: {
               outputId: outputId ?? null,

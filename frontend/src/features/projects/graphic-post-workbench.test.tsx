@@ -1,10 +1,11 @@
 import * as React from "react";
-import {afterEach,expect,it,vi} from "vitest";
+import {beforeEach,afterEach,expect,it,vi} from "vitest";
 import {cleanup,fireEvent,render,screen,waitFor} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type {GraphicPostResource} from "@creatoros/contract";
 import {unzipSync,strFromU8} from "fflate";
 import {GraphicPostWorkbench} from "./graphic-post-workbench";
+import {DraftChatRequestProvider,useDraftChatRequest} from '@/features/draft-workbench/draft-chat-request';
 const api=vi.hoisted(()=>({createGraphicPostVersion:vi.fn(),getGraphicPost:vi.fn(),getGraphicPostVersion:vi.fn(),getAssetFileDownloadUrl:vi.fn(async(_input:{params:{assetId:string;assetFileId:string}})=>({url:"http://example.test/image.png"})),listAssets:vi.fn(async()=>[])}));
 vi.mock("@/features/reference-editors/noterelay/noterelay-editor",()=>({NoteRelayEditor:()=> <div>NoteRelay 预览</div>}));
 async function openSeries(){const details=screen.getByText("逐页创作与 AI 辅助").closest("details")!;details.open=true;fireEvent(details,new Event("toggle"));await screen.findByRole("button",{name:"读取现有候选"});}
@@ -14,7 +15,39 @@ vi.mock("next/navigation",()=>({useRouter:()=>({refresh:vi.fn(),push:canvas.push
 vi.mock("@/features/creative-canvas/graphic-page-context",()=>({openGraphicPageCanvas:canvas.openGraphicPageCanvas}));
 vi.mock("./graphic-post-results",()=>({GraphicPostResults:({onAdopt}:{onAdopt:()=>Promise<void>})=> <button onClick={()=>void onAdopt()}>读取现有候选</button>}));
 vi.mock("./publication-result-actions",()=>({PublicationResultActions:()=> <button>读取发布内容</button>}));
-afterEach(()=>{cleanup();vi.clearAllMocks();vi.restoreAllMocks();vi.unstubAllGlobals();});
+beforeEach(()=>{sessionStorage.clear();api.getGraphicPostVersion.mockReset();api.getGraphicPostVersion.mockImplementation(async({params})=>({versionId:params.versionId,document:api.createGraphicPostVersion.mock.calls.at(-1)?.[0].body.document}));});
+afterEach(()=>{cleanup();sessionStorage.clear();vi.clearAllMocks();vi.restoreAllMocks();vi.unstubAllGlobals();});
+let director:ReturnType<typeof useDraftChatRequest>;
+function DirectorProbe(){director=useDraftChatRequest();return null;}
+it('编导选区用真实cardId，调序、切页后更新；正文metadata不冒充页文字',async()=>{
+ const initial:GraphicPostResource={projectId:'p',outputId:'selection-output',targetPlatform:null,artifactId:'artifact',currentVersionId:'v0',versions:[],current:{schemaVersion:1,title:'图文',body:'整篇正文',summary:'',tags:[],sourceRefs:[],imageUses:[],ruleSnapshotRef:null,cardBriefs:[{cardId:'real-a',title:'甲页',body:'甲的正文',sourceRefs:[]},{cardId:'real-b',title:'乙页',body:'乙的正文',sourceRefs:[]}]}};
+ let latest=initial;
+ api.getGraphicPost.mockImplementation(async()=>latest);api.getGraphicPostVersion.mockImplementation(async({params})=>({versionId:params.versionId,document:latest.current}));
+ api.createGraphicPostVersion.mockImplementation(async({body})=>{latest={...latest,currentVersionId:'v1',current:body.document};return {versionId:'v1'};});
+ render(<DraftChatRequestProvider><DirectorProbe/><GraphicPostWorkbench projectId="p" projectTitle="项目" accountId="a" initial={initial}/></DraftChatRequestProvider>);
+ await openSeries();
+ const a=screen.getByRole('textbox',{name:'图卡1正文'}) as HTMLTextAreaElement;a.setSelectionRange(1,3);fireEvent.select(a);
+ const first=await director.prepareEditorTurn();expect(first?.selection).toMatchObject({kind:'graphic_cards',cardIds:['real-a'],field:'body',textRange:{startUtf16:1,endUtf16:3,expectedFieldDigest:expect.stringMatching(/^sha256:/)}});
+ fireEvent.select(screen.getByRole('textbox',{name:'正文'}));expect((await director.prepareEditorTurn())?.selection).toEqual(first?.selection);
+ fireEvent.click(screen.getByRole('button',{name:'图卡1下移'}));
+ const reordered=await screen.findByRole('textbox',{name:'图卡2正文'}) as HTMLTextAreaElement;reordered.setSelectionRange(0,2);fireEvent.select(reordered);
+ expect((await director.prepareEditorTurn())?.selection).toMatchObject({cardIds:['real-a'],field:'body',textRange:{startUtf16:0,endUtf16:2}});
+ fireEvent.click(screen.getByRole('button',{name:'查看第 1 页：乙页'}));
+ const b=await screen.findByRole('textbox',{name:'图卡1正文'}) as HTMLTextAreaElement;b.setSelectionRange(2,4);fireEvent.select(b);
+ expect((await director.prepareEditorTurn())?.selection).toMatchObject({cardIds:['real-b'],field:'body',textRange:{startUtf16:2,endUtf16:4}});
+});
+it('保存UNKNOWN后新输入保留，先恢复完全相同请求，再用新基点保存新输入',async()=>{
+ const initial:GraphicPostResource={projectId:'p',outputId:'unknown-output',targetPlatform:null,artifactId:'artifact',currentVersionId:'v0',versions:[],current:{schemaVersion:1,title:'图文',body:'原文',summary:'',tags:[],sourceRefs:[],imageUses:[],ruleSnapshotRef:null}};
+ let latest=initial;api.createGraphicPostVersion.mockRejectedValueOnce(Error('original receipt lost')).mockImplementation(async({body})=>{latest={...latest,currentVersionId:body.document.body==='第一版'?'v1':'v2',current:body.document};return {versionId:latest.currentVersionId};});
+ api.getGraphicPost.mockImplementation(async()=>latest);api.getGraphicPostVersion.mockImplementation(async({params})=>({versionId:params.versionId,document:latest.current}));
+ render(<GraphicPostWorkbench projectId="p" projectTitle="项目" accountId="a" initial={initial}/>);
+ const field=screen.getByRole('textbox',{name:'正文'});fireEvent.change(field,{target:{value:'第一版'}});fireEvent.click(screen.getByRole('button',{name:'保存作品'}));await screen.findByRole('alert');
+ const original=api.createGraphicPostVersion.mock.calls[0][0];fireEvent.change(field,{target:{value:'第二版'}});fireEvent.click(screen.getByRole('button',{name:'保存作品'}));
+ await waitFor(()=>expect(api.createGraphicPostVersion).toHaveBeenCalledTimes(2));expect(api.createGraphicPostVersion.mock.calls[1][0]).toEqual(original);
+ expect(await screen.findByRole('status')).toHaveTextContent('新输入已保留');expect(field).toHaveValue('第二版');
+ fireEvent.click(screen.getByRole('button',{name:'保存作品'}));await waitFor(()=>expect(api.createGraphicPostVersion).toHaveBeenCalledTimes(3));
+ const fresh=api.createGraphicPostVersion.mock.calls[2][0];expect(fresh.body.expectedCurrentVersionId).toBe('v1');expect(fresh.body.document.body).toBe('第二版');expect(fresh.body.clientRequestId).not.toBe(original.body.clientRequestId);
+});
 it("图文去掉重复页头及版本状态小字，保存和历史仍真实可用",async()=>{
  const initial:GraphicPostResource={projectId:"p",outputId:"o",targetPlatform:null,artifactId:"artifact",currentVersionId:"v0",versions:[{id:"v0",versionNumber:2,createdAt:"2026-10-04T00:00:00Z",changeSummary:"保存"}],current:{schemaVersion:1,title:"稿件标题",body:"已保存正文",summary:"",tags:[],sourceRefs:[],imageUses:[],ruleSnapshotRef:null}};
  const {container}=render(<GraphicPostWorkbench projectId="p" projectTitle="项目名称" accountId="a" initial={initial}/>);
@@ -76,7 +109,7 @@ it("保存期间不接受会被迟到读回覆盖的新编辑；失败保留输�
  expect(body).toBeEnabled();expect(body).toHaveValue("本次编辑不能丢失");
  expect(api.getGraphicPost).not.toHaveBeenCalled();
  api.createGraphicPostVersion.mockImplementationOnce(async({body})=>({versionId:"internal-version-id",document:body.document}));
- api.getGraphicPost.mockResolvedValueOnce({...initial,currentVersionId:"v1",current:{...initial.current,body:"本次编辑不能丢失"}});
+ api.getGraphicPost.mockResolvedValueOnce({...initial,currentVersionId:"internal-version-id",current:{...initial.current,body:"本次编辑不能丢失"}});
  await user.click(screen.getByRole("button",{name:"保存作品"}));
  expect(await screen.findByRole("status")).toHaveTextContent("作品已保存");
  expect(screen.queryByText(/internal-version-id/)).not.toBeInTheDocument();
@@ -99,7 +132,7 @@ it("统一方向可用键盘展开，候选入口在主工作面且不堆全部�
 
 it('画布进入先保存当前输入，然后把真实目标ID传给scoped helper',async()=>{
  const initial:GraphicPostResource={projectId:'p',outputId:'o',targetPlatform:null,artifactId:'artifact',currentVersionId:'v0',versions:[],current:{schemaVersion:1,title:'图文',body:'正文',summary:'',tags:[],sourceRefs:[],imageUses:[],ruleSnapshotRef:null,cardBriefs:[{cardId:'real-page',title:'页',body:'内容',sourceRefs:[]}]}};
- api.createGraphicPostVersion.mockResolvedValue({versionId:'v1'});api.getGraphicPost.mockResolvedValue({...initial,currentVersionId:'v1'});
+ api.createGraphicPostVersion.mockImplementation(async({body})=>({versionId:'v1',document:body.document}));api.getGraphicPost.mockImplementation(async()=>({...initial,currentVersionId:'v1',current:api.createGraphicPostVersion.mock.calls.at(-1)![0].body.document}));
  canvas.openGraphicPageCanvas.mockResolvedValue('/canvases/real-canvas?graphicPageContext=handle');
  render(<GraphicPostWorkbench projectId="p" projectTitle="项目" accountId="a" initial={initial}/>);
  await openSeries();
