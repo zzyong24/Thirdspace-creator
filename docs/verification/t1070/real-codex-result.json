@@ -1,0 +1,44 @@
+{
+  "schema": "t1070-real-codex-probe/v1",
+  "started": "2026-10-07T04:33:40.694Z",
+  "budgetMs": 180000,
+  "isolatedDatabase": true,
+  "originalRequestsReplayed": false,
+  "ids": {
+    "projectId": "project-55d4efee-4d3f-4434-a75a-81673dbd5fa8",
+    "groupId": "grp-5670f527-117d-4e2d-86ec-c46932598848",
+    "taskId": "ai-task-092731ba-2919-4b0a-887c-c729b016e408",
+    "executionTaskId": "execution-task-c9e69c11-6595-40a4-8a8c-b5374bfa24ef",
+    "sourceMessageId": "ai-msg-282c411d-7ec4-4f36-9a65-b6e8b4cc9d6c",
+    "replayed": false
+  },
+  "outcome": "succeeded",
+  "reply": "Warning: Code Mode is unavailable because code-mode host is disabled. Code mode will fail closed; enable `features.code_mode_host` and install `codex-code-mode-host`.\n\n我会读取当前绑定项目，并依据工具返回回复标题。\n隔离项目-f1e58c7f",
+  "titleMatched": true,
+  "calls": [
+    {
+      "id": "call_83a50a32-6e83-47a1-963e-9dc5d855d527",
+      "toolName": "external_agent",
+      "status": "settled"
+    },
+    {
+      "id": "call_3ee5868a-8e37-4515-9186-15ee5b15c38e",
+      "toolName": "external_tool",
+      "status": "settled"
+    }
+  ],
+  "messageParts": [
+    {
+      "type": "step-start"
+    },
+    {
+      "type": "tool-context.project.detail",
+      "outputKind": "context.project.detail"
+    },
+    {
+      "type": "text"
+    }
+  ],
+  "pass": true,
+  "finished": "2026-10-07T04:34:04.474Z"
+}

@@ -8,23 +8,24 @@ import { createAiRepository } from "./ai.repository";
 import {createPendingGeneratedAssetService,type ObjectStorageForCtx} from "../assets";
 import {readCommittedGeneratedAssetFile} from "../assets/generated-asset-candidate.service";
 import { chatHistoryDigest, chatInputDigest } from "./chat-turn-submission.service";
+import {workspaceFilter} from "../../workspace-scope";
 
 const object=(value:unknown):Record<string,unknown>=>value && typeof value==="object" && !Array.isArray(value)?value as Record<string,unknown>:{};
 type Tx=Parameters<Parameters<Db["transaction"]>[0]>[0];
 type Task=typeof executionTasks.$inferSelect;
-type Context={userId:string;accountId?:string|null};
+type Context={userId:string;accountId?:string|null;groupId?:string|null};
 
 /** 外部引擎使用独立真实回执；旧ACP仍可读，原生协议不可冒称Pi/ACP。 */
 export function createExternalChatTurnService(db:Db,deps:{now?:()=>string;budget:{maxCalls:number;maxTokens:number;deadlineMs:number};objectStorageForCtx?:ObjectStorageForCtx}){
  const now=deps.now??(()=>new Date().toISOString()),leases=createExecutionLeaseService(db,{now});
  async function owner(tx:Tx,task:Task,context:Context,checkHistory=false){
   const payload=object(task.payload),frozen=chatWorkerInputSchema.parse(payload.modelInput),engine=frozen.executionEngine;
-  if(task.kind!=="ai_task"||task.ownerType!=="ai_task"||(engine!=="codex"&&engine!=="codebuddy")||frozen.userId!==context.userId||frozen.accountId!==context.accountId)throw new ConflictError("外部聊天任务来源无效");
-  const [business]=await tx.select().from(aiTasks).where(and(eq(aiTasks.id,task.ownerId),eq(aiTasks.executionTaskId,task.id),eq(aiTasks.userId,context.userId),eq(aiTasks.accountId,context.accountId!))).for("update");
+  if(task.kind!=="ai_task"||task.ownerType!=="ai_task"||(engine!=="codex"&&engine!=="codebuddy")||frozen.userId!==context.userId||(frozen.accountId??null)!==(context.accountId??null)||(frozen.groupId??null)!==(context.groupId??null))throw new ConflictError("外部聊天任务来源无效");
+  const [business]=await tx.select().from(aiTasks).where(and(eq(aiTasks.id,task.ownerId),eq(aiTasks.executionTaskId,task.id),eq(aiTasks.userId,context.userId),workspaceFilter(aiTasks,context))).for("update");
   const sourceInput=object(business?.inputData);
   if(!business||business.taskType!=="copilot.assist"||payload.aiTaskId!==business.id||sourceInput.kind!=="chat.run"||sourceInput.conversationId!==frozen.conversationId||sourceInput.sourceMessageId!==frozen.sourceMessageId||sourceInput.modelInputDigest!==chatInputDigest(frozen))throw new ConflictError("外部聊天冻结映射无效");
   if(!checkHistory)return {frozen,engine,business};
-  const [conversation]=await tx.select().from(aiConversations).where(and(eq(aiConversations.id,frozen.conversationId),eq(aiConversations.userId,context.userId),eq(aiConversations.accountId,context.accountId!))).for("update");
+  const [conversation]=await tx.select().from(aiConversations).where(and(eq(aiConversations.id,frozen.conversationId),eq(aiConversations.userId,context.userId),workspaceFilter(aiConversations,context))).for("update");
   if(!conversation||conversation.projectId!==business.projectId)throw new ConflictError("外部聊天会话归属已变化");
   const messages=await tx.select().from(aiMessages).where(eq(aiMessages.conversationId,conversation.id)).orderBy(asc(aiMessages.createdAt));
   const sourceIndex=messages.findIndex(message=>message.id===frozen.sourceMessageId),source=messages[sourceIndex],history=messages.slice(0,sourceIndex+1);
@@ -38,7 +39,7 @@ export function createExternalChatTurnService(db:Db,deps:{now?:()=>string;budget
   const key=`execution-asset:${imageKey(request.callId,request.toolCallId,request.imageIndex)}`;
   return {key,service:createPendingGeneratedAssetService({db,now,objectStorageForCtx:deps.objectStorageForCtx,authorize:async(ctx,operationKey,tx)=>{
    if(key!==operationKey)throw new ConflictError("图片操作键不符");
-   await createExecutionLeaseService(tx as unknown as Db,{now}).withLease(ref,"admission",async scope=>{await imageOwner(scope.tx,scope.task,scope.context,request);if(scope.context.userId!==ctx.userId||scope.context.accountId!==ctx.accountId)throw new ConflictError("图片账户不符");});
+   await createExecutionLeaseService(tx as unknown as Db,{now}).withLease(ref,"admission",async scope=>{await imageOwner(scope.tx,scope.task,scope.context,request);if(scope.context.userId!==ctx.userId||(scope.context.accountId??null)!==(ctx.accountId??null)||(scope.context.groupId??null)!==(ctx.groupId??null))throw new ConflictError("图片账户不符");});
   }})};
  }
  async function imageOwner(tx:Tx,task:Task,context:Context,request:{callId:string;sessionId:string}){
@@ -188,7 +189,7 @@ export function createExternalChatTurnService(db:Db,deps:{now?:()=>string;budget
     const stamp=now();if(call.resultRef||task.status!=="running"||!task.leaseOwner||!task.leaseExpiresAt||Date.parse(task.leaseExpiresAt)<=Date.parse(stamp)||(task.deadlineAt&&Date.parse(task.deadlineAt)<=Date.parse(stamp))||!["queued","running"].includes(business.status))throw new ConflictError("外部聊天当前不可提交");
     const events=await tx.select().from(executionStreamEvents).where(eq(executionStreamEvents.executionTaskId,task.id)).orderBy(asc(executionStreamEvents.sequence));
     if(events.some(event=>object(event.chunk).type==="finish"))throw new ConflictError("外部聊天结束事件已存在");
-    const repo=createAiRepository(tx as unknown as Db,{now:()=>stamp,nextId:()=>messageId,userId:context.userId,accountId:context.accountId!});
+    const repo=createAiRepository(tx as unknown as Db,{now:()=>stamp,nextId:()=>messageId,userId:context.userId,accountId:context.accountId??null,groupId:context.groupId});
     await repo.createMessage(conversation.id,{role:"assistant",content:receipt.text,parts,attachments:[],modelMetadata:metadata,usage:{inputTokens:receipt.usage?.inputTokens??null,outputTokens:receipt.usage?.outputTokens??null,cachedTokens:receipt.usage?.cachedReadTokens??null}});
     await tx.insert(aiTaskResults).values({id:resultId,aiTaskId:business.id,resultType:"conversation_reply",executionCallId:call.id,resultData});
     await tx.update(executionCalls).set({resultRef:resultId,updatedAt:stamp}).where(eq(executionCalls.id,call.id));

@@ -4041,6 +4041,74 @@
         ]
       },
       "scope_note": "原113路径全部保留；用户紧邻具体两文件补充评审问题回复继续，DEC-106901单周期绑定T1069-STABLE-SHELL-HOST，新增AppShell和真实ScrollArea回归两路径，合计115。尚待正式reviewctl和正常claim；不代签真实Tab保存刷新或安装验收。"
+    },
+    "T-1070": {
+      "task_id": "T-1070",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "external-engine",
+        "implementation"
+      ],
+      "read_set": [
+        "docs/features/t1070-director-script-workflow.md",
+        "docs/features/t1016-external-agent-research.md",
+        "docs/research/2026-09-27-external-local-agents.md",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "PROJECT_CONTEXT.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "docs/features/t1022-account-group-workspace/UI_RULES.md",
+        "ai-worker/src/**",
+        "ai-worker/vendor/codex-acp/**",
+        "backend/src/modules/ai-runtime/**",
+        "backend/src/modules/ai/**",
+        "backend/src/modules/execution/**",
+        "backend/src/application/**",
+        "backend/src/modules/articles/**",
+        "backend/src/modules/graphic-posts/**",
+        "backend/src/modules/production/**",
+        "backend/src/modules/creative-results/**",
+        "backend/src/modules/output-scripts/**",
+        "frontend/src/features/**",
+        "frontend/src/app/(creator)/projects/**",
+        "contract/src/**",
+        "backend/src/modules/projects/**",
+        "backend/src/modules/artifacts/**",
+        "backend/src/modules/work-compositions/**",
+        "frontend/src/server/persistence-client.ts",
+        "backend/src/workspace-scope.ts",
+        "backend/src/schema/ai.ts",
+        "backend/src/schema/account-groups.ts",
+        "backend/src/modules/assets/**",
+        "backend/src/schema/pending-generated-asset-commits.ts"
+      ],
+      "write_set": [
+        "backend/src/modules/ai/external-chat-turn.service.ts",
+        "backend/src/modules/ai/external-task-tool.service.ts",
+        "backend/src/modules/ai/external-group-chat.integration.test.ts",
+        "backend/src/modules/assets/generated-asset-candidate.service.ts"
+      ],
+      "step_write_set": {
+        "external-engine": [
+          "backend/src/modules/ai/external-chat-turn.service.ts",
+          "backend/src/modules/ai/external-task-tool.service.ts",
+          "backend/src/modules/ai/external-group-chat.integration.test.ts",
+          "backend/src/modules/assets/generated-asset-candidate.service.ts"
+        ],
+        "implementation": []
+      },
+      "verify_commands": {
+        "external-engine": [
+          "env -u DATABASE_URL -u PGLITE_DATA_DIR NODE_ENV=test pnpm -C backend exec vitest run src/modules/ai/external-group-chat.integration.test.ts src/modules/ai/external-chat-turn.service.test.ts src/modules/ai/external-task-tool.service.test.ts --testTimeout=120000 --hookTimeout=120000",
+          "git diff --check"
+        ],
+        "implementation": [
+          "git diff --check -- docs/features/t1070-director-script-workflow.md"
+        ]
+      },
+      "scope_note": "完整用户任务保持进行；本次仅精确准入已确证外部引擎纯组执行四路径，编导及三产物尚无写准入，补契约独评后继续。；当场图像settle RED暴露同源receipt helper遗漏，补workspace identity/filter，不降原exact file证明。"
     }
   }
 }

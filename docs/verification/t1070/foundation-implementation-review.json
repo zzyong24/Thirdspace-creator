@@ -1,0 +1,235 @@
+{
+  "schema": "foundation-implementation-review/v1",
+  "task_id": "T-1070",
+  "review_kind": "独立只读实现审核；不是第3轮SPEC评审",
+  "reviewed_at": "2026-10-07T04:30:14.280985+00:00",
+  "main_root": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "head": "a8e42b7365d8ba1cb3498a7a623b73c443d8634a",
+  "scope": [
+    "backend/src/modules/ai/external-chat-turn.service.ts",
+    "backend/src/modules/ai/external-task-tool.service.ts",
+    "backend/src/modules/ai/external-group-chat.integration.test.ts",
+    "backend/src/modules/assets/generated-asset-candidate.service.ts"
+  ],
+  "source_sha256": {
+    "backend/src/modules/ai/external-chat-turn.service.ts": "d0879049091d58469ec6c17546f9612ec2a557a78bf7bbc58e31c41c28508f39",
+    "backend/src/modules/ai/external-task-tool.service.ts": "1ecd84d5cbf2cd6708f40221713eb3420e41810ab3169650486e872f4c80ff85",
+    "backend/src/modules/ai/external-group-chat.integration.test.ts": "e6aa9b5df3f6ccda3a7d81cc7194b93b0330d77cc3a068620775f0f98b228719",
+    "backend/src/modules/assets/generated-asset-candidate.service.ts": "c802392aeda1bb3d3b8ffdba6a5c17e34dfa8af96614a4e11a02365cca24f24f"
+  },
+  "authorities_sha256": {
+    "docs/features/t1070-director-script-workflow.md": "25e7c9afc6eb46ddb0c2139c6ac87cde0e468afd13fbf3271384d80ca1de958a",
+    "docs/产品定位.md": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
+    "orchestrator/SYSTEM_ARCHITECTURE.md": "3efbb0394b8bcc9eb3c9ad7e8c9364df51e336006b862e02ac71fd6c9327971e"
+  },
+  "verdict": "PASS_NARROW_IMPLEMENTATION_WITH_PENDING_ACCEPTANCE",
+  "summary": "四路径实际diff未发现新增阻断缺陷，可供主会话进行本次窄修提交。此裁决只覆盖执行归属、实际工具ID及生成素材原提交回执helper；不能完成T-1070或声明全局全绿。未修改产品源码、MAIN控制面或任务状态；未连接用户库、真实媒体根或供应商模型。",
+  "findings": [],
+  "mechanical_review": [
+    {
+      "file": "backend/src/modules/ai/external-chat-turn.service.ts",
+      "lines": [
+        22,
+        23,
+        27,
+        42,
+        192
+      ],
+      "result": "冻结userId严格相等，可空accountId/groupId仅归一null后严格等于lease；AI任务及会话读均经workspaceFilter，图片authorize重核同一三项，回复repository收到原groupId和可空accountId。"
+    },
+    {
+      "file": "backend/src/modules/ai/external-task-tool.service.ts",
+      "lines": [
+        19,
+        28,
+        29,
+        31,
+        47,
+        48,
+        49
+      ],
+      "result": "仅将白名单video.edit纠正为已登记video.edit.render；仍检查冻结定义与当前工具version、effect、host执行、approve/execute、租约及fence。scope与reserve两入口均核三项并按workspaceFilter读任务/会话。"
+    },
+    {
+      "file": "backend/src/modules/assets/generated-asset-candidate.service.ts",
+      "lines": [
+        15,
+        16,
+        23,
+        32,
+        39,
+        52,
+        54
+      ],
+      "result": "身份摘要与pending写端同源workspaceObjectIdentity.identity，原execution-asset调用键保持；旧account身份摘要不变，纯组按既有group身份生成。pending commit及素材读、activate/discard写均使用workspaceFilter。"
+    },
+    {
+      "file": "backend/src/modules/assets/generated-asset-candidate.service.ts",
+      "result": "原committedAt、receipt深等、assetType、fileId、storageKey、mimeType、checksum、size均保留。只读历史文件不依赖currentFileId；candidate采用仍核pending/currentFileId并锁asset/file；active禁止再次采用或候选拒绝删除，deleted禁止选择。"
+    },
+    {
+      "file": "backend/src/modules/ai/external-chat-turn.service.ts",
+      "lines": [
+        196
+      ],
+      "result": "既有AI任务终态更新仍按已锁定business.id写入：同一事务内先经owner的user/workspace查验并持有行锁，无新增跨组写入途径。消息父会话更新由传原组的repository实施workspaceFilter。"
+    },
+    {
+      "files": [
+        "backend/src/modules/ai/external-chat-turn.service.ts",
+        "backend/src/modules/ai/external-task-tool.service.ts"
+      ],
+      "result": "实际diff未降低history digest/sourceMessage绑定、原协议回执与provider turn校验、原operationKey、原结果幂等或unknown不重发；未知toolCallId回放不重新执行，新ID被尚未对账门拒绝。"
+    }
+  ],
+  "evidence": {
+    "reviewer_executed": [
+      "git rev-parse HEAD",
+      "git diff（限定三个已跟踪源文件）",
+      "git diff --check（限定三个已跟踪源文件，exit 0）",
+      "读取未跟踪新测试完整内容并计算四路径SHA256",
+      "git diff --name-only a8e42b73 核四处全局失败相关文件，均无本轮变更"
+    ],
+    "tests_execution": "本审核本人未重跑测试；只读核提供的当场隔离PGlite日志。日志不含完整命令/逐文件GREEN列表或当场源码哈希，不能独立证明34PASS与本报告当前SHA绑定；主会话需保留实际命令及运行时来源记录。",
+    "test_logs_root": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-tests",
+    "test_log_sha256": {
+      "external-group-green.log": "bd59fdf715823320ada54a23f9e09dac7ee96ce6ec9eb68a89796413a9f157cb",
+      "generated-receipt-red.log": "3b45139423c7300b4603a1dc45abf8ec228762eff7d24a48f3da74c9e5a0db46",
+      "generated-receipt-green.log": "06fc70e8fb9335748537a5d44713be3207838ca1c929b6930c5f062352c6fce3",
+      "external-group-red.log": "b7f4251862281df608e8cb00770fff6ba1272ac23d920412ffe08a13bf0f1d62",
+      "related-regressions.log": "18d2e9343aeba93af5923c86ba214dfb341ec6370906fd71dc626396c2dfff31",
+      "backend-typecheck.log": "ca59c2e837fe000c2f032cc3f99753de25ea712239817cf7ef573c60325eadba",
+      "boundary-scan.mjs.log": "6b23ce459cd49f9f78d9a4185f9bceaa53c27b96d14e64f2fdf1a0422b6e6985",
+      "orphan-scan.mjs.log": "ee3224654cf1b13b1bcd3948dd942050a0435380b5b2a84bbb61e9058d056b0e"
+    },
+    "external_group_red": {
+      "file": "external-group-red.log",
+      "status": "RED",
+      "failed": 6,
+      "passed": 2,
+      "total": 8,
+      "causes": [
+        "纯组account NULL查询",
+        "video.edit.render白名单缺失",
+        "冻结group未核lease"
+      ]
+    },
+    "intermediate_misnamed_green": {
+      "file": "external-group-green.log",
+      "status": "RED",
+      "failed": 1,
+      "passed": 18,
+      "total": 19,
+      "cause": "纯组图片settle在旧readGeneratedAssetReceipt强制accountId失败；文件名不能代签GREEN"
+    },
+    "generated_receipt_red": {
+      "file": "generated-receipt-red.log",
+      "status": "RED",
+      "failed": 4,
+      "passed": 7,
+      "total": 11,
+      "cause": "纯组图片结算及新增receipt helper回归均在旧accountId强制失败"
+    },
+    "generated_receipt_green": {
+      "file": "generated-receipt-green.log",
+      "status": "GREEN_LOG_OBSERVED",
+      "passed": 34,
+      "files_passed": 4,
+      "limits": "日志仅汇总，未列逐文件测试名；不代签真实模型、有效图像解码、剪辑执行或上层采纳事务"
+    },
+    "related_regressions": {
+      "file": "related-regressions.log",
+      "status": "RED",
+      "failed": 1,
+      "passed": 58,
+      "files_failed": 1,
+      "files_passed": 2,
+      "cause": "chat-turn-submission.service.test.ts:173旧creatoros.guide产品说明断言失败，实际返回官方说明不可读取；该测试文件未改。未独立重跑baseline，称既有依据为主会话陈述+无本轮diff，不制造baseline PASS"
+    },
+    "backend_typecheck": {
+      "file": "backend-typecheck.log",
+      "status": "RED",
+      "errors": 2,
+      "locations": [
+        "platform-collection/platform-bind.integration.test.ts:173 TS2532",
+        "production/production-native-public.integration.test.ts:31 TS2322"
+      ],
+      "classification": "两处文件均无本轮diff，现有错误保留；不称类型全绿"
+    },
+    "boundary": {
+      "file": "boundary-scan.mjs.log",
+      "status": "RED",
+      "total": 7,
+      "baseline": 5,
+      "new_marked": 2,
+      "locations": [
+        "frontend/src/features/copilot/live-chat-session.ts @ai-sdk/react",
+        "frontend/src/features/copilot/live-chat-session.ts ai"
+      ],
+      "classification": "两条相对基线新标记在未改文件，报告真实失败；不将新标记数量写成零"
+    },
+    "orphan": {
+      "file": "orphan-scan.mjs.log",
+      "errors": 0,
+      "warnings": 100,
+      "status": "PASS_WITH_WARNINGS"
+    }
+  },
+  "test_blind_spots": [
+    {
+      "file": "backend/src/modules/ai/external-group-chat.integration.test.ts",
+      "lines": [
+        35,
+        37,
+        55,
+        57
+      ],
+      "blocking": false,
+      "detail": "prepareVideoEdit为确定性候选stub，project/output/asset均为中性人工ID；ACP start/provider turn/最终回执人工输入。只证明实际服务组合、工具定义/adapter、账本、卡片与归属，不证明真实Codex或原生v3剪辑。"
+    },
+    {
+      "file": "backend/src/modules/ai/external-group-chat.integration.test.ts",
+      "blocking": false,
+      "detail": "图片为12字节PNG头夹具；可证明字节持久化、exact file/receipt映射与pending状态，不能证明有效图片解码、预览或模型生图。"
+    },
+    {
+      "file": "backend/src/modules/ai/external-group-chat.integration.test.ts",
+      "lines": [
+        114,
+        117,
+        120,
+        126
+      ],
+      "blocking": false,
+      "detail": "新增verify/activate/discard直接调用helper，未包裹generated-asset-adoption公共confirmTask/cancelTask事务或并发故障；不能代签上层采纳、项目链接、rollback及锁保证。现有上层合同未改，本窄diff无已证实破坏。"
+    },
+    {
+      "file": "backend/src/modules/ai/external-group-chat.integration.test.ts",
+      "lines": [
+        27,
+        30
+      ],
+      "blocking": false,
+      "detail": "新fixture只分纯组和无group旧account；未直接覆盖ctx同时带原account与grp_legacy_account的workspaceObjectIdentity兼容身份，或旧迁移task/modelInput的冻结组一致性。源码复用同源helper保持已有算法；不据缺例假造新bug。"
+    },
+    {
+      "file": "backend/src/modules/ai/external-group-chat.integration.test.ts",
+      "blocking": false,
+      "detail": "新增纯组用例未分别篡改file的storageKey/mimeType/checksum/size；已读现有creative-canvas-committed-file.test.ts有旧account四项负例，当前GREEN汇总日志不能确认该文件在34项中执行。"
+    }
+  ],
+  "pending_acceptance": [
+    "真实右侧入口选择Codex→供应商回合→host工具→终态与卡片的公共链；原失败用户任务保持，不自动重发。",
+    "同一用户确认project_script版本派生三种完整作品；真实文章、页图、视频工程/媒体的保存、刷新、Tab切换、编辑与导出。",
+    "原生v3工程读/候选/采用、真实自然语言精调、用户采纳后owner CAS与原编辑器可见变化；未保存工程、contextEpoch、备份/恢复和未知应用回执。",
+    "跨Tab共享编导会话与入口清理的精确接口/写集、独立评审及真实视觉操作证据。",
+    "相关产品说明回归、类型与boundary全局失败的任务化保留；最终pmem/reconcile真实结果不得写成全绿。",
+    "构建后的本地候选包、资源核验、用户未保存状态确认后的安装与最终用户验收。",
+    "主会话补记GREEN运行时精确文件/命令与来源SHA；必要的旧account exact文件及公共生成候选采用/拒绝回归。"
+  ],
+  "reviewer_identity": {
+    "model": "inherited Codex model；精确型号未暴露",
+    "independence": "独立同模型子会话，仅homogeneous弱门，不声称cross-family或cross-model-same-family"
+  },
+  "status_changes": "无；未调用reviewctl或taskctl，未作第三规格轮"
+}

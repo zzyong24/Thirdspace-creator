@@ -4,10 +4,10 @@
     "work_branch": "main"
   },
   "summary": {
-    "verticals": 61,
+    "verticals": 62,
     "tasks_done": 44,
-    "tasks_total": 157,
-    "tasks_pending": 113,
+    "tasks_total": 159,
+    "tasks_pending": 115,
     "verticals_complete": 4
   },
   "verticals": [
@@ -4663,7 +4663,84 @@
       "step_read_set": {},
       "step_exclusive_resources": {},
       "commits": {}
+    },
+    {
+      "id": "T-1070",
+      "archetype": [
+        "orchestration"
+      ],
+      "task_id": "T-1070",
+      "tasks": [
+        {
+          "step": "external-engine",
+          "status": "pending"
+        },
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "backend/src/modules/ai/external-chat-turn.service.ts",
+        "backend/src/modules/ai/external-task-tool.service.ts",
+        "backend/src/modules/ai/external-group-chat.integration.test.ts",
+        "backend/src/modules/assets/generated-asset-candidate.service.ts"
+      ],
+      "read_set": [
+        "docs/features/t1070-director-script-workflow.md",
+        "docs/features/t1016-external-agent-research.md",
+        "docs/research/2026-09-27-external-local-agents.md",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "PROJECT_CONTEXT.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "docs/features/t1022-account-group-workspace/UI_RULES.md",
+        "ai-worker/src/**",
+        "ai-worker/vendor/codex-acp/**",
+        "backend/src/modules/ai-runtime/**",
+        "backend/src/modules/ai/**",
+        "backend/src/modules/execution/**",
+        "backend/src/application/**",
+        "backend/src/modules/articles/**",
+        "backend/src/modules/graphic-posts/**",
+        "backend/src/modules/production/**",
+        "backend/src/modules/creative-results/**",
+        "backend/src/modules/output-scripts/**",
+        "frontend/src/features/**",
+        "frontend/src/app/(creator)/projects/**",
+        "contract/src/**",
+        "backend/src/modules/projects/**",
+        "backend/src/modules/artifacts/**",
+        "backend/src/modules/work-compositions/**",
+        "frontend/src/server/persistence-client.ts",
+        "backend/src/workspace-scope.ts",
+        "backend/src/schema/ai.ts",
+        "backend/src/schema/account-groups.ts",
+        "backend/src/modules/assets/**",
+        "backend/src/schema/pending-generated-asset-commits.ts"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {
+        "external-engine": [
+          "backend/src/modules/ai/external-chat-turn.service.ts",
+          "backend/src/modules/ai/external-task-tool.service.ts",
+          "backend/src/modules/ai/external-group-chat.integration.test.ts",
+          "backend/src/modules/assets/generated-asset-candidate.service.ts"
+        ],
+        "implementation": []
+      },
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
     }
   ],
-  "leases": {}
+  "leases": {
+    "T-1070:external-engine": {
+      "agent": "root",
+      "since": "2026-10-07T04:21:54.370Z"
+    }
+  }
 }

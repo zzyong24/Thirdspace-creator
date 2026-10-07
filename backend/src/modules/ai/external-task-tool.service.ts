@@ -7,6 +7,7 @@ import type { ChatBackendTool } from "../execution/execution-chat-tool-ports.ser
 import { createExecutionLeaseService } from "../execution/execution-lease.service";
 import { ConflictError, ExecutionBudgetError } from "../execution/execution.errors";
 import { chatInputDigest } from "./chat-turn-submission.service";
+import {workspaceFilter} from "../../workspace-scope";
 
 type Tools=Record<string,ChatBackendTool>;
 const object=(value:unknown):Record<string,unknown>=>value&&typeof value==="object"&&!Array.isArray(value)?value as Record<string,unknown>:{};
@@ -15,7 +16,7 @@ const safeNames=new Set([
  "history.read","tool.result.read","skill.read","creatoros.guide","context.projects","context.projects.search","context.comments",
  "context.knowledge","context.materials","context.project.detail","context.project.lifecycle","context.review.report",
  "context.positioning.detail","context.knowledge.detail","context.artifacts","context.artifact.text","context.knowledge.text",
- "context.publications","context.metrics","context.learnings","context.candidates","context.predictions","learning.capture","brief.fill","script.patch","video.edit",
+ "context.publications","context.metrics","context.learnings","context.candidates","context.predictions","learning.capture","brief.fill","script.patch","video.edit.render",
 ]);
 
 /** 每次执行都从任务快照、当前租约及真实业务归属重新绑定；进程只接收窄工具结果。 */
@@ -24,10 +25,10 @@ export function createExternalTaskToolService(db:Db,deps:{now?:()=>string}){
  async function scope(ref:ExecutionRef,mode:"admission"|"settlement"){
   return leases.withLease(ref,mode,async({tx,task,context})=>{
    const frozen=chatWorkerInputSchema.parse(object(task.payload).modelInput);
-   if(task.kind!=="ai_task"||task.ownerType!=="ai_task"||!["codex","codebuddy"].includes(frozen.executionEngine??"")||frozen.userId!==context.userId||frozen.accountId!==context.accountId)throw new ConflictError("外部工具任务身份无效");
-   const [business]=await tx.select().from(aiTasks).where(and(eq(aiTasks.id,task.ownerId),eq(aiTasks.executionTaskId,task.id),eq(aiTasks.userId,context.userId),eq(aiTasks.accountId,context.accountId!))).for("update");
+   if(task.kind!=="ai_task"||task.ownerType!=="ai_task"||!["codex","codebuddy"].includes(frozen.executionEngine??"")||frozen.userId!==context.userId||(frozen.accountId??null)!==(context.accountId??null)||(frozen.groupId??null)!==(context.groupId??null))throw new ConflictError("外部工具任务身份无效");
+   const [business]=await tx.select().from(aiTasks).where(and(eq(aiTasks.id,task.ownerId),eq(aiTasks.executionTaskId,task.id),eq(aiTasks.userId,context.userId),workspaceFilter(aiTasks,context))).for("update");
    if(!business||business.taskType!=="copilot.assist"||object(task.payload).aiTaskId!==business.id||object(business.inputData).modelInputDigest!==chatInputDigest(frozen)||!["queued","running"].includes(business.status))throw new ConflictError("外部工具冻结任务映射无效");
-   const [conversation]=await tx.select().from(aiConversations).where(and(eq(aiConversations.id,frozen.conversationId),eq(aiConversations.userId,context.userId),eq(aiConversations.accountId,context.accountId!))).for("update");
+   const [conversation]=await tx.select().from(aiConversations).where(and(eq(aiConversations.id,frozen.conversationId),eq(aiConversations.userId,context.userId),workspaceFilter(aiConversations,context))).for("update");
    if(!conversation||conversation.projectId!==business.projectId)throw new ConflictError("外部工具会话或项目归属已变化");
    return {frozen,context,business};
   });
@@ -43,9 +44,9 @@ export function createExternalTaskToolService(db:Db,deps:{now?:()=>string}){
  async function reserve(ref:ExecutionRef,request:z.infer<typeof workerPortInputSchemas.executeExternalTaskTool>,tools:Tools){
   return leases.withLease(ref,"admission",async({tx,task,context})=>{
    const frozen=chatWorkerInputSchema.parse(object(task.payload).modelInput);
-   if(task.kind!=="ai_task"||task.ownerType!=="ai_task"||!["codex","codebuddy"].includes(frozen.executionEngine??"")||frozen.userId!==context.userId||frozen.accountId!==context.accountId)throw new ConflictError("外部工具任务身份无效");
-   const [business]=await tx.select().from(aiTasks).where(and(eq(aiTasks.id,task.ownerId),eq(aiTasks.executionTaskId,task.id),eq(aiTasks.userId,context.userId),eq(aiTasks.accountId,context.accountId!))).for("update");
-   const [conversation]=await tx.select().from(aiConversations).where(and(eq(aiConversations.id,frozen.conversationId),eq(aiConversations.userId,context.userId),eq(aiConversations.accountId,context.accountId!))).for("update");
+   if(task.kind!=="ai_task"||task.ownerType!=="ai_task"||!["codex","codebuddy"].includes(frozen.executionEngine??"")||frozen.userId!==context.userId||(frozen.accountId??null)!==(context.accountId??null)||(frozen.groupId??null)!==(context.groupId??null))throw new ConflictError("外部工具任务身份无效");
+   const [business]=await tx.select().from(aiTasks).where(and(eq(aiTasks.id,task.ownerId),eq(aiTasks.executionTaskId,task.id),eq(aiTasks.userId,context.userId),workspaceFilter(aiTasks,context))).for("update");
+   const [conversation]=await tx.select().from(aiConversations).where(and(eq(aiConversations.id,frozen.conversationId),eq(aiConversations.userId,context.userId),workspaceFilter(aiConversations,context))).for("update");
    if(!business||business.taskType!=="copilot.assist"||object(task.payload).aiTaskId!==business.id||object(business.inputData).modelInputDigest!==chatInputDigest(frozen)||!["queued","running"].includes(business.status)||!conversation||conversation.projectId!==business.projectId)throw new ConflictError("外部工具账号或项目归属无效");
    const def=available(frozen,tools).find(item=>item.name===request.toolName),tool=tools[request.toolName];
    if(!def||!tool)throw new ConflictError("外部工具未获当前任务授权");
