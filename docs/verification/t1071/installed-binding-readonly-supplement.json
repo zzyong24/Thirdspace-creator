@@ -1,0 +1,33 @@
+{
+  "schema": "creatoros/t1071-installed-readonly-supplement/v1",
+  "status": "PUBLIC_BINDING_CAPABILITY_READY_LOGIN_AND_UI_PENDING",
+  "xiaohongshu_binding": {
+    "platform": "xiaohongshu",
+    "capability": "bind",
+    "supported": true,
+    "authState": "pending",
+    "runtimeState": "ready",
+    "reasonCode": null,
+    "lastVerifiedAt": null
+  },
+  "qr_login_started": false,
+  "accounts_added_or_moved": false,
+  "raw_evidence": {
+    "native-automation-current-readonly-proof.json": {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-install-preparation-fxklwawl/installation-actual/native-automation-current-readonly-proof.json",
+      "sha256": "b49bf439fecc09400c5fc86e2308dd71e35d19becc2c0b58119714943b88ce41",
+      "bytes": 549
+    },
+    "read-accounts.bindingCapabilities.json": {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-install-preparation-fxklwawl/installation-actual/read-accounts.bindingCapabilities.json",
+      "sha256": "6cbea1e786dca3430eaee535a9875e3be1b33244f4435b45cbfc9ab6695f765c",
+      "bytes": 3420
+    },
+    "read-platforms.capabilities.list.json": {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-install-preparation-fxklwawl/installation-actual/read-platforms.capabilities.list.json",
+      "sha256": "e09b070519e5b650fc9158961955d1c4325c2796a7a1e53566fd2a7171038b18",
+      "bytes": 16558
+    }
+  },
+  "main_readback_report_not_modified": true
+}

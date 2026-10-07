@@ -1,0 +1,176 @@
+{
+  "schema": "creatoros/t1071-installed-public-readback/v1",
+  "status": "INSTALLED_PUBLIC_READBACK_PASSED_NATIVE_UI_ACCEPTANCE_PENDING",
+  "source_head": "5e6d025c172ba5fc7f671efcc1632f34cf998a8e",
+  "dmg_sha256": "475b55ba920292316d19233c0fcd51bb4c1c697aa4197e1ec594e84276f98701",
+  "installer_sha256": "0eb2f169ae545eae28069963a8f075f09fafb4144f497329ab8acf574708f25b",
+  "installer_review_sha256": "b0c805d5ba9260d56621c1f3811bf4f03c48f479350f962c223500b0d649e9fd",
+  "backup_closure_sha256": "eede5bc74f5b6b28286c5cb344f9daf97ea1415cbf7bcc9b20fb4fcadea2743f",
+  "install_actual_exit_code": 0,
+  "old_application_preserved_by_rename": true,
+  "user_data_reset_or_restore": false,
+  "native_app_pid": 37432,
+  "sidecar_pid": 37873,
+  "observed_sidecar_port": 58646,
+  "public_access_full_remembered": true,
+  "groups": {
+    "count": 5,
+    "deep_equal_before_install": true
+  },
+  "accounts": {
+    "count": 3,
+    "deep_equal_before_install": true
+  },
+  "neutral_context": {
+    "groupId": "grp-58776bff-101",
+    "projectId": "project-58776bff-104",
+    "video_outputId": "output-58776bff-119",
+    "editor_revision": 6,
+    "editor_state": "editable",
+    "preview_durationSec": 8.16,
+    "preview_warnings": [],
+    "preview_saved_editor_deep_unchanged": true,
+    "article_outputId": "output-58776bff-221",
+    "article_versionId": "artifactversion-58776bff-233",
+    "graphic_outputId": "output-58776bff-242",
+    "graphic_versionId": "artifactversion-58776bff-258"
+  },
+  "existing_render": {
+    "public_download_exit": 0,
+    "bytes": 199098,
+    "sha256": "a72af1826b27bc566fb7b839c4c0813aa3cc04bb0cde6164e1ec04f41f3e1558",
+    "decode_exit": 0,
+    "render_task": "ai-task-33ff4e5b-100",
+    "original_render_not_resubmitted": true,
+    "current_new_render_not_claimed": true
+  },
+  "current_new_render_submitted": false,
+  "browser_acceptance": {
+    "actual_timeout_ms": 125000,
+    "actual_exit_code": 1,
+    "business_http_status": 403,
+    "business_error": "forbidden: request must originate from the local application",
+    "no_header_credential_or_auth_bypass": true,
+    "spaceId": 2,
+    "finish_kept_all_actual": true,
+    "native_webview_click_proof": false
+  },
+  "native_automation": {
+    "accessibility_ui_elements_enabled": false,
+    "screen_capture_preflight_granted": false,
+    "visible_creatoros_window_id": 5505,
+    "user_home_and_navigation_reply": "PENDING"
+  },
+  "warm_cli_whole_command_timing_ms": [
+    325,
+    284,
+    286,
+    287,
+    292
+  ],
+  "physical_footprint_single_observation": "1.1G, peak1.8G; observed at service age10min, not leak clearance",
+  "task_completed": false,
+  "raw_evidence": {
+    "result.json": {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-install-preparation-fxklwawl/installation-actual/result.json",
+      "sha256": "30ef1b8fa66a45874b5bcc13bd2b12098fc8f52aabdae202769ab25822cc1b7a",
+      "bytes": 6597
+    },
+    "startup-public-status-observation.json": {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-install-preparation-fxklwawl/installation-actual/startup-public-status-observation.json",
+      "sha256": "e6cdcfee8b2bd5fbb18e7ca73d7a64b7d4c8e90e0f8ac4bb9876d08c6ecf1aed",
+      "bytes": 205
+    },
+    "installed-access.json": {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-install-preparation-fxklwawl/installation-actual/installed-access.json",
+      "sha256": "69e41520ed879ec2eb883f72c8ad59a1030565e37034b7230ff69401359fbf0b",
+      "bytes": 114
+    },
+    "installed-groups.json": {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-install-preparation-fxklwawl/installation-actual/installed-groups.json",
+      "sha256": "e7ec70c6c98b0523bdb02d8335394375196ede668c423a73cc2726d5351a6cf1",
+      "bytes": 2790
+    },
+    "installed-accounts.json": {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-install-preparation-fxklwawl/installation-actual/installed-accounts.json",
+      "sha256": "8e6ee6980916bb73c9cbc17ad0070dd6b524fa9915600ea5e1fd2d510af4282e",
+      "bytes": 1474
+    },
+    "neutral-projects.json": {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-install-preparation-fxklwawl/installation-actual/neutral-projects.json",
+      "sha256": "6070827183bd71010462e05512a0ec4f881d17b527b1ffe19d5594201ee6e81d",
+      "bytes": 1081
+    },
+    "neutral-running-tasks.json": {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-install-preparation-fxklwawl/installation-actual/neutral-running-tasks.json",
+      "sha256": "801f967edd034e30c0ef0419e342748d6dd88cf7b33492bfdd8f56c8503db73f",
+      "bytes": 281
+    },
+    "neutral-editor-current.json": {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-install-preparation-fxklwawl/installation-actual/neutral-editor-current.json",
+      "sha256": "d775747eabbf08940c5210f056a497351551b4ccc78dc7787b4f6b8ae4d25210",
+      "bytes": 16942
+    },
+    "editor-after-preview.json": {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-install-preparation-fxklwawl/installation-actual/editor-after-preview.json",
+      "sha256": "60899c070db4e533efc2dbe00a6adb1e00d1e0f4951a73c0c3dd83a93bb91cb9",
+      "bytes": 16942
+    },
+    "article-current.json": {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-install-preparation-fxklwawl/installation-actual/article-current.json",
+      "sha256": "7318393999adc9bba9f31046c0ed787e98d7323f6fdedec019fce59a353d6b19",
+      "bytes": 2322
+    },
+    "graphic-current.json": {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-install-preparation-fxklwawl/installation-actual/graphic-current.json",
+      "sha256": "9bc66f452209e7bf060f3063eaf406706d2f051a85153692be2f163b26a69c73",
+      "bytes": 1964
+    },
+    "editor-preview.json": {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-install-preparation-fxklwawl/installation-actual/editor-preview.json",
+      "sha256": "afe5b7537a7c0e60ef9e59a018cc9b599c07cd3b41ea9cf986170aa74edc6187",
+      "bytes": 3760
+    },
+    "existing-render-task-100.json": {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-install-preparation-fxklwawl/installation-actual/existing-render-task-100.json",
+      "sha256": "0eb03bdc2f683a27394ad859d119227bf44cde8922535f61b1d26291e3b9388c",
+      "bytes": 2994
+    },
+    "rendered-asset.json": {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-install-preparation-fxklwawl/installation-actual/rendered-asset.json",
+      "sha256": "7f003485446731a9f989155abadccdbc9ef6dab3fcedd99b788f21260a866022",
+      "bytes": 783
+    },
+    "existing-rough-first-download-failure.json": {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-install-preparation-fxklwawl/installation-actual/existing-rough-first-download-failure.json",
+      "sha256": "08ef20dc65834067e4332ce9dbb217405a28e74a895b414ae8e9df9c28257166",
+      "bytes": 249
+    },
+    "existing-rough-download-decode-result.json": {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-install-preparation-fxklwawl/installation-actual/existing-rough-download-decode-result.json",
+      "sha256": "5716f8e96e33b0c638d44a0faa19ab1f258bb7e10082e15035448bb0f93294d9",
+      "bytes": 276
+    },
+    "existing-rough-ffprobe.json": {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-install-preparation-fxklwawl/installation-actual/existing-rough-ffprobe.json",
+      "sha256": "deeded44de921c4fecb7acb87122427b013c74a9665e80ae466f95282dd8ad60",
+      "bytes": 439
+    },
+    "browser-installed-forbidden.txt": {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-install-preparation-fxklwawl/installation-actual/browser-installed-forbidden.txt",
+      "sha256": "adba6c2c0c1e2c611787ee3ed70d97a60578dccc10ed01609ab6438a1e6e5378",
+      "bytes": 3524
+    },
+    "warm-public-groups-timing.json": {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-install-preparation-fxklwawl/installation-actual/warm-public-groups-timing.json",
+      "sha256": "01e35c4a798f66d2d1c7ab6721735fd29cc203a98125dcac2045c16e96cc6b51",
+      "bytes": 810
+    },
+    "installed-service-os-sample.txt": {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-install-preparation-fxklwawl/installation-actual/installed-service-os-sample.txt",
+      "sha256": "08037562b469fff5860c80d2fa0af86701876666687ccf4ec8df3e7424607285",
+      "bytes": 149399
+    }
+  },
+  "created": "2026-10-07T14:55:14.170982+00:00"
+}

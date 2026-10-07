@@ -1,0 +1,14 @@
+{
+  "schema": "creatoros/t1071-installed-public-readback-independent-review-pointer/v1",
+  "decision": "PASS_NARROW_INSTALLED_AND_PUBLIC_READBACK_NATIVE_UI_PENDING",
+  "reviewer": "/root/navigation_scope_review",
+  "full_private_report": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-installed-public-readback-independent-review/installed-public-readback-independent-review.json",
+  "full_private_report_sha256": "6fffe8a7d018ede2d351726a53fd6017b0078e323c8d7e1e2e9cee2380c3f377",
+  "main_readback_report_sha256": "3c2469ae8c99915c144ab6ac5af72e3869e8e26d6dfb816179d13899e1387f43",
+  "raw_subject_files_verified": 20,
+  "native_home_or_clicks_signed": false,
+  "native_200_percent_signed": false,
+  "new_render_signed": false,
+  "long_term_memory_leak_clearance_signed": false,
+  "task_completed": false
+}
