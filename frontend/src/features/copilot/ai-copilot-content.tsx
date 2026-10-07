@@ -2411,7 +2411,7 @@ export function AICopilotContent({
           data-slot="copilot-message-scroll"
           className="min-h-[120px] min-w-0 flex-1 overflow-x-hidden overflow-y-auto rounded-2xl border border-border bg-surface-subtle/40 p-3"
         >
-          {messages.length > 0 ? (
+          {messages.length > 0 || chatError ? (
             <ol
               data-slot="copilot-messages"
               aria-label="助手活动记录"
