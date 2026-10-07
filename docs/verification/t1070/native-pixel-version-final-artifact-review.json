@@ -1,0 +1,187 @@
+{
+  "task": "T-1070",
+  "reviewer": "/root/t1070_native_diff_review",
+  "reviewedAt": "2026-10-07T12:11:02.051185+00:00",
+  "verdict": {
+    "status": "PASS_FINAL_SOURCE_AND_PACKAGING_PENDING_REAL_REACT_UI_CLOSURE",
+    "sourceAndPackagingPass": true,
+    "fullFeaturePass": false,
+    "newBlocker": 0,
+    "newMajor": 0,
+    "newMinor": 0,
+    "retainedMinor": [
+      {
+        "id": "README_LICENSE_COUNT",
+        "detail": "原README计59、实际60许可包；历史minor保留，不手改官方Zod4空白。"
+      }
+    ]
+  },
+  "producerCommit": "dda4ef6b9076892f1c865465d6d41e0e72127f49",
+  "baseCommit": "696c707d0e1a49a2069862626630ce3b00a18e07",
+  "changedPaths": [
+    "frontend/public/reference-editors/opencut-classic/native/NATIVE_BUILD_GRAPH.json",
+    "frontend/public/reference-editors/opencut-classic/native/native.js",
+    "frontend/public/reference-editors/sources/opencut-classic/native-from-t1046.patch",
+    "frontend/public/reference-editors/sources/opencut-classic/native-patches.diff",
+    "frontend/public/reference-editors/sources/opencut-classic/native-source.tar.gz",
+    "frontend/scripts/verify-native-editors.mjs",
+    "reference-editors/manifest.json"
+  ],
+  "actualBindings": {
+    "actualDeliveryShas": {
+      "frontend/public/reference-editors/sources/opencut-classic/native-source.tar.gz": "cdb9f14f1af6ea93540037e256dff9e229a863e99d9e728ea7b3c9026ac0c8af",
+      "frontend/public/reference-editors/sources/opencut-classic/native-patches.diff": "9f9187b282f602f7df3deeb05ed6a2365fc9fd6234c76774a8b04a2aa74a88ef",
+      "frontend/public/reference-editors/sources/opencut-classic/native-from-t1046.patch": "9f9187b282f602f7df3deeb05ed6a2365fc9fd6234c76774a8b04a2aa74a88ef",
+      "frontend/public/reference-editors/opencut-classic/native/native.js": "7f9650fa680a319a21cb362458d6bccb35c4bcd734f40431f90a66b43fe85a27",
+      "frontend/public/reference-editors/opencut-classic/native/NATIVE_BUILD_GRAPH.json": "31ab7d11a121ed2620624dbf14a40b26d0f8ad05b750cac6c7b08b1c11f51f1e",
+      "reference-editors/manifest.json": "d021479434cef9d4e928ff42371766ba85fa3faae82801ac1ffcd171bf41f4e6",
+      "frontend/scripts/verify-native-editors.mjs": "a4dbbac4d5d386eed8b8a239c77b4576092819e7a22366ea35701bac16ce2153"
+    },
+    "actualProductionArtifacts": {
+      "native.css": "a0bad44d377687bc240c1cf59742b3ffa12b5ba282d00d3912846587fc12b31f",
+      "native.js": "7f9650fa680a319a21cb362458d6bccb35c4bcd734f40431f90a66b43fe85a27",
+      "NATIVE_BUILD_GRAPH.json": "31ab7d11a121ed2620624dbf14a40b26d0f8ad05b750cac6c7b08b1c11f51f1e",
+      "THIRD_PARTY_LICENSES.txt": "e337836ba3e5a4d722e4750619410e357434656a00fc79e9a572ad649d633b8a",
+      "THIRD_PARTY_LICENSES.json": "b92b56836fbb1ac73b12112f61ec12cfce7af0793e91b6ae8748ed591db73964",
+      "LICENSE.opencut": "8117f9bb64534f7530fc6139b014fd1c1465f7981f93d1871789150fa3f59d3d",
+      "effects/preview.jpg": "b318cede7bbe27bfbf1b8b94d41f65b6f52d5f2650ce3a153d03b76c2a1c0190"
+    },
+    "firstSecondCurrentByteSame": true,
+    "moduleGraph": {
+      "fixture": false,
+      "oldModuleCount": 429,
+      "newModuleCount": 429,
+      "newModules": [],
+      "removedModules": [],
+      "renderedLengthChanges": {
+        "src/services/renderer/compositor/frame-descriptor.ts": {
+          "before": 12276,
+          "after": 12549
+        },
+        "src/services/renderer/compositor/wasm-compositor.ts": {
+          "before": 4622,
+          "after": 4986
+        },
+        "src/services/renderer/resolve.ts": {
+          "before": 8733,
+          "after": 8809
+        }
+      }
+    },
+    "manifestBundleBindingSame": true,
+    "producerCommit": "dda4ef6b9076892f1c865465d6d41e0e72127f49",
+    "changedPaths": [
+      "frontend/public/reference-editors/opencut-classic/native/NATIVE_BUILD_GRAPH.json",
+      "frontend/public/reference-editors/opencut-classic/native/native.js",
+      "frontend/public/reference-editors/sources/opencut-classic/native-from-t1046.patch",
+      "frontend/public/reference-editors/sources/opencut-classic/native-patches.diff",
+      "frontend/public/reference-editors/sources/opencut-classic/native-source.tar.gz",
+      "frontend/scripts/verify-native-editors.mjs",
+      "reference-editors/manifest.json"
+    ]
+  },
+  "sourceReview": {
+    "report": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-diagnosis/native-pixel-version-source-review.json",
+    "runtimePatchSha256": "9eff2d82290ca8dffe6e7e60c60da5416f0a762247d3f85d4c074467119840e3",
+    "memberShas": {
+      "apps/web/src/services/renderer/resolve.ts": {
+        "before": "b919790fd9fd75dce6da530816d1be66d84b75660808bd5d7f84f746de3874b7",
+        "after": "d87557b6cf95b6c0036a7a4af2d441f34c9a19d6d387521d30c9d478626d9e99"
+      },
+      "apps/web/src/services/renderer/nodes/visual-node.ts": {
+        "before": "2b79b61dbd0d6363401995d9921e2dc054b7442629e45162232599f6921de38b",
+        "after": "42e90f982fcbc99de3763e3609da668e5bc8b2b9756073bc38ac7c709719af83"
+      },
+      "apps/web/src/services/renderer/nodes/blur-background-node.ts": {
+        "before": "ec340b80552fecca889bf771138c0d0e1d9e57eaa4b5ea82627aa9c47cfba1af",
+        "after": "a369b5ceec9bf86d78c91477fbfdd4f641be0e1d61dfb2cc0714faee28128893"
+      },
+      "apps/web/src/services/renderer/compositor/types.ts": {
+        "before": "6eefe4b85d2026918174e3b746625c8de6983231759e89a43a2dac3a56dcdff4",
+        "after": "38799c6410d98b18fb1b1392877ba7b32fdc87f1305add60d6b63ce04000f4cf"
+      },
+      "apps/web/src/services/renderer/compositor/frame-descriptor.ts": {
+        "before": "734a2d9e779a37b1b37e431c666abb7c72a1a61dac2198a069302758bd21e0b5",
+        "after": "b0cec8c3180a8337834f501b11452eacdf13d47a34642d088bda8160589fe243"
+      },
+      "apps/web/src/services/renderer/compositor/wasm-compositor.ts": {
+        "before": "494820b0b7fea81b3668268f45e8852e56104b82f1f21349b7288ab5595809a7",
+        "after": "72d4e1d28d7e89d605937f79834264c306d267d6561860e2b1127d756a3b89d5"
+      },
+      "apps/web/src/services/renderer/compositor/__tests__/texture-content-version.test.ts": {
+        "before": null,
+        "after": "ac34ba2d935c7be1855a23abc1dc968e24fd6e09aa8767d0d753ab8880326ac6"
+      }
+    },
+    "independentSixTests13Assertions": true
+  },
+  "independentReconstruction": {
+    "observedAt": "2026-10-07T12:09:57.785646+00:00",
+    "fixedBaseArchiveSha256": "ad5a2b874a2b50ab10fca522a271b5c929f383af5c9e40bdf1c3f4feb45360a6",
+    "cumulativePatchSha256": "9f9187b282f602f7df3deeb05ed6a2365fc9fd6234c76774a8b04a2aa74a88ef",
+    "candidateArchiveSha256": "cdb9f14f1af6ea93540037e256dff9e229a863e99d9e728ea7b3c9026ac0c8af",
+    "privateReconstructionRoot": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1070-pixel-final-reconstruction-xwiq1jrv",
+    "patchExit": 0,
+    "expectedMembers": 710,
+    "actualMembers": 710,
+    "differentMembers": [],
+    "pass": true
+  },
+  "twoBuildReview": {
+    "evidence": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-native-candidate/tmp/t1070-pixel-version-fix/evidence/production-build-consistency.json",
+    "actualFirstSecondDeliveredByteSame": true,
+    "sameAsEarlyWarmBuild": true,
+    "artifactCount": 7,
+    "newBuildsByReviewer": 0,
+    "reason": "两次实际生产构建、固定基点重建源码实际build与当前交付SHA均一致，无新疑点，未重复第三次build。"
+  },
+  "reconstructedTestReview": {
+    "pass": 53,
+    "fail": 0,
+    "expectCalls": 326,
+    "typeExit": 0,
+    "basis": "实际reconstructed cache/preview/command/lifecycle/host/resources/compositor日志及types；新GPUbridge/DecoderCanvas单测fixture边界保留。"
+  },
+  "producerActualNativeVerifier": {
+    "log": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-native-candidate/tmp/t1070-pixel-version-fix/evidence/native-verifier.log",
+    "pass": true,
+    "notBrowserOrPixelSignature": true
+  },
+  "complexityBudget": {
+    "pass": true,
+    "newModuleCount": 0,
+    "newCredential": false,
+    "newDependency": false,
+    "newLanguage": false,
+    "newExecutionMechanism": false,
+    "newPublicApiOrOwnerPermission": false,
+    "newCreativeJudgment": false,
+    "originalCasUndoSaveContractUnchanged": true,
+    "shaMayBeRecordedForImplementationComplexityEvidence": true,
+    "doesNotAuthorizeFullFeatureOrInstallPass": true,
+    "ledgerChangedByReviewer": false
+  },
+  "publicNativeRenderEvidence": {
+    "report": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-native-candidate/tmp/t1070-pixel-version-fix/evidence/public-render-frame-validation.json",
+    "warmCorrectSourceFrame24": true,
+    "sixFamiliesPass": true,
+    "allDecodeExit0": true,
+    "minimumSSIMAcrossSix": 0.984682,
+    "aacTrackPreserved": true,
+    "aacTailRetained": "约76–91ms既有AAC尾段，未签听觉质量/无尾误差。",
+    "fixtureBoundary": "真实Chrome原native mount/load/context/export/preview-scene私有内存公共native链，producer按既有scene自构tracks，无AI或正式owner CAS；不代签持久候选97的实际React consumer。"
+  },
+  "producerFinalReport": {
+    "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-native-candidate/tmp/t1070-pixel-version-fix/evidence/final-delivery.json",
+    "sha256": "4cbaf7bc2cc53c929113d70dc976bedf92e822077d4a271e3291de797e10dd47"
+  },
+  "historyPreserved": [
+    "native-browser-frame-closure-attempt3.json",
+    "native-browser-frame-closure-attempt2.json",
+    "native-browser-frame-closure-attempt1.json",
+    "native-browser-repaired-video-result.json",
+    "native-browser-real-video-result.json"
+  ],
+  "nextAcceptance": "等待ROOT明确整合已完成，然后原candidate ai-msg-143a8c85-97、production77 revision4：实际执行hash→warm0/trim1 sourceframe24→原CAS/native读回/Undo/manual/save/tab/reload/export AV；不新AI或rebasing。",
+  "writeBoundary": "只BASE报告及新临时目录重建/测试，不改MAIN/control/ledger/原build源/App/用户库。"
+}

@@ -1,0 +1,48 @@
+{
+  "producerReportSHA": "4cbaf7bc2cc53c929113d70dc976bedf92e822077d4a271e3291de797e10dd47",
+  "mainDelivery": [
+    {
+      "path": "frontend/public/reference-editors/sources/opencut-classic/native-source.tar.gz",
+      "sha256": "cdb9f14f1af6ea93540037e256dff9e229a863e99d9e728ea7b3c9026ac0c8af",
+      "expected": "cdb9f14f1af6ea93540037e256dff9e229a863e99d9e728ea7b3c9026ac0c8af",
+      "match": true
+    },
+    {
+      "path": "frontend/public/reference-editors/sources/opencut-classic/native-patches.diff",
+      "sha256": "9f9187b282f602f7df3deeb05ed6a2365fc9fd6234c76774a8b04a2aa74a88ef",
+      "expected": "9f9187b282f602f7df3deeb05ed6a2365fc9fd6234c76774a8b04a2aa74a88ef",
+      "match": true
+    },
+    {
+      "path": "frontend/public/reference-editors/sources/opencut-classic/native-from-t1046.patch",
+      "sha256": "9f9187b282f602f7df3deeb05ed6a2365fc9fd6234c76774a8b04a2aa74a88ef",
+      "expected": "9f9187b282f602f7df3deeb05ed6a2365fc9fd6234c76774a8b04a2aa74a88ef",
+      "match": true
+    },
+    {
+      "path": "frontend/public/reference-editors/opencut-classic/native/native.js",
+      "sha256": "7f9650fa680a319a21cb362458d6bccb35c4bcd734f40431f90a66b43fe85a27",
+      "expected": "7f9650fa680a319a21cb362458d6bccb35c4bcd734f40431f90a66b43fe85a27",
+      "match": true
+    },
+    {
+      "path": "frontend/public/reference-editors/opencut-classic/native/NATIVE_BUILD_GRAPH.json",
+      "sha256": "31ab7d11a121ed2620624dbf14a40b26d0f8ad05b750cac6c7b08b1c11f51f1e",
+      "expected": "31ab7d11a121ed2620624dbf14a40b26d0f8ad05b750cac6c7b08b1c11f51f1e",
+      "match": true
+    },
+    {
+      "path": "reference-editors/manifest.json",
+      "sha256": "d021479434cef9d4e928ff42371766ba85fa3faae82801ac1ffcd171bf41f4e6",
+      "expected": "d021479434cef9d4e928ff42371766ba85fa3faae82801ac1ffcd171bf41f4e6",
+      "match": true
+    },
+    {
+      "path": "frontend/scripts/verify-native-editors.mjs",
+      "sha256": "a4dbbac4d5d386eed8b8a239c77b4576092819e7a22366ea35701bac16ce2153",
+      "expected": "a4dbbac4d5d386eed8b8a239c77b4576092819e7a22366ea35701bac16ce2153",
+      "match": true
+    }
+  ],
+  "pass": true
+}

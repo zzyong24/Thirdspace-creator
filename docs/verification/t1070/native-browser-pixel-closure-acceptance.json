@@ -1,0 +1,420 @@
+{
+  "schema": "t1070-native-real-codex-persisted-react-ui-closure@1",
+  "task": "T-1070",
+  "reviewer": "/root/t1070_native_diff_review",
+  "reviewedAt": "2026-10-07T12:20:19.099576+00:00",
+  "verdict": {
+    "pass": true,
+    "status": "PASS_REAL_PUBLIC_UI_VIDEO_CHAIN_WITH_RETAINED_MINOR",
+    "blocker": 0,
+    "major": 0,
+    "minor": 1,
+    "scope": "private4371实际React公开原生视频链与普通MP4导出；不是整个T-1070/用户安装包签收"
+  },
+  "currentBindings": {
+    "mainProductIntegrationCommit": "cdd3b1dc",
+    "currentHead": "cdd3b1dc9a4e677db3662bc7d0ab468a4ab055b7",
+    "actualExecutedBundle": {
+      "scriptId": "4312",
+      "url": "http://127.0.0.1:4371/reference-editors/opencut-classic/native/native.js",
+      "sha256": "7f9650fa680a319a21cb362458d6bccb35c4bcd734f40431f90a66b43fe85a27",
+      "bytes": 6735655,
+      "expected": "7f9650fa680a319a21cb362458d6bccb35c4bcd734f40431f90a66b43fe85a27",
+      "matches": true
+    },
+    "sourceArchiveSha256": "cdb9f14f1af6ea93540037e256dff9e229a863e99d9e728ea7b3c9026ac0c8af",
+    "nativeManifestSha256": "d021479434cef9d4e928ff42371766ba85fa3faae82801ac1ffcd171bf41f4e6",
+    "sourceArtifactReview": {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-diagnosis/native-pixel-version-final-artifact-review.json",
+      "sha256": "8851cf16937c1eee01f8d6eecf3f4b9083cc670ab2438f2c0ae30f8b578b5942",
+      "fixedReportUnchanged": true
+    }
+  },
+  "originalRealAiEvidence": {
+    "sourceMessageId": "ai-msg-143a8c85-97",
+    "conversationId": "ai-conv-143a8c85-96",
+    "aiTaskId": "ai-task-cf9edd95-efa7-4893-b062-398a2433c4a7",
+    "executionTaskId": "execution-task-d851f5e1-351a-4be9-ad61-e2922ffbb0fb",
+    "terminalStatus": "succeeded",
+    "completedAt": "2026-10-07T08:17:07.456Z",
+    "prompt": "请把当前视频时间轴上唯一的录像片段开头裁掉 1 秒，留下后面的 5 秒，从时间轴 0 秒开始播放；保留原音轨和其它内容。请给我可预览、可采纳的编辑候选，不要只口头说明，也不要生成或重新下载素材。",
+    "originalPublicMessages": {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-diagnosis/native-browser-repaired-terminal-messages.json",
+      "sha256": "c41e6ce44411bf274b1a3d832f14da34c2fb127df95db921f731e454f76ffa06"
+    },
+    "toolEvidence": "真实work.editor.read→project.lifecycle.read→skill.read→work.editor.propose公共回执，严格host成功生成该候选；公共tool input为空对象，未据此伪称精确原provider函数args。",
+    "newAiRequestsThisClosure": 0,
+    "candidateInjected": false,
+    "candidateDigest": "sha256:c9245f276f03479eb289a336ef36b9a5f24e00bd2b8898621dcbda7cf48be9d1",
+    "baseRevisionNeverRebased": 4
+  },
+  "owner": {
+    "groupId": "grp-95c4e17c-21",
+    "accountId": null,
+    "projectId": "project-95c4e17c-23",
+    "outputId": "output-95c4e17c-52",
+    "productionId": "production-95c4e17c-77",
+    "sceneId": "2004d2d0-706d-4cde-b17a-7d432d659b28",
+    "mediaId": "41aa02b2-364c-479e-946e-18f67c87b968",
+    "assetId": "asset-95c4e17c-98",
+    "assetFileId": "afile-95c4e17c-102",
+    "sourceMediaSha256": "794e508138e43d5d633437a0b26c7c07a7582a64176ed4355750d9d7ec8625e4",
+    "beforeRevision": 4,
+    "adoptedRevision": 5,
+    "manualSavedRevision": 6,
+    "exportSavedRevision": 7,
+    "finalNativeOutputId": "output-95c4e17c-52",
+    "finalReadState": {
+      "target": null,
+      "outputId": "output-95c4e17c-52",
+      "generation": 1,
+      "dirty": false
+    },
+    "finalNativeMediaLastModified": 1791360870999
+  },
+  "steps": [
+    {
+      "step": "fresh actual React read",
+      "pass": true,
+      "basis": "同Space9/p1新document导航真实私有视频route，加载6秒原工程；CDP actual script4312全文SHA匹配终版并保原始源码，不靠resourceURL断言。"
+    },
+    {
+      "step": "warm0→persisted trim1 real UI preview",
+      "pass": true,
+      "basis": "实际选中原6秒clip，主画布已渲0；点击原candidate97预览按钮，真实MP4首帧烧录1.000/frame24；全120帧源24..143比较。原正式owner revision4完整data前后深等。",
+      "media": {
+        "mp4Sha256": "5ff66848b7a635a9c2b7571b7aad18c88c2d3d00a7266439e3ceac1b9c4ffb49",
+        "videoDuration": "5.000000",
+        "videoFrames": "120",
+        "fps": "24/1",
+        "audioDuration": "5.085170",
+        "audioCodec": "aac",
+        "comparedFrames": 120,
+        "firstFrameSSIM": 0.988464,
+        "minSSIM": 0.984992,
+        "decodeExit": 0
+      }
+    },
+    {
+      "step": "one real UI original CAS",
+      "pass": true,
+      "basis": "仅一次采纳按钮，实际Network公共apply POST200；原expectedRevision4/完整edits深等持久候选apply，仅原卡幂等requestId补入。未改冻结base、未私有落库。",
+      "requestId": "sha256:e25d84d84fe4cc87708bbc79cd4a31120d1bb5a3b0e30d73b3fb4cdad0396cf1",
+      "receiptRevision": 5,
+      "uiStatus": "已保存并采用。可继续微调。",
+      "publicProof": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-diagnosis/native-browser-pixel-closure-original-cas-proof.json"
+    },
+    {
+      "step": "native readback and actual Undo/Redo",
+      "pass": true,
+      "basis": "只读actual mounted handle request(context)读真实公开NativeContext，完整tracks等候选。聚焦实际data-native-root后真实Meta+Z回duration720000/trim0；Meta+Shift+Z回600000/120000，没有替代UI造Command。"
+    },
+    {
+      "step": "actual manual property edit and save",
+      "pass": true,
+      "basis": "真实Position X控件fill0→10/Enter；实际NativeContext读回10；真实保存工程按钮公开保存revision6，5秒/trim1保留。"
+    },
+    {
+      "step": "Tab and refresh",
+      "pass": true,
+      "basis": "实际项目文章Tab→制作视频Tab→fresh reload，两个实际native完整tracks均与revision6 saved深等；media restored lastModified原1791360870999。文章仅只读未编辑。"
+    },
+    {
+      "step": "ordinary native MP4 export and AV decode",
+      "pass": true,
+      "basis": "真实导出当前场景MP4按钮→浏览器download.saveAs原Blob，failure=null；正式原export对应工程保存revision7。实际firstframe1.000/frame24、PositionX10左侧10px黑边；全部120帧按已保存X10平移原源24..143比较，未拿无位移样本洗绿。",
+      "media": {
+        "mp4Sha256": "7df717c048350946ad2f0d2c977ba267e68a6be38e80ca4bbdf6979e59c2cb5f",
+        "bytes": 500189,
+        "videoDurationSec": 5.0,
+        "videoFrames": 120,
+        "fps": "24/1",
+        "width": 640,
+        "height": 360,
+        "audioDurationSec": 5.08517,
+        "audioCodec": "aac",
+        "audioSampleRate": "44100",
+        "channels": 2,
+        "comparedFrames": 120,
+        "firstFrameSSIMAgainstSource1SecTranslatedX10": 0.988456,
+        "minSSIMAgainstSource1To6SecTranslatedX10": 0.984258,
+        "decodeExit": 0,
+        "decodedSourceSamples48k": 288000,
+        "decodedExportSamples48k": 244089,
+        "audioFirst5secNormalizedDotAgainstSource1To6Sec": 0.6135499062769663,
+        "audioFirst5secRMS": 0.1242474839708913,
+        "sourceReferenceRMS": 0.08839404374775477,
+        "audio5secTailSamples48k": 4089,
+        "audioTailRMS": 0.09192191836604804,
+        "audioTailPeak": 0.17820735275745392
+      }
+    }
+  ],
+  "minor": [
+    {
+      "id": "NATIVE-AAC-TAIL",
+      "severity": "minor",
+      "status": "既有问题保留",
+      "detail": "视频5.000秒而AAC5.085170秒；解码48k样本244089，超过5秒的4089样本RMS0.0919219、peak0.178207，非零尾段，不能称为无声padding。"
+    }
+  ],
+  "audioEvidenceLimits": {
+    "actualAacTrack": true,
+    "fullAvDecodeExit0": true,
+    "nativeOriginalAudioEnabledAndUnmuted": true,
+    "unchangedOriginalMediaSource": true,
+    "sampleLevelTrimOrLatencySignature": false,
+    "humanListeningSignature": false,
+    "repeatWaveformLimit": {
+      "source0To5Vs1To6NormalizedDot": 0.9992774946250269,
+      "limit": "若接近1，重复音频夹具的波形无法唯一证明起点偏移；本轮只签真实AV decode与轨道/媒体/trim参数，未签采听。"
+    },
+    "diagnosticAlignment": {
+      "comparison": "真实导出音轨对原素材1-6秒PCM，忽略两端0.104秒/本次每24样本确定性抽样；只诊断AAC相位/延迟，不改媒体",
+      "zeroLagNormalizedDot": 0.6165481592303234,
+      "bestLagSamples48k": 1808,
+      "bestLagSec": 0.03766666666666667,
+      "bestNormalizedDot": 0.9994936947424069,
+      "lagRange": [
+        -2400,
+        2400
+      ]
+    },
+    "explanation": "该真实中性音轨0-5秒与1-6秒波形归一化内积0.999277，重复内容不能唯一证明采样级起点。相位搜索高相关只作诊断，不把1808样本搜索峰伪称真实延迟。"
+  },
+  "rawEvidenceShas": {
+    "native-browser-pixel-closure-adopt-click.json": {
+      "sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+      "bytes": 2
+    },
+    "native-browser-pixel-closure-adopt-network-events.json": {
+      "sha256": "c71ca99b0a7a1808f86815ac786e2c7d38073598ef62f2a24127feabafe486e2",
+      "bytes": 59978
+    },
+    "native-browser-pixel-closure-adopt-public-receipts.json": {
+      "sha256": "9ffb1cfccccee90241af2cc3a4ce6eb9b806848abc6025be60292a2da8703952",
+      "bytes": 12502
+    },
+    "native-browser-pixel-closure-adopt-ui-status.json": {
+      "sha256": "ff429e71aa1c61ed4e1dac573787a20734aea798afc8d866ca43aa568275f4b4",
+      "bytes": 118
+    },
+    "native-browser-pixel-closure-adopt.png": {
+      "sha256": "38c404087320b53a843b8b5cdc3ab07af576e0f0ccd16be538f474ae51c8f0d2",
+      "bytes": 250930
+    },
+    "native-browser-pixel-closure-adopt.snapshot.txt": {
+      "sha256": "53699c1416711fa7f56e054391a497fb29f23ee14318d63ce21b46a43406aa6c",
+      "bytes": 18954
+    },
+    "native-browser-pixel-closure-after-adopt-native.json": {
+      "sha256": "dc637f35820107775dc40f34ac227e7c8d31e1e81e92620422196d3d62fb1592",
+      "bytes": 3675
+    },
+    "native-browser-pixel-closure-after-adopt-owner.json": {
+      "sha256": "a9545022b03293ccac0e908d1fabc1a1580ca293cddef0da0fcabf9c6cbe2c52",
+      "bytes": 3822
+    },
+    "native-browser-pixel-closure-after-export-owner.json": {
+      "sha256": "f2ea8ff04c55037ca7d90288bb70ff5be804dbbf8c4f8a580c5de0566105eb2b",
+      "bytes": 3823
+    },
+    "native-browser-pixel-closure-after-preview-owner.json": {
+      "sha256": "3d0551b17fd288665a2caf543e3eff1a98c4201d5db5598321bfe144d6847282",
+      "bytes": 3817
+    },
+    "native-browser-pixel-closure-after-redo-native.json": {
+      "sha256": "c9eec87d458e9591c1d14030b220993727598c032f186d894e2d7320b5af6670",
+      "bytes": 3675
+    },
+    "native-browser-pixel-closure-after-refresh-native.json": {
+      "sha256": "4959877821ca5d582493d31a93bb7dd114cacf1b753cc3f73e4a95226e0a5c93",
+      "bytes": 3536
+    },
+    "native-browser-pixel-closure-after-refresh.png": {
+      "sha256": "3fc8ab05e8e85f8faf6d2c08fd945be16c842e52d7685fd89218ee0e80a68b3b",
+      "bytes": 244463
+    },
+    "native-browser-pixel-closure-after-refresh.snapshot.txt": {
+      "sha256": "099817703a31a1930a4ff02091606bfc8b8a1b33d8de4da3d9fc0326290f7df4",
+      "bytes": 16506
+    },
+    "native-browser-pixel-closure-after-tab-native.json": {
+      "sha256": "2f6f2246fc4ee524975e89ac83ae7f5d8f1d58eac46ca28c3e26ad5f003fca0f",
+      "bytes": 3536
+    },
+    "native-browser-pixel-closure-after-undo-native.json": {
+      "sha256": "cfc014437d8133ee771049c2fd86b333e5bc90ad094dee9f76f6fa71c04925ad",
+      "bytes": 3669
+    },
+    "native-browser-pixel-closure-audio-fixture-limit.json": {
+      "sha256": "9be1f68148776a26cebbd831a881935b6e423782a946e5eb05d766d8f4ae830f",
+      "bytes": 218
+    },
+    "native-browser-pixel-closure-before-owner.json": {
+      "sha256": "f2f6c22aef8ebf50aead05be18e51d719d4abdab181ec115abaabbf84e089294",
+      "bytes": 3817
+    },
+    "native-browser-pixel-closure-browser-finish.json": {
+      "sha256": "1bb5e8ee64ed5157581d28f47823fead1c4a1100ab5802ce1fa625cc74498593",
+      "bytes": 100
+    },
+    "native-browser-pixel-closure-executed-native-4312.js": {
+      "sha256": "7f9650fa680a319a21cb362458d6bccb35c4bcd734f40431f90a66b43fe85a27",
+      "bytes": 6735655
+    },
+    "native-browser-pixel-closure-executed-native.json": {
+      "sha256": "52b2662391d3266fbb861f897df8132cc9b584faf5487790212fc54ff2df6c05",
+      "bytes": 310
+    },
+    "native-browser-pixel-closure-export-audio-alignment.json": {
+      "sha256": "e4904db6fd19c1a97d8932cbbacd52de753690e086f9a02f906a2120b1670e55",
+      "bytes": 357
+    },
+    "native-browser-pixel-closure-export-audio.f32": {
+      "sha256": "0d8d991889e8254893af8ed29f6a7e5ea0c4ff1e14f024d6e203d60e04b2b8cf",
+      "bytes": 976356
+    },
+    "native-browser-pixel-closure-export-decode.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "native-browser-pixel-closure-export-ffprobe.json": {
+      "sha256": "c4fa5ceda31ff4c03e26fe5cea08ca9d8e54fe7f30f9b5567906614c8f5a59f3",
+      "bytes": 4612
+    },
+    "native-browser-pixel-closure-export-first-frame.png": {
+      "sha256": "e6c69b551c606787d1fecadc776277757925c4d774a17516e2595c198062bd46",
+      "bytes": 57791
+    },
+    "native-browser-pixel-closure-export-receipt.json": {
+      "sha256": "385059cdaecab01a3f1183f40242914140797ff29282ecd7ab8f53a185daa9ad",
+      "bytes": 364
+    },
+    "native-browser-pixel-closure-export-ssim.log": {
+      "sha256": "095c2e09cab69f207572f1506aa3972164f46811ba3649957e85626b915c3f38",
+      "bytes": 7572
+    },
+    "native-browser-pixel-closure-export-validation.json": {
+      "sha256": "16f6b4507773b3c49d6d2da767e1b6bc3bc3f1970cbb74ffc9035fee8d2c172b",
+      "bytes": 814
+    },
+    "native-browser-pixel-closure-exported.png": {
+      "sha256": "64dc7857a1e79cae1ab744fbc351db31713f3ffbee0197ca6ad9e738d1f31d54",
+      "bytes": 251270
+    },
+    "native-browser-pixel-closure-exported.snapshot.txt": {
+      "sha256": "1ace45bb347ae1b46533a6564086fea8bd5d17a113d2e61eb9627d69929f91ce",
+      "bytes": 16503
+    },
+    "native-browser-pixel-closure-final-export.mp4": {
+      "sha256": "7df717c048350946ad2f0d2c977ba267e68a6be38e80ca4bbdf6979e59c2cb5f",
+      "bytes": 500189
+    },
+    "native-browser-pixel-closure-final-native.json": {
+      "sha256": "ec32b1042611ab5d9a40265c1408265ed379eb6a0930fcecce8243844817c2bc",
+      "bytes": 3536
+    },
+    "native-browser-pixel-closure-manual-native.json": {
+      "sha256": "73c716547c58aa06bbfd585da99604628d1099a6f82e6d4ff4f09369aa487636",
+      "bytes": 3676
+    },
+    "native-browser-pixel-closure-manual.png": {
+      "sha256": "8005d57af851ffb28f54db029cd92e9cae62cc947b64dc0205a7cd2a5cb0a8c5",
+      "bytes": 234614
+    },
+    "native-browser-pixel-closure-original-cas-proof.json": {
+      "sha256": "58af6d3d2e8238055eee0b5a42ff34f93c291c706805972771bef8bb792c6c57",
+      "bytes": 4370
+    },
+    "native-browser-pixel-closure-preview-decode.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "native-browser-pixel-closure-preview-ffprobe.json": {
+      "sha256": "e58cdf6cf5a1141e1c711ea7ea5449798a9d2bcf39672a00d7a30b0e1985b331",
+      "bytes": 4607
+    },
+    "native-browser-pixel-closure-preview-first-frame.png": {
+      "sha256": "5b88900e88f7fcd0bce1479dccdb8cc58222b960f9158a8cfa9a2fc6e4d7ac98",
+      "bytes": 55438
+    },
+    "native-browser-pixel-closure-preview-result.json": {
+      "sha256": "933a931bc8d90ac29a33f27e74c19d353b14a0b9bdd06e79ebd78225c9c6c07f",
+      "bytes": 702
+    },
+    "native-browser-pixel-closure-preview-ssim.log": {
+      "sha256": "04dca8569fd5590666ae53c715077ba09cdd8932a4673cce3131d40860fa3204",
+      "bytes": 7572
+    },
+    "native-browser-pixel-closure-preview-validation.json": {
+      "sha256": "323cbb392211556a1f4b66f526d900f91260876b22e548bc98e51ea8e09dae30",
+      "bytes": 309
+    },
+    "native-browser-pixel-closure-preview.mp4": {
+      "sha256": "5ff66848b7a635a9c2b7571b7aad18c88c2d3d00a7266439e3ceac1b9c4ffb49",
+      "bytes": 500827
+    },
+    "native-browser-pixel-closure-preview.png": {
+      "sha256": "935085f1942869a15712f10989f16e2e009145d43a95471373c838e55c53d1cd",
+      "bytes": 247141
+    },
+    "native-browser-pixel-closure-preview.snapshot.txt": {
+      "sha256": "03d40dbd4f95b0be355e3928bc8defd177a6f55bc7aeece19c5a5e4bdd4b2c81",
+      "bytes": 18856
+    },
+    "native-browser-pixel-closure-redo.png": {
+      "sha256": "eb075bc3b52b2d91b69d209b65bfc723fadfada405ea53f48069c54796136f59",
+      "bytes": 234637
+    },
+    "native-browser-pixel-closure-saved-owner.json": {
+      "sha256": "96c5f917916798262e7103b431c16bed001babfac0c9bf7280555450e5f077f4",
+      "bytes": 3823
+    },
+    "native-browser-pixel-closure-saved.png": {
+      "sha256": "8361b6ab8f8a99efd19a44330ebc69b8c60fa3ef7b141ece18ae3ed899b420dd",
+      "bytes": 250189
+    },
+    "native-browser-pixel-closure-saved.snapshot.txt": {
+      "sha256": "8693fe08f735999165d51c599a2b4dfb80b7416b06a6fe292dce51c5f507d0ab",
+      "bytes": 19146
+    },
+    "native-browser-pixel-closure-source-audio.f32": {
+      "sha256": "9e2354facd671f372ca09a68f08fd3a2443c6f02e9d05c765cd53cabd08d2fcd",
+      "bytes": 1152000
+    },
+    "native-browser-pixel-closure-tab-article.snapshot.txt": {
+      "sha256": "18c7d40a3946e0446ff2b2fae4f0c3a76659b845bc51dfd89035d9418466f5af",
+      "bytes": 9952
+    },
+    "native-browser-pixel-closure-undo.png": {
+      "sha256": "12ce547f70a9eb67ea750aeae8073d6db285e527fe383700fca303a7a66907ba",
+      "bytes": 233351
+    },
+    "native-browser-pixel-closure-warm-main.png": {
+      "sha256": "0a67cf723694df2d99f8ee2c1c77c841c8def0181925fc80cec85b2b42503258",
+      "bytes": 267738
+    }
+  },
+  "historyPreserved": {
+    "native-browser-real-video-result.json": "20b077bbca85bc15271a6ec42461e35a23a956e750117a333f3cbe7702751917",
+    "native-browser-repaired-video-result.json": "12ecd76f0b0d4bc49fa636ffbc94cedd4966b251a1280f76a551916aa239e52f",
+    "native-browser-frame-closure-attempt1.json": "de315289e66ae136f37be653bd36fe477160ae10a1a0cc58219a0f66826a6e91",
+    "native-browser-frame-closure-attempt2.json": "93d6a010a50cc21e9d705d82837c0612c4c7be55b46cfcdb3b9f9a6ef206606d",
+    "native-browser-frame-closure-attempt3.json": "192c353167e24af0dc205ddbec1816987a8b7e7614111fa1757aaaf21b74aa5a"
+  },
+  "limits": [
+    "本轮只私有4371，非用户运行App/8766/安装产物验收。",
+    "复用已真实模型产生且持久的候选；本轮没有新模型调用，旧协议失败与所有预览FAIL不改写。",
+    "本轮只此video owner；未签ROOT文章/图文或整个任务全部Gate。",
+    "源交付独评报告固定hash保留，实际UI报告另文。",
+    "原生context读为只读公开request观察，不用私有写替代UI操作。"
+  ],
+  "browserFinish": {
+    "finishedAt": "2026-10-07T12:19:00.059Z",
+    "taskSpaceId": 9,
+    "keep": [],
+    "finished": true
+  },
+  "writeBoundary": "只BASE证据/诊断；允许的私有工程正式写仅实际UI首次CAS/手工保存/原普通导出保存，不改MAIN源码/control/ledger/用户库。"
+}

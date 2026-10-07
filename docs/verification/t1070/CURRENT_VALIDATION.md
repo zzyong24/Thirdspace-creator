@@ -1,6 +1,6 @@
 # T-1070 当前实际验收
 
-用户明确：脚本一键生成文章和图文，不自动生成视频初稿；三类作品经同一个右侧编导持续精调。当前已真实完成默认分镜联合生成、文章与图文单字段精调及原生导出；视频暖画布首帧问题已通过一次原事件研究查到GPU纹理缓存，修复和最终真机包仍在继续。原失败不覆盖、不以fixture替真模型，不据此关闭整个任务。
+用户明确：脚本一键生成文章和图文，不自动生成视频初稿；三类作品经同一个右侧编导持续精调。当前已真实完成默认分镜联合生成、文章与图文单字段精调及原生导出；视频暖画布首帧问题已查明并修复，原持久候选的真实React预览、采纳、撤销/重做、手工保存、切Tab刷新及MP4导出实际通过；本地包与安装版验收继续进行。原失败不覆盖、不以fixture替真模型，不据此关闭整个任务。
 
 ```mermaid
 flowchart LR
@@ -9,7 +9,9 @@ flowchart LR
  G --> P[图文翻页预览及采纳]
  A --> R[编导修改指定正文，刷新及HTML验证]
  P --> E[编导修改第2卡，刷新及4页ZIP解码]
- V[真实录像] --> C[原生暖画布候选首帧缓存修复中]
+ V[真实录像] --> C[原生候选首帧从源1秒正确开始]
+ C --> N[采纳到时间轴，撤销重做及手工保存]
+ N --> O[切Tab刷新及5秒MP4导出]
 ```
 
 | 实际链/检查 | 本轮结果 | 证据 |
@@ -24,7 +26,8 @@ flowchart LR
 | LED-047交互回归 | 8files162PASS | root-led047-current-final.log |
 | backend必要公共组合fixture | 5files13PASS，不代签真供应商；真实供应商另外由上述页面链验证 | root-final-required-backend.log |
 | contract新native/work DTO及旧production合同 | 实际三files11PASS | root-final-required-contract.log |
-| 原生旧frame-cache race窄修及交付 | 前producer47tests313assertions、709源重建/双build及six families通过；实际同React warm首帧仍0，这项不代签视频整链 | native-browser-frame-closure-attempt3.json |
+| 原生frame-cache及GPU纹理版本修复交付 | 新53tests326assertions/类型/verifier0；固定基点累计patch复原710文件零差异，两build全部7产物字节相同；独立精确源码及交付复核通过 | native-pixel-version-delivery.json；native-pixel-version-final-artifact-review.json |
+| 原持久candidate97真实React闭环 | 实际执行7f9650 bundle；warm0→trim1预览源frame24，owner revision4完全不写；仅一条原apply CAS→revision5、native完整tracks与候选深等；Undo6秒→Redo5秒，手工PositionX10保存revision6，文章Tab返回及刷新全tracks深等，普通UI导出对应revision7，120帧AVdecode0 | native-browser-pixel-closure-acceptance.json（独立固定报告SHA cc0ab5ba27e929cffbe9e010d86ad3a06dca8f66b141fba72769ccd095dad708）；原始媒体与逐件SHA留BASE |
 
 旧166进入waiting_user/unsupported，未admission且原期限已过；保原ID/失败，不清历史、不续期。修复后source71是明确的一次新测试，沿同一conversation已有工具历史，非自动重发未知付费任务。测试脚本的selector、选区、chatContext路径及跨HTML标签raw-text断言错误单独保旧FAIL后纠正，不改产品洗绿。
 
@@ -32,7 +35,7 @@ flowchart LR
 
 - boundary仍7违规（基线5及未改live-chat-session旧2 SDK），semantic旧video-decisions-runner缺material.match；orphan0error/100warning。旧2 backend Redfox断言、旧全局类型问题不在本精确99；不把本任务回归描述为全仓全绿。
 - MAIN不存在tools/timeout-policy/verify.mjs，规定命令当场MODULE_NOT_FOUND；不使用另一checkout结果冒充MAIN通过，继续登记原T-1018全局欠债。
-- 实际旧native新bundle暖首帧source0，期望source1秒/frame24；原工程revision4/6秒仍深等，未CAS，未启动新模型。root-cause.json原trace证明decoder实际1而GPU identity-only cache仍0；七精确archive成员内部timestamp版本传播独评GO，修复后必须再沿真实React原candidate97预览/首帧/CAS/Undo/保存切Tab/刷新/AV导出。已知AAC尾79–91ms为原encoderminor，完整decode与原声RMS均正常，不能把音频描述为精确5.000秒。
+- 旧native暖首帧source0的三个FAIL和原root-cause trace完整保留；新7f9650实际React原candidate97闭环已通过，预览MP4 SHA5ff66848b7a635a9c2b7571b7aad18c88c2d3d00a7266439e3ceac1b9c4ffb49；手工PositionX10后最终MP4 SHA7df717c048350946ad2f0d2c977ba267e68a6be38e80ca4bbdf6979e59c2cb5f，按实际平移全120帧比源24..143，min SSIM .984258。原AAC音轨尾约85ms仍记录为minor，完整decode通过不代签音频尾精确5秒或听觉质量。当前实际页面只代签本次trim与手工位置/Undo链，字幕/替换/变速等未在本页真模型逐项复验，不以原生/后端fixture代签。
 - 本地安装包及安装版验收仍待完成。当前App的未保存状态尚无新确认，本轮将使用已授权CREATOROS_LOCAL_SKIP_INSTALL=1固定入口先出包，不强制替换/关闭。
 
 本文件是当前当场证据索引，不替代SPEC/BACKLOG/Gate或最终用户验收。

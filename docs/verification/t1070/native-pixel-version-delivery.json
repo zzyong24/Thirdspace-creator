@@ -1,0 +1,304 @@
+{
+  "commit": "dda4ef6b9076892f1c865465d6d41e0e72127f49",
+  "parentCommit": "696c707d0e1a49a2069862626630ce3b00a18e07",
+  "worktree": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-native-candidate",
+  "deliveryPathsSHA256": {
+    "frontend/public/reference-editors/sources/opencut-classic/native-source.tar.gz": "cdb9f14f1af6ea93540037e256dff9e229a863e99d9e728ea7b3c9026ac0c8af",
+    "frontend/public/reference-editors/sources/opencut-classic/native-patches.diff": "9f9187b282f602f7df3deeb05ed6a2365fc9fd6234c76774a8b04a2aa74a88ef",
+    "frontend/public/reference-editors/sources/opencut-classic/native-from-t1046.patch": "9f9187b282f602f7df3deeb05ed6a2365fc9fd6234c76774a8b04a2aa74a88ef",
+    "frontend/public/reference-editors/opencut-classic/native/native.js": "7f9650fa680a319a21cb362458d6bccb35c4bcd734f40431f90a66b43fe85a27",
+    "frontend/public/reference-editors/opencut-classic/native/NATIVE_BUILD_GRAPH.json": "31ab7d11a121ed2620624dbf14a40b26d0f8ad05b750cac6c7b08b1c11f51f1e",
+    "reference-editors/manifest.json": "d021479434cef9d4e928ff42371766ba85fa3faae82801ac1ffcd171bf41f4e6",
+    "frontend/scripts/verify-native-editors.mjs": "a4dbbac4d5d386eed8b8a239c77b4576092819e7a22366ea35701bac16ce2153"
+  },
+  "sourceOnlyDiff": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-native-candidate/tmp/t1070-pixel-version-fix/evidence/runtime-source.patch",
+  "sourceOnlyDiffSHA256": "9eff2d82290ca8dffe6e7e60c60da5416f0a762247d3f85d4c074467119840e3",
+  "sourceMembersSHA256": {
+    "apps/web/src/services/renderer/resolve.ts": {
+      "before": "b919790fd9fd75dce6da530816d1be66d84b75660808bd5d7f84f746de3874b7",
+      "after": "d87557b6cf95b6c0036a7a4af2d441f34c9a19d6d387521d30c9d478626d9e99"
+    },
+    "apps/web/src/services/renderer/nodes/visual-node.ts": {
+      "before": "2b79b61dbd0d6363401995d9921e2dc054b7442629e45162232599f6921de38b",
+      "after": "42e90f982fcbc99de3763e3609da668e5bc8b2b9756073bc38ac7c709719af83"
+    },
+    "apps/web/src/services/renderer/nodes/blur-background-node.ts": {
+      "before": "ec340b80552fecca889bf771138c0d0e1d9e57eaa4b5ea82627aa9c47cfba1af",
+      "after": "a369b5ceec9bf86d78c91477fbfdd4f641be0e1d61dfb2cc0714faee28128893"
+    },
+    "apps/web/src/services/renderer/compositor/types.ts": {
+      "before": "6eefe4b85d2026918174e3b746625c8de6983231759e89a43a2dac3a56dcdff4",
+      "after": "38799c6410d98b18fb1b1392877ba7b32fdc87f1305add60d6b63ce04000f4cf"
+    },
+    "apps/web/src/services/renderer/compositor/frame-descriptor.ts": {
+      "before": "734a2d9e779a37b1b37e431c666abb7c72a1a61dac2198a069302758bd21e0b5",
+      "after": "b0cec8c3180a8337834f501b11452eacdf13d47a34642d088bda8160589fe243"
+    },
+    "apps/web/src/services/renderer/compositor/wasm-compositor.ts": {
+      "before": "494820b0b7fea81b3668268f45e8852e56104b82f1f21349b7288ab5595809a7",
+      "after": "72d4e1d28d7e89d605937f79834264c306d267d6561860e2b1127d756a3b89d5"
+    },
+    "apps/web/src/services/renderer/compositor/__tests__/texture-content-version.test.ts": {
+      "before": null,
+      "after": "ac34ba2d935c7be1855a23abc1dc968e24fd6e09aa8767d0d753ab8880326ac6"
+    }
+  },
+  "exactArchiveChangedMembers": [
+    "apps/web/src/services/renderer/compositor/__tests__/texture-content-version.test.ts",
+    "apps/web/src/services/renderer/compositor/frame-descriptor.ts",
+    "apps/web/src/services/renderer/compositor/types.ts",
+    "apps/web/src/services/renderer/compositor/wasm-compositor.ts",
+    "apps/web/src/services/renderer/nodes/blur-background-node.ts",
+    "apps/web/src/services/renderer/nodes/visual-node.ts",
+    "apps/web/src/services/renderer/resolve.ts"
+  ],
+  "reconstructedSource": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-native-candidate/tmp/t1070-pixel-version-fix/reconstructed",
+  "fullReconstruction": {
+    "baseSha256": "ad5a2b874a2b50ab10fca522a271b5c929f383af5c9e40bdf1c3f4feb45360a6",
+    "patchSha256": "9f9187b282f602f7df3deeb05ed6a2365fc9fd6234c76774a8b04a2aa74a88ef",
+    "patchExit": 0,
+    "fileCount": 710,
+    "reconstructedFileCount": 710,
+    "mismatchMembers": [],
+    "pass": true
+  },
+  "twoProductionBuilds": {
+    "artifactCount": 7,
+    "first": {
+      "native.css": "a0bad44d377687bc240c1cf59742b3ffa12b5ba282d00d3912846587fc12b31f",
+      "native.js": "7f9650fa680a319a21cb362458d6bccb35c4bcd734f40431f90a66b43fe85a27",
+      "NATIVE_BUILD_GRAPH.json": "31ab7d11a121ed2620624dbf14a40b26d0f8ad05b750cac6c7b08b1c11f51f1e",
+      "THIRD_PARTY_LICENSES.txt": "e337836ba3e5a4d722e4750619410e357434656a00fc79e9a572ad649d633b8a",
+      "THIRD_PARTY_LICENSES.json": "b92b56836fbb1ac73b12112f61ec12cfce7af0793e91b6ae8748ed591db73964",
+      "LICENSE.opencut": "8117f9bb64534f7530fc6139b014fd1c1465f7981f93d1871789150fa3f59d3d",
+      "effects/preview.jpg": "b318cede7bbe27bfbf1b8b94d41f65b6f52d5f2650ce3a153d03b76c2a1c0190"
+    },
+    "second": {
+      "native.css": "a0bad44d377687bc240c1cf59742b3ffa12b5ba282d00d3912846587fc12b31f",
+      "native.js": "7f9650fa680a319a21cb362458d6bccb35c4bcd734f40431f90a66b43fe85a27",
+      "NATIVE_BUILD_GRAPH.json": "31ab7d11a121ed2620624dbf14a40b26d0f8ad05b750cac6c7b08b1c11f51f1e",
+      "THIRD_PARTY_LICENSES.txt": "e337836ba3e5a4d722e4750619410e357434656a00fc79e9a572ad649d633b8a",
+      "THIRD_PARTY_LICENSES.json": "b92b56836fbb1ac73b12112f61ec12cfce7af0793e91b6ae8748ed591db73964",
+      "LICENSE.opencut": "8117f9bb64534f7530fc6139b014fd1c1465f7981f93d1871789150fa3f59d3d",
+      "effects/preview.jpg": "b318cede7bbe27bfbf1b8b94d41f65b6f52d5f2650ce3a153d03b76c2a1c0190"
+    },
+    "early": {
+      "native.css": "a0bad44d377687bc240c1cf59742b3ffa12b5ba282d00d3912846587fc12b31f",
+      "native.js": "7f9650fa680a319a21cb362458d6bccb35c4bcd734f40431f90a66b43fe85a27",
+      "NATIVE_BUILD_GRAPH.json": "31ab7d11a121ed2620624dbf14a40b26d0f8ad05b750cac6c7b08b1c11f51f1e",
+      "THIRD_PARTY_LICENSES.txt": "e337836ba3e5a4d722e4750619410e357434656a00fc79e9a572ad649d633b8a",
+      "THIRD_PARTY_LICENSES.json": "b92b56836fbb1ac73b12112f61ec12cfce7af0793e91b6ae8748ed591db73964",
+      "LICENSE.opencut": "8117f9bb64534f7530fc6139b014fd1c1465f7981f93d1871789150fa3f59d3d",
+      "effects/preview.jpg": "b318cede7bbe27bfbf1b8b94d41f65b6f52d5f2650ce3a153d03b76c2a1c0190"
+    },
+    "byteIdentical": true,
+    "matchesEarlyRenderBuild": true,
+    "productionFixture": false
+  },
+  "runtimeFixture": false,
+  "bundleBytes": 6735655,
+  "redLog": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-native-candidate/tmp/t1070-pixel-version-fix/evidence/compositor-red.log",
+  "redObservedTests": {
+    "pass": 1,
+    "fail": 5,
+    "assertions": 8
+  },
+  "greenLog": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-native-candidate/tmp/t1070-pixel-version-fix/evidence/compositor-green.log",
+  "greenTests": {
+    "pass": 6,
+    "fail": 0,
+    "assertions": 13
+  },
+  "allRegression": {
+    "originalAndPriorCacheTests": 47,
+    "assertions": 313,
+    "newCompositorTests": 6,
+    "assertionsAdded": 13,
+    "totalTests": 53,
+    "totalAssertions": 326,
+    "sourceTypesExit": 0,
+    "reconstructedTypesExit": 0,
+    "nativeVerifier": {
+      "passed": true,
+      "verification": "四类原生交付文件集、摘要、对应源码、生产宏语法检查、累计重建patch摘要、新原生preview实际模块图及共享合同归档复制件；不代表浏览器执行/像素验收",
+      "editors": [
+        {
+          "editor": "noterelay",
+          "files": 5,
+          "sourceArchive": "sources/noterelay/source.zip",
+          "sourceArchiveSha256": "78802e24739d1db04991b90b68a646d34d9f33ac935d4cc9993928a83a8d8f9d"
+        },
+        {
+          "editor": "doocs-md",
+          "files": 395,
+          "sourceArchive": "sources/doocs-md/native-source.tar.gz",
+          "sourceArchiveSha256": "0cabb0e4960ee1b4a50e0533782ba9a735c1ed1b66ce22cfc81dd7d3bd4fa583"
+        },
+        {
+          "editor": "kuaitu",
+          "files": 7,
+          "sourceArchive": "sources/kuaitu/native-source.tar.gz",
+          "sourceArchiveSha256": "781c55a73582faaf595100acfc0132414349b6800dad7b85d44d9bcc50f90c45"
+        },
+        {
+          "editor": "opencut-classic",
+          "files": 7,
+          "sourceArchive": "sources/opencut-classic/native-source.tar.gz",
+          "sourceArchiveSha256": "cdb9f14f1af6ea93540037e256dff9e229a863e99d9e728ea7b3c9026ac0c8af"
+        }
+      ]
+    }
+  },
+  "publicRenderValidation": {
+    "sourceSha256": "794e508138e43d5d633437a0b26c7c07a7582a64176ed4355750d9d7ec8625e4",
+    "publicOperations": [
+      "mount",
+      "load",
+      "context",
+      "export",
+      "preview-scene",
+      "context"
+    ],
+    "threshold": 0.95,
+    "productionQualityGateChanged": false,
+    "results": [
+      {
+        "name": "original-export",
+        "sha256": "55794e88a025ea83cdcd022bf20820e7886ef2f102218e29e0fecb439b954ac2",
+        "sourceStartFrame": 0,
+        "expectedFrames": 144,
+        "actualFrames": 144,
+        "videoDuration": 6.0,
+        "videoFPS": "24/1",
+        "audioCodec": "aac",
+        "audioRMS": 0.08768391434388434,
+        "audioDuration": 6.083628,
+        "decodeExit": 0,
+        "decodeErrors": "",
+        "firstFrameSSIM": 0.988338,
+        "minimumSSIM": 0.9853,
+        "comparedFrames": 144,
+        "pass": true
+      },
+      {
+        "name": "no-trim-preview",
+        "sha256": "ab65e2773c791d7f6055b3ca11481af059013954e64224445ae25db9cba535db",
+        "sourceStartFrame": 0,
+        "expectedFrames": 144,
+        "actualFrames": 144,
+        "videoDuration": 6.0,
+        "videoFPS": "24/1",
+        "audioCodec": "aac",
+        "audioRMS": 0.08768391434388434,
+        "audioDuration": 6.083628,
+        "decodeExit": 0,
+        "decodeErrors": "",
+        "firstFrameSSIM": 0.988338,
+        "minimumSSIM": 0.9853,
+        "comparedFrames": 144,
+        "pass": true
+      },
+      {
+        "name": "trim-1",
+        "sha256": "0f24c12405d179b7cf97ca76b89a2108aef48ff4da9e4ccdb8128b2bea084575",
+        "sourceStartFrame": 24,
+        "expectedFrames": 120,
+        "actualFrames": 120,
+        "videoDuration": 5.0,
+        "videoFPS": "24/1",
+        "audioCodec": "aac",
+        "audioRMS": 0.0875223192229538,
+        "audioDuration": 5.08517,
+        "decodeExit": 0,
+        "decodeErrors": "",
+        "firstFrameSSIM": 0.988777,
+        "minimumSSIM": 0.985664,
+        "comparedFrames": 120,
+        "pass": true
+      },
+      {
+        "name": "trim-one-frame",
+        "sha256": "d586b7d41011819d7ef44ad6aee4b4526f391364f14afda4f6ec63b5e79275a3",
+        "sourceStartFrame": 1,
+        "expectedFrames": 143,
+        "actualFrames": 143,
+        "videoDuration": 5.958333,
+        "videoFPS": "24/1",
+        "audioCodec": "aac",
+        "audioRMS": 0.08755653725377205,
+        "audioDuration": 6.037188,
+        "decodeExit": 0,
+        "decodeErrors": "",
+        "firstFrameSSIM": 0.988113,
+        "minimumSSIM": 0.985485,
+        "comparedFrames": 143,
+        "pass": true
+      },
+      {
+        "name": "trim-2_5",
+        "sha256": "f68b6192f1e514b4e7d2eaa80c7496320e044b337435a3506b0700592ee9e7f6",
+        "sourceStartFrame": 60,
+        "expectedFrames": 84,
+        "actualFrames": 84,
+        "videoDuration": 3.5,
+        "videoFPS": "24/1",
+        "audioCodec": "aac",
+        "audioRMS": 0.08735443950023222,
+        "audioDuration": 3.575873,
+        "decodeExit": 0,
+        "decodeErrors": "",
+        "firstFrameSSIM": 0.985992,
+        "minimumSSIM": 0.984682,
+        "comparedFrames": 84,
+        "pass": true
+      },
+      {
+        "name": "trim-5",
+        "sha256": "751e514baba2e8c3f289b9c8bcd87f35e808ddc4e7ca3a760353c14b7184b9de",
+        "sourceStartFrame": 120,
+        "expectedFrames": 24,
+        "actualFrames": 24,
+        "videoDuration": 1.0,
+        "videoFPS": "24/1",
+        "audioCodec": "aac",
+        "audioRMS": 0.08447703152833336,
+        "audioDuration": 1.091338,
+        "decodeExit": 0,
+        "decodeErrors": "",
+        "firstFrameSSIM": 0.987535,
+        "minimumSSIM": 0.985147,
+        "comparedFrames": 24,
+        "pass": true
+      }
+    ],
+    "pass": true,
+    "warm": {
+      "bundleSha256": "7f9650fa680a319a21cb362458d6bccb35c4bcd734f40431f90a66b43fe85a27",
+      "previewSha256": "aca5f556a23cd15f27e6e75a3890a899b0a47c94ed24fb9dd10061037c88267c",
+      "decodeExit": 0,
+      "decodeErrors": "",
+      "video": [
+        {
+          "nb_frames": "120",
+          "duration": "5.000000",
+          "r_frame_rate": "24/1"
+        }
+      ],
+      "alignedSourceStartFrame": 24,
+      "firstFrameSSIM": 0.988777,
+      "minimumSSIM": 0.985664,
+      "comparedFrames": 120,
+      "threshold": 0.95,
+      "pass": true
+    }
+  },
+  "ownerUnchangedInIsolatedReadOnlyPreview": "完整工程除原context.SaveManager.flush的metadata.updatedAt以外深等；两原始document及实际时间戳已完整记录",
+  "rootRealCandidate97Acceptance": "待ROOT用原持久candidate97实际页面预览后验收；此前真实React FAIL原证据保留，不以本源码/冷渲染代签",
+  "ownerCASPerformed": false,
+  "aiCallsPerformed": false,
+  "userAppModified": false,
+  "pureContractSubmitted": false,
+  "pureContractSHA256": "5404771bf43a3ac4a51cd1dc6f698d0f10b115fb81ba7f3a749654c34c073b2b",
+  "knownExistingAudioTail": "原AAC尾差约76–91ms记录保留，此次未修",
+  "commitHookOutput": "正常git commit退出0，同时输出Can’t find lefthook in PATH；本次必要源类型/全部53tests/双构建/native verifier/git diff --check均单独实际运行"
+}

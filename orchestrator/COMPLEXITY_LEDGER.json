@@ -3019,6 +3019,38 @@
       "reason": "原已准入浏览器ESM/固定Bun Vite构建、同依赖锁；具体frame缓存并发guard修复，709原源复原及双build字节一致。无新增工具链/原生机制。后续pixel-version窄修尚未整合，本条只绑定当前58f42/5624摘要。",
       "review": "docs/verification/t1070/native-browser-frame-fix-source-review.json",
       "acceptance": "当前精确SHA机制预算，独立source-only报告SHA 9c367b2973cfd0591d72b2ed873ee8cec1e2a3bbe49b502e2b984660e2b7855a；保baseline历史，不代签实际React暖首帧（当前仍FAIL）、采纳/导出/安装或整个任务完成。"
+    },
+    {
+      "task_id": "T-1070",
+      "files": [
+        "frontend/public/reference-editors/opencut-classic/native/native.js"
+      ],
+      "file_sha256": "7f9650fa680a319a21cb362458d6bccb35c4bcd734f40431f90a66b43fe85a27",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1070-NATIVE-PIXEL-VERSION",
+      "scope_source": "docs/features/t1070-director-script-workflow/PIXEL_VERSION_INTEGRATION.md",
+      "reason": "沿原Bun/Vite和同依赖锁构建；仅六renderer内部成员把真实decoded timestamp传到现纹理版本与blur缓存。独立710源完整重建及双build七产物字节一致；无新增语言、工具链、权限或执行机制。旧baseline和58f42历史条目保留。",
+      "review": "docs/verification/t1070/native-pixel-version-final-artifact-review.json",
+      "acceptance": "精确SHA机制预算，独评报告SHA 8851cf16937c1eee01f8d6eecf3f4b9083cc670ab2438f2c0ae30f8b578b5942；源码及交付机械核验通过，原README既有minor保留。不代签真实React原candidate97的采用、Undo、保存、导出、安装或整个任务完成。"
+    },
+    {
+      "task_id": "T-1070",
+      "files": [
+        "reference-editors/manifest.json"
+      ],
+      "file_sha256": "d021479434cef9d4e928ff42371766ba85fa3faae82801ac1ffcd171bf41f4e6",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1070-NATIVE-PIXEL-VERSION",
+      "scope_source": "docs/features/t1070-director-script-workflow/PIXEL_VERSION_INTEGRATION.md",
+      "reason": "沿原Bun/Vite和同依赖锁构建；仅六renderer内部成员把真实decoded timestamp传到现纹理版本与blur缓存。独立710源完整重建及双build七产物字节一致；无新增语言、工具链、权限或执行机制。旧baseline和58f42历史条目保留。",
+      "review": "docs/verification/t1070/native-pixel-version-final-artifact-review.json",
+      "acceptance": "精确SHA机制预算，独评报告SHA 8851cf16937c1eee01f8d6eecf3f4b9083cc670ab2438f2c0ae30f8b578b5942；源码及交付机械核验通过，原README既有minor保留。不代签真实React原candidate97的采用、Undo、保存、导出、安装或整个任务完成。"
     }
   ],
   "historical_baselines": []
