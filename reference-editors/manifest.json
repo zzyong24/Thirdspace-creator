@@ -73,30 +73,30 @@
     "native": {
       "deliveryMode": "native",
       "sourceArchive": "sources/opencut-classic/native-source.tar.gz",
-      "sourceArchiveSha256": "c9e6fb104f2802d03d443efd44b411b7ca2d7d9241a64caa5fd39eefccfe44db",
+      "sourceArchiveSha256": "cdb9f14f1af6ea93540037e256dff9e229a863e99d9e728ea7b3c9026ac0c8af",
       "patch": "sources/opencut-classic/native-patches.diff",
-      "patchSha256": "3b9522280a5f94535711cde666ad06b55b8c8d6e7d9271752ee4594115492bd2",
+      "patchSha256": "9f9187b282f602f7df3deeb05ed6a2365fc9fd6234c76774a8b04a2aa74a88ef",
       "bundleFiles": {
         "LICENSE.opencut": "8117f9bb64534f7530fc6139b014fd1c1465f7981f93d1871789150fa3f59d3d",
-        "NATIVE_BUILD_GRAPH.json": "7811696e241d5c7e188926e85159db107f861e34524a48507679c72a3bee418f",
+        "NATIVE_BUILD_GRAPH.json": "31ab7d11a121ed2620624dbf14a40b26d0f8ad05b750cac6c7b08b1c11f51f1e",
         "THIRD_PARTY_LICENSES.json": "b92b56836fbb1ac73b12112f61ec12cfce7af0793e91b6ae8748ed591db73964",
         "THIRD_PARTY_LICENSES.txt": "e337836ba3e5a4d722e4750619410e357434656a00fc79e9a572ad649d633b8a",
         "effects/preview.jpg": "b318cede7bbe27bfbf1b8b94d41f65b6f52d5f2650ce3a153d03b76c2a1c0190",
         "native.css": "a0bad44d377687bc240c1cf59742b3ffa12b5ba282d00d3912846587fc12b31f",
-        "native.js": "58f42ac9a39500ddf6c6bcfab3df79eb4c8477ae2d61afaf4a852e2a77a5cb5e"
+        "native.js": "7f9650fa680a319a21cb362458d6bccb35c4bcd734f40431f90a66b43fe85a27"
       },
       "t1062CandidateManifest": {
         "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r8-nzjmtyxt/source-manifest-final.json",
         "sha256": "246e63a02753b7a90760611506a82341d8457462a996aed8463f7f91eccdc153"
       },
-      "verificationStatus": "T1070_FRAME_CACHE_RACE_FIXED_RED_GREEN_47_TESTS_313_ASSERTIONS_TWO_PRODUCTION_BUILDS_AND_REAL_PUBLIC_RENDER_SIX_FAMILIES_REVIEW_PENDING_NOT_OWNER_CAS_OR_INSTALL",
+      "verificationStatus": "T1070_PIXEL_VERSION_RED_GREEN_53_TESTS_326_ASSERTIONS_RECONSTRUCTION_TWO_IDENTICAL_PRODUCTION_BUILDS_WARM_AND_SIX_PUBLIC_RENDER_FAMILIES_SOURCE_REVIEW_PASS_HOST_CANDIDATE_REVALIDATION_PENDING_NOT_OWNER_CAS_OR_INSTALL",
       "t1062TitleRepairCurrentManifest": {
         "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-attempt9-group-native-fix-imixc7dc/native31-current-binding.json",
         "sha256": "944f259e707c9579a321ede8b2655e51f3e3b36c9841fd0f16b640edc73d28b6"
       },
       "t1069ReconstructionEvidence": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1069-native-source/delivery-candidate/full-reconstruction-result.json",
       "fullReconstructionPatch": "sources/opencut-classic/native-from-t1046.patch",
-      "fullReconstructionPatchSha256": "3b9522280a5f94535711cde666ad06b55b8c8d6e7d9271752ee4594115492bd2",
+      "fullReconstructionPatchSha256": "9f9187b282f602f7df3deeb05ed6a2365fc9fd6234c76774a8b04a2aa74a88ef",
       "fixedBaseArchive": "sources/opencut-classic-source.tar.gz",
       "fixedBaseSha256": "ad5a2b874a2b50ab10fca522a271b5c929f383af5c9e40bdf1c3f4feb45360a6",
       "contractCopySha256": "5404771bf43a3ac4a51cd1dc6f698d0f10b115fb81ba7f3a749654c34c073b2b",
@@ -104,7 +104,11 @@
       "sourceRevision": "cf5e79e919144200294fb9fed22a222592a0aeea",
       "t1070ReconstructionEvidence": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-tests/native-duration-build-consistency.json",
       "t1070FrameCacheRepairEvidence": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-native-candidate/tmp/t1070-frame-fix/evidence/public-render-frame-validation.json",
-      "t1070FrameCacheReconstructionEvidence": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-native-candidate/tmp/t1070-frame-fix/evidence/full-reconstruction.json"
+      "t1070FrameCacheReconstructionEvidence": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-native-candidate/tmp/t1070-frame-fix/evidence/full-reconstruction.json",
+      "t1070PixelVersionRepairEvidence": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-native-candidate/tmp/t1070-pixel-version-fix/evidence/public-render-frame-validation.json",
+      "t1070PixelVersionReconstructionEvidence": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-native-candidate/tmp/t1070-pixel-version-fix/evidence/full-reconstruction.json",
+      "t1070PixelVersionBuildEvidence": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-native-candidate/tmp/t1070-pixel-version-fix/evidence/production-build-consistency.json",
+      "t1070PixelVersionSourceDiffSha256": "9eff2d82290ca8dffe6e7e60c60da5416f0a762247d3f85d4c074467119840e3"
     }
   },
   "noterelay": {

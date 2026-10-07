@@ -1161,11 +1161,11 @@
     },
     {
       "module": "src/services/renderer/compositor/frame-descriptor.ts",
-      "renderedLength": 12276
+      "renderedLength": 12549
     },
     {
       "module": "src/services/renderer/compositor/wasm-compositor.ts",
-      "renderedLength": 4622
+      "renderedLength": 4986
     },
     {
       "module": "src/services/renderer/effect-preview.ts",
@@ -1221,7 +1221,7 @@
     },
     {
       "module": "src/services/renderer/resolve.ts",
-      "renderedLength": 8733
+      "renderedLength": 8809
     },
     {
       "module": "src/services/renderer/scene-builder.ts",

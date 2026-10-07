@@ -5224,3 +5224,220 @@
 +				this.isFrameValid({ frame: sinkData.currentFrame, time })
 +			) {
 +				return sinkData.currentFrame;
+--- a/apps/web/src/services/renderer/resolve.ts
++++ b/apps/web/src/services/renderer/resolve.ts
+@@ -228,0 +229 @@
++		contentVersion: frame.timestamp,
+@@ -438,0 +440 @@
++			contentVersion: frame.timestamp,
+--- a/apps/web/src/services/renderer/nodes/visual-node.ts
++++ b/apps/web/src/services/renderer/nodes/visual-node.ts
+@@ -31,0 +32,2 @@
++	/** 解码帧的实际 timestamp；静态素材保持未设置。 */
++	contentVersion?: number;
+--- a/apps/web/src/services/renderer/nodes/blur-background-node.ts
++++ b/apps/web/src/services/renderer/nodes/blur-background-node.ts
+@@ -21,0 +22 @@
++	contentVersion?: number;
+--- a/apps/web/src/services/renderer/compositor/types.ts
++++ b/apps/web/src/services/renderer/compositor/types.ts
+@@ -51 +51 @@
+- * identity of the source object.
++ * identity of the source object and its decoded content version.
+@@ -58,0 +59 @@
++	contentVersion?: number;
+@@ -72,0 +74 @@
++	contentVersion?: number;
+--- a/apps/web/src/services/renderer/compositor/frame-descriptor.ts
++++ b/apps/web/src/services/renderer/compositor/frame-descriptor.ts
+@@ -141,4 +141,4 @@
+-		// Backdrop pixels come from a decoded video/image frame whose identity
+-		// already changes when it changes. Hashing the source reference is
+-		// enough to let us skip redraws on frozen frames.
+-		const contentHash = `blur:${identityKey(backdropSource.source)}:${backdropSource.width}x${backdropSource.height}:${width}x${height}`;
++		// 解码池会复用画布身份；视频派生纹理必须随实际帧版本变化。
++		const frameVersion = backdropSource.contentVersion === undefined
++			? "" : `:frame:${backdropSource.contentVersion}`;
++		const contentHash = `blur:${identityKey(backdropSource.source)}:${backdropSource.width}x${backdropSource.height}:${width}x${height}${frameVersion}`;
+@@ -148,0 +149 @@
++			contentVersion: backdropSource.contentVersion,
+@@ -248,0 +250,2 @@
++		contentVersion: node instanceof GraphicNode
++			? undefined : (node.resolved as ResolvedVisualSourceNodeState).contentVersion,
+--- a/apps/web/src/services/renderer/compositor/wasm-compositor.ts
++++ b/apps/web/src/services/renderer/compositor/wasm-compositor.ts
+@@ -32,0 +33 @@
++	contentVersion?: number;
+@@ -39,0 +41 @@
++	contentVersion?: number;
+@@ -106 +108,3 @@
+-			previous.height === texture.height
++			previous.height === texture.height &&
++			previous.contentVersion === texture.contentVersion &&
++			(texture.contentVersion === undefined || Number.isFinite(texture.contentVersion))
+@@ -130,0 +135 @@
++			contentVersion: texture.contentVersion,
+@@ -142 +147,3 @@
+-			previous.height === texture.height
++			previous.height === texture.height &&
++			previous.contentVersion === texture.contentVersion &&
++			(texture.contentVersion === undefined || Number.isFinite(texture.contentVersion))
+@@ -179,0 +187 @@
++			contentVersion: texture.contentVersion,
+--- /dev/null
++++ b/apps/web/src/services/renderer/compositor/__tests__/texture-content-version.test.ts
+@@ -0,0 +1,154 @@
++import { afterEach, expect, mock, test } from "bun:test";
++
++// 只替换 GPU 上传与解码器画布；原 resolve、descriptor、WasmCompositor 缓存实际执行。
++class DecoderCanvas {
++	pixels = 0;
++	constructor(public width: number, public height: number) {}
++	getContext() {
++		return {
++			clearRect: () => { this.pixels = -1; },
++			drawImage: (source: DecoderCanvas) => { this.pixels = source.pixels; },
++		};
++	}
++}
++Object.assign(globalThis, { OffscreenCanvas: DecoderCanvas,
++	location: { origin: "http://localhost", href: "http://localhost", hash: "" },
++	window: { parent: { postMessage() {} }, addEventListener() {}, removeEventListener() {} } });
++const uploads: Array<{ id: string; pixels: number }> = [];
++const released: string[] = [];
++let failUpload = false;
++mock.module("opencut-wasm", () => ({
++	TICKS_PER_SECOND: () => 120000,
++	mediaTimeToSeconds: ({ time }: { time: number }) => time / 120000,
++	mediaTimeFromSeconds: ({ seconds }: { seconds: number }) => Math.round(seconds * 120000),
++	lastFrameTime: () => 0,
++	parseTimecode: () => 0,
++	roundToFrame: ({ time }: { time: number }) => time,
++	snappedSeekTime: ({ time }: { time: number }) => time,
++	initCompositor() {}, getCompositorCanvas() {}, getLastFrameProfile: () => [],
++	renderFrame() {}, resizeCompositor() {},
++	releaseTexture: (id: string) => { released.push(id); },
++	uploadTexture: ({ id, source }: { id: string; source: DecoderCanvas }) => {
++		if (failUpload) { failUpload = false; throw new Error("真实上传失败夹具"); }
++		uploads.push({ id, pixels: source.pixels });
++	},
++}));
++
++const { wasmCompositor } = await import("../wasm-compositor");
++const { buildFrameDescriptor } = await import("../frame-descriptor");
++const { resolveRenderTree } = await import("../../resolve");
++const { videoCache } = await import("@/services/video-cache/service");
++const { VideoNode } = await import("../../nodes/video-node");
++const { BlurBackgroundNode } = await import("../../nodes/blur-background-node");
++const { RootNode } = await import("../../nodes/root-node");
++import type { CanvasRenderer } from "../../canvas-renderer";
++import type { TextureUploadDescriptor } from "../types";
++
++const renderer = { width: 64, height: 36 } as CanvasRenderer;
++const file = new File(["decoder fixture"], "six-seconds.mp4", { type: "video/mp4" });
++const canvas = () => new DecoderCanvas(64, 36);
++function external(source: DecoderCanvas, contentVersion?: number): TextureUploadDescriptor {
++	return { kind: "external", id: "root:source", source: source as unknown as CanvasImageSource,
++		width: source.width, height: source.height, contentVersion } as TextureUploadDescriptor;
++}
++function seedFrame(source: DecoderCanvas, timestamp: number) {
++	(videoCache as any).sinks.set("shared-media", {
++		input: { dispose() {} }, sink: {}, iterator: null,
++		currentFrame: { canvas: source, timestamp, duration: 1 / 24 }, nextFrame: null,
++		lastTime: timestamp, prefetching: true, prefetchPromise: null,
++	});
++}
++function video(trimStart: number) {
++	return new VideoNode({ mediaId: "shared-media", file, url: "blob:fixture", duration: 720000,
++		timeOffset: 0, trimStart, trimEnd: 0, opacity: 1,
++		transform: { position: { x: 0, y: 0 }, scaleX: 1, scaleY: 1, rotate: 0 } });
++}
++function blur(trimStart: number) {
++	return new BlurBackgroundNode({ mediaId: "shared-media", file, url: "blob:fixture",
++		mediaType: "video", duration: 720000, timeOffset: 0, trimStart, trimEnd: 0, blurIntensity: 0.5 });
++}
++async function resolvedTextures(node: InstanceType<typeof VideoNode> | InstanceType<typeof BlurBackgroundNode>) {
++	const root = new RootNode({ duration: 720000 }).add(node);
++	await resolveRenderTree({ node: root, renderer, time: 0 });
++	return (await buildFrameDescriptor({ node: root, renderer })).textures;
++}
++afterEach(async () => {
++	wasmCompositor.dispose();
++	await videoCache.drain(); videoCache.clearAll();
++	uploads.length = 0; released.length = 0; failUpload = false;
++});
++
++test("同池画布0→1必须重新上传，重复1与真实timestamp0仍命中缓存", () => {
++	const source = canvas(); source.pixels = 0;
++	wasmCompositor.syncTextures([external(source, 0)]);
++	wasmCompositor.syncTextures([external(source, 0)]);
++	source.pixels = 24;
++	wasmCompositor.syncTextures([external(source, 1)]);
++	wasmCompositor.syncTextures([external(source, 1)]);
++	source.pixels = 0;
++	wasmCompositor.syncTextures([external(source, 0)]);
++	expect(uploads.map(upload => upload.pixels)).toEqual([0, 24, 0]);
++});
++
++test("静态身份与尺寸缓存保留，尺寸和身份改变上传，消失纹理释放", () => {
++	const source = canvas();
++	wasmCompositor.syncTextures([external(source)]);
++	wasmCompositor.syncTextures([external(source)]);
++	expect(uploads).toHaveLength(1);
++	source.width = 128; wasmCompositor.syncTextures([external(source)]);
++	wasmCompositor.syncTextures([external(canvas())]);
++	expect(uploads).toHaveLength(3);
++	wasmCompositor.syncTextures([]);
++	expect(released).toEqual(["root:source"]);
++});
++
++test("上传失败不能记为新版本；原版本保持且重试新版本确实上传", () => {
++	const source = canvas();
++	wasmCompositor.syncTextures([external(source, 0)]);
++	source.pixels = 24; failUpload = true;
++	expect(() => wasmCompositor.syncTextures([external(source, 1)])).toThrow("真实上传失败夹具");
++	wasmCompositor.syncTextures([external(source, 1)]);
++	wasmCompositor.syncTextures([external(source, 1)]);
++	expect(uploads.map(upload => upload.pixels)).toEqual([0, 24]);
++});
++
++test("非有限版本没有可验证缓存命中，仍走原可用上传路径", () => {
++	const source = canvas();
++	for (const version of [Number.NaN, Number.NaN, Infinity, Infinity]) {
++		wasmCompositor.syncTextures([external(source, version)]);
++	}
++	expect(uploads).toHaveLength(4);
++});
++
++test("实际resolve→descriptor→compositor透传decoded timestamp而非requested time", async () => {
++	const source = canvas(); seedFrame(source, 0);
++	const zero = await resolvedTextures(video(100));
++	expect((zero[0] as any).contentVersion).toBe(0);
++	wasmCompositor.syncTextures(zero);
++	source.pixels = 24; seedFrame(source, 1);
++	const next = await resolvedTextures(video(120100));
++	expect((next[0] as any).contentVersion).toBe(1);
++	wasmCompositor.syncTextures(next);
++	wasmCompositor.syncTextures(await resolvedTextures(video(120100)));
++	expect(uploads.map(upload => upload.pixels)).toEqual([0, 24]);
++});
++
++test("视频blur同池画布新decoded帧重绘，重复帧和静态blur保留缓存", async () => {
++	const source = canvas(); seedFrame(source, 0);
++	const first = await resolvedTextures(blur(0));
++	wasmCompositor.syncTextures(first);
++	source.pixels = 24; seedFrame(source, 1);
++	const next = await resolvedTextures(blur(120000));
++	expect((first[0] as any).contentHash).not.toBe((next[0] as any).contentHash);
++	wasmCompositor.syncTextures(next);
++	wasmCompositor.syncTextures(await resolvedTextures(blur(120000)));
++	expect(uploads.map(upload => upload.pixels)).toEqual([0, 24]);
++	const staticNode = blur(0);
++	staticNode.resolved = { backdropSource: { source: source as unknown as CanvasImageSource,
++		width: 64, height: 36 }, passes: [] };
++	const root = new RootNode({ duration: 720000 }).add(staticNode);
++	const descriptor = () => buildFrameDescriptor({ node: root, renderer });
++	wasmCompositor.syncTextures((await descriptor()).textures);
++	wasmCompositor.syncTextures((await descriptor()).textures);
++	expect(uploads).toHaveLength(3);
++});
