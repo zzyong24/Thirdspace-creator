@@ -118,6 +118,7 @@ export function ChatThesisCard({
         } catch {
           continue; // 单次拉取失败不终止(下轮再试)
         }
+        if (status === "succeeded") { setPhase("done"); return; }
         if (status === "awaiting_confirmation") {
           try {
             const results = (await client.listTaskResults({

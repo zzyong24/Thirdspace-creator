@@ -1,0 +1,125 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/t1073-frontend/Thirdspace-creator/frontend
+
+(node:72884) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:72883) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ src/features/draft-workbench/use-latest-script-review.test.tsx (4 tests | 2 failed) 95ms
+     × 实际审核门与软提示在慢请求、聚焦和可见唤醒下只保留一个公共读取 68ms
+     × 隐藏停止定时读取，重新可见立即恢复；切项目不回写旧回执，失败后可再查 16ms
+ ❯ src/features/intelligence/use-project-upgrade-queue.test.tsx (6 tests | 2 failed) 269ms
+     × 真实Radar HTTP adapter首次保留250条，空闲30秒不重复扫描，60秒内发现外部新增 119ms
+     × 慢读取中多次唤醒只补一次；隐藏不扫，focus/visible恢复完整历史 4ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/features/draft-workbench/use-latest-script-review.test.tsx > T-1073 真实稿面共享读取与生命周期 > 实际审核门与软提示在慢请求、聚焦和可见唤醒下只保留一个公共读取
+AssertionError: expected "vi.fn()" to be called 1 times, but got 12 times
+ ❯ src/features/draft-workbench/use-latest-script-review.test.tsx:35:35
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  src/features/draft-workbench/use-latest-script-review.test.tsx > T-1073 真实稿面共享读取与生命周期 > 隐藏停止定时读取，重新可见立即恢复；切项目不回写旧回执，失败后可再查
+AssertionError: expected "vi.fn()" to not be called at all, but actually been called 4 times
+
+Received:
+
+  1st vi.fn() call:
+
+    Array [
+      Object {
+        "body": undefined,
+        "params": Object {
+          "projectId": "old-project",
+        },
+        "query": undefined,
+      },
+    ]
+
+  2nd vi.fn() call:
+
+    Array [
+      Object {
+        "body": undefined,
+        "params": Object {
+          "projectId": "old-project",
+        },
+        "query": undefined,
+      },
+    ]
+
+  3rd vi.fn() call:
+
+    Array [
+      Object {
+        "body": undefined,
+        "params": Object {
+          "projectId": "old-project",
+        },
+        "query": undefined,
+      },
+    ]
+
+  4th vi.fn() call:
+
+    Array [
+      Object {
+        "body": undefined,
+        "params": Object {
+          "projectId": "old-project",
+        },
+        "query": undefined,
+      },
+    ]
+
+
+Number of calls: 4
+
+ ❯ src/features/draft-workbench/use-latest-script-review.test.tsx:48:39
+     46|     const hook=renderHook(({id})=>useLatestScriptReview(id,oldReport,2…
+     47|     await act(async()=>{await vi.advanceTimersByTimeAsync(32000);});
+     48|     expect(getLatestScriptReview).not.toHaveBeenCalled();
+       |                                       ^
+     49|     await act(async()=>{hidden=false;document.dispatchEvent(new Event(…
+     50|     expect(getLatestScriptReview).toHaveBeenCalledTimes(1);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  src/features/intelligence/use-project-upgrade-queue.test.tsx > T-1073 雷达完整历史与低频发现 > 真实Radar HTTP adapter首次保留250条，空闲30秒不重复扫描，60秒内发现外部新增
+AssertionError: expected [ { …(2) }, { …(2) }, { …(2) }, …(30) ] to have a length of 3 but got 33
+
+- Expected
++ Received
+
+- 3
++ 33
+
+ ❯ src/features/intelligence/use-project-upgrade-queue.test.tsx:51:64
+     49|   const {result}=renderHook(()=>useProjectUpgradeQueue({api,accountId:…
+     50|   await act(async()=>{await vi.advanceTimersByTimeAsync(30000);});
+     51|   expect(result.current.tasks).toHaveLength(250);expect(reads).toHaveL…
+       |                                                                ^
+     52|   rows.push(row('external-task','queued'));
+     53|   await act(async()=>{await vi.advanceTimersByTimeAsync(30000);});
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  src/features/intelligence/use-project-upgrade-queue.test.tsx > T-1073 雷达完整历史与低频发现 > 慢读取中多次唤醒只补一次；隐藏不扫，focus/visible恢复完整历史
+AssertionError: expected "vi.fn()" to be called 2 times, but got 1 times
+ ❯ src/features/intelligence/use-project-upgrade-queue.test.tsx:67:31
+     65|   expect(listProjectUpgrades).toHaveBeenCalledTimes(1);
+     66|   await act(async()=>{release({tasks:[],total:0});await vi.advanceTime…
+     67|   expect(listProjectUpgrades).toHaveBeenCalledTimes(2);
+       |                               ^
+     68|   await act(async()=>{hidden=true;document.dispatchEvent(new Event('vi…
+     69|   expect(listProjectUpgrades).toHaveBeenCalledTimes(2);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  4 failed | 6 passed (10)
+   Start at  00:02:50
+   Duration  2.09s (transform 777ms, setup 352ms, import 1.17s, tests 364ms, environment 1.23s)

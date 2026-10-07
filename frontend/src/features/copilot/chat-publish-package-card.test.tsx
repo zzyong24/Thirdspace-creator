@@ -38,6 +38,14 @@ vi.mock("@/lib/contract-client", () => ({
 }));
 
 import { ChatPublishPackageCard } from "./chat-publish-package-card";
+it("T-1073 历史成功发布物料只恢复读取一次，立即显示已完成",async()=>{
+ vi.useFakeTimers();getTask.mockResolvedValue({status:'succeeded'});
+ const {act}=await import('@testing-library/react');
+ render(<ChatPublishPackageCard taskId="completed-original" projectId="project" error={null}/>);
+ await act(async()=>{await vi.advanceTimersByTimeAsync(720000);});
+ expect(getTask).toHaveBeenCalledTimes(1);
+ expect(document.querySelector('[data-slot="chat-publish-done"]')).not.toBeNull();
+});
 
 // platform-adapt-runner recordCandidate 的 resultData 形状:{ drafts:[{platform,title,body,
 // tags,coverIdea,auditFlags}], outputId }。单平台链只有 douyin 一条。

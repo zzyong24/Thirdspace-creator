@@ -1,4 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import * as React from "react";
+import { act, cleanup, render } from "@testing-library/react";
+import type { ResourceAsset } from "./types";
 
 // [Bug-6 T-019] 缓存 TTL 强制 ≤ token TTL:local-fs 默认 15min 签名 → 我们 10min 缓存。
 // 否则用户看一会儿图就全消失(token 过期后,缓存还认为 URL 有用 → onError → fallback)。
@@ -17,8 +20,64 @@ beforeEach(() => {
   mockGetDownloadUrl.mockReset();
   vi.useFakeTimers();
 });
+
+it("T-1073 预览元数据缓存超过256项淘汰最久未用项",async()=>{
+  mockGetDownloadUrl.mockImplementation(async ({params})=>({url:`https://signed/${params.assetId}`}));
+  const {resolveAssetPreviewUrl}=await import('./asset-preview-url');
+  for(let i=0;i<300;i++)await resolveAssetPreviewUrl(`bounded-${i}`);
+  await resolveAssetPreviewUrl('bounded-0');
+  expect(mockGetDownloadUrl).toHaveBeenCalledTimes(301);
+});
+
+it("到期自动清除小元数据并停止清理timer，同素材共享在途且invalidate拒旧回填",async()=>{
+ const {resolveAssetPreviewUrl,invalidateAssetPreviewUrl}=await import('./asset-preview-url');
+ let release!:(value:{url:string})=>void;
+ mockGetDownloadUrl.mockImplementationOnce(()=>new Promise(resolve=>{release=resolve;})).mockResolvedValue({url:'https://signed/new'});
+ const first=resolveAssetPreviewUrl('same');expect(resolveAssetPreviewUrl('same')).toBe(first);
+ await Promise.resolve();invalidateAssetPreviewUrl('same');
+ expect(await resolveAssetPreviewUrl('same')).toBe('https://signed/new');
+ release({url:'https://signed/old'});expect(await first).toBeNull();
+ expect(await resolveAssetPreviewUrl('same')).toBe('https://signed/new');
+ await vi.advanceTimersByTimeAsync(600000);
+ expect(vi.getTimerCount()).toBe(0);
+});
 afterEach(() => {
+  cleanup();
   vi.useRealTimers();
+});
+
+it("真实缩略图消费者共享URL读取，到期重挂恢复，卸载与切scope拒旧签名", async () => {
+  const { AssetThumbnail } = await import("./asset-thumbnail");
+  const { CURRENT_GROUP_KEY } = await import("@/lib/http-transport");
+  const asset: ResourceAsset = { id: "consumer-asset", name: "合成图片", type: "image", mimeType: "image/png", fileSizeBytes: 1, width: 1, height: 1, durationMs: null, tags: [], thumbnailToken: "synthetic", updatedAt: "2026-10-07" };
+  localStorage.setItem(CURRENT_GROUP_KEY, "preview-group-a");
+  mockGetDownloadUrl.mockResolvedValue({ url: "https://signed/first.png" });
+  const first = render(React.createElement(React.Fragment, null, React.createElement(AssetThumbnail, { asset }), React.createElement(AssetThumbnail, { asset })));
+  await act(async () => { await vi.advanceTimersByTimeAsync(0); });
+  expect(first.container.querySelectorAll('img[src="https://signed/first.png"]')).toHaveLength(2);
+  expect(mockGetDownloadUrl).toHaveBeenCalledTimes(1);
+  first.unmount();
+  await act(async () => { await vi.advanceTimersByTimeAsync(600000); });
+  mockGetDownloadUrl.mockResolvedValue({ url: "https://signed/refreshed.png" });
+  const refreshed = render(React.createElement(AssetThumbnail, { asset }));
+  await act(async () => { await vi.advanceTimersByTimeAsync(0); });
+  expect(refreshed.container.querySelector("img")?.getAttribute("src")).toBe("https://signed/refreshed.png");
+  expect(mockGetDownloadUrl).toHaveBeenCalledTimes(2);
+  refreshed.unmount();
+  let finish!: (value: { url: string }) => void;
+  mockGetDownloadUrl.mockImplementationOnce(() => new Promise(resolve => { finish = resolve; }));
+  const pendingAsset = { ...asset, id: "pending-consumer-asset" };
+  const pending = render(React.createElement(AssetThumbnail, { asset: pendingAsset }));
+  await act(async () => { await Promise.resolve(); });
+  localStorage.setItem(CURRENT_GROUP_KEY, "preview-group-b");
+  await act(async () => { finish({ url: "https://signed/old-group.png" }); });
+  expect(pending.container.querySelector("img")).toBeNull();
+  pending.unmount();
+  mockGetDownloadUrl.mockResolvedValue({ url: "https://signed/new-group.png" });
+  const current = render(React.createElement(AssetThumbnail, { asset: pendingAsset }));
+  await act(async () => { await vi.advanceTimersByTimeAsync(0); });
+  expect(current.container.querySelector("img")?.getAttribute("src")).toBe("https://signed/new-group.png");
+  localStorage.removeItem(CURRENT_GROUP_KEY);
 });
 
 describe("asset-preview-url TTL 缓存 (Bug-6 T-019)", () => {

@@ -170,6 +170,7 @@ export function ChatScriptDraftCard({
         } catch {
           continue; // 单次拉取失败不终止(下轮再试)
         }
+        if (status === "succeeded") { setPhase("done"); return; }
         if (status === "awaiting_confirmation") {
           try {
             // contract-client 的泛型目前没有把 isList 投影成数组，运行时端点返回的确是

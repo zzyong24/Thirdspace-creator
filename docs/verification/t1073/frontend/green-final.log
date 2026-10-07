@@ -1,0 +1,56 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/t1073-frontend/Thirdspace-creator/frontend
+
+(node:81254) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:81263) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:81257) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:81255) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:81258) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:81259) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:81261) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:81260) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:81256) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:81262) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ src/features/intelligence/use-project-upgrade-queue.test.tsx (8 tests | 1 failed) 196ms
+     × 真实公共HTTP adapter只观察活跃原任务，单项错误不饿死其他任务 13ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/features/intelligence/use-project-upgrade-queue.test.tsx > T-1073 雷达完整历史与低频发现 > 真实公共HTTP adapter只观察活跃原任务，单项错误不饿死其他任务
+AssertionError: expected { id: 'active-second', …(20) } to match object { id: 'active-second', …(1) }
+(19 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+    "id": "active-second",
+-   "status": "succeeded",
++   "status": "running",
+  }
+
+ ❯ src/features/intelligence/use-project-upgrade-queue.test.tsx:92:54
+     90|   expect(reads.filter(r=>r.id===ENDPOINTS.getExecutionTask.id).map(r=>…
+     91|   expect(result.current.tasks).toHaveLength(252);expect(result.current…
+     92|   expect(result.current.byItem.get('active-second')).toMatchObject({id…
+       |                                                      ^
+     93|  });
+     94|  it('enqueue合并在途后的立即发现，切scope或卸载拒绝旧响应',async()=>{
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 9 passed (10)
+      Tests  1 failed | 104 passed (105)
+   Start at  00:14:02
+   Duration  4.04s (transform 4.18s, setup 2.17s, import 6.45s, tests 3.60s, environment 7.42s)

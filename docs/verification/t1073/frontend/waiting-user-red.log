@@ -1,0 +1,58 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/t1073-frontend/Thirdspace-creator/frontend
+
+(node:89685) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+[describeUserError] Error: 合成错误回执
+    at file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:7053:50
+    at file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:16479:17
+    at Array.<anonymous> (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:12577:17)
+    at SerialJobExecutor.processQueue (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:12568:26)
+    at file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:12583:17
+    at new Promise (<anonymous>)
+    at SerialJobExecutor.run (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:12574:12)
+    at runUpdateMessageJob (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:16478:26)
+    at Object.transform (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:6509:15)
+    at invokePromiseCallback (node:internal/webstreams/util:172:10)
+ ❯ src/features/copilot/live-chat-session.consumer.test.tsx (2 tests | 1 failed) 195ms
+   × 真实Copilot text+error SSE的waiting_user原会话离开后仍受保护，不猜错误文字 81ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/features/copilot/live-chat-session.consumer.test.tsx > 真实Copilot text+error SSE的waiting_user原会话离开后仍受保护，不猜错误文字
+AssertionError: expected { control: { …(3) }, …(5) } to be { control: { …(3) }, …(7) } // Object.is equality
+
+- Expected
++ Received
+
+@@ -42,12 +42,10 @@
+    "control": {
+      "cancel": [Function cancel],
+      "fetch": [Function fetch],
+      "release": [Function release],
+    },
+-   "conversationId": "original-conversation",
+-   "disposeListeners": undefined,
++   "conversationId": null,
++   "disposeListeners": [Function anonymous],
+    "epoch": 0,
+    "observers": 0,
+-   "shouldResume": undefined,
+-   "transport": undefined,
+  }
+
+ ❯ src/features/copilot/live-chat-session.consumer.test.tsx:54:88
+     52|  mounted.unmount();await act(async()=>{await Promise.resolve();});
+     53|  for(let i=0;i<100;i++)getLiveChatSession(`waiting-pressure-${i}`);
+     54|  expect(getLiveChatSession(JSON.stringify(['group:waiting-group','proj…
+       |                                                                                        ^
+     55|  expect(original.transport).toBeDefined();
+     56| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 1 passed (2)
+   Start at  00:23:55
+   Duration  1.83s (transform 599ms, setup 113ms, import 995ms, tests 195ms, environment 353ms)

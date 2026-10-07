@@ -136,6 +136,7 @@ export function ChatPublishPackageCard({
         if(!abandoned && task.runtimeStatus==="retry_wait")setProgressText("暂时繁忙，正在等待自动重试");
         if(!abandoned && task.runtimeStatus==="cancel_requested")setProgressText("正在取消生成");
         const status = task.status;
+        if (status === "succeeded") { setPhase("done"); return; }
         if (status === "awaiting_confirmation") {
           try {
             const results = (await client.listTaskResults({

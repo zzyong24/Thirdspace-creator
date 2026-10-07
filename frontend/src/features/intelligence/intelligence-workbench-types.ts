@@ -280,6 +280,7 @@ export interface StartRunResult {
 export interface RadarApi {
   enqueueProjectUpgrades?(input:{itemIds:string[];positioningVersionId:string;idempotencyKey:string}):Promise<{tasks:ExecutionTaskResourceV2[]}>;
   listProjectUpgrades?(input:RadarScope & {page:number}):Promise<{tasks:ExecutionTaskResourceV2[];total:number}>;
+  getProjectUpgrade?(task:Pick<ExecutionTaskResourceV2,"id"|"ownerId">):Promise<ExecutionTaskResourceV2>;
   listShareImportTasks?(input: RadarScope & {ownerId?: string; page?: number}): Promise<ExecutionTaskResourceV2[]>;
   commandTask?(input:{taskId:string;command:"resume"|"cancel"|"retry";idempotencyKey:string}):Promise<void>;
   listCollectors(input: RadarScope): Promise<

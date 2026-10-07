@@ -1,0 +1,133 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/t1073-frontend/Thirdspace-creator/frontend
+
+(node:97487) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+[describeUserError] Error: 合成错误回执
+    at file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:7053:50
+    at file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:16479:17
+    at Array.<anonymous> (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:12577:17)
+    at SerialJobExecutor.processQueue (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:12568:26)
+    at file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:12583:17
+    at new Promise (<anonymous>)
+    at SerialJobExecutor.run (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:12574:12)
+    at runUpdateMessageJob (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:16478:26)
+    at Object.transform (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:6509:15)
+    at invokePromiseCallback (node:internal/webstreams/util:172:10)
+[describeUserError] Error: 合成错误回执
+    at file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:7053:50
+    at file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:16479:17
+    at Array.<anonymous> (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:12577:17)
+    at SerialJobExecutor.processQueue (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:12568:26)
+    at file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:12583:17
+    at new Promise (<anonymous>)
+    at SerialJobExecutor.run (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:12574:12)
+    at runUpdateMessageJob (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:16478:26)
+    at Object.transform (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:6509:15)
+    at invokePromiseCallback (node:internal/webstreams/util:172:10)
+[describeUserError] Error: 合成错误回执
+    at file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:7053:50
+    at file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:16479:17
+    at Array.<anonymous> (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:12577:17)
+    at SerialJobExecutor.processQueue (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:12568:26)
+    at file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:12583:17
+    at new Promise (<anonymous>)
+    at SerialJobExecutor.run (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:12574:12)
+    at runUpdateMessageJob (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:16478:26)
+    at Object.transform (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:6509:15)
+    at invokePromiseCallback (node:internal/webstreams/util:172:10)
+[describeUserError] Error: 合成错误回执
+    at file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:7053:50
+    at file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:16479:17
+    at Array.<anonymous> (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:12577:17)
+    at SerialJobExecutor.processQueue (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:12568:26)
+    at file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:12583:17
+    at new Promise (<anonymous>)
+    at SerialJobExecutor.run (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:12574:12)
+    at runUpdateMessageJob (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:16478:26)
+    at Object.transform (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:6509:15)
+    at invokePromiseCallback (node:internal/webstreams/util:172:10)
+[describeUserError] Error: 合成错误回执
+    at file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:7053:50
+    at file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:16479:17
+    at Array.<anonymous> (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:12577:17)
+    at SerialJobExecutor.processQueue (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:12568:26)
+    at file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:12583:17
+    at new Promise (<anonymous>)
+    at SerialJobExecutor.run (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:12574:12)
+    at runUpdateMessageJob (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:16478:26)
+    at Object.transform (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:6509:15)
+    at invokePromiseCallback (node:internal/webstreams/util:172:10)
+[describeUserError] Error: 合成错误回执
+    at file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:7053:50
+    at file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:16479:17
+    at Array.<anonymous> (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:12577:17)
+    at SerialJobExecutor.processQueue (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:12568:26)
+    at file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:12583:17
+    at new Promise (<anonymous>)
+    at SerialJobExecutor.run (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:12574:12)
+    at runUpdateMessageJob (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:16478:26)
+    at Object.transform (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:6509:15)
+    at invokePromiseCallback (node:internal/webstreams/util:172:10)
+[describeUserError] Error: 合成错误回执
+    at file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:7053:50
+    at file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:16479:17
+    at Array.<anonymous> (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:12577:17)
+    at SerialJobExecutor.processQueue (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:12568:26)
+    at file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:12583:17
+    at new Promise (<anonymous>)
+    at SerialJobExecutor.run (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:12574:12)
+    at runUpdateMessageJob (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:16478:26)
+    at Object.transform (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:6509:15)
+    at invokePromiseCallback (node:internal/webstreams/util:172:10)
+Encountered two children with the same key, `original-assistant`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.
+ ❯ src/features/copilot/live-chat-session.consumer.test.tsx (16 tests | 3 failed) 929ms
+   × 实际停止按钮接受cancel_requested只放弃本地观察，退出后可回收且不伪写终态 27ms
+   × 迟到旧stop不停止新的turn流，也不覆盖其观察归属 86ms
+   × 迟到旧stop不停止新的scope流，也不覆盖其观察归属 90ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/features/copilot/live-chat-session.consumer.test.tsx > 实际停止按钮接受cancel_requested只放弃本地观察，退出后可回收且不伪写终态
+AssertionError: expected { control: { …(4) }, …(7) } not to be { control: { …(4) }, …(7) } // Object.is equality
+
+Compared values have no visual difference.
+
+ ❯ src/features/copilot/live-chat-session.consumer.test.tsx:148:38
+    146|  expect(original.chat.messages.at(-1)?.metadata).toEqual({execution:{e…
+    147|  mounted.unmount();await act(async()=>{await Promise.resolve();});pres…
+    148|  expect(getLiveChatSession(key)).not.toBe(original);expect(original.tr…
+       |                                      ^
+    149|  expect(readStoredConversationId('project:revisit','group:stop-group')…
+    150| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  src/features/copilot/live-chat-session.consumer.test.tsx > 迟到旧stop不停止新的turn流，也不覆盖其观察归属
+ FAIL  src/features/copilot/live-chat-session.consumer.test.tsx > 迟到旧stop不停止新的scope流，也不覆盖其观察归属
+Error: expect(element).toBeEnabled()
+
+Received element is not enabled:
+  <button
+  aria-label="停止生成"
+  class="flex size-9 items-center justify-center rounded-full border border-border bg-surface text-foreground transition-colors hover:bg-surface-muted focus:outline-none"
+  data-slot="prompt-stop"
+  data-testid="stop-button"
+  disabled=""
+  type="button"
+/>
+ ❯ src/features/copilot/live-chat-session.consumer.test.tsx:189:44
+    187|  await waitFor(()=>expect(current.chat.status).toBe('streaming'));
+    188|  await waitFor(()=>expect(streams).toHaveLength(2));
+    189|  expect(screen.getByTestId('stop-button')).toBeEnabled();
+       |                                            ^
+    190|  await act(async()=>{release(cancelResponse(change==='turn'?'succeeded…
+    191|  expect(streams[1]!.aborted).toBe(false);expect(current.chat.status).t…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 13 passed (16)
+   Start at  00:37:23
+   Duration  3.57s (transform 735ms, setup 287ms, import 1.27s, tests 929ms, environment 844ms)

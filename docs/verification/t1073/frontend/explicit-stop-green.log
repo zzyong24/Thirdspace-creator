@@ -1,0 +1,177 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/t1073-frontend/Thirdspace-creator/frontend
+
+(node:98395) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:98397) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:98396) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+{"case":"live-session-pressure","createdScopes":100,"retainedOriginalMessageScopes":15,"estimatedSerializedMessageBytes":1968180,"callbacksReleased":85}
+[describeUserError] Error: 合成错误回执
+    at file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:7053:50
+    at file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:16479:17
+    at Array.<anonymous> (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:12577:17)
+    at SerialJobExecutor.processQueue (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:12568:26)
+    at file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:12583:17
+    at new Promise (<anonymous>)
+    at SerialJobExecutor.run (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:12574:12)
+    at runUpdateMessageJob (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:16478:26)
+    at Object.transform (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:6509:15)
+    at invokePromiseCallback (node:internal/webstreams/util:172:10)
+[describeUserError] Error: 合成错误回执
+    at file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:7053:50
+    at file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:16479:17
+    at Array.<anonymous> (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:12577:17)
+    at SerialJobExecutor.processQueue (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:12568:26)
+    at file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:12583:17
+    at new Promise (<anonymous>)
+    at SerialJobExecutor.run (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:12574:12)
+    at runUpdateMessageJob (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:16478:26)
+    at Object.transform (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:6509:15)
+    at invokePromiseCallback (node:internal/webstreams/util:172:10)
+[describeUserError] Error: 合成错误回执
+    at file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:7053:50
+    at file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:16479:17
+    at Array.<anonymous> (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:12577:17)
+    at SerialJobExecutor.processQueue (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:12568:26)
+    at file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:12583:17
+    at new Promise (<anonymous>)
+    at SerialJobExecutor.run (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:12574:12)
+    at runUpdateMessageJob (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:16478:26)
+    at Object.transform (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:6509:15)
+    at invokePromiseCallback (node:internal/webstreams/util:172:10)
+[describeUserError] Error: 合成错误回执
+    at file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:7053:50
+    at file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:16479:17
+    at Array.<anonymous> (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:12577:17)
+    at SerialJobExecutor.processQueue (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:12568:26)
+    at file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:12583:17
+    at new Promise (<anonymous>)
+    at SerialJobExecutor.run (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:12574:12)
+    at runUpdateMessageJob (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:16478:26)
+    at Object.transform (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:6509:15)
+    at invokePromiseCallback (node:internal/webstreams/util:172:10)
+[describeUserError] Error: 合成错误回执
+    at file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:7053:50
+    at file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:16479:17
+    at Array.<anonymous> (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:12577:17)
+    at SerialJobExecutor.processQueue (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:12568:26)
+    at file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:12583:17
+    at new Promise (<anonymous>)
+    at SerialJobExecutor.run (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:12574:12)
+    at runUpdateMessageJob (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:16478:26)
+    at Object.transform (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:6509:15)
+    at invokePromiseCallback (node:internal/webstreams/util:172:10)
+[describeUserError] Error: 合成错误回执
+    at file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:7053:50
+    at file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:16479:17
+    at Array.<anonymous> (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:12577:17)
+    at SerialJobExecutor.processQueue (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:12568:26)
+    at file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:12583:17
+    at new Promise (<anonymous>)
+    at SerialJobExecutor.run (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:12574:12)
+    at runUpdateMessageJob (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:16478:26)
+    at Object.transform (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:6509:15)
+    at invokePromiseCallback (node:internal/webstreams/util:172:10)
+[T-716][script.patch] composer request started {
+  nonce: 1,
+  functionKey: 'review.script',
+  selectionKind: 'content_output',
+  sectionIndex: null,
+  messageCountBefore: 0
+}
+[describeUserError] Error: 合成错误回执
+    at file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:7053:50
+    at file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:16479:17
+    at Array.<anonymous> (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:12577:17)
+    at SerialJobExecutor.processQueue (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:12568:26)
+    at file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:12583:17
+    at new Promise (<anonymous>)
+    at SerialJobExecutor.run (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:12574:12)
+    at runUpdateMessageJob (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:16478:26)
+    at Object.transform (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.8_zod@4.4.3/node_modules/ai/dist/index.js:6509:15)
+    at invokePromiseCallback (node:internal/webstreams/util:172:10)
+[T-716][script.patch] composer request started {
+  nonce: 1,
+  functionKey: undefined,
+  selectionKind: 'project',
+  sectionIndex: null,
+  messageCountBefore: 0
+}
+[T-716][script.patch] composer request started {
+  nonce: 1,
+  functionKey: 'script.patch',
+  selectionKind: 'script_section',
+  sectionIndex: 1,
+  messageCountBefore: 0
+}
+Encountered two children with the same key, `original-assistant`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.
+Encountered two children with the same key, `original-assistant`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.
+[T-716][script.patch] composer request started {
+  nonce: 1,
+  functionKey: 'script.patch',
+  selectionKind: 'script_section',
+  sectionIndex: 1,
+  messageCountBefore: 0
+}
+[describeUserError] Error: provider stream interrupted
+    at /Users/zyongzhu/.codex/worktrees/t1073-frontend/Thirdspace-creator/frontend/src/features/copilot/ai-copilot-interactions.test.tsx:836:17
+    at file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20
+[T-716][script.patch] composer request started {
+  nonce: 1,
+  functionKey: 'script.patch',
+  selectionKind: 'script_section',
+  sectionIndex: 1,
+  messageCountBefore: 0
+}
+[T-716][script.patch] assistant finished without candidate { nonce: 1, newMessageCount: 2, assistantMessageCount: 1 }
+[T-716][script.patch] composer request started {
+  nonce: 1,
+  functionKey: 'script.patch',
+  selectionKind: 'script_section',
+  sectionIndex: 1,
+  messageCountBefore: 0
+}
+[T-732][script.patch] terminal selection cleared { nonce: 1 }
+[T-716][script.patch] composer request started {
+  nonce: 2,
+  functionKey: 'script.patch',
+  selectionKind: 'script_section',
+  sectionIndex: 1,
+  messageCountBefore: 1
+}
+[T-716][script.patch] composer request started {
+  nonce: 1,
+  functionKey: 'review.script',
+  selectionKind: 'content_output',
+  sectionIndex: null,
+  messageCountBefore: 0
+}
+[describeUserError] Error: boom
+    at /Users/zyongzhu/.codex/worktrees/t1073-frontend/Thirdspace-creator/frontend/src/features/copilot/ai-copilot-interactions.test.tsx:1179:17
+    at file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:302:11
+    at file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:26
+    at file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2326:20
+    at new Promise (<anonymous>)
+    at runWithCancel (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2323:10)
+    at file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2305:20
+    at new Promise (<anonymous>)
+    at runWithTimeout (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2272:10)
+    at file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2955:64
+[copilot] load conversation failed: Error: 404 conversation not found
+    at /Users/zyongzhu/.codex/worktrees/t1073-frontend/Thirdspace-creator/frontend/src/features/copilot/ai-copilot-interactions.test.tsx:1312:40
+    at file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:302:11
+    at file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:26
+    at file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2326:20
+    at new Promise (<anonymous>)
+    at runWithCancel (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2323:10)
+    at file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2305:20
+    at new Promise (<anonymous>)
+    at runWithTimeout (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2272:10)
+    at file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2955:64
+
+ Test Files  3 passed (3)
+      Tests  70 passed (70)
+   Start at  00:38:19
+   Duration  4.97s (transform 2.09s, setup 786ms, import 3.94s, tests 3.72s, environment 2.39s)

@@ -1,6 +1,6 @@
 "use client";
 
-import {getLiveChatSession} from "./live-chat-session";
+import {getLiveChatSession,acquireLiveChatSession} from "./live-chat-session";
 import { ChatToolTrace } from "./chat-tool-trace";
 
 /**
@@ -792,6 +792,7 @@ export function AICopilotContent({
   React.useEffect(()=>{const sync=()=>setSessionOwner(conversationStorageOwner());window.addEventListener("creatoros:accounts-changed",sync);window.addEventListener("storage",sync);return ()=>{window.removeEventListener("creatoros:accounts-changed",sync);window.removeEventListener("storage",sync);};},[]);
   const liveSessionKey = JSON.stringify([sessionOwner, scope]);
   const liveSession = getLiveChatSession(liveSessionKey);
+  React.useLayoutEffect(() => acquireLiveChatSession(liveSessionKey,liveSession), [liveSessionKey,liveSession]);
   const liveSessionRef = React.useRef(liveSession);
   liveSessionRef.current = liveSession;
   // [T-055b] 上下文可摘:用户点掉 chip 后,本面板实例不再注入这份选中态(会话继续,
@@ -988,9 +989,8 @@ export function AICopilotContent({
     (next: CopilotAttachmentState) => setAttachmentState(next),
     [],
   );
-  const taskControl=React.useRef(liveSession.control);
-  taskControl.current = liveSession.control;
-  const [stopPending,setStopPending]=React.useState(false);
+  const [pendingStop,setPendingStop]=React.useState<{session:typeof liveSession;turnKey:string|undefined}|null>(null);
+  const stopPending=pendingStop?.session===liveSession&&pendingStop.turnKey===liveSession.control.turnKey;
   const transport = React.useMemo(
     () =>
       new DefaultChatTransport<UIMessage>({
@@ -1089,10 +1089,15 @@ export function AICopilotContent({
   }, [liveSession, messages, status]);
   const stopTask=async()=>{
     if(stopPending)return;
-    setStopPending(true);
-    try{await taskControl.current.cancel();stop();}
-    catch{setComposerLifecycleError("停止请求尚未确认，请重试停止，或到任务中心核对原任务。");}
-    finally{setStopPending(false);}
+    const session=liveSessionRef.current,epoch=session.epoch;
+    const intent={session,turnKey:session.control.turnKey};
+    setPendingStop(intent);
+    try{
+      const accepted=await session.control.cancel();
+      if(accepted&&session.epoch===epoch&&session.control.turnKey===undefined)session.chat.stop();
+    }catch{
+      if(liveSessionRef.current===session&&session.epoch===epoch&&session.control.turnKey===intent.turnKey)setComposerLifecycleError("停止请求尚未确认，请重试停止，或到任务中心核对原任务。");
+    }finally{setPendingStop(current=>current===intent?null:current);}
   };
   const streaming = status === "streaming" || status === "submitted";
   // [T-332 S4] AI 流式生成中 = 进行中的前台操作:登记进 foreground-activity 注册表,

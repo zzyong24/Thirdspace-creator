@@ -79,10 +79,11 @@ let initialChatTransport: { body?: unknown } | null = null;
 // T-954：真实组件已改用持久 Chat 会话；替身仍保留首个 transport 检查发送时上下文。
 let mockedLiveSession: object | null = null;
 vi.mock("./live-chat-session", () => ({
+  acquireLiveChatSession: () => () => {},
   getLiveChatSession: () => {
     mockedLiveSession ??= {
-      chat: { messages: [], status: "ready" },
-      control: { fetch: vi.fn(), cancel: vi.fn(async () => {}) },
+      chat: { messages: [], status: "ready", stop },
+      control: { fetch: vi.fn(), cancel: vi.fn(async () => true) },
       conversationId: null,
       epoch: 0,
       get transport() { return initialChatTransport; },

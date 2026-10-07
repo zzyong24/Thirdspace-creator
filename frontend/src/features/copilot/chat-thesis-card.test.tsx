@@ -32,6 +32,14 @@ vi.mock("@/lib/contract-client", () => ({
 }));
 
 import { ChatThesisCard } from "./chat-thesis-card";
+it("T-1073 历史成功论点树只恢复读取一次，立即显示已完成",async()=>{
+ vi.useFakeTimers();getTask.mockResolvedValue({status:'succeeded'});
+ const {act}=await import('@testing-library/react');
+ render(<ChatThesisCard taskId="completed-original" error={null}/>);
+ await act(async()=>{await vi.advanceTimersByTimeAsync(360000);});
+ expect(getTask).toHaveBeenCalledTimes(1);
+ expect(document.querySelector('[data-slot="chat-thesis-done"]')).not.toBeNull();
+});
 
 const CANDIDATE_NODES = [
   { column: "core", title: "核心论点X", summary: "核心说明" },
