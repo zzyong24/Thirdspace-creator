@@ -1,0 +1,35 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "已读取真实产品宪法 docs/产品定位.md，并按人工确认、账号归属、真实数据、任务可恢复、统一终态与发布证据要求完成全维度 initial 评审。八项修复的资源归属、幂等、保护状态、停止语义和真实消费者验收与宪法一致；Radar 跨窗口低频发现仍缺少可判定的最长延迟，需补齐后才能唯一验收。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "open",
+      "severity": "major",
+      "category": "testability",
+      "requirement_anchor": {
+        "id": "FR-006",
+        "quote": "focus/重新可见、手动入队及低频发现仍发现其它窗口新增任务"
+      },
+      "acceptance_anchor": {
+        "id": "AC-006",
+        "quote": "新增/恢复/跨窗口发现有确定触发与有界延迟"
+      },
+      "where": "FR-006 的空闲低频发现与 AC-006 的跨窗口发现验收",
+      "failure_mode": "规格没有规定低频发现从哪个事件开始计时以及允许的最长延迟；一分钟、数小时甚至更久的轮询都可声称是“低频”且“有界”，使跨窗口新增任务能长期不出现在当前窗口，同时 AC-006 无法确定性判定通过或失败。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "docs/features/t1073-resource-memory-fixes.md#已确认要求与验收",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "为仅依赖低频发现的其它窗口新增任务规定单一计时起点和最大可见延迟，并让 AC-006 用虚拟时钟或真实消费者断言该上限；保留 focus、重新可见和手动入队的即时触发。",
+      "resolution_evidence": "",
+      "parent_id": "",
+      "threat_model_id": ""
+    }
+  ]
+}

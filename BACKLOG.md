@@ -10,12 +10,13 @@
 | ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
 | --- | --- | --- | --- | --- | --- | --- |
 | T-1071 | 全系统排查资源浪费与内存泄漏并隔离复现 | ✅ 待办 | — | — | [排查范围](docs/verification/t1071-resource-memory-audit.md) | 已隔离复现8项资源缺陷并登记6个根因整改任务；成功Whisper线程1→2→3、IPC50MiB回执保留、SSE缓冲及前端/后台重复工作，详[报告](docs/verification/t1071/REPORT.md)；本轮只诊断，未修改产品代码/安装版或真实数据，UI交付验收不适用。 |
-| T-1071-whisper | 修复本地转录成功后遗留Whisper线程 | 📋 待办 | 待审 | 待验 | [缺陷证据F-01](docs/verification/t1071/REPORT.md#f-01-本地转录成功后遗留-whisper-线程) | 三个实际provider配合真实轻量线程成功再abort，存活1→2→3；每任务新registry但父Worker复用，明确复用/close归属与退出屏障后实现，不下载模型或估算未测容量。 |
-| T-1071-stream | 补齐聊天响应背压与缓冲容量策略 | 📋 待办 | 待审 | 待验 | [缺陷证据F-03](docs/verification/t1071/REPORT.md#f-03-聊天-sse-没有背压缓冲随全部事件字节增长) | 实际SSE未消费时仍生产全部事件，2000个32KiB样本增加62.61MiB；取消后释放，不能称永久泄漏；公共HTTP慢网验证，订阅关闭不取消持久任务。 |
-| T-1071-worker-memory | 收敛宿主IPC历史回执与音频字节保留 | 📋 待办 | 待审 | 待验 | [缺陷证据F-02](docs/verification/t1071/REPORT.md#f-02-宿主保留所有已完成-ipc-回复音频在整个任务期间累计) | 100份512KiB音频回复任务中全部存活共50MiB，clearRun后释放；定义有界重投缓存及持久引用，保留相同请求ID幂等、连续执行与原任务预算。 |
-| T-1071-cache | 为完成聊天会话和预览元数据增加安全淘汰 | 📋 待办 | 待审 | 待验 | [缺陷证据F-04](docs/verification/t1071/REPORT.md#f-04-聊天窗口会话缓存没有淘汰保留全部-scope-的消息和闭包) | 100个scope消息全部保留；会话淘汰须保护在途/待授权、账号隔离和跨页回复，回访恢复服务端历史；预览仅普通URL字符串，不把元数据说成媒体字节。 |
-| T-1071-polling | 修复稿面慢读取叠加、雷达空闲扫描与历史卡终态观察 | 📋 待办 | 待审 | 待验 | [隔离前端复现](docs/verification/t1071/REPORT.md#f-05-审核报告慢请求叠加同一稿面两个消费点放大) | 审核32秒8个在途、空升级队列30秒11次读、250条成功历史33次读、成功整稿卡6分钟90次读；共享单在途及完整终态恢复，不删历史、不重发原任务，公共链路跑LED-047。 |
-| T-1071-scheduler | 修复后台调度重叠并补停止清理与心跳在途防护 | 📋 待办 | 待审 | 待验 | [缺陷证据F-08](docs/verification/t1071/REPORT.md#f-08-自动化后台分钟调度没有在途限制) | 实际分钟cron模拟10回调产生10并发tick；补调度handle/sweep清理并验证挂起heartbeat链，保留持久任务恢复、合法采集与取消结算。 |
+| T-1073 | 修复全面排查确认的8处资源浪费与内存泄漏 | 🔨 待办 | PASS[REV:3b0b0c1dc9ce] | 待验 | [SPEC](docs/features/t1073-resource-memory-fixes.md) | 用户2026-10-07明确授权修复；同轮覆盖Whisper、宿主回执、SSE、会话缓存、稿面/Radar/任务卡轮询及后台调度，保留原任务、幂等、跨页回复和合法输出；先独立评审，再隔离并行实现，不安装/推送/发布。 |
+| T-1071-whisper | 修复本地转录成功后遗留Whisper线程 | 🔨 待办 | — | — | [同轮修复SPEC](docs/features/t1073-resource-memory-fixes.md) | T-1073已审范围的实现归属；统一在父任务核验8处资源生命周期及兼容性，原T-1071缺陷证据保留。 |
+| T-1071-stream | 补齐聊天响应背压与缓冲容量策略 | 🔨 待办 | — | — | [同轮修复SPEC](docs/features/t1073-resource-memory-fixes.md) | T-1073已审范围的实现归属；统一在父任务核验8处资源生命周期及兼容性，原T-1071缺陷证据保留。 |
+| T-1071-worker-memory | 收敛宿主IPC历史回执与音频字节保留 | 🔨 待办 | — | — | [同轮修复SPEC](docs/features/t1073-resource-memory-fixes.md) | T-1073已审范围的实现归属；统一在父任务核验8处资源生命周期及兼容性，原T-1071缺陷证据保留。 |
+| T-1071-cache | 为完成聊天会话和预览元数据增加安全淘汰 | 🔨 待办 | — | — | [同轮修复SPEC](docs/features/t1073-resource-memory-fixes.md) | T-1073已审范围的实现归属；统一在父任务核验8处资源生命周期及兼容性，原T-1071缺陷证据保留。 |
+| T-1071-polling | 修复稿面慢读取叠加、雷达空闲扫描与历史卡终态观察 | 🔨 待办 | — | — | [同轮修复SPEC](docs/features/t1073-resource-memory-fixes.md) | T-1073已审范围的实现归属；统一在父任务核验8处资源生命周期及兼容性，原T-1071缺陷证据保留。 |
+| T-1071-scheduler | 修复后台调度重叠并补停止清理与心跳在途防护 | 🔨 待办 | — | — | [同轮修复SPEC](docs/features/t1073-resource-memory-fixes.md) | T-1073已审范围的实现归属；统一在父任务核验8处资源生命周期及兼容性，原T-1071缺陷证据保留。 |
 | T-1068 | 隔离复现内容雷达转录 MODEL_RESULT_UNKNOWN 暂停并定位原因 | ✅ 待办 | — | — | [诊断范围](docs/verification/t1068-radar-transcription.md) | 用户2026-10-07明确不考虑真实账号，直接复现；使用隔离数据与本地HTTP故障服务跑实际Worker/模型链，核对已识别原文、后处理、账本与暂停状态，不重发用户任务，未实证不声称根治。 |
 | T-1069 | 修复雷达文本模型完整非流式JSON回执被流式解析误判未知 | ✅ 待办 | PASS[REV:020bbb5c97fa] | — | [SPEC](docs/features/t1069-completion-json-compat.md) | 用户2026-10-07授权根治T-1068复现缺陷；同一请求完整JSON兼容，保留断流未知与幂等，不重发原任务、不改安装版。 |
 | T-1070 | 修复通用转录整理文本兼容模式缺少schema校验器与保存阻断 | ✅ 待办 | PASS[REV:5b690995d15b] | — | [SPEC](docs/features/t1070-transcript-postprocess-reliability.md) | 用户2026-10-07授权同轮修复；共享validator与实际后端保存回归，确认的原文安全降级，未知账本不伪造成功。 |

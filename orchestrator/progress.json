@@ -4,10 +4,10 @@
     "work_branch": "main"
   },
   "summary": {
-    "verticals": 65,
-    "tasks_done": 44,
-    "tasks_total": 156,
-    "tasks_pending": 112,
+    "verticals": 70,
+    "tasks_done": 45,
+    "tasks_total": 162,
+    "tasks_pending": 117,
     "verticals_complete": 9
   },
   "verticals": [
@@ -2795,6 +2795,313 @@
       "step_write_set": {},
       "step_read_set": {},
       "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "T-1073",
+      "task_id": "T-1073",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        {
+          "step": "spec-review",
+          "status": "done"
+        },
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "docs/features/t1073-resource-memory-fixes.md",
+        "docs/features/t1073-resource-memory-fixes.review.md",
+        "docs/verification/t1073/**",
+        "ai-worker/src/execution/**",
+        "ai-worker/src/runtime/**",
+        "backend/src/application/scheduling/automation.test.ts",
+        "backend/src/application/scheduling/automation.ts",
+        "backend/src/modules/ai-runtime/automation-driver.test.ts",
+        "backend/src/modules/ai-runtime/automation-driver.ts",
+        "backend/src/modules/execution/execution-stream.service.test.ts",
+        "backend/src/modules/execution/execution-stream.service.ts",
+        "backend/src/modules/execution/worker-supervisor.memory.test.ts",
+        "backend/src/modules/execution/worker-supervisor.test.ts",
+        "backend/src/modules/execution/worker-supervisor.ts",
+        "backend/src/modules/intelligence/source-sync-runner.test.ts",
+        "backend/src/modules/intelligence/source-sync-runner.ts",
+        "contract/src/internal/execution-worker.test.ts",
+        "contract/src/internal/execution-worker.ts",
+        "frontend/src/components/resources/asset-preview-url.test.ts",
+        "frontend/src/components/resources/asset-preview-url.ts",
+        "frontend/src/features/copilot/**",
+        "frontend/src/features/draft-workbench/use-latest-script-review.test.tsx",
+        "frontend/src/features/draft-workbench/use-latest-script-review.ts",
+        "frontend/src/features/intelligence/intelligence-workbench-api.test.ts",
+        "frontend/src/features/intelligence/intelligence-workbench-api.ts",
+        "frontend/src/features/intelligence/intelligence-workbench-types.ts",
+        "frontend/src/features/intelligence/use-project-upgrade-queue.test.tsx",
+        "frontend/src/features/intelligence/use-project-upgrade-queue.ts",
+        "frontend/src/server/chat-execution-stream.test.ts",
+        "frontend/src/server/chat-execution-stream.ts",
+        "frontend/src/server/persistence-client.lifecycle.test.ts",
+        "frontend/src/server/persistence-client.ts"
+      ],
+      "read_set": [
+        "docs/features/t1073-resource-memory-fixes.md",
+        "docs/verification/t1071/**",
+        "frontend/src/**",
+        "backend/src/**",
+        "ai-worker/src/**",
+        "contract/src/**",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "docs/产品定位.md"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {
+        "spec-review": [
+          "docs/features/t1073-resource-memory-fixes.md",
+          "docs/features/t1073-resource-memory-fixes.review.md",
+          "docs/verification/t1073/**"
+        ]
+      },
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {},
+      "verify_commands": {
+        "spec-review": "node orchestrator/process/governance-guard.mjs task-preflight --task T-1073 --write-set docs/features/t1073-resource-memory-fixes.md",
+        "implementation": "git diff --check && node tools/timeout-policy/verify.mjs"
+      }
+    },
+    {
+      "id": "T-1071-worker-memory",
+      "task_id": "T-1071-worker-memory",
+      "archetype": [
+        "orchestration"
+      ],
+      "read_set": [
+        "docs/features/t1073-resource-memory-fixes.md",
+        "docs/verification/t1071/**",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "docs/产品定位.md",
+        "backend/src/modules/execution/worker-supervisor.ts",
+        "backend/src/modules/execution/worker-supervisor.test.ts",
+        "backend/src/modules/execution/worker-supervisor.memory.test.ts",
+        "contract/src/internal/execution-worker.ts",
+        "contract/src/internal/execution-worker.test.ts",
+        "docs/verification/t1073/worker/**",
+        "backend/src/modules/execution/execution-utils.ts",
+        "contract/src/index.ts",
+        "ai-worker/src/runtime/multimodal-whisper-local.ts",
+        "ai-worker/src/runtime/multimodal-whisper-local.test.ts",
+        "ai-worker/src/runtime/multimodal-whisper-local.cancel.test.ts",
+        "ai-worker/src/runtime/multimodal-factory.ts",
+        "ai-worker/src/execution/transcribe-asr-registry.ts",
+        "ai-worker/src/execution/transcribe-worker-run.ts",
+        "ai-worker/src/execution/transcribe-worker-run.test.ts",
+        "ai-worker/src/execution/worker-runtime.ts",
+        "ai-worker/src/execution/worker-runtime.test.ts"
+      ],
+      "write_set": [
+        "ai-worker/src/runtime/multimodal-whisper-local.ts",
+        "ai-worker/src/runtime/multimodal-whisper-local.test.ts",
+        "ai-worker/src/runtime/multimodal-whisper-local.cancel.test.ts",
+        "ai-worker/src/runtime/multimodal-factory.ts",
+        "ai-worker/src/execution/transcribe-asr-registry.ts",
+        "ai-worker/src/execution/transcribe-worker-run.ts",
+        "ai-worker/src/execution/transcribe-worker-run.test.ts",
+        "ai-worker/src/execution/worker-runtime.ts",
+        "ai-worker/src/execution/worker-runtime.test.ts",
+        "backend/src/modules/execution/worker-supervisor.ts",
+        "backend/src/modules/execution/worker-supervisor.test.ts",
+        "backend/src/modules/execution/worker-supervisor.memory.test.ts",
+        "contract/src/internal/execution-worker.ts",
+        "contract/src/internal/execution-worker.test.ts",
+        "docs/verification/t1073/worker/**"
+      ],
+      "verify_commands": {
+        "implementation": "cd ai-worker && pnpm exec vitest run src/execution/worker-runtime.test.ts src/runtime/multimodal-whisper-local.test.ts --testTimeout 120000 --hookTimeout 120000"
+      },
+      "depends_on": [
+        "T-1073:spec-review"
+      ],
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "step_depends_on": {},
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "exclusive_resources": [],
+      "commits": {}
+    },
+    {
+      "id": "T-1071-polling",
+      "task_id": "T-1071-polling",
+      "archetype": [
+        "orchestration"
+      ],
+      "read_set": [
+        "docs/features/t1073-resource-memory-fixes.md",
+        "docs/verification/t1071/**",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "docs/产品定位.md",
+        "frontend/src/features/copilot/**",
+        "frontend/src/features/draft-workbench/use-latest-script-review.ts",
+        "frontend/src/features/draft-workbench/use-latest-script-review.test.tsx",
+        "frontend/src/features/intelligence/use-project-upgrade-queue.ts",
+        "frontend/src/features/intelligence/use-project-upgrade-queue.test.tsx",
+        "frontend/src/features/intelligence/intelligence-workbench-api.ts",
+        "frontend/src/features/intelligence/intelligence-workbench-api.test.ts",
+        "frontend/src/features/intelligence/intelligence-workbench-types.ts",
+        "frontend/src/components/resources/asset-preview-url.ts",
+        "frontend/src/components/resources/asset-preview-url.test.ts",
+        "docs/verification/t1073/frontend/**",
+        "frontend/src/lib/api/**",
+        "frontend/src/lib/http-transport.ts",
+        "contract/src/index.ts",
+        ".agents/skills/oil-ui-pro/**",
+        "docs/features/t1022-account-group-workspace/UI_RULES.md"
+      ],
+      "write_set": [
+        "frontend/src/features/copilot/**",
+        "frontend/src/features/draft-workbench/use-latest-script-review.ts",
+        "frontend/src/features/draft-workbench/use-latest-script-review.test.tsx",
+        "frontend/src/features/intelligence/use-project-upgrade-queue.ts",
+        "frontend/src/features/intelligence/use-project-upgrade-queue.test.tsx",
+        "frontend/src/features/intelligence/intelligence-workbench-api.ts",
+        "frontend/src/features/intelligence/intelligence-workbench-api.test.ts",
+        "frontend/src/features/intelligence/intelligence-workbench-types.ts",
+        "frontend/src/components/resources/asset-preview-url.ts",
+        "frontend/src/components/resources/asset-preview-url.test.ts",
+        "docs/verification/t1073/frontend/**"
+      ],
+      "verify_commands": {
+        "implementation": "cd frontend && pnpm exec vitest run src/features/copilot/chat-script-draft-card.test.tsx src/features/intelligence/use-project-upgrade-queue.test.tsx --testTimeout 120000 --hookTimeout 120000"
+      },
+      "depends_on": [
+        "T-1073:spec-review"
+      ],
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "step_depends_on": {},
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "exclusive_resources": [],
+      "commits": {}
+    },
+    {
+      "id": "T-1071-scheduler",
+      "task_id": "T-1071-scheduler",
+      "archetype": [
+        "orchestration"
+      ],
+      "read_set": [
+        "docs/features/t1073-resource-memory-fixes.md",
+        "docs/verification/t1071/**",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "docs/产品定位.md",
+        "backend/src/modules/ai-runtime/automation-driver.ts",
+        "backend/src/modules/ai-runtime/automation-driver.test.ts",
+        "backend/src/application/scheduling/automation.ts",
+        "backend/src/application/scheduling/automation.test.ts",
+        "backend/src/modules/intelligence/source-sync-runner.ts",
+        "backend/src/modules/intelligence/source-sync-runner.test.ts",
+        "frontend/src/server/persistence-client.ts",
+        "frontend/src/server/persistence-client.lifecycle.test.ts",
+        "docs/verification/t1073/backend/**",
+        "backend/src/modules/execution/execution-task.service.ts",
+        "backend/src/modules/ai-runtime/automation-runtime.ts",
+        "contract/src/index.ts"
+      ],
+      "write_set": [
+        "backend/src/modules/ai-runtime/automation-driver.ts",
+        "backend/src/modules/ai-runtime/automation-driver.test.ts",
+        "backend/src/application/scheduling/automation.ts",
+        "backend/src/application/scheduling/automation.test.ts",
+        "backend/src/modules/intelligence/source-sync-runner.ts",
+        "backend/src/modules/intelligence/source-sync-runner.test.ts",
+        "frontend/src/server/persistence-client.ts",
+        "frontend/src/server/persistence-client.lifecycle.test.ts",
+        "docs/verification/t1073/backend/**"
+      ],
+      "verify_commands": {
+        "implementation": "cd backend && pnpm exec vitest run src/modules/ai-runtime/automation-driver.test.ts src/modules/intelligence/source-sync-runner.test.ts --testTimeout 120000 --hookTimeout 120000"
+      },
+      "depends_on": [
+        "T-1073:spec-review"
+      ],
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "step_depends_on": {},
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "exclusive_resources": [],
+      "commits": {}
+    },
+    {
+      "id": "T-1071-stream",
+      "task_id": "T-1071-stream",
+      "archetype": [
+        "orchestration"
+      ],
+      "read_set": [
+        "docs/features/t1073-resource-memory-fixes.md",
+        "docs/verification/t1071/**",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "docs/产品定位.md",
+        "frontend/src/server/chat-execution-stream.ts",
+        "frontend/src/server/chat-execution-stream.test.ts",
+        "backend/src/modules/execution/execution-stream.service.ts",
+        "backend/src/modules/execution/execution-stream.service.test.ts",
+        "docs/verification/t1073/stream/**",
+        "frontend/src/server/chat-production-runtime.ts",
+        "contract/src/index.ts"
+      ],
+      "write_set": [
+        "frontend/src/server/chat-execution-stream.ts",
+        "frontend/src/server/chat-execution-stream.test.ts",
+        "backend/src/modules/execution/execution-stream.service.ts",
+        "backend/src/modules/execution/execution-stream.service.test.ts",
+        "docs/verification/t1073/stream/**"
+      ],
+      "verify_commands": {
+        "implementation": "cd frontend && pnpm exec vitest run src/server/chat-execution-stream.test.ts --testTimeout 120000 --hookTimeout 120000"
+      },
+      "depends_on": [
+        "T-1073:spec-review"
+      ],
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "step_depends_on": {},
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "exclusive_resources": [],
       "commits": {}
     }
   ],

@@ -5606,6 +5606,68 @@
       "scope_source": "docs/verification/t1071-resource-memory-audit.md",
       "reason": "仅为授权诊断复用既有工具链、实际模块与合成端口；隔离探针只操作自身创建的线程和进程，进程采样只读。报告涉及既有机制，不新增产品运行时、IPC协议、原生部署、数据归属或正式产品功能。",
       "acceptance": "仅登记诊断工件复杂度；不代表缺陷已修复、全局Gate通过或安装版验收。"
+    },
+    {
+      "task_id": "T-1071-worker-memory",
+      "files": [
+        "ai-worker/src/execution/worker-runtime.ts"
+      ],
+      "file_sha256": "2ec9ebe3807844cc9d1111448f98531481c6d1a63cb1bc9b55b64d2aa20e19bf",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1073",
+      "scope_source": "docs/features/t1073-resource-memory-fixes.md",
+      "reason": "用户授权修复已复现资源缺陷的既有机制；私有确认、停止与背压不新增公共权力或运行时。",
+      "acceptance": "复杂度授权只绑定当前文件，不代表测试或验收通过。"
+    },
+    {
+      "task_id": "T-1071-worker-memory",
+      "files": [
+        "backend/src/modules/execution/worker-supervisor.ts"
+      ],
+      "file_sha256": "3e58a620a3f53fb08a0ba08f47326328a9500262a7e1fb9f871a8b0479f7e6f6",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1073",
+      "scope_source": "docs/features/t1073-resource-memory-fixes.md",
+      "reason": "用户授权修复已复现资源缺陷的既有机制；私有确认、停止与背压不新增公共权力或运行时。",
+      "acceptance": "复杂度授权只绑定当前文件，不代表测试或验收通过。"
+    },
+    {
+      "task_id": "T-1071-scheduler",
+      "files": [
+        "backend/src/application/scheduling/automation.ts"
+      ],
+      "file_sha256": "0fea78809aaecb5739307dcc299ae8a2bd8f4a81e8f33104a5e70e2d21f51f32",
+      "categories": [
+        "native_executable"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1073",
+      "scope_source": "docs/features/t1073-resource-memory-fixes.md",
+      "reason": "用户授权修复已复现资源缺陷的既有机制；私有确认、停止与背压不新增公共权力或运行时。",
+      "acceptance": "复杂度授权只绑定当前文件，不代表测试或验收通过。"
+    },
+    {
+      "task_id": "T-1071-scheduler",
+      "files": [
+        "frontend/src/server/persistence-client.ts"
+      ],
+      "file_sha256": "767eed524653dbf418f3a2ff7732d23c046e17977e692205106901dfc7301afb",
+      "categories": [
+        "credential_store",
+        "language_toolchain",
+        "native_executable"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1073",
+      "scope_source": "docs/features/t1073-resource-memory-fixes.md",
+      "reason": "用户授权修复已复现资源缺陷的既有机制；私有确认、停止与背压不新增公共权力或运行时。",
+      "acceptance": "复杂度授权只绑定当前文件，不代表测试或验收通过。"
     }
   ],
   "historical_baselines": []

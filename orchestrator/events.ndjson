@@ -1145,3 +1145,10 @@
 {"ts":"2026-10-07T12:40:59.847Z","actor":"taskctl","action":"complete","task":"T-1070","evidence":"docs/verification/t1070/REPORT.md；当场后处理RED 9失败/1通过→最终真实后端集成13通过，正式Worker子进程IPC/逐字稿保存/全文读回/原任务终态通过；共享schema与模板摘要保持，未知/取消不伪造成功；最终LED-054共40通过；全局reconcile34错误/1告警无新增、T-916/T-1015/T-1018既有欠债保留；未安装/发布/改真实数据。","sha_before":"de2a467e7fb1","sha_after":"294347374a0c"}
 {"ts":"2026-10-07T14:21:03.281Z","actor":"taskctl","action":"start","task":"T-1071","sha_before":"1f506a1d81a8","sha_after":"e5df87d69df8"}
 {"ts":"2026-10-07T14:42:40.069Z","actor":"taskctl","action":"complete","task":"T-1071","evidence":"docs/verification/t1071/REPORT.md与closure.md；已复现8项资源缺陷并登记6项整改，前端4/4、原生sidecar12/12，Whisper仅WeakRef仍1→2→3并最终全清，音频回执50MiB任务内保留、SSE合成缓冲及调度10并发证据归档；39个源码摘要不变，本任务治理通过；完整reconcile34错误/1告警与T-1069逐项一致、无新增，保留既有T-916/T-1015/T-1018；仅诊断，未修复运行代码/安装版，未触碰真实数据，UI验收不适用。","sha_before":"c6bc5af0980e","sha_after":"0af5331ed8d5"}
+{"ts":"2026-10-07T15:53:19.554Z","actor":"taskctl","action":"start","task":"T-1073","sha_before":"9cacd979554b","sha_after":"d15cf1ba3e07"}
+{"ts":"2026-10-07T15:57:49.143Z","actor":"taskctl","action":"start","task":"T-1071-worker-memory","sha_before":"78126a938e47","sha_after":"903d678454ec"}
+{"ts":"2026-10-07T15:57:49.393Z","actor":"taskctl","action":"start","task":"T-1071-whisper","sha_before":"903d678454ec","sha_after":"89e62828ad22"}
+{"ts":"2026-10-07T15:57:49.630Z","actor":"taskctl","action":"start","task":"T-1071-polling","sha_before":"89e62828ad22","sha_after":"9a1c0fcdb6ab"}
+{"ts":"2026-10-07T15:57:49.867Z","actor":"taskctl","action":"start","task":"T-1071-cache","sha_before":"9a1c0fcdb6ab","sha_after":"3005ab5bc813"}
+{"ts":"2026-10-07T15:57:50.118Z","actor":"taskctl","action":"start","task":"T-1071-scheduler","sha_before":"3005ab5bc813","sha_after":"21a89ba05852"}
+{"ts":"2026-10-07T15:57:50.430Z","actor":"taskctl","action":"start","task":"T-1071-stream","sha_before":"21a89ba05852","sha_after":"8b3ee2a9f56f"}
