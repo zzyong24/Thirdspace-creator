@@ -826,7 +826,7 @@ pub async fn owned_device_start(
         if let Some(j) = load(&Keychain, &cfg, &flight)? { return Ok(view("waiting", Some(&j), "继续上一次连接，避免重复登记设备")); }
         if !matches!(intent.as_str(), "link_owner" | "register_device") { return Err(error("请选择正确的账号连接入口")); }
         let label = device_label.unwrap_or_else(|| "这台电脑".to_string()).trim().to_string();
-        if label.is_empty() || label.chars().count() > 80 || label.chars().any(char::is_control) { return Err(error("请填写80字以内的电脑名称")); }
+        if label.is_empty() || label.chars().count() > 64 || label.chars().any(char::is_control) { return Err(error("请填写64字以内的电脑名称")); }
         let mut original = activation_code.map(|v| v.trim().to_string()).filter(|v| !v.is_empty());
         if original.as_ref().is_some_and(|v| v.len() > 256 || v.chars().any(char::is_control)) { return Err(error("请检查原激活码后重试")); }
         let verifier = Zeroizing::new(random()); let challenge = base64::engine::general_purpose::URL_SAFE_NO_PAD.encode(Sha256::digest(verifier.as_bytes()));
