@@ -2,9 +2,9 @@
 
 - Task: T-1070
 - Verdict: PASS
-- Round: 2/3 (recheck)
-- Spec receipt: 25e7c9afc6eb
-- Review receipt: 07e6730531d6
+- Round: 3/3 (recheck)
+- Spec receipt: 2513aedb1164
+- Review receipt: b195ac203ec0
 
 ## 当前有效问题
 
@@ -17,13 +17,13 @@
   "schema": "spec-review-state/v2",
   "task_id": "T-1070",
   "cycle": 1,
-  "round": 2,
+  "round": 3,
   "max_rounds": 3,
   "review_kind": "recheck",
   "verdict": "PASS",
-  "summary": "T-1070 第2轮独立只读复审，review_kind=recheck。MAIN HEAD=a8e42b7365d8ba1cb3498a7a623b73c443d8634a，product-to-code-orchestrator与项目版本均为3.27.4。已读BACKLOG、补充SPEC、项目记忆、任务packet、产品宪法、物理架构、实际两服务diff、隔离公共组合链新测试、pending素材service/repository、workspaceObjectIdentity与现有候选提交/采用/拒绝消费点。复审判断：T1070-GENERATED-RECEIPT-GROUP补充充分，可准入精确第4路径backend/src/modules/assets/generated-asset-candidate.service.ts；本轮未发现需要阻断该SPEC准入的finding。实际写端按workspaceObjectIdentity.identity派生原execution-asset操作键，repository已用workspaceFilter；旧reader仍强制accountId并用旧账号键，和纯组写端不一致。新增范围仅复用同源身份摘要并将该文件receipt/asset查询及verify/activate/discard全部读写作用域改为现有workspaceFilter；旧非空account与既有grp_legacy兼容身份保持原值，不新增别名、归组兜底或第二权限来源。SPEC保留原committed receipt深等、历史exact fileId/checksum/size/storageKey/mime、只读不依赖currentFileId及不写账本、候选采用仍核pending/currentFileId，活跃素材不得二次采用或被候选拒绝删除，删除素材不可用于选择。现有两服务diff将冻结user/account/group三项和lease严格比较（仅可空值归一null），AI任务/会话读使用workspaceFilter，图片授权重核三项，提交传原组与可空账号；video.edit仅更正为实际冻结host proposal工具video.edit.render，现有effect/version/approve/execute/lease/fence、history digest与消息绑定、原回执协议、幂等和unknown不重发逻辑未降级。已核日志原始RED为8测试中6失败/2通过（含账号null查询、工具ID和冻结组约束），首次两服务修复回归为总19测试18通过/1失败，剩余图片settle明确在readGeneratedAssetReceipt报生成素材候选缺少归属。external-group-green.log文件名不能代签GREEN。当前新增3条helper回归覆盖跨组/跨用户/错call/篡改receipt、current变版下历史文件只读与候选禁止采用、activate后禁止再次采用/拒绝删除、discard幂等及exact文件保留；已读generated-receipt-red.log：追加helper回归的11测试当场4失败/7通过，4项均在旧readGeneratedAssetReceipt的accountId强制失败，符合本次第4源补充的预期缺陷；日志SHA256=3b45139423c7300b4603a1dc45abf8ec228762eff7d24a48f3da74c9e5a0db46。本评审本人未重跑测试，不制造GREEN。第四源文件尚未修改，无该路径的实现验收或完整GREEN。实施后必须取得同一隔离PGlite公共外部聊天链及新增helper测试的实际GREEN，并保留旧非空account、pending生成、原历史exact文件和候选采用/拒绝消费回归；相关chat submission/completion/lease、backend类型、boundary/orphan与最终实际diff独评仍待执行。直接helper fixture不代签真实Codex供应商/UI链或生成候选的全部上层旅程。getCommittedAssetResult中旧accountId等值执行读取为范围外既有问题，本窄修不声称全体纯组画布生成证明链已闭合。本复审不准入原生v3编辑、同一确认脚本三种完整作品、跨Tab编导或入口清理，其精确接口/写集与独评仍待补全；不complete T-1070，不改变任何MAIN/control或任务状态，不连接真实库/真实媒体根，不启动供应商模型调用。模型身份：inherited Codex model，精确型号未暴露；同模型子会话，仅为homogeneous弱门，不能声明跨模型或cross-family评审。复审核定哈希：docs/features/t1070-director-script-workflow.md SHA256=25e7c9afc6eb46ddb0c2139c6ac87cde0e468afd13fbf3271384d80ca1de958a；docs/产品定位.md SHA256=86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800；backend/src/modules/ai/external-chat-turn.service.ts SHA256=d0879049091d58469ec6c17546f9612ec2a557a78bf7bbc58e31c41c28508f39；backend/src/modules/ai/external-task-tool.service.ts SHA256=1ecd84d5cbf2cd6708f40221713eb3420e41810ab3169650486e872f4c80ff85；backend/src/modules/ai/external-group-chat.integration.test.ts SHA256=e6aa9b5df3f6ccda3a7d81cc7194b93b0330d77cc3a068620775f0f98b228719；backend/src/modules/assets/generated-asset-candidate.service.ts SHA256=c9fec8162ca82282461a2f04bc39ce9b5434f4e2eff0a2f513885d8d8d5135f9；backend/src/modules/assets/workspace-object-identity.ts SHA256=90354049ce61b0cd0887045b27f99df4a806ead3856c675228816da204047b01；backend/src/modules/assets/pending-generated-asset.service.ts SHA256=5d7cbe166f2b445e1d3bed0e25515ec96861d05c0eb8ec305ae35ddc24d1cb4b；backend/src/modules/assets/pending-generated-asset.repository.ts SHA256=4de9151b17a560d92cc59ecad67f6ae92367b9f4cb00e054b61e0efe4d88169b；测试日志哈希：t1070-tests/external-group-red.log SHA256=b7f4251862281df608e8cb00770fff6ba1272ac23d920412ffe08a13bf0f1d62；t1070-tests/external-group-green.log SHA256=bd59fdf715823320ada54a23f9e09dac7ee96ce6ec9eb68a89796413a9f157cb。 最终实际diff与fixture审查：两服务新增差异仅为workspace作用域/冻结三项校验/回复传组和工具字面ID，未发现新增越权、误重发或回执降级缺陷；git diff --check当場exit0。fixture使用实际submission、persistent claim、external service和真实工具定义/host适配器，但prepareVideoEdit为确定性候选stub，project/output/asset为中性人工ID，图片是12字节PNG头夹具；这可以证明归属、文件字节/回执持久化与卡片协议，不能证明有效图片预览、实际领域剪辑或真实供应商执行。新增verify/activate/discard断言直接调用helper，没有包裹用户采纳公共service事务或并发竞争，不能代签完整采用事务及锁保证；应保留现有生成候选采用/拒绝和历史exact文件回归。本次补充的服务写集不改变这些上层事务合同，以上属于证据解释边界，不是新增SPEC阻断finding。",
+  "summary": "T-1070 当前完整补充合同独立只读评审，MAIN HEAD=5c4440348d9617e8a1e06c882811ed9be3233bf7。已读 BACKLOG T-1070、最新 SPEC 与附属 CONTRACT.json、PROJECT/PROJECT_CONTEXT、产品定位、SYSTEM_ARCHITECTURE、product-to-code-orchestrator 3.27.4 与 stage-router、项目 oil-ui-pro 0.10.0 和账号组 UI_RULES，以及脚本保存、composition/member原预约、文章/图文原createVersion、production apply/commit、工具 gate/host/external ledger/readToolResult、NoteRelay与固定 native 源中 controller/operations/frozen-export/renderer/timeline/animation 的实际消费者。当前流程账本已含同cycle=1 round1 initial与round2 recheck，均findings=[]；reviewctl实际要求下一条使用recheck，属于本周期round3/3，不新开cycle，不运行正式reviewctl。此次审核按用户最新明确范围：取消自动视频初稿/TTS，只用当前引擎在同一原聊天任务联合生成文章和图文候选，分别预览/采纳再精调；视频导入真实录像，右栏自然语言编辑真实native v3，保留原片、手工编辑和合法保存导出。合同93条精确写集无重复；四工具均为原lease下none/proposal host工具，语义由配置Skill/模型给出，无新模型子任务、任务lane、候选表或worker直写库。typed_patch由宿主按精确ID/UTF16范围/前值机械重建完整候选，未改正文、来源、页图、layout、其它scene/settings/sources保真，大稿不要求模型全文echo；native时间基准与实际source固定120000 ticks及v31 sourceRevision。核实际文章/图文原createVersion可先查同key/digest receipt并分别CAS，不要求伪造旧候选血缘或跨owner原子提交。实际production.applyEditor目前只支持v1/v2，选定补v3 replaceNativeSceneTracks分支经原editorFor.commit与checkReferenceMedia，不增加第二写端；新校验只约束编导变动，旧丰富v3手工save/export保留。实际renderer.exportProject已经接受frozen tracks/project/mediaAssets/duration；新preview-scene指定独立只读renderer调用、不load/setScenes/command/save。原frozen-export会取消pending imports，不能拿它直接实现新preview；选定合同已明确busy/pending先恢复、不取消合法导入。采用后原acceptVersion/apply-tracks回执与readback分态，UNKNOWN保原请求，undo/manual后续编辑仍必须实际回归。NoteRelay实际locked会禁surface/page/export，现候选合同明确仅禁布局回写、独立实例仍可翻页和PNG/ZIP，避免disabled/inert造成假预览，无需改vendored归档。审查期间两处确证内部文字差异已由根在同次评审内实际修正并复读：creation preflight改为新prepareScriptForCreation严格120000ms/token守护端口，保旧4s flush与10s诊断flushSaveStrict；lossless规则与gate写集明确四个精确新工具，联合完整脚本/两文档不会按旧60k门在ledger前裁剪，其他旧工具预算不变。原readToolResult实际只查Pi kind=tool结果，当前external ledger是providerResult identity+agenticToolOutcome resultText；合同已把原reader同execution/parent/lease兼容与>60k无损翻窗纳入精确服务/测试闭包，没有旁路存储。当前最新合同未发现剩余可确证blocker/major，findings=[]，可进入已列精确实现；不将尚未实施的新工具/预览/采用判为实现缺陷。限制：本人仅做源码/合同阅读与格式、路径唯一性核对，未运行产品测试、模型请求、真实浏览器/音视频/PNG/ZIP、native重建、安装包或真实库验收；基础5c444034真实Codex成功只支持既有外部身份/执行链，不代签新四工具/联合生成/native v3新链。所有SPEC规定的当场RED→GREEN、Pi与真实Codex公共新链、隔离PGlite、页面1366/1024/200%与键盘/视觉独评、原生两次构建hash、保存刷新导出、boundary/orphan/semantic/LED-047/timeout-policy和全局欠债对账仍待实际完成，不能据本报告complete T-1070或代签最终用户验收。本人不修改MAIN/control/BACKLOG状态；仅写本地诊断评审文件。模型身份为 inherited Codex model，精确型号未暴露；同模型子会话，仅为homogeneous弱门，不声明cross-family或cross-model-same-family。核定哈希：SPEC SHA256=2513aedb1164f3ce99b0a81ea25dc4a0e79853cbda5374ce49a75fbf89c871e9；CONTRACT.json SHA256=fae774ebfe3a20097a93e8bfbc4189069345c0852600940c1e8efadb5ece0a0b；docs/产品定位.md SHA256=86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800；SYSTEM_ARCHITECTURE SHA256=3efbb0394b8bcc9eb3c9ad7e8c9364df51e336006b862e02ac71fd6c9327971e。",
   "spec_path": "docs/features/t1070-director-script-workflow.md",
-  "spec_sha256": "25e7c9afc6eb46ddb0c2139c6ac87cde0e468afd13fbf3271384d80ca1de958a",
+  "spec_sha256": "2513aedb1164f3ce99b0a81ea25dc4a0e79853cbda5374ce49a75fbf89c871e9",
   "constitution_path": "docs/产品定位.md",
   "constitution_sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
   "review_path": "docs/features/t1070-director-script-workflow.review.md",
@@ -31,9 +31,9 @@
   "model": "inherited-codex-model-unreported",
   "policy": "convergent-review/v2",
   "cycle_authorization": null,
-  "latest_event_hash": "edcb043aaf210fe2a2568a6f3c2c27c13d8830486371f86d9f52c4936df0f713",
+  "latest_event_hash": "a6a842b64e55a901ae480e525d9b1f25070bf80513c57dcbfb2c3297c3786bc3",
   "open_findings": [],
   "resolved_findings": [],
-  "receipt": "07e6730531d6"
+  "receipt": "b195ac203ec0"
 }
 ```

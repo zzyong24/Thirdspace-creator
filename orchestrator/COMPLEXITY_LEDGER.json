@@ -2919,6 +2919,56 @@
       "reason": "独立完整diff与11项交付字节核验：仅已有OpenCut产物SHA/状态/证据引用更新；唯一Rust许可证名称与HEAD相同，无新增语言、工具链或执行机制。",
       "review": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1069-final-spec-review/current-candidate-scope-inventory.json",
       "acceptance": "仅此精确SHA母integration准入预算；独评报告SHA 02730c1d1df3bad50c6be14cff3c26cebec0d914c1a19a46b02f5ab923598686。原claim拒绝保留，不代签功能、扫码、性能、安装或任务完成。"
+    },
+    {
+      "task_id": "T-1070",
+      "files": [
+        "frontend/public/reference-editors/opencut-classic/native/native.js"
+      ],
+      "file_sha256": "79c8fc5a9b7ce45f5abf66b91579a33365370edf1b044f740e83d4c5d7ebbc9f",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-T1070-DIRECTOR-SCRIPT-WORKFLOW",
+      "scope_source": "docs/features/t1070-director-script-workflow.md",
+      "reason": "当前源与已独评T1062/T1069精确SHA一致，登记原凭据/工具链/原生构建marker的既有基线；本SPEC只准入新四工具、原owner和原生只读预览，不新增凭据保管、语言或执行机制。未来变动须按完整实际diff独评再绑定新SHA。",
+      "review": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1069-final-spec-review/current-native-delivery-budget-review.json",
+      "acceptance": "只登记当前未变源机制，不代签新功能、测试、重建、安装或正式验收；此前claim真实拒绝保留。"
+    },
+    {
+      "task_id": "T-1070",
+      "files": [
+        "frontend/src/server/persistence-client.ts"
+      ],
+      "file_sha256": "3a6e5abd68d5ff79a7785d3daef1261d006bcd0da75ce71d141bd0860e41dc38",
+      "categories": [
+        "credential_store",
+        "language_toolchain",
+        "native_executable"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-T1070-DIRECTOR-SCRIPT-WORKFLOW",
+      "scope_source": "docs/features/t1070-director-script-workflow.md",
+      "reason": "当前源与已独评T1062/T1069精确SHA一致，登记原凭据/工具链/原生构建marker的既有基线；本SPEC只准入新四工具、原owner和原生只读预览，不新增凭据保管、语言或执行机制。未来变动须按完整实际diff独评再绑定新SHA。",
+      "review": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1069-final-spec-review/current-delivery-budget-review.json",
+      "acceptance": "只登记当前未变源机制，不代签新功能、测试、重建、安装或正式验收；此前claim真实拒绝保留。"
+    },
+    {
+      "task_id": "T-1070",
+      "files": [
+        "reference-editors/manifest.json"
+      ],
+      "file_sha256": "69bda55a03e42d4d30c67f4d091c0282ce6b09d5bf90ed230cec26c053681bc5",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-T1070-DIRECTOR-SCRIPT-WORKFLOW",
+      "scope_source": "docs/features/t1070-director-script-workflow.md",
+      "reason": "当前源与已独评T1062/T1069精确SHA一致，登记原凭据/工具链/原生构建marker的既有基线；本SPEC只准入新四工具、原owner和原生只读预览，不新增凭据保管、语言或执行机制。未来变动须按完整实际diff独评再绑定新SHA。",
+      "review": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1069-final-spec-review/current-candidate-scope-inventory.json",
+      "acceptance": "只登记当前未变源机制，不代签新功能、测试、重建、安装或正式验收；此前claim真实拒绝保留。"
     }
   ],
   "historical_baselines": []

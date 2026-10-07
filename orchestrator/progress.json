@@ -4673,7 +4673,7 @@
       "tasks": [
         {
           "step": "external-engine",
-          "status": "pending"
+          "status": "done"
         },
         {
           "step": "implementation",
@@ -4734,13 +4734,10 @@
       },
       "step_read_set": {},
       "step_exclusive_resources": {},
-      "commits": {}
+      "commits": {
+        "external-engine": "5c444034"
+      }
     }
   ],
-  "leases": {
-    "T-1070:external-engine": {
-      "agent": "root",
-      "since": "2026-10-07T04:21:54.370Z"
-    }
-  }
+  "leases": {}
 }

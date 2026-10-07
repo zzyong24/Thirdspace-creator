@@ -1,0 +1,1122 @@
+{
+  "schemaVersion": 1,
+  "taskId": "T-1070",
+  "status": "root-selected-for-independent-review",
+  "native": {
+    "target_dto": {
+      "schemaVersion": 1,
+      "common_required": [
+        "projectId",
+        "outputId",
+        "owner",
+        "contentType",
+        "savedBase",
+        "documentDigest",
+        "selection"
+      ],
+      "server_owner": "userId/accountId/groupId仅来自RequestContext与execution lease，不采信客户端权限证明",
+      "saved_base": {
+        "artifact": [
+          "kind=artifact",
+          "artifactId",
+          "versionId"
+        ],
+        "production": [
+          "kind=production",
+          "productionId",
+          "revision"
+        ]
+      },
+      "selection": {
+        "article": [
+          "kind=article|article_sections",
+          "sectionIds真实ID",
+          "可选field=heading|body",
+          "可选textRange{startUtf16,endUtf16,expectedFieldDigest}"
+        ],
+        "graphic": [
+          "kind=graphic_post|graphic_cards",
+          "cardIds真实ID",
+          "可选field=title|body|visualBrief",
+          "可选textRange精确UTF16范围"
+        ],
+        "native": [
+          "kind=native_scene",
+          "sceneId",
+          "elementRefs[{trackId,elementId}]",
+          "playheadTick",
+          "timeRange{startTick,endTick,ticksPerSecond=120000}?",
+          "transcript{sourceId,transcriptId,tokenIds}?",
+          "contextEpoch",
+          "editorGeneration"
+        ]
+      },
+      "guards": [
+        "save完成后再次读最终真实context，暂停播放导致epoch变化后才冻结",
+        "epoch/generation只由客户端核本地寿命，不当服务器授权证据",
+        "textRange不能拆Unicode surrogate pair且须匹配原fieldDigest",
+        "时间码只用safe integer native ticks；转写源时间经确切source timebase/trim/rate换算，text-only转写不冒充可剪时码",
+        "当前缺真实selection不猜首个output/card/scene"
+      ]
+    },
+    "tools": {
+      "read": {
+        "name": "work.editor.read",
+        "effect": "none",
+        "result_kind": "work.editor.context",
+        "input": {
+          "view": "selection|index|document|field_window",
+          "scope": "可选精确同output内 article_sections{sectionIds}|graphic_cards{cardIds}|native_elements{sceneId,elementRefs}，不能指定别的project/output",
+          "fieldWindow": "仅view=field_window：{target:article_section|graphic_card|article_metadata|graphic_metadata,id?,field:声明可读文本字段,offsetUtf16,lengthUtf16}，绑定同base；服务端限制有限窗口"
+        },
+        "default_input": {
+          "view": "selection"
+        },
+        "result_fields": [
+          "kind",
+          "schemaVersion",
+          "target",
+          "base",
+          "baseDigest",
+          "selection",
+          "readScope",
+          "selected:完整所读typed section/card/element及前值digests",
+          "documentSummary:机械字段/顺序/ID/计数索引，不代写内容摘要",
+          "document:仅view=document时完整typed owned doc/scene，其他null",
+          "projectEnvelope:原v31受保护metadata/settings或null",
+          "media:全已登记exact mediaId/assetId/assetFileId/类型/真实时长目录",
+          "sourceTranscripts:当前相关原证据或明示窗口",
+          "capabilities:固定源revision/typed字段/原params registry/rate/ticks",
+          "fieldWindow:精确offset/total/digest/text/hasMore/nextOffset或null",
+          "complete:仅证明readScope完整，不将局部冒充全稿",
+          "failureCode",
+          "error:string|null"
+        ],
+        "behavior": "每调用经原owner重读当前base；immutable窗口可从原version读，propose/adopt仍核current未变；超长结果先无损原ledger存，再现tool.result.read按offset回读原toolCallId；原reader补external settled identity/outcome的真实账本解析，禁止新side storage。"
+      },
+      "propose": {
+        "name": "work.editor.propose",
+        "effect": "proposal",
+        "result_kind": "work.editor.candidate",
+        "input_required": [
+          "base",
+          "baseDigest",
+          "summary",
+          "candidate"
+        ],
+        "input_optional": [
+          "imageRequest{cardId,visualRequirements}|null"
+        ],
+        "input_candidate_union": [
+          {
+            "kind": "typed_patch",
+            "owner": "wechat_article",
+            "edits": [
+              {
+                "type": "patchArticleMetadata",
+                "expectedDocumentDigest": "sha256",
+                "patch": "typed partial {title?,summary?,tags?}"
+              },
+              {
+                "type": "patchArticleSection",
+                "sectionId": "真实ID",
+                "expectedSectionDigest": "sha256",
+                "patch": "typed partial {heading?,headingLevel?,body?}；未改sourceRefs/imageUses/layout保留"
+              },
+              {
+                "type": "replaceArticleTextRange",
+                "sectionId": "真实ID",
+                "field": "heading|body",
+                "expectedFieldDigest": "sha256",
+                "startUtf16": "nonnegative safe integer",
+                "endUtf16": "safe integer>=start",
+                "replacementText": "模型内容；代码精确slice，不做字符串相似度"
+              }
+            ]
+          },
+          {
+            "kind": "typed_patch",
+            "owner": "graphic_post",
+            "edits": [
+              {
+                "type": "patchGraphicMetadata",
+                "expectedDocumentDigest": "sha256",
+                "patch": "typed partial {title?,body?,summary?,tags?}"
+              },
+              {
+                "type": "patchGraphicCard",
+                "cardId": "真实ID",
+                "expectedCardDigest": "sha256",
+                "patch": "typed partial {title?,body?,visualBrief?}"
+              },
+              {
+                "type": "replaceGraphicTextRange",
+                "cardId": "真实ID",
+                "field": "title|body|visualBrief",
+                "expectedFieldDigest": "sha256",
+                "startUtf16": "nonnegative safe integer",
+                "endUtf16": "safe integer>=start",
+                "replacementText": "模型内容"
+              }
+            ]
+          },
+          {
+            "kind": "typed_patch",
+            "owner": "production",
+            "sceneId": "frozen实际sceneId",
+            "edits": [
+              {
+                "type": "patchNativeElement",
+                "trackId": "真实ID",
+                "elementId": "真实ID",
+                "expectedElementDigest": "sha256",
+                "patch": "typed partial {name?,startTime?,duration?,trimStart?,trimEnd?,sourceDuration?,mediaId?,isSourceAudioEnabled?,hidden?,retime?,params?,animations?}；type固定，不可改sourceType/sourceUrl；未改rich fields原值保留"
+              },
+              {
+                "type": "replaceNativeElement",
+                "trackId": "真实ID",
+                "elementId": "真实ID",
+                "expectedElementDigest": "sha256",
+                "element": "完整对应TypedSerializedTimelineElement，id保持"
+              },
+              {
+                "type": "insertNativeElement",
+                "trackId": "真实ID",
+                "expectedTrackDigest": "sha256",
+                "element": "完整typed元素，明确唯一新ID、时间；type与track匹配"
+              },
+              {
+                "type": "removeNativeElement",
+                "trackId": "真实ID",
+                "elementId": "真实ID",
+                "expectedElementDigest": "sha256"
+              },
+              {
+                "type": "moveNativeElement",
+                "fromTrackId": "真实ID",
+                "toTrackId": "真实ID",
+                "elementId": "真实ID",
+                "expectedElementDigest": "sha256",
+                "expectedFromTrackDigest": "sha256",
+                "expectedToTrackDigest": "sha256",
+                "startTime": "明确非负native tick；其余完整元素保持"
+              },
+              {
+                "type": "insertNativeTrack",
+                "lane": "overlay|audio",
+                "index": "明确顺序index",
+                "expectedTracksDigest": "sha256",
+                "track": "完整typed匹配lane轨道，唯一新ID；main轨ID不改"
+              }
+            ]
+          },
+          {
+            "kind": "typed_snapshot",
+            "owner": "wechat_article|graphic_post|production",
+            "document": "完整ArticleDocument|GraphicPostDocument|SerializedScene；可选高级/小稿路径，单句精调不要求全文echo"
+          }
+        ],
+        "host_reconstruction": [
+          "读取冻结base/current真值并核前值digest",
+          "所有patch应用在同一原base上；同字段多个range拒绝重叠并按原坐标机械落实，不让顺序改变目标",
+          "按明确ID落实参数/位置/文本；不解释创作语义、不关键词分类",
+          "native rate/trim/source span/duration/keyframe按固定原生数学约束核/派生，纯时间计算不是创作取舍；需ripple/多个片段则模型明确追加IDs/时间，代码不决定删句",
+          "机械合成完整typed owned candidate，并核现owner媒体/来源/其它页/其它scene保护",
+          "构造原owner apply描述与实际before/after字段差异；不写库/不启动任务"
+        ],
+        "result_fields": [
+          "kind",
+          "schemaVersion",
+          "target",
+          "base",
+          "baseDigest",
+          "candidateDigest",
+          "summary",
+          "candidate:完整article|graphic_post|native_scene",
+          "changes[{path,objectId,label,before,after}]",
+          "apply:host构造原owner operation/body，未含用户采用时requestId",
+          "imageRequest|null",
+          "failureCode|null",
+          "error:string|null"
+        ],
+        "failure": "现host adapter只识别error:string；extras中candidate/apply=null、changes=[]，失败无可用采用按钮"
+      }
+    },
+    "complete_candidate_types": {
+      "article": {
+        "kind": "article",
+        "schema_ref": "contract/src/resources/articles.ts#articleDocument",
+        "document_fields": [
+          "schemaVersion=1",
+          "title",
+          "titleSourceRefs?",
+          "summary",
+          "summarySourceRefs?",
+          "tags?",
+          "metadataSource?",
+          "imageMatchWarnings?",
+          "sections[{sectionId,order,heading,headingLevel,body,sourceRefs}]",
+          "factItems[{id,text,sourceRefs,reviewState}]",
+          "visualBriefs[{sectionId,brief,proposedAssetId?,proposedAssetFileId?}]",
+          "imageUses[{sectionId,assetId,assetFileId,sourceKind,reviewState=selected}]",
+          "coverImageUse?",
+          "nativeLayout?"
+        ],
+        "preserve": "patch未改所有fields/refs/images/layout原值，不能只重建正文"
+      },
+      "graphic": {
+        "kind": "graphic_post",
+        "schema_ref": "contract/src/resources/graphic-posts.ts#graphicPostDocument",
+        "document_fields": [
+          "schemaVersion=1",
+          "nativeLayout?",
+          "title",
+          "body",
+          "summary",
+          "tags",
+          "metadataSource?",
+          "imageMatchWarnings?",
+          "imageUses[{assetId,assetFileId,order,role,cardId?}]",
+          "cardBriefs?[{cardId,title,body,visualBrief?,sourceRefs,proposedImage?}]",
+          "seriesProfile?{visualDirection,aspectRatio,referenceImage?}",
+          "designs?",
+          "sourceRefs",
+          "ruleSnapshotRef"
+        ],
+        "preserve": "未改card/image/cover/design/series/source/layout原值；指明cardId，NoteRelay pageIndex不作保存ID"
+      },
+      "native": {
+        "kind": "native_scene",
+        "document_version": 31,
+        "source_revision": "cf5e79e919144200294fb9fed22a222592a0aeea",
+        "scene_fields": [
+          "id",
+          "name",
+          "isMain",
+          "tracks{main:VideoTrack,overlay:OverlayTrack[],audio:AudioTrack[]}",
+          "bookmarks[{time,note?,color?,duration?}]",
+          "createdAt:serialized ISO",
+          "updatedAt:serialized ISO"
+        ],
+        "element_base": [
+          "id",
+          "name",
+          "startTime",
+          "duration",
+          "trimStart",
+          "trimEnd",
+          "sourceDuration?",
+          "params:Record<string,number|string|boolean>",
+          "animations?:ElementAnimations"
+        ],
+        "element_variants": {
+          "video": [
+            "type=video",
+            "mediaId",
+            "isSourceAudioEnabled?",
+            "hidden?",
+            "retime?{rate,maintainPitch?}",
+            "effects?",
+            "masks?"
+          ],
+          "image": [
+            "type=image",
+            "mediaId",
+            "hidden?",
+            "effects?",
+            "masks?"
+          ],
+          "text": [
+            "type=text",
+            "hidden?",
+            "effects?",
+            "params.content/原fontSize/color/transform.*"
+          ],
+          "audio_upload": [
+            "type=audio",
+            "sourceType=upload",
+            "mediaId",
+            "retime?"
+          ],
+          "audio_library": [
+            "type=audio",
+            "sourceType=library",
+            "sourceUrl:只保原已核来源，模型不可新增URL",
+            "retime?"
+          ],
+          "sticker": [
+            "type=sticker",
+            "stickerId",
+            "intrinsicWidth?",
+            "intrinsicHeight?",
+            "hidden?",
+            "effects?"
+          ],
+          "graphic": [
+            "type=graphic",
+            "definitionId",
+            "hidden?",
+            "effects?",
+            "masks?"
+          ],
+          "effect": [
+            "type=effect",
+            "effectType"
+          ]
+        },
+        "track_variants": {
+          "video": [
+            "id",
+            "name",
+            "type=video",
+            "muted",
+            "hidden",
+            "elements:video|image[]"
+          ],
+          "text": [
+            "id",
+            "name",
+            "type=text",
+            "hidden",
+            "elements:text[]"
+          ],
+          "audio": [
+            "id",
+            "name",
+            "type=audio",
+            "muted",
+            "elements:audio[]"
+          ],
+          "graphic": [
+            "id",
+            "name",
+            "type=graphic",
+            "hidden",
+            "elements:sticker|graphic[]"
+          ],
+          "effect": [
+            "id",
+            "name",
+            "type=effect",
+            "hidden",
+            "elements:effect[]"
+          ]
+        },
+        "animation_schema": "原animation/types.ts ScalarChannel/DiscreteChannel/CompositeChannel，keys{id,time,value,segmentToNext?,tangentMode?,leftHandle?,rightHandle?}与extrapolation；未改原样",
+        "effect_schema": "{id,type,params,enabled}按固定原renderer catalog验证新增/更改；旧未知项不得静默删除",
+        "mask_schema": "原masks/types.ts discriminated split/cinematic-bars/rectangle/ellipse/heart/diamond/star/text/freeform完整params；未改原样，不为了字幕改动扩通用mask编辑",
+        "protected": "后端完整v3 plan机械保其它scene/settings/metadata身份/nativeSources/sourceTranscripts；mediaRefs由已登记目录机械构造",
+        "safety": "新validator只对编导改动准入，不收紧旧手工save/export；旧丰富未改元素/扩展/params/effects/masks保真；旧时间tick不以秒混入"
+      }
+    },
+    "lossless_result_policy": {
+      "existing_fact": "defineChatTool默认60,000 chars截长字符串；native executor及原ledger存的是截后结果，所以tool.result.read无法修复已丢正文。",
+      "change": "仅work.editor.read、work.editor.propose、work.creation.read、work.creation.propose四个精确工具在CHAT_TOOL_ERROR_ENVELOPES登记lossless:true。返回typed完整JSON，原native/owner/context大小边界继续；其它工具裁剪不变。",
+      "storage": "原executionCalls结果和aiMessage.parts保存完整candidate；不新proposal表。完整candidate由host重建，大工程模型只输出小typed patch。",
+      "model_window": "现chat-context-window-v2只缩展示，不改原settled结果；完成原readToolResult对external identity/outcome的同租约兼容后，按原toolCallId+offset用现tool.result.read续页。readScope/fieldWindow hasMore诚实，无局部complete冒充全稿。",
+      "proof": ">60k含正文、params、effects的夹具：gate前后canonical byte/digest相等；原ledger→tool.result.read所有页重拼相等；UI parts刷新卡及原owner采用同candidateDigest；旧普通工具预算仍有效。",
+      "existing_external_read_gap": "已核原readToolResult只识别resultText.kind=tool的Pi包装；external工具resultText为agenticToolOutcome，providerResult为externalTaskToolCall identity。须在原service用契约schema解析identity/outcome并核同execution/parentCallId=turnCallId，才能回读当前Codex长结果；保原lease权限，不新增registry/表/旁路任务。"
+    },
+    "rail_port": {
+      "location": "扩现DraftChatRequestProvider，非全局模块state/window事件总线",
+      "identity": [
+        "scopeKey",
+        "projectId",
+        "outputId",
+        "generation"
+      ],
+      "methods": [
+        "readState()->{ready,dirty,busy,pending,imports}",
+        "prepareForTurn()->Promise<WorkEditorTarget>",
+        "previewCandidate(candidate)->Promise<actual readonly preview>",
+        "adoptCandidate(candidate,stable clientRequestId)->Promise<owner version and sync state>"
+      ],
+      "register": "registerEditor(port)返回token guarded unregister；旧unmount不能清新目标；方法稳定并读refs。",
+      "send": "捕获token→原保存/UNKNOWN原回执→owner重读→最后真实native context/epoch→核scope/registration未变→同send body冻结DTO；所有发送通路共用，失败保输入。",
+      "session": "复用原VideoSessionIdentity由host→production-editor-entry→video workbench传；registry只读复用。保hidden原生实例、dirty guard与原lease。",
+      "conversation": "project:<id>原会话，不按Tab新建桶；跨Tab候选只能当前匹配target采用；原消息结果仍可读。",
+      "routes": [
+        "/projects/:projectId/article",
+        "/projects/:projectId/outputs/:outputId/image",
+        "/projects/:projectId/production"
+      ],
+      "responsiveness": "复用本地打开/折叠/宽度能力，窄屏也可实际打开同编导；不能双挂聊天或切尺寸丢进行中的会话。",
+      "script_port": {
+        "register": "registerScript(port)返回token guarded unregister",
+        "prepare": "prepareScriptForCreation()->Promise<{scriptSourceRef:{kind:project_script,id,versionId},confirmation:{confirmedBy:user,source:current-click}}>",
+        "identity": "projectId、registration token、generation及HTML前后深等；首次ensure后的真实artifactId保存在本编辑器ref；读回同一版本且当前稿未变。",
+        "budget": "120000ms；结束保留原保存请求/回执；旧4秒flush和10秒flushSaveStrict继续服务旧诊断入口，不用于新联合生成。"
+      }
+    },
+    "preview_and_sync": {
+      "native": {
+        "operation": "preview-scene",
+        "payload": [
+          "owner",
+          "targetSceneId",
+          "baseContextEpoch",
+          "beforeDigest",
+          "candidateDigest",
+          "tracks完整typed",
+          "已核exact registered media File+metadata"
+        ],
+        "result": [
+          "blob",
+          "fileName",
+          "sceneId",
+          "candidateDigest",
+          "contextEpoch",
+          "documentVersion=31"
+        ],
+        "consumer": "实际native-controller→新native-preview→renderer.exportProject frozen{tracks,project,mediaAssets,duration}",
+        "no_draft_mutation": [
+          "不load",
+          "不setScenes",
+          "不command",
+          "不saveProject",
+          "不新owner版本",
+          "不取消合法在途import；busy/pending先恢复"
+        ],
+        "after_adopt": "原ownerCAS先known成功，再原acceptVersion/apply-tracks；readcontext after核对后才显示已采用到时间轴；原undo和后续manual edits保持"
+      },
+      "article_graphic": {
+        "consumer": "现NoteRelay wrapper只读候选模式/隔离实例，原projection保图/layout；候选不setDraft或save。已核source web/native.ts每mount局部state独立，无需改NoteRelay归档。",
+        "after_adopt": "原createVersion返回并exact version/current读回，matching scope/generation且本地draft未新改才同步；否则保手工稿并标已保存未同步。",
+        "graphic_order": "指定card文字/visualBrief先preview采用保存；新base现image_card生成→真实图preview→原adopt；失败保成功文案和旧图。"
+      }
+    },
+    "native_source_member_write_set": [
+      {
+        "id": "n_controller",
+        "path": "apps/web/src/embedded/native-controller.ts",
+        "inspection_absolute_path": "/private/tmp/t1070-native-readonly.ukUvgX/apps/web/src/embedded/native-controller.ts",
+        "action": "modify",
+        "purpose": "在实际native mount controller登记preview-scene；沿现queue/lifetime/contextEpoch，不改旧window bridge",
+        "container": "frontend/public/reference-editors/sources/opencut-classic/native-source.tar.gz",
+        "depends_on": []
+      },
+      {
+        "id": "n_preview",
+        "path": "apps/web/src/embedded/native-preview.ts",
+        "inspection_absolute_path": "/private/tmp/t1070-native-readonly.ukUvgX/apps/web/src/embedded/native-preview.ts",
+        "action": "add",
+        "purpose": "beginExportLock+frozen候选tracks/project/mediaAssets/duration渲Blob；核epoch/before；不load/setScenes/command/saveProject，不取消合法导入而是busy守护",
+        "container": "frontend/public/reference-editors/sources/opencut-classic/native-source.tar.gz",
+        "depends_on": []
+      },
+      {
+        "id": "n_schema",
+        "path": "apps/web/src/embedded/native-document-contract.ts",
+        "inspection_absolute_path": "/private/tmp/t1070-native-readonly.ukUvgX/apps/web/src/embedded/native-document-contract.ts",
+        "action": "add",
+        "purpose": "纯contract生产-native-document机械schema的精确复制件；不得backend/AI SDK入bundle",
+        "container": "frontend/public/reference-editors/sources/opencut-classic/native-source.tar.gz",
+        "depends_on": [
+          "c_native"
+        ]
+      },
+      {
+        "id": "n_operations",
+        "path": "apps/web/src/embedded/native-operations.ts",
+        "inspection_absolute_path": "/private/tmp/t1070-native-readonly.ukUvgX/apps/web/src/embedded/native-operations.ts",
+        "action": "modify",
+        "purpose": "正式apply-tracks仅增加候选typed校验；原before摘要/二次前值check/不可淘汰receipt/preserveRuntime/undo语义保留",
+        "container": "frontend/public/reference-editors/sources/opencut-classic/native-source.tar.gz",
+        "depends_on": [
+          "n_schema"
+        ]
+      },
+      {
+        "id": "n_test_preview",
+        "path": "apps/web/src/embedded/__tests__/native-preview.test.ts",
+        "inspection_absolute_path": "/private/tmp/t1070-native-readonly.ukUvgX/apps/web/src/embedded/__tests__/native-preview.test.ts",
+        "action": "add",
+        "purpose": "fixture断言frozen输入与候选Blob，不setScenes/command/load/save；资源取消/lifetime/epoch与真实source类型",
+        "container": "frontend/public/reference-editors/sources/opencut-classic/native-source.tar.gz",
+        "depends_on": []
+      },
+      {
+        "id": "n_test_command",
+        "path": "apps/web/src/embedded/__tests__/native-command.test.ts",
+        "inspection_absolute_path": "/private/tmp/t1070-native-readonly.ukUvgX/apps/web/src/embedded/__tests__/native-command.test.ts",
+        "action": "modify",
+        "purpose": "typed新候选后原apply-tracks一次命令/原回执/undo/后续manual edits保真",
+        "container": "frontend/public/reference-editors/sources/opencut-classic/native-source.tar.gz",
+        "depends_on": []
+      },
+      {
+        "id": "n_readme",
+        "path": "README.creatoros.md",
+        "inspection_absolute_path": "/private/tmp/t1070-native-readonly.ukUvgX/README.creatoros.md",
+        "action": "modify",
+        "purpose": "真实新增接口及当前构建/测试证据限制，不复制历史PASS",
+        "container": "frontend/public/reference-editors/sources/opencut-classic/native-source.tar.gz",
+        "depends_on": []
+      },
+      {
+        "id": "n_rebuild",
+        "path": "NATIVE_REBUILD_CONSISTENCY.json",
+        "inspection_absolute_path": "/private/tmp/t1070-native-readonly.ukUvgX/NATIVE_REBUILD_CONSISTENCY.json",
+        "action": "regenerate",
+        "purpose": "当场两次生产重建hash证据，不能代签浏览器像素或跨平台位复现",
+        "container": "frontend/public/reference-editors/sources/opencut-classic/native-source.tar.gz",
+        "depends_on": []
+      }
+    ],
+    "native_reconstruction": {
+      "fixed_base_archive": "frontend/public/reference-editors/sources/opencut-classic-source.tar.gz",
+      "fixed_base_sha256": "ad5a2b874a2b50ab10fca522a271b5c929f383af5c9e40bdf1c3f4feb45360a6",
+      "inspected_current_native_archive_sha256": "3a1442e9b0150710f7f284ea4c4773124d78f8e252d5b906d6e140cdec34bb44",
+      "sequence": [
+        "新私有source准备增量与RED",
+        "固定base+完整累计native-from-t1046.patch复原新source零差异",
+        "锁依赖bun frozen install/build-native真实生产构建",
+        "native source types/tests + 两次build hash一致",
+        "将对应source/patch/固定7个bundle文件hash同步manifest",
+        "现verify-native-editors核整交付文件集/生产宏/新schema复制件",
+        "实际浏览器候选像素/音视频/采用/undo/保存刷新/导出证据"
+      ],
+      "unchanged_hash": "CSS/license/preview等hash未变不写diff，但必须核整个文件集",
+      "new_output_file": "若构建新增chunk/asset，先以真实文件名补合同写集和manifest，不放宽目录。",
+      "historical_evidence": "历史full-reconstruction PASS不能代签本增量；本文没有运行构建/测试。"
+    },
+    "minimum_acceptance_chains": [
+      {
+        "id": "article",
+        "chain": "实际右栏当前文章/section→typed文字/range patch→host完整保图/layout candidate→只读NoteRelay preview→原createArticleVersion CAS→exact/current读回→当前文章同步→保存刷新/HTML交付",
+        "adversarial": [
+          "排队时版本漂移",
+          "保存中手工draft变化",
+          "UNKNOWN原body/请求",
+          "纯组/跨组",
+          "大正文只改短range且完整candidate>60k保真"
+        ]
+      },
+      {
+        "id": "graphic",
+        "chain": "实际右栏当前cardId→typed文字/visualBrief patch→完整doc保所有页图/design→预览采用原createGraphicPostVersion→新base generateResult image_card→真实图预览→原adoptResult→getGraphicPost同步→分页刷新/ZIP",
+        "adversarial": [
+          "pageIndex不是cardId",
+          "旧base图不能跨新文字采用",
+          "页图失败保旧图/成功文案",
+          "同图exactFile/current漂移",
+          "UNKNOWN不发新任务"
+        ]
+      },
+      {
+        "id": "native",
+        "chain": "实际真实v3 saved工程+selection/epoch→read完整元素/能力→typed patch字幕/trim/move/replace/speed→host完整单scene候选→frozen preview-scene实际音视频→原applyProductionEditor CAS/receipt→原apply-tracks→read after确认→undo/manual/save/refresh/export一致",
+        "adversarial": [
+          "其它scene/settings/source保真",
+          "rate/trim真实source时长及音高保持",
+          "epoch/generation/播放头变更",
+          "dirty/import/apply/export pending",
+          "save成功native未知分态",
+          "原回执恢复不二次apply",
+          "切Tab保原生寿命",
+          "旧v1/v2/v3手工save/export合法"
+        ]
+      },
+      {
+        "id": "common_execution",
+        "chain": "同公开chat submission→原execution_tasks claim/lease→真实host工具list/call→原ledger/parts→当前target卡片；真Codex与Pi各实际验收适用路径",
+        "adversarial": [
+          "纯组可空account",
+          "跨组拒绝",
+          "假name/effect/version拒绝",
+          "取消/UNKNOWN不重发",
+          "模拟供应商只证明协议，真模型证据另列",
+          "当前Codex外部turn的>60k tool结果可目录/按offset续读，原identity-parent绑定严格"
+        ]
+      },
+      {
+        "id": "ui_and_boundary",
+        "chain": "oil-ui-pro同视口baseline→当前目标chip/真实before-after/状态恢复→1366/1024与200%/键盘/焦点实操→boundary/orphan/semantic及相关LED-047回归",
+        "adversarial": [
+          "不双聊天实例",
+          "折叠重资源按需",
+          "轮询单在途和unmount过期回写",
+          "删旁路不删原稿/来源/导出"
+        ]
+      }
+    ]
+  },
+  "creation": {
+    "frozen_creation_target": {
+      "schema": "新增严格 WorkCreationTarget：schemaVersion=1、clientRequestId、projectId、compositionId、compositionRevision、scriptSourceRef、scriptConfirmation、articleMember、graphicMember；禁止视频/moments 或任意 JSON path。",
+      "scriptSourceRef": {
+        "kind": "project_script",
+        "id": "真实 artifactId",
+        "versionId": "真实不可变 versionId"
+      },
+      "script_confirmation": "按钮当场确认保存的当前稿；可明确确认 reconstructed 稿，记录 confirmedBy=user/current-click 与真实被保存版本，不能把 reconstructed 标成先前已确认。",
+      "member_identity": "每项冻结真实 kind/outputId/artifactId/baseVersionId；成员来自明确选定 composition.current.members 及 memberCurrent，不按名称、类型列表首项或 read() 默认脚本猜。",
+      "preflight": "先 await 新局部端口 prepareScriptForCreation（单次有限等待120000ms，保持原回执；不是旧10秒flushSaveStrict），核 registration/generation 与编辑器没有继续变脏，再取得该编辑器确切保存artifact/version读回。保存失败/在途变稿/未注册/读回不符时保留输入停止发送。",
+      "project_script_reader": "复用 backend/src/application/project-script-source.ts 的 readVersion(ctx,ref,projectId)；不要改成 read() 自动主稿选择。",
+      "composition_default": "默认明确新建一个只有 article/image 的 composition。用稳定 clientRequestId，复用 workCompositions.create → members.create(article) → members.create(image) 及各原请求读回，冻结完成后的真实 revision/成员版本；原 composition/旧作品不自动归并。",
+      "composition_existing": "用户明确选择既有组合时，直接核验其真实 article/image 成员及当前 owner 版本，禁止自动选项目 first output。新增创建未全部完成时显示原预约恢复，不能另起组合。",
+      "source_integrity": "read 返回真实完整脚本文本、两 owner 基准稿和冻结来源；模型语义决定内容、段落/图卡分配和可选素材。代码只核真实 ID/归属/范围/schema/来源引用/版本与稳定请求，不按词表做创作选择。",
+      "image_integrity": "只可从 read 返回的 owned exact (assetId,assetFileId) 图片目录选择；空 imageUses 合法。图卡文字仍可形成真实页图，不能声称 AI 插画已生成。采用时既有 owner 的素材权限/文件验证继续执行。"
+    },
+    "tools": [
+      {
+        "name": "work.creation.read",
+        "execution": "host",
+        "effect": "none",
+        "input": "严格读取当前已冻结 creationTarget；工具不能接受模型自报 ctx、任意另一 composition/script/output。可只接受 targetDigest 校验或由宿主补齐 target。",
+        "output": "kind=work.creation.read；targetDigest、scriptText、scriptSourceRef、两个真实 base document/version、明确可选图片目录与选定方法/主题信息。",
+        "ownership": "执行每次经 chatHostContext reader 从原 lease 恢复 ctx/target；复用原 work-composition/article/graphic/script service ports 重读；领域跨模块装配在 backend/application，不在 frontend 写业务。"
+      },
+      {
+        "name": "work.creation.propose",
+        "execution": "host",
+        "effect": "proposal",
+        "input": "strict {targetDigest, article:articleDocument, graphic:graphicPostDocument}；可由纯 schema 组合新增 workCreationProposal，不接受 JS/HTML、任务类型或任意 operation。",
+        "output": "kind=work.creation.propose；schemaVersion=1；冻结 target、两个 typed documents、各 documentDigest、原 toolCallId/callId/executionTaskId（后端真实值）与 source 证据。",
+        "persistence": "工具只校验并返回候选；原 tool executor 将真实 outcome 保存到 executionCalls，完成消息的 aiMessage parts 引用同一结果。不得调用 owner createVersion、素材生成或 persistent enqueue。",
+        "semantics": "整篇文章与完整图文标题/正文/摘要/标签/cardBriefs/来源/版式由所选 Skill/模型联合给出。articleDocument/graphicPostDocument 不伪装成旧 wechat.article-draft 或五个 graphic.post-text 子任务。",
+        "narrow_authorization": "CHAT_TOOL_EFFECTS、参数与 version、错误 envelope、当前 frozen allowed tools 中逐项登记；external-task-tool.safeNames 仅新增这两个精确 ID，仍要求 execution=host、效果 none/proposal、真实 execute/approve 与版本相等。",
+        "superseded_effects": "早先 work.generate=host.task-submit/committed 适用于真正创建持久任务的方案，现选定方案不提交任务，故不引入它，也不降低其他 committed 工具边界。"
+      }
+    ],
+    "original_ledger_and_recovery": {
+      "model": "按钮提交选定 engine 的一个原 copilot.assist/chat.run。Codex 可有协议内部回合；“一次”指同一联合创作任务/提案，不虚称一次 HTTP。普通模型与 Codex 共用相同候选 schema/host 工具。",
+      "creation_intent": "creationTarget 进入严格 ChatContext 与 hostContext 快照，并参加 hostContextDigest；服务端在提交前验证真源，不仅信任客户端 JSON。保留源 sourceMessageId 与现 chatTaskId/执行 ID 幂等绑定。",
+      "caller_receipt": "稳定 clientRequestId + sourceMessageId；HTTP 断开仅释放订阅。保留原 conversationId/taskId/executionTaskId/工具回执，恢复读取原任务/消息，不再发送一个新用户消息。",
+      "tool_receipt": "保留 executionCalls 原 operationKey、inputDigest、实际 providerResult/tool version/父回合/attempt/fence/resultText。propose 输出只有候选；aiMessage parts 应投影深等原工具结果，刷新仍可查看。",
+      "unknown": "原 external started/unknown 不重执行。候选尚未有 settled 回执时显示真实未知并读原 ledger/消息；不能把断流当成功，也不让 read/propose 自行后台重试。纯提案未知经现原任务恢复策略对账，不伪造收据。",
+      "accounting": "继承原模型/external 调用 usage；内部纯 schema 工具无独立付费请求，不新增假 model/request call，不把未知用量写 0。",
+      "table_changes": "无新表、无迁移。ai_tasks/execution_tasks/execution_calls/ai_messages 原体系继续为真相；不另设 workGeneration checkpoint 或候选库。",
+      "no_children": "没有 enqueue 子模型/媒体任务，也没有 work.generate lane。宿主 read/propose 短执行不调用模型；原聊天模型位结算后释放，无 parent 持有模型位等 child。",
+      "readonly_restore": "已 settled 候选可直接从原消息/工具结果恢复；候选与正式 owner 当前稿不同，切 Tab/切组不拿过期回执覆盖当前输入。"
+    },
+    "adoption": {
+      "operations": [
+        {
+          "id": "articles.versions.create",
+          "method": "POST",
+          "path": "/outputs/:outputId/article/versions",
+          "consumer": "contract/src/operations/articles.ts:createArticleVersion；backend/src/modules/articles/articles.service.ts:createVersion"
+        },
+        {
+          "id": "graphicPosts.versions.create",
+          "method": "POST",
+          "path": "/outputs/:outputId/graphic-post/versions",
+          "consumer": "contract/src/operations/graphic-posts.ts:createGraphicPostVersion；backend/src/modules/graphic-posts/graphic-posts.service.ts:createVersion"
+        }
+      ],
+      "protocol": "用户在候选卡分别点击采用；每项调用该真实 output 原 createVersion({expectedCurrentVersionId:冻结 baseVersionId,document:用户确认的候选副本,clientRequestId:稳定成员采用请求})。请求标识绑定原 toolCallId + article/image + 冻结稿；更换内容不能重用已经绑定的请求。",
+      "source_retention": "采用副本必须保留共同 scriptSourceRef，文章 titleSourceRefs/summarySourceRefs/sections/factItems 和 graphic sourceRefs/cardBriefs 按对应字段保真；用户文字编辑不移除来源或把素材换成未授权文件。owner 原 source/file 验证仍守边界。",
+      "cas": "当前 owner 版本改变时原 CAS 返回 conflict，保留候选和编辑副本；读回正式版本后用户重新审读，不能自动覆盖或替换 expectedVersion。",
+      "receipt": "原 artifacts adoptionKey 与 exact sourceDigest 深等读回；文章/图文各自独立提交，不声称跨 owner 原子采用。一个成功另一个失败保留成功 receipt；失败只恢复自身。",
+      "lost_response": "保持同一 outputId、expectedCurrentVersionId、document 与 clientRequestId；同参重试原 createVersion 先命中原 adoption receipt，不新建内容版本。已确认后的手动继续编辑使用新请求。",
+      "workbench": "采用后读回原 getArticle/getGraphicPost，导航到实际该 output，继续现 typed 文档编辑/版式调整/历史/CAS保存。禁止导航回项目 first output。",
+      "candidate_limit": "候选 envelope 不是旧 articleCandidate/graphicPostTextCandidate；不调用旧 adoptCandidate 并伪造任务血缘。不新增候选表，也不改变旧候选 API 对 taskType/deepEquals 的检查。"
+    },
+    "noterelay_preview": {
+      "verified_chain": [
+        "frontend/src/features/reference-editors/noterelay/projection.ts: projectGraphic(doc) → title/body/cardBriefs 的明确顺序及 exact imageUses；projectArticle(doc) → 真实文章段落",
+        "frontend/src/features/reference-editors/noterelay/noterelay-editor.tsx: frozen projection/layout digest → native load → pageCount/pageIndex → PNG/ZIP export Blob",
+        "reference-editors/noterelay/web/native.ts: RednoteAdapter.render → ensureLayout；页数来自真实 .noterelay-rednote-card；page 操作真实切页",
+        "reference-editors/noterelay/src/platforms/rednote/adapter.ts: renderCardPng → waitForImages → inlineImagesForExport → html-to-image.toPng；downloadAll 逐页真实生成并压缩"
+      ],
+      "contract": "新增 readOnlyCandidate=true，接收独立冻结候选 document、sourceVersionId=候选真实身份及 digest；完全独立实例，不能把候选临时灌入正式 owner 工作台或保存。",
+      "required_behavior": "候选可翻页、可 PNG/ZIP 导出，禁 layout 写回/导入/素材创建/正式保存。不要直接 disabled=true：现 locked 禁 page，NativeEditorSurface 与 native update 还会容器 inert，不能实现可交互只读预览。",
+      "minimum_change": "宿主 NoteRelayEditor 增加候选模式：锁定布局输入与 onLayoutChange，不把 native surface/page/export 禁掉；onChanged 仅更新本候选 metadata。现 native 本身没有业务保存端口，可复用其 load/page/export，优先不改 vendored source。",
+      "meaningful_readiness": "联合 typed 候选已保存不等于页图预览成功。图文显示排版中/成功真实 pageCount/失败可重新加载；文章独立可用，图文预览失败不回滚文章。",
+      "actual_output": "纯文字页由真实 DOM 排版与原 toPng 得到真实 PNG；无 imageUses 不等于缺图。生成点击完成时交付的是可编辑候选与已排好的真实页面；只有用户实际导出后才能称 PNG/ZIP 文件已产生。无需先做 pending asset。",
+      "safety_fallback": "可选图片不可读时正文/版式可继续；保留真实缺图提示，不声称图片已生成或读取。权限/合同错误仍走原 owner 验证，不能用图片失败整单吞文章。",
+      "refinement": "正式采用后继续原 NoteRelay 主题/分页/字号/署名/图宽等微调与 PNG/ZIP，保存 nativeLayout 到 graphicDocument。若用户明确需要自由图层可另走现 Kuaitu 入口，当前最小合同不承诺 NoteRelay 卡片自动映射 Kuaitu 图层。",
+      "verification_limit": "本轮只读源代码，不声明真实浏览器页图、PNG/ZIP、模型结果、安装包已验收；现测试/metadata 历史事实不重新标 PASS。"
+    },
+    "deadline": {
+      "no_timeout_change": "不新增持续生成根任务或子任务 deadline。原 bounded/continuous chat ownership/heartbeat/预算/取消按原实际输入执行，不能把当前 continuous chat 说成有未存在的固定 deadline。",
+      "frozen_work": "若原任务是 bounded，read/propose 与恢复继承同一绝对 deadline；不重发延长。单次正执行/有限观察/探针按 LED-053 至少 120 秒且外层覆盖原串行链与清理。",
+      "browser": "NoteRelay preview/export 遵守原 contextEpoch、digest、abort/卸载/切组，不因一个订阅结束续发模型。导出 Blob 在浏览器原实例产生，不新增服务器超时消费者。"
+    },
+    "selected_chain_tests": [
+      "当场 RED：strict flush失败/在途变稿/未保存/确认 reconstructed；共同真实 project_script/ref 篡改拒绝；默认组合稳定重入与中途 member 回执未知恢复",
+      "隔离 PGlite 原公共 services：显式 composition/currentMember owner read→原 chat submit/claim→work.creation.read/propose→executionCall settled→assistant parts→刷新深等恢复；不接真实用户 DB/媒体根",
+      "modelConcurrency=1：原 copilot.assist 得联合提案且任务 settle；断言未 enqueue 模型/媒体 child，也未新增 work lane",
+      "选定 Codex 引擎真实已通过的 ACP 公共链证据只复用其身份/执行能力结论；新增两工具与联合文档仍需真实当场验收，不能代签",
+      "文章/图文分别原 createVersion：共同来源、旧 account/纯 group、cross-group拒绝、base冲突、同请求丢响应恢复、一个采用成功另一个失败不回滚",
+      "真实浏览器 NoteRelay：空 imageUses 多页纯文字，独立候选实例翻页，真正 PNG 解码/尺寸与 ZIP 页文件、字体/长段落分页、禁layout写回，刷新/切Tab/切组/取消不覆盖正式稿",
+      "采用后真实目标 article/image output 打开，改正文/卡片/nativeLayout 保存、刷新、历史与导出；不写 first output",
+      "相关合同/类型/boundary/orphan与UI oil-ui-pro真实操作证据；超时相关实际新增消费者须跑 timeout-policy；未发生的证据保持待验"
+    ]
+  },
+  "write_set": [
+    {
+      "path": "contract/src/resources/work-editor.ts",
+      "purpose": "统一目标DTO、精确read窗口、typed_patch/typed_snapshot输入与完整候选/应用描述；仅合同与机械类型"
+    },
+    {
+      "path": "contract/src/resources/production-native-document.ts",
+      "purpose": "v31原生scene/track/element/params/animation/effect/mask机械schema；纯Zod可字节复制到原生source"
+    },
+    {
+      "path": "contract/src/resources/production-editor.ts",
+      "purpose": "原productionEditorEdit新增replaceNativeSceneTracks；不增加保存或采用endpoint"
+    },
+    {
+      "path": "contract/src/index.ts",
+      "purpose": "导出新增纯合同，现operations经原索引自动复用；导出新增 work-creation 资源；无新公共 operation"
+    },
+    {
+      "path": "contract/src/chat-tool-labels.ts",
+      "purpose": "登记两个真实工具中文用途；不新增能力占位"
+    },
+    {
+      "path": "backend/src/modules/production/production-native-editor.ts",
+      "purpose": "验证patch前值并重建单scene完整tracks；派生duration；保护其它scene/settings/sources并核真实媒体"
+    },
+    {
+      "path": "backend/src/modules/production/production.service.ts",
+      "purpose": "原applyEditor补v3分支，经原editorFor.commit事务/CAS/checkReferenceMedia/原request回执保存"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/work-editor-candidate.ts",
+      "purpose": "经既有三owner/assets读端口重读；精确read/前值校验/机械应用typed patch；输出完整候选与原owner调用描述"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/chat-work-editor-tool-host.ts",
+      "purpose": "恢复原execution冻结hostContext与三维owner；两短none/proposal工具真实装配，定义版本与原lease一致"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/chat-tools.ts",
+      "purpose": "read/propose完整schema和真实native executor；ALL_CHAT_TOOL_NAMES及project允许列表；绑定同target而非模型自报output；两个工具定义/native executor 与必要精确 allowlist；无任意写/任务"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/chat-tool-definitions.ts",
+      "purpose": "精准登记work.editor.read=none、work.editor.propose=proposal及实际实现版本；none/proposal effects、稳定工具实现 revision，保持 host"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/chat-tool-gate.ts",
+      "purpose": "四个精确工具真实kind错误占位及lossless:true；完整正文、两候选与native工程在原ledger存保真，原其它工具仍守60k预算。"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/chat-task-tool-host.ts",
+      "purpose": "原resolveTools组合新增同一editor host组；不增加任务/runtime"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/chat-production-composition.ts",
+      "purpose": "同组合根注入原三owner/assets ports到editor host"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/chat-assembly-types.ts",
+      "purpose": "准备期readEditorTarget服务端端口类型；准备仅读，不取得写/模型权限；新增 named creation read ports 类型；无模型/提交 port"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/chat-assembly-tool-deps.ts",
+      "purpose": "把已核真实editorTarget带入工具定义，不由普通project selection猜目标；冻结 creation context 传到定义装配；只读准备"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/chat-assembly.ts",
+      "purpose": "仅合法当前editorTarget暴露两工具；附精确范围/能力说明，旧无编辑器聊天不被阻断；只在 verified creationTarget 允许 read/propose，联合语义方法与宿主快照"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/chat-turn-preparation.ts",
+      "purpose": "两个公开入口共用冻结前owner重读；旧DTOadditive；保存base漂移明确拒绝，不静默改基点"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/chat-context.ts",
+      "purpose": "ChatContext additive editorTarget；用户意图/选区作不可信数据，基点由owner核验；ChatContext creationTarget 类型及明确用户入口"
+    },
+    {
+      "path": "backend/src/modules/ai/chat-host-context.ts",
+      "purpose": "strict schema添加共享typed editorTarget，沿现digest/三维owner冻存；严格 creationTarget 宿主快照/digest"
+    },
+    {
+      "path": "backend/src/modules/ai/external-task-tool.service.ts",
+      "purpose": "原safeNames精确加两真实工具；保原冻结版本/effect/native executor/lease/UNKNOWN；仅 safeNames 增加 work.creation.read/propose，其他 ACP 效果边界原样"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/index.ts",
+      "purpose": "仅导出新组合根所需preparer/ports，不导出新写运行时；导出新增 host/port 类型"
+    },
+    {
+      "path": "frontend/src/server/persistence-client.ts",
+      "purpose": "现ChatRuntime与composition root注入原Articles/GraphicPosts/Production/Assets服务；业务实现在backend；只组合 backend work-creation root + resolveTools；不把跨 owner 业务移到 frontend"
+    },
+    {
+      "path": "frontend/src/server/prepare-chat-reply.ts",
+      "purpose": "两个公开聊天入口同准备端口；保原8k可用于小patch，禁止用截尾完整稿冒充候选；原Skill/模型配置不新增runtime"
+    },
+    {
+      "path": "frontend/src/app/api/chat/route.ts",
+      "purpose": "parse additive editorTarget并携带同次send的冻结body；不接受客户端owner权限证明；传递/校验严格 creationTarget 与 stable message；不直接模型"
+    },
+    {
+      "path": "frontend/src/features/draft-workbench/draft-chat-request.tsx",
+      "purpose": "现Provider新增token守护的当前编辑器窄端口与严格prepareEditorTurn；不用4s/10s放行；无全局registry；creationTarget 在当前稿面 request 中保真；原 strict flush"
+    },
+    {
+      "path": "frontend/src/app/(creator)/projects/[projectId]/stage-chat-wrapper.tsx",
+      "purpose": "现右栏覆盖真实article与outputs/:id/image路由，并维持production/review；同Provider当前目标；窄屏有实际本地打开路径，单聊天实例"
+    },
+    {
+      "path": "frontend/src/features/draft-workbench/draft-chat-rail.tsx",
+      "purpose": "project同会话persistKey，当前作品/选区chip与prepare/preview/adopt端口接AICopilotContent"
+    },
+    {
+      "path": "frontend/src/features/copilot/ai-copilot-content.tsx",
+      "purpose": "Enter/按钮/autoSend/retry/卡内续改共用prepare；DTO直接冻结同次body；恢复原parts并渲新候选卡；creationTarget 发给原 chat；原工具结果渲卡，刷新恢复与 selected engine 保真"
+    },
+    {
+      "path": "frontend/src/features/copilot/chat-work-editor-card.tsx",
+      "purpose": "实际字段差异/只读候选预览/原owner采纳与saved-not-synced/UNKNOWN恢复；仅展开时渲重资源"
+    },
+    {
+      "path": "frontend/src/features/article/article-workbench.tsx",
+      "purpose": "section/field精确选区与当前owner端口；发送前原save；候选preview不setDraft，采纳createVersion/readback/state同步保手工稿"
+    },
+    {
+      "path": "frontend/src/features/projects/graphic-post-workbench.tsx",
+      "purpose": "activeCardId/selectedCardIds与字段精确选区；完整doc保图/design；原createVersion稳定body/UNKNOWN与state同步"
+    },
+    {
+      "path": "frontend/src/features/projects/graphic-post-results.tsx",
+      "purpose": "编导已采用新文字后按该base复用现image_card页任务及原list/get/adopt恢复；移除新创作旁路，保旧结果"
+    },
+    {
+      "path": "frontend/src/features/reference-editors/noterelay/noterelay-editor.tsx",
+      "purpose": "新增只读候选模式复用现projection与隔离实例load；不改当前draft/owner，不用分页pageIndex猜cardId；无NoteRelay归档改动；readOnlyCandidate 允许 page/export，布局不回写"
+    },
+    {
+      "path": "frontend/src/features/reference-editors/project-video-session-host.tsx",
+      "purpose": "将原VideoSessionIdentity显式传现入口；保挂载寿命/dirty guard/hidden session与原Provider"
+    },
+    {
+      "path": "frontend/src/features/production/production-editor-entry.tsx",
+      "purpose": "原session identity透传VideoReferenceWorkbench；收敛新粗剪旁路入口但旧工程/来源/历史/导出可达"
+    },
+    {
+      "path": "frontend/src/features/reference-editors/video-reference-workbench.tsx",
+      "purpose": "真实context/epoch/tick/selection端口；preview-scene；原applyProductionEditor→acceptVersion→apply-tracks；保pending/undo/UNKNOWN及手工精调"
+    },
+    {
+      "path": "frontend/src/features/reference-editors/native-editor-contract.ts",
+      "purpose": "typed native context、preview-scene入参/Blob结果、owner/generation/epoch；沿现request方法不新消息总线"
+    },
+    {
+      "path": "ai-worker/src/prompt/templates/chatbox-turn.ts",
+      "purpose": "现已注册chatbox.topic v2模板更新版本/工具方法：先read真实局部，模型产typed patch；明确候选与实际采纳；不写死语义"
+    },
+    {
+      "path": "frontend/scripts/verify-native-editors.mjs",
+      "purpose": "核新纯native contract复制件与source/archive/manifest字节一致，沿现交付文件集/生产宏校验"
+    },
+    {
+      "path": "contract/tests/work-editor.test.ts",
+      "purpose": "read窗口/selection DTO/typed patch/完整candidate与错误态；无假ID、局部字段范围和Unicode边界"
+    },
+    {
+      "path": "contract/tests/production-native-document.test.ts",
+      "purpose": "真实v31类型、tick/rate/source/keyframe/媒体，旧丰富未改扩展保真"
+    },
+    {
+      "path": "contract/tests/modules/production.test.ts",
+      "purpose": "原apply operation接v3 edit，旧v1/v2 schema合法族保留"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/work-editor-candidate.test.ts",
+      "purpose": "局部patch机械重建完整candidate；多output/准确section/card/scene；前值与base漂移、完整图/design/settings/source保真"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/chat-work-editor-tool-host.test.ts",
+      "purpose": "原execution/三维owner/真实name/effect/version；篡改/跨组/未装配拒绝"
+    },
+    {
+      "path": "backend/src/modules/production/production-native-editor.integration.test.ts",
+      "purpose": "隔离PGlite公共applyEditor v3、CAS/receipt/history/read、字幕/trim/move/replace/speed与同request回放"
+    },
+    {
+      "path": "backend/src/integration/chat-work-editor-worker.test.ts",
+      "purpose": "同chat submission→claim→host list/call→原ledger/parts→完整候选；Codex/Pi协议路径；>60k回读不丢正文/params"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/chat-tool-gate.test.ts",
+      "purpose": ">60k有长正文/params/effects的候选lossless、digest同字节；其它工具预算不变"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/chat-tool-definitions.test.ts",
+      "purpose": "两实际工具名/effect/version/参数完整登记"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/chat-tools.test.ts",
+      "purpose": "同target局部读/patch工具真实装配和错误kind"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/chat-assembly.test.ts",
+      "purpose": "有无editorTarget工具scope、原Skill装配与真实端口一致"
+    },
+    {
+      "path": "backend/src/modules/ai/chat-turn-submission.service.test.ts",
+      "purpose": "editorTarget冻结/digest/账号组及旧context兼容"
+    },
+    {
+      "path": "frontend/src/server/prepare-chat-reply.test.ts",
+      "purpose": "两个公开入口准备端口、局部patch不需全文输出、正确已注册Skill版本"
+    },
+    {
+      "path": "frontend/src/features/draft-workbench/draft-chat-request.test.tsx",
+      "purpose": "token注销、generation/换output防旧回写、真实save超过10s仍不旧版发送、UNKNOWN原body保留"
+    },
+    {
+      "path": "frontend/src/app/(creator)/projects/[projectId]/stage-chat-wrapper.test.tsx",
+      "purpose": "文章/图文/视频实际右栏、同项目会话、窄屏可打开且单实例"
+    },
+    {
+      "path": "frontend/src/features/copilot/chat-work-editor-card.test.tsx",
+      "purpose": "preview无owner写、原adopt/readback、known冲突/UNKNOWN/saved-not-synced、折叠资源"
+    },
+    {
+      "path": "frontend/src/features/copilot/ai-copilot-content.test.tsx",
+      "purpose": "所有send/retry/续改同冻结editorTarget，原parts恢复真实候选；原消息/tool parts 结果恢复与 creationTarget 请求保持"
+    },
+    {
+      "path": "frontend/src/features/article/article-workbench-save-race.test.tsx",
+      "purpose": "采用完整doc保图/layout；保存期间手动新编辑不覆盖；稳定原request读回"
+    },
+    {
+      "path": "frontend/src/features/projects/graphic-post-workbench.test.tsx",
+      "purpose": "指定card文字/visualBrief前值、完整图页/design保真及UNKNOWN恢复"
+    },
+    {
+      "path": "frontend/src/features/projects/graphic-post-results.test.tsx",
+      "purpose": "新文字base→现页图generation→真实预览→原adopt，仅改目标图；失败保旧图/成功稿"
+    },
+    {
+      "path": "frontend/src/features/reference-editors/noterelay/noterelay-editor.test.tsx",
+      "purpose": "候选隔离load/current draft不变、图片保真/分页与cardId不混用；只读候选真实翻页/导出调用，禁 layout 写回"
+    },
+    {
+      "path": "frontend/src/features/reference-editors/video-reference-workbench.test.tsx",
+      "purpose": "preview不改稿、原apply-tracks/undo、保存成功尚未应用/UNKNOWN/旧手工新改动"
+    },
+    {
+      "path": "frontend/src/features/reference-editors/project-video-session-host.test.tsx",
+      "purpose": "generation透传，切Tab不卸载旧工程或丢dirty/pending/原receipt"
+    },
+    {
+      "path": "frontend/src/features/production/production-editor-entry.test.tsx",
+      "purpose": "session透传与删除旁路后旧工程/手工精调合法可达"
+    },
+    {
+      "path": "frontend/tests/e2e/t1070-director-editor.spec.ts",
+      "purpose": "真实右栏当前target→模型候选→预览→用户采用→原编辑器→保存刷新导出；模拟协议不能代签真模型"
+    },
+    {
+      "path": "frontend/public/reference-editors/sources/opencut-classic/native-source.tar.gz",
+      "purpose": "新对应源码完整归档，native源member写集固定"
+    },
+    {
+      "path": "frontend/public/reference-editors/sources/opencut-classic/native-patches.diff",
+      "purpose": "现适配patch更新，manifest patch摘要同步"
+    },
+    {
+      "path": "frontend/public/reference-editors/sources/opencut-classic/native-from-t1046.patch",
+      "purpose": "从固定base归档复原新source零差异的完整累计patch"
+    },
+    {
+      "path": "frontend/public/reference-editors/opencut-classic/native/native.js",
+      "purpose": "真实源码经固定锁依赖构建的生产ESM，禁止手改minified JS"
+    },
+    {
+      "path": "frontend/public/reference-editors/opencut-classic/native/native.css",
+      "purpose": "完整构建闭包CSS；hash未变不写diff"
+    },
+    {
+      "path": "frontend/public/reference-editors/opencut-classic/native/NATIVE_BUILD_GRAPH.json",
+      "purpose": "新preview/schema实际保留模块图，排除旧bridge/全页入口"
+    },
+    {
+      "path": "frontend/public/reference-editors/opencut-classic/native/THIRD_PARTY_LICENSES.json",
+      "purpose": "真实保留依赖逐项许可，hash未变不写diff"
+    },
+    {
+      "path": "frontend/public/reference-editors/opencut-classic/native/THIRD_PARTY_LICENSES.txt",
+      "purpose": "真实保留依赖许可原文，hash未变不写diff"
+    },
+    {
+      "path": "frontend/public/reference-editors/opencut-classic/native/LICENSE.opencut",
+      "purpose": "原OpenCut许可保留"
+    },
+    {
+      "path": "frontend/public/reference-editors/opencut-classic/native/effects/preview.jpg",
+      "purpose": "现效果预览依赖保留，不另下载媒体"
+    },
+    {
+      "path": "reference-editors/manifest.json",
+      "purpose": "精确source/patch/bundle文件集与摘要；新增chunk/asset先补精确写集，不目录通配符"
+    },
+    {
+      "path": "backend/src/modules/ai/chat-host-context.service.ts",
+      "purpose": "原readToolResult兼容当前execution的external settled outcome+providerResult identity；同租约/冻结user-account-group与parent绑定，原Pi包装仍支持；不另建长结果存储"
+    },
+    {
+      "path": "backend/src/modules/ai/chat-host-context.service.test.ts",
+      "purpose": "隔离PGlite原lease结果目录/翻窗：Pi包装与Codex external原identity/outcome >60k无损重拼、未知未结算不读、parent mismatch/跨任务/跨组拒绝"
+    },
+    {
+      "path": "contract/src/resources/work-creation.ts",
+      "purpose": "严格 creationTarget + 联合 candidate typed schema；使用现 articleDocument/graphicPostDocument/projectScriptSourceRef"
+    },
+    {
+      "path": "backend/src/application/generation/work-creation-root.ts",
+      "purpose": "同 backend/application 装配真实 composition/article/graphic/script 只读 ports 与冻结校验；不写正式稿、不建任务"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/chat-tool-parameters.ts",
+      "purpose": "两个精确工具 schema 登记"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/chat-work-creation-tool-host.ts",
+      "purpose": "经真实 lease/reader 重建 frozen context，复用 createChatHostToolAdapter，仅 read/propose"
+    },
+    {
+      "path": "frontend/src/features/draft-workbench/creation-flow-ctas.tsx",
+      "purpose": "一个明确按钮，默认新建两成员或恢复既有原请求；保存确认后自动发原 chat"
+    },
+    {
+      "path": "frontend/src/features/draft-workbench/work-creation-request.ts",
+      "purpose": "客户端稳定请求冻结/恢复 composition create 与两 member 原预约，真实脚本版本读回；无业务写"
+    },
+    {
+      "path": "frontend/src/features/copilot/chat-work-creation-card.tsx",
+      "purpose": "联合候选卡、独立 NoteRelay 预览、两 owner 现 createVersion/同参恢复/冲突；导航实际 output"
+    },
+    {
+      "path": "backend/src/application/generation/work-creation-root.test.ts",
+      "purpose": "隔离真实 service：共同 ref/member/owner、group/account、篡改与版本冲突"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/chat-work-creation-tool-host.test.ts",
+      "purpose": "冻结 defs、host effect、真实 lease、结构与权限；无模型子任务"
+    },
+    {
+      "path": "backend/src/modules/ai/work-creation-chat.integration.test.ts",
+      "purpose": "原 submit→claim→read/propose ledger→completion/message replay + 普通/外部工具 + unknown"
+    },
+    {
+      "path": "frontend/src/features/draft-workbench/work-creation-request.test.ts",
+      "purpose": "stable default composition/member 原请求恢复、strict flush/version、点击重入"
+    },
+    {
+      "path": "frontend/src/features/copilot/chat-work-creation-card.test.tsx",
+      "purpose": "两 owner 采用/响应丢失/一项冲突/来源保真/不写预览"
+    },
+    {
+      "path": "frontend/src/features/script/script-rich-editor.tsx",
+      "purpose": "注册当前脚本精确 artifact/version 读回端口，保存完成后核当前HTML；不依自动脚本读取猜首项"
+    },
+    {
+      "path": "frontend/src/features/script/script-rich-editor.test.tsx",
+      "purpose": "真实保存版本回执、在途改稿/卸载防回写"
+    },
+    {
+      "path": "frontend/src/features/draft-workbench/creation-flow-ctas.test.tsx",
+      "purpose": "联合按钮真实save确认/原请求/错误保输入；保原素材入口"
+    }
+  ]
+}
