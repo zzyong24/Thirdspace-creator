@@ -1,0 +1,91 @@
+{
+  "schema": "creatoros/t1071-local-package/v1",
+  "source_head": "5e6d025c172ba5fc7f671efcc1632f34cf998a8e",
+  "source_branch": "codex/t1062-integrated-client",
+  "build_exit_code": 0,
+  "entry": "CREATOROS_LOCAL_SKIP_INSTALL=1 pnpm -C frontend desktop:package-local",
+  "basic_tests": {
+    "files": 4,
+    "tests": 44,
+    "exit_code": 0
+  },
+  "dmg": {
+    "path": "/Users/zyongzhu/Downloads/CreatorOS-1.2.0.dmg",
+    "preserved_path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-local-package-5e6d025c/CreatorOS-1.2.0.dmg",
+    "bytes": 667000456,
+    "sha256": "475b55ba920292316d19233c0fcd51bb4c1c697aa4197e1ec594e84276f98701",
+    "verify_exit_code": 0
+  },
+  "signatures": {
+    "built_strict_deep_exit_code": 0,
+    "image_strict_deep_exit_code": 0,
+    "signing": "local-ad-hoc-not-notarized"
+  },
+  "app_mirror": {
+    "files": 7,
+    "all_exact": true,
+    "symlinks": {}
+  },
+  "integrity": {
+    "actual_embedded_blob": true,
+    "record_count": 1082,
+    "all_exact": true,
+    "single_pass_exit_code": 0,
+    "native_js": {
+      "path": "frontend/public/reference-editors/opencut-classic/native/native.js",
+      "sha256": "7f9650fa680a319a21cb362458d6bccb35c4bcd734f40431f90a66b43fe85a27",
+      "matches_frozen_source": true
+    }
+  },
+  "source_status_after_build": "",
+  "installed_app_replaced": false,
+  "installation_startup_navigation_acceptance": "PENDING_CURRENT_APP_UNSAVED_STATE",
+  "task_completed": false,
+  "global_reconcile": "37 errors / 1 warning; ERROR集合与824基线相同，T1018/T1015继续保留",
+  "operational_history": {
+    "external_link_preparation_exit_code": 143,
+    "link_preserved": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-local-package-5e6d025c-preflight-external-link/previous-canonical-link.dmg",
+    "external_target_untouched": true,
+    "local_backup_used": {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-local-package-5e6d025c/previous-CreatorOS-1.2.0.dmg",
+      "bytes": 666830233,
+      "sha256": "9f43ed142f5dcf8c494d4628824bd88f7ee306ba05e1cab69a1c9922fcd5de0b"
+    },
+    "original_random_seek_verifier_exit_code": 130,
+    "replacement_single_pass_same_checks_exit_code": 0,
+    "dmg_detach_exit_code": 0
+  },
+  "raw_evidence": {
+    "build.result.json": {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-local-package-5e6d025c/build.result.json",
+      "sha256": "8c7d65dd3e03c22a7c456fe6fb174600b58502b4dfa8dbf95394fe3d9e9217a3",
+      "bytes": 1374
+    },
+    "basic-tests.log": {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-local-package-5e6d025c/basic-tests.log",
+      "sha256": "65841c3910b8b57aa8857a8b67c4effa193691055e6b2fdcf3201af227517f9b",
+      "bytes": 871
+    },
+    "package-local.log": {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-local-package-5e6d025c/package-local.log",
+      "sha256": "501e0854f82e4718dea1d3bbdbb76d4cf23607a34ea92a756825f90bbcec0bf3",
+      "bytes": 102390
+    },
+    "artifact-verification.json": {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-local-package-5e6d025c/artifact-verification.json",
+      "sha256": "722e23c95eafced1b2926a2f43040d508c44935dd42d52dd127db9fb54e28458",
+      "bytes": 3295
+    },
+    "integrity-single-pass.json": {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-local-package-5e6d025c/integrity-single-pass.json",
+      "sha256": "b5fad324d3f42182f47ba709b1555ff835f01f01f987aab16354e5a23b50d399",
+      "bytes": 202659
+    },
+    "duplicate-readonly-verifier-stop.json": {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-local-package-5e6d025c/duplicate-readonly-verifier-stop.json",
+      "sha256": "9ede7f42c7f242219ab05be094e3b5e79493d8c6c1087ef28672fd257840c1fe",
+      "bytes": 503
+    }
+  },
+  "created": "2026-10-07T14:03:21.786472+00:00"
+}
