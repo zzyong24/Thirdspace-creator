@@ -1,3 +1,5 @@
+import {workEditorTarget,workCreationTarget} from "@creatoros/contract";
+import {canonicalJson} from "../ai/canonical-json";
 import { createChatSkillLibrary } from "./chat-skill-library";
 import { type ChatResearchContext } from "./chat-research-preparation";
 import type { ChatStructuredContext } from "./chat-structured-tool-nodes";
@@ -48,6 +50,22 @@ export async function prepareChatAssembly(ctx: RequestContext, chatContext: Chat
     verbatimSources?: readonly VerbatimSource[];
     latestUserInstruction?: string;
 } = {}): Promise<ChatAssemblyPreparation> {
+    chatContext=structuredClone(chatContext);
+    if(chatContext.editorTarget&&chatContext.creationTarget)throw new Error('同一轮只能冻结一种作品目标');
+    if(chatContext.editorTarget){
+      const target=workEditorTarget.parse(chatContext.editorTarget);
+      if(chatContext.surface!=='project'||chatContext.projectId!==target.projectId||!deps.readEditorTarget)throw new Error('当前作品目标缺少真实准备读取端口');
+      const actual=await deps.readEditorTarget(ctx,target);
+      if(canonicalJson(workEditorTarget.parse(actual))!==canonicalJson(target))throw new Error('作品版本在准备期间变化，请重新保存并读取');
+      chatContext.editorTarget=structuredClone(actual);
+    }
+    if(chatContext.creationTarget){
+      const target=workCreationTarget.parse(chatContext.creationTarget);
+      if(chatContext.surface!=='project'||chatContext.projectId!==target.projectId||!deps.readCreationTarget)throw new Error('联合创作目标缺少真实准备读取端口');
+      const actual=await deps.readCreationTarget(ctx,target);
+      if(canonicalJson(workCreationTarget.parse(actual))!==canonicalJson(target))throw new Error('确认脚本或作品组合在准备期间变化');
+      chatContext.creationTarget=structuredClone(actual);
+    }
     // 1) 页面层:surface → 基础 skill。
     const skillId = resolveSkillForSurface(chatContext.surface);
     // 2) registry 取 skill(模板 system + 工具白名单)。懒加载 ai-worker(AI SDK 不进顶层 bundle)。
@@ -152,7 +170,7 @@ export async function prepareChatAssembly(ctx: RequestContext, chatContext: Chat
             ? "video"
             : undefined;
     const isArticleImageAction = forcedMaterialKind === "image" && chatContext.selection?.kind === "article_section";
-    const forcedToolSequence = mediaRoute?.kind === "cover.publication_reference"
+    const forcedToolSequence = chatContext.creationTarget ? ["work.creation.read","work.creation.propose"] : mediaRoute?.kind === "cover.publication_reference"
         ? ["context.publications", "cover.generate"]
         : isArticleImageAction
             ? ["material.generate"]
@@ -216,6 +234,8 @@ export async function prepareChatAssembly(ctx: RequestContext, chatContext: Chat
     }
     // 原无画布上下文的合法聊天保留其工具定义；新画布工具只在受信单画布入口可见。
     if(chatContext.surface!=="canvas"||chatContext.selection?.kind!=="canvas"||chatContext.selection.ids.length!==1){allowedNames=allowedNames.filter(name=>name!=="canvas.read"&&name!=="canvas.propose");}
+    if(!chatContext.editorTarget)allowedNames=allowedNames.filter(name=>name!=='work.editor.read'&&name!=='work.editor.propose');
+    if(!chatContext.creationTarget)allowedNames=allowedNames.filter(name=>name!=='work.creation.read'&&name!=='work.creation.propose');
     const preferredTools = applyFunctionKey(hasEffectiveScope ? getEffectiveTools(skillId) : getTools(skillId), effectiveFunctionKey).filter((n) => allowedNames.includes(n));
     const toolWhitelist = isScriptPatchAction
         ? ["script.patch"]
@@ -249,6 +269,8 @@ export async function prepareChatAssembly(ctx: RequestContext, chatContext: Chat
     const searchConfigured = Boolean(deps.searchWeb);
     // 宿主只声明真实能力与执行边界；业务方法由冻结Skill按需加载。
     const honestyBlock = [
+        ...(chatContext.editorTarget?['当前编辑器目标已保存并经原owner核验；先work.editor.read读取选区与原始前值，按明确UTF16范围/真实ID/native ticks提出typed_patch。宿主保完整未改字段；返回候选不表示已采纳。']:[]),
+        ...(chatContext.creationTarget?['用户已确认当前保存脚本并明确新建文章和图文。先work.creation.read，再由当前引擎联合创作完整同源article和graphic候选，一次work.creation.propose。没有自动视频、TTS或子模型任务。']:[]),
         "【执行边界】",
         "只使用本轮真实工具；权限、账号归属与当前实体状态以工具回执为准。读取或执行被拒绝时尊重拒绝，不换路径绕过；需要授权或登录时说明当前阻塞。",
         "候选、排队、执行中、已执行与已采纳是不同状态。只有真实回执能证明保存或执行；卡片不是完成全部请求的证据。不要声称后台任务已经完成。",

@@ -23,7 +23,8 @@ export const productionLegacyEditorEdit = z.discriminatedUnion("type", [
   z.object({type:z.literal("addBroll"),broll:videoRenderBroll.extend({anchor:productionOverlayAnchor.optional()})}).strict(),
 ]);
 export type ProductionEditorEdit = z.infer<typeof productionEditorEdit>;
-export const productionEditorEdit=z.discriminatedUnion("type",[...productionLegacyEditorEdit.options,...productionMainEditOptions]);
+export const productionNativeSceneEdit=z.object({type:z.literal("replaceNativeSceneTracks"),sceneId:z.string().min(1),expectedBeforeDigest:z.string().regex(/^sha256:[a-f0-9]{64}$/),tracks:z.record(z.string(),z.json())}).strict();
+export const productionEditorEdit=z.discriminatedUnion("type",[...productionLegacyEditorEdit.options,...productionMainEditOptions,productionNativeSceneEdit]);
 
 export const productionEditorRequestId = z.string().min(16).max(128);
 export const productionEditorSource = z.enum(["manual","assistant","restore","legacy"]);

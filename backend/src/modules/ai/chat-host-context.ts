@@ -1,3 +1,4 @@
+import {workEditorTarget,workCreationTarget} from "@creatoros/contract";
 import { createHash } from "node:crypto";
 import { z } from "zod";
 import { workerSkillSnapshotSchema, scriptHooksContextSchema } from "@creatoros/contract/execution-worker";
@@ -12,6 +13,7 @@ export const chatHostContextSchema = z.object({
   chatContext: z.object({
     surface: id, functionKey: z.string().optional(), webReadUrl: z.string().optional(), projectId: id.nullable().optional(),
     selection: z.object({kind:id,ids:z.array(id),label:z.string().optional(),artifactId:id.optional(),outputId:id.optional(),versionId:id.optional(),sectionIndex:z.number().int().nonnegative().optional(),excerpt:z.string().optional()}).strict().optional(),
+    editorTarget:workEditorTarget.optional(),creationTarget:workCreationTarget.optional(),
     assetAliases:z.record(z.string(),id).optional(),diagnosticRef:z.string().optional(),
   }).strict(),
   mediaRoute: z.discriminatedUnion("kind", [z.object({kind:z.literal("douyin.share"),shareInput:z.string(),transcribe:z.boolean()}).strict(),z.object({kind:z.literal("cover.reference")}).strict(),z.object({kind:z.literal("cover.publication_reference")}).strict()]).nullable(),
@@ -37,6 +39,8 @@ export const chatHostContextDigest=(value:ChatHostContext)=>createHash("sha256")
 export function validateChatHostContext(raw:unknown,owner:Owner):ChatHostContext {
   const value=chatHostContextSchema.parse(raw);
   if(value.skillSnapshot.userId!==owner.userId || value.skillSnapshot.accountId!==(owner.accountId??null) || (value.skillSnapshot.groupId??null)!==(owner.groupId??null) || (value.chatContext.projectId??null)!==owner.projectId) throw new ConflictError("宿主上下文归属不符");
+  if(value.chatContext.editorTarget&&value.chatContext.editorTarget.projectId!==owner.projectId||value.chatContext.creationTarget&&value.chatContext.creationTarget.projectId!==owner.projectId)throw new ConflictError("作品目标与聊天项目不符");
+  if(value.chatContext.editorTarget&&value.chatContext.creationTarget)throw new ConflictError("同一轮只能冻结一种作品目标");
   return value;
 }
 export function readChatHostContextPair(raw:unknown,digest:unknown,owner:Owner):ChatHostContext|null {

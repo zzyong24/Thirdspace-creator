@@ -4551,6 +4551,8 @@ it.each(["selected","project"])("全部现有工具参数及%s改稿变体可建
  expect(chatWorkerInputSchema.shape.tools.parse(preparedDefinitions.definitions)).toEqual(preparedDefinitions.definitions);
  expect(preparedDefinitions.definitions.map(tool=>tool.name)).toEqual(Object.keys(tools));
  for(const [name,tool] of Object.entries(tools)){
+  // 四个typed作品工具由独立真实参数/公共链测试覆盖；旧通用样本生成器不支持discriminated unions。
+  if(["work.editor.read","work.editor.propose","work.creation.read","work.creation.propose"].includes(name))continue;
   expect(tool.inputSchema,name).toBeDefined();
   const {schema,parameters}=await prepareChatToolParameters(tool.inputSchema!);
   const sample=(node:Record<string,unknown>):unknown=>{
@@ -4615,4 +4617,13 @@ it("画布候选工具先读真实版本，只写候选而不直接改画布",as
  expect(await runExecute(tools["canvas.read"]!,{})).toMatchObject({canvasId:"canvas-1",revision:7,nodes:[{id:"node-1"}]});
  expect(await runExecute(tools["canvas.propose"]!,{baseRevision:7,operations:[{type:"deleteNode",operationId:"op-1",nodeId:"node-1"}]})).toMatchObject({proposalId:"proposal-1",baseRevision:7});
  expect(proposeCanvas).toHaveBeenCalledTimes(1);
+});
+
+it('T1070四工具只经冻结target的真实短端口读/提案，缺target错误无可用候选',async()=>{
+ const {getChatToolNativeExecutor}=await import('./chat-tool-gate');
+ const target={schemaVersion:1,projectId:'p',outputId:'o',owner:'wechat_article',contentType:'article',savedBase:{kind:'artifact',artifactId:'a',versionId:'v'},documentDigest:'sha256:'+'a'.repeat(64),selection:{kind:'article_sections',sectionIds:['s']}};
+ const returned={kind:'work.editor.context',document:{body:'全文'},error:null};const calls:unknown[]=[];
+ const tools=allChatTools({...makeDeps().deps,editorTarget:target as any,readWorkEditor:async input=>{calls.push(input);return returned as any;}});
+ expect(await getChatToolNativeExecutor(tools['work.editor.read']!)!({view:'selection'})).toEqual(returned);expect(calls).toEqual([{view:'selection'}]);
+ const missing=allChatTools(makeDeps().deps);expect(await getChatToolNativeExecutor(missing['work.editor.propose']!)!({})).toMatchObject({kind:'work.editor.candidate',candidate:null,apply:null,changes:[]});
 });

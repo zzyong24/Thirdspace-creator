@@ -1,3 +1,4 @@
+import {applyNativeEditorEdits,nativeProbeMediaCatalog} from "./production-native-editor";
 import {assertWritableWorkspace} from "../../workspace-scope";
 import {isProductionOverlayReference} from "./production-overlay-capture";
 import {createProductionRoughCutReservations} from './production-rough-cut-reservation';
@@ -128,6 +129,8 @@ export interface ServiceDeps {
   conversionPorts?:Pick<ProductionConversionPorts,'readLegacyMain'>;
   sourcePorts?:SourcePorts;
   resolveEditorMedia?:ResolveEditorMedia;
+  /** 编导v3候选执行时按已登记确切文件重读类型/时长，不能相信客户端mediaMetadata。 */
+  readNativeEditorMedia?:(ctx:RequestContext,input:{projectId:string;assetId:string;assetFileId:string},transaction?:Db)=>Promise<{kind:'video'|'audio'|'image';durationTick:number|null}>;
   /** 只读该正式保存版本的原 immutable file capture；草稿变更仅保留仍同身份的触点。 */
   readEditorOverlayBindings?:(ctx:RequestContext,input:{outputId:string;revision:number;planDigest:string},tx?:Db)=>Promise<ProductionOverlayBinding[]>;
   assertEditorAsset?: (ctx:RequestContext,input:{projectId:string;assetId:string;assetFileId?:string;fileDigest?:string},transaction?:Db)=>Promise<void>;
@@ -349,6 +352,18 @@ export function createProductionService(deps: ServiceDeps): ProductionService {
       const body=productionEditorApplyBody.parse(input);
       const mediaLineage:import("./production-main-track").ProductionOverlayMechanicalLineage[]=[];
       return editorFor(ctx).commit(outputId,{...body,source:"assistant",getMediaLineage:()=>mediaLineage,requestDigest:itemDigest({op:"apply",body})},async(current,projectId,transaction)=>{
+        if(current?.editorVersion===3){
+          const prior=productionReferencePlan.parse(current),media=nativeProbeMediaCatalog(prior);
+          for(const ref of prior.referenceEditor.mediaRefs){
+            if(!deps.readNativeEditorMedia){if(media.some(m=>m.mediaId===ref.mediaId))continue;throw new UnsupportedOperationError('production.editor.native-media-read');}
+            const exact=await deps.readNativeEditorMedia(ctx,{projectId,assetId:ref.assetId,assetFileId:ref.assetFileId},transaction);
+            const probe=media.find(m=>m.mediaId===ref.mediaId);
+            if(probe){if(exact.kind!=='video')throw new ConflictError('原片媒体类型已变化');continue;}
+            media.push({mediaId:ref.mediaId,...exact});
+          }
+          const next=applyNativeEditorEdits(current,body.edits,media);
+          return checkReferenceMedia(ctx,projectId,next,transaction,current);
+        }
         if(current?.editorVersion===2){const next=applyV2EditorEdits(productionPlanV2.parse(current),body.edits,()=>deps.nextId("clip"),value=>mediaLineage.push(value));await checkNewMedia(ctx,projectId,current,next,transaction);return next;}
         if(current?.editorVersion!==1)throw new ConflictError("请先保存制作方案，再编辑片段");
         const next=applyEditorEdits(current as EditorPlan,body.edits,()=>deps.nextId("item"));

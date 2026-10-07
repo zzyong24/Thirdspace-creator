@@ -51,3 +51,9 @@ it("Worker 开场版本独立，未启用时原定义不变，其它工具不改
  expect(worker.definitions[0]!.version).not.toBe(legacy.definitions[0]!.version);
  expect(worker.definitions[1]).toEqual(legacy.definitions[1]);
 });
+
+it('T1070四个精确工具native参数效应与实现revision严格冻结',async()=>{
+ const {buildChatTools}=await import('./chat-tools');const names=['work.editor.read','work.editor.propose','work.creation.read','work.creation.propose'];const prepared=await prepareChatToolDefinitions(buildChatTools(names,{humanizeError:()=>null} as any));
+ expect(prepared.definitions.map(d=>[d.name,d.effect])).toEqual([['work.editor.read','none'],['work.editor.propose','proposal'],['work.creation.read','none'],['work.creation.propose','proposal']]);for(const d of prepared.definitions){expect(d.version).toMatch(/^chat-tools-work-director-v1:/);expect(d.execution).toBeUndefined();expect(d.parameters.type).toBe('object');}
+ expect(prepared.parameters['work.editor.read']!.parameters.safeParse({view:'field_window'}).success).toBe(false);expect(prepared.parameters['work.editor.propose']!.parameters.safeParse({candidate:{outputId:'invented'}}).success).toBe(false);
+});

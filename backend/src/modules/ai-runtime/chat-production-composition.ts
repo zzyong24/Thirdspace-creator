@@ -1,3 +1,5 @@
+import type {WorkEditorPorts} from "./work-editor-candidate";
+import type {ChatWorkCreationToolPorts} from "./chat-work-creation-tool-host";
 import type {Db} from "@creatoros/backend";
 import {createChatHostContextReader} from "../ai/chat-host-context.service";
 import {createChatProductionRuntime} from "./chat-production-runtime";
@@ -36,6 +38,8 @@ export interface ChatProductionServicePorts extends ChatIngestionToolPorts {
  getPositioningDiscovery:RequiredTaskPorts["structured"]["getPositioningDiscovery"];
 }
 export interface ChatProductionCompositionDeps {
+ editor?:WorkEditorPorts;
+ creation?:ChatWorkCreationToolPorts;
  canvas?:Parameters<typeof createChatCanvasToolHost>[1];
  externalImageStorage?:ProductionDeps["externalImageStorage"];
  entryPath:string;
@@ -57,7 +61,7 @@ export function composeChatProduction(db:Db,deps:ChatProductionCompositionDeps){
  const canvasTools=deps.canvas?createChatCanvasToolHost(hostReader,deps.canvas):null;
  const ingestionTools=createChatIngestionTaskToolHost(hostReader,chatRuntime);
  const taskTools=createChatTaskToolHost(hostReader,chatRuntime.contextReaders,{
-  webRead:true,research:true,
+  webRead:true,research:true,editor:deps.editor,creation:deps.creation,
   cover:{prepareTaskCommit:deps.prepareTaskCommit,wakeTask:chatRuntime.wakeChatCoverTask},
   agenticResearch:{prepareTaskCommit:deps.prepareTaskCommit,wakeTask:chatRuntime.wakeChatResearchTask},
   planning:{prepareTaskCommit:deps.prepareTaskCommit,wakeTask:chatRuntime.wakeChatPlanningTask},

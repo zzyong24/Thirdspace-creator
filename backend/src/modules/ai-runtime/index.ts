@@ -163,3 +163,7 @@ export {createLocalCodexStatusService} from "./local-codex-status.service";
 export {transcribeConfiguration} from './transcribe-business-execution.service';
 
 export type {StructuredBusinessAdapter} from "./structured-business-execution.service";
+
+export {createWorkEditorCandidateService,workEditorContentDigest,type WorkEditorPorts} from "./work-editor-candidate";
+export {createChatWorkEditorToolHost} from "./chat-work-editor-tool-host";
+export {createChatWorkCreationToolHost,type ChatWorkCreationToolPorts} from "./chat-work-creation-tool-host";

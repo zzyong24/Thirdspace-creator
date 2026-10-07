@@ -1,3 +1,4 @@
+import {workEditorReadInput,workEditorProposeInput,workCreationReadInput,workCreationProposalInput,type WorkEditorTarget,type WorkEditorContext,type WorkEditorCandidate,type WorkEditorReadInput,type WorkEditorProposeInput,type WorkCreationTarget,type WorkCreationReadResult,type WorkCreationProposalResult,type WorkCreationProposalInput} from "@creatoros/contract";
 import {buildRedfoxTool} from "./chat-redfox-tool";
 import {createLegacyScriptRange, legacyScriptHash} from "../artifacts";
 import { buildChatToolResultReader, buildChatHistoryReader, type ChatHistoryReader, type ChatToolResultReader } from "./chat-tool-result-reader";
@@ -57,6 +58,12 @@ function safeFinalSourceUrl(value: string | undefined): string | undefined {
 // 路由在请求期解析(resolveModelSpec + assembleCreativeContext)后注入,故工具本身无副作用、
 // 不碰持久化、不直连模块 repo —— 可单测(注入 fake 的 generate/enrich 实现即可)。
 export interface ChatToolDeps {
+  editorTarget?:WorkEditorTarget;
+  readWorkEditor?:(input:WorkEditorReadInput)=>Promise<WorkEditorContext>;
+  proposeWorkEditor?:(input:WorkEditorProposeInput)=>Promise<WorkEditorCandidate>;
+  creationTarget?:WorkCreationTarget;
+  readWorkCreation?:(input?:{targetDigest?:string})=>Promise<WorkCreationReadResult>;
+  proposeWorkCreation?:(input:WorkCreationProposalInput)=>Promise<WorkCreationProposalResult>;
   boundCanvasId?:string;
   readCanvas?:()=>Promise<{id:string;title:string;projectId:string|null;revision:number;document:unknown}>;
   proposeCanvas?:(baseRevision:number,operations:unknown)=>Promise<{id:string;canvasId:string;baseRevision:number;operations:unknown[]}>;
@@ -4060,6 +4067,26 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
     // [T-084c] AI 生成素材:文生图/文生视频。execute **不直接生成**(视频异步分钟级不能阻塞
     // 对话回合)—— dispatch 既有 asset.generate task,立即返回 taskId;前端 ChatGenerateCard
     // 轮询 → 完成渲缩略图 + 采纳。未配生图/生视频模型 → task cancelled,卡内诚实「去设置」。
+    "work.editor.read":defineChatTool("work.editor.read",{
+      description:"读取当前明确保存作品的真实版本、选区、字段窗口或完整文档。先读局部及前值digest，长结果按原toolCallId续读；scope仅在冻结output内，index只含机械身份索引。",
+      inputSchema:workEditorReadInput,
+      execute:async(input)=>{if(!deps.editorTarget||!deps.readWorkEditor)throw new ChatToolUserError('当前对话缺少已保存编辑目标');return deps.readWorkEditor(input);},
+    },deps.humanizeError),
+    "work.editor.propose":defineChatTool("work.editor.propose",{
+      description:"基于work.editor.read真实base/digest提出typed_patch候选，宿主机械保留未改正文、图片、来源、布局与原生丰富字段。文本坐标为精确UTF16，原生时间120000 ticks/秒；此工具不保存正式作品，用户预览采纳后由原owner提交。",
+      inputSchema:workEditorProposeInput,
+      execute:async(input)=>{if(!deps.editorTarget||!deps.proposeWorkEditor)throw new ChatToolUserError('当前对话缺少已保存编辑目标');return deps.proposeWorkEditor(input);},
+    },deps.humanizeError),
+    "work.creation.read":defineChatTool("work.creation.read",{
+      description:"读取用户确认保存的脚本、真实组合和两个文章/图文成员的当前保存版本与共同来源。联合创作必须先读取此回执，不猜脚本或作品ID。",
+      inputSchema:workCreationReadInput,
+      execute:async(input)=>{if(!deps.creationTarget||!deps.readWorkCreation)throw new ChatToolUserError('当前对话缺少已确认的联合创作目标');return deps.readWorkCreation(input);},
+    },deps.humanizeError),
+    "work.creation.propose":defineChatTool("work.creation.propose",{
+      description:"使用work.creation.read返回的targetDigest与共同脚本来源，一次提出完整ArticleDocument和GraphicPostDocument可编辑候选。当前所选引擎亲自创作；纯文字图文可排版预览，不声称图片已生成。工具不写正式稿、不调用第二模型、不提交视频或生图任务。",
+      inputSchema:workCreationProposalInput,
+      execute:async(input)=>{if(!deps.creationTarget||!deps.proposeWorkCreation)throw new ChatToolUserError('当前对话缺少已确认的联合创作目标');return deps.proposeWorkCreation(input);},
+    },deps.humanizeError),
     "canvas.read":defineChatTool("canvas.read",{
       description:"只读当前账号已选创作画布。先读取真实节点 ID、连接与 revision，再提出操作建议；不要猜测画布内容。",
       inputSchema:CANVAS_READ_PARAMS,
@@ -4977,6 +5004,7 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
  * drift 由 chat-tools.test.ts 的 guard 用例锁(必须 === Object.keys(allChatTools(deps)))。
  */
 export const ALL_CHAT_TOOL_NAMES: readonly string[] = [
+  "work.editor.read","work.editor.propose","work.creation.read","work.creation.propose",
   "history.read",
   "tool.result.read",
   "skill.read",
@@ -5039,8 +5067,7 @@ export const ALL_CHAT_TOOL_NAMES: readonly string[] = [
   "context.learnings",
   "context.candidates",
   "context.predictions",
-  "canvas.read",
-  "canvas.propose",
+
 ];
 
 // ── [T-240③] 场景工具白名单(「场景」一等机制的静态层)────────────────────────────────
@@ -5118,6 +5145,7 @@ export const SURFACE_TOOL_SCOPES: Readonly<Record<string, readonly string[]>> = 
   ],
   // 项目对话:创作 + 审核 + 复盘双场景全量(阶段感知收窄见 getSurfaceToolScope)。
   project: [
+    "work.editor.read","work.editor.propose","work.creation.read","work.creation.propose",
     "creatoros.guide",
     ...CREATION_TOOL_NAMES,
     // 只有稿面明确选择段落时实现表才会实际挂载该工具。

@@ -18,6 +18,7 @@ export function createChatAssemblyToolDeps(ctx: RequestContext, chatContext: Cha
         ...createChatReadToolBindings(ctx, deps.contextReaders),
         ...(input.mediaRoute?.kind === 'cover.publication_reference' ? { publicationView: 'published_cover_candidates' as const } : {}),
         readCreatorOsGuide: input.creatorOsGuideSnapshot ? () => input.creatorOsGuideSnapshot! : undefined,
+        editorTarget:chatContext.editorTarget,creationTarget:chatContext.creationTarget,
         boundProjectId: chatContext.projectId ?? undefined,
         ...(input.forcedMaterialKind ? { forcedMaterialKind: input.forcedMaterialKind } : {}),
         ...(chatContext.selection?.kind === "article_section" ? {articleImageSelection: chatContext.selection} : {}),

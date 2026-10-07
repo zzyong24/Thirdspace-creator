@@ -53,6 +53,8 @@ export interface ChatToolErrorEnvelope {
   extras?: Record<string, unknown>;
   /** per-tool 结果预算覆盖(默认 CHAT_TOOL_RESULT_BUDGET_CHARS)。 */
   budgetChars?: number;
+  /** 仅四个已审计完整作品工具保留原结果；模型展示窗口由既有context预算管理。 */
+  lossless?:boolean;
 }
 
 /**
@@ -63,6 +65,10 @@ export interface ChatToolErrorEnvelope {
 export const CHAT_TOOL_ERROR_ENVELOPES: Readonly<
   Record<string, ChatToolErrorEnvelope>
 > = {
+  "work.editor.read":{kind:"work.editor.context",lossless:true,extras:{schemaVersion:1,document:null,selected:[],media:[],sourceTranscripts:[],complete:false,failureCode:"unavailable"}},
+  "work.editor.propose":{kind:"work.editor.candidate",lossless:true,extras:{schemaVersion:1,candidate:null,apply:null,changes:[],candidateDigest:null,imageRequest:null,failureCode:"unavailable"}},
+  "work.creation.read":{kind:"work.creation.read",lossless:true,extras:{article:null,graphic:null,scriptText:null}},
+  "work.creation.propose":{kind:"work.creation.propose",lossless:true,extras:{article:null,graphic:null,articleDigest:null,graphicDigest:null}},
   "canvas.read":{kind:"canvas.read",extras:{canvasId:null,revision:null,title:null,projectId:null,nodes:[],edges:[]}},
   "canvas.propose":{kind:"canvas.propose",extras:{proposalId:null,canvasId:null,baseRevision:null,operations:[]}},
   "history.read": { kind: "history.read", extras: { text: null, hasMore: false, nextOffset: null } },
@@ -484,7 +490,7 @@ export function defineChatTool<INPUT, OUTPUT extends { kind: string }>(
     const startedAt = Date.now();
     try {
       const result = await config.execute(input, callOptions);
-      const bounded = enforceChatToolResultBudget(result, budget);
+      const bounded = envelope.lossless===true ? result : enforceChatToolResultBudget(result, budget);
       // 【T-239e 挂点】usage 归因扩展字段(tokens/费用)加在这行日志上,别另起打点层。
       const resultRecord =
         result && typeof result === "object"
