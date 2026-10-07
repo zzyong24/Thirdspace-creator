@@ -19,6 +19,8 @@ export type WorkCreationRequestState = {
   >;
   completed?: boolean;
   creationTarget?: WorkCreationTarget;
+  submission?: "preparing" | "not-submitted" | "submitted-unknown";
+  prefill?: string;
 };
 /** Reversible UI reservation orchestration: each original owner request remains frozen. */
 export async function prepareWorkCreationRequest(

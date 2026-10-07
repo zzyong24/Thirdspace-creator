@@ -83,9 +83,33 @@ describe("CreationFlowCtas(T-127 创作流引导 CTA)", () => {
     prepareScriptForCreation.mockResolvedValue(source);preparePair.mockResolvedValue(target);
     const view=render(<CreationFlowCtas projectId="project-x"/>);fireEvent.click(screen.getByRole('button',{name:'一键生成文章和图文'}));
     await waitFor(()=>expect(openChat).toHaveBeenCalledOnce());expect(openChat.mock.calls[0][0]).toMatchObject({autoSend:true,creationTarget:target});
+    act(()=>openChat.mock.calls[0][0].onCreationSubmission('submitted-unknown'));
     view.unmount();render(<CreationFlowCtas projectId="project-x"/>);fireEvent.click(screen.getByRole('button',{name:'查看原文章和图文生成'}));
     const restored=openChat.mock.calls[1][0];expect(restored).toMatchObject({autoSend:false,creationTarget:target});expect(preparePair).toHaveBeenCalledOnce();expect(prepareScriptForCreation).toHaveBeenCalledOnce();
     act(()=>restored.onCreationSettled());expect(screen.getByRole('button',{name:'一键生成文章和图文'})).toBeEnabled();
+  });
+  it('已知未提交可显式恢复同冻结文案/target/预约，不能创建第二组合或另存脚本',async()=>{
+    const source={kind:'project_script',id:'script',versionId:'script-v'},target={clientRequestId:'original',scriptSourceRef:source};
+    prepareScriptForCreation.mockResolvedValue(source);preparePair.mockResolvedValue(target);
+    render(<CreationFlowCtas projectId="project-x"/>);fireEvent.click(screen.getByRole('button',{name:'一键生成文章和图文'}));
+    await waitFor(()=>expect(openChat).toHaveBeenCalledOnce());
+    const original=openChat.mock.calls[0][0];
+    act(()=>original.onCreationSubmission('not-submitted'));
+    fireEvent.click(screen.getByRole('button',{name:'恢复原请求 · 一键生成文章和图文'}));
+    await waitFor(()=>expect(openChat).toHaveBeenCalledTimes(2));
+    expect(openChat.mock.calls[1][0]).toMatchObject({prefill:original.prefill,autoSend:true,creationTarget:target});
+    expect(preparePair).toHaveBeenCalledOnce();expect(prepareScriptForCreation).toHaveBeenCalledOnce();
+  });
+  it('刷新中断preparing不能按零提交重发，仍只打开原冻结目标',async()=>{
+    const source={kind:'project_script',id:'script',versionId:'script-v'},target={clientRequestId:'original',scriptSourceRef:source};
+    prepareScriptForCreation.mockResolvedValue(source);preparePair.mockResolvedValue(target);
+    const view=render(<CreationFlowCtas projectId="project-x"/>);fireEvent.click(screen.getByRole('button',{name:'一键生成文章和图文'}));
+    await waitFor(()=>expect(openChat).toHaveBeenCalledOnce());
+    expect(screen.getByRole('button',{name:'正在保存并准备…'})).toBeDisabled();
+    view.unmount();render(<CreationFlowCtas projectId="project-x"/>);
+    fireEvent.click(screen.getByRole('button',{name:'查看原文章和图文生成'}));
+    expect(openChat.mock.calls[1][0]).toMatchObject({autoSend:false,creationTarget:target});
+    expect(preparePair).toHaveBeenCalledOnce();expect(prepareScriptForCreation).toHaveBeenCalledOnce();
   });
 
 });

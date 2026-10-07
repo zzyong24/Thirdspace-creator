@@ -139,6 +139,7 @@ export interface DraftChatRequest {
   readonly nonce: number;
   readonly creationTarget?: WorkCreationTarget;
   readonly onCreationSettled?: () => void;
+  readonly onCreationSubmission?: (state: "not-submitted" | "submitted-unknown") => void;
 }
 
 /** 编辑器 flush:把在途未保存内容落库,resolve 后 DB = 最新。saved 态则 no-op 立即返回。 */

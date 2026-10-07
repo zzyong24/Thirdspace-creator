@@ -325,6 +325,7 @@ export interface AICopilotContentProps {
       readonly nonce: number;
       readonly creationTarget?:WorkCreationTarget;
       readonly onCreationSettled?:()=>void;
+      readonly onCreationSubmission?:(state:"not-submitted"|"submitted-unknown")=>void;
     } | null;
   };
 }
@@ -1004,6 +1005,7 @@ export function AICopilotContent({
   const receiptStorageKey=`creatoros:t1070:turn:${liveSessionKey}`;
   React.useEffect(()=>{try{const stored=sessionStorage.getItem(receiptStorageKey);preparedReceipt.current=stored?JSON.parse(stored):null;}catch{preparedReceipt.current=null;}},[receiptStorageKey]);
   const preparationPending=React.useRef(false);
+  const submissionAttempt=React.useRef<{request?:EmbeddedDraftChatRequest|null;networkStarted:boolean}|null>(null);
   const recoveryMounted=React.useRef(true);
   React.useEffect(()=>{recoveryMounted.current=true;return()=>{recoveryMounted.current=false;};},[]);
   const sendPreparedRef=React.useRef<(text:string,request?:EmbeddedDraftChatRequest|null)=>Promise<void>>(async()=>{});
@@ -1083,6 +1085,8 @@ export function AICopilotContent({
         // 后原样把 Response 交回给 SDK(不改流)。这是本 SDK 版本捕获会话 id 最稳的办法。
         fetch: async (input, init) => {
           const epoch = liveSession.epoch;
+          const attempt=submissionAttempt.current;
+          if(attempt&&!attempt.networkStarted){attempt.networkStarted=true;attempt.request?.onCreationSubmission?.("submitted-unknown");}
           const res = await liveSession.control.fetch(input as RequestInfo, init);
           try {
             const cid = res.headers.get("x-conversation-id");
@@ -1509,7 +1513,8 @@ export function AICopilotContent({
   React.useLayoutEffect(()=>{sendPreparedRef.current=async(text,request)=>{
     if(preparationPending.current)throw Error("当前稿件仍在准备，请等待原保存结束。");
     preparationPending.current=true;setComposerLifecycleError(null);
-    try{const editorTarget=request?.creationTarget?undefined:await draftEditor.prepareEditorTurn();const targets={...(editorTarget?{editorTarget}:{}),...(request?.creationTarget?{creationTarget:request.creationTarget}:{})};preparedTargets.current=targets;
+    const attempt={request,networkStarted:false};submissionAttempt.current=attempt;
+    try{if(!selectedEngineAvailable)throw Error("当前编导引擎尚不可用，请到设置核对后恢复原请求。");const editorTarget=request?.creationTarget?undefined:await draftEditor.prepareEditorTurn();const targets={...(editorTarget?{editorTarget}:{}),...(request?.creationTarget?{creationTarget:request.creationTarget}:{})};preparedTargets.current=targets;
       if(!targets.editorTarget&&!targets.creationTarget){preparedReceipt.current=null;sessionStorage.removeItem(receiptStorageKey);await sendMessage({text});return;}
       const requestedFn=quickFunctionKeyRef.current??entryFunctionKeyRef.current?.consume()??null;quickFunctionKeyRef.current=null;
       const webReadUrl=requestedFn==="web.read"?quickWebReadUrlRef.current:null;quickWebReadUrlRef.current=null;
@@ -1517,7 +1522,7 @@ export function AICopilotContent({
       const frozenReceipt={chatContext:frozenContext,sourceText:text,attachmentIds:[...requestAttachmentIdsRef.current],executionEngine:liveSession.executionEngine,...(liveSession.conversationId?{conversationId:liveSession.conversationId}:{})};
       preparedReceipt.current=frozenReceipt;sessionStorage.setItem(receiptStorageKey,JSON.stringify(frozenReceipt));
       await sendMessage({text},{body:{chatContext:frozenContext,attachmentIds:frozenReceipt.attachmentIds,executionEngine:frozenReceipt.executionEngine,...(frozenReceipt.conversationId?{conversationId:frozenReceipt.conversationId}:{})}});
-    }catch(cause){setComposerLifecycleError(cause instanceof Error?cause.message:"稿件尚未准备好，本次未发送。");throw cause;}finally{preparationPending.current=false;}
+    }catch(cause){setComposerLifecycleError(cause instanceof Error?cause.message:"稿件尚未准备好，本次未发送。");throw cause;}finally{if(!attempt.networkStarted)request?.onCreationSubmission?.("not-submitted");preparationPending.current=false;}
   };});
   const settledCreation=React.useRef(new Set<string>());
   React.useEffect(()=>{const request=embed?.request,target=request?.creationTarget;if(!target||!request?.onCreationSettled||settledCreation.current.has(target.clientRequestId))return;const settled=messages.some(message=>message.role==="assistant"&&message.parts.some(part=>{if(!isToolUIPart(part)||getToolName(part)!=="work.creation.propose"||part.state!=="output-available")return false;const result=workCreationProposalResult.safeParse(part.output);return result.success&&result.data.target.clientRequestId===target.clientRequestId;}));if(settled){settledCreation.current.add(target.clientRequestId);request.onCreationSettled();}},[messages,embed?.request]);

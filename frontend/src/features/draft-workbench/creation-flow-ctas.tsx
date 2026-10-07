@@ -17,6 +17,7 @@ import { uploadFileToProject } from "./upload-to-project";
 
 // 上传接受的文件类型:图/视频 + 常见文档(PR 资料多为 PDF/Word/MD/纯文本)。
 const UPLOAD_ACCEPT = "image/*,video/*,.pdf,.doc,.docx,.md,.txt";
+const CREATION_PREFILL="请使用已确认脚本与同一创作方法，一起生成完整文章和图文候选。我会分别预览采纳，再继续微调。不要生成视频、语音或插画。";
 
 export function CreationFlowCtas({ projectId }: { projectId: string }) {
   const { openChat,prepareScriptForCreation } = useDraftChatRequest();
@@ -24,11 +25,17 @@ export function CreationFlowCtas({ projectId }: { projectId: string }) {
   const storageKey=`creatoros:t1070:creation:${scopeKey}:${projectId}`;
   const intent=React.useRef<WorkCreationRequestState|null>(null),currentScope=React.useRef(scopeKey),mounted=React.useRef(true);
   currentScope.current=scopeKey;
-  const [creating,setCreating]=React.useState(false),[submitted,setSubmitted]=React.useState(false),[creationError,setCreationError]=React.useState<string|null>(null);
+  const [creating,setCreating]=React.useState(false),[submitted,setSubmitted]=React.useState(false),[submission,setSubmission]=React.useState<WorkCreationRequestState['submission']>(),[creationError,setCreationError]=React.useState<string|null>(null);
   React.useEffect(()=>{mounted.current=true;return()=>{mounted.current=false;};},[]);
-  React.useEffect(()=>{try{const previous=sessionStorage.getItem(storageKey);intent.current=previous?JSON.parse(previous):null;setSubmitted(Boolean(intent.current?.completed));}catch{intent.current=null;}},[storageKey]);
-  function settledCallback(frozen:WorkCreationRequestState,frozenScope:string){return()=>{if(currentScope.current===frozenScope&&intent.current===frozen){sessionStorage.removeItem(storageKey);intent.current=null;if(mounted.current){setSubmitted(false);setCreationError(null);}}};}
-  async function createPair(){if(creating)return;if(intent.current?.completed){const frozen=intent.current;openChat({prefill:"",autoSend:false,creationTarget:frozen.creationTarget,onCreationSettled:settledCallback(frozen,scopeKey)});setCreationError("原生成已提交，正在编导中读取原任务结果。请保留原请求，不要重复生成。");return;}setCreating(true);setCreationError(null);const frozenScope=scopeKey;try{
+  React.useEffect(()=>{try{const previous=sessionStorage.getItem(storageKey);intent.current=previous?JSON.parse(previous):null;const state=intent.current?.submission;setSubmission(state==='preparing'?'submitted-unknown':state);setSubmitted(Boolean(intent.current?.completed&&state!=='not-submitted'));}catch{intent.current=null;}},[storageKey]);
+  function settledCallback(frozen:WorkCreationRequestState,frozenScope:string){return()=>{if(currentScope.current===frozenScope&&intent.current===frozen){sessionStorage.removeItem(storageKey);intent.current=null;if(mounted.current){setSubmitted(false);setSubmission(undefined);setCreationError(null);}}};}
+  function submissionCallback(frozen:WorkCreationRequestState,frozenScope:string){return(state:'not-submitted'|'submitted-unknown')=>{if(currentScope.current!==frozenScope||intent.current!==frozen)return;frozen.submission=state;sessionStorage.setItem(storageKey,JSON.stringify(frozen));if(mounted.current){setSubmission(state);setSubmitted(state==='submitted-unknown');setCreationError(state==='not-submitted'?'尚未提交生成。请核对编导设置后恢复原请求，原组合与脚本版本已保留。':null);}};}
+  function sendFrozen(frozen:WorkCreationRequestState,frozenScope:string){frozen.submission='preparing';frozen.prefill??=CREATION_PREFILL;sessionStorage.setItem(storageKey,JSON.stringify(frozen));setSubmission('preparing');setSubmitted(false);setCreationError(null);openChat({prefill:frozen.prefill,autoSend:true,creationTarget:frozen.creationTarget,onCreationSettled:settledCallback(frozen,frozenScope),onCreationSubmission:submissionCallback(frozen,frozenScope)});}
+  async function createPair(){if(creating||submission==='preparing')return;if(intent.current?.completed){
+    // A remounted rail can still own the original live SDK request. An interrupted
+    // preparing marker is UNKNOWN until that request explicitly reports no fetch.
+    const latest=sessionStorage.getItem(storageKey);if(latest){const stored:WorkCreationRequestState=JSON.parse(latest);if(stored.clientRequestId===intent.current.clientRequestId&&stored.submission==='not-submitted')intent.current=stored;}
+    const frozen=intent.current;if(frozen.submission==='not-submitted'){sendFrozen(frozen,scopeKey);return;}openChat({prefill:"",autoSend:false,creationTarget:frozen.creationTarget,onCreationSettled:settledCallback(frozen,scopeKey),onCreationSubmission:submissionCallback(frozen,scopeKey)});setCreationError("原生成结果尚未确认，正在编导中读取原任务结果。请保留原请求，不要重复生成。");return;}setCreating(true);setCreationError(null);const frozenScope=scopeKey;try{
     const source=await prepareScriptForCreation();
     if(currentScope.current!==frozenScope||!mounted.current)throw Error("工作区已切换，请回原项目恢复。");
     if(!intent.current){const previous=sessionStorage.getItem(storageKey);if(previous)intent.current=JSON.parse(previous);}
@@ -43,8 +50,7 @@ export function CreationFlowCtas({ projectId }: { projectId: string }) {
     const frozen=intent.current,persist=()=>sessionStorage.setItem(storageKey,JSON.stringify(frozen));persist();
     const creationTarget=await prepareWorkCreationRequest(client,frozen,persist);
     if(currentScope.current!==frozenScope||!mounted.current)throw Error("工作区已切换，原组合已保留。");
-    frozen.completed=true;frozen.creationTarget=creationTarget;persist();setSubmitted(true);
-    openChat({onCreationSettled:settledCallback(frozen,frozenScope),prefill:"请使用已确认脚本与同一创作方法，一起生成完整文章和图文候选。我会分别预览采纳，再继续微调。不要生成视频、语音或插画。",creationTarget,autoSend:true});
+    frozen.completed=true;frozen.creationTarget=creationTarget;persist();sendFrozen(frozen,frozenScope);
   }catch(cause){if(mounted.current)setCreationError(cause instanceof Error?cause.message:"准备未完成，原预约已保留。");}finally{if(mounted.current)setCreating(false);}}
   const router = useRouter();
   const inputRef = React.useRef<HTMLInputElement>(null);
@@ -82,7 +88,7 @@ export function CreationFlowCtas({ projectId }: { projectId: string }) {
       aria-label="创作流引导"
       className="flex flex-wrap items-center gap-2 rounded-card border border-border bg-surface-subtle px-3 py-2"
     >
-      <Button type="button" disabled={creating} onClick={()=>void createPair()} className="min-h-11 gap-2"><Sparkles className="size-4"/>{creating?"正在保存并准备…":submitted?"查看原文章和图文生成":creationError?"恢复原请求 · 一键生成文章和图文":"一键生成文章和图文"}</Button>
+      <Button type="button" disabled={creating||submission==='preparing'} onClick={()=>void createPair()} className="min-h-11 gap-2"><Sparkles className="size-4"/>{creating||submission==='preparing'?"正在保存并准备…":submitted?"查看原文章和图文生成":creationError||submission==='not-submitted'?"恢复原请求 · 一键生成文章和图文":"一键生成文章和图文"}</Button>
       {creationError?<p role="alert" className="w-full text-sm text-destructive">{creationError}</p>:null}
 
       {/* [T-146] ＋上传素材(最高优先级):把自己的 PDF/Word/MD 资料上传进当前项目弹药库。 */}
