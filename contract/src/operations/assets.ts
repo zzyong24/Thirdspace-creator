@@ -20,6 +20,12 @@ const assetUpload = z.object({
 // SPEC §13 "素材库" (assets) group.
 export const assetsOperations = {
   previewAssetDelete:defineEndpoint({id:'assets.previewDelete',method:'POST',path:'/assets/:assetId/delete-preview',params:assetParams,response:assetDeleteImpactPreview,fr:['FR-ASSETS-DELETE-IMPACT']}),
+  searchAssets: defineEndpoint({
+    id: "assets.search", method: "GET", path: "/assets/search",
+    query: z.object({query:z.string().trim().max(500).default(""),limit:z.coerce.number().int().min(1).max(100).default(24),cursor:z.string().max(2048).nullable().optional(),assetTypes:z.array(assetType).min(1).max(5).optional()}).strict(),
+    response:z.object({items:z.array(assetResource),nextCursor:z.string().nullable()}),
+    fr:["FR-ASSETS-SEARCH"],
+  }),
   listAssets: defineEndpoint({
     id: "assets.list",
     method: "GET",

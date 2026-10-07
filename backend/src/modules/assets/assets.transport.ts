@@ -33,6 +33,7 @@ export const ASSET_OP_IDS = [
   "assets.downloadUrl",
   "assets.fileDownloadUrl",
   "assets.list",
+  "assets.search",
   "assets.uploads.create",
   "assets.uploads.complete",
   "assets.get",
@@ -163,6 +164,13 @@ export function createAssetsTransport(
       };
 
       switch (endpoint.id) {
+        case "assets.search": {
+          const input=(query??{}) as {query?:string;limit?:number;cursor?:string|null;assetTypes?:Array<"image"|"video"|"audio"|"document"|"subtitle">};
+          const result=await service.searchAssets(ctx,{query:input.query??"",limit:input.limit??24,cursor:input.cursor,assetTypes:input.assetTypes});
+          const ids=result.rows.map(row=>row.currentFileId).filter((id):id is string=>Boolean(id));
+          const files=new Map((await service.listFilesByIds(ctx,ids)).map(file=>[file.id,file]));
+          return {data:{items:result.rows.map(row=>toAssetResource(row,row.currentFileId ? files.get(row.currentFileId)??null : null)),nextCursor:result.nextCursor},meta:{requestId:ctx.requestId}};
+        }
         case "assets.list": {
           const page = q.page ?? 1;
           const pageSize = q.pageSize ?? 20;

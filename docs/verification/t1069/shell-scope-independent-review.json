@@ -1,0 +1,34 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "T-1069 当前完整 SPEC（含组内平台登录、统一视觉选择器全部 13 入口、同作品活会话与离开保护、视频导入可用性及性能合同、精确实现/验证/原生交付写集、公共操作归属及两轮稳定宿主补充）独立首轮完整静态审核通过，findings=[]。本轮亦核对实际 Tab 丢稿根因与精确容器补充（T1069-STABLE-SHELL-HOST）。SPEC docs/features/t1069-installed-media-and-binding.md SHA256=0363fa6014a11328af557cf01f3a1f3151ff524ac6b0cbb95acaff4d4983327d；constitution docs/产品定位.md SHA256=86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800。已核对完整 SPEC、产品宪法、项目记忆、3.27.4 技能与项目版本、实际 AppShell/PageScrollArea/共享 ScrollArea、ShellRouter/ProjectVideoSessionHost、creation-workspace-scope 和 frontend/tests/e2e/t1069-media-tab-session.spec.ts；同时核对本地验收根 t1069-tests/media-tab-public-name-edit.log 与 media-tab-layout-red 的真实失败记录。日志实际止于原 native root.isConnected=false 的断言，前置两个中性视频导入、未保存状态、加入时间轴及工程名编辑已执行；后续保存/刷新尚未在该次运行验证。现 AppShell 的 contentFill 分支改变 PageScrollArea 与直接 div 的组件祖先树，ShellRouter 虽在 WorkspaceInitializationBoundary 外持有唯一 Host，仍会随该祖先更换销毁，补充指出的根因与真实源码、RED 相符。仅新增 frontend/src/components/shell/app-shell.tsx 与 app-shell.test.tsx 两条精确路径，始终保留同一 PageScrollArea/ScrollArea viewport/内容 div，用 CSS 切换滚动与尺寸，可在现有组件 API 内实现，无需改共享 ScrollArea、路由、业务层、API、数据库或原归属合同。实施时 CSS 必须仅命中外层直接 viewport、Radix 直接内容包装层及直接 scrollbar，覆盖其实际 overflow 样式；填满模式恢复满高/min-h-0 并把滚动留给原工作台内部，普通模式保留页面滚动，不可把嵌套素材/时间轴滚动一并禁用。此为实现检查点，不新增产品范围。现有真实 group/account scope 由 creationScopeKey 与冻结 Session owner 管理，补充不改变它；实际项目/作品可见性、未知意图恢复、切组迟到隔离、单引擎及 dispose 顺序继续按原合同验证，不能由固定外层树推定已正确。新测试要求真实 PageScrollArea/ScrollArea 的双向 contentFill 切换，检验 mount 数、DOM 身份及本地未保存状态；原公共导入/时间轴/Tab 返回/正式 revision 不增加/保存/刷新断言继续保留，不得弱化已失败的 isConnected 检查。普通页与填满页真实滚动、目标视口、200% 和原 purple/tokens 视觉基线继续验证。全部原 13 素材入口、精确 file 引用与模板全链、assets.search 公共 SQL/typed client、组绑定事务和实际用户登录、导入进度/性能/恢复、LED-047/LED-053、boundary/orphan、native 源与 bundle 核验、完整 reconcile 与真实安装验收均未减少。与宪法可恢复、真实证据、人工确认、数据归属、单一写者及可用性原则一致。本 PASS 仅表示当前完整 SPEC 及两文件补充方案和精确范围可实施，未修改产品/控制面，未运行新测试，不代签实现、性能提速、视觉/滚动或安装包验收，也不把该次 RED 之后未执行的保存刷新补拍为 PASS。",
+  "findings": [],
+  "implementation_review": {
+    "verdict": "PASS",
+    "scope": [
+      "frontend/src/components/shell/app-shell.tsx",
+      "frontend/src/components/shell/app-shell.test.tsx"
+    ],
+    "source_sha256": {
+      "frontend/src/components/shell/app-shell.tsx": "eb734f9c2b85f3fec5c7dfc16712aa48f52fd11339bdf6c01a96368eb282c76f",
+      "frontend/src/components/shell/app-shell.test.tsx": "68e7e35e5433b3e2b28e52e0313cb2a8945816d9bbad0776f483c3e003e71873"
+    },
+    "summary": "两文件实际 diff 静态独立审核通过，无新增发现。AppShell 始终渲染相同 PageScrollArea 和 app-page-content div，contentFill 只改变 data 属性及 className，没有该开关引起的 key、组件类型或父子层级变化；同一 children 不再因该外层分支被重挂。PageScrollArea 仍透传 className 至实际 Radix root；全部 selector 使用直接子级，!overflow-hidden 仅命中外层 viewport，h-full/min-h-0 仅命中该 viewport 的直接 Radix 内容包装 div，scrollbar hidden 仅命中 root 直接 scrollbar，不匹配嵌套工作台 ScrollArea。viewport 原 size-full、root 原 flex-1/min-h-0、内容包装满高及 app-page-content 满高/min-h-0 构成填满高度链；普通模式撤下新增四组约束，保留原 w-full/min-w-0/页边与 global py-8/project py-section-gap，原 shared ScrollArea 保持不变。未改导航、scope、业务写请求、保存或回执。单测仅隔离 Sidebar/TopHeader，实际加载 PageScrollArea/ScrollArea；从 false 和 true 两个初始状态双向切换，检验输入 DOM 身份、未保存本地状态、mount 一次/unmount 零次和返回时 viewport DOM 身份。已阅读当场 app-shell-red.log（两项失败，输入重建并回到原稿）及 app-shell-green.log（两项通过），证据与当前源码一致。该单测证明状态/DOM 保留，不证明浏览器 CSS 布局、滚轮、Tailwind 编译或 native 旅程；当前实现静态上满足精确补充，但公共视频 E2E、两种模式实际画面/滚动及安装验收尚不能由本报告签为通过。",
+    "findings": [],
+    "evidence": [
+      {
+        "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1069-tests/app-shell-red.log",
+        "observed": "2 failed，真实首次切换产生新的输入 DOM 及原稿状态"
+      },
+      {
+        "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1069-tests/app-shell-green.log",
+        "observed": "2 passed，未在本子会话重跑"
+      }
+    ],
+    "pending_acceptance": [
+      "实际公共视频导入/时间轴/Tab/保存/刷新 E2E",
+      "普通页与填满页实际视觉及滚动",
+      "全部原任务 Gate、13 入口及真实安装验收"
+    ]
+  }
+}

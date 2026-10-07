@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "recheck",
+  "summary": "T-1069 稳定宿主补充静态方案复审通过，findings=[]。SPEC docs/features/t1069-installed-media-and-binding.md SHA256=75f01c51f9abb387f876b7cb7b785993e9d9f6dca6c99010443359bd766f6107；constitution docs/产品定位.md SHA256=86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800。本次核对当前 SPEC、现有 shell-router/project-layout/registry/entry/workbench/StageChatWrapper/DraftChatRequestProvider/Copilot nonce 消费及真实 scope cancel/activate 消费者。将单宿主迁移到已准入 shell-router 的初始化 boundary 外，可保留直接 SPA Link 和历史导航后的原实例；旧会话按项目、作品与实际 scope 联合核对可见性，真正 owner 更换前恢复原意图或备份，原 requestId/body 保持，范围/数据归属/正式手工保存策略不变。route provider 与 session provider 隔离，隐藏 route 不挂重复 rail；native 保持固定挂载，历史恢复按真实成功回执显式同步而非靠卸载。已准入 source/test 集覆盖该闭包，无新业务层、API、表、AI 决策或产品方向，与宪法一致。此 PASS 仅表示该方案可实施，不代签当前源代码、native 构建、实际双 rail/自动发去重、scope 恢复、路由/前后退、导入进度、保存/历史、UI 或安装包验收。实现仍需满足全部原 Gate，并确认 ShellRouter 的 Suspense fallback 不更换稳定 Host 树；长期 provider 中已有 autoSend 请求的 rail 重挂不能重发，不能仅靠 CSS hidden 或各实例 nonce ref 宣称安全。",
+  "findings": []
+}

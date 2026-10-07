@@ -36,7 +36,7 @@ it('同ID在途请求拒绝重复；超时重试后旧回执不能消费新请�
  const ref=React.createRef<NativeEditorHandle>(),view=render(<NativeEditorSurface {...props} ref={ref}/>);await connect(view.container);vi.useFakeTimers();
  const first=ref.current!.request('apply-tracks',{}, {requestId:'receipt'}),failed=expect(first).rejects.toThrow('尚未确认');
  await act(async()=>{await Promise.resolve();});await expect(ref.current!.request('apply-tracks',{}, {requestId:'receipt'})).rejects.toThrow('仍在确认');
- await act(async()=>vi.advanceTimersByTime(120000));await failed;
+ await act(async()=>vi.advanceTimersByTime(900000));await failed;
  let secondFinished=false;const second=ref.current!.request('apply-tracks',{}, {requestId:'receipt'}).then(value=>{secondFinished=true;return value;});
  await act(async()=>{await Promise.resolve();replies[0]!({old:true});await Promise.resolve();});expect(secondFinished).toBe(false);
  await act(async()=>replies[1]!({applied:true}));expect(await second).toEqual({applied:true});

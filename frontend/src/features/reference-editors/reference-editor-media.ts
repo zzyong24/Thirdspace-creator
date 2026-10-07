@@ -1,19 +1,50 @@
-import {createCreationWorkspace,readCreationScope,type CreationOperation} from '@/lib/creation-workspace-scope';
+import {createCreationWorkspace,readCreationScope,creationScopeKey,type CreationOperation} from '@/lib/creation-workspace-scope';
 import type {ReferenceEditorDocument,ReferenceEditorMedia} from '@creatoros/contract';
-export async function uploadEditorMedia(projectId:string,outputId:string,file:File,captured?:CreationOperation):Promise<ReferenceEditorMedia>{
+type UploadReceipt=Awaited<ReturnType<CreationOperation['client']['createUpload']>>;
+export type EditorUploadStage='creating'|'uploading'|'confirming'|'linking'|'ready';
+export type EditorUploadIntent={
+ owner?:{scopeKey:string;projectId:string;outputId:string;file:File};
+ mediaId?:string;upload?:UploadReceipt;createUnknown?:boolean;putConfirmed?:boolean;
+ ref?:ReferenceEditorMedia;linked?:boolean;running?:boolean;stage?:EditorUploadStage;
+};
+export type EditorUploadOptions={intent?:EditorUploadIntent;signal?:AbortSignal;onProgress?:(stage:EditorUploadStage)=>void};
+export async function uploadEditorMedia(projectId:string,outputId:string,file:File,captured?:CreationOperation,options:EditorUploadOptions={}):Promise<ReferenceEditorMedia>{
  const workspace=captured?null:createCreationWorkspace(readCreationScope());workspace?.activate();const operation=captured??workspace!.capture(),api=operation.client;
- try{operation.assertCurrent();
- const assetType=file.type.startsWith('video/')?'video':file.type.startsWith('audio/')?'audio':file.type.startsWith('image/')?'image':null;
- if(!assetType||!file.size)throw Error('请选择有效的图片、音频或视频文件');
- const upload=await api.createUpload({params:undefined,query:undefined,body:{projectId,fileName:file.name,assetType,mimeType:file.type,fileSize:file.size}});
- operation.assertCurrent();if(upload.uploadUrl.startsWith('mock://'))throw Error('当前素材存储未接通，文件和输入已保留');
- const put=await fetch(upload.uploadUrl,{method:'PUT',headers:{'content-type':file.type},body:file,signal:operation.signal});
- operation.assertCurrent();if(!put.ok)throw Error(`素材上传未完成（${put.status}），请重试`);
- const asset=await api.completeUpload({params:{uploadId:upload.uploadId},query:undefined,body:{name:file.name}});
- operation.assertCurrent();if(!asset.currentFileId)throw Error('上传文件尚未确认，请保留当前素材');
- operation.assertCurrent();await api.createMaterialLink({params:undefined,query:undefined,body:{projectId,contentOutputId:outputId,entityType:'asset',entityId:asset.id,role:'reference',stage:'production'}});
- operation.assertCurrent();return{mediaId:crypto.randomUUID(),assetId:asset.id,assetFileId:asset.currentFileId};
- }finally{workspace?.dispose();}
+ const intent=options.intent??{},signal=options.signal?AbortSignal.any([options.signal,operation.signal]):operation.signal;
+ const check=()=>{operation.assertCurrent();signal.throwIfAborted();};
+ const stage=(value:EditorUploadStage)=>{intent.stage=value;options.onProgress?.(value);};
+ let acquired=false;
+ try{
+  check();const scopeKey=creationScopeKey(operation.scope);
+  if(intent.owner&&(intent.owner.scopeKey!==scopeKey||intent.owner.projectId!==projectId||intent.owner.outputId!==outputId||intent.owner.file!==file))throw Error('原上传属于另一份文件或作品，请保留原上传记录');
+  if(intent.running)throw Error('原上传仍在确认，请等待完成');
+  const assetType=file.type.startsWith('video/')?'video':file.type.startsWith('audio/')?'audio':file.type.startsWith('image/')?'image':null;
+  if(!assetType||!file.size)throw Error('请选择有效的图片、音频或视频文件');
+  intent.owner??={scopeKey,projectId,outputId,file};intent.mediaId??=crypto.randomUUID();intent.running=true;acquired=true;
+  if(!intent.upload){
+   if(intent.createUnknown)throw Error('原上传创建结果尚未确认，请保留文件并在素材中心核对原上传；未重新创建');
+   stage('creating');intent.createUnknown=true;
+   intent.upload=await api.createUpload({params:undefined,query:undefined,body:{projectId,fileName:file.name,assetType,mimeType:file.type,fileSize:file.size}});
+   intent.createUnknown=false;check();
+  }
+  if(!intent.putConfirmed){
+   if(intent.upload.uploadUrl.startsWith('mock://'))throw Error('当前素材存储未接通，文件和输入已保留');
+   stage('uploading');check();
+   const put=await fetch(intent.upload.uploadUrl,{method:'PUT',headers:{'content-type':file.type},body:file,signal});
+   if(!put.ok)throw Error(`素材上传未完成（${put.status}），请恢复原上传`);
+   intent.putConfirmed=true;check();
+  }
+  if(!intent.ref){
+   stage('confirming');check();const asset=await api.completeUpload({params:{uploadId:intent.upload.uploadId},query:undefined,body:{name:file.name}});
+   if(!asset.currentFileId)throw Error('上传文件尚未确认，请保留当前素材');
+   intent.ref={mediaId:intent.mediaId,assetId:asset.id,assetFileId:asset.currentFileId};check();
+  }
+  if(!intent.linked){
+   stage('linking');check();await api.createMaterialLink({params:undefined,query:undefined,body:{projectId,contentOutputId:outputId,entityType:'asset',entityId:intent.ref.assetId,role:'reference',stage:'production'}});
+   intent.linked=true;check();
+  }
+  check();stage('ready');return intent.ref;
+ }finally{if(acquired)intent.running=false;workspace?.dispose();}
 }
 export async function readEditorMedia(ref:ReferenceEditorMedia,signal?:AbortSignal,captured?:CreationOperation){
  const workspace=captured?null:createCreationWorkspace(readCreationScope());workspace?.activate();const operation=captured??workspace!.capture(),api=operation.client;

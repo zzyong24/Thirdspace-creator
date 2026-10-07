@@ -88,6 +88,7 @@ const READ_OPERATIONS = [
   "assets.fileDownloadUrl",
   "assets.get",
   "assets.list",
+  "assets.search",
   "assets.usage.list",
   "audienceSignals.list",
   "benchmark.sources.list",

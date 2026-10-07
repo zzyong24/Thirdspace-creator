@@ -1,10 +1,10 @@
 {
   "fixture": false,
   "entry": "src/embedded/native-entry.tsx",
-  "moduleCount": 426,
+  "moduleCount": 427,
   "modules": [
     {
-      "module": "../../../../../../../../../../__vite-plugin-wasm-helper",
+      "module": "../../../../../../../../__vite-plugin-wasm-helper",
       "renderedLength": 1158
     },
     {
@@ -49,7 +49,7 @@
     },
     {
       "module": "src/actions/keybindings/persisted-state.ts",
-      "renderedLength": 641
+      "renderedLength": 635
     },
     {
       "module": "src/actions/registry.ts",
@@ -73,7 +73,7 @@
     },
     {
       "module": "src/animation/channel-data.ts",
-      "renderedLength": 979
+      "renderedLength": 985
     },
     {
       "module": "src/animation/curve-bridge.ts",
@@ -345,7 +345,7 @@
     },
     {
       "module": "src/components/editor/panels/assets/views/assets.tsx",
-      "renderedLength": 15248
+      "renderedLength": 16415
     },
     {
       "module": "src/components/editor/panels/assets/views/base-panel.tsx",
@@ -429,7 +429,7 @@
     },
     {
       "module": "src/components/ui/color-picker.tsx",
-      "renderedLength": 18147
+      "renderedLength": 18143
     },
     {
       "module": "src/components/ui/context-menu.tsx",
@@ -445,11 +445,11 @@
     },
     {
       "module": "src/components/ui/font-picker.tsx",
-      "renderedLength": 7617
+      "renderedLength": 7615
     },
     {
       "module": "src/components/ui/input.tsx",
-      "renderedLength": 4124
+      "renderedLength": 4120
     },
     {
       "module": "src/components/ui/label.tsx",
@@ -517,7 +517,7 @@
     },
     {
       "module": "src/core/managers/audio-manager.ts",
-      "renderedLength": 19264
+      "renderedLength": 19268
     },
     {
       "module": "src/core/managers/clipboard-manager.ts",
@@ -637,19 +637,19 @@
     },
     {
       "module": "src/embedded/media-registration.ts",
-      "renderedLength": 5954
+      "renderedLength": 6164
     },
     {
       "module": "src/embedded/native-controller.ts",
-      "renderedLength": 9001
+      "renderedLength": 9303
     },
     {
       "module": "src/embedded/native-entry.tsx",
-      "renderedLength": 4817
+      "renderedLength": 5242
     },
     {
       "module": "src/embedded/native-host.ts",
-      "renderedLength": 4610
+      "renderedLength": 4662
     },
     {
       "module": "src/embedded/native-lifecycle.ts",
@@ -662,6 +662,10 @@
     {
       "module": "src/embedded/native-version.ts",
       "renderedLength": 35
+    },
+    {
+      "module": "src/embedded/native-visibility.tsx",
+      "renderedLength": 149
     },
     {
       "module": "src/embedded/next-image.tsx",
@@ -809,7 +813,7 @@
     },
     {
       "module": "src/hooks/use-raf-loop.ts",
-      "renderedLength": 628
+      "renderedLength": 740
     },
     {
       "module": "src/hooks/use-resize-observer.ts",
@@ -841,7 +845,7 @@
     },
     {
       "module": "src/masks/builtin/definitions/index.ts",
-      "renderedLength": 1054
+      "renderedLength": 1052
     },
     {
       "module": "src/masks/builtin/definitions/rectangle.ts",
@@ -921,7 +925,7 @@
     },
     {
       "module": "src/media/audio.ts",
-      "renderedLength": 12483
+      "renderedLength": 12485
     },
     {
       "module": "src/media/media-utils.ts",
@@ -929,11 +933,11 @@
     },
     {
       "module": "src/media/mediabunny.ts",
-      "renderedLength": 1667
+      "renderedLength": 1702
     },
     {
       "module": "src/media/processing.ts",
-      "renderedLength": 7076
+      "renderedLength": 7798
     },
     {
       "module": "src/media/thumbnail.ts",
@@ -981,7 +985,7 @@
     },
     {
       "module": "src/preview/components/index.tsx",
-      "renderedLength": 9268
+      "renderedLength": 9407
     },
     {
       "module": "src/preview/components/mask-handles.tsx",
@@ -1229,7 +1233,7 @@
     },
     {
       "module": "src/services/video-cache/service.ts",
-      "renderedLength": 8004
+      "renderedLength": 8006
     },
     {
       "module": "src/services/waveform-cache/service.ts",
@@ -1325,7 +1329,7 @@
     },
     {
       "module": "src/timeline/bookmarks/components/bookmarks.tsx",
-      "renderedLength": 13286
+      "renderedLength": 13282
     },
     {
       "module": "src/timeline/bookmarks/hooks/use-bookmark-drag.ts",

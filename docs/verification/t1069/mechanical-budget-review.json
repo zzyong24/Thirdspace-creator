@@ -1,0 +1,452 @@
+{
+  "schema": "mechanical-budget-review/v1",
+  "task_id": "T-1069",
+  "review_kind": "readonly-exact-baseline-budget",
+  "base_commit": "5f6ab1bb01d4b148a977ac4714db12b0ce0dc5db",
+  "spec_path": "docs/features/t1069-installed-media-and-binding.md",
+  "spec_sha256": "1e26068675610acbb86b212b2b4fd5c6ce7da3008d2821cdfb5e73e9f67ad41e",
+  "scope": "四个尚未产品修改的文件，六个既有机械复杂度类别；不是 reviewctl 新周期或产品/安全授权。",
+  "verdict": "六类当前精确SHA均为已存在机制，可由root正常追加任务内精确in-budget条目后重新执行原progress claim；没有跳过或弱化门卫。",
+  "guard_source": {
+    "path": "orchestrator/process/governance-guard.mjs",
+    "sha256": "de06cdb13af2e73b20cd1beea9c4bb5705443d652fdc50170df677f1d3664eaf",
+    "rules": "MARKERS+detectsMarker扫描整文件；errorsForFile要求task_id+file+category+file_sha256，且disposition属于baseline-migrated/in-budget/defer-hardening/approved-threat-model。progress transitionErrors正常调用该门卫。"
+  },
+  "ledger_snapshot": {
+    "path": "orchestrator/COMPLEXITY_LEDGER.json",
+    "sha256": "df05f6a32669c323d84b5b00bd1214abe742b7830e5afc2b9f74f4a6d2e7e9ea",
+    "schema": "complexity-ledger/v1",
+    "entry_count": 172,
+    "existing_relevant_entries": [
+      {
+        "task_id": "T-915",
+        "files": [
+          "frontend/src/server/persistence-client.ts"
+        ],
+        "file_sha256": "226a03251f38e06cfa3b29cdc9fdc919bd84a6b71e70b443b9d2feb4a856e991",
+        "categories": [
+          "credential_store",
+          "language_toolchain",
+          "native_executable"
+        ],
+        "disposition": "baseline-migrated",
+        "decision": "DEC-RUNTIME-055",
+        "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+        "reason": "DEC-RUNTIME-055 已批准的持久 Worker、正式聊天和封面执行接线；本轮按用户授权删除旧实现并拆分装配，不新增执行权或数据归属。",
+        "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+      },
+      {
+        "task_id": "T-1021",
+        "files": [
+          "frontend/src/server/persistence-client.ts"
+        ],
+        "file_sha256": "6772dbcc7a0186ef861065a8643cda2349a9496ebeb97f7d99d7f01f95f431f5",
+        "categories": [
+          "credential_store",
+          "language_toolchain",
+          "native_executable"
+        ],
+        "disposition": "baseline-migrated",
+        "scope_source": "docs/features/t1021-cover-template-library.md",
+        "reason": "b22e6522原装配文件已包含这些凭据与桌面工具链标记。本任务diff仅装配原Assets/Publishing/creative-canvas服务端口；未新增凭据保管、语言工具链、原生进程或安装机制。准确哈希绑定本任务，标记不授权新机制。",
+        "acceptance": "git diff b22e6522 -- frontend/src/server/persistence-client.ts可核对只增加模板与采纳服务接线。本项不是测试或发布PASS。"
+      },
+      {
+        "task_id": "T-1062",
+        "files": [
+          "frontend/src/server/persistence-client.ts"
+        ],
+        "file_sha256": "8e27512fb9f3286686d07bdd968354de730cda6561735192949f36176ccb535a",
+        "categories": [
+          "credential_store"
+        ],
+        "disposition": "in-budget",
+        "decision": "DEC-T1062-INTEGRATION-20261005 / DEC-T1062-ROUGH-20261005",
+        "scope_source": "docs/features/t1062-consolidated-local-client-acceptance.md",
+        "reason": "只复用既有 channel/model credential resolver 进行当前 Skill/ASR 接线；不新增存储、迁移、加密或凭据生命周期。",
+        "review": "docs/verification/t1062/backend-complexity-review.json",
+        "acceptance": "仅批准现有机制复用预算，不代表测试/安装或预先放行后续字节；最终diff与hash需独立复核。"
+      },
+      {
+        "task_id": "T-1062",
+        "files": [
+          "frontend/src/server/persistence-client.ts"
+        ],
+        "file_sha256": "8e27512fb9f3286686d07bdd968354de730cda6561735192949f36176ccb535a",
+        "categories": [
+          "language_toolchain"
+        ],
+        "disposition": "in-budget",
+        "decision": "DEC-T1062-INTEGRATION-20261005 / DEC-T1062-ROUGH-20261005",
+        "scope_source": "docs/features/t1062-consolidated-local-client-acceptance.md",
+        "reason": "保留文件内既有工具链相关装配；T-1062 不新增或改变运行时安装、探测、编译与环境管理。",
+        "review": "docs/verification/t1062/backend-complexity-review.json",
+        "acceptance": "仅批准现有机制复用预算，不代表测试/安装或预先放行后续字节；最终diff与hash需独立复核。"
+      },
+      {
+        "task_id": "T-1062",
+        "files": [
+          "frontend/src/server/persistence-client.ts"
+        ],
+        "file_sha256": "8e27512fb9f3286686d07bdd968354de730cda6561735192949f36176ccb535a",
+        "categories": [
+          "native_executable"
+        ],
+        "disposition": "in-budget",
+        "decision": "DEC-T1062-INTEGRATION-20261005 / DEC-T1062-ROUGH-20261005",
+        "scope_source": "docs/features/t1062-consolidated-local-client-acceptance.md",
+        "reason": "只复用现有 resolveExecutablePath 与 worker dispatcher；不新增二进制、搜索/下载/安装、spawn 参数族或进程拓扑。",
+        "review": "docs/verification/t1062/backend-complexity-review.json",
+        "acceptance": "仅批准现有机制复用预算，不代表测试/安装或预先放行后续字节；最终diff与hash需独立复核。"
+      },
+      {
+        "task_id": "T-1062",
+        "files": [
+          "frontend/public/reference-editors/opencut-classic/native/native.js"
+        ],
+        "file_sha256": "8356943449ba3c071d2a27971abe5627239d057e2aae988317622b2d43917696",
+        "categories": [
+          "language_toolchain"
+        ],
+        "disposition": "in-budget",
+        "decision": "DEC-T1062-INTEGRATION-20261005 / DEC-T1062-ROUGH-20261005",
+        "scope_source": "docs/features/t1062-consolidated-local-client-acceptance.md",
+        "reason": "既有OpenCut媒体时间转换错误字符串rust returned undefined；沿原打包引擎，非本轮新增Rust运行/编译器。仅准入已审原Skill/native源码锁定产物在本任务的精确文件字节；不引入runtime/toolchain/安装或进程权限。",
+        "review": "docs/verification/t1062/frontend-native-adaptation-scope-independent-review.json",
+        "acceptance": "覆盖冻结after精确SHA的既有引用预算，不代表原18/安装/听审/任务PASS；不允许新hash自动沿用，不使用historical baseline豁免。"
+      },
+      {
+        "task_id": "T-1062",
+        "files": [
+          "frontend/public/reference-editors/opencut-classic/native/native.js"
+        ],
+        "file_sha256": "f61b0939ff9a185861dbc7addee2c40ef1b3a0d71cfac81c31c41d1f43a50354",
+        "categories": [
+          "language_toolchain"
+        ],
+        "disposition": "in-budget",
+        "decision": "DEC-T1062-INTEGRATION-20261005 / DEC-T1062-ROUGH-20261005",
+        "scope_source": "docs/features/t1062-consolidated-local-client-acceptance.md",
+        "reason": "既有OpenCut媒体时间转换错误字符串rust returned undefined；沿原打包引擎，非本轮新增Rust运行/编译器。仅准入已审原Skill/native源码锁定产物在本任务的精确文件字节；不引入runtime/toolchain/安装或进程权限。",
+        "review": "docs/verification/t1062/frontend-native-adaptation-scope-independent-review.json",
+        "acceptance": "覆盖冻结before精确SHA的既有引用预算，不代表原18/安装/听审/任务PASS；不允许新hash自动沿用，不使用historical baseline豁免。"
+      },
+      {
+        "task_id": "T-1062",
+        "files": [
+          "reference-editors/opencut-classic/native/DELIVERY.json"
+        ],
+        "file_sha256": "2d01b96ea6f90b9763259efaaa52cd19aca160f683588090f9f17ef6c3477c67",
+        "categories": [
+          "runtime"
+        ],
+        "disposition": "in-budget",
+        "decision": "DEC-T1062-INTEGRATION-20261005 / DEC-T1062-ROUGH-20261005",
+        "scope_source": "docs/features/t1062-consolidated-local-client-acceptance.md",
+        "reason": "既有OpenCut构建工具版本与原Bun命令、源码/产物回执。仅准入已审原Skill/native源码锁定产物在本任务的精确文件字节；不引入runtime/toolchain/安装或进程权限。",
+        "review": "docs/verification/t1062/frontend-native-adaptation-scope-independent-review.json",
+        "acceptance": "覆盖冻结after精确SHA的既有引用预算，不代表原18/安装/听审/任务PASS；不允许新hash自动沿用，不使用historical baseline豁免。"
+      },
+      {
+        "task_id": "T-1062",
+        "files": [
+          "reference-editors/opencut-classic/native/DELIVERY.json"
+        ],
+        "file_sha256": "c2227ae8a1c4eae396994f5323bafd78b80fb559ae612e50039a57f52d0e6ed0",
+        "categories": [
+          "runtime"
+        ],
+        "disposition": "in-budget",
+        "decision": "DEC-T1062-INTEGRATION-20261005 / DEC-T1062-ROUGH-20261005",
+        "scope_source": "docs/features/t1062-consolidated-local-client-acceptance.md",
+        "reason": "既有OpenCut构建工具版本与原Bun命令、源码/产物回执。仅准入已审原Skill/native源码锁定产物在本任务的精确文件字节；不引入runtime/toolchain/安装或进程权限。",
+        "review": "docs/verification/t1062/frontend-native-adaptation-scope-independent-review.json",
+        "acceptance": "覆盖冻结before精确SHA的既有引用预算，不代表原18/安装/听审/任务PASS；不允许新hash自动沿用，不使用historical baseline豁免。"
+      },
+      {
+        "task_id": "T-1062",
+        "files": [
+          "reference-editors/opencut-classic/native/VERIFICATION.md"
+        ],
+        "file_sha256": "0031db53690cff79f6cb0105fb35890a10d2e5036315674438e44455a53ec16f",
+        "categories": [
+          "runtime"
+        ],
+        "disposition": "in-budget",
+        "decision": "DEC-T1062-INTEGRATION-20261005 / DEC-T1062-ROUGH-20261005",
+        "scope_source": "docs/features/t1062-consolidated-local-client-acceptance.md",
+        "reason": "既有Bun宿主与原native验证结果/失败说明，保留原失败和验收限制。仅准入已审原Skill/native源码锁定产物在本任务的精确文件字节；不引入runtime/toolchain/安装或进程权限。",
+        "review": "docs/verification/t1062/frontend-native-adaptation-scope-independent-review.json",
+        "acceptance": "覆盖冻结after精确SHA的既有引用预算，不代表原18/安装/听审/任务PASS；不允许新hash自动沿用，不使用historical baseline豁免。"
+      },
+      {
+        "task_id": "T-1062",
+        "files": [
+          "reference-editors/opencut-classic/native/VERIFICATION.md"
+        ],
+        "file_sha256": "44c222af6d7f45157936c83b37c6d6c8314b5b63f1ca0c3826cc8d93ab3b37ef",
+        "categories": [
+          "runtime"
+        ],
+        "disposition": "in-budget",
+        "decision": "DEC-T1062-INTEGRATION-20261005 / DEC-T1062-ROUGH-20261005",
+        "scope_source": "docs/features/t1062-consolidated-local-client-acceptance.md",
+        "reason": "既有Bun宿主与原native验证结果/失败说明，保留原失败和验收限制。仅准入已审原Skill/native源码锁定产物在本任务的精确文件字节；不引入runtime/toolchain/安装或进程权限。",
+        "review": "docs/verification/t1062/frontend-native-adaptation-scope-independent-review.json",
+        "acceptance": "覆盖冻结before精确SHA的既有引用预算，不代表原18/安装/听审/任务PASS；不允许新hash自动沿用，不使用historical baseline豁免。"
+      },
+      {
+        "task_id": "T-1062",
+        "files": [
+          "frontend/public/reference-editors/opencut-classic/native/native.js"
+        ],
+        "file_sha256": "ad5e817d260c9fa1686dd606db2151a96c96822d74ab2917956a02e04013769c",
+        "categories": [
+          "language_toolchain"
+        ],
+        "disposition": "in-budget",
+        "decision": "DEC-T1062-INTEGRATION-20261005 / DEC-T1062-ROUGH-20261005 / DEC-T1062-INTEGRATION-COMPLEXITY-REBIND-20261006",
+        "scope_source": "docs/features/t1062-consolidated-local-client-acceptance.md",
+        "reason": "原OpenCut媒体sample机器精度修复后的既有真实编译产物；Rust返回值错误字符串沿旧引擎，不是新增Rust运行/编译器。",
+        "review": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/integration-complexity-readonly-review-g3hiqp92/independent-review.json",
+        "acceptance": "仅本7文件/11类别当前精确SHA的既有机制预算重绑，独立只读报告SHA256 cab28137d8183a5c55ba2f7b8009c0a650522f29985c0480a501dc04e1364e0f；旧entries原样保留，不自动授权新hash，不代签claim、重新原18、全局Gate、安装功能或用户验收。"
+      },
+      {
+        "task_id": "T-1062",
+        "files": [
+          "frontend/src/server/persistence-client.ts"
+        ],
+        "file_sha256": "b59cffa4d7848168efab2f47a6264275c22c88599b6d95b18533f120afac3a09",
+        "categories": [
+          "credential_store",
+          "language_toolchain",
+          "native_executable"
+        ],
+        "disposition": "in-budget",
+        "decision": "DEC-T1062-INTEGRATION-20261005 / DEC-T1062-ROUGH-20261005 / DEC-T1062-INTEGRATION-COMPLEXITY-REBIND-20261006",
+        "scope_source": "docs/features/t1062-consolidated-local-client-acceptance.md",
+        "reason": "唯一后续diff补同transaction公开projects.getProject作为assertProjectOwned（DEC-T1062-PUBLIC-PORT-WIRING-20261006）；凭据resolver、toolchain装配和resolveExecutablePath/worker dispatcher均沿既有机制，不新增存储/安装/执行拓扑。",
+        "review": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/integration-complexity-readonly-review-g3hiqp92/independent-review.json",
+        "acceptance": "仅本7文件/11类别当前精确SHA的既有机制预算重绑，独立只读报告SHA256 cab28137d8183a5c55ba2f7b8009c0a650522f29985c0480a501dc04e1364e0f；旧entries原样保留，不自动授权新hash，不代签claim、重新原18、全局Gate、安装功能或用户验收。"
+      },
+      {
+        "task_id": "T-1062",
+        "files": [
+          "reference-editors/opencut-classic/native/DELIVERY.json"
+        ],
+        "file_sha256": "57ce560b04c9042d49dc16645b0df3fdd8a0ae20e250af5fb75522c7e62d2998",
+        "categories": [
+          "runtime"
+        ],
+        "disposition": "in-budget",
+        "decision": "DEC-T1062-INTEGRATION-20261005 / DEC-T1062-ROUGH-20261005 / DEC-T1062-INTEGRATION-COMPLEXITY-REBIND-20261006",
+        "scope_source": "docs/features/t1062-consolidated-local-client-acceptance.md",
+        "reason": "原OpenCut构建工具/Bun argv及source/产物回执随已批准实际current交付更新；保留历史失败，不新增产品runtime。",
+        "review": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/integration-complexity-readonly-review-g3hiqp92/independent-review.json",
+        "acceptance": "仅本7文件/11类别当前精确SHA的既有机制预算重绑，独立只读报告SHA256 cab28137d8183a5c55ba2f7b8009c0a650522f29985c0480a501dc04e1364e0f；旧entries原样保留，不自动授权新hash，不代签claim、重新原18、全局Gate、安装功能或用户验收。"
+      },
+      {
+        "task_id": "T-1062",
+        "files": [
+          "frontend/src/server/persistence-client.ts"
+        ],
+        "file_sha256": "af13c2b2c66a0244508354c4077818c6ffcc6384c93c84c132d6b30dc29589fb",
+        "categories": [
+          "credential_store",
+          "language_toolchain",
+          "native_executable"
+        ],
+        "disposition": "in-budget",
+        "decision": "DEC-T1062-INSTALLED-RENDER-OWNER-20261006",
+        "scope_source": "docs/features/t1062-installed-render-skill-owner.md",
+        "reason": "独立逐类核对：命中原daemon/keychain/keyring/Rust注释及既有组合根装配，与85f基点marker字节相同；本次只经真实任务service读取冻结owner/runtime并按原claim/executor执行，不新增进程、凭据存储或工具链。",
+        "review": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/render-owner-final-implementation-independent-review-o5demg3a/final-implementation-review.json",
+        "acceptance": "只重绑当前精确已独评源SHA，原entries/基线/失败全保留；独评报告SHA fc86cc4ffeae09e75c01cdf8be4b69fa2bcd0ab91914fef0c63c0aeef4f83147。不代签安装、MP4、跨筛选执行恢复或全局通过。"
+      }
+    ],
+    "preservation": "旧entries原样保留；其它任务条目不为T1069自动授权；没有给T1069加quarantined historical baseline。"
+  },
+  "file_checks": [
+    {
+      "file": "frontend/public/reference-editors/opencut-classic/native/native.js",
+      "file_sha256": "ad5e817d260c9fa1686dd606db2151a96c96822d74ab2917956a02e04013769c",
+      "base_file_sha256": "ad5e817d260c9fa1686dd606db2151a96c96822d74ab2917956a02e04013769c",
+      "byte_length": 6654631,
+      "byte_identical_to_base": true
+    },
+    {
+      "file": "frontend/src/server/persistence-client.ts",
+      "file_sha256": "af13c2b2c66a0244508354c4077818c6ffcc6384c93c84c132d6b30dc29589fb",
+      "base_file_sha256": "af13c2b2c66a0244508354c4077818c6ffcc6384c93c84c132d6b30dc29589fb",
+      "byte_length": 420255,
+      "byte_identical_to_base": true
+    },
+    {
+      "file": "reference-editors/opencut-classic/native/DELIVERY.json",
+      "file_sha256": "57ce560b04c9042d49dc16645b0df3fdd8a0ae20e250af5fb75522c7e62d2998",
+      "base_file_sha256": "57ce560b04c9042d49dc16645b0df3fdd8a0ae20e250af5fb75522c7e62d2998",
+      "byte_length": 36236,
+      "byte_identical_to_base": true
+    },
+    {
+      "file": "reference-editors/opencut-classic/native/VERIFICATION.md",
+      "file_sha256": "0031db53690cff79f6cb0105fb35890a10d2e5036315674438e44455a53ec16f",
+      "base_file_sha256": "0031db53690cff79f6cb0105fb35890a10d2e5036315674438e44455a53ec16f",
+      "byte_length": 9906,
+      "byte_identical_to_base": true
+    }
+  ],
+  "category_reviews": [
+    {
+      "task_id": "T-1069",
+      "file": "frontend/public/reference-editors/opencut-classic/native/native.js",
+      "file_sha256": "ad5e817d260c9fa1686dd606db2151a96c96822d74ab2917956a02e04013769c",
+      "base_file_sha256": "ad5e817d260c9fa1686dd606db2151a96c96822d74ab2917956a02e04013769c",
+      "byte_length": 6654631,
+      "byte_identical_to_base": true,
+      "category": "language_toolchain",
+      "recommended_disposition": "in-budget",
+      "scope_source": "docs/features/t1069-installed-media-and-binding.md",
+      "scope_reason": "原 OpenCut 产物中的 mediaTimeFromSeconds 错误字符串“rust returned undefined”，不是 Rust 编译器、运行时安装或额外本机执行权限。",
+      "source_anchors": [
+        {
+          "line": 25076,
+          "quote": "mediaTimeFromSeconds: rust returned undefined for seconds=${g}"
+        }
+      ],
+      "no_new_mechanism_at_reviewed_hash": true,
+      "acceptance": "仅当前精确文件SHA的既有机制预算；不代签claim、测试、扫码、性能、安装、用户验收或发布。最终源/生成物哈希变化必须对完整diff重新独立复核，不能自动继承。"
+    },
+    {
+      "task_id": "T-1069",
+      "file": "frontend/src/server/persistence-client.ts",
+      "file_sha256": "af13c2b2c66a0244508354c4077818c6ffcc6384c93c84c132d6b30dc29589fb",
+      "base_file_sha256": "af13c2b2c66a0244508354c4077818c6ffcc6384c93c84c132d6b30dc29589fb",
+      "byte_length": 420255,
+      "byte_identical_to_base": true,
+      "category": "credential_store",
+      "recommended_disposition": "in-budget",
+      "scope_source": "docs/features/t1069-installed-media-and-binding.md",
+      "scope_reason": "原组合根沿已有 resolveMasterKey 与 Tauri keyring 注入模型/浏览器登录态密钥；T1069 不新增凭据保管、迁移、加密或 secret 生命周期。只允许 SPEC 已确认的现有平台 stage、profile authority 和 collection service 接线。",
+      "source_anchors": [
+        {
+          "line": 1289,
+          "quote": "T-147 P2 本地加密 —— 解析 master key(桌面 keychain via env `CREATOROS_MASTER_KEY`"
+        },
+        {
+          "line": 1303,
+          "quote": "模型密钥本地加密使用降级 master key(未取到 keychain key)。"
+        }
+      ],
+      "no_new_mechanism_at_reviewed_hash": true,
+      "acceptance": "仅当前精确文件SHA的既有机制预算；不代签claim、测试、扫码、性能、安装、用户验收或发布。最终源/生成物哈希变化必须对完整diff重新独立复核，不能自动继承。"
+    },
+    {
+      "task_id": "T-1069",
+      "file": "frontend/src/server/persistence-client.ts",
+      "file_sha256": "af13c2b2c66a0244508354c4077818c6ffcc6384c93c84c132d6b30dc29589fb",
+      "base_file_sha256": "af13c2b2c66a0244508354c4077818c6ffcc6384c93c84c132d6b30dc29589fb",
+      "byte_length": 420255,
+      "byte_identical_to_base": true,
+      "category": "language_toolchain",
+      "recommended_disposition": "in-budget",
+      "scope_source": "docs/features/t1069-installed-media-and-binding.md",
+      "scope_reason": "命中原工作区归档和 keyring 的 Rust 说明，属于已存在桌面机制；T1069 不新增 Rust/Swift/Xcode/Cargo 编译器、运行时探测、下载安装或环境管理。",
+      "source_anchors": [
+        {
+          "line": 1188,
+          "quote": "重置工作区(T-332 S5 Rust 整目录归档)"
+        },
+        {
+          "line": 1290,
+          "quote": "由 Rust keyring 注入 / web-dev 降级"
+        }
+      ],
+      "no_new_mechanism_at_reviewed_hash": true,
+      "acceptance": "仅当前精确文件SHA的既有机制预算；不代签claim、测试、扫码、性能、安装、用户验收或发布。最终源/生成物哈希变化必须对完整diff重新独立复核，不能自动继承。"
+    },
+    {
+      "task_id": "T-1069",
+      "file": "frontend/src/server/persistence-client.ts",
+      "file_sha256": "af13c2b2c66a0244508354c4077818c6ffcc6384c93c84c132d6b30dc29589fb",
+      "base_file_sha256": "af13c2b2c66a0244508354c4077818c6ffcc6384c93c84c132d6b30dc29589fb",
+      "byte_length": 420255,
+      "byte_identical_to_base": true,
+      "category": "native_executable",
+      "recommended_disposition": "in-budget",
+      "scope_source": "docs/features/t1069-installed-media-and-binding.md",
+      "scope_reason": "命中原 sweepAiTaskDeps 的 system daemon 注释；不是 T1069 新增守护进程。现有唯一 execution_tasks、host lifecycle 与 worker 浏览器适配继续复用，不增加第二套执行权、进程拓扑、二进制安装或 cleanup 后台系统。",
+      "source_anchors": [
+        {
+          "line": 5203,
+          "quote": "扫僵尸是系统 daemon(schedulerCtx 无选中号):走系统级"
+        }
+      ],
+      "no_new_mechanism_at_reviewed_hash": true,
+      "acceptance": "仅当前精确文件SHA的既有机制预算；不代签claim、测试、扫码、性能、安装、用户验收或发布。最终源/生成物哈希变化必须对完整diff重新独立复核，不能自动继承。"
+    },
+    {
+      "task_id": "T-1069",
+      "file": "reference-editors/opencut-classic/native/DELIVERY.json",
+      "file_sha256": "57ce560b04c9042d49dc16645b0df3fdd8a0ae20e250af5fb75522c7e62d2998",
+      "base_file_sha256": "57ce560b04c9042d49dc16645b0df3fdd8a0ae20e250af5fb75522c7e62d2998",
+      "byte_length": 36236,
+      "byte_identical_to_base": true,
+      "category": "runtime",
+      "recommended_disposition": "in-budget",
+      "scope_source": "docs/features/t1069-installed-media-and-binding.md",
+      "scope_reason": "DELIVERY.json 仅记载原 Bun 1.2.18、bun apps/web/scripts/build-native.mjs 与既有实际构建/源码/验证回执；T1069 只在 SPEC 列出原生成员重建后更新真实交付信息，不引入产品 runtime 或安装机制。",
+      "source_anchors": [
+        {
+          "line": 7,
+          "quote": "\"command\": \"bun apps/web/scripts/build-native.mjs\""
+        },
+        {
+          "line": 9,
+          "quote": "\"bun\": \"1.2.18\""
+        }
+      ],
+      "no_new_mechanism_at_reviewed_hash": true,
+      "acceptance": "仅当前精确文件SHA的既有机制预算；不代签claim、测试、扫码、性能、安装、用户验收或发布。最终源/生成物哈希变化必须对完整diff重新独立复核，不能自动继承。"
+    },
+    {
+      "task_id": "T-1069",
+      "file": "reference-editors/opencut-classic/native/VERIFICATION.md",
+      "file_sha256": "0031db53690cff79f6cb0105fb35890a10d2e5036315674438e44455a53ec16f",
+      "base_file_sha256": "0031db53690cff79f6cb0105fb35890a10d2e5036315674438e44455a53ec16f",
+      "byte_length": 9906,
+      "byte_identical_to_base": true,
+      "category": "runtime",
+      "recommended_disposition": "in-budget",
+      "scope_source": "docs/features/t1069-installed-media-and-binding.md",
+      "scope_reason": "VERIFICATION.md 的 Bun 命令和旧 NODE_ENV/DOM 失败说明是原验证记录；T1069 必须保留历史限制，仅追加实际当场测试证据，不以词语命中扩大 runtime、工具链、安装或进程权限。",
+      "source_anchors": [
+        {
+          "line": 7,
+          "quote": "/tmp/t1062-native-build-preflight/build-tools-bun/node_modules/@oven/bun-darwin-aarch64/bin/bun apps/web/scripts/build-native.mjs"
+        },
+        {
+          "line": 38,
+          "quote": "原Bun环境DOM验证未覆盖这一差异"
+        }
+      ],
+      "no_new_mechanism_at_reviewed_hash": true,
+      "acceptance": "仅当前精确文件SHA的既有机制预算；不代签claim、测试、扫码、性能、安装、用户验收或发布。最终源/生成物哈希变化必须对完整diff重新独立复核，不能自动继承。"
+    }
+  ],
+  "future_hash_policy": "本报告仅绑定当前四文件SHA。产品代码、native归档成员与重建bundle、DELIVERY/VERIFICATION更新后，必须针对最终完整diff、scope和SHA做独立复核再重新精确预算，不预先授权未来字节或新机制。",
+  "prohibited_inference": [
+    "不消费user typed capability",
+    "不新增reviewctl规格周期",
+    "不授权下载安装新工具链或后台守护进程",
+    "不代表实际测试、真实扫码、视觉、性能、打包或安装PASS"
+  ],
+  "operations_performed": [
+    "只读当前源码/metadata/流程代码/ledger",
+    "以git show读取冻结提交并逐字节比较",
+    "只读导入taskGovernanceErrors复核六个实际拒绝类别",
+    "仅写此私有报告"
+  ],
+  "shared_writes": false,
+  "app_db_model_qr_packaging_executed": false
+}

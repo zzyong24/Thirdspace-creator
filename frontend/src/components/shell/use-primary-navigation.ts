@@ -18,7 +18,7 @@ export function usePrimaryNavigation() {
   useEffect(()=>{
     if(!isPending && latest.current?.token===settledToken) clear();
   },[isPending,settledToken,clear]);
-  const navigate = useCallback((href:string)=>{
+  const navigateNow = useCallback((href:string)=>{
     // SEMANTIC_BOUNDARY_ALLOW: 仅完整地址相等判断，不选择内容或改变用户导航意图。
     const target = new URL(href,window.location.href).href;
     // Next 可先提交 loading 边界并结束 transition；此时同页仍在读取，不能再次刷新。
@@ -43,5 +43,7 @@ export function usePrimaryNavigation() {
       }
     });
   },[router,clear]);
+  // 路由离开由稳定宿主保留原稿；只有实际更换作品或账号组才处理离开决定。
+  const navigate=navigateNow;
   return {navigate,pendingHref,error};
 }

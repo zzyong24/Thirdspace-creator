@@ -1,4 +1,5 @@
 "use client";
+import {requestVideoLeave} from "@/features/reference-editors/project-video-session-registry";
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -16,7 +17,7 @@ import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { resolveCurrentGroup, type SwitcherGroup } from "./account-switcher-logic";
-export const WORKSPACE_INITIALIZATION_TIMEOUT_MS = 15_000;
+export const WORKSPACE_INITIALIZATION_TIMEOUT_MS = 120_000;
 
 type LoadState = {kind:"loading"}|{kind:"ready";groups:readonly SwitcherGroup[]}|{kind:"error"};
 
@@ -144,7 +145,8 @@ export function AccountSwitcher({collapsed}:{collapsed:boolean}) {
     };
   },[load,retry,cancelInitialRefresh]);
   useAccountsChanged(detail=>{if(detail.source!=="account-switcher")load();});
-  const performSwitch=React.useCallback((id:string)=>{
+  const performSwitch=React.useCallback(async(id:string)=>{
+    if(!(await requestVideoLeave({scopeKey:`group:${id}`}))||!alive.current)return;
     const version=++epoch.current;
     const wasReady=firstReady.current||initializationRef.current?.isReady();
     if(!wasReady){cancelInitialRefresh();controller.current?.abort();}

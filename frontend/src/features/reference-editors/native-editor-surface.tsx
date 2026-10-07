@@ -9,10 +9,12 @@ type Props = {
   editor: 'kuaitu' | 'opencut-classic' | 'doocs-md' | 'noterelay';
   owner: NativeEditorOwner;
   disabled?: boolean;
+  visible?:boolean;
   onReady(): void;
   onChanged(value?: unknown): void;
-  onImport(file: File): Promise<{mediaId: string}>;
+  onImport(file: File, options?:{signal?:AbortSignal}): Promise<{mediaId: string}>;
   onError(message: string): void;
+  onImportActivity?(pending:number):void;
 };
 /** 固定本地源码直接挂载；ShadowRoot 只隔离样式，业务正式稿由原作品服务持有。 */
 export const NativeEditorSurface = React.forwardRef<NativeEditorHandle, Props>(function NativeEditorSurface(props, ref) {
@@ -37,7 +39,7 @@ export const NativeEditorSurface = React.forwardRef<NativeEditorHandle, Props>(f
         const cleanup = () => {clearTimeout(timer); options?.signal?.removeEventListener('abort', abort); if (requests.get(requestId) === entry) requests.delete(requestId);};
         const fail = (error: Error) => {requestController.abort(); cleanup(); reject(error);};
         const abort = () => fail(new Error('编辑操作已停止，当前输入已保留'));
-        const timer = setTimeout(() => fail(new Error('编辑操作尚未确认，当前内容已保留，请重试')), 120000);
+        const timer = setTimeout(() => fail(new Error('编辑操作尚未确认，当前内容已保留，请重试')), 900000);
         const entry = {reject: fail, cleanup};
         requests.set(requestId, entry);
         options?.signal?.addEventListener('abort', abort, {once: true});
@@ -83,7 +85,7 @@ export const NativeEditorSurface = React.forwardRef<NativeEditorHandle, Props>(f
     css.onload = () => cssResolve();
     css.onerror = () => cssReject(new Error('编辑器样式读取失败，请重新打开工作台'));
     const abortCss = () => cssReject(new Error('已离开当前作品'));
-    const cssTimer = setTimeout(() => cssReject(new Error('编辑器样式读取超时，请重新打开工作台')), 30000);
+    const cssTimer = setTimeout(() => cssReject(new Error('编辑器样式读取超时，请重新打开工作台')), 120000);
     void cssReady.finally(() => clearTimeout(cssTimer)).catch(() => undefined);
     controller.signal.addEventListener('abort', abortCss, {once: true});
     applyNativeEditorTheme(element, latestTheme.current);
@@ -97,11 +99,12 @@ export const NativeEditorSurface = React.forwardRef<NativeEditorHandle, Props>(f
           owner: {groupId,accountId:effectiveAccountId,projectId,outputId,sourceVersionId}, theme: latestTheme.current!, portalContainer: portals, signal: controller.signal,
           onChanged: value => {if (isCurrent()) callbacks.current.onChanged(value);},
           onError: message => {if (isCurrent()) callbacks.current.onError(message);},
-          importMedia: async file => {if (!isCurrent()) throw new Error('已切换作品'); const result = await importForOwner(file); if (!isCurrent()) throw new Error('已切换作品'); return result;},
+          onImportActivity: pending => {if(isCurrent())callbacks.current.onImportActivity?.(pending);},
+          importMedia: async (file,options) => {if (!isCurrent()) throw new Error('已切换作品'); const result = await importForOwner(file,{signal:options?.signal?AbortSignal.any([controller.signal,options.signal]):controller.signal}); if (!isCurrent()) throw new Error('已切换作品'); return result;},
         });
         if (controller.signal.aborted) {await mounted.dispose(); return;}
         active.current = mounted;
-        mounted.update({theme: latestTheme.current!, disabled: callbacks.current.disabled});
+        mounted.update({theme: latestTheme.current!, disabled: callbacks.current.disabled,visible:callbacks.current.visible});
         setState('ready'); callbacks.current.onReady();
       } catch (error) {
         if (!controller.signal.aborted) {setState('failed'); callbacks.current.onError(error instanceof Error ? error.message : '编辑器没有完成加载');}
@@ -120,8 +123,8 @@ export const NativeEditorSurface = React.forwardRef<NativeEditorHandle, Props>(f
   // Theme 变化由 update 处理，不能重建时间轴或丢失图层。
   }, [editor,groupId,effectiveAccountId,projectId,outputId,sourceVersionId,themeReady]);
   React.useEffect(() => {
-    if (theme && host.current) {applyNativeEditorTheme(host.current, theme); active.current?.update({theme, disabled: props.disabled});}
-  }, [theme, props.disabled]);
+    if (theme && host.current) {applyNativeEditorTheme(host.current, theme); active.current?.update({theme, disabled: props.disabled,visible:props.visible});}
+  }, [theme, props.disabled,props.visible]);
   return <div className="relative h-full min-h-0 min-w-0" aria-busy={state === 'opening'}>
     {state !== 'ready' && <p role="status" className="absolute inset-x-0 top-0 z-10 bg-surface p-4 text-sm text-muted-foreground">{state === 'failed' ? '编辑器未完成加载，当前稿件已保留。' : '正在打开编辑器…'}</p>}
     <div ref={host} className="relative h-full min-h-0 w-full" aria-label={props.editor === 'opencut-classic' ? '视频剪辑工作台' : props.editor === 'kuaitu' ? '图片设计工作台' : '公众号排版编辑器'} />

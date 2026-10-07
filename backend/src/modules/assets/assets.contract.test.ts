@@ -174,3 +174,12 @@ describe("assets.transport — 7-op contract conformance", () => {
     ).rejects.toBeInstanceOf(UnsupportedOperationError);
   });
 });
+
+it("assets.search 公共读口返回实际文件元数据与游标，不伪造列表 envelope",async()=>{
+ const id=await uploadAsset("目标图片");
+ const result=await transport.request(ENDPOINTS.searchAssets,{params:undefined,body:undefined,query:{query:"目标",limit:24,assetTypes:["image"]}},ctx);
+ const parsed=successEnvelope(ENDPOINTS.searchAssets.response).parse(result);
+ expect(parsed.data.items.map(item=>item.id)).toEqual([id]);expect(parsed.data.items[0]!.currentFileId).toBeTruthy();expect(parsed.data.items[0]!.fileSize).toBe(4096);expect(parsed.data.nextCursor).toBeNull();
+ expect(ENDPOINTS.searchAssets.query!.safeParse({query:"",limit:0}).success).toBe(false);
+ expect(ENDPOINTS.searchAssets.query!.safeParse({query:"",assetTypes:[]}).success).toBe(false);
+});

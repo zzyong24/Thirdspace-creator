@@ -1,4 +1,6 @@
 "use client";
+import {AssetPicker} from "@/components/media/asset-picker";
+import {assetChoice} from "@/components/media/asset-picker.types";
 import {useCreationClient} from "@/lib/creation-workspace-scope";
 import * as React from 'react';
 import Image from 'next/image';
@@ -64,7 +66,7 @@ export function GraphicSeriesPanel({document,onChange,selectedCardId,selectedCar
      <details><summary className="cursor-pointer text-sm text-muted-foreground">这页的画面想法，可选</summary><textarea aria-label="这一页的画面想法" value={selected.visualBrief??''} onChange={event=>edit({visualBrief:event.target.value})} rows={3} className="mt-2 w-full rounded-md border border-border bg-background p-3 text-sm"/></details>
      {image&&<GraphicImagePreview image={image} large/>}
      <div className="flex flex-wrap gap-2"><Button size="sm" variant="outline" onClick={()=>onOpenCanvas(selected.cardId)}>进入画布制作这一页</Button>{image&&<><Button size="sm" variant="outline" onClick={()=>onChange(setGraphicCover(document,image))}>用这页作封面</Button><Button size="sm" variant="outline" onClick={()=>onChange({...document,seriesProfile:{visualDirection:document.seriesProfile?.visualDirection??'',aspectRatio:document.seriesProfile?.aspectRatio??'',referenceImage:{assetId:image.assetId,assetFileId:image.assetFileId}}})}>设为统一参考</Button></>}<Button size="sm" variant="ghost" onClick={()=>onOpenDesign(selected.cardId)}>快图细调</Button></div>
-     <div className="flex gap-2"><select aria-label="选择这一页的已有图片" value={assetId} onChange={event=>setAssetId(event.target.value)} className="min-w-0 flex-1 rounded-md border border-border bg-background p-2 text-sm"><option value="">选择已有图片</option>{assets.map(asset=><option key={asset.id} value={asset.id}>{asset.name}</option>)}</select><Button size="sm" variant="outline" disabled={!selectedAsset} onClick={()=>{if(selectedAsset?.currentFileId)onChange(replaceGraphicPageImage(document,selected.cardId,{assetId:selectedAsset.id,assetFileId:selectedAsset.currentFileId}));setAssetId('');}}>使用到这一页</Button></div>
+     <AssetPicker ownerKey={selected.cardId} label="选择这一页的已有图片" source={{kind:"library",key:"graphic-series-page",label:"素材库图片",allowedTypes:["image"],map:asset=>assetChoice(asset)}} value={null} disabled={disabled} onConfirm={choice=>{if(choice.value.currentFileId)onChange(replaceGraphicPageImage(document,selected.cardId,{assetId:choice.value.id,assetFileId:choice.value.currentFileId}));setAssetId("");}} confirmLabel="使用到这一页"/>
      <Link href="/assets" className="inline-flex min-h-8 items-center text-xs text-primary hover:underline">上传图片素材 →</Link>
     </fieldset>}
     {children}

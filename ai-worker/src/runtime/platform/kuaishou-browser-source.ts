@@ -22,9 +22,11 @@ export function kuaishouProfilePaths(root: string, userId: string, bindAttemptId
     permanent: identity ? join(base, "accounts", hash(identity)) : null };
 }
 
-async function open(directory: string, headless: boolean): Promise<BrowserContext> {
-  await mkdir(directory, { recursive: true });
+type LoginControls={signal?:AbortSignal;onStopped?:()=>Promise<void>;onStopUnconfirmed?:(retry:()=>Promise<void>)=>void};
+async function closeProfile(context:BrowserContext,controls?:LoginControls){try{await context.close();}catch(error){controls?.onStopUnconfirmed?.(()=>context.close());throw error;}}
+async function open(directory: string, headless: boolean,controls?:LoginControls): Promise<BrowserContext> {
   return guardedLaunch(directory, async () => {
+    await mkdir(directory, { recursive: true });
     const { chromium } = await import("@playwright/test");
     return launchWithBrowser((selection) => chromium.launchPersistentContext(directory, {
       ...selection, ...chromiumSandboxOpts(), headless,
@@ -32,12 +34,12 @@ async function open(directory: string, headless: boolean): Promise<BrowserContex
       timezoneId: "Asia/Shanghai", acceptDownloads: false,
       args: ["--no-first-run", "--no-default-browser-check"],
     }));
-  }, { label: "快手创作者浏览器" });
+  }, { label: "快手创作者浏览器",signal:controls?.signal,onStopped:controls?.onStopped });
 }
 
 function observe<T>(context: BrowserContext, pathname: string,
   parse: (body: unknown, response: Response) => T, match: (response: Response) => boolean,
-  timeoutMs: number, ignoreUnavailable = false) {
+  timeoutMs: number, ignoreUnavailable = false,signal?:AbortSignal) {
   let stop = () => {};
   const promise = new Promise<T>((resolve, reject) => {
     let settled = false;
@@ -47,9 +49,11 @@ function observe<T>(context: BrowserContext, pathname: string,
       clearTimeout(timer);
       context.off("response", receive);
       context.off("close", closed);
+      signal?.removeEventListener("abort",aborted);
       error ? reject(error) : resolve(value!);
     };
     const closed = () => finish(new Error("BROWSER_CLOSED"));
+    const aborted=()=>finish(new Error("CANCELLED"));
     const timer = setTimeout(() => finish(new Error("SOURCE_TIMEOUT")), timeoutMs);
     const receive = async (response: Response) => {
       let url: URL;
@@ -72,36 +76,37 @@ function observe<T>(context: BrowserContext, pathname: string,
     stop = () => finish(new Error("CANCELLED"));
     context.on("response", receive);
     context.on("close", closed);
+    signal?.addEventListener("abort",aborted,{once:true});if(signal?.aborted)aborted();
   });
   void promise.catch(() => {});
   return { promise, stop };
 }
 
 /** Human logs in inside a new CreatorOS-owned profile. No browser cookie import. */
-export async function loginKuaishouCreator(directory: string): Promise<KuaishouCreatorIdentity> {
-  const context = await open(directory, false);
+export async function loginKuaishouCreator(directory: string,controls?:LoginControls): Promise<KuaishouCreatorIdentity> {
+  const context = await open(directory, false,controls);
   const identity = observe(context, KS_IDENTITY_SOURCE,
-    (body) => parseKuaishouCreatorIdentity(body), () => true, 8 * 60_000, true);
+    (body) => parseKuaishouCreatorIdentity(body), () => true, 8 * 60_000, true,controls?.signal);
   try {
     const page = context.pages()[0] ?? await context.newPage();
-    await page.goto(ORIGIN + "/", { waitUntil: "domcontentloaded", timeout: 30_000 });
+    await page.goto(ORIGIN + "/", { waitUntil: "domcontentloaded", timeout: 120_000 });
     return await identity.promise;
-  } finally { identity.stop(); await context.close().catch(() => {}); }
+  } finally { identity.stop(); await closeProfile(context,controls); }
 }
 
 export async function readKuaishouCreatorIdentity(directory: string,
-  expectedIdentity: string): Promise<KuaishouCreatorIdentity> {
-  const context = await open(directory, true);
+  expectedIdentity: string,controls?:LoginControls): Promise<KuaishouCreatorIdentity> {
+  const context = await open(directory, true,controls);
   const identity = observe(context, KS_IDENTITY_SOURCE,
-    (body) => parseKuaishouCreatorIdentity(body, expectedIdentity), () => true, 25_000);
+    (body) => parseKuaishouCreatorIdentity(body, expectedIdentity), () => true, 120_000,false,controls?.signal);
   try {
     const page = context.pages()[0] ?? await context.newPage();
-    await page.goto(ORIGIN + "/", { waitUntil: "domcontentloaded", timeout: 30_000 });
+    await page.goto(ORIGIN + "/", { waitUntil: "domcontentloaded", timeout: 120_000 });
     return await identity.promise;
-  } finally { identity.stop(); await context.close().catch(() => {}); }
+  } finally { identity.stop(); await closeProfile(context,controls); }
 }
 
-async function readPass(context: BrowserContext, page: Page, expectedIdentity: string): Promise<KuaishouWorkPage[]> {
+async function readPass(context: BrowserContext, page: Page, expectedIdentity: string,signal?:AbortSignal): Promise<KuaishouWorkPage[]> {
   const pages: KuaishouWorkPage[] = [];
   let cursor: string | null = null;
   const seen = new Set<string>();
@@ -114,10 +119,10 @@ async function readPass(context: BrowserContext, page: Page, expectedIdentity: s
           const body = response.request().postDataJSON() as { queryType?: string; cursor?: string };
           return body.queryType === "0" && (index === 0 || body.cursor === requested);
         } catch { return false; }
-      }, 25_000);
+      }, 120_000,false,signal);
     try {
       if (index === 0) {
-        await page.goto(ORIGIN + "/article/manage/video?status=0", { waitUntil: "domcontentloaded", timeout: 30_000 });
+        await page.goto(ORIGIN + "/article/manage/video?status=0", { waitUntil: "domcontentloaded", timeout: 120_000 });
       } else {
         await page.locator("#main-container").evaluate((element) => { element.scrollTop = element.scrollHeight; });
       }
@@ -141,30 +146,30 @@ async function readPass(context: BrowserContext, page: Page, expectedIdentity: s
   throw new Error("INCOMPLETE_CATALOG");
 }
 
-export async function collectKuaishouCreatorCatalog(directory: string, expectedIdentity: string): Promise<{
+export async function collectKuaishouCreatorCatalog(directory: string, expectedIdentity: string,controls?:LoginControls): Promise<{
   first: KuaishouWorkPage[]; second: KuaishouWorkPage[];
   identity: KuaishouCreatorIdentity;
 }> {
-  const context = await open(directory, true);
+  const context = await open(directory, true,controls);
   try {
     const page = context.pages()[0] ?? await context.newPage();
     const current = observe(context, KS_IDENTITY_SOURCE,
-      (body) => parseKuaishouCreatorIdentity(body, expectedIdentity), () => true, 25_000);
+      (body) => parseKuaishouCreatorIdentity(body, expectedIdentity), () => true, 120_000,false,controls?.signal);
     let identity: KuaishouCreatorIdentity;
     try {
-      await page.goto(ORIGIN + "/", { waitUntil: "domcontentloaded", timeout: 30_000 });
+      await page.goto(ORIGIN + "/", { waitUntil: "domcontentloaded", timeout: 120_000 });
       identity = await current.promise;
     } finally { current.stop(); }
-    const first = await readPass(context, page, expectedIdentity);
+    const first = await readPass(context, page, expectedIdentity,controls?.signal);
     await page.goto("about:blank");
     const secondIdentity = observe(context, KS_IDENTITY_SOURCE,
-      (body) => parseKuaishouCreatorIdentity(body, expectedIdentity), () => true, 25_000);
+      (body) => parseKuaishouCreatorIdentity(body, expectedIdentity), () => true, 120_000,false,controls?.signal);
     try {
-      await page.goto(ORIGIN + "/", { waitUntil: "domcontentloaded", timeout: 30_000 });
+      await page.goto(ORIGIN + "/", { waitUntil: "domcontentloaded", timeout: 120_000 });
       await secondIdentity.promise;
     } finally { secondIdentity.stop(); }
-    const second = await readPass(context, page, expectedIdentity);
+    const second = await readPass(context, page, expectedIdentity,controls?.signal);
     compareKuaishouWorkPasses(first, second);
     return { first, second, identity };
-  } finally { await context.close().catch(() => {}); }
+  } finally { await closeProfile(context,controls); }
 }

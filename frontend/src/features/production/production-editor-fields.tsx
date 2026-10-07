@@ -1,4 +1,6 @@
 "use client";
+import {AssetPicker} from "@/components/media/asset-picker";
+import {mediaIdentity} from "@/components/media/asset-picker.types";
 import {videoCardMotion,videoRenderBroll,videoRenderTone} from "@creatoros/contract";
 import type {DraftItem,DraftPlan} from "./production-editor-draft";
 import {readDraftItem} from "./production-editor-draft";
@@ -19,7 +21,8 @@ export function ProductionEditorFields({plan,item,patch,remove,materials,onScene
 export function ProductionEditableItemFields({raw,kind,patch,remove,materials,sceneTitle,onSceneTitle,skipTime=false}:{raw:Record<string,unknown>;kind:"caption"|"broll"|"card";patch:(p:Record<string,unknown>)=>void;remove:()=>void;materials?:Array<{id:string;name:string;assetType:string}>;sceneTitle?:string;onSceneTitle?:(title:string)=>void;skipTime?:boolean}) {
   const select=(name:string,field:string,values:ReadonlyArray<string>)=><label className={label}>{name}<select aria-label={name} className={input} value={String(raw[field]??"")} onChange={e=>patch({[field]:e.target.value||undefined})}><option value="">沿用默认</option>{values.map(v=><option key={v} value={v}>{({bar:"对比条",counter:"数字递增",metaphor:"视觉隐喻",strike:"划线",reveal:"依次出现",plain:"基础进场",accent:"强调",green:"绿色",amber:"暖色",muted:"低调",danger:"警示"} as Record<string,string>)[v]??v}</option>)}</select></label>;
   const field=(name:string,key:string,numeric=false)=><Field name={name} value={raw[key]} numeric={numeric} onCommit={v=>patch({[key]:v})}/>;
-  const file=materials?<label className={label}>替换素材<select aria-label="替换素材" className={input} value={String(raw.file??"")} onChange={e=>patch({file:e.target.value})}><option value={String(raw.file)}>{materials.find(m=>m.id===raw.file)?.name??"当前素材"}</option>{materials.filter(m=>m.id!==raw.file&&(raw.kind!=="image"||m.assetType==="image")).map(m=><option key={m.id} value={m.id}>{m.name}</option>)}</select></label>:<p className="text-xs text-muted-foreground">图片和视频文件请在作品组合的材料区选择、替换或解除；此处修改已采用画面的文字与位置。</p>;
+  const choices=materials?.filter(m=>raw.kind!=="image"||m.assetType==="image").map(m=>({choiceKey:m.id,value:m,identity:mediaIdentity({...m,currentFileId:(m as {currentFileId?:string}).currentFileId??null}),name:m.name,assetType:m.assetType as "image"|"video"|"audio"}))??[];
+  const file=materials?<AssetPicker ownerKey={String(raw.id??"legacy-item")} label="替换素材" source={{kind:"bounded",key:"legacy-project-materials",label:"当前项目素材",allowedTypes:raw.kind==="image"?["image"]:["image","video","audio"],items:choices,completeness:"complete"}} value={choices.find(choice=>choice.value.id===raw.file)??(raw.file?{choiceKey:String(raw.file),value:{id:String(raw.file),name:"当前素材",assetType:"image"},name:"当前素材",identity:null}:null)} onConfirm={choice=>patch({file:choice.value.id})}/>:<p className="text-xs text-muted-foreground">图片和视频文件请在作品组合的材料区选择、替换或解除；此处修改已采用画面的文字与位置。</p>;
   return <div className="grid gap-3">
     <h3 className="text-sm font-medium">{kind==="caption"?"字幕":kind==="broll"?"素材片段":"画面卡片"}</h3>
     {kind==="caption"?<><Text name="中文字幕" value={String(raw.cn)} onCommit={cn=>patch({cn})}/><Text name="英文字幕" value={String(raw.en??"")} onCommit={en=>patch({en:en||null})}/>{!skipTime&&<>{field("开始时间（秒）","start",true)}{field("结束时间（秒）","end",true)}</>}</>:<>

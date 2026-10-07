@@ -68,3 +68,16 @@ it('目标租约等待期间取消会释放预留资源，只清理本run且保�
  try{const run=await start();await service.drainAccountBindingQueue(control);await vi.waitFor(async()=>expect(await service.status(ctx,run.runId)).toMatchObject({status:'finalizing'}));await service.cancel(ctx,run.runId);await vi.waitFor(async()=>expect(await service.status(ctx,run.runId)).toMatchObject({status:'cancelled'}),{timeout:3000});expect(await readFile(path.join(target,'profile.txt'),'utf8')).toBe('old-login');expect(await readdir(base)).toEqual([account.id]);}finally{await blocker.onStopped();}
  const held=await lifecycle.acquire(target);await held.onStopped();
 });
+it.each(['xiaohongshu','kuaishou'] as const)('T1069 %s真实目录、宿主租约与账号组事务闭环',async(platform)=>{
+ const module=await import('./account-binding-stage');const make=(module as typeof module&{createLocalPlatformAccountBindingStage:(ports:any)=>any}).createLocalPlatformAccountBindingStage;expect(make).toBeTypeOf('function');
+ const root=path.join(base,'platforms'),authority=(createBrowserProfileAuthority as any)(store.db,path.join(base,'douyin'),{localPlatformRoot:root});
+ lifecycle=createHostBrowserProfileLifecycle(store.db,{resolveProfile:authority.resolveProfile,waitTimeoutMs:120000,pollIntervalMs:10});
+ const local=make({db:store.db,authority,lifecycle,now,nextId,platform,scopes:['workCatalog'],loadLogin:async()=>async(directory:string,controls:any)=>{try{await mkdir(directory,{recursive:true});await writeFile(path.join(directory,'profile.txt'),'verified-local-login');return {platformIdentity:'verified-local-id',displayName:'中性绑定身份',source:'fixture-driver'};}finally{await controls.onStopped();}},commitAuthorization:async()=>{}});
+ service=createAccountBindingService({db:store.db,now,nextId,stage,localStages:{[platform]:local},capabilities:async()=>[{platform,bind:{available:true,method:'qr',reason:'受控浏览器驱动'}}]});
+ const group=await createAccountGroupService({db:store.db,now,nextId}).get(ctx,ctx.groupId!);const run=await service.start(ctx,{groupId:ctx.groupId!,platform,expectedGroupVersion:group.version,idempotencyKey:'local-intent'});
+ await service.drainAccountBindingQueue(control,{waitForCompletion:true});const receipt=await service.status(ctx,run.runId);expect(receipt).toMatchObject({status:'succeeded',platform});
+ const {createHash}=await import('node:crypto');const hash=(value:string)=>createHash('sha256').update(value).digest('hex');const directory=path.join(root,platform,hash(ctx.userId),'accounts',hash('verified-local-id'));
+ expect(await readFile(path.join(directory,'profile.txt'),'utf8')).toBe('verified-local-login');expect((await createAccountGroupService({db:store.db,now,nextId}).get(ctx,ctx.groupId!)).members).toHaveLength(1);
+ expect(await createPlatformAccountService({db:store.db,now,nextId}).getAccount(ctx,receipt.accountId!)).toMatchObject({platform,externalAccountId:'verified-local-id'});
+ const resource=await lifecycle.acquire(directory);await resource.onStopped();expect(await readdir(path.dirname(directory))).toEqual([hash('verified-local-id')]);
+});

@@ -2,7 +2,7 @@ import {runAccountGroupStartup} from '@creatoros/backend/application/workspace/s
 import {hasLegacyDouyinCredentialEvidence} from '@creatoros/backend/application/workspace/credential-evidence';
 import {createTaxonomyEntityAccess} from "@creatoros/backend/application/taxonomy-entity-access";
 import {workspaceKey} from "@creatoros/backend";
-import {createDouyinAccountBindingStage} from "@/server/ingestion/account-binding-stage";
+import {createDouyinAccountBindingStage,createLocalPlatformAccountBindingStage} from "@/server/ingestion/account-binding-stage";
 import {createAccountBindingService,createAccountBindingTransport} from "@creatoros/backend/modules/platform-account";
 import {createUnassignedDraftRetainer} from "@creatoros/backend/application/publishing-retain-unassigned";
 import {createMembershipLockService} from "@creatoros/backend/modules/platform-account";
@@ -1219,7 +1219,11 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   const douyinAuthDirBase =
     process.env.CREATOROS_DOUYIN_AUTH_DIR ??
     nodePath.join(process.cwd(), ".auth", "douyin");
-  const profileAuthority=createBrowserProfileAuthority(db,douyinAuthDirBase);
+  const webAuthDirBase =
+    process.env.CREATOROS_WEB_AUTH_DIR ??
+    nodePath.join(process.cwd(), ".auth", "web");
+  const platformProfileRoot=nodePath.join(nodePath.dirname(webAuthDirBase),"platforms");
+  const profileAuthority=createBrowserProfileAuthority(db,douyinAuthDirBase,{localPlatformRoot:platformProfileRoot});
   const hostProfileLifecycle=createHostBrowserProfileLifecycle(db,{resolveProfile:profileAuthority.resolveProfile,recovery:createDesktopHostProcessRecovery()});
   configureHostBrowserProfileLifecycle(hostProfileLifecycle.acquire,profileAuthority.resolveProfile);
   const douyinAuthDirFor = async (accountId?: string | null, signal?: AbortSignal,userId?:string): Promise<string> => {
@@ -1242,9 +1246,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   //   (CREATOROS_WEB_AUTH_DIR,lib.rs 注 appDataDir 顶层跨版本持久,复用 T-205 注入机制)或
   //   默认项目内 `.auth/web`(cookie 只在本机、不入 Git —— `.auth/` 已在 .gitignore)。per-user
   //   全局归属(ChatGPT/知乎登录与抖音号无关),不按 accountId 分。
-  const webAuthDirBase =
-    process.env.CREATOROS_WEB_AUTH_DIR ??
-    nodePath.join(process.cwd(), ".auth", "web");
+
   // [B-01] domain → 目录路径的纵深防御(FS 边界二次校验,不信任任何上游):
   //   ① 白名单校验(assertSafeWebDomain 拒 `..`/分隔符/编码分隔符/绝对路径/非法字符);
   //   ② containment:path.resolve 后必须严格位于 webAuthDirBase 之内(path.relative 非空、
@@ -4506,8 +4508,9 @@ dispatchIntelligenceRun});
   // collision-free across requests).
   const accountGroupService = createAccountGroupService({db, now: deps.now, nextId: deps.nextId});
   const accountGroup = createAccountGroupTransport(()=>accountGroupService,()=>createGroupMigrationService({db,...deps}),()=>createGroupResourceAccessService({db,now:deps.now}));
+  const localBindingStages:NonNullable<Parameters<typeof createAccountBindingService>[0]["localStages"]>={};
   const platformAccountService = createPlatformAccountService({
-    bindingCapabilities:async()=>["douyin","kuaishou","wechatVideo","wechatOfficial","xiaohongshu"].map(platform=>({platform:platform as import("@creatoros/contract").PlatformAccountCapabilitiesResource["platform"],bind:platform==="douyin"?{available:true,reason:"已接入抖音扫码登录与真实身份读取",method:"qr" as const}:{available:false,reason:"尚未接入该平台身份绑定",method:"none" as const},collect:{available:platform==="douyin",reason:platform==="douyin"?"已接入作品与明细采集":"尚未接入该平台自动采集"},publish:{available:false,reason:"尚未接入自动发布"},draft:{available:false,reason:"尚未接入平台草稿保存"},manual:{available:true,reason:"可登记账号、导出物料与录入真实发布记录"}})),
+    bindingCapabilities:async()=>["douyin","kuaishou","wechatVideo","wechatOfficial","xiaohongshu"].map(platform=>({platform:platform as import("@creatoros/contract").PlatformAccountCapabilitiesResource["platform"],bind:(platform==="douyin"||((platform==="xiaohongshu"||platform==="kuaishou")&&!!localBindingStages[platform]))?{available:true,reason:"已接入平台登录与真实身份读取",method:"qr" as const}:{available:false,reason:"尚未接入该平台身份绑定",method:"none" as const},collect:{available:platform==="douyin"||((platform==="xiaohongshu"||platform==="kuaishou")&&!!localBindingStages[platform]),reason:(platform==="douyin"||((platform==="xiaohongshu"||platform==="kuaishou")&&!!localBindingStages[platform]))?"已接入作品与明细采集":"尚未接入该平台自动采集"},publish:{available:false,reason:"尚未接入自动发布"},draft:{available:false,reason:"尚未接入平台草稿保存"},manual:{available:true,reason:"可登记账号、导出物料与录入真实发布记录"}})),
     db,
     now: deps.now,
     nextId: deps.nextId,
@@ -4519,7 +4522,7 @@ dispatchIntelligenceRun});
   // T-1021: worker owns the local browser; this composition root only binds
   // its verified observations to the backend service port. Kuaishou stays
   // unavailable until its actual creator-page identity and fields are sampled.
-  const platformProfileRoot = nodePath.join(nodePath.dirname(webAuthDirBase), "platforms");
+
   const xhsCatalogSource = "/api/galaxy/v2/creator/note/user/posted";
   const xhsReady = (["bind", "workCatalog", "workMetrics"] as const).map((capability) => ({
     platform: "xiaohongshu" as const, capability, supported: true,
@@ -4595,7 +4598,8 @@ dispatchIntelligenceRun});
       const directory = kuaishouProfilePaths(platformProfileRoot, ctx.userId, run.attemptId,
         lease.expectedPlatformIdentity).permanent!;
       if (lease.capability === "accountOverview") {
-        const identity = await readKuaishouCreatorIdentity(directory, lease.expectedPlatformIdentity);
+        const authorized=await profileAuthority.authorizeBindingTarget(ctx,lease.accountId,(c,id)=>platformAccountService.getAccount(c,id));if(authorized.authDir!==(await resolveDouyinProfileIdentity(nodePath.dirname(directory),nodePath.basename(directory))).authDir)throw Error('采集目录与当前平台身份不符');const checkout=await hostProfileLifecycle.acquire(authorized.authDir);
+        const identity = await readKuaishouCreatorIdentity(directory, lease.expectedPlatformIdentity,{onStopped:checkout.onStopped});
         const observedAt = new Date().toISOString();
         await platformCollectionService.commitPage({
           attemptId: lease.attemptId, accountId: lease.accountId, platform: "kuaishou",
@@ -4611,7 +4615,8 @@ dispatchIntelligenceRun});
         } satisfies CollectionPageCommit);
         return;
       }
-      const { first, second } = await collectKuaishouCreatorCatalog(directory, lease.expectedPlatformIdentity);
+      const authorized=await profileAuthority.authorizeBindingTarget(ctx,lease.accountId,(c,id)=>platformAccountService.getAccount(c,id));if(authorized.authDir!==(await resolveDouyinProfileIdentity(nodePath.dirname(directory),nodePath.basename(directory))).authDir)throw Error('采集目录与当前平台身份不符');const checkout=await hostProfileLifecycle.acquire(authorized.authDir);
+      const { first, second } = await collectKuaishouCreatorCatalog(directory, lease.expectedPlatformIdentity,{onStopped:checkout.onStopped});
       if (lease.capability === "workMetrics") {
         const observedAt = new Date().toISOString();
         const fields = [
@@ -4686,7 +4691,8 @@ dispatchIntelligenceRun});
       const { xhsSourceWorks } = await import("@creatoros/ai-worker/platform/xhs-creator-normalizer");
       const directory = xhsProfilePaths(platformProfileRoot, ctx.userId, run.attemptId,
         lease.expectedPlatformIdentity).permanent!;
-      const [first, second] = await collectXhsCreatorCatalog(directory, lease.expectedPlatformIdentity);
+      const authorized=await profileAuthority.authorizeBindingTarget(ctx,lease.accountId,(c,id)=>platformAccountService.getAccount(c,id));if(authorized.authDir!==(await resolveDouyinProfileIdentity(nodePath.dirname(directory),nodePath.basename(directory))).authDir)throw Error('采集目录与当前平台身份不符');const checkout=await hostProfileLifecycle.acquire(authorized.authDir);
+      const [first, second] = await collectXhsCreatorCatalog(directory, lease.expectedPlatformIdentity,undefined,{onStopped:checkout.onStopped});
       if (lease.capability === "workMetrics") {
         const mappings = ["view_count", "likes", "comments_count", "collected_count", "shared_count"] as const;
         const observedAt = new Date().toISOString();
@@ -4837,15 +4843,19 @@ dispatchIntelligenceRun});
     now: deps.now,
   });
 
-  const accountBindingService=createAccountBindingService({db,...deps,
+  localBindingStages.xiaohongshu=createLocalPlatformAccountBindingStage({db,...deps,authority:profileAuthority,lifecycle:hostProfileLifecycle,platform:'xiaohongshu',scopes:['workCatalog','workMetrics'],loadLogin:async()=>{const source=await import('@creatoros/ai-worker/platform/xhs-browser-source');return (directory,controls)=>source.loginXhsCreator(directory,controls.signal,controls);},commitAuthorization:async(tx,c,accountId,identity)=>{if(!identity.collectionProof)throw Error('平台身份证明尚未读取');await platformCollectionService.commitVerifiedBinding(tx,c,{accountId,platform:'xiaohongshu',platformIdentity:identity.externalAccountId,...identity.collectionProof});}});
+  localBindingStages.kuaishou=createLocalPlatformAccountBindingStage({db,...deps,authority:profileAuthority,lifecycle:hostProfileLifecycle,platform:'kuaishou',scopes:['accountOverview','workCatalog','workMetrics'],loadLogin:async()=>{const source=await import('@creatoros/ai-worker/platform/kuaishou-browser-source');return (directory,controls)=>source.loginKuaishouCreator(directory,controls);},commitAuthorization:async(tx,c,accountId,identity)=>{if(!identity.collectionProof)throw Error('平台身份证明尚未读取');await platformCollectionService.commitVerifiedBinding(tx,c,{accountId,platform:'kuaishou',platformIdentity:identity.externalAccountId,...identity.collectionProof});}});
+  const accountBindingService=createAccountBindingService({db,...deps,localStages:localBindingStages,
     stage:createDouyinAccountBindingStage({db,base:douyinAuthDirBase,authority:profileAuthority,lifecycle:hostProfileLifecycle,...deps,loadCdp:loadDouyinCdp}),
     capabilities:ctx=>platformAccountService.getBindingCapabilities(ctx),
     wake:()=>recoveryWake?.wake('account_binding'),
     onProfileCleanupError:()=>console.error('[account-binding] 登录目录备份清理未完成，请保留恢复文件'),
-    onBound:async(c,accountId)=>{
+    onBound:async(c,accountId,runId)=>{
       if(!await accountGroupService.hasVerifiedBinding(c,accountId))throw new Error('绑定成功回执尚未完成，请保留原扫码任务');
       const member=await accountGroupService.forAccount(c,accountId);
-      await bootstrapDouyinOnBind({...c,accountId,groupId:member.groupId,membershipVersion:member.version,source:'ingestion'});
+      const account=await platformAccountService.getAccount(c,accountId),frozen={...c,accountId,groupId:member.groupId,membershipVersion:member.version,source:'ingestion' as const};
+      if(account.platform==='douyin'){await bootstrapDouyinOnBind(frozen);return;}
+      if(account.platform==='xiaohongshu'||account.platform==='kuaishou'){const run=await platformCollectionService.start(frozen,{accountId,capability:'workCatalog',clientRequestId:runId+'-catalog'});scheduleXhsCollection(frozen,run);}
     },
     onBoundError:()=>console.warn('[account-binding] 账号已绑定，默认采集计划补齐未完成，下次启动会按真实账号重试'),
   });

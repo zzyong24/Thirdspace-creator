@@ -1,4 +1,6 @@
 "use client";
+import {AssetPicker} from "@/components/media/asset-picker";
+import {assetChoice} from "@/components/media/asset-picker.types";
 import {useCreationClient,useCreationScope,creationScopeKey} from "@/lib/creation-workspace-scope";
 
 import * as React from "react";
@@ -132,8 +134,8 @@ function GraphicPostWorkbenchSession({projectId,projectTitle,accountId,initial,i
   }, []);
   React.useEffect(() => { void Promise.resolve().then(() => loadAssets(1)); }, [loadAssets]);
 
-  function addImage() {
-    const asset = assets.find((item) => item.id === assetId && item.currentFileId);
+  function addImage(selected?:ImageAsset) {
+    const asset = selected??assets.find((item) => item.id === assetId && item.currentFileId);
     if (!asset?.currentFileId) return;
     if (draft.imageUses.some((image) => image.assetId === asset.id && image.assetFileId === asset.currentFileId)) return;
     setDraft((current) => ({ ...current, imageUses: normalizeImages([...current.imageUses, {
@@ -250,7 +252,7 @@ function GraphicPostWorkbenchSession({projectId,projectTitle,accountId,initial,i
 
         <details className="rounded-xl border border-border bg-surface p-5" aria-label="图文图片"><summary className="cursor-pointer text-sm font-medium">手动选图与封面</summary><div className="mt-4">
           <div className="flex flex-wrap items-start justify-between gap-2"><div><h2 className="font-semibold">封面与原照片</h2><p className="mt-1 text-sm text-muted-foreground">没有绑定页的原照片可以继续使用。封面保留独立用途，不会取消原页绑定。</p></div><Link href="/assets" className="text-sm text-primary hover:underline">上传图片素材 →</Link></div>
-          <div className="mt-4 flex gap-2"><select aria-label="选择图片素材" value={assetId} onChange={(event) => setAssetId(event.target.value)} className="min-w-0 flex-1 rounded-md border border-border bg-background px-2 py-2 text-sm"><option value="">选择已有图片</option>{assets.map((asset) => <option key={asset.id} value={asset.id}>{asset.name}</option>)}</select><Button variant="outline" disabled={!assetId} onClick={addImage}>添加图片</Button></div>
+          <div className="mt-4"><AssetPicker ownerKey={`${projectId}:${state.outputId}`} label="选择图片素材" source={{kind:"library",key:"graphic-post-image",label:"素材库图片",allowedTypes:["image"],map:asset=>assetChoice(asset)}} value={null} disabled={busy} onConfirm={choice=>addImage(choice.value)} confirmLabel="添加图片"/></div>
           {hasMoreAssets && <Button variant="ghost" size="sm" disabled={assetBusy} onClick={() => void loadAssets(assetPage + 1)} className="mt-2">{assetBusy ? "读取中…" : "加载更多图片"}</Button>}
           {draft.imageUses.some(image=>image.role==="cover"||!image.cardId) ? <ol className="mt-4 grid gap-3 sm:grid-cols-2">{legacyImages.map((image, index) => <li key={`${image.role}:${image.cardId??"unbound"}:${image.assetId}:${image.assetFileId}`} className="rounded-lg border border-border p-3"><ImagePreview image={image} /><div className="mt-2 flex items-center justify-between text-xs"><span>{image.role === "cover" ? "封面" : `原照片 ${index + 1}`}</span><span>{index + 1} / {legacyImages.length}</span></div><div className="mt-2 flex flex-wrap gap-2"><Button size="sm" variant="outline" disabled={index === 0||image.role==="cover"||legacyImages[index-1]?.role==="cover"} onClick={() => { const next = [...legacyImages]; [next[index - 1], next[index]] = [next[index]!, next[index - 1]!]; editLegacyImages(next); }}>上移</Button><Button size="sm" variant="outline" disabled={index === legacyImages.length - 1||image.role==="cover"} onClick={() => { const next = [...legacyImages]; [next[index], next[index + 1]] = [next[index + 1]!, next[index]!]; editLegacyImages(next); }}>下移</Button><Button size="sm" variant="outline" disabled={image.role === "cover"} onClick={() => setDraft(current=>setGraphicCover(current,image))}>设为封面</Button><Button size="sm" variant="ghost" onClick={() => editLegacyImages(legacyImages.filter((_, position) => position !== index))}>移除</Button></div></li>)}</ol> : <p className="mt-4 text-sm text-muted-foreground">暂无图片。文字可先保存，图片稍后补充。</p>}
         </div></details>

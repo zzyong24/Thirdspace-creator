@@ -86,7 +86,7 @@ export interface AssetRepository {
   // [T-332 S2] owned-root(assets)方法的 accountId 收紧为**必填 string**(strict 门,
   // SPEC §4.1):service 层断言 requireAccountId 后传入,repo 不再有 undefined 退化全量
   // 的分支。repo 是单例、userId 随调用传,故 accountId 也随调用传(不能 baked 进 deps)。
-  searchAssets(userId:string,accountId:string|WorkspaceKey,input:{query:string;limit:number;after?:{createdAt:string;id:string}}):Promise<AssetRow[]>;
+  searchAssets(userId:string,accountId:string|WorkspaceKey,input:{query:string;limit:number;after?:{createdAt:string;id:string};assetTypes?:string[]}):Promise<AssetRow[]>;
   listAssets(
     userId: string,
     query: ListAssetsQuery,
@@ -313,6 +313,7 @@ export function createAssetRepository(
       return db.select().from(assets).where(and(
         eq(assets.userId,userId),readableGate(accountId),eq(assets.status,"active"),
         sql`${assets.name} ILIKE ${pattern}`,
+        input.assetTypes ? inArray(assets.assetType,input.assetTypes) : undefined,
         input.after ? sql`(${assets.createdAt} < ${input.after.createdAt} OR (${assets.createdAt} = ${input.after.createdAt} AND ${assets.id} > ${input.after.id}))` : undefined,
       )).orderBy(desc(assets.createdAt),asc(assets.id)).limit(input.limit);
     },

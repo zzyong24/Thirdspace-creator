@@ -9,6 +9,8 @@ import Link from "next/link";
 import type {CanvasNode} from "@creatoros/contract";
 import {readCurrentAccountId,readCurrentGroupId} from "@/lib/http-transport";
 import {client} from "@/lib/contract-client";
+import {AssetPicker} from "@/components/media/asset-picker";
+import {assetChoice,mediaIdentity} from "@/components/media/asset-picker.types";
 import {imageRatioStatus} from "./image-ratio";
 
 export type CanvasAssetOption={id:string;name:string;assetType:string;currentFileId:string};
@@ -16,35 +18,8 @@ export type CanvasResult={generationLinkId:string;fileId:string;checksum:string;
 export type CanvasCapability={mode:"text_to_image"|"image_to_image"|"text_to_video"|"image_to_video";available:boolean;model:string|null;reason:string|null;aspectRatios?:string[]};
 export const defaultSize=(type:CanvasNode["type"])=>type==="text"?{width:280,height:200}:type==="image"||type==="video"?{width:380,height:300}:{width:350,height:430};
 
-export function MediaPreview({assetId,fileId,type,requestedRatio,expectedChecksum}:{assetId:string;fileId?:string;type:"image"|"video";requestedRatio?:string;expectedChecksum?:string}){
- const workspace=useCreationWorkspace(useCreationScope()),client=workspace.client;
- const mediaKey=JSON.stringify([creationScopeKey(workspace.scope),assetId,fileId??null,expectedChecksum??null]);
-
- const [media,setMedia]=useState<{key:string;url:string}>({key:"",url:""}),[dimensions,setDimensions]=useState<{width:number;height:number}|null>(null);
- const url=media.key===mediaKey?media.url:"";
- useEffect(()=>{
-  let live=true,blobUrl="";const controller=new AbortController();
-  const setUrl=(url:string)=>setMedia({key:mediaKey,url});
-  queueMicrotask(()=>{if(live){setUrl("");setDimensions(null);}});
-  if(!fileId)return()=>{live=false;controller.abort();};
-  void client.getAssetFileDownloadUrl({params:{assetId,assetFileId:fileId},query:undefined,body:undefined}).then(async response=>{
-   if(!live)return;workspace.assertCurrent();
-   if(!expectedChecksum){setUrl(response.url);return;}
-   // SEMANTIC_BOUNDARY_ALLOW: 仅校验用户已保存样图的文件完整性，不做风格或创作选择。
-   const file=await fetch(response.url,{signal:controller.signal});if(!file.ok)throw Error("私人样图读取失败");
-   const bytes=await file.arrayBuffer();
-   const digest=Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256",bytes)),value=>value.toString(16).padStart(2,"0")).join("");
-   if(digest!==expectedChecksum)throw Error("私人样图版本已变化");
-   if(!live)return;workspace.assertCurrent();
-   blobUrl=URL.createObjectURL(new Blob([bytes],{type:file.headers.get("content-type")??"image/png"}));setUrl(blobUrl);
-  }).catch(()=>{if(live)setUrl("");});
-  return()=>{live=false;controller.abort();if(blobUrl)URL.revokeObjectURL(blobUrl);};
- },[mediaKey,client,workspace]);
- if(!url)return <div className="flex min-h-32 flex-1 items-center justify-center rounded-lg bg-muted/60 text-xs text-muted-foreground">预览暂不可用</div>;
- // Blob URLs are short-lived, account-scoped media links and must be loaded directly.
- // eslint-disable-next-line @next/next/no-img-element
- return type==="image"?<div className="flex h-full min-h-0 w-full flex-col"><img src={url} alt="画布图片素材" className="min-h-0 w-full flex-1 object-contain" onLoad={e=>setDimensions({width:e.currentTarget.naturalWidth,height:e.currentTarget.naturalHeight})}/>{dimensions?<p className={`shrink-0 px-1 py-1 text-center text-[10px] ${imageRatioStatus(dimensions.width,dimensions.height,requestedRatio).matched===false?"text-amber-700":"text-muted-foreground"}`}>{dimensions.width} × {dimensions.height} · {imageRatioStatus(dimensions.width,dimensions.height,requestedRatio).actualRatio}{requestedRatio&&imageRatioStatus(dimensions.width,dimensions.height,requestedRatio).matched===false?`（目标${requestedRatio}，仍可选用或下载）`:""}</p>:null}</div>:<video src={url} className="h-full min-h-0 w-full object-contain" muted controls playsInline/>;
-}
+export {AssetMediaPreview as MediaPreview} from "@/components/media/asset-media-preview";
+import {AssetMediaPreview as MediaPreview} from "@/components/media/asset-media-preview";
 
 const modeLabel={text_to_image:"文生图",image_to_image:"参考图生图",text_to_video:"文生视频",image_to_video:"首帧图生视频"} as const;
 type Props={item:CanvasNode;selected:boolean;result?:CanvasResult;assets:CanvasAssetOption[];capability?:CanvasCapability;busy:boolean;busyResult:boolean;projectTitle:string|null;
@@ -64,7 +39,7 @@ export function InfiniteCanvasNode({item,selected,result,assets,capability,busy,
   {isGeneration?<div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto p-3" data-canvas-scroll onDragOver={event=>{if(event.dataTransfer.types.includes("application/x-creatoros-canvas-image"))event.preventDefault();}} onDrop={event=>{const source=event.dataTransfer.getData("application/x-creatoros-canvas-image");if(source){event.preventDefault();event.stopPropagation();onReferenceDrop(item.id,source);}}}>
    <select aria-label="生成模式" className="w-full rounded-lg border bg-background px-2 py-1.5 text-xs" value={item.mode} onChange={event=>onPatch(item.id,{mode:event.target.value as typeof item.mode,referenceAssetId:undefined,referenceFileId:undefined,...(event.target.value==="image_to_video"?{aspectRatio:undefined}:{})} as Partial<CanvasNode>)}>{(item.type==="image_generation"?["text_to_image","image_to_image"]:["text_to_video","image_to_video"]).map(mode=><option key={mode} value={mode} disabled={item.visualMode==="real_person"&&mode==="text_to_image"}>{modeLabel[mode as keyof typeof modeLabel]}</option>)}</select>
    <textarea aria-label="生成描述" className="min-h-24 w-full flex-1 resize-none rounded-lg border bg-background p-2 text-xs leading-relaxed outline-none focus:border-primary" placeholder="描述你想生成的画面…" value={item.prompt} onChange={event=>onPatch(item.id,{prompt:event.target.value} as Partial<CanvasNode>)}/>
-   {item.mode.startsWith("image_to_")?<select aria-label="参考图片" className="w-full rounded-lg border bg-background px-2 py-1.5 text-xs" value={item.referenceAssetId??""} onChange={event=>onPatch(item.id,{referenceAssetId:event.target.value||undefined,referenceFileId:undefined} as Partial<CanvasNode>)}><option value="">选择或拖入参考图片</option>{assets.filter(asset=>asset.assetType==="image").map(asset=><option key={asset.id} value={asset.id}>{asset.name}</option>)}</select>:null}
+   {item.mode.startsWith("image_to_")?<AssetPicker ownerKey={item.id} label="参考图片" source={{kind:"library",key:"canvas-image-reference",label:"素材库图片",allowedTypes:["image"],map:asset=>assetChoice(asset)}} value={item.referenceAssetId?(()=>{const found=assets.find(asset=>asset.id===item.referenceAssetId);return {choiceKey:JSON.stringify([item.referenceAssetId,item.referenceFileId??null]),value:found??{id:item.referenceAssetId,currentFileId:item.referenceFileId??"",name:"已选参考图",assetType:"image"},identity:item.referenceFileId?mediaIdentity({id:item.referenceAssetId,currentFileId:item.referenceFileId,name:found?.name??"已选参考图",assetType:"image"}):null,name:found?.name??"已选参考图"};})():null} onConfirm={choice=>onPatch(item.id,{referenceAssetId:choice.value.id,referenceFileId:choice.identity?.file.assetFileId??choice.value.currentFileId} as Partial<CanvasNode>)} allowClear={item.visualMode!=="real_person"} onClear={()=>onPatch(item.id,{referenceAssetId:undefined,referenceFileId:undefined} as Partial<CanvasNode>)}/>:null}
    {result?<div className="shrink-0 space-y-2 rounded-xl border bg-background p-2"><div className="flex items-center justify-between gap-2 text-[10px] text-muted-foreground"><span>最近结果 · 画布版本 {result.inputRevision}</span><span>{result.isPreviousVersion?"旧版本结果":result.status==="succeeded"?"已保留":"待选择"}</span></div><div className="h-32 overflow-hidden rounded-lg bg-muted/30">{nearViewport?<MediaPreview assetId={result.assetId} fileId={result.fileId} type={mediaType} requestedRatio={result.requestedAspectRatio}/>:null}</div><div className="grid grid-cols-2 gap-1.5"><button type="button" className="rounded-lg border px-2 py-1.5 text-[11px] font-medium hover:border-primary hover:text-primary" disabled={busyResult||result.status!=="succeeded"} onClick={()=>onInsertResult(item.id,result.assetId,mediaType)}>放到画布</button><button type="button" disabled={busyResult||result.status==="succeeded"} className="rounded-lg border px-2 py-1.5 text-[11px] font-medium hover:border-primary hover:text-primary disabled:opacity-50" onClick={()=>onKeepResult(result.taskId,result.assetId,result.inputRevision,false)}>{result.status==="succeeded"?"已在素材库":"保留到素材库"}</button></div>{projectTitle?<button type="button" disabled={busyResult||result.attached} className="w-full rounded-lg bg-primary px-2 py-1.5 text-[11px] font-semibold text-primary-foreground disabled:opacity-50" onClick={()=>onKeepResult(result.taskId,result.assetId,result.inputRevision,true)}>{result.attached?`已加入 ${projectTitle}`:`加入作品 · ${projectTitle}`}</button>:null}</div>:null}
    <div className="flex items-center justify-between gap-2"><span className="max-w-[65%] truncate text-[10px] text-muted-foreground" title={capability?.reason??capability?.model??""}>{capability?.available?capability.model:capability?.reason??"正在读取模型…"}</span><button type="button" className="rounded-lg bg-primary px-3 py-1.5 text-xs text-primary-foreground disabled:opacity-40" disabled={busy||!capability?.available||!item.prompt.trim()||(item.mode.startsWith("image_to_")&&!item.referenceAssetId)} onClick={()=>onGenerate(item.id)}>{busy?"提交中…":"生成"}</button></div>
    {capability&&!capability.available?<p className="rounded-lg border border-amber-500/30 bg-amber-500/5 px-2 py-1.5 text-[11px] leading-4 text-foreground">{capability.reason??"当前模式没有可用模型。"} <Link href="/settings" className="font-medium text-primary underline">查看模型设置</Link></p>:null}

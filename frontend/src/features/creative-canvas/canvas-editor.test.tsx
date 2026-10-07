@@ -1,12 +1,12 @@
 import '@testing-library/jest-dom/vitest';
 import {beforeEach,afterEach,it,expect,vi} from 'vitest';
 import {render,screen,fireEvent,waitFor,act,cleanup} from '@testing-library/react';
-const f=vi.hoisted(()=>({account:'account-a',params:new URLSearchParams(),accountChanged:null as null|(()=>void),read:vi.fn(),save:vi.fn(),tasks:vi.fn(),selector:vi.fn(),download:vi.fn(),confirm:vi.fn(),localOpen:vi.fn(),router:{push:vi.fn(),replace:vi.fn()}}));
+const f=vi.hoisted(()=>({account:'account-a',params:new URLSearchParams(),accountChanged:null as null|(()=>void),read:vi.fn(),save:vi.fn(),tasks:vi.fn(),selector:vi.fn(),download:vi.fn(),searchAssets:vi.fn(),confirm:vi.fn(),localOpen:vi.fn(),router:{push:vi.fn(),replace:vi.fn()}}));
 vi.mock('next/navigation',()=>({useRouter:()=>f.router,useSearchParams:()=>f.params}));
 vi.mock("@/lib/http-transport", async importOriginal => ({...await importOriginal<typeof import("@/lib/http-transport")>(), readCurrentAccountId:()=>f.account}));
 vi.mock('@/lib/account-events',()=>({useAccountsChanged:(fn:()=>void)=>{f.accountChanged=fn;}}));
 vi.mock('@/lib/copilot-navigation',()=>({openCopilotLocally:(href:string)=>f.localOpen(href)}));
-vi.mock('@/lib/contract-client',()=>({client:{getGraphicPost:async()=>({projectId:'p',outputId:'o',artifactId:'art',currentVersionId:'v1',current:graphic()}),getGraphicPostVersion:async()=>({versionId:'v1',document:graphic()}),getProject:async()=>({id:'p',title:'项目'}),listMaterialLinks:async()=>[],getCanvas:(...a:unknown[])=>f.read(...a),saveCanvas:(...a:unknown[])=>f.save(...a),listCanvasNodeTasks:(...a:unknown[])=>f.tasks(...a),listCanvasProposals:async()=>[],listAssets:async()=>[],listProjects:async()=>[],getCanvasGenerationCapabilities:async()=>({modes:[{mode:'text_to_image',available:true,model:'fixture',reason:null}]}),getTask:async()=>({status:'awaiting_confirmation',taskType:'asset.generate',executionTaskId:'exec-a',inputData:{prompt:'原生成描述'}}),getCanvasGenerationMaterial:(...a:unknown[])=>f.selector(...a),getAssetFileDownloadUrl:(...a:unknown[])=>f.download(...a),confirmTask:(...a:unknown[])=>f.confirm(...a)}}));
+vi.mock('@/lib/contract-client',()=>({client:{getGraphicPost:async()=>({projectId:'p',outputId:'o',artifactId:'art',currentVersionId:'v1',current:graphic()}),getGraphicPostVersion:async()=>({versionId:'v1',document:graphic()}),getProject:async()=>({id:'p',title:'项目'}),listMaterialLinks:async()=>[],getCanvas:(...a:unknown[])=>f.read(...a),saveCanvas:(...a:unknown[])=>f.save(...a),listCanvasNodeTasks:(...a:unknown[])=>f.tasks(...a),listCanvasProposals:async()=>[],listAssets:async()=>[],listProjects:async()=>[],getCanvasGenerationCapabilities:async()=>({modes:[{mode:'text_to_image',available:true,model:'fixture',reason:null}]}),getTask:async()=>({status:'awaiting_confirmation',taskType:'asset.generate',executionTaskId:'exec-a',inputData:{prompt:'原生成描述'}}),getCanvasGenerationMaterial:(...a:unknown[])=>f.selector(...a),getAssetFileDownloadUrl:(...a:unknown[])=>f.download(...a),searchAssets:(...a:unknown[])=>f.searchAssets(...a),confirmTask:(...a:unknown[])=>f.confirm(...a)}}));
 import {CanvasEditor} from './canvas-editor';
 import {MediaPreview} from './infinite-canvas-node';
 import {CanvasAssetPicker} from './canvas-asset-picker';
@@ -94,7 +94,7 @@ t1062ScopeAfterEach(() => {
 
 it('素材卡以真实currentFileId读取exact预览，插入仍返回同一冻结素材',async()=>{
  vi.stubGlobal('IntersectionObserver',undefined);const asset={id:'asset-exact',name:'中性图片',assetType:'image',currentFileId:'file-exact'};
- const inserted=vi.fn();render(<CanvasAssetPicker assets={[asset]} hasMore={false} loadingMore={false} onLoadMore={vi.fn()} onInsert={inserted} onClose={vi.fn()}/>);
- await screen.findByAltText('画布图片素材');expect(f.download).toHaveBeenCalledWith(expect.objectContaining({params:{assetId:'asset-exact',assetFileId:'file-exact'}}));
- fireEvent.click(screen.getByRole('button',{name:/图片 · 中性图片 · 放到画布/}));expect(inserted).toHaveBeenCalledWith(asset);vi.unstubAllGlobals();
+ f.searchAssets.mockResolvedValue({items:[asset],nextCursor:null});const inserted=vi.fn();render(<CanvasAssetPicker assets={[asset]} hasMore={false} loadingMore={false} onLoadMore={vi.fn()} onInsert={inserted} onClose={vi.fn()}/>);
+ await screen.findByAltText('中性图片');expect(f.download).toHaveBeenCalledWith(expect.objectContaining({params:{assetId:'asset-exact',assetFileId:'file-exact'}}));
+ fireEvent.click(screen.getByRole('button',{name:'放到画布'}));await waitFor(()=>expect(inserted).toHaveBeenCalledWith(expect.objectContaining(asset)));vi.unstubAllGlobals();
 });

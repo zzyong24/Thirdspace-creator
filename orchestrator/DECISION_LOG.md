@@ -3631,3 +3631,32 @@ Owner=agent 的既有行为实现选择；原SPEC cfbaf9、用户空组共享创
 ### DEC-T1068-LOOPBACK-PROXY 收尾路由澄清
 
 独立host分类报告efe4acc8确认本任务无UI页面设计或journey contract；初始验收待验误选UI路径，纠正单行非UI验收—，仍以两次真实HTTP原生窗口完成事件及用户已显示正常首页为收尾证据。ROOT是唯一实际writer，正式工具release原并行lease再普通claim/done记录实际集成；不更改门卫或全局mode，不伪造历史准入。固定打包入口实际自动安装，之前已备份；私有planned installer未执行，事实另列。完整T1062和原T734/全局红仍保留。
+
+
+## DEC-T1069-INSTALLED-MEDIA-AND-BINDING（2026-10-06）
+
+用户当前安装版明确要求视频导入慢/切Tab丢失修复、同类素材选择器重设计（追加模板本人照片截图）、当前组增加小红书等已装配平台账号。Owner=agent的机械实现选择落实该用户范围：保留原丰富紫色布局，共用图库Dialog/精确文件/全库字面搜索；项目内唯一活剪辑会话与人工CAS保存、隐藏暂停、原未知回执不重签；既有持久accounts.bind与原profile/collection事务接入真实local stage，目标组冻结，不自动转组，不造平台能力。对应用户请求即服务契约增量与组归属修复授权，不消费或制造新的Owner=user typed capability/规格周期。
+
+SPEC 1e26068675610acbb86b212b2b4fd5c6ce7da3008d2821cdfb5e73e9f67ad41e 经独立同家族子代理只读完整评审，真实宪法86bc2c8a，formal initial PASS[REV:b3c513a0c65c]。此前record使用不存在的PRODUCT_SPEC.md失败，start仍待审拒绝，无产品开工；改用真实docs/产品定位.md并补核后才正常record/start。112路径精确闭包，无数据库迁移/新任务权/新媒体服务；主会话单写共享产品，辅助不推进控制面。现App保持运行；新包先SKIP_INSTALL=1，真实视觉/公共旅程/视频分段性能/扫码和安装验收均尚未完成，不把静态审核当PASS。
+
+T-1069 开工机械核对：正常 claim 命中四个冻结文件的六类既有机制标记；独立逐字节核对与 5f6ab1bb 基点一致，只追加当前精确 SHA 的任务预算。旧条目保留，未修改门卫，未来生成物或源码哈希变化仍须独立最终 diff 复核；证据 docs/verification/t1069/mechanical-budget-review.json。
+
+DEC-T1069 公共搜索注册补充：实际类型检查发现workspace-operation-scope穷尽表缺新ID，已独立复核SPEC补充236691550961；新增操作与assets.list同属group，保留原CLI归属校验和registry穷尽断言。无需新增用户方向确认。
+
+
+## DEC-106901：切换页面保持剪辑宿主的两文件补充
+
+用户在明确问题“是否同意新增一个评审周期，扩充 AppShell 及其回归测试两个文件”的紧邻回复为“继续”。本次记录仅落实该具体问答：一周期、两个精确路径，固定页面容器并通过真实视频切 Tab/保存/刷新验证；不授予未来通用继续权限，不改变产品方向、数据归属或原全部验收范围。
+
+```text
+ID: DEC-106901
+Authorization-Kind: process-review-cycle
+Task-ID: T-1069
+Previous-Spec-SHA256: 75f01c51f9abb387f876b7cb7b785993e9d9f6dca6c99010443359bd766f6107
+Previous-Constitution-SHA256: 86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800
+Allowed-Change-IDs: T1069-STABLE-SHELL-HOST
+Max-Cycles: 1
+Nonce: 376c98a7-c028-4c25-9488-0eeaf6abc17c
+Owner: user
+Status: active
+```

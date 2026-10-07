@@ -5,7 +5,6 @@ const h=vi.hoisted(()=>({request:vi.fn(),changed:null as null|(()=>void),saved:v
 vi.mock('@/lib/contract-client',()=>({client:h.client}));
 vi.mock('./reference-editor-media',()=>({readEditorMedia:vi.fn(async()=>{if(h.missing)throw Error('不可选素材暂不可读');return new File(['video'],'原片.mp4',{type:'video/mp4'});}),uploadEditorMedia:vi.fn(),downloadEditorExport:vi.fn()}));
 vi.mock('./native-editor-surface',()=>({NativeEditorSurface:React.forwardRef(function Frame(props:any,ref:any){React.useImperativeHandle(ref,()=>({request:h.request}),[]);h.changed=props.onChanged;React.useEffect(()=>{props.onReady();},[]);return <div>真实原生编辑器边界</div>;})}));
-vi.mock('@/components/ui/dialog',()=>({Dialog:({children}:any)=><div>{children}</div>,DialogContent:({children}:any)=><div>{children}</div>,DialogTitle:({children}:any)=><h1>{children}</h1>}));
 vi.mock('@/features/production/use-production-delivery',()=>({useProductionDelivery:()=>({})}));
 vi.mock('./native-source-panel',()=>({NativeSourcePanel:()=>null}));
 vi.mock('@/features/production/production-transcript-panel',()=>({ProductionTranscriptPanel:()=>null}));

@@ -161,3 +161,15 @@ describe("platform bind with durable attempts and an atomic account port", () =>
     } finally { await f.client.close(); }
   });
 });
+
+it('T1069 持久绑定复用真实授权事务，不转移旧身份且失败完整回滚',async()=>{
+ const f=await fixture();try{
+  const begin=await f.service.bindBegin(ctx('user-a'),{platform:'xiaohongshu',clientRequestId:'original'});await f.service.recordVerifiedIdentity(f.proof(begin.bindAttemptId));const bound=await f.service.bindConfirm(ctx('user-a'),{bindAttemptId:begin.bindAttemptId});
+  const service=f.service as typeof f.service&{commitVerifiedBinding:(...args:any[])=>Promise<void>};expect(service.commitVerifiedBinding).toBeTypeOf('function');
+  const {bindAttemptId:_,...proof}=f.proof(begin.bindAttemptId);const input={...proof,accountId:bound.accountId!};
+  await f.db.transaction(tx=>service.commitVerifiedBinding(tx,ctx('user-a'),input));expect(await f.db.select().from(platformCollectionBindings)).toHaveLength(1);
+  await expect(f.db.transaction(tx=>service.commitVerifiedBinding(tx,ctx('user-a'),{...input,accountId:'other-real-id'}))).rejects.toMatchObject({code:'WRONG_PLATFORM_IDENTITY'});
+  await expect(f.db.transaction(async tx=>{await service.commitVerifiedBinding(tx,ctx('user-a'),{...input,proofSource:'new-proof'});throw Error('finish transaction rejected');})).rejects.toThrow('finish transaction rejected');
+  expect((await f.db.select().from(platformCollectionBindings))[0].proofSource).toBe(proof.proofSource);
+ }finally{await f.client.close();}
+});

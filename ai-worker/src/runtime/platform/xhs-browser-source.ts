@@ -15,7 +15,7 @@ import {
 const ORIGIN = "https://creator.xiaohongshu.com";
 const IDENTITY_PATH = "/api/galaxy/user/info";
 const CATALOG_PATH = "/api/galaxy/v2/creator/note/user/posted";
-const WAIT_MS = 25_000;
+const WAIT_MS = 120_000;
 const LOGIN_MS = 8 * 60_000;
 type TerminalEvidence = NonNullable<CollectionPageCommit["terminalEvidence"]>;
 export interface XhsCatalogScan { pages: XhsCatalogPage[]; terminalEvidence: TerminalEvidence }
@@ -37,9 +37,11 @@ export function xhsProfilePaths(root: string, userId: string, bindAttemptId: str
   };
 }
 
-async function openProfile(directory: string, headless: boolean): Promise<BrowserContext> {
-  await mkdir(directory, { recursive: true });
+type LoginControls={onStopped?:()=>Promise<void>;onStopUnconfirmed?:(retry:()=>Promise<void>)=>void};
+async function closeProfile(context:BrowserContext,controls?:LoginControls){try{await context.close();}catch(error){controls?.onStopUnconfirmed?.(()=>context.close());throw error;}}
+async function openProfile(directory: string, headless: boolean,signal?:AbortSignal,controls?:LoginControls): Promise<BrowserContext> {
   return guardedLaunch(directory, async () => {
+    await mkdir(directory, { recursive: true });
     const { chromium } = await import("@playwright/test");
     return launchWithBrowser((selection) => chromium.launchPersistentContext(directory, {
       ...selection, ...chromiumSandboxOpts(), headless,
@@ -47,7 +49,7 @@ async function openProfile(directory: string, headless: boolean): Promise<Browse
       timezoneId: "Asia/Shanghai", acceptDownloads: false,
       args: ["--no-first-run", "--no-default-browser-check"],
     }));
-  }, { label: "小红书账号浏览器" });
+  }, { label: "小红书账号浏览器",signal,onStopped:controls?.onStopped });
 }
 
 function waitForResponse<T>(context: BrowserContext, pathname: string,
@@ -105,17 +107,17 @@ function waitForResponse<T>(context: BrowserContext, pathname: string,
 }
 
 /** Opens a fresh CreatorOS-only profile; the human completes the normal QR login. */
-export async function loginXhsCreator(directory: string, signal?: AbortSignal): Promise<XhsIdentity> {
-  const context = await openProfile(directory, false);
+export async function loginXhsCreator(directory: string, signal?: AbortSignal,controls?:LoginControls): Promise<XhsIdentity> {
+  const context = await openProfile(directory, false,signal,controls);
   const waiter = waitForResponse(context, IDENTITY_PATH,
     (body) => parseXhsCreatorIdentity(body), () => true, LOGIN_MS, signal, true);
   try {
     const page = context.pages()[0] ?? await context.newPage();
-    await page.goto(ORIGIN + "/", { waitUntil: "domcontentloaded", timeout: 30_000 });
+    await page.goto(ORIGIN + "/", { waitUntil: "domcontentloaded", timeout: 120_000 });
     return await waiter.promise;
   } finally {
     waiter.stop();
-    await context.close().catch(() => {});
+    await closeProfile(context,controls);
   }
 }
 
@@ -154,7 +156,7 @@ async function readCatalogPass(context: BrowserContext, page: Page, expectedIden
       (body) => parseXhsCreatorIdentity(body, expectedIdentity), () => true, WAIT_MS, signal) : null;
     try {
       if (index === 0) {
-        await page.goto(ORIGIN + "/new/note-manager", { waitUntil: "domcontentloaded", timeout: 30_000 });
+        await page.goto(ORIGIN + "/new/note-manager", { waitUntil: "domcontentloaded", timeout: 120_000 });
         await identity!.promise;
       } else {
         await page.locator("main div.content").evaluate((element) => { element.scrollTop = element.scrollHeight; });
@@ -208,8 +210,8 @@ async function readCatalogPass(context: BrowserContext, page: Page, expectedIden
 
 /** Two independent page reads are returned; the service port publishes only matching passes. */
 export async function collectXhsCreatorCatalog(directory: string, expectedIdentity: string,
-  signal?: AbortSignal): Promise<[XhsCatalogScan, XhsCatalogScan]> {
-  const context = await openProfile(directory, true);
+  signal?: AbortSignal,controls?:LoginControls): Promise<[XhsCatalogScan, XhsCatalogScan]> {
+  const context = await openProfile(directory, true,signal,controls);
   try {
     const page = context.pages()[0] ?? await context.newPage();
     const first = await readCatalogPass(context, page, expectedIdentity, signal);
@@ -221,5 +223,5 @@ export async function collectXhsCreatorCatalog(directory: string, expectedIdenti
       fail("INCOMPLETE_CATALOG", "两次作品扫描结果不一致，已保留上次完整目录");
     }
     return [first, second];
-  } finally { await context.close().catch(() => {}); }
+  } finally { await closeProfile(context,controls); }
 }

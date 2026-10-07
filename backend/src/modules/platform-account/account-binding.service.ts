@@ -1,12 +1,12 @@
 import {createHash} from 'node:crypto';
 import {and,eq,inArray,executionTasks,type Db} from '@creatoros/backend';
 import {accountGroupCommands} from '../../schema/account-groups';
-import type {RequestContext,ENDPOINTS} from '@creatoros/contract';
+import {ENDPOINTS,type RequestContext} from '@creatoros/contract';
 import {createPersistentTaskService,createExecutionLeaseService,type PersistentTaskClaim} from '../execution';
 import {lockWorkspaceMembership} from './membership-lock.service';
 import {OwnershipError,ConflictError,ValidationError} from './platform-account.errors';
 export type BindingTransaction=Parameters<Parameters<Db['transaction']>[0]>[0];
-export interface BindingIdentity {externalAccountId:string;accountHandle:string;followerBaseline?:number;}
+export interface BindingIdentity {externalAccountId:string;accountHandle:string;followerBaseline?:number;collectionProof?:{proofSource:string;scopes:("accountOverview"|"workCatalog"|"workMetrics")[];verifiedAt:string;expiresAt:string|null};}
 export interface AccountBindingStagePort {
  createStaging(ctx:RequestContext,runId:string):Promise<{stagingKey:string}>;
  login(ctx:RequestContext,input:{stagingKey:string;signal:AbortSignal}):Promise<boolean>;
@@ -18,7 +18,7 @@ export interface AccountBindingStagePort {
  /** 和run成功状态共用tx；FS adopt须可回滚，保留并恢复原目标profile。 */
  commit(ctx:RequestContext,input:{stagingKey:string;identity:BindingIdentity;signal:AbortSignal},tx:BindingTransaction):Promise<{accountId:string;rollbackProfile?:()=>Promise<void>;finalizeProfile?:()=>Promise<void>}>;
 }
-export interface AccountBindingDeps {db:Db;now:()=>string;nextId:(prefix:string)=>string;stage:AccountBindingStagePort;capabilities:(ctx:RequestContext)=>Promise<Array<{platform:string;bind:{available:boolean;reason:string;method:string}}>>;wake?:()=>void;onProfileCleanupError?:(error:unknown,runId:string)=>void;
+export interface AccountBindingDeps {db:Db;now:()=>string;nextId:(prefix:string)=>string;stage:AccountBindingStagePort;localStages?:Partial<Record<"xiaohongshu"|"kuaishou",AccountBindingStagePort>>;capabilities:(ctx:RequestContext)=>Promise<Array<{platform:string;bind:{available:boolean;reason:string;method:string}}>>;wake?:()=>void;onProfileCleanupError?:(error:unknown,runId:string)=>void;
  /** 成功提交之后的默认任务补齐；失败不回滚身份或改变已成功回执。仅内部组合根。 */
  onBound?:(ctx:RequestContext,accountId:string,runId:string)=>Promise<void>;
  onBoundError?:(error:unknown,runId:string)=>void;}
@@ -26,7 +26,7 @@ type Start=typeof ENDPOINTS.startAccountBinding.body['_output'];
 type Run=typeof ENDPOINTS.getAccountBinding.response['_output'];
 type Task=Awaited<ReturnType<ReturnType<typeof createPersistentTaskService>['get']>>;
 type Phase='waiting_verification'|'verifying'|'finalizing';
-type Checkpoint={phase?:Phase;stagingKey?:string;accountId?:string;cleanupPending?:boolean;error?:string};
+type Checkpoint={phase?:Phase;stagingKey?:string;externalAccountId?:string;accountId?:string;cleanupPending?:boolean;error?:string};
 const terminal=new Set(['succeeded','failed','cancelled']);
 const checkpoint=(value:unknown):Checkpoint=>value&&typeof value==='object'?value as Checkpoint:{};
 /** 只投影协议字段，不按平台名、昵称或内容语义推断身份。 */
@@ -40,8 +40,13 @@ function dto(task:Task):Run{
 // payload由已验证的start请求冻结；公开status不返回staging目录或profile资料。
 function taskPayload(task:Task):Start{return (task as Task&{bindingPayload?:Start}).bindingPayload!;}
 export function createAccountBindingService(deps:AccountBindingDeps){
- const {db,now,stage}=deps,tasks=createPersistentTaskService(db,{now,nextId:deps.nextId}),leases=createExecutionLeaseService(db,{now});
+ const {db,now}=deps,tasks=createPersistentTaskService(db,{now,nextId:deps.nextId}),leases=createExecutionLeaseService(db,{now});
  const workerId=deps.nextId('account-binding-worker');
+ function stageFor(platform:string):AccountBindingStagePort{
+  if(platform==='douyin')return deps.stage;
+  if(platform==='xiaohongshu'||platform==='kuaishou'){const selected=deps.localStages?.[platform];if(selected)return selected;}
+  throw new ValidationError('此平台未提供真实扫码绑定端口');
+ }
  const active=new Map<string,{controller:AbortController;promise:Promise<void>;kind:"run"|"cleanup"}>();
  const stopFailures=new Map<string,unknown>();let draining:Promise<void>|null=null,stopping=false;
  // 查询只限本业务拥有的execution kind；状态写入全部经唯一任务/lease服务。
@@ -50,21 +55,22 @@ export function createAccountBindingService(deps:AccountBindingDeps){
  async function execute(claim:PersistentTaskClaim,signal:AbortSignal){
   const ctx:RequestContext={userId:claim.task.userId,accountId:null,groupId:claim.task.groupId,requestId:`binding:${claim.task.id}`,source:'user'};
   const tuple={taskId:claim.task.id,workerId:claim.lease.workerId,attempt:claim.lease.attempt},ref={executionTaskId:claim.task.id,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken};
-  let stagingKey:string|undefined;let receipt:Awaited<ReturnType<AccountBindingStagePort["commit"]>>|undefined;
-  const save=async(phase:Phase)=>{await tasks.saveCheckpoint({...tuple,checkpoint:{phase,stagingKey}});};
+  let stagingKey:string|undefined,externalAccountId:string|undefined,stage:AccountBindingStagePort|undefined;let receipt:Awaited<ReturnType<AccountBindingStagePort["commit"]>>|undefined;
+  const save=async(phase:Phase)=>{await tasks.saveCheckpoint({...tuple,checkpoint:{phase,stagingKey,externalAccountId}});};
   try{
+   stage=stageFor(ENDPOINTS.startAccountBinding.body.parse(claim.payload).platform);
    await guard(ref,signal);const created=await stage.createStaging(ctx,claim.task.id);stagingKey=created.stagingKey;if(!stagingKey)throw new ValidationError('临时扫码环境没有返回真实标识');
    await save('waiting_verification');await guard(ref,signal);
    const loggedIn=await stage.login(ctx,{stagingKey,signal});signal.throwIfAborted();if(!loggedIn)throw new ValidationError('未检测到完成扫码，请重新发起绑定');
    await guard(ref,signal);await save('verifying');const identity=await stage.identity(ctx,{stagingKey,signal});signal.throwIfAborted();if(!identity?.externalAccountId?.trim()||!identity.accountHandle?.trim())throw new ValidationError('扫码已结束，但未读到真实平台身份，请重试');
-   await guard(ref,signal);await save('finalizing');
+   externalAccountId=identity.externalAccountId;await guard(ref,signal);await save('finalizing');
    await stage.prepareCommit?.(ctx,{stagingKey,identity,signal});
    await guard(ref,signal); // 宿主等待后重新验证原组版本与本run执行权。
    await leases.withLease(ref,'admission',async({tx,task,context})=>{
     signal.throwIfAborted();const frozen=await lockWorkspaceMembership(tx,{...context,accountId:null});if(frozen.groupVersion!==task.groupVersion)throw new ConflictError('账号组已改变，请在原组重新发起绑定');
-    const result=await stage.commit({...context,accountId:null},{stagingKey:stagingKey!,identity,signal},tx);receipt=result;if(!result.accountId)throw new ValidationError('绑定未返回真实账号ID');
+    const result=await stage!.commit({...context,accountId:null},{stagingKey:stagingKey!,identity,signal},tx);receipt=result;if(!result.accountId)throw new ValidationError('绑定未返回真实账号ID');
     const atomicTasks=createPersistentTaskService(tx as unknown as Db,{now,nextId:deps.nextId});
-    await atomicTasks.saveCheckpoint({...tuple,checkpoint:{phase:'finalizing',accountId:result.accountId}});
+    await atomicTasks.saveCheckpoint({...tuple,checkpoint:{phase:'finalizing',stagingKey,externalAccountId,accountId:result.accountId}});
     await atomicTasks.finish({...tuple,fenceToken:ref.fenceToken,status:'succeeded'});
    });
    stopFailures.delete(claim.task.id);
@@ -78,8 +84,8 @@ export function createAccountBindingService(deps:AccountBindingDeps){
    }
   }catch(error){
    const message=error instanceof Error?error.message:'绑定未完成，请重试';
-   try{await receipt?.rollbackProfile?.();if(stagingKey)await stage.discard(ctx,{stagingKey,runId:claim.task.id});stopFailures.delete(claim.task.id);}
-   catch(cleanupError){await tasks.saveCheckpoint({...tuple,checkpoint:{stagingKey,cleanupPending:true,error:`${message}；扫码环境停止尚未确认，请刷新原任务状态`}}).catch(()=>{});stopFailures.set(claim.task.id,cleanupError);return;}
+   try{await receipt?.rollbackProfile?.();if(stagingKey&&stage)await stage.discard(ctx,{stagingKey,runId:claim.task.id});stopFailures.delete(claim.task.id);}
+   catch(cleanupError){await tasks.saveCheckpoint({...tuple,checkpoint:{stagingKey,externalAccountId,cleanupPending:true,error:`${message}；扫码环境停止尚未确认，请刷新原任务状态`}}).catch(()=>{});stopFailures.set(claim.task.id,cleanupError);return;}
    const current=await read(ctx,claim.task.id);
    if(terminal.has(current.status))return;
    if(current.status==='cancel_requested'){await tasks.acknowledgeControl(tuple);return;}
@@ -94,7 +100,7 @@ export function createAccountBindingService(deps:AccountBindingDeps){
  async function recover(control:{signal:AbortSignal}){
   const rows=await db.select().from(executionTasks).where(and(eq(executionTasks.kind,'account_binding'),inArray(executionTasks.status,['running','cancel_requested'])));
   for(const row of rows){if(active.has(row.id)||(!row.leaseOwner)||(row.status!=='cancel_requested'&&row.leaseExpiresAt&&Date.parse(row.leaseExpiresAt)>Date.parse(now())))continue;
-   launch(row.id,control,"cleanup",async()=>{const ctx:RequestContext={userId:row.userId,accountId:null,groupId:row.groupId,requestId:`binding-recovery:${row.id}`,source:'user'},state=checkpoint(row.checkpoint);if(state.stagingKey)await stage.discard(ctx,{stagingKey:state.stagingKey,runId:row.id});const current=await read(ctx,row.id);if(terminal.has(current.status))return;const tuple={taskId:row.id,workerId:row.leaseOwner!,attempt:row.attempt};if(current.status==='cancel_requested')await tasks.acknowledgeControl(tuple);else await tasks.finish({...tuple,fenceToken:row.fenceToken??undefined,status:'failed',errorCode:'ACCOUNT_BINDING_INTERRUPTED',errorMessage:'上次扫码执行已停止并清理，请重新发起绑定'});stopFailures.delete(row.id);});
+   launch(row.id,control,"cleanup",async()=>{const ctx:RequestContext={userId:row.userId,accountId:null,groupId:row.groupId,requestId:`binding-recovery:${row.id}`,source:'user'},state=checkpoint(row.checkpoint);if(state.stagingKey)await stageFor(ENDPOINTS.startAccountBinding.body.parse(row.payload).platform).discard(ctx,{stagingKey:state.stagingKey,runId:row.id});const current=await read(ctx,row.id);if(terminal.has(current.status))return;const tuple={taskId:row.id,workerId:row.leaseOwner!,attempt:row.attempt};if(current.status==='cancel_requested')await tasks.acknowledgeControl(tuple);else await tasks.finish({...tuple,fenceToken:row.fenceToken??undefined,status:'failed',errorCode:'ACCOUNT_BINDING_INTERRUPTED',errorMessage:'上次扫码执行已停止并清理，请重新发起绑定'});stopFailures.delete(row.id);});
   }
  }
  return {
@@ -107,6 +113,7 @@ export function createAccountBindingService(deps:AccountBindingDeps){
     await tx.insert(accountGroupCommands).values({userId:ctx.userId,key,kind:'account_binding',inputHash:hash,result:{pending:true},createdAt:now()}).onConflictDoNothing();
     const [memo]=await tx.select().from(accountGroupCommands).where(and(eq(accountGroupCommands.userId,ctx.userId),eq(accountGroupCommands.key,key))).for('update');if(!memo||memo.kind!=='account_binding'||memo.inputHash!==hash)throw new ConflictError('同次绑定请求的账号组或平台已改变，请重新发起');
     const prior=(memo.result as {runId?:string}).runId;if(prior)return read({...ctx,accountId:null},prior,tx);
+    stageFor(input.platform);
     if(!capability?.available||capability.method!=='qr')throw new ValidationError(capability?.reason??'此平台未提供真实扫码绑定端口');
     const frozen=await lockWorkspaceMembership(tx,{...ctx,accountId:null});if(frozen.groupVersion!==input.expectedGroupVersion)throw new ConflictError('账号组版本已改变，请重新读取后绑定');
     const task=await createPersistentTaskService(tx as unknown as Db,{now,nextId:deps.nextId}).enqueue({...ctx,accountId:null},{kind:'account_binding',ownerType:'account_binding',ownerId:deps.nextId('account-binding'),idempotencyKey:key,payload:input,maxAttempts:1});

@@ -32,4 +32,18 @@ describe("全库字面素材检索",()=>{
       for(const [query,expected] of [["%",names[0]],["_",names[1]],["\\",names[2]]])expect((await service.searchAssets(ctx,{query:query!,limit:20})).rows.map(row=>row.name)).toEqual([expected]);
     }finally{await opened.client.close();}
   });
+  it("类型筛选跨页准确，游标不能用于另一类型；旧无类型调用仍兼容",async()=>{
+    const opened=await createDb();const deps={now:()=>stamp,nextId:(p:string)=>p};const service=createAssetsService(createAssetRepository(opened.db,deps),async()=>{throw new Error("不访问存储");},deps);
+    try{
+      await opened.db.insert(assets).values(["image","video","image","audio"].map((assetType,index)=>({id:`typed-${index}`,userId:"u",accountId:"a",assetType,name:"素材",createdAt:stamp,updatedAt:stamp})));
+      const first=await service.searchAssets(ctx,{query:"",limit:1,assetTypes:["image"]});
+      expect(first.rows.map(row=>row.assetType)).toEqual(["image"]);
+      const next=await service.searchAssets(ctx,{query:"",limit:1,assetTypes:["image"],cursor:first.nextCursor});
+      expect(next.rows.map(row=>row.id)).toEqual(["typed-2"]);expect(next.nextCursor).toBeNull();
+      await expect(service.searchAssets(ctx,{query:"",limit:1,assetTypes:["video"],cursor:first.nextCursor})).rejects.toThrow("游标");
+      expect((await service.searchAssets(ctx,{query:"",limit:20})).rows).toHaveLength(4);
+      await expect(service.searchAssets(ctx,{query:"",limit:1,assetTypes:[]})).rejects.toThrow("参数");
+    }finally{await opened.client.close();}
+  });
+
 });

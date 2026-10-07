@@ -64,3 +64,7 @@ TDD红证据仅沿用当场发生的生命周期缺模块红测（`lifecycle-red
 原 `opencut-wasm` 0.2.10的公共API没有GPU设备/compositor销毁方法。实现释放所有当前纹理并缩小/移除canvas，但其模块GPU初始化对象仍保留到浏览器文档关闭。此项真实限制未被fixture证明消失，也未声明彻底free GPU设备。
 
 以下仍待主会话验收：实际宿主加载、真实浏览器WebGPU、真实媒体预览与MP4、系统剪贴板、各尺寸人工视觉检查和根任务/frontend/contract/e2e/boundary/orphan/reconcile Gate。对应源码归档重建本轮连接已有冻结锁依赖树，没有fresh安装或跨OS可复现证据。
+
+## T-1069 当前源码与生成物
+
+本轮实际运行原生类型检查、生产构建、19 项控制测试、16 项资源测试与 42 项 DOM 检查。完整上游补丁及旧原生归档增量均 `patch --fuzz=0` 还原为当前 705 文件，逐文件字节相等。证据：`/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1069-native-source/delivery-candidate` 与 `/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1069-tests`。以上不代表浏览器像素、视频性能、MP4 或安装验收；旧记录保持历史含义。

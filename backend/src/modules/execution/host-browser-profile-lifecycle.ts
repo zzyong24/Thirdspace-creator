@@ -6,7 +6,7 @@ import type {Db} from '@creatoros/backend';
 import {setTimeout as delay} from 'node:timers/promises';
 import {BrowserProfileBusyError,createExecutionBrowserProfileLeaseService} from './execution-browser-profile-lease.service';
 
-export interface HostBrowserProfileIdentity {userId:string;authDir:string;profileKey:string}
+export interface HostBrowserProfileIdentity {userId:string;authDir:string;profileKey:string;domain?:string}
 /** 宿主资源授权适配器。当前账号归属/规范路径由生产resolveProfile验证，凭据不经此端口。 */
 export function createHostBrowserProfileLifecycle(db:Db,deps:{
  resolveProfile(authDir:string,signal?:AbortSignal):Promise<HostBrowserProfileIdentity>;
@@ -18,7 +18,7 @@ export function createHostBrowserProfileLifecycle(db:Db,deps:{
  const profiles=createExecutionBrowserProfileLeaseService(db);
  let hostIdentity:Promise<string>|undefined;
  const getHostIdentity=()=>hostIdentity??=Promise.resolve(deps.hostInstanceId??deps.recovery?.createHostInstanceId()??randomUUID());
- const identitySchema=z.object({userId:z.string().min(1),authDir:z.string().min(1),profileKey:z.string().regex(/^[a-f0-9]{64}$/)}).strict();
+ const identitySchema=z.object({userId:z.string().min(1),authDir:z.string().min(1),profileKey:z.string().regex(/^[a-f0-9]{64}$/),domain:z.string().min(1).optional()}).strict();
  const stoppedCleanup=new Map<string,()=>Promise<void>>();
  const acquire=async(authDir:string,signal?:AbortSignal)=>{
   signal?.throwIfAborted();const identity=identitySchema.parse(await deps.resolveProfile(authDir,signal));signal?.throwIfAborted();
@@ -26,7 +26,7 @@ export function createHostBrowserProfileLifecycle(db:Db,deps:{
   // 只重试本进程已经收到实际停止证明的释放；不抢占活资源或按TTL解锁。
   await retryBrowserProfileCleanup(identity.authDir,{signal});signal?.throwIfAborted();
   const hostInstanceId=await getHostIdentity();signal?.throwIfAborted();
-  const owner={userId:identity.userId,domain:'douyin.com',profileKey:identity.profileKey,hostInstanceId,hostOperationId:randomUUID()};
+  const owner={userId:identity.userId,domain:identity.domain??'douyin.com',profileKey:identity.profileKey,hostInstanceId,hostOperationId:randomUUID()};
   // 同档案的后台采集和登录探针共用互斥资源。只等真实持有者释放，不按时间抢占。
   const deadline=Date.now()+(deps.waitTimeoutMs??60_000);
   let receipt:Awaited<ReturnType<typeof profiles.acquireForHost>>;
@@ -38,7 +38,7 @@ export function createHostBrowserProfileLifecycle(db:Db,deps:{
     if(!(error instanceof BrowserProfileBusyError)||Date.now()>=deadline)throw error;
     if(deps.recovery&&!recoveryChecked){
      recoveryChecked=true;
-     const held=await profiles.getHeldHostLease({userId:identity.userId,domain:'douyin.com',profileKey:identity.profileKey});
+     const held=await profiles.getHeldHostLease({userId:identity.userId,domain:identity.domain??'douyin.com',profileKey:identity.profileKey});
      if(held&&held.hostInstanceId!==hostInstanceId){
       const proof=await deps.recovery.isPreviousHostStopped({hostInstanceId:held.hostInstanceId,authDir:identity.authDir});signal?.throwIfAborted();
       if(proof.stopped){

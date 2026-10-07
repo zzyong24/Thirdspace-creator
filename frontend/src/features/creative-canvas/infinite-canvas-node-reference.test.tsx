@@ -1,11 +1,68 @@
 import '@testing-library/jest-dom/vitest';
 import * as React from 'react';
 import {it,expect,vi,afterEach} from 'vitest';
-import {render,screen,fireEvent,cleanup} from '@testing-library/react';
+import {render,screen,fireEvent,cleanup,waitFor} from '@testing-library/react';
 import {InfiniteCanvasNode} from './infinite-canvas-node';
-vi.mock('@/lib/http-transport',()=>({readCurrentAccountId:()=> 'a'}));
-vi.mock('@/lib/contract-client',()=>({client:{}}));
+
+vi.mock('@/lib/contract-client',()=>({client:{searchAssets:vi.fn(async()=>({items:[{id:'new',name:'新图',assetType:'image',currentFileId:'new-file'}],nextCursor:null})),getAssetFileDownloadUrl:vi.fn(async()=>({url:'/exact.png'}))}}));
 afterEach(cleanup);
 function view(){const onPatch=vi.fn();render(<InfiniteCanvasNode item={{id:'node',type:'image_generation',position:{x:0,y:0},label:'页图',prompt:'画面',mode:'image_to_image',referenceAssetId:'old',referenceFileId:'old-file'}} assets={[{id:'old',name:'原图',assetType:'image',currentFileId:'old-file'},{id:'new',name:'新图',assetType:'image',currentFileId:'new-file'}]} selected busy={false} busyResult={false} projectTitle={null} onPatch={onPatch} onSelect={vi.fn()} onStartDrag={vi.fn()} onStartResize={vi.fn()} onStartConnect={vi.fn()} onGenerate={vi.fn()} onInsertResult={vi.fn()} onKeepResult={vi.fn()} onReferenceDrop={vi.fn()}/>);return onPatch;}
 it('切换生成模式清掉精确参考，旧file不能残留阻断合法保存',()=>{const patch=view();fireEvent.change(screen.getByRole('combobox',{name:'生成模式'}),{target:{value:'text_to_image'}});expect(patch.mock.calls[0]?.[1]).toHaveProperty('referenceFileId',undefined);expect(patch.mock.calls[0]?.[1]).toHaveProperty('referenceAssetId',undefined);});
-it('换参考资产清掉旧精确file，沿画布提交冻结新文件',()=>{const patch=view();fireEvent.change(screen.getByRole('combobox',{name:'参考图片'}),{target:{value:'new'}});expect(patch.mock.calls[0]?.[1]).toHaveProperty('referenceFileId',undefined);expect(patch.mock.calls[0]?.[1]).toHaveProperty('referenceAssetId','new');});
+it('参考图库确认冻结新资产和精确文件，预览时仍保留旧引用',async()=>{const patch=view();fireEvent.click(screen.getByRole('button',{name:'参考图片'}));fireEvent.click(await screen.findByRole('button',{name:'预览 新图'}));expect(patch).not.toHaveBeenCalled();fireEvent.click(screen.getByRole('button',{name:'使用此素材'}));await waitFor(()=>expect(patch.mock.calls[0]?.[1]).toMatchObject({referenceFileId:'new-file',referenceAssetId:'new'}));});
+
+// T1069_EXISTING_PORT_SEAM: 仅本文件既有业务spies；真实scope/epoch/signal/lifecycle不替换。
+vi.mock("@/lib/creation-workspace-scope", async importOriginal => {
+  const actual = await importOriginal<typeof import("@/lib/creation-workspace-scope")>();
+  const {client: componentPorts} = await import("@/lib/contract-client");
+  type Workspace = ReturnType<typeof actual.createCreationWorkspace>;
+  type Operation = ReturnType<Workspace["capture"]>;
+  const views = new WeakMap<Workspace, Workspace>();
+  function portClient(base: Operation["client"], capture: () => Operation): Operation["client"] {
+    const methods = new Map<PropertyKey, unknown>();
+    return new Proxy(base, {
+      get(target, key, receiver) {
+        const port = Reflect.get(componentPorts, key);
+        const original = Reflect.get(target, key, receiver);
+        if (typeof port !== "function") return original;
+        if (!methods.has(key)) methods.set(key, async (...args: unknown[]) => {
+          const operation = capture();
+          operation.assertCurrent();
+          try { return await Reflect.apply(Reflect.get(componentPorts, key), componentPorts, args); }
+          finally { operation.assertCurrent(); }
+        });
+        return methods.get(key);
+      },
+    });
+  }
+  function view(workspace: Workspace): Workspace {
+    const cached = views.get(workspace);
+    if (cached) return cached;
+    const client = portClient(workspace.client, () => workspace.capture());
+    const capture = (): Operation => {
+      const operation = workspace.capture();
+      return Object.freeze({...operation, client: portClient(operation.client, () => operation)});
+    };
+    const proxy = new Proxy(workspace, {
+      get(target, key) {
+        if (key === "client") return client;
+        if (key === "capture") return capture;
+        // Reflect读取原对象getter，signal/epoch始终是原factory当前值；不spread workspace。
+        return Reflect.get(target, key, target);
+      },
+    });
+    views.set(workspace, proxy);
+    return proxy;
+  }
+  return {
+    ...actual,
+    createCreationWorkspace: (...args: Parameters<typeof actual.createCreationWorkspace>) => view(actual.createCreationWorkspace(...args)),
+    useCreationWorkspace: (scope: Parameters<typeof actual.useCreationWorkspace>[0]) => view(actual.useCreationWorkspace(scope)),
+    useCreationClient: () => view(actual.useCreationWorkspace(actual.useCreationScope())).client,
+  };
+});
+// T1069_EXISTING_PORT_SEAM_END
+
+// 显式单测账号范围；工作区与取消守卫仍使用真实实现。
+import {beforeEach as scopeBefore,afterEach as scopeAfter} from "vitest";
+scopeBefore(()=>{localStorage.removeItem("creatoros:current-group");localStorage.setItem("creatoros:current-account","a");});
+scopeAfter(()=>{localStorage.removeItem("creatoros:current-group");localStorage.removeItem("creatoros:current-account");});

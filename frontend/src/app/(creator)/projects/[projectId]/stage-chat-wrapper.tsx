@@ -18,6 +18,7 @@
  */
 
 import * as React from "react";
+import {ProjectVideoSessionContext} from "@/features/reference-editors/project-video-session-registry";
 import { usePathname } from "next/navigation";
 
 import { cn } from "@/lib/utils";
@@ -44,14 +45,16 @@ function clampRail(n: number): number {
 export function StageChatWrapper({
   projectId,
   projectTitle,
-  children,
+  children,active,
 }: {
   readonly projectId: string | null;
   readonly projectTitle: string | null;
   readonly children: React.ReactNode;
+  readonly active?:boolean;
 }) {
   const pathname = usePathname() ?? "";
-  const isStagePage = STAGE_SEGMENTS.test(pathname);
+  const hosted=React.useContext(ProjectVideoSessionContext);
+  const isStagePage = STAGE_SEGMENTS.test(pathname)&&(active??(!hosted||!pathname.includes("/production")));
 
   // Hooks 必须无条件调用(早返回在其后)。SSR 默认 640,挂载后读回持久宽度(避免 hydration 闪)。
   const [railWidth, setRailWidth] = React.useState<number>(DEFAULT_RAIL);
@@ -166,7 +169,7 @@ export function StageChatWrapper({
     [persist],
   );
 
-  if (!isStagePage || !projectId || !projectTitle) return <>{children}</>;
+  const showRail=isStagePage&&Boolean(projectId&&projectTitle);
 
   return (
     <div
@@ -177,7 +180,7 @@ export function StageChatWrapper({
 
       {/* [T-297] 拖拽分隔条(pointer 拖 + 键盘 ←/→,role=separator);仅 xl+ 右栏可见时显示。
           [T-411] 收起态整条隐藏(连同右栏)。 */}
-      {!collapsed ? (
+      {showRail&&!collapsed ? (
         <div
           role="separator"
           aria-orientation="vertical"
@@ -200,7 +203,7 @@ export function StageChatWrapper({
         />
       ) : null}
 
-      {!collapsed ? (
+      {showRail ? (!collapsed ? (
         <aside
           data-slot="stage-chat-rail"
           style={{ width: railWidth }}
@@ -228,7 +231,7 @@ export function StageChatWrapper({
               </button>
             </div>
             <div className="min-h-0 flex-1">
-              <DraftChatRail projectId={projectId} projectTitle={projectTitle} />
+              <DraftChatRail projectId={projectId!} projectTitle={projectTitle!} />
             </div>
           </div>
         </aside>
@@ -252,7 +255,7 @@ export function StageChatWrapper({
             <span className="[writing-mode:vertical-rl]">编导</span>
           </button>
         </div>
-      )}
+      )) : null}
     </div>
   );
 }

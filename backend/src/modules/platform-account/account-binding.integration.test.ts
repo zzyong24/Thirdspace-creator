@@ -72,3 +72,16 @@ it('绑定成功后默认采集callback只能在成功回执提交后读取真�
 });
 it('绑定失败没有真实回执时默认采集callback不会补任务',async()=>{const onBound=vi.fn(async()=>{});stage.identity=vi.fn(async()=>null);service=createAccountBindingService({db:store.db,now,nextId,stage,capabilities:async()=>[{platform:'douyin',bind:{available:true,method:'qr',reason:'受控身份端口'}}],onBound} as any);const run=await service.start(ctx,input());await service.drainAccountBindingQueue(control,{waitForCompletion:true});expect((await service.status(ctx,run.runId)).status).toBe('failed');expect(onBound).not.toHaveBeenCalled();});
 it('默认采集callback异常与诊断异常不能反杀已经成功的真实绑定回执或回滚profile',async()=>{const rollback=vi.fn(async()=>{}),commit=stage.commit;stage.commit=vi.fn(async(c,input,tx)=>({...await commit(c,input,tx),rollbackProfile:rollback}));const onBound=vi.fn(async()=>{throw Error('默认采集补齐暂不可用');}),onBoundError=vi.fn(()=>{throw Error('诊断记录暂不可用');});service=createAccountBindingService({db:store.db,now,nextId,stage,capabilities:async()=>[{platform:'douyin',bind:{available:true,method:'qr',reason:'受控身份端口'}}],onBound,onBoundError} as any);const run=await service.start(ctx,input());await service.drainAccountBindingQueue(control,{waitForCompletion:true});expect((await service.status(ctx,run.runId)).status).toBe('succeeded');expect(onBound).toHaveBeenCalledOnce();expect(onBoundError).toHaveBeenCalledOnce();expect(rollback).not.toHaveBeenCalled();expect(stage.discard).not.toHaveBeenCalled();await expect(service.stop()).resolves.toBeUndefined();});
+
+// 真实队列与DB，平台端口为受控fixture；不冒充平台扫码。
+it('T1069 小红书绑定按持久任务冻结平台执行，不落到抖音端口',async()=>{
+ const local={...stage,createStaging:vi.fn(async()=>({stagingKey:'xhs-original-run'})),commit:vi.fn(async(c:any,identityInput:any,tx:any)=>{const account=await createPlatformAccountService({db:tx as Db,now,nextId}).createAccount(c,{platform:'xiaohongshu',accountHandle:identityInput.identity.accountHandle,externalAccountId:identityInput.identity.externalAccountId});return {accountId:account.id};})};
+ service=createAccountBindingService({db:store.db,now,nextId,stage,localStages:{xiaohongshu:local},capabilities:async()=>[{platform:'xiaohongshu',bind:{available:true,method:'qr',reason:'真实平台端口'}}]} as any);
+ const run=await service.start(ctx,{...input(),platform:'xiaohongshu'});await service.drainAccountBindingQueue(control,{waitForCompletion:true});
+ expect(await service.status(ctx,run.runId)).toMatchObject({status:'succeeded',platform:'xiaohongshu'});expect(local.createStaging).toHaveBeenCalledOnce();expect(stage.createStaging).not.toHaveBeenCalled();
+ const bound=await service.status(ctx,run.runId);expect(await createPlatformAccountService({db:store.db,now,nextId}).getAccount(ctx,bound.accountId!)).toMatchObject({platform:'xiaohongshu'});
+});
+it('T1069 未装配快手端口不能因能力表声称可用而创建绑定任务或借用抖音',async()=>{
+ service=createAccountBindingService({db:store.db,now,nextId,stage,capabilities:async()=>[{platform:'kuaishou',bind:{available:true,method:'qr',reason:'错误能力声明'}}]});
+ await expect(service.start(ctx,{...input(),platform:'kuaishou'})).rejects.toThrow('真实扫码绑定端口');expect(stage.createStaging).not.toHaveBeenCalled();
+});

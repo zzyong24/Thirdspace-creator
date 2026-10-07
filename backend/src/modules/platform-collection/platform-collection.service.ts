@@ -157,6 +157,28 @@ export function createPlatformCollectionService(deps: PlatformCollectionServiceD
     });
   }
 
+  /** 内部受信端口：沿调用者现有事务登记同一真实账号的身份授权，不创建第二绑定尝试。 */
+  async function commitVerifiedBinding(tx:BindingTx,ctx:RequestContext,input:{accountId:string;platform:string;platformIdentity:string;proofSource:string;scopes:Capability[];verifiedAt:string;expiresAt:string|null},adapterAlreadyVerified=false):Promise<void>{
+    if(!input.platformIdentity||!input.proofSource||!input.scopes.length||input.scopes.some(scope=>!["accountOverview","workCatalog","workMetrics"].includes(scope))||!Number.isFinite(Date.parse(input.verifiedAt))||Date.parse(input.verifiedAt)>Date.parse(now())||(input.expiresAt!==null&&expired(input.expiresAt)))deny("WRONG_PLATFORM_IDENTITY","平台身份证明无效");
+    // 旧begin已验证端口；confirm保留其既有完成语义，不因后来的能力状态变化反杀真实身份证明。
+    if(!adapterAlreadyVerified)assertAdapterReady(input.platform,"bind");
+    const [existing]=await tx.select().from(platformCollectionBindings).where(and(eq(platformCollectionBindings.userId,ctx.userId),eq(platformCollectionBindings.platform,input.platform),eq(platformCollectionBindings.platformIdentity,input.platformIdentity))).for("update");
+    if(existing&&existing.accountId!==input.accountId)deny("WRONG_PLATFORM_IDENTITY","已绑定身份不能转移到其他账号");
+      const [account] = await tx.select().from(platformAccounts).where(and(eq(platformAccounts.id, input.accountId),
+        eq(platformAccounts.userId, ctx.userId))).for("update");
+      if (!account || account.status !== "active" || account.platform !== input.platform || account.externalAccountId !== input.platformIdentity) {
+        deny("WRONG_PLATFORM_IDENTITY", "账号所有权或平台身份核验失败");
+      }
+      if (existing) await tx.update(platformCollectionBindings).set({ scopes: input.scopes,
+        proofSource: input.proofSource, verifiedAt: input.verifiedAt,
+        expiresAt: input.expiresAt, revokedAt: null,
+      }).where(eq(platformCollectionBindings.accountId, existing.accountId));
+      else await tx.insert(platformCollectionBindings).values({ accountId:input.accountId, userId: ctx.userId,
+        platform: input.platform, platformIdentity: input.platformIdentity,
+        scopes: input.scopes, proofSource: input.proofSource, verifiedAt: input.verifiedAt,
+        expiresAt: input.expiresAt });
+  }
+
   async function bindConfirm(ctx: RequestContext, raw: unknown) {
     const { bindAttemptId } = platformBindConfirmRequest.parse(raw);
     const result = await db.transaction(async tx => {
@@ -181,19 +203,7 @@ export function createPlatformCollectionService(deps: PlatformCollectionServiceD
         existingAccountId: existing?.accountId ?? null,
       });
       if (existing && existing.accountId !== accountId) deny("WRONG_PLATFORM_IDENTITY", "已绑定身份不能转移到其他账号");
-      const [account] = await tx.select().from(platformAccounts).where(and(eq(platformAccounts.id, accountId),
-        eq(platformAccounts.userId, ctx.userId))).for("update");
-      if (!account || account.status !== "active" || account.platform !== attempt.platform || account.externalAccountId !== attempt.platformIdentity) {
-        deny("WRONG_PLATFORM_IDENTITY", "账号所有权或平台身份核验失败");
-      }
-      if (existing) await tx.update(platformCollectionBindings).set({ scopes: attempt.scopes,
-        proofSource: attempt.proofSource, verifiedAt: attempt.proofVerifiedAt,
-        expiresAt: attempt.proofExpiresAt, revokedAt: null,
-      }).where(eq(platformCollectionBindings.accountId, existing.accountId));
-      else await tx.insert(platformCollectionBindings).values({ accountId, userId: ctx.userId,
-        platform: attempt.platform, platformIdentity: attempt.platformIdentity,
-        scopes: attempt.scopes, proofSource: attempt.proofSource, verifiedAt: attempt.proofVerifiedAt,
-        expiresAt: attempt.proofExpiresAt });
+      await commitVerifiedBinding(tx,ctx,{accountId,platform:attempt.platform,platformIdentity:attempt.platformIdentity,proofSource:attempt.proofSource,scopes:attempt.scopes as Capability[],verifiedAt:attempt.proofVerifiedAt,expiresAt:attempt.proofExpiresAt??null},true);
       const [bound] = await tx.update(platformBindAttempts).set({ status: "bound", accountId,
         cleanupPendingAt: now(), updatedAt: now() }).where(eq(platformBindAttempts.id, attempt.id)).returning();
       return { resource: bindResource(bound!), expired: false };
@@ -863,7 +873,7 @@ export function createPlatformCollectionService(deps: PlatformCollectionServiceD
     });
   }
 
-  return { listCapabilities, bindBegin, recordVerifiedIdentity, bindConfirm, bindCancel, retryBindCleanup,
+  return { commitVerifiedBinding, listCapabilities, bindBegin, recordVerifiedIdentity, bindConfirm, bindCancel, retryBindCleanup,
     start, claim, renewLease, sweepExpiredLeases, status, latestRun, cancel, failRun, commitPage, listWorks, readMetrics,
     recordConfirmedLegacyImport };
 }

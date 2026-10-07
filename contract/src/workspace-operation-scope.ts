@@ -53,6 +53,7 @@ export const WORKSPACE_OPERATION_SCOPES = {
   // assets
   "assets.previewDelete": "group",
   "assets.list": "group",
+  "assets.search": "group",
   "assets.downloadUrl": "group",
   "assets.uploads.create": "group",
   "assets.uploads.complete": "group",

@@ -15,7 +15,7 @@ export function isNativeContextEvent(value:unknown):value is NativeContextEvent 
 }
 export type NativeEditorHandle = {
   request<T = unknown>(operation: string, payload?: unknown, options?: {requestId?: string; signal?: AbortSignal}): Promise<T>;
-  update(options: {theme?: NativeEditorTheme; disabled?: boolean}): void;
+  update(options: {theme?: NativeEditorTheme; disabled?: boolean;visible?:boolean}): void;
   dispose(): Promise<void>;
 };
 export type NativeEditorOptions = {
@@ -25,7 +25,8 @@ export type NativeEditorOptions = {
   signal: AbortSignal;
   onChanged(value?: unknown): void;
   onError(message: string): void;
-  importMedia(file: File): Promise<{mediaId: string}>;
+  onImportActivity?(pending:number):void;
+  importMedia(file: File, options?:{signal?:AbortSignal}): Promise<{mediaId: string}>;
 };
 export type NativeEditorModule = {mount(container: HTMLElement, options: NativeEditorOptions): Promise<NativeEditorHandle>};
 export type EditorSnapshot = {document: Record<string, unknown>; mediaMetadata?: Array<Record<string, unknown>>};

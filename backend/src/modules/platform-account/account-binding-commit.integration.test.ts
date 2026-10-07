@@ -30,3 +30,15 @@ it('真实账号只在原组更新；其它组的同一平台ID不能暗中转�
  const other=await createAccountGroupService({db:store.db,now,nextId}).create(ctx,{name:'其它',idempotencyKey:'other'});
  await expect(binding.createAccountBindingPreparer({db:store.db,now,nextId})({...ctx,groupId:other.id},identity)).rejects.toThrow('请先明确转组');
 });
+
+it('T1069 小红书事务保留平台身份，授权失败回滚账号且不搬profile',async()=>{
+ const ports={db:store.db,now,nextId,platform:'xiaohongshu'},plan=await binding.createAccountBindingPreparer(ports)(ctx,identity);
+ const prepareProfile=vi.fn(async()=>({rollbackProfile:async()=>{},finalizeProfile:async()=>{}}));
+ const authorize=vi.fn(async()=>{throw Error('真实身份授权写入失败');});
+ const commit=binding.createAccountBindingCommitter({...ports,prepareProfile,commitAuthorization:authorize} as any);
+ await expect(store.db.transaction(tx=>commit(ctx,{stagingKey:'original-stage',identity,signal,prepared:plan},tx))).rejects.toThrow('真实身份授权写入失败');
+ expect(prepareProfile).not.toHaveBeenCalled();expect((await createAccountGroupService({db:store.db,now,nextId}).get(ctx,ctx.groupId!)).members).toHaveLength(0);
+ const success=binding.createAccountBindingCommitter({...ports,prepareProfile,commitAuthorization:vi.fn(async()=>{})} as any);
+ const result=await store.db.transaction(tx=>success(ctx,{stagingKey:'original-stage',identity,signal,prepared:plan},tx));
+ expect(await createPlatformAccountService({db:store.db,now,nextId}).getAccount(ctx,result.accountId)).toMatchObject({platform:'xiaohongshu',externalAccountId:identity.externalAccountId});
+});

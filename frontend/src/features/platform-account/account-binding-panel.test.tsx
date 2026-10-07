@@ -8,7 +8,7 @@ import {AccountBindingPanel} from './account-binding-panel';
 import {CURRENT_GROUP_KEY} from '@/lib/http-transport';
 const group:AccountGroupResource={id:'g',userId:'u',name:'真实创作者',status:'active',version:1,members:[],createdAt:'2026-10-04T00:00:00Z',updatedAt:'2026-10-04T00:00:00Z'};
 const run={runId:'real-run',groupId:'g',platform:'douyin',status:'waiting_verification',accountId:null,error:null,createdAt:'2026-10-04T00:00:00Z',updatedAt:'2026-10-04T00:00:00Z'};
-beforeEach(()=>{vi.clearAllMocks();localStorage.clear();sessionStorage.clear();localStorage.setItem(CURRENT_GROUP_KEY,'g');api.startAccountBinding.mockResolvedValue(run);api.getAccountBinding.mockResolvedValue(run);api.cancelAccountBinding.mockResolvedValue({...run,status:'cancel_requested'});api.getAccount.mockResolvedValue({id:'real-account'});});afterEach(cleanup);
+beforeEach(()=>{vi.clearAllMocks();localStorage.clear();sessionStorage.clear();localStorage.setItem(CURRENT_GROUP_KEY,'g');api.startAccountBinding.mockResolvedValue(run);api.getAccountBinding.mockResolvedValue(run);api.cancelAccountBinding.mockResolvedValue({...run,status:'cancel_requested'});api.getAccount.mockResolvedValue({id:'real-account',platform:'douyin'});});afterEach(cleanup);
 const show=(changed=vi.fn())=>render(<AccountBindingPanel group={group} canStart onChanged={changed}/>);
 it('开始真实run冻结目标组版本，等待扫码时不能假报已连接',async()=>{show();fireEvent.click(screen.getByRole('button',{name:'扫码绑定抖音账号'}));await screen.findByText('等待扫码验证');expect(api.startAccountBinding.mock.calls[0][0].body).toMatchObject({groupId:'g',platform:'douyin',expectedGroupVersion:1});expect(screen.queryByText('绑定已完成')).toBeNull();expect(screen.getByText('真实记录：real-run')).toBeVisible();});
 it('取消返回requested只展示停止中，实际status确认cancelled后才结束',async()=>{show();fireEvent.click(screen.getByRole('button',{name:'扫码绑定抖音账号'}));await screen.findByText('等待扫码验证');fireEvent.click(screen.getByRole('button',{name:'取消本次绑定'}));await screen.findByText('正在停止本次扫码');expect(screen.queryByText('本次绑定已取消')).toBeNull();api.getAccountBinding.mockResolvedValue({...run,status:'cancelled'});fireEvent.click(screen.getByRole('button',{name:'刷新绑定状态'}));await screen.findByText('本次绑定已取消');});
@@ -20,3 +20,9 @@ it('状态刷新最多一个在途请求，连续点击不能重复读回或采�
 });
 it('重新进入页面读真实run索引，不再次启动扫码任务',async()=>{const first=show();fireEvent.click(screen.getByRole('button',{name:'扫码绑定抖音账号'}));await screen.findByText('等待扫码验证');first.unmount();api.startAccountBinding.mockClear();show();await screen.findByText('等待扫码验证');expect(api.startAccountBinding).not.toHaveBeenCalled();expect(api.getAccountBinding).toHaveBeenCalled();});
 it('卸载会释放提交中的前台离开保护，迟到回执仍被丢弃',async()=>{const {hasForegroundActivity}=await import('@/lib/foreground-activity');let resolve!:(value:typeof run)=>void;api.startAccountBinding.mockImplementation(()=>new Promise(done=>{resolve=done;}));const first=show();fireEvent.click(screen.getByRole('button',{name:'扫码绑定抖音账号'}));expect(hasForegroundActivity()).toBe(true);first.unmount();expect(hasForegroundActivity()).toBe(false);resolve(run);await Promise.resolve();expect(api.getAccountBinding).not.toHaveBeenCalled();});
+it('T1069 小红书入口冻结真实平台，同组不同平台的未知请求索引分开',async()=>{
+ api.startAccountBinding.mockResolvedValue({...run,platform:'xiaohongshu'});
+ render(<AccountBindingPanel {...({group,canStart:true,platform:'xiaohongshu',onChanged:vi.fn()} as any)}/>);
+ fireEvent.click(screen.getByRole('button',{name:'扫码绑定小红书账号'}));await waitFor(()=>expect(api.startAccountBinding).toHaveBeenCalled());expect(api.startAccountBinding.mock.calls[0][0].body.platform).toBe('xiaohongshu');
+ expect(JSON.parse(sessionStorage.getItem('creatoros:account-binding:u:g:xiaohongshu')!).runId).toBe(run.runId);expect(sessionStorage.getItem('creatoros:account-binding:u:g')).toBeNull();
+});

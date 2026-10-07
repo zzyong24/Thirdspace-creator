@@ -8,7 +8,7 @@
  * 确定性:纯 fixture,无网络/随机/时钟。
  */
 
-import { cleanup, fireEvent, render } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type {
@@ -58,9 +58,7 @@ describe("VideoDecisionPreview", () => {
     expect(getByText("角色技巧")).toBeTruthy();
     expect(getByText("效率提升 47%")).toBeTruthy();
     expect(getByText("数据")).toBeTruthy(); // stat kind 徽标
-    const select = getByTestId("broll-0").querySelector("select")!;
-    expect(select.value).toBe("asset-1");
-    expect(select.options).toHaveLength(2); // 选项集 = 素材清单快照
+    expect(getByTestId("broll-0")).toHaveTextContent("提示词录屏");
     expect(getByTestId("subtitle-sample-0").textContent).toContain(
       "大家好,效率提升 47%",
     );
@@ -89,7 +87,7 @@ describe("VideoDecisionPreview", () => {
     expect(payload.renderProps.scenes[1]!.cards).toHaveLength(1);
   });
 
-  it("B-roll 换选后保留原分镜与既有绑定，只在当前方案内自动优化", () => {
+  it("B-roll 换选后保留原分镜与既有绑定，只在当前方案内自动优化", async () => {
     const onConfirm = vi.fn();
     const onRestoryboard = vi.fn();
     const { getByTestId, getByText } = render(
@@ -102,8 +100,10 @@ describe("VideoDecisionPreview", () => {
         talkingHeadAssetId="asset-video-raw"
       />,
     );
-    const select = getByTestId("broll-0").querySelector("select")!;
-    fireEvent.change(select, { target: { value: "asset-2" } });
+    fireEvent.click(screen.getByRole("button",{name:"B-roll 素材(当前:提示词录屏)"}));
+    fireEvent.click(screen.getByRole("button",{name:/预览 角色示意图/}));
+    fireEvent.click(screen.getByRole("button",{name:"替换这一段素材"}));
+    await waitFor(()=>expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
     expect(getByText(/系统会保留原分镜/)).toBeTruthy();
     fireEvent.click(getByText("应用补充选材"));
     expect(onConfirm).not.toHaveBeenCalled();
@@ -129,11 +129,7 @@ describe("VideoDecisionPreview", () => {
       />,
     );
 
-    const select = getByTestId("broll-0").querySelector("select")!;
-    expect(select.value).toBe("asset-1");
-    expect(select.options[0]?.textContent).toBe(
-      "已删除的项目录屏.mov（素材已不可用）",
-    );
+    expect(getByTestId("broll-0")).toHaveTextContent("已删除的项目录屏.mov（素材已不可用）");
     expect(getByText("请先移除或重新选择 1 条已不可用素材。"))
       .toBeTruthy();
     const confirm = getByRole("button", { name: "确认决策,进入渲染" });
@@ -154,11 +150,7 @@ describe("VideoDecisionPreview", () => {
       />,
     );
 
-    const select = getByTestId("broll-0").querySelector("select")!;
-    expect(Array.from(select.options).map((option) => option.value)).toEqual([
-      "asset-1",
-      "asset-2",
-    ]);
+    expect(getByTestId("broll-0")).toHaveTextContent("已删除的项目录屏.mov（素材已不可用）");
     fireEvent.click(getByLabelText("移除 B-roll:已删除的项目录屏.mov"));
     const confirm = getByRole("button", { name: "确认决策,进入渲染" });
     expect((confirm as HTMLButtonElement).disabled).toBe(false);

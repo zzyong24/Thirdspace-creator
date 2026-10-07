@@ -127,6 +127,7 @@ const SPEC_13: ReadonlyArray<[string, string]> = [
   ["GET", "/tags/for-entity"],
   ["GET", "/tags/:tagId/entities"],
   ["GET", "/assets"],
+  ["GET", "/assets/search"],
   ["POST", "/assets/uploads"],
   ["POST", "/assets/uploads/:uploadId/complete"],
   ["GET", "/assets/:assetId"],

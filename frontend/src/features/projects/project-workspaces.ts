@@ -8,7 +8,7 @@ export function projectWorkspaceId(pathname: string): string {
 }
 export type WorkspaceOutput = {readonly id: string; readonly contentType: string};
 
-export function projectWorkspaces(projectId: string, pathname: string, outputs: readonly WorkspaceOutput[] | null = null) {
+export function projectWorkspaces(projectId: string, pathname: string, outputs: readonly WorkspaceOutput[] | null = null, selectedVideoId?:string|null) {
   const base = `/projects/${encodeURIComponent(projectId)}`;
   const active = projectWorkspaceId(pathname);
   const currentOutputId = pathname.split("/").filter(Boolean)[3];
@@ -16,7 +16,7 @@ export function projectWorkspaces(projectId: string, pathname: string, outputs: 
     ?? outputs?.find(output => output.contentType === type);
   const article = pick("article");
   const image = pick("image");
-  const video = pick("video");
+  const video = (selectedVideoId?outputs?.find(output=>output.id===selectedVideoId&&output.contentType==="video"):undefined)??pick("video");
   // 明确读到无 output 的旧项目仍沿原稿面和制作链；读失败不伪装成多形式项目。
   const legacyVideo = outputs !== null && outputs.length === 0;
   const visible = (id: string, hasOutput: boolean) => hasOutput || (outputs === null && active === id);

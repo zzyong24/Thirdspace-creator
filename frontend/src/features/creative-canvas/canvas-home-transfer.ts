@@ -45,7 +45,7 @@ export class CanvasHomeTransfer{
    }
    const {nodes,group}=this.plan,existing=nodes.map(n=>canvas.document.nodes.find(old=>old.id===n.id));
    if(existing.every(Boolean)){
-    const same=nodes.every((n,index)=>{const old=existing[index]!;if(n.type!==old.type)return false;if(n.type==='image'||n.type==='video')return (old.type==='image'||old.type==='video')&&n.assetId===old.assetId&&n.fileId===old.fileId;if(n.type==='image_generation'||n.type==='video_generation')return (old.type==='image_generation'||old.type==='video_generation')&&n.prompt===old.prompt&&n.templateId===old.templateId&&n.templateVersion===old.templateVersion&&n.referenceAssetId===old.referenceAssetId&&n.aspectRatio===old.aspectRatio;return false;});
+    const same=nodes.every((n,index)=>{const old=existing[index]!;if(n.type!==old.type)return false;if(n.type==='image'||n.type==='video')return (old.type==='image'||old.type==='video')&&n.assetId===old.assetId&&n.fileId===old.fileId;if(n.type==='image_generation'||n.type==='video_generation')return (old.type==='image_generation'||old.type==='video_generation')&&n.prompt===old.prompt&&n.templateId===old.templateId&&n.templateVersion===old.templateVersion&&n.referenceAssetId===old.referenceAssetId&&(n.referenceFileId??null)===(old.referenceFileId??null)&&n.aspectRatio===old.aspectRatio;return false;});
     if(!same)throw new Error('已保存的节点发生变化，请在原画布核对');
     if(group&&!canvas.document.visualGroups?.some(old=>old.id===group.id&&JSON.stringify(old.pageOrder)===JSON.stringify(group.pageOrder)))throw new Error('页组已发生变化，请在原画布核对');
     return canvas;

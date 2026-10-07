@@ -1,4 +1,5 @@
 "use client";
+import {ProjectVideoSessionHost} from "@/features/reference-editors/project-video-session-host";
 
 /**
  * ShellRouter derives the AppShell props from the current pathname and
@@ -19,7 +20,9 @@
 
 import { WorkspaceInitializationBoundary } from "@/components/shell/workspace-initialization";
 import * as React from "react";
-import { usePathname } from "next/navigation";
+import {readVideoSession,readServerVideoSession,subscribeVideoSession} from "@/features/reference-editors/project-video-session-registry";
+import {creationScopeKey,useCreationScope} from "@/lib/creation-workspace-scope";
+import { usePathname,useSearchParams } from "next/navigation";
 
 import { AppShell } from "@/components/shell/app-shell";
 import type {
@@ -150,6 +153,7 @@ export function resolveRoute(
   // 灌进来)。项目路由下有真 {projectId,title} 时,标题优先用真值(fixture 里查不到真项目 → 原来
   // 退回中性「当前项目」)。非项目路由 / 无 override → 走原 fixture 逻辑,**不破坏现有 fixture 路由**。
   override?: CurrentProjectOverride | null,
+  selectedVideoId?:string|null,
 ): RouteResolution {
   if (pathname === "/overview") return {headerMode:"global",pageTitle:"创作者总览",pageDescription:"账号组的内容与多平台表现",contextualCardVariant:"assistant"};
   if (pathname === "/") {
@@ -284,7 +288,7 @@ export function resolveRoute(
       pageTitle: realTitle || undefined,
       contextualCardVariant: "assistant",
       project: identity,
-      projectStages: projectWorkspaces(identity?.projectId ?? projectId, pathname, overrideMatches ? override!.workOutputs ?? null : null),
+      projectStages: projectWorkspaces(identity?.projectId ?? projectId, pathname, overrideMatches ? override!.workOutputs ?? null : null,selectedVideoId),
       ...(primaryActionLabel ? { primaryActionLabel } : {}),
       // [T-209] 移除假「分享」按钮的 label 来源(该按钮无 onClick,已随 top-header 一并删除)。
       sidebarContext: {
@@ -380,18 +384,22 @@ export interface ShellRouterProps {
   readonly overlayMasked?: boolean;
 }
 
-export function ShellRouter({
+function ShellRouterContents({
   children,
   user,
   notifications,
   hasInterceptingModal = false,
   overlayMasked = false,
 }: ShellRouterProps) {
+  const [queryOutputId,setQueryOutputId]=React.useState<string|null>(null);
   const pathname = usePathname() ?? "/";
   // T-039b item②:项目路由下读真项目 identity(由 projects/[projectId]/layout.tsx 灌进 context)。
   // 非项目路由无 Provider → null → resolveRoute 走原 fixture 逻辑(向后兼容,不破坏现有路由)。
   const projectOverride = useCurrentProjectOverride();
-  const resolution = resolveRoute(pathname, projectOverride);
+  const remembered=React.useSyncExternalStore(subscribeVideoSession,readVideoSession,readServerVideoSession);
+  const scopeKey=creationScopeKey(useCreationScope());
+  const selectedVideoId=/\/production(?:\/|$)/.test(pathname)&&queryOutputId?queryOutputId:remembered?.scopeKey===scopeKey&&remembered.projectId===projectOverride?.projectId?remembered.outputId:null;
+  const resolution = resolveRoute(pathname, projectOverride,selectedVideoId);
 
   return (
     <AppShell
@@ -409,7 +417,8 @@ export function ShellRouter({
       contentFill={isContentFillRoute(pathname)}
       overlayMasked={hasInterceptingModal || overlayMasked}
     >
-      <WorkspaceInitializationBoundary allowRecovery>{children}</WorkspaceInitializationBoundary>
+      <React.Suspense fallback={null}><ShellRouterQuery onChange={setQueryOutputId}/></React.Suspense>
+      <ProjectVideoSessionHost selectedOutputId={queryOutputId}><WorkspaceInitializationBoundary allowRecovery>{children}</WorkspaceInitializationBoundary></ProjectVideoSessionHost>
       {/* The Copilot overlay controller is wrapped in a Suspense boundary
           because it consumes `useSearchParams()`, which Next.js requires
           during prerender. The fallback is `null` so the panel only
@@ -425,3 +434,6 @@ export function ShellRouter({
     </AppShell>
   );
 }
+
+function ShellRouterQuery({onChange}:{onChange:(value:string|null)=>void}){const params=useSearchParams(),value=params.get("outputId");React.useLayoutEffect(()=>onChange(value),[value,onChange]);return null;}
+export function ShellRouter(props:ShellRouterProps){return <ShellRouterContents {...props}/>;}
