@@ -5061,3 +5061,63 @@
 - const unlock=beginExportLock();
 + // 文件和SHA核对之后必须同步重核真实导入状态；该检查与取得锁之间没有await，不取消原导入。
 + assertFrozen();const unlock=beginExportLock();
+--- a/NATIVE_REBUILD_CONSISTENCY.json
++++ b/NATIVE_REBUILD_CONSISTENCY.json
+@@ -3 +3 @@
+-  "scope": "修复NATIVE-REVIEW-001后：固定base+完整累计patch实际复原全部708source零字节差异；fresh frozen install后真实source类型/43测试253断言及同一本机两次production构建hash一致；独立复审和真实浏览器音视频未签",
++  "scope": "修复NATIVE-REVIEW-001及非main场景冻结project.metadata.duration后：固定base+完整累计patch实际复原全部708source零字节差异；fresh frozen install后真实source类型/44测试271断言及同一本机两次production构建hash一致；独立复审和真实浏览器音视频未签",
+@@ -14,2 +14,2 @@
+-    "tests": 43,
+-    "assertions": 253,
++    "tests": 44,
++    "assertions": 271,
+@@ -32,2 +32,2 @@
+-      "log": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-tests/native-race-production-build-1.log",
+-      "sha256": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-tests/native-race-production-build-1-sha256.json"
++      "log": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-tests/native-duration-production-build-1.log",
++      "sha256": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-tests/native-duration-production-build-1-sha256.json"
+@@ -37,2 +37,2 @@
+-      "log": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-tests/native-race-production-build-2.log",
+-      "sha256": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-tests/native-race-production-build-2-sha256.json"
++      "log": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-tests/native-duration-production-build-2.log",
++      "sha256": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-tests/native-duration-production-build-2-sha256.json"
+@@ -43 +43 @@
+-    "NATIVE_BUILD_GRAPH.json": "47b91f72912b47e4ba0813b67229fa7ab823469d7e3a335cf44317704d41bdac",
++    "NATIVE_BUILD_GRAPH.json": "b9e0e5d5c3ab192c6689b0791060274171c8a3433a449e08508700e6f4f83227",
+@@ -48 +48 @@
+-    "native.js": "7716ee850a64d3a556ff8f71dda79afa33dd61f105f97e02644303b8fc4e6f25"
++    "native.js": "fec1ca3ddaf8c0d5451d377ceaa459724038eb2ce106cad8f5dda814daa625b4"
+@@ -72 +72,20 @@
+-  "postBuildEvidenceUpdate": "仅本JSON证据在两次build后更新；运行时源码与被测/被构建字节相同"
++  "postBuildEvidenceUpdate": "仅本JSON证据在两次build后更新；运行时源码与被测/被构建字节相同",
++  "projectDuration": {
++    "sourceMath": "timeline/scenes.ts:getProjectDurationFromScenes，只取main scene缺失fallback first的所有轨道maxEnd；renderer frozen.duration仍为target scene",
++    "red": {
++      "log": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-tests/native-duration-public-red.log",
++      "exitCode": 1,
++      "observed": "非main目标时长240000误写project.metadata.duration；期待main120000，收到240000"
++    },
++    "green": {
++      "log": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-tests/native-duration-public-green.log",
++      "tests": 1,
++      "assertions": 18,
++      "families": [
++        "main存在",
++        "main缺失fallback first"
++      ],
++      "observed": "目标sceneId/candidateDigest/tracks及render duration保持目标，冻结工程metadata时长沿main规则，其它metadata扩展与scene保真，原工程未写"
++    },
++    "boundary": "真实previewNativeScene源码与显式renderer fixture；原RendererManager消费frozen.duration/source已核，不代表真浏览器编解码"
++  }
+--- a/apps/web/src/embedded/__tests__/native-preview.test.ts
++++ b/apps/web/src/embedded/__tests__/native-preview.test.ts
+@@ -28,0 +29 @@
++test('非主场景候选仅用目标时长渲染，冻结工程metadata仍按原main fallback first数学',async()=>{for(const fallback of [false,true]){const f=fixture();f.scene.isMain=false;const originalMain=f.project.scenes[1];originalMain.isMain=!fallback;originalMain.tracks.main.elements[0].duration=120000;originalMain.tracks.main.elements[0].trimEnd=120000;if(fallback)f.project.scenes=[originalMain,f.scene];f.project.metadata.duration=120000;f.project.metadata.extraMetadata={kept:true};const original=structuredClone(f.project),p=await f.payload();const work=previewNativeScene(f.editor,p);for(let i=0;i<100&&!f.calls;i++)await Bun.sleep(1);expect(f.calls).toBe(1);f.complete({success:true,buffer:new ArrayBuffer(4)});const result=await work;expect(f.frozen.duration).toBe(240000);expect(f.frozen.project.metadata).toEqual(original.metadata);expect(result.sceneId).toBe(f.scene.id);expect(result.candidateDigest).toBe(p.candidateDigest);expect(f.frozen.project.scenes.find((scene:any)=>scene.id===f.scene.id).tracks).toEqual(f.candidate);expect(f.frozen.project.scenes.find((scene:any)=>scene.id===originalMain.id)).toEqual(original.scenes.find((scene:any)=>scene.id===originalMain.id));expect(f.project).toEqual(original);expect(isExportLocked()).toBe(false);}},120000);
+--- a/apps/web/src/embedded/native-preview.ts
++++ b/apps/web/src/embedded/native-preview.ts
+@@ -52 +52,4 @@
+- project.metadata={...project.metadata,duration:mediaTime({ticks:duration})};
++ // 沿timeline/scenes.ts:getProjectDurationFromScenes：工程metadata只取main（缺失取first）；renderer仍渲染目标scene。
++ const mainScene=project.scenes.find(scene=>scene.isMain)??project.scenes[0];let projectDuration=0;
++ if(mainScene)for(const track of [mainScene.tracks.main,...mainScene.tracks.overlay,...mainScene.tracks.audio])for(const element of track.elements){const end=element.startTime+element.duration;if(end>projectDuration)projectDuration=end;}
++ project.metadata={...project.metadata,duration:mediaTime({ticks:projectDuration})};
