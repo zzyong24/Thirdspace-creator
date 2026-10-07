@@ -641,11 +641,11 @@
     },
     {
       "module": "src/embedded/native-controller.ts",
-      "renderedLength": 10849
+      "renderedLength": 10875
     },
     {
       "module": "src/embedded/native-document-contract.ts",
-      "renderedLength": 13956
+      "renderedLength": 17204
     },
     {
       "module": "src/embedded/native-entry.tsx",
@@ -665,7 +665,7 @@
     },
     {
       "module": "src/embedded/native-preview.ts",
-      "renderedLength": 5806
+      "renderedLength": 5974
     },
     {
       "module": "src/embedded/native-version.ts",

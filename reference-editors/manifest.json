@@ -73,36 +73,36 @@
     "native": {
       "deliveryMode": "native",
       "sourceArchive": "sources/opencut-classic/native-source.tar.gz",
-      "sourceArchiveSha256": "c2826d9167fb8d9bc58ab3b02fb2734794eab08b198fb40828ea87bd5a1d7533",
+      "sourceArchiveSha256": "56c415210dcee4e6584e058eee3c864a44482dbee4260e20375c19eabe35e1b4",
       "patch": "sources/opencut-classic/native-patches.diff",
-      "patchSha256": "5775b62929292c30eae066560242f4becf7f703d4661163e30d8c238ee7c1400",
+      "patchSha256": "09935765e05389df8cff9078ab617c44f6183aa34a748523c0bd1c2d3f0ffa88",
       "bundleFiles": {
         "LICENSE.opencut": "8117f9bb64534f7530fc6139b014fd1c1465f7981f93d1871789150fa3f59d3d",
-        "NATIVE_BUILD_GRAPH.json": "df94f84a7e0f09d3d6a2fd38ce093b7ebbc93621cfd6db637ae8968c356aa315",
+        "NATIVE_BUILD_GRAPH.json": "47b91f72912b47e4ba0813b67229fa7ab823469d7e3a335cf44317704d41bdac",
         "THIRD_PARTY_LICENSES.json": "b92b56836fbb1ac73b12112f61ec12cfce7af0793e91b6ae8748ed591db73964",
         "THIRD_PARTY_LICENSES.txt": "e337836ba3e5a4d722e4750619410e357434656a00fc79e9a572ad649d633b8a",
         "effects/preview.jpg": "b318cede7bbe27bfbf1b8b94d41f65b6f52d5f2650ce3a153d03b76c2a1c0190",
         "native.css": "a0bad44d377687bc240c1cf59742b3ffa12b5ba282d00d3912846587fc12b31f",
-        "native.js": "b7f119a87dd82d0fca0dd775a8c2cecb39c721f17d9ece4d59c8488292515cf7"
+        "native.js": "7716ee850a64d3a556ff8f71dda79afa33dd61f105f97e02644303b8fc4e6f25"
       },
       "t1062CandidateManifest": {
         "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-native-r8-nzjmtyxt/source-manifest-final.json",
         "sha256": "246e63a02753b7a90760611506a82341d8457462a996aed8463f7f91eccdc153"
       },
-      "verificationStatus": "T1070_RECONSTRUCTED_SOURCE_TYPES_FIXTURES_TWO_PRODUCTION_BUILDS_NOT_BROWSER_OR_INSTALL",
+      "verificationStatus": "T1070_RACE_FIXED_PUBLIC_IMPORT_SOURCE_TYPES_FIXTURES_TWO_PRODUCTION_BUILDS_REVIEW_PENDING_NOT_BROWSER_OR_INSTALL",
       "t1062TitleRepairCurrentManifest": {
         "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-attempt9-group-native-fix-imixc7dc/native31-current-binding.json",
         "sha256": "944f259e707c9579a321ede8b2655e51f3e3b36c9841fd0f16b640edc73d28b6"
       },
       "t1069ReconstructionEvidence": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1069-native-source/delivery-candidate/full-reconstruction-result.json",
       "fullReconstructionPatch": "sources/opencut-classic/native-from-t1046.patch",
-      "fullReconstructionPatchSha256": "5775b62929292c30eae066560242f4becf7f703d4661163e30d8c238ee7c1400",
+      "fullReconstructionPatchSha256": "09935765e05389df8cff9078ab617c44f6183aa34a748523c0bd1c2d3f0ffa88",
       "fixedBaseArchive": "sources/opencut-classic-source.tar.gz",
       "fixedBaseSha256": "ad5a2b874a2b50ab10fca522a271b5c929f383af5c9e40bdf1c3f4feb45360a6",
-      "contractCopySha256": "4dc632fd8b5176730c0b2343071c64afe7fa47aa0448d2d08f527a8c46237874",
+      "contractCopySha256": "5404771bf43a3ac4a51cd1dc6f698d0f10b115fb81ba7f3a749654c34c073b2b",
       "documentVersion": 31,
       "sourceRevision": "cf5e79e919144200294fb9fed22a222592a0aeea",
-      "t1070ReconstructionEvidence": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-tests/native-build-consistency.json"
+      "t1070ReconstructionEvidence": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-tests/native-race-build-consistency.json"
     }
   },
   "noterelay": {
