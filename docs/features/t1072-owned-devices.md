@@ -1,0 +1,52 @@
+# T-1072 手机号连接已有产品与双设备
+
+日期：2026-10-07。本地范围已获用户授权，规范待独立评审。关联 Growth T-188-owned-devices 与 Activity T-188-AM；两跨仓最终 closed contract 是网络字段权威，不修改旧 annual 领取协议。
+
+## 用户任务与实际结果
+
+首台维持输入激活码启用，不强制注册。已激活电脑在设置的产品授权卡选择“账号与设备”，从本机取得新短票据并打开官方完整客户登录页；手机号验证完成后确认准确产品归属。第二电脑在激活页选择“用手机号连接已有产品”，打开浏览器完成验证、选择本人产品、确认正在使用的电脑；回到软件后执行权威激活、验签与原子保存，显示“已启用，开始使用”。已满两台时网页明确选择移除哪台，再启用本机。网页登记成功与软件启用成功分别反馈。
+
+```mermaid
+flowchart LR
+ A[原电脑已经激活] --> B[连接手机号账号]
+ B --> C[确认本人产品]
+ D[新电脑连接已有产品] --> E[浏览器登录并选择产品]
+ C --> E
+ E --> F[确认本机与两个名额]
+ F --> G[软件验签并保存授权]
+ G --> H[重启后继续使用]
+```
+
+| 操作者与已有对象 | 带走结果与下一步 | 失败与恢复 |
+| --- | --- | --- |
+| 已激活客户、原授权电脑 | 产品连接本人手机号，随后可管理两台设备 | 浏览器关闭/超时不损害现有激活；重开连接；其他账号不能偷接产品 |
+| 第二电脑、本人手机号 | 同一授权有效期与同一AI额度，在本机启用 | 等待不重复创建；已批准但网络未知先续查同意向；本机未验证不报启用成功 |
+| 换机客户、本人两台设备 | 明确选移除旧设备、登记新电脑，回到软件继续 | 回读实际设备，刷新/返回保留结果；不得要求清全部模型密钥或重建用户项目 |
+
+## 实际协议与安全边界
+
+- 新建独立 owned-device 能力，不打开 CREATOROS_ENTITLEMENT_CLAIM_ENABLED，不改变 API-210/211/212 与 annual consume 的用途。现有PKCE构件可复用，但旧create未冻结机器证据，不能原样作为第二设备授权。
+- native 从 LicenseState 读取硬件稳定 machineId、烘焙 projectKey；JS不能输入或覆盖设备身份。machineId只作为TLS请求中的受控证据，禁止在日志、普通JS状态、URL、剪贴板、截图、持久普通文件中扩散。PKCE与桌面秘密证明同一客户端会话持有，不声称远程硬件证明。
+- 第二台创建意向冻结 projectKey/machineId、PKCE S256 challenge、设备名称。浏览器只使用短期 userCode，不能改machineId；完整普通客户会话与CSRF执行批准。deviceSecret/codeVerifier原生内存保管，不跨IPC；退出/替换会话清理，卸载组件停止轮询，同一时刻仅一个在途请求，迟到结果不能覆盖新会话。
+- 成功轮询得到确切本人授权的原激活码只在原生保管并通过既有Activity公开activate/status取得可信签名；在写盘前由新原生薄consumer用内存candidate code+本机请求fresh config-ticket-v3，验证Activity外层原始响应Ed25519签名、date、nonce，按冻结v3票据声明核对批准的准确hash/project/channel/TIME及原期限。现有sidecarhelper依赖已落盘快照且不回hash，不能直接使用；license_activate也会先写盘，不能先调用再补核对。拒绝错误origin、path、外来code、错误签名、nonce不匹配、版本/期限不合约及超大响应。
+- TIME永久 expiresAt 为 null，是正常情况；禁止复用旧annual consumer的“必须非空到期时间”校验挡永久。Monthly保持原usedAt/expiresAt；第二台不重新计时，不另建额度。
+- 复用 .license 的原生加密写入和读回验证、sidecar镜像与配置刷新；成功后提供重启入口。替换前失败保留原授权文件；替换后fsync或读回未知时保留安全journal并回读收敛，或用已校验的原加密文件恢复。write_snapshot_file_checked的Err不能单独证明旧文件未改变，必须分别注错验证替换前/后恢复，不清空授权，也不能假报完成。
+- 结果未知的登记/交付不自动新建第二意向；安全journal保管同一秘密与PKCE用于resume。Growth在连接有效期内允许原生重复读取同一ready结果，逐次核验当前owner与已登记设备仍active；原生完成验签、核对与原子保存后才ack并清理secret，ack丢失不阻断已启用软件。需要持久化时使用OS凭据库，不写普通文件里的deviceSecret、codeVerifier或明码。journal必须与既有annual分离，冲突可恢复且不互相清空。
+- 明确网络预算：遵循项目LED-053两分钟单次请求下限和外层覆盖内层；短期意向TTL是资格有效期，不拿它覆盖正在执行的完整登记/保存动作。遇到超时保留真实请求状态，不伪造后台成功，不自动重发。
+- 原电脑账号连接复用native/server-only fresh config ticket，浏览器走full手机号验证；短信过程可能超过60秒，原生保持该会话、单在途刷新准确票据证明，浏览器提示保持原电脑连接。JS不得拿deviceSecret，轮询结束/退出时停止刷新；AI额度restricted portal不承担设备写权限。已有额度owner转移以Growth当前事实为准，客户端不创造第二owner。
+
+## 移除与兼容
+
+Activity服务器移除后立即拒绝该设备验码和新票据。旧客户端在可信在线校验收到valid=false后停用；网络不可达及永久离线旧快照无法即时追回。原有永久心跳可到30天，本任务不扩为永久强制联网。页面明确剩余离线影响；尚未取得Mac/Windows实际安装包双机回执时不得称跨客户端完成。
+
+不调整核心license heartbeat导航规则，不强制重启正在运行的编辑任务，不清本机项目、素材、模型Key、平台账号或数据库。旧首台输入码、COUNT/TRIAL/DEVICE_TRIAL与annual路径回归。设备移除不能只发valid=true/revoked=true（该旧信号只停更新）；公开服务按已移除机器返回旧兼容无效结果，幸存设备继续取票。
+
+## 工程范围与验收
+
+新增 frontend/src-tauri/src/owned_devices.rs、frontend/src/lib/owned-devices.ts、frontend/src/app/activate/owned-device-panel.tsx、frontend/src/features/settings/owned-device-connection.tsx；修改激活页、设置授权卡、原生命令注册/build flag/最小ACL capability与permission；原电脑连接新增native/server-only adapter与必要薄local route。若复用 frontend/src-tauri/src/license.rs 内部验签/快照/票据函数，仅做必要pub(crate)可见性或helper抽取，不变更旧验证语义。客户端身份使用现有烘焙productRef/appIdentifier/projectKey，Growth从准确注册事实解析唯一软件profile，不让用户输入内部profileRef，也不在客户端写死猜ID。ready仅native响应分别携带连接有效期与原授权expiresAt（永久null），不能混用重置期限。新API消费只允许规范冻结的官方HTTPS origin；本地测试环境仅隔离开发构建，release不得允许绕过验签。
+
+新增界面按oil-ui-pro及账号组UI_RULES，保留原方向；所有功能文字>=16px，触控>=44px，桌面/390px兼容。不要单独改变T1022其他页样式；不引入第二登录库、OAuth供应商或同步产品。
+
+验证原生协议、秘密隔离、签名拒绝、永久/月卡、错误产品、不重复占槽、保存失败原文件保留、resume与过期、前端单在途/卸载/失败恢复，完整配套required checks；本地真实HTTP跨仓链路与UI操作证据分开记录。正式Mac与Windows安装包各一台、已验证owner、首台/第二台/第三台替换/重启/返回刷新/离线限制是最终用户验收，fixture不能代替；未完成保留待验，不补写PASS。
+
+本任务不含push、发布、安装版替换、生产数据库或真实码/设备操作，候选与恢复方案完成后再按准确对象处理发布。

@@ -9,6 +9,7 @@
 
 | ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
 | --- | --- | --- | --- | --- | --- | --- |
+| T-1072 | 配合 Growth 轻量手机号账号与正式双设备，补齐新电脑连接与已激活账号入口 | 🔨 待办 | PASS[REV:eb8de221287b] | 待验 | [SPEC](docs/features/t1072-owned-devices.md) | 用户已采纳并授权与Growth T-188一起实施；仅隔离本地改造，原码首台不变，第二电脑本人确认后登记同一授权，不重复期限或额度；保留本机素材与项目，正式包双电脑验收与生产操作尚未授权。 |
 | T-1068 | 隔离复现内容雷达转录 MODEL_RESULT_UNKNOWN 暂停并定位原因 | ✅ 待办 | — | — | [诊断范围](docs/verification/t1068-radar-transcription.md) | 用户2026-10-07明确不考虑真实账号，直接复现；使用隔离数据与本地HTTP故障服务跑实际Worker/模型链，核对已识别原文、后处理、账本与暂停状态，不重发用户任务，未实证不声称根治。 |
 | T-1069 | 修复雷达文本模型完整非流式JSON回执被流式解析误判未知 | ✅ 待办 | PASS[REV:020bbb5c97fa] | — | [SPEC](docs/features/t1069-completion-json-compat.md) | 用户2026-10-07授权根治T-1068复现缺陷；同一请求完整JSON兼容，保留断流未知与幂等，不重发原任务、不改安装版。 |
 | T-1070 | 修复通用转录整理文本兼容模式缺少schema校验器与保存阻断 | ✅ 待办 | PASS[REV:5b690995d15b] | — | [SPEC](docs/features/t1070-transcript-postprocess-reliability.md) | 用户2026-10-07授权同轮修复；共享validator与实际后端保存回归，确认的原文安全降级，未知账本不伪造成功。 |
