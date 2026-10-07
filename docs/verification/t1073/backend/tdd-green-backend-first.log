@@ -1,0 +1,38 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/t1073-backend/Thirdspace-creator/backend
+
+stdout | src/modules/ai-runtime/automation-driver.test.ts > T-1073 正式自动化 driver 生命周期 > 十次分钟唤醒只有一份在途，结束后补一次合并读取
+[automation-driver] 持久自动化 driver 已启动(每分钟一次)
+
+stdout | src/modules/ai-runtime/automation-driver.test.ts > T-1073 正式自动化 driver 生命周期 > 十次分钟唤醒只有一份在途，结束后补一次合并读取
+T-1073 scheduler 慢窗口 { wakeups: 10, active: 1, peak: 1, calls: 2 }
+
+ ❯ src/modules/ai-runtime/automation-driver.test.ts (10 tests | 1 failed) 21ms
+     × 十次分钟唤醒只有一份在途，结束后补一次合并读取 7ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai-runtime/automation-driver.test.ts > T-1073 正式自动化 driver 生命周期 > 十次分钟唤醒只有一份在途，结束后补一次合并读取
+AssertionError: expected 2 to be 3 // Object.is equality
+
+- Expected
++ Received
+
+- 3
++ 2
+
+ ❯ src/modules/ai-runtime/automation-driver.test.ts:349:21
+    347|       expect(peak).toBe(1); expect(active).toBe(1); expect(calls).toBe…
+    348|       release(); await flush();
+    349|       expect(calls).toBe(3); expect(active).toBe(0);
+       |                     ^
+    350|     } finally { release(); await flush(); await cleanup(control); }
+    351|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 2 passed (3)
+      Tests  1 failed | 35 passed (36)
+   Start at  00:04:54
+   Duration  21.95s (transform 3.28s, setup 0ms, import 5.69s, tests 19.29s, environment 0ms)

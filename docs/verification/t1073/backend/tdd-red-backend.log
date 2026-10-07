@@ -1,0 +1,116 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/t1073-backend/Thirdspace-creator/backend
+
+stdout | src/modules/ai-runtime/automation-driver.test.ts > T-1073 正式自动化 driver 生命周期 > 十次分钟唤醒只有一份在途，结束后补一次合并读取
+[automation-driver] 持久自动化 driver 已启动(每分钟一次)
+
+stdout | src/modules/ai-runtime/automation-driver.test.ts > T-1073 正式自动化 driver 生命周期 > 十次分钟唤醒只有一份在途，结束后补一次合并读取
+T-1073 scheduler 慢窗口 { wakeups: 10, active: 1, peak: 2, calls: 11 }
+
+stdout | src/modules/ai-runtime/automation-driver.test.ts > T-1073 正式自动化 driver 生命周期 > 失败后下一次唤醒可恢复；stop 清理 cron，停止后不再读业务端口
+[automation-driver] 持久自动化 driver 已启动(每分钟一次)
+
+stdout | src/modules/ai-runtime/automation-driver.test.ts > T-1073 正式自动化 driver 生命周期 > stop 等当前查询结束并丢弃合并唤醒，不再领取下一份持久任务
+[automation-driver] 持久自动化 driver 已启动(每分钟一次)
+
+stderr | src/modules/ai-runtime/automation-driver.test.ts > T-1073 正式自动化 driver 生命周期 > stop 等当前查询结束并丢弃合并唤醒，不再领取下一份持久任务
+[automation-driver] tick 失败: TypeError: jobs is not iterable
+    at runAutomationDriverTick (/Users/zyongzhu/.codex/worktrees/t1073-backend/Thirdspace-creator/backend/src/modules/ai-runtime/automation-driver.ts:212:21)
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+
+ ❯ src/modules/ai-runtime/automation-driver.test.ts (10 tests | 3 failed) 25ms
+     × 十次分钟唤醒只有一份在途，结束后补一次合并读取 6ms
+     × 失败后下一次唤醒可恢复；stop 清理 cron，停止后不再读业务端口 3ms
+     × stop 等当前查询结束并丢弃合并唤醒，不再领取下一份持久任务 3ms
+ ❯ src/modules/intelligence/source-sync-runner.test.ts (22 tests | 2 failed) 19731ms
+     × success：挂起心跳跨十个间隔不积累，释放后不补发历史心跳 895ms
+     × cancel：挂起心跳跨十个间隔不积累，释放后不补发历史心跳 846ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai-runtime/automation-driver.test.ts > T-1073 正式自动化 driver 生命周期 > 十次分钟唤醒只有一份在途，结束后补一次合并读取
+AssertionError: expected 2 to be 1 // Object.is equality
+
+- Expected
++ Received
+
+- 1
++ 2
+
+ ❯ src/modules/ai-runtime/automation-driver.test.ts:347:20
+    345|       await flush();
+    346|       console.log("T-1073 scheduler 慢窗口", {wakeups: 10, active, peak, …
+    347|       expect(peak).toBe(1); expect(active).toBe(1); expect(calls).toBe…
+       |                    ^
+    348|       release(); await flush();
+    349|       expect(calls).toBe(3); expect(active).toBe(0);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
+
+ FAIL  src/modules/ai-runtime/automation-driver.test.ts > T-1073 正式自动化 driver 生命周期 > 失败后下一次唤醒可恢复；stop 清理 cron，停止后不再读业务端口
+TypeError: Cannot read properties of undefined (reading 'stop')
+ ❯ src/modules/ai-runtime/automation-driver.test.ts:361:22
+    359|       expect(failure).toHaveBeenCalled(); scheduled.callback!(); await…
+    360|       expect(list).toHaveBeenCalledTimes(3);
+    361|       expect(control.stop).toBeTypeOf("function"); await control.stop!…
+       |                      ^
+    362|       expect(scheduled.stop).toHaveBeenCalledOnce(); expect(scheduled.…
+    363|       scheduled.callback!(); await flush(); expect(list).toHaveBeenCal…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
+
+ FAIL  src/modules/ai-runtime/automation-driver.test.ts > T-1073 正式自动化 driver 生命周期 > stop 等当前查询结束并丢弃合并唤醒，不再领取下一份持久任务
+TypeError: Cannot read properties of undefined (reading 'stop')
+ ❯ src/modules/ai-runtime/automation-driver.test.ts:374:22
+    372|     try {
+    373|       control = await open(input); scheduled.callback!(); await flush(…
+    374|       expect(control.stop).toBeTypeOf("function");
+       |                      ^
+    375|       let stopped = false; const stopping = control.stop!().then(() =>…
+    376|       await flush(); expect(stopped).toBe(false);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
+
+ FAIL  src/modules/intelligence/source-sync-runner.test.ts > T-1073 采集心跳有界与取消 > success：挂起心跳跨十个间隔不积累，释放后不补发历史心跳
+AssertionError: expected 10 to be 1 // Object.is equality
+
+- Expected
++ Received
+
+- 1
++ 10
+
+ ❯ src/modules/intelligence/source-sync-runner.test.ts:587:21
+    585|       }
+    586|       releaseHeartbeat(); await vi.advanceTimersByTimeAsync(0); await …
+    587|       expect(calls).toBe(1);
+       |                     ^
+    588|       releaseAdapter(succeededEnvelope(d.now(), "隔离心跳结果")); await work;
+    589|       expect(vi.getTimerCount()).toBe(0); expect(active).toBe(0);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯
+
+ FAIL  src/modules/intelligence/source-sync-runner.test.ts > T-1073 采集心跳有界与取消 > cancel：挂起心跳跨十个间隔不积累，释放后不补发历史心跳
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/modules/intelligence/source-sync-runner.test.ts:583:25
+    581|       if (mode === "cancel") {
+    582|         parent.abort(); await flush(); await vi.advanceTimersByTimeAsy…
+    583|         expect(settled).toBe(true);
+       |                         ^
+    584|         expect(await realTasks.get(ctx, created.task.id)).toMatchObjec…
+    585|       }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  5 failed | 27 passed (32)
+   Start at  00:02:53
+   Duration  22.96s (transform 2.01s, setup 0ms, import 3.16s, tests 19.76s, environment 0ms)

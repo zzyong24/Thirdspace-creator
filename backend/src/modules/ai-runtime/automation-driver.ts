@@ -86,6 +86,8 @@ export interface AutomationDriverTickDeps {
   sweepStaleJobRuns?: () => Promise<number>;
   scheduledChildren?: {attach(ref:{executionTaskId:string;attempt:number;fenceToken:string},childId:string):Promise<void>;reconcile():Promise<{succeeded:number;failed:number;pending:number}>};
   wakeDelegated?:()=>void;
+  /** 宿主封闭调度后只结算已开始的任务，不再发起下一份查询或领取。 */
+  shouldStop?:()=>boolean;
 }
 
 export interface AutomationDriverTickReport {
@@ -194,22 +196,25 @@ export async function runAutomationDriverTick(
   if (!deps.registry.isSealed()) {
     throw new Error("自动化 handler registry 必须先 seal");
   }
-  const delegated=await deps.scheduledChildren?.reconcile();
-  const sweptJobRuns = await deps.sweepStaleJobRuns?.() ?? 0;
-  const recovered = await deps.tasks.recoverExpiredLeases();
   const report: AutomationDriverTickReport = {
-    recovered,
-    sweptJobRuns,
-    enqueued: 0,
-    overlapped: 0,
-    succeeded: delegated?.succeeded ?? 0,
-    failed: delegated?.failed ?? 0,
+    recovered: {requeued: 0, unknownResult: 0, failed: 0, paused: 0, cancelled: 0},
+    sweptJobRuns: 0, enqueued: 0, overlapped: 0, succeeded: 0, failed: 0,
   };
+  if (deps.shouldStop?.()) return report;
+  const delegated = await deps.scheduledChildren?.reconcile();
+  report.succeeded = delegated?.succeeded ?? 0;
+  report.failed = delegated?.failed ?? 0;
+  if (deps.shouldStop?.()) return report;
+  report.sweptJobRuns = await deps.sweepStaleJobRuns?.() ?? 0;
+  if (deps.shouldStop?.()) return report;
+  report.recovered = await deps.tasks.recoverExpiredLeases();
+  if (deps.shouldStop?.()) return report;
   const nowIso = deps.now();
   const scheduledFor = minuteAnchor(nowIso);
   const now = new Date(nowIso);
   const jobs = await deps.listRunnableJobs(deps.ctx);
   for (const job of jobs) {
+    if (deps.shouldStop?.()) break;
     const validSchedule = deps.cron.validate(job.schedule);
     const scheduleMatches =
       validSchedule && cronMatchesMinute(job.schedule, now, job.target.scheduleTimezone === "Asia/Shanghai" ? "Asia/Shanghai" : undefined);
@@ -260,6 +265,7 @@ export async function runAutomationDriverTick(
   const leaseSeconds = deps.leaseSeconds ?? 120;
   const maxClaims = Math.max(1, deps.maxClaims ?? 8);
   for (let index = 0; index < maxClaims; index += 1) {
+    if (deps.shouldStop?.()) break;
     const claim = await deps.tasks.claimNext({
       workerId: deps.workerId,
       kinds: [AUTOMATION_TASK_KIND],
@@ -273,15 +279,18 @@ export async function runAutomationDriverTick(
       source: "ingestion",
     };
     const heartbeatMs = Math.max(1_000, Math.floor((leaseSeconds * 1_000) / 3));
+    let heartbeatInFlight: Promise<unknown> | undefined;
     const heartbeat = setInterval(() => {
-      void deps.tasks
+      if (heartbeatInFlight) return;
+      heartbeatInFlight = deps.tasks
         .heartbeat({
           taskId: claim.task.id,
           workerId: claim.lease.workerId,
           attempt: claim.lease.attempt,
           leaseSeconds,
         })
-        .catch(() => undefined);
+        .catch(() => undefined)
+        .finally(() => { heartbeatInFlight = undefined; });
     }, heartbeatMs);
     heartbeat.unref?.();
     let delegationReceived=false;
@@ -316,6 +325,7 @@ export async function runAutomationDriverTick(
       report.failed += 1;
     } finally {
       clearInterval(heartbeat);
+      await heartbeatInFlight;
     }
   }
   return report;
@@ -323,48 +333,84 @@ export async function runAutomationDriverTick(
 
 export type AutomationDriverStartDeps = Omit<AutomationDriverTickDeps, "cron">;
 
+export interface AutomationDriverControl {
+  /** 启动恢复仍可观察失败；控制句柄在异步启动之前就归属宿主。 */
+  ready: Promise<void>;
+  stop(): Promise<void>;
+}
+
 declare global {
   // eslint-disable-next-line no-var
   var __creatorosAutomationDriverStarted: boolean | undefined;
+  // eslint-disable-next-line no-var
+  var __creatorosAutomationDriver: AutomationDriverControl | undefined;
 }
 
-/** 一个进程只启动这一处分钟 driver；测试/build 明确无副作用。 */
-export async function startAutomationDriver(
-  deps: AutomationDriverStartDeps,
-): Promise<void> {
+/** 一个进程一个 driver；慢 tick 只登记一次待刷新，停止先封闭入口再等当前工作。 */
+export function startAutomationDriver(deps: AutomationDriverStartDeps): AutomationDriverControl {
   if (
-    process.env.NODE_ENV === "test" ||
-    process.env.VITEST ||
-    process.env.CI ||
-    process.env.NEXT_PHASE === "phase-production-build" ||
-    process.env.CREATOROS_DISABLE_SCHEDULER === "1"
-  ) {
-    return;
-  }
-  if (globalThis.__creatorosAutomationDriverStarted) return;
+    process.env.NODE_ENV === "test" || process.env.VITEST || process.env.CI ||
+    process.env.NEXT_PHASE === "phase-production-build" || process.env.CREATOROS_DISABLE_SCHEDULER === "1"
+  ) return {ready: Promise.resolve(), stop: async () => {}};
+  if (globalThis.__creatorosAutomationDriver) return globalThis.__creatorosAutomationDriver;
+
+  let stopped = false, pendingWake = false;
+  let active: Promise<void> | undefined, stopping: Promise<void> | undefined;
+  let scheduled: Pick<import("node-cron").ScheduledTask, "stop" | "destroy"> | undefined;
+  const release = () => {
+    if (globalThis.__creatorosAutomationDriver === control) {
+      globalThis.__creatorosAutomationDriver = undefined;
+      globalThis.__creatorosAutomationDriverStarted = false;
+    }
+  };
+  const control: AutomationDriverControl = {
+    ready: Promise.resolve(),
+    stop() {
+      if (stopping) return stopping;
+      stopped = true; pendingWake = false;
+      stopping = (async () => {
+        await scheduled?.stop(); await scheduled?.destroy();
+        // 已发送查询无法物理取消；等它返回，shouldStop 阻止接着发起下一份。
+        await control.ready.catch(() => {});
+        await active;
+        release();
+      })();
+      return stopping;
+    },
+  };
+  globalThis.__creatorosAutomationDriver = control;
   globalThis.__creatorosAutomationDriverStarted = true;
-  try {
+  control.ready = (async () => {
     const cron = await import("node-cron");
-    // 同一 driver 完成启动恢复；内容雷达不再另起启动扫描器。
-    await runAutomationDriverTick({
-      ...deps,
-      cron,
-      startupRecovery: true,
-      recoverMissedDailyRuns: true,
-    });
-    cron.schedule("* * * * *", () => {
-      void runAutomationDriverTick({
-        ...deps,
-        cron,
-        startupRecovery: false,
-        recoverMissedDailyRuns: true,
-      }).catch((error) =>
-        console.error("[automation-driver] tick 失败:", error),
-      );
-    });
-    console.log("[automation-driver] 持久自动化 driver 已启动(每分钟一次)");
-  } catch (error) {
-    globalThis.__creatorosAutomationDriverStarted = false;
+    if (stopped) return;
+    const wake = (startupRecovery: boolean): Promise<void> => {
+      if (stopped) return Promise.resolve();
+      if (active) {pendingWake = true; return active;}
+      const work = Promise.resolve().then(async () => {
+        let startup = startupRecovery;
+        while (!stopped) {
+          try {
+            await runAutomationDriverTick({...deps, cron, startupRecovery: startup,
+              recoverMissedDailyRuns: true, shouldStop: () => stopped || deps.shouldStop?.() === true});
+          } catch (error) {
+            if (startup) throw error;
+            console.error("[automation-driver] tick 失败:", error);
+          }
+          startup = false;
+          if (!pendingWake) break;
+          pendingWake = false;
+        }
+      }).finally(() => {if (active === work) active = undefined;});
+      active = work;
+      return work;
+    };
+    scheduled = cron.schedule("* * * * *", () => {void wake(false).catch(error => console.error("[automation-driver] tick 失败:", error));});
+    await wake(true);
+    if (!stopped) console.log("[automation-driver] 持久自动化 driver 已启动(每分钟一次)");
+  })().catch(async error => {
+    stopped = true; pendingWake = false;
+    await scheduled?.stop(); await scheduled?.destroy(); release();
     throw error;
-  }
+  });
+  return control;
 }

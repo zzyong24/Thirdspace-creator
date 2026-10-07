@@ -1,0 +1,35 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/t1073-backend/Thirdspace-creator/frontend
+
+stderr | src/server/persistence-client.lifecycle.test.ts > 真实持久层 dispose 停止分钟 cron 和周期 sweep，停止后十次触发不再查询数据库
+EXECUTION_WORKER_BUILD_MISSING
+AGENTIC_WORKER_BUILD_MISSING
+
+stdout | src/server/persistence-client.lifecycle.test.ts > 真实持久层 dispose 停止分钟 cron 和周期 sweep，停止后十次触发不再查询数据库
+[automation-driver] 持久自动化 driver 已启动(每分钟一次)
+
+ ❯ src/server/persistence-client.lifecycle.test.ts (1 test | 1 failed) 11766ms
+   × 真实持久层 dispose 停止分钟 cron 和周期 sweep，停止后十次触发不再查询数据库 11765ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/server/persistence-client.lifecycle.test.ts > 真实持久层 dispose 停止分钟 cron 和周期 sweep，停止后十次触发不再查询数据库
+Error: PGlite is closed
+ ❯ pe._checkReady ../../../../../Workbase/Thirdspace-creator/node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pglite/src/pglite.ts:549:12
+ ❯ pe.close ../../../../../Workbase/Thirdspace-creator/node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pglite/src/pglite.ts:474:15
+ ❯ Object.fixture.close src/server/persistence-client.lifecycle.test.ts:15:81
+     13|  const original = await originalImport<typeof import('@creatoros/backe…
+     14|  return {...original, resolveMasterKey: () => ({key: Buffer.alloc(32, …
+     15|   const opened = await original.createDb(); fixture.close = () => open…
+       |                                                                                 ^
+     16|   return {db: opened.db, driver: {kind: 'memory-pglite'}, dispose: asy…
+     17|  }};
+ ❯ src/server/persistence-client.lifecycle.test.ts:48:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed (1)
+   Start at  00:03:15
+   Duration  16.95s (transform 3.41s, setup 167ms, import 4.73s, tests 11.77s, environment 0ms)
