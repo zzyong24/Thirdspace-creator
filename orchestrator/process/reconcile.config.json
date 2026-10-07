@@ -20,6 +20,12 @@
   ],
   "lessons": [
     {
+      "led": "LED-055",
+      "what": "线程/回执/响应流/闲置会话泄漏，慢轮询与后台调度叠加，等待或显式停止会话归属错误",
+      "check": "node docs/verification/t1073/verify-resource-lifecycle.mjs",
+      "onFail": "资源生命周期回归：修复实际消费者的释放、背压、单在途和停止屏障；保留原任务/attempt/fence/deadline、审批、完整历史与合法大输出。等待状态按真实任务ID保护；取消接受仅释放原turn本地关联，最终终态由原租约确认。禁止删历史、重发任务或伪造释放/成功。"
+    },
+    {
       "led": "LED-053",
       "what": "固定30秒宿主端口先于合法转录准备中止，观察到期误报失败，SDK隐式等待与首次预算未归一",
       "check": "node tools/timeout-policy/verify.mjs",

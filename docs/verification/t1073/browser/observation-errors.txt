@@ -1,0 +1,6 @@
+实际观察错误，未记录为PASS：
+1. 初次Vite缺@creatoros/contract/timeout-policy alias。
+2. 合成getTask DTO modelKey=null、attemptId与fingerprint不合公开schema，原卡继续观察；夹具使用真实aiTaskResource.parse校正，实际Vite重启后重跑通过。
+3. 第一次Page.screenshot fullPage报 CdpRequestTimeoutError: Page.captureScreenshot。
+4. 手工等待误用不存在的“外部新增：原任务可继续观察”字符串，waitForFunction120000ms超时；后续依据实际radar-external节点“外部原任务：queued”确认真实结果。
+5. Page.captureScreenshot({format:png,captureBeyondViewport:false},{timeout:120000})仍报CdpRequestTimeoutError。图片没有生成或查看，视觉未验证。

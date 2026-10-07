@@ -1,0 +1,23 @@
+{
+  "observedAt": "2026-10-07T16:18:10.479Z",
+  "data": "synthetic-public-http",
+  "text": "T-1073 前端资源验收\n\n合成回执 · 实际组件与公共 HTTP adapter · 不连接真实账号、模型或数据库\n\n切换账号组\n当前：group-a\n读取请求计数\n已完成历史任务恢复\n成功回执\n失败回执\n整稿分镜脚本 · 采纳后写入稿面\n\n✓ 整稿已写入稿面（新版本已保存，可在编辑器里直接改；保存即新版本、可回滚）。\n\n可选论点骨架 · 确认采用后才影响生成式写稿\n\n✓ 已采纳并用于生成式写稿；完整逐字稿仍按原文优先，不会被论点骨架改写。\n\n抖音发布物料 · 已过合规审核 · 采纳后建发布行\n\n✓ 发布物料已采纳，可在当前项目点击“查看发布物料”。\n\n雷达升级队列\n\n已读 251 条 / 服务端总量 251 条\n\n外部原任务：queued\n\n外部新增并聚焦\n完成原升级任务\n同项目双消费点慢审核\n开始慢读取\n释放原回执\n编导文案审核\n重新审核\n通过\n命中 0 条 · 脚本 v2\n\n当前版本审核完成\n\n语义审核：合成回执\n\n未命中任何规则。\n\n实际 Copilot 会话与历史恢复\nAI 助手\n\n描述你的目标，我来帮你规划下一步\n\n新对话\n历史记录\n项目\n·\n当前项目\n×\n\n原账号组：上次的完整回复已恢复。\n\n添加文件或图片\n也可拖到这里；图片识别效果取决于当前模型\n分析机会\n生成脚本\n寻找素材\n生成图片素材\n生成视频素材\n生成封面\n发布复盘\n⌘/Ctrl ↩ 发送 · Enter 换行\n清空\n生成",
+  "metrics": {
+    "counts": {
+      "execution.tasks.list": 46,
+      "ai.conversations.messages.list": 5,
+      "ai.tasks.list": 3,
+      "ai.tasks.get": 9,
+      "ai.tasks.steps.list": 3,
+      "scriptReviews.getLatest": 5,
+      "ai.conversations.list": 1
+    },
+    "activeReviews": 0,
+    "maxReviews": 1,
+    "total": 251
+  },
+  "viewport": [
+    1366,
+    900
+  ]
+}

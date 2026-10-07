@@ -1,0 +1,14 @@
+{
+  "counts": {
+    "execution.tasks.list": 20,
+    "ai.conversations.messages.list": 3,
+    "ai.tasks.list": 2,
+    "ai.tasks.get": 6,
+    "ai.tasks.steps.list": 2,
+    "scriptReviews.getLatest": 4,
+    "ai.conversations.list": 1
+  },
+  "activeReviews": 1,
+  "maxReviews": 1,
+  "total": 250
+}

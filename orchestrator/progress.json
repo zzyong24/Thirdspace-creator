@@ -5,10 +5,10 @@
   },
   "summary": {
     "verticals": 70,
-    "tasks_done": 45,
+    "tasks_done": 50,
     "tasks_total": 162,
-    "tasks_pending": 117,
-    "verticals_complete": 9
+    "tasks_pending": 112,
+    "verticals_complete": 14
   },
   "verticals": [
     {
@@ -2810,7 +2810,7 @@
         },
         {
           "step": "implementation",
-          "status": "pending"
+          "status": "done"
         }
       ],
       "blocked_reason": null,
@@ -2820,14 +2820,18 @@
         "docs/features/t1073-resource-memory-fixes.md",
         "docs/features/t1073-resource-memory-fixes.review.md",
         "docs/verification/t1073/**",
-        "ai-worker/src/execution/**",
-        "ai-worker/src/runtime/**",
+        "ai-worker/src/execution/transcribe-asr-registry.ts",
+        "ai-worker/src/execution/transcribe-worker-run.test.ts",
+        "ai-worker/src/execution/transcribe-worker-run.ts",
+        "ai-worker/src/execution/worker-runtime.test.ts",
+        "ai-worker/src/execution/worker-runtime.ts",
+        "ai-worker/src/runtime/multimodal-factory.ts",
+        "ai-worker/src/runtime/multimodal-whisper-local.cancel.test.ts",
+        "ai-worker/src/runtime/multimodal-whisper-local.ts",
         "backend/src/application/scheduling/automation.test.ts",
         "backend/src/application/scheduling/automation.ts",
         "backend/src/modules/ai-runtime/automation-driver.test.ts",
         "backend/src/modules/ai-runtime/automation-driver.ts",
-        "backend/src/modules/execution/execution-stream.service.test.ts",
-        "backend/src/modules/execution/execution-stream.service.ts",
         "backend/src/modules/execution/worker-supervisor.memory.test.ts",
         "backend/src/modules/execution/worker-supervisor.test.ts",
         "backend/src/modules/execution/worker-supervisor.ts",
@@ -2837,7 +2841,18 @@
         "contract/src/internal/execution-worker.ts",
         "frontend/src/components/resources/asset-preview-url.test.ts",
         "frontend/src/components/resources/asset-preview-url.ts",
-        "frontend/src/features/copilot/**",
+        "frontend/src/features/copilot/ai-copilot-content.tsx",
+        "frontend/src/features/copilot/ai-copilot-interactions.test.tsx",
+        "frontend/src/features/copilot/chat-publish-package-card.test.tsx",
+        "frontend/src/features/copilot/chat-publish-package-card.tsx",
+        "frontend/src/features/copilot/chat-script-draft-card.test.tsx",
+        "frontend/src/features/copilot/chat-script-draft-card.tsx",
+        "frontend/src/features/copilot/chat-task-control.ts",
+        "frontend/src/features/copilot/chat-thesis-card.test.tsx",
+        "frontend/src/features/copilot/chat-thesis-card.tsx",
+        "frontend/src/features/copilot/live-chat-session.consumer.test.tsx",
+        "frontend/src/features/copilot/live-chat-session.test.ts",
+        "frontend/src/features/copilot/live-chat-session.ts",
         "frontend/src/features/draft-workbench/use-latest-script-review.test.tsx",
         "frontend/src/features/draft-workbench/use-latest-script-review.ts",
         "frontend/src/features/intelligence/intelligence-workbench-api.test.ts",
@@ -2870,7 +2885,9 @@
       },
       "step_read_set": {},
       "step_exclusive_resources": {},
-      "commits": {},
+      "commits": {
+        "implementation": "f7f80bb0fdb11c8a232f1c52df89a85f83da1143"
+      },
       "verify_commands": {
         "spec-review": "node orchestrator/process/governance-guard.mjs task-preflight --task T-1073 --write-set docs/features/t1073-resource-memory-fixes.md",
         "implementation": "git diff --check && node tools/timeout-policy/verify.mjs"
@@ -2931,7 +2948,7 @@
       "tasks": [
         {
           "step": "implementation",
-          "status": "pending"
+          "status": "done"
         }
       ],
       "blocked_reason": null,
@@ -2940,7 +2957,9 @@
       "step_read_set": {},
       "step_exclusive_resources": {},
       "exclusive_resources": [],
-      "commits": {}
+      "commits": {
+        "implementation": "8590fa5a9a6a6a3d7a840c0d77fac3785564cc1d"
+      }
     },
     {
       "id": "T-1071-polling",
@@ -2992,7 +3011,7 @@
       "tasks": [
         {
           "step": "implementation",
-          "status": "pending"
+          "status": "done"
         }
       ],
       "blocked_reason": null,
@@ -3001,7 +3020,9 @@
       "step_read_set": {},
       "step_exclusive_resources": {},
       "exclusive_resources": [],
-      "commits": {}
+      "commits": {
+        "implementation": "9c7be793fbd3e323bdaf41a0460e6397c87d6db0"
+      }
     },
     {
       "id": "T-1071-scheduler",
@@ -3023,7 +3044,7 @@
         "frontend/src/server/persistence-client.ts",
         "frontend/src/server/persistence-client.lifecycle.test.ts",
         "docs/verification/t1073/backend/**",
-        "backend/src/modules/execution/execution-task.service.ts",
+        "backend/src/modules/execution/persistent-task.service.ts",
         "backend/src/modules/ai-runtime/automation-runtime.ts",
         "contract/src/index.ts"
       ],
@@ -3047,7 +3068,7 @@
       "tasks": [
         {
           "step": "implementation",
-          "status": "pending"
+          "status": "done"
         }
       ],
       "blocked_reason": null,
@@ -3056,7 +3077,9 @@
       "step_read_set": {},
       "step_exclusive_resources": {},
       "exclusive_resources": [],
-      "commits": {}
+      "commits": {
+        "implementation": "a3d9db286a52b825c77eec29abb55e7618d23b84"
+      }
     },
     {
       "id": "T-1071-stream",
@@ -3075,7 +3098,11 @@
         "backend/src/modules/execution/execution-stream.service.test.ts",
         "docs/verification/t1073/stream/**",
         "frontend/src/server/chat-production-runtime.ts",
-        "contract/src/index.ts"
+        "contract/src/index.ts",
+        "backend/src/modules/execution/persistent-task.service.ts",
+        "backend/src/modules/execution/execution-call-ledger.service.ts",
+        "frontend/src/features/copilot/live-chat-session.ts",
+        "frontend/src/features/copilot/chat-task-control.ts"
       ],
       "write_set": [
         "frontend/src/server/chat-execution-stream.ts",
@@ -3093,7 +3120,7 @@
       "tasks": [
         {
           "step": "implementation",
-          "status": "pending"
+          "status": "done"
         }
       ],
       "blocked_reason": null,
@@ -3102,7 +3129,9 @@
       "step_read_set": {},
       "step_exclusive_resources": {},
       "exclusive_resources": [],
-      "commits": {}
+      "commits": {
+        "implementation": "f7f80bb0"
+      }
     }
   ],
   "leases": {}

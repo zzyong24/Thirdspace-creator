@@ -1,0 +1,47 @@
+[p1 "T-1073 前端资源验收" | space "CreatorOS 资源修复状态验证"(4): 1 managed, 0 untracked — p1* "T-1073 前端资源验收"]
+root
+  container
+    container
+      text "[plugin:vite:import-analysis]"
+      text "Failed to resolve import "@creatoros/contract/timeout-policy" from "src/features/draft-workbench/script-review-gate.tsx". Does the file exist?"
+    anchor [ref=1]
+      text "/Users/zyongzhu/.codex/worktrees/t1073-frontend/Thirdspace-creator/frontend/src/features/draft-workbench/script-review-gate.tsx:34:35"
+    text "30 | */ 31 | import * as React from "react"; 32 | import { executionTimeoutMs } from "@creatoros/contract/timeout-policy"; | ^ 33 | import { useRouter } from "next/navigation"; 34 | import { ShieldChe..."
+    container [ref=2]
+      text "at TransformPluginContext._formatLog ("
+      anchor [ref=3]
+        text "file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/vite@8.0.16_@types+node@20.19.43_esbuild@0.28.1_jiti@2.7.0_tsx@4.22.4_yaml@2.9.0/node_modules/vite/dist/node/chunks/node.js:30602:..."
+      text ") at TransformPluginContext.error ("
+      anchor [ref=4]
+        text "file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/vite@8.0.16_@types+node@20.19.43_esbuild@0.28.1_jiti@2.7.0_tsx@4.22.4_yaml@2.9.0/node_modules/vite/dist/node/chunks/node.js:30599:..."
+      text ") at normalizeUrl ("
+      anchor [ref=5]
+        text "file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/vite@8.0.16_@types+node@20.19.43_esbuild@0.28.1_jiti@2.7.0_tsx@4.22.4_yaml@2.9.0/node_modules/vite/dist/node/chunks/node.js:27842:..."
+      text ") at async"
+      anchor [ref=6]
+        text "file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/vite@8.0.16_@types+node@20.19.43_esbuild@0.28.1_jiti@2.7.0_tsx@4.22.4_yaml@2.9.0/node_modules/vite/dist/node/chunks/node.js:27905:..."
+      text "at async Promise.all (index 1) at async TransformPluginContext.transform ("
+      anchor [ref=7]
+        text "file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/vite@8.0.16_@types+node@20.19.43_esbuild@0.28.1_jiti@2.7.0_tsx@4.22.4_yaml@2.9.0/node_modules/vite/dist/node/chunks/node.js:27873:..."
+      text ") at async EnvironmentPluginContainer.transform ("
+      anchor [ref=8]
+        text "file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/vite@8.0.16_@types+node@20.19.43_esbuild@0.28.1_jiti@2.7.0_tsx@4.22.4_yaml@2.9.0/node_modules/vite/dist/node/chunks/node.js:30387:..."
+      text ") at async loadAndTransform ("
+      anchor [ref=9]
+        text "file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/vite@8.0.16_@types+node@20.19.43_esbuild@0.28.1_jiti@2.7.0_tsx@4.22.4_yaml@2.9.0/node_modules/vite/dist/node/chunks/node.js:24646:..."
+    container
+      text "Click outside, press"
+      text "Esc"
+      text "key, or fix the code to dismiss."
+      text "You can also disable this overlay by setting"
+      text "server.hmr.overlay"
+      text "to"
+      text "false"
+      text "in"
+      text "vite.config.mts"
+      text "."
+  svg_root
+  svg_root
+  svg_root
+  svg_root
+  svg_root

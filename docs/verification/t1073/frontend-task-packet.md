@@ -1,0 +1,163 @@
+# Task Packet · T-1071-polling
+
+> 由 `orchestrator/process/context-compile.mjs` 确定性生成 —— 同一仓库状态重跑逐字节相同。
+> read_set、write_set 与验收命令只来自本任务绑定；不得手工扩成其他任务的范围。
+
+## 1. 目标
+
+- **任务**:修复稿面慢读取叠加、雷达空闲扫描与历史卡终态观察
+- **一句话**:T-1073已审范围的实现归属；统一在父任务核验8处资源生命周期及兼容性，原T-1071缺陷证据保留。
+- **当前步骤**:implementation
+- **任务绑定**:T-1071-polling
+
+### 执行环境（主控制面 lease）
+
+- isolation_kind: `worktree`
+- workspace_root: `/Users/zyongzhu/.codex/worktrees/t1073-frontend/Thirdspace-creator`
+- branch: `codex/t1073-frontend`
+- base_sha: `e56cd2735774762908d59022aad265554849972a`
+- wave_id: `t1073-resource-fixes`
+- merge_index: `1`
+
+## 2. 看板行原文
+
+```
+| T-1071-polling | 修复稿面慢读取叠加、雷达空闲扫描与历史卡终态观察 | 🔨 待办 | — | — | [同轮修复SPEC](docs/features/t1073-resource-memory-fixes.md) | T-1073已审范围的实现归属；统一在父任务核验8处资源生命周期及兼容性，原T-1071缺陷证据保留。 |
+```
+
+## 3. 引用文档
+
+- `docs/features/t1073-resource-memory-fixes.md`
+
+(只给路径不展开内容 —— 子代理按需自己读,别整篇灌进简报。)
+
+## 4. 上下文读取计划
+
+读取根：`/Users/zyongzhu/.codex/skills/product-to-code-orchestrator`
+读取模式：compat-full — legacy reconcile.config.json 缺少 context_policy，本次显式使用 compat-full；不修改项目配置
+
+- `rules/global-rules.md`
+- `workflows/_COMMON.md`
+- `gates/_GATE_EVIDENCE.md`
+- `workflows/v3-1-plan.md`
+- `gates/01-product-gate.md`
+- `templates/PRODUCT_SPEC_TEMPLATE.md`
+- `workflows/v3-2-contract.md`
+- `gates/03-scope-budget-gate.md`
+- `gates/12-service-contract-gate.md`
+- `gates/15b-contract-completeness-gate.md`
+- `templates/SERVICE_CONTRACT_TEMPLATE.md`
+- `workflows/v3-3-design.md`
+- `gates/05-ui-gate.md`
+- `gates/06-page-spec-gate.md`
+- `templates/UI_RULES_TEMPLATE.md`
+- `templates/PAGE_SPEC_TEMPLATE.md`
+- `workflows/v3-4-build.md`
+- `gates/13-tdd-gate.md`
+- `workflows/v3-5-ship.md`
+- `gates/14-integration-gate.md`
+- `rules/product-integrity-rules.md`
+- `rules/observability-rules.md`
+- `templates/RELEASE_REVIEW_TEMPLATE.md`
+- `rules/physical-architecture-rules.md`
+- `gates/02-architecture-boundary-gate.md`
+- `templates/SYSTEM_ARCHITECTURE_TEMPLATE.md`
+- `rules/knowledge-layer-rules.md`
+- `rules/program-orchestration-rules.md`
+- `rules/orchestrator-state-machine.md`
+- `templates/THREAT_MODEL_TEMPLATE.json`
+- `rules/ui-implementation-rules.md`
+- `gates/09-frontend-implementation-gate.md`
+- `gates/10-frontend-validation-gate.md`
+- `gates/04-research-first-gate.md`
+- `templates/TECHNICAL_RESEARCH_CARD_TEMPLATE.md`
+- `rules/mock-data-rules.md`
+- `gates/08-mock-data-gate.md`
+- `templates/UI_MOCK_PROMPT_TEMPLATE.md`
+- `prompts/prelaunch-engineering-audit.md`
+- `prompts/engineering-retro.md`
+- `prompts/asset-distill.md`
+
+项目权威（项目根相对路径）：
+
+- `orchestrator/SYSTEM_ARCHITECTURE.md`
+- `orchestrator/process/boundaries.config.json`
+- `orchestrator/THREAT_MODEL.json`
+
+## 5. 知识上下文
+
+无 orchestrator/process/knowledge.config.json —— 本项目未启用知识上下文映射,跳过此节(不影响开工;需要时按 feature_map 约定补配置)。
+
+## 6. 任务边界
+
+### 五问落位（无状态）
+
+1. **谁拥有**：任务绑定 `T-1071-polling`；当前步骤 `implementation`。
+2. **前端 / 后端 / 数据 / 宿主边界**：从当前代码树与项目权威确认实际落点；Packet 不替项目发明架构。
+3. **Create / Modify / Test**：首次编辑前，把本次创建、修改、测试文件解析到下方 write_set 内；这是会话内清单，不持久化。
+4. **不应触碰**：不得触碰 write_set 之外的路径；当前允许范围仅为 `frontend/src/features/copilot/**`、`frontend/src/features/draft-workbench/use-latest-script-review.ts`、`frontend/src/features/draft-workbench/use-latest-script-review.test.tsx`、`frontend/src/features/intelligence/use-project-upgrade-queue.ts`、`frontend/src/features/intelligence/use-project-upgrade-queue.test.tsx`、`frontend/src/features/intelligence/intelligence-workbench-api.ts`、`frontend/src/features/intelligence/intelligence-workbench-api.test.ts`、`frontend/src/features/intelligence/intelligence-workbench-types.ts`、`frontend/src/components/resources/asset-preview-url.ts`、`frontend/src/components/resources/asset-preview-url.test.ts`、`docs/verification/t1073/frontend/**`；主控制面仅按既有协议由主会话更新。
+5. **最小验证**：
+- [模块 T-1071-polling · implementation] `cd frontend && pnpm exec vitest run src/features/copilot/chat-script-draft-card.test.tsx src/features/intelligence/use-project-upgrade-queue.test.tsx --testTimeout 120000 --hookTimeout 120000`
+本检查复用现有 task binding、边界与 verify，不新增状态或工件。
+
+read_set（并行依赖）：
+
+- `docs/features/t1073-resource-memory-fixes.md`
+- `docs/verification/t1071/**`
+- `orchestrator/SYSTEM_ARCHITECTURE.md`
+- `docs/产品定位.md`
+- `frontend/src/features/copilot/**`
+- `frontend/src/features/draft-workbench/use-latest-script-review.ts`
+- `frontend/src/features/draft-workbench/use-latest-script-review.test.tsx`
+- `frontend/src/features/intelligence/use-project-upgrade-queue.ts`
+- `frontend/src/features/intelligence/use-project-upgrade-queue.test.tsx`
+- `frontend/src/features/intelligence/intelligence-workbench-api.ts`
+- `frontend/src/features/intelligence/intelligence-workbench-api.test.ts`
+- `frontend/src/features/intelligence/intelligence-workbench-types.ts`
+- `frontend/src/components/resources/asset-preview-url.ts`
+- `frontend/src/components/resources/asset-preview-url.test.ts`
+- `docs/verification/t1073/frontend/**`
+- `frontend/src/lib/api/**`
+- `frontend/src/lib/http-transport.ts`
+- `contract/src/index.ts`
+- `.agents/skills/oil-ui-pro/**`
+- `docs/features/t1022-account-group-workspace/UI_RULES.md`
+
+exclusive_resources（必须串行的逻辑资源）：
+
+(无 task-local 独占资源)
+
+write_set（允许修改）：
+
+- `frontend/src/features/copilot/**`
+- `frontend/src/features/draft-workbench/use-latest-script-review.ts`
+- `frontend/src/features/draft-workbench/use-latest-script-review.test.tsx`
+- `frontend/src/features/intelligence/use-project-upgrade-queue.ts`
+- `frontend/src/features/intelligence/use-project-upgrade-queue.test.tsx`
+- `frontend/src/features/intelligence/intelligence-workbench-api.ts`
+- `frontend/src/features/intelligence/intelligence-workbench-api.test.ts`
+- `frontend/src/features/intelligence/intelligence-workbench-types.ts`
+- `frontend/src/components/resources/asset-preview-url.ts`
+- `frontend/src/components/resources/asset-preview-url.test.ts`
+- `docs/verification/t1073/frontend/**`
+
+说明:write_set = 本任务允许触碰的文件/目录清单。**并行任务的 write_set 必须不相交**；write_set 相交或存在语义冲突时必须串行。worktree 只隔离工作空间，不能把冲突任务变安全(协议见 rules/parallel-collab-rules.md)。子代理越出 write_set 的改动视为违规,主 agent 合并时拒收。
+
+## 7. 验收判据
+
+- [模块 T-1071-polling · implementation] `cd frontend && pnpm exec vitest run src/features/copilot/chat-script-draft-card.test.tsx src/features/intelligence/use-project-upgrade-queue.test.tsx --testTimeout 120000 --hookTimeout 120000`
+
+## 8. 禁止事项
+
+- 只交付一个 candidate commit（候选提交），禁止 push。
+- 禁止修改 BACKLOG、progress、manifest、DEC/review/ledger 等主控制面；只能由主会话串行整合与推进状态。
+- 隔离与候选校验遵循 `rules/parallel-collab-rules.md`；越界或基线失效即拒收。
+
+## 9. 受阻协议
+
+同一障碍失败 2 次 = 停止并报告(带已试过什么、卡在哪、需要什么);被 hook / permission 拒 = 政策禁止,**禁止换措辞重试**。子代理不能提问 —— 受阻即返回,不许在原地打转。
+
+## 10. 版本锚
+
+- git HEAD:`e56cd273`
+- BACKLOG.md sha256(前 12 位):`8b3ee2a9f56f`

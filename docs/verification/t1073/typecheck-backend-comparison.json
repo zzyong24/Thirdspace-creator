@@ -1,0 +1,15 @@
+{
+  "current": "docs/verification/t1073/typecheck-backend-full-final.log",
+  "baseline": "docs/verification/t1073/worker/typecheck-backend-baseline.log",
+  "errors": 12,
+  "newErrorMessages": [],
+  "resolvedErrorMessages": [],
+  "sourceOnlyExit": 0,
+  "fullExit": 2,
+  "affectedSourceHasErrors": false,
+  "retainedRootTasks": [
+    "T-916",
+    "T-1015",
+    "T-1018"
+  ]
+}

@@ -808,3 +808,13 @@ T991：Windows 源码编译成功后，TypeScript 检查在约 2 GiB V8 堆耗�
 - **GuardRule**: 同一次完整JSON响应仅在明确结束事实和可验证形状下映射原流消费者；保留正文、reasoning、工具参数和真实usage，不增加请求、不制造结束码。共享schema必须提供严格validator，wire schema与冻结摘要保持兼容；最终稿由真实后端回执回放决定，明确失败沿原文降级。started/unknown、取消、旧fence与原deadline耗尽不能伪造成功或获得重发资格。至少覆盖真实Worker/Pi/HTTP/账本终态和后处理全部业务端口、artifact写后读回。
 - **GuardCheck**: reconcile.config.json LED-054；pi-provider-json-compat、radar-model-result-unknown.repro与transcribe-postprocess.integration实际回归。
 - **Outcome(T+N)**: 修复前协议6失败/8通过；真实后处理9失败/1通过。补丁和validator修复后最终自包含构建门协议19、原复现8、真实后端集成13共40通过；另有相关后端53通过及正式bundle旅程，保留异常/断流/取消对照。全局reconcile34错误/1告警与原基线逐项一致；具体日志在docs/verification/t1069与t1070，不代称真实供应商或安装版验收。
+
+## LED-055 — 资源释放必须走实际消费者并保持原任务归属
+
+- **Date**: 2026-10-08 · **Stage**: BUILD · **Severity**: high · **Status**: active
+- **WhatFailed**: 转录成功遗留Whisper线程；宿主累积已消费音频；聊天提前读完整历史；完成会话/预览无界缓存；稿面与Radar重复读取；成功任务卡反复观察；后台调度/心跳叠加。独立复核还发现无审批等待误淘汰，以及显式停止后running元数据永久保护。
+- **RootCause**: 创建和释放没有同一归属、缺背压/终态映射/单在途屏障；缓存未关联实际任务状态和当前turn。
+- **GuardRule**: 每任务finally等待自己的线程退出；双向协商消费确认并用单调水位/紧凑区间释放已消费字节，旧peer保持原协议兼容；流只按pull读取当前有限页；只淘汰无观察者的完成会话，真实等待状态按原任务ID保护；停止接受只释放对应turn本地引用，不伪造cancelled；同一读取/调度/心跳最多一份，重复唤醒有界合并，dispose关闭入口并等待清理。保持原execution/attempt/fence/deadline、幂等收费、完整历史、合法大输出与跨页回复。
+- **GuardCheck**: `node docs/verification/t1073/verify-resource-lifecycle.mjs`；已登记reconcile.config.json，覆盖全部8处实际消费者。单测/hook各120秒；没有整套watchdog，不冒称整组有总上限。
+- **Outcome(T+N)**: 各根因当场正确行为RED后同测GREEN保留。整合聚合301/301通过（7+83+62+121+28）；无消费者SSE读0页、100份已消费音频liveBuffers=0、线程归属退出、慢读取peak=1、根dispose计时器为0。无审批等待、原任务停止和最终确认经真实隔离持久服务/SDK链23项及独立复跑通过。真实模型容量、安装版RSS和浏览器像素证据未验证，全局历史失败保留。内存探针新输出写本次门日志并还原旧证据；失败后的旧字节不得视为新观测。
+- **Ref**: DEC-T1073；docs/features/t1073-resource-memory-fixes.md；docs/verification/t1073/REPORT.md。

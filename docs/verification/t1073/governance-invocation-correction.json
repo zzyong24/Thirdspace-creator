@@ -1,0 +1,19 @@
+{
+  "invalid": [
+    "backend-governance-final.log: missing write-set, exit2",
+    "backend-governance-comma-invalid.log: comma-joined unsupported flags, zero matched paths; invalid PASS excluded"
+  ],
+  "valid": "docs/verification/t1073/backend-governance-write-set-final.log",
+  "declaredPaths": [
+    "backend/src/modules/ai-runtime/automation-driver.ts",
+    "backend/src/modules/ai-runtime/automation-driver.test.ts",
+    "backend/src/application/scheduling/automation.ts",
+    "backend/src/application/scheduling/automation.test.ts",
+    "backend/src/modules/intelligence/source-sync-runner.ts",
+    "backend/src/modules/intelligence/source-sync-runner.test.ts",
+    "frontend/src/server/persistence-client.ts",
+    "frontend/src/server/persistence-client.lifecycle.test.ts",
+    "docs/verification/t1073/backend/**"
+  ],
+  "exit": 0
+}

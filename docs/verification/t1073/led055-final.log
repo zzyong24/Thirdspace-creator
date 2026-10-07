@@ -1,0 +1,75 @@
+资源生命周期检查：pnpm --dir contract exec vitest run --config ../docs/verification/t1073/worker/contract-vitest.config.mjs src/internal/execution-worker.test.ts --testTimeout 120000 --hookTimeout 120000 --retry 0
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/contract
+
+
+ Test Files  1 passed (1)
+      Tests  7 passed (7)
+   Start at  01:04:34
+   Duration  347ms (transform 104ms, setup 0ms, import 180ms, tests 6ms, environment 0ms)
+
+资源生命周期检查：pnpm --dir ai-worker exec vitest run src/execution/worker-runtime.test.ts src/execution/transcribe-worker-run.test.ts src/execution/transcribe-asr-run.test.ts src/execution/transcribe-postprocess-run.test.ts src/runtime/multimodal-whisper-local.test.ts src/runtime/multimodal-whisper-local.cancel.test.ts --testTimeout 120000 --hookTimeout 120000 --retry 0
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+
+
+ Test Files  6 passed (6)
+      Tests  83 passed (83)
+   Start at  01:04:35
+   Duration  2.89s (transform 1.96s, setup 0ms, import 3.53s, tests 2.86s, environment 2ms)
+
+资源生命周期检查：pnpm --dir backend exec vitest run src/modules/execution/worker-supervisor.memory.test.ts src/modules/execution/worker-supervisor.test.ts src/modules/execution/execution-stream.service.test.ts src/modules/ai-runtime/automation-driver.test.ts src/modules/intelligence/source-sync-runner.test.ts src/application/scheduling/automation.test.ts --testTimeout 120000 --hookTimeout 120000 --retry 0
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+{"witness":"T-1073 scheduler 慢窗口","wakeups":10,"active":1,"peak":1,"calls":2}
+{"witness":"T-1073 durable automation","originalIds":["execution-task_9135e8ec-3210-44b3-ad1a-d16c662616ad","execution-task_86f398e4-48ba-4017-a249-2385ced029c2"],"callbacks":10,"handlers":2,"peak":1,"status":"succeeded","attempts":[1,1]}
+{"witness":"T-1073 public source","mode":"success","simulatedMs":250000,"calls":1,"peak":1,"pendingAfter":0,"status":"succeeded","attempt":1}
+{"witness":"T-1073 public source","mode":"cancel","simulatedMs":250000,"calls":1,"peak":1,"pendingAfter":0,"status":"cancelled","attempt":1}
+{"witness":"T-1073 public source","mode":"failure","simulatedMs":250000,"calls":1,"peak":1,"pendingAfter":0,"status":"succeeded","attempt":2}
+
+ Test Files  6 passed (6)
+      Tests  62 passed (62)
+   Start at  01:04:39
+   Duration  27.30s (transform 13.21s, setup 0ms, import 20.43s, tests 47.56s, environment 1ms)
+
+资源生命周期检查：pnpm --dir frontend exec vitest run src/features/copilot/live-chat-session.test.ts src/features/copilot/live-chat-session.consumer.test.tsx src/features/copilot/chat-script-draft-card.test.tsx src/features/copilot/chat-thesis-card.test.tsx src/features/copilot/chat-publish-package-card.test.tsx src/features/copilot/ai-copilot-interactions.test.tsx src/features/draft-workbench/use-latest-script-review.test.tsx src/features/intelligence/use-project-upgrade-queue.test.tsx src/features/intelligence/intelligence-workbench-api.test.ts src/components/resources/asset-preview-url.test.ts --testTimeout 120000 --hookTimeout 120000 --retry 0
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+
+(node:19153) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:19155) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:19158) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:19154) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:19156) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:19157) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:19152) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:19151) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:19150) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:19149) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+ Test Files  10 passed (10)
+      Tests  121 passed (121)
+   Start at  01:05:07
+   Duration  4.88s (transform 6.85s, setup 2.15s, import 10.16s, tests 5.16s, environment 7.56s)
+
+资源生命周期检查：pnpm --dir frontend exec vitest run src/server/chat-execution-stream.test.ts src/server/persistence-client.lifecycle.test.ts src/server/browser-host-dispose.test.ts --testTimeout 120000 --hookTimeout 120000 --retry 0
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+
+{"witness":"T-1073 root dispose","sweepsBeforeStop":2,"sweepsAfterStop":2,"cronStops":1,"timersAfterStop":0}
+
+ Test Files  3 passed (3)
+      Tests  28 passed (28)
+   Start at  01:05:12
+   Duration  18.16s (transform 7.30s, setup 417ms, import 8.49s, tests 22.31s, environment 0ms)
