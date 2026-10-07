@@ -1,0 +1,27 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+
+ ❯ src/server/chat-execution-stream.test.ts (10 tests | 1 failed) 44ms
+   × 没有消费者时不读取事件页，慢消费者按需求推进且事件不重不丢 35ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/server/chat-execution-stream.test.ts > 没有消费者时不读取事件页，慢消费者按需求推进且事件不重不丢
+AssertionError: expected 100 to be +0 // Object.is equality
+
+- Expected
++ Received
+
+- 0
++ 100
+
+ ❯ src/server/chat-execution-stream.test.ts:14:29
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 9 passed (10)
+   Start at  00:00:36
+   Duration  449ms (transform 48ms, setup 171ms, import 20ms, tests 44ms, environment 0ms)

@@ -1,0 +1,18 @@
+{
+  "probe": "实际SSE/持久订阅函数，合成只读端口；不访问真实库/账号",
+  "count": 2000,
+  "eventBytes": 32768,
+  "idle": {
+    "produced": 0,
+    "arrayBuffersDelta": 0
+  },
+  "paused": {
+    "produced": 64,
+    "arrayBuffersDelta": 0
+  },
+  "cancelled": {
+    "produced": 64,
+    "released": true,
+    "arrayBuffersDelta": 0
+  }
+}

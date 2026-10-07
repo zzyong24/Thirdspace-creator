@@ -1,0 +1,17 @@
+# 聊天持久事件响应流修复
+
+原始正确行为测试先在旧实现失败：无消费者仍读取100页，期望0页，见red.log。修复将生成器只从ReadableStream.pull推进，highWaterMark为0，当前页由既有持久查询上限限制；不截断单个合法事件、不删除历史。request abort或cancel先关闭HTTP订阅并释放迭代器，不持有任务取消权。正在执行且不可取消的存储查询只能在返回后退出，不能声称数据库操作已物理中断。
+
+同一RED用例GREEN见green.log；后续http-sdk-green.log额外覆盖实际PGlite enqueue/claim/调用预留/stream.append→实际read/subscribeExecutionStream→chatExecutionResponse→真实本地HTTP/socket drain→真实fetch暂停/恢复和断连。512个64KiB合成事件保存在隔离PGlite，暂停时查询未读完且保持稳定，继续读取后0–511顺序完整，无重复；SDK DefaultChatTransport/readUIMessageStream还原assistant消息。合成终态是夹具设置，未运行模型、安装版、Next正式路由、真实账号或真实数据库，不冒充端到端产品旅程。
+
+waiting_user、审批、paused/blocked、unknown_result两种稳定码、failed/cancelled、DONE与既有协议保持，断连后原持久任务仍succeeded。现有后端追加/幂等/游标/fence隔离测试另跑backend-stream-green.log。首轮frontend tsc发现新增测试对unknown输入spread类型错误，已以真实afterSequence类型校正；frontend-typecheck-green.log退出0，不把首轮失败删掉。
+
+修复后独立字节探针memory-green.json：相同2000×32KiB合成输入，未消费时produced=0、ArrayBuffer增量0；读两个帧后仅生成当前64事件页，停读不再推进；cancel后订阅finally释放。只量化本探针实际分配的传输字节，不推算真实任务总堆、模型容量或安装版RSS。旧T-1071的62.61MiB驻留证据未改写。
+
+最终聚焦final-focused-green.log额外验证预先abort和实际已发送只读请求迟到：HTTP立即结束、迟到事件不能回写，存储返回后迭代器finally真实完成。此取消延迟用例不把逻辑取消说成数据库查询物理停止。
+
+独立复核进一步指出缓存不能从 error 文案识别无审批卡的 waiting_user。新增实际 SDK 消费测试7种状态先真实RED（status-metadata-red.log：7 failed，metadata undefined）；在既有 message-metadata 通道传递当前有限页真实 executionTaskId/status后，20/20通过。该帧位于page.hasMore=false的事件之后、error/abort之前；不扩大公共operation。额外metadata-compat-green.log为21/21，实际SDK从暂时无更多事件的running继续到succeeded，旧状态覆盖且finish的其它metadata字段保留。生产者代码获独立只读复核无阻断；缓存跨分区全链另在主整合后验证。
+
+主整合实际链路已通过，integrated-cache-chain-corrected-green.log为23/23：内存PGlite实际enqueue/claim/账本reserve/start/stream.append→实际read/subscribe→chatExecutionResponse→实际DefaultChatTransport/SDK Chat→原control响应头→卸载与100 scope缓存压力。没有审批卡的waiting_user原会话保留；同原任务改为合成成功回执后，明确regenerate恢复并能淘汰；其它scope不含旧内容。另一个原任务的cancel请求使用实际operation body/response schema和实际tasks.command：返回真实status=cancel_requested，SDK停止与订阅finally退出、本地缓存可回收，消息metadata未写cancelled；最后由原worker/attempt的实际acknowledgeControl使原任务真实cancelled。没有重发任务或第二次cancel。
+
+首次整合追加用例的两处失败是测试错误地要求所有V2资源都含runtimeStatus；实际toResource只为waiting_user/unknown_result/retry_wait/partial等别名状态加该字段，其它状态使用status。第一份integrated-cache-chain-first.log保留2 failed/21 passed；一次路径编辑错误未生效导致integrated-cache-chain-green.log仍2 failed，均不是产品RED。改正上述status断言后同整合链23/23通过。SSE/缓存生产代码未因此修改。合成waiting/succeeded回执在隔离DB直接设置，不冒充真实模型结算；取消与确认是实际服务口。
