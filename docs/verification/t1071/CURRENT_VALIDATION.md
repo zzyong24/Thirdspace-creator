@@ -43,3 +43,5 @@ flowchart LR
 继续只读观察时，原生PID37432与子sidecar37873仍在，公开CLI再次connected/full。3秒OS采样真实exit0，physical footprint 1.2G、peak 1.8G，主线程可见定时回调/Promise与无符号JIT栈；不能仅据此归因某个查询或服务。125秒是采样进程执行预算，3秒是测量窗口，未新增产品执行期限。RSS与footprint不混比，不称后台空闲、长期泄漏已排除或所有切页更快。原始身份/采样/当前ps/CLI回读SHA索引见installed-runtime-observation.json；无新业务写、模型任务、应用重启或产品改动。
 
 当前公开groups list实际5组；按这5个真实组ID显式逐一回读execution.tasks.list的running/queued，共10次全部exit0/total0。两种状态为0不证明其它状态、不可见组或后台扫描不存在；整条CLI命令313.3–813.04ms、最大并发2，不冒充界面/纯SQL计时。相关原始JSON及SHA保留在同一观察索引；后台共同慢点继续只读核因，未扩大四前端产品写集。
+
+navigation_source_diagnosis继续独立只读复核：旧profile原始跨度5.308841秒，首条间隔1.795018秒落在混淆业务符号，不能把它当作函数CPU热点；2648样本中2280栈含PGlite/WASM仅支持旧窗口活跃，不能推广为当前根因。现源1秒model-worker轮询、2秒recovery-wake及traffic恢复链与旧查询形状相符，相关后台文件在frozen5e6d025c与514a45b0间没有差异；这些是待测候选，不是根因签收。当前不新启inspector、不关闭合法后台；下一步结合用户实际点击时间与同PID的OS增量观察，需要符号化归因时先独评临时诊断和真正关闭listener的清理路径。T-1071继续WIP。
