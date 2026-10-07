@@ -1005,7 +1005,7 @@ export function AICopilotContent({
   const receiptStorageKey=`creatoros:t1070:turn:${liveSessionKey}`;
   React.useEffect(()=>{try{const stored=sessionStorage.getItem(receiptStorageKey);preparedReceipt.current=stored?JSON.parse(stored):null;}catch{preparedReceipt.current=null;}},[receiptStorageKey]);
   const preparationPending=React.useRef(false);
-  const submissionAttempt=React.useRef<{request?:EmbeddedDraftChatRequest|null;networkStarted:boolean}|null>(null);
+  const submissionAttempt=React.useRef<{text:string;strict:boolean;request?:EmbeddedDraftChatRequest|null;networkStarted:boolean}|null>(null);
   const recoveryMounted=React.useRef(true);
   React.useEffect(()=>{recoveryMounted.current=true;return()=>{recoveryMounted.current=false;};},[]);
   const sendPreparedRef=React.useRef<(text:string,request?:EmbeddedDraftChatRequest|null)=>Promise<void>>(async()=>{});
@@ -1428,6 +1428,14 @@ export function AICopilotContent({
 
   const retryLastTurn = React.useCallback(async () => {
     setComposerLifecycleError(null);
+    const attempt=submissionAttempt.current;
+    if(attempt?.strict&&!attempt.networkStarted){
+      if(preparationPending.current)return;
+      // This attempt never reached transport.fetch. An explicit retry prepares
+      // this same text/request, rather than regenerating any older saved receipt.
+      try{await sendPreparedRef.current(attempt.text,attempt.request);}catch{/* Original preflight error stays visible. */}
+      return;
+    }
     const request =
       pendingComposerRequestRef.current ?? retryableScriptPatchRequestRef.current;
     if (request) {
@@ -1513,7 +1521,7 @@ export function AICopilotContent({
   React.useLayoutEffect(()=>{sendPreparedRef.current=async(text,request)=>{
     if(preparationPending.current)throw Error("当前稿件仍在准备，请等待原保存结束。");
     preparationPending.current=true;setComposerLifecycleError(null);
-    const attempt={request,networkStarted:false};submissionAttempt.current=attempt;
+    const attempt={text,request,strict:Boolean(request?.creationTarget||draftEditor.readEditorState()),networkStarted:false};submissionAttempt.current=attempt;
     try{if(!selectedEngineAvailable)throw Error("当前编导引擎尚不可用，请到设置核对后恢复原请求。");const editorTarget=request?.creationTarget?undefined:await draftEditor.prepareEditorTurn();const targets={...(editorTarget?{editorTarget}:{}),...(request?.creationTarget?{creationTarget:request.creationTarget}:{})};preparedTargets.current=targets;
       if(!targets.editorTarget&&!targets.creationTarget){preparedReceipt.current=null;sessionStorage.removeItem(receiptStorageKey);await sendMessage({text});return;}
       const requestedFn=quickFunctionKeyRef.current??entryFunctionKeyRef.current?.consume()??null;quickFunctionKeyRef.current=null;
@@ -3140,7 +3148,7 @@ export function AICopilotContent({
                     {chatError.canRetry &&
                     !chatError.suggestOpenCredits &&
                     !streaming &&
-                    messages.length > 0 ? (
+                    (messages.length > 0 || Boolean(submissionAttempt.current?.strict&&!submissionAttempt.current.networkStarted)) ? (
                       <button
                         type="button"
                         data-slot="copilot-error-retry"
