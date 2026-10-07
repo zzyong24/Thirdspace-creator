@@ -1,0 +1,24 @@
+{
+  "schema": "creatoros/t1071-prefreeze-reconcile/v1",
+  "command": "node orchestrator/process/reconcile.mjs",
+  "exit_code": 1,
+  "errors": 37,
+  "warnings": 1,
+  "source_head_at_start": "82406168b95dc4fe02c26adf4e6f35d884ef9e81",
+  "head_at_end": "a2b803ed72179fe35d56e4d9113ce84982779563",
+  "product_and_tests_unchanged_during_reconcile": true,
+  "baseline_log": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1070/root-prefreeze-reconcile.log",
+  "current_log": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1071/reconcile.log",
+  "preserved_log": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-browser-diagnosis/reconcile.log",
+  "current_log_sha256": "ff95de5787927c16835d0101ec144e975f066133317a455d69dfd96ce84cc3e0",
+  "baseline_error_lines_equal": true,
+  "new_error_lines": [],
+  "resolved_error_lines": [],
+  "root_cause_tasks": [
+    "T-1018",
+    "T-1015"
+  ],
+  "task_completion": "PENDING_INSTALLATION_AND_PERFORMANCE",
+  "pmem_sync_exit_code": 0,
+  "pmem_sync_overlap": "pmem sync 完成前 reconcile 已启动；真实两项结果分别记录，不虚构严格顺序。"
+}
