@@ -60,7 +60,10 @@ const protocol = vi.hoisted(() => ({
   live: null as any,
   actualSdk: false,
   attachmentIds: [] as string[],
+  engine: "pi" as "pi"|"codex",
+  engineAvailable: true,
 }));
+vi.mock("./use-assistant-engine",()=>({useAssistantEngine:()=>({engine:protocol.engine,available:protocol.engineAvailable})}));
 vi.mock("@/lib/contract-client", () => ({
   client: {
     listAITasks: async () => [],
@@ -121,6 +124,8 @@ beforeEach(() => {
   protocol.live = null;
   protocol.actualSdk = false;
   protocol.attachmentIds = [];
+  protocol.engine = "pi";
+  protocol.engineAvailable = true;
   protocol.error = null;
   protocol.messages = [];
   protocol.send.mockReset();
@@ -493,7 +498,7 @@ describe("T-1070 actual composer component / SDK boundary", () => {
     protocol.live=live;
     protocol.fetch.mockResolvedValueOnce(new Response("原流响应未知",{status:503,headers:{"x-source-message-id":"server-source-real","x-conversation-id":"original-conversation"}}));
     protocol.listMessages.mockResolvedValue([{id:"server-source-real",role:"user",content:"微调标题",parts:[{type:"text",text:"微调标题"}],attachments:["uploaded-original-asset"]}] as any);
-    render(<Composer />);
+    const view=render(<Composer />);
     const user=userEvent.setup();
     await user.type(screen.getByLabelText("我能帮你做什么"),"微调标题");
     await user.click(screen.getByLabelText("提交提示给 Copilot"));
@@ -501,7 +506,8 @@ describe("T-1070 actual composer component / SDK boundary", () => {
     expect(live.chat.messages[0].id).not.toBe("server-source-real");
     const original=JSON.parse(protocol.fetch.mock.calls[0][1].body);
     protocol.fetch.mockResolvedValueOnce(new Response('data: {"type":"start","messageId":"restored-assistant"}\n\ndata: {"type":"finish","finishReason":"stop"}\n\ndata: [DONE]\n\n',{headers:{"content-type":"text/event-stream","x-vercel-ai-ui-message-stream":"v1"}}));
-    live.executionEngine="codex";
+    protocol.engine="codex";
+    view.rerender(<Composer />);
     prepare.mockResolvedValue({...target,savedBase:{...target.savedBase,versionId:"later-base"}});
     await user.click(await screen.findByRole("button",{name:"重试"}));
     await waitFor(()=>expect(protocol.fetch).toHaveBeenCalledTimes(2));
@@ -510,5 +516,25 @@ describe("T-1070 actual composer component / SDK boundary", () => {
     expect(retry.messages.at(-1)).toMatchObject({id:"server-source-real",role:"user",parts:[{type:"text",text:"微调标题"}]});
     expect(prepare).toHaveBeenCalledOnce();
     await waitFor(()=>expect(live.chat.status).toBe("ready"));
+  });
+  it("真实SDK联合创作在引擎不可用时明确零提交，可显式恢复同target；fetch开始后失败保持UNKNOWN",async()=>{
+    const {Chat}=await vi.importActual<typeof import("@ai-sdk/react")>("@ai-sdk/react");
+    protocol.actualSdk=true;protocol.engineAvailable=false;
+    const live:any={control:{fetch:(...args:unknown[])=>protocol.fetch(...args),cancel:async()=>{}},conversationId:null,epoch:0,executionEngine:"pi",sourceEngines:new Map(),transport:null};
+    live.chat=new Chat({id:"actual-creation-chat",transport:{sendMessages:options=>live.transport.sendMessages(options),reconnectToStream:async()=>null}});protocol.live=live;
+    const creationTarget={clientRequestId:"original-pair",projectId:"protocol-project",scriptSourceRef:{kind:"project_script",id:"script",versionId:"frozen-script-v"}};
+    const onCreationSubmission=vi.fn(),request={nonce:1,prefill:"生成原文章图文候选",creationTarget,autoSend:true,onCreationSubmission};
+    const view=render(<Composer request={request}/>);
+    await screen.findByText("当前编导引擎尚不可用，请到设置核对后恢复原请求。");
+    expect(onCreationSubmission.mock.calls).toEqual([["not-submitted"]]);
+    expect(protocol.fetch).not.toHaveBeenCalled();expect(live.chat.messages).toHaveLength(0);expect(prepare).not.toHaveBeenCalled();
+    protocol.engineAvailable=true;
+    protocol.fetch.mockResolvedValueOnce(new Response("原流未知",{status:503,headers:{"x-source-message-id":"original-creation-source","x-conversation-id":"original-creation-conversation"}}));
+    view.rerender(<Composer request={{...request,nonce:2}}/>);
+    await waitFor(()=>expect(protocol.fetch).toHaveBeenCalledOnce());
+    await waitFor(()=>expect(live.chat.status).toBe("error"));
+    expect(onCreationSubmission.mock.calls).toEqual([["not-submitted"],["submitted-unknown"]]);
+    expect(JSON.parse(protocol.fetch.mock.calls[0][1].body)).toMatchObject({chatContext:{creationTarget},executionEngine:"pi"});
+    expect(prepare).not.toHaveBeenCalled();
   });
 });
