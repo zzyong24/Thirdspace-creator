@@ -58,6 +58,8 @@ const protocol = vi.hoisted(() => ({
   listMessages: vi.fn(async (..._args: unknown[]) => []),
   fetch: vi.fn(),
   live: null as any,
+  actualSdk: false,
+  attachmentIds: [] as string[],
 }));
 vi.mock("@/lib/contract-client", () => ({
   client: {
@@ -82,8 +84,9 @@ vi.mock("./live-chat-session", () => ({
       transport: null,
     }),
 }));
-vi.mock("@ai-sdk/react", () => ({
-  useChat: () => ({
+vi.mock("@ai-sdk/react", async () => {
+  const actual=await vi.importActual<typeof import("@ai-sdk/react")>("@ai-sdk/react");
+  return {useChat: (options:any) => protocol.actualSdk?actual.useChat(options):({
     messages: protocol.messages,
     status: "ready",
     error: protocol.error,
@@ -91,8 +94,17 @@ vi.mock("@ai-sdk/react", () => ({
     regenerate: (...args: unknown[]) => protocol.regenerate(...args),
     setMessages: (...args: unknown[]) => protocol.setMessages(...args),
     stop: async () => {},
-  }),
-}));
+  })};
+});
+vi.mock("./copilot-attachment-picker",async()=>{
+  const actual=await vi.importActual<typeof import("./copilot-attachment-picker")>("./copilot-attachment-picker");
+  const react=await vi.importActual<typeof import("react")>("react");
+  return {...actual,CopilotAttachmentPicker:react.forwardRef((props:any,ref:any)=>{
+    react.useEffect(()=>{if(protocol.actualSdk&&protocol.attachmentIds.length)props.onStateChange({ids:[...protocol.attachmentIds],count:protocol.attachmentIds.length,uploading:false});},[]);
+    react.useImperativeHandle(ref,()=>({clear:()=>props.onStateChange({ids:[],count:0,uploading:false})}));
+    return protocol.actualSdk?null:<actual.CopilotAttachmentPicker {...props} ref={ref}/>;
+  })};
+});
 
 import { AppShell } from "@/components/shell/app-shell";
 import { OverlayController } from "@/components/overlays/overlay-controller";
@@ -107,6 +119,8 @@ import {
 afterEach(() => cleanup());
 beforeEach(() => {
   protocol.live = null;
+  protocol.actualSdk = false;
+  protocol.attachmentIds = [];
   protocol.error = null;
   protocol.messages = [];
   protocol.send.mockReset();
@@ -372,6 +386,8 @@ describe("T-1070 actual composer component / SDK boundary", () => {
         { text: "缩短所选段落" },
         {
           body: {
+            attachmentIds: [],
+            executionEngine: "pi",
             chatContext: expect.objectContaining({
               scope: "project:protocol-project",
               editorTarget: target,
@@ -447,12 +463,13 @@ describe("T-1070 actual composer component / SDK boundary", () => {
       },
     ];
     protocol.error = Error("original stream interrupted");
+    protocol.listMessages.mockResolvedValue([{id:"server-source-real",role:"user",content:"微调标题",attachments:[]}] as any);
     view.rerender(<Composer />);
     await user.click(await screen.findByRole("button", { name: "重试" }));
-    expect(protocol.regenerate).toHaveBeenCalledWith({
+    await waitFor(()=>expect(protocol.regenerate).toHaveBeenCalledWith({
       messageId: "server-source-real",
-      body: { chatContext: frozen, executionEngine: "pi" },
-    });
+      body: { chatContext: frozen, executionEngine: "pi",conversationId:"original-conversation",attachmentIds:[] },
+    }));
     expect(prepare).toHaveBeenCalledOnce();
     const stored = Array.from({ length: sessionStorage.length }, (_, index) =>
       sessionStorage.key(index),
@@ -464,5 +481,34 @@ describe("T-1070 actual composer component / SDK boundary", () => {
       conversationId: "original-conversation",
       chatContext: frozen,
     });
+  });
+  it("真实SDK从listMessages恢复server user ID后重接原任务，保原附件、会话、引擎与冻结稿", async () => {
+    const {Chat}=await vi.importActual<typeof import("@ai-sdk/react")>("@ai-sdk/react");
+    protocol.actualSdk=true;
+    // Only the upload boundary is supplied: this test uses the actual Chat/useChat
+    // and DefaultChatTransport for both submissions, without mocking regenerate.
+    protocol.attachmentIds=["uploaded-original-asset"];
+    const live:any={control:{fetch:(...args:unknown[])=>protocol.fetch(...args),cancel:async()=>{}},conversationId:null,epoch:0,executionEngine:"pi",sourceEngines:new Map(),transport:null};
+    live.chat=new Chat({id:"actual-protocol-chat",transport:{sendMessages:options=>live.transport.sendMessages(options),reconnectToStream:async()=>null}});
+    protocol.live=live;
+    protocol.fetch.mockResolvedValueOnce(new Response("原流响应未知",{status:503,headers:{"x-source-message-id":"server-source-real","x-conversation-id":"original-conversation"}}));
+    protocol.listMessages.mockResolvedValue([{id:"server-source-real",role:"user",content:"微调标题",parts:[{type:"text",text:"微调标题"}],attachments:["uploaded-original-asset"]}] as any);
+    render(<Composer />);
+    const user=userEvent.setup();
+    await user.type(screen.getByLabelText("我能帮你做什么"),"微调标题");
+    await user.click(screen.getByLabelText("提交提示给 Copilot"));
+    await waitFor(()=>expect(live.chat.status).toBe("error"));
+    expect(live.chat.messages[0].id).not.toBe("server-source-real");
+    const original=JSON.parse(protocol.fetch.mock.calls[0][1].body);
+    protocol.fetch.mockResolvedValueOnce(new Response('data: {"type":"start","messageId":"restored-assistant"}\n\ndata: {"type":"finish","finishReason":"stop"}\n\ndata: [DONE]\n\n',{headers:{"content-type":"text/event-stream","x-vercel-ai-ui-message-stream":"v1"}}));
+    live.executionEngine="codex";
+    prepare.mockResolvedValue({...target,savedBase:{...target.savedBase,versionId:"later-base"}});
+    await user.click(await screen.findByRole("button",{name:"重试"}));
+    await waitFor(()=>expect(protocol.fetch).toHaveBeenCalledTimes(2));
+    const retry=JSON.parse(protocol.fetch.mock.calls[1][1].body);
+    expect(retry).toMatchObject({trigger:"regenerate-message",messageId:"server-source-real",conversationId:"original-conversation",attachmentIds:["uploaded-original-asset"],executionEngine:"pi",chatContext:original.chatContext});
+    expect(retry.messages.at(-1)).toMatchObject({id:"server-source-real",role:"user",parts:[{type:"text",text:"微调标题"}]});
+    expect(prepare).toHaveBeenCalledOnce();
+    await waitFor(()=>expect(live.chat.status).toBe("ready"));
   });
 });
