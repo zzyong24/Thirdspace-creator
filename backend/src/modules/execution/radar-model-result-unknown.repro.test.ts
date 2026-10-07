@@ -67,6 +67,8 @@ async function reproduce(mode: Mode, flow: 'radar' | 'transcribe' = 'radar') {
     }
     response.write(chunk({ content: JSON.stringify({ correctedText: corrected }) }));
     response.write(chunk({}, 'stop'));
+    // 多作品回归需要明确用量回执；缺用量时真实账本应阻止后续调用。
+    response.write(`data: ${JSON.stringify({ id: 'fixture', choices: [], usage: { prompt_tokens: 10, completion_tokens: 12, total_tokens: 22 } })}\n\n`);
     response.end('data: [DONE]\n\n');
   });
   await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve));
@@ -179,20 +181,20 @@ async function reproduce(mode: Mode, flow: 'radar' | 'transcribe' = 'radar') {
       stopReason: [...messages].reverse().find(message => message.type === 'stopped')?.reason ?? null,
     };
     evidence.push(result);
-    expect(hostErrors).toEqual(flow === 'transcribe' ? ['Error: 未知回执不可保存'] : []);
+    expect(hostErrors).toEqual([]);
     expect(ports).not.toContain('reserveAsrRequest'); // 已确认识别回执：全程不重新ASR。
     expect(JSON.stringify(result)).not.toContain(spec.token);
     if (flow === 'transcribe') {
-      expect(result).toMatchObject({ requests: 0, asrRead: ['fixture-one'], artifacts: [], runtimeStatus: 'unknown_result', errorCode: 'TRANSCRIPT_POSTPROCESS_RECEIPT_UNKNOWN', callStatuses: [] });
-      expect(nodeProbe).toMatchObject({ applied: false, transcript: original, reason: '模型调用失败:结构化节点缺少 schema validator' });
-    } else if (['disconnect', 'partial-disconnect', 'json-instead-of-sse'].includes(mode)) {
+      expect(result).toMatchObject({ requests: 4, asrRead: ['fixture-one', 'fixture-two', 'fixture-three'], artifacts: ['fixture-one', 'fixture-two', 'fixture-three'], runtimeStatus: 'succeeded', callStatuses: ['settled', 'settled', 'settled'] });
+      expect(nodeProbe).toMatchObject({ applied: true, transcript: corrected });
+    } else if (['disconnect', 'partial-disconnect'].includes(mode)) {
       expect(result).toMatchObject({ requests: 1, savedResults: [], runtimeStatus: 'unknown_result', errorCode: 'MODEL_RESULT_UNKNOWN', errorMessage: '服务尚未返回完整结果，任务已暂停，已完成内容保留', callStatuses: ['unknown'], stopReason: 'unknown_result' });
-      if (mode === 'json-instead-of-sse') expect(servedResponses).toEqual([{ status: 200, format: 'json-completion', fullContent: true }]);
       expect(await tasks.claimTask({ taskId: task.id, workerId: 'no-blind-retry' })).toBeNull();
-    } else if (mode !== 'success') {
+    } else if (mode !== 'success' && mode !== 'json-instead-of-sse') {
       expect(result).toMatchObject({ requests: 1, savedResults: [], runtimeStatus: mode === 'http-401' ? 'waiting_user' : 'retry_wait', callStatuses: ['rejected'] });
     } else {
       expect(result).toMatchObject({ requests: 1, savedResults: ['checkpoint', 'result'], runtimeStatus: 'succeeded', callStatuses: ['settled'] });
+      if (mode === 'json-instead-of-sse') expect(servedResponses).toEqual([{ status: 200, format: 'json-completion', fullContent: true }]);
     }
     return result;
   } finally {
@@ -201,4 +203,4 @@ async function reproduce(mode: Mode, flow: 'radar' | 'transcribe' = 'radar') {
 }
 
 it.each<Mode>(['success', 'http-401', 'http-429', 'http-503', 'disconnect', 'partial-disconnect', 'json-instead-of-sse'])('T-1068 实际调用链隔离复现：%s', async mode => { await reproduce(mode); }, 180_000);
-it('T-1068 通用转录校正缺少schema validator：尚未请求模型即阻断保存', async () => { await reproduce('success', 'transcribe'); }, 180_000);
+it('T-1070 通用转录校正具备schema validator：原缺陷回归已恢复模型调用与保存', async () => { await reproduce('success', 'transcribe'); }, 180_000);

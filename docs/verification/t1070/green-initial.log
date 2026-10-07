@@ -1,0 +1,39 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+stdout | src/modules/execution/transcribe-postprocess.integration.test.ts > 实际后端后处理端口保存并无网络恢复：json
+[structured-node] template=transcript.postprocess.inline status=error durationMs=1 path=text_compat modelCalls=1 inputTokens=0 outputTokens=0
+
+stdout | src/modules/execution/transcribe-postprocess.integration.test.ts > 实际后端后处理端口保存并无网络恢复：json
+[structured-node] template=transcript.postprocess.inline status=error durationMs=58 path=text_compat modelCalls=1 inputTokens=0 outputTokens=0
+
+ ❯ src/modules/execution/transcribe-postprocess.integration.test.ts (10 tests | 1 failed) 3682ms
+   × 实际后端后处理端口保存并无网络恢复：json 151ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/execution/transcribe-postprocess.integration.test.ts > 实际后端后处理端口保存并无网络恢复：json
+Error: MODEL_RESULT_UNKNOWN
+ ❯ generationFailure ../ai-worker/src/execution/generation-error.ts:27:10
+     25|     }
+     26|   }
+     27|   return new GenerationFailure("unknown_result", "MODEL_RESULT_UNKNOWN…
+       |          ^
+     28| }
+     29|
+ ❯ wrapGenerate ../ai-worker/src/execution/durable-generation-model.ts:44:23
+ ❯ Object.doGenerate ../node_modules/.pnpm/ai@7.0.4_zod@4.4.3/node_modules/ai/src/middleware/wrap-language-model.ts:88:10
+ ❯ execute ../node_modules/.pnpm/ai@7.0.4_zod@4.4.3/node_modules/ai/src/generate-text/generate-text.ts:937:22
+ ❯ runWithTracingChannelSpan ../node_modules/.pnpm/ai@7.0.4_zod@4.4.3/node_modules/ai/src/telemetry/tracing-channel-publisher.ts:79:11
+ ❯ executeLanguageModelCall ../node_modules/.pnpm/ai@7.0.4_zod@4.4.3/node_modules/ai/src/telemetry/create-telemetry-dispatcher.ts:184:13
+ ❯ ../node_modules/.pnpm/ai@7.0.4_zod@4.4.3/node_modules/ai/src/generate-text/generate-text.ts:933:31
+ ❯ _retryWithExponentialBackoff ../node_modules/.pnpm/ai@7.0.4_zod@4.4.3/node_modules/ai/src/util/retry-with-exponential-backoff.ts:101:11
+ ❯ execute ../node_modules/.pnpm/ai@7.0.4_zod@4.4.3/node_modules/ai/src/generate-text/generate-text.ts:932:37
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 9 passed (10)
+   Start at  20:20:47
+   Duration  8.27s (transform 2.73s, setup 0ms, import 4.37s, tests 3.68s, environment 0ms)

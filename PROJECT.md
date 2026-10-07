@@ -3,7 +3,7 @@
 > 本文件由 `node orchestrator/process/pmem.mjs sync` 生成,**勿手改生成段**。
 > 人写的「定位/为什么」改 pmem.mjs 顶部常量与 SYSTEM_ARCHITECTURE.md。
 
-LAST_SYNCED: codex/t1062-account-group-snapshot @ 4aa040f4
+LAST_SYNCED: codex/t1062-account-group-snapshot @ 5a982108
 
 ## 这是什么(定位)
 
@@ -23,8 +23,6 @@ CreatorOS —— 一个编导式的自媒体内容生产系统(非项目管理�
 
 ## 开放任务(欠债)
 
-- [open] T-1069 修复雷达文本模型完整非流式JSON回执被流式解析误判未知
-- [open] T-1070 修复通用转录整理文本兼容模式缺少schema校验器与保存阻断
 - [wip] T-1063 取消双端出包人为超时与阻断检查并重跑 Windows 流水线
 - [open] T-1067 清理通用产品流程Skill既有公开分发校验债务
 - [wip] T-1062 汇总各会话改动统一提交并打包本地客户端，逐项验收含Skill粗剪

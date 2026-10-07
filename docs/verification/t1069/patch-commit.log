@@ -1,0 +1,14 @@
+Progress: resolved 0, reused 2, downloaded 0, added 0
+Progress: resolved 241, reused 187, downloaded 0, added 0
+Progress: resolved 957, reused 787, downloaded 0, added 0
+Progress: resolved 1550, reused 1368, downloaded 0, added 0
+Progress: resolved 1551, reused 1369, downloaded 0, added 0
+Progress: resolved 1552, reused 1370, downloaded 0, added 0
+Progress: resolved 1553, reused 1371, downloaded 0, added 0
+Progress: resolved 1554, reused 1371, downloaded 0, added 0
+Progress: resolved 1555, reused 1373, downloaded 0, added 0
+Progress: resolved 1556, reused 1373, downloaded 0, added 0
+ WARN  9 deprecated subdependencies found: @esbuild-kit/core-utils@3.3.2, @esbuild-kit/esm-loader@2.6.5, fstream@1.0.12, glob@7.2.3, inflight@1.0.6, lodash.isequal@4.5.0, node-domexception@1.0.0, prebuild-install@7.1.3, rimraf@2.7.1
+Packages: -1
+-
+Progress: resolved 1556, reused 1374, downloaded 0, added 1, done

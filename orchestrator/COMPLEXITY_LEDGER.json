@@ -5485,6 +5485,66 @@
       "scope_source": "docs/features/t1066-timeout-policy.md",
       "reason": "用户授权的超时修复及隔离公共链回归；复用现有IPC/本机工具边界，不新增执行权限、持久数据、发布或远端访问。",
       "acceptance": "仅绑定本次真实文件哈希；不代表供应商或安装版验收。"
+    },
+    {
+      "task_id": "T-1069",
+      "files": [
+        "pnpm-lock.yaml"
+      ],
+      "file_sha256": "28f107b75e781e21eed8206d441127b372ea3cc3057c382986f029b301322fc0",
+      "categories": [
+        "runtime"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1069-1070",
+      "scope_source": "docs/features/t1069-completion-json-compat.md",
+      "reason": "用户授权的两处已复现缺陷修复；复用Pi同版本及既有Worker/IPC业务端口。锁文件仅补丁hash改变，报告仅记实际隔离验证，不新增运行时、进程、端口、安装或执行权。",
+      "acceptance": "仅登记当前文件hash所含既有复杂度，不代替真实测试或安装版验收。"
+    },
+    {
+      "task_id": "T-1070",
+      "files": [
+        "pnpm-lock.yaml"
+      ],
+      "file_sha256": "28f107b75e781e21eed8206d441127b372ea3cc3057c382986f029b301322fc0",
+      "categories": [
+        "runtime"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1069-1070",
+      "scope_source": "docs/features/t1070-transcript-postprocess-reliability.md",
+      "reason": "用户授权的两处已复现缺陷修复；复用Pi同版本及既有Worker/IPC业务端口。锁文件仅补丁hash改变，报告仅记实际隔离验证，不新增运行时、进程、端口、安装或执行权。",
+      "acceptance": "仅登记当前文件hash所含既有复杂度，不代替真实测试或安装版验收。"
+    },
+    {
+      "task_id": "T-1069",
+      "files": [
+        "docs/verification/t1069/REPORT.md"
+      ],
+      "file_sha256": "8bec06abe26af14f1dc0b482ef4bdf4e5c27b9bbc318296c005855be95138722",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1069-1070",
+      "scope_source": "docs/features/t1069-completion-json-compat.md",
+      "reason": "用户授权的两处已复现缺陷修复；复用Pi同版本及既有Worker/IPC业务端口。锁文件仅补丁hash改变，报告仅记实际隔离验证，不新增运行时、进程、端口、安装或执行权。",
+      "acceptance": "仅登记当前文件hash所含既有复杂度，不代替真实测试或安装版验收。"
+    },
+    {
+      "task_id": "T-1069",
+      "files": [
+        "docs/verification/t1069/implementation-review.md"
+      ],
+      "file_sha256": "f498d55032c749c2c444909ce3980ff184a3c36a028f9167404f0c8156281411",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1069-1070",
+      "scope_source": "docs/features/t1069-completion-json-compat.md",
+      "reason": "用户授权的两处已复现缺陷修复；复用Pi同版本及既有Worker/IPC业务端口。锁文件仅补丁hash改变，报告仅记实际隔离验证，不新增运行时、进程、端口、安装或执行权。",
+      "acceptance": "仅登记当前文件hash所含既有复杂度，不代替真实测试或安装版验收。"
     }
   ],
   "historical_baselines": []

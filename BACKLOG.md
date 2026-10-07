@@ -10,8 +10,8 @@
 | ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
 | --- | --- | --- | --- | --- | --- | --- |
 | T-1068 | 隔离复现内容雷达转录 MODEL_RESULT_UNKNOWN 暂停并定位原因 | ✅ 待办 | — | — | [诊断范围](docs/verification/t1068-radar-transcription.md) | 用户2026-10-07明确不考虑真实账号，直接复现；使用隔离数据与本地HTTP故障服务跑实际Worker/模型链，核对已识别原文、后处理、账本与暂停状态，不重发用户任务，未实证不声称根治。 |
-| T-1069 | 修复雷达文本模型完整非流式JSON回执被流式解析误判未知 | 📋 待办 | — | 待验 | [根因证据](docs/verification/t1068-radar-transcription.md#隔离复现结论) | T-1068实际Worker、Pi、HTTP与内存PG证实完整HTTP200 Chat Completion被误报MODEL_RESULT_UNKNOWN；需先形成兼容契约与修复SPEC，保留真断流未知账本、不重复付费调用；本轮仅复现未修改生产。 |
-| T-1070 | 修复通用转录整理文本兼容模式缺少schema校验器与保存阻断 | 📋 待办 | — | 待验 | [根因证据](docs/verification/t1068-radar-transcription.md#隔离复现结论) | T-1068实际默认节点证实自定义端点text模式在请求前缺validator，返回原文后未建立后处理结果回执；保存端源码拒绝无回执，隔离宿主再现暂停。需真实后端业务端口回归与SPEC，不与直接雷达ASR混淆。 |
+| T-1069 | 修复雷达文本模型完整非流式JSON回执被流式解析误判未知 | ✅ 待办 | PASS[REV:020bbb5c97fa] | — | [SPEC](docs/features/t1069-completion-json-compat.md) | 用户2026-10-07授权根治T-1068复现缺陷；同一请求完整JSON兼容，保留断流未知与幂等，不重发原任务、不改安装版。 |
+| T-1070 | 修复通用转录整理文本兼容模式缺少schema校验器与保存阻断 | ✅ 待办 | PASS[REV:5b690995d15b] | — | [SPEC](docs/features/t1070-transcript-postprocess-reliability.md) | 用户2026-10-07授权同轮修复；共享validator与实际后端保存回归，确认的原文安全降级，未知账本不伪造成功。 |
 | T-1066 | 全系统统一两分钟超时下限、嵌套预算与Skill防复发 | ⏸️ 待办 | PASS[REV:13310516269c] | 待验 | [SPEC](docs/features/t1066-timeout-policy.md) | 用户2026-10-06授权按T-1065完整清单修复全部超时策略，单次执行/结果等待最低2分钟，外层预算覆盖内层及清理余量，长任务继承持久任务预算；规范与Skill沉淀并加回归门，不推送发布或改真实数据。 |
 | T-1066-worker | 执行Worker及后端超时修复 | ✅ 待办 | — | — | [已评审父SPEC](docs/features/t1066-timeout-policy.md) | T-1066同一确认范围的并行实现分区，不形成分期验收；独立工作树、互斥写集，由主会话集成。 |
 | T-1066-frontend | 前端与桌面原生层超时修复 | ✅ 待办 | — | — | [已评审父SPEC](docs/features/t1066-timeout-policy.md) | T-1066同一确认范围的并行实现分区，不形成分期验收；独立工作树、互斥写集，由主会话集成。 |
@@ -28,7 +28,7 @@
 | T-1019 | 按观众具体任务与双九宫格持续生成可实测选题 | ⏸️ 待办 | PASS[REV:3a0362412b23] | 待验 | [SPEC](docs/features/audience-task-topics/README.md) | 用户委派；复用定位/雷达/候选/反馈，观众入口与作者实测分流，保留 T-1017 首稿；不发布或 push。 |
 | T-1020 | 统一可视化推荐、作品承接与科学运营观测 | 📋 待办 | 待审 | 待验 | [SPEC](docs/features/creator-operations/README.md) | 用户2026-10-02补充；依赖T-1019验收，复用采集/analytics/review及独立本地投影后台，不复制UI/调度；逐平台区分发布/草稿，null与未关联保真。 |
 | T-1017 | 简化内容雷达：按账号定位一键生成可编辑改写稿 | 🔨 待办 | PASS[REV:d2fb4541c82d] | 待验 | [SPEC](docs/features/t1017-content-radar-rewrite-first.md) | 把“基于对标文案与当前定位快速改写”作为主结果；拆解、策略和选题卡字段改为可选补充，不得阻断首稿；[自动化实测](docs/verification/t1017-rewrite-first.md)，真实桌面/供应商待验。 |
-| T-1018 | 清理本轮测试暴露的全局类型与边界欠债 | 📋 待办 | — | 待验 | [实测证据](docs/verification/t1017-rewrite-first.md) | 后端旧测试 API/类型漂移、contract旧快照/资产/cover断言、live-chat-session SDK 边界与 video-decisions-runner 语义门仍失败；与 T-1015 历史教训对账联动，不混入 T-1017。 本轮T-1022再次实测原12项后端类型、3项契约及边界/语义旧失败，见docs/features/t1022-account-group-workspace/VERIFICATION.md。 本轮T-1066隔离树再次实测同12个后端类型/3个契约/2个live-chat SDK边界既有失败，详docs/verification/t1066/REPORT.md。 |
+| T-1018 | 清理本轮测试暴露的全局类型与边界欠债 | 📋 待办 | — | 待验 | [实测证据](docs/verification/t1017-rewrite-first.md) | 后端旧测试 API/类型漂移、contract旧快照/资产/cover断言、live-chat-session SDK 边界与 video-decisions-runner 语义门仍失败；与 T-1015 历史教训对账联动，不混入 T-1017。 本轮T-1022再次实测原12项后端类型、3项契约及边界/语义旧失败，见docs/features/t1022-account-group-workspace/VERIFICATION.md。 本轮T-1066隔离树再次实测同12个后端类型/3个契约/2个live-chat SDK边界既有失败，详docs/verification/t1066/REPORT.md。 T-1069/T-1070保留同12类型/2边界旧失败，generation-replay旧断言在HEAD归档基线与当前均9/10通过；见docs/verification/t1069/generation-replay-baseline.log。 |
 | T-1016 | 调研 CreatorOS 连接本地 Codex、WorkBuddy 与外部 Agent | ✅ 待办 | — | — | [SPEC](docs/features/t1016-external-agent-research.md) | 参考 ChatCut 和公开协议，核实双向接入、现有执行边界与可落地方案；本轮仅调研设计。 |
 | T-1014 | 核对并清理233项历史对账失败 | ✅ 待办 | — | — | [范围](docs/verification/t1014-reconcile-triage.md) | 按真实证据关闭过期治理项，保留有效缺陷与历史回执；不修改产品运行时。 |
 | T-1015 | 核实剩余教训失败并校准过期回归断言 | 📋 待办 | — | — | [实测清单](docs/verification/t1014-reconcile-triage.md) | 从19条失败命令定位旧版本/源码字符串断言与实际重试、消费、交互差异；保留有效检查，修正后重验。 本轮T-1022收尾reconcile仍15项既有LED失败，日志docs/verification/t1022/logs/reconcile-final.log；新增LED-052及LED-047通过。 T-1066完整对账再次保留旧LED失败；本轮新增LED-053与LED-047通过，原20秒搜索断言已真实修复重验；详超时整改报告。 |

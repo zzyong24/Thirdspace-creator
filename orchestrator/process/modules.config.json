@@ -2029,6 +2029,82 @@
         ]
       },
       "depends_on": []
+    },
+    "T-1069": {
+      "task_id": "T-1069",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "read_set": [
+        "docs/features/t1069-completion-json-compat.md",
+        "docs/verification/t1068/**",
+        "docs/verification/t1068-radar-transcription.md",
+        "docs/产品定位.md",
+        "ai-worker/src/**",
+        "backend/src/modules/execution/**",
+        "contract/src/**",
+        "patches/**",
+        "pnpm-lock.yaml"
+      ],
+      "write_set": [
+        "docs/features/t1069-completion-json-compat.md",
+        "docs/features/t1069-completion-json-compat.review.md",
+        "docs/verification/t1069/**",
+        "ai-worker/src/runtime/pi-provider-json-compat.test.ts",
+        "backend/src/modules/execution/execution-transcribe-postprocess.service.test.ts",
+        "backend/src/modules/execution/transcribe-postprocess.integration.test.ts",
+        "backend/src/modules/execution/radar-model-result-unknown.repro.test.ts",
+        "patches/@earendil-works__pi-ai@0.80.7.patch",
+        "pnpm-lock.yaml",
+        "orchestrator/DECISION_LOG.md",
+        "orchestrator/LESSON_LEDGER.md",
+        "orchestrator/process/reconcile.config.json"
+      ],
+      "verify_commands": {
+        "implementation": "git diff --check"
+      },
+      "depends_on": []
+    },
+    "T-1070": {
+      "task_id": "T-1070",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "read_set": [
+        "docs/features/t1070-transcript-postprocess-reliability.md",
+        "docs/verification/t1068/**",
+        "docs/verification/t1068-radar-transcription.md",
+        "docs/产品定位.md",
+        "ai-worker/src/**",
+        "backend/src/modules/execution/**",
+        "contract/src/**",
+        "patches/**",
+        "pnpm-lock.yaml"
+      ],
+      "write_set": [
+        "docs/features/t1070-transcript-postprocess-reliability.md",
+        "docs/features/t1070-transcript-postprocess-reliability.review.md",
+        "docs/verification/t1070/**",
+        "ai-worker/src/runtime/transcript-postprocess.ts",
+        "backend/src/modules/execution/execution-transcribe-postprocess.service.test.ts",
+        "backend/src/modules/execution/transcribe-postprocess.integration.test.ts",
+        "backend/src/modules/execution/radar-model-result-unknown.repro.test.ts",
+        "patches/@earendil-works__pi-ai@0.80.7.patch",
+        "pnpm-lock.yaml",
+        "orchestrator/DECISION_LOG.md",
+        "orchestrator/LESSON_LEDGER.md",
+        "orchestrator/process/reconcile.config.json"
+      ],
+      "verify_commands": {
+        "implementation": "git diff --check"
+      },
+      "depends_on": []
     }
   }
 }

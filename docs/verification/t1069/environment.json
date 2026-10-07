@@ -1,0 +1,14 @@
+{
+  "capturedAt": "2026-10-07T12:40:59.332366+00:00",
+  "baseCommit": "5a98210841a8d70ad53d74725ee906e7fe1f9fca",
+  "nodeVersion": "v25.9.0",
+  "scope": "源码与本地构建；合成媒体、本机HTTP、内存PGlite；未安装/发布/修改真实任务",
+  "sha256": {
+    "patches/@earendil-works__pi-ai@0.80.7.patch": "0845475547acfdae94e2b4f8daa2efa4d65c12e9f54c9a35aa9df5dc9ab3bd94",
+    "pnpm-lock.yaml": "28f107b75e781e21eed8206d441127b372ea3cc3057c382986f029b301322fc0",
+    "ai-worker/src/runtime/transcript-postprocess.ts": "78750ab1b9c194402e3763f630ebf87e10eb298f571b25d0d39b3fa666503f41",
+    "ai-worker/src/runtime/pi-provider-json-compat.test.ts": "52e86e653b3c82bff11678f48c85da2c57198df41afb290a1f43bfd083adaa03",
+    "backend/src/modules/execution/transcribe-postprocess.integration.test.ts": "88ddc7d4b6c6c7c285bc9389c73a2b9f5a00253ff7e7e5aa32aa2449a6ade04b",
+    "ai-worker/dist/execution-worker.cjs": "4c5ae8d5836b516e5bca2b51d8b01b8050979ba16d43e0f08c87bc3d1789dc3f"
+  }
+}

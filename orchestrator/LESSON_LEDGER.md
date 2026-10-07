@@ -799,3 +799,12 @@ T991：Windows 源码编译成功后，TypeScript 检查在约 2 GiB V8 堆耗�
 - **GuardCheck**: `node tools/timeout-policy/verify.mjs`；reconcile.config.json LED-053。含正式Worker→ASR准备、真实沙箱执行、PGlite持久入队/历史claim、前端原任务观察、CLI等待、依赖补丁及真实CLI解析；完整渲染导出证据另存。
 - **Outcome(T+N)**: 当场旧30秒红测失败；修复后31秒、125秒和超过10分钟continuous慢成功，取消/原deadline仍停止。新持久入队1秒旧预算红测失败，修复后冻结两分钟且历史过期不认领。依赖公共CLI实际隔离导出成功。全部222条原清单有归属；真实供应商、Windows与安装版未冒充通过，全局既有Gate失败保留。
 - **Ref**: docs/engineering/timeout-policy.md；docs/verification/t1066/REPORT.md；通用Skill 3.27.4。
+
+## LED-054 — 完整模型响应与转录回放必须在同一真实链路验收
+
+- **Date**: 2026-10-07 · **Stage**: BUILD · **Severity**: high · **Status**: active
+- **WhatFailed**: T-1068实际HTTP证明完整Chat Completion JSON被SSE消费者误判未知；转录共享节点裸jsonSchema在text模式没有validator，尚未请求模型即阻断真实后端回放/保存。
+- **RootCause**: 完整JSON与SSE的wire形状未兼容；只有发给模型的schema，没有回放/文本模式实际消费的validator；单测只注入结构化返回，未覆盖真实business port。
+- **GuardRule**: 同一次完整JSON响应仅在明确结束事实和可验证形状下映射原流消费者；保留正文、reasoning、工具参数和真实usage，不增加请求、不制造结束码。共享schema必须提供严格validator，wire schema与冻结摘要保持兼容；最终稿由真实后端回执回放决定，明确失败沿原文降级。started/unknown、取消、旧fence与原deadline耗尽不能伪造成功或获得重发资格。至少覆盖真实Worker/Pi/HTTP/账本终态和后处理全部业务端口、artifact写后读回。
+- **GuardCheck**: reconcile.config.json LED-054；pi-provider-json-compat、radar-model-result-unknown.repro与transcribe-postprocess.integration实际回归。
+- **Outcome(T+N)**: 修复前协议6失败/8通过；真实后处理9失败/1通过。补丁和validator修复后最终自包含构建门协议19、原复现8、真实后端集成13共40通过；另有相关后端53通过及正式bundle旅程，保留异常/断流/取消对照。全局reconcile34错误/1告警与原基线逐项一致；具体日志在docs/verification/t1069与t1070，不代称真实供应商或安装版验收。

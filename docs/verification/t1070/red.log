@@ -1,0 +1,116 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+stdout | src/modules/execution/transcribe-postprocess.integration.test.ts > 实际后端后处理端口保存并无网络恢复：sse
+[structured-node] template=transcript.postprocess.inline status=error durationMs=1 path=unknown modelCalls=0 inputTokens=0 outputTokens=0
+
+stdout | src/modules/execution/transcribe-postprocess.integration.test.ts > 实际后端后处理端口保存并无网络恢复：json
+[structured-node] template=transcript.postprocess.inline status=error durationMs=0 path=unknown modelCalls=0 inputTokens=0 outputTokens=0
+
+stdout | src/modules/execution/transcribe-postprocess.integration.test.ts > 实际后端后处理端口保存并无网络恢复：reject
+[structured-node] template=transcript.postprocess.inline status=error durationMs=1 path=unknown modelCalls=0 inputTokens=0 outputTokens=0
+
+stdout | src/modules/execution/transcribe-postprocess.integration.test.ts > 实际后端后处理端口保存并无网络恢复：bad-output
+[structured-node] template=transcript.postprocess.inline status=error durationMs=0 path=unknown modelCalls=0 inputTokens=0 outputTokens=0
+
+stdout | src/modules/execution/transcribe-postprocess.integration.test.ts > 实际后端后处理端口保存并无网络恢复：fidelity
+[structured-node] template=transcript.postprocess.inline status=error durationMs=0 path=unknown modelCalls=0 inputTokens=0 outputTokens=0
+
+stdout | src/modules/execution/transcribe-postprocess.integration.test.ts > 实际后端后处理端口保存并无网络恢复：budget
+[structured-node] template=transcript.postprocess.inline status=error durationMs=0 path=unknown modelCalls=0 inputTokens=0 outputTokens=0
+
+stdout | src/modules/execution/transcribe-postprocess.integration.test.ts > 断流保留真实未知账本与原ASR回执，不能保存或重发
+[structured-node] template=transcript.postprocess.inline status=error durationMs=0 path=unknown modelCalls=0 inputTokens=0 outputTokens=0
+
+stdout | src/modules/execution/transcribe-postprocess.integration.test.ts > 实际转录Worker闭合逐字稿工件写入与终态，并从业务读口取回全文
+[structured-node] template=transcript.postprocess.inline status=error durationMs=0 path=unknown modelCalls=0 inputTokens=0 outputTokens=0
+
+ ❯ src/modules/execution/transcribe-postprocess.integration.test.ts (10 tests | 9 failed) 2404ms
+   × 共享节点保持原JSON schema并提供严格validator 6ms
+   × 实际后端后处理端口保存并无网络恢复：sse 124ms
+   × 实际后端后处理端口保存并无网络恢复：json 85ms
+   × 实际后端后处理端口保存并无网络恢复：reject 78ms
+   × 实际后端后处理端口保存并无网络恢复：bad-output 81ms
+   × 实际后端后处理端口保存并无网络恢复：fidelity 77ms
+   × 实际后端后处理端口保存并无网络恢复：budget 77ms
+   × 断流保留真实未知账本与原ASR回执，不能保存或重发 85ms
+   × 实际转录Worker闭合逐字稿工件写入与终态，并从业务读口取回全文 154ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 9 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/execution/transcribe-postprocess.integration.test.ts > 共享节点保持原JSON schema并提供严格validator
+AssertionError: expected undefined to be type of 'function'
+
+Expected: "function"
+Received: "undefined"
+
+ ❯ src/modules/execution/transcribe-postprocess.integration.test.ts:88:27
+     86|   const schema = asSchema(outputSchema);
+     87|   expect(await schema.jsonSchema).toEqual(TRANSCRIPT_POSTPROCESS_SCHEM…
+     88|   expect(schema.validate).toBeTypeOf('function');
+       |                           ^
+     89|   expect(await schema.validate?.({ correctedText: corrected })).toMatc…
+     90|   for (const bad of [{}, { correctedText: 1 }, { correctedText: correc…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/9]⎯
+
+ FAIL  src/modules/execution/transcribe-postprocess.integration.test.ts > 实际后端后处理端口保存并无网络恢复：sse
+ FAIL  src/modules/execution/transcribe-postprocess.integration.test.ts > 实际后端后处理端口保存并无网络恢复：json
+ FAIL  src/modules/execution/transcribe-postprocess.integration.test.ts > 实际后端后处理端口保存并无网络恢复：reject
+ FAIL  src/modules/execution/transcribe-postprocess.integration.test.ts > 实际后端后处理端口保存并无网络恢复：bad-output
+ FAIL  src/modules/execution/transcribe-postprocess.integration.test.ts > 实际后端后处理端口保存并无网络恢复：fidelity
+ FAIL  src/modules/execution/transcribe-postprocess.integration.test.ts > 实际后端后处理端口保存并无网络恢复：budget
+Error: TRANSCRIPT_POSTPROCESS_RECEIPT_UNKNOWN
+ ❯ unknown ../ai-worker/src/execution/transcribe-postprocess-run.ts:11:19
+      9| const receiptSchema=z.object({callId:z.string().min(1),status:z.enum([…
+     10| class PostprocessSkipped extends Error {}
+     11| const unknown=()=>new GenerationFailure('unknown_result','TRANSCRIPT_P…
+       |                   ^
+     12|
+     13| /** 后处理只消费已冻结 ASR 原文；最终结果由后端回执回放确定，不提交 Worker 自报正文。 */
+ ❯ controlled ../ai-worker/src/execution/transcribe-postprocess-run.ts:18:39
+ ❯ src/modules/execution/transcribe-postprocess.integration.test.ts:96:20
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/9]⎯
+
+ FAIL  src/modules/execution/transcribe-postprocess.integration.test.ts > 断流保留真实未知账本与原ASR回执，不能保存或重发
+AssertionError: expected [ 'settled' ] to deeply equal [ 'settled', 'unknown' ]
+
+- Expected
++ Received
+
+  [
+    "settled",
+-   "unknown",
+  ]
+
+ ❯ src/modules/execution/transcribe-postprocess.integration.test.ts:114:37
+    112|     await expect(runTranscribePostprocessInWorker(f.awemeId, AbortSign…
+    113|     const rows = (await f.ledger.inspect(f.ref)).calls;
+    114|     expect(rows.map(c => c.status)).toEqual(['settled', 'unknown']);
+       |                                     ^
+    115|     expect((await f.asr.read(f.ref, { awemeId: f.awemeId }))?.result.t…
+    116|     await expect(f.post.save(f.ref, { awemeId: f.awemeId })).rejects.t…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/9]⎯
+
+ FAIL  src/modules/execution/transcribe-postprocess.integration.test.ts > 实际转录Worker闭合逐字稿工件写入与终态，并从业务读口取回全文
+Error: TRANSCRIPT_POSTPROCESS_RECEIPT_UNKNOWN
+ ❯ unknown ../ai-worker/src/execution/transcribe-postprocess-run.ts:11:19
+      9| const receiptSchema=z.object({callId:z.string().min(1),status:z.enum([…
+     10| class PostprocessSkipped extends Error {}
+     11| const unknown=()=>new GenerationFailure('unknown_result','TRANSCRIPT_P…
+       |                   ^
+     12|
+     13| /** 后处理只消费已冻结 ASR 原文；最终结果由后端回执回放确定，不提交 Worker 自报正文。 */
+ ❯ controlled ../ai-worker/src/execution/transcribe-postprocess-run.ts:18:39
+ ❯ runTranscribeInWorker ../ai-worker/src/execution/transcribe-worker-run.ts:37:5
+ ❯ src/modules/execution/transcribe-postprocess.integration.test.ts:130:12
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/9]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  9 failed | 1 passed (10)
+   Start at  20:19:44
+   Duration  6.14s (transform 2.21s, setup 0ms, import 3.57s, tests 2.40s, environment 0ms)

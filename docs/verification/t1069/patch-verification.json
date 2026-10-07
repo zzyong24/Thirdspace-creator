@@ -1,0 +1,13 @@
+{
+  "patchSha256": "0845475547acfdae94e2b4f8daa2efa4d65c12e9f54c9a35aa9df5dc9ab3bd94",
+  "lockMatches": true,
+  "cleanExtractionPatchApplied": true,
+  "installedConsumerMatchesCleanPatchedFiles": true,
+  "frozenOfflineInstallPassed": true,
+  "files": {
+    "openai-completions.js": "1ab8f0a8ac42ea108f976b5023285d31a9fa0d4b4ac859bb6d089f788a0c94e6",
+    "openai-completion-json-compat.js": "387b7d66d64c01f209bc627d1d74964d831b040046d077e2fe36688b3132a560",
+    "anthropic-messages.js": "5539380573354362cfe120a018e6e32bc32cfae15c79047ec8fb847064af100d",
+    "openai-responses.js": "46af61ba7df9bc4db0d4e7895e5e9d16fa25d9b4c8d716deb5b45647d01c36c6"
+  }
+}
