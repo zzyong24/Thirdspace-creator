@@ -1,0 +1,731 @@
+{
+  "schema": "creatoros/t1071-independent-implementation-review/v1",
+  "task_id": "T-1071",
+  "reviewer": "/root/navigation_scope_review（独立只读评审）",
+  "created_at": "2026-10-07T13:36:58.153350+00:00",
+  "verdict": "PASS",
+  "verdict_scope": "当前精确四产品路径与四测试的实施合同、局部 UI 保持、TDD/LED-047/typecheck 证据，以及隔离源服务真实浏览器所覆盖的功能修复验收可通过。",
+  "whole_task_verdict": "PENDING",
+  "plain_language": "切换稿面时保留同一个剪辑器，避免反复重新取工程；链接继续正常导航；账号页面的三批数据同时开始加载，原有失败处理和刷新保留。已看到真实隔离浏览器中剪辑状态不丢，但还没有验证新包安装后的完整表现。",
+  "approval_boundary": {
+    "may_proceed": "可在原 SPEC 范围内冻结此八文件实现、出修复包并继续真实安装版验收。",
+    "not_signed": [
+      "整个 T-1071 完成或发布合格",
+      "当前安装版已修复或已安装新包",
+      "所有导航均更快/所有卡顿根因已消除",
+      "统计性能目标",
+      "桌面原生 200% 缩放按钮实测",
+      "项目全局既有红项消除"
+    ],
+    "blocking_findings": [],
+    "guard_scope_extension_approved": false
+  },
+  "scope_bindings": {
+    "main_root": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+    "source_head": "82406168b95dc4fe02c26adf4e6f35d884ef9e81",
+    "source_snapshot": "HEAD 82406168 基线上的当前未提交文件，以以下 SHA256 固定评审对象；未来内容变更需重新评审变化。",
+    "spec": {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/features/t1071-navigation-latency.md",
+      "sha256": "b6dc7eb70c7768e989b452865b0abad8d9ec42ebc33882b0f41294ede300ce36",
+      "bytes": 5210
+    },
+    "original_scope_review": {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-scope-review/t1071-scope-review.json",
+      "sha256": "c99dcddd62c28597c28abb72d71fad4c677b3c72143b6b032796458d232cb6d5",
+      "bytes": 16312
+    },
+    "original_scope_receipt_validity": "恢复后的完整 SPEC 精确匹配原 b6dc7... scope 独评；本报告不替代或代签 reviewctl receipt。",
+    "implementation_record": {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1071/frontend-implementation.result.json",
+      "sha256": "cbb7761c3b4870b830e3bb7bf2962d3ba6bfe0b4e4baa2347acc2b044f321534",
+      "bytes": 4903
+    },
+    "files": [
+      {
+        "role": "product",
+        "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/app/(creator)/projects/[projectId]/stage-chat-wrapper.tsx",
+        "sha256": "eecaf4567738aa735ccc4c6c08ae284f9f0c76fde01eeb6bf17cabf37b590c3f",
+        "bytes": 14464
+      },
+      {
+        "role": "product",
+        "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/components/navigation/project-stage-stepper.tsx",
+        "sha256": "76114db39d8f28bad07eda6f782874e774067815daf892017b39d4b608b822d7",
+        "bytes": 8371
+      },
+      {
+        "role": "product",
+        "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/components/shell/account-switcher.tsx",
+        "sha256": "701fff5fbbb54378b9cdc8d9f695a649807cf6fb6ca1a0a873be5efe7d257aee",
+        "bytes": 15030
+      },
+      {
+        "role": "product",
+        "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/features/platform-account/account-manager-page.tsx",
+        "sha256": "653400a2096fdd173f8bcfa2e04b33e9b34aa3533660d92d17fe1175f2ed5fa6",
+        "bytes": 3593
+      },
+      {
+        "role": "test",
+        "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/app/(creator)/projects/[projectId]/stage-chat-wrapper.test.tsx",
+        "sha256": "a7ddca3c03b4d9c45b8b8ae4743cbf3d5f923ff3309c8c22e05b719b36c776fc",
+        "bytes": 10913
+      },
+      {
+        "role": "test",
+        "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/components/navigation/project-stage-stepper.highlight.test.tsx",
+        "sha256": "bd48eb0b571b47b3cfe86664b68f40447b0eaaf99166f14806d3586ae4ed67b1",
+        "bytes": 7947
+      },
+      {
+        "role": "test",
+        "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/components/shell/account-switcher.test.tsx",
+        "sha256": "87b2fdd5b95bbedde1418560a96b025c7fa02f2613853c6ed33634497c0b656c",
+        "bytes": 6910
+      },
+      {
+        "role": "test",
+        "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/features/platform-account/account-manager-page.test.tsx",
+        "sha256": "3c422133b1e8b87c2dfac4b870c394322600d29cfe4a511845e807f618699256",
+        "bytes": 4381
+      }
+    ]
+  },
+  "review_method": {
+    "skills": [
+      {
+        "path": "/Users/zyongzhu/.codex/skills/product-to-code-orchestrator/SKILL.md",
+        "version": "3.27.4",
+        "project_process_version": "3.27.4",
+        "match": true
+      },
+      {
+        "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/.agents/skills/oil-ui-pro/SKILL.md",
+        "version": "0.10.0",
+        "mode": "已认可原版上的局部行为修复；保留设计基线，不新增方向探索或整体改版。"
+      }
+    ],
+    "stage": "stage4-build 的实施独评；之前已完成原 scope 准入评审。",
+    "upstream_read": [
+      "BACKLOG.md 顶部 T-1071 与完整 SPEC",
+      "PROJECT.md",
+      "PROJECT_CONTEXT.md",
+      "orchestrator/SYSTEM_ARCHITECTURE.md",
+      "docs/features/t1022-account-group-workspace/UI_RULES.md",
+      "产品流程 stage-router/context-plan 所需规则与 Gate",
+      "涉及四源、四测试与客户端刷新/常驻 shell 源"
+    ],
+    "performed": [
+      "只读源 diff/测试/实际日志/真实原始 JSON",
+      "本地截图实际查看",
+      "当前源码和所有浏览器 raw 文件 SHA256/字节数核对",
+      "仅在指定 acceptance 目录写本评审"
+    ],
+    "not_performed": [
+      "不修改 MAIN 文件",
+      "不提交",
+      "不操作浏览器或已安装 App",
+      "不运行模型任务",
+      "不访问或改 DB",
+      "不独立执行测试、重建历史 RED 或重新制造 E2E 证据"
+    ],
+    "evidence_authorship": "测试由实施代理当时执行；真实浏览器由主会话执行。本评审独立检查已有事实、内容与哈希，不声称评审人亲手操作。"
+  },
+  "implementation_contract": [
+    {
+      "path": "frontend/src/app/(creator)/projects/[projectId]/stage-chat-wrapper.tsx",
+      "status": "PASS",
+      "contract": "仅显式 active 的常驻宿主保留固定祖先；未传 active 的稿面继续 Fragment 透传。",
+      "diff": "if(!showRail && active===undefined)return <>{children}</>;",
+      "reason": "原分支在 active true/false 间切换时改变根形态，令同 key 子节点仍卸载重建；改后显式 active 的根 div 与其首个内容 div 保持一致，切页只控制编导栏。",
+      "preserved": [
+        "现有类名、宽度、token、rail、可见性逻辑",
+        "既有窄窗编导 dialog 与键盘行为",
+        "未传 active 的稿面 flex 高度链与发送区可达性"
+      ],
+      "evidence": [
+        "真实 RED 的两个 DOM/句柄身份失败",
+        "GREEN 初始 active true 与 false 两种方向 mount1/unmount0、输入状态与句柄不变",
+        "真实原生 shadow host/engine/X11/选区读回"
+      ]
+    },
+    {
+      "path": "frontend/src/components/navigation/project-stage-stepper.tsx",
+      "status": "PASS",
+      "contract": "Tab 保持真实 Next Link 导航，只关闭该组 Link 的自动 prefetch。",
+      "diff": "prefetch={false}",
+      "preserved": [
+        "href",
+        "aria-current 与高亮",
+        "已到达阶段和可导航条件",
+        "无项目与 gated 行为"
+      ],
+      "evidence": [
+        "真实 RED 的 prefetch undefined/false 差异",
+        "GREEN Link prop 与真实 href/点击高亮夹具",
+        "真实浏览器点击及 Enter/后退观察"
+      ],
+      "limit": "Link 替身组件测试本身不能证明 Next 浏览器预取流量或性能效果。"
+    },
+    {
+      "path": "frontend/src/components/shell/account-switcher.tsx",
+      "status": "PASS",
+      "contract": "账号组管理 Link 仅 prefetch=false；维持既有账号组选择与管理导航合同。",
+      "diff": "<Link href=\"/accounts\" prefetch={false}>",
+      "preserved": [
+        "真实 /accounts href",
+        "菜单键盘可达",
+        "切组既有 requestVideoLeave/refresh 流程",
+        "modified 与新窗口的 Link 行为"
+      ],
+      "evidence": [
+        "真实 RED/GREEN prefetch prop 与可达 anchor",
+        "真实 /accounts 页面及同 host/同 engine/原生 X11 读回"
+      ],
+      "correction": "不加入临时提出的管理导航 guard；shared shell 中 ProjectVideoSessionHost 跨主页面保留，完整读回已否定“卸载丢稿”推断。"
+    },
+    {
+      "path": "frontend/src/features/platform-account/account-manager-page.tsx",
+      "status": "PASS",
+      "contract": "accounts/capabilities/groups 同一个 Promise.all 发起；客户端 mount 刷新保留。",
+      "diff": "groups 从 accounts/capabilities 之后 await 移入同一 Promise.all，缺失可选方法仍 Promise.resolve(undefined)。",
+      "preserved": [
+        "同一现有 ctx/selectedAccountId",
+        "page1/pageSize100/includeArchived=true 与 params/body",
+        "capabilities 失败转换为局部 failed=true",
+        "accounts/groups 失败继续 reject 页面",
+        "viewModel 直供与无 client 错误",
+        "客户端 AccountGroupManager mount/event 真实刷新、在途与过期回写保护"
+      ],
+      "evidence": [
+        "真实 RED 中 groups 调用次数0而预期1",
+        "deferred promise GREEN 证明三个请求在任一完成前均已发起",
+        "缺失可选方法/能力失败/accounts或groups失败测试",
+        "实际账号页面仍有 SSR 与客户端二次读请求"
+      ],
+      "limit": "既有 groups 服务含 ensureLegacyGroups 事务，不将该路径描述成纯 SELECT；本改动仅调度现有服务读取，没有改变服务事务、权限、归属或存储。"
+    }
+  ],
+  "test_contract": [
+    {
+      "path": "frontend/src/app/(creator)/projects/[projectId]/stage-chat-wrapper.test.tsx",
+      "status": "PASS",
+      "coverage": "同 key SessionProbe，在初始 active=true 和 false 两种条件切换中验证同 DOM、同 handle、保留输入与 mount/unmount；未传 active 稿面透传。",
+      "limit": "组件夹具不能单独代签原生工程或安装版，已另有真实隔离原生证据。"
+    },
+    {
+      "path": "frontend/src/components/navigation/project-stage-stepper.highlight.test.tsx",
+      "status": "PASS",
+      "coverage": "既有 highlight 测试文件继续使用实际 Link href 和点击流程；替身记录传入 prefetch=false，四稿面高亮/可达/阶段 gated 语义。",
+      "limit": "不等于真实 Next Link 预取网络测试。"
+    },
+    {
+      "path": "frontend/src/components/shell/account-switcher.test.tsx",
+      "status": "PASS",
+      "coverage": "forwardRef Link 替身记录 prefetch，键盘打开菜单后真实 anchor /accounts 可达；既有切组 scope/刷新测试保留。",
+      "limit": "不为未实施的 guard 签验收，也不推断 modified 点击的网络性能。"
+    },
+    {
+      "path": "frontend/src/features/platform-account/account-manager-page.test.tsx",
+      "status": "PASS",
+      "new_file": true,
+      "coverage": "三组 deferred promises 验证同时开始；参数原样、能力局部降级、accounts/groups 拒绝语义、可选方法缺失、viewModel 直供、无 client 错误。",
+      "limit": "不重复实现内部 Promise.all 排序断言，而验证原串行缺陷的实际可观察发起时序与失败合同。"
+    }
+  ],
+  "execution_evidence": [
+    {
+      "name": "red-before-fix",
+      "executed_by_reviewer": false,
+      "review_method": "读取实际 result JSON 与完整 log；不重拍历史 RED，也未由评审人重跑。",
+      "observed": {
+        "files_failed": 4,
+        "tests_failed": 5,
+        "tests_passed": 30,
+        "tests_total": 35
+      },
+      "record": {
+        "command": "pnpm -C frontend exec vitest run 'src/app/(creator)/projects/[projectId]/stage-chat-wrapper.test.tsx' src/components/navigation/project-stage-stepper.highlight.test.tsx src/components/shell/account-switcher.test.tsx src/features/platform-account/account-manager-page.test.tsx --retry=0",
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+        "exit_code": 1,
+        "started_at": 1791378881.156072,
+        "duration_seconds": 5.92,
+        "product_modified_before_run": false
+      },
+      "record_binding": {
+        "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1071/red-before-fix.result.json",
+        "sha256": "39bf1a1e50568c8ac3f25b8eaf8212b2b7cbcf7e4271311b570e3aed2f5b7064",
+        "bytes": 515
+      },
+      "log_binding": {
+        "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1071/red-before-fix.log",
+        "sha256": "22c3e45fa9e8e84f50bf8b34efcc8c5f61b996296620344403672247631a516c",
+        "bytes": 5503
+      }
+    },
+    {
+      "name": "green-after-fix",
+      "executed_by_reviewer": false,
+      "review_method": "读取实际 result JSON 与完整 log；不重拍历史 RED，也未由评审人重跑。",
+      "observed": {
+        "files_passed": 4,
+        "tests_passed": 35
+      },
+      "record": {
+        "command": "pnpm -C frontend exec vitest run 'src/app/(creator)/projects/[projectId]/stage-chat-wrapper.test.tsx' src/components/navigation/project-stage-stepper.highlight.test.tsx src/components/shell/account-switcher.test.tsx src/features/platform-account/account-manager-page.test.tsx --retry=0",
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+        "exit_code": 0,
+        "started_at": 1791379111.202113,
+        "duration_seconds": 9.506
+      },
+      "record_binding": {
+        "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1071/green-after-fix.result.json",
+        "sha256": "d9bbba317e3636bd03ab2cba1526bb810fb7a6c83963c1bf17d72786baf8cabb",
+        "bytes": 476
+      },
+      "log_binding": {
+        "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1071/green-after-fix.log",
+        "sha256": "3b9fd998b8a1ca9b354dbeefc41d869ec4b90d61fc6c8502da734196fedf4ea0",
+        "bytes": 876
+      }
+    },
+    {
+      "name": "led-047-regression",
+      "executed_by_reviewer": false,
+      "review_method": "读取实际 result JSON 与完整 log；不重拍历史 RED，也未由评审人重跑。",
+      "observed": {
+        "files_passed": 8,
+        "tests_passed": 162
+      },
+      "record": {
+        "command": "pnpm --dir frontend exec vitest run src/features/copilot/ai-copilot-interactions.test.tsx src/features/knowledge/knowledge-dump-zone.test.tsx src/features/topics/topics-interactions.test.tsx src/components/overlays/overlay-routing.test.tsx src/lib/copilot-navigation.test.ts src/features/copilot/chat-tool-trace.test.tsx src/features/automations/run-controls.test.tsx src/features/automations/cadence.test.ts --retry=0",
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+        "exit_code": 0,
+        "started_at": 1791379111.202133,
+        "duration_seconds": 27.197
+      },
+      "record_binding": {
+        "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1071/led-047-regression.result.json",
+        "sha256": "caaa8b9b759db178207ba088adcbe6d86d7e987309744a22b4d3bc4b79dd0b29",
+        "bytes": 610
+      },
+      "log_binding": {
+        "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1071/led-047-regression.log",
+        "sha256": "71f932c6c92e2a3d7cecccddbb3c87a8b3b8c7f1d089915042e0200174b8d457",
+        "bytes": 1674
+      }
+    },
+    {
+      "name": "frontend-typecheck",
+      "executed_by_reviewer": false,
+      "review_method": "读取实际 result JSON 与完整 log；不重拍历史 RED，也未由评审人重跑。",
+      "observed": {
+        "typecheck_passed": true
+      },
+      "record": {
+        "command": "pnpm -C frontend typecheck",
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+        "exit_code": 0,
+        "started_at": 1791379129.478333,
+        "duration_seconds": 27.882
+      },
+      "record_binding": {
+        "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1071/frontend-typecheck.result.json",
+        "sha256": "b56d260ecd0c58591c9a268f9da593d2043bf0c3d906d56e0410d4528c13feaa",
+        "bytes": 218
+      },
+      "log_binding": {
+        "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1071/frontend-typecheck.log",
+        "sha256": "4c0cd880abe2a1a1a1f20e2f9d2825951e19ae4e848a3f36d2216d3b9e20d035",
+        "bytes": 215
+      }
+    }
+  ],
+  "tdd_conclusion": {
+    "status": "PASS",
+    "red": "未改产品前真实 exit1，四测试文件中5失败、30通过；明确击中两个宿主身份、两个 prefetch、一个 groups 串行缺陷。",
+    "green": "同四文件真实 exit0、35测试通过。",
+    "regression": "LED-047真实8文件162测试 exit0；frontend typecheck exit0。",
+    "log_limits": "LED-047 stderr 的 jsdom navigation 与 localStorage 提示没有改写成真浏览器证据，也没有改写实际 exit。no-index diff 约定差异 exit1 与空白错误区分见实施记录。"
+  },
+  "real_browser_review": {
+    "status": "PASS_WITH_LIMITS",
+    "environment": "Ego Browser taskSpace12/p1，端口4371隔离源服务 Next dev，1716x895；非当前安装 App。",
+    "summary_binding": {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1071/browser-acceptance.json",
+      "sha256": "8ac6ce2f035cfae50d28ebf15deb6bee1a3b7120586db08c17cee4704d92fab9",
+      "bytes": 8338
+    },
+    "narrative_binding": {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1071/BROWSER_ACCEPTANCE.md",
+      "sha256": "4da99d29ad66e345fa59639f71b347d17ede238ac645e61b105e06b771bb9271",
+      "bytes": 2584
+    },
+    "native_state": {
+      "status": "PASS",
+      "baseline": "实际原生工程编辑 X10→X11；旧版切文章返回观察为不同宿主、X10、dirtyfalse。组件生命周期隔离 probe 的 mount3/unmount2 独立支持根形态缺陷，但不与真原生测混为同一证据。",
+      "fixed": "article/graphic/script/video 四实际导航均同 ShadowRoot host、同已加载 engine、同文档 scene/track/element/媒体身份与 selectedElements，原生 X11 保持，返回 dirtytrue。",
+      "four_click_ms": {
+        "article": 1187,
+        "graphic": 882.1,
+        "script": 1144.3,
+        "video": 480.5
+      },
+      "four_step_editor_gets": 0,
+      "accounts": "实际进入 /accounts 后 connected=true/sameHost=true/sameEngine=true/X11/选区保留，返回视频 dirtytrue。",
+      "hidden_state_limit": "隐藏 article/script 的 body 未保存文字布尔 false，仅说明外层可见文字；不据此签全程 body 标志 true，也不据此否定原生文档/句柄读回。"
+    },
+    "navigation": {
+      "status": "OBSERVED_MECHANISM_PASS_PERFORMANCE_PENDING",
+      "samples": [
+        {
+          "tab": "article",
+          "before_ms": 2338.3,
+          "after_ms": 1300.2,
+          "before_editor_gets": 2,
+          "after_editor_gets": 0
+        },
+        {
+          "tab": "video",
+          "before_ms": 500.5,
+          "after_ms": 411.7,
+          "before_editor_gets": 2,
+          "after_editor_gets": 0
+        },
+        {
+          "tab": "graphic",
+          "before_ms": 811,
+          "after_ms": 658.3,
+          "before_editor_gets": 2,
+          "after_editor_gets": 0
+        },
+        {
+          "tab": "video",
+          "before_ms": 3359.9,
+          "after_ms": 599,
+          "before_editor_gets": 2,
+          "after_editor_gets": 0
+        },
+        {
+          "tab": "script",
+          "before_ms": 1167.9,
+          "after_ms": 1059.4,
+          "before_editor_gets": 2,
+          "after_editor_gets": 0
+        },
+        {
+          "tab": "video",
+          "before_ms": 353,
+          "after_ms": 626.7,
+          "before_editor_gets": 2,
+          "after_editor_gets": 0
+        }
+      ],
+      "method": "同一预热 dev 服务/视口，逐步等 fetch 在途0再点击；ready 采样自身仍可能有在途请求，不能称所有观察时刻在途0。",
+      "editor_gets_total": {
+        "before": 12,
+        "after": 0
+      },
+      "judgment": "机械性的重复制作工程重读已在该六步序列消除；五步耗时降低，最后视频353→626.7ms变慢。单次顺序样本不能做统计承诺或外推安装版。",
+      "cold_limit": "冷启动 baseline 混入 dev 首次编译，不作为速度倍数。"
+    },
+    "accounts": {
+      "status": "PASS",
+      "fixed_visible_ms": 423.2,
+      "refresh": "真实能力、groups/accounts SSR 与 mount 再次刷新仍存在，没有以删客户端刷新或数据缓存提速。",
+      "comparison_limit": "baseline1327ms与after423.2ms初次/再次条件不同，不签同条件速度倍数。"
+    },
+    "keyboard": {
+      "status": "OBSERVED",
+      "evidence": "主会话真实 Enter 到文章、history.back 回实际视频记录，结合同宿主读回；评审人未操作浏览器。"
+    },
+    "undo_redo_save_export": {
+      "status": "PASS",
+      "undo_redo": "实际原生 tabindex0 容器焦点 + MetaZ/MetaShiftZ：X11→10→11→最终10。误用未支持的 undo 协议、错误焦点探针失败均保留，不当成产品失败或通过。",
+      "save": "实际 UI 保存/导出，带正确 x-group-id 的公开读回200、revision9、X10；首次手动 GET 遗漏 group header 返回428 AccountRequiredError，保留并解释，不把授权拒绝绕过。",
+      "export": "实际下载 MP4 500189字节；ffprobe H264640x360、24fps、120帧/视频5秒，AAC219帧/容器5.085170秒；约85ms音频尾段原有限制保留。",
+      "decode_witness": "主会话 summary 记录 ffmpeg 完整解码 exit0；评审人仅核原始产物哈希与 ffprobe，不声称自行执行 decode。"
+    },
+    "visual_and_viewports": {
+      "status": "PASS_WITH_NATIVE_ZOOM_PENDING",
+      "actually_viewed": [
+        "baseline-video.png",
+        "baseline-accounts.png",
+        "fixed-video.png",
+        "fixed-accounts.png",
+        "fixed-1024-video.png",
+        "fixed-1024-director.png",
+        "fixed-200-equivalent-video.png",
+        "fixed-200-equivalent-director-bottom.png"
+      ],
+      "observations": "现有紫色富界面、基础几何与组件关系保留；无产品 class/token 变更。宽屏截图处于不同滚动/账号状态，不对加载态和完整态做逐像素等价承诺。",
+      "narrow": "真实CSS1024x768中编导dialog宽640/高768贴右，Escape焦点返回，原host保留。",
+      "zoom_equivalent": "858x447/dpr2仅200%等效布局；真实滚动后send top398/bottom434处于高447视口内。不是桌面原生缩放按钮执行证明。",
+      "limit": "局部行为/状态与响应式可达性观察，不代签整体视觉改版或用户安装体验。"
+    },
+    "raw_evidence_hash_check": {
+      "status": "PASS",
+      "checked_count": 30,
+      "method": "本评审现场逐个读取文件，SHA256与bytes均匹配最终 browser-acceptance.json。"
+    },
+    "raw_evidence_bindings": [
+      {
+        "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-browser-diagnosis/account-dirty-navigation-failure.json",
+        "sha256": "7d1a2825014c4b727ef2c383590b551c8e3d301658f10a26fe1f9dd8714caf69",
+        "bytes": 534
+      },
+      {
+        "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-browser-diagnosis/account-hidden-native-readback.json",
+        "sha256": "abc251d20c2fbfdd39dd5b9facce9dc6fb4b3a3a1d1b55e572b195159cb0ebc0",
+        "bytes": 3667
+      },
+      {
+        "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-browser-diagnosis/account-return-native-readback.json",
+        "sha256": "6c9e089f423c161f43b33e725677266d20e18c75f22dca407dd6261140e14929",
+        "bytes": 3595
+      },
+      {
+        "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-browser-diagnosis/accounts-baseline.json",
+        "sha256": "d94f59669a0b4dcd80d7fdffac9d0a732dc436b5a8e3edfbb1a6a82a06556230",
+        "bytes": 918
+      },
+      {
+        "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-browser-diagnosis/accounts-fixed.json",
+        "sha256": "6a33b631f8fc3b311a5adfe6321eb73a49a7234e4f28a02a7fd2c5fc29e06ac5",
+        "bytes": 1346
+      },
+      {
+        "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-browser-diagnosis/baseline-accounts.png",
+        "sha256": "0e00715320fb2f39f81b56b560aa57c7382a7b5c914c6d22167cf3bcfec2f4a1",
+        "bytes": 207563
+      },
+      {
+        "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-browser-diagnosis/baseline-video.png",
+        "sha256": "be1697ced6f3747d60a770bc1790d9c67390a5295750ce2105c2ae04f19c2636",
+        "bytes": 262596
+      },
+      {
+        "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-browser-diagnosis/browser-finish.json",
+        "sha256": "ac32f60738b9ab8c4b13263efd2d0aef29a2cab2871d0b72decb49113ed8115b",
+        "bytes": 142
+      },
+      {
+        "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-browser-diagnosis/fixed-1024-director.png",
+        "sha256": "9d2dce5c437ef48b71871a2ddc6968aed175c41cb6e0e6ad417017cf2398dd04",
+        "bytes": 162701
+      },
+      {
+        "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-browser-diagnosis/fixed-1024-video.png",
+        "sha256": "9336e90f6d412511fb1093d5072b9611e8aea3b30f18a6b327a68ed73e2312ed",
+        "bytes": 104396
+      },
+      {
+        "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-browser-diagnosis/fixed-200-equivalent-bottom-result.json",
+        "sha256": "1c898407a1eea7a3ecefd2951e5792a7cd7d4af9a140771c4f1fa8f90331e400",
+        "bytes": 459
+      },
+      {
+        "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-browser-diagnosis/fixed-200-equivalent-director-bottom.png",
+        "sha256": "4303d68338d484950b22b69c531e8d4e064aae2a778734abe6bb901f5840dacf",
+        "bytes": 108718
+      },
+      {
+        "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-browser-diagnosis/fixed-200-equivalent-director.png",
+        "sha256": "66816df2b4b35fa6ddcb092fae6eb9a2cf60e89ee0f29e5cad22b051d1978ae5",
+        "bytes": 105997
+      },
+      {
+        "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-browser-diagnosis/fixed-200-equivalent-video.png",
+        "sha256": "096bd88009b0767494e1097a2ed4dcdf3669b5d5123b2816cb363b380a99fcec",
+        "bytes": 72439
+      },
+      {
+        "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-browser-diagnosis/fixed-accounts.png",
+        "sha256": "2bb5158bf705c200bfded89d700cab690f8da3cd588ecf09b1b9976cb4a1c4b2",
+        "bytes": 256481
+      },
+      {
+        "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-browser-diagnosis/fixed-export-ffprobe.json",
+        "sha256": "c1a3156e01503abc9f7daf64043b8f69c8365735babccf5d58e7cdef6aaec0b3",
+        "bytes": 600
+      },
+      {
+        "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-browser-diagnosis/fixed-export-public-readback.json",
+        "sha256": "cc9d17dfa85103968746225311d49924b1e9bdc506429f929243508ee3c0d659",
+        "bytes": 7705
+      },
+      {
+        "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-browser-diagnosis/fixed-export-result.json",
+        "sha256": "5dc7a47395d0753fdb935eb8c0af83cd8145a425bea554f71fc128f9b6d3bc9d",
+        "bytes": 168
+      },
+      {
+        "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-browser-diagnosis/fixed-native-before.json",
+        "sha256": "62832d55d8bb6cf07effbcbd88a354e907204c4e0ca9bae44e05a47f02563446",
+        "bytes": 3698
+      },
+      {
+        "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-browser-diagnosis/fixed-native-saved-readback.json",
+        "sha256": "ff0a14db2edf229a1b15e17aa92a676324e99b7326c364c9b17244d92f4bbc21",
+        "bytes": 3853
+      },
+      {
+        "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-browser-diagnosis/fixed-native-tab-journey.json",
+        "sha256": "988067b4fb6d5f46b64ce8ca4850a7782f8d23f5e9161c019bcaf3ba2fdea47c",
+        "bytes": 21171
+      },
+      {
+        "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-browser-diagnosis/fixed-native-undo-redo.json",
+        "sha256": "5861997e14cc3034b7e9814c1e16738c65221c82298d08a7c4877125aab8bbf0",
+        "bytes": 14524
+      },
+      {
+        "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-browser-diagnosis/fixed-navigation-export.mp4",
+        "sha256": "5bd99758ed5f6d83e24c267d855daad9cdc2bf681c1d1b20072cfa7e2186d53f",
+        "bytes": 500189
+      },
+      {
+        "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-browser-diagnosis/fixed-video.png",
+        "sha256": "434d0c54296e8d691d9ff3938d7c4d68bc171ca6795b323ce2ef44bc93796c6a",
+        "bytes": 264616
+      },
+      {
+        "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-browser-diagnosis/fixed-viewport-result.json",
+        "sha256": "306c5cf355f8d1b2d23fad336b191c6bae28170674429b703e898d2789510c61",
+        "bytes": 711
+      },
+      {
+        "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-browser-diagnosis/native-tab-baseline-hidden.json",
+        "sha256": "2b359277f8364bcd9800b3d37771b7fc84f9dcb09726a52f358cff6b845921c6",
+        "bytes": 3657
+      },
+      {
+        "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-browser-diagnosis/native-tab-baseline-return.json",
+        "sha256": "c2551bee5336200a0ae3fbda6e34c1772aafef50ae95e7f599b6b920c6ae0554",
+        "bytes": 5936
+      },
+      {
+        "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-browser-diagnosis/navigation-baseline.json",
+        "sha256": "4ab17997b5cf780d7fdb26905f0db5d6a9e825c455aad808bb94b7a93c73bbed",
+        "bytes": 16452
+      },
+      {
+        "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-browser-diagnosis/navigation-warm-baseline.json",
+        "sha256": "3947352af55be25f975244004cb4c693db76b13b98da0897a433053e1fff352f",
+        "bytes": 18776
+      },
+      {
+        "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-browser-diagnosis/navigation-warm-fixed.json",
+        "sha256": "27b69807636b0fed5eac91a1e7a8b6425b2e5f899ec1a840c6bfb9e1bac77037",
+        "bytes": 7175
+      }
+    ]
+  },
+  "diagnosis_correction": {
+    "status": "CONFIRMED_NO_SCOPE_CHANGE",
+    "record_binding": {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1071/DIAGNOSIS_CORRECTION.md",
+      "sha256": "8fce19faeedee7c840c75e32d65f4a7d096e68285afa9c73ef9c7a4949e31f6d",
+      "bytes": 2930
+    },
+    "initial_mistake": "管理 Link 探针预期未存在的离开 modal 并等待120秒超时；快速读数不足以证明卸载。原 account-dirty-navigation-failure.json 同时已有 host connected 信息。",
+    "corrected_fact": "完整 /accounts native 后置读回同 host/engine/X11/选区；shell-router 全部主 children 共享 ProjectVideoSessionHost 源与结果一致。",
+    "product_consequence": "原四产品改动保持；临时追加 guard 草稿未准入、未实施、未记录新 receipt，原 SPEC 已恢复精确 b6dc7...。",
+    "evidence_policy": "不删除或改成 PASS 原错误探针，也不把错误预期升级为必须新增管理 guard 的产品范围；在纠正文档保诊断历史。"
+  },
+  "safety_and_architecture": {
+    "status": "PASS",
+    "findings": [
+      "没有后端业务落到 frontend、AI/worker/DB/schema/new owner/执行权/模型任务/截止期限变化。",
+      "Link 继续是真实可导航控件，未以阻断合法页面切换提速。",
+      "错误处理、服务参数、数据归属与能力局部降级保持；不做新 cache 或吞 accounts/groups 错误。",
+      "没有删除历史、限制合法保存/导出、清掉工程或客户端 mount 刷新。",
+      "账号导航无需新增 guard 的结论只适用已观察共享宿主合同，未扩张到所有主导航政策。",
+      "LED-047变化所需真实回归已记录；没有涉及超时消费者，无新 LED-053执行预算修改。"
+    ],
+    "side_effect_limit": "并行调用既有 groups 服务仍可经其既有 ensureLegacyGroups 事务，不把调度变更误写成后端零行为/纯SELECT优化。"
+  },
+  "concerns": [
+    {
+      "id": "C-INSTALL",
+      "blocking_for_this_implementation": false,
+      "blocking_for_full_task_completion": true,
+      "status": "PENDING",
+      "fact": "当前安装版没有包含此快照并完成真实逐项点击；出包/安装/启动与当前 App 未保存状态保护仍须独立实测。"
+    },
+    {
+      "id": "C-NATIVE-ZOOM",
+      "blocking_for_this_implementation": false,
+      "status": "PENDING",
+      "fact": "已完成等效CSS200%布局，不等于桌面原生200%缩放按钮执行。"
+    },
+    {
+      "id": "C-PERFORMANCE",
+      "blocking_for_this_implementation": false,
+      "status": "PENDING",
+      "fact": "六步单次dev暖样本重复editor.get从12降至0；末视频慢于基线，首/再次账号条件不同。需多次同条件统计及安装版比较才有性能承诺。"
+    },
+    {
+      "id": "C-GLOBAL-GATES",
+      "blocking_for_this_implementation": false,
+      "status": "EXISTING_DEBT_NOT_ERASED",
+      "fact": "项目全局既有红项仍保留，本评审未重跑 reconcile/全任务 Gate，不以局部GREEN代签全局全绿。"
+    },
+    {
+      "id": "C-EVIDENCE-SURFACES",
+      "blocking_for_this_implementation": false,
+      "status": "BOUNDED",
+      "fact": "真实原生证据来自隔离源服务；wrapper合成leaf生命周期probe、旧安装App查询probe、真实dev操作是不同表面，不能交叉外推。"
+    },
+    {
+      "id": "C-PROBE-ERRORS",
+      "blocking_for_this_implementation": false,
+      "status": "CORRECTED",
+      "fact": "无modal错误等待、手动GET缺group header428、不支持undo协议与错误焦点均保原失败记录；各自后置实际证据独立证明正确合同。"
+    }
+  ],
+  "acceptance_matrix": [
+    {
+      "dimension": "四产品实施范围与架构",
+      "status": "PASS"
+    },
+    {
+      "dimension": "真实TDD RED/GREEN",
+      "status": "PASS"
+    },
+    {
+      "dimension": "LED-047与frontend typecheck",
+      "status": "PASS"
+    },
+    {
+      "dimension": "隔离源服务真实原生宿主/工程状态",
+      "status": "PASS"
+    },
+    {
+      "dimension": "已观察保存/导出合法路径",
+      "status": "PASS"
+    },
+    {
+      "dimension": "局部原版UI及1024/等效200%可达",
+      "status": "PASS_WITH_LIMITS"
+    },
+    {
+      "dimension": "安装版冻结安装实测",
+      "status": "PENDING"
+    },
+    {
+      "dimension": "桌面原生200%按钮",
+      "status": "PENDING"
+    },
+    {
+      "dimension": "统计性能与安装版比较",
+      "status": "PENDING"
+    },
+    {
+      "dimension": "整个T1071与全局Gate",
+      "status": "NOT_SIGNED"
+    }
+  ],
+  "diagram_mermaid": "flowchart LR\n A[真实Tab或账号Link] --> B[现有路由]\n B --> C[同一常驻剪辑宿主]\n C --> D[保留原生工程与选区]\n E[账号页面开始加载] --> F[accounts与capabilities与groups同时发起]\n F --> G[原错误语义与客户端刷新]\n D --> H[隔离源功能验收通过]\n G --> H\n H --> I[安装版与统计性能仍待实测]",
+  "final_review_statement": "未发现阻断当前精确实现快照的代码/合同问题。原scope实施与已覆盖的真实隔离功能修复验收PASS；这是一份独立事实评审，不代签实施代理、性能效果、安装版或全任务完成。"
+}

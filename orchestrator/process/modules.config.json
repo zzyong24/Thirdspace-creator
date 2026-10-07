@@ -4319,6 +4319,55 @@
         ]
       },
       "scope_note": "原93实现路径合同与三轮评审原样保留；默认分镜消费者两路径经独评准入；原生排版挂载容器inline hidden覆盖原auto，新增surface及原测试两条必要消费者路径，实现步骤合计97（模块另有原外部引擎路径）。独评534decbf7326bdcf3b49d6084a9bc01cbfada6695641c246fcd67fa7fbe37d0e，不增加公共合同/权限/owner/runtime或评审周期；真实滚动、完整正文整卡与200%尚待验。 原Codex prompt误拒SDK合法工具历史，必要两消费者独评5e415a9e552dba4c123bb657e6abaa41e20fed3d7774379cb8ca1d8ae8e8d781准入，实现99；仅历史数据序列化，直接多媒体/未知仍拒绝、无新能力轮次。 原warm首帧真实decoded timestamp进入内部texture版本及blur cache，七精确archive源成员独评78c934b5d99bf55fb0e8179b3cfa41f7cf2a1536b6313d721c3b90b110de9efd准入，无新MAIN产品路径/公共合同/权限/runtime，仍99实现。"
+    },
+    "T-1071": {
+      "task_id": "T-1071",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1071-navigation-latency.md",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "PROJECT_CONTEXT.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "docs/features/t1022-account-group-workspace/UI_RULES.md",
+        "frontend/src/components/shell/**",
+        "frontend/src/components/navigation/**",
+        "frontend/src/features/reference-editors/**",
+        "frontend/src/features/platform-account/**",
+        "frontend/src/app/**",
+        "frontend/src/lib/**",
+        "frontend/src/server/**",
+        "backend/src/application/**",
+        "backend/src/modules/**",
+        "backend/src/schema/**",
+        "tools/logdec/**"
+      ],
+      "write_set": [
+        "docs/features/t1071-navigation-latency.md",
+        "docs/verification/t1071/**",
+        "frontend/src/app/(creator)/projects/[projectId]/stage-chat-wrapper.tsx",
+        "frontend/src/app/(creator)/projects/[projectId]/stage-chat-wrapper.test.tsx",
+        "frontend/src/components/navigation/project-stage-stepper.tsx",
+        "frontend/src/components/navigation/project-stage-stepper.highlight.test.tsx",
+        "frontend/src/components/shell/account-switcher.tsx",
+        "frontend/src/components/shell/account-switcher.test.tsx",
+        "frontend/src/features/platform-account/account-manager-page.tsx",
+        "frontend/src/features/platform-account/account-manager-page.test.tsx"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "git diff --check",
+          "pnpm -C frontend exec vitest run src/app/\\(creator\\)/projects/\\[projectId\\]/stage-chat-wrapper.test.tsx src/components/navigation/project-stage-stepper.highlight.test.tsx src/components/shell/account-switcher.test.tsx src/features/platform-account/account-manager-page.test.tsx",
+          "pnpm -C frontend typecheck"
+        ]
+      },
+      "scope_note": "完整SPEC b6dc7eb70c7768e989b452865b0abad8d9ec42ebc33882b0f41294ede300ce36 独立PASS[REV:a53e25bf48df]；四前端窄修及四测试，保留错误/刷新/归属/普通稿面；不改后台调度或数据库。"
     }
   }
 }

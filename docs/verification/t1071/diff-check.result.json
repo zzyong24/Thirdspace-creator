@@ -1,0 +1,19 @@
+[
+  {
+    "command": "git diff --check",
+    "exit_code": 0,
+    "output": ""
+  },
+  {
+    "command": "git diff --no-index --check /dev/null frontend/src/features/platform-account/account-manager-page.test.tsx",
+    "exit_code": 1,
+    "output": "",
+    "expected_exit_code": 1,
+    "meaning": "no-index 的文件差异返回1；output为空，没有 whitespace 错误，不把实际exit改写成0"
+  },
+  {
+    "command": "Python 检查新增测试逐行末尾空白与多余末尾空行",
+    "exit_code": 0,
+    "output": "无末尾空白或多余末尾空行"
+  }
+]

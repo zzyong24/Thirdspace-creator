@@ -1,0 +1,66 @@
+{
+  "task": "T-1070",
+  "candidateHead": "82406168b95dc4fe02c26adf4e6f35d884ef9e81",
+  "version": "1.2.0",
+  "platform": "macOS arm64",
+  "fixedEntry": "CREATOROS_LOCAL_SKIP_INSTALL=1 pnpm -C frontend desktop:package-local",
+  "packageExit": 0,
+  "artifact": {
+    "path": "/Users/zyongzhu/Downloads/CreatorOS-1.2.0.dmg",
+    "immutableLocalCopy": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-local-package-82406168/CreatorOS-1.2.0.dmg",
+    "bytes": 666830233,
+    "sha256": "9f43ed142f5dcf8c494d4628824bd88f7ee306ba05e1cab69a1c9922fcd5de0b"
+  },
+  "basicTests": {
+    "files": 4,
+    "tests": 44,
+    "exit": 0
+  },
+  "hdiutilVerifyExit": 0,
+  "buildAppDeepStrictCodesignExit": 0,
+  "mountedAppDeepStrictCodesignExit": 0,
+  "signatureKind": "本地 ad-hoc",
+  "appleNotarized": false,
+  "updaterArtifactProduced": false,
+  "mountedAppByteMirror": {
+    "entries": 7,
+    "mismatches": [],
+    "pass": true
+  },
+  "actualEmbeddedIntegrityManifest": {
+    "manifestSource": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src-tauri/target/release-fast/build/creatoros-desktop-ea965a848775ab2d/out/integrity-manifest.bin",
+    "manifestSHA256": "2e06207eee65ac5ddf4a95ec65f36c6c4766e85cd6903acd9ba44fa9273d1e27",
+    "manifestEmbeddedInActualExecutable": true,
+    "expectedRecords": 1082,
+    "actualMatchedRecords": 1082,
+    "mismatches": [],
+    "pass": true,
+    "installedUserDataTouched": false
+  },
+  "nativeJsActualUiSHA256": "7f9650fa680a319a21cb362458d6bccb35c4bcd734f40431f90a66b43fe85a27",
+  "nativeJsMatchesPackedTar": true,
+  "installedAppReplaced": false,
+  "installedStartupVerified": false,
+  "installationPendingReason": "当前App的未保存状态尚待用户答复；不强退。",
+  "globalReconcile": {
+    "exit": 1,
+    "errors": 37,
+    "warnings": 1,
+    "notConvertedToPass": true
+  },
+  "pushTagRelease": false,
+  "rawEvidenceRoot": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-local-package-82406168",
+  "rawEvidenceSHA256": {
+    "hdiutil-verify.log": "08d3494dd4f57fe046c795c68020ec05cd0f97c2e8124a6856ed69fccabe4c9b",
+    "build-app-codesign-verify.log": "0913a5fc874fe8966e6353272f90d07e891ef37949a6cde068f5f6c5f9f8a440",
+    "mounted-app-codesign-verify.log": "97e34044864ee005a3f9b4a7154a462686b8952a21ebba489c4bab8105ca9181",
+    "mounted-app-signature-info.log": "73f4879d958df5e798f8fd274373c18b96a59320103485f0b02d98ac70c58667",
+    "basic-packaging-tests.log": "4cd24ee693857f858af0255755b512c4ea9d93ce1825b2f977cbe17baf233531",
+    "freeze-preflight.json": "1502be41370b44d8a78d4b8f831687f2e740a41e9f86c70473ddd02bafc2b791",
+    "artifact-observed.json": "5476372f1830ce8fb452f1053952839a0dff55f930ffe2b12792e11d40f40c3a",
+    "app-mirror-validation.json": "c531ce108a4e6abde13f4b27008aed4f7e2d42e0ce485c6f7259000bf1ab3148",
+    "integrity-resources-validation.json": "8b5bc24b00b9af09106f7a011aae871d515c6c2584c50e167eb0b8f4ce1d0550",
+    "packed-native-identity.json": "6f135dd7ae0a442edcda21c98ef0a881c37a7ed1ed4c0934014eab089d4b72a0",
+    "package-local.log": "84f0f3e9a1f6a2672174e2a480dfdcbd9b1bda9360d432967334d82f4adb5b8d"
+  }
+}

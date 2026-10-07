@@ -1,0 +1,336 @@
+diff --git a/frontend/src/app/(creator)/projects/[projectId]/stage-chat-wrapper.test.tsx b/frontend/src/app/(creator)/projects/[projectId]/stage-chat-wrapper.test.tsx
+index 6ce5709d..f97965aa 100644
+--- a/frontend/src/app/(creator)/projects/[projectId]/stage-chat-wrapper.test.tsx
++++ b/frontend/src/app/(creator)/projects/[projectId]/stage-chat-wrapper.test.tsx
+@@ -171,3 +171,66 @@ it("窄屏新请求展开本地栏，无整页导航", async () => {
+   fireEvent.click(screen.getByRole("button", { name: "微调稿件" }));
+   expect(await screen.findByRole("dialog", { name: "编导对话" })).toBeVisible();
+ });
++
++type SessionHandle = { readDraft: () => string };
++function SessionProbe({ handleRef, mounted, unmounted }: {
++  handleRef: React.RefObject<SessionHandle | null>;
++  mounted: () => void;
++  unmounted: () => void;
++}) {
++  const [draft, setDraft] = React.useState("原始工程");
++  const draftRef = React.useRef(draft);
++  const handle = React.useRef<SessionHandle>({ readDraft: () => draftRef.current });
++  React.useEffect(() => { draftRef.current = draft; }, [draft]);
++  React.useEffect(() => {
++    handleRef.current = handle.current;
++    mounted();
++    return unmounted;
++  }, [handleRef, mounted, unmounted]);
++  return <input aria-label="剪辑工程未保存名称" value={draft} onChange={event => setDraft(event.target.value)} />;
++}
++
++it.each([true, false])("显式 active 初值 %s 的常驻剪辑器切页后保留 DOM、句柄和未保存稿", initialActive => {
++  route.path = initialActive ? "/projects/p/production" : "/accounts";
++  const mounted = vi.fn(), unmounted = vi.fn();
++  const handleRef = React.createRef<SessionHandle>();
++  const session = <SessionProbe key="same-native-session" handleRef={handleRef} mounted={mounted} unmounted={unmounted} />;
++  const view = render(<StageChatWrapper active={initialActive} projectId="p" projectTitle="项目">{session}</StageChatWrapper>);
++  const editor = screen.getByRole("textbox", { name: "剪辑工程未保存名称" });
++  const handle = handleRef.current;
++  fireEvent.change(editor, { target: { value: "切页前的未保存工程" } });
++
++  for (const active of initialActive ? [false, true] : [true, false, true]) {
++    route.path = active ? "/projects/p/production" : "/accounts";
++    view.rerender(<StageChatWrapper active={active} projectId="p" projectTitle="项目">{session}</StageChatWrapper>);
++    expect(screen.getByRole("textbox", { name: "剪辑工程未保存名称" })).toBe(editor);
++    expect(editor).toHaveValue("切页前的未保存工程");
++    expect(handleRef.current).toBe(handle);
++    expect(handle?.readDraft()).toBe("切页前的未保存工程");
++    expect(mounted).toHaveBeenCalledTimes(1);
++    expect(unmounted).not.toHaveBeenCalled();
++    expect(screen.queryByTestId("director") !== null).toBe(active);
++  }
++  view.unmount();
++  expect(unmounted).toHaveBeenCalledTimes(1);
++});
++
++it("未传 active 的无栏稿面保持原透传结构和同 key 状态", () => {
++  route.path = "/projects/p";
++  const mounted = vi.fn(), unmounted = vi.fn();
++  const handleRef = React.createRef<SessionHandle>();
++  const session = <SessionProbe key="same-draft-session" handleRef={handleRef} mounted={mounted} unmounted={unmounted} />;
++  const view = render(<StageChatWrapper projectId="p" projectTitle="项目">{session}</StageChatWrapper>);
++  const editor = screen.getByRole("textbox", { name: "剪辑工程未保存名称" });
++  const handle = handleRef.current;
++  fireEvent.change(editor, { target: { value: "稿面原未保存内容" } });
++  route.path = "/accounts";
++  view.rerender(<StageChatWrapper projectId="p" projectTitle="项目">{session}</StageChatWrapper>);
++  expect(editor.parentElement).toBe(view.container);
++  expect(screen.getByRole("textbox", { name: "剪辑工程未保存名称" })).toBe(editor);
++  expect(editor).toHaveValue("稿面原未保存内容");
++  expect(handleRef.current).toBe(handle);
++  expect(mounted).toHaveBeenCalledTimes(1);
++  expect(unmounted).not.toHaveBeenCalled();
++  expect(screen.queryByTestId("director")).not.toBeInTheDocument();
++});
+diff --git a/frontend/src/app/(creator)/projects/[projectId]/stage-chat-wrapper.tsx b/frontend/src/app/(creator)/projects/[projectId]/stage-chat-wrapper.tsx
+index 947b8239..2604e8b5 100644
+--- a/frontend/src/app/(creator)/projects/[projectId]/stage-chat-wrapper.tsx
++++ b/frontend/src/app/(creator)/projects/[projectId]/stage-chat-wrapper.tsx
+@@ -202,7 +202,8 @@ export function StageChatWrapper({
+ 
+   // 稿面已有自己的有界分栏；透传才能保留它与宿主之间的 flex 高度链。
+   // 多包一层普通 block 会让长候选撑高聊天，发送区落到隐藏视口之外。
+-  if(!showRail)return <>{children}</>;
++  // 显式 active 的常驻剪辑宿主始终保留相同祖先，切页只隐藏编导栏。
++  if(!showRail && active===undefined)return <>{children}</>;
+ 
+   return (
+     <div
+diff --git a/frontend/src/components/navigation/project-stage-stepper.highlight.test.tsx b/frontend/src/components/navigation/project-stage-stepper.highlight.test.tsx
+index 40a4ca90..95f7d849 100644
+--- a/frontend/src/components/navigation/project-stage-stepper.highlight.test.tsx
++++ b/frontend/src/components/navigation/project-stage-stepper.highlight.test.tsx
+@@ -16,26 +16,34 @@
+ 
+ import * as React from "react";
+ import { cleanup, render, screen } from "@testing-library/react";
+-import { afterEach, describe, expect, it, vi } from "vitest";
++import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+ import type { ReactNode } from "react";
+ 
+ import { ProjectStageStepper } from "./project-stage-stepper";
+ 
++const linkReads = vi.hoisted(() => ({ props: [] as Array<{ href: string; prefetch?: boolean | null }> }));
++
+ vi.mock("next/link", () => ({
+   default: ({
+     children,
+     href,
++    prefetch,
+     ...rest
+   }: {
+     children: ReactNode;
+     href: string;
+-  }) => (
++    prefetch?: boolean | null;
++  }) => {
++    linkReads.props.push({ href, prefetch });
++    return (
+     <a href={href} {...rest}>
+       {children}
+     </a>
+-  ),
++    );
++  },
+ }));
+ 
++beforeEach(() => { linkReads.props.length = 0; });
+ afterEach(() => cleanup());
+ 
+ // 已发布项目的阶段条(shell-router buildProjectStages("review") 的产物形状)。
+@@ -47,6 +55,37 @@ const REVIEW_PROJECT_STAGES = [
+ 
+ const HIGHLIGHT_CLASS = "bg-brand-soft";
+ 
++it("四工作面保留真实链接与高亮，未点击目标不预取", () => {
++  const workspaces = [
++    { id: "script", label: "脚本", href: "/projects/project-x", status: "completed" as const },
++    { id: "article", label: "文章", href: "/projects/project-x/outputs/article-real/article", status: "pending" as const },
++    { id: "graphic", label: "图文", href: "/projects/project-x/outputs/graphic-real/image", status: "pending" as const },
++    { id: "video", label: "视频", href: "/projects/project-x/outputs/video-real/production", status: "pending" as const },
++  ];
++  render(<ProjectStageStepper variant="segmented" projectId="project-x" currentStage="article" stages={workspaces} />);
++  for (const stage of workspaces) {
++    const link = screen.getByRole("link", { name: stage.label });
++    expect(link).toHaveAttribute("href", stage.href);
++    expect(linkReads.props.find(props => props.href === stage.href)?.prefetch).toBe(false);
++    expect(link.closest("li")).toHaveAttribute("data-current", String(stage.id === "article"));
++  }
++  expect(screen.getByRole("link", { name: "文章" })).toHaveAttribute("aria-current", "page");
++});
++
++it("取消预取不放开未到达阶段或无项目的导航门禁", () => {
++  const stages = [
++    { id: "script", label: "脚本", status: "in_progress" as const },
++    { id: "production", label: "视频", status: "pending" as const },
++    { id: "review", label: "复盘", status: "pending" as const },
++  ];
++  const view = render(<ProjectStageStepper variant="segmented" projectId="project-x" currentStage="script" stages={stages} />);
++  expect(screen.getByRole("link", { name: "视频" })).toHaveAttribute("href", "/projects/project-x/production");
++  expect(screen.getByTestId("stage-segment-review")).toHaveAttribute("aria-disabled", "true");
++  expect(screen.getByTestId("stage-segment-review").tagName).toBe("SPAN");
++  view.rerender(<ProjectStageStepper variant="segmented" currentStage="script" stages={stages} />);
++  expect(screen.queryByRole("link")).not.toBeInTheDocument();
++});
++
+ describe("[T-373] segmented stepper 高亮跟随正在查看的面(isCurrent)", () => {
+   it("currentStage=script + review 项目:高亮「脚本」而非「复盘」;成熟度点保留", () => {
+     render(
+diff --git a/frontend/src/components/navigation/project-stage-stepper.tsx b/frontend/src/components/navigation/project-stage-stepper.tsx
+index bfc86440..b27a8fe5 100644
+--- a/frontend/src/components/navigation/project-stage-stepper.tsx
++++ b/frontend/src/components/navigation/project-stage-stepper.tsx
+@@ -146,6 +146,7 @@ export function ProjectStageStepper({
+               {navigable ? (
+                 <Link
+                   href={stage.href ?? projectWorkspaceHref(navigableProjectId!, stage.id as import("@/types/domain").ProjectStageName)}
++                  prefetch={false}
+                   data-slot="header-stage-link"
+                   data-testid={`stage-segment-${stage.id}`}
+                   aria-current={isCurrent ? (stage.href ? "page" : "step") : undefined}
+diff --git a/frontend/src/components/shell/account-switcher.test.tsx b/frontend/src/components/shell/account-switcher.test.tsx
+index e0763e93..8f3ac521 100644
+--- a/frontend/src/components/shell/account-switcher.test.tsx
++++ b/frontend/src/components/shell/account-switcher.test.tsx
+@@ -5,6 +5,16 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+ const router={refresh:vi.fn()};
+ const list=vi.fn();
+ vi.mock("next/navigation",()=>({useRouter:()=>router}));
++const linkReads = vi.hoisted(() => ({ props: [] as Array<{ href?: string; prefetch?: boolean | null }> }));
++vi.mock("next/link", async () => {
++  const { forwardRef } = await import("react");
++  return { default: forwardRef<HTMLAnchorElement, React.ComponentProps<"a"> & { prefetch?: boolean | null }>(
++    ({ prefetch, ...props }, ref) => {
++      linkReads.props.push({ href: props.href, prefetch });
++      return <a {...props} ref={ref} />;
++    },
++  ) };
++});
+ 
+ import { AccountSwitcher } from "./account-switcher";
+ import {TooltipProvider} from '@/components/ui/tooltip';
+@@ -16,9 +26,18 @@ const fetcher=vi.fn(async(_url:unknown,init?:RequestInit)=>{
+  const request=JSON.parse(init?.body as string);const rows=await list(request.input);
+  return new Response(JSON.stringify({data:rows,meta:{requestId:"r",page:request.input.query.page,pageSize:100,total:rows.length}}),{status:200});
+ });
+-beforeEach(()=>{vi.clearAllMocks();vi.stubGlobal("fetch",fetcher);localStorage.clear();document.cookie=`${CURRENT_GROUP_COOKIE}=; Path=/; Max-Age=0`;resetForegroundActivitiesForTest();});
++beforeEach(()=>{vi.clearAllMocks();linkReads.props.length=0;vi.stubGlobal("fetch",fetcher);localStorage.clear();document.cookie=`${CURRENT_GROUP_COOKIE}=; Path=/; Max-Age=0`;resetForegroundActivitiesForTest();});
+ afterEach(()=>{cleanup();vi.unstubAllGlobals();});
+ describe("账号组全局切换",()=>{
++ it("账号管理保留真实键盘入口且不预取未打开页面",async()=>{
++  const user=userEvent.setup();localStorage.setItem(CURRENT_GROUP_KEY,"a");list.mockResolvedValue([group("a")]);
++  render(<AccountSwitcher collapsed={false}/>);const trigger=await screen.findByRole("button",{name:"当前账号组：组a"});
++  trigger.focus();await user.keyboard("{Enter}");
++  const entry=await screen.findByRole("menuitem",{name:"账号组与绑定账号"});
++  expect(entry.tagName).toBe("A");expect(entry).toHaveAttribute("href","/accounts");
++  expect(linkReads.props.find(props=>props.href==="/accounts")?.prefetch).toBe(false);
++  expect(localStorage.getItem(CURRENT_GROUP_KEY)).toBe("a");expect(router.refresh).not.toHaveBeenCalled();
++ });
+  it("窄窗折叠侧栏仍能用鼠标打开并切换真实账号组",async()=>{
+   const user=userEvent.setup();localStorage.setItem(CURRENT_GROUP_KEY,'a');list.mockResolvedValue([group('a'),group('b')]);
+   render(<TooltipProvider><AccountSwitcher collapsed/></TooltipProvider>);
+diff --git a/frontend/src/components/shell/account-switcher.tsx b/frontend/src/components/shell/account-switcher.tsx
+index af5f3397..001b8d95 100644
+--- a/frontend/src/components/shell/account-switcher.tsx
++++ b/frontend/src/components/shell/account-switcher.tsx
+@@ -171,7 +171,7 @@ export function AccountSwitcher({collapsed}:{collapsed:boolean}) {
+       <DropdownMenuContent align="start" side={collapsed?"right":"top"} className="w-64" data-testid="account-switcher-menu"><DropdownMenuLabel>切换账号组</DropdownMenuLabel>
+         {!groups.length&&state.kind!=="error"&&<div data-testid="account-switcher-empty" className="px-2 py-2 text-sm text-muted-foreground">还没有账号组。先创建工作区，也可以稍后绑定账号。</div>}
+         {groups.map(group=><DropdownMenuItem key={group.id} data-testid="account-switcher-item" data-group-id={group.id} data-selected={group.id===currentId?"true":"false"} onSelect={()=>select(group.id)} className="flex gap-2"><Layers className="size-4 shrink-0" aria-hidden="true"/><span className="min-w-0 flex-1 truncate" title={group.name}>{group.name}</span>{group.id===currentId&&<Check className="size-4 text-brand" aria-hidden="true"/>}</DropdownMenuItem>)}
+-        <DropdownMenuSeparator/><DropdownMenuItem asChild data-testid="account-switcher-bind"><Link href="/accounts"><Plus className="mr-2 size-4" aria-hidden="true"/>账号组与绑定账号</Link></DropdownMenuItem>
++        <DropdownMenuSeparator/><DropdownMenuItem asChild data-testid="account-switcher-bind"><Link href="/accounts" prefetch={false}><Plus className="mr-2 size-4" aria-hidden="true"/>账号组与绑定账号</Link></DropdownMenuItem>
+       </DropdownMenuContent>
+     </DropdownMenu>
+     {state.kind==="error"&&<div className="text-xs text-muted-foreground" data-testid="account-switcher-error"><span>账号组列表暂不可用</span><button className="ml-1 text-brand" onClick={retry}>重试</button></div>}
+diff --git a/frontend/src/features/platform-account/account-manager-page.tsx b/frontend/src/features/platform-account/account-manager-page.tsx
+index 514398ee..0d4101e8 100644
+--- a/frontend/src/features/platform-account/account-manager-page.tsx
++++ b/frontend/src/features/platform-account/account-manager-page.tsx
+@@ -56,7 +56,7 @@ async function loadViewModel(
+   client: AccountManagerReadClient,
+   selectedAccountId: string | null,
+ ): Promise<AccountManagerViewModel> {
+-  const [accounts, capabilityResult] = await Promise.all([
++  const [accounts, capabilityResult, groups] = await Promise.all([
+     client.listAccounts({
+       params: undefined,
+       query: { page: 1, pageSize: 100 },
+@@ -65,8 +65,8 @@ async function loadViewModel(
+     (client.listCapabilities?.({ params: undefined, query: undefined, body: undefined }) ?? Promise.resolve({items:[]}))
+       .then((response) => ({ items: response.items, failed: false }))
+       .catch(() => ({ items: [] as PlatformCapabilityState[], failed: true })),
++    client.listAccountGroups ? client.listAccountGroups({params:undefined,query:{page:1,pageSize:100,includeArchived:true},body:undefined}) : Promise.resolve(undefined),
+   ]);
+-  const groups=client.listAccountGroups ? await client.listAccountGroups({params:undefined,query:{page:1,pageSize:100,includeArchived:true},body:undefined}) : undefined;
+   return {
+     groups:groups as unknown as import("@creatoros/contract").AccountGroupResource[]|undefined,
+     accounts,
+diff --git a/frontend/src/features/platform-account/account-manager-page.test.tsx b/frontend/src/features/platform-account/account-manager-page.test.tsx
+new file mode 100644
+index 00000000..0b55a349
+--- /dev/null
++++ b/frontend/src/features/platform-account/account-manager-page.test.tsx
+@@ -0,0 +1,76 @@
++import * as React from "react";
++import { describe, expect, it, vi } from "vitest";
++import { AccountManagerPage, type AccountManagerReadClient, type AccountManagerViewModel } from "./account-manager-page";
++
++vi.mock("./account-manager-view", () => ({
++  AccountManagerView: ({ viewModel }: { viewModel: AccountManagerViewModel }) => <pre>{JSON.stringify(viewModel)}</pre>,
++}));
++
++function deferred<T>() {
++  let resolve!: (value: T) => void;
++  const promise = new Promise<T>(complete => { resolve = complete; });
++  return { promise, resolve };
++}
++const readClient = (ports: object) => ports as AccountManagerReadClient;
++const viewModelOf = (element: React.ReactElement<{ viewModel: AccountManagerViewModel }>) => element.props.viewModel;
++
++describe("账号管理服务端并行读取", () => {
++  it("账号、能力和组在任何一个完成前全部开始，保留原请求参数和选中账号", async () => {
++    const accounts = deferred<unknown[]>(), capabilities = deferred<{ items: never[] }>(), groups = deferred<unknown[]>();
++    const client = {
++      listAccounts: vi.fn(() => accounts.promise),
++      listCapabilities: vi.fn(() => capabilities.promise),
++      listAccountGroups: vi.fn(() => groups.promise),
++    };
++    const pending = AccountManagerPage({ client: readClient(client), selectedAccountId: "real-account" });
++    try {
++      expect(client.listAccounts).toHaveBeenCalledTimes(1);
++      expect(client.listCapabilities).toHaveBeenCalledTimes(1);
++      expect(client.listAccountGroups).toHaveBeenCalledTimes(1);
++      expect(client.listAccounts).toHaveBeenCalledWith({ params: undefined, query: { page: 1, pageSize: 100 }, body: undefined });
++      expect(client.listCapabilities).toHaveBeenCalledWith({ params: undefined, query: undefined, body: undefined });
++      expect(client.listAccountGroups).toHaveBeenCalledWith({ params: undefined, query: { page: 1, pageSize: 100, includeArchived: true }, body: undefined });
++    } finally {
++      accounts.resolve([]); capabilities.resolve({ items: [] }); groups.resolve([]);
++      await pending;
++    }
++    expect(viewModelOf(await pending)).toEqual({ accounts: [], groups: [], capabilities: [], capabilitiesError: false, selectedAccountId: "real-account" });
++  });
++
++  it("能力读取拒绝只局部降级，账号与组成功结果保留", async () => {
++    const client = {
++      listAccounts: vi.fn().mockResolvedValue([]),
++      listCapabilities: vi.fn().mockRejectedValue(new Error("能力暂不可读")),
++      listAccountGroups: vi.fn().mockResolvedValue([]),
++    };
++    expect(viewModelOf(await AccountManagerPage({ client: readClient(client) }))).toEqual({ accounts: [], groups: [], capabilities: [], capabilitiesError: true, selectedAccountId: null });
++  });
++
++  it.each(["listAccounts", "listAccountGroups"] as const)("%s 拒绝仍拒绝页面，不把数据错误变成空成功", async failingPort => {
++    const error = new Error("原账号归属读取失败");
++    const client = {
++      listAccounts: vi.fn().mockResolvedValue([]),
++      listCapabilities: vi.fn().mockResolvedValue({ items: [] }),
++      listAccountGroups: vi.fn().mockResolvedValue([]),
++    };
++    client[failingPort].mockRejectedValue(error);
++    await expect(AccountManagerPage({ client: readClient(client) })).rejects.toBe(error);
++  });
++
++  it("缺少可选能力和组方法保留旧调用方默认值", async () => {
++    const client = { listAccounts: vi.fn().mockResolvedValue([]) };
++    expect(viewModelOf(await AccountManagerPage({ client: readClient(client) }))).toEqual({ accounts: [], groups: undefined, capabilities: [], capabilitiesError: false, selectedAccountId: null });
++    expect(client.listAccounts).toHaveBeenCalledTimes(1);
++  });
++
++  it("明确 viewModel 原样透传，不发起服务读取", async () => {
++    const viewModel: AccountManagerViewModel = { accounts: [], groups: [], capabilitiesError: true, selectedAccountId: "selected" };
++    const client = { listAccounts: vi.fn(), listCapabilities: vi.fn(), listAccountGroups: vi.fn() };
++    expect(viewModelOf(await AccountManagerPage({ viewModel, client: readClient(client) }))).toBe(viewModel);
++    for (const port of Object.values(client)) expect(port).not.toHaveBeenCalled();
++  });
++
++  it("没有会话 client 或 viewModel 时仍明确失败", async () => {
++    await expect(AccountManagerPage({})).rejects.toThrow("账号读取需要当前会话");
++  });
++});

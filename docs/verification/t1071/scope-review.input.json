@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "独立navigation_scope_review完整SPEC评审PASS（报告docs/verification/t1071/scope-review.json，SHA256 c99dcddd62c28597c28abb72d71fad4c677b3c72143b6b032796458d232cb6d5；被审SPEC b6dc7eb70c7768e989b452865b0abad8d9ec42ebc33882b0f41294ede300ce36）。仅准入四个前端路径和配套测试；不存在open阻断，普通稿面透传、错误语义、客户端刷新必须保留。实现、真实原生状态、性能、安装版均待实际验收；报告约束全部保留。",
+  "findings": []
+}

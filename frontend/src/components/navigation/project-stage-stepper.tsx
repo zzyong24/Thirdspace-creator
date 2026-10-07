@@ -146,6 +146,7 @@ export function ProjectStageStepper({
               {navigable ? (
                 <Link
                   href={stage.href ?? projectWorkspaceHref(navigableProjectId!, stage.id as import("@/types/domain").ProjectStageName)}
+                  prefetch={false}
                   data-slot="header-stage-link"
                   data-testid={`stage-segment-${stage.id}`}
                   aria-current={isCurrent ? (stage.href ? "page" : "step") : undefined}

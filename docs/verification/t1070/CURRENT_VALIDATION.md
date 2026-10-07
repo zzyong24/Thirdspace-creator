@@ -38,6 +38,6 @@ flowchart LR
 - boundary仍7违规（基线5及未改live-chat-session旧2 SDK），semantic旧video-decisions-runner缺material.match；orphan0error/100warning。旧2 backend Redfox断言、旧全局类型问题不在本精确99；不把本任务回归描述为全仓全绿。
 - MAIN不存在tools/timeout-policy/verify.mjs，规定命令当场MODULE_NOT_FOUND；不使用另一checkout结果冒充MAIN通过，继续登记原T-1018全局欠债。
 - 旧native暖首帧source0的三个FAIL和原root-cause trace完整保留；新7f9650实际React原candidate97闭环已通过，预览MP4 SHA5ff66848b7a635a9c2b7571b7aad18c88c2d3d00a7266439e3ceac1b9c4ffb49；手工PositionX10后最终MP4 SHA7df717c048350946ad2f0d2c977ba267e68a6be38e80ca4bbdf6979e59c2cb5f，按实际平移全120帧比源24..143，min SSIM .984258。原AAC音轨尾约85ms仍记录为minor，完整decode通过不代签音频尾精确5秒或听觉质量。当前实际页面只代签本次trim与手工位置/Undo链，字幕/替换/变速等未在本页真模型逐项复验，不以原生/后端fixture代签。
-- 本地安装包及安装版验收仍待完成。当前App的未保存状态尚无新确认，本轮将使用已授权CREATOROS_LOCAL_SKIP_INSTALL=1固定入口先出包，不强制替换/关闭。
+- 本地包已从干净82406168真实生成，四文件44PASS、镜像验证/两处深签名/7条App字节镜像/1082条实际内嵌资源及新native SHA全部通过，见LOCAL_PACKAGE.md与local-package-result.json。已明确跳过安装；当前App的未保存状态已再次具体询问，等待实际答复，不强制替换/关闭。安装版逐项验收仍未完成。
 
 本文件是当前当场证据索引，不替代SPEC/BACKLOG/Gate或最终用户验收。

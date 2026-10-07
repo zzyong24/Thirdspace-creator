@@ -1,0 +1,7 @@
+{
+  "command": "pnpm --dir frontend exec vitest run src/features/copilot/ai-copilot-interactions.test.tsx src/features/knowledge/knowledge-dump-zone.test.tsx src/features/topics/topics-interactions.test.tsx src/components/overlays/overlay-routing.test.tsx src/lib/copilot-navigation.test.ts src/features/copilot/chat-tool-trace.test.tsx src/features/automations/run-controls.test.tsx src/features/automations/cadence.test.ts --retry=0",
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "exit_code": 0,
+  "started_at": 1791379111.202133,
+  "duration_seconds": 27.197
+}

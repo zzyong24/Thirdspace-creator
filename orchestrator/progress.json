@@ -4,10 +4,10 @@
     "work_branch": "main"
   },
   "summary": {
-    "verticals": 62,
+    "verticals": 63,
     "tasks_done": 45,
-    "tasks_total": 159,
-    "tasks_pending": 114,
+    "tasks_total": 160,
+    "tasks_pending": 115,
     "verticals_complete": 4
   },
   "verticals": [
@@ -4939,6 +4939,58 @@
       "commits": {
         "external-engine": "5c444034"
       }
+    },
+    {
+      "id": "T-1071",
+      "archetype": [
+        "orchestration"
+      ],
+      "task_id": "T-1071",
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "docs/features/t1071-navigation-latency.md",
+        "docs/verification/t1071/**",
+        "frontend/src/app/(creator)/projects/[projectId]/stage-chat-wrapper.tsx",
+        "frontend/src/app/(creator)/projects/[projectId]/stage-chat-wrapper.test.tsx",
+        "frontend/src/components/navigation/project-stage-stepper.tsx",
+        "frontend/src/components/navigation/project-stage-stepper.highlight.test.tsx",
+        "frontend/src/components/shell/account-switcher.tsx",
+        "frontend/src/components/shell/account-switcher.test.tsx",
+        "frontend/src/features/platform-account/account-manager-page.tsx",
+        "frontend/src/features/platform-account/account-manager-page.test.tsx"
+      ],
+      "read_set": [
+        "docs/features/t1071-navigation-latency.md",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "PROJECT_CONTEXT.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "docs/features/t1022-account-group-workspace/UI_RULES.md",
+        "frontend/src/components/shell/**",
+        "frontend/src/components/navigation/**",
+        "frontend/src/features/reference-editors/**",
+        "frontend/src/features/platform-account/**",
+        "frontend/src/app/**",
+        "frontend/src/lib/**",
+        "frontend/src/server/**",
+        "backend/src/application/**",
+        "backend/src/modules/**",
+        "backend/src/schema/**",
+        "tools/logdec/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
     }
   ],
   "leases": {

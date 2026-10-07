@@ -1,0 +1,7 @@
+{
+  "command": "pnpm -C frontend exec vitest run 'src/app/(creator)/projects/[projectId]/stage-chat-wrapper.test.tsx' src/components/navigation/project-stage-stepper.highlight.test.tsx src/components/shell/account-switcher.test.tsx src/features/platform-account/account-manager-page.test.tsx --retry=0",
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "exit_code": 0,
+  "started_at": 1791379111.202113,
+  "duration_seconds": 9.506
+}

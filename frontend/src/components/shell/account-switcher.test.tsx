@@ -5,6 +5,16 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const router={refresh:vi.fn()};
 const list=vi.fn();
 vi.mock("next/navigation",()=>({useRouter:()=>router}));
+const linkReads = vi.hoisted(() => ({ props: [] as Array<{ href?: string; prefetch?: boolean | null }> }));
+vi.mock("next/link", async () => {
+  const { forwardRef } = await import("react");
+  return { default: forwardRef<HTMLAnchorElement, React.ComponentProps<"a"> & { prefetch?: boolean | null }>(
+    ({ prefetch, ...props }, ref) => {
+      linkReads.props.push({ href: props.href, prefetch });
+      return <a {...props} ref={ref} />;
+    },
+  ) };
+});
 
 import { AccountSwitcher } from "./account-switcher";
 import {TooltipProvider} from '@/components/ui/tooltip';
@@ -16,9 +26,18 @@ const fetcher=vi.fn(async(_url:unknown,init?:RequestInit)=>{
  const request=JSON.parse(init?.body as string);const rows=await list(request.input);
  return new Response(JSON.stringify({data:rows,meta:{requestId:"r",page:request.input.query.page,pageSize:100,total:rows.length}}),{status:200});
 });
-beforeEach(()=>{vi.clearAllMocks();vi.stubGlobal("fetch",fetcher);localStorage.clear();document.cookie=`${CURRENT_GROUP_COOKIE}=; Path=/; Max-Age=0`;resetForegroundActivitiesForTest();});
+beforeEach(()=>{vi.clearAllMocks();linkReads.props.length=0;vi.stubGlobal("fetch",fetcher);localStorage.clear();document.cookie=`${CURRENT_GROUP_COOKIE}=; Path=/; Max-Age=0`;resetForegroundActivitiesForTest();});
 afterEach(()=>{cleanup();vi.unstubAllGlobals();});
 describe("账号组全局切换",()=>{
+ it("账号管理保留真实键盘入口且不预取未打开页面",async()=>{
+  const user=userEvent.setup();localStorage.setItem(CURRENT_GROUP_KEY,"a");list.mockResolvedValue([group("a")]);
+  render(<AccountSwitcher collapsed={false}/>);const trigger=await screen.findByRole("button",{name:"当前账号组：组a"});
+  trigger.focus();await user.keyboard("{Enter}");
+  const entry=await screen.findByRole("menuitem",{name:"账号组与绑定账号"});
+  expect(entry.tagName).toBe("A");expect(entry).toHaveAttribute("href","/accounts");
+  expect(linkReads.props.find(props=>props.href==="/accounts")?.prefetch).toBe(false);
+  expect(localStorage.getItem(CURRENT_GROUP_KEY)).toBe("a");expect(router.refresh).not.toHaveBeenCalled();
+ });
  it("窄窗折叠侧栏仍能用鼠标打开并切换真实账号组",async()=>{
   const user=userEvent.setup();localStorage.setItem(CURRENT_GROUP_KEY,'a');list.mockResolvedValue([group('a'),group('b')]);
   render(<TooltipProvider><AccountSwitcher collapsed/></TooltipProvider>);

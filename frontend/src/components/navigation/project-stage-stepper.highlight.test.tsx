@@ -16,26 +16,34 @@
 
 import * as React from "react";
 import { cleanup, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ReactNode } from "react";
 
 import { ProjectStageStepper } from "./project-stage-stepper";
+
+const linkReads = vi.hoisted(() => ({ props: [] as Array<{ href: string; prefetch?: boolean | null }> }));
 
 vi.mock("next/link", () => ({
   default: ({
     children,
     href,
+    prefetch,
     ...rest
   }: {
     children: ReactNode;
     href: string;
-  }) => (
+    prefetch?: boolean | null;
+  }) => {
+    linkReads.props.push({ href, prefetch });
+    return (
     <a href={href} {...rest}>
       {children}
     </a>
-  ),
+    );
+  },
 }));
 
+beforeEach(() => { linkReads.props.length = 0; });
 afterEach(() => cleanup());
 
 // 已发布项目的阶段条(shell-router buildProjectStages("review") 的产物形状)。
@@ -46,6 +54,37 @@ const REVIEW_PROJECT_STAGES = [
 ];
 
 const HIGHLIGHT_CLASS = "bg-brand-soft";
+
+it("四工作面保留真实链接与高亮，未点击目标不预取", () => {
+  const workspaces = [
+    { id: "script", label: "脚本", href: "/projects/project-x", status: "completed" as const },
+    { id: "article", label: "文章", href: "/projects/project-x/outputs/article-real/article", status: "pending" as const },
+    { id: "graphic", label: "图文", href: "/projects/project-x/outputs/graphic-real/image", status: "pending" as const },
+    { id: "video", label: "视频", href: "/projects/project-x/outputs/video-real/production", status: "pending" as const },
+  ];
+  render(<ProjectStageStepper variant="segmented" projectId="project-x" currentStage="article" stages={workspaces} />);
+  for (const stage of workspaces) {
+    const link = screen.getByRole("link", { name: stage.label });
+    expect(link).toHaveAttribute("href", stage.href);
+    expect(linkReads.props.find(props => props.href === stage.href)?.prefetch).toBe(false);
+    expect(link.closest("li")).toHaveAttribute("data-current", String(stage.id === "article"));
+  }
+  expect(screen.getByRole("link", { name: "文章" })).toHaveAttribute("aria-current", "page");
+});
+
+it("取消预取不放开未到达阶段或无项目的导航门禁", () => {
+  const stages = [
+    { id: "script", label: "脚本", status: "in_progress" as const },
+    { id: "production", label: "视频", status: "pending" as const },
+    { id: "review", label: "复盘", status: "pending" as const },
+  ];
+  const view = render(<ProjectStageStepper variant="segmented" projectId="project-x" currentStage="script" stages={stages} />);
+  expect(screen.getByRole("link", { name: "视频" })).toHaveAttribute("href", "/projects/project-x/production");
+  expect(screen.getByTestId("stage-segment-review")).toHaveAttribute("aria-disabled", "true");
+  expect(screen.getByTestId("stage-segment-review").tagName).toBe("SPAN");
+  view.rerender(<ProjectStageStepper variant="segmented" currentStage="script" stages={stages} />);
+  expect(screen.queryByRole("link")).not.toBeInTheDocument();
+});
 
 describe("[T-373] segmented stepper 高亮跟随正在查看的面(isCurrent)", () => {
   it("currentStage=script + review 项目:高亮「脚本」而非「复盘」;成熟度点保留", () => {

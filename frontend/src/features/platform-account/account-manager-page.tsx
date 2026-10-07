@@ -56,7 +56,7 @@ async function loadViewModel(
   client: AccountManagerReadClient,
   selectedAccountId: string | null,
 ): Promise<AccountManagerViewModel> {
-  const [accounts, capabilityResult] = await Promise.all([
+  const [accounts, capabilityResult, groups] = await Promise.all([
     client.listAccounts({
       params: undefined,
       query: { page: 1, pageSize: 100 },
@@ -65,8 +65,8 @@ async function loadViewModel(
     (client.listCapabilities?.({ params: undefined, query: undefined, body: undefined }) ?? Promise.resolve({items:[]}))
       .then((response) => ({ items: response.items, failed: false }))
       .catch(() => ({ items: [] as PlatformCapabilityState[], failed: true })),
+    client.listAccountGroups ? client.listAccountGroups({params:undefined,query:{page:1,pageSize:100,includeArchived:true},body:undefined}) : Promise.resolve(undefined),
   ]);
-  const groups=client.listAccountGroups ? await client.listAccountGroups({params:undefined,query:{page:1,pageSize:100,includeArchived:true},body:undefined}) : undefined;
   return {
     groups:groups as unknown as import("@creatoros/contract").AccountGroupResource[]|undefined,
     accounts,

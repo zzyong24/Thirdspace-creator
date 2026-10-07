@@ -1,0 +1,270 @@
+{
+  "schema": "creatoros/independent-scope-review/v1",
+  "task_id": "T-1071",
+  "reviewer": "/root/navigation_scope_review",
+  "review_type": "独立只读完整SPEC与源码范围评审",
+  "created_at": "2026-10-07T13:09:55.926988+00:00",
+  "verdict": "PASS",
+  "verdict_scope": "仅准入当前完整SPEC所列四条前端路径及四个配套测试的行为修复；不证明实现已完成、性能已改善、安装版通过或整个T-1071完成。",
+  "summary": "现有源码明确违反常驻视频宿主的子树身份约定；固定显式active宿主结构直接修复该机械问题。取消两个Link预取、三读并行是保留既有导航和服务合同的窄修复，可实施。安装版与隔离源证据分开，真实原生保留及前后性能属于实施后验收。",
+  "reviewed_artifact": {
+    "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/features/t1071-navigation-latency.md",
+    "sha256": "b6dc7eb70c7768e989b452865b0abad8d9ec42ebc33882b0f41294ede300ce36",
+    "read_complete": true
+  },
+  "source_head": "82406168b95dc4fe02c26adf4e6f35d884ef9e81",
+  "source_snapshot": [
+    {
+      "path": "frontend/src/app/(creator)/projects/[projectId]/stage-chat-wrapper.tsx",
+      "sha256": "4225b5042ef2a1dbce12c0b83806d8a3ba84dc898aebbad38eeefd7585331211"
+    },
+    {
+      "path": "frontend/src/components/navigation/project-stage-stepper.tsx",
+      "sha256": "302d23e2290f6738aecaa518f4220536e6760a9552932e0f6573f1df7daa5aca"
+    },
+    {
+      "path": "frontend/src/components/shell/account-switcher.tsx",
+      "sha256": "6944fe01c84552284bf618ebab74e203098861307804a49b052c934bf127cc21"
+    },
+    {
+      "path": "frontend/src/features/platform-account/account-manager-page.tsx",
+      "sha256": "8781ea328e5c9db058cfc43c68de0a19144987fedcaf1df45589933680f9da47"
+    }
+  ],
+  "test_scope": [
+    {
+      "path": "frontend/src/app/(creator)/projects/[projectId]/stage-chat-wrapper.test.tsx",
+      "existing": true,
+      "sha256": "37809d523d7d3af7a9e0070a23cd4b43c86ffebd5a7ac52494874e3b3824eea5"
+    },
+    {
+      "path": "frontend/src/components/navigation/project-stage-stepper.highlight.test.tsx",
+      "existing": true,
+      "sha256": "2e7528eb4ac9560fc090721258141ebd45d7642104341cdd8dc8e7b616fc85ba"
+    },
+    {
+      "path": "frontend/src/components/shell/account-switcher.test.tsx",
+      "existing": true,
+      "sha256": "ddfcd9d3cab0d5290ec66a7ab8488e33b568df7b54e2bb6ad8f260cfa4b1dc0c"
+    },
+    {
+      "path": "frontend/src/features/platform-account/account-manager-page.test.tsx",
+      "existing": false,
+      "sha256": null
+    }
+  ],
+  "workflow": {
+    "skill": "product-to-code-orchestrator",
+    "skill_version": "3.27.4",
+    "project_skill_version": "3.27.4",
+    "context_plan_command": "node orchestrator/process/context-plan.mjs --root /Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator --task T-1071 --json",
+    "context_plan_result": "exit 0；4-build / diagnosis；legacy compat-full；未修改配置",
+    "current_registered_step": "diagnosis",
+    "implementation_precondition": "主会话将本次PASS与SPEC hash绑定到原任务，按已列精确路径登记实施步骤/write_set/verify_commands，再运行任务对应前置检查。当前modules.config.json仍只登记诊断写集，评审报告不自动授权任意产品路径。",
+    "ui_skill": ".agents/skills/oil-ui-pro/SKILL.md 0.10.0",
+    "ui_route": "沿用用户认可原版方向的局部行为修复，保留主题/宽度/滚动/组件；不是视觉方向探索或整体改版。",
+    "authorities_read": [
+      "BACKLOG.md",
+      "完整T-1071 SPEC",
+      "PROJECT.md",
+      "PROJECT_CONTEXT.md",
+      "orchestrator/SYSTEM_ARCHITECTURE.md",
+      "docs/features/t1022-account-group-workspace/UI_RULES.md",
+      "context-plan required rule/gate/template references",
+      "oil-ui-pro existing-project / interaction-and-state / layout-and-viewport"
+    ],
+    "scope_authorization": "用户已要求修复卡顿；本修复保留产品方向、真实href、已有服务签名及数据归属，不需要再次确认同一授权。"
+  },
+  "dimensions": [
+    {
+      "id": "scope",
+      "status": "PASS",
+      "evidence": "完整SPEC仅四个frontend产品文件；测试路径已改为真实既有highlight测试，新增只有account-manager-page.test.tsx。",
+      "reason": "无新增页面、operation、能力、角色、缓存、队列、owner、runtime、迁移或执行期限改动。"
+    },
+    {
+      "id": "architecture",
+      "status": "PASS",
+      "evidence": "SYSTEM_ARCHITECTURE的frontend UI与typed contract client边界；四文件现有导入与调用装配。",
+      "reason": "修复属于UI身份和页面读装配，不新增backend业务、模型SDK或直接DB写入。该结论为源码范围评审，不是boundary-scan执行PASS。"
+    },
+    {
+      "id": "lifecycle-root-cause",
+      "status": "PASS",
+      "evidence": "stage-chat-wrapper.tsx:205的Fragment早返回与有栏div>div结构；project-video-session-host.tsx:59传active={visible}并用稳定编辑器key；私有实际源生命周期JSON。",
+      "reason": "active真→假→真改变祖先结构，稳定叶子key不能跨该祖先变更保持身份。隔离probe记录mount=3/unmount=2/state重置，足以支持固定显式宿主结构修复。"
+    },
+    {
+      "id": "read-contract-and-failure",
+      "status": "PASS",
+      "evidence": "account-manager-page.tsx的accounts/capabilities Promise.all之后再读groups；account-group-manager.tsx客户端mount/event重读和epoch/inFlight保护；account-group.service.ts list保留ensureLegacyGroups。",
+      "reason": "并行三读不改请求入参、会话ctx或返回模型。capabilities catch留局部失败标记；accounts/groups拒绝不得伪造成功。旧groups.list含幂等legacy归组事务，不能把它误称纯SELECT或为了提速删掉。"
+    },
+    {
+      "id": "navigation",
+      "status": "PASS",
+      "evidence": "两个Link现有href；sidebar已有prefetch=false基线；account-switcher切组离开守卫仍在四路径窄修范围内保持。",
+      "reason": "只新增prefetch=false可减未点击目标的预取，不改变点击/键盘/后退路由合同；速度效果仍待实测。"
+    },
+    {
+      "id": "acceptance-closure",
+      "status": "PASS",
+      "evidence": "SPEC明确RED→GREEN、shadow host、未保存状态、GET次数、前后耗时、LED-047、类型、窄窗/200%及安装限制。",
+      "reason": "闭环设计可执行；下列未完成项均为实施后验收，不是当前性能PASS。"
+    }
+  ],
+  "evidence": [
+    {
+      "id": "source-lifecycle-probe",
+      "kind": "隔离源码私有React生命周期探针",
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-source-diagnosis/stage-wrapper-lifecycle-result.json",
+      "sha256": "ca6bed1c677629845d380dd3f02aa8f0bd5d387edc87f7764fe60bcdbb8433f6",
+      "observed": {
+        "mounts": 3,
+        "unmounts": 2,
+        "sameChildKeyWasRetained": true,
+        "leafStateSurvived": false
+      },
+      "scope": "实际wrapper经esbuild编译；路由/编导/控件为桩，stateful叶子为观察夹具。",
+      "supports": "wrapper子树身份与未保存叶子state损失的机械根因。",
+      "does_not_support": [
+        "真实安装版点击性能",
+        "真实native engine与shadow host保留",
+        "真实工程/撤销/导入状态保留",
+        "保存或导出通过"
+      ]
+    },
+    {
+      "id": "installed-query-probe",
+      "kind": "既有安装版临时诊断结果的只读核对",
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-runtime-diagnosis/installed-query-probe-require.json",
+      "sha256": "707071c0910cd1a99acdb334ff79dea2ac7e7a103591eb4e29bd9ddca367312c",
+      "observed": {
+        "entries": 119,
+        "sql_verbs": [
+          "SELECT"
+        ],
+        "await_ms_total": 2485.735
+      },
+      "supports": "该捕获窗口存在119条SELECT且无DML，累计await约2486毫秒。",
+      "does_not_support": [
+        "点击全过程耗时",
+        "SQL本身解释全部await",
+        "索引或本次前端修复已解决卡顿"
+      ]
+    },
+    {
+      "id": "installed-explain",
+      "kind": "既有安装版恢复扫描EXPLAIN结果的只读核对",
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-runtime-diagnosis/installed-recovery-query-explain.json",
+      "sha256": "0a32588e7af03b8002baa5fde3ec8311673ccfc1a6d0d5674c67a51cf834708e",
+      "observed": {
+        "execution_time_ms": 6.512,
+        "actual_rows": 0
+      },
+      "supports": "该单条SQL实执行短于累计await，不能只凭await将全部延迟归因SQL。",
+      "does_not_support": [
+        "全部后台查询无影响",
+        "任何后台索引优化已验证"
+      ]
+    },
+    {
+      "id": "source-browser-navigation",
+      "kind": "主会话已有实际隔离源浏览器观察，非本评审重演",
+      "reference": "完整SPEC的3710毫秒点击/3304毫秒RSC及重复outputs.production.editor.get记录",
+      "independently_replayed": false,
+      "supports": "可作为待复核的导航分段基线与生命周期问题关联线索。",
+      "limit": "本评审没有操作浏览器，未找到该目录内持久化的原始浏览器trace；不可将主会话观测代写为独立实测。"
+    },
+    {
+      "id": "installed-http-cpu",
+      "kind": "完整SPEC记载的既有安装版HTTP/CPU采样",
+      "reference": "PID96205/端口55382、HTTP 75/101毫秒、3.5秒CPU采样",
+      "independently_replayed": false,
+      "limit": "安装版与82406168新包不同，HTTP单请求不代表用户点击。未据这些记录代签当前安装版。"
+    }
+  ],
+  "findings": [
+    {
+      "id": "F-01",
+      "severity": "已修正",
+      "blocking": false,
+      "title": "测试路径事实已更正",
+      "evidence": "原SPEC称project-stage-stepper.test.tsx既有，但文件不存在；当前被审hash改为真实project-stage-stepper.highlight.test.tsx。",
+      "required_action": "在既有highlight测试中接收并断言prefetch参数，同时保留href/aria-current/可达性断言，后续真实Link旅程覆盖点击、键盘和后退。",
+      "resolution": "本次完整SPEC中已修正；不需扩展产品写集。"
+    },
+    {
+      "id": "F-02",
+      "severity": "验收约束",
+      "blocking": false,
+      "title": "固定结构必须只作用显式active宿主",
+      "evidence": "普通稿面现有Fragment透传是flex高度链保障；显式active目前只由常驻video host传入。",
+      "required_action": "active !== undefined时始终保持同根同children容器；showRail仅切栏/把手/按钮。未传active的无栏路径仍原样透传。active=false不得仅用display变化又引入另一套祖先；原visible/leave control不改。",
+      "reason": "避免为修视频重挂载破坏普通稿面的滚动、发送区和高度链。"
+    },
+    {
+      "id": "F-03",
+      "severity": "验收约束",
+      "blocking": false,
+      "title": "并行读取保留失败、兼容和客户端刷新",
+      "evidence": "capabilities可选且局部catch；groups可选；AccountGroupManager另有真实getPlatformAccountCapabilities与mount刷新。",
+      "required_action": "测试三读在任何一个完成前均已启动，测试账号拒绝/组拒绝仍拒绝页面，能力拒绝只capabilitiesError=true；空数组、缺可选client方法保持。不得把旧listCapabilities与新平台能力矩阵混用，不删客户端mount/event失效。"
+    },
+    {
+      "id": "F-04",
+      "severity": "未验证效果",
+      "blocking": false,
+      "title": "不能把四路径修复当成所有Tab共同慢点已消除",
+      "evidence": "已确认一个生命周期缺陷与串行SSR；安装版119查询和PGlite/文件系统压力仍在，当前源RSC耗时不等于安装版。",
+      "required_action": "同版本/服务/库/视口/工程/空闲与点选条件分开记录前后RSC、可见内容、GET次数和在途；无改善则保持T-1071未完成，再按真实因果补后台精确范围并独评。",
+      "reason": "prefetch=false可能减少空闲负载，也可能影响冷点击；只验证属性不能证明性能。"
+    },
+    {
+      "id": "F-05",
+      "severity": "待实施后真实验收",
+      "blocking": false,
+      "title": "探针不能代签native state或安装版",
+      "evidence": "lifecycle JSON明确使用stateful夹具；真实native未保存名字probe由主会话仍在等结果。",
+      "required_action": "同一中性工程视频→文章/图文/脚本/账号管理→返回，核实际shadow host/engine句柄、未保存输入、时间轴、Undo/Redo、导入队列、工程/素材GET；合法保存后读回、既有导出继续完成；切项目/切组仍按原守卫隔离。"
+    },
+    {
+      "id": "F-06",
+      "severity": "安装前事实约束",
+      "blocking": false,
+      "title": "当前用户App未保存状态仍须落实",
+      "evidence": "SPEC明确当前App不强关，新包不是运行中的安装物。",
+      "required_action": "先完成实现和冻结本地包；实际替换前落实当前未保存状态，保留原备份和固定安装入口。未完成不得强退/覆盖或报告安装版已通过。"
+    }
+  ],
+  "implementation_acceptance_required": [
+    "真实RED-before-fix：固定key的stateful child和代表性handle从active true→false→true保持；未传active稿面透传回归。GREEN与原栏宽/键盘/窄窗/本地弹层测试。",
+    "三读并行RED→GREEN与能力局部失败、账号/组失败、空结果和缺可选方法测试；保原平台能力合同和客户端mount/event失效。",
+    "真实Link四Tab与账号管理入口点击/键盘/后退、active高亮/href以及离开守卫；预取前后空闲RSC统计。",
+    "真实原生shadow host和engine控制句柄保留、未保存名字/时间轴/撤销/导入、同scope原工程和素材请求数量；不同项目/组仍隔离。",
+    "同条件前后点击反馈、RSC、可见内容耗时；不得从fixture/单次HTTP或leaf probe外推安装版效果。",
+    "原合法保存读回及导出回归；不触发新模型任务。",
+    "项目LED-047原check命令、范围前端类型、所列四测试及直接消费者公共链路；若发现范围内失败修复后再验。",
+    "同数据视口基线与修复后实际画面，普通宽窗、1024窄窗、200%和键盘/焦点；本报告未执行视觉验收。",
+    "本地冻结包构建与身份核验；当前App安全替换后逐项真实安装验证，未取得事实前不强退。",
+    "收尾pmem sync/reconcile/taskctl审计；范围外既有全局失败明确保留，不写全仓全绿。"
+  ],
+  "unchanged_boundaries": [
+    "无后台、数据库schema/查询、调度、claim/recovery/interval或任务状态改动。",
+    "无新增执行权、缓存、队列、TTL、业务状态或能力；不删除历史、不重发任务、不生成模型任务。",
+    "组/用户/账号归属、真实session ctx、离开守卫、原请求错误与原执行deadline保留。",
+    "不push/tag/公开发布，不将本次范围PASS代签用户最终验收。"
+  ],
+  "diagram_mermaid": "flowchart LR\n A[常驻视频宿主] --> B[显式active固定根与编辑器容器]\n B --> C[同一原生剪辑会话]\n D[Tab点击] --> E[真实Link路由]\n E --> F[只切编导栏与visible]\n F --> C\n G[账号管理] --> H[账号/旧能力/组并行]\n H --> I[客户端原刷新与失效保留]",
+  "limitations": {
+    "implementation_review": "未提供实现diff；本报告是完整SPEC和当前源码的实施准入评审。",
+    "tests_executed": false,
+    "browser_or_app_operated": false,
+    "database_operated": false,
+    "models_started": false,
+    "main_files_modified": false,
+    "actual_visual_review": "未执行；无截图评分和视觉PASS。",
+    "actual_installed_acceptance": "未执行；明确待当前App状态及新包实际安装验证。",
+    "global_reconcile": "本评审未重跑；当前既有全局债务不由本范围PASS豁免。"
+  }
+}

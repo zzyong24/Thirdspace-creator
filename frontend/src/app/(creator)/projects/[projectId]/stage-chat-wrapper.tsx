@@ -202,7 +202,8 @@ export function StageChatWrapper({
 
   // 稿面已有自己的有界分栏；透传才能保留它与宿主之间的 flex 高度链。
   // 多包一层普通 block 会让长候选撑高聊天，发送区落到隐藏视口之外。
-  if(!showRail)return <>{children}</>;
+  // 显式 active 的常驻剪辑宿主始终保留相同祖先，切页只隐藏编导栏。
+  if(!showRail && active===undefined)return <>{children}</>;
 
   return (
     <div

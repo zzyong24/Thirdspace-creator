@@ -171,3 +171,66 @@ it("窄屏新请求展开本地栏，无整页导航", async () => {
   fireEvent.click(screen.getByRole("button", { name: "微调稿件" }));
   expect(await screen.findByRole("dialog", { name: "编导对话" })).toBeVisible();
 });
+
+type SessionHandle = { readDraft: () => string };
+function SessionProbe({ handleRef, mounted, unmounted }: {
+  handleRef: React.RefObject<SessionHandle | null>;
+  mounted: () => void;
+  unmounted: () => void;
+}) {
+  const [draft, setDraft] = React.useState("原始工程");
+  const draftRef = React.useRef(draft);
+  const handle = React.useRef<SessionHandle>({ readDraft: () => draftRef.current });
+  React.useEffect(() => { draftRef.current = draft; }, [draft]);
+  React.useEffect(() => {
+    handleRef.current = handle.current;
+    mounted();
+    return unmounted;
+  }, [handleRef, mounted, unmounted]);
+  return <input aria-label="剪辑工程未保存名称" value={draft} onChange={event => setDraft(event.target.value)} />;
+}
+
+it.each([true, false])("显式 active 初值 %s 的常驻剪辑器切页后保留 DOM、句柄和未保存稿", initialActive => {
+  route.path = initialActive ? "/projects/p/production" : "/accounts";
+  const mounted = vi.fn(), unmounted = vi.fn();
+  const handleRef = React.createRef<SessionHandle>();
+  const session = <SessionProbe key="same-native-session" handleRef={handleRef} mounted={mounted} unmounted={unmounted} />;
+  const view = render(<StageChatWrapper active={initialActive} projectId="p" projectTitle="项目">{session}</StageChatWrapper>);
+  const editor = screen.getByRole("textbox", { name: "剪辑工程未保存名称" });
+  const handle = handleRef.current;
+  fireEvent.change(editor, { target: { value: "切页前的未保存工程" } });
+
+  for (const active of initialActive ? [false, true] : [true, false, true]) {
+    route.path = active ? "/projects/p/production" : "/accounts";
+    view.rerender(<StageChatWrapper active={active} projectId="p" projectTitle="项目">{session}</StageChatWrapper>);
+    expect(screen.getByRole("textbox", { name: "剪辑工程未保存名称" })).toBe(editor);
+    expect(editor).toHaveValue("切页前的未保存工程");
+    expect(handleRef.current).toBe(handle);
+    expect(handle?.readDraft()).toBe("切页前的未保存工程");
+    expect(mounted).toHaveBeenCalledTimes(1);
+    expect(unmounted).not.toHaveBeenCalled();
+    expect(screen.queryByTestId("director") !== null).toBe(active);
+  }
+  view.unmount();
+  expect(unmounted).toHaveBeenCalledTimes(1);
+});
+
+it("未传 active 的无栏稿面保持原透传结构和同 key 状态", () => {
+  route.path = "/projects/p";
+  const mounted = vi.fn(), unmounted = vi.fn();
+  const handleRef = React.createRef<SessionHandle>();
+  const session = <SessionProbe key="same-draft-session" handleRef={handleRef} mounted={mounted} unmounted={unmounted} />;
+  const view = render(<StageChatWrapper projectId="p" projectTitle="项目">{session}</StageChatWrapper>);
+  const editor = screen.getByRole("textbox", { name: "剪辑工程未保存名称" });
+  const handle = handleRef.current;
+  fireEvent.change(editor, { target: { value: "稿面原未保存内容" } });
+  route.path = "/accounts";
+  view.rerender(<StageChatWrapper projectId="p" projectTitle="项目">{session}</StageChatWrapper>);
+  expect(editor.parentElement).toBe(view.container);
+  expect(screen.getByRole("textbox", { name: "剪辑工程未保存名称" })).toBe(editor);
+  expect(editor).toHaveValue("稿面原未保存内容");
+  expect(handleRef.current).toBe(handle);
+  expect(mounted).toHaveBeenCalledTimes(1);
+  expect(unmounted).not.toHaveBeenCalled();
+  expect(screen.queryByTestId("director")).not.toBeInTheDocument();
+});

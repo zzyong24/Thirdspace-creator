@@ -1,0 +1,204 @@
+{
+  "schema": "creatoros/t1071-real-browser-acceptance/v1",
+  "task": "T-1071",
+  "source_head_before": "82406168b95dc4fe02c26adf4e6f35d884ef9e81",
+  "source_after": "四前端当前文件SHA见frontend-implementation.result.json；待提交冻结",
+  "surface": "Ego Browser taskSpace12/p1，隔离库服务4371，非安装版",
+  "viewport": [
+    1716,
+    895
+  ],
+  "warm_click_samples": [
+    {
+      "tab": "article",
+      "before_ms": 2338.3,
+      "after_ms": 1300.2,
+      "before_editor_gets": 2,
+      "after_editor_gets": 0
+    },
+    {
+      "tab": "video",
+      "before_ms": 500.5,
+      "after_ms": 411.7,
+      "before_editor_gets": 2,
+      "after_editor_gets": 0
+    },
+    {
+      "tab": "graphic",
+      "before_ms": 811,
+      "after_ms": 658.3,
+      "before_editor_gets": 2,
+      "after_editor_gets": 0
+    },
+    {
+      "tab": "video",
+      "before_ms": 3359.9,
+      "after_ms": 599,
+      "before_editor_gets": 2,
+      "after_editor_gets": 0
+    },
+    {
+      "tab": "script",
+      "before_ms": 1167.9,
+      "after_ms": 1059.4,
+      "before_editor_gets": 2,
+      "after_editor_gets": 0
+    },
+    {
+      "tab": "video",
+      "before_ms": 353,
+      "after_ms": 626.7,
+      "before_editor_gets": 2,
+      "after_editor_gets": 0
+    }
+  ],
+  "sample_limits": "每类单次顺序样本，开发服务已预热、等fetch在途0再点击；并非统计性能承诺。账号首次/再次样本不同条件不能用1327→423作同条件倍数。",
+  "native_identity_and_unsaved": "视频X10→11；文章/图文/脚本/视频及账号管理真实同ShadowRoot/同已加载engine句柄，原生X11、选区和timeline身份保留；返回dirty真实为true。隐藏页body未保存文字false不代表原生state清空。",
+  "native_before_fix": "同key wrapper真实leaf remount；原生视频X11切文章返回X10、host换新、dirtyfalse。",
+  "keyboard": "真实Enter文章及history.back返回实际视频；旧组合探针等待不存在的管理modal超时，该错误预期已纠正，非产品FAIL。",
+  "undo_redo": "真实原生容器焦点与Meta+Z/Meta+Shift+Z X11→10→11→10。误用不支持undo协议/错误focus探针均失败保留，无产品修改。",
+  "save_export": "真实UI保存工程与导出按钮，原fixture工程公开正确group header读回200/revision9/X10；最初手工GET漏x-group-id被428拒绝，保原失败；未绕过边界。导出500189bytes、H264640x360 120帧视频5秒、AAC219帧容器5.085170秒、ffmpeg完整解码exit0。保原AAC约85ms尾段限制。",
+  "account": "原管理Link保持，实际账号表内容423.2ms可见，同host保留；能力加载/SSR客户端刷新继续真实请求，未缓存或吞失败。",
+  "viewports": "1024x768真实CSS窄窗，编导640x768贴右边且Escape回原按钮；858x447/dpr2为200%等效布局观察，非桌面原生缩放按钮实测；底部滚动另见原始result。",
+  "scope_correction": "DIAGNOSIS_CORRECTION.md保临时被事实否定的guard草稿；SPEC恢复已审b6dc7...，未增加guard、后台或scope。",
+  "paid_models_started": false,
+  "installed_app_changed": false,
+  "pending": [
+    "新冻结包和当前安装版真实启动/逐项点击验收",
+    "桌面原生200%缩放按钮操作（已测等效CSSviewport）",
+    "性能统计多次样本和当前安装版比较；不声称所有慢点已消除"
+  ],
+  "raw_evidence_root": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-browser-diagnosis",
+  "raw_evidence_hashes": {
+    "account-dirty-navigation-failure.json": {
+      "sha256": "7d1a2825014c4b727ef2c383590b551c8e3d301658f10a26fe1f9dd8714caf69",
+      "bytes": 534
+    },
+    "account-hidden-native-readback.json": {
+      "sha256": "abc251d20c2fbfdd39dd5b9facce9dc6fb4b3a3a1d1b55e572b195159cb0ebc0",
+      "bytes": 3667
+    },
+    "account-return-native-readback.json": {
+      "sha256": "6c9e089f423c161f43b33e725677266d20e18c75f22dca407dd6261140e14929",
+      "bytes": 3595
+    },
+    "accounts-baseline.json": {
+      "sha256": "d94f59669a0b4dcd80d7fdffac9d0a732dc436b5a8e3edfbb1a6a82a06556230",
+      "bytes": 918
+    },
+    "accounts-fixed.json": {
+      "sha256": "6a33b631f8fc3b311a5adfe6321eb73a49a7234e4f28a02a7fd2c5fc29e06ac5",
+      "bytes": 1346
+    },
+    "baseline-accounts.png": {
+      "sha256": "0e00715320fb2f39f81b56b560aa57c7382a7b5c914c6d22167cf3bcfec2f4a1",
+      "bytes": 207563
+    },
+    "baseline-video.png": {
+      "sha256": "be1697ced6f3747d60a770bc1790d9c67390a5295750ce2105c2ae04f19c2636",
+      "bytes": 262596
+    },
+    "browser-finish.json": {
+      "sha256": "ac32f60738b9ab8c4b13263efd2d0aef29a2cab2871d0b72decb49113ed8115b",
+      "bytes": 142
+    },
+    "fixed-1024-director.png": {
+      "sha256": "9d2dce5c437ef48b71871a2ddc6968aed175c41cb6e0e6ad417017cf2398dd04",
+      "bytes": 162701
+    },
+    "fixed-1024-video.png": {
+      "sha256": "9336e90f6d412511fb1093d5072b9611e8aea3b30f18a6b327a68ed73e2312ed",
+      "bytes": 104396
+    },
+    "fixed-200-equivalent-bottom-result.json": {
+      "sha256": "1c898407a1eea7a3ecefd2951e5792a7cd7d4af9a140771c4f1fa8f90331e400",
+      "bytes": 459
+    },
+    "fixed-200-equivalent-director-bottom.png": {
+      "sha256": "4303d68338d484950b22b69c531e8d4e064aae2a778734abe6bb901f5840dacf",
+      "bytes": 108718
+    },
+    "fixed-200-equivalent-director.png": {
+      "sha256": "66816df2b4b35fa6ddcb092fae6eb9a2cf60e89ee0f29e5cad22b051d1978ae5",
+      "bytes": 105997
+    },
+    "fixed-200-equivalent-video.png": {
+      "sha256": "096bd88009b0767494e1097a2ed4dcdf3669b5d5123b2816cb363b380a99fcec",
+      "bytes": 72439
+    },
+    "fixed-accounts.png": {
+      "sha256": "2bb5158bf705c200bfded89d700cab690f8da3cd588ecf09b1b9976cb4a1c4b2",
+      "bytes": 256481
+    },
+    "fixed-export-ffprobe.json": {
+      "sha256": "c1a3156e01503abc9f7daf64043b8f69c8365735babccf5d58e7cdef6aaec0b3",
+      "bytes": 600
+    },
+    "fixed-export-public-readback.json": {
+      "sha256": "cc9d17dfa85103968746225311d49924b1e9bdc506429f929243508ee3c0d659",
+      "bytes": 7705
+    },
+    "fixed-export-result.json": {
+      "sha256": "5dc7a47395d0753fdb935eb8c0af83cd8145a425bea554f71fc128f9b6d3bc9d",
+      "bytes": 168
+    },
+    "fixed-native-before.json": {
+      "sha256": "62832d55d8bb6cf07effbcbd88a354e907204c4e0ca9bae44e05a47f02563446",
+      "bytes": 3698
+    },
+    "fixed-native-saved-readback.json": {
+      "sha256": "ff0a14db2edf229a1b15e17aa92a676324e99b7326c364c9b17244d92f4bbc21",
+      "bytes": 3853
+    },
+    "fixed-native-tab-journey.json": {
+      "sha256": "988067b4fb6d5f46b64ce8ca4850a7782f8d23f5e9161c019bcaf3ba2fdea47c",
+      "bytes": 21171
+    },
+    "fixed-native-undo-redo.json": {
+      "sha256": "5861997e14cc3034b7e9814c1e16738c65221c82298d08a7c4877125aab8bbf0",
+      "bytes": 14524
+    },
+    "fixed-navigation-export.mp4": {
+      "sha256": "5bd99758ed5f6d83e24c267d855daad9cdc2bf681c1d1b20072cfa7e2186d53f",
+      "bytes": 500189
+    },
+    "fixed-video.png": {
+      "sha256": "434d0c54296e8d691d9ff3938d7c4d68bc171ca6795b323ce2ef44bc93796c6a",
+      "bytes": 264616
+    },
+    "fixed-viewport-result.json": {
+      "sha256": "306c5cf355f8d1b2d23fad336b191c6bae28170674429b703e898d2789510c61",
+      "bytes": 711
+    },
+    "native-tab-baseline-hidden.json": {
+      "sha256": "2b359277f8364bcd9800b3d37771b7fc84f9dcb09726a52f358cff6b845921c6",
+      "bytes": 3657
+    },
+    "native-tab-baseline-return.json": {
+      "sha256": "c2551bee5336200a0ae3fbda6e34c1772aafef50ae95e7f599b6b920c6ae0554",
+      "bytes": 5936
+    },
+    "navigation-baseline.json": {
+      "sha256": "4ab17997b5cf780d7fdb26905f0db5d6a9e825c455aad808bb94b7a93c73bbed",
+      "bytes": 16452
+    },
+    "navigation-warm-baseline.json": {
+      "sha256": "3947352af55be25f975244004cb4c693db76b13b98da0897a433053e1fff352f",
+      "bytes": 18776
+    },
+    "navigation-warm-fixed.json": {
+      "sha256": "27b69807636b0fed5eac91a1e7a8b6425b2e5f899ec1a840c6bfb9e1bac77037",
+      "bytes": 7175
+    }
+  },
+  "zoom_bottom": "实际wheel滚动后发送按钮top398/bottom434，视口高447；滚动区域height447/scrollHeight560/scrollTop112.5，按钮实际可见。",
+  "browser_finish": {
+    "spaceId": 12,
+    "closedSpace": true,
+    "keptManagedLabels": [],
+    "closedManagedLabels": [
+      "p1"
+    ],
+    "preservedUnmanagedCount": 0
+  }
+}

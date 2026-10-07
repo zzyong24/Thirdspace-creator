@@ -1,0 +1,121 @@
+{
+  "schema": "t1071-navigation-diagnosis@1",
+  "sourceHead": "82406168",
+  "installed": {
+    "app": "/Applications/CreatorOS.app",
+    "pid": 96089,
+    "servicePid": 96205,
+    "port": 55382,
+    "sourceDiffersFromNewPackage": true,
+    "accountsSSR_ms": [
+      75.205,
+      101.06
+    ],
+    "queryProbe": {
+      "duration_ms": 6000,
+      "queries": 119,
+      "durationSum_ms": 2485.7348390445113,
+      "DML_observed": 0,
+      "queryValuesStored": false
+    },
+    "topRecoveryQueryExplain": {
+      "execution_ms": 6.512,
+      "returnedRows": 0,
+      "conclusion": "单次SQL执行约6.5ms，await含排队；不支持据此代签索引或后台开关解决"
+    }
+  },
+  "privateBrowser": {
+    "port": 4371,
+    "data": "隔离PGlite现有中性工程",
+    "videoToArticle": {
+      "visibleWorkbench_ms": 3710.1,
+      "RSCHeaders_ms": 3304.5,
+      "productionEditorRereadObserved": true
+    },
+    "nativeUnsavedWindowState": "真实原生输入切页探针尚未完成，不签通过"
+  },
+  "actualSourceLifecycleProbe": {
+    "sourceHead": "82406168",
+    "sourcePath": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/app/(creator)/projects/[projectId]/stage-chat-wrapper.tsx",
+    "sourceSha256": "4225b5042ef2a1dbce12c0b83806d8a3ba84dc898aebbad38eeefd7585331211",
+    "method": "实际 StageChatWrapper 源码经 esbuild 编译；仅外部路由/编导/控件替成只读桩，stateful 叶子用于观察 React 生命周期。未操作 App、未读写领域库、未运行原生剪辑器。",
+    "states": [
+      {
+        "active": true,
+        "route": "/projects/lifecycle-fixture/production",
+        "identity": 1,
+        "draft": "原始稿"
+      },
+      {
+        "step": "before-navigation",
+        "identity": 1,
+        "draft": "窗口未保存稿"
+      },
+      {
+        "active": false,
+        "route": "/projects/lifecycle-fixture/article",
+        "identity": 2,
+        "draft": "原始稿"
+      },
+      {
+        "active": true,
+        "route": "/projects/lifecycle-fixture/production",
+        "identity": 3,
+        "draft": "原始稿"
+      }
+    ],
+    "events": [
+      {
+        "event": "mount",
+        "identity": 1
+      },
+      {
+        "event": "unmount",
+        "identity": 1
+      },
+      {
+        "event": "mount",
+        "identity": 2
+      },
+      {
+        "event": "unmount",
+        "identity": 2
+      },
+      {
+        "event": "mount",
+        "identity": 3
+      }
+    ],
+    "observed": {
+      "mounts": 3,
+      "unmounts": 2,
+      "sameChildKeyWasRetained": true,
+      "leafStateSurvived": false
+    },
+    "limit": "证明实际 wrapper 子树身份变更；不能代替真实原生工程、网络/CPU及导航端到端耗时证据。"
+  },
+  "rawEvidence": [
+    {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-source-diagnosis/stage-wrapper-lifecycle-result.json",
+      "sha256": "ca6bed1c677629845d380dd3f02aa8f0bd5d387edc87f7764fe60bcdbb8433f6"
+    },
+    {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-runtime-diagnosis/installed-idle.cpuprofile",
+      "sha256": "7640d0b41e9e331fc1c98aed1bc1aae8b10de03c3e3c6c021b5d455657cf237d"
+    },
+    {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-runtime-diagnosis/installed-query-probe-require.json",
+      "sha256": "707071c0910cd1a99acdb334ff79dea2ac7e7a103591eb4e29bd9ddca367312c"
+    },
+    {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-runtime-diagnosis/installed-recovery-query-explain.json",
+      "sha256": "0a32588e7af03b8002baa5fde3ec8311673ccfc1a6d0d5674c67a51cf834708e"
+    }
+  ],
+  "limitations": [
+    "非当前用户安装版点击E2E",
+    "dev冷编译不能冒充生产耗时",
+    "尚未实施或签修复效果",
+    "探针已恢复原query/exec方法、关闭临时Node inspector，未读取参数值或写领域数据"
+  ]
+}
