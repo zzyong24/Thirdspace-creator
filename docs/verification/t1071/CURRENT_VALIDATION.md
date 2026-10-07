@@ -39,3 +39,7 @@ flowchart LR
 证据索引见installed-public-readback-result.json；T-1071仍不完成，原生实际点击、同条件安装版性能、200%按钮及用户最终验收待补。T-1070字幕/变速/替换真模型与T-1062完整功能验收继续保留，不以本轮公开只读检查代签。
 
 本轮安装与公开回读20件主体证据已由navigation_scope_review独立核SHA和实际结果，窄复核PASS，原生首页/点击/200%、新render及长期泄漏仍未签。完整私有报告SHA6fffe8a7d018ede2d351726a53fd6017b0078e323c8d7e1e2e9cee2380c3f377，索引见installed-public-readback-independent-review.json。
+
+继续只读观察时，原生PID37432与子sidecar37873仍在，公开CLI再次connected/full。3秒OS采样真实exit0，physical footprint 1.2G、peak 1.8G，主线程可见定时回调/Promise与无符号JIT栈；不能仅据此归因某个查询或服务。125秒是采样进程执行预算，3秒是测量窗口，未新增产品执行期限。RSS与footprint不混比，不称后台空闲、长期泄漏已排除或所有切页更快。原始身份/采样/当前ps/CLI回读SHA索引见installed-runtime-observation.json；无新业务写、模型任务、应用重启或产品改动。
+
+当前公开groups list实际5组；按这5个真实组ID显式逐一回读execution.tasks.list的running/queued，共10次全部exit0/total0。两种状态为0不证明其它状态、不可见组或后台扫描不存在；整条CLI命令313.3–813.04ms、最大并发2，不冒充界面/纯SQL计时。相关原始JSON及SHA保留在同一观察索引；后台共同慢点继续只读核因，未扩大四前端产品写集。

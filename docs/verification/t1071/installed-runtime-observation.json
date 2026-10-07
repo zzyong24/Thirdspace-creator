@@ -1,0 +1,131 @@
+{
+  "schema": "t1071-installed-runtime-observation@1",
+  "observedAtUtc": "2026-10-07T15:06:49.432588+00:00",
+  "sourceHead": "514a45b0",
+  "packagedSourceHead": "5e6d025c172ba5fc7f671efcc1632f34cf998a8e",
+  "status": "READONLY_DIAGNOSTICS_NATIVE_UI_ACCEPTANCE_PENDING",
+  "installedCli": {
+    "exitCode": 0,
+    "connected": true,
+    "mode": "installed",
+    "access": "full",
+    "pid": 37432
+  },
+  "osSample": {
+    "pid": 37873,
+    "parentPid": 37432,
+    "exitCode": 0,
+    "measurementDurationSeconds": 3,
+    "subprocessExecutionBudgetSeconds": 125,
+    "physicalFootprintText": "1.2G",
+    "peakFootprintText": "1.8G",
+    "mainThreadObserved": "timer callbacks / Promise microtasks / unresolved JIT frames",
+    "attribution": "不能仅据无符号OS采样定位具体查询或服务"
+  },
+  "boundaries": {
+    "nativeHomepageObserved": false,
+    "nativeNavigationClicksMeasured": false,
+    "native200PercentButtonsAccepted": false,
+    "longTermLeakRuledOut": false,
+    "businessWritesOrModelTasksStarted": false,
+    "appStoppedOrRestarted": false,
+    "sourceOrBuildFilesChanged": false
+  },
+  "rawEvidence": [
+    {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-current-runtime-observation-u8v6c55f/identity.txt",
+      "sha256": "d5ea4a07500249b2591c966a48e2959ab9fc848b3e15a9c16b620e9bb5fc6aa6"
+    },
+    {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-current-runtime-observation-u8v6c55f/sample-process-result.json",
+      "sha256": "aa9eb4efc53492cb845b52ed69cbf6a12b98c00c689a17ae7a484151a4844627"
+    },
+    {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-current-runtime-observation-u8v6c55f/sidecar-sample.txt",
+      "sha256": "07bcb4c65449fbc3185603b8824fd6156b5713ee07931ea5cffc02c317cc58c0"
+    },
+    {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-current-runtime-observation-u8v6c55f/current-ps.txt",
+      "sha256": "664611b412a1d9e3dee9eb2fd0bdfc2fcf722f1fbf30deabfdf8c56a7c08223b"
+    },
+    {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-current-runtime-observation-u8v6c55f/current-cli-status.json",
+      "sha256": "d3bffce5d3e5d47d2634bb62cda6d87bb032bf726e5dd213a239010519bdc88c"
+    },
+    {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-current-runtime-observation-u8v6c55f/tasks-list-description.json",
+      "sha256": "369aebe94f097d2a5a3a93c2aa7f72c4ed3e8801e53c89c9f19f9405956baba4"
+    },
+    {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-current-runtime-observation-u8v6c55f/current-groups.json",
+      "sha256": "162fac2177134eaa70345d09dd000193b55fe65cf803ff8b87f267c886635ac9"
+    },
+    {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-current-runtime-observation-u8v6c55f/task-count-observation.json",
+      "sha256": "8bfa474c0ed50050e0cd9b8b458e1fab674080feaa282502ba1b93f8d5b9db5d"
+    },
+    {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-current-runtime-observation-u8v6c55f/task-grp_legacy_acct-ae1a8346-9-running.json",
+      "sha256": "83e2dd09ca65598b152ba6ef724c553fe204cde53af6337b24a6f15ed65b8c8b"
+    },
+    {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-current-runtime-observation-u8v6c55f/task-grp_legacy_acct-ae1a8346-9-queued.json",
+      "sha256": "ca7cf287c3123daeed6166378b5392c6618ba4ba3182cd52ab4ceb3edf5308e8"
+    },
+    {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-current-runtime-observation-u8v6c55f/task-grp_legacy_acct-91ea746a-200-running.json",
+      "sha256": "0390ca9ee302df3ed0080ebe32f3a2ca328bbb50c8bebf659ec65a3ead7d9d6c"
+    },
+    {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-current-runtime-observation-u8v6c55f/task-grp_legacy_acct-91ea746a-200-queued.json",
+      "sha256": "6cbf6cdb5e15ab79209c36068fb4c036dc5039e45791be2dd945d3612156b310"
+    },
+    {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-current-runtime-observation-u8v6c55f/task-grp_legacy_acct-b944fd09-473-running.json",
+      "sha256": "9deb8c25681e637a10c8042eac3fdd5ed1cee6c60e4d41135340bef5aa2ac39b"
+    },
+    {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-current-runtime-observation-u8v6c55f/task-grp_legacy_acct-b944fd09-473-queued.json",
+      "sha256": "6fe10ca62da2f3e95fb4036574188d56079d6c77d0e628383347d76a42f01844"
+    },
+    {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-current-runtime-observation-u8v6c55f/task-grp-58776bff-101-running.json",
+      "sha256": "5dd9bbae50d9b7ffe277bffe01749c5215c2e46cb0b2aced19e80dfb11c5d582"
+    },
+    {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-current-runtime-observation-u8v6c55f/task-grp-58776bff-101-queued.json",
+      "sha256": "05724b1e44f6c0f29bf243601f9cc61e4cb3e5714e4074706cbfcb6e6e00f536"
+    },
+    {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-current-runtime-observation-u8v6c55f/task-grp-58776bff-302-running.json",
+      "sha256": "a880c0bcc707fb8a06c114adc37b1e5ddff67e748d3f9b10152c6bf873595648"
+    },
+    {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-current-runtime-observation-u8v6c55f/task-grp-58776bff-302-queued.json",
+      "sha256": "b664baeb54122bfa5a842fafb1beae2c59e390cb76e78faa24b8397b5f57f0e7"
+    }
+  ],
+  "limitations": [
+    "CLI连接成功不代表原生首页和点击验收。",
+    "RSS与physical footprint统计口径不同，不混合比较。",
+    "本次短时采样不证明后台空闲、长期泄漏已解决或切页卡顿全消失。",
+    "不以日志文本中没有timeout标记代签无启动故障。",
+    "5个当前可见组的running/queued均为0，不证明其它状态、不可见组或后台扫描不存在。"
+  ],
+  "visibleTaskCountObservation": {
+    "groupsCount": 5,
+    "statuses": [
+      "running",
+      "queued"
+    ],
+    "reads": 10,
+    "allReadsExitCode": 0,
+    "totalReportedAcrossReads": 0,
+    "maxConcurrentReads": 2,
+    "elapsedMsRange": [
+      313.3,
+      813.04
+    ],
+    "timingScope": "whole CLI command; not UI / pure SQL"
+  }
+}
