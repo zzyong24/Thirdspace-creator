@@ -4,13 +4,49 @@
     "work_branch": "main"
   },
   "summary": {
-    "verticals": 63,
+    "verticals": 64,
     "tasks_done": 45,
-    "tasks_total": 160,
-    "tasks_pending": 115,
+    "tasks_total": 161,
+    "tasks_pending": 116,
     "verticals_complete": 4
   },
   "verticals": [
+    {
+      "id": "T-1072",
+      "archetype": [
+        "orchestration"
+      ],
+      "task_id": "T-1072",
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "docs/features/t1072-global-git-hook.md",
+        "docs/verification/t1072/commit-msg",
+        "docs/verification/t1072/verify-hook.py",
+        "docs/verification/t1072/RESULT.md",
+        "docs/verification/t1072/result.json",
+        "docs/verification/t1072/independent-review.json"
+      ],
+      "read_set": [
+        "docs/features/t1072-global-git-hook.md",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "PROJECT_CONTEXT.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
     {
       "id": "T-1022",
       "archetype": [

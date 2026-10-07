@@ -1149,3 +1149,4 @@
 {"ts":"2026-10-07T11:53:58.994Z","actor":"taskctl","action":"block","task":"T-1070","reason":"真实同页warm preview首帧仍source0；CDP已执行新58f42，进入最多两次最小只读探针，查具体机制后原任务继续；不CAS、不重发AI、不猜改产品。","sha_before":"dd345e2d08fa","sha_after":"a99fca200e09"}
 {"ts":"2026-10-07T12:01:03.140Z","actor":"taskctl","action":"resume","task":"T-1070","reason":"一次最小warm trace证明decoded1但同Canvasidentity旧GPU缓存沿0；两事实验收实际0，七精确source成员scope独评78c934b5...GO；原99及formal93不变，不新权限/runtime，恢复原实现。","sha_before":"a99fca200e09","sha_after":"dd345e2d08fa"}
 {"ts":"2026-10-07T12:55:56.217Z","actor":"taskctl","action":"start","task":"T-1071","sha_before":"cb72db51faeb","sha_after":"5925dcb0d6c3"}
+{"ts":"2026-10-07T16:32:25.072Z","actor":"taskctl","action":"start","task":"T-1072","sha_before":"5ed83844e700","sha_after":"3e11379caa97"}

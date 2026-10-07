@@ -1,0 +1,75 @@
+{
+  "schema": "t1072-hook-repair@1",
+  "status": "INSTALLED_REAL_CREATOROS_COMMIT_PENDING",
+  "changedExternalFile": "/Users/zyongzhu/.config/git/hooks/commit-msg",
+  "backupRoot": "/Users/zyongzhu/.config/git/t1072-0mqy07ml/backup",
+  "red": {
+    "exitCode": 1,
+    "failed": 35,
+    "passed": 3
+  },
+  "green": {
+    "exitCode": 0,
+    "passed": 38,
+    "failed": 0,
+    "boundary": "真实Git与可观察工具夹具"
+  },
+  "officialLefthook": {
+    "version": "2.1.4",
+    "publishedChecksumVerified": true,
+    "actualSuccessGitExit": 0,
+    "actualFailedGitExit": 1,
+    "failedHeadUnchanged": true,
+    "spaceArgAndMessageReadBack": true,
+    "hookNotReinstalled": true,
+    "installedIntoPathOrDependencies": false
+  },
+  "installed": {
+    "installedAtUtc": "2026-10-07T16:41:40.205243+00:00",
+    "changedOnly": "commit-msg",
+    "installedSha256": "5b8bb2109d0f3f2759da805a3bb7550edd5c683c1c7fb209928b878225ca2b10",
+    "mode": "0755",
+    "otherThreeHooksExactBytesAndOwnershipPreserved": true,
+    "coreHooksPathUnchanged": true,
+    "directCreatorosNoConfigHook": {
+      "exitCode": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "realCreatorosCommitVerified": false,
+    "backupManifestPath": "/Users/zyongzhu/.config/git/t1072-0mqy07ml/backup-manifest.json"
+  },
+  "rawEvidence": [
+    {
+      "path": "/Users/zyongzhu/.config/git/t1072-0mqy07ml/backup-manifest.json",
+      "sha256": "b1016762fc8969caa2289616dfa561056f1bf15e727a7ddfbcdddddea1c8d531"
+    },
+    {
+      "path": "/Users/zyongzhu/.config/git/t1072-0mqy07ml/red-result.json",
+      "sha256": "a20fd6537cab79c70e26ea8f3db48a4c717df3ed4842780bbd5ff10873054598"
+    },
+    {
+      "path": "/Users/zyongzhu/.config/git/t1072-0mqy07ml/green-result.json",
+      "sha256": "a20cefde47edf7a1da37629c3b19c325bd91e8de5fbad6a1fa1d976202f81d2e"
+    },
+    {
+      "path": "/Users/zyongzhu/.config/git/t1072-0mqy07ml/official-binary-verified.json",
+      "sha256": "6dbe64602603d382c6caccaa2657eb0ed876ad86177e29ad6204ba08f7c2f9e6"
+    },
+    {
+      "path": "/Users/zyongzhu/.config/git/t1072-0mqy07ml/actual-official-lefthook-result.json",
+      "sha256": "e22dd458faf06316b90df0856df597e7604dcccb73c27179999c1b4a0ae47e24"
+    },
+    {
+      "path": "/Users/zyongzhu/.config/git/t1072-0mqy07ml/installation-result.json",
+      "sha256": "fd42b1174a8c630d4a2c1bc5016386e5317e12b579488bf1ec123f28d03bb46c"
+    }
+  ],
+  "registrationCorrections": [
+    "初始模块注册误把dict当list，AttributeError发生在写入前；已纠正。",
+    "context-compile先缺module binding，再缺progress binding，真实返回2；补注册并经progress generate后真实0。"
+  ],
+  "globalProjectVerification": "待pmem sync/reconcile，不代签全仓",
+  "clientSourceDataBuildOrAppChanged": false,
+  "pushedTaggedOrReleased": false
+}

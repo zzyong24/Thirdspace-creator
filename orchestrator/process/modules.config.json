@@ -18,6 +18,39 @@
     ]
   },
   "modules": {
+    "T-1072": {
+      "task_id": "T-1072",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1072-global-git-hook.md",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "PROJECT_CONTEXT.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md"
+      ],
+      "write_set": [
+        "docs/features/t1072-global-git-hook.md",
+        "docs/verification/t1072/commit-msg",
+        "docs/verification/t1072/verify-hook.py",
+        "docs/verification/t1072/RESULT.md",
+        "docs/verification/t1072/result.json",
+        "docs/verification/t1072/independent-review.json"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "sh -n docs/verification/t1072/commit-msg",
+          "python3 docs/verification/t1072/verify-hook.py --hook docs/verification/t1072/commit-msg",
+          "git diff --check"
+        ]
+      },
+      "scope_note": "仅用户已授权当前环境 ~/.config/git/hooks/commit-msg 外部替换；备份及原LFS/ThirdSpace三钩子保字节。仓库仅保存修复副本、验证与任务控制；不改产品/数据/打包/依赖，不push。已配置工具不可用或检查失败保持非零，不从其他项目借依赖。"
+    },
     "T-1022": {
       "task_id": "T-1022",
       "archetype": [

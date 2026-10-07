@@ -1,0 +1,14 @@
+{
+  "schema": "t1072-independent-candidate-review@1",
+  "reviewerTask": "/root/navigation_scope_review",
+  "verdict": "PASS",
+  "phase": "candidate_review_before_install",
+  "candidateSha256": "5b8bb2109d0f3f2759da805a3bb7550edd5c683c1c7fb209928b878225ca2b10",
+  "specSha256": "ba7c31a03dcd8f68178cb114086d6eeceed0a357b535ee25bb0222c8f5abad4b",
+  "verifyScriptSha256": "7217330cad3c0d942169ffc392a2a94b6adcc28c9b3e394e1d608fa3da58c5d3",
+  "officialResultSha256": "e22dd458faf06316b90df0856df597e7604dcccb73c27179999c1b4a0ae47e24",
+  "findings": [],
+  "reviewerDidNotWriteOrExecuteHooks": true,
+  "permittedAction": "仅替换单commit-msg，保留备份、core.hooksPath与其它三钩子",
+  "realCreatorosCommitAcceptedByThisReview": false
+}
