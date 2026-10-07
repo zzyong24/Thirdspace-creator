@@ -1,11 +1,11 @@
 {
   "fixture": false,
   "entry": "src/embedded/native-entry.tsx",
-  "moduleCount": 427,
+  "moduleCount": 429,
   "modules": [
     {
       "module": "../../../../../../../../__vite-plugin-wasm-helper",
-      "renderedLength": 1158
+      "renderedLength": 1154
     },
     {
       "module": "\u0000commonjsHelpers.js",
@@ -425,7 +425,7 @@
     },
     {
       "module": "src/components/ui/button.tsx",
-      "renderedLength": 1961
+      "renderedLength": 1963
     },
     {
       "module": "src/components/ui/color-picker.tsx",
@@ -641,7 +641,11 @@
     },
     {
       "module": "src/embedded/native-controller.ts",
-      "renderedLength": 9303
+      "renderedLength": 10849
+    },
+    {
+      "module": "src/embedded/native-document-contract.ts",
+      "renderedLength": 13956
     },
     {
       "module": "src/embedded/native-entry.tsx",
@@ -657,7 +661,11 @@
     },
     {
       "module": "src/embedded/native-operations.ts",
-      "renderedLength": 4505
+      "renderedLength": 5287
+    },
+    {
+      "module": "src/embedded/native-preview.ts",
+      "renderedLength": 5806
     },
     {
       "module": "src/embedded/native-version.ts",
@@ -965,7 +973,7 @@
     },
     {
       "module": "src/params/index.ts",
-      "renderedLength": 3939
+      "renderedLength": 3941
     },
     {
       "module": "src/params/registry.ts",
@@ -1329,7 +1337,7 @@
     },
     {
       "module": "src/timeline/bookmarks/components/bookmarks.tsx",
-      "renderedLength": 13282
+      "renderedLength": 13288
     },
     {
       "module": "src/timeline/bookmarks/hooks/use-bookmark-drag.ts",
@@ -1421,7 +1429,7 @@
     },
     {
       "module": "src/timeline/components/timeline-element.tsx",
-      "renderedLength": 31894
+      "renderedLength": 31896
     },
     {
       "module": "src/timeline/components/timeline-playhead.tsx",
@@ -1681,7 +1689,7 @@
     },
     {
       "module": "src/utils/color.ts",
-      "renderedLength": 3999
+      "renderedLength": 4001
     },
     {
       "module": "src/utils/geometry.ts",
@@ -1701,7 +1709,7 @@
     },
     {
       "module": "src/utils/string.ts",
-      "renderedLength": 171
+      "renderedLength": 173
     },
     {
       "module": "src/utils/ui.ts",

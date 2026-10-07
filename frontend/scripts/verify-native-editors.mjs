@@ -2,6 +2,7 @@ import {readFile,readdir} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
+import {execFileSync} from 'node:child_process';
 import ts from 'typescript';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../..');
 const publicRoot=path.join(root,'frontend/public/reference-editors');
@@ -30,4 +31,16 @@ for(const editor of ['noterelay','doocs-md','kuaitu','opencut-classic']){
 }
 const source=await readFile(path.join(root,'contract/src/resources/noterelay-layout.ts'));
 if(!source.equals(await readFile(path.join(root,'reference-editors/noterelay/web/noterelay-layout.ts'))))throw Error('NoteRelay 合同复制件漂移');
-console.log(JSON.stringify({passed:true,verification:'四类原生交付文件集、摘要、对应源码、生产宏语法检查及共享合同；不代表浏览器执行/像素验收',editors:result},null,2));
+const opencut=manifest['opencut-classic'];
+const opencutArchive=ownedPath(publicRoot,opencut.native.sourceArchive);
+const fixedBase=await readFile(ownedPath(publicRoot,opencut.native.fixedBaseArchive));
+if(sha(fixedBase)!==opencut.native.fixedBaseSha256||opencut.native.fixedBaseSha256!==opencut.sourceArchiveSha256)throw Error('OpenCut 固定重建基础归档摘要不一致');
+const nativeContract=await readFile(path.join(root,'contract/src/resources/production-native-document.ts'));
+const archivedNativeContract=execFileSync('tar',['-xOf',opencutArchive,'./apps/web/src/embedded/native-document-contract.ts']);
+if(sha(archivedNativeContract)!==opencut.native.contractCopySha256)throw Error('OpenCut v31 合同归档摘要不一致');
+if(!nativeContract.equals(archivedNativeContract))throw Error('OpenCut v31 合同归档复制件漂移');
+for(const [name,expected] of [[opencut.native.patch,opencut.native.patchSha256],[opencut.native.fullReconstructionPatch,opencut.native.fullReconstructionPatchSha256]]){if(!name||!expected)throw Error('OpenCut 完整重建patch清单缺失');if(sha(await readFile(ownedPath(publicRoot,name)))!==expected)throw Error(`OpenCut 对应源码patch摘要不一致：${name}`);}
+const graph=JSON.parse(await readFile(path.join(publicRoot,'opencut-classic/native/NATIVE_BUILD_GRAPH.json'),'utf8'));
+if(graph.fixture!==false)throw Error('OpenCut 发布包不能是compositor fixture');
+for(const module of ['src/embedded/native-controller.ts','src/embedded/native-preview.ts','src/embedded/native-document-contract.ts','src/embedded/native-operations.ts'])if(!graph.modules.some(item=>item.module===module))throw Error(`OpenCut 新原生消费者未进入实际生产模块图：${module}`);
+console.log(JSON.stringify({passed:true,verification:'四类原生交付文件集、摘要、对应源码、生产宏语法检查、累计重建patch摘要、新原生preview实际模块图及共享合同归档复制件；不代表浏览器执行/像素验收',editors:result},null,2));
