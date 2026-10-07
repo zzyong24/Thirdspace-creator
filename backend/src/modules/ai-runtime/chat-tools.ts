@@ -4078,12 +4078,12 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
       execute:async(input)=>{if(!deps.editorTarget||!deps.proposeWorkEditor)throw new ChatToolUserError('当前对话缺少已保存编辑目标');return deps.proposeWorkEditor(input);},
     },deps.humanizeError),
     "work.creation.read":defineChatTool("work.creation.read",{
-      description:"读取用户确认保存的脚本、真实组合和两个文章/图文成员的当前保存版本与共同来源。联合创作必须先读取此回执，不猜脚本或作品ID。",
+      description:"读取用户确认保存的脚本、真实组合和两个文章/图文成员的当前保存版本与共同来源。联合创作必须先读取此回执，保存返回的targetDigest（裸64位十六进制，无sha256前缀）及完整article/graphic原文档；propose从原文档克隆后按严格typed字段填创作内容，不猜脚本或作品ID。",
       inputSchema:workCreationReadInput,
       execute:async(input)=>{if(!deps.creationTarget||!deps.readWorkCreation)throw new ChatToolUserError('当前对话缺少已确认的联合创作目标');return deps.readWorkCreation(input);},
     },deps.humanizeError),
     "work.creation.propose":defineChatTool("work.creation.propose",{
-      description:"使用work.creation.read返回的targetDigest与共同脚本来源，一次提出完整ArticleDocument和GraphicPostDocument可编辑候选。当前所选引擎亲自创作；纯文字图文可排版预览，不声称图片已生成。工具不写正式稿、不调用第二模型、不提交视频或生图任务。",
+      description:"参数只有{targetDigest,article,graphic}。targetDigest逐字复制work.creation.read返回值（裸64hex，无sha256前缀）。先克隆read的完整article和graphic，仅填写本次创作字段，保留来源、metadataSource、图片和布局等原稿字段。article必有schemaVersion:1、title、summary、sections、factItems、visualBriefs、imageUses；sections每项严格为{sectionId,order,heading,headingLevel,body,sourceRefs}，sectionId是明确唯一非空ID，order从0按顺序，headingLevel为1至6整数，正文在body。graphic必有schemaVersion:1、title、body、summary、tags、imageUses、sourceRefs、ruleSnapshotRef；cardBriefs每项严格为{cardId,title,body,sourceRefs,visualBrief?}，cardId是明确唯一非空ID，数组顺序就是页顺序。不要造id/page/type/text或proposedSections等替代字段。sourceRefs引用read的共同scriptSourceRef，不编ID。metadataSource保持read原值；原稿没有就不要新增，不能把titleSourceRefs/summarySourceRefs包进metadataSource。它只接受原project或publication_revision discriminator结构。没有事实、视觉建议或图片时使用对应空数组，不能省略必填根字段。当前引擎亲自联合创作完整可编辑候选，纯文字图文可预览；不写正式稿、不调用第二模型、不提交视频或生图任务。",
       inputSchema:workCreationProposalInput,
       execute:async(input)=>{if(!deps.creationTarget||!deps.proposeWorkCreation)throw new ChatToolUserError('当前对话缺少已确认的联合创作目标');return deps.proposeWorkCreation(input);},
     },deps.humanizeError),

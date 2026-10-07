@@ -103,9 +103,12 @@ export function validateNativeSceneTracksCandidate(before:NativeSerializedTimeli
     }
     const visit=(v:unknown)=>{if(!v||typeof v!=='object')return;if(Array.isArray(v)){v.forEach(visit);return;}const r=v as Record<string,unknown>;if(Array.isArray(r.keys)){const seen=new Set<string>();for(const k of r.keys as Array<{id:string;time:number}>){if(seen.has(k.id)||k.time>element.duration)throw new Error('关键帧重复或越界');seen.add(k.id);}}else Object.values(r).forEach(visit);};visit(element.animations);
    }
-   if(!old||!same(old.masks,element.masks))for(const mask of (element.masks??[]) as unknown[])productionNativeMask.parse(mask);
-   validateChangedParams(old?.params??{},element.params,element.type);
-   if(!old||!same(old.effects,element.effects))for(const fx of (element.effects??[]) as Array<{type:string;params:Record<string,unknown>}>){productionNativeEffect.parse(fx);if(fx.type!=='blur'||typeof fx.params.intensity!=='number'||fx.params.intensity<0||fx.params.intensity>100)throw new Error('效果不属于固定renderer catalog');}
+   if(!old||!same(old.masks,element.masks))for(const mask of (element.masks??[]) as Array<Record<string,unknown>>){const prior=(old?.masks as Array<Record<string,unknown>>|undefined)?.find(m=>m.id===mask.id);if(!prior||!same(prior,mask))productionNativeMask.parse(mask);}
+   if(element.type==='graphic'&&!old&&!Object.hasOwn(graphicParams,element.definitionId))throw new Error('图形不属于固定renderer catalog');
+   if(element.type==='effect'&&(!old||!same(old.effectType,element.effectType))&&element.effectType!=='blur')throw new Error('效果不属于固定renderer catalog');
+   validateChangedParams(old?.params??{},element.params,element);
+   validateChangedAnimations(old?.animations??{},element);
+   if(!old||!same(old.effects,element.effects))for(const fx of (element.effects??[]) as Array<{id:string;type:string;params:Record<string,unknown>}>){const prior=(old?.effects as Array<{id:string;type:string;params:Record<string,unknown>}>|undefined)?.find(value=>value.id===fx.id);if(prior&&same(prior,fx))continue;productionNativeEffect.parse(fx);if(fx.type!=='blur'||prior&&prior.type!==fx.type)throw new Error('效果不属于固定renderer catalog');validateParamChanges(prior?.params as Record<string,unknown>??{},fx.params,blurParams);}
   }
  }
 }
@@ -118,7 +121,29 @@ const visualParams:Record<string,z.ZodType>={
 };
 const audioParams={volume:z.number().min(-60).max(20),muted:z.boolean()};
 const textParams:Record<string,z.ZodType>={content:z.string(),fontFamily:z.string(),fontSize:z.number().min(1),color:z.string(),textAlign:z.enum(['left','center','right']),fontWeight:z.enum(['normal','bold']),fontStyle:z.enum(['normal','italic']),textDecoration:z.enum(['none','underline','line-through']),letterSpacing:z.number().min(-100),lineHeight:z.number().min(.1),'background.enabled':z.boolean(),'background.color':z.string(),'background.cornerRadius':z.number().min(0).max(100),'background.paddingX':z.number().min(0),'background.paddingY':z.number().min(0),'background.offsetX':z.number().min(-100000),'background.offsetY':z.number().min(-100000)};
-function validateChangedParams(before:Record<string,unknown>,after:Record<string,unknown>,type:string){
- const registry:Record<string,z.ZodType>=type==='video'?{...visualParams,...audioParams}:type==='text'?{...visualParams,...textParams}:type==='audio'?audioParams:type==='effect'?{}:visualParams;
+const blurParams:Record<string,z.ZodType>={intensity:z.number().finite().min(0).max(100)};
+const graphicBase:Record<string,z.ZodType>={fill:z.string(),stroke:z.string(),strokeWidth:z.number().finite().min(0).max(64),strokeAlign:z.enum(['inside','center','outside'])};
+const graphicParams:Record<string,Record<string,z.ZodType>>={rectangle:{...graphicBase,cornerRadius:z.number().finite().min(0).max(50)},ellipse:graphicBase,polygon:{...graphicBase,sides:z.number().finite().min(3).max(12),cornerRadius:z.number().finite().min(0).max(50)},star:{...graphicBase,points:z.number().finite().min(3).max(12),depth:z.number().finite().min(1).max(99)}};
+function paramRegistry(type:string,definitionId?:string,effectType?:string):Record<string,z.ZodType>{return type==='video'?{...visualParams,...audioParams}:type==='text'?{...visualParams,...textParams}:type==='audio'?audioParams:type==='effect'?(effectType==='blur'?blurParams:{}):type==='graphic'?{...visualParams,...graphicParams[definitionId??'']}:visualParams;}
+/** 与固定源params/graphics/effects registry同名；只披露机械可改字段，不决定创作。 */
+export function productionNativeParamRegistryKeys(type:string,definitionId?:string,effectType?:string):string[]{return Object.keys(paramRegistry(type,definitionId,effectType));}
+export const PRODUCTION_NATIVE_GRAPHIC_DEFINITIONS=['rectangle','ellipse','polygon','star'] as const;
+function validateParamChanges(before:Record<string,unknown>,after:Record<string,unknown>,registry:Record<string,z.ZodType>){
  for(const key of new Set([...Object.keys(before),...Object.keys(after)]))if(!same(before[key],after[key])){const schema=registry[key];if(!schema)throw new Error('参数不属于固定原生registry');schema.parse(after[key]);}
+}
+function validateChangedParams(before:Record<string,unknown>,after:Record<string,unknown>,element:NativeSerializedTimelineElement){validateParamChanges(before,after,paramRegistry(element.type,element.definitionId as string|undefined,element.effectType as string|undefined));}
+const notKeyframable=new Set(['blendMode','muted','content','fontFamily','textAlign','fontWeight','fontStyle','textDecoration','background.enabled']);
+function validateChangedAnimations(before:Record<string,unknown>,element:NativeSerializedTimelineElement){
+ const registry=paramRegistry(element.type),after=element.animations??{};
+ for(const path of new Set([...Object.keys(before),...Object.keys(after)])){
+  if(same(before[path],after[path])||after[path]===undefined)continue;
+  let schema=notKeyframable.has(path)?undefined:registry[path],color=path==='color'||path==='background.color';
+  if(element.type==='graphic'&&path.startsWith('params.')){const key=path.slice(7);schema=graphicParams[element.definitionId]?.[key];color=key==='fill'||key==='stroke';}
+  if(path.startsWith('effects.')){const split=path.indexOf('.params.',8),fx=split>8?(element.effects as Array<{id:string;type:string}>|undefined)?.find(f=>f.id===path.slice(8,split)):undefined,key=split>8?path.slice(split+8):'';schema=fx?.type==='blur'?blurParams[key]:undefined;color=false;}
+  if(!schema)throw new Error('动画字段不属于固定原生registry');
+  const data=after[path] as Record<string,unknown>;
+  if(color&&!Array.isArray(data.keys)){for(const [component,channel] of Object.entries(data)){if(!['r','g','b','a'].includes(component))throw new Error('动画颜色component无效');if(channel!==undefined)for(const key of (channel as {keys:Array<{value:unknown}>}).keys)z.number().finite().parse(key.value);}}
+  else if(Array.isArray(data.keys)){for(const key of data.keys as Array<{value:unknown}>)schema.parse(key.value);}
+  else throw new Error('动画channel与参数类型不符');
+ }
 }

@@ -4625,5 +4625,5 @@ it('T1070四工具只经冻结target的真实短端口读/提案，缺target错�
  const returned={kind:'work.editor.context',document:{body:'全文'},error:null};const calls:unknown[]=[];
  const tools=allChatTools({...makeDeps().deps,editorTarget:target as any,readWorkEditor:async input=>{calls.push(input);return returned as any;}});
  expect(await getChatToolNativeExecutor(tools['work.editor.read']!)!({view:'selection'})).toEqual(returned);expect(calls).toEqual([{view:'selection'}]);
- const missing=allChatTools(makeDeps().deps);expect(await getChatToolNativeExecutor(missing['work.editor.propose']!)!({})).toMatchObject({kind:'work.editor.candidate',candidate:null,apply:null,changes:[]});
+ const missing=allChatTools(makeDeps().deps);expect(await runExecute(missing['work.editor.propose']!,{})).toMatchObject({kind:'work.editor.candidate',candidate:null,apply:null,changes:[]});
 });
