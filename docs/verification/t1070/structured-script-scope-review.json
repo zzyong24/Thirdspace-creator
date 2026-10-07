@@ -1,0 +1,131 @@
+{
+  "schema": "creatoros/t1070-structured-script-consumer-scope-independent-review@1",
+  "task_id": "T-1070",
+  "reviewer": "/root/final_scope_recheck",
+  "created_at": "2026-10-07T07:55:21.770526+00:00",
+  "review_kind": "同一已确认需求的最小消费者实现闭包；非新合同轮、不reset cycle",
+  "verdict": "GO_FOR_EXACT_TWO_PATH_IMPLEMENTATION_ADMISSION",
+  "summary": "可准入这两个现有消费者文件。默认分镜视图持有真实未保存稿却未注册严格脚本端口；复用原registerScript与原保存/读回正是原一键生成确认步骤的不可约正确性闭包。新增SOURCE尚未实现，本报告只准入范围，不以未实现为缺陷或签未来实现。",
+  "main": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "observed_head": "b678b90527a1e2bd076e3c88cc2e5c70fb29a069",
+  "reviewed_sha256": {
+    "docs/features/t1070-director-script-workflow/STRUCTURED_SCRIPT_INTEGRATION.md": "fce48145e9ac4d9aafdffd8395114498628f2fd9777176469bd659ac2f9bf7cd",
+    "docs/features/t1070-director-script-workflow.md": "2513aedb1164f3ce99b0a81ea25dc4a0e79853cbda5374ce49a75fbf89c871e9",
+    "docs/features/t1070-director-script-workflow/CONTRACT.json": "fae774ebfe3a20097a93e8bfbc4189069345c0852600940c1e8efadb5ece0a0b",
+    "orchestrator/SYSTEM_ARCHITECTURE.md": "3efbb0394b8bcc9eb3c9ad7e8c9364df51e336006b862e02ac71fd6c9327971e",
+    "frontend/src/features/script/script-structure-view.tsx": "19675662e9e396a95e552aa6f6ec3da0459e6690e78057e2efe585cbc9b810e9",
+    "frontend/src/features/script/script-structure-view.test.tsx": "4f7d78fa596d45a2c60bb4b39d1b80a5a44c3a53031e4e84c0e177f700123d61",
+    "frontend/src/features/script/script-rich-editor.tsx": "a0044c2ad9a54574a2440beb53232592958e0c5ed80284611bdb233069fe3427",
+    "frontend/src/features/draft-workbench/draft-chat-request.tsx": "cf99614e68abb31238caa56f06b6a3a8a6163d7dbb1f43c25bfa02a757af723b",
+    "frontend/src/features/script/ensure-script-artifact.ts": "3839e7461cc0cd78e74008c09c6063c5c803544940a90f9fab1c20a282bf6270"
+  },
+  "exact_scope": {
+    "preserved_original_contract_write_set": 93,
+    "additive_consumer_paths": [
+      "frontend/src/features/script/script-structure-view.tsx",
+      "frontend/src/features/script/script-structure-view.test.tsx"
+    ],
+    "additive_implementation_write_set": 95,
+    "old_contract_and_spec_bytes_unchanged": true,
+    "existing_base_repairs": "本次不重新授权或重写此前基础修复；95仅表示原93加此2消费者",
+    "production_changes_permitted": "只在真实持有结构稿闭包的现有组件注册原DraftScriptPort，复用原client/save/read/owner/预算；测试文件提供真实Provider和原client边界证据",
+    "not_authorized": "不新增API、表、任务、模型循环、工具、权限、owner、IPC或安装机制，不改rich/provider/ensure helper或任何第三产品路径；若发现确需其它路径必须另报最小闭包"
+  },
+  "source_evidence": [
+    {
+      "path": "frontend/src/features/script/script-structure-view.tsx",
+      "line": 123,
+      "observation": "sections非空默认structure，153–165条件渲染仅挂结构编辑器，rich children不挂载。"
+    },
+    {
+      "path": "frontend/src/features/script/script-structure-view.tsx",
+      "line": 188,
+      "observation": "结构编辑器仅取openChat/registerFlush；local、persistedAnchor、editRevision和pendingSave在该组件闭包。"
+    },
+    {
+      "path": "frontend/src/features/script/script-structure-view.tsx",
+      "line": 287,
+      "observation": "原persistCurrentSections通过ensureScriptArtifact/createArtifactVersion生成完整sections版本，真实回执anchor与在途editRevision必须由该消费者维护。"
+    },
+    {
+      "path": "frontend/src/features/script/script-structure-view.tsx",
+      "line": 356,
+      "observation": "只注册旧flush，不能把旧flush无异常当新严格端口的真实artifact/version确认。"
+    },
+    {
+      "path": "frontend/src/features/script/script-rich-editor.tsx",
+      "line": 400,
+      "observation": "已准入rich消费者注册registerScript；不能从已卸载实例读取结构稿local，也不能旁挂隐藏rich假定两稿相同。"
+    },
+    {
+      "path": "frontend/src/features/draft-workbench/draft-chat-request.tsx",
+      "line": 263,
+      "observation": "原registerScript返回token guarded unregister；prepareScriptForCreation捕获entry、120000ms等待、核entry/generation。可直接复用，不需新增Provider/API。"
+    },
+    {
+      "path": "docs/features/t1070-director-script-workflow.md",
+      "line": 37,
+      "observation": "既有SPEC要求当前脚本真实ID/版本/完整内容保存读回与registration/generation/UNKNOWN守卫；并未把一键生成限定为纯文本视图。"
+    }
+  ],
+  "authorization_assessment": {
+    "conclusion": "原用户明确一键生成非视频作品；默认分镜视图正确确认当前稿属于已授权正常路径，不是新产品能力。AGENTS的必要实现和可用性规则支持补真实消费者接线；本报告没有修改控制面/启动新评审轮，也不代替ROOT实际登记范围。",
+    "public_service_contract": "保持原ScriptSourceRef与creationTarget，不新增公共operation；确认仍当场用户current-click，backend仍每次按原三维归属守权。",
+    "data_ownership": "所有读写沿原当前project/workspace认证client与backend owner校验；浏览器scope key只冻结调用意图，不能伪称已验证成员权限。",
+    "semantics": "不猜首脚本、不按词/类型选创作内容；section顺序/完整字段与原visual只机械保真，语义仍由原Skill/模型。"
+  },
+  "findings": [],
+  "counts": {
+    "blocker": 0,
+    "major": 0,
+    "minor": 0
+  },
+  "required_implementation_evidence": [
+    {
+      "id": "SS-01",
+      "gate": "真实默认视图端口",
+      "requirement": "真实ScriptStructureToggle有sections默认structure，原Provider prepareScriptForCreation走该实际组件；不得mock已预确认port或隐藏rich实例。"
+    },
+    {
+      "id": "SS-02",
+      "gate": "完整真实稿与归属",
+      "requirement": "冻结当场local/section ID、类型、visual完整对象及原完整contentData/contentText；机械更新结构字段，旧html不得覆盖新sections。精确artifact.id/projectId与version.artifactId/version.id核对，工作区调用意图前后同根；pure group与合法legacy均保原入口，foreign/archive由原backend拒绝。"
+    },
+    {
+      "id": "SS-03",
+      "gate": "首次ID与CAS",
+      "requirement": "首次ensure实际ID持久在本消费者ref；原pending保存先等待、不重复append。保存基点与current/read版本同绑定，首次/已有artifact CAS和并发current换版均实际覆盖，不用项目列表首项或旧flush猜源。"
+    },
+    {
+      "id": "SS-04",
+      "gate": "UNKNOWN保守恢复",
+      "requirement": "保存前冻结完整原intent/基点，未知结果只读原artifact当前/精确版本核完整body。无法证明该次保存结果时保持UNKNOWN与输入，禁止重复append；不能将恰好同正文的旧版本或另一个用户新版本当该次回执。超时保原pending/intent，不自动重发。"
+    },
+    {
+      "id": "SS-05",
+      "gate": "生命周期与编辑generation",
+      "requirement": "注册entry token与注销受原Provider保护；editRevision/草稿深等在等待保存、读回后和最终return前保持，卸载/切视图/换项目/换workspace/异步props重灌均阻止旧确认发chat，保新稿。不得用保存成功覆盖在途新编辑。"
+    },
+    {
+      "id": "SS-06",
+      "gate": "预算与历史兼容",
+      "requirement": "严格准备沿原至少120000ms有限预算，保原手工保存、分段AI改写、版本历史、无script空态；不得缩旧合法执行或把reconstructed来源伪装为历史确认。"
+    },
+    {
+      "id": "SS-07",
+      "gate": "实际证据与分层结论",
+      "requirement": "当场RED→GREEN包含原Provider/save/read client边界及SS01–06；实际默认分镜新输入→按钮保存读回→原chat frozen source精确version/body一致。组件证据不代签模型候选、native、导出、视觉、包装、安装或全Gate。"
+    }
+  ],
+  "diagram": "当前实际分镜local → 原token guarded registerScript → 原保存/UNKNOWN回读 → 同artifact当前精确version与完整稿核验 → 原creationTarget/chat（不新增任务）",
+  "verification": "本轮只读源码/文档/哈希；未运行测试、模型、DB、browser或reviewctl；未构造未发生的RED/GREEN。",
+  "mutations": {
+    "repo": false,
+    "product": false,
+    "controlplane": false,
+    "user_db": false,
+    "browser": false,
+    "models": false,
+    "writes": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-diagnosis/structured-script-scope-review.json"
+  }
+}

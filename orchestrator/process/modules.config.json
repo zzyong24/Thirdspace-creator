@@ -4082,7 +4082,8 @@
         "backend/src/schema/ai.ts",
         "backend/src/schema/account-groups.ts",
         "backend/src/modules/assets/**",
-        "backend/src/schema/pending-generated-asset-commits.ts"
+        "backend/src/schema/pending-generated-asset-commits.ts",
+        "docs/features/t1070-director-script-workflow/STRUCTURED_SCRIPT_INTEGRATION.md"
       ],
       "write_set": [
         "backend/src/modules/ai/external-chat-turn.service.ts",
@@ -4180,7 +4181,9 @@
         "frontend/src/features/copilot/chat-work-creation-card.test.tsx",
         "frontend/src/features/script/script-rich-editor.tsx",
         "frontend/src/features/script/script-rich-editor.test.tsx",
-        "frontend/src/features/draft-workbench/creation-flow-ctas.test.tsx"
+        "frontend/src/features/draft-workbench/creation-flow-ctas.test.tsx",
+        "frontend/src/features/script/script-structure-view.tsx",
+        "frontend/src/features/script/script-structure-view.test.tsx"
       ],
       "step_write_set": {
         "external-engine": [
@@ -4282,7 +4285,9 @@
           "frontend/src/features/copilot/chat-work-creation-card.test.tsx",
           "frontend/src/features/script/script-rich-editor.tsx",
           "frontend/src/features/script/script-rich-editor.test.tsx",
-          "frontend/src/features/draft-workbench/creation-flow-ctas.test.tsx"
+          "frontend/src/features/draft-workbench/creation-flow-ctas.test.tsx",
+          "frontend/src/features/script/script-structure-view.tsx",
+          "frontend/src/features/script/script-structure-view.test.tsx"
         ]
       },
       "verify_commands": {
@@ -4302,7 +4307,7 @@
           "git diff --check"
         ]
       },
-      "scope_note": "最新用户取消自动视频；完整选定文章图文联合创作和原生自然语言编导精确写集，待同周期第3轮独评与正常claim后产品实施。原基础四路径已5c444034完成。"
+      "scope_note": "原93路径合同和三轮PASS原样保留；实际默认分镜稿卸载rich端口导致原按钮无法确认稿件。2026-10-07必要消费者补充及独立scope review SHA49710fd73cf3448abf50252b65927a0f85a62153b525ddccb6307593feccf173，仅新增structure-view.tsx/test两路径，implementation合计95。无新API/owner/表/权限/任务/能力，不重开合同周期；实际实现及默认视图旅程仍待验。"
     }
   }
 }

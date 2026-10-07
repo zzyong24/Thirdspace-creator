@@ -3669,3 +3669,7 @@ Status: active
 ## DEC-T1070-EXCLUDE-AUTO-VIDEO（2026-10-07）
 
 用户当场回复：“视频初稿这个初不了 这个不做 也不能自动生成 做个按钮吧 除视频外的一键生成 这个是没问题的 然后再去微调”。当前完整范围因此改为确认脚本后按钮一键生成文章和图文；视频保留真实素材导入、原生时间线手动调整与右侧编导自然语言精剪。取消自动视频初稿、TTS、新视频生成任务及其配置/渲染扩展；不是拆分已确认需求。既有 Codex 纯组执行修复不变。该决策记录实际产品授权，不是 review-cycle/process capability，不消费或重置评审预算。
+
+## DEC-T1070-STRUCTURED-SCRIPT-CONSUMER（2026-10-07）
+
+原用户要求确认脚本后一键生成文章和图文，当前实际默认分镜视图会卸载唯一严格确认端口。独立范围复核准入原组件和测试两路径，技术补充见docs/features/t1070-director-script-workflow/STRUCTURED_SCRIPT_INTEGRATION.md，独评SHA49710fd73cf3448abf50252b65927a0f85a62153b525ddccb6307593feccf173。这是原授权的必要消费者正确性闭包，无新公共合同/表/owner/权限/任务/能力；原93合同及三轮PASS不修改、不reset、不新造Owner=user capability。实现沿同一token/save/current/read/UNKNOWN/generation约束，未知不盲目再append。未代签默认视图模型或安装验收。
