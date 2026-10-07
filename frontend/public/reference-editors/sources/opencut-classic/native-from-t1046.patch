@@ -4902,3 +4902,162 @@
 +  return{blob:new Blob([result.buffer],{type:'video/mp4'}),fileName:`${project.metadata.name}-preview.mp4`,sceneId:p.targetSceneId,candidateDigest:p.candidateDigest,contextEpoch:p.baseContextEpoch,documentVersion:31};
 + }finally{unlock();}
 +}
+--- a/NATIVE_REBUILD_CONSISTENCY.json
++++ b/NATIVE_REBUILD_CONSISTENCY.json
+@@ -2,2 +2,2 @@
+-  "status": "PASS",
+-  "scope": "固定base+完整累计patch实际复原全部source零字节差异；fresh frozen install后真实source类型/源码fixture测试及同一本机两次production构建hash一致；未签真实浏览器音视频或跨OS位复现",
++  "status": "PASS_SOURCE_REBUILD_REVIEW_PENDING",
++  "scope": "修复NATIVE-REVIEW-001后：固定base+完整累计patch实际复原全部708source零字节差异；fresh frozen install后真实source类型/43测试253断言及同一本机两次production构建hash一致；独立复审和真实浏览器音视频未签",
+@@ -6 +6 @@
+-  "nativeContractCopySha256": "4dc632fd8b5176730c0b2343071c64afe7fa47aa0448d2d08f527a8c46237874",
++  "nativeContractCopySha256": "5404771bf43a3ac4a51cd1dc6f698d0f10b115fb81ba7f3a749654c34c073b2b",
+@@ -14,2 +14,2 @@
+-    "tests": 42,
+-    "assertions": 233,
++    "tests": 43,
++    "assertions": 253,
+@@ -32,2 +32,2 @@
+-      "log": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-tests/native-production-build-1.log",
+-      "sha256": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-tests/native-production-build-1-sha256.json"
++      "log": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-tests/native-race-production-build-1.log",
++      "sha256": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-tests/native-race-production-build-1-sha256.json"
+@@ -37,2 +37,2 @@
+-      "log": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-tests/native-production-build-2.log",
+-      "sha256": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-tests/native-production-build-2-sha256.json"
++      "log": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-tests/native-race-production-build-2.log",
++      "sha256": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-tests/native-race-production-build-2-sha256.json"
+@@ -43 +43 @@
+-    "NATIVE_BUILD_GRAPH.json": "df94f84a7e0f09d3d6a2fd38ce093b7ebbc93621cfd6db637ae8968c356aa315",
++    "NATIVE_BUILD_GRAPH.json": "47b91f72912b47e4ba0813b67229fa7ab823469d7e3a335cf44317704d41bdac",
+@@ -48 +48 @@
+-    "native.js": "b7f119a87dd82d0fca0dd775a8c2cecb39c721f17d9ece4d59c8488292515cf7"
++    "native.js": "7716ee850a64d3a556ff8f71dda79afa33dd61f105f97e02644303b8fc4e6f25"
+@@ -54 +54,19 @@
+-  ]
++  ],
++  "publicImportRace": {
++    "reviewFinding": "NATIVE-REVIEW-001",
++    "originalReview": "FAIL major; native-diff-review.json保留原记录",
++    "red": {
++      "log": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-tests/native-race-public-red.log",
++      "observed": "原controller→preview在File摘要窗口启动真实processMediaAssets导入，原editSignal被预览锁取消，expect(false)收到true",
++      "exitCode": 1
++    },
++    "green": {
++      "log": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-tests/native-race-public-green.log",
++      "tests": 1,
++      "assertions": 20,
++      "observed": "最后取得锁前同步重核controller pendingImports与MediaManager loading，preview409零renderer/零lock；原File/信号/epoch保留，原公共导入完成并进入实际MediaManager/StorageService"
++    },
++    "boundary": "视频decoder和renderer端口为明确fixture；controller、processMediaAssets、registerMediaFile、MediaManager和StorageService源码实际执行；不证明浏览器音视频"
++  },
++  "licenseMetadataNote": "THIRD_PARTY_LICENSES.json实际60项，新增Zod4.3.6；README旧59计数暂保留minor，根会话文档据实登记",
++  "postBuildEvidenceUpdate": "仅本JSON证据在两次build后更新；运行时源码与被测/被构建字节相同"
+--- a/apps/web/src/embedded/__tests__/native-preview.test.ts
++++ b/apps/web/src/embedded/__tests__/native-preview.test.ts
+@@ -6 +6,2 @@
+-mock.module('@/core',()=>({EditorCore:{getInstance(){throw Error('fixture must not access global editor');}}}));
++let controllerEditor:any;
++mock.module('@/core',()=>({EditorCore:{getInstance(){if(!controllerEditor)throw Error('fixture must not access global editor');return controllerEditor;},reset(){}}}));
+@@ -31,0 +33,43 @@
++
++// 原controller与processMediaAssets/registerMediaFile/MediaManager公共导入源码都实际执行；仅视频解码和renderer端口是显式fixture。
++test('T1070 公共控制器摘要窗口的新导入保原请求/信号/epoch并完整加入，不被只读预览取消',async()=>{
++ let decoderStarted=false,decoderSignal:AbortSignal|undefined,finishDecoder!:(result:any)=>void,uploadSignal:AbortSignal|undefined,uploadCalls=0;
++ const decoder=new Promise(resolve=>finishDecoder=resolve);
++ mock.module('@/media/mediabunny',()=>({readVideoFile:({signal}:any)=>{decoderStarted=true;decoderSignal=signal;return new Promise((resolve,reject)=>{const abort=()=>{cleanup();reject(new DOMException('decode fixture canceled','AbortError'));};const cleanup=()=>signal.removeEventListener('abort',abort);signal.addEventListener('abort',abort,{once:true});decoder.then(value=>{cleanup();resolve(value);},reject);if(signal.aborted)abort();});}}));
++ mock.module('@/services/video-cache/service',()=>({videoCache:{drain:async()=>{},clearAll(){}}}));
++ mock.module('@/services/waveform-cache/service',()=>({waveformCache:{clearAll(){}}}));
++ mock.module('@/services/renderer/nodes/image-node',()=>({clearImageSources(){}}));
++ mock.module('@/services/renderer/compositor/wasm-compositor',()=>({wasmCompositor:{dispose(){}}}));
++ mock.module('@/services/renderer/gpu-renderer',()=>({initializeGpuRenderer:async()=>{},isGpuAvailable:()=>true}));
++ mock.module('@/timeline/scenes',()=>({buildDefaultScene(){return {id:'unused-default',tracks:{main:{id:'unused-main',type:'video',elements:[]},overlay:[],audio:[]}};}}));
++ mock.module('@/components/editor/panels/assets/assets-panel-store',()=>({useAssetsPanelStore:{setState(){}}}));
++ mock.module('@/timeline/timeline-store',()=>({useTimelineStore:{setState(){}}}));
++ mock.module('@/actions/keybindings-store',()=>({useKeybindingsStore:{setState(){}}}));
++ mock.module('@/commands',()=>({BatchCommand:class{},RemoveMediaAssetCommand:class{}}));
++ const {MediaManager}=await import('@/core/managers/media-manager');
++ const {storageService}=await import('@/services/storage/service');
++ const {processMediaAssets}=await import('@/media/processing');
++ const {createNativeController}=await import('../native-controller');
++ const {getRegisteredMediaId}=await import('../media-registration');
++ const {currentEditEpoch,currentEditSignal}=await import('../edit-lock');
++ const f=fixture(),e=f.editor,lateFile=new File(['late import source'],'late.mp4',{type:'video/mp4',lastModified:222});
++ nativeHost().importMedia=async(file,options)=>{expect(file).toBe(lateFile);uploadCalls++;uploadSignal=options?.signal;return{mediaId:'late-media'};};
++ const no=()=>{};Object.assign(e.playback,{pause:no,dispose:no,getCurrentTime:()=>0,subscribe:()=>no,onSeek:()=>no});Object.assign(e.save,{stop:no,pause:no,resume:no,flush:async()=>{},markDirty:no});e.audio={dispose:async()=>{}};e.selection={getSelectedElements:()=>[],subscribe:()=>no};e.timeline={subscribe:()=>no};e.scenes={getScenes:()=>f.project.scenes,getActiveScene:()=>f.project.scenes.find((scene:any)=>scene.id===f.project.currentSceneId),subscribe:()=>no};
++ Object.assign(e.project,{subscribe:()=>no,ratchetFpsForImportedMedia:no,loadProject:async({id}:any)=>{const loaded=await storageService.loadProject({id});if(!loaded)throw Error('actual transient project missing');Object.assign(f.project,loaded.project);await e.media.loadProjectMedia({projectId:id});}});e.renderer.setDegraded=no;e.media=new MediaManager(e);controllerEditor=e;
++ const ctl=createNativeController(()=>{});let releaseFile!:(value:ArrayBuffer)=>void,bytesStarted=false;let importObserved:Promise<any>|undefined;
++ try{
++  const initial=await f.payload();await ctl.request('load',{outputId:f.project.metadata.id,document:nativeJson(f.project),media:initial.media}, {requestId:'public-race-load'});
++  const p=await f.payload(),independent=new File([f.file],f.file.name,{type:f.file.type,lastModified:f.file.lastModified});
++  Object.defineProperty(independent,'arrayBuffer',{value:()=>{bytesStarted=true;return new Promise<ArrayBuffer>(resolve=>releaseFile=resolve);}});p.media[0].file=independent;
++  const editEpoch=currentEditEpoch(),editSignal=currentEditSignal();
++  const previewObserved=ctl.request('preview-scene',p,{requestId:'public-race-preview'}).then(value=>({value}),error=>({error}));
++  for(let i=0;i<100&&!bytesStarted;i++)await Bun.sleep(1);expect(bytesStarted).toBe(true);
++  const importWork=processMediaAssets({files:[lateFile],onProcessed:async asset=>{const added=await e.media.addMediaAsset({projectId:f.project.metadata.id,asset});if(!added)throw Error('original imported asset was not accepted');}});importObserved=importWork.then(value=>({value}),error=>({error}));
++  for(let i=0;i<100&&!decoderStarted;i++)await Bun.sleep(1);expect(decoderStarted).toBe(true);expect(uploadCalls).toBe(1);expect(decoderSignal?.aborted).toBe(false);
++  f.complete({success:true,buffer:new ArrayBuffer(4)});releaseFile(await f.file.arrayBuffer());
++  const preview=await previewObserved;
++  expect(editSignal.aborted).toBe(false);expect(preview.error).toMatchObject({status:409,code:'ConflictError'});expect(f.calls).toBe(0);expect(isExportLocked()).toBe(false);expect(currentEditEpoch()).toBe(editEpoch);expect(decoderSignal?.aborted).toBe(false);expect(uploadSignal?.aborted).toBe(false);
++  finishDecoder({duration:2,width:1280,height:720,fps:30,hasAudio:false,canDecode:true,codec:'h264',thumbnailUrl:null});const imported=await importObserved;
++  expect(imported.error).toBeUndefined();expect(imported.value).toHaveLength(1);expect(getRegisteredMediaId(lateFile)).toBe('late-media');expect(e.media.getAssets().find((asset:any)=>asset.id==='late-media')?.file).toBe(lateFile);expect(uploadCalls).toBe(1);expect(currentEditEpoch()).toBe(editEpoch);expect(editSignal.aborted).toBe(false);expect(decoderSignal?.aborted).toBe(false);
++ }finally{finishDecoder({duration:2,width:1280,height:720,fps:30,hasAudio:false,canDecode:true});if(importObserved)await importObserved;ctl.clear();controllerEditor=undefined;}
++},120000);
+--- a/apps/web/src/embedded/native-controller.ts
++++ b/apps/web/src/embedded/native-controller.ts
+@@ -47 +47 @@
+- async function operate(operation:string,payload:any,requestId:string,signal?:AbortSignal){check();if(signal?.aborted)throw new DOMException('原操作已停止。','AbortError');if(operation==='load')return load(payload);if(!loaded)throw Error('请先载入当前作品。');const editor=EditorCore.getInstance();if(operation==='read-original-audio-range')return readOriginalAudioRange(payload,signal,()=>{check();const p=payload as OriginalAudioRangeRequest;const active=editor.scenes.getActiveScene();if(active.id!==p.sceneId||![active.tracks.main,...active.tracks.overlay,...active.tracks.audio].some(t=>t.elements.some(e=>e.id===p.clipId)))throw Error('原场景或片段已改变。');});if(operation==='snapshot'||operation==='context'){if(operation==='context'&&payload?.pausePlayback===true)pauseNativePlaybackForContext(editor.playback,check);await editor.save.flush();check();return operation==='context'?{...readNativeContext(editor,storageService.snapshot()),contextEpoch:currentNativeContextEpoch()}:storageService.snapshot();}if(operation==='preview-scene'){view({loaded:true,exporting:true});try{return await previewNativeScene(editor,payload,check,waitForImports);}finally{if(!life.signal.aborted)view({loaded:true,exporting:false});}}if(operation==='seek')return seekNative(editor,payload,check);if(operation==='apply-tracks')return replay.apply(editor,requestId,payload,check);if(operation==='export'){view({loaded:true,exporting:true});try{return await exportFrozenSnapshot(editor,payload?.format==='webm'?'webm':'mp4',()=>life.signal.aborted||!!signal?.aborted);}finally{if(!life.signal.aborted)view({loaded:true,exporting:false});}}if(operation==='insert-media'){if(!(payload?.file instanceof File)||typeof payload.mediaId!=='string'||!payload.mediaId)throw Error('素材文件与ID缺失。');const existing=editor.media.getAssets().find(asset=>asset.id===payload.mediaId);if(existing)return{mediaId:existing.id};rememberMediaFile(payload.file,payload.mediaId);const assets=await processMediaAssets({files:[payload.file],signal});check();if(assets.length!==1)throw Error('此素材无法处理。');const asset=await editor.media.addMediaAsset({projectId:host.owner.outputId,asset:assets[0]});check();if(!asset)throw Error('加入素材失败。');return{mediaId:asset.id};}throw Error('此编辑操作尚不支持。');}
++ async function operate(operation:string,payload:any,requestId:string,signal?:AbortSignal){check();if(signal?.aborted)throw new DOMException('原操作已停止。','AbortError');if(operation==='load')return load(payload);if(!loaded)throw Error('请先载入当前作品。');const editor=EditorCore.getInstance();if(operation==='read-original-audio-range')return readOriginalAudioRange(payload,signal,()=>{check();const p=payload as OriginalAudioRangeRequest;const active=editor.scenes.getActiveScene();if(active.id!==p.sceneId||![active.tracks.main,...active.tracks.overlay,...active.tracks.audio].some(t=>t.elements.some(e=>e.id===p.clipId)))throw Error('原场景或片段已改变。');});if(operation==='snapshot'||operation==='context'){if(operation==='context'&&payload?.pausePlayback===true)pauseNativePlaybackForContext(editor.playback,check);await editor.save.flush();check();return operation==='context'?{...readNativeContext(editor,storageService.snapshot()),contextEpoch:currentNativeContextEpoch()}:storageService.snapshot();}if(operation==='preview-scene'){view({loaded:true,exporting:true});try{return await previewNativeScene(editor,payload,check,waitForImports,()=>pendingImports>0);}finally{if(!life.signal.aborted)view({loaded:true,exporting:false});}}if(operation==='seek')return seekNative(editor,payload,check);if(operation==='apply-tracks')return replay.apply(editor,requestId,payload,check);if(operation==='export'){view({loaded:true,exporting:true});try{return await exportFrozenSnapshot(editor,payload?.format==='webm'?'webm':'mp4',()=>life.signal.aborted||!!signal?.aborted);}finally{if(!life.signal.aborted)view({loaded:true,exporting:false});}}if(operation==='insert-media'){if(!(payload?.file instanceof File)||typeof payload.mediaId!=='string'||!payload.mediaId)throw Error('素材文件与ID缺失。');const existing=editor.media.getAssets().find(asset=>asset.id===payload.mediaId);if(existing)return{mediaId:existing.id};rememberMediaFile(payload.file,payload.mediaId);const assets=await processMediaAssets({files:[payload.file],signal});check();if(assets.length!==1)throw Error('此素材无法处理。');const asset=await editor.media.addMediaAsset({projectId:host.owner.outputId,asset:assets[0]});check();if(!asset)throw Error('加入素材失败。');return{mediaId:asset.id};}throw Error('此编辑操作尚不支持。');}
+--- a/apps/web/src/embedded/native-document-contract.ts
++++ b/apps/web/src/embedded/native-document-contract.ts
+@@ -106,3 +106,6 @@
+-   if(!old||!same(old.masks,element.masks))for(const mask of (element.masks??[]) as unknown[])productionNativeMask.parse(mask);
+-   validateChangedParams(old?.params??{},element.params,element.type);
+-   if(!old||!same(old.effects,element.effects))for(const fx of (element.effects??[]) as Array<{type:string;params:Record<string,unknown>}>){productionNativeEffect.parse(fx);if(fx.type!=='blur'||typeof fx.params.intensity!=='number'||fx.params.intensity<0||fx.params.intensity>100)throw new Error('效果不属于固定renderer catalog');}
++   if(!old||!same(old.masks,element.masks))for(const mask of (element.masks??[]) as Array<Record<string,unknown>>){const prior=(old?.masks as Array<Record<string,unknown>>|undefined)?.find(m=>m.id===mask.id);if(!prior||!same(prior,mask))productionNativeMask.parse(mask);}
++   if(element.type==='graphic'&&!old&&!Object.hasOwn(graphicParams,element.definitionId))throw new Error('图形不属于固定renderer catalog');
++   if(element.type==='effect'&&(!old||!same(old.effectType,element.effectType))&&element.effectType!=='blur')throw new Error('效果不属于固定renderer catalog');
++   validateChangedParams(old?.params??{},element.params,element);
++   validateChangedAnimations(old?.animations??{},element);
++   if(!old||!same(old.effects,element.effects))for(const fx of (element.effects??[]) as Array<{id:string;type:string;params:Record<string,unknown>}>){const prior=(old?.effects as Array<{id:string;type:string;params:Record<string,unknown>}>|undefined)?.find(value=>value.id===fx.id);if(prior&&same(prior,fx))continue;productionNativeEffect.parse(fx);if(fx.type!=='blur'||prior&&prior.type!==fx.type)throw new Error('效果不属于固定renderer catalog');validateParamChanges(prior?.params as Record<string,unknown>??{},fx.params,blurParams);}
+@@ -121,2 +124,8 @@
+-function validateChangedParams(before:Record<string,unknown>,after:Record<string,unknown>,type:string){
+- const registry:Record<string,z.ZodType>=type==='video'?{...visualParams,...audioParams}:type==='text'?{...visualParams,...textParams}:type==='audio'?audioParams:type==='effect'?{}:visualParams;
++const blurParams:Record<string,z.ZodType>={intensity:z.number().finite().min(0).max(100)};
++const graphicBase:Record<string,z.ZodType>={fill:z.string(),stroke:z.string(),strokeWidth:z.number().finite().min(0).max(64),strokeAlign:z.enum(['inside','center','outside'])};
++const graphicParams:Record<string,Record<string,z.ZodType>>={rectangle:{...graphicBase,cornerRadius:z.number().finite().min(0).max(50)},ellipse:graphicBase,polygon:{...graphicBase,sides:z.number().finite().min(3).max(12),cornerRadius:z.number().finite().min(0).max(50)},star:{...graphicBase,points:z.number().finite().min(3).max(12),depth:z.number().finite().min(1).max(99)}};
++function paramRegistry(type:string,definitionId?:string,effectType?:string):Record<string,z.ZodType>{return type==='video'?{...visualParams,...audioParams}:type==='text'?{...visualParams,...textParams}:type==='audio'?audioParams:type==='effect'?(effectType==='blur'?blurParams:{}):type==='graphic'?{...visualParams,...graphicParams[definitionId??'']}:visualParams;}
++/** 与固定源params/graphics/effects registry同名；只披露机械可改字段，不决定创作。 */
++export function productionNativeParamRegistryKeys(type:string,definitionId?:string,effectType?:string):string[]{return Object.keys(paramRegistry(type,definitionId,effectType));}
++export const PRODUCTION_NATIVE_GRAPHIC_DEFINITIONS=['rectangle','ellipse','polygon','star'] as const;
++function validateParamChanges(before:Record<string,unknown>,after:Record<string,unknown>,registry:Record<string,z.ZodType>){
+@@ -124,0 +134,16 @@
++function validateChangedParams(before:Record<string,unknown>,after:Record<string,unknown>,element:NativeSerializedTimelineElement){validateParamChanges(before,after,paramRegistry(element.type,element.definitionId as string|undefined,element.effectType as string|undefined));}
++const notKeyframable=new Set(['blendMode','muted','content','fontFamily','textAlign','fontWeight','fontStyle','textDecoration','background.enabled']);
++function validateChangedAnimations(before:Record<string,unknown>,element:NativeSerializedTimelineElement){
++ const registry=paramRegistry(element.type),after=element.animations??{};
++ for(const path of new Set([...Object.keys(before),...Object.keys(after)])){
++  if(same(before[path],after[path])||after[path]===undefined)continue;
++  let schema=notKeyframable.has(path)?undefined:registry[path],color=path==='color'||path==='background.color';
++  if(element.type==='graphic'&&path.startsWith('params.')){const key=path.slice(7);schema=graphicParams[element.definitionId]?.[key];color=key==='fill'||key==='stroke';}
++  if(path.startsWith('effects.')){const split=path.indexOf('.params.',8),fx=split>8?(element.effects as Array<{id:string;type:string}>|undefined)?.find(f=>f.id===path.slice(8,split)):undefined,key=split>8?path.slice(split+8):'';schema=fx?.type==='blur'?blurParams[key]:undefined;color=false;}
++  if(!schema)throw new Error('动画字段不属于固定原生registry');
++  const data=after[path] as Record<string,unknown>;
++  if(color&&!Array.isArray(data.keys)){for(const [component,channel] of Object.entries(data)){if(!['r','g','b','a'].includes(component))throw new Error('动画颜色component无效');if(channel!==undefined)for(const key of (channel as {keys:Array<{value:unknown}>}).keys)z.number().finite().parse(key.value);}}
++  else if(Array.isArray(data.keys)){for(const key of data.keys as Array<{value:unknown}>)schema.parse(key.value);}
++  else throw new Error('动画channel与参数类型不符');
++ }
++}
+--- a/apps/web/src/embedded/native-preview.ts
++++ b/apps/web/src/embedded/native-preview.ts
+@@ -18 +18 @@
+-export async function previewNativeScene(editor:EditorCore,input:NativePreviewSceneRequest,check:()=>void=()=>{},waitForImports:()=>Promise<void>=async()=>{}):Promise<NativePreviewSceneResult>{
++export async function previewNativeScene(editor:EditorCore,input:NativePreviewSceneRequest,check:()=>void=()=>{},waitForImports:()=>Promise<void>=async()=>{},hasPendingImports:()=>boolean=()=>false):Promise<NativePreviewSceneResult>{
+@@ -47 +47 @@
+- const assertFrozen=()=>{assert();if(editor.scenes.getActiveScene().id!==p.targetSceneId||canonicalNative(nativeJson({...editor.project.getActive(),scenes:editor.scenes.getScenes()}))!==originalProject||canonicalNative(nativeJson(editor.scenes.getActiveScene().tracks))!==beforeTracks||canonicalNative(editor.media.getAssets().map(descriptor))!==originalMedia||editor.media.getAssets().some((asset,i)=>asset.file!==currentAssets[i]?.file))throw conflict('候选预览核对期间原工程或素材发生改变。');};
++ const assertFrozen=()=>{assert();if(hasPendingImports()||editor.media.isLoadingMedia())throw conflict('原素材导入仍在进行，候选预览未取得处理锁。请等待原导入完成后重新核对。');if(editor.scenes.getActiveScene().id!==p.targetSceneId||canonicalNative(nativeJson({...editor.project.getActive(),scenes:editor.scenes.getScenes()}))!==originalProject||canonicalNative(nativeJson(editor.scenes.getActiveScene().tracks))!==beforeTracks||canonicalNative(editor.media.getAssets().map(descriptor))!==originalMedia||editor.media.getAssets().some((asset,i)=>asset.file!==currentAssets[i]?.file))throw conflict('候选预览核对期间原工程或素材发生改变。');};
+@@ -55 +55,2 @@
+- const unlock=beginExportLock();
++ // 文件和SHA核对之后必须同步重核真实导入状态；该检查与取得锁之间没有await，不取消原导入。
++ assertFrozen();const unlock=beginExportLock();
