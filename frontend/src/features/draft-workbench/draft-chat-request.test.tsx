@@ -1,5 +1,5 @@
 import * as React from "react";
-import { act, render, cleanup } from "@testing-library/react";
+import { act, render, cleanup, screen } from "@testing-library/react";
 import { it, expect, afterEach } from "vitest";
 import {
   DraftChatRequestProvider,
@@ -11,6 +11,31 @@ function Consumer() {
   return null;
 }
 afterEach(cleanup);
+it("首次严格读回成功后通知同栏当前作品，方法保持稳定且不改变generation", async () => {
+  let target: any = null;
+  const savedTarget = {
+    schemaVersion: 1, projectId: "p", outputId: "o", owner: "wechat_article",
+    contentType: "article", savedBase: { kind: "artifact", artifactId: "a", versionId: "v" },
+    documentDigest: "sha256:" + "a".repeat(64), selection: { kind: "article" },
+  };
+  function CurrentWork() {
+    const chat = useDraftChatRequest();
+    return <p role="status">{chat.readEditorState()?.target?.contentType ?? "等待读回"}</p>;
+  }
+  render(<DraftChatRequestProvider><Consumer /><CurrentWork /></DraftChatRequestProvider>);
+  const prepare = api.prepareEditorTurn;
+  act(() => { api.registerEditor({
+    readState: () => ({ target, generation: 1, dirty: false }),
+    prepareForTurn: async () => { target = savedTarget; return target; },
+    previewCandidate: async () => null,
+    adoptCandidate: async () => ({ status: "adopted" }),
+  }); });
+  expect(screen.getByRole("status")).toHaveTextContent("等待读回");
+  await act(async () => { expect(await prepare()).toEqual(savedTarget); });
+  expect(screen.getByRole("status")).toHaveTextContent("article");
+  expect(api.prepareEditorTurn).toBe(prepare);
+  expect(api.readEditorState()?.generation).toBe(1);
+});
 it("编辑器注册令牌防止旧卸载清除新端口，并在等待保存期间核对generation", async () => {
   render(
     <DraftChatRequestProvider>
