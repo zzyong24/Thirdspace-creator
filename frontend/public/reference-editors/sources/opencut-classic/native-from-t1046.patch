@@ -4549,3 +4549,356 @@
  
  	return (
  		<PreviewViewportProvider value={viewport}>
+--- a/NATIVE_REBUILD_CONSISTENCY.json
++++ b/NATIVE_REBUILD_CONSISTENCY.json
+@@ -3 +3,38 @@
+-  "scope": "显式production mode与NODE_ENV定义；同一Bun1.4.0与现有冻结锁依赖树连续生产构建，未声称fresh依赖安装或跨OS位复现",
++  "scope": "固定base+完整累计patch实际复原全部source零字节差异；fresh frozen install后真实source类型/源码fixture测试及同一本机两次production构建hash一致；未签真实浏览器音视频或跨OS位复现",
++  "taskId": "T-1070",
++  "fixedBaseArchiveSha256": "ad5a2b874a2b50ab10fca522a271b5c929f383af5c9e40bdf1c3f4feb45360a6",
++  "nativeContractCopySha256": "4dc632fd8b5176730c0b2343071c64afe7fa47aa0448d2d08f527a8c46237874",
++  "tools": {
++    "bun": "1.4.0",
++    "vite": "6.4.3",
++    "typescript": "6.0.3"
++  },
++  "sourceTypes": "PASS",
++  "fixtureTests": {
++    "tests": 42,
++    "assertions": 233,
++    "files": [
++      "native-command",
++      "native-preview",
++      "native-lifecycle",
++      "host-boundary",
++      "native-resources"
++    ]
++  },
++  "redEvidence": {
++    "native-preview": "缺少native-preview实现模块；native-preview-red.log",
++    "native-command": "无candidate marker约束时错误rate/digest仍执行Command；native-command-red.log；同次另一runtime夹具缺原typed元素字段已单独修正，不计为功能红测"
++  },
++  "reconstructionSourceFiles": 708,
++  "builds": [
++    {
++      "command": "bun apps/web/scripts/build-native.mjs",
++      "log": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-tests/native-production-build-1.log",
++      "sha256": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-tests/native-production-build-1-sha256.json"
++    },
++    {
++      "command": "bun apps/web/scripts/build-native.mjs",
++      "log": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-tests/native-production-build-2.log",
++      "sha256": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-tests/native-production-build-2-sha256.json"
++    }
++  ],
+@@ -5,5 +41,0 @@
+-    "native.css": "e8757103e0fd57d164826df1de27070222dc6b2ba23bcd4bb32a3cbbe64ee688",
+-    "native.js": "f61b0939ff9a185861dbc7addee2c40ef1b3a0d71cfac81c31c41d1f43a50354",
+-    "NATIVE_BUILD_GRAPH.json": "d1bcbd11d320f80c93e9c4d91c3293375e608b0099046f6d63c28949633f65f5",
+-    "THIRD_PARTY_LICENSES.txt": "d3e59d1b80d9ebcccfc76f84dc51d976ed113749afec53d51c02f6832eafe51f",
+-    "THIRD_PARTY_LICENSES.json": "becfab856e0610ccbc14f1abf05d38c25593b60ada26f553dac667fcd471e8ad",
+@@ -11,2 +43,12 @@
+-    "effects/preview.jpg": "b318cede7bbe27bfbf1b8b94d41f65b6f52d5f2650ce3a153d03b76c2a1c0190"
+-  }
++    "NATIVE_BUILD_GRAPH.json": "df94f84a7e0f09d3d6a2fd38ce093b7ebbc93621cfd6db637ae8968c356aa315",
++    "THIRD_PARTY_LICENSES.json": "b92b56836fbb1ac73b12112f61ec12cfce7af0793e91b6ae8748ed591db73964",
++    "THIRD_PARTY_LICENSES.txt": "e337836ba3e5a4d722e4750619410e357434656a00fc79e9a572ad649d633b8a",
++    "effects/preview.jpg": "b318cede7bbe27bfbf1b8b94d41f65b6f52d5f2650ce3a153d03b76c2a1c0190",
++    "native.css": "a0bad44d377687bc240c1cf59742b3ffa12b5ba282d00d3912846587fc12b31f",
++    "native.js": "b7f119a87dd82d0fca0dd775a8c2cecb39c721f17d9ece4d59c8488292515cf7"
++  },
++  "limitations": [
++    "测试renderer fixture不证明WebGPU、真实帧像素、音轨或MP4可播放",
++    "native-controller路由进入production模块图，实际浏览器preview/adopt/undo/manual/save/refresh/export由主会话继续验收",
++    "原opencut-wasm模块GPU初始化对象仍随浏览器文档关闭释放"
++  ]
+--- a/README.creatoros.md
++++ b/README.creatoros.md
+@@ -17 +17 @@
+-操作保留 `load/snapshot/insert-media/export/context/seek/apply-tracks` 以及原返回形状。load 接收版本31原生工程、真实 outputId 与已注册媒体 File；snapshot 不含 File、Blob、URL、buffer。export 继续原 MediaBunny/WebCodecs，返回与本次真实渲染同次冻结的原文档、媒体元信息、Blob 和文件名。context、seek 保留 120000 ticks/s；apply-tracks 保留完整 main/overlay/audio 前值与摘要、409冲突、单次真实命令及当前挂载寿命内不可淘汰的采纳回执，不二次 ripple。正式数据仍由 CreatorOS 宿主公共服务保存，编辑器只有暂存内存。
++操作保留 `load/snapshot/insert-media/export/context/seek/apply-tracks/preview-scene` 以及原返回形状。load 接收版本31原生工程、真实 outputId 与已注册媒体 File；snapshot 不含 File、Blob、URL、buffer。export 继续原 MediaBunny/WebCodecs，返回与本次真实渲染同次冻结的原文档、媒体元信息、Blob 和文件名。context、seek 保留 120000 ticks/s；apply-tracks 保留完整 main/overlay/audio 前值与摘要、409冲突、单次真实命令及当前挂载寿命内不可淘汰的采纳回执，不二次 ripple。正式数据仍由 CreatorOS 宿主公共服务保存，编辑器只有暂存内存。
+@@ -25 +25 @@
+-本次实际工具链 Bun 1.4.0、Vite 6.4.3、TypeScript 6.0.2（原锁依赖）。原生Vite Library构建显式设置生产mode，并将process.env.NODE_ENV定义为production常量，避免浏览器依赖不存在的Node全局。
++本次实际工具链 Bun 1.4.0、Vite 6.4.3、TypeScript 6.0.3（原锁依赖）。原生Vite Library构建显式设置生产mode，并将process.env.NODE_ENV定义为production常量，避免浏览器依赖不存在的Node全局。
+@@ -32,2 +32,4 @@
+-bun test src/embedded/__tests__/native-lifecycle.test.ts src/embedded/__tests__/native-command.test.ts src/embedded/__tests__/host-boundary.test.ts
+-bun test src/embedded/__tests__/native-resources.test.ts
++bun test --timeout 120000 src/embedded/__tests__/native-preview.test.ts
++bun test --timeout 120000 src/embedded/__tests__/native-command.test.ts
++bun test --timeout 120000 src/embedded/__tests__/native-lifecycle.test.ts src/embedded/__tests__/host-boundary.test.ts
++bun test --timeout 120000 src/embedded/__tests__/native-resources.test.ts
+@@ -41,0 +44,8 @@
++## T-1070 只读候选预览
++
++`preview-scene` 接收 `{owner,targetSceneId,baseContextEpoch,beforeDigest,candidateDigest,tracks,media}`。`beforeDigest` 为完整原 `scene.tracks` 摘要，`candidateDigest` 为原场景元信息加候选轨道的完整 SerializedScene 摘要；均用 canonical JSON 与 SHA-256，不交换两者范围。media 是完整已登记目录的 exact assetId/assetFileId、File 与当前 metadata。返回真实 MP4 Blob、fileName、sceneId、candidateDigest、contextEpoch、documentVersion31。
++
++原控制器队列等待前序操作，原导入进行中先完成再核 epoch；不取消导入。新路径从当前项目、场景和已登记原文件复制 frozen 输入，只校编导改动字段；完整前值/epoch/owner/目录与文件字节在异步核对后及渲染结束再次检查。渲染调用原 `renderer.exportProject({frozen:{tracks,project,mediaAssets,duration}})`，不调用 load、setScenes、command、saveProject 或宿主版本写入。沿原 export lock 保护并在成功、错误、取消和寿命停止时释放；没有新增短执行超时。
++
++新编导 `apply-tracks` 额外携带 `candidateDigest` 后启用纯合同 changed-only 校验；没有该字段的旧路径保持原行为。既有 NativePatchReplay 不淘汰原采纳回执，重放不二次执行，undo 后重放保留撤销和后来手工稿；runtime 字段继续从原元素回填。共享合同源是 `contract/src/resources/production-native-document.ts` 的同字节复制件。
++
+@@ -44 +54 @@
+-类型与生产构建通过，原采纳/冻结/归属/lease回归13项68断言通过；慢资源取消3项12断言通过。最终生产JS没有未替换的process.env.NODE_ENV或未守卫的全局process引用。原四区、同轨文字、Undo/Redo、真实Select与复选上下文菜单、焦点/外部点击、通知作用域和跨owner清理的JSDOM探针先移除process全局，再使用明确命名的compositor/Canvas fixture，不能证明WebGPU、真实像素、MP4或系统剪贴板。
++本轮当场 TypeScript 原生源检查通过，preview/command/lifecycle/host-boundary/resources 分别单独执行，具体新测试与当场双构建摘要见 `NATIVE_REBUILD_CONSISTENCY.json`。缺少新 preview 的 RED 与无 typed 候选约束的 RED 保存在本地 T1070 验收日志；没有追补历史红测。最终生产JS没有未替换的process.env.NODE_ENV或未守卫的全局process引用。原四区、同轨文字、Undo/Redo、真实Select与复选上下文菜单、焦点/外部点击、通知作用域和跨owner清理的JSDOM探针先移除process全局，再使用明确命名的compositor/Canvas fixture，不能证明WebGPU、真实像素、MP4或系统剪贴板。
+--- a/apps/web/src/embedded/__tests__/native-command.test.ts
++++ b/apps/web/src/embedded/__tests__/native-command.test.ts
+@@ -9 +9 @@
+-function tracks(id:string){return {main:{id:'main-'+id,type:'video',elements:[{id:'clip-'+id,type:'video',startTime:240000,duration:480000,mediaId:'same-media',trimStart:0,trimEnd:0,params:{position:{x:0,y:0}}}]},overlay:[{id:'text-'+id,type:'text',elements:[{id:'caption-'+id,content:'独立文字',startTime:300000,duration:120000}]}],audio:[]};}
++function tracks(id:string){return {main:{id:'main-'+id,type:'video',elements:[{id:'clip-'+id,type:'video',startTime:240000,duration:480000,mediaId:'same-media',trimStart:0,trimEnd:0,params:{position:{x:0,y:0}}}]},overlay:[{id:'text-'+id,type:'text',elements:[{id:'caption-'+id,type:'text',name:'字幕',content:'独立文字',startTime:300000,duration:120000,trimStart:0,trimEnd:0,params:{content:'独立文字'}}]}],audio:[]};}
+@@ -14 +14 @@
+-const {NativePatchReplay,nativeDigest}=await import('../native-operations');
++const {NativePatchReplay,nativeDigest,nativeJson}=await import('../native-operations');
+@@ -18,0 +19,3 @@
++
++test('T1070 typed候选保旧扩展与runtime，原回执只执行一次，undo后手工编辑保留',async()=>{const e=setup();e.media={getAssets:()=>[{id:'same-media',type:'video',duration:4}]};const old=e.scenes.getScenes()[0].tracks.main.elements[0];Object.assign(old,{name:'原片',sourceDuration:480000,legacyRich:{layout:['原样']},url:'blob:original-runtime'});const before=nativeJson(e.scenes.getScenes()[0].tracks) as any,after=structuredClone(before);after.main.elements[0].name='明确改名';delete after.main.elements[0].url;const p={outputId:'output-one',sceneId:'scene-a',expectedBeforeDigest:await nativeDigest(before),candidateDigest:await nativeDigest({...e.scenes.getScenes()[0],tracks:after}),beforeTracks:before,afterTracks:after};const replay=new NativePatchReplay();await replay.apply(e,'typed-once',p);expect(e.scenes.getScenes()[0].tracks.main.elements[0].url).toBe('blob:original-runtime');expect(e.scenes.getScenes()[0].tracks.main.elements[0].legacyRich).toEqual({layout:['原样']});e.command.undo();e.scenes.getScenes()[0].tracks.overlay[0].elements[0].content='undo后手工稿';await replay.apply(e,'typed-once',p);expect(e.scenes.getScenes()[0].tracks.overlay[0].elements[0].content).toBe('undo后手工稿');expect(e.scenes.getScenes()[0].tracks.main.elements[0].name).toBe('原片');},120000);
++test('T1070 typed候选错rate/摘要拒绝零Command；旧无marker路径维持合法兼容',async()=>{for(const bad of ['rate','digest'] as const){const e=setup();e.media={getAssets:()=>[{id:'same-media',type:'video',duration:4}]};const old=e.scenes.getScenes()[0].tracks.main.elements[0];Object.assign(old,{name:'原片',sourceDuration:480000,params:{}});const before=structuredClone(e.scenes.getScenes()[0].tracks),after=structuredClone(before);if(bad==='rate')after.main.elements[0].retime={rate:-1};else after.main.elements[0].name='候选';const p={outputId:'output-one',sceneId:'scene-a',expectedBeforeDigest:await nativeDigest(before),candidateDigest:bad==='digest'?'sha256:'+ '0'.repeat(64):await nativeDigest({...e.scenes.getScenes()[0],tracks:after}),beforeTracks:before,afterTracks:after};await expect(new NativePatchReplay().apply(e,'typed-bad',p)).rejects.toMatchObject({status:409});expect(e.command.canUndo()).toBe(false);}},120000);
+--- /dev/null
++++ b/apps/web/src/embedded/__tests__/native-preview.test.ts
+@@ -0,0 +1,31 @@
++import {test,expect,beforeEach,afterEach,mock} from 'bun:test';
++import {NativeLifetime} from '../native-lifecycle';
++import {installNativeHost,nativeHost,currentNativeContextEpoch,invalidateNativeContext} from '../native-host';
++import {rememberMediaFile,resetMediaRegistration} from '../media-registration';
++mock.module('@/wasm',()=>({TICKS_PER_SECOND:120000,ZERO_MEDIA_TIME:0,mediaTime:(v:any)=>v.ticks}));
++mock.module('@/core',()=>({EditorCore:{getInstance(){throw Error('fixture must not access global editor');}}}));
++const {nativeDigest,nativeJson}=await import('../native-operations');
++import {isExportLocked} from '../edit-lock';
++const {previewNativeScene}=await import('../native-preview');
++let detach=()=>{};
++const root=()=>({inert:false} as HTMLElement);
++beforeEach(()=>{Object.assign(globalThis,{AudioBuffer:class{}});detach=installNativeHost({container:root(),portalContainer:root(),owner:{groupId:'group-fixture',accountId:null,projectId:'project-fixture',outputId:'output-fixture',sourceVersionId:'31'},theme:{mode:'dark',tokens:{},fontFamily:'system-ui',fontSize:'14px',density:'comfortable'},lifetime:new NativeLifetime(new AbortController().signal),disabled:false,onChanged(){},onError(){},importMedia:async()=>({mediaId:'media-fixture'})});});
++afterEach(()=>{nativeHost().lifetime.cancel();resetMediaRegistration();detach();});
++function fixture(){
++ const file=new File(['real fixture bytes'],'fixture.mp4',{type:'video/mp4',lastModified:100});rememberMediaFile(file,'media-fixture');
++ const tracks:any={main:{id:'main-fixture',name:'主轨',type:'video',muted:false,hidden:false,elements:[{id:'clip-fixture',name:'原片',type:'video',mediaId:'media-fixture',startTime:0,duration:240000,trimStart:0,trimEnd:0,sourceDuration:240000,params:{}}]},overlay:[],audio:[]};
++ const scene:any={id:'scene-fixture',name:'主画面',isMain:true,bookmarks:[],createdAt:new Date(0),updatedAt:new Date(0),tracks};
++ const project:any={version:31,metadata:{id:'output-fixture',name:'真实预览',createdAt:new Date(0),updatedAt:new Date(0),duration:240000},settings:{fps:{numerator:30,denominator:1},canvasSize:{width:1280,height:720},background:{type:'color',color:'#000000'}},currentSceneId:scene.id,scenes:[scene,{...structuredClone(scene),id:'other-scene'}]};
++ const media:any={id:'media-fixture',assetId:'asset-fixture',assetFileId:'file-fixture',name:file.name,type:'video',file,url:'blob:registered',duration:2,hasAudio:true};
++ let calls=0,frozen:any;let complete:(value:any)=>void=()=>{};const response=new Promise(resolve=>complete=resolve);
++ const forbidden=()=>{throw Error('候选预览不得修改工程或保存');};
++ const editor:any={project:{getActive:()=>project,loadProject:forbidden,saveCurrentProject:forbidden},scenes:{getActiveScene:()=>scene,getScenes:()=>project.scenes,setScenes:forbidden},media:{getAssets:()=>[media],isLoadingMedia:()=>false},playback:{getIsPlaying:()=>false,pause:forbidden},save:{getIsDirty:()=>false,pause:forbidden,resume:forbidden,flush:forbidden},command:{execute:forbidden},renderer:{exportProject(args:any){calls++;frozen=args.frozen;return response;}}};
++ const candidate=structuredClone(tracks);candidate.main.elements[0].name='候选片段';
++ const payload=async()=>({owner:{...nativeHost().owner},targetSceneId:scene.id,baseContextEpoch:currentNativeContextEpoch(),beforeDigest:await nativeDigest(tracks),candidateDigest:await nativeDigest({...nativeJson(scene) as object,tracks:candidate}),tracks:candidate,media:[{mediaId:media.id,assetId:media.assetId,assetFileId:media.assetFileId,file,name:media.name,type:media.type,size:file.size,lastModified:file.lastModified,duration:media.duration,hasAudio:media.hasAudio}]});
++ return {file,scene,project,media,editor,candidate,payload,complete,get calls(){return calls;},get frozen(){return frozen;}};
++}
++test('只读候选经原renderer冻结完整project/media/tracks与真实派生duration，返回MP4 Blob且原工程未变',async()=>{const f=fixture(),original=structuredClone(f.project);const p=await f.payload();const work=previewNativeScene(f.editor,p);for(let i=0;i<100&&!f.calls;i++)await Bun.sleep(1);expect(f.calls).toBe(1);expect(isExportLocked()).toBe(true);expect(f.frozen.tracks.main.elements[0].name).toBe('候选片段');expect(f.frozen.project.scenes[0].tracks).toEqual(f.candidate);expect(f.frozen.project.scenes[1]).toEqual(original.scenes[1]);expect(f.frozen.mediaAssets[0].file).toBe(f.file);expect(f.frozen.duration).toBe(240000);f.complete({success:true,buffer:new Uint8Array([0,1,2,3]).buffer});const result=await work;expect(result.blob.type).toBe('video/mp4');expect(result.blob.size).toBe(4);expect(result).toMatchObject({fileName:'真实预览-preview.mp4',sceneId:f.scene.id,candidateDigest:p.candidateDigest,contextEpoch:p.baseContextEpoch,documentVersion:31});expect(f.project).toEqual(original);expect(isExportLocked()).toBe(false);},120000);
++test('错误owner/epoch/前值/候选摘要均零渲染且原稿保留',async()=>{for(const key of ['owner','baseContextEpoch','beforeDigest','candidateDigest'] as const){const f=fixture();const p:any=await f.payload();p[key]=key==='owner'?{...p.owner,accountId:'foreign-account'}:key==='baseContextEpoch'?p.baseContextEpoch+1:'sha256:'+ '0'.repeat(64);await expect(previewNativeScene(f.editor,p)).rejects.toThrow();expect(f.calls).toBe(0);expect(isExportLocked()).toBe(false);}},120000);
++test('真正registered文件字节/元信息漂移不得把别的file渲为原exact素材',async()=>{const f=fixture();const p=await f.payload();p.media[0].file=new File(['different bytes!!!'],'fixture.mp4',{type:'video/mp4',lastModified:100});await expect(previewNativeScene(f.editor,p)).rejects.toThrow();expect(f.calls).toBe(0);expect(isExportLocked()).toBe(false);},120000);
++test('渲染期间context漂移与取消均拒绝Blob并释放锁',async()=>{for(const action of ['epoch','cancel','owner-dispose'] as const){const f=fixture(),signal=new AbortController();const p=await f.payload();const work=previewNativeScene(f.editor,p,()=>signal.signal.throwIfAborted());for(let i=0;i<100&&!f.calls;i++)await Bun.sleep(1);expect(f.calls).toBe(1);if(action==='epoch')invalidateNativeContext({sceneId:f.scene.id,selectedElements:[],documentChanged:false});else if(action==='cancel')signal.abort();else nativeHost().lifetime.cancel();f.complete({success:true,buffer:new ArrayBuffer(4)});await expect(work).rejects.toThrow();expect(isExportLocked()).toBe(false);if(action==='owner-dispose')break;}},120000);
++test('等待原导入完成，等待中不提前锁或取消导入；完成发生context漂移明确拒绝',async()=>{const f=fixture(),p=await f.payload();let finish!:()=>void;const pending=new Promise<void>(resolve=>finish=resolve);const work=previewNativeScene(f.editor,p,()=>{},()=>pending);await Promise.resolve();expect(isExportLocked()).toBe(false);expect(f.calls).toBe(0);invalidateNativeContext({sceneId:f.scene.id,selectedElements:[],documentChanged:true});finish();await expect(work).rejects.toThrow();expect(f.calls).toBe(0);expect(isExportLocked()).toBe(false);},120000);
+--- a/apps/web/src/embedded/native-controller.ts
++++ b/apps/web/src/embedded/native-controller.ts
+@@ -16,0 +17 @@
++import {previewNativeScene} from './native-preview';
+@@ -27,0 +29,3 @@
++ let pendingImports=0;const importWaiters=new Set<()=>void>(),originalImportActivity=host.onImportActivity;
++ const observeImports=(pending:number)=>{pendingImports=pending;originalImportActivity?.(pending);if(pending===0)for(const wake of [...importWaiters])wake();};host.onImportActivity=observeImports;
++ async function waitForImports(){while(pendingImports>0){check();await new Promise<void>((resolve,reject)=>{const finish=()=>{cleanup();resolve();};const abort=()=>{cleanup();reject(new DOMException('原操作已停止。','AbortError'));};const cleanup=()=>{importWaiters.delete(finish);life.signal.removeEventListener('abort',abort);requestSignal?.removeEventListener('abort',abort);};importWaiters.add(finish);life.signal.addEventListener('abort',abort,{once:true});requestSignal?.addEventListener('abort',abort,{once:true});if(life.signal.aborted||requestSignal?.aborted)abort();});}}
+@@ -43,2 +47,2 @@
+- async function operate(operation:string,payload:any,requestId:string,signal?:AbortSignal){check();if(signal?.aborted)throw new DOMException('原操作已停止。','AbortError');if(operation==='load')return load(payload);if(!loaded)throw Error('请先载入当前作品。');const editor=EditorCore.getInstance();if(operation==='read-original-audio-range')return readOriginalAudioRange(payload,signal,()=>{check();const p=payload as OriginalAudioRangeRequest;const active=editor.scenes.getActiveScene();if(active.id!==p.sceneId||![active.tracks.main,...active.tracks.overlay,...active.tracks.audio].some(t=>t.elements.some(e=>e.id===p.clipId)))throw Error('原场景或片段已改变。');});if(operation==='snapshot'||operation==='context'){if(operation==='context'&&payload?.pausePlayback===true)pauseNativePlaybackForContext(editor.playback,check);await editor.save.flush();check();return operation==='context'?{...readNativeContext(editor,storageService.snapshot()),contextEpoch:currentNativeContextEpoch()}:storageService.snapshot();}if(operation==='seek')return seekNative(editor,payload,check);if(operation==='apply-tracks')return replay.apply(editor,requestId,payload,check);if(operation==='export'){view({loaded:true,exporting:true});try{return await exportFrozenSnapshot(editor,payload?.format==='webm'?'webm':'mp4',()=>life.signal.aborted||!!signal?.aborted);}finally{if(!life.signal.aborted)view({loaded:true,exporting:false});}}if(operation==='insert-media'){if(!(payload?.file instanceof File)||typeof payload.mediaId!=='string'||!payload.mediaId)throw Error('素材文件与ID缺失。');const existing=editor.media.getAssets().find(asset=>asset.id===payload.mediaId);if(existing)return{mediaId:existing.id};rememberMediaFile(payload.file,payload.mediaId);const assets=await processMediaAssets({files:[payload.file],signal});check();if(assets.length!==1)throw Error('此素材无法处理。');const asset=await editor.media.addMediaAsset({projectId:host.owner.outputId,asset:assets[0]});check();if(!asset)throw Error('加入素材失败。');return{mediaId:asset.id};}throw Error('此编辑操作尚不支持。');}
+- return {request(operation:string,payload?:unknown,options?:{requestId?:string;signal?:AbortSignal}){life.assertCurrent();const issuedEpoch=currentNativeContextEpoch();const requestId=options?.requestId??crypto.randomUUID();const cacheKey=`${issuedEpoch}:${operation}:${requestId}`;if(requestId.length>256||!requestId)throw Error('编辑回执ID无效。');const prior=operation==='apply-tracks'?undefined:responses.get(cacheKey);if(prior)return prior;const result=life.run(()=>{const task=queue.then(async()=>{requestSignal=options?.signal;check();if(issuedEpoch!==currentNativeContextEpoch())throw new DOMException('时间轴上下文已改变。','AbortError');const data=await operate(operation,payload,requestId,options?.signal);check();if(options?.signal?.aborted)throw new DOMException('原操作已停止。','AbortError');return{operation,...data};});queue=task.then(()=>{},()=>{});return task;});if(operation!=='apply-tracks'){responses.set(cacheKey,result);if(operation==='insert-media')void result.catch(()=>{if(responses.get(cacheKey)===result)responses.delete(cacheKey);});if(responses.size>100)responses.delete(responses.keys().next().value!);}return result;},clear(){detachContext();loaded=false;responses.clear();invalidateNativeContext({sceneId:null,selectedElements:[],documentChanged:false});advanceEditEpoch();}};
++ async function operate(operation:string,payload:any,requestId:string,signal?:AbortSignal){check();if(signal?.aborted)throw new DOMException('原操作已停止。','AbortError');if(operation==='load')return load(payload);if(!loaded)throw Error('请先载入当前作品。');const editor=EditorCore.getInstance();if(operation==='read-original-audio-range')return readOriginalAudioRange(payload,signal,()=>{check();const p=payload as OriginalAudioRangeRequest;const active=editor.scenes.getActiveScene();if(active.id!==p.sceneId||![active.tracks.main,...active.tracks.overlay,...active.tracks.audio].some(t=>t.elements.some(e=>e.id===p.clipId)))throw Error('原场景或片段已改变。');});if(operation==='snapshot'||operation==='context'){if(operation==='context'&&payload?.pausePlayback===true)pauseNativePlaybackForContext(editor.playback,check);await editor.save.flush();check();return operation==='context'?{...readNativeContext(editor,storageService.snapshot()),contextEpoch:currentNativeContextEpoch()}:storageService.snapshot();}if(operation==='preview-scene'){view({loaded:true,exporting:true});try{return await previewNativeScene(editor,payload,check,waitForImports);}finally{if(!life.signal.aborted)view({loaded:true,exporting:false});}}if(operation==='seek')return seekNative(editor,payload,check);if(operation==='apply-tracks')return replay.apply(editor,requestId,payload,check);if(operation==='export'){view({loaded:true,exporting:true});try{return await exportFrozenSnapshot(editor,payload?.format==='webm'?'webm':'mp4',()=>life.signal.aborted||!!signal?.aborted);}finally{if(!life.signal.aborted)view({loaded:true,exporting:false});}}if(operation==='insert-media'){if(!(payload?.file instanceof File)||typeof payload.mediaId!=='string'||!payload.mediaId)throw Error('素材文件与ID缺失。');const existing=editor.media.getAssets().find(asset=>asset.id===payload.mediaId);if(existing)return{mediaId:existing.id};rememberMediaFile(payload.file,payload.mediaId);const assets=await processMediaAssets({files:[payload.file],signal});check();if(assets.length!==1)throw Error('此素材无法处理。');const asset=await editor.media.addMediaAsset({projectId:host.owner.outputId,asset:assets[0]});check();if(!asset)throw Error('加入素材失败。');return{mediaId:asset.id};}throw Error('此编辑操作尚不支持。');}
++ return {request(operation:string,payload?:unknown,options?:{requestId?:string;signal?:AbortSignal}){life.assertCurrent();const issuedEpoch=currentNativeContextEpoch();const requestId=options?.requestId??crypto.randomUUID();const cacheKey=`${issuedEpoch}:${operation}:${requestId}`;if(requestId.length>256||!requestId)throw Error('编辑回执ID无效。');const prior=operation==='apply-tracks'?undefined:responses.get(cacheKey);if(prior)return prior;const result=life.run(()=>{const task=queue.then(async()=>{requestSignal=options?.signal;check();if(issuedEpoch!==currentNativeContextEpoch())throw new DOMException('时间轴上下文已改变。','AbortError');const data=await operate(operation,payload,requestId,options?.signal);check();if(options?.signal?.aborted)throw new DOMException('原操作已停止。','AbortError');return{operation,...data};});queue=task.then(()=>{},()=>{});return task;});if(operation!=='apply-tracks'){responses.set(cacheKey,result);if(operation==='insert-media')void result.catch(()=>{if(responses.get(cacheKey)===result)responses.delete(cacheKey);});if(responses.size>100)responses.delete(responses.keys().next().value!);}return result;},clear(){detachContext();if(host.onImportActivity===observeImports)host.onImportActivity=originalImportActivity;loaded=false;responses.clear();invalidateNativeContext({sceneId:null,selectedElements:[],documentChanged:false});advanceEditEpoch();}};
+--- /dev/null
++++ b/apps/web/src/embedded/native-document-contract.ts
+@@ -0,0 +1,124 @@
++import {z} from 'zod';
++
++/** 固定 OpenCut cf5e79e v31；纯合同可逐字节复制到原生源码。仅供新增编导候选。 */
++export const NATIVE_DOCUMENT_VERSION=31;
++export const NATIVE_SOURCE_REVISION='cf5e79e919144200294fb9fed22a222592a0aeea';
++export const NATIVE_TICKS_PER_SECOND=120000;
++export const nativeTick=z.number().int().min(0).max(Number.MAX_SAFE_INTEGER);
++const signedTick=z.number().int().min(-Number.MAX_SAFE_INTEGER).max(Number.MAX_SAFE_INTEGER);
++const id=z.string().min(1);
++export const productionNativeParams=z.record(z.string(),z.union([z.number().finite(),z.string(),z.boolean()]));
++const handle=z.looseObject({dt:signedTick,dv:z.number().finite()});
++const scalarKey=z.looseObject({id,time:nativeTick,value:z.number().finite(),segmentToNext:z.enum(['step','linear','bezier']),tangentMode:z.enum(['auto','aligned','broken','flat']),leftHandle:handle.optional(),rightHandle:handle.optional()});
++const discreteKey=z.looseObject({id,time:nativeTick,value:z.union([z.string(),z.boolean()])});
++const scalarChannel=z.looseObject({keys:z.array(scalarKey),extrapolation:z.object({before:z.enum(['hold','linear']),after:z.enum(['hold','linear'])}).strict().optional()});
++const discreteChannel=z.looseObject({keys:z.array(discreteKey)});
++const channel=z.union([scalarChannel,discreteChannel]);
++export const productionNativeAnimations=z.record(z.string(),z.union([channel,z.record(z.string(),channel.optional())]).optional());
++export const productionNativeEffect=z.looseObject({id,type:id,params:productionNativeParams,enabled:z.boolean()});
++const maskBase={feather:z.number().finite(),inverted:z.boolean(),strokeColor:z.string(),strokeWidth:z.number().finite(),strokeAlign:z.enum(['inside','center','outside'])};
++const rect={...maskBase,centerX:z.number().finite(),centerY:z.number().finite(),width:z.number().finite(),height:z.number().finite(),rotation:z.number().finite(),scale:z.number().finite()};
++const point=z.looseObject({id,x:z.number().finite(),y:z.number().finite(),inX:z.number().finite(),inY:z.number().finite(),outX:z.number().finite(),outY:z.number().finite()});
++export const productionNativeMask=z.discriminatedUnion('type',[
++ z.looseObject({id,type:z.literal('split'),params:z.looseObject({...maskBase,centerX:z.number().finite(),centerY:z.number().finite(),rotation:z.number().finite()})}),
++ ...(['cinematic-bars','rectangle','ellipse','heart','diamond','star'] as const).map(type=>z.looseObject({id,type:z.literal(type),params:z.looseObject(rect)})),
++ z.looseObject({id,type:z.literal('text'),params:z.looseObject({...maskBase,content:z.string(),fontSize:z.number().finite(),fontFamily:z.string(),fontWeight:z.enum(['normal','bold']),fontStyle:z.enum(['normal','italic']),textDecoration:z.enum(['none','underline','line-through']),letterSpacing:z.number().finite(),lineHeight:z.number().finite(),centerX:z.number().finite(),centerY:z.number().finite(),rotation:z.number().finite(),scale:z.number().finite()})}),
++ z.looseObject({id,type:z.literal('freeform'),params:z.looseObject({...maskBase,path:z.array(point),closed:z.boolean(),centerX:z.number().finite(),centerY:z.number().finite(),rotation:z.number().finite(),scale:z.number().finite()})}),
++]);
++export const productionNativeRetime=z.object({rate:z.number().finite().min(0.01).max(5),maintainPitch:z.boolean().optional()}).strict();
++const base={id,name:z.string(),startTime:nativeTick,duration:nativeTick.refine(v=>v>0),trimStart:nativeTick,trimEnd:nativeTick,sourceDuration:nativeTick.optional(),params:z.record(z.string(),z.json()),animations:productionNativeAnimations.optional()};
++const visual={hidden:z.boolean().optional(),effects:z.array(z.union([productionNativeEffect,z.record(z.string(),z.json())])).optional()};
++const video=z.looseObject({...base,...visual,type:z.literal('video'),mediaId:id,isSourceAudioEnabled:z.boolean().optional(),retime:productionNativeRetime.optional(),masks:z.array(z.union([productionNativeMask,z.record(z.string(),z.json())])).optional()});
++const image=z.looseObject({...base,...visual,type:z.literal('image'),mediaId:id,masks:z.array(z.union([productionNativeMask,z.record(z.string(),z.json())])).optional()});
++const text=z.looseObject({...base,...visual,type:z.literal('text')});
++const uploadAudio=z.looseObject({...base,type:z.literal('audio'),sourceType:z.literal('upload'),mediaId:id,retime:productionNativeRetime.optional()});
++const libraryAudio=z.looseObject({...base,type:z.literal('audio'),sourceType:z.literal('library'),sourceUrl:id,retime:productionNativeRetime.optional()});
++const sticker=z.looseObject({...base,...visual,type:z.literal('sticker'),stickerId:id,intrinsicWidth:z.number().positive().optional(),intrinsicHeight:z.number().positive().optional()});
++const graphic=z.looseObject({...base,...visual,type:z.literal('graphic'),definitionId:id,masks:z.array(z.union([productionNativeMask,z.record(z.string(),z.json())])).optional()});
++const effect=z.looseObject({...base,type:z.literal('effect'),effectType:id});
++export const productionNativeElement=z.union([video,image,text,uploadAudio,libraryAudio,sticker,graphic,effect]);
++const trackBase={id,name:z.string()};
++export const productionNativeVideoTrack=z.looseObject({...trackBase,type:z.literal('video'),muted:z.boolean(),hidden:z.boolean(),elements:z.array(z.union([video,image]))});
++export const productionNativeTextTrack=z.looseObject({...trackBase,type:z.literal('text'),hidden:z.boolean(),elements:z.array(text)});
++export const productionNativeAudioTrack=z.looseObject({...trackBase,type:z.literal('audio'),muted:z.boolean(),elements:z.array(z.union([uploadAudio,libraryAudio]))});
++const graphicTrack=z.looseObject({...trackBase,type:z.literal('graphic'),hidden:z.boolean(),elements:z.array(z.union([sticker,graphic]))});
++const effectTrack=z.looseObject({...trackBase,type:z.literal('effect'),hidden:z.boolean(),elements:z.array(effect)});
++export const productionNativeOverlayTrack=z.union([productionNativeVideoTrack,productionNativeTextTrack,graphicTrack,effectTrack]);
++export const productionNativeTrack=z.union([productionNativeOverlayTrack,productionNativeAudioTrack]);
++export const productionNativeTracks=z.looseObject({main:productionNativeVideoTrack,overlay:z.array(productionNativeOverlayTrack),audio:z.array(productionNativeAudioTrack)});
++export const productionNativeScene=z.looseObject({id,name:z.string(),isMain:z.boolean(),tracks:productionNativeTracks,bookmarks:z.array(z.looseObject({time:nativeTick,note:z.string().optional(),color:z.string().optional(),duration:nativeTick.optional()})),createdAt:z.string(),updatedAt:z.string()});
++export type NativeSerializedTimelineElement=z.infer<typeof productionNativeElement>;
++export type NativeSerializedTimelineTrack=z.infer<typeof productionNativeTrack>;
++export type NativeSerializedTimelineTracks=z.infer<typeof productionNativeTracks>;
++export type NativeSerializedScene=z.infer<typeof productionNativeScene>;
++export interface ProductionNativeMedia {mediaId:string;kind:'video'|'audio'|'image';durationTick:number|null}
++
++// SEMANTIC_BOUNDARY_ALLOW: 仅检查新增/变更字段、类型、唯一身份、ticks与真实媒体数学，不选择镜头或创作风格。
++const same=(a:unknown,b:unknown):boolean=>{
++ if(a===b)return true;if(!a||!b||typeof a!=='object'||typeof b!=='object')return false;
++ if(Array.isArray(a)||Array.isArray(b))return Array.isArray(a)&&Array.isArray(b)&&a.length===b.length&&a.every((v,i)=>same(v,b[i]));
++ const x=a as Record<string,unknown>,y=b as Record<string,unknown>;return Object.keys(x).length===Object.keys(y).length&&Object.keys(x).every(k=>Object.hasOwn(y,k)&&same(x[k],y[k]));
++};
++export function validateNativeSceneTracksCandidate(before:NativeSerializedTimelineTracks,after:NativeSerializedTimelineTracks,media:readonly ProductionNativeMedia[]):void{
++ const tracks=(v:NativeSerializedTimelineTracks)=>[v.main,...v.overlay,...v.audio];
++ const oldTracks=tracks(before),nextTracks=tracks(after),oldElements=new Map(oldTracks.flatMap(t=>t.elements.map(e=>[e.id,e] as const)));
++ if(after.main.id!==before.main.id||after.main.type!=='video')throw new Error('主轨身份不能改变');
++ const trackIds=new Set<string>(),elementIds=new Set<string>(),catalog=new Map(media.map(m=>[m.mediaId,m]));
++ for(const track of nextTracks){
++  if(trackIds.has(track.id))throw new Error('轨道ID重复');trackIds.add(track.id);
++  const prior=oldTracks.find(t=>t.id===track.id);
++  if(!prior)productionNativeTrack.parse(track);else {if(prior.type!==track.type)throw new Error('既有轨道类型不能改变');for(const key of new Set([...Object.keys(prior),...Object.keys(track)]))if(key!=='elements'&&!same(prior[key],track[key])){if(key==='name')z.string().parse(track[key]);else if(key==='muted'||key==='hidden')z.boolean().parse(track[key]);else throw new Error('不能改写轨道身份或扩展');}}
++  if(track===after.main&&track.type!=='video'||after.audio.includes(track as never)&&track.type!=='audio'||after.overlay.includes(track as never)&&track.type==='audio')throw new Error('轨道不属于该lane');
++  for(const element of track.elements){
++   if(elementIds.has(element.id))throw new Error('元素ID重复');elementIds.add(element.id);
++   const old=oldElements.get(element.id);
++   if(!old)productionNativeElement.parse(element);else if(old.type!==element.type)throw new Error('既有元素类型不能改变');
++   const allowed=track.type==='video'?['video','image']:track.type==='graphic'?['sticker','graphic']:[track.type];
++   if(!allowed.includes(element.type))throw new Error('元素与轨道类型不符');
++   if(old&&same(old,element))continue;
++   // 未改丰富字段保持原值；仅对变动known字段使用原v31schema，不重验原扩展。
++   const variants={video,image,text,audio:element.sourceType==='library'?libraryAudio:uploadAudio,sticker,graphic,effect};
++   const shape=variants[element.type].shape as Record<string,z.ZodType>;
++   for(const key of Object.keys(shape))if(!old||!same(old[key],element[key])){
++    if(key==='params')continue;
++    shape[key]!.parse(element[key]);
++   }
++   if(old){for(const key of new Set([...Object.keys(old),...Object.keys(element)]))if(!same(old[key],element[key])&&!Object.hasOwn(base,key)&&!['type','mediaId','isSourceAudioEnabled','hidden','retime','effects','masks'].includes(key))throw new Error('不能改写原生受保护扩展');
++    if('sourceType'in old&&old.sourceType!==element.sourceType||'sourceUrl'in old&&old.sourceUrl!==element.sourceUrl)throw new Error('不能改写来源');}
++   if(element.type==='audio'&&element.sourceType==='library'&&!old)throw new Error('不能新增外部音频来源');
++   const timingChanged=!old||['startTime','duration','trimStart','trimEnd','sourceDuration','mediaId','retime','animations'].some(k=>!same(old[k],element[k]));
++   if(timingChanged){
++    for(const key of ['startTime','duration','trimStart','trimEnd'] as const)nativeTick.parse(element[key]);
++    if(!element.duration||!Number.isSafeInteger(element.startTime+element.duration))throw new Error('时间范围溢出');
++    const rate='retime'in element?(element.retime as {rate:number}|undefined)?.rate??1:1;
++    if(rate<=0||!Number.isFinite(rate))throw new Error('速率无效');
++    if('mediaId'in element){const m=catalog.get(element.mediaId as string);if(!m)throw new Error('媒体未登记');if(m.kind!==element.type&&!(element.type==='audio'&&m.kind==='video'))throw new Error('媒体类型不符');
++     if(element.type==='video'||element.type==='audio'){
++      if(m.durationTick===null||!Number.isSafeInteger(m.durationTick)||m.durationTick<=0)throw new Error('媒体缺少真实时长');
++      const sourceDuration=element.sourceDuration??m.durationTick;
++      if(sourceDuration>m.durationTick||sourceDuration<=element.trimStart+element.trimEnd)throw new Error('源时间越界');
++      const expected=Math.round((sourceDuration-element.trimStart-element.trimEnd)/rate);
++      if(element.duration!==expected)throw new Error('片段时长与trim/rate不符');
++     }
++    }
++    const visit=(v:unknown)=>{if(!v||typeof v!=='object')return;if(Array.isArray(v)){v.forEach(visit);return;}const r=v as Record<string,unknown>;if(Array.isArray(r.keys)){const seen=new Set<string>();for(const k of r.keys as Array<{id:string;time:number}>){if(seen.has(k.id)||k.time>element.duration)throw new Error('关键帧重复或越界');seen.add(k.id);}}else Object.values(r).forEach(visit);};visit(element.animations);
++   }
++   if(!old||!same(old.masks,element.masks))for(const mask of (element.masks??[]) as unknown[])productionNativeMask.parse(mask);
++   validateChangedParams(old?.params??{},element.params,element.type);
++   if(!old||!same(old.effects,element.effects))for(const fx of (element.effects??[]) as Array<{type:string;params:Record<string,unknown>}>){productionNativeEffect.parse(fx);if(fx.type!=='blur'||typeof fx.params.intensity!=='number'||fx.params.intensity<0||fx.params.intensity>100)throw new Error('效果不属于固定renderer catalog');}
++  }
++ }
++}
++
++// 固定原params registry；只验证模型明确变更的字段，旧未知参数可原样保留。
++const visualParams:Record<string,z.ZodType>={
++ 'transform.positionX':z.number().finite().min(-100000),'transform.positionY':z.number().finite().min(-100000),
++ 'transform.scaleX':z.number().finite().min(.01),'transform.scaleY':z.number().finite().min(.01),'transform.rotate':z.number().min(-360).max(360),
++ opacity:z.number().min(0).max(1),blendMode:z.enum(['normal','darken','multiply','color-burn','lighten','screen','plus-lighter','color-dodge','overlay','soft-light','hard-light','difference','exclusion','hue','saturation','color','luminosity']),
++};
++const audioParams={volume:z.number().min(-60).max(20),muted:z.boolean()};
++const textParams:Record<string,z.ZodType>={content:z.string(),fontFamily:z.string(),fontSize:z.number().min(1),color:z.string(),textAlign:z.enum(['left','center','right']),fontWeight:z.enum(['normal','bold']),fontStyle:z.enum(['normal','italic']),textDecoration:z.enum(['none','underline','line-through']),letterSpacing:z.number().min(-100),lineHeight:z.number().min(.1),'background.enabled':z.boolean(),'background.color':z.string(),'background.cornerRadius':z.number().min(0).max(100),'background.paddingX':z.number().min(0),'background.paddingY':z.number().min(0),'background.offsetX':z.number().min(-100000),'background.offsetY':z.number().min(-100000)};
++function validateChangedParams(before:Record<string,unknown>,after:Record<string,unknown>,type:string){
++ const registry:Record<string,z.ZodType>=type==='video'?{...visualParams,...audioParams}:type==='text'?{...visualParams,...textParams}:type==='audio'?audioParams:type==='effect'?{}:visualParams;
++ for(const key of new Set([...Object.keys(before),...Object.keys(after)]))if(!same(before[key],after[key])){const schema=registry[key];if(!schema)throw new Error('参数不属于固定原生registry');schema.parse(after[key]);}
++}
+--- a/apps/web/src/embedded/native-operations.ts
++++ b/apps/web/src/embedded/native-operations.ts
+@@ -5,0 +6 @@
++import {validateNativeSceneTracksCandidate,type NativeSerializedTimelineTracks} from './native-document-contract';
+@@ -13 +14 @@
+-export type NativeTracksPatch={outputId:string;sceneId:string;expectedBeforeDigest:string;beforeTracks:SceneTracks;afterTracks:SceneTracks};
++export type NativeTracksPatch={outputId:string;sceneId:string;expectedBeforeDigest:string;beforeTracks:SceneTracks;afterTracks:SceneTracks;candidateDigest?:string};
+@@ -33,0 +35,5 @@
++  if(p.candidateDigest!==undefined){
++   try{validateNativeSceneTracksCandidate(nativeJson(scene.tracks) as NativeSerializedTimelineTracks,nativeJson(p.afterTracks) as NativeSerializedTimelineTracks,editor.media.getAssets().map(asset=>({mediaId:asset.id,kind:asset.type,durationTick:typeof asset.duration==='number'?Math.round(asset.duration*TICKS_PER_SECOND):null})));}catch{throw new NativeOperationError('新编导候选变动字段不符合原生合同，当前工程保留。');}
++   if(p.candidateDigest!==await nativeDigest({...nativeJson(scene) as object,tracks:p.afterTracks}))throw new NativeOperationError('新编导候选完整场景摘要不匹配。');
++   check();if(canonicalNative(nativeJson(scene.tracks))!==current||editor.project.getActive().metadata.id!==p.outputId)throw new NativeOperationError('时间轴在候选核对时发生变化，当前输入保留。');
++  }
+--- /dev/null
++++ b/apps/web/src/embedded/native-preview.ts
+@@ -0,0 +1,61 @@
++import type {EditorCore} from '@/core';
++import type {TProject} from '@/project/types';
++import type {MediaAsset} from '@/media/types';
++import type {SceneTracks} from '@/timeline';
++import {mediaTime,TICKS_PER_SECOND} from '@/wasm';
++import {beginExportLock} from './edit-lock';
++import {nativeHost,currentNativeContextEpoch,type NativeOwner} from './native-host';
++import {getRegisteredMediaId} from './media-registration';
++import {canonicalNative,nativeDigest,nativeJson,NativeOperationError} from './native-operations';
++import {validateNativeSceneTracksCandidate,type NativeSerializedTimelineTracks} from './native-document-contract';
++export type NativePreviewMedia={mediaId:string;assetId:string;assetFileId:string;file:File;name:string;type:'video'|'audio'|'image';size:number;lastModified:number;width?:number;height?:number;duration?:number;fps?:number;hasAudio?:boolean};
++export type NativePreviewSceneRequest={owner:NativeOwner;targetSceneId:string;baseContextEpoch:number;beforeDigest:string;candidateDigest:string;tracks:SceneTracks;media:NativePreviewMedia[]};
++export type NativePreviewSceneResult={blob:Blob;fileName:string;sceneId:string;candidateDigest:string;contextEpoch:number;documentVersion:31};
++const conflict=(message:string)=>new NativeOperationError(message);
++function descriptor(asset:MediaAsset){return {mediaId:asset.id,name:asset.name,type:asset.type,size:asset.file.size,lastModified:asset.file.lastModified,width:asset.width,height:asset.height,duration:asset.duration,fps:asset.fps,hasAudio:asset.hasAudio};}
++async function fileDigest(file:File){return new Uint8Array(await crypto.subtle.digest('SHA-256',await file.arrayBuffer())).join(',');}
++// SEMANTIC_BOUNDARY_ALLOW: 仅核真实owner、完整前值、exact文件字节、typed变动和tick；不选择创作内容。
++export async function previewNativeScene(editor:EditorCore,input:NativePreviewSceneRequest,check:()=>void=()=>{},waitForImports:()=>Promise<void>=async()=>{}):Promise<NativePreviewSceneResult>{
++ const p:NativePreviewSceneRequest={...input,owner:{...input.owner},tracks:structuredClone(nativeJson(input.tracks)) as SceneTracks,media:input.media.map(item=>({...item}))};
++ const host=nativeHost();
++ if(!Number.isSafeInteger(p.baseContextEpoch)||p.baseContextEpoch<0||![p.beforeDigest,p.candidateDigest].every(value=>typeof value==='string'&&/^sha256:[a-f0-9]{64}$/.test(value)))throw conflict('候选预览缺少真实上下文或摘要。');
++ const assert=()=>{host.lifetime.assertCurrent();check();if(currentNativeContextEpoch()!==p.baseContextEpoch)throw conflict('预览选区或工程已改变，请重新读取当前稿件。');if(canonicalNative(p.owner)!==canonicalNative(host.owner))throw conflict('候选预览不属于当前作品。');};
++ assert();await waitForImports();assert();
++ if(editor.playback.getIsPlaying()||editor.media.isLoadingMedia()||editor.save.getIsDirty())throw conflict('请先完成原素材导入和保存，暂停预览后读取当前稿件。');
++ const sourceProject=editor.project.getActive(),sourceScene=editor.scenes.getActiveScene();
++ if(sourceProject.version!==31||sourceProject.metadata.id!==host.owner.outputId||sourceScene.id!==p.targetSceneId)throw conflict('候选预览工程或场景不匹配。');
++ const originalProject=canonicalNative(nativeJson({...sourceProject,scenes:editor.scenes.getScenes()}));
++ const beforeTracks=canonicalNative(nativeJson(sourceScene.tracks));
++ const currentAssets=editor.media.getAssets().map(asset=>({...asset}));const originalMedia=canonicalNative(currentAssets.map(descriptor));
++ if(!Array.isArray(p.media)||p.media.length!==currentAssets.length)throw conflict('候选预览素材目录已改变。');
++ const mediaIds=new Set<string>();
++ for(const item of p.media){
++  assert();const actual=currentAssets.find(asset=>asset.id===item.mediaId);
++  if(!actual||mediaIds.has(item.mediaId)||typeof item.assetId!=='string'||!item.assetId||typeof item.assetFileId!=='string'||!item.assetFileId||!(item.file instanceof File)||getRegisteredMediaId(actual.file)!==item.mediaId)throw conflict('候选预览缺少真实登记的素材文件。');
++  mediaIds.add(item.mediaId);
++  const {file,assetId,assetFileId,...metadata}=item;
++  if(canonicalNative(metadata)!==canonicalNative(descriptor(actual))||file.type!==actual.file.type||file.size!==actual.file.size||file.lastModified!==actual.file.lastModified)throw conflict('候选预览素材元信息已改变。');
++  // load携带的exact身份可比对；旧已挂载源没有该附加字段时仍核注册File的完整字节，不伪造服务器授权。
++  const exact=actual as MediaAsset&{assetId?:string;assetFileId?:string};
++  if(exact.assetId!==undefined&&exact.assetId!==assetId||exact.assetFileId!==undefined&&exact.assetFileId!==assetFileId)throw conflict('候选预览素材文件版本已改变。');
++  if(file!==actual.file&&await fileDigest(file)!==await fileDigest(actual.file))throw conflict('候选预览素材字节与已登记原文件不同。');
++  assert();
++ }
++ const tracks=structuredClone(nativeJson(p.tracks)) as SceneTracks;
++ validateNativeSceneTracksCandidate(nativeJson(sourceScene.tracks) as NativeSerializedTimelineTracks,tracks as unknown as NativeSerializedTimelineTracks,currentAssets.map(asset=>({mediaId:asset.id,kind:asset.type,durationTick:typeof asset.duration==='number'?Math.round(asset.duration*TICKS_PER_SECOND):null})));
++ if(p.beforeDigest!==await nativeDigest(sourceScene.tracks)||p.candidateDigest!==await nativeDigest({...nativeJson(sourceScene) as object,tracks}))throw conflict('候选预览摘要与当前完整场景不一致。');
++ const assertFrozen=()=>{assert();if(editor.scenes.getActiveScene().id!==p.targetSceneId||canonicalNative(nativeJson({...editor.project.getActive(),scenes:editor.scenes.getScenes()}))!==originalProject||canonicalNative(nativeJson(editor.scenes.getActiveScene().tracks))!==beforeTracks||canonicalNative(editor.media.getAssets().map(descriptor))!==originalMedia||editor.media.getAssets().some((asset,i)=>asset.file!==currentAssets[i]?.file))throw conflict('候选预览核对期间原工程或素材发生改变。');};
++ assertFrozen();
++ let duration=0;for(const track of [tracks.main,...tracks.overlay,...tracks.audio])for(const element of track.elements){const end=element.startTime+element.duration;if(!Number.isSafeInteger(end)||end<0)throw conflict('候选预览时间码无效。');duration=Math.max(duration,end);}
++ const project=structuredClone({...sourceProject,scenes:editor.scenes.getScenes()}) as TProject;
++ project.scenes=project.scenes.map(scene=>scene.id===p.targetSceneId?{...scene,tracks}:scene);
++ project.metadata={...project.metadata,duration:mediaTime({ticks:duration})};
++ const mediaAssets=currentAssets.map(asset=>({...asset}));
++ const cancel=()=>{try{assertFrozen();return false;}catch{return true;}};
++ const unlock=beginExportLock();
++ try{
++  assertFrozen();const result=await editor.renderer.exportProject({options:{format:'mp4',quality:'high',includeAudio:true,fps:project.settings.fps},onCancel:cancel,frozen:{tracks,project,mediaAssets,duration:mediaTime({ticks:duration})}});
++  assertFrozen();if(!result.success||!result.buffer)throw Error(result.error||'候选视频预览未生成，请保留原请求核对。');
++  return{blob:new Blob([result.buffer],{type:'video/mp4'}),fileName:`${project.metadata.name}-preview.mp4`,sceneId:p.targetSceneId,candidateDigest:p.candidateDigest,contextEpoch:p.baseContextEpoch,documentVersion:31};
++ }finally{unlock();}
++}
