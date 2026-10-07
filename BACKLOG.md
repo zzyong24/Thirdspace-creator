@@ -9,6 +9,9 @@
 
 | ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
 | --- | --- | --- | --- | --- | --- | --- |
+| T-1068 | 隔离复现内容雷达转录 MODEL_RESULT_UNKNOWN 暂停并定位原因 | ✅ 待办 | — | — | [诊断范围](docs/verification/t1068-radar-transcription.md) | 用户2026-10-07明确不考虑真实账号，直接复现；使用隔离数据与本地HTTP故障服务跑实际Worker/模型链，核对已识别原文、后处理、账本与暂停状态，不重发用户任务，未实证不声称根治。 |
+| T-1069 | 修复雷达文本模型完整非流式JSON回执被流式解析误判未知 | 📋 待办 | — | 待验 | [根因证据](docs/verification/t1068-radar-transcription.md#隔离复现结论) | T-1068实际Worker、Pi、HTTP与内存PG证实完整HTTP200 Chat Completion被误报MODEL_RESULT_UNKNOWN；需先形成兼容契约与修复SPEC，保留真断流未知账本、不重复付费调用；本轮仅复现未修改生产。 |
+| T-1070 | 修复通用转录整理文本兼容模式缺少schema校验器与保存阻断 | 📋 待办 | — | 待验 | [根因证据](docs/verification/t1068-radar-transcription.md#隔离复现结论) | T-1068实际默认节点证实自定义端点text模式在请求前缺validator，返回原文后未建立后处理结果回执；保存端源码拒绝无回执，隔离宿主再现暂停。需真实后端业务端口回归与SPEC，不与直接雷达ASR混淆。 |
 | T-1066 | 全系统统一两分钟超时下限、嵌套预算与Skill防复发 | ⏸️ 待办 | PASS[REV:13310516269c] | 待验 | [SPEC](docs/features/t1066-timeout-policy.md) | 用户2026-10-06授权按T-1065完整清单修复全部超时策略，单次执行/结果等待最低2分钟，外层预算覆盖内层及清理余量，长任务继承持久任务预算；规范与Skill沉淀并加回归门，不推送发布或改真实数据。 |
 | T-1066-worker | 执行Worker及后端超时修复 | ✅ 待办 | — | — | [已评审父SPEC](docs/features/t1066-timeout-policy.md) | T-1066同一确认范围的并行实现分区，不形成分期验收；独立工作树、互斥写集，由主会话集成。 |
 | T-1066-frontend | 前端与桌面原生层超时修复 | ✅ 待办 | — | — | [已评审父SPEC](docs/features/t1066-timeout-policy.md) | T-1066同一确认范围的并行实现分区，不形成分期验收；独立工作树、互斥写集，由主会话集成。 |
