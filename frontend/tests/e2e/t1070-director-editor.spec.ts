@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { readFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
-import { unzipSync, strFromU8 } from "fflate";
+import { unzipSync } from "fflate";
 import type { Page } from "@playwright/test";
 import { ENDPOINTS } from "@creatoros/contract";
 import { test, expect as baseExpect } from "../helpers/test-environment";
@@ -46,6 +46,13 @@ async function workspace(page: Page, baseURL: string) {
     },
     group.id,
   );
+  // Mirror the existing writeCurrentGroupId switch: the previous account cookie
+  // must be removed before SSR, even when the new group has no bound accounts.
+  await page.evaluate((id) => {
+    localStorage.setItem("creatoros:current-group", id);
+    localStorage.removeItem("creatoros:current-account");
+  }, group.id);
+  await page.context().clearCookies({ name: "creatoros_current_account" });
   await page
     .context()
     .addCookies([
