@@ -1,0 +1,60 @@
+{
+  "actualUI": {
+    "started": "2026-10-07T11:38:16.564Z",
+    "finished": "2026-10-07T11:40:21.098Z",
+    "pass": true,
+    "candidateVisible": true,
+    "articleAdopted": true,
+    "graphicAdopted": true,
+    "recoveredAfterRefresh": true
+  },
+  "requestCount": 1,
+  "postStatus": 200,
+  "sourceId": "ai-msg-57da6418-71",
+  "executionTaskId": "execution-task-7eef281d-6438-4c33-87a9-3da70a0f8155",
+  "creationTarget": {
+    "schemaVersion": 1,
+    "clientRequestId": "6cb8c585-aec3-4494-8dbf-d69a8954814c",
+    "projectId": "project-95c4e17c-23",
+    "compositionId": "work-57da6418-43",
+    "compositionRevision": 4,
+    "scriptSourceRef": {
+      "kind": "project_script",
+      "id": "artifact-95c4e17c-377",
+      "versionId": "artifactversion-57da6418-28"
+    },
+    "scriptConfirmation": {
+      "confirmedBy": "user",
+      "source": "current-click"
+    },
+    "articleMember": {
+      "kind": "article",
+      "outputId": "output-57da6418-48",
+      "artifactId": "artifact-57da6418-54",
+      "baseVersionId": "artifactversion-57da6418-55"
+    },
+    "graphicMember": {
+      "kind": "image",
+      "outputId": "output-57da6418-60",
+      "artifactId": "artifact-57da6418-66",
+      "baseVersionId": "artifactversion-57da6418-67"
+    }
+  },
+  "articleCurrentVersionId": "artifactversion-57da6418-106",
+  "graphicCurrentVersionId": "artifactversion-57da6418-110",
+  "articleSections": 5,
+  "graphicCards": 5,
+  "exactSavedSourceTextPresent": false,
+  "errors": [],
+  "limitations": [
+    "真实隔离开发页面，未代签安装版",
+    "旧166未admission且原期限已结束，原失败保留；当前一次新明确测试沿同会话历史，不清历史不续旧期"
+  ],
+  "adoptedBothExactCompleteCandidate": true,
+  "articleDigest": "1969940bd3b4dfa8857cae40fcca75e10cb99edd41a1ec1e84111fb912050470",
+  "graphicDigest": "caf1e1d59780759158bbc2f80d5f3b3e1c9f660bfdf768f57fc57a907969466c",
+  "modelBudgetFactsPreserved": true,
+  "exactTextCheckExplanation": "句子逐字匹配为false，图文已按页改写；实际完整typed候选与两owner当前正文深等，200元预算事实两者都保留。未用关键词计分作生成或采纳判断。",
+  "exactSavedStructuredScriptReadback": true,
+  "scriptCurrentClickConfirmation": "来自已保存当前分镜版本的按钮点击，无伪称先前已确认"
+}

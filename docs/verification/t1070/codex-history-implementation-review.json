@@ -1,0 +1,108 @@
+{
+  "schema": "creatoros/t1070-codex-history-prompt-consumer-implementation-independent-review@1",
+  "task_id": "T-1070",
+  "reviewer": "/root/final_scope_recheck",
+  "created_at": "2026-10-07T11:39:04.594308+00:00",
+  "review_kind": "已准入两prompt消费者实现一轮只读复核；不formal新轮/reset",
+  "verdict": "CHANGES_REQUIRED_MINOR_IDENTITY_GUARD",
+  "summary": "实际SDK历史机械适配、完整JSON顺序、角色及媒体拒绝与原动态工具执行边界均正确。尚有一个minor严格shape遗漏：toolCallId/toolName只核字符串、不拒空/全空白值，违反前次CH-02非空真实identity边界；在同两路径补机械非空核验与负例即可。未发现新工具权限或runtime/API机制扩张。",
+  "main": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "observed_head": "b6773bc888f441890be9741dc501d39c7837439f",
+  "actual_current_sha256": {
+    "ai-worker/src/execution/external-chat-worker-run.ts": "4f355ccf606e3cbd49e6d027616590a138408db7858b7674c093e27f2c3a2e4a",
+    "ai-worker/src/execution/external-chat-worker-run.test.ts": "bed1058dab4be189b06f8803526916107ede15a08bbe83c59e7895692b876add"
+  },
+  "scope_authority": {
+    "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-diagnosis/codex-history-scope-review.json",
+    "sha256": "5e415a9e552dba4c123bb657e6abaa41e20fed3d7774379cb8ca1d8ae8e8d781",
+    "unchanged_original_formal_contract": {
+      "path": "docs/features/t1070-director-script-workflow/CONTRACT.json",
+      "sha256": "fae774ebfe3a20097a93e8bfbc4189069345c0852600940c1e8efadb5ece0a0b"
+    },
+    "paths": [
+      "ai-worker/src/execution/external-chat-worker-run.ts",
+      "ai-worker/src/execution/external-chat-worker-run.test.ts"
+    ]
+  },
+  "producer_actual_evidence": [
+    {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-diagnosis/root-codex-history-red.log",
+      "sha256": "4c26f879d3754e86e4e9d65f78c6f132b7b5079a74624465b352aefe10164b61",
+      "meaning": "初次8FAIL校准记录保留，不替代正确的2FAIL6PASS产品RED；负例断言校准后另有corrected日志"
+    },
+    {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-diagnosis/root-codex-history-red-corrected.log",
+      "sha256": "ca051d7cc322daeee590456e2007c6dfefc36ecee2fae7ea2bfea03b7b529970",
+      "meaning": "ROOT实际旧source的8case/2FAIL6PASS，两合法历史入口因旧text-only明确失败"
+    },
+    {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-diagnosis/root-codex-history-green.log",
+      "sha256": "52240b8a9baff8302120bf183270d2e7606291ac0924d575267791d36c0ad44a",
+      "meaning": "ROOT实际当前3files24PASS；本agent只读证据，未冒充独立执行"
+    }
+  ],
+  "findings": [
+    {
+      "id": "T1070-CODEX-HISTORY-001",
+      "severity": "minor",
+      "status": "OPEN",
+      "title": "历史工具identity未拒绝空值",
+      "locations": [
+        {
+          "path": "ai-worker/src/execution/external-chat-worker-run.ts",
+          "line": 35
+        },
+        {
+          "path": "ai-worker/src/execution/external-chat-worker-run.test.ts",
+          "line": 22
+        }
+      ],
+      "evidence_kind": "实际当前源码静态直接分支，未本轮运行新增负例",
+      "actual": "identity仅typeof record.toolCallId/toolName === string；assistant tool-call带toolCallId空串、空白name及合法input会序列化，tool-result同样；ChatInput的content仅z.json，不对这些ID代做SDK严格核验。",
+      "impact": "允许无真实identity的畸形历史进入prompt；不直接赋予工具执行或owner权限，所以为minor，不是新安全major。前轮scope CH-02明确非空合法字符串，不能以正常fixture24PASS覆盖该未测输入。",
+      "required": "同一identity表达式增加trim().length>0检查（只检查、不trim或改历史原字节）；添加call/result空ID/空name/全空白负例，并保原合法历史完整JSON、文本与媒体拒绝全部断言。无需新schema/API/工具列表/任务或第三路径。"
+    }
+  ],
+  "counts": {
+    "blocker": 0,
+    "major": 0,
+    "minor_open": 1
+  },
+  "verified_bounds": [
+    {
+      "topic": "真实消费者与SDK",
+      "evidence": "测试真实import convertToModelMessages和externalChatPrompt；无prompt mock。SDK两回合输出逐part JSON.stringify全量断言及order；生产函数仍由runExternalChatInWorker原native/ACP消费者调用。"
+    },
+    {
+      "topic": "字段与顺序",
+      "evidence": "完整part JSON序列化保type/toolCallId/toolName/input/output及额外SDK字段，parts与messages按原数组map保序，不drop/truncate/dedup；历史标签明确不是本轮执行/授权，普通string/text原输出布局保留。"
+    },
+    {
+      "topic": "media与错角色",
+      "evidence": "仅assistant tool-call与tool tool-result允许；output.type限定text/error-text/json/error-json，content媒体结果不接受；直接image/file和unknownpart仍unsupported；JSON业务asset/file元数据保文本，不执行素材访问。"
+    },
+    {
+      "topic": "冻结输入与权限",
+      "evidence": "git diff原runExternalChatInWorker主体字节与HEAD相同：动态tools仍来自listExternalTaskTools/definition映射，onTool仍经executeExternalTaskTool/lease/effect/归属；不从历史构造新tools。原schema/system/frozen source/receipt/digest/引擎/任务deadline未修改。"
+    },
+    {
+      "topic": "原期限与失败保全",
+      "evidence": "ROOT通知原ai-msg143a8c85-166 deadline11:36:26已过，不续deadline不清会话；本agent未改task/raw失败。此次consumer单测24PASS不是原任务恢复或模型admission成功。"
+    }
+  ],
+  "limitations": [
+    "本轮未运行独立tests、模型、浏览器、用户库或原任务恢复，24PASS为ROOT实际日志。",
+    "未知/媒体的实际拒绝与普通历史合法通过已有RED/GREEN；空identity负例尚需补，当前报告不预签其未来SHA/GREEN。",
+    "不签完整连续模型候选/采纳/导出/视觉/native构建/包装/安装/全部Gate。"
+  ],
+  "mutations": {
+    "repo": false,
+    "product": false,
+    "controlplane": false,
+    "formal_contract": false,
+    "models": false,
+    "browser": false,
+    "user_db": false,
+    "writes": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-diagnosis/codex-history-implementation-review.json"
+  }
+}

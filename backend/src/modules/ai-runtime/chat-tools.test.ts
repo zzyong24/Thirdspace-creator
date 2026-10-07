@@ -4551,6 +4551,8 @@ it.each(["selected","project"])("全部现有工具参数及%s改稿变体可建
  expect(chatWorkerInputSchema.shape.tools.parse(preparedDefinitions.definitions)).toEqual(preparedDefinitions.definitions);
  expect(preparedDefinitions.definitions.map(tool=>tool.name)).toEqual(Object.keys(tools));
  for(const [name,tool] of Object.entries(tools)){
+  // 四个typed作品工具由独立真实参数/公共链测试覆盖；旧通用样本生成器不支持discriminated unions。
+  if(["work.editor.read","work.editor.propose","work.creation.read","work.creation.propose"].includes(name))continue;
   expect(tool.inputSchema,name).toBeDefined();
   const {schema,parameters}=await prepareChatToolParameters(tool.inputSchema!);
   const sample=(node:Record<string,unknown>):unknown=>{
@@ -4615,4 +4617,25 @@ it("画布候选工具先读真实版本，只写候选而不直接改画布",as
  expect(await runExecute(tools["canvas.read"]!,{})).toMatchObject({canvasId:"canvas-1",revision:7,nodes:[{id:"node-1"}]});
  expect(await runExecute(tools["canvas.propose"]!,{baseRevision:7,operations:[{type:"deleteNode",operationId:"op-1",nodeId:"node-1"}]})).toMatchObject({proposalId:"proposal-1",baseRevision:7});
  expect(proposeCanvas).toHaveBeenCalledTimes(1);
+});
+
+it('T1070四工具只经冻结target的真实短端口读/提案，缺target错误无可用候选',async()=>{
+ const {getChatToolNativeExecutor}=await import('./chat-tool-gate');
+ const target={schemaVersion:1,projectId:'p',outputId:'o',owner:'wechat_article',contentType:'article',savedBase:{kind:'artifact',artifactId:'a',versionId:'v'},documentDigest:'sha256:'+'a'.repeat(64),selection:{kind:'article_sections',sectionIds:['s']}};
+ const returned={kind:'work.editor.context',document:{body:'全文'},error:null};const calls:unknown[]=[];
+ const tools=allChatTools({...makeDeps().deps,editorTarget:target as any,readWorkEditor:async input=>{calls.push(input);return returned as any;}});
+ expect(await getChatToolNativeExecutor(tools['work.editor.read']!)!({view:'selection'})).toEqual(returned);expect(calls).toEqual([{view:'selection'}]);
+ const missing=allChatTools(makeDeps().deps);expect(await runExecute(missing['work.editor.propose']!,{})).toMatchObject({kind:'work.editor.candidate',candidate:null,apply:null,changes:[]});
+});
+
+it('编导冻结工具说明提供真正的typed操作名，原错误op不能通过参数门',async()=>{
+ const tool=buildChatTools(['work.editor.propose'],makeDeps().deps)['work.editor.propose']!;
+ const {definitions}=await prepareChatToolDefinitions({'work.editor.propose':tool});
+ const {parameters}=await prepareChatToolParameters(tool.inputSchema!);
+ const base={kind:'production',productionId:'real-production',revision:3},baseDigest='sha256:'+'1'.repeat(64);
+ const edit={type:'patchNativeElement',trackId:'real-track',elementId:'real-element',expectedElementDigest:'sha256:'+'2'.repeat(64),patch:{trimStart:120000,duration:600000,startTime:0}};
+ const request={base,baseDigest,summary:'按用户明确要求修改原片段',candidate:{kind:'typed_patch',owner:'production',sceneId:'real-scene',edits:[edit]}};
+ expect(parameters.parse(request)).toEqual(request);
+ expect(parameters.safeParse({...request,candidate:{...request.candidate,edits:[{...edit,type:undefined,op:'update_element'}]}}).success).toBe(false);
+ for(const name of ['patchNativeElement','expectedElementDigest','patchArticleSection','expectedSectionDigest','patchGraphicCard','expectedCardDigest'])expect(definitions[0].description).toContain(name);
 });

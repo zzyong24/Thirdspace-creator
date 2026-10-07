@@ -7,6 +7,7 @@ import {
   type WorkCreationProposalResult,
 } from "@creatoros/contract";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import {
   useCreationClient,
   useCreationScope,
@@ -154,22 +155,34 @@ function CreationMember({
   }
   return (
     <article className="space-y-3 rounded-xl border border-border bg-surface p-4">
-      <div className="flex items-center justify-between gap-3">
+      <div className="min-w-0 space-y-1">
         <h4 className="font-medium">
           {kind === "article" ? "文章候选" : "图文候选"}
         </h4>
-        <span className="text-sm text-muted-foreground">
+        <p className="break-words text-sm text-muted-foreground">
           {document.title || "未命名作品"}
-        </span>
+        </p>
       </div>
       <div className="flex flex-wrap gap-2">
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => setExpanded((v) => !v)}
-        >
-          {expanded ? "收起预览" : "预览候选"}
-        </Button>
+        <Dialog open={expanded} onOpenChange={setExpanded}>
+          <DialogTrigger asChild><Button size="sm" variant="outline">预览候选</Button></DialogTrigger>
+          <DialogContent className="flex max-h-[calc(100dvh-2rem)] flex-col overflow-y-auto sm:max-w-5xl">
+            <DialogTitle>{kind === "article" ? "文章候选预览" : "图文候选预览"}</DialogTitle>
+            <DialogDescription>查看完整内容，关闭预览后采纳。</DialogDescription>
+            {expanded && <NoteRelayEditor
+              key={`${creationScopeKey(scope)}:${sourceVersionId}`}
+              projectId={value.target.projectId}
+              accountId={scope.accountId}
+              outputId={member.outputId}
+              sourceVersionId={sourceVersionId}
+              platform={kind === "article" ? "wechat" : "rednote"}
+              value={document}
+              readOnlyCandidate
+              onLayoutChange={() => {}}
+              onPreviewReady={() => setPreviewReady(true)}
+            />}
+          </DialogContent>
+        </Dialog>
         <Button
           size="sm"
           disabled={!previewReady || busy || saved}
@@ -188,20 +201,6 @@ function CreationMember({
           打开{kind === "article" ? "文章" : "图文"}
         </Link>
       </div>
-      {expanded ? (
-        <NoteRelayEditor
-          key={`${creationScopeKey(scope)}:${sourceVersionId}`}
-          projectId={value.target.projectId}
-          accountId={scope.accountId}
-          outputId={member.outputId}
-          sourceVersionId={sourceVersionId}
-          platform={kind === "article" ? "wechat" : "rednote"}
-          value={document}
-          readOnlyCandidate
-          onLayoutChange={() => {}}
-          onPreviewReady={() => setPreviewReady(true)}
-        />
-      ) : null}
       {error ? (
         <p role="alert" className="text-sm text-destructive">
           {error}

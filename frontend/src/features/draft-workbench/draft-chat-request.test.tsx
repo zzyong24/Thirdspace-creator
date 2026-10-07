@@ -11,6 +11,23 @@ function Consumer() {
   return null;
 }
 afterEach(cleanup);
+it("刷新后原候选使用已加载作品身份预览和采纳，不要求再发送模型初始化target", async () => {
+  render(<DraftChatRequestProvider><Consumer /></DraftChatRequestProvider>);
+  let outputId = "o", prepared = 0, previews = 0, adoptions = 0;
+  api.registerEditor({
+    readState: () => ({ target: null, outputId, generation: 1, dirty: false }),
+    prepareForTurn: async () => { prepared++; throw Error("本轮不能重新发送"); },
+    previewCandidate: async () => { previews++; return {blob: new Blob(["预览"]), fileName: "候选.mp4"}; },
+    adoptCandidate: async () => { adoptions++; return {status: "adopted"}; },
+  } as any);
+  const candidate: any = {kind: "work.editor.candidate", target: {outputId: "o"}};
+  expect(await api.previewEditorCandidate(candidate)).toMatchObject({fileName: "候选.mp4"});
+  expect(await api.adoptEditorCandidate(candidate, "原采纳请求")).toEqual({status: "adopted"});
+  outputId = "other";
+  expect(await api.previewEditorCandidate(candidate)).toBeNull();
+  expect(await api.adoptEditorCandidate(candidate, "原采纳请求")).toBeNull();
+  expect([prepared, previews, adoptions]).toEqual([0, 1, 1]);
+});
 it("首次严格读回成功后通知同栏当前作品，方法保持稳定且不改变generation", async () => {
   let target: any = null;
   const savedTarget = {

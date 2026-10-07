@@ -1,0 +1,185 @@
+{
+  "schema": "creatoros/t1070-codex-history-prompt-consumer-scope-review@1",
+  "task_id": "T-1070",
+  "reviewer": "/root/final_scope_recheck",
+  "created_at": "2026-10-07T11:32:00.647241+00:00",
+  "review_kind": "同一已确认连续编导需求的原prompt必要消费者范围闭包；非formal新轮、不reset cycle",
+  "verdict": "GO_FOR_EXACT_TWO_PATH_IMPLEMENTATION_ADMISSION",
+  "summary": "可准入原externalChatPrompt消费者及其新增定向测试。实际SDK把同一会话上一回合持久tool parts转成合法assistant tool-call/tool tool-result；现消费者只收text，导致无附件正常第二轮在模型admission前误报unsupported。只机械文本序列化原历史、保持字段与角色及顺序，不新增多模态、API、runtime、工具授权或执行机制。",
+  "main": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "observed_head": "a192934022304c1a2d14d2553330be1244085ddd",
+  "reviewed_sha256": {
+    "docs/features/t1070-director-script-workflow/CODEX_TOOL_HISTORY_INTEGRATION.md": "7676e50727861a7cacbb2042656cbd60be9a3743b9098d32627d0b2bffb44734",
+    "docs/features/t1070-director-script-workflow.md": "2513aedb1164f3ce99b0a81ea25dc4a0e79853cbda5374ce49a75fbf89c871e9",
+    "docs/features/t1070-director-script-workflow/CONTRACT.json": "fae774ebfe3a20097a93e8bfbc4189069345c0852600940c1e8efadb5ece0a0b",
+    "ai-worker/src/execution/external-chat-worker-run.ts": "1862684d1e614b4b218c0f750ee0a16428825118d4ff1247e114b5a99e9f24f1",
+    "backend/src/modules/ai-runtime/chat-model-messages.ts": "3a9c4f692f5e658a05cea79b952ba2b3062872bf71bfa5253e96ab8adde726d4",
+    "frontend/src/server/prepare-chat-reply.ts": "fff1e73af72f3edfe23c132e93fb905d6b6980000c9eac0adf3a8c403bf9309a",
+    "contract/src/internal/chat-worker.ts": "d1f48e1757f368106ded4e60acd4d147c87074f6663293841572a84bc98c6834",
+    "ai-worker/src/execution/codex-acp-worker-run.test.ts": "c686b46247932065405bc0746a09f39e73d6049968b1b3e119cd0ef7109ad7ab",
+    "orchestrator/SYSTEM_ARCHITECTURE.md": "3efbb0394b8bcc9eb3c9ad7e8c9364df51e336006b862e02ac71fd6c9327971e"
+  },
+  "exact_scope": {
+    "preserved_original_formal_write_set": 93,
+    "previous_additive_consumer_paths": [
+      "frontend/src/features/script/script-structure-view.tsx",
+      "frontend/src/features/script/script-structure-view.test.tsx",
+      "frontend/src/features/reference-editors/native-editor-surface.tsx",
+      "frontend/src/features/reference-editors/native-editor-surface.test.tsx"
+    ],
+    "previous_implementation_write_set": 97,
+    "additive_paths": [
+      "ai-worker/src/execution/external-chat-worker-run.ts",
+      "ai-worker/src/execution/external-chat-worker-run.test.ts"
+    ],
+    "implementation_write_set": 99,
+    "classification": {
+      "ai-worker/src/execution/external-chat-worker-run.ts": "现有原prompt消费者，当前源码已实读",
+      "ai-worker/src/execution/external-chat-worker-run.test.ts": "当前不存在，允许新增该消费者定向测试；不能误登记为已有测试文件"
+    },
+    "source_not_yet_implemented": "不把待实施SOURCE列为缺陷，不签未来SHA/RED/GREEN",
+    "boundary": "仅externalChatPrompt机械协议适配和同路径定向tests；不得改worker schema/backend/frontend冻结input、外部runtime/ACP/native协议、工具列表/执行/lease/effect/归属或预算。若确需第三路径先报告。"
+  },
+  "owned_actual_failure_evidence": {
+    "task_file": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-browser-baseline/real-ui-structured-second-task.json",
+    "task_sha256": "f4a4faa9efbd8a0968fe33d187c8f6691c1823ab91954c78c8eb9ff489d60d23",
+    "messages_file": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-browser-baseline/real-ui-structured-second-messages.json",
+    "messages_sha256": "c46416fd9a05f5a3851f72b67c96c3ae7b33d60ac28906cb2cf67b2296e9da60",
+    "ai_task_id": "ai-task-f1e18424-a17e-4cb2-a782-8ef2a52b1eb2",
+    "execution_task_id": "execution-task-31c081af-3c18-4271-a27d-cafc81476b5c",
+    "source_message_id": "ai-msg-143a8c85-166",
+    "conversation_id": "ai-conv-143a8c85-96",
+    "task_status": "running",
+    "runtime_status": "waiting_user",
+    "error_code": "CODEX_INPUT_MODALITY_UNSUPPORTED",
+    "honesty": "公开task.status仍running、runtimeStatus waiting_user，按实际字段并列，不伪写已failed/settled；模型未admission为ROOT事实与消费者拒绝位置，未调用模型复验。",
+    "message_summary": [
+      {
+        "id": "ai-msg-143a8c85-97",
+        "role": "user",
+        "attachments_count": 0,
+        "part_types": [],
+        "tool_call_ids": []
+      },
+      {
+        "id": "chat:ai-msg-143a8c85-97",
+        "role": "assistant",
+        "attachments_count": 0,
+        "part_types": [
+          "step-start",
+          "tool-work.editor.read",
+          "tool-context.project.lifecycle",
+          "tool-skill.read",
+          "tool-work.editor.propose",
+          "text"
+        ],
+        "tool_call_ids": [
+          "2",
+          "3",
+          "4",
+          "5"
+        ]
+      },
+      {
+        "id": "ai-msg-143a8c85-166",
+        "role": "user",
+        "attachments_count": 0,
+        "part_types": [],
+        "tool_call_ids": []
+      }
+    ]
+  },
+  "independent_actual_sdk_projection": {
+    "actual": true,
+    "performed": "node从MAIN/backend安装的ai SDK import真实convertToModelMessages，对上述owned rows按原UIMessage映射，ignoreIncompleteToolCalls:true；纯内存/无网络/模型/DB/文件写",
+    "exit_code": 0,
+    "result_roles": [
+      "user",
+      "assistant",
+      "tool",
+      "user"
+    ],
+    "assistant_parts": "tool-call IDs 2,3,4,5，names work.editor.read/context.project.lifecycle/skill.read/work.editor.propose，以及297字符text",
+    "tool_parts": "tool-result IDs 2,3,4,5，四个output.type=json",
+    "projection_messages_sha256": "00ed05572a32894ecead97d7f2bd91478fffe78f9398552d9a46922c320b4fd0",
+    "old_consumer_predicate_rejects": true,
+    "limit": "此hash是本次SDK纯转换messages JSON，不冒充原task.modelInputDigest/historyDigest，也不是未来prompt实现GREEN或整轮模型PASS。"
+  },
+  "source_evidence": [
+    {
+      "path": "ai-worker/src/execution/external-chat-worker-run.ts",
+      "line": 24,
+      "observation": "externalChatPrompt现所有非string content都强制每part type=text/text:string，合法tool-call/tool-result直接GenerationFailure waiting_user CODEX_INPUT_MODALITY_UNSUPPORTED。"
+    },
+    {
+      "path": "ai-worker/src/execution/external-chat-worker-run.ts",
+      "line": 37,
+      "observation": "本地native分支prompt在原workingDirectory/reserveExternalChatTurn/controlledCodexSession之前构建；这条拒绝不能以清历史或创建新付费task洗绿。ACP绑定早分支仍须保原相关回归。"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/chat-model-messages.ts",
+      "line": 7,
+      "observation": "原准备消费者使用真实convertToModelMessages与原工具历史，不是本新增方案造出来的任意能力。"
+    },
+    {
+      "path": "ai-worker/src/execution/external-chat-worker-run.ts",
+      "line": 54,
+      "observation": "当前可执行tools只由listExternalTaskTools动态定义映射；executeExternalTaskTool沿原lease/frozencontext/effect校验，历史文本不可替换此通路。"
+    }
+  ],
+  "authorization_and_security": {
+    "conclusion": "原SPEC同一project编导连续生成/精调与原完整历史已授权；把真实SDK合法工具历史适配到已有文本prompt是不可约消费者正确性修复，非新API/任务/权限/多模态/capability。原93三轮事实与原等待任务保留，不开formal新周期。",
+    "historical_tool_authority": "历史只作数据/回执，不从其toolName/input构造当前动态tools或调用host；标明仅历史、非本轮授权。历史曾合法而本轮不在tools列表也不得恢复权限；动态网关继续拒绝本轮未授权name。",
+    "frozen_context": "不改原source/conversation/historyMessageIds/historyDigest/modelInputDigest/hostContextDigest、frozen targets/receipts、任务请求键、期限或模型引擎；仅在现prompt边界产生文本投影，不过滤持久会话。"
+  },
+  "findings": [],
+  "counts": {
+    "blocker": 0,
+    "major": 0,
+    "minor": 0
+  },
+  "required_implementation_evidence": [
+    {
+      "id": "CH-01",
+      "gate": "实际SDK合法转换",
+      "requirement": "用实际installed convertToModelMessages后的文本+assistant tool-call+tool tool-result调用实际externalChatPrompt做当场RED→GREEN，验证完整type/toolCallId/toolName/input/output、消息/part顺序、mixedtext与JSON深等；不mock预确认prompt或只手造成功parts。"
+    },
+    {
+      "id": "CH-02",
+      "gate": "角色与shape严格",
+      "requirement": "tool-call只接受assistant，tool-result只接受tool；IDs/name必须真实非空合法字符串，input/output须合法SDK已冻结JSON shape。images/file/audio/reasoning/unknownpart与错角色/畸形输出仍原unsupported，不把附件/媒体part JSON字符串化偷渡为文本。"
+    },
+    {
+      "id": "CH-03",
+      "gate": "SDK output媒体边界",
+      "requirement": "明确验证tool-result.output的SDK union，普通text/json及原合法错误text/json可机械保留；content输出若含媒体必须unsupported，不能因外层tool-result就接受image/file内容。JSON业务元数据中的asset/file ID不是多模态字节，不能按业务type名称猜内容而误杀合法回执。"
+    },
+    {
+      "id": "CH-04",
+      "gate": "lossless与普通文本兼容",
+      "requirement": "普通string/text输出保持原样；历史完整JSON不截断、不选工具、不删旧回执、不丢别人的字段或跨回合重排，空对象/null/数组/多语言长内容真实覆盖；SEMANTIC_BOUNDARY_ALLOW仅机械协议序列化，不作创作/授权判断。"
+    },
+    {
+      "id": "CH-05",
+      "gate": "原执行边界不变",
+      "requirement": "新增标注历史数据不影响本轮动态工具来源、tool revision/effect/fence/lease/owner/receipt。保原native/ACP/binding回归、原admission/UNKNOWN与超时期限，不自动重发原等待任务/付费task。"
+    },
+    {
+      "id": "CH-06",
+      "gate": "真实连续操作补验",
+      "requirement": "ROOT在同一会话/原source/task安全恢复公共链，前轮合法工具历史仍可回读，本轮真实正常生成/候选/用户采纳证据补齐。单测协议GREEN不是模型/包/安装PASS，原unsupported事实与等待任务证据不修改。"
+    }
+  ],
+  "diagram": "原持久历史 → 实际SDK assistant/tool合法parts → 原prompt机械历史文本 → 原当前动态tool gateway；历史不能成为本轮权限",
+  "verification": "本轮只读源码/文档/ownedJSON与一次实际SDK纯内存转换。未改repo/control/工具链，不跑模型、浏览器、DB或reviewctl；唯一写入授权本报告。",
+  "mutations": {
+    "repo": false,
+    "product": false,
+    "controlplane": false,
+    "toolchain": false,
+    "models": false,
+    "browser": false,
+    "user_db": false,
+    "writes": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-diagnosis/codex-history-scope-review.json"
+  }
+}

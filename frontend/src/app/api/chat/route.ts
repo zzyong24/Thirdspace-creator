@@ -7,6 +7,7 @@ import { randomUUID } from "node:crypto";
 import type { UIMessage } from "ai";
 import {chatExecutionResponse} from "@/server/chat-execution-stream";
 import type { RequestContext } from "@creatoros/contract";
+import {workEditorTarget,workCreationTarget} from "@creatoros/contract";
 import { OwnershipError } from "@creatoros/backend/modules/identity";
 import {
   getChatRuntime,
@@ -214,6 +215,10 @@ export async function POST(req: Request): Promise<Response> {
       { status: 400 },
     );
   }
+  const editorTarget=body.chatContext?.editorTarget===undefined?undefined:workEditorTarget.safeParse(body.chatContext.editorTarget);
+  const creationTarget=body.chatContext?.creationTarget===undefined?undefined:workCreationTarget.safeParse(body.chatContext.creationTarget);
+  if((editorTarget&&!editorTarget.success)||(creationTarget&&!creationTarget.success))return NextResponse.json({code:"WORK_TARGET_INVALID",error:"当前作品或确认脚本定位无效，请回到稿面重新操作。"},{status:400});
+  if(editorTarget&&creationTarget)return NextResponse.json({code:"WORK_TARGET_INVALID",error:"一次请求只能选择当前精调或联合生成。"},{status:400});
   const chatContext: ChatContext = {
     surface:
       typeof body.chatContext?.surface === "string"
@@ -225,7 +230,11 @@ export async function POST(req: Request): Promise<Response> {
     selection: body.chatContext?.selection,
     assetAliases,
     diagnosticRef,
+    ...(editorTarget?.success?{editorTarget:editorTarget.data}:{}),
+    ...(creationTarget?.success?{creationTarget:creationTarget.data}:{}),
   };
+  const workTarget=chatContext.editorTarget??chatContext.creationTarget;
+  if(workTarget&&(chatContext.surface!=="project"||chatContext.projectId!==workTarget.projectId))return NextResponse.json({code:"WORK_TARGET_MISMATCH",error:"当前作品不属于这个项目对话，请重新打开编导。"},{status:409});
 
   const hasCompleteScriptSelection =
     chatContext.selection?.kind === "script_section" &&
@@ -486,7 +495,14 @@ export async function POST(req: Request): Promise<Response> {
       //     不重插。查失败(best-effort)→ 照常 insert(宁多勿丢)。
       const approvalContinuation=messages.at(-1)?.role==="assistant" && messages.at(-1)!.parts.some(part=>typeof part==="object" && part!==null && "state" in part && part.state==="approval-responded");
       let skipInsert = approvalContinuation;
-      if (!skipInsert && isExistingConversation && body.trigger!=="regenerate-message") {
+      // 新编导重接原服务器 source ID；不能把同文、不同稿面误当一次请求。
+      if(workTarget&&body.trigger==="regenerate-message"){
+        const history=await runtime.ai.listMessages(ctx,conversationId);
+        const saved=history.find(message=>message.id===body.messageId&&message.role==="user");
+        if(!saved||saved.content!==userText||JSON.stringify(saved.attachments??[])!==JSON.stringify(attachmentIds))return NextResponse.json({code:"WORK_SOURCE_MESSAGE_INVALID",error:"找不到这次原请求，输入已保留。请先恢复当前对话的任务。"},{status:409});
+        skipInsert=true;persistedUserMessageId=saved.id;
+      }
+      if (!skipInsert && !workTarget && isExistingConversation && body.trigger!=="regenerate-message") {
         try {
           const history = await runtime.ai.listMessages(ctx, conversationId);
           const last = history[history.length - 1];
@@ -511,7 +527,7 @@ export async function POST(req: Request): Promise<Response> {
           ...(attachmentIds.length > 0 ? { attachments: attachmentIds } : {}),
         });
         persistedUserMessageId = persisted.id;
-      } else {
+      } else if(!persistedUserMessageId) {
         const history = await runtime.ai.listMessages(ctx, conversationId);
         const last = [...history].reverse().find(message=>message.role==="user");
         if (last?.role === "user" && last.content === userText) {
@@ -602,7 +618,9 @@ export async function POST(req: Request): Promise<Response> {
       const task=await runtime.durable.get(ctx,submitted.executionTaskId);
       if((task.runtimeStatus??task.status)==='waiting_user')await runtime.durable.command(ctx,submitted.executionTaskId,'resume');
     }
-    return chatExecutionResponse(runtime.durable,ctx,{...submitted,conversationId},req.signal);
+    const response=chatExecutionResponse(runtime.durable,ctx,{...submitted,conversationId},req.signal);
+    response.headers.set("x-source-message-id",submitted.sourceMessageId);
+    return response;
   } catch (err) {
     if (err instanceof OwnershipError) {
       return NextResponse.json({ error: err.message }, { status: 404 });

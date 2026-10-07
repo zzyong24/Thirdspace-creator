@@ -9,13 +9,14 @@ import {prepareChatModelMessages} from "./chat-model-messages";
 /** 新执行入口共用既有上下文、白名单、可信来源和历史转换；此步骤不取主模型凭据。 */
 export async function prepareChatTurn(ctx:RequestContext,input:ChatTurnInput,deps:AssembleChatDeps,options:NonNullable<Parameters<typeof prepareChatToolDefinitions>[1]>={}){
  const frozenOptions={...options};
- const assembly=await prepareChatAssembly(ctx,input.chatContext,deps,detectCopilotMediaRoute(input.messages),{
-  positioningScratch:isScratchPositioningConversation(input.messages),
-  verbatimSources:input.trustedScriptSources??[],
-  latestUserInstruction:latestUserText(input.messages),
+ const context=structuredClone(ctx),frozenInput={...input,messages:structuredClone(input.messages),chatContext:structuredClone(input.chatContext),trustedScriptSources:structuredClone(input.trustedScriptSources??[])};
+ const assembly=await prepareChatAssembly(context,frozenInput.chatContext,deps,detectCopilotMediaRoute(frozenInput.messages),{
+  positioningScratch:isScratchPositioningConversation(frozenInput.messages),
+  verbatimSources:frozenInput.trustedScriptSources,
+  latestUserInstruction:latestUserText(frozenInput.messages),
  });
  const preparedTools=await prepareChatToolDefinitions(assembly.tools,frozenOptions);
- return {assembly,toolParameters:preparedTools.parameters,toolDefinitions:preparedTools.definitions,modelMessages:await prepareChatModelMessages(input.messages,assembly)};
+ return {assembly,toolParameters:preparedTools.parameters,toolDefinitions:preparedTools.definitions,modelMessages:await prepareChatModelMessages(frozenInput.messages,assembly)};
 }
 
 /** 仅接服务端已验归属的消息/来源与快照；不从客户端输入解析权限或当前配置。 */
@@ -40,7 +41,7 @@ export async function prepareDurableChatTurn(
  const scriptHooksGeneration=structuredClone(options.scriptHooksGeneration);
  requireWorkspace(context);
  const hostContext=validateChatHostContext({
-  schemaVersion:1,chatContext:input.chatContext,
+  schemaVersion:1,chatContext:structuredClone(input.chatContext),
   mediaRoute:detectCopilotMediaRoute(messages),
   positioningScratch:isScratchPositioningConversation(messages),
   trustedScriptSources:input.trustedScriptSources??[],skillSnapshot,

@@ -1,0 +1,1123 @@
+{
+  "schema": "creatoros/t1070-implementation-root-independent-review@1",
+  "task_id": "T-1070",
+  "reviewer": "/root/final_scope_recheck",
+  "created_at": "2026-10-07T07:42:57.324577+00:00",
+  "scope": "已确认合同的当前实现与组合根独立只读复查，非新合同轮",
+  "verdict": "REVIEWED_IMPLEMENTATION_MAJORS_CLOSED_ACCEPTANCE_PENDING",
+  "summary": "已报告的001–004共4项major均在当前集成源码的审查边界关闭；本轮独立6 suites/54 PASS、0 FAIL、0 skip，真实Chat/useChat/DefaultChatTransport验证明确零提交恢复与fetch后UNKNOWN。ROOT真实完整fulltools创作链terminalfailed CHAT_WORKER_INPUT_UNAVAILABLE，仍待公共组合装配诊断；本报告不代签完整链、真模型交付、browser、native最新构建或安装。",
+  "main": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "head": "7c596d02a09bca4fc911b5d84d18cab30680b789",
+  "authorities": {
+    "docs/features/t1070-director-script-workflow.md": "2513aedb1164f3ce99b0a81ea25dc4a0e79853cbda5374ce49a75fbf89c871e9",
+    "docs/features/t1070-director-script-workflow/CONTRACT.json": "fae774ebfe3a20097a93e8bfbc4189069345c0852600940c1e8efadb5ece0a0b",
+    "orchestrator/SYSTEM_ARCHITECTURE.md": "3efbb0394b8bcc9eb3c9ad7e8c9364df51e336006b862e02ac71fd6c9327971e",
+    "orchestrator/process/modules.config.json": "06f574f4ab7aaa4f2dad8e1d6a5373c20f67926159d0598e935a03f4cbf78b79",
+    "orchestrator/COMPLEXITY_LEDGER.json": "f8730100ad00d3bc9796422d3a140fb24c126f89f9ea0604e4988895a6b05b35"
+  },
+  "skill_version": "3.27.4，项目与已安装一致",
+  "scope_inventory": {
+    "contract_exact_paths": 93,
+    "module_exact_paths": 96,
+    "module_extra_existing_base_paths": [
+      "backend/src/modules/ai/external-chat-turn.service.ts",
+      "backend/src/modules/ai/external-group-chat.integration.test.ts",
+      "backend/src/modules/assets/generated-asset-candidate.service.ts"
+    ],
+    "current_product_dirty_outside_contract": [],
+    "control_dirty_excluded": [
+      "orchestrator/.lessons-stats.json",
+      "orchestrator/context/T-1070.md",
+      "orchestrator/progress.json"
+    ],
+    "actual_current_source": [
+      {
+        "path": "contract/src/resources/work-editor.ts",
+        "exists": true,
+        "sha256": "cdb72233b401b845adca70b569024316e804a1b713f0606e24311336d6775a2c"
+      },
+      {
+        "path": "contract/src/resources/production-native-document.ts",
+        "exists": true,
+        "sha256": "5404771bf43a3ac4a51cd1dc6f698d0f10b115fb81ba7f3a749654c34c073b2b"
+      },
+      {
+        "path": "contract/src/resources/production-editor.ts",
+        "exists": true,
+        "sha256": "eda919052eeab995b1a743dc0296bdb598d43f4fd8ed3d374d5d49958e82d0cc"
+      },
+      {
+        "path": "contract/src/index.ts",
+        "exists": true,
+        "sha256": "ee8ec41bfc8b60f815c5515f733f0922cd58cbc1020406597c84d3caf958be73"
+      },
+      {
+        "path": "contract/src/chat-tool-labels.ts",
+        "exists": true,
+        "sha256": "29319bab69a764b9d0f9d8edfa4b073bd647b544461d188073d01442e1083e62"
+      },
+      {
+        "path": "backend/src/modules/production/production-native-editor.ts",
+        "exists": true,
+        "sha256": "bf797437f77a44997b952e4d371bfa8c844e3cd65805e4995a266323a15b567d"
+      },
+      {
+        "path": "backend/src/modules/production/production.service.ts",
+        "exists": true,
+        "sha256": "8d4606840c0640a340663cc81f41cdf8274652abdebbadecfc96657580589b26"
+      },
+      {
+        "path": "backend/src/modules/ai-runtime/work-editor-candidate.ts",
+        "exists": true,
+        "sha256": "396cd5979874ed4b021ffaad92623b0af6c8020f8ef07e7a668fc4c5a05ebdc9"
+      },
+      {
+        "path": "backend/src/modules/ai-runtime/chat-work-editor-tool-host.ts",
+        "exists": true,
+        "sha256": "e3764dad2e7cfff8473019b9c1eb31e12a49a562677098cf14ddaa058be47943"
+      },
+      {
+        "path": "backend/src/modules/ai-runtime/chat-tools.ts",
+        "exists": true,
+        "sha256": "5aaa7a74067b84efb2438f247161a5ee1a7f9f76604d8320096c2e0d819ba85d"
+      },
+      {
+        "path": "backend/src/modules/ai-runtime/chat-tool-definitions.ts",
+        "exists": true,
+        "sha256": "e7e5ef22d9eba4191c4da9d5715874cc9dc80e97c7c13153eed34699a8892371"
+      },
+      {
+        "path": "backend/src/modules/ai-runtime/chat-tool-gate.ts",
+        "exists": true,
+        "sha256": "d31238ff49409371d96cb0b42553902de2fb05fb0aeea613e08895237abeb7f1"
+      },
+      {
+        "path": "backend/src/modules/ai-runtime/chat-task-tool-host.ts",
+        "exists": true,
+        "sha256": "1497df084b20c6fc89b650c98ad98b9b73aa45526e3d417ec5a8c03a8628892d"
+      },
+      {
+        "path": "backend/src/modules/ai-runtime/chat-production-composition.ts",
+        "exists": true,
+        "sha256": "5bdec7f73bac8a30dd95a9dc8043f552e254077120b7fe019351c090290badb5"
+      },
+      {
+        "path": "backend/src/modules/ai-runtime/chat-assembly-types.ts",
+        "exists": true,
+        "sha256": "ed56020a8576799a2fa51b36ea099cd63293c6e6a631ff2368d7d2ccd72aaa19"
+      },
+      {
+        "path": "backend/src/modules/ai-runtime/chat-assembly-tool-deps.ts",
+        "exists": true,
+        "sha256": "63c18718dd5a425ab5cb8abcaea52b105502449c8edd4071f0bdf2b0fd1a9429"
+      },
+      {
+        "path": "backend/src/modules/ai-runtime/chat-assembly.ts",
+        "exists": true,
+        "sha256": "b2e00bf1c906fde9e6cfe05602184654fcd6e63af31502f6ffdb93b4a3dd512c"
+      },
+      {
+        "path": "backend/src/modules/ai-runtime/chat-turn-preparation.ts",
+        "exists": true,
+        "sha256": "3bb8ca9a94629d4791e43c5329a5f84298dc4630ebc530b23604fcf93208c6ca"
+      },
+      {
+        "path": "backend/src/modules/ai-runtime/chat-context.ts",
+        "exists": true,
+        "sha256": "2c465dc2a19a1d1e0b0bf16729b90532098d6e4b5fcbd255cb2baa156cfb02aa"
+      },
+      {
+        "path": "backend/src/modules/ai/chat-host-context.ts",
+        "exists": true,
+        "sha256": "1a2e2b78460eebd40632065ab98b5d1bcd2ba0d7106d26d7421bd8cc77d8b0dd"
+      },
+      {
+        "path": "backend/src/modules/ai/external-task-tool.service.ts",
+        "exists": true,
+        "sha256": "9a6e765ac2a7fc29314d82767cbbd0e29e86dab97292db31e13b0428e190b40b"
+      },
+      {
+        "path": "backend/src/modules/ai-runtime/index.ts",
+        "exists": true,
+        "sha256": "c96c85f4a24dd483f92a159ad8a960ad4e55c5b818ac362e822cedde81cf26ac"
+      },
+      {
+        "path": "frontend/src/server/persistence-client.ts",
+        "exists": true,
+        "sha256": "e76ac819e762bd326f28f57499941b348524ef9cd23466f4f3340683cd55f7ed"
+      },
+      {
+        "path": "frontend/src/server/prepare-chat-reply.ts",
+        "exists": true,
+        "sha256": "fff1e73af72f3edfe23c132e93fb905d6b6980000c9eac0adf3a8c403bf9309a"
+      },
+      {
+        "path": "frontend/src/app/api/chat/route.ts",
+        "exists": true,
+        "sha256": "b9559b5d0921d14329e3cbce8cff472b3dfcbd9507c74bbe343b8e085b66f8ad"
+      },
+      {
+        "path": "frontend/src/features/draft-workbench/draft-chat-request.tsx",
+        "exists": true,
+        "sha256": "cf99614e68abb31238caa56f06b6a3a8a6163d7dbb1f43c25bfa02a757af723b"
+      },
+      {
+        "path": "frontend/src/app/(creator)/projects/[projectId]/stage-chat-wrapper.tsx",
+        "exists": true,
+        "sha256": "58dbd7bb13635689a5d728991ef3141cb32a442bdb049203b4f9ab7b926df2dd"
+      },
+      {
+        "path": "frontend/src/features/draft-workbench/draft-chat-rail.tsx",
+        "exists": true,
+        "sha256": "8033f5784391d3b9e6fee78c58587053a70c4ea8837284ab0d657c87ce64a04a"
+      },
+      {
+        "path": "frontend/src/features/copilot/ai-copilot-content.tsx",
+        "exists": true,
+        "sha256": "d2f90bc78530b680abf440d1d267c06c81d6ac3891ddaaa78864fec740650672"
+      },
+      {
+        "path": "frontend/src/features/copilot/chat-work-editor-card.tsx",
+        "exists": true,
+        "sha256": "ce6f6f50f91a140335be271a531cde21fb2a153de5915bbb9903972b6b55b656"
+      },
+      {
+        "path": "frontend/src/features/article/article-workbench.tsx",
+        "exists": true,
+        "sha256": "7c50d812b68b0fac00e89cbdf281ca4a7d16018765a47bcb1455fbb0e720b5c9"
+      },
+      {
+        "path": "frontend/src/features/projects/graphic-post-workbench.tsx",
+        "exists": true,
+        "sha256": "674517a5ac48e1901faa3ee540c90c8a4e48e7c429c3dbf90ad52d508b8ad8f4"
+      },
+      {
+        "path": "frontend/src/features/projects/graphic-post-results.tsx",
+        "exists": true,
+        "sha256": "84d6a49f5d19ef3f2a50839ca3d584862f328eec8ad16614e68f71db576de9a7"
+      },
+      {
+        "path": "frontend/src/features/reference-editors/noterelay/noterelay-editor.tsx",
+        "exists": true,
+        "sha256": "7c4391845aafe2e40908a1f7f5edd16ee0590a2789a3d78b3a332768dea43582"
+      },
+      {
+        "path": "frontend/src/features/reference-editors/project-video-session-host.tsx",
+        "exists": true,
+        "sha256": "55482ba0ab89890d2f52dbd9f5fd79ef0e0f2aeb8e974411b9e38bf4c889b8f5"
+      },
+      {
+        "path": "frontend/src/features/production/production-editor-entry.tsx",
+        "exists": true,
+        "sha256": "bdba0e5b483c0b3013705092577b16587ac3b5ef6090f9a4ad0b7fbaba224c16"
+      },
+      {
+        "path": "frontend/src/features/reference-editors/video-reference-workbench.tsx",
+        "exists": true,
+        "sha256": "2a6fba449b83a6007412b97ec5f1524cefdc8fec00cb887e7c083b6ea92e4631"
+      },
+      {
+        "path": "frontend/src/features/reference-editors/native-editor-contract.ts",
+        "exists": true,
+        "sha256": "b1671cf42e39fba71467a45160bf539bac761c2b4f7483da8ee1c83195f42093"
+      },
+      {
+        "path": "ai-worker/src/prompt/templates/chatbox-turn.ts",
+        "exists": true,
+        "sha256": "d850abac10f64e324fb21d5bafa8874fa37de1ff20e9a29ba1507414cfc0e577"
+      },
+      {
+        "path": "frontend/scripts/verify-native-editors.mjs",
+        "exists": true,
+        "sha256": "a0315cfff65b89c42e73279d2198fbf1908337340da5242adf5f1aabd45d272c"
+      },
+      {
+        "path": "contract/tests/work-editor.test.ts",
+        "exists": true,
+        "sha256": "214e715a065aba4141426f7945f41b8355f75ee7c0f7cbd27211ec1f486d58e5"
+      },
+      {
+        "path": "contract/tests/production-native-document.test.ts",
+        "exists": true,
+        "sha256": "a6737f2340f6a4bced5fb1b8c54eaedc52476b3c8249151075142bb8e4b8f13b"
+      },
+      {
+        "path": "contract/tests/modules/production.test.ts",
+        "exists": true,
+        "sha256": "20c78643e8422a49ad9ffa9e304512c32abc3043c9be6f5939a99a6347f0875b"
+      },
+      {
+        "path": "backend/src/modules/ai-runtime/work-editor-candidate.test.ts",
+        "exists": true,
+        "sha256": "aacdf9379c8eb5e81ef9b2985e9ec46ef09af217d8b83677ac6dff4a0ff186f0"
+      },
+      {
+        "path": "backend/src/modules/ai-runtime/chat-work-editor-tool-host.test.ts",
+        "exists": true,
+        "sha256": "e488ec56be537a658b3b30c264837cf6fb1991a84f5fd6900153b38ddb45a26d"
+      },
+      {
+        "path": "backend/src/modules/production/production-native-editor.integration.test.ts",
+        "exists": true,
+        "sha256": "a1599a85bd2a5ef44652672181cb054fccd47147911509b7e6c3f8ed4fbf9d1b"
+      },
+      {
+        "path": "backend/src/integration/chat-work-editor-worker.test.ts",
+        "exists": true,
+        "sha256": "c1d3efbf34bdb1b86e07e7ee4ecc9391516a35bddc08b94449d0191f4e113f5e"
+      },
+      {
+        "path": "backend/src/modules/ai-runtime/chat-tool-gate.test.ts",
+        "exists": true,
+        "sha256": "9291c73f14c29ab959c9147e1072be65518cd9df3731ea25dd73538ffbbcc856"
+      },
+      {
+        "path": "backend/src/modules/ai-runtime/chat-tool-definitions.test.ts",
+        "exists": true,
+        "sha256": "c6f5e9fbc5c06684f86a03f7a9090a17a292323ce515eee6168e1d1c2a4208d8"
+      },
+      {
+        "path": "backend/src/modules/ai-runtime/chat-tools.test.ts",
+        "exists": true,
+        "sha256": "7b4f541b4c7f0b1b5ac5f715a7bf66cf61c724d1ad4a35496fafe416e7919ccd"
+      },
+      {
+        "path": "backend/src/modules/ai-runtime/chat-assembly.test.ts",
+        "exists": true,
+        "sha256": "84e37545a948a5cd90e130ce2316d35d0546c72267a739cfbfc5edfdbccc4334"
+      },
+      {
+        "path": "backend/src/modules/ai/chat-turn-submission.service.test.ts",
+        "exists": true,
+        "sha256": "343ff8cea5cfdc4408a42ef030ae94ff3a877c20587d5ac6c80021749dd8c4e5"
+      },
+      {
+        "path": "frontend/src/server/prepare-chat-reply.test.ts",
+        "exists": true,
+        "sha256": "08c9fea17ec9d506b5fd68c5d5a7da5fa0af1d98bc058116f99c7d6cb7e8c19b"
+      },
+      {
+        "path": "frontend/src/features/draft-workbench/draft-chat-request.test.tsx",
+        "exists": true,
+        "sha256": "8afd427a76ecca9d5189b3d3e01d9affe79719b196bb80904a451fc6ffebe0f8"
+      },
+      {
+        "path": "frontend/src/app/(creator)/projects/[projectId]/stage-chat-wrapper.test.tsx",
+        "exists": true,
+        "sha256": "392c2b8b1c70fe5507e10207a072906cbe0b6aedfa4950abf995dbd6f86decec"
+      },
+      {
+        "path": "frontend/src/features/copilot/chat-work-editor-card.test.tsx",
+        "exists": true,
+        "sha256": "fee24c80f5a1ebe49ee3602b8f5a057a1bf65b1309a6c774360baebdd73446d0"
+      },
+      {
+        "path": "frontend/src/features/copilot/ai-copilot-content.test.tsx",
+        "exists": true,
+        "sha256": "5ef49333f1f31cf6a100b219fbdd50cf72efa3de247774eadf652bf22e2b305b"
+      },
+      {
+        "path": "frontend/src/features/article/article-workbench-save-race.test.tsx",
+        "exists": true,
+        "sha256": "acb7b23b69f42f18b0b7302f6993f632d48efd023871517784005fa4e522a440"
+      },
+      {
+        "path": "frontend/src/features/projects/graphic-post-workbench.test.tsx",
+        "exists": true,
+        "sha256": "252563c19849cbf7c7947ea92f8dc9cf28b675b90822c36ad7c5002413d848a4"
+      },
+      {
+        "path": "frontend/src/features/projects/graphic-post-results.test.tsx",
+        "exists": true,
+        "sha256": "9ad4d039168eb7ce66b5d431153919965e6d9ca2eb7ccd723c3e39990acfd4e5"
+      },
+      {
+        "path": "frontend/src/features/reference-editors/noterelay/noterelay-editor.test.tsx",
+        "exists": true,
+        "sha256": "3eea713b30d3af20091ebd8e82b9d5e025d391c2e86d1868b7b5fdcfb48ae8c3"
+      },
+      {
+        "path": "frontend/src/features/reference-editors/video-reference-workbench.test.tsx",
+        "exists": true,
+        "sha256": "7698fcbd2c539864e7cc4fe240b1764e7ae8e9d332e969ef9665b6baa6e78ffe"
+      },
+      {
+        "path": "frontend/src/features/reference-editors/project-video-session-host.test.tsx",
+        "exists": true,
+        "sha256": "9e778d6713a9146af89836db433b88365652929e5fa03e51bc238562c06b300c"
+      },
+      {
+        "path": "frontend/src/features/production/production-editor-entry.test.tsx",
+        "exists": true,
+        "sha256": "4df1e3cc0bd0d71a1bee9cb9711c4dd8f5dac4dfb2fdb0cc0ef623c5010e0edb"
+      },
+      {
+        "path": "frontend/tests/e2e/t1070-director-editor.spec.ts",
+        "exists": true,
+        "sha256": "f05eb72d068cc2768d799fe715441c3a02db329380418dcb60d4f4929f836757"
+      },
+      {
+        "path": "frontend/public/reference-editors/sources/opencut-classic/native-source.tar.gz",
+        "exists": true,
+        "sha256": "08edc36d5057f737824c232c0c6b2e73358256c898207847898576e74a3dee60"
+      },
+      {
+        "path": "frontend/public/reference-editors/sources/opencut-classic/native-patches.diff",
+        "exists": true,
+        "sha256": "c65de282b1eef7bae63294f834790da0a87bdc51f9b131c94e08d369cb713a79"
+      },
+      {
+        "path": "frontend/public/reference-editors/sources/opencut-classic/native-from-t1046.patch",
+        "exists": true,
+        "sha256": "c65de282b1eef7bae63294f834790da0a87bdc51f9b131c94e08d369cb713a79"
+      },
+      {
+        "path": "frontend/public/reference-editors/opencut-classic/native/native.js",
+        "exists": true,
+        "sha256": "fec1ca3ddaf8c0d5451d377ceaa459724038eb2ce106cad8f5dda814daa625b4"
+      },
+      {
+        "path": "frontend/public/reference-editors/opencut-classic/native/native.css",
+        "exists": true,
+        "sha256": "a0bad44d377687bc240c1cf59742b3ffa12b5ba282d00d3912846587fc12b31f"
+      },
+      {
+        "path": "frontend/public/reference-editors/opencut-classic/native/NATIVE_BUILD_GRAPH.json",
+        "exists": true,
+        "sha256": "b9e0e5d5c3ab192c6689b0791060274171c8a3433a449e08508700e6f4f83227"
+      },
+      {
+        "path": "frontend/public/reference-editors/opencut-classic/native/THIRD_PARTY_LICENSES.json",
+        "exists": true,
+        "sha256": "b92b56836fbb1ac73b12112f61ec12cfce7af0793e91b6ae8748ed591db73964"
+      },
+      {
+        "path": "frontend/public/reference-editors/opencut-classic/native/THIRD_PARTY_LICENSES.txt",
+        "exists": true,
+        "sha256": "e337836ba3e5a4d722e4750619410e357434656a00fc79e9a572ad649d633b8a"
+      },
+      {
+        "path": "frontend/public/reference-editors/opencut-classic/native/LICENSE.opencut",
+        "exists": true,
+        "sha256": "8117f9bb64534f7530fc6139b014fd1c1465f7981f93d1871789150fa3f59d3d"
+      },
+      {
+        "path": "frontend/public/reference-editors/opencut-classic/native/effects/preview.jpg",
+        "exists": true,
+        "sha256": "b318cede7bbe27bfbf1b8b94d41f65b6f52d5f2650ce3a153d03b76c2a1c0190"
+      },
+      {
+        "path": "reference-editors/manifest.json",
+        "exists": true,
+        "sha256": "4008853940b8a57cef7da91209f31694e6a418b7a870916abd622a3701fe4f11"
+      },
+      {
+        "path": "backend/src/modules/ai/chat-host-context.service.ts",
+        "exists": true,
+        "sha256": "6a3452998e4ebb2d632e399d34550ec60f219e0acc2f773a476aca7fa2b30b7a"
+      },
+      {
+        "path": "backend/src/modules/ai/chat-host-context.service.test.ts",
+        "exists": true,
+        "sha256": "6ea2ce94b6ce62c53086be341f637c829b2b654f5c2636c949d9f602efc7b96a"
+      },
+      {
+        "path": "contract/src/resources/work-creation.ts",
+        "exists": true,
+        "sha256": "33e71b0ab7b944e73e1c2f8431d87af44bfc7cbc603fb2b697bbb4b74f53593b"
+      },
+      {
+        "path": "backend/src/application/generation/work-creation-root.ts",
+        "exists": true,
+        "sha256": "965ca161f4bacfecd732fb8dad16f8bda6f5130007b48f5931d12e24372dbd5e"
+      },
+      {
+        "path": "backend/src/modules/ai-runtime/chat-tool-parameters.ts",
+        "exists": true,
+        "sha256": "03e2ba3e4af1fc0a3eb61ccde02984600c39abd63b9b7a54488f991ad9ae5f7a"
+      },
+      {
+        "path": "backend/src/modules/ai-runtime/chat-work-creation-tool-host.ts",
+        "exists": true,
+        "sha256": "5d69de433fdd87a657094cb0356332b4c274b4b5d81a357cd2854d2317f287d9"
+      },
+      {
+        "path": "frontend/src/features/draft-workbench/creation-flow-ctas.tsx",
+        "exists": true,
+        "sha256": "27cca5b5602ae7718d995082f65dc8b8a92131c397665dd63875e9f34909df16"
+      },
+      {
+        "path": "frontend/src/features/draft-workbench/work-creation-request.ts",
+        "exists": true,
+        "sha256": "376a05d4b809bfef5b900ce7fa9832dca19c669b1ef859fbe2fb3bb7c515d952"
+      },
+      {
+        "path": "frontend/src/features/copilot/chat-work-creation-card.tsx",
+        "exists": true,
+        "sha256": "6c7dfc25f36d7d16eb68158c078b94896ba5979dce5454bd090d489b065a69e5"
+      },
+      {
+        "path": "backend/src/application/generation/work-creation-root.test.ts",
+        "exists": true,
+        "sha256": "c4b7a57c545212ffbafaabda1745c87765d5632c61ca95415ee70c78555766e2"
+      },
+      {
+        "path": "backend/src/modules/ai-runtime/chat-work-creation-tool-host.test.ts",
+        "exists": true,
+        "sha256": "8c4858cbe26cc996195d650b92e96226202b278b36d04ba3bb53f22e36d61739"
+      },
+      {
+        "path": "backend/src/modules/ai/work-creation-chat.integration.test.ts",
+        "exists": true,
+        "sha256": "120d1ff08df42794c23dc05a290cc0d6bf14c2afc4ed10f819633157cc8ec36e"
+      },
+      {
+        "path": "frontend/src/features/draft-workbench/work-creation-request.test.ts",
+        "exists": true,
+        "sha256": "2cb9443898719f303cf2d1ad4576ab1cf56bf863f49df749227b62012220097f"
+      },
+      {
+        "path": "frontend/src/features/copilot/chat-work-creation-card.test.tsx",
+        "exists": true,
+        "sha256": "4e65b3e018262a7f263c5d9ae1e57c371ce7edc20fef41eb8065261ecefb758e"
+      },
+      {
+        "path": "frontend/src/features/script/script-rich-editor.tsx",
+        "exists": true,
+        "sha256": "a0044c2ad9a54574a2440beb53232592958e0c5ed80284611bdb233069fe3427"
+      },
+      {
+        "path": "frontend/src/features/script/script-rich-editor.test.tsx",
+        "exists": true,
+        "sha256": "02c8058ebbdc8e97374a3a2e4a56006c71c1a57cc26fdc263e8a465b6f2b14a8"
+      },
+      {
+        "path": "frontend/src/features/draft-workbench/creation-flow-ctas.test.tsx",
+        "exists": true,
+        "sha256": "43ef6054c857a3065a26d39e7bb0e232825ef0a79b8caaa6d664e4ed88fb7893"
+      }
+    ]
+  },
+  "findings": [
+    {
+      "id": "T1070-IMPL-001",
+      "severity": "major",
+      "status": "CLOSED",
+      "title": "真实SDK无法用服务器sourceID恢复本地用户消息",
+      "locations": [
+        {
+          "path": "frontend/src/features/copilot/ai-copilot-content.tsx",
+          "line": 1445
+        },
+        {
+          "path": "frontend/src/server/chat-execution-stream.ts",
+          "line": 18
+        },
+        {
+          "path": "frontend/src/features/copilot/ai-copilot-content.test.tsx",
+          "line": 451
+        }
+      ],
+      "evidence_type": "实际安装SDK无网络探针 + 当前源码",
+      "evidence": {
+        "probe": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1070-independent-root-review-17l_1nv9/actual-sdk-source-id-probe.mjs",
+        "result": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1070-independent-root-review-17l_1nv9/actual-sdk-source-id-result.json",
+        "error": "message server-source-real not found",
+        "transportCalls": 0,
+        "ai": "7.0.4",
+        "reactSdk": "4.0.9"
+      },
+      "impact": "第一次SDK生成的user ID没有被server header替换；regenerate要求ID存在于SDK messages。断流后恢复在发请求前失败，不能重接原task。当前mock测试只是断言regenerate参数，漏掉真实SDK拒绝。",
+      "required": "经公开原conversation回读，核准确服务器用户消息及原绑定，恢复SDK原消息ID后再重接；保持同一source/engine/完整body，不新发用户消息。补真实Chat边界回归。",
+      "closure": {
+        "main_commit": "8c5860f8290f868dbf3009be6a5329eef79d675b",
+        "producer_commit": "2fa3e46c",
+        "source": "frontend/src/features/copilot/ai-copilot-content.tsx",
+        "source_sha256": "44bce07afbd5a82fdd9971ecc865dad0c933c202d8d0804edd2c660ba0788e46",
+        "test_sha256": "a474e4cc2f696fe66fa5831808c4eed47ae33f5774dd58fa552478efb248ef6c",
+        "independent_actual_tests": 23,
+        "result_path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1070-independent-root-review-17l_1nv9/frontend-sdk-recheck-result.json",
+        "result_sha256": "2e9143a3604cd4816cf358bfee098341a1077a1d077068944f61df0d782c0bc0",
+        "behavior": "公开原conversation listMessages按server user ID/role、正文、attachments精确核对；setMessages同步实际SDK后regenerate。冻结完整conversationId/attachmentIds/executionEngine/chatContext，原sourceEngines对应服务器source；准备端口仅首次调用。late回读核mounted/liveSession/epoch/receipt/messages/status；不猜消息、不自动新发。",
+        "limits": "上传边界是已入库ID fixture，实际Chat/useChat/DefaultChatTransport不mock；HTTP response与公开message列表在组件测试内受控，不签真实浏览器/模型/用户库。"
+      }
+    },
+    {
+      "id": "T1070-IMPL-002",
+      "severity": "major",
+      "status": "CLOSED",
+      "title": "附件未进入原回执的完整冻结body",
+      "locations": [
+        {
+          "path": "frontend/src/features/copilot/ai-copilot-content.tsx",
+          "line": 1003
+        },
+        {
+          "path": "frontend/src/features/copilot/ai-copilot-content.tsx",
+          "line": 1445
+        },
+        {
+          "path": "frontend/src/features/copilot/ai-copilot-content.tsx",
+          "line": 1498
+        },
+        {
+          "path": "frontend/src/features/copilot/ai-copilot-content.tsx",
+          "line": 1614
+        },
+        {
+          "path": "frontend/src/app/api/chat/route.ts",
+          "line": 501
+        }
+      ],
+      "evidence_type": "当前公共handler与生产请求生命周期静态闭合；未执行浏览器",
+      "impact": "Pi当前稿面带真实附件发送后，finally清空requestAttachmentIdsRef；持久receipt只有chatContext/engine，重接请求缺原attachmentIds。server严格检查已保存attachments与本次attachmentIds，故修复001后仍会拒绝合法附件重接。",
+      "required": "冻结并恢复原attachmentIds、conversation和原用户正文/消息ID，禁止从当前picker或新输入取值；补附件清空后同body恢复及伪造附件拒绝测试。",
+      "closure": {
+        "main_commit": "8c5860f8290f868dbf3009be6a5329eef79d675b",
+        "producer_commit": "2fa3e46c",
+        "source": "frontend/src/features/copilot/ai-copilot-content.tsx",
+        "source_sha256": "44bce07afbd5a82fdd9971ecc865dad0c933c202d8d0804edd2c660ba0788e46",
+        "test_sha256": "a474e4cc2f696fe66fa5831808c4eed47ae33f5774dd58fa552478efb248ef6c",
+        "independent_actual_tests": 23,
+        "result_path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1070-independent-root-review-17l_1nv9/frontend-sdk-recheck-result.json",
+        "result_sha256": "2e9143a3604cd4816cf358bfee098341a1077a1d077068944f61df0d782c0bc0",
+        "behavior": "公开原conversation listMessages按server user ID/role、正文、attachments精确核对；setMessages同步实际SDK后regenerate。冻结完整conversationId/attachmentIds/executionEngine/chatContext，原sourceEngines对应服务器source；准备端口仅首次调用。late回读核mounted/liveSession/epoch/receipt/messages/status；不猜消息、不自动新发。",
+        "limits": "上传边界是已入库ID fixture，实际Chat/useChat/DefaultChatTransport不mock；HTTP response与公开message列表在组件测试内受控，不签真实浏览器/模型/用户库。"
+      }
+    },
+    {
+      "id": "T1070-IMPL-003",
+      "severity": "major",
+      "status": "CLOSED",
+      "title": "联合创作在实际聊天提交前永久标记completed",
+      "locations": [
+        {
+          "path": "frontend/src/features/draft-workbench/creation-flow-ctas.tsx",
+          "line": 31
+        },
+        {
+          "path": "frontend/src/features/draft-workbench/creation-flow-ctas.tsx",
+          "line": 46
+        },
+        {
+          "path": "frontend/src/features/copilot/ai-copilot-content.tsx",
+          "line": 1510
+        }
+      ],
+      "evidence_type": "当前源码状态机静态检查，尚未独立执行公共浏览器失败族",
+      "impact": "组合准备完成即completed=true，早于autoSend真正提交。如果发送明确未提交或提交前拒绝，之后按钮只openChat空prefill且autoSend=false；Copilot空文案仅消费请求，无法重新提交这个已预约且未执行的合法联合创作。不能将未提交与已提交UNKNOWN混为一态。",
+      "required": "显式区分预约完成/明确未提交/原task未知/settled；已提交未知只读原task，不自动重发。明确未提交须可由用户恢复同冻结预约和原body，核公共消息绑定后提交，不能猜消息或新增付费执行。补提交前拒绝后恢复及真UNKNOWN不重发族。",
+      "closure": {
+        "main_commit": "c2eb3f8a83e7f90e13479542e2663a53890ec413",
+        "producer_commit": "d6631f37",
+        "behavior": "completed只证明组合预约完成，另以submission准备/明确零提交/已触fetch未知分态。callback由完整request透传到rail；首次fetch入口在control.fetch之前持久submitted-unknown，finally仅networkStarted=false报告not-submitted。已知零提交用户恢复同prefill/target不另存script或创建pair。刷新preparing与旧无phase的completed均按UNKNOWN，仅读原target，不猜零提交。",
+        "independent_result_path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1070-independent-root-review-17l_1nv9/frontend-submission-recheck-result.json",
+        "independent_result_sha256": "84471929825a617fc7f03902a3a79f8eebae29ea385e1a046465bc22dde73945",
+        "passed": 53,
+        "failed": 0,
+        "pending": 0,
+        "actual_sdk_boundary": "新增真实Chat/useChat/DefaultChatTransport覆盖engine不可用零fetch与恢复后503已触fetch UNKNOWN；CTA预约和刷新状态是组件stub，未代签真实浏览器",
+        "current_source": {
+          "frontend/src/features/copilot/ai-copilot-content.tsx": "26530d0cb0bb2f8fc6f19546430edfe1158d1b672978c318e55bed8264ade9a6",
+          "frontend/src/features/copilot/ai-copilot-content.test.tsx": "1fdf7fb217fa287bc86c8dfff9e4559dd13f7311ba2879ce649e723a0e2ca54f",
+          "frontend/src/features/draft-workbench/creation-flow-ctas.tsx": "27cca5b5602ae7718d995082f65dc8b8a92131c397665dd63875e9f34909df16",
+          "frontend/src/features/draft-workbench/creation-flow-ctas.test.tsx": "43ef6054c857a3065a26d39e7bb0e232825ef0a79b8caaa6d664e4ed88fb7893",
+          "frontend/src/features/draft-workbench/draft-chat-request.tsx": "cf99614e68abb31238caa56f06b6a3a8a6163d7dbb1f43c25bfa02a757af723b",
+          "frontend/src/features/draft-workbench/work-creation-request.ts": "376a05d4b809bfef5b900ce7fa9832dca19c669b1ef859fbe2fb3bb7c515d952"
+        }
+      }
+    },
+    {
+      "id": "T1070-IMPL-004",
+      "severity": "major",
+      "status": "CLOSED",
+      "title": "当前轮零提交失败的共用重试不能读取上一任务冻结receipt",
+      "locations": [
+        {
+          "path": "frontend/src/features/copilot/ai-copilot-content.tsx",
+          "line": 1432
+        },
+        {
+          "path": "frontend/src/features/copilot/ai-copilot-content.tsx",
+          "line": 1524
+        },
+        {
+          "path": "frontend/src/features/copilot/ai-copilot-content.tsx",
+          "line": 3151
+        },
+        {
+          "path": "frontend/src/features/copilot/ai-copilot-content.test.tsx",
+          "line": 492
+        },
+        {
+          "path": "frontend/src/features/copilot/ai-copilot-content.test.tsx",
+          "line": 539
+        }
+      ],
+      "evidence_type": "当前真实源码静态调用链 + 独立当前集成6suite/54实跑",
+      "impact": "selectedEngineAvailable/strict preflight在重写preparedReceipt前失败时，preparedReceipt可能仍为上一已提交任务；共用错误区retryLastTurn继续按旧receipt恢复上一轮。CTA自己的显式零提交恢复正确，不等于共用错误入口闭合。",
+      "required": "当场attempt.networkStarted=false优先使用该轮精确text/同request重新严格preflight，保输入与creationTarget；已触fetch始终按原任务恢复。不能用上一receipt、首消息或猜零提交；新增actual组件RED→GREEN，集成后独立复核新SHA。",
+      "closure": {
+        "producer_commit": "513f6985",
+        "main_commit": "7c596d02a09bca4fc911b5d84d18cab30680b789",
+        "current_source": {
+          "frontend/src/features/copilot/ai-copilot-content.tsx": "d2f90bc78530b680abf440d1d267c06c81d6ac3891ddaaa78864fec740650672",
+          "frontend/src/features/copilot/ai-copilot-content.test.tsx": "5ef49333f1f31cf6a100b219fbdd50cf72efa3de247774eadf652bf22e2b305b",
+          "frontend/src/features/draft-workbench/creation-flow-ctas.tsx": "27cca5b5602ae7718d995082f65dc8b8a92131c397665dd63875e9f34909df16",
+          "frontend/src/features/draft-workbench/creation-flow-ctas.test.tsx": "43ef6054c857a3065a26d39e7bb0e232825ef0a79b8caaa6d664e4ed88fb7893",
+          "frontend/src/features/draft-workbench/draft-chat-request.tsx": "cf99614e68abb31238caa56f06b6a3a8a6163d7dbb1f43c25bfa02a757af723b",
+          "frontend/src/features/draft-workbench/work-creation-request.ts": "376a05d4b809bfef5b900ce7fa9832dca19c669b1ef859fbe2fb3bb7c515d952",
+          "frontend/src/server/persistence-client.ts": "e76ac819e762bd326f28f57499941b348524ef9cd23466f4f3340683cd55f7ed"
+        },
+        "independent_result_path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1070-independent-root-review-17l_1nv9/frontend-retry-final-recheck-result.json",
+        "independent_result_sha256": "188e52e45b069a11b3f41cb28d79438335b888153e79c7d99a2083fc8539d94d",
+        "passed": 54,
+        "failed": 0,
+        "pending": 0,
+        "behavior": "重试入口首先读取当前attempt.strict且networkStarted=false，携本轮精确text与原request再严格prepare，不读取上一receipt；无消息错误区仍真实显示重试。实际transport.fetch在control.fetch之前置networkStarted并持久submitted-unknown；已触fetch恢复仍经同conversation/server source/正文/附件/frozenbody核对。engine恢复复用同nonce/creationTarget，不再次预约或新发未知任务。",
+        "type_reference": "仅移除冗余typeof import(@ai-sdk/react)类型引用，vi.importActual真实runtime未替换；未在本轮重跑全局boundary。",
+        "limits": "实际SDK恢复与engine零提交例的Chat/useChat/DefaultChatTransport未mock；前轮旧receipt/currenttext preflight案例的send/regenerate沿组件受控seam。HTTP响应/附件入库ID/公开listMessages是受控fixture，不能代签真实模型、生产库或browser。"
+      }
+    }
+  ],
+  "counts": {
+    "blocker": 0,
+    "major_open": 0,
+    "major_closed": 4,
+    "major_historical": 4,
+    "minor": 0
+  },
+  "actual_tests": [
+    {
+      "kind": "backend",
+      "actual": true,
+      "result_path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1070-independent-root-review-17l_1nv9/backend-result.json",
+      "sha256": "6399a062420aaac4e20a9d1cbbdd5e4fd2a0eb4497760c3b9dd378b1f4cce418",
+      "passed": 27,
+      "failed": 0,
+      "pending": 0,
+      "test_timeout_ms": 120000,
+      "hook_timeout_ms": 120000,
+      "cache": "TMP，cache:false",
+      "DATABASE_URL": "显式移除",
+      "PGLITE_DATA_DIR": "显式移除",
+      "suites": [
+        {
+          "path": "backend/src/integration/chat-work-editor-worker.test.ts",
+          "cases": 2,
+          "status": "passed"
+        },
+        {
+          "path": "backend/src/application/generation/work-creation-root.test.ts",
+          "cases": 5,
+          "status": "passed"
+        },
+        {
+          "path": "backend/src/modules/ai/chat-host-context.service.test.ts",
+          "cases": 1,
+          "status": "passed"
+        },
+        {
+          "path": "backend/src/modules/ai/work-creation-chat.integration.test.ts",
+          "cases": 4,
+          "status": "passed"
+        },
+        {
+          "path": "backend/src/modules/ai-runtime/chat-work-creation-tool-host.test.ts",
+          "cases": 8,
+          "status": "passed"
+        },
+        {
+          "path": "backend/src/modules/ai-runtime/chat-work-editor-tool-host.test.ts",
+          "cases": 1,
+          "status": "passed"
+        },
+        {
+          "path": "backend/src/modules/ai-runtime/work-editor-candidate.test.ts",
+          "cases": 5,
+          "status": "passed"
+        },
+        {
+          "path": "backend/src/modules/production/production-native-editor.integration.test.ts",
+          "cases": 1,
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "kind": "frontend",
+      "actual": true,
+      "result_path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1070-independent-root-review-17l_1nv9/frontend-result.json",
+      "sha256": "0ef35f379f22d21a82f806b78fa75b9f41c846428c3f4decabef51cdcaca125c",
+      "passed": 65,
+      "failed": 0,
+      "pending": 0,
+      "test_timeout_ms": 120000,
+      "hook_timeout_ms": 120000,
+      "cache": "TMP，cache:false",
+      "DATABASE_URL": "显式移除",
+      "PGLITE_DATA_DIR": "显式移除",
+      "suites": [
+        {
+          "path": "frontend/src/server/prepare-chat-reply.test.ts",
+          "cases": 4,
+          "status": "passed"
+        },
+        {
+          "path": "frontend/src/features/article/article-workbench-save-race.test.tsx",
+          "cases": 7,
+          "status": "passed"
+        },
+        {
+          "path": "frontend/src/features/copilot/ai-copilot-content.test.tsx",
+          "cases": 15,
+          "status": "passed"
+        },
+        {
+          "path": "frontend/src/features/copilot/chat-work-creation-card.test.tsx",
+          "cases": 1,
+          "status": "passed"
+        },
+        {
+          "path": "frontend/src/features/copilot/chat-work-editor-card.test.tsx",
+          "cases": 2,
+          "status": "passed"
+        },
+        {
+          "path": "frontend/src/features/draft-workbench/creation-flow-ctas.test.tsx",
+          "cases": 8,
+          "status": "passed"
+        },
+        {
+          "path": "frontend/src/features/draft-workbench/draft-chat-request.test.tsx",
+          "cases": 2,
+          "status": "passed"
+        },
+        {
+          "path": "frontend/src/features/draft-workbench/work-creation-request.test.ts",
+          "cases": 1,
+          "status": "passed"
+        },
+        {
+          "path": "frontend/src/features/projects/graphic-post-workbench.test.tsx",
+          "cases": 10,
+          "status": "passed"
+        },
+        {
+          "path": "frontend/src/features/script/script-rich-editor.test.tsx",
+          "cases": 15,
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "kind": "frontend-sdk-closure-independent",
+      "actual": true,
+      "passed": 23,
+      "failed": 0,
+      "pending": 0,
+      "result_path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1070-independent-root-review-17l_1nv9/frontend-sdk-recheck-result.json",
+      "sha256": "2e9143a3604cd4816cf358bfee098341a1077a1d077068944f61df0d782c0bc0",
+      "test_timeout_ms": 120000,
+      "hook_timeout_ms": 120000,
+      "DATABASE_URL": "显式移除",
+      "PGLITE_DATA_DIR": "显式移除",
+      "cache": "TMP/cache:false",
+      "sdk_mock": "新真实SDK例用actual Chat/useChat/DefaultChatTransport，regenerate未mock；其它旧组件测试保原seams"
+    },
+    {
+      "kind": "frontend-submission-closure-independent",
+      "actual": true,
+      "passed": 53,
+      "failed": 0,
+      "pending": 0,
+      "result_path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1070-independent-root-review-17l_1nv9/frontend-submission-recheck-result.json",
+      "sha256": "84471929825a617fc7f03902a3a79f8eebae29ea385e1a046465bc22dde73945",
+      "test_timeout_ms": 120000,
+      "hook_timeout_ms": 120000,
+      "DATABASE_URL": "显式移除",
+      "PGLITE_DATA_DIR": "显式移除",
+      "cache": "TMP/cache:false",
+      "suites": [
+        {
+          "path": "frontend/src/features/article/article-workbench-save-race.test.tsx",
+          "cases": 7,
+          "status": "passed"
+        },
+        {
+          "path": "frontend/src/features/copilot/ai-copilot-content.test.tsx",
+          "cases": 17,
+          "status": "passed"
+        },
+        {
+          "path": "frontend/src/features/draft-workbench/creation-flow-ctas.test.tsx",
+          "cases": 10,
+          "status": "passed"
+        },
+        {
+          "path": "frontend/src/features/draft-workbench/draft-chat-request.test.tsx",
+          "cases": 3,
+          "status": "passed"
+        },
+        {
+          "path": "frontend/src/features/draft-workbench/work-creation-request.test.ts",
+          "cases": 1,
+          "status": "passed"
+        },
+        {
+          "path": "frontend/src/features/script/script-rich-editor.test.tsx",
+          "cases": 15,
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "kind": "frontend-current-attempt-retry-closure-independent",
+      "actual": true,
+      "execution_exit_code": 0,
+      "passed": 54,
+      "failed": 0,
+      "pending": 0,
+      "result_path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1070-independent-root-review-17l_1nv9/frontend-retry-final-recheck-result.json",
+      "sha256": "188e52e45b069a11b3f41cb28d79438335b888153e79c7d99a2083fc8539d94d",
+      "test_timeout_ms": 120000,
+      "hook_timeout_ms": 120000,
+      "DATABASE_URL": "显式移除",
+      "PGLITE_DATA_DIR": "显式移除",
+      "cache": "TMP/cache:false",
+      "retry": 0,
+      "suites": [
+        {
+          "path": "frontend/src/features/article/article-workbench-save-race.test.tsx",
+          "cases": 7,
+          "status": "passed"
+        },
+        {
+          "path": "frontend/src/features/copilot/ai-copilot-content.test.tsx",
+          "cases": 18,
+          "status": "passed"
+        },
+        {
+          "path": "frontend/src/features/draft-workbench/creation-flow-ctas.test.tsx",
+          "cases": 10,
+          "status": "passed"
+        },
+        {
+          "path": "frontend/src/features/draft-workbench/draft-chat-request.test.tsx",
+          "cases": 3,
+          "status": "passed"
+        },
+        {
+          "path": "frontend/src/features/draft-workbench/work-creation-request.test.ts",
+          "cases": 1,
+          "status": "passed"
+        },
+        {
+          "path": "frontend/src/features/script/script-rich-editor.test.tsx",
+          "cases": 15,
+          "status": "passed"
+        }
+      ],
+      "limits": "实际SDK恢复与engine零提交例的Chat/useChat/DefaultChatTransport未mock；前轮旧receipt/currenttext preflight案例的send/regenerate沿组件受控seam。HTTP响应/附件入库ID/公开listMessages是受控fixture，不能代签真实模型、生产库或browser。"
+    }
+  ],
+  "verified_bounds": [
+    "host reader从原execution lease恢复user/account/group及fence，与modelInput/业务task/history/hostContextDigest同绑定；两host重新读真实owner，精确effect/version definitions相等，四safeNames不允许正式写入。",
+    "workCreationRoot位于backend/application，仅get/readVersion/readImages原ports；不存在新任务表、enqueue、模型子调用或正式owner写端口。",
+    "纯group(account=null)与legacy account公共隔离PGlite测试实际通过；cross-group、伪造account/fence拒绝，原external ledger/完成消息parts与全文候选一致。这里只是协议/服务组合，不是真Codex/Pi模型执行。",
+    "两owner各用原expectedCurrentVersionId和clientRequestId/adoption receipt；实际公共集成证明一项冲突不回滚另一项成功，并保持原同body回放。",
+    "当前registration token guarded unregister；article/graphic手改generation与稿件深等阻止旧读回覆盖，graphic scope/output key隔离实例；保native隐藏寿命。定向组件测试证据不能代签真实跨Tab原生交互。",
+    "production新增v3 apply沿原editorFor.commit同TX/CAS/checkReferenceMedia/requestDigest；不替代原v1/v2 branch；当前backend公开native集成1例通过，最新native bundle仍明确不签。"
+  ],
+  "complexity_review": {
+    "actual_persistence_sha256": "e76ac819e762bd326f28f57499941b348524ef9cd23466f4f3340683cd55f7ed",
+    "head_baseline_sha256": "3a6e5abd68d5ff79a7785d3daef1261d006bcd0da75ce71d141bd0860e41dc38",
+    "diff_summary": "31新增行：组合原article/graphic/production/assets/script/WorkCompositions service ports；纯机械媒体类型/时长换算；同TX读。没有新增凭据保管、语言、工具链、原生执行机制、任务权或第二模型循环。",
+    "t1070_baselines": [
+      {
+        "task_id": "T-1070",
+        "files": [
+          "frontend/public/reference-editors/opencut-classic/native/native.js"
+        ],
+        "file_sha256": "79c8fc5a9b7ce45f5abf66b91579a33365370edf1b044f740e83d4c5d7ebbc9f",
+        "categories": [
+          "language_toolchain"
+        ],
+        "disposition": "baseline-migrated",
+        "decision": "DEC-T1070-DIRECTOR-SCRIPT-WORKFLOW",
+        "scope_source": "docs/features/t1070-director-script-workflow.md",
+        "reason": "当前源与已独评T1062/T1069精确SHA一致，登记原凭据/工具链/原生构建marker的既有基线；本SPEC只准入新四工具、原owner和原生只读预览，不新增凭据保管、语言或执行机制。未来变动须按完整实际diff独评再绑定新SHA。",
+        "review": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1069-final-spec-review/current-native-delivery-budget-review.json",
+        "acceptance": "只登记当前未变源机制，不代签新功能、测试、重建、安装或正式验收；此前claim真实拒绝保留。"
+      },
+      {
+        "task_id": "T-1070",
+        "files": [
+          "frontend/src/server/persistence-client.ts"
+        ],
+        "file_sha256": "3a6e5abd68d5ff79a7785d3daef1261d006bcd0da75ce71d141bd0860e41dc38",
+        "categories": [
+          "credential_store",
+          "language_toolchain",
+          "native_executable"
+        ],
+        "disposition": "baseline-migrated",
+        "decision": "DEC-T1070-DIRECTOR-SCRIPT-WORKFLOW",
+        "scope_source": "docs/features/t1070-director-script-workflow.md",
+        "reason": "当前源与已独评T1062/T1069精确SHA一致，登记原凭据/工具链/原生构建marker的既有基线；本SPEC只准入新四工具、原owner和原生只读预览，不新增凭据保管、语言或执行机制。未来变动须按完整实际diff独评再绑定新SHA。",
+        "review": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1069-final-spec-review/current-delivery-budget-review.json",
+        "acceptance": "只登记当前未变源机制，不代签新功能、测试、重建、安装或正式验收；此前claim真实拒绝保留。"
+      },
+      {
+        "task_id": "T-1070",
+        "files": [
+          "reference-editors/manifest.json"
+        ],
+        "file_sha256": "69bda55a03e42d4d30c67f4d091c0282ce6b09d5bf90ed230cec26c053681bc5",
+        "categories": [
+          "language_toolchain"
+        ],
+        "disposition": "baseline-migrated",
+        "decision": "DEC-T1070-DIRECTOR-SCRIPT-WORKFLOW",
+        "scope_source": "docs/features/t1070-director-script-workflow.md",
+        "reason": "当前源与已独评T1062/T1069精确SHA一致，登记原凭据/工具链/原生构建marker的既有基线；本SPEC只准入新四工具、原owner和原生只读预览，不新增凭据保管、语言或执行机制。未来变动须按完整实际diff独评再绑定新SHA。",
+        "review": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1069-final-spec-review/current-candidate-scope-inventory.json",
+        "acceptance": "只登记当前未变源机制，不代签新功能、测试、重建、安装或正式验收；此前claim真实拒绝保留。"
+      }
+    ],
+    "recommendation": "仅此实际persistence SHA可按原credential_store/language_toolchain/native_executable三类别登记必要精确预算绑定，保baseline历史；我没有改ledger。native/manifest最新源码与构建由其独评验证，不能套用此结论。"
+  },
+  "limitations": {
+    "true_models": "ROOT当前实际fulltools创作terminalfailed CHAT_WORKER_INPUT_UNAVAILABLE（ROOT通知），待诊断；本轮未调用且不代签",
+    "native_latest_delivery": "未审最新第三构建，不签native.js/归档/重建",
+    "browser": "未操作或启动真实浏览器",
+    "visual": "未签Oil视觉、1366/1024/200%、键盘焦点",
+    "export": "未签真实PNG/ZIP/MP4/HTML交付",
+    "installed": "未包装、安装、修改运行App或签收",
+    "all_tests": "本报告实际列定向执行证据，当前独立54 PASS；未代签完整type/boundary/orphan/semantic/LED047/timeout-policy Gate"
+  },
+  "mutations": {
+    "repo": false,
+    "controlplane": false,
+    "user_db": false,
+    "models": false,
+    "browser": false,
+    "writes": "仅TMP evidence/config 与授权BASE本报告；测试DB为显式内存PGlite"
+  },
+  "next": "组件恢复004已关闭；等待ROOT公共装配根因和真实完整链验收，不能按定向测试绿宣布T-1070整体完成。",
+  "revision": 4,
+  "historical_reviews": [
+    {
+      "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1070-independent-root-review-17l_1nv9/implementation-root-review-r1.json",
+      "sha256": "2a2b5e7752c886319a5e43148c8750e846030d4feb3d40f1b25fac474b6a720b",
+      "verdict": "CHANGES_REQUIRED",
+      "major": 3,
+      "preserved": "初轮报告完整原字节"
+    },
+    {
+      "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1070-independent-root-review-17l_1nv9/implementation-root-review-r2.json",
+      "sha256": "0f8e3a62c9c65438536fd7e3466d7c66d3670f92dc4d75335df61e92f6db3705",
+      "verdict": "CHANGES_REQUIRED",
+      "major_open": 1,
+      "major_closed": 2,
+      "preserved": "第二轮报告原字节"
+    },
+    {
+      "path": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1070-independent-root-review-17l_1nv9/implementation-root-review-r3.json",
+      "sha256": "f31659241897d9cfc8acb81841c3c249dba4e47ee61ae1b560936ff0daec6a7f",
+      "verdict": "CHANGES_REQUIRED_RECOVERY_ADDENDUM_PENDING",
+      "major_open": 1,
+      "major_closed": 3,
+      "preserved": "第三轮报告完整原字节，004 OPEN 与类型引用待落事实保留"
+    }
+  ],
+  "producer_sdk_evidence": [
+    {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-tests/frontend-actual-sdk-source-red.log",
+      "sha256": "2140663d16ee7ba5fb5484a11c97f13c37cf348636860f6546f5bb83e1c5ce26",
+      "meaning": "实际旧源SDK RED：1FAIL/15PASS与message server-source-real not found；保留，不洗绿"
+    },
+    {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-tests/frontend-actual-sdk-source-green.log",
+      "sha256": "86319896aacfc41356d3b8cfd0977b814995852065c9f3421a07b5631cebbffc",
+      "meaning": "生产者当前修复2file/72PASS；我独立23项另列，不冒充这72由我执行"
+    },
+    {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-tests/frontend-actual-sdk-source-typecheck.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "meaning": "空日志，本轮仅读到空文件；退出码由ROOT/生产者回执负责，不靠空日志代签typePASS"
+    }
+  ],
+  "producer_submission_evidence": [
+    {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-tests/frontend-creation-submission-red.log",
+      "sha256": "2c1f82cd86f8f9d1e6b1ef80ff6afa92c00ceaf05fc3dc83fbe30d4789b66dbb",
+      "meaning": "生产者旧源9case/2FAIL/7PASS，缺onCreationSubmission callback原记录完整保留"
+    },
+    {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-tests/frontend-creation-submission-final-green.log",
+      "sha256": "b66395aa836b086704ab7d00029bfad508a3e62a687dc7b465ecf4a1e4f7e063",
+      "meaning": "生产者6file/95PASS，不冒充由我运行；独立MAIN53另列"
+    },
+    {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-tests/frontend-creation-submission-typecheck.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "meaning": "仅读到空日志，不靠空日志代签实际退出码"
+    }
+  ],
+  "known_pending_gate_items": [
+    {
+      "item": "frontend test新增typeof import(@ai-sdk/react)类型引用",
+      "status": "当前7c596d02源码已删除冗余类型引用，actual runtime importActual保留；ROOT报告boundary退回旧7，本agent未重跑全局门卫，旧R3待落观察保留"
+    },
+    {
+      "item": "timeout-policy verifier",
+      "status": "此前ROOT报告tool missing，本agent未执行，不称通过"
+    },
+    {
+      "item": "真实fulltools完整创作链",
+      "status": "ROOT当前实际terminalfailed CHAT_WORKER_INPUT_UNAVAILABLE，仍待公共组合装配诊断，来源为ROOT消息而非本agent执行，尚无本agent读取的rawreceipt路径"
+    }
+  ],
+  "current_final_recheck": {
+    "observed_head": "7c596d02a09bca4fc911b5d84d18cab30680b789",
+    "producer_commit": "513f6985",
+    "main_commit": "7c596d02",
+    "exact_commit_changed_paths": [
+      "frontend/src/features/copilot/ai-copilot-content.test.tsx",
+      "frontend/src/features/copilot/ai-copilot-content.tsx"
+    ],
+    "actual_source_sha256": {
+      "frontend/src/features/copilot/ai-copilot-content.tsx": "d2f90bc78530b680abf440d1d267c06c81d6ac3891ddaaa78864fec740650672",
+      "frontend/src/features/copilot/ai-copilot-content.test.tsx": "5ef49333f1f31cf6a100b219fbdd50cf72efa3de247774eadf652bf22e2b305b",
+      "frontend/src/features/draft-workbench/creation-flow-ctas.tsx": "27cca5b5602ae7718d995082f65dc8b8a92131c397665dd63875e9f34909df16",
+      "frontend/src/features/draft-workbench/creation-flow-ctas.test.tsx": "43ef6054c857a3065a26d39e7bb0e232825ef0a79b8caaa6d664e4ed88fb7893",
+      "frontend/src/features/draft-workbench/draft-chat-request.tsx": "cf99614e68abb31238caa56f06b6a3a8a6163d7dbb1f43c25bfa02a757af723b",
+      "frontend/src/features/draft-workbench/work-creation-request.ts": "376a05d4b809bfef5b900ce7fa9832dca19c669b1ef859fbe2fb3bb7c515d952",
+      "frontend/src/server/persistence-client.ts": "e76ac819e762bd326f28f57499941b348524ef9cd23466f4f3340683cd55f7ed"
+    },
+    "scope_inventory_note": "既有93路径清单为此前审查快照；本轮独立实读上述7路径的当前SHA，仅004两路径实际修订。其余大范围审查沿用历史报告，不宣称最新native/source全闭包重新审完。"
+  },
+  "producer_retry_evidence": [
+    {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-tests/frontend-zero-submit-retry-red.log",
+      "sha256": "34c51b105422f307de4e6a235ace877e6d681a63e7e57de961c70b70bd9716ec",
+      "meaning": "生产者首轮旧源17case/1FAIL；真实零提交错误区重试缺失"
+    },
+    {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-tests/frontend-zero-submit-retry-red-with-old-source.log",
+      "sha256": "ac9a01047622cf3282af9a0f1cea3a561cab4f1f7c1baf7d458c4669c0e16605",
+      "meaning": "生产者旧源18case/2FAIL16PASS；当前轮preflight和真实SDK零提交两错误入口RED，原字节保留"
+    },
+    {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-tests/frontend-zero-submit-retry-final-green.log",
+      "sha256": "7751a5dd611507117a66c94c77805faa77c705541603140e8ece3abfdf1ab33e",
+      "meaning": "生产者3file/84PASS，不冒充由我运行；本轮独立54另列"
+    },
+    {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-tests/frontend-zero-submit-retry-typecheck.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "meaning": "仅读到日志；空日志不能替代独立实际退出码，producer/ROOT报告typecheck通过"
+    }
+  ]
+}

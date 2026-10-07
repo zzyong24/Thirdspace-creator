@@ -2969,6 +2969,56 @@
       "reason": "当前源与已独评T1062/T1069精确SHA一致，登记原凭据/工具链/原生构建marker的既有基线；本SPEC只准入新四工具、原owner和原生只读预览，不新增凭据保管、语言或执行机制。未来变动须按完整实际diff独评再绑定新SHA。",
       "review": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1069-final-spec-review/current-candidate-scope-inventory.json",
       "acceptance": "只登记当前未变源机制，不代签新功能、测试、重建、安装或正式验收；此前claim真实拒绝保留。"
+    },
+    {
+      "task_id": "T-1070",
+      "files": [
+        "frontend/src/server/persistence-client.ts"
+      ],
+      "file_sha256": "e76ac819e762bd326f28f57499941b348524ef9cd23466f4f3340683cd55f7ed",
+      "categories": [
+        "credential_store",
+        "language_toolchain",
+        "native_executable"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1070-DIRECTOR-SCRIPT-WORKFLOW",
+      "scope_source": "docs/features/t1070-director-script-workflow.md",
+      "reason": "31行只组合原只读service ports和同事务真实媒体时长机械换算；独立当前实际diff确认未新增凭据保管、语言、工具链、原生执行机制或模型循环。",
+      "review": "docs/verification/t1070/implementation-root-review.json",
+      "acceptance": "只绑定当前精确SHA的机制预算；独立报告SHA 2b425ee90cbf3640e6dff7f5b023b98a88e26871ba6fba784f98c6bc06943b5d。保留既有baseline-migrated条目，不代签功能、实际模型、浏览器、安装或整个任务完成。"
+    },
+    {
+      "task_id": "T-1070",
+      "files": [
+        "frontend/public/reference-editors/opencut-classic/native/native.js"
+      ],
+      "file_sha256": "58f42ac9a39500ddf6c6bcfab3df79eb4c8477ae2d61afaf4a852e2a77a5cb5e",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1070-DIRECTOR-SCRIPT-WORKFLOW",
+      "scope_source": "docs/features/t1070-director-script-workflow.md",
+      "reason": "原已准入浏览器ESM/固定Bun Vite构建、同依赖锁；具体frame缓存并发guard修复，709原源复原及双build字节一致。无新增工具链/原生机制。后续pixel-version窄修尚未整合，本条只绑定当前58f42/5624摘要。",
+      "review": "docs/verification/t1070/native-browser-frame-fix-source-review.json",
+      "acceptance": "当前精确SHA机制预算，独立source-only报告SHA 9c367b2973cfd0591d72b2ed873ee8cec1e2a3bbe49b502e2b984660e2b7855a；保baseline历史，不代签实际React暖首帧（当前仍FAIL）、采纳/导出/安装或整个任务完成。"
+    },
+    {
+      "task_id": "T-1070",
+      "files": [
+        "reference-editors/manifest.json"
+      ],
+      "file_sha256": "5624bd207768d594ff952a71b11ecfe8d38fad50802a34a7f4bb07a22fad0914",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1070-DIRECTOR-SCRIPT-WORKFLOW",
+      "scope_source": "docs/features/t1070-director-script-workflow.md",
+      "reason": "原已准入浏览器ESM/固定Bun Vite构建、同依赖锁；具体frame缓存并发guard修复，709原源复原及双build字节一致。无新增工具链/原生机制。后续pixel-version窄修尚未整合，本条只绑定当前58f42/5624摘要。",
+      "review": "docs/verification/t1070/native-browser-frame-fix-source-review.json",
+      "acceptance": "当前精确SHA机制预算，独立source-only报告SHA 9c367b2973cfd0591d72b2ed873ee8cec1e2a3bbe49b502e2b984660e2b7855a；保baseline历史，不代签实际React暖首帧（当前仍FAIL）、采纳/导出/安装或整个任务完成。"
     }
   ],
   "historical_baselines": []

@@ -10,6 +10,21 @@ let options:NativeEditorOptions;
 const props={editor:'kuaitu' as const,owner,onReady:vi.fn(),onChanged:vi.fn(),onError:vi.fn(),onImport:vi.fn(async()=>({mediaId:'real-media'}))};
 beforeEach(()=>{vi.clearAllMocks();document.documentElement.classList.remove('dark');document.documentElement.style.setProperty('--creatoros-surface','#ffffff');document.documentElement.style.setProperty('--creatoros-font-sans','sans-serif');h.load.mockResolvedValue({mount:h.mount});h.mount.mockImplementation(async(container:HTMLElement,value:NativeEditorOptions)=>{options=value;container.textContent='真实挂载点（引擎夹具）';return{request:h.request,update:h.update,dispose:h.dispose};});h.dispose.mockResolvedValue(undefined);h.request.mockResolvedValue({document:{value:'original'}});});
 afterEach(()=>{cleanup();vi.useRealTimers();});
+it('NoteRelay恢复原生完整稿滚动，其它原生挂载仍保持原裁切策略',async()=>{
+ const view=render(<NativeEditorSurface {...props} editor="noterelay"/>);
+ const label='公众号排版编辑器';
+ await waitFor(()=>expect(view.container.querySelector(`[aria-label="${label}"]`)?.shadowRoot?.querySelector('link')).toBeTruthy());
+ const host=view.container.querySelector(`[aria-label="${label}"]`)!;
+ await act(async()=>fireEvent.load(host.shadowRoot!.querySelector('link')!));
+ await waitFor(()=>expect(h.mount).toHaveBeenCalledOnce());
+ expect((h.mount.mock.calls[0][0] as HTMLElement).style.overflow).toBe('auto');
+ expect(options.owner).toEqual(owner);
+ expect(options.signal.aborted).toBe(false);
+ view.unmount();
+ await waitFor(()=>expect(h.dispose).toHaveBeenCalledOnce());
+ const next=render(<NativeEditorSurface {...props}/>);await connect(next.container);
+ expect((h.mount.mock.calls[1][0] as HTMLElement).style.overflow).toBe('hidden');
+});
 async function connect(container:HTMLElement){await waitFor(()=>expect(container.querySelector('[aria-label="图片设计工作台"]')?.shadowRoot?.querySelector('link')).toBeTruthy());const element=container.querySelector('[aria-label="图片设计工作台"]')!;await act(async()=>fireEvent.load(element.shadowRoot!.querySelector('link')!));await waitFor(()=>expect(props.onReady).toHaveBeenCalled());return element;}
 it('同页ShadowRoot真实挂载并直调句柄；portal与owner均归当前实例，无iframe/message桥',async()=>{
  const ref=React.createRef<NativeEditorHandle>(),view=render(<NativeEditorSurface {...props} ref={ref}/>);const host=await connect(view.container);expect(view.container.querySelector('iframe')).toBeNull();expect(options.portalContainer.getRootNode()).toBe(host.shadowRoot);expect(options.owner).toEqual(owner);expect(host.shadowRoot!.textContent).toContain('真实挂载点');

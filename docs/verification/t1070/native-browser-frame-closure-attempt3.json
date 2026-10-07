@@ -1,0 +1,145 @@
+{
+  "schema": "t1070-native-real-preview-frame-closure-attempt3@1",
+  "reviewer": "/root/t1070_native_diff_review",
+  "reviewedAt": "2026-10-07T11:52:09.974205+00:00",
+  "verdict": {
+    "pass": false,
+    "status": "FAIL_REAL_RENDER_FIRST_FRAME_ON_NEW_EXECUTED_BUNDLE",
+    "blocker": 0,
+    "major": 1,
+    "minor": 1
+  },
+  "sourceMessageId": "ai-msg-143a8c85-97",
+  "originalAiTaskStatus": "succeeded",
+  "newModelRequests": 0,
+  "currentProduction": {
+    "productionId": "production-95c4e17c-77",
+    "revision": 4,
+    "publicOwnerDeepEqualBeforeAfter": true,
+    "clipDuration": 720000,
+    "trimStart": 0,
+    "casAttempted": false
+  },
+  "recoveryConsumerReview": {
+    "status": "PASS_SOURCE_AND_REAL_PERSISTED_PREVIEW_ADMISSION",
+    "actualEightPathsSha256": {
+      "frontend/src/features/draft-workbench/draft-chat-request.tsx": "2636c074de7ac9c97a2c7a6e93d8fd9d800d349892cc102265b0af2f433b3736",
+      "frontend/src/features/draft-workbench/draft-chat-request.test.tsx": "dfb2fc3a1e47d8e98a646b4070eeaf45e645d5d5d3ae5392309f93ae5b54a6f7",
+      "frontend/src/features/article/article-workbench.tsx": "8f3468697be11eba8c1b29896ea7ee10dbb92c6a3934d241ebad86289e1f33e3",
+      "frontend/src/features/projects/graphic-post-workbench.tsx": "92df2885de532884614bdefc3b50215f50759ba0f48118c5ec5d2f7ef2da3448",
+      "frontend/src/features/reference-editors/video-reference-workbench.tsx": "03d99459de61735ddad47765666f25f71ff81fd166f2dec0e1a5be28a1390f63",
+      "frontend/src/features/reference-editors/video-reference-workbench.test.tsx": "5e6aa7e3efbf488dc01de78b51175c1b5e95af218decc121c7fa8f40d1b9d3fd",
+      "frontend/src/features/reference-editors/project-video-session-host.tsx": "80efb86d1121c08c4f8eab79d43a93eac3838f16473f8f3e93dbc6c3d0617b18",
+      "frontend/src/features/reference-editors/project-video-session-host.test.tsx": "4b4c7472124acb183b4f15d2ed41beee794125646ce79b31d77b19ce0a97f706"
+    },
+    "basis": [
+      "Provider从真实loaded outputId定位port，target仍仅发送前prepare冻结；wrong output回归。",
+      "mountIdentity含原hostgeneration和local UUID，旧numeric1不会被新mount数字1误当同实例。",
+      "真实getProductionEditor完整owner/revision/plan与旧target.digest核；当前nativeContent完整深等和scene old tracksDigest核；同mount epoch严格；跨mount采用真实新epoch，不改原CAS。",
+      "adopt原CAS/body/key/readback原样，原UNKNOWN回执不被新增base门拒绝；旧ACK/undo后差异保护仍测。",
+      "load下载原bytes后以saved descriptor安全整数mtime重建同bytes/name/type File，缓存同File送native，不豁免mtime，不写正式工程。"
+    ],
+    "logs": [
+      "root-recovered-editor-red.log",
+      "root-recovered-native-red.log",
+      "root-recovered-media-mtime-red.log",
+      "root-recovered-media-mtime-green.log"
+    ],
+    "fixtureLimits": "consumer spies/mock NativeEditorSurface明确，不代签真实MP4；本次UI已越过准入并实际生成preview。"
+  },
+  "preview": {
+    "actualUiReceipt": {
+      "observedAt": "2026-10-07T11:50:24.747Z",
+      "sourceMessageId": "ai-msg-143a8c85-97",
+      "newModelRequests": 0,
+      "error": null,
+      "video": {
+        "src": "blob:http://127.0.0.1:4371/b07ac399-d34c-43b5-b564-9d158692ce31",
+        "duration": 5.08517,
+        "readyState": 4,
+        "width": 640,
+        "height": 360
+      },
+      "download": {
+        "ok": true,
+        "status": 200,
+        "statusText": "OK",
+        "url": "blob:http://127.0.0.1:4371/b07ac399-d34c-43b5-b564-9d158692ce31",
+        "headers": {
+          "content-length": "499545",
+          "content-type": "video/mp4"
+        },
+        "savedPath": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-diagnosis/native-browser-frame-closure-preview.mp4"
+      },
+      "originalOwnerUnchanged": true
+    },
+    "mp4Sha256": "22b97e03fefa61a5e84fbcf4a8037c4afe8cd9f320091b24083de59196d5ac35",
+    "bytes": 499545,
+    "videoDurationSec": 5,
+    "frames": 120,
+    "fps": "24/1",
+    "audioDurationSec": 5.08517,
+    "avDecodeExit": 0,
+    "firstFrameObservedSourceFrame": 0,
+    "firstFrameExpectedSourceFrame": 24,
+    "firstFrameObservedSourceSec": 0,
+    "firstFrameExpectedSourceSec": 1,
+    "frame1ObservedSourceFrame": 25,
+    "ssimFirstThree": [
+      0.884354,
+      0.988338,
+      0.986411
+    ],
+    "ssimMin": 0.884354
+  },
+  "executedBundle": [
+    {
+      "scriptId": "3230",
+      "url": "http://127.0.0.1:4371/reference-editors/opencut-classic/native/native.js",
+      "cdpHash": "58f42ac9a39500ddf6c6bcfab3df79eb4c8477ae2d61afaf4a852e2a77a5cb5e",
+      "sha256": "58f42ac9a39500ddf6c6bcfab3df79eb4c8477ae2d61afaf4a852e2a77a5cb5e",
+      "bytes": 6735098,
+      "hasFrameValidPatch": true
+    }
+  ],
+  "major": {
+    "id": "NATIVE-REAL-PREVIEW-FIRST-FRAME",
+    "status": "NOT_RESOLVED_IN_REAL_UI",
+    "actual": "在58f42ac9实际执行bundle与新恢复消费者下，真实候选0帧仍烧录0.000/frame0；预期1.000/frame24。",
+    "scope": "数据candidate值正确且owner只读；前端恢复两major已闭，剩下真实React同页render实际帧范围major。",
+    "rootCause": "当前不猜；CDP源码证明非旧cache。原isFrameValid narrow queue测试与独立公共六族不包含实际React主画布/候选并发，需精确复现新的机制。"
+  },
+  "minor": {
+    "id": "NATIVE-REAL-PREVIEW-AAC-TAIL",
+    "status": "既有约85ms音频尾段继续保留",
+    "audioDurationSec": 5.08517,
+    "videoDurationSec": 5
+  },
+  "notRun": [
+    "CAS用户采纳",
+    "采纳后native读回/Undo/manual Save",
+    "采纳后切Tab刷新",
+    "正式采用后普通导出AV decode"
+  ],
+  "historyPreserved": [
+    "native-browser-real-video-result.json",
+    "native-browser-repaired-video-result.json",
+    "native-browser-frame-closure-attempt1.json",
+    "native-browser-frame-closure-attempt2.json"
+  ],
+  "evidence": [
+    "native-browser-frame-closure-preview.mp4",
+    "native-browser-frame-closure-preview-first-frame.png",
+    "native-browser-frame-closure-preview-ssim.log",
+    "native-browser-frame-closure-preview-decode.log",
+    "native-browser-frame-closure-executed-native-evidence.json",
+    "native-browser-frame-closure-executed-native-3230.js",
+    "native-browser-frame-closure-attempt3-owner.json",
+    "native-browser-frame-closure-attempt3.snapshot.txt"
+  ],
+  "limitations": [
+    "只private4371/Space9；不改MAIN/控制/用户App或库。",
+    "未CAS，不重发AI，不替用户签收T-1070。",
+    "源码机制/构建一致性独立评审不等于实际音视频PASS。"
+  ]
+}

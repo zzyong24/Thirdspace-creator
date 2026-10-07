@@ -238,3 +238,19 @@ it("新Codex任务冻结ACP工件，重放不切版本或协议",async()=>{
  const rows=await f.rows();expect(rows.executions[0]!.payload).toMatchObject({modelInput:{externalAgentBinding:{protocolKind:"acp",adapterVersion:"2.1.1",runtimeVersion:"0.159.3",policy:"creatoros-acp-readonly-v2"}}});
  await expect(f.service.submit(f.ctx,{...f.request,executionEngine:"pi"})).rejects.toThrow("引擎");
 });
+
+it('编导target原子冻结与原digest同租约恢复；后来改选区不改任务，篡改原target拒绝',async()=>{
+ const f=await fixture(),{aiConversations}=await import('@creatoros/backend');
+ await db.update(aiConversations).set({projectId:'editor-project'}).where(eq(aiConversations.id,f.conversation.id));
+ const target:import('@creatoros/contract').WorkEditorTarget={schemaVersion:1,projectId:'editor-project',outputId:'editor-output',owner:'wechat_article',contentType:'article',savedBase:{kind:'artifact',artifactId:'editor-artifact',versionId:'editor-version'},documentDigest:`sha256:${'b'.repeat(64)}`,selection:{kind:'article_sections',sectionIds:['original-section']}};
+ const frozen={...hostContext(f.ctx),chatContext:{surface:'project',projectId:'editor-project',editorTarget:target}};
+ const service=createChatTurnSubmissionService(db,{now,nextId,assertProject:async()=>{},assemble:async(ctx,snapshot)=>({...await f.assemble(ctx,snapshot),hostContext:frozen})});
+ const submitted=await service.submit(f.ctx,f.request);target.selection.sectionIds[0]='later-section';
+ expect((await f.rows()).executions[0]!.payload).toMatchObject({hostContext:{chatContext:{editorTarget:{selection:{sectionIds:['original-section']}}}}});
+ expect(await service.submit(f.ctx,f.request)).toMatchObject({...submitted,replayed:true});
+ const {createPersistentTaskService}=await import('../execution/persistent-task.service');
+ const claimed=(await createPersistentTaskService(db,{now,nextId}).claimTask({taskId:submitted.executionTaskId,workerId:'editor-worker'}))!,ref={executionTaskId:submitted.executionTaskId,attempt:claimed.lease.attempt,fenceToken:claimed.lease.fenceToken};
+ const reader=createChatHostContextReader(db,{now});expect((await reader.read(ref)).hostContext.chatContext.editorTarget?.selection).toMatchObject({sectionIds:['original-section']});
+ const payload=structuredClone((await f.rows()).executions[0]!.payload) as {hostContext:typeof frozen};payload.hostContext.chatContext.editorTarget.savedBase.versionId='tampered';
+ await db.update(executionTasks).set({payload}).where(eq(executionTasks.id,submitted.executionTaskId));await expect(reader.read(ref)).rejects.toThrow('摘要');
+},120000);

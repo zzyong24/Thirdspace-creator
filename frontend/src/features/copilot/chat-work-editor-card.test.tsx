@@ -124,15 +124,15 @@ it("收起候选不装重预览；实际预览就绪后才可采用，完整docu
   expect(screen.queryByTestId("preview")).toBeNull();
   expect(screen.getByRole("button", { name: "采纳到当前作品" })).toBeDisabled();
   fireEvent.click(screen.getByRole("button", { name: "预览改动" }));
-  await waitFor(() =>
-    expect(
-      screen.getByRole("button", { name: "采纳到当前作品" }),
-    ).not.toBeDisabled(),
-  );
+  expect(await screen.findByRole('dialog',{name:'文章改动预览'})).toBeVisible();
   expect(screen.getByTestId("preview")).toHaveAttribute(
     "data-readonly",
     "true",
   );
+  expect(api.createArticleVersion).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole('button',{name:'关闭'}));
+  await waitFor(()=>expect(screen.queryByRole('dialog')).toBeNull());
+  expect(screen.getByRole('button',{name:'采纳到当前作品'})).not.toBeDisabled();
   fireEvent.click(screen.getByRole("button", { name: "采纳到当前作品" }));
   await screen.findByText("已保存并采用。可继续微调。");
   expect(api.createArticleVersion.mock.calls[0][0]).toMatchObject({

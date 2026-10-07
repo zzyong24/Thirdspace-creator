@@ -51,3 +51,22 @@ it("Worker 开场版本独立，未启用时原定义不变，其它工具不改
  expect(worker.definitions[0]!.version).not.toBe(legacy.definitions[0]!.version);
  expect(worker.definitions[1]).toEqual(legacy.definitions[1]);
 });
+
+it('T1070四个精确工具native参数效应与实现revision严格冻结',async()=>{
+ const {buildChatTools}=await import('./chat-tools');const names=['work.editor.read','work.editor.propose','work.creation.read','work.creation.propose'];const prepared=await prepareChatToolDefinitions(buildChatTools(names,{humanizeError:()=>null} as any));
+ expect(prepared.definitions.map(d=>[d.name,d.effect])).toEqual([['work.editor.read','none'],['work.editor.propose','proposal'],['work.creation.read','none'],['work.creation.propose','proposal']]);for(const d of prepared.definitions){expect(d.version).toMatch(/^chat-tools-work-director-v1:/);expect(d.execution).toBeUndefined();expect(d.parameters.type).toBe('object');}
+ expect(prepared.parameters['work.editor.read']!.parameters.safeParse({view:'field_window'}).success).toBe(false);expect(prepared.parameters['work.editor.propose']!.parameters.safeParse({candidate:{outputId:'invented'}}).success).toBe(false);
+});
+
+it('真实creation参数校验接收sectionId/cardId协议，拒绝真模型出现的id/page/type/text与伪metadataSource',async()=>{
+ const {buildChatTools}=await import('./chat-tools');
+ const prepared=await prepareChatToolDefinitions(buildChatTools(['work.creation.propose'],{humanizeError:()=>null} as never));
+ const validator=prepared.parameters['work.creation.propose']!.parameters;
+ const ref={kind:'project_script',id:'script',versionId:'saved-script-version'};
+ const article={schemaVersion:1,title:'中性标题',summary:'中性摘要',sections:[{sectionId:'section-1',order:0,heading:'开头',headingLevel:2,body:'中性正文',sourceRefs:[ref]}],factItems:[],visualBriefs:[],imageUses:[],metadataSource:{kind:'project',projectId:'project',updatedAt:'2026-10-07T00:00:00.000Z'}};
+ const graphic={schemaVersion:1,title:'中性图文',body:'中性正文',summary:'中性摘要',tags:[],imageUses:[],sourceRefs:[ref],ruleSnapshotRef:null,cardBriefs:[{cardId:'card-1',title:'中性页',body:'页正文',sourceRefs:[ref]}],metadataSource:article.metadataSource};
+ const valid={targetDigest:'a'.repeat(64),article,graphic};expect(validator.safeParse(valid).success).toBe(true);
+ expect(validator.safeParse({...valid,article:{...article,sections:[{id:'section-1',type:'text',text:'中性正文',sourceRefs:[ref]}]}}).success).toBe(false);
+ expect(validator.safeParse({...valid,graphic:{...graphic,cardBriefs:[{id:'card-1',page:1,type:'text',title:'中性页',body:'页正文',sourceRefs:[ref]}]}}).success).toBe(false);
+ expect(validator.safeParse({...valid,article:{...article,metadataSource:{titleSourceRefs:[ref],summarySourceRefs:[ref]}}}).success).toBe(false);
+});

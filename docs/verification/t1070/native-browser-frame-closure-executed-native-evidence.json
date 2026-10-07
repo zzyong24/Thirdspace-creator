@@ -1,0 +1,10 @@
+[
+  {
+    "scriptId": "3230",
+    "url": "http://127.0.0.1:4371/reference-editors/opencut-classic/native/native.js",
+    "cdpHash": "58f42ac9a39500ddf6c6bcfab3df79eb4c8477ae2d61afaf4a852e2a77a5cb5e",
+    "sha256": "58f42ac9a39500ddf6c6bcfab3df79eb4c8477ae2d61afaf4a852e2a77a5cb5e",
+    "bytes": 6735098,
+    "hasFrameValidPatch": true
+  }
+]

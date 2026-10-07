@@ -467,3 +467,9 @@ describe("[T-456] sanitizeSystemToolReferences —— system prompt 里带点工
     );
   });
 });
+
+it('T1070只四个作品工具lossless完整60k以上原结果，其它工具继续预算',async()=>{
+ const names=['work.editor.read','work.editor.propose','work.creation.read','work.creation.propose'];
+ for(const name of names){const result={kind:CHAT_TOOL_ERROR_ENVELOPES[name]!.kind,document:{body:'完整正文😀'.repeat(20000)},error:null};const t=defineChatTool(name,{description:'实际无损候选',inputSchema:NOOP_SCHEMA,execute:async()=>result});expect(await executeOf(t)({},{})).toEqual(result);}
+ const result={kind:'context.artifact.text',body:'旧读取预算'.repeat(20000)};const t=defineChatTool('context.artifact.text',{description:'原预算',inputSchema:NOOP_SCHEMA,execute:async()=>result});expect(JSON.stringify(await executeOf(t)({},{})).length).toBeLessThanOrEqual(CHAT_TOOL_RESULT_BUDGET_CHARS+1000);
+});

@@ -1,0 +1,121 @@
+{
+  "schema": "creatoros/t1070-structured-script-consumer-implementation-closure@1",
+  "task_id": "T-1070",
+  "reviewer": "/root/final_scope_recheck",
+  "created_at": "2026-10-07T11:24:53.204991+00:00",
+  "review_kind": "同一实现闭包T1070-STRUCTURE-001精确增量复核；不新合同轮/reset/Owner capability",
+  "verdict": "T1070_STRUCTURE_001_CLOSED_BOUNDED_IMPLEMENTATION_GO",
+  "summary": "c4f4bd79已修复本项明确CAS拒绝误留无IDUNKNOWN：只对原追加调用的结构化409 ConflictError解除同intent，保local和真实旧base，不重建目标、不静默rebasing。当前MAIN a1929340两路径字节与该候选commit完全相同。网络、其他409/400/5xx与无ID成功仍UNKNOWN、不盲append。旧CHANGES_REQUIRED报告与RED证据原样保留；默认视图实际模型/浏览器链尚不由此签。",
+  "candidate": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-frontend-candidate",
+  "candidate_commit": "c4f4bd79eb3b6726076329cc46ff45d8c020d943",
+  "main": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "observed_main_head": "a192934022304c1a2d14d2553330be1244085ddd",
+  "root_integrated_commit": "a192934022304c1a2d14d2553330be1244085ddd",
+  "exact_changed_paths": [
+    "frontend/src/features/script/script-structure-view.test.tsx",
+    "frontend/src/features/script/script-structure-view.tsx"
+  ],
+  "candidate_main_bytes_equal_commit": true,
+  "actual_current_sha256": {
+    "frontend/src/features/script/script-structure-view.test.tsx": "9e707bea4aa87e046e620390ed3b67085f490dfd072893efae38c46cbb66182e",
+    "frontend/src/features/script/script-structure-view.tsx": "2401195c1a54a29ad7efc38a77a2854d92228851b2ab2d70490284486777eb9a"
+  },
+  "historical_changes_required": {
+    "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-diagnosis/structured-script-implementation-review.json",
+    "sha256": "9c68ce85bc7d2283910aa9016e593f943278858d848173bc95247c5fbaf07770",
+    "preserved": true,
+    "finding": "T1070-STRUCTURE-001",
+    "historical_verdict": "CHANGES_REQUIRED"
+  },
+  "producer_evidence": [
+    {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-tests/frontend-structured-cas-red-final.log",
+      "sha256": "8c71a1448f786875469345e0e4edde17d21bc3f3504d0d5b839e23c553354e7e",
+      "meaning": "生产者当场34case/3FAIL31PASS；实际Provider未恢复明确CAS分态及firstensure prior，无唯一版本回执锁住。"
+    },
+    {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-tests/frontend-structured-cas-green-final.log",
+      "sha256": "45cae41319a9a41ef0a563101f4f7277a11857cc1072014830977d28041bc4ea",
+      "meaning": "生产者当前4files62PASS；不是本agent执行。原Provider/组件与createHttpTransport真实执行，fetch/API rows与router是受控fixture。"
+    },
+    {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-tests/frontend-structured-cas-typecheck.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "meaning": "本agent只读日志；生产者/ROOT报告typecheck退出0，空输出不作为本agent独立退出码证据。"
+    }
+  ],
+  "closure": {
+    "id": "T1070-STRUCTURE-001",
+    "severity": "major",
+    "status": "CLOSED",
+    "locations": [
+      {
+        "path": "frontend/src/features/script/script-structure-view.tsx",
+        "line": 415
+      },
+      {
+        "path": "frontend/src/features/script/script-structure-view.tsx",
+        "line": 425
+      },
+      {
+        "path": "frontend/src/features/script/script-structure-view.tsx",
+        "line": 429
+      },
+      {
+        "path": "frontend/src/features/script/script-structure-view.test.tsx",
+        "line": 633
+      }
+    ],
+    "mechanism": [
+      "try/catch只包createArtifactVersion await；不会因后续readback失败误清已保存intent。",
+      "HttpTransportError instanceof + status409 + ErrorCode.ConflictError（真实值ConflictError）精确判断；不是任意HTTP/字面CONFLICT分支。",
+      "intentRef.current===intent、versionId===null、真实priorVersionId同时成立才释放该intent；迟到旧catch不清另一份新intent。",
+      "已有persistedAnchor不改；首次ensure没有anchor时保原intent.artifactId/priorVersionId作为旧base，首次ID稳定，不自动读新current改写expectedCurrentVersionId。",
+      "继续throw原错误，上层保dirty/local；只有用户再明确动作可重试，current漂移仍核原CAS拒绝，不新增自动chat/append。",
+      "网络/noID/503/wrong409/null409/400均留intent；knownID/readback失效仍按原body/current/exact版本恢复，不二次append。"
+    ],
+    "public_contract_basis": "原HttpTransportError保status/code；前轮已实读该endpoint repository CAS在insert前拒绝或整事务回滚，service提交后的派生错误吞掉。此次复用原类型/常量，没有新服务参数、回执表或机制。",
+    "scope_switch_bound": "引用身份守卫不清不同新intent；原owner/scope/mounted与外层dirty回写守卫仍原样。此次未独立执行新的真实scope浏览器race，不以静态guard签实机。"
+  },
+  "test_assessment": {
+    "independent_actual_execution_this_turn": false,
+    "producer_red": {
+      "cases": 34,
+      "failed": 3,
+      "passed": 31
+    },
+    "producer_green": {
+      "files": 4,
+      "passed": 62,
+      "failed": 0
+    },
+    "covered": [
+      "实际createHttpTransport解析409JSON成原HttpTransportError，通过真实Provider调用原结构消费者；拒绝后保dirty与原错误，同base/body明确再确认。",
+      "手工保存明确CAS后current已被其他页面更新，strict准备并发拒绝且不append；再次手工保存仍原base，不替换为newcurrent。",
+      "首次ensure实际ID与首次prior保存，current换版时不reensure、不静默rebasing。",
+      "503 ConflictError、409字面CONFLICT、409 nullcode、400 ValidationError继续无IDUNKNOWN不追加；原网络与同文旧/新current UNKNOWN、knownID恢复与其它旧tests保持。"
+    ],
+    "limits": "第一例受控server current保持同base，只证明协议分态与再调用可达；真实current换版例刻意不自动rebasing，不能据此称冲突后的任意手工合并已验收。无真实DB/模型/browser。"
+  },
+  "counts": {
+    "reviewed_major_closed": 1,
+    "reviewed_major_open": 0,
+    "new_blocker": 0,
+    "new_major": 0,
+    "new_minor": 0
+  },
+  "remaining_acceptance": [
+    "ROOT仍须实际默认分镜→保存确认→共同frozen script source→模型候选/采纳/保存/刷新公共链。",
+    "完整字段/归属/生命周期沿前轮source与producer定向证据；本增量仅关闭CAS分类，未重新代签全部T1070/native/visual/export/install/全Gate。"
+  ],
+  "mutations": {
+    "repo": false,
+    "product": false,
+    "controlplane": false,
+    "reviewctl": false,
+    "models": false,
+    "browser": false,
+    "user_db": false,
+    "writes": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-diagnosis/structured-script-implementation-closure.json"
+  }
+}

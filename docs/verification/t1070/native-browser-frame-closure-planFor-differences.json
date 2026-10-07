@@ -1,0 +1,31 @@
+{
+  "observedAt": "2026-10-07T11:48:12.113828+00:00",
+  "comparison": "实际public context reply依当前planFor覆盖mediaMetadata，存储原owner全plan精确diff",
+  "diff": [
+    {
+      "path": "plan.referenceEditor.nativeDocument.mediaMetadata[0].lastModified",
+      "stored": 1791360870999,
+      "nativePlanFor": 1791373543757
+    },
+    {
+      "path": "plan.referenceEditor.nativeDocument.metadata.updatedAt",
+      "stored": "2026-10-07T08:16:27.901Z",
+      "nativePlanFor": "2026-10-07T11:47:28.511Z"
+    }
+  ],
+  "nativeContentUnignoredDiff": [
+    {
+      "path": "plan.referenceEditor.nativeDocument.mediaMetadata[0].lastModified",
+      "stored": 1791360870999,
+      "nativePlanFor": 1791373543757
+    }
+  ],
+  "contextFacts": {
+    "dirty": false,
+    "outputId": "output-95c4e17c-52",
+    "contextEpoch": 4,
+    "generation": 2,
+    "target": null
+  },
+  "ownerRevision": 4
+}

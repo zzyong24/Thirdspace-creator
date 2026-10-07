@@ -1,0 +1,435 @@
+{
+  "schema": "t1070-native-actual-diff-final-review@1",
+  "task_id": "T-1070",
+  "reviewer": "/root/t1070_native_diff_review",
+  "review_type": "独立只读复核最终归档/修复/actual diff复杂度",
+  "reviewed_at": "2026-10-07T07:27:48.318518+00:00",
+  "main_head": "1d1db02462ea7053b33cb667e50ebef744bfb44e",
+  "before_commit": "0d37b71f",
+  "reviewed_native_commits": [
+    "9396e0fdc8b92a6ee8ab254c5162d00853237a20",
+    "f2e3342cb72aa42b6b43ae93adaf64de5ca3319b",
+    "fd3ed7386549d58e3d03b49b79b82969368739c3"
+  ],
+  "main_integrated_fixes": [
+    "c0f2d822",
+    "1d1db024"
+  ],
+  "authorities": [
+    "AGENTS.md",
+    "BACKLOG.md:T-1070",
+    "PROJECT.md",
+    "PROJECT_CONTEXT.md",
+    "orchestrator/SYSTEM_ARCHITECTURE.md",
+    "docs/features/t1070-director-script-workflow.md",
+    "docs/features/t1070-director-script-workflow/CONTRACT.json",
+    "product-to-code-orchestrator@3.27.4"
+  ],
+  "prior_report": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-diagnosis/native-diff-review.json",
+  "verdict": {
+    "status": "PASS_WITH_MINOR",
+    "scope": "native实际源码、晚到导入修复、非主场景时长修复、源码与交付一致性、复杂度机制评审",
+    "blocker": 0,
+    "major": 0,
+    "minor": 1,
+    "native_browser_audio_video": "NOT_RUN",
+    "install_acceptance": "NOT_RUN",
+    "whole_task_completion": "本报告不代签T-1070完整功能或用户验收"
+  },
+  "resolved_findings": [
+    {
+      "id": "NATIVE-REVIEW-001",
+      "previous_severity": "major",
+      "status": "RESOLVED",
+      "title": "摘要窗口晚到导入保持原执行",
+      "source_lines": {
+        "apps/web/src/embedded/native-controller.ts": [
+          29,
+          30,
+          31,
+          47
+        ],
+        "apps/web/src/embedded/native-preview.ts": [
+          18,
+          47,
+          48,
+          59,
+          61,
+          64
+        ]
+      },
+      "basis": "controller新增真实pendingImports闭包交给preview；assertFrozen同时同步核pending与isLoadingMedia，最后assertFrozen紧接beginExportLock，中间无await。摘要窗口新import在任何已完成/在途阶段都会因pending、metadata/File/document漂移而busy或冲突返回，不取得锁，不advanceEditEpoch，不取消import。",
+      "original_red": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-tests/native-race-public-red.log",
+      "public_green": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-tests/native-race-public-green.log",
+      "independent_final_green": {
+        "argv": [
+          "bun",
+          "test",
+          "--timeout",
+          "120000",
+          "src/embedded/__tests__/native-preview.test.ts"
+        ],
+        "cwd": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1070-native-final-review-yx1b3_yv/apps/web",
+        "exit_code": 0,
+        "tests_passed": 7,
+        "assertions": 79,
+        "tool_output_chunk_id": "487dab",
+        "observed": "全部7项通过，包含非主scene main/fallback-first时长、只读frozen、owner/epoch/digest、真实File字节、取消清理和实际controller公共晚到导入。"
+      },
+      "observed_public_postconditions": [
+        "preview为409/ConflictError，renderer调用0、未取得lock。",
+        "原currentEditSignal、uploadSignal、decoderSignal未abort，currentEditEpoch不变。",
+        "原实际processMediaAssets/registerMediaFile/MediaManager/StorageService继续完成，仅一次上传；late File真正进入原媒体目录，getRegisteredMediaId保持late-media。"
+      ],
+      "fixture_boundary": "实际执行controller/preview/processMediaAssets/registerMediaFile/MediaManager/StorageService源码；EditorCore组合与UI/store/GPU入口窄端口为fixture，视频decoder和renderer明确mock。不可据此声明浏览器解码、MP4或UI实机完成。"
+    },
+    {
+      "id": "NATIVE-MAIN-DURATION",
+      "status": "RESOLVED",
+      "title": "工程主场景时长与目标预览时长分开保持真实",
+      "source_lines": {
+        "apps/web/src/embedded/native-preview.ts": [
+          46,
+          49,
+          50,
+          51,
+          52,
+          53,
+          54,
+          55,
+          61,
+          63
+        ],
+        "apps/web/src/embedded/__tests__/native-preview.test.ts": [
+          29
+        ],
+        "apps/web/src/timeline/scenes.ts": [
+          89,
+          94,
+          99
+        ]
+      },
+      "basis": "目标candidateDigest仍签完整目标SerializedScene；renderer frozen.duration取目标scene maxEnd；frozen project.metadata.duration沿原getProjectDurationFromScenes的main→first规则计算。只在复制project目标scene替换tracks，保其它scene、metadata扩展和原工程。",
+      "red": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-tests/native-duration-public-red.log",
+      "green": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-tests/native-duration-public-green.log",
+      "independent_final_green": {
+        "argv": [
+          "bun",
+          "test",
+          "--timeout",
+          "120000",
+          "src/embedded/__tests__/native-preview.test.ts"
+        ],
+        "cwd": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1070-native-final-review-yx1b3_yv/apps/web",
+        "exit_code": 0,
+        "tests_passed": 7,
+        "assertions": 79,
+        "tool_output_chunk_id": "487dab",
+        "observed": "全部7项通过，包含非主scene main/fallback-first时长、只读frozen、owner/epoch/digest、真实File字节、取消清理和实际controller公共晚到导入。"
+      },
+      "covered_input_families": [
+        "main scene存在",
+        "无main fallback first",
+        "目标sceneId/candidateDigest/tracks仍属当前目标",
+        "其它scene、metadata扩展和原工程深等"
+      ],
+      "boundary": "真实previewNativeScene源码+明确renderer fixture；未做真实音视频编解码。"
+    }
+  ],
+  "remaining_findings": [
+    {
+      "id": "NATIVE-REVIEW-002",
+      "severity": "minor",
+      "title": "归档README固定依赖计数仍为59",
+      "source_member": "README.creatoros.md",
+      "line": 41,
+      "observed": "README59；实际THIRD_PARTY_LICENSES.json60，新增Zod4.3.6 MIT。",
+      "blocking": false,
+      "disposition": "保留已知文档计数minor，不改源码或bundle。"
+    }
+  ],
+  "readonly_and_owner_review": {
+    "status": "PASS_SOURCE_AND_FIXTURE",
+    "source_lines": {
+      "apps/web/src/embedded/native-preview.ts": [
+        19,
+        22,
+        25,
+        27,
+        29,
+        34,
+        37,
+        40,
+        41,
+        45,
+        46,
+        47,
+        50,
+        51,
+        55,
+        56,
+        59,
+        61,
+        62,
+        64
+      ],
+      "apps/web/src/embedded/native-operations.ts": [
+        19,
+        20,
+        23,
+        29,
+        30,
+        33,
+        35,
+        36,
+        37,
+        38,
+        40
+      ]
+    },
+    "basis": "完整strict native owner（group/account/project/output/sourceVersion）与epoch/current project/scene深核；服务器user/account/group权限不由客户端证明。新preview只复制输入，经原renderer frozen消费；不load/setScenes/command/saveProject/正式owner写。finally释放锁，取消/卸载/漂移丢弃Blob；旧renderer与资源销毁路径保留。beforeDigest明确完整tracks，candidateDigest完整scene含元信息。typed validator只在candidateDigest标记开启，原无markerapply-tracks与手工save/export保持；不可淘汰原request receipts和runtime回填/undo保持。",
+    "independent_command_tests": {
+      "argv": [
+        "bun",
+        "test",
+        "--timeout",
+        "120000",
+        "src/embedded/__tests__/native-command.test.ts"
+      ],
+      "cwd": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1070-native-final-review-yx1b3_yv/apps/web",
+      "exit_code": 0,
+      "tests_passed": 8,
+      "assertions": 35,
+      "tool_output_chunk_id": "65e20a",
+      "observed": "原NativeTracksSnapshotCommand/CommandManager/ScenesManager采纳、单次回执、undo/redo、其它scene与后续手工编辑、typed标记和旧无marker兼容均通过。"
+    }
+  },
+  "actual_changed_files": [
+    {
+      "path": "frontend/public/reference-editors/opencut-classic/native/NATIVE_BUILD_GRAPH.json",
+      "before_sha256": "6629699c0e7899fe016ab0fb38d74db902ece5f68bded1eeafba1ec6a8aabeba",
+      "current_sha256": "b9e0e5d5c3ab192c6689b0791060274171c8a3433a449e08508700e6f4f83227",
+      "before_bytes": 41609,
+      "current_bytes": 41805,
+      "head_bytes_same": true
+    },
+    {
+      "path": "frontend/public/reference-editors/opencut-classic/native/THIRD_PARTY_LICENSES.json",
+      "before_sha256": "becfab856e0610ccbc14f1abf05d38c25593b60ada26f553dac667fcd471e8ad",
+      "current_sha256": "b92b56836fbb1ac73b12112f61ec12cfce7af0793e91b6ae8748ed591db73964",
+      "before_bytes": 14167,
+      "current_bytes": 14390,
+      "head_bytes_same": true
+    },
+    {
+      "path": "frontend/public/reference-editors/opencut-classic/native/THIRD_PARTY_LICENSES.txt",
+      "before_sha256": "d3e59d1b80d9ebcccfc76f84dc51d976ed113749afec53d51c02f6832eafe51f",
+      "current_sha256": "e337836ba3e5a4d722e4750619410e357434656a00fc79e9a572ad649d633b8a",
+      "before_bytes": 110192,
+      "current_bytes": 111363,
+      "head_bytes_same": true
+    },
+    {
+      "path": "frontend/public/reference-editors/opencut-classic/native/native.js",
+      "before_sha256": "79c8fc5a9b7ce45f5abf66b91579a33365370edf1b044f740e83d4c5d7ebbc9f",
+      "current_sha256": "fec1ca3ddaf8c0d5451d377ceaa459724038eb2ce106cad8f5dda814daa625b4",
+      "before_bytes": 6656774,
+      "current_bytes": 6735031,
+      "head_bytes_same": true
+    },
+    {
+      "path": "frontend/public/reference-editors/sources/opencut-classic/native-from-t1046.patch",
+      "before_sha256": "22b311b811cb788c704f24e78e954f7921bc791f5e650830092debf933f8e195",
+      "current_sha256": "c65de282b1eef7bae63294f834790da0a87bdc51f9b131c94e08d369cb713a79",
+      "before_bytes": 294859,
+      "current_bytes": 375610,
+      "head_bytes_same": true
+    },
+    {
+      "path": "frontend/public/reference-editors/sources/opencut-classic/native-patches.diff",
+      "before_sha256": "22b311b811cb788c704f24e78e954f7921bc791f5e650830092debf933f8e195",
+      "current_sha256": "c65de282b1eef7bae63294f834790da0a87bdc51f9b131c94e08d369cb713a79",
+      "before_bytes": 294859,
+      "current_bytes": 375610,
+      "head_bytes_same": true
+    },
+    {
+      "path": "frontend/public/reference-editors/sources/opencut-classic/native-source.tar.gz",
+      "before_sha256": "3a1442e9b0150710f7f284ea4c4773124d78f8e252d5b906d6e140cdec34bb44",
+      "current_sha256": "08edc36d5057f737824c232c0c6b2e73358256c898207847898576e74a3dee60",
+      "before_bytes": 742460,
+      "current_bytes": 758689,
+      "head_bytes_same": true
+    },
+    {
+      "path": "frontend/scripts/verify-native-editors.mjs",
+      "before_sha256": "0602ef46ba1a3e6bb0aba07e0f90fda3f7c2bbdc230a6943cfc3d56fb37ec711",
+      "current_sha256": "a0315cfff65b89c42e73279d2198fbf1908337340da5242adf5f1aabd45d272c",
+      "before_bytes": 3272,
+      "current_bytes": 5124,
+      "head_bytes_same": true
+    },
+    {
+      "path": "reference-editors/manifest.json",
+      "before_sha256": "69bda55a03e42d4d30c67f4d091c0282ce6b09d5bf90ed230cec26c053681bc5",
+      "current_sha256": "4008853940b8a57cef7da91209f31694e6a418b7a870916abd622a3701fe4f11",
+      "before_bytes": 55465,
+      "current_bytes": 56222,
+      "head_bytes_same": true
+    }
+  ],
+  "archive_members": {
+    "before": 705,
+    "current": 708,
+    "exact_changed_members": [
+      "NATIVE_REBUILD_CONSISTENCY.json",
+      "README.creatoros.md",
+      "apps/web/src/embedded/__tests__/native-command.test.ts",
+      "apps/web/src/embedded/__tests__/native-preview.test.ts",
+      "apps/web/src/embedded/native-controller.ts",
+      "apps/web/src/embedded/native-document-contract.ts",
+      "apps/web/src/embedded/native-operations.ts",
+      "apps/web/src/embedded/native-preview.ts"
+    ],
+    "approved_exact8_same": true,
+    "member_sha256": {
+      "NATIVE_REBUILD_CONSISTENCY.json": "2807832322715684ea19f88a0339c4c6bb2b1102e705b638e6d698198d822d15",
+      "README.creatoros.md": "d8286a048a364020fbd9fe6db19debdaf4b31537b88bb2b5dd8763359b0f7d2d",
+      "apps/web/src/embedded/__tests__/native-command.test.ts": "506bf21e1ccf8980ff189ccdd4b30a69f3e658c11b14ceb55fffc75691762e67",
+      "apps/web/src/embedded/__tests__/native-preview.test.ts": "72695ecc026687e3acb8c70376a5a6a3362e1bdfc02d2af05f0440d9a35e489e",
+      "apps/web/src/embedded/native-controller.ts": "46fab71c41afc3c22d44eff5585dbdaf30d60118749eac30f12ee7cb5b6e9452",
+      "apps/web/src/embedded/native-document-contract.ts": "5404771bf43a3ac4a51cd1dc6f698d0f10b115fb81ba7f3a749654c34c073b2b",
+      "apps/web/src/embedded/native-operations.ts": "ccaee313ad4dd4dc9c756375003af6a480c63fca6abc515ea699667ce93429ec",
+      "apps/web/src/embedded/native-preview.ts": "7a55a844bb3c1092196a95dd0c58284c15dba7bba1bf1365559f23aeed26ca2a"
+    }
+  },
+  "independent_reconstruction": {
+    "members": 708,
+    "reconstructed": 708,
+    "patch_exit": 0,
+    "zero_byte_diff": true,
+    "runtime_contract_same": true
+  },
+  "observed_tests": [
+    {
+      "argv": [
+        "bun",
+        "test",
+        "--timeout",
+        "120000",
+        "src/embedded/__tests__/native-preview.test.ts"
+      ],
+      "cwd": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1070-native-final-review-yx1b3_yv/apps/web",
+      "exit_code": 0,
+      "tests_passed": 7,
+      "assertions": 79,
+      "tool_output_chunk_id": "487dab",
+      "observed": "全部7项通过，包含非主scene main/fallback-first时长、只读frozen、owner/epoch/digest、真实File字节、取消清理和实际controller公共晚到导入。"
+    },
+    {
+      "argv": [
+        "bun",
+        "test",
+        "--timeout",
+        "120000",
+        "src/embedded/__tests__/native-command.test.ts"
+      ],
+      "cwd": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1070-native-final-review-yx1b3_yv/apps/web",
+      "exit_code": 0,
+      "tests_passed": 8,
+      "assertions": 35,
+      "tool_output_chunk_id": "65e20a",
+      "observed": "原NativeTracksSnapshotCommand/CommandManager/ScenesManager采纳、单次回执、undo/redo、其它scene与后续手工编辑、typed标记和旧无marker兼容均通过。"
+    }
+  ],
+  "source_delivery": {
+    "source_archive_sha256": "08edc36d5057f737824c232c0c6b2e73358256c898207847898576e74a3dee60",
+    "full_patch_sha256": "c65de282b1eef7bae63294f834790da0a87bdc51f9b131c94e08d369cb713a79",
+    "contract_sha256": "5404771bf43a3ac4a51cd1dc6f698d0f10b115fb81ba7f3a749654c34c073b2b",
+    "archived_contract_sha256": "5404771bf43a3ac4a51cd1dc6f698d0f10b115fb81ba7f3a749654c34c073b2b",
+    "two_existing_builds_equal_current_manifest": true,
+    "bundle_file_set": {
+      "LICENSE.opencut": "8117f9bb64534f7530fc6139b014fd1c1465f7981f93d1871789150fa3f59d3d",
+      "NATIVE_BUILD_GRAPH.json": "b9e0e5d5c3ab192c6689b0791060274171c8a3433a449e08508700e6f4f83227",
+      "THIRD_PARTY_LICENSES.json": "b92b56836fbb1ac73b12112f61ec12cfce7af0793e91b6ae8748ed591db73964",
+      "THIRD_PARTY_LICENSES.txt": "e337836ba3e5a4d722e4750619410e357434656a00fc79e9a572ad649d633b8a",
+      "effects/preview.jpg": "b318cede7bbe27bfbf1b8b94d41f65b6f52d5f2650ce3a153d03b76c2a1c0190",
+      "native.css": "a0bad44d377687bc240c1cf59742b3ffa12b5ba282d00d3912846587fc12b31f",
+      "native.js": "fec1ca3ddaf8c0d5451d377ceaa459724038eb2ce106cad8f5dda814daa625b4"
+    },
+    "fresh_types_and_fixture_evidence": {
+      "log_root": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-tests",
+      "result": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-tests/native-duration-final-reconstruction-result.json",
+      "tests": 44,
+      "assertions": 271,
+      "status": "PASS existing current evidence; this review additionally reran15 tests114assertions"
+    },
+    "root_current_verifier": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-tests/root-native-final-verifier.log",
+    "root_verifier_status": "PASS current08edc36 source, explicit no browser/pixel attestation",
+    "new_builds_run_by_review": false
+  },
+  "complexity_budget": {
+    "status": "PASS_ACTUAL_DIFF_MECHANISM_REVIEW",
+    "registration_allowed_for_exact_current_bytes": true,
+    "ledger_modified_by_reviewer": false,
+    "native_js_sha256": "fec1ca3ddaf8c0d5451d377ceaa459724038eb2ce106cad8f5dda814daa625b4",
+    "manifest_sha256": "4008853940b8a57cef7da91209f31694e6a418b7a870916abd622a3701fe4f11",
+    "reason": "累计9交付路径与精确8source成员，最终修复只增加既有controller/queue/edit-lock中的机械并发校验和沿原主场景时长数学。Zod4.3.6原package/bun.lock未变，仅纯合同随生产闭包保留并补MIT许可；沿原browser ESM、Bun/Vite构建、Node verifier与tar argv，无新凭据库、语言toolchain、产品runtime、native executable/process、IPC、签名身份、installer/deploy机制。",
+    "sha_registration_limits": "可用本独立actualdiff报告将当前native.js/manifest精确SHA绑定T-1070复杂度条目；这只确认机制范围，不代表实机音视频/安装/整个T-1070 PASS。任一SHA后续变化必须核实际delta再绑定，不使用旧hash或宽category通行证。",
+    "bytes": {
+      "native_js_before": 6656774,
+      "native_js_current": 6735031,
+      "delta": 78257,
+      "gzip_before": 2131395,
+      "gzip_current": 2155046
+    },
+    "dependency": {
+      "name": "zod",
+      "version": "4.3.6",
+      "license": "MIT",
+      "source_lock_package_unchanged": true,
+      "actual_license_count": 60
+    },
+    "existing_marker_probe": {
+      "rust returned undefined": {
+        "before": 1,
+        "current": 1
+      },
+      "Deno": {
+        "before": 0,
+        "current": 0
+      },
+      "Bun": {
+        "before": 1,
+        "current": 1
+      },
+      "child_process": {
+        "before": 0,
+        "current": 0
+      },
+      "spawn": {
+        "before": 0,
+        "current": 0
+      },
+      "execFile": {
+        "before": 0,
+        "current": 0
+      },
+      "credential": {
+        "before": 2,
+        "current": 2
+      },
+      "new Function": {
+        "before": 0,
+        "current": 0
+      }
+    }
+  },
+  "limitations": [
+    "本报告仅源码/交付/隔离公共链路及明确fixture证据，不代签WebGPU真实帧像素、音轨、MP4播放或浏览器preview/adopt/undo/manual/save/refresh/export完整旅程。",
+    "原README59 vs actual60 minor保留；官方Zod4处生成模板空白在whole-task diff-check中原样保留，未手改bundle，不能称全绿。",
+    "本评审未修改MAIN、控制面、ledger，未安装/启动/替换App、push或公开发布。",
+    "原wasm初始化GPU对象随浏览器文档关闭释放的既有限制保留；不声称完整free设备。",
+    "前版native-diff-review.json FAIL和RED证据保留，当前报告以实际修复与新SHA关闭major，不追补历史PASS。"
+  ]
+}

@@ -4781,7 +4781,11 @@
         "frontend/src/features/script/script-rich-editor.test.tsx",
         "frontend/src/features/draft-workbench/creation-flow-ctas.test.tsx",
         "frontend/src/features/script/script-structure-view.tsx",
-        "frontend/src/features/script/script-structure-view.test.tsx"
+        "frontend/src/features/script/script-structure-view.test.tsx",
+        "frontend/src/features/reference-editors/native-editor-surface.tsx",
+        "frontend/src/features/reference-editors/native-editor-surface.test.tsx",
+        "ai-worker/src/execution/external-chat-worker-run.ts",
+        "ai-worker/src/execution/external-chat-worker-run.test.ts"
       ],
       "read_set": [
         "docs/features/t1070-director-script-workflow.md",
@@ -4815,7 +4819,10 @@
         "backend/src/schema/account-groups.ts",
         "backend/src/modules/assets/**",
         "backend/src/schema/pending-generated-asset-commits.ts",
-        "docs/features/t1070-director-script-workflow/STRUCTURED_SCRIPT_INTEGRATION.md"
+        "docs/features/t1070-director-script-workflow/STRUCTURED_SCRIPT_INTEGRATION.md",
+        "docs/features/t1070-director-script-workflow/NOTE_PREVIEW_INTEGRATION.md",
+        "docs/features/t1070-director-script-workflow/CODEX_TOOL_HISTORY_INTEGRATION.md",
+        "docs/features/t1070-director-script-workflow/PIXEL_VERSION_INTEGRATION.md"
       ],
       "exclusive_resources": [],
       "step_write_set": {
@@ -4920,7 +4927,11 @@
           "frontend/src/features/script/script-rich-editor.test.tsx",
           "frontend/src/features/draft-workbench/creation-flow-ctas.test.tsx",
           "frontend/src/features/script/script-structure-view.tsx",
-          "frontend/src/features/script/script-structure-view.test.tsx"
+          "frontend/src/features/script/script-structure-view.test.tsx",
+          "frontend/src/features/reference-editors/native-editor-surface.tsx",
+          "frontend/src/features/reference-editors/native-editor-surface.test.tsx",
+          "ai-worker/src/execution/external-chat-worker-run.ts",
+          "ai-worker/src/execution/external-chat-worker-run.test.ts"
         ]
       },
       "step_read_set": {},
@@ -4933,7 +4944,7 @@
   "leases": {
     "T-1070:implementation": {
       "agent": "root",
-      "since": "2026-10-07T07:56:33.430Z"
+      "since": "2026-10-07T11:33:02.154Z"
     }
   }
 }

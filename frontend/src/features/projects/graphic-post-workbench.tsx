@@ -200,7 +200,7 @@ function GraphicPostWorkbenchSession({projectId,projectTitle,accountId,initial,i
     }
   }
 
-  React.useLayoutEffect(()=>{portRef.current={readState:()=>({target:targetRef.current,generation:generationRef.current,dirty:Boolean(stateRef.current&&draftRef.current&&editorCanonical(draftRef.current)!==editorCanonical(stateRef.current.current))}),prepareForTurn:async()=>{
+  React.useLayoutEffect(()=>{portRef.current={readState:()=>({target:targetRef.current,outputId:stateRef.current?.outputId,generation:generationRef.current,dirty:Boolean(stateRef.current&&draftRef.current&&editorCanonical(draftRef.current)!==editorCanonical(stateRef.current.current))}),prepareForTurn:async()=>{
    if(selectionPromise.current)await selectionPromise.current;
    if(savePromiseRef.current)await savePromiseRef.current;
    const initial=stateRef.current;if(!initial||!draftRef.current)throw Error("当前稿件尚未准备好。");

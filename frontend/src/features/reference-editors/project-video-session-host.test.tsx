@@ -22,8 +22,10 @@ beforeEach(()=>{vi.clearAllMocks();h.pathname='/projects/p/production';h.mounts=
 afterEach(cleanup);
 it('直接离开项目到账号页、浏览器历史返回保留同一会话；别的项目不能显示旧稿',async()=>{
  const view=render(<View/>);await screen.findByTestId('session');expect(h.mounts).toBe(1);
+ expect(screen.getByTestId('session').closest('[data-video-session-outlet]')).toHaveClass('flex','min-h-0','flex-1');
+ expect(view.container.querySelector('[data-video-route-outlet]')).toHaveClass('hidden');
  const identity=h.identity;expect(identity).toMatchObject({scopeKey:'group:g',projectId:'p',outputId:'v',generation:expect.any(Number)});
- h.pathname='/accounts';view.rerender(<View/>);expect(screen.getByTestId('session').closest('[data-video-session-outlet]')).toHaveAttribute('hidden');expect(h.unmounts).toBe(0);
+ h.pathname='/accounts';view.rerender(<View/>);expect(view.container.querySelector('[data-video-route-outlet]')).toHaveClass('flex','min-h-0','flex-1');expect(screen.getByTestId('session').closest('[data-video-session-outlet]')).toHaveAttribute('hidden');expect(h.unmounts).toBe(0);
  h.pathname='/projects/other/production';view.rerender(<View/>);expect(screen.getByTestId('session').closest('[data-video-session-outlet]')).toHaveAttribute('hidden');
  h.pathname='/projects/p/production';view.rerender(<View/>);expect(screen.getByTestId('session').closest('[data-video-session-outlet]')).not.toHaveAttribute('hidden');expect(h.mounts).toBe(1);expect(h.identity).toBe(identity);
 });

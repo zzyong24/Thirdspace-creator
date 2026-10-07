@@ -1,0 +1,413 @@
+{
+  "schema": "t1070-existing-text-refinement-evidence@1",
+  "generatedAt": "2026-10-07T11:52:22.729830+00:00",
+  "passForScopedAcceptance": true,
+  "service": "http://127.0.0.1:4371",
+  "modelPostCount": 2,
+  "activeModelTasks": 0,
+  "owners": [
+    {
+      "kind": "article",
+      "passedScope": "隔离开发页既有稿单字段精调→真实工具候选→只读完整预览→用户UI采纳→当前/精确版本/刷新全文→原生导出实际解码",
+      "fixture": {
+        "groupId": "grp-95c4e17c-201",
+        "projectId": "project-95c4e17c-203",
+        "outputId": "output-95c4e17c-215",
+        "read": "articles.get",
+        "exact": "articles.versions.get",
+        "expected": "编导先读取当前段落，预览候选后由我决定是否采用。"
+      },
+      "engine": {
+        "engine": "codex",
+        "installed": true,
+        "available": true,
+        "version": "0.159.3",
+        "loginStatus": "authenticated"
+      },
+      "modelPostCount": 1,
+      "resumeModelPostCount": 0,
+      "requestAt": "2026-10-07T11:41:47.441Z",
+      "conversationId": "ai-conv-57da6418-145",
+      "sourceMessageId": "ai-msg-57da6418-146",
+      "assistantMessageId": "chat:ai-msg-57da6418-146",
+      "executionTask": {
+        "id": "execution-task-af530350-6ceb-42a4-936c-7c6a1b161191",
+        "status": "succeeded",
+        "ownerId": "ai-task-7e42275e-33b8-48e5-ae2f-58a489942c16",
+        "accountId": null,
+        "groupId": "grp-95c4e17c-201",
+        "errorCode": null,
+        "errorMessage": null
+      },
+      "originalVersionId": "artifactversion-95c4e17c-232",
+      "adoptedVersionId": "artifactversion-57da6418-244",
+      "selectedTarget": {
+        "schemaVersion": 1,
+        "projectId": "project-95c4e17c-203",
+        "outputId": "output-95c4e17c-215",
+        "owner": "wechat_article",
+        "contentType": "article",
+        "savedBase": {
+          "kind": "artifact",
+          "artifactId": "artifact-95c4e17c-221",
+          "versionId": "artifactversion-95c4e17c-232"
+        },
+        "documentDigest": "sha256:2a797f6e61641bcf3cd5731d75a75660fe8210ea05e2bca04a1120bda03e2cb8",
+        "selection": {
+          "kind": "article_sections",
+          "sectionIds": [
+            "20184dd4-1f36-44d0-983f-a6a41f3c31e2"
+          ],
+          "field": "body",
+          "textRange": {
+            "startUtf16": 0,
+            "endUtf16": 20,
+            "expectedFieldDigest": "sha256:fde1f4dc6a118819b8ceb401d641f248f69d11e040a93d1cf7372a8686d9e4fb"
+          }
+        }
+      },
+      "changedPath": "document.sections[0].body",
+      "baseDigest": "sha256:2a797f6e61641bcf3cd5731d75a75660fe8210ea05e2bca04a1120bda03e2cb8",
+      "candidateDigest": "sha256:de36a0dc709befb1c262756868204f0a1724e70fd3023e080255b98f9877b0ab",
+      "toolCalls": [
+        {
+          "type": "tool-work.editor.read",
+          "state": "output-available",
+          "toolCallId": "2",
+          "outputKind": "work.editor.context"
+        },
+        {
+          "type": "tool-work.editor.propose",
+          "state": "output-available",
+          "toolCallId": "4",
+          "outputKind": "work.editor.candidate"
+        }
+      ],
+      "dialogBox": {
+        "x": 172.9259033203125,
+        "y": 17.820579528808594,
+        "width": 1020.148193359375,
+        "height": 964.3588638305664
+      },
+      "exports": [
+        {
+          "file": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-diagnosis/text-refinement-article-export.html",
+          "sha256": "6bfcce44995175b83a9dc8cfe608ee92b7ad3e59c90c2da04b49baef6558e035",
+          "bytes": 7865,
+          "decode": {
+            "type": "实际Chromium载入原生HTML后的DOM与可见文本",
+            "changedText": "编导先读取当前段落，预览候选后由我决定是否采用。",
+            "title": "真实保存后继续微调",
+            "heading": "先保存当前修改",
+            "splitMarkup": true
+          }
+        }
+      ],
+      "resultFile": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-diagnosis/text-refinement-article-result.json",
+      "resultSha256": "8bac8bde22495be1e05abc9a9b3e124f69cb257d7506a94dbde66da760ba37be",
+      "actualSource": {
+        "head": "b6773bc888f441890be9741dc501d39c7837439f",
+        "skillVersion": "version=3.27.4\nskill_dir=/Users/zyongzhu/.codex/skills/product-to-code-orchestrator",
+        "hashes": {
+          "docs/features/t1070-director-script-workflow.md": "2513aedb1164f3ce99b0a81ea25dc4a0e79853cbda5374ce49a75fbf89c871e9",
+          "frontend/src/features/copilot/chat-work-editor-card.tsx": "7663c818e55dd64cb4076fe5a35daf2cf2ac0412a134196fc9ca1bcc4984da25",
+          "frontend/src/features/article/article-workbench.tsx": "8f3468697be11eba8c1b29896ea7ee10dbb92c6a3934d241ebad86289e1f33e3",
+          "frontend/src/features/projects/graphic-post-workbench.tsx": "92df2885de532884614bdefc3b50215f50759ba0f48118c5ec5d2f7ef2da3448",
+          "frontend/src/features/reference-editors/noterelay/noterelay-editor.tsx": "7c4391845aafe2e40908a1f7f5edd16ee0590a2789a3d78b3a332768dea43582"
+        }
+      },
+      "visualFilesViewed": [
+        {
+          "file": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-diagnosis/text-refinement-article-selected-before.png",
+          "sha256": "ea1475241da79c9cae01ec3e92338801f204511a85504023060e0201fc46d93c"
+        },
+        {
+          "file": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-diagnosis/text-refinement-article-adopted.png",
+          "sha256": "1fbaab051b7c8dde1da47879aeebfbf588c61f2dd01170e36b8d8e1a0b055c90"
+        },
+        {
+          "file": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-diagnosis/text-refinement-article-refreshed.png",
+          "sha256": "985fd9939b591e9549eafe61485d707e222a9fe4f18c09a952911306c4b99a8d"
+        },
+        {
+          "file": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-diagnosis/text-refinement-article-preview.png",
+          "sha256": "c1bc3608ce379cfb6aa68ec4b48f2561c77e6b073d333c9d988b7948ea6cecd6"
+        },
+        {
+          "file": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-diagnosis/text-refinement-article-export-rendered.png",
+          "sha256": "ae49c9fe8a06a838cd844df6a7dc826fe017f7317b8696e20e1d634bce0f818c"
+        }
+      ],
+      "visualObservation": "文章宽屏完整章与导出HTML正文可读；绿色默认模板的空变量保持原样。"
+    },
+    {
+      "kind": "graphic",
+      "passedScope": "隔离开发页既有稿单字段精调→真实工具候选→只读完整预览→用户UI采纳→当前/精确版本/刷新全文→原生导出实际解码",
+      "fixture": {
+        "groupId": "grp-95c4e17c-249",
+        "projectId": "project-95c4e17c-252",
+        "outputId": "output-95c4e17c-264",
+        "read": "graphicPosts.get",
+        "exact": "graphicPosts.versions.get",
+        "expected": "第2页内容：保留真实ID，翻页只改变预览。"
+      },
+      "engine": {
+        "engine": "codex",
+        "installed": true,
+        "available": true,
+        "version": "0.159.3",
+        "loginStatus": "authenticated"
+      },
+      "modelPostCount": 1,
+      "resumeModelPostCount": 0,
+      "requestAt": "2026-10-07T11:48:53.163Z",
+      "conversationId": "ai-conv-57da6418-308",
+      "sourceMessageId": "ai-msg-57da6418-309",
+      "assistantMessageId": "chat:ai-msg-57da6418-309",
+      "executionTask": {
+        "id": "execution-task-06f208ab-f341-496c-8741-178406a4e16d",
+        "status": "succeeded",
+        "ownerId": "ai-task-8facbb21-6ff3-48a0-b887-0057d6e7fba8",
+        "accountId": null,
+        "groupId": "grp-95c4e17c-249",
+        "errorCode": null,
+        "errorMessage": null
+      },
+      "originalVersionId": "artifactversion-95c4e17c-286",
+      "adoptedVersionId": "artifactversion-57da6418-318",
+      "selectedTarget": {
+        "schemaVersion": 1,
+        "projectId": "project-95c4e17c-252",
+        "outputId": "output-95c4e17c-264",
+        "owner": "graphic_post",
+        "contentType": "image",
+        "savedBase": {
+          "kind": "artifact",
+          "artifactId": "artifact-95c4e17c-270",
+          "versionId": "artifactversion-95c4e17c-286"
+        },
+        "documentDigest": "sha256:fa12e9d23c35ea4323553e13e13579863b4d01f5ee18778673905044f73f40bd",
+        "selection": {
+          "kind": "graphic_cards",
+          "cardIds": [
+            "a82a4d28-2a40-4d3f-b62d-d8146553d570"
+          ],
+          "field": "body",
+          "textRange": {
+            "startUtf16": 0,
+            "endUtf16": 21,
+            "expectedFieldDigest": "sha256:272311f1dabfeb939f51eb94359b54ab0a72c55199e91763b5a198cd7f5f58b2"
+          }
+        }
+      },
+      "changedPath": "document.cardBriefs[1].body",
+      "baseDigest": "sha256:fa12e9d23c35ea4323553e13e13579863b4d01f5ee18778673905044f73f40bd",
+      "candidateDigest": "sha256:443c6b98396fdb989b23a5d29712ad6ed28f9a5f1ce3ca509c4e1a9f8f593f66",
+      "toolCalls": [
+        {
+          "type": "tool-work.editor.read",
+          "state": "output-available",
+          "toolCallId": "2",
+          "outputKind": "work.editor.context"
+        },
+        {
+          "type": "tool-work.editor.propose",
+          "state": "output-available",
+          "toolCallId": "5",
+          "outputKind": "work.editor.candidate"
+        }
+      ],
+      "dialogBox": {
+        "x": 174.16656494140625,
+        "y": 18.993392944335938,
+        "width": 1017.6669311523438,
+        "height": 962.0131988525391
+      },
+      "exports": [
+        {
+          "file": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-diagnosis/text-refinement-graphic-export.zip",
+          "name": "真实图文分页-全部页面.zip",
+          "sha256": "a50987df21a005dfe60e5d2f3cea3f980fd68fe36ef8ba9e59bb803e7f72d2e3",
+          "bytes": 281086,
+          "pages": [
+            {
+              "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-diagnosis/text-refinement-graphic-真实图文分页-01.png",
+              "sha256": "25c0acff2a792702a8216339433331fef4d5f6420f8fe938a4fa75deafc70220",
+              "bytes": 89108,
+              "decoded": {
+                "width": 1242,
+                "height": 1658,
+                "opaque": 2059236,
+                "nonwhite": 2045720
+              }
+            },
+            {
+              "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-diagnosis/text-refinement-graphic-真实图文分页-02.png",
+              "sha256": "c6d49d078d2c29f93be7efa7fd318484ffff382aaa0b2d52d07d00a984474081",
+              "bytes": 93304,
+              "decoded": {
+                "width": 1242,
+                "height": 1658,
+                "opaque": 2059236,
+                "nonwhite": 2046274
+              }
+            },
+            {
+              "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-diagnosis/text-refinement-graphic-真实图文分页-03.png",
+              "sha256": "48c0aa16b8779b41e6c04e0ef3df316f0fc08e5b66383b70b1a4a6f8b84c9777",
+              "bytes": 96363,
+              "decoded": {
+                "width": 1242,
+                "height": 1658,
+                "opaque": 2059236,
+                "nonwhite": 2045754
+              }
+            },
+            {
+              "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-diagnosis/text-refinement-graphic-真实图文分页-04.png",
+              "sha256": "8e09b92e29a7c2fe1dcc3bcde0a9f69c4d46f38886514c136da9f3ddf9ad79b4",
+              "bytes": 94703,
+              "decoded": {
+                "width": 1242,
+                "height": 1658,
+                "opaque": 2059236,
+                "nonwhite": 2046143
+              }
+            }
+          ]
+        }
+      ],
+      "resultFile": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-diagnosis/text-refinement-graphic-result.json",
+      "resultSha256": "d74f02c3d8dae1ab1aba71166853498b52a4f70dbf912f01f0f7ad097d995d13",
+      "actualSource": {
+        "head": "b6773bc888f441890be9741dc501d39c7837439f",
+        "skillVersion": "version=3.27.4\nskill_dir=/Users/zyongzhu/.codex/skills/product-to-code-orchestrator",
+        "hashes": {
+          "docs/features/t1070-director-script-workflow.md": "2513aedb1164f3ce99b0a81ea25dc4a0e79853cbda5374ce49a75fbf89c871e9",
+          "frontend/src/features/copilot/chat-work-editor-card.tsx": "7663c818e55dd64cb4076fe5a35daf2cf2ac0412a134196fc9ca1bcc4984da25",
+          "frontend/src/features/article/article-workbench.tsx": "8f3468697be11eba8c1b29896ea7ee10dbb92c6a3934d241ebad86289e1f33e3",
+          "frontend/src/features/projects/graphic-post-workbench.tsx": "92df2885de532884614bdefc3b50215f50759ba0f48118c5ec5d2f7ef2da3448",
+          "frontend/src/features/reference-editors/noterelay/noterelay-editor.tsx": "7c4391845aafe2e40908a1f7f5edd16ee0590a2789a3d78b3a332768dea43582"
+        }
+      },
+      "visualFilesViewed": [
+        {
+          "file": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-diagnosis/text-refinement-graphic-selected-before.png",
+          "sha256": "75d1ba8605cca4220b87232b0379991ecddc150f5b974bca0b71ccbd40feb8ee"
+        },
+        {
+          "file": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-diagnosis/text-refinement-graphic-adopted.png",
+          "sha256": "d97f7c0636fb657128e97c43a0ba2854f6b1e874546d9298aa0a796b6f5ac2dc"
+        },
+        {
+          "file": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-diagnosis/text-refinement-graphic-refreshed.png",
+          "sha256": "83b02d5bed8591353f46828cc06e53b28acb2173af2d373782978aaf94ff781a"
+        },
+        {
+          "file": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-diagnosis/text-refinement-graphic-preview-page1.png",
+          "sha256": "b215539397a1125c03eba861219fb39ceb6472afc0ab936a96143de0bc92a925"
+        },
+        {
+          "file": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-diagnosis/text-refinement-graphic-preview-page2.png",
+          "sha256": "d9d432057e3f3c0803d2fc75300d392c833f9512258aa471f2015b02c245ac3b"
+        },
+        {
+          "file": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-diagnosis/text-refinement-graphic-preview-page3.png",
+          "sha256": "ab04106438097916fdda057e6c8ed139f153304af94541e815c5c190cecf9b00"
+        },
+        {
+          "file": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-diagnosis/text-refinement-graphic-preview-page4.png",
+          "sha256": "7a1bb93166ef1fd263223520c18d87782eccf1f81dfe8336b0b24c97722f161f"
+        },
+        {
+          "file": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-diagnosis/text-refinement-graphic-真实图文分页-01.png",
+          "sha256": "25c0acff2a792702a8216339433331fef4d5f6420f8fe938a4fa75deafc70220"
+        },
+        {
+          "file": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-diagnosis/text-refinement-graphic-真实图文分页-02.png",
+          "sha256": "c6d49d078d2c29f93be7efa7fd318484ffff382aaa0b2d52d07d00a984474081"
+        },
+        {
+          "file": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-diagnosis/text-refinement-graphic-真实图文分页-03.png",
+          "sha256": "48c0aa16b8779b41e6c04e0ef3df316f0fc08e5b66383b70b1a4a6f8b84c9777"
+        },
+        {
+          "file": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-diagnosis/text-refinement-graphic-真实图文分页-04.png",
+          "sha256": "8e09b92e29a7c2fe1dcc3bcde0a9f69c4d46f38886514c136da9f3ddf9ad79b4"
+        }
+      ],
+      "visualObservation": "宽屏四页预览与原生ZIP四页PNG一致；第2卡新句可读，配文及第1/3卡原句完整可读，未见文字截断。"
+    }
+  ],
+  "keptPriorFailures": [
+    {
+      "file": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-diagnosis/text-refinement-article-export-raw-assertion-result.json",
+      "sha256": "a1869cb23f55a0f966bc972a4b7c7462259fe9935c3b8268c06d48e6355a57a8",
+      "pass": false,
+      "modelPostCount": 1,
+      "error": "The expression evaluated to a falsy value:\n\n  assert(html.includes(fixture.expected))\n"
+    },
+    {
+      "file": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-diagnosis/text-refinement-article-original-candidate-request-assertion-result.json",
+      "sha256": "c7e5961d2ede8133b0eba24e7c17ab03880ac9dae0b9f9666cc3d3fb7b55a8bb",
+      "pass": false,
+      "modelPostCount": 1,
+      "error": "Cannot read properties of undefined (reading 'outputId')"
+    },
+    {
+      "file": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-diagnosis/text-refinement-article-pre-restart-result.json",
+      "sha256": "87038fc19d2d843f0902840735a081a7dcce060e31fb21d317fc1700152732c3",
+      "pass": false,
+      "modelPostCount": 0,
+      "error": "expect(locator).toHaveValue(expected) failed\n\nLocator: locator('[data-page=\"article-workbench\"]').getByLabel('段落正文', { exact: true })\nExpected: \"编导读取这个真实段落，候选预览后才采用。\"\nError: element(s) not found\n\nCall log:\n  - Expect \"to.have.value\" with timeout 120000ms\n  - waiting for locator('[data-page=\"article-workbench\"]').getByLabel('段落正文', { exact: true })\n"
+    },
+    {
+      "file": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-diagnosis/text-refinement-article-preflight-body-selector-result.json",
+      "sha256": "fd985b8fc34a06247619e7f357694f73a9290417a98dea187710b10d9b2b873b",
+      "pass": false,
+      "modelPostCount": 0,
+      "error": "expect(locator).toHaveValue(expected) failed\n\nLocator: locator('[data-page=\"article-workbench\"]').getByLabel('段落正文', { exact: true })\nExpected: \"编导读取这个真实段落，候选预览后才采用。\"\nTimeout: 120000ms\nError: element(s) not found\n\nCall log:\n  - Expect \"to.have.value\" with timeout 120000ms\n  - waiting for locator('[data-page=\"article-workbench\"]').getByLabel('段落正文', { exact: true })\n"
+    },
+    {
+      "file": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-diagnosis/text-refinement-article-preflight-selector-result.json",
+      "sha256": "6c55644fea06792fc2366c1088afa403b4859cf2d10df680000e652921edb9d7",
+      "pass": false,
+      "modelPostCount": 0,
+      "error": "expect(locator).toHaveValue(expected) failed\n\nLocator: getByLabel('编导引擎', { exact: true })\nExpected: \"codex\"\nError: strict mode violation: getByLabel('编导引擎', { exact: true }) resolved to 2 elements:\n    1) <div role=\"region\" data-size=\"default\" data-slot=\"section-card\" aria-labelledby=\"section-card-编导引擎\" class=\"group/card flex flex-col gap-(--card-spacing) overflow-hidden rounded-xl bg-card py-(--card-spacing) text-sm text-card-foreground ring-1 ring-foreground/10 [--card-spacing:--spacing(4)] has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:[--card-spacing:--spacing(3)] data-[size=sm]:has-data-[slot=card-footer]:pb-0 *:[img:first-child]:rounded-t-xl *:[img:last-child]:roun…>…</div> aka getByRole('region', { name: '编导引擎' })\n    2) <select aria-label=\"编导引擎\" id=\"assistant-engine\" class=\"h-10 w-full max-w-xs rounded-control border border-border bg-surface px-3 text-sm text-foreground\">…</select> aka getByRole('region', { name: '编导引擎' }).getByLabel('编导引擎')\n\nCall log:\n  - Expect \"to.have.value\" with timeout 120000ms\n  - waiting for getByLabel('编导引擎', { exact: true })\n"
+    },
+    {
+      "file": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-diagnosis/text-refinement-graphic-preflight-engine-unverified-result.json",
+      "sha256": "d278e033997ebfd3da444990f38b2686a522b500b888162a5209c7e8d3ae6667",
+      "pass": false,
+      "modelPostCount": 0,
+      "error": "expect(locator).toBeVisible() failed\n\nLocator: getByRole('status').filter({ hasText: '本地 Codex 文本会话已连接' })\nExpected: visible\nTimeout: 120000ms\nError: element(s) not found\n\nCall log:\n  - Expect \"to.be.visible\" with timeout 120000ms\n  - waiting for getByRole('status').filter({ hasText: '本地 Codex 文本会话已连接' })\n"
+    },
+    {
+      "file": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-diagnosis/text-refinement-graphic-preflight-selection-result.json",
+      "sha256": "2e8d3a6c1b8f494df6a5795b4f81c99c59da9d2b6f3580a8463d4bdeaf2cfb5a",
+      "pass": false,
+      "modelPostCount": 0,
+      "error": "Expected values to be strictly equal:\n+ actual - expected\n\n+ ''\n- '第2页内容：保存真实ID，分页只影响预览。'\n"
+    }
+  ],
+  "corrections": [
+    "编导设置区域与select重名，定位改为实际combobox；文章段落label匹配含正文，改为现有placeholder。真实articles.get200及无pageerror证据留在route-loading。",
+    "图卡选区原Home/Shift+End为空，提交前改为真实ControlOrMeta+A并断言实际UTF16范围。",
+    "文章首轮候选已成功，验收脚本误读顶层editorTarget；修正为chatContext.editorTarget，恢复唯一原source146，无重发模型。",
+    "文章HTML主题跨span强调句子，源码连续substring断言失败；保留原FAIL，对同一原生HTML实际Chromium载入/DOM与可见正文核验通过。",
+    "graphic设置曾实际状态暂未核实，120s观察FAIL且POST0；保留原记录，后续实际public engines200/connected后才首次提交。",
+    "root修复refresh恢复消费者后，原文章候选只读恢复预览/采纳；本子任务没有写产品源码。"
+  ],
+  "limits": [
+    "仅2个不同owner的中性既有稿单字段真实精调验收，不代签T-1070全任务、安装版、最终用户签收。",
+    "两夹具来源/图片为空、未配置nativeLayout；完整document deepEqual验证仅指定正文变化，空字段与默认排版保真不代表实图替换/复杂来源/非空layout验收。",
+    "本轮真实公共UI成功采纳CAS，不将这里视为冲突CAS或其他owner负向测试证据。",
+    "只写BASE/t1070-diagnosis证据与脚本；未改MAIN、控制面、真实库、用户App、root默认脚本组或视频。"
+  ],
+  "scripts": [
+    "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-diagnosis/text-refinement-real.mjs",
+    "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-diagnosis/text-refinement-resume.mjs",
+    "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-diagnosis/text-refinement-article-export-check.mjs",
+    "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-diagnosis/text-refinement-collect-evidence.py"
+  ]
+}

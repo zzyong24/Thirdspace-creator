@@ -53,6 +53,8 @@ export type EditorAdoption = {
 };
 export type EditorState = {
   target: WorkEditorTarget | null;
+  /** 已加载的本地作品身份；刷新恢复不依赖再次发送模型，冻结target仍由prepare产生。 */
+  outputId?: string;
   generation: number;
   dirty: boolean;
 };
@@ -307,9 +309,10 @@ export function DraftChatRequestProvider({
   const previewEditorCandidate = React.useCallback(
     async (candidate: WorkEditorCandidate) => {
       const entry = editorRef.current;
+      const state = entry?.port.readState();
       if (
         !entry ||
-        entry.port.readState().target?.outputId !== candidate.target.outputId
+        (state?.outputId ?? state?.target?.outputId) !== candidate.target.outputId
       )
         return null;
       const result = await entry.port.previewCandidate(candidate);
@@ -322,9 +325,10 @@ export function DraftChatRequestProvider({
   const adoptEditorCandidate = React.useCallback(
     async (candidate: EditorSaveCandidate, requestId: string) => {
       const entry = editorRef.current;
+      const state = entry?.port.readState();
       if (
         !entry ||
-        entry.port.readState().target?.outputId !==
+        (state?.outputId ?? state?.target?.outputId) !==
           editorCandidateOutputId(candidate)
       )
         return null;

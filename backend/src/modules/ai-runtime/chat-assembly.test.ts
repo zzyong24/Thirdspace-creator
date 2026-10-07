@@ -1783,7 +1783,45 @@ it("T-957 账号覆写在原规则后追加偏好时，最终规则仍只保留�
 
 // 新Canvas工具不能扩散到原无Canvas的合法聊天。
 describe('Canvas 受信单画布范围',()=>{
- it('原global/project工具不注册Canvas，普通material.generate仍在',async()=>{const {deps}=makeDeps();for(const input of [{surface:'global'},{surface:'project',projectId:'proj-1'}]){const actual=await prepareChatAssembly(ctx,input,deps);expect(Object.keys(actual.tools)).not.toContain('canvas.read');expect(Object.keys(actual.tools)).not.toContain('canvas.propose');expect(Object.keys(actual.tools)).toContain('material.generate');}});
+it('原global/project工具不注册Canvas，普通material.generate仍在',async()=>{const {deps}=makeDeps();for(const input of [{surface:'global'},{surface:'project',projectId:'proj-1'}]){const actual=await prepareChatAssembly(ctx,input,deps);expect(Object.keys(actual.tools)).not.toContain('canvas.read');expect(Object.keys(actual.tools)).not.toContain('canvas.propose');expect(Object.keys(actual.tools)).toContain('material.generate');}});
  it('真实单画布入口选原Canvas Skill且强制先读，再可propose',async()=>{const {deps}=makeDeps();const actual=await prepareChatAssembly(ctx,{surface:'canvas',selection:{kind:'canvas',ids:['actual-canvas'],label:'用户原画布'}},deps);expect(actual.skillId).toBe('chatbox.canvas');expect(actual.forcedTool).toBe('canvas.read');expect(Object.keys(actual.tools)).toContain('canvas.read');expect(Object.keys(actual.tools)).toContain('canvas.propose');});
  it('多画布与错kind没有可编辑Canvas工具',async()=>{const {deps}=makeDeps();for(const selection of [{kind:'canvas',ids:['a','b']},{kind:'project',ids:['a']}]){const actual=await prepareChatAssembly(ctx,{surface:'canvas',selection},deps);expect(Object.keys(actual.tools)).not.toContain('canvas.read');expect(Object.keys(actual.tools)).not.toContain('canvas.propose');expect(actual.forcedTool).not.toBe('canvas.read');}});
+});
+
+const editorAssemblyTarget = (): Extract<import('@creatoros/contract').WorkEditorTarget,{owner:'wechat_article'}> => ({
+ schemaVersion:1,projectId:'proj-1',outputId:'article-output',owner:'wechat_article',contentType:'article',
+ savedBase:{kind:'artifact',artifactId:'article-artifact',versionId:'article-version'},
+ documentDigest:`sha256:${'a'.repeat(64)}`,selection:{kind:'article_sections',sectionIds:['section']},
+});
+it('编导工具只在真实准备端口确认同保存target后开放，旧聊天与失效functionKey不偷补',async()=>{
+ const readEditorTarget=vi.fn(async(_ctx:RequestContext,target:import('@creatoros/contract').WorkEditorTarget)=>structuredClone(target));
+ const {deps}=makeDeps({readEditorTarget});
+ const target=editorAssemblyTarget();
+ const actual=await prepareChatAssembly(ctx,{surface:'project',projectId:'proj-1',editorTarget:target},deps);
+ expect(readEditorTarget).toHaveBeenCalledWith(ctx,target);
+ expect(Object.keys(actual.tools)).toContain('work.editor.read');expect(Object.keys(actual.tools)).toContain('work.editor.propose');
+ expect(Object.keys(actual.tools)).not.toContain('work.creation.read');
+ for(const surface of ['global','project']){
+  const old=await prepareChatAssembly(ctx,{surface,projectId:surface==='project'?'proj-1':undefined,functionKey:'work.editor.propose'},deps);
+  expect(Object.keys(old.tools)).not.toContain('work.editor.propose');expect(old.forcedTool).not.toBe('work.editor.propose');
+ }
+ await expect(prepareChatAssembly(ctx,{surface:'project',projectId:'proj-1',editorTarget:target},makeDeps().deps)).rejects.toThrow('准备读取端口');
+ await expect(prepareChatAssembly(ctx,{surface:'project',projectId:'proj-1',editorTarget:target},makeDeps({readEditorTarget:async()=>({...target,savedBase:{...target.savedBase,versionId:'new-version'}})}).deps)).rejects.toThrow('准备期间变化');
+});
+it('编导上下文在准备首个await前冻结，外部改selection/消息不污染原target及模型输入',async()=>{
+ let entered!:()=>void,release!:()=>void;const wait=new Promise<void>(r=>release=r),ready=new Promise<void>(r=>entered=r);
+ const {deps}=makeDeps({readEditorTarget:async(_ctx,target)=>{entered();await wait;return target;}});
+ const target=editorAssemblyTarget(),input:Parameters<typeof prepareChatTurn>[1]={messages:[{id:'source',role:'user',parts:[{type:'text',text:'原问题'}]}],chatContext:{surface:'project',projectId:'proj-1',editorTarget:target}};
+ const pending=prepareDurableChatTurn(ctx,input,deps,durableChatSnapshot('acct-current','真实方法'));
+ await ready;target.selection.sectionIds[0]='later-section';input.messages[0]!.parts=[{type:'text',text:'后来改的问题'}];release();
+ const frozen=await pending;expect(frozen.hostContext.chatContext.editorTarget?.selection).toMatchObject({sectionIds:['section']});
+ expect(JSON.stringify(frozen.modelMessages)).toContain('原问题');expect(JSON.stringify(frozen.modelMessages)).not.toContain('后来改的问题');
+});
+it('联合创作准备先确认真实source/member并冻结两个短工具顺序',async()=>{
+ const target:import('@creatoros/contract').WorkCreationTarget={schemaVersion:1,clientRequestId:'creation-assembly-request',projectId:'proj-1',compositionId:'composition',compositionRevision:1,scriptSourceRef:{kind:'project_script',id:'script',versionId:'script-version'},scriptConfirmation:{confirmedBy:'user',source:'current-click'},articleMember:{kind:'article',outputId:'a',artifactId:'aa',baseVersionId:'av'},graphicMember:{kind:'image',outputId:'g',artifactId:'ga',baseVersionId:'gv'}};
+ const reader=vi.fn(async(_ctx:RequestContext,value:typeof target)=>structuredClone(value)),{deps}=makeDeps({readCreationTarget:reader});
+ const actual=await prepareChatAssembly(ctx,{surface:'project',projectId:'proj-1',creationTarget:target},deps);
+ expect(reader).toHaveBeenCalledWith(ctx,target);expect(actual.forcedToolSequence).toEqual(['work.creation.read','work.creation.propose']);
+ expect(Object.keys(actual.tools)).toContain('work.creation.read');expect(Object.keys(actual.tools)).toContain('work.creation.propose');expect(Object.keys(actual.tools)).not.toContain('work.editor.read');
+ await expect(prepareChatAssembly(ctx,{surface:'project',projectId:'proj-1',creationTarget:target,editorTarget:editorAssemblyTarget()},deps)).rejects.toThrow('只能冻结一种');
 });

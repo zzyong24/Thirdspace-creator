@@ -1,0 +1,181 @@
+{
+  "task": "T-1070",
+  "review_kind": "必要实现消费者归档成员增补；只读范围复核，不是新合同评审轮",
+  "reviewed_at_utc": "2026-10-07T11:59:52.693095+00:00",
+  "verdict": "GO_FOR_EXACT_SEVEN_ARCHIVE_MEMBERS_IMPLEMENTATION_SCOPE",
+  "summary": "同页暖缓存证据与实际归档消费者一致。六个原有源码成员及一个新增真实消费者回归测试，是恢复已确认原生候选预览像素正确性的最小闭包，可准入；未签实现、修复后实际首帧、CAS、导出或安装通过。",
+  "main": {
+    "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+    "head": "b6773bc888f441890be9741dc501d39c7837439f"
+  },
+  "bindings": {
+    "docs/features/t1070-director-script-workflow/PIXEL_VERSION_INTEGRATION.md": "6d7cad00322f36c84a030fae00d29e09b69523f6e96207ccd44dbb44448002ff",
+    "docs/verification/t1070/native-warm-root-cause.json": "ced96f01939fabd9557bc2d3e270f849b2ba38450b29f3f651303f7c3eb42862",
+    "docs/features/t1070-director-script-workflow.md": "2513aedb1164f3ce99b0a81ea25dc4a0e79853cbda5374ce49a75fbf89c871e9",
+    "docs/features/t1070-director-script-workflow/CONTRACT.json": "fae774ebfe3a20097a93e8bfbc4189069345c0852600940c1e8efadb5ece0a0b",
+    "orchestrator/SYSTEM_ARCHITECTURE.md": "3efbb0394b8bcc9eb3c9ad7e8c9364df51e336006b862e02ac71fd6c9327971e",
+    "frontend/public/reference-editors/sources/opencut-classic/native-source.tar.gz": "c9e6fb104f2802d03d443efd44b411b7ca2d7d9241a64caa5fd39eefccfe44db",
+    "frontend/public/reference-editors/sources/opencut-classic/native-patches.diff": "3b9522280a5f94535711cde666ad06b55b8c8d6e7d9271752ee4594115492bd2",
+    "frontend/public/reference-editors/sources/opencut-classic/native-from-t1046.patch": "3b9522280a5f94535711cde666ad06b55b8c8d6e7d9271752ee4594115492bd2",
+    "frontend/public/reference-editors/opencut-classic/native/native.js": "58f42ac9a39500ddf6c6bcfab3df79eb4c8477ae2d61afaf4a852e2a77a5cb5e",
+    "frontend/public/reference-editors/opencut-classic/native/NATIVE_BUILD_GRAPH.json": "7811696e241d5c7e188926e85159db107f861e34524a48507679c72a3bee418f",
+    "reference-editors/manifest.json": "5624bd207768d594ff952a71b11ecfe8d38fad50802a34a7f4bb07a22fad0914",
+    "frontend/scripts/verify-native-editors.mjs": "9ef092cb28f6d52cd12cfabba06f70135a7a2466cbd6ac8791914fc56d916537"
+  },
+  "archive_member_baselines": {
+    "apps/web/src/services/renderer/resolve.ts": {
+      "sha256": "b919790fd9fd75dce6da530816d1be66d84b75660808bd5d7f84f746de3874b7",
+      "exists": true
+    },
+    "apps/web/src/services/renderer/nodes/visual-node.ts": {
+      "sha256": "2b79b61dbd0d6363401995d9921e2dc054b7442629e45162232599f6921de38b",
+      "exists": true
+    },
+    "apps/web/src/services/renderer/nodes/blur-background-node.ts": {
+      "sha256": "ec340b80552fecca889bf771138c0d0e1d9e57eaa4b5ea82627aa9c47cfba1af",
+      "exists": true
+    },
+    "apps/web/src/services/renderer/compositor/types.ts": {
+      "sha256": "6eefe4b85d2026918174e3b746625c8de6983231759e89a43a2dac3a56dcdff4",
+      "exists": true
+    },
+    "apps/web/src/services/renderer/compositor/frame-descriptor.ts": {
+      "sha256": "734a2d9e779a37b1b37e431c666abb7c72a1a61dac2198a069302758bd21e0b5",
+      "exists": true
+    },
+    "apps/web/src/services/renderer/compositor/wasm-compositor.ts": {
+      "sha256": "494820b0b7fea81b3668268f45e8852e56104b82f1f21349b7288ab5595809a7",
+      "exists": true
+    },
+    "apps/web/src/services/renderer/compositor/__tests__/texture-content-version.test.ts": {
+      "sha256": null,
+      "exists": false
+    },
+    "apps/web/src/services/video-cache/service.ts": {
+      "sha256": "9c4e1000894ffa56744b98c3ce5601659caf7aa860830ee62f5a89f34e1a42aa",
+      "exists": true
+    }
+  },
+  "findings": {
+    "blocker": [],
+    "major": [],
+    "minor": []
+  },
+  "confirmed_facts": [
+    {
+      "path": "docs/verification/t1070/native-warm-root-cause.json",
+      "events": [
+        3,
+        6,
+        16,
+        18,
+        19,
+        22,
+        24,
+        25
+      ],
+      "detail": "同canvas2：timestamp0像素1473438556已上传；timestamp1像素2956356774已真实改变，却identityHit=true未上传。后续canvas5 identityHit=false才上传。日志副本的时间扰动限制及未instrument原新bundle暖首帧失败均保留，不以冷渲染六族PASS覆盖。"
+    },
+    {
+      "archive_member": "apps/web/src/services/renderer/compositor/wasm-compositor.ts",
+      "lines": [
+        100,
+        106,
+        117,
+        133
+      ],
+      "detail": "当前external cache只比较source对象与尺寸。upload后才cache.set；新增内容版本应沿此成功上传后的原顺序记录。"
+    },
+    {
+      "archive_member": "apps/web/src/services/renderer/compositor/frame-descriptor.ts",
+      "lines": [
+        134,
+        144,
+        242,
+        249
+      ],
+      "detail": "blur contentHash只含source identity/尺寸；external descriptor尚未传帧版本，两个路径均须补齐。"
+    },
+    {
+      "archive_member": "apps/web/src/services/renderer/resolve.ts",
+      "lines": [
+        205,
+        229,
+        426,
+        439
+      ],
+      "detail": "视频和视频blur均取得真实WrappedCanvas但只传canvas/尺寸；实际timestamp已有，无需新解码协议。"
+    },
+    {
+      "archive_member": "apps/web/src/services/video-cache/service.ts",
+      "lines": [
+        29,
+        62,
+        114,
+        118,
+        291,
+        305
+      ],
+      "detail": "读取以mediaId为键并串行；CanvasSink按每媒体创建poolSize3；帧覆盖判断已用实际timestamp/duration。该源码只读，不增补写集。独立媒体池的不同Canvas身份仍受原identity守卫。"
+    }
+  ],
+  "scope": {
+    "exact_new_archive_members": [
+      "apps/web/src/services/renderer/resolve.ts",
+      "apps/web/src/services/renderer/nodes/visual-node.ts",
+      "apps/web/src/services/renderer/nodes/blur-background-node.ts",
+      "apps/web/src/services/renderer/compositor/types.ts",
+      "apps/web/src/services/renderer/compositor/frame-descriptor.ts",
+      "apps/web/src/services/renderer/compositor/wasm-compositor.ts",
+      "apps/web/src/services/renderer/compositor/__tests__/texture-content-version.test.ts"
+    ],
+    "existing_members_modified": 6,
+    "new_test_members_added": 1,
+    "original_formal_contract_paths": 93,
+    "current_main_product_paths": 99,
+    "count_rule": "七项是已有归档容器内的精确成员，不是七条MAIN散落产品路径；原formal93不改，已准入MAIN99不因成员数直接加7。",
+    "delivery_paths": [
+      "frontend/public/reference-editors/sources/opencut-classic/native-source.tar.gz",
+      "frontend/public/reference-editors/sources/opencut-classic/native-patches.diff",
+      "frontend/public/reference-editors/sources/opencut-classic/native-from-t1046.patch",
+      "frontend/public/reference-editors/opencut-classic/native/native.js",
+      "frontend/public/reference-editors/opencut-classic/native/NATIVE_BUILD_GRAPH.json",
+      "reference-editors/manifest.json",
+      "frontend/scripts/verify-native-editors.mjs"
+    ],
+    "delivery_rule": "仍原七个交付路径；verifier仅在实际模块来源绑定确需改变时修改。native.css/许可/锁依赖不改，不新建chunk或目录通配。",
+    "necessity": "resolve取得实际帧版本；visual/blur类型保留该字段；descriptor传入原external与derived cache；compositor判断并记账；新增测试执行实际消费者。删任意一环会漏掉版本或无法验证已证实的暖缓存缺口。",
+    "no_expansion": [
+      "公共API或preview协议",
+      "Owner/权限或归属",
+      "模型/工具授权",
+      "runtime/依赖/语言/执行机制",
+      "候选剪辑时间/创作决策",
+      "CAS/Undo/保存版本语义",
+      "正式合同轮次重置"
+    ]
+  },
+  "implementation_and_acceptance_requirements": [
+    "只用实际解码frame.timestamp，不用请求timeline time、Date.now、渲染计数或创作判断；timestamp0须作为合法版本透传。",
+    "视频正常和blur两链均贯通；静态来源不带版本仍保原identity缓存；同Canvas同尺寸同实际版本命中，变版本才重新上传；不每帧全清缓存、不像素遍历哈希。",
+    "保identity和尺寸守卫及原释放/生命周期路径；仅成功upload后记录版本，失败不得把尚未上传的版本记成命中。未知/非有效版本不得伪称已验证新帧。",
+    "新增测试须实际经过原WasmCompositor上传分支和实际frame descriptor/blur消费者：同池canvas0→1产生真实第二次upload，重复1/静态保持命中；覆盖零timestamp、upload失败后重试、来源/尺寸变化原守卫。测试未执行之前不标RED/GREEN。",
+    "固定base加完整累计patch重建零差异；native-source两patch/graph/manifest实际hash同步；锁依赖不变、类型及原tests、新测试、两次真实生产构建byte一致。",
+    "实际React同页已warm原0秒→同正确持久candidate97首帧source24；真实5秒MP4首帧对应1秒后，才进行既有owner CAS/Undo/手动编辑/保存切Tab/刷新/导出验证。不用冷实例或日志probe替代正式暖首帧。",
+    "原三次FAIL、revision4未CAS、研究block和旧证据完整保留；本GO仅准入精确成员，不转写产品完成或安装PASS。"
+  ],
+  "evidence_limits": {
+    "new_tests_run_by_this_reviewer": 0,
+    "new_model_calls": 0,
+    "new_ffmpeg_calls": 0,
+    "browser_actions": 0,
+    "user_database_access": false,
+    "production_or_control_edits": false,
+    "implementation_exists": false,
+    "fixed_native_warm_first_frame_pass": false,
+    "owner_cas_pass": false,
+    "export_pass": false,
+    "install_pass": false
+  },
+  "write_boundary": "本次只写此独立报告；没有修改MAIN/源码/控制面或运行taskctl/reviewctl。"
+}

@@ -1,0 +1,57 @@
+{
+  "schema": "t1070-native-persisted-candidate-recovery-plan-review@1",
+  "reviewer": "/root/t1070_native_diff_review",
+  "reviewedAt": "2026-10-07T11:43:44.165761+00:00",
+  "reviewScope": "只读评审恢复消费者最小方案，不是实现或浏览器闭环PASS",
+  "verdict": "ACCEPTABLE_WITH_EXPLICIT_INVARIANTS",
+  "allowedScope": [
+    "现有EditorState增加当前loaded outputId局部身份；article/graphic/video端口从真实当前loaded owner提供；WorkEditorTarget仍只由prepareForTurn冻结，不伪造target。",
+    "Provider根据注册端口真实outputId路由preview/adopt；不加后端service、公共DTO、权限来源、凭据或执行机制。",
+    "视频持久候选在同原production/output/project/revision、完整保存plan摘要和当前native scene/tracks前值匹配后，用新mount实际当前epoch给原native只读preview lock。",
+    "采用仍用候选原expectedRevision/expectedBeforeDigest和稳定原requestId，不自动save/rebase、不重启模型。"
+  ],
+  "invariants": [
+    "跨scope/output/production/project或saved revision漂移必须拒绝新的预览/采纳；UI身份只能定位端口，服务器三维owner授权不变。",
+    "实际current saved plan全digest必须等于冻结documentDigest，native当前目标scene tracks digest等于apply原expectedBeforeDigest，且完整before tracks深等。candidateDigest仍原完整scene。",
+    "当前native dirty、pending save/apply/export、imports、busy/playback状态都需按原边界核，等待和最终锁取得之间防新变化。",
+    "同真实mount签发候选仍守原epoch；跨新mount不能把旧epoch当当前身份，只能完整前值核验后采用现在真实epoch。",
+    "原UNKNOWN固定body/key回执恢复、已保存未同步、exact/current读回与单次apply/undo手工修改保护必须保持。"
+  ],
+  "specificRisks": [
+    {
+      "id": "RECOVERY-MOUNT-COUNTER",
+      "level": "必须覆盖",
+      "source": "frontend/src/features/reference-editors/project-video-session-host.tsx:24与video-reference-workbench.tsx:169",
+      "observed": "sessionIdentity.generation来自模块let sequence，刷新重置，旧97 frozen editorGeneration=1，新mount也可能1。",
+      "requirement": "不能只比较String数字判断same mount；使用已在本mount签发的local证据或每次真实mount唯一身份。旧持久numeric generation应走完整恢复证明，不能为了通过浏览器直接改旧target/epoch。"
+    },
+    {
+      "id": "RECOVERY-ORIGINAL-RECEIPT",
+      "level": "必须覆盖",
+      "source": "video-reference-workbench.tsx:175–186及原acceptVersion/resumeNativeReceipt",
+      "observed": "服务已成功写入却响应丢失时，latest revision超过旧candidate base；局部Map跨mount丢失。",
+      "requirement": "新增base检查不得阻断同body/key的既有receipt恢复；允许先取原幂等回执并核exact/current，再在无dirty/前值正确时同步。新候选请求仍严格原CAS，不改基准。"
+    },
+    {
+      "id": "RECOVERY-LOCAL-DRIFT",
+      "level": "必须覆盖",
+      "requirement": "同mount epoch/selection漂移拒绝；跨mount当前native内容/目标scene不同、dirty/pending/busy拒绝；完整plan摘要一致不能单独放宽当前native手工改动。"
+    }
+  ],
+  "requiredConsumerCases": [
+    "target null但真实loaded outputId匹配时实际preview端口进入，跨output拒绝",
+    "fresh mount旧numeric generation同值但完整原before一致可恢复，不用再发AI或save提升revision",
+    "同mount selection epoch变化保原拒绝",
+    "新mount saved plan/content/scene tracks漂移拒绝",
+    "busy/pending/import/dirty拒绝",
+    "旧CAS同requestId丢响应→fresh mount exact原receipt恢复且不二次apply",
+    "原用户undo或后续manual改动保持saved-not-synced，不重覆候选",
+    "真实持久candidate97新版MP4首帧1.000/frame24→CAS→native undo/manual/save/tab/reload/export"
+  ],
+  "authority": [
+    "SPEC:37局部端口、43原CAS/UNKNOWN、45native只读preview/undo/恢复、103刷新持久候选",
+    "现严格contract/work-editor.ts nativeSelection含contextEpoch/editorGeneration；恢复不新增或放宽DTO"
+  ],
+  "currentAcceptanceState": "未CAS；原owner77 revision4原6秒，旧228与preview首帧FAIL和恢复target null FAIL均保留",
+  "noSourceOrControlWrites": true
+}

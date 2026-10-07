@@ -1,0 +1,144 @@
+{
+  "schema": "creatoros/t1070-note-preview-consumer-scope-independent-review@1",
+  "task_id": "T-1070",
+  "reviewer": "/root/final_scope_recheck",
+  "created_at": "2026-10-07T08:07:00.411496+00:00",
+  "review_kind": "同一已确认需求必要挂载消费者范围复核；非新合同轮、不reset cycle",
+  "verdict": "GO_FOR_EXACT_TWO_PATH_IMPLEMENTATION_ADMISSION",
+  "summary": "可准入原native-editor-surface及原测试两路径，仅editor===noterelay恢复原既有auto滚动策略。当前inline overflow:hidden确实覆盖NoteRelay mount实际container的原CSS auto；完整正文/卡片不可读直接妨碍原SPEC候选实际审读。该源头修正是正确性闭包，无新API/runtime/owner/权限/模型/协议；不以load/previewReady代签完整稿可读。",
+  "main": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "observed_head": "88a51816beebb0e109b65cf4b8dd1fd944b827c3",
+  "reviewed_sha256": {
+    "docs/features/t1070-director-script-workflow/NOTE_PREVIEW_INTEGRATION.md": "423ce2949c10c70d08979cc939e8d9e81c708318b173e2e891e10a0405c64666",
+    "docs/features/t1070-director-script-workflow.md": "2513aedb1164f3ce99b0a81ea25dc4a0e79853cbda5374ce49a75fbf89c871e9",
+    "docs/features/t1070-director-script-workflow/CONTRACT.json": "fae774ebfe3a20097a93e8bfbc4189069345c0852600940c1e8efadb5ece0a0b",
+    "docs/verification/t1070/current-visual-review.json": "1aaef3cc0e3541351951bc339716f7ccded046b3f60e2d851cf54c07f221f101",
+    "orchestrator/SYSTEM_ARCHITECTURE.md": "3efbb0394b8bcc9eb3c9ad7e8c9364df51e336006b862e02ac71fd6c9327971e",
+    "frontend/src/features/reference-editors/native-editor-surface.tsx": "ef94cbc3bd923da29a46ac44570918dd62d9cb559f87358b4174e77cdd301e8d",
+    "frontend/src/features/reference-editors/native-editor-surface.test.tsx": "5c7f0ed86fc6db7da520abdb16938da8e72be803f48c2468c648663761d462f1",
+    "frontend/src/features/reference-editors/native-editor-contract.ts": "b1671cf42e39fba71467a45160bf539bac761c2b4f7483da8ee1c83195f42093",
+    "frontend/src/features/reference-editors/noterelay/noterelay-editor.tsx": "7c4391845aafe2e40908a1f7f5edd16ee0590a2789a3d78b3a332768dea43582",
+    "frontend/src/features/copilot/chat-work-editor-card.tsx": "ce6f6f50f91a140335be271a531cde21fb2a153de5915bbb9903972b6b55b656",
+    "frontend/src/features/copilot/chat-work-creation-card.tsx": "6c7dfc25f36d7d16eb68158c078b94896ba5979dce5454bd090d489b065a69e5",
+    "reference-editors/noterelay/web/native.ts": "2cfdbecb0fea02352e64c6c8a350fc622fda8c5286e9276b1ca6e9d1cb30c212",
+    "reference-editors/noterelay/web/native.css": "a107dc4f9f6c61ada81dee6e968e7bd9372441de615b9f18e6e0df423ac39f33",
+    "frontend/public/reference-editors/noterelay/native/native.css": "e379e8cc8d1d90e49a09fe2af5ef813d231411fd902cee32bf1be908675612bf",
+    ".agents/skills/oil-ui-pro/SKILL.md": "a623059117b5afdeaf437a6ac0944040ba666b0847e520cfe4fa42cc1ea1cec2",
+    "docs/features/t1022-account-group-workspace/UI_RULES.md": "a19d209281fe1a51463c7c2b8a063c3fa117d53679762f33d8c9637004bc8d76"
+  },
+  "exact_scope": {
+    "preserved_original_contract_write_set": 93,
+    "previous_admitted_consumer_paths": [
+      "frontend/src/features/script/script-structure-view.tsx",
+      "frontend/src/features/script/script-structure-view.test.tsx"
+    ],
+    "previous_implementation_write_set": 95,
+    "additive_consumer_paths": [
+      "frontend/src/features/reference-editors/native-editor-surface.tsx",
+      "frontend/src/features/reference-editors/native-editor-surface.test.tsx"
+    ],
+    "additive_implementation_write_set": 97,
+    "original_spec_contract_unchanged": true,
+    "already_admitted_local_consumers": [
+      "frontend/src/features/reference-editors/noterelay/noterelay-editor.tsx",
+      "frontend/src/features/copilot/chat-work-editor-card.tsx",
+      "frontend/src/features/copilot/chat-work-creation-card.tsx"
+    ],
+    "boundary": "两个新增路径只恢复NoteRelay容器原滚动策略及验证，已准入卡片/NoteRelay路径内可用既有Dialog形成有界宽审读表面；未授权其它产品路径、native源码/bundle/archive/public API或宿主消息协议变动"
+  },
+  "actual_read_evidence": [
+    {
+      "path": "frontend/src/features/reference-editors/native-editor-surface.tsx",
+      "line": 73,
+      "observation": "新建原生mount容器inline style设置overflow:hidden；它不是单页装饰覆盖，而是所有原生消费者共用的真正mount节点。"
+    },
+    {
+      "path": "reference-editors/noterelay/web/native.ts",
+      "line": 18,
+      "observation": "mount直接接收这个container，line24为其添加creatoros-noterelay-native class；没有创建第二个代替scroll根。"
+    },
+    {
+      "path": "reference-editors/noterelay/web/native.css",
+      "line": 1,
+      "observation": "原CSS creatoros-noterelay-native已声明height:100%;min-height:0;overflow:auto；公开native.css line238同策略，普通CSS不能覆盖该节点inline hidden。"
+    },
+    {
+      "path": "frontend/src/features/reference-editors/noterelay/noterelay-editor.tsx",
+      "line": 72,
+      "observation": "声明editor=noterelay沿原NativeEditorSurface挂载，owner/ref/mountVersion/epoch原样；外部preview尺寸边界存在。"
+    },
+    {
+      "path": "frontend/src/features/reference-editors/native-editor-surface.tsx",
+      "line": 63,
+      "observation": "原owner同组account筛选不重建，跨group/project/output/sourceVersion取消旧实例；request signal/900000ms预算、CSS120000ms加载预算、dispose/late response保护都与overflow独立。"
+    },
+    {
+      "path": "frontend/src/features/reference-editors/native-editor-surface.test.tsx",
+      "line": 16,
+      "observation": "现8个真实ShadowRoot/挂载stub消费者回归覆盖owner/直接handle、主题不重建、换作品迟到回执、卸载、加载失败、同ID在途/超时、同组平台与跨组、请求signal；原断言须保留。"
+    },
+    {
+      "path": "frontend/src/features/copilot/chat-work-creation-card.tsx",
+      "line": 192,
+      "observation": "候选NoteRelay独立只读实例可page/export，onPreviewReady只反映实际load完成，不证明全文与全部卡片在可见区读完。"
+    }
+  ],
+  "visual_evidence_reference": {
+    "path": "docs/verification/t1070/current-visual-review.json",
+    "sha256": "1aaef3cc0e3541351951bc339716f7ccded046b3f60e2d851cf54c07f221f101",
+    "finding": "VIS-M02",
+    "source": "此前独立执行者真实浏览器走查，本agent只读报告、不重复执行/关闭视觉finding",
+    "measurements": "1366x900：图文可见205–217px/卡450px/scrollWidth474，overflowX hidden；文章673/6268或673/2922，overflowY hidden。",
+    "interpretation": "翻页页码变化与previewReady均不足以证明原用户能审读完整内容；auto恢复允许真实滚动，最终效果仍需相同候选取证。",
+    "VIS_M01": "本次两新增路径针对VIS-M02；脚本工作台外层滚动VIS-M01需在既有准入布局消费者另修与实测，不套用本结论称已关闭。"
+  },
+  "authority_assessment": {
+    "authorized_correctness": "原SPEC行31/33/65要求可读、翻页、只读候选及实际预览后采纳。不能用不可读的预览完成信号放行验收；恢复原已有滚动是原可用路径，不新增创作能力。",
+    "api_and_runtime": "只改固定editor discriminator对应的容器样式；NativeEditorOwner/Handle/Options/request/update/loader原公共类型与runtime不变。无新跨iframe/message机制，无新模型、任务、权限或数据写。",
+    "read_only": "readOnlyCandidate布局禁写但page/export保持；不能disabled/inert预览、把preview完成改成保存成功，CAS/UNKNOWN/frozen source仍守原约束。",
+    "oil_scope": "已读项目oil-ui-pro0.10.0、existing-project/layout-and-viewport及UI_RULES。沿原紫色工作台、tokens/Button/Dialog，修源头不侵入私有DOM、不换视觉方向。本轮是源码范围复核，未看当前浏览器画面或评分。"
+  },
+  "findings": [],
+  "counts": {
+    "blocker": 0,
+    "major": 0,
+    "minor": 0
+  },
+  "required_implementation_gates": [
+    {
+      "id": "NP-01",
+      "requirement": "只对声明noterelay恢复auto，kuaitu/opencut-classic/doocs-md仍hidden；真实mount container/ShadowRoot样式RED→GREEN，不靠screen文本stub假证明滚动。"
+    },
+    {
+      "id": "NP-02",
+      "requirement": "保原8挂载回归与owner/ref/epoch/signal/期限/同组平台不remount/跨组取消/主题update/卸载迟到清理；不改bundle/archive/接口/请求或业务API。"
+    },
+    {
+      "id": "NP-03",
+      "requirement": "同一真实候选完整读到文章第5章/结尾，图文每页左右边缘与标题正文可达；page/export真实有效。源码auto或loadReady本身不签可读性，采纳仍原用户明确操作。"
+    },
+    {
+      "id": "NP-04",
+      "requirement": "宽预览沿既有Dialog，本地打开，不等整页加载；有界视口与一个明确主阅读滚动区，避免页面/浮层/原生多层争滚；标题、关闭、分页/原交付操作可达。"
+    },
+    {
+      "id": "NP-05",
+      "requirement": "保同一独立candidate实例/owner/frozen内容与原readonly边界；打开/关闭不能另挂同内容第二实例、重置正式稿/聊天、冒写layout，也不能把UNKNOWN变saved。"
+    },
+    {
+      "id": "NP-06",
+      "requirement": "1366x900、1280x800、1024窄窗、真实200%以原同数据实测鼠标/键盘Tab/PageDown/Esc/焦点返回；不缩文字到不可读，不以隐滚动条/裁切/disabled/inert冒充可审读。触本地浮层路径运行原LED047等适用门禁。"
+    }
+  ],
+  "diagram": "候选预览 → 原隔离NoteRelay mount容器（原CSS auto恢复） → 全文/整卡真实滚动与分页 → 用户明确采纳；保存/CAS/UNKNOWN不改",
+  "verification": "只读当前文档/源码/CSS/API/测试及hash，未运行测试、浏览器、模型、用户库或reviewctl；本报告不制造未来RED/GREEN、视觉关闭或安装PASS。",
+  "mutations": {
+    "repo": false,
+    "product": false,
+    "controlplane": false,
+    "browser": false,
+    "models": false,
+    "user_db": false,
+    "writes": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-diagnosis/note-preview-scope-review.json"
+  }
+}

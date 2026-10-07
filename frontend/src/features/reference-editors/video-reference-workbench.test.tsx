@@ -1,7 +1,7 @@
 import * as React from 'react';
 import {render,screen,fireEvent,waitFor,cleanup} from '@testing-library/react';
 import {beforeEach,afterEach,it,expect,vi} from 'vitest';
-const h=vi.hoisted(()=>({request:vi.fn(),changed:null as null|(()=>void),saved:vi.fn(),client:{getOutput:vi.fn(),saveProductionEditor:vi.fn(),getProductionEditorVersion:vi.fn(),getProductionEditor:vi.fn()},rough:null as any,missing:false,failApply:false}));
+const h=vi.hoisted(()=>({request:vi.fn(),changed:null as null|(()=>void),saved:vi.fn(),client:{getOutput:vi.fn(),saveProductionEditor:vi.fn(),getProductionEditorVersion:vi.fn(),getProductionEditor:vi.fn(),applyProductionEditor:vi.fn()},rough:null as any,missing:false,failApply:false}));
 vi.mock('@/lib/contract-client',()=>({client:h.client}));
 vi.mock('./reference-editor-media',()=>({readEditorMedia:vi.fn(async()=>{if(h.missing)throw Error('不可选素材暂不可读');return new File(['video'],'原片.mp4',{type:'video/mp4'});}),uploadEditorMedia:vi.fn(),downloadEditorExport:vi.fn()}));
 vi.mock('./native-editor-surface',()=>({NativeEditorSurface:React.forwardRef(function Frame(props:any,ref:any){React.useImperativeHandle(ref,()=>({request:h.request}),[]);h.changed=props.onChanged;React.useEffect(()=>{props.onReady();},[]);return <div>真实原生编辑器边界</div>;})}));
@@ -10,7 +10,7 @@ vi.mock('./native-source-panel',()=>({NativeSourcePanel:()=>null}));
 vi.mock('@/features/production/production-transcript-panel',()=>({ProductionTranscriptPanel:()=>null}));
 vi.mock('@/features/production/production-rough-candidate-panel',()=>({ProductionRoughCandidatePanel:(props:any)=>{h.rough=props;return <div>同工程粗剪建议</div>;}}));
 import {VideoReferenceWorkbench} from './video-reference-workbench';
-import {DraftChatRequestProvider,useDraftChatRequest} from '@/features/draft-workbench/draft-chat-request';
+import {DraftChatRequestProvider,useDraftChatRequest,editorDigest} from '@/features/draft-workbench/draft-chat-request';
 const source={sourceId:'source',assetId:'asset',assetFileId:'file',fileDigest:'a'.repeat(64),probeDigest:'b'.repeat(64),timebase:{num:1,den:120000},durationTicks:720000,hasAudio:true};
 const tracks={main:{id:'main',type:'video',elements:[{id:'clip',type:'video',mediaId:'media',name:'原片',startTime:0,duration:720000,trimStart:0,trimEnd:0}]},overlay:[{id:'text',type:'text',elements:[{id:'title',type:'text',content:'独立标题',startTime:0,duration:720000,trimStart:0,trimEnd:0}]}],audio:[]};
 const native={metadata:{id:'output',name:'测试稿'},currentSceneId:'scene',scenes:[{id:'scene',tracks}],settings:{},version:31,mediaMetadata:[{mediaId:'media',name:'原片.mp4',type:'video'}]};
@@ -21,18 +21,67 @@ beforeEach(()=>{vi.clearAllMocks();sessionStorage.clear();local=structuredClone(
 afterEach(cleanup);
 let director:ReturnType<typeof useDraftChatRequest>;
 function DirectorProbe(){director=useDraftChatRequest();return null;}
+it('重新打开工程还原已保存素材mtime与原bytes，不能把下载时刻当成用户修改',async()=>{
+ const savedPlan=structuredClone(plan);(savedPlan.referenceEditor.nativeDocument.mediaMetadata[0] as any).lastModified=1700000000123;
+ render(<VideoReferenceWorkbench initial={{...initial,plan:savedPlan}} title="还原原素材" onOriginal={()=>{}} onSaved={h.saved}/>);
+ await waitFor(()=>expect(screen.getByRole('button',{name:'保存工程'})).toBeEnabled());
+ const file=h.request.mock.calls.find(row=>row[0]==='load')![1].media[0].file as File;
+ expect(file.lastModified).toBe(1700000000123);expect(file.name).toBe('原片.mp4');expect(file.type).toBe('video/mp4');expect(await file.text()).toBe('video');
+ expect(h.client.saveProductionEditor).not.toHaveBeenCalled();
+});
+it('刷新恢复原视频候选用真实已保存前值和现在epoch；不发模型、不保存、不加载替代工程',async()=>{
+ const original=h.request.getMockImplementation()!;
+ h.client.getProductionEditor.mockResolvedValue(initial);
+ h.request.mockImplementation(async(op:string,payload:any)=>{if(op==='preview-scene')return{blob:new Blob(['真实预览端口']),fileName:'恢复候选.mp4',sceneId:payload.targetSceneId,candidateDigest:payload.candidateDigest,contextEpoch:payload.baseContextEpoch};return original(op,payload);});
+ render(<DraftChatRequestProvider><DirectorProbe/><VideoReferenceWorkbench sessionIdentity={{scopeKey:'account:account',projectId:'project',outputId:'output',generation:71}} initial={initial} title="恢复剪辑候选" onOriginal={()=>{}} onSaved={h.saved}/></DraftChatRequestProvider>);
+ await waitFor(()=>expect(screen.getByRole('button',{name:'保存工程'})).toBeEnabled());
+ const beforeDigest=await editorDigest(tracks),documentDigest=await editorDigest(plan);
+ const target:any={schemaVersion:1,projectId:'project',outputId:'output',owner:'production',contentType:'video',savedBase:{kind:'production',productionId:'production',revision:1},documentDigest,selection:{kind:'native_scene',sceneId:'scene',elementRefs:[],playheadTick:0,contextEpoch:999,editorGeneration:'71'}};
+ const candidate:any={kind:'work.editor.candidate',target,candidate:{kind:'native_scene',document:{...local.scenes[0],tracks:{...tracks,main:{...tracks.main,elements:[]}}}},candidateDigest:'sha256:'+'c'.repeat(64),apply:{operation:'applyProductionEditor',outputId:'output',body:{expectedRevision:1,edits:[{type:'replaceNativeSceneTracks',sceneId:'scene',expectedBeforeDigest:beforeDigest,tracks:{...tracks,main:{...tracks.main,elements:[]}}}]}}};
+ const loadCount=h.request.mock.calls.filter(row=>row[0]==='load').length;
+ expect((await director.previewEditorCandidate(candidate))?.fileName).toBe('恢复候选.mp4');
+ expect(h.request.mock.calls.find(row=>row[0]==='preview-scene')?.[1].baseContextEpoch).toBe(7);
+ h.client.getProductionEditor.mockResolvedValue({...initial,revision:2});
+ await expect(director.previewEditorCandidate(candidate)).rejects.toThrow(/基准工程/);
+ h.client.getProductionEditor.mockResolvedValue(initial);
+ local.scenes[0].tracks.main.elements[0].duration=600000;
+ await expect(director.previewEditorCandidate(candidate)).rejects.toThrow(/时间轴/);
+ expect(h.request.mock.calls.filter(row=>row[0]==='preview-scene')).toHaveLength(1);
+ expect(h.request.mock.calls.filter(row=>row[0]==='load')).toHaveLength(loadCount);
+ expect(h.request.mock.calls.some(row=>row[0]==='apply-tracks')).toBe(false);
+ expect(h.client.saveProductionEditor).not.toHaveBeenCalled();
+});
+it('刷新后原已保存但ACK未知的采纳重用原body/key，不能被旧revision阻断或重复apply',async()=>{
+ const after=structuredClone(plan);after.referenceEditor.nativeDocument.scenes[0].tracks.main.elements=[];local=structuredClone(after.referenceEditor.nativeDocument);
+ const receipt:any={...initial,revision:2,plan:after,requestId:'原采纳请求'};
+ h.client.applyProductionEditor.mockResolvedValue(receipt);
+ h.client.getProductionEditor.mockResolvedValue(receipt);
+ h.client.getProductionEditorVersion.mockImplementation(async({params}:any)=>({...initial,revision:params.revision,plan:params.revision===1?plan:after}));
+ render(<DraftChatRequestProvider><DirectorProbe/><VideoReferenceWorkbench initial={receipt} title="恢复原采纳" onOriginal={()=>{}} onSaved={h.saved}/></DraftChatRequestProvider>);
+ await waitFor(()=>expect(screen.getByRole('button',{name:'保存工程'})).toBeEnabled());
+ const body={expectedRevision:1,edits:[{type:'replaceNativeSceneTracks',sceneId:'scene',expectedBeforeDigest:await editorDigest(tracks),tracks:after.referenceEditor.nativeDocument.scenes[0].tracks}]};
+ const candidate:any={kind:'work.editor.candidate',target:{outputId:'output',savedBase:{kind:'production',productionId:'production',revision:1}},candidate:{kind:'native_scene',document:after.referenceEditor.nativeDocument.scenes[0]},apply:{operation:'applyProductionEditor',outputId:'output',body},candidateDigest:'sha256:'+'d'.repeat(64)};
+ expect(await director.adoptEditorCandidate(candidate,'原采纳请求')).toEqual({status:'adopted',revision:2});
+ expect(h.client.applyProductionEditor).toHaveBeenCalledWith({params:{outputId:'output'},query:undefined,body:{...body,requestId:'原采纳请求'}});
+ expect(h.request.mock.calls.some(row=>row[0]==='apply-tracks')).toBe(false);
+ expect(h.client.saveProductionEditor).not.toHaveBeenCalled();
+});
 it('编导冻结原host identity与当场选区；preview-scene传actual File/身份但不load/save/apply',async()=>{
  const original=h.request.getMockImplementation()!;
  h.client.getProductionEditor.mockResolvedValue(initial);
  h.request.mockImplementation(async(op:string,payload:any)=>{if(op==='context')return {...await original(op,payload),playheadTick:12000,ticksPerSecond:120000};if(op==='preview-scene')return{operation:op,blob:new Blob(['actual-native-port-boundary'],{type:'video/mp4'}),fileName:'候选.mp4',sceneId:payload.targetSceneId,candidateDigest:payload.candidateDigest,contextEpoch:payload.baseContextEpoch,documentVersion:31};return original(op,payload);});
  render(<DraftChatRequestProvider><DirectorProbe/><VideoReferenceWorkbench sessionIdentity={{scopeKey:'account:account',projectId:'project',outputId:'output',generation:71}} initial={initial} title="编导精剪" onOriginal={()=>{}} onSaved={h.saved}/></DraftChatRequestProvider>);
  await waitFor(()=>expect(screen.getByRole('button',{name:'保存工程'})).toBeEnabled());
- const target=await director.prepareEditorTurn();expect(target).toMatchObject({owner:'production',savedBase:{productionId:'production',revision:1},selection:{sceneId:'scene',playheadTick:12000,contextEpoch:7,editorGeneration:'71',elementRefs:[{trackId:'main',elementId:'clip'},{trackId:'other-overlay',elementId:'overlay'}]}});
+ const target=await director.prepareEditorTurn();expect(target).toMatchObject({owner:'production',savedBase:{productionId:'production',revision:1},selection:{sceneId:'scene',playheadTick:12000,contextEpoch:7,editorGeneration:expect.stringMatching(/^71:/),elementRefs:[{trackId:'main',elementId:'clip'},{trackId:'other-overlay',elementId:'overlay'}]}});
  const loaded=h.request.mock.calls.find(row=>row[0]==='load')![1],loadCount=h.request.mock.calls.filter(row=>row[0]==='load').length;
- const candidate:any={kind:'work.editor.candidate',target,candidate:{kind:'native_scene',document:{...local.scenes[0],tracks:{...tracks,main:{...tracks.main,elements:[]}}}},candidateDigest:'sha256:'+ 'c'.repeat(64)};
+ const candidate:any={kind:'work.editor.candidate',target,candidate:{kind:'native_scene',document:{...local.scenes[0],tracks:{...tracks,main:{...tracks.main,elements:[]}}}},candidateDigest:'sha256:'+ 'c'.repeat(64),apply:{operation:'applyProductionEditor',body:{edits:[{sceneId:'scene',expectedBeforeDigest:await editorDigest(tracks)}]}}};
  const output=await director.previewEditorCandidate(candidate);expect(output?.blob.size).toBeGreaterThan(0);
  const input=h.request.mock.calls.find(row=>row[0]==='preview-scene')![1];expect(input).toMatchObject({owner:{accountId:'account',projectId:'project',outputId:'output'},targetSceneId:'scene',baseContextEpoch:7,candidateDigest:candidate.candidateDigest,media:[{mediaId:'media',assetId:'asset',assetFileId:'file'}]});expect(input.media[0].file).toBe(loaded.media[0].file);
  expect(h.request.mock.calls.filter(row=>row[0]==='load')).toHaveLength(loadCount);expect(h.request.mock.calls.some(row=>row[0]==='apply-tracks')).toBe(false);expect(h.client.saveProductionEditor).not.toHaveBeenCalled();
+ const previous=h.request.getMockImplementation()!;
+ h.request.mockImplementation(async(op:string,payload:any)=>op==='context'?{...await previous(op,payload),contextEpoch:8}:previous(op,payload));
+ await expect(director.previewEditorCandidate(candidate)).rejects.toThrow(/时间轴或选区/);
+ expect(h.request.mock.calls.filter(row=>row[0]==='preview-scene')).toHaveLength(1);
 });
 async function open(){render(<VideoReferenceWorkbench initial={initial} title="真实粗剪" onOriginal={()=>{}} onSaved={h.saved}/>);await waitFor(()=>expect(screen.getByRole('button',{name:'保存工程'})).not.toBeDisabled());}
 it('保存期间完成的在途导入在回执后仍是未保存修改',async()=>{

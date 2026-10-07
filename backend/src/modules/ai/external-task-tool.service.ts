@@ -13,6 +13,7 @@ type Tools=Record<string,ChatBackendTool>;
 const object=(value:unknown):Record<string,unknown>=>value&&typeof value==="object"&&!Array.isArray(value)?value as Record<string,unknown>:{};
 /** 逐个审计的宿主短读取与纯候选；本机命令、发布、采纳、删除和 Worker 专用工具不开放给 ACP。 */
 const safeNames=new Set([
+ "work.editor.read","work.editor.propose","work.creation.read","work.creation.propose",
  "history.read","tool.result.read","skill.read","creatoros.guide","context.projects","context.projects.search","context.comments",
  "context.knowledge","context.materials","context.project.detail","context.project.lifecycle","context.review.report",
  "context.positioning.detail","context.knowledge.detail","context.artifacts","context.artifact.text","context.knowledge.text",

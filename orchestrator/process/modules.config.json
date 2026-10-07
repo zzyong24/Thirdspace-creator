@@ -4083,7 +4083,10 @@
         "backend/src/schema/account-groups.ts",
         "backend/src/modules/assets/**",
         "backend/src/schema/pending-generated-asset-commits.ts",
-        "docs/features/t1070-director-script-workflow/STRUCTURED_SCRIPT_INTEGRATION.md"
+        "docs/features/t1070-director-script-workflow/STRUCTURED_SCRIPT_INTEGRATION.md",
+        "docs/features/t1070-director-script-workflow/NOTE_PREVIEW_INTEGRATION.md",
+        "docs/features/t1070-director-script-workflow/CODEX_TOOL_HISTORY_INTEGRATION.md",
+        "docs/features/t1070-director-script-workflow/PIXEL_VERSION_INTEGRATION.md"
       ],
       "write_set": [
         "backend/src/modules/ai/external-chat-turn.service.ts",
@@ -4183,7 +4186,11 @@
         "frontend/src/features/script/script-rich-editor.test.tsx",
         "frontend/src/features/draft-workbench/creation-flow-ctas.test.tsx",
         "frontend/src/features/script/script-structure-view.tsx",
-        "frontend/src/features/script/script-structure-view.test.tsx"
+        "frontend/src/features/script/script-structure-view.test.tsx",
+        "frontend/src/features/reference-editors/native-editor-surface.tsx",
+        "frontend/src/features/reference-editors/native-editor-surface.test.tsx",
+        "ai-worker/src/execution/external-chat-worker-run.ts",
+        "ai-worker/src/execution/external-chat-worker-run.test.ts"
       ],
       "step_write_set": {
         "external-engine": [
@@ -4287,7 +4294,11 @@
           "frontend/src/features/script/script-rich-editor.test.tsx",
           "frontend/src/features/draft-workbench/creation-flow-ctas.test.tsx",
           "frontend/src/features/script/script-structure-view.tsx",
-          "frontend/src/features/script/script-structure-view.test.tsx"
+          "frontend/src/features/script/script-structure-view.test.tsx",
+          "frontend/src/features/reference-editors/native-editor-surface.tsx",
+          "frontend/src/features/reference-editors/native-editor-surface.test.tsx",
+          "ai-worker/src/execution/external-chat-worker-run.ts",
+          "ai-worker/src/execution/external-chat-worker-run.test.ts"
         ]
       },
       "verify_commands": {
@@ -4307,7 +4318,7 @@
           "git diff --check"
         ]
       },
-      "scope_note": "原93路径合同和三轮PASS原样保留；实际默认分镜稿卸载rich端口导致原按钮无法确认稿件。2026-10-07必要消费者补充及独立scope review SHA49710fd73cf3448abf50252b65927a0f85a62153b525ddccb6307593feccf173，仅新增structure-view.tsx/test两路径，implementation合计95。无新API/owner/表/权限/任务/能力，不重开合同周期；实际实现及默认视图旅程仍待验。"
+      "scope_note": "原93实现路径合同与三轮评审原样保留；默认分镜消费者两路径经独评准入；原生排版挂载容器inline hidden覆盖原auto，新增surface及原测试两条必要消费者路径，实现步骤合计97（模块另有原外部引擎路径）。独评534decbf7326bdcf3b49d6084a9bc01cbfada6695641c246fcd67fa7fbe37d0e，不增加公共合同/权限/owner/runtime或评审周期；真实滚动、完整正文整卡与200%尚待验。 原Codex prompt误拒SDK合法工具历史，必要两消费者独评5e415a9e552dba4c123bb657e6abaa41e20fed3d7774379cb8ca1d8ae8e8d781准入，实现99；仅历史数据序列化，直接多媒体/未知仍拒绝、无新能力轮次。 原warm首帧真实decoded timestamp进入内部texture版本及blur cache，七精确archive源成员独评78c934b5d99bf55fb0e8179b3cfa41f7cf2a1536b6313d721c3b90b110de9efd准入，无新MAIN产品路径/公共合同/权限/runtime，仍99实现。"
     }
   }
 }

@@ -1,3 +1,4 @@
+import {workEditorReadInput,workEditorProposeInput,workCreationReadInput,workCreationProposalInput,type WorkEditorTarget,type WorkEditorContext,type WorkEditorCandidate,type WorkEditorReadInput,type WorkEditorProposeInput,type WorkCreationTarget,type WorkCreationReadResult,type WorkCreationProposalResult,type WorkCreationProposalInput} from "@creatoros/contract";
 import {buildRedfoxTool} from "./chat-redfox-tool";
 import {createLegacyScriptRange, legacyScriptHash} from "../artifacts";
 import { buildChatToolResultReader, buildChatHistoryReader, type ChatHistoryReader, type ChatToolResultReader } from "./chat-tool-result-reader";
@@ -57,6 +58,12 @@ function safeFinalSourceUrl(value: string | undefined): string | undefined {
 // 路由在请求期解析(resolveModelSpec + assembleCreativeContext)后注入,故工具本身无副作用、
 // 不碰持久化、不直连模块 repo —— 可单测(注入 fake 的 generate/enrich 实现即可)。
 export interface ChatToolDeps {
+  editorTarget?:WorkEditorTarget;
+  readWorkEditor?:(input:WorkEditorReadInput)=>Promise<WorkEditorContext>;
+  proposeWorkEditor?:(input:WorkEditorProposeInput)=>Promise<WorkEditorCandidate>;
+  creationTarget?:WorkCreationTarget;
+  readWorkCreation?:(input?:{targetDigest?:string})=>Promise<WorkCreationReadResult>;
+  proposeWorkCreation?:(input:WorkCreationProposalInput)=>Promise<WorkCreationProposalResult>;
   boundCanvasId?:string;
   readCanvas?:()=>Promise<{id:string;title:string;projectId:string|null;revision:number;document:unknown}>;
   proposeCanvas?:(baseRevision:number,operations:unknown)=>Promise<{id:string;canvasId:string;baseRevision:number;operations:unknown[]}>;
@@ -4060,6 +4067,26 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
     // [T-084c] AI 生成素材:文生图/文生视频。execute **不直接生成**(视频异步分钟级不能阻塞
     // 对话回合)—— dispatch 既有 asset.generate task,立即返回 taskId;前端 ChatGenerateCard
     // 轮询 → 完成渲缩略图 + 采纳。未配生图/生视频模型 → task cancelled,卡内诚实「去设置」。
+    "work.editor.read":defineChatTool("work.editor.read",{
+      description:"读取当前明确保存作品的真实版本、选区、字段窗口或完整文档。先读局部及前值digest，长结果按原toolCallId续读；scope仅在冻结output内，index只含机械身份索引。",
+      inputSchema:workEditorReadInput,
+      execute:async(input)=>{if(!deps.editorTarget||!deps.readWorkEditor)throw new ChatToolUserError('当前对话缺少已保存编辑目标');return deps.readWorkEditor(input);},
+    },deps.humanizeError),
+    "work.editor.propose":defineChatTool("work.editor.propose",{
+      description:"参数严格为{base,baseDigest,summary,candidate,imageRequest?}，base与baseDigest逐字复制work.editor.read回执，不自行构造版本或digest。candidate优先{kind:'typed_patch',owner,edits}；production还必填sceneId。每项编辑用type字段，不能用op/update_element/set_element_fields/beforeDigest/fields。视频局部修改严格为{type:'patchNativeElement',trackId,elementId,expectedElementDigest,patch:{本次明确修改的字段}}，expectedElementDigest复制selected对应elementDigest；可改name/startTime/duration/trimStart/trimEnd/sourceDuration/mediaId/isSourceAudioEnabled/hidden/retime/params/animations，时间均为120000 ticks/秒。retime为{rate,maintainPitch?}；params的名称从capabilities.paramsRegistry按元素类型复制；graphic另按definitionId查capabilities.graphicDefinitions，effect按effectType查capabilities.effectsCatalog，保留未改参数，不猜duration或真实媒体ID。替换用replaceNativeElement加element；删除用removeNativeElement；两者仍带trackId/elementId/expectedElementDigest。新增元素用insertNativeElement加trackId/expectedTrackDigest/element；移动用moveNativeElement加fromTrackId/toTrackId/elementId/expectedElementDigest/expectedFromTrackDigest/expectedToTrackDigest/startTime。文章局部修改为{type:'patchArticleSection',sectionId,expectedSectionDigest,patch:{heading?,headingLevel?,body?}}，标题摘要用patchArticleMetadata+expectedDocumentDigest+patch。图卡为{type:'patchGraphicCard',cardId,expectedCardDigest,patch:{title?,body?,visualBrief?}}，作品标题正文用patchGraphicMetadata+expectedDocumentDigest+patch。所有前值digest复制真实读取回执，文本精确范围另用replaceArticleTextRange/replaceGraphicTextRange，坐标为UTF16；不要把操作名或ID换成自创同义词。宿主机械保留未改正文、图片、来源、布局与其它场景，候选仅在工具成功回执后就绪；不保存正式作品，用户预览采纳后由原owner提交。",
+      inputSchema:workEditorProposeInput,
+      execute:async(input)=>{if(!deps.editorTarget||!deps.proposeWorkEditor)throw new ChatToolUserError('当前对话缺少已保存编辑目标');return deps.proposeWorkEditor(input);},
+    },deps.humanizeError),
+    "work.creation.read":defineChatTool("work.creation.read",{
+      description:"读取用户确认保存的脚本、真实组合和两个文章/图文成员的当前保存版本与共同来源。联合创作必须先读取此回执，保存返回的targetDigest（裸64位十六进制，无sha256前缀）及完整article/graphic原文档；propose从原文档克隆后按严格typed字段填创作内容，不猜脚本或作品ID。",
+      inputSchema:workCreationReadInput,
+      execute:async(input)=>{if(!deps.creationTarget||!deps.readWorkCreation)throw new ChatToolUserError('当前对话缺少已确认的联合创作目标');return deps.readWorkCreation(input);},
+    },deps.humanizeError),
+    "work.creation.propose":defineChatTool("work.creation.propose",{
+      description:"参数只有{targetDigest,article,graphic}。targetDigest逐字复制work.creation.read返回值（裸64hex，无sha256前缀）。先克隆read的完整article和graphic，仅填写本次创作字段，保留来源、metadataSource、图片和布局等原稿字段。article必有schemaVersion:1、title、summary、sections、factItems、visualBriefs、imageUses；sections每项严格为{sectionId,order,heading,headingLevel,body,sourceRefs}，sectionId是明确唯一非空ID，order从0按顺序，headingLevel为1至6整数，正文在body。graphic必有schemaVersion:1、title、body、summary、tags、imageUses、sourceRefs、ruleSnapshotRef；cardBriefs每项严格为{cardId,title,body,sourceRefs,visualBrief?}，cardId是明确唯一非空ID，数组顺序就是页顺序。不要造id/page/type/text或proposedSections等替代字段。sourceRefs引用read的共同scriptSourceRef，不编ID。metadataSource保持read原值；原稿没有就不要新增，不能把titleSourceRefs/summarySourceRefs包进metadataSource。它只接受原project或publication_revision discriminator结构。没有事实、视觉建议或图片时使用对应空数组，不能省略必填根字段。当前引擎亲自联合创作完整可编辑候选，纯文字图文可预览；不写正式稿、不调用第二模型、不提交视频或生图任务。",
+      inputSchema:workCreationProposalInput,
+      execute:async(input)=>{if(!deps.creationTarget||!deps.proposeWorkCreation)throw new ChatToolUserError('当前对话缺少已确认的联合创作目标');return deps.proposeWorkCreation(input);},
+    },deps.humanizeError),
     "canvas.read":defineChatTool("canvas.read",{
       description:"只读当前账号已选创作画布。先读取真实节点 ID、连接与 revision，再提出操作建议；不要猜测画布内容。",
       inputSchema:CANVAS_READ_PARAMS,
@@ -4977,6 +5004,7 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
  * drift 由 chat-tools.test.ts 的 guard 用例锁(必须 === Object.keys(allChatTools(deps)))。
  */
 export const ALL_CHAT_TOOL_NAMES: readonly string[] = [
+  "work.editor.read","work.editor.propose","work.creation.read","work.creation.propose",
   "history.read",
   "tool.result.read",
   "skill.read",
@@ -5039,8 +5067,7 @@ export const ALL_CHAT_TOOL_NAMES: readonly string[] = [
   "context.learnings",
   "context.candidates",
   "context.predictions",
-  "canvas.read",
-  "canvas.propose",
+
 ];
 
 // ── [T-240③] 场景工具白名单(「场景」一等机制的静态层)────────────────────────────────
@@ -5118,6 +5145,7 @@ export const SURFACE_TOOL_SCOPES: Readonly<Record<string, readonly string[]>> = 
   ],
   // 项目对话:创作 + 审核 + 复盘双场景全量(阶段感知收窄见 getSurfaceToolScope)。
   project: [
+    "work.editor.read","work.editor.propose","work.creation.read","work.creation.propose",
     "creatoros.guide",
     ...CREATION_TOOL_NAMES,
     // 只有稿面明确选择段落时实现表才会实际挂载该工具。

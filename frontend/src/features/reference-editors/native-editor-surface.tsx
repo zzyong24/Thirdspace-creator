@@ -70,7 +70,8 @@ export const NativeEditorSurface = React.forwardRef<NativeEditorHandle, Props>(f
     const shadow = element.shadowRoot ?? element.attachShadow({mode: 'open'});
     const container = document.createElement('div');
     const portals = document.createElement('div');
-    container.style.cssText = 'height:100%;min-height:0;min-width:0;position:relative;overflow:hidden;';
+    // NoteRelay的原生正文/整卡滚动归挂载容器；其它工作台保留原裁切布局。
+    container.style.cssText = `height:100%;min-height:0;min-width:0;position:relative;overflow:${editor === 'noterelay' ? 'auto' : 'hidden'};`;
     container.tabIndex = -1;
     portals.dataset.nativePortalRoot = '';
     portals.style.cssText = 'position:absolute;inset:0;pointer-events:none;z-index:60;';

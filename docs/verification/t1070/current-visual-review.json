@@ -1,0 +1,232 @@
+{
+  "taskId": "T-1070",
+  "recordedAt": "2026-10-07T08:03:56.045Z",
+  "reviewType": "独立现有界面视觉与可用性评审，一轮，不评分",
+  "status": "已完成只读评审；2 项 major 妨碍完整候选审读",
+  "scope": {
+    "direction": "保留原版丰富紫色工作台，仅增加脚本一键生成文章和图文；共享编导候选预览并分别采纳；视频只导入与自然语言精调。",
+    "constraints": [
+      "不提出新风格或新能力",
+      "不读实现代码或制作历史",
+      "不修改代码或控制文档",
+      "不发送 AI、不使用付费生成、不采纳、不保存 owner",
+      "仅写本报告"
+    ],
+    "skillsRead": [
+      "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/.agents/skills/oil-ui-pro/SKILL.md",
+      "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/.agents/skills/oil-ui-pro/references/existing-project.md",
+      "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/.agents/skills/oil-ui-pro/references/visual-review.md",
+      "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/.agents/skills/oil-ui-pro/references/layout-and-viewport.md",
+      "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/.agents/skills/oil-ui-pro/references/visual-language.md",
+      "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/features/t1022-account-group-workspace/UI_RULES.md"
+    ],
+    "sourceService": "http://127.0.0.1:4371",
+    "projectId": "project-95c4e17c-23",
+    "groupId": "grp-95c4e17c-21",
+    "sourceConversationId": "ai-conv-95c4e17c-417",
+    "sourceMessageId": "ai-msg-9d33019f-189"
+  },
+  "summary": "画面仍是内容编辑工作台：原有侧栏、紫色操作、浅色画布、表单与右侧编导保持一致，当前对象和文章/图文分别打开的关系可识别。需要修的是候选的可读边界与滚动，保留现有品牌、字体、组件与能力即可。",
+  "actualEvidence": {
+    "imagesActuallyViewed": [
+      "t1070-ui/article-1366.jpg",
+      "t1070-ui/graphic-1366.jpg",
+      "t1070-ui/article-1024-director.jpg",
+      "t1070-ui/graphic-683-director-reflow-after-scrolled.jpg",
+      "t1070-browser-baseline/real-ui-creation-article-preview.png",
+      "t1070-browser-baseline/real-ui-creation-graphic-preview.png",
+      "t1070-ui/article-actual-200pct.png",
+      "t1070-ui/article-director-actual-200pct.png"
+    ],
+    "reportsRead": [
+      "t1070-ui/actual-zoom-result.json",
+      "t1070-ui/frontend-visual-evidence.json",
+      "t1070-browser-baseline/baseline.json",
+      "t1070-browser-baseline/real-ui-creation-result.json"
+    ],
+    "liveReadOnlyWalkthrough": {
+      "browser": "本评审新建隐藏 IAB tab，未附着 Space9、用户 App 或 8766 原型；结束已重置视口并关闭本 tab。",
+      "viewports": [
+        {
+          "width": 1280,
+          "height": 720,
+          "note": "私有浏览器默认视口"
+        },
+        {
+          "width": 1366,
+          "height": 900,
+          "note": "按正式目标视口核验"
+        }
+      ],
+      "steps": [
+        "读取账号组菜单，选择已有中性验收组；直接进入 baseline.routes.script。",
+        "打开历史记录，选择既有文章图文联合生成会话。",
+        "仅展开文章候选，实际查看画面；向下滚动未改变预览或工作区。",
+        "仅收起文章预览，展开图文候选；查看首卡裁切。",
+        "仅点击图文下一页，观察到 2/11；横向滚动未恢复右侧文字。",
+        "直接进入已采纳的 articleHref，读取当前标题、5 个正文段落及保存按钮状态；在右栏展开同一图文候选并滚动查看。",
+        "全程未输入、发送、采纳、保存或导出，未改 owner 文稿。"
+      ],
+      "runtimeScreenshots": "以上实时画面已通过 CUA 截图实际查看；按仅写 JSON 的范围，未另存新截图。",
+      "measuredAt1366": {
+        "scriptOuter": {
+          "clientHeight": 828,
+          "scrollHeight": 2933,
+          "overflowY": "hidden",
+          "scrollTopAfterOpeningArticlePreview": 1042
+        },
+        "scriptArticleShadowPreview": {
+          "clientHeight": 673,
+          "scrollHeight": 6268,
+          "clientWidth": 217,
+          "overflowY": "hidden"
+        },
+        "scriptGraphicShadowPreview": {
+          "clientWidth": 217,
+          "scrollWidth": 474,
+          "cardWidth": 450,
+          "overflowX": "hidden"
+        },
+        "articlePageChat": {
+          "clientHeight": 347,
+          "scrollHeight": 2514,
+          "overflowY": "auto",
+          "note": "文章页右栏能正常纵向滚动，与脚本页问题分开"
+        },
+        "articlePageGraphicShadowPreview": {
+          "clientWidth": 205,
+          "scrollWidth": 474,
+          "cardWidth": 450,
+          "overflowX": "hidden"
+        },
+        "articlePageOwnerArticleShadowPreview": {
+          "clientHeight": 673,
+          "scrollHeight": 2922,
+          "clientWidth": 578,
+          "overflowY": "hidden"
+        }
+      }
+    }
+  },
+  "major": [
+    {
+      "id": "VIS-M01",
+      "location": "脚本页的右侧编导，展开既有联合候选时",
+      "observation": "在 1280×720 与 1366×900，脚本主稿与编导列一起被候选内容撑长。1366×900 外层可见高 828px、内容高约 2933px，却为 overflowY hidden；编导活动区自身被撑高，未形成可供鼠标继续滚动的范围。点击预览或下一页会把这个隐藏外层自动滚到对应控件，编导关闭、标题或输入区随之离屏，左侧主稿也一起移动。",
+      "impact": "用户不能沿正常滚动路径完整审读候选，读完后也不能稳定回到当前对象与微调输入区。这违反每表面一个主要滚动区和浮层/内容不被裁切的规范。",
+      "evidence": {
+        "type": "实时只读走查",
+        "route": "/projects/project-95c4e17c-23",
+        "viewport": "1366×900",
+        "steps": [
+          2,
+          3,
+          4,
+          5
+        ],
+        "screenshotReference": "本次 CUA 实际画面，未另存；联合候选外观亦见 t1070-browser-baseline/real-ui-creation-article-preview.png"
+      },
+      "minimumSuggestion": "保留脚本、编导两列和现有组件，让脚本工作区与编导在可见高度内布局；编导活动区承担候选纵向滚动，标题/关闭/输入区保持可达。不要让候选撑高整页或依靠点击控件触发隐藏父层滚动。",
+      "verification": "在 1366×900、1280×800、1024 窄窗中，从脚本一键生成的既有候选入口，鼠标与键盘均可从候选标题读到预览末尾，再返回输入区；左侧主稿的位置与编导身份不被右栏阅读带走。",
+      "preference": false
+    },
+    {
+      "id": "VIS-M02",
+      "location": "联合候选中的 NoteRelay 文章与图文预览；文章页右栏也复现图文裁切",
+      "observation": "图文模板卡片实际宽 450px，右栏预览可见宽仅 205–217px，内部 scrollWidth 474px 且 overflowX hidden。首卡和 2/11 页右侧标题、正文直接被截断，横向滚动不能恢复。文章预览的正文在窄栏能够换行，但影子 DOM 可见高度 673px、内容高度 6268px、overflowY hidden；正文未形成正常滚动阅读路径。文章主工作区的排版预览也为 673px 对 2922px 的隐藏溢出。",
+      "impact": "用户看不全将要采纳的正文与图卡，无法依据预览判断是否采用。图文翻页能切换页码，不能抵消每一页右侧不可读的问题。",
+      "evidence": {
+        "screenshots": [
+          "t1070-browser-baseline/real-ui-creation-graphic-preview.png",
+          "t1070-browser-baseline/real-ui-creation-article-preview.png"
+        ],
+        "liveRoutes": [
+          "/projects/project-95c4e17c-23",
+          "/projects/project-95c4e17c-23/article?outputId=output-9d33019f-166"
+        ],
+        "viewport": "1366×900",
+        "steps": [
+          3,
+          4,
+          5,
+          6
+        ]
+      },
+      "minimumSuggestion": "在已有 NoteRelay 预览边界内适配窄栏：文章提供真实纵向阅读滚动；图文保留完整卡片比例并允许完整查看，或使用现有较宽预览表面。不要仅把字体缩小到规范以下，也不要用隐藏溢出掩盖卡片宽度。",
+      "verification": "同一真实候选能读到文章第 5 章与结尾；图文每页标题、正文和左右边缘完整可见，分页仍可用。分别在右栏、窄窗浮层与 200% 真实缩放下检查。",
+      "preference": false
+    }
+  ],
+  "minor": [
+    {
+      "id": "VIS-m01",
+      "location": "1366×900 文章页编导栏头部与联合候选卡标题",
+      "observation": "有真实 token 用量时，编导标题缩成“编导…”、说明缩成“基于当…”；文章候选与图文候选的小标题出现“文章候 / 选”“图文候 / 选”的孤字换行。",
+      "impact": "标题与动作关系仍能猜出，但扫描对象的速度下降。",
+      "evidence": {
+        "screenshots": [
+          "t1070-browser-baseline/real-ui-creation-article-preview.png",
+          "t1070-browser-baseline/real-ui-creation-graphic-preview.png"
+        ],
+        "liveRoute": "/projects/project-95c4e17c-23/article?outputId=output-9d33019f-166",
+        "note": "标题挤压以本次实时 CUA 画面为证"
+      },
+      "minimumSuggestion": "沿用现有字号与组件，让完整“编导对话”和候选类型优先占位；次要用量及候选长标题换到下一行，避免类型标题留孤字。",
+      "preference": false
+    },
+    {
+      "id": "VIS-m02",
+      "location": "既有已采纳候选在历史记录中的状态",
+      "observation": "两份 owner 已采纳的结果由 real-ui-creation-result.json 记录；历史候选初始采纳按钮禁用但没有可见原因，展开预览后同一旧候选的采纳按钮又启用。未点击采纳，也未核验重复采纳或冲突行为。",
+      "impact": "用户无法从这一层分清“尚未预览”“已经采纳”“旧版本冲突”几种原因，容易犹豫是否要再点一次。",
+      "evidence": {
+        "report": "t1070-browser-baseline/real-ui-creation-result.json",
+        "liveRoutes": [
+          "/projects/project-95c4e17c-23",
+          "/projects/project-95c4e17c-23/article?outputId=output-9d33019f-166"
+        ],
+        "steps": [
+          3,
+          4,
+          6
+        ]
+      },
+      "minimumSuggestion": "使用现有状态词与按钮语法给出当前真实原因；已采纳时保留“打开文章/图文”和只读预览可用，旧候选不得靠颜色或禁用态让用户猜。",
+      "preference": false
+    },
+    {
+      "id": "VIS-m03",
+      "location": "文章排版预览的栏目、日期、账号与作者装饰字段",
+      "observation": "真实文章标题已经呈现，但模板仍显示 {{栏目名}}、{{日期}}、{{副标题}}、{{关键词}}、{{账号名称}}、{{作者名}} 等未填占位。仅观察预览，未复制或导出。",
+      "impact": "用户难以把业务正文与模板待填项区分，预览看起来还没整理完。",
+      "evidence": {
+        "liveRoute": "/projects/project-95c4e17c-23/article?outputId=output-9d33019f-166",
+        "note": "本次 CUA 实际画面与可访问文本，不据此声称导出也带占位"
+      },
+      "minimumSuggestion": "沿用现有模板编辑能力，未设置的装饰字段在候选审读视图中明确处理或不渲染；保留真实标题、正文、来源和主要操作。",
+      "preference": false
+    }
+  ],
+  "supportedObservations": [
+    "已提供 1366 宽窗文章/图文截图中，紫色主操作、浅色画布和原侧栏延续选定方向，没有发现需要新主题的理由。",
+    "文章表单标题、摘要、标签、段落与保存动作的关系清楚；真实已采纳文章页能读取同一生成标题及 5 个正文段落。未执行保存。",
+    "图文模型凭据不可用状态保留手工稿和编辑入口，没有在截图中把合法手工编辑全部封死；是否实际保存由原主流程证据承担。",
+    "1024 文章编导以浮层呈现，项目身份与关闭入口仍可见；截图不证明焦点行为，本次没有重复执行该浮层键盘流程。",
+    "683×512 等效重排截图显示经滚动可以看到发送控件；其报告明示是等效视口，不应标为浏览器真实 200%。",
+    "actual-zoom-result.json 第二次真实浏览器缩放为 factor 2，报告无横向溢出，发送控件经键盘聚焦触发外层 scrollTop 17 后 bottom 499.5 小于 512，并有 Escape 焦点结果。article-actual-200pct.png 本身仍是加载态；article-director-actual-200pct.png 证明滚动后的可读状态，不能标成初始无裁切。"
+  ],
+  "textReductionSuggestions": [
+    "不删除对象名称、候选类型、已确认脚本来源、当前状态或采纳/打开动作。",
+    "候选预览内部的导出按钮不应比“预览/采纳”抢眼；可沿用已有更多导出入口安排次要导出，属于层级精修，先修 major。",
+    "未填模板装饰字段可处理；本评审只读，实际删除文字为 0。"
+  ],
+  "notVerified": [
+    "未发送新 AI 消息、未验证候选新生成、未重复采纳、未保存或重新读取 owner 写入。",
+    "未执行复制公众号文章、分页 ZIP、导出、发布或视频编辑操作。",
+    "未现场重复浏览器真实 200% 缩放；真实缩放结论来源为提供的最新实际报告与已看截图。",
+    "未制造错误、断网或权限失败；不声明全部状态、键盘或完整任务链通过。",
+    "没有动效或录屏证据，本轮不评审动效记忆点。",
+    "未测字体像素、色值、圆角的实现取值，不根据截图精确断言 token 不合规。"
+  ],
+  "followup": "主会话可按两项 major 做最小容器修正，并以同一真实候选重新取完整阅读证据；这是一轮 existing review，不开展新风格探索、不评分，也不要求新的创作能力。"
+}

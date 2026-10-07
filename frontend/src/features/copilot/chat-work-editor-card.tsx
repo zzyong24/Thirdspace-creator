@@ -7,6 +7,7 @@ import {
   type WorkEditorCandidate,
 } from "@creatoros/contract";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import {
   useCreationClient,
   useCreationScope,
@@ -226,6 +227,7 @@ export function ChatWorkEditorCard({
     }
   }
   return (
+    <Dialog open={expanded && candidate?.kind !== "native_scene"} onOpenChange={setExpanded}>
     <section
       className="space-y-3 rounded-xl border border-primary/30 bg-primary/5 p-4 text-sm"
       aria-label="编导编辑候选"
@@ -250,21 +252,20 @@ export function ChatWorkEditorCard({
         </p>
       ) : null}
       <div className="flex flex-wrap gap-2">
-        <Button
+        <DialogTrigger asChild><Button
           size="sm"
           variant="outline"
           disabled={busy || !candidate}
           onClick={() => void preview()}
         >
           {busy ? "处理中…" : expanded ? "重新预览" : "预览改动"}
-        </Button>
+        </Button></DialogTrigger>
         <Button
           size="sm"
           disabled={
             busy ||
             !candidate ||
             !value.apply ||
-            !expanded ||
             !previewReady ||
             (candidate.kind === "native_scene" && !video) ||
             adoption?.status === "adopted"
@@ -316,20 +317,7 @@ export function ChatWorkEditorCard({
             ) : (
               <p>正在准备实际预览…</p>
             )
-          ) : (
-            <NoteRelayEditor
-              key={`${creationScopeKey(scope)}:${key}`}
-              projectId={value.target.projectId}
-              accountId={scope.accountId}
-              outputId={value.target.outputId}
-              sourceVersionId={key}
-              platform={candidate.kind === "article" ? "wechat" : "rednote"}
-              value={candidate.document}
-              readOnlyCandidate
-              onPreviewReady={() => setPreviewReady(true)}
-              onLayoutChange={() => {}}
-            />
-          )}
+          ) : null}
         </div>
       )}
       {error ? (
@@ -348,5 +336,22 @@ export function ChatWorkEditorCard({
         </p>
       ) : null}
     </section>
+    {candidate && candidate.kind !== "native_scene" && <DialogContent className="flex max-h-[calc(100dvh-2rem)] flex-col overflow-y-auto sm:max-w-5xl">
+      <DialogTitle>{candidate.kind === "article" ? "文章改动预览" : "图文改动预览"}</DialogTitle>
+      <DialogDescription>查看完整内容，关闭预览后采纳。</DialogDescription>
+      {expanded && <NoteRelayEditor
+        key={`${creationScopeKey(scope)}:${key}`}
+        projectId={value.target.projectId}
+        accountId={scope.accountId}
+        outputId={value.target.outputId}
+        sourceVersionId={key}
+        platform={candidate.kind === "article" ? "wechat" : "rednote"}
+        value={candidate.document}
+        readOnlyCandidate
+        onPreviewReady={() => setPreviewReady(true)}
+        onLayoutChange={() => {}}
+      />}
+    </DialogContent>}
+    </Dialog>
   );
 }

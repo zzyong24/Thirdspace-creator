@@ -1,0 +1,189 @@
+{
+  "taskId": "T-1070",
+  "recordedAt": "2026-10-07T08:19:04.152Z",
+  "type": "既有 VIS-M01 / VIS-M02 修复只读复核，不评分，不扩展产品范围",
+  "status": "部分闭合：候选预览 VIS-M02 已可完整阅读；脚本聊天 VIS-M01 仍有 major",
+  "overallPass": false,
+  "source": {
+    "service": "http://127.0.0.1:4371",
+    "route": "/projects/project-95c4e17c-23",
+    "projectId": "project-95c4e17c-23",
+    "groupId": "grp-95c4e17c-21",
+    "conversationId": "ai-conv-95c4e17c-417",
+    "sourceMessageId": "ai-msg-9d33019f-189",
+    "versionFromHandoff": "MAIN 305698b5 + 主会话未提交修复；本轮未读实现代码或 Git 状态。",
+    "currentFixVisiblyObserved": "文章/图文预览按钮已打开有界宽屏 Dialog；文章正文的现有预览表面实际 overflowY auto。",
+    "previousReport": "current-visual-review.json"
+  },
+  "boundaries": {
+    "aiSent": 0,
+    "adopted": 0,
+    "ownerSaved": 0,
+    "exported": 0,
+    "filesWritten": [
+      "t1070-diagnosis/current-visual-closure-review.json"
+    ],
+    "codeRead": false,
+    "controlDocumentsChanged": false,
+    "actual200PercentZoom": false,
+    "actual200PercentOwner": "由主会话私有扩展另行执行，本轮不代签",
+    "browser": "本轮 CUA IAB 不可用，改为新建命名 Chrome1 会话中的自有 tab 417863156；未附着 Space9 Chrome2 或其视频 tab。不是复用原 IAB。",
+    "cleanup": "已恢复复核前 Chrome1 的本地账号组选择，重置临时视口并关闭本次自有 tab。"
+  },
+  "reviewedViewports": [
+    {
+      "width": 1366,
+      "height": 900
+    },
+    {
+      "width": 1280,
+      "height": 720
+    }
+  ],
+  "actualVisualEvidence": {
+    "method": "逐状态调用 CUA 截图并实际看图；DOM 测量仅读取已渲染界面的尺寸与滚动状态。",
+    "newScreenshotFiles": [],
+    "note": "按只写本 JSON 的范围，未另外保存截图文件。以下场景均为实际新服务界面，未以旧截图代替本轮复核。",
+    "screenshotsViewed": [
+      "1366×900 脚本页联合候选历史首屏：编导内容长出视口，输入区不在首屏。",
+      "1366×900 脚本页滚动 2 页后的画面：未发生可观察滚动。",
+      "1366×900 文章候选 Dialog 顶部与第 1 章。",
+      "1366×900 文章候选第 2/3 章、04 标题，以及第 5 章与 END。",
+      "1366×900 图文候选第 1 页整卡、滚到分页后的画面、第 2 页整卡。",
+      "1280×720 文章候选顶部、第 4/5 章、正文结尾与 THANKS FOR READING。",
+      "1280×720 图文第 1 页右侧正文、分页控件、第 2 页右侧正文。",
+      "1280×720 图文预览表面获焦并 PageDown 后，第 2 页卡片底边与 footer。"
+    ]
+  },
+  "findings": [
+    {
+      "id": "VIS-M01",
+      "severity": "major",
+      "closure": "failed",
+      "observation": "脚本页的编导聊天自身仍未形成有界滚动区。1366×900 下外层工作区 clientHeight 828、scrollHeight 1996、overflowY hidden；对聊天区域执行向下滚动 2 页，画面没有移动。此时聊天内容和输入区被正文一起撑到视口下方。语义点击屏外的预览按钮会自动滚动隐藏父层，关闭 Dialog 后，1280×720 实测编导关闭按钮 top -977，发送按钮 top 900.09、bottom 936.09，二者不能在同一个稳定工作区中可达。",
+      "impact": "普通阅读不能到达候选与微调输入区；通过控件自动定位后，编导身份与关闭又离屏。候选 Dialog 可读，不代表脚本聊天的滚动问题已修复。",
+      "evidence": {
+        "viewport1366": {
+          "outerClientHeight": 828,
+          "outerScrollHeight": 1996,
+          "outerOverflowY": "hidden",
+          "outerScrollTopBeforePreview": 0,
+          "chatWheelChangedPicture": false
+        },
+        "viewport1280": {
+          "outerClientHeight": 648,
+          "outerScrollHeight": 1996,
+          "outerOverflowY": "hidden",
+          "outerScrollTopAfterDialogReturn": 1079,
+          "closeBounds": {
+            "top": -977,
+            "bottom": -953
+          },
+          "submitBounds": {
+            "top": 900.0859375,
+            "bottom": 936.0859375
+          }
+        },
+        "source": "本轮实时 CUA 脚本页截图与只读 DOM 测量"
+      },
+      "minimumSuggestion": "继续修原有脚本工作区的高度与滚动归属；让右栏活动记录在可见高度内滚动，保留编导身份、关闭和输入区的稳定可达性。沿用现有两列与组件，不需要新增能力或风格。",
+      "verificationStillRequired": "同一既有长会话在 1366×900 和 1280×720，正常鼠标/键盘阅读能到候选，再回到输入与关闭；只滚聊天不能把左侧主稿和整个编导标题一起带走。"
+    },
+    {
+      "id": "VIS-M02",
+      "severity": "major",
+      "closure": "passed_for_candidate_preview",
+      "observation": "已生成的文章与图文候选在有界宽屏 Dialog 中完整可读。文章预览可实际滚至第 3、第 4、第 5 章及 END；图文卡片 450px 的左右边缘和第 1、2 页正文均完整可见，页码真实由 1/11 变为 2/11。Escape 关闭预览并返回对应预览入口。",
+      "evidence": {
+        "viewport1366": {
+          "dialog": {
+            "x": 171,
+            "y": 16,
+            "width": 1024,
+            "height": 868
+          },
+          "article": {
+            "previewWidth": 956,
+            "clientHeight": 673,
+            "scrollHeight": 2629,
+            "overflowY": "auto",
+            "scrollTopObserved": [
+              0,
+              900,
+              1800
+            ],
+            "chapter5AndEndActuallyViewed": true
+          },
+          "graphic": {
+            "previewWidth": 956,
+            "cardWidth": 450,
+            "cardLeft": 458,
+            "cardRight": 908,
+            "page1ActuallyViewed": true,
+            "page2ActuallyViewed": true,
+            "wholeCardVisibleAtThisHeight": true
+          }
+        },
+        "viewport1280": {
+          "dialog": {
+            "x": 128,
+            "y": 16,
+            "width": 1024,
+            "height": 688
+          },
+          "article": {
+            "clientHeight": 538,
+            "scrollHeight": 2629,
+            "overflowY": "auto",
+            "scrollTopObserved": [
+              0,
+              1440,
+              2091
+            ],
+            "chapter4Chapter5AndEndActuallyViewed": true,
+            "scrolledToMaximum": true
+          },
+          "graphic": {
+            "previewWidth": 956,
+            "cardWidth": 450,
+            "cardLeft": 415,
+            "cardRight": 865,
+            "page1RightEdgeAndTextActuallyViewed": true,
+            "page2RightEdgeAndTextActuallyViewed": true,
+            "innerClientHeight": 538,
+            "innerScrollHeight": 649,
+            "innerScrollTopAfterFocusAndPageDown": 111,
+            "bottomBorderAndFooterActuallyViewed": true
+          }
+        },
+        "escape": {
+          "article1366": true,
+          "graphic1366": true,
+          "article1280": true,
+          "graphic1280": true,
+          "focusReturnedToCorrespondingPreviewButton": true
+        }
+      },
+      "operationBoundary": "1280×720 首屏不能同时容纳 601px 图卡、标题、导出与分页控件。外层 Dialog 可滚到分页；本轮对未获焦内层图卡的坐标滚动未改变 scrollTop，点击既有预览空白使表面获焦后 PageDown 实到 scrollTop 111，并实际看到了卡片底边。本轮因此确认内容完整可达，不声称初始整卡无裁切或所有鼠标滚动路径均已通过。",
+      "minimumSuggestion": "保持当前宽屏 Dialog 与现有滚动表面；低高度下可进一步检查内层鼠标滚动和焦点入口，但不用恢复窄栏内裁切的卡片。",
+      "notCovered": "本轮按请求复核候选 Dialog，没有再次走已采纳 owner 主稿的排版预览；不替该表面单独签 PASS。"
+    }
+  ],
+  "remainingMajor": [
+    "VIS-M01"
+  ],
+  "completedActions": [
+    "进入原有中性组与原有项目，打开既有历史会话。",
+    "只打开文章/图文预览，滚动与图文翻页，按 Escape 关闭。",
+    "实际查看两种目标视口中的文章后续章节、图卡右侧与第 2 页。",
+    "核验脚本聊天滚动、输入/关闭控件位置，发现 VIS-M01 仍失败。",
+    "结束恢复本地选择、重置视口、关闭自有 tab。"
+  ],
+  "unverified": [
+    "真实浏览器 200% 缩放由主会话负责，本轮未执行。",
+    "不验证新 AI 生成、采纳、保存、导出或视频处理。",
+    "未覆盖其它历史会话、其它模板、全部 11 页或更密集图卡。",
+    "不重评此前 minor，也不将本复核作为新的审美评分或方向确认。"
+  ],
+  "conclusion": "不要把本轮写成全绿。VIS-M02 候选完整阅读已解除此前文章纵向/图文横向不可读的问题；VIS-M01 脚本聊天自身滚动及输入/关闭稳定可达仍需修复。"
+}

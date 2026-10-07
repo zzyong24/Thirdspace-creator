@@ -58,6 +58,7 @@ export function StageChatWrapper({
   const pathname = usePathname() ?? "";
   const hosted=React.useContext(ProjectVideoSessionContext);
   const isStagePage = STAGE_SEGMENTS.test(pathname)&&(active??(!hosted||!pathname.includes("/production")));
+  const showRail=isStagePage&&Boolean(projectId&&projectTitle);
 
   // Hooks 必须无条件调用(早返回在其后)。SSR 默认 640,挂载后读回持久宽度(避免 hydration 闪)。
   const [railWidth, setRailWidth] = React.useState<number>(DEFAULT_RAIL);
@@ -75,7 +76,7 @@ export function StageChatWrapper({
     const observer=typeof ResizeObserver!=="undefined"?new ResizeObserver(measure):null;
     observer?.observe(container);window.addEventListener("resize",measure);
     return()=>{observer?.disconnect();window.removeEventListener("resize",measure);};
-  },[]);
+  },[showRail]);
   // Preserve the original width preference. Only the rendered width adapts;
   // if both editor and minimum rail cannot fit, use the same local dialog.
   const narrow=viewportNarrow||(availableWidth>0&&availableWidth<MIN_EDITOR_WIDTH+MIN_RAIL+RESIZE_HANDLE_WIDTH);
@@ -199,7 +200,9 @@ export function StageChatWrapper({
     [persist,maxAvailableRail],
   );
 
-  const showRail=isStagePage&&Boolean(projectId&&projectTitle);
+  // 稿面已有自己的有界分栏；透传才能保留它与宿主之间的 flex 高度链。
+  // 多包一层普通 block 会让长候选撑高聊天，发送区落到隐藏视口之外。
+  if(!showRail)return <>{children}</>;
 
   return (
     <div

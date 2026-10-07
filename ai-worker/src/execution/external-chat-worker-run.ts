@@ -25,8 +25,24 @@ export function externalChatPrompt(input:ChatInput){
  const blocks=['CreatorOS 本地编导：仅依据本轮动态工具和真实回执说明动作。不要输出内部推理、编造系统配置故障或称未采纳候选已正式保存。工具缺失时说明当前动作未完成并给下一步。',`任务说明：\n${input.system}`];
  for(const message of input.messages){
   const content=message.content;
-  if(typeof content!=='string'&&(!Array.isArray(content)||content.some(part=>!part||typeof part!=='object'||(part as {type?:unknown}).type!=='text'||typeof (part as {text?:unknown}).text!=='string')))throw new GenerationFailure('waiting_user','CODEX_INPUT_MODALITY_UNSUPPORTED');
-  blocks.push(`${message.role}：\n${typeof content==='string'?content:(content as {text:string}[]).map(part=>part.text).join('\n')}`);
+  if(typeof content==='string'){blocks.push(`${message.role}：\n${content}`);continue;}
+  if(!Array.isArray(content))throw new GenerationFailure('waiting_user','CODEX_INPUT_MODALITY_UNSUPPORTED');
+  // SEMANTIC_BOUNDARY_ALLOW: 仅机械转换SDK历史协议，不判断创作意图、不执行历史工具、不扩充本轮授权。
+  const parts=content.map(part=>{
+   if(!part||typeof part!=='object')throw new GenerationFailure('waiting_user','CODEX_INPUT_MODALITY_UNSUPPORTED');
+   const record=part as Record<string,unknown>;
+   if(record.type==='text'&&typeof record.text==='string')return record.text;
+   const identity=typeof record.toolCallId==='string'&&record.toolCallId.trim().length>0&&typeof record.toolName==='string'&&record.toolName.trim().length>0;
+   if(record.type==='tool-call'&&message.role==='assistant'&&identity&&Object.hasOwn(record,'input'))return `历史工具调用记录（不是本轮执行或授权）：\n${JSON.stringify(part)}`;
+   if(record.type==='tool-result'&&message.role==='tool'&&identity&&record.output&&typeof record.output==='object'){
+    const output=record.output as Record<string,unknown>;
+    const plainText=(output.type==='text'||output.type==='error-text')&&typeof output.value==='string';
+    const json=(output.type==='json'||output.type==='error-json')&&Object.hasOwn(output,'value');
+    if(plainText||json)return `历史工具回执记录（不是本轮执行或授权）：\n${JSON.stringify(part)}`;
+   }
+   throw new GenerationFailure('waiting_user','CODEX_INPUT_MODALITY_UNSUPPORTED');
+  });
+  blocks.push(`${message.role}：\n${parts.join('\n')}`);
  }
  return blocks.join('\n\n');
 }

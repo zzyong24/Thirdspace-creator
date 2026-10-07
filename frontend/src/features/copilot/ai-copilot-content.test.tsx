@@ -62,8 +62,9 @@ const protocol = vi.hoisted(() => ({
   attachmentIds: [] as string[],
   engine: "pi" as "pi"|"codex",
   engineAvailable: true,
+  engineChecking: false,
 }));
-vi.mock("./use-assistant-engine",()=>({useAssistantEngine:()=>({engine:protocol.engine,available:protocol.engineAvailable})}));
+vi.mock("./use-assistant-engine",()=>({useAssistantEngine:()=>({engine:protocol.engine,available:protocol.engineAvailable,checking:protocol.engineChecking})}));
 vi.mock("@/lib/contract-client", () => ({
   client: {
     listAITasks: async () => [],
@@ -126,6 +127,7 @@ beforeEach(() => {
   protocol.attachmentIds = [];
   protocol.engine = "pi";
   protocol.engineAvailable = true;
+  protocol.engineChecking = false;
   protocol.error = null;
   protocol.messages = [];
   protocol.send.mockReset();
@@ -556,5 +558,24 @@ describe("T-1070 actual composer component / SDK boundary", () => {
     expect(onCreationSubmission.mock.calls).toEqual([["not-submitted"],["submitted-unknown"]]);
     expect(JSON.parse(protocol.fetch.mock.calls[0][1].body)).toMatchObject({chatContext:{creationTarget},executionEngine:"pi"});
     expect(prepare).not.toHaveBeenCalled();
+  });
+  it("真实SDK联合创作等待原Codex状态检查；同target就绪后只提交一次",async()=>{
+    const {Chat}=await vi.importActual<{Chat:new(options:any)=>any}>("@ai-sdk/react");
+    protocol.actualSdk=true;protocol.engine='codex';protocol.engineAvailable=false;protocol.engineChecking=true;
+    const live:any={control:{fetch:(...args:unknown[])=>protocol.fetch(...args),cancel:async()=>{}},conversationId:null,epoch:0,executionEngine:'codex',sourceEngines:new Map(),transport:null};
+    live.chat=new Chat({id:'checking-original-creation',transport:{sendMessages:(options:any)=>live.transport.sendMessages(options),reconnectToStream:async()=>null}});protocol.live=live;
+    const creationTarget={clientRequestId:'original-checking-pair',projectId:'protocol-project',scriptSourceRef:{kind:'project_script',id:'script',versionId:'confirmed-version'}};
+    const onCreationSubmission=vi.fn(),request={nonce:1,prefill:'生成当前文章图文',creationTarget,autoSend:true,onCreationSubmission};
+    const view=render(<Composer request={request}/>);
+    await act(async()=>{await Promise.resolve();});
+    expect(protocol.fetch).not.toHaveBeenCalled();expect(onCreationSubmission).not.toHaveBeenCalled();
+    expect(screen.queryByText('当前编导引擎尚不可用，请到设置核对后恢复原请求。')).toBeNull();
+    protocol.engineChecking=false;protocol.engineAvailable=true;
+    protocol.fetch.mockResolvedValueOnce(new Response('data: {"type":"start","messageId":"checking-done"}\n\ndata: {"type":"finish","finishReason":"stop"}\n\ndata: [DONE]\n\n',{headers:{'content-type':'text/event-stream','x-vercel-ai-ui-message-stream':'v1'}}));
+    view.rerender(<Composer request={request}/>);
+    await waitFor(()=>expect(protocol.fetch).toHaveBeenCalledOnce());
+    expect(JSON.parse(protocol.fetch.mock.calls[0][1].body)).toMatchObject({chatContext:{creationTarget},executionEngine:'codex'});
+    await waitFor(()=>expect(live.chat.status).toBe('ready'));
+    view.rerender(<Composer request={request}/>);expect(protocol.fetch).toHaveBeenCalledOnce();expect(prepare).not.toHaveBeenCalled();
   });
 });

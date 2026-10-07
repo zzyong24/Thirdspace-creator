@@ -1,0 +1,143 @@
+{
+  "schema": "creatoros/t1070-structured-script-consumer-implementation-independent-review@1",
+  "task_id": "T-1070",
+  "reviewer": "/root/final_scope_recheck",
+  "created_at": "2026-10-07T08:13:15.138617+00:00",
+  "review_kind": "已准入两消费者候选实现只读一轮；非新合同轮、不reset cycle",
+  "verdict": "CHANGES_REQUIRED",
+  "summary": "实际默认分镜接入原Provider，真实ID、完整已声明section/visual、knownID恢复和真正无IDUNKNOWN不append均方向正确。但确定CAS拒绝被统一留成无IDUNKNOWN，后续保存永久拒绝，妨碍原合法未保存稿恢复；此一major须在同两路径内修复后再整合。",
+  "candidate": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-frontend-candidate",
+  "candidate_commit": "07da8410445aae354e1a0e5dc75c3c219d83eb78",
+  "exact_changed_paths": [
+    "frontend/src/features/script/script-structure-view.test.tsx",
+    "frontend/src/features/script/script-structure-view.tsx"
+  ],
+  "current_bytes_equal_commit": true,
+  "actual_sha256": {
+    "frontend/src/features/script/script-structure-view.tsx": "d0a18e327604f2d46bab51afd43c1f95e73471120a23b77557785a47061b45dc",
+    "frontend/src/features/script/script-structure-view.test.tsx": "14916b31dfbfad694c6b636f1faac3a56a79fc25084bf677e4628e847e671e14",
+    "frontend/src/features/draft-workbench/draft-chat-request.tsx": "cf99614e68abb31238caa56f06b6a3a8a6163d7dbb1f43c25bfa02a757af723b",
+    "frontend/src/lib/http-transport.ts": "3c89798b49c372bdb60be1cb255fe1b85ea9449752c97d7bdb4bdad1bff79302",
+    "backend/src/modules/artifacts/artifacts.repository.ts": "abd36627260726a84cf585ad988c86fc187a714f9dd60cf588f310c44de1ff4f",
+    "backend/src/modules/artifacts/artifacts.service.ts": "b426d023dbb7f948a20fea2f2d2aa7b753b66ff0a2fc50b881665fa3185cc013",
+    "backend/src/errors.ts": "6da9d2560a6742dd1df21871c1587e0cb473a19b2b39826c129e0937b0481fdb"
+  },
+  "producer_actual_evidence": [
+    {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-tests/frontend-structured-script-red.log",
+      "sha256": "ca22d2416ead9b67117df286f21f4edd6095a3cf2ba363eabe0d9ab0c9d96535",
+      "meaning": "生产者旧源：1file21case，7FAIL14PASS；真实Provider准备未注册及UNKNOWN等RED，历史原字节保留"
+    },
+    {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-tests/frontend-structured-script-green-final.log",
+      "sha256": "290da5a861ccaee52a2e63dd060840fd735fef8cd0805773e286911b12c277a3",
+      "meaning": "生产者当前：4files55PASS，不冒充本agent独立执行；真实Provider/结构组件，APIget/list/create与router为受控seam"
+    },
+    {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-tests/frontend-structured-script-typecheck-final.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "meaning": "本轮仅读日志，空输出不能替代退出码；生产者报告实际typecheck通过"
+    }
+  ],
+  "findings": [
+    {
+      "id": "T1070-STRUCTURE-001",
+      "severity": "major",
+      "status": "OPEN",
+      "title": "确定CAS拒绝被永久锁为无ID UNKNOWN，原手工稿无可达恢复路径",
+      "locations": [
+        {
+          "path": "frontend/src/features/script/script-structure-view.tsx",
+          "line": 411
+        },
+        {
+          "path": "frontend/src/features/script/script-structure-view.tsx",
+          "line": 436
+        },
+        {
+          "path": "frontend/src/features/script/script-structure-view.tsx",
+          "line": 339
+        },
+        {
+          "path": "frontend/src/features/script/script-structure-view.tsx",
+          "line": 375
+        },
+        {
+          "path": "frontend/src/features/script/script-structure-view.tsx",
+          "line": 466
+        },
+        {
+          "path": "frontend/src/lib/http-transport.ts",
+          "line": 119
+        },
+        {
+          "path": "backend/src/modules/artifacts/artifacts.repository.ts",
+          "line": 346
+        }
+      ],
+      "evidence_kind": "实际候选与原公共HTTP/后端事务源码静态闭合，未在本轮运行新增RED",
+      "trigger": "编辑器基于version-before有未保存新稿，原createArtifactVersion收到明确HttpTransportError(status409, codeConflictError) CAS拒绝（例如另一个页面在strict get之后抢先保存，或原手工save使用旧anchor）。",
+      "actual_path": "create调用前intentRef设versionId=null；catch不区分服务明确拒绝和网络结果未知，保留intent。后续手工save先recoverIntent、strict prepare也先recoverIntent，无ID分支读后永远throw且不清intent。dirty状态又阻止外部props换版回灌，没有用户在同实例解除该intent的路径。",
+      "public_no_write_proof": "原repository346–352在插入前检查expectedCurrentVersionId并throw ConflictError；398–411条件更新失败整个事务回滚，不产生孤儿版本。HttpTransportError119–139与211–214保结构化status/code，不需文案猜测。只应沿该endpoint已证明未写的结构化拒绝分支处理；不是泛化任意409/HTTP5xx。",
+      "impact": "原用户未保存内容虽然仍在，但每次保存/严格准备均永久拒绝，需卸载重开而丢掉local才能恢复；新增守卫不能反杀旧合法任务。它不等同于正确的网络无响应ID UNKNOWN保守不追加。",
+      "required_fix": "仅对原版本追加endpoint可证明明确未写的CAS结构化拒绝分态；保完整local并释放这次不确定intent，仍必须读真实current并由用户明确核对/恢复基点，不能静默换expectedCurrentVersionId覆盖别人的新稿，不能自动付费/chat/append。网络异常、无版本ID成功响应、未知/5xx仍保原intent与UNKNOWN、不盲append。",
+      "required_evidence": "同真实Provider与原HTTP结构化错误输入做当场RED→GREEN：明确CAS no-write后保持新稿，用户可核对真实新current后合法保存/生成，首次拒绝不产生第二个append；原无IDUNKNOWN同文旧/新current两拒绝断言及knownID不追加都保持。"
+    }
+  ],
+  "verified_source_bounds": [
+    {
+      "topic": "原Provider与token",
+      "source": "frontend/src/features/script/script-structure-view.tsx:509",
+      "result": "registerScript读refs/generation，原Provider263/292捕获entry与120000ms有限等待，卸载注销token；不新增Owner capability或公共API。"
+    },
+    {
+      "topic": "已声明结构字段完整冻结",
+      "source": "frontend/src/features/script/script-structure-view.tsx:86",
+      "result": "保用户section顺序、ID/type/heading/body/emphasis/start/end以及完整visual对象，structuredClone冻结保存body；沿原结构序列化生成contentText，不保旧html去覆盖新sections。实际上游view-model未暴露的任意JSON字段不属于此新增端口自行猜读权限；不把受控extra visual fixture当上游全JSON来源证明。"
+    },
+    {
+      "topic": "当前版本与归属",
+      "source": "frontend/src/features/script/script-structure-view.tsx:397",
+      "result": "严格保存getArtifact核真实id/project，expectedCurrentVersionId原CAS；确认读回exact.id/artifactId及contentText/sections深等，current必须等anchor。跨workspace/项目、编辑revision/深等、卸载与外部props generation变化拒绝旧确认。"
+    },
+    {
+      "topic": "首次真实ID",
+      "source": "frontend/src/features/script/script-structure-view.tsx:385",
+      "result": "ensure回执真实ID写artifactIdRef并复用后续保存，不重猜另一个脚本；与原ensure/helper行为一致，不扩其API或任务。"
+    },
+    {
+      "topic": "已知ID读回失败",
+      "source": "frontend/src/features/script/script-structure-view.tsx:343",
+      "result": "保intent实际versionId/prior/body，只读同artifact/current/exact全文，回读合后确认；pending保存复用同Promise，knownID回读失败不重复append。"
+    },
+    {
+      "topic": "真正无IDUNKNOWN",
+      "source": "frontend/src/features/script/script-structure-view.tsx:339",
+      "result": "即使新current恰好同文也不能证明同次结果，明确保UNKNOWN并禁止另append，符合原scope要求；不得为修CAS混淆此分支。"
+    },
+    {
+      "topic": "legacy/rich格式可用性",
+      "source": "frontend/src/features/script/script-structure-view.tsx:486",
+      "result": "保存格式与当前可见结构不等时，仅current-click沿原CAS至多一次规范保存；该次strict intent读回不合不再append，语义不由代码猜。"
+    },
+    {
+      "topic": "原合法入口",
+      "source": "frontend/src/features/script/script-structure-view.tsx:507",
+      "result": "手工save/原registerFlush/局部AI段落入口保留，late scope/unmount不回写；但明确失败恢复被上述major阻断，不能签全部原入口可用。"
+    }
+  ],
+  "not_verified": [
+    "本agent未执行新测试或浏览器/模型/用户库；当前55PASS为生产者实际日志，不证明缺失CAS族通过。",
+    "未代签默认分镜按钮公共模型生成/候选/采用/保存/刷新链，亦未签native最新构建、包装、安装。",
+    "未改产品、控制面、reviewctl、任务状态或原合同；此报告不发起新轮。"
+  ],
+  "mutations": {
+    "repo": false,
+    "product": false,
+    "controlplane": false,
+    "models": false,
+    "browser": false,
+    "user_db": false,
+    "writes": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-diagnosis/structured-script-implementation-review.json"
+  }
+}

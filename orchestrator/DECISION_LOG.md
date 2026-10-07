@@ -3673,3 +3673,17 @@ Status: active
 ## DEC-T1070-STRUCTURED-SCRIPT-CONSUMER（2026-10-07）
 
 原用户要求确认脚本后一键生成文章和图文，当前实际默认分镜视图会卸载唯一严格确认端口。独立范围复核准入原组件和测试两路径，技术补充见docs/features/t1070-director-script-workflow/STRUCTURED_SCRIPT_INTEGRATION.md，独评SHA49710fd73cf3448abf50252b65927a0f85a62153b525ddccb6307593feccf173。这是原授权的必要消费者正确性闭包，无新公共合同/表/owner/权限/任务/能力；原93合同及三轮PASS不修改、不reset、不新造Owner=user capability。实现沿同一token/save/current/read/UNKNOWN/generation约束，未知不盲目再append。未代签默认视图模型或安装验收。
+
+
+## DEC-T1070-NOTE-PREVIEW-CONSUMER（2026-10-07）
+
+用户原要求文章/图文候选可预览再采纳。独立实际视觉审读发现全文纵向与整卡横向被裁切；原通用挂载inline hidden覆盖NoteRelay原auto。原生排版挂载及测试两路径已独立范围复核准入，见docs/features/t1070-director-script-workflow/NOTE_PREVIEW_INTEGRATION.md，独评SHA534decbf7326bdcf3b49d6084a9bc01cbfada6695641c246fcd67fa7fbe37d0e。只恢复已存在的滚动策略；既有候选卡内有界宽屏只读预览沿原实例/分页/导出/CAS/UNKNOWN，不增加公共合同/表/owner/权限/任务/runtime/IPC，不修改原93合同和三轮PASS、不另造process capability或重开轮次。实现步骤97路径，模块保留原外部引擎路径。实际可读性与200%仍须实测，单测ready不能代签。
+
+
+## DEC-T1070-CODEX-TOOL-HISTORY（2026-10-07）
+
+原连续创作请求ai-msg-143a8c85-166在既有成功工具回执后被text-only prompt误拒，真实SDK转换和原waiting_user/CODEX_INPUT_MODALITY_UNSUPPORTED已独立核实。两原prompt消费者路径按必要闭包准入，补充CODEX_TOOL_HISTORY_INTEGRATION.md及独评5e415a9e552dba4c123bb657e6abaa41e20fed3d7774379cb8ca1d8ae8e8d781；原实现97变99，无新API/工具授权/runtime/多模态/评审周期。保历史角色/顺序/完整数据，不能当新授权；直接或结果中的多媒体仍unsupported。原任务与deadline保留，不续期、不靠清会话洗绿。
+
+## DEC-T1070-NATIVE-PIXEL-VERSION
+
+用户已要求真实自然语言剪辑并逐功能验证；原warm首帧仍0，已通过一次有界原事件证明decoded1但identity-only GPU缓存仍0。采用真实decoded timestamp的内部texture版本透传，保同帧/静态缓存并覆盖blur，不改公共合同、owner、runtime、依赖或CAS。七archive精确成员独评78c934b5...准入（PIXEL_VERSION_INTEGRATION.md）。机制选择已闭合，真实修复/采纳/导出与安装不代签。原研究一次实验、两具体trace验收0；按用户AGENTS只用taskctl恢复原任务（受支持resume子命令），不让研究工具另写看板。

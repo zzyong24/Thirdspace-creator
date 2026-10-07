@@ -1551,7 +1551,7 @@ export function AICopilotContent({
       // 流式中不打断本轮(极窄竞态:用户上一条还在流)—— 此时**不**标记消费,待 streaming 结束
       // effect 重跑(依赖 streaming)再发,不丢这条请求。functionKey/selection 已随 request 重算进
       // chatContextBody → transport 本次求值带最新上下文,模型据 functionKey 优先调专用工具。
-      if (streaming) return;
+      if (streaming || assistantEngine.checking) return;
       handledRequestNonceRef.current = req.nonce;
       beginComposerRequest(req);
       quickFunctionKeyRef.current = req.functionKey ?? null;
@@ -1572,7 +1572,7 @@ export function AICopilotContent({
     requestAnimationFrame(() => {
       textareaRef.current?.focus();
     });
-  }, [activeRequest, streaming, sendMessage, finishComposerRequest, beginComposerRequest]);
+  }, [activeRequest, streaming, assistantEngine.checking, sendMessage, finishComposerRequest, beginComposerRequest]);
 
   const submit = React.useCallback(() => {
     const value =

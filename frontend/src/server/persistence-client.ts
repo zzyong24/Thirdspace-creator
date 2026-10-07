@@ -9,6 +9,9 @@ import {createMembershipLockService} from "@creatoros/backend/modules/platform-a
 import {createGroupWorkspaceApplication} from "@creatoros/backend/application/queries/group-workspace";
 import {createWorkspaceBlobService} from "@creatoros/backend/modules/assets";
 import { createProjectScriptSource } from "@creatoros/backend/application/project-script-source";
+import {createWorkCreationRoot} from "@creatoros/backend/application/generation/work-creation-root";
+import {createWorkEditorCandidateService,type WorkEditorPorts} from "@creatoros/backend/modules/ai-runtime";
+import type {WorkCreationTarget,WorkEditorTarget} from "@creatoros/contract";
 import {createCreativeCanvasRoot} from "@creatoros/backend/application/generation/creative-canvas-root";
 import {createMomentsModelRoot,createPublicMomentsAiAdapter} from "@creatoros/backend/application/generation/moments-model-root";
 import {createMomentsModelService,type MomentsModelPorts} from "@creatoros/backend/modules/moments";
@@ -791,6 +794,8 @@ interface PersistenceBundle {
 // context readers (assembleChatAssembly reads them for 数据层注入). The readers are bound
 // to the same public services the topic.generate trigger uses (no cross-module repo import).
 export interface ChatRuntime {
+  readCreationTarget?: (ctx:RequestContext,target:WorkCreationTarget)=>Promise<WorkCreationTarget>;
+  readEditorTarget?: (ctx:RequestContext,target:WorkEditorTarget)=>Promise<WorkEditorTarget>;
   resolveRedfoxCredential: ReturnType<typeof createIntegrationCredentials>["resolve"];
   readCurrentScript?: (ctx:RequestContext,projectId:string,signal?:AbortSignal)=>ReturnType<ReturnType<typeof createCurrentArtifactReader>>;
   durable: ReturnType<typeof createChatProductionRuntime>;
@@ -1968,7 +1973,22 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   let productionOverlayCapture:ReturnType<typeof createProductionOverlayCapture>;
   let productionRoughCut:ReturnType<typeof createProductionRoughCutReservations>;
   let productionTranscripts:ReturnType<typeof createProductionTranscripts>;
+  // exact 文件元数据来自原素材属主；不读取模型/native payload 自报的时长。
+  const readNativeEditorMedia=async(c:RequestContext,input:{projectId:string;assetId:string;assetFileId:string},transaction?:typeof db):ReturnType<WorkEditorPorts['readMedia']>=>{
+    await assertProductionEditorAsset(c,input,transaction);
+    const scoped=transaction?createAssetsService(createAssetRepository(transaction,deps),objectStorageForStore(transaction),deps):assetsService;
+    await scoped.assertAssetFileOwned(c,input.assetId,input.assetFileId,false);
+    const asset=await scoped.getAsset(c,input.assetId);
+    const [file]=await scoped.listFilesByIds(c,[input.assetFileId]);
+    if(asset.status!=="active"||!file||file.assetId!==input.assetId)throw new ProductionConflictError("真实素材文件不可读取，原工程保留");
+    const kind=file.mimeType.startsWith("video/")?"video":file.mimeType.startsWith("audio/")?"audio":file.mimeType.startsWith("image/")?"image":null;
+    if(!kind)throw new ProductionConflictError("当前文件不是可编辑媒体");
+    const durationTick=kind==="image"||file.durationMs===null?null:file.durationMs*120;
+    if(durationTick!==null&&(!Number.isSafeInteger(durationTick)||durationTick<=0))throw new ProductionConflictError("真实媒体时长不可核验");
+    return {kind,durationTick};
+  };
   const productionOwnerDeps:Parameters<typeof createProductionService>[0] = {
+    readNativeEditorMedia,
     roughCut:()=>productionRoughCut,
     transcripts:()=>productionTranscripts,
     db,
@@ -3354,6 +3374,14 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   }));
   articleOwnerPorts.assertWorkSource=async(c,ref,projectId)=>{await workSourceService.read(c,projectId,ref,db);};
   graphicOwnerPorts.assertWorkSource=async(c,ref,projectId)=>{await workSourceService.read(c,projectId,ref,db);};
+  const workCreationRoot=createWorkCreationRoot({compositions:workCompositionsFor(db),articles:articlesService,graphicPosts:graphicPostsService,script:projectScriptSource});
+  const workEditorPorts:WorkEditorPorts={
+    readArticle:(c,id)=>articlesService.getArticle(c,id),
+    readGraphicPost:(c,id)=>graphicPostsService.getGraphicPost(c,id),
+    readProduction:(c,id)=>productionService.getEditor(c,id),
+    readMedia:readNativeEditorMedia,
+  };
+  const workEditorCandidate=createWorkEditorCandidateService(workEditorPorts);
   const workSources=createWorkSourcesTransport(()=>workSourceService,db);
   let moments=createMomentsTransport(()=>workMomentsFor(db));
   const workPublicationCoverMaterial=createPublicationCoverMaterialPorts(workPublicationCoverFor);
@@ -6587,6 +6615,8 @@ FAVORITES_PROMOTE_PER_RUN
   });
   const creativeCanvas=createCreativeCanvasTransport(creativeCanvasService,visualMaterialAdoption);
   const chatRuntime: ChatRuntime = {
+    readCreationTarget:async(c,target)=>(await workCreationRoot.read(c,target)).target,
+    readEditorTarget:(c,target)=>workEditorCandidate.readTarget(c,target),
     localCodexStatus:localCodexStatus.read,
     resolveRedfoxCredential: ctx => redfoxCredentials.resolve(ctx),
     readCurrentScript: async (c,projectId,signal) => {signal?.throwIfAborted();const result=await readCurrentArtifactTruth(c,projectId,"output_script");signal?.throwIfAborted();return result;},
@@ -6878,6 +6908,7 @@ getArticleForImage: (ctx, {outputId}) => articlesService.getArticle(ctx, outputI
 
   if(workerEntry){
     chatWorker=composeChatProduction(db,{
+      editor:workEditorPorts,creation:workCreationRoot,
       entryPath:workerEntry,runtime:chatRuntime,now:deps.now,externalImageStorage:objectStorageForCtx,
       topicWorkspace:{getContext:(c,id)=>candidateService.getTopicRecommendationContext(c,id)},
       canvas:{read:(c,id)=>creativeCanvasRoot.service.get(c,id),propose:(c,id,revision,operations)=>creativeCanvasRoot.service.propose(c,id,revision,operations)},

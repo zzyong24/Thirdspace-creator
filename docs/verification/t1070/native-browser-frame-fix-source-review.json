@@ -1,0 +1,36 @@
+{
+  "extractRoot": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1070-frame-independent-jbcvgsci",
+  "archiveSha256": "c9e6fb104f2802d03d443efd44b411b7ca2d7d9241a64caa5fd39eefccfe44db",
+  "sourceCount": 709,
+  "exactChangedMembers": [
+    "NATIVE_REBUILD_CONSISTENCY.json",
+    "README.creatoros.md",
+    "apps/web/src/embedded/__tests__/video-cache-request.test.ts",
+    "apps/web/src/services/video-cache/service.ts"
+  ],
+  "diff": "--- /var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1070-native-final-review-yx1b3_yv/apps/web/src/services/video-cache/service.ts\t1970-01-01 08:00:00\n+++ /var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1070-frame-independent-jbcvgsci/apps/web/src/services/video-cache/service.ts\t1970-01-01 08:00:00\n@@ -45,8 +45,13 @@\n \n \t\tconst previous = this.frameChain.get(mediaId) ?? Promise.resolve();\n \t\tconst current = previous.then(() => {\n-\t\t\tif (this.seekGenerations.get(mediaId) !== generation) {\n-\t\t\t\treturn sinkData.currentFrame ?? null;\n+\t\t\t// 同媒体的画布与导出共用队列；被后续请求取代也只能复用覆盖本次时间的帧。\n+\t\t\tif (\n+\t\t\t\tthis.seekGenerations.get(mediaId) !== generation &&\n+\t\t\t\tsinkData.currentFrame &&\n+\t\t\t\tthis.isFrameValid({ frame: sinkData.currentFrame, time })\n+\t\t\t) {\n+\t\t\t\treturn sinkData.currentFrame;\n \t\t\t}\n \t\t\treturn this.resolveFrame({ sinkData, time });\n \t\t});\n",
+  "verdict": "PASS_SOURCE_AND_REQUEST_TIME_RACE",
+  "runtimeChangedMember": "apps/web/src/services/video-cache/service.ts",
+  "lines": [
+    48,
+    50,
+    51,
+    52,
+    54,
+    56
+  ],
+  "independentTests": {
+    "argv": "bun test --timeout 120000 src/embedded/__tests__/video-cache-request.test.ts",
+    "cwd": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1070-frame-independent-jbcvgsci/apps/web",
+    "exitCode": 0,
+    "tests": 3,
+    "assertions": 42,
+    "returnedForRequested1And0": [
+      1,
+      0
+    ],
+    "fixtureBoundary": "仅MediaBunny decoder为fixture，VideoCache真实request queue/generation/isFrameValid/resolve/seek/prefetch执行"
+  },
+  "evidenceToolChunk": "7eccf9",
+  "productionRealRenderSixFamilies": "已读生产者public-render-frame-validation.json；本轮持久候选frontend准入先失败，尚未独立浏览器新MP4"
+}

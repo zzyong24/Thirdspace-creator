@@ -1,3 +1,4 @@
+import type {WorkEditorTarget,WorkCreationTarget} from "@creatoros/contract";
 import type { CreativeContext } from "./creative-context";
 import { redactedRawErrorMessage } from "./error-diagnostics";
 
@@ -36,6 +37,8 @@ export interface ChatSelection {
  * `functionKey`(按钮层叠加)。`selection`(T-027):工作台选中内容,注入 system + 作工具入参兜底。
  */
 export interface ChatContext {
+  editorTarget?:WorkEditorTarget;
+  creationTarget?:WorkCreationTarget;
   /** 页面层 —— 选基础 skill(选题页 = topics → chatbox.topic)。 */
   surface: string;
   /** 按钮层 —— 在基础 skill 上叠加专用工具白名单(本切片留口子)。 */

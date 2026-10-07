@@ -99,7 +99,8 @@ function VideoReferenceWorkbenchSession({initial,title,onOriginal,onSaved,scope,
   const document=next.plan?.editorVersion===3?productionReferencePlan.parse(next.plan).referenceEditor:null;
   const metadata=(document?.nativeDocument.mediaMetadata??[]) as Array<Record<string,unknown>>;
   media.current=document?.mediaRefs??[];
-  const rows=await Promise.allSettled(media.current.map(async ref=>{const file=exactFiles.current.get(exactFileKey(ref))??await readEditorMedia(ref,controller.current.signal,workspace.capture());exactFiles.current.set(exactFileKey(ref),file);return {...metadata.find(row=>row.mediaId===ref.mediaId),mediaId:ref.mediaId,assetId:ref.assetId,assetFileId:ref.assetFileId,file};}));
+  // SEMANTIC_BOUNDARY_ALLOW: 下载原asset bytes后还原原File描述符mtime，不把重新下载时间当作用户编辑。
+  const rows=await Promise.allSettled(media.current.map(async ref=>{const descriptor=metadata.find(row=>row.mediaId===ref.mediaId);let file=exactFiles.current.get(exactFileKey(ref))??await readEditorMedia(ref,controller.current.signal,workspace.capture());if(typeof descriptor?.lastModified==='number'&&Number.isSafeInteger(descriptor.lastModified)&&file.lastModified!==descriptor.lastModified)file=new File([file],file.name,{type:file.type,lastModified:descriptor.lastModified});exactFiles.current.set(exactFileKey(ref),file);return {...descriptor,mediaId:ref.mediaId,assetId:ref.assetId,assetFileId:ref.assetFileId,file};}));
   const files=rows.flatMap(row=>row.status==='fulfilled'?[row.value]:[]);missingMedia.current=rows.flatMap((row,index)=>row.status==='rejected'?[metadata.find(m=>m.mediaId===media.current[index].mediaId)??{mediaId:media.current[index].mediaId}]:[]);
   if(!alive.current)return;await frame.current!.request('load',{document:document?.nativeDocument??null,title,outputId:next.outputId,media:files});
   if(alive.current){setMediaForView([...media.current]);setReady(true);setDirty(false);dirtyRef.current=false;if(missingMedia.current.length)setNotice(`${missingMedia.current.length} 个素材暂未读到，其余素材可继续编辑；原片引用和时间轴已保留。`);}
@@ -155,7 +156,8 @@ function VideoReferenceWorkbenchSession({initial,title,onOriginal,onSaved,scope,
  }
  const chat=useDraftChatRequest(),directorPort=React.useRef<DraftEditorPort|null>(null),directorTarget=React.useRef<WorkEditorTarget|null>(null),directorGeneration=React.useRef(0),directorSelection=React.useRef<string|null>(null),directorSaved=React.useRef(new Map<string,ProductionEditorVersion>()),directorApplied=React.useRef(new Set<string>());
  const [localSessionId]=React.useState(()=>crypto.randomUUID());
- React.useLayoutEffect(()=>{directorPort.current={readState:()=>({target:directorTarget.current,generation:directorGeneration.current,dirty:dirtyRef.current}),prepareForTurn:async()=>{
+ const directorMountIdentity=`${sessionIdentity?String(sessionIdentity.generation)+':':''}${localSessionId}`;
+ React.useLayoutEffect(()=>{directorPort.current={readState:()=>({target:directorTarget.current,outputId:ready&&visible?ownerRef.current.outputId:undefined,generation:directorGeneration.current,dirty:dirtyRef.current}),prepareForTurn:async()=>{
   if(!visible||!ready||imports.current||nativeImports.current||busyRef.current||busy||aiBusy)throw Error('请等待当前素材或剪辑操作完成。');
   if(pendingApply.current)await resumeNativeReceipt();if(pendingApply.current)throw Error('原时间轴回执尚未确认，请先恢复。');
   await frame.current!.request<NativeContext>('context',{pausePlayback:true});
@@ -166,16 +168,25 @@ function VideoReferenceWorkbenchSession({initial,title,onOriginal,onSaved,scope,
   if(native.outputId!==current.outputId||native.ticksPerSecond!==120000||!Number.isSafeInteger(native.contextEpoch)||dirtyRef.current)throw Error('当前原生选区尚未确认，请重试。');
   const plan=planFor(native);if(canonical(nativeContent(plan))!==canonical(nativeContent(productionReferencePlan.parse(actual.plan))))throw Error('时间轴还有新修改，本次未发送。');
   nativeContextEpoch.current=native.contextEpoch!;directorSelection.current=canonical([native.sceneId,native.selectedElements]);setContext(native);
-  const target:WorkEditorTarget={schemaVersion:1,projectId:actual.projectId,outputId:actual.outputId,owner:'production',contentType:'video',savedBase:{kind:'production',productionId:actual.productionId,revision:actual.revision},documentDigest:await digest(actual.plan),selection:{kind:'native_scene',sceneId:native.sceneId,elementRefs:native.selectedElements,playheadTick:native.playheadTick,contextEpoch:native.contextEpoch!,editorGeneration:sessionIdentity?String(sessionIdentity.generation):localSessionId}};
+  const target:WorkEditorTarget={schemaVersion:1,projectId:actual.projectId,outputId:actual.outputId,owner:'production',contentType:'video',savedBase:{kind:'production',productionId:actual.productionId,revision:actual.revision},documentDigest:await digest(actual.plan),selection:{kind:'native_scene',sceneId:native.sceneId,elementRefs:native.selectedElements,playheadTick:native.playheadTick,contextEpoch:native.contextEpoch!,editorGeneration:directorMountIdentity}};
   directorTarget.current=target;return target;
  },previewCandidate:async(result:WorkEditorCandidate)=>{
   if(result.candidate?.kind!=='native_scene'||result.target.selection.kind!=='native_scene'||!result.candidateDigest)throw Error('当前候选不是可预览的视频场景。');
-  if(result.target.outputId!==ownerRef.current.outputId||result.target.savedBase.kind!=='production'||result.target.savedBase.revision!==ownerRef.current.revision)throw Error('候选基准工程已改变，请重新审阅。');
-  const current=await frame.current!.request<NativeContext>('context');if(current.contextEpoch!==result.target.selection.contextEpoch||dirtyRef.current)throw Error('当前时间轴或选区已改变，请重新生成候选。');
+  if(!visible||!ready||imports.current||nativeImports.current||busyRef.current||busy||aiBusy||pendingApply.current||saveRequest.current)throw Error('请先完成或恢复当前素材与剪辑操作，再预览候选。');
+  const operation=workspace.capture(),owner=ownerRef.current,handle=frame.current;
+  const check=()=>{operation.assertCurrent();if(!alive.current||frame.current!==handle||ownerRef.current.outputId!==owner.outputId||ownerRef.current.revision!==owner.revision)throw Error('当前作品已改变，请重新预览。');};
+  if(result.target.outputId!==owner.outputId||result.target.projectId!==owner.projectId||result.target.savedBase.kind!=='production'||result.target.savedBase.productionId!==owner.productionId||result.target.savedBase.revision!==owner.revision)throw Error('候选基准工程已改变，请重新审阅。');
+  const actual=await client.getProductionEditor({params:{outputId:owner.outputId},query:undefined,body:undefined});check();
+  if(actual.productionId!==owner.productionId||actual.revision!==owner.revision||actual.plan?.editorVersion!==3||canonical(actual.plan)!==canonical(owner.plan)||await digest(actual.plan)!==result.target.documentDigest)throw Error('候选基准工程已改变，请重新审阅。');check();
+  const current=await handle!.request<NativeContext>('context');check();
+  // SEMANTIC_BOUNDARY_ALLOW: 刷新恢复只核真实旧base与完整前值；新mount不复用旧epoch，不改变候选或CAS基准。
+  if(current.outputId!==owner.outputId||!Number.isSafeInteger(current.contextEpoch)||dirtyRef.current||canonical(nativeContent(planFor(current)))!==canonical(nativeContent(productionReferencePlan.parse(actual.plan)))||(result.target.selection.editorGeneration===directorMountIdentity&&current.contextEpoch!==result.target.selection.contextEpoch))throw Error('当前时间轴或选区已改变，请重新生成候选。');
   const sceneId=result.target.selection.sceneId;const scene=((current.document.scenes??[]) as Array<{id:string;tracks:Record<string,unknown>}>).find(scene=>scene.id===sceneId);if(!scene)throw Error('候选原场景已不可读取。');
+  const edit=result.apply?.operation==='applyProductionEditor'?result.apply.body.edits.find(edit=>edit.sceneId===sceneId):null;
+  if(!edit||result.candidate.document.id!==sceneId||await digest(scene.tracks)!==edit.expectedBeforeDigest)throw Error('当前时间轴前值已改变，请重新审阅候选。');check();
   const refs=media.current;const descriptors=(current.mediaMetadata??[]);const files=await Promise.all(refs.map(async ref=>{const metadata=descriptors.find(row=>row.mediaId===ref.mediaId);if(!metadata)throw Error('实际媒体信息尚未读到。');const cached=exactFiles.current.get(exactFileKey(ref));const fresh=cached??await readEditorMedia(ref,controller.current.signal,workspace.capture());const file=cached??new File([fresh],String(metadata.name),{type:fresh.type,lastModified:Number(metadata.lastModified)});return {...metadata,mediaId:ref.mediaId,assetId:ref.assetId,assetFileId:ref.assetFileId,file};}));
   const payload:NativePreviewSceneRequest={owner:{groupId,accountId,projectId:ownerRef.current.projectId,outputId:ownerRef.current.outputId,sourceVersionId:mountVersion},targetSceneId:scene.id,baseContextEpoch:current.contextEpoch!,beforeDigest:await digest(scene.tracks),candidateDigest:result.candidateDigest,tracks:result.candidate.document.tracks,media:files as NativePreviewSceneRequest['media']};
-  const output=await frame.current!.request<NativePreviewSceneResult>('preview-scene',payload);if(output.candidateDigest!==result.candidateDigest||output.sceneId!==scene.id||output.contextEpoch!==current.contextEpoch||!(output.blob instanceof Blob)||!output.blob.size)throw Error('预览回执与候选不一致。');return {blob:output.blob,fileName:output.fileName};
+  check();const output=await handle!.request<NativePreviewSceneResult>('preview-scene',payload);check();if(output.candidateDigest!==result.candidateDigest||output.sceneId!==scene.id||output.contextEpoch!==current.contextEpoch||!(output.blob instanceof Blob)||!output.blob.size)throw Error('预览回执与候选不一致。');return {blob:output.blob,fileName:output.fileName};
  },adoptCandidate:async(result,requestId:string)=>{
   if(result.kind==='work.creation.member')throw Error('文章或图文候选不能写入视频。');
   if(result.apply?.operation!=='applyProductionEditor'||result.candidate?.kind!=='native_scene')throw Error('当前候选不可用于视频采纳。');

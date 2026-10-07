@@ -1,0 +1,288 @@
+{
+  "task": "T-1070",
+  "review": "现有界面 VIS-M01 高度链修复独立只读闭合复核",
+  "reviewedAtLocalDate": "2026-10-07",
+  "project": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "mode": "existing-project / visual-review，不评分",
+  "rules": [
+    ".agents/skills/oil-ui-pro/SKILL.md（已在原评审加载，0.10.0）",
+    "docs/features/t1022-account-group-workspace/UI_RULES.md（已在原评审加载）"
+  ],
+  "scope": {
+    "route": "http://127.0.0.1:4371/projects/project-95c4e17c-23",
+    "groupId": "grp-95c4e17c-21",
+    "groupName": "编导改版中性基线",
+    "projectId": "project-95c4e17c-23",
+    "conversationId": "ai-conv-95c4e17c-417",
+    "sourceMessageId": "ai-msg-9d33019f-189",
+    "historySelectedByUI": "请使用已确认脚本与同一创作方法，一起生成完整文章 2026-10-07 15:36",
+    "candidateArticleHref": "/projects/project-95c4e17c-23/article?outputId=output-9d33019f-166",
+    "candidateGraphicHref": "/projects/project-95c4e17c-23/outputs/output-9d33019f-178/image",
+    "acceptedDirection": "保留原丰富紫色工作台及既有创作流程；仅复核剩余聊天可达性，不提出新风格或新能力。",
+    "checks": [
+      "1366×900 与 1280×720，关闭及发送入口同时完整处于视口内",
+      "同一已有联合候选对话实际滚动至顶部和底部，聊天独立滚动",
+      "两视口实际关闭并重新展开编导栏",
+      "文章与图文相邻候选弹层打开后 Esc 关闭与焦点返回"
+    ],
+    "excluded": [
+      "不重读实现代码或制作历史",
+      "不重测文章全部章节、图文页2；沿用上一轮独立 M02 复核",
+      "不代签 root 独立实际 200% 浏览器缩放核验",
+      "不测试发送、采纳、owner 保存、视频执行或导出"
+    ]
+  },
+  "result": {
+    "scopedPass": true,
+    "overallPass": true,
+    "overallPassMeaning": "仅表示本报告指定的 VIS-M01 与相邻弹层 Esc/焦点复核通过，不表示 T-1070 全量 Gate 或 200% 核验通过。",
+    "remainingMajor": [],
+    "closedMajor": [
+      "VIS-M01"
+    ],
+    "newMajor": [],
+    "newMinor": [],
+    "conclusion": "两视口的脚本 host 已受可见高度约束，聊天可实际独立滚至首尾；顶部关闭与底部发送入口同时完整可达。原先外层增高、隐藏裁切和聊天无法独立滚动的 VIS-M01 在本次真实页面复核中闭合。"
+  },
+  "viewportEvidence": [
+    {
+      "viewport": {
+        "width": 1366,
+        "height": 900
+      },
+      "main": {
+        "top": 96,
+        "bottom": 876,
+        "height": 780,
+        "clientHeight": 780,
+        "scrollHeight": 780,
+        "scrollTop": 0
+      },
+      "activeRouteOutlet": {
+        "top": 96,
+        "bottom": 876,
+        "height": 780,
+        "clientHeight": 780,
+        "scrollHeight": 780,
+        "scrollTop": 0
+      },
+      "chatScrollContainer": {
+        "top": 235.5,
+        "bottom": 528.2890625,
+        "height": 292.7890625,
+        "clientHeight": 291,
+        "scrollHeight": 1459,
+        "overflowY": "auto"
+      },
+      "actualWheelScroll": [
+        {
+          "action": "已有会话打开后的候选底部",
+          "scrollTop": 1168
+        },
+        {
+          "action": "聊天内部向上滚动2页",
+          "scrollTop": 0
+        },
+        {
+          "action": "聊天内部向下滚动2页",
+          "scrollTop": 1168,
+          "maxScroll": 1168
+        }
+      ],
+      "closeControl": {
+        "top": 102,
+        "bottom": 126,
+        "height": 24,
+        "fullyWithinViewport": true
+      },
+      "sendControl": {
+        "top": 811,
+        "bottom": 847,
+        "height": 36,
+        "fullyWithinViewport": true,
+        "disabled": true,
+        "disabledReason": "输入为空；未输入或发送任何内容"
+      },
+      "body": {
+        "clientHeight": 900,
+        "scrollHeight": 900,
+        "scrollTopBefore": 0,
+        "scrollTopAfterUp": 0,
+        "scrollTopAfterDown": 0
+      },
+      "actualCloseReopen": {
+        "closed": true,
+        "evidenceWhenClosed": "AX 中收起编导栏及聊天、输入控件退出，出现展开编导栏",
+        "reopened": true,
+        "restoredExistingConversation": true,
+        "chatScrollTopAfterReopen": 1168,
+        "sendBottomAfterReopen": 847
+      },
+      "actualImagesViewed": [
+        "本轮私有页 1366×900 候选底部及完整发送区截图",
+        "本轮私有页 1366×900 聊天顶部用户消息截图；左工作台及关闭/发送位置未移动",
+        "本轮私有页 1366×900 文章候选 Dialog 首章截图",
+        "本轮私有页 1366×900 关闭再展开后的原候选及发送区截图"
+      ],
+      "pass": true
+    },
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "main": {
+        "top": 96,
+        "bottom": 696,
+        "height": 600,
+        "clientHeight": 600,
+        "scrollHeight": 600,
+        "scrollTop": 0
+      },
+      "chatScrollContainer": {
+        "top": 235.5,
+        "bottom": 355.5,
+        "height": 120,
+        "clientHeight": 118,
+        "scrollHeight": 1459,
+        "overflowY": "auto"
+      },
+      "actualWheelScroll": [
+        {
+          "action": "从1366视口缩至1280后的当前聊天位置",
+          "scrollTop": 1119.5
+        },
+        {
+          "action": "聊天内部向上滚动3页",
+          "scrollTop": 0
+        },
+        {
+          "action": "聊天内部向下滚动3页",
+          "scrollTop": 1341,
+          "maxScroll": 1341
+        }
+      ],
+      "closeControl": {
+        "top": 102,
+        "bottom": 126,
+        "height": 24,
+        "fullyWithinViewport": true
+      },
+      "sendControl": {
+        "top": 638.2109375,
+        "bottom": 674.2109375,
+        "height": 36,
+        "fullyWithinViewport": true,
+        "disabled": true,
+        "disabledReason": "输入为空；未输入或发送任何内容"
+      },
+      "prompt": {
+        "top": 376.5,
+        "bottom": 428.5,
+        "height": 52,
+        "fullyWithinViewport": true
+      },
+      "body": {
+        "clientHeight": 720,
+        "scrollHeight": 720,
+        "scrollTopBefore": 0,
+        "scrollTopAfterUp": 0,
+        "scrollTopAfterDown": 0
+      },
+      "actualCloseReopen": {
+        "closed": true,
+        "evidenceWhenClosed": "AX 中收起编导栏及聊天、输入控件退出，出现展开编导栏",
+        "reopened": true,
+        "restoredExistingConversation": true,
+        "chatClientHeightAfterReopen": 118,
+        "chatScrollHeightAfterReopen": 1459,
+        "chatScrollTopAfterReopen": 1341,
+        "bodyScrollTopAfterReopen": 0
+      },
+      "actualImagesViewed": [
+        "本轮私有页 1280×720 文章候选位置及完整发送区截图",
+        "本轮私有页 1280×720 聊天顶部用户消息截图",
+        "本轮私有页 1280×720 滚至最后图文候选的截图，预览/采纳/打开入口进入聊天可见范围",
+        "本轮私有页 1280×720 图文候选 Dialog 第1页截图"
+      ],
+      "limit": "聊天可读区域为118px，需要滚动阅读；本轮已实际滚达首尾，不将其写成所有聊天内容可在初始帧同时看见。",
+      "pass": true
+    }
+  ],
+  "adjacentPreviewRegression": [
+    {
+      "viewport": {
+        "width": 1366,
+        "height": 900
+      },
+      "candidate": "文章",
+      "actuallyOpened": true,
+      "screenshotActuallyViewed": true,
+      "actuallyPressedEscape": true,
+      "dialogCountAfterEscape": 0,
+      "focusAfterEscape": {
+        "tag": "BUTTON",
+        "text": "预览候选",
+        "ariaExpanded": "false",
+        "returnedToCorrespondingTrigger": true
+      },
+      "bodyScrollTopAfter": 0,
+      "pass": true
+    },
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "candidate": "图文",
+      "actuallyOpened": true,
+      "screenshotActuallyViewed": true,
+      "actuallyPressedEscape": true,
+      "dialogCountAfterEscape": 0,
+      "focusAfterEscape": {
+        "tag": "BUTTON",
+        "text": "预览候选",
+        "ariaExpanded": "false",
+        "returnedToCorrespondingTrigger": true
+      },
+      "bodyScrollTopAfter": 0,
+      "pass": true
+    }
+  ],
+  "evidenceReferences": {
+    "unchangedPreviousReports": [
+      "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-diagnosis/current-visual-review.json",
+      "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-diagnosis/current-visual-closure-review.json"
+    ],
+    "previousM02Closure": "current-visual-closure-review.json 中已有两视口文章完整后续章节及图文整卡/页2真实复核，本轮仅复核相邻弹层 Esc/焦点。",
+    "currentEvidenceStorage": "本轮实际查看 CUA 工具返回的截图与只读 DOM 几何；遵守仅追加此 JSON 的要求，未写新截图文件。",
+    "oldScreenshotFilesNotTreatedAsCurrentPass": [
+      "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-browser-baseline/real-ui-creation-article-preview.png",
+      "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-browser-baseline/real-ui-creation-graphic-preview.png"
+    ]
+  },
+  "minimalUsabilityAdvice": [
+    "保持脚本 host 的可见高度约束和聊天容器独立滚动；让关闭与发送入口同时处于可见范围。",
+    "1280×720 的聊天区仍较短，沿现组件和同一工作台继续维护阅读空间；本次闭合不要求引入新风格或新能力。",
+    "保留候选预览 Esc 关闭后返回原按钮的焦点行为。"
+  ],
+  "boundariesAndCleanup": {
+    "aiMessagesSubmitted": 0,
+    "paidCallsInitiated": 0,
+    "adoptionActions": 0,
+    "ownerSaveActions": 0,
+    "exportActions": 0,
+    "implementationFilesRead": 0,
+    "serverRestarts": 0,
+    "controlDocumentsModified": 0,
+    "onlyWrittenFile": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-diagnosis/current-visual-host-closure.json",
+    "oldFailReportsPreserved": true,
+    "ownTabId": "417863161",
+    "existingUserTabTouched": false,
+    "originalAccountGroupRestored": "编导真实UI-b83bc312-72ef-438c-b48d-347967f84dff",
+    "restoredGroupConfirmedByAX": true,
+    "viewportOverrideReset": true,
+    "ownTabClosed": true,
+    "actual200PercentReviewSigned": false
+  }
+}

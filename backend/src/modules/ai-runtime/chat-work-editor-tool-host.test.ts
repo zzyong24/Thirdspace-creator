@@ -1,0 +1,28 @@
+import { it, expect } from 'vitest';
+import { buildChatTools } from './chat-tools';
+import { prepareChatToolDefinitions } from './chat-tool-definitions';
+import { createChatWorkEditorToolHost } from './chat-work-editor-tool-host';
+import { workEditorContentDigest } from './work-editor-candidate';
+import type { WorkEditorTarget } from '@creatoros/contract';
+const ctx = { userId: 'u', accountId: 'a', groupId: 'g', source: 'user' as const, requestId: 'r' }, ref = { executionTaskId: 'task', attempt: 1, fenceToken: 'fence' };
+it('原短host严格核三维owner/冻结effect版本并只产原owner候选', async () => {
+    const document = { schemaVersion: 1 as const, title: '真实文章', summary: '摘要', sections: [{ sectionId: 's', order: 0, heading: '原标题', headingLevel: 2, body: '原正文', sourceRefs: [] }], factItems: [], visualBriefs: [], imageUses: [] };
+    const target: WorkEditorTarget = { schemaVersion: 1, projectId: 'p', outputId: 'o', owner: 'wechat_article', contentType: 'article', savedBase: { kind: 'artifact', artifactId: 'a', versionId: 'v' }, documentDigest: workEditorContentDigest(document), selection: { kind: 'article_sections', sectionIds: ['s'] } };
+    const defs = (await prepareChatToolDefinitions(buildChatTools(['work.editor.read', 'work.editor.propose'], { humanizeError: () => null } as any))).definitions;
+    let version = 'v';
+    let frozen: any = { context: ctx, hostContext: { chatContext: { surface: 'project', projectId: 'p', editorTarget: target } }, modelInput: { tools: defs } };
+    const host = createChatWorkEditorToolHost({ read: async () => frozen } as any, { readArticle: async () => ({ projectId: 'p', outputId: 'o', artifactId: 'a', currentVersionId: version, current: document, versions: [] }), readGraphicPost: async () => { throw Error('不应读'); }, readProduction: async () => { throw Error('不应读'); }, readMedia: async () => { throw Error('不应读'); } });
+    const signal = new AbortController().signal, tools = await host(ctx, {} as any, ref, signal);
+    expect(Object.keys(tools)).toEqual(['work.editor.read', 'work.editor.propose']);
+    const out = await tools['work.editor.read']!.execute!(ctx, { view: 'selection' }, { execution: ref, aiTaskId: 'ai', callId: 'call', toolCallId: 'tool', signal });
+    expect(out).toMatchObject({ status: 'ok', sideEffect: 'none', data: { kind: 'work.editor.context', selected: [{ sectionId: 's', body: '原正文' }] } });
+    version = 'changed';
+    const conflict = await tools['work.editor.read']!.execute!(ctx, { view: 'selection' }, { execution: ref, aiTaskId: 'ai', callId: 'conflict', toolCallId: 'conflict', signal });
+    expect(conflict).toMatchObject({ status: 'error', sideEffect: 'none', data: { kind: 'work.editor.context', target, failureCode: 'conflict', error: expect.stringContaining('版本') } });
+    version = 'v';
+    await expect(host({ ...ctx, accountId: 'foreign-same-group' }, {} as any, ref, signal)).rejects.toThrow('账号组');
+    frozen = { ...frozen, modelInput: { tools: [{ ...defs[0], effect: 'proposal' }] } };
+    await expect(host(ctx, {} as any, ref, signal)).rejects.toThrow('定义');
+    frozen = { ...frozen, modelInput: { tools: [{ ...defs[0], version: 'forged' }] } };
+    await expect(host(ctx, {} as any, ref, signal)).rejects.toThrow('定义');
+});

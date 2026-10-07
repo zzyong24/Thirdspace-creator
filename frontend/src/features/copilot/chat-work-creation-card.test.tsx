@@ -145,14 +145,20 @@ it("两候选分别预览/独立采纳：文章成功后图文未知不回滚；
     g = within(rows[1]);
   expect(a.getByRole("button", { name: "采纳文章" })).toBeDisabled();
   fireEvent.click(a.getByRole("button", { name: "预览候选" }));
+  expect(await screen.findByRole('dialog',{name:'文章候选预览'})).toBeVisible();
+  expect(screen.getByTestId('wechat-preview')).toHaveAttribute('data-readonly','true');
+  expect(api.createArticleVersion).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole('button',{name:'关闭'}));
+  await waitFor(()=>expect(screen.queryByRole('dialog')).toBeNull());
   fireEvent.click(g.getByRole("button", { name: "预览候选" }));
-  await waitFor(() =>
-    expect(a.getByRole("button", { name: "采纳文章" })).not.toBeDisabled(),
-  );
+  expect(await screen.findByRole('dialog',{name:'图文候选预览'})).toBeVisible();
   expect(screen.getByTestId("rednote-preview")).toHaveAttribute(
     "data-readonly",
     "true",
   );
+  fireEvent.click(screen.getByRole('button',{name:'关闭'}));
+  await waitFor(()=>expect(screen.queryByRole('dialog')).toBeNull());
+  expect(a.getByRole("button", { name: "采纳文章" })).not.toBeDisabled();
   fireEvent.click(a.getByRole("button", { name: "采纳文章" }));
   await a.findByRole("status");
   fireEvent.click(g.getByRole("button", { name: "采纳图文" }));

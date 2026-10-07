@@ -1,0 +1,118 @@
+{
+  "status": "ROOT_CAUSE_CONFIRMED_NOT_FIXED",
+  "bundleUnderTestSha256": "58f42ac9a39500ddf6c6bcfab3df79eb4c8477ae2d61afaf4a852e2a77a5cb5e",
+  "loggingOnlyInstrumentedCopySha256": "7df1d89f76f89435a816cec238e25e7ac00518701fb866ce1f4a89c27ed469a9",
+  "instrumentedPreviewSha256": "3ef6db531873fdcb4fdae417e35c8a1c9f1749bf13bb52048a3fcf986892463c",
+  "exactEvents": [
+    {
+      "n": 3,
+      "at": 273.8999999910593,
+      "type": "frame-return",
+      "mediaId": "41aa02b2-364c-479e-946e-18f67c87b968",
+      "time": 0,
+      "timestamp": 0,
+      "duration": 0.041666666666666664,
+      "canvas": 2,
+      "pixels": 1473438556,
+      "currentTimestamp": 0
+    },
+    {
+      "n": 6,
+      "at": 292.5,
+      "type": "texture-upload",
+      "id": "root:1:source",
+      "canvas": 2,
+      "pixels": 1473438556
+    },
+    {
+      "n": 10,
+      "at": 358.3999999910593,
+      "type": "frame-return",
+      "mediaId": "41aa02b2-364c-479e-946e-18f67c87b968",
+      "time": 0,
+      "timestamp": 0,
+      "duration": 0.041666666666666664,
+      "canvas": 2,
+      "pixels": 1473438556,
+      "currentTimestamp": 0
+    },
+    {
+      "n": 12,
+      "at": 358.69999998807907,
+      "type": "texture-decision",
+      "id": "root:1:source",
+      "canvas": 2,
+      "previousCanvas": 2,
+      "pixels": 1473438556,
+      "lastUploadedPixels": 1473438556,
+      "identityHit": true
+    },
+    {
+      "n": 16,
+      "at": 631.7999999970198,
+      "type": "frame-return",
+      "mediaId": "41aa02b2-364c-479e-946e-18f67c87b968",
+      "time": 1,
+      "timestamp": 1,
+      "duration": 0.041666666666666664,
+      "canvas": 2,
+      "pixels": 2956356774,
+      "currentTimestamp": 1
+    },
+    {
+      "n": 18,
+      "at": 632.1999999880791,
+      "type": "texture-decision",
+      "id": "root:1:source",
+      "canvas": 2,
+      "previousCanvas": 2,
+      "pixels": 2956356774,
+      "lastUploadedPixels": 1473438556,
+      "identityHit": true
+    },
+    {
+      "n": 19,
+      "at": 632.5999999940395,
+      "type": "renderer-composited",
+      "renderer": 4,
+      "time": 0
+    },
+    {
+      "n": 22,
+      "at": 640.6999999880791,
+      "type": "frame-return",
+      "mediaId": "41aa02b2-364c-479e-946e-18f67c87b968",
+      "time": 1.0416666666666667,
+      "timestamp": 1.0416666666666667,
+      "duration": 0.041666666666666664,
+      "canvas": 5,
+      "pixels": 33299731,
+      "currentTimestamp": 1.0416666666666667
+    },
+    {
+      "n": 24,
+      "at": 642.2999999970198,
+      "type": "texture-decision",
+      "id": "root:1:source",
+      "canvas": 5,
+      "previousCanvas": 2,
+      "pixels": 33299731,
+      "lastUploadedPixels": 1473438556,
+      "identityHit": false
+    },
+    {
+      "n": 25,
+      "at": 642.2999999970198,
+      "type": "texture-upload",
+      "id": "root:1:source",
+      "canvas": 5,
+      "pixels": 33299731
+    }
+  ],
+  "sourceConsumer": "apps/web/src/services/renderer/compositor/wasm-compositor.ts:119",
+  "mechanism": "MediaBunny池复用同OffscreenCanvas对象，首帧真实像素已改变但identity-only纹理缓存跳过upload，GPU纹理仍原0秒。",
+  "limits": [
+    "仅日志probe副本，改变少量执行时间，但未instrument原新生产bundle暖缓存也实际首帧0；不代签修复或owner CAS",
+    "没有修改生产/source/MAIN/控制面/用户库，没有启动AI或采纳"
+  ]
+}

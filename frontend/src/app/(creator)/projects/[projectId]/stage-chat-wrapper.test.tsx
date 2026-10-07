@@ -87,14 +87,27 @@ it.each([
   expect(screen.getAllByTestId("director")).toHaveLength(1);
   expect(screen.getByTestId("director")).toHaveTextContent("project:p");
 });
-it("脚本既有栏由稿面保留，阶段容器不重复挂载", () => {
+it("脚本既有栏由稿面保留，阶段容器不重复挂载或截断原flex高度链", () => {
   route.path = "/projects/p";
-  render(
+  const {container}=render(
     <StageChatWrapper projectId="p" projectTitle="项目">
       <p>稿面原栏</p>
     </StageChatWrapper>,
   );
   expect(screen.queryByTestId("director")).not.toBeInTheDocument();
+  expect(screen.getByText("稿面原栏").parentElement).toBe(container);
+});
+
+it("从脚本进入作品后才挂容器测量，不保留未挂载的旧observer", () => {
+  const resize=measuredContainer(1046);
+  route.path="/projects/p";
+  const view=render(<StageChatWrapper projectId="p" projectTitle="项目"><p>稿件</p></StageChatWrapper>);
+  route.path="/projects/p/article";
+  view.rerender(<StageChatWrapper projectId="p" projectTitle="项目"><p>稿件</p></StageChatWrapper>);
+  expect(screen.getByLabelText("编导对话")).toHaveStyle({width:"320px"});
+  resize(1000);
+  expect(screen.queryByTestId("director")).not.toBeInTheDocument();
+  expect(screen.getByRole("button",{name:"打开编导"})).toBeVisible();
 });
 it("窄屏本地打开编导，可 Escape 关闭并回到原按钮", async () => {
   window.matchMedia = vi.fn(

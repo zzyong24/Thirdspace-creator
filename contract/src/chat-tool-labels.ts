@@ -19,6 +19,10 @@ export interface ChatToolLabel {
 
 /** 全部 chatbox 白名单工具的中文名 + 一句话用途。 */
 export const CHAT_TOOL_LABELS: Readonly<Record<string, ChatToolLabel>> = {
+  "work.editor.read":{name:"读取当前作品",purpose:"读取已保存作品和真实选区、字段及版本"},
+  "work.editor.propose":{name:"生成精调候选",purpose:"对当前文章、图文或原生时间线提出可预览的局部修改"},
+  "work.creation.read":{name:"读取确认脚本",purpose:"读取联合创作共同脚本与两份作品的真实保存版本"},
+  "work.creation.propose":{name:"生成文章和图文候选",purpose:"由当前引擎一次创作同源文章和图文，分别预览采纳"},
   "canvas.read": {name:"读取当前画布",purpose:"读取明确选中的画布节点、连接和保存版本"},
   "canvas.propose": {name:"保存画布建议",purpose:"保存待用户检查和应用的画布候选操作"},
   "history.read": { name: "读取对话原文", purpose: "按页读回本轮已冻结的历史消息" },
