@@ -1,0 +1,17 @@
+基线 e56cd2735774762908d59022aad265554849972a；仅在 TypeScript CompilerHost 内覆盖 8 个已修改源码；排除新增测试，不改工作树。
+src/modules/ai-runtime/asset-business-execution.service.test.ts(40,44): error TS2345: Argument of type 'Mock<() => Promise<void>>' is not assignable to parameter of type '(() => boolean) | undefined'.
+  Type 'Mock<() => Promise<void>>' is not assignable to type '() => boolean'.
+    Type 'Promise<void>' is not assignable to type 'boolean'.
+src/modules/ai-runtime/chat-assembly.test.ts(1521,33): error TS2353: Object literal may only specify known properties, and 'captureScreenshotPort' does not exist in type 'Partial<AssembleChatDeps>'.
+src/modules/ai-runtime/chat-assembly.test.ts(1546,33): error TS2353: Object literal may only specify known properties, and 'readWebUrlPort' does not exist in type 'Partial<AssembleChatDeps>'.
+src/modules/ai-runtime/signal-quality.test.ts(10,40): error TS2307: Cannot find module './topic-task-adapter' or its corresponding type declarations.
+src/modules/ai-runtime/transcribe-runner.test.ts(15,3): error TS2305: Module '"./transcribe-runner"' has no exported member 'runTranscribe'.
+src/modules/ai-runtime/transcribe-runner.test.ts(18,8): error TS2305: Module '"./transcribe-runner"' has no exported member 'TranscribeRunnerDeps'.
+src/modules/ai-runtime/transcribe-runner.test.ts(558,27): error TS7006: Parameter 'e' implicitly has an 'any' type.
+src/modules/ai-runtime/transcribe-runner.test.ts(561,23): error TS7006: Parameter 'ms' implicitly has an 'any' type.
+src/modules/ai-runtime/transcribe-runner.test.ts(600,27): error TS7006: Parameter 'e' implicitly has an 'any' type.
+src/modules/ai-runtime/transcribe-runner.test.ts(753,27): error TS7019: Rest parameter 'args' implicitly has an 'any[]' type.
+src/modules/ai-runtime/transcribe-runner.test.ts(754,25): error TS7019: Rest parameter 'args' implicitly has an 'any[]' type.
+src/modules/execution/asset-worker-runtime.integration.test.ts(82,70): error TS2339: Property 'legacy' does not exist on type 'Preparation'.
+
+基线诊断条数：12

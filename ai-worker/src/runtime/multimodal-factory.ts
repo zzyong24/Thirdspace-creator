@@ -125,6 +125,8 @@ export interface GeneratedTranscript {
  *  但对工厂/上层而言两者签名都返 `Promise<GeneratedAsset>` —— 异步性被封装。
  *  某 provider 只支持其一(如只出图)→ 另一个方法可不实现(工厂调用时报明确错误)。 */
 export interface MultimodalProviderAdapter {
+  /** 释放此实例拥有的执行资源；调用者须等待关闭后才交还任务归属。 */
+  close?(): Promise<void>;
   generateImage?(
     spec: MultimodalSpec,
     opts: GenerateImageOptions,

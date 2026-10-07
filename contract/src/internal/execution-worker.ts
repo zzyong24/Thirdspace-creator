@@ -246,17 +246,22 @@ export const workerReservationSchema = z.object({
 }).strict();
 export const workerStartReceiptSchema = z.object({callId: operationKeySchema, status: z.literal("started")}).strict();
 const envelope = { version: z.literal(1), requestId: z.string().min(1) };
+/** 可选私有协议；旧宿主/Worker 未协商时维持原 requestId 重投语义。 */
+const receiptProtocol = z.literal('consumed-v1');
+const callSeq = z.number().int().positive().max(Number.MAX_SAFE_INTEGER);
+const consumedRange = z.object({fromSeq:callSeq,toSeq:callSeq}).strict().refine(range=>range.fromSeq<=range.toSeq,'确认区间顺序错误');
 export const workerStopReasonSchema = z.enum(["completed", "cancelled", "failed", "unknown_result", "retry_wait", "waiting_user"]);
 export type WorkerStopReason = z.infer<typeof workerStopReasonSchema>;
 export const hostMessageSchema = z.discriminatedUnion("type", [
-  z.object({...envelope, type: z.literal("run"), execution: executionRefSchema, deadlineAt: z.number().finite().nullable()}),
+  z.object({...envelope, type: z.literal("run"), execution: executionRefSchema, deadlineAt: z.number().finite().nullable(), receiptProtocol: receiptProtocol.optional()}),
   z.object({...envelope, type: z.literal("cancel"), execution: executionRefSchema}),
-  z.object({...envelope, type: z.literal("reply"), ok: z.boolean(), data: z.unknown().optional(), errorCode: z.string().optional()}),
+  z.object({...envelope, type: z.literal("reply"), ok: z.boolean(), data: z.unknown().optional(), errorCode: z.string().optional(), execution: executionRefSchema.optional(), callSeq: callSeq.optional()}),
 ]);
 export type HostMessage = z.infer<typeof hostMessageSchema>;
 export const workerMessageSchema = z.discriminatedUnion("type", [
-  z.object({...envelope, type: z.literal("ready"), capabilities: z.array(z.string())}),
-  z.object({...envelope, type: z.literal("call"), execution: executionRefSchema, port: workerPortSchema, data: z.unknown()}),
+  z.object({...envelope, type: z.literal("ready"), capabilities: z.array(z.string()), receiptProtocol: receiptProtocol.optional()}),
+  z.object({...envelope, type: z.literal("call"), execution: executionRefSchema, port: workerPortSchema, data: z.unknown(), callSeq: callSeq.optional()}),
+  z.object({...envelope, type: z.literal("consumed"), execution: executionRefSchema, throughSeq: z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER), consumedRanges:z.array(consumedRange).optional()}),
   z.object({...envelope, type: z.literal("progress"), execution: executionRefSchema, seq: z.number().int().nonnegative(), text: z.string()}),
   z.object({...envelope, type: z.literal("stopped"), execution: executionRefSchema, reason: workerStopReasonSchema}),
 ]);
@@ -303,6 +308,10 @@ export type TranscribePostprocessResult=z.infer<typeof transcribePostprocessResu
 
 export function sameExecution(a: ExecutionRef, b: ExecutionRef): boolean {
   return a.executionTaskId === b.executionTaskId && a.attempt === b.attempt && a.fenceToken === b.fenceToken;
+}
+/** SEMANTIC_BOUNDARY_ALLOW: 私有协议身份绑定，不解释内容或作创作选择。 */
+export function workerCallRequestId(execution:ExecutionRef,callSeq:number):string{
+  return JSON.stringify([execution.executionTaskId,execution.attempt,execution.fenceToken,callSeq]);
 }
 
 const completionPolicySchema=z.object({schemaVersion:z.literal(1),minSegments:z.number().int().nonnegative(),maxSegments:z.number().int().positive().nullable(),requiredSequence:z.array(z.string()),repairAttempts:z.number().int().nonnegative()}).strict();

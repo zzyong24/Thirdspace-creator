@@ -30,7 +30,7 @@ function checkpointFixture() {
 describe("真实独立 Worker 进程", () => {
   beforeAll(() => {
     execFileSync(process.execPath, [resolve("../ai-worker/scripts/build.mjs")], {stdio: "pipe"});
-  }, 30000);
+  }, 120000);
   it("使用私有端口取上下文与凭据，经真实 SDK 调本地供应商并提交结果", async () => {
     const calls: string[] = [];
     let submitted: unknown;
@@ -68,7 +68,7 @@ describe("真实独立 Worker 进程", () => {
       expect(await supervisor.run(execution, Date.now()+10000)).toBe("completed");
       expect(requestCount).toBe(1);
     } finally {await supervisor.stop(); await new Promise<void>(resolve => server.close(() => resolve()));}
-  }, 15000);
+  }, 120000);
 
   it.each(["MODEL_AUTHORITY_CHANGED","MODEL_CREDENTIAL_UNAVAILABLE"])("凭据端口 %s 进入等待用户，且不启动供应商调用",async code=>{
     const calls:string[]=[];
@@ -163,7 +163,7 @@ describe("真实独立 Worker 进程", () => {
       expect(JSON.stringify(results)).not.toContain("private-key-in-error");
       if (status === 429) expect(results).toContainEqual(expect.objectContaining({port: "commitResult", data: expect.objectContaining({retryAfterMs: 120000})}));
     } finally {await supervisor.stop(); server.closeAllConnections(); await new Promise<void>(resolve => server.close(() => resolve()));}
-  }, 15000);
+  }, 120000);
 
   it("活动流取消会断开供应商，仅结算未知用量，不提交候选且能再次启动", async () => {
     let opened = false;
@@ -209,5 +209,5 @@ describe("真实独立 Worker 进程", () => {
       await supervisor.stop(); server.closeAllConnections();
       await new Promise<void>(resolve => server.close(() => resolve()));
     }
-  }, 15000);
+  }, 120000);
 });

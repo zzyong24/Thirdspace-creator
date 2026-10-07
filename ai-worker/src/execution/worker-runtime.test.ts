@@ -4,6 +4,51 @@ import { GenerationFailure } from "./generation-error";
 import { createExecutionWorker } from "./worker-runtime";
 import type { WorkerMessage } from "@creatoros/contract/execution-worker";
 const execution = {executionTaskId: "exec-1", attempt: 1, fenceToken: "lease-1"};
+describe('私有消费确认与断连',()=>{
+  function receiptFixture(){
+    const messages:WorkerMessage[]=[],portErrors:string[]=[];
+    const worker=createExecutionWorker({generate:vi.fn(),
+      runTranscribe:async(_input,signal,call)=>{
+        void call('heartbeat',{},signal).catch(()=>portErrors.push('heartbeat'));
+        void call('readTranscribeAudio',{awemeId:'synthetic'},signal).catch(()=>portErrors.push('audio'));
+        return await new Promise<never>((_resolve,reject)=>signal.addEventListener('abort',()=>reject(signal.reason),{once:true}));
+      },
+      send(message){messages.push(message);if(message.type==='call' && message.port==='readTaskContext')queueMicrotask(()=>worker.receive({version:1,type:'reply',requestId:message.requestId,execution,callSeq:message.callSeq,ok:true,data:{kind:'transcribe.douyin',awemeIds:['synthetic'],language:'zh',configuration:{kind:'audio',provider:'whisper-local',model:'small',baseUrl:null}}}));},
+    });
+    worker.receive({version:1,type:'run',requestId:'receipt-run',execution,deadlineAt:Date.now()+120000,receiptProtocol:'consumed-v1'});
+    return {worker,messages,portErrors};
+  }
+  it('先完成的音频确认独立于较早在途心跳，重复回复重发紧凑确认，错误 fence 不解开在途请求',async()=>{
+    const f=receiptFixture();
+    try{
+      await vi.waitFor(()=>expect(f.messages.filter(message=>message.type==='call')).toHaveLength(3),{timeout:120000});
+      const audio=f.messages.find(message=>message.type==='call' && message.port==='readTranscribeAudio') as Extract<WorkerMessage,{type:'call'}>;
+      const heartbeat=f.messages.find(message=>message.type==='call' && message.port==='heartbeat') as Extract<WorkerMessage,{type:'call'}>;
+      const reply={version:1,type:'reply',requestId:audio.requestId,execution,callSeq:audio.callSeq,ok:true,data:{bytes:new Uint8Array([1])}};
+      f.worker.receive(reply);
+      expect(f.messages.at(-1)).toMatchObject({type:'consumed',throughSeq:1,consumedRanges:[{fromSeq:3,toSeq:3}]});
+      f.worker.receive(reply);
+      expect(f.messages.at(-1)).toMatchObject({type:'consumed',throughSeq:1,consumedRanges:[{fromSeq:3,toSeq:3}]});
+      const count=f.messages.length;
+      f.worker.receive({...reply,requestId:heartbeat.requestId,callSeq:heartbeat.callSeq,execution:{...execution,fenceToken:'stale'}});
+      expect(f.messages).toHaveLength(count);
+      f.worker.receive({...reply,requestId:heartbeat.requestId,callSeq:heartbeat.callSeq,data:{}});
+      expect(f.messages.at(-1)).toMatchObject({type:'consumed',throughSeq:3,consumedRanges:[]});
+      f.worker.receive({version:1,type:'cancel',requestId:'cancel',execution});
+      await vi.waitFor(()=>expect(f.messages.find(message=>message.type==='stopped')).toMatchObject({reason:'cancelled'}),{timeout:120000});
+    }finally{f.worker.close();}
+  });
+  it('断连撤回所有在途端口，迟到回复不产生确认或新的工作',async()=>{
+    const f=receiptFixture();
+    await vi.waitFor(()=>expect(f.messages.filter(message=>message.type==='call')).toHaveLength(3),{timeout:120000});
+    const audio=f.messages.find(message=>message.type==='call' && message.port==='readTranscribeAudio') as Extract<WorkerMessage,{type:'call'}>;
+    f.worker.close();
+    await vi.waitFor(()=>expect(f.portErrors.sort()).toEqual(['audio','heartbeat']),{timeout:120000});
+    const count=f.messages.length;
+    f.worker.receive({version:1,type:'reply',requestId:audio.requestId,execution,callSeq:audio.callSeq,ok:true,data:{bytes:new Uint8Array([1])}});
+    expect(f.messages).toHaveLength(count);
+  });
+});
 it.each([false,true])("网页能力声明依赖已装配对话运行器：%s",hasRunner=>{
  const messages:WorkerMessage[]=[];
  const worker=createExecutionWorker({generate:vi.fn(),supportsChatWebRead:true,...(hasRunner?{runChat:vi.fn()}:{}),send:message=>{messages.push(message);}});

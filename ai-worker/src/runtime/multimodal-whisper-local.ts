@@ -69,6 +69,7 @@ export type AsrPipeline = (
 
 /** 可注入副作用(测试零成本:注 fake pipeline/fake decode;真跑走默认 transformers + ffmpeg)。 */
 export interface WhisperLocalAdapterDeps {
+  close?(): Promise<void>;
   /** 惰性拿到某级别的 ASR pipeline。**必须自身幂等**:同一级别第二次调用复用首次实例
    *  (不重下模型)。真实现见 createDefaultPipelineProvider(内部 memo by level)。 */
   getPipeline: (modelId: string, signal?: AbortSignal) => Promise<AsrPipeline>;
@@ -181,6 +182,7 @@ export function createWhisperLocalAdapter(
   deps: WhisperLocalAdapterDeps,
 ): MultimodalProviderAdapter {
   return {
+    close: () => deps.close?.() ?? Promise.resolve(),
     async transcribeAudio(spec, opts) {
       // 冻结输入后再等待回执；回放已确认正文时不启动解码、模型加载或推理。
       const frozen = snapshotAsrInput(spec, opts);
@@ -585,14 +587,28 @@ export function createWhisperWorker(
  */
 export function createWorkerPipelineProvider(
   spawnWorker?: () => WhisperWorkerLike,
-): (modelId: string) => Promise<AsrPipeline> {
+) {
   let worker: WhisperWorkerLike | null = null;
   let nextId = 1;
   type Pending = { owner: WhisperWorkerLike; resolve: (text: string) => void; reject: (err: Error) => void };
   const pending = new Map<number, Pending>();
   const exits = new WeakMap<WhisperWorkerLike, Promise<number>>();
+  const owners = new Set<WhisperWorkerLike>();
+  const stoppingOwners = new WeakMap<WhisperWorkerLike, Promise<number>>();
+  const shutdown = new AbortController();
+  let closing: Promise<void> | undefined;
   let queue: Promise<unknown> = Promise.resolve();
   const spawn = spawnWorker ?? (() => createWhisperWorker());
+
+  function stopWorker(owner: WhisperWorkerLike): Promise<number> {
+    let stopping = stoppingOwners.get(owner);
+    if (!stopping) {
+      // terminate 拒绝不等于已退出；保留真实 exit 屏障，不启动替代资源。
+      stopping = Promise.resolve().then(() => owner.terminate()).catch(() => exits.get(owner)!).then(code => {owners.delete(owner); return code;});
+      stoppingOwners.set(owner, stopping);
+    }
+    return stopping;
+  }
 
   function failPending(owner: WhisperWorkerLike, err: Error): void {
     if (worker === owner) worker = null;
@@ -604,10 +620,12 @@ export function createWorkerPipelineProvider(
   }
 
   function ensureWorker(): WhisperWorkerLike {
+    shutdown.signal.throwIfAborted();
     if (worker) return worker;
     const w = spawn();
     let confirmExit!: (code: number) => void;
     exits.set(w, new Promise<number>((resolve) => { confirmExit = resolve; }));
+    owners.add(w);
     w.on("message", (msg) => {
       const p = pending.get(msg.id);
       if (!p || p.owner !== w) return;
@@ -618,11 +636,15 @@ export function createWorkerPipelineProvider(
         { reference: msg.errorCode ?? "LOCAL_WHISPER_WORKER_UNKNOWN", retryable: true },
       ));
     });
-    w.on("error", (err) => failPending(w, new MultimodalGenerationError(
-      `whisper-local worker 崩溃: ${err.message}`,
-      { reference: "LOCAL_WHISPER_WORKER_CRASH", retryable: true },
-    )));
+    w.on("error", (err) => {
+      // error 通知先于 exit；不能让队列在旧线程退出确认前启动替代线程。
+      void stopWorker(w).then(() => failPending(w, new MultimodalGenerationError(
+        `whisper-local worker 崩溃: ${err.message}`,
+        { reference: "LOCAL_WHISPER_WORKER_CRASH", retryable: true },
+      )));
+    });
     w.on("exit", (code) => {
+      owners.delete(w);
       confirmExit(code);
       failPending(w, new MultimodalGenerationError(
         `whisper-local worker 退出 (code=${code})`,
@@ -633,10 +655,12 @@ export function createWorkerPipelineProvider(
     return w;
   }
 
-  return async (modelId: string) => {
+  const provider = async (modelId: string) => {
+    shutdown.signal.throwIfAborted();
     const proxy: AsrPipeline = (audio, options, signal) => {
       const job = async () => {
-        throwIfAborted(signal);
+        const combined = signal ? AbortSignal.any([signal, shutdown.signal]) : shutdown.signal;
+        throwIfAborted(combined);
         const w = ensureWorker();
         const id = nextId++;
         let stopping: Promise<number> | undefined;
@@ -647,17 +671,17 @@ export function createWorkerPipelineProvider(
             if (worker === w) worker = null;
             // terminate 自身也可能失败；同步抛错和异步拒绝都不能算退出确认。
             // 此时继续等待该 owner 的 exit，期间队列保留屏障，不创建替代 worker。
-            stopping = Promise.resolve().then(() => w.terminate()).catch(() => exits.get(w)!);
+            stopping = stopWorker(w);
             stopping.then(() => reject(abortError()), reject);
           };
-          const cleanup = () => signal?.removeEventListener("abort", cancel);
+          const cleanup = () => combined.removeEventListener("abort", cancel);
           pending.set(id, {
             owner: w,
             resolve: (text) => { cleanup(); resolve({ text }); },
             reject: (err) => { cleanup(); reject(err); },
           });
-          signal?.addEventListener("abort", cancel, { once: true });
-          if (signal?.aborted) { cancel(); return; }
+          combined.addEventListener("abort", cancel, { once: true });
+          if (combined.aborted) { cancel(); return; }
           try {
             // 有偏移或共享底层存储时复制有效范围，避免传入其它音频/哨兵数据。
             const buf = audio.byteOffset === 0 && audio.byteLength === audio.buffer.byteLength && audio.buffer instanceof ArrayBuffer
@@ -682,14 +706,25 @@ export function createWorkerPipelineProvider(
     };
     return proxy;
   };
+  return Object.assign(provider, {
+    close(): Promise<void> {
+      return closing ??= (async () => {
+        shutdown.abort(abortError());
+        await Promise.all([...owners].map(stopWorker));
+        await queue;
+      })();
+    },
+  });
 }
 
 /** 便捷装配:host 默认 deps(真 transformers pipeline + 真 ffmpeg 解码)。测试**不用**这个,
  *  而是给 createWhisperLocalAdapter 注 fake deps。
  *  [T-356] 推理走 worker 化 provider(常驻单 worker + 串行队列)—— 主线程永不被推理阻塞。 */
 export function createDefaultWhisperLocalAdapter(): MultimodalProviderAdapter {
+  const provider = createWorkerPipelineProvider();
   return createWhisperLocalAdapter({
-    getPipeline: createWorkerPipelineProvider(),
+    getPipeline: provider,
+    close: () => provider.close(),
     decodeAudioToFloat32: createFfmpegPcmDecoder(),
   });
 }
