@@ -21,8 +21,10 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { ArrowDown, ArrowUp, Plus, Sparkles, Trash2 } from "lucide-react";
+import { ErrorCode } from "@creatoros/contract";
 
 import { client } from "@/lib/contract-client";
+import { HttpTransportError } from "@/lib/http-transport";
 import { ensureScriptArtifact } from "./ensure-script-artifact";
 import { plainTextFromSections } from "./script-editor-bridge";
 import type { ScriptSectionView } from "@/types/view-models";
@@ -410,12 +412,25 @@ function ScriptStructureEditor({
       };
       const intent: ScriptSaveIntent = { artifactId: targetId, projectId, scopeKey, priorVersionId: expectedCurrentVersionId ?? null, versionId: null, body };
       intentRef.current = intent;
-      const created = (await client.createArtifactVersion({
-        params: { artifactId: targetId },
-        query: undefined,
-        // 原保存shape，不写html或新增回执metadata；正文未知时仅保守原结果恢复。
-        body,
-      })) as unknown as { id?: string };
+      let created: { id?: string };
+      try {
+        created = (await client.createArtifactVersion({
+          params: { artifactId: targetId },
+          query: undefined,
+          // 原保存shape，不写html或新增回执metadata；正文未知时仅保守原结果恢复。
+          body,
+        })) as unknown as { id?: string };
+      } catch (error) {
+        // 原endpoint的CAS ConflictError在insert前抛出，或使整事务回滚；提交后的派生异常被吞。
+        // 仅此调用的明确无写解除意图，原错误继续交上层；其它状态/码及网络未知仍保回执。
+        if (error instanceof HttpTransportError && error.status === 409 && error.code === ErrorCode.ConflictError
+          && intentRef.current === intent && intent.versionId === null && intent.priorVersionId) {
+          // 首次ensure也保这次实际读到的原base；下次不得把并发current静默换成新base。
+          if (!persistedAnchorRef.current) persistedAnchorRef.current = { artifactId: intent.artifactId, versionId: intent.priorVersionId };
+          intentRef.current = null;
+        }
+        throw error;
+      }
       const versionId = created.id?.trim();
       if (!versionId) throw new Error("script version id missing after save");
       intent.versionId = versionId;

@@ -20,6 +20,8 @@ import {
 } from "@/features/draft-workbench/draft-chat-request";
 import type { ScriptSectionView } from "@/types/view-models";
 import { plainTextFromSections } from "./script-editor-bridge";
+import { ENDPOINTS, ErrorCode } from "@creatoros/contract";
+import { createHttpTransport, HttpTransportError } from "@/lib/http-transport";
 
 const mockRouter = { refresh: vi.fn(), replace: vi.fn(), push: vi.fn() };
 vi.mock("next/navigation", () => ({ useRouter: () => mockRouter }));
@@ -567,7 +569,7 @@ describe("T-1070 默认分镜严格确认（真实Provider与原client边界）"
     mockListArtifacts.mockReset(); mockCreateArtifact.mockReset();
     localStorage.setItem("creatoros:current-group", "structure-group");
   });
-  afterEach(() => { vi.useRealTimers(); localStorage.removeItem("creatoros:current-group"); });
+  afterEach(() => { vi.useRealTimers(); vi.unstubAllGlobals(); localStorage.removeItem("creatoros:current-group"); });
   it("默认分镜真实注册，已保存全文和版本读回后才给source", async () => {
     structureBoundary(); render(creationStructure());
     expect(screen.queryByTestId("rich-view")).not.toBeInTheDocument();
@@ -627,6 +629,69 @@ describe("T-1070 默认分镜严格确认（真实Provider与原client边界）"
     await act(async () => { await expect(prepareStructure()).rejects.toThrow(/未知|原保存|回执/); });
     expect(mockCreateArtifactVersion).toHaveBeenCalledOnce();
     expect(screen.getByLabelText("第 1 段正文")).toHaveValue(body);
+  });
+  it("原公共transport明确409 ConflictError后保dirty和原错误，用户再次确认可沿同base/body保存", async () => {
+    structureBoundary(); render(creationStructure());
+    fireEvent.change(screen.getByLabelText("第 1 段正文"), { target: { value: "未写入的当前稿🦊" } });
+    const dispatch = vi.fn(async (_url: RequestInfo | URL, _init?: RequestInit) => new Response(JSON.stringify({ error: {
+      code: ErrorCode.ConflictError, message: "内容已在其他页面更新，请刷新后基于当前版本重试", details: {},
+    } }), { status: 409, headers: { "content-type": "application/json" } }));
+    vi.stubGlobal("fetch", dispatch);
+    mockCreateArtifactVersion.mockImplementationOnce(input => createHttpTransport().request(ENDPOINTS.createArtifactVersion, input as any));
+    await act(async () => { await expect(prepareStructure()).rejects.toMatchObject({ status: 409, code: ErrorCode.ConflictError }); });
+    expect(dispatch).toHaveBeenCalledOnce();
+    expect(JSON.parse(dispatch.mock.calls[0]![1]!.body as string)).toMatchObject({ id: "artifacts.versions.create", input: { params: { artifactId: "structure-real" }, body: { expectedCurrentVersionId: "version-before" } } });
+    expect(mockCreateArtifactVersion).toHaveBeenCalledOnce();
+    expect(screen.getByLabelText("第 1 段正文")).toHaveValue("未写入的当前稿🦊");
+    expect(document.querySelector('[data-slot="structure-save-status"]')).toHaveAttribute("data-save-status", "dirty");
+    const original = structuredClone(mockCreateArtifactVersion.mock.calls[0]![0]);
+    await act(async () => expect(await prepareStructure()).toMatchObject({ versionId: "version-created-1" }));
+    expect(mockCreateArtifactVersion).toHaveBeenCalledTimes(2);
+    expect(mockCreateArtifactVersion.mock.calls[1]![0]).toEqual(original);
+  });
+  it("手工保存收到明确CAS拒绝后下一次严格确认核并发current，不把它换成原base覆盖", async () => {
+    const server = structureBoundary(); render(creationStructure());
+    fireEvent.change(screen.getByLabelText("第 1 段正文"), { target: { value: "保留我的未保存稿" } });
+    server.versions.unshift({ ...server.versions[0]!, id: "another-user-version" });
+    server.setCurrent("another-user-version");
+    mockCreateArtifactVersion.mockRejectedValueOnce(new HttpTransportError("原CAS明确拒绝", { status: 409, code: ErrorCode.ConflictError }));
+    fireEvent.click(screen.getByRole("button", { name: /^保存$/ }));
+    await waitFor(() => expect(document.querySelector('[data-slot="structure-save-status"]')).toHaveAttribute("data-save-status", "dirty"));
+    expect(mockCreateArtifactVersion).toHaveBeenCalledOnce();
+    await act(async () => { await expect(prepareStructure()).rejects.toThrow("脚本已并发更新"); });
+    expect(mockCreateArtifactVersion).toHaveBeenCalledOnce();
+    expect(screen.getByLabelText("第 1 段正文")).toHaveValue("保留我的未保存稿");
+    mockCreateArtifactVersion.mockRejectedValueOnce(new HttpTransportError("原CAS仍拒绝", { status: 409, code: ErrorCode.ConflictError }));
+    fireEvent.click(screen.getByRole("button", { name: /^保存$/ }));
+    await waitFor(() => expect(mockCreateArtifactVersion).toHaveBeenCalledTimes(2));
+    expect((mockCreateArtifactVersion.mock.calls[1]![0] as any).body.expectedCurrentVersionId).toBe("version-before");
+  });
+  it("首次ensure后明确CAS拒绝保真实ID和原prior，后续current变更不自动rebasing", async () => {
+    const server = structureBoundary(); mockListArtifacts.mockResolvedValue([]); mockCreateArtifact.mockResolvedValue({ id: "structure-real" });
+    render(creationStructure({ artifactId: null }));
+    fireEvent.change(screen.getByLabelText("第 1 段正文"), { target: { value: "首份当前稿" } });
+    mockCreateArtifactVersion.mockRejectedValueOnce(new HttpTransportError("首次CAS明确拒绝", { status: 409, code: ErrorCode.ConflictError }));
+    await act(async () => { await expect(prepareStructure()).rejects.toThrow("首次CAS明确拒绝"); });
+    server.versions.unshift({ ...server.versions[0]!, id: "another-user-version" });
+    server.setCurrent("another-user-version");
+    await act(async () => { await expect(prepareStructure()).rejects.toThrow("脚本已并发更新"); });
+    expect(mockCreateArtifactVersion).toHaveBeenCalledOnce();
+    expect(mockCreateArtifact).toHaveBeenCalledOnce(); expect(mockListArtifacts).toHaveBeenCalledOnce();
+    expect(screen.getByLabelText("第 1 段正文")).toHaveValue("首份当前稿");
+  });
+  it.each([
+    { status: 503, code: ErrorCode.ConflictError },
+    { status: 409, code: "CONFLICT" },
+    { status: 409, code: null },
+    { status: 400, code: ErrorCode.ValidationError },
+  ])("非原明确CAS拒绝 $status/$code 继续保UNKNOWN意图，不再次append", async ({ status, code }) => {
+    structureBoundary(); render(creationStructure());
+    fireEvent.change(screen.getByLabelText("第 1 段正文"), { target: { value: "未知时保留这份稿" } });
+    mockCreateArtifactVersion.mockRejectedValueOnce(new HttpTransportError("原请求结果需保守恢复", { status, code }));
+    await act(async () => { await expect(prepareStructure()).rejects.toThrow("原请求结果需保守恢复"); });
+    await act(async () => { await expect(prepareStructure()).rejects.toThrow("没有唯一版本回执"); });
+    expect(mockCreateArtifactVersion).toHaveBeenCalledOnce();
+    expect(screen.getByLabelText("第 1 段正文")).toHaveValue("未知时保留这份稿");
   });
   it("已known版本的读回失败恢复原ID，不再追加；并发current换版明确拒绝", async () => {
     const server = structureBoundary(); render(creationStructure());
