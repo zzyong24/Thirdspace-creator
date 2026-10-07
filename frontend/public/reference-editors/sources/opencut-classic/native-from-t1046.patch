@@ -5121,3 +5121,106 @@
 + const mainScene=project.scenes.find(scene=>scene.isMain)??project.scenes[0];let projectDuration=0;
 + if(mainScene)for(const track of [mainScene.tracks.main,...mainScene.tracks.overlay,...mainScene.tracks.audio])for(const element of track.elements){const end=element.startTime+element.duration;if(end>projectDuration)projectDuration=end;}
 + project.metadata={...project.metadata,duration:mediaTime({ticks:projectDuration})};
+--- a/NATIVE_REBUILD_CONSISTENCY.json
++++ b/NATIVE_REBUILD_CONSISTENCY.json
+@@ -90,0 +91,39 @@
++  },
++  "t1070FrameCacheRepair": {
++    "status": "PASS_SOURCE_AND_REAL_PUBLIC_RENDER_REVIEW_PENDING",
++    "scope": "仅修复共享VideoCache过期请求复用帧时未校requested time。未改候选语义、合同、owner、音频、导入、锁或runtime。",
++    "sourceMember": "apps/web/src/services/video-cache/service.ts",
++    "newTestMember": "apps/web/src/embedded/__tests__/video-cache-request.test.ts",
++    "actualRedEvidence": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-native-candidate/tmp/t1070-frame-fix/evidence/video-cache-request-red-exact.log",
++    "actualGreenEvidence": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-native-candidate/tmp/t1070-frame-fix/evidence/video-cache-request-green.log",
++    "newTests": 3,
++    "newAssertions": 42,
++    "originalTests": 44,
++    "originalAssertions": 271,
++    "typecheck": "PASS",
++    "frozenInstall": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-native-candidate/tmp/t1070-frame-fix/evidence/frozen-install.log",
++    "productionBuildsByteEqual": true,
++    "productionFiles": {
++      "LICENSE.opencut": "8117f9bb64534f7530fc6139b014fd1c1465f7981f93d1871789150fa3f59d3d",
++      "NATIVE_BUILD_GRAPH.json": "7811696e241d5c7e188926e85159db107f861e34524a48507679c72a3bee418f",
++      "THIRD_PARTY_LICENSES.json": "b92b56836fbb1ac73b12112f61ec12cfce7af0793e91b6ae8748ed591db73964",
++      "THIRD_PARTY_LICENSES.txt": "e337836ba3e5a4d722e4750619410e357434656a00fc79e9a572ad649d633b8a",
++      "effects/preview.jpg": "b318cede7bbe27bfbf1b8b94d41f65b6f52d5f2650ce3a153d03b76c2a1c0190",
++      "native.css": "a0bad44d377687bc240c1cf59742b3ffa12b5ba282d00d3912846587fc12b31f",
++      "native.js": "58f42ac9a39500ddf6c6bcfab3df79eb4c8477ae2d61afaf4a852e2a77a5cb5e"
++    },
++    "publicRenderValidation": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-native-candidate/tmp/t1070-frame-fix/evidence/public-render-frame-validation.json",
++    "realPublicRenderFamilies": [
++      "原6秒普通export",
++      "0秒trim preview",
++      "1帧trim preview",
++      "1秒trim preview",
++      "2.5秒trim preview",
++      "5秒trim preview"
++    ],
++    "limits": [
++      "独立Chrome+中性媒体+仅内存原生公共API；不代签正式owner CAS采纳、安装或UI全旅程。",
++      "原公共context自flush仅metadata.updatedAt更新，记录实际差异，其余原document深等。",
++      "既有AAC音轨超画面约79–91ms尾段保留，不声称静音padding。",
++      "原生重新渲染MP4时间戳使容器hash不同；生产JS/CSS等7个构建文件已两次字节相等。"
++    ]
+--- a/README.creatoros.md
++++ b/README.creatoros.md
+@@ -56,0 +57,6 @@
++
++## T-1070 共享缓存首帧修复
++
++同媒体的主画布和冻结候选导出共用原 VideoCache 队列。被后续请求取代时，仅允许复用覆盖本次请求时间的缓存帧；否则沿原 resolveFrame、seek 和预取取得本次时间的帧，不能返回另一个请求的 currentFrame。原同帧复用和顺序预取保持。
++
++当场新增 `bun test --timeout 120000 src/embedded/__tests__/video-cache-request.test.ts` 先 RED（请求1秒和0秒实际返回0、0），窄修后 GREEN（返回1、0），3测试42断言；原44测试271断言与类型检查通过。独立Chrome中，真实生产公共mount/load/preview-scene/export对中性6秒音视频执行无裁剪、裁1帧、1秒、2.5秒、5秒族并完整解码；新1秒候选首帧为源1.000/frame24，旧生产bundle同链仍复现源0.000/frame0。公共context每次flush引起的内存metadata.updatedAt差异和既有AAC尾段如实记录；没有正式owner写入、模型调用或安装验收。具体证据见 `NATIVE_REBUILD_CONSISTENCY.json` 的 `t1070FrameCacheRepair`。
+--- /dev/null
++++ b/apps/web/src/embedded/__tests__/video-cache-request.test.ts
+@@ -0,0 +1,37 @@
++import {test,expect} from 'bun:test';
++import {VideoCache} from '@/services/video-cache/service';
++
++// 只替换 MediaBunny 解码器。原 VideoCache 请求队列、generation、帧校验与预取实际执行。
++function fixture(initialTime=0){
++ const cache=new VideoCache(),seeks:number[]=[];
++ const frame=(timestamp:number)=>({timestamp,duration:1/24,canvas:{sourceFrame:Math.round(timestamp*24)}});
++ const sink:any={currentFrame:frame(initialTime),nextFrame:null,iterator:null,lastTime:initialTime,prefetching:false,prefetchPromise:null,input:{dispose(){}},sink:{canvases(time:number){seeks.push(time);return(async function*(){for(let i=0;i<144;i++)yield frame((Math.round(time*24)+i)/24);})();}}};
++ const state=cache as any;state.sinks.set('shared-media',sink);
++ const file=new File(['decoder fixture'],'six-seconds.mp4',{type:'video/mp4'});
++ const get=(time:number)=>cache.getFrameAt({mediaId:'shared-media',file,time});
++ const valid=(actual:any,time:number)=>actual!==null&&actual.timestamp<=time&&time<actual.timestamp+actual.duration;
++ async function concurrent(times:number[]){let release!:()=>void;state.frameChain.set('shared-media',new Promise<void>(resolve=>release=resolve));const work=times.map(get);await Promise.resolve();await Promise.resolve();release();return Promise.all(work);}
++ return{cache,get,seeks,valid,concurrent};
++}
++
++test('候选首帧1秒与主画布0秒争用同媒体时，每个请求返回自己的时间范围',async()=>{
++ const f=fixture(),frames=await f.concurrent([1,0]);
++ console.log(JSON.stringify({probe:'trim-first-frame-shared-cache',requested:[1,0],returned:frames.map(frame=>frame?.timestamp),decoderSeeks:f.seeks}));
++ expect(f.valid(frames[0],1)).toBe(true);expect(f.valid(frames[1],0)).toBe(true);
++ await f.cache.drain();f.cache.clearAll();
++},120000);
++
++test('首尾、连续和重复时间的竞争都不能返回别的请求已缓存帧',async()=>{
++ for(const times of [[1,0,2],[5.958333333333333,0,1],[1,1+1/24,1+2/24],[0,0,0]]){
++  const f=fixture(),frames=await f.concurrent(times);
++  for(let i=0;i<times.length;i++)expect(f.valid(frames[i],times[i])).toBe(true);
++  await f.cache.drain();f.cache.clearAll();
++ }
++},120000);
++
++test('同一已缓存帧仍复用；顺序播放保留原预取，只seek一次',async()=>{
++ const f=fixture(),frames=await f.concurrent([0,0,0]);
++ expect(frames[0]).toBe(frames[1]);expect(frames[1]).toBe(frames[2]);expect(f.seeks).toEqual([]);
++ for(let i=24;i<48;i++){const time=i/24,frame=await f.get(time);expect(f.valid(frame,time)).toBe(true);}
++ expect(f.seeks).toEqual([1]);await f.cache.drain();f.cache.clearAll();
++},120000);
+--- a/apps/web/src/services/video-cache/service.ts
++++ b/apps/web/src/services/video-cache/service.ts
+@@ -48,2 +48,7 @@
+-			if (this.seekGenerations.get(mediaId) !== generation) {
+-				return sinkData.currentFrame ?? null;
++			// 同媒体的画布与导出共用队列；被后续请求取代也只能复用覆盖本次时间的帧。
++			if (
++				this.seekGenerations.get(mediaId) !== generation &&
++				sinkData.currentFrame &&
++				this.isFrameValid({ frame: sinkData.currentFrame, time })
++			) {
++				return sinkData.currentFrame;

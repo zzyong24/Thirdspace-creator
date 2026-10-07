@@ -30762,7 +30762,7 @@ class PsA {
     if (!B) return null;
     const Q = (this.seekGenerations.get(A) ?? 0) + 1;
     this.seekGenerations.set(A, Q);
-    const e = (this.frameChain.get(A) ?? Promise.resolve()).then(() => this.seekGenerations.get(A) !== Q ? B.currentFrame ?? null : this.resolveFrame({ sinkData: B, time: C }));
+    const e = (this.frameChain.get(A) ?? Promise.resolve()).then(() => this.seekGenerations.get(A) !== Q && B.currentFrame && this.isFrameValid({ frame: B.currentFrame, time: C }) ? B.currentFrame : this.resolveFrame({ sinkData: B, time: C }));
     return this.frameChain.set(
       A,
       e.catch(() => {

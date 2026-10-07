@@ -4,7 +4,7 @@
   "moduleCount": 429,
   "modules": [
     {
-      "module": "../../../../../../../../__vite-plugin-wasm-helper",
+      "module": "../../../../../../../../../../__vite-plugin-wasm-helper",
       "renderedLength": 1154
     },
     {
@@ -1241,7 +1241,7 @@
     },
     {
       "module": "src/services/video-cache/service.ts",
-      "renderedLength": 8006
+      "renderedLength": 8084
     },
     {
       "module": "src/services/waveform-cache/service.ts",
