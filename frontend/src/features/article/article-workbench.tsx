@@ -1,6 +1,9 @@
 "use client";
 
 import * as React from "react";
+import type {WorkEditorTarget,WorkEditorCandidate} from "@creatoros/contract";
+import {useDraftChatRequest,editorDigest,editorCanonical,editorCandidateOutputId,type EditorSaveCandidate,type DraftEditorPort} from "@/features/draft-workbench/draft-chat-request";
+import {saveWorkEditorCandidate} from "@/features/copilot/chat-work-editor-card";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -10,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { describeUserError } from "@/lib/ai-error-humanize";
 import { copilotDeepLink } from "@/features/copilot/copilot-deeplink";
-import { OutputConversionPanel } from "@/features/projects/output-conversion-panel";
+
 import { ArticleResultActions } from "./article-result-actions";
 import {NoteRelayEditor} from "@/features/reference-editors/noterelay/noterelay-editor";
 import {LazyDisclosure} from "@/features/reference-editors/noterelay/lazy-disclosure";
@@ -174,7 +177,7 @@ function ArticleWorkbenchSession({ projectId, projectTitle, accountId, initialOu
     : initialOutputs.length === 1 ? initialOutputs[0]!.id : "");
   const [pendingSwitch, setPendingSwitch] = React.useState<{outputId: string} | {create: true} | null>(null);
   const [state, setState] = React.useState<ArticleState | null>(null);
-  const [draft, setDraft] = React.useState<ArticleDocument | null>(null);
+  const [draft, setDraftState] = React.useState<ArticleDocument | null>(null);
   const [tagsInput, setTagsInput] = React.useState("");
   const [candidate, setCandidate] = React.useState<Candidate | null>(null);
   const [pendingTaskId, setPendingTaskId] = React.useState<string | null>(null);
@@ -198,8 +201,17 @@ function ArticleWorkbenchSession({ projectId, projectTitle, accountId, initialOu
   const [error, setError] = React.useState<string | null>(null);
   const firstLoads = React.useRef(new Set<string>());
   const stateRef = React.useRef(state);
+  const mountedRef=React.useRef(true);
+  React.useEffect(()=>{mountedRef.current=true;return()=>{mountedRef.current=false;};},[]);
   const draftRef = React.useRef(draft);
   React.useLayoutEffect(() => { stateRef.current = state; draftRef.current = draft; }, [state,draft]);
+  const chat=useDraftChatRequest(),generationRef=React.useRef(0),targetRef=React.useRef<WorkEditorTarget|null>(null),portRef=React.useRef<DraftEditorPort|null>(null),savePromiseRef=React.useRef<Promise<boolean>|null>(null);
+  const selectionRef=React.useRef<any>({kind:"article",sectionIds:[]});
+  const selectionPromise=React.useRef<Promise<void>|null>(null);
+  const setDraft=React.useCallback((value:React.SetStateAction<ArticleDocument | null>)=>{const next=typeof value==='function'?value(draftRef.current):value;if(editorCanonical(next)!==editorCanonical(draftRef.current)){generationRef.current++;draftRef.current=next;const {textRange,...selection}=selectionRef.current;selectionRef.current=selection;chat.notifyEditorChanged();}setDraftState(next);},[chat.notifyEditorChanged]);
+  function selectText(id:string,field:'heading'|'body',event:React.SyntheticEvent<HTMLInputElement|HTMLTextAreaElement>){const input=event.currentTarget;const start=input.selectionStart??0,end=input.selectionEnd??0,text=input.value;const selection={kind:"article_sections",sectionIds:[id],field};selectionRef.current=selection;generationRef.current++;chat.notifyEditorChanged();selectionPromise.current=(async()=>{if(end>start){const fieldDigest=await editorDigest(text);if(selectionRef.current===selection&&draftRef.current?.sections.find(section=>section.sectionId===id)?.[field]===text)selectionRef.current={...selection,textRange:{startUtf16:start,endUtf16:end,expectedFieldDigest:fieldDigest}};}})();}
+  function save(documentOverride?:ArticleDocument):Promise<boolean>{if(savePromiseRef.current)return savePromiseRef.current;const work=saveCore(documentOverride);savePromiseRef.current=work;return work.finally(()=>{if(savePromiseRef.current===work)savePromiseRef.current=null;});}
+
   const loadSerial = React.useRef(0);
   React.useEffect(() => () => { loadSerial.current += 1; }, []);
   const createRequestId = React.useRef({ id: requestId(), payload: "" });
@@ -315,6 +327,24 @@ function ArticleWorkbenchSession({ projectId, projectTitle, accountId, initialOu
     return () => { active = false; if (timer) clearTimeout(timer); };
   }, [outputId, pendingTaskId]);
 
+  React.useLayoutEffect(()=>{portRef.current={readState:()=>({target:targetRef.current,generation:generationRef.current,dirty:Boolean(stateRef.current&&draftRef.current&&editorCanonical(draftRef.current)!==editorCanonical(stateRef.current.current))}),prepareForTurn:async()=>{
+   if(selectionPromise.current)await selectionPromise.current;
+   if(savePromiseRef.current)await savePromiseRef.current;
+   const initial=stateRef.current;if(!initial||!draftRef.current)throw Error("当前稿件尚未准备好。");
+   if(editorCanonical(draftRef.current)!==editorCanonical(initial.current)&&!(await save()))throw Error("请先确认保存当前修改，原请求已保留。");
+   const current=stateRef.current!;const latest=await articleClient.getArticle({params:{outputId:current.outputId},query:undefined,body:undefined});
+   const exact=await articleClient.getArticleVersion({params:{outputId:current.outputId,versionId:latest.currentVersionId},query:undefined,body:undefined});
+   if(latest.currentVersionId!==current.currentVersionId||editorCanonical(exact.document)!==editorCanonical(latest.current)||editorCanonical(draftRef.current)!==editorCanonical(exact.document))throw Error("当前作品已改变，请核对保存版本后重试。");
+   const target:WorkEditorTarget={schemaVersion:1,projectId,outputId:latest.outputId,owner:"wechat_article",contentType:"article",savedBase:{kind:"artifact",artifactId:latest.artifactId,versionId:latest.currentVersionId},documentDigest:await editorDigest(exact.document),selection:selectionRef.current};targetRef.current=target;return target;
+  },previewCandidate:async()=>null,adoptCandidate:async(result:EditorSaveCandidate,requestId:string)=>{
+   const initial=stateRef.current;if(!initial||initial.outputId!==editorCandidateOutputId(result))throw Error("当前作品已改变。");
+   const frozen=editorCanonical(draftRef.current),generation=generationRef.current;
+   const saved=await saveWorkEditorCandidate(articleClient,result,requestId);
+   const sync=editorCanonical(initial.current)===frozen&&generation===generationRef.current&&editorCanonical(draftRef.current)===frozen&&saved.currentMatches;
+   if(mountedRef.current&&stateRef.current?.outputId===initial.outputId){stateRef.current=saved.current;setState(saved.current);if(sync){setDraft(structuredClone(saved.current.current));setTagsInput((saved.current.current.tags??[]).join("、"));}else setMessage("已保存，当前稿有新修改，未覆盖输入。");}
+   return {status:sync?"adopted":"saved-not-synced",versionId:saved.receipt.versionId};
+  }};});
+  React.useEffect(()=>chat.registerEditor({readState:()=>portRef.current!.readState(),prepareForTurn:()=>portRef.current!.prepareForTurn(),previewCandidate:c=>portRef.current!.previewCandidate(c),adoptCandidate:(c,id)=>portRef.current!.adoptCandidate(c,id)}),[chat.registerEditor,outputId]);
   async function createArticle() {
     setBusy("create"); setError(null); setMessage(null);
     try {
@@ -365,7 +395,7 @@ function ArticleWorkbenchSession({ projectId, projectTitle, accountId, initialOu
     } catch (err) { setError(errorText(err)); }
     finally { setBusy(null); }
   }
-  async function save(documentOverride?: ArticleDocument) {
+  async function saveCore(documentOverride?: ArticleDocument) {
     const documentToSave = documentOverride ?? draft;
     if (!state || !documentToSave || busy) return false;
     const serial = loadSerial.current;
@@ -399,7 +429,7 @@ function ArticleWorkbenchSession({ projectId, projectTitle, accountId, initialOu
       stateRef.current = latest;
       sessionStorage.removeItem(storageKey);
       saveRequestId.current = { id: requestValue.clientRequestId, payload: requestValue.payloadDigest };
-      if (latest.currentVersionId !== result.versionId) {
+      if (latest.currentVersionId !== result.versionId || canonicalJson(latest.current)!==canonicalJson(exact.document)) {
         setState(latest); if (!editedDuringSave) setDraft(documentToSave);
         setError(`此请求已保存为版本 ${exact.versionId}，但当前稿件已被并发更新。保留本地草稿，请比较后再决定。`);
         return false;
@@ -458,7 +488,7 @@ function ArticleWorkbenchSession({ projectId, projectTitle, accountId, initialOu
     </section>
   );
 
-  return <main data-page="article-workbench" className="mx-auto w-full max-w-[1600px] space-y-4 px-5 py-4 text-sm md:px-8">
+  return <main data-page="article-workbench" className="mx-auto w-full max-w-[1600px] @container space-y-4 px-5 py-4 text-sm md:px-8">
     {showArticleControls && articleControls}
     {pendingSwitch && <section role="alertdialog" aria-label="当前文章有未保存修改" className="space-y-3 rounded-xl border border-border bg-surface p-4">
       <p>当前文章有未保存的修改。保存后继续，或明确放弃这些修改。</p>
@@ -478,12 +508,12 @@ function ArticleWorkbenchSession({ projectId, projectTitle, accountId, initialOu
       <section className="rounded-xl border p-5">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <h2 className="text-[13.5px] font-semibold">当前稿件</h2>
-          <div className="flex flex-wrap gap-3"><Button className="min-h-11 px-5 text-sm" onClick={() => void generate()} disabled={Boolean(busy) || Boolean(pendingTaskId)}>{pendingTaskId || busy === "generate" ? "正在生成…" : "根据脚本扩写文章"}</Button>
+          <div className="flex flex-wrap gap-3">
             <Button className="min-h-11 px-5 text-sm" variant="outline" title={busy === "save" ? "正在保存…" : dirty ? "有未保存的修改" : "修改已保存"} onClick={() => void save()} disabled={Boolean(busy) || !dirty}>{busy === "save" ? "保存中…" : "保存修改"}</Button></div>
         </div>
         {state.scriptContext?.message && <p className="mt-3 text-sm text-muted-foreground">{state.scriptContext.message}</p>}
         {draft.imageMatchWarnings?.map((warning,index)=><p key={index} role="status" className="mt-3 text-sm text-muted-foreground">{warning}</p>)}
-        <div className="mt-6 grid items-start gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(360px,1fr)]"><fieldset disabled={Boolean(busy)} aria-label="编辑文章" className="min-w-0 space-y-5">
+        <div className="mt-6 grid items-start gap-6 @3xl:grid-cols-[minmax(0,1.15fr)_minmax(360px,1fr)]"><fieldset disabled={Boolean(busy)} aria-label="编辑文章" className="min-w-0 space-y-5">
           {draft.coverImageUse && <ArticleCoverDisplay image={draft.coverImageUse} />}
           <div><label className="block text-sm">标题<Input className="mt-1" value={draft.title} onChange={(event) => setDraft({ ...draft, title: event.target.value })} /></label>
             <SourceReferences refs={draft.titleSourceRefs} /></div>
@@ -492,14 +522,14 @@ function ArticleWorkbenchSession({ projectId, projectTitle, accountId, initialOu
           <label className="block text-sm">标签<Input className="mt-1" value={tagsInput} onChange={event=>{setTagsInput(event.target.value);setDraft({...draft,tags:event.target.value.split(/[、,，\n]+/).map(tag=>tag.trim()).filter(Boolean)});}} placeholder="多个标签用顿号分隔" /></label>
           <div className="space-y-8 border-t border-border pt-6">
           {[...draft.sections].sort((a,b)=>a.order-b.order).map((section,index) => <section key={section.sectionId} className="space-y-3" aria-label={`第 ${index+1} 段`}>
-            <div className="flex items-start justify-between gap-3"><label className="min-w-0 flex-1 text-sm"><span className="sr-only">段落标题</span><Input className="h-10 text-[13px] font-semibold md:text-[13px]" value={section.heading} placeholder="段落标题" onChange={event=>setDraft(editSection(draft,section.sectionId,"heading",event.target.value))}/></label>
+            <div className="flex items-start justify-between gap-3"><label className="min-w-0 flex-1 text-sm"><span className="sr-only">段落标题</span><Input className="h-10 text-[13px] font-semibold md:text-[13px]" value={section.heading} onSelect={event=>void selectText(section.sectionId,"heading",event)} placeholder="段落标题" onChange={event=>setDraft(editSection(draft,section.sectionId,"heading",event.target.value))}/></label>
               <details className="relative shrink-0"><summary className="cursor-pointer rounded-md border border-border px-3 py-3 text-sm">段落操作</summary><div className="absolute right-0 z-20 mt-2 flex min-w-36 flex-col gap-1 rounded-lg border border-border bg-surface p-2 shadow-lg">
                 <Button variant="ghost" disabled={index===0} onClick={()=>moveSection(section.sectionId,-1)}>上移</Button>
                 <Button variant="ghost" disabled={index===draft.sections.length-1} onClick={()=>moveSection(section.sectionId,1)}>下移</Button>
                 <Button variant="ghost" onClick={()=>{setImageSectionId(section.sectionId);setImagePage(1);setSelectedImageId("");}}>为此段选图</Button>
                 <Button variant="ghost" onClick={()=>setDraft({...draft,sections:draft.sections.filter(item=>item.sectionId!==section.sectionId).sort((a,b)=>a.order-b.order).map((item,order)=>({...item,order})),imageUses:draft.imageUses.filter(item=>item.sectionId!==section.sectionId),visualBriefs:draft.visualBriefs.filter(item=>item.sectionId!==section.sectionId)})}>删除段落</Button>
               </div></details></div>
-            <label className="block text-sm"><span className="sr-only">段落正文</span><textarea className="min-h-56 w-full resize-y rounded-lg border border-border bg-background p-4 text-sm leading-relaxed" value={section.body} placeholder="编辑这一段正文" onChange={event=>setDraft(editSection(draft,section.sectionId,"body",event.target.value))}/></label><SourceReferences refs={section.sourceRefs}/>
+            <label className="block text-sm"><span className="sr-only">段落正文</span><textarea className="min-h-56 w-full resize-y rounded-lg border border-border bg-background p-4 text-sm leading-relaxed" value={section.body} onSelect={event=>void selectText(section.sectionId,"body",event)} placeholder="编辑这一段正文" onChange={event=>setDraft(editSection(draft,section.sectionId,"body",event.target.value))}/></label><SourceReferences refs={section.sourceRefs}/>
           </section>)}
           <Button variant="outline" onClick={()=>setDraft({...draft,sections:[...draft.sections,{sectionId:requestId(),order:draft.sections.length,heading:"",headingLevel:2,body:"",sourceRefs:[]}]})}>添加段落</Button>
           </div>
@@ -574,9 +604,6 @@ function ArticleWorkbenchSession({ projectId, projectTitle, accountId, initialOu
 
 
 
-      {(scope.groupId||accountId) && <OutputConversionPanel key={`${workspaceOwner}:${state.outputId}`} accountId={accountId??null} projectId={projectId} outputId={state.outputId}
-        sourceType="article" versionId={state.currentVersionId} dirty={dirty} fields={{title: state.current.title, summary: state.current.summary}}
-        sections={state.current.sections} images={[...state.current.imageUses, ...(state.current.coverImageUse ? [state.current.coverImageUse] : [])]} />}
       {(scope.groupId||accountId) && <ArticleResultActions key={state.outputId} accountId={accountId??null} outputId={state.outputId}
         currentVersionId={state.currentVersionId} dirty={JSON.stringify(draft) !== JSON.stringify(state.current)}
         bodyReplaceBlocked={draft.imageUses.length > 0 || draft.visualBriefs.length > 0}

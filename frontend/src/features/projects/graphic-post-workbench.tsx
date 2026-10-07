@@ -4,6 +4,9 @@ import {assetChoice} from "@/components/media/asset-picker.types";
 import {useCreationClient,useCreationScope,creationScopeKey} from "@/lib/creation-workspace-scope";
 
 import * as React from "react";
+import type {WorkEditorTarget,WorkEditorCandidate} from "@creatoros/contract";
+import {useDraftChatRequest,editorDigest,editorCanonical,editorCandidateOutputId,type EditorSaveCandidate,type DraftEditorPort} from "@/features/draft-workbench/draft-chat-request";
+import {saveWorkEditorCandidate} from "@/features/copilot/chat-work-editor-card";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -21,7 +24,7 @@ import {GraphicSeriesPanel} from "./graphic-series-panel";
 import {graphicDeliveryImages,setGraphicCover,normalizeGraphicImages} from "./graphic-series-document";
 import {openGraphicPageCanvas} from "@/features/creative-canvas/graphic-page-context";
 import {zipSync,strToU8} from "fflate";
-import { OutputConversionPanel } from "./output-conversion-panel";
+
 import {GraphicDesignWorkbench} from "@/features/reference-editors/graphic-design-workbench";
 import type {ReferenceEditorMedia} from "@creatoros/contract";
 import { PublicationResultActions } from "./publication-result-actions";
@@ -70,7 +73,7 @@ function GraphicPostWorkbenchSession({projectId,projectTitle,accountId,initial,i
   React.useEffect(()=>{mounted.current=true;return()=>{mounted.current=false;};},[]);
   const [designTarget,setDesignTarget]=React.useState<{kind:"cover"}|{kind:"card";cardId:string}|null>(null);
   const [state, setState] = React.useState(initial);
-  const [draft, setDraft] = React.useState<GraphicPostDocument>(()=>fillScriptMetadata(initial.current,initial.scriptContext));
+  const [draft, setDraftState] = React.useState<GraphicPostDocument>(()=>fillScriptMetadata(initial.current,initial.scriptContext));
   const [tagsInput, setTagsInput] = React.useState(()=>fillScriptMetadata(initial.current,initial.scriptContext).tags.join("、"));
   const [assets, setAssets] = React.useState<ImageAsset[]>([]);
   const [assetPage, setAssetPage] = React.useState(1);
@@ -82,17 +85,38 @@ function GraphicPostWorkbenchSession({projectId,projectTitle,accountId,initial,i
   const [message, setMessage] = React.useState<string | null>(null);
   const [startStatus, setStartStatus] = React.useState(initialStartStatus);
   const [startResolutionMessage, setStartResolutionMessage] = React.useState<string | null>(null);
+  const [directorImageRequest,setDirectorImageRequest]=React.useState<{cardId:string;visualRequirements:string}|null>(null);
   const startResolved = React.useRef(false);
   const [preview, setPreview] = React.useState<{ versionId: string; document: GraphicPostDocument } | null>(null);
   const designSaveRequest=React.useRef<{digest:string;input:Parameters<typeof client.createGraphicPostVersion>[0]["body"]}|null>(null);
   const saveRequest = React.useRef({ id: crypto.randomUUID(), digest: "" });
+  const graphicSaveIntent=React.useRef<{body:{expectedCurrentVersionId:string;document:GraphicPostDocument;clientRequestId:string};draftDigest:string}|null>(null);
+  const saveStorageKey=`creatoros:graphic:request:${creationScopeKey(useCreationScope())}:${initial.outputId}`;
   const dirty = JSON.stringify(draft) !== JSON.stringify(state.current);
   const draftRef=React.useRef(draft);
   const stateRef=React.useRef(state);
   React.useLayoutEffect(()=>{draftRef.current=draft;stateRef.current=state;},[draft,state]);
+  const chat=useDraftChatRequest(),generationRef=React.useRef(0),targetRef=React.useRef<WorkEditorTarget|null>(null),portRef=React.useRef<DraftEditorPort|null>(null),savePromiseRef=React.useRef<Promise<boolean>|null>(null);
+  const selectionRef=React.useRef<any>({kind:"graphic_post",cardIds:[]});
+  const setDraft=React.useCallback((value:React.SetStateAction<GraphicPostDocument>)=>{const next=typeof value==='function'?value(draftRef.current):value;if(editorCanonical(next)!==editorCanonical(draftRef.current)){generationRef.current++;draftRef.current=next;const {textRange,...selection}=selectionRef.current;selectionRef.current=selection;chat.notifyEditorChanged();}setDraftState(next);},[chat.notifyEditorChanged]);
+  const selectionPromise=React.useRef<Promise<void>|null>(null);
+  function captureCardSelection(event:React.SyntheticEvent<HTMLElement>){
+   const input=event.target;if(!(input instanceof HTMLInputElement||input instanceof HTMLTextAreaElement)||input.closest('fieldset')?.getAttribute('aria-label')!=="选中页")return;
+   const cards=draftRef.current.cardBriefs??[],index=cards.findIndex(card=>card.cardId===activeCardId),card=cards[index];if(!card)return;
+   // SEMANTIC_BOUNDARY_ALLOW: Adapt three exact controlled UI fields to the selected real card ID; this never interprets content or chooses a card.
+   const fields:Record<string,'title'|'body'|'visualBrief'>={[`图卡${index+1}标题`]:'title',[`图卡${index+1}正文`]:'body','这一页的画面想法':'visualBrief'};
+   const field=fields[input.getAttribute('aria-label')??''];if(!field||input.value!==(card[field]??'')){selectionRef.current={kind:'graphic_cards',cardIds:[card.cardId]};setMessage('当前文字选区无法核对，编导会读取所选页；请重新选择文字。');generationRef.current++;chat.notifyEditorChanged();return;}
+   const start=input.selectionStart??0,end=input.selectionEnd??0,text=input.value;
+   if(start<0||end<start||end>text.length)return;
+   const selection={kind:'graphic_cards',cardIds:[card.cardId],field};selectionRef.current=selection;generationRef.current++;chat.notifyEditorChanged();
+   selectionPromise.current=(async()=>{if(end>start){const digest=await editorDigest(text);if(selectionRef.current===selection&&draftRef.current.cardBriefs?.find(row=>row.cardId===card.cardId)?.[field]===text)selectionRef.current={...selection,textRange:{startUtf16:start,endUtf16:end,expectedFieldDigest:digest}};}})();
+  }
+  function save(documentOverride?:never):Promise<boolean>{if(savePromiseRef.current)return savePromiseRef.current;const work=saveCore();savePromiseRef.current=work;return work.finally(()=>{if(savePromiseRef.current===work)savePromiseRef.current=null;});}
+
   const pageIds=draft.cardBriefs?.map(card=>card.cardId)??[];
   const activeCardId=selectedCardId&&pageIds.includes(selectedCardId)?selectedCardId:pageIds[0]??null;
   const activeCardIds=selectedCardIds.filter(id=>pageIds.includes(id));
+  React.useLayoutEffect(()=>{const next={kind:"graphic_cards",cardIds:activeCardId?[activeCardId]:[]};if(editorCanonical(selectionRef.current)!==editorCanonical(next)){selectionRef.current=next;generationRef.current++;chat.notifyEditorChanged();}},[activeCardId]);
 
   const onResultListResolved = React.useCallback((bodyResult: CreativeResult | null) => {
     if (initialStartStatus !== "unknown" || startResolved.current) return;
@@ -124,7 +148,6 @@ function GraphicPostWorkbenchSession({projectId,projectTitle,accountId,initial,i
       setAssets((previous) => page === 1 ? imageRows : [...previous, ...imageRows]);
       setHasMoreAssets(rows.length === 50);
       setAssetPage(page);
-      setError(null);
     } catch (reason) {
       if(!mounted.current)return;
       setError(describeUserError(reason, "图片素材暂未读取到，请重试。"));
@@ -146,29 +169,25 @@ function GraphicPostWorkbenchSession({projectId,projectTitle,accountId,initial,i
   }
   function editLegacyImages(next:ImageUse[]){setDraft(current=>normalizeGraphicImages({...current,imageUses:[...next,...current.imageUses.filter(image=>image.role==="card"&&image.cardId)]}));}
   const legacyImages=draft.imageUses.filter(image=>image.role==="cover"||!image.cardId);
-  async function save(): Promise<boolean> {
-    if (busy) return false;
-    if (!dirty) return true;
-    const digest = JSON.stringify({ outputId: state.outputId, versionId: state.currentVersionId, document: draft });
-    if (saveRequest.current.digest !== digest) saveRequest.current = { id: crypto.randomUUID(), digest };
-    setBusy(true); setError(null); setMessage(null);
-    try {
-      await client.createGraphicPostVersion({
-        params: { outputId: state.outputId }, query: undefined,
-        body: { expectedCurrentVersionId: state.currentVersionId, document: draft, clientRequestId: saveRequest.current.id },
-      });
-      if(!mounted.current)return false;
-      await refreshPost(JSON.stringify(draft));
-      saveRequest.current = { id: crypto.randomUUID(), digest: "" };
-      setMessage("作品已保存。");
-      return true;
-    } catch (reason) {
-      if(!mounted.current)return false;
-      setError(describeUserError(reason, "保存未完成。当前输入已保留，请检查后重试。"));
-      return false;
-    } finally {
-      if(mounted.current)setBusy(false);
-    }
+  async function saveCore(): Promise<boolean> {
+    if(busy)return false;
+    const frozenDraft=editorCanonical(draftRef.current),current=stateRef.current;
+    if(!graphicSaveIntent.current){const stored=sessionStorage.getItem(saveStorageKey);if(stored){try{graphicSaveIntent.current=JSON.parse(stored);}catch{throw Error("原保存记录无法读取，请保留当前稿并核对。");}}}
+    if(!graphicSaveIntent.current&&frozenDraft===editorCanonical(current.current))return true;
+    if(!graphicSaveIntent.current){graphicSaveIntent.current={body:{expectedCurrentVersionId:current.currentVersionId,document:structuredClone(draftRef.current),clientRequestId:crypto.randomUUID()},draftDigest:frozenDraft};sessionStorage.setItem(saveStorageKey,JSON.stringify(graphicSaveIntent.current));}
+    const intent=graphicSaveIntent.current;setBusy(true);setError(null);setMessage(null);
+    try{
+      const receipt=await client.createGraphicPostVersion({params:{outputId:current.outputId},query:undefined,body:intent.body});
+      const exact=await client.getGraphicPostVersion({params:{outputId:current.outputId,versionId:receipt.versionId},query:undefined,body:undefined});
+      if(exact.versionId!==receipt.versionId||editorCanonical(exact.document)!==editorCanonical(intent.body.document))throw Error("指定版本读回与保存内容不一致，原请求保留。");
+      const latest=await client.getGraphicPost({params:{outputId:current.outputId},query:undefined,body:undefined});if(!mounted.current)return false;
+      const changed=editorCanonical(draftRef.current)!==frozenDraft,recovered=intent.draftDigest!==frozenDraft;
+      stateRef.current=latest;setState(latest);graphicSaveIntent.current=null;sessionStorage.removeItem(saveStorageKey);
+      if(latest.currentVersionId!==receipt.versionId||editorCanonical(latest.current)!==editorCanonical(exact.document)){setMessage("此请求已保存，但当前作品已有更新，当前输入保留。");return false;}
+      if(changed||recovered){setMessage("原请求已保存，期间的新输入已保留，请再次保存当前修改。");return false;}
+      setDraft(structuredClone(latest.current));setTagsInput(latest.current.tags.join("、"));setMessage("作品已保存。");return true;
+    }catch(reason){if(mounted.current)setError(describeUserError(reason,"保存未确认，当前输入和原请求已保留，请恢复原请求。"));return false;}
+    finally{if(mounted.current)setBusy(false);}
   }
   async function openVersion(versionId: string) {
     try {
@@ -181,6 +200,24 @@ function GraphicPostWorkbenchSession({projectId,projectTitle,accountId,initial,i
     }
   }
 
+  React.useLayoutEffect(()=>{portRef.current={readState:()=>({target:targetRef.current,generation:generationRef.current,dirty:Boolean(stateRef.current&&draftRef.current&&editorCanonical(draftRef.current)!==editorCanonical(stateRef.current.current))}),prepareForTurn:async()=>{
+   if(selectionPromise.current)await selectionPromise.current;
+   if(savePromiseRef.current)await savePromiseRef.current;
+   const initial=stateRef.current;if(!initial||!draftRef.current)throw Error("当前稿件尚未准备好。");
+   if((graphicSaveIntent.current||sessionStorage.getItem(saveStorageKey)||editorCanonical(draftRef.current)!==editorCanonical(initial.current))&&!(await save()))throw Error("请先确认保存当前修改，原请求已保留。");
+   const current=stateRef.current!;const latest=await client.getGraphicPost({params:{outputId:current.outputId},query:undefined,body:undefined});
+   const exact=await client.getGraphicPostVersion({params:{outputId:current.outputId,versionId:latest.currentVersionId},query:undefined,body:undefined});
+   if(latest.currentVersionId!==current.currentVersionId||editorCanonical(exact.document)!==editorCanonical(latest.current)||editorCanonical(draftRef.current)!==editorCanonical(exact.document))throw Error("当前作品已改变，请核对保存版本后重试。");
+   const target:WorkEditorTarget={schemaVersion:1,projectId,outputId:latest.outputId,owner:"graphic_post",contentType:"image",savedBase:{kind:"artifact",artifactId:latest.artifactId,versionId:latest.currentVersionId},documentDigest:await editorDigest(exact.document),selection:selectionRef.current};targetRef.current=target;return target;
+  },previewCandidate:async()=>null,adoptCandidate:async(result:EditorSaveCandidate,requestId:string)=>{
+   const initial=stateRef.current;if(!initial||initial.outputId!==editorCandidateOutputId(result))throw Error("当前作品已改变。");
+   const frozen=editorCanonical(draftRef.current),generation=generationRef.current;
+   const saved=await saveWorkEditorCandidate(client,result,requestId);
+   const sync=editorCanonical(initial.current)===frozen&&generation===generationRef.current&&editorCanonical(draftRef.current)===frozen&&saved.currentMatches;
+   if(mounted.current){stateRef.current=saved.current;setState(saved.current);if(sync){setDraft(structuredClone(saved.current.current));setTagsInput((saved.current.current.tags??[]).join("、"));if(result.kind!=='work.creation.member'&&result.imageRequest){setDirectorImageRequest(result.imageRequest);setSelectedCardId(result.imageRequest.cardId);setSelectedCardIds([result.imageRequest.cardId]);setMessage("文字已采用。请按编导要求生成所选页图片，预览后再采用；旧图继续保留。");}}else setMessage("已保存，当前稿有新修改，未覆盖输入。");}
+   return {status:sync?"adopted":"saved-not-synced",versionId:saved.receipt.versionId};
+  }};});
+  React.useEffect(()=>chat.registerEditor({readState:()=>portRef.current!.readState(),prepareForTurn:()=>portRef.current!.prepareForTurn(),previewCandidate:c=>portRef.current!.previewCandidate(c),adoptCandidate:(c,id)=>portRef.current!.adoptCandidate(c,id)}),[chat.registerEditor,state.outputId]);
   const currentDesign=designTarget?draft.designs?.find(design=>design.target.kind===designTarget.kind&&(design.target.kind==='cover'||(designTarget.kind==='card'&&design.target.cardId===designTarget.cardId)))??{target:designTarget,document:{editor:'kuaitu' as const,revision:'b3bdcfb0bd6d8f98e7483cf561ac03ba56c0d889',nativeDocument:{},mediaRefs:[]}}:null;
   async function saveDesign(design:NonNullable<GraphicPostDocument['designs']>[number],image?:ReferenceEditorMedia){
     const designs=[...(draft.designs??[]).filter(old=>old.target.kind!==design.target.kind||(old.target.kind==='card'&&design.target.kind==='card'&&old.target.cardId!==design.target.cardId)),design];
@@ -222,7 +259,7 @@ function GraphicPostWorkbenchSession({projectId,projectTitle,accountId,initial,i
     }catch(reason){if(mounted.current)setError(describeUserError(reason,'导出未完成，作品已保留，请重试。'));}
     finally{if(mounted.current)setExportBusy(false);}
   }
-  return <main data-page="graphic-post-workbench" className="mx-auto w-full max-w-[1600px] space-y-4 px-5 py-4 text-sm md:px-8">
+  return <main data-page="graphic-post-workbench" className="mx-auto w-full max-w-[1600px] @container space-y-4 px-5 py-4 text-sm md:px-8">
     <div className="flex flex-wrap justify-end gap-3" aria-label="图文操作">
       <Button variant="outline" disabled={busy||exportBusy} onClick={()=>void exportGroup()}>{exportBusy?"导出中…":"导出整组"}</Button>
       <Button className="min-h-11 px-5 text-sm" title={busy ? "正在保存…" : dirty ? "有未保存的修改" : "修改已保存"} onClick={() => void save()} disabled={busy || !dirty}>{busy ? "保存中…" : "保存作品"}</Button>
@@ -238,9 +275,9 @@ function GraphicPostWorkbenchSession({projectId,projectTitle,accountId,initial,i
 
     {state.scriptContext?.message && <p className="text-sm text-muted-foreground">{state.scriptContext.message}</p>}
     {draft.imageMatchWarnings?.map((warning,index)=><p key={index} role="status" className="text-sm text-muted-foreground">{warning}</p>)}
-    <GraphicPostResults key={`${accountId}:${state.outputId}`} accountId={accountId} outputId={state.outputId} targetPlatform={state.targetPlatform} currentVersionId={state.currentVersionId} manualDraftDirty={dirty} prepareGeneration={save} onAdopt={()=>refreshPost()} onResultListResolved={onResultListResolved} scriptDerived
+    <GraphicPostResults key={`${accountId}:${state.outputId}`} accountId={accountId} outputId={state.outputId} targetPlatform={state.targetPlatform} currentVersionId={state.currentVersionId} manualDraftDirty={dirty} prepareGeneration={save} onAdopt={()=>refreshPost()} onResultListResolved={onResultListResolved} scriptDerived imageRequest={directorImageRequest}
       series={{cards:draft.cardBriefs??[],selectedCardId:activeCardId,selectedCardIds:activeCardIds}}/>
-    <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(360px,1fr)]">
+    <div className="grid items-start gap-6 @3xl:grid-cols-[minmax(0,1.15fr)_minmax(360px,1fr)]">
       <fieldset disabled={busy} aria-busy={busy} aria-label="编辑图文作品" className="min-w-0 space-y-4">
         <section className="space-y-4 rounded-xl border border-border bg-surface p-5" aria-label="图文稿件"><h2 className="text-[13.5px] font-semibold">当前稿件</h2>
           <label className="block text-sm font-medium">标题<input value={draft.title} onChange={(event) => setDraft({ ...draft, title: event.target.value })} className="mt-2 h-11 w-full rounded-md border border-border bg-background px-3" placeholder="输入作品标题" /></label>
@@ -261,12 +298,12 @@ function GraphicPostWorkbenchSession({projectId,projectTitle,accountId,initial,i
     </div>
     <details aria-label="发布内容" className="rounded-xl border border-border bg-surface"><summary className="cursor-pointer px-5 py-4 text-sm font-medium">首图、简介、话题与审核</summary><div className="border-t border-border p-4"><Button size="sm" variant="outline" disabled={busy} onClick={()=>setDesignTarget({kind:'cover'})}>快图细调封面</Button><PublicationResultActions accountId={accountId} outputId={state.outputId} outputType="image" platform={state.targetPlatform==='xiaohongshu'?'xiaohongshu':null} dirty={dirty}/></div></details>
 
-        <LazyDisclosure label="逐页创作与 AI 辅助">{()=> <>
-    <OutputConversionPanel key={`${accountId}:${state.outputId}`} accountId={accountId} projectId={projectId} outputId={state.outputId} sourceType="image" versionId={state.currentVersionId} dirty={dirty} fields={{title:state.current.title,body:state.current.body,summary:state.current.summary,tags:state.current.tags}} images={state.current.imageUses}/>
+        <LazyDisclosure label="逐页创作与 AI 辅助">{()=> <div onSelectCapture={captureCardSelection}>
+
     <GraphicSeriesPanel document={draft} onChange={setDraft} selectedCardId={activeCardId} selectedCardIds={activeCardIds} onSelect={setSelectedCardId} onSelectionChange={setSelectedCardIds} assets={assets} disabled={busy||canvasBusy}
       onOpenCanvas={cardId=>void enterCanvas(cardId)} onOpenDesign={cardId=>setDesignTarget({kind:'card',cardId})}>
 
-    </GraphicSeriesPanel>    </>}</LazyDisclosure>
+    </GraphicSeriesPanel>    </div>}</LazyDisclosure>
     <Dialog open={Boolean(preview)} onOpenChange={(open) => { if (!open) setPreview(null); }}>
       <DialogContent className="max-h-[85vh] overflow-y-auto">
         <DialogHeader><DialogTitle>历史版本预览</DialogTitle></DialogHeader>

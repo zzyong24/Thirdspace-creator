@@ -21,11 +21,12 @@ import * as React from "react";
 import {ProjectVideoSessionContext} from "@/features/reference-editors/project-video-session-registry";
 import { usePathname } from "next/navigation";
 
+import {Button} from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { DraftChatRail } from "@/features/draft-workbench/draft-chat-rail";
 import { useDraftChatRequest } from "@/features/draft-workbench/draft-chat-request";
 
-const STAGE_SEGMENTS = /\/projects\/[^/]+\/(review|production)(\/|$)/;
+const STAGE_SEGMENTS = /\/projects\/[^/]+\/(review|production|article|outputs\/[^/]+\/image)(\/|$)/;
 
 // [T-297] 阶段编导栏宽度:独立持久键(不与稿面 creatoros:draft:rail-width 串味);
 // 默认 = 最大 640(与稿面 MAX_RAIL 对齐);拖拽/键盘钳到 [300,640]。
@@ -60,7 +61,14 @@ export function StageChatWrapper({
   const [railWidth, setRailWidth] = React.useState<number>(DEFAULT_RAIL);
   // [T-411] 折叠态(镜像稿面 DraftResizableLayout)。SSR/首帧默认展开避免 hydration 闪。
   const [collapsed, setCollapsed] = React.useState(false);
+  const mobileTrigger=React.useRef<HTMLButtonElement>(null),mobilePanel=React.useRef<HTMLElement>(null);
+  const [narrow,setNarrow]=React.useState(false),[mobileOpen,setMobileOpen]=React.useState(false);
+  React.useEffect(()=>{const media=window.matchMedia("(max-width: 1279px)");const sync=()=>setNarrow(media.matches);sync();media.addEventListener("change",sync);return()=>media.removeEventListener("change",sync);},[]);
   const containerRef = React.useRef<HTMLDivElement>(null);
+  React.useEffect(()=>{if(narrow&&mobileOpen)requestAnimationFrame(()=>mobilePanel.current?.querySelector<HTMLButtonElement>('button')?.focus());},[narrow,mobileOpen]);
+  function closeMobile(){setMobileOpen(false);requestAnimationFrame(()=>mobileTrigger.current?.focus());}
+  function mobileKeys(event:React.KeyboardEvent<HTMLElement>){if(!narrow)return;if(event.key==='Escape'){event.preventDefault();closeMobile();return;}if(event.key!=='Tab')return;const nodes=Array.from(event.currentTarget.querySelectorAll<HTMLElement>('button:not([disabled]),a[href],input:not([disabled]),textarea:not([disabled]),[tabindex="0"]')).filter(node=>node.offsetParent!==null);const first=nodes[0],last=nodes.at(-1);if(event.shiftKey&&document.activeElement===first){event.preventDefault();last?.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first?.focus();}}
+
   const draggingRef = React.useRef(false);
 
   React.useEffect(() => {
@@ -111,7 +119,7 @@ export function StageChatWrapper({
     const prev = lastNonceRef.current;
     lastNonceRef.current = nonce;
     if (nonce !== null && nonce !== prev) {
-      setCollapsed(false);
+      setCollapsed(false);setMobileOpen(true);
     }
   }, [nonce]);
 
@@ -176,11 +184,11 @@ export function StageChatWrapper({
       ref={containerRef}
       className="flex min-h-0 flex-1 items-stretch gap-0"
     >
-      <div className="min-w-0 flex-1">{children}</div>
+      <div className="min-w-0 flex-1" inert={narrow&&mobileOpen} aria-hidden={narrow&&mobileOpen||undefined}>{children}</div>
 
       {/* [T-297] 拖拽分隔条(pointer 拖 + 键盘 ←/→,role=separator);仅 xl+ 右栏可见时显示。
           [T-411] 收起态整条隐藏(连同右栏)。 */}
-      {showRail&&!collapsed ? (
+      {showRail&&!collapsed&&!narrow ? (
         <div
           role="separator"
           aria-orientation="vertical"
@@ -203,11 +211,12 @@ export function StageChatWrapper({
         />
       ) : null}
 
-      {showRail ? (!collapsed ? (
-        <aside
+      {showRail && narrow && !mobileOpen ? <Button ref={mobileTrigger} variant="outline" className="fixed bottom-5 right-5 z-40" onClick={()=>setMobileOpen(true)}>打开编导</Button> : null}
+      {showRail ? (!(narrow?!mobileOpen:collapsed) ? (
+        <aside ref={mobilePanel} role={narrow?"dialog":undefined} aria-modal={narrow?true:undefined} aria-label="编导对话" onKeyDown={mobileKeys}
           data-slot="stage-chat-rail"
-          style={{ width: railWidth }}
-          className="hidden shrink-0 border-l border-border bg-surface xl:block"
+          style={{ width: narrow?"min(100vw, 640px)":railWidth }}
+          className={cn("shrink-0 border-l border-border bg-surface",narrow?"fixed inset-y-0 right-0 z-50 shadow-lg":"block")}
         >
           <div className="sticky top-0 flex h-[calc(100vh-4rem)] flex-col">
             {/* [T-411] 右栏头部:显眼的「收起编导」开关(与稿面一致)。 */}
@@ -220,7 +229,7 @@ export function StageChatWrapper({
                 data-slot="stage-rail-collapse-toggle"
                 data-testid="stage-rail-collapse-toggle"
                 aria-label="收起编导栏"
-                onClick={() => setCollapsedPersisted(true)}
+                onClick={() => {setCollapsedPersisted(true);closeMobile();}}
                 className={cn(
                   "flex cursor-pointer items-center gap-1 rounded-md px-2 py-1 text-xs text-text-subtle transition-colors",
                   "hover:bg-surface-subtle hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40",

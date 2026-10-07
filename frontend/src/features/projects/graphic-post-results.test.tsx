@@ -61,6 +61,16 @@ describe('组图逐页候选',()=>{
   api.listResults.mockResolvedValue({items:[]});api.listBundles.mockResolvedValue({items:[]});
   api.getAssetFileDownloadUrl.mockResolvedValue({url:'http://example.test/exact.png'});
  });
+ it('编导图片要求走原page generator；未知后新要求不覆盖原body/key',async()=>{
+  api.generateResult.mockRejectedValueOnce(Error('original response unknown')).mockResolvedValueOnce({...card,status:'awaiting_confirmation',targetSectionId:'page-b',value:[{...image,cardId:'page-b'}]});
+  const series={cards:pages,selectedCardId:'page-b',selectedCardIds:['page-b']};
+  const view=render(<GraphicPostResults {...props} series={series} imageRequest={{cardId:'page-b',visualRequirements:'蓝色示意图'}}/>);
+  fireEvent.click(await screen.findByRole('button',{name:'按编导要求生成所选页图片'}));await screen.findByRole('alert');
+  const original=api.generateResult.mock.calls[0][0];expect(original.body).toMatchObject({kind:'image_card',targetSectionId:'page-b',ruleOverrides:{visualRequirements:'蓝色示意图'}});
+  view.rerender(<GraphicPostResults {...props} series={series} imageRequest={{cardId:'page-a',visualRequirements:'新要求'}}/>);
+  fireEvent.click(screen.getByRole('button',{name:'恢复编导原出图请求'}));await waitFor(()=>expect(api.generateResult).toHaveBeenCalledTimes(2));expect(api.generateResult.mock.calls[1][0]).toEqual(original);
+  expect(props.prepareGeneration).toHaveBeenCalledOnce();expect(api.createBundle).not.toHaveBeenCalled();
+ });
  it('选中多页提交同一已有bundle，各项保留真实cardId',async()=>{
   api.createBundle.mockResolvedValue({bundleId:'bundle',status:'running',items:[]});
   render(<GraphicPostResults {...props} series={{cards:pages,selectedCardId:'page-b',selectedCardIds:['page-a','page-b']}}/>);
@@ -251,13 +261,13 @@ describe("图卡文字候选审阅",()=>{
  });
 });
 
-it("基于脚本快速生成只请求正文和图卡，元数据再生成折叠",async()=>{
+it("联合主动作替代图文旁路生成，原历史候选和单页图片保留",async()=>{
  api.listCreativeCapabilities.mockResolvedValue({items:["title","body","summary","tags","cardBriefs"].map(kind=>({outputType:"image",platform:"xiaohongshu",kind,state:"supported"}))});
  api.createBundle.mockResolvedValue({bundleId:"draft",status:"complete",items:[]});
  render(<GraphicPostResults {...props} scriptDerived series={{cards:[],selectedCardId:null,selectedCardIds:[]}}/>);
- fireEvent.click(await screen.findByRole("button",{name:"根据脚本生成图文"}));
- await waitFor(()=>expect(api.createBundle).toHaveBeenCalledWith({params:{outputId:"output"},query:undefined,body:{items:[{kind:"body"},{kind:"cardBriefs"}],clientRequestId:expect.any(String)}}));
- expect(screen.getByText("重新生成标题、简介与标签").closest("details")).not.toHaveAttribute("open");expect(screen.queryByRole("button",{name:"生成标题"})).toBeNull();
+ await screen.findByRole('button',{name:'刷新能力与候选'});
+ expect(screen.queryByRole("button",{name:"根据脚本生成图文"})).toBeNull();expect(api.createBundle).not.toHaveBeenCalled();
+ expect(screen.queryByText("重新生成标题、简介与标签")).toBeNull();expect(screen.queryByRole("button",{name:"生成标题"})).toBeNull();expect(screen.getByText('规划与配文候选')).toBeInTheDocument();
 });
 
 // T1062_COMPONENT_PORT_SEAM: 仅本文件既有业务spies；真实scope/epoch/signal/lifecycle不替换。

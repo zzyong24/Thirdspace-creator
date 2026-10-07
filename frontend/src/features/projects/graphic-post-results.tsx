@@ -96,6 +96,7 @@ type GraphicPostResultsProps={
   prepareGeneration:()=>Promise<boolean>;onAdopt:()=>Promise<void>;
   onResultListResolved?:(bodyResult:CreativeResult|null)=>void;
   scriptDerived?:boolean;
+  imageRequest?:{cardId:string;visualRequirements:string}|null;
   series?:{cards:GraphicPostCardBrief[];selectedCardId:string|null;selectedCardIds:string[]};
 };
 type SeriesRequest={items:{kind:'image_card';targetSectionId:string}[];clientRequestId:string};
@@ -127,7 +128,7 @@ function readSeriesRequests(key:string):SeriesRequest[]{
   }catch{/* Unavailable storage does not block creation. */}return [];
 }
 export function GraphicPostResults(props:GraphicPostResultsProps){const workspaceSelection=useCreationScope();return <GraphicPostResultsSession key={`${creationScopeKey(workspaceSelection)}:${props.outputId}`} {...props}/>;}
-function GraphicPostResultsSession({accountId,outputId,targetPlatform,currentVersionId,manualDraftDirty,prepareGeneration,onAdopt,onResultListResolved,series,scriptDerived=false}:GraphicPostResultsProps){
+function GraphicPostResultsSession({accountId,outputId,targetPlatform,currentVersionId,manualDraftDirty,prepareGeneration,onAdopt,onResultListResolved,series,scriptDerived=false,imageRequest}:GraphicPostResultsProps){
  const client=useCreationClient(),workspaceSelection=useCreationScope();
 
   const [capabilities, setCapabilities] = React.useState<CreativeCapability[] | null>(null);
@@ -143,6 +144,10 @@ function GraphicPostResultsSession({accountId,outputId,targetPlatform,currentVer
   const seriesStorageKey=`creatoros:graphic-series-request:${workspaceSelection.groupId?creationScopeKey(workspaceSelection):accountId}:${outputId}`;
   const [initialSeriesQueue]=React.useState(()=>readSeriesRequests(seriesStorageKey));
   const seriesQueue=React.useRef<SeriesRequest[]>(initialSeriesQueue);
+  const directedStorageKey=`${seriesStorageKey}:director`;
+  const directedRequest=React.useRef<Parameters<typeof client.generateResult>[0]['body']|null>(null);
+  const [unknownDirected,setUnknownDirected]=React.useState(false);
+  React.useEffect(()=>{try{const value=JSON.parse(sessionStorage.getItem(directedStorageKey)??'null');if(value?.kind==='image_card'&&typeof value.targetSectionId==='string'&&typeof value.clientRequestId==='string'&&typeof value.ruleOverrides?.visualRequirements==='string'){directedRequest.current=value;setUnknownDirected(true);}}catch{/* Original in-memory request remains. */}},[directedStorageKey]);
   const [unknownSeries,setUnknownSeries]=React.useState(initialSeriesQueue.length>0);
   function persistSeriesQueue(){try{if(seriesQueue.current.length)window.sessionStorage.setItem(seriesStorageKey,JSON.stringify(seriesQueue.current));else window.sessionStorage.removeItem(seriesStorageKey);}catch{/* Storage can be disabled; in-memory original requests still remain. */}}
   const pageAdoptions=React.useRef<Record<string,PageAdoptionAttempt>>({});
@@ -455,6 +460,23 @@ function GraphicPostResultsSession({accountId,outputId,targetPlatform,currentVer
     finally {if(epoch===scope.current.epoch)setRetrying(null);}
   }
 
+  async function generateDirectedPage(){
+    if(seriesBusy||!series)return;
+    const epoch=scope.current.epoch;setSeriesBusy(true);setError(null);
+    try{
+      if(!directedRequest.current){
+        if(!imageRequest||!series.cards.some(card=>card.cardId===imageRequest.cardId))throw Error('编导指定页已不存在，请重新核对。');
+        if(!(await prepareGeneration())||epoch!==scope.current.epoch)return;
+        directedRequest.current={kind:'image_card',targetSectionId:imageRequest.cardId,ruleOverrides:{visualRequirements:imageRequest.visualRequirements},clientRequestId:crypto.randomUUID()};
+        sessionStorage.setItem(directedStorageKey,JSON.stringify(directedRequest.current));
+      }
+      // The existing page generator freezes the current saved text and preserves the original key on UNKNOWN.
+      const result=await client.generateResult({params:{outputId},query:undefined,body:directedRequest.current});
+      if(epoch!==scope.current.epoch)return;
+      rememberResult(result);directedRequest.current=null;sessionStorage.removeItem(directedStorageKey);setUnknownDirected(false);setMessage('所选页图片已提交。请预览并采用新图，旧图仍保留。');
+    }catch(reason){if(epoch===scope.current.epoch){setUnknownDirected(Boolean(directedRequest.current));setError(errorText(reason));}}
+    finally{if(epoch===scope.current.epoch)setSeriesBusy(false);}
+  }
   async function generatePages(recover=false) {
     if(seriesBusy || !series)return;
     const epoch=scope.current.epoch;
@@ -536,7 +558,7 @@ function GraphicPostResultsSession({accountId,outputId,targetPlatform,currentVer
         ? Array.isArray(result.value) && result.value.every((item) => typeof item === "string")
         : typeof result.value === "string");
       return <div key={kind} className="rounded-lg border border-border p-4"><div className="flex items-start justify-between gap-2"><div><h3 className="font-medium">{LABEL[kind]}</h3><p className="mt-1 text-xs text-muted-foreground">{capabilityExplanation(capability)}</p></div>
-        {supported && <Button variant="outline" disabled={Boolean(resultPending) || busyKind === kind || busyBundle} onClick={() => void generate(kind)}>{busyKind === kind || resultPending ? "生成中…" : result ? `重新生成${LABEL[kind]}` : `生成${LABEL[kind]}`}</Button>}</div>
+        {supported && !scriptDerived && <Button variant="outline" disabled={Boolean(resultPending) || busyKind === kind || busyBundle} onClick={() => void generate(kind)}>{busyKind === kind || resultPending ? "生成中…" : result ? `重新生成${LABEL[kind]}` : `生成${LABEL[kind]}`}</Button>}</div>
         {result && <div className="mt-3 space-y-2"><p className="text-xs text-muted-foreground">{STATUS[result.status]}{resultError(result.errorCode) ? ` · ${resultError(result.errorCode)}` : ""}</p>
           {(result.status === "succeeded" || result.status === "adopted") && <p className="text-xs text-muted-foreground">{result.appliedRules === "applied" ? "已应用账号规则" : "未应用账号规则"} · 已记录来源 {result.sourceRefs.length} 条</p>}
           {result.status === "adopted" && !hasCandidateValue && <p className="text-xs text-muted-foreground">已保存到正式作品，请在下方稿件查看。</p>}
@@ -554,9 +576,9 @@ function GraphicPostResultsSession({accountId,outputId,targetPlatform,currentVer
 
   }
   return <section aria-label="按结果生成" className="space-y-4 rounded-xl border border-border bg-surface p-5">
-    <div className="flex flex-wrap items-start justify-between gap-3"><div><h2 className="text-[13.5px] font-semibold">{scriptDerived?"基于脚本生成":series?"出图与候选":"直接生成需要的结果"}</h2>{!scriptDerived&&<p className="mt-1 text-sm text-muted-foreground">每项独立生成。审阅并点击“采用”后，才写入正式作品。</p>}</div>
+    <div className="flex flex-wrap items-start justify-between gap-3"><div><h2 className="text-[13.5px] font-semibold">{scriptDerived?"历史候选与单页图片":series?"出图与候选":"直接生成需要的结果"}</h2>{!scriptDerived&&<p className="mt-1 text-sm text-muted-foreground">每项独立生成。审阅并点击“采用”后，才写入正式作品。</p>}</div>
       <div className="flex flex-wrap gap-2"><Button variant="ghost" onClick={() => void load()}>刷新能力与候选</Button>
-      {(scriptDerived ? supportedKinds.some(kind=>kind==="body"||kind==="cardBriefs") : !series && supportedKinds.length > 0) && <Button className="min-h-11 px-5 text-sm" disabled={busyBundle || bundleInProgress || Boolean(busyKind)} onClick={() => void createAll()}>{busyBundle || bundleInProgress ? "准备中…" : scriptDerived?"根据脚本生成图文":"一次备齐可用内容"}</Button>}</div>
+      {(!scriptDerived && !series && supportedKinds.length > 0) && <Button className="min-h-11 px-5 text-sm" disabled={busyBundle || bundleInProgress || Boolean(busyKind)} onClick={() => void createAll()}>{busyBundle || bundleInProgress ? "准备中…" : scriptDerived?"根据脚本生成图文":"一次备齐可用内容"}</Button>}</div>
     </div>
     {loading && <p className="text-sm text-muted-foreground">正在读取创作能力与历史候选…</p>}
     {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
@@ -567,9 +589,10 @@ function GraphicPostResultsSession({accountId,outputId,targetPlatform,currentVer
     </div>}
     {series && <div aria-label="当前页图片候选" className="space-y-3">
       <div className="flex flex-wrap gap-2">
-        {series.cards.length===0 && pickCapability(capabilities??[],'cardBriefs',targetPlatform)?.state==='supported' && <Button disabled={Boolean(busyKind)} onClick={()=>void generate('cardBriefs')}>规划组图</Button>}
+        {!scriptDerived && series.cards.length===0 && pickCapability(capabilities??[],'cardBriefs',targetPlatform)?.state==='supported' && <Button disabled={Boolean(busyKind)} onClick={()=>void generate('cardBriefs')}>规划组图</Button>}
         {series.cards.length>0 && cardCapability?.state==='supported' && <Button disabled={seriesBusy||unknownSeries||selectedPagePending||series.selectedCardIds.length===0} onClick={()=>void generatePages()}>{seriesBusy?'提交中…':`生成所选 ${series.selectedCardIds.length} 页`}</Button>}
         {unknownSeries && <Button variant="outline" disabled={seriesBusy} onClick={()=>void generatePages(true)}>恢复原组图请求</Button>}
+        {(imageRequest||unknownDirected)&&cardCapability?.state==='supported'&&<Button variant="outline" disabled={seriesBusy||selectedPagePending} onClick={()=>void generateDirectedPage()}>{unknownDirected?'恢复编导原出图请求':'按编导要求生成所选页图片'}</Button>}
       </div>
       {series.cards.length>0&&cardCapability?.state!=='supported'&&<p className="text-xs text-muted-foreground">{capabilityExplanation(cardCapability)}。仍可选用已有图片或进入画布。</p>}
       {seriesBundles.map(group=><div key={group.bundleId} className="rounded-md bg-surface-subtle p-3 text-xs"><strong>所选页生成：{group.status==='partial_completed'?'部分完成':group.status==='complete'?'已完成':group.status==='failed'?'未完成':'处理中'}</strong><ul className="mt-2 space-y-1">{group.items.map(item=><li key={item.resultId}>{series.cards.find(card=>card.cardId===item.targetSectionId)?.title||'原目标页'}：{STATUS[item.status]}{['failed','cancelled'].includes(item.status)&&<Button variant="ghost" disabled={Boolean(retrying)} onClick={()=>void retry(item.resultId)}>只重试这一页</Button>}</li>)}</ul></div>)}
@@ -585,7 +608,7 @@ function GraphicPostResultsSession({accountId,outputId,targetPlatform,currentVer
     <details open={scriptDerived||!series||(series.cards.length===0&&Boolean(results.cardBriefs))} className="space-y-3"><summary className="cursor-pointer text-sm font-medium">{series?'规划与配文候选':'文字候选'}</summary>
     <div className="grid gap-3 md:grid-cols-2">{(scriptDerived ? ["body","cardBriefs"] as TextKind[] : TEXT_KINDS).map(renderTextCandidate)}</div>
     </details>
-    {scriptDerived && <LazyDisclosure label="重新生成标题、简介与标签">{()=> <div className="grid gap-3 md:grid-cols-3">{(["title","summary","tags"] as TextKind[]).map(renderTextCandidate)}</div>}</LazyDisclosure>}
+    {scriptDerived && (results.title||results.summary||results.tags) && <LazyDisclosure label="先前标题、简介与标签候选">{()=> <div className="grid gap-3 md:grid-cols-3">{(["title","summary","tags"] as TextKind[]).filter(kind=>results[kind]).map(renderTextCandidate)}</div>}</LazyDisclosure>}
     {(!series||coverResult||cardResult) && <div className="rounded-lg border border-dashed border-border p-3 text-sm">{series&&<h3 className="mb-3 font-medium">先前未绑定页的图片候选</h3>}<div className="flex flex-wrap items-start justify-between gap-2"><div><h3 className="font-medium">封面</h3><p className="mt-1 text-xs text-muted-foreground">{capabilityExplanation(coverCapability)}</p></div>
       {!series && coverCapability?.state === "supported" && <Button variant="outline" disabled={Boolean(coverBusy) || Boolean(cardBusy) || Boolean(busyKind) || busyBundle || Boolean(coverResult && ["queued", "running"].includes(coverResult.status))} onClick={() => void generateCover()}>{coverBusy === "generate" || (coverResult && ["queued", "running"].includes(coverResult.status)) ? "生成中…" : coverResult ? "重新生成封面" : "生成封面"}</Button>}</div>
       {coverResult && <div className="mt-3 space-y-2"><p className="text-xs text-muted-foreground">{coverResult.status === "awaiting_confirmation" ? "待审阅" : coverResult.status === "adopted" ? "已采纳" : coverResult.status === "failed" ? "生成未完成" : coverResult.status === "cancelled" ? "已取消" : "生成中"}{resultError(coverResult.errorCode) ? ` · ${resultError(coverResult.errorCode)}` : ""}</p>
