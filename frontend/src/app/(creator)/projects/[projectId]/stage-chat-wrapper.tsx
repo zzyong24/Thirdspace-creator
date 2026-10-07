@@ -240,7 +240,7 @@ export function StageChatWrapper({
           style={{ width: narrow?"min(100vw, 640px)":actualRailWidth }}
           className={cn("shrink-0 border-l border-border bg-surface",narrow?"fixed inset-y-0 right-0 z-50 shadow-lg":"block")}
         >
-          <div className="sticky top-0 flex h-[calc(100vh-4rem)] flex-col">
+          <div className={cn("flex flex-col",narrow?"h-full overflow-y-auto":"sticky top-0 h-[calc(100vh-4rem)]")}>
             {/* [T-411] 右栏头部:显眼的「收起编导」开关(与稿面一致)。 */}
             <div
               data-slot="stage-rail-header"

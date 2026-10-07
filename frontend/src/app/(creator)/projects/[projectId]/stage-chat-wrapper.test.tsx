@@ -116,6 +116,10 @@ it("窄屏本地打开编导，可 Escape 关闭并回到原按钮", async () =>
   fireEvent.click(open);
   const dialog = await screen.findByRole("dialog", { name: "编导对话" });
   expect(dialog).toHaveAttribute("aria-modal", "true");
+  // 683×512 实际浏览器复现：弹层扣除桌面顶部64px会裁到发送按钮。
+  // jsdom 不做几何布局；这里守容器策略，实际可见性另保留浏览器截图。
+  expect(dialog.firstElementChild).toHaveClass("h-full", "overflow-y-auto");
+  expect(dialog.firstElementChild).not.toHaveClass("h-[calc(100vh-4rem)]");
   expect(screen.getAllByTestId("director")).toHaveLength(1);
   expect(screen.getByText("稿件操作").parentElement).toHaveAttribute("inert");
   fireEvent.keyDown(dialog, { key: "Escape" });
