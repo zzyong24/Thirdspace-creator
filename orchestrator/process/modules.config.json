@@ -18,6 +18,40 @@
     ]
   },
   "modules": {
+    "T-1074": {
+      "task_id": "T-1074",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "research"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1074-ai-system-operations.md",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "PROJECT_CONTEXT.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "backend/src/**",
+        "frontend/src/**",
+        "ai-worker/src/**",
+        "contract/src/**",
+        "mcp-server/**"
+      ],
+      "write_set": [
+        "docs/features/t1074-ai-system-operations.md",
+        "docs/verification/t1074/research.md",
+        "docs/verification/t1074/tool-inventory.md",
+        "docs/verification/t1074/research-result.json"
+      ],
+      "verify_commands": {
+        "research": [
+          "git diff --check"
+        ]
+      },
+      "scope_note": "当前只读调研/盘点阶段。主会话维护控制面和证据，子agent只读/无写集；未独评精确产品范围前不改任何产品代码、真实作品、权限、任务或安装包。整个任务保留用户全功能落地目标；research不是完成状态。"
+    },
     "T-1072": {
       "task_id": "T-1072",
       "archetype": [

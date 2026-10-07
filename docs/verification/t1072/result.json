@@ -1,6 +1,6 @@
 {
   "schema": "t1072-hook-repair@1",
-  "status": "INSTALLED_REAL_CREATOROS_COMMIT_PENDING",
+  "status": "REPAIR_COMPLETE",
   "changedExternalFile": "/Users/zyongzhu/.config/git/hooks/commit-msg",
   "backupRoot": "/Users/zyongzhu/.config/git/t1072-0mqy07ml/backup",
   "red": {
@@ -36,7 +36,7 @@
       "stdout": "",
       "stderr": ""
     },
-    "realCreatorosCommitVerified": false,
+    "realCreatorosCommitVerified": true,
     "backupManifestPath": "/Users/zyongzhu/.config/git/t1072-0mqy07ml/backup-manifest.json"
   },
   "rawEvidence": [
@@ -63,13 +63,73 @@
     {
       "path": "/Users/zyongzhu/.config/git/t1072-0mqy07ml/installation-result.json",
       "sha256": "fd42b1174a8c630d4a2c1bc5016386e5317e12b579488bf1ec123f28d03bb46c"
+    },
+    {
+      "path": "/Users/zyongzhu/.config/git/t1072-0mqy07ml/creatoros-real-commit-result.json",
+      "sha256": "b3c1d81e44769a9cff4c554bdf74ff5e3daf083a481d98651d90000215ed7d83"
+    },
+    {
+      "path": "/Users/zyongzhu/.config/git/t1072-0mqy07ml/creatoros-commit-trace.jsonl",
+      "sha256": "5072a23bc2ec91fa2dc105e8415f299269d71318b1d8bb9d19e89befe89f6aea"
+    },
+    {
+      "path": "/Users/zyongzhu/.config/git/t1072-0mqy07ml/reconcile-result.json",
+      "sha256": "3020c30e5cb8388728bd629f104c1d72fd43bbdf6d1ef23afcdf4ab0e9b4d7b6"
+    },
+    {
+      "path": "/Users/zyongzhu/.config/git/t1072-0mqy07ml/reconcile-comparison.json",
+      "sha256": "623676d25be8edd72db44afc1d3a436799f4748ce4a4a0c1248901cc5ceb577c"
     }
   ],
   "registrationCorrections": [
     "初始模块注册误把dict当list，AttributeError发生在写入前；已纠正。",
-    "context-compile先缺module binding，再缺progress binding，真实返回2；补注册并经progress generate后真实0。"
+    "context-compile先缺module binding，再缺progress binding，真实返回2；补注册并经progress generate后真实0。",
+    "收尾读取backup-manifest误假设hooks字段，KeyError发生在写入前；改用已验证备份和真实stat核对。"
   ],
-  "globalProjectVerification": "待pmem sync/reconcile，不代签全仓",
+  "globalProjectVerification": {
+    "pmemSyncExitCode": 0,
+    "reconcileExitCode": 1,
+    "errors": 37,
+    "warnings": 1,
+    "sameExactPriorLogSha256": "ff95de5787927c16835d0101ec144e975f066133317a455d69dfd96ce84cc3e0",
+    "newErrorLines": [],
+    "preservedRootCauseTasks": [
+      "T-1018",
+      "T-1015"
+    ],
+    "productAndTestsUnchangedDuringReconcile": true,
+    "controlRegistrationDuringReconcile": "T-1074只读任务登记及T-1072非UI验收类型更正；不声称全局绿色"
+  },
   "clientSourceDataBuildOrAppChanged": false,
-  "pushedTaggedOrReleased": false
+  "pushedTaggedOrReleased": false,
+  "realCreatorosCommit": {
+    "commit": "4eedd433",
+    "exitCode": 0,
+    "commitMsgHookActualInvocation": true,
+    "hookExitCode": 0,
+    "missingToolMessage": false
+  },
+  "preservedHooksCurrentReadBack": [
+    {
+      "name": "post-checkout",
+      "sha256": "8d606e58cce98604696a4abcf3ae1ebde6f9f31ac72bb0d44e2444cc39f26030",
+      "mode": "0755",
+      "uid": 501,
+      "gid": 20
+    },
+    {
+      "name": "post-commit",
+      "sha256": "6d5771f3451f808e84e98d55bb1c6fc10ce746c0e7a9b2dd9ea5d998e99d1e01",
+      "mode": "0755",
+      "uid": 501,
+      "gid": 20
+    },
+    {
+      "name": "pre-push",
+      "sha256": "a52d0510d0f8c75e27852156ec6f7791f0d8ed65fc58fcc368dd1de0a60a1d74",
+      "mode": "0755",
+      "uid": 501,
+      "gid": 20
+    }
+  ]
 }

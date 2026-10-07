@@ -4,13 +4,52 @@
     "work_branch": "main"
   },
   "summary": {
-    "verticals": 64,
+    "verticals": 65,
     "tasks_done": 45,
-    "tasks_total": 161,
-    "tasks_pending": 116,
+    "tasks_total": 162,
+    "tasks_pending": 117,
     "verticals_complete": 4
   },
   "verticals": [
+    {
+      "id": "T-1074",
+      "archetype": [
+        "orchestration"
+      ],
+      "task_id": "T-1074",
+      "tasks": [
+        {
+          "step": "research",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "docs/features/t1074-ai-system-operations.md",
+        "docs/verification/t1074/research.md",
+        "docs/verification/t1074/tool-inventory.md",
+        "docs/verification/t1074/research-result.json"
+      ],
+      "read_set": [
+        "docs/features/t1074-ai-system-operations.md",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "PROJECT_CONTEXT.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "backend/src/**",
+        "frontend/src/**",
+        "ai-worker/src/**",
+        "contract/src/**",
+        "mcp-server/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
     {
       "id": "T-1072",
       "archetype": [
