@@ -285,6 +285,7 @@ export function DraftChatRequestProvider({
       after.dirty
     )
       throw Error("当前稿或选区已改变，本次未发送，请核对后重试。");
+    bumpEditor();
     return target;
   }, []);
   const prepareScriptForCreation = React.useCallback(async () => {

@@ -37,6 +37,8 @@ const DEFAULT_RAIL = 640;
 const MIN_RAIL = 300;
 const MAX_RAIL = 640;
 const KEY_STEP = 16;
+const MIN_EDITOR_WIDTH = 720;
+const RESIZE_HANDLE_WIDTH = 6;
 
 function clampRail(n: number): number {
   if (!Number.isFinite(n)) return DEFAULT_RAIL;
@@ -62,14 +64,29 @@ export function StageChatWrapper({
   // [T-411] 折叠态(镜像稿面 DraftResizableLayout)。SSR/首帧默认展开避免 hydration 闪。
   const [collapsed, setCollapsed] = React.useState(false);
   const mobileTrigger=React.useRef<HTMLButtonElement>(null),mobilePanel=React.useRef<HTMLElement>(null);
-  const [narrow,setNarrow]=React.useState(false),[mobileOpen,setMobileOpen]=React.useState(false);
-  React.useEffect(()=>{const media=window.matchMedia("(max-width: 1279px)");const sync=()=>setNarrow(media.matches);sync();media.addEventListener("change",sync);return()=>media.removeEventListener("change",sync);},[]);
+  const [viewportNarrow,setViewportNarrow]=React.useState(false),[mobileOpen,setMobileOpen]=React.useState(false);
+  React.useEffect(()=>{const media=window.matchMedia("(max-width: 1279px)");const sync=()=>setViewportNarrow(media.matches);sync();media.addEventListener("change",sync);return()=>media.removeEventListener("change",sync);},[]);
   const containerRef = React.useRef<HTMLDivElement>(null);
+  const [availableWidth,setAvailableWidth]=React.useState(0);
+  React.useLayoutEffect(()=>{
+    const container=containerRef.current;if(!container)return;
+    const measure=()=>{const width=Math.floor(container.getBoundingClientRect().width);if(width>0)setAvailableWidth(width);};
+    measure();
+    const observer=typeof ResizeObserver!=="undefined"?new ResizeObserver(measure):null;
+    observer?.observe(container);window.addEventListener("resize",measure);
+    return()=>{observer?.disconnect();window.removeEventListener("resize",measure);};
+  },[]);
+  // Preserve the original width preference. Only the rendered width adapts;
+  // if both editor and minimum rail cannot fit, use the same local dialog.
+  const narrow=viewportNarrow||(availableWidth>0&&availableWidth<MIN_EDITOR_WIDTH+MIN_RAIL+RESIZE_HANDLE_WIDTH);
+  const maxAvailableRail=availableWidth>0?Math.min(MAX_RAIL,Math.max(MIN_RAIL,availableWidth-MIN_EDITOR_WIDTH-RESIZE_HANDLE_WIDTH)):MAX_RAIL;
+  const actualRailWidth=Math.min(railWidth,maxAvailableRail);
   React.useEffect(()=>{if(narrow&&mobileOpen)requestAnimationFrame(()=>mobilePanel.current?.querySelector<HTMLButtonElement>('button')?.focus());},[narrow,mobileOpen]);
   function closeMobile(){setMobileOpen(false);requestAnimationFrame(()=>mobileTrigger.current?.focus());}
   function mobileKeys(event:React.KeyboardEvent<HTMLElement>){if(!narrow)return;if(event.key==='Escape'){event.preventDefault();closeMobile();return;}if(event.key!=='Tab')return;const nodes=Array.from(event.currentTarget.querySelectorAll<HTMLElement>('button:not([disabled]),a[href],input:not([disabled]),textarea:not([disabled]),[tabindex="0"]')).filter(node=>node.offsetParent!==null);const first=nodes[0],last=nodes.at(-1);if(event.shiftKey&&document.activeElement===first){event.preventDefault();last?.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first?.focus();}}
 
   const draggingRef = React.useRef(false);
+  const dragChangedRef = React.useRef(false);
 
   React.useEffect(() => {
     try {
@@ -126,6 +143,7 @@ export function StageChatWrapper({
   const onPointerDown = React.useCallback((e: React.PointerEvent) => {
     e.preventDefault();
     draggingRef.current = true;
+    dragChangedRef.current = false;
     try {
       e.currentTarget.setPointerCapture(e.pointerId);
     } catch {
@@ -139,8 +157,9 @@ export function StageChatWrapper({
     const rect = containerRef.current?.getBoundingClientRect();
     if (!rect) return;
     // 右栏宽 = 容器右缘 - 指针 x(拖左 → 变宽,拖右 → 变窄)。
-    setRailWidth(clampRail(rect.right - e.clientX));
-  }, []);
+    const next=Math.min(clampRail(rect.right-e.clientX),maxAvailableRail);
+    setRailWidth(w=>{if(next!==Math.min(w,maxAvailableRail)){dragChangedRef.current=true;return next;}return w;});
+  }, [maxAvailableRail]);
 
   const endDrag = React.useCallback(
     (e: React.PointerEvent) => {
@@ -153,11 +172,12 @@ export function StageChatWrapper({
       }
       document.body.style.userSelect = "";
       setRailWidth((w) => {
-        persist(w);
-        return w;
+        if(!dragChangedRef.current)return w;
+        const actual=Math.min(w,maxAvailableRail);persist(actual);
+        return actual;
       });
     },
-    [persist],
+    [persist,maxAvailableRail],
   );
 
   const onKeyDown = React.useCallback(
@@ -169,12 +189,14 @@ export function StageChatWrapper({
       else return;
       e.preventDefault();
       setRailWidth((w) => {
-        const n = clampRail(w + delta);
+        const actual=Math.min(w,maxAvailableRail);
+        const n = Math.min(clampRail(actual + delta),maxAvailableRail);
+        if(n===actual)return w;
         persist(n);
         return n;
       });
     },
-    [persist],
+    [persist,maxAvailableRail],
   );
 
   const showRail=isStagePage&&Boolean(projectId&&projectTitle);
@@ -193,9 +215,9 @@ export function StageChatWrapper({
           role="separator"
           aria-orientation="vertical"
           aria-label="调整编导栏宽度"
-          aria-valuenow={railWidth}
+          aria-valuenow={actualRailWidth}
           aria-valuemin={MIN_RAIL}
-          aria-valuemax={MAX_RAIL}
+          aria-valuemax={maxAvailableRail}
           tabIndex={0}
           data-slot="stage-rail-resize-handle"
           data-testid="stage-rail-resize-handle"
@@ -215,7 +237,7 @@ export function StageChatWrapper({
       {showRail ? (!(narrow?!mobileOpen:collapsed) ? (
         <aside ref={mobilePanel} role={narrow?"dialog":undefined} aria-modal={narrow?true:undefined} aria-label="编导对话" onKeyDown={mobileKeys}
           data-slot="stage-chat-rail"
-          style={{ width: narrow?"min(100vw, 640px)":railWidth }}
+          style={{ width: narrow?"min(100vw, 640px)":actualRailWidth }}
           className={cn("shrink-0 border-l border-border bg-surface",narrow?"fixed inset-y-0 right-0 z-50 shadow-lg":"block")}
         >
           <div className="sticky top-0 flex h-[calc(100vh-4rem)] flex-col">
