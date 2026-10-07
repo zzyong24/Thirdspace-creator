@@ -74,6 +74,7 @@ fn main() {
     // 生产后门。
     for name in [
         "CREATOROS_ENTITLEMENT_CLAIM_ENABLED",
+        "CREATOROS_OWNED_DEVICES_ENABLED",
         "CREATOROS_PRODUCT_FEEDBACK_SUBMIT_ENABLED",
         "GROWTH_ENTITLEMENT_API_ORIGIN",
         "CREATOROS_FEEDBACK_OFFICIAL_ORIGINS",
@@ -97,6 +98,10 @@ fn main() {
             "0"
         }
     };
+    println!(
+        "cargo:rustc-env=CREATOROS_BUILTIN_OWNED_DEVICES_ENABLED={}",
+        build_flag("CREATOROS_OWNED_DEVICES_ENABLED")
+    );
     let requested_claim_enabled = build_flag("CREATOROS_ENTITLEMENT_CLAIM_ENABLED");
     if !debug_build && requested_claim_enabled != "0" {
         panic!(
