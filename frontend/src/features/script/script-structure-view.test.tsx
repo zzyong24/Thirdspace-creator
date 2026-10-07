@@ -19,6 +19,7 @@ import {
   useDraftChatRequest,
 } from "@/features/draft-workbench/draft-chat-request";
 import type { ScriptSectionView } from "@/types/view-models";
+import { plainTextFromSections } from "./script-editor-bridge";
 
 const mockRouter = { refresh: vi.fn(), replace: vi.fn(), push: vi.fn() };
 vi.mock("next/navigation", () => ({ useRouter: () => mockRouter }));
@@ -32,11 +33,15 @@ const mockListArtifacts = vi.fn(
 const mockCreateArtifact = vi.fn(
   (_input: unknown): Promise<unknown> => Promise.resolve({ id: "art-created" }),
 );
+const mockGetArtifact = vi.fn();
+const mockListArtifactVersions = vi.fn();
 vi.mock("@/lib/contract-client", () => ({
   client: {
     createArtifactVersion: (input: unknown) => mockCreateArtifactVersion(input),
     listArtifacts: (input: unknown) => mockListArtifacts(input),
     createArtifact: (input: unknown) => mockCreateArtifact(input),
+    getArtifact: (input: unknown) => mockGetArtifact(input),
+    listArtifactVersions: (input: unknown) => mockListArtifactVersions(input),
   },
 }));
 
@@ -507,14 +512,193 @@ describe("ScriptStructureEditor(凝固分镜 visual)", () => {
 
 let strictStructureFlush: () => Promise<void>;
 function StructureFlushProbe() { strictStructureFlush = useDraftChatRequest().flushSaveStrict; return null; }
-it("结构视图严格 flush 真实失败不吞掉，保留编辑并可重试", async () => {
+it("结构视图严格 flush 未知不吞掉，保留编辑与原回执而不盲append", async () => {
+  mockGetArtifact.mockResolvedValue({ id: "a1", projectId: "p1", currentVersionId: "v1" });
+  mockListArtifactVersions.mockResolvedValue([{ id: "v1", artifactId: "a1", contentText: "旧稿", contentData: { sections: SECTIONS } }]);
   render(<DraftChatRequestProvider><StructureFlushProbe /><ScriptStructureToggle sections={SECTIONS} artifactId="a1" projectId="p1" currentVersionId="v1"><div /></ScriptStructureToggle></DraftChatRequestProvider>);
   const input = document.querySelector('textarea')!;
   fireEvent.change(input, { target: { value: "当前新正文" } });
   mockCreateArtifactVersion.mockRejectedValueOnce(new Error("保存失败"));
   await act(async () => { await expect(strictStructureFlush()).rejects.toThrow("保存失败"); });
   expect(input.value).toBe("当前新正文");
-  await act(async () => { await strictStructureFlush(); });
-  expect(mockCreateArtifactVersion).toHaveBeenCalledTimes(2);
-  expect(mockCreateArtifactVersion.mock.calls[1]?.[0]).toMatchObject({ body: { contentText: expect.stringContaining("当前新正文") } });
+  await act(async () => { await expect(strictStructureFlush()).rejects.toThrow("原保存结果未知"); });
+  expect(mockCreateArtifactVersion).toHaveBeenCalledOnce();
+  expect(mockCreateArtifactVersion.mock.calls[0]?.[0]).toMatchObject({ body: { expectedCurrentVersionId: "v1", contentText: expect.stringContaining("当前新正文") } });
+});
+
+let prepareStructure: ReturnType<typeof useDraftChatRequest>["prepareScriptForCreation"];
+function StructureCreationProbe() {
+  prepareStructure = useDraftChatRequest().prepareScriptForCreation;
+  return null;
+}
+function creationStructure(props: { artifactId?: string | null; sections?: ScriptSectionView[] } = {}) {
+  return <DraftChatRequestProvider><StructureCreationProbe />
+    <ScriptStructureToggle sections={props.sections ?? SECTIONS} artifactId={props.artifactId === undefined ? "structure-real" : props.artifactId}
+      projectId="structure-project" currentVersionId={props.artifactId === null ? null : "version-before"}>
+      <div data-testid="rich-view">纯文本视图</div>
+    </ScriptStructureToggle>
+  </DraftChatRequestProvider>;
+}
+function structurePayload(sections: ScriptSectionView[]) {
+  return sections.map(s => ({ ...s, emphasis: s.type === "golden_quote" ? true : s.emphasis }));
+}
+function structureBoundary(sections = SECTIONS) {
+  let current = "version-before";
+  const first = structurePayload(sections);
+  const versions = [{ id: current, artifactId: "structure-real", contentText: plainTextFromSections(first), contentData: { sections: first } }];
+  mockGetArtifact.mockImplementation(async () => ({ id: "structure-real", projectId: "structure-project", currentVersionId: current }));
+  mockListArtifactVersions.mockImplementation(async () => versions);
+  mockCreateArtifactVersion.mockImplementation(async (input: any) => {
+    current = `version-created-${versions.length}`;
+    const version = { id: current, artifactId: input.params.artifactId, contentText: input.body.contentText, contentData: input.body.contentData };
+    versions.unshift(version);
+    return version;
+  });
+  return { versions, setCurrent: (id: string) => { current = id; } };
+}
+function structureDeferred<T>() {
+  let resolve!: (value: T) => void;
+  const promise = new Promise<T>(done => { resolve = done; });
+  return { promise, resolve };
+}
+describe("T-1070 默认分镜严格确认（真实Provider与原client边界）", () => {
+  beforeEach(() => {
+    mockCreateArtifactVersion.mockReset(); mockGetArtifact.mockReset(); mockListArtifactVersions.mockReset();
+    mockListArtifacts.mockReset(); mockCreateArtifact.mockReset();
+    localStorage.setItem("creatoros:current-group", "structure-group");
+  });
+  afterEach(() => { vi.useRealTimers(); localStorage.removeItem("creatoros:current-group"); });
+  it("默认分镜真实注册，已保存全文和版本读回后才给source", async () => {
+    structureBoundary(); render(creationStructure());
+    expect(screen.queryByTestId("rich-view")).not.toBeInTheDocument();
+    await act(async () => expect(await prepareStructure()).toEqual({ kind: "project_script", id: "structure-real", versionId: "version-before" }));
+    expect(mockGetArtifact).toHaveBeenCalled(); expect(mockListArtifactVersions).toHaveBeenCalled();
+    expect(mockCreateArtifactVersion).not.toHaveBeenCalled();
+  });
+  it("当前未保存稿保真实ID、类型、时间与完整visual，旧html不覆盖新sections", async () => {
+    const sections = SECTIONS.map((s, i) => i === 0 ? { ...s, visual: { description: "当前画面", assetRefs: ["real-asset"], missing: [], extra: { keep: true } } } : structuredClone(s));
+    const server = structureBoundary(sections);
+    (server.versions[0]!.contentData as Record<string, unknown>).html = "<p>旧正文</p>";
+    render(creationStructure({ sections }));
+    fireEvent.change(screen.getByLabelText("第 1 段正文"), { target: { value: "新正文🦊，完整保留。" } });
+    await act(async () => expect(await prepareStructure()).toMatchObject({ id: "structure-real", versionId: "version-created-1" }));
+    expect(mockCreateArtifactVersion).toHaveBeenCalledOnce();
+    expect(mockCreateArtifactVersion.mock.calls[0]![0]).toMatchObject({ params: { artifactId: "structure-real" }, body: { expectedCurrentVersionId: "version-before", contentData: { sections: [{ ...structurePayload(sections)[0], body: "新正文🦊，完整保留。" }, ...structurePayload(sections).slice(1)] } } });
+    expect((mockCreateArtifactVersion.mock.calls[0]![0] as any).body.contentData).not.toHaveProperty("html");
+  });
+  it("首次ensure真实ID保留，两次明确编辑不再次ensure或猜其它脚本", async () => {
+    structureBoundary(); mockListArtifacts.mockResolvedValue([]); mockCreateArtifact.mockResolvedValue({ id: "structure-real" });
+    render(creationStructure({ artifactId: null }));
+    fireEvent.change(screen.getByLabelText("第 1 段正文"), { target: { value: "首次编辑" } });
+    await act(async () => expect(await prepareStructure()).toMatchObject({ id: "structure-real", versionId: "version-created-1" }));
+    fireEvent.change(screen.getByLabelText("第 1 段正文"), { target: { value: "二次编辑" } });
+    await act(async () => expect(await prepareStructure()).toMatchObject({ id: "structure-real", versionId: "version-created-2" }));
+    expect(mockCreateArtifact).toHaveBeenCalledOnce(); expect(mockListArtifacts).toHaveBeenCalledOnce();
+    expect((mockCreateArtifactVersion.mock.calls[1]![0] as any).body.expectedCurrentVersionId).toBe("version-created-1");
+  });
+  it("保存期间继续输入拒绝本次确认且保留新稿", async () => {
+    structureBoundary(); const pending = structureDeferred<any>(); mockCreateArtifactVersion.mockReturnValueOnce(pending.promise);
+    render(creationStructure());
+    fireEvent.change(screen.getByLabelText("第 1 段正文"), { target: { value: "正在保存的稿" } });
+    let failure!: Promise<void>;
+    await act(async () => { failure = expect(prepareStructure()).rejects.toThrow(/改变|修改/); });
+    await waitFor(() => expect(mockCreateArtifactVersion).toHaveBeenCalledOnce());
+    fireEvent.change(screen.getByLabelText("第 1 段正文"), { target: { value: "保存途中新稿" } });
+    await act(async () => { pending.resolve({ id: "known-saved", artifactId: "structure-real" }); await failure; });
+    expect(screen.getByLabelText("第 1 段正文")).toHaveValue("保存途中新稿");
+  });
+  it("切纯文本视图注销token，迟到原保存不发旧source", async () => {
+    structureBoundary(); const pending = structureDeferred<any>(); mockCreateArtifactVersion.mockReturnValueOnce(pending.promise);
+    render(creationStructure()); fireEvent.change(screen.getByLabelText("第 1 段正文"), { target: { value: "当前结构稿" } });
+    let failure!: Promise<void>; await act(async () => { failure = expect(prepareStructure()).rejects.toThrow(/改变|卸载|切换/); });
+    await waitFor(() => expect(mockCreateArtifactVersion).toHaveBeenCalledOnce());
+    fireEvent.click(screen.getByRole("button", { name: "纯文本稿" }));
+    await act(async () => { pending.resolve({ id: "late-known", artifactId: "structure-real" }); await failure; });
+    expect(screen.getByTestId("rich-view")).toBeVisible();
+    await expect(prepareStructure()).rejects.toThrow("脚本尚未准备好");
+  });
+  it("无响应ID的UNKNOWN不把同正文旧current当回执，也不盲append", async () => {
+    structureBoundary(); render(creationStructure());
+    const body = SECTIONS[0]!.body;
+    fireEvent.change(screen.getByLabelText("第 1 段正文"), { target: { value: "临时修改" } });
+    fireEvent.change(screen.getByLabelText("第 1 段正文"), { target: { value: body } });
+    mockCreateArtifactVersion.mockRejectedValueOnce(Error("保存响应未知"));
+    await act(async () => { await expect(prepareStructure()).rejects.toThrow("保存响应未知"); });
+    await act(async () => { await expect(prepareStructure()).rejects.toThrow(/未知|原保存|回执/); });
+    expect(mockCreateArtifactVersion).toHaveBeenCalledOnce();
+    expect(screen.getByLabelText("第 1 段正文")).toHaveValue(body);
+  });
+  it("已known版本的读回失败恢复原ID，不再追加；并发current换版明确拒绝", async () => {
+    const server = structureBoundary(); render(creationStructure());
+    fireEvent.change(screen.getByLabelText("第 1 段正文"), { target: { value: "已保存但读回丢失" } });
+    mockListArtifactVersions.mockRejectedValueOnce(Error("读回未知"));
+    await act(async () => { await expect(prepareStructure()).rejects.toThrow("读回未知"); });
+    await act(async () => expect(await prepareStructure()).toMatchObject({ versionId: "version-created-1" }));
+    expect(mockCreateArtifactVersion).toHaveBeenCalledOnce();
+    server.setCurrent("another-user-version");
+    await act(async () => { await expect(prepareStructure()).rejects.toThrow(/并发|当前版本|更新/); });
+    expect(mockCreateArtifactVersion).toHaveBeenCalledOnce();
+  });
+  it("无响应ID时新current恰好同文也不能冒充这次保存回执", async () => {
+    const server = structureBoundary(); render(creationStructure());
+    fireEvent.change(screen.getByLabelText("第 1 段正文"), { target: { value: "另一用户也可能写的稿" } });
+    mockCreateArtifactVersion.mockRejectedValueOnce(Error("网络响应未知"));
+    await act(async () => { await expect(prepareStructure()).rejects.toThrow("网络响应未知"); });
+    const body = (mockCreateArtifactVersion.mock.calls[0]![0] as any).body;
+    server.versions.unshift({ id: "another-same-text", artifactId: "structure-real", contentText: body.contentText, contentData: structuredClone(body.contentData) });
+    server.setCurrent("another-same-text");
+    await act(async () => { await expect(prepareStructure()).rejects.toThrow("没有唯一版本回执"); });
+    expect(mockCreateArtifactVersion).toHaveBeenCalledOnce();
+  });
+  it("等待原手工保存超过旧10s仍不提前确认、不启动第二次save", async () => {
+    const server = structureBoundary(); const pending = structureDeferred<any>(); mockCreateArtifactVersion.mockReturnValueOnce(pending.promise);
+    render(creationStructure()); fireEvent.change(screen.getByLabelText("第 1 段正文"), { target: { value: "慢保存仍等完整回执" } });
+    fireEvent.click(screen.getByRole("button", { name: /^保存$/ }));
+    expect(mockCreateArtifactVersion).toHaveBeenCalledOnce();
+    vi.useFakeTimers(); let settled = false; let prepared!: Promise<unknown>;
+    await act(async () => { prepared = prepareStructure().then(value => { settled = true; return value; }); await vi.advanceTimersByTimeAsync(12_000); });
+    expect(settled).toBe(false); expect(mockCreateArtifactVersion).toHaveBeenCalledOnce();
+    const body = (mockCreateArtifactVersion.mock.calls[0]![0] as any).body;
+    const saved = { id: "manual-known", artifactId: "structure-real", contentText: body.contentText, contentData: body.contentData };
+    server.versions.unshift(saved); server.setCurrent(saved.id);
+    await act(async () => { pending.resolve(saved); expect(await prepared).toEqual({ kind: "project_script", id: "structure-real", versionId: "manual-known" }); });
+    expect(mockCreateArtifactVersion).toHaveBeenCalledOnce();
+  });
+  it("工作区切换或卸载后迟到保存只保原回执，不更新新scope或返回source", async () => {
+    structureBoundary(); const pending = structureDeferred<any>(); mockCreateArtifactVersion.mockReturnValueOnce(pending.promise);
+    render(creationStructure()); fireEvent.change(screen.getByLabelText("第 1 段正文"), { target: { value: "原工作区的稿" } });
+    let failure!: Promise<void>; await act(async () => { failure = expect(prepareStructure()).rejects.toThrow(/工作区|卸载|切换/); });
+    await waitFor(() => expect(mockCreateArtifactVersion).toHaveBeenCalledOnce());
+    act(() => { localStorage.setItem("creatoros:current-group", "other-group"); window.dispatchEvent(new Event("creatoros:accounts-changed")); });
+    await act(async () => { pending.resolve({ id: "old-scope-known", artifactId: "structure-real" }); await failure; });
+    expect(screen.getByLabelText("第 1 段正文")).toHaveValue("原工作区的稿");
+    await act(async () => { await expect(prepareStructure()).rejects.toThrow(/工作区|切换/); });
+    expect(mockCreateArtifactVersion).toHaveBeenCalledOnce();
+  });
+  it("真实外部props换版时generation使原读回失效，新稿完整保留", async () => {
+    const server = structureBoundary(); const pending = structureDeferred<any[]>(); mockListArtifactVersions.mockReturnValueOnce(pending.promise);
+    const view = render(creationStructure());
+    let failure!: Promise<void>; await act(async () => { failure = expect(prepareStructure()).rejects.toThrow(/改变|修改/); });
+    await waitFor(() => expect(mockListArtifactVersions).toHaveBeenCalledOnce());
+    const sections = SECTIONS.map((s, i) => i === 0 ? { ...s, body: "外部完整新稿" } : s);
+    view.rerender(creationStructure({ sections }));
+    await act(async () => { pending.resolve(server.versions); await failure; });
+    expect(screen.getByLabelText("第 1 段正文")).toHaveValue("外部完整新稿");
+    expect(mockCreateArtifactVersion).not.toHaveBeenCalled();
+  });
+  it("artifact/project与exact version artifactId任一错配都拒绝确认", async () => {
+    structureBoundary(); render(creationStructure());
+    mockGetArtifact.mockResolvedValueOnce({ id: "structure-real", projectId: "foreign-project", currentVersionId: "version-before" });
+    await act(async () => { await expect(prepareStructure()).rejects.toThrow("不属于当前项目"); });
+    mockListArtifactVersions.mockResolvedValueOnce([{ id: "version-before", artifactId: "foreign-artifact", contentText: "", contentData: {} }]);
+    await act(async () => { await expect(prepareStructure()).rejects.toThrow("版本不属于原保存目标"); });
+    expect(mockCreateArtifactVersion).not.toHaveBeenCalled();
+  });
+  it("原rich的段间空行格式不同仍沿原CAS确认当前结构一次，不阻断默认视图", async () => {
+    const server = structureBoundary(); server.versions[0]!.contentText = server.versions[0]!.contentText.replace("\n", "\n\n");
+    render(creationStructure());
+    await act(async () => expect(await prepareStructure()).toMatchObject({ versionId: "version-created-1" }));
+    expect(mockCreateArtifactVersion).toHaveBeenCalledOnce();
+    expect((mockCreateArtifactVersion.mock.calls[0]![0] as any).body).toMatchObject({ expectedCurrentVersionId: "version-before", contentText: plainTextFromSections(structurePayload(SECTIONS)), contentData: { sections: structurePayload(SECTIONS) } });
+  });
 });
