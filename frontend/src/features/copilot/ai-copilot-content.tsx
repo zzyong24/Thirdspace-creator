@@ -1000,10 +1000,12 @@ export function AICopilotContent({
   // Resolvable(每次请求求值),ref 更新不重建 transport(重建会打断进行中的流)。
   const draftEditor=useDraftChatRequest();
   const preparedTargets=React.useRef<{editorTarget?:WorkEditorTarget;creationTarget?:WorkCreationTarget}>({});
-  const preparedReceipt=React.useRef<{sourceMessageId?:string;conversationId?:string;chatContext:Record<string,unknown>;executionEngine?:string}|null>(null);
+  const preparedReceipt=React.useRef<{sourceMessageId?:string;conversationId?:string;sourceText?:string;attachmentIds?:string[];chatContext:Record<string,unknown>;executionEngine?:string}|null>(null);
   const receiptStorageKey=`creatoros:t1070:turn:${liveSessionKey}`;
   React.useEffect(()=>{try{const stored=sessionStorage.getItem(receiptStorageKey);preparedReceipt.current=stored?JSON.parse(stored):null;}catch{preparedReceipt.current=null;}},[receiptStorageKey]);
   const preparationPending=React.useRef(false);
+  const recoveryMounted=React.useRef(true);
+  React.useEffect(()=>{recoveryMounted.current=true;return()=>{recoveryMounted.current=false;};},[]);
   const sendPreparedRef=React.useRef<(text:string,request?:EmbeddedDraftChatRequest|null)=>Promise<void>>(async()=>{});
   const quickFunctionKeyRef = React.useRef<string | null>(null);
   // [T-813] 搜索卡「阅读全文」的一次性执行锚。和 functionKey 同轮消费，服务端在浏览器
@@ -1085,7 +1087,7 @@ export function AICopilotContent({
           try {
             const cid = res.headers.get("x-conversation-id");
             const sourceMessageId=res.headers.get("x-source-message-id");
-            if(sourceMessageId&&preparedReceipt.current&&liveSession.epoch===epoch){preparedReceipt.current={...preparedReceipt.current,sourceMessageId,...(cid?{conversationId:cid}:{})};sessionStorage.setItem(receiptStorageKey,JSON.stringify(preparedReceipt.current));const executionEngine=preparedReceipt.current.executionEngine;if(executionEngine==="codex"||executionEngine==="pi")liveSession.sourceEngines.set(sourceMessageId,executionEngine);}
+            if((sourceMessageId||cid)&&preparedReceipt.current&&liveSession.epoch===epoch){preparedReceipt.current={...preparedReceipt.current,...(sourceMessageId?{sourceMessageId}:{}),...(cid?{conversationId:cid}:{})};sessionStorage.setItem(receiptStorageKey,JSON.stringify(preparedReceipt.current));const executionEngine=preparedReceipt.current.executionEngine;if(sourceMessageId&&(executionEngine==="codex"||executionEngine==="pi"))liveSession.sourceEngines.set(sourceMessageId,executionEngine);}
             if (cid && liveSession.epoch === epoch) captureConversationId(cid);
           } catch {
             /* 读头失败不影响流式 */
@@ -1420,7 +1422,7 @@ export function AICopilotContent({
     finishComposerRequest(inFlight.nonce);
   }, [error, finishComposerRequest, messages, status]);
 
-  const retryLastTurn = React.useCallback(() => {
+  const retryLastTurn = React.useCallback(async () => {
     setComposerLifecycleError(null);
     const request =
       pendingComposerRequestRef.current ?? retryableScriptPatchRequestRef.current;
@@ -1442,13 +1444,30 @@ export function AICopilotContent({
     }
     const receipt=preparedReceipt.current;
     if(receipt&&(receipt.chatContext.editorTarget||receipt.chatContext.creationTarget)){
-      if(receipt.sourceMessageId)return regenerate({messageId:receipt.sourceMessageId,body:{chatContext:receipt.chatContext,...(receipt.executionEngine?{executionEngine:receipt.executionEngine}:{})}});
+      if(preparationPending.current)return;
       const id=receipt.conversationId??conversationIdRef.current;
-      if(!id){setComposerLifecycleError("原请求结果尚未确认，请保留当前对话并等待原任务回执。");return Promise.resolve();}
-      return client.listMessages({params:{conversationId:id},query:undefined,body:undefined}).then(rows=>{setMessages(toUIMessages(rows as unknown as WireAIMessage[]));setComposerLifecycleError("已读取原对话回执。原请求未重复提交，请核对任务与候选状态。");});
+      if(!id){setComposerLifecycleError("原请求结果尚未确认，请保留当前对话并等待原任务回执。");return;}
+      preparationPending.current=true;
+      const epoch=liveSession.epoch,beforeMessages=liveSession.chat.messages;
+      try{
+        const rows=await client.listMessages({params:{conversationId:id},query:undefined,body:undefined}) as unknown as Array<WireAIMessage&{attachments?:string[]}>;
+        if(!recoveryMounted.current||liveSessionRef.current!==liveSession||liveSession.epoch!==epoch||preparedReceipt.current!==receipt||liveSession.chat.messages!==beforeMessages)return;
+        if(liveSession.chat.status==="streaming"||liveSession.chat.status==="submitted")return;
+        const mapped=toUIMessages(rows);
+        if(!receipt.sourceMessageId){setMessages(mapped);setComposerLifecycleError("已读取原对话回执。原请求未重复提交，请核对任务与候选状态。");return;}
+        const source=rows.find(row=>row.id===receipt.sourceMessageId&&row.role==="user");
+        // SEMANTIC_BOUNDARY_ALLOW: exact original receipt identity/content/attachment
+        // equality only; this never chooses a message by wording or creates a turn.
+        if(!source||!mapped.some(row=>row.id===source.id&&row.role==="user")||(receipt.sourceText!==undefined&&source.content!==receipt.sourceText)||(receipt.attachmentIds!==undefined&&JSON.stringify(source.attachments??[])!==JSON.stringify(receipt.attachmentIds))){setComposerLifecycleError("找不到这次原请求的完整回执，请保留当前对话并核对原任务。");return;}
+        setMessages(mapped);captureConversationId(id);
+        if(receipt.executionEngine==="pi"||receipt.executionEngine==="codex")liveSession.sourceEngines.set(source.id,receipt.executionEngine);
+        await regenerate({messageId:source.id,body:{chatContext:receipt.chatContext,conversationId:id,attachmentIds:receipt.attachmentIds??source.attachments??[],...(receipt.executionEngine?{executionEngine:receipt.executionEngine}:{})}});
+      }catch(cause){if(recoveryMounted.current&&liveSessionRef.current===liveSession&&preparedReceipt.current===receipt)setComposerLifecycleError(cause instanceof Error?`原请求恢复未完成：${cause.message}`:"原请求恢复未完成，请核对原任务。");}
+      finally{preparationPending.current=false;}
+      return;
     }
     return regenerate();
-  }, [messages, regenerate]);
+  }, [messages, regenerate,setMessages,liveSession,captureConversationId]);
 
   // [T-055b SPEC §5.1] 一键岛预填 —— 面板带 fn 打开且对话尚空 → 把「预填话术」写进**输入框**,
   // 用户回车才发,**绝不自动发送**(治「点击后内容重复两遍」:旧预调自动 sendMessage 在带 ?fn
@@ -1495,8 +1514,9 @@ export function AICopilotContent({
       const requestedFn=quickFunctionKeyRef.current??entryFunctionKeyRef.current?.consume()??null;quickFunctionKeyRef.current=null;
       const webReadUrl=requestedFn==="web.read"?quickWebReadUrlRef.current:null;quickWebReadUrlRef.current=null;
       const frozenContext={...chatContextBodyRef.current.chatContext,...targets,...(requestedFn?{functionKey:requestedFn}:{}),...(webReadUrl?{webReadUrl}:{}),...(Object.keys(assetAliasRegistryRef.current.aliases).length?{assetAliases:assetAliasRegistryRef.current.aliases}:{})};
-      if(targets.editorTarget||targets.creationTarget){preparedReceipt.current={chatContext:frozenContext,executionEngine:liveSession.executionEngine};sessionStorage.setItem(receiptStorageKey,JSON.stringify(preparedReceipt.current));}
-      await sendMessage({text},{body:{chatContext:frozenContext}});
+      const frozenReceipt={chatContext:frozenContext,sourceText:text,attachmentIds:[...requestAttachmentIdsRef.current],executionEngine:liveSession.executionEngine,...(liveSession.conversationId?{conversationId:liveSession.conversationId}:{})};
+      preparedReceipt.current=frozenReceipt;sessionStorage.setItem(receiptStorageKey,JSON.stringify(frozenReceipt));
+      await sendMessage({text},{body:{chatContext:frozenContext,attachmentIds:frozenReceipt.attachmentIds,executionEngine:frozenReceipt.executionEngine,...(frozenReceipt.conversationId?{conversationId:frozenReceipt.conversationId}:{})}});
     }catch(cause){setComposerLifecycleError(cause instanceof Error?cause.message:"稿件尚未准备好，本次未发送。");throw cause;}finally{preparationPending.current=false;}
   };});
   const settledCreation=React.useRef(new Set<string>());
