@@ -1,0 +1,13 @@
+{
+  "stage": "首次干净冻结检查",
+  "head": "bf2c8377",
+  "pass": false,
+  "reason": "完整reconcile恰好写入机器生成的orchestrator/.lessons-stats.json，git status非空；未执行打包。",
+  "basicTestsObserved": {
+    "files": 4,
+    "tests": 44,
+    "exit": 0
+  },
+  "implementationOrTestAssertionsChanged": false,
+  "correction": "提交完整真实对账计数及结果；之后重新检查干净冻结并绑定最终HEAD。"
+}

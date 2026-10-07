@@ -33,6 +33,8 @@ flowchart LR
 
 ## 保留的全局欠债与待验
 
+本次pmem sync exit0，完整reconcile exit1：37错误/1告警，原始日志root-prefreeze-reconcile.log保留，自动计数原样提交。T1070评审无新的receipt错误；其它过期receipt、既有boundary/语义/LED门仍失败，未把整仓签为通过。37项未在本轮逐一核因，原T1018/T1015继续跟进；本任务的必要真模型/公共UI与所列专门回归独立记录。用户T1067已明确额外质量验证不阻断安装包生成，未改变检查或删除断言。初次冻结检查恰逢reconcile更新.lessons-stats，真实拒绝dirty tree；当时没有执行打包，四基本测试随后实际44PASS。现在先提交生成记录，再重新做干净冻结和同四基本检查。
+
 - boundary仍7违规（基线5及未改live-chat-session旧2 SDK），semantic旧video-decisions-runner缺material.match；orphan0error/100warning。旧2 backend Redfox断言、旧全局类型问题不在本精确99；不把本任务回归描述为全仓全绿。
 - MAIN不存在tools/timeout-policy/verify.mjs，规定命令当场MODULE_NOT_FOUND；不使用另一checkout结果冒充MAIN通过，继续登记原T-1018全局欠债。
 - 旧native暖首帧source0的三个FAIL和原root-cause trace完整保留；新7f9650实际React原candidate97闭环已通过，预览MP4 SHA5ff66848b7a635a9c2b7571b7aad18c88c2d3d00a7266439e3ceac1b9c4ffb49；手工PositionX10后最终MP4 SHA7df717c048350946ad2f0d2c977ba267e68a6be38e80ca4bbdf6979e59c2cb5f，按实际平移全120帧比源24..143，min SSIM .984258。原AAC音轨尾约85ms仍记录为minor，完整decode通过不代签音频尾精确5秒或听觉质量。当前实际页面只代签本次trim与手工位置/Undo链，字幕/替换/变速等未在本页真模型逐项复验，不以原生/后端fixture代签。
