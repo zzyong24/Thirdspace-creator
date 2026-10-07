@@ -1,0 +1,782 @@
+[
+  {
+    "atUtc": "2026-10-07T14:23:24.148305+00:00",
+    "processes": [
+      {
+        "pid": 11427,
+        "ppid": 64216,
+        "rssKiB": 10496,
+        "cpuPercent": 0.0,
+        "elapsed": "06:54",
+        "executable": "/Users/zyongzhu/Library/Application Support/cloud.aitongban.creatoros/runtime/1.2.0/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "parentExecutable": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex",
+        "role": "external-client-child"
+      },
+      {
+        "pid": 62688,
+        "ppid": 62618,
+        "rssKiB": 10032,
+        "cpuPercent": 0.0,
+        "elapsed": "01:36:16",
+        "executable": "/Users/zyongzhu/Library/Application Support/cloud.aitongban.creatoros/runtime/1.2.0/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "parentExecutable": "/Users/zyongzhu/.codex/packages/app-server-daemon/releases/0.160.1-aarch64-apple-darwin/bin/codex",
+        "role": "external-client-child"
+      },
+      {
+        "pid": 64624,
+        "ppid": 64216,
+        "rssKiB": 10048,
+        "cpuPercent": 0.0,
+        "elapsed": "01:28:45",
+        "executable": "/Users/zyongzhu/Library/Application Support/cloud.aitongban.creatoros/runtime/1.2.0/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "parentExecutable": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex",
+        "role": "external-client-child"
+      },
+      {
+        "pid": 64693,
+        "ppid": 64216,
+        "rssKiB": 10048,
+        "cpuPercent": 0.0,
+        "elapsed": "01:28:45",
+        "executable": "/Users/zyongzhu/Library/Application Support/cloud.aitongban.creatoros/runtime/1.2.0/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "parentExecutable": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex",
+        "role": "external-client-child"
+      },
+      {
+        "pid": 64773,
+        "ppid": 64216,
+        "rssKiB": 10048,
+        "cpuPercent": 0.0,
+        "elapsed": "01:28:44",
+        "executable": "/Users/zyongzhu/Library/Application Support/cloud.aitongban.creatoros/runtime/1.2.0/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "parentExecutable": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex",
+        "role": "external-client-child"
+      },
+      {
+        "pid": 64883,
+        "ppid": 64216,
+        "rssKiB": 10048,
+        "cpuPercent": 0.0,
+        "elapsed": "01:28:40",
+        "executable": "/Users/zyongzhu/Library/Application Support/cloud.aitongban.creatoros/runtime/1.2.0/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "parentExecutable": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex",
+        "role": "external-client-child"
+      },
+      {
+        "pid": 66031,
+        "ppid": 64216,
+        "rssKiB": 10048,
+        "cpuPercent": 0.0,
+        "elapsed": "01:27:33",
+        "executable": "/Users/zyongzhu/Library/Application Support/cloud.aitongban.creatoros/runtime/1.2.0/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "parentExecutable": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex",
+        "role": "external-client-child"
+      },
+      {
+        "pid": 66861,
+        "ppid": 64216,
+        "rssKiB": 10048,
+        "cpuPercent": 0.0,
+        "elapsed": "01:26:42",
+        "executable": "/Users/zyongzhu/Library/Application Support/cloud.aitongban.creatoros/runtime/1.2.0/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "parentExecutable": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex",
+        "role": "external-client-child"
+      },
+      {
+        "pid": 68776,
+        "ppid": 64216,
+        "rssKiB": 10048,
+        "cpuPercent": 0.0,
+        "elapsed": "01:24:57",
+        "executable": "/Users/zyongzhu/Library/Application Support/cloud.aitongban.creatoros/runtime/1.2.0/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "parentExecutable": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex",
+        "role": "external-client-child"
+      },
+      {
+        "pid": 69310,
+        "ppid": 64216,
+        "rssKiB": 10048,
+        "cpuPercent": 0.0,
+        "elapsed": "01:24:29",
+        "executable": "/Users/zyongzhu/Library/Application Support/cloud.aitongban.creatoros/runtime/1.2.0/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "parentExecutable": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex",
+        "role": "external-client-child"
+      },
+      {
+        "pid": 72291,
+        "ppid": 64216,
+        "rssKiB": 10048,
+        "cpuPercent": 0.0,
+        "elapsed": "01:19:09",
+        "executable": "/Users/zyongzhu/Library/Application Support/cloud.aitongban.creatoros/runtime/1.2.0/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "parentExecutable": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex",
+        "role": "external-client-child"
+      },
+      {
+        "pid": 73290,
+        "ppid": 64216,
+        "rssKiB": 10048,
+        "cpuPercent": 0.0,
+        "elapsed": "01:17:30",
+        "executable": "/Users/zyongzhu/Library/Application Support/cloud.aitongban.creatoros/runtime/1.2.0/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "parentExecutable": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex",
+        "role": "external-client-child"
+      },
+      {
+        "pid": 74358,
+        "ppid": 64216,
+        "rssKiB": 10048,
+        "cpuPercent": 0.0,
+        "elapsed": "01:16:47",
+        "executable": "/Users/zyongzhu/Library/Application Support/cloud.aitongban.creatoros/runtime/1.2.0/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "parentExecutable": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex",
+        "role": "external-client-child"
+      },
+      {
+        "pid": 76558,
+        "ppid": 64216,
+        "rssKiB": 10048,
+        "cpuPercent": 0.0,
+        "elapsed": "01:14:40",
+        "executable": "/Users/zyongzhu/Library/Application Support/cloud.aitongban.creatoros/runtime/1.2.0/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "parentExecutable": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex",
+        "role": "external-client-child"
+      },
+      {
+        "pid": 85096,
+        "ppid": 62618,
+        "rssKiB": 10048,
+        "cpuPercent": 0.0,
+        "elapsed": "01:06:05",
+        "executable": "/Users/zyongzhu/Library/Application Support/cloud.aitongban.creatoros/runtime/1.2.0/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "parentExecutable": "/Users/zyongzhu/.codex/packages/app-server-daemon/releases/0.160.1-aarch64-apple-darwin/bin/codex",
+        "role": "external-client-child"
+      }
+    ],
+    "totalRssKiB": 151152
+  },
+  {
+    "atUtc": "2026-10-07T14:23:54.359493+00:00",
+    "processes": [
+      {
+        "pid": 11427,
+        "ppid": 64216,
+        "rssKiB": 10240,
+        "cpuPercent": 0.0,
+        "elapsed": "07:25",
+        "executable": "/Users/zyongzhu/Library/Application Support/cloud.aitongban.creatoros/runtime/1.2.0/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "parentExecutable": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex",
+        "role": "external-client-child"
+      },
+      {
+        "pid": 62688,
+        "ppid": 62618,
+        "rssKiB": 9952,
+        "cpuPercent": 0.0,
+        "elapsed": "01:36:46",
+        "executable": "/Users/zyongzhu/Library/Application Support/cloud.aitongban.creatoros/runtime/1.2.0/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "parentExecutable": "/Users/zyongzhu/.codex/packages/app-server-daemon/releases/0.160.1-aarch64-apple-darwin/bin/codex",
+        "role": "external-client-child"
+      },
+      {
+        "pid": 64624,
+        "ppid": 64216,
+        "rssKiB": 9968,
+        "cpuPercent": 0.0,
+        "elapsed": "01:29:15",
+        "executable": "/Users/zyongzhu/Library/Application Support/cloud.aitongban.creatoros/runtime/1.2.0/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "parentExecutable": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex",
+        "role": "external-client-child"
+      },
+      {
+        "pid": 64693,
+        "ppid": 64216,
+        "rssKiB": 9968,
+        "cpuPercent": 0.0,
+        "elapsed": "01:29:15",
+        "executable": "/Users/zyongzhu/Library/Application Support/cloud.aitongban.creatoros/runtime/1.2.0/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "parentExecutable": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex",
+        "role": "external-client-child"
+      },
+      {
+        "pid": 64773,
+        "ppid": 64216,
+        "rssKiB": 9968,
+        "cpuPercent": 0.0,
+        "elapsed": "01:29:14",
+        "executable": "/Users/zyongzhu/Library/Application Support/cloud.aitongban.creatoros/runtime/1.2.0/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "parentExecutable": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex",
+        "role": "external-client-child"
+      },
+      {
+        "pid": 64883,
+        "ppid": 64216,
+        "rssKiB": 9968,
+        "cpuPercent": 0.0,
+        "elapsed": "01:29:10",
+        "executable": "/Users/zyongzhu/Library/Application Support/cloud.aitongban.creatoros/runtime/1.2.0/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "parentExecutable": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex",
+        "role": "external-client-child"
+      },
+      {
+        "pid": 66031,
+        "ppid": 64216,
+        "rssKiB": 9968,
+        "cpuPercent": 0.0,
+        "elapsed": "01:28:03",
+        "executable": "/Users/zyongzhu/Library/Application Support/cloud.aitongban.creatoros/runtime/1.2.0/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "parentExecutable": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex",
+        "role": "external-client-child"
+      },
+      {
+        "pid": 66861,
+        "ppid": 64216,
+        "rssKiB": 9968,
+        "cpuPercent": 0.0,
+        "elapsed": "01:27:12",
+        "executable": "/Users/zyongzhu/Library/Application Support/cloud.aitongban.creatoros/runtime/1.2.0/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "parentExecutable": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex",
+        "role": "external-client-child"
+      },
+      {
+        "pid": 68776,
+        "ppid": 64216,
+        "rssKiB": 9968,
+        "cpuPercent": 0.0,
+        "elapsed": "01:25:27",
+        "executable": "/Users/zyongzhu/Library/Application Support/cloud.aitongban.creatoros/runtime/1.2.0/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "parentExecutable": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex",
+        "role": "external-client-child"
+      },
+      {
+        "pid": 69310,
+        "ppid": 64216,
+        "rssKiB": 9968,
+        "cpuPercent": 0.0,
+        "elapsed": "01:24:59",
+        "executable": "/Users/zyongzhu/Library/Application Support/cloud.aitongban.creatoros/runtime/1.2.0/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "parentExecutable": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex",
+        "role": "external-client-child"
+      },
+      {
+        "pid": 72291,
+        "ppid": 64216,
+        "rssKiB": 9968,
+        "cpuPercent": 0.0,
+        "elapsed": "01:19:39",
+        "executable": "/Users/zyongzhu/Library/Application Support/cloud.aitongban.creatoros/runtime/1.2.0/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "parentExecutable": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex",
+        "role": "external-client-child"
+      },
+      {
+        "pid": 73290,
+        "ppid": 64216,
+        "rssKiB": 9968,
+        "cpuPercent": 0.0,
+        "elapsed": "01:18:00",
+        "executable": "/Users/zyongzhu/Library/Application Support/cloud.aitongban.creatoros/runtime/1.2.0/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "parentExecutable": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex",
+        "role": "external-client-child"
+      },
+      {
+        "pid": 74358,
+        "ppid": 64216,
+        "rssKiB": 9968,
+        "cpuPercent": 0.0,
+        "elapsed": "01:17:17",
+        "executable": "/Users/zyongzhu/Library/Application Support/cloud.aitongban.creatoros/runtime/1.2.0/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "parentExecutable": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex",
+        "role": "external-client-child"
+      },
+      {
+        "pid": 76558,
+        "ppid": 64216,
+        "rssKiB": 9968,
+        "cpuPercent": 0.0,
+        "elapsed": "01:15:10",
+        "executable": "/Users/zyongzhu/Library/Application Support/cloud.aitongban.creatoros/runtime/1.2.0/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "parentExecutable": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex",
+        "role": "external-client-child"
+      },
+      {
+        "pid": 85096,
+        "ppid": 62618,
+        "rssKiB": 9968,
+        "cpuPercent": 0.0,
+        "elapsed": "01:06:35",
+        "executable": "/Users/zyongzhu/Library/Application Support/cloud.aitongban.creatoros/runtime/1.2.0/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "parentExecutable": "/Users/zyongzhu/.codex/packages/app-server-daemon/releases/0.160.1-aarch64-apple-darwin/bin/codex",
+        "role": "external-client-child"
+      }
+    ],
+    "totalRssKiB": 149776
+  },
+  {
+    "atUtc": "2026-10-07T14:24:24.670264+00:00",
+    "processes": [
+      {
+        "pid": 11427,
+        "ppid": 64216,
+        "rssKiB": 10240,
+        "cpuPercent": 0.0,
+        "elapsed": "07:55",
+        "executable": "/Users/zyongzhu/Library/Application Support/cloud.aitongban.creatoros/runtime/1.2.0/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "parentExecutable": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex",
+        "role": "external-client-child"
+      },
+      {
+        "pid": 62688,
+        "ppid": 62618,
+        "rssKiB": 9952,
+        "cpuPercent": 0.0,
+        "elapsed": "01:37:16",
+        "executable": "/Users/zyongzhu/Library/Application Support/cloud.aitongban.creatoros/runtime/1.2.0/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "parentExecutable": "/Users/zyongzhu/.codex/packages/app-server-daemon/releases/0.160.1-aarch64-apple-darwin/bin/codex",
+        "role": "external-client-child"
+      },
+      {
+        "pid": 64624,
+        "ppid": 64216,
+        "rssKiB": 9968,
+        "cpuPercent": 0.0,
+        "elapsed": "01:29:45",
+        "executable": "/Users/zyongzhu/Library/Application Support/cloud.aitongban.creatoros/runtime/1.2.0/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "parentExecutable": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex",
+        "role": "external-client-child"
+      },
+      {
+        "pid": 64693,
+        "ppid": 64216,
+        "rssKiB": 9968,
+        "cpuPercent": 0.0,
+        "elapsed": "01:29:45",
+        "executable": "/Users/zyongzhu/Library/Application Support/cloud.aitongban.creatoros/runtime/1.2.0/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "parentExecutable": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex",
+        "role": "external-client-child"
+      },
+      {
+        "pid": 64773,
+        "ppid": 64216,
+        "rssKiB": 9968,
+        "cpuPercent": 0.0,
+        "elapsed": "01:29:44",
+        "executable": "/Users/zyongzhu/Library/Application Support/cloud.aitongban.creatoros/runtime/1.2.0/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "parentExecutable": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex",
+        "role": "external-client-child"
+      },
+      {
+        "pid": 64883,
+        "ppid": 64216,
+        "rssKiB": 9968,
+        "cpuPercent": 0.0,
+        "elapsed": "01:29:40",
+        "executable": "/Users/zyongzhu/Library/Application Support/cloud.aitongban.creatoros/runtime/1.2.0/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "parentExecutable": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex",
+        "role": "external-client-child"
+      },
+      {
+        "pid": 66031,
+        "ppid": 64216,
+        "rssKiB": 9968,
+        "cpuPercent": 0.0,
+        "elapsed": "01:28:33",
+        "executable": "/Users/zyongzhu/Library/Application Support/cloud.aitongban.creatoros/runtime/1.2.0/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "parentExecutable": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex",
+        "role": "external-client-child"
+      },
+      {
+        "pid": 66861,
+        "ppid": 64216,
+        "rssKiB": 9968,
+        "cpuPercent": 0.0,
+        "elapsed": "01:27:42",
+        "executable": "/Users/zyongzhu/Library/Application Support/cloud.aitongban.creatoros/runtime/1.2.0/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "parentExecutable": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex",
+        "role": "external-client-child"
+      },
+      {
+        "pid": 68776,
+        "ppid": 64216,
+        "rssKiB": 9968,
+        "cpuPercent": 0.0,
+        "elapsed": "01:25:57",
+        "executable": "/Users/zyongzhu/Library/Application Support/cloud.aitongban.creatoros/runtime/1.2.0/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "parentExecutable": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex",
+        "role": "external-client-child"
+      },
+      {
+        "pid": 69310,
+        "ppid": 64216,
+        "rssKiB": 9968,
+        "cpuPercent": 0.0,
+        "elapsed": "01:25:29",
+        "executable": "/Users/zyongzhu/Library/Application Support/cloud.aitongban.creatoros/runtime/1.2.0/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "parentExecutable": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex",
+        "role": "external-client-child"
+      },
+      {
+        "pid": 72291,
+        "ppid": 64216,
+        "rssKiB": 9968,
+        "cpuPercent": 0.0,
+        "elapsed": "01:20:09",
+        "executable": "/Users/zyongzhu/Library/Application Support/cloud.aitongban.creatoros/runtime/1.2.0/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "parentExecutable": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex",
+        "role": "external-client-child"
+      },
+      {
+        "pid": 73290,
+        "ppid": 64216,
+        "rssKiB": 9968,
+        "cpuPercent": 0.0,
+        "elapsed": "01:18:30",
+        "executable": "/Users/zyongzhu/Library/Application Support/cloud.aitongban.creatoros/runtime/1.2.0/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "parentExecutable": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex",
+        "role": "external-client-child"
+      },
+      {
+        "pid": 74358,
+        "ppid": 64216,
+        "rssKiB": 9968,
+        "cpuPercent": 0.0,
+        "elapsed": "01:17:47",
+        "executable": "/Users/zyongzhu/Library/Application Support/cloud.aitongban.creatoros/runtime/1.2.0/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "parentExecutable": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex",
+        "role": "external-client-child"
+      },
+      {
+        "pid": 76558,
+        "ppid": 64216,
+        "rssKiB": 9968,
+        "cpuPercent": 0.0,
+        "elapsed": "01:15:40",
+        "executable": "/Users/zyongzhu/Library/Application Support/cloud.aitongban.creatoros/runtime/1.2.0/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "parentExecutable": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex",
+        "role": "external-client-child"
+      },
+      {
+        "pid": 85096,
+        "ppid": 62618,
+        "rssKiB": 9968,
+        "cpuPercent": 0.0,
+        "elapsed": "01:07:05",
+        "executable": "/Users/zyongzhu/Library/Application Support/cloud.aitongban.creatoros/runtime/1.2.0/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "parentExecutable": "/Users/zyongzhu/.codex/packages/app-server-daemon/releases/0.160.1-aarch64-apple-darwin/bin/codex",
+        "role": "external-client-child"
+      }
+    ],
+    "totalRssKiB": 149776
+  },
+  {
+    "atUtc": "2026-10-07T14:24:55.242416+00:00",
+    "processes": [
+      {
+        "pid": 11427,
+        "ppid": 64216,
+        "rssKiB": 10240,
+        "cpuPercent": 0.0,
+        "elapsed": "08:26",
+        "executable": "/Users/zyongzhu/Library/Application Support/cloud.aitongban.creatoros/runtime/1.2.0/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "parentExecutable": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex",
+        "role": "external-client-child"
+      },
+      {
+        "pid": 62688,
+        "ppid": 62618,
+        "rssKiB": 9952,
+        "cpuPercent": 0.0,
+        "elapsed": "01:37:47",
+        "executable": "/Users/zyongzhu/Library/Application Support/cloud.aitongban.creatoros/runtime/1.2.0/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "parentExecutable": "/Users/zyongzhu/.codex/packages/app-server-daemon/releases/0.160.1-aarch64-apple-darwin/bin/codex",
+        "role": "external-client-child"
+      },
+      {
+        "pid": 64624,
+        "ppid": 64216,
+        "rssKiB": 9968,
+        "cpuPercent": 0.0,
+        "elapsed": "01:30:16",
+        "executable": "/Users/zyongzhu/Library/Application Support/cloud.aitongban.creatoros/runtime/1.2.0/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "parentExecutable": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex",
+        "role": "external-client-child"
+      },
+      {
+        "pid": 64693,
+        "ppid": 64216,
+        "rssKiB": 9968,
+        "cpuPercent": 0.0,
+        "elapsed": "01:30:16",
+        "executable": "/Users/zyongzhu/Library/Application Support/cloud.aitongban.creatoros/runtime/1.2.0/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "parentExecutable": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex",
+        "role": "external-client-child"
+      },
+      {
+        "pid": 64773,
+        "ppid": 64216,
+        "rssKiB": 9968,
+        "cpuPercent": 0.0,
+        "elapsed": "01:30:15",
+        "executable": "/Users/zyongzhu/Library/Application Support/cloud.aitongban.creatoros/runtime/1.2.0/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "parentExecutable": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex",
+        "role": "external-client-child"
+      },
+      {
+        "pid": 64883,
+        "ppid": 64216,
+        "rssKiB": 9968,
+        "cpuPercent": 0.0,
+        "elapsed": "01:30:11",
+        "executable": "/Users/zyongzhu/Library/Application Support/cloud.aitongban.creatoros/runtime/1.2.0/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "parentExecutable": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex",
+        "role": "external-client-child"
+      },
+      {
+        "pid": 66031,
+        "ppid": 64216,
+        "rssKiB": 9968,
+        "cpuPercent": 0.0,
+        "elapsed": "01:29:04",
+        "executable": "/Users/zyongzhu/Library/Application Support/cloud.aitongban.creatoros/runtime/1.2.0/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "parentExecutable": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex",
+        "role": "external-client-child"
+      },
+      {
+        "pid": 66861,
+        "ppid": 64216,
+        "rssKiB": 9968,
+        "cpuPercent": 0.0,
+        "elapsed": "01:28:13",
+        "executable": "/Users/zyongzhu/Library/Application Support/cloud.aitongban.creatoros/runtime/1.2.0/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "parentExecutable": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex",
+        "role": "external-client-child"
+      },
+      {
+        "pid": 68776,
+        "ppid": 64216,
+        "rssKiB": 9968,
+        "cpuPercent": 0.0,
+        "elapsed": "01:26:28",
+        "executable": "/Users/zyongzhu/Library/Application Support/cloud.aitongban.creatoros/runtime/1.2.0/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "parentExecutable": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex",
+        "role": "external-client-child"
+      },
+      {
+        "pid": 69310,
+        "ppid": 64216,
+        "rssKiB": 9968,
+        "cpuPercent": 0.0,
+        "elapsed": "01:26:00",
+        "executable": "/Users/zyongzhu/Library/Application Support/cloud.aitongban.creatoros/runtime/1.2.0/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "parentExecutable": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex",
+        "role": "external-client-child"
+      },
+      {
+        "pid": 72291,
+        "ppid": 64216,
+        "rssKiB": 9968,
+        "cpuPercent": 0.0,
+        "elapsed": "01:20:40",
+        "executable": "/Users/zyongzhu/Library/Application Support/cloud.aitongban.creatoros/runtime/1.2.0/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "parentExecutable": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex",
+        "role": "external-client-child"
+      },
+      {
+        "pid": 73290,
+        "ppid": 64216,
+        "rssKiB": 9968,
+        "cpuPercent": 0.0,
+        "elapsed": "01:19:01",
+        "executable": "/Users/zyongzhu/Library/Application Support/cloud.aitongban.creatoros/runtime/1.2.0/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "parentExecutable": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex",
+        "role": "external-client-child"
+      },
+      {
+        "pid": 74358,
+        "ppid": 64216,
+        "rssKiB": 9968,
+        "cpuPercent": 0.0,
+        "elapsed": "01:18:18",
+        "executable": "/Users/zyongzhu/Library/Application Support/cloud.aitongban.creatoros/runtime/1.2.0/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "parentExecutable": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex",
+        "role": "external-client-child"
+      },
+      {
+        "pid": 76558,
+        "ppid": 64216,
+        "rssKiB": 9968,
+        "cpuPercent": 0.0,
+        "elapsed": "01:16:11",
+        "executable": "/Users/zyongzhu/Library/Application Support/cloud.aitongban.creatoros/runtime/1.2.0/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "parentExecutable": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex",
+        "role": "external-client-child"
+      },
+      {
+        "pid": 85096,
+        "ppid": 62618,
+        "rssKiB": 9968,
+        "cpuPercent": 0.0,
+        "elapsed": "01:07:36",
+        "executable": "/Users/zyongzhu/Library/Application Support/cloud.aitongban.creatoros/runtime/1.2.0/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "parentExecutable": "/Users/zyongzhu/.codex/packages/app-server-daemon/releases/0.160.1-aarch64-apple-darwin/bin/codex",
+        "role": "external-client-child"
+      }
+    ],
+    "totalRssKiB": 149776
+  },
+  {
+    "atUtc": "2026-10-07T14:25:25.441579+00:00",
+    "processes": [
+      {
+        "pid": 11427,
+        "ppid": 64216,
+        "rssKiB": 10240,
+        "cpuPercent": 0.0,
+        "elapsed": "08:56",
+        "executable": "/Users/zyongzhu/Library/Application Support/cloud.aitongban.creatoros/runtime/1.2.0/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "parentExecutable": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex",
+        "role": "external-client-child"
+      },
+      {
+        "pid": 62688,
+        "ppid": 62618,
+        "rssKiB": 9952,
+        "cpuPercent": 0.0,
+        "elapsed": "01:38:17",
+        "executable": "/Users/zyongzhu/Library/Application Support/cloud.aitongban.creatoros/runtime/1.2.0/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "parentExecutable": "/Users/zyongzhu/.codex/packages/app-server-daemon/releases/0.160.1-aarch64-apple-darwin/bin/codex",
+        "role": "external-client-child"
+      },
+      {
+        "pid": 64624,
+        "ppid": 64216,
+        "rssKiB": 9968,
+        "cpuPercent": 0.0,
+        "elapsed": "01:30:46",
+        "executable": "/Users/zyongzhu/Library/Application Support/cloud.aitongban.creatoros/runtime/1.2.0/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "parentExecutable": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex",
+        "role": "external-client-child"
+      },
+      {
+        "pid": 64693,
+        "ppid": 64216,
+        "rssKiB": 9968,
+        "cpuPercent": 0.0,
+        "elapsed": "01:30:46",
+        "executable": "/Users/zyongzhu/Library/Application Support/cloud.aitongban.creatoros/runtime/1.2.0/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "parentExecutable": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex",
+        "role": "external-client-child"
+      },
+      {
+        "pid": 64773,
+        "ppid": 64216,
+        "rssKiB": 9968,
+        "cpuPercent": 0.0,
+        "elapsed": "01:30:45",
+        "executable": "/Users/zyongzhu/Library/Application Support/cloud.aitongban.creatoros/runtime/1.2.0/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "parentExecutable": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex",
+        "role": "external-client-child"
+      },
+      {
+        "pid": 64883,
+        "ppid": 64216,
+        "rssKiB": 9968,
+        "cpuPercent": 0.0,
+        "elapsed": "01:30:41",
+        "executable": "/Users/zyongzhu/Library/Application Support/cloud.aitongban.creatoros/runtime/1.2.0/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "parentExecutable": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex",
+        "role": "external-client-child"
+      },
+      {
+        "pid": 66031,
+        "ppid": 64216,
+        "rssKiB": 9968,
+        "cpuPercent": 0.0,
+        "elapsed": "01:29:34",
+        "executable": "/Users/zyongzhu/Library/Application Support/cloud.aitongban.creatoros/runtime/1.2.0/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "parentExecutable": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex",
+        "role": "external-client-child"
+      },
+      {
+        "pid": 66861,
+        "ppid": 64216,
+        "rssKiB": 9968,
+        "cpuPercent": 0.0,
+        "elapsed": "01:28:43",
+        "executable": "/Users/zyongzhu/Library/Application Support/cloud.aitongban.creatoros/runtime/1.2.0/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "parentExecutable": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex",
+        "role": "external-client-child"
+      },
+      {
+        "pid": 68776,
+        "ppid": 64216,
+        "rssKiB": 9968,
+        "cpuPercent": 0.0,
+        "elapsed": "01:26:58",
+        "executable": "/Users/zyongzhu/Library/Application Support/cloud.aitongban.creatoros/runtime/1.2.0/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "parentExecutable": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex",
+        "role": "external-client-child"
+      },
+      {
+        "pid": 69310,
+        "ppid": 64216,
+        "rssKiB": 9968,
+        "cpuPercent": 0.0,
+        "elapsed": "01:26:30",
+        "executable": "/Users/zyongzhu/Library/Application Support/cloud.aitongban.creatoros/runtime/1.2.0/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "parentExecutable": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex",
+        "role": "external-client-child"
+      },
+      {
+        "pid": 72291,
+        "ppid": 64216,
+        "rssKiB": 9968,
+        "cpuPercent": 0.0,
+        "elapsed": "01:21:10",
+        "executable": "/Users/zyongzhu/Library/Application Support/cloud.aitongban.creatoros/runtime/1.2.0/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "parentExecutable": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex",
+        "role": "external-client-child"
+      },
+      {
+        "pid": 73290,
+        "ppid": 64216,
+        "rssKiB": 9968,
+        "cpuPercent": 0.0,
+        "elapsed": "01:19:31",
+        "executable": "/Users/zyongzhu/Library/Application Support/cloud.aitongban.creatoros/runtime/1.2.0/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "parentExecutable": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex",
+        "role": "external-client-child"
+      },
+      {
+        "pid": 74358,
+        "ppid": 64216,
+        "rssKiB": 9968,
+        "cpuPercent": 0.0,
+        "elapsed": "01:18:48",
+        "executable": "/Users/zyongzhu/Library/Application Support/cloud.aitongban.creatoros/runtime/1.2.0/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "parentExecutable": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex",
+        "role": "external-client-child"
+      },
+      {
+        "pid": 76558,
+        "ppid": 64216,
+        "rssKiB": 9968,
+        "cpuPercent": 0.0,
+        "elapsed": "01:16:41",
+        "executable": "/Users/zyongzhu/Library/Application Support/cloud.aitongban.creatoros/runtime/1.2.0/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "parentExecutable": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex",
+        "role": "external-client-child"
+      },
+      {
+        "pid": 85096,
+        "ppid": 62618,
+        "rssKiB": 9968,
+        "cpuPercent": 0.0,
+        "elapsed": "01:08:06",
+        "executable": "/Users/zyongzhu/Library/Application Support/cloud.aitongban.creatoros/runtime/1.2.0/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "parentExecutable": "/Users/zyongzhu/.codex/packages/app-server-daemon/releases/0.160.1-aarch64-apple-darwin/bin/codex",
+        "role": "external-client-child"
+      }
+    ],
+    "totalRssKiB": 149776
+  }
+]

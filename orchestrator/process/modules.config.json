@@ -2105,6 +2105,32 @@
         "implementation": "git diff --check"
       },
       "depends_on": []
+    },
+    "T-1071": {
+      "task_id": "T-1071",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "audit"
+      ],
+      "read_set": [
+        "docs/verification/t1071-resource-memory-audit.md",
+        "frontend/src/**",
+        "frontend/src-tauri/**",
+        "backend/src/**",
+        "ai-worker/src/**",
+        "contract/src/**",
+        "mcp-server/**"
+      ],
+      "write_set": [
+        "docs/verification/t1071-resource-memory-audit.md",
+        "docs/verification/t1071/**"
+      ],
+      "verify_commands": {
+        "audit": "git diff --check -- docs/verification/t1071-resource-memory-audit.md docs/verification/t1071"
+      },
+      "depends_on": []
     }
   }
 }

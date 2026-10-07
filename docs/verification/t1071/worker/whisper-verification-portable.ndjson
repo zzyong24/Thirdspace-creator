@@ -1,0 +1,4 @@
+{"completedTask":1,"result":"synthetic transcript","signalAborted":true,"spawnedThreads":1,"liveThreads":1,"terminateCallsBeforeHarnessCleanup":0}
+{"completedTask":2,"result":"synthetic transcript","signalAborted":true,"spawnedThreads":2,"liveThreads":2,"terminateCallsBeforeHarnessCleanup":0}
+{"completedTask":3,"result":"synthetic transcript","signalAborted":true,"spawnedThreads":3,"liveThreads":3,"terminateCallsBeforeHarnessCleanup":0}
+{"afterHarnessCleanup":0}

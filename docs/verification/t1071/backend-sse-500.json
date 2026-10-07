@@ -1,0 +1,28 @@
+{
+  "probe": "真实 chatExecutionResponse + subscribeExecutionStream，合成 read 端口，未消费响应体",
+  "count": 500,
+  "produced": 500,
+  "before": {
+    "rss": 146931712,
+    "heapTotal": 36028416,
+    "heapUsed": 25757480,
+    "external": 3544831,
+    "arrayBuffers": 23663
+  },
+  "queued": {
+    "rss": 175767552,
+    "heapTotal": 44941312,
+    "heapUsed": 25980840,
+    "external": 19957446,
+    "arrayBuffers": 16436238
+  },
+  "cancelled": {
+    "rss": 175767552,
+    "heapTotal": 44941312,
+    "heapUsed": 25845432,
+    "external": 3544871,
+    "arrayBuffers": 23663
+  },
+  "arrayBuffersDelta": 16412575,
+  "expectedPayloadBytes": 16384000
+}

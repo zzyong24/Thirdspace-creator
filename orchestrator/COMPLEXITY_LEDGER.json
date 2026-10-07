@@ -5545,6 +5545,67 @@
       "scope_source": "docs/features/t1069-completion-json-compat.md",
       "reason": "用户授权的两处已复现缺陷修复；复用Pi同版本及既有Worker/IPC业务端口。锁文件仅补丁hash改变，报告仅记实际隔离验证，不新增运行时、进程、端口、安装或执行权。",
       "acceptance": "仅登记当前文件hash所含既有复杂度，不代替真实测试或安装版验收。"
+    },
+    {
+      "task_id": "T-1071",
+      "files": [
+        "docs/verification/t1071/README.md"
+      ],
+      "file_sha256": "9d7ad046530f2cc2cc980f4c91a96de99406824d07807d0d8d1d36b118035c46",
+      "categories": [
+        "ipc",
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "用户2026-10-07要求全面检查资源浪费与内存泄漏",
+      "scope_source": "docs/verification/t1071-resource-memory-audit.md",
+      "reason": "仅为授权诊断复用既有工具链、实际模块与合成端口；隔离探针只操作自身创建的线程和进程，进程采样只读。报告涉及既有机制，不新增产品运行时、IPC协议、原生部署、数据归属或正式产品功能。",
+      "acceptance": "仅登记诊断工件复杂度；不代表缺陷已修复、全局Gate通过或安装版验收。"
+    },
+    {
+      "task_id": "T-1071",
+      "files": [
+        "docs/verification/t1071/REPORT.md"
+      ],
+      "file_sha256": "f0ee9b4d0f9015896625002f0eaad771bc0af5a2655d10ae1ac6712d261aa3ef",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "用户2026-10-07要求全面检查资源浪费与内存泄漏",
+      "scope_source": "docs/verification/t1071-resource-memory-audit.md",
+      "reason": "仅为授权诊断复用既有工具链、实际模块与合成端口；隔离探针只操作自身创建的线程和进程，进程采样只读。报告涉及既有机制，不新增产品运行时、IPC协议、原生部署、数据归属或正式产品功能。",
+      "acceptance": "仅登记诊断工件复杂度；不代表缺陷已修复、全局Gate通过或安装版验收。"
+    },
+    {
+      "task_id": "T-1071",
+      "files": [
+        "docs/verification/t1071/native-sidecar-probe.py"
+      ],
+      "file_sha256": "ee9bd8a2632e5edce65e1640fd179bd7a5e643bbc2e6457bd44d5775931ea9bf",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "用户2026-10-07要求全面检查资源浪费与内存泄漏",
+      "scope_source": "docs/verification/t1071-resource-memory-audit.md",
+      "reason": "仅为授权诊断复用既有工具链、实际模块与合成端口；隔离探针只操作自身创建的线程和进程，进程采样只读。报告涉及既有机制，不新增产品运行时、IPC协议、原生部署、数据归属或正式产品功能。",
+      "acceptance": "仅登记诊断工件复杂度；不代表缺陷已修复、全局Gate通过或安装版验收。"
+    },
+    {
+      "task_id": "T-1071",
+      "files": [
+        "docs/verification/t1071/process-samples.json"
+      ],
+      "file_sha256": "09b1cc3b294421084c3de8d0a11966004096f8c9d5dc637423a1c586966994bb",
+      "categories": [
+        "native_executable"
+      ],
+      "disposition": "in-budget",
+      "decision": "用户2026-10-07要求全面检查资源浪费与内存泄漏",
+      "scope_source": "docs/verification/t1071-resource-memory-audit.md",
+      "reason": "仅为授权诊断复用既有工具链、实际模块与合成端口；隔离探针只操作自身创建的线程和进程，进程采样只读。报告涉及既有机制，不新增产品运行时、IPC协议、原生部署、数据归属或正式产品功能。",
+      "acceptance": "仅登记诊断工件复杂度；不代表缺陷已修复、全局Gate通过或安装版验收。"
     }
   ],
   "historical_baselines": []

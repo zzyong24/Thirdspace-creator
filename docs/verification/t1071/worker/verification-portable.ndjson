@@ -1,0 +1,8 @@
+{"label":"baseline","returnedBuffers":0,"liveBuffers":0,"retainedMiB":0,"heapMiB":21.32,"externalMiB":3.39,"rssMiB":103.28}
+{"label":"running-25","returnedBuffers":25,"liveBuffers":25,"retainedMiB":12.5,"heapMiB":21.7,"externalMiB":15.92,"rssMiB":128.25}
+{"label":"running-50","returnedBuffers":50,"liveBuffers":50,"retainedMiB":25,"heapMiB":21.73,"externalMiB":28.42,"rssMiB":141.13}
+{"label":"running-75","returnedBuffers":75,"liveBuffers":75,"retainedMiB":37.5,"heapMiB":21.74,"externalMiB":40.92,"rssMiB":153.89}
+{"label":"running-100","returnedBuffers":100,"liveBuffers":100,"retainedMiB":50,"heapMiB":21.76,"externalMiB":53.42,"rssMiB":162.56}
+{"runOutcome":"cancelled"}
+{"label":"after-stopped-clearRun","returnedBuffers":100,"liveBuffers":0,"retainedMiB":0,"heapMiB":21.73,"externalMiB":3.42,"rssMiB":162.56}
+{"label":"after-supervisor-stop","returnedBuffers":100,"liveBuffers":0,"retainedMiB":0,"heapMiB":21.74,"externalMiB":3.42,"rssMiB":162.56}

@@ -3,7 +3,7 @@
 > 本文件由 `node orchestrator/process/pmem.mjs sync` 生成,**勿手改生成段**。
 > 人写的「定位/为什么」改 pmem.mjs 顶部常量与 SYSTEM_ARCHITECTURE.md。
 
-LAST_SYNCED: codex/t1062-account-group-snapshot @ 5a982108
+LAST_SYNCED: codex/t1062-account-group-snapshot @ 7e93ca3b
 
 ## 这是什么(定位)
 
@@ -23,6 +23,12 @@ CreatorOS —— 一个编导式的自媒体内容生产系统(非项目管理�
 
 ## 开放任务(欠债)
 
+- [open] T-1071-whisper 修复本地转录成功后遗留Whisper线程
+- [open] T-1071-stream 补齐聊天响应背压与缓冲容量策略
+- [open] T-1071-worker-memory 收敛宿主IPC历史回执与音频字节保留
+- [open] T-1071-cache 为完成聊天会话和预览元数据增加安全淘汰
+- [open] T-1071-polling 修复稿面慢读取叠加、雷达空闲扫描与历史卡终态观察
+- [open] T-1071-scheduler 修复后台调度重叠并补停止清理与心跳在途防护
 - [wip] T-1063 取消双端出包人为超时与阻断检查并重跑 Windows 流水线
 - [open] T-1067 清理通用产品流程Skill既有公开分发校验债务
 - [wip] T-1062 汇总各会话改动统一提交并打包本地客户端，逐项验收含Skill粗剪

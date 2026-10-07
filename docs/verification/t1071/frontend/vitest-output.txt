@@ -1,0 +1,24 @@
+
+ RUN  v4.1.8 /private/tmp/t1071-front-audit
+
+stdout | frontend-resources.test.tsx > 真实审核 hook 在慢请求未回时重复启动请求，两个消费点放大到 8 个在途
+{"case":"slow-review","observedMs":32000,"consumers":2,"requests":8,"maxInFlight":8,"afterUnmountInFlight":8,"timersStopped":true}
+
+stdout | frontend-resources.test.tsx > 真实升级 hook 空队列仍然每 3 秒请求，完成任务也重复全分页
+{"case":"upgrade-completed-history","observedMs":30000,"idleRequests":11,"completedTasks":250,"requests":33,"pagesPerSweep":3}
+
+stdout | frontend-resources.test.tsx > 真实 Chat 会话容器跨不同 scope 仍保留全部已结束消息
+{"case":"live-chat-retention","uniqueScopes":100,"retainedScopes":100,"retainedChars":6553890,"realHeapMeasured":false}
+
+stdout | frontend-resources.test.tsx > 真实整稿卡重新挂载已成功任务仍查询 90 次且停在运行中
+{"case":"script-card-succeeded","observedMs":360000,"requests":90,"returnedStatus":"succeeded","uiPhase":"running","observationPaused":true}
+
+ ✓ frontend-resources.test.tsx > 真实审核 hook 在慢请求未回时重复启动请求，两个消费点放大到 8 个在途 18ms
+ ✓ frontend-resources.test.tsx > 真实升级 hook 空队列仍然每 3 秒请求，完成任务也重复全分页 23ms
+ ✓ frontend-resources.test.tsx > 真实 Chat 会话容器跨不同 scope 仍保留全部已结束消息 2ms
+ ✓ frontend-resources.test.tsx > 真实整稿卡重新挂载已成功任务仍查询 90 次且停在运行中 42ms
+
+ Test Files  1 passed (1)
+      Tests  4 passed (4)
+   Start at  22:25:11
+   Duration  2.56s (transform 877ms, setup 0ms, import 1.41s, tests 87ms, environment 860ms)

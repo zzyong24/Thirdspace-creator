@@ -4,11 +4,11 @@
     "work_branch": "main"
   },
   "summary": {
-    "verticals": 64,
-    "tasks_done": 41,
-    "tasks_total": 155,
-    "tasks_pending": 114,
-    "verticals_complete": 6
+    "verticals": 65,
+    "tasks_done": 44,
+    "tasks_total": 156,
+    "tasks_pending": 112,
+    "verticals_complete": 9
   },
   "verticals": [
     {
@@ -2756,6 +2756,40 @@
         "contract/src/**",
         "patches/**",
         "pnpm-lock.yaml"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "T-1071",
+      "archetype": [
+        "orchestration"
+      ],
+      "task_id": "T-1071",
+      "tasks": [
+        {
+          "step": "audit",
+          "status": "done"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "docs/verification/t1071-resource-memory-audit.md",
+        "docs/verification/t1071/**"
+      ],
+      "read_set": [
+        "docs/verification/t1071-resource-memory-audit.md",
+        "frontend/src/**",
+        "frontend/src-tauri/**",
+        "backend/src/**",
+        "ai-worker/src/**",
+        "contract/src/**",
+        "mcp-server/**"
       ],
       "exclusive_resources": [],
       "step_write_set": {},
