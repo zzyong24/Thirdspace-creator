@@ -88,7 +88,7 @@ vi.mock("./live-chat-session", () => ({
     }),
 }));
 vi.mock("@ai-sdk/react", async () => {
-  const actual=await vi.importActual<typeof import("@ai-sdk/react")>("@ai-sdk/react");
+  const actual=await vi.importActual<{useChat:(options:any)=>any;Chat:new(options:any)=>any}>("@ai-sdk/react");
   return {useChat: (options:any) => protocol.actualSdk?actual.useChat(options):({
     messages: protocol.messages,
     status: "ready",
@@ -417,6 +417,8 @@ describe("T-1070 actual composer component / SDK boundary", () => {
     await user.type(screen.getByLabelText("我能帮你做什么"), "精简这一段");
     await user.click(screen.getByLabelText("提交提示给 Copilot"));
     await waitFor(() => expect(protocol.send).toHaveBeenCalledOnce());
+    protocol.fetch.mockRejectedValueOnce(Error("network response unknown"));
+    await act(async()=>{await expect(protocol.live.transport.fetch("/api/chat",{method:"POST"})).rejects.toThrow("network response unknown");});
     protocol.messages = [
       {
         id: "sdk-local-source",
@@ -487,14 +489,31 @@ describe("T-1070 actual composer component / SDK boundary", () => {
       chatContext: frozen,
     });
   });
+  it("新回合严格准备明确失败时重试当前原话，不重接上一回合server source",async()=>{
+    const view=render(<Composer/>),user=userEvent.setup();
+    await user.type(screen.getByLabelText("我能帮你做什么"),"上一回合");await user.click(screen.getByLabelText("提交提示给 Copilot"));
+    await waitFor(()=>expect(protocol.send).toHaveBeenCalledOnce());
+    protocol.fetch.mockResolvedValueOnce(new Response("",{headers:{"x-source-message-id":"older-server-source","x-conversation-id":"original-conversation"}}));
+    await act(async()=>{await protocol.live.transport.fetch("/api/chat",{method:"POST"});});
+    protocol.messages=[{id:"older-local-user",role:"user",parts:[{type:"text",text:"上一回合"}]}];
+    protocol.listMessages.mockResolvedValue([{id:"older-server-source",role:"user",content:"上一回合",attachments:[]}] as any);
+    view.rerender(<Composer/>);
+    prepare.mockRejectedValueOnce(Error("这次原保存尚未完成"));
+    await user.type(screen.getByLabelText("我能帮你做什么"),"这次明确修改");await user.click(screen.getByLabelText("提交提示给 Copilot"));
+    await screen.findByText("这次原保存尚未完成");
+    await user.click(screen.getByRole("button",{name:"重试"}));
+    await waitFor(()=>expect(prepare).toHaveBeenCalledTimes(3));
+    expect(protocol.send).toHaveBeenLastCalledWith({text:"这次明确修改"},expect.anything());
+    expect(protocol.regenerate).not.toHaveBeenCalled();
+  });
   it("真实SDK从listMessages恢复server user ID后重接原任务，保原附件、会话、引擎与冻结稿", async () => {
-    const {Chat}=await vi.importActual<typeof import("@ai-sdk/react")>("@ai-sdk/react");
+    const {Chat}=await vi.importActual<{useChat:(options:any)=>any;Chat:new(options:any)=>any}>("@ai-sdk/react");
     protocol.actualSdk=true;
     // Only the upload boundary is supplied: this test uses the actual Chat/useChat
     // and DefaultChatTransport for both submissions, without mocking regenerate.
     protocol.attachmentIds=["uploaded-original-asset"];
     const live:any={control:{fetch:(...args:unknown[])=>protocol.fetch(...args),cancel:async()=>{}},conversationId:null,epoch:0,executionEngine:"pi",sourceEngines:new Map(),transport:null};
-    live.chat=new Chat({id:"actual-protocol-chat",transport:{sendMessages:options=>live.transport.sendMessages(options),reconnectToStream:async()=>null}});
+    live.chat=new Chat({id:"actual-protocol-chat",transport:{sendMessages:(options:any)=>live.transport.sendMessages(options),reconnectToStream:async()=>null}});
     protocol.live=live;
     protocol.fetch.mockResolvedValueOnce(new Response("原流响应未知",{status:503,headers:{"x-source-message-id":"server-source-real","x-conversation-id":"original-conversation"}}));
     protocol.listMessages.mockResolvedValue([{id:"server-source-real",role:"user",content:"微调标题",parts:[{type:"text",text:"微调标题"}],attachments:["uploaded-original-asset"]}] as any);
@@ -518,10 +537,10 @@ describe("T-1070 actual composer component / SDK boundary", () => {
     await waitFor(()=>expect(live.chat.status).toBe("ready"));
   });
   it("真实SDK联合创作在引擎不可用时明确零提交，可显式恢复同target；fetch开始后失败保持UNKNOWN",async()=>{
-    const {Chat}=await vi.importActual<typeof import("@ai-sdk/react")>("@ai-sdk/react");
+    const {Chat}=await vi.importActual<{useChat:(options:any)=>any;Chat:new(options:any)=>any}>("@ai-sdk/react");
     protocol.actualSdk=true;protocol.engineAvailable=false;
     const live:any={control:{fetch:(...args:unknown[])=>protocol.fetch(...args),cancel:async()=>{}},conversationId:null,epoch:0,executionEngine:"pi",sourceEngines:new Map(),transport:null};
-    live.chat=new Chat({id:"actual-creation-chat",transport:{sendMessages:options=>live.transport.sendMessages(options),reconnectToStream:async()=>null}});protocol.live=live;
+    live.chat=new Chat({id:"actual-creation-chat",transport:{sendMessages:(options:any)=>live.transport.sendMessages(options),reconnectToStream:async()=>null}});protocol.live=live;
     const creationTarget={clientRequestId:"original-pair",projectId:"protocol-project",scriptSourceRef:{kind:"project_script",id:"script",versionId:"frozen-script-v"}};
     const onCreationSubmission=vi.fn(),request={nonce:1,prefill:"生成原文章图文候选",creationTarget,autoSend:true,onCreationSubmission};
     const view=render(<Composer request={request}/>);
@@ -530,7 +549,8 @@ describe("T-1070 actual composer component / SDK boundary", () => {
     expect(protocol.fetch).not.toHaveBeenCalled();expect(live.chat.messages).toHaveLength(0);expect(prepare).not.toHaveBeenCalled();
     protocol.engineAvailable=true;
     protocol.fetch.mockResolvedValueOnce(new Response("原流未知",{status:503,headers:{"x-source-message-id":"original-creation-source","x-conversation-id":"original-creation-conversation"}}));
-    view.rerender(<Composer request={{...request,nonce:2}}/>);
+    view.rerender(<Composer request={request}/>);
+    await userEvent.setup().click(await screen.findByRole("button",{name:"重试"}));
     await waitFor(()=>expect(protocol.fetch).toHaveBeenCalledOnce());
     await waitFor(()=>expect(live.chat.status).toBe("error"));
     expect(onCreationSubmission.mock.calls).toEqual([["not-submitted"],["submitted-unknown"]]);
