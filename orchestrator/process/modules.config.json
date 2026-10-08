@@ -6273,6 +6273,61 @@
           "node orchestrator/process/reconcile.mjs"
         ]
       }
+    },
+    "T-1093": {
+      "task_id": "T-1093",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1093-director-method-recovery.md",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "PROJECT_CONTEXT.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "backend/src/modules/ai-runtime/**",
+        "backend/src/modules/ai/**",
+        "ai-worker/src/runtime/chat/**",
+        "frontend/src/server/**",
+        "contract/src/**",
+        "docs/features/t1091-public-director-context.md",
+        "docs/verification/t1091/**"
+      ],
+      "write_set": [
+        "backend/src/modules/ai-runtime/assistant-functional-prompt.ts",
+        "backend/src/modules/ai-runtime/assistant-director-methods.test.ts",
+        "docs/features/t1093-director-method-recovery.md",
+        "docs/features/t1093-director-method-recovery.review.md",
+        "docs/features/t1093-director-method-recovery.review-input.json",
+        "docs/features/t1093-director-method-recovery.independent-review.md",
+        "docs/verification/t1093/**",
+        "docs/verification/t1091/**",
+        "docs/verification/t1062/assistant-fixes-20261009.md",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "orchestrator/DECISION_LOG.md",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/progress.json",
+        "orchestrator/.lessons-stats.json"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "git diff --check",
+          "pnpm -C backend exec vitest run src/modules/ai-runtime/assistant-director-methods.test.ts src/modules/ai-runtime/assistant-functional-prompt.test.ts src/modules/ai-runtime/chat-assembly.test.ts --retry=0 --no-file-parallelism --testTimeout=180000 --hookTimeout=180000",
+          "pnpm -C backend typecheck",
+          "pnpm -C frontend typecheck",
+          "node orchestrator/process/boundary-scan.mjs",
+          "node orchestrator/process/semantic-boundary-scan.mjs",
+          "node orchestrator/process/orphan-scan.mjs",
+          "node orchestrator/process/reconcile.mjs"
+        ]
+      }
     }
   }
 }

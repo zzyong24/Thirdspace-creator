@@ -4966,3 +4966,11 @@ T-1063-release-pipeline验收分类复核：独立review_spec只读确认它是w
 ## DEC-T1091 — 公开编导的显式引擎与已保存目标（2026-10-09）
 
 用户继续验证并已授权全面补齐AI各功能、Codex与自然语言精剪、文章图文联合创作、本地main及无备份出包。本轮公开describe和原owner确认固定Pi且没有目标参数；沿同一已授权入口补可选engine/严格目标，不绕过本地页面来源保护或增加保存权限。公开联合生成目标由原owner标记实际public-request来源，不伪称页面current-click；原UI/旧冻结均保持。候选仍须明确采用，图401、真实稿件、平台登录/采集/发布、凭据不动。SPEC独评后才改产品，当前只建立候选与精确pending绑定。
+
+## DEC-T1093 — 按真实失败校准编导功能方法（2026-10-09）
+
+用户持续授权全面可用性稳定性验证、缺口修复、本地main及无备份出包。T1091新包实际Codex四类候选与Pi文章图文成功；Pi原生与联合失败均保留真实原任务、参数和严格回执。新任务只校准原功能方法prompt的数字类型、首次读取及同任务改参纠错与诚实状态，不改变工具schema/description/version/hash、Worker循环、owner、执行预算或采纳权限。当前仅登记SPEC与精确pending绑定，独立初审/真实RED后才实施；旧失败不抹除，unknown/running不新键重发，未采用候选、图401、原生UI及平台凭据/发布保持原界限。
+
+### DEC-T1093-CONTEXT — 串行交互式实施与既有Task Packet阻断
+
+2026-10-09：实际编译缺progress绑定、官方generate因T1026旧glob exit2，已登记T1083。遵循3.29 v3-4-build的单人交互不生成包；root串行产品/测试，独评只读辅助，以显式implementation context-plan、精确写集和正式评审守边界。保留原失败，未手改progress/旧glob、未改产品范围或减少实际安装验收。

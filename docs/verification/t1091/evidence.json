@@ -336,5 +336,299 @@
   "businessBoundary": "新候选不直接采纳；不修改真实稿件/图401/凭据/原S1工程；临时源码基线夹具已清理，未创建worktree",
   "packagingBasicTests": 45,
   "finalGateReviewSha256": "1d3ad480b2050c84d3032db828ec9c0bd2ae85d88fb4d9d2f72bcfbb124b8f11",
-  "freezeEligibility": "独立FINAL_GATE_REVIEW允许固定本地入口；旧2FAIL由旧main证明并登记T1092，其余Gate已实际通过；当前未签完成/真实Codex/全功能"
+  "freezeEligibility": "独立FINAL_GATE_REVIEW允许固定本地入口；旧2FAIL由旧main证明并登记T1092，其余Gate已实际通过；当前未签完成/真实Codex/全功能",
+  "installedVerification": {
+    "recordedAt": "2026-10-08T23:38:04.142852+00:00",
+    "sourceSha": "58bc6246bff56de1c086cc13857b9601681a7db0",
+    "commands": {
+      "package-local-build": {
+        "argv": [
+          "env",
+          "CREATOROS_LOCAL_SKIP_INSTALL=1",
+          "pnpm",
+          "-C",
+          "frontend",
+          "desktop:package-local"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+        "startedAt": "2026-10-08T23:05:09.137145+00:00",
+        "finishedAt": "2026-10-08T23:10:55.479386+00:00",
+        "exitCode": 0,
+        "elapsedSeconds": 346.3416002499871,
+        "logSha256": "ba3c327382d260f8e04a0a23b2f64bf5bb718f79a937196e94cb29685f126791"
+      },
+      "package-verification": {
+        "argv": [
+          "python3",
+          "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1091/verify-package.py"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+        "startedAt": "2026-10-08T23:11:10.574677+00:00",
+        "finishedAt": "2026-10-08T23:11:21.350995+00:00",
+        "exitCode": 0,
+        "elapsedSeconds": 10.776085624995176,
+        "logSha256": "f190ed45e6a9c9154a1ec78e0f492a60ca94d7735c4620adcd772219d716268a"
+      },
+      "app-installation": {
+        "argv": [
+          "node",
+          "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1091/install-verified-app.mjs"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+        "startedAt": "2026-10-08T23:11:26.231285+00:00",
+        "finishedAt": "2026-10-08T23:11:27.448623+00:00",
+        "exitCode": 0,
+        "elapsedSeconds": 1.2172110830142628,
+        "logSha256": "e9af097d3feae36e085e9007df35aa21cccc9b7f2cf1820bcdf5a166b07261a0"
+      },
+      "installed-startup-run": {
+        "argv": [
+          "python3",
+          "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1091/observe-installed-startup.py"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+        "startedAt": "2026-10-08T23:11:38.558839+00:00",
+        "finishedAt": "2026-10-08T23:12:43.006406+00:00",
+        "exitCode": 0,
+        "elapsedSeconds": 64.4468445420207,
+        "logSha256": "a61897c3353e0e13f68621b8891ffa8b4d4ffac31541b5d97f73657869c11f7a"
+      },
+      "installed-codex-read-run": {
+        "argv": [
+          "python3",
+          "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1091/installed-codex-read.py"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+        "startedAt": "2026-10-08T23:12:46.582557+00:00",
+        "finishedAt": "2026-10-08T23:14:28.211197+00:00",
+        "exitCode": 0,
+        "elapsedSeconds": 101.6276985000004,
+        "logSha256": "1d1e65e8fbec274ea5cee5cea56fe003f21e05b99d073346ebf02dcfbf5ac911"
+      },
+      "candidate-fixture-setup": {
+        "argv": [
+          "python3",
+          "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1091/installed-candidate-matrix.py",
+          "setup"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+        "startedAt": "2026-10-08T23:14:49.890968+00:00",
+        "finishedAt": "2026-10-08T23:15:05.233830+00:00",
+        "exitCode": 0,
+        "elapsedSeconds": 15.342600208008662,
+        "logSha256": "e88bb39f3b04b5a31132473f5f29810fb529402130d5bf264df1049e656e35f1"
+      },
+      "candidate-submit-batch": {
+        "argv": [
+          "python3",
+          "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1091/submit-candidate-matrix.py"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+        "startedAt": "2026-10-08T23:15:17.623772+00:00",
+        "finishedAt": "2026-10-08T23:16:18.131544+00:00",
+        "exitCode": 0,
+        "elapsedSeconds": 60.50719258299796,
+        "logSha256": "e6321daf33155b3da91a5096e892af2743044df173d785ff81d124d202f7e151"
+      },
+      "candidate-observe-run": {
+        "argv": [
+          "python3",
+          "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1091/installed-candidate-matrix.py",
+          "observe"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+        "startedAt": "2026-10-08T23:16:29.906103+00:00",
+        "finishedAt": "2026-10-08T23:19:15.571748+00:00",
+        "exitCode": 0,
+        "elapsedSeconds": 165.66419595800107,
+        "logSha256": "7876d4076c46622689f3a0b5b699aaccb8e5c74fdcd7fd771805b5f92387b3eb"
+      },
+      "pi-original-candidates-revalidation-run": {
+        "argv": [
+          "python3",
+          "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1091/revalidate-pi-original-candidates.py"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+        "startedAt": "2026-10-08T23:19:23.586166+00:00",
+        "finishedAt": "2026-10-08T23:19:32.082614+00:00",
+        "exitCode": 0,
+        "elapsedSeconds": 8.496281125000678,
+        "logSha256": "76beead841e1eec8a2e18fdbed690cc4080137941ad1091a208686273a70db79"
+      },
+      "native-candidate-preview-run": {
+        "argv": [
+          "python3",
+          "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1091/preview-native-candidates.py"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+        "startedAt": "2026-10-08T23:20:33.656931+00:00",
+        "finishedAt": "2026-10-08T23:20:35.438822+00:00",
+        "exitCode": 1,
+        "elapsedSeconds": 1.7817559159884695,
+        "logSha256": "d2ff7267d5ef2ff0a6c10124f2a65bb239f81d288c22c0319beb42008f543144"
+      },
+      "warm-restart-run": {
+        "argv": [
+          "python3",
+          "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1091/warm-restart-verified-app.py"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+        "startedAt": "2026-10-08T23:24:02.883972+00:00",
+        "finishedAt": "2026-10-08T23:24:04.289770+00:00",
+        "exitCode": 0,
+        "elapsedSeconds": 1.4055883330001961,
+        "logSha256": "232a5b1a92b754a64ce12bba10e370ecd59674c391985d56522e3b0bd18d58b4"
+      },
+      "warm-startup-run": {
+        "argv": [
+          "python3",
+          "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1091/observe-warm-startup.py"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+        "startedAt": "2026-10-08T23:24:13.059814+00:00",
+        "finishedAt": "2026-10-08T23:24:35.807160+00:00",
+        "exitCode": 0,
+        "elapsedSeconds": 22.747053833008977,
+        "logSha256": "49ef47043455df9c89e7ec6bcb5c17f8a262b40665dab99f514c8fe6c381eaba"
+      },
+      "warm-task-recovery-run": {
+        "argv": [
+          "python3",
+          "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1091/verify-warm-task-recovery.py"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+        "startedAt": "2026-10-08T23:25:06.977485+00:00",
+        "finishedAt": "2026-10-08T23:25:40.297011+00:00",
+        "exitCode": 0,
+        "elapsedSeconds": 33.319157541991444,
+        "logSha256": "7af46f264c1ce12a102ca67012eb23b8af33c9704d431ddcfc4ab14e171df500"
+      },
+      "full-reconcile": {
+        "argv": [
+          "env",
+          "CREATOROS_TEST_POSTGRES_URL=postgresql://creatoros_test@127.0.0.1:55422/postgres",
+          "node",
+          "orchestrator/process/reconcile.mjs"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+        "startedAt": "2026-10-08T23:11:38.558577+00:00",
+        "finishedAt": "2026-10-08T23:29:08.295888+00:00",
+        "exitCode": 1,
+        "elapsedSeconds": 1049.7288651669805,
+        "logSha256": "5a7dc597bbef244902c857fc708f2a8e4fbfe10583fb9d46624d709b7079ea5a"
+      },
+      "installed-page-read-latency-run": {
+        "argv": [
+          "python3",
+          "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1091/installed-page-read-latency.py"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+        "startedAt": "2026-10-08T23:29:18.233346+00:00",
+        "finishedAt": "2026-10-08T23:29:24.159495+00:00",
+        "exitCode": 1,
+        "elapsedSeconds": 5.9259580000070855,
+        "logSha256": "b5e44771f81561a19aeb6acc1f617c8632fec712166683cc6e13539b28ae285d"
+      },
+      "group-page-recheck-run": {
+        "argv": [
+          "python3",
+          "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1091/recheck-group-page-read.py"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+        "startedAt": "2026-10-08T23:33:01.155695+00:00",
+        "finishedAt": "2026-10-08T23:33:03.381124+00:00",
+        "exitCode": 0,
+        "elapsedSeconds": 2.2252824169991072,
+        "logSha256": "f008238c62328f694eb81d76f727a3cc8ccf60a04216b43fb9511a34cb44a05b"
+      },
+      "owned-pg-stop": {
+        "argv": [
+          "/opt/homebrew/opt/postgresql@16/bin/pg_ctl",
+          "-D",
+          "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1089/pg-server",
+          "-w",
+          "-t",
+          "180",
+          "-m",
+          "fast",
+          "stop"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+        "startedAt": "2026-10-08T23:30:42.353615+00:00",
+        "finishedAt": "2026-10-08T23:30:42.502479+00:00",
+        "exitCode": 0,
+        "elapsedSeconds": 0.14869020800688304,
+        "logSha256": "ca19178a35ab4153b75b494963b66ce8243e1b94c173107c87b44d09db23652d"
+      }
+    },
+    "privateProofs": {
+      "new-package-verification.json": {
+        "path": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1091/new-package-verification.json",
+        "sha256": "e4e79bede42eb34138ce6194b54142bd1a24d74842756c4e94314274f1f3144c"
+      },
+      "new-app-installation.json": {
+        "path": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1091/new-app-installation.json",
+        "sha256": "aa194b9c4cc921daaf50956d4f53328ead63686d465d20e3e6021ba7c788c954"
+      },
+      "new-startup-verification.json": {
+        "path": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1091/new-startup-verification.json",
+        "sha256": "974d353e95ec4da9056a201e76eea098d84abf7002627e71fbc37116a9b728d5"
+      },
+      "installed-codex-read-verification.json": {
+        "path": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1091/installed-codex-read-verification.json",
+        "sha256": "a3c6c3500c6a55994340993e2ef718ab7457a22adf18a45c6c87f1d4be04ba74"
+      },
+      "installed-candidate-matrix-binding.json": {
+        "path": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1091/installed-candidate-matrix-binding.json",
+        "sha256": "e0e2122164152487806a3038fe3843f83f20811ae6e5a971da1a60eb65309f08"
+      },
+      "installed-candidate-matrix-result.json": {
+        "path": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1091/installed-candidate-matrix-result.json",
+        "sha256": "0e404726c70512774efd119d0999ca7f721788f21dbd0c108a51d2d6d8413c60"
+      },
+      "pi-original-candidates-revalidation.json": {
+        "path": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1091/pi-original-candidates-revalidation.json",
+        "sha256": "869ee075871e9fd9f53224539639928bdac17036830bedb3ee146863eae6bf87"
+      },
+      "native-candidate-preview-verification.json": {
+        "path": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1091/native-candidate-preview-verification.json",
+        "sha256": "4c867472e833a7c9b41445a055454a2d19341a1f0d56b69d5ddad582afb99489"
+      },
+      "warm-startup-verification.json": {
+        "path": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1091/warm-startup-verification.json",
+        "sha256": "ba872b9b6522181141fb45a332d440d92fa5b9c37c44d4ff3aca218bb6d35648"
+      },
+      "warm-task-recovery-verification.json": {
+        "path": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1091/warm-task-recovery-verification.json",
+        "sha256": "cc0fa9794d8cc82c09679dad7623dbcf7eeb354be65fd236e75b1ff6cc679ccd"
+      },
+      "reconcile-comparison.json": {
+        "path": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1091/reconcile-comparison.json",
+        "sha256": "b5131618d7f7bacb14431cd12f516b0587892ad6851a245db488adf50a85064f"
+      },
+      "group-page-recheck-verification.json": {
+        "path": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1091/group-page-recheck-verification.json",
+        "sha256": "8d1594746c5052dc7862ed0be40a297a35b7f901d568cd7730c88d285596fc0a"
+      }
+    },
+    "candidateBusinessResult": {
+      "passed": 6,
+      "failed": 2,
+      "failures": [
+        "pi-native原ai-task-b8c8d3c3-306数字类型错误，无候选却称就绪",
+        "pi-creation原ai-task-b8c8d3c3-320首读猜摘要，无候选"
+      ],
+      "noNewTasksForPiArticleGraphicRevalidation": true,
+      "candidateAdoption": false,
+      "repairTask": "T-1093"
+    },
+    "reconcileResult": {
+      "exitCode": 1,
+      "errors": 42,
+      "warnings": 0,
+      "sameBytesAsPrevious": true,
+      "newErrors": 0
+    },
+    "uiEvidence": "未冒称原生点击/播放/全功能验收；v3公开HTML预览HTTP409需回剪辑工作台"
+  }
 }
