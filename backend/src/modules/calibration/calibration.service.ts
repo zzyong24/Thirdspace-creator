@@ -1,3 +1,4 @@
+import {workspaceKey,workspaceStamp,workspaceFilter,assertWritableWorkspace} from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
 import { requireAccountId, type Db } from "@creatoros/backend";
 import {
@@ -21,6 +22,7 @@ import {
   type CalibrationRuleSuggestionResource,
 } from "./calibration.schema";
 import {
+  OwnershipError,
   ConflictError,
   ImmutableError,
   ValidationError,
@@ -146,6 +148,8 @@ export interface ServiceDeps {
   // SOFT dep — the cross-module aggregates for calibration.overview (待校准内容 + 经验沉淀).
   // Absent ⇒ those lists report [] (honest, never fabricated).
   overview?: CalibrationOverviewPort;
+  assertSubjectOwned?(ctx:RequestContext,subject:{subjectType:string;subjectId:string}):Promise<unknown>;
+  assertLearningOwned?(ctx:RequestContext,learningId:string):Promise<unknown>;
 }
 
 // --- Command inputs ---
@@ -400,7 +404,7 @@ export function createCalibrationService(
       now,
       nextId,
       userId: ctx.userId,
-      accountId: requireAccountId(ctx.accountId, op),
+      ...workspaceStamp(workspaceKey(ctx)),
     };
     return createCalibrationRepository(db, repoDeps);
   }
@@ -457,6 +461,8 @@ export function createCalibrationService(
     },
 
     async createDraftPrediction(ctx, input) {
+      await assertWritableWorkspace(db,ctx);
+      if(ctx.groupId){if(!deps.assertSubjectOwned)throw new OwnershipError("校准内容归属校验不可用");await deps.assertSubjectOwned(ctx,input);}
       // Identical to createPrediction (deterministic 变现加权 weighted sum over the rubric
       // version's dimensions), but reached from the AI confirm seam rather than the contract
       // op. The status starts 'draft' (the user reviews + locks the 盲预测 themselves; the AI
@@ -645,6 +651,8 @@ export function createCalibrationService(
     },
 
     async createPrediction(ctx, input) {
+      await assertWritableWorkspace(db,ctx);
+      if(ctx.groupId){if(!deps.assertSubjectOwned)throw new OwnershipError("校准内容归属校验不可用");await deps.assertSubjectOwned(ctx,input);}
       const repo = repoFor(ctx, "calibration.createPrediction");
       // Ownership: the rubric version must be owned (cross-user → OwnershipError → 404).
       const version = await repo.getRubricVersion(input.rubricVersionId);
@@ -747,6 +755,8 @@ export function createCalibrationService(
     },
 
     async createRuleSuggestion(ctx, input) {
+      await assertWritableWorkspace(db,ctx);
+      if(ctx.groupId){if(!deps.assertLearningOwned)throw new OwnershipError("经验归属校验不可用");await deps.assertLearningOwned(ctx,input.learningId);}
       const repo = repoFor(ctx, "calibration.createRuleSuggestion");
       // Ownership gate on the target Rubric (cross-user / unknown → OwnershipError → 404)
       // BEFORE any suggestion row is written.

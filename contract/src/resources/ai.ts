@@ -11,6 +11,9 @@ import { id, iso8601, aiTaskStatus } from "../primitives";
 export const aiConversationResource = z.object({
   id,
   userId: id,
+  groupId: id.nullable().optional(),
+  groupVersion: z.number().int().nullable().optional(),
+  membershipVersion: z.number().int().nullable().optional(),
   projectId: id.nullable(),
   scope: z.string(),
   title: z.string(),
@@ -51,6 +54,9 @@ export type AIMessageResource = z.infer<typeof aiMessageResource>;
 export const aiTaskResource = z.object({
   id,
   userId: id,
+  groupId: id.nullable().optional(),
+  groupVersion: z.number().int().nullable().optional(),
+  membershipVersion: z.number().int().nullable().optional(),
   projectId: id.nullable(),
   contentOutputId: id.nullable(),
   taskType: z.string(),

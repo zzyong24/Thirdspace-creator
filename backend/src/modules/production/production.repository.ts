@@ -1,3 +1,5 @@
+import {withWorkspaceParentWrite,type WorkspaceWriteParent} from '../../workspace-write';
+import {workspaceFilter,requireWorkspace} from "../../workspace-scope";
 import { and, asc, eq, sql, type Db } from "@creatoros/backend";
 // [T-332 S2] 父锚闭合(SPEC §3.2):production 域自身无 account 列,唯一合法入口是
 // content_output → project(project 门 strict)。此前实现只按 userId 收窄 —— 同一 user
@@ -36,6 +38,8 @@ export interface RepoDeps {
   // 漂移),但每个读写点都经 content_output → project 的 strict 门校验归属号。未选号
   // (null)→ 读写点直接抛 AccountRequiredError(引导态禁读写)。
   accountId: string | null;
+  groupId?:string|null;
+  assertOutputOwned?:(id:string)=>Promise<unknown>;
 }
 
 export interface ProductionRepository {
@@ -88,18 +92,23 @@ export interface ProductionRepository {
   ): Promise<ExportRecordRow>;
 }
 
-export function createProductionRepository(
-  db: Db,
-  deps: RepoDeps,
-): ProductionRepository {
+export function createProductionRepository(db:Db,deps:RepoDeps):ProductionRepository{return productionRepository(db,deps,false);}
+function productionRepository(db:Db,deps:RepoDeps,locked:boolean):ProductionRepository {
   const userId = deps.userId;
+  const writeCtx={userId,groupId:deps.groupId,accountId:deps.accountId,requestId:'production-parent-write',source:'user' as const};
+  const outputParent:WorkspaceWriteParent={table:projects,id:projects.id,userId:projects.userId,groupId:projects.groupId,accountId:projects.accountId,via:[{table:contentOutputs,id:contentOutputs.id,parentId:contentOutputs.projectId}]};
+  const productionParent:WorkspaceWriteParent={...outputParent,via:[...outputParent.via!,{table:productions,id:productions.id,parentId:productions.contentOutputId,userId:productions.userId}]};
+  const exportParent:WorkspaceWriteParent={...productionParent,via:[...productionParent.via!,{table:exportRecords,id:exportRecords.id,parentId:exportRecords.productionId,userId:exportRecords.userId}]};
+
 
   // [T-332 S2] 父锚门:outputId 必须属于「本 user 的当前号」的项目(content_outputs ⋈
   // projects,strict eq(accountId))。跨 user / 跨号 / 不存在同貌 → OwnershipError 404
   // (§4.5 号一致性门);未选号 → AccountRequiredError(引导态)。production 的所有读写
   // 都收敛过这道门(by-productionId / by-exportId 先解析出 contentOutputId 再过门)。
   async function requireOwnedOutput(outputId: string): Promise<void> {
-    const accountId = requireAccountId(deps.accountId, "production.ownershipGate");
+    requireWorkspace(deps);
+    if(!locked&&deps.assertOutputOwned){const owned=await deps.assertOutputOwned(outputId);if(owned===null||owned===false)throw new OwnershipError("产出不存在");return;}
+    if(!locked&&deps.groupId)throw new OwnershipError("产出归属验证不可用");
     const rows = await db
       .select({ id: contentOutputs.id })
       .from(contentOutputs)
@@ -108,7 +117,7 @@ export function createProductionRepository(
         and(
           eq(contentOutputs.id, outputId),
           eq(projects.userId, userId),
-          eq(projects.accountId, accountId),
+          workspaceFilter(projects,deps),
         ),
       );
     if (!rows[0]) {
@@ -172,6 +181,7 @@ export function createProductionRepository(
     getProductionById: getProductionRowById,
 
     async ensureProductionForOutput(outputId) {
+      if(!locked)return withWorkspaceParentWrite(db,writeCtx,outputParent,[outputId],tx=>productionRepository(tx as unknown as Db,deps,true).ensureProductionForOutput(outputId));
       // Get-or-create scoped by output. The UNIQUE index on content_output_id
       // makes the row at-most-one per output (data-model 0..1), so a second call
       // returns the SAME id (idempotent — backs the initial GET load).
@@ -214,6 +224,7 @@ export function createProductionRepository(
     },
 
     async updateProduction(productionId, patch) {
+      if(!locked)return withWorkspaceParentWrite(db,writeCtx,{...productionParent,lock:'update'},[productionId],tx=>productionRepository(tx as unknown as Db,deps,true).updateProduction(productionId,patch));
       // Ownership gate first (cross-user / unknown id → OwnershipError 404).
       await getProductionRowById(productionId);
       const set: Record<string, unknown> = { updatedAt: deps.now() };
@@ -236,6 +247,7 @@ export function createProductionRepository(
     },
 
     async confirmEditingPlan(productionId, expectedRevision, plan) {
+      if(!locked)return withWorkspaceParentWrite(db,writeCtx,{...productionParent,lock:'update'},[productionId],tx=>productionRepository(tx as unknown as Db,deps,true).confirmEditingPlan(productionId,expectedRevision,plan));
       await getProductionRowById(productionId);
       const next = { ...plan, revision: expectedRevision + 1 };
       const rows = await db
@@ -256,6 +268,7 @@ export function createProductionRepository(
     },
 
     async createSegment(productionId, input) {
+      if(!locked)return withWorkspaceParentWrite(db,writeCtx,productionParent,[productionId],tx=>productionRepository(tx as unknown as Db,deps,true).createSegment(productionId,input));
       // Parent-ownership gate before the write (no cross-user child rows).
       await getProductionRowById(productionId);
       const id = deps.nextId("segment");
@@ -298,6 +311,7 @@ export function createProductionRepository(
     },
 
     async createExport(productionId, input) {
+      if(!locked)return withWorkspaceParentWrite(db,writeCtx,productionParent,[productionId],tx=>productionRepository(tx as unknown as Db,deps,true).createExport(productionId,input));
       // Parent-ownership gate before the write.
       await getProductionRowById(productionId);
       const id = deps.nextId("export");
@@ -321,6 +335,7 @@ export function createProductionRepository(
     getExport: getExportRow,
 
     async completeExportRow(exportId, input) {
+      if(!locked)return withWorkspaceParentWrite(db,writeCtx,{...exportParent,lock:'update'},[exportId],tx=>productionRepository(tx as unknown as Db,deps,true).completeExportRow(exportId,input));
       await getExportRow(exportId); // ownership gate
       await db
         .update(exportRecords)

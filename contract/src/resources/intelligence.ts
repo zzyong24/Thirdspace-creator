@@ -106,6 +106,7 @@ export const executionTaskKindV2 = z.enum([
   "script_candidate",
   "automation_sync",
   "migration",
+  "account_binding",
 ]);
 
 const nullableCount = z.number().int().nonnegative().nullable();
@@ -121,7 +122,10 @@ export const intelligenceCollectionResource = z
   .object({
     id,
     userId: id,
-    accountId: id,
+    accountId: id.nullable(),
+    groupId: id.nullable().optional(),
+    groupVersion: z.number().int().nullable().optional(),
+    membershipVersion: z.number().int().nullable().optional(),
     parentId: id.nullable(),
     name: z.string().min(1),
     kind: intelligenceCollectionKind,
@@ -175,7 +179,10 @@ export const intelligenceSourceConfig = z.discriminatedUnion("type", [
 
 export const intelligenceCollectorResource = z
   .object({
-    accountId: id,
+    accountId: id.nullable(),
+    groupId: id.nullable().optional(),
+    groupVersion: z.number().int().nullable().optional(),
+    membershipVersion: z.number().int().nullable().optional(),
     accountHandle: z.string().min(1).nullable(),
     platform: z.literal("douyin").nullable(),
     availability: z.enum(["active", "archived", "missing"]),
@@ -186,7 +193,10 @@ export const intelligenceSourceResource = z
   .object({
     id,
     userId: id,
-    accountId: id,
+    accountId: id.nullable(),
+    groupId: id.nullable().optional(),
+    groupVersion: z.number().int().nullable().optional(),
+    membershipVersion: z.number().int().nullable().optional(),
     collectionId: id.nullable(),
     type: intelligenceSourceType,
     platform: z.string().min(1),
@@ -220,7 +230,10 @@ export const intelligenceItemResource = z
   .object({
     id,
     userId: id,
-    accountId: id,
+    accountId: id.nullable(),
+    groupId: id.nullable().optional(),
+    groupVersion: z.number().int().nullable().optional(),
+    membershipVersion: z.number().int().nullable().optional(),
     type: intelligenceItemType,
     platform: z.string().min(1),
     externalId: z.string().nullable(),
@@ -273,7 +286,10 @@ export const syncRunResource = z
   .object({
     id,
     userId: id,
-    accountId: id,
+    accountId: id.nullable(),
+    groupId: id.nullable().optional(),
+    groupVersion: z.number().int().nullable().optional(),
+    membershipVersion: z.number().int().nullable().optional(),
     sourceId: id,
     executionTaskId: id,
     trigger: z.enum(["manual", "schedule", "initial", "retry"]),
@@ -316,7 +332,10 @@ export const itemSourceObservationResource = z
   .object({
     id,
     userId: id,
-    accountId: id,
+    accountId: id.nullable(),
+    groupId: id.nullable().optional(),
+    groupVersion: z.number().int().nullable().optional(),
+    membershipVersion: z.number().int().nullable().optional(),
     itemId: id,
     sourceId: id,
     runId: id,
@@ -331,7 +350,10 @@ export const sourceSnapshotResource = z
   .object({
     id,
     userId: id,
-    accountId: id,
+    accountId: id.nullable(),
+    groupId: id.nullable().optional(),
+    groupVersion: z.number().int().nullable().optional(),
+    membershipVersion: z.number().int().nullable().optional(),
     sourceId: id,
     runId: id,
     itemId: id.nullable(),
@@ -352,11 +374,14 @@ export const intelligenceTransformResource = z
   .object({
     id,
     userId: id,
-    accountId: id,
+    accountId: id.nullable(),
+    groupId: id.nullable().optional(),
+    groupVersion: z.number().int().nullable().optional(),
+    membershipVersion: z.number().int().nullable().optional(),
     itemId: id,
     sourceSnapshotId: id,
     kind: z.literal("topic"),
-    positioningVersionId: id,
+    positioningVersionId: id.nullable(),
     aiTaskId: id.nullable(),
     idempotencyKey: z.string().min(1),
     status: z.enum(["candidate", "confirmed", "cancelled"]),
@@ -391,7 +416,10 @@ export const executionTaskResourceV2 = z
   .object({
     id,
     userId: id,
-    accountId: id,
+    accountId: id.nullable(),
+    groupId: id.nullable().optional(),
+    groupVersion: z.number().int().nullable().optional(),
+    membershipVersion: z.number().int().nullable().optional(),
     kind: executionTaskKindV2,
     ownerType: z.enum([
       "ai_task",
@@ -402,6 +430,7 @@ export const executionTaskResourceV2 = z
       "project",
       "scheduled_job",
       "migration",
+      "account_binding",
     ]),
     ownerId: id,
     status: executionTaskStatusV2,

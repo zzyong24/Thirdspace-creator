@@ -1,0 +1,5 @@
+import {ENDPOINTS,type Endpoint,type Transport} from '@creatoros/contract';
+import type {AccountBindingService} from './account-binding.service';
+import {AuthenticationError,UnsupportedOperationError} from './platform-account.errors';
+export const ACCOUNT_BINDING_OP_IDS=['accounts.bind.start','accounts.bind.status','accounts.bind.cancel'] as const;
+export function createAccountBindingTransport(factory:()=>AccountBindingService):Transport{return {async request(endpoint:Endpoint,input,ctx){if(!ctx)throw new AuthenticationError();const service=factory(),request=input??{};let data:unknown;switch(endpoint.id){case 'accounts.bind.start':data=await service.start(ctx,ENDPOINTS.startAccountBinding.body.parse(request.body));break;case 'accounts.bind.status':data=await service.status(ctx,ENDPOINTS.getAccountBinding.params.parse(request.params).runId);break;case 'accounts.bind.cancel':data=await service.cancel(ctx,ENDPOINTS.cancelAccountBinding.params.parse(request.params).runId);break;default:throw new UnsupportedOperationError(endpoint.id);}return {data,meta:{requestId:ctx.requestId}};}};}

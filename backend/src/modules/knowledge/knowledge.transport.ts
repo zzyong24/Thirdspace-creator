@@ -73,6 +73,7 @@ function toFolderResource(row: KnowledgeFolderRow): KnowledgeFolderResource {
     id: row.id,
     userId: row.userId,
     accountId: row.accountId,
+    groupId: row.groupId,
     parentId: row.parentId ?? null,
     name: row.name,
     status: row.status as KnowledgeFolderResource["status"],

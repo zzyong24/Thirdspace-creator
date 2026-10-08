@@ -48,6 +48,7 @@ function toPublicationResource(row: PublicationRow): PublicationResource {
   return {
     id: row.id,
     contentOutputId: row.contentOutputId,
+    accountId:row.accountId,groupId:row.groupId??null,
     platform: row.platform as PublicationResource["platform"],
     accountReference: row.accountReference,
     status: row.status as PublicationResource["status"],

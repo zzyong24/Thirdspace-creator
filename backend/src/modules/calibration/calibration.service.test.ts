@@ -1,3 +1,4 @@
+import {seedAdjacentContent} from "../../integration/adjacent-domain-fixtures";
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { createDb, type Db } from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
@@ -48,6 +49,7 @@ describe("calibration service", () => {
 
   beforeEach(async () => {
     ({ db } = await createDb());
+    await seedAdjacentContent(db,ctxFor("user-a"),["output-1","output-nested","o"]);
     let seq = 0;
     adjustConfidence = vi.fn(
       async () => {},

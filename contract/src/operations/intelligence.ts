@@ -29,6 +29,7 @@ import {
 } from "../resources/intelligence";
 
 const accountQuery = z.object({ accountId: id });
+const sharedWorkspaceQuery=z.object({accountId:id.optional()});
 const collectionParams = z.object({ collectionId: id });
 const sourceParams = z.object({ sourceId: id });
 const runParams = z.object({ runId: id });
@@ -100,7 +101,7 @@ export const intelligenceOperations = {
     id: "intelligence.workspace.get",
     method: "GET",
     path: "/intelligence/workspace",
-    query: accountQuery,
+    query: sharedWorkspaceQuery,
     response: z
       .object({
         collections: z.array(intelligenceCollectionResource),
@@ -119,7 +120,7 @@ export const intelligenceOperations = {
     path: "/intelligence/collections",
     body: z
       .object({
-        accountId: id,
+        accountId: id.optional(),
         parentId: id.nullable().optional(),
         name: z.string().min(1),
         idempotencyKey: z.string().min(1),
@@ -169,7 +170,7 @@ export const intelligenceOperations = {
     id: "intelligence.collectors.list",
     method: "GET",
     path: "/intelligence/collectors",
-    query: accountQuery,
+    query: sharedWorkspaceQuery,
     response: intelligenceCollectorResource
       .pick({
         accountId: true,
@@ -190,7 +191,7 @@ export const intelligenceOperations = {
     path: "/intelligence/sources/preview-profile",
     body: z
       .object({
-        accountId: id,
+        accountId: id.optional(),
         collectorAccountId: id,
         url: z.string().url(),
       })
@@ -213,7 +214,7 @@ export const intelligenceOperations = {
     path: "/intelligence/sources/preview-web",
     body: z
       .object({
-        accountId: id,
+        accountId: id.optional(),
         url: z.string().url(),
         instruction: z.string(),
         browserSessionRef: z.string().min(1).optional(),
@@ -243,7 +244,7 @@ export const intelligenceOperations = {
     method: "GET",
     path: "/intelligence/sources/favorite-folders",
     query: z
-      .object({ accountId: id, collectorAccountId: id })
+      .object({ accountId: id.optional(), collectorAccountId: id })
       .strict(),
     response: favoriteFolderPreview,
     isList: true,
@@ -255,7 +256,7 @@ export const intelligenceOperations = {
     path: "/intelligence/sources",
     body: z
       .object({
-        accountId: id,
+        accountId: id.optional(),
         collectionId: id.nullable(),
         type: intelligenceSourceType,
         config: intelligenceSourceConfig,
@@ -280,7 +281,7 @@ export const intelligenceOperations = {
     method: "GET",
     path: "/intelligence/sources",
     query: paginationQuery.extend({
-      accountId: id,
+      accountId: id.optional(),
       collectionId: id.optional(),
       type: intelligenceSourceType.optional(),
       status: intelligenceSourceStatus.optional(),
@@ -378,7 +379,7 @@ export const intelligenceOperations = {
     method: "GET",
     path: "/intelligence/items",
     query: paginationQuery.extend({
-      accountId: id,
+      accountId: id.optional(),
       collectionId: id.optional(),
       sourceId: id.optional(),
       query: z.string().optional(),
@@ -431,7 +432,7 @@ export const intelligenceOperations = {
     path: "/intelligence/items/import-douyin-share",
     body: z
       .object({
-        accountId: id,
+        accountId: id.optional(),
         collectionId: id.nullable(),
         shareInput: z.string().trim().min(1).max(2_000),
         idempotencyKey: z.string().min(1),
@@ -505,7 +506,7 @@ export const intelligenceOperations = {
       .object({
         itemId: id,
         sourceSnapshotId: id,
-        positioningVersionId: id,
+        positioningVersionId: id.optional(),
         idempotencyKey: z.string().min(1),
       })
       .strict(),
@@ -522,12 +523,23 @@ export const intelligenceOperations = {
     method: "POST",
     path: "/intelligence/transforms/:transformId/confirm-topic",
     params: transformParams,
-    body: z
-      .object({
-        editedCandidate: topicCandidate,
-        idempotencyKey: z.string().min(1),
-      })
-      .strict(),
+    body: z.union([
+      // Legacy strategy-backed clients continue to send the complete edited card.
+      z
+        .object({
+          editedCandidate: topicCandidate,
+          idempotencyKey: z.string().min(1),
+        })
+        .strict(),
+      // rewrite_only clients may only confirm the saved non-empty draft; source
+      // provenance is re-read from the transform and cannot be supplied here.
+      z
+        .object({
+          idempotencyKey: z.string().min(1),
+          editedDraftContentText: z.string().trim().min(1).max(50_000).optional(),
+        })
+        .strict(),
+    ]),
     response: z
       .object({
         transform: intelligenceTransformResource,
@@ -536,7 +548,7 @@ export const intelligenceOperations = {
           .object({
             itemId: id,
             sourceSnapshotId: id,
-            positioningVersionId: id,
+            positioningVersionId: id.nullable(),
           })
           .strict(),
       })

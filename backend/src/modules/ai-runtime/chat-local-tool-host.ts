@@ -14,9 +14,9 @@ const effects=Object.freeze({"local.tools":"none","local.workspace":"none"} as c
 /** 只接白名单版本探测和授权目录根读取；不包含读文件、浏览器或模型动作。 */
 export function createChatLocalTaskToolHost(reader:Pick<ReturnType<typeof createChatHostContextReader>,"read">,ports:ChatLocalToolPorts):NonNullable<ChatWorkerDispatcherDeps["resolveTools"]>{
  const resolve:ResolveChatHostTools=async(context,execution,signal)=>{
-  const owner={userId:context.userId,accountId:context.accountId};signal?.throwIfAborted();
+  const owner={userId:context.userId,accountId:context.accountId??null,groupId:context.groupId??null};signal?.throwIfAborted();
   const restored=structuredClone(await reader.read({...execution}));signal?.throwIfAborted();
-  if(!owner.userId || !owner.accountId || restored.context.userId!==owner.userId || restored.context.accountId!==owner.accountId)throw new Error("本机工具账号与原任务不符");
+  if(!owner.userId || (!owner.accountId && !owner.groupId) || restored.context.userId!==owner.userId || (restored.context.accountId??null)!==owner.accountId || (restored.context.groupId??null)!==owner.groupId)throw new Error("本机工具账号与原任务不符");
   const definitions=restored.modelInput.tools.filter(tool=>Object.hasOwn(effects,tool.name));
   const tools=buildChatTools(definitions.map(tool=>tool.name),{
    detectTools:async input=>{signal?.throwIfAborted();const result=await ports.detectTools(restored.context,{...input,signal});signal?.throwIfAborted();return result;},

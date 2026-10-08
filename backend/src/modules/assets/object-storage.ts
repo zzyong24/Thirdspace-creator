@@ -50,6 +50,7 @@ export interface ObjectStoragePort {
     // [T-157] 当前抖音号 —— key 头段按号分区(`<accountId ?? _default>/…`)。可选,
     // 缺省(存量/未选号)回退 `_default`;向后兼容(老 key 不迁移,DB 存每 asset 的 key)。
     accountId?: string | null;
+    groupId?: string | null;
     // [T-055d SPEC §7.1] 目录规则(local-fs):folder 形如 "projects/<safe>-<id6>/素材"
     // 或 "inbox";fileName 原名保真。二者可选 —— 缺省回退旧 key 规则(assetType/nextKey),
     // mock/s3 后端可忽略。
@@ -108,10 +109,10 @@ export function createMockObjectStorage(
 
   return {
     kind: "mock",
-    async createPresignedUpload({ assetType, mimeType, fileSize, accountId }) {
+    async createPresignedUpload({ assetType, mimeType, fileSize, accountId, groupId }) {
       // [T-157] 账号分区:key 头段 = <accountId ?? _default>(mock 键也分区,让集成测试
       // 看到与真实后端一致的按号 key 形状)。
-      const storageKey = `${accountKeyPrefix(accountId)}${deps.nextKey()}`;
+      const storageKey = `${groupId ? `groups/${accountKeyPrefix(groupId)}` : accountKeyPrefix(accountId)}${deps.nextKey()}`;
       objects.set(storageKey, {
         mimeType,
         fileSize,

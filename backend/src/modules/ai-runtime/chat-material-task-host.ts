@@ -22,9 +22,9 @@ export function createChatMaterialTaskHost(
  ports:ChatMaterialTaskPorts,
 ):NonNullable<ChatWorkerDispatcherDeps["resolveTools"]>{
  async function current(ctx:RequestContext,ref:ExecutionRef,signal?:AbortSignal){
-  const owner={userId:ctx.userId,accountId:ctx.accountId};signal?.throwIfAborted();
+  const owner={userId:ctx.userId,accountId:ctx.accountId??null,groupId:ctx.groupId??null};signal?.throwIfAborted();
   const restored=structuredClone(await reader.read({...ref}));signal?.throwIfAborted();
-  if(!owner.userId || !owner.accountId || restored.context.userId!==owner.userId || restored.context.accountId!==owner.accountId)throw new Error("素材工具账号与原任务不符");
+  if(!owner.userId || (!owner.accountId && !owner.groupId) || restored.context.userId!==owner.userId || (restored.context.accountId??null)!==owner.accountId || (restored.context.groupId??null)!==owner.groupId)throw new Error("素材工具账号与原任务不符");
   const frozen=restored.modelInput.tools.find(tool=>tool.name==="material.generate");
   if(!frozen || frozen.execution!=="host.task-submit")return null;
   const prototypes=buildChatTools(["material.generate"],{} as ChatToolDeps);

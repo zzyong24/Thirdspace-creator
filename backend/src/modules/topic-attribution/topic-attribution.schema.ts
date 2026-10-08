@@ -14,6 +14,7 @@ export function toTopicAttributionDto(
   return {
     id: row.id,
     userId: row.userId,
+    groupId:row.groupId??null,
     accountId: row.accountId ?? null,
     publicationId: row.publicationId,
     projectId: row.projectId ?? null,

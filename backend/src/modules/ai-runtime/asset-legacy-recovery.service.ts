@@ -1,3 +1,4 @@
+import {requireWorkspace,workspaceFilter,assertWritableWorkspace} from "../../workspace-scope";
 import {createHash,randomUUID} from 'node:crypto';
 import {isDeepStrictEqual} from 'node:util';
 import {and,asc,eq,inArray,aiTasks,aiTaskResults,executionTasks,executionCalls,OwnershipError,type Db} from '@creatoros/backend';
@@ -13,7 +14,7 @@ export async function prepareLegacyAssetRecovery(db:Db,ctx:RequestContext,snapsh
  return db.transaction(async tx=>{
   signal.throwIfAborted();
   const ids=[...new Set([snapshot.id,snapshot.retryOfTaskId].filter((id):id is string=>!!id))].sort();
-  const rows=await tx.select().from(aiTasks).where(and(inArray(aiTasks.id,ids),eq(aiTasks.userId,ctx.userId),eq(aiTasks.accountId,ctx.accountId??''))).orderBy(asc(aiTasks.id)).for('update');
+  const rows=await tx.select().from(aiTasks).where(and(inArray(aiTasks.id,ids),eq(aiTasks.userId,ctx.userId),workspaceFilter(aiTasks,ctx))).orderBy(asc(aiTasks.id)).for('update');
   const current=rows.find(row=>row.id===snapshot.id),original=rows.find(row=>row.id===(snapshot.retryOfTaskId??snapshot.id));
   if(!current||!original||rows.length!==ids.length||rows.some(row=>row.taskType!=='asset.generate'))throw new OwnershipError('旧素材任务归属不符');
   if(!isDeepStrictEqual(current.inputData,snapshot.inputData)||current.requestFingerprint!==snapshot.requestFingerprint||current.projectId!==snapshot.projectId)throw new Error('旧素材记录在准备期间改变');

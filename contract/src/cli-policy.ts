@@ -16,12 +16,25 @@ export type EndpointId = (typeof ENDPOINTS)[keyof typeof ENDPOINTS]["id"];
 // T-843: 这是 CLI effect 的契约真值，不在调用期按 HTTP method 或 operation 名猜。
 // 新 operation 没有进入 READ/MUTATION 两张穷尽表时，下方类型门与测试都会失败。
 const READ_OPERATIONS = [
+  "accountGroups.list",
+  "groupResourceGrants.list",
+  "groupResourceGrants.previewRevoke",
+  "assets.previewDelete",
+  "accountGroups.get",
+  "group.calendar.list",
+  "group.cadence.get",
+  "group.cadence.attainment",
+  "accountGroups.migration.status",
+  "accountGroups.migration.preview",
+  "accountGroups.members.previewTransfer",
   "analytics.traffic.get",
   "accounts.cadence.attainment",
   "accounts.cadence.get",
   "accounts.calendar.list",
   "accounts.get",
   "accounts.list",
+  "accounts.bindingCapabilities",
+  "accounts.bind.status",
   "ai.conversations.list",
   "ai.conversations.messages.list",
   "ai.tasks.get",
@@ -79,6 +92,7 @@ const READ_OPERATIONS = [
   "outputs.production.get",
   "outputs.publications.list",
   "pages.dashboard.get",
+  "pages.groupOverview.get",
   "pages.dailyReport.get",
   "pages.positioning.get",
   "pages.projectOverview.get",
@@ -110,6 +124,7 @@ const READ_OPERATIONS = [
   "settings.models.list",
   "settings.redfox.get",
   "settings.onboarding.get",
+  "settings.onboarding.group.get",
   "settings.preferences.get",
   "settings.prompts.get",
   "settings.prompts.list",
@@ -125,6 +140,19 @@ const READ_OPERATIONS = [
 ] as const satisfies readonly EndpointId[];
 
 const MUTATION_OPERATIONS = [
+  "accounts.bind.start",
+  "accounts.bind.cancel",
+  "groupResourceGrants.revoke",
+  "accountGroups.create",
+  "group.calendar.entries.create",
+  "group.cadence.upsert",
+  "calendar.entries.target",
+  "accountGroups.migration.apply",
+  "accountGroups.migration.undo",
+  "accountGroups.update",
+  "accountGroups.archive",
+  "accountGroups.restore",
+  "accountGroups.members.transfer",
   "analytics.traffic.refresh",
   "accounts.archive",
   "accounts.cadence.upsert",
@@ -265,6 +293,7 @@ const MUTATION_OPERATIONS = [
   "settings.models.put",
   "settings.redfox.put", "settings.redfox.delete",
   "settings.onboarding.patch",
+  "settings.onboarding.group.patch",
   "settings.models.test",
   "settings.preferences.patch",
   "settings.prompts.put",
@@ -282,6 +311,8 @@ const MUTATION_OPERATIONS = [
 ] as const satisfies readonly EndpointId[];
 
 const DESTRUCTIVE_OPERATIONS = new Set<EndpointId>([
+  "accounts.bind.cancel",
+  "groupResourceGrants.revoke",
   "accounts.archive",
   "ai.tasks.cancel",
   "assets.trash",
@@ -309,6 +340,7 @@ const DESTRUCTIVE_OPERATIONS = new Set<EndpointId>([
 ]);
 
 const EXTERNAL_OPERATIONS = new Set<EndpointId>([
+  "accounts.bind.start",
   "analytics.traffic.refresh",
   "ai.conversations.messages.create",
   "ai.tasks.create",
@@ -334,6 +366,7 @@ const EXTERNAL_OPERATIONS = new Set<EndpointId>([
 ]);
 
 const ASYNC_TASK_OPERATIONS = new Set<EndpointId>([
+  "accounts.bind.start",
   "analytics.traffic.refresh",
   "ai.tasks.create",
   "benchmark.works.transcribe",
@@ -387,7 +420,7 @@ function policyFor(operation: EndpointId): CliOperationPolicy {
         ? "apply"
         : "confirm_impact",
     asyncTask: ASYNC_TASK_OPERATIONS.has(operation),
-    idempotency: effect === "read" ? "not_applicable" : (["topics.workspace.save","topics.proposals.feedback"] as readonly string[]).includes(operation) ? "native" : "gateway",
+    idempotency: effect === "read" ? "not_applicable" : (["topics.workspace.save","topics.proposals.feedback","accounts.bind.start","accounts.bind.cancel"] as readonly string[]).includes(operation) ? "native" : "gateway",
   };
 }
 

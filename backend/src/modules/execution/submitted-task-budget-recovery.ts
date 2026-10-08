@@ -1,10 +1,11 @@
+import {workspaceFilter} from "../../workspace-scope";
 import {and,eq,aiTasks,aiTaskResults,executionTasks,executionCalls,executionEvidence,type Db} from "@creatoros/backend";
 import {executionBudgetSchema,isContinuousExecutionBudget,type ExecutionBudget} from "@creatoros/contract/execution-worker";
 
 /** 仅修复已验证聊天提交、尚无任何执行事实却因旧默认期限失败的子任务。调用方持有业务行锁并验证父调用回执。 */
 export async function restoreUnstartedSubmittedBudget(tx:Db,task:typeof aiTasks.$inferSelect,parent:typeof executionTasks.$inferSelect,budget:ExecutionBudget,stamp:string){
  if(task.taskType!=="script.draft" || !task.executionTaskId || !isContinuousExecutionBudget(budget) || task.startedAt || task.modelCallStartedAt || task.leaseOwner || task.leaseToken)return false;
- const [execution]=await tx.select().from(executionTasks).where(and(eq(executionTasks.id,task.executionTaskId),eq(executionTasks.ownerId,task.id),eq(executionTasks.userId,task.userId),eq(executionTasks.accountId,task.accountId),eq(executionTasks.ownerType,"ai_task"),eq(executionTasks.kind,"ai_task"))).for("update");
+ const [execution]=await tx.select().from(executionTasks).where(and(eq(executionTasks.id,task.executionTaskId),eq(executionTasks.ownerId,task.id),eq(executionTasks.userId,task.userId),workspaceFilter(executionTasks,task),eq(executionTasks.ownerType,"ai_task"),eq(executionTasks.kind,"ai_task"))).for("update");
  if(!execution || execution.status!=="failed" || execution.lastErrorCode!=="EXECUTION_DEADLINE" || execution.leaseOwner || execution.leaseExpiresAt || execution.checkpoint)return false;
  const input=(execution.payload as {modelInput?:{kind?:string;skillId?:string}}).modelInput;
  if(input?.kind!=="model.structured" || input.skillId!==task.taskType)return false;

@@ -3,6 +3,7 @@ import { defineEndpoint } from "../endpoints";
 import {
   onboardingPatchResource,
   onboardingStateResource,
+  groupOnboardingStateResource,
   userResource,
   userPreferenceResource,
   modelConfigurationResource,
@@ -18,6 +19,8 @@ import {
 // user's preferences, per-capability model config, and agent configs.
 const redfoxStatus=z.object({provider:z.literal("redfox"),configured:z.boolean(),updatedAt:z.string().nullable()});
 export const settingsOperations = {
+ getGroupOnboarding:defineEndpoint({id:"settings.onboarding.group.get",method:"GET",path:"/settings/group-onboarding/:groupId",params:z.object({groupId:z.string().min(1)}).strict(),response:groupOnboardingStateResource,fr:["FR-ONBOARDING"]}),
+ patchGroupOnboarding:defineEndpoint({id:"settings.onboarding.group.patch",method:"PATCH",path:"/settings/group-onboarding/:groupId",params:z.object({groupId:z.string().min(1)}).strict(),body:onboardingPatchResource,response:groupOnboardingStateResource,fr:["FR-ONBOARDING"]}),
  getOnboarding: defineEndpoint({id:"settings.onboarding.get",method:"GET",path:"/settings/onboarding/:accountId",params:z.object({accountId:z.string().min(1)}).strict(),response:onboardingStateResource,fr:["FR-ONBOARDING"]}),
  patchOnboarding: defineEndpoint({id:"settings.onboarding.patch",method:"PATCH",path:"/settings/onboarding/:accountId",params:z.object({accountId:z.string().min(1)}).strict(),body:onboardingPatchResource,response:onboardingStateResource,fr:["FR-ONBOARDING"]}),
  getRedfox:defineEndpoint({id:"settings.redfox.get",method:"GET",path:"/settings/redfox",response:redfoxStatus,fr:["FR-REDFOX"]}),

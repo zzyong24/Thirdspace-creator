@@ -1,3 +1,5 @@
+import {requireWorkspace,workspaceFilter,assertWritableWorkspace} from "../../workspace-scope";
+import {assertFrozenWorkspaceMembership} from "../platform-account/membership-lock.service";
 import { randomUUID } from "node:crypto";
 import { isDeepStrictEqual } from "node:util";
 import { z } from "zod";
@@ -39,10 +41,7 @@ export function createBrowserTaskAuthorizationService(
           and(
             eq(aiTasks.id, aiTaskId),
             eq(aiTasks.userId, ctx.userId),
-            eq(
-              aiTasks.accountId,
-              requireAccountId(ctx.accountId, "browserTask.prepare"),
-            ),
+            workspaceFilter(aiTasks,ctx),
           ),
         );
       if (!task) throw new OwnershipError("任务不存在");
@@ -51,7 +50,8 @@ export function createBrowserTaskAuthorizationService(
     },
     async grant(ctx: RequestContext, aiTaskId: string, raw: unknown) {
       const input = browserTaskAuthorizationRequestSchema.parse(raw),
-        accountId = requireAccountId(ctx.accountId, "browserTask.grant");
+        accountId = (requireWorkspace(ctx),ctx.accountId??null);
+      await assertWritableWorkspace(db,ctx);
       const authorization =
         input.authorization === null
           ? null
@@ -66,11 +66,12 @@ export function createBrowserTaskAuthorizationService(
             and(
               eq(aiTasks.id, aiTaskId),
               eq(aiTasks.userId, ctx.userId),
-              eq(aiTasks.accountId, accountId),
+              workspaceFilter(aiTasks,ctx),
             ),
           )
           .for("update");
         if (!task) throw new OwnershipError("任务不存在");
+        await assertFrozenWorkspaceMembership(tx,{userId:task.userId,groupId:task.groupId,accountId:task.accountId,groupVersion:task.groupVersion,membershipVersion:task.membershipVersion});
         if (task.taskType !== "exec.agentic.research")
           throw new ConflictError("任务不支持浏览器授权");
         if (
@@ -103,7 +104,7 @@ export function createBrowserTaskAuthorizationService(
           grantId: randomUUID(),
           aiTaskId: task.id,
           userId: task.userId,
-          accountId: task.accountId,
+          accountId: task.accountId,groupId:task.groupId,groupVersion:task.groupVersion??undefined,membershipVersion:task.membershipVersion??undefined,
           requestFingerprint: task.requestFingerprint,
           grantedAt: (deps.now ?? (() => new Date().toISOString()))(),
           idempotencyKey: input.idempotencyKey,

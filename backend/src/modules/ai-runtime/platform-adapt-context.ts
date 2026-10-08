@@ -16,7 +16,7 @@ export interface PlatformDraft {
 
 // Default fan-out when the caller names no platforms — the four 编导 surfaces. "wechat"
 // here is the agent-facing label; the materialization port maps it to the publishing
-// platform enum (wechatVideo).
+// platform enum (wechatOfficial).
 const DEFAULT_PLATFORMS = ["douyin", "bilibili", "xiaohongshu", "wechat"];
 
 const PLATFORM_LABEL: Record<string, string> = {

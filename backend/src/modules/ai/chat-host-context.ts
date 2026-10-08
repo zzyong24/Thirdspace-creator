@@ -31,12 +31,12 @@ export const chatHostContextSchema = z.object({
   if (!skills.includes(resolveSkillForSurface(value.chatContext.surface))) ctx.addIssue({code:"custom",message:"快照缺少当前场景Skill"});
 });
 export type ChatHostContext=z.infer<typeof chatHostContextSchema>;
-type Owner={userId:string;accountId:string;projectId:string|null};
+type Owner={userId:string;accountId:string|null;groupId?:string|null;projectId:string|null};
 export const chatHostContextDigest=(value:ChatHostContext)=>createHash("sha256").update(canonicalJson(value)).digest("hex");
 /** 结构和关联校验不代替组装器对选区、附件与源实体的真实归属验证。 */
 export function validateChatHostContext(raw:unknown,owner:Owner):ChatHostContext {
   const value=chatHostContextSchema.parse(raw);
-  if(value.skillSnapshot.userId!==owner.userId || value.skillSnapshot.accountId!==owner.accountId || (value.chatContext.projectId??null)!==owner.projectId) throw new ConflictError("宿主上下文归属不符");
+  if(value.skillSnapshot.userId!==owner.userId || value.skillSnapshot.accountId!==(owner.accountId??null) || (value.skillSnapshot.groupId??null)!==(owner.groupId??null) || (value.chatContext.projectId??null)!==owner.projectId) throw new ConflictError("宿主上下文归属不符");
   return value;
 }
 export function readChatHostContextPair(raw:unknown,digest:unknown,owner:Owner):ChatHostContext|null {

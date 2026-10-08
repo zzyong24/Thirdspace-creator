@@ -1,3 +1,4 @@
+import {projects as parentProjects,contentOutputs as parentOutputs,publications as parentPublications,reviews as parentReviews} from "@creatoros/backend";
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { createDb, type Db } from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
@@ -43,6 +44,10 @@ describe("learnings service (validationStatus machine + confidence + apply)", ()
   let db: Db;
   beforeEach(async () => {
     ({ db } = await createDb());
+    // 真实父实体fixture；授权不能只靠通过的mock服务端口。
+    await db.insert(parentProjects).values(["p1", "p2", "proj-1"].map(id=>({id,userId:"user-a",accountId:"acct-a",title:id,creationMode:"free",status:"active",currentStage:"script",startedAt:NOW,createdAt:NOW,updatedAt:NOW}))).onConflictDoNothing();
+    await db.insert(parentReviews).values({id:"review-1",userId:"user-a",accountId:"acct-a",projectId:"p1",reviewType:"project",status:"completed",periodStart:NOW,periodEnd:NOW,createdAt:NOW});
+
   });
 
   it("createLearning yields a candidate strategy learning with zeroed fields", async () => {
@@ -288,6 +293,10 @@ describe("learnings suggestCalibrationRule (复盘飞轮回流 轨B)", () => {
   let db: Db;
   beforeEach(async () => {
     ({ db } = await createDb());
+    // 真实父实体fixture；授权不能只靠通过的mock服务端口。
+    await db.insert(parentProjects).values(["p1", "p2", "proj-1"].map(id=>({id,userId:"user-a",accountId:"acct-a",title:id,creationMode:"free",status:"active",currentStage:"script",startedAt:NOW,createdAt:NOW,updatedAt:NOW}))).onConflictDoNothing();
+    await db.insert(parentReviews).values({id:"review-1",userId:"user-a",accountId:"acct-a",projectId:"p1",reviewType:"project",status:"completed",periodStart:NOW,periodEnd:NOW,createdAt:NOW});
+
   });
 
   function makeCalibrationPort(rubricId: string | null = "rubric-x") {
@@ -408,6 +417,10 @@ describe("learnings service — captureEditDelta (改稿 delta → 品味信号)
   let db: Db;
   beforeEach(async () => {
     ({ db } = await createDb());
+    // 真实父实体fixture；授权不能只靠通过的mock服务端口。
+    await db.insert(parentProjects).values(["p1", "p2", "proj-1"].map(id=>({id,userId:"user-a",accountId:"acct-a",title:id,creationMode:"free",status:"active",currentStage:"script",startedAt:NOW,createdAt:NOW,updatedAt:NOW}))).onConflictDoNothing();
+    await db.insert(parentReviews).values({id:"review-1",userId:"user-a",accountId:"acct-a",projectId:"p1",reviewType:"project",status:"completed",periodStart:NOW,periodEnd:NOW,createdAt:NOW});
+
   });
 
   it("有实质改稿 → 产一条 edit_delta candidate learning(带 projectId,可被裁决台读到)", async () => {

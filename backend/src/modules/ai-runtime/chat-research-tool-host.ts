@@ -7,9 +7,9 @@ import {canonicalJson} from "../ai/canonical-json";
 /** 浏览器执行留在 Worker；此处仅恢复原搜索描述、输入 schema 与账号归属。 */
 export function createChatResearchTaskToolHost(reader:Pick<ReturnType<typeof createChatHostContextReader>,"read">):NonNullable<ChatWorkerDispatcherDeps["resolveTools"]>{
  return async(context,_input,ref,signal):Promise<Record<string,ChatBackendTool>>=>{
-  const owner={userId:context.userId,accountId:context.accountId};
+  const owner={userId:context.userId,accountId:context.accountId??null,groupId:context.groupId??null};
   signal.throwIfAborted();const restored=await reader.read({...ref});signal.throwIfAborted();
-  if(!owner.userId || !owner.accountId || restored.context.userId!==owner.userId || restored.context.accountId!==owner.accountId)throw new Error("搜索工具账号与原任务不符");
+  if(!owner.userId || (!owner.accountId && !owner.groupId) || restored.context.userId!==owner.userId || (restored.context.accountId??null)!==owner.accountId || (restored.context.groupId??null)!==owner.groupId)throw new Error("搜索工具账号与原任务不符");
   const frozen=restored.modelInput.tools.find(tool=>tool.name==="material.gather");if(!frozen)return {};
   if(frozen.execution!=="worker.research" || !restored.hostContext.researchContext)throw new Error("原任务没有冻结搜索上下文");
   const prototypes=buildChatTools(["material.gather"],{searchConfigured:restored.hostContext.researchContext.searchConfigured} as ChatToolDeps);

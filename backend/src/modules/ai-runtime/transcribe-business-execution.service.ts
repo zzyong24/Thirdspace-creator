@@ -1,3 +1,4 @@
+import {requireWorkspace,workspaceFilter,assertWritableWorkspace} from "../../workspace-scope";
 import type {BoundedExecutionBudget} from "@creatoros/contract/execution-worker";
 import {isDeepStrictEqual} from 'node:util';
 import {and,asc,eq,isNull,aiTasks,aiTaskSteps,aiTaskResults,executionTasks,OwnershipError,type Db} from '@creatoros/backend';
@@ -18,7 +19,7 @@ function ids(task:Task){const input=task.inputData as Record<string,unknown>;ret
 /** 只有没有旧执行事实的任务才转交；配置读取在事务外，提交时重新核对原任务。 */
 export function createTranscribeBusinessExecutionService(db:Db,deps:{budget:BoundedExecutionBudget;now?:()=>string;resolveSpec(ctx:RequestContext):Promise<MultimodalSpec>}){
  const controller=new AbortController(),authority=createExecutionAuthorityService(db,{now:deps.now});
- const owned=(ctx:RequestContext,id:string)=>and(eq(aiTasks.id,id),eq(aiTasks.userId,ctx.userId),eq(aiTasks.accountId,ctx.accountId??''));
+ const owned=(ctx:RequestContext,id:string)=>and(eq(aiTasks.id,id),eq(aiTasks.userId,ctx.userId),workspaceFilter(aiTasks,ctx));
  async function legacy(tx:Pick<Db,'select'>,task:Task){
   if(task.retryOfTaskId||task.startedAt||Object.hasOwn(task.runtimeData??{},'multimodalProviderCheckpoint'))return true;
   if((await tx.select({id:aiTaskSteps.id}).from(aiTaskSteps).where(eq(aiTaskSteps.aiTaskId,task.id)).limit(1))[0])return true;
@@ -45,7 +46,7 @@ export function createTranscribeBusinessExecutionService(db:Db,deps:{budget:Boun
   },
   async recoverQueued(onLegacy:(ctx:RequestContext,id:string)=>Promise<void>,onFailure:(ctx:RequestContext,id:string)=>Promise<void>,shouldStop=()=>false){
    const tasks=await db.select().from(aiTasks).where(and(eq(aiTasks.taskType,'transcribe.douyin'),eq(aiTasks.status,'queued'),isNull(aiTasks.executionTaskId),isNull(aiTasks.leaseOwner))).orderBy(asc(aiTasks.requestedAt));
-   for(const task of tasks){if(shouldStop()||controller.signal.aborted)return;const ctx:RequestContext={userId:task.userId,accountId:task.accountId,requestId:`transcribe-recover:${task.id}`,source:'user'};
+   for(const task of tasks){if(shouldStop()||controller.signal.aborted)return;const ctx:RequestContext={userId:task.userId,accountId:task.accountId,groupId:task.groupId,groupVersion:task.groupVersion??undefined,membershipVersion:task.membershipVersion??undefined,requestId:`transcribe-recover:${task.id}`,source:'user'};
     try{const result=await service.prepare(ctx,task.id);if(result.legacy)await onLegacy(ctx,task.id);}catch{if(shouldStop()||controller.signal.aborted)return;await onFailure(ctx,task.id);}
    }
   },

@@ -1,3 +1,4 @@
+import {workspaceFilter} from "../../workspace-scope";
 import { createHash } from "node:crypto";
 import { z } from "zod";
 import {
@@ -106,7 +107,7 @@ export function createExecutionTopicReadService(
             eq(aiTasks.id, task.ownerId),
             eq(aiTasks.executionTaskId, task.id),
             eq(aiTasks.userId, context.userId),
-            eq(aiTasks.accountId, context.accountId!),
+            workspaceFilter(aiTasks,context),
           ),
         );
       if (!business || !["topic.generate","scheduled.topic.daily"].includes(business.taskType))

@@ -255,7 +255,7 @@ export async function runScriptDraft(
           onStep: async (e) => {
             const terminal = JSON.stringify({
               taskId: task.id,
-              accountId: activeSnapshot.accountId,
+              accountId: activeSnapshot.accountId,groupId:activeSnapshot.groupId,
               skillId: effectiveSkill.skillId,
               baseVersion: effectiveSkill.baseVersion,
               overlayVersion: effectiveSkill.overlayVersion,
@@ -588,7 +588,7 @@ export async function runScriptDraft(
       shots: result.shots,
       generation: result.generation,
       validation: result.validation,
-      accountId: activeSnapshot.accountId,
+      accountId: activeSnapshot.accountId,groupId:activeSnapshot.groupId,
       effectiveSkill,
       pipelineMetadata,
       sourceMetadata: frozenSources.metadata,
@@ -617,7 +617,7 @@ export async function runScriptDraft(
           kind: "validation",
           text: JSON.stringify({
             taskId: task.id,
-            accountId: activeSnapshot.accountId,
+            accountId: activeSnapshot.accountId,groupId:activeSnapshot.groupId,
             skillId: effectiveSkill.skillId,
             baseVersion: effectiveSkill.baseVersion,
             overlayVersion: effectiveSkill.overlayVersion,

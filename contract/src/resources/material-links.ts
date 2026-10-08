@@ -8,6 +8,8 @@ import { id, iso8601 } from "../primitives";
 export const materialLinkResource = z.object({
   id,
   userId: id,
+  groupId:id.nullable().optional(),
+  accountId:id.nullable().optional(),
   projectId: id,
   contentOutputId: id.nullable(),
   entityType: z.enum(["knowledge", "asset"]),

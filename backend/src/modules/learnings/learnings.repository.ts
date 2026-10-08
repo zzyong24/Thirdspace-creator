@@ -1,3 +1,6 @@
+import {withWorkspaceParentWrite,withWorkspaceWrite} from "../../workspace-write";
+import {projects,reviews,aiTasks} from "@creatoros/backend";
+import {workspaceKey,workspaceFilter,workspaceStamp,assertWritableWorkspace} from "@creatoros/backend";
 import {createHash} from "node:crypto";
 import {
   and,
@@ -28,12 +31,14 @@ export interface RepoDeps {
   userId: string; // the ownership boundary, baked in at construction
   // [T-332 S2 · ISO-02/03] 第二所有权维度,**必填 strict**:读门恒叠 eq(table.accountId),
   // 写路径盖章当前号。未选号在 service 入口 requireAccountId 即被拒(SPEC §4.2 引导态)。
-  accountId: string;
+  accountId?: string | null;
+  groupId?: string | null;
 }
 
 export interface CreateLearningInput {
   /** 仅可信采纳端口传入，必须绑定候选与内容项；不作为公开创建参数。 */
   adoptionKey?: string;
+  sourceTaskId?: string;
   title: string;
   insight: string;
   learningType: string;
@@ -115,7 +120,16 @@ export interface LearningsRepository {
 export function createLearningsRepository(
   db: Db,
   deps: RepoDeps,
+  parentLocked = false,
 ): LearningsRepository {
+  const scope = workspaceKey(deps);
+  const stamp = workspaceStamp(scope);
+  const ctx={userId:deps.userId,...stamp,requestId:"learnings-parent-write",source:"user" as const};
+  const writeParent={table:learnings,id:learnings.id,userId:learnings.userId,groupId:learnings.groupId,accountId:learnings.accountId,lock:"update" as const};
+  const projectParent={table:projects,id:projects.id,userId:projects.userId,groupId:projects.groupId,accountId:projects.accountId};
+  const taskParent={table:aiTasks,id:aiTasks.id,userId:aiTasks.userId,groupId:aiTasks.groupId,accountId:aiTasks.accountId};
+  const reviewParent={table:reviews,id:reviews.id,userId:reviews.userId,groupId:reviews.groupId,accountId:reviews.accountId};
+  const writable = () => assertWritableWorkspace(db, {userId:deps.userId,...stamp,requestId:"shared-domain-write",source:"user"});
   // Private ownership gate: the scoped select for a learning. Empty ⇒ OwnershipError
   // (→ 404; cross-user / unknown id never reveals existence).
   async function getRow(learningId: string): Promise<LearningRow> {
@@ -126,7 +140,7 @@ export function createLearningsRepository(
         and(
           eq(learnings.userId, deps.userId),
           // [T-332 S2 · §4.5 by-id 门] strict 恒叠号:跨号 learning 与未知 id 同样 404。
-          eq(learnings.accountId, deps.accountId),
+          workspaceFilter(learnings, scope),
           eq(learnings.id, learningId),
         ),
       );
@@ -151,7 +165,7 @@ export function createLearningsRepository(
       const conds = [
         eq(learnings.userId, deps.userId),
         // [T-332 S2 · ISO-02] 号维度 strict 恒叠(无「无号全量」退化)。
-        eq(learnings.accountId, deps.accountId),
+        workspaceFilter(learnings, scope),
       ];
       if (filter?.projectId !== undefined) {
         conds.push(eq(learnings.projectId, filter.projectId));
@@ -175,16 +189,32 @@ export function createLearningsRepository(
     },
 
     async createLearning(input) {
+      if(!parentLocked && input.sourceTaskId)return withWorkspaceParentWrite(db,ctx,taskParent,[input.sourceTaskId],async tx=>{
+        const [source]=await tx.select({projectId:aiTasks.projectId}).from(aiTasks).where(eq(aiTasks.id,input.sourceTaskId!));
+        if(!source||(input.projectId && source.projectId!==input.projectId))throw new OwnershipError("经验来源任务与项目不一致");
+        return createLearningsRepository(tx as unknown as Db,deps,false).createLearning({...input,sourceTaskId:undefined,projectId:source.projectId});
+      });
+      if(!parentLocked && (input.projectId || input.reviewId)) {
+        const write=(tx: Parameters<Parameters<Db["transaction"]>[0]>[0])=>createLearningsRepository(tx as unknown as Db,deps,true).createLearning(input);
+        if(input.reviewId)return withWorkspaceParentWrite(db,ctx,reviewParent,[input.reviewId],async tx=>{
+          const [source]=await tx.select({projectId:reviews.projectId}).from(reviews).where(eq(reviews.id,input.reviewId!));
+          if(!source||(input.projectId && source.projectId!==input.projectId))throw new OwnershipError("经验来源复盘与项目不一致");
+          return withWorkspaceParentWrite(tx as unknown as Db,ctx,projectParent,[source.projectId],projectTx=>createLearningsRepository(projectTx as unknown as Db,deps,true).createLearning({...input,projectId:source.projectId}));
+        });
+        return withWorkspaceParentWrite(db,ctx,projectParent,[input.projectId!],write);
+      }
+      if(!parentLocked)return withWorkspaceWrite(db,ctx,tx=>createLearningsRepository(tx as unknown as Db,deps,true).createLearning(input));
+      await writable();
       // SEMANTIC_BOUNDARY_ALLOW: 哈希仅编码采纳归属与幂等身份，不判断内容含义或相似度。
       const id = input.adoptionKey === undefined ? deps.nextId("learning")
-        : `learning-adoption:${createHash("sha256").update(JSON.stringify([deps.userId,deps.accountId,input.adoptionKey])).digest("hex")}`;
+        : `learning-adoption:${createHash("sha256").update(JSON.stringify([deps.userId,scope.kind,scope.id,input.adoptionKey])).digest("hex")}`;
       const insert = db
         .insert(learnings)
         .values({
           id,
           userId: deps.userId,
           // [T-332 S2 · ISO-03] 号维度盖章(必填,无 null 兜底)。
-          accountId: deps.accountId,
+          ...stamp,
           reviewId: input.reviewId ?? null,
           // [T-118a gate-F3] 来源作品锚(复盘产经验采纳时带上 task.projectId)。
           projectId: input.projectId ?? null,
@@ -209,6 +239,9 @@ export function createLearningsRepository(
     },
 
     async adoptLearning(input) {
+      if(!parentLocked && input.projectId)return withWorkspaceParentWrite(db,ctx,projectParent,[input.projectId],tx=>createLearningsRepository(tx as unknown as Db,deps,true).adoptLearning(input));
+      if(!parentLocked)return withWorkspaceWrite(db,ctx,tx=>createLearningsRepository(tx as unknown as Db,deps,true).adoptLearning(input));
+      await writable();
       try {
         return await db.transaction(async (tx) => {
           const matches = await tx
@@ -217,7 +250,7 @@ export function createLearningsRepository(
             .where(
               and(
                 eq(learnings.userId, deps.userId),
-                eq(learnings.accountId, deps.accountId),
+                workspaceFilter(learnings, scope),
                 input.projectId ? eq(learnings.projectId, input.projectId) : sql`${learnings.projectId} IS NULL`,
                 sql`${learnings.validationStatus} <> 'discarded'`,
                 or(
@@ -253,7 +286,7 @@ export function createLearningsRepository(
               .where(
                 and(
                   eq(learnings.userId, deps.userId),
-                  eq(learnings.accountId, deps.accountId),
+                  workspaceFilter(learnings, scope),
                   inArray(
                     learnings.id,
                     duplicates.map((row) => row.id),
@@ -278,7 +311,7 @@ export function createLearningsRepository(
               .where(
                 and(
                   eq(learnings.userId, deps.userId),
-                  eq(learnings.accountId, deps.accountId),
+                  workspaceFilter(learnings, scope),
                   eq(learnings.id, keeper.id),
                 ),
               )
@@ -291,7 +324,7 @@ export function createLearningsRepository(
             .values({
               id: deps.nextId("learning"),
               userId: deps.userId,
-              accountId: deps.accountId,
+              ...stamp,
               reviewId: null,
               projectId: input.projectId ?? null,
               learningType: input.learningType,
@@ -317,7 +350,7 @@ export function createLearningsRepository(
           .where(
             and(
               eq(learnings.userId, deps.userId),
-              eq(learnings.accountId, deps.accountId),
+              workspaceFilter(learnings, scope),
               eq(learnings.contentFingerprint, input.contentFingerprint),
               eq(learnings.validationStatus, "validated"),
             ),
@@ -333,6 +366,8 @@ export function createLearningsRepository(
     },
 
     async updateLearningStatus(learningId, input) {
+      if(!parentLocked)return withWorkspaceParentWrite(db,ctx,writeParent,[learningId],tx=>createLearningsRepository(tx as unknown as Db,deps,true).updateLearningStatus(learningId,input));
+      await writable();
       await getRow(learningId); // scoped ownership gate
       const updated = await db
         .update(learnings)
@@ -342,13 +377,16 @@ export function createLearningsRepository(
           updatedAt: deps.now(),
         })
         .where(
-          and(eq(learnings.userId, deps.userId), eq(learnings.id, learningId)),
+          and(eq(learnings.userId, deps.userId), workspaceFilter(learnings, scope), eq(learnings.id, learningId)),
         )
         .returning();
-      return updated[0]!;
+      if(!updated[0])throw new OwnershipError("经验已归组，请重新选择工作区");
+      return updated[0];
     },
 
     async patchLearning(learningId, input) {
+      if(!parentLocked)return withWorkspaceParentWrite(db,ctx,writeParent,[learningId],tx=>createLearningsRepository(tx as unknown as Db,deps,true).patchLearning(learningId,input));
+      await writable();
       await getRow(learningId); // scoped ownership gate
       const set: Record<string, unknown> = { updatedAt: deps.now() };
       if (input.title !== undefined) set.title = input.title;
@@ -358,21 +396,25 @@ export function createLearningsRepository(
         .update(learnings)
         .set(set)
         .where(
-          and(eq(learnings.userId, deps.userId), eq(learnings.id, learningId)),
+          and(eq(learnings.userId, deps.userId), workspaceFilter(learnings, scope), eq(learnings.id, learningId)),
         )
         .returning();
-      return updated[0]!;
+      if(!updated[0])throw new OwnershipError("经验已归组，请重新选择工作区");
+      return updated[0];
     },
 
     async createApplication(learningId, input) {
-      await getRow(learningId); // scoped ownership gate on the parent learning
+      if(!parentLocked)return withWorkspaceParentWrite(db,ctx,writeParent,[learningId],tx=>withWorkspaceParentWrite(tx as unknown as Db,ctx,projectParent,[input.projectId],projectTx=>createLearningsRepository(projectTx as unknown as Db,deps,true).createApplication(learningId,input)));
+      await writable();
+      const parent=await getRow(learningId);
+      // 父行已在当前事务经真实owner/workspace校验并持锁；保留初始legacy映射。
       const inserted = await db
         .insert(learningApplications)
         .values({
           id: deps.nextId("learning-app"),
           userId: deps.userId,
           // [T-332 S2 · ISO-03] 号维度盖章(与父 learning 同号;必填)。
-          accountId: deps.accountId,
+          ...stamp, groupId: parent.groupId ?? stamp.groupId,
           learningId,
           projectId: input.projectId,
           contentOutputId: null,
@@ -393,7 +435,7 @@ export function createLearningsRepository(
           and(
             eq(learningApplications.userId, deps.userId),
             // [T-332 S2 · ISO-02] 号维度 strict 恒叠。
-            eq(learningApplications.accountId, deps.accountId),
+            workspaceFilter(learningApplications, scope),
             eq(learningApplications.learningId, learningId),
           ),
         );
@@ -412,7 +454,7 @@ export function createLearningsRepository(
           and(
             eq(learningApplications.userId, deps.userId),
             // [T-332 S2 · ISO-02] 号维度 strict 恒叠。
-            eq(learningApplications.accountId, deps.accountId),
+            workspaceFilter(learningApplications, scope),
             inArray(learningApplications.learningId, learningIds),
           ),
         )

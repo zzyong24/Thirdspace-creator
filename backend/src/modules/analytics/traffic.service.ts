@@ -8,9 +8,9 @@ import {OwnershipError} from '../projects';
 export function createTrafficService(db:Db,ports:{now:()=>string;publishing:Pick<PublishingService,'getPublication'|'listPublicationIdsByProject'|'listPublicationsForUser'>}){
  const repo=createTrafficRepository(db);
  const account=(ctx:RequestContext)=>requireAccountId(ctx.accountId,'analytics.traffic');
- async function assertPublication(ctx:RequestContext,id:string){
+ async function assertPublication(ctx:RequestContext,id:string,allowHistorical=false){
   const p=await ports.publishing.getPublication(ctx,id);
-  if(p.accountId!==account(ctx)||p.platform!=='douyin'||!p.externalId||p.hiddenAt||p.status!=='published')throw new OwnershipError('作品不可采集');
+  if((ctx.accountId&&p.accountId!==ctx.accountId)||(!ctx.groupId&&p.accountId!==account(ctx))||p.platform!=='douyin'||!p.externalId||(!allowHistorical&&(p.hiddenAt||p.status!=='published')))throw new OwnershipError('作品不可采集');
   return p;
  }
  return {
@@ -30,8 +30,8 @@ export function createTrafficService(db:Db,ports:{now:()=>string;publishing:Pick
   },
   async getProject(ctx:RequestContext,projectId:string){
    const ids=await ports.publishing.listPublicationIdsByProject(ctx,projectId),allowed:string[]=[];
-   for(const id of ids){try{await assertPublication(ctx,id);allowed.push(id);}catch(error){if(!(error instanceof OwnershipError))throw error;}}
-   const rows=await repo.list(ctx.userId,account(ctx),allowed);
+   for(const id of ids){try{await assertPublication(ctx,id,true);allowed.push(id);}catch(error){if(!(error instanceof OwnershipError))throw error;}}
+   const rows=await repo.list(ctx.userId,ctx.groupId?ctx:account(ctx),allowed);
    return {items:rows.map(r=>publicationTrafficResource.parse(r))};
   },
   async pending(ctx:RequestContext,limit=20){return repo.pending(ctx.userId,account(ctx),limit);},

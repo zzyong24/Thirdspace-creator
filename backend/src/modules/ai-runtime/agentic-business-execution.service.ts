@@ -1,3 +1,4 @@
+import {workspaceFilter} from "../../workspace-scope";
 import {createContinuousExecutionBudget} from "@creatoros/contract/execution-worker";
 import { readBrowserTaskGrant, assertFrozenBrowserTaskGrant } from "../execution/browser-task-grant";
 import { createHash } from "node:crypto";
@@ -31,7 +32,7 @@ export function createAgenticBusinessExecutionService(db: Db, deps: AgenticBusin
   const service = {
     supports(type: string) { return Boolean(definitionFor(type)); },
     async prepare(ctx: RequestContext, taskId: string) {
-      const [task] = await db.select().from(aiTasks).where(and(eq(aiTasks.id, taskId), eq(aiTasks.userId, ctx.userId), eq(aiTasks.accountId, ctx.accountId ?? "")));
+      const [task] = await db.select().from(aiTasks).where(and(eq(aiTasks.id, taskId), eq(aiTasks.userId, ctx.userId), workspaceFilter(aiTasks,ctx)));
       if (!task) throw new OwnershipError("自主任务不存在");
       const definition = definitionFor(task.taskType);
       if (!definition) throw new Error("AGENTIC_TASK_ADAPTER_UNAVAILABLE");
@@ -44,7 +45,7 @@ export function createAgenticBusinessExecutionService(db: Db, deps: AgenticBusin
       // 用户 checkpoint 只参与原请求身份，不可作为已用预算或恢复事实。
       const operationKey = `agentic:${createHash("sha256").update(JSON.stringify(spec)).digest("hex")}`;
       if (task.executionTaskId) {
-        const [execution] = await db.select().from(executionTasks).where(and(eq(executionTasks.id, task.executionTaskId), eq(executionTasks.ownerId, task.id), eq(executionTasks.userId, task.userId), eq(executionTasks.accountId, task.accountId)));
+        const [execution] = await db.select().from(executionTasks).where(and(eq(executionTasks.id, task.executionTaskId), eq(executionTasks.ownerId, task.id), eq(executionTasks.userId, task.userId), workspaceFilter(executionTasks,task)));
         const frozen = agenticWorkerInputSchema.parse((execution?.payload as { modelInput?: unknown } | undefined)?.modelInput);
         if (frozen.taskType !== spec.taskType || frozen.operationKey !== operationKey || frozen.goal !== spec.goal) throw new Error("AGENTIC_EXECUTION_MISMATCH");
         assertFrozenBrowserTaskGrant(task, frozen.browserAuthorization);
@@ -76,7 +77,7 @@ export function createAgenticBusinessExecutionService(db: Db, deps: AgenticBusin
         let unresolved = 0;
         for (const task of rows) {
           if (shouldStop()) return;
-          const context: RequestContext = { userId: task.userId, accountId: task.accountId, requestId: `recover:${task.id}`, source: "user" };
+          const context: RequestContext = { userId: task.userId, accountId: task.accountId,groupId:task.groupId,groupVersion:task.groupVersion??undefined,membershipVersion:task.membershipVersion??undefined, requestId: `recover:${task.id}`, source: "user" };
           try { const prepared=await service.prepare(context, task.id); if (!prepared.executionTaskId) unresolved++; }
           catch {
             await onFailure(context, task.id);

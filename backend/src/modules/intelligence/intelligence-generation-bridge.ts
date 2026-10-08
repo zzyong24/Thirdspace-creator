@@ -20,6 +20,9 @@ const hash=(value:unknown)=>createHash("sha256").update(JSON.stringify(value)).d
 const json=(value:unknown)=>z.json().parse(JSON.parse(JSON.stringify(value)));
 const savedSchema=z.object({sourceDigest:z.string(),input:structuredGenerationInputSchema,identity:z.json()});
 const topicResult=intelligenceTopicDecomposeSchema.and(intelligenceTopicFromDecompositionSchema).and(z.object({adaptedDraft:z.string().min(1)}));
+const rewriteOnlyResult=z.object({generationMode:z.literal("rewrite_only"),adaptedDraft:z.string().min(1)}).strict();
+function isRewriteOnlyInput(input:z.infer<typeof structuredGenerationInputSchema>){try{return JSON.parse(input.facets.target??"null")?.generationMode==="rewrite_only";}catch{return false;}}
+function parseTopicResult(value:unknown,input:z.infer<typeof structuredGenerationInputSchema>){return isRewriteOnlyInput(input)?rewriteOnlyResult.parse(value):topicResult.parse(value);}
 export interface IntelligenceGenerationBridgeDeps {
  entryPath:string|(()=>string);
  tasks:Pick<PersistentTaskService,"heartbeat">;
@@ -37,19 +40,19 @@ export function createIntelligenceGenerationBridge(db:Db,deps:IntelligenceGenera
   if(supervision.isStopping())throw new Error("INTELLIGENCE_WORKER_STOPPING");
   if(!claim)throw new Error("INTELLIGENCE_GENERATION_CLAIM_REQUIRED");
   const ref:ExecutionRef={executionTaskId:claim.task.id,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken};
-  const verify=()=>leases.withLease(ref,"admission",async({task,context})=>{if(task.kind!==mode || context.userId!==ctx.userId || context.accountId!==ctx.accountId)throw new Error("INTELLIGENCE_GENERATION_OWNER_MISMATCH");return task;});
+  const verify=()=>leases.withLease(ref,"admission",async({task,context})=>{if(task.kind!==mode || context.userId!==ctx.userId || context.accountId!==(ctx.accountId??null) || (context.groupId??null)!==(ctx.groupId??null))throw new Error("INTELLIGENCE_GENERATION_OWNER_MISMATCH");return task;});
   const task=await verify();
   // 只绑定实际提示使用的源内容；列表展示状态/updatedAt 变化不使已结算模型失去回放资格。
   const item=z.object({title:z.string().nullable().optional(),authorName:z.string().nullable().optional(),platform:z.string().optional(),canonicalUrl:z.string()});
-  const stable=mode==="topic_preview"?z.object({transformId:z.string(),item,positioning:z.object({id:z.string(),oneLiner:z.string(),keywords:z.array(z.string())}),transcript:z.object({hash:z.string(),text:z.string()})}).parse(target):z.object({strategy:z.string(),sources:z.array(z.object({item,transform:z.object({outputSnapshot:z.json()}),transcript:z.object({text:z.string()})}))}).parse(target);
+  const stable=mode==="topic_preview"?z.object({generationMode:z.enum(["rewrite_only","strategy_backed"]).optional(),transformId:z.string(),item,positioning:z.unknown().nullable().optional(),positioningVersionId:z.string().nullable().optional(),personalizationStatus:z.enum(["applied","not_applied"]).optional(),transcript:z.object({hash:z.string(),text:z.string()})}).parse(target):z.object({strategy:z.string(),sources:z.array(z.object({item,transform:z.object({outputSnapshot:z.json()}),transcript:z.object({text:z.string()})}))}).parse(target);
   const sourceDigest=hash(stable),capability=mode==="topic_preview"?"topic.generate":"script.draft";
   const spec=workerModelSpecSchema.parse(await deps.resolveModelSpec(ctx,capability));
   const {identity}=prepareExecutionModelIdentity(capability,spec);
   let frozen=task.payload && typeof task.payload==="object"?(task.payload as Record<string,unknown>).intelligenceGeneration:undefined;
   if(!frozen){
-   const skillIds=mode==="topic_preview"?["intelligence.topic-decompose","intelligence.topic-from-decomposition","intelligence.topic-adapted-draft"]:["script.draft"];
+   const skillIds=mode==="topic_preview"?(isRewriteOnlyTarget(target)?["intelligence.topic-adapted-draft"]:["intelligence.topic-decompose","intelligence.topic-from-decomposition","intelligence.topic-adapted-draft"]):["script.draft"];
    const snapshot=workerSkillSnapshotSchema.parse(await deps.resolveSkillSnapshot(ctx,skillIds));
-   if(snapshot.userId!==ctx.userId || snapshot.accountId!==ctx.accountId)throw new Error("INTELLIGENCE_SKILL_OWNER_MISMATCH");
+   if(snapshot.userId!==ctx.userId || snapshot.accountId!==(ctx.accountId??null) || (snapshot.groupId??null)!==(ctx.groupId??null))throw new Error("INTELLIGENCE_SKILL_OWNER_MISMATCH");
    const input=structuredGenerationInputSchema.parse({kind:"model.structured",operationKey:`intelligence:${task.id}`,capability,skillId:skillIds[0],skillSnapshot:snapshot,maxOutputTokens:8192,timeoutMs:600000,facets:{mode,target:JSON.stringify(target),...(task.executionBudget && isContinuousExecutionBudget(task.executionBudget)?{continuousRecovery:"true"}:{})}});
    frozen=await leases.withLease(ref,"admission",async({tx,task})=>{
     const payload=task.payload as Record<string,unknown>;
@@ -64,7 +67,7 @@ export function createIntelligenceGenerationBridge(db:Db,deps:IntelligenceGenera
   const state=await ledger.inspect(ref);
   // 已保存最终模型结果可按原调用回放，不能换模型重新烧费。
   const prior=state.calls.at(-1);
-  if(prior?.status==="settled" && prior.resultText){const value=z.object({kind:z.literal("result"),value:z.json()}).parse(JSON.parse(prior.resultText));return mode==="topic_preview"?topicResult.parse(value.value):z.object({text:z.string().min(1)}).parse(value.value);}
+  if(prior?.status==="settled" && prior.resultText){const value=z.object({kind:z.literal("result"),value:z.json()}).parse(JSON.parse(prior.resultText));return mode==="topic_preview"?parseTopicResult(value.value,saved.input):z.object({text:z.string().min(1)}).parse(value.value);}
   let completed:unknown, persistedStatus:string|undefined,requestSequence=0,closedPorts=false;
   const ports:Parameters<typeof supervision.run>[0]["ports"]={
    async validate(current,kind){if(closedPorts)throw new Error("INTELLIGENCE_PORTS_CLOSED");if(!isDeepStrictEqual(current,ref))throw new Error("INTELLIGENCE_CLAIM_MISMATCH");await leases.withLease(ref,kind,async()=>{});},
@@ -93,12 +96,12 @@ export function createIntelligenceGenerationBridge(db:Db,deps:IntelligenceGenera
      const recorded=(await ledger.inspect(ref)).calls;
      const last=value.kind==="checkpoint"?recorded.find(row=>row.id===request.callId):recorded.at(-1);
      if(last?.id!==request.callId || last.status!=="settled" || !last.providerResult || last.kind!=="model" || last.parentCallId || last.operationKey!==`${saved.input.operationKey}/model/${requestSequence}`)throw new Error("INTELLIGENCE_RESULT_RECEIPT_INVALID");
-     if(value.kind==="checkpoint"){
-      if(mode!=="topic_preview" || !onCheckpoint)throw new Error("INTELLIGENCE_CHECKPOINT_INVALID");
-      const checkpoint=value.stage==="decomposition"?{stage:"decomposition" as const,value:intelligenceTopicDecomposeSchema.parse(value.value)}:value.stage==="topic"?{stage:"topic" as const,value:intelligenceTopicFromDecompositionSchema.parse(value.value)}:value.stage==="draft"?{stage:"draft" as const,value:z.object({contentText:z.string().min(1)}).parse(value.value)}:null;
+      if(value.kind==="checkpoint"){
+       if(mode!=="topic_preview" || !onCheckpoint)throw new Error("INTELLIGENCE_CHECKPOINT_INVALID");
+      const checkpoint=value.stage==="decomposition"?{stage:"decomposition" as const,value:intelligenceTopicDecomposeSchema.parse(value.value)}:value.stage==="topic"?{stage:"topic" as const,value:intelligenceTopicFromDecompositionSchema.parse(value.value)}:value.stage==="draft"?{stage:"draft" as const,value:z.object({contentText:z.string().min(1),templateVersion:z.string().min(1).optional()}).parse(value.value)}:null;
       if(!checkpoint)throw new Error("INTELLIGENCE_CHECKPOINT_STAGE_INVALID");await onCheckpoint(checkpoint);await verify();
      }else{
-      if(mode==="topic_preview")topicResult.parse(value.value);else z.object({text:z.string().min(1)}).parse(value.value);
+      if(mode==="topic_preview")parseTopicResult(value.value,saved.input);else z.object({text:z.string().min(1)}).parse(value.value);
       await ledger.settle(ref,last.id,{status:"settled",usage:{},resultText:request.text});
      }
      return {callId:last.id};
@@ -110,7 +113,8 @@ export function createIntelligenceGenerationBridge(db:Db,deps:IntelligenceGenera
       persistedStatus=result.status;closedPorts=true;return result;
      }
      await verify();const last=(await ledger.inspect(ref)).calls.at(-1);if(last?.id!==request.callId||last.resultText!==request.text||last.status!=="settled")throw new Error("INTELLIGENCE_COMMIT_MISMATCH");
-     completed=z.object({kind:z.literal("result"),value:z.json()}).parse(JSON.parse(request.text)).value;closedPorts=true;return {};
+     const value=z.object({kind:z.literal("result"),value:z.json()}).parse(JSON.parse(request.text)).value;
+     completed=mode==="topic_preview"?parseTopicResult(value,saved.input):z.object({text:z.string().min(1)}).parse(value);closedPorts=true;return {};
     }
     throw new Error("INTELLIGENCE_PORT_UNAVAILABLE");
    },
@@ -121,7 +125,7 @@ export function createIntelligenceGenerationBridge(db:Db,deps:IntelligenceGenera
     const last=(await ledger.inspect(ref)).calls.at(-1);
     if(last?.status==="settled"&&last.resultText){
      const value=z.object({kind:z.literal("result"),value:z.json()}).parse(JSON.parse(last.resultText));
-     completed=mode==="topic_preview"?topicResult.parse(value.value):z.object({text:z.string().min(1)}).parse(value.value);
+     completed=mode==="topic_preview"?parseTopicResult(value.value,saved.input):z.object({text:z.string().min(1)}).parse(value.value);
      return completed;
     }
    }
@@ -154,7 +158,8 @@ export function createIntelligenceGenerationBridge(db:Db,deps:IntelligenceGenera
    throw new IntelligenceGenerationSuspended(ref.executionTaskId,ref.attempt,ref.fenceToken,status);
   }
  }
- const topicPreviewGenerator:TopicPreviewGeneratorPort={async generate(ctx,target,onCheckpoint,claim){return topicResult.parse(await generate(ctx,"topic_preview",target,claim,onCheckpoint));}};
+ const topicPreviewGenerator:TopicPreviewGeneratorPort={async generate(ctx,target,onCheckpoint,claim){const result=await generate(ctx,"topic_preview",target,claim,onCheckpoint);return isRewriteOnlyTarget(target)?rewriteOnlyResult.parse(result):topicResult.parse(result);}};
  const projectScriptGenerator:ProjectScriptCandidateGeneratorPort={async generate(ctx,target,claim){return z.object({text:z.string().min(1)}).parse(await generate(ctx,"script_candidate",target,claim));}};
  return {topicPreviewGenerator,projectScriptGenerator,stop:supervision.stop};
 }
+function isRewriteOnlyTarget(target:unknown){return !!target&&typeof target==="object"&&!Array.isArray(target)&&(target as Record<string,unknown>).generationMode==="rewrite_only";}

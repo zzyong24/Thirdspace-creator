@@ -2,6 +2,7 @@ import { z } from "zod";
 import { defineEndpoint } from "../endpoints";
 import { id, iso8601, paginationQuery, assetType } from "../primitives";
 import { assetResource, assetFileResource } from "../resources/assets";
+import {assetDeleteImpactPreview} from "../resources/account-groups";
 import { materialLinkResource } from "../resources/material-links";
 
 const assetParams = z.object({ assetId: id });
@@ -18,6 +19,7 @@ const assetUpload = z.object({
 
 // SPEC §13 "素材库" (assets) group.
 export const assetsOperations = {
+  previewAssetDelete:defineEndpoint({id:'assets.previewDelete',method:'POST',path:'/assets/:assetId/delete-preview',params:assetParams,response:assetDeleteImpactPreview,fr:['FR-ASSETS-DELETE-IMPACT']}),
   listAssets: defineEndpoint({
     id: "assets.list",
     method: "GET",

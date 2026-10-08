@@ -1,11 +1,14 @@
+import {requireWorkspace} from "../../workspace-scope";
 import type { RequestContext } from "@creatoros/contract";
 import type {
   AnalyticsRepository,
   AppendSnapshotInput,
   MetricSnapshotRow,
   Page,
+  DashboardRollup,
+  DailyPlayPoint,
 } from "./analytics.repository";
-import { requireAccountId } from "./analytics.errors";
+import { requireAccountId, OwnershipError } from "./analytics.errors";
 
 // Analytics service (foundation §5.3) — RequestContext-taking methods that thread
 // `ctx.userId` into the user-scoped repository. Analytics owns NO state machine
@@ -78,28 +81,24 @@ export interface AnalyticsService {
   getDailyPlayTrend(
     ctx: RequestContext,
     opts?: { publicationIds?: readonly string[]; days?: number },
-  ): Promise<Array<{ day: string; plays: number }>>;
+  ): Promise<DailyPlayPoint[]>;
   getDashboardRollup(
     ctx: RequestContext,
     opts?: { publicationIds?: readonly string[] },
-  ): Promise<{
-    plays: number;
-    likes: number;
-    comments: number;
-    shares: number;
-    favorites: number;
-    followerGain: number;
-    ctrAvg: number;
-    finishAvg: number;
-    finishCount: number;
-    snapshotCount: number;
-  }>;
+  ): Promise<DashboardRollup>;
 }
 
 export function createAnalyticsService(deps: ServiceDeps): AnalyticsService {
   const { repo, publishing } = deps;
   return {
     async appendSnapshot(ctx, input) {
+      let publication:Record<string,unknown>|null=null;
+      if(ctx.groupId){
+        const owned=await publishing.resolvePublication(ctx,input.publicationId);
+        if(!owned||typeof owned!=="object")throw new OwnershipError("发布记录不存在");
+        publication=owned as Record<string,unknown>;
+        if(publication.groupId!==ctx.groupId || typeof publication.accountId!=="string" || input.accountId&&input.accountId!==publication.accountId)throw new OwnershipError("快照与发布账号不一致");
+      }
       // Append-only: delegate the idempotent insert. The denormalized user_id is
       // stamped from ctx.userId inside the repo.
       // [T-332 S2] 采集 stamp:input 未显式带 accountId 时从 ctx.accountId 兜底(ingestion
@@ -107,8 +106,9 @@ export function createAnalyticsService(deps: ServiceDeps): AnalyticsService {
       //   一律 AccountRequiredError(SPEC §4.2),不存在「null 兜底落库」。
       return repo.appendSnapshot(ctx.userId, {
         ...input,
+        ...(publication?{rawMetrics:{...input.rawMetrics,_platform:publication.platform},groupId:ctx.groupId}:{}),
         accountId: requireAccountId(
-          input.accountId ?? ctx.accountId,
+          input.accountId ?? publication?.accountId as string | undefined ?? ctx.accountId,
           "analytics.appendSnapshot",
         ),
       });
@@ -116,10 +116,7 @@ export function createAnalyticsService(deps: ServiceDeps): AnalyticsService {
 
     async getPublicationAnalytics(ctx, publicationId, page, pageSize) {
       // [T-332 S2] 读路径同门:未选号 → AccountRequiredError(引导态,禁读)。
-      const accountId = requireAccountId(
-        ctx.accountId,
-        "analytics.getPublicationAnalytics",
-      );
+      const accountId = (requireWorkspace(ctx), ctx);
       // Ownership gate via the Publishing public seam: a cross-user / unknown
       // publication throws OwnershipError (→404, no existence leak) BEFORE any
       // metric row is read.
@@ -135,10 +132,7 @@ export function createAnalyticsService(deps: ServiceDeps): AnalyticsService {
 
     async getProjectAnalytics(ctx, projectId, page, pageSize) {
       // [T-332 S2] 读路径同门:未选号 → AccountRequiredError(引导态,禁读)。
-      const accountId = requireAccountId(
-        ctx.accountId,
-        "analytics.getProjectAnalytics",
-      );
+      const accountId = (requireWorkspace(ctx), ctx);
       // Resolve the project's owned publication ids via Publishing (user-scoped;
       // the project-ownership gate lives in Publishing/Projects, not an Analytics
       // join). Empty id list → empty page (valid, not an error).
@@ -150,10 +144,7 @@ export function createAnalyticsService(deps: ServiceDeps): AnalyticsService {
     async listLatestSnapshotsByPublicationIds(ctx, publicationIds) {
       return repo.listLatestSnapshotsByPublicationIds(
         ctx.userId,
-        requireAccountId(
-          ctx.accountId,
-          "analytics.listLatestSnapshotsByPublicationIds",
-        ),
+        (requireWorkspace(ctx), ctx),
         publicationIds,
       );
     },
@@ -163,7 +154,7 @@ export function createAnalyticsService(deps: ServiceDeps): AnalyticsService {
       //   「当前号 or 未标记」与「未选号 → 全量」均已退役)。
       return repo.getDailyPlayTrend(
         ctx.userId,
-        requireAccountId(ctx.accountId, "analytics.getDailyPlayTrend"),
+        (requireWorkspace(ctx), ctx),
         opts?.publicationIds,
         opts?.days ?? 7,
       );
@@ -177,7 +168,7 @@ export function createAnalyticsService(deps: ServiceDeps): AnalyticsService {
       // [T-332 S2] strict 贯穿 ctx.accountId(号门语义同 getDailyPlayTrend)。
       return repo.getDashboardRollup(
         ctx.userId,
-        requireAccountId(ctx.accountId, "analytics.getDashboardRollup"),
+        (requireWorkspace(ctx), ctx),
         opts?.publicationIds,
       );
     },

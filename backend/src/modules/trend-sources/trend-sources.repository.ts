@@ -1,3 +1,4 @@
+import {workspaceFilter,workspaceKey} from "../../workspace-scope";
 import { and, desc, eq, type Db } from "@creatoros/backend";
 import { trendSources } from "./trend-sources.db-schema";
 import { OwnershipError } from "./trend-sources.errors";
@@ -7,14 +8,15 @@ import { OwnershipError } from "./trend-sources.errors";
 // SPEC §4.1)/ EVERY insert stamp userId+accountId(repo 不接受调用方显式传号,§4.6)。
 // toggle/remove 先 ownership-scoped select(叠号门),缺失/跨号 → OwnershipError(404)。
 
-export type TrendSourceRow = typeof trendSources.$inferSelect;
+export type TrendSourceRow = Omit<typeof trendSources.$inferSelect,"groupId"> & {groupId?:string|null};
 
 export interface RepoDeps {
   now: () => string;
   nextId: (prefix: string) => string;
   userId: string; // 所有权边界,构造时 baked in
   // [T-332 S2] 第二属主维度(账号全域隔离)。必填:service 入口经 requireAccountId 收窄后传入。
-  accountId: string;
+  accountId: string|null;
+  groupId?:string|null;
 }
 
 export interface CreateTrendSourceInput {
@@ -50,7 +52,7 @@ export function createTrendSourcesRepository(
       // [T-332 S2] strict:无条件叠号门(无「无号 → 全量」退化)。
       const where = and(
         eq(trendSources.userId, deps.userId),
-        eq(trendSources.accountId, deps.accountId),
+        workspaceFilter(trendSources,workspaceKey(deps)),
       );
       const rows = await db
         .select()
@@ -69,7 +71,7 @@ export function createTrendSourcesRepository(
     async listEnabledSources() {
       const where = and(
         eq(trendSources.userId, deps.userId),
-        eq(trendSources.accountId, deps.accountId),
+        workspaceFilter(trendSources,workspaceKey(deps)),
         eq(trendSources.enabled, true),
       );
       return db.select().from(trendSources).where(where);
@@ -84,6 +86,7 @@ export function createTrendSourcesRepository(
           userId: deps.userId,
           // [T-332 S2] stamp 当前号(repo 不接受调用方显式传号,§4.6)。
           accountId: deps.accountId,
+          groupId: deps.groupId??null,
           name: input.name ?? "",
           url: input.url,
           sourceType: input.sourceType,
@@ -96,19 +99,20 @@ export function createTrendSourcesRepository(
         // [T-332 S2] 幂等:命中 ux_trend_sources_identity_v2 (user, account, url)
         // (迁移 0042)→ 更新展示字段/enabled(不冒重复源)。conflict target 必须与 _v2
         // 索引列一致(含 account_id);两个号登记同一 URL 信源合法,各自成行。
-        .onConflictDoUpdate({
-          target: [trendSources.userId, trendSources.accountId, trendSources.url],
-          set: {
+        .onConflictDoNothing()
+        .returning();
+      const owned=inserted[0]??(await db.select().from(trendSources).where(and(eq(trendSources.userId,deps.userId), workspaceFilter(trendSources,workspaceKey(deps)), eq(trendSources.url,input.url))).limit(1))[0];
+      if(!owned)throw new OwnershipError("研究资料不存在");
+      const [updated]=await db.update(trendSources).set({
             name: input.name ?? "",
             sourceType: input.sourceType,
             domain: input.domain,
             note: input.note ?? null,
             enabled: input.enabled ?? true,
             updatedAt: nowIso,
-          },
-        })
-        .returning();
-      return inserted[0]!;
+      }).where(and(eq(trendSources.userId,deps.userId), workspaceFilter(trendSources,workspaceKey(deps)), eq(trendSources.url,input.url),eq(trendSources.id,owned.id))).returning();
+      if(!updated)throw new OwnershipError("研究资料不存在");
+      return updated;
     },
 
     async setSourceEnabled(sourceId, enabled) {
@@ -119,7 +123,7 @@ export function createTrendSourcesRepository(
         .where(
           and(
             eq(trendSources.userId, deps.userId),
-            eq(trendSources.accountId, deps.accountId),
+            workspaceFilter(trendSources,workspaceKey(deps)),
             eq(trendSources.id, sourceId),
           ),
         )
@@ -134,7 +138,7 @@ export function createTrendSourcesRepository(
         .where(
           and(
             eq(trendSources.userId, deps.userId),
-            eq(trendSources.accountId, deps.accountId),
+            workspaceFilter(trendSources,workspaceKey(deps)),
             eq(trendSources.id, sourceId),
           ),
         );
@@ -156,7 +160,7 @@ async function requireOwnedSource(
     .where(
       and(
         eq(trendSources.userId, deps.userId),
-        eq(trendSources.accountId, deps.accountId),
+        workspaceFilter(trendSources,workspaceKey(deps)),
         eq(trendSources.id, sourceId),
       ),
     );

@@ -29,6 +29,8 @@ export const publishingOperations = {
     params: outputParams,
     body: z.object({
       platform: z.string().min(1),
+      accountId:id.optional(),
+      expectedMembershipVersion:z.number().int().positive().optional(),
       accountReference: z.string().min(1),
     }),
     response: publicationResource,
@@ -85,6 +87,8 @@ export const publishingOperations = {
     //   - externalUrl 规范化:trim + 合法 URL（前端粘链接场景防前后空白/半截串)。
     body: z.object({
       platform: z.string().min(1),
+      accountId:id.optional(),
+      expectedMembershipVersion:z.number().int().positive().optional(),
       externalId: z.string().min(1),
       externalUrl: z.string().trim().url().nullable().optional(),
       publishedAt: iso8601.nullable().optional(),

@@ -1,3 +1,4 @@
+import {requireWorkspace,workspaceFilter,assertWritableWorkspace} from "../../workspace-scope";
 import { createHash } from "node:crypto";
 
 import {
@@ -42,7 +43,7 @@ export interface ProjectIntelligenceSourceContext {
   };
   transform: {
     id: string;
-    positioningVersionId: string;
+    positioningVersionId: string | null;
     outputSnapshot: Record<string, unknown>;
   };
   transcript: {
@@ -122,17 +123,14 @@ export function createProjectIntelligenceReferenceService(
     ctx: RequestContext,
     topicId: string,
   ) {
-    const accountId = requireAccountId(
-      ctx.accountId,
-      "intelligence.projectReference.transform",
-    );
+    requireWorkspace(ctx);const accountId=ctx.accountId??null;
     const [transform] = await db
       .select()
       .from(intelligenceTransforms)
       .where(
         and(
           eq(intelligenceTransforms.userId, ctx.userId),
-          eq(intelligenceTransforms.accountId, accountId),
+          workspaceFilter(intelligenceTransforms,ctx),
           eq(intelligenceTransforms.targetTopicId, topicId),
           eq(intelligenceTransforms.status, "confirmed"),
         ),
@@ -153,10 +151,8 @@ export function createProjectIntelligenceReferenceService(
     },
     missingIsNull: boolean,
   ): Promise<ProjectIntelligenceReferenceResource | null> {
-    const accountId = requireAccountId(
-      ctx.accountId,
-      "intelligence.projectReference.attach",
-    );
+    requireWorkspace(ctx);const accountId=ctx.accountId??null;
+    await assertWritableWorkspace(db,ctx);
     if (!input.idempotencyKey.trim()) {
       throw new IntelligenceValidationError("idempotencyKey 不能为空");
     }
@@ -190,7 +186,7 @@ export function createProjectIntelligenceReferenceService(
         and(
           eq(itemTranscripts.itemId, transform.itemId),
           eq(itemTranscripts.userId, ctx.userId),
-          eq(itemTranscripts.accountId, accountId),
+          workspaceFilter(itemTranscripts,ctx),
         ),
       )
       .limit(1);
@@ -213,7 +209,7 @@ export function createProjectIntelligenceReferenceService(
       .where(
         and(
           eq(projectIntelligenceReferences.userId, ctx.userId),
-          eq(projectIntelligenceReferences.accountId, accountId),
+          workspaceFilter(projectIntelligenceReferences,ctx),
           eq(projectIntelligenceReferences.projectId, input.projectId),
           eq(projectIntelligenceReferences.transformId, transform.id),
         ),
@@ -226,7 +222,7 @@ export function createProjectIntelligenceReferenceService(
       .values({
         id: deps.nextId("project-intelligence-reference"),
         userId: ctx.userId,
-        accountId,
+        accountId,groupId:ctx.groupId??null,
         projectId: input.projectId,
         topicId: input.topicId,
         itemId: transform.itemId,
@@ -245,7 +241,7 @@ export function createProjectIntelligenceReferenceService(
       .where(
         and(
           eq(projectIntelligenceReferences.userId, ctx.userId),
-          eq(projectIntelligenceReferences.accountId, accountId),
+          workspaceFilter(projectIntelligenceReferences,ctx),
           eq(projectIntelligenceReferences.projectId, input.projectId),
           eq(projectIntelligenceReferences.transformId, transform.id),
         ),
@@ -278,17 +274,14 @@ export function createProjectIntelligenceReferenceService(
     },
 
     async getSourceContexts(ctx, input) {
-      const accountId = requireAccountId(
-        ctx.accountId,
-        "intelligence.projectReference.context",
-      );
+      requireWorkspace(ctx);const accountId=ctx.accountId??null;
       if (deps.projects) {
         await deps.projects.assertExists(ctx, input.projectId);
       }
       const requestedIds = [...new Set(input.referenceIds ?? [])];
       const conditions = [
         eq(projectIntelligenceReferences.userId, ctx.userId),
-        eq(projectIntelligenceReferences.accountId, accountId),
+        workspaceFilter(projectIntelligenceReferences,ctx),
         eq(projectIntelligenceReferences.projectId, input.projectId),
       ];
       if (requestedIds.length > 0) {
@@ -319,7 +312,7 @@ export function createProjectIntelligenceReferenceService(
                 and(
                   eq(intelligenceItems.id, reference.itemId),
                   eq(intelligenceItems.userId, ctx.userId),
-                  eq(intelligenceItems.accountId, accountId),
+                  workspaceFilter(intelligenceItems,ctx),
                 ),
               )
               .limit(1),
@@ -330,7 +323,7 @@ export function createProjectIntelligenceReferenceService(
                 and(
                   eq(sourceSnapshots.id, reference.sourceSnapshotId),
                   eq(sourceSnapshots.userId, ctx.userId),
-                  eq(sourceSnapshots.accountId, accountId),
+                  workspaceFilter(sourceSnapshots,ctx),
                 ),
               )
               .limit(1),
@@ -341,7 +334,7 @@ export function createProjectIntelligenceReferenceService(
                 and(
                   eq(intelligenceTransforms.id, reference.transformId),
                   eq(intelligenceTransforms.userId, ctx.userId),
-                  eq(intelligenceTransforms.accountId, accountId),
+                  workspaceFilter(intelligenceTransforms,ctx),
                 ),
               )
               .limit(1),
@@ -352,7 +345,7 @@ export function createProjectIntelligenceReferenceService(
                 and(
                   eq(itemTranscripts.itemId, reference.itemId),
                   eq(itemTranscripts.userId, ctx.userId),
-                  eq(itemTranscripts.accountId, accountId),
+                  workspaceFilter(itemTranscripts,ctx),
                 ),
               )
               .limit(1),
@@ -363,6 +356,10 @@ export function createProjectIntelligenceReferenceService(
           !snapshot ||
           !transform ||
           !transform.outputSnapshot ||
+          transform.status !== "confirmed" ||
+          transform.targetTopicId !== reference.topicId ||
+          transform.itemId !== reference.itemId ||
+          transform.sourceSnapshotId !== reference.sourceSnapshotId ||
           !transcript ||
           transcript.status !== "done" ||
           !transcript.completedAt ||
@@ -377,6 +374,50 @@ export function createProjectIntelligenceReferenceService(
           throw new IntelligenceConflictError(
             "来源逐字稿已变化，请重新确认来源后再生成稿件",
           );
+        }
+        const outputSnapshot = transform.outputSnapshot as Record<string, unknown>;
+        if (outputSnapshot.generationMode === "rewrite_only") {
+          const draft = outputSnapshot.adaptedDraft;
+          const adaptedDraft =
+            draft && typeof draft === "object" && !Array.isArray(draft)
+              ? (draft as Record<string, unknown>)
+              : null;
+          const frozenPositioning = outputSnapshot.positioningSnapshot;
+          const frozenPositioningRecord =
+            frozenPositioning &&
+            typeof frozenPositioning === "object" &&
+            !Array.isArray(frozenPositioning)
+              ? (frozenPositioning as Record<string, unknown>)
+              : null;
+          const hasMasterSnapshot =
+            frozenPositioningRecord?.masterSnapshot != null &&
+            typeof frozenPositioningRecord.masterSnapshot === "object" &&
+            !Array.isArray(frozenPositioningRecord.masterSnapshot);
+          if (
+            !adaptedDraft ||
+            adaptedDraft.generationMode !== "rewrite_only" ||
+            typeof adaptedDraft.contentText !== "string" ||
+            !adaptedDraft.contentText.trim() ||
+            adaptedDraft.sourceSnapshotId !== reference.sourceSnapshotId ||
+            adaptedDraft.generatedFromTranscriptHash !== currentHash ||
+            !transform.aiTaskId ||
+            adaptedDraft.aiTaskId !== transform.aiTaskId ||
+            typeof adaptedDraft.templateVersion !== "string" ||
+            !adaptedDraft.templateVersion.trim() ||
+            (transform.positioningVersionId === null &&
+              (outputSnapshot.personalizationStatus !== "not_applied" ||
+                frozenPositioningRecord !== null ||
+                adaptedDraft.positioningVersionId !== undefined)) ||
+            (transform.positioningVersionId !== null &&
+              (outputSnapshot.personalizationStatus !== "applied" ||
+                frozenPositioningRecord?.id !== transform.positioningVersionId ||
+                !hasMasterSnapshot ||
+                adaptedDraft.positioningVersionId !== transform.positioningVersionId))
+          ) {
+            throw new IntelligenceConflictError(
+              "内容雷达改写稿的来源或定位 provenance 不一致",
+            );
+          }
         }
         contexts.push({
           reference: toReference(reference),

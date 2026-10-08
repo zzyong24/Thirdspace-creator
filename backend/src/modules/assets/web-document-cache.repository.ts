@@ -1,4 +1,4 @@
-import {and,asc,desc,eq,inArray,sql,type Db} from "@creatoros/backend";
+import {workspaceFilter,type WorkspaceKey,and,asc,desc,eq,inArray,sql,type Db} from "@creatoros/backend";
 import {assets,assetFiles} from "./assets.db-schema";
 import {ConflictError} from "./assets.errors";
 export type CacheTransaction=Parameters<Parameters<Db["transaction"]>[0]>[0];
@@ -7,14 +7,14 @@ const source=(file:Snapshot["file"]) => (file.mediaMetadata as Record<string,unk
 /** 缓存来源和当前文件一次绑定，修复时重新锁定同一素材与文件。 */
 export function createWebDocumentCacheRepository(db:Db){
  return {
-  async find(userId:string,accountId:string,url:string):Promise<Snapshot|null>{
-   const rows=await db.select({asset:assets,file:assetFiles}).from(assets).innerJoin(assetFiles,and(eq(assetFiles.id,assets.currentFileId),eq(assetFiles.assetId,assets.id))).where(and(eq(assets.userId,userId),eq(assets.accountId,accountId),eq(assets.assetType,"document"),inArray(assets.status,["pending","active"]),sql`${assetFiles.mediaMetadata}->>'sourceUrl' = ${url}`)).orderBy(desc(assets.createdAt),asc(assets.id)).limit(1);
+  async find(userId:string,accountId:string|WorkspaceKey,url:string):Promise<Snapshot|null>{
+   const rows=await db.select({asset:assets,file:assetFiles}).from(assets).innerJoin(assetFiles,and(eq(assetFiles.id,assets.currentFileId),eq(assetFiles.assetId,assets.id))).where(and(eq(assets.userId,userId),workspaceFilter(assets,accountId),eq(assets.assetType,"document"),inArray(assets.status,["pending","active"]),sql`${assetFiles.mediaMetadata}->>'sourceUrl' = ${url}`)).orderBy(desc(assets.createdAt),asc(assets.id)).limit(1);
    return rows.find(row=>source(row.file)===url)??null;
   },
   async confirm(snapshot:Snapshot,fullText:string,transaction?:CacheTransaction,signal?:AbortSignal){
    const work=async(tx:CacheTransaction)=>{
     signal?.throwIfAborted();
-    const [asset]=await tx.select().from(assets).where(and(eq(assets.id,snapshot.asset.id),eq(assets.userId,snapshot.asset.userId),eq(assets.accountId,snapshot.asset.accountId!))).for("update");
+    const [asset]=await tx.select().from(assets).where(and(eq(assets.id,snapshot.asset.id),eq(assets.userId,snapshot.asset.userId),workspaceFilter(assets,snapshot.asset.groupId?{kind:"group",id:snapshot.asset.groupId}:snapshot.asset.accountId!))).for("update");
     signal?.throwIfAborted();
     if(!asset || asset.assetType!=="document" || !["pending","active"].includes(asset.status) || asset.currentFileId!==snapshot.file.id)throw new ConflictError("缓存素材当前版本已改变，请重试读取");
     const [file]=await tx.select().from(assetFiles).where(and(eq(assetFiles.id,snapshot.file.id),eq(assetFiles.assetId,asset.id))).for("update");

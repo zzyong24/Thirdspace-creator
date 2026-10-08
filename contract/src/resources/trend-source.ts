@@ -9,6 +9,7 @@ import { id, iso8601 } from "../primitives";
 export const trendSourceResource = z.object({
   id,
   userId: id,
+  groupId:id.nullable().optional(),
   accountId: id.nullable(), // 按抖音号隔离(哪个号在用这批信源)
   name: z.string(), // 展示名(缺省用 domain)
   url: z.string(), // 信源 URL(幂等锚:同 user 重复登记同 URL → 更新不新建)

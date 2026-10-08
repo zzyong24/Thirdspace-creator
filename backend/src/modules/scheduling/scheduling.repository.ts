@@ -1,3 +1,5 @@
+import {requireWorkspace,workspaceFilter} from "../../workspace-scope";
+import {lockWorkspaceMembership,assertFrozenWorkspaceMembership} from "../platform-account/membership-lock.service";
 import { and, desc, eq, sql, type Db } from "@creatoros/backend";
 import { scheduledJobs, jobRuns } from "./scheduling.db-schema";
 import { OwnershipError, requireAccountId } from "./scheduling.errors";
@@ -69,6 +71,8 @@ export interface RepoDeps {
   //   · listRunsByStatus / getRun / updateRun 的启动扫超时回填 —— job_run 父锚继承(自身无 account 列),
   //     系统 sweep 仅按 userId 收窄。
   accountId: string | null;
+  groupId?:string|null;
+  membershipVersion?:number;
 }
 
 export interface ListJobsQuery {
@@ -137,8 +141,8 @@ export interface ListRunsQuery {
 
 export interface SchedulingRepository {
   // Fixture hydration (insert with explicit user_id already on the row).
-  seedJobs(rows: ScheduledJobRow[]): Promise<void>;
-  seedRuns(rows: JobRunRow[]): Promise<void>;
+  seedJobs(rows: (typeof scheduledJobs.$inferInsert)[]): Promise<void>;
+  seedRuns(rows: (typeof jobRuns.$inferInsert)[]): Promise<void>;
 
   // scheduled_job reads/writes —— 用户路径一律 strict 按 (user_id, account_id) 双维收窄
   //   (T-332 S2;未选号 → AccountRequiredError,跨号 by-id → OwnershipError 404)。
@@ -184,10 +188,10 @@ export function createSchedulingRepository(
 
     async listJobs({ sourceKind, enabled, limit = 100, offset = 0 }) {
       // [T-332 S2] strict 双维门:未选号直接抛(引导态),有号只见当前号的 job。
-      const accountId = requireAccountId(deps.accountId, "scheduling.listJobs");
+      requireWorkspace(deps);const accountId=deps.accountId;
       const filters = [
         eq(scheduledJobs.userId, deps.userId),
-        eq(scheduledJobs.accountId, accountId),
+        workspaceFilter(scheduledJobs,deps),
       ];
       if (sourceKind) filters.push(eq(scheduledJobs.sourceKind, sourceKind));
       if (enabled !== undefined) filters.push(eq(scheduledJobs.enabled, enabled));
@@ -230,7 +234,10 @@ export function createSchedulingRepository(
 
     async createJob(input) {
       // [T-332 S2] 从 deps stamp(§4.6:repo 不接受调用方显式传号);未选号 → 抛。
-      const accountId = requireAccountId(deps.accountId, "scheduling.createJob");
+      requireWorkspace(deps);const accountId=deps.accountId;
+      if(!["topic.daily"].includes(input.sourceKind))requireAccountId(accountId,"平台采集作业");
+      return db.transaction(async tx=>{
+      const frozen=await lockWorkspaceMembership(tx,{...deps,requestId:"scheduled-job-create",source:"user"});
       const isCollectionKind = COLLECTION_JOB_SOURCE_KINDS.has(input.sourceKind);
       // [T-359] 尊重入参(分层启用:默认关的模板建即 disabled);缺省保持旧行为 true。
       const wantEnabled = input.enabled ?? true;
@@ -242,21 +249,22 @@ export function createSchedulingRepository(
       //   bootstrap ensure 对默认关模板传 false,竞态撞上时不得反向覆盖用户意愿)。
       //   非采集类 kind 不查重,行为不变。
       const findExisting = async (): Promise<ScheduledJobRow | undefined> => {
-        const rows = await db
+        const rows = await tx
           .select()
           .from(scheduledJobs)
           .where(
             and(
               eq(scheduledJobs.userId, deps.userId),
-              eq(scheduledJobs.accountId, accountId),
+              workspaceFilter(scheduledJobs,deps),
               eq(scheduledJobs.sourceKind, input.sourceKind),
+              input.sourceKind!=="topic.daily" ? eq(scheduledJobs.accountId,requireAccountId(accountId,"平台采集作业")):undefined,
             ),
           );
         return rows[0];
       };
       const reuse = async (row: ScheduledJobRow): Promise<ScheduledJobRow> => {
         if (wantEnabled && !row.enabled) {
-          const updated = await db
+          const updated = await tx
             .update(scheduledJobs)
             .set({ enabled: true, updatedAt: deps.now() })
             .where(eq(scheduledJobs.id, row.id))
@@ -272,12 +280,12 @@ export function createSchedulingRepository(
       }
 
       try {
-        const inserted = await db
+        const inserted = await tx
           .insert(scheduledJobs)
           .values({
             id: deps.nextId("job"),
             userId: deps.userId,
-            accountId,
+            accountId,groupId:frozen.groupId,groupVersion:frozen.groupVersion,membershipVersion:frozen.membershipVersion,
             name: input.name,
             prompt: input.prompt,
             sourceKind: input.sourceKind,
@@ -303,19 +311,20 @@ export function createSchedulingRepository(
         }
         throw err;
       }
+      });
     },
 
     async getJob(id) {
       // [T-332 S2 · §4.5] by-id 号一致性门:未选号 → 抛;跨号命中 → 与跨 user 同语义 404
       //   (不泄漏存在性)。采集触发链的 ctx 账号由 job 行派生(ISO-06),读写恒同号,不误伤。
-      const accountId = requireAccountId(deps.accountId, "scheduling.getJob");
+      requireWorkspace(deps);const accountId=deps.accountId;
       const rows = await db
         .select()
         .from(scheduledJobs)
         .where(
           and(
             eq(scheduledJobs.userId, deps.userId),
-            eq(scheduledJobs.accountId, accountId),
+            workspaceFilter(scheduledJobs,deps),
             eq(scheduledJobs.id, id),
           ),
         );
@@ -357,13 +366,16 @@ export function createSchedulingRepository(
     },
 
     async createRun(input) {
-      await repo.getJob(input.jobId); // requireJob — the run's parent must be owned(含账号一致性)
-      const inserted = await db
+      const parent=await repo.getJob(input.jobId); // requireJob — the run's parent must be owned(含账号一致性)
+      return db.transaction(async tx=>{
+      await assertFrozenWorkspaceMembership(tx,{userId:parent.userId,groupId:parent.groupId,accountId:parent.accountId,groupVersion:parent.groupVersion,membershipVersion:parent.membershipVersion},{allowArchived:!!parent.accountId});
+      const inserted = await tx
         .insert(jobRuns)
         .values({
           id: deps.nextId("run"),
           userId: deps.userId,
           jobId: input.jobId,
+          groupId:parent.groupId,groupVersion:parent.groupVersion,membershipVersion:parent.membershipVersion,
           aiTaskId: input.aiTaskId ?? null,
           status: input.status ?? "running",
           itemsNew: 0,
@@ -377,6 +389,7 @@ export function createSchedulingRepository(
         })
         .returning();
       return inserted[0]!;
+      });
     },
 
     async getRun(id) {
@@ -391,7 +404,7 @@ export function createSchedulingRepository(
       // [T-332 S2 · §4.5] job_run 父锚继承(自身无 account 列):有号 ctx 下经父 job 校验账号
       //   一致性(跨号 run 深链 → 404,不泄漏存在性)。deps.accountId 为 null 仅系统 sweep 路径
       //   (启动扫超时,ISO-06)—— 系统回填只按 userId 收窄,不做账号门。
-      if (deps.accountId !== null) {
+      if (deps.accountId !== null || deps.groupId) {
         await repo.getJob(row.jobId);
       }
       return row;

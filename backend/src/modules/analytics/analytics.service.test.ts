@@ -183,14 +183,14 @@ describe("analytics service", () => {
       publicationId: "pub-1",
       capturedAt: "2026-06-12T10:00:00.000Z",
       source: "platform_api",
-      rawMetrics: { plays: 100, likes: 10, comments: 5, shares: 2, favorites: 4, follower_gain: 3, ctr: 0.2, finish_rate: 0.6 },
+      rawMetrics: { plays: 100, likes: 10, comments: 5, shares: 2, favorites: 4, follower_gain: 3, ctr: 0.2, finish_rate: 0.6,ctr_denominator:100,finish_rate_denominator:100,ctr_definition:"test",finish_rate_definition:"test" },
       values: [],
     });
     await service.appendSnapshot(ctxA, {
       publicationId: "pub-2",
       capturedAt: "2026-06-11T10:00:00.000Z",
       source: "platform_api",
-      rawMetrics: { plays: 50, likes: 4, comments: 1, shares: 0, favorites: 6, follower_gain: 7, ctr: 0.4, finish_rate: 0.8 },
+      rawMetrics: { plays: 50, likes: 4, comments: 1, shares: 0, favorites: 6, follower_gain: 7, ctr: 0.4, finish_rate: 0.8,ctr_denominator:50,finish_rate_denominator:50,ctr_definition:"test",finish_rate_definition:"test" },
       values: [],
     });
 
@@ -198,26 +198,26 @@ describe("analytics service", () => {
     expect(r.snapshotCount).toBe(2);
     expect(r.plays).toBe(150);
     expect(r.followerGain).toBe(10);
-    expect(r.ctrAvg).toBeCloseTo(0.3, 10);
-    expect(r.finishAvg).toBeCloseTo(0.7, 10);
+    expect(r.ctrAvg).toBeCloseTo((0.2*100+0.4*50)/150, 10);
+    expect(r.finishAvg).toBeCloseTo((0.6*100+0.8*50)/150, 10);
   });
 
-  it("getDashboardRollup with no snapshots returns an all-zero rollup (no throw)", async () => {
+  it("getDashboardRollup with no snapshots returns an unknown metrics rollup (no throw)", async () => {
     const publishing: AnalyticsPublishingPort = {
       resolvePublication: () => Promise.resolve(),
       listPublicationIdsByProject: () => Promise.resolve([]),
     };
     const service = makeService(db, publishing);
     const r = await service.getDashboardRollup(ctxA);
-    expect(r).toEqual({
-      plays: 0,
-      likes: 0,
-      comments: 0,
-      shares: 0,
-      favorites: 0,
-      followerGain: 0,
-      ctrAvg: 0,
-      finishAvg: 0,
+    expect(r).toMatchObject({
+      plays: null,
+      likes: null,
+      comments: null,
+      shares: null,
+      favorites: null,
+      followerGain: null,
+      ctrAvg: null,
+      finishAvg: null,
       finishCount: 0,
       snapshotCount: 0,
     });
@@ -276,15 +276,15 @@ describe("analytics service", () => {
     });
     const ctxEmpty: RequestContext = { ...ctxA, accountId: "acct-empty" };
     const r = await service.getDashboardRollup(ctxEmpty);
-    expect(r).toEqual({
-      plays: 0,
-      likes: 0,
-      comments: 0,
-      shares: 0,
-      favorites: 0,
-      followerGain: 0,
-      ctrAvg: 0,
-      finishAvg: 0,
+    expect(r).toMatchObject({
+      plays: null,
+      likes: null,
+      comments: null,
+      shares: null,
+      favorites: null,
+      followerGain: null,
+      ctrAvg: null,
+      finishAvg: null,
       finishCount: 0,
       snapshotCount: 0,
     });

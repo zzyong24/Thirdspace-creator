@@ -1,3 +1,8 @@
+import {projects,type Db as FixtureDb} from '@creatoros/backend';
+async function seedOwnedProjects(db:FixtureDb){
+ const rows=([["project-1", "user-a", "acct-a"], ["project-b", "user-b", "acct-b"]] as Array<[string,string,string]>).map(([id,userId,accountId])=>({id,userId,accountId,title:'真实测试父项目',brief:'',creationMode:'guided',status:'active',currentStage:'script',startedAt:new Date().toISOString(),createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()}));
+ await db.insert(projects).values(rows).onConflictDoNothing();
+}
 import { describe, it, expect, beforeEach } from "vitest";
 import { readFileSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -65,12 +70,13 @@ describe("G2 — domain acceptance (SPEC §22)", () => {
 
   beforeEach(async () => {
     ({ db } = await createDb());
+  await seedOwnedProjects(db);
     service = makeService(db);
   });
 
   async function seed(ctx: RequestContext, title = "脚本") {
     return service.createArtifact(ctx, {
-      projectId: "project-1",
+      projectId: ctx.userId===ctxB.userId?"project-b":"project-1",
       title,
       artifactType: "master_script",
       stage: "script",

@@ -13,6 +13,7 @@ export function toFavoritesFolderDto(
   return {
     id: row.id,
     userId: row.userId,
+    groupId:row.groupId??null,
     accountId: row.accountId ?? null,
     name: row.name,
     collectsId: row.collectsId ?? null,

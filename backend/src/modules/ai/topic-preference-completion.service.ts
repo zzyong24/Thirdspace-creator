@@ -1,3 +1,4 @@
+import {requireWorkspace,workspaceFilter,assertWritableWorkspace} from "../../workspace-scope";
 import {randomUUID} from "node:crypto";
 import {upsertDistilledTopicPreference,topicPreferenceSourceIsCurrent} from "../candidate/candidate.service";
 import {and,eq,asc,aiTasks,aiTaskResults,executionTasks,executionCalls,type Db} from '@creatoros/backend';
@@ -12,7 +13,7 @@ export function createTopicPreferenceCompletionService(db:Db,deps:{now?:()=>stri
  return {async commitResult(ref:ExecutionRef,raw:unknown,signal?:AbortSignal){
   const input=workerPortInputSchemas.commitResult.parse(raw);if(input.outcome!=='succeeded')throw new ConflictError('偏好提炼失败须经执行状态端口');
   return leases.withLease(ref,'settlement',async({tx,task,context})=>{
-   const [business]=await tx.select().from(aiTasks).where(and(eq(aiTasks.id,task.ownerId),eq(aiTasks.executionTaskId,task.id),eq(aiTasks.userId,context.userId),eq(aiTasks.accountId,context.accountId!))).for('update');
+   const [business]=await tx.select().from(aiTasks).where(and(eq(aiTasks.id,task.ownerId),eq(aiTasks.executionTaskId,task.id),eq(aiTasks.userId,context.userId),workspaceFilter(aiTasks,context))).for('update');
    if(task.kind!=='ai_task'||task.ownerType!=='ai_task'||!business||business.taskType!=='topic.preference'||(task.payload as {aiTaskId?:unknown}).aiTaskId!==business.id)throw new ConflictError('偏好提炼任务归属不符');
    const frozen=structuredGenerationInputSchema.parse((task.payload as {modelInput?:unknown}).modelInput);
    const target=topicPreferenceInputSchema.parse(JSON.parse(frozen.facets.__topicPreference??'null'));

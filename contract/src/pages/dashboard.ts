@@ -77,14 +77,14 @@ const publicationCompactRow = z.object({
   title: z.string(),
   platform: platformId,
   status: publicationStatus,
-  views: z.number(),
-  engagement: z.number(),
+  views: z.number().nullable(),
+  engagement: z.number().nullable(),
   publishedAt: iso8601,
 });
 
 const dataOverview = z.object({
   metrics: z.array(metricCard),
-  trend: z.array(z.object({ label: z.string(), value: z.number() })),
+  trend: z.array(z.object({ label: z.string(), value: z.number().nullable() })),
 });
 
 const creationSuggestion = z.object({

@@ -1,3 +1,4 @@
+import {factFilter} from "../../workspace-scope";
 import {and,eq,type Db} from '@creatoros/backend';
 import {publicationSyncState} from '../../schema/analytics';
 import type {RequestContext} from '@creatoros/contract';
@@ -5,12 +6,12 @@ import {requireAccountId} from './analytics.errors';
 import {isSyncDue,type SyncCapability} from './sync-policy';
 /** 持久水位经业务服务写入；零结果也是成功，排队/失败不伪造成功。 */
 export function createPublicationSyncService(db:Db,ports:{now:()=>string;assertPublication:(ctx:RequestContext,id:string)=>Promise<{externalId:string|null;publishedAt?:string|null}>}){
- const scope=(ctx:RequestContext,id:string,capability:SyncCapability)=>and(eq(publicationSyncState.userId,ctx.userId),eq(publicationSyncState.accountId,requireAccountId(ctx.accountId,'analytics.sync')),eq(publicationSyncState.publicationId,id),eq(publicationSyncState.capability,capability));
+ const scope=(ctx:RequestContext,id:string,capability:SyncCapability)=>and(eq(publicationSyncState.userId,ctx.userId),factFilter(publicationSyncState,ctx),eq(publicationSyncState.publicationId,id),eq(publicationSyncState.capability,capability));
  async function read(ctx:RequestContext,id:string,capability:SyncCapability){return(await db.select().from(publicationSyncState).where(scope(ctx,id,capability)))[0];}
  return {
   read,
   async failures(ctx:RequestContext,capabilities:readonly SyncCapability[]){
-   const rows=await db.select().from(publicationSyncState).where(and(eq(publicationSyncState.userId,ctx.userId),eq(publicationSyncState.accountId,requireAccountId(ctx.accountId,'analytics.sync'))));
+   const rows=await db.select().from(publicationSyncState).where(and(eq(publicationSyncState.userId,ctx.userId),factFilter(publicationSyncState,ctx)));
    let count=0;for(const row of rows){if(!row.error||!capabilities.includes(row.capability as SyncCapability))continue;try{await ports.assertPublication(ctx,row.publicationId);count++;}catch{/* 已隐藏/移除作品不阻塞当前同步 */}}
    return count;
   },

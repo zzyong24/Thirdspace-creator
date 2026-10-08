@@ -29,7 +29,7 @@ describe("[T-633] 选题卡失败诊断脱敏", () => {
       ),
     ).toEqual({
       category: "output_invalid",
-      message: "模型输出不完整，请重试生成选题卡",
+      message: "这次没有生成改写稿，请重试",
     });
   });
 
@@ -38,7 +38,7 @@ describe("[T-633] 选题卡失败诊断脱敏", () => {
       classifyTopicPreviewFailure(new Error("TimeoutError: request aborted")),
     ).toEqual({
       category: "timeout",
-      message: "模型响应超时，请重试生成选题卡",
+      message: "改写稿生成超时，您可以重试",
     });
     expect(
       classifyTopicPreviewFailure(new Error("401 invalid api key: secret")),
@@ -330,6 +330,7 @@ describe("T-482 内容雷达转为我的选题", () => {
         itemId: detail.item.id,
         sourceSnapshotId: detail.snapshots[0]!.id,
         positioningVersionId: "positioning-v1",
+        strategyBacked: true,
         idempotencyKey: "topic-preview-1",
       });
       expect(createTopic).not.toHaveBeenCalled();
@@ -356,7 +357,7 @@ describe("T-482 内容雷达转为我的选题", () => {
                 reusablePattern: "反常识开场—拆必要条件—给判断顺序",
                 factRisks: [],
                 title: "参数不重要，工作流才是 AI 落地的分水岭",
-                angle: `从“${input.positioning.oneLiner}”切入`,
+                angle: `从“${input.positioning?.oneLiner}”切入`,
                 differentiation: "不做参数盘点，只拆业务中的责任边界",
                 targetAudience: "正在落地 AI 的业务负责人",
                 audiencePain: "只盯模型参数却无法稳定交付",
@@ -417,12 +418,14 @@ describe("T-482 内容雷达转为我的选题", () => {
         itemId: detail.item.id,
         sourceSnapshotId: detail.snapshots[0]!.id,
         positioningVersionId: "positioning-v1",
+        strategyBacked: true,
         idempotencyKey: "topic-preview-2",
       });
       const replayedRegeneration = await intelligence.startTopicPreview(ctx, {
         itemId: detail.item.id,
         sourceSnapshotId: detail.snapshots[0]!.id,
         positioningVersionId: "positioning-v1",
+        strategyBacked: true,
         idempotencyKey: "topic-preview-2",
       });
       expect(replayedRegeneration.transform.id).toBe(regenerated.transform.id);
@@ -657,7 +660,7 @@ describe("T-482 内容雷达转为我的选题", () => {
             audiencePain: "",
             coreConflict: "",
             format: "",
-            adaptationStrategy: regeneratedCandidate.adaptationStrategy,
+            adaptationStrategy: regeneratedCandidate!.adaptationStrategy,
           },
           idempotencyKey: "confirm-2",
         },

@@ -1,3 +1,5 @@
+import {factFilter} from "../../workspace-scope";
+import {workspaceKey,workspaceFilter,workspaceStamp,assertWritableWorkspace} from "@creatoros/backend";
 import {lockCandidateSupply} from "./candidate-supply-lock";
 import { and, desc, eq, gte, lt, sql, type Db } from "@creatoros/backend";
 import {
@@ -34,7 +36,8 @@ export interface RepoDeps {
   // audience_signals/topic_promotions/topic_preferences)均 per-account(0042 起
   // account_id NOT NULL)。必填 string:service 入口经 requireAccountId 收窄后传入,
   // 未选号根本到不了 repo(引导态禁读写,不存在「null = 全局视图」退化)。
-  accountId: string;
+  accountId?: string | null;
+  groupId?: string | null;
 }
 
 export type CandidateSort =
@@ -57,6 +60,7 @@ export interface ListCandidatesQuery {
 }
 
 export interface CreateCandidateInput {
+  idempotentId?: string;
   title: string;
   angle: string;
   source: string; // trend|benchmark|demand|idea
@@ -93,6 +97,8 @@ export interface UpsertTopicPreferenceInput {
 }
 
 export interface CreateSignalInput {
+  /** 内部采集服务已验证真实 run/账号/Publication 后传入的冻结事实身份。 */
+  verifiedCollection?: {groupId:string|null;accountId:string};
   source: string;
   rawText: string;
   demandTag: string | null;
@@ -168,7 +174,7 @@ export interface CandidateRepository {
   ): Promise<AudienceSignalRow | undefined>;
   linkSignal(signalId: string, candidateId: string): Promise<AudienceSignalRow>;
   // Recompute demand_count from the linked-signal count (the derived denormalization).
-  recomputeDemandCount(candidateId: string): Promise<number>;
+  recomputeDemandCount(candidateId: string, factDerived?: boolean): Promise<number>;
 
   // 选题中心总览 — the candidate-module-owned counts the topics.overview read derives
   // its 来源 + 漏斗 from (everything computable WITHOUT a cross-module read). All
@@ -199,6 +205,9 @@ export function createCandidateRepository(
   db: Db,
   deps: RepoDeps,
 ): CandidateRepository {
+  const scope = workspaceKey(deps);
+  const stamp = workspaceStamp(scope);
+  const writable = () => assertWritableWorkspace(db, {userId:deps.userId,...stamp,requestId:"shared-domain-write",source:"user"});
   function sortColumn(sort: CandidateSort | undefined) {
     switch (sort) {
       case "positioningFit":
@@ -214,12 +223,12 @@ export function createCandidateRepository(
   }
 
   // [T-332 S2] 按号隔离条件门(每表一个,列相同语义)。strict:无条件
-  // `eq(table.accountId, deps.accountId)`(SPEC §4.1 全仓统一 strict,退化分支已删)。
-  const candAccountGate = eq(candidates.accountId, deps.accountId);
-  const sigAccountGate = eq(audienceSignals.accountId, deps.accountId);
-  const promoAccountGate = eq(topicPromotions.accountId, deps.accountId);
+  // `workspaceFilter(table, scope)`(SPEC §4.1 全仓统一 strict,退化分支已删)。
+  const candAccountGate = workspaceFilter(candidates, scope);
+  const sigAccountGate = factFilter(audienceSignals, deps);
+  const promoAccountGate = workspaceFilter(topicPromotions, scope);
   // [T-212d] 偏好信号按号读点门(与其它表同语义,strict)。
-  const prefAccountGate = eq(topicPreferences.accountId, deps.accountId);
+  const prefAccountGate = workspaceFilter(topicPreferences, scope);
 
   return {
     async seedCandidates(rows) {
@@ -257,15 +266,22 @@ export function createCandidateRepository(
     },
 
     async createCandidate(input) {
+      await writable();
       return db.transaction(async tx=>{
       await lockCandidateSupply(tx,deps);
+      if (input.idempotentId) {
+        const [existing] = await tx.select().from(candidates).where(and(
+          eq(candidates.id, input.idempotentId), eq(candidates.userId, deps.userId), candAccountGate,
+        )).limit(1);
+        if (existing) return existing;
+      }
       const inserted = await tx
         .insert(candidates)
         .values({
-          id: deps.nextId("cand"),
+          id: input.idempotentId ?? deps.nextId("cand"),
           userId: deps.userId,
           // [T-332 S2] create stamp:归到当前号(service 经 requireAccountId 保证非空)。
-          accountId: deps.accountId,
+          ...stamp,
           title: input.title,
           angle: input.angle,
           source: input.source,
@@ -321,6 +337,7 @@ export function createCandidateRepository(
     },
 
     async patchCandidate(id, patch) {
+      await writable();
       // Derived-field guard: a free patch can NEVER set 'promoted' or demandCount.
       const status = (patch as { status?: string }).status;
       if (status === "promoted") {
@@ -368,6 +385,7 @@ export function createCandidateRepository(
     },
 
     async enrichCard(id, card) {
+      await writable();
       await this.getCandidate(id); // ownership gate
       const updated = await db
         .update(candidates)
@@ -384,6 +402,7 @@ export function createCandidateRepository(
     },
 
     async setPromoted(id) {
+      await writable();
       await this.getCandidate(id); // ownership gate
       const updated = await db
         .update(candidates)
@@ -400,13 +419,16 @@ export function createCandidateRepository(
     },
 
     async createPromotion(input) {
+      await writable();
+      const parent=await this.getCandidate(input.candidateId);
+      if(parent.groupId)await assertWritableWorkspace(db,{userId:deps.userId,groupId:parent.groupId,requestId:"parent-write",source:"user"});
       const inserted = await db
         .insert(topicPromotions)
         .values({
           id: deps.nextId("promo"),
           userId: deps.userId,
           // [T-332 S2] create stamp:晋升记录归到当前号(必有号)。
-          accountId: deps.accountId,
+          ...stamp, groupId: parent.groupId ?? stamp.groupId,
           candidateId: input.candidateId,
           projectId: input.projectId,
           promotedAt: deps.now(),
@@ -431,6 +453,9 @@ export function createCandidateRepository(
     },
 
     async createSignal(input) {
+      if (!input.verifiedCollection) await writable();
+      else if(input.verifiedCollection.accountId!==deps.accountId)throw new OwnershipError("采集事实账号不匹配");
+      if (!deps.accountId) throw new OwnershipError("采集信号需要真实平台账号");
       const values = {
         id: deps.nextId("sig"),
         userId: deps.userId,
@@ -438,7 +463,7 @@ export function createCandidateRepository(
         // ux_audience_signals_user_source_external_v2 (user, account, source, external_id)
         // (迁移 0042)—— 同一评论被两个号各自采集,各归其号,不再被先入库的号吞掉
         // (T-136 时代自认的设计缺陷在此关闭)。
-        accountId: deps.accountId,
+        ...stamp, groupId: input.verifiedCollection ? input.verifiedCollection.groupId : stamp.groupId, accountId: deps.accountId,
         source: input.source,
         rawText: input.rawText,
         demandTag: input.demandTag,
@@ -479,12 +504,13 @@ export function createCandidateRepository(
           .where(
             and(
               eq(audienceSignals.userId, deps.userId),
-              sigAccountGate,
+              input.verifiedCollection ? eq(audienceSignals.accountId,deps.accountId) : sigAccountGate,
               eq(audienceSignals.source, input.source),
               eq(audienceSignals.externalId, input.externalId),
             ),
           );
-        return { row: existing[0]!, inserted: false };
+        if(!existing[0])throw new OwnershipError("评论幂等锚不属于当前采集账号");
+        return { row: existing[0], inserted: false };
       }
       const inserted = await db
         .insert(audienceSignals)
@@ -594,7 +620,9 @@ export function createCandidateRepository(
     },
 
     async linkSignal(signalId, candidateId) {
+      await writable();
       await this.getSignal(signalId); // ownership gate
+      await this.getCandidate(candidateId); // both association endpoints belong to the workspace
       const updated = await db
         .update(audienceSignals)
         .set({ linkedCandidateId: candidateId })
@@ -609,14 +637,16 @@ export function createCandidateRepository(
       return updated[0]!;
     },
 
-    async recomputeDemandCount(candidateId) {
+    async recomputeDemandCount(candidateId, factDerived = false) {
+      if(!factDerived)await writable();
+      await this.getCandidate(candidateId);
       const linked = await db
         .select({ id: audienceSignals.id })
         .from(audienceSignals)
         .where(
           and(
             eq(audienceSignals.userId, deps.userId),
-            sigAccountGate,
+            workspaceFilter(audienceSignals,scope),
             eq(audienceSignals.linkedCandidateId, candidateId),
           ),
         );
@@ -709,6 +739,7 @@ export function createCandidateRepository(
     },
 
     async upsertTopicPreference(input) {
+      await writable();
       const nowTs = deps.now();
       // [T-326 DATA-H02 → T-332 S2] 身份键 ux_topic_preferences_identity_v2
       // (user_id, account_id, keyword, direction)(迁移 0041):同号命中即累计强化
@@ -720,7 +751,7 @@ export function createCandidateRepository(
         .values({
           id: deps.nextId("tpref"),
           userId: deps.userId,
-          accountId: deps.accountId,
+          ...stamp,
           keyword: input.keyword,
           direction: input.direction,
           signal: input.signal,
@@ -734,10 +765,11 @@ export function createCandidateRepository(
         .onConflictDoUpdate({
           target: [
             topicPreferences.userId,
-            topicPreferences.accountId,
+            scope.kind === "group" ? topicPreferences.groupId : topicPreferences.accountId,
             topicPreferences.keyword,
             topicPreferences.direction,
           ],
+          targetWhere: scope.kind === "group" ? sql`${topicPreferences.groupId} IS NOT NULL` : sql`${topicPreferences.accountId} IS NOT NULL`,
           set: {
             signal: input.signal,
             exampleCount: input.exampleCount,
@@ -766,6 +798,7 @@ export function createCandidateRepository(
     },
 
     async archiveExpiredPreferences(cutoffIso) {
+      await writable();
       const updated = await db
         .update(topicPreferences)
         .set({ status: "archived", updatedAt: deps.now() })
