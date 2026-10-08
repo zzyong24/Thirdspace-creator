@@ -1155,3 +1155,4 @@
 {"ts":"2026-10-08T04:45:06.094Z","actor":"taskctl","action":"start","task":"T-1075","sha_before":"372451759a6a","sha_after":"71d68ecb1b0f"}
 {"ts":"2026-10-08T08:05:55.473Z","actor":"taskctl","action":"start","task":"T-1076","sha_before":"2e6fa8842b25","sha_after":"757b7c4ce16c"}
 {"ts":"2026-10-08T08:09:48.367Z","actor":"taskctl","action":"complete","task":"T-1076","evidence":"docs/verification/t1076/result.json：16旧DMG删除/6镜像正常detach/实际净释放9.48GiB/当前15.13GiB/最新包SHA一致与CLI connected full；仅minor本机维护，原全局37错误1告警保留，不代签全功能","sha_before":"757b7c4ce16c","sha_after":"d05936d1d783"}
+{"ts":"2026-10-08T10:26:21.452Z","actor":"taskctl","action":"start","task":"T-1077","sha_before":"6c73e0673166","sha_after":"531d06845e63"}

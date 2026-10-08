@@ -4614,6 +4614,47 @@
         ]
       },
       "scope_note": "PASS[REV:73a6052db08f]先准入8精确路径；全功能安装验证新证据391缺标签观察/401纯组NULL误拒。根唯一串行writer，与T1074同文件改动分开绑定；原owner/出处/精确文件/版本/无重发/旧pending保留。仅源码修复不完成安装目标，旧全局欠债不伪绿。"
+    },
+    "T-1077": {
+      "task_id": "T-1077",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1077-material-parent-port.md",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "PROJECT_CONTEXT.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "backend/src/**",
+        "contract/src/**",
+        "frontend/src/server/persistence-client.ts",
+        "frontend/src/server/__module_integration__/canvas-original-worker.persistence-client.test.ts"
+      ],
+      "write_set": [
+        "frontend/src/server/persistence-client.ts",
+        "frontend/src/server/__module_integration__/canvas-original-worker.persistence-client.test.ts",
+        "frontend/src/server/__module_integration__/material-parent-port.persistence-client.test.ts",
+        "docs/features/t1077-material-parent-port.review.md",
+        "docs/verification/t1077/CURRENT_VALIDATION.md",
+        "docs/verification/t1077/result.json"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "git diff --check",
+          "pnpm --filter creatoros-frontend exec vitest run --testTimeout 180000 --hookTimeout 180000 --retry 0 src/server/__module_integration__/canvas-original-worker.persistence-client.test.ts src/server/__module_integration__/material-parent-port.persistence-client.test.ts",
+          "pnpm --filter creatoros-frontend typecheck",
+          "pnpm --filter @creatoros/contract typecheck",
+          "node orchestrator/process/boundary-scan.mjs",
+          "node orchestrator/process/semantic-boundary-scan.mjs",
+          "node tools/timeout-policy/verify.mjs"
+        ]
+      },
+      "scope_note": "精确3私有MaterialLinks适配，根串行实现，独评只写review；原图401不重发，原权限与事务、原失败保留。"
     }
   }
 }

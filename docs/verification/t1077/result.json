@@ -1,0 +1,307 @@
+{
+  "taskId": "T-1077",
+  "status": "SOURCE_BOUNDED_REVIEW_PASS_PACKAGE_AND_INSTALL_PENDING",
+  "specReview": "PASS[REV:a36209c19783]",
+  "updatedAt": "2026-10-08T10:51:18.090860+00:00",
+  "sourceHashes": {
+    "frontend/src/server/persistence-client.ts": "6761ac09aba5f14ca7400485da32ed57676ae1ec2ca09ca6c38657fdac969c45",
+    "frontend/src/server/__module_integration__/canvas-original-worker.persistence-client.test.ts": "299073ca1ae03bb9441cc18af7086f2d536e0f98c972a7173871654b25c996c3",
+    "frontend/src/server/__module_integration__/material-parent-port.persistence-client.test.ts": "f620ec8651a295f8e6dc57baf365696d87616abf280f0a121162f6d2137bf56a"
+  },
+  "tests": [
+    {
+      "name": "public-parent-red",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "creatoros-frontend",
+        "exec",
+        "vitest",
+        "run",
+        "--testTimeout",
+        "180000",
+        "--hookTimeout",
+        "180000",
+        "--retry",
+        "0",
+        "--maxWorkers",
+        "1",
+        "src/server/__module_integration__/canvas-original-worker.persistence-client.test.ts",
+        "src/server/__module_integration__/material-parent-port.persistence-client.test.ts"
+      ],
+      "startedAt": "2026-10-08T10:28:30.740005+00:00",
+      "finishedAt": "2026-10-08T10:29:17.926825+00:00",
+      "exitCode": 1,
+      "elapsedSeconds": 47.18644045799738,
+      "log": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1077-public-parent-fix/public-parent-red.log",
+      "receiptSHA256": "81573871825902c04505cf3bc7747a7fef8a9a6ab9f67162edd4909f61f83473",
+      "logSHA256": "c3b15a334760d4662f69628758fb95c9306dc2501e28ffafc6f7a7693499f46c"
+    },
+    {
+      "name": "public-parent-red-valid-scope",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "creatoros-frontend",
+        "exec",
+        "vitest",
+        "run",
+        "--testTimeout",
+        "180000",
+        "--hookTimeout",
+        "180000",
+        "--retry",
+        "0",
+        "--maxWorkers",
+        "1",
+        "src/server/__module_integration__/canvas-original-worker.persistence-client.test.ts",
+        "src/server/__module_integration__/material-parent-port.persistence-client.test.ts"
+      ],
+      "startedAt": "2026-10-08T10:30:24.364203+00:00",
+      "finishedAt": "2026-10-08T10:31:17.003752+00:00",
+      "exitCode": 1,
+      "elapsedSeconds": 52.63884687499376,
+      "log": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1077-public-parent-fix/public-parent-red-valid-scope.log",
+      "receiptSHA256": "ab7302ee292936cd79a046b900287cf43009992ee7e430c89889facaa4fb178b",
+      "logSHA256": "025ba8452213159172d5822dc14212f821ec677940733b9baf1feb236e6ecd6e"
+    },
+    {
+      "name": "public-parent-green",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "creatoros-frontend",
+        "exec",
+        "vitest",
+        "run",
+        "--testTimeout",
+        "180000",
+        "--hookTimeout",
+        "180000",
+        "--retry",
+        "0",
+        "--maxWorkers",
+        "1",
+        "src/server/__module_integration__/canvas-original-worker.persistence-client.test.ts",
+        "src/server/__module_integration__/material-parent-port.persistence-client.test.ts"
+      ],
+      "startedAt": "2026-10-08T10:34:57.607233+00:00",
+      "finishedAt": "2026-10-08T10:35:44.977055+00:00",
+      "exitCode": 1,
+      "elapsedSeconds": 47.36941412501619,
+      "log": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1077-public-parent-fix/public-parent-green.log",
+      "receiptSHA256": "4493ff84c3e8328758a0d6365142e9a09123ad7376afccfa1a77176a86a84c07",
+      "logSHA256": "9c2e7a7819e8659b32ef221dbeb1d040804609b0c4c384bdcc9275fc90db4cc0"
+    },
+    {
+      "name": "public-parent-red-owner-scope",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "creatoros-frontend",
+        "exec",
+        "vitest",
+        "run",
+        "--testTimeout",
+        "180000",
+        "--hookTimeout",
+        "180000",
+        "--retry",
+        "0",
+        "--maxWorkers",
+        "1",
+        "src/server/__module_integration__/canvas-original-worker.persistence-client.test.ts",
+        "src/server/__module_integration__/material-parent-port.persistence-client.test.ts"
+      ],
+      "startedAt": "2026-10-08T10:37:10.299422+00:00",
+      "finishedAt": "2026-10-08T10:37:54.327421+00:00",
+      "exitCode": 1,
+      "elapsedSeconds": 44.02758654099307,
+      "log": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1077-public-parent-fix/public-parent-red-owner-scope.log",
+      "receiptSHA256": "99b6865ccb83e30c75f3567a7066d0867b152dc0985c9008175d6616806f9cd5",
+      "logSHA256": "3f43324934fe6094c6791e17095a95a6c057e8a93af0f0eecb68abab48be5d83"
+    },
+    {
+      "name": "public-parent-green-owner-scope",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "creatoros-frontend",
+        "exec",
+        "vitest",
+        "run",
+        "--testTimeout",
+        "180000",
+        "--hookTimeout",
+        "180000",
+        "--retry",
+        "0",
+        "--maxWorkers",
+        "1",
+        "src/server/__module_integration__/canvas-original-worker.persistence-client.test.ts",
+        "src/server/__module_integration__/material-parent-port.persistence-client.test.ts"
+      ],
+      "startedAt": "2026-10-08T10:38:13.290580+00:00",
+      "finishedAt": "2026-10-08T10:38:59.942154+00:00",
+      "exitCode": 0,
+      "elapsedSeconds": 46.651179500011494,
+      "log": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1077-public-parent-fix/public-parent-green-owner-scope.log",
+      "receiptSHA256": "8b09c3629ca37ba06d4fcc64a146e5ac4d9e5a86a012e75d82c410fc4a2f1e22",
+      "logSHA256": "6d39d28e08bd739248a305fcd6fb379bbeacc62725990ab109808ec6cc7fefff"
+    },
+    {
+      "name": "material-links-backend-real-pg",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@creatoros/backend",
+        "exec",
+        "vitest",
+        "run",
+        "--testTimeout",
+        "180000",
+        "--hookTimeout",
+        "180000",
+        "--retry",
+        "0",
+        "--maxWorkers",
+        "1",
+        "src/modules/material-links/material-links.service.test.ts",
+        "src/modules/material-links/workspace-parent-write.integration.test.ts"
+      ],
+      "startedAt": "2026-10-08T10:38:32.217262+00:00",
+      "finishedAt": "2026-10-08T10:39:24.777865+00:00",
+      "exitCode": 0,
+      "elapsedSeconds": 52.560205709014554,
+      "log": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1077-public-parent-fix/material-links-backend-real-pg.log",
+      "receiptSHA256": "2a7e7f32259db6f40180bec84198901bffa9a5711118bc727b2548f58379833a",
+      "logSHA256": "51269b7458832ceb11e960c53d99869182347729f8b557095639dfbe7de441e6"
+    },
+    {
+      "name": "frontend-typecheck",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "creatoros-frontend",
+        "typecheck"
+      ],
+      "startedAt": "2026-10-08T10:35:44.592697+00:00",
+      "finishedAt": "2026-10-08T10:36:25.497186+00:00",
+      "exitCode": 0,
+      "elapsedSeconds": 40.90266433299985,
+      "log": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1077-public-parent-fix/frontend-typecheck.log",
+      "receiptSHA256": "78474f547e2f25d045a3e7098bb7acd0bd7a842579f388b5029e7d0bc861efec",
+      "logSHA256": "4c0cd880abe2a1a1a1f20e2f9d2825951e19ae4e848a3f36d2216d3b9e20d035"
+    },
+    {
+      "name": "contract-typecheck",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@creatoros/contract",
+        "typecheck"
+      ],
+      "startedAt": "2026-10-08T10:36:01.143958+00:00",
+      "finishedAt": "2026-10-08T10:36:05.127214+00:00",
+      "exitCode": 0,
+      "elapsedSeconds": 3.983024415996624,
+      "log": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1077-public-parent-fix/contract-typecheck.log",
+      "receiptSHA256": "37776c19cd91272f4cf92fbf933b17223d39783077794713f4bf84a7b12163bb",
+      "logSHA256": "d819a6e1f78b2951433132e182dffbbd1eaa881e6c535db02871314377997331"
+    },
+    {
+      "name": "boundary",
+      "argv": [
+        "node",
+        "orchestrator/process/boundary-scan.mjs"
+      ],
+      "startedAt": "2026-10-08T10:37:47.946123+00:00",
+      "finishedAt": "2026-10-08T10:37:48.274424+00:00",
+      "exitCode": 1,
+      "elapsedSeconds": 0.3281861249997746,
+      "log": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1077-public-parent-fix/boundary.log",
+      "receiptSHA256": "745456c0e8723a1317aaeaaf10f403baa85d722c319408726f4f0497530b86e4",
+      "logSHA256": "6b23ce459cd49f9f78d9a4185f9bceaa53c27b96d14e64f2fdf1a0422b6e6985"
+    },
+    {
+      "name": "semantic",
+      "argv": [
+        "node",
+        "orchestrator/process/semantic-boundary-scan.mjs"
+      ],
+      "startedAt": "2026-10-08T10:37:47.951398+00:00",
+      "finishedAt": "2026-10-08T10:37:48.199682+00:00",
+      "exitCode": 1,
+      "elapsedSeconds": 0.2481651249981951,
+      "log": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1077-public-parent-fix/semantic.log",
+      "receiptSHA256": "30333fe94ca6cd4d80f6f910055ce15622a5e432443f6d982d4483e2c8ddc716",
+      "logSHA256": "7cbfa9443346edf9491b83ddb83b954cb1f8df6829a641b2362813753644e2f7"
+    },
+    {
+      "name": "timeout",
+      "argv": [
+        "node",
+        "tools/timeout-policy/verify.mjs"
+      ],
+      "startedAt": "2026-10-08T10:37:47.946192+00:00",
+      "finishedAt": "2026-10-08T10:37:48.045831+00:00",
+      "exitCode": 1,
+      "elapsedSeconds": 0.09941012499621138,
+      "log": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1077-public-parent-fix/timeout.log",
+      "receiptSHA256": "3dcd9f1038357ddd5574c8930a81fd45b039a6b2adbad27590973e8e4ab26475",
+      "logSHA256": "9ba8029f31e215297c3e8e6aa03c0f61cf3c58c079380fdb5ab9749a9c6bed38"
+    },
+    {
+      "name": "diff-check",
+      "argv": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "startedAt": "2026-10-08T10:39:51.858630+00:00",
+      "finishedAt": "2026-10-08T10:39:51.920785+00:00",
+      "exitCode": 0,
+      "elapsedSeconds": 0.06201112500275485,
+      "log": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1077-public-parent-fix/diff-check.log",
+      "receiptSHA256": "91e441b724d1247c1895fade30020029405712dfd7ba2a453d8b8cb6f2fb49ec",
+      "logSHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "frontend-final-typecheck",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "creatoros-frontend",
+        "typecheck"
+      ],
+      "startedAt": "2026-10-08T10:42:30.687295+00:00",
+      "finishedAt": "2026-10-08T10:42:37.633649+00:00",
+      "exitCode": 0,
+      "elapsedSeconds": 6.946182082989253,
+      "log": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1077-public-parent-fix/frontend-final-typecheck.log",
+      "receiptSHA256": "21ebd3194dd153d88b13da8f53eaa156139ddfe605c81bcca57b328986d46eea",
+      "logSHA256": "4c0cd880abe2a1a1a1f20e2f9d2825951e19ae4e848a3f36d2216d3b9e20d035"
+    }
+  ],
+  "counts": {
+    "frontendPublicPassed": 6,
+    "backendPassed": 18,
+    "backendSkipped": 0
+  },
+  "limits": [
+    "前三次scope夹具/断言问题及原日志保留，正式TDD使用public-parent-red-owner-scope与public-parent-green-owner-scope同一argv。",
+    "同组账号筛选不改变共享创作任务归属；跨组/用户仍拒绝，legacy叠账号边界。",
+    "原boundary7/live-chat-session旧2、semantic缺material.match与timeout入口缺失保留，不声称全仓通过。",
+    "本次真实worker是本机HTTP fixture，研究候选是原AI service明确夹具，不代签真实供应商。",
+    "独立实施复核已通过；打包安装与原401正式恢复尚待真实发生；全功能/原生验收未完成。"
+  ],
+  "wholeAcceptance": false,
+  "finalSourceTypesBound": true,
+  "implementationReview": {
+    "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1077-public-parent-fix/implementation-independent-report.json",
+    "sha256": "4404ad4e3661fec55ad148e387ad90f0413927285a2200c78d6b0dbb6e2973b4",
+    "verdict": "PASS_BOUNDED_IMPLEMENTATION",
+    "findings": [],
+    "sourceAndEvidenceHashesRechecked": true
+  }
+}

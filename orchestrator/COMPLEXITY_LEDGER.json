@@ -3317,6 +3317,42 @@
       "reason": "独立实施复核核对原装配，仅追加同一既有标签owner的只读prepare端口；原凭据、宿主语言与原生执行保持。",
       "review": "docs/verification/t1075/result.json",
       "acceptance": "2026-10-08实际独立实施PASS、8路径SHA与私有PG87PASS/0skip重绑；报告f4d108eb...及原失败在result.json。仅源码通过，不代表安装或完整功能验收。"
+    },
+    {
+      "task_id": "T-1077",
+      "files": [
+        "frontend/src/server/persistence-client.ts"
+      ],
+      "file_sha256": "fd77fece7398b7c6318c7b8275c57c3cc6966c802dbd86440f25a158ff628c6d",
+      "categories": [
+        "credential_store",
+        "language_toolchain",
+        "native_executable"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-AI-1077",
+      "scope_source": "docs/features/t1077-material-parent-port.md",
+      "reason": "复用原凭据/Rust/进程装配基线；只修三个MaterialLinks私有父返回值，零凭据/语言/原生执行改动。",
+      "review": "docs/features/t1077-material-parent-port.review.md",
+      "acceptance": "实际前置PASS[REV:a36209c19783]；只绑定开工基点，不签实现、测试或安装。"
+    },
+    {
+      "task_id": "T-1077",
+      "files": [
+        "frontend/src/server/persistence-client.ts"
+      ],
+      "file_sha256": "6761ac09aba5f14ca7400485da32ed57676ae1ec2ca09ca6c38657fdac969c45",
+      "categories": [
+        "credential_store",
+        "language_toolchain",
+        "native_executable"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-AI-1077",
+      "scope_source": "docs/features/t1077-material-parent-port.md",
+      "reason": "实际独立实施复核确认只改三个MaterialLinks父返回值；原凭据/Rust/进程装配、归属与锁字节未改。",
+      "review": "docs/verification/t1077/result.json",
+      "acceptance": "2026-10-08独立限定实施PASS，报告4404ad4e...；实际正确owner RED4失败/2旧入口PASS→GREEN6，原MaterialLinks真实隔离PG18PASS/0skip和最终frontend/contract类型0。只绑定当前源码，安装/原401/全功能仍待验。"
     }
   ],
   "historical_baselines": []

@@ -2692,7 +2692,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       const txProjects=createProjectsService(createProjectRepository(txDb),deps);
       const txAssets=createAssetsService(createAssetRepository(txDb,deps),objectStorageForCtx,deps);
       return createMaterialLinksService({db:txDb,...deps,
-        assertProjectOwned:async(context,id)=>{await txProjects.listOutputIdsByProject(context,id);},
+        assertProjectOwned:(context,id)=>txProjects.getProject(context,id),
         assertAssetOwned:async(context,id)=>{
           const asset=await txAssets.getAsset(context,id);
           if(asset.status!=="active")throw new Error("素材已不可用，请重新选择素材");
@@ -2747,7 +2747,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       const txProjects=createProjectsService(createProjectRepository(txDb),deps);
       const txKnowledge=createKnowledgeService(createKnowledgeRepository(txDb,deps));
       return createMaterialLinksService({db:txDb,...deps,
-        assertProjectOwned:async(context,id)=>{await txProjects.listOutputIdsByProject(context,id);},
+        assertProjectOwned:(context,id)=>txProjects.getProject(context,id),
         assertKnowledgeOwned:(context,id)=>txKnowledge.getKnowledge(context,id),
       }).create(c,input);
     },
@@ -3383,7 +3383,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   }});
   const workSourceService=createWorkSourceService(createWorkSourcePortsFactory({projects:workProjectsFor,assets:workAssetsFor,
     readProjectScriptVersion:store=>createProjectScriptSource({projects:workProjectsFor(store),artifacts:workArtifactsFor(store)}).readVersion,
-    materialLinks:store=>createMaterialLinksService({db:store,...deps,assertProjectOwned:async(c,id)=>{await workProjectsFor(store).getProject(c,id);},resolveOutputProjectId:(c,id)=>workProjectsFor(store).getProjectIdByOutput(c,id),assertKnowledgeOwned:(c,id)=>workKnowledgeFor(store).getKnowledge(c,id),assertAssetOwned:(c,id)=>workAssetsFor(store).getAsset(c,id)}),
+    materialLinks:store=>createMaterialLinksService({db:store,...deps,assertProjectOwned:(c,id)=>workProjectsFor(store).getProject(c,id),resolveOutputProjectId:(c,id)=>workProjectsFor(store).getProjectIdByOutput(c,id),assertKnowledgeOwned:(c,id)=>workKnowledgeFor(store).getKnowledge(c,id),assertAssetOwned:(c,id)=>workAssetsFor(store).getAsset(c,id)}),
     moments:workMomentsFor,compositions:workCompositionsFor,
     conversion:store=>({projects:workProjectsFor(store),articles:workArticlesFor(store),graphicPosts:workGraphicFor(store),outputScripts:workScriptsFor(store)}),
     pureIntelligenceSnapshot:createIntelligenceSnapshotReader,
