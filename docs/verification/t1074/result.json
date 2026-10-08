@@ -1,6 +1,6 @@
 {
   "taskId": "T-1074",
-  "updatedAt": "2026-10-08T02:53:31.187277+00:00",
+  "updatedAt": "2026-10-08T03:04:44.150088+00:00",
   "taskComplete": false,
   "sourceBaseBeforeCommit": "fbb861d433eae12b5824709916a669c7a0400aa5",
   "specSHA256": "c33f1a6a06bcb5a4782abda16153c0877654f707a733612d3773060e251ed411",
@@ -556,6 +556,18 @@
       "endUTC": "2026-10-08T02:51:23.955145+00:00",
       "logSHA256": "7cbfa9443346edf9491b83ddb83b954cb1f8df6829a641b2362813753644e2f7",
       "description": "保留原video-decisions-runner缺material.match失败，不修改原语义规则"
+    },
+    {
+      "name": "core-prefreeze-reconcile",
+      "argv": [
+        "node",
+        "orchestrator/process/reconcile.mjs"
+      ],
+      "exitCode": 1,
+      "startUTC": "2026-10-08T02:52:54.201184+00:00",
+      "endUTC": "2026-10-08T03:03:26.752715+00:00",
+      "logSHA256": "ff95de5787927c16835d0101ec144e975f066133317a455d69dfd96ce84cc3e0",
+      "description": "实际全局37错误/1告警；与824冻结前ERROR集合精确比较见comparison，不签全绿"
     }
   ],
   "evidenceRoot": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl",
@@ -571,5 +583,16 @@
     "report": "docs/verification/t1074/core-implementation-review.json",
     "findingClosed": "CORE-001",
     "wholeGoalComplete": false
-  }
+  },
+  "globalComparison": {
+    "baseline": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-diagnosis/root-prefreeze-reconcile.log",
+    "baselineSHA256": "ff95de5787927c16835d0101ec144e975f066133317a455d69dfd96ce84cc3e0",
+    "current": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1074-tests/core-prefreeze-reconcile.log",
+    "currentSHA256": "ff95de5787927c16835d0101ec144e975f066133317a455d69dfd96ce84cc3e0",
+    "sameErrors": true,
+    "added": [],
+    "removed": [],
+    "currentErrorCount": 37
+  },
+  "candidateImplementationCommit": "cacf4d2643ded91974505ac7986cd9d9afedd36a"
 }

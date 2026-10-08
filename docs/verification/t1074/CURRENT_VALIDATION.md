@@ -159,3 +159,5 @@ flowchart LR
 临时组件浏览器1024视口已实际reset并关闭私有tab，私有Vite主动结束；用户的原页未替换。
 
 核心实现独立复核链已PASS，见[当前报告](core-implementation-review.md)。原35源中仅root/合同/测试发生已复核分页修复，其余32源逐一SHA不变；原FAIL和独立Knowledge重放均在机器报告内保留。
+
+源码已于`cacf4d26`提交，本轮完整reconcile实际exit1/37错误1告警（运行2026-10-08T02:52:54.201184+00:00至2026-10-08T03:03:26.752715+00:00，log SHA `ff95de5787927c16835d0101ec144e975f066133317a455d69dfd96ce84cc3e0`）。与`t1070-diagnosis/root-prefreeze-reconcile.log`原ERROR集合相同=true；新增0/消失0，原欠债保留，不将本任务或整仓完成。四打包基本检查实际44通过；尚未生成新包。
