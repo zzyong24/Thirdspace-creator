@@ -1,6 +1,6 @@
 {
   "taskId": "T-1074",
-  "updatedAt": "2026-10-08T03:04:44.150088+00:00",
+  "updatedAt": "2026-10-08T03:40:00.371045+00:00",
   "taskComplete": false,
   "sourceBaseBeforeCommit": "fbb861d433eae12b5824709916a669c7a0400aa5",
   "specSHA256": "c33f1a6a06bcb5a4782abda16153c0877654f707a733612d3773060e251ed411",
@@ -576,7 +576,7 @@
     "后端类型仍有两个未改旧测试错误",
     "全局边界与timeout-policy仍红",
     "私有组件夹具不代签真实模型或安装版",
-    "尚未产出本轮新包"
+    "当前本地包已生成并安装；原生可见首页待用户反馈，未代签全功能验收"
   ],
   "coreImplementationReview": {
     "verdict": "PASS",
@@ -594,5 +594,181 @@
     "removed": [],
     "currentErrorCount": 37
   },
-  "candidateImplementationCommit": "cacf4d2643ded91974505ac7986cd9d9afedd36a"
+  "candidateImplementationCommit": "cacf4d2643ded91974505ac7986cd9d9afedd36a",
+  "localPackage": {
+    "path": "/Users/zyongzhu/Downloads/CreatorOS-1.2.0.dmg",
+    "sha256": "05f950d1e7fc8cf08cad12e798e2d4197628bb3911387d0df2b8057e63fd6ba2",
+    "bytes": 667348058,
+    "basic_tests_passed": 44,
+    "build_exit": 0,
+    "dmg_verify_exit": 0,
+    "signature": "local-ad-hoc-not-notarized",
+    "app_full_mirror_files": 7,
+    "backend_resource_count": 791
+  },
+  "currentInstalled": {
+    "actual_exit": 0,
+    "steps_all_exit0": true,
+    "native_pid": 81735,
+    "sidecar_pid": 81983,
+    "access": "full",
+    "operation_count": 409,
+    "old_operations_removed": [],
+    "added_operations": [
+      "ai.assistantActions.adopt",
+      "ai.assistantActions.receipt",
+      "canvas.create.adopt",
+      "canvas.generation.confirm"
+    ],
+    "fresh_backup": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/offline-backup-real-provenance-journal-ga2fk7hb",
+    "fresh_backup_closure_sha256": "16718645a5ffd173cbad77acd7d16945962ae99e48c76acb5535f6cafe2f4abf",
+    "old_application_preserved_by_rename": true,
+    "user_data_reset_or_restore": false,
+    "orphan_force_stopped_single_pid": 37873,
+    "flush_confirmed": false,
+    "visible_home_user_confirmation": "PENDING"
+  },
+  "installedPiCanvas": {
+    "status": "PASS_BOUNDED_PUBLIC_MODEL_SOURCE_ADOPTION_READBACK",
+    "actual_engine": "pi",
+    "conversationId": "ai-conv-b64dd921-147",
+    "taskId": "ai-task-b64dd921-152",
+    "source": {
+      "callId": "call_7f678578-c945-43e8-882a-ec096175a142",
+      "taskId": "ai-task-b64dd921-152",
+      "toolCallId": "call_01a11992cb1a778db92bc38e",
+      "candidateDigest": "sha256:5e92fc9d5c9302dbc6311d3eb21d8d3d0e512231e2ceeb1c8fe339634e261a1b"
+    },
+    "canvasId": "66690ab6-9ac3-4bfe-8ffa-4569a4a1b4dd",
+    "revision": 1,
+    "nodes": 3,
+    "edges": 2,
+    "exact_document_readback": true,
+    "receipt_equals_adoption": true,
+    "source_replay_returns_identical_result": true,
+    "canvas_count_before": 1,
+    "canvas_count_after": 2,
+    "cross_group_receipt_rejected": true,
+    "tampered_digest_rejected": true,
+    "real_tools": [
+      "tool-system_read",
+      "tool-system_read",
+      "tool-system_read",
+      "tool-canvas_create_propose"
+    ],
+    "initial_confirmation_flag_409_retained": true,
+    "initial_correction_same_idempotency_key": true,
+    "model_task_resubmitted": false,
+    "native_ui_clicks_claimed": false
+  },
+  "installedEvidenceIndex": {
+    "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1074-installed/bounded-acceptance-index.json",
+    "sha256": "7ef77980ee04027211029dfeedb0653722eefb9ce9ce2572f92620cf6d7d42c9",
+    "bytes": 16696
+  },
+  "installedPreservation": {
+    "groups": {
+      "data_deep_equal_previous_install_record": true,
+      "before": {
+        "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-install-preparation-fxklwawl/installation-actual/installed-groups.json",
+        "sha256": "e7ec70c6c98b0523bdb02d8335394375196ede668c423a73cc2726d5351a6cf1",
+        "bytes": 2790
+      },
+      "current": {
+        "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1074-installed/groups-new.stdout.json",
+        "sha256": "f0d2008e66dd34a8d2e13508b7f8ff2c3e8d27a3e1364721f5b2d5e765320997",
+        "bytes": 2790
+      }
+    },
+    "accounts": {
+      "data_deep_equal_previous_install_record": true,
+      "before": {
+        "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-install-preparation-fxklwawl/installation-actual/installed-accounts.json",
+        "sha256": "8e6ee6980916bb73c9cbc17ad0070dd6b524fa9915600ea5e1fd2d510af4282e",
+        "bytes": 1474
+      },
+      "current": {
+        "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1074-installed/accounts-new.stdout.json",
+        "sha256": "93bde174fa5d2a0c6e487224f9615a1aaeb987aae1db5266870dd2c91e0e1760",
+        "bytes": 1474
+      }
+    },
+    "editor": {
+      "data_deep_equal_previous_install_record": true,
+      "before": {
+        "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-install-preparation-fxklwawl/installation-actual/neutral-editor-current.json",
+        "sha256": "d775747eabbf08940c5210f056a497351551b4ccc78dc7787b4f6b8ae4d25210",
+        "bytes": 16942
+      },
+      "current": {
+        "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1074-installed/neutral-editor-read.stdout.json",
+        "sha256": "28fb259e8ff2107f2d6582d7cbd139da062b9bdd5d93d1607608f8aa5905454f",
+        "bytes": 16942
+      }
+    },
+    "article": {
+      "data_deep_equal_previous_install_record": true,
+      "before": {
+        "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-install-preparation-fxklwawl/installation-actual/article-current.json",
+        "sha256": "7318393999adc9bba9f31046c0ed787e98d7323f6fdedec019fce59a353d6b19",
+        "bytes": 2322
+      },
+      "current": {
+        "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1074-installed/neutral-article-read.stdout.json",
+        "sha256": "32cd944fa7e1dc61fa84a0eaa547d9ce35b4393563913eccf4bc8366a0b3973f",
+        "bytes": 2322
+      }
+    },
+    "graphic": {
+      "data_deep_equal_previous_install_record": true,
+      "before": {
+        "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1071-install-preparation-fxklwawl/installation-actual/graphic-current.json",
+        "sha256": "9bc66f452209e7bf060f3063eaf406706d2f051a85153692be2f163b26a69c73",
+        "bytes": 1964
+      },
+      "current": {
+        "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1074-installed/neutral-graphic-read.stdout.json",
+        "sha256": "d7d7d2d5bfb397e07b09488479b4f6858cbf9635bf30f3f5ad7dac27431c3d4a",
+        "bytes": 1964
+      }
+    }
+  },
+  "oldExportReadback": {
+    "started": "2026-10-08T03:35:03.222349+00:00",
+    "source_operation": "assets.downloadUrl",
+    "assetId": "asset-33ff4e5b-144",
+    "transport": "原公开下载相对URL在已核实属于新Native的服务origin解析；直连loopback，不改Origin/授权header",
+    "file": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1074-installed/preserved-rough-cut-8.16s.mp4",
+    "native_pid": 81735,
+    "sidecar_pid": 81983,
+    "http_status": 200,
+    "bytes": 199098,
+    "sha256": "a72af1826b27bc566fb7b839c4c0813aa3cc04bb0cde6164e1ec04f41f3e1558",
+    "matches_original_approved_export": true,
+    "ffprobe_exit": 0,
+    "decode_exit": 0,
+    "finished": "2026-10-08T03:35:03.564413+00:00",
+    "new_render_submitted": false
+  },
+  "installedLimitations": [
+    "只验证当前安装版真实Pi画布创建/正式采纳和公开读回，不代表两引擎全功能矩阵。",
+    "原生可见首页仍待用户反馈；浏览器来源保护和桌面自动化限制不绕过，原生右栏/200%未签。",
+    "画布节点生图确认/产物放置、Codex右栏、七类视频调整与文章图文持续精调的新安装版仍待逐项。",
+    "原8.16秒产物仅重新下载/解码验证字节保持，不是本轮新render或导出。",
+    "强制关闭旧孤儿只证明进程结束，未证明flush；新鲜备份完整闭包与正式对象读回分别记录。",
+    "全局37错误1告警及原后端两个测试类型错误保留，未签全绿或任务完成。"
+  ],
+  "historyLimitationsBeforeCurrentInstallation": [
+    "真实两引擎模型矩阵、19类完整异常矩阵与安装版功能验收未完成",
+    "后端类型仍有两个未改旧测试错误",
+    "全局边界与timeout-policy仍红",
+    "私有组件夹具不代签真实模型或安装版",
+    "尚未产出本轮新包"
+  ],
+  "installedIndependentReview": {
+    "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1074-installed/independent-bounded-evidence-review.json",
+    "sha256": "513bf0ed2132ae3ea6e8a21e6fa4e59bcf825990286875df41cc7a57f0674817",
+    "bytes": 34458,
+    "verdict": "PASS_BOUNDED_EVIDENCE"
+  }
 }

@@ -1,6 +1,6 @@
 # T-1074 当前验证记录
 
-更新时间：2026-10-08。任务仍在实现与验收中，尚未交付本轮新安装包，也未代签用户验收。本轮源基线 `fbb861d433eae12b5824709916a669c7a0400aa5`；提交状态以实际 Git 为准，包与安装证据单独记录。
+更新时间：2026-10-08。任务仍在逐项验收中；本轮新本地包已生成并安装，公开CLI已连接，新安装版真实Pi画布创建/采纳/读回已通过，但未代签用户验收或两引擎全功能矩阵。早期未提交源基线 `fbb861d433eae12b5824709916a669c7a0400aa5` 保留；产品实现提交 `cacf4d26`，本包冻结源 `74883948432b87f73ea464fb029bf2f5554ac47f`，下文分别绑定历史测试、包和安装证据。
 
 工具先读取原账号组的真实对象，模型只提出候选；用户采用后，原业务服务保存正式结果，并在同一事务记录原来源回执。生成和扫码沿原任务观察，不因刷新重发。
 
@@ -131,7 +131,7 @@ flowchart LR
 | boundary-nine-current | 1 | exit1/7条，日志SHA与旧current-boundary完全相同，未改live-chat-session | `6b23ce459cd49f9f78d9a4185f9bceaa53c27b96d14e64f2fdf1a0422b6e6985` |
 | timeout-policy-current | 1 | exit1/MODULE_NOT_FOUND；MAIN仍缺规定verify入口，无借用或造PASS | `9ba8029f31e215297c3e8e6aa03c0f61cf3c58c079380fdb5ab9749a9c6bed38` |
 
-浏览器使用当前原组件/Provider/typed client的私有HTTP夹具实际检查：1366未保存标题与具体提示保留，记录仅receipt读；1024保存等待中新增标题，正式source采用仅一次，原精确版本读回，标题和当前输入焦点保留，显示已保存未覆盖输入。画面已实际查看：`t1074-cards-ui/nine-dirty-current-1366.png`、`nine-new-input-preserved-1024.png`。这不证明模型、真实后台或安装版UI；200%和原生逐项仍未签。九文件有界独立实现复查已PASS，报告见[nine-consumers-implementation-review.md](nine-consumers-implementation-review.md)，原Intelligence机制已按当前源摘要重绑，旧历史保留。核心总体实现复查仍在进行，基础实现不等于总体验收完成。
+浏览器使用当前原组件/Provider/typed client的私有HTTP夹具实际检查：1366未保存标题与具体提示保留，记录仅receipt读；1024保存等待中新增标题，正式source采用仅一次，原精确版本读回，标题和当前输入焦点保留，显示已保存未覆盖输入。画面已实际查看：`t1074-cards-ui/nine-dirty-current-1366.png`、`nine-new-input-preserved-1024.png`。这不证明模型、真实后台或安装版UI；200%和原生逐项仍未签。九文件有界独立实现复查已PASS，报告见[nine-consumers-implementation-review.md](nine-consumers-implementation-review.md)，原Intelligence机制已按当前源摘要重绑，旧历史保留。核心总体实现后续复核已PASS，见末节保留的原FAIL与修复链；基础实现不等于总体验收完成。
 
 ## 核心分页独评发现及当场修复
 核心只读实现审查初次FAIL仅发现CORE-001：知识及同族原transport全量返回，新system.read未按query.pageSize裁切，且允许100。原FAIL/真实复现保留；只修改既审新合同/root及原测试，不修改原手工owner/transport，不增加权限。新wrapper最多50条，四全量族沿原page切页，原分页结果不二次offset裁切；没有真实总数的三族如实为null，nextInput保留原request并继续下一页；有效meta随实际页归一化。
@@ -160,4 +160,20 @@ flowchart LR
 
 核心实现独立复核链已PASS，见[当前报告](core-implementation-review.md)。原35源中仅root/合同/测试发生已复核分页修复，其余32源逐一SHA不变；原FAIL和独立Knowledge重放均在机器报告内保留。
 
-源码已于`cacf4d26`提交，本轮完整reconcile实际exit1/37错误1告警（运行2026-10-08T02:52:54.201184+00:00至2026-10-08T03:03:26.752715+00:00，log SHA `ff95de5787927c16835d0101ec144e975f066133317a455d69dfd96ce84cc3e0`）。与`t1070-diagnosis/root-prefreeze-reconcile.log`原ERROR集合相同=true；新增0/消失0，原欠债保留，不将本任务或整仓完成。四打包基本检查实际44通过；尚未生成新包。
+源码已于`cacf4d26`提交，本轮完整reconcile实际exit1/37错误1告警（运行2026-10-08T02:52:54.201184+00:00至2026-10-08T03:03:26.752715+00:00，log SHA `ff95de5787927c16835d0101ec144e975f066133317a455d69dfd96ce84cc3e0`）。与`t1070-diagnosis/root-prefreeze-reconcile.log`原ERROR集合相同=true；新增0/消失0，原欠债保留，不将本任务或整仓完成。当时四打包基本检查实际44通过；随后冻结打包与安装实际结果见下节，不将先前时间点追记成安装PASS。
+
+## 新冻结本地包、实际安装与Pi画布创建
+
+固定入口 `pnpm -C frontend desktop:package-local` 在干净冻结源 `74883948` 上实际exit0；未改产品或打包入口消除失败，版本仍1.2.0。规范安装包 `/Users/zyongzhu/Downloads/CreatorOS-1.2.0.dmg`，667348058字节，SHA256 `05f950d1e7fc8cf08cad12e798e2d4197628bb3911387d0df2b8057e63fd6ba2`。44基本测试、hdiutil verify、镜像/构建App深严格签名均exit0；全7应用文件镜像一致，后端791资源逐项匹配冻结源码。这是本地ad-hoc包，未经Apple公证。只读DMG已实际detach0。
+
+旧Native37432退出后残留37873仍有数据文件占用，TERM与INT各实际观察120秒均未退出，随后重新核实际PID/启动时间/cwd/executable，仅对37873强制停止；不发进程组或广泛pkill，不宣称flush。旧15个共享工具PID快照过期，按新实际11身份及每个完整25项txt/REG映射，仅重绑两个字面快照；原新PID、写FD、身份变化、缺文件等拒绝规则不变。独评发现安装adapter路径字面漏替换，在任何安装前纠正并复核PASS；原finding和初SHA保留。
+
+新鲜五根目录及偏好文件备份 `offline-backup-real-provenance-journal-ga2fk7hb` 实际9步全exit0，最终闭包SHA `16718645a5ffd173cbad77acd7d16945962ae99e48c76acb5535f6cafe2f4abf`；强停不等于安全落盘，闭包也不替代业务读回。原安装机制12步全exit0（含再次闭包、占用、镜像、前后签名和open），旧App通过rename保留；没有恢复/重置用户数据或激活。Native81735/sidecar81983已实际运行，首次展开36943项约1696MiB，公开status最终connected/full。初期CONNECTION_STALE按真实记录保留，未当成访问关闭或另行授权。
+
+当前安装版动态目录409项，原405无删除，新增四项正式来源API；compact返回20项并有真实后续页。完整5组/3账号数组、原中性工程revision6、文章current233和图文current258，与上一安装实际记录data深等；原工程preview8.16秒无警告。原已获用户采用的成片重新按公开下载URL在已核新Native服务origin解析，HTTP200、199098字节与原SHA `a72af1826b27bc566fb7b839c4c0813aa3cc04bb0cde6164e1ec04f41f3e1558` 完全一致，ffprobe及全解码exit0；这是旧产物保持，不是本轮新渲染。
+
+在已授权的中性组101/项目104创建验收会话147，公开消息151产生唯一task152/execution153。首次confirm-impact误传group ID，真实409在guard前拒绝；纠正为实际会话ID，沿同一幂等key成功，不为获取PASS重发模型任务。任务actualEngine=pi、completeness=completed；实际三个system.read读取原画布能力/列表/项目，随后canvas.create.propose生成“脚本到多载体创作”3个文字节点/2条连线的完整候选。采用前receipt=null/只有原1画布；正式canvas.create.adopt保存画布 `66690ab6-9ac3-4bfe-8ffa-4569a4a1b4dd` revision1，document完整等于候选。正式get与receipt准确读回；不同gateway key同source重复采用返回完全同一结果，列表只从1变2；跨组receipt与篡改candidateDigest分别真实409拒绝。所有操作走公开CLI与原来源/owner，没有直接写库。
+
+[机器结果](result.json)绑定本机`t1074-installed/bounded-acceptance-index.json`及36项当场证据；完整备份状态、最初失败、强停限制均保留。该链只证明当前安装版Pi画布创建及公开正式采纳/读回；原生界面按钮不是本次调用入口，原生可见首页仍待用户反馈。Codex右栏、画布节点生成/放置、七类自然语言视频操作、文章图文持续精调、两引擎全功能矩阵及200%原生操作仍待验；不将T1074、T1070、T1071或T1062完成。
+
+本轮有界安装/公开实测证据另经独立只读复核PASS，报告`t1074-installed/independent-bounded-evidence-review.json`，SHA256 `513bf0ed2132ae3ea6e8a21e6fa4e59bcf825990286875df41cc7a57f0674817`；只签实际安装、Pi画布来源采纳和读回范围，不代签原生可见体验或完整任务。
