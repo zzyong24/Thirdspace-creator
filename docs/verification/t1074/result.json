@@ -1,6 +1,6 @@
 {
   "taskId": "T-1074",
-  "updatedAt": "2026-10-08T03:40:00.371045+00:00",
+  "updatedAt": "2026-10-08T05:51:12.065150+00:00",
   "taskComplete": false,
   "sourceBaseBeforeCommit": "fbb861d433eae12b5824709916a669c7a0400aa5",
   "specSHA256": "c33f1a6a06bcb5a4782abda16153c0877654f707a733612d3773060e251ed411",
@@ -598,37 +598,56 @@
   },
   "candidateImplementationCommit": "cacf4d2643ded91974505ac7986cd9d9afedd36a",
   "localPackage": {
+    "candidateCommit": "b64061ab6bee213c939bf97ad19f423c7090a5ef",
     "path": "/Users/zyongzhu/Downloads/CreatorOS-1.2.0.dmg",
-    "sha256": "05f950d1e7fc8cf08cad12e798e2d4197628bb3911387d0df2b8057e63fd6ba2",
-    "bytes": 667348058,
-    "basic_tests_passed": 44,
-    "build_exit": 0,
-    "dmg_verify_exit": 0,
+    "preservedPath": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1075-local-package-b64061ab/CreatorOS-1.2.0.dmg",
+    "sha256": "7060b1732a433148ce722df7b0e6f2f18de971f11cebb9a5d8a77d71efb3543d",
+    "bytes": 667061735,
     "signature": "local-ad-hoc-not-notarized",
-    "app_full_mirror_files": 7,
-    "backend_resource_count": 791
+    "basicTests": {
+      "files": 4,
+      "passed": 44
+    },
+    "dmgVerifyExit": 0,
+    "signatureVerifyExit": 0,
+    "fullAppMirrorFiles": 7,
+    "fullAppMirrorMatchesBuildRecord": true,
+    "backendResourceCount": 791,
+    "rawBackendSourceHashesVerified": false,
+    "artifactVerification": {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1075-local-package-b64061ab/artifact-verification.json",
+      "sha256": "d8e70bfd6cf0797223550fc5e4d087de7cfc23ed76da4fc09c9cf87f637a052c"
+    },
+    "buildResult": {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1075-local-package-b64061ab/build.result.json",
+      "sha256": "a3012e5834f3e12fd5781dfb821be39f408f3a0545c0e1b257a6cbe8f5a676ea"
+    },
+    "literalInstallerReview": {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1075-install-preparation-b64061ab/literal-adaptation-review.json",
+      "sha256": "8fdcefb632755765cb80a9ea926e3bc8e2eaf73faa00ddafebd9e9ad389b753f"
+    },
+    "freshBackupStarted": false,
+    "stageCreated": false,
+    "installed": false,
+    "startupForNewPackageVerified": false
   },
   "currentInstalled": {
-    "actual_exit": 0,
-    "steps_all_exit0": true,
-    "native_pid": 81735,
-    "sidecar_pid": 81983,
+    "head": "74883948432b87f73ea464fb029bf2f5554ac47f",
+    "nativePID": 6790,
+    "publicListenerPID": 6894,
+    "connected": true,
     "access": "full",
-    "operation_count": 409,
-    "old_operations_removed": [],
-    "added_operations": [
-      "ai.assistantActions.adopt",
-      "ai.assistantActions.receipt",
-      "canvas.create.adopt",
-      "canvas.generation.confirm"
-    ],
-    "fresh_backup": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/offline-backup-real-provenance-journal-ga2fk7hb",
-    "fresh_backup_closure_sha256": "16718645a5ffd173cbad77acd7d16945962ae99e48c76acb5535f6cafe2f4abf",
-    "old_application_preserved_by_rename": true,
-    "user_data_reset_or_restore": false,
-    "orphan_force_stopped_single_pid": 37873,
-    "flush_confirmed": false,
-    "visible_home_user_confirmation": "PENDING"
+    "sourceMirrorMatchesOriginalArtifact": true,
+    "resumeReceipt": {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1075-install-preparation-b64061ab/resume-current-for-testing/result.json",
+      "sha256": "8483a24126009ac8c2ef24419c3696f619059bf1513451b15f47ff56e11fe9ea"
+    },
+    "publicStatusReceipt": {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1075-install-preparation-b64061ab/resume-current-for-testing/cli-status.receipt.json",
+      "sha256": "d848690e1eaa744cb4d47ae42a37a3d9602ed87b13ff519d4710df898fd32c0d"
+    },
+    "newPackageInstalled": false,
+    "nativeVisibleHomeVerified": false
   },
   "installedPiCanvas": {
     "status": "PASS_BOUNDED_PUBLIC_MODEL_SOURCE_ADOPTION_READBACK",
@@ -823,6 +842,139 @@
     ],
     "sourceFixTask": "T-1075",
     "sourceFixNotInstalled": true,
-    "nativeTwoEnginesFullMatrix": "PENDING"
+    "nativeTwoEnginesFullMatrix": "PENDING",
+    "publicManualEditorExtension": {
+      "status": "BOUNDED_PUBLIC_MANUAL_VIDEO_PASS_NOT_WHOLE_FUNCTIONAL_PASS",
+      "installedHead": "74883948432b87f73ea464fb029bf2f5554ac47f",
+      "groupId": "grp-58776bff-101",
+      "projectId": "project-b64dd921-376",
+      "outputId": "output-a36b244e-133",
+      "currentEditorRevision": 5,
+      "originalImageTaskPreserved": "ai-task-b64dd921-401",
+      "originalImageTaskStatus": "awaiting_confirmation",
+      "paidImageRegenerated": false,
+      "renderTaskId": "ai-task-a36b244e-195",
+      "renderAssetId": "asset-a36b244e-272",
+      "renderAssetFileId": "afile-a36b244e-273",
+      "finalMediaSHA256": "9f15dfbd255b6de1f4cbc7b4377e0c2de4b3176e9bc1a8de5c908de62485041b",
+      "durationSec": 8,
+      "width": 1920,
+      "height": 1080,
+      "fps": 30,
+      "decodedVideoFrames": 240,
+      "fullDecodeExit": 0,
+      "indexedCLIReceipts": {
+        "total": 69,
+        "exit0": 63,
+        "nonZero": 6,
+        "containsDescribe": true,
+        "allFunctionCountClaimed": false
+      },
+      "index": {
+        "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1074-installed/t1075-installed-public-extension-index.json",
+        "sha256": "8597f20eda26e1a77038302af31634d281ef28d858339b3edd89e73c8ff55ee7"
+      },
+      "sourceOrderAndDecode": {
+        "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1074-installed/t1075-neutral-final-verification.json",
+        "sha256": "997b5adad318727340f109f033559f3d1cf070106e77eb504f0a1190aa491559"
+      },
+      "actualFrameView": {
+        "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1074-installed/t1075-neutral-final-frame-visual-observation.json",
+        "sha256": "43157ff0d75878f9fe397960459ffaffec1ed83243c41dea691eefbb820d1513"
+      },
+      "staleAndReplay": {
+        "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1074-installed/t1075-editor-stale-replay-comparison.json",
+        "sha256": "76e3952d128e435a539fd5ff6f20e2113228dc78825d7f0aa2e632b40e82897f"
+      },
+      "restore": {
+        "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1074-installed/t1075-neutral-editor-restore-comparison.json",
+        "sha256": "238588fb5c52fd7c5effc100b6248c642e3b5a8889466243ca74ba5e9de7aa10"
+      },
+      "finalReplayAndCrossGroup": {
+        "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1074-installed/t1075-neutral-replays-cross-group-comparison.json",
+        "sha256": "6127b74b509ff565695d45470cc2703e2516fe5e638ac54c47676f2914141984"
+      },
+      "additionalCatalogOnly": {
+        "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1074-installed/t1075-additional-catalog-only-observation.json",
+        "sha256": "a72584efde6fa235694b52c2f7c777c48a6d57e5599a28fbb71735ab4e88ffed"
+      },
+      "nativeUIButtonsVerified": false,
+      "AINaturalLanguageVideoVerified": false,
+      "bothEngineMatrixVerified": false,
+      "wholeGoalComplete": false,
+      "independentReview": {
+        "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1074-installed/t1075-installed-public-video-independent-review.json",
+        "sha256": "d9022948b29845d3e5b1efd9abc650288d30214bd5b8d0a06400b3e12bff646c",
+        "bytes": 116526,
+        "verdict": "PASS_BOUNDED_CURRENT_INSTALLED_PUBLIC_MANUAL_VIDEO",
+        "indexedFileCount": 272,
+        "boundReferenceCount": 506,
+        "openBoundedFindings": 0,
+        "wholeTaskAccepted": false,
+        "installedHead": "74883948432b87f73ea464fb029bf2f5554ac47f",
+        "newPackageInstalled": false,
+        "nativeUIAccepted": false,
+        "AINaturalLanguageVideoAccepted": false
+      }
+    }
+  },
+  "historyLocalPackage74883948BeforeB640Build": {
+    "path": "/Users/zyongzhu/Downloads/CreatorOS-1.2.0.dmg",
+    "sha256": "05f950d1e7fc8cf08cad12e798e2d4197628bb3911387d0df2b8057e63fd6ba2",
+    "bytes": 667348058,
+    "basic_tests_passed": 44,
+    "build_exit": 0,
+    "dmg_verify_exit": 0,
+    "signature": "local-ad-hoc-not-notarized",
+    "app_full_mirror_files": 7,
+    "backend_resource_count": 791
+  },
+  "historyCurrentInstalledBeforeResume": {
+    "actual_exit": 0,
+    "steps_all_exit0": true,
+    "native_pid": 81735,
+    "sidecar_pid": 81983,
+    "access": "full",
+    "operation_count": 409,
+    "old_operations_removed": [],
+    "added_operations": [
+      "ai.assistantActions.adopt",
+      "ai.assistantActions.receipt",
+      "canvas.create.adopt",
+      "canvas.generation.confirm"
+    ],
+    "fresh_backup": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/offline-backup-real-provenance-journal-ga2fk7hb",
+    "fresh_backup_closure_sha256": "16718645a5ffd173cbad77acd7d16945962ae99e48c76acb5535f6cafe2f4abf",
+    "old_application_preserved_by_rename": true,
+    "user_data_reset_or_restore": false,
+    "orphan_force_stopped_single_pid": 37873,
+    "flush_confirmed": false,
+    "visible_home_user_confirmation": "PENDING"
+  },
+  "installationPendingDiskSpace": {
+    "initialObservation": {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1075-install-preparation-b64061ab/disk-space-install-pending.json",
+      "sha256": "57704f6c08465e524a17874de022ca7534494cb82b7d2c4d0687fd9b2c5d7d74"
+    },
+    "latestObservation": {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1075-install-preparation-b64061ab/disk-space-observation-final.json",
+      "sha256": "72c383f223447c0e9bbb1ca42e52431d572d17aaf3cb40681899c933b8dc05ae"
+    },
+    "requiredTotalFreeGiB": 10,
+    "freshBackupStarted": false,
+    "installerExecuted": false,
+    "latestControlObservation": {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1074-installed/t1075-validation-control-observation-20261008.json",
+      "sha256": "942bc8c936440294346dd511c1eb1cad33ecc2cb02a6efed7da0e165f926a1a7",
+      "bytes": 1610
+    }
+  },
+  "latestReconcileObservation": {
+    "errors": 37,
+    "warnings": 1,
+    "actualChildExitCaptured": false,
+    "fullNewRawLogCaptured": false,
+    "outerReadCommandExitZeroIsNotReconcilePass": true,
+    "previousLoggedExit1EvidenceRetained": true
   }
 }

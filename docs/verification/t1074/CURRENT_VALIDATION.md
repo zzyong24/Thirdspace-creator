@@ -194,3 +194,36 @@ flowchart LR
 | 旧画布来源重放 | 通过 | 原create回执rev1重放后，当前手工追加生图节点的rev2/4节点保持。 |
 
 源码侧目录精确匹配与方法提示在T1074原准入范围内修正，两个观察/证明缺陷在独立PASS的T1075精确8文件内修复。T1075最终私有PG原owner/transport链87 PASS/0 skip；新增夹具类型问题已修，后端仅原2测试错误、前端真实tsc及contract通过。源码通过仍不是安装版缺陷关闭。所有本轮raw与SHA在私有full-functional-20261008-index.json；完整结果字段见本目录result.json。
+
+## 2026-10-08 续检：剪辑保存、恢复与真实成片
+
+本轮仍使用实际安装源74883948。中性项目376的新视频作品`output-a36b244e-133`沿公开CLI完成以下链路，未修改真实创作内容，不将手工公共接口操作记为右侧AI编导或原生按钮验收。
+
+```mermaid
+flowchart LR
+ A[20秒中性视频] --> B[关联项目并探测真实文件]
+ B --> C[保存分段、裁切、删段和重排]
+ C --> D[8秒预览与原任务渲染]
+ D --> E[原执行确认、下载和完整解码]
+ C --> F[恢复20秒原版本，再恢复8秒编辑版]
+```
+
+| 实测 | 实际结果 | 证据边界 |
+| --- | --- | --- |
+| 项目素材导入 | source153成功；原asset239/file244与SHA、timebase及20秒长度准确 | 首次缺项目关联409、source.get404和同key原failed回执均保留；明确新关联后的新意图才创建153，不是未知重发。 |
+| 分段、裁切、删段和重排 | revision1→2→3；先保留源6–10秒，再源1–5秒，预览8秒且无警告 | 手工保存整份真实计划，不代签AI创作决策。 |
+| 冲突和幂等 | 旧revision1保存409；原导入key回放返回原revision1，当前revision2计划不变 | 原失败不能被统计为成功调用。 |
+| 渲染与正式保存 | 唯一render195通过既有execution确认保存asset272/file273；仅一条render记录 | `ai.tasks.confirm`错误入口对execution_manifest的409原样保留，随后在同195使用既有execution.tasks.confirm；未重新渲染。 |
+| 下载与媒体验收 | 10508642字节，SHA`9f15dfbd255b6de1f4cbc7b4377e0c2de4b3176e9bc1a8de5c908de62485041b`；1080p/30fps/240帧，音视频均8秒，完整解码0 | 下载只用公开签名URL及实际Native进程树的服务origin；初次观察漏读stderr在HTTP前退出，修正后才下载。 |
+| 实际来源次序 | 输出0.5秒的画面时标为源6.500秒/frame195；输出4.5秒为源1.500秒/frame45，SSIM正确源均优于互换源 | 已实际查看取帧；不声称像素完全相同或视觉模型评审通过。 |
+| 历史恢复及重放 | 原rev1恢复为rev4、编辑rev3恢复为rev5，除revision外计划内容和来源完全一致；原render/confirm重放后当前rev5完整DTO保持、history5/render1 | 这是公开历史恢复，不是原生Undo/Redo；跨组读取新output133实际404。 |
+
+原401在此次真实重启后仍为awaiting_confirmation，只读取原ID，没有重发生图或将pending冒充已保存。续检索引`t1074-installed/t1075-installed-public-extension-index.json` SHA`8597f20eda26e1a77038302af31634d281ef28d858339b3edd89e73c8ff55ee7`核272个文件；69次CLI捕获含目录describe，63 exit0/6非零，不应写成69功能通过。
+
+新源`b64061ab6bee213c939bf97ad19f423c7090a5ef`已完成固定入口本地构建，44基本测试、hdiutil与深严格签名均0，DMG与留存构建App完整7文件镜像一致；后台791资源已核数量，原逐raw.ts文件观察失败保留，不据此声称逐源码打包hash通过。新规范DMG SHA`7060b1732a433148ce722df7b0e6f2f18de971f11cebb9a5d8a77d71efb3543d`，667061735字节，本地ad-hoc/未公证；仅安装字面适配独评PASS，不是安装PASS。
+
+完整五根目录及偏好文件的新鲜备份尚未启动：本机可用空间先约7.47GiB、随后约5.76GiB，不能同时承载约6.7GiB备份、stage和约1.7GiB启动展开。只清理本任务不在用、可重建的构建/依赖缓存；历史备份、各版安装包及真实素材工程全部保留，重复包共享字节仅为未执行提案。旧App经完整镜像核验后恢复启动，Native6790、公开CLI connected/full；不代签原生可见首页。已向用户请求释放空间或提供已挂载APFS目的地，不能因等待时间推定回复。T1074/T1075/T1062均未完成，新包修复复验和两引擎原生矩阵继续待验。
+
+对账程序本轮实际输出仍为37错误/1告警；外层随后读取命令的exit0不能当作reconcile通过，本次完整新raw log未捕获。上一完整实际exit1的原日志与旧欠债保留，不写成整仓全绿。
+
+本轮旧安装版公共手工视频链经独立只读复核通过，限定结论`PASS_BOUNDED_CURRENT_INSTALLED_PUBLIC_MANUAL_VIDEO`，0个未闭合范围内问题。报告`t1074-installed/t1075-installed-public-video-independent-review.json` SHA`d9022948b29845d3e5b1efd9abc650288d30214bd5b8d0a06400b3e12bff646c`，绑定506个引用；69捕获和追加7个只读describe分开记录，错误入口和首次失败保留。该PASS不覆盖原生UI、Undo/Redo、自然语言视频、两引擎矩阵、401采纳或新b640安装。05:50 UTC再次公开status exit0，磁盘约5.76GiB、需至少10GiB总可用空间，新鲜备份/stage/新安装仍全false；新观察见result.json，原索引与已签独评不回写。
