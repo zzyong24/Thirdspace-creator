@@ -1,0 +1,575 @@
+{
+  "taskId": "T-1074",
+  "updatedAt": "2026-10-08T02:53:31.187277+00:00",
+  "taskComplete": false,
+  "sourceBaseBeforeCommit": "fbb861d433eae12b5824709916a669c7a0400aa5",
+  "specSHA256": "c33f1a6a06bcb5a4782abda16153c0877654f707a733612d3773060e251ed411",
+  "supplementReview": "PASS[REV:b19144c34cab]",
+  "records": [
+    {
+      "name": "editor-protection-red",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "creatoros-frontend",
+        "exec",
+        "vitest",
+        "run",
+        "src/features/draft-workbench/draft-chat-request.test.tsx",
+        "--testNamePattern",
+        "匹配编辑器|采用等待"
+      ],
+      "exitCode": 1,
+      "startUTC": "2026-10-08T02:16:17.351175+00:00",
+      "endUTC": "2026-10-08T02:16:18.990858+00:00",
+      "logSHA256": "ed4a1e8948c371f0ca32115b669d14454d35650a4ea70ec320308438b45066f3",
+      "description": "匹配脏稿仍采用/等待换编辑器误报同步的RED，2失败；旧配置retry=2已如实留档"
+    },
+    {
+      "name": "owner-narrow-ports-red",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@creatoros/backend",
+        "exec",
+        "vitest",
+        "run",
+        "--testTimeout",
+        "120000",
+        "src/modules/candidate/candidate.service.test.ts",
+        "src/modules/intelligence/intelligence.service.test.ts",
+        "--testNamePattern",
+        "T1074"
+      ],
+      "exitCode": 1,
+      "startUTC": "2026-10-08T02:16:17.351282+00:00",
+      "endUTC": "2026-10-08T02:16:25.226989+00:00",
+      "logSHA256": "14a9ba62eb8b43584c33f8aa146d45bb3eca2b7351cda62be3442b4db976f090",
+      "description": "原owner缺窄锁读/纯读端口，2失败"
+    },
+    {
+      "name": "owner-narrow-ports-green",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@creatoros/backend",
+        "exec",
+        "vitest",
+        "run",
+        "--testTimeout",
+        "120000",
+        "src/modules/candidate/candidate.service.test.ts",
+        "src/modules/intelligence/intelligence.service.test.ts"
+      ],
+      "exitCode": 0,
+      "startUTC": "2026-10-08T02:17:13.745579+00:00",
+      "endUTC": "2026-10-08T02:18:30.640105+00:00",
+      "logSHA256": "fd0c10499de8c238fbd016a48b023bed187073df75c1f0513187f4e3e711285e",
+      "description": "两个原owner完整单测60通过"
+    },
+    {
+      "name": "nine-public-full-pg",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@creatoros/backend",
+        "exec",
+        "vitest",
+        "run",
+        "--testTimeout",
+        "180000",
+        "src/application/chat/assistant-system-root.integration.test.ts"
+      ],
+      "exitCode": 1,
+      "startUTC": "2026-10-08T02:24:01.630861+00:00",
+      "endUTC": "2026-10-08T02:24:20.204123+00:00",
+      "logSHA256": "51d76a0a97e84d9a05afbe2eef16b22a0c0f3fdbeb51e984b3f46bbecb0bab3c",
+      "description": "57通过/2失败：新验收夹具会话project=null，原产品归属校验正确拒绝，不记为产品RED"
+    },
+    {
+      "name": "nine-public-full-pg-fixed",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@creatoros/backend",
+        "exec",
+        "vitest",
+        "run",
+        "--testTimeout",
+        "180000",
+        "src/application/chat/assistant-system-root.integration.test.ts"
+      ],
+      "exitCode": 0,
+      "startUTC": "2026-10-08T02:28:30.811501+00:00",
+      "endUTC": "2026-10-08T02:28:51.569417+00:00",
+      "logSHA256": "c6cc4e0c3eca836d6f1b153890abb6d6eb7c54a97396f335cb95b6820556da31",
+      "description": "实际私有PG全59通过、无skip；含三项独立Pool/真实Lock观测及receipt回滚，不使用用户数据库"
+    },
+    {
+      "name": "editor-dirty-message-red",
+      "argv": [
+        "pnpm",
+        "--dir",
+        "frontend",
+        "exec",
+        "vitest",
+        "run",
+        "src/features/copilot/chat-system-action-card.test.tsx",
+        "-t",
+        "当前稿未保存",
+        "--retry=0"
+      ],
+      "exitCode": 1,
+      "startUTC": "2026-10-08T02:31:10.649914+00:00",
+      "endUTC": "2026-10-08T02:31:13.608761+00:00",
+      "logSHA256": "c8b1c62d81f02fe0cc7f4e6f6f8360d684627ad8e67782bf7d1c8175aa90e470",
+      "description": "1失败：界面丢失原本地冲突说明"
+    },
+    {
+      "name": "editor-adopted-status-red",
+      "argv": [
+        "pnpm",
+        "--dir",
+        "frontend",
+        "exec",
+        "vitest",
+        "run",
+        "src/features/copilot/chat-system-action-card.test.tsx",
+        "-t",
+        "当前已保存稿采用",
+        "--retry=0"
+      ],
+      "exitCode": 1,
+      "startUTC": "2026-10-08T02:33:35.120481+00:00",
+      "endUTC": "2026-10-08T02:33:36.982735+00:00",
+      "logSHA256": "3cd88b553b64d46b9cc875e177382c1a4a959e82b7ee888c0adfd2a5f80a76a5",
+      "description": "1失败：保存后仍显示等待采用"
+    },
+    {
+      "name": "editor-adoption-ui-final",
+      "argv": [
+        "pnpm",
+        "--dir",
+        "frontend",
+        "exec",
+        "vitest",
+        "run",
+        "src/features/draft-workbench/draft-chat-request.test.tsx",
+        "src/features/copilot/chat-work-editor-card.test.tsx",
+        "src/features/copilot/chat-system-action-card.test.tsx",
+        "src/features/copilot/chat-tool-outcome.test.tsx",
+        "src/features/copilot/chat-tool-trace.test.tsx",
+        "src/features/copilot/ai-copilot-content.test.tsx",
+        "--retry=0"
+      ],
+      "exitCode": 0,
+      "startUTC": "2026-10-08T02:34:04.407898+00:00",
+      "endUTC": "2026-10-08T02:34:08.036942+00:00",
+      "logSHA256": "e4e31057bf4cc1a3047f507340be38f86b42630c1b6781729935781d84e93c22",
+      "description": "原编辑器/卡片/Copilot/trace/outcome 67通过，retry=0；匹配编辑器正式source-only保存、dirty拒绝、等待换页/新输入保护、原receipt恢复"
+    },
+    {
+      "name": "nine-led047-current",
+      "argv": [
+        "pnpm",
+        "--dir",
+        "frontend",
+        "exec",
+        "vitest",
+        "run",
+        "src/features/copilot/ai-copilot-interactions.test.tsx",
+        "src/features/knowledge/knowledge-dump-zone.test.tsx",
+        "src/features/topics/topics-interactions.test.tsx",
+        "src/components/overlays/overlay-routing.test.tsx",
+        "src/lib/copilot-navigation.test.ts",
+        "src/features/copilot/chat-tool-trace.test.tsx",
+        "src/features/automations/run-controls.test.tsx",
+        "src/features/automations/cadence.test.ts",
+        "--retry=0"
+      ],
+      "exitCode": 0,
+      "startUTC": "2026-10-08T02:28:30.728239+00:00",
+      "endUTC": "2026-10-08T02:28:39.207922+00:00",
+      "logSHA256": "bd765bc8d4114fb3cb7b46d31434ad475d02f446ef83acc718e281265d999ab0",
+      "description": "8文件167通过，retry=0；实际导航见浏览器，不以jsdom告警冒签"
+    },
+    {
+      "name": "editor-adoption-types-final",
+      "argv": [
+        "pnpm",
+        "--dir",
+        "frontend",
+        "exec",
+        "tsc",
+        "--noEmit"
+      ],
+      "exitCode": 0,
+      "startUTC": "2026-10-08T02:35:35.787709+00:00",
+      "endUTC": "2026-10-08T02:35:41.772342+00:00",
+      "logSHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "description": "最新前端含新增测试类型exit0"
+    },
+    {
+      "name": "scope-contract-mcp-types",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@creatoros/contract",
+        "--filter",
+        "@creatoros/mcp-server",
+        "typecheck"
+      ],
+      "exitCode": 0,
+      "startUTC": "2026-10-08T02:34:04.415041+00:00",
+      "endUTC": "2026-10-08T02:34:11.101327+00:00",
+      "logSHA256": "f8b0c8e346dac576a9526eeb7be9ebd931a5c055fdd109160cf26912dcbc00f5",
+      "description": "contract与mcp两包类型exit0，四API原group登记及派生穷举通过"
+    },
+    {
+      "name": "worker-types-current",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@creatoros/ai-worker",
+        "typecheck"
+      ],
+      "exitCode": 0,
+      "startUTC": "2026-10-08T02:36:35.072983+00:00",
+      "endUTC": "2026-10-08T02:36:40.962856+00:00",
+      "logSHA256": "f7e0274cdcecda48497f193a594347fce2e14a12f0cadab4ba3a707690fa4ead",
+      "description": "worker类型exit0"
+    },
+    {
+      "name": "nine-backend-types-final",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@creatoros/backend",
+        "typecheck"
+      ],
+      "exitCode": 2,
+      "startUTC": "2026-10-08T02:28:30.728215+00:00",
+      "endUTC": "2026-10-08T02:29:05.054329+00:00",
+      "logSHA256": "3aa84ac7a89b69d9108f4520c5fbee1ebc77f909ea84db790ad81180d7dc5d34",
+      "description": "中间类型exit2含新增fixture.document.title联合错误和原2历史错误，原日志保留"
+    },
+    {
+      "name": "nine-backend-types-rechecked",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@creatoros/backend",
+        "typecheck"
+      ],
+      "exitCode": 2,
+      "startUTC": "2026-10-08T02:31:34.317690+00:00",
+      "endUTC": "2026-10-08T02:32:06.305872+00:00",
+      "logSHA256": "2a66e93c4a02b999e2e6360a16084c5d412f5645c4e1cd69a0bc3883c0aa5e04",
+      "description": "新增联合类型已修复；exit2仅原platform-bind:173、production-native-public:31两个未改测试错误"
+    },
+    {
+      "name": "boundary-nine-current",
+      "argv": [
+        "node",
+        "orchestrator/process/boundary-scan.mjs"
+      ],
+      "exitCode": 1,
+      "startUTC": "2026-10-08T02:37:15.159708+00:00",
+      "endUTC": "2026-10-08T02:37:15.388740+00:00",
+      "logSHA256": "6b23ce459cd49f9f78d9a4185f9bceaa53c27b96d14e64f2fdf1a0422b6e6985",
+      "description": "exit1/7条，日志SHA与旧current-boundary完全相同，未改live-chat-session"
+    },
+    {
+      "name": "timeout-policy-current",
+      "argv": [
+        "node",
+        "tools/timeout-policy/verify.mjs"
+      ],
+      "exitCode": 1,
+      "startUTC": "2026-10-08T02:37:15.159708+00:00",
+      "endUTC": "2026-10-08T02:37:15.253956+00:00",
+      "logSHA256": "9ba8029f31e215297c3e8e6aa03c0f61cf3c58c079380fdb5ab9749a9c6bed38",
+      "description": "exit1/MODULE_NOT_FOUND；MAIN仍缺规定verify入口，无借用或造PASS"
+    },
+    {
+      "name": "read-pagination-contract-red",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@creatoros/contract",
+        "exec",
+        "vitest",
+        "run",
+        "--config",
+        "../docs/verification/t1074/contract-tests.config.mjs",
+        "src/assistant-system.test.ts",
+        "-t",
+        "系统列表"
+      ],
+      "exitCode": 1,
+      "startUTC": "2026-10-08T02:43:33.006192+00:00",
+      "endUTC": "2026-10-08T02:43:34.001930+00:00",
+      "logSHA256": "2702f73004179aaa7ee4c4d2a7fe55f56f228759835dcf6ce742822fcce5df17",
+      "description": "真实产品RED：pageSize100被接受，1失败"
+    },
+    {
+      "name": "read-pagination-public-red",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@creatoros/backend",
+        "exec",
+        "vitest",
+        "run",
+        "--testTimeout",
+        "180000",
+        "src/application/chat/assistant-system-root.integration.test.ts",
+        "-t",
+        "原全量reader"
+      ],
+      "exitCode": 1,
+      "startUTC": "2026-10-08T02:43:33.006199+00:00",
+      "endUTC": "2026-10-08T02:43:40.461602+00:00",
+      "logSHA256": "f0e89e42d7866efe853a25369cc99a97d8fa85195fbb2cfabd12bb7fa7522bdd",
+      "description": "真实知识/项目原全量分页RED，两页返回全3条，2失败"
+    },
+    {
+      "name": "read-pagination-families-green",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@creatoros/backend",
+        "exec",
+        "vitest",
+        "run",
+        "--testTimeout",
+        "180000",
+        "src/application/chat/assistant-system-root.integration.test.ts",
+        "-t",
+        "reader"
+      ],
+      "exitCode": 1,
+      "startUTC": "2026-10-08T02:47:48.380740+00:00",
+      "endUTC": "2026-10-08T02:47:56.871983+00:00",
+      "logSHA256": "9682097ba455aab2b88a5f807cd491f34347247506cec4a49c7b36d6f9bd4096",
+      "description": "中间夹具计数失败：artifact原owner自动初版加3次成为4；产品未改"
+    },
+    {
+      "name": "read-pagination-contract-families",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@creatoros/contract",
+        "exec",
+        "vitest",
+        "run",
+        "--config",
+        "../docs/verification/t1074/contract-tests.config.mjs",
+        "src/assistant-system.test.ts"
+      ],
+      "exitCode": 1,
+      "startUTC": "2026-10-08T02:47:49.564464+00:00",
+      "endUTC": "2026-10-08T02:47:50.544902+00:00",
+      "logSHA256": "f33b3620b00c65a86ec180e1dddc11ee847f9df50b748bc96d90f48e5dec9e5a",
+      "description": "测试误写原scheduledJobs query limit/offset，原严格合同正确拒绝；按实际assets.search字段补正，不是产品RED"
+    },
+    {
+      "name": "read-pagination-families-fixtures-corrected",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@creatoros/backend",
+        "exec",
+        "vitest",
+        "run",
+        "--testTimeout",
+        "180000",
+        "src/application/chat/assistant-system-root.integration.test.ts",
+        "-t",
+        "reader"
+      ],
+      "exitCode": 0,
+      "startUTC": "2026-10-08T02:48:27.818474+00:00",
+      "endUTC": "2026-10-08T02:48:37.407698+00:00",
+      "logSHA256": "096f98f91fc58f9de077edb86e7321085b53ac4623a82d0cf2bca815732a2ff6",
+      "description": "7项真实host/model协议fixture/账本/原owner读取通过，其余59为过滤；四全量族和三原分页族"
+    },
+    {
+      "name": "read-pagination-contract-final",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@creatoros/contract",
+        "exec",
+        "vitest",
+        "run",
+        "--config",
+        "../docs/verification/t1074/contract-tests.config.mjs",
+        "src/assistant-system.test.ts"
+      ],
+      "exitCode": 0,
+      "startUTC": "2026-10-08T02:48:27.816523+00:00",
+      "endUTC": "2026-10-08T02:48:28.875137+00:00",
+      "logSHA256": "b6b49572abb6976f35b965c3832e10084d18f63e559259f5997cb29252502bdb",
+      "description": "4项合同通过，实际pageSize/limit最多50且原分页字段保留"
+    },
+    {
+      "name": "core-pagination-public-final",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@creatoros/backend",
+        "exec",
+        "vitest",
+        "run",
+        "--testTimeout",
+        "180000",
+        "src/application/chat/assistant-system-root.integration.test.ts"
+      ],
+      "exitCode": 0,
+      "startUTC": "2026-10-08T02:51:22.288865+00:00",
+      "endUTC": "2026-10-08T02:51:40.893070+00:00",
+      "logSHA256": "b9010ce54d00745f3035e47606dcb2566d74682d8f3765308ae11ad68cdc0352",
+      "description": "实际私有PG完整66项通过，无skip；3个两连接锁竞态，19动作保存/回滚/原编辑器，7分页族"
+    },
+    {
+      "name": "core-source-host-final",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@creatoros/backend",
+        "exec",
+        "vitest",
+        "run",
+        "--testTimeout",
+        "180000",
+        "src/modules/ai/chat-proposal-source.service.test.ts",
+        "src/modules/ai/assistant-action-adoption.integration.test.ts",
+        "src/modules/ai-runtime/chat-system-tool-host.test.ts",
+        "src/modules/ai-runtime/chat-canvas-tool-host.test.ts",
+        "src/modules/ai-runtime/chat-assembly.test.ts",
+        "src/modules/ai-runtime/chat-tool-definitions.test.ts",
+        "src/modules/ai-runtime/chat-tool-gate.test.ts"
+      ],
+      "exitCode": 0,
+      "startUTC": "2026-10-08T02:49:11.009227+00:00",
+      "endUTC": "2026-10-08T02:49:22.593508+00:00",
+      "logSHA256": "b89d2f80fd07a6fc4940773df090c006bae23ffc333fdcde66044c93db93d428",
+      "description": "来源/采用/host/定义/装配/工具权限176项7文件通过；协议fixture不代签真实模型"
+    },
+    {
+      "name": "core-pagination-backend-types",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@creatoros/backend",
+        "typecheck"
+      ],
+      "exitCode": 2,
+      "startUTC": "2026-10-08T02:48:27.815235+00:00",
+      "endUTC": "2026-10-08T02:48:58.698937+00:00",
+      "logSHA256": "02c58daeea13f6f35a038adad030a17d1d2c4817d90421a94bd532a9a8d74484",
+      "description": "中间新增测试transport/host类型错误及原2历史错误，如实保留"
+    },
+    {
+      "name": "core-pagination-backend-types-final",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@creatoros/backend",
+        "typecheck"
+      ],
+      "exitCode": 2,
+      "startUTC": "2026-10-08T02:50:10.920823+00:00",
+      "endUTC": "2026-10-08T02:50:42.620345+00:00",
+      "logSHA256": "75772b7acab2e499ef1ad8f58a34e1703c29a6a1e05506a36a0cf603de097778",
+      "description": "中间类型修正遗漏transport替换，未签绿"
+    },
+    {
+      "name": "core-pagination-backend-types-rechecked",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@creatoros/backend",
+        "typecheck"
+      ],
+      "exitCode": 2,
+      "startUTC": "2026-10-08T02:50:51.982217+00:00",
+      "endUTC": "2026-10-08T02:51:22.329575+00:00",
+      "logSHA256": "2a66e93c4a02b999e2e6360a16084c5d412f5645c4e1cd69a0bc3883c0aa5e04",
+      "description": "最新exit2仅原platform-bind:173与production-native-public:31两个未改测试错误；无本轮新增类型错误"
+    },
+    {
+      "name": "core-contract-mcp-worker-final",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@creatoros/contract",
+        "--filter",
+        "@creatoros/mcp-server",
+        "--filter",
+        "@creatoros/ai-worker",
+        "typecheck"
+      ],
+      "exitCode": 0,
+      "startUTC": "2026-10-08T02:49:11.011212+00:00",
+      "endUTC": "2026-10-08T02:49:22.981220+00:00",
+      "logSHA256": "488cc1c67f78abbfa7410d06dc718259db84e6d39a9fd9298b39e7bd64252c4e",
+      "description": "三个包类型检查exit0"
+    },
+    {
+      "name": "core-pagination-frontend-types",
+      "argv": [
+        "pnpm",
+        "-C",
+        "frontend",
+        "exec",
+        "tsc",
+        "--noEmit"
+      ],
+      "exitCode": 0,
+      "startUTC": "2026-10-08T02:49:11.011187+00:00",
+      "endUTC": "2026-10-08T02:49:48.746887+00:00",
+      "logSHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "description": "前端最新类型exit0"
+    },
+    {
+      "name": "core-orphan-current",
+      "argv": [
+        "node",
+        "orchestrator/process/orphan-scan.mjs"
+      ],
+      "exitCode": 0,
+      "startUTC": "2026-10-08T02:51:23.386844+00:00",
+      "endUTC": "2026-10-08T02:51:23.490516+00:00",
+      "logSHA256": "ee3224654cf1b13b1bcd3948dd942050a0435380b5b2a84bbb61e9058d056b0e",
+      "description": "孤儿链扫描0错误100警告，未签SHIP"
+    },
+    {
+      "name": "core-semantic-current",
+      "argv": [
+        "node",
+        "orchestrator/process/semantic-boundary-scan.mjs"
+      ],
+      "exitCode": 1,
+      "startUTC": "2026-10-08T02:51:23.669613+00:00",
+      "endUTC": "2026-10-08T02:51:23.955145+00:00",
+      "logSHA256": "7cbfa9443346edf9491b83ddb83b954cb1f8df6829a641b2362813753644e2f7",
+      "description": "保留原video-decisions-runner缺material.match失败，不修改原语义规则"
+    }
+  ],
+  "evidenceRoot": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl",
+  "limitations": [
+    "真实两引擎模型矩阵、19类完整异常矩阵与安装版功能验收未完成",
+    "后端类型仍有两个未改旧测试错误",
+    "全局边界与timeout-policy仍红",
+    "私有组件夹具不代签真实模型或安装版",
+    "尚未产出本轮新包"
+  ],
+  "coreImplementationReview": {
+    "verdict": "PASS",
+    "report": "docs/verification/t1074/core-implementation-review.json",
+    "findingClosed": "CORE-001",
+    "wholeGoalComplete": false
+  }
+}

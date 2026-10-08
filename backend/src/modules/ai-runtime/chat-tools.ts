@@ -20,6 +20,8 @@ import type { DetectToolsResult } from "./local-env-probe";
 // [T-326·RT-H05] 不可信外部内容定界包裹(spotlighting 缓解提示词注入;非根治,见该模块头注释)。
 import { wrapUntrustedContent } from "./untrusted-content";
 import { ChatToolUserError } from "./chat-tool-errors";
+import {assistantFeaturesInputSchema,assistantReadInputSchema,assistantActionProposeInputSchema,canvasCreateProposalInputSchema,canvasGenerateProposalInputSchema,canvasProposalOperationSchema} from '@creatoros/contract';
+import {z} from 'zod';
 import { formatErrorDiagnostic } from "./error-diagnostics";
 
 /** 转给模型的异常仅使用已审核的人话映射；未知异常留在服务端日志。 */
@@ -58,6 +60,13 @@ function safeFinalSourceUrl(value: string | undefined): string | undefined {
 // 路由在请求期解析(resolveModelSpec + assembleCreativeContext)后注入,故工具本身无副作用、
 // 不碰持久化、不直连模块 repo —— 可单测(注入 fake 的 generate/enrich 实现即可)。
 export interface ChatToolDeps {
+  assistantSystem?:{
+    features:(input:import('zod').z.infer<typeof assistantFeaturesInputSchema>)=>Promise<unknown>;
+    read:(input:import('zod').z.infer<typeof assistantReadInputSchema>)=>Promise<{kind:string}>;
+    propose:(input:import('zod').z.infer<typeof assistantActionProposeInputSchema>)=>Promise<{kind:string}>;
+    createCanvas:(input:import('zod').z.infer<typeof canvasCreateProposalInputSchema>)=>Promise<{kind:string}>;
+    generateCanvas?:(input:import('zod').z.infer<typeof canvasGenerateProposalInputSchema>)=>Promise<{kind:string}>;
+  };
   editorTarget?:WorkEditorTarget;
   readWorkEditor?:(input:WorkEditorReadInput)=>Promise<WorkEditorContext>;
   proposeWorkEditor?:(input:WorkEditorProposeInput)=>Promise<WorkEditorCandidate>;
@@ -65,6 +74,8 @@ export interface ChatToolDeps {
   readWorkCreation?:(input?:{targetDigest?:string})=>Promise<WorkCreationReadResult>;
   proposeWorkCreation?:(input:WorkCreationProposalInput)=>Promise<WorkCreationProposalResult>;
   boundCanvasId?:string;
+  /** 仅恢复已知旧冻结合同；当前任务仍使用严格operations schema。 */
+  legacyCanvasProposalParameters?:boolean;
   readCanvas?:()=>Promise<{id:string;title:string;projectId:string|null;revision:number;document:unknown}>;
   proposeCanvas?:(baseRevision:number,operations:unknown)=>Promise<{id:string;canvasId:string;baseRevision:number;operations:unknown[]}>;
   skillLibrary?: ChatSkillLibrary;
@@ -4098,12 +4109,32 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
     },deps.humanizeError),
     "canvas.propose":defineChatTool("canvas.propose",{
       description:"为当前画布保存候选操作，供用户逐项查看并手动应用。必须先调用 canvas.read，使用它返回的 revision 与真实节点 ID。此工具只写候选，不改画布、不自动生成图片或视频。",
-      inputSchema:CANVAS_PROPOSE_PARAMS,
+      inputSchema:deps.legacyCanvasProposalParameters?CANVAS_PROPOSE_PARAMS:z.object({baseRevision:z.number().int().positive(),operations:z.array(canvasProposalOperationSchema).min(1).max(100)}).strict(),
       execute:async(input)=>{
         if(!deps.boundCanvasId||!deps.proposeCanvas)return {kind:"canvas.propose",proposalId:null,canvasId:null,baseRevision:null,operations:[],error:"当前对话未绑定可编辑的画布"};
         const result=await deps.proposeCanvas(input.baseRevision,input.operations);
         return {kind:"canvas.propose",proposalId:result.id,canvasId:result.canvasId,baseRevision:result.baseRevision,operations:result.operations,error:null};
       },
+    },deps.humanizeError),
+    "system.features":defineChatTool("system.features",{
+      description:'按功能查询当前系统的真实读取、候选操作、前置条件与原页面入口；按页读取，目录不授予执行权限。',inputSchema:assistantFeaturesInputSchema,
+      execute:async input=>{if(!deps.assistantSystem)throw new ChatToolUserError('能力读取端口未装配，请保留当前任务并检查客户端服务');return {kind:'system.features',...await deps.assistantSystem.features(input) as object};},
+    },deps.humanizeError),
+    "system.read":defineChatTool("system.read",{
+      description:'从固定 request.kind 选择原功能的只读操作。params/query严格使用合同；分页最多50项，长内容通过window分页，complete=false时继续读同一目标。不得猜测ID、账号或统计；文章/剪辑当前稿优先work.editor.read。',inputSchema:assistantReadInputSchema,
+      execute:async input=>{if(!deps.assistantSystem)throw new ChatToolUserError('业务读取端口未装配，请保留当前任务并检查客户端服务');return deps.assistantSystem.read(input);},
+    },deps.humanizeError),
+    "system.action.propose":defineChatTool("system.action.propose",{
+      description:'参数为{action:{kind,...严格字段}}，一次准备一个可预览改动；先通过system.read读取真实对象/版本。此工具不写正式数据、不绑定成功、不启用自动化、不发布。用户采用后原服务执行。当前文章/图文编辑器精调使用work.editor.propose，保护未保存输入。',inputSchema:assistantActionProposeInputSchema,
+      execute:async input=>{if(!deps.assistantSystem)throw new ChatToolUserError('候选准备端口未装配，请保留当前任务并检查客户端服务');return deps.assistantSystem.propose(input);},
+    },deps.humanizeError),
+    "canvas.create.propose":defineChatTool("canvas.create.propose",{
+      description:'从任意页面准备完整创作画布候选，参数title/projectId?/document。document必须含schemaVersion:1、viewport、nodes和edges；节点ID由本次候选指定且唯一，媒体引用必须先读真实asset/file。可使用text及image_generation节点；尚不建画布、不生图，用户预览采用后保存完整文档。',inputSchema:canvasCreateProposalInputSchema,
+      execute:async input=>{if(!deps.assistantSystem)throw new ChatToolUserError('画布准备端口未装配，请保留当前任务并检查客户端服务');return deps.assistantSystem.createCanvas(input);},
+    },deps.humanizeError),
+    "canvas.generate.propose":defineChatTool("canvas.generate.propose",{
+      description:'为当前受信画布中已保存的生成节点准备确认候选。先canvas.read，使用真实nodeId和baseRevision；冻结完整prompt、比例、参考图和输入摘要，不创建付费任务。用户确认后沿原任务执行。',inputSchema:canvasGenerateProposalInputSchema,
+      execute:async input=>{if(!deps.assistantSystem?.generateCanvas)throw new ChatToolUserError('请先打开要生成的画布，并读取其已保存节点');return deps.assistantSystem.generateCanvas(input);},
     },deps.humanizeError),
     "material.generate": defineChatTool("material.generate", {
       description:
@@ -5004,6 +5035,7 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
  * drift 由 chat-tools.test.ts 的 guard 用例锁(必须 === Object.keys(allChatTools(deps)))。
  */
 export const ALL_CHAT_TOOL_NAMES: readonly string[] = [
+  'system.features','system.read','system.action.propose','canvas.create.propose','canvas.generate.propose',
   "work.editor.read","work.editor.propose","work.creation.read","work.creation.propose",
   "history.read",
   "tool.result.read",

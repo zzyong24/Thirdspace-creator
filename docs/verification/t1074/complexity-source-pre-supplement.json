@@ -1,0 +1,240 @@
+{
+  "schema": "complexity-source-review/v1",
+  "task_id": "T-1074",
+  "review_kind": "mechanical-source-rebinding",
+  "verdict": "PASS",
+  "checked_at": "2026-10-08T02:14:57.197Z",
+  "worktree": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "head": "fbb861d433eae12b5824709916a669c7a0400aa5",
+  "scope": "仅4文件当前源码SHA/真实HEAD差异/现行governance marker机械预算重绑核验，不是新增SPEC评审轮次。",
+  "summary": "4文件的现行marker分类与HEAD相同，命中原文均已存在于HEAD；三个已准入文件的新差异仅复用原owner、事务/账本与host装配，雷达文件与HEAD完全相同。确认可作为现有机械预算当前源SHA重绑及原ipc分类登记的只读证据，没有新增常驻程序、凭据存储、语言工具链或执行权。",
+  "marker_detector": {
+    "path": "orchestrator/process/governance-guard.mjs",
+    "sha256": "de06cdb13af2e73b20cd1beea9c4bb5705443d652fdc50170df677f1d3664eaf",
+    "method": "只读调用当前真实signalsFor/detectsMarker；没有执行baseline-apply或修改门卫。"
+  },
+  "files": [
+    {
+      "file": "backend/src/modules/ai/ai.service.ts",
+      "current_sha256": "41012e7d05770c40fa7f5daad49276a982feae285ab3d49e23ea48c53ed2d995",
+      "head_sha256": "ddc30c9690f5ac652f6604522313c149139fdbe2d5096fdc9bf4d1eb3787ce1b",
+      "categories": [
+        "native_executable"
+      ],
+      "head_categories": [
+        "native_executable"
+      ],
+      "marker_categories_unchanged": true,
+      "marker_anchors": [
+        {
+          "category": "native_executable",
+          "line": 372,
+          "quote": "*  系统 daemon(schedulerCtx 无选中号)。用户面 listTasks 仍 strict 按号。",
+          "identical_text_in_head": true,
+          "head_lines": [
+            372
+          ]
+        },
+        {
+          "category": "native_executable",
+          "line": 1939,
+          "quote": "// [T-332 S2 修补] 系统 daemon 扫僵尸:不经 requireAccountId,用占位号建 repo(占位不进",
+          "identical_text_in_head": true,
+          "head_lines": [
+            1939
+          ]
+        }
+      ],
+      "diff_against_head": {
+        "changed": true,
+        "added_lines": 3,
+        "deleted_lines": 3,
+        "sha256": "8e8d8f0f3eb59bded6c161a13e0053d25d1f6432f73ad8f63d74ea791d8f7e31"
+      },
+      "checked_content": "对照完整HEAD差异仅3行替换：prepareChatReply端口透传executionEngine选项，公开消息装配与提交显式保持Pi。系统daemon标记来自原listRunningTasksSystem接口/扫僵尸读取说明与原实现；此次未改该系统读取入口。",
+      "conclusion": "既有daemon/执行账本机制复用；没有新增常驻程序、OS执行器或执行权。",
+      "classification": "existing-mechanism-reuse",
+      "new_owned_mechanism": false
+    },
+    {
+      "file": "backend/src/modules/scheduling/scheduling.service.ts",
+      "current_sha256": "9ff44a9d24001ca285e8435c5afb72ea2ac583183aca458bf2865133bac268d6",
+      "head_sha256": "55bc9b8547b72b6728ff94e9e96eb80b454d4fe05685c07278d7b752ffb25ca8",
+      "categories": [
+        "native_executable"
+      ],
+      "head_categories": [
+        "native_executable"
+      ],
+      "marker_categories_unchanged": true,
+      "marker_anchors": [
+        {
+          "category": "native_executable",
+          "line": 119,
+          "quote": "// [T-332 S2 · ISO-06] 系统 daemon 专用:cron 调度器跨号枚举该 user 全部 job(触发时逐 job",
+          "identical_text_in_head": true,
+          "head_lines": [
+            110
+          ]
+        },
+        {
+          "category": "native_executable",
+          "line": 171,
+          "quote": "//   AccountRequiredError;null 仅系统 daemon 路径合法,见 RepoDeps 注释)。",
+          "identical_text_in_head": true,
+          "head_lines": [
+            162
+          ]
+        }
+      ],
+      "diff_against_head": {
+        "changed": true,
+        "added_lines": 30,
+        "deleted_lines": 0,
+        "sha256": "8ec7a6448f5e20de85f0e99aaf86efbb93dedb18fd11f44525273f33ac552212"
+      },
+      "checked_content": "完整差异新增createDraftIfAbsent及setEnabledIfUnchanged原owner窄端口与DB/membership/版本锁检查，之后仍调用原createJob(enabled=false)或原setEnabled。daemon标记来自原listJobsSystem接口及repoFor账号范围说明，与HEAD同文；此次未新增cron进程、常驻调度器或任务执行系统。",
+      "conclusion": "既有系统daemon/scheduledJobs owner复用；新增的是同owner事务检查，无新增常驻程序或执行权。",
+      "classification": "existing-mechanism-reuse",
+      "new_owned_mechanism": false
+    },
+    {
+      "file": "frontend/src/server/persistence-client.ts",
+      "current_sha256": "4fdb19a2268a5faad298b67173193642098ddac7968d17f093377d8ef322e4f7",
+      "head_sha256": "e76ac819e762bd326f28f57499941b348524ef9cd23466f4f3340683cd55f7ed",
+      "categories": [
+        "credential_store",
+        "language_toolchain",
+        "native_executable"
+      ],
+      "head_categories": [
+        "credential_store",
+        "language_toolchain",
+        "native_executable"
+      ],
+      "marker_categories_unchanged": true,
+      "marker_anchors": [
+        {
+          "category": "credential_store",
+          "line": 1297,
+          "quote": "// T-147 P2 本地加密 —— 解析 master key(桌面 keychain via env `CREATOROS_MASTER_KEY`",
+          "identical_text_in_head": true,
+          "head_lines": [
+            1296
+          ]
+        },
+        {
+          "category": "credential_store",
+          "line": 1298,
+          "quote": "// 由 Rust keyring 注入 / web-dev 降级)。[T-370a] 前移到此(原在 settings 装配处):",
+          "identical_text_in_head": true,
+          "head_lines": [
+            1297
+          ]
+        },
+        {
+          "category": "credential_store",
+          "line": 1311,
+          "quote": "\"[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。\" +",
+          "identical_text_in_head": true,
+          "head_lines": [
+            1310
+          ]
+        },
+        {
+          "category": "credential_store",
+          "line": 1312,
+          "quote": "\"桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。\",",
+          "identical_text_in_head": true,
+          "head_lines": [
+            1311
+          ]
+        },
+        {
+          "category": "credential_store",
+          "line": 7138,
+          "quote": "// canonical user/课程 + 回填 tag、sweep 僵尸 job_run/ai_task/沙箱、解析 master key(无 keychain",
+          "identical_text_in_head": true,
+          "head_lines": [
+            7078
+          ]
+        },
+        {
+          "category": "language_toolchain",
+          "line": 1194,
+          "quote": "// [T-363] 重置工作区(T-332 S5 Rust 整目录归档)后的首次启动:把 PRESERVE 清单表",
+          "identical_text_in_head": true,
+          "head_lines": [
+            1193
+          ]
+        },
+        {
+          "category": "language_toolchain",
+          "line": 1298,
+          "quote": "// 由 Rust keyring 注入 / web-dev 降级)。[T-370a] 前移到此(原在 settings 装配处):",
+          "identical_text_in_head": true,
+          "head_lines": [
+            1297
+          ]
+        },
+        {
+          "category": "native_executable",
+          "line": 5261,
+          "quote": "// [T-332 S2 修补] 扫僵尸是系统 daemon(schedulerCtx 无选中号):走系统级",
+          "identical_text_in_head": true,
+          "head_lines": [
+            5241
+          ]
+        }
+      ],
+      "diff_against_head": {
+        "changed": true,
+        "added_lines": 89,
+        "deleted_lines": 29,
+        "sha256": "9fadd3ce88dd4b92e0a7e71b4581720e7035a17fcf66fe074039cd0c50c67b9f"
+      },
+      "checked_content": "完整差异为assistant根及原host组合、executionEngine透传、原领域同store service组合、commit后派生回写及原Settings读写锁。getChannelModelCredential/getChannelModelSelection新增store透传仍调用settingsServiceFor(store).getChannelModelCredential，沿同masterKey的原createSettingsRepository；未另设凭据库。Rust整目录归档/桌面keyring注入CREATOROS_MASTER_KEY、resolveMasterKey以及系统daemon扫僵尸原文均已存在HEAD。原local.tools固定argv只读环境探测装配保持不变。",
+      "conclusion": "既有Rust宿主、keychain/masterKey和daemon机制复用；没有新增语言工具链、凭据存储系统、native executable或独立执行权。",
+      "classification": "existing-mechanism-reuse",
+      "new_owned_mechanism": false
+    },
+    {
+      "file": "backend/src/modules/intelligence/intelligence.service.ts",
+      "current_sha256": "4ca8c1db2e5962c3a5c0f586d7fa2a2681774336f849d46d6a9f63dc96a25033",
+      "head_sha256": "4ca8c1db2e5962c3a5c0f586d7fa2a2681774336f849d46d6a9f63dc96a25033",
+      "categories": [
+        "ipc"
+      ],
+      "head_categories": [
+        "ipc"
+      ],
+      "marker_categories_unchanged": true,
+      "marker_anchors": [
+        {
+          "category": "ipc",
+          "line": 4431,
+          "quote": "// 先发布不可变来源记录，再让任务进入可领取队列。IPC/进程恢复可按 transformId 接上同一记录。",
+          "identical_text_in_head": true,
+          "head_lines": [
+            4431
+          ]
+        }
+      ],
+      "diff_against_head": {
+        "changed": false,
+        "added_lines": 0,
+        "deleted_lines": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "checked_content": "当前文件与HEAD逐字节一致，diff为空。IPC标记仅在既有topic transform冻结来源记录/进程恢复说明：先持久化不可变来源记录，再enqueueRewriteTransform沿原tasks入队，重启按同transformId接续；没有新增IPC端口、socket或第二任务机制。",
+      "conclusion": "原受控IPC/持久任务恢复说明复用；本文件本次尚无产品差异，无新增IPC机制或执行权。",
+      "classification": "existing-mechanism-reuse",
+      "new_owned_mechanism": false
+    }
+  ],
+  "evidence_limitations": [
+    "这是当前4文件源码与marker机械分类核验，不是第8.1节第二次SPEC复核。",
+    "仅产出私有证据；未修改产品/控制文件、旧budget marker、progress或任务状态。",
+    "未运行实现功能、真实并发、模型、UI或安装验收，PASS不代签这些Gate。"
+  ]
+}

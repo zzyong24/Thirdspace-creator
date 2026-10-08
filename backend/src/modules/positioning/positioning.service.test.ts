@@ -6,6 +6,7 @@ import {
   type Db,
 } from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
+import {accountGroups} from '../../schema/account-groups';
 import {
   createPositioningService,
   type PositioningProjectsPort,
@@ -60,6 +61,21 @@ const PROFILE_INPUT = {
   differentiation: "论文到代码",
   capabilities: ["拆解", "演示"],
 };
+
+it('T1074 真实空组定位采用比较完整母版，固定时钟修改也冲突，外层回滚保留原文',async()=>{
+ const {db,client}=await createDb();try{
+  const group={...ctx,accountId:null,groupId:'positioning-cas-group',groupVersion:1};
+  await db.insert(accountGroups).values({id:group.groupId,userId:group.userId,name:'中性定位验收',status:'active',version:1,createdAt:NOW,updatedAt:NOW});
+  const owner=makeService(db,makeProjectsPort());
+  const first=await owner.compareAndUpsertProfile(group,{...PROFILE_INPUT,facets:{tone:'自然'}},null);
+  expect(first.facets.tone).toBe('自然');
+  await owner.upsertProfile(group,{...PROFILE_INPUT,audience:'用户刚改的受众'});
+  await expect(owner.compareAndUpsertProfile(group,PROFILE_INPUT,first)).rejects.toThrow('定位');
+  const current=await owner.getProfile(group);expect(current).toMatchObject({audience:'用户刚改的受众',facets:{tone:'自然'},updatedAt:NOW});
+  await expect(db.transaction(async tx=>{await makeService(tx as unknown as Db,makeProjectsPort()).compareAndUpsertProfile(group,{...PROFILE_INPUT,audience:'候选新受众'},current);throw Error('母版回滚');})).rejects.toThrow('母版回滚');
+  expect(await owner.getProfile(group)).toEqual(current);
+ }finally{await client.close();}
+});
 
 describe("positioning service", () => {
   let db: Db;

@@ -4,6 +4,10 @@ import Link from "next/link";
 import {
   workEditorCandidate,
   workEditorContext,
+  articleResource,
+  graphicPostResource,
+  assistantAdoptionReceiptSchema,
+  type AssistantActionCandidate,
   type WorkEditorCandidate,
 } from "@creatoros/contract";
 import { Button } from "@/components/ui/button";
@@ -12,21 +16,81 @@ import {
   useCreationClient,
   useCreationScope,
   creationScopeKey,
+  type CreationClient,
+  type CreationScope,
 } from "@/lib/creation-workspace-scope";
 import { NoteRelayEditor } from "@/features/reference-editors/noterelay/noterelay-editor";
 import {
   useDraftChatRequest,
   editorCanonical,
   editorDigest,
+  boundEditorCandidateSave,
+  withEditorCandidateSave,
+  EditorCandidateConflictError,
   type EditorAdoption,
   type EditorSaveCandidate,
 } from "@/features/draft-workbench/draft-chat-request";
+type AssistantAdoptionReceipt=ReturnType<typeof assistantAdoptionReceiptSchema.parse>;
+/** 正式来源仍由后台验证；此桥接只让原编辑器保留本地输入并刷新精确版本。 */
+export async function adoptAssistantDocumentThroughEditor(input:{
+  candidate:AssistantActionCandidate;client:CreationClient;assertCurrent:()=>void;
+  sourceScope:CreationScope;currentScope:CreationScope;
+  editor:Pick<ReturnType<typeof useDraftChatRequest>,"readEditorState"|"adoptEditorCandidate">;
+  receipt?:AssistantAdoptionReceipt;
+}):Promise<{receipt:AssistantAdoptionReceipt;adoption:EditorAdoption|null}> {
+  const {candidate,client,editor}=input,action=candidate.request.action;
+  if(action.kind!=="article.save"&&action.kind!=="graphic.save")throw Error("当前候选不是文章或图文保存。");
+  const source=candidate.source;
+  const save=async()=>{
+    input.assertCurrent();
+    const receipt=assistantAdoptionReceiptSchema.parse(input.receipt??await client.adoptAssistantAction({params:undefined,query:undefined,body:source}));
+    input.assertCurrent();
+    if(editorCanonical(receipt.source)!==editorCanonical(source))throw Error("原回执与候选来源不符。");
+    return receipt;
+  };
+  const state=editor.readEditorState();
+  if((state?.outputId??state?.target?.outputId)!==action.outputId)return {receipt:await save(),adoption:null};
+  if(creationScopeKey(input.sourceScope)!==creationScopeKey(input.currentScope))
+    throw new EditorCandidateConflictError("当前编辑器与候选的账号组不同，请回原工作区核对。");
+  const article=action.kind==="article.save";
+  const original=article?articleResource.parse(candidate.observations.article):graphicPostResource.parse(candidate.observations.graphic);
+  if(original.outputId!==action.outputId||original.currentVersionId!==action.expectedCurrentVersionId)
+    throw new EditorCandidateConflictError("候选观察与原作品版本不一致。");
+  const base={kind:"artifact" as const,artifactId:original.artifactId,versionId:original.currentVersionId};
+  const baseDigest=await editorDigest(original.current);
+  const target={schemaVersion:1,projectId:original.projectId,outputId:original.outputId,
+    owner:article?"wechat_article":"graphic_post",contentType:article?"article":"image",savedBase:base,documentDigest:baseDigest,
+    selection:article?{kind:"article",sectionIds:[]}:{kind:"graphic_post",cardIds:[]}};
+  const value=workEditorCandidate.parse({kind:"work.editor.candidate",schemaVersion:1,target,base,baseDigest,
+    candidateDigest:await editorDigest(action.document),summary:article?"采用已核对的文章候选":"采用已核对的图文候选",
+    candidate:{kind:article?"article":"graphic_post",document:action.document},changes:[],
+    apply:{operation:article?"createArticleVersion":"createGraphicPostVersion",outputId:action.outputId,
+      body:{expectedCurrentVersionId:action.expectedCurrentVersionId,document:action.document}},imageRequest:null,failureCode:null,error:null});
+  let receipt:AssistantAdoptionReceipt|undefined;
+  const requestId=`assistant-editor:${source.callId}:${source.candidateDigest}`;
+  const adoption=await withEditorCandidateSave(value,requestId,async()=>{
+    receipt=await save();
+    const versionId=receipt.result&&typeof receipt.result==="object"?(receipt.result as {versionId?:unknown}).versionId:undefined;
+    if(typeof versionId!=="string"||!versionId)throw Error("原采用回执缺少作品版本。");
+    const exact=await client[article?"getArticleVersion":"getGraphicPostVersion"]({params:{outputId:action.outputId,versionId},query:undefined,body:undefined});
+    input.assertCurrent();
+    if(exact.versionId!==versionId||editorCanonical(exact.document)!==editorCanonical(action.document))
+      throw Error("指定版本读回与原采用候选不一致，请核对同一来源回执。");
+    const current=await client[article?"getArticle":"getGraphicPost"]({params:{outputId:action.outputId},query:undefined,body:undefined});
+    input.assertCurrent();
+    return {receipt:{versionId},exact,current,currentMatches:current.currentVersionId===versionId&&editorCanonical(current.current)===editorCanonical(exact.document)};
+  },()=>editor.adoptEditorCandidate(value,requestId));
+  if(!adoption||!receipt)throw new EditorCandidateConflictError("编辑器已改变，本次没有绕过编辑器保存，请重新核对。");
+  return {receipt,adoption};
+}
 /** UI owner operation; same body/key retry follows the existing owner receipt. */
 export async function saveWorkEditorCandidate(
   client: any,
   result: EditorSaveCandidate,
   requestId: string,
 ) {
+  const bound=boundEditorCandidateSave(result,requestId);
+  if(bound)return bound;
   const member =
     result.kind === "work.creation.member"
       ? result.member === "article"

@@ -10,7 +10,9 @@ import type { RequestContext } from "@creatoros/contract";
 import { assembleCreativeContext, formatProjectStageBlock } from "./creative-context";
 import { resolveSkillForSurface, applyFunctionKey, assembleChatSystem, assembleSelectionContext, wrapUserData, selectRecentChatTasks, formatRecentTasksBlock, type ChatContext, type RecentTaskTruth } from "./chat-context";
 import { buildChatTools, ALL_CHAT_TOOL_NAMES, getSurfaceToolScope, type VerbatimSource } from "./chat-tools";
-import { buildSkillsBrief } from "@creatoros/contract";
+import {prepareChatToolDefinitions} from "./chat-tool-definitions";
+import {selectAssistantTools} from "./assistant-operation-policy";
+import {buildAssistantFunctionalPrompt} from "./assistant-functional-prompt";
 import type { AssembleChatDeps } from './chat-assembly-types';
 import { formatVerbatimSourceInventory, type CopilotMediaRoute } from './chat-assembly-context';
 import { createChatAssemblyToolDeps } from './chat-assembly-tool-deps';
@@ -49,8 +51,11 @@ export async function prepareChatAssembly(ctx: RequestContext, chatContext: Chat
     positioningScratch?: boolean;
     verbatimSources?: readonly VerbatimSource[];
     latestUserInstruction?: string;
+    executionEngine?: "pi" | "codex";
+    toolDefinitionOptions?:NonNullable<Parameters<typeof prepareChatToolDefinitions>[1]>;
 } = {}): Promise<ChatAssemblyPreparation> {
     chatContext=structuredClone(chatContext);
+    options={...options,toolDefinitionOptions:{...options.toolDefinitionOptions},verbatimSources:structuredClone(options.verbatimSources)};
     if(chatContext.editorTarget&&chatContext.creationTarget)throw new Error('同一轮只能冻结一种作品目标');
     if(chatContext.editorTarget){
       const target=workEditorTarget.parse(chatContext.editorTarget);
@@ -126,6 +131,9 @@ export async function prepareChatAssembly(ctx: RequestContext, chatContext: Chat
         projectPublished: projectStage ? projectStage.published : null,
     });
     let baseAllowed = scopedNames ?? ALL_CHAT_TOOL_NAMES;
+    const systemNames=['system.features','system.read','system.action.propose','canvas.create.propose','canvas.generate.propose'];
+    baseAllowed=baseAllowed.filter(name=>!systemNames.includes(name));
+    if(deps.assistantSystem)baseAllowed=[...baseAllowed,...systemNames.filter(name=>name!=='canvas.generate.propose'||Boolean(deps.assistantSystem?.generateCanvas))];
     baseAllowed = baseAllowed.filter(name => name !== "skill.read" && name !== "tool.result.read" && name !== "history.read");
     if (skillLibrary?.catalog) baseAllowed = [...baseAllowed, "skill.read", "tool.result.read", "history.read"];
     // [T-770] `creatoros.guide` 是低误触发元 Skill，不继承未知 surface 的“全量工具”兼容回退。
@@ -189,7 +197,7 @@ export async function prepareChatAssembly(ctx: RequestContext, chatContext: Chat
         "context.comments",
         "context.positioning.detail",
     ]);
-    const effectiveFunctionKey = mediaRoute?.kind === "douyin.share" &&
+    const effectiveFunctionKey = chatContext.editorTarget?.owner==="production"&&chatContext.functionKey==="video.edit.render"?undefined:mediaRoute?.kind === "douyin.share" &&
         chatContext.functionKey === "web.read"
         ? undefined
         : options.positioningScratch &&
@@ -233,11 +241,12 @@ export async function prepareChatAssembly(ctx: RequestContext, chatContext: Chat
         allowedNames = allowedNames.filter((name) => name !== "script.patch");
     }
     // 原无画布上下文的合法聊天保留其工具定义；新画布工具只在受信单画布入口可见。
-    if(chatContext.surface!=="canvas"||chatContext.selection?.kind!=="canvas"||chatContext.selection.ids.length!==1){allowedNames=allowedNames.filter(name=>name!=="canvas.read"&&name!=="canvas.propose");}
+    if(chatContext.surface!=="canvas"||chatContext.selection?.kind!=="canvas"||chatContext.selection.ids.length!==1){allowedNames=allowedNames.filter(name=>name!=="canvas.read"&&name!=="canvas.propose"&&name!=="canvas.generate.propose");}
     if(!chatContext.editorTarget)allowedNames=allowedNames.filter(name=>name!=='work.editor.read'&&name!=='work.editor.propose');
     if(!chatContext.creationTarget)allowedNames=allowedNames.filter(name=>name!=='work.creation.read'&&name!=='work.creation.propose');
+    if(chatContext.editorTarget?.owner==="production")allowedNames=allowedNames.filter(name=>name!=='video.edit.render');
     const preferredTools = applyFunctionKey(hasEffectiveScope ? getEffectiveTools(skillId) : getTools(skillId), effectiveFunctionKey).filter((n) => allowedNames.includes(n));
-    const toolWhitelist = isScriptPatchAction
+    let toolWhitelist = isScriptPatchAction
         ? ["script.patch"]
         : [
             ...preferredTools,
@@ -257,6 +266,12 @@ export async function prepareChatAssembly(ctx: RequestContext, chatContext: Chat
         excludeAccounts: options.positioningScratch && chatContext.surface === "positioning",
         excludeHistoricalCreatorContext: options.positioningScratch && chatContext.surface === "positioning",
     }, deps);
+    const searchConfigured = Boolean(deps.searchWeb);
+    const toolDeps = createChatAssemblyToolDeps(ctx, chatContext, deps, { mediaRoute, forcedMaterialKind, creatorOsGuideSnapshot, verbatimSources: options.verbatimSources, latestUserInstruction: options.latestUserInstruction, searchConfigured });
+    const prototypes=buildChatTools(toolWhitelist,{...toolDeps,skillLibrary,assistantSystem:deps.assistantSystem});
+    const actualDefinitions=(await prepareChatToolDefinitions(prototypes,options.toolDefinitionOptions)).definitions;
+    const tools=selectAssistantTools(options.executionEngine??"pi",prototypes,actualDefinitions);
+    toolWhitelist=Object.keys(tools);
     // 数据层 + 选中态层(T-027):先拼 CreativeContext facets,再接上"本次对话针对的选中内容"块 ——
     // 让模型一进来就知道用户"这条"指哪条,不再瞎答/反复索要标题。
     // T-039b per-action 注入矩阵:定位对话(chatbox.positioning)额外注入账号画像 accountsBrief
@@ -266,7 +281,6 @@ export async function prepareChatAssembly(ctx: RequestContext, chatContext: Chat
     });
     // [T-684] 联网检索已改成随包浏览器能力，不再读取被隐藏的搜索模型配置。
     // 只要宿主装配了 searchWeb 端口，就是真联网；失败时诚实失败，不回落模型记忆。
-    const searchConfigured = Boolean(deps.searchWeb);
     // 宿主只声明真实能力与执行边界；业务方法由冻结Skill按需加载。
     const honestyBlock = [
         ...(chatContext.editorTarget?['当前编辑器目标已保存并经原owner核验；先work.editor.read读取选区与原始前值，按明确UTF16范围/真实ID/native ticks提出typed_patch。宿主保完整未改字段；返回候选不表示已采纳。']:[]),
@@ -291,10 +305,7 @@ export async function prepareChatAssembly(ctx: RequestContext, chatContext: Chat
     // (每工具一行「中文名(工具名):一句话用途」,行数=白名单工具数、上限 20 超出截断)——
     // 让模型能如实回答「你能干什么」,并在对话中主动建议(「这个我可以用『记录经验』帮你存下来」)。
     // 词表与前端工具 trace 行同源(lib/chat-tool-labels 单一真值),不编造白名单外的能力。
-    const skillsBriefBlock = [
-        "【本轮可调用工具 —— 这是操作能力，不是工作方法；具体参数以工具定义为准】",
-        buildSkillsBrief(toolWhitelist),
-    ].join("\n");
+    const skillsBriefBlock = buildAssistantFunctionalPrompt(toolWhitelist);
     const selectionBlock = assembleSelectionContext(chatContext.selection, {
         scriptPatchRequired: isScriptPatchAction,
     });
@@ -349,7 +360,7 @@ export async function prepareChatAssembly(ctx: RequestContext, chatContext: Chat
     // 默认指当前号);未选号 / reader 无 id / 无匹配 → 空串不注(诚实,不猜)。
     const currentAccountBlock = context.currentAccountLine
         ? [
-            `【当前选中的抖音号】用户当前操作的抖音号:${context.currentAccountLine}。`,
+            `【当前选中的平台账号】用户当前操作的平台账号:${context.currentAccountLine}。`,
             "用户说「我的账号 / 我的数据 / 我当前登录的是哪个账号」时,默认都指这个号——直接如实回答、直接拉它的数据;**绝不要说「我没法判断你登录的是哪个号」、也绝不要反问用户当前是哪个号**(系统已把当前号告诉你了)。",
         ].join("\n")
         : "";
@@ -429,10 +440,8 @@ export async function prepareChatAssembly(ctx: RequestContext, chatContext: Chat
         userMaterialRefBrief: context.userMaterialRefBrief ?? "", knowledgeBrief: context.knowledgeBrief ?? "",
     };
     // 5) 工具白名单层:按 skill 白名单挂工具,execute 复用现有 runner 核心产**候选**(非实体)。
-    const toolDeps = createChatAssemblyToolDeps(ctx, chatContext, deps, { mediaRoute, forcedMaterialKind, creatorOsGuideSnapshot, verbatimSources: options.verbatimSources, latestUserInstruction: options.latestUserInstruction, searchConfigured });
     // [T-439] 装配层一律用**原名**(内部真值:错误信封登记 / 白名单 / 深链 functionKey / 审计日志
     //   都按原名)。合规化只在发给模型那一刻做,见下方 streamText 入参。
-    const tools = buildChatTools(toolWhitelist, { ...toolDeps, skillLibrary });
     // [T-117 确定性修] functionKey 是深链/按钮明确指定的工具(如「补全选题卡」深链 fn=topic.enrich);
     // 命中真工具时强制本轮调它,防模型把卡当文本吐 + 谎称已渲卡(弱 tool-calling 模型的常态)。
     const forcedTool = forcedToolSequence?.[0] && toolWhitelist.includes(forcedToolSequence[0])
@@ -453,6 +462,6 @@ export async function prepareChatAssembly(ctx: RequestContext, chatContext: Chat
         ...((["topic.enrich", "positioning.generate", "calibration.diagnose", "topic.generate", "review.analyze", "knowledge.distill"].some(name => tools[name])) ? { structuredContext: { positioningBrief: context.positioningBrief, accountsBrief: context.accountsBrief, learningsBrief: context.learningsBrief, signalsBrief: context.signalsBrief, knowledgeBrief: context.knowledgeBrief } } : {}),
         ...(tools["script.hooks"] ? { scriptHooksContext: { ...scriptHooksContext } } : {}),
         forcedTool,
-        ...(forcedToolSequence ? { forcedToolSequence } : {}),
+        ...(forcedToolSequence?.some(name=>toolWhitelist.includes(name)) ? { forcedToolSequence:forcedToolSequence.filter(name=>toolWhitelist.includes(name)) } : {}),
     };
 }

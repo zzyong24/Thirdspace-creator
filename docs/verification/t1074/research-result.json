@@ -1,0 +1,38 @@
+{
+  "taskId": "T-1074",
+  "status": "RESEARCH_COMPLETE_IMPLEMENTATION_PENDING",
+  "date": "2026-10-08",
+  "mainHead": "fbb861d4",
+  "sourceInventoryHead": "4eedd433",
+  "productCodeChanged": false,
+  "installed": {
+    "statusExitCode": 0,
+    "mode": "installed",
+    "connected": true,
+    "access": "full",
+    "catalogExitCode": 0,
+    "seconds": 0.543,
+    "count": 405,
+    "utf8Bytes": 9549765,
+    "characters": 9532447,
+    "sha256": "c5e06d1ca9d0b07d6811d1270ec84b4086007d34af0b3823a7bf31ba6f60c4fa",
+    "effects": {
+      "read": 179,
+      "write": 168,
+      "destructive": 26,
+      "external": 32
+    }
+  },
+  "sourceReviews": {
+    "canvasVideo": "read-only complete; not acceptance",
+    "otherFeatures": "CONCERNS; not implementation review"
+  },
+  "testsRun": false,
+  "modelRun": false,
+  "uiRun": false,
+  "userAcceptance": false,
+  "artifacts": {
+    "research.md": "a12a470b003303af266e18c9f18a84c09275da2cba639ec32561199999059d3c",
+    "tool-inventory.md": "2c507bf84fb8352aaa0a88981b8f9160e4af7e26c1fc55a109ee5b6ca2f11387"
+  }
+}

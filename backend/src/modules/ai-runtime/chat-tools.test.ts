@@ -4637,5 +4637,5 @@ it('编导冻结工具说明提供真正的typed操作名，原错误op不能通
  const request={base,baseDigest,summary:'按用户明确要求修改原片段',candidate:{kind:'typed_patch',owner:'production',sceneId:'real-scene',edits:[edit]}};
  expect(parameters.parse(request)).toEqual(request);
  expect(parameters.safeParse({...request,candidate:{...request.candidate,edits:[{...edit,type:undefined,op:'update_element'}]}}).success).toBe(false);
- for(const name of ['patchNativeElement','expectedElementDigest','patchArticleSection','expectedSectionDigest','patchGraphicCard','expectedCardDigest'])expect(definitions[0].description).toContain(name);
+ for(const name of ['patchNativeElement','expectedElementDigest','patchArticleSection','expectedSectionDigest','patchGraphicCard','expectedCardDigest'])expect(definitions[0]!.description).toContain(name);
 });

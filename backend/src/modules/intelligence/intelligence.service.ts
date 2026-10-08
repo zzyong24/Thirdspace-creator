@@ -2404,6 +2404,18 @@ export function createIntelligenceService(
       };
     },
 
+    /** 原分类owner的纯读取；候选观察不能触发workspace初始化或任务恢复。 */
+    async readCollection(ctx: RequestContext, id: string, options?: {forUpdate:true}) {
+      if (options?.forUpdate && typeof (db as unknown as {rollback?:unknown}).rollback !== "function")
+        throw new Error("雷达父分类锁读必须绑定实际事务");
+      const query = db.select().from(intelligenceCollections).where(and(
+        eq(intelligenceCollections.id,id),eq(intelligenceCollections.userId,ctx.userId),
+        workspaceFilter(intelligenceCollections,ctx),isNull(intelligenceCollections.archivedAt),
+      )).limit(1);
+      const [row] = await (options?.forUpdate ? query.for("update") : query);
+      if (!row) throw new OwnershipError("雷达分类不存在、已归档或不属于当前工作区");
+      return toCollection(row);
+    },
     async getWorkspace(ctx: RequestContext) {
       await ensureSystemCollections(ctx);
       await migrateLegacySignalSourcesOnce(ctx);
@@ -2522,7 +2534,10 @@ export function createIntelligenceService(
       const accountId = await account(ctx, "intelligence.collections.create");
       const name = input.name.trim().replace(/\s+/g, " ");
       if (!name) throw new IntelligenceValidationError("分类名不能为空");
-      if (input.parentId) await requireCollection(ctx, input.parentId);
+      if (input.parentId) {
+        const parent = await requireCollection(ctx,input.parentId);
+        if (parent.archivedAt) throw new IntelligenceValidationError("父分类已归档，请重新选择");
+      }
       const [duplicate] = await db
         .select()
         .from(intelligenceCollections)

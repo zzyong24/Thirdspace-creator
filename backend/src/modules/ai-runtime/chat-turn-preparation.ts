@@ -14,6 +14,8 @@ export async function prepareChatTurn(ctx:RequestContext,input:ChatTurnInput,dep
   positioningScratch:isScratchPositioningConversation(frozenInput.messages),
   verbatimSources:frozenInput.trustedScriptSources,
   latestUserInstruction:latestUserText(frozenInput.messages),
+  executionEngine:frozenInput.executionEngine??"pi",
+  toolDefinitionOptions:frozenOptions,
  });
  const preparedTools=await prepareChatToolDefinitions(assembly.tools,frozenOptions);
  return {assembly,toolParameters:preparedTools.parameters,toolDefinitions:preparedTools.definitions,modelMessages:await prepareChatModelMessages(frozenInput.messages,assembly)};
@@ -28,7 +30,7 @@ export async function prepareDurableChatTurn(
  options: {atomicCoverGenerate?:boolean;atomicAgenticResearch?:boolean;workerScriptDraft?:boolean;workerWebRead?:boolean;workerResearch?:boolean;atomicMaterialGenerate?:boolean;atomicScriptReview?:boolean;atomicPublishPackage?:boolean;scriptHooksGeneration?:ChatHostContext["scriptHooksGeneration"];structuredGeneration?:ChatHostContext["structuredGeneration"]} = {},
 ) {
  // 必须在首个 await 前复制，工具闭包也不能持有调用方可变的账号/选区对象。
- const context=structuredClone(ctx), messages=structuredClone(input.messages), abortSignal=input.abortSignal;
+ const context=structuredClone(ctx), messages=structuredClone(input.messages), abortSignal=input.abortSignal, executionEngine=input.executionEngine??"pi";
  const atomicCoverGenerate=options.atomicCoverGenerate===true;
  const atomicAgenticResearch=options.atomicAgenticResearch===true;
  const workerScriptDraft=options.workerScriptDraft===true;
@@ -49,7 +51,7 @@ export async function prepareDurableChatTurn(
  },{userId:context.userId,accountId:context.accountId??null,groupId:context.groupId,projectId:input.chatContext.projectId??null});
  const {runWithEffectiveSkillSnapshot}=await import("@creatoros/ai-worker");
  const prepared=await runWithEffectiveSkillSnapshot(hostContext.skillSnapshot,()=>prepareChatTurn(context,{
-  messages,chatContext:hostContext.chatContext,trustedScriptSources:hostContext.trustedScriptSources,
+  messages,chatContext:hostContext.chatContext,trustedScriptSources:hostContext.trustedScriptSources,executionEngine,
   abortSignal,
  },deps,{atomicCoverGenerate,atomicAgenticResearch,workerScriptDraft,workerWebRead,workerResearch,atomicMaterialGenerate,atomicScriptReview,atomicPublishPackage,workerScriptHooks:Boolean(scriptHooksGeneration),atomicPlanningThesis:true,workerStructuredNodes:Boolean(structuredGeneration)}));
  if(structuredGeneration && prepared.toolDefinitions.some(tool=>tool.execution==="worker.structured-node" && !hostContext.skillSnapshot.skills.some(skill=>skill.skillId===(tool.name==="review.analyze"?"review.insights":tool.name))))throw new Error("原任务缺少生成节点 Skill");

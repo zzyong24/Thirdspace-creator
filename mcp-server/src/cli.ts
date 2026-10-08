@@ -14,6 +14,7 @@ import {
   revokeConnection,
 } from "./connection";
 import { endpointInputSchema, schemaToJson } from "./tools";
+import {operationCatalog,describeOperation} from "./operation-catalog";
 import { readDefaultAccountId, writeDefaultAccountId, readDefaultGroupId, writeDefaultGroupId } from "./context";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 
@@ -46,6 +47,7 @@ const VALUE_FLAGS = new Set([
   "--timeout",
   "--share",
   "--collection",
+  "--domain","--effect","--offset","--limit",
 ]);
 const BOOLEAN_FLAGS = new Set([
   "--json",
@@ -55,6 +57,7 @@ const BOOLEAN_FLAGS = new Set([
   "--force-new",
   "--help",
   "--version",
+  "--compact",
 ]);
 
 function assertKnownFlags(args: string[]): void {
@@ -103,20 +106,7 @@ async function parseInput(raw: string | undefined): Promise<DispatchInput> {
 }
 
 function operationMetadata(endpoint: Endpoint): JsonObject {
-  const policy = getCliOperationPolicy(endpoint.id);
-  if (!policy) throw new Error(`operation 缺 CLI policy: ${endpoint.id}`);
-  return {
-    operation: endpoint.id,
-    method: endpoint.method,
-    path: endpoint.path,
-    description: endpoint.id === "ingestion.douyin.refresh"
-      ? `${endpoint.id} 已退役；刷新本人作品请用 creatoros douyin refresh (${endpoint.method} ${endpoint.path})`
-      : `${endpoint.id} (${endpoint.method} ${endpoint.path})`,
-    ...policy,
-    contractVersion: CONTRACT_VERSION,
-    inputSchema: endpointInputSchema(endpoint),
-    outputSchema: schemaToJson(endpoint.response),
-  };
+  return describeOperation(endpoint.id,endpointInputSchema,schemaToJson);
 }
 
 function requireExecutionFlags(
@@ -358,6 +348,11 @@ export async function runCliCommand(args: string[]): Promise<unknown> {
     return { ok: true, cliVersion: "0.1.0", contractVersion: CONTRACT_VERSION };
   }
   if (group === "operations" && action === "list") {
+    const compact=hasFlag(args,"--compact"),domain=flagValue(args,"--domain"),effect=flagValue(args,"--effect"),offset=flagValue(args,"--offset"),limit=flagValue(args,"--limit");
+    if(compact||domain!==undefined||effect!==undefined||offset!==undefined||limit!==undefined){
+      const page=operationCatalog({...(domain!==undefined?{domain}:{}),...(effect!==undefined?{effect}:{}),...(offset!==undefined?{offset:Number(offset)}:{}),...(limit!==undefined?{limit:Number(limit)}:{})});
+      return {ok:true,count:page.rows.length,total:page.total,offset:page.offset,limit:page.limit,hasMore:page.hasMore,nextOffset:page.nextOffset,operations:compact?page.rows:page.rows.map(row=>operationMetadata(endpointsById.get(row.operation)!))};
+    }
     return {
       ok: true,
       count: endpointsById.size,

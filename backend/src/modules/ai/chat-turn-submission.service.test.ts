@@ -1,4 +1,5 @@
 import { createChatHostContextReader } from "./chat-host-context.service";
+import type { ChatHostContext } from "./chat-host-context";
 import { beforeAll, afterAll, it, expect, vi } from "vitest";
 import { createDb, aiTasks, aiMessages, executionTasks, eq, type Db } from "@creatoros/backend";
 import { createAiRepository } from "./ai.repository";
@@ -20,6 +21,22 @@ async function fixture(){
   const rows=async()=>({tasks:await db.select().from(aiTasks).where(eq(aiTasks.accountId,ctx.accountId)),executions:await db.select().from(executionTasks).where(eq(executionTasks.accountId,ctx.accountId))});
   return {ctx,repo,conversation,source,request,assemble,service,message,rows};
 }
+it.each([undefined,"codex"] as const)("装配前解析真实引擎 %s，冻结工具与策略一致且重放不重新装配",async executionEngine=>{
+  const f=await fixture(),engine=executionEngine??"pi";
+  const assemble=vi.fn(async(ctx:typeof f.ctx,snapshot:ChatTurnSnapshot,options?:{executionEngine:"pi"|"codex"})=>({
+    ...await f.assemble(ctx,snapshot),system:`目录来自 ${options?.executionEngine??"missing"}`,
+    tools:[{name:options?.executionEngine==="codex"?"canvas.read":"context.projects",version:"1",description:"真实已装配工具",parameters:{type:"object"},effect:"none" as const}],
+  }));
+  const service=createChatTurnSubmissionService(db,{now,nextId,assemble});
+  const result=await service.submit(f.ctx,{...f.request,...(executionEngine?{executionEngine}:{})});
+  expect(assemble.mock.calls[0]?.[2]).toEqual({executionEngine:engine});
+  const saved=(await f.rows()).executions[0]!.payload as {modelInput:Record<string,unknown>};
+  expect(saved.modelInput).toMatchObject({executionEngine:engine,system:`目录来自 ${engine}`,tools:[{name:engine==="codex"?"canvas.read":"context.projects"}]});
+  const frozen=JSON.stringify(saved);
+  expect(await service.submit(f.ctx,{...f.request,...(executionEngine?{executionEngine}:{})})).toMatchObject({...result,replayed:true});
+  expect(assemble).toHaveBeenCalledTimes(1);
+  expect(JSON.stringify((await f.rows()).executions[0]!.payload)).toBe(frozen);
+});
 it("同源消息并发提交只产生一个完整绑定，冻结真实历史且不吞后续消息",async()=>{
   const f=await fixture();await f.message("user","后续问题");
   const [a,b]=await Promise.all([f.service.submit(f.ctx,f.request),f.service.submit(f.ctx,f.request)]);
@@ -77,7 +94,7 @@ it("已有旧公开入口回复绑定的源消息不能再创建第二份聊天�
   expect(f.assemble).not.toHaveBeenCalled();expect(await f.rows()).toEqual({tasks:[],executions:[]});
 });
 
-function hostContext(ctx:{userId:string;accountId:string}) {
+function hostContext(ctx:{userId:string;accountId:string}):ChatHostContext {
   return {schemaVersion:1 as const,chatContext:{surface:"topics"},mediaRoute:null,positioningScratch:false,trustedScriptSources:[],skillSnapshot:{snapshotVersion:1 as const,userId:ctx.userId,accountId:ctx.accountId,resolvedAt:"fixed",platformPolicyVersion:"1",platformPolicy:"候选",skills:[{skillId:"chatbox.topic",baseVersion:"1",overlayRevision:null,overlayVersion:null,effective:{methodSystem:"固定策略",template:"模板",tools:["context.projects"],requiredFacets:[],contextRequirements:[],outputSchema:null,completionPolicy:null,completionPolicyAdapter:null}}]}};
 }
 it("宿主上下文与执行原子保存，重放不换Skill或选区",async()=>{
@@ -156,7 +173,9 @@ it("真实租约恢复只读工具，使用冻结产品说明及当前账号数�
  const {createChatHostContextReader}=await import("./chat-host-context.service");
  const {createPersistentTaskService}=await import("../execution/persistent-task.service");
  const f=await fixture(),frozen=hostContext(f.ctx);
- frozen.skillSnapshot.skills.push({skillId:"creatoros.guide",baseVersion:"v1",overlayRevision:null,overlayVersion:null,effective:{methodSystem:"提交时产品说明",template:"模板",tools:[],requiredFacets:[],contextRequirements:[],outputSchema:null,completionPolicy:null,completionPolicyAdapter:null}});
+ const {registerAllTemplates,getOfficialSkillBase}=await import("@creatoros/ai-worker");registerAllTemplates();
+ const official=getOfficialSkillBase("creatoros.guide")!;
+ frozen.skillSnapshot.skills.push({skillId:"creatoros.guide",baseVersion:official.baseVersion,overlayRevision:null,overlayVersion:null,effective:{methodSystem:official.methodSystem,template:official.template,tools:official.tools??[],requiredFacets:official.requiredFacets??[],contextRequirements:official.contextRequirements??[],outputSchema:null,completionPolicy:null,completionPolicyAdapter:null}});
  const prototypes=buildChatTools(["creatoros.guide","context.projects"],{} as Parameters<typeof buildChatTools>[1]);
  const definitions=(await prepareChatToolDefinitions(prototypes)).definitions;
  const service=createChatTurnSubmissionService(db,{now,nextId,assemble:async(ctx,snapshot)=>({...await f.assemble(ctx,snapshot),tools:definitions,hostContext:frozen})});
@@ -170,7 +189,7 @@ it("真实租约恢复只读工具，使用冻结产品说明及当前账号数�
  expect(Object.keys(tools)).toEqual(["creatoros.guide","context.projects"]);
  expect(listProjects).not.toHaveBeenCalled();
  const guide=await getChatToolNativeExecutor(tools["creatoros.guide"]!)!({},{});
- expect(JSON.stringify(guide)).toContain("提交时产品说明");expect(JSON.stringify(guide)).not.toContain("后来的配置");
+ expect(guide).toMatchObject({guide:official.methodSystem});expect(guide).not.toHaveProperty("error");expect(JSON.stringify(guide)).not.toContain("后来的配置");
  await getChatToolNativeExecutor(tools["context.projects"]!)!({},{});
  expect(listProjects).toHaveBeenLastCalledWith(expect.objectContaining({accountId:f.ctx.accountId}),expect.anything());
  await expect(resolve({...f.ctx,accountId:"other"},ref)).rejects.toThrow();

@@ -1,0 +1,34 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "PASS（仅用户授权的SPEC第8.1节四变更ID/9精确文件有界补充复核；SPEC sha256=c33f1a6a06bcb5a4782abda16153c0877654f707a733612d3773060e251ed411）。原REV-001的resolved状态、完整字段及证据原样保留，无新增finding。四API已有严格来源合同，登记原group作用域不增加API或权限；原article-workbench:339及graphic-post-workbench:212仅两参数adoptCandidate(candidate,requestId)，内部saveWorkEditorCandidate读回receipt/exact/current/currentMatches并按generation/本地草稿比对保留未保存输入。正式来源执行器可在已准入协调器/helper中按稳定requestId及候选canonical绑定，仍只调用后台来源采用API；匹配dirty、entry/身份/epoch变化、拒绝或unknown不得返回null绕过直接保存，等待期间变化保留saved-not-synced，刷新先读原source receipt。Candidate现有getCandidate未加行锁，原forStore可绑定同tx项目peer；新增锁读限tx-bound原owner，保留user/workspace/id筛选、原DTO观察比较后调用原promote并同行receipt。Intelligence.getWorkspace实际有初始化分类、迁移和任务恢复副作用，原requireCollection未排除归档；新观察纯读须按user/workspace/id/非归档，无parent不查询，有parent采用先tx父锁并重验后原createCollection。原9文件之外的工作台无需更改，原19类范围、数据归属与旧候选兼容保留。同模型独立会话为弱门；仅源码/合同读审，不声称实现测试、真实PG两连接、模型、实际UI、安装或整仓Gate PASS。本次使用用户DEC-106902授权的单次补充cycle对应initial格式，完整保留既有resolved finding；未修改旧event或轮次，未执行record，不将报告产出等同正式receipt。登记格式按真实reviewctl新cycle要求使用initial；原轮次和finding不改写。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "resolved",
+      "severity": "major",
+      "category": "correctness",
+      "requirement_anchor": {
+        "id": "T-1074-SPEC-4-automation.createDraft",
+        "quote": "| automation.createDraft | name/prompt/schedule与sourceKind限topic.daily/self.metrics/comments，Scheduling原createJob；enabled=false，无任意toolGrants/target/systemManaged；具体账号必须真实当前组目标 |"
+      },
+      "acceptance_anchor": {
+        "id": "T-1074-SPEC-8-real-model-matrix",
+        "quote": "真实模型矩阵：两引擎按实际目录分别完成第4节各功能主旅程、画布创建/采用/刷新再改、生图确认/进度/精确产物/放画布、视频上述七类调整、文章/图文联合及微调、至少一次缺输入/过期版本/拒绝/取消/未知恢复。确定性协议fixture、真实模型、真实UI、安装版分别记录。任务等待保原ID，不为获取PASS重发付费生成。"
+      },
+      "where": "docs/features/t1074-ai-system-operations.md:90；backend/src/modules/scheduling/scheduling.service.ts:162-207；backend/src/modules/scheduling/scheduling.repository.ts:240-322",
+      "failure_mode": "automation.createDraft的完整调用合同未闭合。其strict输入未列具体targetAccountId，原Scheduling从ctx.accountId落归属，而self.metrics/comments在account-null组上下文会拒绝。另一方面原createJob按当前workspace/sourceKind（平台采集另按账号）幂等复用已有job；传enabled=false仍会返回已有enabled=true的任务且不会采用新的name/prompt/schedule。当前“新建关闭草稿”承诺可能变成无法选定实际账号或把既有运行任务误称新草稿，不能兑现第4节及两引擎完整功能主旅程。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "SPEC sha256=f4805b747b9a601d6000df69620d24b866ed611fed6ed5059fc92c8f5f60e75b，第70/90/98/156行；源码HEAD=fbb861d433eae12b5824709916a669c7a0400aa5，scheduling.service.ts:162-207 ctx.accountId stamp；scheduling.repository.ts:242-243 requireAccountId、252-286 reuse原行、267 topic.daily去重不叠账号、313-322唯一冲突复用。只读源码与合同核对，未运行测试。",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "clarify",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "SPEC-LINE:90:57ff1655ad1dab62",
+      "suggestion": "在既有19项范围内明确targetAccountId：topic.daily可null，self.metrics/comments必须是当前组真实目标；候选及正式采纳都按真实组成员核验，由宿主派生原Scheduling目标ctx。原owner新增窄createDraftIfAbsent，以相同tx及既有membership锁（账号→member→group）在原去重身份下先查；已有返回明确conflict/原job读回及enable入口，不能关闭、覆盖或称为新草稿。topic.daily沿原workspace+sourceKind查已有任务，不错误追加account=null筛选；平台种类沿目标account。增加account-null/多账号目标、已有enabled=true/false、新name/prompt/schedule不覆盖、普通createJob与AI采纳并发、重复采纳读原receipt的公共owner验收。",
+      "resolution_evidence": "SPEC sha256=8d622f98f79cb8a68bcfae4e85eee0027cc0ae588df8cdaf011d15d4c196ed97，第92行明确targetAccountId及两类必选目标；第102行规定候选保存目标/成员版本、宿主派生目标ctx、account→member→group锁序、tx-bound createDraftIfAbsent按原去重身份先查、topic.daily不叠account=null、已有enabled=true/false保持name/prompt/schedule/启用状态并返回真实冲突及原入口；第102/150/160/162行绑定公共owner并发/归属/回滚/幂等与两引擎验收。只读复核原scheduling.service.ts:162-207、scheduling.repository.ts:240-322、membership-lock.service.ts锁序，确认方案沿原owner可落地；此处仅销账首轮SPEC合同矛盾，未运行产品测试或声称实现/模型/UI/安装验收通过。",
+      "parent_id": ""
+    }
+  ]
+}

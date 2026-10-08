@@ -596,7 +596,7 @@ export async function POST(req: Request): Promise<Response> {
     submissionPhase = "runtime_access";
     const durable = runtime.durable;
     submissionPhase = "task_submission";
-    const submitted=await durable.submit(ctx,{conversationId,sourceMessageId:persistedUserMessageId,executionEngine:body.executionEngine},async(owner,snapshot)=>{
+    const submitted=await durable.submit(ctx,{conversationId,sourceMessageId:persistedUserMessageId,executionEngine:body.executionEngine},async(owner,snapshot,options)=>{
       // 历史只取后端已保存的消息。附件只替换本轮已验归属的用户输入副本。
       const trustedMessages: UIMessage[]=snapshot.messages.map(message=>({
         id:message.id,role:message.role as UIMessage["role"],
@@ -610,7 +610,7 @@ export async function POST(req: Request): Promise<Response> {
         ...trustedScriptSources.filter(source=>source.sourceType==="attachment"),
       ];
       submissionPhase = "context_preparation";
-      return prepareChatReply(runtime,owner,snapshot,{messages:trustedMessages,chatContext,trustedScriptSources:boundSources,abortSignal:req.signal});
+      return prepareChatReply(runtime,owner,snapshot,{messages:trustedMessages,chatContext,trustedScriptSources:boundSources,abortSignal:req.signal,executionEngine:options.executionEngine});
     });
     submissionPhase = "stream_subscription";
     // 授权按钮只续接执行；真实权限仍由宿主 approve 重新检查。
@@ -620,6 +620,7 @@ export async function POST(req: Request): Promise<Response> {
     }
     const response=chatExecutionResponse(runtime.durable,ctx,{...submitted,conversationId},req.signal);
     response.headers.set("x-source-message-id",submitted.sourceMessageId);
+    response.headers.set("x-ai-task-id",submitted.taskId);
     return response;
   } catch (err) {
     if (err instanceof OwnershipError) {

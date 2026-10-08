@@ -34,6 +34,42 @@ const service=(extra:Partial<Parameters<typeof createCreativeCanvasService>[1]>=
 beforeAll(async()=>{const opened=await createDb();db=opened.db;close=()=>opened.client.close();});
 afterAll(async()=>{await close();});
 
+it('生成候选纯读取完整输入；同事务预约和绑定失败全部回滚且不唤醒',async()=>{
+ const s=service(),c=ctx('account-a'),created=await s.create(c,{title:'生成候选'});
+ const saved=await s.save(c,created.id,{expectedRevision:1,document:doc([imageNode('proposal-image','image_to_image')])});
+ const before=await s.listTasks(c,created.id);
+ const snapshot=await s.prepareGenerateProposal(c,created.id,{baseRevision:saved.revision,nodeId:'proposal-image'});
+ expect(snapshot).toMatchObject({inputRevision:saved.revision,inputData:{prompt:'山间日出',referenceFileId:'file-1',referenceChecksum:checksum}});
+ expect(await s.listTasks(c,created.id)).toEqual(before);
+ submit.mockClear();
+ await expect(db.transaction(async tx=>{
+  await s.reserveGenerationInTransaction(c,created.id,'proposal-image',{expectedRevision:saved.revision,attemptId:'canvas-proposal-fixture',snapshot},tx as unknown as Db);
+  throw Error('原采用回执失败');
+ })).rejects.toThrow('原采用回执失败');
+ expect(await s.listTasks(c,created.id)).toEqual(before);expect(submit).not.toHaveBeenCalled();
+});
+
+it("AI创建先准备完整候选，采用同一事务保存初文档和精确文件；回滚不留下空画布",async()=>{
+ const s=service(),c=ctx("account-a");
+ const input={title:"AI完整画布",projectId:"project-a",document:doc([{id:"photo",type:"image" as const,label:"参考图片",position:{x:10,y:20},assetId:"image-1"}])};
+ const before=(await s.list(c)).length;
+ const prepared=await s.prepareCreateProposal(c,input);
+ expect((await s.list(c)).length).toBe(before);
+ expect(prepared.document.nodes[0]).toMatchObject({fileId:"file-1",checksum});
+ await expect(db.transaction(async tx=>{
+  await s.createWithDocumentInTransaction(c,prepared,tx as unknown as Db);
+  throw Error("injected receipt failure");
+ })).rejects.toThrow("injected receipt failure");
+ expect((await s.list(c)).length).toBe(before);
+ const created=await db.transaction(tx=>s.createWithDocumentInTransaction(c,prepared,tx as unknown as Db));
+ expect(created).toMatchObject({revision:1,title:input.title,projectId:input.projectId,document:prepared.document});
+ expect(await s.get(c,created.id)).toEqual(created);
+ await expect(s.prepareCreateProposal(ctx("account-b"),input)).rejects.toThrow();
+ const photo=prepared.document.nodes[0]!;
+ if(photo.type!=="image")throw Error("验收夹具不是图片节点");
+ await expect(db.transaction(tx=>s.createWithDocumentInTransaction(c,{...prepared,document:doc([{...photo,checksum:"0".repeat(64)}])},tx as unknown as Db))).rejects.toThrow("校验已变化");
+});
+
 it("账号独立画布、CAS 保存与媒体文件版本冻结",async()=>{
  const s=service(),created=await s.create(ctx("account-a"),{title:"分镜"});
  expect(await s.list(ctx("account-b"))).toEqual([]);

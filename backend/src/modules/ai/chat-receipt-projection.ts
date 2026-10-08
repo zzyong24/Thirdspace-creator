@@ -75,7 +75,7 @@ export function projectChatReceipts(calls: Call[], input: z.infer<typeof chatWor
             const part = pending.get(receipt.toolCallId);
             if (!part || part.type !== `tool-${receipt.toolName}`)
                 throw new ConflictError("工具回执未关联模型调用");
-            hasOutput = applyChatToolOutcome(part,call.id,receipt.output,invalidInputs.has(receipt.toolCallId),approvals.get(receipt.toolCallId)) || hasOutput;
+            hasOutput = applyChatToolOutcome(part,call.id,receipt.output,invalidInputs.has(receipt.toolCallId),approvals.get(receipt.toolCallId),input.toolOutcomeProjectionVersion) || hasOutput;
             pending.delete(receipt.toolCallId);
         }
         else
@@ -89,7 +89,7 @@ export function projectChatReceipts(calls: Call[], input: z.infer<typeof chatWor
 }
 
 /** 已确认工具结果到UI part的唯一规则；流事件和最终消息共用。 */
-export function applyChatToolOutcome(part:Record<string,Json>,callId:string,raw:unknown,invalidInput:boolean,approval?:ChatApprovalFact){
+export function applyChatToolOutcome(part:Record<string,Json>,callId:string,raw:unknown,invalidInput:boolean,approval?:ChatApprovalFact,projectionVersion?:1){
     const output = agenticToolOutcomeSchema.parse(raw);
     if (output.sideEffect === "unknown" || output.error?.code === "unknown_commit")
         throw new ConflictError("未知工具结果不能完成聊天");
@@ -101,10 +101,17 @@ export function applyChatToolOutcome(part:Record<string,Json>,callId:string,raw:
     }
     const denied = output.sideEffect === "none" && output.error?.code === "permission" && (object(output.data).denied === true || approval?.approved===false);
     part.state = denied ? "output-denied" : "output-available";
-    if (denied)
+    if (denied) {
+        delete part.output;
         part.approval = { id: approval?.id??`receipt:${callId}`, approved: false, reason: approval?.reason??output.error!.recovery };
+    }
     else {
-        part.output = z.json().parse(output.data ?? output);
+        // 宿主回执是展示状态真值；业务data中的同名字段不得伪造成功。
+        const data=output.data??output;
+        part.output = projectionVersion===1?z.json().parse({
+            ...(data!==null&&typeof data==="object"&&!Array.isArray(data)?data:{data:data??null}),
+            __creatorosOutcome:{schemaVersion:1,callId,status:output.status,summary:output.summary,error:output.error,sideEffect:output.sideEffect,continuation:output.continuation},
+        }):z.json().parse(output.data??output);
         if(approval?.approved===true)part.approval={...approval,approved:true};
         return true;
     }

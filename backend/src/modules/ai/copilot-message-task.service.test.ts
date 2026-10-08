@@ -16,7 +16,7 @@ const unused = async (): Promise<never> => {
   throw new Error("unused domain port");
 };
 function fixture(fail = false) {
-  const resolve = vi.fn(async (_ctx:RequestContext, snapshot:Parameters<NonNullable<ServiceDeps["prepareChatReply"]>>[1]) => {
+  const resolve = vi.fn(async (_ctx:RequestContext, snapshot:Parameters<NonNullable<ServiceDeps["prepareChatReply"]>>[1],_options:Parameters<NonNullable<ServiceDeps["prepareChatReply"]>>[2]) => {
     await db.select().from(aiTasks); // 真实 PGlite 读取：验证装配不在外层事务内自锁。
     return {capability:"copilot.assist",system:"真实策略",messages:snapshot.messages.map(m=>({role:m.role as "user"|"assistant"|"system"|"tool",content:m.content})),tools:[],maxSteps:6,maxOutputTokens:128};
   });
@@ -71,6 +71,7 @@ it("公开消息与持久聊天任务同时落库，流式入口的原保存方�
     },
   });
   expect(resolve).toHaveBeenCalledTimes(1);
+  expect(resolve.mock.calls[0]?.[2]).toEqual({executionEngine:"pi"});
   expect((await service.listMessages(ctx, conv.id)).map((m) => m.id)).toEqual([
     first.id,
     message.id,

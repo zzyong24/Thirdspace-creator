@@ -1,0 +1,566 @@
+{
+  "schema": "implementation-review/v1",
+  "task_id": "T-1074",
+  "review_kind": "bounded-independent-implementation-recheck",
+  "review_mode": "subagent-same-model-weak-gate",
+  "verdict": "PASS",
+  "summary": "PASS，仅用户已审§8.1四项九文件及必要原消费者的当前实现复查。未见未解决范围内阻断；三项本轮发现均有修正/复验，真实公共59含三项PG竞态、当前前端67、LED047167及最新前端/contract/MCP类型通过。backend整体类型仍为原2历史错误，保持FAIL。Intelligence post-change原ipc/doc预算机械核验通过，旧源证据保留。",
+  "checked_at": "2026-10-08T02:36:54.823Z",
+  "worktree": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "head": "fbb861d433eae12b5824709916a669c7a0400aa5",
+  "spec_path": "docs/features/t1074-ai-system-operations.md",
+  "spec_sha256": "c33f1a6a06bcb5a4782abda16153c0877654f707a733612d3773060e251ed411",
+  "files": [
+    {
+      "file": "contract/src/workspace-operation-scope.ts",
+      "role": "section-8.1-exact-path",
+      "sha256": "78fa7765a98a34e966818275cc21dff1a6895f7734e4f3224b9670215307d0b3",
+      "diff_sha256": "35c73ed8199174eda1f50e5fba4cd4e60b278c5c281c078a55fbf685633812c5"
+    },
+    {
+      "file": "frontend/src/features/draft-workbench/draft-chat-request.tsx",
+      "role": "section-8.1-exact-path",
+      "sha256": "9d36e3049aa4c85222c28e1a46af2c8df5ef585a5faa2ecedb0690ea8ffa16c1",
+      "diff_sha256": "069798b566f664c294288005237febb8216d41f12a3d468930df48f66bb7d98f"
+    },
+    {
+      "file": "frontend/src/features/draft-workbench/draft-chat-request.test.tsx",
+      "role": "section-8.1-exact-path",
+      "sha256": "4700d008edc41e2fce74c9ba64a96445ec0e5e30d1c805523a5714dfc6821533",
+      "diff_sha256": "577d8f0f56fc04aa54344df20c3a787e78972829799c4d74a56e9c4752d1b86f"
+    },
+    {
+      "file": "frontend/src/features/copilot/chat-work-editor-card.tsx",
+      "role": "section-8.1-exact-path",
+      "sha256": "1af168c089aecc67a4251217d96869c7c5de5610dae23a5d708eb40ed6ba8015",
+      "diff_sha256": "476fc88942f0b3a0912988a86e74d95d7fd542f4f83a70bb4c37fac7d7ec800e"
+    },
+    {
+      "file": "frontend/src/features/copilot/chat-work-editor-card.test.tsx",
+      "role": "section-8.1-exact-path",
+      "sha256": "e2ec73e05ed1ab32950112942a96840b5268f0f7b76977fed8f4b87ce2ef341d",
+      "diff_sha256": "af8becc8ffdb178bdf15c262774b49351ce4f7cf67eddb5b15d8c1e05c838d21"
+    },
+    {
+      "file": "backend/src/modules/candidate/candidate.service.ts",
+      "role": "section-8.1-exact-path",
+      "sha256": "0cb3fa786a34dff34404959dfe7cd5b079d15c2755dbe4896273a4dbee5e63de",
+      "diff_sha256": "4a15465089394eaae547918b9b6e35dfcaf53bc97dfd0262bcaeb2158b1befa7"
+    },
+    {
+      "file": "backend/src/modules/candidate/candidate.service.test.ts",
+      "role": "section-8.1-exact-path",
+      "sha256": "65d4f558469103947fce4555a674b446f65481a752e544e029e748b37ea3ce72",
+      "diff_sha256": "e352840518645a8747c87cf05de7ff26519ba05faa7bbfcb46f24fc417ab1dbd"
+    },
+    {
+      "file": "backend/src/modules/intelligence/intelligence.service.ts",
+      "role": "section-8.1-exact-path",
+      "sha256": "3656cf91333147c2372c4d1ae9978d78cddffc3c980dfdb07a21c74703d88b81",
+      "diff_sha256": "9e65eb7551388aba1e73ae85c3e1dc12ba696ee8d75f9f07d7d2e2fd61ad78f2"
+    },
+    {
+      "file": "backend/src/modules/intelligence/intelligence.service.test.ts",
+      "role": "section-8.1-exact-path",
+      "sha256": "c098208a35ec355ac63e9f12c9123474676c40c9dd6a815fab6f5a27fa25ff8b",
+      "diff_sha256": "aec6b33ea50e6e7f390fddea64993d7b22c278f2fc61110aca128970f6479c7f"
+    },
+    {
+      "file": "backend/src/application/chat/assistant-system-root.ts",
+      "role": "necessary-original-consumer",
+      "sha256": "8e4a0feeecffcef327b08f5e690f407495e43826e234320d2f3cffc24834e0e2",
+      "diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "frontend/src/features/copilot/chat-system-action-card.tsx",
+      "role": "necessary-original-consumer",
+      "sha256": "d9c8e71635cd78ffb7ca4fd22e4dcff7dc96745dec49475846176619f0ba4445",
+      "diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "backend/src/application/chat/assistant-system-root.integration.test.ts",
+      "role": "read-only-support",
+      "sha256": "0246b5561f67c64a54d065058a267db18d1be957a312a7d78f37bd351170eb86",
+      "diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "frontend/src/features/copilot/chat-system-action-card.test.tsx",
+      "role": "read-only-support",
+      "sha256": "97228356b424756c032fa603fd736b56d719ae6064a2c07fa73b2cee11432d0e",
+      "diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "frontend/src/features/article/article-workbench.tsx",
+      "role": "read-only-support",
+      "sha256": "8f3468697be11eba8c1b29896ea7ee10dbb92c6a3934d241ebad86289e1f33e3",
+      "diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "frontend/src/features/projects/graphic-post-workbench.tsx",
+      "role": "read-only-support",
+      "sha256": "92df2885de532884614bdefc3b50215f50759ba0f48118c5ec5d2f7ef2da3448",
+      "diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "frontend/src/server/persistence-client.ts",
+      "role": "read-only-support",
+      "sha256": "4fdb19a2268a5faad298b67173193642098ddac7968d17f093377d8ef322e4f7",
+      "diff_sha256": "9fadd3ce88dd4b92e0a7e71b4581720e7035a17fcf66fe074039cd0c50c67b9f"
+    },
+    {
+      "file": "backend/src/modules/ai/assistant-action-adoption.service.ts",
+      "role": "read-only-support",
+      "sha256": "a8594a7625e32594bf9492078eab08d64d8a73cef23bb36511306edf3fd31585",
+      "diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "checks": [
+    {
+      "change_id": "T1074-CONSUMER-SCOPE",
+      "verdict": "PASS",
+      "source": "contract/src/workspace-operation-scope.ts:27–30",
+      "observation": "四API均登记group，除4新增键之外原作用域穷举不变；不引入新API或权限。"
+    },
+    {
+      "change_id": "T1074-EDITOR-ADOPTION",
+      "verdict": "PASS",
+      "source": "draft-chat-request.tsx:54–72/340–362；chat-work-editor-card.tsx:36–94；chat-system-action-card.tsx:168–190",
+      "observation": "按稳定requestId绑定候选canonical与本次保存Promise，finally释放；旧adoptCandidate(candidate,requestId)不变。无匹配编辑器调用source-only正式API；匹配编辑器dirty抛typed冲突、不用null fallback，入口换页/等待期间generation或dirty变化保留saved-not-synced。来源scope与观察基版本核验，精确版本/当前版本读回匹配；card先读原receipt，input.receipt恢复不再次adopt；读取失败只保留原结果/未知状态和恢复入口。原两工作台文件未改，保留其local草稿/generation/currentMatches及刷新机制。"
+    },
+    {
+      "change_id": "T1074-CANDIDATE-LOCK",
+      "verdict": "PASS",
+      "source": "candidate.service.ts:572–582；assistant-system-root.ts:150–152；persistence-client.ts:6648–6663",
+      "observation": "rollback真实tx能力守卫、user/workspace/id scoped SELECT FOR UPDATE、原DTO；root锁读比较后调用原promote，同store项目peer及receipt同行提交。实际PG两连接覆盖编辑先锁/采用先锁两种次序，数据库pg_stat_activity确认Lock；receipt INSERT失败同行回滚。"
+    },
+    {
+      "change_id": "T1074-RADAR-PURE-READ",
+      "verdict": "PASS",
+      "source": "intelligence.service.ts:2407–2418/2537–2540；assistant-system-root.ts:100–103/166–169",
+      "observation": "readCollection不调用getWorkspace，按user/workspace/id/non-archived纯SELECT；有锁选项限实际事务。无parent prepare直接返回null、有parent采用先FOR UPDATE重读原DTO/version比较后仍原createCollection。实际PG第二连接由原deleteCollection持锁，公共采用等锁后拒绝，无孤儿/receipt；原createCollection拒绝归档父项。"
+    }
+  ],
+  "findings": [
+    {
+      "id": "IMPL-001",
+      "status": "resolved",
+      "severity": "major",
+      "where": "backend/src/application/chat/assistant-system-root.integration.test.ts:563",
+      "finding": "新增冻结编辑器公共夹具对workState联合直接访问document.title，导致原2项历史类型红之外新增TS2339。",
+      "resolution": "改为实际document.toMatchObject({title:expect.stringMatching(...)})，保持原结果与标题断言；最终backend类型日志中新增错误已消失，仅保留原2历史项。",
+      "evidence": [
+        "nine-backend-types-final",
+        "nine-backend-types-rechecked"
+      ]
+    },
+    {
+      "id": "IMPL-002",
+      "status": "resolved",
+      "severity": "minor",
+      "where": "frontend/src/features/copilot/chat-system-action-card.tsx:35",
+      "finding": "本地EditorCandidateConflictError经过通用humanize可能丢失脏稿恢复指引，实际RED未读到明确未保存提示。",
+      "resolution": "仅typed本地冲突显示其已审中文message；其它供应商/服务错误继续humanize。当前67回归含未保存输入保留且source adopt/旧save调用为0。",
+      "evidence": [
+        "editor-dirty-message-red",
+        "editor-source-bridge-final",
+        "editor-adoption-ui-final"
+      ]
+    },
+    {
+      "id": "IMPL-003",
+      "status": "resolved",
+      "severity": "minor",
+      "where": "frontend/src/features/copilot/chat-system-action-card.tsx:53",
+      "finding": "正式采用后静态impact占位“等待你采用”与已采用状态冲突。",
+      "resolution": "无真实impact时返回空文本并不画占位p；真实日期、账号、素材计数与生成信息保持。当前完整source采用回归只发来源引用、保留两参数编辑器调用、精确版本读回并断言无重复等待文案。",
+      "evidence": [
+        "editor-adopted-status-red",
+        "editor-adoption-ui-final"
+      ]
+    }
+  ],
+  "open_scope_findings": [],
+  "preserved_global_failures": [
+    {
+      "where": "backend/src/modules/platform-collection/platform-bind.integration.test.ts:173",
+      "code": "TS2532",
+      "status": "open-historical-outside-bounded-scope"
+    },
+    {
+      "where": "backend/src/modules/production/production-native-public.integration.test.ts:31",
+      "code": "TS2322",
+      "status": "open-historical-outside-bounded-scope"
+    }
+  ],
+  "evidence": [
+    {
+      "name": "nine-public-full-pg-fixed",
+      "metadata_path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1074-tests/nine-public-full-pg-fixed.json",
+      "metadata_sha256": "824e4e9ce75502e06f53746f18c8853b0f291caef804ce064eab3dbd49126f56",
+      "log_path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1074-tests/nine-public-full-pg-fixed.log",
+      "log_sha256": "c6cc4e0c3eca836d6f1b153890abb6d6eb7c54a97396f335cb95b6820556da31",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@creatoros/backend",
+        "exec",
+        "vitest",
+        "run",
+        "--testTimeout",
+        "180000",
+        "src/application/chat/assistant-system-root.integration.test.ts"
+      ],
+      "exit_code": 0,
+      "start_utc": "2026-10-08T02:28:30.811501+00:00",
+      "end_utc": "2026-10-08T02:28:51.569417+00:00",
+      "test_summary": "59 passed (59)"
+    },
+    {
+      "name": "editor-source-bridge-current",
+      "metadata_path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1074-tests/editor-source-bridge-current.json",
+      "metadata_sha256": "0338631559d0bd35d098bdb58d54354e9b80d899bba7ee9b27a00076dbcb0af0",
+      "log_path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1074-tests/editor-source-bridge-current.log",
+      "log_sha256": "be993627f50f9bc2df955b4fc94a357dab32066656f46ecce028388651f0a944",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "creatoros-frontend",
+        "exec",
+        "vitest",
+        "run",
+        "--retry",
+        "0",
+        "src/features/draft-workbench/draft-chat-request.test.tsx",
+        "src/features/copilot/chat-work-editor-card.test.tsx",
+        "src/features/copilot/chat-system-action-card.test.tsx",
+        "src/features/copilot/chat-tool-outcome.test.tsx",
+        "src/features/copilot/chat-tool-trace.test.tsx",
+        "src/features/copilot/ai-copilot-content.test.tsx"
+      ],
+      "exit_code": 0,
+      "start_utc": "2026-10-08T02:21:54.691161+00:00",
+      "end_utc": "2026-10-08T02:21:58.388939+00:00",
+      "test_summary": "65 passed (65)"
+    },
+    {
+      "name": "editor-source-bridge-final",
+      "metadata_path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1074-tests/editor-source-bridge-final.json",
+      "metadata_sha256": "b8d71f0e9a5e03a64a3621bcf3341f486bf7917646bfe217365f38f154434446",
+      "log_path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1074-tests/editor-source-bridge-final.log",
+      "log_sha256": "e41f32884c337daa784b1ad3edfd074b0a8e8722117a479ae370a7f6207ed0c9",
+      "argv": [
+        "pnpm",
+        "--dir",
+        "frontend",
+        "exec",
+        "vitest",
+        "run",
+        "src/features/draft-workbench/draft-chat-request.test.tsx",
+        "src/features/copilot/chat-work-editor-card.test.tsx",
+        "src/features/copilot/chat-system-action-card.test.tsx",
+        "src/features/copilot/chat-tool-outcome.test.tsx",
+        "src/features/copilot/chat-tool-trace.test.tsx",
+        "src/features/copilot/ai-copilot-content.test.tsx",
+        "--retry=0"
+      ],
+      "exit_code": 0,
+      "start_utc": "2026-10-08T02:31:34.317529+00:00",
+      "end_utc": "2026-10-08T02:31:38.584778+00:00",
+      "test_summary": "66 passed (66)"
+    },
+    {
+      "name": "editor-adoption-ui-final",
+      "metadata_path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1074-tests/editor-adoption-ui-final.json",
+      "metadata_sha256": "1d7c3034c2170cfc1844775717602e094ea0bb2445396722b013c91cadd84a6e",
+      "log_path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1074-tests/editor-adoption-ui-final.log",
+      "log_sha256": "e4e31057bf4cc1a3047f507340be38f86b42630c1b6781729935781d84e93c22",
+      "argv": [
+        "pnpm",
+        "--dir",
+        "frontend",
+        "exec",
+        "vitest",
+        "run",
+        "src/features/draft-workbench/draft-chat-request.test.tsx",
+        "src/features/copilot/chat-work-editor-card.test.tsx",
+        "src/features/copilot/chat-system-action-card.test.tsx",
+        "src/features/copilot/chat-tool-outcome.test.tsx",
+        "src/features/copilot/chat-tool-trace.test.tsx",
+        "src/features/copilot/ai-copilot-content.test.tsx",
+        "--retry=0"
+      ],
+      "exit_code": 0,
+      "start_utc": "2026-10-08T02:34:04.407898+00:00",
+      "end_utc": "2026-10-08T02:34:08.036942+00:00",
+      "test_summary": "67 passed (67)"
+    },
+    {
+      "name": "nine-led047-current",
+      "metadata_path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1074-tests/nine-led047-current.json",
+      "metadata_sha256": "6dbf6484403927d76499863fafa95151eb2a4db18ea86da414505344b74c1af4",
+      "log_path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1074-tests/nine-led047-current.log",
+      "log_sha256": "bd765bc8d4114fb3cb7b46d31434ad475d02f446ef83acc718e281265d999ab0",
+      "argv": [
+        "pnpm",
+        "--dir",
+        "frontend",
+        "exec",
+        "vitest",
+        "run",
+        "src/features/copilot/ai-copilot-interactions.test.tsx",
+        "src/features/knowledge/knowledge-dump-zone.test.tsx",
+        "src/features/topics/topics-interactions.test.tsx",
+        "src/components/overlays/overlay-routing.test.tsx",
+        "src/lib/copilot-navigation.test.ts",
+        "src/features/copilot/chat-tool-trace.test.tsx",
+        "src/features/automations/run-controls.test.tsx",
+        "src/features/automations/cadence.test.ts",
+        "--retry=0"
+      ],
+      "exit_code": 0,
+      "start_utc": "2026-10-08T02:28:30.728239+00:00",
+      "end_utc": "2026-10-08T02:28:39.207922+00:00",
+      "test_summary": "167 passed (167)"
+    },
+    {
+      "name": "nine-frontend-types-final",
+      "metadata_path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1074-tests/nine-frontend-types-final.json",
+      "metadata_sha256": "d18a133ca0cd1d8d73a0124532d179257a8b1895154750674e1e0e155cf20212",
+      "log_path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1074-tests/nine-frontend-types-final.log",
+      "log_sha256": "4c0cd880abe2a1a1a1f20e2f9d2825951e19ae4e848a3f36d2216d3b9e20d035",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "creatoros-frontend",
+        "typecheck"
+      ],
+      "exit_code": 0,
+      "start_utc": "2026-10-08T02:24:01.546529+00:00",
+      "end_utc": "2026-10-08T02:24:08.908957+00:00",
+      "test_summary": null
+    },
+    {
+      "name": "nine-frontend-types-rechecked",
+      "metadata_path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1074-tests/nine-frontend-types-rechecked.json",
+      "metadata_sha256": "fa77b89ebe91683f61b94104038c1ae53e4c0a34e89306a8fbcc474072ed2a40",
+      "log_path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1074-tests/nine-frontend-types-rechecked.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "argv": [
+        "pnpm",
+        "--dir",
+        "frontend",
+        "exec",
+        "tsc",
+        "--noEmit"
+      ],
+      "exit_code": 0,
+      "start_utc": "2026-10-08T02:31:34.318170+00:00",
+      "end_utc": "2026-10-08T02:31:42.167752+00:00",
+      "test_summary": null
+    },
+    {
+      "name": "nine-backend-types-final",
+      "metadata_path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1074-tests/nine-backend-types-final.json",
+      "metadata_sha256": "aa6a096413b8f668cc560f263e7212e06806b0f562042405dc22e37fdd91bfde",
+      "log_path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1074-tests/nine-backend-types-final.log",
+      "log_sha256": "3aa84ac7a89b69d9108f4520c5fbee1ebc77f909ea84db790ad81180d7dc5d34",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@creatoros/backend",
+        "typecheck"
+      ],
+      "exit_code": 2,
+      "start_utc": "2026-10-08T02:28:30.728215+00:00",
+      "end_utc": "2026-10-08T02:29:05.054329+00:00",
+      "test_summary": null
+    },
+    {
+      "name": "nine-backend-types-rechecked",
+      "metadata_path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1074-tests/nine-backend-types-rechecked.json",
+      "metadata_sha256": "f9bc1703c1e0dc0bf8eb479ba719e5c6effe394124a99bc5f294a3199cf398c6",
+      "log_path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1074-tests/nine-backend-types-rechecked.log",
+      "log_sha256": "2a66e93c4a02b999e2e6360a16084c5d412f5645c4e1cd69a0bc3883c0aa5e04",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@creatoros/backend",
+        "typecheck"
+      ],
+      "exit_code": 2,
+      "start_utc": "2026-10-08T02:31:34.317690+00:00",
+      "end_utc": "2026-10-08T02:32:06.305872+00:00",
+      "test_summary": null
+    },
+    {
+      "name": "nine-supplement-backend-types",
+      "metadata_path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1074-tests/nine-supplement-backend-types.json",
+      "metadata_sha256": "e3a07ae665269f0585668f37fd4047d0d4434fc4b9066b3ffd93e8e03892d102",
+      "log_path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1074-tests/nine-supplement-backend-types.log",
+      "log_sha256": "2a66e93c4a02b999e2e6360a16084c5d412f5645c4e1cd69a0bc3883c0aa5e04",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@creatoros/backend",
+        "typecheck"
+      ],
+      "exit_code": 2,
+      "start_utc": "2026-10-08T02:18:55.990361+00:00",
+      "end_utc": "2026-10-08T02:19:30.571403+00:00",
+      "test_summary": null
+    },
+    {
+      "name": "editor-dirty-message-red",
+      "metadata_path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1074-tests/editor-dirty-message-red.json",
+      "metadata_sha256": "da27bdbf987c9f626553e0272514b6cb8eeffd5b48c16a758ea70ecc24a5e8ca",
+      "log_path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1074-tests/editor-dirty-message-red.log",
+      "log_sha256": "c8b1c62d81f02fe0cc7f4e6f6f8360d684627ad8e67782bf7d1c8175aa90e470",
+      "argv": [
+        "pnpm",
+        "--dir",
+        "frontend",
+        "exec",
+        "vitest",
+        "run",
+        "src/features/copilot/chat-system-action-card.test.tsx",
+        "-t",
+        "当前稿未保存",
+        "--retry=0"
+      ],
+      "exit_code": 1,
+      "start_utc": "2026-10-08T02:31:10.649914+00:00",
+      "end_utc": "2026-10-08T02:31:13.608761+00:00",
+      "test_summary": "1 ⎯⎯⎯⎯⎯⎯⎯"
+    },
+    {
+      "name": "editor-adopted-status-red",
+      "metadata_path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1074-tests/editor-adopted-status-red.json",
+      "metadata_sha256": "b84179efe0ca5e768b4fcd70bd17db7b0522ebe7b11f9575efeb6a67fc0b10d8",
+      "log_path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1074-tests/editor-adopted-status-red.log",
+      "log_sha256": "3cd88b553b64d46b9cc875e177382c1a4a959e82b7ee888c0adfd2a5f80a76a5",
+      "argv": [
+        "pnpm",
+        "--dir",
+        "frontend",
+        "exec",
+        "vitest",
+        "run",
+        "src/features/copilot/chat-system-action-card.test.tsx",
+        "-t",
+        "当前已保存稿采用",
+        "--retry=0"
+      ],
+      "exit_code": 1,
+      "start_utc": "2026-10-08T02:33:35.120481+00:00",
+      "end_utc": "2026-10-08T02:33:36.982735+00:00",
+      "test_summary": "1 ⎯⎯⎯⎯⎯⎯⎯"
+    },
+    {
+      "name": "nine-editor-owner-fixture-fixed",
+      "metadata_path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1074-tests/nine-editor-owner-fixture-fixed.json",
+      "metadata_sha256": "057b1c49d342430b6a07e5950d441ae87560f1de9f4408eea1bb0b31780540a7",
+      "log_path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1074-tests/nine-editor-owner-fixture-fixed.log",
+      "log_sha256": "9f18ad8f5f8160699c891c69f788e841fdd12c62420c53428d096ada24c0eddb",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@creatoros/backend",
+        "exec",
+        "vitest",
+        "run",
+        "--testTimeout",
+        "180000",
+        "src/application/chat/assistant-system-root.integration.test.ts",
+        "-t",
+        "实际冻结编辑器目标"
+      ],
+      "exit_code": 0,
+      "start_utc": "2026-10-08T02:28:13.509862+00:00",
+      "end_utc": "2026-10-08T02:28:20.994344+00:00",
+      "test_summary": "2 passed | 57 skipped (59)"
+    },
+    {
+      "name": "editor-adoption-types-final",
+      "metadata_path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1074-tests/editor-adoption-types-final.json",
+      "metadata_sha256": "31342a3bb82ab2dd4334ccddb4583ee5316048e5cf0898953160842fc7a30cf3",
+      "log_path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1074-tests/editor-adoption-types-final.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "argv": [
+        "pnpm",
+        "--dir",
+        "frontend",
+        "exec",
+        "tsc",
+        "--noEmit"
+      ],
+      "exit_code": 0,
+      "start_utc": "2026-10-08T02:35:35.787709+00:00",
+      "end_utc": "2026-10-08T02:35:41.772342+00:00",
+      "test_summary": null
+    },
+    {
+      "name": "scope-contract-mcp-types",
+      "metadata_path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1074-tests/scope-contract-mcp-types.json",
+      "metadata_sha256": "30c877858af62699020052c23a558de919bfdc56404547b38346884cfa38fbc7",
+      "log_path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1074-tests/scope-contract-mcp-types.log",
+      "log_sha256": "f8b0c8e346dac576a9526eeb7be9ebd931a5c055fdd109160cf26912dcbc00f5",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@creatoros/contract",
+        "--filter",
+        "@creatoros/mcp-server",
+        "typecheck"
+      ],
+      "exit_code": 0,
+      "start_utc": "2026-10-08T02:34:04.415041+00:00",
+      "end_utc": "2026-10-08T02:34:11.101327+00:00",
+      "test_summary": null
+    }
+  ],
+  "intelligence_postchange_mechanical_review": {
+    "schema": "complexity-postchange-review/v1",
+    "verdict": "PASS",
+    "file": "backend/src/modules/intelligence/intelligence.service.ts",
+    "current_sha256": "3656cf91333147c2372c4d1ae9978d78cddffc3c980dfdb07a21c74703d88b81",
+    "head_sha256": "4ca8c1db2e5962c3a5c0f586d7fa2a2681774336f849d46d6a9f63dc96a25033",
+    "previous_pre_supplement_sha256": "4ca8c1db2e5962c3a5c0f586d7fa2a2681774336f849d46d6a9f63dc96a25033",
+    "previous_record_path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1074-nine-review/complexity-source.json",
+    "previous_record_sha256": "a4e79fd18dff876cd8bd83b9c8b8f9266fc0673f6f8f43e5f63d0300486485ee",
+    "categories": [
+      "ipc"
+    ],
+    "head_categories": [
+      "ipc"
+    ],
+    "marker_anchors": [
+      {
+        "line": 4446,
+        "quote": "// 先发布不可变来源记录，再让任务进入可领取队列。IPC/进程恢复可按 transformId 接上同一记录。",
+        "identical_in_head": true
+      }
+    ],
+    "actual_diff_sha256": "9e65eb7551388aba1e73ae85c3e1dc12ba696ee8d75f9f07d7d2e2fd61ad78f2",
+    "mechanism_classification": "existing-mechanism-reuse",
+    "new_owned_mechanism": false,
+    "checked_content": "当前真实diff新增纯分类SELECT/tx-bound FOR UPDATE和原createCollection归档父项校验；原IPC/进程恢复transformId说明与HEAD同文，未增加IPC端口、socket、常驻程序、凭据、工具链或执行权。当前post-change SHA已改变，旧记录保持不动，本记录仅供按当前精确源SHA重绑原ipc/doc预算。",
+    "detector_sha256": "de06cdb13af2e73b20cd1beea9c4bb5705443d652fdc50170df677f1d3664eaf"
+  },
+  "validation_scope_limitations": [
+    "仅§8.1九文件及必要原消费者有界独立实现复查；不是新SPEC轮次，不修改SPEC/review-event/控制面。",
+    "本会话未重跑大量产品测试；只读核对既有真实执行metadata、日志sha/结果和相应当前源码，另实际git diff --check通过。",
+    "公共59通过含三项真实PG两连接竞态；不扩大为所有PG场景、模型或系统全功能通过。",
+    "当前67前端回归/167 LED047、最新前端/contract/MCP类型通过；backend整体类型仍exit2且仅2条原历史错误，其日志与补充前原2红记录sha完全相同，不声称backend整体类型PASS。",
+    "同模型独立会话是弱门；未独立操作实际UI或给视觉评分，未签真实模型、安装包、发布或T-1074整任务完成。",
+    "Intelligence机械预算只绑定当前源sha/原ipc分类；旧pre-supplement记录原样保留，未修改预算ledger或progress授权。"
+  ],
+  "parent_supplied_fixture_ui_observations": {
+    "attribution": "主会话提供；本实现复查者未独立操作UI",
+    "scope": "隔离typed API fixture，不代签backend/model/native",
+    "observations": [
+      "1366未保存输入时正式采用与旧保存写入均为0。",
+      "1024保存等待1.5秒内填写新稿，返回saved-not-synced且原输入/焦点保留。",
+      "正式来源采用仅一次，精确版本读回；未调用旧createVersion。"
+    ]
+  }
+}

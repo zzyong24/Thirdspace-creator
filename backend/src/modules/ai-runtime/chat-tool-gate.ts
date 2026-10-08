@@ -65,6 +65,11 @@ export interface ChatToolErrorEnvelope {
 export const CHAT_TOOL_ERROR_ENVELOPES: Readonly<
   Record<string, ChatToolErrorEnvelope>
 > = {
+  'system.features':{kind:'system.features',extras:{rows:[],error:null}},
+  'system.read':{kind:'system.read',extras:{text:null,complete:false},lossless:true},
+  'system.action.propose':{kind:'system.action.proposal',lossless:true},
+  'canvas.create.propose':{kind:'canvas.create.proposal',lossless:true},
+  'canvas.generate.propose':{kind:'canvas.generate.proposal',lossless:true},
   "work.editor.read":{kind:"work.editor.context",lossless:true,extras:{schemaVersion:1,document:null,selected:[],media:[],sourceTranscripts:[],complete:false,failureCode:"unavailable"}},
   "work.editor.propose":{kind:"work.editor.candidate",lossless:true,extras:{schemaVersion:1,candidate:null,apply:null,changes:[],candidateDigest:null,imageRequest:null,failureCode:"unavailable"}},
   "work.creation.read":{kind:"work.creation.read",lossless:true,extras:{article:null,graphic:null,scriptText:null}},

@@ -3,6 +3,8 @@
 import {useAssistantEngine} from "./use-assistant-engine";
 import {getLiveChatSession} from "./live-chat-session";
 import { ChatToolTrace } from "./chat-tool-trace";
+import {readChatToolOutcome,ChatToolOutcomeNotice} from "./chat-tool-outcome";
+import {ChatSystemActionCard,appendCandidateReviewPrompt,rememberAssistantSourceScope,readAssistantSourceScope} from "./chat-system-action-card";
 import {CanvasChatResult} from "@/features/creative-canvas/canvas-chat-result";
 
 /**
@@ -1087,8 +1089,11 @@ export function AICopilotContent({
           const epoch = liveSession.epoch;
           const attempt=submissionAttempt.current;
           if(attempt&&!attempt.networkStarted){attempt.networkStarted=true;attempt.request?.onCreationSubmission?.("submitted-unknown");}
+          const sourceHeaders=new Headers(init?.headers);
           const res = await liveSession.control.fetch(input as RequestInfo, init);
           try {
+            const sourceTaskId=res.headers.get("x-ai-task-id");
+            if(sourceTaskId&&liveSession.epoch===epoch&&liveSessionRef.current===liveSession)rememberAssistantSourceScope(sourceTaskId,sourceHeaders);
             const cid = res.headers.get("x-conversation-id");
             const sourceMessageId=res.headers.get("x-source-message-id");
             if((sourceMessageId||cid)&&preparedReceipt.current&&liveSession.epoch===epoch){preparedReceipt.current={...preparedReceipt.current,...(sourceMessageId?{sourceMessageId}:{}),...(cid?{conversationId:cid}:{})};sessionStorage.setItem(receiptStorageKey,JSON.stringify(preparedReceipt.current));const executionEngine=preparedReceipt.current.executionEngine;if(sourceMessageId&&(executionEngine==="codex"||executionEngine==="pi"))liveSession.sourceEngines.set(sourceMessageId,executionEngine);}
@@ -1533,7 +1538,7 @@ export function AICopilotContent({
     }catch(cause){setComposerLifecycleError(cause instanceof Error?cause.message:"稿件尚未准备好，本次未发送。");throw cause;}finally{if(!attempt.networkStarted)request?.onCreationSubmission?.("not-submitted");preparationPending.current=false;}
   };});
   const settledCreation=React.useRef(new Set<string>());
-  React.useEffect(()=>{const request=embed?.request,target=request?.creationTarget;if(!target||!request?.onCreationSettled||settledCreation.current.has(target.clientRequestId))return;const settled=messages.some(message=>message.role==="assistant"&&message.parts.some(part=>{if(!isToolUIPart(part)||getToolName(part)!=="work.creation.propose"||part.state!=="output-available")return false;const result=workCreationProposalResult.safeParse(part.output);return result.success&&result.data.target.clientRequestId===target.clientRequestId;}));if(settled){settledCreation.current.add(target.clientRequestId);request.onCreationSettled();}},[messages,embed?.request]);
+  React.useEffect(()=>{const request=embed?.request,target=request?.creationTarget;if(!target||!request?.onCreationSettled||settledCreation.current.has(target.clientRequestId))return;const settled=messages.some(message=>message.role==="assistant"&&message.parts.some(part=>{if(!isToolUIPart(part)||getToolName(part)!=="work.creation.propose"||part.state!=="output-available")return false;const outcome=readChatToolOutcome(part.output);if(outcome.blocksData)return false;const result=workCreationProposalResult.safeParse(outcome.data);return result.success&&result.data.target.clientRequestId===target.clientRequestId;}));if(settled){settledCreation.current.add(target.clientRequestId);request.onCreationSettled();}},[messages,embed?.request]);
   const handledRequestNonceRef = React.useRef(0);
   React.useEffect(() => {
     const req = activeRequest;
@@ -2561,14 +2566,24 @@ export function AICopilotContent({
                         </div>
                       );
                     }
-                    const out = part.output as { kind?: string } | undefined;
+                    const outcome=readChatToolOutcome(part.output);
+                    const out = outcome.data as { kind?: string } | undefined;
                     if (!out) return null;
                     const key = `${message.id}-tool-${idx}`;
                     // [T-060②] 已完成 trace 行:可折叠展开看入参/结果摘要;后面若有产物卡
                     // 则卡随其后。纯读工具(context.*)也留痕 —— 用户能看见 AI 读了什么。
                     const traceRow = (
-                      <ChatToolTrace key={`${key}-trace`} label={traceLabel} input={part.input} output={out} />
+                      <React.Fragment key={`${key}-trace`}><ChatToolTrace label={traceLabel} input={part.input} output={part.output}/><ChatToolOutcomeNotice outcome={outcome}/></React.Fragment>
                     );
+                    if(outcome.blocksData)return <React.Fragment key={key}>{traceRow}</React.Fragment>;
+                    if((name==="system.action.propose"&&out.kind==="system.action.proposal")||(name==="canvas.create.propose"&&out.kind==="canvas.create.proposal")||(name==="canvas.generate.propose"&&out.kind==="canvas.generate.proposal")){
+                      const source=(out as {source?:{taskId?:string}}).source;
+                      return <React.Fragment key={key}>{traceRow}<ChatSystemActionCard result={out} scope={source?.taskId?readAssistantSourceScope(source.taskId):null} onReviewCandidate={request=>{
+                        setPrompt(current=>appendCandidateReviewPrompt(current,request));
+                        quickFunctionKeyRef.current=null;
+                        textareaRef.current?.focus();
+                      }}/></React.Fragment>;
+                    }
                     if((name==="work.editor.read"||name==="work.editor.propose")&&(out.kind==="work.editor.context"||out.kind==="work.editor.candidate"))return <React.Fragment key={key}>{traceRow}<ChatWorkEditorCard result={out} toolCallId={part.toolCallId}/></React.Fragment>;
                     if((name==="work.creation.read"||name==="work.creation.propose")&&(out.kind==="work.creation.read"||out.kind==="work.creation.propose"))return <React.Fragment key={key}>{traceRow}<ChatWorkCreationCard result={out} toolCallId={part.toolCallId}/></React.Fragment>;
                     if(name==="research.autonomous" && out.kind==="research.autonomous"){

@@ -13,7 +13,8 @@ import { ConflictError } from "../execution/execution.errors";
 type ChatInput=z.infer<typeof chatWorkerInputSchema>;
 type Message=typeof aiMessages.$inferSelect;
 export type ChatTurnSnapshot={conversation:typeof aiConversations.$inferSelect;messages:Message[];sourceMessage:Message};
-export type ChatTurnAssembly=Omit<ChatInput,"kind"|"operationKey"|"userId"|"accountId"|"groupId"|"groupVersion"|"membershipVersion"|"conversationId"|"sourceMessageId"|"externalAgentBinding"> & {hostContext?:ChatHostContext};
+export type ChatTurnAssembly=Omit<ChatInput,"kind"|"operationKey"|"userId"|"accountId"|"groupId"|"groupVersion"|"membershipVersion"|"conversationId"|"sourceMessageId"|"externalAgentBinding"|"toolOutcomeProjectionVersion"> & {hostContext?:ChatHostContext};
+export type ChatPrepareOptions={executionEngine:"pi"|"codex"};
 const object=(value:unknown):Record<string,unknown>=>value && typeof value==="object" && !Array.isArray(value)?value as Record<string,unknown>:{};
 export const chatInputDigest=(value:unknown)=>createHash("sha256").update(canonicalJson(value)).digest("hex");
 export const chatHistoryDigest=(snapshot:ChatTurnSnapshot)=>chatInputDigest({
@@ -35,7 +36,7 @@ export async function readChatTurnSnapshot(store:Db,ctx:RequestContext,request:{
 /** 源消息已经保存；装配只读真实历史，提交时原子绑定唯一业务任务与执行任务。 */
 export function createChatTurnSubmissionService(db:Db,deps:{
   now?:()=>string;nextId?:(prefix:string)=>string;
-  assemble(ctx:RequestContext,snapshot:ChatTurnSnapshot):Promise<ChatTurnAssembly>;
+  assemble(ctx:RequestContext,snapshot:ChatTurnSnapshot,options:ChatPrepareOptions):Promise<ChatTurnAssembly>;
   assertProject?(ctx:RequestContext,projectId:string):Promise<unknown>;
 }){
   const now=deps.now??(()=>new Date().toISOString()),nextId=deps.nextId??(prefix=>`${prefix}-${randomUUID()}`);
@@ -73,10 +74,11 @@ export function createChatTurnSubmissionService(db:Db,deps:{
         await deps.assertProject(ctx,snapshot.conversation.projectId);
       }
       const historyDigest=chatHistoryDigest(snapshot);
-      const {hostContext:rawHostContext,...assembly}=await deps.assemble(ctx,structuredClone(snapshot));
+      const executionEngine=requestedEngine??"pi";
+      const {hostContext:rawHostContext,...assembly}=await deps.assemble(ctx,structuredClone(snapshot),{executionEngine});
       // 先通过严格 schema，再统一成数据库 JSON 形态；可选 undefined 不得进入摘要后在落库时消失。
       const hostContext=rawHostContext===undefined?undefined:JSON.parse(JSON.stringify(validateChatHostContext(rawHostContext,{userId:ctx.userId,accountId:ctx.accountId??null,groupId:ctx.groupId,projectId:snapshot.conversation.projectId}))) as ChatHostContext;
-      const modelInput=JSON.parse(JSON.stringify(chatWorkerInputSchema.parse({...assembly,executionEngine:requestedEngine??"pi",...(requestedEngine==="codex"?{externalAgentBinding:codexAcpBinding}:{}),recoverMissingFinal:true,...(assembly.tools.some(tool=>tool.name==="history.read")?{contextPolicyVersion:2}:{}),kind:"chat.run",operationKey:`chat:${snapshot.sourceMessage.id}`,userId:ctx.userId,accountId:ctx.accountId??null,groupId:ctx.groupId??null,groupVersion:ctx.groupVersion??null,membershipVersion:ctx.membershipVersion??null,conversationId:snapshot.conversation.id,sourceMessageId:snapshot.sourceMessage.id}))) as ChatInput;
+      const modelInput=JSON.parse(JSON.stringify(chatWorkerInputSchema.parse({...assembly,executionEngine,toolOutcomeProjectionVersion:1,...(executionEngine==="codex"?{externalAgentBinding:codexAcpBinding}:{}),recoverMissingFinal:true,...(assembly.tools.some(tool=>tool.name==="history.read")?{contextPolicyVersion:2}:{}),kind:"chat.run",operationKey:`chat:${snapshot.sourceMessage.id}`,userId:ctx.userId,accountId:ctx.accountId??null,groupId:ctx.groupId??null,groupVersion:ctx.groupVersion??null,membershipVersion:ctx.membershipVersion??null,conversationId:snapshot.conversation.id,sourceMessageId:snapshot.sourceMessage.id}))) as ChatInput;
       return db.transaction(async tx=>{
         const frozenScope=await lockWorkspaceMembership(tx,ctx);
         if(hostContext&&frozenScope.groupId){hostContext.skillSnapshot.groupId=frozenScope.groupId;hostContext.skillSnapshot.groupVersion=frozenScope.groupVersion;hostContext.skillSnapshot.membershipVersion=frozenScope.membershipVersion;}

@@ -879,14 +879,14 @@ describe("prepareChatAssembly — 三层注入装配", () => {
     ]);
   });
 
-  it("[T-077c] 技能自感知:skillsBrief 注入 system(每白名单工具一行「中文名(工具名):用途」,行数=min(白名单数,40))", async () => {
+  it("[T-077c] 技能自感知:skillsBrief 注入 system(每白名单工具一行「中文名(工具名):用途」,完整行数=实际工具数)", async () => {
     const { deps } = makeDeps();
     const a = await prepareChatAssembly(ctx, { surface: "topics" }, deps);
     // 清单块头(与 honestyBlock 并列注入)。
-    expect(a.system).toContain("本轮可调用工具");
+    expect(a.system).toContain("本轮实际工具目录");
     // 每个白名单工具一行,格式「中文名(工具名):一句话用途」(gate-F1)。
     const whitelist = Object.keys(a.tools);
-    for (const id of whitelist.slice(0, SKILLS_BRIEF_MAX_LINES)) {
+    for (const id of whitelist) {
       // 行内含「(工具名):」—— 中文名和用途由词表给,这里锚定格式骨架。
       expect(a.system).toContain(`(${id}):`);
     }
@@ -896,12 +896,11 @@ describe("prepareChatAssembly — 三层注入装配", () => {
     // 行数 = 白名单工具数(≤ SKILLS_BRIEF_MAX_LINES,gate-F1 截断上限;[T-099c] 20→30,
     // [T-256a] 30→40 覆盖环境感知扩展后的全工具集 33)。
     const brief = a.system
-      .split("【本轮可调用工具")[1]!
-      .split("\n\n")[0]!
+      .split("【本轮实际工具目录】")[1]!
+      .split("【工具目录结束】")[0]!
       .split("\n")
       .filter((l) => /\(.+\):/.test(l));
-    expect(brief).toHaveLength(Math.min(whitelist.length, SKILLS_BRIEF_MAX_LINES));
-    expect(brief.length).toBeLessThanOrEqual(SKILLS_BRIEF_MAX_LINES);
+    expect(brief).toHaveLength(whitelist.length);
   });
 
   it("[T-240③] skillsBrief 与场景白名单同步:review 面 preferred 在前,被场景砍掉的工具不进自感知清单", async () => {
@@ -1638,7 +1637,7 @@ describe("chat-runner T-382 — 当前选中号注入", () => {
   it("ctx.accountId 命中 → 任意 surface 的 system 含「当前选中的抖音号」块 + 禁反问指令", async () => {
     const { deps } = makeDeps(accountsOver);
     const a = await prepareChatAssembly(ctxWithAccount, { surface: "topics" }, deps);
-    expect(a.system).toContain("【当前选中的抖音号】");
+    expect(a.system).toContain("【当前选中的平台账号】");
     expect(a.system).toContain("douyin | @月明水清深 | 粉丝 42000");
     expect(a.system).toContain("绝不要反问用户当前是哪个号");
   });
@@ -1652,13 +1651,13 @@ describe("chat-runner T-382 — 当前选中号注入", () => {
     );
     expect(a.system).toContain("⭐当前选中号 | douyin | @月明水清深");
     expect(a.system).not.toContain("⭐当前选中号 | douyin | @第二个号");
-    expect(a.system).toContain("【当前选中的抖音号】");
+    expect(a.system).toContain("【当前选中的平台账号】");
   });
 
   it("未选号(ctx 无 accountId)→ 不注当前号块(诚实,不猜)", async () => {
     const { deps } = makeDeps(accountsOver);
     const a = await prepareChatAssembly(ctx, { surface: "topics" }, deps);
-    expect(a.system).not.toContain("【当前选中的抖音号】");
+    expect(a.system).not.toContain("【当前选中的平台账号】");
   });
 });
 
@@ -1783,6 +1782,16 @@ it("T-957 账号覆写在原规则后追加偏好时，最终规则仍只保留�
 
 // 新Canvas工具不能扩散到原无Canvas的合法聊天。
 describe('Canvas 受信单画布范围',()=>{
+ it('系统目录可跨页面使用，生成候选只在真实单画布上下文开放',async()=>{
+  const {deps}=makeDeps();deps.assistantSystem={features:async()=>({}),read:async()=>({kind:'system.read'}),propose:async()=>({kind:'system.action.proposal'}),createCanvas:async()=>({kind:'canvas.create.proposal'}),generateCanvas:async()=>({kind:'canvas.generate.proposal'})};
+  for(const chatContext of [{surface:'global'},{surface:'canvas',selection:{kind:'canvas',ids:['a','b']}},{surface:'canvas',selection:{kind:'project',ids:['a']}}]){
+   const actual=await prepareChatAssembly(ctx,chatContext,deps);
+   expect(Object.keys(actual.tools)).toEqual(expect.arrayContaining(['system.features','system.read','system.action.propose','canvas.create.propose']));
+   expect(Object.keys(actual.tools)).not.toContain('canvas.generate.propose');
+  }
+  const actual=await prepareChatAssembly(ctx,{surface:'canvas',selection:{kind:'canvas',ids:['actual-canvas']}},deps);
+  expect(Object.keys(actual.tools)).toContain('canvas.generate.propose');
+ });
 it('原global/project工具不注册Canvas，普通material.generate仍在',async()=>{const {deps}=makeDeps();for(const input of [{surface:'global'},{surface:'project',projectId:'proj-1'}]){const actual=await prepareChatAssembly(ctx,input,deps);expect(Object.keys(actual.tools)).not.toContain('canvas.read');expect(Object.keys(actual.tools)).not.toContain('canvas.propose');expect(Object.keys(actual.tools)).toContain('material.generate');}});
  it('真实单画布入口选原Canvas Skill且强制先读，再可propose',async()=>{const {deps}=makeDeps();const actual=await prepareChatAssembly(ctx,{surface:'canvas',selection:{kind:'canvas',ids:['actual-canvas'],label:'用户原画布'}},deps);expect(actual.skillId).toBe('chatbox.canvas');expect(actual.forcedTool).toBe('canvas.read');expect(Object.keys(actual.tools)).toContain('canvas.read');expect(Object.keys(actual.tools)).toContain('canvas.propose');});
  it('多画布与错kind没有可编辑Canvas工具',async()=>{const {deps}=makeDeps();for(const selection of [{kind:'canvas',ids:['a','b']},{kind:'project',ids:['a']}]){const actual=await prepareChatAssembly(ctx,{surface:'canvas',selection},deps);expect(Object.keys(actual.tools)).not.toContain('canvas.read');expect(Object.keys(actual.tools)).not.toContain('canvas.propose');expect(actual.forcedTool).not.toBe('canvas.read');}});
@@ -1824,4 +1833,17 @@ it('联合创作准备先确认真实source/member并冻结两个短工具顺序
  expect(reader).toHaveBeenCalledWith(ctx,target);expect(actual.forcedToolSequence).toEqual(['work.creation.read','work.creation.propose']);
  expect(Object.keys(actual.tools)).toContain('work.creation.read');expect(Object.keys(actual.tools)).toContain('work.creation.propose');expect(Object.keys(actual.tools)).not.toContain('work.editor.read');
  await expect(prepareChatAssembly(ctx,{surface:'project',projectId:'proj-1',creationTarget:target,editorTarget:editorAssemblyTarget()},deps)).rejects.toThrow('只能冻结一种');
+});
+
+it.each(['topics','canvas'])('T1074 %s 的Codex真实准备仅冻结已审宿主读取/候选，工具目录对应实际定义',async surface=>{
+ const {deps}=makeDeps();
+ const prepared=await prepareChatTurn(ctx,{executionEngine:'codex',messages:[{id:'source',role:'user',parts:[{type:'text',text:'读取真实状态后帮我调整'}]}],chatContext:{surface,...(surface==='canvas'?{selection:{kind:'canvas',ids:['canvas-1']}}:{functionKey:'web.read'})}},deps,{workerWebRead:true,workerResearch:true,workerScriptDraft:true,workerStructuredNodes:true});
+ expect(prepared.toolDefinitions.map(t=>t.name)).not.toContain('web.read');
+ expect(prepared.toolDefinitions.every(t=>(t.execution??'host')==='host'&&(t.effect==='none'||t.effect==='proposal'))).toBe(true);
+ if(surface==='canvas')expect(prepared.toolDefinitions.map(t=>t.name)).toEqual(expect.arrayContaining(['canvas.read','canvas.propose']));
+ else expect(prepared.assembly.forcedTool).not.toBe('web.read');
+ const block=prepared.assembly.system.split('【本轮实际工具目录】')[1]?.split('【工具目录结束】')[0];
+ expect(block).toBeDefined();
+ const names=[...block!.matchAll(/\(([^()]+)\):/g)].map(m=>m[1]);
+ expect(names).toEqual(prepared.toolDefinitions.map(t=>t.name));
 });

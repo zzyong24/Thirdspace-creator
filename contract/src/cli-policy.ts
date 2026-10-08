@@ -16,6 +16,7 @@ export type EndpointId = (typeof ENDPOINTS)[keyof typeof ENDPOINTS]["id"];
 // T-843: 这是 CLI effect 的契约真值，不在调用期按 HTTP method 或 operation 名猜。
 // 新 operation 没有进入 READ/MUTATION 两张穷尽表时，下方类型门与测试都会失败。
 const READ_OPERATIONS = [
+  'ai.assistantActions.receipt',
   "accountGroups.list",
   "groupResourceGrants.list",
   "groupResourceGrants.previewRevoke",
@@ -200,6 +201,7 @@ const READ_OPERATIONS = [
 ] as const satisfies readonly EndpointId[];
 
 const MUTATION_OPERATIONS = [
+  'ai.assistantActions.adopt','canvas.create.adopt','canvas.generation.confirm',
   "accounts.bind.start",
   "accounts.bind.cancel",
   "groupResourceGrants.revoke",
@@ -457,6 +459,7 @@ const DESTRUCTIVE_OPERATIONS = new Set<EndpointId>([
 ]);
 
 const EXTERNAL_OPERATIONS = new Set<EndpointId>([
+  'ai.assistantActions.adopt','canvas.generation.confirm',
   "accounts.bind.start",
   "moments.candidates.generate",
   "moments.candidates.retry",
@@ -493,6 +496,7 @@ const EXTERNAL_OPERATIONS = new Set<EndpointId>([
 ]);
 
 const ASYNC_TASK_OPERATIONS = new Set<EndpointId>([
+  'ai.assistantActions.adopt','canvas.generation.confirm',
   "accounts.bind.start",
   "canvas.node.generate",
   "canvas.node.generate",
@@ -560,7 +564,7 @@ function policyFor(operation: EndpointId): CliOperationPolicy {
         ? "apply"
         : "confirm_impact",
     asyncTask: ASYNC_TASK_OPERATIONS.has(operation),
-    idempotency: effect === "read" ? "not_applicable" : (["topics.workspace.save","topics.proposals.feedback","accounts.bind.start","accounts.bind.cancel"] as readonly string[]).includes(operation) ? "native" : "gateway",
+    idempotency: effect === "read" ? "not_applicable" : (["ai.assistantActions.adopt","canvas.create.adopt","canvas.generation.confirm","topics.workspace.save","topics.proposals.feedback","accounts.bind.start","accounts.bind.cancel"] as readonly string[]).includes(operation) ? "native" : "gateway",
   };
 }
 

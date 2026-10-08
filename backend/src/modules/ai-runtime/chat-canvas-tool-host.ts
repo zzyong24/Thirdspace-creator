@@ -22,13 +22,19 @@ export function createChatCanvasToolHost(reader:Read,ports:{
   const definitions=restored.modelInput.tools.filter(tool=>tool.name==="canvas.read"||tool.name==="canvas.propose");
   if(!definitions.length)return {};
   if(!canvasId)throw new Error("画布工具缺少受信对话定位");
-  const tools=buildChatTools(definitions.map(tool=>tool.name),{
+  const toolDeps={
    boundCanvasId:canvasId,humanizeError:()=>null,
    readCanvas:()=>ports.read(restored.context,canvasId),
    proposeCanvas:(baseRevision:number,operations:unknown)=>ports.propose(restored.context,canvasId,baseRevision,operations),
-  } as unknown as ChatToolDeps);
+  } as unknown as ChatToolDeps;
+  let tools=buildChatTools(definitions.map(tool=>tool.name),toolDeps);
   const current=(await prepareChatToolDefinitions(tools)).definitions;
-  if(canonicalJson(current)!==canonicalJson(definitions))throw new Error("画布工具定义与任务快照不符");
+  if(canonicalJson(current)!==canonicalJson(definitions)){
+   // SEMANTIC_BOUNDARY_ALLOW:只恢复一个已知历史参数合同，完整版本/描述/效果仍精确比对。
+   const legacy=buildChatTools(definitions.map(tool=>tool.name),{...toolDeps,legacyCanvasProposalParameters:true});
+   if(canonicalJson((await prepareChatToolDefinitions(legacy)).definitions)!==canonicalJson(definitions))throw new Error("画布工具定义与任务快照不符");
+   tools=legacy;
+  }
   signal?.throwIfAborted();return tools;
  }
  return async(ctx,_input,execution,signal)=>{

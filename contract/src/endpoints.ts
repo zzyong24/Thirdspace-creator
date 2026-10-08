@@ -1,4 +1,5 @@
 import {creativeCanvasOperations} from "./operations/creative-canvas";
+import {assistantSystemOperations} from './operations/assistant-system';
 import {workSourcesOperations} from "./operations/work-sources";
 import {workCompositionsOperations,momentsOperations,workReviewsOperations} from "./operations/work-compositions";
 
@@ -51,6 +52,7 @@ export type { Endpoint, HttpMethod } from "./endpoint-definition";
 // The complete contract surface — the machine-checkable form of SPEC §13.
 // (`tests/registry.test.ts` asserts this matches §13 exactly.)
 export const ENDPOINTS = {
+  ...assistantSystemOperations,
   ...creativeCanvasOperations,
   ...workSourcesOperations,
   ...workCompositionsOperations,...momentsOperations,...workReviewsOperations,

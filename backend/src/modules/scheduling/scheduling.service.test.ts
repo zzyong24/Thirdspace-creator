@@ -11,6 +11,80 @@ import {
   ValidationError,
 } from "./scheduling.errors";
 import { scheduledJobs } from "../../schema/scheduling";
+import {accountGroups} from '../../schema/account-groups';
+import {createAccountGroupService} from '../platform-account/account-group.service';
+import {createPlatformAccountService} from '../platform-account/platform-account.service';
+
+async function realGroupFixture(db:Db){
+ let n=0;const deps={db,now:()=>NOW,nextId:(prefix:string)=>`${prefix}-real-${++n}`};
+ const groups=createAccountGroupService(deps),accounts=createPlatformAccountService(deps);
+ const base={userId:'draft-real-user',requestId:'draft-real',source:'user' as const};
+ const group=await groups.create(base,{name:'中性自动化组',idempotencyKey:'real-group'});
+ const groupOnly={...base,accountId:null,groupId:group.id};
+ const a=await accounts.createAccount(groupOnly,{platform:'douyin',accountHandle:'中性A'});
+ const b=await accounts.createAccount(groupOnly,{platform:'xiaohongshu',accountHandle:'中性B'});
+ const target=async(accountId:string)=>({...groupOnly,accountId,membershipVersion:(await groups.forAccount(groupOnly,accountId)).version});
+ return {groupOnly,a:await target(a.id),b:await target(b.id),groups,accounts,owner:createSchedulingService(deps)};
+}
+
+describe('T1074 自动化草稿与启用比较',()=>{
+ it.each([true,false])('topic.daily已有非null账号任务enabled=%s：空组候选拒绝且完整原内容不变',async enabled=>{
+  const {db,client}=await createDb();try{
+   const f=await realGroupFixture(db),job=await f.owner.createJob(f.a,{name:'已有任务',prompt:'原说明',schedule:'0 9 * * *',sourceKind:'topic.daily',enabled});
+   await expect(f.owner.createDraftIfAbsent(f.groupOnly,{name:'新的候选',prompt:'新的说明',schedule:'30 10 * * *',sourceKind:'topic.daily'})).rejects.toMatchObject({existingJobId:job.id,readOperationId:'scheduledJobs.get',enableOperationId:'scheduledJobs.setEnabled'});
+   expect(await f.owner.getJob(f.groupOnly,job.id)).toEqual(job);
+  }finally{await client.close();}
+ });
+ it('两个真实平台目标互不阻断，同目标不重复；成员转组后不能沿旧上下文采用',async()=>{
+  const {db,client}=await createDb();try{
+   const f=await realGroupFixture(db),input={name:'中性草稿',prompt:'待确认',schedule:'0 9 * * *',sourceKind:'comments' as const};
+   const first=await f.owner.createDraftIfAbsent(f.a,input),second=await f.owner.createDraftIfAbsent(f.b,input);
+   expect(first.accountId).toBe(f.a.accountId);expect(second.accountId).toBe(f.b.accountId);expect(second.id).not.toBe(first.id);
+   await expect(f.owner.createDraftIfAbsent(f.a,input)).rejects.toMatchObject({existingJobId:first.id});
+   const target=await f.groups.create(f.groupOnly,{name:'另一个中性组',idempotencyKey:'target-group'});
+   const preview=await f.groups.previewTransfer(f.groupOnly,{accountId:f.a.accountId!,toGroupId:target.id});
+   await f.groups.transfer(f.groupOnly,{...preview,idempotencyKey:'move-account'});
+   await expect(f.owner.setEnabledIfUnchanged(f.a,first.id,true,first)).rejects.toThrow();
+   expect((await f.owner.listJobs(f.groupOnly,{limit:50,offset:0})).rows.some(row=>row.id===first.id)).toBe(false);
+   const moved={...f.a,groupId:target.id,membershipVersion:(await f.groups.forAccount({...f.groupOnly,groupId:target.id},f.a.accountId!)).version};
+   expect(await f.owner.getJob(moved,first.id)).toMatchObject({enabled:false,prompt:'待确认'});
+  }finally{await client.close();}
+ });
+ it('普通create与AI关闭草稿沿同去重身份并发，不建立第二条任务',async()=>{
+  const {db,client}=await createDb();try{
+   const f=await realGroupFixture(db);
+   const [manual,draft]=await Promise.allSettled([
+    f.owner.createJob(f.a,{name:'手工任务',prompt:'手工说明',schedule:'0 9 * * *',sourceKind:'topic.daily'}),
+    f.owner.createDraftIfAbsent(f.groupOnly,{name:'候选草稿',prompt:'候选说明',schedule:'30 9 * * *',sourceKind:'topic.daily'}),
+   ]);
+   expect(manual.status).toBe('fulfilled');
+   const rows=(await f.owner.listJobs(f.groupOnly,{sourceKind:'topic.daily',limit:50,offset:0})).rows;
+   expect(rows).toHaveLength(1);expect(rows[0]?.enabled).toBe(true);
+   if(draft.status==='fulfilled')expect(draft.value).toMatchObject({id:rows[0]!.id,enabled:false});
+   else expect(draft.reason).toMatchObject({existingJobId:rows[0]!.id});
+  }finally{await client.close();}
+ });
+ it('真实空组创建关闭草稿；已有同类任务明确冲突，外层失败全部回滚',async()=>{
+  const {db,client}=await createDb();try{
+   const group={...ctxNoAcct,accountId:null,groupId:'draft-group',groupVersion:1};
+   await db.insert(accountGroups).values({id:group.groupId,userId:group.userId,name:'中性组',status:'active',version:1,createdAt:NOW,updatedAt:NOW});
+   const owner=makeService(db),input={name:'中性草稿',prompt:'待确认',sourceKind:'topic.daily' as const,schedule:'0 9 * * *'};
+   const job=await owner.createDraftIfAbsent(group,input);expect(job).toMatchObject({accountId:null,enabled:false});
+   await expect(owner.createDraftIfAbsent(group,input)).rejects.toMatchObject({existingJobId:job.id});
+   expect(await owner.getJob(group,job.id)).toEqual(job);
+   await expect(db.transaction(async tx=>{await makeService(tx as unknown as Db).setEnabledIfUnchanged(group,job.id,true,job);throw Error('事务回滚');})).rejects.toThrow('事务回滚');
+   expect(await owner.getJob(group,job.id)).toEqual(job);
+  }finally{await client.close();}
+ });
+ it('固定时钟下普通改内容后旧候选不能启用，保留用户新内容',async()=>{
+  const {db,client}=await createDb();try{
+   const owner=makeService(db),job=await owner.createJob(ctxA,{name:'中性任务',prompt:'原说明',sourceKind:'comments',schedule:'0 9 * * *'});
+   await owner.updateJob(ctxA,job.id,{prompt:'用户刚改的说明'});
+   await expect(owner.setEnabledIfUnchanged(ctxA,job.id,false,job)).rejects.toThrow('改变');
+   expect(await owner.getJob(ctxA,job.id)).toMatchObject({prompt:'用户刚改的说明',enabled:true,updatedAt:NOW});
+  }finally{await client.close();}
+ });
+});
 
 // Scheduling service test (T-007 D1 → T-332 S2) — the service builds a (user, account)
 // 双维 scoped repo per request(repoFor bakes ctx.userId + ctx.accountId)。Proves:

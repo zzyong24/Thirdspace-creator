@@ -1,4 +1,5 @@
 import {CREATIVE_CANVAS_OP_IDS} from "../modules/creative-canvas";
+import {ASSISTANT_ACTION_OP_IDS} from '../modules/ai';
 import type {Transport} from "@creatoros/contract";
 import {UnsupportedOperationError} from "../persistence-transport";
 import {TAXONOMY_OP_IDS} from "../modules/taxonomy";
@@ -42,6 +43,7 @@ import {CREATIVE_RESULT_OP_IDS} from "../modules/creative-results";
 
 /** 公开操作只由登记的领域 transport 负责；读取宿主实例之前先拒绝未知操作。 */
 const operations = {
+  assistantActions:ASSISTANT_ACTION_OP_IDS,
   taxonomy: TAXONOMY_OP_IDS,
   notifications: NOTIFICATION_OP_IDS,
   search: SEARCH_OP_IDS.filter((opId) => opId !== "pages.search.get"),

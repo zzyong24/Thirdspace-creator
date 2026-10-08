@@ -11,6 +11,34 @@ function Consumer() {
   return null;
 }
 afterEach(cleanup);
+it("匹配编辑器有未保存文字时拒绝采用，不能返回null触发直接保存", async () => {
+  render(<DraftChatRequestProvider><Consumer /></DraftChatRequestProvider>);
+  let adoptions = 0;
+  act(() => { api.registerEditor({
+    readState: () => ({ target: null, outputId: "o", generation: 1, dirty: true }),
+    prepareForTurn: async () => { throw Error("不能自动保存"); },
+    previewCandidate: async () => null,
+    adoptCandidate: async () => { adoptions++; return {status: "adopted"}; },
+  }); });
+  await expect(api.adoptEditorCandidate({kind: "work.editor.candidate", target: {outputId: "o"}} as any, "same-source")).rejects.toThrow(/未保存/);
+  expect(adoptions).toBe(0);
+});
+it("采用等待期间换编辑器或新增输入，保留已保存结果但不能报告当前稿已同步", async () => {
+  render(<DraftChatRequestProvider><Consumer /></DraftChatRequestProvider>);
+  let generation = 1, done!: (value: any) => void;
+  const port = {
+    readState: () => ({ target: null, outputId: "o", generation, dirty: false }),
+    prepareForTurn: async () => { throw Error("不能另发模型"); },
+    previewCandidate: async () => null,
+    adoptCandidate: () => new Promise<any>(resolve => { done = resolve; }),
+  };
+  act(() => { api.registerEditor(port); });
+  const pending = api.adoptEditorCandidate({kind: "work.editor.candidate", target: {outputId: "o"}} as any, "same-source");
+  generation++;
+  act(() => { api.registerEditor({...port, readState: () => ({target:null,outputId:"other",generation:3,dirty:true})}); });
+  await act(async () => { done({status:"adopted",versionId:"saved-v"}); });
+  expect(await pending).toMatchObject({status:"saved-not-synced",versionId:"saved-v"});
+});
 it("刷新后原候选使用已加载作品身份预览和采纳，不要求再发送模型初始化target", async () => {
   render(<DraftChatRequestProvider><Consumer /></DraftChatRequestProvider>);
   let outputId = "o", prepared = 0, previews = 0, adoptions = 0;

@@ -96,3 +96,6 @@ export { createAiTaskSubmissionService } from "./ai-task-submission.service";
 export {createGeneratedAssetAdoptionService} from "./generated-asset-adoption.service";
 
 export {type MediaProbeControl} from "./ai-media-probe-control";
+export {createAssistantActionTransport,ASSISTANT_ACTION_OP_IDS} from './assistant-action-transport';
+export {createAssistantActionAdoptionService} from './assistant-action-adoption.service';
+export {createChatProposalSourceService,sealChatProposal} from './chat-proposal-source.service';

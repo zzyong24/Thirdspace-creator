@@ -9,6 +9,7 @@ export const chatWorkerInputSchema = z.object({
   externalAgentBinding:externalAgentBindingSchema.optional(),
   recoverMissingFinal:z.boolean().optional(),
   contextPolicyVersion:z.literal(2).optional(),
+  toolOutcomeProjectionVersion:z.literal(1).optional(),
   kind: z.literal("chat.run"),
   operationKey: z.string().min(1).max(200),
   capability: z.string().min(1).max(128),

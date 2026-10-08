@@ -13,6 +13,7 @@
  */
 
 import * as React from "react";
+import {readChatToolOutcome,ChatToolOutcomeNotice} from "./chat-tool-outcome";
 
 import type {
   ContextArtifactsToolResult,
@@ -231,7 +232,9 @@ export function renderContextCard(
   out: Record<string, unknown>,
   ctx: ContextCardCtx,
 ): React.ReactNode {
+  const outcome=readChatToolOutcome(out);
+  if(outcome.blocksData)return <ChatToolOutcomeNotice outcome={outcome}/>;
+  const data=outcome.data as Record<string,unknown>;
   const renderer = CONTEXT_CARD_REGISTRY[kind];
-  if (renderer) return renderer(out, ctx);
-  return <ChatContextGenericCard kind={kind} out={out} />;
+  return <><ChatToolOutcomeNotice outcome={outcome}/>{renderer?renderer(data, ctx):<ChatContextGenericCard kind={kind} out={data}/>}</>;
 }

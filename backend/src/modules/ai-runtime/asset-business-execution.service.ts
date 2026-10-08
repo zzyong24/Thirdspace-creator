@@ -6,7 +6,7 @@ import {prepareLegacyAssetRecovery} from "./asset-legacy-recovery.service";
 import {createHash} from "node:crypto";
 import {isDeepStrictEqual} from "node:util";
 import {and,asc,eq,isNull,sql,aiTasks,aiTaskResults,executionTasks,OwnershipError,type Db} from "@creatoros/backend";
-import type {RequestContext} from "@creatoros/contract";
+import {canvasProposalAdmissionSchema,type CanvasProposalAdmission,type RequestContext} from "@creatoros/contract";
 import {assetGenerationInputSchema,assetCredentialSchema,assetRuntimeOptionsSchema} from "@creatoros/contract/execution-worker";
 import {canonicalJson} from "../ai/canonical-json";
 import {awaitPreparation} from "../execution/await-preparation";
@@ -32,7 +32,7 @@ function fields(task:Task,legacyPlain=false){
  };
 }
 /** 新调用单向转交；旧素材仅恢复原 provider job 或呈现核对状态，不能重新计费。 */
-export function createAssetBusinessExecutionService(db:Db,deps:{budget:BoundedExecutionBudget;now?:()=>string;resolveSpec(ctx:RequestContext,capability:"image.generate"|"image.edit"|"video.generate",taskId:string):Promise<MultimodalSpec>;assertProject(ctx:RequestContext,id:string,tx?:Db,forUpdate?:boolean):Promise<void>;assertCanvasInput?:(ctx:RequestContext,input:{attemptId:string;inputData:unknown;taskId:string},tx:Db)=>Promise<void>;getReference?:(ctx:RequestContext,assetId:string,fileId?:string)=>Promise<{fileId:string;checksum:string;mimeType:string;bytes:Uint8Array}|null>}){
+export function createAssetBusinessExecutionService(db:Db,deps:{budget:BoundedExecutionBudget;now?:()=>string;resolveSpec(ctx:RequestContext,capability:"image.generate"|"image.edit"|"video.generate",taskId:string):Promise<MultimodalSpec>;assertProject(ctx:RequestContext,id:string,tx?:Db,forUpdate?:boolean):Promise<void>;assertCanvasInput?:(ctx:RequestContext,input:{attemptId:string;inputData:unknown;taskId:string},tx:Db)=>Promise<CanvasProposalAdmission|undefined>;getReference?:(ctx:RequestContext,assetId:string,fileId?:string)=>Promise<{fileId:string;checksum:string;mimeType:string;bytes:Uint8Array}|null>}){
  const controller=new AbortController();
  const authority=createExecutionAuthorityService(db,{now:deps.now});
  const owned=(ctx:RequestContext,id:string)=>and(eq(aiTasks.id,id),eq(aiTasks.userId,ctx.userId),workspaceFilter(aiTasks,ctx));
@@ -44,10 +44,32 @@ export function createAssetBusinessExecutionService(db:Db,deps:{budget:BoundedEx
   if(!Object.prototype.hasOwnProperty.call(task.inputData??{},"canvasOwner"))return;
   if(!deps.assertCanvasInput)throw new Error("画布生成原预约核验未装配");
   if(!task.attemptId)throw new Error("画布生成缺少原attempt");
-  await deps.assertCanvasInput(ctx,{attemptId:task.attemptId,inputData:task.inputData,taskId:task.id},tx);
+  const admission=await deps.assertCanvasInput(ctx,{attemptId:task.attemptId,inputData:task.inputData,taskId:task.id},tx);
   const raw=task.inputData as Record<string,unknown>;
   if(Object.prototype.hasOwnProperty.call(raw,"projectId")&&(raw.projectId??null)!==task.projectId)throw new Error("画布原项目与冻结任务不符");
+  const owner=raw.canvasOwner as Record<string,unknown>;
+  if(Object.hasOwn(owner,'proposalAdmission')){
+   const expected=canvasProposalAdmissionSchema.parse(owner.proposalAdmission);
+   if(!admission||!isDeepStrictEqual(admission,expected))throw new Error('画布生成缺少已核验的确认事实');
+   return admission;
+  }
+  if(admission!==undefined)throw new Error('原画布输入没有确认事实，不能补新预算');
+  return undefined;
  }
+ function admittedBudget(task:Task,admission:CanvasProposalAdmission,inherited?:ExecutionBudget):BoundedExecutionBudget{
+  const deadlineMs=Date.parse(admission.deadlineAt)-Date.parse(task.requestedAt);
+  if(!Number.isInteger(deadlineMs)||deadlineMs<=0)throw new Error('原画布生成预算已耗尽');
+  const budget={maxCalls:admission.assetLimit.maxCalls,maxTokens:admission.assetLimit.maxTokens,deadlineMs};
+  if(inherited!==undefined&&!isDeepStrictEqual(inherited,budget))throw new Error('继承预算与首次确认冻结值不符');
+  return budget;
+ }
+ function assertDeadline(admission:CanvasProposalAdmission){
+  if(Date.parse((deps.now??(()=>new Date().toISOString()))())>=Date.parse(admission.deadlineAt))throw new Error('原画布生成预算已耗尽');
+ }
+ function assertMappedAdmission(execution:typeof executionTasks.$inferSelect|undefined,budget:BoundedExecutionBudget,admission:CanvasProposalAdmission){
+  if(!execution||!isDeepStrictEqual(execution.executionBudget,budget)||execution.deadlineAt!==admission.deadlineAt)throw new Error('原画布生成执行预算或截止时间不符');
+ }
+
  const service={
   async prepare(context:RequestContext,taskId:string,signal?:AbortSignal,inheritedBudget?:ExecutionBudget):Promise<Preparation>{
    let ctx={...context};signal=signal?AbortSignal.any([signal,controller.signal]):controller.signal;signal.throwIfAborted();
@@ -55,11 +77,14 @@ export function createAssetBusinessExecutionService(db:Db,deps:{budget:BoundedEx
    if(!task || task.taskType!=="asset.generate")throw new OwnershipError("素材生成任务不存在");
    // 现页只授权访问；后续恢复/模型解析始终保存原任务身份。
    ctx={...ctx,accountId:task.accountId,groupId:task.groupId,groupVersion:task.groupVersion??undefined,membershipVersion:task.membershipVersion??undefined};
-   await assertCanvasInput(ctx,task,db);
+   const admission=await assertCanvasInput(ctx,task,db),budget=admission?admittedBudget(task,admission,inheritedBudget):inheritedBudget??deps.budget;
+   if(admission){assertDeadline(admission);signal=AbortSignal.any([signal,AbortSignal.timeout(Math.max(1,Date.parse(admission.deadlineAt)-Date.parse((deps.now??(()=>new Date().toISOString()))())))]);}
+
    if(task.executionTaskId){
     const [execution]=await db.select().from(executionTasks).where(eq(executionTasks.id,task.executionTaskId));
     const recovery=(execution?.payload as {assetLegacyRecovery?:{inputData:unknown;requestFingerprint:string}})?.assetLegacyRecovery;
     if(!execution||execution.userId!==task.userId||execution.accountId!==task.accountId||execution.groupId!==task.groupId||execution.groupVersion!==task.groupVersion||execution.membershipVersion!==task.membershipVersion||execution.ownerId!==task.id||execution.ownerType!=="ai_task"||execution.kind!=="ai_task")throw new OwnershipError("素材执行原归属不符");
+    if(admission){assertMappedAdmission(execution,budget as BoundedExecutionBudget,admission);if(recovery)throw new Error('已确认画布任务不能转为旧恢复执行');}
     if(recovery){
      if(!isDeepStrictEqual(recovery.inputData,task.inputData)||recovery.requestFingerprint!==task.requestFingerprint)throw new Error("历史素材输入与原恢复记录不符");
      return authority.bindAiTask(ctx,task.id);
@@ -71,10 +96,11 @@ export function createAssetBusinessExecutionService(db:Db,deps:{budget:BoundedEx
       || Boolean(frozen.mode)&&(frozen.reference?.assetId??null)!==(typeof raw.referenceAssetId==="string"?raw.referenceAssetId:null)
       || (Boolean(frozen.mode)&&typeof raw.referenceFileId==="string" && frozen.reference?.fileId!==raw.referenceFileId)
       || (Boolean(frozen.mode)&&typeof raw.referenceChecksum==="string" && frozen.reference?.checksum!==raw.referenceChecksum))throw new Error("素材输入与原执行不符");
-    const mapped=await authority.bindAiTask(ctx,task.id);signal.throwIfAborted();return mapped;
+    const mapped=await authority.bindAiTask(ctx,task.id);if(admission)assertDeadline(admission);signal.throwIfAborted();return mapped;
    }
    if(task.status!=="queued" || task.leaseOwner || task.leaseToken)throw new Error("素材任务已执行，须沿原任务对账");
    const legacy=await hasLegacy(db,task);
+   if(admission&&legacy)throw new Error('已确认画布任务有原执行事实，请核对原任务');
    const input=fields(task,legacy),capability=input.capability as "image.generate"|"image.edit"|"video.generate";
    if(task.projectId)await awaitPreparation(()=>deps.assertProject(ctx,task.projectId!),signal);
    let modelInput:import('zod').z.infer<typeof assetGenerationInputSchema>;
@@ -103,6 +129,7 @@ export function createAssetBusinessExecutionService(db:Db,deps:{budget:BoundedEx
     const runtimeOptionsDigest=`sha256:${createHash("sha256").update(canonicalJson(assetRuntimeOptionsSchema.parse(options))).digest("hex")}`;
     modelInput=assetGenerationInputSchema.parse({...input,...(reference?{reference}:{}),provider,model,baseUrl,...(serviceId?{serviceId}:{}),runtimeOptionsDigest});
    }catch(error){signal.throwIfAborted();if(legacy)return prepareLegacyAssetRecovery(db,ctx,task,undefined,{deadlineMs:deps.budget.deadlineMs,now:deps.now??(()=>new Date().toISOString()),signal,assertProject:deps.assertProject});throw error;}
+   if(admission)assertDeadline(admission);
    if(legacy)return prepareLegacyAssetRecovery(db,ctx,task,modelInput,{deadlineMs:deps.budget.deadlineMs,now:deps.now??(()=>new Date().toISOString()),signal,assertProject:deps.assertProject});
    try{return await db.transaction(async outer=>{
     await assertFrozenWorkspaceMembership(outer,task);
@@ -111,13 +138,18 @@ export function createAssetBusinessExecutionService(db:Db,deps:{budget:BoundedEx
     signal?.throwIfAborted();const [current]=await tx.select().from(aiTasks).where(owned(ctx,task.id)).for("update");
     if(!current || current.requestFingerprint!==task.requestFingerprint || !isDeepStrictEqual(current.inputData,task.inputData) || current.projectId!==task.projectId)throw new Error("素材准备期间原任务发生变化");
     if(!current.executionTaskId && await hasLegacy(tx,current))throw new LegacyFactAppeared("素材准备期间出现旧提交事实，请重新读取原记录");
-    await assertCanvasInput(ctx,current,tx);
+    const currentAdmission=await assertCanvasInput(ctx,current,tx);
+    if(!isDeepStrictEqual(currentAdmission,admission))throw new Error('准备期间画布确认事实已变化');
+    const currentBudget=currentAdmission?admittedBudget(current,currentAdmission,inheritedBudget):budget;
+    if(currentAdmission)assertDeadline(currentAdmission);
     signal?.throwIfAborted();
-    const mapped=await createExecutionAuthorityService(tx,{now:deps.now}).bindAiTask(ctx,task.id,{requestFingerprint:task.requestFingerprint,modelInput,budget:inheritedBudget??deps.budget});
+    const mapped=await createExecutionAuthorityService(tx,{now:deps.now}).bindAiTask(ctx,task.id,{requestFingerprint:task.requestFingerprint,modelInput,budget:currentBudget});
+    if(currentAdmission){const [execution]=await tx.select().from(executionTasks).where(eq(executionTasks.id,mapped.executionTaskId));assertMappedAdmission(execution,currentBudget as BoundedExecutionBudget,currentAdmission);assertDeadline(currentAdmission);}
     signal!.throwIfAborted();return mapped;
     });
    });}catch(error){
     if(!(error instanceof LegacyFactAppeared))throw error;
+    if(admission)throw new OwnershipError('已确认画布生成出现旧恢复事实，请核对原任务，不能改用默认预算');
     // 原事务已经回滚，回读刚出现的原事实；不把未知结果转作新付费提交或普通失败。
     const [original]=await db.select().from(aiTasks).where(owned(ctx,task.id));
     if(!original||original.requestFingerprint!==task.requestFingerprint||!isDeepStrictEqual(original.inputData,task.inputData)||original.projectId!==task.projectId)throw new OwnershipError("旧素材原输入已改变，保留原记录待核对");

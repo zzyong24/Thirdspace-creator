@@ -3,7 +3,7 @@
 > 本文件由 `node orchestrator/process/pmem.mjs sync` 生成,**勿手改生成段**。
 > 人写的「定位/为什么」改 pmem.mjs 顶部常量与 SYSTEM_ARCHITECTURE.md。
 
-LAST_SYNCED: codex/t1062-integrated-client @ ef7bd450
+LAST_SYNCED: codex/t1062-integrated-client @ fbb861d4
 
 ## 这是什么(定位)
 
@@ -23,6 +23,7 @@ CreatorOS —— 一个编导式的自媒体内容生产系统(非项目管理�
 
 ## 开放任务(欠债)
 
+- [wip] T-1074 全面验收与补齐AI助手系统操作、工具开放性和功能提示词
 - [wip] T-1071 修复账号绑定和页面Tab切换卡顿
 - [wip] T-1070 打通Codex执行与编导精调，脚本一键生成文章和图文
 - [wip] T-1069 修复安装版素材导入慢与跨Tab丢失，重设计素材选择并补多平台绑定入口

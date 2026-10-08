@@ -9,6 +9,8 @@ import {createPendingGeneratedAssetService,type ObjectStorageForCtx} from "../as
 import {readCommittedGeneratedAssetFile} from "../assets/generated-asset-candidate.service";
 import { chatHistoryDigest, chatInputDigest } from "./chat-turn-submission.service";
 import {workspaceFilter} from "../../workspace-scope";
+import {applyChatToolOutcome} from "./chat-receipt-projection";
+import {z} from "zod";
 
 const object=(value:unknown):Record<string,unknown>=>value && typeof value==="object" && !Array.isArray(value)?value as Record<string,unknown>:{};
 type Tx=Parameters<Parameters<Db["transaction"]>[0]>[0];
@@ -176,8 +178,9 @@ export function createExternalChatTurnService(db:Db,deps:{now?:()=>string;budget
       // 候选与读取结果来自已结算的宿主工具回执，不能只依赖 Agent 正文自述。
       const output=outcome.data && typeof outcome.data==="object" && !Array.isArray(outcome.data)
         ? outcome.data : {kind:identity.toolName,error:outcome.summary};
-      toolCards.push({callId:tool.id,toolCallId:identity.toolCallId,toolName:identity.toolName,output,
-        part:{type:`tool-${identity.toolName}`,toolCallId:identity.toolCallId,state:"output-available",input:{},output}});
+      const part:Record<string,z.infer<ReturnType<typeof z.json>>>={type:`tool-${identity.toolName}`,toolCallId:identity.toolCallId,state:"output-available",input:{},output:z.json().parse(output)};
+      if(frozen.toolOutcomeProjectionVersion===1)applyChatToolOutcome(part,tool.id,outcome,false,undefined,1);
+      toolCards.push({callId:tool.id,toolCallId:identity.toolCallId,toolName:identity.toolName,output:part.output,part});
     }
     if(call.status!=="settled"||call.inputDigest!==chatInputDigest(frozen)||receipt.engine!==engine||receipt.turnId!==call.id||call.resultText!==receipt.text)throw new ConflictError("外部聊天缺少已结算的真实回执");
     const resultId=`chat:${business.id}`,messageId=`chat:${source.id}`,outcome=receipt.stopReason==="end_turn"?"succeeded" as const:"partial" as const;
@@ -198,10 +201,14 @@ export function createExternalChatTurnService(db:Db,deps:{now?:()=>string;budget
     const indices=new Map<string,number>();
     for(const event of events)indices.set(event.callId,Math.max(indices.get(event.callId)??-1,event.callIndex));
     const append=(callId:string,chunk:Record<string,unknown>)=>({executionTaskId:task.id,sequence:++sequence,callId,callIndex:(indices.set(callId,(indices.get(callId)??-1)+1),indices.get(callId)!),chunk,createdAt:stamp});
-    const streamRows=toolCards.flatMap(card=>[
-      append(call.id,{type:"tool-input-available",toolCallId:card.toolCallId,toolName:card.toolName,input:{}}),
-      append(card.callId,{type:"tool-output-available",toolCallId:card.toolCallId,output:card.output}),
-    ]);
+    const streamRows=toolCards.flatMap(card=>{
+      const input=append(call.id,{type:"tool-input-available",toolCallId:card.toolCallId,toolName:card.toolName,input:{}});
+      if(card.part.state==="output-denied"){
+        const approval=card.part.approval as {id:string;reason:string};
+        return [input,append(card.callId,{type:"tool-approval-request",toolCallId:card.toolCallId,approvalId:approval.id}),append(card.callId,{type:"tool-approval-response",approvalId:approval.id,approved:false,reason:approval.reason}),append(card.callId,{type:"tool-output-denied",toolCallId:card.toolCallId})];
+      }
+      return [input,append(card.callId,{type:"tool-output-available",toolCallId:card.toolCallId,output:card.output})];
+    });
     // 实际正文沿UI消息协议交付；进程 progress 仅用于任务进度，不能代替正文事件。
     const textId=`external-${call.id}`;
     streamRows.push(append(call.id,{type:"text-start",id:textId}),append(call.id,{type:"text-delta",id:textId,delta:receipt.text}),append(call.id,{type:"text-end",id:textId}));

@@ -11,6 +11,27 @@ const control={signal:new AbortController().signal,shouldStop:()=>false};
 beforeEach(async()=>{store=await createDb();groups=createAccountGroupService({db:store.db,now,nextId});const group=await groups.create({userId:'u',requestId:'t',source:'user'},{name:'目标组',idempotencyKey:'g'});ctx={userId:'u',accountId:null,groupId:group.id,requestId:'t',source:'user'};stage={createStaging:vi.fn(async()=>({stagingKey:'real-owned-stage'})),login:vi.fn(async()=>true),identity:vi.fn(async()=>({externalAccountId:'real-external-id',accountHandle:'真实扫码身份'})),discard:vi.fn(async()=>{}),commit:vi.fn(async(c,input,tx)=>{const account=await createPlatformAccountService({db:tx as unknown as Db,now,nextId}).createAccount(c,{platform:'douyin',accountHandle:input.identity.accountHandle,externalAccountId:input.identity.externalAccountId});return {accountId:account.id};})};service=createAccountBindingService({db:store.db,now,nextId,stage,capabilities:async()=>[{platform:'douyin',bind:{available:true,method:'qr',reason:'真实端口'}}]});});
 afterEach(async()=>{stage.discard=async()=>{};await service?.stop();await store?.client.close();});
 const input=(key='bind')=>({groupId:ctx.groupId!,platform:'douyin' as const,expectedGroupVersion:1,idempotencyKey:key});
+it('T1074 绑定预约随外层采纳事务回滚，提交后才唤醒原实例且幂等返回同run',async()=>{
+ const wake=vi.fn();
+ service=createAccountBindingService({db:store.db,now,nextId,stage,wake,capabilities:async()=>[{platform:'douyin',bind:{available:true,method:'qr',reason:'受控端口'}}]});
+ let failedRun='';
+ await expect(store.db.transaction(async tx=>{
+  const run=await service.reserveInTransaction(ctx,input(),tx);
+  failedRun=run.runId;expect(run.status).toBe('queued');
+  expect(wake).not.toHaveBeenCalled();expect(stage.createStaging).not.toHaveBeenCalled();
+  throw Error('采用回执失败');
+ })).rejects.toThrow('采用回执失败');
+ await expect(service.status(ctx,failedRun)).rejects.toThrow();
+ const saved=await store.db.transaction(tx=>service.reserveInTransaction(ctx,input(),tx));
+ expect(wake).not.toHaveBeenCalled();
+ service.wakeReserved();expect(wake).toHaveBeenCalledOnce();
+ const replay=await service.start(ctx,input());expect(replay.runId).toBe(saved.runId);
+ await service.drainAccountBindingQueue(control,{waitForCompletion:true});
+ expect(await service.status(ctx,saved.runId)).toMatchObject({status:'succeeded'});
+ expect(stage.commit).toHaveBeenCalledOnce();
+ await service.stop();
+ await expect(store.db.transaction(tx=>service.reserveInTransaction(ctx,input('after-stop'),tx))).rejects.toThrow('正在停止');
+});
 it('启动幂等返回同run，未运行不建假成员，跨用户status不可读',async()=>{const a=await service.start(ctx,input());const b=await service.start(ctx,input());expect(a.runId).toBe(b.runId);expect(a.status).toBe('queued');expect((await groups.get(ctx,ctx.groupId!)).members).toHaveLength(0);await expect(service.status({...ctx,userId:'other'},a.runId)).rejects.toThrow();expect(stage.login).not.toHaveBeenCalled();});
 it('唯一执行任务完成真实身份登记，status读回真实accountID',async()=>{const run=await service.start(ctx,input());await service.drainAccountBindingQueue(control,{waitForCompletion:true});const result=await service.status(ctx,run.runId);expect(result.status).toBe('succeeded');expect(result.accountId).toBeTruthy();expect((await groups.get(ctx,ctx.groupId!)).members[0]?.accountId).toBe(result.accountId);expect(stage.commit).toHaveBeenCalledTimes(1);});
 it('取消需等待扫码停止与清理证明，cleanup未完成不能显示cancelled',async()=>{let cleaned!:()=>void;stage.login=vi.fn(async(_c,{signal})=>new Promise<boolean>((_resolve,reject)=>signal.addEventListener('abort',()=>reject(signal.reason),{once:true})));stage.discard=vi.fn(async()=>new Promise<void>(resolve=>{cleaned=resolve;}));const run=await service.start(ctx,input());await service.drainAccountBindingQueue(control);await vi.waitFor(()=>expect(stage.login).toHaveBeenCalled());expect((await service.cancel(ctx,run.runId)).status).toBe('cancel_requested');await vi.waitFor(()=>expect(stage.discard).toHaveBeenCalled());expect((await service.status(ctx,run.runId)).status).toBe('cancel_requested');cleaned();await vi.waitFor(async()=>expect((await service.status(ctx,run.runId)).status).toBe('cancelled'));expect(stage.commit).not.toHaveBeenCalled();});

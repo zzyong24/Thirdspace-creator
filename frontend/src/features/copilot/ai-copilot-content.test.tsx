@@ -158,6 +158,14 @@ function slot(dialog: HTMLElement, name: string) {
 }
 
 describe("AI Copilot dialog (Task 24)", () => {
+  it("宿主读取失败保留原因与恢复，不渲染项目空库或绿色成功",()=>{
+    protocol.messages=[{id:"assistant-real-result",role:"assistant",parts:[{type:"tool-context_projects",toolCallId:"real-tool",state:"output-available",input:{},output:{kind:"context.projects",items:[],total:0,__creatorosOutcome:{schemaVersion:1,callId:"call-real",status:"error",summary:"账号权限已变更",sideEffect:"none",error:{code:"permission",retryable:false,recovery:"重新选择有权限的账号组"},continuation:null}}}]}];
+    const {container}=renderDialog();
+    expect(screen.getByText("账号权限已变更")).toBeVisible();
+    expect(screen.getByText("重新选择有权限的账号组")).toBeVisible();
+    expect(container.querySelector('[data-slot="chat-project-list-card"]')).toBeNull();
+    expect(screen.queryByText(/共 0 条/)).toBeNull();
+  });
   it("renders the dialog inside the single shared AppShell with one sidebar and one top-header", () => {
     renderDialog();
     expect(screen.getAllByTestId("app-shell")).toHaveLength(1);

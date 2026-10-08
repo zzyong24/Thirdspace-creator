@@ -1,4 +1,7 @@
 import * as fs from "node:fs/promises";
+import {isDeepStrictEqual} from 'node:util';
+import {ConflictError} from '../execution/execution.errors';
+import {ENDPOINTS} from '@creatoros/contract';
 import type { RequestContext } from "@creatoros/backend";
 import type {
   SettingsRepository,
@@ -239,6 +242,7 @@ export type AccountWriter = (
 ) => Promise<UserResource>;
 
 export interface SettingsService {
+  patchPreferencesIfUnchanged(ctx:RequestContext,patch:PreferencePatch,expected:Partial<PreferencePatch>):Promise<UserPreferenceResource>;
   getAccount(ctx: RequestContext): Promise<UserResource>;
   updateAccount(
     ctx: RequestContext,
@@ -355,6 +359,8 @@ function toPreferenceResource(
     analyticsEnabled: row.analyticsEnabled,
   };
 }
+function defaultPreferenceResource(ctx:RequestContext):UserPreferenceResource{return {id:`pref-${ctx.userId}`,userId:ctx.userId,defaultHome:'dashboard',defaultCreationMode:'guided',defaultVisibility:'private',autosaveEnabled:true,fileNamingRule:'{date}-{title}',analyticsEnabled:false};}
+export type PreferencesWritePort=<T>(ctx:RequestContext,write:(repo:Pick<SettingsRepository,'getPreferences'|'patchPreferences'>)=>Promise<T>)=>Promise<T>;
 
 function toModelResource(
   row: ModelConfigurationRow,
@@ -550,6 +556,7 @@ export function createSettingsService(
   //   (原来直接 import 的 migrateStorageRoot 在测试里会对真机 ~/CreatorOS/media 做 copy/delete,
   //   曾把用户真实封面从 media 搬去 custom+删 media,并是那条 flaky 测试的根源)。
   migrate: typeof migrateStorageRoot = migrateStorageRoot,
+  withPreferencesWrite?:PreferencesWritePort,
 ): SettingsService {
   const fallbackBase = (id: string): OfficialSkillBase => ({
     skillId: id,
@@ -598,24 +605,25 @@ export function createSettingsService(
     },
 
     async updatePreferences(ctx, patch) {
-      const row = await repoForCtx(ctx).patchPreferences(ctx, patch);
-      return toPreferenceResource(ctx, row);
+      const write=async(repo:Pick<SettingsRepository,'getPreferences'|'patchPreferences'>)=>toPreferenceResource(ctx,await repo.patchPreferences(ctx,patch));
+      return withPreferencesWrite?withPreferencesWrite(ctx,write):write(repoForCtx(ctx));
+    },
+    async patchPreferencesIfUnchanged(ctx,patch,expected){
+      if(!withPreferencesWrite)throw new ConflictError('偏好写锁尚未装配，请从原设置入口保存');
+      const input=ENDPOINTS.patchPreferences.body.parse(patch),keys=Object.keys(input) as (keyof PreferencePatch)[];
+      if(!keys.length||!isDeepStrictEqual(Object.keys(expected).sort(),Object.keys(input).sort()))throw new ConflictError('偏好候选需要完整的受改字段前值');
+      return withPreferencesWrite(ctx,async repo=>{
+        const row=await repo.getPreferences(ctx),current=row?toPreferenceResource(ctx,row):defaultPreferenceResource(ctx);
+        if(keys.some(key=>!isDeepStrictEqual(current[key],expected[key])))throw new ConflictError('偏好已改变，请重新读取并确认；现有设置未被覆盖');
+        return toPreferenceResource(ctx,await repo.patchPreferences(ctx,input));
+      });
     },
 
     async getPreferences(ctx) {
       const row = await repoForCtx(ctx).getPreferences(ctx);
       if (row) return toPreferenceResource(ctx, row);
       // 用户还没改过任何偏好 → 返回默认值(不落库;首次 patch 才 upsert)。
-      return {
-        id: `pref-${ctx.userId}`,
-        userId: ctx.userId,
-        defaultHome: "dashboard",
-        defaultCreationMode: "guided",
-        defaultVisibility: "private",
-        autosaveEnabled: true,
-        fileNamingRule: "{date}-{title}",
-        analyticsEnabled: false, // 默认关(PROTECTION.md §4 遥测零收集)
-      };
+      return defaultPreferenceResource(ctx);
     },
 
     async setModelConfiguration(ctx, capability, body) {

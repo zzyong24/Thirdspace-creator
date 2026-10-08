@@ -103,22 +103,28 @@ export function createAccountBindingService(deps:AccountBindingDeps){
    launch(row.id,control,"cleanup",async()=>{const ctx:RequestContext={userId:row.userId,accountId:null,groupId:row.groupId,requestId:`binding-recovery:${row.id}`,source:'user'},state=checkpoint(row.checkpoint);if(state.stagingKey)await stageFor(ENDPOINTS.startAccountBinding.body.parse(row.payload).platform).discard(ctx,{stagingKey:state.stagingKey,runId:row.id});const current=await read(ctx,row.id);if(terminal.has(current.status))return;const tuple={taskId:row.id,workerId:row.leaseOwner!,attempt:row.attempt};if(current.status==='cancel_requested')await tasks.acknowledgeControl(tuple);else await tasks.finish({...tuple,fenceToken:row.fenceToken??undefined,status:'failed',errorCode:'ACCOUNT_BINDING_INTERRUPTED',errorMessage:'上次扫码执行已停止并清理，请重新发起绑定'});stopFailures.delete(row.id);});
   }
  }
- return {
-  async start(ctx:RequestContext,input:Start):Promise<Run>{
+ async function reserveInTransaction(ctx:RequestContext,input:Start,tx:BindingTransaction):Promise<Run>{
    if(!ctx.groupId||ctx.groupId!==input.groupId)throw new OwnershipError('请先进入要绑定的账号组');
    if(stopping)throw new ConflictError('应用正在停止，请稍后重试');
    const capability=(await deps.capabilities(ctx)).find(row=>row.platform===input.platform)?.bind;
    const key=`account-binding:${input.idempotencyKey}`,hash=createHash('sha256').update(JSON.stringify(input)).digest('hex');
-   const result=await db.transaction(async tx=>{
     await tx.insert(accountGroupCommands).values({userId:ctx.userId,key,kind:'account_binding',inputHash:hash,result:{pending:true},createdAt:now()}).onConflictDoNothing();
     const [memo]=await tx.select().from(accountGroupCommands).where(and(eq(accountGroupCommands.userId,ctx.userId),eq(accountGroupCommands.key,key))).for('update');if(!memo||memo.kind!=='account_binding'||memo.inputHash!==hash)throw new ConflictError('同次绑定请求的账号组或平台已改变，请重新发起');
-    const prior=(memo.result as {runId?:string}).runId;if(prior)return read({...ctx,accountId:null},prior,tx);
+    const prior=(memo.result as {runId?:string}).runId;if(prior)return dto(await read({...ctx,accountId:null},prior,tx));
     stageFor(input.platform);
     if(!capability?.available||capability.method!=='qr')throw new ValidationError(capability?.reason??'此平台未提供真实扫码绑定端口');
     const frozen=await lockWorkspaceMembership(tx,{...ctx,accountId:null});if(frozen.groupVersion!==input.expectedGroupVersion)throw new ConflictError('账号组版本已改变，请重新读取后绑定');
     const task=await createPersistentTaskService(tx as unknown as Db,{now,nextId:deps.nextId}).enqueue({...ctx,accountId:null},{kind:'account_binding',ownerType:'account_binding',ownerId:deps.nextId('account-binding'),idempotencyKey:key,payload:input,maxAttempts:1});
-    await tx.update(accountGroupCommands).set({result:{runId:task.id}}).where(and(eq(accountGroupCommands.userId,ctx.userId),eq(accountGroupCommands.key,key)));return Object.assign(task,{bindingPayload:input});
-   });deps.wake?.();return dto(result);
+    await tx.update(accountGroupCommands).set({result:{runId:task.id}}).where(and(eq(accountGroupCommands.userId,ctx.userId),eq(accountGroupCommands.key,key)));return dto(Object.assign(task,{bindingPayload:input}));
+
+ }
+ return {
+  reserveInTransaction,
+  // 保留同一实例的停止状态、active controller与drain；不构造第二个扫码执行器。
+  wakeReserved(){deps.wake?.();},
+  async start(ctx:RequestContext,input:Start):Promise<Run>{
+   const result=await db.transaction(tx=>reserveInTransaction(ctx,input,tx));
+   deps.wake?.();return result;
   },
   async status(ctx:RequestContext,id:string):Promise<Run>{return dto(await read({...ctx,accountId:null},id));},
   async cancel(ctx:RequestContext,id:string):Promise<Run>{

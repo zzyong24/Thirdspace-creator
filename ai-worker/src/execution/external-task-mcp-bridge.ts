@@ -5,7 +5,7 @@ import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/
 import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import type { McpServerHttp } from "@agentclientprotocol/sdk";
-import type { WorkerPort } from "@creatoros/contract/execution-worker";
+import {agenticToolOutcomeSchema,type WorkerPort } from "@creatoros/contract/execution-worker";
 
 type Call=(port:WorkerPort,data:unknown,signal?:AbortSignal)=>Promise<unknown>;
 const listedSchema=z.object({tools:z.array(z.object({name:z.string().min(1),version:z.string().min(1),description:z.string(),inputSchema:z.record(z.string(),z.unknown())}).strict())}).strict();
@@ -34,7 +34,8 @@ export async function startExternalTaskMcpBridge(input:{turnCallId:string;signal
         const toolCallId=String(extra.requestId);
         const response=outcomeSchema.parse(await input.call("executeExternalTaskTool",{turnCallId:input.turnCallId,toolCallId,toolName:request.params.name,input:request.params.arguments??{}},signal));
         if(response.status!=="settled")return {content:[{type:"text" as const,text:"TOOL_RESULT_UNKNOWN: 请先对账，此工具调用不能自动重试。"}],isError:true};
-        return {content:[{type:"text" as const,text:JSON.stringify(response.outcome??null)}]};
+        const outcome=agenticToolOutcomeSchema.parse(response.outcome);
+        return {content:[{type:"text" as const,text:JSON.stringify(outcome)}],...(outcome.status==="error"||outcome.status==="blocked"?{isError:true}:{})};
       }catch(error){
         const code=error && typeof error==="object" && "code" in error && typeof error.code==="string"?error.code:"TOOL_EXECUTION_FAILED";
         return {content:[{type:"text" as const,text:code}],isError:true};

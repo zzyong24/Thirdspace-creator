@@ -316,6 +316,8 @@ export interface CandidateService {
     ctx: RequestContext,
     candidateId: string,
   ): Promise<CandidateResource>;
+  /** 应用组合的同事务锁读，不是模型写入或公共API。 */
+  getCandidateForUpdate(ctx: RequestContext, candidateId: string): Promise<CandidateResource>;
   patchCandidate(
     ctx: RequestContext,
     candidateId: string,
@@ -566,6 +568,15 @@ export function createCandidateService(deps: ServiceDeps): CandidateService {
 
     async getCandidate(ctx, candidateId) {
       return toCandidateDto(await repoFor(ctx, "candidate.getCandidate").getCandidate(candidateId));
+    },
+    async getCandidateForUpdate(ctx, candidateId) {
+      if (typeof (db as unknown as {rollback?:unknown}).rollback !== "function")
+        throw new Error("选题锁读必须绑定实际事务");
+      const [row] = await db.select().from(candidates).where(and(
+        eq(candidates.id,candidateId),eq(candidates.userId,ctx.userId),workspaceFilter(candidates,ctx),
+      )).limit(1).for("update");
+      if (!row) throw new OwnershipError("选题不存在或不属于当前工作区");
+      return toCandidateDto(row);
     },
 
     async patchCandidate(ctx, candidateId, patch) {

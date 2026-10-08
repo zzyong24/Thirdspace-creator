@@ -7,7 +7,8 @@ import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
-import { buildTools, type McpToolDef } from "./tools";
+import { buildTools,endpointInputSchema,schemaToJson,type McpToolDef } from "./tools";
+import {operationCatalog,describeOperation,operationDescribeInput} from "./operation-catalog";
 import {
   DispatchClient,
   DispatchError,
@@ -60,6 +61,10 @@ export function createCreatorOsMcpServer(
     };
     const { _creatoros, ...input } = args;
     try {
+      if(tool.opId==="creatoros.operations.list"||tool.opId==="creatoros.operations.describe"){
+        const result=tool.opId==="creatoros.operations.list"?operationCatalog(args):describeOperation(operationDescribeInput.parse(args).operation,endpointInputSchema,schemaToJson);
+        return {content:[{type:"text" as const,text:JSON.stringify(result)}]};
+      }
       const policy = getCliOperationPolicy(tool.opId);
       if (!policy) throw new Error(`operation 缺 CLI policy: ${tool.opId}`);
       if (policy.effect !== "read") {

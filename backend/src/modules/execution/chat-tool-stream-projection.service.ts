@@ -10,7 +10,7 @@ import { ConflictError } from "./execution.errors";
 export function createChatToolStreamProjection(db:Db,deps:{now?:()=>string;tools:Record<string,AgenticBackendTool>}){
  const now=deps.now??(()=>new Date().toISOString()),leases=createExecutionLeaseService(db,{now}),binding=createAgenticToolBinding(deps.tools);
  const project=async(ref:ExecutionRef,callId:string)=>leases.withLease(ref,"settlement",async({tx,task})=>{
-  chatWorkerInputSchema.parse((task.payload as Record<string,unknown>).modelInput);
+  const frozen=chatWorkerInputSchema.parse((task.payload as Record<string,unknown>).modelInput);
   const calls=await tx.select().from(executionCalls).where(eq(executionCalls.executionTaskId,task.id)).orderBy(asc(executionCalls.sequence));
   const call=calls.find(row=>row.id===callId);if(!call || call.status!=="settled")throw new ConflictError("工具卡缺少已确认调用");
   const bound=binding.forCall(task,calls,call),model=calls.find(row=>row.id===bound.modelCallId)!;
@@ -25,7 +25,7 @@ export function createChatToolStreamProjection(db:Db,deps:{now?:()=>string;tools
   let approval=readChatApprovalFacts(history.map(event=>event.chunk)).get(bound.toolCallId);
   const outcome=agenticToolOutcomeSchema.parse(receipt.output);
   if(approval?.id===`chat-approval:${model.id}:${bound.toolCallId}` && outcome.sideEffect==="none" && outcome.error?.code==="permission")approval={id:approval.id,approved:false,reason:outcome.summary};
-  applyChatToolOutcome(part,call.id,receipt.output,invalid,approval);
+  applyChatToolOutcome(part,call.id,receipt.output,invalid,approval,frozen.toolOutcomeProjectionVersion);
   const approvalId=(part.approval as {id?:string}|undefined)?.id??`receipt:${call.id}`;
   const metadata=part.callProviderMetadata?{providerMetadata:part.callProviderMetadata}:{};
   const chunks=z.array(executionStreamChunkSchema).parse(part.state==="output-error"

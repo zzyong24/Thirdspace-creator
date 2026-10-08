@@ -3051,6 +3051,236 @@
       "reason": "沿原Bun/Vite和同依赖锁构建；仅六renderer内部成员把真实decoded timestamp传到现纹理版本与blur缓存。独立710源完整重建及双build七产物字节一致；无新增语言、工具链、权限或执行机制。旧baseline和58f42历史条目保留。",
       "review": "docs/verification/t1070/native-pixel-version-final-artifact-review.json",
       "acceptance": "精确SHA机制预算，独评报告SHA 8851cf16937c1eee01f8d6eecf3f4b9083cc670ab2438f2c0ae30f8b578b5942；源码及交付机械核验通过，原README既有minor保留。不代签真实React原candidate97的采用、Undo、保存、导出、安装或整个任务完成。"
+    },
+    {
+      "task_id": "T-1074",
+      "files": [
+        "backend/src/modules/ai/ai.service.ts"
+      ],
+      "file_sha256": "ddc30c9690f5ac652f6604522313c149139fdbe2d5096fdc9bf4d1eb3787ce1b",
+      "categories": [
+        "native_executable"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-AI-1074",
+      "scope_source": "docs/features/t1074-ai-system-operations.md",
+      "reason": "原有系统调度daemon注释；本任务复用AI task/结果账本和service port，不新增常驻程序或原生执行机制。",
+      "review": "docs/features/t1074-ai-system-operations.review.md",
+      "acceptance": "仅绑定准入前当前文件SHA与既有机制复用；SPEC真实独立复核PASS[REV:19441710ae43]，同模型弱门。后续实现改变SHA须按实际差异复核重绑，不代签测试、模型、UI或安装。"
+    },
+    {
+      "task_id": "T-1074",
+      "files": [
+        "backend/src/modules/scheduling/scheduling.service.ts"
+      ],
+      "file_sha256": "55bc9b8547b72b6728ff94e9e96eb80b454d4fe05685c07278d7b752ffb25ca8",
+      "categories": [
+        "native_executable"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-AI-1074",
+      "scope_source": "docs/features/t1074-ai-system-operations.md",
+      "reason": "原有跨账号cron调度daemon注释；本任务仅在原owner增加关闭草稿与CAS端口，不新增调度器或常驻程序。",
+      "review": "docs/features/t1074-ai-system-operations.review.md",
+      "acceptance": "仅绑定准入前当前文件SHA与既有机制复用；SPEC真实独立复核PASS[REV:19441710ae43]，同模型弱门。后续实现改变SHA须按实际差异复核重绑，不代签测试、模型、UI或安装。"
+    },
+    {
+      "task_id": "T-1074",
+      "files": [
+        "docs/verification/t1074/research.md"
+      ],
+      "file_sha256": "a12a470b003303af266e18c9f18a84c09275da2cba639ec32561199999059d3c",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-AI-1074",
+      "scope_source": "docs/features/t1074-ai-system-operations.md",
+      "reason": "公开参考资料描述已有开源项目的语言；本项目仍使用原TypeScript工具链，不引入参考项目的语言或构建系统。",
+      "review": "docs/features/t1074-ai-system-operations.review.md",
+      "acceptance": "仅绑定准入前当前文件SHA与既有机制复用；SPEC真实独立复核PASS[REV:19441710ae43]，同模型弱门。后续实现改变SHA须按实际差异复核重绑，不代签测试、模型、UI或安装。"
+    },
+    {
+      "task_id": "T-1074",
+      "files": [
+        "frontend/src/server/persistence-client.ts"
+      ],
+      "file_sha256": "e76ac819e762bd326f28f57499941b348524ef9cd23466f4f3340683cd55f7ed",
+      "categories": [
+        "credential_store",
+        "language_toolchain",
+        "native_executable"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-AI-1074",
+      "scope_source": "docs/features/t1074-ai-system-operations.md",
+      "reason": "原有Rust/keychain/daemon装配与注释；本任务仅组合现有service ports，不修改凭据保管、宿主语言或原生执行机制。",
+      "review": "docs/features/t1074-ai-system-operations.review.md",
+      "acceptance": "仅绑定准入前当前文件SHA与既有机制复用；SPEC真实独立复核PASS[REV:19441710ae43]，同模型弱门。后续实现改变SHA须按实际差异复核重绑，不代签测试、模型、UI或安装。"
+    },
+    {
+      "task_id": "T-1074",
+      "files": [
+        "backend/src/modules/ai/ai.service.ts"
+      ],
+      "file_sha256": "41012e7d05770c40fa7f5daad49276a982feae285ab3d49e23ea48c53ed2d995",
+      "categories": [
+        "native_executable"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-AI-1074",
+      "scope_source": "docs/features/t1074-ai-system-operations.md",
+      "reason": "既有daemon/执行账本机制复用；没有新增常驻程序、OS执行器或执行权。",
+      "review": "docs/verification/t1074/complexity-source-pre-supplement.json",
+      "acceptance": "实际独立机械源核验PASS；精确当前SHA及原marker复用预算，不新增实现范围，不代签功能/模型/UI/安装。旧条目和SHA历史保留；实现后SHA变化须真实再核。"
+    },
+    {
+      "task_id": "T-1074",
+      "files": [
+        "backend/src/modules/scheduling/scheduling.service.ts"
+      ],
+      "file_sha256": "9ff44a9d24001ca285e8435c5afb72ea2ac583183aca458bf2865133bac268d6",
+      "categories": [
+        "native_executable"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-AI-1074",
+      "scope_source": "docs/features/t1074-ai-system-operations.md",
+      "reason": "既有系统daemon/scheduledJobs owner复用；新增的是同owner事务检查，无新增常驻程序或执行权。",
+      "review": "docs/verification/t1074/complexity-source-pre-supplement.json",
+      "acceptance": "实际独立机械源核验PASS；精确当前SHA及原marker复用预算，不新增实现范围，不代签功能/模型/UI/安装。旧条目和SHA历史保留；实现后SHA变化须真实再核。"
+    },
+    {
+      "task_id": "T-1074",
+      "files": [
+        "frontend/src/server/persistence-client.ts"
+      ],
+      "file_sha256": "4fdb19a2268a5faad298b67173193642098ddac7968d17f093377d8ef322e4f7",
+      "categories": [
+        "credential_store",
+        "language_toolchain",
+        "native_executable"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-AI-1074",
+      "scope_source": "docs/features/t1074-ai-system-operations.md",
+      "reason": "既有Rust宿主、keychain/masterKey和daemon机制复用；没有新增语言工具链、凭据存储系统、native executable或独立执行权。",
+      "review": "docs/verification/t1074/complexity-source-pre-supplement.json",
+      "acceptance": "实际独立机械源核验PASS；精确当前SHA及原marker复用预算，不新增实现范围，不代签功能/模型/UI/安装。旧条目和SHA历史保留；实现后SHA变化须真实再核。"
+    },
+    {
+      "task_id": "T-1074",
+      "files": [
+        "backend/src/modules/intelligence/intelligence.service.ts"
+      ],
+      "file_sha256": "4ca8c1db2e5962c3a5c0f586d7fa2a2681774336f849d46d6a9f63dc96a25033",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-106902",
+      "scope_source": "docs/features/t1074-ai-system-operations.md",
+      "reason": "原受控IPC/持久任务恢复说明复用；本文件本次尚无产品差异，无新增IPC机制或执行权。",
+      "review": "docs/verification/t1074/complexity-source-pre-supplement.json",
+      "acceptance": "实际独立机械源核验PASS；精确当前SHA及原marker复用预算，不新增实现范围，不代签功能/模型/UI/安装。旧条目和SHA历史保留；实现后SHA变化须真实再核。"
+    },
+    {
+      "task_id": "T-1074",
+      "files": [
+        "docs/verification/t1074/complexity-source-pre-supplement.json"
+      ],
+      "file_sha256": "a4e79fd18dff876cd8bd83b9c8b8f9266fc0673f6f8f43e5f63d0300486485ee",
+      "categories": [
+        "credential_store",
+        "ipc",
+        "language_toolchain",
+        "native_executable"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-AI-1074",
+      "scope_source": "docs/features/t1074-ai-system-operations.md",
+      "reason": "当前机械复核报告列出原有机制名与源码锚点，纯JSON验证工件不执行任何机制，不引入产品能力。",
+      "acceptance": "真实报告文件摘要，仅登记报告正文标记，不代签产品测试或安装。"
+    },
+    {
+      "task_id": "T-1074",
+      "files": [
+        "backend/src/modules/intelligence/intelligence.service.ts"
+      ],
+      "file_sha256": "3656cf91333147c2372c4d1ae9978d78cddffc3c980dfdb07a21c74703d88b81",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-106902",
+      "scope_source": "docs/features/t1074-ai-system-operations.md",
+      "reason": "当前独立实现复核同时核验原IPC说明与HEAD同文；新增的是原owner分类纯读、事务行锁与归档父项校验，没有新增跨进程机制或执行权。",
+      "review": "docs/verification/t1074/nine-consumers-implementation-review.json",
+      "acceptance": "真实post-change源核验PASS；前一SHA/pre-supplement条目保留。仅重绑原预算，不代签模型或安装版。"
+    },
+    {
+      "task_id": "T-1074",
+      "files": [
+        "docs/verification/t1074/nine-consumers-implementation-review.json"
+      ],
+      "file_sha256": "91ca17d30e6af6bef68c8861acfe31db2a9b954004027ebc3f4306dfe11c3149",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-106902",
+      "scope_source": "docs/features/t1074-ai-system-operations.md",
+      "reason": "独立复查报告列出原IPC说明与源摘要，属于纯验证正文，不新增或执行跨进程机制。",
+      "acceptance": "当前实际报告SHA；原预算与复核事实登记，不增加产品权力。"
+    },
+    {
+      "task_id": "T-1074",
+      "files": [
+        "docs/verification/t1074/nine-consumers-implementation-review.md"
+      ],
+      "file_sha256": "5d5305b67cdc223f1a0446e30b97619411ff6a7ebad7a56b9e93acc855269692",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-106902",
+      "scope_source": "docs/features/t1074-ai-system-operations.md",
+      "reason": "独立复查报告列出原IPC说明与源摘要，属于纯验证正文，不新增或执行跨进程机制。",
+      "acceptance": "当前实际报告SHA；原预算与复核事实登记，不增加产品权力。"
+    },
+    {
+      "task_id": "T-1074",
+      "files": [
+        "docs/verification/t1074/core-implementation-review.md"
+      ],
+      "file_sha256": "ad9b440632e43ec181035690a10c15ed22a6dc5661b8ef28c2b25b752cebc9b7",
+      "categories": [
+        "ipc",
+        "language_toolchain",
+        "native_executable"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-AI-1074",
+      "scope_source": "docs/features/t1074-ai-system-operations.md",
+      "reason": "纯独立验证报告引用原机制名和路径，不执行机制，不新增产品能力；原FAIL和修复复核链同时保存。",
+      "acceptance": "只登记报告正文标记和当前真实摘要，不代签运行或发布。"
+    },
+    {
+      "task_id": "T-1074",
+      "files": [
+        "docs/verification/t1074/core-implementation-review.json"
+      ],
+      "file_sha256": "765f3581a6c247dc6e1d8ce4d83d39a55f9c312ccafd1b589e3adc6cc221b81c",
+      "categories": [
+        "ipc",
+        "language_toolchain",
+        "native_executable"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-AI-1074",
+      "scope_source": "docs/features/t1074-ai-system-operations.md",
+      "reason": "纯独立验证报告引用原机制名和路径，不执行机制，不新增产品能力；原FAIL和修复复核链同时保存。",
+      "acceptance": "只登记报告正文标记和当前真实摘要，不代签运行或发布。"
     }
   ],
   "historical_baselines": []

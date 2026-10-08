@@ -80,6 +80,19 @@ describe("T-843 creatoros CLI", () => {
     expect(result.operations.find((item) => item.operation === "ingestion.douyin.refresh")?.effect).toBe("external");
   });
 
+  it("简明目录离线筛选和分页，describe仍给原完整合同",async()=>{
+    const fetchMock=vi.fn();globalThis.fetch=fetchMock as typeof fetch;
+    const result=await runCliCommand(["operations","list","--compact","--domain","projects","--effect","read","--offset","0","--limit","2"]) as any;
+    expect(result).toMatchObject({ok:true,count:2,offset:0,limit:2,hasMore:true,nextOffset:2});
+    expect(result.total).toBeGreaterThan(2);
+    for(const row of result.operations){expect(row).toMatchObject({domain:"projects",effect:"read",hasParams:expect.any(Boolean),hasBody:expect.any(Boolean),confirmation:"none"});expect(row).not.toHaveProperty("inputSchema");}
+    const next=await runCliCommand(["operations","list","--compact","--domain","projects","--effect","read","--offset","2","--limit","2"]) as any;
+    expect(next.operations.some((row:any)=>result.operations.some((old:any)=>old.operation===row.operation))).toBe(false);
+    expect(await runCliCommand(["operations","describe",result.operations[0].operation])).toHaveProperty("inputSchema");
+    expect(fetchMock).not.toHaveBeenCalled();
+    for(const args of [["--limit","51"],["--offset","-1"],["--effect","anything"],["--limit","2x"]])await expect(runCliCommand(["operations","list","--compact",...args])).rejects.toThrow();
+  });
+
   it("写、破坏性和外部调用在发请求前校验执行语义", async () => {
     await expect(runCliCommand(["call", "projects.create", "--input", "{}"])).rejects.toThrow("--apply");
     await expect(runCliCommand([

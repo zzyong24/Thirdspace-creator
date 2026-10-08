@@ -10,8 +10,9 @@ import { attachmentIdsOf, withAttachmentContext, MAX_CHAT_ATTACHMENT_TOTAL_BYTES
 
 /** 两个公开入口共用冻结方法、工具定义与模型消息装配。 */
 export async function prepareChatReply(runtime:ChatRuntime,owner:RequestContext,snapshot:ChatTurnSnapshot,input?:{
- chatContext:ChatContext;messages?:UIMessage[];trustedScriptSources?:VerbatimSource[];abortSignal?:AbortSignal;
+ chatContext?:ChatContext;messages?:UIMessage[];trustedScriptSources?:VerbatimSource[];abortSignal?:AbortSignal;executionEngine?:"pi"|"codex";
 }){
+ const executionEngine=input?.executionEngine??"pi";
  const chatContext=input?.chatContext??{surface:snapshot.conversation.projectId?"project":"topics",projectId:snapshot.conversation.projectId};
  let messages: UIMessage[]=input?.messages??snapshot.messages.map(message=>({id:message.id,role:message.role as UIMessage["role"],parts:Array.isArray(message.parts)&&message.parts.length?message.parts as UIMessage["parts"]:[{type:"text",text:message.content}]}));
  const sources:VerbatimSource[]=input?.trustedScriptSources??snapshot.messages.filter(m=>m.role==="user"&&m.content.trim()).slice(-16).map(m=>({ref:`message:${m.id}`,label:`用户消息 ${m.createdAt}`,text:m.content,truncated:false,sourceType:"message",sourceId:m.id}));
@@ -25,7 +26,7 @@ export async function prepareChatReply(runtime:ChatRuntime,owner:RequestContext,
    for(const a of attachments)if(a.extractedText?.trim())sources.push({ref:`attachment:${a.assetId}`,label:`文本附件：${a.name}`,text:a.extractedText,truncated:false,sourceType:"attachment",sourceId:a.assetId});
  }
  const skillSnapshot=await runtime.resolveEffectiveSkillSnapshot(owner,[...requiredSkillIdsForTask("chat.sync",{surface:chatContext.surface}),"topic.enrich","positioning.generate","calibration.diagnose","topic.generate","review.insights","knowledge.distill"]);
- const prepared=await prepareDurableChatTurn(owner,{messages,chatContext,trustedScriptSources:sources,abortSignal:input?.abortSignal},{...runtime.context,humanizeError:humanizeAiError,contextReaders:runtime.contextReaders,searchWeb:runtime.searchWeb,listRecentTasksPort:runtime.listRecentTasks,readEditorTarget:runtime.readEditorTarget,readCreationTarget:runtime.readCreationTarget},workerSkillSnapshotSchema.parse(skillSnapshot),{
+ const prepared=await prepareDurableChatTurn(owner,{messages,chatContext,trustedScriptSources:sources,abortSignal:input?.abortSignal,executionEngine},{...runtime.context,assistantSystem:runtime.assistantSystem,humanizeError:humanizeAiError,contextReaders:runtime.contextReaders,searchWeb:runtime.searchWeb,listRecentTasksPort:runtime.listRecentTasks,readEditorTarget:runtime.readEditorTarget,readCreationTarget:runtime.readCreationTarget},workerSkillSnapshotSchema.parse(skillSnapshot),{
  workerScriptDraft:true,workerWebRead:true,workerResearch:true,atomicCoverGenerate:true,atomicAgenticResearch:true,atomicMaterialGenerate:true,atomicScriptReview:true,atomicPublishPackage:true,scriptHooksGeneration:{version:1,maxOutputTokens:4096},structuredGeneration:{version:1,maxOutputTokens:8192},
  });
  input?.abortSignal?.throwIfAborted();

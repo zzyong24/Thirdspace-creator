@@ -111,7 +111,7 @@ import { createExecutionScheduledChildService, createModelWorkerDispatcher, crea
 import { createScriptSimilarityEvaluator, createTopicPreferenceSubmission, createArtifactContextReaders, createStructuredBusinessExecutionService } from "@creatoros/backend/modules/ai-runtime";
 import "server-only";
 
-import { createConfiguredDb, createCliInvocationService, resolveMasterKey,
+import { createConfiguredDb, createCliInvocationService, resolveMasterKey, sql,
 // [T-332 S2] per-account 域 repo 工厂的统一断言:未选号 → AccountRequiredError(引导态)。
 requireAccountId, type Db, type CliInvocationService,
 // [T-363] 「重置工作区」归档后的首启:PRESERVE 表(模型配置/skill 定制/激活态…)从
@@ -123,6 +123,7 @@ import { type Transport, type RequestContext, type CollectionPageCommit, type Co
 // [T-084c] ENDPOINTS 值导入 —— dispatchGenerateAsset 经 ai transport 起 asset.generate task
 // 时用真 endpoint 对象(带 body zod 类型),避免裸 { id } 造成 body 类型收窄为 undefined。
 import { ENDPOINTS } from "@creatoros/contract";
+import {createAssistantSystemRoot,createAssistantActionOwners} from "@creatoros/backend/application/chat/assistant-system-root";
 import { createAiTaskAttemptId } from "@/lib/ai-task-attempt";
 
 import { readChannelModelAuthority } from "@/server/activation/client-config.server";
@@ -159,7 +160,7 @@ import { createOnboardingState, createIntegrationCredentials, createReportingLoc
 // T-147 P5 桌面激活授权 —— 装配一机一码激活门(桌面拦/web 跳);门控/激活页经 bundle 取用。
 import { assembleActivationService, type ActivationService } from "./activation";
 import { createRadarProjectService, createProjectRepository, createProjectsService, createProjectsTransport, createTranscriptArtifactService, createProjectTranscriptionTargetService, type StageGateReadersRef } from "@creatoros/backend/modules/projects";
-import { createKnowledgeRepository, createKnowledgeService } from "@creatoros/backend/modules/knowledge";
+import { createKnowledgeRepository, createKnowledgeService, createKnowledgeTransport } from "@creatoros/backend/modules/knowledge";
 import { createAssetRepository, createAssetsService, createWebDocumentCacheService, createAssetsTransport, createVisualTemplateService, createVisualTemplateTransport, VISUAL_TEMPLATE_OP_IDS, ConflictError as AssetConflictError, createMockObjectStorage, createS3ObjectStorage, createLocalFsObjectStorage, ensureBucket, type ObjectStorageForCtx } from "@creatoros/backend/modules/assets";
 import { createArtifactsService, createArtifactsTransport } from "@creatoros/backend/modules/artifacts";
 import {createMomentsService,createMomentsTransport} from "@creatoros/backend/modules/moments";
@@ -663,6 +664,7 @@ interface PersistenceBundle {
   workReviews: Transport;
   creativeCanvas: Transport;
   creativeResults: Transport;
+  assistantActions: Transport;
   production: Transport;
   publishing: Transport;
   analytics: Transport;
@@ -863,6 +865,7 @@ export interface ChatRuntime {
     extractedText: string | null;
     bytes: Uint8Array;
   }>;
+  assistantSystem?:Awaited<ReturnType<typeof createAssistantSystemRoot>>["preparation"];
   context: ChatContextDeps;
   // 只读 context 工具(context.projects / context.knowledge / context.materials)的真数据读端口。
   // 与 `context`(CreativeContext facet reader,进 system 的记忆)不同:这些是「用户问才实时拉」的
@@ -1131,6 +1134,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   const getChannelModelCredential = async (
     ctx: RequestContext,
     serviceId: string,
+    store?:Db,
   ): Promise<string | null> => {
     const pinnedScopeId = taskModelAuthorityScope.currentScopeId();
     let scopeId: string | null;
@@ -1144,11 +1148,12 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     if (!readStoredChannelModelCredential) {
       throw new Error("渠道模型凭据存储尚未初始化");
     }
-    return readStoredChannelModelCredential(ctx, scopeId, serviceId);
+    return store?settingsServiceFor(store).getChannelModelCredential(ctx,scopeId,serviceId):readStoredChannelModelCredential(ctx, scopeId, serviceId);
   };
   const getChannelModelSelection = async (
     ctx: RequestContext,
     capability: string,
+    store?:Db,
   ): Promise<string | null> => {
     const pinnedScopeId = taskModelAuthorityScope.currentScopeId();
     const authority = pinnedScopeId === undefined
@@ -1160,11 +1165,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         ? authority.scopeId
         : null;
     if (!scopeId || !readStoredChannelModelCredential) return null;
-    const stored = await readStoredChannelModelCredential(
-      ctx,
-      scopeId,
-      `__model_selection__:${capability}`,
-    );
+    const stored = await (store?settingsServiceFor(store).getChannelModelCredential(ctx,scopeId,`__model_selection__:${capability}`):readStoredChannelModelCredential(ctx,scopeId,`__model_selection__:${capability}`));
     if (!stored) return null;
     try {
       const value = JSON.parse(stored) as { id?: unknown };
@@ -2199,6 +2200,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       projectsService.reconcileImportedProjections(ctx, input),
   };
   const publishingOriginalFor=(store:typeof db)=>createPublishingService({...publishingOwnerDeps,db:store,
+    assertTargetAccount:(c,target)=>createPlatformAccountService({db:store,...deps}).assertOwnedAccount(c,target.accountId,target.platform),
     resolveOutputOwner:(c,id)=>workProjectsFor(store).getOutputOwnerSummary(c,id),
     assertCoverOwned:(c,id)=>workAssetsFor(store).getAsset(c,id),
     isCoverAvailable:(c,id)=>workAssetsFor(store).isAssetFileAvailable(c,id),
@@ -2768,10 +2770,10 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     createFromAIResult:createTopicCandidateInTransaction,
   },deps.now);
   const aiOwnerDeps:Parameters<typeof createAiService>[0] = {
-    prepareChatReply:(ctx,snapshot)=>{
+    prepareChatReply:(ctx,snapshot,options)=>{
       if(stoppingPreparation)throw new Error("应用正在停止，无法启动新聊天");
       void chatRuntime.durable;
-      return prepareChatReply(chatRuntime,ctx,snapshot);
+      return prepareChatReply(chatRuntime,ctx,snapshot,options);
     },
     assertChatProject:(ctx,id)=>projectsService.getProjectOverviewCore(ctx,id),
     projectTranscriptionTargets:createProjectTranscriptionTargetService(),
@@ -3335,9 +3337,14 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     },
   };
   const outputScriptsService = createOutputScriptsService(outputScriptOwnerPorts);
+  const workKnowledgeFor=(store:typeof db)=>createKnowledgeService(createKnowledgeRepository(store,deps));
   const workProjectsFor=(store:typeof db)=>createProjectsService(createProjectRepository(store),deps);
   const workAssetsFor=(store:typeof db)=>createAssetsService(createAssetRepository(store,deps),objectStorageForStore(store),deps);
-  const workArtifactsFor=(store:typeof db)=>createArtifactsService({db:store,...deps,assertProjectOwned:async(c,id)=>{await workProjectsFor(store).getProject(c,id);},resolveOutputProjectId:(c,id)=>workProjectsFor(store).getProjectIdByOutput(c,id)});
+  const workArtifactsFor=(store:typeof db,deferred?:Array<()=>Promise<void>>)=>createArtifactsService({db:store,...deps,
+    ...(deferred?{searchUpsert:(c:RequestContext,input:Parameters<NonNullable<Parameters<typeof createArtifactsService>[0]['searchUpsert']>>[1])=>{deferred.push(async()=>{await searchService.upsertDocument(c,input);});return Promise.resolve();},
+      recordEditDelta:(c:RequestContext,input:Parameters<NonNullable<Parameters<typeof createArtifactsService>[0]['recordEditDelta']>>[1])=>{deferred.push(async()=>{await learningsService.captureEditDelta(c,input);});return Promise.resolve();}}:{}),
+    assertKnowledgeOwned:(c,id)=>workKnowledgeFor(store).getKnowledge(c,id),assertAssetOwned:(c,id)=>workAssetsFor(store).getAsset(c,id),
+    assertProjectOwned:async(c,id)=>{await workProjectsFor(store).getProject(c,id);},resolveOutputProjectId:(c,id)=>workProjectsFor(store).getProjectIdByOutput(c,id)});
   const workPublishingFor=(store:typeof db)=>withPublicationManualRevisionLock(store,publicationCoverPorts,publishingOriginalFor);
   const workProjectScriptPortsFor=(store:typeof db)=>{
     const source=createProjectScriptSource({projects:workProjectsFor(store),artifacts:workArtifactsFor(store),publishing:workPublishingFor(store),assets:workAssetsFor(store)});
@@ -3345,13 +3352,22 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       readProjectScriptContext:source.readContext,assertScriptMetadataSource:source.assertMetadata,
       readProjectImageLibrary:source.readImages,assertProjectImageFile:source.assertImage};
   };
-  const workArticlesFor=(store:typeof db)=>createArticlesService(store,{...articleOwnerPorts,...workProjectScriptPortsFor(store),
+  const workConversionFor=(store:typeof db)=>createConversionSourceService({projects:workProjectsFor(store),articles:workArticlesFor(store),graphicPosts:workGraphicFor(store),outputScripts:workScriptsFor(store)});
+  const workArticlesFor=(store:typeof db):import("@creatoros/backend/modules/articles").ArticlesService=>createArticlesService(store,{...articleOwnerPorts,...workProjectScriptPortsFor(store),
+    assertOutputVersionSource:(c,ref,id)=>workConversionFor(store).assertReference(c,ref,id),
     assertAssetFile:(c,id,file,active)=>workAssetsFor(store).assertAssetFileOwned(c,id,file,active),
     assertWorkSource:async(c,ref,projectId)=>{await workSourceService.read(c,projectId,ref,store);}});
-  const workGraphicFor=(store:typeof db)=>createGraphicPostsService(store,{...graphicOwnerPorts,...workProjectScriptPortsFor(store),
+  const workGraphicFor=(store:typeof db):import("@creatoros/backend/modules/graphic-posts").GraphicPostsService=>createGraphicPostsService(store,{...graphicOwnerPorts,...workProjectScriptPortsFor(store),
+    assertOutputVersionSource:(c,ref,id)=>workConversionFor(store).assertReference(c,ref,id),
+    async assertIntelligenceSourceRef(c,ref){
+      if(ref.kind!=="intelligence")throw new Error("雷达来源类型不匹配");
+      const detail=await createIntelligenceService(store,{...deps,tasks:createPersistentTaskService(store,{now:deps.now})}).getItem(c,ref.id);
+      if(!detail.snapshots.some(row=>row.id===ref.versionId&&row.safeExtract?.trim())&&!(detail.transcript.status==="done"&&detail.transcript.completedAt===ref.versionId&&detail.transcript.text?.trim()))throw new Error("雷达来源版本不存在或正文不可用");
+    },
+    assertRuleSnapshotRef:async(c,id)=>{await workPositioningFor(store).getStatement(c,id);},
     assertAssetFile:(c,id,file,active)=>workAssetsFor(store).assertAssetFileOwned(c,id,file,active),
     assertWorkSource:async(c,ref,projectId)=>{await workSourceService.read(c,projectId,ref,store);}});
-  const workScriptsFor=(store:typeof db)=>createOutputScriptsService({...outputScriptOwnerPorts,projects:workProjectsFor(store),artifacts:workArtifactsFor(store)});
+  const workScriptsFor=(store:typeof db):import("@creatoros/backend/modules/output-scripts").OutputScriptsService=>createOutputScriptsService({...outputScriptOwnerPorts,projects:workProjectsFor(store),artifacts:workArtifactsFor(store)});
   const workMomentsFor: (store:typeof db)=>import("@creatoros/backend/modules/moments").MomentsService = store=>createMomentsService({db:store,...deps,ports:{
     artifacts:workArtifactsFor,
     assertProjectOwned:async(c,id,tx,lock)=>{await workProjectsFor(tx).getProject(c,id,lock);},
@@ -3367,7 +3383,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   }});
   const workSourceService=createWorkSourceService(createWorkSourcePortsFactory({projects:workProjectsFor,assets:workAssetsFor,
     readProjectScriptVersion:store=>createProjectScriptSource({projects:workProjectsFor(store),artifacts:workArtifactsFor(store)}).readVersion,
-    materialLinks:store=>createMaterialLinksService({db:store,...deps,assertProjectOwned:async(c,id)=>{await workProjectsFor(store).getProject(c,id);},resolveOutputProjectId:(c,id)=>workProjectsFor(store).getProjectIdByOutput(c,id),assertKnowledgeOwned:(c,id)=>knowledgeService.getKnowledge(c,id),assertAssetOwned:(c,id)=>workAssetsFor(store).getAsset(c,id)}),
+    materialLinks:store=>createMaterialLinksService({db:store,...deps,assertProjectOwned:async(c,id)=>{await workProjectsFor(store).getProject(c,id);},resolveOutputProjectId:(c,id)=>workProjectsFor(store).getProjectIdByOutput(c,id),assertKnowledgeOwned:(c,id)=>workKnowledgeFor(store).getKnowledge(c,id),assertAssetOwned:(c,id)=>workAssetsFor(store).getAsset(c,id)}),
     moments:workMomentsFor,compositions:workCompositionsFor,
     conversion:store=>({projects:workProjectsFor(store),articles:workArticlesFor(store),graphicPosts:workGraphicFor(store),outputScripts:workScriptsFor(store)}),
     pureIntelligenceSnapshot:createIntelligenceSnapshotReader,
@@ -3632,6 +3648,10 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       process.stdout.write(`[positioning-audit] ${JSON.stringify(event)}\n`);
     },
   };
+  const workPositioningFor=(store:typeof db)=>createPositioningService({...positioningOwnerDeps,db:store,projects:{
+    getProjectSubject:async(c,id)=>{const row=await workProjectsFor(store).getProject(c,id);return {title:row.title,brief:row.brief};},
+    listWorkIds:async c=>(await createProjectRepository(store).list(c)).map(row=>row.id),
+  }});
   const positioningService = createPositioningService(positioningOwnerDeps);
   const positioning = createPositioningTransport(() => positioningService);
 
@@ -5307,19 +5327,19 @@ FAVORITES_PROMOTE_PER_RUN
   // which throws OwnershipError when absent — we never create a Candidate here);
   // notifications.notify is the 断更 seam (best-effort no-op until a public
   // create-notification op lands — mirrors the learnings.adjustConfidence seam below).
-  const contentCalendarService: ContentCalendarService =
+  const calendarFor=(store:typeof db):ContentCalendarService=>
     createContentCalendarService({
-      db,
+      db:store,
       now: deps.now,
       nextId: deps.nextId,
       clock: { now: deps.now },
       platformAccounts: {
         getAccount: (ctx, accountId) =>
-          platformAccountService.getAccount(ctx, accountId),
+          createPlatformAccountService({db:store,...deps}).getAccount(ctx, accountId),
       },
       publishing: {
         isOutputPublished: async (ctx, contentOutputId) => {
-          const pubs = await publishingService.listPublications(
+          const pubs = await workPublishingFor(store).listPublications(
             ctx,
             contentOutputId,
             { limit: 100, offset: 0 },
@@ -5330,7 +5350,7 @@ FAVORITES_PROMOTE_PER_RUN
       candidates: {
         exists: async (ctx, candidateId) => {
           try {
-            await candidateService.getCandidate(ctx, candidateId);
+            await assistantCandidateFor(store).getCandidate(ctx, candidateId);
             return true;
           } catch {
             return false;
@@ -5345,17 +5365,18 @@ FAVORITES_PROMOTE_PER_RUN
       },
       identity: {
         getEffectiveTimezone: async (ctx) =>
-          (await identity.getCurrentUser(ctx)).timezone,
+          (await createIdentityService(createIdentityRepository(store,deps),deps).getCurrentUser(ctx)).timezone,
       },
       projects: {
         getScheduleProject: (ctx, projectId) =>
-          projectsService.getScheduleProject(ctx, projectId),
+          workProjectsFor(store).getScheduleProject(ctx, projectId),
       },
       schedulePublishing: {
         getProjectPublicationFact: (ctx, projectId) =>
-          publishingService.getProjectPublicationFact(ctx, projectId),
+          workPublishingFor(store).getProjectPublicationFact(ctx, projectId),
       },
     });
+  const contentCalendarService=calendarFor(db);
   const contentCalendar = createContentCalendarTransport(
     () => contentCalendarService,
   );
@@ -5627,6 +5648,12 @@ FAVORITES_PROMOTE_PER_RUN
           }));
       },
     },
+    undefined,
+    async(ctx,write)=>store.transaction(async tx=>{
+      // SEMANTIC_BOUNDARY_ALLOW:用户级偏好写锁，串行原对象写入；缺行首次插入也受保护。
+      await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext('creatoros:preferences'),hashtext(${ctx.userId}))`);
+      return write(createSettingsRepository(tx as unknown as typeof db,{...deps,masterKey}));
+    }),
   );
   const settingsService=settingsServiceFor(db);
   readStoredChannelModelCredential = (ctx, scopeId, serviceId) =>
@@ -5660,10 +5687,13 @@ FAVORITES_PROMOTE_PER_RUN
     }),
   });
   // T1042：画布组合原owner，同tx的AI runtime Settings/Assets/Projects均用传入连接。
+  let assistantSystemRoot!:Awaited<ReturnType<typeof createAssistantSystemRoot>>;
   const creativeCanvasRoot=createCreativeCanvasRoot(db,deps,{
     ai:workReviewAiFor,assets:workAssetsFor,projects:workProjectsFor,
-    resolveTemplateRequirement:(c,id,version,tx)=>tx?createVisualTemplateService(tx,{assertImageReference:(context,ref)=>resolveFrozenImage(context,ref.assetId,ref.fileId,ref.checksum)}).resolveRequirement(c,id,version):visualTemplateService.resolveRequirement(c,id,version),
-    resolveCapability:async(c,capability)=>{const spec=await resolveMultimodalSpec(c,capability);return{provider:spec.provider,model:spec.model};},
+    resolveTemplateRequirement:(c,id,version,tx)=>tx?createVisualTemplateService(tx,{assertImageReference:async(context,ref)=>{const owner=workAssetsFor(tx),asset=await owner.getAsset(context,ref.assetId);if(asset.assetType!=="image"||asset.status!=="active")throw new AssetConflictError("参考图片不是可用素材");const exact=await owner.readImageReference(context,ref.assetId,ref.fileId);if(exact.checksum!==ref.checksum)throw new AssetConflictError("图片文件已变化，请重新选择");return {fileId:exact.fileId,checksum:exact.checksum};}}).resolveRequirement(c,id,version):visualTemplateService.resolveRequirement(c,id,version),
+    resolveCapability:async(c,capability,store)=>{const spec=await resolveMultimodalSpec(c,capability,store);return{provider:spec.provider,model:spec.model};},
+    assetLimit:{maxCalls:6,maxTokens:1_000_000,deadlineMs:1_800_000},
+    assertProposalAdmission:(c,input,store)=>assistantSystemRoot.service.assertGenerationAdmission(c,input,store),
     wake:(c,id)=>wakeBusinessTask(c,id,"asset.generate"),
     projectCandidate:(_c,input)=>businessExecution.projectCandidate(input),
   });
@@ -6212,15 +6242,16 @@ FAVORITES_PROMOTE_PER_RUN
   const resolveMultimodalSpec = (
     ctx: RequestContext,
     capability: "image.generate" | "image.edit" | "video.generate" | "asset.classify",
+    store?:typeof db,
   ) =>
     resolveMultimodalSpecFn(ctx, capability, {
-      getModelConfig: (c, cap) => settingsService.getModelConfig(c, cap),
+      getModelConfig: (c, cap) => (store?settingsServiceFor(store):settingsService).getModelConfig(c, cap),
       env: process.env,
       getChannelModelConfig,
       getChannelModelCredential: (serviceId) =>
-        getChannelModelCredential(ctx, serviceId),
+        getChannelModelCredential(ctx, serviceId,store),
       getChannelModelSelection: (selectedCapability) =>
-        getChannelModelSelection(ctx, selectedCapability),
+        getChannelModelSelection(ctx, selectedCapability,store),
     });
 
   // ── [T-084a] 联网检索解析 + registry(SPEC 2026-07-03 §1.1)─────────────────────
@@ -6614,7 +6645,35 @@ FAVORITES_PROMOTE_PER_RUN
     assertOutputProject:async(c,outputId,projectId)=>{await projectsService.getProject(c,projectId);const output=await projectsService.getOutput(c,outputId);if(output.projectId!==projectId)throw new OwnershipError("稿件不属于目标作品");},
   });
   const creativeCanvas=createCreativeCanvasTransport(creativeCanvasService,visualMaterialAdoption);
+  const assistantCandidateFor=(store:typeof db)=>createCandidateService({db:store,...deps,
+    projects:{createProject:(c,input)=>workProjectsFor(store).createProject(c,input)},
+    topicWorkspace:{assertProject:(c,id)=>workProjectsFor(store).getProject(c,id),currentPositioningVersion:async c=>(await workPositioningFor(store).readPositioningCenter(c)).currentStatement?.id??null},
+    resolveCollectedPublication:async(c,id)=>{const row=await workPublishingFor(store).resolveCollectedPublicationById(c,id);return row?{groupId:row.groupId??null,accountId:row.accountId}:null;},
+    ingestion:{assertRunExists:async()=>{throw new Error("该有限动作不开放采集信号写入");}},
+    positioning:{evaluateFit:async(c,subject)=>{try{return (await workPositioningFor(store).evaluateGate(c,{subjectType:"candidate",subjectId:"candidate-inline",candidate:{title:subject.title,angle:subject.angle,contentRole:subject.contentRole??undefined,productAnchorId:subject.productAnchorId??undefined}})).positioningFit;}catch{return null;}}},
+  });
+  const assistantActions=createAssistantActionOwners(db,{
+    binding:accountBindingService,assetTags:assetTagProposalAdoption,
+    forStore:(store,deferred)=>{
+      const projects=workProjectsFor(store),artifacts=workArtifactsFor(store,deferred),knowledge=workKnowledgeFor(store),publishing=workPublishingFor(store);
+      return {projects,artifacts,knowledge,candidates:assistantCandidateFor(store),articles:workArticlesFor(store),graphicPosts:workGraphicFor(store),
+        intelligence:store===db?intelligenceService:createIntelligenceService(store,{...deps,tasks:createPersistentTaskService(store,{now:deps.now})}),
+        positioning:workPositioningFor(store),groups:createAccountGroupService({db:store,...deps}),accounts:store===db?platformAccountService:createPlatformAccountService({db:store,...deps}),
+        calendar:calendarFor(store),scheduling:createSchedulingService({db:store,...deps}),settings:settingsServiceFor(store),
+        writes:{projects:createProjectsTransport(()=>({service:projects,repo:createProjectRepository(store)})),artifacts:createArtifactsTransport(()=>artifacts),knowledge:createKnowledgeTransport(()=>knowledge),publishing:createPublishingTransport(()=>publishing)},
+      };
+    },
+    async afterCommit(c,action,result){
+      if(action.kind==="project.create")await indexProjectBestEffort(c,result as Parameters<typeof indexProjectBestEffort>[1]);
+      if(action.kind==="knowledge.create")await knowledgeSearchRuntime.indexKnowledgeDocumentBestEffort(c,(result as {id:string}).id);
+    },
+  });
+  assistantSystemRoot=await createAssistantSystemRoot(db,{canvas:creativeCanvasRoot.service,generation:creativeCanvasRoot.generation,actions:assistantActions,
+    read:async(c,endpoint,input)=>await compositeTransport.request(endpoint,{params:input.params,query:input.query,body:undefined} as never,c) as {data:unknown;meta?:unknown},
+  },deps);
   const chatRuntime: ChatRuntime = {
+    assistantSystem:assistantSystemRoot.preparation,
+
     readCreationTarget:async(c,target)=>(await workCreationRoot.read(c,target)).target,
     readEditorTarget:(c,target)=>workEditorCandidate.readTarget(c,target),
     localCodexStatus:localCodexStatus.read,
@@ -6908,7 +6967,7 @@ getArticleForImage: (ctx, {outputId}) => articlesService.getArticle(ctx, outputI
 
   if(workerEntry){
     chatWorker=composeChatProduction(db,{
-      editor:workEditorPorts,creation:workCreationRoot,
+      assistantSystem:assistantSystemRoot.host,editor:workEditorPorts,creation:workCreationRoot,
       entryPath:workerEntry,runtime:chatRuntime,now:deps.now,externalImageStorage:objectStorageForCtx,
       topicWorkspace:{getContext:(c,id)=>candidateService.getTopicRecommendationContext(c,id)},
       canvas:{read:(c,id)=>creativeCanvasRoot.service.get(c,id),propose:(c,id,revision,operations)=>creativeCanvasRoot.service.propose(c,id,revision,operations)},
@@ -7002,6 +7061,7 @@ getArticleForImage: (ctx, {outputId}) => articlesService.getArticle(ctx, outputI
     workReviews,
     creativeCanvas,
     creativeResults,
+    assistantActions:assistantSystemRoot.transport,
     production,
     publishing,
     analytics,

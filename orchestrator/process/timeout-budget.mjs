@@ -24,7 +24,7 @@ export function checkTimeoutBudget(policy) {
   else requiredMs+=value;
  }
  if(!Number.isSafeInteger(requiredMs))errors.push('composed budget is invalid or overflows');
- if(policy.sharedDeadline===true && (!positive(policy.deadlineAt)||(policy.stages??[]).some(stage=>stage?.deadlineAt!==policy.deadlineAt)))errors.push('shared deadline must identify the same original absolute deadline at every inner stage');
+ if(policy.sharedDeadline===true && (!positive(policy.deadlineAt)||(Array.isArray(policy.stages)?policy.stages:[]).some(stage=>stage?.deadlineAt!==policy.deadlineAt)))errors.push('shared deadline must identify the same original absolute deadline at every inner stage');
  if(policy?.outerMs===null){if(policy.unboundedAllowed!==true)errors.push('unbounded outer observation requires an explicit contract');}
  else {
   if(!positive(policy?.outerMs)||policy.outerMs<policy.minimumMs)errors.push('outerMs is below the project minimum');

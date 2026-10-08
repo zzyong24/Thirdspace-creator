@@ -1,6 +1,7 @@
 import {workspaceStamp,workspaceKey} from "@creatoros/backend";
 import {lockPositioningAdoptionAccount} from "./positioning-write-lock";
 import { createHash } from "node:crypto";
+import {isDeepStrictEqual} from "node:util";
 import { requireAccountId, type Db } from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
 import {
@@ -237,6 +238,7 @@ export interface PositioningService {
       };
     },
   ): Promise<PositioningDiscoveryConfirmResultResource>;
+  compareAndUpsertProfile(ctx:RequestContext,input:UpsertProfileInput,expected:CreatorProfileResource|null):Promise<CreatorProfileResource>;
   upsertProfile(
     ctx: RequestContext,
     input: UpsertProfileInput,
@@ -379,8 +381,10 @@ export function createPositioningService(
   async function cleanupLegacyDynamicStatusNote(
     ctx: RequestContext,
   ): Promise<LegacyStatusNoteCleanupResult> {
+    return db.transaction(async (tx):Promise<LegacyStatusNoteCleanupResult>=>{
+    await lockPositioningAdoptionAccount(ctx,tx,false);
     const accountId = workspaceKey(ctx).id;
-    const repo = repoFor(ctx, "positioning.cleanupLegacyDynamicStatusNote");
+    const repo = repoFor(ctx, "positioning.cleanupLegacyDynamicStatusNote",tx as unknown as Db);
     const profile = await repo.getProfile();
     if (!profile) {
       return { outcome: "already_clean", previousValueHash: null };
@@ -413,6 +417,7 @@ export function createPositioningService(
       occurredAt: now(),
     });
     return { outcome: "cleared", previousValueHash };
+    });
   }
 
   // [T-332 S2 · SPEC §4.2] 每个经 ctx 的入口都经此建 repo:未选号 → AccountRequiredError
@@ -474,7 +479,7 @@ export function createPositioningService(
     }
 
     const positioningFit = Math.min(100, keywordScore + anchorScore + roleScore);
-    return { positioningFit, reasons };
+  return { positioningFit, reasons };
   }
 
   async function requireProfileId(
@@ -492,7 +497,8 @@ export function createPositioningService(
   function snapshotFromProfile(
     profile: CreatorProfileResource,
   ): PositioningMasterSnapshotResource {
-    return {
+
+  return {
       persona: profile.persona,
       field: profile.field,
       audience: profile.audience,
@@ -502,6 +508,62 @@ export function createPositioningService(
       downstreamRules: { ...profile.downstreamRules },
     };
   }
+
+      async function upsertProfile(ctx:RequestContext,input:UpsertProfileInput,expected?:CreatorProfileResource|null){
+      return db.transaction(async tx => {
+      // 正式账号均持有同一行锁；历史无账号行的数据保持旧读写语义。
+      await lockPositioningAdoptionAccount(ctx,tx,false);
+      const repo = repoFor(ctx, "positioning.upsertProfile", tx as unknown as Db);
+      const existing = await repo.getProfile();
+      // SEMANTIC_BOUNDARY_ALLOW:比较原完整母版身份/内容，不选择定位语义。
+      if(expected!==undefined&&!isDeepStrictEqual(existing?toCreatorProfileDto(existing):null,expected))throw new DiscoveryConflictError("定位母版已改变，请重新读取并确认；现有定位未被覆盖");
+      // [T-049 B3] 缺省 = **保留现值**(partial merge),不再清空。旧语义「缺省=空串」
+      // 是真事故根因:采纳 AI 定位建议(ai.service confirm / Copilot 聊天卡都只传 5 个
+      // 基础字段)把用户全部 6 facets + 5 条下游规则整体抹空,17 个 AI 节点随即失去
+      // 规则约束(真库已发生过)。字段级回退:调用方显式传值(含显式空串)则写入,
+      // 缺省(undefined)则保留库中现值;无现值兜 ""。
+      const prevFacets = (existing?.facets ?? {}) as Record<string, string>;
+      const prevRules = (existing?.downstreamRules ?? {}) as Record<
+        string,
+        string
+      >;
+      const normalized = {
+        persona: input.persona,
+        field: input.field,
+        audience: input.audience,
+        differentiation: input.differentiation,
+        capabilities: input.capabilities,
+        facets: {
+          contentScope:
+            input.facets?.contentScope ?? prevFacets.contentScope ?? "",
+          avoid: input.facets?.avoid ?? prevFacets.avoid ?? "",
+          corePain: input.facets?.corePain ?? prevFacets.corePain ?? "",
+          coreValue: input.facets?.coreValue ?? prevFacets.coreValue ?? "",
+          tone: input.facets?.tone ?? prevFacets.tone ?? "",
+          statusNote: input.facets?.statusNote ?? prevFacets.statusNote ?? "",
+        },
+        downstreamRules: {
+          topicRule:
+            input.downstreamRules?.topicRule ?? prevRules.topicRule ?? "",
+          scriptRule:
+            input.downstreamRules?.scriptRule ?? prevRules.scriptRule ?? "",
+          projectRule:
+            input.downstreamRules?.projectRule ?? prevRules.projectRule ?? "",
+          forbidRule:
+            input.downstreamRules?.forbidRule ?? prevRules.forbidRule ?? "",
+          expressionRule:
+            input.downstreamRules?.expressionRule ??
+            prevRules.expressionRule ??
+            "",
+        },
+      };
+      const row = existing
+        ? await repo.updateProfileRow(normalized)
+        : await repo.insertProfile(normalized);
+      return toCreatorProfileDto(row);
+      });
+    }
+
 
   return {
     async startDiscovery(ctx, sourceMode) {
@@ -686,58 +748,8 @@ export function createPositioningService(
       });
     },
 
-    async upsertProfile(ctx, input) {
-      return db.transaction(async tx => {
-      // 正式账号均持有同一行锁；历史无账号行的数据保持旧读写语义。
-      await lockPositioningAdoptionAccount(ctx,tx,false);
-      const repo = repoFor(ctx, "positioning.upsertProfile", tx as unknown as Db);
-      const existing = await repo.getProfile();
-      // [T-049 B3] 缺省 = **保留现值**(partial merge),不再清空。旧语义「缺省=空串」
-      // 是真事故根因:采纳 AI 定位建议(ai.service confirm / Copilot 聊天卡都只传 5 个
-      // 基础字段)把用户全部 6 facets + 5 条下游规则整体抹空,17 个 AI 节点随即失去
-      // 规则约束(真库已发生过)。字段级回退:调用方显式传值(含显式空串)则写入,
-      // 缺省(undefined)则保留库中现值;无现值兜 ""。
-      const prevFacets = (existing?.facets ?? {}) as Record<string, string>;
-      const prevRules = (existing?.downstreamRules ?? {}) as Record<
-        string,
-        string
-      >;
-      const normalized = {
-        persona: input.persona,
-        field: input.field,
-        audience: input.audience,
-        differentiation: input.differentiation,
-        capabilities: input.capabilities,
-        facets: {
-          contentScope:
-            input.facets?.contentScope ?? prevFacets.contentScope ?? "",
-          avoid: input.facets?.avoid ?? prevFacets.avoid ?? "",
-          corePain: input.facets?.corePain ?? prevFacets.corePain ?? "",
-          coreValue: input.facets?.coreValue ?? prevFacets.coreValue ?? "",
-          tone: input.facets?.tone ?? prevFacets.tone ?? "",
-          statusNote: input.facets?.statusNote ?? prevFacets.statusNote ?? "",
-        },
-        downstreamRules: {
-          topicRule:
-            input.downstreamRules?.topicRule ?? prevRules.topicRule ?? "",
-          scriptRule:
-            input.downstreamRules?.scriptRule ?? prevRules.scriptRule ?? "",
-          projectRule:
-            input.downstreamRules?.projectRule ?? prevRules.projectRule ?? "",
-          forbidRule:
-            input.downstreamRules?.forbidRule ?? prevRules.forbidRule ?? "",
-          expressionRule:
-            input.downstreamRules?.expressionRule ??
-            prevRules.expressionRule ??
-            "",
-        },
-      };
-      const row = existing
-        ? await repo.updateProfileRow(normalized)
-        : await repo.insertProfile(normalized);
-      return toCreatorProfileDto(row);
-      });
-    },
+    async upsertProfile(ctx,input){return upsertProfile(ctx,input);},
+    async compareAndUpsertProfile(ctx,input,expected){return upsertProfile(ctx,input,expected);},
 
     async resetMaster(ctx) {
       const repo = repoFor(ctx, "positioning.resetMaster");

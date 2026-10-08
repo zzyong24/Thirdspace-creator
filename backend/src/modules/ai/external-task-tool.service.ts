@@ -8,17 +8,11 @@ import { createExecutionLeaseService } from "../execution/execution-lease.servic
 import { ConflictError, ExecutionBudgetError } from "../execution/execution.errors";
 import { chatInputDigest } from "./chat-turn-submission.service";
 import {workspaceFilter} from "../../workspace-scope";
+import {isAssistantEngineToolAllowed} from "@creatoros/contract";
 
 type Tools=Record<string,ChatBackendTool>;
 const object=(value:unknown):Record<string,unknown>=>value&&typeof value==="object"&&!Array.isArray(value)?value as Record<string,unknown>:{};
 /** 逐个审计的宿主短读取与纯候选；本机命令、发布、采纳、删除和 Worker 专用工具不开放给 ACP。 */
-const safeNames=new Set([
- "work.editor.read","work.editor.propose","work.creation.read","work.creation.propose",
- "history.read","tool.result.read","skill.read","creatoros.guide","context.projects","context.projects.search","context.comments",
- "context.knowledge","context.materials","context.project.detail","context.project.lifecycle","context.review.report",
- "context.positioning.detail","context.knowledge.detail","context.artifacts","context.artifact.text","context.knowledge.text",
- "context.publications","context.metrics","context.learnings","context.candidates","context.predictions","learning.capture","brief.fill","script.patch","video.edit.render",
-]);
 
 /** 每次执行都从任务快照、当前租约及真实业务归属重新绑定；进程只接收窄工具结果。 */
 export function createExternalTaskToolService(db:Db,deps:{now?:()=>string}){
@@ -37,7 +31,7 @@ export function createExternalTaskToolService(db:Db,deps:{now?:()=>string}){
  function available(frozen:Awaited<ReturnType<typeof scope>>["frozen"],tools:Tools){
   return frozen.tools.filter(def=>{
    const tool=tools[def.name];
-   return safeNames.has(def.name)&&(def.execution??"host")==="host"&&
+   return isAssistantEngineToolAllowed(frozen.executionEngine as "codex"|"codebuddy",def)&&(def.execution??"host")==="host"&&
      (def.effect==="none"||def.effect==="proposal")&&!!tool&&tool.version===def.version&&tool.effect===def.effect&&
      (tool.execution??"host")==="host"&&typeof tool.execute==="function"&&typeof tool.approve==="function";
   });

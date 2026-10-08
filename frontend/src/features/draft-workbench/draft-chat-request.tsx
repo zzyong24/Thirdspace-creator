@@ -51,6 +51,22 @@ export type EditorAdoption = {
   revision?: number;
   message?: string;
 };
+export class EditorCandidateConflictError extends Error {}
+type EditorBoundSave = {canonical:string; save:()=>Promise<any>; pending?:Promise<any>};
+const editorBoundSaves = new Map<string,EditorBoundSave>();
+/** 只在本次UI调用期间绑定正式来源保存；旧两参数编辑器仍负责草稿/epoch和刷新。 */
+export async function withEditorCandidateSave<T>(candidate:EditorSaveCandidate,requestId:string,save:()=>Promise<any>,adopt:()=>Promise<T>):Promise<T> {
+  if (editorBoundSaves.has(requestId)) throw new EditorCandidateConflictError("该候选正在采用，请先核对原结果。");
+  const binding:EditorBoundSave={canonical:editorCanonical(candidate),save};
+  editorBoundSaves.set(requestId,binding);
+  try {return await adopt();} finally {if(editorBoundSaves.get(requestId)===binding)editorBoundSaves.delete(requestId);}
+}
+export function boundEditorCandidateSave(candidate:EditorSaveCandidate,requestId:string):Promise<any>|undefined {
+  const binding=editorBoundSaves.get(requestId);
+  if(!binding)return undefined;
+  if(binding.canonical!==editorCanonical(candidate))throw new EditorCandidateConflictError("候选身份或内容已改变，原采用请求保留。");
+  return binding.pending??=binding.save();
+}
 export type EditorState = {
   target: WorkEditorTarget | null;
   /** 已加载的本地作品身份；刷新恢复不依赖再次发送模型，冻结target仍由prepare产生。 */
@@ -332,7 +348,14 @@ export function DraftChatRequestProvider({
           editorCandidateOutputId(candidate)
       )
         return null;
-      return entry.port.adoptCandidate(candidate, requestId);
+      if (!state || state.dirty) throw new EditorCandidateConflictError("当前作品有未保存修改，请先保存或核对；原输入已保留。");
+      const result=await entry.port.adoptCandidate(candidate, requestId);
+      const after=entry.port.readState();
+      if(editorRef.current!==entry||after.generation!==state.generation||after.dirty) {
+        return {...result,status:result.status==="adopted"?"saved-not-synced":result.status,message:"已保留原保存结果，当前编辑器或输入已改变，未覆盖输入。"};
+      }
+      bumpEditor();
+      return result;
     },
     [],
   );

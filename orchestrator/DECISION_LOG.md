@@ -3687,3 +3687,37 @@ Status: active
 ## DEC-T1070-NATIVE-PIXEL-VERSION
 
 用户已要求真实自然语言剪辑并逐功能验证；原warm首帧仍0，已通过一次有界原事件证明decoded1但identity-only GPU缓存仍0。采用真实decoded timestamp的内部texture版本透传，保同帧/静态缓存并覆盖blur，不改公共合同、owner、runtime、依赖或CAS。七archive精确成员独评78c934b5...准入（PIXEL_VERSION_INTEGRATION.md）。机制选择已闭合，真实修复/采纳/导出与安装不代签。原研究一次实验、两具体trace验收0；按用户AGENTS只用taskctl恢复原任务（受支持resume子命令），不让研究工具另写看板。
+
+
+## DEC-AI-1074（2026-10-08）：全系统编导工具与候选采纳闭环
+
+**Owner**：user。**Status**：需求及执行授权Confirmed；精确SPEC真实独立初审CONCERNS后复核PASS[REV:19441710ae43]，同模型弱门，功能待验。
+
+**来源**：用户要求全面测试优化AI助手的各功能操作，补缺口，参考Coze等优秀开源工具与提示词实践，明确必须支持画布创建、生图、自然语言剪辑，并继续执行。沿用用户此前当前安装App中性验收、本地打包、原版丰富紫色UI和oil-ui-pro、只一键生成文章图文而不自动视频初稿的授权。
+
+**落实**：按T1074 SPEC在既有contract/原owner/execution账本上增加短发现、有限读取及单个严格操作候选；用户采纳只给来源摘要，原owner同事务写入并用原aiTaskResults唯一call回执读回。Canvas新建一次保存完整文档；生图沿原node预约/精确文件证明与冻结有限期限；Codex仅审计开放pure tools，提示词按真实目录装配。失败保真实outcome，避免空库/绿色成功假象。
+
+**边界**：不任意RPC、不AI直写正式对象、不新增任务系统或候选表；删除、迁移、真发布、密钥仍由原功能具体授权；不push/tag/发布。开源参考是官方公开Codex/Coze Studio/Claude材料，Coze X/Code对应未确认，不声称隐藏提示词。独评原REV-001自动化已有任务语义已补正并复核关闭；未据调研或源码签安装版PASS。
+
+
+### DEC-AI-1074-COMPATIBLE-OUTCOME（2026-10-08）
+
+原用户要求真实全功能回执与持续使用，具体检查确认Pi流/完成和ACP终态必须同源且旧严格作品卡仍有效。必要消费者闭包增加原chat-worker可选展示版本、execution原投影及ACP原终态与两原公共测试五路径；无新业务权限、owner、任务、表或引擎。新任务冻toolOutcomeProjectionVersion=1，旧缺省原字节；不删除旧deepEqual，不回写已存事件。需实际独评复核新增精确路径后实施；现有初审REV-001保持关闭。
+
+
+## DEC-106902：T-1074 精确9文件的一次补充独立复核
+
+用户本轮明确回复：“同意这9个文件补一次独立复核”。沿用当前已审SPEC，补齐4项必要接入/保护措施；不新增用户功能、AI权限、发布授权或整个目录写集。本次授权只消费一次，原3轮及历史证据保留。精确范围见SPEC第8.1节。
+
+```text
+ID: DEC-106902
+Authorization-Kind: process-review-cycle
+Task-ID: T-1074
+Previous-Spec-SHA256: a0ab7c395b59112819340eadf09a7b4aca142fed6733fb40621ff4bbd0f01b4b
+Previous-Constitution-SHA256: 86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800
+Allowed-Change-IDs: T1074-CONSUMER-SCOPE,T1074-EDITOR-ADOPTION,T1074-CANDIDATE-LOCK,T1074-RADAR-PURE-READ
+Max-Cycles: 1
+Nonce: 0173eddf-4313-46d0-bda5-c0819d7ba8d1
+Owner: user
+Status: active
+```

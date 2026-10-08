@@ -16,7 +16,7 @@ let db:Db,close:()=>Promise<void>,counter=0;
 const now=()=>"2026-09-28T10:00:00.000Z",budget={maxCalls:4,maxTokens:10000,deadlineMs:60000};
 beforeAll(async()=>{const opened=await createDb();db=opened.db;close=()=>opened.client.close();});
 afterAll(async()=>{await close();for(const root of storageRoots)await rm(root,{recursive:true,force:true});});
-async function fixture(legacy=false){
+async function fixture(legacy=false,displayLegacy=false){
  const ctx={userId:"external-chat-user",accountId:`external-chat-account-${++counter}`,requestId:"test",source:"user" as const};
  const repo=createAiRepository(db,{userId:ctx.userId,accountId:ctx.accountId,now,nextId:prefix=>`${prefix}-${++counter}`});
  const conversation=await repo.createConversation({title:"会话",projectId:null,scope:"global"});
@@ -24,8 +24,9 @@ async function fixture(legacy=false){
  const submission=await createChatTurnSubmissionService(db,{now,assemble:async()=>({capability:"copilot.assist",system:"策略",messages:[{role:"user",content:"问题"}],maxSteps:6,maxOutputTokens:128,tools:[]})}).submit(ctx,{conversationId:conversation.id,sourceMessageId:source.id,executionEngine:"codex"});
  const taskService=createPersistentTaskService(db,{now}),claim=(await taskService.claimTask({taskId:submission.executionTaskId,workerId:"worker"}))!;
  const ref={executionTaskId:submission.executionTaskId,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken};
- if(legacy){
-  const [task]=await db.select().from(executionTasks).where(eq(executionTasks.id,submission.executionTaskId));const payload=task!.payload as any;const modelInput={...payload.modelInput};delete modelInput.externalAgentBinding;
+ if(legacy||displayLegacy){
+  // 合成旧持久输入夹具，单独核投影兼容；不伪称来自安装版历史任务。
+  const [task]=await db.select().from(executionTasks).where(eq(executionTasks.id,submission.executionTaskId));const payload=task!.payload as any;const modelInput={...payload.modelInput};if(legacy)delete modelInput.externalAgentBinding;if(displayLegacy)delete modelInput.toolOutcomeProjectionVersion;
   await db.update(executionTasks).set({payload:{...payload,modelInput}}).where(eq(executionTasks.id,submission.executionTaskId));
   const [business]=await db.select().from(aiTasks).where(eq(aiTasks.id,submission.taskId));await db.update(aiTasks).set({inputData:{...(business!.inputData as any),modelInputDigest:chatInputDigest(modelInput)}}).where(eq(aiTasks.id,submission.taskId));
  }
@@ -34,6 +35,33 @@ async function fixture(legacy=false){
  return {ctx,repo,conversation,source,submission,ref,service,rows,storage};
 }
 const receipt=(callId:string)=>({schemaVersion:1 as const,engine:"codex" as const,protocolKind:"acp" as const,protocolVersion:1,sessionId:"session-real",turnId:callId,stopReason:"end_turn" as const,text:"真实 ACP 回复",usage:null});
+
+it.each([false,true])("ACP 展示旧版=%s：失败/拒绝/部分结果与终态事件一致，完成回放不改字节",async displayLegacy=>{
+ for(const status of ["error","blocked","partial","denied"] as const){
+  const f=await fixture(false,displayLegacy),turn=await f.service.reserve(f.ref,{});
+  await f.service.start(f.ref,{callId:turn.callId,sessionId:"session-real",protocolKind:"acp",protocolVersion:1});
+  const callId=`call-projection-${++counter}`,data={kind:"context.projects",items:[],total:0,...(status==="denied"?{denied:true}:{})};
+  const outcome={status:status==="denied"?"blocked":status,summary:"账号权限已变更",evidence:[],data,error:status==="partial"?null:{code:"permission",retryable:false,recovery:"重新选择有权限的账号组"},continuation:null,sideEffect:"none"};
+  await db.insert(executionCalls).values({id:callId,executionTaskId:f.submission.executionTaskId,sequence:2,operationKey:`projection-${counter}`,parentCallId:turn.callId,kind:"external_tool",inputDigest:"sha256:test",status:"settled",reservedTokens:0,accountingBasis:"requests",providerResult:{schemaVersion:1,kind:"external_tool",turnCallId:turn.callId,toolCallId:"real-read",toolName:"context.projects",toolVersion:"1"},resultText:JSON.stringify(outcome),createdAt:now(),updatedAt:now()});
+  await f.service.settle(f.ref,{callId:turn.callId,status:"settled",receipt:receipt(turn.callId)});
+  const completed=await f.service.commit(f.ref,{callId:turn.callId}),rows=await f.rows();
+  const part=(rows.messages[1]!.parts as Array<Record<string,unknown>>).find(part=>part.toolCallId==="real-read")!;
+  const events=await db.select().from(executionStreamEvents).where(eq(executionStreamEvents.executionTaskId,f.submission.executionTaskId));
+  if(!displayLegacy&&status==="denied"){
+   expect(part.state).toBe("output-denied");expect(part).not.toHaveProperty("output");
+   expect(events.map(row=>row.chunk.type)).toContain("tool-output-denied");
+   expect(events.map(row=>row.chunk.type)).not.toContain("tool-output-available");
+  }else{
+   expect(part.state).toBe("output-available");
+   expect(events.find(row=>row.chunk.type==="tool-output-available")?.chunk.output).toEqual(part.output);
+   if(displayLegacy)expect(part.output).toEqual(data);
+   else expect(part.output).toMatchObject({...data,__creatorosOutcome:{schemaVersion:1,callId,status,summary:outcome.summary,error:outcome.error,sideEffect:"none"}});
+  }
+  const before=JSON.stringify({rows,events});
+  expect(await f.service.commit(f.ref,{callId:turn.callId})).toEqual(completed);
+  expect(JSON.stringify({rows:await f.rows(),events:await db.select().from(executionStreamEvents).where(eq(executionStreamEvents.executionTaskId,f.submission.executionTaskId))})).toBe(before);
+ }
+});
 
 it("ACP 总用量包含缓存读取时，真实模型回执仍可结算和提交",async()=>{
  const f=await fixture(),reserved=await f.service.reserve(f.ref,{});
@@ -113,7 +141,7 @@ it("已结算的外部工具候选进入原会话卡片与事件流，用户仍�
  await f.service.settle(f.ref,{callId:reserved.callId,status:"settled",receipt:receipt(reserved.callId)});
  await f.service.commit(f.ref,{callId:reserved.callId});
  const rows=await f.rows();
- expect(rows.messages[1]?.parts).toContainEqual(expect.objectContaining({type:"tool-learning.capture",toolCallId:"mcp-2",state:"output-available",output:{kind:"learning.capture",suggestion:{title:"经验"}}}));
+ expect(rows.messages[1]?.parts).toContainEqual(expect.objectContaining({type:"tool-learning.capture",toolCallId:"mcp-2",state:"output-available",output:expect.objectContaining({kind:"learning.capture",suggestion:{title:"经验"},__creatorosOutcome:expect.objectContaining({sideEffect:"proposal",status:"ok"})})}));
  const events=await db.select().from(executionStreamEvents).where(eq(executionStreamEvents.executionTaskId,f.submission.executionTaskId));
  expect(events.map(event=>event.chunk.type)).toEqual(["tool-input-available","tool-output-available","text-start","text-delta","text-end","finish"]);
  expect(events[1]?.chunk.output).toMatchObject({kind:"learning.capture"});

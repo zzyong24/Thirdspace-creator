@@ -5,7 +5,7 @@ import { afterAll, beforeAll, expect, it } from "vitest";
 import { createDb, aiConversations, aiMessages, aiTasks, aiTaskResults, executionTasks, executionCalls, executionStreamEvents, eq, sql, type Db } from "@creatoros/backend";
 import { chatWorkerInputSchema } from "@creatoros/contract/execution-worker";
 import { createAiRepository } from "./ai.repository";
-import { createChatTurnSubmissionService } from "./chat-turn-submission.service";
+import { createChatTurnSubmissionService,chatInputDigest } from "./chat-turn-submission.service";
 import { createChatTurnCompletionService } from "./chat-turn-completion.service";
 import { createPersistentTaskService } from "../execution/persistent-task.service";
 import { createExecutionCallLedgerService } from "../execution/execution-call-ledger.service";
@@ -22,12 +22,21 @@ async function fixture(options: {
     finishReason?: string;
     checkpoint?: boolean;
     unknownUsage?: boolean;
+    displayLegacy?:boolean;
 } = {}) {
     const ctx = { userId: "chat-completion-u", accountId: `chat-completion-a-${++sequence}`, requestId: "test", source: "user" as const };
     const repo = createAiRepository(db, { userId: ctx.userId, accountId: ctx.accountId, now, nextId: prefix => `${prefix}-${++sequence}` });
     const conversation = await repo.createConversation({ title: "会话", projectId: null, scope: "global" });
     const source = await repo.createMessage(conversation.id, { role: "user", content: "问题", attachments: [], modelMetadata: {} });
     const submit = await createChatTurnSubmissionService(db, { now, assemble: async () => ({ capability: "copilot.assist", system: "策略", messages: [{ role: "user", content: "问题" }], maxSteps: 6, maxOutputTokens: 128, tools: options.tools ?? [] }) }).submit(ctx, { conversationId: conversation.id, sourceMessageId: source.id });
+    if(options.displayLegacy){
+      // 合成升级前持久输入的形状，仅核兼容；不是安装版历史证据。
+      const [task]=await db.select().from(executionTasks).where(eq(executionTasks.id,submit.executionTaskId));
+      const payload=task!.payload as Record<string,unknown>,modelInput={...payload.modelInput as Record<string,unknown>};delete modelInput.toolOutcomeProjectionVersion;
+      await db.update(executionTasks).set({payload:{...payload,modelInput}}).where(eq(executionTasks.id,submit.executionTaskId));
+      const [business]=await db.select().from(aiTasks).where(eq(aiTasks.id,submit.taskId));
+      await db.update(aiTasks).set({inputData:{...business!.inputData as Record<string,unknown>,modelInputDigest:chatInputDigest(modelInput)}}).where(eq(aiTasks.id,submit.taskId));
+    }
     const tasks = createPersistentTaskService(db, { now }), claim = (await tasks.claimTask({ taskId: submit.executionTaskId, workerId: "worker" }))!;
     const ref = { executionTaskId: submit.executionTaskId, attempt: claim.lease.attempt, fenceToken: claim.lease.fenceToken };
     const [task] = await db.select().from(executionTasks).where(eq(executionTasks.id, submit.executionTaskId));
@@ -200,4 +209,25 @@ it("内部模型不进入最终消息，但真实用量计入整个聊天回合"
  const rows=await f.rows();expect(rows.messages).toHaveLength(2);
  expect(rows.messages[1]).toMatchObject({content:"外层最终回复",inputTokens:8,outputTokens:9});
  expect(JSON.stringify(rows.messages[1]!.parts)).not.toContain("内部内容不可显示");
+});
+
+it.each([false,true])("Pi 展示旧版=%s：公共工具流与完成消息一致，历史读取和完成重放不改写",async displayLegacy=>{
+ for(const status of ["ok","error","blocked","partial"] as const){
+  const tools={"context.projects":{version:"1",parameters:z.object({}).strict(),effect:"none" as const}};
+  const f=await fixture({displayLegacy,checkpoint:false,finishReason:"tool-calls",content:[{type:"tool-call",toolCallId:"real-read",toolName:"context_projects",input:"{}"}],tools:[{name:"context.projects",version:"1",description:"真实读取",parameters:{type:"object"},effect:"none"}]});
+  const ports=createExecutionAgenticToolPorts(db,{now,budget,tools}),tool=await ports.reserve(f.ref,{modelCallId:f.call.callId,toolCallId:"real-read"});await ports.start(f.ref,{callId:tool.callId});
+  const data={kind:"context.projects",items:[],total:0},outcome={status,summary:status==="ok"?"读取完成":"账号权限已变更",evidence:[],data,error:status==="error"||status==="blocked"?{code:"permission" as const,retryable:false,recovery:"重新选择有权限的账号组"}:null,continuation:null,sideEffect:"none" as const};
+  await ports.settle(f.ref,{callId:tool.callId,status:"settled",output:outcome});
+  await createChatToolStreamProjection(db,{now,tools})(f.ref,tool.callId);
+  const last=await f.generation.reserveGenerationCall(f.ref,{operationKey:`${f.frozen.operationKey}/model/2`,request:{maxOutputTokens:128}});await f.ledger.start(f.ref,last.callId);
+  await f.generation.settleGenerationCall(f.ref,{callId:last.callId,status:"settled",usage:{},providerResult:{content:[{type:"text",text:"已核对原操作"}],finishReason:{unified:"stop"},usage:{inputTokens:{total:2},outputTokens:{total:3}},warnings:[]}});
+  await createExecutionCheckpointService(db,{now}).save(f.ref,{expectedRevision:0,expectedLedgerSequence:3,messages:[{role:"assistant",callId:f.call.callId},{role:"tool",callId:tool.callId},{role:"assistant",callId:last.callId}]});
+  const request={lastModelCallId:last.callId,toolCallIds:[tool.callId]},result=await f.service.commitResult(f.ref,request),rows=await f.rows();
+  const part=(rows.messages[1]!.parts as Array<Record<string,unknown>>).find(part=>part.toolCallId==="real-read")!;
+  const events=await db.select().from(executionStreamEvents).where(eq(executionStreamEvents.executionTaskId,f.task.id)).orderBy(executionStreamEvents.sequence);
+  expect(events.find(row=>row.chunk.type==="tool-output-available")?.chunk.output).toEqual(part.output);
+  if(displayLegacy)expect(part.output).toEqual(data);else expect(part.output).toMatchObject({...data,__creatorosOutcome:{callId:tool.callId,status,summary:outcome.summary,error:outcome.error,sideEffect:"none"}});
+  const before=JSON.stringify({rows,events});expect(await f.service.commitResult(f.ref,request)).toEqual(result);
+  expect(JSON.stringify({rows:await f.rows(),events:await db.select().from(executionStreamEvents).where(eq(executionStreamEvents.executionTaskId,f.task.id)).orderBy(executionStreamEvents.sequence)})).toBe(before);
+ }
 });

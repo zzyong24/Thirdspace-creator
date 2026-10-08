@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import type { RequestContext } from "@creatoros/backend";
 import { createSettingsService } from "./settings.service";
 import {
@@ -42,6 +42,60 @@ const NOW = "2026-06-21T00:00:00.000Z";
 // [T-196] no-op 存储迁移 stub —— updateStorage 单测传它,避免真的对 ~/CreatorOS 做
 //   copy/delete(原来直接 import 的 migrateStorageRoot 会动真机 home,搬走用户真实封面 + flaky)。
 const noopMigrate = async () => ({ migrated: 0, skipped: true });
+
+describe('T1074 用户偏好采用比较',()=>{
+ it('普通保存与候选采用共用写端口，候选在取得锁后重读当前值',async()=>{
+  const repo=makeFakeRepo();let unlock!:()=>void,entered!:()=>void;
+  const held=new Promise<void>(resolve=>{unlock=resolve;});
+  const admitted=new Promise<void>(resolve=>{entered=resolve;});
+  let tail=Promise.resolve(),first=true;
+  const lock=vi.fn(async(_c:RequestContext,write:(repo:SettingsRepository)=>Promise<unknown>)=>{
+   const result=tail.then(async()=>{if(first){first=false;entered();await held;}return write(repo);});
+   tail=result.then(()=>undefined,()=>undefined);return result;
+  });
+  const service=createSettingsService(()=>repo,accountReader,accountWriter,undefined,noopMigrate,lock as never);
+  const read=vi.spyOn(repo,'getPreferences');
+  const manual=service.updatePreferences(ctx,{defaultHome:'projects'});await admitted;
+  const candidate=service.patchPreferencesIfUnchanged(ctx,{defaultHome:'dashboard'},{defaultHome:'dashboard'});
+  expect(read).not.toHaveBeenCalled();expect(lock).toHaveBeenCalledTimes(2);
+  unlock();await manual;await expect(candidate).rejects.toThrow('偏好');
+  expect(await service.getPreferences(ctx)).toMatchObject({defaultHome:'projects'});
+ });
+ it('真实偏好repository首次写与采用随外层事务回滚，不留下半次更新',async()=>{
+  const {createDb,sql}=await import('@creatoros/backend');
+  const {createSettingsRepository}=await import('./settings.repository');
+  const {db,client}=await createDb();let n=0;
+  const deps={now:()=>NOW,nextId:(prefix:string)=>`${prefix}-preference-${++n}`};
+  const owner=(store:typeof db)=>createSettingsService(()=>createSettingsRepository(store,deps),accountReader,accountWriter,undefined,noopMigrate,async(c,write)=>store.transaction(async tx=>{
+   await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext('creatoros:preferences'),hashtext(${c.userId}))`);
+   return write(createSettingsRepository(tx as unknown as typeof db,deps));
+  }));
+  try{
+   await expect(db.transaction(async tx=>{await owner(tx as unknown as typeof db).patchPreferencesIfUnchanged(ctx,{defaultHome:'projects'},{defaultHome:'dashboard'});throw Error('回执失败');})).rejects.toThrow('回执失败');
+   expect(await createSettingsRepository(db,deps).getPreferences(ctx)).toBeNull();
+   const current=await owner(db).updatePreferences(ctx,{defaultHome:'projects',autosaveEnabled:true});
+   await expect(db.transaction(async tx=>{await owner(tx as unknown as typeof db).patchPreferencesIfUnchanged(ctx,{autosaveEnabled:false},{autosaveEnabled:current.autosaveEnabled});throw Error('回执失败');})).rejects.toThrow('回执失败');
+   expect(await owner(db).getPreferences(ctx)).toEqual(current);
+  }finally{await client.close();}
+ });
+ it('只比较受改字段，普通保存改变它后拒绝整单覆盖',async()=>{
+  const repo=makeFakeRepo(),lock=async(_c:RequestContext,write:(repo:SettingsRepository)=>Promise<unknown>)=>write(repo);
+  const service=createSettingsService(()=>repo,accountReader,accountWriter,undefined,noopMigrate,lock as never);
+  const before=await service.getPreferences(ctx);
+  await service.updatePreferences(ctx,{defaultHome:'projects'});
+  await expect(service.patchPreferencesIfUnchanged(ctx,{defaultHome:'dashboard',autosaveEnabled:false},{defaultHome:before.defaultHome,autosaveEnabled:before.autosaveEnabled})).rejects.toThrow('偏好');
+  expect(await service.getPreferences(ctx)).toMatchObject({defaultHome:'projects',autosaveEnabled:true});
+  const current=await service.getPreferences(ctx);await service.updatePreferences(ctx,{analyticsEnabled:true});
+  expect(await service.patchPreferencesIfUnchanged(ctx,{autosaveEnabled:false},{autosaveEnabled:current.autosaveEnabled})).toMatchObject({autosaveEnabled:false,analyticsEnabled:true});
+ });
+ it('无偏好行比较原公开默认值；缺少事务锁端口时不写',async()=>{
+  const repo=makeFakeRepo(),locked=createSettingsService(()=>repo,accountReader,accountWriter,undefined,noopMigrate,async(_c,write)=>write(repo));
+  expect(await locked.patchPreferencesIfUnchanged(ctx,{fileNamingRule:'测试-{title}'},{fileNamingRule:'{date}-{title}'})).toMatchObject({fileNamingRule:'测试-{title}'});
+  const plain=createSettingsService(()=>repo,accountReader,accountWriter);
+  await expect(plain.patchPreferencesIfUnchanged(ctx,{autosaveEnabled:false},{autosaveEnabled:true})).rejects.toThrow('锁');
+  expect(repo._pref?.autosaveEnabled).toBe(true);
+ });
+});
 
 // A tiny in-memory fake of the user-scoped repository. It ignores ctx scoping
 // (the integration test covers scoping); it just records state for the mapping
