@@ -24,6 +24,8 @@ import {createPublishingService,createPublishingTransport} from '../../modules/p
 import {createContentCalendarService} from '../../modules/content-calendar';
 import {createIntelligenceService} from '../../modules/intelligence';
 import {createAssetTagProposalService} from '../../modules/taxonomy';
+import {createAssetsTransport,createMockObjectStorage} from '../../modules/assets';
+import {createFixtureAssetsService} from '../../test-fixtures/owner-services';
 import {createChatSystemToolHost} from "../../modules/ai-runtime/chat-system-tool-host";
 import {buildChatTools} from "../../modules/ai-runtime/chat-tools";
 import {prepareChatToolDefinitions} from "../../modules/ai-runtime/chat-tool-definitions";
@@ -62,7 +64,25 @@ it('生产动作组合公开全部19个原owner适配器，而非只在工具目
  const module=await import('./assistant-system-root');
  expect(module).toHaveProperty('createAssistantActionOwners',expect.any(Function));
 });
-async function fixture(group=false,generate=false,options:{parentDeadlineMs?:number;runtimeDelayMs?:number;wakeFailure?:boolean;attachDelayMs?:number;receiptDelayMs?:number;action?:AssistantActionInput;derivedFailure?:boolean;tagAssets?:boolean;workAction?:'script.patch'|'article.save'|'graphic.save';workflowAction?:'publication.prepare'|'calendar.plan'|'account.bind.start';assignedCalendar?:boolean;ownerAction?:'topic.promote'|'radar.collection.create';radarParent?:boolean;beforePromotionCreate?:()=>Promise<void>;currentEditor?:boolean;readKind?:'knowledge.list'|'projects.list'|'artifacts.list'|'artifacts.versions.list'|'candidates.list'|'outputs.publications.list'|'publications.revisions.list'}={}){
+it('功能发现按真实域或完整读取/动作ID精确定位，不把操作ID误报成空目录',async()=>{
+ const f=await fixture(true,false,{action:assistantActionInputSchema.parse({kind:'project.create',title:'中性目录验收'})}),before=await f.state();
+ for(const [id,domain] of [['project','project'],['project.create','project'],['topic.create','project'],['projects.list','project'],['knowledge.create','material'],['assets.search','material'],['calendar.plan','calendar'],['automation.createDraft','calendar'],['scheduledJobs.get','calendar'],['canvas.capabilities','canvas']] as const){
+  const result=await f.root.host.features(f.ctx,{feature:id,offset:0,limit:1},f.frozen) as {rows:Array<{feature:string;reads:string[];actions:string[]}>;total:number;nextOffset:number|null};
+  expect(result.rows.map(row=>row.feature),id).toEqual([domain]);
+  expect(result.total).toBe(1);expect(result.nextOffset).toBeNull();
+ }
+ for(const id of ['project.cre','topic','automation','ASSETS.SEARCH','任意操作','settings.models.put']){
+  const result=await f.root.host.features(f.ctx,{feature:id,offset:0,limit:20},f.frozen) as {rows:unknown[];total:number};
+  expect(result.rows,id).toEqual([]);expect(result.total).toBe(0);
+ }
+ const all=await f.root.host.features(f.ctx,{offset:0,limit:20},f.frozen) as {rows:unknown[];total:number};
+ expect(all.total).toBe(14);expect(all.rows).toHaveLength(14);
+ expect(await f.state()).toEqual(before);
+ const unbound=await fixture(true);
+ const unavailable=await unbound.root.host.features(unbound.ctx,{feature:'project.create',offset:0,limit:20},unbound.frozen) as {rows:unknown[];total:number};
+ expect(unavailable.rows).toEqual([]);expect(unavailable.total).toBe(0);
+});
+async function fixture(group=false,generate=false,options:{parentDeadlineMs?:number;runtimeDelayMs?:number;wakeFailure?:boolean;attachDelayMs?:number;receiptDelayMs?:number;action?:AssistantActionInput;derivedFailure?:boolean;tagAssets?:boolean;observeTags?:boolean;tagObservationRace?:boolean;workAction?:'script.patch'|'article.save'|'graphic.save';workflowAction?:'publication.prepare'|'calendar.plan'|'account.bind.start';assignedCalendar?:boolean;ownerAction?:'topic.promote'|'radar.collection.create';radarParent?:boolean;beforePromotionCreate?:()=>Promise<void>;currentEditor?:boolean;readKind?:'knowledge.list'|'projects.list'|'artifacts.list'|'artifacts.versions.list'|'candidates.list'|'outputs.publications.list'|'publications.revisions.list'}={}){
  let clock=Date.parse(now());const clockNow=()=>new Date(clock).toISOString();
  const wake=vi.fn(async()=>{if(options.wakeFailure)throw Error('提交后唤醒失败');});
 
@@ -74,6 +94,8 @@ async function fixture(group=false,generate=false,options:{parentDeadlineMs?:num
  const creativeRoot=createCreativeCanvasRoot(db,{now:clockNow},{ai:aiFor,assets:()=>({getAsset:failPort,readMediaFile:failPort,readImageReference:failPort,getAssetFileDownloadUrl:failPort}),projects:()=>({getProject:failPort}),resolveCapability:async()=>({provider:'openai',model:'fixture-image'}),assetLimit:{maxCalls:6,maxTokens:1_000_000,deadlineMs:1_800_000},wake,projectCandidate:()=>{throw Error("本夹具不调用素材产物采纳");},assertProposalAdmission:(c,input,tx)=>root.service.assertGenerationAdmission(c,input,tx)});
  const canvas=creativeRoot.service;
  const assetTags=createAssetTagProposalService(db,{now:clockNow,nextId:prefix=>`${prefix}-tag-${++seq}`});
+ const observeTagTargets={prepare:vi.fn(async(c:RequestContext,ids:string[])=>{const targets=await assetTags.prepare(c,ids);if(options.tagObservationRace)await db.update(assets).set({name:'并发改名'}).where(eq(assets.id,ids[0]!));return targets;})};
+ const assetsTransport=createAssetsTransport(()=>createFixtureAssetsService(db,{now:clockNow,nextId:p=>`${p}-asset-read-${++seq}`},async()=>createMockObjectStorage({nextKey:()=> 'unused-read'}),{now:clockNow,nextId:p=>`${p}-asset-read-${++seq}`}));
  let action=options.action;
  if(options.tagAssets){
   const ids=[`asset-B-${++seq}`,`asset_a-${++seq}`];
@@ -148,7 +170,8 @@ async function fixture(group=false,generate=false,options:{parentDeadlineMs?:num
    };const value=Reflect.get(t,key);return typeof value==='function'?value.bind(t):value;}})));
   const value=Reflect.get(target,property);return typeof value==='function'?value.bind(target):value;
  }}):db;
- root=await createAssistantSystemRoot(rootDb,{canvas,...(generate?{generation:{...creativeRoot.generation!,attach:async(...args:Parameters<NonNullable<typeof creativeRoot.generation>['attach']>)=>{const result=await creativeRoot.generation!.attach(...args);clock+=options.attachDelayMs??0;return result;}}}:{}),actions:actualOwners,read:async(c,endpoint,input)=>{
+ root=await createAssistantSystemRoot(rootDb,{canvas,assetTags:observeTagTargets,...(generate?{generation:{...creativeRoot.generation!,attach:async(...args:Parameters<NonNullable<typeof creativeRoot.generation>['attach']>)=>{const result=await creativeRoot.generation!.attach(...args);clock+=options.attachDelayMs??0;return result;}}}:{}),actions:actualOwners,read:async(c,endpoint,input)=>{
+  if(endpoint.id==='assets.get')return z.object({data:z.unknown(),meta:z.unknown().optional()}).parse(await assetsTransport.request(endpoint,{params:input.params,query:input.query,body:undefined} as never,c));
   if(endpoint.id==='canvas.list')return {data:await canvas.list(c)};
   if(endpoint.id==='canvas.get')return {data:await canvas.get(c,(input.params as {canvasId:string}).canvasId)};
   if(endpoint.id==='knowledge.list')return z.object({data:z.unknown(),meta:z.unknown().optional()}).parse(await actionServices(db).writes.knowledge.request(endpoint,{params:input.params,query:input.query,body:undefined} as never,c));
@@ -158,6 +181,13 @@ async function fixture(group=false,generate=false,options:{parentDeadlineMs?:num
    if(endpoint.id==='outputs.publications.list'||endpoint.id==='publications.revisions.list')return z.object({data:z.unknown(),meta:z.unknown().optional()}).parse(await actionServices(db).writes.publishing.request(endpoint,{params:input.params,query:input.query,body:undefined} as never,c));
   throw Error('本例仅验证原画布读取');
  }},{now:clockNow});
+ if(options.observeTags&&action?.kind==='asset.tag'){
+  const before={assets:await db.select().from(assets),tags:await db.select().from(entityTags),results:await db.select().from(aiTaskResults)};
+  const targets=[];
+  for(const target of action.targets){const read=z.object({text:z.string()}).parse(await root.host.read(ctx,assistantReadInputSchema.parse({request:{kind:'assets.get',params:{assetId:target.assetId}}}),{} as never));const dto=JSON.parse(read.text);expect(dto.tagTarget).toEqual(target);targets.push(dto.tagTarget);}
+  expect({assets:await db.select().from(assets),tags:await db.select().from(entityTags),results:await db.select().from(aiTaskResults)}).toEqual(before);
+  action={...action,targets};
+ }
  const existingCanvas=generate?await canvas.createWithDocumentInTransaction(ctx,{title:'生图中性画布',document:{...emptyCanvasDocument,nodes:[{id:'image-node',type:'image_generation',label:'测试画面',prompt:'一只白色纸船在平静水面',mode:'text_to_image',aspectRatio:'1:1',position:{x:10,y:20}}]}},db):null;
  let readInput:AssistantReadInput|undefined;
  if(options.readKind){
@@ -210,7 +240,7 @@ async function fixture(group=false,generate=false,options:{parentDeadlineMs?:num
  const adoption=root.service,client=createClient(ENDPOINTS,root.transport,ctx);
  const state=async()=>({canvases:await canvas.list(ctx),results:await db.select().from(aiTaskResults).where(eq(aiTaskResults.executionCallId,call.callId)),call:(await db.select().from(executionCalls).where(eq(executionCalls.id,call.callId)))[0]!});
  const businessFor=(patch:Partial<Parameters<typeof createAssetBusinessExecutionService>[1]>={})=>createAssetBusinessExecutionService(db,{now:clockNow,budget:{maxCalls:6,maxTokens:1_000_000,deadlineMs:1_800_000},resolveSpec:async()=>({kind:'image',provider:'openai',model:'fixture-image',baseUrl:null,token:'test-only-secret'}),assertProject:failPort,assertCanvasInput:canvas.assertFrozenGenerationInput,...patch});
- return {ctx,canvas,adoption,source,reference,output,host,frozen,client,transport:root.transport,state,call,submitted,existingCanvas,wake,clockNow,advance:(ms:number)=>{clock+=ms;},businessFor,aiFor,root,derivedEffect,afterCommit,actionServices,action,readInput,workflowProjectId,binding,bindingWake,bindingStage};
+ return {ctx,canvas,adoption,source,reference,output,host,frozen,client,transport:root.transport,state,call,submitted,existingCanvas,wake,clockNow,advance:(ms:number)=>{clock+=ms;},businessFor,aiFor,root,derivedEffect,afterCommit,actionServices,action,readInput,workflowProjectId,binding,bindingWake,bindingStage,assetTags,observeTagTargets};
 }
 it.each([false,true])('真实宿主工具→执行账本→公共采用transport，组范围=%s保存完整画布并可读回',async group=>{
  const f=await fixture(group),source=f.reference as Parameters<typeof f.client.adoptCanvasCreate>[0]['body'];
@@ -338,6 +368,31 @@ it('素材ID大小写与下划线按原owner排序，真实来源采用不误报
  expect(adopted).toMatchObject({status:'adopted',operationId:'taxonomy.assetTags.adopt',result:{addedCount:2,assetIds:[expect.stringContaining('asset-B-'),expect.stringContaining('asset_a-')]}});
  const links=await db.select().from(entityTags).where(and(eq(entityTags.userId,f.ctx.userId),eq(entityTags.tagId,(adopted.result as {tagId:string}).tagId)));expect(links).toHaveLength(2);
  expect(await f.client.adoptAssistantAction({params:undefined,query:undefined,body:f.reference as never})).toEqual(adopted);expect((await f.state()).results).toHaveLength(1);
+});
+it('标签观察完整链：原assets.get给模型真实target，原工具候选→公共采纳→读回，同source不重写',async()=>{
+ const f=await fixture(true,false,{tagAssets:true,observeTags:true});
+ const adopted=await f.client.adoptAssistantAction({params:undefined,query:undefined,body:f.reference as never});
+ expect(adopted).toMatchObject({status:'adopted',operationId:'taxonomy.assetTags.adopt',result:{addedCount:2}});
+ const result=adopted.result as {tagId:string;assetIds:string[]};
+ const links=await db.select().from(entityTags).where(and(eq(entityTags.userId,f.ctx.userId),eq(entityTags.tagId,result.tagId),eq(entityTags.entityType,'asset')));
+ expect(links.filter(link=>result.assetIds.includes(link.entityId)).map(link=>link.entityId).sort()).toEqual([...result.assetIds].sort());
+ expect(await f.client.adoptAssistantAction({params:undefined,query:undefined,body:f.reference as never})).toEqual(adopted);
+ const action=f.action!;expect(action.kind).toBe('asset.tag');
+ await expect(f.root.host.propose(f.ctx,{action},f.frozen)).rejects.toThrow('版本');
+});
+it('标签观察拒绝并发素材变化；pending与未装配标签owner仍可正常读且零标签观察',async()=>{
+ const race=await fixture(true,false,{tagAssets:true,tagObservationRace:true});
+ const action=race.action!;if(action.kind!=='asset.tag')throw Error('验收目标必须是原素材标签');
+ await expect(race.root.host.read(race.ctx,assistantReadInputSchema.parse({request:{kind:'assets.get',params:{assetId:action.targets[0]!.assetId}}}),race.frozen)).rejects.toThrow('变化');
+ const f=await fixture(true,false,{tagAssets:true}),tagAction=f.action!;if(tagAction.kind!=='asset.tag')throw Error('验收目标必须是原素材标签');
+ const id=tagAction.targets[0]!.assetId;
+ await db.update(assets).set({status:'pending'}).where(eq(assets.id,id));
+ const pending=z.object({text:z.string()}).parse(await f.root.host.read(f.ctx,assistantReadInputSchema.parse({request:{kind:'assets.get',params:{assetId:id}}}),f.frozen));
+ expect(JSON.parse(pending.text)).toMatchObject({id,status:'pending'});expect(JSON.parse(pending.text)).not.toHaveProperty('tagTarget');expect(f.observeTagTargets.prepare).not.toHaveBeenCalled();
+ const unbound=await fixture(true);await db.insert(assets).values({id:'unbound-tag-'+(++seq),userId:unbound.ctx.userId,groupId:unbound.ctx.groupId,accountId:null,name:'未装配标签素材',assetType:'image',createdAt:now(),updatedAt:now()});
+ const [row]=await db.select().from(assets).where(eq(assets.name,'未装配标签素材'));
+ const ordinary=z.object({text:z.string()}).parse(await unbound.root.host.read(unbound.ctx,assistantReadInputSchema.parse({request:{kind:'assets.get',params:{assetId:row!.id}}}),unbound.frozen));
+ expect(JSON.parse(ordinary.text)).not.toHaveProperty('tagTarget');expect(unbound.observeTagTargets.prepare).not.toHaveBeenCalled();
 });
 it.each([
  {kind:'topic.create',title:'中性选题',angle:'用真实实操说明'},

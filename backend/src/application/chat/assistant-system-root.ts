@@ -39,6 +39,8 @@ export interface AssistantSystemRootPorts {
  /** 调用已审固定原读取合同的应用service port，不收自由path/method或凭据。 */
  read:(ctx:RequestContext,endpoint:typeof assistantReadEndpoints[string],input:{params?:unknown;query?:unknown})=>Promise<{data:unknown;meta?:unknown}>;
  actions:Partial<Record<AssistantActionInput['kind'],AssistantActionOwner>>;
+ /** 只读原标签owner的观察版本；不创建候选、标签或采纳事实。 */
+ assetTags?:Pick<ReturnType<typeof createAssetTagProposalService>,'prepare'>;
  generation?:NonNullable<ReturnType<typeof createCreativeCanvasRoot>['generation']>;
 }
 type ActionServices={
@@ -268,13 +270,15 @@ export async function createAssistantSystemRoot(db:Db,ports:AssistantSystemRootP
  const host:ChatSystemToolPorts={
   async features(_ctx,input,frozen){
    const parsed=assistantFeaturesInputSchema.parse(input),availableTools=frozen.modelInput.tools.map(tool=>({name:tool.name,effect:tool.effect,execution:tool.execution??'host'}));
-   const rows=features.filter(feature=>!parsed.feature||feature.feature===parsed.feature).map(feature=>({
+   const visible=features.map(feature=>({
     feature:feature.feature,title:feature.title,page:feature.page,
     reads:Object.keys(assistantReadEndpoints).filter(id=>feature.reads.some(prefix=>id.startsWith(prefix))),
     actions:feature.actions.filter(kind=>Object.hasOwn(ports.actions,kind)),
     tools:availableTools.filter(tool=>tool.name.startsWith(feature.feature==='canvas'?'canvas.':feature.feature==='video'?'work.editor.':'system.')),
     prerequisites:feature.feature==='canvas'?'新建可在任何页提出；修改与生成先打开并读取已保存画布':feature.feature==='video'?'打开已导入真实录像的项目视频，读取选区、时间轴与转写后精调':'读取当前账号组真实对象和版本；正式写入需用户采用',
    }));
+   // SEMANTIC_BOUNDARY_ALLOW:只按固定域或已开放完整read/action ID查目录身份；不做别名、前缀或内容语义匹配，不扩大执行权限。
+   const rows=visible.filter(row=>!parsed.feature||row.feature===parsed.feature||row.reads.includes(parsed.feature)||row.actions.some(kind=>kind===parsed.feature));
    const page=rows.slice(parsed.offset,parsed.offset+parsed.limit);return {rows:page,total:rows.length,nextOffset:parsed.offset+page.length<rows.length?parsed.offset+page.length:null};
   },
   async read(ctx,input){
@@ -282,6 +286,21 @@ export async function createAssistantSystemRoot(db:Db,ports:AssistantSystemRootP
    const endpoint=assistantReadEndpoints[request.kind];if(!endpoint)throw new ConflictError('读取操作不在已审固定目录');
    const response=await ports.read(ctx,endpoint,{...(request.params?{params:request.params}:{}),...(request.query?{query:request.query}:{})});
    let data=response.data,readMeta=response.meta??null,total:number|null=null,nextOffset:number|null=null,nextInput:typeof parsed|null=null;
+   if(request.kind==='assets.get'&&ports.actions['asset.tag']&&ports.assetTags){
+    // 只核本适配消费的身份/状态；保留原owner DTO与合法无文件素材的读取行为。
+    const asset=z.object({id:z.string().min(1),status:z.enum(['active','archived','deleted','pending'])}).passthrough().parse(data);
+    if(asset.status==='active'){
+     const assetId=(request.params as {assetId:string}).assetId;
+     if(asset.id!==assetId)throw new ConflictError('素材读取目标与真实素材不同');
+     const targets=await ports.assetTags.prepare(ctx,[assetId]);
+     const current=await ports.read(ctx,endpoint,{params:request.params});
+     // SEMANTIC_BOUNDARY_ALLOW:比较同一真实DTO观察，防并发字段变化；不判断素材内容或标签语义。
+     if(!isDeepStrictEqual(response.data,current.data))throw new ConflictError('素材在观察期间发生变化，请读取原素材后再提出候选');
+     const [tagTarget]=targets;
+     if(targets.length!==1||tagTarget?.assetId!==assetId||!tagTarget.expectedVersion)throw new ConflictError('原标签观察目标无效');
+     data={...asset,tagTarget};
+    }
+   }
    if(endpoint.isList&&Array.isArray(data)){
     const query=(request.query??{}) as Record<string,unknown>,meta=(response.meta??{}) as Record<string,unknown>;
     const pageSize=typeof query.pageSize==='number'?query.pageSize:typeof query.limit==='number'?query.limit:parsed.limit;

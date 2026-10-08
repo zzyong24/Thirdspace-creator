@@ -6668,7 +6668,7 @@ FAVORITES_PROMOTE_PER_RUN
       if(action.kind==="knowledge.create")await knowledgeSearchRuntime.indexKnowledgeDocumentBestEffort(c,(result as {id:string}).id);
     },
   });
-  assistantSystemRoot=await createAssistantSystemRoot(db,{canvas:creativeCanvasRoot.service,generation:creativeCanvasRoot.generation,actions:assistantActions,
+  assistantSystemRoot=await createAssistantSystemRoot(db,{canvas:creativeCanvasRoot.service,generation:creativeCanvasRoot.generation,actions:assistantActions,assetTags:assetTagProposalAdoption,
     read:async(c,endpoint,input)=>await compositeTransport.request(endpoint,{params:input.params,query:input.query,body:undefined} as never,c) as {data:unknown;meta?:unknown},
   },deps);
   const chatRuntime: ChatRuntime = {

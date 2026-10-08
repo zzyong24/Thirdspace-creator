@@ -576,7 +576,9 @@
     "后端类型仍有两个未改旧测试错误",
     "全局边界与timeout-policy仍红",
     "私有组件夹具不代签真实模型或安装版",
-    "当前本地包已生成并安装；原生可见首页待用户反馈，未代签全功能验收"
+    "当前本地包已生成并安装；原生可见首页待用户反馈，未代签全功能验收",
+    "本轮60次公共读不等于原生页签性能；新视频字节持久化不等于编辑器Tab素材保留。",
+    "T1075源码已修两个真实安装缺陷，新包原任务恢复尚未执行；生成图未确认或放画布。"
   ],
   "coreImplementationReview": {
     "verdict": "PASS",
@@ -770,5 +772,57 @@
     "sha256": "513bf0ed2132ae3ea6e8a21e6fa4e59bcf825990286875df41cc7a57f0674817",
     "bytes": 34458,
     "verdict": "PASS_BOUNDED_EVIDENCE"
+  },
+  "fullFunctionalInstalled20261008": {
+    "index": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1074-installed/full-functional-20261008-index.json",
+    "indexSHA256": "6826fb4f49e1faf3d46398612f186c9bc23d0fb072469ad94e44e0b1615918a3",
+    "catalogOperationCount": 409,
+    "stableReadRequests": 60,
+    "stableReadSucceeded": 60,
+    "latencySource": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1074-installed/full-stability-public-read-summary.json",
+    "readEmptyProfile": "positioning.profile.get404与pages.positioning.get真实空状态均保留",
+    "realPiAdoptedProject": "project-b64dd921-376",
+    "realPiAdoptedKnowledge": "knowledge-b64dd921-416",
+    "knowledgeRevisionBodyVerified": true,
+    "projectReceiptReplayIdentical": true,
+    "oldCanvasSourceReplayPreservedRevision2": true,
+    "cancelledTask": "ai-task-b64dd921-422",
+    "cancelTerminalVerified": true,
+    "crossGroupObjectRejects": 5,
+    "neutralVideoUpload": {
+      "assetId": "asset-b64dd921-239",
+      "bytes": 50087218,
+      "uploadHTTP200Seconds": 0.4375,
+      "completeCLIRoundTripSeconds": 3.238245,
+      "persistedBytesChecksumMatches": true,
+      "projectLinkVerified": true,
+      "nativeEditorImportTabPersistence": "PENDING"
+    },
+    "realImageGenerated": {
+      "taskId": "ai-task-b64dd921-401",
+      "attemptId": "t1074-image-neutral-74883948-20261008",
+      "linkId": "70806005-4bf7-4170-b87b-4d1a04324727",
+      "bytes": 1824488,
+      "sha256": "0ccdb849e106162ef260901f93da5904872a3680417b075c42202027bf54374f",
+      "dimensions": [
+        1024,
+        1024
+      ],
+      "fullDecodeVerified": true,
+      "visualInspected": true,
+      "phase": "pending",
+      "proofStatusInstalled": "unverifiable",
+      "confirmed": false,
+      "placedOnCanvas": false,
+      "regenerationSubmitted": false
+    },
+    "actualInstalledFailures": [
+      "task234功能目录10次operationID过滤误判空，虽有项目候选仍未完成所有请求",
+      "task391 asset.tag两次猜expectedVersion后失败",
+      "task401纯组NULL执行来源证明误拒"
+    ],
+    "sourceFixTask": "T-1075",
+    "sourceFixNotInstalled": true,
+    "nativeTwoEnginesFullMatrix": "PENDING"
   }
 }

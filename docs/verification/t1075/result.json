@@ -1,0 +1,343 @@
+{
+  "taskId": "T-1075",
+  "status": "SOURCE_FIXED_INSTALLATION_PENDING",
+  "specReview": "PASS[REV:73a6052db08f]",
+  "sourceHashes": {
+    "backend/src/application/chat/assistant-system-root.ts": "18277ec922b395397022d01d6a35545cfcddee87abc5e8ab49890a4bba0b2386",
+    "backend/src/application/chat/assistant-system-root.integration.test.ts": "1a66279c05a6506f185a01160b001a73106b7a8066b1997835495fb9a56a98f9",
+    "backend/src/modules/ai-runtime/assistant-functional-prompt.ts": "eb976cf90c7d93c25ef8506113114c89b4fa867839292436df9e82fe65e708bf",
+    "backend/src/modules/ai-runtime/assistant-functional-prompt.test.ts": "0a80e854f37c83ea37e6cfb4c6bd1f99b1c471cd356b095c816a4398a051592e",
+    "frontend/src/server/persistence-client.ts": "fd77fece7398b7c6318c7b8275c57c3cc6966c802dbd86440f25a158ff628c6d",
+    "backend/src/modules/ai/execution-candidate.service.ts": "bb669b03cd66ea582e57a60c387dc73a91d97e28189885a488c38b361c918784",
+    "backend/src/modules/creative-canvas/creative-canvas-result-proof.test.ts": "9b0b2e7e6d5cb295b309a0b9e89a58c1008b29d96549fbbba9f92ae4d2e77a70",
+    "backend/src/modules/creative-canvas/creative-canvas-material-selector.test.ts": "4796cd15774df4f1a1a48b36ddd1e412f75b3f9afd425fe31de1adedd261898e"
+  },
+  "tests": [
+    {
+      "name": "t1075-observation-red",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "backend/src/application/chat/assistant-system-root.integration.test.ts",
+        "backend/src/modules/creative-canvas/creative-canvas-result-proof.test.ts",
+        "backend/src/modules/creative-canvas/creative-canvas-material-selector.test.ts",
+        "backend/src/modules/ai-runtime/assistant-functional-prompt.test.ts",
+        "--testNamePattern",
+        "标签观察|纯组|素材标签版本",
+        "--testTimeout",
+        "180000"
+      ],
+      "exitCode": 254,
+      "startUTC": "2026-10-08T04:51:22.531040+00:00",
+      "endUTC": "2026-10-08T04:51:22.788351+00:00",
+      "logSHA256": "98bb9c43567b6fc10e95ef62af360f83a4a555098e4d5c4f79f95e728e1a8724"
+    },
+    {
+      "name": "t1075-observation-red-public-chain",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@creatoros/backend",
+        "exec",
+        "vitest",
+        "run",
+        "src/application/chat/assistant-system-root.integration.test.ts",
+        "src/modules/creative-canvas/creative-canvas-result-proof.test.ts",
+        "src/modules/creative-canvas/creative-canvas-material-selector.test.ts",
+        "src/modules/ai-runtime/assistant-functional-prompt.test.ts",
+        "-t",
+        "标签观察|纯组|素材标签版本",
+        "--testTimeout",
+        "180000"
+      ],
+      "exitCode": 1,
+      "startUTC": "2026-10-08T04:51:35.403942+00:00",
+      "endUTC": "2026-10-08T04:51:44.301277+00:00",
+      "logSHA256": "6df8dcc4c2d830c84b3db64757e577db32af1fe1c5ccddd93081d7884fa48d29"
+    },
+    {
+      "name": "t1075-observation-green-public-chain",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@creatoros/backend",
+        "exec",
+        "vitest",
+        "run",
+        "src/application/chat/assistant-system-root.integration.test.ts",
+        "src/modules/creative-canvas/creative-canvas-result-proof.test.ts",
+        "src/modules/creative-canvas/creative-canvas-material-selector.test.ts",
+        "src/modules/ai-runtime/assistant-functional-prompt.test.ts",
+        "-t",
+        "标签观察|纯组|素材标签版本",
+        "--testTimeout",
+        "180000"
+      ],
+      "exitCode": 1,
+      "startUTC": "2026-10-08T04:52:12.469409+00:00",
+      "endUTC": "2026-10-08T04:52:20.622974+00:00",
+      "logSHA256": "9f73a1674db106cfd531f379af7e06ba637d0c88c4f2e1f7638103877d8cc437"
+    },
+    {
+      "name": "t1075-observation-green-headless-preserved",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@creatoros/backend",
+        "exec",
+        "vitest",
+        "run",
+        "src/application/chat/assistant-system-root.integration.test.ts",
+        "src/modules/creative-canvas/creative-canvas-result-proof.test.ts",
+        "src/modules/creative-canvas/creative-canvas-material-selector.test.ts",
+        "src/modules/ai-runtime/assistant-functional-prompt.test.ts",
+        "-t",
+        "标签观察|纯组|素材标签版本",
+        "--testTimeout",
+        "180000"
+      ],
+      "exitCode": 0,
+      "startUTC": "2026-10-08T04:52:48.693424+00:00",
+      "endUTC": "2026-10-08T04:52:57.585204+00:00",
+      "logSHA256": "4fef6d2e338afe4b45369c022c5c9fe2a0934d6bb95c20d896785f0bec11658d"
+    },
+    {
+      "name": "t1075-full-owner-regression",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@creatoros/backend",
+        "exec",
+        "vitest",
+        "run",
+        "src/application/chat/assistant-system-root.integration.test.ts",
+        "src/modules/creative-canvas/creative-canvas-result-proof.test.ts",
+        "src/modules/creative-canvas/creative-canvas-material-selector.test.ts",
+        "src/modules/ai/execution-candidate.test.ts",
+        "src/modules/ai-runtime/assistant-functional-prompt.test.ts",
+        "--testTimeout",
+        "180000"
+      ],
+      "exitCode": 1,
+      "startUTC": "2026-10-08T04:53:11.957385+00:00",
+      "endUTC": "2026-10-08T04:53:38.056681+00:00",
+      "logSHA256": "7a677eaba8e6b1de5b320826ad53ce6d40d6ba4ca100e2b2e8835af04f21c2a2"
+    },
+    {
+      "name": "t1075-full-owner-regression-scoped",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@creatoros/backend",
+        "exec",
+        "vitest",
+        "run",
+        "src/application/chat/assistant-system-root.integration.test.ts",
+        "src/modules/creative-canvas/creative-canvas-result-proof.test.ts",
+        "src/modules/creative-canvas/creative-canvas-material-selector.test.ts",
+        "src/modules/ai/execution-candidate.service.test.ts",
+        "src/modules/ai-runtime/assistant-functional-prompt.test.ts",
+        "--testTimeout",
+        "180000"
+      ],
+      "exitCode": 0,
+      "startUTC": "2026-10-08T04:54:22.504805+00:00",
+      "endUTC": "2026-10-08T04:54:50.997804+00:00",
+      "logSHA256": "29bbf22a4b7570a3550b9504a0cdba0e06c83cecbe498bd772d667d4f0d6f01b"
+    },
+    {
+      "name": "t1075-owner-regression-final-typed",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@creatoros/backend",
+        "exec",
+        "vitest",
+        "run",
+        "src/application/chat/assistant-system-root.integration.test.ts",
+        "src/modules/creative-canvas/creative-canvas-result-proof.test.ts",
+        "src/modules/creative-canvas/creative-canvas-material-selector.test.ts",
+        "src/modules/ai/execution-candidate.service.test.ts",
+        "src/modules/ai-runtime/assistant-functional-prompt.test.ts",
+        "--testTimeout",
+        "180000"
+      ],
+      "exitCode": 0,
+      "startUTC": "2026-10-08T04:55:30.162979+00:00",
+      "endUTC": "2026-10-08T04:55:58.192893+00:00",
+      "logSHA256": "bc18ed5ec8daea42b643e698ebf4db4777d1846501876d197ce19b21c1267e76"
+    },
+    {
+      "name": "t1075-full-owner-real-pg",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@creatoros/backend",
+        "exec",
+        "vitest",
+        "run",
+        "src/application/chat/assistant-system-root.integration.test.ts",
+        "src/modules/creative-canvas/creative-canvas-result-proof.test.ts",
+        "src/modules/creative-canvas/creative-canvas-material-selector.test.ts",
+        "src/modules/ai/execution-candidate.service.test.ts",
+        "src/modules/ai-runtime/assistant-functional-prompt.test.ts",
+        "--testTimeout",
+        "180000"
+      ],
+      "exitCode": 0,
+      "startUTC": "2026-10-08T04:56:24.622576+00:00",
+      "endUTC": "2026-10-08T04:56:46.891156+00:00",
+      "logSHA256": "b9a742a4e06199069cb3f14d98571480e6a8222bcb5537ba3f795786f30d55d7"
+    },
+    {
+      "name": "t1075-contract-typecheck",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@creatoros/contract",
+        "typecheck"
+      ],
+      "exitCode": 0,
+      "startUTC": "2026-10-08T04:53:38.984086+00:00",
+      "endUTC": "2026-10-08T04:53:42.530368+00:00",
+      "logSHA256": "d819a6e1f78b2951433132e182dffbbd1eaa881e6c535db02871314377997331"
+    },
+    {
+      "name": "t1075-backend-typecheck",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@creatoros/backend",
+        "typecheck"
+      ],
+      "exitCode": 2,
+      "startUTC": "2026-10-08T04:53:38.988110+00:00",
+      "endUTC": "2026-10-08T04:54:13.445675+00:00",
+      "logSHA256": "1d2436f606341f4b97459a0b94a2f1a13bc4e38dd209c188600c0a7c7ef54d5d"
+    },
+    {
+      "name": "t1075-backend-typecheck-fixture-corrected",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@creatoros/backend",
+        "typecheck"
+      ],
+      "exitCode": 2,
+      "startUTC": "2026-10-08T04:55:15.846549+00:00",
+      "endUTC": "2026-10-08T04:55:51.248496+00:00",
+      "logSHA256": "2a66e93c4a02b999e2e6360a16084c5d412f5645c4e1cd69a0bc3883c0aa5e04"
+    },
+    {
+      "name": "t1075-frontend-typecheck",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@creatoros/frontend",
+        "typecheck"
+      ],
+      "exitCode": 0,
+      "startUTC": "2026-10-08T04:53:38.987917+00:00",
+      "endUTC": "2026-10-08T04:53:39.218478+00:00",
+      "logSHA256": "d7fd7b0585ed90a57d03cda9c40c83b3e7478814f2ebe444fc66ca13baa3d9f3"
+    },
+    {
+      "name": "t1075-frontend-actual-tsc",
+      "argv": [
+        "pnpm",
+        "-C",
+        "frontend",
+        "exec",
+        "tsc",
+        "--noEmit"
+      ],
+      "exitCode": 0,
+      "startUTC": "2026-10-08T04:53:52.502198+00:00",
+      "endUTC": "2026-10-08T04:54:32.257907+00:00",
+      "logSHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "t1075-boundary",
+      "argv": [
+        "node",
+        "orchestrator/process/boundary-scan.mjs"
+      ],
+      "exitCode": 1,
+      "startUTC": "2026-10-08T04:53:53.757818+00:00",
+      "endUTC": "2026-10-08T04:53:54.097077+00:00",
+      "logSHA256": "6b23ce459cd49f9f78d9a4185f9bceaa53c27b96d14e64f2fdf1a0422b6e6985"
+    },
+    {
+      "name": "t1075-semantic",
+      "argv": [
+        "node",
+        "orchestrator/process/semantic-boundary-scan.mjs"
+      ],
+      "exitCode": 1,
+      "startUTC": "2026-10-08T04:53:53.750119+00:00",
+      "endUTC": "2026-10-08T04:53:54.020065+00:00",
+      "logSHA256": "7cbfa9443346edf9491b83ddb83b954cb1f8df6829a641b2362813753644e2f7"
+    },
+    {
+      "name": "t1075-timeout",
+      "argv": [
+        "node",
+        "tools/timeout-policy/verify.mjs"
+      ],
+      "exitCode": 1,
+      "startUTC": "2026-10-08T04:53:53.750119+00:00",
+      "endUTC": "2026-10-08T04:53:53.853082+00:00",
+      "logSHA256": "9ba8029f31e215297c3e8e6aa03c0f61cf3c58c079380fdb5ab9749a9c6bed38"
+    }
+  ],
+  "finalFocusedTests": {
+    "files": 5,
+    "passed": 87,
+    "skipped": 0,
+    "realPostgresOriginalTwoConnectionRacesIncluded": true,
+    "privateFixtureStartStopExit": 0,
+    "userDatabaseTouched": false
+  },
+  "honestFailureHistory": {
+    "firstTestCommand": "root pnpm exec vitest无命令，exit254；真实RED另留",
+    "realRed": "5真实失败1pass",
+    "firstGreen": "窄适配新增完整DTO重验误拒合法无文件素材，已仅校消费字段并保留原完整DTO比较",
+    "fullRegressionFixture": "同用户同名标签跨用例读回漏assetIds，已按本例真实IDs限制；不改原owner",
+    "firstFullRegressionMissingSuite": "错误execution-candidate.test路径不计入覆盖，最终用真实.service.test纳入",
+    "newTestTypes": "真实schema输出default/泛型回值错误已修",
+    "frontendNoop": "@creatoros/frontend无匹配虽exit0不算PASS，真实-C frontend tsc已通过"
+  },
+  "installedFailureTaskIds": [
+    "ai-task-b64dd921-391",
+    "ai-task-b64dd921-401"
+  ],
+  "originalGeneratedImageRetained": true,
+  "paidRegenerationSubmitted": false,
+  "installedSourceStillOld": "74883948432b87f73ea464fb029bf2f5554ac47f",
+  "independentImplementationReview": {
+    "verdict": "PASS_SOURCE_ONLY",
+    "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1074-installed/t1075-implementation-independent-review.json",
+    "sha256": "f4d108eb3cf9b9a64442035ac67406cac8965c764719b8a5b893f43801090b4b",
+    "sourceHashes": {
+      "backend/src/application/chat/assistant-system-root.ts": "18277ec922b395397022d01d6a35545cfcddee87abc5e8ab49890a4bba0b2386",
+      "backend/src/application/chat/assistant-system-root.integration.test.ts": "1a66279c05a6506f185a01160b001a73106b7a8066b1997835495fb9a56a98f9",
+      "backend/src/modules/ai-runtime/assistant-functional-prompt.ts": "eb976cf90c7d93c25ef8506113114c89b4fa867839292436df9e82fe65e708bf",
+      "backend/src/modules/ai-runtime/assistant-functional-prompt.test.ts": "0a80e854f37c83ea37e6cfb4c6bd1f99b1c471cd356b095c816a4398a051592e",
+      "frontend/src/server/persistence-client.ts": "fd77fece7398b7c6318c7b8275c57c3cc6966c802dbd86440f25a158ff628c6d",
+      "backend/src/modules/ai/execution-candidate.service.ts": "bb669b03cd66ea582e57a60c387dc73a91d97e28189885a488c38b361c918784",
+      "backend/src/modules/creative-canvas/creative-canvas-result-proof.test.ts": "9b0b2e7e6d5cb295b309a0b9e89a58c1008b29d96549fbbba9f92ae4d2e77a70",
+      "backend/src/modules/creative-canvas/creative-canvas-material-selector.test.ts": "4796cd15774df4f1a1a48b36ddd1e412f75b3f9afd425fe31de1adedd261898e"
+    },
+    "openFindings": 0,
+    "limits": "原8路径源码与真实隔离链；安装、模型、原生界面和全矩阵未代签"
+  },
+  "wholeGoalComplete": false,
+  "limitations": [
+    "源码修复尚未安装；原401精确证明与采纳/放置待验。",
+    "标签真实Pi新候选/正式采纳待新包。",
+    "全系统两引擎原生界面、视频调整及页签切换矩阵未签。",
+    "后端原2测试类型错误、boundary7、semantic原1、timeout入口缺失及全局旧37errors/1warning不伪绿。"
+  ]
+}

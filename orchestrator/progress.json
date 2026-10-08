@@ -4,10 +4,10 @@
     "work_branch": "main"
   },
   "summary": {
-    "verticals": 65,
+    "verticals": 66,
     "tasks_done": 45,
-    "tasks_total": 162,
-    "tasks_pending": 117,
+    "tasks_total": 163,
+    "tasks_pending": 118,
     "verticals_complete": 4
   },
   "verticals": [
@@ -149,7 +149,11 @@
         "backend/src/modules/intelligence/intelligence.service.ts",
         "backend/src/modules/intelligence/intelligence.service.test.ts",
         "docs/verification/t1074/spec-review-nine-consumers.json",
-        "docs/verification/t1074/complexity-source-pre-supplement.json"
+        "docs/verification/t1074/complexity-source-pre-supplement.json",
+        "docs/verification/t1074/nine-consumers-implementation-review.json",
+        "docs/verification/t1074/nine-consumers-implementation-review.md",
+        "docs/verification/t1074/core-implementation-review.json",
+        "docs/verification/t1074/core-implementation-review.md"
       ],
       "read_set": [
         "docs/features/t1074-ai-system-operations.md",
@@ -5185,6 +5189,49 @@
       "step_read_set": {},
       "step_exclusive_resources": {},
       "commits": {}
+    },
+    {
+      "id": "T-1075",
+      "archetype": [
+        "orchestration"
+      ],
+      "task_id": "T-1075",
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "backend/src/application/chat/assistant-system-root.ts",
+        "backend/src/application/chat/assistant-system-root.integration.test.ts",
+        "backend/src/modules/ai-runtime/assistant-functional-prompt.ts",
+        "backend/src/modules/ai-runtime/assistant-functional-prompt.test.ts",
+        "frontend/src/server/persistence-client.ts",
+        "backend/src/modules/ai/execution-candidate.service.ts",
+        "backend/src/modules/creative-canvas/creative-canvas-result-proof.test.ts",
+        "backend/src/modules/creative-canvas/creative-canvas-material-selector.test.ts",
+        "docs/verification/t1075/CURRENT_VALIDATION.md",
+        "docs/verification/t1075/result.json"
+      ],
+      "read_set": [
+        "docs/features/t1075-installed-ai-observation-gaps.md",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "PROJECT_CONTEXT.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "backend/src/**",
+        "contract/src/**",
+        "frontend/src/server/persistence-client.ts"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
     }
   ],
   "leases": {
@@ -5195,6 +5242,10 @@
     "T-1074:implementation": {
       "agent": "/root",
       "since": "2026-10-08T02:39:53.690Z"
+    },
+    "T-1075:implementation": {
+      "agent": "/root",
+      "since": "2026-10-08T04:46:09.159Z"
     }
   }
 }

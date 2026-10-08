@@ -4,7 +4,7 @@ import type {AITaskResource,AITaskResultResource} from "./ai.schema";
 import {readCoverImageBinding} from "../execution/cover-execution-binding";
 import {verifyGeneratedAssetCandidate} from "../assets";
 import {bindAssetExecution} from "../execution/asset-execution-binding";
-import { and, eq, desc, aiTasks, aiTaskResults, aiTaskSteps, executionCalls, executionTasks, type Db } from "@creatoros/backend";
+import { and, eq, isNull, desc, aiTasks, aiTaskResults, aiTaskSteps, executionCalls, executionTasks, type Db } from "@creatoros/backend";
 import { workerStructuredResultSchema, workerPortInputSchemas,workerProviderReceiptSchema,structuredGenerationInputSchema, type WorkerStructuredResult, type ExecutionRef } from "@creatoros/contract/execution-worker";
 import type { RequestContext } from "@creatoros/contract";
 import { createExecutionLeaseService } from "../execution/execution-lease.service";
@@ -34,7 +34,7 @@ export function createExecutionCandidateService(db:Db,deps:ExecutionCandidateDep
           const original=await deps.committedAssets!.aiFor(tx).getAssetResultProof(context,input);
           const business=original.task,result=original.result;
           if(business.taskType!=="asset.generate" || business.id!==input.taskId || result.id!==input.resultId || result.aiTaskId!==business.id || result.resultType!=="generated_asset" || !original.executionCallId || !business.executionTaskId || !["awaiting_confirmation","succeeded"].includes(business.status))throw new ConflictError("原素材候选证明不完整");
-          const [task]=await tx.select().from(executionTasks).where(and(eq(executionTasks.id,business.executionTaskId),eq(executionTasks.userId,context.userId),eq(executionTasks.accountId,context.accountId??"")));
+          const [task]=await tx.select().from(executionTasks).where(and(eq(executionTasks.id,business.executionTaskId),eq(executionTasks.userId,context.userId),workspaceFilter(executionTasks,context),context.accountId===null||context.accountId===undefined?isNull(executionTasks.accountId):eq(executionTasks.accountId,context.accountId)));
           if(!task || task.ownerId!==business.id || task.kind!=="ai_task" || task.ownerType!=="ai_task" || !["succeeded","partial"].includes(task.status))throw new ConflictError("原素材执行证明不完整");
           const binding=await bindAssetExecution({tx:transaction,task,context},original.executionCallId);
           const call=binding.call!;

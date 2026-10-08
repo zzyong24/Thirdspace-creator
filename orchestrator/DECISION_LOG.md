@@ -3721,3 +3721,13 @@ Nonce: 0173eddf-4313-46d0-bda5-c0819d7ba8d1
 Owner: user
 Status: active
 ```
+
+## DEC-AI-1075（2026-10-08）：安装全功能验收发现的两项原观察缺口
+
+- 用户依据：用户要求“全面测试和优化AI助手…有gap及时支持”及本轮“全功能可用性稳定性验证”；沿既有当前用户/安装版中性验收授权执行。
+- 精确范围：[T-1075 SPEC](../docs/features/t1075-installed-ai-observation-gaps.md)，独立前置PASS[REV:73a6052db08f]，仅8路径。原401生图任务保持pending与原task/attempt/link，不重新付费生成；原391标签版本猜测失败保留。
+- 选择：system.read的assets.get补原owner真实tagTarget并前后DTO核一致；原生成证明查询纠正NULL账号并保留组/user/account及所有来源/文件验证。原public assets.get合同、工具schema/版本、凭据、原生执行及调度不改。
+- 执行：主root串行；与T1074同文件的目录/方法变更分开记录，不增加独立writer。原persistence-client既有credential_store/language_toolchain/native_executable只复用，不扩凭据/宿主机制，按当前源SHA记录预算并在实现后独评重绑。
+- 验收：真实RED/GREEN、公有owner/selector与标签回读，独立实施复核；新包前原备份/签名/镜像守卫。SOURCE通过不代签安装或全功能，全局旧红如实保留。
+
+DEC-AI-1075 实施证据补充（2026-10-08）：独立源码PASS报告f4d108eb3cf9b9a64442035ac67406cac8965c764719b8a5b893f43801090b4b，8精确路径实际SHA复核；原私有PG全链87通过无跳过。仅原标签owner prepare注入，persistence当前SHA fd77fece7398b7c6318c7b8275c57c3cc6966c802dbd86440f25a158ff628c6d，原复杂度项重绑且历史条目保留。当前安装仍74883948，原401恢复/标签真实Pi/原生与两引擎未签，任务不完成。

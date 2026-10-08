@@ -4569,6 +4569,51 @@
         ]
       },
       "scope_note": "完整SPEC b6dc7eb70c7768e989b452865b0abad8d9ec42ebc33882b0f41294ede300ce36 独立PASS[REV:a53e25bf48df]；四前端窄修及四测试，保留错误/刷新/归属/普通稿面；不改后台调度或数据库。"
+    },
+    "T-1075": {
+      "task_id": "T-1075",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1075-installed-ai-observation-gaps.md",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "PROJECT_CONTEXT.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "backend/src/**",
+        "contract/src/**",
+        "frontend/src/server/persistence-client.ts"
+      ],
+      "write_set": [
+        "backend/src/application/chat/assistant-system-root.ts",
+        "backend/src/application/chat/assistant-system-root.integration.test.ts",
+        "backend/src/modules/ai-runtime/assistant-functional-prompt.ts",
+        "backend/src/modules/ai-runtime/assistant-functional-prompt.test.ts",
+        "frontend/src/server/persistence-client.ts",
+        "backend/src/modules/ai/execution-candidate.service.ts",
+        "backend/src/modules/creative-canvas/creative-canvas-result-proof.test.ts",
+        "backend/src/modules/creative-canvas/creative-canvas-material-selector.test.ts",
+        "docs/verification/t1075/CURRENT_VALIDATION.md",
+        "docs/verification/t1075/result.json"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "git diff --check",
+          "pnpm --filter @creatoros/backend exec vitest run --testTimeout 180000 src/application/chat/assistant-system-root.integration.test.ts src/modules/ai-runtime/assistant-functional-prompt.test.ts src/modules/ai/execution-candidate.service.test.ts src/modules/creative-canvas/creative-canvas-result-proof.test.ts src/modules/creative-canvas/creative-canvas-material-selector.test.ts",
+          "pnpm --filter @creatoros/contract typecheck",
+          "pnpm --filter @creatoros/backend typecheck",
+          "pnpm --filter creatoros-frontend typecheck",
+          "node orchestrator/process/boundary-scan.mjs",
+          "node orchestrator/process/semantic-boundary-scan.mjs",
+          "node tools/timeout-policy/verify.mjs"
+        ]
+      },
+      "scope_note": "PASS[REV:73a6052db08f]先准入8精确路径；全功能安装验证新证据391缺标签观察/401纯组NULL误拒。根唯一串行writer，与T1074同文件改动分开绑定；原owner/出处/精确文件/版本/无重发/旧pending保留。仅源码修复不完成安装目标，旧全局欠债不伪绿。"
     }
   }
 }

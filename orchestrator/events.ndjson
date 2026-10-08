@@ -1152,3 +1152,4 @@
 {"ts":"2026-10-07T16:32:25.072Z","actor":"taskctl","action":"start","task":"T-1072","sha_before":"5ed83844e700","sha_after":"3e11379caa97"}
 {"ts":"2026-10-07T16:49:28.419Z","actor":"taskctl","action":"start","task":"T-1074","sha_before":"6d1f54be85ed","sha_after":"ab5a0749590e"}
 {"ts":"2026-10-07T20:37:55.605Z","actor":"taskctl","action":"complete","task":"T-1072","evidence":"4eedd433真实CreatorOS提交0/Git Trace钩子0且无失效提示；同38例RED35→GREEN38及官方Lefthook2.1.4成功/失败/参数回读/共享钩子保留；独评PASS；pmem0/reconcile1原37错误1告警完整SHA与T1071相同，T1018/T1015既有债务保留，见docs/verification/t1072/result.json；非UI独立环境维修完成，未改客户端/未push发布","sha_before":"ab5a0749590e","sha_after":"f1cc25d7fbb4"}
+{"ts":"2026-10-08T04:45:06.094Z","actor":"taskctl","action":"start","task":"T-1075","sha_before":"372451759a6a","sha_after":"71d68ecb1b0f"}
