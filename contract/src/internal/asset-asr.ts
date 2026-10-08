@@ -1,4 +1,4 @@
-import {assetAsrPcmMappingReceipt,assetAsrProviderTiming} from "./asset-asr-timing";
+import {assetAsrPcmMappingReceipt,assetAsrAacMappingReceipt,assetAsrAacDecodedMappingReceipt,assetAsrProviderTiming} from "./asset-asr-timing";
 import {transcribeConfigurationSchema} from './transcribe-task';
 import {transcribeAudioReceiptSchema} from './execution-transcribe-audio';
 import {z} from 'zod';
@@ -14,7 +14,7 @@ const asrWorkspace=z.object({userId:id,accountId:id.nullable(),groupId:id.nullab
 export const productionAssetAsrReservationFrozen=z.union([originalReservation,originalReservation.extend({schemaVersion:z.literal(2),creationScope:z.object({userId:id,accountId:id.nullable(),groupId:id.nullable()}).strict(),workspaceScope:asrWorkspace}).strict()]);
 export const rational=z.object({num:z.string().regex(/^-?(0|[1-9]\d*)$/),den:z.string().regex(/^[1-9]\d*$/)}).strict();
 // This candidate never exports precision editing. A mapping is evidence, not inferred word timing.
-export const assetAsrAudioEvidence=z.object({schemaVersion:z.literal(1),assetFileId:id,fileDigest:sha,sourceStreamIndex:revision,sourceClockOrigin:rational.nullable(),firstDecodedSamplePts:rational,sampleRate:z.number().int().positive(),decodedValidSampleCount:revision,initialSkipSamples:revision.nullable(),trailingDiscardSamples:revision.nullable(),probeEvidenceDigest:sha,extractorArgumentsDigest:sha,audioDigest:prefixed,audioByteLength:z.number().int().positive(),mappingStatus:z.enum(['unverified','verified']),mappingReceipt:assetAsrPcmMappingReceipt.optional(),reason:z.string().min(1)}).strict();
+export const assetAsrAudioEvidence=z.object({schemaVersion:z.literal(1),assetFileId:id,fileDigest:sha,sourceStreamIndex:revision,sourceClockOrigin:rational.nullable(),firstDecodedSamplePts:rational,sampleRate:z.number().int().positive(),decodedValidSampleCount:revision,initialSkipSamples:revision.nullable(),trailingDiscardSamples:revision.nullable(),probeEvidenceDigest:sha,extractorArgumentsDigest:sha,audioDigest:prefixed,audioByteLength:z.number().int().positive(),mappingStatus:z.enum(['unverified','verified']),mappingReceipt:z.union([assetAsrPcmMappingReceipt,assetAsrAacMappingReceipt,assetAsrAacDecodedMappingReceipt]).optional(),reason:z.string().min(1)}).strict();
 export const assetAsrStoredAudio=z.object({receipt:transcribeAudioReceiptSchema,evidence:assetAsrAudioEvidence}).strict();
 export const assetAsrEffectivePlan=z.object({identity:asrIdentitySchema,timestampMode:z.enum(['text','segment','word']),protocolVersion:z.literal('asset-asr-text.v1'),audioDigest:prefixed,audioByteLength:z.number().int().positive(),audioManifestDigest:sha.optional()}).strict();
 export const assetAsrTranscript=z.object({text:z.string().max(1900000),language:z.string().max(128).optional(),timing:assetAsrProviderTiming.optional()}).strict();
