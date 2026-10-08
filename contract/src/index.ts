@@ -347,3 +347,4 @@ export {noteRelayLayout,type NoteRelayLayout} from "./resources/noterelay-layout
 export * from "./resources/production-native-document";
 export * from "./resources/work-editor";
 export * from "./resources/work-creation";
+export * from "./resources/ai-public-message";

@@ -13,6 +13,7 @@ import { projectExecutionTasks } from "./execution-task-projection";
 import { createHash, randomUUID } from "node:crypto";
 import { AsyncLocalStorage } from "node:async_hooks";
 import type { RequestContext } from "@creatoros/contract";
+import {aiPublicMessageBody,type AiPublicMessageBody,type AiPublicChatPrepareOptions} from '@creatoros/contract';
 import { and, eq, aiTasks, aiTaskResults, aiMessages, aiConversations, requireAccountId, type Db } from "@creatoros/backend";
 import {
   createAiRepository,
@@ -237,7 +238,7 @@ export interface AiAssetLibraryPort {
 }
 
 export interface ServiceDeps {
-  prepareChatReply?: (ctx:RequestContext,snapshot:ChatTurnSnapshot,options:{executionEngine:"pi"|"codex"})=>Promise<ChatTurnAssembly>;
+  prepareChatReply?: (ctx:RequestContext,snapshot:ChatTurnSnapshot,options:AiPublicChatPrepareOptions)=>Promise<ChatTurnAssembly>;
   assertChatProject?: (ctx:RequestContext,projectId:string)=>Promise<unknown>;
   projectTranscriptionTargets?: {lock(tx:Db,ctx:RequestContext,projectId:string):Promise<unknown>;read(tx:Db,ctx:RequestContext,projectId:string):Promise<{awemeId:string;hasTranscript:boolean}>};
   scriptDraftTargets?: {ensure(tx:Db,ctx:RequestContext,projectId:string,outputId?:string):Promise<string>};
@@ -316,7 +317,7 @@ export interface AiService {
     conversationId: string,
   ): Promise<AIConversationResource>;
   /** 旧公开对话入口：用户消息与可恢复回复任务同事务保存。 */
-  createMessageWithReplyTask(ctx:RequestContext,conversationId:string,body:{content:string;attachments?:string[]}):Promise<AIMessageResource>;
+  createMessageWithReplyTask(ctx:RequestContext,conversationId:string,body:AiPublicMessageBody):Promise<AIMessageResource>;
   createMessage(
     ctx: RequestContext,
     conversationId: string,
@@ -835,14 +836,26 @@ export function createAiService(deps: ServiceDeps): AiService {
         if(!deps.assertChatProject)throw new ConflictError("项目归属验证端口未装配");
         await deps.assertChatProject(ctx,conversation.projectId);
       }
+      const parsed=aiPublicMessageBody.parse(body);
+      const options:AiPublicChatPrepareOptions={executionEngine:parsed.executionEngine??'pi'};
+      if(parsed.chatContext){
+        const target='editorTarget' in parsed.chatContext?parsed.chatContext.editorTarget:parsed.chatContext.creationTarget;
+        if(!conversation.projectId||target.projectId!==conversation.projectId)throw new ConflictError('作品目标必须属于当前会话的项目');
+        if('editorTarget' in parsed.chatContext){
+          options.chatContext={editorTarget:parsed.chatContext.editorTarget};
+        }else{
+          if(ctx.source!=='user')throw new ConflictError('联合创作必须由用户选择已保存脚本与作品');
+          options.chatContext={creationTarget:{...parsed.chatContext.creationTarget,scriptConfirmation:{confirmedBy:'user',source:'public-request'}}};
+        }
+      }
       const history=await repo.listMessages(conversationId);
       const sourceMessage:ChatTurnSnapshot["sourceMessage"]={
-        id:deps.nextId("ai-msg"),conversationId,role:"user",content:body.content,
-        parts:[],attachments:body.attachments??[],modelMetadata:{},inputTokens:null,outputTokens:null,cachedTokens:null,modelKey:null,createdAt:deps.now(),
+        id:deps.nextId("ai-msg"),conversationId,role:"user",content:parsed.content,
+        parts:[],attachments:parsed.attachments??[],modelMetadata:{},inputTokens:null,outputTokens:null,cachedTokens:null,modelKey:null,createdAt:deps.now(),
       };
       const snapshot={conversation,messages:[...history,sourceMessage],sourceMessage};
       // 所有跨服务读取在事务外完成；PGlite 单连接不能在锁内等待全局读取。
-      const assembly=await deps.prepareChatReply(ctx,structuredClone(snapshot),{executionEngine:"pi"});
+      const assembly=await deps.prepareChatReply(ctx,structuredClone(snapshot),options);
       return deps.db.transaction(async membershipTx=>{
         await lockWorkspaceMembership(membershipTx,ctx);
         return withWorkspaceParentWrite(membershipTx as unknown as Db,ctx,{table:aiConversations,id:aiConversations.id,userId:aiConversations.userId,groupId:aiConversations.groupId,accountId:aiConversations.accountId,lock:"update"},[conversationId],async tx=>{
@@ -856,7 +869,7 @@ export function createAiService(deps: ServiceDeps): AiService {
         await tx.update(aiConversations).set({updatedAt:sourceMessage.createdAt}).where(and(eq(aiConversations.id,conversationId),eq(aiConversations.userId,ctx.userId),workspaceFilter(aiConversations,ctx)));
         const submitted=await createChatTurnSubmissionService(txDb,{
           now:deps.now,nextId:deps.nextId,assemble:async()=>assembly,assertProject:async()=>undefined,
-        }).submit(ctx,{conversationId,sourceMessageId:sourceMessage.id,executionEngine:"pi"});
+        }).submit(ctx,{conversationId,sourceMessageId:sourceMessage.id,executionEngine:options.executionEngine});
         return toMessageDto({...sourceMessage,modelMetadata:{chatTaskId:submitted.taskId}});
       });
       });

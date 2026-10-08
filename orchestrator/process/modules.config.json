@@ -6211,6 +6211,68 @@
           "node orchestrator/process/reconcile.mjs"
         ]
       }
+    },
+    "T-1091": {
+      "task_id": "T-1091",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1091-public-director-context.md",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "PROJECT_CONTEXT.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "backend/src/modules/ai/**",
+        "backend/src/modules/ai-runtime/**",
+        "backend/src/modules/execution/**",
+        "backend/src/modules/production/**",
+        "contract/src/**",
+        "frontend/src/server/**",
+        "docs/features/t1070-director-script-workflow.md",
+        "docs/features/t1074-ai-system-operations.md"
+      ],
+      "write_set": [
+        "contract/src/resources/ai-public-message.ts",
+        "contract/src/operations/ai.ts",
+        "contract/src/index.ts",
+        "contract/src/resources/work-creation.ts",
+        "backend/src/modules/ai/ai.service.ts",
+        "frontend/src/server/persistence-client.ts",
+        "contract/tests/ai-public-message.test.ts",
+        "backend/src/modules/ai/public-chat-options.service.test.ts",
+        "frontend/src/server/public-chat-options.integration.test.ts",
+        "docs/features/t1091-public-director-context.md",
+        "docs/features/t1091-public-director-context.review.md",
+        "docs/features/t1091-public-director-context.review-input.json",
+        "docs/features/t1091-public-director-context.independent-review.md",
+        "docs/verification/t1091/**",
+        "docs/verification/t1062/assistant-fixes-20261009.md",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "orchestrator/DECISION_LOG.md",
+        "orchestrator/events.ndjson",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/progress.json"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "git diff --check",
+          "pnpm -C contract exec vitest run tests/ai-public-message.test.ts --retry=0 --no-file-parallelism --testTimeout=180000 --hookTimeout=180000",
+          "pnpm -C backend exec vitest run src/modules/ai/public-chat-options.service.test.ts src/modules/ai/copilot-message-task.service.test.ts src/modules/ai/frozen-chat-history.service.test.ts src/modules/ai/chat-turn-completion.service.test.ts src/modules/ai/chat-turn-submission.service.test.ts src/modules/ai/external-chat-turn.service.test.ts src/modules/ai/chat-proposal-source.service.test.ts --retry=0 --no-file-parallelism --testTimeout=180000 --hookTimeout=180000",
+          "pnpm -C frontend exec vitest run src/server/public-chat-options.integration.test.ts src/server/legacy-frozen-source-read.integration.test.ts src/server/assistant-native-editor-read.integration.test.ts --retry=0 --no-file-parallelism --testTimeout=1200000 --hookTimeout=1200000",
+          "pnpm -C backend typecheck",
+          "pnpm -C frontend typecheck",
+          "node orchestrator/process/boundary-scan.mjs",
+          "node orchestrator/process/semantic-boundary-scan.mjs",
+          "node orchestrator/process/orphan-scan.mjs",
+          "node orchestrator/process/reconcile.mjs"
+        ]
+      }
     }
   }
 }

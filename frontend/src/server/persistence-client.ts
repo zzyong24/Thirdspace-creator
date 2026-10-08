@@ -2807,7 +2807,10 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     prepareChatReply:(ctx,snapshot,options)=>{
       if(stoppingPreparation)throw new Error("应用正在停止，无法启动新聊天");
       void chatRuntime.durable;
-      return prepareChatReply(chatRuntime,ctx,snapshot,options);
+      return prepareChatReply(chatRuntime,ctx,snapshot,{
+        executionEngine:options.executionEngine,
+        ...(options.chatContext?{chatContext:{...options.chatContext,surface:'project',projectId:snapshot.conversation.projectId}}:{}),
+      });
     },
     assertChatProject:(ctx,id)=>projectsService.getProjectOverviewCore(ctx,id),
     projectTranscriptionTargets:createProjectTranscriptionTargetService(),

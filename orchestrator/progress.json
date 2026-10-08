@@ -6955,6 +6955,63 @@
       "step_read_set": {},
       "step_exclusive_resources": {},
       "commits": {}
+    },
+    {
+      "id": "T-1091",
+      "task_id": "T-1091",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1091-public-director-context.md",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "PROJECT_CONTEXT.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "backend/src/modules/ai/**",
+        "backend/src/modules/ai-runtime/**",
+        "backend/src/modules/execution/**",
+        "backend/src/modules/production/**",
+        "contract/src/**",
+        "frontend/src/server/**",
+        "docs/features/t1070-director-script-workflow.md",
+        "docs/features/t1074-ai-system-operations.md"
+      ],
+      "write_set": [
+        "contract/src/resources/ai-public-message.ts",
+        "contract/src/operations/ai.ts",
+        "contract/src/index.ts",
+        "contract/src/resources/work-creation.ts",
+        "backend/src/modules/ai/ai.service.ts",
+        "frontend/src/server/persistence-client.ts",
+        "contract/tests/ai-public-message.test.ts",
+        "backend/src/modules/ai/public-chat-options.service.test.ts",
+        "frontend/src/server/public-chat-options.integration.test.ts",
+        "docs/features/t1091-public-director-context.md",
+        "docs/features/t1091-public-director-context.review.md",
+        "docs/features/t1091-public-director-context.review-input.json",
+        "docs/features/t1091-public-director-context.independent-review.md",
+        "docs/verification/t1091/**",
+        "docs/verification/t1062/assistant-fixes-20261009.md",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "orchestrator/DECISION_LOG.md",
+        "orchestrator/events.ndjson",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/progress.json"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
     }
   ],
   "leases": {

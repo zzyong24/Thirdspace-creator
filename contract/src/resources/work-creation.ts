@@ -10,7 +10,7 @@ const member={outputId:id,artifactId:id,baseVersionId:id};
 export const workCreationTarget=z.object({
  schemaVersion:z.literal(1),clientRequestId:z.string().min(8).max(128),projectId:id,
  compositionId:id,compositionRevision:z.number().int().positive(),scriptSourceRef:projectScriptSourceRef,
- scriptConfirmation:z.object({confirmedBy:z.literal('user'),source:z.literal('current-click')}).strict(),
+ scriptConfirmation:z.object({confirmedBy:z.literal('user'),source:z.enum(['current-click','public-request'])}).strict(),
  articleMember:z.object({kind:z.literal('article'),...member}).strict(),
  graphicMember:z.object({kind:z.literal('image'),...member}).strict(),
 }).strict();

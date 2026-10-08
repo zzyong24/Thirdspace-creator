@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { defineEndpoint } from "../endpoint-definition";
 import { id, paginationQuery } from "../primitives";
+import {aiPublicMessageBody} from '../resources/ai-public-message';
 import {
   aiConversationResource,
   aiMessageResource,
@@ -43,10 +44,7 @@ export const aiOperations = {
     method: "POST",
     path: "/ai/conversations/:conversationId/messages",
     params: conversationParams,
-    body: z.object({
-      content: z.string().min(1),
-      attachments: z.array(id).optional(),
-    }),
+    body: aiPublicMessageBody,
     response: aiMessageResource,
     fr: ["FR-AI-MESSAGES-CREATE"],
   }),

@@ -9,6 +9,8 @@
 
 | ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
 | --- | --- | --- | --- | --- | --- | --- |
+| T-1091 | 补齐公开编导消息的Codex选择与文章图文视频目标定位并安装验收 | 🔨 | PASS[REV:dcd0b932fca7] | — | [SPEC](docs/features/t1091-public-director-context.md) | 用户继续全面验证；安装公开消息仅content/attachments，实际owner固定Pi，无法从正式CLI验收已实现的编辑/联合创作。仅加可选引擎及严格已保存目标，保默认Pi和原任务/owner/候选采纳；先独评和真实RED/GREEN，再main无备份出包/公开Codex实测，不绕过本地来源保护。 |
+| T-1092 | 核对联合创作旧集成测试未解包可信回执的契约漂移 | 📋 | — | — | [当场基线证据](docs/verification/t1091/CREATION_BASELINE_DIAGNOSIS.md) | T1091扩大回归154PASS/2FAIL，旧main隔离同2FAIL；原第104行严格parse含__creatorosOutcome的展示投影，页面先经原解包器。先独评实际旧断言/回执协议再校准，保可信元数据与两稿内容断言，不改生产schema或洗掉失败。本轮不实施。 |
 | T-1084 | 修复安装版 AI 普通消息被 Workbench 工具预装配校验阻断 | ✅ | PASS[REV:e209f8301608] | — | [SPEC](docs/features/t1084-chat-workbench-preparation-order.md) | T1062 新 main 安装实测公开消息入口 HTTP400：plan.update 未装配；原已有 plan host，但校验发生在原型注入之前。只修准备顺序，保留最终严格目录/副作用/schema/租约校验；先独立复核、RED/GREEN，再重新出包和原会话公开复验，不重发未知任务、不触碰真实稿件。 |
 | T-1085 | 核对实际聊天集成失败与既有计划恢复场景漂移 | ✅ | PASS[REV:beb541a947be] | — | [SPEC](docs/features/t1085-chat-integration-fixture-calibration.md) | T1084 回归实际暴露原 plan 集成2FAIL及完整装配后段失败。两plan旧fixture不经本轮修改函数，与有限错误收口和安全根模型恢复协议漂移；前端后段还需完整诊断。先取得实际账本/lastError/模型请求事实，修复需单独SPEC和独评，不放宽生产门或删断言，不冒称完整Gate通过。 |
 | T-1086 | 补齐 AI 助手对项目现有剪辑工程的发现与真实读取 | ✅ | PASS[REV:6e65ef420578] | — | [SPEC](docs/features/t1086-assistant-native-editor-read.md) | 新安装 main3a60 中性只读会话真实完成却误称无可编辑视频；项目104实际已有output119原生编辑器rev7。先核对作品发现/生命周期/只读目录和提示词，独评后打通原正式端口及归属边界，不自动写稿/剪辑/生成，安装版同项目真实复验。 |
