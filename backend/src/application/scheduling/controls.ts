@@ -1,5 +1,7 @@
 import {PRIVATE_COLLECTION_SOURCE_KINDS} from '../../modules/scheduling';
 import type {RequestContext,Transport} from "@creatoros/contract";
+import {ENDPOINTS} from '@creatoros/contract';
+import {ConflictError,ValidationError} from '../../modules/publishing';
 import {triggerScheduledJob,runJobNow,bootstrapDouyinCollectionJobs,type TriggerDeps} from "../../modules/ai-runtime";
 /** 绑定初始化、立即运行与自动化共用同一触发协议。 */
 export function createSchedulingControls(ports:{aiService:Pick<ReturnType<typeof import("../../modules/ai").createAiService>,"createTask"|"getTask">;
@@ -11,6 +13,7 @@ ensureDailyRun:ReturnType<typeof import("../../modules/scheduling").createDailyT
 ensureCollectionRun:ReturnType<typeof import("../../modules/ai-runtime").createScheduledFlywheelExecutionService>["ensureRunForTask"];
 ensureCanonicalRubricForAccount:(accountId:string)=>Promise<void>;
 migrateProfile:(ctx:RequestContext)=>Promise<void>;
+assertCommentPublications?:(ctx:RequestContext,ids:readonly string[])=>Promise<void>;
 scheduling:Transport;}){
 const {aiService,schedulingService,platformAccountService,dispatchScheduledCollection,deps,ensureDailyRun,ensureCollectionRun,ensureCanonicalRubricForAccount,migrateProfile,scheduling}=ports;
   const triggerDeps: TriggerDeps = {
@@ -140,24 +143,59 @@ const {aiService,schedulingService,platformAccountService,dispatchScheduledColle
     async request(endpoint, input, ctx) {
       if (endpoint.id === "scheduledJobs.runNow") {
         if (!ctx) throw new Error("AuthenticationError: runNow requires ctx");
-        const { params } = (input ?? {}) as { params?: { jobId?: string } };
+        const { params,body } = (input ?? {}) as { params?: { jobId?: string };body?:unknown };
+        const requested=ENDPOINTS.runScheduledJobNow.body.parse(body)?.publicationIds;
         const jobId = params?.jobId ?? "";
+        let commentJob=false,expectedSelection:string[]|null=null;
+        const selectionOf=(target:unknown):string[]|null=>{
+          if(!target||typeof target!=='object'||Array.isArray(target))throw new ConflictError('无法确认已有运行的作品范围');
+          const selection=(target as Record<string,unknown>).publicationIds;
+          if(selection===undefined)return null;
+          const parsed=ENDPOINTS.runScheduledJobNow.body.safeParse({publicationIds:selection});
+          if(!parsed.success)throw new ConflictError('无法确认已有运行的作品范围');
+          return [...parsed.data!.publicationIds!].sort();
+        };
+        const assertTaskSelection=async(taskId:string,jobRunId?:string)=>{
+          if(!commentJob)return;
+          const task=await aiService.getTask(ctx,taskId);
+          const details={aiTaskId:taskId,...(jobRunId?{jobRunId}:{})};
+          let actual:string[]|null;
+          try{actual=selectionOf(task.inputData.target);}catch{throw new ConflictError('无法确认已有运行的作品范围，请先核对原任务',details);}
+          if(task.inputData.jobId!==jobId||JSON.stringify(actual)!==JSON.stringify(expectedSelection))throw new ConflictError('已有运行的作品范围不同，请等待原任务完成后再运行',details);
+        };
         const result = await runJobNow(ctx, jobId, {
           ...triggerDeps,
+          ai:{createTask:async(c,taskInput)=>{
+            const task=await triggerDeps.ai.createTask(c,taskInput);
+            // createTask 自身也可能命中旧 queued/running task，必须在ensureRun/dispatch前核对持久范围。
+            await assertTaskSelection(task.id);
+            return task;
+          }},
           job: {
             getJob: async (c, id) => {
               const j = await schedulingService.getJob(c, id);
+              commentJob=j.sourceKind==='comments';
+              if(requested&&!commentJob)throw new ValidationError('publicationIds 仅适用于 comments 作业');
+              const target=requested?{...j.target,publicationIds:[...requested].sort()}:j.target;
+              if(commentJob){
+                expectedSelection=selectionOf(target);
+                if(expectedSelection){
+                  if(!ports.assertCommentPublications)throw new ValidationError('作品范围校验服务尚未接入');
+                  await ports.assertCommentPublications(c,expectedSelection);
+                }
+              }
               // [T-200] 带 job 属主号:触发采集 ctx.accountId 由此派生(与 cron/bind 三路统一)。
               return {
                 id: j.id,
                 enabled: j.enabled,
                 sourceKind: j.sourceKind,
-                target: j.target,
+                target,
                 accountId: j.accountId ?? null,
               };
             },
           },
         });
+        if(result.deduped)await assertTaskSelection(result.aiTaskId,result.jobRunId);
         // [T-201d] 归属号已隐藏(status 非 active)→ triggerScheduledJob 跳过不产 run,
         //   jobRunId 为空串。runNow response 契约要求 jobRunId 非空(id=min(1)),且此路是用户
         //   手动「立即运行」→ 诚实抛错告知(账号已隐藏,先恢复再运行),不假装产了 run。

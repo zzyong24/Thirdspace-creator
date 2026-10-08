@@ -1,6 +1,7 @@
 import {describe,it,expect,vi} from "vitest";
 import type {AgenticToolOutcome,WorkerPort} from "@creatoros/contract/execution-worker";
 import {runDurableAgenticTool} from "./durable-agentic-tool";
+import {projectReceiptForPi} from "../capabilities/result-pages";
 const input={modelCallId:"model-1",toolCallId:"tool-1"};
 const output:AgenticToolOutcome={status:"ok",summary:"真实正文",evidence:[{sourceUrl:"https://example.com",text:"正文"}],error:null,continuation:null,sideEffect:"none"};
 function fixture(status="reserved") {
@@ -35,6 +36,20 @@ describe("Worker 持久工具执行边界",()=>{
   it("已结算回执只重放，绝不再次执行或结算",async()=>{
     const f=fixture("settled");expect(await f.run()).toEqual(output);
     expect(f.execute).not.toHaveBeenCalled();expect(f.call).toHaveBeenCalledTimes(1);
+  });
+  it("已结算截图回放仅解析原媒体引用，不再次派发浏览器截图",async()=>{
+    const dataRef="wm1-"+"a".repeat(64);
+    const screenshot:AgenticToolOutcome={status:"ok",summary:"截图",evidence:[],data:{workbench:{operationId:"call-1",status:"succeeded",artifactRefs:[],progressCursor:null,content:[{type:"image",mediaType:"image/png",dataRef}]}},error:null,continuation:null,sideEffect:"none"};
+    const execute=vi.fn(async()=>{throw Error("BROWSER_SCREENSHOT_MUST_NOT_RERUN");});
+    const call=vi.fn(async(port:WorkerPort)=>{
+      if(port!=="reserveAgenticTool")throw Error("UNEXPECTED_WORKER_PORT");
+      return {callId:"call-1",status:"settled",toolName:"browser_screenshot",input:{},receipt:{schemaVersion:1,kind:"tool",toolCallId:"tool-1",toolName:"browser_screenshot",output:screenshot}};
+    });
+    const replayed=await runDurableAgenticTool(input,{signal:AbortSignal.timeout(10000),call,execute});
+    const resolveImage=vi.fn(async()=>({mimeType:"image/png",data:"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWP4z8DwHwAFAAH/e+m+7wAAAABJRU5ErkJggg=="}));
+    const projected=await projectReceiptForPi(replayed,"call-1",{resolveImage});
+    expect(projected.content[1]?.type).toBe("image");expect(resolveImage).toHaveBeenCalledExactlyOnceWith(dataRef);
+    expect(execute).not.toHaveBeenCalled();expect(call).toHaveBeenCalledTimes(1);
   });
   it.each(["started","unknown","rejected"])("历史%s需要对账，不重做",async(status)=>{
     const f=fixture(status);await expect(f.run()).rejects.toMatchObject({outcome:"unknown_result"});

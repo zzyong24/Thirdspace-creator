@@ -66,7 +66,7 @@ export const executionOperations = {
     method: "GET",
     path: "/execution/tasks/:taskId",
     params: taskParams,
-    response: executionTaskResource,
+    response: z.union([executionTaskResource, executionTaskResourceV2]),
     fr: ["FR-EXECUTION-TASKS"],
   }),
   confirmExecutionTask: defineEndpoint({

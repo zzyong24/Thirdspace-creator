@@ -36,12 +36,18 @@ flowchart LR
 - 历史 `planning.thesis` 候选不得再确认写入 `thesis_tree` 新版本；确认请求返回稳定退役错误，已有 artifact/version 不变。
 - 项目重建不再物化新的 `thesis_tree`。
 - `thesis_tree` 继续保留在历史 artifact 类型兼容集合中；本任务不删枚举、不删行、不做破坏性迁移。
+- 上线时仍为非终态的旧 `planning.thesis` 任务保留历史和调用账本，但稳定结束为
+  `capability_retired`；Backend 在任务创建、Worker 结果结算、`recordCandidate`、候选确认和 reconstruct
+  写入点统一重读当前 capability 与可信 `taskId + operationId + attempt + fence`。任何迟到或旧 fence
+  结果都不得写候选、artifact 或版本；Worker 只返回结果，不直写数据库。
 
 ### FR-726-03：停止隐藏消费
 
 - `CreativeContext.thesisBrief` 对新执行恒为空，不读取历史 `thesis_tree`。
 - `script.draft`、`planning.contract`、`planning.outline` 不再从论点树获得输入；定位、选题、项目 Brief、用户资料、项目素材、内容雷达证据和既有结构方案继续按原契约工作。
-- 前端制作候选与 backend `video.decisions` 不再读取 `thesis_tree.nodes[].materialRefs`。
+- 项目素材、脚本点名引用及来源信息只由 Backend application/service 统一装配；前端只消费 contract DTO，
+  `video.decisions` 经同一 service port 读取同一结果。两侧都不再读取 `thesis_tree.nodes[].materialRefs`，
+  前端不得重新实现来源合并、去重或脚本引用解析。
 - B-roll 继续读取脚本明确点名素材和项目 `materialLinks`；去掉论点来源不得让项目素材从候选集中消失。
 
 ### FR-726-04：历史与当前结果不变
@@ -91,6 +97,11 @@ flowchart LR
 
 允许暂时保留无调用者的旧 runner/prompt 作为一个发布周期内的回滚兼容，但必须有不可达测试；它们不得注册为 Skill、模型能力或任务入口。后续物理删代码不能删除历史数据。
 
+`script.draft`、`planning.contract`、`planning.outline`、项目素材装配和 `video.decisions` 真正执行前，
+Backend service 必须按当前 RequestContext 重读项目、Brief、当前稿件版本、materialLinks、资源存在性和归属；
+AI 只产候选。候选采纳时再次核对当前根实体、候选版本、权限和稳定幂等键；只有可唯一重绑时执行，
+否则返回明确冲突，禁止使用前端状态或旧任务快照作为当前真值。
+
 ## 5. 验收标准
 
 ### AC-726-01 稿面瘦身
@@ -114,7 +125,8 @@ version 数量和内容 hash 也保持不变。
 
 ### AC-726-04 制作素材不丢
 
-前端制作候选与 backend `video.decisions` 输入分别用同一组夹具验证：
+Backend 统一素材装配 service 用同一组夹具验证；前端 DTO 与 `video.decisions` 输入都必须等于该 service
+的同一结果，boundary Gate 证明 frontend 没有重新实现业务装配：
 
 - 同一图片/视频同时存在于项目 `materialLinks` 和历史 thesis refs 时，两处均保留该素材，来源为
   项目素材而非 thesis；
@@ -129,6 +141,14 @@ version 数量和内容 hash 也保持不变。
 ### AC-726-06 无残留用户承诺
 
 运行时代码与用户文档中没有可触发的“立论点/论点骨架/论点树模型”入口；允许出现在历史 SPEC、迁移说明、兼容类型和本任务测试/诊断中。
+
+### AC-726-07 真实公共链路仍可用
+
+在含历史 `thesis_tree`、当前 Brief、materialLinks 和脚本点名素材的非 fixture 项目中，通过正式入口执行
+`script.draft`，证明输入不含 thesis、产生真实候选；由 Backend 采纳后刷新仍可编辑，再进入
+`video.decisions` 或短预览并验证素材保留。证据记录 taskId、candidateId、脚本 artifact/version、素材 ID
+与下游产物；同时注入 Brief 换版、素材删除、跨项目引用、旧候选采纳、迟到 Worker 和并发重领，证明
+当前真值与 fence 生效，历史 `thesis_tree` 数量和 hash 始终不变。
 
 ```frontend-journey-contract
 {

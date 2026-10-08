@@ -49,12 +49,47 @@ for (const scanRoot of scanRoots) {
   }
 }
 
-// T-712 的真实链路契约：画面规划不得再次自己挑素材，必须调用 official material.match。
-const videoRunnerPath = "backend/src/modules/ai-runtime/video-decisions-runner.ts";
-const videoRunner = await readFile(path.join(root, videoRunnerPath), "utf8");
-if (!videoRunner.includes('skillId: "material.match"')) {
-  failures.push(`${videoRunnerPath} 未调用 material.match Skill`);
+// T-930 将真实视频决策 runner 搬进 Worker。逐段检查执行入口、两条编排路径和
+// Skill 调用，避免仅凭一个闲置的 skillId 字符串放过语义匹配绕行。
+export function checkVideoMaterialBoundary(backendSource, workerSource, runnerSource) {
+  const errors = [];
+  if (!/export\s*\*\s*from\s*["']@creatoros\/ai-worker\/video-decisions-runner["']/.test(backendSource)) {
+    errors.push("backend 视频决策入口未指向 Worker runner");
+  }
+  if (!/import\s*\{[^}]*\brunVideoDecisions\b[^}]*\}\s*from\s*["']\.\.\/runtime\/video-decisions-runner["']/.test(workerSource)
+    || !/runWithEffectiveSkillSnapshot\([^;]*\brunVideoDecisions\(/.test(workerSource)) {
+    errors.push("Worker 执行入口未调用视频决策 runner");
+  }
+
+  const materialStart = runnerSource.indexOf("export async function decideMaterialBroll(");
+  const orchestratorStart = runnerSource.indexOf("export async function runVideoDecisions(");
+  const nextExport = materialStart >= 0 ? runnerSource.indexOf("\nexport ", materialStart + 1) : -1;
+  const materialBody = materialStart >= 0 && nextExport > materialStart
+    ? runnerSource.slice(materialStart, nextExport) : "";
+  const orchestration = orchestratorStart >= 0 ? runnerSource.slice(orchestratorStart) : "";
+  if (!/call<MaterialMatchOutput>\s*\(\s*\{\s*skillId\s*:\s*["']material\.match["']/.test(materialBody)
+    || !/try\s*\{\s*output\s*=\s*await\s+invokeMatch\(\)/.test(materialBody)) {
+    errors.push("Worker 素材决策函数未实际调用 material.match Skill");
+  }
+  const adjustment = orchestration.split("if (task.inputData.adjustmentMode === \"materials\")")[1]?.split("let materialMatchedBroll:")[0] ?? "";
+  const fullRun = orchestration.split("let materialMatchedBroll:")[1] ?? "";
+  if (!/matchedBroll\s*=\s*await\s+decideMaterialBroll\(/.test(adjustment)) {
+    errors.push("Worker 局部选材路径未调用素材 Skill");
+  }
+  if (!/materialMatchedBroll\s*=\s*await\s+decideMaterialBroll\(/.test(fullRun)) {
+    errors.push("Worker 完整视频决策路径未调用素材 Skill");
+  }
+  return errors;
 }
+
+const backendVideoRunner = await readFile(
+  path.join(root, "backend/src/modules/ai-runtime/video-decisions-runner.ts"),
+  "utf8",
+);
+const videoRunnerPath = "ai-worker/src/runtime/video-decisions-runner.ts";
+const videoRunner = await readFile(path.join(root, videoRunnerPath), "utf8");
+const videoWorker = await readFile(path.join(root, "ai-worker/src/execution/video-decisions-worker.ts"), "utf8");
+failures.push(...checkVideoMaterialBoundary(backendVideoRunner, videoWorker, videoRunner));
 for (const forbidden of [
   "preferUserProjectBroll",
   "userAssetSemanticTokens",

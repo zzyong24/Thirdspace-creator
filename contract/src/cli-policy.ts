@@ -53,6 +53,10 @@ const READ_OPERATIONS = [
   "workReviews.requests.get",
 
   "outputs.conversions.get",
+  "analytics.comments.failures.list",
+  "workbench.tasks.inspect", "workbench.tasks.events", "workbench.capabilities.list",
+  "workbench.artifacts.list", "workbench.artifacts.read", "workbench.artifacts.render",
+
   "analytics.traffic.get",
   "articles.get",
   "articles.versions.get",
@@ -233,6 +237,11 @@ const MUTATION_OPERATIONS = [
   "moments.candidates.adopt",
   "workReviews.create",
   "workReviews.confirm",
+
+  "analytics.comments.diagnose",
+  "analytics.comments.retry",
+  "workbench.artifacts.reconcile",
+  "workbench.files.reconcile",
 
   "analytics.traffic.refresh",
   "articles.candidates.generate",
@@ -464,6 +473,8 @@ const EXTERNAL_OPERATIONS = new Set<EndpointId>([
   "moments.candidates.generate",
   "moments.candidates.retry",
   "workReviews.create",
+
+  "analytics.comments.diagnose",
 
   "analytics.traffic.refresh",
   "ai.conversations.messages.create",

@@ -231,7 +231,7 @@ describe("SettingsPage", () => {
   // The settings content now lives in a centered Dialog (Radix Portal → body),
   // so dialog-internal queries go through `document` rather than the render
   // container. The dialog opens by default.
-  it("renders the settings dialog with 6 vertical tabs in the approved order", async () => {
+  it("renders the settings dialog with 7 vertical tabs in the approved order", async () => {
     await renderSettings();
     const tabs = document.querySelector('[data-slot="settings-tabs"]');
     expect(tabs).not.toBeNull();

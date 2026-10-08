@@ -135,10 +135,10 @@ export function classifyTopicPreviewFailure(error: unknown): {
     break;
   }
   const signal = parts.join(" ").toLowerCase();
-  if (/401|403|api.?key|credential|unauthori|鉴权|密钥/.test(signal)) {
+  if (/401|403|api.?key|credential|unauthori|鉴权|密钥|model[_\s-]*(?:not[_\s-]*)?configured|模型.{0,8}(?:未配置|没有配置)/.test(signal)) {
     return {
       category: "credential",
-      message: "模型配置不可用，请在设置中检查后重试",
+      message: "还没有可用的 AI 模型，请完成模型设置后继续原任务",
     };
   }
   if (/positioning|定位/.test(signal)) {
@@ -150,7 +150,8 @@ export function classifyTopicPreviewFailure(error: unknown): {
   if (/timeout|timed.?out|abort(?:ed)?|超时/.test(signal)) {
     return {
       category: "timeout",
-      message: "改写稿生成超时，您可以重试",
+      message: "模型响应超时，系统正在自动恢复",
+
     };
   }
   if (
@@ -160,13 +161,14 @@ export function classifyTopicPreviewFailure(error: unknown): {
   ) {
     return {
       category: "output_invalid",
-      message: "这次没有生成改写稿，请重试",
+      message: "模型输出不完整，系统正在继续生成选题卡",
+
     };
   }
   if (/502|503|504|network|econn|fetch failed|网络/.test(signal)) {
     return {
       category: "network",
-      message: "模型服务暂时不可用，请稍后重试",
+      message: "模型服务暂时不可用，系统正在自动恢复",
     };
   }
   return {
@@ -195,6 +197,7 @@ export async function runIntelligenceTopicPreviewTask(
     taskId: input.taskId,
     workerId: claim.lease.workerId,
     attempt: claim.lease.attempt,
+    fenceToken: claim.lease.fenceToken,
   };
   let pendingStage: TopicPreviewCheckpoint["stage"] = "decomposition";
   let targetTransformId: string | null = null;
@@ -270,12 +273,15 @@ export async function runIntelligenceTopicPreviewTask(
       }
     }
     const failure = classifyTopicPreviewFailure(error);
-    const blocked =
+    const waitingForUser =
       failure.category === "positioning" || failure.category === "credential";
+    const recoverable = ["timeout", "output_invalid", "network"].includes(
+      failure.category,
+    );
     console.warn(
       `[intelligence-topic] generation_failed category=${failure.category}`,
     );
-    if (targetTransformId) {
+    if (targetTransformId && !waitingForUser && !recoverable) {
       try {
         await deps.intelligence.markTopicPreviewStageFailed(
           ctx,
@@ -293,13 +299,23 @@ export async function runIntelligenceTopicPreviewTask(
     }
     await deps.tasks.finish({
       ...lease,
-      status: blocked ? "blocked" : "failed",
+      status: waitingForUser
+        ? "waiting_user"
+        : recoverable
+          ? "retry_wait"
+          : "failed",
       errorCode:
         failure.category === "positioning"
           ? "POSITIONING_MISSING"
           : failure.category === "credential"
             ? "MODEL_CONFIGURATION_REQUIRED"
-            : "TOPIC_PREVIEW_FAILED",
+            : failure.category === "timeout"
+              ? "TOPIC_PREVIEW_TIMEOUT"
+              : failure.category === "output_invalid"
+                ? "TOPIC_PREVIEW_OUTPUT_INVALID"
+                : failure.category === "network"
+                  ? "TOPIC_PREVIEW_NETWORK"
+                  : "TOPIC_PREVIEW_FAILED",
       errorMessage: failure.message,
     });
   }

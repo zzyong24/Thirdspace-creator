@@ -93,6 +93,13 @@ describe("T-843 creatoros CLI", () => {
     for(const args of [["--limit","51"],["--offset","-1"],["--effect","anything"],["--limit","2x"]])await expect(runCliCommand(["operations","list","--compact",...args])).rejects.toThrow();
   });
 
+  it('评论诊断动态发现且在HTTP之前要求external执行语义',async()=>{
+    const result=await runCliCommand(['operations','describe','analytics.comments.diagnose','--json']) as {operation:string;policy:unknown};
+    expect(result.operation).toBe('analytics.comments.diagnose');
+    await expect(runCliCommand(['call','analytics.comments.diagnose','--input','{"body":{"action":"start","publicationId":"p"}}','--account','a'])).rejects.toThrow('--apply');
+    await expect(runCliCommand(['call','analytics.comments.diagnose','--apply','--idempotency-key','x','--account','a','--input','{}'])).rejects.toThrow('--confirm-impact');
+  });
+
   it("写、破坏性和外部调用在发请求前校验执行语义", async () => {
     await expect(runCliCommand(["call", "projects.create", "--input", "{}"])).rejects.toThrow("--apply");
     await expect(runCliCommand([

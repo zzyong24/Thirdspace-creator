@@ -712,8 +712,22 @@
     {
       "idx": 101,
       "version": "7",
+      "when": 1789963200000,
+      "tag": "0101_workbench_artifact_lineage",
+      "breakpoints": true
+    },
+    {
+      "idx": 102,
+      "version": "7",
       "when": 1791043200001,
       "tag": "0128_workspace_convergence",
+      "breakpoints": true
+    },
+    {
+      "idx": 103,
+      "version": "7",
+      "when": 1791043200002,
+      "tag": "0129_workbench_artifact_convergence",
       "breakpoints": true
     }
   ]

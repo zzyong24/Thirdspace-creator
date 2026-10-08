@@ -3,6 +3,8 @@ export {creativeCanvases,canvasGenerationLinks,canvasAgentProposals} from "./sch
 export { articleAnchors, articleCandidates } from "./schema/articles";
 export { creativeResults, creativeResultBundles, outputMediaAttempts } from "./schema/creative-results";
 export { graphicPostAnchors, graphicPostTextCandidates } from "./modules/graphic-posts/graphic-posts.schema";
+export {workbenchArtifactLineages,workbenchArtifactLineageVersions} from "./schema/workbench-artifacts";
+
 export {
   createDb,
   createRuntimeDb,

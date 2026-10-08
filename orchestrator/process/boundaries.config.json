@@ -27,6 +27,14 @@
       "allowSameModule": true
     },
     {
+      "id": "R5-no-workbench-worker-direct-db",
+      "desc": "通用能力适配器只能经 backend service port 写入，不得直连数据库。",
+      "type": "forbidden-import",
+      "scopeDirs": ["ai-worker/src/capabilities"],
+      "specifiers": ["pg", "drizzle-orm", "postgres", "@creatoros/backend/db"],
+      "ext": [".ts", ".tsx"]
+    },
+    {
       "id": "R4-no-web-direct-license-commerce",
       "desc": "Web frontend 不准直连 activity/growth 授权与交易端点，只能经 typed RPC。",
       "type": "forbidden-text",

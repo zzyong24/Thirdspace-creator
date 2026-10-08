@@ -1,0 +1,379 @@
+// @vitest-environment node
+import {describe,expect,it,vi} from "vitest";
+import {execFileSync,spawn} from "node:child_process";
+import {createHash,randomUUID} from "node:crypto";
+import {createServer} from "node:http";
+import {mkdtemp,readFile,rm,writeFile} from "node:fs/promises";
+import {tmpdir} from "node:os";
+import {join,resolve} from "node:path";
+import {createDb,eq,executionCalls,executionTasks,type Db} from "@creatoros/backend";
+import {createLocalFsObjectStorage,createWorkbenchBlobService} from "@creatoros/backend/modules/assets";
+import {createAiRepository,createChatTurnSubmissionService} from "@creatoros/backend/modules/ai";
+import {createPersistentTaskService,createWorkbenchArtifactReadService} from "@creatoros/backend/modules/execution";
+import type {WorkbenchHostCall} from "@creatoros/contract/agent-workbench";
+import {NativeFileError,type NativeCommandAction} from "./workbench-native-client";
+import {createNativeFilesWorkbenchHost,nativeFileCapabilities} from "./workbench-native-host";
+import {createWorkbenchArtifactHost} from "./workbench-artifact-host";
+import {renderTrustedWorkbenchHtml} from "./workbench-artifact-render";
+import {PDFParse} from "pdf-parse";
+
+vi.mock("server-only",()=>({}));
+
+const db={} as Db;
+const options={platform:"darwin" as const,desktop:true,socketPath:"/tmp/test-workbench.sock"};
+const call=(name:string,input:Record<string,unknown>):WorkbenchHostCall=>({
+  context:{userId:"u",accountId:"a",taskId:"task",attempt:2,fenceToken:"fence",leaseId:"lease",operationId:"op"},
+  invocation:{name,schemaVersion:1,input},
+});
+const control={signal:new AbortController().signal,onProgress:()=>{}};
+
+describe("桌面任务文件宿主",()=>{
+  it("没有私有桌面通道时目录不向模型开放，读写副作用分别冻结",()=>{
+    expect(createNativeFilesWorkbenchHost(db,{...options,socketPath:""})).toBeUndefined();
+    expect(createNativeFilesWorkbenchHost(db,{...options,platform:"win32",socketPath:""})).toBeUndefined();
+    expect(nativeFileCapabilities.find(item=>item.name==="files.read")?.effects).toEqual(["read"]);
+    expect(nativeFileCapabilities.find(item=>item.name==="files.write")?.effects).toEqual(["task_write"]);
+  });
+
+  it("Windows 私有通道只开放文件能力，命令继续拒绝",async()=>{
+    const filePort=vi.fn(async()=>({version:1}));
+    const host=createNativeFilesWorkbenchHost(db,{...options,platform:"win32",socketPath:"\\\\.\\pipe\\creatoros-test",filePort})!;
+    expect(host).toBeDefined();
+    expect(host.platform).toBe("windows");
+    expect(host.capabilities).toEqual(["task.files"]);
+    expect(host.catalog.map(item=>item.name)).toEqual(nativeFileCapabilities.map(item=>item.name));
+    expect(await host.dispatch(call("files.write",{path:"报告.html",content:"你好"}),control)).toMatchObject({status:"succeeded"});
+    expect(filePort).toHaveBeenCalledOnce();
+    await expect(host.dispatch(call("execution.run",{argv:["-e","1"],cwd:".",runtimeId:"bundled-node",timeoutMs:1000}),control))
+      .rejects.toThrow("NATIVE_FILE_CAPABILITY_UNAVAILABLE");
+  });
+
+  it("只把宿主上下文中的 task/fence 与经过验证的相对路径交给原生端口",async()=>{
+    const filePort=vi.fn(async()=>({version:3}));
+    const host=createNativeFilesWorkbenchHost(db,{...options,filePort})!;
+    const output=await host.dispatch(call("files.edit",{path:"草稿/报告.html",content:"你好",expectedVersion:2}),control);
+    expect(filePort).toHaveBeenCalledWith({executionTaskId:"task",attempt:2,fenceToken:"fence"},"op",
+      {kind:"write",path:"草稿/报告.html",contentBase64:Buffer.from("你好").toString("base64"),expectedVersion:2});
+    expect(output).toMatchObject({status:"succeeded",operationId:"op",content:[{type:"text",text:expect.stringContaining('"version":3')}]});
+    const invalid=await host.dispatch(call("files.write",{path:"../other",content:"x"}),control);
+    expect(invalid).toMatchObject({status:"failed",error:{code:"invalid_input",dispatched:false,nextAction:"fix_input"}});
+    expect(filePort).toHaveBeenCalledTimes(1);
+  });
+
+  it.each(["darwin","win32"] as const)("%s 列举任务根目录接受点路径，但不开放绝对路径或父目录",async platform=>{
+    const filePort=vi.fn(async()=>["报告.md"]);
+    const host=createNativeFilesWorkbenchHost(db,{...options,platform,filePort})!;
+    expect(await host.dispatch(call("files.list",{path:"."}),control)).toMatchObject({status:"succeeded"});
+    expect(filePort).toHaveBeenLastCalledWith({executionTaskId:"task",attempt:2,fenceToken:"fence"},"op",{kind:"list"});
+    expect(await host.dispatch(call("files.list",{}),control)).toMatchObject({status:"succeeded"});
+    for(const path of ["/","..","../outside","./../outside"]){
+      expect(await host.dispatch(call("files.list",{path}),control)).toMatchObject({status:"failed",error:{dispatched:false}});
+    }
+    expect(await host.dispatch(call("files.write",{path:".",content:"x"}),control)).toMatchObject({status:"failed",error:{dispatched:false}});
+    expect(filePort).toHaveBeenCalledTimes(2);
+  });
+
+  it("回读文本与冲突版本有确定结果，未知写入保留原 operationId 等待对账",async()=>{
+    const filePort=vi.fn(async (_ref,_id,action)=>{
+      if(action.kind==="read")return {contentBase64:Buffer.from("事实=0").toString("base64"),total:8,version:1};
+      throw new NativeFileError("VERSION_CONFLICT",true,4);
+    });
+    const host=createNativeFilesWorkbenchHost(db,{...options,filePort})!;
+    const read=await host.dispatch(call("files.read",{path:"事实.csv",offset:0,limit:100}),control);
+    expect(read).toMatchObject({status:"succeeded",content:[{type:"text"}]});
+    expect((read as {content:Array<{text:string}>}).content[0]!.text).toContain("事实=0");
+    const conflict=await host.dispatch(call("files.edit",{path:"事实.csv",content:"新值",expectedVersion:1}),control);
+    expect(conflict).toMatchObject({status:"failed",operationId:"op",error:{code:"version_conflict:4",dispatched:false,nextAction:"fix_input"}});
+    const uncertain=createNativeFilesWorkbenchHost(db,{...options,filePort:async()=>{throw new NativeFileError("NATIVE_RESULT_UNKNOWN",true);}})!;
+    const unknown=await uncertain.dispatch(call("files.write",{path:"事实.csv",content:"新值",expectedVersion:1}),control);
+    expect(unknown).toMatchObject({status:"unknown",operationId:"op",error:{dispatched:true,retryable:false,nextAction:"reconcile"}});
+  });
+});
+
+describe("Mac 受控命令能力",()=>{
+  it("目录分别声明启动、查询、取消；只把原任务中的目标 operation ID 交给原生端口",async()=>{
+    const commandPort=vi.fn(async()=>({operationId:"target-run",state:"running",stdoutRef:"command:x:stdout",stderrRef:"command:x:stderr"}));
+    const host=createNativeFilesWorkbenchHost(db,{...options,commandPort})!;
+    expect(host.catalog.find(item=>item.name==="execution.run")?.effects).toEqual(["process"]);
+    expect(host.catalog.find(item=>item.name==="execution.status")?.effects).toEqual(["read"]);
+    expect(host.catalog.find(item=>item.name==="execution.cancel")?.effects).toEqual(["process"]);
+    const status=await host.dispatch(call("execution.status",{targetOperationId:"target-run"}),control);
+    expect(commandPort).toHaveBeenCalledWith({executionTaskId:"task",attempt:2,fenceToken:"fence"},"op",
+      {kind:"command_status",targetOperationId:"target-run"});
+    expect(status).toMatchObject({status:"succeeded",operationId:"op"});
+    expect(await host.dispatch(call("execution.status",{targetOperationId:"../other"}),control))
+      .toMatchObject({status:"failed",error:{code:"invalid_input",dispatched:false}});
+    expect(commandPort).toHaveBeenCalledTimes(1);
+  });
+  it("启动使用 argv 与已批准 runtime，输出分页保留游标，取消只引用本任务原操作",async()=>{
+    const commandPort=vi.fn(async (_ref:unknown,_id:string,action:NativeCommandAction)=>{
+      if(action.kind==="command_read")return {contentBase64:Buffer.from("长输出").toString("base64"),more:true,nextOffset:9};
+      return {operationId:"targetOperationId" in action?action.targetOperationId:"op",state:action.kind==="command_cancel"?"cancelled":"running",stdoutRef:"command:x:stdout"};
+    });
+    const host=createNativeFilesWorkbenchHost(db,{...options,commandPort})!;
+    const run=await host.dispatch(call("execution.run",{argv:["-e","console.log(1)"],cwd:".",runtimeId:"bundled-node",timeoutMs:1000}),control);
+    expect(run).toMatchObject({status:"succeeded",operationId:"op"});
+    expect(commandPort).toHaveBeenCalledWith({executionTaskId:"task",attempt:2,fenceToken:"fence"},"op",
+      {kind:"command_run",argv:["-e","console.log(1)"],cwd:".",runtimeId:"bundled-node",timeoutMs:1000});
+    const read=await host.dispatch(call("execution.read",{targetOperationId:"run-1",stream:"stdout",offset:0,limit:64}),control);
+    expect(read).toMatchObject({status:"succeeded",content:[{type:"text",text:expect.stringContaining('"nextOffset":9')}]});
+    await host.dispatch(call("execution.cancel",{targetOperationId:"run-1"}),control);
+    expect(commandPort).toHaveBeenLastCalledWith({executionTaskId:"task",attempt:2,fenceToken:"fence"},"op",
+      {kind:"command_cancel",targetOperationId:"run-1"});
+    expect(await host.dispatch(call("execution.run",{argv:["/bin/sh"],cwd:".",runtimeId:"unknown",timeoutMs:1000}),control))
+      .toMatchObject({status:"failed",error:{code:"invalid_input",dispatched:false}});
+  });
+  it("缺失的随包运行时明确失败；已分发但断联的启动保持待对账",async()=>{
+    const invocation=call("execution.run",{argv:["-e","1"],cwd:".",runtimeId:"bundled-python",timeoutMs:1000});
+    const unavailable=createNativeFilesWorkbenchHost(db,{...options,commandPort:async()=>{throw new NativeFileError("COMMAND_UNAVAILABLE",true);}})!;
+    expect(await unavailable.dispatch(invocation,control)).toMatchObject({status:"failed",error:{code:"command_unavailable",dispatched:false}});
+    const uncertain=createNativeFilesWorkbenchHost(db,{...options,commandPort:async()=>{throw new NativeFileError("NATIVE_RESULT_UNKNOWN",true);}})!;
+    expect(await uncertain.dispatch(invocation,control)).toMatchObject({status:"unknown",error:{dispatched:true,retryable:false,nextAction:"reconcile"}});
+  });
+});
+
+const realModel=process.env.CREATOROS_T1012_REAL_MODEL==="1";
+const realMacFiles=process.platform==="darwin" && process.env.CREATOROS_TEST_PACKAGED_RUNTIME_ROOT
+  && (process.env.CREATOROS_T1007_REAL_FILES==="1" || process.env.CREATOROS_T1009_REAL_HOST==="1" || realModel) ? it : it.skip;
+
+realMacFiles("真实 Mac socket + 模型工具调用、双版本 Blob 与导出，跨账号与旧 fence 拒绝",async()=>{
+  if(realModel && !(process.env.CREATOROS_T1012_MODEL_TOKEN??process.env.MINIMAX_API_KEY))
+    throw Error("真实模型验收需要 CREATOROS_T1012_MODEL_TOKEN 或 MINIMAX_API_KEY");
+  const directory=await mkdtemp(join(tmpdir(),"t1007-html-host-"));
+  const ready=join(directory,"ready"),done=join(directory,"done"),taskRoot=join(directory,"tasks");
+  const projectRoot=resolve(import.meta.dirname,"../../..");
+  const rust=spawn("cargo",["test","--manifest-path","frontend/src-tauri/src/workbench/Cargo.toml",
+    "--locked","--offline","external_node_files_host_fixture","--","--ignored","--nocapture"],{
+    cwd:projectRoot,
+    env:{...process.env,CREATOROS_FILES_E2E_NODE_PID:String(process.pid),CREATOROS_FILES_E2E_READY_FILE:ready,
+      CREATOROS_FILES_E2E_DONE_FILE:done,CREATOROS_FILES_E2E_TASK_ROOT:taskRoot},
+    stdio:["ignore","pipe","pipe"],
+  });
+  let output="",exited:number|null|undefined;
+  rust.stdout.on("data",chunk=>{output+=String(chunk);});
+  rust.stderr.on("data",chunk=>{output+=String(chunk);});
+  const exit=new Promise<number|null>((resolveExit,rejectExit)=>{
+    rust.once("exit",code=>{exited=code;resolveExit(code);});
+    rust.once("error",rejectExit);
+  });
+  let closeDb:(()=>Promise<void>)|undefined;
+  try {
+    let socketPath:string|undefined;
+    const deadline=Date.now()+90_000;
+    while(Date.now()<deadline&&exited===undefined){
+      try {socketPath=(await readFile(ready,"utf8")).trim();break;}catch{/* Rust fixture is compiling. */}
+      await new Promise(resolveWait=>setTimeout(resolveWait,100));
+    }
+    if(!socketPath)throw new Error(`Rust file fixture did not become ready: ${output}`);
+    const opened=await createDb();const realDb=opened.db;closeDb=()=>opened.client.close();
+    const tasks=createPersistentTaskService(realDb);
+    const nonce=randomUUID(),userId=`html-user-${nonce}`,accountId=`html-account-${nonce}`;
+    const makeTask=async(suffix:string,taskAccountId=accountId)=>{
+      const task=await tasks.enqueue({userId,accountId:taskAccountId,requestId:`${nonce}-${suffix}`,source:"user"},
+        {kind:"ai_task",ownerType:"ai_task",ownerId:`${nonce}-${suffix}`,idempotencyKey:`${nonce}-${suffix}`,payload:{}});
+      const workerId=`html-worker-${suffix}`;
+      const claim=await tasks.claimTask({taskId:task.id,workerId,leaseSeconds:120});
+      if(!claim)throw new Error(`claim missing for ${suffix}`);
+      return {task,context:{userId,accountId:taskAccountId,taskId:task.id,attempt:claim.lease.attempt,
+        fenceToken:claim.lease.fenceToken,leaseId:workerId}};
+    };
+    const owner=await makeTask("owner"),other=await makeTask("other");
+    const foreign=await makeTask("foreign",`html-other-account-${nonce}`);
+    const host=createNativeFilesWorkbenchHost(realDb,{platform:"darwin",desktop:true,socketPath})!;
+    const invoke=(context:typeof owner.context,name:string,input:Record<string,unknown>,operationId=randomUUID())=>
+      host.dispatch({context:{...context,operationId},invocation:{name,schemaVersion:1,input}},
+        {signal:AbortSignal.timeout(20_000),onProgress:()=>{}});
+    const value=(reply:Awaited<ReturnType<typeof invoke>>)=>{
+      expect(reply.status,JSON.stringify(reply)).toBe("succeeded");
+      if(reply.status!=="succeeded")throw new Error(JSON.stringify(reply));
+      const content=reply.content[0];
+      expect(content?.type).toBe("text");
+      return JSON.parse((content as {type:"text";text:string}).text) as Record<string,unknown>|null;
+    };
+    const html="<!doctype html><html lang=\"zh-CN\"><meta charset=\"utf-8\"><title>真实任务报告</title><body><h1>事实 0</h1></body></html>";
+    const file="交付/报告.html";
+    expect(value(await invoke(owner.context,"files.write",{path:file,content:html,expectedVersion:0}))).toMatchObject({version:1,writeMode:"replace_all",size:Buffer.byteLength(html),hash:createHash("sha256").update(html).digest("hex")});
+    const read=value(await invoke(owner.context,"files.read",{path:file,offset:0,limit:4096}));
+    expect(read).toMatchObject({text:html,version:1,encoding:"utf8",total:Buffer.byteLength(html)});
+    expect(value(await invoke(owner.context,"files.stat",{path:file}))).toMatchObject({isDirectory:false,size:Buffer.byteLength(html),version:1});
+    expect(value(await invoke(other.context,"files.read",{path:file}))).toBeNull();
+    expect(value(await invoke(other.context,"files.stat",{path:file}))).toBeNull();
+    expect(value(await invoke(foreign.context,"files.read",{path:file}))).toBeNull();
+    await expect(invoke({...other.context,taskId:owner.task.id},"files.read",{path:file}))
+      .rejects.toMatchObject({name:"ConflictError"});
+    await expect(invoke({...owner.context,fenceToken:"stale-fence"},"files.stat",{path:file}))
+      .rejects.toMatchObject({name:"ConflictError"});
+    const expectedHash=createHash("sha256").update(String(read?.text)).digest("hex");
+    const storage=createLocalFsObjectStorage({rootPath:join(directory,"blobs"),publicBaseUrl:"/blob"},
+      {nextKey:()=>{throw new Error("产物必须使用确定性存储键");}});
+    const blobs=createWorkbenchBlobService(async()=>storage);
+    const artifactHost=createWorkbenchArtifactHost(realDb,{platform:"darwin",desktop:true,socketPath,blobs})!;
+    const artifactReader=createWorkbenchArtifactReadService(realDb,{blobs});
+    const artifactCall=(context:typeof owner.context,name:string,input:Record<string,unknown>)=>
+      artifactHost.dispatch({context:{...context,operationId:randomUUID()},invocation:{name,schemaVersion:1,input}},
+        {signal:AbortSignal.timeout(20_000),onProgress:()=>{}});
+    const registered=async(context:typeof owner.context,input:Record<string,unknown>)=>{
+      const reply=await artifactCall(context,"artifact.register",input);
+      expect(reply.status,JSON.stringify(reply)).toBe("succeeded");
+      if(reply.status!=="succeeded")throw new Error(JSON.stringify(reply));
+      const text=reply.content.find(part=>part.type==="text");
+      expect(text?.type).toBe("text");
+      return JSON.parse((text as {type:"text";text:string}).text) as
+        {artifactId:string;version:number;hash:string;size:number;relativePath:string};
+    };
+    const version1=await registered(owner.context,{path:file,mime:"text/html"});
+    expect(version1).toMatchObject({version:1,relativePath:file,size:Buffer.byteLength(html),hash:expectedHash});
+    const secondFile="交付/修订.html",secondHtml=html.replace("事实 0","事实 1");
+    expect(value(await invoke(owner.context,"files.write",{path:secondFile,content:secondHtml,expectedVersion:0})))
+      .toMatchObject({version:1,writeMode:"replace_all",size:Buffer.byteLength(secondHtml),hash:createHash("sha256").update(secondHtml).digest("hex")});
+    const secondRead=value(await invoke(owner.context,"files.read",{path:secondFile,offset:0,limit:4096}));
+    expect(secondRead).toMatchObject({text:secondHtml,version:1});
+    const version2=await registered(owner.context,{path:secondFile,mime:"text/html",
+      artifactId:version1.artifactId,expectedVersion:1});
+    const secondHash=createHash("sha256").update(String(secondRead?.text)).digest("hex");
+    expect(version2).toMatchObject({artifactId:version1.artifactId,version:2,relativePath:secondFile,
+      size:Buffer.byteLength(secondHtml),hash:secondHash});
+    const artifactContext={userId,accountId,requestId:randomUUID(),source:"ai" as const};
+    const firstBlob=await artifactReader.readAll(artifactContext,owner.task.id,version1.artifactId,1);
+    const secondBlob=await artifactReader.readAll(artifactContext,owner.task.id,version1.artifactId,2);
+    expect(Buffer.from(firstBlob.bytes).toString("utf8")).toBe(html);
+    expect(Buffer.from(secondBlob.bytes).toString("utf8")).toBe(secondHtml);
+    expect(createHash("sha256").update(firstBlob.bytes).digest("hex")).toBe(version1.hash);
+    expect(createHash("sha256").update(secondBlob.bytes).digest("hex")).toBe(version2.hash);
+    const firstPdf=await renderTrustedWorkbenchHtml({html:firstBlob.bytes,format:"pdf"});
+    const secondPdf=await renderTrustedWorkbenchHtml({html:secondBlob.bytes,format:"pdf"});
+    for(const [pdf,expected,unexpected] of [[firstPdf,"事实 0","事实 1"],[secondPdf,"事实 1","事实 0"]] as const){
+      expect(pdf.subarray(0,5).toString()).toBe("%PDF-");
+      const parser=new PDFParse({data:pdf});
+      try{const text=(await parser.getText()).text;expect(text).toContain(expected);expect(text).not.toContain(unexpected);}
+      finally{await parser.destroy();}
+    }
+    const secondPng=await renderTrustedWorkbenchHtml({html:secondBlob.bytes,format:"png"});
+    expect(secondPng.subarray(0,8)).toEqual(Buffer.from([137,80,78,71,13,10,26,10]));
+    // 模型协议夹具选择工具；写入、登记与渲染仍经过真实 Worker、租约和 Mac 宿主。
+    const modelHtml="<!doctype html><html lang=\"zh-CN\"><meta charset=\"utf-8\"><body><h1>模型工具链报告</h1></body></html>";
+    const modelFile="交付/模型报告.html",now=()=>new Date().toISOString();
+    const modelContext={userId,accountId,requestId:`${nonce}-model`,source:"user" as const};
+    const repo=createAiRepository(realDb,{userId,accountId,now,nextId:prefix=>`${prefix}-${randomUUID()}`});
+    const conversation=await repo.createConversation({title:"真实文件交付验证",projectId:null,scope:"global"});
+    const request="制作一份简短 HTML 报告，正文包含“模型工具链报告”，保存到交付/模型报告.html，并登记为可预览产物。完成后告诉我已交付。";
+    const source=await repo.createMessage(conversation.id,{role:"user",content:request,attachments:[],modelMetadata:{}});
+    const {defineWorkbenchChatTool}=await import("../../../backend/src/modules/ai-runtime/chat-tool-gate");
+    const {prepareChatToolDefinitions}=await import("../../../backend/src/modules/ai-runtime/chat-tool-definitions");
+    const {createChatWorkbenchCapabilityHost}=await import("../../../backend/src/modules/ai-runtime/chat-workbench-capability-host");
+    const {createChatWorkerDispatcher}=await import("../../../backend/src/modules/execution/model-worker-dispatcher");
+    const {createExecutionLeaseService}=await import("../../../backend/src/modules/execution/execution-lease.service");
+    const descriptors=[host.catalog.find(item=>item.name==="files.write")!,artifactHost.catalog.find(item=>item.name==="artifact.register")!];
+    const prototypes=Object.fromEntries(descriptors.map(item=>[item.name,defineWorkbenchChatTool(item,async()=>{throw Error("unused");})]));
+    const definitions=(await prepareChatToolDefinitions(prototypes,{workbenchCapabilities:descriptors})).definitions;
+    const submitted=await createChatTurnSubmissionService(realDb,{now,assemble:async()=>({
+      capability:"copilot.assist",system:"使用可用工具完成用户的文件交付目标；交付前核对工具回执。",messages:[{role:"user",content:request}],
+      maxSteps:6,maxOutputTokens:realModel?1024:256,tools:definitions,workbenchCapabilities:descriptors,workbenchPlatform:"macos",
+    })}).submit(modelContext,{conversationId:conversation.id,sourceMessageId:source.id});
+    execFileSync(process.execPath,[resolve(projectRoot,"ai-worker/scripts/build.mjs")],{cwd:projectRoot,stdio:"pipe"});
+    let modelRequests=0;
+    const server=realModel?undefined:createServer((request,response)=>{request.resume();request.on("end",()=>{
+      modelRequests++;
+      const calls=[
+        {name:"files_write",arguments:{path:modelFile,content:modelHtml,expectedVersion:0}},
+        {name:"artifact_register",arguments:{path:modelFile,mime:"text/html"}},
+      ];
+      const next=calls[modelRequests-1];
+      const delta=next?{tool_calls:[{index:0,id:`model-call-${modelRequests}`,type:"function",function:{name:next.name,arguments:JSON.stringify(next.arguments)}}]}:{content:"报告已交付。"};
+      const chunks=[{choices:[{index:0,delta,finish_reason:null}]},{choices:[{index:0,delta:{},finish_reason:next?"tool_calls":"stop"}],usage:{prompt_tokens:2,completion_tokens:3,total_tokens:5}}];
+      response.writeHead(200,{"content-type":"text/event-stream"});
+      response.end(chunks.map(chunk=>`data: ${JSON.stringify({id:"fixture",object:"chat.completion.chunk",created:1,model:"fixture",...chunk})}\n\n`).join("")+"data: [DONE]\n\n");
+    });});
+    if(server)await new Promise<void>(ready=>server.listen(0,"127.0.0.1",ready));
+    const leases=createExecutionLeaseService(realDb,{now});
+    const available={catalog:descriptors,platform:"macos" as const,capabilities:["task.files","task.artifacts"],
+      dispatch:(call:Parameters<typeof host.dispatch>[0],dispatchControl:Parameters<typeof host.dispatch>[1])=>
+        call.invocation.name==="files.write"?host.dispatch(call,dispatchControl):artifactHost.dispatch(call,dispatchControl),
+      // 聊天任务使用 artifactProtocolVersion=2；真实组合宿主必须保留产物专用的原子结算与未知态端口。
+      commitAndSettle:(call:Parameters<NonNullable<typeof artifactHost.commitAndSettle>>[0],input:Parameters<NonNullable<typeof artifactHost.commitAndSettle>>[1])=>
+        artifactHost.commitAndSettle!(call,input),
+      markUnknown:(call:Parameters<NonNullable<typeof artifactHost.markUnknown>>[0],input:Parameters<NonNullable<typeof artifactHost.markUnknown>>[1])=>
+        artifactHost.markUnknown!(call,input)};
+    const resolveTools=createChatWorkbenchCapabilityHost(available,
+      ref=>leases.withLease(ref,"admission",async({task,context})=>({userId:context.userId,accountId:context.accountId!,
+        taskId:task.id,attempt:task.attempt,fenceToken:task.fenceToken!,leaseId:task.leaseOwner!})),async()=>{});
+    const worker=createChatWorkerDispatcher(realDb,{entryPath:resolve(projectRoot,"ai-worker/dist/execution-worker.cjs"),
+      workerId:`html-model-${nonce}`,budget:{maxCalls:8,maxTokens:100000,deadlineMs:realModel?90_000:60_000},pollMs:100,modelConcurrency:1,
+      resolveTools,resolveModelCredential:async()=>{
+        if(realModel){
+          const token=(process.env.CREATOROS_T1012_MODEL_TOKEN??process.env.MINIMAX_API_KEY)!;
+          const format=process.env.CREATOROS_T1012_MODEL_API_FORMAT??"anthropic";
+          if(format!=="anthropic"&&format!=="openai_chat"&&format!=="openai_responses")
+            throw Error("CREATOROS_T1012_MODEL_API_FORMAT 无效");
+          return {apiFormat:format,authStyle:"bearer" as const,
+            baseUrl:process.env.CREATOROS_T1012_MODEL_BASE_URL??"https://api.minimax.io/anthropic",
+            model:process.env.CREATOROS_T1012_MODEL_NAME??"MiniMax-M3",token};
+        }
+        return {apiFormat:"openai_chat" as const,baseUrl:`http://127.0.0.1:${(server!.address() as {port:number}).port}/v1`,model:"fixture",token:"fixture"};
+      }});
+    try{
+      worker.start();
+      await expect.poll(async()=>["succeeded","failed","waiting_user","unknown_result"].includes(
+        (await realDb.select().from(executionTasks).where(eq(executionTasks.id,submitted.executionTaskId)))[0]?.status??""),{timeout:realModel?100_000:30_000}).toBe(true);
+      const terminal=(await realDb.select().from(executionTasks).where(eq(executionTasks.id,submitted.executionTaskId)))[0]!;
+      const calls=await realDb.select().from(executionCalls).where(eq(executionCalls.executionTaskId,submitted.executionTaskId));
+      expect(terminal.status,JSON.stringify({error:terminal.lastErrorCode,calls:calls.map(row=>({kind:row.kind,status:row.status}))})).toBe("succeeded");
+      expect((terminal.payload as Record<string,unknown>).artifactProtocolVersion).toBe(2);
+      if(!realModel)expect(modelRequests).toBe(3);
+      expect(calls.filter(row=>row.kind==="tool").map(row=>row.status)).toEqual(["settled","settled"]);
+      const registeredModel=calls.map(row=>row.resultText??"").join(" ").match(/wa-[a-f0-9]{32}@1/);
+      expect(registeredModel).not.toBeNull();
+      const modelBlob=await artifactReader.readAll(modelContext,submitted.executionTaskId,registeredModel![0].split("@")[0]!,1);
+      const deliveredHtml=Buffer.from(modelBlob.bytes).toString("utf8");
+      if(realModel){expect(deliveredHtml).toContain("模型工具链报告");expect(deliveredHtml).toMatch(/<html\b/i);}
+      else expect(deliveredHtml).toBe(modelHtml);
+      const modelPdf=await renderTrustedWorkbenchHtml({html:modelBlob.bytes,format:"pdf"});
+      const parser=new PDFParse({data:modelPdf});
+      try{expect((await parser.getText()).text.normalize("NFKC")).toContain("模型工具链报告");}finally{await parser.destroy();}
+    }finally{await worker.stop();if(server){server.closeAllConnections();await new Promise<void>(closed=>server.close(()=>closed()));}}
+    const artifactRead=await artifactCall(owner.context,"artifact.read",{artifactId:version1.artifactId,
+      version:1,offset:0,limit:4096});
+    expect(artifactRead).toMatchObject({status:"succeeded",artifactRefs:[`${version1.artifactId}@1`]});
+    expect(artifactRead.status==="succeeded"&&artifactRead.content[0]?.type==="text"&&
+      JSON.parse(artifactRead.content[0].text).hash).toBe(version1.hash);
+    expect(await artifactCall({...owner.context,accountId:"foreign-account"},"artifact.read",
+      {artifactId:version1.artifactId,version:1})).toMatchObject({status:"failed",error:{code:"artifact_scope_invalid"}});
+    expect(await artifactCall(other.context,"artifact.read",{artifactId:version1.artifactId,version:1}))
+      .toMatchObject({status:"failed"});
+    expect(await artifactCall(foreign.context,"artifact.read",{artifactId:version1.artifactId,version:1}))
+      .toMatchObject({status:"failed"});
+    expect(await artifactCall({...owner.context,fenceToken:"stale-fence"},"artifact.register",
+      {path:file,mime:"text/html"})).toMatchObject({status:"failed",error:{code:"artifact_scope_invalid"}});
+    expect(await artifactCall({...owner.context,fenceToken:"stale-fence"},"artifact.read",
+      {artifactId:version1.artifactId,version:1})).toMatchObject({status:"failed",error:{code:"artifact_scope_invalid"}});
+    await expect(artifactReader.readAll({...artifactContext,accountId:"foreign-account"},owner.task.id,
+      version1.artifactId,1)).rejects.toThrow();
+    const script="const fs=require('node:fs');const crypto=require('node:crypto');"+
+      "process.stdout.write(crypto.createHash('sha256').update(fs.readFileSync('交付/报告.html')).digest('hex'))";
+    expect(value(await invoke(owner.context,"files.write",{path:"check.js",content:script,expectedVersion:0}))).toMatchObject({version:1,writeMode:"replace_all",size:Buffer.byteLength(script),hash:createHash("sha256").update(script).digest("hex")});
+    const commandId=randomUUID();
+    expect(value(await invoke(owner.context,"execution.run",{argv:["check.js"],cwd:".",runtimeId:"bundled-node",timeoutMs:10000},commandId)))
+      .toMatchObject({operationId:commandId});
+    let state="running";
+    for(let index=0;index<100 && state==="running";index++){
+      const receipt=value(await invoke(owner.context,"execution.status",{targetOperationId:commandId}));
+      state=String(receipt?.state);
+      if(state==="running")await new Promise(resolveWait=>setTimeout(resolveWait,50));
+    }
+    expect(state).toBe("succeeded");
+    expect(value(await invoke(owner.context,"execution.read",{targetOperationId:commandId,stream:"stdout",offset:0,limit:256})))
+      .toMatchObject({text:expectedHash,encoding:"utf8"});
+    expect(await invoke(other.context,"execution.status",{targetOperationId:commandId}))
+      .toMatchObject({status:"failed",error:{code:"invalid_command"}});
+    await writeFile(done,JSON.stringify({userId,accountId,taskId:owner.task.id,html}));
+    expect(await exit,output).toBe(0);
+  } finally {
+    await closeDb?.();
+    if(exited===undefined){
+      await writeFile(done,JSON.stringify({abort:true})).catch(()=>{});
+      await Promise.race([exit.catch(()=>null),new Promise(resolveWait=>setTimeout(resolveWait,5000))]);
+      if(exited===undefined){rust.kill();await exit.catch(()=>{});}
+    }
+    await rm(directory,{recursive:true,force:true});
+  }
+},180_000);

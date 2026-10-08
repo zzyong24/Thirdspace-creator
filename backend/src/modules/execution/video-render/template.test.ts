@@ -157,6 +157,26 @@ describe("generateVideoRenderHtml", () => {
     expect(html).toMatchSnapshot();
   });
 
+  it("[T-1018] 竖屏人物在片尾切换布局时不延长主时间线", () => {
+    const props = fullProps();
+    const html = generateVideoRenderHtml({
+      ...props,
+      delivery: { width: 1080, height: 1920, fps: 30 },
+      broll: [],
+      scenes: [{
+        id: "tail",
+        label: "片尾",
+        title: "片尾内容",
+        startSec: 0,
+        endSec: 60,
+        role: "body",
+        cards: [{ kind: "quote", at: 59.8, text: "片尾信息", tone: "accent" }],
+      }],
+    });
+    expect(html).toMatch(/tl\.to\("#th",\{[^\n]*duration:0\.20[^\n]*\},59\.80\);/);
+    expect(html).not.toMatch(/tl\.to\("#th",\{[^\n]*\},60\.00\);/);
+  });
+
   it("双语字幕:SRT 主时钟,重叠行被夹断(end 夹到下一行 start-0.02)", () => {
     const html = generateVideoRenderHtml(fullProps());
     // 第 2 行 end=5.2 但下一行 start=5.3 → duration = 5.28-2.50 = 2.78

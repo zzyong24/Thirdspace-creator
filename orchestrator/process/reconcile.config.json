@@ -80,12 +80,6 @@
       "onFail": "渠道作用域门回归：缺签名 channelRef 必须投影 activation_scope_missing、零出网且 UI 可见；真实复校成功后必须刷新 SSR authority。"
     },
     {
-      "led": "LED-009",
-      "what": "用写死词表、关键词分数或字符串相似度替代 Skill 做创作语义判断",
-      "check": "node orchestrator/process/semantic-boundary-scan.mjs && pnpm --dir backend exec vitest run src/modules/ai-runtime/video-decisions-runner.test.ts",
-      "onFail": "语义职责边界回归：意图理解、内容归类和素材/场景匹配必须走 Skill/模型；代码只守真实 ID、归属、类型、范围、时间、幂等和安全。确定性相似度仅可用于去重/协议纠错/安全校验，并须标记 SEMANTIC_BOUNDARY_ALLOW: 与测试。"
-    },
-    {
       "led": "LED-010",
       "what": "CreatorOS 本机验收包退回手工拼接环境变量",
       "check": "pnpm --dir frontend exec vitest run scripts/desktop/package-local.test.mjs",
@@ -282,6 +276,48 @@
       "what": "Windows 类型检查子进程默认堆不足造成重复构建失败",
       "check": "node --test tools/windows-closure-rat/build-memory.test.mjs tools/windows-closure-rat/build-production-closure.test.mjs",
       "onFail": "检查实际子进程预算传播；禁止关闭类型检查、无限加内存或污染安装后运行时。"
+    },
+    {
+      "led": "LED-056",
+      "what": "宿主支持新工具版本，但真实内置目录筛选或新任务冻结丢掉该能力",
+      "check": "pnpm --dir frontend exec vitest run src/server/workbench-builtin-manifest.test.ts src/server/prepare-chat-reply.test.ts src/server/workbench-artifact-register.integration.test.ts --retry=0",
+      "onFail": "必须经正式selector、公开capabilities、prepareChatReply冻结与真实工具端口验收；精确声明各工具当前版本，保留旧任务冻结定义，不用直接注入host目录代替生产装配。"
+    },
+    {
+      "led": "LED-055",
+      "what": "历史stop续行读取当前计划，导致模型请求重放指纹变化或原任务再次阻断",
+      "check": "pnpm --dir backend exec vitest run src/modules/execution/workbench-plan-history.test.ts src/modules/execution/chat-model-retry-anchor.test.ts src/modules/execution/chat-model-pause-recovery.test.ts --retry=0 && pnpm --dir ai-worker exec vitest run src/execution/durable-stream-model.test.ts src/execution/worker-runtime.test.ts src/execution/chat-plan-history-replay.test.ts --retry=0",
+      "onFail": "恢复按原模型调用锚点读取已证明历史计划，保留严格请求摘要/原账本费用，不以最新状态替代历史或宽松忽略mismatch。"
+    },
+    {
+      "led": "LED-054",
+      "what": "外部 I/O 或产物存储设置读取再次占住 PGlite 事务，或完成对账后原任务仍永久阻断",
+      "check": "pnpm --dir frontend exec vitest run src/server/workbench-native-client.test.ts src/server/workbench-browser-host.test.ts --retry=0 && pnpm --dir ai-worker exec vitest run src/runtime/chat/chat-pi-loop.protocol.test.ts --retry=0 && pnpm --dir backend exec vitest run src/modules/execution/execution-worker-outcome.service.test.ts src/modules/execution/persistent-task.service.test.ts src/modules/execution/workbench-artifact-lineage.service.test.ts src/integration/chat-worker-entry.test.ts --retry=0",
+      "onFail": "恢复短事务读取可信身份→事务外 I/O→短事务复核租约；对象存储回读必须在租约事务外完成；外部副作用按原键对账后自动续跑同一任务。"
+    },
+    {
+      "led": "LED-059",
+      "what": "内置工具约束再次阻断整轮聊天装配，或前端在没有任务回执和进展时无限自动恢复",
+      "check": "pnpm --dir backend exec vitest run src/modules/ai-runtime/chat-tool-parameters.test.ts --retry=0 && pnpm --dir frontend exec vitest run src/server/prepare-chat-reply.test.ts src/features/copilot/chat-task-control.test.ts src/features/copilot/ai-copilot-interactions.test.tsx --retry=0",
+      "onFail": "恢复真实内置工具装配回归与有限恢复预算：已支持约束必须实际校验，未知约束 fail-closed；没有持久任务时连续三次无进展即停止自动请求并保留同轮继续入口。"
+    },
+    {
+      "led": "LED-058",
+      "what": "模型断流、超时或候选不完整再次变成用户手动重试终态，或外部副作用被盲目重放",
+      "check": "pnpm --dir ai-worker exec vitest run src/execution/durable-generation-model.test.ts src/execution/durable-stream-model.test.ts src/execution/durable-pi-stream.test.ts src/execution/chat-tool-input-liveness.test.ts src/runtime/pi-provider-http.test.ts src/execution/intelligence-generation-worker.test.ts --retry=0 && pnpm --dir backend exec vitest run src/modules/execution/execution-call-ledger.service.test.ts src/modules/execution/execution-worker-outcome.service.test.ts src/modules/execution/execution-chat-generation.service.test.ts src/modules/ai/chat-turn-completion.service.test.ts src/modules/intelligence/topic-preview-runner.test.ts --retry=0 && pnpm --dir frontend exec vitest run src/features/intelligence/intelligence-workbench.test.tsx src/features/copilot/ai-copilot-interactions.test.tsx src/server/chat-execution-stream.test.ts --retry=0",
+      "onFail": "恢复模型候选的 superseded→retry_wait→同任务重试链；保留预算、检查点和原对话。只有无模型配置进入设置引导；用户取消与外部副作用 unknown 继续禁止自动重放。"
+    },
+    {
+      "led": "LED-009",
+      "what": "用写死词表、关键词分数或字符串相似度替代 Skill 做创作语义判断",
+      "check": "node --test orchestrator/process/semantic-boundary-scan.test.mjs && node orchestrator/process/semantic-boundary-scan.mjs && pnpm --dir backend exec vitest run src/modules/ai-runtime/video-decisions-runner.test.ts",
+      "onFail": "语义职责边界回归：意图理解、内容归类和素材/场景匹配必须走 Skill/模型；代码只守真实 ID、归属、类型、范围、时间、幂等和安全。确定性相似度仅可用于去重/协议纠错/安全校验，并须标记 SEMANTIC_BOUNDARY_ALLOW: 与测试。"
+    },
+    {
+      "led": "LED-057",
+      "what": "Windows 干净安装验证遗漏保留 AppData 时运行环境目录切换拒绝访问",
+      "check": "cargo test --manifest-path frontend/src-tauri/Cargo.toml --lib runtime_cleanup_tests::windows_ --no-default-features",
+      "onFail": "保留完整性校验并修复已完成隔离目录的安全复用；禁止清空用户 AppData、放宽入口校验或无依据重试。"
     }
   ],
   "program_completion_required": false,
@@ -313,7 +349,8 @@
     "navigation-account-smoothness:test": "pnpm --dir frontend exec vitest run src/components/shell/shell.test.tsx src/components/shell/account-switcher.test.tsx src/lib/account-events.test.ts src/components/shell/account-switcher-logic.test.ts --retry=0",
     "ai-recovery-guidance:e2e": "CREATOROS_TEST_PORT=3441 CREATOROS_PLAYWRIGHT_BROWSER_CHANNEL=chrome pnpm --dir frontend exec playwright test tests/e2e/ai-recovery-guidance.spec.ts --project=e2e",
     "audience-task-topics:e2e": "CREATOROS_TEST_PORT=3448 CREATOROS_PLAYWRIGHT_BROWSER_CHANNEL=chrome pnpm --dir frontend exec playwright test tests/e2e/audience-task-topics.spec.ts --project=e2e",
-    "account-group-workspace:e2e": "node docs/verification/t1022/run-journey.mjs"
+    "account-group-workspace:e2e": "node docs/verification/t1022/run-journey.mjs",
+    "ai-nonblocking-recovery:e2e": "CREATOROS_TEST_PORT=3442 CREATOROS_PLAYWRIGHT_BROWSER_CHANNEL=chrome pnpm --dir frontend exec playwright test tests/e2e/ai-nonblocking-recovery.spec.ts --project=e2e"
   },
   "research_verify_commands": {
     "t987-baseline-timing": "node docs/research/t987/verify-baseline.mjs timing",

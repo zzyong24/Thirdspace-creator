@@ -43,6 +43,8 @@ flowchart LR
 
 - `projectId`、`artifactId`、`currentVersionId`、`versionNumber`、`updatedAt`；
 - `contentHash`：对当前版本规范正文计算的 SHA-256；
+- `snapshotRef`：由服务端/运行时签发的受信引用，绑定 artifactId、currentVersionId、contentHash、
+  sectionRef 集合与原段指纹；只供同一工具回合核对，模型不能自报或改写；
 - `sections[]`：`sectionRef`、顺序、标题、类型、时间范围、当前正文；
 - `truthPriority=current_confirmed_script`。
 
@@ -65,6 +67,8 @@ flowchart LR
 - 目标只能唯一命中一个段落；
 - 替换内容非空，且与当前段原文规范化后不同；
 - 候选携带执行时的 artifact/version/section/originalText，采纳时继续走既有三重并发校验。
+- `script.patch` 执行时还必须从可信调用上下文取得本轮读取的 `snapshotRef`，重读并核对版本、hash 和
+  原段指纹；模型读取后、候选创建前已换版时立即冲突，不能把旧 replacementText 重绑到新版本。
 
 模型判断零段或多段都可能匹配时，只澄清用户语义，不向用户索要 artifactId、versionId、sectionId、hash 等技术字段。
 
@@ -82,6 +86,12 @@ flowchart LR
 - 封面继续走 `cover.generate`，但任务同样冻结当前稿快照；封面方案的内容主张先读当前确认稿，Brief 只补充受众、视觉语气与缺失背景。
 - 价格表、流程图、架构图等要求精确文字/数字/节点关系的信息卡不走自由文生图；没有确定性信息卡渲染器时应诚实提示，不能让生图模型伪造可读文字与数字。真实网页/公告/GitHub 数据优先截图或确定性图表。
 - 每轮系统注入的任务真值按 taskId 覆盖历史消息和旧工具回执。任务已完成、失败、取消或等待采纳时，编导不得继续复述旧的 queued/running 状态。
+- `material.generate` 与 `cover.generate` 完成后只经 backend service 保存统一候选封套，至少包含受信
+  `userId / accountId / projectId / taskId / sourceArtifactId / sourceVersionId / sourceHash`，段落配图还绑定
+  `sectionRef`；Worker 不更新正式素材绑定或当前封面。
+- 用户采用配图或封面时，backend 按当前 RequestContext 重读项目和当前稿并校验归属、版本、hash、
+  状态与幂等。跨账号、项目已删除或当前稿已换版时明确冲突；只有校验通过的候选才能写正式素材绑定
+  或当前封面，生成完成本身不得改变这些正式实体。
 
 ## 7. 安全与物理边界
 
@@ -99,6 +109,7 @@ flowchart LR
 4. 零段/多段命中时澄清；整稿请求不触发单段补丁；按钮入口继续可用。
 5. no-op 在工具、卡片和后端任一入口都不能写入新版本；换版后的旧候选不能覆盖新稿。
 6. 内容配图任务保存当前 artifact/version/hash、目标段落与视觉任务；封面任务保存当前稿快照。精确文字/数字信息卡不会误走自由文生图。
+   生成完成但未采用时正式素材绑定和当前封面不变；验收覆盖采用成功、跨账号拒绝和换版后旧候选拒绝。
 7. 三张素材图已从 queued 变为完成时，下一轮读取同 taskId 的真值后不得再说“还在后台跑”。
 8. 相关单测、路由测试、服务测试、类型检查、边界 Gate 与 reconcile 通过；边界检查必须证明 frontend 没有新增对 backend service/repository 的直接依赖。至少完成一次真实项目回归：读取当前稿 → 自然语言单段候选 → 用户采纳 → 刷新只改一段；并覆盖同一 `currentVersionId` 连续两次读取产生完全一致的 `sectionRef[]`。
 

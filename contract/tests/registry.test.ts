@@ -165,6 +165,10 @@ const SPEC_13: ReadonlyArray<[string, string]> = [
   ["GET", "/analytics/projects/:projectId/traffic"],
   ["POST", "/analytics/projects/:projectId/traffic/refresh"],
   ["GET", "/analytics/dashboard"],
+  // T-1027 公开失败清单与保留历史的作品重试。
+  ["GET", "/analytics/comments/failures"],
+  ["POST", "/analytics/comments/retry"],
+  ["POST", "/analytics/comments/diagnose"],
   ["POST", "/projects/:projectId/reviews"],
   // [T-053 断点③] 复盘记录列表读(复盘页「复盘记录」区)。
   ["GET", "/projects/:projectId/reviews"],
@@ -463,6 +467,17 @@ const SPEC_13: ReadonlyArray<[string, string]> = [
   ["POST", "/articles/candidates/:candidateId/adopt"],
   ["POST", "/outputs/:outputId/article/versions"],
   ["GET", "/assets/:assetId/files/:assetFileId/download-url"],
+  // T-1026 公开工作台验收契约；方向经独立审查，执行仍归原 Agent loop。
+  ["GET", "/workbench/tasks/:taskId"],
+  ["GET", "/workbench/tasks/:taskId/events"],
+  ["POST", "/workbench/tasks/:taskId/files/reconcile"],
+  ["GET", "/workbench/capabilities"],
+  ["GET", "/workbench/conversations/:conversationId/artifacts"],
+  ["GET", "/workbench/tasks/:taskId/artifacts/:artifactId/:version"],
+  ["GET", "/workbench/tasks/:taskId/artifacts/:artifactId/:version/render"],
+  ["POST", "/workbench/conversations/:conversationId/artifacts/reconcile"],
+  // 补齐既有正式契约清单：production/intelligence/settings/pages，保留穷尽及唯一性断言。
+
 ];
 
 describe("endpoint registry", () => {

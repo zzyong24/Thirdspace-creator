@@ -9,4 +9,5 @@ it('失败不替代成功时间，重试退避独立，边界到期',()=>{
  expect(isSyncDue({publishedAt:now,lastSucceededAt:'2026-09-12T22:00:00Z'},now)).toBe(true);
  expect(isSyncDue({publishedAt:now,lastSucceededAt:'2026-09-12T23:00:00Z'},now)).toBe(false);
  expect(isSyncDue({publishedAt:now,lastSucceededAt:null,retryAt:'2026-09-13T00:05:00Z'},now)).toBe(false);
+ expect(isSyncDue({publishedAt:now,lastSucceededAt:'2026-09-12T23:59:00Z',retryAt:now},now)).toBe(true);
 });

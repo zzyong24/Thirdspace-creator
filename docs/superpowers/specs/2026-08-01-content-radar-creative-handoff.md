@@ -174,8 +174,8 @@ Candidate 立项时全量映射：
 
 ### 4.2 `intelligence.transforms.confirmTopic`
 
-- `editedCandidate` 扩为完整 `TopicBriefCandidate + AdaptationStrategy`；改写初稿和来源拆解、source URL、hash、模型/模板版本由服务端从 transform 保留，客户端不得改写其 provenance。
-- backend candidate service 一次写入完整卡片、策略、只读拆解和来源链接。
+- `editedCandidate` 只允许提交用户可编辑的 `TopicBriefCandidate`。`AdaptationStrategy`、改写初稿、来源拆解、source URL、hash、模型/模板版本必须由服务端按当前 transform 重新读取并冻结；客户端即使回传这些字段也只能做完全一致校验，不能覆盖服务端真值。
+- backend candidate service 一次写入卡片、服务端读取的只读策略/拆解和来源链接。若用户要改变策略，必须重新生成新的 transform 与 `strategyHash`，不能在确认请求中直接改写。
 
 ### 4.3 `candidates.promote`
 
@@ -212,14 +212,14 @@ Candidate 立项时全量映射：
 
 异步生成完成后，当前作品详情、选题卡和“创建项目/采纳为选题”状态必须主动回显，无需用户切换选题、切换 Tab 或手动刷新。切换作品期间旧任务的迟到响应不得覆盖新作品详情；任务仍在运行时页面只显示“后台自动更新中”，不把刷新按钮当成主流程。
 
-确认按钮文案为“采纳为选题”，下方显示“将携带 1 条来源、1 份拆解和当前改编策略”。缺少真正影响立项的字段时按钮保持不可用，并逐项提示；不得因为文案长度、格式偏好或风险提示不完美而阻断用户编辑和查看已有内容。
+确认按钮文案为“采纳为选题”，下方显示“将携带 1 条来源、1 份拆解和当前改编策略”。只有当前账号归属不符、真实来源不可访问、transform/逐字稿哈希失效、非空改写初稿缺完整 provenance、无法取得真实标题或幂等一致性冲突时按钮保持不可用，并逐项提示。`angle / differentiation / sourceSummary / targetAudience / audiencePain / coreConflict / format` 与四组改写规则为空时显示真实待补状态，但不得阻断采纳或创建 Project。
 
 ### 5.2 选题中心
 
 - 卡片显示“来自内容雷达 · N 条来源 · 已有改编策略”；
 - 详情展示完整选题字段；来源拆解为只读折叠区，改编策略可读；
 - 详情继续展示同一份本账号改写稿，并可按需查看折叠的来源证据；不重新生成、不只显示摘要；
-- 创建 Project 前若目标观众、内容目标、内容形式或核心信息为空，明确阻止并引导补全，不创建半空 Project。
+- 创建 Project 前按与确认动作相同的账号、来源、transform/逐字稿哈希、非空改写初稿 provenance、真实标题与幂等一致性硬门复核。目标观众、内容目标、内容形式或核心信息为空时保留真实空值并提示后补，不阻断已有可靠改写初稿进入 Project。
 
 ### 5.3 Project 稿面
 
@@ -240,13 +240,13 @@ Project 的素材区对用户统一命名为「创作素材」，不使用「内
 ## 7. 验收
 
 - 注入阶段 B 失败：阶段 A 的拆解仍写入快照并在刷新后可见；点击重试只调用阶段 B/C，不重复阶段 A。
-- 注入阶段 C 失败：拆解、选题和策略仍可见、可编辑；页面在右稿区域显示局部失败，不产生重复 toast；重试只重新生成右稿。
+- 注入阶段 C 失败：拆解和策略仍只读可见，选题字段仍可编辑；页面在右稿区域显示局部失败，不产生重复 toast；重试只重新生成右稿。
 - 改写初稿返回自然语言纯文本时可以直接保存，不要求满足大对象 JSON schema；空文本仍诚实失败。
 - 模型返回可解析但缺少非关键字段时先展示已有候选并标注待补项；只有采纳动作受完整性门槛约束，不触发自动全链重试。
 - 单次用户操作的模型调用数量可由日志分阶段计数；任一阶段不得同时叠加 SDK 自动重试和整链重试。
-- `AC-CR-009` 增补：新生成候选的完整选题字段、四段改编策略、来源拆解和改写初稿均非空；确认后选题中心刷新读回一致，项目口播稿不得误用来源原文。
+- `AC-CR-009` 增补：用“只有带真实 provenance 的非空改写初稿、辅助字段与四段策略为空”的样例证明仍可确认并 promotion；空值保持真实且可后补。另用完整字段样例证明确认后选题中心刷新读回一致，项目口播稿不得误用来源原文。
 - `AC-CR-021` 增补：从该选题创建 Project 后，常规 `script.draft` 任务证据包含 reference/transform/transcript hash/strategy；日志不能只证明读取定位。
-- Project 创作依据缺失/哈希变化/策略为空三类用例分别受阻，普通手动 Project 仍可生成。
+- Project 创作依据缺失或 transform/逐字稿/strategy provenance 哈希变化时受阻；策略内容为空但 provenance 有效时保留真实空值并允许继续，普通手动 Project 仍可生成。
 - 内容雷达候选立项中途注入 reference attach 失败，刷新后不得出现“Project 已创建但无 reference”的半成功状态。
 - promotion 成功后 Project 首次打开即显示与选题阶段一致的右稿 seed，无需点击生成；首次保存恰好创建一个 `output_script` 版本，刷新后正文不回退 seed，provenance 仍能追到 transform/transcript/strategy。
 - 注入首次保存失败时不得产生半个 artifact/version；页面仍显示原 seed 并允许幂等重试，成功后恰有一个第一版。该范围缩减销账 `REV-002` 所指出的 promotion + artifact 跨模块原子性风险。

@@ -3,10 +3,12 @@ import type { RequestContext } from "@creatoros/contract";
 import type { ChatTurnSnapshot } from "@creatoros/backend/modules/ai";
 import { prepareDurableChatTurn, requiredSkillIdsForTask, type ChatContext, type VerbatimSource } from "@creatoros/backend/modules/ai-runtime";
 import { workerSkillSnapshotSchema } from "@creatoros/contract/execution-worker";
+import type { WorkbenchCapability } from "@creatoros/contract/agent-workbench";
 import { resolveChatMaxSteps } from "@creatoros/ai-worker/chat";
 import { humanizeAiError } from "@/lib/ai-error-humanize";
 import type { ChatRuntime } from "./persistence-client";
 import { attachmentIdsOf, withAttachmentContext, MAX_CHAT_ATTACHMENT_TOTAL_BYTES } from "./chat-attachments";
+import { selectBuiltinWorkbenchCapabilities } from "./workbench-builtin-manifest";
 
 /** 两个公开入口共用冻结方法、工具定义与模型消息装配。 */
 export async function prepareChatReply(runtime:ChatRuntime,owner:RequestContext,snapshot:ChatTurnSnapshot,input?:{
@@ -26,11 +28,13 @@ export async function prepareChatReply(runtime:ChatRuntime,owner:RequestContext,
    for(const a of attachments)if(a.extractedText?.trim())sources.push({ref:`attachment:${a.assetId}`,label:`文本附件：${a.name}`,text:a.extractedText,truncated:false,sourceType:"attachment",sourceId:a.assetId});
  }
  const skillSnapshot=await runtime.resolveEffectiveSkillSnapshot(owner,[...requiredSkillIdsForTask("chat.sync",{surface:chatContext.surface}),"topic.enrich","positioning.generate","calibration.diagnose","topic.generate","review.insights","knowledge.distill"]);
+ const workbenchHost=(runtime.durable as (ChatRuntime["durable"] & {workbenchHost?:{catalog:readonly WorkbenchCapability[];platform:WorkbenchCapability["platforms"][number];capabilities:readonly string[];dispatch:Function}}) | undefined)?.workbenchHost;
+ const workbenchCapabilities=selectBuiltinWorkbenchCapabilities(workbenchHost);
  const prepared=await prepareDurableChatTurn(owner,{messages,chatContext,trustedScriptSources:sources,abortSignal:input?.abortSignal,executionEngine},{...runtime.context,assistantSystem:runtime.assistantSystem,humanizeError:humanizeAiError,contextReaders:runtime.contextReaders,searchWeb:runtime.searchWeb,listRecentTasksPort:runtime.listRecentTasks,readEditorTarget:runtime.readEditorTarget,readCreationTarget:runtime.readCreationTarget},workerSkillSnapshotSchema.parse(skillSnapshot),{
- workerScriptDraft:true,workerWebRead:true,workerResearch:true,atomicCoverGenerate:true,atomicAgenticResearch:true,atomicMaterialGenerate:true,atomicScriptReview:true,atomicPublishPackage:true,scriptHooksGeneration:{version:1,maxOutputTokens:4096},structuredGeneration:{version:1,maxOutputTokens:8192},
+ workerScriptDraft:true,workerWebRead:true,workerResearch:true,atomicCoverGenerate:true,atomicAgenticResearch:true,atomicMaterialGenerate:true,atomicScriptReview:true,atomicPublishPackage:true,workbenchPlans:true,workbenchCapabilities,workbenchPlatform:workbenchHost?.platform,scriptHooksGeneration:{version:1,maxOutputTokens:4096},structuredGeneration:{version:1,maxOutputTokens:8192},
  });
  input?.abortSignal?.throwIfAborted();
  // 两份严格 typed 稿件由同一模型调用返回；局部精调沿用旧预算。
  const maxOutputTokens=chatContext.creationTarget?32768:8192;
- return {capability:prepared.assembly.capability,system:prepared.assembly.system,messages:JSON.parse(JSON.stringify(prepared.modelMessages)),tools:prepared.toolDefinitions,maxSteps:resolveChatMaxSteps(process.env),maxOutputTokens,...(prepared.assembly.forcedTool?{forcedTool:prepared.assembly.forcedTool}:{}),...(prepared.assembly.forcedToolSequence?{forcedToolSequence:prepared.assembly.forcedToolSequence}:{}),hostContext:prepared.hostContext};
+ return {capability:prepared.assembly.capability,system:prepared.assembly.system,messages:JSON.parse(JSON.stringify(prepared.modelMessages)),tools:prepared.toolDefinitions,workbenchCapabilities:prepared.workbenchCapabilities,...(prepared.workbenchCapabilities.length?{workbenchPlatform:prepared.workbenchPlatform}:{}),maxSteps:resolveChatMaxSteps(process.env),maxOutputTokens,...(prepared.assembly.forcedTool?{forcedTool:prepared.assembly.forcedTool}:{}),...(prepared.assembly.forcedToolSequence?{forcedToolSequence:prepared.assembly.forcedToolSequence}:{}),hostContext:prepared.hostContext};
 }

@@ -1,0 +1,34 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "当前确认稿优先级、稳定 sectionRef、frontend/RPC 边界及自然语言改稿采纳链与现行架构一致；但配图和封面候选缺少正式归属与采纳前置条件。",
+  "findings": [
+    {
+      "id": "REV-003",
+      "status": "open",
+      "severity": "major",
+      "category": "data-integrity",
+      "requirement_anchor": {
+        "id": "ARCH-§2.2/§3",
+        "quote": "AI 不直接写领域实体；采纳前按当前 RequestContext 重读并校验归属、版本、状态和幂等。"
+      },
+      "acceptance_anchor": {
+        "id": "AC-6/AC-8",
+        "quote": "内容配图与封面保存当前稿快照并通过真实项目回归。"
+      },
+      "where": "SPEC §6—§8 的 material.generate、cover.generate 候选结果、正式采用与账号/版本归属。",
+      "failure_mode": "未定义候选封套及采用时的当前稿复核，生成可直接写正式素材/封面，或把 V1 结果附着到已换成 V2 的当前稿。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "SYSTEM_ARCHITECTURE.md §2.2/§3；T-816 SPEC §6—§8",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "new-cycle full review",
+      "suggestion": "定义候选封套冻结 user/account/project/task/source artifact/version/hash/sectionRef；Worker 只经 backend 保存候选，采用时重读当前稿并拒绝跨账号或已换版候选。",
+      "resolution_evidence": "",
+      "parent_id": ""
+    }
+  ]
+}

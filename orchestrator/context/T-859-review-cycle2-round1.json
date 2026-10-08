@@ -1,0 +1,88 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "新周期全量审查发现 3 项 major：正文仍要求已被 T-902 取代的竖屏隐藏人物规则；素材舞台碰撞直接失败而未安全降级；2–4 帧间隔抽帧不能证明单帧白闪消失。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "open",
+      "severity": "major",
+      "category": "consistency",
+      "requirement_anchor": {
+        "id": "DEC-VIDEO-056 / T-902",
+        "quote": "竖屏 card 或非 overlay B-roll beat 中，人物缩小到固定左下角并保持可见；旧候选或模型给出的 hidden 不再拥有最终执行权。"
+      },
+      "acceptance_anchor": {
+        "id": "T-902-AC-1/2",
+        "quote": "修复后 HTML 不得存在任何竖屏隐藏人物 tween；卡片与 B-roll 都生成稳定左下几何。"
+      },
+      "where": "纠偏说明与 FR-859-1、FR-859-2、契约、状态机、AC-859-1、AC-859-3 相互矛盾。",
+      "failure_mode": "正文仍透传 speakerMode=hidden 并要求 card/hidden B-roll 隐藏人物，会恢复已被真实成片验收否定的行为。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "当前 T-859 SPEC 第 3–5、19、41–49、76、84、91–96、124–135 行；T-902 SPEC；DEC-VIDEO-056",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "new-cycle full review",
+      "suggestion": "竖屏且有真实人物输入时 card 与非 overlay B-roll 均固定左下可见；删除 hidden 分支、透传和验收，仅 visualOnly 或无人物输入可无人物。",
+      "resolution_evidence": "",
+      "parent_id": ""
+    },
+    {
+      "id": "REV-002",
+      "status": "open",
+      "severity": "major",
+      "category": "correctness",
+      "requirement_anchor": {
+        "id": "AGENTS-关键链路可用性",
+        "quote": "渲染存在安全布局或回退路径时必须先确定性降级。"
+      },
+      "acceptance_anchor": {
+        "id": "T-902-AC-3",
+        "quote": "各种素材比例与左下人物、字幕安全区不冲突。"
+      },
+      "where": "FR-859-1/2 与失败恢复未定义安全舞台，碰撞时直接失败。",
+      "failure_mode": "可通过缩放、安全边距或基础布局解决的冲突仍拒绝整单渲染。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "AGENTS.md 关键链路规则；T-859 SPEC 第 32–37、113–116 行；T-902 AC-3",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "new-cycle full review",
+      "suggestion": "定义统一安全舞台和缩放/边距/上一有效视觉/基础布局降级顺序，仅输入损坏、归属错误或无安全布局时失败。",
+      "resolution_evidence": "",
+      "parent_id": ""
+    },
+    {
+      "id": "REV-003",
+      "status": "open",
+      "severity": "major",
+      "category": "testability",
+      "requirement_anchor": {
+        "id": "FR-859-3",
+        "quote": "进入、切换、退出不得出现单帧白底、黑底、默认背景或亮度突跳。"
+      },
+      "acceptance_anchor": {
+        "id": "AC-859-2",
+        "quote": "边界按 2–4 帧间隔密集抽帧。"
+      },
+      "where": "FR-859-3 与 AC-859-2。",
+      "failure_mode": "间隔抽样可能跳过持续一帧的白闪或未解码默认帧，核心缺陷仍可假绿。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "T-859 SPEC 第 54–60、127–130、139–141 行",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "new-cycle full review",
+      "suggestion": "边界限定窗口逐帧解码，证明每帧由旧层、新层或静态桥接层覆盖，并用真实源资源 ID/hash 区分素材白帧。",
+      "resolution_evidence": "",
+      "parent_id": ""
+    }
+  ]
+}

@@ -313,5 +313,40 @@
     "firstRedAt": "2026-10-04T19:15:46.254Z",
     "registeredAt": "2026-10-04T19:01:56.494Z",
     "deterrence": false
+  },
+  "LED-058": {
+    "fireCount": 0,
+    "lastFiredAt": null,
+    "firstRedAt": null,
+    "registeredAt": "2026-09-21T15:10:03.744Z",
+    "deterrence": false
+  },
+  "LED-059": {
+    "fireCount": 0,
+    "lastFiredAt": null,
+    "firstRedAt": null,
+    "registeredAt": "2026-09-21T16:24:09.025Z",
+    "deterrence": false
+  },
+  "LED-054": {
+    "fireCount": 3,
+    "lastFiredAt": "2026-09-23T08:42:20.236Z",
+    "firstRedAt": "2026-09-22T09:02:17.450Z",
+    "registeredAt": "2026-09-21T18:53:36.332Z",
+    "deterrence": false
+  },
+  "LED-055": {
+    "fireCount": 2,
+    "lastFiredAt": "2026-09-23T08:42:20.236Z",
+    "firstRedAt": "2026-09-22T09:54:44.667Z",
+    "registeredAt": "2026-09-22T09:02:17.450Z",
+    "deterrence": false
+  },
+  "LED-056": {
+    "fireCount": 0,
+    "lastFiredAt": null,
+    "firstRedAt": null,
+    "registeredAt": "2026-09-22T09:54:44.667Z",
+    "deterrence": false
   }
 }

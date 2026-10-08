@@ -66,6 +66,7 @@ import * as platformCollectionSchema from "./schema/platform-collection";
 import * as articlesSchema from "./schema/articles";
 import * as creativeResultsSchema from "./schema/creative-results";
 import * as graphicPostsSchema from "./modules/graphic-posts/graphic-posts.schema";
+import * as workbenchArtifactsSchema from "./schema/workbench-artifacts";
 import { Pool } from "pg";
 import { drizzle as drizzlePg } from "drizzle-orm/node-postgres";
 import { migrate as migratePg } from "drizzle-orm/node-postgres/migrator";
@@ -140,6 +141,7 @@ const schema = {
   ...graphicPostsSchema,
   ...proposalAdoptionsSchema,
   ...executionBrowserProfileLeasesSchema,
+  ...workbenchArtifactsSchema,
 };
 
 export type Db = PgliteDatabase<typeof schema>;

@@ -11,6 +11,7 @@ import {
   videoSubtitlesSchema,
 } from "./video-decisions";
 import { _resetRegistry, getOfficialSkillBase } from "../registry";
+import { BUSINESS_METHOD_VERSION } from "../business-methods";
 
 const slot = (purpose: string, index: number) => ({
   sceneIdx: index,
@@ -154,12 +155,13 @@ describe("[T-792] VIDEO_BROLL_TEMPLATE 内容辅助型生图提示词", () => {
 });
 
 describe("VIDEO_CARDS_TEMPLATE 视觉覆盖底线", () => {
-  it("设置页 official Skill 与运行时共用 v7 单一真值，可恢复到同一版本", () => {
+  it("设置页 official Skill 与运行时共用模板及方法版本，可恢复到同一版本", () => {
     _resetRegistry();
     const official = getOfficialSkillBase("video.cards");
     expect(official?.baseVersion).toBe(
-      "v7+methods-operations-2026-09-27",
+      `${VIDEO_CARDS_TEMPLATE.version}+${BUSINESS_METHOD_VERSION}`,
     );
+    expect(official?.template).toBe(VIDEO_CARDS_TEMPLATE.template);
     expect(official?.template).toContain("可组合 Scene Graph");
     expect(official?.outputSchema).toMatchObject({ type: "object" });
   });

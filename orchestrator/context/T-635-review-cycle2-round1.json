@@ -1,0 +1,115 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "当前规格仍有 4 个 major：三仓身份与最终安装包的 attestation 缺少可复核绑定，受控构建验收未覆盖全部可分发入口，test/default 存量迁移门缺少可执行证据契约，现行运营指南仍要求手工创建 test 并宣称可运行时覆盖产品身份。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "open",
+      "severity": "major",
+      "category": "testability",
+      "requirement_anchor": {
+        "id": "SPEC-6",
+        "quote": "release attestation 绑定 manifest digest、安装包 digest、release profile 和三仓 commit"
+      },
+      "acceptance_anchor": {
+        "id": "AC-6",
+        "quote": "manifest digest 与安装包 digest 同属当前 release attestation"
+      },
+      "where": "SPEC §4、§6 与 AC-6 的本地 identity receipt 和 release attestation。",
+      "failure_mode": "规格没有定义 attestation 的 schema、生成时点、三仓 commit 如何从受信 checkout 取得，以及如何证明 Growth 商品目录和 Activity 项目身份在对应 commit 上都 exact 为 creatoros。实现可以在 CreatorOS 构建中自报任意三仓 commit 和摘要；也可以先为未签名或未公证的中间包生成 attestation，随后包被签名、封装或替换。AC-6 仍可能通过，却不能证明最终交付包、ProductManifest 与三仓权威属于同一构建事实。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "T-635 SPEC §4、§6、AC-6；Growth T-123 §7、TC-T123-15/16；PROJECT.md 的真实证据不变量",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "DEC-028 new-cycle full review",
+      "suggestion": "定义可机读 attestation schema 和验证器：从受信的三仓 checkout 读取 repo identity、commit、dirty 状态及各自产品身份权威文件摘要；在最终签名、公证和封装完成后计算实际可分发包摘要，并绑定 ProductManifest 摘要、profile、workflow run 和三仓证据。验收必须篡改任一 commit、权威文件、manifest 或最终包并证明验证失败；T-575 的 live gate 继续独立负责线上事实。",
+      "resolution_evidence": "",
+      "parent_id": ""
+    },
+    {
+      "id": "REV-002",
+      "status": "open",
+      "severity": "major",
+      "category": "completeness",
+      "requirement_anchor": {
+        "id": "SPEC-2",
+        "quote": "所有可安装、可分发、非 debug artifact 都属于受控发布构建"
+      },
+      "acceptance_anchor": {
+        "id": "AC-2",
+        "quote": "release、release-fast 分别拒绝 missing、非法、test 和其他合法 key"
+      },
+      "where": "SPEC §2 将 Cargo/Tauri release、release-fast、NSIS 候选包和日常内测安装包全部纳入受控边界，但 AC-1 至 AC-3 主要验证 profile 和运行时环境变量。",
+      "failure_mode": "只测试 release 与 release-fast 的 build.rs 可以证明两个 Cargo profile 的变量校验，却不能证明 package-local、desktop-release、Windows NSIS、渠道包装器及其他实际可分发入口都使用同一 canonical input、携带对应 manifest，并且没有在打包或后处理阶段替换身份。任一未覆盖入口仍可能产出可安装但身份错误或可降级验签的包，而现有验收保持全绿。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "T-635 SPEC §2、AC-1/2/3/5/6；BACKLOG T-635 的正式构建范围",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "DEC-028 new-cycle full review",
+      "suggestion": "把受控构建判定写成共享的构建期不变量，并在验收矩阵中逐一覆盖当前所有可分发入口和双平台最终产物。每个入口都验证错误 key、关闭严格验签和开启 claim 会在重型打包前失败；成功包经 artifact inspection 证明内置 creatoros、严格验签、claim=0、manifest 和 attestation 一致。新增入口必须自动进入同一矩阵。",
+      "resolution_evidence": "",
+      "parent_id": ""
+    },
+    {
+      "id": "REV-003",
+      "status": "open",
+      "severity": "major",
+      "category": "operability",
+      "requirement_anchor": {
+        "id": "SPEC-5",
+        "quote": "四类存量全为零才可切换；任一非零则保持现有发布不动"
+      },
+      "acceptance_anchor": {
+        "id": "AC-7",
+        "quote": "T-575 live program-gate GO 之前不发布身份切换安装包"
+      },
+      "where": "SPEC §5 的生产 Activity test/default Project、code、grant 和已发布 CreatorOS 本地授权盘点，以及 §4/AC-7 的 T-575 发布门。",
+      "failure_mode": "规格没有规定四类存量各自由哪个权威系统查询、统计口径和时间截面，也没有要求 T-575 GO 绑定这些查询的摘要、执行身份和结果。发布门可以只具备 release commit、HTTPS、密钥和 live journey 便可签发 GO，而遗漏非零旧 Project、code、grant 或本地授权；随后 creatoros 切换会让存量授权失效，且本地 E2E 无法发现。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "T-635 SPEC §4、§5、AC-7；DEC-PID-001 第 7 项",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "DEC-028 new-cycle full review",
+      "suggestion": "定义 typed migration-inventory receipt：分别记录 Activity Project/code/grant 与已发布客户端授权的权威查询、环境、as-of 时间、计数、摘要和执行者；T-575 GO 必须引用同一 release identity 下的 receipt。任何非零、查询失败、过期或环境不一致都阻断发布并进入明确 alias/双读迁移决策，不能由本地测试或人工口头确认替代。",
+      "resolution_evidence": "",
+      "parent_id": ""
+    },
+    {
+      "id": "REV-004",
+      "status": "open",
+      "severity": "major",
+      "category": "operability",
+      "requirement_anchor": {
+        "id": "USER-GOAL",
+        "quote": "运营人员不再登录 Activity 手工配项目，用户不能通过运行时环境变量把可分发包切换到另一个产品"
+      },
+      "acceptance_anchor": {
+        "id": "AC-1",
+        "quote": "release workflow 和受控打包脚本不再出现 projectKey=test"
+      },
+      "where": "SPEC 验收只扫描 workflow 和打包脚本，没有覆盖当前有效运营文档；docs/desktop-activation-guide.md 仍要求登录 Activity 手工创建 test，并写明 CREATOROS_LICENSE_PROJECT_KEY 可由 env 配置。",
+      "failure_mode": "代码和安装包即使正确，运营人员仍会按现行指南创建错误的 test 项目、生成错误商品下的激活码或尝试用运行时环境变量修复，直接违背统一 Growth 入口目标。受控构建会拒绝这些操作，使真实激活流程表现为项目不存在或构建失败，但 AC-1 仍可通过并把任务写成完成。",
+      "evidence_kind": "deterministic-check",
+      "evidence_ref": "docs/desktop-activation-guide.md:7-24；T-635 SPEC §1、AC-1；2026-09-21 仓库只读检查",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "DEC-028 new-cycle full review",
+      "suggestion": "把当前运营和激活指南纳入退役扫描：活动文档必须改为 Growth 创建商品并自动同步 Activity，固定 projectKey=creatoros，明确可分发包不接受运行时覆盖；旧 test/default 流程只能留在有历史标记的归档 SPEC。验收扫描当前文档、示例命令和环境变量表，确保不再向操作者承诺手工建项目或生产覆盖能力。",
+      "resolution_evidence": "",
+      "parent_id": ""
+    }
+  ]
+}

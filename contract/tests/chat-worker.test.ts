@@ -31,6 +31,9 @@ it("聊天完成端口只接收账本引用，拒绝自报消息、身份和终�
   const schema=workerPortInputSchemas.commitChatResult;
   const input={lastModelCallId:"model-final",toolCallIds:["tool-1"]};
   expect(schema.safeParse(input).success).toBe(true);
+  expect(schema.safeParse({...input,partialPlanFailureStepIds:["step-failed"]}).success).toBe(true);
+  for(const ids of [[],["step-failed","step-failed"],["x".repeat(257)]])expect(schema.safeParse({...input,partialPlanFailureStepIds:ids}).success).toBe(false);
+  expect(schema.safeParse({...input,partialPlanFailureStepIds:["step-failed"],partialMessage:"模型自报文案"}).success).toBe(false);
   for(const extra of [{message:{text:"伪造"}},{userId:"foreign"},{outcome:"succeeded"}])expect(schema.safeParse({...input,...extra}).success).toBe(false);
   expect(schema.safeParse({...input,toolCallIds:["tool-1","tool-1"]}).success).toBe(false);
 });

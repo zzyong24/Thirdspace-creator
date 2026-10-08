@@ -126,7 +126,7 @@ export function wrapDurablePiStream(native:StreamFunction,deps:DurablePiStreamDe
               if(event.type==="done"){message=event.message;break;}
               if(event.type==="error"){
                 if(!hasOutput && responseFact && responseFact.status>=400 && responseFact.status<=599)throw generationFailure(responseFact,false);
-                throw new GenerationFailure("unknown_result","MODEL_STREAM_ERROR");
+                throw new GenerationFailure("retry_wait","MODEL_STREAM_INTERRUPTED");
               }
               hasOutput ||= event.type!=="start";push(event);
             }
@@ -134,7 +134,7 @@ export function wrapDurablePiStream(native:StreamFunction,deps:DurablePiStreamDe
             signal.removeEventListener("abort",onAbort);
             void iterator.return?.().catch(()=>{});
           }
-          if(!message)throw new Error("MODEL_STREAM_INCOMPLETE");
+          if(!message)throw new GenerationFailure("retry_wait","MODEL_STREAM_INCOMPLETE");
           canonical=piAssistantToCanonical(message);
           const usage=canonical.usage;
           settling=true;
@@ -148,12 +148,15 @@ export function wrapDurablePiStream(native:StreamFunction,deps:DurablePiStreamDe
         signal.throwIfAborted();
         push({type:"done",reason:message.stopReason as "stop"|"length"|"toolUse",message});resolve(message);
       }catch(error){
-        const classified=error instanceof GenerationFailure?error:generationFailure(error,hasOutput);
+        const userCancelled=deps.signal.aborted || options?.signal?.aborted;
+        const classified=error instanceof GenerationFailure
+          ? (!userCancelled && error.errorCode==="MODEL_CANCELLED" ? new GenerationFailure("retry_wait","MODEL_IDLE_TIMEOUT") : error)
+          : generationFailure(error,hasOutput,{allowUnconfirmedModelRetry:true});
         failure=settling || terminalSettled || !nativeBegan ? new GenerationFailure("unknown_result","MODEL_RECEIPT_REQUIRES_RECONCILIATION") : classified;
         if(nativeBegan && !terminalSettled && !settling && callId){
           try{
-            const status=classified.outcome==="unknown_result"?"unknown":"rejected";
-            const receipt=z.object({callId:z.string(),status:z.enum(["unknown","rejected"])}).parse(await deps.call("settleGenerationCall",{callId,status}));
+            const status=classified.outcome==="unknown_result"?"unknown":classified.outcome==="retry_wait"?"superseded":"rejected";
+            const receipt=z.object({callId:z.string(),status:z.enum(["unknown","rejected","superseded"])}).parse(await deps.call("settleGenerationCall",{callId,status}));
             if(receipt.callId!==callId || receipt.status!==status)throw new Error("MODEL_SETTLEMENT_RECEIPT_MISMATCH");
           }catch{failure=new GenerationFailure("unknown_result","MODEL_SETTLEMENT_RECEIPT_UNKNOWN");}
         }

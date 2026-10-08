@@ -35,12 +35,15 @@ export function createChatToolStreamProjection(db:Db,deps:{now?:()=>string;tools
     {type:"tool-approval-response",approvalId,approved:false,reason:(part.approval as {reason:string}).reason},
     {type:"tool-output-denied",toolCallId:bound.toolCallId}]:[{type:"tool-output-available",toolCallId:bound.toolCallId,output:part.output}]));
   await ensureInputs(tx,task,model,now);
-  const existing=await tx.select().from(executionStreamEvents).where(eq(executionStreamEvents.callId,call.id)).orderBy(asc(executionStreamEvents.callIndex));
-  if(existing.length){if(existing.length!==chunks.length || existing.some((row,i)=>row.callIndex!==i || !isDeepStrictEqual(row.chunk,chunks[i])))throw new ConflictError("已保存工具卡与回执不符");return;}
+  const allCallEvents=await tx.select().from(executionStreamEvents).where(eq(executionStreamEvents.callId,call.id)).orderBy(asc(executionStreamEvents.callIndex));
+  const progress=allCallEvents.filter(row=>row.chunk.type==="data-workbench-progress");
+  const existing=allCallEvents.filter(row=>row.chunk.type!=="data-workbench-progress");
+  if(existing.length){if(existing.length!==chunks.length || existing.some((row,i)=>row.callIndex!==progress.length+i || !isDeepStrictEqual(row.chunk,chunks[i])))throw new ConflictError("已保存工具卡与回执不符");return;}
+  if(allCallEvents.length!==progress.length || progress.some((row,i)=>row.callIndex!==i))throw new ConflictError("工具进度事件顺序不符");
   if(history.some(event=>event.chunk.type==="finish"))throw new ConflictError("聊天结束后不能追加新工具卡");
   const [last]=await tx.select().from(executionStreamEvents).where(eq(executionStreamEvents.executionTaskId,task.id)).orderBy(desc(executionStreamEvents.sequence)).limit(1);
   const sequence=last?.sequence??0,stamp=now();
-  await tx.insert(executionStreamEvents).values(chunks.map((chunk,i)=>({executionTaskId:task.id,sequence:sequence+i+1,callId:call.id,callIndex:i,chunk,createdAt:stamp})));
+  await tx.insert(executionStreamEvents).values(chunks.map((chunk,i)=>({executionTaskId:task.id,sequence:sequence+i+1,callId:call.id,callIndex:progress.length+i,chunk,createdAt:stamp})));
  });
  return Object.assign(project,{recordApproval:async(ref:ExecutionRef,request:{modelCallId:string;toolCallId:string},decision:{status:string;reason?:string})=>{
   if(decision.status==="unavailable")return;

@@ -43,6 +43,7 @@ const NETWORK_RETRYABLE_PATTERNS: ReadonlyArray<[RegExp, string]> = [
   [/epipe/i, "network_epipe"],
   [/fetch failed/i, "network_fetch_failed"],
   [/socket hang up/i, "network_socket_hangup"],
+  [/connection (?:closed|reset)/i, "network_connection_closed"],
   [/network error/i, "network_generic"],
   [/und_err|terminated|other side closed/i, "network_terminated"],
   // provider 侧「过载/取消」类流启动失败(Anthropic overloaded_error;MiniMax cancelled

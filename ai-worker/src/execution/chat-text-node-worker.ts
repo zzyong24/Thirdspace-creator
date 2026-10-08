@@ -9,7 +9,7 @@ export async function runChatTextNodeInWorker(callId:string,model:LanguageModel,
  const ports=node==="hooks"?{prepare:"prepareChatHooks",reserve:"reserveChatHooksModel",start:"startChatHooksModel",settle:"settleChatHooksModel",complete:"completeChatHooks",fail:"failChatHooks"} as const:{prepare:"prepareChatScriptDraft",reserve:"reserveChatScriptDraftModel",start:"startChatScriptDraftModel",settle:"settleChatScriptDraftModel",complete:"completeChatScriptDraft",fail:"failChatScriptDraft"} as const;
  const prepared=(node==="hooks"?chatHooksPreparationSchema:chatHooksPreparationSchema.extend({noModel:z.literal(true).optional()})).parse(await call(ports.prepare,{callId},signal));
  if("noModel" in prepared && prepared.noModel)return agenticToolOutcomeSchema.parse(await call(ports.complete,{callId},signal));
- const durable=createDurableGenerationModel({model,operationKey:prepared.operationKey,signal,ports:{
+ const durable=createDurableGenerationModel({model,operationKey:prepared.operationKey,signal,allowUnconfirmedModelRetry:true,ports:{
   // 请求遵循 JSON 契约，显式移除 SDK 可选 undefined，兼容 advanced IPC。
   reserve:async request=>workerReservationSchema.parse(await call(ports.reserve,JSON.parse(JSON.stringify({...request,callId,...(prepared.retryOfCallId?{retryOfCallId:prepared.retryOfCallId}:{})})),signal)),
   start:async childId=>{const receipt=workerStartReceiptSchema.parse(await call(ports.start,{callId:childId},signal));if(receipt.callId!==childId)throw new Error("内部模型启动回执不符");},

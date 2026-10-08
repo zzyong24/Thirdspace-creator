@@ -29,7 +29,8 @@ describe("[T-633] 选题卡失败诊断脱敏", () => {
       ),
     ).toEqual({
       category: "output_invalid",
-      message: "这次没有生成改写稿，请重试",
+      message: "模型输出不完整，系统正在继续生成选题卡",
+
     });
   });
 
@@ -38,13 +39,14 @@ describe("[T-633] 选题卡失败诊断脱敏", () => {
       classifyTopicPreviewFailure(new Error("TimeoutError: request aborted")),
     ).toEqual({
       category: "timeout",
-      message: "改写稿生成超时，您可以重试",
+      message: "模型响应超时，系统正在自动恢复",
+
     });
     expect(
       classifyTopicPreviewFailure(new Error("401 invalid api key: secret")),
     ).toEqual({
       category: "credential",
-      message: "模型配置不可用，请在设置中检查后重试",
+      message: "还没有可用的 AI 模型，请完成模型设置后继续原任务",
     });
   });
 });
@@ -67,7 +69,7 @@ describe("[T-646] 内容雷达分段生成", () => {
       {
         tasks: {
           claimTask: vi.fn().mockResolvedValue({
-            lease: { workerId: "worker-1", attempt: 1 },
+            lease: { workerId: "worker-1", attempt: 1, fenceToken: "fence-1" },
           }),
           heartbeat: vi.fn().mockResolvedValue(undefined),
           finish: finishTask,
@@ -107,17 +109,49 @@ describe("[T-646] 内容雷达分段生成", () => {
       }),
     );
     expect(finishTopicPreview).not.toHaveBeenCalled();
-    expect(markTopicPreviewStageFailed).toHaveBeenCalledWith(
-      ctx,
-      "transform-1",
-      { stage: "topic", errorCode: "output_invalid" },
-    );
+    expect(markTopicPreviewStageFailed).not.toHaveBeenCalled();
     expect(finishTask).toHaveBeenCalledWith(
       expect.objectContaining({
-        status: "failed",
-        errorCode: "TOPIC_PREVIEW_FAILED",
+        status: "retry_wait",
+        fenceToken: "fence-1",
+        errorCode: "TOPIC_PREVIEW_OUTPUT_INVALID",
       }),
     );
+  });
+
+  it("[T-1022] 只有模型配置问题等待用户，且保留原任务等待设置后继续", async () => {
+    const finish = vi.fn().mockResolvedValue(undefined);
+    const markTopicPreviewStageFailed = vi.fn().mockResolvedValue(undefined);
+    await runIntelligenceTopicPreviewTask(
+      ctx,
+      { taskId: "task-model-missing" },
+      {
+        tasks: {
+          claimTask: vi.fn().mockResolvedValue({
+            task: { id: "task-model-missing" },
+            lease: { workerId: "worker-1", attempt: 1, fenceToken: "fence-model" },
+          }),
+          heartbeat: vi.fn(),
+          finish,
+        } as never,
+        intelligence: {
+          getTopicPreviewForExecution: vi.fn().mockResolvedValue({
+            transformId: "transform-model-missing",
+            item: { canonicalUrl: "https://example.com/work" },
+            transcript: { hash: "sha256:transcript" },
+          }),
+          markTopicPreviewStageFailed,
+        } as never,
+        generator: { generate: vi.fn().mockRejectedValue(new Error("MODEL_NOT_CONFIGURED")) },
+      },
+    );
+
+    expect(markTopicPreviewStageFailed).not.toHaveBeenCalled();
+    expect(finish).toHaveBeenCalledWith(expect.objectContaining({
+      status: "waiting_user",
+      fenceToken: "fence-model",
+      errorCode: "MODEL_CONFIGURATION_REQUIRED",
+    }));
   });
 
   it("[T-893] 启动恢复会消费既有排队任务，并在每个检查点续租后进入成功终态", async () => {

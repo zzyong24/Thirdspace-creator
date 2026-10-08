@@ -21,6 +21,7 @@ import {createExecutionTranscribeAudioService} from "./execution-transcribe-audi
 import {createExecutionAsrPorts} from "./execution-asr-ports.service";
 import {createExecutionAssetPorts} from "./execution-asset-ports.service";
 import {createExecutionChatToolPorts,readExecutionChatTask,type ChatBackendTool} from "./execution-chat-tool-ports.service";
+import {createWorkbenchPlanService,validateTerminalPlanFailures,validateTerminalToolFailures} from "./workbench-plan.service";
 import {createExecutionModelIdentityService} from "./execution-model-identity.service";
 import {createChatTurnCompletionService} from "../ai/chat-turn-completion.service";
 import {createExecutionStreamService} from "./execution-stream.service";
@@ -71,7 +72,8 @@ interface WorkerDispatcherDeps {
   recoverPendingPreparation?(signal:AbortSignal):Promise<void>;
 }
 export interface ModelWorkerDispatcherDeps extends WorkerDispatcherDeps, ExecutionCandidateDeps {assetAsr?:ReturnType<typeof createAssetAsrOwner>;assetProcessing?:Parameters<typeof createExecutionAssetProcessingService>[1];video?:Pick<Parameters<typeof createExecutionVideoService>[1],"resolveModelSpec">;transcribeWorkflow?:Omit<TranscribeWorkflowDeps,"now">;transcribeSource?:TranscribeSourceDeps;cover?:CoverExecutionPorts;transcribePostprocess?:Pick<Parameters<typeof createExecutionTranscribePostprocessService>[1],"resolveModelSpec"|"readContext"|"maxOutputTokens">;transcribePreparation?:Pick<Parameters<typeof createExecutionTranscribePreparationService>[1],"resolveSpec"|"prepareSpec">;transcribeAudioStorage?:Parameters<typeof createExecutionTranscribeAudioService>[1]["objectStorageForCtx"];resolveAssetCredential?:Parameters<typeof createExecutionAssetPorts>[0]["resolveCredential"];readAssetReference?:Parameters<typeof createExecutionAssetPorts>[0]["readReference"];assetStorage?:Parameters<typeof createExecutionAssetPorts>[0]["objectStorageForCtx"];browserSessions?:Pick<BrowserSessionsService,"getStateVersioned"|"saveStateVersioned">;dailyTopicPorts?:DailyTopicCompletionPorts}
-export type ChatWorkerDispatcherDeps = WorkerDispatcherDeps & {externalImageStorage?:import("../assets").ObjectStorageForCtx;resolveRedfoxCredential?:Parameters<typeof createExecutionChatToolPorts>[1]["resolveRedfoxCredential"];resolveFallbackModelCredential?(context:RequestContext):Promise<unknown|null>;webRead?:Parameters<typeof createExecutionChatToolPorts>[1]["webRead"]} & (
+export type ChatWorkerDispatcherDeps = WorkerDispatcherDeps & {externalImageStorage?:import("../assets").ObjectStorageForCtx;resolveRedfoxCredential?:Parameters<typeof createExecutionChatToolPorts>[1]["resolveRedfoxCredential"];resolveFallbackModelCredential?(context:RequestContext):Promise<unknown|null>;webRead?:Parameters<typeof createExecutionChatToolPorts>[1]["webRead"];resolveWorkbenchScreenshot?(ref:ExecutionRef,input:{callId:string;dataRef:string}):Promise<{mimeType:"image/png";data:string}>} & (
+
  {tools:Record<string,ChatBackendTool>;resolveTools?:never} |
  {tools?:never;resolveTools(context:RequestContext,input:Awaited<ReturnType<typeof readExecutionChatTask>>["input"],execution:ExecutionRef,signal:AbortSignal):Promise<Record<string,ChatBackendTool>>}
 );
@@ -87,6 +89,7 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
   if(!Number.isInteger(concurrency) || concurrency<1 || concurrency>8)throw new Error("MODEL_CONCURRENCY_INVALID");
   const now=deps.now ?? (()=>new Date().toISOString());
   const leases=createExecutionLeaseService(db,{now});
+  const workbenchPlans=createWorkbenchPlanService(db,{now});
   const modelIdentity=createExecutionModelIdentityService(db,{now});
   const chatFallback=deps.executionMode==="chat.run"?createExecutionChatFallbackService(db,{now,resolve:c=>deps.resolveFallbackModelCredential?.(c)??Promise.resolve(null)}):null;
   const tasks=createPersistentTaskService(db,{now});
@@ -113,7 +116,7 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
   const candidates=deps.executionMode==="model"?createExecutionCandidateService(db,deps):null;
   const dailyTopics=deps.executionMode==="model"&&deps.dailyTopicPorts?createDailyTopicCompletionService(db,{now,ports:deps.dailyTopicPorts}):null;
   const scriptFinalizer=deps.executionMode==="model"?createScriptPartialFinalizationService(db,{...deps,onRecoveryError:()=>report("SCRIPT_RESULT_RECOVERY_FAILED")}):null;
-  const chatReplies=createChatTurnCompletionService(db,{now});
+  const chatReplies=createChatTurnCompletionService(db,{now,validateTerminalPlanFailures,validateTerminalToolFailures});
   const assetProcessing=deps.executionMode==="model"&&deps.assetProcessing?createExecutionAssetProcessingService(db,{...deps.assetProcessing,now}):null;
   const similarities=deps.executionMode==="model"?createScriptSimilarityCompletionService(db,{now}):null;
   const preferences=deps.executionMode==="model"?createTopicPreferenceCompletionService(db,{now}):null;
@@ -148,22 +151,27 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
     if(!scope.chatPorts)scope.chatPorts=(async()=>{
       const signal=scope.controller.signal;signal.throwIfAborted();
       if(staticChatTools){scope.externalToolMap=Promise.resolve(deps.executionMode==="chat.run"?deps.tools!:{ });return staticChatTools;}
-      const {context,input}=await readExecutionChatTask(db,ref,now);
-      await calls.readTaskContext(ref);
-      signal.throwIfAborted();
-      const work=deps.resolveTools!(structuredClone(context),structuredClone(input),{...ref},signal);
-      // 解析器只能构造端口；不响应取消的迟到解析不能阻塞退出或取得执行权。
-      const resolved=await new Promise<Record<string,ChatBackendTool>>((resolve,reject)=>{
-        const abort=()=>reject(signal.reason??new Error("CHAT_TOOL_RESOLUTION_CANCELLED"));
-        signal.addEventListener("abort",abort,{once:true});
-        work.then(value=>{signal.removeEventListener("abort",abort);resolve(value);},error=>{signal.removeEventListener("abort",abort);reject(error);});
-        if(signal.aborted)abort();
-      });
-      signal.throwIfAborted();
-      const tools=Object.fromEntries(Object.entries(resolved).map(([name,tool])=>[name,{...tool}]));
-      const ports=createExecutionChatToolPorts(db,{now,budget:deps.budget,tools,resolveGenerationCredential,resolveRedfoxCredential:deps.resolveRedfoxCredential,webRead:deps.webRead});
-      await ports.validateTask(ref);signal.throwIfAborted();scope.externalToolMap=Promise.resolve(tools);
-      return ports;
+      const resolutionTimer=setTimeout(()=>scope.controller.abort(new Error("EXECUTION_DEADLINE")),deps.budget.deadlineMs);
+      resolutionTimer.unref?.();
+      try{
+        const {context,input}=await readExecutionChatTask(db,ref,now);
+        await calls.readTaskContext(ref);
+        signal.throwIfAborted();
+        const work=deps.resolveTools!(structuredClone(context),structuredClone(input),{...ref},signal);
+        // 解析器只能构造端口；不响应取消的迟到解析不能阻塞退出或取得执行权。
+        const resolved=await new Promise<Record<string,ChatBackendTool>>((resolve,reject)=>{
+          const abort=()=>reject(signal.reason??new Error("CHAT_TOOL_RESOLUTION_CANCELLED"));
+          signal.addEventListener("abort",abort,{once:true});
+          work.then(value=>{signal.removeEventListener("abort",abort);resolve(value);},error=>{signal.removeEventListener("abort",abort);reject(error);});
+          if(signal.aborted)abort();
+        });
+        signal.throwIfAborted();
+        const tools=Object.fromEntries(Object.entries(resolved).map(([name,tool])=>[name,{...tool}]));
+        const ports=createExecutionChatToolPorts(db,{now,budget:deps.budget,tools,resolveGenerationCredential,resolveRedfoxCredential:deps.resolveRedfoxCredential,webRead:deps.webRead});
+        await ports.validateTask(ref);signal.throwIfAborted();scope.externalToolMap=Promise.resolve(tools);
+        return ports;
+      }finally{clearTimeout(resolutionTimer);}
+
     })();
     return scope.chatPorts;
   }
@@ -287,6 +295,12 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
         scope.pending.add(work);try{return await work;}finally{scope.pending.delete(work);}
       }
       if(port==="commitChatResult")return chatReplies.commitResult(ref,raw);
+      if(port==="readWorkbenchPlan")return workbenchPlans.status(ref,raw);
+      if(port==="saveWorkbenchPlan")return workbenchPlans.save(ref,workerPortInputSchemas.saveWorkbenchPlan.parse(raw));
+      if(port==="resolveWorkbenchScreenshot"&&deps.executionMode==="chat.run"){
+        if(!deps.resolveWorkbenchScreenshot)throw new Error("SCREENSHOT_MEDIA_UNAVAILABLE");
+        return deps.resolveWorkbenchScreenshot(ref,workerPortInputSchemas.resolveWorkbenchScreenshot.parse(raw));
+      }
       if(port==="appendStreamEvents")return streamEvents.append(ref,raw);
       if(port==="completeDailyTopicSkip"&&dailyTopics){workerPortInputSchemas.completeDailyTopicSkip.parse(raw);return dailyTopics.completeDailyTopicSkip(ref);}
       if(port==="commitDailyTopicResult"&&dailyTopics)return dailyTopics.commitResult(ref,workerPortInputSchemas.commitDailyTopicResult.parse(raw));
@@ -433,9 +447,10 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
       await tasks.recoverExpiredLeases();
       let activeCount=0;
       let pendingClaims=0;
+      let idleExit=false;
       const counts=await Promise.allSettled(supervisors.map(async supervisor=>{
       let count=0;
-      while(!stopping){
+      while(!stopping && !idleExit){
         recoverPreparation();
         if(stopping)break;
         pendingClaims++;
@@ -445,7 +460,9 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
         if(stopping)break;
         if(!claim){
           // 空闲进程继续查看队列，避免新短任务被另一个长请求挡住。
-          if(activeCount===0 && pendingClaims===0)break;
+          // 全局空闲时让全部槽一起结束本轮，下一轮完整重建。
+          // 不能只退出最后一个 claim 返回空的槽，否则睡眠中的槽会独自接走后续长队列。
+          if(activeCount===0 && pendingClaims===0){idleExit=true;break;}
           await new Promise(resolve=>setTimeout(resolve,Math.max(100,deps.pollMs ?? 1000)));
           continue;
         }
@@ -458,8 +475,15 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
         let controlTimer:ReturnType<typeof setTimeout>|undefined;
         const watch=async()=>{
           try{
-            const status=await leases.withLease(ref,"settlement",async({task})=>task.status);
-            if(watching && (status==="pause_requested" || status==="cancel_requested")){toolScope.controller.abort();supervisor.cancel(ref);}
+            const state=await leases.withLease(ref,"settlement",async({task})=>({status:task.status,deadlineAt:task.deadlineAt}));
+            const deadlineReached=state.deadlineAt!==null&&Date.parse(state.deadlineAt)<=Date.parse(now());
+            if(watching && (state.status==="pause_requested" || state.status==="cancel_requested" || deadlineReached)){
+              // 工具目录尚未装配时还没有任何外部调用；截止时间到达可直接、诚实地
+              // 结束原任务，不能让一个不响应 AbortSignal 的解析器把任务留在 running。
+              if(deadlineReached&&!toolScope.chatReady)await tasks.finish({taskId:ref.executionTaskId,workerId:deps.workerId,
+                attempt:ref.attempt,fenceToken:ref.fenceToken,status:"failed",errorCode:"EXECUTION_DEADLINE",errorMessage:"原任务截止时间已到"});
+              toolScope.controller.abort(deadlineReached?new Error("EXECUTION_DEADLINE"):undefined);supervisor.cancel(ref);
+            }
             else if(watching && deps.executionMode==="chat.run" && !toolScope.chatReady)await leases.withLease(ref,"admission",async()=>{});
           }catch{if(watching){toolScope.controller.abort();try{supervisor.cancel(ref);}catch{/* 进程可能已经退出。 */}}}
           if(watching)controlTimer=setTimeout(()=>{void watch();},250);

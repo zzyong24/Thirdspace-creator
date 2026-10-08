@@ -1,0 +1,88 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "recheck",
+  "summary": "定向复核通过：当前 changed_line_refs 已完整销账 REV-003、REV-004 与 REV-005，分别补齐浏览器副作用授权、同域多账号外部身份隔离及 LED-047 可证伪验收；四处变更未引入新问题。",
+  "findings": [
+    {
+      "id": "REV-003",
+      "status": "resolved",
+      "severity": "major",
+      "category": "completeness",
+      "requirement_anchor": {
+        "id": "R-04",
+        "quote": "副作用动作沿用用户已有授权和工具 effect，未知提交先核实，不能自动重复提交表单。"
+      },
+      "acceptance_anchor": {
+        "id": "AC-06",
+        "quote": "新观察后改目标；取消排队不启动；搜索取消不启动后续 fallback；动作后回读证据；登录不反复撞墙"
+      },
+      "where": "R-04 浏览器 act 契约与 AC-06。",
+      "failure_mode": "act 没有绑定服务端保存的工具 effect 与授权快照，验收也未验证无授权副作用拒绝；只读任务可能触发表单提交、发布或其他外部副作用，恢复后也无法证明沿用原授权。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md#r-04-统一工具与浏览器闭环；#验收-ac完整范围统一交付",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "clarify",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "new-cycle initial full review against current SPEC and AGENTS.md",
+      "suggestion": "明确 browser session/副作用动作绑定服务端 task authority 与 tool effect，动作前校验用户、账号、授权范围和控制状态，并补只读拒绝、恢复沿用、越界等待与未知提交同键核实验收。",
+      "resolution_evidence": "SPEC-LINE:176:5c141774d75a7fa4；SPEC-LINE:197:4e2cc827b34b28ed",
+      "parent_id": ""
+    },
+    {
+      "id": "REV-004",
+      "status": "resolved",
+      "severity": "major",
+      "category": "data-integrity",
+      "requirement_anchor": {
+        "id": "R-04",
+        "quote": "现有登录保管库真实归属是 user+domain，本次保持该数据归属，不宣称按 account 加密隔离。浏览器执行 session 绑定 task/user/account，上下文切换不得挪用任务页面。"
+      },
+      "acceptance_anchor": {
+        "id": "AC-02",
+        "quote": "超过 100 条仍可分页；真实 ID 与归属；跨账号/已删/版本冲突拒绝；既有制作成功例继续可完成"
+      },
+      "where": "完整工作范围第 7 项、R-04 登录 profile 归属与 AC-02/AC-06。",
+      "failure_mode": "同一用户、同一 domain 的多个业务账号仍可能复用同一外部登录 profile；session 标记 accountId 不能证明浏览器实际登录身份，任务可能读取或操作另一账号数据。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md#完整工作范围；#r-04-统一工具与浏览器闭环；#验收-ac完整范围统一交付",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "new-cycle initial full review against current SPEC and AGENTS.md",
+      "suggestion": "定义 accountId 与外部登录身份的可验证绑定；首个动作前回读外部账号身份，不匹配进入 waiting_user，并补同 user/domain 不同 account 的 session、evidence、恢复和副作用隔离验收。",
+      "resolution_evidence": "SPEC-LINE:178:2db3b3922e5d283e；SPEC-LINE:197:4e2cc827b34b28ed",
+      "parent_id": ""
+    },
+    {
+      "id": "REV-005",
+      "status": "resolved",
+      "severity": "major",
+      "category": "testability",
+      "requirement_anchor": {
+        "id": "AGENTS-LED-047",
+        "quote": "改动这些路径运行 LED-047 回归，不靠删除历史或阻断合法任务提速。"
+      },
+      "acceptance_anchor": {
+        "id": "AC-09",
+        "quote": "R-03 同条件 P50/P95 和模型调用数；全部故障分类符合预期；重复副作用为 0，取消生效后的新 admission 为 0"
+      },
+      "where": "AGENTS.md 的 LED-047 与 R-03、AC-08、AC-09。",
+      "failure_mode": "验收未覆盖同页本地打开、折叠大对象按需渲染、轮询在途限制及卸载/切换后的迟到响应隔离，仍可能重新引入整页等待、请求堆积或跨账号旧响应覆盖。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "AGENTS.md#硬规矩踩过的坑别再踩；docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md#r-03-共享恢复预算与观测；#验收-ac完整范围统一交付",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "new-cycle initial full review against current SPEC and AGENTS.md",
+      "suggestion": "把 LED-047 定向回归列入验收，覆盖本地打开、按需渲染、单飞轮询、切换/卸载后的迟到响应不回写，且不删除合法历史或阻断正常操作。",
+      "resolution_evidence": "SPEC-LINE:200:512432e2a7da784e",
+      "parent_id": ""
+    }
+  ]
+}

@@ -86,7 +86,7 @@ export const schedulingOperations = {
     method: "POST",
     path: "/scheduled-jobs/:jobId/run-now",
     params: jobParams,
-    body: z.object({}).optional(),
+    body: z.object({publicationIds:z.array(id.max(200)).min(1).max(20).refine(ids=>new Set(ids).size===ids.length,'作品ID不可重复').optional()}).strict().optional(),
     response: z.object({
       jobRunId: id,
       aiTaskId: z.string(),

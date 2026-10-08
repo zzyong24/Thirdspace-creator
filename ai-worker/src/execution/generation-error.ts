@@ -9,9 +9,9 @@ export class GenerationFailure extends Error {
   ) {super(errorCode);}
 }
 
-export function generationFailure(error: unknown, hasOutput: boolean): GenerationFailure {
+export function generationFailure(error: unknown, hasOutput: boolean, options: {allowUnconfirmedModelRetry?: boolean} = {}): GenerationFailure {
   const classified = classifyLlmError(error);
-  // 仅明确 HTTP 拒绝可据响应分类。网络断开或已出流均可能已计费，不推测为未提交。
+  // 默认只有明确 HTTP 拒绝可据响应分类；模型候选调用可显式选择废弃后续跑。
   if (!hasOutput && error && typeof error === "object") {
     const e = error as {statusCode?: unknown; status?: unknown; code?: unknown; retryAfterMs?: unknown};
     if (e.code === "AI_CREDIT_EXHAUSTED") return new GenerationFailure("waiting_user", "AI_CREDIT_EXHAUSTED");
@@ -24,6 +24,10 @@ export function generationFailure(error: unknown, hasOutput: boolean): Generatio
       return new GenerationFailure("failed", classified.reason);
     }
   }
+  // 模型文本是可丢弃的候选。即使流里已有未完成文本，连接故障仍可废弃本次候选并由原任务续跑；
+  // 默认保持保守，素材、工具和其他可能有副作用的调用不得借此重放。
+  if (options.allowUnconfirmedModelRetry && classified.retryable)
+    return new GenerationFailure("retry_wait", classified.reason, getRetryAfterMs(error, Date.now, Infinity) ?? undefined);
   return new GenerationFailure("unknown_result", "MODEL_RESULT_UNKNOWN");
 }
 

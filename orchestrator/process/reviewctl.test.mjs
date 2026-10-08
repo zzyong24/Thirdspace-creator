@@ -252,6 +252,70 @@ test("R3 继续冻结 R2 条件，并允许严重度单向下降", () => {
   assert.match(r.stderr + r.stdout, /probe.*冻结|probe.*不得改写/i);
 });
 
+test("共享同一 SPEC 的任务可迁移到任务级 review snapshot 且不覆盖另一任务", () => {
+  const root = tempProject();
+  const packet = writePacket(root, "round-1.json", {
+    schema: "spec-review-round/v2",
+    review_kind: "initial",
+    summary: "首轮通过。",
+    findings: [],
+  });
+  let r = run(
+    REVIEWCTL,
+    [
+      "record", "T-101", "--spec", "SPEC.md", "--constitution", "CONSTITUTION.md",
+      "--input", packet, "--review", "SPEC.review.md", "--backlog", "BACKLOG.md",
+      "--review-mode", "cross-family", "--model", "test-reviewer",
+    ],
+    root,
+  );
+  assert.equal(r.status, 0, r.stderr || r.stdout);
+
+  fs.appendFileSync(
+    path.join(root, "BACKLOG.md"),
+    "| T-102 | 共享规格任务 | 📋 | [SPEC](SPEC.md) | 待审 | — | 验证任务级快照 |\n",
+  );
+  const eventsFile = path.join(root, "orchestrator", "review-events.ndjson");
+  const events = fs.readFileSync(eventsFile, "utf8").trim().split("\n").map(JSON.parse);
+  const source = events.at(-1);
+  const { event_hash: sourceHash, ...sourceBody } = source;
+  const collidedBody = {
+    ...sourceBody,
+    task_id: "T-102",
+    recorded_at: "2026-09-21T00:00:00.000Z",
+    previous_event_hash: sourceHash,
+  };
+  const collided = { ...collidedBody, event_hash: objectHash(collidedBody) };
+  fs.appendFileSync(eventsFile, `${JSON.stringify(collided)}\n`);
+
+  r = run(REVIEWCTL, ["migrate-shared-review", "T-102", "--backlog", "BACKLOG.md"], root);
+  assert.equal(r.status, 0, r.stderr || r.stdout);
+  assert.equal(JSON.parse(fs.readFileSync(path.join(root, "SPEC.review.md"), "utf8").match(/```spec-review-state\n([\s\S]*?)\n```/)[1]).task_id, "T-101");
+  const scoped = path.join(root, "SPEC.T-102.review.md");
+  assert.equal(fs.existsSync(scoped), true);
+  assert.equal(JSON.parse(fs.readFileSync(scoped, "utf8").match(/```spec-review-state\n([\s\S]*?)\n```/)[1]).task_id, "T-102");
+  r = run(REVIEWCTL, ["audit", "--backlog", "BACKLOG.md", "--quiet"], root);
+  assert.equal(r.status, 0, r.stderr || r.stdout);
+
+  const recheck = writePacket(root, "round-2.json", {
+    schema: "spec-review-round/v2",
+    review_kind: "recheck",
+    summary: "任务级快照迁移后可继续独立复审。",
+    findings: [],
+  });
+  r = run(
+    REVIEWCTL,
+    [
+      "record", "T-102", "--spec", "SPEC.md", "--constitution", "CONSTITUTION.md",
+      "--input", recheck, "--review", "SPEC.T-102.review.md", "--backlog", "BACKLOG.md",
+      "--review-mode", "cross-family", "--model", "test-reviewer",
+    ],
+    root,
+  );
+  assert.equal(r.status, 0, r.stderr || r.stdout);
+  assert.equal(JSON.parse(fs.readFileSync(scoped, "utf8").match(/```spec-review-state\n([\s\S]*?)\n```/)[1]).round, 2);
+});
+
 test("changed-lines 必须引用相对上一轮实际新增或修改的 SPEC 行指纹", () => {
   const root = tempProject();
   const args = (input) => [

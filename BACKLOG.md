@@ -9,6 +9,12 @@
 
 | ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
 | --- | --- | --- | --- | --- | --- | --- |
+| T-1026 | 补齐新增 Agent 功能的公开 CLI 并逐项验收安装版 | 🔨 | — | — | [SPEC](docs/features/t1026-agent-cli-acceptance.md) | 用户要求所有新增功能通过 CLI 实测；核对计划、工具、文件、命令、浏览器、Skill、产物、恢复与旧功能；修复已实测的取消/跳过步骤被误报完成，再安装版复验。 |
+| T-1027 | 修复评论采集完成统计与失败诊断 | 🔨 | — | — | [SPEC](docs/features/t1027-comment-collection-evidence.md) | T1026真实评论回归failed却提示全量完成；统一完成统计并补公开未完成原因，不把零新增冒充成功。 |
+| T-1025 | 重新核验 constitution 变更后的历史评审与前端验收回执 | 📋 | — | — | [SPEC](docs/features/t1025-receipt-drift-revalidation.md) | reconcile 已确认运行门全部通过，但 T-703/T-691/T-656/T-645/T-635 的旧评审回执和 T-1022 前端验收回执已因当前真相变化失效；按现状重新评审，禁止补拍历史 PASS。 |
+| T-1024-runtime-liveness | 根治聊天生成占用数据通道与重启后 unknown_result 卡死 | ✅ | — | — | [SPEC](docs/features/t1024-chat-runtime-liveness.md) | 真实安装版生成期间查询被阻塞，重启后原任务停在 unknown_result；释放长调用期间的数据通道，并让 agent loop 沿原任务安全恢复或明确收口。 本地main原任务T-1024的来源别名，原事件/验收证据不改写。 |
+| T-1023-agent-recovery | 根治 AI 助手自动恢复无限卡死并证明后台进展 | ✅ | — | PASS:87c802e61bbe | [SPEC](docs/features/t1023-agent-recovery-liveness.md) | 区分已持久化任务续跑与提交前网络失败；恢复必须有进展证据，持续无进展自动收口为可继续操作的状态，禁止永久转圈。 本地main原任务T-1023的来源别名，原事件/验收证据不改写。 |
+| T-1022-agent-recovery | 禁止模型超时或不完整输出阻断生成，统一由 Agent loop 恢复 | ✅ | — | PASS:06eb90bb86b5 | [SPEC](docs/features/t1022-nonblocking-agent-recovery.md) | 覆盖内容雷达与 AI 助手；仅无可用模型时引导配置，其他可恢复失败沿原任务自动续跑、修复或降级。 本地main原任务T-1022的来源别名，原事件/验收证据不改写。 |
 | T-1080 | 汇总全部本地worktree代码到main并清理闲置目录后构建 | 🔨 待办 | — | — | [SPEC](docs/features/t1080-local-main-worktree-consolidation.md) | 用户2026-10-08明确授权全部代码本地合并至主分支、清理不用的worktree再构建，构建无需备份。先逐树核HEAD/未提交/使用情况并保留Git来源，解决冲突和验证后只删除已保留代码且未占用的目录；保留活跃会话、真实数据与既有备份，不push/tag/发布。 |
 | T-1077 | 修复采纳与作品素材读取的项目返回值 | 🔨 待办 | PASS[REV:a36209c19783] | 待验 | [SPEC](docs/features/t1077-material-parent-port.md) | 新b640原401保留404项目不存在；真实项目可读，三个MaterialLinks私有适配丢弃Projects返回值。先精确独评、公共链RED→GREEN，保留原事务/归属/文件和原401，不重发生图；继续打包安装恢复，不push发布。 当前仅3产品行修复、正确owner公共RED4/2→GREEN6、原素材真实隔离PG18/0skip和最终类型0，独立实施限定PASS；错误同组账号拒绝断言与旧全局红如实保留。新包、原401保留/放画布和完整功能仍待验，不完成。 |
 | T-1076 | 清理旧安装包与本轮临时构建垃圾 | ✅ 待办 | — | — | [SPEC](docs/features/t1076-clean-obsolete-local-packages.md) | 用户明确授权清理旧包/垃圾以释放新包安装空间；只删本会话确认过期的DMG与未占用可重建缓存，保留新b640包、当前App、全部回滚备份/素材/原证据；记录精确SHA清单与实际空间，维护不改产品、不push发布。 |

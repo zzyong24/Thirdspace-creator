@@ -47,26 +47,29 @@ describe("orderCommentCollection(T-232 爆款优先 + 未采优先)", () => {
 });
 
 describe("buildCommentCoverageMessage(T-232 run 诚实:全量 vs 截断)", () => {
-  it("全量完成 → 「全量完成:已采 N/N」", () => {
+  it("完整批次只声明本批完成，不推断跨批全量状态", () => {
     expect(
       buildCommentCoverageMessage({
         collectedWorks: 49,
+        completedWorks: 49,
         totalWorks: 49,
         truncated: false,
         cooldownRemainMs: 0,
       }),
-    ).toBe("全量完成:已采 49/49 个作品");
+    ).toBe("本批完成:已处理 49/49 个作品，确认完成 49 个，未完成 0 个");
   });
 
   it("额度截断 → 注明「已采 X/N + 冷却剩余 + 下轮续」(不掩盖截断)", () => {
     const msg = buildCommentCoverageMessage({
       collectedWorks: 1,
+      completedWorks: 0,
       totalWorks: 49,
       truncated: true,
       cooldownRemainMs: 960_000,
     });
     expect(msg).toContain("额度截断");
-    expect(msg).toContain("已采 1/49 个作品");
+    expect(msg).toContain("已处理 1/49 个作品");
+    expect(msg).toContain("确认完成 0 个，未完成 49 个");
     expect(msg).toContain("960s");
     expect(msg).toContain("下轮优先续采");
   });

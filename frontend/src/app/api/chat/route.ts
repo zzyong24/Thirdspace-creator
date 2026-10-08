@@ -494,7 +494,7 @@ export async function POST(req: Request): Promise<Response> {
       //     同内容的 user 行(上一轮流失败/中断,assistant 未落库),说明这条 user 已在库里,
       //     不重插。查失败(best-effort)→ 照常 insert(宁多勿丢)。
       const approvalContinuation=messages.at(-1)?.role==="assistant" && messages.at(-1)!.parts.some(part=>typeof part==="object" && part!==null && "state" in part && part.state==="approval-responded");
-      let skipInsert = approvalContinuation;
+      let skipInsert = approvalContinuation || (!workTarget && isExistingConversation && body.trigger === "regenerate-message");
       // 新编导重接原服务器 source ID；不能把同文、不同稿面误当一次请求。
       if(workTarget&&body.trigger==="regenerate-message"){
         const history=await runtime.ai.listMessages(ctx,conversationId);

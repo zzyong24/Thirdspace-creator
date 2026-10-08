@@ -70,6 +70,7 @@ const REGISTERED_SKILL_IDS: ReadonlySet<string> = new Set([
   "method.review",
   "method.knowledge",
   "method.guide",
+  "method.report",
 
   "reconstruct.project",
   "positioning.generate",

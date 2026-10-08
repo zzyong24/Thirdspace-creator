@@ -97,7 +97,8 @@ export function createExecutionChatToolPorts(db:Db,deps:{now?:()=>string;budget:
   executionScope.signal.throwIfAborted();return tool.execute!(context,input,executionScope);
  }} satisfies AgenticBackendTool]));
  const project=createChatToolStreamProjection(db,deps);
- const tools=createExecutionAgenticToolPorts(db,{...deps,tools:guardedTools});
+ // 新只读调用代表新的观察，即使参数相同且本任务没有写入，外部状态也可能变化。
+ const tools=createExecutionAgenticToolPorts(db,{...deps,tools:guardedTools,reuseReadResults:false});
  async function settle(ref:ExecutionRef,raw:unknown){
   const request=workerPortInputSchemas.settleAgenticTool.parse(raw);
   const state=await leases.withLease(ref,"settlement",async({tx,task})=>{

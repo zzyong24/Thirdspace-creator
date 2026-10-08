@@ -102,7 +102,7 @@ describe("runModelConnectionTest — 文本模型(default)", () => {
     expect(r.ok).toBe(true);
     expect(r.model).toBe("test-model");
     expect(r.detail).toContain("流式");
-    expect(deps.probeTextModel).toHaveBeenCalledWith(llmSpec);
+    expect(deps.probeTextModel).toHaveBeenCalledWith(llmSpec, ctx);
     expect(deps.fetchImpl).not.toHaveBeenCalled();
   });
 
@@ -118,6 +118,7 @@ describe("runModelConnectionTest — 文本模型(default)", () => {
     expect(r.provider).toBe("openai_responses");
     expect(deps.probeTextModel).toHaveBeenCalledWith(
       expect.objectContaining({ apiFormat: "openai_responses" }),
+      ctx,
     );
     expect(deps.fetchImpl).not.toHaveBeenCalled();
   });
@@ -243,7 +244,7 @@ describe("runModelConnectionTest — image.generate(真实最小生图)", () => 
     expect(r.provider).toBe("openai");
     expect(r.model).toBe("gpt-image-2-4K");
     expect(r.detail).toContain("额度");
-    expect(deps.generateImageMinimal).toHaveBeenCalledWith(openaiSpec);
+    expect(deps.generateImageMinimal).toHaveBeenCalledWith(openaiSpec, ctx);
   });
 
   it("生图调用抛错 → ✗ 人话提示(不泄原始报错)", async () => {

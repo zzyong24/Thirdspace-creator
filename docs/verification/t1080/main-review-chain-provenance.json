@@ -1,0 +1,13 @@
+{
+  "sourceHead": "12288cefdd43544478ea8f67a648798f43e813df",
+  "sourcePath": "orchestrator/review-events.ndjson",
+  "sha256": "c255b19197425fb9b04ac048e3c831b513c435401ccc01e72a63cea259c72608",
+  "bytesUnchanged": true,
+  "disposition": "原分叉哈希链完整归档；当前消费主链保持client完整原字节，不重算原历史hash。",
+  "currentChainSource": "7d3a259a39f054d3ed56d8eb0d8ee4d5938873c5",
+  "taskAliases": {
+    "T-1022": "T-1022-agent-recovery",
+    "T-1023": "T-1023-agent-recovery",
+    "T-1024": "T-1024-runtime-liveness"
+  }
+}

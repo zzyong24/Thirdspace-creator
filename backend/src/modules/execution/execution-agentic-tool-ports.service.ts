@@ -13,7 +13,7 @@ const hash=(value:unknown)=>createHash("sha256").update(JSON.stringify(value)).d
 type Call=typeof executionCalls.$inferSelect;
 type ToolOutcome=z.infer<typeof agenticToolOutcomeSchema>;
 /** 工具名、参数和允许副作用来自后端冻结定义与已结算模型回执，不接受Worker自报。 */
-export function createExecutionAgenticToolPorts(db:Db,deps:Parameters<typeof createExecutionCallLedgerService>[1]&{tools:Record<string,AgenticBackendTool>;waitForResultMs?:number}){
+export function createExecutionAgenticToolPorts(db:Db,deps:Parameters<typeof createExecutionCallLedgerService>[1]&{tools:Record<string,AgenticBackendTool>;waitForResultMs?:number;reuseReadResults?:boolean}){
  const leases=createExecutionLeaseService(db,deps);const ledger=createExecutionCallLedgerService(db,deps);
  const {bind:binding,forCall:bindingForCall}=createAgenticToolBinding(deps.tools);
  const readOutput=(call:Call)=>agenticToolOutcomeSchema.parse(workerToolResultReceiptSchema.parse(JSON.parse(call.resultText ?? "")).output);
@@ -27,6 +27,15 @@ export function createExecutionAgenticToolPorts(db:Db,deps:Parameters<typeof cre
    if(original.toolExecutionClaimId && !claimId && original.status!=="settled")throw new ConflictError("Host执行回执只能由实际执行者结算");
    if(claimId && original.toolExecutionClaimId!==claimId)throw new ConflictError("工具执行领取凭证不符");
    const bound=await leases.withLease(ref,"settlement",async({task})=>bindingForCall(task,state.calls,original));
+   if(original.status==="settled"){
+    if(request.status==="unknown")return {callId:original.id,status:original.status};
+    const saved=workerToolResultReceiptSchema.parse(JSON.parse(original.resultText??""));
+    const savedOutput=JSON.parse(JSON.stringify(saved.output)),incomingOutput=JSON.parse(JSON.stringify(request.output));
+    if(saved.toolCallId!==bound.toolCallId||saved.toolName!==bound.toolName||!isDeepStrictEqual(savedOutput,incomingOutput)){
+     throw new ConflictError("已确认工具回执不能改写");
+    }
+    return {callId:original.id,status:original.status};
+   }
    if(bound.validationOutcome && request.status==="settled" && hash(request.output)!==hash(bound.validationOutcome))throw new ConflictError("非法参数只能结算后端确定的校验回执");
    const unknown=request.status==="unknown" || request.output.sideEffect==="unknown" || request.output.error?.code==="unknown_commit";
    if(request.status==="settled" && !unknown && bound.dryRun && request.output.sideEffect!=="none")throw new ConflictError("预演任务不能结算真实副作用");
@@ -56,21 +65,27 @@ export function createExecutionAgenticToolPorts(db:Db,deps:Parameters<typeof cre
     if(call.status!=="started" || call.startedAttempt!==ref.attempt)throw new ConflictError("工具未获当前执行许可或须对账");
     if(call.toolExecutionClaimId)return {kind:"waiting" as const,call};
     if(calls.filter(row=>row.kind==="model" && !row.parentCallId).at(-1)?.id!==bound.modelCallId)throw new ConflictError("旧模型回合不能执行");
-    const handler=deps.tools[bound.executionToolName]?.execute;
+    const handler=deps.tools[bound.executionToolName]?.execute,committer=(task.payload as Record<string,unknown>).artifactProtocolVersion===2
+     ?deps.tools[bound.executionToolName]?.commitAndSettle:undefined;
+    const unknownMarker=(task.payload as Record<string,unknown>).artifactProtocolVersion===2?deps.tools[bound.executionToolName]?.markUnknown:undefined;
     if(!handler && !bound.validationOutcome && !(bound.dryRun && bound.effect!=="none"))throw new ConflictError("工具没有后端执行端口");
     let reuseCallId:string|undefined;
-    if(bound.reuseWithinRound && !bound.validationOutcome){
+    const reuseSettledResults=deps.tools[bound.executionToolName]?.reuseSettledResults!==false;
+    // SEMANTIC_BOUNDARY_ALLOW: effect=none 只承诺无副作用，不承诺观察值不变。
+    // 聊天端口关闭跨 operation 的读复用；同 callId 回放已在上方独立处理，写入防重放不受影响。
+    if(bound.reuseWithinRound && !bound.validationOutcome && (bound.effect!=="none" || deps.reuseReadResults!==false)){
      for(const prior of [...calls].reverse()){
       if(prior.sequence>=call.sequence || prior.kind!=="tool" || prior.status==="rejected")continue;
       const previous=bindingForCall(task,calls,prior);
       if(previous.validationOutcome || previous.executionToolName!==bound.executionToolName || previous.effect!==bound.effect || !isDeepStrictEqual(previous.input,bound.input))continue;
-      if(prior.status==="settled" && !reusable(readOutput(prior)))continue;
+      // 新命令可跳过已结算旧进程，但未结算/unknown 同参操作仍须等待或对账。
+      if(prior.status==="settled" && (!reuseSettledResults || !reusable(readOutput(prior))))continue;
       reuseCallId=prior.id;break;
      }
     }
     const claimId=randomUUID();
     await tx.update(executionCalls).set({toolExecutionClaimId:claimId}).where(eq(executionCalls.id,callId));
-    return {kind:"owner" as const,claimId,bound,handler,context,aiTaskId:task.ownerId,reuseCallId};
+    return {kind:"owner" as const,claimId,bound,handler,committer,unknownMarker,context,aiTaskId:task.ownerId,reuseCallId,reuseSettledResults};
    });
    if(claimed.kind==="replay")return readOutput(claimed.call);
    if(claimed.kind==="waiting"){
@@ -100,7 +115,7 @@ export function createExecutionAgenticToolPorts(db:Db,deps:Parameters<typeof cre
       signal.throwIfAborted();
       const prior=(await ledger.inspect(ref)).calls.find(row=>row.id===claimed.reuseCallId);
       if(!prior || prior.status==="unknown")throw new ConflictError("同参前序调用结果未知，不能重复执行");
-      if(prior.status==="settled"){const output=readOutput(prior);if(reusable(output))reused=output;break;}
+      if(prior.status==="settled"){const output=readOutput(prior);if(claimed.reuseSettledResults && reusable(output))reused=output;break;}
       if(prior.status==="rejected")break;
       await new Promise(resolve=>setTimeout(resolve,25));
      }
@@ -109,10 +124,16 @@ export function createExecutionAgenticToolPorts(db:Db,deps:Parameters<typeof cre
     const output=agenticToolOutcomeSchema.parse(reused ?? claimed.bound.validationOutcome ?? (claimed.bound.dryRun && claimed.bound.effect!=="none"
      ? {status:"ok",summary:"已生成操作预演",evidence:[],data:{plan:{toolName:claimed.bound.toolName,input:claimed.bound.input}},error:null,continuation:null,sideEffect:"none"}
      : await claimed.handler!(claimed.context,claimed.bound.input,{execution:ref,aiTaskId:claimed.aiTaskId,callId,toolCallId:claimed.bound.toolCallId,signal,executionSignal:parentSignal})));
+    if(claimed.committer && output.sideEffect==="committed" && !reused && !claimed.bound.validationOutcome){
+     return agenticToolOutcomeSchema.parse(await claimed.committer(claimed.context,claimed.bound.input,output,{execution:ref,
+      aiTaskId:claimed.aiTaskId,callId,toolCallId:claimed.bound.toolCallId,claimId:claimed.claimId}));
+    }
     const receipt=await settle(ref,{callId,status:"settled",output},claimed.claimId,reused?claimed.reuseCallId:undefined);
     if(receipt.status!=="settled")throw new ConflictError("工具提交结果未知，须对账");
     return output;
    }catch{
+    await claimed.unknownMarker?.(claimed.context,{execution:ref,aiTaskId:claimed.aiTaskId,callId,toolCallId:claimed.bound.toolCallId,
+     claimId:claimed.claimId,toolName:claimed.bound.toolName}).catch(()=>{});
     await settle(ref,{callId,status:"unknown"},claimed.claimId).catch(()=>{});
     throw new ConflictError("工具执行结果未确认，须按原调用对账");
    }finally{clearInterval(timer);stop.abort();}

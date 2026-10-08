@@ -5,6 +5,7 @@ import {chatWorkerInputSchema,checkpointToolCallSchema,workerProviderReceiptSche
 import {agenticToolOperationKey} from "./agentic-tool-binding";
 type Call=typeof executionCalls.$inferSelect;
 type Task=typeof executionTasks.$inferSelect;
+const recoverableModelFailure=(call:Call)=>call.status==="superseded" || (call.status==="rejected" && call.rejectionCode!=="STRUCTURED_PROTOCOL_UNSUPPORTED");
 /** 只识别有已确认前缀的父工具；是否完成及下一请求仍由原节点与账本验证。 */
 export function recoverableChatNodeParents(task:Task,calls:Call[],evidence:(typeof executionEvidence.$inferSelect)[]=[]){
  const empty=()=>({completedHooks:[] as string[],resumableHooks:[] as string[],structured:[] as string[],scriptDrafts:[] as string[],webReads:[] as string[]});
@@ -48,7 +49,7 @@ export function recoverableChatNodeParents(task:Task,calls:Call[],evidence:(type
    if(index===groups.length+1){if(child.retryOfCallId){invalid=true;break;}groups.push([child]);}
    else if(index===groups.length && groups.length){
     const previous=groups[index-1]!.at(-1)!;
-    if(previous.status!=="rejected" || previous.rejectionCode==="STRUCTURED_PROTOCOL_UNSUPPORTED" || child.retryOfCallId!==previous.id || child.inputDigest!==previous.inputDigest){invalid=true;break;}
+    if(!recoverableModelFailure(previous) || child.retryOfCallId!==previous.id || child.inputDigest!==previous.inputDigest){invalid=true;break;}
     groups[index-1]!.push(child);
    }else {invalid=true;break;}
   }
@@ -56,7 +57,7 @@ export function recoverableChatNodeParents(task:Task,calls:Call[],evidence:(type
   const last=groups.at(-1)!.at(-1)!;
   const known=(call:Call)=>call.status==="settled" || (!hooks && !draft && call.status==="rejected" && call.rejectionCode==="STRUCTURED_PROTOCOL_UNSUPPORTED");
   if(groups.slice(0,-1).some(group=>!known(group.at(-1)!)))continue;
-  const retry=last.status==="rejected" && !last.rejectionCode && last.id===task.retryOfCallId;
+  const retry=recoverableModelFailure(last) && last.id===task.retryOfCallId;
   if(!known(last) && !retry)continue;
   if(draft)result.scriptDrafts.push(parent.id);
   else if(hooks)(retry?result.resumableHooks:result.completedHooks).push(parent.id);

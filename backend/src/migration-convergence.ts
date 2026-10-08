@@ -9,6 +9,7 @@ import installedLineages from './migration-convergence-installed-lineages.json';
 
 /** SEMANTIC_BOUNDARY_ALLOW: 只识别冻结迁移身份和PostgreSQL物理catalog，不判断内容或猜测归属。 */
 export const CONVERGENCE_WHEN=1791043200001;
+const WORKBENCH_CONVERGENCE={tag:"0129_workbench_artifact_convergence",when:1791043200002,hash:"e4a8e08ec392d781ba6401d6f6389ec0fcaf4fb18a06aa51945864ce63951113"};
 type QueryDb=Pick<Db,'execute'>;
 type Identity={hash:string;when:number};
 type Catalog=Record<'columns'|'constraints'|'indexes'|'functions'|'triggers'|'sequences',Record<string,unknown>[]>;
@@ -28,7 +29,7 @@ const allLineages={...lineages,...installedLineages};
 const sourceEntries=Object.values(lineages).flatMap(l=>l.entries);
 const canonicalEntries=new Map(sourceEntries.map(i=>[id(i),i]));
 const installedEntries=Object.values(installedLineages).flatMap(l=>l.entries).filter(i=>!canonicalEntries.has(id(i)));
-const entries=new Map([...sourceEntries,...installedEntries].map(i=>[id(i),i]));
+const entries=new Map([...sourceEntries,...installedEntries,WORKBENCH_CONVERGENCE].map(i=>[id(i),i]));
 const cache=new Map<string,Promise<Catalog>>();
 const repairable=new Set(['reporting_consents','reporting_outbox','reporting_consent_changes','creative_canvases','canvas_generation_links','canvas_agent_proposals']);
 async function rows(db:QueryDb,query:string){return(await db.execute(sql.raw(query))).rows as Record<string,unknown>[];}
@@ -39,7 +40,7 @@ async function readLedger(db:QueryDb):Promise<Identity[]>{
  for(const [name,type] of [['id','int4'],['hash','text'],['created_at','int8']])if(!cols.some(r=>r.column_name===name&&r.udt_name===type))fail('账本结构未知');
  return(await rows(db,'SELECT hash,created_at FROM drizzle.__drizzle_migrations ORDER BY created_at,id')).map(r=>{const when=Number(r.created_at);if(typeof r.hash!=='string'||!Number.isSafeInteger(when)||when<0)fail('账本身份类型无效');return{hash:r.hash as string,when};});
 }
-function sourceSQL(folder:string,item:Identity){for(const [name,lineage]of Object.entries(allLineages)){const entry=lineage.entries.find(e=>id(e)===id(item));if(entry){const raw=readFileSync(join(folder,'lineages',name,entry.tag+'.sql'),'utf8');if(sha(raw)!==item.hash)fail(`归档SQL校验失败 ${name}/${entry.tag}`);return raw;}}return fail('没有冻结SQL来源');}
+function sourceSQL(folder:string,item:Identity){if(id(item)===id(WORKBENCH_CONVERGENCE)){const raw=readFileSync(join(folder,WORKBENCH_CONVERGENCE.tag+".sql"),"utf8");if(sha(raw)!==WORKBENCH_CONVERGENCE.hash)fail("工作台收敛SQL校验失败");return raw;}for(const [name,lineage]of Object.entries(allLineages)){const entry=lineage.entries.find(e=>id(e)===id(item));if(entry){const raw=readFileSync(join(folder,'lineages',name,entry.tag+'.sql'),'utf8');if(sha(raw)!==item.hash)fail(`归档SQL校验失败 ${name}/${entry.tag}`);return raw;}}return fail('没有冻结SQL来源');}
 const validatedFolders=new Set<string>();
 function validateSources(folder:string){
  if(validatedFolders.has(folder))return;
@@ -48,7 +49,8 @@ function validateSources(folder:string){
   for(const entry of lineage.entries){const content=readFileSync(join(folder,'lineages',name,entry.tag+'.sql'),'utf8');if(sha(content)!==entry.hash)fail(`冻结SQL校验失败 ${name}/${entry.tag}`);}
  }
  const normal=JSON.parse(readFileSync(join(folder,'meta','_journal.json'),'utf8'));const common=lineages.root.entries.slice(0,101);
- if(normal.entries.length!==102||normal.entries[101].tag!=='0128_workspace_convergence'||normal.entries[101].when!==CONVERGENCE_WHEN)fail('当前主journal不符合共同前缀+真实新收敛版本');
+ const tail=[{idx:101,tag:'0101_workbench_artifact_lineage',when:1789963200000,hash:WORKBENCH_CONVERGENCE.hash},{idx:102,tag:'0128_workspace_convergence',when:CONVERGENCE_WHEN},{idx:103,...WORKBENCH_CONVERGENCE}];
+ if(normal.entries.length!==104||tail.some(expected=>{const actual=normal.entries[expected.idx];return !actual||actual.idx!==expected.idx||actual.tag!==expected.tag||actual.when!==expected.when||(expected.hash&&sha(readFileSync(join(folder,expected.tag+'.sql'),'utf8'))!==expected.hash);}))fail('当前主journal不符合共同前缀+真实收敛及固定工作台闭包');
  for(let i=0;i<common.length;i++){const entry=normal.entries[i];if(entry.tag!==common[i]!.tag||entry.when!==common[i]!.when||sha(readFileSync(join(folder,entry.tag+'.sql'),'utf8'))!==common[i]!.hash)fail('共同旧迁移tag/SQL/时间漂移');}
  validatedFolders.add(folder);
 }

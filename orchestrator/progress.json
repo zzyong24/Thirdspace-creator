@@ -4,10 +4,10 @@
     "work_branch": "main"
   },
   "summary": {
-    "verticals": 67,
-    "tasks_done": 45,
-    "tasks_total": 164,
-    "tasks_pending": 119,
+    "verticals": 79,
+    "tasks_done": 49,
+    "tasks_total": 180,
+    "tasks_pending": 131,
     "verticals_complete": 4
   },
   "verticals": [
@@ -279,17 +279,24 @@
       "archetype": [
         "reference-config",
         "user-authored",
-        "ai-generated"
+        "ai-generated",
+        "orchestration"
       ],
       "task_id": "T-1021",
       "tasks": [
         {
           "step": "design",
           "status": "pending"
+        },
+        {
+          "step": "implementation",
+          "status": "pending"
         }
       ],
       "blocked_reason": null,
-      "depends_on": [],
+      "depends_on": [
+        "T-1009:implementation"
+      ],
       "step_depends_on": {},
       "write_set": [
         "docs/features/t1021-cover-template-library.md",
@@ -298,7 +305,14 @@
         "orchestrator/reviews/T-1021-round-1.json",
         "orchestrator/reviews/T-1021-round-2.json",
         "orchestrator/reviews/T-1021-round-3.json",
-        "orchestrator/DECISION_LOG.md"
+        "orchestrator/DECISION_LOG.md",
+        "orchestrator/process/modules.config.json",
+        "backend/src/modules/execution/execution-agentic-tool-ports.service.ts",
+        "backend/src/modules/execution/workbench-artifact.service.ts",
+        "backend/src/modules/execution/workbench-artifact-lineage.service.test.ts",
+        "backend/src/modules/execution/execution-agentic-tool-host.test.ts",
+        "frontend/src/server/workbench-native-host.test.ts",
+        "docs/verification/t1021-t1009-full-acceptance.md"
       ],
       "read_set": [
         "docs/features/t1021-cover-template-library.md",
@@ -330,7 +344,13 @@
         "backend/src/modules/ai/ai.service.ts",
         "backend/src/application/chat/generation-tasks.ts",
         "contract/src/operations/publishing.ts",
-        "contract/src/resources/publishing.ts"
+        "contract/src/resources/publishing.ts",
+        "docs/features/t1003-agent-workbench.md",
+        "docs/features/t1009-artifact-lineage-proposal.md",
+        "backend/src/modules/ai-runtime/chat-workbench-capability-host.ts",
+        "backend/src/modules/execution/execution-agentic-tool-ports.service.ts",
+        "frontend/src/server/workbench-artifact-host.ts",
+        "frontend/src-tauri/src/workbench/**"
       ],
       "exclusive_resources": [],
       "step_write_set": {},
@@ -5295,7 +5315,58 @@
         "orchestrator/process/modules.config.json",
         "orchestrator/events.ndjson",
         "orchestrator/DECISION_LOG.md",
-        "orchestrator/context/T-1080.md"
+        "orchestrator/context/T-1080.md",
+        "PROJECT.md",
+        "ai-worker/src/nodes/structured-node.test.ts",
+        "ai-worker/src/prompt/templates/video-decisions.test.ts",
+        "backend/drizzle/meta/_journal.json",
+        "backend/src/db.ts",
+        "backend/src/index.ts",
+        "backend/src/modules/ai-runtime/chat-production-composition.ts",
+        "backend/src/modules/ai-runtime/chat-tool-definitions.test.ts",
+        "backend/src/modules/ai-runtime/chat-tool-definitions.ts",
+        "backend/src/modules/ai-runtime/chat-tool-gate.ts",
+        "backend/src/modules/ai-runtime/chat-turn-preparation.ts",
+        "backend/src/modules/ai-runtime/effective-skill-snapshot.test.ts",
+        "backend/src/modules/ai/chat-turn-completion.service.test.ts",
+        "backend/src/modules/ai/chat-turn-submission.service.test.ts",
+        "backend/src/modules/ai/chat-turn-submission.service.ts",
+        "backend/src/modules/analytics/sync-state.service.ts",
+        "backend/src/modules/assets/index.ts",
+        "backend/src/modules/execution/execution-browser-profile-lease.service.test.ts",
+        "backend/src/modules/execution/index.ts",
+        "backend/src/modules/execution/model-worker-dispatcher.ts",
+        "backend/src/modules/execution/persistent-task.service.ts",
+        "backend/src/modules/intelligence/topic-preview-runner.test.ts",
+        "backend/src/modules/intelligence/topic-preview-runner.ts",
+        "contract/src/cli-policy.ts",
+        "contract/src/internal/execution-worker.ts",
+        "contract/src/operations/analytics.ts",
+        "contract/tests/cli-policy.test.ts",
+        "contract/tests/registry.test.ts",
+        "frontend/scripts/desktop/build-sidecar.mjs",
+        "frontend/src/app/api/chat/route.ts",
+        "frontend/src/features/copilot/ai-copilot-content.tsx",
+        "frontend/src/features/copilot/live-chat-session.ts",
+        "frontend/src/features/intelligence/intelligence-workbench.test.tsx",
+        "frontend/src/features/intelligence/intelligence-workbench.tsx",
+        "frontend/src/features/intelligence/topic-candidate-editor.test.tsx",
+        "frontend/src/features/intelligence/topic-candidate-editor.tsx",
+        "frontend/src/server/persistence-client.ts",
+        "frontend/src/server/prepare-chat-reply.ts",
+        "mcp-server/src/cli.ts",
+        "mcp-server/tests/cli.test.ts",
+        "orchestrator/.lessons-stats.json",
+        "orchestrator/COMPLEXITY_LEDGER.json",
+        "orchestrator/LESSON_LEDGER.md",
+        "orchestrator/context/T-1021.md",
+        "orchestrator/context/T-1022.md",
+        "orchestrator/process/reconcile.config.json",
+        "orchestrator/progress.json",
+        "orchestrator/review-events.ndjson",
+        "backend/drizzle/0129_workbench_artifact_convergence.sql",
+        "backend/src/workbench-main-migration.test.ts",
+        "backend/src/migration-convergence.ts"
       ],
       "read_set": [
         "BACKLOG.md",
@@ -5320,6 +5391,555 @@
       "step_read_set": {},
       "step_exclusive_resources": {},
       "commits": {}
+    },
+    {
+      "id": "T-1026",
+      "task_id": "T-1026",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "contract/**",
+        "backend/src/modules/execution/**",
+        "frontend/src/server/**",
+        "frontend/src/cli/**",
+        "frontend/src/app/api/v1/workbench-preview/**",
+        "frontend/src/app/api/v1/workbench-artifacts/**",
+        "frontend/src/features/copilot/**",
+        "ai-worker/src/prompt/**",
+        "docs/features/t1026-agent-cli-acceptance.md",
+        "docs/verification/t1026*",
+        "orchestrator/DECISION_LOG.md",
+        "orchestrator/process/modules.config.json",
+        "mcp-server/**",
+        "orchestrator/progress.json"
+      ],
+      "read_set": [
+        "docs/features/t1026-agent-cli-acceptance.md",
+        "docs/features/t1003-agent-workbench.md",
+        "contract/src/**",
+        "backend/src/modules/execution/**",
+        "frontend/src/server/**",
+        "frontend/src/cli/**",
+        "ai-worker/src/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "task_id": "T-1027",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "read_set": [
+        "docs/features/t1027-comment-collection-evidence.md",
+        "backend/src/application/collection/**",
+        "backend/src/modules/ai-runtime/scheduled-collection-runner*",
+        "frontend/src/server/ingestion/**"
+      ],
+      "write_set": [
+        "docs/features/t1027-comment-collection-evidence.md",
+        "docs/verification/t1027*",
+        "backend/src/application/collection/**",
+        "backend/src/modules/ai-runtime/scheduled-collection-runner*",
+        "frontend/src/server/ingestion/douyin-cdp*",
+        "frontend/src/server/ingestion/comment-collection-plan.test.ts"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "pnpm --dir frontend typecheck",
+          "node orchestrator/process/boundary-scan.mjs"
+        ]
+      },
+      "id": "T-1027",
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "T-1022-agent-recovery",
+      "archetype": [
+        "orchestration",
+        "ai-generated"
+      ],
+      "task_id": "T-1022-agent-recovery",
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        },
+        {
+          "step": "acceptance",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "docs/features/t1022-nonblocking-agent-recovery.md",
+        "docs/verification/t1022-nonblocking-agent-recovery.md",
+        "backend/src/modules/execution/**",
+        "backend/src/modules/intelligence/**",
+        "ai-worker/src/execution/**",
+        "frontend/src/features/copilot/**",
+        "frontend/src/features/intelligence/**",
+        "orchestrator/DECISION_LOG.md",
+        "orchestrator/LESSON_LEDGER.md",
+        "orchestrator/process/reconcile.config.json"
+      ],
+      "read_set": [
+        "docs/features/t1022-nonblocking-agent-recovery.md",
+        "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+        "docs/features/t1003-agent-workbench.md",
+        "backend/src/modules/execution/**",
+        "backend/src/modules/intelligence/**",
+        "ai-worker/src/execution/**",
+        "frontend/src/features/copilot/**",
+        "frontend/src/features/intelligence/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "T-1005",
+      "archetype": [
+        "orchestration"
+      ],
+      "task_id": "T-1005",
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [
+        "T-1004:implementation"
+      ],
+      "step_depends_on": {},
+      "write_set": [
+        "backend/src/modules/execution/workbench-plan.service.ts",
+        "backend/src/modules/execution/workbench-plan.service.test.ts",
+        "ai-worker/src/runtime/chat/chat-pi-loop.ts",
+        "ai-worker/src/runtime/chat/chat-pi-loop.protocol.test.ts",
+        "ai-worker/src/execution/chat-worker-run.ts",
+        "docs/verification/t1005-plan.md"
+      ],
+      "read_set": [
+        "docs/features/t1003-agent-workbench.md",
+        "contract/src/internal/agent-workbench.ts",
+        "backend/src/modules/execution/**",
+        "ai-worker/src/runtime/chat/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "T-1006",
+      "archetype": [
+        "orchestration"
+      ],
+      "task_id": "T-1006",
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "done"
+        },
+        {
+          "step": "integration",
+          "status": "done"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [
+        "T-1004:implementation"
+      ],
+      "step_depends_on": {},
+      "write_set": [
+        "ai-worker/src/capabilities/gateway.ts",
+        "ai-worker/src/capabilities/gateway.test.ts",
+        "ai-worker/src/capabilities/result-pages.ts",
+        "ai-worker/src/capabilities/result-pages.test.ts",
+        "ai-worker/src/execution/chat-worker-run.ts",
+        "ai-worker/src/execution/worker-runtime.ts",
+        "backend/src/modules/ai-runtime/chat-tool-definitions.ts",
+        "backend/src/modules/ai-runtime/chat-tool-gate.ts",
+        "backend/src/modules/ai-runtime/chat-tool-definitions.test.ts",
+        "backend/src/modules/ai-runtime/chat-turn-preparation.ts",
+        "backend/src/modules/ai-runtime/chat-production-composition.ts",
+        "backend/src/modules/ai-runtime/chat-workbench-capability-host.ts",
+        "backend/src/modules/ai-runtime/chat-workbench-capability-host.test.ts",
+        "backend/src/modules/execution/model-worker-dispatcher.ts",
+        "backend/src/modules/execution/execution-chat-tool-ports.service.ts",
+        "backend/src/modules/execution/chat-tool-stream-projection.service.ts",
+        "backend/src/modules/execution/execution-stream.service.ts",
+        "backend/src/modules/execution/execution-stream.service.test.ts",
+        "backend/src/integration/chat-workbench-gateway.integration.test.ts",
+        "contract/src/internal/chat-worker.ts",
+        "contract/src/internal/execution-worker.ts",
+        "frontend/src/server/prepare-chat-reply.ts",
+        "docs/verification/t1006-gateway.md"
+      ],
+      "read_set": [
+        "docs/features/t1003-agent-workbench.md",
+        "contract/src/internal/agent-workbench.ts",
+        "backend/src/modules/ai-runtime/**",
+        "ai-worker/src/execution/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {
+        "implementation": "2b102729",
+        "integration": "21479378"
+      }
+    },
+    {
+      "id": "T-1007",
+      "archetype": [
+        "orchestration"
+      ],
+      "task_id": "T-1007",
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "done"
+        },
+        {
+          "step": "desktop-integration",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [
+        "T-1004:implementation"
+      ],
+      "step_depends_on": {},
+      "write_set": [
+        "ai-worker/src/capabilities/task-files.ts",
+        "ai-worker/src/capabilities/task-files.test.ts",
+        "ai-worker/src/capabilities/command-host.ts",
+        "ai-worker/src/capabilities/command-host.test.ts",
+        "frontend/src-tauri/src/workbench/**",
+        "frontend/src-tauri/src/lib.rs",
+        "frontend/src-tauri/Cargo.toml",
+        "frontend/src/server/workbench-native-client.ts",
+        "frontend/src/server/workbench-native-client.test.ts",
+        "frontend/src/server/workbench-native-host.ts",
+        "frontend/src/server/workbench-native-host.test.ts",
+        "frontend/src/server/persistence-client.ts",
+        "docs/verification/t1007-files-command.md"
+      ],
+      "read_set": [
+        "docs/features/t1003-agent-workbench.md",
+        "contract/src/internal/agent-workbench.ts",
+        "ai-worker/src/runtime/browser/**",
+        "frontend/src-tauri/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {
+        "implementation": "18d89f35"
+      }
+    },
+    {
+      "id": "T-1008",
+      "archetype": [
+        "orchestration"
+      ],
+      "task_id": "T-1008",
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [
+        "T-1004:implementation",
+        "T-1006:integration"
+      ],
+      "step_depends_on": {},
+      "write_set": [
+        "frontend/src-tauri/vendor/nomifun/**",
+        "frontend/src-tauri/Cargo.toml",
+        "frontend/src-tauri/Cargo.lock",
+        "frontend/src-tauri/src/workbench/**",
+        "frontend/src-tauri/src/lib.rs",
+        "backend/src/modules/execution/execution-browser-profile-lease.service.ts",
+        "backend/src/modules/execution/execution-browser-profile-lease.service.test.ts",
+        "backend/src/modules/execution/host-browser-profile-lifecycle.ts",
+        "backend/src/modules/execution/host-browser-profile-lifecycle.test.ts",
+        "backend/src/modules/execution/workbench-browser-admission.service.ts",
+        "backend/src/modules/execution/workbench-browser-admission.service.test.ts",
+        "backend/src/modules/execution/index.ts",
+        "frontend/src/server/workbench-browser-client.ts",
+        "frontend/src/server/workbench-browser-client.test.ts",
+        "frontend/src/server/workbench-browser-host.ts",
+        "frontend/src/server/workbench-browser-host.test.ts",
+        "frontend/src/server/persistence-client.ts",
+        "frontend/src/server/ingestion/douyin-cdp.ts",
+        "frontend/src/server/ingestion/douyin-cdp.test.ts",
+        "frontend/src/server/ingestion/douyin-traffic.ts",
+        "frontend/src/server/ingestion/douyin-traffic.test.ts",
+        "frontend/scripts/desktop/build-sidecar.mjs",
+        "frontend/scripts/desktop/runtime-inventory.mjs",
+        "docs/verification/t1008-browser.md"
+      ],
+      "read_set": [
+        "docs/features/t1003-agent-workbench.md",
+        "docs/verification/t1004-nomifun-dependency.md",
+        "contract/src/internal/agent-workbench.ts",
+        "backend/src/modules/execution/**",
+        "frontend/src/server/ingestion/**",
+        "frontend/src-tauri/src/workbench/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "T-1009",
+      "archetype": [
+        "orchestration"
+      ],
+      "task_id": "T-1009",
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [
+        "T-1006:integration",
+        "T-1007:desktop-integration"
+      ],
+      "step_depends_on": {},
+      "write_set": [
+        "orchestrator/process/modules.config.json",
+        "backend/drizzle/0101_workbench_artifact_lineage.sql",
+        "backend/drizzle/meta/_journal.json",
+        "backend/src/db.ts",
+        "backend/src/index.ts",
+        "backend/src/schema/workbench-artifacts.ts",
+        "backend/src/modules/assets/workbench-blob.service.ts",
+        "backend/src/modules/assets/workbench-blob.service.test.ts",
+        "backend/src/modules/assets/index.ts",
+        "backend/src/modules/execution/agentic-tool-binding.ts",
+        "backend/src/modules/execution/execution-agentic-tool-ports.service.ts",
+        "backend/src/modules/execution/execution-agentic-tool-host.test.ts",
+        "backend/src/modules/execution/workbench-artifact.service.ts",
+        "backend/src/modules/execution/workbench-artifact.service.test.ts",
+        "backend/src/modules/execution/workbench-artifact-lineage.service.test.ts",
+        "backend/src/modules/execution/workbench-artifact-reconciler.ts",
+        "backend/src/modules/execution/index.ts",
+        "backend/src/modules/ai/chat-turn-submission.service.ts",
+        "backend/src/modules/ai/chat-turn-submission.service.test.ts",
+        "backend/src/modules/ai-runtime/chat-production-composition.ts",
+        "backend/src/modules/ai-runtime/chat-workbench-plan-tool-host.ts",
+        "backend/src/modules/ai-runtime/chat-workbench-capability-host.ts",
+        "frontend/src/server/workbench-artifact-host.ts",
+        "frontend/src/server/workbench-artifact-host.test.ts",
+        "frontend/src/server/persistence-client.ts",
+        "frontend/src/app/api/v1/workbench-artifacts/**",
+        "frontend/src/app/api/v1/workbench-preview/**",
+        "frontend/src/server/workbench-preview-policy.ts",
+        "frontend/src/server/workbench-preview-read.ts",
+        "frontend/src/server/workbench-preview-read.test.ts",
+        "frontend/src/server/workbench-artifact-render.ts",
+        "frontend/src/server/workbench-artifact-render.test.ts",
+        "frontend/src/components/workbench-preview-frame.tsx",
+        "frontend/src/components/workbench-preview-frame.test.tsx",
+        "frontend/src/features/copilot/ai-copilot-content.tsx",
+        "frontend/src/features/copilot/workbench-artifact-history.tsx",
+        "frontend/src/features/copilot/workbench-artifact-history.test.tsx",
+        "frontend/src/features/copilot/workbench-artifact-export.ts",
+        "frontend/src/features/copilot/workbench-artifact-export.test.ts",
+        "frontend/src/features/copilot/workbench-artifact-card.tsx",
+        "frontend/src/features/copilot/workbench-artifact-card.test.tsx",
+        "frontend/src/server/workbench-builtin-manifest.ts",
+        "frontend/src/server/workbench-builtin-manifest.test.ts",
+        "frontend/src-tauri/src/lib.rs",
+        "contract/src/internal/agent-workbench.ts",
+        "contract/src/internal/execution-worker.ts",
+        "contract/tests/agent-workbench.test.ts",
+        "docs/verification/t1009-artifacts.md",
+        "docs/verification/t1009-preview.md",
+        "docs/verification/t1009-native-export.md",
+        "docs/verification/t1009-html-export-chain.md",
+        "docs/verification/t1009-cross-turn-lineage.md"
+      ],
+      "read_set": [
+        "docs/features/t1003-agent-workbench.md",
+        "contract/src/internal/agent-workbench.ts",
+        "backend/src/modules/assets/**",
+        "backend/src/modules/execution/**",
+        "frontend/src/server/workbench-native-host.ts",
+        "frontend/src-tauri/src/workbench/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "T-1010",
+      "archetype": [
+        "orchestration"
+      ],
+      "task_id": "T-1010",
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [
+        "T-1005:implementation",
+        "T-1006:integration",
+        "T-1007:desktop-integration",
+        "T-1008:implementation",
+        "T-1009:implementation"
+      ],
+      "step_depends_on": {},
+      "write_set": [
+        "ai-worker/src/prompt/business-methods.ts",
+        "ai-worker/src/prompt/registry.ts",
+        "backend/src/modules/ai-runtime/effective-skill-snapshot.ts",
+        "backend/src/modules/ai-runtime/effective-skill-snapshot.test.ts",
+        "backend/src/modules/settings/settings.service.ts",
+        "frontend/src/server/prepare-chat-reply.ts",
+        "frontend/src/server/prepare-chat-reply.test.ts",
+        "frontend/src/server/workbench-builtin-manifest.ts",
+        "frontend/src/server/workbench-builtin-manifest.test.ts",
+        "docs/verification/t1010-workbench-skills.md"
+      ],
+      "read_set": [
+        "docs/features/t1003-agent-workbench.md",
+        "ai-worker/src/prompt/**",
+        "backend/src/modules/ai-runtime/chat-skill-library.ts",
+        "frontend/src/server/prepare-chat-reply.ts"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "T-1011",
+      "archetype": [
+        "orchestration"
+      ],
+      "task_id": "T-1011",
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [
+        "T-1005:implementation",
+        "T-1006:integration",
+        "T-1009:implementation"
+      ],
+      "step_depends_on": {},
+      "write_set": [
+        "frontend/src/features/copilot/ai-copilot-content.tsx",
+        "frontend/src/features/copilot/ai-copilot-interactions.test.tsx",
+        "frontend/src/features/copilot/workbench-plan-card.tsx",
+        "frontend/src/features/copilot/workbench-plan-card.test.tsx",
+        "docs/verification/t1011-workbench-ui.md"
+      ],
+      "read_set": [
+        "docs/features/t1003-agent-workbench.md",
+        "contract/src/internal/agent-workbench.ts",
+        "frontend/src/features/copilot/**",
+        "frontend/src/components/workbench-preview-frame.tsx",
+        "backend/src/modules/execution/workbench-plan.service.ts"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "T-1004",
+      "archetype": [
+        "orchestration"
+      ],
+      "task_id": "T-1004",
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "done"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "contract/src/internal/agent-workbench.ts",
+        "contract/tests/agent-workbench.test.ts",
+        "docs/verification/t1004-nomifun-dependency.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "orchestrator/process/boundaries.config.json",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/progress.json"
+      ],
+      "read_set": [
+        "docs/features/t1003-agent-workbench.md",
+        "contract/src/**",
+        "frontend/src-tauri/**",
+        "orchestrator/SYSTEM_ARCHITECTURE.md"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {
+        "implementation": "8525ddff"
+      }
     }
   ],
   "leases": {

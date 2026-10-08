@@ -46,9 +46,10 @@ flowchart LR
 `video.subtitles` 可为每行中文字幕选择 0–2 个重点片段，并输出原文片段、Unicode 字符起止范围及
 该行内的真实起止秒。runner 只接受能逐字对应最终 `zh`、字符范围合法、时间落在该行区间内的片段；
 无效片段单独丢弃，不能重写字幕，也不能用词表重新猜重点。单行允许没有重点，但一条包含非空字幕的
-新候选全片至少要保留 1 个合法重点片段；首轮全部为空或全部被校验丢弃时，使用同一
+T-858 的代表性验收候选全片至少要保留 1 个合法重点片段；首轮全部为空或全部被校验丢弃时，使用同一
 `video.subtitles` Skill 对首个非空字幕批次做至多 1 次“必须选择真实重点”的结构化重试。重试后仍为
-空则该次决策任务明确失败并记录“重点词未产出”，不能把无重点候选送入 T-858 验收，也不能由代码补猜。
+空时记录“重点词未产出”，保留真实字幕并使用无强调的安全基础样式，仍允许候选和短预览继续；该样例不能
+作为 AC-858-3 的通过证据，也不能由代码补猜重点。
 
 ### FR-858-3：竖屏是一套连续舞台
 
@@ -123,11 +124,17 @@ type SubtitleEmphasis = {
 };
 ```
 
-每行 `emphasis` 默认空数组、最多 2 项。原有模型配置、节点和候选落盘通道不变。
+每行 `emphasis` 默认空数组、最多 2 项。ai-worker 只产生结构化方向/字幕候选并通过受控执行端口返回；
+backend service 是 checkpoint、候选、采纳投影与 render 请求的唯一持久化所有者，Worker 不打开数据库、
+不保存第二份业务状态。原有模型配置和业务落盘通道不变。
 
 ### 3.2 runner 校验
 
 - director facet 为每张卡和 B-roll 提供稳定真实 ref；beat 只能引用卡片与非 `overlay` B-roll 的主视觉集合。
+- ref 绑定不可变候选版本与真实资源 ID。方向落盘、短预览组装及 `video.render` 真正执行前，backend
+  service port 都必须按当前 RequestContext 重读根实体，核对 user/account/project、候选版本、资源
+  存在性、有效时间窗与归属；可唯一重绑时使用当前真实值，否则返回明确冲突，禁止消费已删除、旧版本
+  或跨项目资源。
 - beat 时间必须位于所属场景与被引用对象的真实有效窗内，`startSec < endSec`，按时间排序；每项都是
   主视觉且相邻时间窗必须满足 `previous.endSec <= next.startSec`。任一重叠使整份 direction 无效并进入
   既有有限重试/明确降级记录，代码不截短、不按数组顺序覆盖，也不替 AI 新造主体或运动。
@@ -137,9 +144,12 @@ type SubtitleEmphasis = {
   `same_base`，表示结束后直接切回同一人物基底。
 - emphasis 以校正后的 `zh` 做 Unicode code point 精确切片，`text` 必须逐字相等，时间必须在该 SRT
   行内。无效 emphasis 丢弃；中文、英文、SRT 时钟保持现有保真规则。全片合法 emphasis 数量为 0
-  时执行 FR-858-2 的单次定向重试；仍为 0 则任务失败，不生成无重点的新候选。
+  时执行 FR-858-2 的单次定向重试；仍为 0 时保留真实字幕和安全基础样式，记录增强未完成，不阻断候选或预览。
 - `VideoDecisions.direction` 和字幕 emphasis 都随 checkpoint、候选、局部补充选材保留；旧候选字段
   缺失时可读，不能伪造补齐。
+- director、subtitles、候选提交与 render 请求共享 backend 注入的 `taskId + operationId + attempt + fence`。
+  相同 operationId 重放返回既有结算结果；定向重试只增加 attempt，旧 fence 的迟到结果不得写 checkpoint、
+  候选或 render 请求，也不得重复计费。
 
 ### 3.3 render props 与模板
 
@@ -164,10 +174,14 @@ type SubtitleEmphasis = {
 ## 5. 失败与恢复
 
 - director 模型输出不合 schema：沿用现有有限重试与确定性安全降级，运行记录明确 `direction` 缺失。
-- 单个 beat 引用或时间无效：丢弃该 beat 并记录可定位原因；其余合法时间线可继续。
+- beat 排序或时间窗重叠会拒绝整份 direction，并进入既有有限重试；仍失败时明确记录无 direction，使用
+  不含编导增强的安全基础时间线继续。只有单个 ref 不存在或范围越界、且移除它不需要代码选择主视觉也
+  不破坏其余时间线语义时，才可丢弃该 beat 并记录原因；代码不得在重叠项之间替 AI 选择保留对象。
 - 单个 emphasis 无效：只丢强调，保留该行真实字幕与翻译；若全片因此没有任何合法 emphasis，执行
-  一次同 Skill 定向重试，仍为空则任务明确失败。
-- 安全布局无法满足完整 `contain`、字幕安全区或人物回位：渲染前失败关闭，不输出有裁切/遮挡的成片。
+  一次同 Skill 定向重试，仍为空则使用无强调基础样式继续，并把该增强标为未完成。
+- 布局冲突先按确定顺序降级并记录：移除辅助 overlay → 切换安全基础布局 → 跳过单个问题素材或降级
+  单卡 → 回到人物基底。只有输入损坏、权限/归属错误或所有安全输出路径都不存在时才允许整单失败；
+  任何路径都不得输出有裁切、遮挡或人物回位漂移的成片。发生降级的样例不能作为 T-858 验收通过证据。
 - 代表性样例发生 Scene Graph 降级、人物自动缩成 PiP、主视觉期间仍露人物、纯黑断层、第二路动态
   背景、字幕无强调或切回后人物几何漂移：验收失败，继续修复。
 
@@ -176,7 +190,8 @@ type SubtitleEmphasis = {
 ### AC-858-1：AI 决策可追溯
 
 用真实确认稿/SRT/素材运行正式决策链，候选含非空 `motionThesis` 与按时间排序的 beat graph；抽查每拍
-ref、场景、时间、stage 和回位均能指向真实候选对象，代码中没有关键词/文件名创作分支。
+ref、场景、时间、stage 和回位均能指向当前 backend service port 重读的真实候选对象，代码中没有
+关键词/文件名创作分支。补充候选换版本、资源删除、卡片重排和跨项目 ref 的拒绝或唯一重绑定用例。
 
 ### AC-858-2：竖屏统一舞台
 
@@ -198,7 +213,8 @@ contain；主视觉接管期间人物完全不可见，模板没有人物缩放/
 
 先红后绿覆盖 prompt/schema、runner、组装器、模板几何、字幕切片和旧候选兼容；通过 contract 与
 frontend 类型检查、聚焦单测、boundary、semantic、diff-check，以及前端“生成分镜 → 确认 → 生成
-短预览”的真实生产旅程。输出实际关键帧、接触表和短 MP4，等待用户确认后才允许重渲整片。
+短预览”的真实生产旅程。故障注入覆盖相同 operationId 重放、崩溃续跑、旧 fence 迟到完成、无 emphasis
+安全预览、布局逐级降级和 Worker 无数据库依赖。输出实际关键帧、接触表和短 MP4，等待用户确认后才允许重渲整片。
 
 ## 7. 预期改动面
 
@@ -209,4 +225,4 @@ frontend 类型检查、聚焦单测、boundary、semantic、diff-check，以及
 - `backend/src/modules/execution/video-render/template.ts` 及测试
 - 既有真实时间线预览脚本与 `orchestrator/evidence/T-858/` 验收产物
 
-不新增跨层直连；AI 仍只产候选，backend runner 仍是唯一安全收口，renderer 仍只消费契约。
+不新增跨层直连；AI 仍只产候选，backend service 仍是唯一持久化与安全收口，renderer 仍只消费契约。

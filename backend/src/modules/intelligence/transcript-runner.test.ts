@@ -1,12 +1,14 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { createDb } from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
 import { createPersistentTaskService } from "../execution";
+import { createRecoveryWakeCoordinator } from "../../application/recovery-wake";
 import { createIntelligenceService } from "./intelligence.service";
 import {
   drainIntelligenceTranscriptQueue,
   runIntelligenceTranscriptTask,
+  type IntelligenceTranscriptRunnerDeps,
 } from "./transcript-runner";
 
 const ctx: RequestContext = {
@@ -46,7 +48,7 @@ describe("T-482 手动逐字稿持久队列", () => {
 
       let active = 0;
       let maxActive = 0;
-      const processed = await drainIntelligenceTranscriptQueue({
+      const runner: IntelligenceTranscriptRunnerDeps = {
         tasks,
         intelligence,
         transcript: {
@@ -63,9 +65,36 @@ describe("T-482 手动逐字稿持久队列", () => {
             };
           },
         },
+      };
+      let processed = 0;
+      const batches: number[] = [];
+      const recovery = createRecoveryWakeCoordinator({
+        intervalMs: 10,
+        lanes: {
+          transcribe: async (control) => {
+            const count = await drainIntelligenceTranscriptQueue(runner, {
+              ...control,
+              maxTasks: 4,
+              concurrency: 2,
+            });
+            processed += count;
+            batches.push(count);
+          },
+        },
       });
+      try {
+        recovery.start();
+        await vi.waitFor(() => expect(processed).toBe(total), {
+          timeout: 15_000,
+          interval: 50,
+        });
+      } finally {
+        await recovery.stop();
+      }
 
       expect(processed).toBe(total);
+      expect(batches.filter((count) => count > 0).length).toBeGreaterThan(1);
+      expect(batches.every((count) => count <= 4)).toBe(true);
       expect(maxActive).toBe(2);
       await expect(
         tasks.list(ctx, { kind: "transcribe", status: "queued", limit: 100 }),

@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { Copy, FolderPlus,Link2,RefreshCw } from "lucide-react";
 import * as React from "react";
 import type { RadarItemDetail } from "./intelligence-workbench-types";
-import { canRetryTopicTask,isTopicTaskPending,isTopicTaskPolling,topicTaskAttention,topicTaskStatus } from "./topic-task-state";
+import { canRetryTopicTask,isTopicTaskPending,isTopicTaskPolling,topicTaskAttention,topicTaskNeedsModelSetup,topicTaskStatus } from "./topic-task-state";
 const CONTENT_ROLE_LABELS = { traffic: "流量型", trust: "信任型", conversion: "获客型" } as const;
 type CandidateSnapshot = NonNullable<RadarItemDetail["transforms"][number]["outputSnapshot"]>;
 function candidateFromSnapshot(snapshot: CandidateSnapshot) {
@@ -123,6 +123,7 @@ export function TopicCandidateEditor({
   const progress = transform.outputSnapshot.generationProgress;
   const retrying=generationPending || isTopicTaskPending(topicTaskStatus(transform));
   const terminalFailure=Boolean(topicTaskAttention(topicTaskStatus(transform)));
+  const needsModelSetup=topicTaskNeedsModelSetup(transform);
   const personalizationStatus =
     transform.outputSnapshot.adaptedDraft?.generationMode === "rewrite_only"
       ? transform.outputSnapshot.adaptedDraft.personalizationStatus
@@ -176,12 +177,20 @@ export function TopicCandidateEditor({
           className="rounded-lg border border-warning/30 bg-warning/5 px-3 py-2"
         >
           <p className="text-xs font-medium text-foreground">
-            {rewriteOnly ? "这次没有生成改写稿" : "后续生成暂未完成，已生成的内容已保留"}
+            {needsModelSetup ? "完成 AI 设置后继续" : rewriteOnly ? "这次没有生成改写稿" : "后续生成暂未完成，已生成的内容已保留"}
           </p>
           <p className="mt-1 text-[11px] leading-4 text-muted-foreground">
             {transform.taskErrorMessage?.trim() || topicTaskAttention(topicTaskStatus(transform)) || "可以稍后只重试未完成部分。"}
           </p>
-          {!confirmed ? (
+          {needsModelSetup ? (
+            <a
+              href="/settings?highlight=text-model"
+              data-slot="topic-model-settings-link"
+              className="mt-2 inline-flex h-8 items-center rounded-md bg-primary px-3 text-[11px] font-medium text-primary-foreground"
+            >
+              去设置 AI 模型
+            </a>
+          ) : !confirmed&&canRetryTopicTask(topicTaskStatus(transform)) ? (
             <Button
               type="button"
               size="sm"
@@ -387,7 +396,7 @@ export function TopicCandidateEditor({
         </Button>
       ) : null}
       <div className="grid gap-2 sm:grid-cols-2">
-        {!confirmed ? (
+        {!confirmed && (generationPending || !isTopicTaskPending(topicTaskStatus(transform))) ? (
           <Button
             type="button"
             size="sm"

@@ -224,6 +224,9 @@ const growthFixtureBytes = readFileSync(
 const growthCanonicalFixture = JSON.parse(
   growthFixtureBytes.toString("utf8"),
 ).responseBody as SignedClientConfigBundle;
+const clientVersion = JSON.parse(
+  readFileSync(join(process.cwd(), "package.json"), "utf8"),
+).version as string;
 
 describe("T-575 config.pull Creator consumer", () => {
   const amKeys = generateKeyPairSync("ed25519");
@@ -275,7 +278,7 @@ describe("T-575 config.pull Creator consumer", () => {
         );
       }
       expect(url).toBe(
-        `${GROWTH_ORIGIN}/api/client-config/bundles/current?clientVersion=1.1.0&accept=creatoros.model-config%40creatoros-model-config-v1`,
+        `${GROWTH_ORIGIN}/api/client-config/bundles/current?clientVersion=${encodeURIComponent(clientVersion)}&accept=creatoros.model-config%40creatoros-model-config-v1`,
       );
       expect(init?.headers).toMatchObject({
         Authorization: "Bearer header.payload.signature",

@@ -3,7 +3,8 @@ import {asSchema,type FlexibleSchema} from "ai";
 type Node=Record<string,z.infer<ReturnType<typeof z.json>>>;
 const object=z.record(z.string(),z.json());
 const common=["type","description","title","enum"];
-const keys:Record<string,string[]>={object:["properties","required","additionalProperties"],array:["items","minItems","maxItems"],string:["minLength","maxLength"],number:["minimum","maximum"],integer:["minimum","maximum"],boolean:[],null:[]};
+const keys:Record<string,string[]>={object:["properties","required","additionalProperties"],array:["items","minItems","maxItems"],string:["minLength","maxLength","format"],number:["minimum","maximum"],integer:["minimum","maximum"],boolean:[],null:[]};
+const stringFormats=new Set(["uri"]);
 /** SEMANTIC_BOUNDARY_ALLOW: 只校验明确参数契约，不判断意图或创作选择；未支持约束不能静默放行。 */
 function checked(node:Node):Node{
  // JSON Schema 方言声明是元数据，不是新增业务约束。只接受本转换器实际支持的 draft-7。
@@ -17,6 +18,7 @@ function checked(node:Node):Node{
  const allowed=[...common,...(typeof type==="string"?keys[type]!:[])];
  for(const key of Object.keys(node))if(!allowed.includes(key))throw new Error(`工具参数约束尚不支持：${key}`);
  for(const key of ["title","description"])if(node[key]!==undefined && typeof node[key]!=="string")throw new Error("工具参数描述格式无效");
+ if(node.format!==undefined && (typeof node.format!=="string" || !stringFormats.has(node.format)))throw new Error("工具参数字符串格式尚不支持");
  const result={...node};
  for(const key of ["minLength","maxLength","minItems","maxItems","minimum","maximum"]){
   const value=node[key];if(value===undefined)continue;

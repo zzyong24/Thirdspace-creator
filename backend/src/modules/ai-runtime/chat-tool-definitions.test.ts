@@ -3,6 +3,8 @@ import { jsonSchema, tool } from "ai";
 import { CHAT_TOOL_EFFECTS, prepareChatToolDefinitions } from "./chat-tool-definitions";
 import { ALL_CHAT_TOOL_NAMES } from "./chat-tools";
 import { defineChatTool } from "./chat-tool-gate";
+import { defineWorkbenchChatTool, getChatToolNativeExecutor } from "./chat-tool-gate";
+import type { WorkbenchCapability, WorkbenchResult } from "@creatoros/contract/agent-workbench";
 const schema = { type: "object", properties: { q: { type: "string" } }, additionalProperties: false } as const;
 const make = (name: string, input = schema, description = "测试") => defineChatTool(name, { description, inputSchema: jsonSchema(input), execute: () => ({ kind: name }) });
 
@@ -69,4 +71,41 @@ it('真实creation参数校验接收sectionId/cardId协议，拒绝真模型出�
  expect(validator.safeParse({...valid,article:{...article,sections:[{id:'section-1',type:'text',text:'中性正文',sourceRefs:[ref]}]}}).success).toBe(false);
  expect(validator.safeParse({...valid,graphic:{...graphic,cardBriefs:[{id:'card-1',page:1,type:'text',title:'中性页',body:'页正文',sourceRefs:[ref]}]}}).success).toBe(false);
  expect(validator.safeParse({...valid,article:{...article,metadataSource:{titleSourceRefs:[ref],summarySourceRefs:[ref]}}}).success).toBe(false);
+});
+
+const workbenchCapability: WorkbenchCapability = {
+  name: "files.read", schemaVersion: 1, description: "读取任务文件",
+  inputSchema: { type: "object", properties: { path: { type: "string" } }, required: ["path"], additionalProperties: false },
+  resultSchema: { type: "object" }, effects: ["read"], requiredCapabilities: ["task.files"], platforms: ["macos"],
+};
+const workbenchResult: WorkbenchResult = { status: "succeeded", operationId: "op", content: [{ type: "text", text: "a".repeat(80000) }], artifactRefs: [], progressCursor: null };
+
+it("Workbench 目录由可信描述冻结副作用与版本；原执行入口保留完整回执供原 tool.result.read", async () => {
+  const built = defineWorkbenchChatTool(workbenchCapability, async () => workbenchResult);
+  const prepared = await prepareChatToolDefinitions({ "files.read": built }, { workbenchCapabilities: [workbenchCapability] });
+  expect(prepared.definitions[0]).toMatchObject({ name: "files.read", effect: "none", parameters: workbenchCapability.inputSchema });
+  expect(await getChatToolNativeExecutor(built)!({ path: "a.txt" })).toEqual({ kind: "workbench.result", result: workbenchResult });
+  const direct = await built.execute!({ path: "a.txt" }, {} as never) as { result: WorkbenchResult };
+  expect(JSON.stringify(direct).length).toBeLessThan(JSON.stringify({ kind: "workbench.result", result: workbenchResult }).length);
+  const changed = { ...workbenchCapability, schemaVersion: 2 };
+  const changedTool = defineWorkbenchChatTool(changed, async () => workbenchResult);
+  const newer = await prepareChatToolDefinitions({ "files.read": changedTool }, { workbenchCapabilities: [changed] });
+  expect(newer.definitions[0]!.version).not.toBe(prepared.definitions[0]!.version);
+  await expect(prepareChatToolDefinitions({ "files.read": built })).rejects.toThrow();
+  await expect(prepareChatToolDefinitions({ "files.read": built }, { workbenchCapabilities: [changed] })).rejects.toThrow();
+});
+
+it("Workbench 副作用按声明最大值映射，未知效果不被默认为只读", async () => {
+  const write = { ...workbenchCapability, name: "files.write", effects: ["task_write"] as WorkbenchCapability["effects"] };
+  const built = defineWorkbenchChatTool(write, async () => workbenchResult);
+  const prepared = await prepareChatToolDefinitions({ "files.write": built }, { workbenchCapabilities: [write] });
+  expect(prepared.definitions[0]!.effect).toBe("committed");
+});
+
+it("已装配的通用能力与冻结目录一致，未装配的目录项不暴露", async () => {
+  const built = defineWorkbenchChatTool(workbenchCapability, async () => workbenchResult);
+  const prepared = await prepareChatToolDefinitions({ "files.read": built }, { workbenchCapabilities: [workbenchCapability] });
+  expect(prepared.definitions[0]).toMatchObject({ name: "files.read", effect: "none", parameters: workbenchCapability.inputSchema });
+  await expect(prepareChatToolDefinitions({}, { workbenchCapabilities: [workbenchCapability] })).rejects.toThrow();
+
 });

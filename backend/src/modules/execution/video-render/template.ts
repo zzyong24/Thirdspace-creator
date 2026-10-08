@@ -759,18 +759,21 @@ function schedulePortraitSpeakerDirection(
     at: number,
   ): void => {
     if (from === to) return;
+    const remaining = f2(props.talkingHead.durationSec) - at;
+    if (remaining <= 0) return;
+    const transitionDuration = remaining >= 0.34 ? ".34" : fmt(remaining);
     const box = to === "pip" ? pip : full;
     const layer = to === "pip" ? 945 : 900;
     if (to === "pip") {
       ctx.tweens.push(
         `tl.set("#th",{zIndex:945},${fmt(at)});`,
-        `tl.to("#th",{left:${box.left},top:${box.top},width:${box.width},height:${box.height},borderRadius:${box.borderRadius},duration:.34,ease:"power3.inOut"},${fmt(at)});`,
+        `tl.to("#th",{left:${box.left},top:${box.top},width:${box.width},height:${box.height},borderRadius:${box.borderRadius},duration:${transitionDuration},ease:"power3.inOut"},${fmt(at)});`,
       );
       return;
     }
     ctx.tweens.push(
-      `tl.to("#th",{left:${box.left},top:${box.top},width:${box.width},height:${box.height},borderRadius:${box.borderRadius},duration:.34,ease:"power3.inOut"},${fmt(at)});`,
-      `tl.set("#th",{zIndex:900},${fmt(Math.min(props.talkingHead.durationSec, at + 0.34))});`,
+      `tl.to("#th",{left:${box.left},top:${box.top},width:${box.width},height:${box.height},borderRadius:${box.borderRadius},duration:${transitionDuration},ease:"power3.inOut"},${fmt(at)});`,
+      `tl.set("#th",{zIndex:900},${fmt(at + Number(transitionDuration))});`,
     );
   };
 

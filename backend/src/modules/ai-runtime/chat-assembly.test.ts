@@ -1742,6 +1742,16 @@ it("持久聊天准备并发账号使用各自快照，跨账号快照在读取�
  await expect(prepareDurableChatTurn({...(ctx as RequestContext),accountId:"a"},input,deps,durableChatSnapshot("b","错误方法"))).rejects.toThrow("归属不符");
 });
 
+it("真实聊天冻结可选计划工具，旧快照不被静默改写",async()=>{
+ const {deps}=makeDeps(),owner={...(ctx as RequestContext),accountId:"a"};
+ const input:Parameters<typeof prepareChatTurn>[1]={messages:[{id:"source",role:"user",parts:[{type:"text",text:"研究并制作报告"}]}],chatContext:{surface:"topics"}};
+ const snapshot=durableChatSnapshot("a","本轮方法");
+ const old=await prepareDurableChatTurn(owner,input,deps,snapshot);
+ expect(old.toolDefinitions.some(tool=>tool.name==="plan.update")).toBe(false);
+ const current=await prepareDurableChatTurn(owner,input,deps,snapshot,{workbenchPlans:true});
+ expect(current.toolDefinitions.find(tool=>tool.name==="plan.update")).toMatchObject({effect:"committed",parameters:{type:"object"}});
+});
+
 it("持久聊天准备不借外层快照补齐缺失的产品说明",async()=>{
  const {deps}=makeDeps(),owner={...(ctx as RequestContext),accountId:"a"};
  const input:Parameters<typeof prepareChatTurn>[1]={messages:[],chatContext:{surface:"topics"}};

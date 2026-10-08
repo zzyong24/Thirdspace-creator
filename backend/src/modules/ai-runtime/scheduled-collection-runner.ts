@@ -134,11 +134,15 @@ export interface ScheduledCollectionTask {
 const NEEDS_RECONNECT_ERROR =
   "抖音登录态未连接或已过期,请去「设置 → 账户」扫码登录(或点本行「登录抖音」)后再采集。";
 
+/** 本地完成状态，不是供应商异常；诊断中的字段名不能再次决定失败类别。 */
+class CollectionIncompleteError extends Error {}
+
 /** 把采集器抛的原始异常转成人话 run.error(T-032b ②:别把裸英文 stack/技术串塞给用户)。
  *  未登录已在 catch 分支单独走 NEEDS_RECONNECT_ERROR,这里只管其它失败:取音频/网络/解析等,
  *  尽量给可读原因 + 提示。识别不出的具体类型 → 保留原始 message(仍比空好),前缀点明"采集失败"。 */
 function humanizeCollectError(err: unknown, label: string): string {
   const raw = err instanceof Error ? err.message : String(err ?? "");
+  if (err instanceof CollectionIncompleteError) return `采集${label}失败:${raw}。`;
   const lower = raw.toLowerCase();
   // 网络/超时类:抓取时最常见的非登录失败。
   if (
@@ -292,8 +296,8 @@ export async function runScheduledCollection(
     });
 
     if (result.continueCollection && deps.ai.deferCollection) await deps.ai.deferCollection(ctx,task.id,result.retryAfterMs,result.message);
-    if (result.continueCollection) throw new Error("采集尚未完成，请继续原任务");
-    if (result.incomplete) throw new Error(result.message ?? "采集尚未完成，已保存本轮可确认的数据，请继续采集");
+    if (result.continueCollection) throw new CollectionIncompleteError("采集尚未完成，请继续原任务");
+    if (result.incomplete) throw new CollectionIncompleteError(result.message ?? "采集尚未完成，已保存本轮可确认的数据，请继续采集");
     await deps.ai.markSucceeded(ctx, task.id);
     runStatus = "succeeded";
     runError = null;

@@ -3740,3 +3740,1151 @@ DEC-AI-1077 实施补记：实际独立限定复核PASS（报告4404ad4e...）�
 # DEC-T1080 · 2026-10-08 · 统一本地主分支和清理工作树
 
 用户明确要求“把不用的worktree全部清理掉，代码都合并到主分支，然后再做构建，构建的时候不需要备份”。本轮先保存项目源码的Git来源和真实改动，再整合本地main及闲置目录；该授权覆盖原T1062封闭来源限制，不含推送/tag/公开发布。构建不创建当前应用/数据备份，不自动安装；既有备份和真实素材仍保留。活跃会话占用目录保留，不用删除目录中止会话；来源与冲突逐项记录，不能把旧候选或缺失验收洗成完成。
+
+<!-- T1080：下列为本地main独有原记录，来源main12288cef；重复教训编号见整合报告 -->
+## DEC-AI-037 (2026-09-21) — 模型生成超时与不完整输出必须由原 Agent loop 恢复
+
+**来源**：用户提供内容雷达与 AI 助手真机截图并明确确认：除当前账号没有可用模型配置时直接提示并引导配置外，模型超时、输出不完整和临时服务故障不得成为用户手动重试的阻断终态，应在 Agent loop 内解决。
+
+**决定**：
+
+1. 用户提交一次生成后，timeout、network、明确可重试 HTTP 拒绝和结构化输出不完整统一沿原任务、原幂等标识、调用账本与检查点恢复；页面只展示自动恢复进度。
+2. 单次调用保留安全超时，但持续生成任务不设会把任务直接变成 `failed` 的总截止时间。退避必须持久化且单飞，页面关闭或应用重启后继续原任务。
+3. 当前账号不存在任何可用文本模型时进入 `waiting_user`，保留输入并直达模型设置；配置恢复后继续原任务。
+4. 用户取消、输入损坏、权限/归属错误及有副作用外部操作的未知结果继续遵守既有安全边界，不伪造成功、不盲目重复提交。
+5. 内容雷达和 AI 助手是本轮真机验收入口；同一防复发门覆盖后续模型生成入口。
+
+**状态**：confirmed（用户 2026-09-21 明确要求立即落实）。
+
+```text
+ID: DEC-AI-727
+Date: 2026-08-08
+Stage: T-727 BUILD
+Type: contract-and-execution-shape
+Decision: `script.draft` 保留现有异步任务与候选确认链，但增加 `verbatim` 模式。模型只从本轮
+          受信用户消息/文本附件清单选择 `sourceRef` 与可选精确锚点；服务端恢复原字符、计算
+          hash 并写入 task input，runner 直接产 artifact_version 候选，不装配创作上下文、
+          不调用写稿模型。普通 generate 模式零行为变化。
+Rationale: PAT-004 CF-001/CF-004 命中：工具→组合根→任务 runner 是跨包、需端到端可追溯的协议，
+           因此先在工具 schema 和任务输入形状中明确模式/引用/hash，不能仅加提示词。PAT-003
+           AF-003 命中：保真导入也需要刷新可恢复、执行审计和统一确认门，继续复用持久异步任务，
+           不另造同步写稿旁路。MOD-002 已核对但不借入保真路径：它适合普通非工具 LLM 调用，
+           本需求恰恰要在 `verbatim` 模式彻底绕开 LLM；既有 generate 路径继续复用现有 provider。
+Pattern-Ref: PAT-003, PAT-004
+Asset-Ref: MOD-002（已评估；仅保留既有 generate 使用，verbatim 明确不使用）
+Affected Artifacts: T-727 SPEC、chat-runner/chat-tools、script-runner、persistence-client、原文候选卡与测试。
+Explicit Limits: 代码不用关键词/相似度猜创作语义，语义分界只由配置模型完成；不直接写稿面；不覆盖历史版本；
+                 来源不唯一或已截断时 fail-closed，不退回模型重写。
+Owner: user+agent
+Status: active
+```
+
+```text
+ID: DEC-WEB-672
+Date: 2026-08-03
+Stage: T-672 PLAN
+Type: user-confirmed-public-commercial-boundary
+Decision: CreatorOS 官网撤下全部公开价格、代理利润与作者个人联系方式。官网不再提供直营购买
+          入口；价格、购买、代理和联系问题统一引导访问者联系向其推荐 CreatorOS 的授权合作
+          伙伴，以保护代理的客户线索与利润空间。
+Rationale: 公开零售价、进货价、利润和作者联系方式会让终端客户绕开代理，削弱代理推广意愿与
+           成交空间。官网应成为代理可安全转发的产品说明页，而不是官方直销页。
+Source: 用户 2026-08-03 明确要求“官网的价格下掉吧，包括我的联系方式，保护代理的利润”。
+Affected Artifacts: T-668/T-671 公开范围、website/index.html、官网 FAQ、二维码静态资源与部署读回。
+Explicit Limits: 内部代理价盘、Growth 商品、Activity 激活和既有代理身份不因官网下架而自动
+                 变更；官网仍可公开产品能力、设备支持、一机一码和更新日志。
+Owner: user+agent
+Status: active
+```
+
+```text
+ID: DEC-AGENT-671
+Date: 2026-08-02
+Stage: T-671 PLAN
+Type: user-confirmed-channel-pricing
+Decision: 用户以 599 元首购 CreatorOS 内测版后自动成为代理，不需要提交申请，不设置人工审核、
+          加盟费或其他附加门槛。成为代理后进货价为 399 元/个，对外指导价为 899 元/个，
+          代理首年每单账面价差 500 元；代理合作口径不提续费、续费分成或续费抽成。成为代理
+          后进入“内测代理股东群”，并取得 CreatorOS 体系后续智能体产品的合作资格；各新智能
+          体的具体价盘和交付规则在产品发布时另定。
+Rationale: 用户希望代理收益简单、可直接解释，只赚首次销售价差，同时以长期产品合作资格增强
+           内测代理的参与感，不在当前招商中引入续费结算复杂度。
+Source: 用户 2026-08-02 最终纠正确认“没有提交申请一说，不要人为制造门槛”；首购 599 元后
+        自动成为代理，进货价 399、指导价 899、进入内测代理股东群、后续所有智能体都有合作
+        资格，并要求不要提续费。
+Affected Artifacts: T-671 代理合作 SPEC；后续官网、代理招商物料、Growth 渠道商品与协议。
+Explicit Limits: 399 元只适用于完成 599 元首购、自动成为代理后的后续进货；不得另设申请、审核、
+                 加盟费或其他未确认门槛。
+                 “代理股东群”当前是合作社群称谓，不构成工商股权承诺；未确认代理层级、最低
+                 进货量、退换、官方直营、价格约束与售后责任前，不进入实现或公开承诺。
+Owner: user+agent
+Status: active
+```
+
+```text
+ID: DEC-PRICE-668
+Date: 2026-08-02
+Stage: T-668 BUILD
+Type: user-confirmed-public-pricing
+Decision: CreatorOS 官网公开口径改为：内测群用户在 2026-08-10 前可按 599 元一次买断参与共创；
+          内测结束后正式版为 899 元/年、次年续费 199 元/年，且不再提供永久买断。
+          通用设备规则置于价格之前：一机一码，每个激活码仅绑定 1 台设备；当前支持 Apple
+          芯片 Mac 和 Windows；Intel Mac 只能显示“适配推进中”。页面不展示基础版、Plus、
+          Pro 或其他版本分级。购买意向通过现有联系方式私聊，确认后进入单独内测共创群。
+Rationale: 现官网 1499 元永久买断、永久免费更新和笼统 Mac 支持已经与用户确认的商业规则冲突，
+           继续公开会造成错误购买预期；静态官网应直接表达当前唯一价格真相。
+Source: 用户 2026-08-02 连续确认价格海报、微信群通知及官网同步要求。
+Affected Artifacts: website/index.html、T-668 SPEC、官网静态校验与部署读回。
+Explicit Limits: 不修改支付、Growth 商品、Activity 激活、续费执行或换机契约；不承诺 Intel Mac
+                 日期、免费更新、退款或多设备权益。
+Owner: user+agent
+Status: active
+```
+
+```text
+ID: DEC-RADAR-642
+Date: 2026-08-01
+Stage: T-642 BUILD
+Type: user-confirmed-creative-handoff
+Decision: 仅内容雷达转出的选题携带“左侧对标逐字稿 + 右侧本账号改写初稿”；直接新建、
+          常规 AI、评论/需求等正常选题链保持单稿流程。雷达改写初稿随 Candidate 和 Project
+          作为 adaptedDraftSeed 传递，Project 首开直接显示；用户首次保存才物化为正式
+          output_script 版本，之后共用既有编辑器、版本链和 script.draft，不创建第二套稿件状态机。
+Rationale: 用户需要从雷达、选题到作品持续看到同一份对标与改写稿，但普通创作没有真实来源稿，
+           强行套双栏会伪造依据并破坏原流程。seed 方案同时避免 promotion 跨模块创建 artifact
+           产生半成功，销账复审 REV-002 的数据完整性风险。
+Source: 用户 2026-08-01 明确提出左右对照并追问“直接创建选题也这样做吗？不是吧”。
+Affected Artifacts: T-642 SPEC、雷达 transform/candidate/project brief 契约、选题详情、Project 稿面。
+Explicit Limits: 普通选题不生成改写稿；左稿只读且不复制为正式稿；未采纳/未立项不写 Project；
+                 首次保存失败保留 seed 并允许幂等重试。
+Owner: user+agent
+Status: active
+```
+
+```text
+ID: DEC-ONB-637
+Date: 2026-07-31
+Stage: T-637 BUILD
+Type: user-confirmed-information-architecture
+Decision: 新手引导不再暴露文本模型配置和自动化任务。主线统一为绑定账号→确认账号情况→
+          （已有作品账号）等待并查看历史项目→确定定位→监控对标→从对标创建选题→进入项目；
+          新号跳过历史项目。设置页“重新打开”必须强制展示完整引导，即使全部步骤已完成。
+Rationale: 自动化是后台基础设施，不是用户目标；用户需要围绕作品、定位、对标、选题和项目
+           建立第一次成功体验。旧重新打开只清 hidden、又被 complete 自动隐藏，属于假按钮。
+Source: 用户 2026-07-31 明确确认的引导顺序与“自动化用户完全不需要感知”。
+Affected Artifacts: onboarding SPEC/状态机/数据装配/首页卡片、设置页重新打开入口与测试。
+Explicit Limits: 不新增第二套自动化或后端持久化；不把 imported 历史项目算作用户新建项目；
+                 历史项目确认按当前账号本地隔离。
+Owner: user+agent
+Status: active
+```
+
+```text
+ID: DEC-POS-623
+Date: 2026-07-29
+Stage: T-623 PLAN / CONTRACT
+Type: user-confirmed-product-semantics
+Decision: 定位中心右上角统一为“新建定位母版”。确认后清空当前账号 profile 的画像、
+          facets 与 downstreamRules，并以 statement_version_floor 建立新的当前母版边界；
+          positioning_statements 继续不可变保留，边界之前的历史不再成为 currentStatement。
+          随后只打开既有定位 AI 对话并预填从头访谈，不自动发送、不由 AI 直接写库。
+          复盘页“帮我复盘”不再打开全局 Copilot，而是预填既有项目编导右栏，用户发送后
+          复用 review.analyze。定位编辑点击外部不得关闭。
+Rationale: 现有重新定位只清前端表单，旧规则仍会进入 AI 上下文；物理删除定位陈述又破坏
+           不可变审计。复盘页已有右栏却再弹全局面板，造成双入口和会话混淆。
+Source: 用户 2026-07-29 截图与明确指令。
+Affected Artifacts: positioning contract/service/repository/schema、定位中心交互、项目阶段
+                    DraftChatRequestProvider、复盘入口、相关测试与追溯。
+Explicit Limits: 不删除历史定位陈述；不新增第二套 Copilot 或 review 工具；不自动发送
+                 预填话术；AI 候选仍须用户采纳后通过 backend service 落库。
+Owner: user+agent
+Status: active
+```
+
+```text
+ID: DEC-POS-632
+Date: 2026-07-31
+Stage: T-632 BUILD remediation
+Type: user-confirmed-data-semantics-correction
+Decision: “定位版本”必须可恢复完整母版，不再把只有一句话/关键词/产品锚的
+          positioning_statements 冒充完整历史。新增只写一次的 masterSnapshot；重置前保存当前
+          画像、facets、五类规则与陈述；恢复通过 backend 事务回写 profile 并追加新陈述版本，
+          不修改旧历史。旧版确实没有快照的记录只提供“复制定位陈述”并明确缺失边界。
+Rationale: 当前 reset 会物理清空唯一可变 creator_profiles，而历史行没有画像/规则，导致用户
+           点击旧版本后表单仍为空，属于写真读空和潜在数据丢失。用户明确要求旧版本可恢复。
+Pattern-Ref: PAT-002（RF-001 跨 profile/statement 原子恢复；RF-002 用户定位需重启留存；
+             RF-004 正规 migration）。
+Affected Artifacts: positioning resource/operation、0065 migration、positioning repository/service/
+                    transport、定位中心历史交互、T-632 SPEC/Gate/测试。
+Explicit Limits: 不覆盖或删除历史陈述；不伪造旧版缺失的画像/规则；不新增第二套定位模块；
+                 AI 仍不直接写库。
+Owner: user+agent
+Status: active
+```
+
+```text
+ID: DEC-LEARNING-001
+Date: 2026-07-29
+Stage: T-610 BUILD
+Type: user-confirmed-product-semantics
+Decision: 对话/复盘里由用户点击“采纳”或“存为经验”的内容，按当前用户与账号内的
+          title+insight 稳定指纹去重，并直接成为 validated Learning，由知识库现有
+          validated 投影立即展示；不再进入第二次裁决队列。AI 未经用户确认产生的候选
+          仍保持 candidate。内容雷达保留跨轮次来源快照用于审计，但详情只按唯一 source
+          展示，并回显最近采集时间与累计次数。
+Rationale: 旧实现把已经经过用户确认的采纳再次降成 candidate，造成“已沉淀”但知识库
+           不可见；刷新后还可重复插入。雷达详情把一个来源的三次历史快照误画成三条来源，
+           与作品卡“1 个来源”的真实口径矛盾。
+Source: 用户 2026-07-29 明确要求“经验需要去重，然后直接进知识库即可”，并要求核对采集
+        是否去重。
+Affected Artifacts: learnings.create 既有 operation 语义、Learnings service/repository、
+                    learning migration、知识库 validated 投影、内容雷达详情来源证据。
+Explicit Limits: 不新建第二套知识库表；不物理删除历史重复经验或跨轮次来源快照；不同账号
+                 不互相去重；不同 source 发现同一作品时仍分别展示。
+Owner: user+agent
+Status: active
+```
+
+```text
+ID: DEC-MODEL-619
+Date: 2026-07-29
+Stage: T-619 REMEDIATION / CONTRACT
+Type: user-confirmed-authority-correction
+Decision: Activity 的 config.pull ticket/introspection 只证明 projectKey/channelRef 与授权事实，
+          不再提供权威 clientId。Creator 请求 Activity 时不得把自报 clientId 当授权依据；
+          旧 ticket 响应若仍带 clientId 只兼容忽略。Creator 仅向 Growth 声明接受的
+          extension/protocol，由 Growth registry 解析并签入最终 clientId；Creator 验签
+          bundle 时继续强校验 Growth 签入的 creatoros.desktop 和协议。
+Rationale: 应用/客户端目录唯一归 Growth，Activity 不拥有客户端目录，不能反向授权 clientId。
+Affected Artifacts: T-606 Creator contract、creator-client-config-consumer-v1、Creator
+                    config.pull request/parser/tests、T-619 validation、CHANGE_IMPACT。
+Compatibility: 在 Growth/Activity 最终字段契约落定前，Creator parser 兼容旧响应字段但不信任；
+               该兼容不允许恢复 request clientId，也不允许跨 locator 比较版本或 ETag。
+Status: active（整改代码已验证；正式三端联调与独立复审前 release NO-GO）
+```
+
+```text
+ID: DEC-MODEL-606
+Date: 2026-07-29
+Stage: T-606 PLAN / CONTRACT
+Type: user-confirmed-authority-correction
+Decision: CreatorOS 继续使用既有 config.pull ticket 和当前激活 locator。verified configured
+          渠道 JSON 是当前模型配置权威，即使 Key/URL/model/provider 错误或模型调用失败也
+          不回退本地；明确未配置、不可达且本次未取得 JSON、或安全校验失败时才使用本地。
+          用户本地配置始终允许编辑并作为 inactive 备用。
+Rationale: Growth T-086 最终契约与 2026-07-29 用户确认明确取代旧 T-575/T-604 设计。
+Supersedes: T-575 的三键 parser/长期 Key 禁止/24h 远端 LKG；T-604 的 Gateway、短 bearer、
+            introspection、alias routing、managed_locked 与远端 LKG 优先。
+Invariant: Activity 只证明 projectKey/channelRef 授权；Growth-signed clientId 与其二者共同
+           组成配置版本 locator。渠道 JSON/Key 不进入 URL、日志、错误、审计摘要或 Web 响应。
+Authority: Growth docs/contracts/T-086-creatoros-managed-model-service.md
+           SHA-256 be1d4546b080e8b30144e31dd20d2e094d82b66d3c57d0f6116782fb89650182；
+           T-086-review-concern-resolution.md
+           SHA-256 68bd438f9893a7c4508cff396274e893cb630d7ad488109e6b91430f18cdbc0f。
+Status: active（独立评审通过前不得 BUILD）
+```
+
+```text
+ID: DEC-PKG565-002
+Date: 2026-07-27
+Stage: T-565 PLAN / RAT
+Type: user-confirmed-external-execution
+Decision: 授权 agent 创建、推送并操作 T-565 的原生 Windows RAT 工作流；GitHub Actions
+          费用不设上限，由 agent 根据验证需要持续运行和修复，直到 Product Gate 所需的
+          Burn payload/cache/代理/中断、Win32 current/journal kill recovery 与 reparse
+          containment 证据形成。
+Rationale: T-565 重写 SPEC 的 cross-family Round 1 唯一未闭环 blocker 是原生 Windows
+           可行性证据；本机没有 Windows/Wine/VM，私有仓 GitHub-hosted Windows runner
+           是当前可执行的真实 Win32/NTFS 环境。用户明确回复“授权运行windows rat
+           没有费用上限 你来操作”。
+Pattern-Ref: PAT-001
+Pattern Tier: T1（WiX Burn 直接采用 + CreatorOS 窄事务 worker；命中 BG-003 官方方案、
+              BG-005 覆盖 acquisition/trust，worker 只补产品事务缺口）
+Affected Artifacts: T-565 SPEC/review、Windows RAT workflow、RAT evidence、BACKLOG。
+Explicit Limits: 仅授权验证和为验证所需的 branch/workflow push；不创建或发布 GitHub
+                 Release，不对用户分发安装包，不将 RAT spike 冒充生产实现。
+Supersedes: DEC-PKG565-001 的“不得触发付费 Windows runner”限制；其他限制继续有效。
+Owner: user+agent
+Status: active
+```
+
+```text
+ID: DEC-PKG565-001
+Date: 2026-07-27
+Stage: T-565 PLAN
+Type: user-confirmed-architecture-direction
+Decision: 重选 CreatorOS Windows Runtime 交付架构。默认发布小型 Web Installer，同时保留
+          完整 Offline Installer；两者使用同一签名分层 Runtime Image 与安装事务。setup
+          必须完成全部必需 runtime 的下载/读取、校验、物化和 smoke；正式应用首启完整
+          runtime 解压次数恒为 0。必须实质减少 node_modules/JS 散文件，不能只把原 tar
+          改成联网下载。Windows 正式安装树不得保留通用 node_modules/源码项目结构；纯
+          JS/JSON 优先 bundle，只有 Chromium、媒体工具、WASM、native addon、migrations
+          等有真实路径要求的资产可进入签名 allowlist。安装失败不得显示成功或转移给首启修复。
+Rationale: Windows 0.2.0 真机在安装后白屏约 30 分钟，已确认是在处理大量小文件。现有
+           NSIS POSTINSTALL 失败后保留 tar、首启 AppData 兼容解压的 fail-forward 破坏
+           “安装完成即可使用”与诚实失败边界；当前 runtime 26,381 个文件中 24,756 个来自
+           node_modules，在线下载本身不能消除 NTFS/Defender 小文件成本。RAT-565-01 已证明
+           高置信 prune 可把普通文件减至 16,381（-37.91%）且真实能力 smoke 通过，但距离
+           ≤5,000 仍必须进行 production closure bundle；`pnpm deploy`/Next standalone/压缩
+           容器都不能单独成为最终解法。
+Architecture Refinement: 实际 Tauri 壳与四层 runtime 组成不可变、版本化 compatibility set；
+                         固定 shortcut 只启动稳定 launcher，installer 在 pending set 真 smoke
+                         后以单一 `current` 指针同时切换壳与 runtime。0.2.0 首迁移不信任旧 tar
+                         为新 layer，必须全量取得新签名 layers，并在提交前保留 legacy fallback。
+                         默认 Web 发布阈值：首装 ≤500 MiB、core-only 更新 ≤100 MiB、每成功
+                         安装 CDN 成本 ≤US$0.10；超限阻断或另开 DEC。
+Source: 用户 2026-07-27 明确要求“必须得 setup 阶段完成小文件的解压缩，并且必须合理的减少
+        小文件”；在收到“默认 Web Installer + 保留 Offline Installer”的推荐与确认请求后
+        回复“启动”。
+Affected Artifacts: T-565、Windows runtime packaging、installer、updater、release workflow、
+                    desktop startup resolver；替代 T-487 的 Windows 交付条款。
+Invalidates: T-487/T-493 中“NSIS hook 失败后首启兼容解压可作为发布兜底”以及 T-487 已完成的
+             Windows 零解压验收结论；macOS 交付条款不受影响。
+Explicit Limits: 不触发付费 Windows runner、不发布安装包、不改变领域数据存储、不把必需
+                 runtime 改成应用首启/功能首次使用时按需下载。
+Owner: user+agent
+Revisit Trigger: Windows 原生 RAT 证明 WiX Burn/少文件方案不可行，或用户改变在线/离线分发取舍。
+Status: active
+```
+
+```text
+ID: DEC-MC-002
+Date: 2026-07-26
+Stage: T-501 4-build
+Type: user-confirmed-scope-reduction
+Decision: T-501 只做现有模型设置页的轻量优化：减少普通用户配置项；“保存并测试”复用正式
+          modelFor + streamText 并验证非空文本；补官方预设、New API/中转站、Responses、
+          Kimi 开放平台与 Kimi Code 教程。
+Rationale: 用户明确指出模型配置需求没有原方案复杂。当前 Settings、T-471 Responses 和
+           settings.models.put/test 已经存在，继续建设八槽总览、向导、能力平台和付费探测
+           会扩大范围、增加配置负担并偏离真实问题。
+Source: 用户会话“优化一下就行了……减轻用户配置负担，优化配置测试通路，补充教程文档即可”，
+        2026-07-26。
+Affected Artifacts: T-501 BACKLOG/任务详情、替代范围、应用内手册、模型预设、连接测试组合层。
+Invalidates: 旧 T-501 PRODUCT SPEC/CONTRACT/PAGE SPEC 中的八槽总览、配置向导、能力平台、
+             费用与付费 effect 均不进入 BUILD；旧文档只作为历史审计材料。
+Explicit Limits: 不新增页面/公开 operation/数据模型；不依赖 T-517；不触发图片或视频付费调用；
+                 轻量测试只承诺基础流式文本，不冒充复杂工具调用全兼容认证。
+Owner: user+agent
+Revisit Trigger: 用户明确要求新增模型管理页面、能力平台、计费或付费 provider 验证。
+Status: active
+```
+
+```text
+ID: DEC-001
+Date: 2026-06-20
+Stage: 00-intake (orchestrator initialization)
+Type: default-assumption
+Decision: Initialize product-to-code-orchestrator as a MID-PROJECT TAKEOVER rather than from scratch.
+         Existing markdown specs and the implemented frontend are mapped onto stages in
+         ARTIFACT_MANIFEST.yaml instead of being regenerated.
+Rationale: The repo already contains product docs, frontend/backend specs, a fully implemented
+          frontend (127 files, passing lint/typecheck/tests), and 17 imported UI screens.
+          Re-running stages 00-11 from zero would discard working artifacts.
+Source: Repo scan on 2026-06-20 (docs/, frontend/, backend/, ui/, branch feat/frontend-implementation).
+Affected Artifacts: orchestrator/ARTIFACT_MANIFEST.yaml and all stage rows.
+Invalidates: none.
+Owner: agent
+Revisit Trigger: If the user wants a clean-room re-derivation with full traceability.
+Status: active
+```
+
+```text
+ID: DEC-002
+Date: 2026-06-20
+Stage: 00-14 (all pre-existing stages)
+Type: default-assumption
+Decision: Mark all pre-existing artifacts as `draft` (not `passed`), because none were produced under
+         this orchestrator and none carry stable IDs or have had their stage gate run.
+Rationale: State-machine rule: a stage may move to `passed` only when its gate has been run and
+          confirmations recorded. That has not happened yet for any stage.
+Source: rules/orchestrator-state-machine.md, transition rule 1.
+Affected Artifacts: stages 00-14 in ARTIFACT_MANIFEST.yaml.
+Invalidates: none.
+Owner: agent
+Revisit Trigger: Ratification pass — run each stage gate to promote draft -> passed.
+Status: active
+```
+
+```text
+ID: DEC-003
+Date: 2026-06-20
+Stage: 11-frontend-implementation
+Type: tradeoff
+Decision: Treat frontend implementation as verified-green on static checks (eslint 0, tsc 0, vitest
+         all-green) but NOT release-verified, because `next build` and the full vitest/visual suite
+         could not complete inside the sandbox (45s command limit; npm registry blocked).
+Rationale: Static analysis passed cleanly; build/visual confirmation must run on the host.
+Source: Sandbox verification run 2026-06-20.
+Affected Artifacts: stage 11 + OPEN-002.
+Invalidates: none.
+Owner: user
+Revisit Trigger: Host run of `pnpm verify`.
+Status: active
+```
+
+```text
+ID: DEC-004
+Date: 2026-06-20
+Stage: 00-14 (ratification pass, option A)
+Type: scope-change
+Decision: Ran the ratification pass. Extracted and assigned stable IDs from existing docs
+         (68 FR, 24 NFR, 22 FLOW, 58 ENT, 9 IA, 18 PAGE, 42 COMP) into ID_REGISTRY.md and built
+         TRACEABILITY_MATRIX.md. Ran each stage gate 00-14. Documentation stages pass on completeness;
+         those requiring confirmation are set to `needs-user-confirmation` pending one batch sign-off.
+Rationale: User chose option A to firm up the foundation with traceability before backend work.
+Source: Repo docs + subagent ID extraction, 2026-06-20.
+Affected Artifacts: ID_REGISTRY.md, TRACEABILITY_MATRIX.md, ARTIFACT_MANIFEST.yaml (stages 00-14).
+Invalidates: none.
+Owner: agent
+Revisit Trigger: User confirms the extracted IDs/specs -> promote stages to `passed`.
+Status: active
+```
+
+```text
+ID: DEC-005
+Date: 2026-06-20
+Stage: consistency-gates (cross-artifact)
+Type: accepted-risk
+Decision: Cross-artifact consistency gate returns FAIL on the upstream->downstream orphan scan: every
+         backend-bearing FR currently lacks an API operation and a backend test, because the service
+         contract (stage 15) and backend implementation (stage 16) do not exist yet.
+Rationale: Expected for a frontend-first project mid-build; not a defect, but it blocks any claim of
+          end-to-end completeness. Recorded so it is not mistaken for done.
+Source: TRACEABILITY_MATRIX.md > Orphan Scan; consistency-gates.md.
+Affected Artifacts: TRACEABILITY_MATRIX.md (GAP-002, GAP-003), manifest consistency_gate.status.
+Invalidates: blocks stage 17 (integration-release) until chains close.
+Owner: user+agent
+Revisit Trigger: After service contract (15) + backend TDD (16) close the broken chains.
+Status: active
+```
+
+```text
+ID: DEC-006
+Date: 2026-06-20
+Stage: 11-frontend-implementation (remediation)
+Type: user-confirmation
+Decision: FULL ALIGNMENT — the existing specs are authoritative; the implementation will be changed to
+         match them. All P0 decision points resolve in favor of the spec:
+         (R0-1) migrate UI primitives from @base-ui/react back to shadcn/ui on Radix (locked baseline);
+         (R0-4) add all 13 missing domain entities to types + fixtures;
+         (R0-6) align field/enum types to the data model (Learning.confidenceScore int; relationType free string);
+         (R2-7) create the mandated directory structure (public/fixtures/, features/<page>/{components,tests}).
+         Execute the full P0+P1+P2 backlog in REMEDIATION_BACKLOG.md.
+Rationale: User chose "需要全量对齐" (full spec conformance) over amending specs to accept current code.
+Source: User instruction 2026-06-20.
+Affected Artifacts: entire frontend; REMEDIATION_BACKLOG.md; manifest stages 06-12.
+Invalidates: current frontend visual baselines (must re-baseline after fixes, R2-9).
+Owner: user
+Revisit Trigger: If scope/effort (≈5-8 wks) forces a phased cut.
+Status: active
+```
+
+```text
+ID: DEC-007
+Date: 2026-06-21
+Stage: 11-frontend-implementation (remediation execution, host)
+Type: scope-change / gate-result
+Decision: Executed the DEC-006 remediation backlog on the host and re-ran the stage-09
+         frontend-implementation gate. Result: PASS (with one documented residual). Stage 11 promoted
+         draft/fail -> passed/pass; implementation_gate fail -> pass.
+Work done:
+  - INC-3 (host-only): migrated all 18 ui/* primitives @base-ui/react -> shadcn/ui on Radix
+    (radix-ui 1.6.0); removed @base-ui/react; components.json new-york. 0 @base-ui imports remain.
+  - INC-5 milestones A-D: de-dup ProjectStageStepper; extract analytics layer
+    (AudienceBreakdown/RetentionChart/HorizontalBarsChart/InsightCard), resource layer
+    (AssetCard/MediaPreview/AssetDetailPanel), SearchField; move Pagination/ViewModeToggle/SortSelect to
+    components/navigation; rename to spec (PlatformIcon/InsightCard/RetentionChart/AudienceBreakdown);
+    public/fixtures/ + canonical.json generator; pin Node 24 LTS. Shared components ~10 -> 20.
+  - INC-1/INC-2/INC-4 (prior sandbox work) re-verified GREEN under full host build.
+Verification: `cd frontend && pnpm verify` GREEN — ESLint 0, tsc 0, 398 tests (38 files), next build OK.
+Residual (non-blocking, recorded in STAGE-09-GATE-RERUN.md): RISK-007 tail — single-use content
+  components (ArtifactListItem/KnowledgeListItem/EvidenceCard/FileThumbnail/VersionCard) left inline per
+  SPEC §8; FilterBar + per-page search unification (R2-3); ui/* sweep (R2-6); test-dir relocation (R2-7);
+  stage-12 visual re-validation (R2-9, design-locked references).
+Rationale: User chose full INC-5 scope; highest-value/lowest-risk component work executed in committed,
+          individually-verified milestones. Visual re-validation is stage-12 and excluded from `pnpm verify`.
+Source: Host execution 2026-06-21 on branch remediation/frontend-spec-alignment.
+Affected Artifacts: ARTIFACT_MANIFEST.yaml (stages 11/12, increments, implementation_gate),
+          STAGE-09-GATE-RERUN.md, entire frontend ui/components layers.
+Invalidates: CODE_RECONCILIATION.md FAIL verdict (superseded by STAGE-09-GATE-RERUN.md PASS).
+Owner: agent (DEC-006 user-authorized)
+Revisit Trigger: Stage-12 visual validation; or if the user wants the R2 tail completed.
+Status: active
+```
+
+```text
+ID: DEC-008
+Date: 2026-06-21
+Stage: 15-service-contract (15a)
+Type: scope-change / build
+Decision: Advanced the pipeline (user chose "build the backend") by executing stage 15a — the
+         FE↔BE service contract — as the foundation that unblocks all parallel module verticals.
+Approach: Zod-first shared package `@creatoros/contract` (approach C), pure TS, transport-agnostic.
+Work done (TDD, on branch feat/service-contract off remediation/frontend-spec-alignment):
+  - Framework: envelope (SPEC §14) + primitives + defineEndpoint registry + typed client + Transport iface.
+  - 15 modules (projects exemplar + 13 fanned out via a 14-agent workflow) of resource DTOs + operations,
+    translated field-by-field from types/domain.ts; 4 page composition DTOs.
+  - registry.test asserts the surface == SPEC §13 exactly (76 routes, each once, unique ids) — caught +
+    fixed an ai/projects key collision and a GET /search duplicate (page layer owns it).
+  - traceability.test: every endpoint traced; each GAP-002 named backend-bearing FR covered.
+Verification: contract gate typecheck 0, 20 files / 60 tests green; frontend untouched (398 tests pass).
+Result: stage 15 -> draft/gate-pass (15a); frontier -> 16-backend-tdd. Closes the CONTRACT half of GAP-002.
+Not done (separate specs/plans): 15b (FE MockTransport + read migration + mutation wiring — makes the
+  buttons real), stage 16 (backend TDD against these schemas), stage 17 (MockTransport->HttpTransport swap).
+Source: User instruction 2026-06-21 ("选择2" — build the backend).
+Affected Artifacts: contract/ package; ARTIFACT_MANIFEST stage 15/frontier; TRACEABILITY_MATRIX GAP-002.
+Owner: agent (user-directed)
+Revisit Trigger: Start 15b or stage-16; or reconcile fine-grained per-operation FR ids.
+Status: active
+```
+
+```text
+ID: DEC-009
+Date: 2026-06-21
+Stage: 15b (FE mock-backend) + AI-orchestration design/foundation + contract seam fix
+Type: scope-change / build / gate-result
+Decision: Under the /goal "启动workflow开发前后端程序 以及联调" directive, advanced the pipeline in
+         workflow mode (sequential TDD pipelines, one agent per plan task, verify+commit, halt-on-fail).
+Work done (branch feat/service-contract, worktree frontend-implementation):
+  - AI EXECUTION LAYER (new): designed + built. Spec 2026-06-21-ai-orchestration-agent-sdk-design.md
+    (unified Claude Agent SDK substrate; AITask=query() on a worker; in-process creatoros MCP tools;
+    submit_candidate is the SOLE write boundary; confirmResult is AI-free; awaiting_confirmation added
+    to AITaskStatus). Plan 2026-06-21-ai-orchestration-foundation.md executed Tasks 1-10 (Wave 1):
+    new @creatoros/ai-worker package (state machine, candidate schemas, ports, context tools,
+    config resolver, fake runner, orchestrator, confirm) — SDK-free, 27 tests green. Task 11 (real
+    SDK query() runner + script-rewrite Skill + manual smoke) deferred (needs binary + API key).
+  - 15b (Wave 2): executed plan Tasks 1-8 — MockBackend store (deterministic clone + seeded ids),
+    MockTransport + lib/contract-client (composition root), Dashboard read seam + loop, Projects
+    read+write handlers (§12), Projects page async reads, and the Projects buttons wired
+    (createProject/transitionProjectStage/patch/archive + refresh). viewModel? seam + isActiveRoute
+    gate preserved; no assertions weakened.
+  - CONTRACT SEAM FIX: @creatoros/contract switched NodeNext .js specifiers -> bundler resolution
+    (module:esnext/moduleResolution:bundler, extensionless across 36 files). NodeNext .js barrels were
+    unresolvable by Next 16/Turbopack (dropped ENDPOINTS/createClient at build); the whole consuming
+    stack is bundlers (FE Turbopack, stage-16 BE = Next.js, vitest). Supersedes DEC-008's
+    "exports ./src/index.ts" packaging note (still source-direct; just bundler-resolved).
+  - AITaskStatus: added awaiting_confirmation in contract primitives + frontend domain.ts.
+Verification: frontend `pnpm verify` GREEN (lint 0, tsc 0, 420 tests + 1 todo, Turbopack build OK,
+  all 18 routes); contract typecheck 0 / 61 tests; ai-worker typecheck 0 / 27 tests.
+Result: FE now consumes the contract via MockTransport with real Projects mutations; the FE↔BE seam
+  builds clean. Closes the FE half of GAP-002 for the Projects vertical. Frontier -> 16-backend-tdd.
+Not done: 15b Task 9 manifest promote (this entry stands in); other FE verticals (reuse 15b foundation);
+  AI worker Task 11; stage 16 backend; stage 17 MockTransport->HttpTransport 联调.
+Source: /goal workflow execution 2026-06-21 (Waves 1-2).
+Affected Artifacts: ai-worker/ (new), frontend/ (mock-backend + projects), contract/ (seam + status),
+  docs/superpowers/{specs,plans}/2026-06-21-*; ARTIFACT_MANIFEST stage 15b/AI/frontier.
+Owner: agent (user-directed)
+Revisit Trigger: Start stage-16 backend TDD; or wire AI worker Task 11.
+Status: active
+```
+
+```text
+ID: DEC-010
+Date: 2026-06-21
+Stage: 17-integration (FE↔BE 联调 seam, thin slice over the 15b mock store)
+Type: scope-change / build / gate-result
+Decision: Brought the FE↔BE integration (联调) forward over the 15b mock store, ahead of full
+         persistence, because a runtime gap demanded it: 15b client islands imported the
+         MockTransport-bound client, which in the browser mutates a browser-LOCAL store the server
+         never sees (and bundles the mock backend into the client). So island buttons did not truly
+         persist across router.refresh(). The fix IS the integration.
+Work done (branch feat/service-contract):
+  - HttpTransport (lib/http-transport.ts): client-safe; POSTs {id,input} to /api/v1/dispatch.
+  - Composition split: lib/contract-client.ts -> HttpTransport (browser islands; no server imports
+    -> mock backend stays out of the client bundle); lib/contract-client.server.ts (server-only
+    guard) re-exports an in-process MockTransport client (server pages/route);
+    server/mock-backend/in-process-client.ts is the guard-free variant for in-process tests.
+  - Route app/api/v1/dispatch/route.ts: RPC dispatch by endpoint id -> mockTransport over the SERVER
+    store -> contract envelope. STAGE-16 SWAP POINT: replace the transport behind this route with a
+    persistence-backed one; HttpTransport + contract + pages are unchanged.
+  - Tests: route.test proves the create->persist->list round-trip; http-transport.test the fetch
+    shape; vitest stubs server-only/client-only (guards stay live in the Turbopack build).
+Verification: frontend `pnpm verify` GREEN (lint 0, tsc 0, 426 tests +1 todo, Turbopack build OK, 18
+  routes); client-bundle audit: getStore/handlers NOT in client chunks (only a pre-existing
+  shell-router->canonicalDataset import remains, out of scope).
+Result: real HTTP FE↔BE round-trip over the contract for the Projects vertical; island mutations now
+  persist server-side. The "swap a line at stage 17" promise is realized as "swap the transport behind
+  one route." Frontier -> 16-backend-tdd (real persistence behind the dispatch route).
+Not done: stage-16 real persistence (Drizzle/Postgres; the TDD-PLAN uses Testcontainers — a
+  Docker-vs-pglite test-infra decision is pending before that wave); other FE verticals (reuse this
+  seam + 15b foundation); AI worker Task 11.
+Source: /goal workflow execution 2026-06-21 (Wave 3, done inline for RSC-boundary safety).
+Affected Artifacts: frontend/ (lib/*, app/api/v1, mock-backend, pages, vitest.config, server-only dep).
+Owner: agent (user-directed)
+Revisit Trigger: Stage-16 persistence behind /api/v1/dispatch; or fan out the remaining verticals.
+Status: active
+```
+
+```text
+ID: DEC-011
+Date: 2026-06-21
+Stage: 16-backend-tdd (Projects persistence slice) + 17 live cutover
+Type: scope-change / build / gate-result
+Decision: Executed a real-persistence slice and cut the live app over to it, so the FE↔BE 联调 round
+         -trip is durable SQL, not the in-memory mock (closing the gap the Stop-hook flagged).
+Infra decision: pglite (pure-WASM Postgres) instead of the TDD-PLAN's Testcontainers — runs in vitest
+         AND the Next server with no Docker; Drizzle schema/queries identical to a real Postgres.
+Work done (branch feat/service-contract):
+  - NEW @creatoros/backend package: Drizzle schema (projects, project_activities) + pglite db factory
+    (in-memory for tests / dataDir-capable) + ProjectRepository (list/get/create/patch/archive/
+    stage.transition/activity, replicating the mock §12 semantics, injected clock+id for determinism)
+    + createPersistenceTransport (contract Transport; UnsupportedOperationError -> caller falls back).
+    typecheck 0, 8 pglite-backed tests.
+  - LIVE CUTOVER: frontend compositeTransport (server/persistence-client.ts) = persistence for the 7
+    project-entity ops + mock for the rest, used by BOTH server pages (contract-client.server) and the
+    /api/v1/dispatch route -> server reads and island writes share ONE pglite store -> a created
+    project persists in SQL and survives router.refresh(). An ownership set keeps pglite out of the
+    static build; next.config serverExternalPackages externalizes the WASM. Deterministic seed
+    (canonical) + clock/ids keep test/visual parity.
+Verification: frontend `pnpm verify` GREEN (lint 0, tsc 0, 427 tests +1 todo, Next build OK WITH pglite,
+  /api/v1/dispatch route live); backend typecheck 0 / 8 tests; route.test proves create->persist(SQL)->
+  list + mock fallback.
+Result: a COMPLETE vertical slice through the whole stack now exists and is proven —
+  contract -> FE (HttpTransport) -> /api/v1/dispatch -> compositeTransport -> pglite SQL -> envelope ->
+  render, durable. The "swap the transport behind one route" promise is realized with real persistence.
+Not done (now pure fan-out of a proven path): the other 6 project ops' outputs/tasks persistence + the
+  other module verticals (Knowledge/Assets/Artifacts/Publishing/Analytics/Reviews/Learnings/AI/
+  Notifications) — each = a Drizzle schema + repository + add ids to PERSISTED_OPS, reusing this slice;
+  dataDir for cross-restart durability; AI worker Task 11 (real SDK runner); extract /api/v1 into a REST
+  surface if a standalone backend service is wanted.
+Source: /goal workflow execution 2026-06-21 (Wave 4, inline for DB+RSC-boundary safety).
+Affected Artifacts: backend/ (new pkg), frontend/ (persistence-client, contract-client.server, route,
+  next.config), pnpm-lock; ARTIFACT_MANIFEST stage 16/17/frontier.
+Owner: agent (user-directed)
+Revisit Trigger: Fan out remaining verticals/ops; add dataDir durability; AI worker Task 11.
+Status: active
+```
+
+```text
+ID: DEC-012
+Date: 2026-06-21
+Stage: program scope (七步整合设计 adoption)
+Type: scope-change / user-confirmation
+Decision: ADOPT docs/CreatorOS-七步整合设计.md (Seven-Step Integration Design) into the program.
+         It extends (does NOT refactor) the 6-stage trunk: adds a positioning gate, a monetization
+         loop, a Candidate/AudienceSignal topic-intel layer, a Prediction/Rubric calibration loop, and
+         cross-cutting PlatformAccount/ContentCalendar/StageTemplate/AI-relay. Its hard constraints
+         C-2/C-3/C-4 ARE our proven patterns (DEC-011 persistence path / DEC-009 AI candidate-confirm /
+         Ingestion idempotency), so the new modules slot into the same foundation/module-template/
+         contract-op/pglite fan-out with zero architectural conflict.
+User decisions (2026-06-21):
+  1. Adopt, phased per spec §8.
+  2. The "monetization-weighted" directional change (§2.0/§4.4/§6.2) is BAKED INTO the base-module
+     plans BEFORE Wave 2/3 launch (no retrofit): ContentOutput.content_role (traffic/trust/conversion);
+     MetricValue.metric_key extension (profile_visit/lead/inquiry/conversion/revenue…);
+     AudienceSnapshot.dimension_type += intent/paying; Learning.learning_type += conversion types;
+     Dashboard/Publishing surface conversion/lead as first-class metric columns. Touches the Projects/
+     Analytics/Reviews/Learnings/Publishing/Dashboard module plans (+ a small contract v0.3 for
+     content_role on contentOutputResource & any enum/key additions that cross the wire).
+  3. The 6 NEW modules (positioning, monetization, candidate+audience-signal, calibration,
+     platform-account, content-calendar) are appended as Waves 5-7 AFTER the base 16 (Waves 1-4),
+     in spec §8 priority order (P0: monetization+candidate+calibration → P1: positioning+
+     platform-account+content-calendar → P2: stage-templating+AI-relay+eng-debt). Each gets a
+     modules/<n>-<module>.md plan via the same generation+fan-out; needs a contract v0.3 op/DTO pass.
+  4. ID governance: PRAGMATIC continuation (append new FR/ENT/etc. as new segments) — NOT the spec's
+     formal C-1 freeze ceremony, consistent with how this build has proceeded.
+Execution timing: edits to base-module plans (#2) happen AFTER the running Wave 1 (Taxonomy/
+  Notifications/Search/Settings) completes and BEFORE Wave 2 launch, to avoid worktree contention.
+Source: user instruction 2026-06-21 (pointed at the new spec, "看能怎么落地" + 3 confirming answers).
+Affected Artifacts: docs/CreatorOS-七步整合设计.md (status→adopted); upcoming contract v0.3; base-module
+  plans (Projects/Analytics/Reviews/Learnings/Publishing/Dashboard); new module plans (6); program waves.
+Owner: agent (user-directed)
+Revisit Trigger: Wave 1 done → bake the directional change into Wave 2/3 plans; after base waves →
+  generate the 6 new-module plans + contract v0.3.
+Status: active
+```
+
+```text
+ID: DEC-013
+Date: 2026-06-22
+Stage: process (orchestrator workflow hardening + manifest reconciliation)
+Type: scope-change / process-improvement
+Decision: (A) Reconcile ARTIFACT_MANIFEST.yaml to repo reality, and (B) add an in-repo executable process
+         layer so the manifest can never silently go stale again, modeled on industry practice.
+Problem found (audit 2026-06-22): the manifest's `stages:` block was a frozen 2026-06-20 snapshot that its
+         own DECISION_LOG (DEC-008..012) contradicted — it claimed backend "not-started / no code" while a
+         real @creatoros/backend persistence slice, @creatoros/contract v0.4.0, an ai-worker, and a live
+         FE↔BE↔SQL Projects round-trip already existed on feat/service-contract (317 commits ahead of main).
+         Required artifact CHANGE_IMPACT.md was missing; API/TEST/MOCK/ASM IDs referenced but never
+         instantiated; consistency_gate=fail was non-blocking; failing gate verdicts were "invalidated"
+         rather than retained; the workflow definition lived only in an external, unpinned skill install.
+Work done:
+  (A) Manifest reconciled: header + project block (work_branch, topology, honest notes); stages 13/15/16/17
+      corrected to match DEC-008..012; consistency_gate reason updated + marked blocking for stage 17;
+      added reconciliation + reference blocks; OPEN-003 resolved, OPEN-004 (ID governance accepted-risk) and
+      OPEN-005 (untracked control artifacts on wrong branch) added.
+  (B) New orchestrator/process/ layer (in-repo, version-pinned — fixes "definition lives external/unpinned"):
+      - reconcile.mjs: drift detector / executable gate. Validates manifest against JSON Schema, checks
+        each build-claim against git+filesystem reality on the work branch, enforces the blocking-consistency
+        rule (no `passed` downstream of a failing release-critical chain unless `accepted-risk`), and flags
+        manifest staleness vs the latest DEC. Exits non-zero on drift (CI-as-gate).
+      - manifest.schema.json: structural + enum validation for the manifest.
+      - rules/orchestrator-state-machine.md: pinned copy of the external skill rule (reproducible audits).
+      - README.md: best-practice mapping (CI-as-gate, Terraform/GitOps drift, policy-as-code, DO-178C
+        bidirectional traceability, ADR immutable history).
+  (C) Created CHANGE_IMPACT.md back-filling CI-006/009/012 (the previously-missing required artifact).
+Policy set:
+  - FAIL HISTORY IS RETAINED: a failed gate verdict superseded by a later pass keeps its record + a delta;
+    it is NOT marked `invalidated`. (Corrects the DEC-007 pattern; anti snapshot-laundering, ADR-style.)
+  - DRIFT IS CHECKED: trust the manifest only after `node orchestrator/process/reconcile.mjs` passes.
+Rationale: User /goal — "参照业界优秀实现解决 orchestrator 工程问题，并修复 manifest 等问题."
+Source: Two-agent audit (artifacts + repo reality) 2026-06-22; skill rules at
+        ~/.skills-manager/skills/product-to-code-orchestrator/.
+Affected Artifacts: ARTIFACT_MANIFEST.yaml, DECISION_LOG.md, CHANGE_IMPACT.md (new), orchestrator/process/* (new).
+Invalidates: none (corrects bookkeeping; no code/spec change). Does NOT alter any DEC-001..012 verdict.
+Owner: agent (user-directed via /goal)
+Revisit Trigger: Backport the executable-gate + retained-history changes into the external skill; or commit
+        the control artifacts onto feat/service-contract (OPEN-005).
+Status: active
+```
+
+```text
+ID: DEC-014
+Date: 2026-06-22
+Stage: process (long-running autonomous harness)
+Type: scope-change / process-improvement
+Decision: Add a long-running autonomous harness so the orchestrator can run UNATTENDED for hours/days to
+         implement the remaining verticals, following Anthropic's official "Effective harnesses for
+         long-running agents" (three-agent initializer/coding/evaluator + progress checklist + commit-per-step).
+Work done:
+  - progress.json — feature-grained task queue, DERIVED from work-branch reality via process/progress.mjs
+    (not hand-written). 21 verticals; honest status: only `projects` persisted, 20 scaffolded, 0 e2e_verified
+    (matches the ~30% maturity note). `e2e_verified` is human/evaluator-set, never inferred.
+  - process/progress.mjs — generate (from git reality) / status / next (the loop's task picker).
+  - process/harness/ — README (3-agent model + run via /goal, headless loop, or GitHub Action), init.sh
+    (initializer), coding-agent.md, evaluator.md, settings.autonomous.json (permission allowlist +
+    Stop-hook = reconcile.mjs, for unattended runs only — NOT always-on project settings).
+  - rules §"Autonomous Mode": scope-envelope pre-authorization replaces synchronous per-stage gates; an async
+    decision queue lets the loop continue on unblocked verticals while a human answers asynchronously.
+  - Backported to the skill (both copies) so future projects inherit the harness.
+Rationale: User asked to research Anthropic's official long-running-agent practice and make the skill support
+         it. Research confirmed the three-agent harness + /goal + self-verification + fresh-context-per-step.
+Source: anthropic.com/engineering/effective-harnesses-for-long-running-agents; Claude Code /goal; Agent SDK.
+Affected Artifacts: progress.json, process/harness/*, process/progress.mjs, rules (updated), skill copies; a
+         detailed KB doc written to ThirdSpace (03-知识).
+Invalidates: none (additive process layer; no code/spec change).
+Owner: agent (user-directed via /goal)
+Revisit Trigger: Run init.sh and drive the loop; or wire the GitHub Action on feat/service-contract.
+Status: active
+```
+
+
+## DEC-AW-1004 — 多步 Agent 实施授权与依赖边界
+
+用户在 T-1003 独立评审 PASS 后明确授权于同一任务会话连续实施 T-1004～T-1013。以 `docs/features/t1003-agent-workbench.md` 为完整验收范围；保留 Pi core、`execution_tasks`、账号隔离和旧采集。NomiFun 只读参考提交 `e27bd5de9a58ce444032ef4e63bb753992555c4c`，在 CreatorOS 锁定来源与依赖，不修改参考仓。实施授权不包括推送、发布或外部系统改动。Windows 原生安装与升级证据仍须由 T-1013 当场取得；本机交叉编译失败不能冒充产品缺陷或验收通过。
+
+
+## DEC-AW-1009 — 同一对话跨回合产物版本谱系
+
+用户在补充规格独立评审 `PASS[REV:825f3a6d65da]` 后明确“都确认”，批准按 `docs/features/t1009-artifact-lineage-proposal.md` 实施同一对话跨回合修订。产物谱系归属用户、账号和对话；每个版本继续绑定真实任务、原工具调用和 Blob，旧版本保留。新增后端唯一谱系索引、原调用同事务结算、未知 Blob 持久对账、旧任务保守迁移、HTML 精确图片版本清单以及新旧协议排他切换。不同对话或账号不得串联；迁移受阻时旧版只读且不伪造新版本。该确认授权实现与本地验收，不包含公开发布、生产放量或修改外部仓库。
+
+
+
+## T-916 历史规格回执复核授权（2026-09-21）
+
+用户要求继续修复当前 reconcile 暴露的问题。以下一次性能力仅允许对绑定任务的当前 SPEC 与当前宪法执行独立复核；不得改写历史事件、跳过审查或冒充既有 PASS。
+
+```text
+ID: DEC-015
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-915
+Previous-Spec-SHA256: b990a38a015698105d29d2da0cada4767b3be4bd09948cc5ef147621fb98d8ce
+Previous-Constitution-SHA256: ab6003112be4c5b680fba05abf8326eaf59eeafd1613b4ca44464ef3d0cff126
+Allowed-Change-IDs: SPEC-DRIFT,CONSTITUTION-DRIFT
+Max-Cycles: 1
+Nonce: ff11bd90-4588-44ed-85e4-498b9f5f1121
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-016
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-859
+Previous-Spec-SHA256: e6fe3ad73fa90859a3850b09e4ffd11fd82efdc1da7e1ee27899839d045981c5
+Previous-Constitution-SHA256: e84f83b7e65a415ba7a2a4639188bc2fd2d682f42d3220107a119abdc39d2a77
+Allowed-Change-IDs: SPEC-DRIFT,CONSTITUTION-DRIFT
+Max-Cycles: 1
+Nonce: 03366bd3-4852-44ba-9e39-a33c08dfa26b
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-017
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-858
+Previous-Spec-SHA256: ab768b979e62ab63199ee8d1014c993dcac7f51dfa92f15e627dacb33b2ceed1
+Previous-Constitution-SHA256: 871570cc600267be82e2e1fbfa79d730fc51121810b8de262c5a49c876029b66
+Allowed-Change-IDs: SPEC-DRIFT,CONSTITUTION-DRIFT
+Max-Cycles: 1
+Nonce: e7266c6d-fe58-4215-9a56-d1c82be92e71
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-018
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-824
+Previous-Spec-SHA256: 58355a1e3ae9f12a57279dfb67ba05d7e950b2aec1f3284aecaf8764339950c6
+Previous-Constitution-SHA256: 871570cc600267be82e2e1fbfa79d730fc51121810b8de262c5a49c876029b66
+Allowed-Change-IDs: CONSTITUTION-DRIFT
+Max-Cycles: 1
+Nonce: c2d657d0-27b9-4fb8-97fc-6e3ee65ea71b
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-019
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-819
+Previous-Spec-SHA256: d89d457083d1d2d0dd132429b3f65b8a8470f3feca2f44284080833b4754eecb
+Previous-Constitution-SHA256: 871570cc600267be82e2e1fbfa79d730fc51121810b8de262c5a49c876029b66
+Allowed-Change-IDs: SPEC-DRIFT,CONSTITUTION-DRIFT
+Max-Cycles: 1
+Nonce: ca9488d5-e93a-4c60-9f58-f9812be0bb00
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-020
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-816
+Previous-Spec-SHA256: b9490f4fac3f5f00ff1c32d26609e48d82b94b615ab3580f0b0d2a5df955548d
+Previous-Constitution-SHA256: 871570cc600267be82e2e1fbfa79d730fc51121810b8de262c5a49c876029b66
+Allowed-Change-IDs: SPEC-DRIFT,CONSTITUTION-DRIFT
+Max-Cycles: 1
+Nonce: 10f7f1c9-b65d-4c68-bf59-cff752140c5d
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-021
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-768
+Previous-Spec-SHA256: f0771cc886f5f56646b8431bf2e939952ecaa7297a05c0b888e23f7ffdb4fec2
+Previous-Constitution-SHA256: 871570cc600267be82e2e1fbfa79d730fc51121810b8de262c5a49c876029b66
+Allowed-Change-IDs: CONSTITUTION-DRIFT
+Max-Cycles: 1
+Nonce: 7ae1d4fe-b06e-497d-8f2c-7e531e85087d
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-022
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-726
+Previous-Spec-SHA256: 7e2e8d6b672ee2cea8f84c346ac23373f2fb15069bd8f32ab560370687b3e7c1
+Previous-Constitution-SHA256: 871570cc600267be82e2e1fbfa79d730fc51121810b8de262c5a49c876029b66
+Allowed-Change-IDs: CONSTITUTION-DRIFT
+Max-Cycles: 1
+Nonce: 35a3a05d-46f1-456d-bf72-025205408349
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-023
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-703
+Previous-Spec-SHA256: 70e49d3ae5a3e418fad77e80fa0a61054c42de5c0634cc20881cfd7a4f005320
+Previous-Constitution-SHA256: 2afb9684d1ef531f56c5def2185c6cc7086c00aa3105bff0ce87fc5c81fc5fad
+Allowed-Change-IDs: SPEC-DRIFT,CONSTITUTION-DRIFT
+Max-Cycles: 1
+Nonce: 2adcb180-5753-4ea0-a0c7-90fe3a81e26a
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-024
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-691
+Previous-Spec-SHA256: a4a57d75e372b01db3c0880f6791b98971a98d0abb44a3b29c07c1723752e232
+Previous-Constitution-SHA256: 6a04d0b0fa6c123f7990f02685afeed38858494cc2501ec4bfbc742050ab97fd
+Allowed-Change-IDs: CONSTITUTION-DRIFT
+Max-Cycles: 1
+Nonce: ac8673b6-158e-4b68-9431-6ec807c855d5
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-025
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-656
+Previous-Spec-SHA256: ca037dafc7b21ab04ce3ffe20502e7cc8862f14dc342a1e3db2437a67887f40e
+Previous-Constitution-SHA256: d01469220b22455024bd58473a6ca9f307162b1317ba0fa5fe036b148f90362a
+Allowed-Change-IDs: CONSTITUTION-DRIFT
+Max-Cycles: 1
+Nonce: fabb442c-61e4-4776-b796-dfdc6fceac56
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-026
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-645
+Previous-Spec-SHA256: c693c9a4ad1175d831512f493aabd4782603a21dda58f92fdca6c76e45989c4b
+Previous-Constitution-SHA256: 76e9fa0fa2408bd5f512b640d01ad5a0c550702875abeeb4ddb648a07e0e6bca
+Allowed-Change-IDs: SPEC-DRIFT,CONSTITUTION-DRIFT
+Max-Cycles: 1
+Nonce: 2564bde3-ee0e-4e82-b317-a784d856ceb2
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-027
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-642
+Previous-Spec-SHA256: e8c4568adfcd8dcf82c91468cd1dfde4c46899e128d1388c00001eddcb9b1442
+Previous-Constitution-SHA256: 07c9b61b58ca970feff57f1647c30a32c4af4fc92063c9a87952771403376950
+Allowed-Change-IDs: REV-002,SPEC-DRIFT
+Max-Cycles: 1
+Nonce: e9eec361-0bb6-41fb-aee9-1e0ebdd4b713
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-028
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-635
+Previous-Spec-SHA256: f00d4d7c0ecf1f7821fd336ce9278a12a168e1593417b1630527d458bcc929a3
+Previous-Constitution-SHA256: 89a36038833bdaed0d6de3ca353725643aff8aa53e6e0c53933b7ebdf4b1ad9b
+Allowed-Change-IDs: CONSTITUTION-DRIFT
+Max-Cycles: 1
+Nonce: 29cc5a99-7d6d-4301-bb87-c33c1124d26b
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-029
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-652
+Previous-Spec-SHA256: 381393efb2d2f63029b4d6df27522836b5bcbb7205429b9df13ccbd6d96f513e
+Previous-Constitution-SHA256: 86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800
+Allowed-Change-IDs: REV-004,REV-005,SPEC-DRIFT
+Max-Cycles: 1
+Nonce: 21ee04c8-f878-41cb-9555-69ebd0454f44
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-030
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-694
+Previous-Spec-SHA256: 6ea31e784c68e7498c99f4bfd89f8231d3d4e545c345127acd6eeee961a3192b
+Previous-Constitution-SHA256: 86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800
+Allowed-Change-IDs: SPEC-DRIFT,THREAT-MODEL-BINDING
+Max-Cycles: 1
+Nonce: d4f103ce-f2e9-4f0e-9f08-e599a5dca694
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-031
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-707
+Previous-Spec-SHA256: 274348c049ec609de8c6fd85ff5e1c35ccd888c4d3862a744e0167f8270d3c98
+Previous-Constitution-SHA256: 86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800
+Allowed-Change-IDs: REV-003,REV-004,SPEC-DRIFT
+Max-Cycles: 1
+Nonce: 653e2dc9-8565-443c-8e94-d4a39c653707
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-032
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-656
+Previous-Spec-SHA256: a6a56eb9bdb5c7b19e59fee6bef2c8f8fdbca2d4276f1b49d7a9c7ea049bc1ac
+Previous-Constitution-SHA256: d6611dbad51dc439d17e638fc2cab9283ad6a0d5557c183f82dad0aaedb05c28
+Allowed-Change-IDs: PMEM-SYNC
+Max-Cycles: 1
+Nonce: 9135a313-e798-4475-b983-f80300305656
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-033
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-635
+Previous-Spec-SHA256: 5849ba840ce1352b97eb47a8d72b77397737242621d7e32170e2cd9e2a8d9402
+Previous-Constitution-SHA256: d6611dbad51dc439d17e638fc2cab9283ad6a0d5557c183f82dad0aaedb05c28
+Allowed-Change-IDs: PMEM-SYNC
+Max-Cycles: 1
+Nonce: 439e493a-98a7-42a6-8d4c-adc7b2fa0635
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-034
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-703
+Previous-Spec-SHA256: 1624f50bb9f70d475bec8c633a7cc6f46d0d94f8fe4e01ecf6abfced36420460
+Previous-Constitution-SHA256: d6611dbad51dc439d17e638fc2cab9283ad6a0d5557c183f82dad0aaedb05c28
+Allowed-Change-IDs: PMEM-SYNC
+Max-Cycles: 1
+Nonce: 51b2872d-f6c4-43df-b41a-c1a6f8741703
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-035
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-691
+Previous-Spec-SHA256: a4a57d75e372b01db3c0880f6791b98971a98d0abb44a3b29c07c1723752e232
+Previous-Constitution-SHA256: d6611dbad51dc439d17e638fc2cab9283ad6a0d5557c183f82dad0aaedb05c28
+Allowed-Change-IDs: PMEM-SYNC
+Max-Cycles: 1
+Nonce: e7356b91-2d2f-477f-a909-bf225c156691
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-036
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-645
+Previous-Spec-SHA256: d2e9fbef2dcb8228b3652d5f269024eada6cafbf62c03ec61ba26ad6e4418fd1
+Previous-Constitution-SHA256: d6611dbad51dc439d17e638fc2cab9283ad6a0d5557c183f82dad0aaedb05c28
+Allowed-Change-IDs: PMEM-SYNC
+Max-Cycles: 1
+Nonce: ef51bc98-82f0-463f-b6bb-ecde96654645
+Owner: user
+Status: active
+```
+
+
+## DEC-T1026-CLI（2026-09-21）公开验收入口
+
+用户明确要求所有新增功能可通过 CLI 验证，授权补齐缺失入口、修复问题和本机覆盖安装。增加 `workbench.tasks.inspect/events`、`workbench.capabilities.list`、`workbench.artifacts.list/read/render/reconcile`；CLI 导出仅写用户指定本地路径并校验 SHA-256。复用现有账号鉴权、持久任务、产物服务及预览渲染，不增加执行权或数据库归属。
+
+独立审查（Wegener，本轮实际发生）认可方向，指出读取隐式迁移、对账重试/跨任务回收、锁顺序和计划产物校验死锁；本任务修复并验证这些合入条件。只读入口不迁移账本，原操作对账可重复回读，恢复只限定目标任务。HTML 诊断报告实际降级，登记成功不等于图表完整。历史未验收项目继续保留缺口，Windows 无实机不得记 PASS。
+
+
+## DEC-T1026-ANONYMOUS-ACT（2026-09-21）
+
+用户要求新增浏览器能力全部可用并通过CLI验收；实际合法匿名scroll/click被底层crawl身份策略拒绝。沿原T1008受控工作台边界，仅由可信宿主为当前任务独占anonymous Hub启用已声明的七种交互。开关默认false、不可由序列化/模型输入开启；普通采集Hub、authenticated-replica、Debug、domain/epoch/ref/租约与外部操作授权均不扩大。Rust独立复核指出Act+evaluate需在Hub自身拒绝，已纳入修复与回归。此决定落实用户已授权功能与安全边界，不将“禁止阻断”解释为绕过授权或重复未知动作。
+
+
+## DEC-T1027-CLI-RETRY（2026-09-21）
+
+用户已明确授权新增功能缺少CLI入口时补齐。安装实测确认评论失败项没有公开重试入口，runNow无法解除作品级backoff。增加账号限定、有界IDs、基线CAS和幂等的失败清单/重试时间调整操作，复用原调度入口；保留历史与成功水位，不解除平台冷却。不读取或直接修写用户私有数据库，独立评审与正式契约回归先行。
+
+同项实现发现仅提前少量作品的 retryAt 无法限制随后 runNow 的范围，其他作品可能同时到期。为可靠验收和用户真实选择，扩展现有 runNow 可选 publicationIds（仅评论，1–20、真实归属、每次任务固定选择），不改变定时作业配置；不同选择与已运行作业冲突，禁止悄悄复用为本次结果。该细案按既有用户授权落实，经独立评审后实现，未发生新的用户确认消息。
+
+
+## DEC-T1026-FILE-RECEIPT（2026-09-21）
+
+沿用户要求补公开 `workbench.files.reconcile`（taskId、原operationId；write/apply/gateway幂等），只用可信Native持久committed记录结算原文件调用，保留旧unknown快照、原键和费用。独审Wegener已放行协议A及生产自动恢复：复用已有单在途recoveryWake lane，有界轮转，停止时等待并拒绝迟到回写，只定点恢复该unknown_result任务，paused保持暂停。缺记录/prepared不伪报成功；观察协议B未实现、未通过，原99不解锁。新同会话后续修订可在独立task目录读取不可变v1并登记v2，不能作为99恢复通过的证据。Windows实机与断电持久性仍无实证。
+
+
+## DEC-T1026-EXACT-ARTIFACT-COPY（2026-09-22）
+
+按用户“所有新增功能通过CLI验收，缺入口补齐，生成问题继续修复”的既有授权，补现有`artifact.copy`对已登记HTML/Markdown/CSV/PDF的精确字节复制；沿同会话/账号、真实源版本、租约和原调用身份创建独立新artifact@1，原lineage与源任务文件不动。真实子任务242/261已证明让模型转写18KB报告会超时或抄错，不能把这种搬运当可靠恢复手段。此为确定性协议能力，不替模型做内容创作或替用户挑选源版本。
+
+Socrates独立方案审查有条件通过：PNG既有2MiB守卫保留，其余支持格式沿登记20MiB；HTML必须冻结并逐项校验源依赖闭包及宿主生成的原相对路径基准，嵌套copy保留原基准。渲染不得扩大图片归属、网络或脚本权限。旧冻结工具目录不回写，新任务才采用扩展。真实红绿及完整公共调用链验收仍待完成；这不是已发布或已通过的记录。未发生额外用户确认消息，不伪造确认。
+
+
+## DEC-T1027-CONTROLLED-DIAGNOSIS（2026-09-22）
+
+真实七包仍无评论响应，现有公开入口无法在同一个采集身份页面核验导航契约；用户已要求CLI缺口补齐并持续修复。采用新增`analytics.comments.diagnose`窄领域入口，单真实publication、同账号原采集profile/lease、固定主页及有界导航候选观察/选择/关闭。不开放任意URL、selector、JS或私有CDP；先看真实DOM证据，再由Agent判断并选择真实引用，代码仅守身份、生命周期、范围与幂等。
+
+Socrates已实际独审通过完整方案：close只依session归属、不被作品状态变化挡住；诊断只获取平台准入、不把观察成功report为采集成功或清退避；持久CLI gateway的pending/unknown重放不重新派发；observe原子换generation、旧ref拒绝。自然网络仅有界白名单协议证据，不返回凭据/评论正文/未知字段值；无法硬限读取的body明确unavailable。TTL本身不释放未确认停止资源，不把诊断可用等同平台采集通过。具体约束和红绿门在T1027 SPEC，未新增application空转发层。无额外用户确认消息，不冒称完成。
+
+### DEC-T1027-DIAGNOSIS-ROOT-COVERAGE
+
+第八安装CLI诊断只能观察首个顶部nav，不能据此判断评论入口不存在。沿用户既有全功能测试与修复授权，增加有界多语义root与覆盖事实；不增加任意动作或正文读取权限。具体预算/旧ref约束见T1027 SPEC追加段，经Wegener前置独审PASS后实现、Carver做最终复核。未收到新的用户确认消息，不把实现裁决写成新确认。
+
+### DEC-T1027-OBSERVATION-FAILURE（2026-09-22）
+
+第九安装原诊断catch丢失阶段，实际构建模块隔离Chromium未复现该故障。落实用户持续修复与CLI验收授权，增加可选固定observationFailure四值，按阶段和自有timer来源分类，成功省略，禁止公开raw异常；保持原deadline/权限/平台预算。Carver前置条件PASS，具体约束与红测见T1027 SPEC。此为现有授权内的可观测性补齐，无额外用户确认消息，当前并未证明安装版失败根因或采集成功。
+
+### DEC-T1026-TERMINAL-FAILURE-FINALIZATION（2026-09-23）
+
+第九安装task256公开CLI真实453call快照显示：正常安全retry修复已创建准确284→retryOf283；随后plan已无pending/running，模型stop后因Pi将failed计划步骤纳入unfinished而继续自动loop，反复重试持久回执为额度耗尽的外部调用并重写报告。模型通常进展改变revision，旧相同progressToken停滞守卫未触发。主线已从正式CLI pause，未知453与全部既有费用/回执保留。原提案为增加一次工具禁用模型收尾调用；Hypatia独立复审指出其可能遗漏已有正文、不能跨重启持久化、摘要/历史可能不全且与强制工具序列冲突，故该提案废弃。
+
+修订方案不增加模型调用：Pi loop 在失败步骤已终态且无 pending/running/waiting_user 时仅返回失败 step IDs；后端在现有聊天完成事务中重验当前计划与账本，按固定可信标题写入持久 partial 回复。execution 模块通过纯校验端口拥有计划语义；新任务冻结策略版本，符合终态失败却漏传 IDs 必须拒绝。历史 stop 是否有后继按所有后续聊天 root 状态判断，以保留 rejected/superseded 的历史续行提示；提交资格要求候选是最新 settled root stop，任意后继都阻止部分提交。消息、completion、两个 task 状态、text-start/delta/end 流事件与 finish metadata 原子一致，重复提交幂等；没有模型正文时仍能由宿主说明完成。缺策略版本的旧任务保持legacy v0、不回填；公开CLI已确认task256仍paused，453 unknown，所以不迁移、不绕过checkpoint，以新隔离任务验收v1。Hypatia与Ptolemy独立复审均认可这些边界。具体验收见 T1026 SPEC。

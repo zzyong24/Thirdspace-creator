@@ -1,8 +1,9 @@
 import { beforeAll, afterAll, it, expect } from "vitest";
-import { createDb, executionTasks, eq, type Db } from "@creatoros/backend";
+import { createDb, executionCalls, executionTasks, eq, type Db } from "@creatoros/backend";
 import { createPersistentTaskService } from "./persistent-task.service";
 import { createExecutionCallLedgerService } from "./execution-call-ledger.service";
 import { createExecutionStreamService } from "./execution-stream.service";
+import type { WorkbenchResult } from "@creatoros/contract/agent-workbench";
 const ctx = {
     userId: "stream-u",
     accountId: "stream-a",
@@ -268,4 +269,48 @@ it("内部模型不能写入对外展示流",async()=>{
  const parent=await f.ledger.reserve(f.ref,{operationKey:"parent",kind:"tool",inputDigest:"sha256:"+"a".repeat(64),reservedTokens:0});await f.ledger.start(f.ref,parent.id);
  const child=await f.ledger.reserve(f.ref,{operationKey:"child",kind:"model",parentCallId:parent.id,inputDigest:"sha256:"+"b".repeat(64),reservedTokens:20});await f.ledger.start(f.ref,child.id);
  await expect(f.stream.append(f.ref,{callId:child.id,startIndex:0,chunks:[chunk("内部秘密")]})).rejects.toThrow();
+});
+
+const running = (operationId: string, text: string): Extract<WorkbenchResult, {status:"running"}> => ({
+  status:"running", operationId, content:[{type:"text",text}], artifactRefs:[], progressCursor:"step-1",
+});
+it("宿主工具进度落原事件流，重复投递幂等，断线后按 sequence 回读且终态仍取任务",async()=>{
+ const f=await fixture("workbench-progress");
+ const tool=await f.ledger.reserve(f.ref,{operationKey:"files.read",kind:"tool",inputDigest:"sha256:"+"c".repeat(64),reservedTokens:0});
+ await f.ledger.start(f.ref,tool.id);
+ await db.update(executionCalls).set({toolExecutionClaimId:"host-owner"}).where(eq(executionCalls.id,tool.id));
+ const update=running(tool.id,"已读取 20 行");
+ const first=await f.stream.appendWorkbenchProgress(f.ref,tool.id,update);
+ expect(await f.stream.appendWorkbenchProgress(f.ref,tool.id,update)).toEqual(first);
+ const controller=new AbortController();
+ const subscription=(await import("./execution-stream.service")).subscribeExecutionStream(f.stream,ctx,f.task.id,{signal:controller.signal});
+ const page=(await subscription.next()).value!;
+ expect(page.events).toEqual([{sequence:first.lastSequence,callId:tool.id,callIndex:0,chunk:{type:"data-workbench-progress",id:tool.id,data:{operationId:tool.id,progressCursor:"step-1",content:[{type:"text",text:"已读取 20 行"}]}}}]);
+ controller.abort();await subscription.next();
+ const second=await f.stream.appendWorkbenchProgress(f.ref,tool.id,running(tool.id,"已读取 40 行"));
+ const replay=await createExecutionStreamService(db,{now}).read(ctx,f.task.id,{afterSequence:first.lastSequence});
+ expect(replay.events).toHaveLength(1);expect(replay.nextSequence).toBe(second.lastSequence);
+ expect(replay.status).toBe("running");
+});
+it("宿主进度拒绝跨账号调用、旧 fence、停止、坏载荷与已结算工具",async()=>{
+ const f=await fixture("workbench-progress-guards"),other=await fixture("workbench-progress-other");
+ const tool=await f.ledger.reserve(f.ref,{operationKey:"files.read",kind:"tool",inputDigest:"sha256:"+"d".repeat(64),reservedTokens:0});
+ await f.ledger.start(f.ref,tool.id);
+ const update=running(tool.id,"安全进度");
+ await expect(f.stream.appendWorkbenchProgress(f.ref,tool.id,update)).rejects.toThrow();
+ await db.update(executionCalls).set({toolExecutionClaimId:"host-owner"}).where(eq(executionCalls.id,tool.id));
+ await expect(f.stream.appendWorkbenchProgress(other.ref,tool.id,update)).rejects.toThrow();
+ await expect(f.stream.read({...ctx,accountId:"foreign"},f.task.id)).rejects.toThrow();
+ await expect(f.stream.appendWorkbenchProgress({...f.ref,fenceToken:"stale"},tool.id,update)).rejects.toThrow();
+ await expect(f.stream.appendWorkbenchProgress(f.ref,tool.id,{...update,operationId:"forged"})).rejects.toThrow();
+ await expect(f.stream.appendWorkbenchProgress(f.ref,tool.id,{...update,content:[{type:"text",text:"x".repeat(5000)}]})).rejects.toThrow();
+ await f.tasks.command(ctx,{taskIds:[f.task.id],command:"cancel",idempotencyKey:"stop-progress"});
+ await expect(f.stream.appendWorkbenchProgress(f.ref,tool.id,update)).rejects.toThrow();
+ const settled=await fixture("workbench-progress-settled");
+ const finishedTool=await settled.ledger.reserve(settled.ref,{operationKey:"files.read",kind:"tool",inputDigest:"sha256:"+"e".repeat(64),reservedTokens:0});
+ await settled.ledger.start(settled.ref,finishedTool.id);
+ await db.update(executionCalls).set({toolExecutionClaimId:"host-owner"}).where(eq(executionCalls.id,finishedTool.id));
+ await settled.ledger.settle(settled.ref,finishedTool.id,{status:"settled",usage:{totalTokens:0},resultText:"ok"});
+ await expect(settled.stream.appendWorkbenchProgress(settled.ref,finishedTool.id,running(finishedTool.id,"迟到"))).rejects.toThrow();
+ expect((await f.stream.read(ctx,f.task.id)).events).toHaveLength(0);
 });

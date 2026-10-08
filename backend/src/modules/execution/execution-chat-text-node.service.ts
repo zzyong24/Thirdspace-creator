@@ -31,6 +31,7 @@ const reserveRequest=workerPortInputSchemas.reserveChatHooksModel;
 const digest = (value: unknown) =>
   `sha256:${createHash("sha256").update(canonicalJson(value)).digest("hex")}`;
 type Call = typeof executionCalls.$inferSelect;
+const recoverableModelFailure=(call:Call)=>call.status==="rejected" || call.status==="superseded";
 type Frozen = Awaited<ReturnType<ReturnType<typeof createChatHostContextReader>["read"]>>;
 type PreparedData = { prompt: string; system: string; [key: string]: unknown };
 export interface ChatTextNode {
@@ -116,7 +117,7 @@ export function createExecutionChatTextNodeService(
           .orderBy(asc(executionCalls.sequence));
         const found = findParent(task, calls, input.callId);
         assertCurrentRound(calls, found);
-        const retry=calls.find(call=>call.id===task.retryOfCallId && call.parentCallId===found.parent.id && call.status==="rejected");
+        const retry=calls.find(call=>call.id===task.retryOfCallId && call.parentCallId===found.parent.id && recoverableModelFailure(call));
         return {...found,...(retry?{retryOfCallId:retry.id}:{})};
       },
     );
@@ -175,7 +176,7 @@ export function createExecutionChatTextNodeService(
       throw new ConflictError("开场内部调用与原生成输入不符");
     const last = children.at(-1)!;
     if (
-      children.slice(0, -1).some((call) => call.status !== "rejected") ||
+      children.slice(0, -1).some((call) => !recoverableModelFailure(call)) ||
       last.status !== "settled" ||
       last.totalTokens === null ||
       !last.providerResult
@@ -183,9 +184,9 @@ export function createExecutionChatTextNodeService(
       throw new ConflictError("开场内部调用仍须对账");
     return { children, last };
   };
-  const rejectedChildren = (calls:Call[],parentId:string,operationKey:string) => {
+  const recoverableChildren = (calls:Call[],parentId:string,operationKey:string) => {
     const children=calls.filter(call=>call.parentCallId===parentId).sort((a,b)=>a.sequence-b.sequence);
-    if(!children.length || children.some(call=>call.kind!=="model" || call.status!=="rejected" || call.operationKey!==`${operationKey}/model/1`))throw new ConflictError("内部模型缺少完整明确拒绝事实");
+    if(!children.length || children.some(call=>call.kind!=="model" || !recoverableModelFailure(call) || call.operationKey!==`${operationKey}/model/1`))throw new ConflictError("内部模型缺少完整可恢复失败事实");
     return children;
   };
   return {
@@ -195,7 +196,7 @@ export function createExecutionChatTextNodeService(
         if(!["waiting_user","retry_wait","failed"].includes(task.status))return null;
         const calls=await tx.select().from(executionCalls).where(eq(executionCalls.executionTaskId,task.id)).orderBy(asc(executionCalls.sequence));
         const found=findParent(task,calls,callId),children=calls.filter(call=>call.parentCallId===callId);
-        if(found.parent.status!=="started" || !children.length || children.some(call=>call.status!=="rejected") || children.at(-1)!.id!==calls.at(-1)!.id || children.at(-1)!.startedAttempt!==ref.attempt)throw new ConflictError("挂起回执不匹配原执行");
+        if(found.parent.status!=="started" || !children.length || children.some(call=>!recoverableModelFailure(call)) || children.at(-1)!.id!==calls.at(-1)!.id || children.at(-1)!.startedAttempt!==ref.attempt)throw new ConflictError("挂起回执不匹配原执行");
         const budgetExhausted=task.status==="failed" && failure.outcome==="retry_wait" && task.lastErrorCode==="RETRY_BUDGET_EXHAUSTED";
         if(!budgetExhausted && (task.status!==failure.outcome || task.lastErrorCode!==failure.errorCode || (task.status!=="failed" && task.retryOfCallId!==children.at(-1)!.id)))throw new ConflictError("挂起结果与原回执不符");
         return {status:task.status,retryAt:task.retryAt};
@@ -204,7 +205,7 @@ export function createExecutionChatTextNodeService(
       const prepared=await prepare(ref,{callId},signal);
       return createExecutionWorkerOutcomeService(db,deps).recordFailure(ref,failure,(calls,task)=>{
         const found=findParent(task,calls,callId);assertCurrentRound(calls,found);
-        const children=rejectedChildren(calls,callId,prepared.operationKey);
+        const children=recoverableChildren(calls,callId,prepared.operationKey);
         if(found.parent.status!=="started" || found.parent.startedAttempt!==ref.attempt || children.at(-1)!.id!==calls.reduce((a,b)=>a.sequence>b.sequence?a:b).id || children.at(-1)!.startedAttempt!==ref.attempt)throw new ConflictError("开场失败不属于当前执行");
         return [callId];
       });
@@ -218,7 +219,7 @@ export function createExecutionChatTextNodeService(
         const recoverable=node.resumable(recoverableChatNodeParents(task,calls,await tx.select().from(executionEvidence).where(eq(executionEvidence.executionTaskId,task.id))));
         if(found.parent.status!=="started" || !recoverable.includes(callId))throw new ConflictError("原任务没有可恢复的文本节点记录");
         if(node.name!=="script.draft"){
-          const children=rejectedChildren(calls,callId,prepared.operationKey);
+          const children=recoverableChildren(calls,callId,prepared.operationKey);
           if(task.retryOfCallId!==children.at(-1)!.id)throw new ConflictError("原节点缺少重试许可");
         }
         signal?.throwIfAborted();
@@ -273,7 +274,7 @@ export function createExecutionChatTextNodeService(
           assertCurrentRound(calls, current);
           if(input.retryOfCallId){
             const source=calls.find(call=>call.id===input.retryOfCallId);
-            if(task.retryOfCallId!==input.retryOfCallId || source?.parentCallId!==input.callId || source.status!=="rejected" || source.startedAttempt===ref.attempt || current.parent.startedAttempt!==ref.attempt)throw new ConflictError("子模型重试尚未获得任务恢复许可");
+            if(task.retryOfCallId!==input.retryOfCallId || source?.parentCallId!==input.callId || !recoverableModelFailure(source) || source.startedAttempt===ref.attempt || current.parent.startedAttempt!==ref.attempt)throw new ConflictError("子模型重试尚未获得任务恢复许可");
           }
           if (current.bound.inputDigest !== prepared.bound.inputDigest)
             throw new ConflictError("开场工具绑定已改变");

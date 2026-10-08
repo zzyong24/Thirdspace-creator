@@ -15,3 +15,9 @@ flowchart LR
 ```
 
 根会话负责Git及控制面整合，独立会话只读复核来源、冲突与清理清单。实现阶段不随意扩展业务功能；若整合产生实际编译问题，在本任务记录精确冲突及最小兼容修复，再验证相关公共链路。构建前独立复核整合候选，工作树干净、版本四处一致、打包四项基本测试通过；固定入口`pnpm -C frontend desktop:package-local`，显式跳过自动安装和备份。保留每次退出码及失败日志。产物SHA256、镜像和签名核验真实执行，构建成功不代签全功能或用户验收。
+
+## 三方合并发现的迁移闭包
+
+本地main的`0101_workbench_artifact_lineage`与客户端`0128_workspace_convergence`占用同一journal idx101；前者when更早。只并列保留旧journal不足以升级已经执行0128的安装库，旧迁移会被最新when跳过。保留两份原SQL和原when/tag，journal只规范连续idx，另新增`0129_workbench_artifact_convergence.sql`及一个更晚的when，仅重放原0101的`CREATE TABLE/INDEX IF NOT EXISTS`两张表/四索引，字段、外键、非空、版本及原account归属完全不变，不回填或改变任何旧行。先独立复核该精确必要范围，再新增隔离公共`createDb`测试实证：已到0128但缺工作台表的旧库、已执行main0101且有历史行的库、空库，双启表/索引和旧行深等；原收敛迁移原权限和自动保护保持，不访问安装库。产品写集为该新SQL、journal、`backend/src/db.ts`双方schema并存及`backend/src/workbench-main-migration.test.ts`；其他冲突只三方兼容既有功能，不新增服务契约。
+
+实际旧`migration-convergence.ts`严格只允许102个journal条目及冻结历史身份，因此同样进入必要写集：仅增加以上两份准确SQL的tag/when/SHA256固定身份（原0101与新增0129），保留前101共同tag/when/hash及0128原身份，核规范journal精确四段长度/顺序；原历史来源文件完全不改。来源读取、历史账本准入、参考catalog与缓存摘要都包含实际执行的这两份固定身份，安装已跳过0101时允许只存在新0129回执。未知hash/时间/未来迁移、冻结SQL篡改及旧表不兼容仍拒绝，不能泛化为信任任意当前journal或忽略未知表列。隔离测试补未知回执拒绝与真实main0101历史行保留，不修改历史账本伪造旧回执。
