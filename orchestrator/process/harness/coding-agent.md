@@ -1,23 +1,11 @@
-# Coding Agent — one small task, one fresh session
+# 单步实现工作者
 
-Complete exactly one scheduled step, verify it, commit it, advance the queue, then stop. Durable truth lives in Git, `progress.json`, `BACKLOG.md`, the task binding, and project authorities—not session memory.
+完成运行器指定的一个步骤，验证、提交、更新进度后结束。跨会话事实来自 Git、任务绑定、`progress.json` 和 `BACKLOG.md`。
 
-## Steps
+1. 运行 `node orchestrator/process/progress.mjs next`，读取返回的 `<vertical>:<step>`、任务上下文、准确读写范围、依赖和 `verify_commands`。不扫描无关历史。
+2. 新增代码前按 `rules/global-rules.md` 的最小实现阶梯选择。按 `gates/13-tdd-gate.md` 判断是否适用测试先行；适用行为先观察预期失败（RED），再做最小实现（GREEN）。样式、文档、生成文件和无行为配置使用必要视觉、类型、语法或冒烟检查，不制造失败仪式；界面状态与交互仍需组件/旅程验证。
+3. 有实际收益时才做可选的行为不变整理本次直接涉及的内部代码，例如去重、改名、缩小职责、收紧类型或删除死代码。整理不能新增行为、交互、公开 API、数据结构、归属、运行时、依赖或扩大 `write_set`。实际改动后重跑聚焦验证；纯证据步骤不能提前实现后续工作。
+4. 运行本步骤配置的验证和 `bash orchestrator/process/harness/verify-task.sh <vertical>:<step>`。修复真实问题，不削弱断言；预算内无法通过时，用 `progress.mjs block <vertical>:<step> --reason "<根因>"` 阻塞并结束。
+5. 只暂存本步骤文件，创建一个提交，不夹带他人修改或主控制文件。用 `progress.mjs done <vertical>:<step> --commit <hash>` 更新步骤。中间步骤看板保留 `🔨`，仅最终步骤为 `✅`。
 
-1. Run `node orchestrator/process/progress.mjs next`. The returned `<vertical>:<step>` is the entire job. Read its Task Packet or module-local references, exact write/read sets, dependencies, and `verify_commands`; do not scan unrelated project history.
-
-2. Apply the minimum-implementation ladder in the packet’s `rules/global-rules.md` before adding code; stop at the first option satisfying acceptance. Follow `gates/13-tdd-gate.md` in the skill for applicability. For applicable behavior, use RED (expected failure) → GREEN (minimal implementation) → optional cleanup (behavior-preserving). After actual changes, rerun the focused verification. Cleanup is justified by a concrete improvement and stays inside the write_set and directly touched private code: deduplicate, rename, narrow responsibility, tighten types, remove temporary compatibility/dead code. It must not add behavior, change interaction/public API/schema/data ownership, add a runtime/dependency, or widen scope; those require a new task/decision.
-
-   Exploratory UI, style, docs, generated output, or non-behavioral config must not manufacture RED; use the smallest useful visual/type/syntax/smoke check. UI state or interaction still needs its component/journey test. A declared review/evidence step produces only its receipt and never implements a later step.
-
-3. Run the new focused test and this step's exact configured verification. Then run `bash orchestrator/process/harness/verify-task.sh <vertical>:<step>`. Fix the real signal without weakening assertions. If the bounded repair cannot make it green, run `node orchestrator/process/progress.mjs block <vertical>:<step> --reason "<root cause>"` and stop.
-
-4. Stage only this step's files and create one commit. Never include unrelated or main-control-plane changes from another worker. Never push.
-
-5. Run `node orchestrator/process/progress.mjs done <vertical>:<step> --commit <hash>` and stop. Intermediate steps keep their canonical BACKLOG row at `🔨`; only the final declared step may use `✅`.
-
-## Hard boundaries
-
-- Never delete dependencies, pre-mark upstream work done, edit outside write_set, or weaken/skip tests to obtain GREEN. `test-integrity.mjs` enforces the mechanical portion.
-- Product direction, public contract, schema, security/permission, or data ownership ambiguity is a decision—not an implementation guess. Record it through the project's existing decision path, block the step, and stop.
-- One step, one fresh context, one commit. No push, deploy, destructive cleanup, or manual claims of end-to-end completion.
+不得删除依赖、提前标记上游完成、越出租约或跳过失败测试。当前授权未覆盖的产品、公开契约、数据、安全或权限问题交回主会话。工作者不推送、不部署、不做破坏性清理、不自行宣称整体端到端完成。

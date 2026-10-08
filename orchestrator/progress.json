@@ -5366,7 +5366,13 @@
         "orchestrator/review-events.ndjson",
         "backend/drizzle/0129_workbench_artifact_convergence.sql",
         "backend/src/workbench-main-migration.test.ts",
-        "backend/src/migration-convergence.ts"
+        "backend/src/migration-convergence.ts",
+        "orchestrator/process/.skill-version",
+        "orchestrator/process/.vendor-manifest.json",
+        "orchestrator/process/context-plan.mjs",
+        "orchestrator/process/harness/coding-agent.md",
+        "orchestrator/process/harness/evaluator-rebuttal.md",
+        "orchestrator/process/harness/evaluator.md"
       ],
       "read_set": [
         "BACKLOG.md",

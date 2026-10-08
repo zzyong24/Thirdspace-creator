@@ -21,3 +21,7 @@ flowchart LR
 本地main的`0101_workbench_artifact_lineage`与客户端`0128_workspace_convergence`占用同一journal idx101；前者when更早。只并列保留旧journal不足以升级已经执行0128的安装库，旧迁移会被最新when跳过。保留两份原SQL和原when/tag，journal只规范连续idx，另新增`0129_workbench_artifact_convergence.sql`及一个更晚的when，仅重放原0101的`CREATE TABLE/INDEX IF NOT EXISTS`两张表/四索引，字段、外键、非空、版本及原account归属完全不变，不回填或改变任何旧行。先独立复核该精确必要范围，再新增隔离公共`createDb`测试实证：已到0128但缺工作台表的旧库、已执行main0101且有历史行的库、空库，双启表/索引和旧行深等；原收敛迁移原权限和自动保护保持，不访问安装库。产品写集为该新SQL、journal、`backend/src/db.ts`双方schema并存及`backend/src/workbench-main-migration.test.ts`；其他冲突只三方兼容既有功能，不新增服务契约。
 
 实际旧`migration-convergence.ts`严格只允许102个journal条目及冻结历史身份，因此同样进入必要写集：仅增加以上两份准确SQL的tag/when/SHA256固定身份（原0101与新增0129），保留前101共同tag/when/hash及0128原身份，核规范journal精确四段长度/顺序；原历史来源文件完全不改。来源读取、历史账本准入、参考catalog与缓存摘要都包含实际执行的这两份固定身份，安装已跳过0101时允许只存在新0129回执。未知hash/时间/未来迁移、冻结SQL篡改及旧表不兼容仍拒绝，不能泛化为信任任意当前journal或忽略未知表列。隔离测试补未知回执拒绝与真实main0101历史行保留，不修改历史账本伪造旧回执。
+
+## 本轮流程升级来源
+
+技能在本轮入口已更新为3.29.0，项目按AGENTS执行受支持的update/adopt。三处已存在的通用扩展逐字节保留：台账详情外置、ID防撞与独立评审共享SPEC迁移；先独立复核完整候选，再同步本地generic源并执行27项原回归与完整selfcheck（均exit0），不修改vendor guard或伪造stamp。新generic管理文件按原流程更新，项目特有Gate/测试57文件从已提交46d502b精确恢复，避免原adopt替换目录抹掉项目扩展。版本和原manifest真实记录，主评审链及main归档原字节不变。严格receipt迁移仍报告原活动表与暂停池两表歧义；不以自动迁移清掉暂停任务或冒造验收。完整reconcile保留真实结果，不代签原全局旧债。
