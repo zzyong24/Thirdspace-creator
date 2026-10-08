@@ -65,7 +65,7 @@ it('生产动作组合公开全部19个原owner适配器，而非只在工具目
  expect(module).toHaveProperty('createAssistantActionOwners',expect.any(Function));
 });
 it('功能发现按真实域或完整读取/动作ID精确定位，不把操作ID误报成空目录',async()=>{
- const f=await fixture(true,false,{action:assistantActionInputSchema.parse({kind:'project.create',title:'中性目录验收'})}),before=await f.state();
+ const f=await fixture(true,false,{discoverReads:true,action:assistantActionInputSchema.parse({kind:'project.create',title:'中性目录验收'})}),before=await f.state();
  for(const [id,domain] of [['project','project'],['project.create','project'],['topic.create','project'],['projects.list','project'],['knowledge.create','material'],['assets.search','material'],['calendar.plan','calendar'],['automation.createDraft','calendar'],['scheduledJobs.get','calendar'],['canvas.capabilities','canvas']] as const){
   const result=await f.root.host.features(f.ctx,{feature:id,offset:0,limit:1},f.frozen) as {rows:Array<{feature:string;reads:string[];actions:string[]}>;total:number;nextOffset:number|null};
   expect(result.rows.map(row=>row.feature),id).toEqual([domain]);
@@ -82,7 +82,7 @@ it('功能发现按真实域或完整读取/动作ID精确定位，不把操作I
  const unavailable=await unbound.root.host.features(unbound.ctx,{feature:'project.create',offset:0,limit:20},unbound.frozen) as {rows:unknown[];total:number};
  expect(unavailable.rows).toEqual([]);expect(unavailable.total).toBe(0);
 });
-async function fixture(group=false,generate=false,options:{parentDeadlineMs?:number;runtimeDelayMs?:number;wakeFailure?:boolean;attachDelayMs?:number;receiptDelayMs?:number;action?:AssistantActionInput;derivedFailure?:boolean;tagAssets?:boolean;observeTags?:boolean;tagObservationRace?:boolean;workAction?:'script.patch'|'article.save'|'graphic.save';workflowAction?:'publication.prepare'|'calendar.plan'|'account.bind.start';assignedCalendar?:boolean;ownerAction?:'topic.promote'|'radar.collection.create';radarParent?:boolean;beforePromotionCreate?:()=>Promise<void>;currentEditor?:boolean;readKind?:'knowledge.list'|'projects.list'|'artifacts.list'|'artifacts.versions.list'|'candidates.list'|'outputs.publications.list'|'publications.revisions.list'}={}){
+async function fixture(group=false,generate=false,options:{discoverReads?:boolean;parentDeadlineMs?:number;runtimeDelayMs?:number;wakeFailure?:boolean;attachDelayMs?:number;receiptDelayMs?:number;action?:AssistantActionInput;derivedFailure?:boolean;tagAssets?:boolean;observeTags?:boolean;tagObservationRace?:boolean;workAction?:'script.patch'|'article.save'|'graphic.save';workflowAction?:'publication.prepare'|'calendar.plan'|'account.bind.start';assignedCalendar?:boolean;ownerAction?:'topic.promote'|'radar.collection.create';radarParent?:boolean;beforePromotionCreate?:()=>Promise<void>;currentEditor?:boolean;readKind?:'knowledge.list'|'projects.list'|'artifacts.list'|'artifacts.versions.list'|'candidates.list'|'outputs.publications.list'|'publications.revisions.list'}={}){
  let clock=Date.parse(now());const clockNow=()=>new Date(clock).toISOString();
  const wake=vi.fn(async()=>{if(options.wakeFailure)throw Error('提交后唤醒失败');});
 
@@ -207,7 +207,7 @@ async function fixture(group=false,generate=false,options:{parentDeadlineMs?:num
   }
   readInput={request:{kind,...(params?{params}:{}),query:{page:1,pageSize:1}},offset:0,limit:1};
  }
- const name=readInput?'system.read':action?'system.action.propose':generate?'canvas.generate.propose':'canvas.create.propose',definitions=(await prepareChatToolDefinitions(buildChatTools([name],{} as never))).definitions;
+ const name=readInput?'system.read':action?'system.action.propose':generate?'canvas.generate.propose':'canvas.create.propose',definitions=(await prepareChatToolDefinitions(buildChatTools([name,...(options.discoverReads?['system.read']:[])],{} as never))).definitions;
  const definition=definitions[0]!,version=definition.version,parameterSchema=definition.parameters;
  const createRequest={title:"AI中性画布",document:{...emptyCanvasDocument,nodes:[{id:"note-1",type:"text" as const,label:"主旨",text:"中性验收说明",position:{x:0,y:0}}]}};
  const request=readInput??(action?{action:assistantActionInputSchema.parse(action)}:generate?{baseRevision:existingCanvas!.revision,nodeId:'image-node'}:createRequest);
@@ -684,3 +684,111 @@ it.each(['candidates.list','outputs.publications.list','publications.revisions.l
  expect(new Set(ids).size).toBe(3);
  if(kind!=='candidates.list'){expect(JSON.parse(current.text)).toEqual([]);expect(current.nextInput).toBeNull();expect(current.total).toBeNull();}
 });
+
+
+import {readFileSync} from 'node:fs';
+import {projects,contentOutputs,productions,productionEditVersions,productionRenderRequests} from '@creatoros/backend';
+import {createProductionService,createProductionTransport} from '../../modules/production';
+const nativeV1Definition=JSON.parse(readFileSync(new URL('../../../../docs/verification/t1086/system-read-v1.definition.json',import.meta.url),'utf8'));
+async function nativeReadOwnerFixture(scope:'pure-group'|'group-account'|'legacy',catalog:1|2=2){
+ const f=await fixture(scope!=='legacy'),services=f.actionServices(db),ctx={...f.ctx};
+ if(scope==='group-account'){
+  const account=await services.accounts.createAccount(ctx,{platform:'xiaohongshu',accountHandle:`真实读取账号-${++seq}`});
+  ctx.accountId=account.id;ctx.groupVersion=(await services.groups.get(ctx,ctx.groupId!)).version;
+ }
+ const project=await services.projects.createProject(ctx,{title:'原生工程读取当前项目'}),otherProject=await services.projects.createProject(ctx,{title:'同范围其它项目'});
+ const outputs=[];
+ for(const title of ['空视频','旧视频','原生视频'])outputs.push(await services.projects.createOutput(ctx,project.id,{title,contentType:'video'}));
+ const nonVideo=await services.projects.createOutput(ctx,project.id,{title:'非视频',contentType:'image'}),other=await services.projects.createOutput(ctx,otherProject.id,{title:'其它项目视频',contentType:'video'});
+ const production=createProductionService({db,now:now,nextId:p=>`${p}-native-read-${++seq}`,assertOutputOwned:(c,id)=>services.projects.getOutput(c,id)}),transport=createProductionTransport(()=>production);
+ async function request(endpoint:typeof ENDPOINTS[keyof typeof ENDPOINTS],outputId:string,body?:unknown,c=ctx){return z.object({data:z.unknown(),meta:z.unknown().optional()}).parse(await transport.request(endpoint,{params:{outputId},query:undefined,body} as never,c));}
+ const native={editorVersion:3,referenceEditor:{editor:'opencut-classic',revision:'c'.repeat(40),mediaRefs:[],nativeDocument:{version:31,metadata:{id:outputs[2]!.id,name:'原工程中文😀\r\n'.repeat(2400)},currentSceneId:'scene',settings:{fps:{numerator:30,denominator:1}},scenes:[{id:'scene',tracks:{main:{id:'main',type:'video',elements:[]},overlay:[{id:'text-track',type:'text',elements:[{id:'caption',type:'text',startTime:0,duration:120000,trimStart:0,trimEnd:0,params:{text:'真实已保存字幕'}}]}],audio:[]}}]}}};
+ await request(ENDPOINTS.getOutputProduction,outputs[1]!.id);
+ await request(ENDPOINTS.confirmProductionEditingPlan,outputs[1]!.id,{expectedRevision:0,plan:{confirmedAt:now(),sourceArtifactVersionId:null,decisions:{},renderProps:{}}});
+ await request(ENDPOINTS.saveProductionEditor,outputs[2]!.id,{expectedRevision:0,requestId:`native-read-save-${++seq}`,source:'manual',plan:native});
+ const reads: string[]=[];
+ const root=await createAssistantSystemRoot(db,{canvas:f.canvas,actions:{},read:async(c,endpoint,input)=>{
+  reads.push(endpoint.id);
+  const selected=endpoint.id==='outputs.production.editor.get'?transport:services.writes.projects;
+  return z.object({data:z.unknown(),meta:z.unknown().optional()}).parse(await selected.request(endpoint,{params:input.params,query:input.query,body:undefined} as never,c));
+ }},{now});
+ const definitions=(await prepareChatToolDefinitions(buildChatTools(['system.features','system.read'],{assistantReadCatalogVersion:catalog} as never))).definitions;
+ if(catalog===1)definitions[1]=structuredClone(nativeV1Definition);
+ const repo=createAiRepository(db,{userId:ctx.userId,accountId:ctx.accountId??null,groupId:ctx.groupId,now,nextId:p=>`${p}-read-bound-${++seq}`});
+ const conversation=await repo.createConversation({title:'只读原工程',projectId:project.id,scope:'project'}),message=await repo.createMessage(conversation.id,{role:'user',content:'只读当前工程，不创建候选',attachments:[],modelMetadata:{}});
+ const host={...f.host,chatContext:{surface:'project' as const,projectId:project.id},skillSnapshot:{...f.host.skillSnapshot,accountId:ctx.accountId??null,skills:f.host.skillSnapshot.skills.map(skill=>({...skill,effective:{...skill.effective,tools:['system.features','system.read']}}))}};
+ const submitted=await createChatTurnSubmissionService(db,{now,assertProject:(c,id)=>services.projects.getProject(c,id),assemble:async()=>({capability:'copilot.assist',system:'只读当前工程',messages:[{role:'user',content:message.content}],tools:definitions,maxSteps:8,maxOutputTokens:128,hostContext:host})}).submit(ctx,{conversationId:conversation.id,sourceMessageId:message.id});
+ const claimed=(await createPersistentTaskService(db,{now}).claimTask({taskId:submitted.executionTaskId,workerId:'native-read-owner'}))!;
+ const ref={executionTaskId:submitted.executionTaskId,attempt:claimed.lease.attempt,fenceToken:claimed.lease.fenceToken},frozen=await createChatHostContextReader(db,{now}).read(ref);
+ const read=(input:unknown,c:RequestContext=ctx)=>root.host.read(c,input as never,frozen);
+ const state=async()=>({projects:await db.select().from(projects),outputs:await db.select().from(contentOutputs),productions:await db.select().from(productions),versions:await db.select().from(productionEditVersions),renders:await db.select().from(productionRenderRequests),tasks:await db.select().from(aiTasks),results:await db.select().from(aiTaskResults),canvasLinks:await db.select().from(canvasGenerationLinks)});
+ return {ctx,project,otherProject,outputs,nonVideo,other,read,root,frozen,reads,request,native,state,production,ref,canvas:f.canvas};
+}
+const nativeReadResult=z.object({text:z.string(),complete:z.boolean(),nextWindowOffset:z.number().nullable(),observedRevision:z.number().int().nonnegative().optional(),nextInput:z.unknown().nullable(),nextOffset:z.number().nullable()});
+it.each(['pure-group','group-account','legacy'] as const)('T1086 %s 原owner工程状态/归属/当前项目真实读取，零业务写',async scope=>{
+ const f=await nativeReadOwnerFixture(scope),before=await f.state();
+ const directory=await f.root.host.features(f.ctx,{feature:'video',offset:0,limit:20},f.frozen) as {rows:Array<{reads:string[];actions:string[]}>};
+ expect(directory.rows[0]!.reads).toEqual(['projects.outputs.list','outputs.production.editor.get']);expect(directory.rows[0]!.actions).toEqual([]);
+ for(const [index,state] of ['empty','legacy','editable'].entries()){
+  const input={request:{kind:'outputs.production.editor.get',params:{outputId:f.outputs[index]!.id}}},read=nativeReadResult.parse(await f.read(input));
+  const dto=ENDPOINTS.getProductionEditor.response.parse((await f.request(ENDPOINTS.getProductionEditor,f.outputs[index]!.id)).data);
+  expect(read.observedRevision).toBe(dto.revision);
+  if(read.complete)expect(JSON.parse(read.text)).toEqual(dto);
+  expect(dto.state).toBe(state);expect(dto.projectId).toBe(f.project.id);expect(dto.outputId).toBe(f.outputs[index]!.id);
+ }
+ for(const ctx of [{...f.ctx,userId:'foreign-user'},...(f.ctx.groupId?[{...f.ctx,groupId:'foreign-group'}]:[{...f.ctx,accountId:'foreign-legacy-account'}])])await expect(f.read({request:{kind:'outputs.production.editor.get',params:{outputId:f.outputs[0]!.id}}},ctx)).rejects.toThrow();
+ await expect(f.read({request:{kind:'outputs.production.editor.get',params:{outputId:f.other.id}}})).rejects.toThrow('工程与当前真实作品或项目不同');
+ await expect(f.read({request:{kind:'outputs.production.editor.get',params:{outputId:f.nonVideo.id}}})).rejects.toThrow();
+ expect(await f.state()).toEqual(before);
+},1200000);
+it('T1086 原作品分页读到全部真实ID，空项目显示0；旧V1和无read目录不广告新GET',async()=>{
+ const f=await nativeReadOwnerFixture('pure-group'),before=await f.state();
+ let input:unknown={request:{kind:'projects.outputs.list',params:{projectId:f.project.id}},limit:1},seen:string[]=[];
+ for(let page=0;page<10;page++){
+  const read=nativeReadResult.parse(await f.read(input));seen.push(...(JSON.parse(read.text) as Array<{id:string}>).map(row=>row.id));
+  if(read.nextInput===null)break;input=read.nextInput;
+ }
+ expect(new Set(seen).size).toBe(4);expect(seen).toHaveLength(4);expect(seen).toContain(f.outputs[2]!.id);
+ const empty=await f.production.getEditor(f.ctx,f.outputs[0]!.id);expect(empty.revision).toBe(0);expect(empty.productionId).toBeNull();
+ expect(await f.state()).toEqual(before);
+ const legacy=await nativeReadOwnerFixture('legacy',1),legacyBefore=await legacy.state();
+ const directory=await legacy.root.host.features(legacy.ctx,{feature:'video',offset:0,limit:20},legacy.frozen) as {rows:Array<{reads:string[]}>};
+ expect(directory.rows[0]!.reads).toEqual(['projects.outputs.list']);
+ await expect(legacy.read({request:{kind:'outputs.production.editor.get',params:{outputId:legacy.outputs[0]!.id}}})).rejects.toThrow();expect(legacy.reads).toHaveLength(0);
+ const noRead=(await prepareChatToolDefinitions(buildChatTools(['system.features'],{} as never))).definitions;
+ const unavailable=await legacy.root.host.features(legacy.ctx,{feature:'video',offset:0,limit:20},{...legacy.frozen,modelInput:{...legacy.frozen.modelInput,tools:noRead}}) as {rows:Array<{reads:string[]}>};
+ expect(unavailable.rows[0]!.reads).toEqual([]);expect(await legacy.state()).toEqual(legacyBefore);
+ const services=createProjectsService(createProjectRepository(db),{now,nextId:p=>`${p}-empty-read-${++seq}`}),emptyProject=await services.createProject(f.ctx,{title:'没有作品的真实项目'});
+ const emptyRead=nativeReadResult.parse(await f.read({request:{kind:'projects.outputs.list',params:{projectId:emptyProject.id}}}));expect(JSON.parse(emptyRead.text)).toEqual([]);expect(emptyRead.nextOffset).toBeNull();
+},1200000);
+it('T1086 原生长工程固定observedRevision续窗完整还原；原owner合法保存后旧续窗拒绝',async()=>{
+ const f=await nativeReadOwnerFixture('pure-group'),before=await f.state(),request={kind:'outputs.production.editor.get',params:{outputId:f.outputs[2]!.id}};
+ const original=ENDPOINTS.getProductionEditor.response.parse((await f.request(ENDPOINTS.getProductionEditor,f.outputs[2]!.id)).data);
+ let part=nativeReadResult.parse(await f.read({request}));expect(part.complete).toBe(false);expect(part.observedRevision).toBe(1);let text=part.text;
+ for(let page=0;!part.complete&&page<20;page++){
+  part=nativeReadResult.parse(await f.read({request,window:{offsetUtf16:part.nextWindowOffset!,lengthUtf16:12000,expectedRevision:1}}));expect(part.observedRevision).toBe(1);text+=part.text;
+ }
+ expect(part.complete).toBe(true);expect(JSON.parse(text)).toEqual(original);expect(await f.state()).toEqual(before);
+ const first=nativeReadResult.parse(await f.read({request}));
+ const changed=structuredClone(f.native);changed.referenceEditor.nativeDocument.metadata.name='原owner合法保存的新工程版本';
+ await f.request(ENDPOINTS.saveProductionEditor,f.outputs[2]!.id,{expectedRevision:1,requestId:`native-read-next-save-${++seq}`,source:'manual',plan:changed});
+ const afterSave=await f.state();
+ await expect(f.read({request,window:{offsetUtf16:first.nextWindowOffset!,expectedRevision:first.observedRevision!}})).rejects.toThrow('原生工程版本已变化');
+ const reread=nativeReadResult.parse(await f.read({request}));expect(reread.observedRevision).toBe(2);expect(JSON.parse(reread.text)).toEqual(ENDPOINTS.getProductionEditor.response.parse((await f.request(ENDPOINTS.getProductionEditor,f.outputs[2]!.id)).data));
+ expect(await f.state()).toEqual(afterSave);
+},1200000);
+
+it('T1086 原output/production父归组损坏保持原拒绝，错误原owner响应身份不被当成当前工程',async()=>{
+ const f=await nativeReadOwnerFixture('pure-group'),outputId=f.outputs[2]!.id,request={request:{kind:'outputs.production.editor.get',params:{outputId}}};
+ await db.update(contentOutputs).set({groupId:'foreign-parent'}).where(eq(contentOutputs.id,outputId));
+ const corruptedOutput=await f.state();await expect(f.read(request)).rejects.toThrow();expect(await f.state()).toEqual(corruptedOutput);
+ await db.update(contentOutputs).set({groupId:f.ctx.groupId!}).where(eq(contentOutputs.id,outputId));
+ await db.update(productions).set({groupId:'foreign-production'}).where(eq(productions.contentOutputId,outputId));
+ const corruptedProduction=await f.state();await expect(f.read(request)).rejects.toThrow();expect(await f.state()).toEqual(corruptedProduction);
+ await db.update(productions).set({groupId:f.ctx.groupId!}).where(eq(productions.contentOutputId,outputId));
+ const before=await f.state();
+ // 原transport实际返回另一真实作品DTO；只校验错误端口响应身份，没有手工DTO。
+ const redirected=await createAssistantSystemRoot(db,{canvas:f.canvas,actions:{},read:async()=>f.request(ENDPOINTS.getProductionEditor,f.outputs[0]!.id)},{now});
+ await expect(redirected.host.read(f.ctx,request as never,f.frozen)).rejects.toThrow('工程与当前真实作品或项目不同');
+ expect(await f.state()).toEqual(before);
+},1200000);

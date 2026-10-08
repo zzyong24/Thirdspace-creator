@@ -18,12 +18,12 @@ import {aiTasks,executionTasks,and,eq,type Db} from '@creatoros/backend';
 import {isDeepStrictEqual} from 'node:util';
 import {workspaceFilter} from '../../workspace-scope';
 import type {createCreativeCanvasRoot} from '../generation/creative-canvas-root';
-import {assistantReadEndpoints,assistantReadInputSchema,assistantActionProposeInputSchema,assistantActionCandidateSchema,canvasCreateCandidateSchema,canvasCreateProposalInputSchema,assistantFeaturesInputSchema,canvasGenerateProposalInputSchema,canvasGenerateUnsignedCandidateSchema,canvasGenerateCandidateSchema,canvasProposalAdmissionSchema,type CanvasProposalAdmission,type RequestContext,type AssistantActionInput,type AssistantProposalSource} from '@creatoros/contract';
+import {assistantReadEndpoints,assistantReadEndpointsV1,assistantReadInputSchema,assistantReadInputSchemaV1,assistantActionProposeInputSchema,assistantActionCandidateSchema,canvasCreateCandidateSchema,canvasCreateProposalInputSchema,assistantFeaturesInputSchema,canvasGenerateProposalInputSchema,canvasGenerateUnsignedCandidateSchema,canvasGenerateCandidateSchema,canvasProposalAdmissionSchema,type CanvasProposalAdmission,type RequestContext,type AssistantActionInput,type AssistantProposalSource} from '@creatoros/contract';
 import {createChatProposalSourceService,createAssistantActionAdoptionService,createAssistantActionTransport} from '../../modules/ai';
 import {createCreativeCanvasService} from '../../modules/creative-canvas';
 import {buildChatTools,type ChatToolDeps} from '../../modules/ai-runtime/chat-tools';
 import {prepareChatToolDefinitions} from '../../modules/ai-runtime/chat-tool-definitions';
-import type {ChatSystemToolPorts} from '../../modules/ai-runtime/chat-system-tool-host';
+import {matchFrozenAssistantReadCatalog,type ChatSystemToolPorts} from '../../modules/ai-runtime/chat-system-tool-host';
 import {ConflictError} from '../../modules/execution/execution.errors';
 
 type Host=Parameters<ChatSystemToolPorts['propose']>[2];
@@ -217,7 +217,7 @@ const features=[
  {feature:'calendar',title:'日历与自动化',page:'/automations',reads:['group.calendar.','group.cadence.','scheduledJobs.','jobRuns.'],actions:['calendar.plan','automation.createDraft','automation.enable']},
  {feature:'settings',title:'偏好设置',page:'/settings',reads:['settings.preferences.'],actions:['preferences.update']},
  {feature:'canvas',title:'创作画布与生图',page:'/canvases',reads:['canvas.'],actions:[]},
- {feature:'video',title:'视频剪辑',page:'/projects',reads:[],actions:[]},
+ {feature:'video',title:'视频剪辑',page:'/projects',reads:['projects.outputs.list','outputs.production.editor.get'],actions:[]},
 ] as const;
 
 /** 固定应用组合；来源、正式owner和回执沿既有账本，没有第二执行器。 */
@@ -270,22 +270,34 @@ export async function createAssistantSystemRoot(db:Db,ports:AssistantSystemRootP
  const host:ChatSystemToolPorts={
   async features(_ctx,input,frozen){
    const parsed=assistantFeaturesInputSchema.parse(input),availableTools=frozen.modelInput.tools.map(tool=>({name:tool.name,effect:tool.effect,execution:tool.execution??'host'}));
+   const catalog=await matchFrozenAssistantReadCatalog(frozen.modelInput.tools);
+   const readable=catalog===1?assistantReadEndpointsV1:catalog===2?assistantReadEndpoints:{};
    const visible=features.map(feature=>({
     feature:feature.feature,title:feature.title,page:feature.page,
-    reads:Object.keys(assistantReadEndpoints).filter(id=>feature.reads.some(prefix=>id.startsWith(prefix))),
+    reads:Object.keys(readable).filter(id=>feature.reads.some(prefix=>id.startsWith(prefix))),
     actions:feature.actions.filter(kind=>Object.hasOwn(ports.actions,kind)),
     tools:availableTools.filter(tool=>tool.name.startsWith(feature.feature==='canvas'?'canvas.':feature.feature==='video'?'work.editor.':'system.')),
-    prerequisites:feature.feature==='canvas'?'新建可在任何页提出；修改与生成先打开并读取已保存画布':feature.feature==='video'?'打开已导入真实录像的项目视频，读取选区、时间轴与转写后精调':'读取当前账号组真实对象和版本；正式写入需用户采用',
+    prerequisites:feature.feature==='canvas'?'新建可在任何页提出；修改与生成先打开并读取已保存画布':feature.feature==='video'?'先读取当前项目作品，再读取真实视频工程状态；精调需打开已保存视频并冻结真实编辑目标，读取选区、时间轴与转写':'读取当前账号组真实对象和版本；正式写入需用户采用',
    }));
    // SEMANTIC_BOUNDARY_ALLOW:只按固定域或已开放完整read/action ID查目录身份；不做别名、前缀或内容语义匹配，不扩大执行权限。
    const rows=visible.filter(row=>!parsed.feature||row.feature===parsed.feature||row.reads.includes(parsed.feature)||row.actions.some(kind=>kind===parsed.feature));
    const page=rows.slice(parsed.offset,parsed.offset+parsed.limit);return {rows:page,total:rows.length,nextOffset:parsed.offset+page.length<rows.length?parsed.offset+page.length:null};
   },
-  async read(ctx,input){
-   const parsed=assistantReadInputSchema.parse(input),request=parsed.request as {kind:string;params?:unknown;query?:unknown};
-   const endpoint=assistantReadEndpoints[request.kind];if(!endpoint)throw new ConflictError('读取操作不在已审固定目录');
+  async read(ctx,input,frozen){
+   const catalog=frozen?.modelInput?await matchFrozenAssistantReadCatalog(frozen.modelInput.tools):null;
+   const parsed=(catalog===1?assistantReadInputSchemaV1:assistantReadInputSchema).parse(input),request=parsed.request as {kind:string;params?:unknown;query?:unknown};
+   const endpoint=(catalog===2?assistantReadEndpoints:assistantReadEndpointsV1)[request.kind];if(!endpoint)throw new ConflictError('读取操作不在已审固定目录');
    const response=await ports.read(ctx,endpoint,{...(request.params?{params:request.params}:{}),...(request.query?{query:request.query}:{})});
    let data=response.data,readMeta=response.meta??null,total:number|null=null,nextOffset:number|null=null,nextInput:typeof parsed|null=null;
+   let observedRevision:number|undefined;
+   if(request.kind==='outputs.production.editor.get'){
+    const editor=ENDPOINTS.getProductionEditor.response.parse(data),outputId=(request.params as {outputId:string}).outputId;
+    const projectId=frozen.hostContext.chatContext.projectId;
+    if(editor.outputId!==outputId||(projectId!=null&&editor.projectId!==projectId))throw new ConflictError('工程与当前真实作品或项目不同');
+    const expectedRevision='expectedRevision' in (parsed.window??{})?(parsed.window as {expectedRevision?:number}).expectedRevision:undefined;
+    if((parsed.window?.offsetUtf16??0)>0&&editor.revision!==expectedRevision)throw new ConflictError('原生工程版本已变化，请从 offsetUtf16 0 重新读取同一作品');
+    observedRevision=editor.revision;
+   }
    if(request.kind==='assets.get'&&ports.actions['asset.tag']&&ports.assetTags){
     // 只核本适配消费的身份/状态；保留原owner DTO与合法无文件素材的读取行为。
     const asset=z.object({id:z.string().min(1),status:z.enum(['active','archived','deleted','pending'])}).passthrough().parse(data);
@@ -326,7 +338,7 @@ export async function createAssistantSystemRoot(db:Db,ports:AssistantSystemRootP
    const value=z.json().parse(JSON.parse(JSON.stringify(data))),full=JSON.stringify(value),offset=parsed.window?.offsetUtf16??0,length=parsed.window?.lengthUtf16??12000;
    if(offset>full.length)throw new ConflictError('读取窗口超出本次结果，请从原目标重新读取');
    const text=full.slice(offset,offset+length),nextWindowOffset=offset+text.length<full.length?offset+text.length:null;
-   return {kind:'system.read',requestKind:request.kind,text,complete:nextWindowOffset===null,totalUtf16:full.length,nextWindowOffset,total,nextOffset,nextInput,meta:z.json().parse(JSON.parse(JSON.stringify(readMeta)))};
+   return {kind:'system.read',requestKind:request.kind,text,complete:nextWindowOffset===null,totalUtf16:full.length,nextWindowOffset,total,nextOffset,nextInput,meta:z.json().parse(JSON.parse(JSON.stringify(readMeta))),...(observedRevision===undefined?{}:{observedRevision})};
   },
   async propose(ctx,input,frozen){
    const parsed=assistantActionProposeInputSchema.parse(input),action=parsed.action;

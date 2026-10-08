@@ -42,3 +42,50 @@ describe('系统助手真实工具注册',()=>{
   expect(parameters.safeParse({title:'测试',document,userId:'other'}).success).toBe(false);
  });
 });
+
+
+import {readFileSync} from 'node:fs';
+import {createHash} from 'node:crypto';
+import {vi} from 'vitest';
+import {canonicalJson} from '../ai/canonical-json';
+const frozenV1Read=JSON.parse(readFileSync(new URL('../../../../docs/verification/t1086/system-read-v1.definition.json',import.meta.url),'utf8'));
+const systemCtx:RequestContext={userId:'fixed-read-user',groupId:'fixed-read-group',accountId:null,source:'user',requestId:'fixed-read-test'};
+const systemRef:ExecutionRef={executionTaskId:'fixed-read-task',attempt:1,fenceToken:'fixed-read-fence'};
+async function frozenSystemDefinitions(catalog:1|2){
+ const definitions=(await prepareChatToolDefinitions(buildChatTools(['system.features','system.read','canvas.create.propose'],{assistantReadCatalogVersion:catalog} as never))).definitions;
+ if(catalog===1)definitions[1]=structuredClone(frozenV1Read);
+ return definitions;
+}
+it.each([1,2] as const)('T1086 完整固定 V%s 恢复，旧 schema 拒新 GET 且 owner 调用为0',async catalog=>{
+ expect(createHash('sha256').update(canonicalJson(frozenV1Read)).digest('hex')).toBe('0dcaa42c23ff46263e9f45ccf25277a5c9dabc9eda8ea3decc30860993581fea');
+ const definitions=await frozenSystemDefinitions(catalog),before=structuredClone(definitions),read=vi.fn(async()=>({kind:'system.read',text:'[]'}));
+ const reader={read:async()=>({context:systemCtx,modelInput:{tools:definitions},hostContext:{chatContext:{surface:'project',projectId:'fixed-project'}}})};
+ const tools=await createChatSystemToolHost(reader as never,{features:async()=>({kind:'system.features',rows:[]}),read,propose:async()=>{throw Error('禁止候选');},createCanvas:async()=>{throw Error('禁止写入');}} as never)(systemCtx,{} as never,systemRef,new AbortController().signal);
+ const scope={execution:systemRef,aiTaskId:'fixed-ai-task',callId:'fixed-read-call',toolCallId:'fixed-tool-call',signal:new AbortController().signal};
+ expect(await tools['system.read']!.execute!(systemCtx,{request:{kind:'projects.outputs.list',params:{projectId:'fixed-project'}}},scope)).toMatchObject({status:'ok',sideEffect:'none'});
+ read.mockClear();
+ const native={request:{kind:'outputs.production.editor.get',params:{outputId:'fixed-output'}}};
+ expect(tools['system.read']!.parameters.safeParse(native).success).toBe(catalog===2);
+ const outcome=await tools['system.read']!.execute!(systemCtx,native,scope);
+ expect(outcome.status).toBe(catalog===2?'ok':'error');expect(read).toHaveBeenCalledTimes(catalog===2?1:0);
+ if(catalog===1)expect((await prepareChatToolDefinitions(buildChatTools(['system.read'],{assistantReadCatalogVersion:1} as never))).definitions[0]).toEqual(frozenV1Read);
+ expect(definitions).toEqual(before);
+},120000);
+it.each([1,2] as const)('T1086 V%s schema/描述/版本/副作用/其它系统工具任一漂移仍拒绝整套冻结定义',async catalog=>{
+ const original=await frozenSystemDefinitions(catalog);
+ const mutations=[
+  (defs:typeof original)=>{defs[1]!.description+='漂移';},
+  (defs:typeof original)=>{defs[1]!.version+='漂移';},
+  (defs:typeof original)=>{defs[1]!.effect='proposal';},
+  (defs:typeof original)=>{defs[1]!.parameters={...defs[1]!.parameters,additionalProperties:true};},
+  (defs:typeof original)=>{defs[0]!.description+='另一工具漂移';},
+  (defs:typeof original)=>{(defs[1]!.parameters as {properties:{request:{oneOf:unknown[]}}}).properties.request.oneOf.push({type:'object',properties:{kind:{const:'unknown.get'}}});},
+ ];
+ for(const mutate of mutations){
+  const definitions=structuredClone(original);mutate(definitions);
+  const reader={read:async()=>({context:systemCtx,modelInput:{tools:definitions},hostContext:{chatContext:{surface:'topics'}}})};
+  const read=vi.fn(async()=>({kind:'system.read'}));
+  await expect(createChatSystemToolHost(reader as never,{read,features:async()=>({}),propose:async()=>({kind:'unused'}),createCanvas:async()=>({kind:'unused'})} as never)(systemCtx,{} as never,systemRef,new AbortController().signal)).rejects.toThrow('系统工具定义与冻结任务不符');
+  expect(read).not.toHaveBeenCalled();
+ }
+},120000);

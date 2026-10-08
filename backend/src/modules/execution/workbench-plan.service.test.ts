@@ -1,5 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createServer } from "node:http";
+import {createAgenticToolBinding, type AgenticBackendTool} from "./agentic-tool-binding";
+import {createExecutionAgenticToolPorts} from "./execution-agentic-tool-ports.service";
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { resolve } from "node:path";
@@ -25,7 +27,7 @@ import { defineWorkbenchChatTool } from "../ai-runtime/chat-tool-gate";
 import { prepareChatToolDefinitions } from "../ai-runtime/chat-tool-definitions";
 import type { ExecutionRef, WorkerPort } from "@creatoros/contract/execution-worker";
 import type { WorkbenchPlan } from "@creatoros/contract/agent-workbench";
-import { agenticToolOutcomeSchema, workerToolResultReceiptSchema } from "@creatoros/contract/execution-worker";
+import { agenticToolOutcomeSchema, workerToolResultReceiptSchema, chatWorkerInputSchema } from "@creatoros/contract/execution-worker";
 
 const now = () => "2026-09-19T00:00:00.000Z";
 const ctx = {userId: "plan-user", accountId: "plan-account", requestId: "test", source: "user" as const};
@@ -40,17 +42,39 @@ it("仅按execution当前计划顺序核验完整终态失败ID并返回可信�
   expect(()=>validateTerminalPlanFailures({workbenchPlan:{planRevision:1,steps:[step("failed",{status:"failed"}),step("waiting",{status:"waiting_user"})]}},["failed"])).toThrow();
   expect(validateTerminalPlanFailures({workbenchPlan:{planRevision:1,steps:[step("pending")]}},undefined)).toBeNull();
 });
-it("仅将真实账本中同工具同输入的重复不可重试错误作为终态工具失败",()=>{
- const output={status:"error",summary:"参数错误",evidence:[],data:null,error:{code:"invalid_input",retryable:false,recovery:"补齐参数"},continuation:null,sideEffect:"none"};
- const call=(id:string,digest="same")=>({id,sequence:id==="a"?1:2,kind:"tool",status:"settled",parentCallId:null,inputDigest:digest,resultText:JSON.stringify({schemaVersion:1,kind:"tool",toolCallId:`provider-${id}`,toolName:"plan_update",output})});
- expect(agenticToolOutcomeSchema.safeParse(output).success).toBe(true);
- expect(workerToolResultReceiptSchema.safeParse(JSON.parse(call("a").resultText)).success).toBe(true);
- expect(validateTerminalToolFailures([call("a"),call("b")],["a","b"])).toEqual([{toolName:"plan_update",errorCode:"invalid_input"}]);
- expect(()=>validateTerminalToolFailures([call("a"),call("b")],undefined,true)).toThrow();
- expect(()=>validateTerminalToolFailures([call("a"),call("b")],["a"])).toThrow();
- expect(validateTerminalToolFailures([call("a"),call("b","different")])).toBeNull();
- expect(()=>validateTerminalToolFailures([call("a"),call("b","different")],["a","b"])).toThrow();
+function terminalBindingFixture(inputs:unknown[]=[{value:1},{value:1}]){
+ const tool={version:'1',effect:'none' as const,parameters:z.object({value:z.number().optional(),steps:z.array(z.number()).optional()}).strict()};
+ const task={kind:'ai_task',userId:'unit-user',accountId:'unit-account',payload:{modelInput:{kind:'chat.run',executionEngine:'pi',operationKey:'unit-chat',capability:'copilot.assist',userId:'unit-user',accountId:'unit-account',conversationId:'conversation',sourceMessageId:'source',system:'读取',messages:[{role:'user',content:'读取'}],maxSteps:4,maxOutputTokens:128,tools:[{name:'plan.update',version:'1',effect:'none',description:'读取',parameters:{type:'object',properties:{}}}]}}} as unknown as typeof executionTasks.$inferSelect;
+ const binding=createAgenticToolBinding({'plan.update':tool});
+ const output={status:'error',summary:'参数错误',evidence:[],data:null,error:{code:'invalid_input',retryable:false,recovery:'补齐参数'},continuation:null,sideEffect:'none'};
+ const calls:typeof executionCalls.$inferSelect[]=[];
+ inputs.forEach((input,index)=>{
+  const id=`model-${index}`,toolCallId=`provider-${index}`;
+  const model={id,sequence:index*2+1,kind:'model',status:'settled',parentCallId:null,providerResult:{content:[{type:'tool-call',toolCallId,toolName:'plan_update',input:JSON.stringify(input)}],finishReason:{unified:'tool-calls'}}} as typeof executionCalls.$inferSelect;calls.push(model);
+  const bound=binding.bind(task,calls,{modelCallId:id,toolCallId});
+  calls.push({id:`tool-${index}`,sequence:index*2+2,kind:'tool',status:'settled',parentCallId:null,operationKey:bound.operationKey,inputDigest:bound.inputDigest,resultText:JSON.stringify({schemaVersion:1,kind:'tool',toolCallId,toolName:'plan_update',output})} as typeof executionCalls.$inferSelect);
+ });
+ const ids=calls.filter(c=>c.kind==='tool').map(c=>c.id),resolveInput=(call:typeof executionCalls.$inferSelect)=>binding.forCall(task,calls,call);
+ return {calls,ids,resolveInput};
+}
+it('真实 binding 完整调用 digest 不同，同参数不可重试错误仍可终态收口',()=>{
+ const f=terminalBindingFixture();expect(f.calls[1]!.inputDigest).not.toBe(f.calls[3]!.inputDigest);
+ expect(validateTerminalToolFailures(f.calls,f.ids,true,f.resolveInput)).toEqual([{toolName:'plan_update',errorCode:'invalid_input'}]);
+ expect(()=>validateTerminalToolFailures(f.calls,undefined,true,f.resolveInput)).toThrow();
+ expect(()=>validateTerminalToolFailures(f.calls,[f.ids[0]!],true,f.resolveInput)).toThrow();
 });
+it.each([[{value:1},{value:2}],[{steps:[1,2]},{steps:[2,1]}],[{value:1},{value:1,steps:[]}]])('不同真实绑定参数不进入同参终态组 %#',(...inputs)=>{
+ const f=terminalBindingFixture(inputs);expect(validateTerminalToolFailures(f.calls,undefined,true,f.resolveInput)).toBeNull();expect(()=>validateTerminalToolFailures(f.calls,f.ids,true,f.resolveInput)).toThrow();
+});
+it.each(['digest','providerInput','toolName','toolCallId','result','untrusted'] as const)('篡改 %s 不能生成终态失败摘要',mode=>{
+ const f=terminalBindingFixture(),call=f.calls[3]!;
+ if(mode==='digest')call.inputDigest='forged';
+ if(mode==='providerInput')(f.calls[2]!.providerResult as {content:Array<{input:string}>}).content[0]!.input=JSON.stringify({value:2});
+ if(mode==='result')call.resultText='broken';
+ if(mode==='toolName'||mode==='toolCallId'){const receipt=JSON.parse(call.resultText!);receipt[mode]='forged';call.resultText=JSON.stringify(receipt);}
+ expect(()=>validateTerminalToolFailures(f.calls,f.ids,true,mode==='untrusted'?undefined:f.resolveInput)).toThrow();
+});
+
 it("旧stop的历史提示将任意状态后继root计为后继，忽略工具子调用",()=>{
  for(const status of ["settled","rejected","superseded","reserved","started","unknown"]){
   expect(hasLaterChatRoot([{kind:"model",parentCallId:null,sequence:12,status}],10)).toBe(true);
@@ -406,4 +430,122 @@ describe("T-1005 计划作为原 execution_tasks 的投影", () => {
       await new Promise<void>(done => server.close(() => done()));
     }
   }, 30_000);
+});
+
+
+// T1088 补充矩阵：每条调用均由原持久任务、generation/tool ports 和账本产生。
+// model/provider 是确定性夹具；inputDigest/operationKey 和 validationOutcome 不手造。
+describe("T1088 真实账本绑定的终态签名矩阵", () => {
+  let matrixDb: Db, closeMatrixDb: () => Promise<void>, matrixSequence = 0;
+  const matrixBudget = {maxCalls: 12, maxTokens: 10000, deadlineMs: 120000};
+  beforeAll(async () => {
+    const opened = await createDb(); matrixDb = opened.db; closeMatrixDb = () => opened.client.close();
+  }, 120000);
+  afterAll(async () => closeMatrixDb?.(), 120000);
+  type MatrixEntry = {input: unknown; tool?: "fixture.read" | "fixture.other"; code?: "invalid_input" | "permission"};
+  async function matrixFixture(entries: MatrixEntry[]) {
+    const key = `terminal-matrix-${++matrixSequence}`;
+    const schema = z.object({value: z.number(), meta: z.record(z.string(), z.number()).optional(), steps: z.array(z.number()).optional()}).strict();
+    const tools: Record<string, AgenticBackendTool> = {
+      "fixture.read": {version: "1", parameters: schema, effect: "none"},
+      "fixture.other": {version: "1", parameters: schema, effect: "none"},
+    };
+    const frozen = chatWorkerInputSchema.parse({kind: "chat.run", executionEngine: "pi", operationKey: key,
+      capability: "copilot.assist", userId: ctx.userId, accountId: ctx.accountId, conversationId: `${key}-conversation`, sourceMessageId: `${key}-source`,
+      system: "只读测试", messages: [{role: "user", content: "读取"}], maxSteps: 8, maxOutputTokens: 128,
+      tools: Object.keys(tools).map(name => ({name, version: "1", effect: "none", description: "只读夹具", parameters: {
+        type: "object", properties: {value: {type: "number"}, meta: {type: "object", additionalProperties: {type: "number"}}, steps: {type: "array", items: {type: "number"}}},
+        required: ["value"], additionalProperties: false,
+      }})),
+    });
+    const tasks = createPersistentTaskService(matrixDb, {now});
+    const created = await tasks.enqueue(ctx, {kind: "ai_task", ownerType: "ai_task", ownerId: key, idempotencyKey: key,
+      executionBudget: matrixBudget, payload: {modelInput: frozen}});
+    const claimed = await tasks.claimTask({taskId: created.id, workerId: "terminal-matrix-worker"});
+    if (!claimed) throw new Error("matrix claim missing");
+    const ref: ExecutionRef = {executionTaskId: created.id, attempt: claimed.lease.attempt, fenceToken: claimed.lease.fenceToken};
+    const ledger = createExecutionCallLedgerService(matrixDb, {now, budget: matrixBudget});
+    const generation = createExecutionGenerationPorts(matrixDb, {now, budget: matrixBudget});
+    const ports = createExecutionAgenticToolPorts(matrixDb, {now, budget: matrixBudget, tools});
+    const binding = createAgenticToolBinding(tools), ids: string[] = [];
+    for (const [index, entry] of entries.entries()) {
+      const toolCallId = `${key}-provider-${index}`, name = entry.tool ?? "fixture.read";
+      const model = await generation.reserveGenerationCall(ref, {operationKey: `${key}/model/${index + 1}`, request: {maxOutputTokens: 128}});
+      await ledger.start(ref, model.callId);
+      await generation.settleGenerationCall(ref, {callId: model.callId, status: "settled", usage: {inputTokens: 1, outputTokens: 1}, providerResult: {
+        content: [{type: "tool-call", toolCallId, toolName: name.replaceAll(".", "_"), input: JSON.stringify(entry.input)}],
+        finishReason: {unified: "tool-calls"}, usage: {inputTokens: {total: 1}, outputTokens: {total: 1}}, warnings: [],
+      }});
+      const reserved = await ports.reserve(ref, {modelCallId: model.callId, toolCallId});
+      await ports.start(ref, {callId: reserved.callId});
+      const output = reserved.validationOutcome ?? agenticToolOutcomeSchema.parse({status: "error", summary: "确定性宿主拒绝", evidence: [], data: null,
+        error: {code: entry.code ?? "invalid_input", retryable: false, recovery: "修正后继续"}, continuation: null, sideEffect: "none"});
+      await ports.settle(ref, {callId: reserved.callId, status: "settled", output});
+      ids.push(reserved.callId);
+    }
+    const read = async () => {
+      const [task] = await matrixDb.select().from(executionTasks).where(eq(executionTasks.id, created.id));
+      const calls = await matrixDb.select().from(executionCalls).where(eq(executionCalls.executionTaskId, created.id)).orderBy(executionCalls.sequence);
+      if (!task) throw new Error("matrix task missing");
+      return {task, calls};
+    };
+    const state = await read();
+    return {...state, ids, tools, read, resolveInput: (call: typeof executionCalls.$inferSelect) => binding.forCall(state.task, state.calls, call)};
+  }
+
+  it("对象仅键序不同仍是真实同参；每条原调用完整身份 digest 各自不同", {timeout: 1200000, retry: 0}, async () => {
+    const f = await matrixFixture([{input: {value: 1, meta: {a: 1, b: 2}}}, {input: {meta: {b: 2, a: 1}, value: 1}}]);
+    const calls = f.calls.filter(call => f.ids.includes(call.id));
+    expect(calls).toHaveLength(2); expect(calls[0]!.inputDigest).not.toBe(calls[1]!.inputDigest);
+    const bindings = calls.map(call => f.resolveInput(call));
+    expect(JSON.stringify(bindings[0]!.input)).not.toBe(JSON.stringify(bindings[1]!.input));
+    expect(bindings[0]!.input).toEqual(bindings[1]!.input);
+    expect(validateTerminalToolFailures(f.calls, f.ids, true, f.resolveInput)).toEqual([{toolName: "fixture_read", errorCode: "invalid_input"}]);
+  });
+
+  it.each(["error-code", "tool"] as const)("不同真实 %s 不能合并终态组", {timeout: 1200000, retry: 0}, async mode => {
+    const f = await matrixFixture([{input: {value: 1}}, {input: {value: 1}, ...(mode === "error-code" ? {code: "permission" as const} : {tool: "fixture.other" as const})}]);
+    const bindings = f.calls.filter(call => f.ids.includes(call.id)).map(call => f.resolveInput(call));
+    expect(bindings).toHaveLength(2); expect(bindings[0]!.input).toEqual(bindings[1]!.input);
+    if (mode === "tool") expect(bindings[0]!.executionToolName).not.toBe(bindings[1]!.executionToolName);
+    const before = await f.read();
+    expect(validateTerminalToolFailures(f.calls, undefined, true, f.resolveInput)).toBeNull();
+    expect(() => validateTerminalToolFailures(f.calls, f.ids, true, f.resolveInput)).toThrow();
+    expect(await f.read()).toEqual(before);
+  });
+
+  it.each(["version", "effect", "execution"] as const)("同一冻结任务的 %s registry 漂移由真实 forCall 拒绝", {timeout: 1200000, retry: 0}, async mode => {
+    const f = await matrixFixture([{input: {value: 1}}, {input: {value: 1}}]);
+    const original = f.tools["fixture.read"]!;
+    const changed: AgenticBackendTool = {...original, ...(mode === "version" ? {version: "2"} : mode === "effect" ? {effect: "proposal" as const} : {execution: "worker.web-read" as const})};
+    const drifted = createAgenticToolBinding({...f.tools, "fixture.read": changed});
+    const resolver = (call: typeof executionCalls.$inferSelect) => drifted.forCall(f.task, f.calls, call);
+    const before = await f.read();
+    expect(() => resolver(f.calls.find(call => call.id === f.ids[0])!)).toThrow();
+    expect(() => validateTerminalToolFailures(f.calls, f.ids, true, resolver)).toThrow();
+    expect(await f.read()).toEqual(before);
+  });
+
+  it.each(["summary", "code", "recovery", "evidence", "data", "continuation"] as const)("机械 validationOutcome 的 %s 深等篡改不能冒充原回执", {timeout: 1200000, retry: 0}, async field => {
+    const f = await matrixFixture([{input: {value: "非法类型"}}, {input: {value: "非法类型"}}]);
+    const target = f.calls.find(call => call.id === f.ids[1])!;
+    const bound = f.resolveInput(target);
+    expect(bound.validationOutcome).toMatchObject({status: "error", sideEffect: "none", error: {code: "invalid_input", retryable: false}});
+    const receipt = workerToolResultReceiptSchema.parse(JSON.parse(target.resultText!));
+    expect(receipt.output).toEqual(bound.validationOutcome);
+    const output = agenticToolOutcomeSchema.parse(receipt.output);
+    if (field === "summary") output.summary += "伪造";
+    if (field === "code") output.error = {...output.error!, code: "permission"};
+    if (field === "recovery") output.error = {...output.error!, recovery: "伪造恢复建议"};
+    if (field === "evidence") output.evidence = [{entityId: "forged-evidence"}];
+    if (field === "data") output.data = {forged: true};
+    if (field === "continuation") output.continuation = {evidenceRef: "forged-evidence", nextOffset: 1, totalChars: 2};
+    await matrixDb.update(executionCalls).set({resultText: JSON.stringify({...receipt, output})}).where(eq(executionCalls.id, target.id));
+    const current = await f.read();
+    const resolver = (call: typeof executionCalls.$inferSelect) => createAgenticToolBinding(f.tools).forCall(current.task, current.calls, call);
+    expect(resolver(current.calls.find(call => call.id === target.id)!).validationOutcome).toEqual(bound.validationOutcome);
+    const before = await f.read();
+    expect(() => validateTerminalToolFailures(current.calls, f.ids, true, resolver)).toThrow();
+    expect(await f.read()).toEqual(before); expect(before.task.status).toBe("running");
+  });
 });

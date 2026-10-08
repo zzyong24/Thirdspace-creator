@@ -20,6 +20,7 @@ import {analyticsOperations} from "../operations/analytics";
 import {pagesOperations} from "../operations/pages";
 import {workCompositionsOperations,momentsOperations} from "../operations/work-compositions";
 import {creativeCanvasOperations} from "../operations/creative-canvas";
+import {productionOperations} from "../operations/production";
 import type {Endpoint} from "../endpoint-definition";
 
 /** SEMANTIC_BOUNDARY_ALLOW:仅按已审原操作身份查合同；不推断意图、不授予写权限。 */
@@ -36,12 +37,15 @@ const readIds=new Set([
  "group.calendar.list","group.cadence.get","scheduledJobs.list","scheduledJobs.get","jobRuns.listByJob","jobRuns.get","settings.preferences.get",
  "canvas.list","canvas.get","canvas.capabilities","canvas.node.tasks","canvas.generations.material.get",
 ]);
-export const assistantReadEndpoints:Readonly<Record<string,Endpoint>>=Object.freeze(Object.fromEntries([
+export const assistantReadEndpointsV1:Readonly<Record<string,Endpoint>>=Object.freeze(Object.fromEntries([
  projectsOperations,candidateOperations,artifactsOperations,articlesOperations,graphicPostsOperations,knowledgeOperations,
  positioningOperations,publishingOperations,contentCalendarOperations,settingsOperations,schedulingOperations,assetsOperations,
  intelligenceOperations,platformAccountOperations,accountGroupOperations,analyticsOperations,pagesOperations,workCompositionsOperations,momentsOperations,creativeCanvasOperations,
 ].flatMap(operations=>Object.values(operations)).filter(endpoint=>readIds.has(endpoint.id)&&endpoint.method==="GET").map(endpoint=>[endpoint.id,endpoint])));
-const readBranches=Object.values(assistantReadEndpoints).map(endpoint=>{
+/** 代码内固定目录，恢复旧任务不能接受任务自报端点或 schema。 */
+export type AssistantReadCatalogVersion=1|2;
+export const assistantReadEndpoints:Readonly<Record<string,Endpoint>>=Object.freeze({...assistantReadEndpointsV1,[productionOperations.getProductionEditor.id]:productionOperations.getProductionEditor});
+function readBranches(endpoints:Readonly<Record<string,Endpoint>>){return Object.values(endpoints).map(endpoint=>{
  const shape:Record<string,z.ZodType>={kind:z.literal(endpoint.id)};
  if(endpoint.params)shape.params=endpoint.params instanceof z.ZodObject?endpoint.params.strict():endpoint.params;
  if(endpoint.query){
@@ -50,9 +54,16 @@ const readBranches=Object.values(assistantReadEndpoints).map(endpoint=>{
   const defaults=query.safeParse({});shape.query=defaults.success?query.default(defaults.data):query;
  }
  return z.object(shape).strict();
+});}
+export const assistantReadRequestSchemaV1=z.discriminatedUnion('kind',readBranches(assistantReadEndpointsV1) as [z.ZodObject,...z.ZodObject[]]);
+export const assistantReadRequestSchema=z.discriminatedUnion('kind',readBranches(assistantReadEndpoints) as [z.ZodObject,...z.ZodObject[]]);
+// V1 的字段、顺序和默认值保持已冻结 JSON schema 原样。
+export const assistantReadInputSchemaV1=z.object({request:assistantReadRequestSchemaV1,window:z.object({offsetUtf16:z.number().int().nonnegative().default(0),lengthUtf16:z.number().int().min(1).max(20000).default(12000)}).strict().optional(),offset:z.number().int().nonnegative().default(0),limit:z.number().int().min(1).max(50).default(20)}).strict();
+export const assistantReadInputSchema=z.object({request:assistantReadRequestSchema,window:z.object({offsetUtf16:z.number().int().nonnegative().default(0),lengthUtf16:z.number().int().min(1).max(20000).default(12000),expectedRevision:z.number().int().nonnegative().optional()}).strict().optional(),offset:z.number().int().nonnegative().default(0),limit:z.number().int().min(1).max(50).default(20)}).strict().superRefine((input,ctx)=>{
+ const continuation=input.request.kind==='outputs.production.editor.get'&&(input.window?.offsetUtf16??0)>0;
+ if(continuation&&input.window?.expectedRevision===undefined)ctx.addIssue({code:'custom',path:['window','expectedRevision'],message:'原生工程续窗必须复制首读 observedRevision'});
+ if(!continuation&&input.window?.expectedRevision!==undefined)ctx.addIssue({code:'custom',path:['window','expectedRevision'],message:'expectedRevision 仅用于同一原生工程的非零续窗'});
 });
-export const assistantReadRequestSchema=z.discriminatedUnion('kind',readBranches as [z.ZodObject,...z.ZodObject[]]);
-export const assistantReadInputSchema=z.object({request:assistantReadRequestSchema,window:z.object({offsetUtf16:z.number().int().nonnegative().default(0),lengthUtf16:z.number().int().min(1).max(20000).default(12000)}).strict().optional(),offset:z.number().int().nonnegative().default(0),limit:z.number().int().min(1).max(50).default(20)}).strict();
 export type AssistantReadInput=z.infer<typeof assistantReadInputSchema>;
 export const assistantFeaturesInputSchema=z.object({feature:z.string().min(1).optional(),offset:z.number().int().nonnegative().default(0),limit:z.number().int().min(1).max(20).default(14)}).strict();
 

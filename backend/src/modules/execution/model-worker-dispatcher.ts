@@ -1,3 +1,5 @@
+import {createAgenticToolBinding} from "./agentic-tool-binding";
+import {chatWorkerInputSchema} from "@creatoros/contract/execution-worker";
 import {createExecutionMomentsModelService} from "../moments";
 import {createAssetAsrPortInvoker} from './asset-asr-port-invoker';
 import type {createAssetAsrOwner} from './asset-asr-owner.service';
@@ -294,7 +296,18 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
         const work=port==="failChatHooks"?chatTools.hooks.fail(ref,raw,signal):port==="restoreChatHooks"?chatTools.hooks.restore(ref,raw,signal):port==="prepareChatHooks"?chatTools.hooks.prepare(ref,raw,signal):port==="reserveChatHooksModel"?chatTools.hooks.reserve(ref,raw,signal):port==="startChatHooksModel"?chatTools.hooks.start(ref,raw,signal):chatTools.hooks.complete(ref,raw,signal);
         scope.pending.add(work);try{return await work;}finally{scope.pending.delete(work);}
       }
-      if(port==="commitChatResult")return chatReplies.commitResult(ref,raw);
+      if(port==="commitChatResult"){
+        // 只复用此租约已装配且 validateTask 通过的目录；不再初始化工具或嵌套 admission。
+        const scope=activeTools.get(executionKey(ref));
+        const tools=scope?.chatReady&&scope.externalToolMap?await scope.externalToolMap:undefined;
+        const binding=tools?createAgenticToolBinding(tools):undefined;
+        return chatReplies.commitResult(ref,raw,binding?(task,rows,call)=>{
+          scope!.controller.signal.throwIfAborted();
+          const frozen=chatWorkerInputSchema.parse((task.payload as Record<string,unknown>).modelInput);
+          for(const definition of frozen.tools){const tool=tools![definition.name];if(!tool||tool.version!==definition.version||tool.effect!==definition.effect||(tool.execution??"host")!==(definition.execution??"host"))throw Error("CHAT_TERMINAL_FROZEN_TOOL_MISMATCH");}
+          return binding.forCall(task,rows,call);
+        }:undefined);
+      }
       if(port==="readWorkbenchPlan")return workbenchPlans.status(ref,raw);
       if(port==="saveWorkbenchPlan")return workbenchPlans.save(ref,workerPortInputSchemas.saveWorkbenchPlan.parse(raw));
       if(port==="resolveWorkbenchScreenshot"&&deps.executionMode==="chat.run"){

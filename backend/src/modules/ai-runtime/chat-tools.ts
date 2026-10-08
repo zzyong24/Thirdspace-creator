@@ -20,7 +20,7 @@ import type { DetectToolsResult } from "./local-env-probe";
 // [T-326·RT-H05] 不可信外部内容定界包裹(spotlighting 缓解提示词注入;非根治,见该模块头注释)。
 import { wrapUntrustedContent } from "./untrusted-content";
 import { ChatToolUserError } from "./chat-tool-errors";
-import {assistantFeaturesInputSchema,assistantReadInputSchema,assistantActionProposeInputSchema,canvasCreateProposalInputSchema,canvasGenerateProposalInputSchema,canvasProposalOperationSchema} from '@creatoros/contract';
+import {assistantFeaturesInputSchema,assistantReadInputSchema,assistantReadInputSchemaV1,type AssistantReadCatalogVersion,assistantActionProposeInputSchema,canvasCreateProposalInputSchema,canvasGenerateProposalInputSchema,canvasProposalOperationSchema} from '@creatoros/contract';
 import {z} from 'zod';
 import { formatErrorDiagnostic } from "./error-diagnostics";
 
@@ -60,6 +60,8 @@ function safeFinalSourceUrl(value: string | undefined): string | undefined {
 // 路由在请求期解析(resolveModelSpec + assembleCreativeContext)后注入,故工具本身无副作用、
 // 不碰持久化、不直连模块 repo —— 可单测(注入 fake 的 generate/enrich 实现即可)。
 export interface ChatToolDeps {
+  /** 仅宿主恢复代码内固定旧协议；新任务默认 V2，不接受自由 schema。 */
+  assistantReadCatalogVersion?:AssistantReadCatalogVersion;
   assistantSystem?:{
     features:(input:import('zod').z.infer<typeof assistantFeaturesInputSchema>)=>Promise<unknown>;
     read:(input:import('zod').z.infer<typeof assistantReadInputSchema>)=>Promise<{kind:string}>;
@@ -4121,7 +4123,7 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
       execute:async input=>{if(!deps.assistantSystem)throw new ChatToolUserError('能力读取端口未装配，请保留当前任务并检查客户端服务');return {kind:'system.features',...await deps.assistantSystem.features(input) as object};},
     },deps.humanizeError),
     "system.read":defineChatTool("system.read",{
-      description:'从固定 request.kind 选择原功能的只读操作。params/query严格使用合同；分页最多50项，长内容通过window分页，complete=false时继续读同一目标。不得猜测ID、账号或统计；文章/剪辑当前稿优先work.editor.read。',inputSchema:assistantReadInputSchema,
+      description:'从固定 request.kind 选择原功能的只读操作。params/query严格使用合同；分页最多50项，长内容通过window分页，complete=false时继续读同一目标。不得猜测ID、账号或统计；文章/剪辑当前稿优先work.editor.read。',inputSchema:deps.assistantReadCatalogVersion===1?assistantReadInputSchemaV1:assistantReadInputSchema,
       execute:async input=>{if(!deps.assistantSystem)throw new ChatToolUserError('业务读取端口未装配，请保留当前任务并检查客户端服务');return deps.assistantSystem.read(input);},
     },deps.humanizeError),
     "system.action.propose":defineChatTool("system.action.propose",{

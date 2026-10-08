@@ -1,3 +1,4 @@
+import type {TerminalToolBinding,TerminalToolInputResolver} from "../execution/workbench-plan.service";
 import {requireWorkspace,workspaceFilter,assertWritableWorkspace} from "../../workspace-scope";
 import { partitionExecutionCalls } from "../execution/execution-call-tree";
 import { and, asc, eq, aiTasks, aiMessages, aiConversations, aiTaskResults, executionTasks, executionCalls, executionStreamEvents, type Db } from "@creatoros/backend";
@@ -15,10 +16,10 @@ const object = (value: unknown): Record<string, unknown> => value && typeof valu
 export function createChatTurnCompletionService(db: Db, deps: {
     now?: () => string;
     validateTerminalPlanFailures?(payload: unknown, candidateStepIds?: string[], requireFailureIds?: boolean): TerminalPlanIssue[] | null;
-    validateTerminalToolFailures?(calls:ReadonlyArray<typeof executionCalls.$inferSelect>,candidateCallIds?:string[],requireFailureIds?:boolean):TerminalToolFailure[]|null;
+    validateTerminalToolFailures?(calls:ReadonlyArray<typeof executionCalls.$inferSelect>,candidateCallIds?:string[],requireFailureIds?:boolean,resolveInput?:TerminalToolInputResolver):TerminalToolFailure[]|null;
 } = {}) {
     const now = deps.now ?? (() => new Date().toISOString()), leases = createExecutionLeaseService(db, { now });
-    return { async commitResult(ref: ExecutionRef, raw: unknown) {
+    return { async commitResult(ref: ExecutionRef, raw: unknown, trustedBinding?:(task:typeof executionTasks.$inferSelect,calls:Array<typeof executionCalls.$inferSelect>,call:typeof executionCalls.$inferSelect)=>TerminalToolBinding) {
             const request = workerPortInputSchemas.commitChatResult.parse(raw);
             return leases.withLease(ref, "settlement", async ({ tx, task, context }) => {
                 if (task.kind !== "ai_task" || task.ownerType !== "ai_task")
@@ -49,7 +50,7 @@ export function createChatTurnCompletionService(db: Db, deps: {
                 const providerFinishReason=workerProviderReceiptSchema.parse(lastModel.providerResult).finishReason.unified;
                 const latestSettledStop=latestRoot?.id===lastModel.id && latestRoot.status==="settled" && providerFinishReason==="stop";
                 let terminalFailureTitles=policyVersion===1?deps.validateTerminalPlanFailures!(payload,request.partialPlanFailureStepIds,latestSettledStop):null;
-                const terminalToolFailures=policyVersion===1?deps.validateTerminalToolFailures!(calls,request.terminalToolFailureCallIds,latestSettledStop):null;
+                const terminalToolFailures=policyVersion===1?deps.validateTerminalToolFailures!(calls,request.terminalToolFailureCallIds,latestSettledStop,trustedBinding?call=>trustedBinding(task,calls,call):undefined):null;
                 if(terminalFailureTitles && request.partialPlanFailureStepIds && !latestSettledStop)throw new ConflictError("终态失败计划必须由最新settled stop回执收口");
                 if(terminalToolFailures && request.terminalToolFailureCallIds && !latestSettledStop)throw new ConflictError("终态工具失败必须由最新settled stop回执收口");
                 if(terminalFailureTitles && !request.partialPlanFailureStepIds){

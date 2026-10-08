@@ -1,3 +1,5 @@
+import type {createAgenticToolBinding} from "./agentic-tool-binding";
+import {canonicalJson} from "../ai/canonical-json";
 import { isDeepStrictEqual } from "node:util";
 import { createHash } from "node:crypto";
 import { and, eq, executionCalls, executionTasks, OwnershipError, type Db } from "@creatoros/backend";
@@ -126,19 +128,34 @@ export function validateTerminalPlanFailures(payload: unknown, candidateStepIds?
     throw new ConflictError("未成功步骤引用与当前计划不一致");
   return incomplete.map(({stepId,title,status}) => ({stepId,title,status:status as TerminalPlanIssue["status"]}));
 }
-type TerminalToolCall = {id:string;sequence:number;kind:string;status:string;parentCallId:string|null;inputDigest:string;resultText:string|null};
+type TerminalToolCall = typeof executionCalls.$inferSelect;
+export type TerminalToolBinding = ReturnType<ReturnType<typeof createAgenticToolBinding>["forCall"]>;
+export type TerminalToolInputResolver = (call:TerminalToolCall)=>TerminalToolBinding;
 export type TerminalToolFailure = {toolName:string;errorCode:string};
 /** 只把相同冻结工具/输入的重复不可重试失败认作终态；不从模型正文判断交付完整性。 */
-export function validateTerminalToolFailures(calls:ReadonlyArray<TerminalToolCall>,candidateCallIds?:string[],requireFailureIds=false):TerminalToolFailure[]|null{
+export function validateTerminalToolFailures(calls:ReadonlyArray<TerminalToolCall>,candidateCallIds?:string[],requireFailureIds=false,resolveInput?:TerminalToolInputResolver):TerminalToolFailure[]|null{
+ const eligible=calls.flatMap(call=>{
+  if(call.kind!=="tool"||call.parentCallId!==null||call.status!=="settled"||!call.resultText)return [];
+  let receipt:typeof workerToolResultReceiptSchema._output;
+  try{receipt=workerToolResultReceiptSchema.parse(JSON.parse(call.resultText));}catch{return [];}
+  const output=agenticToolOutcomeSchema.parse(receipt.output);
+  if(output.status!=="error"||output.sideEffect!=="none"||output.error?.retryable!==false)return [];
+  return [{call,receipt,output}];
+ });
+ // SEMANTIC_BOUNDARY_ALLOW: 单笔或不同原工具/错误码不可能组成重复失败；保留原合法纠错完成路径，不判断参数含义。
+ if(!resolveInput&&!candidateCallIds){
+  const coarseCounts=new Map<string,number>();
+  for(const {receipt,output} of eligible){const key=canonicalJson([receipt.toolName,output.error!.code]);coarseCounts.set(key,(coarseCounts.get(key)??0)+1);}
+  if(![...coarseCounts.values()].some(count=>count>=2))return null;
+ }
  const groups=new Map<string,{callIds:string[];failure:TerminalToolFailure}>();
- for(const call of calls){
-  if(call.kind!=="tool"||call.parentCallId!==null||call.status!=="settled"||!call.resultText)continue;
-  try{
-   const receipt=workerToolResultReceiptSchema.parse(JSON.parse(call.resultText)),output=agenticToolOutcomeSchema.parse(receipt.output);
-   if(output.status!=="error"||output.sideEffect!=="none"||output.error?.retryable!==false)continue;
-   const failure={toolName:receipt.toolName,errorCode:output.error.code},signature=JSON.stringify([receipt.toolName,call.inputDigest,failure.errorCode]);
-   const group=groups.get(signature)??{callIds:[],failure};group.callIds.push(call.id);groups.set(signature,group);
-  }catch{/* 未知或损坏回执不能转成终态失败摘要。 */}
+ for(const {call,receipt,output} of eligible){
+  if(!resolveInput)throw new ConflictError("终态工具失败缺少可信绑定");
+  const bound=resolveInput(call);
+  if(bound.inputDigest!==call.inputDigest||receipt.toolName!==bound.toolName||receipt.toolCallId!==bound.toolCallId||(bound.validationOutcome&&!isDeepStrictEqual(output,bound.validationOutcome)))throw new ConflictError("终态工具回执与真实绑定不符");
+  // SEMANTIC_BOUNDARY_ALLOW: 只比较已验证的 JSON 参数、执行位置和错误码，不做创作或含义判断。
+  const failure={toolName:receipt.toolName,errorCode:output.error!.code},signature=canonicalJson([bound.executionToolName,bound.execution,bound.effect,bound.input,failure.errorCode]);
+  const group=groups.get(signature)??{callIds:[],failure};group.callIds.push(call.id);groups.set(signature,group);
  }
  const terminal=[...groups.values()].filter(group=>group.callIds.length>=2);
  if(!candidateCallIds){if(terminal.length&&requireFailureIds)throw new ConflictError("重复不可重试工具失败缺少回执引用");return null;}

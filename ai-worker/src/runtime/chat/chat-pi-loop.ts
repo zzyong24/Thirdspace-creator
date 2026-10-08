@@ -39,6 +39,8 @@ export interface ChatPiLoopOptions {
   /** 仅由宿主冻结的新运行策略启用；旧账本回放必须沿用原请求序列。 */
   recoverMissingFinal?:boolean;
   terminalToolFailurePolicyVersion?:1;
+  /** 原 reserveAgenticTool 已绑定并结算的参数；SDK args 只是空占位。 */
+  terminalToolFailureInput?(toolCallId:string):unknown;
   /** 由宿主读取原 execution_tasks 计划，不能由模型文本推断完成。 */
   readPlanStatus?():Promise<ChatPlanStatus|null>;
   onChunk?(chunk:UIMessageChunk):Promise<void>;
@@ -216,7 +218,9 @@ export async function runChatPiLoop(options:ChatPiLoopOptions){
         const failureRecord=output&&typeof output==="object"&&!Array.isArray(output)?output as Record<string,unknown>:{},errorRecord=failureRecord.error&&typeof failureRecord.error==="object"&&!Array.isArray(failureRecord.error)?failureRecord.error as Record<string,unknown>:{};
         if(options.terminalToolFailurePolicyVersion===1 && failureRecord.status==="error" && failureRecord.sideEffect==="none" && errorRecord.retryable===false && typeof errorRecord.code==="string"){
           const canonical=(value:unknown):unknown=>Array.isArray(value)?value.map(canonical):value&&typeof value==="object"?Object.fromEntries(Object.entries(value as Record<string,unknown>).sort(([a],[b])=>a.localeCompare(b)).map(([key,item])=>[key,canonical(item)])):value;
-          const signature=JSON.stringify([def.name,errorRecord.code,canonical(args)]);
+          const boundInput=options.terminalToolFailureInput?.(toolCallId);
+          if(boundInput===undefined)throw Error("CHAT_TERMINAL_TOOL_FAILURE_RECEIPT_MISSING");
+          const signature=JSON.stringify([def.name,errorRecord.code,canonical(boundInput)]);
           const previous=nonRetryableToolFailures.get(signature);
           const callIds=[...(previous?.callIds??[]),toolCallId];
           nonRetryableToolFailures.set(signature,{callIds});

@@ -1,0 +1,35 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "recheck",
+  "summary": "静态 SPEC 复评 GO：本轮 SPEC SHA256=2727868808d5992828fc13d3a6ee75502143124bf4ae187c13264f67a6f332c1。真实诊断确认 Pi arguments:{} 占位参数错误合并两个不同的 invalid_input 调用；允许仅 chat-pi-loop.ts/chat-worker-run.ts 沿既有 reserveAgenticTool 的已绑定 input 构造内部只读签名，保留 SDK 占位、原归属/账本/CAS/回放与真正同参两次失败后的有限收口，缺权威输入沿既有未知回执错误，不新增合同/API/表/安全门。前端后段 fixture 补充限原两个测试：按真实 worker/atomic flags 装配 task+ingestion 宿主全部工具，发布非空夹具经 accounts.create 登记中性账号并贯穿原父/子/稿件/采纳；不得裁剪目录、造 executor、放宽 owner 或删断言。原三测试及新增既有 protocol 测试共四个测试写路径；原五轮/四工具成功旅程、23+4 原例、双确认与同 attempt 不变。REV-001 保持 resolved，未新增 finding。实际后端 3PASS/1FAIL、前端 20PASS/3FAIL 仅为既有诊断；本次未运行测试/产品/API/模型/DB，也未执行 reviewctl 或修改任务事件。新矩阵 RED/GREEN、类型/boundary 及修复后出包安装仍待实际验证。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "resolved",
+      "severity": "minor",
+      "category": "consistency",
+      "requirement_anchor": {
+        "id": "SRC-001",
+        "quote": "只读来源绑定"
+      },
+      "acceptance_anchor": {
+        "id": "AC-EVIDENCE",
+        "quote": "补测/校准记录真实 argv、退出码、日志 SHA、retry 0 和完整终态"
+      },
+      "where": "SPEC 第 74 行 adjacent-integration-diagnosis.md SHA256",
+      "failure_mode": "SPEC 声称该报告 SHA256 为 3f72e154…，但按要求撤回首例同签名推断后的当前文件 SHA256 为 5ae688b1aaadeb873dff38d93e12810a402d01c5e165720c6ff688d11dac4abe；后续按表核验会把真实更正报告判为不匹配。",
+      "evidence_kind": "deterministic-check",
+      "evidence_ref": "sha256sum /Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1084/adjacent-integration-diagnosis.md",
+      "risk_class": "low-risk",
+      "disposition": "mitigate",
+      "remedy_type": "clarify",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "只更新来源表中 adjacent-integration-diagnosis.md 的 SHA256 为 5ae688b1aaadeb873dff38d93e12810a402d01c5e165720c6ff688d11dac4abe，不改变产品、测试范围或验收语义。",
+      "resolution_evidence": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1084/t1085-spec-minor-closure-evidence.json：SPEC line 74 declared=5ae688b1aaadeb873dff38d93e12810a402d01c5e165720c6ff688d11dac4abe，实际 sha256sum=5ae688b1aaadeb873dff38d93e12810a402d01c5e165720c6ff688d11dac4abe，matches=true；SPEC SHA256=e855093d3e19eaca89944fccf27bb0c9ec47b6d70e66000589ef02c85c7f99f4。",
+      "parent_id": "",
+      "threat_model_id": ""
+    }
+  ]
+}

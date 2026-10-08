@@ -6047,6 +6047,59 @@
         ]
       },
       "depends_on": []
+    },
+    "T-1086": {
+      "task_id": "T-1086",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1086-assistant-native-editor-read.md",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "PROJECT_CONTEXT.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "contract/src/operations/production.ts",
+        "contract/src/resources/production-editor.ts",
+        "backend/src/modules/ai-runtime/chat-assembly.ts",
+        "backend/src/modules/production/production.transport.ts",
+        "backend/src/modules/production/production.service.ts",
+        "backend/src/modules/production/production-editor.repository.ts",
+        "backend/src/modules/projects/projects.repository.ts",
+        "frontend/src/server/persistence-client.ts",
+        "frontend/src/server/prepare-chat-reply.ts"
+      ],
+      "write_set": [
+        "contract/src/resources/assistant-system.ts",
+        "backend/src/modules/ai-runtime/chat-tools.ts",
+        "backend/src/modules/ai-runtime/chat-system-tool-host.ts",
+        "backend/src/application/chat/assistant-system-root.ts",
+        "backend/src/modules/ai-runtime/assistant-functional-prompt.ts",
+        "contract/src/assistant-system.test.ts",
+        "backend/src/modules/ai-runtime/chat-system-tool-host.test.ts",
+        "backend/src/application/chat/assistant-system-root.integration.test.ts",
+        "backend/src/modules/ai-runtime/assistant-functional-prompt.test.ts",
+        "frontend/src/server/assistant-native-editor-read.integration.test.ts"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "git diff --check",
+          "pnpm --filter @creatoros/contract exec vitest run src/assistant-system.test.ts --retry=0",
+          "pnpm --filter @creatoros/backend exec vitest run src/modules/ai-runtime/chat-system-tool-host.test.ts src/application/chat/assistant-system-root.integration.test.ts src/modules/ai-runtime/assistant-functional-prompt.test.ts --retry=0 --testTimeout=120000 --hookTimeout=120000",
+          "pnpm --filter creatoros-frontend exec vitest run src/server/assistant-native-editor-read.integration.test.ts --retry=0 --testTimeout=120000 --hookTimeout=120000",
+          "pnpm --filter @creatoros/contract typecheck",
+          "pnpm --filter @creatoros/backend typecheck",
+          "pnpm --filter creatoros-frontend typecheck",
+          "node orchestrator/process/boundary-scan.mjs",
+          "node orchestrator/process/semantic-boundary-scan.mjs",
+          "node tools/timeout-policy/verify.mjs"
+        ]
+      },
+      "scope_note": "T1086 仅实现已评审的固定 V1/V2 助手只读目录、原 Production GET 与 revision 续窗；产品5路径、测试5路径。旧任务冻结兼容、零业务写和真实 Worker/安装验收按 SPEC 记录；本绑定不迁移 T1083 旧 glob。"
     }
   }
 }

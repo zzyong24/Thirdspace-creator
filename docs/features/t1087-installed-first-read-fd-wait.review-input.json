@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "静态 SPEC GO：T1087 当前正式 SPEC SHA256=9b0e57b1f7918d7b0cc3b784b3d5979bd55e8b2e9adb5eb0ad67609a9f842c45，8个源码与2个既有安装证据SHA均实际精确核对。确定性缺陷为 secret-crypto 默认 readSync 在 n=0 且未读到数据时仍 sleep/retry 至原 executionTimeoutMs；仅将真EOF分支改为结束，保留120000ms合同和真实EAGAIN重试、正缓存、全部fallback/加密/owner边界。精确1产品+2测试路径合理；真实closed pipe、正常注入、非阻塞FIFO迟到写入、独立模块耗尽FD、原加密回归在既有Node/tsx及Unix机制内可测试，不以mock reader或缩短timeout替代。当前仅核源码与原231782ms/sample证据；sample不证明EOF返回码、模块实例数或全部安装慢读因果。实际RED/GREEN、模块独立性、完整Gate及修复后安装前后只读对照仍pending，未签产品或Windows实际PASS。无finding。本次仅写指定评审工件，未运行业务/测试/模型/DB/构建/App，未读用户密钥或连接文件，未执行reviewctl/taskctl/事件写入。",
+  "findings": []
+}

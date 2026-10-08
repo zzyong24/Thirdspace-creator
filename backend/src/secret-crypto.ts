@@ -120,7 +120,7 @@ function sleepSyncMs(ms: number): void {
 // [T-408 fd 竞态修复] Rust 在 spawn sidecar 后**异步**往 stdin(fd 0)写 master key + 换行;若
 //   sidecar 首个消费者(DB 初始化)抢先在 Rust 写入前读 fd,非阻塞读连吃 EAGAIN → 4096 次微秒级
 //   空转后拿空 → 降级 → .license 解不开 → **偶发跳转激活页**(真机实测 ~1/4 启动会中招)。
-//   修:①EAGAIN / 未就绪的 0 返回时**同步小睡后重试**(给 Rust 写入留最多 3s 窗口,而非微秒空转);
+//   修:①真正未就绪的 EAGAIN 按原有限执行预算同步小睡后重试；0 是 EOF，立即交既有兜底。
 //   ②**空结果不缓存**(key 仍在管道,允许后续消费者——如激活门——重读到)。已读到主体后的
 //   EAGAIN/EOF 视为 key 结束正常收尾。
 // [T-460 后修 2026-07-22] Windows tauri-plugin-shell:stdin 是**阻塞管道**,readSync 一次会
@@ -160,11 +160,7 @@ function readMasterKeyFromFd(fd: number): string {
       }
       break; // 其它错误 → 停(交由上层降级)
     }
-    if (n === 0) {
-      if (sawData) break; // 真 EOF(key 已读完)
-      sleepSyncMs(10); // 写端尚未就绪的 0 返回 → 等一下重试
-      continue;
-    }
+    if (n === 0) break; // 真 EOF：已关闭的管道不会再来数据，立即走原兜底。
     sawData = true;
     const b = one.readUInt8(0);
     if (b === 0x0a) break; // 换行 → key 结束

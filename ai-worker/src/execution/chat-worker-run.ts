@@ -38,6 +38,7 @@ export async function runChatInWorker(rawInput:z.infer<typeof chatWorkerInputSch
   const stop=new AbortController(),signal=AbortSignal.any([parentSignal,stop.signal]);
   let failure:GenerationFailure|undefined,lastModelCallId:string|undefined;
   const modelForTool=new Map<string,string>(),toolCallIds=new Set<string>();
+  const terminalToolInputs=new Map<string,unknown>();
   const outcomesForProjection=new Map<string,{callId:string;outcome:z.infer<typeof agenticToolOutcomeSchema>}>();
   const legacyToolResultTexts=new Map<string,ToolResultProjectionText[]>();
   let replayPrompt:(()=>Promise<unknown>)|undefined;
@@ -149,6 +150,7 @@ export async function runChatInWorker(rawInput:z.infer<typeof chatWorkerInputSch
             const reservation=agenticToolReservationSchema.parse(result);
             if(reservation.toolName!==sanitizeToolName(definition.name))throw Error("tool receipt mismatch");
             reservedCallId=reservation.callId;
+            terminalToolInputs.set(options.toolCallId,structuredClone(reservation.input));
           }
           return result;
         },execute:async(_reservedName,reservationInput)=>{
@@ -204,6 +206,10 @@ export async function runChatInWorker(rawInput:z.infer<typeof chatWorkerInputSch
     const result=await runChatPiLoop({model,system:input.system,messages:input.messages.map(message=>modelMessageSchema.parse(message)) as ModelMessage[],
       definitions:input.tools,maxOutputTokens:input.maxOutputTokens,signal,messageId:`chat:${input.sourceMessageId}`,
       recoverMissingFinal:input.recoverMissingFinal,terminalToolFailurePolicyVersion:input.terminalToolFailurePolicyVersion,contextPolicyVersion:input.contextPolicyVersion,forcedTool:input.forcedTool,forcedToolSequence:input.forcedToolSequence,onChunk:ports.onChunk,
+      terminalToolFailureInput:toolCallId=>{
+        if(!terminalToolInputs.has(toolCallId))throw new GenerationFailure("unknown_result","CHAT_TERMINAL_TOOL_FAILURE_RECEIPT_MISSING");
+        return terminalToolInputs.get(toolCallId);
+      },
       replayProjection:{original:legacyToolResultTexts,capture:build=>{replayPrompt=build;}},
       readPlanStatus:ports.readPlanStatus?async()=>{
         if(!lastModelCallId)throw fail(new Error("model receipt missing"),"CHAT_PLAN_HISTORY_UNPROVEN");

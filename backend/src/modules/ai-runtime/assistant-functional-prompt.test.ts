@@ -31,3 +31,13 @@ it('素材标签版本只沿原读取观察，指导复制target而不是猜版�
  expect(buildAssistantFunctionalPrompt(['system.action.propose'])).not.toContain('assets.get返回的tagTarget');
  expect(buildAssistantFunctionalPrompt(['system.read'])).not.toContain('assets.get返回的tagTarget');
 });
+
+
+it('T1086 指引沿当前项目作品和原工程读取，如实说明状态与版本；只读不产生候选',()=>{
+ const prompt=buildAssistantFunctionalPrompt(['system.features','system.read']);
+ for(const fragment of ['projects.outputs.list','outputs.production.editor.get','context.project.lifecycle','observedRevision','window.expectedRevision','empty','legacy','editable','unsupportedFields','多个video逐个核对','只读请求不得提出候选、生成或渲染','没有真实冻结editorTarget'])expect(prompt).toContain(fragment);
+ expect(prompt).not.toContain('用system.action.propose生成');
+ for(const input of [{request:{kind:'projects.outputs.list',params:{projectId:'真实当前ID'}}},{request:{kind:'outputs.production.editor.get',params:{outputId:'真实作品ID'}}}]){expect(prompt).toContain(JSON.stringify(input));expect(assistantReadInputSchema.safeParse(input).success).toBe(true);}
+ expect(buildAssistantFunctionalPrompt(['system.features'])).not.toContain('outputs.production.editor.get');
+ expect(buildAssistantFunctionalPrompt([])).not.toContain('observedRevision');
+});

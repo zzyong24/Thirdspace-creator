@@ -4949,3 +4949,7 @@ T-1063-release-pipeline前段已经修改并提交出包链，但没有实际新
 
 
 T-1063-release-pipeline验收分类复核：独立review_spec只读确认它是workflow/构建脚本任务，无页面交互与frontend-journey-contract；按BACKLOG_TEMPLATE“非UI任务为—”仅纠正该行验收元数据，状态仍由taskctl按实际run/制品证据完成。此纠正不免除SPEC的非空setup、精确SHA、版本/体积/hash、检查与失败记录；未执行的Windows安装/GUI/卸载、Mac实跑仍明确未执行。此规则不应用于实际更改UI观察行为的T-1066-timeout-policy。证据见docs/verification/t1063/acceptance-classification.json。
+
+## DEC-T1086/T1087/T1088 — 本地验收缺口的原服务与账本修复（2026-10-09）
+
+用户已要求全面验证和及时补齐 AI 系统操作缺口、持续修复启动卡顿，并将审计过的代码本地整合 main 后无备份构建。该授权覆盖本轮实际确认的普通消息准备顺序、项目现有原生剪辑工程只读发现、密钥 FD 真 EOF 错等与终态同参失败账本校验。T1086扩展固定新版只读目录，旧冻结V1完整定义和功能目录沿原权限恢复；新工程分页按当前真实revision继续，读取不解锁写工具。T1087只区分EOF和EAGAIN，不缩短执行预算或修改用户密钥。T1088保持每条调用原完整digest校验，使用原宿主binding参数判断同参，不信任Worker自报。方案分别已登记SPEC并走真实独评/测试，未取得实施或安装证据的状态保留待验；该记录不授权push、Release或公开发布，也不授权采纳待确认图像401。

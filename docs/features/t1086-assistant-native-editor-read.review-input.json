@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "PASS：T1086 把已存在的 outputs.production.editor.get 纳入代码内固定 V2 只读目录，同时以完整 canonical 定义匹配保留 V1 冻结任务；没有从持久任务或模型输入动态生成 schema。SPEC 已明确原 Projects→Production 公共 owner 链、纯组/组内真实账号/legacy 三族、当前 project/output 校验、零业务写、长工程 revision 续窗冲突和旧目录不广告新权限。五条产品路径与五条测试路径足以实现并验证该缺口；前端测试要求走正式 service/transport、chat submission/Worker/lease/账本，禁止用 DTO mock 代替公共链。真实安装 Pi 错答只作为缺口证据，不代签 Codex、UI、实现、测试或新安装验收。",
+  "findings": []
+}

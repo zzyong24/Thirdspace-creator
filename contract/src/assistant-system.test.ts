@@ -33,3 +33,33 @@ it('系统列表原pageSize和limit均最多50，分页字段保留原查询形�
  expect(assistantReadRequestSchema.safeParse({kind:'assets.search',query:{query:'中性',limit:51}}).success).toBe(false);
  expect(assistantReadRequestSchema.parse({kind:'assets.search',query:{query:'中性',limit:50,cursor:'original-cursor'}})).toMatchObject({query:{query:'中性',limit:50,cursor:'original-cursor'}});
 });
+
+
+import {z} from 'zod';
+import * as assistantContract from './resources/assistant-system';
+const nodeFsSpecifier:string='node:fs';
+const {readFileSync}=await import(nodeFsSpecifier);
+const v1Golden=JSON.parse(readFileSync(new URL('../../docs/verification/t1086/system-read-v1.definition.json',import.meta.url),'utf8'));
+it('T1086 新 GET 只接受原 outputId，不开放写操作或模型自报归属',()=>{
+ const input={request:{kind:'outputs.production.editor.get',params:{outputId:'真实作品'}}};
+ expect(assistantContract.assistantReadInputSchema.safeParse(input).success).toBe(true);
+ for(const params of [{outputId:'真实作品',projectId:'伪父'},{outputId:'真实作品',userId:'伪用户'},{outputId:'真实作品',accountId:'伪账号'},{id:'真实作品'}])expect(assistantContract.assistantReadInputSchema.safeParse({request:{kind:'outputs.production.editor.get',params}}).success).toBe(false);
+ for(const kind of ['outputs.production.editor.save','outputs.production.editor.render','outputs.production.editor.versions.get','unknown.get'])expect(assistantContract.assistantReadInputSchema.safeParse({request:{kind,params:{outputId:'真实作品'}}}).success).toBe(false);
+});
+it('T1086 原生工程首读/续窗 revision 严格分类，零 revision 也是真实版本',()=>{
+ const request={kind:'outputs.production.editor.get',params:{outputId:'真实作品'}},parse=(window:unknown)=>assistantContract.assistantReadInputSchema.safeParse({request,window}).success;
+ expect(parse({offsetUtf16:0,lengthUtf16:20})).toBe(true);
+ expect(parse({offsetUtf16:20,lengthUtf16:20,expectedRevision:0})).toBe(true);
+ for(const window of [{offsetUtf16:20},{offsetUtf16:0,expectedRevision:1},{expectedRevision:1},{offsetUtf16:20,expectedRevision:-1},{offsetUtf16:20,expectedRevision:1.5}])expect(parse(window)).toBe(false);
+ expect(assistantContract.assistantReadInputSchema.safeParse({request:{kind:'projects.get',params:{projectId:'真实项目'}},window:{offsetUtf16:20,expectedRevision:1}}).success).toBe(false);
+});
+it('T1086 V1 JSON schema 与产品改动前实际捕获的完整 definition 一致',()=>{
+ const legacy=(assistantContract as unknown as {assistantReadInputSchemaV1:z.ZodType}).assistantReadInputSchemaV1;
+ expect(legacy).toBeDefined();
+ expect(z.toJSONSchema(legacy,{target:'draft-7',io:'input'})).toEqual(v1Golden.parameters);
+ expect(legacy.safeParse({request:{kind:'projects.outputs.list',params:{projectId:'原项目'}}}).success).toBe(true);
+ expect(legacy.safeParse({request:{kind:'outputs.production.editor.get',params:{outputId:'真实作品'}}}).success).toBe(false);
+ expect(legacy.safeParse({request:{kind:'projects.get',params:{projectId:'原项目'}},window:{offsetUtf16:1,expectedRevision:1}}).success).toBe(false);
+ expect(assistantContract.assistantReadEndpoints['outputs.production.editor.get']?.method).toBe('GET');
+ expect(Object.keys(assistantContract.assistantReadEndpoints)).toEqual([...v1Golden.parameters.properties.request.oneOf.map((branch:{properties:{kind:{const?:string;enum?:string[]}}})=>branch.properties.kind.const??branch.properties.kind.enum![0]),'outputs.production.editor.get']);
+});

@@ -1,4 +1,4 @@
-import type {RequestContext} from '@creatoros/contract';
+import type {RequestContext,AssistantReadCatalogVersion} from '@creatoros/contract';
 import {assistantActionCandidateSchema,canvasCreateCandidateSchema,canvasGenerateUnsignedCandidateSchema} from '@creatoros/contract';
 import type {ExecutionRef} from '@creatoros/contract/execution-worker';
 import {agenticToolOutcomeSchema} from '@creatoros/contract/execution-worker';
@@ -15,6 +15,17 @@ export const ASSISTANT_SYSTEM_TOOL_EFFECTS=Object.freeze({'system.features':'non
 type Host=Awaited<ReturnType<ReturnType<typeof createChatHostContextReader>['read']>>;
 type Ports=NonNullable<ChatToolDeps['assistantSystem']>;
 export type ChatSystemToolPorts={ [K in keyof Ports]:Ports[K] extends ((input:infer I)=>Promise<infer R>)|undefined?(ctx:RequestContext,input:I,host:Host)=>Promise<R>:never };
+/** SEMANTIC_BOUNDARY_ALLOW:固定已知原型的完整协议身份相等；不从任务 schema 造执行器或授予新权限。 */
+export async function matchFrozenAssistantReadCatalog(all:Host['modelInput']['tools']):Promise<AssistantReadCatalogVersion|null>{
+ const definitions=all.filter(tool=>Object.hasOwn(ASSISTANT_SYSTEM_TOOL_EFFECTS,tool.name));
+ if(!definitions.length)return null;
+ for(const assistantReadCatalogVersion of [2,1] as const){
+  const tools=buildChatTools(definitions.map(tool=>tool.name),{humanizeError:()=>null,assistantReadCatalogVersion} as unknown as ChatToolDeps);
+  const current=(await prepareChatToolDefinitions(tools)).definitions;
+  if(canonicalJson(current)===canonicalJson(definitions))return definitions.some(tool=>tool.name==='system.read')?assistantReadCatalogVersion:null;
+ }
+ throw Error('系统工具定义与冻结任务不符');
+}
 /** 真实冻结宿主上下文与原业务端口；仅新候选从执行scope盖来源。 */
 export function createChatSystemToolHost(reader:Pick<ReturnType<typeof createChatHostContextReader>,'read'>,ports:ChatSystemToolPorts):NonNullable<ChatWorkerDispatcherDeps['resolveTools']>{
  async function resolve(ctx:RequestContext,execution:ExecutionRef,signal?:AbortSignal){
@@ -27,7 +38,8 @@ export function createChatSystemToolHost(reader:Pick<ReturnType<typeof createCha
    propose:input=>ports.propose(host.context,input,host),createCanvas:input=>ports.createCanvas(host.context,input,host),
    ...(ports.generateCanvas?{generateCanvas:(input:Parameters<NonNullable<Ports['generateCanvas']>>[0])=>ports.generateCanvas!(host.context,input,host)}:{}),
   };
-  const tools=buildChatTools(definitions.map(tool=>tool.name),{humanizeError:()=>null,assistantSystem} as unknown as ChatToolDeps);
+  const assistantReadCatalogVersion=await matchFrozenAssistantReadCatalog(host.modelInput.tools);
+  const tools=buildChatTools(definitions.map(tool=>tool.name),{humanizeError:()=>null,assistantSystem,assistantReadCatalogVersion:assistantReadCatalogVersion??2} as unknown as ChatToolDeps);
   const current=(await prepareChatToolDefinitions(tools)).definitions;
   if(canonicalJson(current)!==canonicalJson(definitions))throw Error('系统工具定义与冻结任务不符');
   signal?.throwIfAborted();return tools;

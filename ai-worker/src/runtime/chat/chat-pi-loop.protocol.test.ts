@@ -107,7 +107,7 @@ it('相同不可重试工具错误最多重复一次，随后无工具生成部�
   const repeat=calls<=2,content=repeat?[{type:'tool-call',toolCallId:`bad-${calls}`,toolName:'plan_update',input:'{}'}]:[{type:'text-start',id:'final'},{type:'text-delta',id:'final',delta:'计划登记失败，检索未完成。'},{type:'text-end',id:'final'}],finish=repeat?'tool-calls':'stop';
   return {stream:new ReadableStream({start(c){c.enqueue({type:'stream-start',warnings:[]});for(const part of content)c.enqueue(part);c.enqueue({type:'finish',usage,finishReason:{unified:finish,raw:finish}});c.close();}})};
  }};
- const result=await runChatPiLoop({model:model as never,system:'按请求工作',messages:[{role:'user',content:'执行两步任务'}],definitions:[{name:'plan.update',description:'更新计划',parameters:{type:'object',properties:{expectedRevision:{type:'integer'},steps:{type:'array'}}}}],execute:async()=>{executions++;return {status:'error',summary:'参数错误',error:{code:'invalid_input',retryable:false},sideEffect:'none'};},approve:async()=> 'approved',approvalId:()=> 'approval',signal:AbortSignal.timeout(10000),maxOutputTokens:256,messageId:'duplicate-nonretryable',terminalToolFailurePolicyVersion:1});
+ const result=await runChatPiLoop({model:model as never,system:'按请求工作',messages:[{role:'user',content:'执行两步任务'}],definitions:[{name:'plan.update',description:'更新计划',parameters:{type:'object',properties:{expectedRevision:{type:'integer'},steps:{type:'array'}}}}],execute:async()=>{executions++;return {status:'error',summary:'参数错误',error:{code:'invalid_input',retryable:false},sideEffect:'none'};},approve:async()=> 'approved',approvalId:()=> 'approval',signal:AbortSignal.timeout(10000),maxOutputTokens:256,messageId:'duplicate-nonretryable',terminalToolFailurePolicyVersion:1,terminalToolFailureInput:()=>({expectedRevision:0,steps:[]})} as Parameters<typeof runChatPiLoop>[0]);
  assert.equal(calls,3,JSON.stringify(requests.map(request=>({toolChoice:request.toolChoice,tools:Object.keys(request.tools??{}),last:request.prompt?.at(-1)}))));assert.equal(executions,2);assert.equal(requests[2].toolChoice?.type,'none');assert.equal(Object.keys(requests[2].tools??{}).length,0);assert.match(JSON.stringify(requests[2].prompt),/宿主生成的最终回复恢复/);assert.match(result.text,/计划登记失败/);assert.deepEqual(result.terminalToolFailureCallIds,['bad-1','bad-2']);
 });
 
@@ -226,3 +226,29 @@ it('已结算长结果只把分页投影送回模型，UI仍持有完整结果',
  assert.ok(!JSON.stringify(requests[1]).includes('证据'.repeat(200)));
  assert.equal((result.message.parts.find(part=>'toolCallId' in part) as any).output.text,original.text);
 });
+
+// 参数签名只比较宿主绑定的机械事实，不进行内容或创作判断。
+it.each([
+ {label:'不同参数可继续纠错',inputs:[{revision:0},{revision:1}],terminal:false},
+ {label:'相同参数两次有限收口',inputs:[{revision:0},{revision:0}],terminal:true},
+ {label:'对象键顺序不制造新调用',inputs:[{a:1,b:2},{b:2,a:1}],terminal:true},
+ {label:'数组顺序保留',inputs:[{steps:[1,2]},{steps:[2,1]}],terminal:false},
+ {label:'不同错误不合并',inputs:[{revision:0},{revision:0}],codes:['invalid_input','not_found'],terminal:false},
+ {label:'不同工具不合并',inputs:[{revision:0},{revision:0}],names:['read','other'],terminal:false},
+])('$label',async({inputs,codes,names,terminal})=>{
+ let calls=0,executions=0;const requests:any[]=[];
+ const model={specificationVersion:'v4',provider:'fixture',modelId:'fixture',supportedUrls:{},doGenerate:async()=>{throw Error('forbidden')},doStream:async(request:any)=>{
+  requests.push(request);const turn=++calls;
+  return {stream:new ReadableStream({start(c){c.enqueue({type:'stream-start',warnings:[]});
+   if(turn<=2)c.enqueue({type:'tool-call',toolCallId:`owned-${turn}`,toolName:names?.[turn-1]??'read',input:JSON.stringify(inputs[turn-1])});
+   else {c.enqueue({type:'text-start',id:'final'});c.enqueue({type:'text-delta',id:'final',delta:'已说明结果'});c.enqueue({type:'text-end',id:'final'});}
+   c.enqueue({type:'finish',finishReason:{unified:turn<=2?'tool-calls':'stop',raw:null},usage});c.close();}})};
+ }};
+ const result=await runChatPiLoop({model:model as never,system:'读取并核实',messages:[{role:'user',content:'读取资料'}],definitions:['read','other'].map(name=>({name,description:'读取',parameters:{type:'object',properties:{}}})),execute:async(_name,_args,{toolCallId})=>{executions++;return {status:'error',sideEffect:'none',error:{code:codes?.[Number(toolCallId.slice(-1))-1]??'invalid_input',retryable:false}};},approve:async()=> 'approved',approvalId:()=> 'approval',signal:AbortSignal.timeout(120000),maxOutputTokens:256,messageId:'bound-input',terminalToolFailurePolicyVersion:1,terminalToolFailureInput:(id:string)=>structuredClone(inputs[Number(id.slice(-1))-1])} as Parameters<typeof runChatPiLoop>[0]);
+ assert.equal(calls,3);assert.equal(executions,2);assert.equal(requests[2].toolChoice?.type==='none',terminal);assert.equal(Object.keys(requests[2].tools??{}).length===0,terminal);assert.deepEqual(result.terminalToolFailureCallIds,terminal?['owned-1','owned-2']:undefined);
+},120000);
+
+it('缺宿主绑定参数不把 SDK 空占位当真实重复调用',async()=>{
+ const model={specificationVersion:'v4',provider:'fixture',modelId:'fixture',supportedUrls:{},doGenerate:async()=>{throw Error('forbidden')},doStream:async()=>({stream:new ReadableStream({start(c){c.enqueue({type:'stream-start',warnings:[]});c.enqueue({type:'tool-call',toolCallId:'missing',toolName:'read',input:'{}'});c.enqueue({type:'finish',finishReason:{unified:'tool-calls',raw:null},usage});c.close();}})})};
+ await assert.rejects(runChatPiLoop({model:model as never,system:'读取',messages:[{role:'user',content:'读取'}],definitions:[{name:'read',description:'读取',parameters:{type:'object',properties:{}}}],execute:async()=>({status:'error',sideEffect:'none',error:{code:'invalid_input',retryable:false}}),approve:async()=> 'approved',approvalId:()=> 'approval',signal:AbortSignal.timeout(120000),maxOutputTokens:256,messageId:'missing-bound-input',terminalToolFailurePolicyVersion:1,terminalToolFailureInput:()=>undefined} as Parameters<typeof runChatPiLoop>[0]),/CHAT_TERMINAL_TOOL_FAILURE_RECEIPT_MISSING/);
+},120000);

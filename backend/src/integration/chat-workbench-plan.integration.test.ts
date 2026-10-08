@@ -4,7 +4,7 @@ import {resolve} from "node:path";
 import {afterAll,beforeAll,expect,it} from "vitest";
 import {z} from "zod";
 import {workbenchFileRequestSchema,workbenchResultSchema,type WorkbenchCapability} from "@creatoros/contract/agent-workbench";
-import {createDb,executionCalls,executionTasks,eq,type Db} from "@creatoros/backend";
+import {createDb,executionCalls,executionTasks,aiTasks,aiTaskResults,executionStreamEvents,eq,type Db} from "@creatoros/backend";
 import {createAiRepository} from "../modules/ai/ai.repository";
 import {createChatTurnSubmissionService} from "../modules/ai/chat-turn-submission.service";
 import {createChatWorkerDispatcher} from "../modules/execution/model-worker-dispatcher";
@@ -57,6 +57,12 @@ it("真实 Worker 遇到非法产物引用和伪造计划回执后收到 invalid
   const tools=calls.filter(call=>call.kind==="tool");expect(tools).toHaveLength(4);expect(calls.every(call=>call.status==="settled")).toBe(true);
   for(const call of tools.slice(0,2))expect(JSON.parse(call.resultText!).output).toMatchObject({status:"error",sideEffect:"none",error:{code:"invalid_input"}});
   expect(await createWorkbenchPlanService(db).read(ctx,submission.executionTaskId)).toMatchObject({planRevision:2,steps:[{status:"succeeded",operationRefs:[tools[2]!.id]}]});
+ }catch(error){
+  const [task]=await db.select().from(executionTasks).where(eq(executionTasks.id,submission.executionTaskId));
+  const calls=(await db.select().from(executionCalls).where(eq(executionCalls.executionTaskId,submission.executionTaskId))).sort((a,b)=>a.sequence-b.sequence);
+  // 只输出本例隔离模型/账本，保留原失败及原成功断言，不读取用户数据或请求头。
+  console.error("T1085_PLAN_REPAIR_DIAGNOSTIC",JSON.stringify({submission,status:task?.status,lastErrorCode:task?.lastErrorCode,lastErrorMessage:task?.lastErrorMessage,requests,plansBeforeRepair,plan:await createWorkbenchPlanService(db).read(ctx,submission.executionTaskId),modelRequests:bodies.map((body,index)=>({ordinal:index+1,...JSON.parse(body)})),calls}));
+  throw error;
  }finally{await host.stop();server.closeAllConnections();await new Promise<void>(done=>server.close(()=>done()));}
 },30000);
 
@@ -180,7 +186,7 @@ it("真实子进程连续调用两次文件写入协议后，凭两条已结算�
  }finally{await host.stop();server.closeAllConnections();await new Promise<void>(resolve=>server.close(()=>resolve()));}
 },30000);
 
-it("暂停在途模型流后保留计划与已结算回执，恢复要求对账且不重发",async()=>{
+it("暂停无结果根模型流后保留计划与已结算回执，安全恢复同一任务且不重放初始计划",async()=>{
  const ctx={userId:"plan-resume-user",accountId:"plan-resume-account",requestId:"test",source:"user" as const};
  const repo=createAiRepository(db,{userId:ctx.userId,accountId:ctx.accountId,now:()=>new Date().toISOString(),nextId:prefix=>`${prefix}-plan-resume`});
  const conversation=await repo.createConversation({title:"计划恢复",projectId:null,scope:"global"});
@@ -188,9 +194,9 @@ it("暂停在途模型流后保留计划与已结算回执，恢复要求对账�
  const prototype=defineWorkbenchChatTool(chatWorkbenchPlanCapability,async()=>{throw new Error("unused");});
  const [definition]=(await prepareChatToolDefinitions({"plan.update":prototype},{workbenchCapabilities:[chatWorkbenchPlanCapability]})).definitions;
  const submission=await createChatTurnSubmissionService(db,{assemble:async()=>({capability:"copilot.assist",system:"遵循已有计划",messages:[{role:"user",content:"创建计划并继续"}],maxSteps:6,maxOutputTokens:256,tools:[definition!]})}).submit(ctx,{conversationId:conversation.id,sourceMessageId:source.id});
- let requests=0,stoppedStream=false;
+ let requests=0,stoppedStream=false;const bodies:string[]=[];
  const server=createServer((req,res)=>{let body="";req.on("data",chunk=>body+=chunk);req.on("end",()=>{
-  requests++;
+  requests++;bodies.push(body);
   if(requests===2){res.writeHead(200,{"content-type":"text/event-stream"});res.write(": waiting\n\n");res.on("close",()=>{stoppedStream=true;});return;}
   let toolName:string|null=null,args:Record<string,unknown>={};
   if(requests===1){toolName="plan_update";args={expectedRevision:0,steps:[{stepId:"plan",title:"建立计划",dependsOn:[],status:"pending",operationRefs:[],artifactRefs:[]}]};}
@@ -215,14 +221,70 @@ it("暂停在途模型流后保留计划与已结算回执，恢复要求对账�
   await expect.poll(status,{timeout:15000}).toBe("paused");
   expect(stoppedStream).toBe(true);
   expect((await createWorkbenchPlanService(db).read(ctx,submission.executionTaskId))?.planRevision).toBe(1);
+  const [paused]=await db.select().from(executionTasks).where(eq(executionTasks.id,submission.executionTaskId));
+  const before=(await db.select().from(executionCalls).where(eq(executionCalls.executionTaskId,submission.executionTaskId))).sort((a,b)=>a.sequence-b.sequence);
+  const settled=before.filter(row=>row.kind==="tool"&&row.status==="settled");
+  expect(settled).toHaveLength(1);
+  expect(before.filter(row=>row.kind==="model"&&row.providerResult!==null)).toHaveLength(1);
   await tasks.command(ctx,{taskIds:[submission.executionTaskId],command:"resume",idempotencyKey:"resume-plan"});
-  await expect.poll(status,{timeout:15000}).toBe("unknown_result");
+  await expect.poll(status,{timeout:15000}).toBe("succeeded");
   const plan=await createWorkbenchPlanService(db).read(ctx,submission.executionTaskId);
-  expect(plan).toMatchObject({planRevision:1,steps:[{status:"pending"}]});
+  expect(plan).toMatchObject({planRevision:2,steps:[{status:"succeeded",operationRefs:[settled[0]!.id]}]});
   const [task]=await db.select().from(executionTasks).where(eq(executionTasks.id,submission.executionTaskId));
-  expect(task?.lastErrorCode).toBe("CHAT_CHECKPOINT_REQUIRES_RECONCILIATION");
+  expect(task?.id).toBe(paused!.id);expect(task?.ownerId).toBe(paused!.ownerId);
+  const frozen=paused!.payload as Record<string,unknown>,current=task!.payload as Record<string,unknown>;
+  expect(current.modelInput).toEqual(frozen.modelInput);expect(current.hostContext).toEqual(frozen.hostContext);
+  expect(task?.deadlineAt).toBe(paused!.deadlineAt);
+  expect(task?.lastErrorCode).toBeNull();
+  expect(await db.select().from(executionTasks).where(eq(executionTasks.ownerId,paused!.ownerId))).toHaveLength(1);
   const rows=await db.select().from(executionCalls).where(eq(executionCalls.executionTaskId,submission.executionTaskId));
-  expect(rows.filter(row=>row.kind==="tool"&&row.status==="settled")).toHaveLength(1);
-  expect(requests).toBe(2);
+  const tools=rows.filter(row=>row.kind==="tool");
+  expect(tools).toHaveLength(2);expect(tools.every(row=>row.status==="settled")).toBe(true);
+  expect(tools.find(row=>row.id===settled[0]!.id)).toEqual(settled[0]);
+  expect(bodies[2]).toContain(settled[0]!.id);
+  expect(requests).toBe(4);
  }finally{await host.stop();server.closeAllConnections();await new Promise<void>(resolve=>server.close(()=>resolve()));}
 },30000);
+
+it('真实 Worker 相同参数的两条 invalid_input 回执仍有限收口且不写计划',async()=>{
+ const ctx={userId:'plan-identical-user',accountId:'plan-identical-account',requestId:'test',source:'user' as const};let seq=0;
+ const repo=createAiRepository(db,{userId:ctx.userId,accountId:ctx.accountId,now:()=>new Date().toISOString(),nextId:prefix=>`${prefix}-identical-${++seq}`});
+ const conversation=await repo.createConversation({title:'相同参数收口',projectId:null,scope:'global'});
+ const source=await repo.createMessage(conversation.id,{role:'user',content:'核对计划',attachments:[],modelMetadata:{}});
+ const prototype=defineWorkbenchChatTool(chatWorkbenchPlanCapability,async()=>{throw Error('unused');});
+ const definitions=(await prepareChatToolDefinitions({'plan.update':prototype},{workbenchCapabilities:[chatWorkbenchPlanCapability]})).definitions;
+ const submission=await createChatTurnSubmissionService(db,{assemble:async()=>({capability:'copilot.assist',system:'依据真实回执核对',messages:[{role:'user',content:'核对计划'}],maxSteps:8,maxOutputTokens:256,tools:definitions})}).submit(ctx,{conversationId:conversation.id,sourceMessageId:source.id});
+ const requests:any[]=[];const args={expectedRevision:0,steps:[{stepId:'plan',title:'建立计划',dependsOn:[],status:'pending',operationRefs:[],artifactRefs:[null]}]};
+ const planHost=createChatWorkbenchPlanToolHost(db);let resolveToolsCount=0,externalRegistry:Awaited<ReturnType<typeof planHost>>|undefined;
+ const server=createServer(async(req,res)=>{let body='';for await(const c of req)body+=c;requests.push(JSON.parse(body));const turn=requests.length;
+  if(turn===1){expect(externalRegistry).toBeDefined();(externalRegistry!['plan.update'] as {version:string}).version='external-mutated-after-resolve';}
+  const delta=turn<=2?{tool_calls:[{index:0,id:`same-${turn}`,type:'function',function:{name:'plan_update',arguments:JSON.stringify(args)}}]}:{content:'两次相同输入均被拒绝，计划未保存。'};
+  const chunks=[{choices:[{index:0,delta,finish_reason:null}]},{choices:[{index:0,delta:{},finish_reason:turn<=2?'tool_calls':'stop'}],usage:{prompt_tokens:2,completion_tokens:3,total_tokens:5}}];
+  res.writeHead(200,{'content-type':'text/event-stream'});res.end(chunks.map(chunk=>`data: ${JSON.stringify({id:'fixture',object:'chat.completion.chunk',created:1,model:'fixture',...chunk})}\n\n`).join('')+'data: [DONE]\n\n');
+ });
+ await new Promise<void>(done=>server.listen(0,'127.0.0.1',done));
+ const host=createChatWorkerDispatcher(db,{entryPath:resolve('../ai-worker/dist/execution-worker.cjs'),workerId:'same-args',budget:{maxCalls:8,maxTokens:100000,deadlineMs:120000},pollMs:100,modelConcurrency:1,resolveTools:async(...input)=>{resolveToolsCount++;externalRegistry=await planHost(...input);return externalRegistry;},resolveModelCredential:async()=>({apiFormat:'openai_chat',baseUrl:`http://127.0.0.1:${(server.address() as {port:number}).port}/v1`,model:'fixture',token:'fixture'})});
+ try{host.start();await expect.poll(async()=>(await db.select().from(executionTasks).where(eq(executionTasks.id,submission.executionTaskId)))[0]?.status,{timeout:120000}).toBe('partial');
+  expect(requests).toHaveLength(3);expect(requests[2].tool_choice).toBe('none');expect(requests[2].tools??[]).toHaveLength(0);expect(resolveToolsCount).toBe(1);
+  const rows=await db.select().from(executionCalls).where(eq(executionCalls.executionTaskId,submission.executionTaskId));const tools=rows.filter(r=>r.kind==='tool');expect(tools).toHaveLength(2);expect(tools[0]!.inputDigest).not.toBe(tools[1]!.inputDigest);expect(tools.every(r=>r.status==='settled')).toBe(true);
+  for(const row of tools)expect(JSON.parse(row.resultText!).output).toMatchObject({status:'error',sideEffect:'none',error:{code:'invalid_input',retryable:false}});
+  const [business]=await db.select().from(aiTasks).where(eq(aiTasks.id,submission.taskId));expect(business!.status).toBe('partial');
+  const messages=await repo.listMessages(conversation.id);expect(messages).toHaveLength(2);expect(messages[1]!.modelMetadata).toMatchObject({completeness:'partial',stopReason:'stop',actualEngine:'pi'});expect(messages[1]!.content).toContain('系统已停止重复调用');
+  expect(await db.select().from(aiTaskResults).where(eq(aiTaskResults.aiTaskId,submission.taskId))).toHaveLength(1);
+  const events=await db.select().from(executionStreamEvents).where(eq(executionStreamEvents.executionTaskId,submission.executionTaskId)).orderBy(executionStreamEvents.sequence);expect(events.at(-1)!.chunk).toMatchObject({type:'finish',finishReason:'stop',messageMetadata:{completeness:'partial'}});
+  expect(await createWorkbenchPlanService(db).read(ctx,submission.executionTaskId)).toBe(null);
+ }finally{await host.stop();server.closeAllConnections();await new Promise<void>(done=>server.close(()=>done()));}
+},180000);
+
+it('T1088 final stop迟到：取消并停止原scope后不能提交partial，前两轮账本保持',{timeout:180000,retry:0},async()=>{
+ const ctx={userId:'terminal-late-user',accountId:'terminal-late-account',requestId:'test',source:'user' as const};let seq=0;
+ const repo=createAiRepository(db,{userId:ctx.userId,accountId:ctx.accountId,now:()=>new Date().toISOString(),nextId:p=>`${p}-late-${++seq}`}),conversation=await repo.createConversation({title:'迟到终态',projectId:null,scope:'global'}),source=await repo.createMessage(conversation.id,{role:'user',content:'核对计划',attachments:[],modelMetadata:{}});
+ const prototype=defineWorkbenchChatTool(chatWorkbenchPlanCapability,async()=>{throw Error('unused');}),definitions=(await prepareChatToolDefinitions({'plan.update':prototype},{workbenchCapabilities:[chatWorkbenchPlanCapability]})).definitions;
+ const submission=await createChatTurnSubmissionService(db,{assemble:async()=>({capability:'copilot.assist',system:'依据真实回执核对',messages:[{role:'user',content:'核对计划'}],maxSteps:8,maxOutputTokens:256,tools:definitions})}).submit(ctx,{conversationId:conversation.id,sourceMessageId:source.id});
+ const args={expectedRevision:0,steps:[{stepId:'plan',title:'建立计划',dependsOn:[],status:'pending',operationRefs:[],artifactRefs:[null]}]};let turn=0,releaseLate!:()=>void,thirdResolve!:()=>void;const late=new Promise<void>(r=>releaseLate=r),third=new Promise<void>(r=>thirdResolve=r);
+ const server=createServer(async(req,res)=>{for await(const _ of req){};turn++;if(turn===3){thirdResolve();await late;if(res.destroyed)return;}const delta=turn<=2?{tool_calls:[{index:0,id:`late-${turn}`,type:'function',function:{name:'plan_update',arguments:JSON.stringify(args)}}]}:{content:'迟到终稿不得保存'},chunks=[{choices:[{index:0,delta,finish_reason:null}]},{choices:[{index:0,delta:{},finish_reason:turn<=2?'tool_calls':'stop'}],usage:{prompt_tokens:2,completion_tokens:3,total_tokens:5}}];if(!res.destroyed){res.writeHead(200,{'content-type':'text/event-stream'});res.end(chunks.map(c=>`data: ${JSON.stringify({id:'fixture',object:'chat.completion.chunk',created:1,model:'fixture',...c})}\n\n`).join('')+'data: [DONE]\n\n');}});
+ await new Promise<void>(done=>server.listen(0,'127.0.0.1',done));const host=createChatWorkerDispatcher(db,{entryPath:resolve('../ai-worker/dist/execution-worker.cjs'),workerId:'late-stop',budget:{maxCalls:8,maxTokens:100000,deadlineMs:120000},pollMs:100,modelConcurrency:1,resolveTools:createChatWorkbenchPlanToolHost(db),resolveModelCredential:async()=>({apiFormat:'openai_chat',baseUrl:`http://127.0.0.1:${(server.address() as {port:number}).port}/v1`,model:'fixture',token:'fixture'})});
+ try{host.start();await Promise.race([third,new Promise((_,reject)=>setTimeout(()=>reject(Error('final model未到达')),120000))]);const before=(await db.select().from(executionCalls).where(eq(executionCalls.executionTaskId,submission.executionTaskId))).sort((a,b)=>a.sequence-b.sequence),prefix=before.filter(r=>r.status==='settled');expect(prefix).toHaveLength(4);
+  await createPersistentTaskService(db).command(ctx,{taskIds:[submission.executionTaskId],command:'cancel',idempotencyKey:'cancel-before-late-stop'});await host.stop();releaseLate();const after=(await db.select().from(executionCalls).where(eq(executionCalls.executionTaskId,submission.executionTaskId))).sort((a,b)=>a.sequence-b.sequence);expect(after.filter(r=>prefix.some(p=>p.id===r.id))).toEqual(prefix);expect(await db.select().from(aiTaskResults).where(eq(aiTaskResults.aiTaskId,submission.taskId))).toHaveLength(0);expect(await repo.listMessages(conversation.id)).toHaveLength(1);const events=await db.select().from(executionStreamEvents).where(eq(executionStreamEvents.executionTaskId,submission.executionTaskId));expect(events.some(e=>e.chunk.type==='finish')).toBe(false);expect(JSON.stringify(events)).not.toContain('系统已停止重复调用');
+ }finally{releaseLate?.();await host.stop();server.closeAllConnections();await new Promise<void>(done=>server.close(()=>done()));}
+});
