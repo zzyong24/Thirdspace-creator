@@ -1,0 +1,4 @@
+[[permission]]
+identifier = "allow-owned-devices"
+description = "允许同一受控本机页面连接本人账号和设备；秘密与机器证据只由原生持有。"
+commands.allow = ["owned_device_start", "owned_device_poll", "owned_device_resume", "owned_device_cancel"]

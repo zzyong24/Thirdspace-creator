@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 
+import { OwnedDevicePanel } from "./owned-device-panel";
 import { ActivateForm } from "./activate-form";
 import { EntitlementClaimPanel } from "./entitlement-claim-panel";
 import { getActivationService } from "@/server/persistence-client";
@@ -52,7 +53,7 @@ export default async function ActivatePage(): Promise<React.JSX.Element> {
   const subtitle =
     check.status === "expired"
       ? "续费后可以重新领取，也可以输入新的激活码。"
-      : "如果你已经购买，请直接领取产品；也可以输入已有激活码。";
+      : "如果你已经购买，可输入激活码；已有账号的产品可通过手机号连接。";
   const entitlementClaimEnabled =
     process.env.CREATOROS_ENTITLEMENT_CLAIM_ENABLED === "1";
 
@@ -61,22 +62,23 @@ export default async function ActivatePage(): Promise<React.JSX.Element> {
       data-testid="activate-page"
       className="flex min-h-screen items-center justify-center bg-background px-4"
     >
-      <div className="flex w-full max-w-sm flex-col gap-6 rounded-xl bg-card p-8 text-card-foreground ring-1 ring-foreground/10">
+      <div className="flex w-full max-w-md flex-col gap-6 rounded-xl bg-card p-4 sm:p-8 text-card-foreground ring-1 ring-foreground/10">
         <div className="flex flex-col gap-2">
           <h1 className="text-xl font-semibold">{heading}</h1>
-          <p className="text-sm text-muted-foreground">{subtitle}</p>
+          <p className="text-base text-muted-foreground">{subtitle}</p>
         </div>
         <EntitlementClaimPanel enabled={entitlementClaimEnabled} />
+        <OwnedDevicePanel enabled={process.env.CREATOROS_OWNED_DEVICES_ENABLED === "1"} />
         <div className="grid gap-2">
           {entitlementClaimEnabled ? (
-            <p className="text-center text-xs text-muted-foreground">
+            <p className="text-center text-base text-muted-foreground">
               或使用已有激活码
             </p>
           ) : null}
           <ActivateForm />
         </div>
         {channelSupportUrl ? (
-          <p className="text-center text-xs text-muted-foreground">
+          <p className="text-center text-base text-muted-foreground">
             激活码由购买时的服务方提供，遇到问题请
             <a
               href={channelSupportUrl}
@@ -90,7 +92,7 @@ export default async function ActivatePage(): Promise<React.JSX.Element> {
           </p>
         ) : (
           // 中性降级(SPEC §7 操作定义):纯文案,无链接无按钮。
-          <p className="text-center text-xs text-muted-foreground">
+          <p className="text-center text-base text-muted-foreground">
             没有激活码时，请联系购买时的服务方。
           </p>
         )}

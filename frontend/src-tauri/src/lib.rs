@@ -21,6 +21,7 @@ mod product_identity;
 mod cli_access;
 // [T-575] Growth device authorization → OS protected pending-consume → AM signed consume。
 mod entitlement_claim;
+mod owned_devices;
 // [T-399b] 蜜罐授权门:纯诱饵,零真实引用(真链一行不碰),仅 #[used] 强制进二进制过 DCE。
 //   故意重放明文命名的教科书假验签门,诱逆向 AR 的 nm/strings 撞它而非 obfstr 藏起的真门(见 decoy_gate.rs)。
 mod decoy_gate;
@@ -2231,6 +2232,10 @@ pub fn run() {
             entitlement_claim::entitlement_claim_start,
             entitlement_claim::entitlement_claim_poll,
             entitlement_claim::entitlement_claim_resume,
+            owned_devices::owned_device_start,
+            owned_devices::owned_device_poll,
+            owned_devices::owned_device_resume,
+            owned_devices::owned_device_cancel,
             // [T-372 L3] 最近判定只读口(零网络):前端桥初始态 + 设置页宽限倒计时。
             license::license_last_decision,
             // [T-396c] 版本检查(latest-version 端点 + 渠道 downloadUrl,替代 updater check)。
@@ -2578,6 +2583,10 @@ pub fn run() {
                 "CREATOROS_ENTITLEMENT_CLAIM_ENABLED",
                 option_env!("CREATOROS_BUILTIN_ENTITLEMENT_CLAIM_ENABLED").unwrap_or("0"),
             );
+            let owned_devices_enabled = packaged_binary_flag(
+                "CREATOROS_OWNED_DEVICES_ENABLED",
+                option_env!("CREATOROS_BUILTIN_OWNED_DEVICES_ENABLED").unwrap_or("0"),
+            );
             let product_feedback_submit_enabled = packaged_binary_flag(
                 "CREATOROS_PRODUCT_FEEDBACK_SUBMIT_ENABLED",
                 option_env!("CREATOROS_BUILTIN_PRODUCT_FEEDBACK_SUBMIT_ENABLED").unwrap_or("0"),
@@ -2815,6 +2824,7 @@ pub fn run() {
                         "CREATOROS_ENTITLEMENT_CLAIM_ENABLED",
                         &entitlement_claim_enabled,
                     )
+                    .env("CREATOROS_OWNED_DEVICES_ENABLED", &owned_devices_enabled)
                     .env(
                         "CREATOROS_PRODUCT_FEEDBACK_SUBMIT_ENABLED",
                         &product_feedback_submit_enabled,
@@ -3029,6 +3039,7 @@ pub fn run() {
                         "CREATOROS_ENTITLEMENT_CLAIM_ENABLED",
                         &entitlement_claim_enabled,
                     )
+                    .env("CREATOROS_OWNED_DEVICES_ENABLED", &owned_devices_enabled)
                     .env(
                         "CREATOROS_PRODUCT_FEEDBACK_SUBMIT_ENABLED",
                         &product_feedback_submit_enabled,

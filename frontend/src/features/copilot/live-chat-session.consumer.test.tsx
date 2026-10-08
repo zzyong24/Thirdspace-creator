@@ -117,14 +117,30 @@ it('卸载/切scope后迟到waiting metadata只保护原会话，不改新scope'
  expect(original.chat.messages.at(-1)?.metadata).toEqual({execution:{executionTaskId:'original-execution',status:'waiting_user'}});
 });
 it('同消息原ID显式resume waiting→succeeded后解除保护，不自动重建任务',async()=>{
- const request=vi.fn().mockResolvedValueOnce(sseResponse('waiting_user')).mockResolvedValueOnce(sseResponse('succeeded'));
+ let submissions=0;
+ const request=vi.fn(async(_url:RequestInfo|URL,_init?:RequestInit)=>sseResponse(++submissions===5?'succeeded':'waiting_user'));
  vi.stubGlobal('fetch',request);
  const {mounted,key,original}=await startConsumer('resume-metadata');
  await waitFor(()=>expect(original.chat.status).toBe('error'));
  expect(request).toHaveBeenCalledTimes(1);
- fireEvent.click(screen.getByRole('button',{name:/^重试$/}));
- await waitFor(()=>expect(request).toHaveBeenCalledTimes(2));
- await waitFor(()=>expect(original.chat.status).toBe('ready'));
+ expect(screen.getByText('自动恢复中')).toBeInTheDocument();
+ // main 原流程自动恢复至三次上限，再由用户沿同消息/任务明确继续。
+ const continueButton=await screen.findByRole('button',{name:'继续恢复'},{timeout:120000});
+ expect(request).toHaveBeenCalledTimes(4);
+ expect(original.chat.status).toBe('error');
+ expect(original.control.currentTaskId()).toBe('original-execution');
+ fireEvent.click(continueButton);
+ await waitFor(()=>expect(request).toHaveBeenCalledTimes(5),{timeout:120000});
+ await waitFor(()=>expect(original.chat.status).toBe('ready'),{timeout:120000});
+ const initial=JSON.parse(request.mock.calls[0]![1]?.body as string) as {messages:UIMessage[]};
+ const sourceId=initial.messages.findLast(message=>message.role==='user')?.id;
+ expect(sourceId).toBeTruthy();
+ for(const [,init] of request.mock.calls.slice(1)){
+  const body=JSON.parse(init?.body as string) as {trigger:string;conversationId:string;messages:UIMessage[]};
+  expect(body.trigger).toBe('regenerate-message');expect(body.conversationId).toBe('original-conversation');
+  expect(body.messages.findLast(message=>message.role==='user')?.id).toBe(sourceId);
+ }
+ expect(original.control.currentTaskId()).toBe('original-execution');
  expect(original.chat.messages.at(-1)?.id).toBe('original-assistant');
  expect(original.chat.messages.at(-1)?.metadata).toEqual({execution:{executionTaskId:'original-execution',status:'succeeded'}});
  mounted.unmount();await act(async()=>{await Promise.resolve();});pressure('resume-metadata');
@@ -157,6 +173,7 @@ it('实际停止按钮接受cancel_requested只放弃本地观察，退出后可
  await waitFor(()=>expect(original.chat.status).toBe('ready'));
  expect(running.aborted).toBe(true);
  expect(commands).toHaveLength(1);expect(commands[0]).toMatchObject({id:ENDPOINTS.commandExecutionTasks.id,input:{body:{taskIds:['original-execution'],command:'cancel'}}});
+ expect(original.control.executionTaskId).toBeUndefined();expect(original.control.currentTaskId()).toBe('original-execution');
  expect(original.chat.messages.at(-1)?.metadata).toEqual({execution:{executionTaskId:'original-execution',status:'running'}});
  mounted.unmount();await act(async()=>{await Promise.resolve();});pressure('explicit-stop');
  expect(getLiveChatSession(key)).not.toBe(original);expect(original.transport).toBeUndefined();

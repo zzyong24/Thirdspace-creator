@@ -1,0 +1,85 @@
+{
+  "schema": "t1080-independent-session-gap-review-v1",
+  "observed_at": "2026-10-08T12:32:43.061920+00:00",
+  "verdict": "PASS_LIMITED_STATIC_IMPLEMENTATION_PENDING_ACTUAL_GREEN",
+  "candidate_decisions_sha256": "1e4fcde332239c86d1ef7c20e9281b6c1557ce85cc85feebdaaa6f61e894243a",
+  "actual_red_log_sha256": "16db51675da1f8bc8fe95c5dd133dcd2895428197e1486cfe83221df5992bac3",
+  "checks": [
+    {
+      "name": "candidate_exact_three_paths",
+      "pass": true,
+      "evidence": [
+        {
+          "path": "frontend/src/features/copilot/ai-copilot-content.tsx",
+          "source_sha256": "62ed38d736823847600a0cd018c78e125bed9b809907ca365d40f3c210f28d62",
+          "candidate_sha256": "c2802e726d3a9d9412a0525d2b8f66a5cd7b4f2b42becfd906f104145e2d1959",
+          "candidate_hash_matches": true,
+          "diff_hash_matches": true,
+          "current_observed_sha256": "62ed38d736823847600a0cd018c78e125bed9b809907ca365d40f3c210f28d62",
+          "current_is_original_source": true,
+          "current_is_candidate": false
+        },
+        {
+          "path": "frontend/src/features/copilot/chat-task-control.ts",
+          "source_sha256": "431fad9b42530296ee60ec5f6619bf7899c082da196608c5acf0be3b3bc6db10",
+          "candidate_sha256": "c69f5df1488a43ac48602ab0833f66f4009534262961e5e8f8339a37d0967830",
+          "candidate_hash_matches": true,
+          "diff_hash_matches": true,
+          "current_observed_sha256": "431fad9b42530296ee60ec5f6619bf7899c082da196608c5acf0be3b3bc6db10",
+          "current_is_original_source": true,
+          "current_is_candidate": false
+        },
+        {
+          "path": "frontend/src/features/copilot/live-chat-session.consumer.test.tsx",
+          "source_sha256": "9351f5da21bc5f30db03b987e779ac853178c9044bf696d48bcabfb5406663d5",
+          "candidate_sha256": "3f87ccd8fd51e83d1c1752a7bebcf7b4a226c19730a03928e1468a81e22d42c8",
+          "candidate_hash_matches": true,
+          "diff_hash_matches": true,
+          "current_observed_sha256": "9351f5da21bc5f30db03b987e779ac853178c9044bf696d48bcabfb5406663d5",
+          "current_is_original_source": true,
+          "current_is_candidate": false
+        }
+      ]
+    },
+    {
+      "name": "session_owned_preparation_release",
+      "pass": true,
+      "evidence": "WeakSet以真实liveSession对象为key；旧finally仅delete旧对象，新scope独立add不被旧布尔值阻塞；原准备顺序/targets/epoch/key未改。"
+    },
+    {
+      "name": "late_error_owner_guard",
+      "pass": true,
+      "evidence": "旧sendPrepared.catch只有liveSessionRef.current===闭包session才写当前composer错误；外层pending.catch同guard才恢复prompt，避免旧scope迟到失败覆盖新scope输入。"
+    },
+    {
+      "name": "same_turn_cancel_releases_observation_only",
+      "pass": true,
+      "evidence": "dispatch cancel仍必须ok且active===captured turn；成功才active undefined+observationReleased true，getter解除本地观察保护；currentTaskId保持原真实receipt，assistant metadata未写终态。"
+    },
+    {
+      "name": "same_turn_retry_and_new_turn_identity",
+      "pass": true,
+      "evidence": "fetch沿原trigger submit/regenerate行为，regenerate503保留currentTaskId，新fetch恢复观察归属；release时状态重置，旧cancel active!==turn不影响新turn。"
+    },
+    {
+      "name": "consumer_strong_assertions_preserved",
+      "pass": true,
+      "evidence": "diff原stop/revisit/scope/owner/metadata/prune断言均保留；过时即时retry按钮夹具改沿main三次自动恢复+继续恢复，增强原conversation/source userID、同assistantID、次数4→5与最终succeeded断言。"
+    },
+    {
+      "name": "no_task_recreation_or_server_fact_write",
+      "pass": true,
+      "evidence": "两产品路径未加任务创建/后端状态写入；唯一既有dispatch仍cancel原taskIds/idempotencyKey。恢复regenerate-message原消息/对话ID，不submit新task。"
+    },
+    {
+      "name": "real_red_triage_honest",
+      "pass": true,
+      "evidence": "日志16cases13pass3fail：缺即时retry是main保留恢复流程的夹具差异；cancel观察未释放导致prune保留和跨scope新stream ready是两真实产品gap。不把fixture不一致当产品RED。"
+    }
+  ],
+  "findings": [],
+  "repository_or_git_mutated": false,
+  "tests_run": false,
+  "gate_limit": "允许限定候选采用；13/16旧字节PASS不冒称候选GREEN。root需实际consumer+server stream+session/control/interactions公共链回归，保存原3FAIL。",
+  "scope": "三路径组合gap，不复审整个产品；不扩大后台生命周期、取消语义或任务重发。"
+}

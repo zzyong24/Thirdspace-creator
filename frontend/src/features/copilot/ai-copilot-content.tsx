@@ -1057,7 +1057,7 @@ export function AICopilotContent({
   const preparedReceipt=React.useRef<{sourceMessageId?:string;conversationId?:string;sourceText?:string;attachmentIds?:string[];chatContext:Record<string,unknown>;executionEngine?:string}|null>(null);
   const receiptStorageKey=`creatoros:t1070:turn:${liveSessionKey}`;
   React.useEffect(()=>{try{const stored=sessionStorage.getItem(receiptStorageKey);preparedReceipt.current=stored?JSON.parse(stored):null;}catch{preparedReceipt.current=null;}},[receiptStorageKey]);
-  const preparationPending=React.useRef(false);
+  const preparationPending=React.useRef(new WeakSet<typeof liveSession>());
   const submissionAttempt=React.useRef<{text:string;strict:boolean;request?:EmbeddedDraftChatRequest|null;networkStarted:boolean}|null>(null);
   const recoveryMounted=React.useRef(true);
   React.useEffect(()=>{recoveryMounted.current=true;return()=>{recoveryMounted.current=false;};},[]);
@@ -1546,7 +1546,7 @@ export function AICopilotContent({
     setComposerLifecycleError(null);
     const attempt=submissionAttempt.current;
     if(attempt?.strict&&!attempt.networkStarted){
-      if(preparationPending.current)return;
+      if(preparationPending.current.has(liveSession))return;
       // This attempt never reached transport.fetch. An explicit retry prepares
       // this same text/request, rather than regenerating any older saved receipt.
       try{await sendPreparedRef.current(attempt.text,attempt.request);}catch{/* Original preflight error stays visible. */}
@@ -1572,10 +1572,10 @@ export function AICopilotContent({
     }
     const receipt=preparedReceipt.current;
     if(receipt&&(receipt.chatContext.editorTarget||receipt.chatContext.creationTarget)){
-      if(preparationPending.current)return;
+      if(preparationPending.current.has(liveSession))return;
       const id=receipt.conversationId??conversationIdRef.current;
       if(!id){setComposerLifecycleError("原请求结果尚未确认，请保留当前对话并等待原任务回执。");return;}
-      preparationPending.current=true;
+      preparationPending.current.add(liveSession);
       const epoch=liveSession.epoch,beforeMessages=liveSession.chat.messages;
       try{
         const rows=await client.listMessages({params:{conversationId:id},query:undefined,body:undefined}) as unknown as Array<WireAIMessage&{attachments?:string[]}>;
@@ -1591,7 +1591,7 @@ export function AICopilotContent({
         if(receipt.executionEngine==="pi"||receipt.executionEngine==="codex")liveSession.sourceEngines.set(source.id,receipt.executionEngine);
         await regenerate({messageId:source.id,body:{chatContext:receipt.chatContext,conversationId:id,attachmentIds:receipt.attachmentIds??source.attachments??[],...(receipt.executionEngine?{executionEngine:receipt.executionEngine}:{})}});
       }catch(cause){if(recoveryMounted.current&&liveSessionRef.current===liveSession&&preparedReceipt.current===receipt)setComposerLifecycleError(cause instanceof Error?`原请求恢复未完成：${cause.message}`:"原请求恢复未完成，请核对原任务。");}
-      finally{preparationPending.current=false;}
+      finally{preparationPending.current.delete(liveSession);}
       return;
     }
     return regenerate();
@@ -1670,8 +1670,8 @@ export function AICopilotContent({
   //   ② autoSend 缺省:只预填输入框(不覆盖用户已敲的字,延续 T-055b),用户回车才发。
   // nonce 由 Provider 内部计数器生成(SSR 安全,非 Date.now/Random),天然去重(重渲不重复发)。
   React.useLayoutEffect(()=>{sendPreparedRef.current=async(text,request)=>{
-    if(preparationPending.current)throw Error("当前稿件仍在准备，请等待原保存结束。");
-    preparationPending.current=true;setComposerLifecycleError(null);
+    if(preparationPending.current.has(liveSession))throw Error("当前稿件仍在准备，请等待原保存结束。");
+    preparationPending.current.add(liveSession);setComposerLifecycleError(null);
     const attempt={text,request,strict:Boolean(request?.creationTarget||draftEditor.readEditorState()),networkStarted:false};submissionAttempt.current=attempt;
     try{if(!selectedEngineAvailable)throw Error("当前编导引擎尚不可用，请到设置核对后恢复原请求。");const editorTarget=request?.creationTarget?undefined:await draftEditor.prepareEditorTurn();const targets={...(editorTarget?{editorTarget}:{}),...(request?.creationTarget?{creationTarget:request.creationTarget}:{})};preparedTargets.current=targets;
       if(!targets.editorTarget&&!targets.creationTarget){preparedReceipt.current=null;sessionStorage.removeItem(receiptStorageKey);await sendMessage({text});return;}
@@ -1681,7 +1681,7 @@ export function AICopilotContent({
       const frozenReceipt={chatContext:frozenContext,sourceText:text,attachmentIds:[...requestAttachmentIdsRef.current],executionEngine:liveSession.executionEngine,...(liveSession.conversationId?{conversationId:liveSession.conversationId}:{})};
       preparedReceipt.current=frozenReceipt;sessionStorage.setItem(receiptStorageKey,JSON.stringify(frozenReceipt));
       await sendMessage({text},{body:{chatContext:frozenContext,attachmentIds:frozenReceipt.attachmentIds,executionEngine:frozenReceipt.executionEngine,...(frozenReceipt.conversationId?{conversationId:frozenReceipt.conversationId}:{})}});
-    }catch(cause){setComposerLifecycleError(cause instanceof Error?cause.message:"稿件尚未准备好，本次未发送。");throw cause;}finally{if(!attempt.networkStarted)request?.onCreationSubmission?.("not-submitted");preparationPending.current=false;}
+    }catch(cause){if(liveSessionRef.current===liveSession)setComposerLifecycleError(cause instanceof Error?cause.message:"稿件尚未准备好，本次未发送。");throw cause;}finally{if(!attempt.networkStarted)request?.onCreationSubmission?.("not-submitted");preparationPending.current.delete(liveSession);}
   };});
   const settledCreation=React.useRef(new Set<string>());
   React.useEffect(()=>{const request=embed?.request,target=request?.creationTarget;if(!target||!request?.onCreationSettled||settledCreation.current.has(target.clientRequestId))return;const settled=messages.some(message=>message.role==="assistant"&&message.parts.some(part=>{if(!isToolUIPart(part)||getToolName(part)!=="work.creation.propose"||part.state!=="output-available")return false;const outcome=readChatToolOutcome(part.output);if(outcome.blocksData)return false;const result=workCreationProposalResult.safeParse(outcome.data);return result.success&&result.data.target.clientRequestId===target.clientRequestId;}));if(settled){settledCreation.current.add(target.clientRequestId);request.onCreationSettled();}},[messages,embed?.request]);
@@ -1795,7 +1795,7 @@ export function AICopilotContent({
     const pending = sendPreparedRef.current(value,explicitRequest);
     setPrompt("");
     attachmentPickerRef.current?.clear();
-    void pending.catch(()=>{setPrompt(value);}).finally(() => {
+    void pending.catch(()=>{if(liveSessionRef.current===liveSession)setPrompt(value);}).finally(() => {
       requestAttachmentIdsRef.current = [];
     });
   }, [

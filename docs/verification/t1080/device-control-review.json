@@ -1,0 +1,258 @@
+{
+  "schema": "t1080-device-control-independent-review-v1",
+  "observed_at": "2026-10-08T12:30:51.186795+00:00",
+  "verdict": "PASS",
+  "control_resolution_sha256": "79f10b7802f50ae98fc96439a0e7c3762e1b8816a32672f586b1db03b1ff0591",
+  "checks": [
+    {
+      "name": "exact_new_module_only",
+      "pass": true,
+      "evidence": {
+        "before": 91,
+        "after": 92
+      }
+    },
+    {
+      "name": "old_controls_preserved_except_active_T1080_write_set_append",
+      "pass": true,
+      "evidence": {
+        "orchestrator/process/modules.config.json": {
+          "id": "T-1080",
+          "only_write_set_changed": true,
+          "removed_paths": [],
+          "added_paths": [
+            "docs/features/t1072-owned-devices.md",
+            "docs/features/t1072-owned-devices.review.md",
+            "docs/verification/t1072/spec-review.json",
+            "frontend/src-tauri/build.rs",
+            "frontend/src-tauri/capabilities/remote-sidecar.json",
+            "frontend/src-tauri/permissions/owned-devices.toml",
+            "frontend/src-tauri/src/license.rs",
+            "frontend/src-tauri/src/owned_devices.rs",
+            "frontend/src/app/activate/owned-device-panel.test.tsx",
+            "frontend/src/app/activate/owned-device-panel.tsx",
+            "frontend/src/app/activate/page.tsx",
+            "frontend/src/features/settings/owned-device-connection.test.tsx",
+            "frontend/src/features/settings/owned-device-connection.tsx",
+            "frontend/src/features/settings/settings-interactive-region.tsx",
+            "frontend/src/lib/owned-devices.test.ts",
+            "frontend/src/lib/owned-devices.ts",
+            "orchestrator/context/T-1072-owned-devices.md",
+            "orchestrator/context/T-1072.md"
+          ]
+        },
+        "orchestrator/progress.json": {
+          "id": "T-1080",
+          "only_write_set_changed": true,
+          "removed_paths": [],
+          "added_paths": [
+            "backend/src/migration-convergence.test.ts",
+            "backend/src/modules/ai/ai.execution-authority.integration.test.ts",
+            "backend/src/modules/execution/execution-agentic-tool-host.test.ts",
+            "backend/src/modules/execution/workbench-artifact.service.ts",
+            "backend/src/modules/execution/workbench-plan.service.ts",
+            "backend/src/modules/platform-collection/platform-bind.integration.test.ts",
+            "backend/src/modules/production/production-native-public.integration.test.ts",
+            "contract/src/workspace-operation-scope.ts",
+            "contract/tests/modules/assets.test.ts",
+            "docs/features/t1072-owned-devices.md",
+            "docs/features/t1072-owned-devices.review.md",
+            "docs/verification/t1072/spec-review.json",
+            "frontend/src-tauri/build.rs",
+            "frontend/src-tauri/capabilities/remote-sidecar.json",
+            "frontend/src-tauri/permissions/owned-devices.toml",
+            "frontend/src-tauri/src/license.rs",
+            "frontend/src-tauri/src/owned_devices.rs",
+            "frontend/src/app/activate/owned-device-panel.test.tsx",
+            "frontend/src/app/activate/owned-device-panel.tsx",
+            "frontend/src/app/activate/page.tsx",
+            "frontend/src/features/copilot/chat-execution-stream.test.ts",
+            "frontend/src/features/copilot/live-chat-session.consumer.test.tsx",
+            "frontend/src/features/settings/owned-device-connection.test.tsx",
+            "frontend/src/features/settings/owned-device-connection.tsx",
+            "frontend/src/features/settings/settings-interactive-region.tsx",
+            "frontend/src/lib/owned-devices.test.ts",
+            "frontend/src/lib/owned-devices.ts",
+            "orchestrator/context/T-1072-owned-devices.md",
+            "orchestrator/context/T-1072.md"
+          ]
+        }
+      }
+    },
+    {
+      "name": "device_source_binding_alias_exact",
+      "pass": true,
+      "evidence": {
+        "verify": {
+          "implementation": [
+            "pnpm --dir frontend test",
+            "cargo test --manifest-path frontend/src-tauri/Cargo.toml owned_devices"
+          ]
+        }
+      }
+    },
+    {
+      "name": "only_owned_devices_vertical_added",
+      "pass": true,
+      "evidence": {
+        "before_summary": {
+          "verticals": 91,
+          "tasks_done": 61,
+          "tasks_total": 193,
+          "tasks_pending": 132,
+          "verticals_complete": 17
+        },
+        "after_summary": {
+          "verticals": 92,
+          "tasks_done": 61,
+          "tasks_total": 194,
+          "tasks_pending": 133,
+          "verticals_complete": 17
+        }
+      }
+    },
+    {
+      "name": "old_controls_preserved_except_active_T1080_write_set_append",
+      "pass": true,
+      "evidence": {
+        "orchestrator/process/modules.config.json": {
+          "id": "T-1080",
+          "only_write_set_changed": true,
+          "removed_paths": [],
+          "added_paths": [
+            "docs/features/t1072-owned-devices.md",
+            "docs/features/t1072-owned-devices.review.md",
+            "docs/verification/t1072/spec-review.json",
+            "frontend/src-tauri/build.rs",
+            "frontend/src-tauri/capabilities/remote-sidecar.json",
+            "frontend/src-tauri/permissions/owned-devices.toml",
+            "frontend/src-tauri/src/license.rs",
+            "frontend/src-tauri/src/owned_devices.rs",
+            "frontend/src/app/activate/owned-device-panel.test.tsx",
+            "frontend/src/app/activate/owned-device-panel.tsx",
+            "frontend/src/app/activate/page.tsx",
+            "frontend/src/features/settings/owned-device-connection.test.tsx",
+            "frontend/src/features/settings/owned-device-connection.tsx",
+            "frontend/src/features/settings/settings-interactive-region.tsx",
+            "frontend/src/lib/owned-devices.test.ts",
+            "frontend/src/lib/owned-devices.ts",
+            "orchestrator/context/T-1072-owned-devices.md",
+            "orchestrator/context/T-1072.md"
+          ]
+        },
+        "orchestrator/progress.json": {
+          "id": "T-1080",
+          "only_write_set_changed": true,
+          "removed_paths": [],
+          "added_paths": [
+            "backend/src/migration-convergence.test.ts",
+            "backend/src/modules/ai/ai.execution-authority.integration.test.ts",
+            "backend/src/modules/execution/execution-agentic-tool-host.test.ts",
+            "backend/src/modules/execution/workbench-artifact.service.ts",
+            "backend/src/modules/execution/workbench-plan.service.ts",
+            "backend/src/modules/platform-collection/platform-bind.integration.test.ts",
+            "backend/src/modules/production/production-native-public.integration.test.ts",
+            "contract/src/workspace-operation-scope.ts",
+            "contract/tests/modules/assets.test.ts",
+            "docs/features/t1072-owned-devices.md",
+            "docs/features/t1072-owned-devices.review.md",
+            "docs/verification/t1072/spec-review.json",
+            "frontend/src-tauri/build.rs",
+            "frontend/src-tauri/capabilities/remote-sidecar.json",
+            "frontend/src-tauri/permissions/owned-devices.toml",
+            "frontend/src-tauri/src/license.rs",
+            "frontend/src-tauri/src/owned_devices.rs",
+            "frontend/src/app/activate/owned-device-panel.test.tsx",
+            "frontend/src/app/activate/owned-device-panel.tsx",
+            "frontend/src/app/activate/page.tsx",
+            "frontend/src/features/copilot/chat-execution-stream.test.ts",
+            "frontend/src/features/copilot/live-chat-session.consumer.test.tsx",
+            "frontend/src/features/settings/owned-device-connection.test.tsx",
+            "frontend/src/features/settings/owned-device-connection.tsx",
+            "frontend/src/features/settings/settings-interactive-region.tsx",
+            "frontend/src/lib/owned-devices.test.ts",
+            "frontend/src/lib/owned-devices.ts",
+            "orchestrator/context/T-1072-owned-devices.md",
+            "orchestrator/context/T-1072.md"
+          ]
+        }
+      }
+    },
+    {
+      "name": "current_review_chain_exact_bytes",
+      "pass": true,
+      "evidence": {
+        "sha256": "56fc48691a34b61649c3fee7d1065b1de36901d8d30667bc03226131eca17277",
+        "events": 128
+      }
+    },
+    {
+      "name": "source_review_chain_archived_exact",
+      "pass": true,
+      "evidence": {
+        "sha256": "58588cd14317e96a6f5cf141b17d3687087e3f40e2d5a84067647c6676fc7d77",
+        "events": 110
+      }
+    },
+    {
+      "name": "both_chain_hash_and_links",
+      "pass": true,
+      "evidence": [
+        {
+          "file": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/orchestrator/review-events.ndjson",
+          "count": 128,
+          "errors": 0,
+          "tip": "9063d3cd638fb9a2016a8995f7dd7f770feaa47804170978d8fc8657e6cd92f7"
+        },
+        {
+          "file": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1080/device-original-review-events.ndjson",
+          "count": 110,
+          "errors": 0,
+          "tip": "0b5902901a901ff1e780f6e30ebd46d4ea7e0227b11a1e774bb11b08cf5c1a77"
+        }
+      ]
+    },
+    {
+      "name": "canonical_old_context_byte_exact",
+      "pass": true,
+      "evidence": {
+        "sha256": "401d008c6ff1512be9f7ef0d035adf2953d7f7e08366edcd472744692e9b4592"
+      }
+    },
+    {
+      "name": "both_task_ids_and_spec_refs",
+      "pass": true,
+      "evidence": "canonical hook和source owned-devices均在当前看板。"
+    },
+    {
+      "name": "skill_stays_329",
+      "pass": true,
+      "evidence": {
+        "format": "key=value",
+        "version": "3.29.0"
+      }
+    },
+    {
+      "name": "device_products_match_frozen_candidates",
+      "pass": true,
+      "evidence": [
+        {
+          "path": "frontend/src-tauri/src/lib.rs",
+          "actual_sha256": "b85d52ffce43dd10f3e6e82c242b9987ee0820ee5100abdc17f02e0d81f335eb",
+          "candidate_sha256": "b85d52ffce43dd10f3e6e82c242b9987ee0820ee5100abdc17f02e0d81f335eb",
+          "matches": true
+        },
+        {
+          "path": "frontend/src/features/settings/settings-interactive-region.tsx",
+          "actual_sha256": "6f9508e376b421f30c344385bca97ecf3efaad19a3e44b64971417c5197b4868",
+          "candidate_sha256": "6f9508e376b421f30c344385bca97ecf3efaad19a3e44b64971417c5197b4868",
+          "matches": true
+        }
+      ]
+    }
+  ],
+  "repository_or_git_mutated": false,
+  "tests_run": false,
+  "scope": "仅device七控制源组合与两已冻结重叠产品路径，不代签device全产品/双设备验收。",
+  "limits": "T1080正在做产品/测试闭包，写集仅追加并已单列观察；本报告不代签这些追加范围的全产品验证。"
+}

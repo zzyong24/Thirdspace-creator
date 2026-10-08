@@ -1,0 +1,62 @@
+[
+  {
+    "path": "/Users/zyongzhu/.codex/worktrees/t1063-release-pipeline/Thirdspace-creator",
+    "head": "6636e4faf506dcdd417004354637feb7801ee020",
+    "branch": "codex/t1063-release-pipeline",
+    "sourceRefRetained": true,
+    "ordinaryRemove": true,
+    "force": false,
+    "removed": true,
+    "seconds": 16.26820397377014
+  },
+  {
+    "path": "/Users/zyongzhu/.codex/worktrees/t1066-timeout-policy/Thirdspace-creator",
+    "head": "4aa040f47361903ed0694fbb9cf298fd5be95b9d",
+    "branch": "codex/t1066-timeout-policy",
+    "sourceRefRetained": true,
+    "ordinaryRemove": true,
+    "force": false,
+    "removed": true,
+    "seconds": 12.24266505241394
+  },
+  {
+    "path": "/Users/zyongzhu/.codex/worktrees/t188-creator-devices/Thirdspace-creator",
+    "head": "40a5eaf480c1347a9eadf4bf86a36971ce547874",
+    "branch": "codex/t188-creator-owned-devices",
+    "sourceRefRetained": true,
+    "ordinaryRemove": true,
+    "force": false,
+    "removed": true,
+    "seconds": 19.197128772735596
+  },
+  {
+    "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-backend-candidate",
+    "head": "4c767cc20a0f957089a6d5934d6eb8257c9a0f51",
+    "branch": "codex/t1070-backend-candidate",
+    "sourceRefRetained": true,
+    "ordinaryRemove": true,
+    "force": false,
+    "removed": true,
+    "seconds": 2.2288119792938232
+  },
+  {
+    "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-frontend-candidate",
+    "head": "b4356246ed4efc5def535aed774be5b227cea4e7",
+    "branch": "codex/t1070-frontend-candidate",
+    "sourceRefRetained": true,
+    "ordinaryRemove": true,
+    "force": false,
+    "removed": true,
+    "seconds": 1.7922017574310303
+  },
+  {
+    "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-native-candidate",
+    "head": "0ebfc0009ef7c18f08ecfd0b9f7735c86cb6031f",
+    "branch": "codex/t1080-retain-t1070-native-intermediates",
+    "sourceRefRetained": true,
+    "ordinaryRemove": true,
+    "force": false,
+    "removed": true,
+    "seconds": 1.556731939315796
+  }
+]

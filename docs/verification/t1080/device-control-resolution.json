@@ -1,0 +1,46 @@
+{
+  "source": "40a5eaf480c1347a9eadf4bf86a36971ce547874",
+  "task_aliases": {
+    "T-1063": "T-1063-release-pipeline",
+    "T-1066": "T-1066-timeout-policy",
+    "T-1067": "T-1067-skill-verification",
+    "T-1068": "T-1068-radar-transcription",
+    "T-1069": "T-1069-completion-json",
+    "T-1070": "T-1070-transcript-reliability",
+    "T-1071": "T-1071-resource-audit",
+    "T-1072": "T-1072-owned-devices"
+  },
+  "decisions": [
+    {
+      "path": "orchestrator/progress.json.summary.verticals",
+      "choice": "current_latest_scalar",
+      "source_value": 65,
+      "current_value": 91
+    },
+    {
+      "path": "orchestrator/progress.json.summary.tasks_done",
+      "choice": "current_latest_scalar",
+      "source_value": 43,
+      "current_value": 61
+    },
+    {
+      "path": "orchestrator/progress.json.summary.tasks_total",
+      "choice": "current_latest_scalar",
+      "source_value": 156,
+      "current_value": 193
+    },
+    {
+      "path": "orchestrator/progress.json.summary.tasks_pending",
+      "choice": "current_latest_scalar",
+      "source_value": 113,
+      "current_value": 132
+    },
+    {
+      "path": "orchestrator/progress.json.summary.verticals_complete",
+      "choice": "current_latest_scalar",
+      "source_value": 8,
+      "current_value": 17
+    }
+  ],
+  "reviewChain": "current byte exact; source original archive; no rehash"
+}

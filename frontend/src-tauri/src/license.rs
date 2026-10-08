@@ -2543,6 +2543,25 @@ pub fn run_chain_and_persist(ctx: &ShellLicenseCtx, op: LicenseOp<'_>) -> GateDe
     gated
 }
 
+/// T-1072：owned-device 已完成验签和授权文件回读后，更新既有判定缓存与事件。
+/// 不发起网络、不写授权文件；旧 activate/status 路径的语义保持不变。
+pub(crate) fn notify_owned_device_saved(ctx: &ShellLicenseCtx) -> bool {
+    let wall = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_millis() as i64;
+    let mut local = derive_local_verdict(ctx, wall);
+    if !local.signature_verified || local.expires_at.as_deref().is_some_and(|v| parse_iso_ms(v).is_none_or(|deadline| deadline <= wall)) { return false; }
+    local.strict_verify = true;
+    let gated = apply_runtime_gate(local, &SysDebugProbe);
+    let allowed = gated.licensed;
+    if let Ok(mut decision) = ctx.last_decision.lock() {
+        *decision = Some(gated.clone());
+    }
+    if let Some(app) = &ctx.app_handle {
+        use tauri::Emitter as _;
+        let _ = app.emit("creatoros://license-decision", &gated);
+    }
+    allowed
+}
+
 /// BR-01 领域记录同步:放行判定后,把展示副本经 sidecar loopback RPC 写回
 /// activation_state(machineId/code/…/last_seen_at/grace_seconds/revoked)。
 /// best-effort:同步失败只记日志,不影响放行(表只是展示副本,.license 才是权威)。

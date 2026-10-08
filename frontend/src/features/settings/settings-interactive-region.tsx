@@ -1,4 +1,5 @@
 "use client";
+import { OwnedDeviceConnection } from "./owned-device-connection";
 
 /** 设置入口负责页签与账号、外观、存储；模型配置由独立区域维护。 */
 
@@ -1007,7 +1008,7 @@ function ActivationStatusCard({
     return (
       <SectionCard
         title="激活"
-        description="桌面端一机一码激活授权"
+        description="查看当前产品授权与账号设备连接"
         action={
           <Badge
             data-slot="activation-status-badge"
@@ -1048,7 +1049,7 @@ function ActivationStatusCard({
   return (
     <SectionCard
       title="激活"
-      description="桌面端一机一码激活授权"
+      description="查看当前产品授权与账号设备连接"
       action={
         <Badge
           data-slot="activation-status-badge"
@@ -1213,6 +1214,7 @@ function ActivationStatusCard({
             ) : null}
           </div>
         </div>
+        <OwnedDeviceConnection visible={activation.status !== "inactive"} />
         <ActivationResetControl visible={activation.status !== "inactive"} />
       </div>
     </SectionCard>

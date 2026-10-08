@@ -1,0 +1,10 @@
+[
+  {
+    "path": "frontend/src-tauri/src/lib.rs",
+    "sha256": "b85d52ffce43dd10f3e6e82c242b9987ee0820ee5100abdc17f02e0d81f335eb"
+  },
+  {
+    "path": "frontend/src/features/settings/settings-interactive-region.tsx",
+    "sha256": "6f9508e376b421f30c344385bca97ecf3efaad19a3e44b64971417c5197b4868"
+  }
+]

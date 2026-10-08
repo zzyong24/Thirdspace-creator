@@ -1,0 +1,226 @@
+{
+  "schema": "t1080-device-pipeline-external-combination-v1",
+  "observed_at": "2026-10-08T12:17:52.486499+00:00",
+  "verdict": "外部限定组合候选可供root串行普通merge；非已应用/已全测产品",
+  "repository_mutated": false,
+  "git_index_or_checkout_mutated": false,
+  "git_merge_file_only_external": true,
+  "current_snapshot_rule": "每路径current真实整合文件已冻结；apply前核current_still_matches/sha，漂移则重新三方组合，不盲覆。",
+  "records": [
+    {
+      "source": "device",
+      "path": "frontend/src-tauri/src/lib.rs",
+      "source_head": "40a5eaf480c1347a9eadf4bf86a36971ce547874",
+      "base_head": "7e93ca3b4c122cb78293a3dee73a62879f2bd7a2",
+      "merge_file_exit": 0,
+      "sha256": {
+        "current": "6f8f46ea3cec2d0f831f8ab42df1ad6b62f1c256bbaeba29b22495995610dd1a",
+        "base": "820e46bee77ee75121dda9fe1ee4a6ca18aac399f745768a3f44bf49486eb2b5",
+        "source": "7e7801658ed8870572e7750f62ff1822f676948da2113fa1ce34131f69c412e8"
+      },
+      "candidate_sha256": "b85d52ffce43dd10f3e6e82c242b9987ee0820ee5100abdc17f02e0d81f335eb",
+      "unresolved_markers": 0,
+      "current_still_matches": true,
+      "candidate_is_current": false
+    },
+    {
+      "source": "device",
+      "path": "frontend/src/features/settings/settings-interactive-region.tsx",
+      "source_head": "40a5eaf480c1347a9eadf4bf86a36971ce547874",
+      "base_head": "7e93ca3b4c122cb78293a3dee73a62879f2bd7a2",
+      "merge_file_exit": 0,
+      "sha256": {
+        "current": "44a07451639fd9f963c476b6db7e9a290333be74b8e502ac10c5f7eb69672779",
+        "base": "f173aeb1e3b64d28fda3d5a1a814aee182ad40bf15721fc614ee78f944b077b2",
+        "source": "4122d6f531aed9ff379ac7befa193785c5fb10cbc04bac3bcab98e352c0fb22e"
+      },
+      "candidate_sha256": "6f9508e376b421f30c344385bca97ecf3efaad19a3e44b64971417c5197b4868",
+      "unresolved_markers": 0,
+      "current_still_matches": true,
+      "candidate_is_current": false
+    },
+    {
+      "source": "pipeline",
+      "path": ".github/workflows/desktop-release.yml",
+      "source_head": "6636e4faf506dcdd417004354637feb7801ee020",
+      "base_head": "5b0f4998a5c4de1b477ec72523b00f5d29c9669f",
+      "merge_file_exit": 2,
+      "sha256": {
+        "current": "b2837a320f84631237a48867ae441b457001ca8f0ad2851aa03811aea156efe3",
+        "base": "7e3011f7984f52494f3aec9bd3487dc2171be38ae36dadf185397fa80fd112b4",
+        "source": "4938f73bf925be186c33816337925f6a38e86d70ad15d287af224fdddaabe6a1"
+      },
+      "candidate_sha256": "6b9d7cf660f92d14fbad412a406f847f2af93066228e6ae87d6410fff841e0a6",
+      "unresolved_markers": 0,
+      "current_still_matches": true,
+      "candidate_is_current": false
+    },
+    {
+      "source": "pipeline",
+      "path": "frontend/scripts/desktop/build-sidecar.mjs",
+      "source_head": "6636e4faf506dcdd417004354637feb7801ee020",
+      "base_head": "5b0f4998a5c4de1b477ec72523b00f5d29c9669f",
+      "merge_file_exit": 1,
+      "sha256": {
+        "current": "fb9d864505f4cc1edd28206842857367016419619f83accc24892786433bb0c4",
+        "base": "97e8917a22226867cd7ad4731cb477fd41ca580e079e5faeaf466a913704796e",
+        "source": "da6dff407d9175311078e4f239643d2df882485ee5e26c04e3301a574f46fd12"
+      },
+      "candidate_sha256": "07c50a94e1d23e3ce2f601c19255071049ca3d4b31c4bca3b2bb12d5639ed112",
+      "unresolved_markers": 0,
+      "current_still_matches": true,
+      "candidate_is_current": false
+    },
+    {
+      "source": "pipeline",
+      "path": "frontend/scripts/desktop/fetch-ffmpeg.mjs",
+      "source_head": "6636e4faf506dcdd417004354637feb7801ee020",
+      "base_head": "5b0f4998a5c4de1b477ec72523b00f5d29c9669f",
+      "merge_file_exit": 0,
+      "sha256": {
+        "current": "14d86a849a53886c066eb461f8089b8f07386c259aa326ad82dd32da9f6fc6cb",
+        "base": "397085003d8db4331dc9cc9f7658a48cc626d3b6df3660f20820d5808b8d2b5d",
+        "source": "447ab780f7e32f30f7a6c92cc103755bafb924e79b9d0b9c6e6cf924ca5cfb9c"
+      },
+      "candidate_sha256": "14d86a849a53886c066eb461f8089b8f07386c259aa326ad82dd32da9f6fc6cb",
+      "unresolved_markers": 0,
+      "current_still_matches": true,
+      "candidate_is_current": true
+    },
+    {
+      "source": "pipeline",
+      "path": "frontend/scripts/desktop/node-runtime.mjs",
+      "source_head": "6636e4faf506dcdd417004354637feb7801ee020",
+      "base_head": "5b0f4998a5c4de1b477ec72523b00f5d29c9669f",
+      "merge_file_exit": 1,
+      "sha256": {
+        "current": "f341572d12cc2cb6a30cc18ec4bb2a85978a9e09476c91b05b4882a3c3c816fe",
+        "base": "a6973a539a184065c7cc07c6c1f437575a041e6112ff804c20bac88416affcc5",
+        "source": "980d1c2881c50cc0f04337295aac68c7a5a94ad4fc2fa5de9b1fe401bb1aebf0"
+      },
+      "candidate_sha256": "f341572d12cc2cb6a30cc18ec4bb2a85978a9e09476c91b05b4882a3c3c816fe",
+      "unresolved_markers": 0,
+      "current_still_matches": true,
+      "candidate_is_current": true
+    },
+    {
+      "source": "pipeline",
+      "path": "frontend/scripts/desktop/package.mjs",
+      "source_head": "6636e4faf506dcdd417004354637feb7801ee020",
+      "base_head": "5b0f4998a5c4de1b477ec72523b00f5d29c9669f",
+      "merge_file_exit": 3,
+      "sha256": {
+        "current": "f9d7f5c868eeb6d0aa8334621db3d0c6642647449d9bed53d58036d704e7cf48",
+        "base": "128b19fe3f8e4e362ae31382dd5c3329d2f1e2aa838b1159a611d70cf57d32f6",
+        "source": "575098c256e198236c77fe0e06def3ca2345a82bb8845d9fed59d69d33697033"
+      },
+      "candidate_sha256": "801aebc3f3f6de331e2413be82bf3a3edcf6fd6bf940db5aec6bcef34511feda",
+      "unresolved_markers": 0,
+      "current_still_matches": true,
+      "candidate_is_current": false
+    },
+    {
+      "source": "pipeline",
+      "path": "frontend/src-tauri/src/lib.rs",
+      "source_head": "6636e4faf506dcdd417004354637feb7801ee020",
+      "base_head": "5b0f4998a5c4de1b477ec72523b00f5d29c9669f",
+      "merge_file_exit": 1,
+      "sha256": {
+        "current": "6f8f46ea3cec2d0f831f8ab42df1ad6b62f1c256bbaeba29b22495995610dd1a",
+        "base": "f26bf4fb0cb9577bed955c121e74161845146444175f246ab60a9e2d1e9f5a2a",
+        "source": "a14f90e620d7f7cacd9dbb610d44576f86409696341bba16f579c16a1b58f0f5"
+      },
+      "candidate_sha256": "6f8f46ea3cec2d0f831f8ab42df1ad6b62f1c256bbaeba29b22495995610dd1a",
+      "unresolved_markers": 0,
+      "current_still_matches": true,
+      "candidate_is_current": true
+    }
+  ],
+  "combined_native": {
+    "path": "frontend/src-tauri/src/lib.rs",
+    "candidate_path": "/Users/zyongzhu/CreatorOS-local-acceptance/worktree-main-integration-20261008/device-pipeline-combination-candidate/combined/candidate/frontend/src-tauri/src/lib.rs",
+    "candidate_sha256": "b85d52ffce43dd10f3e6e82c242b9987ee0820ee5100abdc17f02e0d81f335eb",
+    "identical_to_device_candidate": true,
+    "pipeline_native_candidate_identical_to_current": true,
+    "reason": "pipeline原Windows runtime功能已在current完整覆盖；combined只增加device精确模块/4命令/2宿主env，保留当前native Source4/三宿主与T1062/T1070/T1077后继。"
+  },
+  "decisions": [
+    {
+      "path": "device/lib.rs",
+      "decision": "source只加owned_devices module、start/poll/resume/cancel四commands、builtin flag及两sidecar env；其他current每行不变。"
+    },
+    {
+      "path": "device/settings",
+      "decision": "追加OwnedDeviceConnection import/入口与两段授权文案；保留currentReportingConsentCard、preferences组合、assistant-engine models深链接。"
+    },
+    {
+      "path": "pipeline/.github/workflows/desktop-release.yml",
+      "decision": "采用source出包策略：build-only env、安装验证explicit opt-in/continue-on-error、制品先上传、取消in-progress false；current timeout等独立后继保留。两empty-vs-env冲突均采source env。"
+    },
+    {
+      "path": "pipeline/build-sidecar",
+      "decision": "唯一新hunk为build-only跳过额外assertWorkerExternalPackages，source声明资源已组装检查与必需装配仍留；current已组装CodexSource4/三宿主代码不改，HyperFrames CLI有限120000ms保留。"
+    },
+    {
+      "path": "pipeline/fetch-ffmpeg",
+      "decision": "candidate=current精确字节；source所有build-only功能已覆盖，保留current显式普通非空文件/缓存非空检查。"
+    },
+    {
+      "path": "pipeline/node-runtime",
+      "decision": "candidate=current精确字节；有限120000ms比source删除旧5000无界后继更适用当前LED053。"
+    },
+    {
+      "path": "pipeline/package",
+      "decision": "追加sourcebuild-only分离T656泄漏扫描与诚实not-run日志；保留currentTLSrequestAbort120000/outer150000、current注释和真实签名路径。"
+    },
+    {
+      "path": "pipeline/lib.rs",
+      "decision": "candidate=current精确字节；identical conflict两侧同字节选current；原Windowsfallback/test已覆盖，不重写其他native后继。"
+    }
+  ],
+  "checks": {
+    "zero_conflict_markers": true,
+    "mjs_syntax_only": [
+      {
+        "path": "frontend/scripts/desktop/build-sidecar.mjs",
+        "exit": 0,
+        "stderr": ""
+      },
+      {
+        "path": "frontend/scripts/desktop/fetch-ffmpeg.mjs",
+        "exit": 0,
+        "stderr": ""
+      },
+      {
+        "path": "frontend/scripts/desktop/node-runtime.mjs",
+        "exit": 0,
+        "stderr": ""
+      },
+      {
+        "path": "frontend/scripts/desktop/package.mjs",
+        "exit": 0,
+        "stderr": ""
+      }
+    ],
+    "combined_native_is_device_additive_candidate": true,
+    "source4_three_hosts_preservation": "device lib是current纯追加；pipeline lib=current；pipelinebuild-sidecar唯一区别为assertWorkerExternalPackages build-only包装，其他装配逐字保留。",
+    "controls_untouched": true,
+    "source_only_nonoverlap_paths": "本次不复制其他source-only产品文件；root普通merge来源提交承接，预检packet已列所有路径。"
+  },
+  "alias_source_note": {
+    "task_aliases": {
+      "device_original_T1072": "T-1072-owned-devices",
+      "pipeline_original_T1063": "T-1063-release-pipeline"
+    },
+    "device_dirty_snapshot_commit": "40a5eaf480c1347a9eadf4bf86a36971ce547874",
+    "device_verify_command": "pnpm --dir frontend test",
+    "alias_candidate_reference": "/Users/zyongzhu/CreatorOS-local-acceptance/worktree-main-integration-20261008/device-pipeline-preflight-packet/device/owned-devices-module-alias-candidate.json",
+    "preserve_current_skill": "3.29.0",
+    "review_chains": "root独立原字节归档来源，不并入当前准入chain、不重新hash历史"
+  },
+  "limitations": [
+    "没有应用repo文件、Gitmerge/index/checkout、运行产品测试/构建、远端流水线、App/真实DB/备份。",
+    "只有4个mjs node --check语法核验，未代签产品公共链/打包验收。",
+    "source/base/current/candidate每个实际文件都在外部packet，root需先核冻结currentSHA再采用。"
+  ]
+}
