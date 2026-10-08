@@ -1,0 +1,28 @@
+{
+  "upstream": "https://github.com/OpenCut-app/opencut-classic",
+  "commit": "cf5e79e919144200294fb9fed22a222592a0aeea",
+  "nativeProjectVersion": 31,
+  "mediaBunny": {
+    "version": "1.41.0",
+    "commit": "b285360563b754546cbfb7bbcf853f107e1dd3b9",
+    "license": "MPL-2.0",
+    "sourceComparison": {
+      "files": 57,
+      "differences": 0
+    }
+  },
+  "soundTouchJS": {
+    "version": "0.3.0",
+    "commit": "36b161bb7d69d801b6a81674ad0fc0c42082729f",
+    "license": "LGPL-2.1",
+    "sourceComparison": {
+      "files": 13,
+      "differences": 0
+    }
+  },
+  "protocol": {
+    "type": "creatoros.reference-editor",
+    "version": 1
+  },
+  "licensingReview": "not-performed"
+}
