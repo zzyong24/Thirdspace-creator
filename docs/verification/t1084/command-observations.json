@@ -1,0 +1,147 @@
+{
+  "schema": "actual-command-observations/v1",
+  "recordedAt": "2026-10-08T15:44:39.848749+00:00",
+  "note": "当前主会话实际工具完成返回值与日志的对应记录；不是历史时间补拍，也不代签安装结果。",
+  "commands": [
+    {
+      "argv": [
+        "pnpm",
+        "-C",
+        "backend",
+        "exec",
+        "vitest",
+        "run",
+        "src/modules/ai-runtime/chat-assembly.test.ts",
+        "-t",
+        "真实聊天冻结可选计划工具"
+      ],
+      "exitCode": 1,
+      "summary": "1 FAIL / 100 过滤",
+      "log": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1084/existing-plan-preparation-red.log",
+      "sha256": "acf9169be484cbb6771d9c896b4ea17cef69063230d78e618b2517eb52e62c2c"
+    },
+    {
+      "argv": [
+        "pnpm",
+        "-C",
+        "backend",
+        "exec",
+        "vitest",
+        "run",
+        "src/modules/ai-runtime/chat-assembly.test.ts",
+        "-t",
+        "T1084"
+      ],
+      "exitCode": 1,
+      "summary": "5 FAIL / 101 过滤",
+      "log": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1084/new-preparation-red.log",
+      "sha256": "870f930a96525e8bafb5345779e184b923ebc5520b5fc40e4be7095f06d22789"
+    },
+    {
+      "argv": [
+        "pnpm",
+        "-C",
+        "backend",
+        "exec",
+        "vitest",
+        "run",
+        "src/modules/ai-runtime/chat-assembly.test.ts",
+        "src/modules/ai-runtime/chat-tool-definitions.test.ts",
+        "src/modules/ai-runtime/chat-workbench-plan-tool-host.test.ts",
+        "src/modules/ai-runtime/chat-workbench-capability-host.test.ts"
+      ],
+      "exitCode": 0,
+      "summary": "4文件146 PASS",
+      "log": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1084/preparation-and-host-green.log",
+      "sha256": "e161306e72c4e6e8360a5ea5110a22312d1978d596e8dde82a983e44b5919c12"
+    },
+    {
+      "argv": [
+        "pnpm",
+        "-C",
+        "backend",
+        "typecheck"
+      ],
+      "exitCode": 0,
+      "summary": "实际exit0",
+      "log": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1084/backend-typecheck.log",
+      "sha256": "931327292db1bbff62320abd8dd57032ae19ad39b9e012d04233dc49d716637b"
+    },
+    {
+      "argv": [
+        "pnpm",
+        "-C",
+        "frontend",
+        "typecheck"
+      ],
+      "exitCode": 0,
+      "summary": "实际exit0",
+      "log": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1084/frontend-typecheck.log",
+      "sha256": "4c0cd880abe2a1a1a1f20e2f9d2825951e19ae4e848a3f36d2216d3b9e20d035"
+    },
+    {
+      "argv": [
+        "pnpm",
+        "-C",
+        "backend",
+        "exec",
+        "vitest",
+        "run",
+        "src/integration/chat-workbench-plan.integration.test.ts"
+      ],
+      "exitCode": 1,
+      "summary": "2 PASS / 2 FAIL，非本轮准备顺序函数调用",
+      "log": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1084/public-plan-integration.log",
+      "sha256": "b127d2e0fec582a84f404e44511731d988c00b01c9866c52fe40151a25257c11"
+    },
+    {
+      "argv": [
+        "node",
+        "orchestrator/process/boundary-scan.mjs"
+      ],
+      "exitCode": 0,
+      "summary": "5条既有基线，无新增",
+      "log": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1084/boundary.log",
+      "sha256": "21063424253db0601ff571f39f0474072b3476d34ee10a8920361b20db642f24"
+    },
+    {
+      "argv": [
+        "node",
+        "orchestrator/process/semantic-boundary-scan.mjs"
+      ],
+      "exitCode": 0,
+      "summary": "PASS",
+      "log": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1084/semantic-boundary.log",
+      "sha256": "b972b2b1d6a12435c4034d60290afc2db036e5e439f96cc3f617e5e78a476923"
+    },
+    {
+      "argv": [
+        "node",
+        "tools/timeout-policy/verify.mjs"
+      ],
+      "exitCode": 1,
+      "summary": "保留原main已登记T1081静态债，动态套件实际通过",
+      "log": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1084/timeout-policy.log",
+      "sha256": "e6a2e7fb97d3f0904a3142904ad8d0cdc4d99d7f20455267097a9d5048e671f0"
+    },
+    {
+      "argv": [
+        "pnpm",
+        "-C",
+        "frontend",
+        "exec",
+        "vitest",
+        "run",
+        "scripts/desktop/package-local.test.mjs",
+        "scripts/desktop/desktop-release-workflow.test.mjs",
+        "scripts/desktop/notarize.test.mjs",
+        "scripts/desktop/tauri-signing-config.test.mjs",
+        "--retry=0"
+      ],
+      "exitCode": 0,
+      "summary": "固定四项预检45 PASS",
+      "log": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1084/package-preflight.log",
+      "sha256": "133ed0d1570832f55268d0e0b2da509eb560cd605bdd941f3e97b9cb5d2387d3"
+    }
+  ]
+}

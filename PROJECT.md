@@ -3,7 +3,7 @@
 > 本文件由 `node orchestrator/process/pmem.mjs sync` 生成,**勿手改生成段**。
 > 人写的「定位/为什么」改 pmem.mjs 顶部常量与 SYSTEM_ARCHITECTURE.md。
 
-LAST_SYNCED: main @ 0480ebe1
+LAST_SYNCED: main @ 0bc810de
 
 ## 这是什么(定位)
 
@@ -23,6 +23,8 @@ CreatorOS —— 一个编导式的自媒体内容生产系统(非项目管理�
 
 ## 开放任务(欠债)
 
+- [wip] T-1084 修复安装版 AI 普通消息被 Workbench 工具预装配校验阻断
+- [open] T-1085 核对实际聊天集成失败与既有计划恢复场景漂移
 - [wip] T-1072-owned-devices 配合 Growth 轻量手机号账号与正式双设备，补齐新电脑连接与已激活账号入口
 - [open] T-1067-skill-verification 清理通用产品流程Skill既有公开分发校验债务
 - [open] T-1018 清理本轮测试暴露的全局类型与边界欠债

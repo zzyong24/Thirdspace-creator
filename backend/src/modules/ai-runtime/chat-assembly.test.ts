@@ -17,6 +17,8 @@ import {
   prepareChatAssembly,
 } from "./chat-assembly";
 import { getChatToolNativeExecutor } from "./chat-tool-gate";
+import { chatWorkbenchPlanCapability } from "./chat-workbench-plan-tool";
+import type { WorkbenchCapability } from "@creatoros/contract/agent-workbench";
 import { createChatSkillLibrary } from "./chat-skill-library";
 import { buildEnrichPrompt } from "./topic-enrich-runner";
 import {
@@ -1750,6 +1752,33 @@ it("真实聊天冻结可选计划工具，旧快照不被静默改写",async()=
  expect(old.toolDefinitions.some(tool=>tool.name==="plan.update")).toBe(false);
  const current=await prepareDurableChatTurn(owner,input,deps,snapshot,{workbenchPlans:true});
  expect(current.toolDefinitions.find(tool=>tool.name==="plan.update")).toMatchObject({effect:"committed",parameters:{type:"object"}});
+});
+
+it.each(["pi", "codex"] as const)("T1084 %s 持久聊天先装配计划及 Workbench，再冻结完整工具目录", async (executionEngine) => {
+ const {deps}=makeDeps(),owner={...(ctx as RequestContext),accountId:"a"};
+ const input:Parameters<typeof prepareChatTurn>[1]={messages:[{id:"source",role:"user",parts:[{type:"text",text:"读取当前资料"}]}],chatContext:{surface:"topics"},executionEngine};
+ const capability:WorkbenchCapability={name:"files.read",schemaVersion:1,description:"读取任务文件",inputSchema:{type:"object",properties:{path:{type:"string"}},required:["path"],additionalProperties:false},resultSchema:{type:"object"},effects:["read"],requiredCapabilities:["task.files"],platforms:["macos"]};
+ const snapshot=durableChatSnapshot("a","本轮方法"),before=structuredClone({input,snapshot,capability});
+ const prepared=await prepareDurableChatTurn(owner,input,deps,snapshot,{workbenchPlans:true,workbenchCapabilities:[capability],workbenchPlatform:"macos"});
+ expect(prepared.toolDefinitions.find(tool=>tool.name==="plan.update")).toMatchObject({effect:"committed",parameters:chatWorkbenchPlanCapability.inputSchema});
+ expect(prepared.toolDefinitions.find(tool=>tool.name==="files.read")).toMatchObject({effect:"none",parameters:capability.inputSchema,description:capability.description});
+ expect(prepared.workbenchCapabilities).toEqual([capability]);
+ expect(prepared.workbenchPlatform).toBe("macos");
+ expect(prepared.toolParameters["files.read"]!.parameters.safeParse({path:"资料.txt"}).success).toBe(true);
+ expect(prepared.toolParameters["files.read"]!.parameters.safeParse({path:123}).success).toBe(false);
+ // 准备原型没有原任务租约，不能提前执行；真实执行仍由已冻结任务的 host 接管。
+ await expect(getChatToolNativeExecutor(prepared.assembly.tools["plan.update"]!)!({expectedRevision:0,steps:[]})).rejects.toThrow("PLAN_EXECUTION_REQUIRES_ORIGINAL_TASK_LEASE");
+ await expect(getChatToolNativeExecutor(prepared.assembly.tools["files.read"]!)!({path:"资料.txt"})).rejects.toThrow("WORKBENCH_EXECUTION_REQUIRES_ORIGINAL_TASK_LEASE");
+ expect({input,snapshot,capability}).toEqual(before);
+});
+
+it.each([
+ {kind:"描述",changed:{...chatWorkbenchPlanCapability,description:"与实际计划入口不同的描述"}},
+ {kind:"schema",changed:{...chatWorkbenchPlanCapability,inputSchema:{type:"object",additionalProperties:false}}},
+ {kind:"版本",changed:{...chatWorkbenchPlanCapability,schemaVersion:2}},
+])("T1084 完整装配后仍拒绝计划 $kind 漂移", async ({changed}) => {
+ const {deps}=makeDeps();
+ await expect(prepareChatTurn(ctx,{messages:[],chatContext:{surface:"topics"}},deps,{workbenchCapabilities:[changed]})).rejects.toThrow("Workbench 冻结目录与执行入口不匹配：plan.update");
 });
 
 it("持久聊天准备不借外层快照补齐缺失的产品说明",async()=>{

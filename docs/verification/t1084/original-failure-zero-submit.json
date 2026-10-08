@@ -1,0 +1,18 @@
+{
+  "groupId": "grp-58776bff-101",
+  "projectId": "project-58776bff-104",
+  "conversationId": "ai-conv-ca33de02-271",
+  "messageCount": 0,
+  "matchingTaskIds": [],
+  "source": "安装版公开 CLI 原始回执，准备HTTP400后没有创建消息或copilot任务",
+  "proof": [
+    {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1084/before-repair-ai.conversations.messages.list.json",
+      "sha256": "348f6fd7bc663714c675dec28d702913458138740fa3d49f4a5027c60394e009"
+    },
+    {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1084/before-repair-ai.tasks.list.json",
+      "sha256": "e5a7c24e1a963bc58b13af8e77a1700adf95714647044350279c47fad8e2ee78"
+    }
+  ]
+}

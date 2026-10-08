@@ -1,0 +1,49 @@
+{
+  "schema": "installed-public-evidence-index/v1",
+  "sourceSha": "0480ebe17717bd426e083709fc22ccbdb9eb7840",
+  "app": "/Applications/CreatorOS.app",
+  "artifact": "/Users/zyongzhu/Downloads/CreatorOS-1.2.0.dmg",
+  "evidenceRoot": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008",
+  "facts": [
+    {
+      "file": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/installation.json",
+      "sha256": "ad3e8b63fe27b4419e9bb1cf1b1c52233637180207002c5f3089ef708b3b58aa"
+    },
+    {
+      "file": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/installed-app-verification.json",
+      "sha256": "0df8b9dd770da4fcb20a6da8ef00df9c27f1a2d0b159afbc7f0c8ba2d8246054"
+    },
+    {
+      "file": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/startup-markers.json",
+      "sha256": "e662c7cc891183b69d3992a990a7dbcab8fa35fb59e26aef6d6e675f31038eac"
+    },
+    {
+      "file": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/installed-data-preservation.json",
+      "sha256": "098429f7b5d377236ac5f49fb1965c3bafc381eef3de28557ed37f75da81aa4a"
+    },
+    {
+      "file": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/installed-read-matrix.json",
+      "sha256": "d5c4fb4bc087e474bdc0fd8b72b5792c11b620a2b19e6857f2a9560b813fccd7"
+    },
+    {
+      "file": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/installed-work-and-original-matrix.json",
+      "sha256": "cb5689e139d3ea8a0cf9b84dd75c661726cf62c5e2243f4bf3a30a5d20d5425d"
+    },
+    {
+      "file": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/installed-export-download-proof.json",
+      "sha256": "adbc0441ae2a53c29e58294d57df97d60ad0b7318ec76537af414a61887ec2f5"
+    },
+    {
+      "file": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/installed-export-full-decode.json",
+      "sha256": "fabd188e24aa920b47ca44715abc483cbe1972af326da6f3e0b68adc28bcef92"
+    },
+    {
+      "file": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/installed-editor-persistence-validation.json",
+      "sha256": "47bff16368424699c0f7e06e64f0b49893b46a918343bd332ac8cc83f58d45c9"
+    },
+    {
+      "file": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/installed-assistant-read-message.json",
+      "sha256": "674845032b09831431173b1774d493e603aa7d7e59661e70867c309a8dfddf2c"
+    }
+  ]
+}

@@ -9,6 +9,8 @@
 
 | ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
 | --- | --- | --- | --- | --- | --- | --- |
+| T-1084 | 修复安装版 AI 普通消息被 Workbench 工具预装配校验阻断 | 🔨 | PASS[REV:e209f8301608] | — | [SPEC](docs/features/t1084-chat-workbench-preparation-order.md) | T1062 新 main 安装实测公开消息入口 HTTP400：plan.update 未装配；原已有 plan host，但校验发生在原型注入之前。只修准备顺序，保留最终严格目录/副作用/schema/租约校验；先独立复核、RED/GREEN，再重新出包和原会话公开复验，不重发未知任务、不触碰真实稿件。 |
+| T-1085 | 核对实际聊天集成失败与既有计划恢复场景漂移 | 📋 | — | — | [实测和独立诊断](docs/verification/t1084/adjacent-integration-diagnosis.md) | T1084 回归实际暴露原 plan 集成2FAIL及完整装配后段失败。两plan旧fixture不经本轮修改函数，与有限错误收口和安全根模型恢复协议漂移；前端后段还需完整诊断。先取得实际账本/lastError/模型请求事实，修复需单独SPEC和独评，不放宽生产门或删断言，不冒称完整Gate通过。 |
 | T-1073 | 修复全面排查确认的8处资源浪费与内存泄漏 | ✅ 待办 | PASS[REV:3b0b0c1dc9ce] | — | [SPEC](docs/features/t1073-resource-memory-fixes.md) [详情](BACKLOG-details.md#t-1073) | 见详情。 |
 | T-1072-owned-devices | 配合 Growth 轻量手机号账号与正式双设备，补齐新电脑连接与已激活账号入口 | 🔨 待办 | PASS[REV:eb8de221287b] | 待验 | [SPEC](docs/features/t1072-owned-devices.md) | 原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-aed1560bebc24ab1)。 |
 | T-1071-resource-audit | 全系统排查资源浪费与内存泄漏并隔离复现 | ✅ 待办 | — | — | [排查范围](docs/verification/t1071-resource-memory-audit.md) [详情](BACKLOG-details.md#t-1071-resource-audit) | 见详情。 |

@@ -18,7 +18,8 @@ export async function prepareChatTurn(ctx:RequestContext,input:ChatTurnInput,dep
   verbatimSources:frozenInput.trustedScriptSources,
   latestUserInstruction:latestUserText(frozenInput.messages),
   executionEngine:frozenInput.executionEngine??"pi",
-  toolDefinitionOptions:frozenOptions,
+  // 内层只建立已有业务工具；Workbench 原型在下方注入后再用完整目录严格校验。
+  toolDefinitionOptions:{...frozenOptions,workbenchCapabilities:[]},
  });
  if(options.workbenchCapabilities?.some(capability=>capability.name===chatWorkbenchPlanCapability.name)){
   assembly.tools[chatWorkbenchPlanCapability.name]=defineWorkbenchChatTool(chatWorkbenchPlanCapability,async()=>{throw new Error("PLAN_EXECUTION_REQUIRES_ORIGINAL_TASK_LEASE");});
