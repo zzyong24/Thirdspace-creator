@@ -6,11 +6,24 @@ import {createServer} from 'node:http';
 import {once} from 'node:events';
 import {createDb,eq,executionTasks} from '@creatoros/backend';
 import {ENDPOINTS} from '@creatoros/contract';
-import {getLiveChatSession,acquireLiveChatSession} from '../features/copilot/live-chat-session';
+import {getLiveChatSession as getLiveChatSessionWithFactory,acquireLiveChatSession} from '../features/copilot/live-chat-session';
+import {Chat} from '@ai-sdk/react';
 import {createPersistentTaskService} from '../../../backend/src/modules/execution/persistent-task.service';
 import {createExecutionCallLedgerService} from '../../../backend/src/modules/execution/execution-call-ledger.service';
 import {createExecutionStreamService,subscribeExecutionStream} from '../../../backend/src/modules/execution/execution-stream.service';
-import {DefaultChatTransport,readUIMessageStream} from 'ai';
+import {DefaultChatTransport,readUIMessageStream,type ChatTransport,type UIMessage} from 'ai';
+
+// 测试沿产品原 factory 端口注入真实 SDK；现有会话仍按原 key 复用，断言不变。
+function getLiveChatSession(key: string) {
+ return getLiveChatSessionWithFactory<Chat<UIMessage>,ChatTransport<UIMessage>,UIMessage>(key, session => new Chat<UIMessage>({
+  id: key,
+  transport: {
+   sendMessages: options => {if (!session.transport) throw new Error("聊天连接尚未就绪");return session.transport.sendMessages(options);},
+   reconnectToStream: options => {if (!session.transport) throw new Error("聊天连接尚未就绪");return session.transport.reconnectToStream(options);},
+  },
+  sendAutomaticallyWhen: input => session.shouldResume?.(input) ?? false,
+ }));
+}
 
 const context={userId:'u',accountId:'a',requestId:'r',source:'user' as const};
 const input={executionTaskId:'original',sourceMessageId:'message',conversationId:'conversation'};

@@ -2,10 +2,24 @@ import * as React from 'react';
 import {act,cleanup,fireEvent,render,screen,waitFor} from '@testing-library/react';
 import {afterEach,expect,it,vi} from 'vitest';
 import {AICopilotContent} from './ai-copilot-content';
-import {getLiveChatSession} from './live-chat-session';
+import {getLiveChatSession as getLiveChatSessionWithFactory} from './live-chat-session';
+import {Chat} from '@ai-sdk/react';
+import type {ChatTransport,UIMessage} from 'ai';
 import {readStoredConversationId,writeStoredConversationId} from './conversation-persistence';
 import {CURRENT_GROUP_KEY} from '@/lib/http-transport';
 import {ENDPOINTS,executionTaskResourceV2} from '@creatoros/contract';
+// 测试沿产品原 factory 端口注入真实 SDK；现有会话仍按原 key 复用，断言不变。
+function getLiveChatSession(key: string) {
+ return getLiveChatSessionWithFactory<Chat<UIMessage>,ChatTransport<UIMessage>,UIMessage>(key, session => new Chat<UIMessage>({
+  id: key,
+  transport: {
+   sendMessages: options => {if (!session.transport) throw new Error("聊天连接尚未就绪");return session.transport.sendMessages(options);},
+   reconnectToStream: options => {if (!session.transport) throw new Error("聊天连接尚未就绪");return session.transport.reconnectToStream(options);},
+  },
+  sendAutomaticallyWhen: input => session.shouldResume?.(input) ?? false,
+ }));
+}
+
 const query='copilot=open&selKind=project&selId=revisit';
 vi.mock('next/navigation',()=>({useSearchParams:()=>new URLSearchParams(query),useRouter:()=>({push:vi.fn(),replace:vi.fn(),refresh:vi.fn()})}));
 const api=vi.hoisted(()=>({listAITasks:vi.fn(async()=>[]),listConversations:vi.fn(async()=>[]),listMessages:vi.fn()}));
