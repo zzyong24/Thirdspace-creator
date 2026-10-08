@@ -1,3 +1,4 @@
+import {seedAdjacentContent} from "../../integration/adjacent-domain-fixtures";
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { createDb, type Db } from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
@@ -70,6 +71,8 @@ function build(db: Db) {
 
 beforeEach(async () => {
   ({ db } = await createDb());
+  await seedAdjacentContent(db,ctx,["output-1","output-2","output-3","output-A","output-B","output-X","output-any","output-archived","output-cover","output-heal","output-hidden","output-legacy-unknown","output-manual","output-mine","output-new","output-private","output-shell","output-visible",...Array.from({length:12},(_,i)=>`output-${i}`)]);
+  await seedAdjacentContent(db,{...ctx,accountId:"acct-2"},["output-other-account"]);
   build(db);
 });
 

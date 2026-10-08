@@ -1,3 +1,4 @@
+import {workspaceFilter,workspaceKey} from "../../workspace-scope";
 import { and, desc, eq, type Db } from "@creatoros/backend";
 import { benchmarkSources, benchmarkWorks } from "./benchmark.db-schema";
 import { OwnershipError } from "./benchmark.errors";
@@ -8,8 +9,8 @@ import { OwnershipError } from "./benchmark.errors";
 // remove/toggle 先 ownership-scoped select(叠号门),缺失/跨号 → OwnershipError(404,
 // 不泄露跨用户/跨号行存在)。
 
-export type BenchmarkSourceRow = typeof benchmarkSources.$inferSelect;
-export type BenchmarkWorkRow = typeof benchmarkWorks.$inferSelect;
+export type BenchmarkSourceRow = Omit<typeof benchmarkSources.$inferSelect,"groupId"> & {groupId?:string|null};
+export type BenchmarkWorkRow = Omit<typeof benchmarkWorks.$inferSelect,"groupId"> & {groupId?:string|null};
 
 export interface RepoDeps {
   now: () => string;
@@ -17,7 +18,8 @@ export interface RepoDeps {
   userId: string; // 所有权边界，构造时 baked in
   // [T-332 S2] 第二属主维度(账号全域隔离)。必填:service 入口经 requireAccountId 收窄
   // 后传入,未选号到不了 repo(引导态禁读写)。
-  accountId: string;
+  accountId: string|null;
+  groupId?:string|null;
 }
 
 export interface CreateSourceInput {
@@ -102,7 +104,7 @@ export function createBenchmarkRepository(db: Db, deps: RepoDeps): BenchmarkRepo
       // [T-332 S2] strict:无条件叠号门(无「无号 → 全量」退化)。
       const where = and(
         eq(benchmarkSources.userId, deps.userId),
-        eq(benchmarkSources.accountId, deps.accountId),
+        workspaceFilter(benchmarkSources,workspaceKey(deps)),
       );
       const rows = await db
         .select()
@@ -121,7 +123,7 @@ export function createBenchmarkRepository(db: Db, deps: RepoDeps): BenchmarkRepo
     async listEnabledSources() {
       const where = and(
         eq(benchmarkSources.userId, deps.userId),
-        eq(benchmarkSources.accountId, deps.accountId),
+        workspaceFilter(benchmarkSources,workspaceKey(deps)),
         eq(benchmarkSources.enabled, true),
       );
       return db.select().from(benchmarkSources).where(where);
@@ -137,6 +139,7 @@ export function createBenchmarkRepository(db: Db, deps: RepoDeps): BenchmarkRepo
           userId: deps.userId,
           // [T-332 S2] stamp 当前号(repo 不接受调用方显式传号,§4.6)。
           accountId: deps.accountId,
+          groupId: deps.groupId??null,
           platform,
           externalAccountId: input.externalAccountId,
           nickname: input.nickname ?? null,
@@ -150,23 +153,19 @@ export function createBenchmarkRepository(db: Db, deps: RepoDeps): BenchmarkRepo
         // (user, account, platform, sec_uid)(迁移 0042)→ 更新展示字段/enabled(不冒重复源)。
         // conflict target 必须与 _v2 索引列一致(含 account_id),否则 ON CONFLICT 不命中直接报错;
         // 两个号对标同一博主合法,各自成行。
-        .onConflictDoUpdate({
-          target: [
-            benchmarkSources.userId,
-            benchmarkSources.accountId,
-            benchmarkSources.platform,
-            benchmarkSources.externalAccountId,
-          ],
-          set: {
+        .onConflictDoNothing()
+        .returning();
+      const owned=inserted[0]??(await db.select().from(benchmarkSources).where(and(eq(benchmarkSources.userId,deps.userId), workspaceFilter(benchmarkSources,workspaceKey(deps)), eq(benchmarkSources.platform,input.platform??"douyin"), eq(benchmarkSources.externalAccountId,input.externalAccountId))).limit(1))[0];
+      if(!owned)throw new OwnershipError("研究资料不存在");
+      const [updated]=await db.update(benchmarkSources).set({
             nickname: input.nickname ?? null,
             homeUrl: input.homeUrl ?? null,
             note: input.note ?? null,
             enabled: input.enabled ?? true,
             updatedAt: nowIso,
-          },
-        })
-        .returning();
-      return inserted[0]!;
+      }).where(and(eq(benchmarkSources.userId,deps.userId), workspaceFilter(benchmarkSources,workspaceKey(deps)), eq(benchmarkSources.platform,input.platform??"douyin"), eq(benchmarkSources.externalAccountId,input.externalAccountId),eq(benchmarkSources.id,owned.id))).returning();
+      if(!updated)throw new OwnershipError("研究资料不存在");
+      return updated;
     },
 
     async setSourceEnabled(sourceId, enabled) {
@@ -177,7 +176,7 @@ export function createBenchmarkRepository(db: Db, deps: RepoDeps): BenchmarkRepo
         .where(
           and(
             eq(benchmarkSources.userId, deps.userId),
-            eq(benchmarkSources.accountId, deps.accountId),
+            workspaceFilter(benchmarkSources,workspaceKey(deps)),
             eq(benchmarkSources.id, sourceId),
           ),
         )
@@ -192,7 +191,7 @@ export function createBenchmarkRepository(db: Db, deps: RepoDeps): BenchmarkRepo
         .where(
           and(
             eq(benchmarkSources.userId, deps.userId),
-            eq(benchmarkSources.accountId, deps.accountId),
+            workspaceFilter(benchmarkSources,workspaceKey(deps)),
             eq(benchmarkSources.id, sourceId),
           ),
         );
@@ -200,22 +199,10 @@ export function createBenchmarkRepository(db: Db, deps: RepoDeps): BenchmarkRepo
     },
 
     async upsertWork(input) {
+      const parent=input.discovery==="darkhorse"?null:deps.groupId?await requireOwnedSource(db,deps,input.sourceId):await requireOwnedSource(db,deps,input.sourceId).catch(()=>null);
+      if(parent&&deps.groupId){if(parent.externalAccountId!==input.sourceExternalAccountId||parent.platform!==(input.platform??"douyin"))throw new OwnershipError("对标作品与信源不一致");}
       const platform = input.platform ?? "douyin";
       const nowIso = deps.now();
-      // 先查是否已存在（决定 inserted 标志 + 保留 createdAt）。[T-332 S2] 叠号门:
-      // _v2 键下同 aweme 可在别的号名下另有一行,存在性判定必须限定本号。
-      const existing = await db
-        .select()
-        .from(benchmarkWorks)
-        .where(
-          and(
-            eq(benchmarkWorks.userId, deps.userId),
-            eq(benchmarkWorks.accountId, deps.accountId),
-            eq(benchmarkWorks.platform, platform),
-            eq(benchmarkWorks.awemeId, input.awemeId),
-          ),
-        );
-      const wasExisting = existing.length > 0;
       const rows = await db
         .insert(benchmarkWorks)
         .values({
@@ -223,8 +210,9 @@ export function createBenchmarkRepository(db: Db, deps: RepoDeps): BenchmarkRepo
           userId: deps.userId,
           // [T-332 S2] stamp 当前号(repo 不接受调用方显式传号,§4.6)。
           accountId: deps.accountId,
+          groupId: parent?.groupId??deps.groupId??null,
           sourceId: input.sourceId,
-          sourceExternalAccountId: input.sourceExternalAccountId,
+          sourceExternalAccountId: parent?.externalAccountId??input.sourceExternalAccountId,
           platform,
           awemeId: input.awemeId,
           description: input.description ?? "",
@@ -248,14 +236,11 @@ export function createBenchmarkRepository(db: Db, deps: RepoDeps): BenchmarkRepo
         // (user, account, platform, aweme_id)(迁移 0042)→ 同号同作品跨采集 run 更新最新
         // 统计/爆款判定(不改 teardown_status —— T-212c 拆解态由它管)。conflict target 必须
         // 与 _v2 索引列一致(含 account_id);两个号各自采同一 aweme 合法,各自成行。
-        .onConflictDoUpdate({
-          target: [
-            benchmarkWorks.userId,
-            benchmarkWorks.accountId,
-            benchmarkWorks.platform,
-            benchmarkWorks.awemeId,
-          ],
-          set: {
+        .onConflictDoNothing()
+        .returning();
+      const owned=rows[0]??(await db.select().from(benchmarkWorks).where(and(eq(benchmarkWorks.userId,deps.userId), workspaceFilter(benchmarkWorks,workspaceKey(deps)), eq(benchmarkWorks.platform,input.platform??"douyin"), eq(benchmarkWorks.awemeId,input.awemeId))).limit(1))[0];
+      if(!owned)throw new OwnershipError("研究资料不存在");
+      const [updated]=await db.update(benchmarkWorks).set({
             description: input.description ?? "",
             diggCount: input.diggCount,
             commentCount: input.commentCount ?? null,
@@ -270,17 +255,16 @@ export function createBenchmarkRepository(db: Db, deps: RepoDeps): BenchmarkRepo
             discoveryKeyword: input.discoveryKeyword ?? null,
             capturedAt: input.capturedAt,
             updatedAt: nowIso,
-          },
-        })
-        .returning();
-      return { row: rows[0]!, inserted: !wasExisting };
+      }).where(and(eq(benchmarkWorks.userId,deps.userId), workspaceFilter(benchmarkWorks,workspaceKey(deps)), eq(benchmarkWorks.platform,input.platform??"douyin"), eq(benchmarkWorks.awemeId,input.awemeId),eq(benchmarkWorks.id,owned.id))).returning();
+      if(!updated)throw new OwnershipError("研究资料不存在");
+      return {row:updated,inserted:rows.length>0};
     },
 
     async listWorks({ limit, offset }) {
       // [T-349b] strict:无条件叠号门(无「无号 → 全量」退化,同 listSources)。
       const where = and(
         eq(benchmarkWorks.userId, deps.userId),
-        eq(benchmarkWorks.accountId, deps.accountId),
+        workspaceFilter(benchmarkWorks,workspaceKey(deps)),
       );
       const rows = await db
         .select()
@@ -300,7 +284,7 @@ export function createBenchmarkRepository(db: Db, deps: RepoDeps): BenchmarkRepo
       // [T-332 S2] strict:无条件叠号门。
       const where = and(
         eq(benchmarkWorks.userId, deps.userId),
-        eq(benchmarkWorks.accountId, deps.accountId),
+        workspaceFilter(benchmarkWorks,workspaceKey(deps)),
         eq(benchmarkWorks.isViral, true),
         eq(benchmarkWorks.teardownStatus, "pending"),
       );
@@ -321,7 +305,7 @@ export function createBenchmarkRepository(db: Db, deps: RepoDeps): BenchmarkRepo
         .where(
           and(
             eq(benchmarkWorks.userId, deps.userId),
-            eq(benchmarkWorks.accountId, deps.accountId),
+            workspaceFilter(benchmarkWorks,workspaceKey(deps)),
             eq(benchmarkWorks.id, workId),
           ),
         )
@@ -337,7 +321,7 @@ export function createBenchmarkRepository(db: Db, deps: RepoDeps): BenchmarkRepo
         .where(
           and(
             eq(benchmarkWorks.userId, deps.userId),
-            eq(benchmarkWorks.accountId, deps.accountId),
+            workspaceFilter(benchmarkWorks,workspaceKey(deps)),
             eq(benchmarkWorks.id, workId),
           ),
         );
@@ -353,7 +337,7 @@ export function createBenchmarkRepository(db: Db, deps: RepoDeps): BenchmarkRepo
         .where(
           and(
             eq(benchmarkWorks.userId, deps.userId),
-            eq(benchmarkWorks.accountId, deps.accountId),
+            workspaceFilter(benchmarkWorks,workspaceKey(deps)),
             eq(benchmarkWorks.id, workId),
           ),
         )
@@ -376,7 +360,7 @@ async function requireOwnedWork(
     .where(
       and(
         eq(benchmarkWorks.userId, deps.userId),
-        eq(benchmarkWorks.accountId, deps.accountId),
+        workspaceFilter(benchmarkWorks,workspaceKey(deps)),
         eq(benchmarkWorks.id, workId),
       ),
     );
@@ -399,7 +383,7 @@ async function requireOwnedSource(
     .where(
       and(
         eq(benchmarkSources.userId, deps.userId),
-        eq(benchmarkSources.accountId, deps.accountId),
+        workspaceFilter(benchmarkSources,workspaceKey(deps)),
         eq(benchmarkSources.id, sourceId),
       ),
     );

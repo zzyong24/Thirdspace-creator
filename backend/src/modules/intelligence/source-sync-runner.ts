@@ -257,7 +257,7 @@ export async function drainIntelligenceSourceQueue(
     if (!claim || isTaskDrainStopping(control)) break;
     const ctx: RequestContext = {
       userId: claim.task.userId,
-      accountId: claim.task.accountId,
+      accountId: claim.task.accountId,groupId:claim.task.groupId,groupVersion:claim.task.groupVersion??undefined,membershipVersion:claim.task.membershipVersion??undefined,
       requestId: `execution:${claim.task.id}`,
       source: "ingestion",
       ingestionRunId: claim.task.id,

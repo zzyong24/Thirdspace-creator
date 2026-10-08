@@ -1,3 +1,5 @@
+import {assertFrozenWorkspaceMembership} from "../platform-account/membership-lock.service";
+import {requireWorkspace,workspaceFilter,assertWritableWorkspace} from "../../workspace-scope";
 import { and, eq, aiTasks, aiTaskResults, requireAccountId, type Db } from "@creatoros/backend";
 import { agenticProposal, type KnowledgeProposal, type AssetTagProposal, type RequestContext } from "@creatoros/contract";
 import { ConflictError, OwnershipError } from "./ai.errors";
@@ -12,10 +14,11 @@ export interface AgenticProposalAdoptionPorts {
 export function createAgenticProposalAdoptionService(db: Db, ports: AgenticProposalAdoptionPorts, now = () => new Date().toISOString()) {
   return {
     async confirmTask(ctx: RequestContext, taskId: string): Promise<void> {
-      const accountId = requireAccountId(ctx.accountId, "ai.confirmAgenticProposals");
+      await assertWritableWorkspace(db,ctx);requireWorkspace(ctx);const accountId=ctx.accountId??null;
       await db.transaction(async tx => {
-        const [task] = await tx.select().from(aiTasks).where(and(eq(aiTasks.id, taskId), eq(aiTasks.userId, ctx.userId), eq(aiTasks.accountId, accountId))).for("update");
+        const [task] = await tx.select().from(aiTasks).where(and(eq(aiTasks.id, taskId), eq(aiTasks.userId, ctx.userId), workspaceFilter(aiTasks,ctx))).for("update");
         if (!task) throw new OwnershipError("候选任务不存在");
+        await assertFrozenWorkspaceMembership(tx,{userId:task.userId,groupId:task.groupId,accountId:task.accountId,groupVersion:task.groupVersion,membershipVersion:task.membershipVersion});
         if (task.status === "succeeded") return;
         if (task.status !== "awaiting_confirmation") throw new ConflictError("候选任务当前不可采纳");
         const candidates = await tx.select().from(aiTaskResults).where(and(eq(aiTaskResults.aiTaskId, taskId), eq(aiTaskResults.resultType, "agentic_proposals")));

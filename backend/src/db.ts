@@ -1,3 +1,4 @@
+import {backupBeforeGroupUpgrade,backupPostgresBeforeGroupUpgrade,verifyGroupUpgradeCounts} from "./group-upgrade-backup";
 import * as executionStreamSchema from "./schema/execution-stream";
 import * as pendingDocumentCommitsSchema from "./schema/pending-document-commits";
 import * as pendingGeneratedAssetCommitsSchema from "./schema/pending-generated-asset-commits";
@@ -26,6 +27,8 @@ import * as positioningSchema from "./schema/positioning";
 // 迁移基线里的 products 等表留存无害,schema 联合不再覆盖它们。
 import * as candidateSchema from "./schema/candidate";
 import * as calibrationSchema from "./schema/calibration";
+import * as accountGroupsSchema from "./schema/account-groups";
+import * as resourceAccessSchema from "./schema/resource-access";
 import * as platformAccountSchema from "./schema/platform-account";
 import * as contentCalendarSchema from "./schema/content-calendar";
 import * as materialLinksSchema from "./schema/material-links";
@@ -91,6 +94,8 @@ const schema = {
   ...candidateSchema,
   ...calibrationSchema,
   ...platformAccountSchema,
+  ...accountGroupsSchema,
+  ...resourceAccessSchema,
   ...contentCalendarSchema,
   ...materialLinksSchema,
   ...schedulingSchema,
@@ -298,7 +303,9 @@ export async function createDb(options: CreateDbOptions = {}): Promise<{
 
   // ── 迁移阶段 ────────────────────────────────────────────────────────────────
   try {
+    const backup=await backupBeforeGroupUpgrade(client,{dataDir});
     const db = await migrateOpenedDb(client);
+    if(backup)await verifyGroupUpgradeCounts(client,backup);
     return { db, client };
   } catch (migErr) {
     // 半开的 client 关掉释放句柄。库已成功打开 → 这**不是**损坏:如实上抛,绝不隔离 + 空库。
@@ -355,7 +362,19 @@ export async function createRuntimeDb(
   }
   const pool = new Pool({ connectionString });
   const db = drizzlePg(pool, { schema });
-  await migratePg(db, { migrationsFolder: MIGRATIONS_FOLDER });
+  const guard=await pool.connect();
+  try{
+    // 同一库的并发启动共用升级互斥；保持同一个连接直到备份、迁移与计数校验完成。
+    await guard.query("SELECT pg_advisory_lock(1022,1)");
+    const client={query:async<T>(query:string)=>{const result=await guard.query(query);return {rows:result.rows as T[]};}};
+    const backup=await backupPostgresBeforeGroupUpgrade(client as never,connectionString);
+    await migratePg(db, { migrationsFolder: MIGRATIONS_FOLDER });
+    if(backup)await verifyGroupUpgradeCounts(client as never,backup);
+  }catch(error){
+    try{await guard.query("SELECT pg_advisory_unlock(1022,1)");}finally{guard.release();}
+    await pool.end();throw error;
+  }
+  try{await guard.query("SELECT pg_advisory_unlock(1022,1)");}finally{guard.release();}
   return { db: db as unknown as Db, pool };
 }
 

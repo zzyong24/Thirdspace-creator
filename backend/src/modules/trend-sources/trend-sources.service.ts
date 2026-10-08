@@ -1,3 +1,4 @@
+import {requireWorkspace,assertWritableWorkspace} from "../../workspace-scope";
 import type { RequestContext } from "@creatoros/contract";
 import type { Db } from "@creatoros/backend";
 import {
@@ -117,7 +118,8 @@ export function createTrendSourcesService(
       nextId,
       userId: ctx.userId,
       // [T-332 S2] 未选号 → AccountRequiredError(读写同门,§4.2)。
-      accountId: requireAccountId(ctx.accountId, op),
+      groupId:ctx.groupId??null,
+      accountId: (requireWorkspace(ctx),ctx.groupId?null:requireAccountId(ctx.accountId,op)),
     };
     return createTrendSourcesRepository(db, repoDeps);
   }
@@ -132,6 +134,7 @@ export function createTrendSourcesService(
     },
 
     async createSource(ctx, input) {
+      await assertWritableWorkspace(db,ctx);
       guardCreate(input);
       const url = input.url.trim();
       const domain = trendSourceDomain(url);
@@ -149,6 +152,7 @@ export function createTrendSourcesService(
     },
 
     async toggleSource(ctx, sourceId, enabled) {
+      await assertWritableWorkspace(db,ctx);
       const row = await repoFor(ctx, "trendSources.toggleSource").setSourceEnabled(
         sourceId,
         enabled,
@@ -157,6 +161,7 @@ export function createTrendSourcesService(
     },
 
     async removeSource(ctx, sourceId) {
+      await assertWritableWorkspace(db,ctx);
       const row = await repoFor(ctx, "trendSources.removeSource").removeSource(sourceId);
       return toTrendSourceDto(row);
     },

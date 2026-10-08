@@ -150,7 +150,7 @@ export function createScriptBusinessAdapter(
         shots,
         generation: result.generation,
         validation: result.validation,
-        accountId: input.skillSnapshot.accountId,
+        accountId: input.skillSnapshot.accountId,groupId:input.skillSnapshot.groupId,
         effectiveSkill,
         pipelineMetadata,
         sourceMetadata: JSON.parse(input.facets.__scriptSources ?? "[]"),

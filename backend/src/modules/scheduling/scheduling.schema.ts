@@ -66,6 +66,7 @@ export function toScheduledJobDto(row: ScheduledJobRow): ScheduledJobResource {
   return {
     id: row.id,
     userId: row.userId,
+    groupId:row.groupId??null,groupVersion:row.groupVersion??null,membershipVersion:row.membershipVersion??null,
     // [T-200] 属主号(nullable)。cron 触发的采集 ctx.accountId 由此派生;DTO 带出便于调试/前端。
     accountId: (row as { accountId?: string | null }).accountId ?? null,
     name: row.name,
@@ -87,6 +88,7 @@ export function toJobRunDto(row: JobRunRow): JobRunResource {
   return {
     id: row.id,
     userId: row.userId,
+    groupId:row.groupId??null,groupVersion:row.groupVersion??null,membershipVersion:row.membershipVersion??null,
     jobId: row.jobId,
     aiTaskId: row.aiTaskId ?? null,
     status: row.status as JobRunResource["status"],

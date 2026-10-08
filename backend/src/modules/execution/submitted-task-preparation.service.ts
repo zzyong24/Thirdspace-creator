@@ -1,3 +1,4 @@
+import {workspaceFilter} from "../../workspace-scope";
 import {executionBudgetSchema,isContinuousExecutionBudget,type ExecutionBudget} from "@creatoros/contract/execution-worker";
 import {isDeepStrictEqual} from "node:util";
 import {z} from "zod";
@@ -26,13 +27,13 @@ export function createSubmittedTaskPreparationService(db:Db,deps:{
  async function claimed(context:RequestContext,taskId:string,signal:AbortSignal){
   return db.transaction(async tx=>{
    signal.throwIfAborted();
-   const [task]=await tx.select().from(aiTasks).where(and(eq(aiTasks.id,taskId),eq(aiTasks.userId,context.userId),eq(aiTasks.accountId,context.accountId??""))).for("update");
+   const [task]=await tx.select().from(aiTasks).where(and(eq(aiTasks.id,taskId),eq(aiTasks.userId,context.userId),workspaceFilter(aiTasks,context))).for("update");
    if(!task || !supportedTaskTypes.includes(task.taskType))throw new Error("提交任务不存在或归属不符");
    if(!["queued","failed"].includes(task.status) || task.leaseOwner || task.leaseToken || task.modelCallStartedAt)return null;
    if(!task.executionTaskId && task.status!=="queued")return null;
    const runtime=object(task.runtimeData),origin=originSchema.parse(runtime.hostTaskSubmission);
-   const [parent]=await tx.select().from(executionTasks).where(and(eq(executionTasks.id,origin.executionTaskId),eq(executionTasks.userId,task.userId),eq(executionTasks.accountId,task.accountId)));
-   const [business]=parent?await tx.select().from(aiTasks).where(and(eq(aiTasks.id,parent.ownerId),eq(aiTasks.executionTaskId,parent.id),eq(aiTasks.userId,task.userId),eq(aiTasks.accountId,task.accountId))):[];
+   const [parent]=await tx.select().from(executionTasks).where(and(eq(executionTasks.id,origin.executionTaskId),eq(executionTasks.userId,task.userId),workspaceFilter(executionTasks,task)));
+   const [business]=parent?await tx.select().from(aiTasks).where(and(eq(aiTasks.id,parent.ownerId),eq(aiTasks.executionTaskId,parent.id),eq(aiTasks.userId,task.userId),workspaceFilter(aiTasks,task))):[];
    if(!parent || parent.kind!=="ai_task" || parent.ownerType!=="ai_task" || business?.taskType!=="copilot.assist")throw new Error("子任务缺少真实聊天提交来源");
    const input=chatWorkerInputSchema.parse(object(parent.payload).modelInput);
    const definition=input.tools.find(tool=>chatSubmittedTaskType(tool.name)===task.taskType && (tool.execution==="host.task-submit" || (tool.name==="script.draft" && tool.execution==="worker.script-draft")) && tool.effect==="committed");
@@ -76,7 +77,7 @@ export function createSubmittedTaskPreparationService(db:Db,deps:{
    if(signal.aborted)throw error;
    const classified=bounded.aborted?{retryable:claim.continuous,reason:"deadline"}:classifyLlmError(error),stamp=now(),retryAt=stamp+(getRetryAfterMs(error,now)??computeBackoffMs(claim.attempt,deps.random));
    await db.transaction(async tx=>{
-    const [task]=await tx.select().from(aiTasks).where(and(eq(aiTasks.id,taskId),eq(aiTasks.userId,context.userId),eq(aiTasks.accountId,context.accountId!))).for("update");
+    const [task]=await tx.select().from(aiTasks).where(and(eq(aiTasks.id,taskId),eq(aiTasks.userId,context.userId),workspaceFilter(aiTasks,context))).for("update");
     if(!task || task.executionTaskId || task.status!=="queued")return;
     const runtime=object(task.runtimeData),current=recoverySchema.parse(runtime.hostTaskPreparation);
     if(current.attempts!==claim.attempt)return;
@@ -96,9 +97,9 @@ export function createSubmittedTaskPreparationService(db:Db,deps:{
  return {prepare,
   async recover(signal:AbortSignal){
    const combined=AbortSignal.any([controller.signal,signal]);combined.throwIfAborted();
-   const rows=await db.select({id:aiTasks.id,userId:aiTasks.userId,accountId:aiTasks.accountId}).from(aiTasks).where(and(pending(),...(cursor?[sql`${aiTasks.id} > ${cursor}`]:[]))).orderBy(asc(aiTasks.id)).limit(20);
+   const rows=await db.select({id:aiTasks.id,userId:aiTasks.userId,accountId:aiTasks.accountId,groupId:aiTasks.groupId,groupVersion:aiTasks.groupVersion,membershipVersion:aiTasks.membershipVersion}).from(aiTasks).where(and(pending(),...(cursor?[sql`${aiTasks.id} > ${cursor}`]:[]))).orderBy(asc(aiTasks.id)).limit(20);
    if(!rows.length){cursor=undefined;return;}
-   for(const row of rows){combined.throwIfAborted();cursor=row.id;try{await prepare({userId:row.userId,accountId:row.accountId,requestId:`submitted-prepare:${row.id}`,source:"ai"},row.id,combined);}catch{if(combined.aborted)throw combined.reason;console.error("[submitted-task] PREPARATION_RECOVERY_REJECTED");}}
+   for(const row of rows){combined.throwIfAborted();cursor=row.id;try{await prepare({userId:row.userId,accountId:row.accountId,groupId:row.groupId,groupVersion:row.groupVersion??undefined,membershipVersion:row.membershipVersion??undefined,requestId:`submitted-prepare:${row.id}`,source:"ai"},row.id,combined);}catch{if(combined.aborted)throw combined.reason;console.error("[submitted-task] PREPARATION_RECOVERY_REJECTED");}}
   },
   async stop(){controller.abort();await Promise.allSettled([...active.values()]);},
  };

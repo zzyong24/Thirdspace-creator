@@ -170,6 +170,8 @@ describe("analytics acceptance (SPEC §22)", () => {
     expect([...ANALYTICS_OP_IDS].sort()).toEqual([
       "analytics.projects.get",
       "analytics.publications.get",
+      "analytics.traffic.get",
+      "analytics.traffic.refresh",
     ]);
   });
 });

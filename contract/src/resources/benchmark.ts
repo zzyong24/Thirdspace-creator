@@ -8,6 +8,7 @@ import { id, iso8601 } from "../primitives";
 export const benchmarkSourceResource = z.object({
   id,
   userId: id,
+  groupId:id.nullable().optional(),
   accountId: id.nullable(), // 按抖音号隔离（哪个号在对标）
   platform: z.string(),
   externalAccountId: z.string(), // sec_uid（稳定身份键）
@@ -24,6 +25,7 @@ export type BenchmarkSourceResource = z.infer<typeof benchmarkSourceResource>;
 export const benchmarkWorkResource = z.object({
   id,
   userId: id,
+  groupId:id.nullable().optional(),
   accountId: id.nullable(),
   sourceId: id,
   sourceExternalAccountId: z.string(),

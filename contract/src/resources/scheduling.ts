@@ -21,6 +21,9 @@ import {
 export const scheduledJobResource = z.object({
   id,
   userId: id,
+  groupId:id.nullable().optional(),
+  groupVersion:z.number().int().nullable().optional(),
+  membershipVersion:z.number().int().nullable().optional(),
   // [T-200] 第二属主维度(按抖音号,nullable)。建 job 时从 ctx.accountId stamp;cron 到点触发的
   //   采集 ctx.accountId 由此列派生(修串号根因)。旧 job / 未选号 → null(向后兼容)。
   accountId: id.nullish(),
@@ -63,6 +66,9 @@ export type JobRunProgress = z.infer<typeof jobRunProgress>;
 export const jobRunResource = z.object({
   id,
   userId: id,
+  groupId:id.nullable().optional(),
+  groupVersion:z.number().int().nullable().optional(),
+  membershipVersion:z.number().int().nullable().optional(),
   jobId: id, // 关联 scheduled_job(经 requireJob ownership gate)
   aiTaskId: id.nullable(), // 本次触发产的 ai_task id(D3 回填)
   status: jobRunStatus, // running | succeeded | failed | needs_reconnect

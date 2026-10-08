@@ -1,3 +1,4 @@
+import {requireWorkspace,assertWritableWorkspace} from "../../workspace-scope";
 import type { RequestContext } from "@creatoros/contract";
 import type { Db } from "@creatoros/backend";
 import {
@@ -10,7 +11,7 @@ import {
   toTopicAttributionDto,
   type TopicAttributionResource,
 } from "./topic-attribution.schema";
-import { requireAccountId } from "./topic-attribution.errors";
+import { OwnershipError,requireAccountId } from "./topic-attribution.errors";
 
 // [T-235d → T-332 S2] TopicAttribution service(foundation §5.3,照 trend-sources 先例)——
 // 每个公开方法 (ctx, …),构 repo bound to ctx.userId + ctx.accountId 使 scoping 结构化。
@@ -22,6 +23,8 @@ export interface ServiceDeps {
   db: Db;
   now: () => string;
   nextId: (prefix: string) => string;
+  resolvePublication?(ctx:RequestContext,id:string):Promise<{groupId?:string|null;accountId?:string|null}|null>;
+  resolveProject?(ctx:RequestContext,id:string):Promise<unknown>;
 }
 
 /** runner 写侧入参(accountId 由 repo deps stamp,不在这里传,§4.6)。 */
@@ -52,7 +55,8 @@ export function createTopicAttributionService(
       nextId,
       userId: ctx.userId,
       // [T-332 S2] 未选号 → AccountRequiredError(读写同门,§4.2)。
-      accountId: requireAccountId(ctx.accountId, op),
+      groupId:ctx.groupId??null,
+      accountId: (requireWorkspace(ctx),ctx.groupId?ctx.accountId??null:requireAccountId(ctx.accountId,op)),
     };
     return createTopicAttributionRepository(db, repoDeps);
   }
@@ -77,6 +81,13 @@ export function createTopicAttributionService(
     },
 
     async saveAttribution(ctx, input) {
+      await assertWritableWorkspace(db,ctx);
+      if(ctx.groupId||deps.resolvePublication){
+        const publication=await deps.resolvePublication?.(ctx.groupId?{...ctx,accountId:null}:ctx,input.publicationId);
+        if(!publication||ctx.groupId&&publication.groupId!==ctx.groupId||!publication.accountId)throw new OwnershipError("发布记录不存在");
+        if(ctx.groupId&&input.projectId){if(!deps.resolveProject)throw new OwnershipError("项目归属验证不可用");await deps.resolveProject({...ctx,accountId:null},input.projectId);}
+        ctx={...ctx,groupId:publication.groupId??ctx.groupId,accountId:publication.accountId};
+      }
       // [T-332 S2] 号由 repo deps stamp(归因 runner ctx 账号由任务链派生,ISO-06)。
       const row = await repoFor(
         ctx,

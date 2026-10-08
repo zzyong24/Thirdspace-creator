@@ -31,6 +31,7 @@ function toSnapshotResource(row: MetricSnapshotRow): MetricSnapshotResource {
   return {
     id: row.id,
     publicationId: row.publicationId,
+    accountId:row.accountId,groupId:row.groupId??null,
     ingestionRunId: row.ingestionRunId ?? null,
     capturedAt: row.capturedAt,
     source: row.source,

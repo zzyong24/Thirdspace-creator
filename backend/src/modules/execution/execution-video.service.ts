@@ -1,3 +1,4 @@
+import {workspaceFilter} from "../../workspace-scope";
 import {createHash} from "node:crypto";
 import {isDeepStrictEqual} from "node:util";
 import {eq,and,aiTasks,aiTaskSteps,type Db} from "@creatoros/backend";
@@ -13,9 +14,9 @@ export function createExecutionVideoService(db:Db,deps:Parameters<typeof createE
  const leases=createExecutionLeaseService(db,deps),ledger=createExecutionCallLedgerService(db,deps);
  const access=<T>(ref:ExecutionRef,action:(scope:{input:ReturnType<typeof structuredGenerationInputSchema.parse>;frozen:ReturnType<typeof videoFrozenSchema.parse>;context:RequestContext})=>Promise<T>)=>leases.withLease(ref,"admission",async({tx,task,context})=>{
   const input=structuredGenerationInputSchema.parse((task.payload as {modelInput?:unknown}).modelInput),frozen=videoFrozenSchema.parse(JSON.parse(input.facets.__videoDecisions??"null"));
-  const [business]=await tx.select().from(aiTasks).where(and(eq(aiTasks.id,task.ownerId),eq(aiTasks.executionTaskId,task.id),eq(aiTasks.userId,context.userId),eq(aiTasks.accountId,context.accountId!)));
+  const [business]=await tx.select().from(aiTasks).where(and(eq(aiTasks.id,task.ownerId),eq(aiTasks.executionTaskId,task.id),eq(aiTasks.userId,context.userId),workspaceFilter(aiTasks,context)));
   if(task.kind!=="ai_task"||!business||business.taskType!=="video.decisions"||business.id!==frozen.task.id||business.projectId!==frozen.task.projectId||!isDeepStrictEqual(business.inputData,frozen.task.inputData))throw new ConflictError("视频任务与冻结来源不符");
-  if(input.skillSnapshot.userId!==context.userId||input.skillSnapshot.accountId!==context.accountId)throw new ConflictError("视频Skill归属不符");
+  if(input.skillSnapshot.userId!==context.userId||input.skillSnapshot.accountId !== (context.accountId??null) || (input.skillSnapshot.groupId??null)!==(context.groupId??null))throw new ConflictError("视频Skill归属不符");
   return action({input,frozen,context});
  });
  return {async invoke(ref:ExecutionRef,port:WorkerPort,raw:unknown,signal?:AbortSignal):Promise<unknown>{

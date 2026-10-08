@@ -22,6 +22,10 @@ export interface TopicPreviewGeneratorPort {
     onCheckpoint: (checkpoint: TopicPreviewCheckpoint) => Promise<void>,
     claim?:PersistentTaskClaim,
   ): Promise<{
+    generationMode: "rewrite_only";
+    adaptedDraft: string;
+  } | {
+    generationMode?: "strategy_backed";
     hook: string;
     structureSteps: string[];
     coreClaims: string[];
@@ -77,7 +81,7 @@ export type TopicPreviewCandidate = {
 export type TopicPreviewCheckpoint =
   | { stage: "decomposition"; value: TopicPreviewDecomposition }
   | { stage: "topic"; value: TopicPreviewCandidate }
-  | { stage: "draft"; value: { contentText: string } };
+  | { stage: "draft"; value: { contentText: string; templateVersion?: string } };
 
 export interface TopicPreviewRunnerDeps {
   tasks: PersistentTaskService;
@@ -146,7 +150,7 @@ export function classifyTopicPreviewFailure(error: unknown): {
   if (/timeout|timed.?out|abort(?:ed)?|超时/.test(signal)) {
     return {
       category: "timeout",
-      message: "模型响应超时，请重试生成选题卡",
+      message: "改写稿生成超时，您可以重试",
     };
   }
   if (
@@ -156,7 +160,7 @@ export function classifyTopicPreviewFailure(error: unknown): {
   ) {
     return {
       category: "output_invalid",
-      message: "模型输出不完整，请重试生成选题卡",
+      message: "这次没有生成改写稿，请重试",
     };
   }
   if (/502|503|504|network|econn|fetch failed|网络/.test(signal)) {
@@ -167,7 +171,7 @@ export function classifyTopicPreviewFailure(error: unknown): {
   }
   return {
     category: "unknown",
-    message: "生成选题卡失败，请重试",
+    message: "生成改写稿失败，请重试",
   };
 }
 
@@ -194,12 +198,14 @@ export async function runIntelligenceTopicPreviewTask(
   };
   let pendingStage: TopicPreviewCheckpoint["stage"] = "decomposition";
   let targetTransformId: string | null = null;
+  const rewriteDraftCheckpoint: { value: { contentText: string } | null } = { value: null };
   try {
     const target = await deps.intelligence.getTopicPreviewForExecution(
       ctx,
       input.taskId,
     );
     targetTransformId = target.transformId;
+    if (target.generationMode === "rewrite_only") pendingStage = "draft";
     input.signal?.throwIfAborted();
     const generated = await deps.generator.generate(
       ctx,
@@ -215,6 +221,9 @@ export async function runIntelligenceTopicPreviewTask(
             transcriptHash: target.transcript.hash,
           },
         );
+        if (target.generationMode === "rewrite_only" && checkpoint.stage === "draft") {
+          rewriteDraftCheckpoint.value = { contentText: checkpoint.value.contentText };
+        }
         await deps.tasks.heartbeat({
           ...lease,
           leaseSeconds: TOPIC_PREVIEW_LEASE_SECONDS,
@@ -232,11 +241,13 @@ export async function runIntelligenceTopicPreviewTask(
     await deps.intelligence.finishTopicPreview(
       ctx,
       target.transformId,
-      {
-        ...generated,
-        sourceUrl: target.item.canonicalUrl,
-        transcriptHash: target.transcript.hash,
-      },
+      generated.generationMode === "rewrite_only"
+        ? generated
+        : {
+            ...generated,
+            sourceUrl: target.item.canonicalUrl,
+            transcriptHash: target.transcript.hash,
+          },
     );
     await deps.tasks.finish({
       ...lease,
@@ -245,6 +256,19 @@ export async function runIntelligenceTopicPreviewTask(
   } catch (error) {
     if(input.signal?.aborted)return;
     if(error instanceof IntelligenceGenerationSuspended && error.taskId===claim.task.id && error.attempt===claim.lease.attempt && error.fenceToken===claim.lease.fenceToken)return;
+    if (targetTransformId && rewriteDraftCheckpoint.value) {
+      try {
+        await deps.intelligence.finishTopicPreview(ctx, targetTransformId, {
+          generationMode: "rewrite_only",
+          adaptedDraft: rewriteDraftCheckpoint.value.contentText,
+        });
+        await deps.tasks.finish({ ...lease, status: "succeeded" });
+        return;
+      } catch {
+        // 保存的 checkpoint 只有在来源与逐字稿证明仍有效时才可收敛为成功；
+        // 若租约已失效或证据变动，继续报告原任务状态。
+      }
+    }
     const failure = classifyTopicPreviewFailure(error);
     const blocked =
       failure.category === "positioning" || failure.category === "credential";
@@ -310,7 +334,7 @@ export async function drainIntelligenceTopicPreviewQueue(
     if (!claim || isTaskDrainStopping(options)) break;
     const ctx: RequestContext = {
       userId: claim.task.userId,
-      accountId: claim.task.accountId,
+      accountId: claim.task.accountId,groupId:claim.task.groupId,groupVersion:claim.task.groupVersion??undefined,membershipVersion:claim.task.membershipVersion??undefined,
       requestId: `execution:${claim.task.id}`,
       source: "user",
     };

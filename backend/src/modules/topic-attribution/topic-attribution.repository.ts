@@ -1,3 +1,4 @@
+import {workspaceFilter,workspaceKey} from "../../workspace-scope";
 import { and, desc, eq, type Db } from "@creatoros/backend";
 import { topicAttributions } from "./topic-attribution.db-schema";
 
@@ -8,14 +9,15 @@ import { topicAttributions } from "./topic-attribution.db-schema";
 // 一条发布作品至多一条归因,无需 account 入键)—— upsert:同作品重跑归因 → 覆盖更新(不重复行)。
 // [gate-F1] 只写本表,零 learnings 依赖(选题维度资产与脚本级经验不共写、不互相触发)。
 
-export type TopicAttributionRow = typeof topicAttributions.$inferSelect;
+export type TopicAttributionRow = Omit<typeof topicAttributions.$inferSelect,"groupId"> & {groupId?:string|null};
 
 export interface RepoDeps {
   now: () => string;
   nextId: (prefix: string) => string;
   userId: string; // 所有权边界,构造时 baked in
   // [T-332 S2] 第二属主维度(账号全域隔离)。必填:service 入口经 requireAccountId 收窄后传入。
-  accountId: string;
+  accountId: string|null;
+  groupId?:string|null;
 }
 
 export interface CreateTopicAttributionInput {
@@ -56,7 +58,7 @@ export function createTopicAttributionRepository(
       // [T-332 S2] strict:无条件叠号门(无「无号 → 全量」退化)。
       const conditions = [
         eq(topicAttributions.userId, deps.userId),
-        eq(topicAttributions.accountId, deps.accountId),
+        workspaceFilter(topicAttributions,workspaceKey(deps)),
       ];
       if (publicationId) {
         conditions.push(eq(topicAttributions.publicationId, publicationId));
@@ -85,7 +87,7 @@ export function createTopicAttributionRepository(
         .where(
           and(
             eq(topicAttributions.userId, deps.userId),
-            eq(topicAttributions.accountId, deps.accountId),
+            workspaceFilter(topicAttributions,workspaceKey(deps)),
             eq(topicAttributions.publicationId, publicationId),
           ),
         )
@@ -102,6 +104,7 @@ export function createTopicAttributionRepository(
           userId: deps.userId,
           // [T-332 S2] stamp 当前号(repo 不接受调用方显式传号,§4.6)。
           accountId: deps.accountId,
+          groupId: deps.groupId??null,
           publicationId: input.publicationId,
           projectId: input.projectId ?? null,
           performanceTier: input.performanceTier,
@@ -146,7 +149,7 @@ export function createTopicAttributionRepository(
         .where(
           and(
             eq(topicAttributions.userId, deps.userId),
-            eq(topicAttributions.accountId, deps.accountId),
+            workspaceFilter(topicAttributions,workspaceKey(deps)),
             eq(topicAttributions.id, attributionId),
           ),
         );

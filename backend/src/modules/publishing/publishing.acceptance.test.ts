@@ -1,3 +1,4 @@
+import {seedAdjacentContent} from "../../integration/adjacent-domain-fixtures";
 import { describe, it, expect, beforeEach } from "vitest";
 import { readFileSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -130,6 +131,8 @@ describe("G9 — domain acceptance (SPEC §22)", () => {
 
   beforeEach(async () => {
     ({ db } = await createDb());
+    await seedAdjacentContent(db,ctxA,["output-a","output-acc-1"]);
+    await seedAdjacentContent(db,ctxB,["output-b"]);
   });
 
   it("Publication publish is idempotent — second publish does not re-fan-out; same externalId", async () => {

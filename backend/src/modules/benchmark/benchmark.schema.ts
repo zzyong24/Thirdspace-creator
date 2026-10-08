@@ -28,6 +28,7 @@ export function toBenchmarkSourceDto(
   return {
     id: row.id,
     userId: row.userId,
+    groupId:row.groupId??null,
     accountId: row.accountId ?? null,
     platform: row.platform,
     externalAccountId: row.externalAccountId,
@@ -63,6 +64,7 @@ export function toBenchmarkWorkDto(
   return {
     id: row.id,
     userId: row.userId,
+    groupId:row.groupId??null,
     accountId: row.accountId ?? null,
     sourceId: row.sourceId,
     sourceExternalAccountId: row.sourceExternalAccountId,

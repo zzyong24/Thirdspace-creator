@@ -1,5 +1,7 @@
 import path from 'node:path';
-import {eq,platformAccounts,type Db} from '@creatoros/backend';
+import {createHash} from 'node:crypto';
+import type {RequestContext} from '@creatoros/contract';
+import {and,eq,platformAccounts,executionTasks,type Db} from '@creatoros/backend';
 import {resolveDouyinProfileIdentity} from '@creatoros/ai-worker/browser/profile-directory';
 
 /** 宿主账号目录归属：真实账号查当前登记；尚未完成绑定的目录必须由当前请求显式登记。 */
@@ -14,6 +16,24 @@ export function createBrowserProfileAuthority(db:Db,base:string){
  }
  return {
   authorizeTemporary,
+  async authorizeBindingStaging(ctx:RequestContext,runId:string,stagingKey:string){
+   const [task]=await db.select().from(executionTasks).where(and(eq(executionTasks.id,runId),eq(executionTasks.userId,ctx.userId),eq(executionTasks.kind,'account_binding')));
+   const expected=createHash('sha256').update(JSON.stringify([ctx.userId,runId])).digest('hex').slice(0,16);
+   if(!task||task.groupId!==ctx.groupId||expected!==stagingKey)throw new Error('临时目录缺少原绑定任务证明');
+   return authorizeTemporary(ctx.userId,`_staging-${stagingKey}`);
+  },
+  async authorizeBindingTarget(ctx:RequestContext,accountId:string,readAccount:(ctx:RequestContext,id:string)=>Promise<{id:string;userId:string;platform:string}>){
+   const account=await readAccount(ctx,accountId);
+   if(account.id!==accountId||account.userId!==ctx.userId||account.platform!=='douyin')throw new Error('绑定目标目录没有真实账号归属');
+   temporaryOwners.set(accountId,ctx.userId);return resolveDouyinProfileIdentity(base,accountId);
+  },
+  async authorizeBindingRecoveryTarget(ctx:RequestContext,input:{runId:string;stagingKey:string;accountId:string}){
+   const [task]=await db.select().from(executionTasks).where(and(eq(executionTasks.id,input.runId),eq(executionTasks.userId,ctx.userId),eq(executionTasks.kind,'account_binding')));
+   if(!task||task.groupId!==ctx.groupId||(task.checkpoint as {stagingKey?:string})?.stagingKey!==input.stagingKey||!['running','cancel_requested'].includes(task.status))throw new Error('恢复登录目录缺少原绑定任务证明');
+   const [account]=await db.select().from(platformAccounts).where(eq(platformAccounts.id,input.accountId));
+   if(account&&(account.userId!==ctx.userId||account.platform!=='douyin'))throw new Error('恢复目标目录属于其它账号');
+   temporaryOwners.set(input.accountId,ctx.userId);return resolveDouyinProfileIdentity(base,input.accountId);
+  },
   forgetTemporary(segment:string){temporaryOwners.delete(segment);},
   async resolveProfile(authDir:string,signal?:AbortSignal){
    const segment=path.basename(authDir),identity=await resolveDouyinProfileIdentity(base,segment,signal);

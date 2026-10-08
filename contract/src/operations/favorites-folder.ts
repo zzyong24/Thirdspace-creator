@@ -23,6 +23,8 @@ export const favoritesFolderOperations = {
     method: "POST",
     path: "/favorites/folders",
     body: z.object({
+      accountId:id.optional(),
+      expectedMembershipVersion:z.number().int().positive().optional(),
       // 夹名(须与抖音收藏夹同名,首采按名精确匹配回填 collectsId)。
       name: z.string().min(1),
       note: z.string().nullable().optional(),

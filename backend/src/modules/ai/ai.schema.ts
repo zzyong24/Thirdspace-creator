@@ -38,6 +38,7 @@ export function toConversationDto(row: ConversationRow): AIConversationResource 
   return {
     id: row.id,
     userId: row.userId,
+    groupId: row.groupId??null,
     projectId: row.projectId ?? null,
     // T-096 会话作用域(入口级隔离)。老行经迁移 backfill 后必有值;'global' 兜底防御。
     scope: row.scope ?? "global",
@@ -82,6 +83,8 @@ export function toTaskDto(row: TaskRow): AITaskResource {
   return {
     id: row.id,
     userId: row.userId,
+    groupId: row.groupId??null,
+    groupVersion:row.groupVersion??null,membershipVersion:row.membershipVersion??null,
     projectId: row.projectId ?? null,
     contentOutputId: row.contentOutputId ?? null,
     taskType: row.taskType,

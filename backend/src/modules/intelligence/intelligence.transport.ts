@@ -393,7 +393,7 @@ export function createIntelligenceTransport(
             data: await service.startTopicPreview(ctx, {
               itemId: b.itemId ?? "",
               sourceSnapshotId: b.sourceSnapshotId ?? "",
-              positioningVersionId: b.positioningVersionId ?? "",
+              ...(b.positioningVersionId ? { positioningVersionId: b.positioningVersionId } : {}),
               idempotencyKey: b.idempotencyKey ?? "",
             }),
             meta: { requestId },
@@ -417,9 +417,10 @@ export function createIntelligenceTransport(
                 avoid: string[];
               };
             };
+            editedDraftContentText?: string;
             idempotencyKey?: string;
           };
-          if (!b.editedCandidate) {
+          if (!b.editedCandidate && b.editedDraftContentText === undefined) {
             throw new UnsupportedOperationError(
               "intelligence.transforms.confirmTopic.invalid",
             );
@@ -429,7 +430,8 @@ export function createIntelligenceTransport(
               ctx,
               p.transformId ?? "",
               {
-                editedCandidate: b.editedCandidate,
+                ...(b.editedCandidate ? { editedCandidate: b.editedCandidate } : {}),
+                ...(b.editedDraftContentText !== undefined ? { editedDraftContentText: b.editedDraftContentText } : {}),
                 idempotencyKey: b.idempotencyKey ?? "",
               },
             ),

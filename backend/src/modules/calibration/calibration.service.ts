@@ -1,3 +1,4 @@
+import {workspaceKey,workspaceStamp,workspaceFilter,assertWritableWorkspace} from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
 import { requireAccountId, type Db } from "@creatoros/backend";
 import {
@@ -21,6 +22,7 @@ import {
   type CalibrationRuleSuggestionResource,
 } from "./calibration.schema";
 import {
+  OwnershipError,
   ConflictError,
   ImmutableError,
   ValidationError,
@@ -146,6 +148,8 @@ export interface ServiceDeps {
   // SOFT dep — the cross-module aggregates for calibration.overview (待校准内容 + 经验沉淀).
   // Absent ⇒ those lists report [] (honest, never fabricated).
   overview?: CalibrationOverviewPort;
+  assertSubjectOwned?(ctx:RequestContext,subject:{subjectType:string;subjectId:string}):Promise<unknown>;
+  assertLearningOwned?(ctx:RequestContext,learningId:string):Promise<unknown>;
 }
 
 // --- Command inputs ---
@@ -400,7 +404,7 @@ export function createCalibrationService(
       now,
       nextId,
       userId: ctx.userId,
-      accountId: requireAccountId(ctx.accountId, op),
+      ...workspaceStamp(workspaceKey(ctx)),
     };
     return createCalibrationRepository(db, repoDeps);
   }
@@ -408,7 +412,7 @@ export function createCalibrationService(
   return {
     async createRubric(ctx, input) {
       validateDimensions(input.dimensions);
-      const repo = repoFor(ctx, "calibration.createRubric");
+      return repoFor(ctx,"calibration.createRubric").withWrite(async repo=>{
       // First-insert circular-FK order (§7.5): rubric (NULL currentVersionId) → v1 →
       // patch currentVersionId.
       const rubric = await repo.createRubric({ name: input.name });
@@ -420,14 +424,14 @@ export function createCalibrationService(
       });
       const patched = await repo.setRubricCurrentVersion(rubric.id, v1.id);
       return toRubricDto(patched, v1);
+      });
     },
 
     async bumpRubricVersion(ctx, rubricId, input) {
       validateDimensions(input.dimensions);
-      const repo = repoFor(ctx, "calibration.bumpRubricVersion");
+      return repoFor(ctx,"calibration.bumpRubricVersion").withRubricWrite(rubricId,async repo=>{
       await repo.getRubric(rubricId); // ownership gate
-      // versionNumber = current count + 1 (assigned under the scoped read — §7.5
-      // concurrency: the (rubric_id, version_number) UNIQUE rejects a racing duplicate).
+      // 在真实rubric UPDATE锁内分配连续版本号并提交current指针。
       const versionNumber = (await repo.countRubricVersions(rubricId)) + 1;
       const version = await repo.insertRubricVersion({
         rubricId,
@@ -437,6 +441,7 @@ export function createCalibrationService(
       });
       await repo.setRubricCurrentVersion(rubricId, version.id); // old rows untouched
       return toRubricVersionDto(version);
+      });
     },
 
     async getRubric(ctx, rubricId) {
@@ -457,6 +462,8 @@ export function createCalibrationService(
     },
 
     async createDraftPrediction(ctx, input) {
+      await assertWritableWorkspace(db,ctx);
+      if(ctx.groupId){if(!deps.assertSubjectOwned)throw new OwnershipError("校准内容归属校验不可用");await deps.assertSubjectOwned(ctx,input);}
       // Identical to createPrediction (deterministic 变现加权 weighted sum over the rubric
       // version's dimensions), but reached from the AI confirm seam rather than the contract
       // op. The status starts 'draft' (the user reviews + locks the 盲预测 themselves; the AI
@@ -645,6 +652,8 @@ export function createCalibrationService(
     },
 
     async createPrediction(ctx, input) {
+      await assertWritableWorkspace(db,ctx);
+      if(ctx.groupId){if(!deps.assertSubjectOwned)throw new OwnershipError("校准内容归属校验不可用");await deps.assertSubjectOwned(ctx,input);}
       const repo = repoFor(ctx, "calibration.createPrediction");
       // Ownership: the rubric version must be owned (cross-user → OwnershipError → 404).
       const version = await repo.getRubricVersion(input.rubricVersionId);
@@ -668,7 +677,7 @@ export function createCalibrationService(
     },
 
     async lockPrediction(ctx, predictionId) {
-      const repo = repoFor(ctx, "calibration.lockPrediction");
+      return repoFor(ctx,"calibration.lockPrediction").withPredictionWrite(predictionId,async repo=>{
       const current = await repo.getPrediction(predictionId); // ownership gate
       // Idempotent: an already-locked prediction returns its existing row WITHOUT
       // re-stamping lockedAt (mirrors Reviews `complete` idempotency). The盲预测 is never
@@ -678,6 +687,7 @@ export function createCalibrationService(
       }
       const locked = await repo.lockPrediction(predictionId);
       return toPredictionDto(locked);
+      });
     },
 
     async getPrediction(ctx, predictionId) {
@@ -747,6 +757,8 @@ export function createCalibrationService(
     },
 
     async createRuleSuggestion(ctx, input) {
+      await assertWritableWorkspace(db,ctx);
+      if(ctx.groupId){if(!deps.assertLearningOwned)throw new OwnershipError("经验归属校验不可用");await deps.assertLearningOwned(ctx,input.learningId);}
       const repo = repoFor(ctx, "calibration.createRuleSuggestion");
       // Ownership gate on the target Rubric (cross-user / unknown → OwnershipError → 404)
       // BEFORE any suggestion row is written.
@@ -767,7 +779,7 @@ export function createCalibrationService(
     },
 
     async adoptRuleSuggestion(ctx, suggestionId) {
-      const repo = repoFor(ctx, "calibration.adoptRuleSuggestion");
+      return repoFor(ctx,"calibration.adoptRuleSuggestion").withSuggestionWrite(suggestionId,async repo=>{
       // 1. Ownership + terminal guard: the suggestion must be PENDING (a re-adopt of an
       //    already 采纳/dismissed suggestion → ConflictError; never double-bumps the rubric).
       const suggestion = await repo.getRuleSuggestion(suggestionId); // ownership gate
@@ -804,12 +816,13 @@ export function createCalibrationService(
         adoptedVersionId: version.id,
       });
       return toRubricVersionDto(version);
+      });
     },
 
     // [T-063e] 忽略一条回流建议:pending 守卫后标记 dismissed(终态),不碰 rubric 版本链。
     // adoptedVersionId 留 null(没有采纳产物),adoptedAt 记录裁决时间(终态时间戳复用同列)。
     async dismissRuleSuggestion(ctx, suggestionId) {
-      const repo = repoFor(ctx, "calibration.dismissRuleSuggestion");
+      return repoFor(ctx,"calibration.dismissRuleSuggestion").withSuggestionWrite(suggestionId,async repo=>{
       const suggestion = await repo.getRuleSuggestion(suggestionId); // ownership gate
       if (suggestion.status !== "pending") {
         throw new ConflictError(
@@ -821,6 +834,7 @@ export function createCalibrationService(
         adoptedVersionId: null,
       });
       return toRuleSuggestionDto(row);
+      });
     },
   };
 }

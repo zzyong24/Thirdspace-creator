@@ -1,4 +1,5 @@
-import { lockTagAssets, mutateTagWithAssetLocks } from "./asset-tag-proposal.service";
+import {assertWritableWorkspace} from "../../workspace-scope";
+import { lockTagWorkspace, lockTagAssets, mutateTagWithAssetLocks } from "./asset-tag-proposal.service";
 import { TagNotFoundError } from "./taxonomy.errors";
 import { and, eq, asc, inArray, sql, type Db } from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
@@ -24,6 +25,9 @@ export type TagRow = typeof tags.$inferSelect;
 export type EntityTagRow = typeof entityTags.$inferSelect;
 
 export interface TaxonomyRepository {
+  assertWritableScope(ctx: RequestContext): Promise<void>;
+  assignEntityTags(ctx: RequestContext, input: {entityType: string; entityId: string; tagIds: string[]}, verify?: (transaction:Db)=>Promise<unknown>): Promise<EntityTagRow[]>;
+  removeEntityTagAndUsage(ctx: RequestContext, input: {tagId: string; entityType: string; entityId: string}, verify?: (transaction:Db)=>Promise<unknown>): Promise<void>;
   assignAssetTags(ctx: RequestContext, assetId: string, tagIds: string[]): Promise<EntityTagRow[]>;
   removeAssetTag(ctx: RequestContext, assetId: string, tagId: string): Promise<void>;
   insertTag(
@@ -67,6 +71,35 @@ export function createTaxonomyRepository(
   deps: RepoDeps,
 ): TaxonomyRepository {
   return {
+    async assertWritableScope(ctx) { if (ctx.groupId || ctx.accountId) await assertWritableWorkspace(db, ctx); },
+    async assignEntityTags(ctx, {entityType, entityId, tagIds}, verify) {
+      return db.transaction(async tx => {
+        if (ctx.groupId || ctx.accountId) await lockTagWorkspace(tx, ctx);
+        await verify?.(tx as Db);
+        const ids = [...new Set(tagIds)].sort();
+        if (!ids.length) return [];
+        const owned = await tx.select().from(tags).where(and(eq(tags.userId, ctx.userId), inArray(tags.id, ids))).orderBy(asc(tags.id)).for("update");
+        if (owned.length !== ids.length) throw new TagNotFoundError();
+        const out: EntityTagRow[] = [];
+        for (const tagId of ids) {
+          const inserted = await tx.insert(entityTags).values({id:deps.nextId("entitytag"),userId:ctx.userId,tagId,entityType,entityId,createdAt:deps.now()}).onConflictDoNothing().returning();
+          if (inserted.length) await tx.update(tags).set({usageCount:sql`${tags.usageCount} + 1`,updatedAt:deps.now()}).where(eq(tags.id,tagId));
+          const [row] = await tx.select().from(entityTags).where(and(eq(entityTags.userId,ctx.userId),eq(entityTags.tagId,tagId),eq(entityTags.entityType,entityType),eq(entityTags.entityId,entityId)));
+          out.push(row!);
+        }
+        return out;
+      });
+    },
+    async removeEntityTagAndUsage(ctx, {tagId,entityType,entityId}, verify) {
+      await db.transaction(async tx => {
+        if (ctx.groupId || ctx.accountId) await lockTagWorkspace(tx,ctx);
+        await verify?.(tx as Db);
+        const [owned] = await tx.select().from(tags).where(and(eq(tags.userId,ctx.userId),eq(tags.id,tagId))).for("update");
+        if (!owned) return;
+        const removed = await tx.delete(entityTags).where(and(eq(entityTags.userId,ctx.userId),eq(entityTags.tagId,tagId),eq(entityTags.entityType,entityType),eq(entityTags.entityId,entityId))).returning();
+        if (removed.length) await tx.update(tags).set({usageCount:sql`greatest(0, ${tags.usageCount} - ${removed.length})`,updatedAt:deps.now()}).where(eq(tags.id,tagId));
+      });
+    },
     async assignAssetTags(ctx,assetId,tagIds) {
       return db.transaction(async tx => {
         await lockTagAssets(tx,ctx,[assetId]);

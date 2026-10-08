@@ -70,6 +70,7 @@ export interface SchedulableJob {
   // [T-200] job 的属主号(建 job 时 stamp)。触发时采集 runtime ctx.accountId 由此派生,使
   //   cron 系统 ctx(无 accountId)的采集也落正确号(串号根因修复)。null/缺省 → 退化用 ctx.accountId。
   accountId?: string | null;
+  groupId?:string|null;groupVersion?:number|null;membershipVersion?:number|null;
 }
 
 export interface TriggerDeps {
@@ -214,7 +215,8 @@ async function submitScheduledJob(
   //   使 ai_task + 下游采集落库 stamp 正确 account_id(strict 门下无号写会被 service 断言拒绝)。
   const collectionCtx: RequestContext = {
     ...ctx,
-    accountId: job.accountId ?? ctx.accountId ?? null,
+    accountId: job.groupId ? job.accountId??null : job.accountId ?? ctx.accountId ?? null,
+    groupId:job.groupId??null,groupVersion:job.groupVersion??undefined,membershipVersion:job.membershipVersion??undefined,
   };
 
   // [T-201d] 隐藏号定时任务停跑 gate:job 有归属号 + 端口已绑 → 查该号 status;非 active
@@ -390,7 +392,7 @@ export interface RunNowJobPort {
     enabled?: boolean;
     sourceKind: string;
     target: Record<string, unknown>;
-    accountId?: string | null; // [T-200] 触发采集 ctx 由此派生
+    accountId?: string | null;groupId?:string|null;groupVersion?:number|null;membershipVersion?:number|null; // [T-200] 触发采集 ctx 由此派生
   }>;
 }
 
@@ -412,7 +414,7 @@ export async function runJobNow(
       enabled: job.enabled,
       sourceKind: job.sourceKind,
       target: job.sourceKind === "self.traffic" ? {...job.target,__refreshDueTraffic:true} : job.target,
-      accountId: job.accountId ?? null,
+      accountId: job.accountId ?? null,groupId:job.groupId??null,groupVersion:job.groupVersion??undefined,membershipVersion:job.membershipVersion??undefined,
     },
     deps,
     {manual:true},
@@ -583,7 +585,7 @@ export interface SweepStaleAiTasksDeps {
   ) => Promise<
     {
       id: string;
-      accountId: string;
+      accountId: string|null;groupId?:string|null;
       taskType: string;
       startedAt: string | null;
     }[]
@@ -651,7 +653,7 @@ export async function sweepStaleAiTasks(
     }
     try {
       // 系统读可以跨账号，但终态写必须重新收窄到每条任务的真实属主号。
-      await deps.markFailed({ ...deps.ctx, accountId: t.accountId }, t.id, reason);
+      await deps.markFailed({ ...deps.ctx, accountId: t.accountId,groupId:t.groupId??null }, t.id, reason);
       swept += 1;
     } catch (e) {
       // 单条 markFailed 失败不阻断其余(fire-and-forget 兜底语义)。

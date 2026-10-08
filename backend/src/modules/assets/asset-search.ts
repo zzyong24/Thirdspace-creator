@@ -1,3 +1,4 @@
+import {workspaceKey} from "@creatoros/backend";
 import { createHash } from "node:crypto";
 import type { RequestContext } from "@creatoros/contract";
 import type { AssetRepository,AssetRow } from "./assets.repository";
@@ -5,7 +6,7 @@ import { requireAccountId,UploadValidationError } from "./assets.errors";
 export interface AssetSearchInput {query:string;limit:number;cursor?:string|null}
 export interface AssetSearchResult {rows:AssetRow[];nextCursor:string|null}
 export async function searchAssetLibrary(repo:Pick<AssetRepository,"searchAssets">,ctx:RequestContext,input:AssetSearchInput):Promise<AssetSearchResult>{
-  const accountId=requireAccountId(ctx.accountId,"assets.searchAssets");
+  const accountId=workspaceKey(ctx);
   const query=input.query.trim();
   if(query.length>500 || !Number.isInteger(input.limit) || input.limit<1 || input.limit>100)throw new UploadValidationError("素材搜索参数无效");
   // SEMANTIC_BOUNDARY_ALLOW: 摘要仅绑定字面查询与归属，不评判素材相关性或创作取舍。

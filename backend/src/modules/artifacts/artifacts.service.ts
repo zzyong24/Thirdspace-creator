@@ -1,3 +1,4 @@
+import {workspaceKey,workspaceStamp,workspaceFilter,assertWritableWorkspace} from "@creatoros/backend";
 import {extractLegacyScriptText, applyLegacyScriptRange, LEGACY_SCRIPT_RANGE_PREFIX} from "./legacy-script-patch";
 import type { RequestContext } from "@creatoros/contract";
 import { requireAccountId, type Db } from "@creatoros/backend";
@@ -10,7 +11,7 @@ import {
   type ScriptSectionRow,
   type StructuredContent,
 } from "./artifacts.repository";
-import { ConflictError, ValidationError } from "./artifacts.errors";
+import { OwnershipError, ConflictError, ValidationError } from "./artifacts.errors";
 import {
   canonicalizeScriptContentData,
   canonicalizeScriptSectionRecords,
@@ -177,7 +178,7 @@ export function createArtifactsService(deps: ServiceDeps): ArtifactsService {
       now: deps.now,
       nextId: deps.nextId,
       userId: ctx.userId,
-      accountId: requireAccountId(ctx.accountId, op),
+      ...workspaceStamp(workspaceKey(ctx)),
     });
   }
 
@@ -191,6 +192,8 @@ export function createArtifactsService(deps: ServiceDeps): ArtifactsService {
     },
 
     async createArtifact(ctx, input) {
+      await assertWritableWorkspace(deps.db,ctx);
+      if(ctx.groupId&&!deps.assertProjectOwned)throw new OwnershipError("项目归属校验不可用");
       // Artifact owns its content/version lifecycle, while Projects owns the
       // project/output relationship. Validate through injected public-service
       // ports before persisting so CLI/API callers cannot create orphan scripts.

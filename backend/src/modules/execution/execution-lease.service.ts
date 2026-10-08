@@ -1,3 +1,4 @@
+import {assertFrozenWorkspaceMembership} from "../platform-account/membership-lock.service";
 import {findScheduledParent} from "./execution-scheduled-child.service";
 import { eq, asc, inArray, executionTasks, type Db } from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
@@ -19,6 +20,7 @@ export function createExecutionLeaseService(db: Db, deps: {now?: () => string} =
       const ref = executionRefSchema.parse(execution);
       return db.transaction(async tx => {
         const [snapshot] = await tx.select().from(executionTasks).where(eq(executionTasks.id,ref.executionTaskId));
+        if(mode==="admission"&&snapshot)await assertFrozenWorkspaceMembership(tx,{userId:snapshot.userId,groupId:snapshot.groupId,accountId:snapshot.accountId,groupVersion:snapshot.groupVersion,membershipVersion:snapshot.membershipVersion},{allowArchived:!!snapshot.accountId});
         const parentSnapshot=mode==='admission'&&snapshot?await findScheduledParent(tx,snapshot):undefined;
         const locked=await tx.select().from(executionTasks).where(inArray(executionTasks.id,parentSnapshot?[ref.executionTaskId,parentSnapshot.id]:[ref.executionTaskId])).orderBy(asc(executionTasks.id)).for("update");
         const task=locked.find(row=>row.id===ref.executionTaskId);
@@ -31,10 +33,11 @@ export function createExecutionLeaseService(db: Db, deps: {now?: () => string} =
           (task.deadlineAt !== null && !(Date.parse(task.deadlineAt) > Date.parse(now()))) ||
           !(Date.parse(task.leaseExpiresAt) > Date.parse(now()))
         )) throw new ConflictError("当前执行已停止或租约到期，不能启动新动作");
+        if(mode==="admission")await assertFrozenWorkspaceMembership(tx,{userId:task.userId,groupId:task.groupId,accountId:task.accountId,groupVersion:task.groupVersion,membershipVersion:task.membershipVersion},{allowArchived:!!task.accountId});
         // settlement 的调用方必须只结算账本中已存在的同键调用；不能启动动作或改终态。
         // 未换租约时，取消/暂停后的迟到用量仍可记账；换过租约则由新执行对账。
         const context: RequestContext = {
-          userId: task.userId, accountId: task.accountId,
+          userId: task.userId, accountId: task.accountId,groupId:task.groupId,groupVersion:task.groupVersion??undefined,membershipVersion:task.membershipVersion??undefined,
           requestId: `execution:${task.id}:${task.attempt}`, source: "ai",
         };
         // 校验和写入共享行锁与事务，禁止把 action 中的写操作放到事务返回之后。

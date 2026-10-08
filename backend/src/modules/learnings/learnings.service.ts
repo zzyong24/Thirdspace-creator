@@ -1,5 +1,6 @@
+import {workspaceKey,workspaceStamp,workspaceFilter,assertWritableWorkspace} from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
-import { requireAccountId, type Db } from "@creatoros/backend";
+import { requireAccountId, sql, type Db } from "@creatoros/backend";
 import { createHash } from "node:crypto";
 import {
   createLearningsRepository,
@@ -12,7 +13,7 @@ import {
   type LearningResource,
   type LearningApplicationResource,
 } from "./learnings.schema";
-import { ConflictError } from "./learnings.errors";
+import { ConflictError, OwnershipError } from "./learnings.errors";
 // [T-183] 改稿 delta 摘要器(纯文本 diff)。用户手改 AI 产出的脚本 → before→after 差异 →
 // 一条 edit_delta candidate learning(飞轮最强品味信号)。
 import {
@@ -94,6 +95,9 @@ export interface ServiceDeps {
   now: () => string;
   nextId: (prefix: string) => string;
   projects: LearningsProjectsPort;
+  /** 组范围下的来源归属窄端口，由公共服务组合。 */
+  assertReviewOwned?(ctx: RequestContext, reviewId: string): Promise<unknown>;
+  assertArtifactOwned?(ctx: RequestContext, artifactId: string): Promise<unknown>;
   // 复盘飞轮回流 轨B — OPTIONAL cross-module seam. Wired at composition; when absent the
   // suggestCalibrationRule op rejects with a ConflictError (the FE hides the button).
   calibration?: LearningsCalibrationPort;
@@ -156,6 +160,8 @@ export interface LearningsService {
       title: string;
       /** 内部AI采纳项的稳定键，公开learnings.create契约不开放。 */
       adoptionKey?: string;
+      /** 内部采纳来源任务；与任务冻结组重验，不由公开契约提供。 */
+      sourceTaskId?: string;
       insight?: string;
       learningType?: string;
       projectId?: string | null;
@@ -317,7 +323,7 @@ export function createLearningsService(deps: ServiceDeps): LearningsService {
       now,
       nextId,
       userId: ctx.userId,
-      accountId: requireAccountId(ctx.accountId, op),
+      ...workspaceStamp(workspaceKey(ctx)),
     };
     return createLearningsRepository(db, repoDeps);
   }
@@ -367,6 +373,13 @@ export function createLearningsService(deps: ServiceDeps): LearningsService {
     },
 
     async createLearning(ctx, body) {
+      await assertWritableWorkspace(db,ctx);
+      if(body.projectId)await projects.assertOwnsProject(ctx,body.projectId);
+      if(ctx.groupId && body.adoptionKey){
+        if(!body.sourceTaskId)throw new OwnershipError("经验采纳缺少冻结来源任务");
+        const task=await db.execute(sql`SELECT id FROM ai_tasks WHERE id=${body.sourceTaskId} AND user_id=${ctx.userId} AND group_id=${ctx.groupId}`);
+        if(!task.rows.length)throw new OwnershipError("经验来源任务不属于当前账号组");
+      }
       // [T-049 B17] learningType 透传(富录入表单用户可选);缺省 strategy 向后兼容。
       // [T-118a gate-F3] projectId 透传(复盘 learning_list 采纳时带上 task.projectId);
       // 手录/无来源作品时为 null。
@@ -408,6 +421,11 @@ export function createLearningsService(deps: ServiceDeps): LearningsService {
     },
 
     async promoteReviewInsight(ctx, input) {
+      await assertWritableWorkspace(db,ctx);
+      if(ctx.groupId){
+        if(!deps.assertReviewOwned)throw new OwnershipError("复盘来源归属校验不可用");
+        await deps.assertReviewOwned(ctx,input.reviewId);
+      }
       const row = await repoFor(ctx, "learnings.promoteReviewInsight").createLearning({
         title: input.insightTitle,
         insight: input.insightBody,
@@ -420,6 +438,12 @@ export function createLearningsService(deps: ServiceDeps): LearningsService {
     },
 
     async captureEditDelta(ctx, input) {
+      await assertWritableWorkspace(db,ctx);
+      if(ctx.groupId){
+        if(!deps.assertArtifactOwned)throw new OwnershipError("脚本来源归属校验不可用");
+        await deps.assertArtifactOwned(ctx,input.artifactId);
+        if(input.projectId)await projects.assertOwnsProject(ctx,input.projectId);
+      }
       const before = input.before ?? "";
       const after = input.after ?? "";
       let title: string;

@@ -2,6 +2,7 @@ import { sql } from "drizzle-orm";
 import {
   check,
   index,
+  integer,
   jsonb,
   pgTable,
   text,
@@ -40,7 +41,9 @@ export const contentCalendarEntries = pgTable(
   {
     id: text("id").primaryKey(),
     userId: text("user_id").notNull(), // denormalized ownership column (foundation §1)
-    accountId: text("account_id").notNull(), // soft FK → platform_accounts.id
+    groupId: text("group_id"),
+    accountId: text("account_id"),
+    membershipVersion: integer("membership_version"), // soft FK → platform_accounts.id
     projectId: text("project_id").references(() => projects.id, {
       onDelete: "cascade",
     }),
@@ -62,8 +65,9 @@ export const contentCalendarEntries = pgTable(
     uniqueIndex("content_calendar_entries_active_project_ux")
       .on(table.userId, table.accountId, table.projectId)
       .where(
-        sql`${table.projectId} IS NOT NULL AND ${table.status} IN ('planned', 'missed')`,
+        sql`${table.groupId} IS NULL AND ${table.projectId} IS NOT NULL AND ${table.status} IN ('planned', 'missed')`,
       ),
+    uniqueIndex("content_calendar_entries_group_active_project_ux").on(table.userId, table.groupId, table.projectId).where(sql`${table.groupId} IS NOT NULL AND ${table.projectId} IS NOT NULL AND ${table.status} IN ('planned', 'missed')`),
     index("content_calendar_entries_date_window_ix").on(
       table.userId,
       table.accountId,
@@ -75,7 +79,8 @@ export const contentCalendarEntries = pgTable(
 export const publishingCadences = pgTable("publishing_cadences", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(), // denormalized ownership column
-  accountId: text("account_id").notNull(), // soft FK → platform_accounts.id
+  groupId: text("group_id"),
+  accountId: text("account_id"), // soft FK → platform_accounts.id
   frequency: text("frequency").notNull(), // daily|weekly|biweekly|monthly|custom
   preferredSlots: jsonb("preferred_slots").notNull().default([]), // [{weekday,time}]
   createdAt: text("created_at").notNull(),
@@ -93,6 +98,8 @@ CREATE TABLE IF NOT EXISTS content_calendar_entries (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
   account_id TEXT NOT NULL,
+  group_id TEXT,
+  membership_version INTEGER,
   project_id TEXT REFERENCES projects(id) ON DELETE CASCADE,
   planned_date TEXT NOT NULL
     CONSTRAINT content_calendar_entries_planned_date_ck
@@ -113,6 +120,7 @@ CREATE TABLE IF NOT EXISTS publishing_cadences (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
   account_id TEXT NOT NULL,
+  group_id TEXT,
   frequency TEXT NOT NULL,
   preferred_slots JSONB NOT NULL DEFAULT '[]',
   created_at TEXT NOT NULL,

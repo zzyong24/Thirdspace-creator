@@ -1,3 +1,4 @@
+import {workspaceStamp,workspaceKey} from "@creatoros/backend";
 import {lockPositioningAdoptionAccount} from "./positioning-write-lock";
 import { createHash } from "node:crypto";
 import { requireAccountId, type Db } from "@creatoros/backend";
@@ -378,10 +379,7 @@ export function createPositioningService(
   async function cleanupLegacyDynamicStatusNote(
     ctx: RequestContext,
   ): Promise<LegacyStatusNoteCleanupResult> {
-    const accountId = requireAccountId(
-      ctx.accountId,
-      "positioning.cleanupLegacyDynamicStatusNote",
-    );
+    const accountId = workspaceKey(ctx).id;
     const repo = repoFor(ctx, "positioning.cleanupLegacyDynamicStatusNote");
     const profile = await repo.getProfile();
     if (!profile) {
@@ -427,7 +425,7 @@ export function createPositioningService(
       now,
       nextId,
       userId: ctx.userId,
-      accountId: requireAccountId(ctx.accountId, op),
+      ...workspaceStamp(ctx),
     };
     return createPositioningRepository(connection, repoDeps);
   }

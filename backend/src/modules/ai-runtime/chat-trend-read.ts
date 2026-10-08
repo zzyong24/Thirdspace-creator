@@ -55,7 +55,7 @@ async function readFeed(source:TrendSourceProjection,signal:AbortSignal){
 export function createChatTrendRead(deps:ChatTrendReadDeps){
  return async(context:RequestContext,positioningBrief:string,abort?:AbortSignal)=>{
   const owner=structuredClone(context);
-  if(!owner.userId||!owner.accountId)throw new Error("热点读取缺少当前账号");
+  if(!owner.userId||(!owner.accountId && !owner.groupId))throw new Error("热点读取缺少当前账号");
   abort?.throwIfAborted();
   const signal=AbortSignal.any([...(abort?[abort]:[]),AbortSignal.timeout(45_000)]);
   let listFailed=false;

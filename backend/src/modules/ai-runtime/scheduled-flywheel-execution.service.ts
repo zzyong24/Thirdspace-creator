@@ -1,3 +1,4 @@
+import {requireWorkspace,workspaceFilter,assertWritableWorkspace} from "../../workspace-scope";
 import {AsyncLocalStorage} from 'node:async_hooks';
 import {randomUUID} from 'node:crypto';
 import {and,asc,desc,eq,inArray,isNull,requireAccountId,aiTasks,aiTaskSteps,executionTasks,jobRuns,scheduledJobs,type Db} from '@creatoros/backend';
@@ -38,9 +39,9 @@ export function createScheduledFlywheelExecutionService(db:Db,deps:ScheduledFlyw
  const runIntents=createScheduledRunIntentService(db,{now,nextId:prefix=>`${prefix}-${randomUUID()}`},sourceKinds);
  // 槽位只表示本进程正在执行的账号；排队、重试时间与任务状态仍以数据库为准。
  const maxActiveAccounts=2;
- const activeRuns=new Map<string,{userId:string;accountId:string;pending:Promise<void>}>();
+ const activeRuns=new Map<string,{userId:string;accountId:string|null;pending:Promise<void>}>();
  let admissionTail:Promise<void>=Promise.resolve();
- const accountKey=(owner:{userId:string;accountId:string})=>JSON.stringify([owner.userId,owner.accountId]);
+ const accountKey=(owner:{userId:string;accountId:string|null})=>JSON.stringify([owner.userId,owner.accountId]);
  function admit<T>(run:()=>Promise<T>):Promise<T>{
   const pending=admissionTail.then(run);
   admissionTail=pending.then(()=>{},()=>{});
@@ -99,7 +100,7 @@ export function createScheduledFlywheelExecutionService(db:Db,deps:ScheduledFlyw
  ensureRunForTask:runIntents.ensureRunForTask,
  async prepare(ctx:RequestContext,aiTaskId:string){
   abort.signal.throwIfAborted();
-  const [task]=await db.select().from(aiTasks).where(and(eq(aiTasks.id,aiTaskId),eq(aiTasks.userId,ctx.userId),eq(aiTasks.accountId,ctx.accountId??'')));
+  const [task]=await db.select().from(aiTasks).where(and(eq(aiTasks.id,aiTaskId),eq(aiTasks.userId,ctx.userId),workspaceFilter(aiTasks,ctx)));
   if(!task||!taskTypes.includes(task.taskType))throw new Error('不支持的原调度任务');
   if(task.executionTaskId){const [execution]=await db.select().from(executionTasks).where(eq(executionTasks.id,task.executionTaskId));scheduledFlywheelTaskInputSchema.parse((execution?.payload as Record<string,unknown>)?.modelInput);return authority.bindAiTask(ctx,aiTaskId);}
   if(task.startedAt||task.modelCallStartedAt||task.retryOfTaskId)throw new Error('已有旧执行事实，须恢复原任务，不能重置预算');
@@ -146,7 +147,7 @@ export function createScheduledFlywheelExecutionService(db:Db,deps:ScheduledFlyw
   const failures:unknown[]=[];
   for(const row of rows){
    if(abort.signal.aborted)return;
-   const ctx:RequestContext={userId:row.userId,accountId:row.accountId,requestId:`flywheel-recover:${row.id}`,source:'ingestion'};
+   const ctx:RequestContext={userId:row.userId,accountId:row.accountId,groupId:row.groupId,groupVersion:row.groupVersion??undefined,membershipVersion:row.membershipVersion??undefined,requestId:`flywheel-recover:${row.id}`,source:'ingestion'};
    try{await (prepare??service.prepare)(ctx,row.id);}catch(error){
     // 一个旧任务已明确失败不能挡住其它账号的恢复；仍向调用方报告结算错误。
     try{await onFailure(ctx,row.id,error);}catch(failure){failures.push(failure);}

@@ -1,3 +1,4 @@
+import {createAccountGroupService} from "../platform-account/account-group.service";
 import { describe, it, expect, beforeEach } from "vitest";
 import { createDb, type Db } from "@creatoros/backend";
 import {
@@ -40,6 +41,17 @@ beforeEach(async () => {
   ({ db } = await createDb());
   repo = createKnowledgeRepository(db, deterministicDeps());
 });
+
+// 战绩fixture使用真实项目父行及legacy平台账号，接受当前SQL父授权stamp。
+async function seedStatsProjects(specs:ReadonlyArray<readonly [string,string,string]>) {
+  const {projects,platformAccounts}=await import("@creatoros/backend");
+  const groups=createAccountGroupService({db,...deterministicDeps()});
+  for(const [id,userId,accountId] of specs){
+    await db.insert(platformAccounts).values({id:accountId,userId,platform:"douyin",accountHandle:accountId,externalAccountId:`sec_${accountId}`,createdAt:NOW,updatedAt:NOW}).onConflictDoNothing();
+    await groups.ensureLegacyGroups({userId,requestId:"stats-legacy-fixture",source:"user"});
+    await db.insert(projects).values({id,userId,groupId:`grp_legacy_${accountId}`,accountId,title:id,creationMode:"free",status:"active",currentStage:"script",startedAt:NOW,createdAt:NOW,updatedAt:NOW});
+  }
+}
 
 describe("knowledge.repository — ownership enforced (multi-tenant)", () => {
   it("list is user-scoped: A sees only A's items", async () => {
@@ -249,12 +261,14 @@ describe("knowledge.repository — sourceNote 往返 + 战绩投影 (T-079a)", (
 
   it("usedCount = materialLinks(entity_type='knowledge') 反查计数;无用料 = 0", async () => {
     const { materialLinks } = await import("@creatoros/backend");
+    await seedStatsProjects([["proj-1",A,ACC_A],["proj-2",A,ACC_A],["proj-9",B,ACC_B]]);
     const used = await repo.create(A, ACC_A, { title: "被用两次" });
     const unused = await repo.create(A, ACC_A, { title: "没被用" });
     await db.insert(materialLinks).values([
       {
         id: "ml-1",
         userId: A,
+        accountId: ACC_A,
         projectId: "proj-1",
         contentOutputId: null,
         entityType: "knowledge",
@@ -267,6 +281,7 @@ describe("knowledge.repository — sourceNote 往返 + 战绩投影 (T-079a)", (
       {
         id: "ml-2",
         userId: A,
+        accountId: ACC_A,
         projectId: "proj-2",
         contentOutputId: null,
         entityType: "knowledge",
@@ -280,6 +295,7 @@ describe("knowledge.repository — sourceNote 往返 + 战绩投影 (T-079a)", (
       {
         id: "ml-3",
         userId: A,
+        accountId: ACC_A,
         projectId: "proj-1",
         contentOutputId: null,
         entityType: "asset",
@@ -292,6 +308,7 @@ describe("knowledge.repository — sourceNote 往返 + 战绩投影 (T-079a)", (
       {
         id: "ml-4",
         userId: B,
+        accountId: ACC_B,
         projectId: "proj-9",
         contentOutputId: null,
         entityType: "knowledge",
@@ -315,12 +332,14 @@ describe("knowledge.repository — sourceNote 往返 + 战绩投影 (T-079a)", (
     const { materialLinks, contentOutputs, publications } = await import(
       "@creatoros/backend"
     );
+    await seedStatsProjects([["proj-pub",A,ACC_A],["proj-draft",A,ACC_A]]);
     const hit = await repo.create(A, ACC_A, { title: "进过已发布项目" });
     const miss = await repo.create(A, ACC_A, { title: "只进过草稿项目" });
     await db.insert(materialLinks).values([
       {
         id: "ml-p1",
         userId: A,
+        accountId: ACC_A,
         projectId: "proj-pub",
         contentOutputId: null,
         entityType: "knowledge",
@@ -333,6 +352,7 @@ describe("knowledge.repository — sourceNote 往返 + 战绩投影 (T-079a)", (
       {
         id: "ml-p2",
         userId: A,
+        accountId: ACC_A,
         projectId: "proj-draft",
         contentOutputId: null,
         entityType: "knowledge",

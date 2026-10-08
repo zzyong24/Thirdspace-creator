@@ -1,3 +1,4 @@
+import {requireWorkspace} from "../../workspace-scope";
 import type {RequestContext} from "@creatoros/contract";
 import type {ChatTurnInput,AssembleChatDeps} from "./chat-assembly-types";
 import { validateChatHostContext, type ChatHostContext } from "../ai/chat-host-context";
@@ -37,14 +38,14 @@ export async function prepareDurableChatTurn(
  const atomicMaterialGenerate=options.atomicMaterialGenerate===true;
  const structuredGeneration=structuredClone(options.structuredGeneration);
  const scriptHooksGeneration=structuredClone(options.scriptHooksGeneration);
- if(!context.userId || !context.accountId) throw new Error("持久聊天准备缺少真实账号");
+ requireWorkspace(context);
  const hostContext=validateChatHostContext({
   schemaVersion:1,chatContext:input.chatContext,
   mediaRoute:detectCopilotMediaRoute(messages),
   positioningScratch:isScratchPositioningConversation(messages),
   trustedScriptSources:input.trustedScriptSources??[],skillSnapshot,
   ...(workerScriptDraft?{scriptDraftContext:{latestUserInstruction:latestUserText(messages)}}:{}),
- },{userId:context.userId,accountId:context.accountId,projectId:input.chatContext.projectId??null});
+ },{userId:context.userId,accountId:context.accountId??null,groupId:context.groupId,projectId:input.chatContext.projectId??null});
  const {runWithEffectiveSkillSnapshot}=await import("@creatoros/ai-worker");
  const prepared=await runWithEffectiveSkillSnapshot(hostContext.skillSnapshot,()=>prepareChatTurn(context,{
   messages,chatContext:hostContext.chatContext,trustedScriptSources:hostContext.trustedScriptSources,
@@ -54,6 +55,6 @@ export async function prepareDurableChatTurn(
  // 返回独立副本；调用方更改待持久化对象不会改变已建立的工具闭包。
  const completeHostContext=validateChatHostContext({
   ...hostContext,...(workerResearch && prepared.assembly.researchContext?{researchContext:prepared.assembly.researchContext}:{}),...(structuredGeneration && prepared.assembly.structuredContext ? {structuredContext:prepared.assembly.structuredContext,structuredGeneration} : {}),...(prepared.assembly.scriptHooksContext ? {scriptHooksContext:prepared.assembly.scriptHooksContext,...(scriptHooksGeneration?{scriptHooksGeneration}:{})} : {}),
- },{userId:context.userId,accountId:context.accountId,projectId:hostContext.chatContext.projectId??null});
+ },{userId:context.userId,accountId:context.accountId??null,groupId:context.groupId,projectId:hostContext.chatContext.projectId??null});
  return {...prepared,hostContext:structuredClone(completeHostContext)};
 }

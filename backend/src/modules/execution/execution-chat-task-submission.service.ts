@@ -1,3 +1,4 @@
+import {workspaceFilter} from "../../workspace-scope";
 import {chatSubmittedTaskType,chatSubmittedTaskResultKind} from "@creatoros/contract/execution-worker";
 import {classifyLlmError} from "@creatoros/ai-worker/retry-policy";
 import {isDeepStrictEqual} from "node:util";
@@ -34,7 +35,7 @@ export function createExecutionChatTaskSubmissionService(db:Db,deps:{now?:()=>st
  const output=(call:typeof executionCalls.$inferSelect)=>agenticToolOutcomeSchema.parse(workerToolResultReceiptSchema.parse(JSON.parse(call.resultText??"")).output);
  async function read(scope:Parameters<Parameters<typeof leases.withLease>[2]>[0],callId:string,settlement=false){
   const {tx,task,context}=scope;
-  const [business]=await tx.select().from(aiTasks).where(and(eq(aiTasks.id,task.ownerId),eq(aiTasks.executionTaskId,task.id),eq(aiTasks.userId,context.userId),eq(aiTasks.accountId,context.accountId!))).for("update");
+  const [business]=await tx.select().from(aiTasks).where(and(eq(aiTasks.id,task.ownerId),eq(aiTasks.executionTaskId,task.id),eq(aiTasks.userId,context.userId),workspaceFilter(aiTasks,context))).for("update");
   if(task.ownerType!=="ai_task" || !business || business.taskType!=="copilot.assist" || (!settlement && !["queued","running"].includes(business.status)))throw new ConflictError("提交工具缺少真实聊天归属");
   const calls=await tx.select().from(executionCalls).where(eq(executionCalls.executionTaskId,task.id)).orderBy(asc(executionCalls.sequence));
   const call=calls.find(row=>row.id===callId);if(!call)throw new ConflictError("提交工具调用不存在");

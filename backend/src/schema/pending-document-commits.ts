@@ -4,7 +4,7 @@ import { integer, pgTable, text } from "drizzle-orm/pg-core";
 export const pendingDocumentCommits = pgTable("pending_document_commits", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(),
-  accountId: text("account_id").notNull(),
+  accountId: text("account_id"),groupId:text("group_id"),
   inputDigest: text("input_digest").notNull(),
   assetId: text("asset_id").notNull().unique(),
   fileId: text("file_id").notNull().unique(),

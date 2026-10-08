@@ -1,4 +1,6 @@
+import {accountGroups} from "../../schema/account-groups";
 import {
+  assertWritableWorkspace,
   and,
   eq,
   platformAccounts,
@@ -14,6 +16,12 @@ export async function lockPositioningAdoptionAccount(
   tx: Tx,
   requireExisting = true,
 ) {
+  if(ctx.groupId){
+    const [group]=await tx.select().from(accountGroups).where(and(eq(accountGroups.id,ctx.groupId),eq(accountGroups.userId,ctx.userId),eq(accountGroups.status,"active"))).for("update");
+    if(!group)throw new OwnershipError("定位账号组不可用");
+    return;
+  }
+  await assertWritableWorkspace(tx,ctx);
   const id = requireAccountId(ctx.accountId, "positioning.write");
   const [account] = await tx
     .select()

@@ -47,3 +47,18 @@ export {
 export {lockAccountForSupply} from "./platform-account.service";
 
 export {createBrowserProfileAuthority} from "./browser-profile-authority.service";
+
+export {createAccountGroupService,type AccountGroupService} from "./account-group.service";
+export {createAccountGroupTransport,ACCOUNT_GROUP_OP_IDS} from "./account-group.transport";
+
+export {createGroupMigrationService,type GroupMigrationService} from "./group-migration.service";
+export {createMembershipLockService,lockWorkspaceMembership,assertFrozenWorkspaceMembership,activeAccountTaskCount} from "./membership-lock.service";
+
+export {createAccountBindingCommitter} from "./account-binding-commit";
+
+export {createAccountBindingService,type AccountBindingService,type AccountBindingStagePort} from "./account-binding.service";
+export {createAccountBindingTransport,ACCOUNT_BINDING_OP_IDS} from "./account-binding.transport";
+
+export {createAccountBindingPreparer,type AccountBindingPreparedPlan} from "./account-binding-commit";
+
+export {createGroupResourceAccessService,type GroupResourceAccessService} from "./group-resource-access.service";

@@ -1,3 +1,4 @@
+import {seedAdjacentContent} from "../../integration/adjacent-domain-fixtures";
 import { beforeAll,afterAll,describe,it,expect } from "vitest";
 import { createDb,type Db } from "@creatoros/backend";
 import { createPublishingService } from "./publishing.service";
@@ -5,9 +6,9 @@ const ctx={userId:"adopt",accountId:"adopt",requestId:"test",source:"user" as co
 const input={outputId:"fixture-output",adoptionKey:"candidate-1",platform:"douyin",title:"候选标题",description:"候选正文",platformTags:["测试"]};
 describe("发布草稿原子采纳",()=>{
   let db:Db;let close:()=>Promise<void>;let sequence=0;
-  beforeAll(async()=>{const c=await createDb();db=c.db;close=()=>c.client.close();});afterAll(async()=>close?.());
+  beforeAll(async()=>{const c=await createDb();db=c.db;close=()=>c.client.close();await seedAdjacentContent(db,ctx,[input.outputId]);await seedAdjacentContent(db,{...ctx,accountId:"other"},["fixture-other-output"]);});afterAll(async()=>close?.());
   function service(failRevision=false){
-    return createPublishingService({
+    const port=createPublishingService({
       db, now:()=>new Date().toISOString(),
       nextId(prefix){
         if(failRevision && prefix==="pub-rev")throw new Error("REVISION_INTERRUPTED");
@@ -18,6 +19,7 @@ describe("发布草稿原子采纳",()=>{
         async remove(){throw new Error("NOT_AUTHORIZED");},
       },
     });
+    return {...port,adoptDraft:async(...args:Parameters<typeof port.adoptDraft>)=>{const row=await port.adoptDraft(...args);if("kind" in row)throw new Error("测试须使用真实账号目标");return row;}};
   }
 
   it("创建首版失败时草稿也回滚，重试只创建完整的一份",async()=>{
@@ -38,7 +40,7 @@ describe("发布草稿原子采纳",()=>{
   });
   it("相同来源键按用户和账号隔离",async()=>{
     const port=service();const a=await port.adoptDraft(ctx,{...input,adoptionKey:"scoped"});
-    const b=await port.adoptDraft({...ctx,accountId:"other"},{...input,adoptionKey:"scoped"});expect(a.id).not.toBe(b.id);
+    const b=await port.adoptDraft({...ctx,accountId:"other"},{...input,outputId:"fixture-other-output",adoptionKey:"scoped"});expect(a.id).not.toBe(b.id);
     await expect(port.getPublication({...ctx,accountId:"other"},a.id)).rejects.toThrow();
   });
 });

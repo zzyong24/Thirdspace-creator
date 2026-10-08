@@ -318,34 +318,60 @@ export interface ProjectBriefReader {
       可借鉴点?: string[];
       适配本账号建议?: string;
     };
-    contentRadarEvidence?: {
-      sourceReferences: Array<{
-        kind: "original_video" | "source_page";
-        platform: string;
-        label: string;
-        url: string;
-        intelligenceItemId?: string;
-      }>;
-      decomposition: {
-        hook: string;
-        structureSteps: string[];
-        coreClaims: string[];
-        reusablePattern: string;
-        factRisks: string[];
-      };
-      strategy: {
-        keep: string[];
-        replace: string[];
-        add: string[];
-        avoid: string[];
-      };
-      adaptedDraftSeed: {
-        contentText: string;
-        generatedFromTranscriptHash: string;
-        strategyHash: string;
-        templateVersion: string;
-      };
-    };
+    contentRadarEvidence?:
+      | {
+          generationMode: "rewrite_only";
+          sourceReferences: Array<{
+            kind: "original_video" | "source_page";
+            platform: string;
+            label: string;
+            url: string;
+            intelligenceItemId?: string;
+          }>;
+          sourceSnapshotId: string;
+          generatedFromTranscriptHash: string;
+          adaptedDraftSeed: {
+            generationMode: "rewrite_only";
+            contentText: string;
+            sourceSnapshotId: string;
+            generatedFromTranscriptHash: string;
+            aiTaskId?: string;
+            positioningVersionId?: string;
+            personalizationStatus: "applied" | "not_applied";
+            templateVersion: string;
+          };
+          positioningVersionId?: string;
+          personalizationStatus?: "applied" | "not_applied";
+          aiTaskId?: string;
+        }
+      | {
+          sourceReferences: Array<{
+            kind: "original_video" | "source_page";
+            platform: string;
+            label: string;
+            url: string;
+            intelligenceItemId?: string;
+          }>;
+          decomposition: {
+            hook: string;
+            structureSteps: string[];
+            coreClaims: string[];
+            reusablePattern: string;
+            factRisks: string[];
+          };
+          strategy: {
+            keep: string[];
+            replace: string[];
+            add: string[];
+            avoid: string[];
+          };
+          adaptedDraftSeed: {
+            contentText: string;
+            generatedFromTranscriptHash: string;
+            strategyHash: string;
+            templateVersion: string;
+          };
+        };
   } | null>;
 }
 
@@ -354,6 +380,9 @@ export interface ProjectIntelligenceReader {
     ctx: RequestContext,
     projectId: string,
   ): Promise<Array<{
+    sourceSnapshotId?: string;
+    positioningVersionId?: string | null;
+    positioningSnapshot?: unknown;
     item: { title: string; canonicalUrl: string; authorName: string | null };
     transcript: { text: string; hash: string };
   }>>;
@@ -675,8 +704,45 @@ export async function assembleCreativeContext(
     const contexts = deps.projectIntelligence
       ? await deps.projectIntelligence.getSourceContexts(ctx, input.projectId)
       : [];
-    if (deps.projectIntelligence && contexts.length === 0) {
+    const rewriteOnly =
+      "generationMode" in briefDetail.contentRadarEvidence &&
+      briefDetail.contentRadarEvidence.generationMode === "rewrite_only";
+    if (
+      (rewriteOnly && (!deps.projectIntelligence || contexts.length === 0)) ||
+      (!rewriteOnly && deps.projectIntelligence && contexts.length === 0)
+    ) {
       throw new Error("内容雷达来源引用缺失，不能退化为仅按定位生成稿件");
+    }
+    if ("generationMode" in briefDetail.contentRadarEvidence && briefDetail.contentRadarEvidence.generationMode === "rewrite_only") {
+      const evidence = briefDetail.contentRadarEvidence;
+      const source = contexts.find(
+        (context) =>
+          context.sourceSnapshotId === evidence.sourceSnapshotId &&
+          context.transcript.hash === evidence.generatedFromTranscriptHash,
+      );
+      if (!source) {
+        throw new Error("内容雷达来源快照或逐字稿与已确认改写稿不一致");
+      }
+      const expectedPositioningVersionId =
+        evidence.positioningVersionId ?? evidence.adaptedDraftSeed.positioningVersionId ?? null;
+      const positioningSnapshot = parseRewriteOnlyPositioningSnapshot(
+        source.positioningSnapshot,
+      );
+      if (evidence.adaptedDraftSeed.personalizationStatus === "applied") {
+        if (
+          !positioningSnapshot ||
+          positioningSnapshot.id !== source.positioningVersionId ||
+          (expectedPositioningVersionId !== null &&
+            positioningSnapshot.id !== expectedPositioningVersionId)
+        ) {
+          throw new Error("内容雷达定位快照与已确认改写稿不一致");
+        }
+      } else if (
+        source.positioningVersionId != null ||
+        positioningSnapshot !== null
+      ) {
+        throw new Error("未应用定位的改写稿不能关联定位快照");
+      }
     }
     projectIntelligenceBrief = renderProjectIntelligence(
       briefDetail.contentRadarEvidence,
@@ -1056,19 +1122,112 @@ export function renderProjectBriefHard(
   ].join("\n");
 }
 
+type RewriteOnlyPositioningSnapshot = {
+  id: string;
+  oneLiner: string;
+  keywords: string[];
+  masterSnapshot: {
+    persona: string;
+    field: string;
+    audience: string;
+    differentiation: string;
+    capabilities: string[];
+    facets: Record<string, string>;
+    downstreamRules: Record<string, string>;
+  };
+};
+
+function parseRewriteOnlyPositioningSnapshot(
+  raw: unknown,
+): RewriteOnlyPositioningSnapshot | null {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
+  const value = raw as Record<string, unknown>;
+  const master = value.masterSnapshot;
+  if (!master || typeof master !== "object" || Array.isArray(master)) return null;
+  const snapshot = master as Record<string, unknown>;
+  const stringList = (input: unknown): string[] | null =>
+    Array.isArray(input) && input.every((entry) => typeof entry === "string")
+      ? input
+      : null;
+  const stringRecord = (input: unknown): Record<string, string> | null =>
+    input &&
+    typeof input === "object" &&
+    !Array.isArray(input) &&
+    Object.values(input).every((entry) => typeof entry === "string")
+      ? (input as Record<string, string>)
+      : null;
+  const keywords = stringList(value.keywords);
+  const capabilities = stringList(snapshot.capabilities);
+  const facets = stringRecord(snapshot.facets);
+  const downstreamRules = stringRecord(snapshot.downstreamRules);
+  if (
+    typeof value.id !== "string" ||
+    !value.id.trim() ||
+    typeof value.oneLiner !== "string" ||
+    !keywords ||
+    typeof snapshot.persona !== "string" ||
+    typeof snapshot.field !== "string" ||
+    typeof snapshot.audience !== "string" ||
+    typeof snapshot.differentiation !== "string" ||
+    !capabilities ||
+    !facets ||
+    !downstreamRules
+  ) return null;
+  return {
+    id: value.id,
+    oneLiner: value.oneLiner,
+    keywords,
+    masterSnapshot: {
+      persona: snapshot.persona,
+      field: snapshot.field,
+      audience: snapshot.audience,
+      differentiation: snapshot.differentiation,
+      capabilities,
+      facets,
+      downstreamRules,
+    },
+  };
+}
+
+function renderRewriteOnlyPositioningSnapshot(
+  snapshot: RewriteOnlyPositioningSnapshot,
+): string {
+  const list = (label: string, values: string[]) =>
+    values.length ? `${label}：${values.join("、")}` : "";
+  const entries = (label: string, values: Record<string, string>) =>
+    Object.entries(values)
+      .filter(([, value]) => value.trim())
+      .map(([key, value]) => `${label}·${key}：${value}`);
+  return [
+    `定位版本：${snapshot.id}`,
+    snapshot.oneLiner.trim() ? `定位陈述：${snapshot.oneLiner.trim()}` : "",
+    list("关键词", snapshot.keywords),
+    `创作者身份：${snapshot.masterSnapshot.persona}`,
+    `所在领域：${snapshot.masterSnapshot.field}`,
+    `目标受众：${snapshot.masterSnapshot.audience}`,
+    `差异化：${snapshot.masterSnapshot.differentiation}`,
+    list("能力", snapshot.masterSnapshot.capabilities),
+    ...entries("定位侧面", snapshot.masterSnapshot.facets),
+    ...entries("创作规则", snapshot.masterSnapshot.downstreamRules),
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
+
 export function renderProjectIntelligence(
   evidence: NonNullable<
     NonNullable<Awaited<ReturnType<ProjectBriefReader["getBriefDetail"]>>>["contentRadarEvidence"]
   >,
   contexts: Array<{
+    sourceSnapshotId?: string;
+    positioningVersionId?: string | null;
+    positioningSnapshot?: unknown;
     item: { title: string; canonicalUrl: string; authorName: string | null };
     transcript: { text: string; hash: string };
   }>,
 ): string {
   const list = (label: string, values: string[]) =>
     values.length ? `${label}：\n${values.map((value) => `- ${value}`).join("\n")}` : "";
-  const strategy = evidence.strategy;
-  const decomposition = evidence.decomposition;
   const sourceLines = evidence.sourceReferences.map(
     (reference) => `- ${reference.label}（${reference.platform}）：${reference.url}`,
   );
@@ -1077,6 +1236,39 @@ export function renderProjectIntelligence(
     const clipped = text.length > 20_000 ? `${text.slice(0, 20_000)}\n[逐字稿过长，已按 20,000 字符截取]` : text;
     return `【${context.item.title}｜${context.item.authorName ?? "作者未提供"}】\n${clipped}`;
   });
+  if ("generationMode" in evidence) {
+    const positioningVersionId =
+      evidence.positioningVersionId ?? evidence.adaptedDraftSeed.positioningVersionId;
+    const personalizationLine =
+      evidence.adaptedDraftSeed.personalizationStatus === "applied"
+        ? `【改写稿定位记录】生成时已应用账号定位${positioningVersionId ? `（版本 ${positioningVersionId}）` : ""}。`
+        : "【改写稿定位记录】生成时未应用账号定位；这是一版通用改写，不得表述成已按账号定位定制。";
+    const positioningSource = contexts.find(
+      (context) =>
+        context.sourceSnapshotId === evidence.sourceSnapshotId &&
+        context.transcript.hash === evidence.generatedFromTranscriptHash,
+    );
+    const frozenPositioning = parseRewriteOnlyPositioningSnapshot(
+      positioningSource?.positioningSnapshot,
+    );
+    return [
+      "【本次创作依据·内容雷达 —— 必须消费】以下是用户确认的真实来源和改写初稿。可以基于当前创作目标继续组织内容，但禁止照搬原标题、原句或冒用原作者案例。",
+      "来源：",
+      ...sourceLines,
+      personalizationLine,
+      frozenPositioning
+        ? `【本次改写实际使用的定位快照】\n${renderRewriteOnlyPositioningSnapshot(frozenPositioning)}`
+        : "",
+      "来源拆解和改写策略未生成；不要补造这些分析，直接使用已确认初稿和经校验的来源材料继续创作。",
+      `【用户已确认的内容雷达改写初稿】当前项目内容目标优先；需要调整时在此基础上重组，不得静默覆盖用户已确认的正文。\n${evidence.adaptedDraftSeed.contentText}`,
+      transcriptLines.length ? `【经 hash 校验的来源逐字稿】\n${transcriptLines.join("\n\n")}` : "",
+    ]
+      .filter(Boolean)
+      .join("\n");
+  }
+
+  const strategy = evidence.strategy;
+  const decomposition = evidence.decomposition;
   return [
     "【本次创作依据·内容雷达 —— 必须消费】以下是用户已确认的来源证据与改写策略；学习方法和结构，可借鉴脱离原表达的因果推进关系，但禁止照搬原标题、原句或冒用原作者案例。",
     "来源：",

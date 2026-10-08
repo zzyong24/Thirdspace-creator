@@ -1,3 +1,5 @@
+import {workspaceFilter,workspaceStamp} from "../../workspace-scope";
+import {lockWorkspaceMembership} from "../platform-account/membership-lock.service";
 import { and, asc, desc, eq, isNull, like, sql, type Db } from "@creatoros/backend";
 // [DATA-H07] 跨模块表(assets)—— canonical 定义在共享基座 @creatoros/backend(与 T-102
 // projects.repository 级联删除同一先例):AI 生成资产的「采纳翻 active / 拒绝清理」是 AI 采纳门
@@ -49,7 +51,9 @@ export interface RepoDeps {
   // 就被拒,SPEC §4.2 / C-07:0 号禁建会话与任务)。子表经父门透传。
   // ⚠️ model_configurations / agent_configurations 是「用户级」模型/密钥配置(跨号共享,
   // 非号级资源),故不叠号门(见文件尾注)。
-  accountId: string;
+  accountId: string | null;
+  groupId?: string | null;
+  membershipVersion?: number;
 }
 
 export interface CreateConversationInput {
@@ -172,7 +176,8 @@ export interface AiRepository {
   listRunningTasksSystem(): Promise<
     {
       id: string;
-      accountId: string;
+      accountId: string|null;
+      groupId?:string|null;
       taskType: string;
       startedAt: string | null;
       requestedAt: string;
@@ -256,7 +261,7 @@ export function createAiRepository(db: Db, deps: RepoDeps): AiRepository {
         and(
           eq(aiConversations.userId, deps.userId),
           // [T-332 S2 · §4.5 by-id 门] strict 恒叠号:跨号会话与未知 id 同样 404。
-          eq(aiConversations.accountId, deps.accountId),
+          workspaceFilter(aiConversations, deps),
           eq(aiConversations.id, conversationId),
         ),
       );
@@ -277,7 +282,7 @@ export function createAiRepository(db: Db, deps: RepoDeps): AiRepository {
         and(
           eq(aiTasks.userId, deps.userId),
           // [T-332 S2 · §4.5 by-id 门] strict 恒叠号:跨号任务与未知 id 同样 404。
-          eq(aiTasks.accountId, deps.accountId),
+          workspaceFilter(aiTasks, deps),
           eq(aiTasks.id, taskId),
         ),
       );
@@ -306,7 +311,7 @@ export function createAiRepository(db: Db, deps: RepoDeps): AiRepository {
       // scope 过滤再叠一层。
       const where = and(
         eq(aiConversations.userId, deps.userId),
-        eq(aiConversations.accountId, deps.accountId),
+        workspaceFilter(aiConversations, deps),
         scope ? eq(aiConversations.scope, scope) : undefined,
       );
       const rows = await db
@@ -330,7 +335,7 @@ export function createAiRepository(db: Db, deps: RepoDeps): AiRepository {
           id: deps.nextId("ai-conv"),
           userId: deps.userId,
           // [T-332 S2 · ISO-03/C-07] 号维度盖章(必填;0 号/未选号在 service 入口即被拒)。
-          accountId: deps.accountId,
+          ...workspaceStamp(deps),
           projectId: input.projectId ?? null,
           // T-096:落作用域(缺省 global,与列 DEFAULT / 迁移 backfill 语义一致)。
           scope: input.scope && input.scope.length > 0 ? input.scope : "global",
@@ -396,7 +401,7 @@ export function createAiRepository(db: Db, deps: RepoDeps): AiRepository {
       const filters = [
         eq(aiTasks.userId, deps.userId),
         // [T-332 S2 · ISO-02] 号维度 strict 恒叠(无「无号全量」退化)。
-        eq(aiTasks.accountId, deps.accountId),
+        workspaceFilter(aiTasks, deps),
       ];
       if (projectId) filters.push(eq(aiTasks.projectId, projectId));
       if (taskType) filters.push(eq(aiTasks.taskType, taskType));
@@ -423,7 +428,7 @@ export function createAiRepository(db: Db, deps: RepoDeps): AiRepository {
       const rows = await db
         .select({
           id: aiTasks.id,
-          accountId: aiTasks.accountId,
+          accountId: aiTasks.accountId,groupId:aiTasks.groupId,
           taskType: aiTasks.taskType, // [T-389] sweep 类型感知:进程内 runner 重启即死,判死不看年龄
           startedAt: aiTasks.startedAt,
           requestedAt: aiTasks.requestedAt,
@@ -459,7 +464,7 @@ export function createAiRepository(db: Db, deps: RepoDeps): AiRepository {
         .where(
           and(
             eq(aiTasks.userId, deps.userId),
-            eq(aiTasks.accountId, deps.accountId),
+            workspaceFilter(aiTasks, deps),
             eq(aiTasks.taskType, taskType),
             eq(aiTasks.attemptId, attemptId),
           ),
@@ -468,19 +473,22 @@ export function createAiRepository(db: Db, deps: RepoDeps): AiRepository {
     },
 
     async createTask(input) {
-      const inserted = await db
+      return db.transaction(async tx => {
+      const frozen=await lockWorkspaceMembership(tx,{...deps,requestId:"ai-create-task",source:"ai"});
+      const inserted = await tx
         .insert(aiTasks)
         .values({
           id: deps.nextId("ai-task"),
           userId: deps.userId,
           // [T-332 S2 · ISO-03] 号维度盖章(必填;未选号 → service 入口 AccountRequiredError)。
-          accountId: deps.accountId,
+          accountId:frozen.accountId,groupId:frozen.groupId,
+          groupVersion:frozen.groupVersion,membershipVersion:frozen.membershipVersion,
           projectId: input.projectId ?? null,
           contentOutputId: input.contentOutputId ?? null,
           taskType: input.taskType,
           status: "queued",
           inputData: input.inputData,
-          runtimeData: input.runtimeData ?? {},
+          runtimeData: input.runtimeData?.skillSnapshot ? {...input.runtimeData,skillSnapshot:{...(input.runtimeData.skillSnapshot as Record<string,unknown>),groupId:frozen.groupId,groupVersion:frozen.groupVersion,membershipVersion:frozen.membershipVersion}} : input.runtimeData??{},
           modelKey: input.modelKey,
           idempotencyKey: input.idempotencyKey,
           attemptId: input.attemptId ?? `legacy-attempt:${input.idempotencyKey}`,
@@ -500,21 +508,25 @@ export function createAiRepository(db: Db, deps: RepoDeps): AiRepository {
         })
         .returning();
       return inserted[0]!;
+      });
     },
 
     async createTaskIfAbsent(input) {
-      const inserted = await db
+      return db.transaction(async tx => {
+      const frozen=await lockWorkspaceMembership(tx,{...deps,requestId:"ai-create-task",source:"ai"});
+      const inserted = await tx
         .insert(aiTasks)
         .values({
           id: deps.nextId("ai-task"),
           userId: deps.userId,
-          accountId: deps.accountId,
+          accountId:frozen.accountId,groupId:frozen.groupId,
+          groupVersion:frozen.groupVersion,membershipVersion:frozen.membershipVersion,
           projectId: input.projectId ?? null,
           contentOutputId: input.contentOutputId ?? null,
           taskType: input.taskType,
           status: "queued",
           inputData: input.inputData,
-          runtimeData: input.runtimeData ?? {},
+          runtimeData: input.runtimeData?.skillSnapshot ? {...input.runtimeData,skillSnapshot:{...(input.runtimeData.skillSnapshot as Record<string,unknown>),groupId:frozen.groupId,groupVersion:frozen.groupVersion,membershipVersion:frozen.membershipVersion}} : input.runtimeData??{},
           modelKey: input.modelKey,
           idempotencyKey: input.idempotencyKey,
           attemptId: input.attemptId ?? `legacy-attempt:${input.idempotencyKey}`,
@@ -532,16 +544,10 @@ export function createAiRepository(db: Db, deps: RepoDeps): AiRepository {
           leaseExpiresAt: null,
           modelCallStartedAt: null,
         })
-        .onConflictDoNothing({
-          target: [
-            aiTasks.userId,
-            aiTasks.accountId,
-            aiTasks.taskType,
-            aiTasks.attemptId,
-          ],
-        })
+        .onConflictDoNothing()
         .returning();
       return inserted[0] ?? null;
+      });
     },
 
     async requireTask(taskId) {
@@ -563,7 +569,7 @@ export function createAiRepository(db: Db, deps: RepoDeps): AiRepository {
         .where(
           and(
             eq(aiTasks.userId, deps.userId),
-            eq(aiTasks.accountId, deps.accountId),
+            workspaceFilter(aiTasks, deps),
             eq(aiTasks.id, taskId),
             eq(aiTasks.status, "queued"),
             sql`${aiTasks.executionTaskId} IS NULL`,
@@ -584,7 +590,7 @@ export function createAiRepository(db: Db, deps: RepoDeps): AiRepository {
             .where(
               and(
                 eq(aiTasks.userId, deps.userId),
-                eq(aiTasks.accountId, deps.accountId),
+                workspaceFilter(aiTasks, deps),
                 eq(aiTasks.id, taskId),
                 eq(aiTasks.status, "running"),
                 eq(aiTasks.leaseToken, leaseToken),
@@ -621,7 +627,7 @@ export function createAiRepository(db: Db, deps: RepoDeps): AiRepository {
         .where(
           and(
             eq(aiTasks.userId, deps.userId),
-            eq(aiTasks.accountId, deps.accountId),
+            workspaceFilter(aiTasks, deps),
             eq(aiTasks.id, taskId),
             eq(aiTasks.status, "running"),
             eq(aiTasks.leaseToken, leaseToken),
@@ -649,7 +655,7 @@ export function createAiRepository(db: Db, deps: RepoDeps): AiRepository {
         .where(
           and(
             eq(aiTasks.userId, deps.userId),
-            eq(aiTasks.accountId, deps.accountId),
+            workspaceFilter(aiTasks, deps),
             eq(aiTasks.id, taskId),
             eq(aiTasks.status, "running"),
             eq(aiTasks.leaseToken, leaseToken),
@@ -662,7 +668,7 @@ export function createAiRepository(db: Db, deps: RepoDeps): AiRepository {
 
     async recordCandidateUnmapped(taskId, input) {
       return db.transaction(async tx => {
-        const [task] = await tx.select().from(aiTasks).where(and(eq(aiTasks.id,taskId),eq(aiTasks.userId,deps.userId),eq(aiTasks.accountId,deps.accountId))).for("update");
+        const [task] = await tx.select().from(aiTasks).where(and(eq(aiTasks.id,taskId),eq(aiTasks.userId,deps.userId),workspaceFilter(aiTasks, deps))).for("update");
         if (!task) throw new OwnershipError(`OwnershipError: task not found: ${taskId}`);
         if (task.executionTaskId || task.leaseToken || !["queued","running"].includes(task.status)) return null;
         await tx.insert(aiTaskResults).values({id:deps.nextId("ai-result"),aiTaskId:taskId,...input});
@@ -684,7 +690,7 @@ export function createAiRepository(db: Db, deps: RepoDeps): AiRepository {
           .where(
             and(
               eq(aiTasks.userId, deps.userId),
-              eq(aiTasks.accountId, deps.accountId),
+              workspaceFilter(aiTasks, deps),
               eq(aiTasks.id, taskId),
               eq(aiTasks.status, "running"),
               eq(aiTasks.leaseToken, leaseToken),
@@ -721,7 +727,7 @@ export function createAiRepository(db: Db, deps: RepoDeps): AiRepository {
         .where(
           and(
             eq(aiTasks.userId, deps.userId),
-            eq(aiTasks.accountId, deps.accountId),
+            workspaceFilter(aiTasks, deps),
             eq(aiTasks.id, taskId),
             eq(aiTasks.status, "running"),
             eq(aiTasks.leaseToken, leaseToken),
@@ -742,7 +748,7 @@ export function createAiRepository(db: Db, deps: RepoDeps): AiRepository {
         .where(
           and(
             eq(aiTasks.userId, deps.userId),
-            eq(aiTasks.accountId, deps.accountId),
+            workspaceFilter(aiTasks, deps),
             eq(aiTasks.id, taskId),
             eq(aiTasks.status, "running"),
             eq(aiTasks.leaseToken, leaseToken),
@@ -778,7 +784,7 @@ export function createAiRepository(db: Db, deps: RepoDeps): AiRepository {
 
     async updateUnboundTaskStatus(taskId, expectedStatus, patch) {
       const [updated] = await db.update(aiTasks).set(patch).where(and(
-        eq(aiTasks.id,taskId),eq(aiTasks.userId,deps.userId),eq(aiTasks.accountId,deps.accountId),
+        eq(aiTasks.id,taskId),eq(aiTasks.userId,deps.userId),workspaceFilter(aiTasks, deps),
         eq(aiTasks.status,expectedStatus),isNull(aiTasks.executionTaskId),
       )).returning();
       return updated ?? null;
@@ -786,7 +792,7 @@ export function createAiRepository(db: Db, deps: RepoDeps): AiRepository {
 
     async updateMappedTaskStatus(taskId, executionTaskId, expectedStatus, patch) {
       const [updated] = await db.update(aiTasks).set(patch).where(and(
-        eq(aiTasks.id, taskId), eq(aiTasks.userId, deps.userId), eq(aiTasks.accountId, deps.accountId),
+        eq(aiTasks.id, taskId), eq(aiTasks.userId, deps.userId), workspaceFilter(aiTasks, deps),
         eq(aiTasks.executionTaskId, executionTaskId), eq(aiTasks.status, expectedStatus),
       )).returning();
       return updated ?? null;
@@ -817,7 +823,7 @@ export function createAiRepository(db: Db, deps: RepoDeps): AiRepository {
         .where(
           and(
             eq(aiTasks.userId, deps.userId),
-            eq(aiTasks.accountId, deps.accountId),
+            workspaceFilter(aiTasks, deps),
             eq(aiTasks.id, taskId),
           ),
         );
@@ -913,7 +919,7 @@ export function createAiRepository(db: Db, deps: RepoDeps): AiRepository {
         .set({
           status: "active",
           // [T-332 S2] stamp 必填当前号(assets.account_id 自 S1 起 NOT NULL)。
-          accountId: deps.accountId,
+          ...(deps.accountId?{accountId:deps.accountId}:{}),
           updatedAt: deps.now(),
         })
         .where(

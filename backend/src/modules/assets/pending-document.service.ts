@@ -1,3 +1,4 @@
+import {workspaceObjectIdentity} from "./workspace-object-identity";
 import { createHash } from "node:crypto";
 import type { Db } from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
@@ -47,7 +48,7 @@ export function createPendingDocumentService(deps: {
     async submit(ctx: RequestContext, input: PendingDocumentInput, signal?: AbortSignal): Promise<PendingDocumentReceipt> {
       ctx = { ...ctx };
       const { operationKey, name, sourceUrl, fullText } = input;
-      const accountId = requireAccountId(ctx.accountId, "assets.pendingDocument");
+      const workspace=workspaceObjectIdentity(ctx);
       if (!ctx.userId || !operationKey?.trim() || operationKey.length > 4096 ||
         !name?.trim() || name.length > 1000 || !fullText?.trim()) {
         throw new UploadValidationError("正文提交参数不完整");
@@ -60,13 +61,13 @@ export function createPendingDocumentService(deps: {
       if (fullText.length > 2 * 1024 * 1024) throw new UploadValidationError("正文超过 2 MiB 限制");
       const bytes = new TextEncoder().encode(fullText);
       if (bytes.byteLength > 2 * 1024 * 1024) throw new UploadValidationError("正文超过 2 MiB 限制");
-      const identity = hash(JSON.stringify([ctx.userId, accountId, operationKey]));
+      const identity = hash(JSON.stringify([ctx.userId, workspace.identity, operationKey]));
       const checksum = hash(bytes);
       const row = await repo.prepare(ctx, operationKey, {
-        id: `document-commit-${identity}`, userId: ctx.userId, accountId,
+        id: `document-commit-${identity}`, userId: ctx.userId, ...workspace.stamp,
         inputDigest: hash(JSON.stringify([name, sourceUrl, checksum])),
         assetId: `asset-document-${identity}`, fileId: `afile-document-${identity}`,
-        storageKey: `${accountKeyPrefix(accountId)}document/committed-${identity}.txt`,
+        storageKey: `${workspace.prefix}document/committed-${identity}.txt`,
         name, sourceUrl, checksum, byteLength: bytes.byteLength,
         createdAt: deps.now(), committedAt: null,
       }, signal);

@@ -1,3 +1,4 @@
+import {requireWorkspace,workspaceFilter,assertWritableWorkspace} from "../../workspace-scope";
 import {createHash} from "node:crypto";
 import {and,asc,eq,aiTasks,aiTaskResults,executionTasks,executionCalls,type Db} from "@creatoros/backend";
 import {agenticProposal,type AgenticProposal} from "@creatoros/contract";
@@ -19,7 +20,7 @@ export function createExecutionAgenticCandidateService(db:Db,deps:{now?:()=>stri
       const requestDigest=digest({lastModelCallId:request.lastModelCallId,toolCallIds:[...request.toolCallIds].sort(),stopReason:request.stopReason});
       return leases.withLease(ref,"settlement",async({tx,task,context})=>{
         if(task.kind!=="ai_task" || task.ownerType!=="ai_task")throw new ConflictError("当前执行不是AI业务任务");
-        const [business]=await tx.select().from(aiTasks).where(and(eq(aiTasks.id,task.ownerId),eq(aiTasks.executionTaskId,task.id),eq(aiTasks.userId,context.userId),eq(aiTasks.accountId,context.accountId!))).for("update");
+        const [business]=await tx.select().from(aiTasks).where(and(eq(aiTasks.id,task.ownerId),eq(aiTasks.executionTaskId,task.id),eq(aiTasks.userId,context.userId),workspaceFilter(aiTasks,context))).for("update");
         if(!business)throw new ConflictError("AI任务映射或归属不一致");
         const frozen=agenticWorkerInputSchema.parse(object(task.payload).modelInput);
         if(`exec.${frozen.taskType}`!==business.taskType)throw new ConflictError("冻结任务类型不一致");

@@ -22,8 +22,9 @@ import { pgTable, text, doublePrecision, jsonb } from "drizzle-orm/pg-core";
 
 export const topicAttributions = pgTable("topic_attributions", {
   id: text("id").primaryKey(),
-  userId: text("user_id").notNull(), // 所有权边界
-  accountId: text("account_id").notNull(), // [T-201] 按号隔离;nullable 稳定终态
+  userId: text("user_id").notNull(),
+  groupId: text("group_id"), // 所有权边界
+  accountId: text("account_id"), // [T-201] 按号隔离;nullable 稳定终态
   publicationId: text("publication_id").notNull(), // soft FK → publications.id(幂等锚)
   projectId: text("project_id"), // soft FK → projects.id(溯源;与 learnings 的关联锚)
   performanceTier: text("performance_tier").notNull().default("normal"), // viral|normal|low(相对本账号基线)

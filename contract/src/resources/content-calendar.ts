@@ -14,7 +14,10 @@ import {
 export const contentCalendarEntryResource = z.object({
   id,
   userId: id,
-  accountId: id,
+  accountId: id.nullable(),
+  groupId: id.nullable().optional(),
+  membershipVersion: z.number().int().nullable().optional(),
+  targetStatus: z.enum(["unassigned", "ready", "needs_reselection"]).optional(),
   projectId: id.nullable(),
   plannedDate: calendarDate,
   plannedAt: iso8601,
@@ -34,7 +37,8 @@ export type ContentCalendarEntryResource = z.infer<
 export const publishingCadenceResource = z.object({
   id,
   userId: id,
-  accountId: id,
+  accountId: id.nullable(),
+  groupId: id.nullable().optional(),
   frequency: cadenceFrequency,
   preferredSlots: z.array(
     z.object({ weekday: z.number().int(), time: z.string() }),
@@ -48,7 +52,8 @@ export type PublishingCadenceResource = z.infer<
 
 // cadenceAttainmentResource — derived (computed, NOT a stored table).
 export const cadenceAttainmentResource = z.object({
-  accountId: id,
+  accountId: id.nullable(),
+  groupId: id.nullable().optional(),
   from: iso8601,
   to: iso8601,
   plannedCount: z.number().int(),
