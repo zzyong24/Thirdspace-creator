@@ -28,7 +28,14 @@ async function parentFixture(groupId:string|null,accountId:string|null){
  const projectsService=createProjectsService(createProjectRepository(db),{now,nextId});
  const service=()=>createProductionService({db,now,nextId,assertOutputOwned:(scope,id)=>projectsService.getOutput(scope,id)});
  const transport=createProductionTransport(service);
- const request=(endpoint:typeof ENDPOINTS.getOutputProduction|typeof ENDPOINTS.getProductionEditor|typeof ENDPOINTS.saveProductionEditor,scope:RequestContext,body:unknown=undefined)=>transport.request(endpoint,{params:{outputId:'owned-video'},query:undefined,body},scope);
+ const request=(endpoint:typeof ENDPOINTS.getOutputProduction|typeof ENDPOINTS.getProductionEditor|typeof ENDPOINTS.saveProductionEditor,scope:RequestContext,body:unknown=undefined)=>{
+  const params={outputId:'owned-video'},query=undefined;
+  switch(endpoint.id){
+   case 'outputs.production.get':return transport.request(ENDPOINTS.getOutputProduction,{params,query,body:undefined},scope);
+   case 'outputs.production.editor.get':return transport.request(ENDPOINTS.getProductionEditor,{params,query,body:undefined},scope);
+   case 'outputs.production.editor.save':return transport.request(ENDPOINTS.saveProductionEditor,{params,query,body:ENDPOINTS.saveProductionEditor.body.parse(body)},scope);
+  }
+ };
  const raw={editorVersion:3,referenceEditor:{editor:'opencut-classic',revision:'c'.repeat(40),mediaRefs:[],nativeDocument:{version:31,metadata:{id:'owned-video'},currentSceneId:'scene',settings:{fps:{numerator:30,denominator:1}},scenes:[{id:'scene',tracks:{main:{id:'main',type:'video',elements:[]},overlay:[],audio:[]}}]}}};
  return {db,request,raw,opened};
 }

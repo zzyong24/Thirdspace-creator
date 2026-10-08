@@ -1,3 +1,4 @@
+import { executionTimeoutMs } from "@creatoros/contract/timeout-policy";
 import "server-only";
 
 import {
@@ -141,7 +142,7 @@ export async function requestManagedAsrLease(
     response = await (dependencies.fetchImpl ?? fetch)(endpoint.toString(), {
       method: "POST",
       redirect: "manual",
-      signal: AbortSignal.timeout(10_000),
+      signal: AbortSignal.timeout(executionTimeoutMs(10_000)),
       headers: {
         Accept: "application/json",
         Authorization: `Bearer ${access.configAccessTicket}`,

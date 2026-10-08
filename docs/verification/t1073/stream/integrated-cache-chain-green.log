@@ -1,0 +1,52 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+
+ ❯ src/server/chat-execution-stream.test.ts (23 tests | 2 failed) 7930ms
+   × 实际持久事件→响应流→SDK→缓存：无审批等待跨页受保护，同原任务成功后可回收 1809ms
+   × 实际服务接受原任务cancel_requested后本地停止可回收，SDK断连不伪造持久cancelled 1432ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/server/chat-execution-stream.test.ts > 实际持久事件→响应流→SDK→缓存：无审批等待跨页受保护，同原任务成功后可回收
+AssertionError: expected undefined to be 'succeeded' // Object.is equality
+
+- Expected:
+"succeeded"
+
++ Received:
+undefined
+
+ ❯ src/server/chat-execution-stream.test.ts:191:120
+    189|   for(let i=0;i<100;i++)getLiveChatSession(`integrated-completed-press…
+    190|   expect(getLiveChatSession(key)).not.toBe(session);expect(session.tra…
+    191|   expect((await tasks.get(context,task.id)).id).toBe(task.id);expect((…
+       |                                                                                                                        ^
+    192|  }finally{release();await session.chat.stop();vi.unstubAllGlobals();aw…
+    193| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/server/chat-execution-stream.test.ts > 实际服务接受原任务cancel_requested后本地停止可回收，SDK断连不伪造持久cancelled
+AssertionError: expected undefined to be 'cancel_requested' // Object.is equality
+
+- Expected:
+"cancel_requested"
+
++ Received:
+undefined
+
+ ❯ src/server/chat-execution-stream.test.ts:212:80
+    210|    commands++;const request=JSON.parse(init.body as string);expect(req…
+    211|    const body=ENDPOINTS.commandExecutionTasks.body!.parse(request.inpu…
+    212|    const rows=await tasks.command(context,body);expect(rows[0]?.status…
+       |                                                                                ^
+    213|    return Response.json(ENDPOINTS.commandExecutionTasks.response.parse…
+    214|   }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 21 passed (23)
+   Start at  00:52:20
+   Duration  16.55s (transform 5.40s, setup 464ms, import 7.75s, tests 7.93s, environment 0ms)

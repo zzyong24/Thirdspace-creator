@@ -1,3 +1,4 @@
+import { executionTimeoutMs } from "@creatoros/contract/timeout-policy";
 // 抖音采集统一限流/退避网关(T-038a / SPEC §4.1–§4.2)。所有对外抖音请求过它:
 // `acquire(channel)` 拿令牌 → 完成后 `report(channel, outcome)`。本片是纯可测核心
 // (无集成):不碰 douyin-cdp / dispatch(那是 T-038b)。
@@ -271,7 +272,7 @@ export class DouyinRequestGateway {
     this.sleep = deps.sleep;
     this.jitter = deps.jitter ?? defaultJitter;
     this.maxAcquireWaitMs =
-      deps.maxAcquireWaitMs ?? DEFAULT_MAX_ACQUIRE_WAIT_MS;
+      executionTimeoutMs(deps.maxAcquireWaitMs, DEFAULT_MAX_ACQUIRE_WAIT_MS);
 
     this.state = {
       "creator-center": {

@@ -1,0 +1,82 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/t1066-timeout-policy/Thirdspace-creator/contract
+
+ ❯ tests/chat-worker.test.ts (14 tests | 1 failed) 24ms
+   × cover.generate 不能冒充已迁移的事务工具 7ms
+ ❯ tests/modules/assets.test.ts (3 tests | 1 failed) 10ms
+     × parses an Asset resource 8ms
+ ❯ tests/registry.test.ts (3 tests | 1 failed) 54ms
+     × registers no routes outside SPEC §13 13ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/chat-worker.test.ts > cover.generate 不能冒充已迁移的事务工具
+AssertionError: expected 'cover.generate' to be null
+
+- Expected:
+null
+
++ Received:
+"cover.generate"
+
+ ❯ tests/chat-worker.test.ts:44:38
+     42| });
+     43| it.each(["asset.generate","cover.generate","arbitrary.task","__proto__…
+     44|  expect(chatSubmittedTaskType(name)).toBeNull();
+       |                                      ^
+     45|  expect(chatWorkerInputSchema.safeParse({...input,tools:[{name,version…
+     46| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  tests/registry.test.ts > endpoint registry > registers no routes outside SPEC §13
+AssertionError: unexpected: PUT /outputs/:outputId/production/editing-plan/broll/remove, POST /intelligence/projects/enqueue, GET /settings/redfox, PUT /settings/redfox, DELETE /settings/redfox: expected [ …(5) ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   "PUT /outputs/:outputId/production/editing-plan/broll/remove",
++   "POST /intelligence/projects/enqueue",
++   "GET /settings/redfox",
++   "PUT /settings/redfox",
++   "DELETE /settings/redfox",
++ ]
+
+ ❯ tests/registry.test.ts:354:54
+    352|     const allowed = new Set(SPEC_13.map(([m, p]) => `${m} ${p}`));
+    353|     const extra = registered.filter((r) => !allowed.has(r));
+    354|     expect(extra, `unexpected: ${extra.join(", ")}`).toEqual([]);
+       |                                                      ^
+    355|   });
+    356|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  tests/modules/assets.test.ts > assets contract > parses an Asset resource
+ZodError: [
+  {
+    "expected": "string",
+    "code": "invalid_type",
+    "path": [
+      "sourceUrl"
+    ],
+    "message": "Invalid input: expected string, received undefined"
+  }
+]
+ ❯ tests/modules/assets.test.ts:7:29
+      5| describe("assets contract", () => {
+      6|   it("parses an Asset resource", () => {
+      7|     const a = assetResource.parse({
+       |                             ^
+      8|       id: "asset-poster-ainativebrowser",
+      9|       userId: "user-zyongzhu",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  3 failed | 42 passed (45)
+      Tests  3 failed | 247 passed (250)
+   Start at  15:26:29
+   Duration  3.54s (transform 5.78s, setup 0ms, import 20.89s, tests 988ms, environment 19ms)

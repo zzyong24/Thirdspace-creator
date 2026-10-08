@@ -1,0 +1,10 @@
+✔ 显式自治迁移创建可审计队列；不会从 DEC prose 猜任务或授权 (5421.276ms)
+✔ 自治迁移对 step_depends_on 的 step 与依赖引用 fail-closed (5416.346167ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 11057.7515

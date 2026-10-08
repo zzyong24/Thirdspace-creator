@@ -1,3 +1,4 @@
+import {executionTimeoutMs} from "@creatoros/contract/timeout-policy";
 import type {HostProcessRecovery} from './host-browser-process-recovery';
 import {retryBrowserProfileCleanup} from '@creatoros/ai-worker/browser/chromium-guard';
 import {z} from 'zod';
@@ -28,7 +29,7 @@ export function createHostBrowserProfileLifecycle(db:Db,deps:{
   const hostInstanceId=await getHostIdentity();signal?.throwIfAborted();
   const owner={userId:identity.userId,domain:identity.domain??'douyin.com',profileKey:identity.profileKey,hostInstanceId,hostOperationId:randomUUID()};
   // 同档案的后台采集和登录探针共用互斥资源。只等真实持有者释放，不按时间抢占。
-  const deadline=Date.now()+(deps.waitTimeoutMs??60_000);
+  const deadline=Date.now()+(executionTimeoutMs(deps.waitTimeoutMs));
   let receipt:Awaited<ReturnType<typeof profiles.acquireForHost>>;
   let recoveryChecked=false;
   for(;;){

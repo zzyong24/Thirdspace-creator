@@ -1,5 +1,5 @@
 import {z} from "zod";
-import {defineEndpoint} from "../endpoints";
+import {defineEndpoint} from "../endpoint-definition";
 import {id} from "../primitives";
 import {executionTaskResourceV2,executionTaskStatusV2} from "../resources/intelligence";
 import {workbenchArtifactSchema,workbenchCapabilitySchema,workbenchPlanSchema,workbenchArtifactVersionsRequestSchema} from "../internal/agent-workbench";

@@ -1,0 +1,21 @@
+
+> @creatoros/ai-worker@0.1.0 build /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+> node scripts/build.mjs
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+
+
+ Test Files  1 passed (1)
+      Tests  19 passed (19)
+   Start at  20:40:14
+   Duration  550ms (transform 64ms, setup 0ms, import 262ms, tests 143ms, environment 0ms)
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+
+ Test Files  2 passed (2)
+      Tests  21 passed (21)
+   Start at  20:40:15
+   Duration  12.77s (transform 2.96s, setup 0ms, import 5.38s, tests 7.09s, environment 0ms)

@@ -1,6 +1,8 @@
 import {AsrExecutionInterruption} from '../runtime/asr-request';
 import type {runAssetAsrInWorker} from './asset-asr-worker-run';
 import type {runExternalChatInWorker} from "./external-chat-worker-run";
+import {executionTimeoutMs, remainingDeadlineMs} from "@creatoros/contract/timeout-policy";
+
 import type {runVideoDecisionsInWorker} from "./video-decisions-worker";
 import type {runAssetProcessingInWorker} from "./asset-processing-worker";
 import type {runTranscribeInWorker} from "./transcribe-worker-run";
@@ -13,7 +15,7 @@ import {getHistoricalScriptFallback} from "./script-fallback";
 import { randomUUID } from "node:crypto";
 import {
   chatToolApprovalReceiptSchema, chatCommitReceiptSchema, hostMessageSchema, workerStructuredResultSchema, agenticCommitReceiptSchema, workerPortInputSchemas, workerReservationSchema, workerStartReceiptSchema, modelGenerationInputSchema, workerModelSpecSchema, sameExecution,
-  workerTaskInputSchema, structuredGenerationInputSchema, type ExecutionRef, type WorkerMessage, type WorkerPort, type WorkerStopReason,
+  workerTaskInputSchema, structuredGenerationInputSchema, workerCallRequestId, type ExecutionRef, type WorkerMessage, type WorkerPort, type WorkerStopReason,
 } from "@creatoros/contract/execution-worker";
 import { z } from "zod";
 import type { runAgenticInWorker } from "./agentic-worker-run";
@@ -52,30 +54,52 @@ export interface WorkerDependencies {
 /** Worker 只执行；状态、预算、凭据、候选的权威均在父进程命名端口。 */
 export function createExecutionWorker(deps: WorkerDependencies) {
   const capabilities=["model.generate",...(deps.runAssetAsr?["asset.asr"]:[]), ...(deps.runTranscribe?["transcribe.douyin"]:[]), ...(deps.runAsset?["asset.generate"]:[]), ...(deps.generateStructured ? ["model.structured"] : []), ...(deps.runAgentic ? ["agentic.run"] : []), ...(deps.runChat ? ["chat.run",...(deps.supportsChatScriptDraft?["chat.script-draft"]:[]),...(deps.supportsChatHooks?["chat.hooks"]:[]),...(deps.supportsChatStructured?["chat.structured"]:[]),...(deps.supportsChatResearch?["chat.research"]:[]),...(deps.supportsChatWebRead?["chat.web-read"]:[])] : [])].filter(capability=>!deps.capabilities || deps.capabilities.some(item=>item===capability));
-  const pending = new Map<string, {resolve(data: unknown): void; reject(error: Error): void; cleanup(): void}>();
+  type Active = {execution: ExecutionRef; controller: AbortController;deadlineAt:number|null;receiptProtocol:boolean;nextCallSeq:number};
+  const pending = new Map<string, {resolve(data: unknown): void; reject(error: Error): void; cleanup(): void;scope?:Active;callSeq?:number}>();
+
   // 只缓存最近的 IPC 重投结果；跨进程/历史幂等仍由后端账本负责。
   const completed = new Map<string, WorkerStopReason>();
-  let active: {execution: ExecutionRef; controller: AbortController;deadlineAt:number|null} | undefined;
+  let active: Active | undefined;
   let closed = false;
   const send = (message: WorkerMessage) => { if (!closed) deps.send(message); };
   const key = (ref: ExecutionRef) => JSON.stringify(ref);
+  const acknowledge = (scope: Active, resend = false) => {
+    if (!scope.receiptProtocol || active !== scope || closed) return;
+    // 从当前在途集合的空隙计算累计确认；较早挂起调用不阻挡后面的音频释放。
+    // 区间数最多为在途空隙数，随空隙关闭合并，不保存历史 ID/tombstone。
+    const outstanding=[...pending.values()].filter(item=>item.scope===scope).map(item=>item.callSeq!).sort((a,b)=>a-b);
+    const throughSeq=outstanding.length?outstanding[0]!-1:scope.nextCallSeq;
+    const consumedRanges:Array<{fromSeq:number;toSeq:number}>=[];
+    let fromSeq=throughSeq+1;
+    for(const sequence of outstanding){if(sequence>fromSeq)consumedRanges.push({fromSeq,toSeq:sequence-1});fromSeq=sequence+1;}
+    if(fromSeq<=scope.nextCallSeq)consumedRanges.push({fromSeq,toSeq:scope.nextCallSeq});
+    if(throughSeq>0 || consumedRanges.length || resend){
+      try {send({version:1,type:'consumed',requestId:randomUUID(),execution:scope.execution,throughSeq,consumedRanges});} catch {/* 断连由原任务监督，不重发调用。 */}
+    }
+  };
   const call = (execution: ExecutionRef, port: WorkerPort, data: unknown, signal?: AbortSignal): Promise<unknown> => {
     signal?.throwIfAborted();
     if (closed) return Promise.reject(new Error("WORKER_DISCONNECTED"));
-    const requestId = randomUUID();
+    const scope = active?.receiptProtocol && sameExecution(active.execution, execution) ? active : undefined;
+    const callSeq = scope ? ++scope.nextCallSeq : undefined;
+    const requestId = callSeq ? workerCallRequestId(execution,callSeq) : randomUUID();
     return new Promise((resolve, reject) => {
       const onAbort = () => { cleanup(); reject(new Error("WORKER_CANCELLED")); };
-      const timer = setTimeout(() => {cleanup(); reject(new Error("HOST_PORT_TIMEOUT"));}, ["executeAgenticTool","acquireTranscribeProfile","acquireTranscribeChannel","readChatWebReadSession"].includes(port) && active && sameExecution(active.execution,execution) ? active.deadlineAt===null ? 600000 : Math.max(1,active.deadlineAt-Date.now()) : 30000);
-      const cleanup = () => {clearTimeout(timer); signal?.removeEventListener("abort", onAbort); pending.delete(requestId);};
-      pending.set(requestId, {resolve, reject, cleanup});
+      // 每个端口共享原领取任务的绝对deadline；continuous由原取消/心跳/租约监督。
+      // 素材准备含登录取流、抽音和保存，不能再由独立30秒限误杀。
+      const waitMs = active && sameExecution(active.execution, execution)
+        ? remainingDeadlineMs(active.deadlineAt) : executionTimeoutMs();
+      const timer = waitMs === undefined ? undefined : setTimeout(() => {cleanup(); reject(new Error("HOST_PORT_TIMEOUT"));}, waitMs);
+      const cleanup = () => {clearTimeout(timer); signal?.removeEventListener("abort", onAbort); pending.delete(requestId); if(scope)acknowledge(scope);};
+      pending.set(requestId, {resolve, reject, cleanup, scope, callSeq});
       signal?.addEventListener("abort", onAbort, {once: true});
-      try { send({version: 1, type: "call", requestId, execution, port, data}); }
+      try { send({version: 1, type: "call", requestId, execution, port, data, ...(callSeq ? {callSeq} : {})}); }
       catch {cleanup(); reject(new Error("WORKER_DISCONNECTED"));}
     });
   };
-  const execute = async (execution: ExecutionRef, deadlineAt: number|null, requestId: string) => {
+  const execute = async (execution: ExecutionRef, deadlineAt: number|null, requestId: string, receiptProtocol?: 'consumed-v1') => {
     const controller = new AbortController();
-    active = {execution, controller,deadlineAt};
+    active = {execution, controller,deadlineAt,receiptProtocol:receiptProtocol === 'consumed-v1',nextCallSeq:0};
     const signal = controller.signal;
     const timer = deadlineAt===null ? undefined : setTimeout(() => controller.abort(), Math.max(0, deadlineAt - Date.now()));
     let reason: WorkerStopReason = "failed";
@@ -320,14 +344,19 @@ export function createExecutionWorker(deps: WorkerDependencies) {
     }
   };
   return {
-    ready() {send({version: 1, type: "ready", requestId: randomUUID(), capabilities});},
+    ready() {send({version: 1, type: "ready", requestId: randomUUID(), capabilities,receiptProtocol:'consumed-v1'});},
     receive(raw: unknown) {
       const parsed = hostMessageSchema.safeParse(raw);
       if (!parsed.success || closed) return;
       const message = parsed.data;
       if (message.type === "reply") {
         const item = pending.get(message.requestId);
-        if (!item) return;
+        if (!item) {
+          // 迟到/重复回复表示宿主可能丢了确认；重发当前累计水位，不创建新的调用。
+          if(active?.receiptProtocol && message.execution && sameExecution(active.execution,message.execution) && message.callSeq && message.callSeq <= active.nextCallSeq)acknowledge(active,true);
+          return;
+        }
+        if(item.scope && (message.callSeq !== item.callSeq || !message.execution || !sameExecution(item.scope.execution,message.execution)))return;
         item.cleanup();
         if (message.ok) item.resolve(message.data); else item.reject(["MODEL_AUTHORITY_CHANGED","MODEL_CREDENTIAL_UNAVAILABLE"].includes(message.errorCode ?? "") ? new GenerationFailure("waiting_user",message.errorCode!) : new Error(message.errorCode ?? "HOST_PORT_REJECTED"));
       } else if (message.type === "cancel") {
@@ -342,7 +371,7 @@ export function createExecutionWorker(deps: WorkerDependencies) {
           if (!sameExecution(active.execution, message.execution)) send({version: 1, type: "stopped", requestId: message.requestId, execution: message.execution, reason: "failed"});
           return;
         }
-        void execute(message.execution, message.deadlineAt, message.requestId);
+        void execute(message.execution, message.deadlineAt, message.requestId,message.receiptProtocol);
       }
     },
     close() {

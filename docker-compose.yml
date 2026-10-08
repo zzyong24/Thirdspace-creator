@@ -15,7 +15,7 @@ services:
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U creatoros -d creatoros"]
       interval: 5s
-      timeout: 3s
+      timeout: 120s
       retries: 10
 
   # S3-compatible object storage for dev. Swap to real S3/OSS in prod via the same
@@ -35,7 +35,7 @@ services:
     healthcheck:
       test: ["CMD-SHELL", "mc ready local || exit 1"]
       interval: 5s
-      timeout: 3s
+      timeout: 120s
       retries: 10
 
 volumes:

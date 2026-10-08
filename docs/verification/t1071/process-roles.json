@@ -1,0 +1,92 @@
+[
+  {
+    "pid": 11427,
+    "role": "MCP bridge",
+    "rssKiB": 10240,
+    "cpuPercent": 0.0
+  },
+  {
+    "pid": 62688,
+    "role": "MCP bridge",
+    "rssKiB": 9952,
+    "cpuPercent": 0.0
+  },
+  {
+    "pid": 64624,
+    "role": "MCP bridge",
+    "rssKiB": 9968,
+    "cpuPercent": 0.0
+  },
+  {
+    "pid": 64693,
+    "role": "MCP bridge",
+    "rssKiB": 9968,
+    "cpuPercent": 0.0
+  },
+  {
+    "pid": 64773,
+    "role": "MCP bridge",
+    "rssKiB": 9968,
+    "cpuPercent": 0.0
+  },
+  {
+    "pid": 64883,
+    "role": "MCP bridge",
+    "rssKiB": 9968,
+    "cpuPercent": 0.0
+  },
+  {
+    "pid": 66031,
+    "role": "MCP bridge",
+    "rssKiB": 9968,
+    "cpuPercent": 0.0
+  },
+  {
+    "pid": 66861,
+    "role": "MCP bridge",
+    "rssKiB": 9968,
+    "cpuPercent": 0.0
+  },
+  {
+    "pid": 68776,
+    "role": "MCP bridge",
+    "rssKiB": 9968,
+    "cpuPercent": 0.0
+  },
+  {
+    "pid": 69310,
+    "role": "MCP bridge",
+    "rssKiB": 9968,
+    "cpuPercent": 0.0
+  },
+  {
+    "pid": 72291,
+    "role": "MCP bridge",
+    "rssKiB": 9968,
+    "cpuPercent": 0.0
+  },
+  {
+    "pid": 73290,
+    "role": "MCP bridge",
+    "rssKiB": 9968,
+    "cpuPercent": 0.0
+  },
+  {
+    "pid": 74358,
+    "role": "MCP bridge",
+    "rssKiB": 9968,
+    "cpuPercent": 0.0
+  },
+  {
+    "pid": 76558,
+    "role": "MCP bridge",
+    "rssKiB": 9968,
+    "cpuPercent": 0.0
+  },
+  {
+    "pid": 85096,
+    "role": "MCP bridge",
+    "rssKiB": 9968,
+    "cpuPercent": 0.0
+  }
+]

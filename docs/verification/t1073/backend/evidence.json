@@ -1,0 +1,108 @@
+{
+  "task": "T-1071-scheduler",
+  "spec": "T-1073 FR-008",
+  "base_sha": "e56cd2735774762908d59022aad265554849972a",
+  "observations": [
+    {
+      "source": "tdd-green-backend-final.log",
+      "observation": {
+        "witness": "T-1073 scheduler 慢窗口",
+        "wakeups": 10,
+        "active": 1,
+        "peak": 1,
+        "calls": 2
+      }
+    },
+    {
+      "source": "tdd-green-backend-final.log",
+      "observation": {
+        "witness": "T-1073 durable automation",
+        "originalIds": [
+          "execution-task_914eaddb-ed90-4924-b0e2-626eb0da2382",
+          "execution-task_c145247a-55b7-4005-a443-9900bfd76b68"
+        ],
+        "callbacks": 10,
+        "handlers": 2,
+        "peak": 1,
+        "status": "succeeded",
+        "attempts": [
+          1,
+          1
+        ]
+      }
+    },
+    {
+      "source": "tdd-green-backend-final.log",
+      "observation": {
+        "witness": "T-1073 public source",
+        "mode": "success",
+        "simulatedMs": 250000,
+        "calls": 1,
+        "peak": 1,
+        "pendingAfter": 0,
+        "status": "succeeded",
+        "attempt": 1
+      }
+    },
+    {
+      "source": "tdd-green-backend-final.log",
+      "observation": {
+        "witness": "T-1073 public source",
+        "mode": "cancel",
+        "simulatedMs": 250000,
+        "calls": 1,
+        "peak": 1,
+        "pendingAfter": 0,
+        "status": "cancelled",
+        "attempt": 1
+      }
+    },
+    {
+      "source": "tdd-green-backend-final.log",
+      "observation": {
+        "witness": "T-1073 public source",
+        "mode": "failure",
+        "simulatedMs": 250000,
+        "calls": 1,
+        "peak": 1,
+        "pendingAfter": 0,
+        "status": "succeeded",
+        "attempt": 2
+      }
+    },
+    {
+      "source": "tdd-green-lifecycle-final.log",
+      "observation": {
+        "witness": "T-1073 root dispose",
+        "sweepsBeforeStop": 2,
+        "sweepsAfterStop": 2,
+        "cronStops": 1,
+        "timersAfterStop": 0
+      }
+    }
+  ],
+  "results": {
+    "focused_backend": {
+      "exit": 0,
+      "passed": 39
+    },
+    "focused_frontend": {
+      "exit": 0,
+      "passed": 7
+    },
+    "frontend_typecheck": {
+      "exit": 0
+    },
+    "backend_full_typecheck": {
+      "exit": 2,
+      "errors_outside_write_set": 12
+    },
+    "backend_source_typecheck": {
+      "exit": 0
+    },
+    "timeout_policy": {
+      "exit": 1,
+      "reason": "mcp-server 缺少 node_modules，vitest command not found"
+    }
+  }
+}

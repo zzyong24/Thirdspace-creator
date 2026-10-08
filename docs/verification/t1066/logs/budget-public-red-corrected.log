@@ -1,0 +1,24 @@
+
+ RUN  v4.1.8 /tmp/creatoros-t1066-budget-public-red
+
+ ❯ new-budget.test.ts (2 tests | 1 failed) 3423ms
+   × 新任务通过正式持久入队口冻结至少两分钟期限 2014ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  new-budget.test.ts > 新任务通过正式持久入队口冻结至少两分钟期限
+AssertionError: expected '2026-10-06T00:00:01.000Z' to be '2026-10-06T00:02:00.000Z' // Object.is equality
+
+Expected: "2026-10-06T00:02:00.000Z"
+Received: "2026-10-06T00:00:01.000Z"
+
+ ❯ ../../private/tmp/creatoros-t1066-budget-public-red/new-budget.test.ts:7:323
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 1 passed (2)
+   Start at  14:57:01
+   Duration  7.81s (transform 2.70s, setup 0ms, import 4.12s, tests 3.42s, environment 0ms)

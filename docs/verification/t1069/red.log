@@ -1,0 +1,106 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+
+stderr | src/runtime/pi-provider-json-compat.test.ts > 完整JSON经实际SDK stream入口仅一次HTTP即返回正文
+Error: PI_MODEL_STREAM_RESULT_UNKNOWN
+    at /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/runtime/pi-provider.ts:43:17
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at Object.doStream (/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/runtime/pi-provider.ts:68:30)
+    at execute (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.4_zod@4.4.3/node_modules/ai/dist/index.js:8008:26)
+    at runWithTracingChannelSpan (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.4_zod@4.4.3/node_modules/ai/dist/index.js:4084:12)
+    at executeLanguageModelCall (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.4_zod@4.4.3/node_modules/ai/dist/index.js:4292:14)
+    at streamLanguageModelCall (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.4_zod@4.4.3/node_modules/ai/dist/index.js:8006:7)
+    at _retryWithExponentialBackoff (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.4_zod@4.4.3/node_modules/ai/dist/index.js:2690:12)
+    at streamStep (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.4_zod@4.4.3/node_modules/ai/dist/index.js:9280:15)
+    at file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.4_zod@4.4.3/node_modules/ai/dist/index.js:9628:7
+
+ ❯ src/runtime/pi-provider-json-compat.test.ts (14 tests | 6 failed) 194ms
+   × 完整JSON经实际SDK generate入口仅一次HTTP即返回正文 138ms
+   × 完整JSON经实际SDK stream入口仅一次HTTP即返回正文 18ms
+   × JSON正文、reasoning、多工具、参数与usage保留供应商真实事实 5ms
+   × 完整JSON保留终止语义 length 2ms
+   × 完整JSON保留终止语义 content_filter 4ms
+   × JSON媒体类型带charset或+json仍消费完整响应 2ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/runtime/pi-provider-json-compat.test.ts > 完整JSON经实际SDK generate入口仅一次HTTP即返回正文
+Error: PI_MODEL_STREAM_RESULT_UNKNOWN
+ ❯ src/runtime/pi-provider.ts:43:17
+     41|             throw Object.assign(new Error(`Pi provider HTTP ${response…
+     42|           }
+     43|           throw new Error("PI_MODEL_STREAM_RESULT_UNKNOWN");
+       |                 ^
+     44|         }
+     45|         output ||= event.type!=="start";
+ ❯ Object.doGenerate src/runtime/pi-provider.ts:63:57
+ ❯ execute ../node_modules/.pnpm/ai@7.0.4_zod@4.4.3/node_modules/ai/src/generate-text/generate-text.ts:937:22
+ ❯ runWithTracingChannelSpan ../node_modules/.pnpm/ai@7.0.4_zod@4.4.3/node_modules/ai/src/telemetry/tracing-channel-publisher.ts:79:11
+ ❯ executeLanguageModelCall ../node_modules/.pnpm/ai@7.0.4_zod@4.4.3/node_modules/ai/src/telemetry/create-telemetry-dispatcher.ts:184:13
+ ❯ ../node_modules/.pnpm/ai@7.0.4_zod@4.4.3/node_modules/ai/src/generate-text/generate-text.ts:933:31
+ ❯ _retryWithExponentialBackoff ../node_modules/.pnpm/ai@7.0.4_zod@4.4.3/node_modules/ai/src/util/retry-with-exponential-backoff.ts:101:11
+ ❯ execute ../node_modules/.pnpm/ai@7.0.4_zod@4.4.3/node_modules/ai/src/generate-text/generate-text.ts:932:37
+ ❯ runWithTracingChannelSpan ../node_modules/.pnpm/ai@7.0.4_zod@4.4.3/node_modules/ai/src/telemetry/tracing-channel-publisher.ts:79:11
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+ FAIL  src/runtime/pi-provider-json-compat.test.ts > 完整JSON经实际SDK stream入口仅一次HTTP即返回正文
+AI_NoOutputGeneratedError: No output generated. Check the stream for errors.
+ ❯ Object.flush ../node_modules/.pnpm/ai@7.0.4_zod@4.4.3/node_modules/ai/src/generate-text/stream-text.ts:1343:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+ FAIL  src/runtime/pi-provider-json-compat.test.ts > JSON正文、reasoning、多工具、参数与usage保留供应商真实事实
+Error: PI_MODEL_STREAM_RESULT_UNKNOWN
+ ❯ src/runtime/pi-provider.ts:43:17
+     41|             throw Object.assign(new Error(`Pi provider HTTP ${response…
+     42|           }
+     43|           throw new Error("PI_MODEL_STREAM_RESULT_UNKNOWN");
+       |                 ^
+     44|         }
+     45|         output ||= event.type!=="start";
+ ❯ Object.doGenerate src/runtime/pi-provider.ts:63:57
+ ❯ src/runtime/pi-provider-json-compat.test.ts:50:20
+ ❯ http src/runtime/pi-provider-json-compat.test.ts:23:5
+ ❯ src/runtime/pi-provider-json-compat.test.ts:49:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/6]⎯
+
+ FAIL  src/runtime/pi-provider-json-compat.test.ts > 完整JSON保留终止语义 length
+ FAIL  src/runtime/pi-provider-json-compat.test.ts > 完整JSON保留终止语义 content_filter
+Error: PI_MODEL_STREAM_RESULT_UNKNOWN
+ ❯ src/runtime/pi-provider.ts:43:17
+     41|             throw Object.assign(new Error(`Pi provider HTTP ${response…
+     42|           }
+     43|           throw new Error("PI_MODEL_STREAM_RESULT_UNKNOWN");
+       |                 ^
+     44|         }
+     45|         output ||= event.type!=="start";
+ ❯ Object.doGenerate src/runtime/pi-provider.ts:63:57
+ ❯ src/runtime/pi-provider-json-compat.test.ts:65:20
+ ❯ http src/runtime/pi-provider-json-compat.test.ts:23:5
+ ❯ src/runtime/pi-provider-json-compat.test.ts:64:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/6]⎯
+
+ FAIL  src/runtime/pi-provider-json-compat.test.ts > JSON媒体类型带charset或+json仍消费完整响应
+Error: PI_MODEL_STREAM_RESULT_UNKNOWN
+ ❯ src/runtime/pi-provider.ts:43:17
+     41|             throw Object.assign(new Error(`Pi provider HTTP ${response…
+     42|           }
+     43|           throw new Error("PI_MODEL_STREAM_RESULT_UNKNOWN");
+       |                 ^
+     44|         }
+     45|         output ||= event.type!=="start";
+ ❯ Object.doGenerate src/runtime/pi-provider.ts:63:57
+ ❯ src/runtime/pi-provider-json-compat.test.ts:72:13
+ ❯ http src/runtime/pi-provider-json-compat.test.ts:23:5
+ ❯ src/runtime/pi-provider-json-compat.test.ts:71:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/6]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  6 failed | 8 passed (14)
+   Start at  20:18:12
+   Duration  1.11s (transform 92ms, setup 0ms, import 537ms, tests 194ms, environment 0ms)

@@ -1,0 +1,8 @@
+{
+  "observedErrors": 34,
+  "observedWarnings": 1,
+  "outputMode": "concise",
+  "omittedDetails": 29,
+  "exactMessageComparison": "缺失：concise未保存完整错误行；后续完整模式单独保存，不补拍本次明细。",
+  "globalExit": 1
+}

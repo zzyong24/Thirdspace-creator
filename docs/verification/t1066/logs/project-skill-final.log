@@ -1,0 +1,17 @@
+test_all_claims_false (test_regressions.Delivery.test_all_claims_false) ... ok
+test_audio_exception_required (test_regressions.Delivery.test_audio_exception_required) ... ok
+test_demo_still_allowed (test_regressions.Delivery.test_demo_still_allowed) ... ok
+test_explicit_source_roots_do_not_fall_back (test_regressions.Delivery.test_explicit_source_roots_do_not_fall_back) ... ok
+test_external_evidence_not_treated_as_file (test_regressions.Delivery.test_external_evidence_not_treated_as_file) ... ok
+test_feature_components_required (test_regressions.Delivery.test_feature_components_required) ... ok
+test_legacy_paths_search_video_then_repo (test_regressions.Delivery.test_legacy_paths_search_video_then_repo) ... ok
+test_source_files_resolve (test_regressions.Delivery.test_source_files_resolve) ... ok
+test_valid_production (test_regressions.Delivery.test_valid_production) ... ok
+test_headless_only_and_cache_revalidation (test_regressions.Preflight.test_headless_only_and_cache_revalidation) ... ok
+test_default_repo_and_unedited_demo_promotion (test_regressions.Starter.test_default_repo_and_unedited_demo_promotion) ... ok
+test_seek_without_progress (test_regressions.Starter.test_seek_without_progress) ... ok
+
+----------------------------------------------------------------------
+Ran 12 tests in 0.239s
+
+OK

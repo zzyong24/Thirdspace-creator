@@ -177,8 +177,12 @@ const {aiService,schedulingService,schedulerCtx,syncDailyExecutionRuns,syncColle
     })
     .seal();
 
-  const startUnifiedAutomationDriver = () =>
-    startAutomationDriver({
+  let stopped = false;
+  let stopping: Promise<void> | undefined;
+  let driver: ReturnType<typeof startAutomationDriver> | undefined;
+  const startUnifiedAutomationDriver = () => {
+    if (stopped) return Promise.resolve();
+    driver ??= startAutomationDriver({
       ctx: schedulerCtx,
       tasks: persistentTaskService,
       registry: automationHandlers,
@@ -191,6 +195,8 @@ const {aiService,schedulingService,schedulerCtx,syncDailyExecutionRuns,syncColle
       scheduledChildren,
       wakeDelegated,
     });
+    return driver.ready;
+  };
 
-return {start:startUnifiedAutomationDriver};
+return {start:startUnifiedAutomationDriver, stop:() => {stopped = true; return stopping ??= Promise.resolve().then(() => driver?.stop());}};
 }

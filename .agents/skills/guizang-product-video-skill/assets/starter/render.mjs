@@ -26,6 +26,8 @@ let browser, frames;
 try {
   browser=await chromium.launch({headless:true});
   const page=await browser.newPage({viewport:{width:plan.width,height:plan.height},deviceScaleFactor:1});
+  page.setDefaultTimeout(120_000);
+  page.setDefaultNavigationTimeout(120_000);
   const failures=[];
   page.on('pageerror',e=>failures.push(e.message));
   page.on('requestfailed',r=>failures.push(r.url()));

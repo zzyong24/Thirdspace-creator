@@ -1,3 +1,4 @@
+import {executionTimeoutMs} from "@creatoros/contract/timeout-policy";
 // [T-254a] video.render executor(HyperFrames 确定性渲染,SPEC 2026-07-11
 // execution-layer-video-pipeline §3.1 步骤4)。
 //
@@ -553,6 +554,13 @@ async function renderWithHyperframesCli(opts: {
           HYPERFRAMES_FFMPEG_PATH: opts.ffmpegPath,
           HYPERFRAMES_FFPROBE_PATH: opts.ffprobePath,
           HYPERFRAMES_TELEMETRY: "0",
+          // 可配第三方执行等待显式归一，不继承隐含短默认；协议/进程300s、编码600s保留。
+          PRODUCER_PUPPETEER_LAUNCH_TIMEOUT_MS: String(executionTimeoutMs(process.env.PRODUCER_PUPPETEER_LAUNCH_TIMEOUT_MS ? Number(process.env.PRODUCER_PUPPETEER_LAUNCH_TIMEOUT_MS) : undefined)),
+          PRODUCER_PAGE_NAVIGATION_TIMEOUT_MS: String(executionTimeoutMs(process.env.PRODUCER_PAGE_NAVIGATION_TIMEOUT_MS ? Number(process.env.PRODUCER_PAGE_NAVIGATION_TIMEOUT_MS) : undefined)),
+          PRODUCER_PLAYER_READY_TIMEOUT_MS: String(executionTimeoutMs(process.env.PRODUCER_PLAYER_READY_TIMEOUT_MS ? Number(process.env.PRODUCER_PLAYER_READY_TIMEOUT_MS) : undefined)),
+          PRODUCER_RENDER_READY_TIMEOUT_MS: String(executionTimeoutMs(process.env.PRODUCER_RENDER_READY_TIMEOUT_MS ? Number(process.env.PRODUCER_RENDER_READY_TIMEOUT_MS) : undefined)),
+          PRODUCER_PUPPETEER_PROTOCOL_TIMEOUT_MS: String(executionTimeoutMs(process.env.PRODUCER_PUPPETEER_PROTOCOL_TIMEOUT_MS ? Number(process.env.PRODUCER_PUPPETEER_PROTOCOL_TIMEOUT_MS) : undefined, 300_000)),
+          FFMPEG_PROCESS_TIMEOUT_MS: String(executionTimeoutMs(process.env.FFMPEG_PROCESS_TIMEOUT_MS ? Number(process.env.FFMPEG_PROCESS_TIMEOUT_MS) : undefined, 300_000)),
           // resolver 虽能从自身 __dirname 推导根目录，仍显式传递同一绝对 root，
           // 避免安装目录重排时 resolver 与 executor 对分层根产生不同理解。
           ...(process.env.CREATOROS_RUNTIME_ROOT

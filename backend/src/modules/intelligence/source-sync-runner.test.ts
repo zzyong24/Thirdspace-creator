@@ -557,3 +557,52 @@ describe("T-942 浏览器忙沿原来源任务自动恢复", () => {
     }finally{await client.close();}
   });
 });
+
+
+describe("T-1073 采集心跳有界与取消", () => {
+  const flush = async () => {for (let n = 0; n < 50; n++) await Promise.resolve();};
+  it.each(["success", "cancel", "failure"] as const)("%s：挂起心跳跨十个间隔不积累，释放后不补发历史心跳", async mode => {
+    const {db, client} = await createDb(); const d = deps(); const realTasks = createPersistentTaskService(db, d);
+    const intelligence = createIntelligenceService(db, {...d, tasks: realTasks});
+    const created = await intelligence.createSource(ctx, {collectionId: null, type: "rss", config: {type: "rss", url: "https://example.com/t1073.xml"}, monitorEnabled: true, runInitial: true, idempotencyKey: "t1073-heartbeat"});
+    if (!created.task || !created.run) throw Error("缺少隔离任务");
+    let releaseHeartbeat!: () => void, releaseAdapter!: (value: ReturnType<typeof succeededEnvelope>) => void, entered!: () => void;
+    const held = new Promise<void>(r => {releaseHeartbeat = r;});
+    const adapterResult = new Promise<ReturnType<typeof succeededEnvelope>>(r => {releaseAdapter = r;});
+    const ready = new Promise<void>(r => {entered = r;});
+    let calls = 0, active = 0, peak = 0;
+    const heartbeat = vi.fn(async (input: Parameters<typeof realTasks.heartbeat>[0]) => {calls++; active++; peak = Math.max(peak, active); try {if (calls === 1) await held; if(mode === "failure") throw Error("合成原租约心跳失败"); return await realTasks.heartbeat(input);} finally {active--;}});
+    const parent = new AbortController(); let settled = false;
+    vi.useFakeTimers();
+    const work = runIntelligenceSourceTask(ctx, {sourceId: created.source.id, runId: created.run.id, taskId: created.task.id, signal: parent.signal}, {tasks: {...realTasks, heartbeat}, intelligence, now: d.now, workerId: () => "t1073-owner", adapter: {run: async () => {entered(); return adapterResult;}}}).then(() => {settled = true;});
+    try {
+      await ready; await vi.advanceTimersByTimeAsync(250_000);
+      expect(calls).toBe(1); expect(peak).toBe(1);
+      if (mode === "cancel") {
+        parent.abort(); await flush(); await vi.advanceTimersByTimeAsync(0); await flush();
+        expect(settled).toBe(true);
+        expect(await realTasks.get(ctx, created.task.id)).toMatchObject({status: "cancelled", leaseOwner: null});
+      }
+      releaseHeartbeat(); await vi.advanceTimersByTimeAsync(0); await flush();
+      expect(calls).toBe(1);
+      releaseAdapter(succeededEnvelope(d.now(), "隔离心跳结果")); await work;
+      expect(vi.getTimerCount()).toBe(0); expect(active).toBe(0);
+      let task = await realTasks.get(ctx, created.task.id);
+      expect(task).toMatchObject({id: created.task.id, status: mode === "cancel" ? "cancelled" : mode === "failure" ? "running" : "succeeded", attempt: 1});
+      if(mode !== "failure") expect(task.leaseOwner).toBeNull();
+      expect((await intelligence.listItems(ctx)).total).toBe(mode === "success" ? 1 : 0);
+      if(mode === "failure") {
+        const recoveryNow = () => new Date(Date.parse(d.now()) + 90_001).toISOString();
+        const recoveredTasks = createPersistentTaskService(db, {...d, now: recoveryNow});
+        await recoveredTasks.recoverExpiredLeases();
+        expect(await recoveredTasks.get(ctx, created.task.id)).toMatchObject({id: created.task.id, status: "queued", attempt: 1});
+        const recoveredIntelligence = createIntelligenceService(db, {...d, now: recoveryNow, tasks: recoveredTasks});
+        await runIntelligenceSourceTask(ctx, {sourceId: created.source.id, runId: created.run.id, taskId: created.task.id}, {tasks: recoveredTasks, intelligence: recoveredIntelligence, now: recoveryNow, adapter: {run: async () => succeededEnvelope(recoveryNow(), "原任务恢复结果")}});
+        task = await recoveredTasks.get(ctx, created.task.id);
+        expect(task).toMatchObject({id: created.task.id, status: "succeeded", attempt: 2, leaseOwner: null});
+        expect((await recoveredIntelligence.listItems(ctx)).total).toBe(1);
+      }
+      process.stdout.write(JSON.stringify({witness: "T-1073 public source", mode, simulatedMs: 250000, calls, peak, pendingAfter: active, status: task.status, attempt: task.attempt}) + "\n");
+    } finally {releaseHeartbeat(); releaseAdapter(succeededEnvelope(d.now())); await work; vi.useRealTimers(); await client.close();}
+  });
+});

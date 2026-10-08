@@ -1,0 +1,7 @@
+Patch: You can now edit the package at:
+
+  /tmp/creatoros-t1069-pi-clean
+
+To commit your changes, run:
+
+  pnpm patch-commit '/tmp/creatoros-t1069-pi-clean'

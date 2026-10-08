@@ -1,4 +1,6 @@
 import type {MediaProbeControl} from "../ai";
+import {executionTimeoutMs} from "@creatoros/contract/timeout-policy";
+
 // runExecutionTask —— 执行层编排(T-255a,live dispatch 范式:persistence-client 在
 // execution.tasks.create 后 `void runExecutionTask(...)` 后台跑,HTTP 立即返回,UI 轮询)。
 //
@@ -87,10 +89,10 @@ async function withExecutionDeadline<T>(
       ? null
       : new Promise<never>((_, reject) => {
           timer = setTimeout(() => {
-            const err = new ExecutionTimeoutError(timeoutSec);
+            const err = new ExecutionTimeoutError(executionTimeoutMs(timeoutSec * 1000) / 1000);
             controller.abort(err);
             reject(err);
-          }, timeoutSec * 1000);
+          }, executionTimeoutMs(timeoutSec * 1000));
         });
   // 丢弃中止:executor 若不响应 signal(挂死),这条 race 腿保证编排立即收尾
   // (任务由 discard 落 cancelled;悬空的 work promise 无人等待,进程内自然回收)。
@@ -216,7 +218,7 @@ export async function runExecutionTask(
     await step(
       spec.constraints.timeoutSec === null
         ? `执行 ${spec.taskType}(无固定总超时，可由用户取消)`
-        : `执行 ${spec.taskType}(超时 ${spec.constraints.timeoutSec}s)`,
+        : `执行 ${spec.taskType}(超时 ${executionTimeoutMs(spec.constraints.timeoutSec * 1000) / 1000}s)`,
     );
     const result = await withExecutionDeadline(
       executor.run(

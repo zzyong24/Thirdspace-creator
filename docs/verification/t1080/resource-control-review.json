@@ -1,0 +1,1009 @@
+{
+  "schema": "t1080-resource-control-independent-review/v1",
+  "observed_at": "2026-10-08T12:00:23.696822+00:00",
+  "candidate_head": "e81e9b609cd0be0b30444de8bab33cfff42c1e64",
+  "source_head": "6b1322af71cbdf55f52e9f37c5cde76e06b56e48",
+  "control_resolution_sha256": "ac9ef6cd9d6e4e7bacd72453ec29c7aa2ef9ace845a45e9c14f14d6e9797bf35",
+  "verdict": "PASS_READONLY_CONTROL_PRESERVATION",
+  "checks": [
+    {
+      "name": "current_backlog_preserved",
+      "pass": true,
+      "evidence": {
+        "current_rows": 177,
+        "result_rows": 198,
+        "missing": [],
+        "changed": []
+      }
+    },
+    {
+      "name": "source_backlog_preserved_with_aliases",
+      "pass": true,
+      "evidence": {
+        "source_rows": 179,
+        "missing_after_alias": [],
+        "aliases": {
+          "T-1063": "T-1063-release-pipeline",
+          "T-1066": "T-1066-timeout-policy",
+          "T-1067": "T-1067-skill-verification",
+          "T-1068": "T-1068-radar-transcription",
+          "T-1069": "T-1069-completion-json",
+          "T-1070": "T-1070-transcript-reliability",
+          "T-1071": "T-1071-resource-audit",
+          "T-1072": "T-1072-owned-devices"
+        }
+      }
+    },
+    {
+      "name": "backlog_unique_task_ids",
+      "pass": true,
+      "evidence": {
+        "duplicates": []
+      }
+    },
+    {
+      "name": "task_title_collisions_complete",
+      "pass": true,
+      "evidence": {
+        "unmapped_same_id_different_titles": []
+      }
+    },
+    {
+      "name": "current_module_bindings_preserved",
+      "pass": true,
+      "evidence": {
+        "original_bindings": 79,
+        "result": 91,
+        "missing": []
+      }
+    },
+    {
+      "name": "resource_module_bindings_preserved",
+      "pass": true,
+      "evidence": {
+        "original_bindings": 70,
+        "result": 91,
+        "missing": []
+      }
+    },
+    {
+      "name": "vertical_ids_unique",
+      "pass": true,
+      "evidence": {
+        "count": 91,
+        "duplicates": []
+      }
+    },
+    {
+      "name": "summary_matches_actual_objects",
+      "pass": true,
+      "evidence": {
+        "actual": {
+          "verticals": 91,
+          "tasks_done": 61,
+          "tasks_total": 193,
+          "tasks_pending": 132,
+          "verticals_complete": 17
+        },
+        "declared": {
+          "verticals": 91,
+          "tasks_done": 61,
+          "tasks_total": 193,
+          "tasks_pending": 132,
+          "verticals_complete": 17
+        },
+        "status_is_historical_not_new_acceptance": true
+      }
+    },
+    {
+      "name": "alias_spec_refs_T-1063-release-pipeline",
+      "pass": true,
+      "evidence": {
+        "source_task": "T-1063",
+        "new_task": "T-1063-release-pipeline",
+        "source_title": "取消双端出包人为超时与阻断检查并重跑 Windows 流水线",
+        "preserved_title": "取消双端出包人为超时与阻断检查并重跑 Windows 流水线",
+        "module_bound_in_source": false,
+        "current_spec_references": [
+          {
+            "path": "docs/features/t1063-release-pipeline.md",
+            "exists": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "alias_spec_refs_T-1066-timeout-policy",
+      "pass": true,
+      "evidence": {
+        "source_task": "T-1066",
+        "new_task": "T-1066-timeout-policy",
+        "source_title": "全系统统一两分钟超时下限、嵌套预算与Skill防复发",
+        "preserved_title": "全系统统一两分钟超时下限、嵌套预算与Skill防复发",
+        "module_bound_in_source": true,
+        "current_spec_references": [
+          {
+            "path": "docs/features/t1066-timeout-policy.md",
+            "exists": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "alias_spec_refs_T-1067-skill-verification",
+      "pass": true,
+      "evidence": {
+        "source_task": "T-1067",
+        "new_task": "T-1067-skill-verification",
+        "source_title": "清理通用产品流程Skill既有公开分发校验债务",
+        "preserved_title": "清理通用产品流程Skill既有公开分发校验债务",
+        "module_bound_in_source": false,
+        "current_spec_references": [
+          {
+            "path": "docs/verification/t1066/SKILL_VERIFICATION.md",
+            "exists": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "alias_spec_refs_T-1068-radar-transcription",
+      "pass": true,
+      "evidence": {
+        "source_task": "T-1068",
+        "new_task": "T-1068-radar-transcription",
+        "source_title": "隔离复现内容雷达转录 MODEL_RESULT_UNKNOWN 暂停并定位原因",
+        "preserved_title": "隔离复现内容雷达转录 MODEL_RESULT_UNKNOWN 暂停并定位原因",
+        "module_bound_in_source": false,
+        "current_spec_references": [
+          {
+            "path": "docs/verification/t1068-radar-transcription.md",
+            "exists": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "alias_spec_refs_T-1069-completion-json",
+      "pass": true,
+      "evidence": {
+        "source_task": "T-1069",
+        "new_task": "T-1069-completion-json",
+        "source_title": "修复雷达文本模型完整非流式JSON回执被流式解析误判未知",
+        "preserved_title": "修复雷达文本模型完整非流式JSON回执被流式解析误判未知",
+        "module_bound_in_source": true,
+        "current_spec_references": [
+          {
+            "path": "docs/features/t1069-completion-json-compat.md",
+            "exists": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "alias_spec_refs_T-1070-transcript-reliability",
+      "pass": true,
+      "evidence": {
+        "source_task": "T-1070",
+        "new_task": "T-1070-transcript-reliability",
+        "source_title": "修复通用转录整理文本兼容模式缺少schema校验器与保存阻断",
+        "preserved_title": "修复通用转录整理文本兼容模式缺少schema校验器与保存阻断",
+        "module_bound_in_source": true,
+        "current_spec_references": [
+          {
+            "path": "docs/features/t1070-transcript-postprocess-reliability.md",
+            "exists": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "alias_spec_refs_T-1071-resource-audit",
+      "pass": true,
+      "evidence": {
+        "source_task": "T-1071",
+        "new_task": "T-1071-resource-audit",
+        "source_title": "全系统排查资源浪费与内存泄漏并隔离复现",
+        "preserved_title": "全系统排查资源浪费与内存泄漏并隔离复现",
+        "module_bound_in_source": true,
+        "current_spec_references": [
+          {
+            "path": "docs/verification/t1071-resource-memory-audit.md",
+            "exists": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "alias_spec_refs_T-1072-owned-devices",
+      "pass": true,
+      "evidence": {
+        "source_task": "T-1072",
+        "new_task": "T-1072-owned-devices",
+        "source_title": "配合 Growth 轻量手机号账号与正式双设备，补齐新电脑连接与已激活账号入口",
+        "preserved_title": "配合 Growth 轻量手机号账号与正式双设备，补齐新电脑连接与已激活账号入口",
+        "module_bound_in_source": false,
+        "current_spec_references": [
+          {
+            "path": "docs/features/t1072-owned-devices.md",
+            "exists": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "original_project_gates_exact",
+      "pass": true,
+      "evidence": {
+        "original_lessons": 50,
+        "original_probes": 4,
+        "exact_preserved_total": 54,
+        "changed_original_lessons": [],
+        "new_source_lessons": [
+          "LED-053",
+          "LED-060",
+          "LED-061"
+        ]
+      }
+    },
+    {
+      "name": "led_ids_unique",
+      "pass": true,
+      "evidence": {
+        "heading_count": 59,
+        "heading_duplicates": [],
+        "gate_lesson_count": 53,
+        "source_aliases": {
+          "LED-054": "LED-060",
+          "LED-055": "LED-061"
+        }
+      }
+    },
+    {
+      "name": "orchestrator/LESSON_LEDGER.md_current_and_unique_source_blocks_preserved",
+      "pass": true,
+      "evidence": {
+        "current_prefix_unchanged": true,
+        "missing_unique_source_blocks": []
+      }
+    },
+    {
+      "name": "orchestrator/DECISION_LOG.md_current_and_unique_source_blocks_preserved",
+      "pass": true,
+      "evidence": {
+        "current_prefix_unchanged": true,
+        "missing_unique_source_blocks": []
+      }
+    },
+    {
+      "name": "current_review_chain_exact_bytes",
+      "pass": true,
+      "evidence": {
+        "sha256": "56fc48691a34b61649c3fee7d1065b1de36901d8d30667bc03226131eca17277",
+        "rows": 128,
+        "tip": "9063d3cd638fb9a2016a8995f7dd7f770feaa47804170978d8fc8657e6cd92f7",
+        "independently_verified_stable_object_event_hash_and_links": true,
+        "chain_errors": []
+      }
+    },
+    {
+      "name": "source_review_chain_archived_exact_bytes",
+      "pass": true,
+      "evidence": {
+        "sha256": "7785cb8b089d8e65a94d2ddd9c7e98aab66de6bb8a8cec7b133ccdce48873526",
+        "rows": 111,
+        "tip": "658a1b8ab6f2d0af86e257097787c410085fd49511543004ed66a4be89a867f3",
+        "independently_verified_stable_object_event_hash_and_links": true,
+        "chain_errors": [],
+        "not_appended_to_current_admission_chain": true
+      }
+    },
+    {
+      "name": "generic_events_preserve_both_original_rows",
+      "pass": true,
+      "evidence": {
+        "source_and_current_exact_rows_in_union": true,
+        "source_task_ids_not_rewritten": true,
+        "new_alias_lookup_needs_source_provenance_not_new_acceptance": true
+      }
+    },
+    {
+      "name": "skill_version_stays_3_29",
+      "pass": true,
+      "evidence": {
+        "current_project_sha256": "059101410c6bd35df37979a7fc91d59aa840a79aa794736772fe04c45a43838d",
+        "installed_skill_version": "3.29.0"
+      }
+    },
+    {
+      "name": "source_snapshot_commits_retained_by_named_refs",
+      "pass": true,
+      "evidence": [
+        {
+          "record": "source-snapshot-commits.json",
+          "branch": "codex/t1080-retain-t1062-aac-v2-r6-candidate-6bb4bd15",
+          "receipt_source_head": "ccb47a0faf6370d9a5fe8f4502ee25e8a3fe0b47",
+          "actual_head": "ccb47a0faf6370d9a5fe8f4502ee25e8a3fe0b47",
+          "retained_as_ref_or_ancestor": true
+        },
+        {
+          "record": "source-snapshot-commits.json",
+          "branch": "codex/t1080-retain-t1062-aac-v2-candidate-cbf9a9f6",
+          "receipt_source_head": "5e0d81a4b349c93cfb5ad74381d8dabd262a5f6b",
+          "actual_head": "5e0d81a4b349c93cfb5ad74381d8dabd262a5f6b",
+          "retained_as_ref_or_ancestor": true
+        },
+        {
+          "record": "source-snapshot-commits.json",
+          "branch": "codex/t1080-retain-t1022-charts",
+          "receipt_source_head": "119ca6f0a9b087b0582619fa44d4435b05b218f2",
+          "actual_head": "119ca6f0a9b087b0582619fa44d4435b05b218f2",
+          "retained_as_ref_or_ancestor": true
+        },
+        {
+          "record": "source-snapshot-commits.json",
+          "branch": "codex/t1080-retain-t1022-project-root",
+          "receipt_source_head": "46f047cad4922f91069634747591373220f68aee",
+          "actual_head": "46f047cad4922f91069634747591373220f68aee",
+          "retained_as_ref_or_ancestor": true
+        },
+        {
+          "record": "source-snapshot-commits.json",
+          "branch": "codex/t1080-retain-t1022-shared-domains",
+          "receipt_source_head": "844b26656eede888a5c85b133b8901007f178c1f",
+          "actual_head": "844b26656eede888a5c85b133b8901007f178c1f",
+          "retained_as_ref_or_ancestor": true
+        },
+        {
+          "record": "source-snapshot-commits.json",
+          "branch": "codex/t1080-retain-t1022-task-scope",
+          "receipt_source_head": "ff8dfcdc59501f18dd9b51960d8402025d982c6b",
+          "actual_head": "ff8dfcdc59501f18dd9b51960d8402025d982c6b",
+          "retained_as_ref_or_ancestor": true
+        },
+        {
+          "record": "source-snapshot-commits.json",
+          "branch": "codex/t1080-retain-t1070-native-intermediates",
+          "receipt_source_head": "339f042700a9c4d75fb482dd6436d0e9b66f0786",
+          "actual_head": "0ebfc0009ef7c18f08ecfd0b9f7735c86cb6031f",
+          "retained_as_ref_or_ancestor": true
+        },
+        {
+          "record": "additional-source-snapshot-commits.json",
+          "branch": "codex/t188-creator-owned-devices",
+          "receipt_source_head": "40a5eaf480c1347a9eadf4bf86a36971ce547874",
+          "actual_head": "40a5eaf480c1347a9eadf4bf86a36971ce547874",
+          "retained_as_ref_or_ancestor": true
+        },
+        {
+          "record": "additional-source-snapshot-commits.json",
+          "branch": "codex/t1070-backend-candidate",
+          "receipt_source_head": "4c767cc20a0f957089a6d5934d6eb8257c9a0f51",
+          "actual_head": "4c767cc20a0f957089a6d5934d6eb8257c9a0f51",
+          "retained_as_ref_or_ancestor": true
+        },
+        {
+          "record": "additional-source-snapshot-commits.json",
+          "branch": "codex/t1070-frontend-candidate",
+          "receipt_source_head": "b4356246ed4efc5def535aed774be5b227cea4e7",
+          "actual_head": "b4356246ed4efc5def535aed774be5b227cea4e7",
+          "retained_as_ref_or_ancestor": true
+        }
+      ]
+    },
+    {
+      "name": "remaining_worktrees_appropriate_during_active_merge",
+      "pass": true,
+      "evidence": {
+        "actual_count": 8,
+        "requested_context_count": 9,
+        "meaning": "当场8树；保留当前/活跃来源与仍待这轮资源、设备、原生来源整合的具名来源，不依据旧占用PID删除。非MAIN干净不等于自动批准清理。"
+      }
+    },
+    {
+      "name": "complexity_original_entries_retained",
+      "pass": true,
+      "evidence": {
+        "actual_entries": 494,
+        "missing": [],
+        "duplicate_task_ids_are_multiple_path_entries_not_module_key_collisions": true
+      }
+    }
+  ],
+  "findings": [],
+  "control_file_sha256": {
+    "BACKLOG.md": "2c6c82fa5b6f248f54bcc95b75ed7e7cd752af99c21a4552bb468c47e5661bae",
+    "PROJECT.md": "07dfcf478bd9cdfbe0b75c4ff1bc7125866af6462adf4cee2a5052de0280c803",
+    "orchestrator/.lessons-stats.json": "eb87cbc45155ab8949607bcf3b8a0118f396a75fa24379c996d081e7c12740a3",
+    "orchestrator/COMPLEXITY_LEDGER.json": "7be6379574cf095d97422d54a9fb26b742030356be375092045986d35c3e8e05",
+    "orchestrator/DECISION_LOG.md": "fd31ace72d0e413bb68e677e4e6cb1328591dbb12eaae8e4fb76467406eac299",
+    "orchestrator/LESSON_LEDGER.md": "9efb30c624a4e5f7583a3c1ccf4cca9340295eee91f62af2954e996e52ba57bd",
+    "orchestrator/context/T-1069.md": "75444c706105007550c75bc5c930aabda2f22d5609513dc500589b9fcced5263",
+    "orchestrator/context/T-1070.md": "b95c2b2e6e8331b05ec842d3fcc61fd4c936497d0f241e9817a0b13b94fc676b",
+    "orchestrator/events.ndjson": "4d867bcad632944520f8203d5934ccb7b638b7100d7dd7799547f3653aa35889",
+    "orchestrator/process/.skill-version": "059101410c6bd35df37979a7fc91d59aa840a79aa794736772fe04c45a43838d",
+    "orchestrator/process/.vendor-manifest.json": "bbb77d2a0f29d32e7cf21593472d89f37e27f2ce7424d98c91371b7306f25607",
+    "orchestrator/process/modules.config.json": "de89bade68c88258e5e92e693e843282a8fb6a86730083034a955e2646123da5",
+    "orchestrator/process/reconcile.config.json": "a2c053a86a919f401ff6f73c74598cff9e5df37be9316e864897b8e3855800af",
+    "orchestrator/progress.json": "19697ffb796b0582273c3f19529e48f55c36ae80c328a1e67028160e47a1e14f",
+    "orchestrator/review-events.ndjson": "56fc48691a34b61649c3fee7d1065b1de36901d8d30667bc03226131eca17277"
+  },
+  "alias_task_refs": [
+    {
+      "source_task": "T-1063",
+      "new_task": "T-1063-release-pipeline",
+      "source_title": "取消双端出包人为超时与阻断检查并重跑 Windows 流水线",
+      "preserved_title": "取消双端出包人为超时与阻断检查并重跑 Windows 流水线",
+      "module_bound_in_source": false,
+      "current_spec_references": [
+        {
+          "path": "docs/features/t1063-release-pipeline.md",
+          "exists": true
+        }
+      ]
+    },
+    {
+      "source_task": "T-1066",
+      "new_task": "T-1066-timeout-policy",
+      "source_title": "全系统统一两分钟超时下限、嵌套预算与Skill防复发",
+      "preserved_title": "全系统统一两分钟超时下限、嵌套预算与Skill防复发",
+      "module_bound_in_source": true,
+      "current_spec_references": [
+        {
+          "path": "docs/features/t1066-timeout-policy.md",
+          "exists": true
+        }
+      ]
+    },
+    {
+      "source_task": "T-1067",
+      "new_task": "T-1067-skill-verification",
+      "source_title": "清理通用产品流程Skill既有公开分发校验债务",
+      "preserved_title": "清理通用产品流程Skill既有公开分发校验债务",
+      "module_bound_in_source": false,
+      "current_spec_references": [
+        {
+          "path": "docs/verification/t1066/SKILL_VERIFICATION.md",
+          "exists": true
+        }
+      ]
+    },
+    {
+      "source_task": "T-1068",
+      "new_task": "T-1068-radar-transcription",
+      "source_title": "隔离复现内容雷达转录 MODEL_RESULT_UNKNOWN 暂停并定位原因",
+      "preserved_title": "隔离复现内容雷达转录 MODEL_RESULT_UNKNOWN 暂停并定位原因",
+      "module_bound_in_source": false,
+      "current_spec_references": [
+        {
+          "path": "docs/verification/t1068-radar-transcription.md",
+          "exists": true
+        }
+      ]
+    },
+    {
+      "source_task": "T-1069",
+      "new_task": "T-1069-completion-json",
+      "source_title": "修复雷达文本模型完整非流式JSON回执被流式解析误判未知",
+      "preserved_title": "修复雷达文本模型完整非流式JSON回执被流式解析误判未知",
+      "module_bound_in_source": true,
+      "current_spec_references": [
+        {
+          "path": "docs/features/t1069-completion-json-compat.md",
+          "exists": true
+        }
+      ]
+    },
+    {
+      "source_task": "T-1070",
+      "new_task": "T-1070-transcript-reliability",
+      "source_title": "修复通用转录整理文本兼容模式缺少schema校验器与保存阻断",
+      "preserved_title": "修复通用转录整理文本兼容模式缺少schema校验器与保存阻断",
+      "module_bound_in_source": true,
+      "current_spec_references": [
+        {
+          "path": "docs/features/t1070-transcript-postprocess-reliability.md",
+          "exists": true
+        }
+      ]
+    },
+    {
+      "source_task": "T-1071",
+      "new_task": "T-1071-resource-audit",
+      "source_title": "全系统排查资源浪费与内存泄漏并隔离复现",
+      "preserved_title": "全系统排查资源浪费与内存泄漏并隔离复现",
+      "module_bound_in_source": true,
+      "current_spec_references": [
+        {
+          "path": "docs/verification/t1071-resource-memory-audit.md",
+          "exists": true
+        }
+      ]
+    },
+    {
+      "source_task": "T-1072",
+      "new_task": "T-1072-owned-devices",
+      "source_title": "配合 Growth 轻量手机号账号与正式双设备，补齐新电脑连接与已激活账号入口",
+      "preserved_title": "配合 Growth 轻量手机号账号与正式双设备，补齐新电脑连接与已激活账号入口",
+      "module_bound_in_source": false,
+      "current_spec_references": [
+        {
+          "path": "docs/features/t1072-owned-devices.md",
+          "exists": true
+        }
+      ]
+    }
+  ],
+  "source_code_protection": {
+    "scope": "独立核E/merge-resource-controls.py实际写目标仅上述control文件+原source review archive；没有生产源码写调用。源码三方冲突由其他owner按packet/source refs处理，本报告不批准product conflicts或新flags。",
+    "control_script_sha256": "3d50e3f30cd50c2b2447c75c103eba0b9c138280f77738c02ce934a0b05956ef",
+    "immutable_source_and_current_refs_preserved": [
+      "6b1322af71cbdf55f52e9f37c5cde76e06b56e48",
+      "e81e9b609cd0be0b30444de8bab33cfff42c1e64"
+    ],
+    "full_source_conflict_merge_acceptance_pending": true
+  },
+  "remaining_worktrees": [
+    {
+      "worktree": "/Users/zyongzhu/Workbase/Thirdspace-creator",
+      "HEAD": "6b1322af71cbdf55f52e9f37c5cde76e06b56e48",
+      "branch": "refs/heads/codex/t1062-account-group-snapshot",
+      "current_open_descriptors": [
+        {
+          "pid": "2461",
+          "name": "node",
+          "fd": "cwd",
+          "relative_path": "."
+        },
+        {
+          "pid": "2566",
+          "name": "node_repl",
+          "fd": "cwd",
+          "relative_path": "."
+        },
+        {
+          "pid": "2957",
+          "name": "creatoros-server",
+          "fd": "cwd",
+          "relative_path": "."
+        },
+        {
+          "pid": "2958",
+          "name": "ChatCut",
+          "fd": "cwd",
+          "relative_path": "."
+        },
+        {
+          "pid": "2959",
+          "name": "node_repl",
+          "fd": "cwd",
+          "relative_path": "."
+        },
+        {
+          "pid": "2960",
+          "name": "python3.12",
+          "fd": "cwd",
+          "relative_path": "."
+        },
+        {
+          "pid": "14553",
+          "name": "codex",
+          "fd": "cwd",
+          "relative_path": "."
+        },
+        {
+          "pid": "14686",
+          "name": "python3.12",
+          "fd": "cwd",
+          "relative_path": "."
+        },
+        {
+          "pid": "14687",
+          "name": "node",
+          "fd": "cwd",
+          "relative_path": "."
+        },
+        {
+          "pid": "14688",
+          "name": "node_repl",
+          "fd": "cwd",
+          "relative_path": "."
+        },
+        {
+          "pid": "14689",
+          "name": "ChatCut",
+          "fd": "cwd",
+          "relative_path": "."
+        },
+        {
+          "pid": "14692",
+          "name": "creatoros-server",
+          "fd": "cwd",
+          "relative_path": "."
+        },
+        {
+          "pid": "14759",
+          "name": "node_repl",
+          "fd": "cwd",
+          "relative_path": "."
+        },
+        {
+          "pid": "15935",
+          "name": "node",
+          "fd": "cwd",
+          "relative_path": "."
+        },
+        {
+          "pid": "15936",
+          "name": "node_repl",
+          "fd": "cwd",
+          "relative_path": "."
+        },
+        {
+          "pid": "15944",
+          "name": "node",
+          "fd": "cwd",
+          "relative_path": "."
+        },
+        {
+          "pid": "15945",
+          "name": "node",
+          "fd": "cwd",
+          "relative_path": "."
+        },
+        {
+          "pid": "15946",
+          "name": "codex",
+          "fd": "cwd",
+          "relative_path": "."
+        },
+        {
+          "pid": "49268",
+          "name": "Python",
+          "fd": "cwd",
+          "relative_path": "."
+        },
+        {
+          "pid": "49321",
+          "name": "lsof",
+          "fd": "cwd",
+          "relative_path": "."
+        },
+        {
+          "pid": "52424",
+          "name": "codex-code-mode-host",
+          "fd": "cwd",
+          "relative_path": "."
+        },
+        {
+          "pid": "62588",
+          "name": "node",
+          "fd": "cwd",
+          "relative_path": "."
+        },
+        {
+          "pid": "62589",
+          "name": "codex",
+          "fd": "cwd",
+          "relative_path": "."
+        },
+        {
+          "pid": "62647",
+          "name": "codex",
+          "fd": "cwd",
+          "relative_path": "."
+        },
+        {
+          "pid": "63854",
+          "name": "node",
+          "fd": "cwd",
+          "relative_path": "."
+        },
+        {
+          "pid": "63855",
+          "name": "ChatCut",
+          "fd": "cwd",
+          "relative_path": "."
+        },
+        {
+          "pid": "63856",
+          "name": "creatoros-server",
+          "fd": "cwd",
+          "relative_path": "."
+        },
+        {
+          "pid": "63858",
+          "name": "node_repl",
+          "fd": "cwd",
+          "relative_path": "."
+        },
+        {
+          "pid": "63859",
+          "name": "python3.12",
+          "fd": "cwd",
+          "relative_path": "."
+        },
+        {
+          "pid": "63881",
+          "name": "node_repl",
+          "fd": "cwd",
+          "relative_path": "."
+        },
+        {
+          "pid": "80328",
+          "name": "fish",
+          "fd": "cwd",
+          "relative_path": "."
+        },
+        {
+          "pid": "80328",
+          "name": "fish",
+          "fd": "4",
+          "relative_path": "."
+        },
+        {
+          "pid": "88961",
+          "name": "node",
+          "fd": "cwd",
+          "relative_path": "."
+        },
+        {
+          "pid": "88962",
+          "name": "node",
+          "fd": "cwd",
+          "relative_path": "."
+        },
+        {
+          "pid": "88969",
+          "name": "codex",
+          "fd": "cwd",
+          "relative_path": "."
+        },
+        {
+          "pid": "95009",
+          "name": "python3.12",
+          "fd": "cwd",
+          "relative_path": "."
+        },
+        {
+          "pid": "95011",
+          "name": "ChatCut",
+          "fd": "cwd",
+          "relative_path": "."
+        },
+        {
+          "pid": "95012",
+          "name": "creatoros-server",
+          "fd": "cwd",
+          "relative_path": "."
+        },
+        {
+          "pid": "95014",
+          "name": "node_repl",
+          "fd": "cwd",
+          "relative_path": "."
+        }
+      ],
+      "status_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "clean": true,
+      "keep_decision": "retain_active_workbase",
+      "appropriate_now": true
+    },
+    {
+      "worktree": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "HEAD": "e81e9b609cd0be0b30444de8bab33cfff42c1e64",
+      "branch": "refs/heads/codex/t1062-integrated-client",
+      "current_open_descriptors": [
+        {
+          "pid": "89843",
+          "name": "node",
+          "fd": "cwd",
+          "relative_path": "."
+        },
+        {
+          "pid": "89843",
+          "name": "node",
+          "fd": "txt",
+          "relative_path": "node_modules/.pnpm/fsevents@2.3.3/node_modules/fsevents/fsevents.node"
+        },
+        {
+          "pid": "89843",
+          "name": "node",
+          "fd": "txt",
+          "relative_path": "node_modules/.pnpm/@tailwindcss+oxide-darwin-arm64@4.3.1/node_modules/@tailwindcss/oxide-darwin-arm64/tailwindcss-oxide.darwin-arm64.node"
+        },
+        {
+          "pid": "89843",
+          "name": "node",
+          "fd": "txt",
+          "relative_path": "node_modules/.pnpm/lightningcss-darwin-arm64@1.32.0/node_modules/lightningcss-darwin-arm64/lightningcss.darwin-arm64.node"
+        },
+        {
+          "pid": "89843",
+          "name": "node",
+          "fd": "txt",
+          "relative_path": "node_modules/.pnpm/@rolldown+binding-darwin-arm64@1.0.3/node_modules/@rolldown/binding-darwin-arm64/rolldown-binding.darwin-arm64.node"
+        },
+        {
+          "pid": "89843",
+          "name": "node",
+          "fd": "34",
+          "relative_path": "frontend/src/app"
+        },
+        {
+          "pid": "89843",
+          "name": "node",
+          "fd": "35",
+          "relative_path": "frontend/src"
+        },
+        {
+          "pid": "89843",
+          "name": "node",
+          "fd": "36",
+          "relative_path": "frontend"
+        },
+        {
+          "pid": "89843",
+          "name": "node",
+          "fd": "37",
+          "relative_path": "."
+        },
+        {
+          "pid": "89843",
+          "name": "node",
+          "fd": "48",
+          "relative_path": "frontend"
+        },
+        {
+          "pid": "89843",
+          "name": "node",
+          "fd": "50",
+          "relative_path": "frontend/src/features/copilot"
+        },
+        {
+          "pid": "89843",
+          "name": "node",
+          "fd": "51",
+          "relative_path": "frontend/src/features"
+        },
+        {
+          "pid": "89843",
+          "name": "node",
+          "fd": "52",
+          "relative_path": "frontend/src"
+        },
+        {
+          "pid": "89843",
+          "name": "node",
+          "fd": "53",
+          "relative_path": "frontend"
+        },
+        {
+          "pid": "89843",
+          "name": "node",
+          "fd": "54",
+          "relative_path": "."
+        },
+        {
+          "pid": "89843",
+          "name": "node",
+          "fd": "63",
+          "relative_path": "."
+        },
+        {
+          "pid": "89843",
+          "name": "node",
+          "fd": "73",
+          "relative_path": "."
+        }
+      ],
+      "status_sha256": "3bc4ff6c9ae0fcbf5030a4ec9a1e9dbd743b53890c3969cd940f54fe83edb4a9",
+      "clean": false,
+      "keep_decision": "retain_active_main_merge",
+      "appropriate_now": true
+    },
+    {
+      "worktree": "/Users/zyongzhu/.codex/worktrees/t1063-release-pipeline/Thirdspace-creator",
+      "HEAD": "6636e4faf506dcdd417004354637feb7801ee020",
+      "branch": "refs/heads/codex/t1063-release-pipeline",
+      "current_open_descriptors": [],
+      "status_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "clean": true,
+      "keep_decision": "retain_named_source_until_current_consolidation_gate_then_fresh_recheck",
+      "appropriate_now": true
+    },
+    {
+      "worktree": "/Users/zyongzhu/.codex/worktrees/t1066-timeout-policy/Thirdspace-creator",
+      "HEAD": "4aa040f47361903ed0694fbb9cf298fd5be95b9d",
+      "branch": "refs/heads/codex/t1066-timeout-policy",
+      "current_open_descriptors": [],
+      "status_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "clean": true,
+      "keep_decision": "retain_named_source_until_current_consolidation_gate_then_fresh_recheck",
+      "appropriate_now": true
+    },
+    {
+      "worktree": "/Users/zyongzhu/.codex/worktrees/t188-creator-devices/Thirdspace-creator",
+      "HEAD": "40a5eaf480c1347a9eadf4bf86a36971ce547874",
+      "branch": "refs/heads/codex/t188-creator-owned-devices",
+      "current_open_descriptors": [],
+      "status_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "clean": true,
+      "keep_decision": "retain_named_source_until_current_consolidation_gate_then_fresh_recheck",
+      "appropriate_now": true
+    },
+    {
+      "worktree": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-backend-candidate",
+      "HEAD": "4c767cc20a0f957089a6d5934d6eb8257c9a0f51",
+      "branch": "refs/heads/codex/t1070-backend-candidate",
+      "current_open_descriptors": [],
+      "status_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "clean": true,
+      "keep_decision": "retain_named_source_until_current_consolidation_gate_then_fresh_recheck",
+      "appropriate_now": true
+    },
+    {
+      "worktree": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-frontend-candidate",
+      "HEAD": "b4356246ed4efc5def535aed774be5b227cea4e7",
+      "branch": "refs/heads/codex/t1070-frontend-candidate",
+      "current_open_descriptors": [],
+      "status_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "clean": true,
+      "keep_decision": "retain_named_source_until_current_consolidation_gate_then_fresh_recheck",
+      "appropriate_now": true
+    },
+    {
+      "worktree": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1070-native-candidate",
+      "HEAD": "0ebfc0009ef7c18f08ecfd0b9f7735c86cb6031f",
+      "branch": "refs/heads/codex/t1080-retain-t1070-native-intermediates",
+      "current_open_descriptors": [],
+      "status_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "clean": true,
+      "keep_decision": "retain_named_source_until_current_consolidation_gate_then_fresh_recheck",
+      "appropriate_now": true
+    }
+  ],
+  "current_occupancy": {
+    "started": "2026-10-08T11:57:37.600299+00:00",
+    "finished": "2026-10-08T11:57:39.193246+00:00",
+    "method": "current global lsof exact roots; only PID/process name/fd/path metadata recorded",
+    "exit": 0,
+    "stderr_bytes": 0,
+    "complete": true
+  },
+  "deadline_review": {
+    "status": "waiting_for_separate_four_path_packet",
+    "scope_boundary": "只允许继承原bounded parent remaining期限，不能扩大普通新任务floor；将单独报告"
+  },
+  "limits": [
+    "只有控制面/来源保护PASS；未跑全量Gate/产品回归、未提交或清理。",
+    "source aliases original PASS/done仅历史来源，不因纳入MAIN推定新安装或新Gate通过。",
+    "当前index仍有未stage的三方冲突；最终freeze必须重新绑定真实commit/源码SHA。",
+    "计数字段.lessons-stats的current_latest_scalar不是跨来源时间排序；两来源字节在原refs/packet均保留，不把该名字解释为source计数丢失或新的验证结果。"
+  ],
+  "repository_mutated_by_reviewer": false,
+  "workbench_circular_import_compatibility": {
+    "scope": "workbench_endpoint_definition_import",
+    "verdict": "PASS",
+    "single_import_replacement_exact": true,
+    "old_definition_source": "../endpoints",
+    "new_definition_source": "../endpoint-definition",
+    "public_endpoint_id_params_result_and_function_body_unchanged": true,
+    "cycle": "endpoints.ts imports operations/workbench.ts; old workbench.ts reimports endpoints.ts. endpoint-definition.ts is the existing runtime leaf.",
+    "candidate_sha256": "c4fa57df496aad4536a4bc819e93cd2de5c7b414bac8ceaf03ab215f559ff856",
+    "t1080_write_set_contains_path": true,
+    "same_regression_argv": true,
+    "red_exit": 1,
+    "red_failure": "两个 suite 在导入阶段 TypeError: defineEndpoint is not a function",
+    "green_exit": 0,
+    "green_test_files": 5,
+    "green_tests": 88,
+    "evidence": {
+      "resource-worker-regression.result.json": "a35f978c75425dba7101b96515717649bbb4b85d73f9551a95f998701a1f7cfd",
+      "resource-worker-regression.log": "47c289ad504e114f95a247bf8c56650d4d88cde142c6265c69580f801227d913",
+      "resource-worker-regression-green.result.json": "9dfc02885976038d760fd56f8b94db3cd6dba3ad392d99b02543592f69d971e7",
+      "resource-worker-regression-green.log": "a71b79c7eb524bc1981926b335dfbd6cc8e35030353f28f6d51f1a8409357157"
+    },
+    "reviewer_reran_tests": false
+  }
+}

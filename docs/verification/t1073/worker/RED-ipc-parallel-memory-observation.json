@@ -1,0 +1,1 @@
+[{"label":"baseline","returnedBuffers":0,"liveBuffers":0,"retainedMiB":0,"externalMiB":1.85},{"label":"running-100","returnedBuffers":100,"liveBuffers":100,"retainedMiB":50,"externalMiB":51.88},{"label":"after-stopped","returnedBuffers":100,"liveBuffers":0,"retainedMiB":0,"externalMiB":1.88}]

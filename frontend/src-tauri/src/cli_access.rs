@@ -360,7 +360,7 @@ fn set_windows_user_path_directory(directory: &Path, present: bool) -> Result<()
                 0,
                 environment.as_ptr() as isize,
                 SMTO_ABORTIFHUNG,
-                5_000,
+                120_000,
                 &mut broadcast_result,
             );
         }

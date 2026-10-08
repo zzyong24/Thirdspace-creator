@@ -1,3 +1,4 @@
+import { executionTimeoutMs } from "@creatoros/contract/timeout-policy";
 // T-147 P5 桌面激活授权 —— activation-manager 在线服务客户端(接 license.aitongban.cloud)。
 //
 // 契约(源码核准,见 SPEC §2 + activation-manager src/lib/license-api.ts、license-result-service.ts):
@@ -101,7 +102,7 @@ async function postLicense(
   options: LicenseClientOptions,
 ): Promise<LicenseCheckResult> {
   const fetchImpl = options.fetchImpl ?? fetch;
-  const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+  const timeoutMs = executionTimeoutMs(options.timeoutMs, DEFAULT_TIMEOUT_MS);
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {

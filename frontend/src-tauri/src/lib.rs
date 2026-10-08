@@ -695,7 +695,7 @@ impl SidecarChild {
                 let mut child = child;
                 let _ = child.write(format!("{SIDECAR_SHUTDOWN_SENTINEL}\n").as_bytes());
                 match job {
-                    Some(job) => job.shutdown(5_000),
+                    Some(job) => job.shutdown(130_000),
                     None => {
                         child
                             .kill()
@@ -789,7 +789,7 @@ const SIDECAR_STARTUP_SENTINEL: &str = "[CreatorOS] SIDECAR_STARTUP_VERIFIED";
 // 避免旧实现每 2 秒取消并重发完整 SSR 请求，把慢机器拖成永久转圈。
 const STARTUP_IDLE_TIMEOUT: Duration = Duration::from_secs(5 * 60);
 const STARTUP_MAX_TIMEOUT: Duration = Duration::from_secs(30 * 60);
-const STARTUP_PROBE_TIMEOUT: Duration = Duration::from_secs(15);
+const STARTUP_PROBE_TIMEOUT: Duration = Duration::from_secs(120);
 const STARTUP_PROBE_INTERVAL: Duration = Duration::from_millis(750);
 
 #[derive(Clone, Debug)]
@@ -841,7 +841,7 @@ fn build_sidecar_probe_client(
         // 本地启动探测必须直连，避免系统/环境代理把正常首页变成代理502。
         // 此client只用于固定127.0.0.1探测，不改变其它网络请求的代理设置。
         .no_proxy()
-        .timeout(timeout)
+        .timeout(timeout.max(Duration::from_secs(120)))
         .redirect(reqwest::redirect::Policy::limited(2))
         .build()
 }

@@ -1,0 +1,8 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/t1066-timeout-policy/Thirdspace-creator/backend
+
+
+ Test Files  1 passed (1)
+      Tests  98 passed (98)
+   Start at  15:34:50
+   Duration  1.54s (transform 815ms, setup 0ms, import 1.30s, tests 64ms, environment 0ms)

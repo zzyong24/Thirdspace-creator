@@ -1,0 +1,12 @@
+
+> @creatoros/mcp-server@0.1.0 test /Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/mcp-server
+> vitest run tests/cli.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/t1066-tooling/Thirdspace-creator/mcp-server
+
+
+ Test Files  1 passed (1)
+      Tests  14 passed (14)
+   Start at  14:26:01
+   Duration  1.23s (transform 511ms, setup 0ms, import 854ms, tests 169ms, environment 0ms)

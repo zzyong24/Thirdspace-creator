@@ -1,5 +1,7 @@
 "use client";
 
+import { executionTimeoutMs } from "@creatoros/contract/timeout-policy";
+
 /**
  * `draft-chat-request.tsx` — 稿面「外部对话请求」协调器(T-108,方案 A · lift state)。
  *
@@ -223,7 +225,7 @@ export function DraftChatRequestProvider({
     const fn = flushFnRef.current;
     if (!fn) return; // 无编辑器注册 → no-op(结构测试/纯文本无编辑器)。
     // [T-120] flush 是「让 AI 审最新版」的**尽力而为**,绝不能无限挂起把 AI 按钮卡死在
-    // 「打开对话中…」。编辑器 performSave 若因 server 冷启动/网络慢而久挂,最多等 4s 就放行
+    // 「打开对话中…」。编辑器 performSave 若因 server 冷启动/网络慢而久挂,最多等 120s 就放行
     // 开对话(审到的版本最多差最后一次未落库的编辑);fn 报错也吞掉不阻断(开对话是主目标)。
     await Promise.race([
       (async () => {
@@ -234,7 +236,7 @@ export function DraftChatRequestProvider({
         }
       })(),
       new Promise<void>((resolve) => {
-        setTimeout(resolve, 4000);
+        setTimeout(resolve, executionTimeoutMs(4000));
       }),
     ]);
   }, []);
@@ -246,11 +248,7 @@ export function DraftChatRequestProvider({
       await Promise.race([
         fn(),
         new Promise<never>((_, reject) => {
-          timer = setTimeout(
-            () =>
-              reject(new Error("保存仍在处理中，本次未发送诊断。请稍后重试。")),
-            10000,
-          );
+          timer = setTimeout(() => reject(new Error("保存仍在处理中，本次未发送诊断。请稍后重试。")), executionTimeoutMs(10000));
         }),
       ]);
     } finally {

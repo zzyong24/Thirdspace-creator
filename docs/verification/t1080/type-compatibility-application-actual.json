@@ -1,0 +1,73 @@
+{
+  "independentReviewer": "assistant_core_implementation_review",
+  "files": [
+    {
+      "path": "contract/src/workspace-operation-scope.ts",
+      "sourceSha256": "78fa7765a98a34e966818275cc21dff1a6895f7734e4f3224b9670215307d0b3",
+      "candidateSha256": "4ef7567647555b86e6d1a7f8a840b7cf0ef959c4a99f61d58b376b4ad7290d94",
+      "decision": "补齐三方合并保留的11端点；沿真实平台账号入口、原任务/会话所属userId/accountId与账号隔离回执，不更改group/user既有操作。"
+    },
+    {
+      "path": "contract/tests/modules/assets.test.ts",
+      "sourceSha256": "998d8673e5a84e3a0c502e48332d38cbeba5e38797eac414f26711be7b191023",
+      "candidateSha256": "137eb5c481b0ac05574a5925307c5050de48efa8c56ee3b9a54f613e85c1c590",
+      "decision": "同值sourceUrl:null分别来自main与client的不同位置；保留main位置，移除重复键，所有测试及断言保持原样。"
+    },
+    {
+      "path": "backend/src/modules/execution/workbench-artifact.service.ts",
+      "sourceSha256": "f2895f73ad3f285a0429647cc9b9df97b820167fe141c54678864f97c84d097e",
+      "candidateSha256": "7432eeec20b49549695197b3ef1527c0ca867dab22bb100707dd2c471ad64acf",
+      "decision": "在原聊天产物映射拒绝条件追加空账号拒绝，保证后续业务/会话account eq和返回Scope是真实string；保留user/account/任务/源消息绑定。"
+    },
+    {
+      "path": "backend/src/modules/execution/workbench-plan.service.ts",
+      "sourceSha256": "42b0c9852a4b43a2fc964013bd384f92a6b0c0b5cb913e4ec5939c85b6d5d9f2",
+      "candidateSha256": "ee509ea5f52cc19041ee7d7155f397452369ba68dcc8c940cc57e7a2ba9b3220",
+      "decision": "仅实际需产物核验时在账号必填端口之前拒绝空账号；不把null强转、不改变端口签名、不改变无产物refs的既有计划路径，最终租约/owner/CAS复核原样。"
+    },
+    {
+      "path": "backend/src/modules/ai/chat-turn-submission.service.test.ts",
+      "sourceSha256": "15229a28f91e4de55152500c032edf36676a9c4fa77a8b06944437deb4513601",
+      "candidateSha256": "f05545a86088b15ad2350d0b2094d3e302019a9ab7ee93b7f05775a3c7ae9f78",
+      "decision": "移除同一作用域早先重复导入；保留registerAllTemplates+getOfficialSkillBase真实模板初始化和全部冻结快照/owner/fence/version断言。"
+    },
+    {
+      "path": "backend/src/modules/platform-collection/platform-bind.integration.test.ts",
+      "sourceSha256": "ace244882d96856f145ea20fad9d4db2ada64c349c39841d984bcf9b743ea97d",
+      "candidateSha256": "eb6b6d48b71e3babc4782ac58b1def4a11da21d58cbcf2fbc63a735d08295cc3",
+      "decision": "数组首行观察显式断言存在，再保留proofSource回滚断言；不修改平台绑定产品行为。"
+    },
+    {
+      "path": "backend/src/modules/execution/execution-agentic-tool-host.test.ts",
+      "sourceSha256": "f25c94256f110b08f884ebd249029cc5b68bb9c2dd19c98c309dafb4559736c5",
+      "candidateSha256": "21a92a920981cacddf7dd5ded9b971c2e71644bae1bfd5ba755fbb24922c635c",
+      "decision": "通用JSON结果用真实workbenchResultSchema读取并缩窄succeeded；仍构造不同键顺序并保留JSON差异、原子结算次数及v1/v2全部断言。"
+    },
+    {
+      "task": "T-1080",
+      "kind": "真实timeout-policy公共CLI排序RED的最小候选",
+      "sourceHEAD": "e81e9b609cd0be0b30444de8bab33cfff42c1e64",
+      "sourceMERGE_HEAD": "6b1322af71cbdf55f52e9f37c5cde76e06b56e48",
+      "path": "mcp-server/src/cli.ts",
+      "sourceSha256": "6b3864fb39dffe7cb76ab5f2a367882e2d386ea27bc34c41e91a14eb874d3aa9",
+      "candidateSha256": "1b4caf864e531502e6905c8a2e2b72bc2c4c34281863b5822340b5a0e6a6eaa4",
+      "decision": "只将operation列表localeCompare替换为稳定ASCII码点顺序的三值comparator；协议ID为ASCII，与原CLI strong test默认sort一致，不删端点或改变原断言。",
+      "evidence": [
+        {
+          "path": "mcp-server/tests/cli.test.ts",
+          "lines": "64–81",
+          "sha256": "acbffcdb6297c0aa55cad79ca3740371fc94795d8aeb7aaaac273daeee5dbd68"
+        },
+        {
+          "path": "/Users/zyongzhu/CreatorOS-local-acceptance/worktree-main-integration-20261008/timeout-policy-combined.log",
+          "lines": "298–363",
+          "observed": "root真实公共CLI27例中1 fail/26pass；workbench与workCompositions排序不同"
+        }
+      ],
+      "limits": [
+        "只写外部候选，未改repo/Git/control。",
+        "未执行公共链路或测试/typecheck；root保留真实RED并应用后验证。"
+      ]
+    }
+  ]
+}

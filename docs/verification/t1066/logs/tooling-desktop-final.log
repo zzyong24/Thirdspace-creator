@@ -1,0 +1,24 @@
+
+> creatoros-frontend@1.2.0 test /Users/zyongzhu/.codex/worktrees/t1066-timeout-policy/Thirdspace-creator/frontend
+> vitest run scripts/desktop/obfuscate.test.mjs scripts/desktop/node-runtime.test.mjs scripts/desktop/execution-worker-runtime.test.mjs scripts/desktop/desktop-release-workflow.test.mjs scripts/desktop/channel-package-workflow.test.mjs scripts/desktop/build-sidecar.test.mjs
+
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/t1066-timeout-policy/Thirdspace-creator/frontend
+
+(node:82704) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:82709) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:82703) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:82706) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:82705) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:82710) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+ Test Files  6 passed (6)
+      Tests  89 passed (89)
+   Start at  15:23:38
+   Duration  47.78s (transform 784ms, setup 1.58s, import 1.63s, tests 46.11s, environment 7.50s)

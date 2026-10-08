@@ -318,6 +318,24 @@
       "what": "Windows 干净安装验证遗漏保留 AppData 时运行环境目录切换拒绝访问",
       "check": "cargo test --manifest-path frontend/src-tauri/Cargo.toml --lib runtime_cleanup_tests::windows_ --no-default-features",
       "onFail": "保留完整性校验并修复已完成隔离目录的安全复用；禁止清空用户 AppData、放宽入口校验或无依据重试。"
+    },
+    {
+      "led": "LED-061",
+      "what": "线程/回执/响应流/闲置会话泄漏，慢轮询与后台调度叠加，等待或显式停止会话归属错误",
+      "check": "node docs/verification/t1073/verify-resource-lifecycle.mjs",
+      "onFail": "资源生命周期回归：修复实际消费者的释放、背压、单在途和停止屏障；保留原任务/attempt/fence/deadline、审批、完整历史与合法大输出。等待状态按真实任务ID保护；取消接受仅释放原turn本地关联，最终终态由原租约确认。禁止删历史、重发任务或伪造释放/成功。"
+    },
+    {
+      "led": "LED-053",
+      "what": "固定30秒宿主端口先于合法转录准备中止，观察到期误报失败，SDK隐式等待与首次预算未归一",
+      "check": "node tools/timeout-policy/verify.mjs",
+      "onFail": "超时预算回归：正执行最低两分钟；独立外层覆盖完整内部预算；原绝对期限/continuous/即时取消保持；前端保留原任务ID；HyperFrames同版本补丁与实际CLI配置必须一致。公共链回归失败不能用词法扫描替代。"
+    },
+    {
+      "led": "LED-060",
+      "what": "完整JSON被流式误判未知或转录共享schema缺validator阻断真实保存链",
+      "check": "pnpm --dir ai-worker run build && pnpm --dir ai-worker exec vitest run src/runtime/pi-provider-json-compat.test.ts --retry=0 && pnpm --dir backend exec vitest run src/modules/execution/radar-model-result-unknown.repro.test.ts src/modules/execution/transcribe-postprocess.integration.test.ts --maxWorkers=1 --retry=0",
+      "onFail": "核对同一次完整响应的结束事实、无损映射与真实usage，补共享validator并验证实际后端回放/工件；保留真实断流未知和原任务，不重复付费调用。"
     }
   ],
   "program_completion_required": false,

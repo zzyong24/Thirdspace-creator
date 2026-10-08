@@ -1,3 +1,4 @@
+import {executionTimeoutMs} from "@creatoros/contract/timeout-policy";
 // 联网检索 provider 工厂(SPEC 2026-07-03 素材能力升级 §1.1 T-084a)—— 把「一次运行解析出来
 // 的搜索模型规格(SearchSpec)」变成统一契约的 REST 检索调用。与多模态 `generateImage`
 // (multimodal-factory.ts)并列的一层:文本走 Vercel AI SDK 的 LanguageModel、多模态走自建 REST,
@@ -86,7 +87,7 @@ export class SearchExecutionError extends Error {
 }
 
 const DEFAULT_COUNT = 10;
-const DEFAULT_TIMEOUT_MS = 10_000;
+const DEFAULT_TIMEOUT_MS = 120_000;
 
 /**
  * 按 spec.provider 取适配器,执行一次联网检索 → 统一 `SearchResult[]`。
@@ -111,6 +112,6 @@ export async function searchWeb(
   return adapter.search(spec, trimmed, {
     ...(opts?.signal ? {signal: opts.signal} : {}),
     count: opts?.count ?? DEFAULT_COUNT,
-    timeoutMs: opts?.timeoutMs ?? DEFAULT_TIMEOUT_MS,
+    timeoutMs: executionTimeoutMs(opts?.timeoutMs, DEFAULT_TIMEOUT_MS),
   });
 }

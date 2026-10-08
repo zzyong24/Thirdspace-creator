@@ -148,7 +148,7 @@ export function createWorkbenchArtifactService(db:Db,deps:{readTaskFile?:Workben
  async function mappedConversationScope(store:Db,task:typeof executionTasks.$inferSelect):Promise<ConversationScope>{
   const payload=object(task.payload);
   const modelInput=object(payload.modelInput),conversationId=modelInput.conversationId;
-  if(task.ownerType!=="ai_task"||typeof conversationId!=="string"||!conversationId||
+  if(!task.accountId||task.ownerType!=="ai_task"||typeof conversationId!=="string"||!conversationId||
    modelInput.kind!=="chat.run"||modelInput.userId!==task.userId||modelInput.accountId!==task.accountId)
    throw new ConflictError("聊天产物协议映射无效");
   const [business]=await store.select().from(aiTasks).where(and(eq(aiTasks.id,task.ownerId),

@@ -1,0 +1,11 @@
+{
+  "baseCommit": "4aa040f47361903ed0694fbb9cf298fd5be95b9d",
+  "node": "v25.9.0",
+  "testSource": "backend/src/modules/execution/radar-model-result-unknown.repro.test.ts",
+  "testSourceSha256": "be08b399d595fcf80f8bd96f40be929fba2edd9ea759fa6680c15be1be98c566",
+  "evidenceSha256": "6aa15e158e041d499a1546b944468585ef638eeb63ccfc561ad26a8d6ba5c1b4",
+  "productionChanges": false,
+  "externalModelRequests": 0,
+  "database": "in-memory PGlite (no dataDir)",
+  "fixtureBoundary": "合成已识别原文、作品业务端口；实际Worker、官方Skill、Pi/SDK、loopback HTTP、持久调用账本和终态服务"
+}

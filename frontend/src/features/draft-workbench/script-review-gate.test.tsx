@@ -476,3 +476,22 @@ describe("contract client 装配 smoke(reviewRules.* + scriptReviews.*)", () => 
     }
   });
 });
+
+it("T-1066 慢创建超过两分钟后继续开审核，迟到结果复用不重复创建", async () => {
+  vi.useFakeTimers();
+  const { act } = await import("@testing-library/react");
+  let resolve!: (value: unknown) => void;
+  mockClient.createOutput.mockReturnValueOnce(new Promise(r => { resolve = r; }));
+  renderWithProvider(<ScriptReviewGate projectId="slow-project" projectTitle="慢稿件" outputId={null} currentVersion={1} initialReport={passReport} />);
+  fireEvent.click(screen.getByTestId("script-review-trigger"));
+  await act(async () => { await vi.advanceTimersByTimeAsync(90_000); });
+  expect(capturedRequest).toBeNull();
+  await act(async () => { await vi.advanceTimersByTimeAsync(30_000); });
+  expect(capturedRequest?.functionKey).toBe("review.script");
+  expect(mockClient.createOutput).toHaveBeenCalledTimes(1);
+  await act(async () => { resolve({ id: "late-original-output" }); });
+  fireEvent.click(screen.getByTestId("script-review-trigger"));
+  await act(async () => { await vi.advanceTimersByTimeAsync(0); });
+  expect(mockClient.createOutput).toHaveBeenCalledTimes(1);
+  expect(capturedRequest?.selection?.id).toBe("late-original-output");
+});

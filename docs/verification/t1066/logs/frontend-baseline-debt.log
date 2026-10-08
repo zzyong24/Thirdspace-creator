@@ -1,0 +1,461 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/t1066-frontend/Thirdspace-creator/frontend
+
+(node:17983) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:17981) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ src/features/copilot/chat-diagnosis-card.test.tsx (5 tests | 1 failed) 1177ms
+     × 诚实:取不到 draft(如没配模型 confirm 空)→ 置 error 态,不假装锁成功 1023ms
+stdout | src/server/activation/client-config.server.test.ts > T-575 config.pull Creator consumer > 拿既有 ticket、验签 closed bundle，并只返回脱敏 authority 投影
+[client-config] {"phase":"refresh","status":"failed","errorCode":"CLIENT_CONFIG_NETWORK_UNAVAILABLE","retryable":true}
+
+stdout | src/server/activation/client-config.server.test.ts > T-575 config.pull Creator consumer > T-706 正式包未显式注入授权 origin 时复用官方授权服务默认值
+[client-config] {"phase":"refresh","status":"failed","errorCode":"CLIENT_CONFIG_NETWORK_UNAVAILABLE","retryable":true}
+
+stdout | src/server/activation/client-config.server.test.ts > T-575 config.pull Creator consumer > 逐字通过 Growth canonical bundle fixture 的 Ed25519 与 JCS digest
+[client-config] {"phase":"refresh","status":"failed","errorCode":"CLIENT_CONFIG_NETWORK_UNAVAILABLE","retryable":true}
+
+stdout | src/server/activation/client-config.server.test.ts > T-575 config.pull Creator consumer > 低版本与同版本不同 digest 隔离，历史密文保留但不激活
+[client-config] {"phase":"refresh","status":"failed","errorCode":"CLIENT_CONFIG_NETWORK_UNAVAILABLE","retryable":true}
+
+stdout | src/server/activation/client-config.server.test.ts > T-575 config.pull Creator consumer > 明确无 extension 时保留历史渠道密文但切到本地
+[client-config] {"phase":"refresh","status":"failed","errorCode":"CLIENT_CONFIG_NETWORK_UNAVAILABLE","retryable":true}
+
+stdout | src/server/activation/client-config.server.test.ts > T-575 config.pull Creator consumer > 独立审查反例矩阵：locator、5xx、密文损坏与 clientId 权威边界
+[client-config] {"phase":"refresh","status":"failed","errorCode":"CLIENT_CONFIG_NETWORK_UNAVAILABLE","retryable":true}
+
+ ❯ src/server/activation/client-config.server.test.ts (22 tests | 7 failed) 168ms
+     × 拿既有 ticket、验签 closed bundle，并只返回脱敏 authority 投影 35ms
+     × T-706 正式包未显式注入授权 origin 时复用官方授权服务默认值 6ms
+     × 逐字通过 Growth canonical bundle fixture 的 Ed25519 与 JCS digest 4ms
+     × 坏签名、额外 envelope 字段和未知产品协议均 fail-closed 3ms
+     × 低版本与同版本不同 digest 隔离，历史密文保留但不激活 4ms
+     × 明确无 extension 时保留历史渠道密文但切到本地 2ms
+     × 独立审查反例矩阵：locator、5xx、密文损坏与 clientId 权威边界 3ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 8 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/features/copilot/chat-diagnosis-card.test.tsx > ChatDiagnosisCard(盲预测确认卡,T-103a) > 诚实:取不到 draft(如没配模型 confirm 空)→ 置 error 态,不假装锁成功
+TestingLibraryElementError: Unable to find an element with the text: /锁定失败/. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"mt-1.5 flex flex-col gap-1.5 rounded-lg border border-brand/20 bg-surface/70 p-2"[39m
+      [33mdata-blind-predict[39m=[32m"true"[39m
+      [33mdata-slot[39m=[32m"chat-diagnosis-card"[39m
+    [36m>[39m
+      [36m<span[39m
+        [33mclass[39m=[32m"text-[10px] font-medium uppercase tracking-wide text-brand"[39m
+      [36m>[39m
+        [0mAI 编导盲预测 · 逐维度诊断[0m
+      [36m</span>[39m
+      [36m<ul[39m
+        [33maria-label[39m=[32m"维度评分"[39m
+        [33mclass[39m=[32m"flex flex-col gap-1"[39m
+      [36m>[39m
+        [36m<li[39m
+          [33mclass[39m=[32m"flex flex-col gap-0.5 rounded-control border border-border bg-surface px-2.5 py-1.5"[39m
+          [33mdata-slot[39m=[32m"chat-diagnosis-dim"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex items-center gap-2"[39m
+          [36m>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"min-w-0 flex-1 text-[13px] font-medium text-foreground"[39m
+            [36m>[39m
+              [0mhook[0m
+            [36m</span>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"shrink-0 rounded-full bg-brand-soft px-1.5 py-0.5 text-[10px] font-medium text-brand"[39m
+            [36m>[39m
+              [0m4[0m
+              [0m / 5[0m
+            [36m</span>[39m
+          [36m</div>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"text-[11px] text-text-subtle"[39m
+          [36m>[39m
+            [0m开头强[0m
+          [36m</span>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"text-[11px] text-muted-foreground"[39m
+          [36m>[39m
+            [0m建议：[0m
+            [0m保持[0m
+          [36m</span>[39m
+        [36m</li>[39m
+        [36m<li[39m
+          [33mclass[39m=[32m"flex flex-col gap-0.5 rounded-control border border-border bg-surface px-2.5 py-1.5"[39m
+          [33mdata-slot[39m=[32m"chat-diagnosis-dim"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex items-center gap-2"[39m
+          [36m>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"min-w-0 flex-1 text-[13px] font-medium text-foreground"[39m
+            [36m>[39m
+              [0mvalue[0m
+            [36m</span>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"shrink-0 rounded-full bg-brand-soft px-1.5 py-0.5 text-[10px] font-medium text-brand"[39m
+            [36m>[39m
+              [0m3[0m
+              [0m / 5[0m
+            [36m</span>[39m
+          [36m</div>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"text-[11px] text-text-subtle"[39m
+          [36m>[39m
+            [0m干货够[0m
+          [36m</span>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"text-[11px] text-muted-foreground"[39m
+          [36m>[39m
+            [0m建议：[0m
+            [0m再具体[0m
+          [36m</span>[39m
+        [36m</li>[39m
+      [36m</ul>[39m
+      [36m<p[39m
+        [33mclass[39m=[32m"text-[13px] font-medium text-foreground"[39m
+      [36m>[39m
+        [0m综合判断：[0m
+        [0m可发[0m
+      [36m</p>[39m
+      [36m<p[39m
+        [33mclass[39m=[32m"text-[11px] text-muted-foreground"[39m
+      [36m>[39m
+        [0m优先修改：[0m
+        [0m加 CTA[0m
+      [36m</p>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"flex flex-col gap-1 border-t border-border/60 pt-1.5"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex items-center gap-2"[39m
+        [36m>[39m
+          [36m<button[39m
+            [33mclass[39m=[32m"inline-flex h-6 items-center rounded-control bg-brand px-2 text-[10px] font-medium text-brand-foreground hover:bg-brand/90 disabled:opacity-50"[39m
+            [33mdata-slot[39m=[32m"chat-diagnosis-lock"[39m
+            [33mtype[39m=[32m"button"[39m
+          [36m>[39m
+            [0m锁定为盲预测[0m
+          [36m</button>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"text-[10px] text-destructive"[39m
+          [36m>[39m
+            [0m尚未确认锁定完成，请查看原任务状态[0m
+          [36m</span>[39m
+        [36m</div>[39m
+        [36m<span[39m
+          [33mclass[39m=[32m"text-[9.5px] text-text-subtle"[39m
+        [36m>[39m
+          [0m锁定 = 用你的变现 rubric 铸一份发布前盲预测并定死(不可改),发布后用真实数据对照校准； 锁定前可继续追问、重新诊断。[0m
+        [36m</span>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+[36m</body>[39m
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"mt-1.5 flex flex-col gap-1.5 rounded-lg border border-brand/20 bg-surface/70 p-2"[39m
+        [33mdata-blind-predict[39m=[32m"true"[39m
+        [33mdata-slot[39m=[32m"chat-diagnosis-card"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33mclass[39m=[32m"text-[10px] font-medium uppercase tracking-wide text-brand"[39m
+        [36m>[39m
+          [0mAI 编导盲预测 · 逐维度诊断[0m
+        [36m</span>[39m
+        [36m<ul[39m
+          [33maria-label[39m=[32m"维度评分"[39m
+          [33mclass[39m=[32m"flex flex-col gap-1"[39m
+        [36m>[39m
+          [36m<li[39m
+            [33mclass[39m=[32m"flex flex-col gap-0.5 rounded-control border border-border bg-surface px-2.5 py-1.5"[39m
+            [33mdata-slot[39m=[32m"chat-diagnosis-dim"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"flex items-center gap-2"[39m
+            [36m>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"min-w-0 flex-1 text-[13px] font-medium text-foreground"[39m
+              [36m>[39m
+                [0mhook[0m
+              [36m</span>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"shrink-0 rounded-full bg-brand-soft px-1.5 py-0.5 text-[10px] font-medium text-brand"[39m
+              [36m>[39m
+                [0m4[0m
+                [0m / 5[0m
+              [36m</span>[39m
+            [36m</div>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"text-[11px] text-text-subtle"[39m
+            [36m>[39m
+              [0m开头强[0m
+            [36m</span>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"text-[11px] text-muted-foreground"[39m
+            [36m>[39m
+              [0m建议：[0m
+              [0m保持[0m
+            [36m</span>[39m
+          [36m</li>[39m
+          [36m<li[39m
+            [33mclass[39m=[32m"flex flex-col gap-0.5 rounded-control border border-border bg-surface px-2.5 py-1.5"[39m
+            [33mdata-slot[39m=[32m"chat-diagnosis-dim"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"flex items-center gap-2"[39m
+            [36m>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"min-w-0 flex-1 text-[13px] font-medium text-foreground"[39m
+              [36m>[39m
+                [0mvalue[0m
+              [36m</span>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"shrink-0 rounded-full bg-brand-soft px-1.5 py-0.5 text-[10px] font-medium text-brand"[39m
+              [36m>[39m
+                [0m3[0m
+                [0m / 5[0m
+              [36m</span>[39m
+            [36m</div>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"text-[11px] text-text-subtle"[39m
+            [36m>[39m
+              [0m干货够[0m
+            [36m</span>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"text-[11px] text-muted-foreground"[39m
+            [36m>[39m
+              [0m建议：[0m
+              [0m再具体[0m
+            [36m</span>[39m
+          [36m</li>[39m
+        [36m</ul>[39m
+        [36m<p[39m
+          [33mclass[39m=[32m"text-[13px] font-medium text-foreground"[39m
+        [36m>[39m
+          [0m综合判断：[0m
+          [0m可发[0m
+        [36m</p>[39m
+        [36m<p[39m
+          [33mclass[39m=[32m"text-[11px] text-muted-foreground"[39m
+        [36m>[39m
+          [0m优先修改：[0m
+          [0m加 CTA[0m
+        [36m</p>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex flex-col gap-1 border-t border-border/60 pt-1.5"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex items-center gap-2"[39m
+          [36m>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"inline-flex h-6 items-center rounded-control bg-brand px-2 text-[10px] font-medium text-brand-foreground hover:bg-brand/90 disabled:opacity-50"[39m
+              [33mdata-slot[39m=[32m"chat-diagnosis-lock"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [0m锁定为盲预测[0m
+            [36m</button>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"text-[10px] text-destructive"[39m
+            [36m>[39m
+              [0m尚未确认锁定完成，请查看原任务状态[0m
+            [36m</span>[39m
+          [36m</div>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"text-[9.5px] text-text-subtle"[39m
+          [36m>[39m
+            [0m锁定 = 用你的变现 rubric 铸一份发布前盲预测并定死(不可改),发布后用真实数据对照校准； 锁定前可继续追问、重新诊断。[0m
+          [36m</span>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</body>[39m
+[36m</html>[39m
+ ❯ Proxy.waitForWrapper ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ❯ src/features/copilot/chat-diagnosis-card.test.tsx:207:11
+    205|     await waitFor(() => expect(confirmTask).toHaveBeenCalled());
+    206|     // 取不到 draft → 不 lockPrediction,不假装锁定,显式错误提示。
+    207|     await waitFor(() => expect(screen.getByText(/锁定失败/)).toBeTruthy());
+       |           ^
+    208|     expect(lockPrediction).not.toHaveBeenCalled();
+    209|     expect(
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/8]⎯
+
+ FAIL  src/server/activation/client-config.server.test.ts > T-575 config.pull Creator consumer > 拿既有 ticket、验签 closed bundle，并只返回脱敏 authority 投影
+AssertionError: expected { authority: 'local', …(3) } to deeply equal { authority: 'channel', …(3) }
+
+- Expected
++ Received
+
+  {
+-   "action": "渠道模型正在使用",
+-   "authority": "channel",
+-   "outcome": "configured",
+-   "retryable": false,
++   "action": "本地模型正在使用 · 暂时无法取得渠道配置",
++   "authority": "local",
++   "outcome": "unreachable",
++   "retryable": true,
+  }
+
+ ❯ src/server/activation/client-config.server.test.ts:309:20
+    307|     });
+    308|
+    309|     expect(result).toEqual({
+       |                    ^
+    310|       authority: "channel",
+    311|       outcome: "configured",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/8]⎯
+
+ FAIL  src/server/activation/client-config.server.test.ts > T-575 config.pull Creator consumer > T-706 正式包未显式注入授权 origin 时复用官方授权服务默认值
+AssertionError: expected { authority: 'local', …(3) } to match object { authority: 'channel', …(1) }
+(2 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "authority": "channel",
+-   "outcome": "configured",
++   "authority": "local",
++   "outcome": "unreachable",
+  }
+
+ ❯ src/server/activation/client-config.server.test.ts:341:5
+    339|         store,
+    340|       }),
+    341|     ).resolves.toMatchObject({
+       |     ^
+    342|       authority: "channel",
+    343|       outcome: "configured",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/8]⎯
+
+ FAIL  src/server/activation/client-config.server.test.ts > T-575 config.pull Creator consumer > 逐字通过 Growth canonical bundle fixture 的 Ed25519 与 JCS digest
+AssertionError: expected 'local' to be 'channel' // Object.is equality
+
+Expected: "channel"
+Received: "local"
+
+ ❯ src/server/activation/client-config.server.test.ts:599:30
+    597|       store,
+    598|     });
+    599|     expect(result.authority).toBe("channel");
+       |                              ^
+    600|     expect(result.outcome).toBe("configured");
+    601|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/8]⎯
+
+ FAIL  src/server/activation/client-config.server.test.ts > T-575 config.pull Creator consumer > 坏签名、额外 envelope 字段和未知产品协议均 fail-closed
+AssertionError: expected { authority: 'local', …(3) } to match object { authority: 'local', …(1) }
+(2 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+    "authority": "local",
+-   "outcome": "security_error",
++   "outcome": "unreachable",
+  }
+
+ ❯ src/server/activation/client-config.server.test.ts:623:5
+    621|         store,
+    622|       }),
+    623|     ).resolves.toMatchObject({
+       |     ^
+    624|       authority: "local",
+    625|       outcome: "security_error",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/8]⎯
+
+ FAIL  src/server/activation/client-config.server.test.ts > T-575 config.pull Creator consumer > 低版本与同版本不同 digest 隔离，历史密文保留但不激活
+AssertionError: expected { authority: 'local', …(3) } to match object { authority: 'local', …(1) }
+(2 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+    "authority": "local",
+-   "outcome": "security_error",
++   "outcome": "unreachable",
+  }
+
+ ❯ src/server/activation/client-config.server.test.ts:754:5
+    752|         store,
+    753|       }),
+    754|     ).resolves.toMatchObject({
+       |     ^
+    755|       authority: "local",
+    756|       outcome: "security_error",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/8]⎯
+
+ FAIL  src/server/activation/client-config.server.test.ts > T-575 config.pull Creator consumer > 明确无 extension 时保留历史渠道密文但切到本地
+AssertionError: expected { authority: 'local', …(3) } to match object { authority: 'local', …(1) }
+(2 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+    "authority": "local",
+-   "outcome": "not_configured",
++   "outcome": "unreachable",
+  }
+
+ ❯ src/server/activation/client-config.server.test.ts:911:20
+    909|       store,
+    910|     });
+    911|     expect(result).toMatchObject({
+       |                    ^
+    912|       authority: "local",
+    913|       outcome: "not_configured",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/8]⎯
+
+ FAIL  src/server/activation/client-config.server.test.ts > T-575 config.pull Creator consumer > 独立审查反例矩阵：locator、5xx、密文损坏与 clientId 权威边界
+AssertionError: expected { authority: 'local', …(3) } to match object { authority: 'channel', …(1) }
+(2 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "authority": "channel",
+-   "outcome": "configured",
++   "authority": "local",
++   "outcome": "unreachable",
+  }
+
+ ❯ src/server/activation/client-config.server.test.ts:1153:5
+    1151|         store,
+    1152|       }),
+    1153|     ).resolves.toMatchObject({ authority: "channel", outcome: "configu…
+       |     ^
+    1154|     expect(fetchB1.mock.calls[1]?.[1]?.headers).not.toMatchObject({
+    1155|       "If-None-Match": expect.anything(),
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/8]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  8 failed | 19 passed (27)
+   Start at  14:25:52
+   Duration  2.64s (transform 873ms, setup 340ms, import 1.44s, tests 1.34s, environment 1.36s)

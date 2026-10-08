@@ -879,3 +879,35 @@ T992：Windows 卸载会保留 AppData 中的业务数据和可再生成运行�
 防复发：安装期继续严格写入并校验正式运行目录；启动期只有在解压已经完成、版本标记匹配、入口哈希和完整性检查全部通过时，才允许从隔离目录继续运行。后续启动可复用重新校验通过的隔离目录，损坏候选必须跳过。诊断保留操作阶段、来源、目标、原始系统错误和回滚结果。跨平台容忍路径由 `runtime_cleanup_tests::windows_*` 守护；原生独占句柄复现带 `#[cfg(target_os = "windows")]`，只在 Windows 开发机上编译进这组测试，macOS 上不参与。该组测试不进发布流水线——它在 sidecar 与 externalBin 产出前会让 tauri_build 资源校验 panic。Windows 流水线继续执行安装、启动、首页加载和卸载验收；禁止靠清空 AppData、关闭校验或重复构建掩盖问题。
 
 执行：`cargo test --manifest-path frontend/src-tauri/Cargo.toml --lib runtime_cleanup_tests::windows_ --no-default-features`（本地/reconcile guard）。前置条件:`frontend/src-tauri/binaries/` 与 `sidecar.tar.gz` 必须已存在,否则 build.rs 在 tauri_build 资源校验处 panic,与测试本身无关。
+
+<!-- T1080：下面保留workbase6b1322af独有决定/教训；撞号映射见resource-control-resolution。 -->
+## LED-053 — 执行预算必须从完整内部流程向外计算
+
+- **Date**: 2026-10-06 · **Stage**: BUILD · **Severity**: high · **Status**: active
+- **WhatFailed**: 安装版素材准备约31秒失败；Worker固定30秒普通宿主等待包住匿名请求、登录导航、重试与抽音。前端观察窗口到期又把后台仍运行的任务显示为失败。
+- **RootCause**: 把端口等待、业务总预算、观察窗口和库默认混用；只改外部配置不能覆盖SDK内部30秒默认。新增预算没有在正式持久创建口首次冻结下限。
+- **GuardRule**: 新正执行/有限观察至少120秒，原长预算保留；独立外层大于全部内部墙钟预算，计入串行尝试、退避、排队、启动和清理余量。同一原绝对deadline向内传播且到期立即结束，历史不续期；continuous沿原归属、取消和心跳。观察结束保留原ID，不能伪造失败或重建任务。间隔/授权TTL/输入长度和取消后强杀宽限分开。依赖默认及单位、0禁用逐消费者检查。
+- **GuardCheck**: `node tools/timeout-policy/verify.mjs`；reconcile.config.json LED-053。含正式Worker→ASR准备、真实沙箱执行、PGlite持久入队/历史claim、前端原任务观察、CLI等待、依赖补丁及真实CLI解析；完整渲染导出证据另存。
+- **Outcome(T+N)**: 当场旧30秒红测失败；修复后31秒、125秒和超过10分钟continuous慢成功，取消/原deadline仍停止。新持久入队1秒旧预算红测失败，修复后冻结两分钟且历史过期不认领。依赖公共CLI实际隔离导出成功。全部222条原清单有归属；真实供应商、Windows与安装版未冒充通过，全局既有Gate失败保留。
+- **Ref**: docs/engineering/timeout-policy.md；docs/verification/t1066/REPORT.md；通用Skill 3.27.4。
+
+
+## LED-060 — 完整模型响应与转录回放必须在同一真实链路验收
+
+- **Date**: 2026-10-07 · **Stage**: BUILD · **Severity**: high · **Status**: active
+- **WhatFailed**: T-1068-radar-transcription实际HTTP证明完整Chat Completion JSON被SSE消费者误判未知；转录共享节点裸jsonSchema在text模式没有validator，尚未请求模型即阻断真实后端回放/保存。
+- **RootCause**: 完整JSON与SSE的wire形状未兼容；只有发给模型的schema，没有回放/文本模式实际消费的validator；单测只注入结构化返回，未覆盖真实business port。
+- **GuardRule**: 同一次完整JSON响应仅在明确结束事实和可验证形状下映射原流消费者；保留正文、reasoning、工具参数和真实usage，不增加请求、不制造结束码。共享schema必须提供严格validator，wire schema与冻结摘要保持兼容；最终稿由真实后端回执回放决定，明确失败沿原文降级。started/unknown、取消、旧fence与原deadline耗尽不能伪造成功或获得重发资格。至少覆盖真实Worker/Pi/HTTP/账本终态和后处理全部业务端口、artifact写后读回。
+- **GuardCheck**: reconcile.config.json LED-060；pi-provider-json-compat、radar-model-result-unknown.repro与transcribe-postprocess.integration实际回归。
+- **Outcome(T+N)**: 修复前协议6失败/8通过；真实后处理9失败/1通过。补丁和validator修复后最终自包含构建门协议19、原复现8、真实后端集成13共40通过；另有相关后端53通过及正式bundle旅程，保留异常/断流/取消对照。全局reconcile34错误/1告警与原基线逐项一致；具体日志在docs/verification/t1069与t1070，不代称真实供应商或安装版验收。
+
+
+## LED-061 — 资源释放必须走实际消费者并保持原任务归属
+
+- **Date**: 2026-10-08 · **Stage**: BUILD · **Severity**: high · **Status**: active
+- **WhatFailed**: 转录成功遗留Whisper线程；宿主累积已消费音频；聊天提前读完整历史；完成会话/预览无界缓存；稿面与Radar重复读取；成功任务卡反复观察；后台调度/心跳叠加。独立复核还发现无审批等待误淘汰，以及显式停止后running元数据永久保护。
+- **RootCause**: 创建和释放没有同一归属、缺背压/终态映射/单在途屏障；缓存未关联实际任务状态和当前turn。
+- **GuardRule**: 每任务finally等待自己的线程退出；双向协商消费确认并用单调水位/紧凑区间释放已消费字节，旧peer保持原协议兼容；流只按pull读取当前有限页；只淘汰无观察者的完成会话，真实等待状态按原任务ID保护；停止接受只释放对应turn本地引用，不伪造cancelled；同一读取/调度/心跳最多一份，重复唤醒有界合并，dispose关闭入口并等待清理。保持原execution/attempt/fence/deadline、幂等收费、完整历史、合法大输出与跨页回复。
+- **GuardCheck**: `node docs/verification/t1073/verify-resource-lifecycle.mjs`；已登记reconcile.config.json，覆盖全部8处实际消费者。单测/hook各120秒；没有整套watchdog，不冒称整组有总上限。
+- **Outcome(T+N)**: 各根因当场正确行为RED后同测GREEN保留。整合聚合301/301通过（7+83+62+121+28）；无消费者SSE读0页、100份已消费音频liveBuffers=0、线程归属退出、慢读取peak=1、根dispose计时器为0。无审批等待、原任务停止和最终确认经真实隔离持久服务/SDK链23项及独立复跑通过。真实模型容量、安装版RSS和浏览器像素证据未验证，全局历史失败保留。内存探针新输出写本次门日志并还原旧证据；失败后的旧字节不得视为新观测。
+- **Ref**: DEC-T1073；docs/features/t1073-resource-memory-fixes.md；docs/verification/t1073/REPORT.md。

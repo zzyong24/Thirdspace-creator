@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, expect, it } from 'vitest';
+import { afterAll, beforeAll, expect, it, vi } from 'vitest';
 import { createDb, type Db } from '@creatoros/backend';
 import { createHostBrowserProfileLifecycle } from './host-browser-profile-lifecycle';
 let db:Db,close:()=>Promise<void>;
@@ -20,7 +20,7 @@ it('排队可以取消，不能释放原持有者，后续操作仍能恢复',as
 });
 it('实际持有者一直运行则有界结束，不用时间推断停止',async()=>{
  const host=lifecycle('c');const first=await host.acquire('/test/c');
- await expect(host.acquire('/test/c')).rejects.toMatchObject({code:'BROWSER_PROFILE_BUSY'});
+ await expectBusy(()=>host.acquire('/test/c'));
  await first.onStopped();const next=await host.acquire('/test/c');await next.onStopped();
 });
 it('采集公共浏览器生命周期：关闭失败保持占用，真实关闭后下一次采集继续',async()=>{
@@ -29,7 +29,7 @@ it('采集公共浏览器生命周期：关闭失败保持占用，真实关闭�
  const resource=await host.acquire('/test/d');
  const browser=await guardedLaunch(resource.authDir,async()=>({close:async()=>{if(stopFails)throw new Error('关闭失败');}}),{onStopped:resource.onStopped},{listProfileProcesses:async()=>[],removeFile:async()=>{}});
  await expect(browser.close()).rejects.toThrow('关闭失败');
- await expect(host.acquire('/test/d')).rejects.toMatchObject({code:'BROWSER_PROFILE_BUSY'});
+ await expectBusy(()=>host.acquire('/test/d'));
  stopFails=false;await browser.close();
  const next=await host.acquire('/test/d');await next.onStopped();
 });
@@ -43,13 +43,13 @@ it('跨启动旧宿主停止证明允许续跑，当前宿主仍持有时不回�
  const checks:string[]=[];
  const next=createHostBrowserProfileLifecycle(db,{resolveProfile:async()=>({userId:'u',authDir:'/test/f',profileKey:key.repeat(64)}),hostInstanceId:'new-host',waitTimeoutMs:30,pollIntervalMs:5,recovery:{createHostInstanceId:async()=> 'new-host',isPreviousHostStopped:async i=>{checks.push(i.hostInstanceId);return {stopped:true,reason:'test-stopped'};}}});
  const recovered=await next.acquire('/test/f');expect(checks).toHaveLength(1);
- await expect(next.acquire('/test/f')).rejects.toMatchObject({code:'BROWSER_PROFILE_BUSY'});expect(checks).toHaveLength(1);
+ await expectBusy(()=>next.acquire('/test/f'));expect(checks).toHaveLength(1);
  await recovered.onStopped();
 });
 it('跨启动无法证明停止仍保留原租约及原owner释放能力',async()=>{
  const key='9',first=lifecycle(key),held=await first.acquire('/test/9');
  const next=createHostBrowserProfileLifecycle(db,{resolveProfile:async()=>({userId:'u',authDir:'/test/9',profileKey:key.repeat(64)}),hostInstanceId:'unknown-host',waitTimeoutMs:30,pollIntervalMs:5,recovery:{createHostInstanceId:async()=> 'unknown-host',isPreviousHostStopped:async()=>({stopped:false,reason:'process-query-unavailable'})}});
- await expect(next.acquire('/test/9')).rejects.toMatchObject({code:'BROWSER_PROFILE_BUSY'});await held.onStopped();
+ await expectBusy(()=>next.acquire('/test/9'));await held.onStopped();
  const recovered=await next.acquire('/test/9');await recovered.onStopped();
 });
 it('绑定提交回执持有目录直到DB完成，release后其他使用者才能进入',async()=>{
@@ -57,3 +57,11 @@ it('绑定提交回执持有目录直到DB完成，release后其他使用者才�
  const pending=host.acquire('/test/7').then(r=>{admitted=true;return r;});await new Promise(r=>setTimeout(r,25));expect(admitted).toBe(false);
  await reservation.release();await reservation.release();const next=await pending;expect(admitted).toBe(true);await next.onStopped();
 });
+
+/** 只推进策略墙钟，不模拟真实宿主停止；DB协议和原owner释放仍实跑。 */
+async function expectBusy(run:()=>Promise<unknown>){
+ const realNow=Date.now.bind(Date);let offset=0;
+ const clock=vi.spyOn(Date,'now').mockImplementation(()=>realNow()+offset);
+ const waiting=run();const move=setTimeout(()=>{offset=120_001;},20);
+ try{await expect(waiting).rejects.toMatchObject({code:'BROWSER_PROFILE_BUSY'});}finally{clearTimeout(move);clock.mockRestore();}
+}

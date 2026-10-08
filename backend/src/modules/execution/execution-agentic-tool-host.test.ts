@@ -1,5 +1,6 @@
 import {beforeAll,afterAll,it,expect} from "vitest";
 import {z} from "zod";
+import {workbenchResultSchema} from "@creatoros/contract/agent-workbench";
 import {createDb,aiTasks,executionTasks,executionCalls,eq,type Db} from "@creatoros/backend";
 import {createPersistentTaskService} from "./persistent-task.service";
 import {createExecutionCallLedgerService} from "./execution-call-ledger.service";
@@ -75,8 +76,10 @@ it("v2 产物工具只走专用原子结算；v1 同名工具仍走旧结算路�
   return {ports,ref,ledger,callId:reserved.callId,atomic:()=>atomic};
  }
  const v2=await artifact(2),v2Result=await v2.ports.execute(v2.ref,{callId:v2.callId});expect(v2Result).toMatchObject({sideEffect:"committed"});expect(v2.atomic()).toBe(1);expect((await v2.ledger.inspect(v2.ref)).calls.at(-1)?.status).toBe("settled");
- const transported={...v2Result,data:{workbench:{content:v2Result.data.workbench.content,progressCursor:v2Result.data.workbench.progressCursor,
-  artifactRefs:v2Result.data.workbench.artifactRefs,status:v2Result.data.workbench.status,operationId:v2Result.data.workbench.operationId}}};
+ const workbench=z.object({workbench:workbenchResultSchema}).parse(v2Result.data).workbench;
+ if(workbench.status!=="succeeded")throw new Error("产物工具测试缺少成功工作台回执");
+ const transported={...v2Result,data:{workbench:{content:workbench.content,progressCursor:workbench.progressCursor,
+  artifactRefs:workbench.artifactRefs,status:workbench.status,operationId:workbench.operationId}}};
  expect(JSON.stringify(transported)).not.toBe(JSON.stringify(v2Result));
  expect(await v2.ports.settle(v2.ref,{callId:v2.callId,status:"settled",output:transported})).toMatchObject({status:"settled"});
  const v1=await artifact(1),v1Result=await v1.ports.execute(v1.ref,{callId:v1.callId});expect(v1Result).toMatchObject({sideEffect:"committed"});expect(v1.atomic()).toBe(0);expect((await v1.ledger.inspect(v1.ref)).calls.at(-1)?.status).toBe("settled");

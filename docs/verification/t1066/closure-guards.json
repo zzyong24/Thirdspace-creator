@@ -1,0 +1,38 @@
+{
+  "schema": "closure-guards/v1",
+  "checks": [
+    {
+      "command": "node orchestrator/process/governance-guard.mjs check",
+      "exitCode": 1,
+      "scope": "未指定scope的全树检查；含ignored Rust target和历史工件",
+      "outputExcerpt": "Warning: truncated output (original token count: 14438)\nTotal output lines: 299\n\ngovernance-guard HALT (298)\n  ✗ BACKLOG-archive.md: unledgered complexity marker credential_store; record structured budget entry and default non-essential hardening to a later task\n  ✗ BACKLOG-archive.md: unledgered complexity marker evidence_protocol; record structured budget entry and default non-essential hardening to a later task\n  ✗ BACKLOG-archive.md: unledgered complexity marker ipc; record structured budget entry and default non-essential hardening to a later task\n  ✗ BACKLOG-archive.md: unledgered comple",
+      "fullOutputCaptured": false
+    },
+    {
+      "command": "node orchestrator/process/autonomy-guard.mjs check",
+      "exitCode": 0,
+      "scope": "当前自治状态",
+      "outputExcerpt": "✓ autonomy preflight/watchdog clean\n",
+      "fullOutputCaptured": true
+    },
+    {
+      "command": "node orchestrator/process/frontend-validation.mjs audit",
+      "exitCode": 0,
+      "scope": "已有回执审计，不是新增UI旅程",
+      "outputExcerpt": "✓ frontend validation receipts PASS\n",
+      "fullOutputCaptured": true
+    },
+    {
+      "command": "node tools/timeout-policy/inventory.mjs --verify-files",
+      "exitCode": 0,
+      "scope": "222条当次交付哈希",
+      "outputExcerpt": "{\n  \"ok\": true,\n  \"records\": 222,\n  \"errors\": [],\n  \"mode\": \"当次交付源码哈希核验；未来合法变更无需改写历史\"\n}\n",
+      "fullOutputCaptured": true
+    }
+  ],
+  "activeGovernanceEvidence": "logs/active-governance-after-closure.json",
+  "limits": [
+    "未将全树检查的298项称为已验证的历史基线，通过T-916另行核对",
+    "未生成UI旅程回执或声称父任务完成"
+  ]
+}

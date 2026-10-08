@@ -1,3 +1,4 @@
+import {executionTimeoutMs} from "@creatoros/contract/timeout-policy";
 
 // [T-217b] Web Reader —— 带登录态读**正文全文**(取代 headless 截公开页首屏图的默认路径)。
 //
@@ -60,7 +61,7 @@ export interface ReadResult {
   turnCount: number | null;
 }
 
-const NAV_TIMEOUT_MS = 30_000; // SPA 正文渲染比截图慢,给 30s
+const NAV_TIMEOUT_MS = 120_000; // 正文导航遵循两分钟执行下限
 
 // readUrl 只依赖 page/context 的这几个能力(收窄便于 fake page 单测)。真实 Playwright
 // Page/BrowserContext 结构上满足(默认注入时向上转型目标)。
@@ -130,6 +131,7 @@ async function realOpenReaderContext(
     () =>
       launchWithBrowser((sel) =>
         chromium.launchPersistentContext(authDir, {
+          timeout: executionTimeoutMs(180_000),
           headless: true,
           ...sel,
           ...chromiumSandboxOpts(), // [T-369] 去掉 Playwright 默认 --no-sandbox
@@ -139,6 +141,8 @@ async function realOpenReaderContext(
       ),
     { label: "网页读取浏览器" },
   );
+  ctx.setDefaultTimeout(executionTimeoutMs());
+  ctx.setDefaultNavigationTimeout(executionTimeoutMs());
   return ctx as unknown as ReaderCapableContext;
 }
 
@@ -563,7 +567,7 @@ export async function readUrl(
       try {
         resp = await page.goto(navigationTarget, {
           waitUntil: "domcontentloaded",
-          timeout: NAV_TIMEOUT_MS,
+          timeout: executionTimeoutMs(NAV_TIMEOUT_MS),
         });
       } catch (err) {
         if (signal?.aborted) throw makeAbortError("网页读取");
@@ -591,7 +595,7 @@ export async function readUrl(
         await page.waitForTimeout(1_500);
         resp = await page.goto(page.url() || navigationTarget, {
           waitUntil: "domcontentloaded",
-          timeout: NAV_TIMEOUT_MS,
+          timeout: executionTimeoutMs(NAV_TIMEOUT_MS),
         });
       }
       const status = resp ? resp.status() : 0;
@@ -620,7 +624,7 @@ export async function readUrl(
         }
       }
       // 等 SPA 正文渲染 + 滚动到底触发懒加载/长对话全量(拿不到 selector/滚动失败都不抛,兜底用当前 DOM)。
-      await page.waitForSelector("main, article, [data-message-author-role]", { timeout: 8_000 }).catch(() => {});
+      await page.waitForSelector("main, article, [data-message-author-role]", { timeout: executionTimeoutMs() }).catch(() => {});
       await page
         .evaluate(() => {
           // 滚到底几次,触发懒加载(ChatGPT 长对话按需渲染)。

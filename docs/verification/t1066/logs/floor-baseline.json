@@ -1,0 +1,701 @@
+{
+  "ok": false,
+  "minimumExecutionMs": 120000,
+  "scannedFiles": 1736,
+  "failures": [
+    {
+      "file": ".agents/skills/guizang-product-video-skill/scripts/check_environment.py",
+      "line": 15,
+      "kind": "原生/脚本执行预算",
+      "valueMs": 30000,
+      "source": "def run(args, cwd=None, timeout=30):"
+    },
+    {
+      "file": "ai-worker/scripts/browser-runtime-probe.mjs",
+      "line": 31,
+      "kind": "abort/reject/kill timer",
+      "valueMs": 30000,
+      "source": "setTimeout(()=>child.kill(\"SIGTERM\"),30000)"
+    },
+    {
+      "file": "ai-worker/scripts/t829-model-compatibility.ts",
+      "line": 59,
+      "kind": "timeout",
+      "valueMs": 30000,
+      "source": "AbortSignal.timeout(30_000)"
+    },
+    {
+      "file": "ai-worker/scripts/t829-model-compatibility.ts",
+      "line": 145,
+      "kind": "timeout",
+      "valueMs": 60000,
+      "source": "AbortSignal.timeout(timeoutMs)"
+    },
+    {
+      "file": "ai-worker/scripts/t829-model-compatibility.ts",
+      "line": 173,
+      "kind": "timeout",
+      "valueMs": 60000,
+      "source": "AbortSignal.timeout(timeoutMs)"
+    },
+    {
+      "file": "ai-worker/src/execution/browser-worker-session.ts",
+      "line": 42,
+      "kind": "abort/reject/kill timer",
+      "valueMs": 5000,
+      "source": "setTimeout(() => reject(new Error(\"deadline\")), 5000)"
+    },
+    {
+      "file": "ai-worker/src/execution/browser-worker-session.ts",
+      "line": 431,
+      "kind": "timeout",
+      "valueMs": 5000,
+      "source": "timeout: 5000"
+    },
+    {
+      "file": "ai-worker/src/execution/browser-worker-session.ts",
+      "line": 441,
+      "kind": "timeout",
+      "valueMs": 5000,
+      "source": "timeout: 5000"
+    },
+    {
+      "file": "ai-worker/src/execution/redfox-client.ts",
+      "line": 16,
+      "kind": "timeout",
+      "valueMs": 30000,
+      "source": "AbortSignal.timeout(30000)"
+    },
+    {
+      "file": "ai-worker/src/execution/research-browser-sessions.ts",
+      "line": 65,
+      "kind": "abort/reject/kill timer",
+      "valueMs": 5000,
+      "source": "setTimeout(\n            () => reject(new Error(\"BROWSER_GUARD_TIMEOUT\")),\n            5000,\n          )"
+    },
+    {
+      "file": "ai-worker/src/execution/research-browser-sessions.ts",
+      "line": 165,
+      "kind": "timeout",
+      "valueMs": 10000,
+      "source": "timeout: 10000"
+    },
+    {
+      "file": "ai-worker/src/execution/research-worker-tools.ts",
+      "line": 78,
+      "kind": "timeout",
+      "valueMs": 15000,
+      "source": "timeout: 15000"
+    },
+    {
+      "file": "ai-worker/src/execution/research-worker-tools.ts",
+      "line": 81,
+      "kind": "timeout",
+      "valueMs": 15000,
+      "source": "timeout: 15000"
+    },
+    {
+      "file": "ai-worker/src/execution/research-worker-tools.ts",
+      "line": 225,
+      "kind": "timeoutMs",
+      "valueMs": 15000,
+      "source": "timeoutMs: 15000"
+    },
+    {
+      "file": "ai-worker/src/execution/research-worker-tools.ts",
+      "line": 259,
+      "kind": "timeoutMs",
+      "valueMs": 15000,
+      "source": "timeoutMs:15000"
+    },
+    {
+      "file": "ai-worker/src/execution/topic-worker-reads.ts",
+      "line": 90,
+      "kind": "timeout",
+      "valueMs": 15000,
+      "source": "AbortSignal.timeout(15000)"
+    },
+    {
+      "file": "ai-worker/src/runtime/browser/chromium-guard.ts",
+      "line": 168,
+      "kind": "abort/reject/kill timer",
+      "valueMs": 15000,
+      "source": "setTimeout(() => reject(new BrowserCleanupPendingError(() => retryBrowserProfileCleanup(profileDir))), opts.queueTimeoutMs ?? DEFAULT_LAUNCH_TIMEOUT_MS)"
+    },
+    {
+      "file": "ai-worker/src/runtime/browser/chromium-guard.ts",
+      "line": 313,
+      "kind": "abort/reject/kill timer",
+      "valueMs": 15000,
+      "source": "setTimeout(()=>reject(new BrowserLaunchError(`${label}启动超时(${Math.round(timeoutMs/1000)} 秒)，正在等待已启动的浏览器退出；退出后请重试。`)),timeoutMs)"
+    },
+    {
+      "file": "ai-worker/src/runtime/browser/chromium-guard.ts",
+      "line": 355,
+      "kind": "abort/reject/kill timer",
+      "valueMs": 15000,
+      "source": "setTimeout(()=>reject(new BrowserLaunchError(`${label}的登录档案仍被占用，请等待相关浏览器退出后重试。`,CHROMIUM_PROFILE_LOCKED_CODE)),opts.queueTimeoutMs??timeoutMs)"
+    },
+    {
+      "file": "ai-worker/src/runtime/browser/navigation-retry.ts",
+      "line": 45,
+      "kind": "timeout",
+      "valueMs": 60000,
+      "source": "timeout: timeoutMs"
+    },
+    {
+      "file": "ai-worker/src/runtime/browser/web-capture.ts",
+      "line": 260,
+      "kind": "timeout",
+      "valueMs": 20000,
+      "source": "timeout: NAV_TIMEOUT_MS"
+    },
+    {
+      "file": "ai-worker/src/runtime/browser/web-reader.ts",
+      "line": 566,
+      "kind": "timeout",
+      "valueMs": 30000,
+      "source": "timeout: NAV_TIMEOUT_MS"
+    },
+    {
+      "file": "ai-worker/src/runtime/browser/web-reader.ts",
+      "line": 594,
+      "kind": "timeout",
+      "valueMs": 30000,
+      "source": "timeout: NAV_TIMEOUT_MS"
+    },
+    {
+      "file": "ai-worker/src/runtime/browser/web-reader.ts",
+      "line": 623,
+      "kind": "timeout",
+      "valueMs": 8000,
+      "source": "timeout: 8_000"
+    },
+    {
+      "file": "ai-worker/src/runtime/browser/web-session.ts",
+      "line": 259,
+      "kind": "timeout",
+      "valueMs": 30000,
+      "source": "timeout: 30_000"
+    },
+    {
+      "file": "ai-worker/src/runtime/browser/web-session.ts",
+      "line": 330,
+      "kind": "timeout",
+      "valueMs": 30000,
+      "source": "timeout: 30_000"
+    },
+    {
+      "file": "ai-worker/src/runtime/douyin-transcribe-detail.ts",
+      "line": 69,
+      "kind": "timeoutMs",
+      "valueMs": 60000,
+      "source": "timeoutMs: 60_000"
+    },
+    {
+      "file": "ai-worker/src/runtime/douyin-transcribe-source.ts",
+      "line": 183,
+      "kind": "timeout",
+      "valueMs": 30000,
+      "source": "AbortSignal.timeout(IESDOUYIN_FETCH_TIMEOUT_MS)"
+    },
+    {
+      "file": "ai-worker/src/runtime/douyin-transcribe-source.ts",
+      "line": 183,
+      "kind": "timeout",
+      "valueMs": 30000,
+      "source": "AbortSignal.timeout(IESDOUYIN_FETCH_TIMEOUT_MS)"
+    },
+    {
+      "file": "ai-worker/src/runtime/search-factory.ts",
+      "line": 114,
+      "kind": "timeoutMs",
+      "valueMs": 10000,
+      "source": "timeoutMs: opts?.timeoutMs ?? DEFAULT_TIMEOUT_MS"
+    },
+    {
+      "file": "backend/scripts/t915-postgres-checkpoint-probe.ts",
+      "line": 21,
+      "kind": "deadlineMs",
+      "valueMs": 60000,
+      "source": "deadlineMs:60000"
+    },
+    {
+      "file": "backend/scripts/t915-postgres-research-evidence-probe.ts",
+      "line": 22,
+      "kind": "deadlineMs",
+      "valueMs": 60000,
+      "source": "deadlineMs:60000"
+    },
+    {
+      "file": "backend/scripts/t915-postgres-tool-host-probe.ts",
+      "line": 24,
+      "kind": "deadlineMs",
+      "valueMs": 60000,
+      "source": "deadlineMs:60000"
+    },
+    {
+      "file": "backend/src/modules/ai-runtime/chat-trend-read.ts",
+      "line": 60,
+      "kind": "timeout",
+      "valueMs": 45000,
+      "source": "AbortSignal.timeout(45_000)"
+    },
+    {
+      "file": "backend/src/modules/ai-runtime/chat-trend-read.ts",
+      "line": 72,
+      "kind": "timeout",
+      "valueMs": 20000,
+      "source": "AbortSignal.timeout(20_000)"
+    },
+    {
+      "file": "backend/src/modules/ai-runtime/local-environment-host.ts",
+      "line": 16,
+      "kind": "timeout",
+      "valueMs": 3000,
+      "source": "timeout:3000"
+    },
+    {
+      "file": "backend/src/modules/ai-runtime/request-io.service.ts",
+      "line": 45,
+      "kind": "abort/reject/kill timer",
+      "valueMs": 1000,
+      "source": "setTimeout(()=>{if(requests.get(request.id)===request&&child===process&&process)terminate(process);},1000)"
+    },
+    {
+      "file": "backend/src/modules/assets/localfs-object-storage.ts",
+      "line": 99,
+      "kind": "timeout",
+      "valueMs": 15000,
+      "source": "timeout: 15000"
+    },
+    {
+      "file": "backend/src/modules/execution/host-browser-process-recovery.ts",
+      "line": 19,
+      "kind": "timeout",
+      "valueMs": 5000,
+      "source": "timeout:5000"
+    },
+    {
+      "file": "backend/src/modules/execution/worker-process-tree.ts",
+      "line": 7,
+      "kind": "timeout",
+      "valueMs": 3000,
+      "source": "timeout: 3000"
+    },
+    {
+      "file": "backend/src/modules/execution/worker-process-tree.ts",
+      "line": 28,
+      "kind": "timeout",
+      "valueMs": 10000,
+      "source": "timeout: 10000"
+    },
+    {
+      "file": "backend/src/modules/execution/worker-supervisor.ts",
+      "line": 76,
+      "kind": "abort/reject/kill timer",
+      "valueMs": 15000,
+      "source": "setTimeout(() => {\n        startupTimedOut = true;\n        void forceStop(processHandle).then(() => reject(new Error(\"WORKER_START_TIMEOUT\")), reject);\n      }, options.startupTimeoutMs ?? 15000)"
+    },
+    {
+      "file": "backend/src/modules/search/knowledge-search-runtime.service.ts",
+      "line": 97,
+      "kind": "timeout",
+      "valueMs": 8000,
+      "source": "AbortSignal.timeout(QUERY_EMBEDDING_DEADLINE_MS)"
+    },
+    {
+      "file": "docker-compose.yml",
+      "line": 18,
+      "kind": "原生/脚本执行预算",
+      "valueMs": 3000,
+      "source": "timeout: 3s"
+    },
+    {
+      "file": "docker-compose.yml",
+      "line": 38,
+      "kind": "原生/脚本执行预算",
+      "valueMs": 3000,
+      "source": "timeout: 3s"
+    },
+    {
+      "file": "frontend/scripts/desktop/build-sidecar.mjs",
+      "line": 804,
+      "kind": "timeout",
+      "valueMs": 20000,
+      "source": "timeout: 20_000"
+    },
+    {
+      "file": "frontend/scripts/desktop/execution-worker-runtime.mjs",
+      "line": 42,
+      "kind": "timeout",
+      "valueMs": 30000,
+      "source": "timeout:30000"
+    },
+    {
+      "file": "frontend/scripts/desktop/node-runtime.mjs",
+      "line": 31,
+      "kind": "timeout",
+      "valueMs": 5000,
+      "source": "timeout: 5_000"
+    },
+    {
+      "file": "frontend/scripts/desktop/obfuscate.mjs",
+      "line": 792,
+      "kind": "timeoutMs",
+      "valueMs": 30000,
+      "source": "timeoutMs: Math.min(timeoutMs, 30_000)"
+    },
+    {
+      "file": "frontend/scripts/desktop/obfuscate.mjs",
+      "line": 824,
+      "kind": "timeout",
+      "valueMs": 60000,
+      "source": "timeout: timeoutMs"
+    },
+    {
+      "file": "frontend/scripts/desktop/obfuscate.mjs",
+      "line": 827,
+      "kind": "timeout",
+      "valueMs": 60000,
+      "source": "timeout: timeoutMs"
+    },
+    {
+      "file": "frontend/scripts/desktop/package.mjs",
+      "line": 272,
+      "kind": "timeout",
+      "valueMs": 30000,
+      "source": "timeout: 30_000"
+    },
+    {
+      "file": "frontend/scripts/desktop/verify-handshake-gate.mjs",
+      "line": 85,
+      "kind": "timeout",
+      "valueMs": 1500,
+      "source": "AbortSignal.timeout(1500)"
+    },
+    {
+      "file": "frontend/scripts/desktop/verify-handshake-gate.mjs",
+      "line": 107,
+      "kind": "timeout",
+      "valueMs": 6000,
+      "source": "AbortSignal.timeout(6000)"
+    },
+    {
+      "file": "frontend/scripts/visual/capture-current.mjs",
+      "line": 193,
+      "kind": "timeout",
+      "valueMs": 30000,
+      "source": "timeout: 30_000"
+    },
+    {
+      "file": "frontend/scripts/visual/capture-current.mjs",
+      "line": 199,
+      "kind": "timeout",
+      "valueMs": 10000,
+      "source": "timeout: 10_000"
+    },
+    {
+      "file": "frontend/scripts/visual/capture-with-port.mjs",
+      "line": 105,
+      "kind": "timeout",
+      "valueMs": 30000,
+      "source": "timeout: 30_000"
+    },
+    {
+      "file": "frontend/scripts/visual/capture-with-port.mjs",
+      "line": 107,
+      "kind": "timeout",
+      "valueMs": 10000,
+      "source": "timeout: 10_000"
+    },
+    {
+      "file": "frontend/src/features/draft-workbench/content-direction-actions.tsx",
+      "line": 42,
+      "kind": "abort/reject/kill timer",
+      "valueMs": 10000,
+      "source": "setTimeout(() => reject(new Error(\"读取当前稿件超时，本次未发送诊断，请重试。\")), 10000)"
+    },
+    {
+      "file": "frontend/src/features/draft-workbench/draft-chat-request.tsx",
+      "line": 128,
+      "kind": "abort/reject/kill timer",
+      "valueMs": 10000,
+      "source": "setTimeout(() => reject(new Error(\"保存仍在处理中，本次未发送诊断。请稍后重试。\")), 10000)"
+    },
+    {
+      "file": "frontend/src/features/draft-workbench/script-review-gate.tsx",
+      "line": 187,
+      "kind": "abort/reject/kill timer",
+      "valueMs": 6000,
+      "source": "setTimeout(() => reject(new Error(\"createOutput 超时\")), 6000)"
+    },
+    {
+      "file": "frontend/src/server/activation/ai-credit-link.server.ts",
+      "line": 131,
+      "kind": "timeout",
+      "valueMs": 10000,
+      "source": "AbortSignal.timeout(10_000)"
+    },
+    {
+      "file": "frontend/src/server/activation/client-config.server.ts",
+      "line": 507,
+      "kind": "timeout",
+      "valueMs": 10000,
+      "source": "AbortSignal.timeout(10_000)"
+    },
+    {
+      "file": "frontend/src/server/activation/license-client.ts",
+      "line": 106,
+      "kind": "abort/reject/kill timer",
+      "valueMs": 10000,
+      "source": "setTimeout(() => controller.abort(), timeoutMs)"
+    },
+    {
+      "file": "frontend/src/server/activation/managed-credential-lease.server.ts",
+      "line": 144,
+      "kind": "timeout",
+      "valueMs": 10000,
+      "source": "AbortSignal.timeout(10_000)"
+    },
+    {
+      "file": "frontend/src/server/feedback/product-feedback.server.ts",
+      "line": 409,
+      "kind": "timeout",
+      "valueMs": 10000,
+      "source": "AbortSignal.timeout(10_000)"
+    },
+    {
+      "file": "frontend/src/server/ingestion/douhot-cdp.ts",
+      "line": 299,
+      "kind": "timeout",
+      "valueMs": 60000,
+      "source": "timeout: 60_000"
+    },
+    {
+      "file": "frontend/src/server/ingestion/douhot-cdp.ts",
+      "line": 419,
+      "kind": "timeout",
+      "valueMs": 60000,
+      "source": "timeout: 60_000"
+    },
+    {
+      "file": "frontend/src/server/ingestion/douhot-cdp.ts",
+      "line": 437,
+      "kind": "timeout",
+      "valueMs": 60000,
+      "source": "timeout: 60_000"
+    },
+    {
+      "file": "frontend/src/server/ingestion/douyin-cdp.ts",
+      "line": 935,
+      "kind": "timeoutMs",
+      "valueMs": 60000,
+      "source": "timeoutMs: 60_000"
+    },
+    {
+      "file": "frontend/src/server/ingestion/douyin-cdp.ts",
+      "line": 1080,
+      "kind": "timeoutMs",
+      "valueMs": 60000,
+      "source": "timeoutMs: 60_000"
+    },
+    {
+      "file": "frontend/src/server/ingestion/douyin-cdp.ts",
+      "line": 1267,
+      "kind": "timeoutMs",
+      "valueMs": 60000,
+      "source": "timeoutMs: 60_000"
+    },
+    {
+      "file": "frontend/src/server/ingestion/douyin-cdp.ts",
+      "line": 1320,
+      "kind": "timeoutMs",
+      "valueMs": 60000,
+      "source": "timeoutMs: 60_000"
+    },
+    {
+      "file": "frontend/src/server/ingestion/douyin-cdp.ts",
+      "line": 1428,
+      "kind": "timeoutMs",
+      "valueMs": 60000,
+      "source": "timeoutMs: 60_000"
+    },
+    {
+      "file": "frontend/src/server/ingestion/douyin-cdp.ts",
+      "line": 1596,
+      "kind": "timeoutMs",
+      "valueMs": 60000,
+      "source": "timeoutMs: 60_000"
+    },
+    {
+      "file": "frontend/src/server/ingestion/douyin-cdp.ts",
+      "line": 1716,
+      "kind": "timeout",
+      "valueMs": 10000,
+      "source": "AbortSignal.timeout(10_000)"
+    },
+    {
+      "file": "frontend/src/server/ingestion/douyin-cdp.ts",
+      "line": 1716,
+      "kind": "timeout",
+      "valueMs": 10000,
+      "source": "AbortSignal.timeout(10_000)"
+    },
+    {
+      "file": "frontend/src/server/ingestion/douyin-cdp.ts",
+      "line": 1931,
+      "kind": "timeoutMs",
+      "valueMs": 60000,
+      "source": "timeoutMs: 60_000"
+    },
+    {
+      "file": "frontend/src/server/ingestion/douyin-cdp.ts",
+      "line": 2172,
+      "kind": "timeoutMs",
+      "valueMs": 60000,
+      "source": "timeoutMs: 60_000"
+    },
+    {
+      "file": "frontend/src/server/ingestion/douyin-cdp.ts",
+      "line": 2645,
+      "kind": "timeout",
+      "valueMs": 5000,
+      "source": "timeout: opts.timeout ?? 5_000"
+    },
+    {
+      "file": "frontend/src/server/ingestion/douyin-cdp.ts",
+      "line": 2782,
+      "kind": "timeoutMs",
+      "valueMs": 60000,
+      "source": "timeoutMs: 60_000"
+    },
+    {
+      "file": "frontend/src/server/ingestion/douyin-cdp.ts",
+      "line": 2793,
+      "kind": "timeout",
+      "valueMs": 3000,
+      "source": "timeout: 3_000"
+    },
+    {
+      "file": "frontend/src/server/ingestion/douyin-cdp.ts",
+      "line": 2802,
+      "kind": "timeout",
+      "valueMs": 2000,
+      "source": "timeout: 2_000"
+    },
+    {
+      "file": "frontend/src/server/ingestion/douyin-cdp.ts",
+      "line": 2822,
+      "kind": "timeout",
+      "valueMs": 8000,
+      "source": "timeout: 8_000"
+    },
+    {
+      "file": "frontend/src/server/ingestion/douyin-cdp.ts",
+      "line": 2873,
+      "kind": "timeout",
+      "valueMs": 4000,
+      "source": "timeout: 4_000"
+    },
+    {
+      "file": "frontend/src/server/ingestion/douyin-cdp.ts",
+      "line": 2890,
+      "kind": "timeout",
+      "valueMs": 4000,
+      "source": "timeout: 4_000"
+    },
+    {
+      "file": "frontend/src/server/ingestion/douyin-cdp.ts",
+      "line": 2935,
+      "kind": "timeout",
+      "valueMs": 5000,
+      "source": "timeout: 5_000"
+    },
+    {
+      "file": "frontend/src/server/ingestion/douyin-cdp.ts",
+      "line": 3165,
+      "kind": "timeoutMs",
+      "valueMs": 60000,
+      "source": "timeoutMs: 60_000"
+    },
+    {
+      "file": "frontend/src/server/ingestion/douyin-cover-backfill.ts",
+      "line": 43,
+      "kind": "timeout",
+      "valueMs": 30000,
+      "source": "AbortSignal.timeout(COVER_IMAGE_FETCH_TIMEOUT_MS)"
+    },
+    {
+      "file": "frontend/src/server/ingestion/douyin-traffic.ts",
+      "line": 28,
+      "kind": "setDefaultTimeout",
+      "valueMs": 15000,
+      "source": "page.setDefaultTimeout(15_000)"
+    },
+    {
+      "file": "frontend/src/server/ingestion/douyin-traffic.ts",
+      "line": 29,
+      "kind": "timeout",
+      "valueMs": 30000,
+      "source": "timeout:30_000"
+    },
+    {
+      "file": "frontend/src/server/ingestion/douyin-traffic.ts",
+      "line": 32,
+      "kind": "timeout",
+      "valueMs": 30000,
+      "source": "timeout:30_000"
+    },
+    {
+      "file": "frontend/src/server/persistence-client.ts",
+      "line": 3213,
+      "kind": "abort/reject/kill timer",
+      "valueMs": 15000,
+      "source": "setTimeout(() => controller.abort(), 15_000)"
+    },
+    {
+      "file": "mcp-server/scripts/build-runtime.mjs",
+      "line": 26,
+      "kind": "timeout",
+      "valueMs": 20000,
+      "source": "timeout: 20_000"
+    },
+    {
+      "file": "mcp-server/scripts/smoke.mjs",
+      "line": 53,
+      "kind": "abort/reject/kill timer",
+      "valueMs": 30000,
+      "source": "setTimeout(() => {\n      if (pending.has(id)) {\n        pending.delete(id);\n        reject(new Error(`timeout waiting for ${method}`));\n      }\n    }, 30_000)"
+    },
+    {
+      "file": "tools/diag-douyin-page.mjs",
+      "line": 77,
+      "kind": "timeout",
+      "valueMs": 60000,
+      "source": "timeout: 60_000"
+    },
+    {
+      "file": "tools/windows-closure-rat/runtime-smoke.mjs",
+      "line": 220,
+      "kind": "timeout",
+      "valueMs": 35000,
+      "source": "timeout: 35_000"
+    },
+    {
+      "file": "tools/windows-closure-rat/runtime-smoke.mjs",
+      "line": 256,
+      "kind": "timeout",
+      "valueMs": 30000,
+      "source": "timeout: 30_000"
+    },
+    {
+      "file": "tools/windows-closure-rat/runtime-smoke.mjs",
+      "line": 278,
+      "kind": "timeout",
+      "valueMs": 30000,
+      "source": "timeout: 30_000"
+    }
+  ],
+  "limits": "静态已知数值及默认回归；动态调用链、库默认、绝对deadline与观察终态由聚焦测试和逐条清单核对"
+}

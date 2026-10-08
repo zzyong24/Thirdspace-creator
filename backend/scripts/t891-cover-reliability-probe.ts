@@ -26,7 +26,7 @@ const coverRuns = Math.max(
 );
 const runId = process.env.T859_PROBE_RUN_ID?.trim() || randomUUID();
 const requestTimeoutMs = Math.max(
-  60_000,
+  120_000,
   Math.min(
     900_000,
     Number(process.env.T859_REQUEST_TIMEOUT_MS ?? 300_000) || 300_000,

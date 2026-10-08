@@ -1,0 +1,41 @@
+{
+  "reviewSha256": "2fd0ca8490bd69ae8340ffe1c22ea6aa3427834c8b88917254fb856091203d2b",
+  "files": [
+    {
+      "path": "backend/src/modules/execution/submitted-task-preparation.service.ts",
+      "sourceSha256": "e060b5361645b1b787b389070ab27dcfccbf90fdb04053172c319798ec2acd8e",
+      "sourceHead": "e81e9b609cd0be0b30444de8bab33cfff42c1e64",
+      "candidateSha256": "15d6d690e90c77f77bccaebc28f1f85080c9f3ce7a3cfb13ba07cad5b4952d48",
+      "currentSourceStillMatches": true,
+      "sourceLineCount": 111,
+      "candidateLineCount": 115
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/structured-business-execution.service.ts",
+      "sourceSha256": "9ba9953416438761fbac8740a8c9344c19ad8c59171f2cde0d87f73c4b8dade1",
+      "sourceHead": "e81e9b609cd0be0b30444de8bab33cfff42c1e64",
+      "candidateSha256": "fd1e1de025e23db52f72a469a2234700928b0d558a43a132e4f621dab1f875d8",
+      "currentSourceStillMatches": true,
+      "sourceLineCount": 74,
+      "candidateLineCount": 74
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/asset-business-execution.service.ts",
+      "sourceSha256": "85e041107604ffc00939a6e10492ffc71d3a4dae447519304cb01ebeed81ac16",
+      "sourceHead": "e81e9b609cd0be0b30444de8bab33cfff42c1e64",
+      "candidateSha256": "520d02df3c784e82313ba2b460f16553285d263e89deba890d040f8e91aad6ef",
+      "currentSourceStillMatches": true,
+      "sourceLineCount": 177,
+      "candidateLineCount": 177
+    },
+    {
+      "path": "backend/src/modules/execution/execution-authority.service.ts",
+      "sourceSha256": "4432819beb69025d6df6cec07fa7c789c7cdfcef4a99ba68867a65bc7661251b",
+      "sourceHead": "e81e9b609cd0be0b30444de8bab33cfff42c1e64",
+      "candidateSha256": "abfe457da2b99a2b1b8370de9b451b5501bf17a58cea909e08b838b08508a778",
+      "currentSourceStillMatches": true,
+      "sourceLineCount": 76,
+      "candidateLineCount": 115
+    }
+  ]
+}

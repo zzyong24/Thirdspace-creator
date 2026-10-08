@@ -231,6 +231,38 @@ describe("T-843 creatoros CLI", () => {
     });
   });
 
+  it("tasks wait 在发观察请求前拒绝短于两分钟的显式超时", async () => {
+    const calls = vi.fn(); globalThis.fetch = calls as unknown as typeof fetch;
+    await expect(runCliCommand(["tasks", "wait", "task-slow", "--account", "acct-a", "--timeout", "30"])).rejects.toThrow("最短为 120 秒");
+    expect(calls).not.toHaveBeenCalled();
+  });
+
+  it("两分钟观察到期保留原任务ID且不取消后台", async () => {
+    vi.useFakeTimers();
+    const operations: string[] = [];
+    globalThis.fetch = vi.fn(async (_url, init) => {
+      operations.push(JSON.parse(String(init?.body)).id);
+      return new Response(JSON.stringify({ data: { id: "task-slow", status: "running" }, meta: {requestId:"same-task"} }), {status:200,headers:{"content-type":"application/json"}});
+    }) as unknown as typeof fetch;
+    try {
+      const pending=runCliCommand(["tasks", "wait", "task-slow", "--account", "acct-a", "--timeout", "120"]);
+      const rejection=expect(pending).rejects.toThrow("等待任务 task-slow 超过 120 秒；后台任务没有被取消");
+      await vi.advanceTimersByTimeAsync(120_000);await rejection;
+      expect(new Set(operations)).toEqual(new Set(["ai.tasks.get"]));
+    } finally {vi.useRealTimers();}
+  });
+
+  it("默认持续观察超过两分钟，使用原任务直到真实完成", async () => {
+    vi.useFakeTimers();let completed=false;let status="running";
+    globalThis.fetch = vi.fn(async () => new Response(JSON.stringify({data:{id:"task-slow",status},meta:{requestId:"same-task"}}), {status:200,headers:{"content-type":"application/json"}})) as unknown as typeof fetch;
+    try {
+      const pending=runCliCommand(["tasks", "wait", "task-slow", "--account", "acct-a"]).then(result=>{completed=true;return result;});
+      await vi.advanceTimersByTimeAsync(180_000);expect(completed).toBe(false);
+      status="succeeded";await vi.advanceTimersByTimeAsync(2_000);
+      expect(await pending).toMatchObject({data:{id:"task-slow",status:"succeeded"}});
+    } finally {vi.useRealTimers();}
+  });
+
   it("douyin refresh 复用当前账号唯一的 self.detail 作业并显式带号", async () => {
     const fetchMock = vi.fn(async (_url: unknown, init?: RequestInit) => {
       const request = JSON.parse(String(init?.body)) as { id: string };

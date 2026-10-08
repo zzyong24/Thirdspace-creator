@@ -1,3 +1,4 @@
+import {executionTimeoutMs} from "@creatoros/contract/timeout-policy";
 import {
   createCipheriv,
   createDecipheriv,
@@ -138,14 +139,14 @@ function readMasterKeyFromFd(fd: number): string {
   //   attached to console)。真机实证:sidecar 启动早期主线程被 pin 6+ 分钟,Next server listen
   //   却不处理请求 → webview 白屏。修:Windows 直接不走 fd 通道,让上层降到文件兜底(T-425 已在)。
   //   mac/Linux 分支下 Rust 用 std::process::Command::stdin + write_all + drop(close),fd 0 是真
-  //   pipe,readSync EAGAIN 语义正常 —— 保留 3s 循环。
+  //   pipe,readSync EAGAIN 语义正常 —— 保留有界读取循环。
   if (process.platform === "win32") {
     fdKeyCache.set(fd, ""); // 缓存空,不再重试;上层会走 CREATOROS_MASTER_KEY_FILE 文件兜底
     return "";
   }
   const bytes: number[] = [];
   const one = Buffer.alloc(1);
-  const deadline = Date.now() + 3000;
+  const deadline = Date.now() + executionTimeoutMs();
   let sawData = false;
   while (Date.now() < deadline) {
     let n = 0;

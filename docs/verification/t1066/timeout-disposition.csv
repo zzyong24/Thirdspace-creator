@@ -1,0 +1,223 @@
+ID,分区,最终文件,策略,文件SHA256
+TO-001,worker,ai-worker/src/execution/browser-worker-session.ts,单操作外层130s，覆盖内部浏览器/VM120s及10s余量；signal即时取消,020f5cf5d253ccbac1bf182ae363c6793f14bff1ff4d8088f2e095242448b0f8
+TO-002,worker,ai-worker/src/execution/browser-worker-session.ts,页面内target可见轮询总等待120s，25ms间隔保留,020f5cf5d253ccbac1bf182ae363c6793f14bff1ff4d8088f2e095242448b0f8
+TO-003,worker,ai-worker/src/execution/durable-pi-stream.ts,原模型无进展180s≥120，进展会重置而非总deadline；保留,e6598226e595895017c4f18af0d423f0e482569c0d1f5f948381d2505d96f501
+TO-004,worker,ai-worker/src/execution/intelligence-generation-worker.ts,原单模型180s≥120；父任务共享signal；保留,c1e0f49124a8029c9f81116837c723af8d9a2cb35d7db0886946c568d002b8c0
+TO-005,worker,ai-worker/src/execution/intelligence-generation-worker.ts,原单模型180s≥120，空输出额外尝试仍受原父任务signal；保留,c1e0f49124a8029c9f81116837c723af8d9a2cb35d7db0886946c568d002b8c0
+TO-006,worker,ai-worker/src/execution/redfox-client.ts,单次执行/请求/观察等待归一最低120s，原较长值不缩短；保持原signal/权限/资源归属,b536d8a8755ebf445cbaee6e428772f0853d01a6c7471224ce5f50da755f70b0
+TO-007,worker,ai-worker/src/execution/research-browser-sessions.ts,单次执行/请求/观察等待归一最低120s，原较长值不缩短；保持原signal/权限/资源归属,7f7ae213bab2628de5e8ed64831956b9f04903283b4d70a8f9dab5698f64a4c5
+TO-008,worker,ai-worker/src/execution/research-browser-sessions.ts,单次执行/请求/观察等待归一最低120s，原较长值不缩短；保持原signal/权限/资源归属,7f7ae213bab2628de5e8ed64831956b9f04903283b4d70a8f9dab5698f64a4c5
+TO-009,worker,ai-worker/src/execution/research-worker-tools.ts,单次执行/请求/观察等待归一最低120s，原较长值不缩短；保持原signal/权限/资源归属,6f4383c792345b8d34b5f1da6d0d75de685daf900fb6b5df4ced9eec1d9e7400
+TO-010,worker,ai-worker/src/execution/research-worker-tools.ts,单次执行/请求/观察等待归一最低120s，原较长值不缩短；保持原signal/权限/资源归属,6f4383c792345b8d34b5f1da6d0d75de685daf900fb6b5df4ced9eec1d9e7400
+TO-011,worker,ai-worker/src/execution/research-worker-tools.ts,单次执行/请求/观察等待归一最低120s，原较长值不缩短；保持原signal/权限/资源归属,6f4383c792345b8d34b5f1da6d0d75de685daf900fb6b5df4ced9eec1d9e7400
+TO-012,worker,ai-worker/src/execution/topic-worker-reads.ts,单次执行/请求/观察等待归一最低120s，原较长值不缩短；保持原signal/权限/资源归属,aacd8fe95f88b986628b9f23f01efa44fc075b38da6cf5a52d82194e19d69ace
+TO-013,worker,ai-worker/src/execution/worker-runtime.ts,所有端口继承同一原持久execution绝对deadline；continuous不再给10分钟小外帽，原心跳/租约/取消监督保留,2ec9ebe3807844cc9d1111448f98531481c6d1a63cb1bc9b55b64d2aa20e19bf
+TO-014,worker,ai-worker/src/execution/worker-runtime.ts,移除所有普通端口固定30s，跟随原execution剩余预算；无活动任务兜底120s,2ec9ebe3807844cc9d1111448f98531481c6d1a63cb1bc9b55b64d2aa20e19bf
+TO-015,worker,ai-worker/src/execution/worker-runtime.ts,原持久绝对deadline耗尽立即停止，不能被两分钟下限延长,2ec9ebe3807844cc9d1111448f98531481c6d1a63cb1bc9b55b64d2aa20e19bf
+TO-016,worker,ai-worker/src/nodes/script-node.ts,原script draft150s≥120保留,ca76fae69379e7e2fcbbf574414f4725f65aafd46020b7576334b96ac022fc4a
+TO-017,worker,ai-worker/src/nodes/script-pipeline.ts,原script pipeline150s≥120保留,0edd3a315128f12c76c66391a00125a5cf3815ed97469a93538cf666d8fbed9b
+TO-018,worker,ai-worker/src/nodes/structured-node.ts,通用模型默认/下限120s，150s/600s覆盖与原900s上限保留；非有限值沿旧fallback，负数沿旧下限归一,a6af5e39c32251043c06bcc1a83145c031e25ca023614f952a43d27311a26ca9
+TO-019,worker,ai-worker/src/runtime/browser/browser-pool.ts,浏览器池已有绝对deadline原样保留，不重新放大剩余预算,dba5e5d508d63cfc2ab2e8b3feec86dff85254ca1306e32c1eccc404470c5db5
+TO-020,worker,ai-worker/src/runtime/browser/chromium-guard.ts,清理/队列默认370s，可配正预算下限120s，原清理能力和owner不变,1cd4ced2481f5f4b69b757fa077d1a502924554dff77d41bd257cb9f017eac9f
+TO-021,worker,ai-worker/src/runtime/browser/chromium-guard.ts,guarded启动外层至少370s，覆盖Chrome及内置浏览器两次原180s启动+10s结算,1cd4ced2481f5f4b69b757fa077d1a502924554dff77d41bd257cb9f017eac9f
+TO-022,worker,ai-worker/src/runtime/browser/chromium-guard.ts,profile租约等待默认370s/显式预算最低120s，取消立即退出，不按时间清理活资源,1cd4ced2481f5f4b69b757fa077d1a502924554dff77d41bd257cb9f017eac9f
+TO-023,worker,ai-worker/src/runtime/browser/navigation-retry.ts,单次执行/请求/观察等待归一最低120s，原较长值不缩短；保持原signal/权限/资源归属,3633f081059b7356a74b087faf748c0bfdeef46d4876c9079249921412840527
+TO-024,worker,ai-worker/src/runtime/browser/search-browser.ts,单次执行/请求/观察等待归一最低120s，原较长值不缩短；保持原signal/权限/资源归属,c306451c22d216528d15433d07e96f8bc120a2b074690dc5bcc59471767a97f2
+TO-025,worker,ai-worker/src/runtime/browser/web-capture.ts,单次执行/请求/观察等待归一最低120s，原较长值不缩短；保持原signal/权限/资源归属,6995d916040040cc6fd4ac2dc36c3ccc26fd658a6249a32a1aefe9f7421e00d2
+TO-026,worker,ai-worker/src/runtime/browser/web-reader.ts,单次执行/请求/观察等待归一最低120s，原较长值不缩短；保持原signal/权限/资源归属,7b8c8d37dc076e3c1e2f245f4e0b64dfa6db8d2abe502fc606a6042c5271b48b
+TO-027,worker,ai-worker/src/runtime/browser/web-reader.ts,单次执行/请求/观察等待归一最低120s，原较长值不缩短；保持原signal/权限/资源归属,7b8c8d37dc076e3c1e2f245f4e0b64dfa6db8d2abe502fc606a6042c5271b48b
+TO-028,worker,ai-worker/src/runtime/browser/web-session.ts,登录有限总等待默认300s不缩短，显式配置最低120s，1s轮询间隔保留,e0c9bc07a23190534d66b7c45f78333090a4106e52116fd42a7e67b104853e9d
+TO-029,worker,ai-worker/src/runtime/browser/web-session.ts,单次执行/请求/观察等待归一最低120s，原较长值不缩短；保持原signal/权限/资源归属,e0c9bc07a23190534d66b7c45f78333090a4106e52116fd42a7e67b104853e9d
+TO-030,worker,ai-worker/src/runtime/browser/web-session.ts,单次执行/请求/观察等待归一最低120s，原较长值不缩短；保持原signal/权限/资源归属,e0c9bc07a23190534d66b7c45f78333090a4106e52116fd42a7e67b104853e9d
+TO-031,worker,ai-worker/src/runtime/chat/chat-pi-loop.ts,单次执行/请求/观察等待归一最低120s，原较长值不缩短；保持原signal/权限/资源归属,851cd0c953d8a06459285f5bdb2cf3101c8e5cced31f44a8991a5edf97e52a10
+TO-032,worker,ai-worker/src/runtime/douyin-transcribe-detail.ts,单次执行/请求/观察等待归一最低120s，原较长值不缩短；保持原signal/权限/资源归属,5e240eaa71beae9664810d03dd47efc2e165597e3061486c49602b1394e26ad6
+TO-033,worker,ai-worker/src/runtime/douyin-transcribe-source.ts,单次执行/请求/观察等待归一最低120s，原较长值不缩短；保持原signal/权限/资源归属,78a96f17d067a8d5fe1888b407b871f2aff0ef7929e01ee98e239b00d2147826
+TO-034,worker,ai-worker/src/runtime/multimodal-minimax.ts,生产5分钟保持，所有注入maxPollAttempts按120s名义总预算归一下限，真实5s周期不改,1b91a15a0517a09aa24cef186c0cfba882178027fae358f427acf1acf502982d
+TO-035,worker,ai-worker/src/runtime/multimodal-minimax.ts,H3生产20分钟保持，动态尝试次数120s名义下限，原任务signal即时生效,1b91a15a0517a09aa24cef186c0cfba882178027fae358f427acf1acf502982d
+TO-036,worker,ai-worker/src/runtime/multimodal-omnihi.ts,生产10分钟保持，动态尝试次数120s名义下限，原任务signal即时生效,f26e78795de617c791e5752f546d4422f720b2d24d6d587e0a80dcf6adac75b3
+TO-037,worker,ai-worker/src/runtime/search-factory.ts,单次执行/请求/观察等待归一最低120s，原较长值不缩短；保持原signal/权限/资源归属,c6aa2b18c5c66d67ff9c8856604ef6243a0e6113f3fa5b75441814ea70480c4a
+TO-038,worker,ai-worker/src/runtime/video-decisions-runner.ts,原video结构化600s≥120保留,e7f42f333aa898e9099b81cee0c66fa231238aebd3e68046f96e6df6a0152ed3
+TO-039,worker,backend/src/modules/ai-runtime/chat-production-composition.ts,原chat600s持久预算由契约新初始化下限/旧截止不延长，保留任务控制,b033be02f96e27a9d53605b0a2c0d31aed593440dc2e5143d344c9a763ee6d06
+TO-040,worker,backend/src/modules/ai-runtime/chat-trend-read.ts,按实际信源数量并发3个的串行批次组合740s/源+10s余量；列表120s、搜索500s分别受原父signal,e0db2d3e71eec63db7180ad0ad7f6793a043f40806bc2f424a0a8369c7b99dff
+TO-041,worker,backend/src/modules/ai-runtime/chat-trend-read.ts,单源740s，覆盖370启动+导航120+可能二次导航120+selector120+10余量,e0db2d3e71eec63db7180ad0ad7f6793a043f40806bc2f424a0a8369c7b99dff
+TO-042,worker,backend/src/modules/ai-runtime/local-environment-host.ts,单次执行/请求/观察等待归一最低120s，原较长值不缩短；保持原signal/权限/资源归属,1af32d4b183cdf5f8a1fd92c59d1f679cf1ffe0f71c11985dd5f62444e68560e
+TO-043,worker,backend/src/modules/ai-runtime/request-io.service.ts,单执行默认/动态>=120s，从实际在途槽获得时开始；外层含前方完整deadline+回收宽限+冷启动+执行+10s余量,5eec8d21d33b66eef940fe42eabc57ac80f72be97c41088abb2f20edeaf80a5e
+TO-044,worker,backend/src/modules/ai-runtime/request-io.service.ts,取消请求立即返回并发送cancel；无ACK回收宽限120s，保留真实在途槽直至ACK/进程关闭,5eec8d21d33b66eef940fe42eabc57ac80f72be97c41088abb2f20edeaf80a5e
+TO-045,worker,backend/src/modules/ai-runtime/script-similarity-business-adapter.ts,单次执行/请求/观察等待归一最低120s，原较长值不缩短；保持原signal/权限/资源归属,8505629cebeac620e3fe581300deb5cc780d15d9cffc7125bdd36127d6f4df0d
+TO-046,worker,backend/src/modules/assets/localfs-object-storage.ts,单次执行/请求/观察等待归一最低120s，原较长值不缩短；保持原signal/权限/资源归属,d355a3eb92e3521eafb68f2237ca7cbd890fa028225117935386962c2cd44e74
+TO-047,worker,backend/src/modules/benchmark/benchmark-transcription.service.ts,单次执行/请求/观察等待归一最低120s，原较长值不缩短；保持原signal/权限/资源归属,35e972977df72ab8d45ef59684b6aad54e4372b41fa875f96085794e59604148
+TO-048,worker,backend/src/modules/execution/chat-web-profile-wait.ts,单次执行/请求/观察等待归一最低120s，原较长值不缩短；保持原signal/权限/资源归属,61dab637d4757e6b0431bbc2091e5e083408804cff6c4822f60d06956c910ffc
+TO-049,worker,backend/src/modules/execution/host-browser-process-recovery.ts,单次执行/请求/观察等待归一最低120s，原较长值不缩短；保持原signal/权限/资源归属,0a2cd59ab89fd08f264365b1bc73a74709b27a760d8c14e37a1c2e86179a06c3
+TO-050,worker,backend/src/modules/execution/host-browser-profile-lifecycle.ts,单次执行/请求/观察等待归一最低120s，原较长值不缩短；保持原signal/权限/资源归属,e255a9348707c64fc4542683011fc3706a373ed00b927ef3f1eeb9bbb49e17f2
+TO-051,worker,backend/src/modules/execution/submitted-task-preparation.service.ts,只归一新准备预算>=120s，历史hostTaskPreparation绝对deadline及继承parent截止原样；continuous仅继承原signal，不新加阶段总帽,e060b5361645b1b787b389070ab27dcfccbf90fdb04053172c319798ec2acd8e
+TO-052,worker,backend/src/modules/execution/worker-process-tree.ts,单次执行/请求/观察等待归一最低120s，原较长值不缩短；保持原signal/权限/资源归属,a1ecf30c0d5b86976588221a6fbbfaaae7012b341fe9b0e0a8b9235b15615c1e
+TO-053,worker,backend/src/modules/execution/worker-process-tree.ts,单次执行/请求/观察等待归一最低120s，原较长值不缩短；保持原signal/权限/资源归属,a1ecf30c0d5b86976588221a6fbbfaaae7012b341fe9b0e0a8b9235b15615c1e
+TO-054,worker,backend/src/modules/execution/worker-process-tree.ts,整树kill后退出确认总等待120s，25ms观察间隔保留；身份核验/不误杀规则保留,a1ecf30c0d5b86976588221a6fbbfaaae7012b341fe9b0e0a8b9235b15615c1e
+TO-055,worker,backend/src/modules/execution/worker-supervisor.ts,cancel信号立即发送、stop立即SIGTERM，退出回收宽限最低120s，超时才强杀原handle,3e58a620a3f53fb08a0ba08f47326328a9500262a7e1fb9f871a8b0479f7e6f6
+TO-056,worker,backend/src/modules/execution/worker-supervisor.ts,启动及动态覆盖最低120s，后端原execution deadline仍共有权威,3e58a620a3f53fb08a0ba08f47326328a9500262a7e1fb9f871a8b0479f7e6f6
+TO-057,worker,backend/src/modules/intelligence/intelligence-generation-bridge.ts,原intelligence-generation600s预算及model节点覆盖保留，实际所有port继承同一原deadline,727d8f42186bbc18e61a03e611db447f5445205517fffa7c26da1389d80aa8c8
+TO-058,worker,backend/src/modules/search/knowledge-search-runtime.service.ts,移除重复backfill短外帽；embedding IO持有冷启/队列/执行完整期限，领域只传运行时stop取消,490a29df05f27fb99e1b70d2705a5571d8ab0e2bc57dbe3defc3572c1f4b195b
+TO-059,worker,backend/src/modules/search/knowledge-search-runtime.service.ts,移除query重复8s短外帽；embedding IO持有动态全流程期限，慢150s成功仍返回语义结果,490a29df05f27fb99e1b70d2705a5571d8ab0e2bc57dbe3defc3572c1f4b195b
+TO-060,worker,backend/src/secret-crypto.ts,同步FD key就绪等待由3s调整120s，10ms轮询保留；同步API阻塞主线程风险如实保留（此候选不改密钥接口）,83de7fb12e2e99ee8b3c55ab7094ce4f518ee86d80d42feae16b054173162240
+TO-061,integration,contract/src/internal/execution-worker.ts,历史预算声明和回推原语保留；新创建首次冻结期限使用newExecutionBudgetDeadline正值至少120000ms，原绝对期限不续期。,f58e947f59262540be6bc22b5c280d3b8a3bcefa2b9c9537b87677a1dd76c423
+TO-062,integration,contract/src/resources/execution.ts,公开旧timeoutSec=600及3600秒上界保留；真正执行入口归一>=120秒并按实际值显示，video.render原null连续执行不变。,d532a652eebe143dce2bf08e98199fb3f50e2a3884007526362958d092f18a22
+TO-063,frontend,frontend/src-tauri/src/cli_access.rs,Windows PATH广播 SendMessageTimeoutW 120000ms；注册结果仍保持原best-effort语义。,618e95aa9da2d44371b7e10b763446a9576fa71673519ec59ab5b675af44fcee
+TO-064,frontend,frontend/src-tauri/src/entitlement_claim.rs,Rust单次HTTP timeout120s；不调整授权有效期/心跳/刷新间隔。,0bd651e285d234b79e16b14e20f15781a9aacdcdb4a76100298bad8cd787aa92
+TO-065,frontend,frontend/src-tauri/src/entitlement_claim.rs,Rust单次HTTP timeout120s；不调整授权有效期/心跳/刷新间隔。,0bd651e285d234b79e16b14e20f15781a9aacdcdb4a76100298bad8cd787aa92
+TO-066,frontend,frontend/src-tauri/src/lib.rs,"Rust页面探针120s；注入timeout按max(120s,requested)；原5min闲置/30min总启动watchdog保留。",820e46bee77ee75121dda9fe1ee4a6ca18aac399f745768a3f44bf49486eb2b5
+TO-067,frontend,frontend/src-tauri/src/lib.rs,原闲置5min/总30min启动等待保留；单请求120s，外层更长。,820e46bee77ee75121dda9fe1ee4a6ca18aac399f745768a3f44bf49486eb2b5
+TO-068,frontend,frontend/src-tauri/src/license.rs,"ReqwestHttp::post timeout=max(self.timeout,120s)，生产请求120s；原串行3次重试不削减。",6bf0ea6d6d4a44dfce5935c95b4bf81d2fe1dfb88e04d0f691e480bec5ad3f9f
+TO-069,frontend,frontend/src-tauri/src/license.rs,Rust单次HTTP timeout120s；不调整授权有效期/心跳/刷新间隔。,6bf0ea6d6d4a44dfce5935c95b4bf81d2fe1dfb88e04d0f691e480bec5ad3f9f
+TO-070,frontend,frontend/src-tauri/src/license.rs,Rust单次HTTP timeout120s；不调整授权有效期/心跳/刷新间隔。,6bf0ea6d6d4a44dfce5935c95b4bf81d2fe1dfb88e04d0f691e480bec5ad3f9f
+TO-071,frontend,frontend/src-tauri/src/license.rs,镜像启动等待原90s调整到1810s，覆盖sidecar原30min启动预算+10s结算；补同步请求各120s。,6bf0ea6d6d4a44dfce5935c95b4bf81d2fe1dfb88e04d0f691e480bec5ad3f9f
+TO-072,frontend,frontend/src-tauri/src/license.rs,Rust单次HTTP timeout120s；不调整授权有效期/心跳/刷新间隔。,6bf0ea6d6d4a44dfce5935c95b4bf81d2fe1dfb88e04d0f691e480bec5ad3f9f
+TO-073,frontend,frontend/src-tauri/src/sidecar_process.rs,macOS即时SIGTERM；壳侧GRACE130s覆盖sidecar内部flush120s+10s结算余量。,c73dd938d4ccf039df41e7e6a5a0c18ab7d4380e7b8440f6db1b78dad979314c
+TO-074,frontend,frontend/src-tauri/src/sidecar_process.rs,SIGKILL后确认停止的有限等待120s；原归属/停止真值守卫保留。,c73dd938d4ccf039df41e7e6a5a0c18ab7d4380e7b8440f6db1b78dad979314c
+TO-075,frontend,frontend/src-tauri/src/win_job.rs,"Windows壳侧退出等待max(grace_timeout_ms,130000)ms，stdin停机哨兵即时发送。",7b982f813948cbac4b15299db15790459ed6d11573598b47ed78c5f5a80ef80f
+TO-076,frontend,frontend/src-tauri/src/win_job.rs,Windows TerminateJobObject后等待确认120000ms；Job句柄关闭兜底保留。,7b982f813948cbac4b15299db15790459ed6d11573598b47ed78c5f5a80ef80f
+TO-077,frontend,frontend/src/components/ai/adopt-candidate-card.tsx,保留原至少300秒观察窗口及poll间隔；到期暂停自动查询并保持原taskId，继续查询原任务，未终态不显示业务失败。,c91b890d9d7766b00d01feb3305a4ad8c982ce2032d3c0b76fcf69380e3123c0
+TO-078,frontend,frontend/src/features/copilot/chat-douyin-share-card.tsx,保留原默认约360秒加读取耗时观察窗口及poll间隔；到期暂停自动查询并保持原taskId，继续查询原任务，未终态不显示业务失败。,099fcb2366c4e73eef57f7526c989ed1579821d454c347d3c764eb6e194ebcc4
+TO-079,frontend,frontend/src/features/copilot/chat-generate-card.tsx,保留原至少356秒加读取耗时观察窗口及poll间隔；到期暂停自动查询并保持原taskId，继续查询原任务，未终态不显示业务失败。,828d191422c5149385f63c9bbbf3b7f5d31c954b71aabaf8e8e6445979fcf5bd
+TO-080,frontend,frontend/src/features/copilot/chat-publish-package-card.tsx,保留原默认至少720秒观察窗口及poll间隔；到期暂停自动查询并保持原taskId，继续查询原任务，未终态不显示业务失败。,eeabf36826dc897d69936f587611195fdb576b6731ef10cfa1ab7fac95822ec7
+TO-081,frontend,frontend/src/features/copilot/chat-result-cards.tsx,保留原默认至少300秒观察窗口及poll间隔；到期暂停自动查询并保持原taskId，继续查询原任务，未终态不显示业务失败。,9996f24048546be73347dcabdabeb8a23bf34855de128b3a17fd10b4353b610d
+TO-082,frontend,frontend/src/features/copilot/chat-review-report-card.tsx,保留原默认至少225秒观察窗口及poll间隔；到期暂停自动查询并保持原taskId，继续查询原任务，未终态不显示业务失败。,e93412f7087b2f08a58b4280df194cae306da7b49eab03fb9de3187d44e076dd
+TO-083,frontend,frontend/src/features/copilot/chat-script-draft-card.tsx,保留原默认至少360秒观察窗口及poll间隔；到期暂停自动查询并保持原taskId，继续查询原任务，未终态不显示业务失败。,11a87f0070e7f9d7e305a39d5b63e18fad6180c1b0b42a6e22c8551801af64d3
+TO-084,frontend,frontend/src/features/copilot/chat-thesis-card.tsx,保留原默认至少360秒观察窗口及poll间隔；到期暂停自动查询并保持原taskId，继续查询原任务，未终态不显示业务失败。,537dbdc54715d87bbb75e412c66da078eb9874f57b4f3d20e31cedd759893cbc
+TO-085,frontend,frontend/src/features/copilot/execution-task-card.tsx,原1800s观察窗口保留；到期本来即保留原执行状态及taskId，不宣称失败。,a98a25fae8af327babc90b8e8e3f48daa80aaca7da677d884d6a129e343a54a6
+TO-086,frontend,frontend/src/features/draft-workbench/content-direction-actions.tsx,executionTimeoutMs：正执行等待≥120000ms；调用者即时取消/原绝对deadline不延长。,0d6e84ed5554afa726c9773a2e947c4026b9a99927c885de0ae393a2e5ed303b
+TO-087,frontend,frontend/src/features/draft-workbench/draft-chat-request.tsx,executionTimeoutMs：正执行等待≥120000ms；调用者即时取消/原绝对deadline不延长。,338ba76986db146b8f480a25cc09e8638cc7766ea8d72cdc6f49f1673b1ffe26
+TO-088,frontend,frontend/src/features/draft-workbench/draft-chat-request.tsx,executionTimeoutMs：正执行等待≥120000ms；调用者即时取消/原绝对deadline不延长。,338ba76986db146b8f480a25cc09e8638cc7766ea8d72cdc6f49f1673b1ffe26
+TO-089,frontend,frontend/src/features/draft-workbench/script-review-gate.tsx,createOutput等待120s；保留同一在途Promise，迟到创建结果复用，超时仍允许既有projectId审核。,0c7199bc1b2811a900bec7f72a9cb69ef8b7911a7815b360f816accc4072bc49
+TO-090,frontend,frontend/src/features/intelligence/use-source-runs.ts,原120×1s窗口保留，到期提示后台继续，保留run任务。,1870316ea532088bdc014d7b04975d7db10ac674fa2c123aa7a7903832c3fa3f
+TO-091,frontend,frontend/src/features/knowledge/knowledge-dump-zone.tsx,正文观察240×500ms=120s；到期暂停读取，保留原File/assetId/taskId，继续原解析读取后才写知识；不重复上传/解析。,635a1fe4a5f0fb5093aaeed437e7b0dc6e7b7b95b84c6ddc84bc2f3b21c136cc
+TO-092,frontend,frontend/src/features/production/production-resource-operations.ts,executionTimeoutMs：正执行等待≥120000ms；调用者即时取消/原绝对deadline不延长。,71d24e7e964bab6a1bf943972cc59d22345ca5a6a86fdd712e81c4f5d7a52840
+TO-093,frontend,frontend/src/server/activation/ai-credit-link.server.ts,executionTimeoutMs：正执行等待≥120000ms；调用者即时取消/原绝对deadline不延长。,08cfbe780c5f41687a50567d6f14d7b8c55181106dfc049c6e18c2100f112da6
+TO-094,frontend,frontend/src/server/activation/client-config.server.ts,executionTimeoutMs：正执行等待≥120000ms；调用者即时取消/原绝对deadline不延长。,d7236b0c4424af6f1205707b0ee75b7b59414c09b0a879369374541eded50dbd
+TO-095,frontend,frontend/src/server/activation/license-client.ts,executionTimeoutMs：正执行等待≥120000ms；调用者即时取消/原绝对deadline不延长。,ad7411529dbf6400ccb2f5e15303035c4418be932cbc83ac8ee0f5a4a47e8a2d
+TO-096,frontend,frontend/src/server/activation/managed-credential-lease.server.ts,executionTimeoutMs：正执行等待≥120000ms；调用者即时取消/原绝对deadline不延长。,b5af8cb2341760a40038059ea6eb432722ef605424e7c40c325dd0bf92af7f56
+TO-097,frontend,frontend/src/server/feedback/product-feedback.server.ts,executionTimeoutMs：正执行等待≥120000ms；调用者即时取消/原绝对deadline不延长。,222802131a5d49d3df335d66e5c9bfe2eb77f340abd2d6e15706782475a9bff7
+TO-098,frontend,frontend/src/server/ingestion/douhot-cdp.ts,显式浏览器launch180s（保留库原默认），context/page action/navigation120s；worker guardedLaunch外层由主集成覆盖双浏览器串行启动。,08fd45f319d6804ceecd214a581bad8b589ed90d41b5f1e5f2a8298f0f5ab3fc
+TO-099,frontend,frontend/src/server/ingestion/douhot-cdp.ts,executionTimeoutMs：正执行等待≥120000ms；调用者即时取消/原绝对deadline不延长。,08fd45f319d6804ceecd214a581bad8b589ed90d41b5f1e5f2a8298f0f5ab3fc
+TO-100,frontend,frontend/src/server/ingestion/douhot-cdp.ts,登录等待timeoutSec经executionTimeoutMs归一，原300s/240s默认保留，正注入至少120s；poll1s不变。,08fd45f319d6804ceecd214a581bad8b589ed90d41b5f1e5f2a8298f0f5ab3fc
+TO-101,frontend,frontend/src/server/ingestion/douhot-cdp.ts,等待搜索输入480×250ms=120s；填词与Enter动作继承page120s默认。,08fd45f319d6804ceecd214a581bad8b589ed90d41b5f1e5f2a8298f0f5ab3fc
+TO-102,frontend,frontend/src/server/ingestion/douhot-cdp.ts,每个实际page建立后applyBrowserTimeoutPolicy：默认action/navigation/screenshot120s，覆盖Playwright隐式30s。,08fd45f319d6804ceecd214a581bad8b589ed90d41b5f1e5f2a8298f0f5ab3fc
+TO-103,frontend,frontend/src/server/ingestion/douhot-cdp.ts,每个实际page建立后applyBrowserTimeoutPolicy：默认action/navigation/screenshot120s，覆盖Playwright隐式30s。,08fd45f319d6804ceecd214a581bad8b589ed90d41b5f1e5f2a8298f0f5ab3fc
+TO-104,frontend,frontend/src/server/ingestion/douhot-cdp.ts,executionTimeoutMs：正执行等待≥120000ms；调用者即时取消/原绝对deadline不延长。,08fd45f319d6804ceecd214a581bad8b589ed90d41b5f1e5f2a8298f0f5ab3fc
+TO-105,frontend,frontend/src/server/ingestion/douhot-cdp.ts,executionTimeoutMs：正执行等待≥120000ms；调用者即时取消/原绝对deadline不延长。,08fd45f319d6804ceecd214a581bad8b589ed90d41b5f1e5f2a8298f0f5ab3fc
+TO-106,frontend,frontend/src/server/ingestion/douyin-cdp.ts,每个实际page建立后applyBrowserTimeoutPolicy：默认action/navigation/screenshot120s，覆盖Playwright隐式30s。,1fc5456731eb23d05dc0cb0123e13fec07aff86f6149d1ccb77cf8c7e842dca9
+TO-107,frontend,frontend/src/server/ingestion/douyin-cdp.ts,登录等待timeoutSec经executionTimeoutMs归一，原300s/240s默认保留，正注入至少120s；poll1s不变。,1fc5456731eb23d05dc0cb0123e13fec07aff86f6149d1ccb77cf8c7e842dca9
+TO-108,frontend,frontend/src/server/ingestion/douyin-cdp.ts,每个实际page建立后applyBrowserTimeoutPolicy：默认action/navigation/screenshot120s，覆盖Playwright隐式30s。,1fc5456731eb23d05dc0cb0123e13fec07aff86f6149d1ccb77cf8c7e842dca9
+TO-109,frontend,frontend/src/server/ingestion/douyin-cdp.ts,executionTimeoutMs：正执行等待≥120000ms；调用者即时取消/原绝对deadline不延长。,1fc5456731eb23d05dc0cb0123e13fec07aff86f6149d1ccb77cf8c7e842dca9
+TO-110,frontend,frontend/src/server/ingestion/douyin-cdp.ts,executionTimeoutMs：正执行等待≥120000ms；调用者即时取消/原绝对deadline不延长。,1fc5456731eb23d05dc0cb0123e13fec07aff86f6149d1ccb77cf8c7e842dca9
+TO-111,frontend,frontend/src/server/ingestion/douyin-cdp.ts,executionTimeoutMs：正执行等待≥120000ms；调用者即时取消/原绝对deadline不延长。,1fc5456731eb23d05dc0cb0123e13fec07aff86f6149d1ccb77cf8c7e842dca9
+TO-112,frontend,frontend/src/server/ingestion/douyin-cdp.ts,executionTimeoutMs：正执行等待≥120000ms；调用者即时取消/原绝对deadline不延长。,1fc5456731eb23d05dc0cb0123e13fec07aff86f6149d1ccb77cf8c7e842dca9
+TO-113,frontend,frontend/src/server/ingestion/douyin-cdp.ts,executionTimeoutMs：正执行等待≥120000ms；调用者即时取消/原绝对deadline不延长。,1fc5456731eb23d05dc0cb0123e13fec07aff86f6149d1ccb77cf8c7e842dca9
+TO-114,frontend,frontend/src/server/ingestion/douyin-cdp.ts,executionTimeoutMs：正执行等待≥120000ms；调用者即时取消/原绝对deadline不延长。,1fc5456731eb23d05dc0cb0123e13fec07aff86f6149d1ccb77cf8c7e842dca9
+TO-115,frontend,frontend/src/server/ingestion/douyin-cdp.ts,executionTimeoutMs：正执行等待≥120000ms；调用者即时取消/原绝对deadline不延长。,1fc5456731eb23d05dc0cb0123e13fec07aff86f6149d1ccb77cf8c7e842dca9
+TO-116,frontend,frontend/src/server/ingestion/douyin-cdp.ts,executionTimeoutMs：正执行等待≥120000ms；调用者即时取消/原绝对deadline不延长。,1fc5456731eb23d05dc0cb0123e13fec07aff86f6149d1ccb77cf8c7e842dca9
+TO-117,frontend,frontend/src/server/ingestion/douyin-cdp.ts,executionTimeoutMs：正执行等待≥120000ms；调用者即时取消/原绝对deadline不延长。,1fc5456731eb23d05dc0cb0123e13fec07aff86f6149d1ccb77cf8c7e842dca9
+TO-118,frontend,frontend/src/server/ingestion/douyin-cdp.ts,"markAndClick timeout=executionTimeoutMs(opts.timeout,5000)，正值至少120s。",1fc5456731eb23d05dc0cb0123e13fec07aff86f6149d1ccb77cf8c7e842dca9
+TO-119,frontend,frontend/src/server/ingestion/douyin-cdp.ts,每个实际page建立后applyBrowserTimeoutPolicy：默认action/navigation/screenshot120s，覆盖Playwright隐式30s。,1fc5456731eb23d05dc0cb0123e13fec07aff86f6149d1ccb77cf8c7e842dca9
+TO-120,frontend,frontend/src/server/ingestion/douyin-cdp.ts,executionTimeoutMs：正执行等待≥120000ms；调用者即时取消/原绝对deadline不延长。,1fc5456731eb23d05dc0cb0123e13fec07aff86f6149d1ccb77cf8c7e842dca9
+TO-121,frontend,frontend/src/server/ingestion/douyin-cdp.ts,executionTimeoutMs：正执行等待≥120000ms；调用者即时取消/原绝对deadline不延长。,1fc5456731eb23d05dc0cb0123e13fec07aff86f6149d1ccb77cf8c7e842dca9
+TO-122,frontend,frontend/src/server/ingestion/douyin-cdp.ts,executionTimeoutMs：正执行等待≥120000ms；调用者即时取消/原绝对deadline不延长。,1fc5456731eb23d05dc0cb0123e13fec07aff86f6149d1ccb77cf8c7e842dca9
+TO-123,frontend,frontend/src/server/ingestion/douyin-cdp.ts,executionTimeoutMs：正执行等待≥120000ms；调用者即时取消/原绝对deadline不延长。,1fc5456731eb23d05dc0cb0123e13fec07aff86f6149d1ccb77cf8c7e842dca9
+TO-124,frontend,frontend/src/server/ingestion/douyin-cdp.ts,DOM有限就绪tries扩展到至少ceil(120000/intervalMs)；原间隔不改变，实际DOM读取耗时另计。,1fc5456731eb23d05dc0cb0123e13fec07aff86f6149d1ccb77cf8c7e842dca9
+TO-125,frontend,frontend/src/server/ingestion/douyin-cdp.ts,DOM有限就绪tries扩展到至少ceil(120000/intervalMs)；原间隔不改变，实际DOM读取耗时另计。,1fc5456731eb23d05dc0cb0123e13fec07aff86f6149d1ccb77cf8c7e842dca9
+TO-126,frontend,frontend/src/server/ingestion/douyin-cdp.ts,executionTimeoutMs：正执行等待≥120000ms；调用者即时取消/原绝对deadline不延长。,1fc5456731eb23d05dc0cb0123e13fec07aff86f6149d1ccb77cf8c7e842dca9
+TO-127,frontend,frontend/src/server/ingestion/douyin-cdp.ts,executionTimeoutMs：正执行等待≥120000ms；调用者即时取消/原绝对deadline不延长。,1fc5456731eb23d05dc0cb0123e13fec07aff86f6149d1ccb77cf8c7e842dca9
+TO-128,frontend,frontend/src/server/ingestion/douyin-cdp.ts,"download外层completionWaitMs([click120s,原生成180s,可选debug截图120s])：默认310s/debug430s；原0禁用保留；DOM准备在timer前。",1fc5456731eb23d05dc0cb0123e13fec07aff86f6149d1ccb77cf8c7e842dca9
+TO-129,frontend,frontend/src/server/ingestion/douyin-cdp.ts,executionTimeoutMs：正执行等待≥120000ms；调用者即时取消/原绝对deadline不延长。,1fc5456731eb23d05dc0cb0123e13fec07aff86f6149d1ccb77cf8c7e842dca9
+TO-130,frontend,frontend/src/server/ingestion/douyin-cdp.ts,executionTimeoutMs：正执行等待≥120000ms；调用者即时取消/原绝对deadline不延长。,1fc5456731eb23d05dc0cb0123e13fec07aff86f6149d1ccb77cf8c7e842dca9
+TO-131,frontend,frontend/src/server/ingestion/douyin-cover-backfill.ts,executionTimeoutMs：正执行等待≥120000ms；调用者即时取消/原绝对deadline不延长。,bb446e890e6716ab3375c63d212e30e1ba20ef3b382edc653250df75ea24567f
+TO-132,frontend,frontend/src/server/ingestion/douyin-request-gateway.ts,maxAcquireWaitMs正值经executionTimeoutMs归一，原15min准入等待默认保留。,dbab0f1eb91fe4746becda0dbef0ed6fb8d3ae080560dd19af0321e68628d79a
+TO-133,frontend,frontend/src/server/ingestion/douyin-traffic.ts,executionTimeoutMs：正执行等待≥120000ms；调用者即时取消/原绝对deadline不延长。,35a0316dcb7dbcbf40c380e4184c7995bf87cdee394766fc74f54982774e505a
+TO-134,frontend,frontend/src/server/ingestion/douyin-traffic.ts,executionTimeoutMs：正执行等待≥120000ms；调用者即时取消/原绝对deadline不延长。,35a0316dcb7dbcbf40c380e4184c7995bf87cdee394766fc74f54982774e505a
+TO-135,frontend,frontend/src/server/ingestion/douyin-traffic.ts,executionTimeoutMs：正执行等待≥120000ms；调用者即时取消/原绝对deadline不延长。,35a0316dcb7dbcbf40c380e4184c7995bf87cdee394766fc74f54982774e505a
+TO-136,frontend,frontend/src/server/persistence-client.ts,登录窗口原15min确认等待保留；用户显式取消即走原handle.cancel。,767eed524653dbf418f3a2ff7732d23c046e17977e692205106901dfc7301afb
+TO-137,frontend,frontend/src/server/persistence-client.ts,executionTimeoutMs：正执行等待≥120000ms；调用者即时取消/原绝对deadline不延长。,767eed524653dbf418f3a2ff7732d23c046e17977e692205106901dfc7301afb
+TO-138,frontend,frontend/src/server/persistence-client.ts,新普通worker与agentic默认30分钟；原ASR/素材/采集30分钟保持。历史冻结deadline和continuous不延长；启动观察30分钟+10秒余量；宿主端口继承原任务剩余期限。,767eed524653dbf418f3a2ff7732d23c046e17977e692205106901dfc7301afb
+TO-139,frontend,frontend/src/server/persistence-client.ts,新普通worker与agentic默认30分钟；原ASR/素材/采集30分钟保持。历史冻结deadline和continuous不延长；启动观察30分钟+10秒余量；宿主端口继承原任务剩余期限。,767eed524653dbf418f3a2ff7732d23c046e17977e692205106901dfc7301afb
+TO-140,frontend,frontend/src/server/persistence-client.ts,新普通worker与agentic默认30分钟；原ASR/素材/采集30分钟保持。历史冻结deadline和continuous不延长；启动观察30分钟+10秒余量；宿主端口继承原任务剩余期限。,767eed524653dbf418f3a2ff7732d23c046e17977e692205106901dfc7301afb
+TO-141,frontend,frontend/src/server/persistence-client.ts,新普通worker与agentic默认30分钟；原ASR/素材/采集30分钟保持。历史冻结deadline和continuous不延长；启动观察30分钟+10秒余量；宿主端口继承原任务剩余期限。,767eed524653dbf418f3a2ff7732d23c046e17977e692205106901dfc7301afb
+TO-142,frontend,frontend/src/server/persistence-client.ts,新普通worker与agentic默认30分钟；原ASR/素材/采集30分钟保持。历史冻结deadline和continuous不延长；启动观察30分钟+10秒余量；宿主端口继承原任务剩余期限。,767eed524653dbf418f3a2ff7732d23c046e17977e692205106901dfc7301afb
+TO-143,frontend,frontend/src/server/persistence-client.ts,新普通worker与agentic默认30分钟；原ASR/素材/采集30分钟保持。历史冻结deadline和continuous不延长；启动观察30分钟+10秒余量；宿主端口继承原任务剩余期限。,767eed524653dbf418f3a2ff7732d23c046e17977e692205106901dfc7301afb
+TO-144,frontend,frontend/src/server/sidecar-lifecycle.ts,sidecar graceful flush总等待120s，退出信号与组内SIGTERM即时；壳外130s覆盖其完整预算。,37716037d3cab602a38c80f97036c75080ef5a37ffe3b7d5974fd4f2ab5b12c7
+TO-145,tooling,mcp-server/src/cli.ts,默认无限持续观察保留；显式--timeout<120秒明确拒绝，提示继续观察原任务ID；到期不取消后台,09b386b9be315b422b419f39c5d48d2ca055f062978ca17c3a197eab72959df1
+TO-146,tooling,.agents/skills/guizang-product-video-skill/scripts/check_environment.py,run默认及调用归一最低120秒；含真实浏览器启动180秒/两个动作各120秒/关闭120秒的run单独570秒并留30秒余量,0d57f6f0db0d68c0af321273fae75b2c8962c01e432c377387d9e3e6607ea011
+TO-147,tooling,.agents/skills/guizang-product-video-skill/scripts/check_environment.py,doctor子进程执行120秒；HyperFrames库中内层未覆写短探针另交主集成pnpm patch,0d57f6f0db0d68c0af321273fae75b2c8962c01e432c377387d9e3e6607ea011
+TO-148,tooling,.github/workflows/channel-package.yml,保留原10分钟，已≥120秒；该策略是独立job/观察/既有高预算，未缩短。,ac819566b17428dd91610a302e6c3a1bfd27fe8a7c2b915442b27517a47d9b23
+TO-149,tooling,.github/workflows/channel-package.yml,保留原300分钟，已≥120秒；该策略是独立job/观察/既有高预算，未缩短。,ac819566b17428dd91610a302e6c3a1bfd27fe8a7c2b915442b27517a47d9b23
+TO-150,tooling,.github/workflows/channel-package.yml,保留原300秒，已≥120秒；该策略是独立job/观察/既有高预算，未缩短。,ac819566b17428dd91610a302e6c3a1bfd27fe8a7c2b915442b27517a47d9b23
+TO-151,tooling,.github/workflows/channel-package.yml,保留原300秒，已≥120秒；该策略是独立job/观察/既有高预算，未缩短。,ac819566b17428dd91610a302e6c3a1bfd27fe8a7c2b915442b27517a47d9b23
+TO-152,tooling,.github/workflows/channel-package.yml,正执行/观察预算升120秒；保留原poll、sleep间隔及媒体输入长度。,ac819566b17428dd91610a302e6c3a1bfd27fe8a7c2b915442b27517a47d9b23
+TO-153,tooling,.github/workflows/commit-activity.yml,保留原10分钟，已≥120秒；该策略是独立job/观察/既有高预算，未缩短。,c1102dae5244956cdbeab949003bc4f35587deb103ca756925dfddcee892c919
+TO-154,tooling,.github/workflows/desktop-release.yml,保留原5分钟，已≥120秒；该策略是独立job/观察/既有高预算，未缩短。,b2837a320f84631237a48867ae441b457001ca8f0ad2851aa03811aea156efe3
+TO-155,tooling,.github/workflows/desktop-release.yml,保留原180分钟，已≥120秒；该策略是独立job/观察/既有高预算，未缩短。,b2837a320f84631237a48867ae441b457001ca8f0ad2851aa03811aea156efe3
+TO-156,tooling,.github/workflows/desktop-release.yml,保留原300秒，已≥120秒；该策略是独立job/观察/既有高预算，未缩短。,b2837a320f84631237a48867ae441b457001ca8f0ad2851aa03811aea156efe3
+TO-157,tooling,.github/workflows/desktop-release.yml,保留原600秒，已≥120秒；该策略是独立job/观察/既有高预算，未缩短。,b2837a320f84631237a48867ae441b457001ca8f0ad2851aa03811aea156efe3
+TO-158,tooling,.github/workflows/desktop-release.yml,保留原120秒，已≥120秒；该策略是独立job/观察/既有高预算，未缩短。,b2837a320f84631237a48867ae441b457001ca8f0ad2851aa03811aea156efe3
+TO-159,tooling,.github/workflows/desktop-release.yml,正执行/观察预算升120秒；保留原poll、sleep间隔及媒体输入长度。,b2837a320f84631237a48867ae441b457001ca8f0ad2851aa03811aea156efe3
+TO-160,tooling,.github/workflows/desktop-release.yml,正执行/观察预算升120秒；保留原poll、sleep间隔及媒体输入长度。,b2837a320f84631237a48867ae441b457001ca8f0ad2851aa03811aea156efe3
+TO-161,tooling,.github/workflows/desktop-release.yml,保留原90分钟，已≥120秒；该策略是独立job/观察/既有高预算，未缩短。,b2837a320f84631237a48867ae441b457001ca8f0ad2851aa03811aea156efe3
+TO-162,tooling,.github/workflows/desktop-release.yml,保留原180分钟，已≥120秒；该策略是独立job/观察/既有高预算，未缩短。,b2837a320f84631237a48867ae441b457001ca8f0ad2851aa03811aea156efe3
+TO-163,tooling,.github/workflows/desktop-release.yml,保留原300秒，已≥120秒；该策略是独立job/观察/既有高预算，未缩短。,b2837a320f84631237a48867ae441b457001ca8f0ad2851aa03811aea156efe3
+TO-164,tooling,.github/workflows/desktop-release.yml,保留原120秒，已≥120秒；该策略是独立job/观察/既有高预算，未缩短。,b2837a320f84631237a48867ae441b457001ca8f0ad2851aa03811aea156efe3
+TO-165,tooling,.github/workflows/desktop-release.yml,正执行/观察预算升120秒；保留原poll、sleep间隔及媒体输入长度。,b2837a320f84631237a48867ae441b457001ca8f0ad2851aa03811aea156efe3
+TO-166,tooling,.github/workflows/desktop-release.yml,保留原10分钟，已≥120秒；该策略是独立job/观察/既有高预算，未缩短。,b2837a320f84631237a48867ae441b457001ca8f0ad2851aa03811aea156efe3
+TO-167,tooling,.github/workflows/harness.yml,保留原340分钟，已≥120秒；该策略是独立job/观察/既有高预算，未缩短。,86e8d6c3a7ad405671328b82d12d48678f41b4ef9590d63e6abf7b4ffeee8842
+TO-168,tooling,.github/workflows/verify.yml,保留原40分钟，已≥120秒；该策略是独立job/观察/既有高预算，未缩短。,64def06184e244623fc8280f3169b55533948a99290d1d289f6fe64225bd938d
+TO-169,tooling,.github/workflows/verify.yml,保留原40分钟，已≥120秒；该策略是独立job/观察/既有高预算，未缩短。,64def06184e244623fc8280f3169b55533948a99290d1d289f6fe64225bd938d
+TO-170,tooling,ai-worker/scripts/browser-runtime-probe.mjs,子进程内启动180秒+连接/建页/三个动作/抽取各120秒+两次关闭各120秒=1170秒；外层1200秒留30秒，不缩短长内层,c097c79a03ffa2f14a8c5e17f15a730a87edb77875fc52cf8edc7257748dab07
+TO-171,tooling,ai-worker/scripts/t829-model-compatibility.ts,网络请求120秒,5ca6467ae8b58005b77c0d0ee8cc2983f825c23d5b19f9cc2b54a416b3ff9b18
+TO-172,tooling,ai-worker/scripts/t829-model-compatibility.ts,可配置默认最低120秒，取消原60秒顶帽，最大Node定时器安全整数2147483647ms,5ca6467ae8b58005b77c0d0ee8cc2983f825c23d5b19f9cc2b54a416b3ff9b18
+TO-173,tooling,ai-worker/scripts/t829-model-compatibility.ts,同一model兼容性执行预算最低120秒，保留更长用户配置,5ca6467ae8b58005b77c0d0ee8cc2983f825c23d5b19f9cc2b54a416b3ff9b18
+TO-174,tooling,backend/scripts/t891-cover-reliability-probe.ts,原默认300秒与上限900秒保留，动态配置下限60升120秒,d78d33a0c4cf2ba135aa3e88c6e1c343d69a3726c8f189537cf02055a0f3c80d
+TO-175,tooling,backend/scripts/t915-postgres-checkpoint-probe.ts,共享agent预算声明120秒；内部步骤须跟随原绝对预算，由主核心分区负责传播,2bf1f5ce77d090ab8cb16f7116429d955dc34c33ef6563c047279cb8153f2a4c
+TO-176,tooling,backend/scripts/t915-postgres-research-evidence-probe.ts,共享agent预算声明120秒，同一budget传播不是独立外层等待帽,995946d4f8063e02667c785c1ec0531522a7ea2e1a86f91d050afd0b1c49e365
+TO-177,tooling,backend/scripts/t915-postgres-tool-host-probe.ts,共享agent预算声明120秒，同一budget传播不是独立外层等待帽,29e8bc6bfda6dfb11ae678500bf1f7a5d6e9a28c1ae05f9fe9e096ca1f6c6c47
+TO-178,tooling,channel-partners/智溯科技/growth-product-config.json,保留原3000秒（50分钟），已≥120秒；该策略是独立job/观察/既有高预算，未缩短。,224348e564149913e456114cee76217dfbc2c93e125b36c8feefbb474e0982f8
+TO-179,tooling,docker-compose.yml,正执行/观察预算升120秒；保留原poll、sleep间隔及媒体输入长度。,bd9ecdf577ac4b8347cd40b8d58f00c8b7178f926ef7d95aa8b03a3cb924c4eb
+TO-180,tooling,docker-compose.yml,正执行/观察预算升120秒；保留原poll、sleep间隔及媒体输入长度。,bd9ecdf577ac4b8347cd40b8d58f00c8b7178f926ef7d95aa8b03a3cb924c4eb
+TO-181,tooling,frontend/scripts/desktop/build-sidecar.mjs,正执行/观察预算升120秒；保留原poll、sleep间隔及媒体输入长度。,a996b9d8c20af648e396d122b31d133b1a3798fb064f31cc14dab44d7552d6ef
+TO-182,tooling,frontend/scripts/desktop/execution-worker-runtime.mjs,普通分层依赖验证执行120秒；CREATOROS_PACKAGE_BUILD_ONLY=1统一跳过额外探针，覆盖两个consumer，不影响入口编译/组装资源检查,f46944d3442ddcace23f591cd8ed5f7700c475cb9d692dbf45feaec665312c58
+TO-183,tooling,frontend/scripts/desktop/node-runtime.mjs,正执行/观察预算升120秒；保留原poll、sleep间隔及媒体输入长度。,f341572d12cc2cb6a30cc18ec4bb2a85978a9e09476c91b05b4882a3c3c816fe
+TO-184,tooling,frontend/scripts/desktop/obfuscate.mjs,readiness独立执行默认/参数floor120秒；不充当后续串行HTTP/浏览器总预算；TCP与readiness共绝对deadline,1c403a8c0fa6bd9b1e59f22f02c48850d258b78b882706611363e1ffcd7195ba
+TO-185,tooling,frontend/scripts/desktop/obfuscate.mjs,取消30秒Math.min帽；导航消费归一floor120秒，Page导航/动作默认同样120秒，启动180秒保留,1c403a8c0fa6bd9b1e59f22f02c48850d258b78b882706611363e1ffcd7195ba
+TO-186,tooling,frontend/scripts/desktop/obfuscate.mjs,body.innerText floor120秒，与导航独立步骤；无更短外层,1c403a8c0fa6bd9b1e59f22f02c48850d258b78b882706611363e1ffcd7195ba
+TO-187,tooling,frontend/scripts/desktop/package.mjs,子TLS fetch AbortSignal120秒，外层Node150秒留启动/结算30秒；两个站点串行各有独立完整150秒,c8eedbe64d1ed947e3d78b8e4bab4d0295197e8e8c324924feb34bb2ff63f00b
+TO-188,tooling,frontend/scripts/desktop/verify-handshake-gate.mjs,readiness150秒绝对deadline，与HTTP观察共享；原绝对deadline最后不足120秒不重置,dd887c6bbf87772e91eaa479da716ccbd4053e9ebab7dfe63f7d295c380a12a6
+TO-189,tooling,frontend/scripts/desktop/verify-handshake-gate.mjs,移除1.5秒独立请求上限，使用readiness绝对deadline剩余值，原120+余量不在每次poll重置,dd887c6bbf87772e91eaa479da716ccbd4053e9ebab7dfe63f7d295c380a12a6
+TO-190,tooling,frontend/scripts/desktop/verify-handshake-gate.mjs,接口HTTP执行120秒，Signal一直覆盖response body读取,dd887c6bbf87772e91eaa479da716ccbd4053e9ebab7dfe63f7d295c380a12a6
+TO-191,tooling,frontend/scripts/t712-video-regression-loop.ts,保留原12分钟，已≥120秒；该策略是独立job/观察/既有高预算，未缩短。,e3fe26a39efeba45a9defacc90087c9448e058cec02910cff716a0cabb690524
+TO-192,tooling,frontend/scripts/t712-video-regression-loop.ts,保留原35分钟，已≥120秒；该策略是独立job/观察/既有高预算，未缩短。,e3fe26a39efeba45a9defacc90087c9448e058cec02910cff716a0cabb690524
+TO-193,tooling,frontend/scripts/visual/capture-current.mjs,原默认120秒保留；执行观察共绝对deadline，child fetch新增剩余Signal使单次网络不能无界穿过外层,82b862c177af1237fa91fef863a057bd47f4caca42a4d30f5e8ba284eed42f9a
+TO-194,tooling,frontend/scripts/visual/capture-current.mjs,复用dev服务器观察原5秒升120秒，shareddeadline Signal,82b862c177af1237fa91fef863a057bd47f4caca42a4d30f5e8ba284eed42f9a
+TO-195,tooling,frontend/scripts/visual/capture-current.mjs,正执行/观察预算升120秒；保留原poll、sleep间隔及媒体输入长度。,82b862c177af1237fa91fef863a057bd47f4caca42a4d30f5e8ba284eed42f9a
+TO-196,tooling,frontend/scripts/visual/capture-current.mjs,正执行/观察预算升120秒；保留原poll、sleep间隔及媒体输入长度。,82b862c177af1237fa91fef863a057bd47f4caca42a4d30f5e8ba284eed42f9a
+TO-197,tooling,frontend/scripts/visual/capture-with-port.mjs,server readiness30升120秒，网络取response body共绝对deadline,430de266e00bbe4191f3761ce21413e9b484b12e6b70a042109ad2b6c5ee9600
+TO-198,tooling,frontend/scripts/visual/capture-with-port.mjs,正执行/观察预算升120秒；保留原poll、sleep间隔及媒体输入长度。,430de266e00bbe4191f3761ce21413e9b484b12e6b70a042109ad2b6c5ee9600
+TO-199,tooling,frontend/scripts/visual/capture-with-port.mjs,正执行/观察预算升120秒；保留原poll、sleep间隔及媒体输入长度。,430de266e00bbe4191f3761ce21413e9b484b12e6b70a042109ad2b6c5ee9600
+TO-200,tooling,mcp-server/scripts/build-runtime.mjs,正执行/观察预算升120秒；保留原poll、sleep间隔及媒体输入长度。,312cf5a13083730702e8e5e92f042c317b8e24737fdd17ecff7e0a7078c13fdb
+TO-201,tooling,mcp-server/scripts/smoke.mjs,正执行/观察预算升120秒；保留原poll、sleep间隔及媒体输入长度。,cff4d907b8905da7f5e4ceef3fd560e10593a9a81152d3dba874dc87e3853894
+TO-202,integration,orchestrator/process/render-t802-samples.mjs,原180/240/300/600秒治理渲染/研究流程预算已>=120秒，保留更长值，不缩短。,f9ac88c4de58c6dcbac7b10134efd5a0dba7058998cd9e314e71cb7d3214764c
+TO-203,integration,orchestrator/process/research-gate.mjs,原180/240/300/600秒治理渲染/研究流程预算已>=120秒，保留更长值，不缩短。,75203cb538a65b776ee1b75db08b4335b4cbb29fd9e829792565f669891d9ab6
+TO-204,integration,orchestrator/process/t802-scene-graph-loop.ts,原180/240/300/600秒治理渲染/研究流程预算已>=120秒，保留更长值，不缩短。,b8525cebc83462adf142b012d7c53f763eda25ba6d154b27754e28b257d1559d
+TO-205,integration,orchestrator/process/verify-t842-opening-preview.mjs,原180/240/300/600秒治理渲染/研究流程预算已>=120秒，保留更长值，不缩短。,106f3439b6b98e1ce40c2721eed5c36cc0fafc78f9fd64d12228e91995161e88
+TO-206,integration,orchestrator/process/verify-t858-unified-stage-preview.mjs,原180/240/300/600秒治理渲染/研究流程预算已>=120秒，保留更长值，不缩短。,4e194aa329d1b239608d6ce2b8bb2ec56530982d8ae073a23c7e12b3853b68dc
+TO-207,integration,tools/diag-douyin-page.mjs,诊断实际context/page action/navigation以及页面goto从60秒改为120秒；轮询间隔不变。,f7f133aedead2eb1b0533d51788f60743dceea545ae80b275ff8c386cf0c762b
+TO-208,tooling,tools/windows-closure-rat/inspect-installed-webview.mjs,CDP target discovery30升120秒，三个host串行观察共享绝对deadline，耗尽即停止,3ab07531b447bc613dac2fd9c0016882ccb3d8fe2af390aa05221f5b429357ca
+TO-209,tooling,tools/windows-closure-rat/inspect-installed-webview.mjs,CDP连接120秒，超时关闭socket，成功/错误清理timer,3ab07531b447bc613dac2fd9c0016882ccb3d8fe2af390aa05221f5b429357ca
+TO-210,tooling,tools/windows-closure-rat/inspect-installed-webview.mjs,DOM读取120秒，超时关闭socket，响应清理timer,3ab07531b447bc613dac2fd9c0016882ccb3d8fe2af390aa05221f5b429357ca
+TO-211,tooling,tools/windows-closure-rat/runtime-smoke.mjs,Worker线程模块加载120秒,21c173783e9cd61184228b108845cf736bfee3793acab2075dbd7646077f4a14
+TO-212,tooling,tools/windows-closure-rat/runtime-smoke.mjs,外层Node150秒覆盖Worker120秒+启动结束30秒,21c173783e9cd61184228b108845cf736bfee3793acab2075dbd7646077f4a14
+TO-213,tooling,tools/windows-closure-rat/runtime-smoke.mjs,正执行/观察预算升120秒；保留原poll、sleep间隔及媒体输入长度。,21c173783e9cd61184228b108845cf736bfee3793acab2075dbd7646077f4a14
+TO-214,tooling,tools/windows-closure-rat/runtime-smoke.mjs,正执行/观察预算升120秒；保留原poll、sleep间隔及媒体输入长度。,21c173783e9cd61184228b108845cf736bfee3793acab2075dbd7646077f4a14
+TO-215,tooling,tools/windows-closure-rat/runtime-smoke.mjs,取消独立spawnSync120秒帽（Node缺省无限契约）；显式HyperFrames各步骤默认120/300/600秒且更长可配置值保留，避免未知多帧串行重试被外层先杀；CI整体deadline保持,21c173783e9cd61184228b108845cf736bfee3793acab2075dbd7646077f4a14
+TO-216,tooling,tools/windows-closure-rat/runtime-smoke.mjs,readiness原120升150秒，fetch/HTMLbody共享同一绝对deadline，原deadline不足120秒不重新floor,21c173783e9cd61184228b108845cf736bfee3793acab2075dbd7646077f4a14
+TO-217,tooling,tools/windows-closure-rat/runtime-smoke.mjs,正执行/观察预算升120秒；保留原poll、sleep间隔及媒体输入长度。,21c173783e9cd61184228b108845cf736bfee3793acab2075dbd7646077f4a14
+TO-218,tooling,tools/windows-closure-rat/worker-smoke.mjs,ready默认/动态短值归一120秒，真实Worker握手原结果/异常保留,cc266d88f77870d72be51715fe4fa0636c310dc1c77df4a87087bfc1a13c4412
+TO-219,tooling,tools/windows-closure-rat/worker-smoke.mjs,退出默认/动态短值归一120秒，首次disconnect即时发出；强杀后的收集再120秒，不延迟请求用户取消,cc266d88f77870d72be51715fe4fa0636c310dc1c77df4a87087bfc1a13c4412
+TO-220,tooling,tools/windows-runtime-rat/run.ps1,Wait-File默认及参数floor120秒，poll200ms保持,d6634eca27328287b0e343e2eeda9c5ad4f369633c87f1c7df4525c08465c042
+TO-221,tooling,tools/windows-runtime-rat/run.ps1,Wait-LogPattern默认及参数floor120秒，poll250ms保持,d6634eca27328287b0e343e2eeda9c5ad4f369633c87f1c7df4525c08465c042
+TO-222,tooling,tools/windows-runtime-rat/run.ps1,proxy结果观察120秒，并统一经Wait-File floor处理,d6634eca27328287b0e343e2eeda9c5ad4f369633c87f1c7df4525c08465c042

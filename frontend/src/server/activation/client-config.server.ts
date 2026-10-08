@@ -1,3 +1,4 @@
+import { executionTimeoutMs } from "@creatoros/contract/timeout-policy";
 import "server-only";
 
 import {
@@ -504,7 +505,7 @@ async function fetchNoRedirect(
     return await fetchImpl(input, {
       ...init,
       redirect: "manual",
-      signal: AbortSignal.timeout(10_000),
+      signal: AbortSignal.timeout(executionTimeoutMs(10_000)),
     });
   } catch {
     return fail(

@@ -160,7 +160,7 @@ export async function runIntelligenceSourceTask(
   const control = new AbortController();
   let leaseLost = false;
   let heartbeatStopped = false;
-  let heartbeatInFlight: Promise<void> = Promise.resolve();
+  let heartbeatInFlight: Promise<void> | undefined;
   let parentCancellation: Promise<void> | undefined;
   let adapterPending:Promise<IntelligenceAdapterEnvelope>|undefined;
   const leaseInput = {taskId: input.taskId, workerId: claim.lease.workerId, attempt: claim.lease.attempt};
@@ -185,17 +185,16 @@ export async function runIntelligenceSourceTask(
   input.signal?.addEventListener("abort", onParentAbort, {once: true});
   if (input.signal?.aborted) onParentAbort();
   const heartbeatTimer = setInterval(() => {
-    if (heartbeatStopped) return;
-    heartbeatInFlight = heartbeatInFlight.then(async () => {
-      if (heartbeatStopped || control.signal.aborted) return;
+    if (heartbeatStopped || heartbeatInFlight || control.signal.aborted) return;
+    // 慢数据库心跳只占一个在途槽；跳过的间隔不形成待执行 Promise 链。
+    heartbeatInFlight = (async () => {
       try {
         const task = await deps.tasks.heartbeat({...leaseInput, leaseSeconds: SOURCE_SYNC_LEASE_SECONDS});
-        if (task.status === "pause_requested" || task.status === "cancel_requested") control.abort();
+        if (!heartbeatStopped && (task.status === "pause_requested" || task.status === "cancel_requested")) control.abort();
       } catch {
-        leaseLost = true;
-        control.abort();
+        if (!heartbeatStopped) {leaseLost = true; control.abort();}
       }
-    });
+    })().finally(() => {heartbeatInFlight = undefined;});
   }, SOURCE_SYNC_HEARTBEAT_MS);
   let abortListener: (() => void) | undefined;
   try {
@@ -215,7 +214,12 @@ export async function runIntelligenceSourceTask(
       if (control.signal.aborted) return;
       envelope = failureEnvelope(sourceInput.source, deps.now?.() ?? new Date().toISOString(), error);
     }
-    await heartbeatInFlight;
+    if (heartbeatInFlight) await new Promise<void>(resolve => {
+      const done = () => {control.signal.removeEventListener("abort", done); resolve();};
+      control.signal.addEventListener("abort", done, {once: true});
+      void heartbeatInFlight!.then(done);
+      if (control.signal.aborted) done();
+    });
     if (control.signal.aborted || leaseLost) return;
     await deps.intelligence.applyAdapterBatch(ctx, {
       runId: input.runId, lease: claim.lease, envelope, terminal: true,
@@ -228,7 +232,8 @@ export async function runIntelligenceSourceTask(
     input.signal?.removeEventListener("abort", onParentAbort);
     if (abortListener) control.signal.removeEventListener("abort", abortListener);
     if(input.cancelOnAbort===false&&adapterPending)await adapterPending.catch(()=>{});
-    await heartbeatInFlight;
+    // 明确取消可以先确认原租约终态；已发出的 DB 查询不能物理中断，但不会再触发新心跳。
+    if (!control.signal.aborted || input.cancelOnAbort === false) await heartbeatInFlight;
     if (parentCancellation) await parentCancellation;
     if (control.signal.aborted && !leaseLost) {
       const current = await deps.tasks.get(ctx, input.taskId);

@@ -1,10 +1,11 @@
+import {executionTimeoutMs} from "@creatoros/contract/timeout-policy";
 import { execFile, ChildProcess } from "node:child_process";
 import { promisify } from "node:util";
 
 const exec = promisify(execFile);
 type Identity = { pid: number; ppid: number; pgid: number; started: string; state: string };
 async function snapshot(): Promise<Map<number, Identity>> {
-  const { stdout } = await exec("ps", ["-axo", "pid=,ppid=,pgid=,lstart=,stat="], { timeout: 3000, maxBuffer: 8 * 1024 * 1024, env: { ...process.env, LC_ALL: "C" } });
+  const { stdout } = await exec("ps", ["-axo", "pid=,ppid=,pgid=,lstart=,stat="], { timeout: executionTimeoutMs(), maxBuffer: 8 * 1024 * 1024, env: { ...process.env, LC_ALL: "C" } });
   const rows = new Map<number, Identity>();
   for (const line of stdout.split("\n")) {
     const match = line.trim().match(/^(\d+)\s+(\d+)\s+(\d+)\s+(\S+\s+\S+\s+\d+\s+\S+\s+\d+)\s+(\S+)$/);
@@ -25,7 +26,7 @@ export async function killWorkerProcessTree(child: ChildProcess): Promise<void> 
   if (!live(child)) throw new Error("WORKER_TREE_ROOT_NOT_LIVE");
   const pid = child.pid!;
   if (process.platform === "win32") {
-    await exec("taskkill", ["/PID", String(pid), "/T", "/F"], { timeout: 10000, windowsHide: true });
+    await exec("taskkill", ["/PID", String(pid), "/T", "/F"], { timeout: executionTimeoutMs(), windowsHide: true });
     return;
   }
   const before = (await snapshot()).get(pid);
@@ -74,7 +75,8 @@ export async function killWorkerProcessTree(child: ChildProcess): Promise<void> 
       killed.add(identity.pid);
     }
     // kill已发出不代表清理完成；僵尸不再执行，待OS/父进程回收。
-    for (let round = 0; round < 40; round++) {
+    const exitDeadline = Date.now() + executionTimeoutMs();
+    while (Date.now() < exitDeadline) {
       const rows = await snapshot();
       if ([...frozen.values()].every(row => !same(row, rows.get(row.pid)) || rows.get(row.pid)!.state.includes("Z"))) return;
       await new Promise(resolve => setTimeout(resolve, 25));

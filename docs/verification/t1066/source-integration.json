@@ -1,0 +1,48 @@
+{
+  "schema": "source-integration-preservation/v1",
+  "observed_at": "2026-10-06T08:02:23.378359+00:00",
+  "source_commit": "38fa41fe4dd6f5a029c5ab647e044f00589aefbd",
+  "primary_branch": "codex/t1062-account-group-snapshot",
+  "stash_preserved": true,
+  "original_untracked_backup_manifest": "/tmp/creatoros-t1066-root-preserve-untracked/manifest.json",
+  "scope": "整合前原任务和审计事件逐行核对，仅主树源码整合；非安装、发布或UI验收",
+  "post_integration_review_rebind": {
+    "task_id": "T-1063",
+    "task_status_changed": false,
+    "original_raw_event_preserved": "docs/verification/t1063/import-original/review-event-original.ndjson",
+    "original_snapshot_preserved": "docs/verification/t1063/import-original/release-pipeline.review.original.md",
+    "current_receipt": "PASS[REV:fad55dd1ffd9]",
+    "reason": "通过项目工具把已有真实证据绑定当前线性审计链，非新增独立评审"
+  },
+  "unchanged_original_task_rows_before_receipt_rebind": {
+    "T-1062": true,
+    "T-1063": true
+  },
+  "original_audit_events_before_receipt_rebind": {
+    "events.ndjson": {
+      "original_lines": 1129,
+      "missing_original_lines": 0
+    },
+    "review-events.ndjson": {
+      "original_lines": 104,
+      "missing_original_lines": 0
+    }
+  },
+  "final_preservation": {
+    "original_task_fields": {
+      "T-1062": {
+        "status_and_other_fields_preserved": true,
+        "whole_row_unchanged": true
+      },
+      "T-1063": {
+        "status_and_other_fields_preserved": true,
+        "whole_row_unchanged": false
+      }
+    },
+    "original_events_missing_from_current_ledger_and_original_archive": {
+      "events.ndjson": 0,
+      "review-events.ndjson": 0
+    },
+    "committed_review_history_unchanged": true
+  }
+}

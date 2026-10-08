@@ -1,0 +1,1 @@
+src/server/chat-execution-stream.test.ts(70,236): error TS2698: Spread types may only be created from object types.

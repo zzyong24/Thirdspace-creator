@@ -28,6 +28,7 @@ export function probeNodeMajor(executable) {
   if (!existsSync(executable)) return null;
   const result = spawnSync(executable, ["-p", "process.versions.node"], {
     encoding: "utf8",
+    timeout: 120_000,
   });
   if (result.status !== 0) return null;
   return parseNodeMajor(result.stdout);

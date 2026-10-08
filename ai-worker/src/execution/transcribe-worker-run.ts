@@ -2,7 +2,7 @@ import {createTranscribeWorkerSource} from "./transcribe-worker-source";
 import {z} from 'zod';
 import {transcribeItemReceiptSchema,transcribeSourceSchema,type transcribeTaskInputSchema,type WorkerPort} from '@creatoros/contract/execution-worker';
 import {createTranscribeAudioExtractor} from '../runtime/transcribe-audio-extract';
-import {createTranscribeAsrRegistry} from './transcribe-asr-registry';
+import {createTranscribeAsrRegistry,closeTranscribeAsrRegistry} from './transcribe-asr-registry';
 import {runTranscribeAsrInWorker} from './transcribe-asr-run';
 import {runTranscribePostprocessInWorker} from './transcribe-postprocess-run';
 import {GenerationFailure} from './generation-error';
@@ -16,6 +16,7 @@ export async function runTranscribeInWorker(input:z.infer<typeof transcribeTaskI
  };
  const source=createTranscribeWorkerSource(signal,call);
  const extract=createTranscribeAudioExtractor(),registry=createTranscribeAsrRegistry();
+ try{
  const ack=z.object({ok:z.literal(true)}).strict();
  for(const awemeId of input.awemeIds){
    signal.throwIfAborted();const state=await guarded(itemState,'prepareTranscribeItem',{awemeId});
@@ -44,5 +45,5 @@ export async function runTranscribeInWorker(input:z.infer<typeof transcribeTaskI
    }
   }
   return await guarded(z.object({status:z.enum(['succeeded','failed'])}).strict(),'completeTranscribeTask',{});
+ }finally{await closeTranscribeAsrRegistry(registry);}
 }
-

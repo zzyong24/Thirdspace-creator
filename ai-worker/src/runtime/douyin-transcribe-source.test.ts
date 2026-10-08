@@ -23,11 +23,11 @@ describe("Worker 抖音转写取流", () => {
       expect(fetcher).toHaveBeenCalledOnce(); expect(channel).toHaveBeenCalledOnce(); expect(detail).not.toHaveBeenCalled();
     } finally { vi.unstubAllGlobals(); }
   });
-  it("匿名请求保留 30 秒超时边界", async () => {
+  it("匿名请求遵循两分钟超时边界", async () => {
     const timeout = vi.spyOn(AbortSignal, "timeout");
     try {
       await fetchDouyinVideoUrl("timeout", {fetch:vi.fn(async()=>new Response(html(video))) as typeof fetch});
-      expect(timeout).toHaveBeenCalledWith(30_000);
+      expect(timeout).toHaveBeenCalledWith(120_000);
     } finally { timeout.mockRestore(); }
   });
   it("解析失败回退时保留账号、网关、取消信号", async () => {

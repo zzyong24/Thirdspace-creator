@@ -46,13 +46,13 @@ it("正常运行时发送失败仍强制清理", async () => {
   await f.supervisor.stop();
 });
 it("不响应SIGTERM时仍按grace执行强制清理", async () => {
-  const f = fixture(false); await f.supervisor.start();
-  await f.supervisor.stop(); expect(mocks.killTree).toHaveBeenCalledTimes(1);
+  vi.useFakeTimers();const f = fixture(false);const started=f.supervisor.start();await vi.advanceTimersByTimeAsync(0);await started;
+  const stopping=f.supervisor.stop();await vi.advanceTimersByTimeAsync(120_000);await stopping;expect(mocks.killTree).toHaveBeenCalledTimes(1);
 });
 it("grace整树清理失败继续传播，不伪造停止证明", async () => {
-  const f = fixture(false); await f.supervisor.start();
+  vi.useFakeTimers();const f = fixture(false);const started=f.supervisor.start();await vi.advanceTimersByTimeAsync(0);await started;
   const error = new Error("WORKER_TREE_OWNER_UNVERIFIED"); mocks.killTree.mockRejectedValue(error);
-  await expect(f.supervisor.stop()).rejects.toBe(error);
+  const stopping=f.supervisor.stop(),rejected=expect(stopping).rejects.toBe(error);await vi.advanceTimersByTimeAsync(120_000);await rejected;
   expect(await f.supervisor.stopExecutionTree(ref)).toBe(false);
   f.exit();
 });

@@ -1,3 +1,4 @@
+import { renderProbeOptions } from "./render-probe-policy.mjs";
 import { smokeWorker } from "./worker-smoke.mjs";
 import {
   copyFileSync,
@@ -201,7 +202,7 @@ const worker = new Worker(${JSON.stringify(whisperWorkerSource)}, {
     runtimeRoot: ${JSON.stringify(runtimeRoot)},
   },
 });
-const timer = setTimeout(() => { console.error("worker-timeout"); process.exit(2); }, 30000);
+const timer = setTimeout(() => { console.error("worker-timeout"); process.exit(2); }, 120_000);
 worker.once("message", async (message) => {
   clearTimeout(timer);
   await worker.terminate();
@@ -217,7 +218,7 @@ const whisperWorkerResult = spawnSync(smokeNode, ["-e", whisperWorkerProbe], {
     SystemRoot: process.env.SystemRoot,
     CREATOROS_RUNTIME_ROOT: runtimeRoot,
   },
-  timeout: 35_000,
+  timeout: 150_000,
 });
 if (
   whisperWorkerResult.status !== 0 ||
@@ -253,7 +254,7 @@ const render = spawnSync(
     SystemRoot: process.env.SystemRoot,
     CREATOROS_RUNTIME_ROOT: runtimeRoot,
   },
-  timeout: 30_000,
+  timeout: 120_000,
   },
 );
 if (
@@ -275,7 +276,7 @@ for (const [tool, toolPath] of [
 ]) {
   const probe = spawnSync(toolPath, ["-version"], {
     encoding: "utf8",
-    timeout: 30_000,
+    timeout: 120_000,
   });
   if (probe.status !== 0 || !`${probe.stdout}`.startsWith(`${tool} version`)) {
     throw new Error(
@@ -292,6 +293,8 @@ const browser = await playwright.chromium.launch({ headless: true });
 const chromiumPath = playwright.chromium.executablePath();
 try {
   const page = await browser.newPage();
+  page.setDefaultTimeout(120_000);
+  page.setDefaultNavigationTimeout(120_000);
   await page.setContent("<title>CreatorOS RAT</title><main>ready</main>");
   if ((await page.title()) !== "CreatorOS RAT") {
     throw new Error("[closure-rat] Chromium 页面 smoke 失败");
@@ -353,7 +356,7 @@ const renderVideo = spawnSync(
   ],
   {
     encoding: "utf8",
-    env: {
+    ...renderProbeOptions({
       PATH: `${mediaBin}${delimiter}${process.env.PATH ?? ""}`,
       SystemRoot: process.env.SystemRoot,
       CREATOROS_RUNTIME_ROOT: runtimeRoot,
@@ -361,8 +364,7 @@ const renderVideo = spawnSync(
       HYPERFRAMES_FFMPEG_PATH: ffmpegPath,
       HYPERFRAMES_FFPROBE_PATH: ffprobePath,
       HYPERFRAMES_TELEMETRY: "0",
-    },
-    timeout: 120_000,
+    }, process.env),
   },
 );
 if (
@@ -419,11 +421,11 @@ sidecar.stdout.on("data", (chunk) => serverLogs.push(`${chunk}`));
 sidecar.stderr.on("data", (chunk) => serverLogs.push(`${chunk}`));
 let mainHtml = "";
 try {
-  const deadline = Date.now() + 120_000;
+  const deadline = Date.now() + 150_000;
   while (Date.now() < deadline) {
     if (sidecar.exitCode !== null) break;
     try {
-      const response = await fetch(`http://127.0.0.1:${port}/`);
+      const response = await fetch(`http://127.0.0.1:${port}/`, { signal: AbortSignal.timeout(Math.max(1, deadline - Date.now())) });
       if (response.ok) {
         mainHtml = await response.text();
         if (mainHtml.includes(expectedMainTitle)) break;
@@ -435,7 +437,7 @@ try {
   }
   if (!mainHtml.includes(expectedMainTitle)) {
     throw new Error(
-      `[closure-rat] Next 主页面 120 秒内未就绪(expectedTitle=${expectedMainTitle}, exit=${sidecar.exitCode})\n${serverLogs.join("").slice(-8000)}`,
+      `[closure-rat] Next 主页面 150 秒内未就绪(expectedTitle=${expectedMainTitle}, exit=${sidecar.exitCode})\n${serverLogs.join("").slice(-8000)}`,
     );
   }
   record(
@@ -459,7 +461,7 @@ try {
     gracefulShutdownCompleted = await Promise.race([
       exitPromise,
       new Promise((resolveWait) =>
-        setTimeout(() => resolveWait(false), 10_000),
+        setTimeout(() => resolveWait(false), 120_000),
       ),
     ]);
   }
@@ -467,7 +469,7 @@ try {
   rmSync(tempRoot, { recursive: true, force: true });
   if (requestedWindowsShutdown && !gracefulShutdownCompleted) {
     throw new Error(
-      "[closure-rat] Windows sidecar 未在停机哨兵后 10 秒内优雅退出",
+      "[closure-rat] Windows sidecar 未在停机哨兵后 120 秒内优雅退出",
     );
   }
   if (requestedWindowsShutdown) {

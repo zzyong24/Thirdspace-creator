@@ -23,6 +23,10 @@
     "./model-probe-io": {
       "types": "./src/internal/model-probe-io.ts",
       "default": "./src/internal/model-probe-io.ts"
+    },
+    "./timeout-policy": {
+      "types": "./src/timeout-policy.ts",
+      "default": "./src/timeout-policy.ts"
     }
   },
   "scripts": {

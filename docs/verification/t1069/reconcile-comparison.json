@@ -1,0 +1,13 @@
+{
+  "previous": "docs/verification/t1068/reconcile.log",
+  "current": "docs/verification/t1069/reconcile.log",
+  "previousErrors": 34,
+  "currentErrors": 34,
+  "newErrors": [],
+  "resolvedErrors": [],
+  "retainedRootTasks": [
+    "T-916",
+    "T-1015",
+    "T-1018"
+  ]
+}

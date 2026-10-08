@@ -45,6 +45,9 @@ export const WORKSPACE_OPERATION_SCOPES = {
   "analytics.traffic.refresh": "group",
   "analytics.publications.get": "group",
   "analytics.projects.get": "project-derived",
+  "analytics.comments.diagnose": "platform-account",
+  "analytics.comments.failures.list": "platform-account",
+  "analytics.comments.retry": "platform-account",
   // artifacts
   "artifacts.list": "project-derived",
   "artifacts.create": "project-derived",
@@ -449,4 +452,13 @@ export const WORKSPACE_OPERATION_SCOPES = {
   "assets.visualTemplates.list": "group",
   "assets.visualTemplates.save": "group",
   "assets.visualTemplates.remove": "group",
+  // workbench — 既有公共入口及原任务/会话均按真实平台账号验证。
+  "workbench.tasks.inspect": "platform-account",
+  "workbench.tasks.events": "platform-account",
+  "workbench.capabilities.list": "platform-account",
+  "workbench.artifacts.list": "platform-account",
+  "workbench.artifacts.read": "platform-account",
+  "workbench.artifacts.render": "platform-account",
+  "workbench.artifacts.reconcile": "platform-account",
+  "workbench.files.reconcile": "platform-account",
 } as const satisfies Record<EndpointId, WorkspaceOperationScope>;

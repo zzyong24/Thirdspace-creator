@@ -1,0 +1,211 @@
+[
+  {
+    "flow": "radar",
+    "mode": "success",
+    "requests": 1,
+    "servedResponses": [
+      {
+        "status": 200,
+        "format": "sse",
+        "fullContent": true
+      }
+    ],
+    "asrRead": [],
+    "artifacts": [],
+    "savedResults": [
+      "checkpoint",
+      "result"
+    ],
+    "nodeProbe": null,
+    "hostErrors": [],
+    "runtimeStatus": "succeeded",
+    "errorCode": null,
+    "errorMessage": null,
+    "callStatuses": [
+      "settled"
+    ],
+    "diagnostic": [],
+    "stopReason": "completed"
+  },
+  {
+    "flow": "radar",
+    "mode": "http-401",
+    "requests": 1,
+    "servedResponses": [
+      {
+        "status": 401,
+        "format": "json-error",
+        "fullContent": false
+      }
+    ],
+    "asrRead": [],
+    "artifacts": [],
+    "savedResults": [],
+    "nodeProbe": null,
+    "hostErrors": [],
+    "runtimeStatus": "waiting_user",
+    "errorCode": "auth_401",
+    "errorMessage": "执行停止，等待恢复或诊断",
+    "callStatuses": [
+      "rejected"
+    ],
+    "diagnostic": [
+      "[ai-model-stream] output=false class=Error reason=auth_401 status=401 message=\"401: {\\\"type\\\":\\\"fixture_rejection\\\",\\\"message\\\":\\\"isolated fixture rejection\\\"}\""
+    ],
+    "stopReason": "waiting_user"
+  },
+  {
+    "flow": "radar",
+    "mode": "http-429",
+    "requests": 1,
+    "servedResponses": [
+      {
+        "status": 429,
+        "format": "json-error",
+        "fullContent": false
+      }
+    ],
+    "asrRead": [],
+    "artifacts": [],
+    "savedResults": [],
+    "nodeProbe": null,
+    "hostErrors": [],
+    "runtimeStatus": "retry_wait",
+    "errorCode": "http_429",
+    "errorMessage": "供应商明确拒绝，等待重试时间到达",
+    "callStatuses": [
+      "rejected"
+    ],
+    "diagnostic": [
+      "[ai-model-stream] output=false class=Error reason=http_429 status=429 message=\"429: {\\\"type\\\":\\\"fixture_rejection\\\",\\\"message\\\":\\\"isolated fixture rejection\\\"}\""
+    ],
+    "stopReason": "retry_wait"
+  },
+  {
+    "flow": "radar",
+    "mode": "http-503",
+    "requests": 1,
+    "servedResponses": [
+      {
+        "status": 503,
+        "format": "json-error",
+        "fullContent": false
+      }
+    ],
+    "asrRead": [],
+    "artifacts": [],
+    "savedResults": [],
+    "nodeProbe": null,
+    "hostErrors": [],
+    "runtimeStatus": "retry_wait",
+    "errorCode": "http_503",
+    "errorMessage": "供应商明确拒绝，等待重试时间到达",
+    "callStatuses": [
+      "rejected"
+    ],
+    "diagnostic": [
+      "[ai-model-stream] output=false class=Error reason=http_503 status=503 message=\"503: {\\\"type\\\":\\\"fixture_rejection\\\",\\\"message\\\":\\\"isolated fixture rejection\\\"}\""
+    ],
+    "stopReason": "retry_wait"
+  },
+  {
+    "flow": "radar",
+    "mode": "disconnect",
+    "requests": 1,
+    "servedResponses": [],
+    "asrRead": [],
+    "artifacts": [],
+    "savedResults": [],
+    "nodeProbe": null,
+    "hostErrors": [],
+    "runtimeStatus": "unknown_result",
+    "errorCode": "MODEL_RESULT_UNKNOWN",
+    "errorMessage": "服务尚未返回完整结果，任务已暂停，已完成内容保留",
+    "callStatuses": [
+      "unknown"
+    ],
+    "diagnostic": [
+      "[ai-model-stream] output=false class=Error reason=unknown message=\"Connection error.\""
+    ],
+    "stopReason": "unknown_result"
+  },
+  {
+    "flow": "radar",
+    "mode": "partial-disconnect",
+    "requests": 1,
+    "servedResponses": [
+      {
+        "status": 200,
+        "format": "sse",
+        "fullContent": false
+      }
+    ],
+    "asrRead": [],
+    "artifacts": [],
+    "savedResults": [],
+    "nodeProbe": null,
+    "hostErrors": [],
+    "runtimeStatus": "unknown_result",
+    "errorCode": "MODEL_RESULT_UNKNOWN",
+    "errorMessage": "服务尚未返回完整结果，任务已暂停，已完成内容保留",
+    "callStatuses": [
+      "unknown"
+    ],
+    "diagnostic": [
+      "[ai-model-stream] output=true class=Error reason=http_200 status=200 message=\"terminated\""
+    ],
+    "stopReason": "unknown_result"
+  },
+  {
+    "flow": "radar",
+    "mode": "json-instead-of-sse",
+    "requests": 1,
+    "servedResponses": [
+      {
+        "status": 200,
+        "format": "json-completion",
+        "fullContent": true
+      }
+    ],
+    "asrRead": [],
+    "artifacts": [],
+    "savedResults": [],
+    "nodeProbe": null,
+    "hostErrors": [],
+    "runtimeStatus": "unknown_result",
+    "errorCode": "MODEL_RESULT_UNKNOWN",
+    "errorMessage": "服务尚未返回完整结果，任务已暂停，已完成内容保留",
+    "callStatuses": [
+      "unknown"
+    ],
+    "diagnostic": [
+      "[ai-model-stream] output=false class=Error reason=http_200 status=200 message=\"Stream ended without finish_reason\""
+    ],
+    "stopReason": "unknown_result"
+  },
+  {
+    "flow": "transcribe",
+    "mode": "success",
+    "requests": 0,
+    "servedResponses": [],
+    "asrRead": [
+      "fixture-one"
+    ],
+    "artifacts": [],
+    "savedResults": [],
+    "nodeProbe": {
+      "applied": false,
+      "transcript": "这是一段已经识别完成的转录原文",
+      "reason": "模型调用失败:结构化节点缺少 schema validator"
+    },
+    "hostErrors": [
+      "Error: 未知回执不可保存"
+    ],
+    "runtimeStatus": "unknown_result",
+    "errorCode": "TRANSCRIPT_POSTPROCESS_RECEIPT_UNKNOWN",
+    "errorMessage": "服务尚未返回完整结果，任务已暂停，已完成内容保留",
+    "callStatuses": [],
+    "diagnostic": [],
+    "stopReason": "unknown_result"
+  }
+]

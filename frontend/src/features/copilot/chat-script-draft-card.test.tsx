@@ -35,6 +35,16 @@ vi.mock("@/lib/contract-client", () => ({
 
 import { ChatScriptDraftCard } from "./chat-script-draft-card";
 import { SCRIPT_WRITE_EVENT } from "@/features/script/script-write-signal";
+it("T-1073 历史成功整稿只恢复读取一次，立即显示已完成",async()=>{
+ vi.useFakeTimers();
+ getTask.mockResolvedValue({status:'succeeded'});
+ const {act}=await import('@testing-library/react');
+ render(<ChatScriptDraftCard taskId="completed-original" projectId="project" error={null}/>);
+ await act(async()=>{await vi.advanceTimersByTimeAsync(360000);});
+ expect(getTask).toHaveBeenCalledTimes(1);
+ expect(document.querySelector('[data-slot="chat-script-done"]')).not.toBeNull();
+ expect(document.querySelector('[data-slot="task-observation-paused"]')).toBeNull();
+});
 
 const CANDIDATE_SECTIONS = [
   { heading: "1. 开场(0-3s)", body: "口播:90% 的文档没人看完" },

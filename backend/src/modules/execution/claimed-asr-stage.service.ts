@@ -1,3 +1,4 @@
+import {transcribePreparationError} from "./transcribe-stage-error";
 import {isDeepStrictEqual} from 'node:util';
 import {eq,executionTasks,type Db} from '@creatoros/backend';
 import type {RequestContext} from '@creatoros/contract';
@@ -39,6 +40,7 @@ export function createClaimedAsrStageService(db:Db,deps:ClaimedAsrStageDeps){
    return {...bound,input,task:scope.task};
   });
   let completed:string|null|undefined,closed=false,persisted:string|undefined,sourceError:unknown;
+  let originalDeadlineAt:number|null=null;
   const readResult=async()=>{
    const {payload}=await verify();
    if((payload.asrSourceSkips as Record<string,unknown>|undefined)?.[awemeId]==='IMAGE_ALBUM')return null;
@@ -49,6 +51,7 @@ export function createClaimedAsrStageService(db:Db,deps:ClaimedAsrStageDeps){
    const initial=await verify();await ledger.initializeBudget(ref);
    completed=await readResult();if(completed!==undefined)return completed;
    const state=await ledger.inspect(ref);
+   originalDeadlineAt=state.deadlineAt===null?null:Date.parse(state.deadlineAt);
    const reason=await deps.runWorker({ref,deadlineAt:state.deadlineAt === null ? null : Date.parse(state.deadlineAt),verify,isClosed:()=>closed,close:()=>{closed=true;},hasDurableOutcome:()=>completed!==undefined||persisted!==undefined,ports:{
     async validate(current,mode){if(closed||!isDeepStrictEqual(current,ref))throw new Error('ASR_STAGE_CLOSED');await leases.withLease(ref,mode,async scope=>{await deps.bindResource(scope,awemeId);});},
     async invoke(_ref,port,raw){
@@ -95,7 +98,7 @@ export function createClaimedAsrStageService(db:Db,deps:ClaimedAsrStageDeps){
      else {const unknown=state.calls.some(call=>call.status==='started'||call.status==='unknown');const result=await outcomes.recordFailure(ref,{outcome:unknown?'unknown_result':own.at(-1)?.status==='rejected'?'waiting_user':'failed',errorCode:unknown?'ASR_STAGE_REQUIRES_RECONCILIATION':'ASR_STAGE_INTERRUPTED'});status=result.status;}
     }
    }catch{/* 不替失去 fence 的原作业改终态。 */}
-   if(unstarted)throw sourceError??error;
+   if(unstarted)throw transcribePreparationError(sourceError??error,abort,originalDeadlineAt);
    throw new ClaimedAsrSuspended(ref,status);
   }finally{closed=true;controller.abort();}
  }};

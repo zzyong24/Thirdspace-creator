@@ -1,3 +1,4 @@
+import {executionTimeoutMs} from "@creatoros/contract/timeout-policy";
 import { createHash } from "node:crypto";
 
 import {
@@ -444,6 +445,11 @@ async function generateVideo(
 export function createOmnihiVideoAdapter(
   deps: OmnihiVideoAdapterDeps = REAL_DEPS,
 ): MultimodalProviderAdapter {
+  // 最大尝试次数是有限轮询总预算；零间隔仅用于注入即时等待器，按真实默认周期解释。
+  const intervalMs=deps.pollIntervalMs || REAL_DEPS.pollIntervalMs;
+  const floorAttempts=(attempts:number)=>Math.max(attempts,Math.ceil(executionTimeoutMs(Math.max(1,Math.round(attempts*intervalMs)))/intervalMs));
+  deps={...deps,maxPollAttempts:floorAttempts(deps.maxPollAttempts)};
+
   return {
     generateVideo: (spec, opts) => generateVideo(spec, opts, deps),
   };

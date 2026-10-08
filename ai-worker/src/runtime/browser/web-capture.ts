@@ -1,3 +1,4 @@
+import {executionTimeoutMs} from "@creatoros/contract/timeout-policy";
 
 // 通用网页截图模块(T-084b,SPEC 2026-07-03 §2.1)—— 与 douyin-cdp 平级、同款依赖注入范式:
 // 给一个**公开** URL,服务端真开无头 Chromium 导航 → 截图 PNG 字节 → 落素材中心
@@ -77,7 +78,7 @@ const DESKTOP_UA =
   "AppleWebKit/537.36 (KHTML, like Gecko) " +
   "Chrome/126.0.0.0 Safari/537.36";
 
-const NAV_TIMEOUT_MS = 20000; // SPEC §2.1:goto timeout 20s
+const NAV_TIMEOUT_MS = 120_000; // 单次执行两分钟下限
 
 // captureUrl 只依赖 page/context 的这几个能力(收窄便于 fake page 单测,不起真 Chromium)。
 // 真实 Playwright Page/BrowserContext 结构上满足(默认注入时向上转型目标)。
@@ -131,6 +132,7 @@ export async function realOpenContext(): Promise<CaptureCapableContext> {
     () =>
       launchWithBrowser((sel) =>
         chromium.launch({
+          timeout: executionTimeoutMs(180_000),
           headless: true,
           ...sel,
           ...chromiumSandboxOpts(), // [T-369] 去掉 Playwright 默认 --no-sandbox
@@ -146,6 +148,8 @@ export async function realOpenContext(): Promise<CaptureCapableContext> {
     userAgent: DESKTOP_UA,
     viewport: { width: 1440, height: 900 },
   });
+  context.setDefaultTimeout(executionTimeoutMs());
+  context.setDefaultNavigationTimeout(executionTimeoutMs());
   // 收窄成 CaptureCapableContext:close 连带关掉 browser(避免泄漏进程)。
   return {
     newPage: () => context.newPage() as unknown as Promise<CaptureCapablePage>,
@@ -257,7 +261,7 @@ export async function captureUrl(
     try {
       resp = await page.goto(target, {
         waitUntil: "networkidle",
-        timeout: NAV_TIMEOUT_MS,
+        timeout: executionTimeoutMs(NAV_TIMEOUT_MS),
       });
     } catch (err) {
       if (signal?.aborted) throw makeAbortError("截图");

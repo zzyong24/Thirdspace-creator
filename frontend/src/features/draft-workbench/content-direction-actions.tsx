@@ -1,5 +1,7 @@
 "use client";
 
+import { executionTimeoutMs } from "@creatoros/contract/timeout-policy";
+
 import * as React from "react";
 import { client } from "@/lib/contract-client";
 import { useDraftChatRequest } from "./draft-chat-request";
@@ -39,7 +41,7 @@ export function ContentDirectionActions({ projectId, projectTitle }: {
           if (latest.projectId !== projectId || !latest.currentVersionId) throw new Error("未能确认当前稿件版本，请稍后重试。");
           return latest;
         })(),
-        new Promise<never>((_, reject) => { timer = setTimeout(() => reject(new Error("读取当前稿件超时，本次未发送诊断，请重试。")), 10000); }),
+        new Promise<never>((_, reject) => { timer = setTimeout(() => reject(new Error("读取当前稿件超时，本次未发送诊断，请重试。")), executionTimeoutMs(10000)); }),
       ]);
       if (!alive.current) return;
       openChat({

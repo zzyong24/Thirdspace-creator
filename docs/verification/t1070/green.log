@@ -1,0 +1,44 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+stdout | src/modules/execution/radar-model-result-unknown.repro.test.ts > T-1070 通用转录校正具备schema validator：原缺陷回归已恢复模型调用与保存
+[structured-node] template=transcript.postprocess.inline status=ok durationMs=7 path=text_compat modelCalls=1 inputTokens=0 outputTokens=0
+
+stdout | src/modules/execution/radar-model-result-unknown.repro.test.ts > T-1070 通用转录校正具备schema validator：原缺陷回归已恢复模型调用与保存
+[structured-node] template=transcript.postprocess.inline status=ok durationMs=23 path=text_compat modelCalls=1 inputTokens=0 outputTokens=0
+
+stdout | src/modules/execution/radar-model-result-unknown.repro.test.ts > T-1070 通用转录校正具备schema validator：原缺陷回归已恢复模型调用与保存
+[structured-node] template=transcript.postprocess.inline status=error durationMs=10 path=text_compat modelCalls=1 inputTokens=0 outputTokens=0
+
+ ❯ src/modules/execution/radar-model-result-unknown.repro.test.ts (8 tests | 1 failed) 2838ms
+   × T-1070 通用转录校正具备schema validator：原缺陷回归已恢复模型调用与保存 69ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/execution/radar-model-result-unknown.repro.test.ts > T-1070 通用转录校正具备schema validator：原缺陷回归已恢复模型调用与保存
+AssertionError: expected [ Array(1) ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   "ConflictError: 已有调用结果或用量未知，须先按原调用对账",
++ ]
+
+ ❯ reproduce src/modules/execution/radar-model-result-unknown.repro.test.ts:182:24
+    180|     };
+    181|     evidence.push(result);
+    182|     expect(hostErrors).toEqual([]);
+       |                        ^
+    183|     expect(ports).not.toContain('reserveAsrRequest'); // 已确认识别回执：全程不重新…
+    184|     expect(JSON.stringify(result)).not.toContain(spec.token);
+ ❯ src/modules/execution/radar-model-result-unknown.repro.test.ts:204:69
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  1 failed | 17 passed (18)
+   Start at  20:21:23
+   Duration  8.22s (transform 4.22s, setup 0ms, import 7.02s, tests 7.37s, environment 0ms)

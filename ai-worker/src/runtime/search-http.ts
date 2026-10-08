@@ -1,3 +1,4 @@
+import {executionTimeoutMs} from "@creatoros/contract/timeout-policy";
 // 联网检索适配器共用的 HTTP 小工具(SPEC 2026-07-03 §1.1 T-084a)—— 三家 provider 适配器
 // (bocha/tavily/serpapi)共用:带超时的 fetch、安全读 body、字符串归一。集中一处,避免各适配器
 // 重复实现 10s 超时逻辑(SPEC §1.2:单次检索 10s 失败降级)。
@@ -34,7 +35,8 @@ export async function fetchWithTimeout(
   const controller = new AbortController();
   const onAbort = () => controller.abort(signal?.reason);
   signal?.addEventListener("abort", onAbort, {once: true});
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  timeoutMs = executionTimeoutMs(timeoutMs);
+  const timer = setTimeout(() => controller.abort(new Error("SEARCH_EXECUTION_TIMEOUT")), timeoutMs);
   try {
     const response = await fetchImpl(url, { ...init, signal: controller.signal });
     // 搜索本就需要完整 JSON/XML；在同一超时/取消生命周期内读完正文。

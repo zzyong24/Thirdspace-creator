@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "独立首轮完整审核：共享validator、原schema/冻结摘要、后端无网络回放、确认失败原文降级及未知不伪造一致，真实业务service与工件验收覆盖替身缺口，未发现规格问题。",
+  "findings": []
+}

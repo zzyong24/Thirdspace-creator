@@ -17,6 +17,7 @@
  */
 
 import * as React from "react";
+import { TaskObservationNotice, useTaskObservation } from "@/components/ai/task-observation";
 import {openCopilotLocally} from "@/lib/copilot-navigation";
 import { useRouter } from "next/navigation";
 import {
@@ -54,7 +55,7 @@ const MANUAL_TYPE_OPTIONS: ReadonlyArray<{ value: ManualType; label: string }> =
 const TEXT_FILE_RE = /\.(md|txt|markdown)$/i;
 const SUPPORTED_DOCUMENT_RE = /\.(pdf|docx|md|markdown|txt)$/i;
 const DOCUMENT_EXTRACT_POLL_MS = 500;
-const DOCUMENT_EXTRACT_MAX_POLLS = 120;
+const DOCUMENT_EXTRACT_MAX_POLLS = 240;
 
 interface ImportFailure {
   readonly fileName: string;
@@ -83,8 +84,12 @@ function readTextFile(file: File): Promise<string> {
 async function waitForExtractedText(
   assetId: string,
   taskId: string,
-): Promise<string> {
-  for (let attempt = 0; attempt < DOCUMENT_EXTRACT_MAX_POLLS; attempt += 1) {
+  pause: () => Promise<boolean>,
+  isAlive: () => boolean,
+): Promise<string | null> {
+  for (let attempt = 0; ; attempt += 1) {
+    if (!isAlive()) return null;
+    if (attempt > 0 && attempt % DOCUMENT_EXTRACT_MAX_POLLS === 0 && !await pause()) return null;
     const asset = (await client.getAsset({
       params: { assetId },
       query: undefined,
@@ -93,6 +98,7 @@ async function waitForExtractedText(
       extractStatus?: string | null;
       extractedText?: string | null;
     };
+    if (!isAlive()) return null;
     const text = asset.extractedText?.trim() ?? "";
     if (asset.extractStatus === "done" && text.length > 0) return text;
     if (asset.extractStatus === "unsupported") {
@@ -112,6 +118,7 @@ async function waitForExtractedText(
       status?: string;
       errorMessage?: string | null;
     };
+    if (!isAlive()) return null;
     if (task.status === "failed" || task.status === "cancelled") {
       throw new Error(
         task.errorMessage?.trim() ||
@@ -122,7 +129,6 @@ async function waitForExtractedText(
       window.setTimeout(resolve, DOCUMENT_EXTRACT_POLL_MS),
     );
   }
-  throw new Error("正文解析超时；原文件已保存在素材库，未加入知识库，请稍后重试。");
 }
 
 // [T-094] 深链 prefill 能带的原文上限(URL 承载;超限改带引导话术,用户在对话里粘全文)。
@@ -160,6 +166,12 @@ const selectCls =
 
 export function KnowledgeDumpZone() {
   const router = useRouter();
+  const observation = useTaskObservation();
+  const aliveRef = React.useRef(true);
+  React.useEffect(() => {
+    aliveRef.current = true;
+    return () => { aliveRef.current = false; };
+  }, []);
   const [content, setContent] = React.useState("");
   const [dragActive, setDragActive] = React.useState(false);
   const [busy, setBusy] = React.useState<"idle" | "saving" | "uploading">("idle");
@@ -252,6 +264,7 @@ export function KnowledgeDumpZone() {
         currentFileName: files[0]?.name ?? null,
       });
       for (const [index, file] of files.entries()) {
+        if (!aliveRef.current) return;
         setImportDialog((current) =>
           current
             ? {
@@ -314,8 +327,11 @@ export function KnowledgeDumpZone() {
                 inputData: { assetId, fileName: file.name },
               },
             })) as unknown as { id: string };
-            extractedContent = await waitForExtractedText(assetId, task.id);
+            const text = await waitForExtractedText(assetId, task.id, observation.pause, () => aliveRef.current);
+            if (text === null) return;
+            extractedContent = text;
           }
+          if (!aliveRef.current) return;
           await client.createKnowledge({
             params: undefined,
             query: undefined,
@@ -331,6 +347,7 @@ export function KnowledgeDumpZone() {
           });
           succeeded += 1;
         } catch (reason) {
+          if (!aliveRef.current) return;
           const safeImportMessage =
             reason instanceof Error &&
             (reason.message.includes("未加入知识库") ||
@@ -342,6 +359,7 @@ export function KnowledgeDumpZone() {
             message: safeImportMessage,
           });
         }
+        if (!aliveRef.current) return;
         setImportDialog((current) =>
           current
             ? {
@@ -369,7 +387,7 @@ export function KnowledgeDumpZone() {
       setBusy("idle");
       if (fileInputRef.current) fileInputRef.current.value = "";
     },
-    [busy, router],
+    [busy, router, observation.pause],
   );
 
   // 拖放即开始上传；与按钮导入共用 handleDocumentFiles，但省去一次确认点击。
@@ -591,6 +609,7 @@ export function KnowledgeDumpZone() {
               </p>
             </div>
             <div className="max-h-64 overflow-y-auto px-5 py-4">
+              <TaskObservationNotice {...observation} />
               {importDialog.phase === "confirm" ? (
                 <ul className="space-y-2">
                   {importDialog.files.map((file) => (
@@ -608,6 +627,7 @@ export function KnowledgeDumpZone() {
                   ))}
                 </ul>
               ) : importDialog.phase === "running" ? (
+                observation.paused ? <p className="text-sm text-muted-foreground">原文件已保存；「{importDialog.currentFileName}」的正文解析尚未返回最终结果。</p> :
                 <div
                   role="status"
                   aria-live="polite"

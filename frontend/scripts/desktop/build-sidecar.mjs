@@ -809,6 +809,7 @@ export function bundleRenderDeps() {
   const cliCheck = spawnSync(process.execPath, [hyperframesCli, "--help"], {
     cwd: join(SIDECAR_RUNTIME, "frontend"),
     encoding: "utf8",
+    timeout: 120_000,
   });
   if (cliCheck.status !== 0) {
     throw new Error(

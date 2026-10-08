@@ -1,0 +1,45 @@
+{
+  "schema": "independent-implementation-review/v1",
+  "task_id": "T-1066",
+  "verdict": "PASS",
+  "scope": [
+    "持久HyperFrames 0.7.54补丁及当前已应用依赖文件",
+    "新增页面默认与关闭组合等待",
+    "新执行首次冻结期限与历史回退边界",
+    "新worker/agentic装配30分钟默认",
+    "desktop-release已授权5处job超时移除"
+  ],
+  "findings": [],
+  "evidence": {
+    "hyperframes_patch_sha256": "15761c896a52b54f07273e5031b38c4480484a466917f4cc65badf472149d5c0",
+    "patch_hash_matches_lock": true,
+    "first_party_new_page_sites": 12,
+    "page_default_configured_sites": 12,
+    "installed_cli_node_check": "PASS，本次真实执行node --check；仅语法验证",
+    "previous_finding_closure": [
+      "秒单位上界保留86400，最低等待120000ms",
+      "授权TTL余量保持30000，独立于请求等待",
+      "公共snapshot零值及明确浏览器零值语义保持",
+      "显式Check/Compare/captureWebsite、cloud max-wait与Cloud Run请求预算下限保留",
+      "BeginFrame内层120000ms、外层130000ms或原更长正预算加10000ms；timer清理保持"
+    ],
+    "cleanup_boundary": "两个取消后SIGKILL500ms保持；正常close外层依session.protocolTimeout原预算加10000ms；protocolTimeout=0按原禁用保持",
+    "new_deadline_boundary": "新创建两个服务口调用newExecutionBudgetDeadline；execution-call-ledger历史缺deadlineAt回退仍调用原executionBudgetDeadline；已有映射不能重写预算/期限",
+    "default_budget_boundary": "frontend workerBudget与agenticBudget均1800000ms，仅新装配；其他已有30分钟值未缩短",
+    "ci_scope": "仅移除plan/build/windows-runtime-rat/windows-closure-rat/draft-release五个显式timeout-minutes，未声称GitHub平台无限",
+    "installed_cli_sha256": "1250669d951c4a462b7e4b5d574256f61978797ba3b941cc8491d620e3ef925b",
+    "final_text_only_update": {
+      "compared_to_patch_sha256": "e31daa074c5cd8f70339f00bc9c0f44c0a330cf36586b8eb3c94e0f8c4d4f50c",
+      "changed_lines": 2,
+      "fields": "仅browser-timeout及player-ready-timeout的description字符串",
+      "content": "browser默认120秒、120至86400秒范围、player-ready默认120000ms；行为代码逐行保持一致",
+      "installed_cli_node_check": "PASS，本次重新执行；不代表新增行为测试"
+    }
+  },
+  "limits": [
+    "这是所列最终集成变化的独立静态审查，不是全仓所有规则的再次穷举证明",
+    "未在本复核中运行真实任务、供应商API、真机渲染或安装版E2E",
+    "未重复主会话正在运行的行为/类型/契约测试，也不据此声称那些测试已通过",
+    "未改生产文件、任务数据或控制面"
+  ]
+}

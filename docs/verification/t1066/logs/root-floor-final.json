@@ -1,0 +1,7 @@
+{
+  "ok": true,
+  "minimumExecutionMs": 120000,
+  "scannedFiles": 1746,
+  "failures": [],
+  "limits": "静态已知数值及默认回归；动态调用链、库默认、绝对deadline与观察终态由聚焦测试和逐条清单核对"
+}

@@ -1,0 +1,9 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+
+{"witness":"T-1073 root dispose","sweepsBeforeStop":2,"sweepsAfterStop":2,"cronStops":1,"timersAfterStop":0}
+
+ Test Files  3 passed (3)
+      Tests  28 passed (28)
+   Start at  01:03:11
+   Duration  36.23s (transform 23.60s, setup 614ms, import 26.37s, tests 40.55s, environment 0ms)

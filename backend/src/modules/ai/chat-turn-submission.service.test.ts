@@ -170,7 +170,6 @@ it("真实租约恢复只读工具，使用冻结产品说明及当前账号数�
  const {buildChatTools}=await import("../ai-runtime/chat-tools");
  const {prepareChatToolDefinitions}=await import("../ai-runtime/chat-tool-definitions");
  const {getChatToolNativeExecutor}=await import("../ai-runtime/chat-tool-gate");
- const {getOfficialSkillBase}=await import("@creatoros/ai-worker");
  const {createChatHostContextReader}=await import("./chat-host-context.service");
  const {createPersistentTaskService}=await import("../execution/persistent-task.service");
  const f=await fixture(),frozen=hostContext(f.ctx);

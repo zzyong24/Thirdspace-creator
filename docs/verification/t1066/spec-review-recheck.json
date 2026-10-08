@@ -1,0 +1,34 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "recheck",
+  "summary": "PASS：仅复核既有REV-001。SPEC第15行已明确docker-compose健康探针和channel-partners预算声明；T-1066模块read_set/write_set及重新生成的Task Packet均包含docker-compose.yml、channel-partners/**。已确认全盘范围与实际可写边界一致，未增加产品范围；本结论仅为SPEC可实施性评审，不声称运行代码或行为验收已完成。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "resolved",
+      "severity": "major",
+      "category": "completeness",
+      "requirement_anchor": {
+        "id": "SPEC-LINE:15:047fe6973c24ba85",
+        "quote": "以125bc864共享源码审计为基线，在独立工作树沿用当前主树完整产品功能及T-1064/1065证据，并与T-1063出包分支分别对照；取消的build-only人为限时不重新加入。覆盖frontend/后端/ai-worker/contract/桌面Rust/CLI/构建运维/项目技能与治理工具的全部清单，并补漏隐式Playwright默认及动态覆盖。调整既有预算、端口等待和错误展示；不引入新数据库、调度器、后台执行权或语义策略。纯数值策略可下沉contract叶子，backend与worker遵守原service/所有权边界。保留现有安全、取消、幂等与退出清理。"
+      },
+      "acceptance_anchor": {
+        "id": "SPEC-LINE:22:7a24bd34aed3ae66",
+        "quote": "2. 每条审计记录的修复位置/新策略/保留原因/验证，全部222条有归属，无30秒隐式默认遗漏，不声称扫描词法等于行为验证。"
+      },
+      "where": "docs/features/t1066-timeout-policy.md:15；Task Packet write_set；docker-compose.yml:18、38（TO-179/TO-180）",
+      "failure_mode": "SPEC要求全部222条有归属且所有执行探针最低120秒，但本任务当前write_set不含docker-compose.yml。实现者遵守边界时无法调整清单内两处3秒健康探针，或只能越界编辑；两者都无法完整验收已确认的全盘范围。",
+      "evidence_kind": "deterministic-check",
+      "evidence_ref": "docs/research/t1065/timeout-inventory.json#TO-179,TO-180；/tmp/creatoros-t1066-task-packet.md 第6节write_set；docker-compose.yml:18、38",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "clarify",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "SPEC-LINE:15:047fe6973c24ba85",
+      "suggestion": "在SPEC或绑定中明确包含本地开发依赖健康探针，将docker-compose.yml补入T-1066 write_set并重生成Packet；两个TO记录按执行探针落实>=120秒及相应验证。仅修复已有确认范围的落地绑定，不新增业务能力。",
+      "resolution_evidence": "SPEC-LINE:15:f66a607d2546e76d 明确两个遗漏域；orchestrator/process/modules.config.json 的T-1066 read_set/write_set含docker-compose.yml和channel-partners/**；重新生成的/tmp/creatoros-t1066-task-packet.md第6节write_set同步包含两者。TO-179/TO-180可以在授权边界内按第9行>=120000ms执行探针要求落实，第22行全部222条归属要求保留。",
+      "parent_id": ""
+    }
+  ]
+}

@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import {
   searchWeb,
   SearchConfigError,
@@ -248,11 +248,14 @@ describe("searchWeb 工厂 —— registry 分派", () => {
         });
       });
     }) as unknown as typeof fetch;
-    await expect(
-      searchWeb({ ...bochaSpec }, "q", { bocha: createBochaAdapter(abortFetch) }, {
-        timeoutMs: 5,
-      }),
-    ).rejects.toThrow(SearchExecutionError);
+    vi.useFakeTimers();
+    try {
+      const waiting=searchWeb({ ...bochaSpec }, "q", { bocha: createBochaAdapter(abortFetch) }, {timeoutMs:5});
+      const rejected=expect(waiting).rejects.toThrow(SearchExecutionError);
+      await vi.advanceTimersByTimeAsync(119_999);
+      await vi.advanceTimersByTimeAsync(1);
+      await rejected;
+    } finally {vi.useRealTimers();}
   });
 });
 

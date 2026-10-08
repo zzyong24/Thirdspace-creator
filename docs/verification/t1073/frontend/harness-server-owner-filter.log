@@ -1,0 +1,10 @@
+
+  VITE v8.0.16  ready in 319 ms
+
+  ➜  Local:   http://127.0.0.1:4187/
+12:16:59 AM [vite] (client) hmr update /@fs/Users/zyongzhu/.codex/worktrees/t1073-frontend/Thirdspace-creator/frontend/src/app/globals.css
+12:16:59 AM [vite] (client) hmr update /@fs/Users/zyongzhu/.codex/worktrees/t1073-frontend/Thirdspace-creator/frontend/src/app/globals.css
+12:17:14 AM [vite] (client) page reload /Users/zyongzhu/.codex/worktrees/t1073-frontend/Thirdspace-creator/frontend/src/features/intelligence/intelligence-workbench-api.ts
+12:17:50 AM [vite] (client) page reload /Users/zyongzhu/.codex/worktrees/t1073-frontend/Thirdspace-creator/frontend/src/components/resources/asset-preview-url.ts
+12:17:50 AM [vite] (client) hmr update /@fs/Users/zyongzhu/.codex/worktrees/t1073-frontend/Thirdspace-creator/frontend/src/app/globals.css
+12:18:31 AM [vite] (client) hmr update /@fs/Users/zyongzhu/.codex/worktrees/t1073-frontend/Thirdspace-creator/frontend/src/app/globals.css

@@ -1,0 +1,237 @@
+{
+  "schema": "creatoros.independent-bounded-review.v1",
+  "task": "T-1080",
+  "createdAtUtc": "2026-10-08T12:20:46.419212+00:00",
+  "reviewer": "assistant_core_implementation_review",
+  "verdict": "PASS",
+  "meaning": "仅8项来源兼容改动及4项测试闭包/期望调整的实现范围判断；不是整体类型/整合/main/安装通过。",
+  "candidatePackets": [
+    {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/worktree-main-integration-20261008/resource-conflict-packet/type-compatibility-candidate/decisions.json",
+      "sha256": "c76cea569c0b251762f1a6bd3ff045a42b3b00f7dbb700607389c6c3aeab4c3c"
+    },
+    {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/worktree-main-integration-20261008/resource-conflict-packet/type-compatibility-candidate/backend-decisions.json",
+      "sha256": "c2f54dd1f2b8d74deacff19eee2e5066ff5acc8fd3c6309244d64a044a889656"
+    },
+    {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/worktree-main-integration-20261008/resource-conflict-packet/type-compatibility-candidate/cli-decisions.json",
+      "sha256": "d0351cbc0abf444cc4d16529872ab8981be6121304d00e03c9b7aac60aa97cf4"
+    }
+  ],
+  "compatibilityItems": [
+    {
+      "path": "contract/src/workspace-operation-scope.ts",
+      "verdict": "PASS",
+      "originalSourceSha256": "78fa7765a98a34e966818275cc21dff1a6895f7734e4f3224b9670215307d0b3",
+      "candidateSha256": "4ef7567647555b86e6d1a7f8a840b7cf0ef959c4a99f61d58b376b4ad7290d94",
+      "actualAppliedSha256": "4ef7567647555b86e6d1a7f8a840b7cf0ef959c4a99f61d58b376b4ad7290d94",
+      "basis": "新增11个原main端点，均按现有真实account-required消费者与CLI账号回执命名空间；原group/user端点不变。"
+    },
+    {
+      "path": "contract/tests/modules/assets.test.ts",
+      "verdict": "PASS",
+      "originalSourceSha256": "998d8673e5a84e3a0c502e48332d38cbeba5e38797eac414f26711be7b191023",
+      "candidateSha256": "137eb5c481b0ac05574a5925307c5050de48efa8c56ee3b9a54f613e85c1c590",
+      "actualAppliedSha256": "137eb5c481b0ac05574a5925307c5050de48efa8c56ee3b9a54f613e85c1c590",
+      "basis": "仅移除同值sourceUrl:null重复键，另一个原位置保留，全部断言不变。"
+    },
+    {
+      "path": "backend/src/modules/execution/workbench-artifact.service.ts",
+      "verdict": "PASS",
+      "originalSourceSha256": "f2895f73ad3f285a0429647cc9b9df97b820167fe141c54678864f97c84d097e",
+      "candidateSha256": "7432eeec20b49549695197b3ef1527c0ca867dab22bb100707dd2c471ad64acf",
+      "actualAppliedSha256": "7432eeec20b49549695197b3ef1527c0ca867dab22bb100707dd2c471ad64acf",
+      "basis": "原聊天映射首个拒绝条件追加缺accountId；真实user/account/业务/会话/源消息绑定及后续核验保持。"
+    },
+    {
+      "path": "backend/src/modules/execution/workbench-plan.service.ts",
+      "verdict": "PASS",
+      "originalSourceSha256": "42b0c9852a4b43a2fc964013bd384f92a6b0c0b5cb913e4ec5939c85b6d5d9f2",
+      "candidateSha256": "ee509ea5f52cc19041ee7d7155f397452369ba68dcc8c940cc57e7a2ba9b3220",
+      "actualAppliedSha256": "ee509ea5f52cc19041ee7d7155f397452369ba68dcc8c940cc57e7a2ba9b3220",
+      "basis": "仅非空verified产物引用分支在原account-required端口之前拒绝空账号；无refs计划和最终lease/owner/CAS不变。"
+    },
+    {
+      "path": "backend/src/modules/ai/chat-turn-submission.service.test.ts",
+      "verdict": "PASS",
+      "originalSourceSha256": "15229a28f91e4de55152500c032edf36676a9c4fa77a8b06944437deb4513601",
+      "candidateSha256": "f05545a86088b15ad2350d0b2094d3e302019a9ab7ee93b7f05775a3c7ae9f78",
+      "actualAppliedSha256": "f05545a86088b15ad2350d0b2094d3e302019a9ab7ee93b7f05775a3c7ae9f78",
+      "basis": "只删除同scope重复getOfficialSkillBase导入，保留真正registerAllTemplates初始化、冻结快照和owner断言。"
+    },
+    {
+      "path": "backend/src/modules/platform-collection/platform-bind.integration.test.ts",
+      "verdict": "PASS",
+      "originalSourceSha256": "ace244882d96856f145ea20fad9d4db2ada64c349c39841d984bcf9b743ea97d",
+      "candidateSha256": "eb6b6d48b71e3babc4782ac58b1def4a11da21d58cbcf2fbc63a735d08295cc3",
+      "actualAppliedSha256": "eb6b6d48b71e3babc4782ac58b1def4a11da21d58cbcf2fbc63a735d08295cc3",
+      "basis": "增加真实绑定行存在断言，原事务回滚proofSource等值断言仍保留。"
+    },
+    {
+      "path": "backend/src/modules/execution/execution-agentic-tool-host.test.ts",
+      "verdict": "PASS",
+      "originalSourceSha256": "f25c94256f110b08f884ebd249029cc5b68bb9c2dd19c98c309dafb4559736c5",
+      "candidateSha256": "21a92a920981cacddf7dd5ded9b971c2e71644bae1bfd5ba755fbb24922c635c",
+      "actualAppliedSha256": "21a92a920981cacddf7dd5ded9b971c2e71644bae1bfd5ba755fbb24922c635c",
+      "basis": "用现有workbenchResultSchema解析并要求succeeded，再保留键顺序差异、v1/v2及原子结算次数断言。"
+    },
+    {
+      "path": "mcp-server/src/cli.ts",
+      "verdict": "PASS",
+      "originalSourceSha256": "6b3864fb39dffe7cb76ab5f2a367882e2d386ea27bc34c41e91a14eb874d3aa9",
+      "candidateSha256": "1b4caf864e531502e6905c8a2e2b72bc2c4c34281863b5822340b5a0e6a6eaa4",
+      "actualAppliedSha256": "1b4caf864e531502e6905c8a2e2b72bc2c4c34281863b5822340b5a0e6a6eaa4",
+      "basis": "只将localeCompare变为ASCII操作ID三值码点比较，保留全部目录成员和原强排序断言，不作语义判断。"
+    }
+  ],
+  "testClosureItems": [
+    {
+      "path": "backend/src/workbench-main-migration.test.ts",
+      "sha256": "a03052985dee11e06cbc6e02d239a4a589ae874d4183edf9c736b46046cb97c5",
+      "verdict": "PASS",
+      "basis": "ledger query只补现有hash/created_at泛型，查询/旧receipt保留和新4项断言不变。"
+    },
+    {
+      "path": "backend/src/modules/production/production-native-public.integration.test.ts",
+      "sha256": "22e2b482d15607bab75f900f84aa987639bcc214af0a2b6bcc9107ed3106a7e2",
+      "verdict": "PASS",
+      "basis": "parentFixture按正式3endpoint分派并用原save body.parse，保留真实公开owner、纯组/带账号/legacy及零写/回放断言。"
+    },
+    {
+      "path": "backend/src/modules/ai/ai.execution-authority.integration.test.ts",
+      "sha256": "28c391a3e6e4beeb2ade84aa6de26d7f363bcc6d500820a97f71d0005eae2d27",
+      "verdict": "PASS",
+      "basis": "新准备输入预算60000→120000，匹配期望00:02；重复绑定不续期、fingerprint/prompt/maxCalls拒绝断言完整保留。"
+    },
+    {
+      "path": "backend/src/migration-convergence.test.ts",
+      "sha256": "3b02c47d387b572a54581c324daabf0331a523f670d094ac4d085512b9836408",
+      "verdict": "PASS",
+      "basis": "仅现行0129正式加入的workbench表存在期望改true；fresh asr/external仍false，旧keyring/external字段、旧值/ledger深等、未知拒绝不变。原3FAIL仍为真实FAIL。"
+    }
+  ],
+  "accountConsumerCorrection": {
+    "priorClaim": "sessionAccountId无消费者、建议删除声明",
+    "status": "WITHDRAWN",
+    "actualConsumers": [
+      2598,
+      2750,
+      2751
+    ],
+    "minimumFix": "现有http-transport导入追加readCurrentAccountId；声明及工作台历史/card owner保持",
+    "path": "frontend/src/features/copilot/ai-copilot-content.tsx",
+    "sha256": "62ed38d736823847600a0cd018c78e125bed9b809907ca365d40f3c210f28d62",
+    "diffFromFrozenCandidate": "仅该原identity helper import"
+  },
+  "sourceProofs": [
+    {
+      "path": "backend/src/modules/analytics/comment-diagnosis.service.ts",
+      "sha256": "bf01c7cb94944f6530204d747f0cd8efaadd13fbaa6cdfe988c6a9e038b46680"
+    },
+    {
+      "path": "backend/src/modules/analytics/comment-retry.service.ts",
+      "sha256": "9df01a5a3466cb158b8538bf66b4b0d37413f3641cdbb30a28f29994e968de5d"
+    },
+    {
+      "path": "backend/src/modules/execution/workbench-public.transport.ts",
+      "sha256": "aeb7a8ee3f77cd5712f0619796b1884e0615781359fe270fefe845906968a2a3"
+    },
+    {
+      "path": "backend/src/modules/cli-invocations/cli-invocations.service.ts",
+      "sha256": "27fc2a8a0ba105ae05717eb29f82e34bdfcb63f234b03ca4651104efbbae5927"
+    },
+    {
+      "path": "contract/src/internal/agent-workbench.ts",
+      "sha256": "2da929cc656e18c5c201f66c43c9381b433042d6ea690f6d2c9c137ee908c76e"
+    },
+    {
+      "path": "frontend/src/lib/http-transport.ts",
+      "sha256": "3c89798b49c372bdb60be1cb255fe1b85ea9449752c97d7bdb4bdad1bff79302"
+    },
+    {
+      "path": "frontend/src/features/copilot/workbench-artifact-history.tsx",
+      "sha256": "9e7bb797d9633c7bb10fd64776da3228c95a58b98c29739802b752a87f248729"
+    },
+    {
+      "path": "frontend/src/features/copilot/workbench-artifact-card.tsx",
+      "sha256": "8479afb91430040615834a54e50a1b18223e6b1da02255ff228d5b93b5946868"
+    },
+    {
+      "path": "backend/src/migration-convergence.ts",
+      "sha256": "de743af39eb6872729fc7b3dca7e30619d3c4585210084106ccad135d60aecb4"
+    },
+    {
+      "path": "backend/drizzle/meta/_journal.json",
+      "sha256": "c0aabf62ea7b8609de899d1cfa1351d7d488d68b37d234975a0ea4103848702c"
+    }
+  ],
+  "actualEvidence": [
+    {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/worktree-main-integration-20261008/combined-migration-public.result.json",
+      "sha256": "b95d1c4468c406cf60b3364a72bff79f02691f1ead3f6f2a0357405fb03a3808"
+    },
+    {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/worktree-main-integration-20261008/combined-migration-public.log",
+      "sha256": "56af0d67f9dbd2e606f2e026f8bc95d80c03611b24635502fcac2f9869eeb808"
+    },
+    {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/worktree-main-integration-20261008/resource-copilot-actual.result.json",
+      "sha256": "bfb225b6435eaee88e18aa08625cf0ac2d3edc20248eacc3fd76f1f64128d7eb"
+    },
+    {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/worktree-main-integration-20261008/resource-copilot-actual.log",
+      "sha256": "c29847dec2bccfc0542f69182de13b3e2eb3e9fc8095fbc61f73525b8bd49e73"
+    },
+    {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/worktree-main-integration-20261008/resource-copilot-import-fixed.result.json",
+      "sha256": "dd65072b9b440aa3d5c58ff2b0d7c55a747d2f7b16e618b5a5fef6306290d6de"
+    },
+    {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/worktree-main-integration-20261008/resource-copilot-import-fixed.log",
+      "sha256": "fe474c3f8d11988dd3085003d4fa11be9f6287dae97c6f21c3ee550553b60ad9"
+    },
+    {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/worktree-main-integration-20261008/resource-desktop-actual.result.json",
+      "sha256": "0622714eb1ca5cb175393d5fcab86e28c97fc09ab082af9e117ca6014f8b892d"
+    },
+    {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/worktree-main-integration-20261008/resource-desktop-actual.log",
+      "sha256": "b03df2862136631497e50b71b3461f6181ae465ce9818a29f0699c0cba39d1bf"
+    },
+    {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/worktree-main-integration-20261008/resource-frontend-typecheck-actual.result.json",
+      "sha256": "d84a00a3d0350a68f9089d4585d2a8113f0f474289bc66b93049875fe5deb6ad"
+    },
+    {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/worktree-main-integration-20261008/resource-frontend-typecheck-actual.log",
+      "sha256": "ebbc4ab0405128e7dec2b3f1cfe2c445af6c0366a5d8ba50a8717880bf81ad09"
+    }
+  ],
+  "actualResults": {
+    "desktop": "31 PASS，exit0",
+    "copilotBeforeImport": "67项：7 PASS/60 FAIL，exit1；同一缺导入ReferenceError，保留原日志",
+    "copilotAfterImport": "同3文件同argv，67 PASS，exit0",
+    "frontendTypecheck": "实际next typegen成功，tsc exit2；仅两个新资源测试消费者仍用旧单参数getLiveChatSession。未宣称类型通过。",
+    "migrationCombined": "实际25项22 PASS/3 FAIL；表存在期望已限定更新，尚未核新运行结果"
+  },
+  "findings": [],
+  "remainingVerification": [
+    {
+      "id": "TYPE-CONSUMERS-001",
+      "status": "OPEN",
+      "paths": [
+        "frontend/src/features/copilot/live-chat-session.consumer.test.tsx",
+        "frontend/src/server/chat-execution-stream.test.ts"
+      ],
+      "evidence": "resource-frontend-typecheck-actual.log",
+      "next": "沿已绿live-chat-session.test.ts原真实Chat factory注入，保留全部SDK/metadata/pressure消费者断言后实际重跑"
+    }
+  ],
+  "limits": [
+    "0业务/产品/测试/Git/控制面写入；仅授权外部日志和本报告。",
+    "未执行模型、真实数据库、App、安装、网络业务或全量build。desktop测试内部原worker build产生ignored产物属于该原测试入口。",
+    "限定兼容review PASS不把当前frontend typecheck FAIL追记通过；原copilot60FAIL与迁移3FAIL保留。",
+    "不签后续新增frontend/native变化、最终main冻结、原生UI或全功能安装矩阵。"
+  ]
+}

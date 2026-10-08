@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "独立首轮完整审核：同请求JSON兼容、明确结束事实、真实usage、取消与deadline、未知不重发及补丁/公共链路验收一致，未发现规格问题；实现仍待AC实证。",
+  "findings": []
+}

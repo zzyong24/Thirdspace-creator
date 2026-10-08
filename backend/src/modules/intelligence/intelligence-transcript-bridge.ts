@@ -1,3 +1,4 @@
+import {transcribePreparationError} from "../execution/transcribe-stage-error";
 import {isDeepStrictEqual} from 'node:util';
 import {and,eq,executionTasks,executionCalls,itemTranscripts,type Db} from '@creatoros/backend';
 import type {RequestContext} from '@creatoros/contract';
@@ -55,6 +56,7 @@ export function createIntelligenceTranscriptBridge(db:Db,deps:IntelligenceTransc
    });
   };
   let persistedStatus:string|undefined,completed:Result|undefined,closed=false,preparationError:unknown;
+  let originalDeadlineAt:number|null=null;
   let readResult:(()=>Promise<Result|undefined>)|undefined;
   const controller=new AbortController();
   try {
@@ -88,6 +90,7 @@ export function createIntelligenceTranscriptBridge(db:Db,deps:IntelligenceTransc
    };
    completed=await readResult();if(completed)return completed;
    const state=await ledger.inspect(ref);
+   originalDeadlineAt=state.deadlineAt===null?null:Date.parse(state.deadlineAt);
    const outcome=await supervision.run({ref,deadlineAt:state.deadlineAt===null?null:Date.parse(state.deadlineAt),verify,isClosed:()=>closed,close:()=>{closed=true;controller.abort();},hasDurableOutcome:()=>completed!==undefined||persistedStatus!==undefined,ports:{
     async validate(current,mode){if(closed||!isDeepStrictEqual(ref,current))throw new Error('INTELLIGENCE_TRANSCRIPT_PORT_CLOSED');await leases.withLease(ref,mode,async()=>{});},
     async invoke(_ref,port,raw){
@@ -141,7 +144,7 @@ export function createIntelligenceTranscriptBridge(db:Db,deps:IntelligenceTransc
      }
     }
    } catch {/* fence 失效/DB 不可用时交还原持久恢复，不覆盖原任务。 */}
-   if(unstarted)throw preparationError??error;
+   if(unstarted)throw transcribePreparationError(preparationError??error,controller.signal,originalDeadlineAt);
    throw new IntelligenceGenerationSuspended(ref.executionTaskId,ref.attempt,ref.fenceToken,status);
   } finally {closed=true;controller.abort();}
  }};

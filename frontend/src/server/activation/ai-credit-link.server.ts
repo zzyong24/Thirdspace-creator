@@ -1,3 +1,4 @@
+import { executionTimeoutMs } from "@creatoros/contract/timeout-policy";
 import "server-only";
 
 import { randomBytes } from "node:crypto";
@@ -128,7 +129,7 @@ export async function createAiCreditPortalLink(
     response = await (dependencies.fetchImpl ?? fetch)(endpoint.toString(), {
       method: "POST",
       redirect: "manual",
-      signal: AbortSignal.timeout(10_000),
+      signal: AbortSignal.timeout(executionTimeoutMs(10_000)),
       headers: {
         Accept: "application/json",
         Authorization: `Bearer ${access.configAccessTicket}`,

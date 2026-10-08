@@ -1,3 +1,4 @@
+import {executionTimeoutMs} from "@creatoros/contract/timeout-policy";
 import type { Page } from "@playwright/test";
 import {
   browserActInputSchema,
@@ -64,7 +65,7 @@ export function createResearchBrowserSessions(deps: {
           if (signal.aborted) abort();
           timer = setTimeout(
             () => reject(new Error("BROWSER_GUARD_TIMEOUT")),
-            5000,
+            executionTimeoutMs(),
           );
         }),
       ]);
@@ -162,7 +163,7 @@ export function createResearchBrowserSessions(deps: {
             // URL已通过guard；每次显式observe URL可重新导航，但绝不恢复旧act。
             await owned.page.goto(params.url, {
               waitUntil: "domcontentloaded",
-              timeout: 10000,
+              timeout: executionTimeoutMs(),
             });
             await guard(owned.page.url(), signal);
           }

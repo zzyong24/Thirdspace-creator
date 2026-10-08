@@ -55,7 +55,6 @@ jobs:
   plan:
     if: ${{ github.event_name != 'workflow_dispatch' || (inputs.windows_runtime_rat != true && inputs.windows_closure_rat != true && inputs.windows_package_rat != true) || (inputs.windows_package_rat == true && inputs.only == 'macos') }}
     runs-on: ubuntu-latest
-    timeout-minutes: 5
     outputs:
       matrix: ${{ steps.m.outputs.matrix }}
     steps:
@@ -81,7 +80,6 @@ jobs:
       matrix:
         include: ${{ fromJSON(needs.plan.outputs.matrix) }}
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 180
     defaults:
       run:
         shell: bash
@@ -884,7 +882,7 @@ jobs:
           } finally {
             if (-not $app.HasExited) {
               $null = $app.CloseMainWindow()
-              if (-not $app.WaitForExit(10000)) {
+              if (-not $app.WaitForExit(120000)) {
                 Stop-Process -Id $app.Id -Force -ErrorAction SilentlyContinue
               }
             }
@@ -906,7 +904,7 @@ jobs:
           if ($uninstall.ExitCode -ne 0) {
             throw "[T-557] NSIS 静默卸载失败(exit=$($uninstall.ExitCode))"
           }
-          for ($i = 0; $i -lt 50 -and (Test-Path $installDir); $i++) {
+          for ($i = 0; $i -lt 600 -and (Test-Path $installDir); $i++) {
             Start-Sleep -Milliseconds 200
           }
           if (Test-Path (Join-Path $installDir "runtime-images")) {
@@ -957,7 +955,6 @@ jobs:
   windows-runtime-rat:
     if: ${{ github.event_name == 'workflow_dispatch' && inputs.windows_runtime_rat == true }}
     runs-on: windows-latest
-    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
 
@@ -981,7 +978,6 @@ jobs:
   windows-closure-rat:
     if: ${{ github.event_name == 'workflow_dispatch' && (inputs.windows_closure_rat == true || inputs.windows_package_rat == true) }}
     runs-on: windows-latest
-    timeout-minutes: 180
     defaults:
       run:
         shell: bash
@@ -1303,7 +1299,7 @@ jobs:
             }
             if ($app -and -not $app.HasExited) {
               $null = $app.CloseMainWindow()
-              if (-not $app.WaitForExit(10000)) {
+              if (-not $app.WaitForExit(120000)) {
                 Stop-Process -Id $app.Id -Force -ErrorAction SilentlyContinue
               }
             }
@@ -1353,7 +1349,6 @@ jobs:
     needs: build
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
-    timeout-minutes: 10
     steps:
       - uses: actions/download-artifact@v4
         with:

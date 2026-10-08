@@ -143,7 +143,7 @@ export function createAssetBusinessExecutionService(db:Db,deps:{budget:BoundedEx
     const currentBudget=currentAdmission?admittedBudget(current,currentAdmission,inheritedBudget):budget;
     if(currentAdmission)assertDeadline(currentAdmission);
     signal?.throwIfAborted();
-    const mapped=await createExecutionAuthorityService(tx,{now:deps.now}).bindAiTask(ctx,task.id,{requestFingerprint:task.requestFingerprint,modelInput,budget:currentBudget});
+    const mapped=await createExecutionAuthorityService(tx,{now:deps.now}).bindAiTask(ctx,task.id,{requestFingerprint:task.requestFingerprint,modelInput,budget:currentBudget,...(inheritedBudget===undefined&&!currentAdmission?{}:{inheritedDeadline:true})});
     if(currentAdmission){const [execution]=await tx.select().from(executionTasks).where(eq(executionTasks.id,mapped.executionTaskId));assertMappedAdmission(execution,currentBudget as BoundedExecutionBudget,currentAdmission);assertDeadline(currentAdmission);}
     signal!.throwIfAborted();return mapped;
     });

@@ -1,3 +1,4 @@
+import {executionTimeoutMs} from "@creatoros/contract/timeout-policy";
 // Local-filesystem object storage (item B) — the same `ObjectStoragePort` as the
 // mock / S3 adapters (foundation §4 swap-seam), backing media bytes with files on
 // the user's disk under a configurable `rootPath`. Bytes really land at
@@ -96,7 +97,7 @@ function probeMedia(ffprobe: string, absKey: string): Promise<ProbedMedia> {
       ffprobe,
       ["-v", "quiet", "-print_format", "json", "-show_format", "-show_streams", absKey],
       // [T-372 W5] windowsHide 同上(ffprobe 黑窗抑制;mac/Linux 无操作)。
-      { maxBuffer: 8 * 1024 * 1024, timeout: 15000, windowsHide: true },
+      { maxBuffer: 8 * 1024 * 1024, timeout: executionTimeoutMs(), windowsHide: true },
       (err, stdout) => {
         if (err) return resolve(EMPTY_PROBE);
         try {

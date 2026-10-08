@@ -1,3 +1,4 @@
+import {executionTimeoutMs} from "@creatoros/contract/timeout-policy";
 import {redfoxInputSchema,type RedfoxInput,redfoxObservationSchema} from "@creatoros/contract/execution-worker";
 /** 固定官方域名和端点；模型无法指定 API URL/请求头。 */
 export async function queryRedfox(input:RedfoxInput,key:string,signal:AbortSignal,fetcher:typeof fetch=fetch){
@@ -13,7 +14,7 @@ export async function queryRedfox(input:RedfoxInput,key:string,signal:AbortSigna
  const submit=q.action==="transcriptSubmit";
  for(let attempt=0;attempt<3;attempt++){
   signal.throwIfAborted();try{
-   const response=await fetcher("https://redfox.hk"+path,{method:"POST",redirect:"error",headers:{"Content-Type":"application/json",REDFOX_API_KEY:key},body:JSON.stringify(body),signal:AbortSignal.any([signal,AbortSignal.timeout(30000)])});
+   const response=await fetcher("https://redfox.hk"+path,{method:"POST",redirect:"error",headers:{"Content-Type":"application/json",REDFOX_API_KEY:key},body:JSON.stringify(body),signal:AbortSignal.any([signal,AbortSignal.timeout(executionTimeoutMs())])});
    if(response.status===401||response.status===403)return redfoxObservationSchema.parse({status:"error",code:"REDFOX_AUTH_INVALID"});
    if(response.status===429||response.status>=500){if(submit)return redfoxObservationSchema.parse({status:"unknown",code:"REDFOX_SUBMIT_UNKNOWN"});if(attempt<2){await pause(attempt,signal);continue;}return redfoxObservationSchema.parse({status:"error",code:response.status===429?"REDFOX_RATE_LIMIT":"REDFOX_UPSTREAM_UNAVAILABLE"});}
    if(!response.ok)return redfoxObservationSchema.parse({status:"error",code:"REDFOX_HTTP_"+response.status});

@@ -1,0 +1,73 @@
+{
+  "sourceCommits": {
+    "worker": "8590fa5a9a6a6a3d7a840c0d77fac3785564cc1d",
+    "frontend": "9c7be793fbd3e323bdaf41a0460e6397c87d6db0",
+    "backend": "a3d9db286a52b825c77eec29abb55e7618d23b84",
+    "stream": "f7f80bb0fdb11c8a232f1c52df89a85f83da1143"
+  },
+  "focused": {
+    "gate": "led055-preserved-final.log",
+    "exit": 0,
+    "groups": [
+      7,
+      83,
+      62,
+      121,
+      28
+    ],
+    "total": 301
+  },
+  "independentStream": {
+    "passed": 23,
+    "limitation": "隔离PGlite/合成事件，真实服务/schema/SDK/cache，非安装版/真实模型"
+  },
+  "types": {
+    "frontend": 0,
+    "worker": 0,
+    "contract": 0,
+    "backendProductionSource": 0,
+    "backendFull": 2,
+    "backendHistoricalErrors": 12,
+    "newBackendErrors": 0
+  },
+  "timeout": {
+    "log": "timeout-final.log",
+    "exit": 0
+  },
+  "finalReconcile": {
+    "log": "reconcile-final.log",
+    "exit": 1,
+    "errors": 34,
+    "warnings": 1,
+    "newErrors": 0,
+    "guardsHold": [
+      "LED-055",
+      "LED-047",
+      "LED-049",
+      "LED-053"
+    ],
+    "retainedRootTasks": [
+      "T-916",
+      "T-1015",
+      "T-1018"
+    ]
+  },
+  "boundary": {
+    "exit": 1,
+    "violations": 7,
+    "historicalBaseline": 5,
+    "introducedThisTask": 0
+  },
+  "orphan": {
+    "exit": 0,
+    "errors": 0,
+    "historicalWarnings": 100
+  },
+  "notVerified": [
+    "安装版长期RSS/堆快照",
+    "真实Whisper模型容量",
+    "正式用户数据库/账号旅程",
+    "浏览器像素截图"
+  ],
+  "baselineExpanded": false
+}

@@ -4,8 +4,6 @@ import type { SearchService, HybridSearchHit } from "./search.service";
 
 const BACKFILL_BATCH = 8;
 const BACKFILL_INTERVAL_MS = 60_000;
-const BACKFILL_DEADLINE_MS = 120_000;
-const QUERY_EMBEDDING_DEADLINE_MS = 8_000;
 
 /** 查询只等待本次查询向量；存量补算由同一应用生命周期管理，不创建业务任务。 */
 export function createKnowledgeSearchRuntime<Spec>(deps: {
@@ -38,7 +36,9 @@ export function createKnowledgeSearchRuntime<Spec>(deps: {
     if (now - (lastAttempt.get(key) ?? 0) < BACKFILL_INTERVAL_MS) return;
     if (lastAttempt.size >= 64) lastAttempt.delete(lastAttempt.keys().next().value!);
     lastAttempt.set(key, now);
-    const signal = AbortSignal.any([controller.signal, AbortSignal.timeout(BACKFILL_DEADLINE_MS)]);
+    // embedding IO持有冷启、排队和模型执行的完整期限；此处仅传播宿主停止。
+    // 不再以独立短外帽先中断仍合法排队/执行的同一请求。
+    const signal = controller.signal;
     const flight = tracked(async () => {
       signal.throwIfAborted();
       const docs = await deps.search.listMissingEmbeddings(ctx, "knowledge", BACKFILL_BATCH);
@@ -92,10 +92,7 @@ export function createKnowledgeSearchRuntime<Spec>(deps: {
       return tracked(async () => {
         let queryEmbedding: number[] | null = null;
         let semanticError: string | null = null;
-        const querySignal = AbortSignal.any([
-          controller.signal,
-          AbortSignal.timeout(QUERY_EMBEDDING_DEADLINE_MS),
-        ]);
+        const querySignal = controller.signal;
         try {
           const spec = await deps.resolveEmbedSpec(ctx);
           querySignal.throwIfAborted();

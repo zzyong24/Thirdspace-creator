@@ -1,0 +1,9 @@
+
+/Users/zyongzhu/.codex/worktrees/t1073-frontend/Thirdspace-creator/frontend/src/features/copilot/ai-copilot-content.tsx
+   948:6  warning  React Hook React.useMemo has a missing dependency: 'contextRequest'. Either include it or remove the dependency array                                                                react-hooks/exhaustive-deps
+  1051:5  warning  React Hook React.useMemo has missing dependencies: 'liveSession.control', 'liveSession.conversationId', and 'liveSession.epoch'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  1417:6  warning  React Hook React.useEffect has a missing dependency: 'searchParams'. Either include it or remove the dependency array                                                                react-hooks/exhaustive-deps
+  1619:5  warning  React Hook React.useCallback has an unnecessary dependency: 'scope'. Either exclude it or remove the dependency array                                                                react-hooks/exhaustive-deps
+  1756:6  warning  React Hook React.useCallback has a missing dependency: 'sessionOwner'. Either include it or remove the dependency array                                                              react-hooks/exhaustive-deps
+
+✖ 5 problems (0 errors, 5 warnings)

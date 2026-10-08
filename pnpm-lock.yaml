@@ -6,8 +6,12 @@ settings:
 
 patchedDependencies:
   '@earendil-works/pi-ai@0.80.7':
-    hash: 3272f5bc69752f8d4017676cd31ca9bad6302658d746c85f8c5606b974088325
+    hash: 0845475547acfdae94e2b4f8daa2efa4d65c12e9f54c9a35aa9df5dc9ab3bd94
     path: patches/@earendil-works__pi-ai@0.80.7.patch
+
+  hyperframes@0.7.54:
+    hash: 15761c896a52b54f07273e5031b38c4480484a466917f4cc65badf472149d5c0
+    path: patches/hyperframes@0.7.54.patch
 
 importers:
 
@@ -23,7 +27,7 @@ importers:
         version: link:../contract
       '@earendil-works/pi-ai':
         specifier: 0.80.7
-        version: 0.80.7(patch_hash=3272f5bc69752f8d4017676cd31ca9bad6302658d746c85f8c5606b974088325)(@modelcontextprotocol/sdk@1.29.0(zod@4.4.3))(ws@8.21.0)(zod@4.4.3)
+        version: 0.80.7(patch_hash=0845475547acfdae94e2b4f8daa2efa4d65c12e9f54c9a35aa9df5dc9ab3bd94)(@modelcontextprotocol/sdk@1.29.0(zod@4.4.3))(ws@8.21.0)(zod@4.4.3)
       '@earendil-works/pi-coding-agent':
         specifier: 0.80.7
         version: 0.80.7(@modelcontextprotocol/sdk@1.29.0(zod@4.4.3))(ws@8.21.0)(zod@4.4.3)
@@ -108,7 +112,7 @@ importers:
         version: link:../contract
       '@earendil-works/pi-ai':
         specifier: 0.80.7
-        version: 0.80.7(patch_hash=3272f5bc69752f8d4017676cd31ca9bad6302658d746c85f8c5606b974088325)(@modelcontextprotocol/sdk@1.29.0(zod@4.4.3))(ws@8.21.0)(zod@4.4.3)
+        version: 0.80.7(patch_hash=0845475547acfdae94e2b4f8daa2efa4d65c12e9f54c9a35aa9df5dc9ab3bd94)(@modelcontextprotocol/sdk@1.29.0(zod@4.4.3))(ws@8.21.0)(zod@4.4.3)
       '@earendil-works/pi-coding-agent':
         specifier: 0.80.7
         version: 0.80.7(@modelcontextprotocol/sdk@1.29.0(zod@4.4.3))(ws@8.21.0)(zod@4.4.3)
@@ -126,7 +130,7 @@ importers:
         version: 3.15.0
       hyperframes:
         specifier: 0.7.54
-        version: 0.7.54(@modelcontextprotocol/sdk@1.29.0(zod@4.4.3))
+        version: 0.7.54(patch_hash=15761c896a52b54f07273e5031b38c4480484a466917f4cc65badf472149d5c0)(@modelcontextprotocol/sdk@1.29.0(zod@4.4.3))
       image-size:
         specifier: 2.0.4
         version: 2.0.4
@@ -263,7 +267,7 @@ importers:
         version: 1.11.13
       hyperframes:
         specifier: 0.7.54
-        version: 0.7.54(@modelcontextprotocol/sdk@1.29.0(zod@4.4.3))
+        version: 0.7.54(patch_hash=15761c896a52b54f07273e5031b38c4480484a466917f4cc65badf472149d5c0)(@modelcontextprotocol/sdk@1.29.0(zod@4.4.3))
       lucide-react:
         specifier: 1.18.0
         version: 1.18.0(react@19.2.4)
@@ -8731,7 +8735,7 @@ snapshots:
 
   '@earendil-works/pi-agent-core@0.80.7(@modelcontextprotocol/sdk@1.29.0(zod@4.4.3))(ws@8.21.0)(zod@4.4.3)':
     dependencies:
-      '@earendil-works/pi-ai': 0.80.7(patch_hash=3272f5bc69752f8d4017676cd31ca9bad6302658d746c85f8c5606b974088325)(@modelcontextprotocol/sdk@1.29.0(zod@4.4.3))(ws@8.21.0)(zod@4.4.3)
+      '@earendil-works/pi-ai': 0.80.7(patch_hash=0845475547acfdae94e2b4f8daa2efa4d65c12e9f54c9a35aa9df5dc9ab3bd94)(@modelcontextprotocol/sdk@1.29.0(zod@4.4.3))(ws@8.21.0)(zod@4.4.3)
       ignore: 7.0.5
       typebox: 1.1.38
       yaml: 2.9.0
@@ -8743,7 +8747,7 @@ snapshots:
       - ws
       - zod
 
-  '@earendil-works/pi-ai@0.80.7(patch_hash=3272f5bc69752f8d4017676cd31ca9bad6302658d746c85f8c5606b974088325)(@modelcontextprotocol/sdk@1.29.0(zod@4.4.3))(ws@8.21.0)(zod@4.4.3)':
+  '@earendil-works/pi-ai@0.80.7(patch_hash=0845475547acfdae94e2b4f8daa2efa4d65c12e9f54c9a35aa9df5dc9ab3bd94)(@modelcontextprotocol/sdk@1.29.0(zod@4.4.3))(ws@8.21.0)(zod@4.4.3)':
     dependencies:
       '@anthropic-ai/sdk': 0.91.1(zod@4.4.3)
       '@aws-sdk/client-bedrock-runtime': 3.1048.0
@@ -8767,7 +8771,7 @@ snapshots:
   '@earendil-works/pi-coding-agent@0.80.7(@modelcontextprotocol/sdk@1.29.0(zod@4.4.3))(ws@8.21.0)(zod@4.4.3)':
     dependencies:
       '@earendil-works/pi-agent-core': 0.80.7(@modelcontextprotocol/sdk@1.29.0(zod@4.4.3))(ws@8.21.0)(zod@4.4.3)
-      '@earendil-works/pi-ai': 0.80.7(patch_hash=3272f5bc69752f8d4017676cd31ca9bad6302658d746c85f8c5606b974088325)(@modelcontextprotocol/sdk@1.29.0(zod@4.4.3))(ws@8.21.0)(zod@4.4.3)
+      '@earendil-works/pi-ai': 0.80.7(patch_hash=0845475547acfdae94e2b4f8daa2efa4d65c12e9f54c9a35aa9df5dc9ab3bd94)(@modelcontextprotocol/sdk@1.29.0(zod@4.4.3))(ws@8.21.0)(zod@4.4.3)
       '@earendil-works/pi-tui': 0.80.7
       '@silvia-odwyer/photon-node': 0.3.4
       chalk: 5.6.2
@@ -13414,7 +13418,7 @@ snapshots:
 
   human-signals@8.0.1: {}
 
-  hyperframes@0.7.54(@modelcontextprotocol/sdk@1.29.0(zod@4.4.3)):
+  hyperframes@0.7.54(patch_hash=15761c896a52b54f07273e5031b38c4480484a466917f4cc65badf472149d5c0)(@modelcontextprotocol/sdk@1.29.0(zod@4.4.3)):
     dependencies:
       '@hono/node-server': 1.19.14(hono@4.12.25)
       '@puppeteer/browsers': 3.0.6

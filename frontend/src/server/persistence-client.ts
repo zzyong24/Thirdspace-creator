@@ -1,3 +1,4 @@
+import { executionTimeoutMs } from "@creatoros/contract/timeout-policy";
 import {runAccountGroupStartup} from '@creatoros/backend/application/workspace/startup';
 import {hasLegacyDouyinCredentialEvidence} from '@creatoros/backend/application/workspace/credential-evidence';
 import {createTaxonomyEntityAccess} from "@creatoros/backend/application/taxonomy-entity-access";
@@ -1198,13 +1199,23 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   let disposeWorkbenchBrowserHost: (()=>Promise<void>) | undefined;
   let disposeCommentDiagnosisHost: (()=>Promise<void>) | undefined;
   let stopWorkbenchArtifactReconciler:(()=>void)|undefined;
+  const backgroundControl = new AbortController();
+  let stopAutomation: (()=>Promise<void>) | undefined;
+  let sweepTimer: ReturnType<typeof setInterval> | undefined;
+  let sweepInFlight: Promise<unknown> | undefined;
+  const stopBackground = async () => {
+    backgroundControl.abort();
+    if (sweepTimer) clearInterval(sweepTimer);
+    sweepTimer = undefined;
+    await Promise.all([stopAutomation?.(), sweepInFlight]);
+  };
   // [T-365/T-362] 把库的优雅关闭(PGlite client.close() = flush WAL)挂到 global,供
   //   sidecar-lifecycle 在 SIGTERM/孤儿自检退出时调用 —— 防「进程死于写库中途 → WAL 半写
   //   → 下次启动判损坏」(2026-07-16 数据事故根因)。挂 global 是刻意的:instrumentation
   //   不能 import 本模块(会在启动钩子里触发整个 persistence 装配)。
   (globalThis as { __creatorosDisposePersistence?: () => Promise<void> }).__creatorosDisposePersistence =
     createBrowserHostDisposer({browser:hostBrowserShutdownScope,stopWorkers:async()=>{
-      stopWorkbenchArtifactReconciler?.();await stopExecutionWorker?.();await disposeWorkbenchBrowserHost?.();await disposeCommentDiagnosisHost?.();
+      stopWorkbenchArtifactReconciler?.();await Promise.all([stopBackground(),stopExecutionWorker?.()]);await disposeWorkbenchBrowserHost?.();await disposeCommentDiagnosisHost?.();
     },disposeDatabase:dispose});
 
   // [T-363] 重置工作区(T-332 S5 Rust 整目录归档)后的首次启动:把 PRESERVE 清单表
@@ -4024,7 +4035,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     let current = url;
     let discoveredFeed = false;
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 15_000);
+    const timer = setTimeout(() => controller.abort(), executionTimeoutMs(15_000));
     try {
       for (let hop = 0; hop <= 6; hop += 1) {
         await assertUrlAllowed(current);
@@ -5289,17 +5300,25 @@ FAVORITES_PROMOTE_PER_RUN
     //   listRunningTasksSystem(跨号、只 running、不经 requireAccountId),不再用
     //   用户面 listTasks(S2 已 strict 按号,无号会抛 AccountRequiredError)。
     listRunningTasks: async (c: RequestContext) => {
+      backgroundControl.signal.throwIfAborted();
       return aiService.listRunningTasksSystem(c);
     },
-    markFailed: (c: RequestContext, taskId: string, msg: string) =>
-      aiService.markFailed(c, taskId, msg),
+    markFailed: (c: RequestContext, taskId: string, msg: string) => {
+      backgroundControl.signal.throwIfAborted();
+      return aiService.markFailed(c, taskId, msg);
+    },
     ctx: schedulerCtx,
     now: deps.now,
     staleMs: envMsOf("CREATOROS_STALE_AI_TASK_MS", 2 * 60 * 60 * 1000),
   };
-  void sweepStaleAiTasks(sweepAiTaskDeps).catch((e) =>
-    console.error("[scheduler] 启动扫僵尸 ai_task 失败:", e),
-  );
+  const runAiTaskSweep = (processStartedAt?: string) => {
+    if (backgroundControl.signal.aborted || sweepInFlight) return;
+    const work = sweepStaleAiTasks({...sweepAiTaskDeps, ...(processStartedAt ? {processStartedAt} : {})})
+      .catch(e => {if (!backgroundControl.signal.aborted) console.error("[scheduler] 清扫僵尸 ai_task 失败:", e);})
+      .finally(() => {if (sweepInFlight === work) sweepInFlight = undefined;});
+    sweepInFlight = work;
+  };
+  runAiTaskSweep();
   // [T-389] 低频周期复扫(默认 30min,CREATOROS_AI_TASK_SWEEP_INTERVAL_MS 可配):兜
   // 「启动扫单条 markFailed 失败」与「本进程运行期悬挂超阈值」的残留。带 processStartedAt
   // 锚 → 进程内类型只判上一进程遗留,本进程正在跑的活任务不误杀(落回年龄门)。
@@ -5309,12 +5328,9 @@ FAVORITES_PROMOTE_PER_RUN
     !(process.env.NODE_ENV === "test" || process.env.VITEST || process.env.CI)
   ) {
     const processStartedAt = deps.now();
-    const sweepTimer = setInterval(() => {
-      void sweepStaleAiTasks({ ...sweepAiTaskDeps, processStartedAt }).catch(
-        (e) => console.error("[scheduler] 周期复扫僵尸 ai_task 失败:", e),
-      );
-    }, envMsOf("CREATOROS_AI_TASK_SWEEP_INTERVAL_MS", 30 * 60 * 1000));
-    sweepTimer.unref?.();
+    if (!backgroundControl.signal.aborted) sweepTimer = setInterval(() => runAiTaskSweep(processStartedAt),
+      envMsOf("CREATOROS_AI_TASK_SWEEP_INTERVAL_MS", 30 * 60 * 1000));
+    sweepTimer?.unref?.();
   }
 
   // [T-255a] 启动清扫孤儿沙箱(T-207 sweep 兜底同族):采纳/丢弃/失败本会清沙箱,
@@ -5334,7 +5350,7 @@ FAVORITES_PROMOTE_PER_RUN
 
   // [T-517] 单一持久自动化 driver：scheduled_job 只供 due producer 读取；
   // execution_tasks/PersistentTaskService 才是 lease/attempt/recovery 唯一真值。
-  const {start:startUnifiedAutomationDriver}=createSchedulingAutomation({
+  const {start:startUnifiedAutomationDriver,stop:stopUnifiedAutomationDriver}=createSchedulingAutomation({
     aiService,schedulingService,schedulerCtx,
     syncDailyExecutionRuns:(ctx)=>dailyTopicRuns.syncExecutionRuns(ctx),
     syncCollectionExecutionRuns:(ctx)=>collectionRunState.syncExecutionRuns(ctx),
@@ -5343,6 +5359,8 @@ FAVORITES_PROMOTE_PER_RUN
     scheduledChildren:createExecutionScheduledChildService(db,{now:deps.now}),
     wakeDelegated:()=>{modelWorker?.start();wakeScheduledFlywheel();},
   });
+  stopAutomation = stopUnifiedAutomationDriver;
+  if (backgroundControl.signal.aborted) await stopUnifiedAutomationDriver();
 
   // ContentCalendar (module 22, Wave 5–7): the service builds a per-ctx user-scoped
   // repo over the shared db; peer modules are reached ONLY through narrow injected
@@ -5808,7 +5826,7 @@ FAVORITES_PROMOTE_PER_RUN
       ...(cfg.displayModelKey?{displayModelKey:cfg.displayModelKey}:{})};
   };
 
-  const workerBudget={maxCalls:6,maxTokens:1_000_000,deadlineMs:600_000};
+  const workerBudget={maxCalls:6,maxTokens:1_000_000,deadlineMs:1_800_000};
   const {readArtifactContentData,thesisReader,contractReader,outlineReader,artifactOriginReader}=createArtifactContextReaders(artifactsService);
   const generationContext={positioning:{getPositioningCenter:(c:RequestContext)=>positioningService.readPositioningCenter(c)},learnings:{getSuggestions:(c:RequestContext,options:{limit?:number})=>learningsService.getSuggestions(c,options)}};
   const reviewScriptSource: Parameters<typeof prepareScriptReviewContext>[2]["scriptSource"] = {
@@ -6148,7 +6166,7 @@ FAVORITES_PROMOTE_PER_RUN
         },
       }),
   });
-  const agenticBudget={maxCalls:8,maxTokens:20000,deadlineMs:600_000};
+  const agenticBudget={maxCalls:8,maxTokens:20000,deadlineMs:1_800_000};
   const agenticBusiness=createAgenticBusinessExecutionService(db,{
     definitions:{
       "exec.agentic.collect":{taskType:"agentic.collect",systemPrompt:DEFAULT_AGENTIC_SYSTEM_PROMPT,capability:"agentic.collect",tools:collectionWorkerTools.definitions},
@@ -6180,7 +6198,7 @@ FAVORITES_PROMOTE_PER_RUN
     prepare:(c,id)=>businessExecution.prepare(c,id),
     wake:()=>{if(!modelWorker)throw new Error("生成服务未就绪");modelWorker.start();},
   });
-  stopExecutionWorker=async()=>{stoppingPreparation=true;assetBusiness.stop();transcribeBusiness.stop();await Promise.all([recoveryWake?.stop(),accountBindingService.stop(),scheduledFlywheel.stop(),submittedPreparation.stop(),knowledgeSearchRuntime.stop(),embeddingIo.stop(),modelProbeIo.stop(),localCodexStatus.stop(),intelligenceGeneration.stop(),intelligenceTranscriptBridge.stop(),benchmarkTranscription.stop(),modelWorker?.stop(),agenticWorker?.stop(),chatWorker?.stop()]);await Promise.all([preparationRecovery,agenticPreparationRecovery]);};
+  stopExecutionWorker=async()=>{stoppingPreparation=true;assetBusiness.stop();transcribeBusiness.stop();await Promise.all([stopBackground(),recoveryWake?.stop(),accountBindingService.stop(),scheduledFlywheel.stop(),submittedPreparation.stop(),knowledgeSearchRuntime.stop(),embeddingIo.stop(),modelProbeIo.stop(),localCodexStatus.stop(),intelligenceGeneration.stop(),intelligenceTranscriptBridge.stop(),benchmarkTranscription.stop(),modelWorker?.stop(),agenticWorker?.stop(),chatWorker?.stop()]);await Promise.all([preparationRecovery,agenticPreparationRecovery]);};
   globalForPersistence.__creatorosStopExecutionWorker=stopExecutionWorker;
 
   // 两个审核入口转交同一持久执行权，报告由后端审核端口绑定冻结版本并原子提交。
@@ -7097,7 +7115,7 @@ getArticleForImage: (ctx, {outputId}) => articlesService.getArticle(ctx, outputI
   if(stoppingPreparation)await recoveryWake.stop();else recoveryWake.start();
 
   // 所有模型、每日任务回执与恢复消费者装配完成后才启动自动化，避免首轮 tick 读取未初始化服务。
-  if (!stoppingPreparation && process.env.CREATOROS_DISABLE_BACKGROUND_DRIVERS !== "1") {
+  if (!stoppingPreparation && !backgroundControl.signal.aborted && process.env.CREATOROS_DISABLE_BACKGROUND_DRIVERS !== "1") {
     void startUnifiedAutomationDriver().catch(error =>
       console.error("[automation-driver] 启动失败:", error),
     );

@@ -1,0 +1,158 @@
+{
+  "schema": "creatoros-independent-external-merge-candidate/v1",
+  "task": "T-1080",
+  "reviewer": "assistant_core_implementation_review",
+  "createdAtUtc": "2026-10-08T12:03:16.897043+00:00",
+  "verdict": "PASS",
+  "boundedVerdict": "13文件三方合并候选及语法初核PASS，待root类型/行为/公共链验证",
+  "repository": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "externalCandidateRoot": "/Users/zyongzhu/CreatorOS-local-acceptance/worktree-main-integration-20261008/resource-frontend-candidate",
+  "currentHead": "e81e9b609cd0be0b30444de8bab33cfff42c1e64",
+  "resourceMergeHead": "6b1322af71cbdf55f52e9f37c5cde76e06b56e48",
+  "files": [
+    {
+      "path": "frontend/scripts/desktop/build-sidecar.mjs",
+      "baseSha256": "97e8917a22226867cd7ad4731cb477fd41ca580e079e5faeaf466a913704796e",
+      "currentSha256": "75c5b2a79191114966bc3f61b72ffc769b02b4a7d69be6998b5f971ff731bb05",
+      "resourceSha256": "a996b9d8c20af648e396d122b31d133b1a3798fb064f31cc14dab44d7552d6ef",
+      "candidateSha256": "fb9d864505f4cc1edd28206842857367016419619f83accc24892786433bb0c4",
+      "decision": "保持current完整层级资源/CfT/Whisper/Playwright/Codex及混淆字节码逻辑；hyperframes实际CLI探针并入resource120s。"
+    },
+    {
+      "path": "frontend/scripts/desktop/execution-worker-runtime.mjs",
+      "baseSha256": "42d5db9e9d15f7ee8f7ece77651209435c7f7fa742094c386504ef081abc575b",
+      "currentSha256": "fc2b920b1d2e2c99e256af00893993a7dbcd054b81958181e4d2d135c2653895",
+      "resourceSha256": "f46944d3442ddcace23f591cd8ed5f7700c475cb9d692dbf45feaec665312c58",
+      "candidateSha256": "952df10ddb536af6a1fe6747fac0616990f2158dba8d56eeba339926c98ae5e0",
+      "decision": "保持current Codex ACP/status两个worker与Codex/fs-safe随包依赖；并入resource buildOnly/可注入run与120s解析预算。"
+    },
+    {
+      "path": "frontend/scripts/desktop/node-runtime.mjs",
+      "baseSha256": "a6973a539a184065c7cc07c6c1f437575a041e6112ff804c20bac88416affcc5",
+      "currentSha256": "980d1c2881c50cc0f04337295aac68c7a5a94ad4fc2fa5de9b1fe401bb1aebf0",
+      "resourceSha256": "f341572d12cc2cb6a30cc18ec4bb2a85978a9e09476c91b05b4882a3c3c816fe",
+      "candidateSha256": "f341572d12cc2cb6a30cc18ec4bb2a85978a9e09476c91b05b4882a3c3c816fe",
+      "decision": "并入resource Node版本探针120s；其余平台路径/版本约束按三方自动合成。"
+    },
+    {
+      "path": "frontend/scripts/desktop/package.mjs",
+      "baseSha256": "128b19fe3f8e4e362ae31382dd5c3329d2f1e2aa838b1159a611d70cf57d32f6",
+      "currentSha256": "af7f00cc5dca6b9e7e7bdaae5e347670d7010e3af30144dad7b3c81768e410bb",
+      "resourceSha256": "c8eedbe64d1ed947e3d78b8e4bab4d0295197e8e8c324924feb34bb2ff63f00b",
+      "candidateSha256": "f9d7f5c868eeb6d0aa8334621db3d0c6642647449d9bed53d58036d704e7cf48",
+      "decision": "保持current打包与native Source4链；并入resource TLS请求120s AbortSignal与外层150s，原签名/资源完整性逻辑保留。"
+    },
+    {
+      "path": "frontend/src-tauri/src/lib.rs",
+      "baseSha256": "f26bf4fb0cb9577bed955c121e74161845146444175f246ab60a9e2d1e9f5a2a",
+      "currentSha256": "9247420ba2c70cab947ae021444576acd8feb14ba865f0cad7e3ace66ae11efd",
+      "resourceSha256": "820e46bee77ee75121dda9fe1ee4a6ca18aac399f745768a3f44bf49486eb2b5",
+      "candidateSha256": "6f8f46ea3cec2d0f831f8ab42df1ad6b62f1c256bbaeba29b22495995610dd1a",
+      "decision": "同时保留current固定127.0.0.1 startup no_proxy与resource探针至少120s；保留current全部Source4和启动实现，接入resource原Windows shutdown130s。"
+    },
+    {
+      "path": "frontend/src/features/copilot/ai-copilot-content.tsx",
+      "baseSha256": "762a1f1c1c7cdee5d4e2ed3e5fc3fd9e8165a6bc8a08898cb352e397308b92ff",
+      "currentSha256": "2a9233504708219cbe772da96e10ba393ccc1c3dc3927d91781f5c0cbe75c988",
+      "resourceSha256": "4848adb233caaed68d98332583cf8bd52d984cd7b504d42232117489c427cd79",
+      "candidateSha256": "7c983403d4ff65f0ced989942253626be62b590c3892061ac0a4db758dd1a5d5",
+      "decision": "保留current助手引擎、group/session scope、工作台plan/artifact卡、编辑器/采纳与来源4；同一UI factory创建泛型Chat后加入resource acquire观察者。停止逻辑按resource冻结session/epoch/turn，恢复预算继续用currentTaskId真实回执ref。"
+    },
+    {
+      "path": "frontend/src/features/copilot/ai-copilot-interactions.test.tsx",
+      "baseSha256": "c38a1588113d4fe8f618feca3cc8be772d3cb435f9ec2862f41b720ee6f837da",
+      "currentSha256": "a863f3261babb079eda5a7e5a9724baf32ce3e2cf69af477845aaa9ff8df638c",
+      "resourceSha256": "a70dc872852f7af3e4e184c4c38c825d6e1648352870c54071cb48e99cbac147",
+      "candidateSha256": "f378c5f4e9d3d6c902af77f8cf68a3e7d01110a7b6e23ee552d0bb9369339772",
+      "decision": "保留双方测试；mock同时具备currentTaskId与resource boolean cancel/chat.stop及acquire，不改既有断言。"
+    },
+    {
+      "path": "frontend/src/features/copilot/chat-task-control.ts",
+      "baseSha256": "4c9592b144a2824dbcd8cff7f5cb8f3c9d475dca47ddd9f55e64170df500240f",
+      "currentSha256": "4e35debdd4db44f1669f8a00ada3ff42215a9e16254b2796814cbfd10f70c203",
+      "resourceSha256": "b5b2490fd5f69c7b7014e9280a5686d20ca78ee0e1e5d9cde858ba2af0869fed",
+      "candidateSha256": "431fad9b42530296ee60ec5f6619bf7899c082da196608c5acf0be3b3bc6db10",
+      "decision": "保留current submit新轮清旧回执、regenerate失败保留同轮回执及cancel回退旧真实taskId；加入resource executionTaskId/turnKey/release、已确认同轮才返true/解除active，非当前轮不停止新流。"
+    },
+    {
+      "path": "frontend/src/features/copilot/live-chat-session.test.ts",
+      "baseSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "currentSha256": "4689eb0fb70d15a163a598717c495389df68d4221c599b7aa1aade486799556d",
+      "resourceSha256": "565658ef44d992d5626f439c9d95325a6c0de6e765f5dbe07ff206607fe165da",
+      "candidateSha256": "81b7b9cd2fb13d254036656fc3b03c5a1867879a467a032ccd98e8c64ede72dd",
+      "decision": "保留current同窗重挂/账号隔离测试；保留resource100scope容量、挂载/审批保护、真正SDK合成stream完整回复测试。resource测试使用UI同型factory适配泛型端口，非模型执行。"
+    },
+    {
+      "path": "frontend/src/features/copilot/live-chat-session.ts",
+      "baseSha256": "273cec01e6f4501adedabd9d6e2d9414b77ba53ecf8f1ffdc856beae33539c5f",
+      "currentSha256": "1150f390db9f243a40ba176ed0e2bf01bdf907cf69e61572ffd92d0c7dab019d",
+      "resourceSha256": "4adaa0e8062f6253812d1acb871a23f4f230916d008c0e2dc1d73d0e6f40b107",
+      "candidateSha256": "6f11f0af329bcd23ee0165a416d8f3c822bbf5e0fadbb6d0226d0d5b3a55b27e",
+      "decision": "融合current泛型factory/执行器与sourceEngines冻结Map，以及resource16闲置scope/4MiB限额、stream/审批/持久任务保护、观察者与callback释放。容器不引入AI SDK业务依赖，读取结构状态管理资源。"
+    },
+    {
+      "path": "frontend/src/features/draft-workbench/draft-chat-request.tsx",
+      "baseSha256": "32a38a6577017efdcb563c1c6917919f7136280026cf5b3c90c7b50419f17973",
+      "currentSha256": "9d36e3049aa4c85222c28e1a46af2c8df5ef585a5faa2ecedb0690ea8ffa16c1",
+      "resourceSha256": "338ba76986db146b8f480a25cc09e8638cc7766ea8d72cdc6f49f1673b1ffe26",
+      "candidateSha256": "0685de879b73d5293ba627700642601c32ddf518b8f0eadd3b9810211b198730",
+      "decision": "保留current草稿/editor协调真实owner；并入resource非严格和严格flush观察至少120s，不新发诊断。"
+    },
+    {
+      "path": "frontend/src/features/production/production-resource-operations.ts",
+      "baseSha256": "a6b7b1b24cbcccf6d2a1b3dfbbe002f038204af309c922e312d696c0d088bd8e",
+      "currentSha256": "abcf37b8983b778c8117ada7ca028519c47b5eeba4270517e45b6384d79af4c7",
+      "resourceSha256": "71d24e7e964bab6a1bf943972cc59d22345ca5a6a86fdd712e81c4f5d7a52840",
+      "candidateSha256": "6f69f6a999f937db7d8a1b05a28549f62a10c0d8c0ceacbfaf33407284565071",
+      "decision": "联合current CreationOperation group归属/取消signal/每阶段assertCurrent与resource媒体元数据120s观察；轮询间隔保留原4s。"
+    },
+    {
+      "path": "frontend/src/server/persistence-client.ts",
+      "baseSha256": "f8281d50f02649553769814bcba9972b0cbb2ddfec91fde74d2fb395eb308029",
+      "currentSha256": "3fb60836e5a5cca4fe3a9184346bcfe8b27a1712ba2f0c7bbd6c8fcbe932a0e7",
+      "resourceSha256": "7da45718f7b63a38f3252bcc9a8ef2b19ad0b5c7fb417571b8217ca0ae9ab194",
+      "candidateSha256": "6f31afb254a97756fa54402e248a6036ca5c7995ce0f50d90b276ad2db928384",
+      "decision": "联合current工作台Gateway/CLI计划、三宿主disposer、账号组、Codex状态stop与原三个T1077 MaterialLinks getProject返回；加入resource abortable后台sweep、单在途、automation stop及资源退出。stop顺序保持reconciler→workers/background→workbench browser→comment diagnosis→原database disposer。"
+    }
+  ],
+  "fileCount": 13,
+  "conflictDecisions": "逐hunk及重叠API组合，不采用整边覆盖；非冲突变化经真实三版本merge-file合成。",
+  "syntax": {
+    "tsParse": {
+      "files": 8,
+      "errors": 0,
+      "receiptSha256": "c07381596625fc37c9530600326f50e28a476349049276609a9bf65b7070894f"
+    },
+    "nodeCheck": {
+      "files": 4,
+      "exit": 0,
+      "receiptSha256": "f2040ddc202a00eb0f2c219b5e09b1bb03201fae76383e07e37fbdd5e8e0124f"
+    },
+    "rustfmtParse": {
+      "files": 1,
+      "exit": 0,
+      "formattedOutputDiscarded": true,
+      "receiptSha256": "492cb974916766c013cf8cb280ad12e604c8a68fe372e8e9a3a06d493ac69e18"
+    }
+  },
+  "importantCompatibility": [
+    "chat-task-control currentTaskId恢复语义与resource boolean cancel保持在同一对象，503同轮重连不能丢真实task指针。",
+    "资源会话已适配current泛型factory，生产容器不重新导入AI SDK；SDK合成stream测试由测试内同型factory创建。",
+    "getLiveChatSession调用侧保留main UI factory，acquire观察者在其后注册；原恢复代码用到的taskControl ref明确保留。",
+    "持久化退出保留localCodexStatus.stop以及三个宿主清理，后台stop加入原worker退出；原automation.stop已是memoized幂等（仅只读原消费者及已有测试）。",
+    "T1077三个MaterialLinks的同事务ProjectsService.getProject返回保留；未改变归属/lock/数据库写入口。",
+    "资源分支其它flow背压/轮询控制文件由root或其它候选范围整合，本报告仅本13路径。"
+  ],
+  "writes": [
+    "本externalCandidateRoot下13候选及语法收据/本报告"
+  ],
+  "repoWrites": 0,
+  "businessWrites": 0,
+  "testsRun": 0,
+  "limits": [
+    "仅语法解析：不是TypeScript完整类型、Rust编译、Gate或实际业务验收。",
+    "未运行构建/安装/App/业务CLI/数据库/真实模型。",
+    "当前37冲突及其它来源未由本报告全部解决；root按候选SHA应用，再做实际类型与公共链。",
+    "候选或三方来源后续变动须重绑；不签最终main/全功能/新包/安装。"
+  ]
+}

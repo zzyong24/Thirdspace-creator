@@ -16,6 +16,7 @@
  */
 
 import * as React from "react";
+import { TaskObservationNotice, useTaskObservation } from "@/components/ai/task-observation";
 import { useRouter } from "next/navigation";
 
 import { client } from "@/lib/contract-client";
@@ -80,6 +81,8 @@ export function ChatPublishPackageCard({
   pollIntervalMs?: number;
 }) {
   const router = useRouter();
+  const observation = useTaskObservation(taskId);
+  const { pause: pauseObservation, capture: captureObservation } = observation;
   const [phase, setPhase] = React.useState<Phase>(
     error || !taskId ? "error" : "running",
   );
@@ -98,10 +101,12 @@ export function ChatPublishPackageCard({
     if (!taskId || error) return;
     let abandoned = false;
     void (async () => {
-      for (let i = 0; i < MAX_POLLS; i++) {
-        if (abandoned) return;
+      const isCurrent = captureObservation();
+      for (let i = 0; ; i++) {
+        if (i > 0 && i % MAX_POLLS === 0 && !await pauseObservation()) return;
+        if (abandoned || !isCurrent()) return;
         await new Promise((r) => setTimeout(r, pollIntervalMs));
-        if (abandoned) return;
+        if (abandoned || !isCurrent()) return;
         try {
           const steps = (await client.listTaskSteps({
             params: { taskId },
@@ -123,6 +128,7 @@ export function ChatPublishPackageCard({
         } catch {
           continue; // 单次拉取失败不终止(下轮再试)
         }
+        if (abandoned || !isCurrent()) return;
         if(task.executionTaskId && ["waiting_user","unknown_result","paused"].includes(task.runtimeStatus ?? "")){
           if(!abandoned){setBlocked({status:task.runtimeStatus!,executionTaskId:task.executionTaskId});setPhase("blocked");}
           return;
@@ -130,6 +136,7 @@ export function ChatPublishPackageCard({
         if(!abandoned && task.runtimeStatus==="retry_wait")setProgressText("暂时繁忙，正在等待自动重试");
         if(!abandoned && task.runtimeStatus==="cancel_requested")setProgressText("正在取消生成");
         const status = task.status;
+        if (status === "succeeded") { setPhase("done"); return; }
         if (status === "awaiting_confirmation") {
           try {
             const results = (await client.listTaskResults({
@@ -139,7 +146,7 @@ export function ChatPublishPackageCard({
             })) as unknown as Array<{ resultData: Record<string, unknown> }>;
             const last = results[results.length - 1];
             const got = last ? parseDouyinDraft(last.resultData) : null;
-            if (abandoned) return;
+            if (abandoned || !isCurrent()) return;
             if (got) {
               setDraft(got);
               setPhase("review");
@@ -147,12 +154,12 @@ export function ChatPublishPackageCard({
               setPhase("error");
             }
           } catch {
-            if (!abandoned) setPhase("error");
+            if (!abandoned && isCurrent()) setPhase("error");
           }
           return;
         }
         if (status === "cancelled" || status === "failed") {
-          if (!abandoned) {
+          if (!abandoned && isCurrent()) {
             const detail = task.errorMessage?.trim();
             if (detail) setFailureDetail(detail);
             setPhase("error");
@@ -160,15 +167,11 @@ export function ChatPublishPackageCard({
           return;
         }
       }
-      if (!abandoned) {
-        setFailureDetail("页面等待超时，后台任务可能仍在执行，请先查看任务状态。");
-        setPhase("error");
-      }
     })();
     return () => {
       abandoned = true;
     };
-  }, [taskId, error, pollIntervalMs,pollEpoch]);
+  }, [taskId, error, pollIntervalMs, pollEpoch, pauseObservation, captureObservation]);
 
   const resume=async()=>{
     if(!blocked)return;
@@ -214,7 +217,8 @@ export function ChatPublishPackageCard({
           {failureDetail ? <p>{failureDetail}</p> : null}
         </div>
       ) : null}
-      {phase === "running" ? (
+      <TaskObservationNotice {...observation} />
+      {phase === "running" && !observation.paused ? (
         <div
           data-slot="chat-publish-running"
           className="flex items-center gap-2 text-[12px] text-muted-foreground"

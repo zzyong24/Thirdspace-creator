@@ -1,0 +1,124 @@
+     Locking 1 package to latest compatible version
+   Compiling libc v0.2.189
+   Compiling t1071-native-audit v0.0.0 (/tmp/t1071-native)
+warning: constant `POLL` is never used
+ --> /Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src-tauri/src/sidecar_process.rs:7:7
+  |
+7 | const POLL: Duration = Duration::from_millis(150);
+  |       ^^^^
+  |
+  = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: constant `GRACE` is never used
+ --> /Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src-tauri/src/sidecar_process.rs:9:7
+  |
+9 | const GRACE: Duration = Duration::from_secs(130);
+  |       ^^^^^
+
+warning: constant `FORCE` is never used
+  --> /Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src-tauri/src/sidecar_process.rs:10:7
+   |
+10 | const FORCE: Duration = Duration::from_secs(120);
+   |       ^^^^^
+
+warning: struct `OwnedSidecar` is never constructed
+  --> /Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src-tauri/src/sidecar_process.rs:12:19
+   |
+12 | pub(crate) struct OwnedSidecar(Mutex<State>);
+   |                   ^^^^^^^^^^^^
+
+warning: struct `State` is never constructed
+  --> /Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src-tauri/src/sidecar_process.rs:13:8
+   |
+13 | struct State {
+   |        ^^^^^
+
+warning: associated items `new`, `stop`, and `watch_exit` are never used
+  --> /Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src-tauri/src/sidecar_process.rs:19:19
+   |
+18 | impl OwnedSidecar {
+   | ----------------- associated items in this implementation
+19 |     pub(crate) fn new(child: Child) -> Self {
+   |                   ^^^
+...
+26 |     pub(crate) fn stop(&self) -> Result<(), String> {
+   |                   ^^^^
+...
+45 |     pub(crate) fn watch_exit(&self) -> Result<(), String> {
+   |                   ^^^^^^^^^^
+
+warning: function `reap_exited` is never used
+  --> /Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src-tauri/src/sidecar_process.rs:71:4
+   |
+71 | fn reap_exited(state: &mut State) -> Result<(), String> {
+   |    ^^^^^^^^^^^
+
+warning: function `root_exited` is never used
+  --> /Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src-tauri/src/sidecar_process.rs:86:4
+   |
+86 | fn root_exited(pid: i32) -> Result<bool, String> {
+   |    ^^^^^^^^^^^
+
+warning: trait `StopPort` is never used
+   --> /Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src-tauri/src/sidecar_process.rs:105:7
+    |
+105 | trait StopPort {
+    |       ^^^^^^^^
+
+warning: function `stop_group` is never used
+   --> /Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src-tauri/src/sidecar_process.rs:113:4
+    |
+113 | fn stop_group(port: &mut impl StopPort, grace: Duration, force: Duration) -> Result<(), String> {
+    |    ^^^^^^^^^^
+
+warning: struct `ProcessGroup` is never constructed
+   --> /Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src-tauri/src/sidecar_process.rs:143:8
+    |
+143 | struct ProcessGroup {
+    |        ^^^^^^^^^^^^
+
+warning: function `group_pids` is never used
+   --> /Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src-tauri/src/sidecar_process.rs:181:4
+    |
+181 | fn group_pids(pgid: i32) -> Result<Vec<i32>, String> {
+    |    ^^^^^^^^^^
+
+warning: function `process_info` is never used
+   --> /Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src-tauri/src/sidecar_process.rs:205:4
+    |
+205 | fn process_info(pid: i32) -> Result<libc::proc_bsdinfo, String> {
+    |    ^^^^^^^^^^^^
+
+warning: function `group_has_executing_members` is never used
+   --> /Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src-tauri/src/sidecar_process.rs:226:4
+    |
+226 | fn group_has_executing_members(pgid: i32) -> Result<bool, String> {
+    |    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: `t1071-native-audit` (lib) generated 14 warnings
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 3.91s
+     Running unittests src/lib.rs (/tmp/t1071-native/target/debug/deps/t1071_native_audit-c66c46ac5c27ebd1)
+
+running 12 tests
+test sidecar_process::tests::failed_signals_do_not_imply_stop ... ok
+test sidecar_process::tests::graceful_window_is_preserved ... ok
+test sidecar_process::tests::forced_stop_is_bounded_and_does_not_report_unconfirmed_success ... ok
+test sidecar_process::tests::identity_mismatch_sends_no_signal ... ok
+test sidecar_process::tests::unreadable_group_attempts_owned_fallback_but_cannot_prove_stop ... ok
+test sidecar_process::tests::t1066_native_outer_allows_slow_inner_flush_and_signals_immediately ... ok
+test sidecar_process::tests::t1066_native_hung_cleanup_is_bounded_after_inner_flush_budget ... ok
+test sidecar_process::tests::drop_stops_and_reaps_an_owned_group ... ok
+test sidecar_process::tests::concurrent_watch_and_stop_share_one_result ... ok
+test sidecar_process::tests::wrong_group_is_not_signalled_and_failure_is_not_success_on_retry ... ok
+test sidecar_process::tests::natural_exit_watcher_stops_group_and_reaps_root has been running for over 60 seconds
+test sidecar_process::tests::root_exit_does_not_prove_descendant_stopped has been running for over 60 seconds
+test sidecar_process::tests::root_exit_does_not_prove_descendant_stopped ... ok
+test sidecar_process::tests::natural_exit_watcher_stops_group_and_reaps_root ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 60.15s
+
+   Doc-tests t1071_native_audit
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s

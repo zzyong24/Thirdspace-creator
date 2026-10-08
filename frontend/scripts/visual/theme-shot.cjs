@@ -24,6 +24,8 @@ const theme = process.argv[4] || "dark";
     } catch (e) {}
   }, theme);
   const page = await context.newPage();
+  page.setDefaultTimeout(120_000);
+  page.setDefaultNavigationTimeout(120_000);
   await page.goto(BASE + route, { waitUntil: "networkidle" });
   await page.waitForTimeout(1200);
   await page.screenshot({ path: outfile, fullPage: true });

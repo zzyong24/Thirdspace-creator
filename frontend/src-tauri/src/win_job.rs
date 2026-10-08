@@ -99,7 +99,7 @@ impl SidecarJob {
     /// 再触发一次 KILL_ON_JOB_CLOSE,幂等)。与 macOS killpg SIGTERM→5s→SIGKILL 同构。
     pub fn shutdown(self, grace_timeout_ms: u32) -> Result<(), String> {
         unsafe {
-            let initial_wait = WaitForSingleObject(self.process, grace_timeout_ms);
+            let initial_wait = WaitForSingleObject(self.process, grace_timeout_ms.max(130_000));
             let result = if initial_wait == WAIT_OBJECT_0 {
                 Ok(())
             } else if TerminateJobObject(self.job, 1) == 0 {
@@ -107,7 +107,7 @@ impl SidecarJob {
                     "TerminateJobObject 失败(GetLastError={})",
                     GetLastError()
                 ))
-            } else if WaitForSingleObject(self.process, 5_000) == WAIT_OBJECT_0 {
+            } else if WaitForSingleObject(self.process, 120_000) == WAIT_OBJECT_0 {
                 Ok(())
             } else {
                 Err("sidecar Job 已请求终止，但 5 秒内未确认进程退出".to_string())

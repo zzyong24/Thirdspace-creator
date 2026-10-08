@@ -1,0 +1,268 @@
+{
+  "decisions": [
+    {
+      "path": "orchestrator/progress.json.summary.verticals",
+      "choice": "current_latest_scalar",
+      "source_value": 70,
+      "current_value": 79
+    },
+    {
+      "path": "orchestrator/progress.json.summary.tasks_done",
+      "choice": "current_latest_scalar",
+      "source_value": 50,
+      "current_value": 49
+    },
+    {
+      "path": "orchestrator/progress.json.summary.tasks_total",
+      "choice": "current_latest_scalar",
+      "source_value": 162,
+      "current_value": 180
+    },
+    {
+      "path": "orchestrator/progress.json.summary.tasks_pending",
+      "choice": "current_latest_scalar",
+      "source_value": 112,
+      "current_value": 131
+    },
+    {
+      "path": "orchestrator/progress.json.summary.verticals_complete",
+      "choice": "current_latest_scalar",
+      "source_value": 14,
+      "current_value": 4
+    },
+    {
+      "path": "orchestrator/.lessons-stats.json.LED-003.fireCount",
+      "choice": "current_latest_scalar",
+      "source_value": 226,
+      "current_value": 201
+    },
+    {
+      "path": "orchestrator/.lessons-stats.json.LED-003.lastFiredAt",
+      "choice": "current_latest_scalar",
+      "source_value": "2026-10-08T09:02:01.559Z",
+      "current_value": "2026-10-08T05:09:12.319Z"
+    },
+    {
+      "path": "orchestrator/.lessons-stats.json.LED-006.fireCount",
+      "choice": "current_latest_scalar",
+      "source_value": 228,
+      "current_value": 204
+    },
+    {
+      "path": "orchestrator/.lessons-stats.json.LED-006.lastFiredAt",
+      "choice": "current_latest_scalar",
+      "source_value": "2026-10-08T09:02:01.559Z",
+      "current_value": "2026-10-08T11:43:38.850Z"
+    },
+    {
+      "path": "orchestrator/.lessons-stats.json.LED-007.fireCount",
+      "choice": "current_latest_scalar",
+      "source_value": 226,
+      "current_value": 202
+    },
+    {
+      "path": "orchestrator/.lessons-stats.json.LED-007.lastFiredAt",
+      "choice": "current_latest_scalar",
+      "source_value": "2026-10-08T09:02:01.559Z",
+      "current_value": "2026-10-08T11:43:38.850Z"
+    },
+    {
+      "path": "orchestrator/.lessons-stats.json.LED-008.fireCount",
+      "choice": "current_latest_scalar",
+      "source_value": 226,
+      "current_value": 202
+    },
+    {
+      "path": "orchestrator/.lessons-stats.json.LED-008.lastFiredAt",
+      "choice": "current_latest_scalar",
+      "source_value": "2026-10-08T09:02:01.559Z",
+      "current_value": "2026-10-08T11:43:38.850Z"
+    },
+    {
+      "path": "orchestrator/.lessons-stats.json.LED-009.fireCount",
+      "choice": "current_latest_scalar",
+      "source_value": 226,
+      "current_value": 202
+    },
+    {
+      "path": "orchestrator/.lessons-stats.json.LED-009.lastFiredAt",
+      "choice": "current_latest_scalar",
+      "source_value": "2026-10-08T09:02:01.559Z",
+      "current_value": "2026-10-08T11:43:38.850Z"
+    },
+    {
+      "path": "orchestrator/.lessons-stats.json.LED-013.lastFiredAt",
+      "choice": "current_latest_scalar",
+      "source_value": "2026-10-07T11:27:17.743Z",
+      "current_value": "2026-10-08T11:43:38.850Z"
+    },
+    {
+      "path": "orchestrator/.lessons-stats.json.LED-014.fireCount",
+      "choice": "current_latest_scalar",
+      "source_value": 226,
+      "current_value": 202
+    },
+    {
+      "path": "orchestrator/.lessons-stats.json.LED-014.lastFiredAt",
+      "choice": "current_latest_scalar",
+      "source_value": "2026-10-08T09:02:01.559Z",
+      "current_value": "2026-10-08T11:43:38.850Z"
+    },
+    {
+      "path": "orchestrator/.lessons-stats.json.LED-017.fireCount",
+      "choice": "current_latest_scalar",
+      "source_value": 226,
+      "current_value": 202
+    },
+    {
+      "path": "orchestrator/.lessons-stats.json.LED-017.lastFiredAt",
+      "choice": "current_latest_scalar",
+      "source_value": "2026-10-08T09:02:01.559Z",
+      "current_value": "2026-10-08T11:43:38.850Z"
+    },
+    {
+      "path": "orchestrator/.lessons-stats.json.LED-018.fireCount",
+      "choice": "current_latest_scalar",
+      "source_value": 240,
+      "current_value": 216
+    },
+    {
+      "path": "orchestrator/.lessons-stats.json.LED-018.lastFiredAt",
+      "choice": "current_latest_scalar",
+      "source_value": "2026-10-08T09:02:01.559Z",
+      "current_value": "2026-10-08T11:43:38.850Z"
+    },
+    {
+      "path": "orchestrator/.lessons-stats.json.LED-020.fireCount",
+      "choice": "current_latest_scalar",
+      "source_value": 225,
+      "current_value": 201
+    },
+    {
+      "path": "orchestrator/.lessons-stats.json.LED-020.lastFiredAt",
+      "choice": "current_latest_scalar",
+      "source_value": "2026-10-08T09:02:01.559Z",
+      "current_value": "2026-10-08T11:43:38.850Z"
+    },
+    {
+      "path": "orchestrator/.lessons-stats.json.LED-023.lastFiredAt",
+      "choice": "current_latest_scalar",
+      "source_value": "2026-10-07T11:27:17.743Z",
+      "current_value": "2026-10-08T11:43:38.850Z"
+    },
+    {
+      "path": "orchestrator/.lessons-stats.json.LED-024.fireCount",
+      "choice": "current_latest_scalar",
+      "source_value": 378,
+      "current_value": 354
+    },
+    {
+      "path": "orchestrator/.lessons-stats.json.LED-024.lastFiredAt",
+      "choice": "current_latest_scalar",
+      "source_value": "2026-10-08T09:02:01.559Z",
+      "current_value": "2026-10-08T11:43:38.850Z"
+    },
+    {
+      "path": "orchestrator/.lessons-stats.json.LED-027.fireCount",
+      "choice": "current_latest_scalar",
+      "source_value": 6,
+      "current_value": 7
+    },
+    {
+      "path": "orchestrator/.lessons-stats.json.LED-027.lastFiredAt",
+      "choice": "current_latest_scalar",
+      "source_value": "2026-10-07T11:27:17.743Z",
+      "current_value": "2026-10-08T11:43:38.850Z"
+    },
+    {
+      "path": "orchestrator/.lessons-stats.json.LED-028.fireCount",
+      "choice": "current_latest_scalar",
+      "source_value": 225,
+      "current_value": 201
+    },
+    {
+      "path": "orchestrator/.lessons-stats.json.LED-028.lastFiredAt",
+      "choice": "current_latest_scalar",
+      "source_value": "2026-10-08T09:02:01.559Z",
+      "current_value": "2026-10-08T11:43:38.850Z"
+    },
+    {
+      "path": "orchestrator/.lessons-stats.json.LED-038.fireCount",
+      "choice": "current_latest_scalar",
+      "source_value": 225,
+      "current_value": 201
+    },
+    {
+      "path": "orchestrator/.lessons-stats.json.LED-038.lastFiredAt",
+      "choice": "current_latest_scalar",
+      "source_value": "2026-10-08T09:02:01.559Z",
+      "current_value": "2026-10-08T11:43:38.850Z"
+    },
+    {
+      "path": "orchestrator/.lessons-stats.json.LED-040.fireCount",
+      "choice": "current_latest_scalar",
+      "source_value": 47,
+      "current_value": 23
+    },
+    {
+      "path": "orchestrator/.lessons-stats.json.LED-040.lastFiredAt",
+      "choice": "current_latest_scalar",
+      "source_value": "2026-10-08T09:02:01.559Z",
+      "current_value": "2026-10-08T11:43:38.850Z"
+    },
+    {
+      "path": "orchestrator/.lessons-stats.json.LED-048.fireCount",
+      "choice": "current_latest_scalar",
+      "source_value": 51,
+      "current_value": 27
+    },
+    {
+      "path": "orchestrator/.lessons-stats.json.LED-048.lastFiredAt",
+      "choice": "current_latest_scalar",
+      "source_value": "2026-10-08T09:02:01.559Z",
+      "current_value": "2026-10-08T11:43:38.850Z"
+    },
+    {
+      "path": "orchestrator/.lessons-stats.json.LED-050.fireCount",
+      "choice": "current_latest_scalar",
+      "source_value": 49,
+      "current_value": 25
+    },
+    {
+      "path": "orchestrator/.lessons-stats.json.LED-050.lastFiredAt",
+      "choice": "current_latest_scalar",
+      "source_value": "2026-10-08T09:02:01.559Z",
+      "current_value": "2026-10-08T11:43:38.850Z"
+    },
+    {
+      "path": "orchestrator/.lessons-stats.json.LED-052.fireCount",
+      "choice": "current_latest_scalar",
+      "source_value": 39,
+      "current_value": 16
+    },
+    {
+      "path": "orchestrator/.lessons-stats.json.LED-052.lastFiredAt",
+      "choice": "current_latest_scalar",
+      "source_value": "2026-10-08T09:02:01.559Z",
+      "current_value": "2026-10-08T11:43:38.850Z"
+    }
+  ],
+  "task_aliases": {
+    "T-1063": "T-1063-release-pipeline",
+    "T-1066": "T-1066-timeout-policy",
+    "T-1067": "T-1067-skill-verification",
+    "T-1068": "T-1068-radar-transcription",
+    "T-1069": "T-1069-completion-json",
+    "T-1070": "T-1070-transcript-reliability",
+    "T-1071": "T-1071-resource-audit",
+    "T-1072": "T-1072-owned-devices"
+  },
+  "source_lesson_aliases": {
+    "LED-054": "LED-060",
+    "LED-055": "LED-061"
+  },
+  "source_ref": "codex/t1062-account-group-snapshot",
+  "source_head": "6b1322af71cbdf55f52e9f37c5cde76e06b56e48",
+  "current_head": "e81e9b609cd0be0b30444de8bab33cfff42c1e64",
+  "review_chain": "current原字节不变，source原字节归档；不拼接/改hash"
+}

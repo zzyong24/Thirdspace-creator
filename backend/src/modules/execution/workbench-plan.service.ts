@@ -218,6 +218,7 @@ export function createWorkbenchPlanService(db: Db, deps: {
             identities: refs.map(ref => artifactIdentity(snapshot.payload, [ref], step, old.get(step.stepId)))});
         }
         for (const {step, earlier, refs} of verified.values()) {
+          if (!snapshot.accountId) throw new OwnershipError("当前账号不存在");
           const scope = {userId: snapshot.userId, accountId: snapshot.accountId, taskId: snapshot.id};
           if (!(await deps.verifyArtifacts?.(scope, refs))) {
             // 原批次拒绝不可被后续观察转成成功；单项只读定位也不能绕过原端口100条上限。

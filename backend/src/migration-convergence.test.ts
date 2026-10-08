@@ -159,13 +159,13 @@ it.each(['all','keyring','workbench','external'] as const)('已执行历史%s su
   cat=await readCatalog(first.db);const keyring=cat.columns.find(c=>c.table_name==='channel_model_credentials'&&c.column_name==='encrypted_secret');expect(keyring?.is_nullable).toBe(subset==='all'||subset==='keyring'?'YES':'NO');
   expect(cat.columns.some(c=>c.table_name==='model_configurations'&&c.column_name==='keyring_ref')).toBe(subset==='all'||subset==='keyring');
   expect(await has(first.client as Client,'asr_usage_intents')).toBe(subset==='all'||subset==='keyring');
-  expect(await has(first.client as Client,'workbench_artifact_lineages')).toBe(subset==='all'||subset==='workbench');
+  expect(await has(first.client as Client,'workbench_artifact_lineages')).toBe(true);
   expect(await has(first.client as Client,'external_agent_connections')).toBe(subset==='all'||subset==='external');
   after=await snapshot(first.client as Client);
  }finally{await first.client.close()}
  const second=await createDb({dataDir});try{expect(await snapshot(second.client as Client)).toEqual(after!);expect(await readCatalog(second.db)).toEqual(cat!)}finally{await second.client.close()}
 });
-it('全新库保持现行凭证结构，不因兼容旧安装而带入未执行的legacy字段',async()=>{const {client,db}=await createDb();try{const cat=await readCatalog(db);expect(cat.columns.some(c=>c.table_name==='model_configurations'&&c.column_name==='keyring_ref')).toBe(false);expect(cat.columns.find(c=>c.table_name==='channel_model_credentials'&&c.column_name==='encrypted_secret')?.is_nullable).toBe('NO');for(const t of ['asr_usage_intents','workbench_artifact_lineages','external_agent_connections'])expect(await has(client as Client,t)).toBe(false)}finally{await client.close()}});
+it('全新库保持现行凭证结构，不因兼容旧安装而带入未执行的legacy字段',async()=>{const {client,db}=await createDb();try{const cat=await readCatalog(db);expect(cat.columns.some(c=>c.table_name==='model_configurations'&&c.column_name==='keyring_ref')).toBe(false);expect(cat.columns.find(c=>c.table_name==='channel_model_credentials'&&c.column_name==='encrypted_secret')?.is_nullable).toBe('NO');expect(await has(client as Client,'workbench_artifact_lineages')).toBe(true);for(const t of ['asr_usage_intents','external_agent_connections'])expect(await has(client as Client,t)).toBe(false)}finally{await client.close()}});
 it.each(['unknown','future','common-hole','supplemental-hole','schema-drift'] as const)('补充兼容仍拒绝%s且零旧数据/回执改写',async kind=>{
  const root=await newRoot();const {dataDir}=await installedFixture(root,kind==='supplemental-hole'?'asr-without-keyring':'all');
  const c=new PGlite(dataDir);let before:Awaited<ReturnType<typeof snapshot>>;try{

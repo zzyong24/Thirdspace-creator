@@ -3542,6 +3542,4095 @@
       "scope_source": "docs/features/t1003-agent-workbench.md",
       "reason": "T-1007 在既有桌面 sidecar 与执行租约边界内接入任务文件；身份来自原任务，WebView 不得调用原生端口。",
       "acceptance": "只登记本次源码与复杂度；Mac 定向测试不代表 Windows 真机、命令隔离或安装版验收。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        ".agents/skills/guizang-product-video-skill/references/component-pipeline.md"
+      ],
+      "file_sha256": "79fc3ae2222b1bbe4fbdb67980f22d40222a367cfdef3e04f91788be2daffed1",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        ".agents/skills/guizang-product-video-skill/references/starter.md"
+      ],
+      "file_sha256": "a354cabf656f746b25162c5d9d3e9ad82b4537b18215d4188eed606a5c5f5d22",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        ".agents/skills/guizang-product-video-skill/scripts/check_environment.py"
+      ],
+      "file_sha256": "0d57f6f0db0d68c0af321273fae75b2c8962c01e432c377387d9e3e6607ea011",
+      "categories": [
+        "runtime"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        ".agents/skills/packaging-creatoros-channel/SKILL.md"
+      ],
+      "file_sha256": "8f2d09788f6f315e6753d475a282853dfd218b68a4249effc85311b7306b0980",
+      "categories": [
+        "credential_store",
+        "os_signing"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        ".agents/skills/packaging-creatoros-channel/references/package-inputs.md"
+      ],
+      "file_sha256": "b1fdda342a7a82d1871e52bbd3648bc43fe5e355e47eff35687abe0fff283c79",
+      "categories": [
+        "os_signing"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        ".agents/skills/packaging-creatoros-release/SKILL.md"
+      ],
+      "file_sha256": "49edf78d6b0cb3064a4892c88a6d1b1b0968058fcaddf4e5538f1fe7a58b89b3",
+      "categories": [
+        "installer_deploy",
+        "language_toolchain",
+        "os_signing"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        ".agents/skills/reset-creatoros-activation/SKILL.md"
+      ],
+      "file_sha256": "6c3446b60b4d9a8b71aecd41af0c3fa6fc7ab52a7cf587f477b7154c6ef88e79",
+      "categories": [
+        "credential_store",
+        "os_signing"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        ".github/workflows/channel-package.yml"
+      ],
+      "file_sha256": "ac819566b17428dd91610a302e6c3a1bfd27fe8a7c2b915442b27517a47d9b23",
+      "categories": [
+        "credential_store",
+        "language_toolchain",
+        "os_signing"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        ".github/workflows/desktop-release.yml"
+      ],
+      "file_sha256": "b2837a320f84631237a48867ae441b457001ca8f0ad2851aa03811aea156efe3",
+      "categories": [
+        "credential_store",
+        "language_toolchain",
+        "os_signing"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "ai-worker/src/execution/agentic-worker-entry.test.ts"
+      ],
+      "file_sha256": "bcdc1b8629b284735bd28aacde184646839d7b70e238a5736d1c718784ae5902",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "ai-worker/src/execution/chat-generation-worker.ts"
+      ],
+      "file_sha256": "540f2f9c8540e4cf4561836b59a9800da8560d04a1bebf9b510c70c09239038b",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "ai-worker/src/execution/durable-stream-model.ts"
+      ],
+      "file_sha256": "c2d93fb9e1ffb12f8eef79f56d7caabb4944bbaaed43a458b8e7c1ad8a39e312",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "ai-worker/src/execution/flywheel-generation-worker-entry.ts"
+      ],
+      "file_sha256": "6dc9b55d3d03b0162baf573bdd3d95cad5101222a79f73684c8c27e410e3116c",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "ai-worker/src/execution/intelligence-generation-worker-entry.ts"
+      ],
+      "file_sha256": "6b66dfa4c9e2b09b2154b10b47c659f28495c554112e010a9b03126dfb168160",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "ai-worker/src/execution/intelligence-transcript-worker-entry.ts"
+      ],
+      "file_sha256": "e71e0b1b92febc53cd1bffa4f42bb03eb1281714c3567b5a1a092c1dde6e42ef",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "ai-worker/src/execution/intelligence-worker-bundle.test.ts"
+      ],
+      "file_sha256": "e38254b3c645c5bd1563d9947d424a25cc829ff093d45901a594af4ba36acc7d",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "ai-worker/src/execution/persistent-stream-writer.ts"
+      ],
+      "file_sha256": "222864b18ef6d11a058635c2bdbc33eeef7871f6ee922c8ea9352962ff82d90d",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "ai-worker/src/execution/structured-worker-generation.ts"
+      ],
+      "file_sha256": "02b9aa3156fc14627e049595eb8bc7ad47247d8d7a28c48f3e0f256164246fd4",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "ai-worker/src/execution/topic-worker-reads.test.ts"
+      ],
+      "file_sha256": "764c8ea0165c48862b45f32ad0e0dda97a57c3cdb2ecccb7564078289fe48272",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "ai-worker/src/execution/worker-entry.ts"
+      ],
+      "file_sha256": "02eaf746c554cc56399aad6d0f7bc5e896302f4b2291830b4612ea40318f8163",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "ai-worker/src/execution/worker-runtime.ts"
+      ],
+      "file_sha256": "2ec9ebe3807844cc9d1111448f98531481c6d1a63cb1bc9b55b64d2aa20e19bf",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "ai-worker/src/runtime/browser/runtime-load.test.ts"
+      ],
+      "file_sha256": "85be81346084d9adef3aa222710379ecde75465e1f9ca48115554c88a5ff5200",
+      "categories": [
+        "runtime"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "ai-worker/src/runtime/ffmpeg-path.test.ts"
+      ],
+      "file_sha256": "9e5db8af74cc762c4faaf977170f4a9dae38e8e396ef325384d8a644570a55e1",
+      "categories": [
+        "native_executable"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "ai-worker/src/runtime/ffmpeg-path.ts"
+      ],
+      "file_sha256": "0886643930e7f4f172e1062d7eda93926f7a763fa779d4de2573c7aba1c2d8c1",
+      "categories": [
+        "language_toolchain",
+        "native_executable"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "backend/scripts/migrate-model-secrets.ts"
+      ],
+      "file_sha256": "d9a90674f4a39f22c9d0a40f58057a541f3655d36e4e8de5d8af6b4e0f612761",
+      "categories": [
+        "credential_store"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "backend/src/application/scheduling/automation.ts"
+      ],
+      "file_sha256": "0fea78809aaecb5739307dcc299ae8a2bd8f4a81e8f33104a5e70e2d21f51f32",
+      "categories": [
+        "native_executable"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "backend/src/errors.ts"
+      ],
+      "file_sha256": "6da9d2560a6742dd1df21871c1587e0cb473a19b2b39826c129e0937b0481fdb",
+      "categories": [
+        "native_executable"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "backend/src/index.ts"
+      ],
+      "file_sha256": "1209fd6da5862405e62e4449eac2761c711c0dfadaefa22815ae72e5d0f1519a",
+      "categories": [
+        "credential_store"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "backend/src/modules/ai/ai.repository.ts"
+      ],
+      "file_sha256": "5c3e9906f4e1e5460d314225d8be497f7e1447cf880bfe4ead9db623e2f97b48",
+      "categories": [
+        "native_executable"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "backend/src/modules/ai/ai.service.test.ts"
+      ],
+      "file_sha256": "d6732c6ade03f2678b0a76fa8efc0c6abdf29eeaf52d6a2058b7f856951fbcf4",
+      "categories": [
+        "native_executable"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "backend/src/modules/ai/ai.service.ts"
+      ],
+      "file_sha256": "91cd9a9eae3d9def01dc7ae086f717186cb75d034c3b3da693bf79fc5260e03e",
+      "categories": [
+        "native_executable"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "backend/src/modules/ai-runtime/agentic-browser-worker.fixture.ts"
+      ],
+      "file_sha256": "464ae605b1036492a56927815703361f2e5864ea2d234e5591f0f6db0034fd85",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "backend/src/modules/ai-runtime/agentic-research-worker.fixture.ts"
+      ],
+      "file_sha256": "43da10f1016a367a44b56a8e47e263d563918d101a07c4ff080e2d5962caa79b",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "backend/src/modules/ai-runtime/local-env-probe.ts"
+      ],
+      "file_sha256": "c591788a502e1c0bce9ac30acaf8504950fb41b90f41c83f1ae7c8a238e67089",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "backend/src/modules/ai-runtime/local-read-security.test.ts"
+      ],
+      "file_sha256": "8462165cf602acaf00ad04aba540ec712c3cd1223d8e9c419be9df4a3f794ebb",
+      "categories": [
+        "credential_store"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "backend/src/modules/ai-runtime/local-read-security.ts"
+      ],
+      "file_sha256": "336c2e3c6a37fd6bfc8fff367db93a2197282581dc29e828f671206529064b48",
+      "categories": [
+        "credential_store"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "backend/src/modules/ai-runtime/remote-prompt-bundle.ts"
+      ],
+      "file_sha256": "6d4889471063f11d6b629f0c194cd35f9c1c3d33974f34484932351dbafb45c7",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "backend/src/modules/ai-runtime/request-io.service.ts"
+      ],
+      "file_sha256": "5eec8d21d33b66eef940fe42eabc57ac80f72be97c41088abb2f20edeaf80a5e",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "backend/src/modules/browser-sessions/browser-sessions.service.ts"
+      ],
+      "file_sha256": "2ca0f35806d79af4709846d8011021849560fd38d913c50e70f40264859faf2d",
+      "categories": [
+        "credential_store"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "backend/src/modules/execution/browser-resource-guardian.probe.fixture.ts"
+      ],
+      "file_sha256": "0e3793bc40e3b12df35b24495def6dfb34f25fa829a9f4018adee4df6db0de6f",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "backend/src/modules/execution/browser-resource-guardian.probe.test.ts"
+      ],
+      "file_sha256": "4af51f2fe49d2cfbe7abf4fa776539b58b94cfb9b3b7ed0960feea9369a13f52",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "backend/src/modules/execution/execution-asr-ports.service.test.ts"
+      ],
+      "file_sha256": "1d3b27cab0bdc09e6ffbd22c0fe22a8dbbe861cfa6361b689d602729ebccd1a2",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "backend/src/modules/execution/execution-browser-profile-lease.service.ts"
+      ],
+      "file_sha256": "885a54003f4ae853b0db33bfbce650beffa0aa594015ae581952f6666b71f632",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "backend/src/modules/execution/host-browser-process-recovery.ts"
+      ],
+      "file_sha256": "0a2cd59ab89fd08f264365b1bc73a74709b27a760d8c14e37a1c2e86179a06c3",
+      "categories": [
+        "runtime"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "backend/src/modules/execution/worker-process-tree.test.ts"
+      ],
+      "file_sha256": "e0ad96bb4dfbc94ed4770514d7661410275d55b186dfebc53b6e197a60e2a453",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "backend/src/modules/execution/worker-supervisor-stop-race.test.ts"
+      ],
+      "file_sha256": "059a44c30569c0daabe727b85bf7a99a36d5e272a401b20d154c7c20ff9e4efb",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "backend/src/modules/execution/worker-supervisor.ts"
+      ],
+      "file_sha256": "3e58a620a3f53fb08a0ba08f47326328a9500262a7e1fb9f871a8b0479f7e6f6",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "backend/src/modules/intelligence/intelligence-generation-bridge.ts"
+      ],
+      "file_sha256": "727d8f42186bbc18e61a03e611db447f5445205517fffa7c26da1389d80aa8c8",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "backend/src/modules/intelligence/intelligence.service.ts"
+      ],
+      "file_sha256": "4ca8c1db2e5962c3a5c0f586d7fa2a2681774336f849d46d6a9f63dc96a25033",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "backend/src/modules/scheduling/daily-topic-run.service.test.ts"
+      ],
+      "file_sha256": "ef28abc41ad102cdf6e51bb230e32f7b727f87345b486a555932f7c4367b0f78",
+      "categories": [
+        "native_executable"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "backend/src/modules/scheduling/scheduling.repository.ts"
+      ],
+      "file_sha256": "1f4a9f3ed1a8cf342b737d8663cfee2f95f13269f91f8cebb4dadef074f250cf",
+      "categories": [
+        "native_executable"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "backend/src/modules/scheduling/scheduling.service.ts"
+      ],
+      "file_sha256": "55bc9b8547b72b6728ff94e9e96eb80b454d4fe05685c07278d7b752ffb25ca8",
+      "categories": [
+        "native_executable"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "backend/src/modules/settings/model-config-transfer.test.ts"
+      ],
+      "file_sha256": "f53ff2f95ef725be4d62ffb4b954e7d1a2a75ef279592f4307ecf4a6b158b2e6",
+      "categories": [
+        "credential_store"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "backend/src/modules/settings/settings.repository.ts"
+      ],
+      "file_sha256": "87fff5509adeb1be9404446f5a7a61fd511d4f5fb55af9e936d48659b37ab423",
+      "categories": [
+        "credential_store"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "backend/src/reset-preserve.ts"
+      ],
+      "file_sha256": "d9d0c90fe6c650aabfdd6e913f386aea3c4f53eb5bc37a615088c9b443952ad1",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "backend/src/schema/activation.ts"
+      ],
+      "file_sha256": "f2b4169caa879ae007609dc83d618fe917ff14fcd05ab1593f02943281533d05",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "backend/src/secret-crypto.test.ts"
+      ],
+      "file_sha256": "baa23b109eb173323ff00695ba1a56f11a1640719627f37c84ad15137c5aa1e8",
+      "categories": [
+        "credential_store",
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "backend/src/secret-crypto.ts"
+      ],
+      "file_sha256": "83de7fb12e2e99ee8b3c55ab7094ce4f518ee86d80d42feae16b054173162240",
+      "categories": [
+        "credential_store",
+        "ipc",
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "backend/src/workspace-restore.ts"
+      ],
+      "file_sha256": "64f2f7588aeb858375d446b5e876634859a70d2e81bd4ffe55bfba04864b82a9",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "channel-partners/智溯科技/README.md"
+      ],
+      "file_sha256": "39b1eff163ff2781ae0e2bcfda199cad74eee0ba6f2cfd7d20b35f666e62cf7d",
+      "categories": [
+        "os_signing"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "channel-partners/智溯科技/local-test-build.json"
+      ],
+      "file_sha256": "27b7c00dc8468f0af4868171ad3f0476b608cf49610fc51f3aeb34421813b663",
+      "categories": [
+        "os_signing"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "channel-partners/饶文贤/local-test-build.json"
+      ],
+      "file_sha256": "a4319772390db4d211aadbbc9d7fda7ab6bac275f2f4e1c5e61c0d3aa4b1fb3e",
+      "categories": [
+        "os_signing"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "contract/src/internal/embedding-io.ts"
+      ],
+      "file_sha256": "72a600b1e4fea8bb82958a2c8deb4e7641771ad0597ae6396746623a13f9df54",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "docs/features/t1066-timeout-policy.md"
+      ],
+      "file_sha256": "323d092d8e75167b287500d8d628a5528ecf2bf062fa81d476cb9751e1e463af",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "docs/verification/t1066/spec-review-initial.json"
+      ],
+      "file_sha256": "c20f82827a941d4b3e542134effc62c153c8239f235ad74cb16a00195d739448",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "docs/verification/t1066/spec-review-recheck.json"
+      ],
+      "file_sha256": "6ce9c7c6c874959dc6d05d3117b80fab5d77d38c55445a3b111dcfc80c5d91a3",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "frontend/src/app/api/v1/local/license-sync/route.ts"
+      ],
+      "file_sha256": "373114fb58ce34f8dc4566eb3f30d8ddf75984919567b006867c52c8b463c359",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "frontend/src/app/api/v1/local/reset-workspace/plan.test.ts"
+      ],
+      "file_sha256": "9b92835079368ba581eebd9da1f0104d2e86fd860f4a1bc3d5157917c7046959",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "frontend/src/app/api/v1/local/reset-workspace/plan.ts"
+      ],
+      "file_sha256": "3bc6f395c2d9e6bcbd3ad246bcc1ab44e3dae35ca6f9e93c07807ed4a1277ef4",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "frontend/src/app/api/v1/local/reset-workspace/route.ts"
+      ],
+      "file_sha256": "97a05464f6ce9ce29ea4f850cb903e65ad154a8b914c9116f5713b4553cf4e06",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "frontend/src/app/api/v1/local/reveal-logs/plan.ts"
+      ],
+      "file_sha256": "db9a24764d9a3b56a8be910228f503161aab42282dc21fb7f1f8960f1949ad2e",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "frontend/src/app/api/v1/local/reveal-logs/route.ts"
+      ],
+      "file_sha256": "c504f58832a8b094a6b9bb3029f963d4418a9ec64e4ec82b05b8f782c84f099e",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "frontend/src/app/api/v1/settings-transfer/models/route.ts"
+      ],
+      "file_sha256": "db6882008ac8f8bfc2ba35f2ca2a9b1d39ff09b89c21876282bb75175d875866",
+      "categories": [
+        "credential_store"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "frontend/src/instrumentation.ts"
+      ],
+      "file_sha256": "d49a12ce777eaf23cee649a4960538fe51a6b9bb5bcaf791c8dc66392ce0b86e",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "frontend/src/lib/activation-gate.server.ts"
+      ],
+      "file_sha256": "9a23af34433ef9aa8f0158e52dffb14785a35d4e94c93621e933b0f7e1da1b44",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "frontend/src/lib/desktop-updater.test.ts"
+      ],
+      "file_sha256": "7c077e710459d2af980a90f8cec996cbecdc1b933a28f4753373a68779389e1e",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "frontend/src/lib/desktop-updater.ts"
+      ],
+      "file_sha256": "ac9fcb4a2a97920a7472d76fbd3bf7b66a9dd8f94bfcbf6e60bebfb847c459c4",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "frontend/src/lib/loopback-core.ts"
+      ],
+      "file_sha256": "68d535672ec92aaedede590c0ea01fc0be1b025ffa36dc97fb28fd3bbf38dd42",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "frontend/src/lib/loopback-guard.server.test.ts"
+      ],
+      "file_sha256": "93a82455326962c45cc08e2e09c44905dd4be512b0ef3d919299b36c2f712d05",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "frontend/src/lib/shell-license.ts"
+      ],
+      "file_sha256": "1a159799b8f80ba3362cd0369e879cc273e89353c9eb91bfcd7705aac55915fd",
+      "categories": [
+        "ipc",
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "frontend/src/proxy.test.ts"
+      ],
+      "file_sha256": "981ac2aee8db38e4c827810774811cf2d70ec18483b0c8c477ac3bb333328115",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "frontend/src/proxy.ts"
+      ],
+      "file_sha256": "9e4ec3a6b87c04fb31941a4f2258bf3113dc9f8e14286a216d0c7bb1f30f0fad",
+      "categories": [
+        "ipc",
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "frontend/src/server/activation/activation-config.test.ts"
+      ],
+      "file_sha256": "ab3549daff3455a4635f79eec2c6cd28732d8fa5f741c98bf576d8fa43d04b9f",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "frontend/src/server/activation/activation-config.ts"
+      ],
+      "file_sha256": "85c4c0220dbbf8dbd755910d73d42da89b5a4754fb0573fce22161e9bedbd92d",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "frontend/src/server/activation/activation-repository.test.ts"
+      ],
+      "file_sha256": "d42d38b5dbe717f2a0c4097ba2da11392fd7d1c92109d2f4495bebe11be146c3",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "frontend/src/server/activation/activation-repository.ts"
+      ],
+      "file_sha256": "224c27d49a0b554ee1f555e1773da2ca2fe1774a0682b2c61cc5cbe3ed40ed2e",
+      "categories": [
+        "credential_store",
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "frontend/src/server/activation/activation-service.test.ts"
+      ],
+      "file_sha256": "2a10441d9f30739f4ca23506315c8de5755488e3198ce010bfa5a22f437e5f4d",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "frontend/src/server/activation/activation-service.ts"
+      ],
+      "file_sha256": "64bd7965a04e6aee3b93f451e8d907530b6cc7b063557ff1d6da14ecf73bcda1",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "frontend/src/server/activation/channel-runtime.server.ts"
+      ],
+      "file_sha256": "7a8c3ebfc9ccd71bfc9ceecb239319506a7237221a9358b1b8257f057a267600",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "frontend/src/server/activation/index.ts"
+      ],
+      "file_sha256": "71477b861b102c07e5cc20b2f37725a57f33811889fc8773d02c76805864ec8b",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "frontend/src/server/activation/is-desktop.ts"
+      ],
+      "file_sha256": "9a6bcb8fbc0affc8437ee53be923b2462bb9ad40dc0a908cb9c34098b9745afa",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "frontend/src/server/activation/license-file.server.test.ts"
+      ],
+      "file_sha256": "562321c00cfb9481b4274d2890478b53b1f99c6fd2c40e5bbeb80c6f12a2a108",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "frontend/src/server/activation/license-file.server.ts"
+      ],
+      "file_sha256": "a437fbe1aa64330db0c313a3006e2dace4319865e9ecc69e7ea73f3b58e126ba",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "frontend/src/server/activation/machine-id.test.ts"
+      ],
+      "file_sha256": "b44ec678b3af98d67f3c635d6d1bb833c0d114c2dacb62959f991ad29c2ac1af",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "frontend/src/server/activation/machine-id.ts"
+      ],
+      "file_sha256": "4e34497ce317deccb82e514e7b85e89fdd99f64ecfdd7f7301f7f00c2514e25c",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "frontend/src/server/activation/product-identity.server.test.ts"
+      ],
+      "file_sha256": "b65d754ad6268587f2c0acc11a30fd90fa9342ecc753ca7f80ab58ecf2e3f282",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "frontend/src/server/activation/product-identity.server.ts"
+      ],
+      "file_sha256": "5b69ae165ede867eebe3b5027d100cf2ea983d840d7c112ef4b31b0e6d22bcec",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "frontend/src/server/persistence-client.ts"
+      ],
+      "file_sha256": "767eed524653dbf418f3a2ff7732d23c046e17977e692205106901dfc7301afb",
+      "categories": [
+        "credential_store",
+        "language_toolchain",
+        "native_executable"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "frontend/src/server/sidecar-lifecycle.test.ts"
+      ],
+      "file_sha256": "f07e2b3b6b97d7781bd4e34aee959a612204a5f0d5a7073b648f434e13fec8c3",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "frontend/src/server/sidecar-lifecycle.ts"
+      ],
+      "file_sha256": "37716037d3cab602a38c80f97036c75080ef5a37ffe3b7d5974fd4f2ab5b12c7",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "frontend/src/server/verdict-token-gate.ts"
+      ],
+      "file_sha256": "b067c9ccd1bac905a029d75d64f51a9c7438ae62bd60ea6d178c818c3f1e7d1c",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "frontend/src-tauri/Cargo.toml"
+      ],
+      "file_sha256": "b3281de070d41c60aef764d69e233712a566c8bd03322064d0395251adf004b3",
+      "categories": [
+        "credential_store",
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "frontend/src-tauri/README.md"
+      ],
+      "file_sha256": "b08a4c3dc874dede9b20e319e3e8473f90ef0d49e746ea834beea3f9669e454f",
+      "categories": [
+        "language_toolchain",
+        "os_signing"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "frontend/src-tauri/build.rs"
+      ],
+      "file_sha256": "22075a4a51cdd5f4e34f2737d8aa552a301c298412e75bcf773a0759030f52aa",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "frontend/src-tauri/capabilities/remote-sidecar.json"
+      ],
+      "file_sha256": "0ff0f518b2881d5f3de46b8a61f1a7bac0a8246dc36be358c9c1290c2b200356",
+      "categories": [
+        "ipc",
+        "language_toolchain",
+        "os_signing"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "frontend/src-tauri/permissions/autogenerated/entitlement_claim_poll.toml"
+      ],
+      "file_sha256": "f17369b1efd5a28bdcd791500675f8aa5f319d165922043aac14a75976579617",
+      "categories": [
+        "os_signing"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "frontend/src-tauri/permissions/autogenerated/entitlement_claim_resume.toml"
+      ],
+      "file_sha256": "c9e8572f3bbb20dee25b09079c651adcf2bbc99ab105d85ac99fa1c8d517e9b9",
+      "categories": [
+        "os_signing"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "frontend/src-tauri/permissions/autogenerated/entitlement_claim_start.toml"
+      ],
+      "file_sha256": "2ea967a466721f3e4f806c3bf7066dc33bb1dd1bc6fd837366c65646288a8550",
+      "categories": [
+        "os_signing"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "frontend/src-tauri/src/decoy_gate.rs"
+      ],
+      "file_sha256": "e8554c9e60d9846b4b35981508c7c9eb3e2139da1c56e5fcf38c99c72bc24d74",
+      "categories": [
+        "language_toolchain",
+        "os_signing"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "frontend/src-tauri/src/entitlement_claim.rs"
+      ],
+      "file_sha256": "0bd651e285d234b79e16b14e20f15781a9aacdcdb4a76100298bad8cd787aa92",
+      "categories": [
+        "credential_store",
+        "ipc",
+        "language_toolchain",
+        "os_signing"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "frontend/src-tauri/src/lib.rs"
+      ],
+      "file_sha256": "820e46bee77ee75121dda9fe1ee4a6ca18aac399f745768a3f44bf49486eb2b5",
+      "categories": [
+        "credential_store",
+        "installer_deploy",
+        "ipc",
+        "language_toolchain",
+        "os_signing"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "frontend/src-tauri/src/license.rs"
+      ],
+      "file_sha256": "6bf0ea6d6d4a44dfce5935c95b4bf81d2fe1dfb88e04d0f691e480bec5ad3f9f",
+      "categories": [
+        "credential_store",
+        "ipc",
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "frontend/src-tauri/src/logging.rs"
+      ],
+      "file_sha256": "2f31f93557c3177d50bb79e8caa9ae3f3bdf9b1d91a34e5862ad5b0687160196",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "frontend/src-tauri/src/product_identity.rs"
+      ],
+      "file_sha256": "3582ae89168f94e2534c7b53212cb1fc7c58432f78aafd15102d54a269a02f2b",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "frontend/src-tauri/src/win_job.rs"
+      ],
+      "file_sha256": "7b982f813948cbac4b15299db15790459ed6d11573598b47ed78c5f5a80ef80f",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "frontend/src-tauri/src/workspace_reset.rs"
+      ],
+      "file_sha256": "feadd8108cd7aa34d09c13b03f679362310be54f8ba23416084c08ce53c77056",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "frontend/src-tauri/tauri.windows.conf.json"
+      ],
+      "file_sha256": "20f79690aa693cfa7251c0807d1b2a77a8375d907f0ddc354c9a2bc43dc61679",
+      "categories": [
+        "installer_deploy"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "frontend/src-tauri/tests/logdec_cli.rs"
+      ],
+      "file_sha256": "5e2cc77ab5719ee1d31266475e3d25c684ab78bd42ee2bfde94d73c904acf6d8",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "tools/logdec/README.md"
+      ],
+      "file_sha256": "0a148915468718106dd80338ad1b1c9145a8f1d22b7bd96dee319d15f0c7454a",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "tools/logdec/decrypt-log.sh"
+      ],
+      "file_sha256": "025b4e5b0b12c7eac3a8430e38987c0fa832562d8c871712248af10f6357b662",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-worker",
+      "files": [
+        "ai-worker/src/execution/agentic-worker-entry.test.ts"
+      ],
+      "file_sha256": "bcdc1b8629b284735bd28aacde184646839d7b70e238a5736d1c718784ae5902",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-worker",
+      "files": [
+        "ai-worker/src/execution/chat-generation-worker.ts"
+      ],
+      "file_sha256": "540f2f9c8540e4cf4561836b59a9800da8560d04a1bebf9b510c70c09239038b",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-worker",
+      "files": [
+        "ai-worker/src/execution/durable-stream-model.ts"
+      ],
+      "file_sha256": "c2d93fb9e1ffb12f8eef79f56d7caabb4944bbaaed43a458b8e7c1ad8a39e312",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-worker",
+      "files": [
+        "ai-worker/src/execution/flywheel-generation-worker-entry.ts"
+      ],
+      "file_sha256": "6dc9b55d3d03b0162baf573bdd3d95cad5101222a79f73684c8c27e410e3116c",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-worker",
+      "files": [
+        "ai-worker/src/execution/intelligence-generation-worker-entry.ts"
+      ],
+      "file_sha256": "6b66dfa4c9e2b09b2154b10b47c659f28495c554112e010a9b03126dfb168160",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-worker",
+      "files": [
+        "ai-worker/src/execution/intelligence-transcript-worker-entry.ts"
+      ],
+      "file_sha256": "e71e0b1b92febc53cd1bffa4f42bb03eb1281714c3567b5a1a092c1dde6e42ef",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-worker",
+      "files": [
+        "ai-worker/src/execution/intelligence-worker-bundle.test.ts"
+      ],
+      "file_sha256": "e38254b3c645c5bd1563d9947d424a25cc829ff093d45901a594af4ba36acc7d",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-worker",
+      "files": [
+        "ai-worker/src/execution/persistent-stream-writer.ts"
+      ],
+      "file_sha256": "222864b18ef6d11a058635c2bdbc33eeef7871f6ee922c8ea9352962ff82d90d",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-worker",
+      "files": [
+        "ai-worker/src/execution/structured-worker-generation.ts"
+      ],
+      "file_sha256": "02b9aa3156fc14627e049595eb8bc7ad47247d8d7a28c48f3e0f256164246fd4",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-worker",
+      "files": [
+        "ai-worker/src/execution/topic-worker-reads.test.ts"
+      ],
+      "file_sha256": "764c8ea0165c48862b45f32ad0e0dda97a57c3cdb2ecccb7564078289fe48272",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-worker",
+      "files": [
+        "ai-worker/src/execution/worker-entry.ts"
+      ],
+      "file_sha256": "02eaf746c554cc56399aad6d0f7bc5e896302f4b2291830b4612ea40318f8163",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-worker",
+      "files": [
+        "ai-worker/src/execution/worker-runtime.ts"
+      ],
+      "file_sha256": "2ec9ebe3807844cc9d1111448f98531481c6d1a63cb1bc9b55b64d2aa20e19bf",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-worker",
+      "files": [
+        "ai-worker/src/runtime/browser/runtime-load.test.ts"
+      ],
+      "file_sha256": "85be81346084d9adef3aa222710379ecde75465e1f9ca48115554c88a5ff5200",
+      "categories": [
+        "runtime"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-worker",
+      "files": [
+        "ai-worker/src/runtime/ffmpeg-path.test.ts"
+      ],
+      "file_sha256": "9e5db8af74cc762c4faaf977170f4a9dae38e8e396ef325384d8a644570a55e1",
+      "categories": [
+        "native_executable"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-worker",
+      "files": [
+        "ai-worker/src/runtime/ffmpeg-path.ts"
+      ],
+      "file_sha256": "0886643930e7f4f172e1062d7eda93926f7a763fa779d4de2573c7aba1c2d8c1",
+      "categories": [
+        "language_toolchain",
+        "native_executable"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-worker",
+      "files": [
+        "backend/src/application/scheduling/automation.ts"
+      ],
+      "file_sha256": "0fea78809aaecb5739307dcc299ae8a2bd8f4a81e8f33104a5e70e2d21f51f32",
+      "categories": [
+        "native_executable"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-worker",
+      "files": [
+        "backend/src/errors.ts"
+      ],
+      "file_sha256": "6da9d2560a6742dd1df21871c1587e0cb473a19b2b39826c129e0937b0481fdb",
+      "categories": [
+        "native_executable"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-worker",
+      "files": [
+        "backend/src/index.ts"
+      ],
+      "file_sha256": "1209fd6da5862405e62e4449eac2761c711c0dfadaefa22815ae72e5d0f1519a",
+      "categories": [
+        "credential_store"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-worker",
+      "files": [
+        "backend/src/modules/ai/ai.repository.ts"
+      ],
+      "file_sha256": "5c3e9906f4e1e5460d314225d8be497f7e1447cf880bfe4ead9db623e2f97b48",
+      "categories": [
+        "native_executable"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-worker",
+      "files": [
+        "backend/src/modules/ai/ai.service.test.ts"
+      ],
+      "file_sha256": "d6732c6ade03f2678b0a76fa8efc0c6abdf29eeaf52d6a2058b7f856951fbcf4",
+      "categories": [
+        "native_executable"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-worker",
+      "files": [
+        "backend/src/modules/ai/ai.service.ts"
+      ],
+      "file_sha256": "91cd9a9eae3d9def01dc7ae086f717186cb75d034c3b3da693bf79fc5260e03e",
+      "categories": [
+        "native_executable"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-worker",
+      "files": [
+        "backend/src/modules/ai-runtime/agentic-browser-worker.fixture.ts"
+      ],
+      "file_sha256": "464ae605b1036492a56927815703361f2e5864ea2d234e5591f0f6db0034fd85",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-worker",
+      "files": [
+        "backend/src/modules/ai-runtime/agentic-research-worker.fixture.ts"
+      ],
+      "file_sha256": "43da10f1016a367a44b56a8e47e263d563918d101a07c4ff080e2d5962caa79b",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-worker",
+      "files": [
+        "backend/src/modules/ai-runtime/local-env-probe.ts"
+      ],
+      "file_sha256": "c591788a502e1c0bce9ac30acaf8504950fb41b90f41c83f1ae7c8a238e67089",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-worker",
+      "files": [
+        "backend/src/modules/ai-runtime/local-read-security.test.ts"
+      ],
+      "file_sha256": "8462165cf602acaf00ad04aba540ec712c3cd1223d8e9c419be9df4a3f794ebb",
+      "categories": [
+        "credential_store"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-worker",
+      "files": [
+        "backend/src/modules/ai-runtime/local-read-security.ts"
+      ],
+      "file_sha256": "336c2e3c6a37fd6bfc8fff367db93a2197282581dc29e828f671206529064b48",
+      "categories": [
+        "credential_store"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-worker",
+      "files": [
+        "backend/src/modules/ai-runtime/remote-prompt-bundle.ts"
+      ],
+      "file_sha256": "6d4889471063f11d6b629f0c194cd35f9c1c3d33974f34484932351dbafb45c7",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-worker",
+      "files": [
+        "backend/src/modules/ai-runtime/request-io.service.ts"
+      ],
+      "file_sha256": "5eec8d21d33b66eef940fe42eabc57ac80f72be97c41088abb2f20edeaf80a5e",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-worker",
+      "files": [
+        "backend/src/modules/browser-sessions/browser-sessions.service.ts"
+      ],
+      "file_sha256": "2ca0f35806d79af4709846d8011021849560fd38d913c50e70f40264859faf2d",
+      "categories": [
+        "credential_store"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-worker",
+      "files": [
+        "backend/src/modules/execution/browser-resource-guardian.probe.fixture.ts"
+      ],
+      "file_sha256": "0e3793bc40e3b12df35b24495def6dfb34f25fa829a9f4018adee4df6db0de6f",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-worker",
+      "files": [
+        "backend/src/modules/execution/browser-resource-guardian.probe.test.ts"
+      ],
+      "file_sha256": "4af51f2fe49d2cfbe7abf4fa776539b58b94cfb9b3b7ed0960feea9369a13f52",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-worker",
+      "files": [
+        "backend/src/modules/execution/execution-asr-ports.service.test.ts"
+      ],
+      "file_sha256": "1d3b27cab0bdc09e6ffbd22c0fe22a8dbbe861cfa6361b689d602729ebccd1a2",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-worker",
+      "files": [
+        "backend/src/modules/execution/execution-browser-profile-lease.service.ts"
+      ],
+      "file_sha256": "885a54003f4ae853b0db33bfbce650beffa0aa594015ae581952f6666b71f632",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-worker",
+      "files": [
+        "backend/src/modules/execution/host-browser-process-recovery.ts"
+      ],
+      "file_sha256": "0a2cd59ab89fd08f264365b1bc73a74709b27a760d8c14e37a1c2e86179a06c3",
+      "categories": [
+        "runtime"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-worker",
+      "files": [
+        "backend/src/modules/execution/worker-process-tree.test.ts"
+      ],
+      "file_sha256": "e0ad96bb4dfbc94ed4770514d7661410275d55b186dfebc53b6e197a60e2a453",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-worker",
+      "files": [
+        "backend/src/modules/execution/worker-supervisor-stop-race.test.ts"
+      ],
+      "file_sha256": "059a44c30569c0daabe727b85bf7a99a36d5e272a401b20d154c7c20ff9e4efb",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-worker",
+      "files": [
+        "backend/src/modules/execution/worker-supervisor.ts"
+      ],
+      "file_sha256": "3e58a620a3f53fb08a0ba08f47326328a9500262a7e1fb9f871a8b0479f7e6f6",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-worker",
+      "files": [
+        "backend/src/modules/intelligence/intelligence-generation-bridge.ts"
+      ],
+      "file_sha256": "727d8f42186bbc18e61a03e611db447f5445205517fffa7c26da1389d80aa8c8",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-worker",
+      "files": [
+        "backend/src/modules/intelligence/intelligence.service.ts"
+      ],
+      "file_sha256": "4ca8c1db2e5962c3a5c0f586d7fa2a2681774336f849d46d6a9f63dc96a25033",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-worker",
+      "files": [
+        "backend/src/modules/scheduling/daily-topic-run.service.test.ts"
+      ],
+      "file_sha256": "ef28abc41ad102cdf6e51bb230e32f7b727f87345b486a555932f7c4367b0f78",
+      "categories": [
+        "native_executable"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-worker",
+      "files": [
+        "backend/src/modules/scheduling/scheduling.repository.ts"
+      ],
+      "file_sha256": "1f4a9f3ed1a8cf342b737d8663cfee2f95f13269f91f8cebb4dadef074f250cf",
+      "categories": [
+        "native_executable"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-worker",
+      "files": [
+        "backend/src/modules/scheduling/scheduling.service.ts"
+      ],
+      "file_sha256": "55bc9b8547b72b6728ff94e9e96eb80b454d4fe05685c07278d7b752ffb25ca8",
+      "categories": [
+        "native_executable"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-worker",
+      "files": [
+        "backend/src/modules/settings/model-config-transfer.test.ts"
+      ],
+      "file_sha256": "f53ff2f95ef725be4d62ffb4b954e7d1a2a75ef279592f4307ecf4a6b158b2e6",
+      "categories": [
+        "credential_store"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-worker",
+      "files": [
+        "backend/src/modules/settings/settings.repository.ts"
+      ],
+      "file_sha256": "87fff5509adeb1be9404446f5a7a61fd511d4f5fb55af9e936d48659b37ab423",
+      "categories": [
+        "credential_store"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-worker",
+      "files": [
+        "backend/src/reset-preserve.ts"
+      ],
+      "file_sha256": "d9d0c90fe6c650aabfdd6e913f386aea3c4f53eb5bc37a615088c9b443952ad1",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-worker",
+      "files": [
+        "backend/src/schema/activation.ts"
+      ],
+      "file_sha256": "f2b4169caa879ae007609dc83d618fe917ff14fcd05ab1593f02943281533d05",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-worker",
+      "files": [
+        "backend/src/secret-crypto.test.ts"
+      ],
+      "file_sha256": "baa23b109eb173323ff00695ba1a56f11a1640719627f37c84ad15137c5aa1e8",
+      "categories": [
+        "credential_store",
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-worker",
+      "files": [
+        "backend/src/secret-crypto.ts"
+      ],
+      "file_sha256": "83de7fb12e2e99ee8b3c55ab7094ce4f518ee86d80d42feae16b054173162240",
+      "categories": [
+        "credential_store",
+        "ipc",
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-worker",
+      "files": [
+        "backend/src/workspace-restore.ts"
+      ],
+      "file_sha256": "64f2f7588aeb858375d446b5e876634859a70d2e81bd4ffe55bfba04864b82a9",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-frontend",
+      "files": [
+        "frontend/src/app/api/v1/local/license-sync/route.ts"
+      ],
+      "file_sha256": "373114fb58ce34f8dc4566eb3f30d8ddf75984919567b006867c52c8b463c359",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-frontend",
+      "files": [
+        "frontend/src/app/api/v1/local/reset-workspace/plan.test.ts"
+      ],
+      "file_sha256": "9b92835079368ba581eebd9da1f0104d2e86fd860f4a1bc3d5157917c7046959",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-frontend",
+      "files": [
+        "frontend/src/app/api/v1/local/reset-workspace/plan.ts"
+      ],
+      "file_sha256": "3bc6f395c2d9e6bcbd3ad246bcc1ab44e3dae35ca6f9e93c07807ed4a1277ef4",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-frontend",
+      "files": [
+        "frontend/src/app/api/v1/local/reset-workspace/route.ts"
+      ],
+      "file_sha256": "97a05464f6ce9ce29ea4f850cb903e65ad154a8b914c9116f5713b4553cf4e06",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-frontend",
+      "files": [
+        "frontend/src/app/api/v1/local/reveal-logs/plan.ts"
+      ],
+      "file_sha256": "db9a24764d9a3b56a8be910228f503161aab42282dc21fb7f1f8960f1949ad2e",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-frontend",
+      "files": [
+        "frontend/src/app/api/v1/local/reveal-logs/route.ts"
+      ],
+      "file_sha256": "c504f58832a8b094a6b9bb3029f963d4418a9ec64e4ec82b05b8f782c84f099e",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-frontend",
+      "files": [
+        "frontend/src/app/api/v1/settings-transfer/models/route.ts"
+      ],
+      "file_sha256": "db6882008ac8f8bfc2ba35f2ca2a9b1d39ff09b89c21876282bb75175d875866",
+      "categories": [
+        "credential_store"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-frontend",
+      "files": [
+        "frontend/src/instrumentation.ts"
+      ],
+      "file_sha256": "d49a12ce777eaf23cee649a4960538fe51a6b9bb5bcaf791c8dc66392ce0b86e",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-frontend",
+      "files": [
+        "frontend/src/lib/activation-gate.server.ts"
+      ],
+      "file_sha256": "9a23af34433ef9aa8f0158e52dffb14785a35d4e94c93621e933b0f7e1da1b44",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-frontend",
+      "files": [
+        "frontend/src/lib/desktop-updater.test.ts"
+      ],
+      "file_sha256": "7c077e710459d2af980a90f8cec996cbecdc1b933a28f4753373a68779389e1e",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-frontend",
+      "files": [
+        "frontend/src/lib/desktop-updater.ts"
+      ],
+      "file_sha256": "ac9fcb4a2a97920a7472d76fbd3bf7b66a9dd8f94bfcbf6e60bebfb847c459c4",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-frontend",
+      "files": [
+        "frontend/src/lib/loopback-core.ts"
+      ],
+      "file_sha256": "68d535672ec92aaedede590c0ea01fc0be1b025ffa36dc97fb28fd3bbf38dd42",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-frontend",
+      "files": [
+        "frontend/src/lib/loopback-guard.server.test.ts"
+      ],
+      "file_sha256": "93a82455326962c45cc08e2e09c44905dd4be512b0ef3d919299b36c2f712d05",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-frontend",
+      "files": [
+        "frontend/src/lib/shell-license.ts"
+      ],
+      "file_sha256": "1a159799b8f80ba3362cd0369e879cc273e89353c9eb91bfcd7705aac55915fd",
+      "categories": [
+        "ipc",
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-frontend",
+      "files": [
+        "frontend/src/proxy.test.ts"
+      ],
+      "file_sha256": "981ac2aee8db38e4c827810774811cf2d70ec18483b0c8c477ac3bb333328115",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-frontend",
+      "files": [
+        "frontend/src/proxy.ts"
+      ],
+      "file_sha256": "9e4ec3a6b87c04fb31941a4f2258bf3113dc9f8e14286a216d0c7bb1f30f0fad",
+      "categories": [
+        "ipc",
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-frontend",
+      "files": [
+        "frontend/src/server/activation/activation-config.test.ts"
+      ],
+      "file_sha256": "ab3549daff3455a4635f79eec2c6cd28732d8fa5f741c98bf576d8fa43d04b9f",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-frontend",
+      "files": [
+        "frontend/src/server/activation/activation-config.ts"
+      ],
+      "file_sha256": "85c4c0220dbbf8dbd755910d73d42da89b5a4754fb0573fce22161e9bedbd92d",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-frontend",
+      "files": [
+        "frontend/src/server/activation/activation-repository.test.ts"
+      ],
+      "file_sha256": "d42d38b5dbe717f2a0c4097ba2da11392fd7d1c92109d2f4495bebe11be146c3",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-frontend",
+      "files": [
+        "frontend/src/server/activation/activation-repository.ts"
+      ],
+      "file_sha256": "224c27d49a0b554ee1f555e1773da2ca2fe1774a0682b2c61cc5cbe3ed40ed2e",
+      "categories": [
+        "credential_store",
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-frontend",
+      "files": [
+        "frontend/src/server/activation/activation-service.test.ts"
+      ],
+      "file_sha256": "2a10441d9f30739f4ca23506315c8de5755488e3198ce010bfa5a22f437e5f4d",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-frontend",
+      "files": [
+        "frontend/src/server/activation/activation-service.ts"
+      ],
+      "file_sha256": "64bd7965a04e6aee3b93f451e8d907530b6cc7b063557ff1d6da14ecf73bcda1",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-frontend",
+      "files": [
+        "frontend/src/server/activation/channel-runtime.server.ts"
+      ],
+      "file_sha256": "7a8c3ebfc9ccd71bfc9ceecb239319506a7237221a9358b1b8257f057a267600",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-frontend",
+      "files": [
+        "frontend/src/server/activation/index.ts"
+      ],
+      "file_sha256": "71477b861b102c07e5cc20b2f37725a57f33811889fc8773d02c76805864ec8b",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-frontend",
+      "files": [
+        "frontend/src/server/activation/is-desktop.ts"
+      ],
+      "file_sha256": "9a6bcb8fbc0affc8437ee53be923b2462bb9ad40dc0a908cb9c34098b9745afa",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-frontend",
+      "files": [
+        "frontend/src/server/activation/license-file.server.test.ts"
+      ],
+      "file_sha256": "562321c00cfb9481b4274d2890478b53b1f99c6fd2c40e5bbeb80c6f12a2a108",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-frontend",
+      "files": [
+        "frontend/src/server/activation/license-file.server.ts"
+      ],
+      "file_sha256": "a437fbe1aa64330db0c313a3006e2dace4319865e9ecc69e7ea73f3b58e126ba",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-frontend",
+      "files": [
+        "frontend/src/server/activation/machine-id.test.ts"
+      ],
+      "file_sha256": "b44ec678b3af98d67f3c635d6d1bb833c0d114c2dacb62959f991ad29c2ac1af",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-frontend",
+      "files": [
+        "frontend/src/server/activation/machine-id.ts"
+      ],
+      "file_sha256": "4e34497ce317deccb82e514e7b85e89fdd99f64ecfdd7f7301f7f00c2514e25c",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-frontend",
+      "files": [
+        "frontend/src/server/activation/product-identity.server.test.ts"
+      ],
+      "file_sha256": "b65d754ad6268587f2c0acc11a30fd90fa9342ecc753ca7f80ab58ecf2e3f282",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-frontend",
+      "files": [
+        "frontend/src/server/activation/product-identity.server.ts"
+      ],
+      "file_sha256": "5b69ae165ede867eebe3b5027d100cf2ea983d840d7c112ef4b31b0e6d22bcec",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-frontend",
+      "files": [
+        "frontend/src/server/persistence-client.ts"
+      ],
+      "file_sha256": "767eed524653dbf418f3a2ff7732d23c046e17977e692205106901dfc7301afb",
+      "categories": [
+        "credential_store",
+        "language_toolchain",
+        "native_executable"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-frontend",
+      "files": [
+        "frontend/src/server/sidecar-lifecycle.test.ts"
+      ],
+      "file_sha256": "f07e2b3b6b97d7781bd4e34aee959a612204a5f0d5a7073b648f434e13fec8c3",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-frontend",
+      "files": [
+        "frontend/src/server/sidecar-lifecycle.ts"
+      ],
+      "file_sha256": "37716037d3cab602a38c80f97036c75080ef5a37ffe3b7d5974fd4f2ab5b12c7",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-frontend",
+      "files": [
+        "frontend/src/server/verdict-token-gate.ts"
+      ],
+      "file_sha256": "b067c9ccd1bac905a029d75d64f51a9c7438ae62bd60ea6d178c818c3f1e7d1c",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-frontend",
+      "files": [
+        "frontend/src-tauri/Cargo.toml"
+      ],
+      "file_sha256": "b3281de070d41c60aef764d69e233712a566c8bd03322064d0395251adf004b3",
+      "categories": [
+        "credential_store",
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-frontend",
+      "files": [
+        "frontend/src-tauri/README.md"
+      ],
+      "file_sha256": "b08a4c3dc874dede9b20e319e3e8473f90ef0d49e746ea834beea3f9669e454f",
+      "categories": [
+        "language_toolchain",
+        "os_signing"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-frontend",
+      "files": [
+        "frontend/src-tauri/build.rs"
+      ],
+      "file_sha256": "22075a4a51cdd5f4e34f2737d8aa552a301c298412e75bcf773a0759030f52aa",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-frontend",
+      "files": [
+        "frontend/src-tauri/capabilities/remote-sidecar.json"
+      ],
+      "file_sha256": "0ff0f518b2881d5f3de46b8a61f1a7bac0a8246dc36be358c9c1290c2b200356",
+      "categories": [
+        "ipc",
+        "language_toolchain",
+        "os_signing"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-frontend",
+      "files": [
+        "frontend/src-tauri/permissions/autogenerated/entitlement_claim_poll.toml"
+      ],
+      "file_sha256": "f17369b1efd5a28bdcd791500675f8aa5f319d165922043aac14a75976579617",
+      "categories": [
+        "os_signing"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-frontend",
+      "files": [
+        "frontend/src-tauri/permissions/autogenerated/entitlement_claim_resume.toml"
+      ],
+      "file_sha256": "c9e8572f3bbb20dee25b09079c651adcf2bbc99ab105d85ac99fa1c8d517e9b9",
+      "categories": [
+        "os_signing"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-frontend",
+      "files": [
+        "frontend/src-tauri/permissions/autogenerated/entitlement_claim_start.toml"
+      ],
+      "file_sha256": "2ea967a466721f3e4f806c3bf7066dc33bb1dd1bc6fd837366c65646288a8550",
+      "categories": [
+        "os_signing"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-frontend",
+      "files": [
+        "frontend/src-tauri/src/decoy_gate.rs"
+      ],
+      "file_sha256": "e8554c9e60d9846b4b35981508c7c9eb3e2139da1c56e5fcf38c99c72bc24d74",
+      "categories": [
+        "language_toolchain",
+        "os_signing"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-frontend",
+      "files": [
+        "frontend/src-tauri/src/entitlement_claim.rs"
+      ],
+      "file_sha256": "0bd651e285d234b79e16b14e20f15781a9aacdcdb4a76100298bad8cd787aa92",
+      "categories": [
+        "credential_store",
+        "ipc",
+        "language_toolchain",
+        "os_signing"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-frontend",
+      "files": [
+        "frontend/src-tauri/src/lib.rs"
+      ],
+      "file_sha256": "820e46bee77ee75121dda9fe1ee4a6ca18aac399f745768a3f44bf49486eb2b5",
+      "categories": [
+        "credential_store",
+        "installer_deploy",
+        "ipc",
+        "language_toolchain",
+        "os_signing"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-frontend",
+      "files": [
+        "frontend/src-tauri/src/license.rs"
+      ],
+      "file_sha256": "6bf0ea6d6d4a44dfce5935c95b4bf81d2fe1dfb88e04d0f691e480bec5ad3f9f",
+      "categories": [
+        "credential_store",
+        "ipc",
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-frontend",
+      "files": [
+        "frontend/src-tauri/src/logging.rs"
+      ],
+      "file_sha256": "2f31f93557c3177d50bb79e8caa9ae3f3bdf9b1d91a34e5862ad5b0687160196",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-frontend",
+      "files": [
+        "frontend/src-tauri/src/product_identity.rs"
+      ],
+      "file_sha256": "3582ae89168f94e2534c7b53212cb1fc7c58432f78aafd15102d54a269a02f2b",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-frontend",
+      "files": [
+        "frontend/src-tauri/src/win_job.rs"
+      ],
+      "file_sha256": "7b982f813948cbac4b15299db15790459ed6d11573598b47ed78c5f5a80ef80f",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-frontend",
+      "files": [
+        "frontend/src-tauri/src/workspace_reset.rs"
+      ],
+      "file_sha256": "feadd8108cd7aa34d09c13b03f679362310be54f8ba23416084c08ce53c77056",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-frontend",
+      "files": [
+        "frontend/src-tauri/tauri.windows.conf.json"
+      ],
+      "file_sha256": "20f79690aa693cfa7251c0807d1b2a77a8375d907f0ddc354c9a2bc43dc61679",
+      "categories": [
+        "installer_deploy"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-frontend",
+      "files": [
+        "frontend/src-tauri/tests/logdec_cli.rs"
+      ],
+      "file_sha256": "5e2cc77ab5719ee1d31266475e3d25c684ab78bd42ee2bfde94d73c904acf6d8",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-tooling",
+      "files": [
+        ".agents/skills/guizang-product-video-skill/references/component-pipeline.md"
+      ],
+      "file_sha256": "79fc3ae2222b1bbe4fbdb67980f22d40222a367cfdef3e04f91788be2daffed1",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-tooling",
+      "files": [
+        ".agents/skills/guizang-product-video-skill/references/starter.md"
+      ],
+      "file_sha256": "a354cabf656f746b25162c5d9d3e9ad82b4537b18215d4188eed606a5c5f5d22",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-tooling",
+      "files": [
+        ".agents/skills/guizang-product-video-skill/scripts/check_environment.py"
+      ],
+      "file_sha256": "0d57f6f0db0d68c0af321273fae75b2c8962c01e432c377387d9e3e6607ea011",
+      "categories": [
+        "runtime"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-tooling",
+      "files": [
+        ".agents/skills/packaging-creatoros-channel/SKILL.md"
+      ],
+      "file_sha256": "8f2d09788f6f315e6753d475a282853dfd218b68a4249effc85311b7306b0980",
+      "categories": [
+        "credential_store",
+        "os_signing"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-tooling",
+      "files": [
+        ".agents/skills/packaging-creatoros-channel/references/package-inputs.md"
+      ],
+      "file_sha256": "b1fdda342a7a82d1871e52bbd3648bc43fe5e355e47eff35687abe0fff283c79",
+      "categories": [
+        "os_signing"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-tooling",
+      "files": [
+        ".agents/skills/packaging-creatoros-release/SKILL.md"
+      ],
+      "file_sha256": "49edf78d6b0cb3064a4892c88a6d1b1b0968058fcaddf4e5538f1fe7a58b89b3",
+      "categories": [
+        "installer_deploy",
+        "language_toolchain",
+        "os_signing"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-tooling",
+      "files": [
+        ".agents/skills/reset-creatoros-activation/SKILL.md"
+      ],
+      "file_sha256": "6c3446b60b4d9a8b71aecd41af0c3fa6fc7ab52a7cf587f477b7154c6ef88e79",
+      "categories": [
+        "credential_store",
+        "os_signing"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-tooling",
+      "files": [
+        ".github/workflows/channel-package.yml"
+      ],
+      "file_sha256": "ac819566b17428dd91610a302e6c3a1bfd27fe8a7c2b915442b27517a47d9b23",
+      "categories": [
+        "credential_store",
+        "language_toolchain",
+        "os_signing"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-tooling",
+      "files": [
+        ".github/workflows/desktop-release.yml"
+      ],
+      "file_sha256": "b2837a320f84631237a48867ae441b457001ca8f0ad2851aa03811aea156efe3",
+      "categories": [
+        "credential_store",
+        "language_toolchain",
+        "os_signing"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-tooling",
+      "files": [
+        "backend/scripts/migrate-model-secrets.ts"
+      ],
+      "file_sha256": "d9a90674f4a39f22c9d0a40f58057a541f3655d36e4e8de5d8af6b4e0f612761",
+      "categories": [
+        "credential_store"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-tooling",
+      "files": [
+        "channel-partners/智溯科技/README.md"
+      ],
+      "file_sha256": "39b1eff163ff2781ae0e2bcfda199cad74eee0ba6f2cfd7d20b35f666e62cf7d",
+      "categories": [
+        "os_signing"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-tooling",
+      "files": [
+        "channel-partners/智溯科技/local-test-build.json"
+      ],
+      "file_sha256": "27b7c00dc8468f0af4868171ad3f0476b608cf49610fc51f3aeb34421813b663",
+      "categories": [
+        "os_signing"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-tooling",
+      "files": [
+        "channel-partners/饶文贤/local-test-build.json"
+      ],
+      "file_sha256": "a4319772390db4d211aadbbc9d7fda7ab6bac275f2f4e1c5e61c0d3aa4b1fb3e",
+      "categories": [
+        "os_signing"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "本文件位于全系统超时修复已授权写集合，沿用既有IPC、凭据、运行时、原生工具链等能力。本条绑定当前文件已有复杂度；允许调整等待预算及相关回归，不授权新执行权、架构、存储、安全旁路或发布能力。未修改的文件仅作已有边界登记。",
+      "acceptance": "复杂度登记不等于测试通过；修改后须重新绑定实际hash，所有超时记录均需实现/保留原因/验证证据。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "docs/verification/t1066/frontend-disposition.json"
+      ],
+      "file_sha256": "615018144388970439bec46230443158699ed6c3f9a12edb5a946e47614da5fa",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "用户授权的超时修复及隔离公共链回归；复用现有IPC/本机工具边界，不新增执行权限、持久数据、发布或远端访问。",
+      "acceptance": "仅绑定本次真实文件哈希；不代表供应商或安装版验收。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "docs/verification/t1066/spec-integration-review.json"
+      ],
+      "file_sha256": "73222bc706a6d7d6bb15db288c4e85940eba24004d990101e3f3c37e84317c39",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "用户授权的超时修复及隔离公共链回归；复用现有IPC/本机工具边界，不新增执行权限、持久数据、发布或远端访问。",
+      "acceptance": "仅绑定本次真实文件哈希；不代表供应商或安装版验收。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "docs/verification/t1066/timeout-disposition.json"
+      ],
+      "file_sha256": "743f8b272c076cedb87c1fb79727166575df104b583b518c663e754387a0452f",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "用户授权的超时修复及隔离公共链回归；复用现有IPC/本机工具边界，不新增执行权限、持久数据、发布或远端访问。",
+      "acceptance": "仅绑定本次真实文件哈希；不代表供应商或安装版验收。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "pnpm-lock.yaml"
+      ],
+      "file_sha256": "881029fedaf1e77e36ded486792e631b35987972dc8f825fd77bbaf101a9570e",
+      "categories": [
+        "runtime"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "用户授权的超时修复及隔离公共链回归；复用现有IPC/本机工具边界，不新增执行权限、持久数据、发布或远端访问。",
+      "acceptance": "仅绑定本次真实文件哈希；不代表供应商或安装版验收。"
+    },
+    {
+      "task_id": "T-1066-timeout-policy",
+      "files": [
+        "docs/verification/t1066/REPORT.md"
+      ],
+      "file_sha256": "d4738ececdd8d13af449200c979acdfb39a8270169038e2dcb4ce328b351609c",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1066",
+      "scope_source": "docs/features/t1066-timeout-policy.md",
+      "reason": "用户授权的超时修复及隔离公共链回归；复用现有IPC/本机工具边界，不新增执行权限、持久数据、发布或远端访问。",
+      "acceptance": "仅绑定本次真实文件哈希；不代表供应商或安装版验收。"
+    },
+    {
+      "task_id": "T-1069-completion-json",
+      "files": [
+        "pnpm-lock.yaml"
+      ],
+      "file_sha256": "28f107b75e781e21eed8206d441127b372ea3cc3057c382986f029b301322fc0",
+      "categories": [
+        "runtime"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1069-1070",
+      "scope_source": "docs/features/t1069-completion-json-compat.md",
+      "reason": "用户授权的两处已复现缺陷修复；复用Pi同版本及既有Worker/IPC业务端口。锁文件仅补丁hash改变，报告仅记实际隔离验证，不新增运行时、进程、端口、安装或执行权。",
+      "acceptance": "仅登记当前文件hash所含既有复杂度，不代替真实测试或安装版验收。"
+    },
+    {
+      "task_id": "T-1070-transcript-reliability",
+      "files": [
+        "pnpm-lock.yaml"
+      ],
+      "file_sha256": "28f107b75e781e21eed8206d441127b372ea3cc3057c382986f029b301322fc0",
+      "categories": [
+        "runtime"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1069-1070",
+      "scope_source": "docs/features/t1070-transcript-postprocess-reliability.md",
+      "reason": "用户授权的两处已复现缺陷修复；复用Pi同版本及既有Worker/IPC业务端口。锁文件仅补丁hash改变，报告仅记实际隔离验证，不新增运行时、进程、端口、安装或执行权。",
+      "acceptance": "仅登记当前文件hash所含既有复杂度，不代替真实测试或安装版验收。"
+    },
+    {
+      "task_id": "T-1069-completion-json",
+      "files": [
+        "docs/verification/t1069/REPORT.md"
+      ],
+      "file_sha256": "8bec06abe26af14f1dc0b482ef4bdf4e5c27b9bbc318296c005855be95138722",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1069-1070",
+      "scope_source": "docs/features/t1069-completion-json-compat.md",
+      "reason": "用户授权的两处已复现缺陷修复；复用Pi同版本及既有Worker/IPC业务端口。锁文件仅补丁hash改变，报告仅记实际隔离验证，不新增运行时、进程、端口、安装或执行权。",
+      "acceptance": "仅登记当前文件hash所含既有复杂度，不代替真实测试或安装版验收。"
+    },
+    {
+      "task_id": "T-1069-completion-json",
+      "files": [
+        "docs/verification/t1069/implementation-review.md"
+      ],
+      "file_sha256": "f498d55032c749c2c444909ce3980ff184a3c36a028f9167404f0c8156281411",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1069-1070",
+      "scope_source": "docs/features/t1069-completion-json-compat.md",
+      "reason": "用户授权的两处已复现缺陷修复；复用Pi同版本及既有Worker/IPC业务端口。锁文件仅补丁hash改变，报告仅记实际隔离验证，不新增运行时、进程、端口、安装或执行权。",
+      "acceptance": "仅登记当前文件hash所含既有复杂度，不代替真实测试或安装版验收。"
+    },
+    {
+      "task_id": "T-1071-resource-audit",
+      "files": [
+        "docs/verification/t1071/README.md"
+      ],
+      "file_sha256": "9d7ad046530f2cc2cc980f4c91a96de99406824d07807d0d8d1d36b118035c46",
+      "categories": [
+        "ipc",
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "用户2026-10-07要求全面检查资源浪费与内存泄漏",
+      "scope_source": "docs/verification/t1071-resource-memory-audit.md",
+      "reason": "仅为授权诊断复用既有工具链、实际模块与合成端口；隔离探针只操作自身创建的线程和进程，进程采样只读。报告涉及既有机制，不新增产品运行时、IPC协议、原生部署、数据归属或正式产品功能。",
+      "acceptance": "仅登记诊断工件复杂度；不代表缺陷已修复、全局Gate通过或安装版验收。"
+    },
+    {
+      "task_id": "T-1071-resource-audit",
+      "files": [
+        "docs/verification/t1071/REPORT.md"
+      ],
+      "file_sha256": "f0ee9b4d0f9015896625002f0eaad771bc0af5a2655d10ae1ac6712d261aa3ef",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "用户2026-10-07要求全面检查资源浪费与内存泄漏",
+      "scope_source": "docs/verification/t1071-resource-memory-audit.md",
+      "reason": "仅为授权诊断复用既有工具链、实际模块与合成端口；隔离探针只操作自身创建的线程和进程，进程采样只读。报告涉及既有机制，不新增产品运行时、IPC协议、原生部署、数据归属或正式产品功能。",
+      "acceptance": "仅登记诊断工件复杂度；不代表缺陷已修复、全局Gate通过或安装版验收。"
+    },
+    {
+      "task_id": "T-1071-resource-audit",
+      "files": [
+        "docs/verification/t1071/native-sidecar-probe.py"
+      ],
+      "file_sha256": "ee9bd8a2632e5edce65e1640fd179bd7a5e643bbc2e6457bd44d5775931ea9bf",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "用户2026-10-07要求全面检查资源浪费与内存泄漏",
+      "scope_source": "docs/verification/t1071-resource-memory-audit.md",
+      "reason": "仅为授权诊断复用既有工具链、实际模块与合成端口；隔离探针只操作自身创建的线程和进程，进程采样只读。报告涉及既有机制，不新增产品运行时、IPC协议、原生部署、数据归属或正式产品功能。",
+      "acceptance": "仅登记诊断工件复杂度；不代表缺陷已修复、全局Gate通过或安装版验收。"
+    },
+    {
+      "task_id": "T-1071-resource-audit",
+      "files": [
+        "docs/verification/t1071/process-samples.json"
+      ],
+      "file_sha256": "09b1cc3b294421084c3de8d0a11966004096f8c9d5dc637423a1c586966994bb",
+      "categories": [
+        "native_executable"
+      ],
+      "disposition": "in-budget",
+      "decision": "用户2026-10-07要求全面检查资源浪费与内存泄漏",
+      "scope_source": "docs/verification/t1071-resource-memory-audit.md",
+      "reason": "仅为授权诊断复用既有工具链、实际模块与合成端口；隔离探针只操作自身创建的线程和进程，进程采样只读。报告涉及既有机制，不新增产品运行时、IPC协议、原生部署、数据归属或正式产品功能。",
+      "acceptance": "仅登记诊断工件复杂度；不代表缺陷已修复、全局Gate通过或安装版验收。"
+    },
+    {
+      "task_id": "T-1071-worker-memory",
+      "files": [
+        "ai-worker/src/execution/worker-runtime.ts"
+      ],
+      "file_sha256": "2ec9ebe3807844cc9d1111448f98531481c6d1a63cb1bc9b55b64d2aa20e19bf",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1073",
+      "scope_source": "docs/features/t1073-resource-memory-fixes.md",
+      "reason": "用户授权修复已复现资源缺陷的既有机制；私有确认、停止与背压不新增公共权力或运行时。",
+      "acceptance": "复杂度授权只绑定当前文件，不代表测试或验收通过。"
+    },
+    {
+      "task_id": "T-1071-worker-memory",
+      "files": [
+        "backend/src/modules/execution/worker-supervisor.ts"
+      ],
+      "file_sha256": "3e58a620a3f53fb08a0ba08f47326328a9500262a7e1fb9f871a8b0479f7e6f6",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1073",
+      "scope_source": "docs/features/t1073-resource-memory-fixes.md",
+      "reason": "用户授权修复已复现资源缺陷的既有机制；私有确认、停止与背压不新增公共权力或运行时。",
+      "acceptance": "复杂度授权只绑定当前文件，不代表测试或验收通过。"
+    },
+    {
+      "task_id": "T-1071-scheduler",
+      "files": [
+        "backend/src/application/scheduling/automation.ts"
+      ],
+      "file_sha256": "0fea78809aaecb5739307dcc299ae8a2bd8f4a81e8f33104a5e70e2d21f51f32",
+      "categories": [
+        "native_executable"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1073",
+      "scope_source": "docs/features/t1073-resource-memory-fixes.md",
+      "reason": "用户授权修复已复现资源缺陷的既有机制；私有确认、停止与背压不新增公共权力或运行时。",
+      "acceptance": "复杂度授权只绑定当前文件，不代表测试或验收通过。"
+    },
+    {
+      "task_id": "T-1071-scheduler",
+      "files": [
+        "frontend/src/server/persistence-client.ts"
+      ],
+      "file_sha256": "767eed524653dbf418f3a2ff7732d23c046e17977e692205106901dfc7301afb",
+      "categories": [
+        "credential_store",
+        "language_toolchain",
+        "native_executable"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1073",
+      "scope_source": "docs/features/t1073-resource-memory-fixes.md",
+      "reason": "用户授权修复已复现资源缺陷的既有机制；私有确认、停止与背压不新增公共权力或运行时。",
+      "acceptance": "复杂度授权只绑定当前文件，不代表测试或验收通过。"
+    },
+    {
+      "task_id": "T-1071-worker-memory",
+      "files": [
+        "ai-worker/src/execution/worker-runtime.ts"
+      ],
+      "file_sha256": "5a935696ff915b216fd0b0e69ca32a01ff484d27ff7114fdf4b015c0dfbc4741",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1073",
+      "scope_source": "docs/features/t1073-resource-memory-fixes.md",
+      "reason": "绑定同轮已审生命周期修复及隔离实际消费者验证的最终源码；不新增公共权力、运行时或数据归属。",
+      "acceptance": "当前文件复杂度归属，不代表测试或产品验收通过。"
+    },
+    {
+      "task_id": "T-1071-worker-memory",
+      "files": [
+        "backend/src/modules/execution/worker-supervisor.memory.test.ts"
+      ],
+      "file_sha256": "a9e8f0c3d47093cacd2a3d092a03fff54a20652f0a1917c9c10cd5124da9f0e8",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1073",
+      "scope_source": "docs/features/t1073-resource-memory-fixes.md",
+      "reason": "绑定同轮已审生命周期修复及隔离实际消费者验证的最终源码；不新增公共权力、运行时或数据归属。",
+      "acceptance": "当前文件复杂度归属，不代表测试或产品验收通过。"
+    },
+    {
+      "task_id": "T-1071-worker-memory",
+      "files": [
+        "backend/src/modules/execution/worker-supervisor.ts"
+      ],
+      "file_sha256": "b35dc9378acabce74173df2775302d7416db846dd5a6be796c6653b227873de0",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1073",
+      "scope_source": "docs/features/t1073-resource-memory-fixes.md",
+      "reason": "绑定同轮已审生命周期修复及隔离实际消费者验证的最终源码；不新增公共权力、运行时或数据归属。",
+      "acceptance": "当前文件复杂度归属，不代表测试或产品验收通过。"
+    },
+    {
+      "task_id": "T-1071-scheduler",
+      "files": [
+        "backend/src/application/scheduling/automation.ts"
+      ],
+      "file_sha256": "513ff8cf606a4c8c14576839e7aaa49c33b2e46341ac40b9de4bcb9c0a3e47e5",
+      "categories": [
+        "native_executable"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1073",
+      "scope_source": "docs/features/t1073-resource-memory-fixes.md",
+      "reason": "绑定同轮已审生命周期修复及隔离实际消费者验证的最终源码；不新增公共权力、运行时或数据归属。",
+      "acceptance": "当前文件复杂度归属，不代表测试或产品验收通过。"
+    },
+    {
+      "task_id": "T-1071-scheduler",
+      "files": [
+        "frontend/src/server/persistence-client.ts"
+      ],
+      "file_sha256": "7da45718f7b63a38f3252bcc9a8ef2b19ad0b5c7fb417571b8217ca0ae9ab194",
+      "categories": [
+        "credential_store",
+        "language_toolchain",
+        "native_executable"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1073",
+      "scope_source": "docs/features/t1073-resource-memory-fixes.md",
+      "reason": "绑定同轮已审生命周期修复及隔离实际消费者验证的最终源码；不新增公共权力、运行时或数据归属。",
+      "acceptance": "当前文件复杂度归属，不代表测试或产品验收通过。"
+    },
+    {
+      "task_id": "T-1071-worker-memory",
+      "files": [
+        "docs/verification/t1073/worker/REPORT.md"
+      ],
+      "file_sha256": "188d3f692f753d50da4ecf248764c67260ef45124e6da9031de26723f9d6f044",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1073",
+      "scope_source": "docs/features/t1073-resource-memory-fixes.md",
+      "reason": "同轮已审资源修复及其实际消费者验证证据的准确文件绑定；不新增公共权力或运行时。",
+      "acceptance": "归属与复杂度预算登记，不代表测试或验收通过。"
+    },
+    {
+      "task_id": "T-1071-worker-memory",
+      "files": [
+        "docs/verification/t1073/worker/vitest-log-sha256.json"
+      ],
+      "file_sha256": "5b59bd284cfeceb772b70925e160a7c6c1703a22127a776c8c419d41688c07db",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1073",
+      "scope_source": "docs/features/t1073-resource-memory-fixes.md",
+      "reason": "同轮已审资源修复及其实际消费者验证证据的准确文件绑定；不新增公共权力或运行时。",
+      "acceptance": "归属与复杂度预算登记，不代表测试或验收通过。"
+    },
+    {
+      "task_id": "T-1073",
+      "files": [
+        "ai-worker/src/execution/worker-runtime.ts"
+      ],
+      "file_sha256": "5a935696ff915b216fd0b0e69ca32a01ff484d27ff7114fdf4b015c0dfbc4741",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1073",
+      "scope_source": "docs/features/t1073-resource-memory-fixes.md",
+      "reason": "用户已授权8处资源修复；仅绑定实际清理/私有消费确认、既有装配及隔离合成回归证据的准确文件哈希，不授权新增公共契约、运行时、部署或其它产品范围。",
+      "acceptance": "仅登记已审实现复杂度；不代表测试、产品验收或全局历史任务通过。"
+    },
+    {
+      "task_id": "T-1073",
+      "files": [
+        "backend/src/application/scheduling/automation.ts"
+      ],
+      "file_sha256": "513ff8cf606a4c8c14576839e7aaa49c33b2e46341ac40b9de4bcb9c0a3e47e5",
+      "categories": [
+        "native_executable"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1073",
+      "scope_source": "docs/features/t1073-resource-memory-fixes.md",
+      "reason": "用户已授权8处资源修复；仅绑定实际清理/私有消费确认、既有装配及隔离合成回归证据的准确文件哈希，不授权新增公共契约、运行时、部署或其它产品范围。",
+      "acceptance": "仅登记已审实现复杂度；不代表测试、产品验收或全局历史任务通过。"
+    },
+    {
+      "task_id": "T-1073",
+      "files": [
+        "backend/src/modules/execution/worker-supervisor.memory.test.ts"
+      ],
+      "file_sha256": "a9e8f0c3d47093cacd2a3d092a03fff54a20652f0a1917c9c10cd5124da9f0e8",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1073",
+      "scope_source": "docs/features/t1073-resource-memory-fixes.md",
+      "reason": "用户已授权8处资源修复；仅绑定实际清理/私有消费确认、既有装配及隔离合成回归证据的准确文件哈希，不授权新增公共契约、运行时、部署或其它产品范围。",
+      "acceptance": "仅登记已审实现复杂度；不代表测试、产品验收或全局历史任务通过。"
+    },
+    {
+      "task_id": "T-1073",
+      "files": [
+        "backend/src/modules/execution/worker-supervisor.ts"
+      ],
+      "file_sha256": "b35dc9378acabce74173df2775302d7416db846dd5a6be796c6653b227873de0",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1073",
+      "scope_source": "docs/features/t1073-resource-memory-fixes.md",
+      "reason": "用户已授权8处资源修复；仅绑定实际清理/私有消费确认、既有装配及隔离合成回归证据的准确文件哈希，不授权新增公共契约、运行时、部署或其它产品范围。",
+      "acceptance": "仅登记已审实现复杂度；不代表测试、产品验收或全局历史任务通过。"
+    },
+    {
+      "task_id": "T-1073",
+      "files": [
+        "docs/verification/t1073/REPORT.md"
+      ],
+      "file_sha256": "26c565c05d29f5a521fae52e19d3eb7bfebcbd0c8c820cea85d6178e702b6392",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1073",
+      "scope_source": "docs/features/t1073-resource-memory-fixes.md",
+      "reason": "用户已授权8处资源修复；仅绑定实际清理/私有消费确认、既有装配及隔离合成回归证据的准确文件哈希，不授权新增公共契约、运行时、部署或其它产品范围。",
+      "acceptance": "仅登记已审实现复杂度；不代表测试、产品验收或全局历史任务通过。"
+    },
+    {
+      "task_id": "T-1073",
+      "files": [
+        "docs/verification/t1073/candidate-validation.json"
+      ],
+      "file_sha256": "37b6f8308726ae2763147035c0f4f4395bae1f9a20646d29a5475c8b4a68a6d8",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1073",
+      "scope_source": "docs/features/t1073-resource-memory-fixes.md",
+      "reason": "用户已授权8处资源修复；仅绑定实际清理/私有消费确认、既有装配及隔离合成回归证据的准确文件哈希，不授权新增公共契约、运行时、部署或其它产品范围。",
+      "acceptance": "仅登记已审实现复杂度；不代表测试、产品验收或全局历史任务通过。"
+    },
+    {
+      "task_id": "T-1073",
+      "files": [
+        "docs/verification/t1073/worker/REPORT.md"
+      ],
+      "file_sha256": "188d3f692f753d50da4ecf248764c67260ef45124e6da9031de26723f9d6f044",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1073",
+      "scope_source": "docs/features/t1073-resource-memory-fixes.md",
+      "reason": "用户已授权8处资源修复；仅绑定实际清理/私有消费确认、既有装配及隔离合成回归证据的准确文件哈希，不授权新增公共契约、运行时、部署或其它产品范围。",
+      "acceptance": "仅登记已审实现复杂度；不代表测试、产品验收或全局历史任务通过。"
+    },
+    {
+      "task_id": "T-1073",
+      "files": [
+        "docs/verification/t1073/worker/vitest-log-sha256.json"
+      ],
+      "file_sha256": "5b59bd284cfeceb772b70925e160a7c6c1703a22127a776c8c419d41688c07db",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1073",
+      "scope_source": "docs/features/t1073-resource-memory-fixes.md",
+      "reason": "用户已授权8处资源修复；仅绑定实际清理/私有消费确认、既有装配及隔离合成回归证据的准确文件哈希，不授权新增公共契约、运行时、部署或其它产品范围。",
+      "acceptance": "仅登记已审实现复杂度；不代表测试、产品验收或全局历史任务通过。"
+    },
+    {
+      "task_id": "T-1073",
+      "files": [
+        "docs/verification/t1073/worker-task-packet.md"
+      ],
+      "file_sha256": "87d704f5c50928f71f657d9de5eeabd505c0c8b60f0794967fddbd01bc52c932",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1073",
+      "scope_source": "docs/features/t1073-resource-memory-fixes.md",
+      "reason": "用户已授权8处资源修复；仅绑定实际清理/私有消费确认、既有装配及隔离合成回归证据的准确文件哈希，不授权新增公共契约、运行时、部署或其它产品范围。",
+      "acceptance": "仅登记已审实现复杂度；不代表测试、产品验收或全局历史任务通过。"
+    },
+    {
+      "task_id": "T-1073",
+      "files": [
+        "frontend/src/server/persistence-client.ts"
+      ],
+      "file_sha256": "7da45718f7b63a38f3252bcc9a8ef2b19ad0b5c7fb417571b8217ca0ae9ab194",
+      "categories": [
+        "credential_store",
+        "language_toolchain",
+        "native_executable"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-T1073",
+      "scope_source": "docs/features/t1073-resource-memory-fixes.md",
+      "reason": "用户已授权8处资源修复；仅绑定实际清理/私有消费确认、既有装配及隔离合成回归证据的准确文件哈希，不授权新增公共契约、运行时、部署或其它产品范围。",
+      "acceptance": "仅登记已审实现复杂度；不代表测试、产品验收或全局历史任务通过。"
     }
   ],
   "historical_baselines": []

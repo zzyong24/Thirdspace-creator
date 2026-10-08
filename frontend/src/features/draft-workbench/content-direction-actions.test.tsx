@@ -48,7 +48,7 @@ describe("当前稿内容判断", () => {
     vi.useFakeTimers(); let resolve!: () => void;
     mocks.flush.mockReturnValue(new Promise<void>(r => { resolve = r; }));
     mount(); fireEvent.click(screen.getByRole("button", { name: "检查哪里留不住人" }));
-    await act(async () => { await vi.advanceTimersByTimeAsync(10001); });
+    await act(async () => { await vi.advanceTimersByTimeAsync(120001); });
     expect(screen.getByRole("alert").textContent).toContain("本次未发送诊断");
     await act(async () => resolve());
     expect(request).toBeNull(); expect(mocks.list).not.toHaveBeenCalled();
@@ -57,7 +57,7 @@ describe("当前稿内容判断", () => {
     vi.useFakeTimers(); let resolve!: (value: unknown) => void;
     mocks.get.mockReturnValue(new Promise(r => { resolve = r; }));
     mount(); fireEvent.click(screen.getByRole("button", { name: "检查哪里留不住人" }));
-    await act(async () => { await vi.advanceTimersByTimeAsync(10001); });
+    await act(async () => { await vi.advanceTimersByTimeAsync(120001); });
     expect(screen.getByRole("alert").textContent).toContain("读取当前稿件超时");
     await act(async () => resolve({ id: "a1", projectId: "p1", currentVersionId: "v-late" }));
     expect(request).toBeNull();

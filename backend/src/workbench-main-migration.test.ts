@@ -15,7 +15,7 @@ const roots: string[] = [];
 afterEach(async () => { for (const root of roots.splice(0)) await rm(root, { recursive: true, force: true }); });
 const tables = ["workbench_artifact_lineages", "workbench_artifact_lineage_versions"];
 async function newRoot() { const root = await mkdtemp(join(tmpdir(), "t1080-workbench-migration-")); roots.push(root); return root; }
-async function ledger(client: PGlite) { return (await client.query("SELECT hash, created_at FROM drizzle.__drizzle_migrations ORDER BY created_at,id")).rows; }
+async function ledger(client: PGlite) { return (await client.query<{hash:string;created_at:string|number}>("SELECT hash, created_at FROM drizzle.__drizzle_migrations ORDER BY created_at,id")).rows; }
 async function history(client: PGlite) {
   return Promise.all(tables.map(async table => (await client.query(`SELECT * FROM ${table} ORDER BY id`)).rows));
 }

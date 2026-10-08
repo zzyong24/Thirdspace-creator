@@ -1,3 +1,4 @@
+import {executionTimeoutMs} from "@creatoros/contract/timeout-policy";
 import { chromium, type Browser, type BrowserServer } from "@playwright/test";
 import { z } from "zod";
 import { browserActionPreparationSchema,agenticToolOutcomeSchema, type AgenticToolOutcome, type WorkerPort } from "@creatoros/contract/execution-worker";
@@ -75,10 +76,10 @@ export function createResearchWorkerTools(deps: Dependencies) {
     }
     return starting ??= (async () => {
       try {
-        server = await (deps.launchServer ?? (() => launchWithBrowser(selection => { signal.throwIfAborted(); return chromium.launchServer({ ...selection, headless: true, timeout: 15000 }); })))();
+        server = await (deps.launchServer ?? (() => launchWithBrowser(selection => { signal.throwIfAborted(); return chromium.launchServer({ ...selection, headless: true, timeout: executionTimeoutMs() }); })))();
         const pid = server.process().pid; if (pid) pids.add(pid);
         signal.throwIfAborted();
-        browser = await (deps.connect ?? (endpoint => chromium.connect(endpoint, { timeout: 15000 })))(server.wsEndpoint());
+        browser = await (deps.connect ?? (endpoint => chromium.connect(endpoint, { timeout: executionTimeoutMs() })))(server.wsEndpoint());
         signal.throwIfAborted(); return browser;
       } catch (error) {
         await browser?.close().catch(() => {}); await server?.close().catch(() => {});
@@ -96,6 +97,7 @@ export function createResearchWorkerTools(deps: Dependencies) {
       storageState = z.object({ cookies: z.array(z.unknown()), origins: z.array(z.unknown()) }).parse(JSON.parse(session.stateJson)) as typeof storageState;
     }
     const ctx = await connected.newContext({ serviceWorkers: "block", ...(storageState ? { storageState } : {}) });
+    ctx.setDefaultTimeout?.(executionTimeoutMs());ctx.setDefaultNavigationTimeout?.(executionTimeoutMs());
     let closed: Promise<void> | undefined;
     const onAbort = () => { void ctx.close().catch(() => {}); };
     const handle = { close: () => closed ??= (async () => {
@@ -148,6 +150,7 @@ export function createResearchWorkerTools(deps: Dependencies) {
     const connected=await getBrowser();combined.throwIfAborted();
     const storageState=mergeBrowserLoginStates((prepared.loginStates??[]).map(row=>row.stateJson));
     const ctx=await connected.newContext({serviceWorkers:"block",storageState});
+    ctx.setDefaultTimeout?.(executionTimeoutMs());ctx.setDefaultNavigationTimeout?.(executionTimeoutMs());
     const handle={close:()=>ctx.close()};contexts.add(handle);
     const onAbort=()=>{void ctx.close().catch(()=>{});};combined.addEventListener("abort",onAbort,{once:true});
     ctx.once("close",()=>{contexts.delete(handle);combined.removeEventListener("abort",onAbort);});
@@ -222,7 +225,7 @@ export function createResearchWorkerTools(deps: Dependencies) {
           const params = searchParams.parse(input);
           const adapter = createBrowserScrapeAdapter({ openContext: () => openContext(scope.callId, combined), saveScreenshot: async () => {} });
           const results = await searchBundledBrowserWithFallback(params.query, { count: params.count ?? 10, signal: combined },
-            (baseUrl, query, options) => adapter.search({ provider: "browser", baseUrl, model: "", token: "" }, query, { count: options?.count ?? 10, timeoutMs: 15000, signal: combined }), undefined, searchState);
+            (baseUrl, query, options) => adapter.search({ provider: "browser", baseUrl, model: "", token: "" }, query, { count: options?.count ?? 10, timeoutMs: executionTimeoutMs(), signal: combined }), undefined, searchState);
           return agenticToolOutcomeSchema.parse({ status: "ok", summary: `联网检索到 ${results.length} 条`, evidence: results.map(row => ({ sourceUrl: row.url, title: row.title, text: row.snippet })), data: { results }, error: null, continuation: null, sideEffect: "none" });
         }
         const params = readParams.parse(input);
@@ -256,7 +259,7 @@ export function createResearchWorkerTools(deps: Dependencies) {
       return enqueue(async()=>{
         const combined=AbortSignal.any([signal,owner.signal]);combined.throwIfAborted();
         const adapter=createBrowserScrapeAdapter({openContext:()=>openContext(owner.callId,combined),saveScreenshot:async()=>{}});
-        const results=await adapter.search({provider:"browser",baseUrl:params.baseUrl,model:"",token:""},params.query,{count:params.count??10,timeoutMs:15000,signal:combined});
+        const results=await adapter.search({provider:"browser",baseUrl:params.baseUrl,model:"",token:""},params.query,{count:params.count??10,timeoutMs:executionTimeoutMs(),signal:combined});
         combined.throwIfAborted();return results;
       });
     },

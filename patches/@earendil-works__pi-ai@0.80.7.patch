@@ -20,11 +20,78 @@ index c8c0268392e72c3a9480f86704586702921ad0d2..f39534ae8744caa31e612fd2027c422d
              output.stopReason = options?.signal?.aborted ? "aborted" : "error";
              output.errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
              stream.push({ type: "error", reason: output.stopReason, error: output });
+diff --git a/dist/api/openai-completion-json-compat.js b/dist/api/openai-completion-json-compat.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..7e4a50bcb4552473d4be5a9dd8f4f90ca358e35c
+--- /dev/null
++++ b/dist/api/openai-completion-json-compat.js
+@@ -0,0 +1,53 @@
++// SEMANTIC_BOUNDARY_ALLOW: lossless wire compatibility for the same HTTP response;
++// no semantic choices, extra request, fabricated completion or token usage.
++const record = value => value !== null && typeof value === "object" && !Array.isArray(value);
++const optionalText = value => value === undefined || value === null || typeof value === "string";
++const tokenCount = value => Number.isSafeInteger(value) && value >= 0;
++
++export async function completionJsonResponse(response, signal) {
++    const mediaType = (response.headers.get("content-type") ?? "").split(";")[0].trim().toLowerCase();
++    if (!response.ok || !(mediaType === "application/json" || /^application\/[\w.-]+\+json$/.test(mediaType))) return response;
++    signal?.throwIfAborted();
++    const body = await response.json();
++    signal?.throwIfAborted();
++    const choice = record(body) && Array.isArray(body.choices) && body.choices.length === 1 ? body.choices[0] : null;
++    const message = choice?.message;
++    const invalid = () => { throw new Error("Incomplete Chat Completion JSON response"); };
++    if (!record(body) || body.object !== "chat.completion" || body.error != null || !record(choice) || choice.index !== 0 ||
++        !["stop", "end", "length", "tool_calls", "content_filter"].includes(choice.finish_reason) ||
++        !record(message) || message.role !== "assistant" || !optionalText(message.content) ||
++        !["reasoning_content", "reasoning", "reasoning_text", "refusal"].every(key => optionalText(message[key])) ||
++        message.function_call != null) invalid();
++    let tools;
++    if (message.tool_calls != null) {
++        if (!Array.isArray(message.tool_calls)) invalid();
++        const ids = new Set();
++        tools = message.tool_calls.map((tool, index) => {
++            if (!record(tool) || typeof tool.id !== "string" || !tool.id || ids.has(tool.id) || tool.type !== "function" ||
++                !record(tool.function) || typeof tool.function.name !== "string" || !tool.function.name || typeof tool.function.arguments !== "string") invalid();
++            ids.add(tool.id);
++            let args;
++            try { args = JSON.parse(tool.function.arguments); } catch { invalid(); }
++            if (!record(args)) invalid();
++            return { ...tool, index };
++        });
++    }
++    if (choice.finish_reason === "tool_calls" && !tools?.length) invalid();
++    if (body.usage != null) {
++        if (!record(body.usage) || !["prompt_tokens", "completion_tokens", "total_tokens"].every(key => tokenCount(body.usage[key]))) invalid();
++        // Validate fields actually consumed by Pi; opaque provider extensions stay opaque.
++        for (const [key, fields] of [["prompt_tokens_details", ["cached_tokens", "cache_write_tokens"]], ["completion_tokens_details", ["reasoning_tokens"]]]) {
++            const details = body.usage[key];
++            if (details != null && (!record(details) || !fields.every(field => details[field] == null || tokenCount(details[field])))) invalid();
++        }
++        if (body.usage.prompt_cache_hit_tokens != null && !tokenCount(body.usage.prompt_cache_hit_tokens)) invalid();
++    }
++    const delta = { ...message, ...(tools ? { tool_calls: tools } : {}) };
++    const chunk = { ...body, object: "chat.completion.chunk", choices: [{ ...choice, delta }] };
++    // Preserve response identity and actual usage; only framing headers change after decoding.
++    const headers = new Headers(response.headers);
++    headers.set("content-type", "text/event-stream");
++    headers.delete("content-length");
++    headers.delete("content-encoding");
++    return new Response(`data: ${JSON.stringify(chunk)}\n\ndata: [DONE]\n\n`, { status: response.status, statusText: response.statusText, headers });
++}
 diff --git a/dist/api/openai-completions.js b/dist/api/openai-completions.js
-index fd227376744839d69aa5f9be4a3828ea2fcd001b..921b31bdf4ff558718ca9c9ba9be6aa129ad6151 100644
+index fd227376744839d69aa5f9be4a3828ea2fcd001b..ce2bdabb830ef1c88b7f0914d7d39a6ad9584e5c 100644
 --- a/dist/api/openai-completions.js
 +++ b/dist/api/openai-completions.js
-@@ -366,6 +366,17 @@ export const stream = (model, context, options) => {
+@@ -10,6 +10,7 @@ import { buildCopilotDynamicHeaders, hasCopilotVisionInput } from "./github-copi
+ import { clampOpenAIPromptCacheKey } from "./openai-prompt-cache.js";
+ import { buildBaseOptions } from "./simple-options.js";
+ import { transformMessages } from "./transform-messages.js";
++import { completionJsonResponse } from "./openai-completion-json-compat.js";
+ /**
+  * Check if conversation messages contain tool calls or tool results.
+  * This is needed because Anthropic (via proxy) requires the tools param
+@@ -366,6 +367,17 @@ export const stream = (model, context, options) => {
                  delete block.partialArgs;
                  delete block.streamIndex;
              }
@@ -42,6 +109,15 @@ index fd227376744839d69aa5f9be4a3828ea2fcd001b..921b31bdf4ff558718ca9c9ba9be6aa1
              output.stopReason = options?.signal?.aborted ? "aborted" : "error";
              output.errorMessage = formatProviderError(normalizeProviderError(error));
              // Some providers via OpenRouter give additional information in this field.
+@@ -425,6 +437,8 @@ function createClient(model, context, apiKey, optionsHeaders, sessionId, compat
+         baseURL: model.baseUrl,
+         dangerouslyAllowBrowser: true,
+         defaultHeaders: headers,
++        // Normalize only this client's same response; never replace global fetch or retry.
++        fetch: async (input, init) => completionJsonResponse(await fetch(input, init), init?.signal ?? (input instanceof Request ? input.signal : undefined)),
+     });
+ }
+ function buildParams(model, context, options, compat = getCompat(model), cacheRetention = resolveCacheRetention(options?.cacheRetention, options?.env)) {
 diff --git a/dist/api/openai-responses.js b/dist/api/openai-responses.js
 index 09c8aee763c1474581900127b215f3c2f645de8e..97980626e14ba3ca3f9102488e1e2fe6469aa60e 100644
 --- a/dist/api/openai-responses.js

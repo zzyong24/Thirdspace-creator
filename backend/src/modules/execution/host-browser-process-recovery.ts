@@ -1,3 +1,4 @@
+import {executionTimeoutMs} from "@creatoros/contract/timeout-policy";
 import {execFile} from 'node:child_process';
 import {promisify} from 'node:util';
 import {randomUUID} from 'node:crypto';
@@ -16,7 +17,7 @@ const identityGlobals=globalThis as typeof globalThis & {[identityRegistryKey]?:
 const currentProcessHostIds=identityGlobals[identityRegistryKey]??=new Set<string>();
 /** 只读OS证据；查询失败绝不能解释为没有进程。脚本不拼接任何用户路径或凭据。 */
 export async function readHostProcessSnapshot(platform:NodeJS.Platform=process.platform):Promise<HostProcessRecord[]>{
- const opts={timeout:5000,maxBuffer:16*1024*1024,windowsHide:true,env:{...process.env,LC_ALL:platform==='darwin'?'en_US.UTF-8':'C.UTF-8'}};
+ const opts={timeout:executionTimeoutMs(),maxBuffer:16*1024*1024,windowsHide:true,env:{...process.env,LC_ALL:platform==='darwin'?'en_US.UTF-8':'C.UTF-8'}};
  if(platform==='win32'){
   const script='[Console]::OutputEncoding=[System.Text.UTF8Encoding]::new($false); $OutputEncoding=[Console]::OutputEncoding; $ErrorActionPreference="Stop"; @(Get-CimInstance Win32_Process | Select-Object ProcessId,ParentProcessId,CreationDate,ExecutablePath,CommandLine,Name) | ConvertTo-Json -Compress';
   const {stdout}=await run('powershell.exe',['-NoProfile','-NonInteractive','-Command',script],opts);

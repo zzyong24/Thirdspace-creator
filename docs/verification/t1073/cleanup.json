@@ -1,0 +1,26 @@
+{
+  "managedWorktrees": [
+    {
+      "root": "/Users/zyongzhu/.codex/worktrees/t1073-worker/Thirdspace-creator",
+      "state": "archived_worktree",
+      "candidate": "7081ba6b8911ecaece9f9212a8b115082d08c7ee"
+    },
+    {
+      "root": "/Users/zyongzhu/.codex/worktrees/t1073-frontend/Thirdspace-creator",
+      "state": "archived_worktree",
+      "candidate": "ce5d89d88f4c3433b9579dea800c4c6f2a8e5db2"
+    },
+    {
+      "root": "/Users/zyongzhu/.codex/worktrees/t1073-backend/Thirdspace-creator",
+      "state": "archived_worktree",
+      "candidate": "54a2e8c9074f3afd6a7752f7d67ecada0eac1746"
+    }
+  ],
+  "proof": "archive_worktree返回queued后，实际list_artifacts确认三项均archived_worktree；候选与源码已保存。",
+  "browserTaskSpace": 4,
+  "browserCleanup": "实际ego-browser taskSpace(4).finish({keep:[]})退出0，cleanup.txt保留；只关闭本轮页面，未新建任务空间或触碰用户页",
+  "preservedUnrelated": [
+    "T-1072",
+    "orchestrator/.lessons-stats.json"
+  ]
+}

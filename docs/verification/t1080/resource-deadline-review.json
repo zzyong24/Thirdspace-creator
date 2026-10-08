@@ -1,0 +1,250 @@
+{
+  "schema": "t1080-independent-deadline-compatibility-review-v1",
+  "observed_at": "2026-10-08T12:12:01.352378+00:00",
+  "task": "T-1080",
+  "manifest_sha256": "4a1d2a6fd23dc0c09ff55bb8bce168ba3a015b68a70dc8290e32f8b58643cd18",
+  "verdict": "限定生产闭包与修正后的真实公共链观察通过；52/52最终GREEN，保留初始证据混杂说明",
+  "production_static_review": "PASS_MINIMAL_COMPATIBILITY_SCOPE",
+  "dynamic_acceptance": "PASS_FINAL_PUBLIC_CHAIN_GREEN_WITH_HONEST_RED_LIMIT",
+  "repository_mutated_by_reviewer": false,
+  "tests_run_by_reviewer": false,
+  "scope": {
+    "production_paths": [
+      "backend/src/modules/execution/submitted-task-preparation.service.ts",
+      "backend/src/modules/ai-runtime/structured-business-execution.service.ts",
+      "backend/src/modules/ai-runtime/asset-business-execution.service.ts",
+      "backend/src/modules/execution/execution-authority.service.ts"
+    ],
+    "new_public_operation_fields": [],
+    "additional_test_path": "backend/src/integration/chat-task-atomic.test.ts",
+    "ordinary_new_execution_floor": "保留 newExecutionBudgetDeadline；内部继承标记不是无条件降下限开关"
+  },
+  "source_provenance": {
+    "three_way_base": "125bc864d79f64891694ed0d630b6462fc7d7e26",
+    "files": [
+      {
+        "path": "backend/src/modules/execution/submitted-task-preparation.service.ts",
+        "candidate_sha256": "15d6d690e90c77f77bccaebc28f1f85080c9f3ce7a3cfb13ba07cad5b4952d48",
+        "source_sha256": "e060b5361645b1b787b389070ab27dcfccbf90fdb04053172c319798ec2acd8e",
+        "three_way": {
+          "base": {
+            "head": "125bc864d79f64891694ed0d630b6462fc7d7e26",
+            "sha256": "bb06c74de6e9106d629c6fe3809f82b572513b4a40fb5c537f4cb5d8c3df6894",
+            "exists": true
+          },
+          "current": {
+            "head": "e81e9b609cd0be0b30444de8bab33cfff42c1e64",
+            "sha256": "bb06c74de6e9106d629c6fe3809f82b572513b4a40fb5c537f4cb5d8c3df6894",
+            "exists": true
+          },
+          "resource": {
+            "head": "6b1322af71cbdf55f52e9f37c5cde76e06b56e48",
+            "sha256": "e060b5361645b1b787b389070ab27dcfccbf90fdb04053172c319798ec2acd8e",
+            "exists": true
+          }
+        },
+        "current_matches_packet": true
+      },
+      {
+        "path": "backend/src/modules/ai-runtime/structured-business-execution.service.ts",
+        "candidate_sha256": "fd1e1de025e23db52f72a469a2234700928b0d558a43a132e4f621dab1f875d8",
+        "source_sha256": "9ba9953416438761fbac8740a8c9344c19ad8c59171f2cde0d87f73c4b8dade1",
+        "three_way": {
+          "base": {
+            "head": "125bc864d79f64891694ed0d630b6462fc7d7e26",
+            "sha256": "9ba9953416438761fbac8740a8c9344c19ad8c59171f2cde0d87f73c4b8dade1",
+            "exists": true
+          },
+          "current": {
+            "head": "e81e9b609cd0be0b30444de8bab33cfff42c1e64",
+            "sha256": "9ba9953416438761fbac8740a8c9344c19ad8c59171f2cde0d87f73c4b8dade1",
+            "exists": true
+          },
+          "resource": {
+            "head": "6b1322af71cbdf55f52e9f37c5cde76e06b56e48",
+            "sha256": "9ba9953416438761fbac8740a8c9344c19ad8c59171f2cde0d87f73c4b8dade1",
+            "exists": true
+          }
+        },
+        "current_matches_packet": true
+      },
+      {
+        "path": "backend/src/modules/ai-runtime/asset-business-execution.service.ts",
+        "candidate_sha256": "520d02df3c784e82313ba2b460f16553285d263e89deba890d040f8e91aad6ef",
+        "source_sha256": "85e041107604ffc00939a6e10492ffc71d3a4dae447519304cb01ebeed81ac16",
+        "three_way": {
+          "base": {
+            "head": "125bc864d79f64891694ed0d630b6462fc7d7e26",
+            "sha256": "8e2f85b7692bfa8dab5cdc2bfdaf4f5b078328491acce14146d8805887c4e8d9",
+            "exists": true
+          },
+          "current": {
+            "head": "e81e9b609cd0be0b30444de8bab33cfff42c1e64",
+            "sha256": "85e041107604ffc00939a6e10492ffc71d3a4dae447519304cb01ebeed81ac16",
+            "exists": true
+          },
+          "resource": {
+            "head": "6b1322af71cbdf55f52e9f37c5cde76e06b56e48",
+            "sha256": "8e2f85b7692bfa8dab5cdc2bfdaf4f5b078328491acce14146d8805887c4e8d9",
+            "exists": true
+          }
+        },
+        "current_matches_packet": true
+      },
+      {
+        "path": "backend/src/modules/execution/execution-authority.service.ts",
+        "candidate_sha256": "abfe457da2b99a2b1b8370de9b451b5501bf17a58cea909e08b838b08508a778",
+        "source_sha256": "4432819beb69025d6df6cec07fa7c789c7cdfcef4a99ba68867a65bc7661251b",
+        "three_way": {
+          "base": {
+            "head": "125bc864d79f64891694ed0d630b6462fc7d7e26",
+            "sha256": "b29bf107a85012868e31f41dcc0827ba8faa2276de44fd8a4d3a7df43e9b25b1",
+            "exists": true
+          },
+          "current": {
+            "head": "e81e9b609cd0be0b30444de8bab33cfff42c1e64",
+            "sha256": "f97137801b09925acab20b05e8641bb201c9cc414a92327d196421df77a2969d",
+            "exists": true
+          },
+          "resource": {
+            "head": "6b1322af71cbdf55f52e9f37c5cde76e06b56e48",
+            "sha256": "35432014cadb4b99dcd8e24f274fcc865ce5e06a97293a542e4820b71fcee3d2",
+            "exists": true
+          }
+        },
+        "current_matches_packet": true
+      }
+    ]
+  },
+  "checks": [
+    {
+      "name": "four_source_and_candidate_hashes_exact",
+      "pass": true,
+      "evidence": "逐一核 manifest hash、四 source 文件、四 candidate 文件；审阅时 MAIN 四源文件仍匹配 packet source。"
+    },
+    {
+      "name": "three_way_guard_preservation",
+      "pass": true,
+      "evidence": "authority 源为真实整合快照，保留 current asset.asr 冻结/归属门和 resource 新任务预算 floor；candidate 不删除原门。submitted 源来自 resource；structured 三方相同；asset 保留 current 同 TX reservation/project/owner 门。"
+    },
+    {
+      "name": "bounded_parent_absolute_deadline",
+      "pass": true,
+      "evidence": "缺 bounded 父绝对期限拒绝；有效期限为 min(parent.deadlineAt, preparation.deadlineAt)，首次准备的新 120000 本地窗口不延长父截止时间。"
+    },
+    {
+      "name": "four_argument_host_bridge",
+      "pass": true,
+      "evidence": "frontend persistence-client:6072–6080 已将 inheritedBudget 真实传入 structured/asset；仅这两条内部 bridge 派生 inheritedDeadline:true。"
+    },
+    {
+      "name": "owned_submission_provenance",
+      "pass": true,
+      "evidence": "authority 在子 aiTasks UPDATE 锁内回读同 user/workspace 的 execution parent、copilot business、settled 根 tool call；核 digest、真实 startedAttempt 1..parent.attempt、chat-submit:call.id。"
+    },
+    {
+      "name": "frozen_tool_and_receipt",
+      "pass": true,
+      "evidence": "原 frozen chat 输入工具必须 task type 匹配、host.task-submit 或既有 worker.script-draft、committed effect；冻结 user/account/group，receipt toolName、成功 committed、实际 child ID/result kind 逐值复验。"
+    },
+    {
+      "name": "inherited_budget_exact",
+      "pass": true,
+      "evidence": "预算原 maxCalls/maxTokens/policy 保留，deadlineMs 必须与真实 parent/preparation 较早期限相同；isDeepStrictEqual 与 executionBudgetDeadline 双核。"
+    },
+    {
+      "name": "settled_parent_lease_ownership",
+      "pass": true,
+      "evidence": "原 execution-chat-task-submission.service execute 的最终原子 child commit+settled receipt 同在 withLease admission 内，assertPending 校验 startedAttempt/ref fence。恢复不要求已结束父仍持活租约，也不重发父调用。"
+    },
+    {
+      "name": "canvas_confirmation_guard_preserved",
+      "pass": true,
+      "evidence": "asset bridge 同外事务重复 assertCanvasInput/reservation/current admission，authority 再核该冻结 admission 原 deadline/assetLimit；不接受普通未确认输入作为来源。"
+    },
+    {
+      "name": "expired_or_untrusted_marker_rejected",
+      "pass": true,
+      "evidence": "来源缺失、digest/回执/预算篡改抛 ConflictError；继承 deadline<=now 首次绑定不能 insert executionTasks。普通任务仍用新 floor。"
+    },
+    {
+      "name": "existing_mappings_and_started_tasks_unchanged",
+      "pass": true,
+      "evidence": "已映射分支仍禁止输入/预算改写并沿原 ID 返回；首次绑定仍要求 queued、无 leaseOwner/leaseToken/modelCallStartedAt；原 continuous 窄旧恢复函数未变。"
+    },
+    {
+      "name": "public_contract_unchanged",
+      "pass": true,
+      "evidence": "四产品 candidate 无 contract 文件；PreparedModelExecution 私有严格 schema 仅追加 literal true optional，公开 operation 无新字段。"
+    },
+    {
+      "name": "real_expired_parent_red",
+      "pass": true,
+      "evidence": "root实际 inherited-deadline-red.log 中已耗尽旧 bounded 父首次准备仍调用 prepare 1次，真实前置 RED，不是 helper 模拟。"
+    }
+  ],
+  "findings": [
+    {
+      "id": "DREV-001",
+      "severity": "validation_blocker",
+      "path": "backend/src/integration/chat-task-atomic.test.ts:326",
+      "finding": "合法绑定/篡改 digest 两分支使用 ai.getTask 的 DTO.executionTaskId，实际值 undefined，日志无法证明是否创建映射。",
+      "required_action": "从 owned aiTasks 真实行回读 executionTaskId，并核 executionTasks 真行；保持 null/truthy/deadline/完整预算断言，先保留真实 RED，再同 argv GREEN。",
+      "resolution": "已改真实owned aiTasks行观察，新增合法无prepareError及真executionTasks期限/预算强断言；最终52GREEN。",
+      "status": "resolved"
+    },
+    {
+      "id": "DREV-002",
+      "severity": "test_expectation_review",
+      "path": "backend/src/integration/chat-task-atomic.test.ts:158",
+      "finding": "四原重试测试预期新 hostTaskPreparation 记录 child.requestedAt+60000，当前 source 新 floor120000 使记录为+120000；候选有效 deadline 又被较早真实 parent 截断，但持久本地窗口记录仍120000。",
+      "required_action": "明确断言区分新本地准备记录窗口与有效父期限；追加/保留原父不被续期、退避次数和原ID不变的强断言，不能仅删失败断言。",
+      "resolution": "生产首次记录写入较早真实parent期限，历史record未重写；原4 retry测试强断言原字节保留且最终GREEN。",
+      "status": "resolved"
+    },
+    {
+      "id": "DREV-003",
+      "severity": "evidence_metadata_note",
+      "finding": "manifest 四 sourceHead 都写 e81e9b，但 submitted 源 SHA 实际为 resource6b 值，authority 源 SHA 为 merge 组合而非 e81 git blob。",
+      "required_action": "引用本报告逐路径三方 SHA 或将 sourceHead 标注为整合工作目录观察来源，避免将整合快照误称单 commit 原字节。",
+      "status": "nonblocking_provenance_note"
+    }
+  ],
+  "evidence": {
+    "inherited-deadline-red.result.json": "497cc79c8995cdfd99f64d4f52e61f89839b6f51d52db2ead5e523ede5ebff0e",
+    "inherited-deadline-red.log": "ec714f21bd0fb6c4a7cd15bba1d1e85cf2465c0a556c3d232ff255402dc3091d"
+  },
+  "limits": [
+    "本评审只读产品/日志并写外部报告；未执行测试、真实DB、付费模型、App操作、备份、repo写入或Git变更。",
+    "合法桥早期RED混有DTO观察/无效fixture错误，已明确不计作纯业务前置RED；不重造历史。",
+    "该必要范围只恢复历史已提交/已确认预算继承，不放宽普通新任务floor，不扩到整产品。"
+  ],
+  "followup_initial_preparation_record_review": {
+    "verdict": "PASS_MINIMAL_INITIAL_RECORD_ALIGNMENT",
+    "decision": "仅无旧record的finite首次准备记录取min(requestedAt+new_floor,parent.deadlineAt)；历史record期限保留原字节，effective仍min(parent,record)。",
+    "reason": "已核真实原提交父的继承上限必须体现在首次持久准备记录；不是普通新任务的floor开关。",
+    "implementation_seen": "当前实际submitted文件相对原已评候选仅一行 min(new floor,parent.deadlineAt)；其余三文件与已评候选SHA完全相同",
+    "validation": "最终52/52通过；原4 retry强断言未改，旧parent deadline不续期、退避次数和原ID守卫保留",
+    "final_submitted_sha256": "0b94c0370d2b90f8b2eabe1213358f7c9855509533c551a7d43dac60105d2108"
+  },
+  "final_source_sha256": {
+    "backend/src/modules/execution/submitted-task-preparation.service.ts": "0b94c0370d2b90f8b2eabe1213358f7c9855509533c551a7d43dac60105d2108",
+    "backend/src/modules/ai-runtime/structured-business-execution.service.ts": "fd1e1de025e23db52f72a469a2234700928b0d558a43a132e4f621dab1f875d8",
+    "backend/src/modules/ai-runtime/asset-business-execution.service.ts": "520d02df3c784e82313ba2b460f16553285d263e89deba890d040f8e91aad6ef",
+    "backend/src/modules/execution/execution-authority.service.ts": "abfe457da2b99a2b1b8370de9b451b5501bf17a58cea909e08b838b08508a778",
+    "backend/src/integration/chat-task-atomic.test.ts": "0794980ca6a872329cb0799ff677aa588a24b3db928458815222bdc2f9518407"
+  },
+  "final_tests_review": {
+    "actual_log": "inherited-deadline-green-final.log",
+    "actual_log_sha256": "2ae5e81dd7f17205485f8921f59b498307ba85a615acf95f46c1fb91c5691cb4",
+    "test_files": 1,
+    "tests_passed": 52,
+    "exit_code": 0,
+    "exit_code_provenance": "root明确报告实际session69842退出0；reviewer读取最终日志核52passed，未自己执行",
+    "same_argv_provenance": "root报告同argv；原red及初green result均该argv，最终未另存result JSON。",
+    "fixture_correction": "仅 appended neutral skillSnapshot.effective.outputSchema:null → {type:\"object\"}，既有结构化协议保持；合法分支要求 preparationErrors=[]。",
+    "real_row_observation": "新增3cases从aiTasks实际owned行回读executionTaskId，合法真executionTasks.deadlineAt==parent，完整budget逐值相同；篡改digest raw.executionTaskId null且DTOstatus failed；父executionTasks和executionCalls深等未删。",
+    "test_assertions_weakened": false
+  },
+  "tdd_evidence_limit": "初次新增expiry（真实prepare被调用1次）和原4 retry deadline记录偏离是有效业务RED。初次legit/forged分支使用DTO未暴露字段，后续legit fixture outputSchema:null又被既有结构化协议拒绝，这些不能冒称完整纯业务RED。最终真实行/有效协议fixture52GREEN包含合法绑定期限与篡改digest拒绝。"
+}

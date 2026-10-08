@@ -241,6 +241,9 @@ async function waitForTask(
 ): Promise<{ sourceOperation: string; requestId: string | null; task: unknown }> {
   const pollSeconds = positiveNumberFlag(args, "--poll-interval") ?? 2;
   const timeoutSeconds = positiveNumberFlag(args, "--timeout");
+  if (timeoutSeconds !== null && timeoutSeconds < 120) {
+    throw new Error("--timeout 最短为 120 秒；省略表示持续观察，等待结束不会取消后台任务。");
+  }
   const startedAt = Date.now();
   while (true) {
     const current = await readTask(client, taskId, accountId, groupId);
@@ -347,6 +350,8 @@ export async function runCliCommand(args: string[]): Promise<unknown> {
       ok: true,
       usage: `creatoros status | access status|revoke | operations list|describe <op> | call <op> --input <json|@file|-> [--group <id>|--use-default-group] [--account <id>|--use-default-account] | tasks get|wait <taskId> --group <id> [--account <id>] | ${ARTIFACT_EXPORT_USAGE} | accounts list|current|use <id> | groups list|current|use <id> | douyin status|login|refresh|import | mcp serve`,
       artifactExport: "通过 workbench.artifacts.render 只读导出；显式 --output 无需 --apply，已有文件不会覆盖。filename 仅作建议展示。",
+      taskWaitFlags: "tasks wait <taskId>：--timeout 最短 120 秒，省略表示持续观察；--poll-interval 是轮询间隔。等待结束不取消后台任务，应继续观察原 taskId。",
+
       writeFlags: "--apply --idempotency-key <key>",
       impactFlags: "--confirm-impact <真实账号或实体ID>",
     };
@@ -364,7 +369,8 @@ export async function runCliCommand(args: string[]): Promise<unknown> {
       ok: true,
       count: endpointsById.size,
       operations: [...endpointsById.values()]
-        .sort((left, right) => left.id.localeCompare(right.id))
+        // SEMANTIC_BOUNDARY_ALLOW: 只按 ASCII 操作 ID 稳定排序协议目录，不作内容或创作判断。
+        .sort((left, right) => left.id < right.id ? -1 : left.id > right.id ? 1 : 0)
         .map(operationMetadata),
     };
   }

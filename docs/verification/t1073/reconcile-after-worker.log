@@ -1,0 +1,8 @@
+✗ reconcile failed — 34 error(s), 1 warning(s).
+  ✗ boundary-scan.mjs found NEW structural violation(s) past baseline (exit 1). Run `node orchestrator/process/boundary-scan.mjs` for the offending files; after an intentional refactor, `--update-baseline` (with a DEC). Rules: orchestrator/SYSTEM_ARCHITECTURE.md.
+  ✗ review receipt: T-1021: review receipt 已过期：SPEC hash 1ca8392b4d5e != 242b25c4f83f
+  ✗ review receipt: T-915: review receipt 已过期：SPEC hash 76d22c886076 != b990a38a0156
+  ✗ review receipt: T-859: review receipt 已过期：SPEC hash 4db0a4daa9ba != e6fe3ad73fa9
+  ✗ review receipt: T-858: review receipt 已过期：SPEC hash 9027f820a773 != ab768b979e62
+  … 29 more error(s) omitted.
+Run `node orchestrator/process/reconcile.mjs` for the full report.

@@ -1,0 +1,18 @@
+
+running 12 tests
+test tests::failed_signals_do_not_imply_stop ... ok
+test tests::forced_stop_is_bounded_and_does_not_report_unconfirmed_success ... ok
+test tests::graceful_window_is_preserved ... ok
+test tests::identity_mismatch_sends_no_signal ... ok
+test tests::drop_stops_and_reaps_an_owned_group ... ok
+test tests::concurrent_watch_and_stop_share_one_result ... ok
+test tests::t1066_native_outer_allows_slow_inner_flush_and_signals_immediately ... ok
+test tests::unreadable_group_attempts_owned_fallback_but_cannot_prove_stop ... ok
+test tests::t1066_native_hung_cleanup_is_bounded_after_inner_flush_budget ... ok
+test tests::wrong_group_is_not_signalled_and_failure_is_not_success_on_retry ... ok
+test tests::natural_exit_watcher_stops_group_and_reaps_root has been running for over 60 seconds
+test tests::root_exit_does_not_prove_descendant_stopped has been running for over 60 seconds
+test tests::root_exit_does_not_prove_descendant_stopped ... ok
+test tests::natural_exit_watcher_stops_group_and_reaps_root ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 60.09s

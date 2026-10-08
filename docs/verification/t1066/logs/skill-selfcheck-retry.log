@@ -1,0 +1,208 @@
+✓ v3 workflows gate links 5/5
+✓ SKILL.md: 实现这个想法
+✓ SKILL.md: Agent-Native Contract
+✓ SKILL.md: Authority Map
+✓ SKILL.md: Scale Triage
+✓ SKILL.md: No API, no UI
+✓ SKILL.md: Real evidence
+✓ SKILL.md: Model judgment has a boundary
+✓ SKILL.md: The translation layer owns user-facing words
+✓ SKILL.md: Semantic single truth never means one giant physical file
+✓ SKILL.md: Uncertainty opens research before more intervention
+✓ SKILL.md: The scaffold defines shapes, never a project
+✓ SKILL.md: context-plan.mjs
+✓ SKILL.md: An unloaded prose pack is not permission
+✓ SKILL.md: Conditional Packs
+✓ frontend visible-copy guard wired
+✓ frontend implementation-jargon guard wired
+✓ runtime observability reaches contract + SHIP
+✓ cross-platform host contract reaches templates + SHIP audit
+✓ timeout budget rules reach core/TDD/integration and executable verification
+✓ SKILL.md compact: 670/800 words
+✓ AGENTS_TEMPLATE.md compact: 241/260 words
+✓ stage-router compact: 258/260 words
+✓ PRODUCT_SPEC template compact: 440/800 words
+✓ active gates inherit one shared contract
+✓ gate boilerplate single-sourced
+✓ common prompt compatibility paths are compact redirects
+✓ README document map has no duplicate frontend report row
+✓ exists: workflows/v3-1-plan.md
+✓ exists: workflows/v3-2-contract.md
+✓ exists: workflows/v3-3-design.md
+✓ exists: workflows/v3-4-build.md
+✓ exists: workflows/v3-5-ship.md
+✓ exists: workflows/_COMMON.md
+✓ exists: templates/hooks/backlog-guard.sh
+✓ exists: templates/hooks/session-start.sh
+✓ exists: templates/hooks/post-tool-observe.sh
+✓ exists: templates/hooks/stop-reconcile.sh
+✓ exists: prompts/product-audit.md
+✓ exists: prompts/spec-cross-audit.md
+✓ exists: prompts/engineering-retro.md
+✓ exists: prompts/asset-distill.md
+✓ exists: process/reconcile.mjs
+✓ exists: process/orphan-scan.mjs
+✓ exists: process/queue.mjs
+✓ exists: process/harness/run.sh
+✓ exists: process/governance-guard.mjs
+✓ exists: process/autonomy-guard.mjs
+✓ exists: process/research-gate.mjs
+✓ exists: process/governance-guard.test.mjs
+✓ exists: process/autonomy-guard.test.mjs
+✓ exists: process/research-gate.test.mjs
+✓ exists: process/progress.test.mjs
+✓ exists: process/migrate-autonomy.test.mjs
+✓ exists: process/lessonctl.mjs
+✓ exists: process/lessonctl.test.mjs
+✓ exists: process/platform-portability-guidance.test.mjs
+✓ exists: process/harness/risk-hook.sh
+✓ exists: decisions/assets/ASSET_INDEX.md
+✓ exists: rules/product-integrity-rules.md
+✓ exists: rules/observability-rules.md
+✓ exists: process/boundary-scan.mjs
+✓ exists: process/backlog-health.mjs
+✓ exists: process/boundaries.config.example.json
+✓ exists: gates/02-architecture-boundary-gate.md
+✓ exists: rules/physical-architecture-rules.md
+✓ exists: gates/03-scope-budget-gate.md
+✓ exists: gates/04-research-first-gate.md
+✓ exists: templates/SCOPE_LEDGER_TEMPLATE.md
+✓ exists: templates/PRODUCT_VOCABULARY_TEMPLATE.md
+✓ exists: templates/TECHNICAL_RESEARCH_CARD_TEMPLATE.md
+✓ exists: templates/SCOPE_AUTHORIZATIONS_TEMPLATE.json
+✓ exists: templates/COMPLEXITY_LEDGER_TEMPLATE.json
+✓ exists: templates/THREAT_MODEL_TEMPLATE.json
+✓ exists: templates/DELIVERY_GUARD_TEMPLATE.json
+✓ exists: templates/SYSTEM_ARCHITECTURE_TEMPLATE.md
+✓ exists: prompts/subagent-dispatch.md
+✓ exists: process/taskctl.mjs
+✓ exists: process/taskctl-extension.test.mjs
+✓ exists: process/reviewctl.mjs
+✓ exists: process/frontend-validation.mjs
+✓ exists: process/state-lock.mjs
+✓ exists: process/reviewctl.test.mjs
+✓ exists: process/frontend-validation.test.mjs
+✓ exists: process/state-lock.test.mjs
+✓ exists: prompts/spec-reviewer.schema.json
+✓ exists: templates/FRONTEND_VALIDATION_REPORT_TEMPLATE.md
+✓ exists: process/context-plan.mjs
+✓ exists: process/context-plan.test.mjs
+✓ exists: process/lean-context.test.mjs
+✓ exists: process/build-hygiene.test.mjs
+✓ exists: process/required-entrypoints.test.mjs
+✓ exists: process/context-compile.mjs
+✓ exists: process/context-compile.test.mjs
+✓ exists: process/parallel-isolation.mjs
+✓ exists: process/parallel-isolation.test.mjs
+✓ exists: process/delivery-phase.mjs
+✓ exists: process/delivery-phase.test.mjs
+✓ exists: process/feature-sync.mjs
+✓ exists: process/program-gate.mjs
+✓ exists: process/program-gate.test.mjs
+✓ exists: process/strict-receipts-migrate.mjs
+✓ exists: process/strict-receipts-migrate.test.mjs
+✓ exists: process/knowledge-drift.mjs
+✓ exists: process/knowledge-coverage.mjs
+✓ exists: process/docs-health.mjs
+✓ exists: process/docs-health.test.mjs
+✓ exists: process/knowledge.config.example.json
+✓ exists: process/harness/semantics-test.sh
+✓ exists: rules/knowledge-layer-rules.md
+✓ exists: rules/parallel-collab-rules.md
+✓ exists: templates/knowledge/FEATURE_README_TEMPLATE.md
+✓ exists: templates/knowledge/FEATURE_BUSINESS_TEMPLATE.md
+✓ exists: templates/knowledge/FEATURE_DATA_TEMPLATE.md
+✓ exists: templates/knowledge/FEATURE_UI_TEMPLATE.md
+✓ exists: templates/knowledge/JOURNEY_FLOW_TEMPLATE.md
+✓ exists: templates/knowledge/DFLOW_TEMPLATE.md
+✓ exists: templates/knowledge/BLOCK_RECEIPT_TEMPLATE.md
+✓ exists: templates/knowledge/INDEX_TEMPLATE.md
+✓ exists: rules/program-orchestration-rules.md
+✓ exists: templates/PROGRAM_CONFIG_TEMPLATE.json
+✓ exists: templates/PROGRAM_RELEASE_SET_TEMPLATE.json
+✓ exists: templates/PROGRAM_JOURNEY_RECEIPT_TEMPLATE.json
+✓ exists: tools/init-project.sh
+✓ exists: tools/init-module.sh
+✓ exists: tools/migrate-autonomy.sh
+✓ exists: tools/init-program.sh
+✓ exists: tools/sync-to-lab.sh
+✓ exists: tools/engine-vendor-guard.mjs
+✓ exists: examples/selftest-taskflow-lite/control/ID_REGISTRY.md
+✓ reconcile wires: lessons-stats
+✓ reconcile wires: evolution-guards
+✓ reconcile wires: run-events
+✓ reconcile wires: asset-check
+✓ reconcile wires: reviewctl
+✓ reconcile wires: frontend-validation
+✓ reconcile wires: governance-guard
+✓ reconcile wires: autonomy-guard
+✓ reconcile wires: research-gate
+✓ reconcile wires: delivery phase
+✓ reconcile wires: CONTROL_ROOT
+✓ stage-router delegates to the deterministic context plan
+✓ stage-router uses pointer-only adaptive reads
+✓ risk-hook mounted
+✓ SHIP + adaptive context + integration gate wire program completion
+✓ parallel planning orders business DAG before write_set
+✓ parallel isolation is adaptive, conflict-aware, and main-integrated
+✓ product integrity owns cross-project completion authority
+✓ BACKLOG template makes legacy migration explicit
+✓ bash -n: tools/init-project.sh
+✓ bash -n: tools/init-module.sh
+✓ bash -n: tools/migrate-autonomy.sh
+✓ bash -n: tools/init-program.sh
+✓ bash -n: tools/sync-to-lab.sh
+✓ bash -n: templates/hooks/backlog-guard.sh
+✓ bash -n: templates/hooks/session-start.sh
+✓ bash -n: templates/hooks/post-tool-observe.sh
+✓ bash -n: templates/hooks/stop-reconcile.sh
+✓ bash -n: process/harness/run.sh
+✓ bash -n: process/harness/verify-task.sh
+✓ buildout omits heavy PostToolUse/Stop lifecycle hooks
+✓ engine update protects extensions and supports reviewed legacy adoption
+✓ SKILL startup entrypoints are complete in the managed vendor contract
+✓ product vocabulary authority mounted by init-project + AGENTS
+✓ governance ledgers are risk-triggered, not empty init artifacts
+✓ complexity guard distinguishes reuse vocabulary from new task-owned mechanisms
+✓ Research-First Gate remains available without precreating research artifacts
+✓ delivery lifecycle defaults to fast buildout and gates formal review behind maintenance
+✓ global scaffold invariant rejects project-bound policy
+✓ multi-step queue uses step-scoped dependencies without laundering BACKLOG state
+✓ M/L module specs + root hygiene wired
+✓ product vocabulary template covers implementation clusters + UI state copy
+✓ Codex lean core hooks mounted by init-project
+✓ node --check: process/reconcile.mjs
+✓ node --check: process/lessonctl.mjs
+✓ node --check: process/orphan-scan.mjs
+✓ node --check: process/progress.mjs
+✓ node --check: process/boundary-scan.mjs
+✓ node --check: process/research-gate.mjs
+✓ node --check: process/delivery-phase.mjs
+✓ node --check: process/governance-guard.mjs
+✓ node --check: process/autonomy-guard.mjs
+✓ node --check: process/backlog-health.mjs
+✓ node --check: process/taskctl.mjs
+✓ node --check: process/context-plan.mjs
+✓ node --check: process/context-compile.mjs
+✓ node --check: process/parallel-isolation.mjs
+✓ node --check: process/reviewctl.mjs
+✓ node --check: process/frontend-validation.mjs
+✓ node --check: process/state-lock.mjs
+✓ node --check: process/program-gate.mjs
+✓ node --check: process/strict-receipts-migrate.mjs
+✓ node --check: process/feature-sync.mjs
+✓ node --check: process/knowledge-drift.mjs
+✓ node --check: process/knowledge-coverage.mjs
+✓ node --check: process/docs-health.mjs
+✓ node --check: tools/engine-vendor-guard.mjs
+✓ engine tests green
+✓ spec-reviewer schema parses
+✓ program JSON templates parse
+✓ harness fail-closed semantics green
+✓ selftest fixture: planted break detected (exit 1)
+✓ fresh-template reconcile green
+✓ registry pointerized
+✓ VERSION 3.27.4 matches CHANGELOG head
+✓ evolution tripwire: working tree fully committed
+──────────────────────────────
+✓ skill integrity intact

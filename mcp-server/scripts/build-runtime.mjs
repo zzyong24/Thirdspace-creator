@@ -23,7 +23,7 @@ await build({
 
 const smoke = spawnSync(process.execPath, [output, "operations", "describe", "accounts.list", "--json"], {
   encoding: "utf8",
-  timeout: 20_000,
+  timeout: 120_000,
 });
 if (smoke.status !== 0) {
   throw new Error(`CLI runtime 冒烟失败(exit ${smoke.status ?? "null"})\n${smoke.stderr || smoke.stdout}`);

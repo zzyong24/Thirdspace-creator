@@ -265,11 +265,12 @@ function verifyPackagedTlsRuntime() {
       [
         "--use-bundled-ca",
         "-e",
-        "fetch(process.argv[1]).then(r=>{console.log('TLS_OK='+r.status);process.exit(r.ok?0:1)}).catch(e=>{console.error(e.cause?.code||e);process.exit(2)})",
+        "fetch(process.argv[1],{signal:AbortSignal.timeout(120000)}).then(r=>{console.log('TLS_OK='+r.status);process.exit(r.ok?0:1)}).catch(e=>{console.error(e.cause?.code||e);process.exit(2)})",
         probeUrl,
       ],
       {
         encoding: "utf8",
+        timeout: 150_000, // 子请求120s + Node启动/结算30s
         env: {
           ...process.env,
           SSL_CERT_FILE: missingCert,

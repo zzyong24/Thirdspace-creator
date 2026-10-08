@@ -1,3 +1,4 @@
+import {executionTimeoutMs} from "@creatoros/contract/timeout-policy";
 // MiniMax 多模态适配器(SPEC 2026-07-01 §2.2 / §8 M1;T-836 H3 v2)—— 实现 MultimodalProviderAdapter,
 // 直连 MiniMax 官方 REST(**不是** anthropic 兼容端点)。image 同步、video 异步(提交 →
 // 轮询 task_id → 下载),异步全部在本适配器内消化,对上层只返 `{ assetBytes }`([gate-F1])。
@@ -488,6 +489,11 @@ interface MinimaxH3QueryResponse {
 export function createMinimaxAdapter(
   deps: MinimaxAdapterDeps = REAL_DEPS,
 ): MultimodalProviderAdapter {
+  // 最大尝试次数是有限轮询总预算；零间隔仅用于注入即时等待器，按真实默认周期解释。
+  const intervalMs=deps.pollIntervalMs || REAL_DEPS.pollIntervalMs;
+  const floorAttempts=(attempts:number)=>Math.max(attempts,Math.ceil(executionTimeoutMs(Math.max(1,Math.round(attempts*intervalMs)))/intervalMs));
+  deps={...deps,maxPollAttempts:floorAttempts(deps.maxPollAttempts),h3MaxPollAttempts:floorAttempts(deps.h3MaxPollAttempts??deps.maxPollAttempts)};
+
   return {
     generateImage: (spec, opts) => generateImage(spec, opts, deps),
     async generateVideo(spec, opts) {

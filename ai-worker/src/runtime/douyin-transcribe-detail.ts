@@ -1,3 +1,4 @@
+import {executionTimeoutMs} from "@creatoros/contract/timeout-policy";
 import { DouyinAudioFetchError, parseAwemeDetail, type DouyinVideoSource } from "./douyin-transcribe-source";
 import { DouyinNotLoggedInError } from "./douyin-errors";
 import { bindAbortContext } from "./browser/abort-context";
@@ -66,7 +67,7 @@ export async function fetchDouyinVideoUrlViaDetail(
         await gotoWithRetry(
           page,
           `https://www.douyin.com/video/${id}`,
-          { timeoutMs: 60_000, label: `作品详情(${opts.awemeId})`, signal: opts.signal },
+          { timeoutMs: executionTimeoutMs(), label: `作品详情(${opts.awemeId})`, signal: opts.signal },
         );
         opts.signal?.throwIfAborted();
         await page.waitForTimeout(3000); // 等页面就绪(建立会话上下文)

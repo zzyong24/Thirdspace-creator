@@ -1,0 +1,77 @@
+{
+  "normalization": "可读 .log 仅规整末尾多余换行；.log.gz 解压后为执行时原始字节。",
+  "logs": [
+    {
+      "readableFile": "GREEN-cancel-protocol.log",
+      "rawArchive": "GREEN-cancel-protocol.log.gz",
+      "rawBytes": 260,
+      "rawSha256": "67f31196f666c3aee0cf543a03ee7cd175673f3d295ce270fd223207e7afc93f",
+      "readableBytes": 259,
+      "readableSha256": "53d1834f1870f50b7585625fe06096e2ec2c38dd53d9a4bba4af2bd188e99314"
+    },
+    {
+      "readableFile": "GREEN-contract.log",
+      "rawArchive": "GREEN-contract.log.gz",
+      "rawBytes": 255,
+      "rawSha256": "5efe320f87b58725ed9c6497b8c8dd4d2fd4b3621f616dd96eb256fd81323be0",
+      "readableBytes": 254,
+      "readableSha256": "d296bcf901d7f2d4266d007ae35a24a2a2b52de1cb2c2305f7df4497c8ed1e93"
+    },
+    {
+      "readableFile": "GREEN-ipc.log",
+      "rawArchive": "GREEN-ipc.log.gz",
+      "rawBytes": 256,
+      "rawSha256": "363d580b2637fb85721b51fb4ff12cdb7c46e62846927565bcd4af1f45d0b6ce",
+      "readableBytes": 255,
+      "readableSha256": "8eff74f9ca4a753f295aece20faec1c2dccee1b56e5d4c6dc4808fe51fd4a889"
+    },
+    {
+      "readableFile": "GREEN-supervisor-regression.log",
+      "rawArchive": "GREEN-supervisor-regression.log.gz",
+      "rawBytes": 259,
+      "rawSha256": "730abe63ea7e10b7a6008cea11f3826070e4869fa87b3e0a3ee31438c68c72f1",
+      "readableBytes": 258,
+      "readableSha256": "b88788a16a4cdb3ffd9666a6ce1077a91f7309045ffb76b859118d5e73e83edc"
+    },
+    {
+      "readableFile": "GREEN-whisper.log",
+      "rawArchive": "GREEN-whisper.log.gz",
+      "rawBytes": 258,
+      "rawSha256": "e0c47b621370ece6f1393bbafde532f91d720b128212eb4c20a6e7ea78c61e81",
+      "readableBytes": 257,
+      "readableSha256": "46131ee996dbc432a5d051a50065ee00e0edc20bfe90a5aea4d80e6f6beaf98f"
+    },
+    {
+      "readableFile": "GREEN-worker-focused.log",
+      "rawArchive": "GREEN-worker-focused.log.gz",
+      "rawBytes": 260,
+      "rawSha256": "4354ab3ddf19cd0008da43a0ac7c06a20903b30eb9a9344477b095553308a568",
+      "readableBytes": 259,
+      "readableSha256": "cf27bf2a16031e92acc04c911ed6a72cfc67d8cbc0194168103678de3a67385c"
+    },
+    {
+      "readableFile": "RED-ipc-parallel.log",
+      "rawArchive": "RED-ipc-parallel.log.gz",
+      "rawBytes": 1347,
+      "rawSha256": "e5081a4fa33acdce034a171c50e37503752ab8f51f9bf43a2e06c6f785cd1b82",
+      "readableBytes": 1346,
+      "readableSha256": "76858fc14618e46e88992a63462675872eb42a7be8d31835ea7f69da2ad14e89"
+    },
+    {
+      "readableFile": "RED-ipc.log",
+      "rawArchive": "RED-ipc.log.gz",
+      "rawBytes": 1305,
+      "rawSha256": "5819192a1d8f477a990bdd167b1d0feb38cd0bc6596a209ed33e256bca714ba2",
+      "readableBytes": 1304,
+      "readableSha256": "7711ad9e99dc0c777532cf1efc122ea0e96cef1ceab41e3a32814cab9e48cc13"
+    },
+    {
+      "readableFile": "RED-whisper.log",
+      "rawArchive": "RED-whisper.log.gz",
+      "rawBytes": 2821,
+      "rawSha256": "988ca4a6e3a1575427ebbb2dad6c1931452f66f0e4c175b96a2431bb55ceb906",
+      "readableBytes": 2820,
+      "readableSha256": "9e74452f45e8e51c01fe8da65455b519a7939e7e80b5b60ed6bea25bfbb32eba"
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/t1073-backend/Thirdspace-creator/backend
+
+{"witness":"T-1073 scheduler 慢窗口","wakeups":10,"active":1,"peak":1,"calls":2}
+{"witness":"T-1073 durable automation","originalIds":["execution-task_914eaddb-ed90-4924-b0e2-626eb0da2382","execution-task_c145247a-55b7-4005-a443-9900bfd76b68"],"callbacks":10,"handlers":2,"peak":1,"status":"succeeded","attempts":[1,1]}
+{"witness":"T-1073 public source","mode":"success","simulatedMs":250000,"calls":1,"peak":1,"pendingAfter":0,"status":"succeeded","attempt":1}
+{"witness":"T-1073 public source","mode":"cancel","simulatedMs":250000,"calls":1,"peak":1,"pendingAfter":0,"status":"cancelled","attempt":1}
+{"witness":"T-1073 public source","mode":"failure","simulatedMs":250000,"calls":1,"peak":1,"pendingAfter":0,"status":"succeeded","attempt":2}
+
+ Test Files  3 passed (3)
+      Tests  39 passed (39)
+   Start at  00:08:00
+   Duration  23.52s (transform 5.39s, setup 0ms, import 9.18s, tests 23.15s, environment 0ms)

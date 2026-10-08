@@ -1,3 +1,4 @@
+import {executionTimeoutMs, completionWaitMs} from "@creatoros/contract/timeout-policy";
 
 // [T-369] 弹窗/无头 Chromium 启动守卫 —— 治「内置浏览器经常打不开」三根因,四个
 // launchPersistentContext / chromium.launch 调用点(douyin-cdp openContext、web-session
@@ -10,7 +11,7 @@
 //   ② 并发防抖:同一 profile 并发 launch(如「状态探针 headless」撞上「登录弹窗 headed」)
 //      按 profile 串行化;且 profile 上还有**我们自己在用**的活 context(如跨请求保持打开的
 //      登录窗)时跳过杀进程/清锁 —— 否则预检会把活窗户的锁删掉、把活进程杀掉。
-//   ③ 失败诚实:launch 包超时(默认 15s)+ 失败抛人话 BrowserLaunchError,沿既有错误通道
+//   ③ 失败诚实:launch 包超时(默认 370s，覆盖两次180s启动及余量)+ 失败抛人话 BrowserLaunchError,沿既有错误通道
 //      回 UI(各调用方 route 已渲错误态),不再静默挂死。
 //
 // 附:--no-sandbox 警告横幅根因 —— 仓库代码从没传过它,是 Playwright 默认
@@ -44,7 +45,8 @@ export class BrowserCleanupPendingError extends BrowserLaunchError {
 export const CHROMIUM_PROFILE_LOCKED_CODE = "CHROMIUM_PROFILE_LOCKED";
 
 /** 默认 launch 超时(毫秒)。 */
-export const DEFAULT_LAUNCH_TIMEOUT_MS = 15_000;
+// Playwright单次启动原默认180秒；Chrome失败后还有内置浏览器一次启动。
+export const DEFAULT_LAUNCH_TIMEOUT_MS = completionWaitMs([180_000, 180_000]);
 
 /**
  * [T-369] 显式开 Chromium 沙箱(darwin/win32),去掉 Playwright 默认注入的 --no-sandbox
@@ -165,7 +167,7 @@ export async function retryBrowserProfileCleanup(
   let onAbort: (() => void) | undefined;
   try {
     await Promise.race([retryStoppedQueue(queue), new Promise<never>((_, reject) => {
-      timer = setTimeout(() => reject(new BrowserCleanupPendingError(() => retryBrowserProfileCleanup(profileDir))), opts.queueTimeoutMs ?? DEFAULT_LAUNCH_TIMEOUT_MS);
+      timer = setTimeout(() => reject(new BrowserCleanupPendingError(() => retryBrowserProfileCleanup(profileDir))), executionTimeoutMs(opts.queueTimeoutMs, DEFAULT_LAUNCH_TIMEOUT_MS));
       onAbort = () => reject(opts.signal!.reason);
       opts.signal?.addEventListener("abort", onAbort, { once: true });
       if (opts.signal?.aborted) onAbort();
@@ -244,7 +246,7 @@ export async function guardedLaunch<T extends Closable>(
 
 async function runGuardedLaunch<T extends Closable>(profileDir:string|null,launch:()=>Promise<T>,opts:GuardedLaunchOptions,deps:ChromiumGuardDeps):Promise<T>{
   const shutdownScope=opts.shutdownScope!;
-  const timeoutMs = opts.timeoutMs ?? DEFAULT_LAUNCH_TIMEOUT_MS;
+  const timeoutMs = Math.max(DEFAULT_LAUNCH_TIMEOUT_MS, executionTimeoutMs(opts.timeoutMs, DEFAULT_LAUNCH_TIMEOUT_MS));
   const label = opts.label ?? "浏览器",signal=opts.signal;
   let resourceUnresolved=false;
   let releaseQueue=()=>{};
@@ -352,7 +354,7 @@ async function runGuardedLaunch<T extends Closable>(profileDir:string|null,launc
   let onAbort:(()=>void)|undefined;
   let queueTimer:ReturnType<typeof setTimeout>|undefined;
   try{
-    await Promise.race([retryStoppedQueue(previousLease).then(()=>previousLease.catch(()=>{})),new Promise<never>((_,reject)=>{queueTimer=setTimeout(()=>reject(new BrowserLaunchError(`${label}的登录档案仍被占用，请等待相关浏览器退出后重试。`,CHROMIUM_PROFILE_LOCKED_CODE)),opts.queueTimeoutMs??timeoutMs);onAbort=()=>reject(signal!.reason);signal?.addEventListener('abort',onAbort,{once:true});if(signal?.aborted)onAbort();})]);
+    await Promise.race([retryStoppedQueue(previousLease).then(()=>previousLease.catch(()=>{})),new Promise<never>((_,reject)=>{queueTimer=setTimeout(()=>reject(new BrowserLaunchError(`${label}的登录档案仍被占用，请等待相关浏览器退出后重试。`,CHROMIUM_PROFILE_LOCKED_CODE)),executionTimeoutMs(opts.queueTimeoutMs, timeoutMs));onAbort=()=>reject(signal!.reason);signal?.addEventListener('abort',onAbort,{once:true});if(signal?.aborted)onAbort();})]);
     if(queueTimer)clearTimeout(queueTimer);
     if(onAbort)signal?.removeEventListener('abort',onAbort);
     signal?.throwIfAborted();return await runGuarded();

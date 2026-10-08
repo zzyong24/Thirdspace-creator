@@ -216,3 +216,21 @@ describe("Windows 分支(platform=win32)", () => {
     stop();
   });
 });
+
+it("T-1066 取消信号即时，慢落盘在 120 秒内完成不被强退", async () => {
+  vi.useFakeTimers();
+  const proc = makeProc();
+  let resolve!: () => void;
+  (globalThis as { __creatorosDisposePersistence?: () => Promise<void> }).__creatorosDisposePersistence =
+    () => new Promise<void>(r => { resolve = r; });
+  const exiting = beginGracefulExit(proc, "取消", () => {});
+  expect(proc.killed).toContainEqual([-4242, "SIGTERM"]);
+  await vi.advanceTimersByTimeAsync(90_000);
+  expect(proc.exited).toEqual([]);
+  resolve();
+  await exiting;
+  expect(proc.exited).toEqual([0]);
+  await vi.advanceTimersByTimeAsync(40_000);
+  expect(proc.exited).toEqual([0]);
+  vi.useRealTimers();
+});

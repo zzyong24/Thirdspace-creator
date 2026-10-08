@@ -1,0 +1,257 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+
+ ❯ src/server/chat-execution-stream.test.ts (20 tests | 7 failed | 13 skipped) 45ms
+   × 实际SDK在waiting_user结束前取得原任务的结构化状态，无审批卡也可区分待处理与终态 27ms (retry x2)
+   × 实际SDK在unknown_result结束前取得原任务的结构化状态，无审批卡也可区分待处理与终态 3ms (retry x2)
+   × 实际SDK在paused结束前取得原任务的结构化状态，无审批卡也可区分待处理与终态 3ms (retry x2)
+   × 实际SDK在blocked结束前取得原任务的结构化状态，无审批卡也可区分待处理与终态 3ms (retry x2)
+   × 实际SDK在succeeded结束前取得原任务的结构化状态，无审批卡也可区分待处理与终态 2ms (retry x2)
+   × 实际SDK在failed结束前取得原任务的结构化状态，无审批卡也可区分待处理与终态 2ms (retry x2)
+   × 实际SDK在cancelled结束前取得原任务的结构化状态，无审批卡也可区分待处理与终态 2ms (retry x2)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 7 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/server/chat-execution-stream.test.ts > 实际SDK在waiting_user结束前取得原任务的结构化状态，无审批卡也可区分待处理与终态
+ FAIL  src/server/chat-execution-stream.test.ts > 实际SDK在waiting_user结束前取得原任务的结构化状态，无审批卡也可区分待处理与终态
+ FAIL  src/server/chat-execution-stream.test.ts > 实际SDK在waiting_user结束前取得原任务的结构化状态，无审批卡也可区分待处理与终态
+AssertionError: expected { id: 'chat:message', …(3) } to match object { id: 'chat:message', …(3) }
+
+- Expected
++ Received
+
+@@ -1,13 +1,8 @@
+  {
+    "id": "chat:message",
+-   "metadata": {
+-     "execution": {
+-       "executionTaskId": "original",
+-       "status": "waiting_user",
+-     },
+-   },
++   "metadata": undefined,
+    "parts": [
+      {
+        "text": "已保存正文",
+        "type": "text",
+      },
+
+ ❯ src/server/chat-execution-stream.test.ts:85:17
+     83|  const stream=(await transport.reconnectToStream({chatId:'conversation…
+     84|  let result;for await(const message of readUIMessageStream({stream,onE…
+     85|  expect(result).toMatchObject({id:'chat:message',role:'assistant',part…
+       |                 ^
+     86| });
+     87|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/21]⎯
+
+ FAIL  src/server/chat-execution-stream.test.ts > 实际SDK在unknown_result结束前取得原任务的结构化状态，无审批卡也可区分待处理与终态
+ FAIL  src/server/chat-execution-stream.test.ts > 实际SDK在unknown_result结束前取得原任务的结构化状态，无审批卡也可区分待处理与终态
+ FAIL  src/server/chat-execution-stream.test.ts > 实际SDK在unknown_result结束前取得原任务的结构化状态，无审批卡也可区分待处理与终态
+AssertionError: expected { id: 'chat:message', …(3) } to match object { id: 'chat:message', …(3) }
+
+- Expected
++ Received
+
+@@ -1,13 +1,8 @@
+  {
+    "id": "chat:message",
+-   "metadata": {
+-     "execution": {
+-       "executionTaskId": "original",
+-       "status": "unknown_result",
+-     },
+-   },
++   "metadata": undefined,
+    "parts": [
+      {
+        "text": "已保存正文",
+        "type": "text",
+      },
+
+ ❯ src/server/chat-execution-stream.test.ts:85:17
+     83|  const stream=(await transport.reconnectToStream({chatId:'conversation…
+     84|  let result;for await(const message of readUIMessageStream({stream,onE…
+     85|  expect(result).toMatchObject({id:'chat:message',role:'assistant',part…
+       |                 ^
+     86| });
+     87|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/21]⎯
+
+ FAIL  src/server/chat-execution-stream.test.ts > 实际SDK在paused结束前取得原任务的结构化状态，无审批卡也可区分待处理与终态
+ FAIL  src/server/chat-execution-stream.test.ts > 实际SDK在paused结束前取得原任务的结构化状态，无审批卡也可区分待处理与终态
+ FAIL  src/server/chat-execution-stream.test.ts > 实际SDK在paused结束前取得原任务的结构化状态，无审批卡也可区分待处理与终态
+AssertionError: expected { id: 'chat:message', …(3) } to match object { id: 'chat:message', …(3) }
+
+- Expected
++ Received
+
+@@ -1,13 +1,8 @@
+  {
+    "id": "chat:message",
+-   "metadata": {
+-     "execution": {
+-       "executionTaskId": "original",
+-       "status": "paused",
+-     },
+-   },
++   "metadata": undefined,
+    "parts": [
+      {
+        "text": "已保存正文",
+        "type": "text",
+      },
+
+ ❯ src/server/chat-execution-stream.test.ts:85:17
+     83|  const stream=(await transport.reconnectToStream({chatId:'conversation…
+     84|  let result;for await(const message of readUIMessageStream({stream,onE…
+     85|  expect(result).toMatchObject({id:'chat:message',role:'assistant',part…
+       |                 ^
+     86| });
+     87|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/21]⎯
+
+ FAIL  src/server/chat-execution-stream.test.ts > 实际SDK在blocked结束前取得原任务的结构化状态，无审批卡也可区分待处理与终态
+ FAIL  src/server/chat-execution-stream.test.ts > 实际SDK在blocked结束前取得原任务的结构化状态，无审批卡也可区分待处理与终态
+ FAIL  src/server/chat-execution-stream.test.ts > 实际SDK在blocked结束前取得原任务的结构化状态，无审批卡也可区分待处理与终态
+AssertionError: expected { id: 'chat:message', …(3) } to match object { id: 'chat:message', …(3) }
+
+- Expected
++ Received
+
+@@ -1,13 +1,8 @@
+  {
+    "id": "chat:message",
+-   "metadata": {
+-     "execution": {
+-       "executionTaskId": "original",
+-       "status": "blocked",
+-     },
+-   },
++   "metadata": undefined,
+    "parts": [
+      {
+        "text": "已保存正文",
+        "type": "text",
+      },
+
+ ❯ src/server/chat-execution-stream.test.ts:85:17
+     83|  const stream=(await transport.reconnectToStream({chatId:'conversation…
+     84|  let result;for await(const message of readUIMessageStream({stream,onE…
+     85|  expect(result).toMatchObject({id:'chat:message',role:'assistant',part…
+       |                 ^
+     86| });
+     87|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/21]⎯
+
+ FAIL  src/server/chat-execution-stream.test.ts > 实际SDK在succeeded结束前取得原任务的结构化状态，无审批卡也可区分待处理与终态
+ FAIL  src/server/chat-execution-stream.test.ts > 实际SDK在succeeded结束前取得原任务的结构化状态，无审批卡也可区分待处理与终态
+ FAIL  src/server/chat-execution-stream.test.ts > 实际SDK在succeeded结束前取得原任务的结构化状态，无审批卡也可区分待处理与终态
+AssertionError: expected { id: 'chat:message', …(3) } to match object { id: 'chat:message', …(3) }
+
+- Expected
++ Received
+
+@@ -1,13 +1,8 @@
+  {
+    "id": "chat:message",
+-   "metadata": {
+-     "execution": {
+-       "executionTaskId": "original",
+-       "status": "succeeded",
+-     },
+-   },
++   "metadata": undefined,
+    "parts": [
+      {
+        "text": "已保存正文",
+        "type": "text",
+      },
+
+ ❯ src/server/chat-execution-stream.test.ts:85:17
+     83|  const stream=(await transport.reconnectToStream({chatId:'conversation…
+     84|  let result;for await(const message of readUIMessageStream({stream,onE…
+     85|  expect(result).toMatchObject({id:'chat:message',role:'assistant',part…
+       |                 ^
+     86| });
+     87|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/21]⎯
+
+ FAIL  src/server/chat-execution-stream.test.ts > 实际SDK在failed结束前取得原任务的结构化状态，无审批卡也可区分待处理与终态
+ FAIL  src/server/chat-execution-stream.test.ts > 实际SDK在failed结束前取得原任务的结构化状态，无审批卡也可区分待处理与终态
+ FAIL  src/server/chat-execution-stream.test.ts > 实际SDK在failed结束前取得原任务的结构化状态，无审批卡也可区分待处理与终态
+AssertionError: expected { id: 'chat:message', …(3) } to match object { id: 'chat:message', …(3) }
+
+- Expected
++ Received
+
+@@ -1,13 +1,8 @@
+  {
+    "id": "chat:message",
+-   "metadata": {
+-     "execution": {
+-       "executionTaskId": "original",
+-       "status": "failed",
+-     },
+-   },
++   "metadata": undefined,
+    "parts": [
+      {
+        "text": "已保存正文",
+        "type": "text",
+      },
+
+ ❯ src/server/chat-execution-stream.test.ts:85:17
+     83|  const stream=(await transport.reconnectToStream({chatId:'conversation…
+     84|  let result;for await(const message of readUIMessageStream({stream,onE…
+     85|  expect(result).toMatchObject({id:'chat:message',role:'assistant',part…
+       |                 ^
+     86| });
+     87|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/21]⎯
+
+ FAIL  src/server/chat-execution-stream.test.ts > 实际SDK在cancelled结束前取得原任务的结构化状态，无审批卡也可区分待处理与终态
+ FAIL  src/server/chat-execution-stream.test.ts > 实际SDK在cancelled结束前取得原任务的结构化状态，无审批卡也可区分待处理与终态
+ FAIL  src/server/chat-execution-stream.test.ts > 实际SDK在cancelled结束前取得原任务的结构化状态，无审批卡也可区分待处理与终态
+AssertionError: expected { id: 'chat:message', …(3) } to match object { id: 'chat:message', …(3) }
+
+- Expected
++ Received
+
+@@ -1,13 +1,8 @@
+  {
+    "id": "chat:message",
+-   "metadata": {
+-     "execution": {
+-       "executionTaskId": "original",
+-       "status": "cancelled",
+-     },
+-   },
++   "metadata": undefined,
+    "parts": [
+      {
+        "text": "已保存正文",
+        "type": "text",
+      },
+
+ ❯ src/server/chat-execution-stream.test.ts:85:17
+     83|  const stream=(await transport.reconnectToStream({chatId:'conversation…
+     84|  let result;for await(const message of readUIMessageStream({stream,onE…
+     85|  expect(result).toMatchObject({id:'chat:message',role:'assistant',part…
+       |                 ^
+     86| });
+     87|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/21]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  7 failed | 13 skipped (20)
+   Start at  00:26:52
+   Duration  3.34s (transform 1.88s, setup 146ms, import 2.97s, tests 45ms, environment 0ms)

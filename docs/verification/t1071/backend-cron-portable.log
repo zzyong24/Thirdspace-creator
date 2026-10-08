@@ -1,0 +1,14 @@
+[automation-driver] 持久自动化 driver 已启动(每分钟一次)
+{
+  "probe": "真实 startAutomationDriver / tick，合成 cron 与慢业务端口；模拟 10 次分钟回调",
+  "during": {
+    "callbacks": 10,
+    "active": 10,
+    "peak": 10,
+    "gates": 10
+  },
+  "after": {
+    "active": 0,
+    "peak": 10
+  }
+}

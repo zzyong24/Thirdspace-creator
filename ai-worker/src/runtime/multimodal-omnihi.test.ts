@@ -41,7 +41,7 @@ function deps(fetchImpl: typeof fetch): OmnihiVideoAdapterDeps {
   return {
     fetch: fetchImpl,
     sleep: async () => {},
-    pollIntervalMs: 0,
+    pollIntervalMs: 5000,
     maxPollAttempts: 10,
   };
 }

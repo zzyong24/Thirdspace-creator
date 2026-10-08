@@ -1,0 +1,50 @@
+{
+  "schema": "final-governance-evidence/v1",
+  "full_reconcile": {
+    "exit_code": 1,
+    "errors": 41,
+    "warnings": 1,
+    "phase": "主树评审链修复前的实际完整运行",
+    "log": "logs/root-reconcile-final.log"
+  },
+  "own_new_chain_error": "仅本轮未提交的跨分支追加；原始event/snapshot已归档，通过reviewctl historical-import重新绑定，未改变已提交历史",
+  "after_chain_repair": {
+    "full_reconcile_repeated": false,
+    "reason": "生产源码及所有lesson执行命令未改变，仅重验发生变化的评审控制面",
+    "review_audit_errors": 17,
+    "review_audit_matches_actual_prior_t1022": true,
+    "targeted_review_receipts": [
+      "T-1066 PASS",
+      "T-1063 PASS",
+      "T-1062 PASS"
+    ],
+    "existing_failed_lessons": [
+      "LED-003",
+      "LED-006",
+      "LED-007",
+      "LED-008",
+      "LED-009",
+      "LED-014",
+      "LED-017",
+      "LED-018",
+      "LED-020",
+      "LED-024",
+      "LED-028",
+      "LED-038",
+      "LED-040",
+      "LED-048",
+      "LED-050"
+    ],
+    "existing_failed_lessons_match_actual_prior_t1022": true
+  },
+  "own_runtime_gate_passes": [
+    "LED-053",
+    "LED-052",
+    "LED-047",
+    "LED-023"
+  ],
+  "limits": [
+    "不把修复后17条评审审计或推算值称作完整reconcile全绿",
+    "真实前端旅程尚未取得，不得标完成"
+  ]
+}
