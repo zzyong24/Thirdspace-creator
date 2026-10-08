@@ -1,0 +1,13 @@
+{
+  "argv": [
+    "node",
+    "tools/timeout-policy/verify.mjs"
+  ],
+  "exitCode": 1,
+  "seconds": 29.04962649999652,
+  "log": "/Users/zyongzhu/CreatorOS-local-acceptance/worktree-main-integration-20261008/post-package-timeout-policy-actual.log",
+  "logSha256": "40c4168afe80d84f30c52a805b37fc1fd012406825278c0ab77112de25d0773d",
+  "historicalIpcEvidenceUnchanged": true,
+  "productChanges": 0,
+  "builtSourceHEAD": "0480ebe17717bd426e083709fc22ccbdb9eb7840"
+}

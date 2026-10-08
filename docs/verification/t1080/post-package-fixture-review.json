@@ -1,0 +1,134 @@
+{
+  "verdict": "PASS",
+  "scope": "只读独立复核 3 个 test-only 外部候选的确切内容和原消费者/已确认合同；不代签应用后测试、安装或全局 reconcile。",
+  "head": "0480ebe17717bd426e083709fc22ccbdb9eb7840",
+  "reviewedAt": "2026-10-08T13:59:52.983062+00:00",
+  "files": [
+    {
+      "path": "backend/src/modules/execution/worker-supervisor.test.ts",
+      "baseSha256": "5c1e10f897f9247fdbb55a661bff0c2fdd19a6e6ea3b59eec99c152838704b86",
+      "candidateSha256": "0bb7be7b3d6c2616e1d4577518b58ee62ebdeba9940e3d3f8b0f5777a7f6cbce",
+      "actualReplacementCount": 2,
+      "inverseFullFileByteIdentical": true,
+      "onlyAllowedBytesChanged": true,
+      "assertionCountBefore": 31,
+      "assertionCountAfter": 31,
+      "budgetAndTimeoutBytesChanged": false,
+      "assertionsRemoved": false
+    },
+    {
+      "path": "frontend/src/server/persistence-client.lifecycle.test.ts",
+      "baseSha256": "6f728c5b810d1f5f6f389c169dda74b0ebc9da2f0230a8816265968923c342cb",
+      "candidateSha256": "53d5d47e2394bde593aad4d3d75649be7182c156613b9dd1201d96bdc5461e41",
+      "actualReplacementCount": 1,
+      "inverseFullFileByteIdentical": true,
+      "onlyAllowedBytesChanged": true,
+      "assertionCountBefore": 7,
+      "assertionCountAfter": 7,
+      "budgetAndTimeoutBytesChanged": false,
+      "assertionsRemoved": false
+    },
+    {
+      "path": "backend/src/modules/execution/radar-model-result-unknown.repro.test.ts",
+      "baseSha256": "29b148d073f8383973837d9156a8172a1e2ea10631396e565f46710eff6f1c73",
+      "candidateSha256": "c13f386703d8d8822411412e691b1057756922afb65e1cf164bc54fe9b46c7b3",
+      "actualReplacementCount": 1,
+      "inverseFullFileByteIdentical": true,
+      "onlyAllowedBytesChanged": true,
+      "assertionCountBefore": 10,
+      "assertionCountAfter": 10,
+      "budgetAndTimeoutBytesChanged": false,
+      "assertionsRemoved": false
+    }
+  ],
+  "checks": [
+    {
+      "id": "C-001",
+      "result": "PASS",
+      "fact": "两处完整 ready capability 数组按真实 worker-runtime 顺序 model.generate → asset.asr → transcribe.douyin 添加一项；原精确 toEqual 与所有供应商、取消、重启断言保留。"
+    },
+    {
+      "id": "C-002",
+      "result": "PASS",
+      "fact": "仅新增 resolveCodexStatusWorkerPath mock export，仍映射到原 missing-throw closure；没有使用真实路径模块或启动 SDK/Worker，cron/sweep/close/timer 强断言原字节保留。"
+    },
+    {
+      "id": "C-003",
+      "result": "PASS",
+      "fact": "Radar 分支覆盖 Mode 中的401/429/503；401 精确 rejected 不变，429/503 精确 superseded。requests=1、savedResults=[]、retry_wait、无盲重发的断流 unknown/claim-null断言和预算全部不变。"
+    },
+    {
+      "id": "C-004",
+      "result": "PASS",
+      "fact": "T1022 SPEC 第39行准许无外部副作用的模型候选 superseded，原预留预算继续占用并需原call作为retry来源；真实durable-generation-model对retry_wait且非协议兼容失败结算superseded，ledger只允许kind=model且providerJob尚未接受，superseded不释放reservedTokens。素材/工具/发布不扩大。"
+    },
+    {
+      "id": "C-005",
+      "result": "PASS",
+      "fact": "三份候选各按列举替换逆向后，与当前HEAD源文件全字节相等；无生产、断言删除、预算、超时、guard或baseline变化。"
+    }
+  ],
+  "history": [
+    {
+      "id": "RLF-CANDIDATE-ORDER-001",
+      "originalVerdict": "FAIL",
+      "status": "CLOSED_IN_CURRENT_EXTERNAL_CANDIDATE",
+      "finding": "第一次候选把asset.asr放在transcribe.douyin后，仍会精确数组失败。当前仅移动新增项到model.generate后。",
+      "originalCandidateSha256": "fd4aeec564d9b063e97a26d3d4e1903bfeb03f4a2bb48c5ee8f1f7886ba6448d",
+      "correctedCandidateSha256": "0bb7be7b3d6c2616e1d4577518b58ee62ebdeba9940e3d3f8b0f5777a7f6cbce",
+      "failureReceiptPath": "/Users/zyongzhu/CreatorOS-local-acceptance/worktree-main-integration-20261008/post-package-fixture-candidate/candidate-first-array-order-review-fail.json",
+      "failureReceiptSha256": "1fef4516be412cf9e78a708ad8b8f877c93580389b0ec2e3be9350e44ae9d2a1",
+      "historicalFailurePreserved": true
+    }
+  ],
+  "sourceHashes": {
+    "docs/features/t1022-nonblocking-agent-recovery.md": "5eb3f4069a9e5601a05c46e5cd5a709e0254338e64078a351d526fa1209b7363",
+    "ai-worker/src/execution/worker-entry.ts": "0f2e22bb34e58787e7992998d3dc5e5f084bf344c094897a044fefbfddb43427",
+    "ai-worker/src/execution/worker-runtime.ts": "6a94a83baa504f3d5d7c0e230fd5656b6ecf9bb978044d132d5e6cf5e288c74a",
+    "ai-worker/src/execution/durable-generation-model.ts": "98967b35698f8a1b0ef024f0b7070ca2a5ceb810514bd6974edcd4f4ff82141f",
+    "ai-worker/src/execution/generation-error.ts": "1b98049a4a7d2f874c48a050724bdc5dd0f16d12ac1df17e29b7d0bcbe21fa1e",
+    "ai-worker/src/execution/intelligence-generation-worker.ts": "9baef5f64f50262486e44f152efb4929f8ca15d0e02c4cdef7d18a2da19992d0",
+    "backend/src/modules/execution/execution-call-ledger.service.ts": "f6e5a8ed5223ed9e12078a795ee89649724a1b269e557e0d9aabc0b9078c90ab",
+    "backend/src/modules/execution/execution-worker-outcome.service.ts": "ee5239f11abbe91267592c43b979b4e0874fbbd4b2a1b8b6ef02d24d2f70f790",
+    "frontend/src/server/execution-worker-path.ts": "628942c78737f55959ab0c1944941057d7dfa051cc31da6c6d3cdcf332b93ae5",
+    "frontend/src/server/persistence-client.ts": "6f31afb254a97756fa54402e248a6036ca5c7995ce0f50d90b276ad2db928384",
+    "backend/src/modules/ai-runtime/local-codex-status.service.ts": "72561068bfef0eb9d06b671dfb53076de55a1973a6cce6f66733707eb7d59b57"
+  },
+  "originalMainContractProof": [
+    {
+      "ref": "12288cefdd43544478ea8f67a648798f43e813df",
+      "path": "docs/features/t1022-nonblocking-agent-recovery.md",
+      "sha256": "5eb3f4069a9e5601a05c46e5cd5a709e0254338e64078a351d526fa1209b7363",
+      "sameAsCurrentBytes": true,
+      "hasSupersededContractOrImplementation": true
+    },
+    {
+      "ref": "12288cefdd43544478ea8f67a648798f43e813df",
+      "path": "ai-worker/src/execution/durable-generation-model.ts",
+      "sha256": "98967b35698f8a1b0ef024f0b7070ca2a5ceb810514bd6974edcd4f4ff82141f",
+      "sameAsCurrentBytes": true,
+      "hasSupersededContractOrImplementation": true
+    }
+  ],
+  "evidenceHashes": {
+    "/Users/zyongzhu/CreatorOS-local-acceptance/worktree-main-integration-20261008/post-package-fixture-candidate/candidate.json": "b28e53c50d7b2ed94b8a079147dd0990cf04babb8045109febf0308d3a6dbc89",
+    "/Users/zyongzhu/CreatorOS-local-acceptance/worktree-main-integration-20261008/post-package-fixture-candidate/candidate-first-array-order-review-fail.json": "1fef4516be412cf9e78a708ad8b8f877c93580389b0ec2e3be9350e44ae9d2a1",
+    "/Users/zyongzhu/CreatorOS-local-acceptance/worktree-main-integration-20261008/resource-lifecycle-post-package-attribution.json": "b15f6c6958ca493c28167ef6dbd727976b8261fccf7d826e3a441c3fe9418bd3",
+    "/Users/zyongzhu/CreatorOS-local-acceptance/worktree-main-integration-20261008/resource-lifecycle-post-package-actual.log": "d0cb1e8931770d8fb9c7504d1b1c307d0a828d5fa399604d47802a72744e34c2",
+    "/Users/zyongzhu/CreatorOS-local-acceptance/worktree-main-integration-20261008/led060-focus/cause-review.json": "6d94371e7d779281ddb5b9b863cde4610069d751ca6851063de14ae72f149cab"
+  },
+  "mutations": {
+    "repo": 0,
+    "Git": 0,
+    "control": 0,
+    "production": 0,
+    "tests": 0,
+    "business": 0
+  },
+  "testsExecuted": false,
+  "limits": [
+    "PASS 只适用于当前候选 SHA，source/candidate 改变须重绑。",
+    "root 按原SPEC/写集准入后才应用；原实际失败日志不能改成PASS。",
+    "实际同命令重跑及finally恢复仍需root闭环；未声明新包/安装/真实供应商/全部功能通过。"
+  ]
+}

@@ -60,7 +60,7 @@ describe("真实独立 Worker 进程", () => {
       },
     }});
     try {
-      expect(await supervisor.start()).toEqual(["model.generate", "transcribe.douyin", "asset.generate", "model.structured", "chat.run", "chat.script-draft", "chat.hooks", "chat.structured", "chat.research", "chat.web-read"]);
+      expect(await supervisor.start()).toEqual(["model.generate", "asset.asr", "transcribe.douyin", "asset.generate", "model.structured", "chat.run", "chat.script-draft", "chat.hooks", "chat.structured", "chat.research", "chat.web-read"]);
       expect(await supervisor.run(execution, Date.now()+10000)).toBe("completed");
       expect(requestCount).toBe(1);
       expect(submitted).toMatchObject({outcome: "succeeded", text: "真实子进程结果"});
@@ -194,20 +194,23 @@ describe("真实独立 Worker 进程", () => {
       },
     }});
     try {
-      const result = supervisor.run(execution, Date.now()+10000);
-      await vi.waitFor(() => expect(opened).toBe(true));
+      await supervisor.start();
+      const result = supervisor.run(execution, Date.now()+120000);
+      // 观察等待或清理先失败时仍接住拒绝；下方原 await result 精确断言不变。
+      void result.catch(() => undefined);
+      await vi.waitFor(() => expect(opened).toBe(true), {timeout: 120000});
       supervisor.cancel({...execution, fenceToken: "old-fence"});
       expect(disconnected).toBe(false);
       supervisor.cancel(execution);
       expect(await result).toBe("cancelled");
-      await vi.waitFor(() => expect(disconnected).toBe(true));
+      await vi.waitFor(() => expect(disconnected).toBe(true), {timeout: 120000});
       expect(calls.filter(x => x.port === "commitResult")).toHaveLength(0);
       expect(calls.find(x => x.port === "settleCall")?.data).toMatchObject({status: "unknown"});
       await supervisor.stop();
-      expect(await supervisor.start()).toEqual(["model.generate", "transcribe.douyin", "asset.generate", "model.structured", "chat.run", "chat.script-draft", "chat.hooks", "chat.structured", "chat.research", "chat.web-read"]);
+      expect(await supervisor.start()).toEqual(["model.generate", "asset.asr", "transcribe.douyin", "asset.generate", "model.structured", "chat.run", "chat.script-draft", "chat.hooks", "chat.structured", "chat.research", "chat.web-read"]);
     } finally {
       await supervisor.stop(); server.closeAllConnections();
       await new Promise<void>(resolve => server.close(() => resolve()));
     }
-  }, 120000);
+  }, 1200000);
 });

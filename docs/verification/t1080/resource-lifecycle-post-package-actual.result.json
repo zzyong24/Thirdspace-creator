@@ -1,0 +1,30 @@
+{
+  "argv": [
+    "node",
+    "docs/verification/t1073/verify-resource-lifecycle.mjs"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-08T13:51:38.046606+00:00",
+  "finishedAt": "2026-10-08T13:53:29.013249+00:00",
+  "seconds": 110.96714170800988,
+  "exitCode": 1,
+  "outerExecutionTimeoutSeconds": 3600,
+  "outerTimedOut": false,
+  "retry": 0,
+  "logPath": "/Users/zyongzhu/CreatorOS-local-acceptance/worktree-main-integration-20261008/resource-lifecycle-post-package-actual.log",
+  "logSha256": "d0cb1e8931770d8fb9c7504d1b1c307d0a828d5fa399604d47802a72744e34c2",
+  "sourceHashesBefore": {
+    "docs/verification/t1073/verify-resource-lifecycle.mjs": "b883364d11dd09932a82dfdb6389a2b92c836920d575b99a36a3b7f6fe97dd1d",
+    "docs/verification/t1073/worker/ipc-memory-serial-observation.json": "57d30f5c9695edc12911f1dfb35aefdd47028a3024d9bd227010216d0c33c7f3",
+    "docs/verification/t1073/worker/ipc-memory-parallel-observation.json": "39efc8ebffdf474ba78374d4e142c0be6c7a2a3533412c0883e6c1991f8ae800"
+  },
+  "sourceHashesAfter": {
+    "docs/verification/t1073/verify-resource-lifecycle.mjs": "b883364d11dd09932a82dfdb6389a2b92c836920d575b99a36a3b7f6fe97dd1d",
+    "docs/verification/t1073/worker/ipc-memory-serial-observation.json": "57d30f5c9695edc12911f1dfb35aefdd47028a3024d9bd227010216d0c33c7f3",
+    "docs/verification/t1073/worker/ipc-memory-parallel-observation.json": "39efc8ebffdf474ba78374d4e142c0be6c7a2a3533412c0883e6c1991f8ae800"
+  },
+  "historicalEvidenceRestored": true,
+  "scriptBytesUnchanged": true,
+  "isolatedSyntheticObservationsOnly": true,
+  "productionOrUserDatabaseOperationsExecuted": false
+}

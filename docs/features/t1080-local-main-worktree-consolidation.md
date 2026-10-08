@@ -45,3 +45,11 @@ flowchart LR
 main、client、resource、owned-device及pipeline已普通三方合并。39个另已逐来源审核覆盖/适配/替代的旧头，用35个最小历史父显式保留历史；合并前后tree OID完全相同，39头全部可达，未把未经审核独有产品用ours丢弃。27闲置worktree逐个普通remove，2个实际活跃目录保留；来源分支和原日志不删除。
 
 真实boundary初扫4新增仅两份SDK测试位于features。限定独评后将两套原SDK协议/消费者测试搬至frontend/src/server/ai-runtime，5处相对导入改原模块alias，当前资源verifier只更新2个argv，逆替换后三个来源文件全文相同。全部测试body/断言/fixture/预算不变，原生产baseline/guard/旧证据不改；T1080写集保留旧删除路径并增加新路径，T1073将实际当前suite声明同步。再次实跑迁移后的原会话/流/控制回归与边界，不以移动文件代替测试通过。
+
+## 出包后测试兼容核验
+
+正式本地main0480出包完成后完整reconcile实际44错误/1告警。按原命令聚焦LED060和LED061，保留真实RED：前者38PASS/2FAIL只为429/503旧rejected断言与原T1022模型重试superseded合同相撞；后者341PASS/3FAIL只为两处现有asset.asr精确能力数组遗漏、一处隔离mock漏Codex status导出。独立精确3文件候选复核后，仅保留实际注册顺序下的asset.asr、原missing-throw mock增加resolveCodexStatusWorkerPath、401仍rejected而429/503严格superseded；不改任何产品、取消/费用/请求数/落库/归属/重试/断流未知断言或预算。首次外部候选能力排序错误被独评拒绝，原FAIL留存，当前候选修正后独评通过。必须再次运行原完整两组命令，未执行的下游断言不能先签成功。该测试-only兼容不改变已交付安装包源码；收尾以Git diff实际核除文档/控制/3测试之外无产品变化。
+
+来源收据另7项真实归属缺口登记T1082，原18更早review欠债与其它教训失败保留；不能在本任务完成证据里把44项全部写成旧债或全绿。
+
+资源门后续实际343PASS/1FAIL及1次未接住拒绝，取消测试在默认1秒等待opened处先停。经第二次精确独评，仅末尾取消例显式先ready、原run正预算和两次正观察各120000，外层1200000覆盖串行阶段；原promise即时附只观察拒绝的handler，原await result精确cancelled仍抛错。全部31expect、cancel/oldfence/断连/unknown结算/零提交/再启动断言保留。初600000外层不足的候选被独评拒绝并保留；当前候选PASS后再实跑原资源完整命令与timeout-policy，原失败不改签，生产0变更。

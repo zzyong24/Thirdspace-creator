@@ -3,7 +3,7 @@
 > 本文件由 `node orchestrator/process/pmem.mjs sync` 生成,**勿手改生成段**。
 > 人写的「定位/为什么」改 pmem.mjs 顶部常量与 SYSTEM_ARCHITECTURE.md。
 
-LAST_SYNCED: codex/t1062-integrated-client @ a91aa045
+LAST_SYNCED: main @ 0480ebe1
 
 ## 这是什么(定位)
 
@@ -26,7 +26,9 @@ CreatorOS —— 一个编导式的自媒体内容生产系统(非项目管理�
 - [wip] T-1072-owned-devices 配合 Growth 轻量手机号账号与正式双设备，补齐新电脑连接与已激活账号入口
 - [open] T-1067-skill-verification 清理通用产品流程Skill既有公开分发校验债务
 - [open] T-1018 清理本轮测试暴露的全局类型与边界欠债
-- [wip] T-1080 汇总全部本地worktree代码到main并清理闲置目录后构建
+- [open] T-1083 复核流程升级后的旧任务写集通配符兼容缺口
+- [open] T-1082 复核合并来源任务的当前评审与UI验收记录归属
+- [open] T-1081 核对整合后原主线的14处短执行预算与超时扫描误报
 - [wip] T-1026 补齐新增 Agent 功能的公开 CLI 并逐项验收安装版
 - [wip] T-1027 修复评论采集完成统计与失败诊断
 - [open] T-1025 重新核验 constitution 变更后的历史评审与前端验收回执

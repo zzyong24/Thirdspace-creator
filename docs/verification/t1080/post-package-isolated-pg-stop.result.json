@@ -1,0 +1,17 @@
+{
+  "argv": [
+    "/opt/homebrew/opt/postgresql@16/bin/pg_ctl",
+    "-D",
+    "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/migration-isolated-pg-graiiz2s/data",
+    "-m",
+    "fast",
+    "-t",
+    "120",
+    "-w",
+    "stop"
+  ],
+  "exitCode": 0,
+  "seconds": 0.15466241701506078,
+  "ownedTestPort": 55422,
+  "userPostgres5432Touched": false
+}

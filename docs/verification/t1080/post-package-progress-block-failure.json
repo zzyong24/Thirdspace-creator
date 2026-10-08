@@ -1,0 +1,17 @@
+{
+  "argv": [
+    "node",
+    "orchestrator/process/progress.mjs",
+    "block",
+    "T-1080:implementation",
+    "--reason",
+    "来源整合7项当前评审/验收记录归属未闭合，T1082；代码合并/27清理/main出包已实证，不冒签全Gate"
+  ],
+  "exitCode": 2,
+  "stdout": "",
+  "stderr": "T-1026: write_set must contain only safe repo-relative files or terminal /** prefixes\n",
+  "progressUnchanged": true,
+  "taskctlBlockAlreadyRecorded": true,
+  "reason": "原T1026 write_set docs/verification/t1026* 不是新引擎支持的真实文件/终端/**前缀，工具在转换前拒绝；不能手改progress状态代签",
+  "rootCauseTask": "T-1083"
+}

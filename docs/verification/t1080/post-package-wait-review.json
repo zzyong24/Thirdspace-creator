@@ -1,0 +1,82 @@
+{
+  "verdict": "PASS",
+  "scope": "只对当前 dc7f0677 末尾隔离真实Worker取消测试候选给出限定写前结论；不实施、不测试、不代签取消链、新包、安装或全功能。",
+  "reviewedAt": "2026-10-08T14:07:38.383765+00:00",
+  "path": "backend/src/modules/execution/worker-supervisor.test.ts",
+  "baseSha256": "0bb7be7b3d6c2616e1d4577518b58ee62ebdeba9940e3d3f8b0f5777a7f6cbce",
+  "candidateSha256": "dc7f0677b133cbbf941a49f8f93de3e50e2d0f46425b2def498591b649a4549f",
+  "candidateMetadataSha256": "0c8f5c08472d9f32e1d7b95c21c930221d3084142ae9b93060517f2c17ad38a2",
+  "onlyLastCaseChanged": true,
+  "inverseFullFileByteIdentical": true,
+  "expectCountBefore": 31,
+  "expectCountAfter": 31,
+  "findings": [],
+  "checks": [
+    {
+      "id": "WAIT-001",
+      "result": "PASS",
+      "fact": "先await supervisor.start再构造原单次run的Date.now()+120000绝对deadline，启动等待与执行预算分离；不重发、不续期、不改execution identity。"
+    },
+    {
+      "id": "WAIT-002",
+      "result": "PASS",
+      "fact": "opened/disconnected两次有限正观察显式timeout120000，消除Vitest原默认1000ms；两分钟下限符合原执行规范。"
+    },
+    {
+      "id": "WAIT-003",
+      "result": "PASS",
+      "fact": "立即附 void result.catch(() => undefined) 只观察原Promise拒绝；原result仍在expect(await result).toBe(\"cancelled\")处精确断言，拒绝并未转为成功。失败观察/清理时可保留原失败并避免多出未处理拒绝。"
+    },
+    {
+      "id": "WAIT-004",
+      "result": "PASS",
+      "fact": "该例外层1200000ms覆盖明确startup120s、opened/run共享120s、取消结算宽限120s、disconnect观察120s、首stop宽限120s、restart120s、finally stop宽限120s的840s，并为清理/调度留360s余量。是本隔离SDK/loopback测试合理预算，生产启停预算不改。"
+    },
+    {
+      "id": "WAIT-005",
+      "result": "PASS",
+      "fact": "原31个expect、旧fence拒绝、真实供应商断开、不commit、unknown结算、重新启动完整能力数组全部保留；仅该末尾例改字节，其他11例及beforeAll原样，生产/guard/baseline0改。"
+    }
+  ],
+  "history": [
+    {
+      "id": "WAIT-F001",
+      "originalVerdict": "FAIL",
+      "status": "CLOSED_IN_CURRENT_EXTERNAL_CANDIDATE",
+      "fact": "首候选600000ms外层不足以覆盖明确串行预算；且等待opened时run未即时接拒绝。当前改1200000并附只观察catch。",
+      "originalCandidateSha256": "f9df5e1d135110d0379588129f7914fbaf7e2f448a0ec5503a0c002361d4dcdd",
+      "originalReceiptPath": "/Users/zyongzhu/CreatorOS-local-acceptance/worktree-main-integration-20261008/post-package-wait-candidate-first-budget-fail.json",
+      "originalReceiptSha256": "d98daa24cf018b374d9bcb27e395d19f5c2e530a93f63b574cfd43b688622d81",
+      "preserved": true
+    }
+  ],
+  "originalActualFailure": {
+    "logPath": "/Users/zyongzhu/CreatorOS-local-acceptance/worktree-main-integration-20261008/post-package-resource-compatible-green.log",
+    "logSha256": "95a15527e636db5e799ed148c24b2c3acda093a1fde37e061ca47acd94e26dd9",
+    "failedLine": 198,
+    "case": "活动流取消会断开供应商，仅结算未知用量，不提交候选且能再次启动",
+    "fact": "原waitFor(opened)约1秒未观察到opened，随后finally stop使未接住run报WORKER_EXITED；该次取消/fence/settlement断言未执行，必须继续保留FAIL。"
+  },
+  "sourceHashes": {
+    "backend/src/modules/execution/worker-supervisor.test.ts": "0bb7be7b3d6c2616e1d4577518b58ee62ebdeba9940e3d3f8b0f5777a7f6cbce",
+    "backend/src/modules/execution/worker-supervisor.ts": "444a0ce48f43f6b2445ee8e9689f62ea1aaf24d69f67f3eb8e74c969a8b7b57e",
+    "backend/src/modules/execution/worker-process-tree.ts": "a1ecf30c0d5b86976588221a6fbbfaaae7012b341fe9b0e0a8b9235b15615c1e",
+    "contract/src/timeout-policy.ts": "0ab2c32fe7f282bb1e7d9e3fc29d252bc3aef8d48a2385d46a13e089f6fbbb71",
+    "docs/engineering/timeout-policy.md": "94385308b37926c3f1b81cf3c8bf0533983025bfc539cac7c914770c112604cf",
+    "docs/verification/t1073/verify-resource-lifecycle.mjs": "b883364d11dd09932a82dfdb6389a2b92c836920d575b99a36a3b7f6fe97dd1d",
+    "backend/node_modules/vitest/dist/index.d.ts": "90ba95a763101bb61b8a799731a2ed60b5016b8135c1a2d5186862d4b534d4a1"
+  },
+  "mutations": {
+    "repo": 0,
+    "production": 0,
+    "tests": 0,
+    "Git": 0,
+    "control": 0
+  },
+  "testsExecuted": false,
+  "limits": [
+    "PASS绑定当前外部候选SHA；实际应用和原完整命令GREEN由root执行。",
+    "1200000是该隔离fixture的串行观察与清理余量；原killWorkerProcessTree含多次ps/身份/退出证明，本读审不证明所有病态生产整树分支的理论最大墙钟。",
+    "原完整verifier实际FAIL、unhandled错误、IPC恢复证据和旧全局timeout flags均保留；不以静态候选审查改记PASS。"
+  ]
+}

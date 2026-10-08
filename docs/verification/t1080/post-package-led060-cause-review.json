@@ -1,0 +1,125 @@
+{
+  "task": "T-1080",
+  "focus": "post-package LED-060归因，无修复",
+  "HEAD": "0480ebe17717bd426e083709fc22ccbdb9eb7840",
+  "exactArgvAndExitReceipt": "/Users/zyongzhu/CreatorOS-local-acceptance/worktree-main-integration-20261008/led060-focus/execution-receipt.json",
+  "receiptSha256": "6b04f9c01889c728f0486640c079695ae70d1ddf947c1d9e35e32ab06012c59a",
+  "result": "原LED060 chain exit1；build exit0；协议19通过；backend19通过/2失败；0skip/0未执行阶段",
+  "failedCases": [
+    {
+      "file": "backend/src/modules/execution/radar-model-result-unknown.repro.test.ts",
+      "lines": "194,205",
+      "mode": "http-429",
+      "expectedCallStatuses": [
+        "rejected"
+      ],
+      "actualCallStatuses": [
+        "superseded"
+      ],
+      "matchedFacts": {
+        "requests": 1,
+        "savedResults": [],
+        "runtimeStatus": "retry_wait"
+      }
+    },
+    {
+      "file": "backend/src/modules/execution/radar-model-result-unknown.repro.test.ts",
+      "lines": "194,205",
+      "mode": "http-503",
+      "expectedCallStatuses": [
+        "rejected"
+      ],
+      "actualCallStatuses": [
+        "superseded"
+      ],
+      "matchedFacts": {
+        "requests": 1,
+        "savedResults": [],
+        "runtimeStatus": "retry_wait"
+      }
+    }
+  ],
+  "cause": [
+    {
+      "path": "ai-worker/src/execution/generation-error.ts",
+      "lines": "19–24",
+      "fact": "明确HTTP429/503可重试分类为retry_wait；401等待用户。"
+    },
+    {
+      "path": "ai-worker/src/execution/durable-generation-model.ts",
+      "lines": "44–48",
+      "fact": "当前沿原main cb2422cf134eb705960ed432f7527a8f8202fe7d：retry_wait且非结构化兼容错误向原账本结算superseded；不是数组/JSON序列化变化。"
+    },
+    {
+      "path": "backend/src/modules/execution/execution-worker-outcome.service.ts",
+      "lines": "28–36",
+      "fact": "当前真实终态端口明确接受rejected或model superseded，按原预算计算retryAt和retryOfCallId；本次实际retry_wait无额外请求。"
+    },
+    {
+      "path": "backend/src/modules/execution/radar-model-result-unknown.repro.test.ts",
+      "lines": "193–194",
+      "fact": "测试沿原client复现提交 5a98210841a8d70ad53d74725ee906e7fe1f9fca 期待所有HTTP拒绝rejected；JSON/validator修复 7e93ca3b4c122cb78293a3dee73a62879f2bd7a2 仍保留该断言。"
+    }
+  ],
+  "sourceRefs": {
+    "oldMain": "12288cefdd43544478ea8f67a648798f43e813df",
+    "oldClient": "04ca6d27eb593c8ba174133c3aa7b456abe09c1f",
+    "mainModelRecoveryChange": "cb2422cf134eb705960ed432f7527a8f8202fe7d",
+    "clientOriginalRepro": "5a98210841a8d70ad53d74725ee906e7fe1f9fca",
+    "clientJsonValidatorFix": "7e93ca3b4c122cb78293a3dee73a62879f2bd7a2"
+  },
+  "classification": "整合兼容缺口：main已有恢复账本状态语义与client新回归旧状态断言相撞；本次未发现LED060完整JSON/schema/validator保存链重新失效。此结论不代签任何真实供应商/Codex/安装或其它reconcile错误。",
+  "confirmedControls": [
+    "完整JSON正文/工具参数/reasoning/usage与非法JSON不重发19例通过。",
+    "真实转录后处理13例通过，包含shared validator、SSE/JSON、明确拒绝/坏输出/预算、取消/断流/旧fence，以及source和新build bundle工件写入/终态/全文读回。",
+    "radar成功/401/完整JSON/断流/部分断流/通用transcribe其余6例通过；断流仍原unknown且不能新claim。"
+  ],
+  "originalFailurePreserved": true,
+  "originalBuildPreserved": true,
+  "sources": [
+    {
+      "path": "orchestrator/process/reconcile.config.json",
+      "sha256": "a2c053a86a919f401ff6f73c74598cff9e5df37be9316e864897b8e3855800af"
+    },
+    {
+      "path": "ai-worker/src/execution/durable-generation-model.ts",
+      "sha256": "98967b35698f8a1b0ef024f0b7070ca2a5ceb810514bd6974edcd4f4ff82141f"
+    },
+    {
+      "path": "ai-worker/src/execution/generation-error.ts",
+      "sha256": "1b98049a4a7d2f874c48a050724bdc5dd0f16d12ac1df17e29b7d0bcbe21fa1e"
+    },
+    {
+      "path": "ai-worker/src/execution/intelligence-generation-worker.ts",
+      "sha256": "9baef5f64f50262486e44f152efb4929f8ca15d0e02c4cdef7d18a2da19992d0"
+    },
+    {
+      "path": "backend/src/modules/execution/execution-worker-outcome.service.ts",
+      "sha256": "ee5239f11abbe91267592c43b979b4e0874fbbd4b2a1b8b6ef02d24d2f70f790"
+    },
+    {
+      "path": "backend/src/modules/execution/radar-model-result-unknown.repro.test.ts",
+      "sha256": "29b148d073f8383973837d9156a8172a1e2ea10631396e565f46710eff6f1c73"
+    },
+    {
+      "path": "backend/src/modules/execution/transcribe-postprocess.integration.test.ts",
+      "sha256": "88ddc7d4b6c6c7c285bc9389c73a2b9f5a00253ff7e7e5aa32aa2449a6ade04b"
+    },
+    {
+      "path": "ai-worker/src/runtime/pi-provider-json-compat.test.ts",
+      "sha256": "52e86e653b3c82bff11678f48c85da2c57198df41afb290a1f43bfd083adaa03"
+    }
+  ],
+  "mutations": {
+    "productTestsAssertionsGitControl": "none",
+    "ignoredWorkerDist": "仅授权原worker build",
+    "externalEvidence": "只写本外部focus目录",
+    "trackedStatusUnchanged": true
+  },
+  "limits": [
+    "仅聚焦原LED060三段命令，无full reconcile；其他44错误/1警由root原记录保留。",
+    "无skip env、--retry=0、原CLI argv/exit/log全留存；没有修改或放宽任何断言。",
+    "测试createDb()内存PGlite和合成loopback HTTP；没有连接root55422或真实App/用户数据/外部模型。",
+    "只归因，不决定或实施生产/测试修复；当前状态差异须由root按已确认主线恢复合同处理。"
+  ]
+}

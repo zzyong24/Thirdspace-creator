@@ -1,0 +1,31 @@
+{
+  "sourceHead": "0480ebe17717bd426e083709fc22ccbdb9eb7840",
+  "artifactSha256": "7fae2a0736891a6b6cb321cfd79966734b665821ad745baee53cc9f61df8396f",
+  "mountedReadonly": true,
+  "appInstalled": false,
+  "appLaunched": false,
+  "mountedDeepSignatureExitCode": 0,
+  "matches": [
+    {
+      "path": "Contents/MacOS/CreatorOS",
+      "sha256": "f7c401cb5959a86858a770d494b82bff2b56d07508b82cf3b099b3911980a810",
+      "matchesBuiltApp": true
+    },
+    {
+      "path": "Contents/MacOS/creatoros-server",
+      "sha256": "3236b69ee7ad7806cddece8f7aa2edca8926c408d4634dbb7635e98c52f349d3",
+      "matchesBuiltApp": true
+    },
+    {
+      "path": "Contents/Resources/sidecar.tar.gz",
+      "sha256": "ed0f8b78e2647d4ae1b9002d9e149c3a4ddad79f193dc756c8cfbc98e4b91f89",
+      "matchesBuiltApp": true
+    },
+    {
+      "path": "Contents/Info.plist",
+      "sha256": "c73a5d55331d915719807ac7330aab4710cbfd3988335911929dfb6b67adcfc9",
+      "matchesBuiltApp": true
+    }
+  ],
+  "detachExitCode": 0
+}

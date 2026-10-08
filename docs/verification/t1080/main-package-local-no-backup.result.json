@@ -1,0 +1,15 @@
+{
+  "head": "0480ebe17717bd426e083709fc22ccbdb9eb7840",
+  "branch": "main",
+  "argv": [
+    "pnpm",
+    "-C",
+    "frontend",
+    "desktop:package-local"
+  ],
+  "skipInstall": true,
+  "appOrDataBackup": false,
+  "outerExecutionTimeout": null,
+  "exitCode": 0,
+  "seconds": 365.6355469226837
+}

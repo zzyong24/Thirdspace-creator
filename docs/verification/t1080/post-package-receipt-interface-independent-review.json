@@ -1,0 +1,68 @@
+{
+  "schema": "t1080-receipt-supported-interface-readonly-review/v1",
+  "createdAt": "2026-10-08T13:58:57.245641+00:00",
+  "baseReport": {
+    "path": "/Users/zyongzhu/CreatorOS-local-acceptance/worktree-main-integration-20261008/post-package-control-receipt-independent-review.json",
+    "sha256": "e1a0647e6106720acaca1564425a26e06568e3c7cd74d24b5c1f30395a684f5a"
+  },
+  "question": "当前仅来源核对能否生成 alias receipt 清除新增7条审计错误？",
+  "answer": "现有接口不支持。来源核对不能冒称当前 initial 完整 SPEC 审核或真实 UI 旅程验收。",
+  "interfaces": [
+    {
+      "kind": "只读",
+      "command": "node orchestrator/process/reviewctl.mjs audit --backlog BACKLOG.md",
+      "meaning": "完整当前review receipt/event chain审计；无alias映射或历史事件导入。"
+    },
+    {
+      "kind": "只读API",
+      "api": "auditReviewReceipts({root,backlogFile}); auditFrontendReceipts({root,backlogFile})",
+      "meaning": "按当前精确task_id/task查当前事件及现有SPEC/report/watch路径；不可用来源核对json代替。"
+    },
+    {
+      "kind": "当前不适用",
+      "command": "node orchestrator/process/reviewctl.mjs migrate-shared-review <task-id> --backlog BACKLOG.md",
+      "meaning": "只迁现有当前task的共享SPEC review路径；1147-1158要求当前task已有v2 event，五条均缺，不能用这个命令import/alias。"
+    },
+    {
+      "kind": "仅在真实新独立SPEC完整评审之后可用；未执行",
+      "commandTemplate": "node orchestrator/process/reviewctl.mjs record <current-task-id> --spec <current-spec-path> --constitution <actual-constitution-path> --input <actual-current-review-packet-path> --review <spec-base>.<current-task-id>.review.md --backlog BACKLOG.md --review-mode independent --model <actual-reviewer-model>",
+      "meaning": "548-581明确无当前事件时首轮必须initial完整审核；会记录当前SPEC/constitution hash并向当前链追加新event，保留旧链原字节。task-scoped新review路径避免覆盖legacy旧snapshot；不能用空findings/来源hash核对制造PASS。SPEC审核不是产品UI验收，记录它不会代签两个frontend receipt。"
+    },
+    {
+      "kind": "仅在真实当前task UI旅程验证之后可用；未执行",
+      "commandTemplate": "node orchestrator/process/taskctl.mjs complete <current-task-id> --evidence <actual-current-frontend-report-path>",
+      "meaning": "要求当前任务🔨、验收待验，报告/contract/可见副本证据task_id与当前task精确匹配；taskctl实际执行allowlisted verification才记录completion。原任务已有✅不能假切状态或复制旧completion清错；当前两个alias旧证据还存在watch变化，需真实复验。"
+    }
+  ],
+  "acceptedRisk": {
+    "notAutomaticallyRequiredForRealReview": true,
+    "notCurrentAuditBypass": true,
+    "explanation": "真实当前SPEC独立评审可生成新receipt，不需要为纯来源映射自行创造风险决定；若选择延期当前receipt/旅程闭包，须按已有用户授权和流程记录明确范围/根因，接受风险必须由用户实际授权并绑定准确task/hash/IDs，不能推定授权。现有 review/frontend audit 不接受 accepted-risk 字符串替代 receipt；DEC 本身不能让这些7条变绿。"
+  },
+  "newReceiptGaps": {
+    "review": 5,
+    "frontend": 2,
+    "sourceProofOnlyPassesSourcePreservation": true,
+    "passesCurrentReceiptAudit": false
+  },
+  "remaining19EnumeratedInBaseReport": true,
+  "codeEvidence": [
+    {
+      "path": "orchestrator/process/reviewctl.mjs",
+      "sha256": "dde682e0ad114048daa5cfd8686a1450ccf902a8ab56a48411e88399a51ccc15"
+    },
+    {
+      "path": "orchestrator/process/frontend-validation.mjs",
+      "sha256": "47c79d66e687b913d3d9a848dda50429f551bae071646d5efbed9263e1c38727"
+    },
+    {
+      "path": "orchestrator/process/taskctl.mjs",
+      "sha256": "f5d9660c87023b1320ba3703bd3b7ef6df9044356b271f6751d0343ea366e65d"
+    }
+  ],
+  "repoMutation": false,
+  "gitMutation": false,
+  "commandsExecuted": false,
+  "fullReconcileExecuted": false,
+  "lessonTestsExecuted": false
+}

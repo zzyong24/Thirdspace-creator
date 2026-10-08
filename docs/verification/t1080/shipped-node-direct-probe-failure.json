@@ -1,0 +1,10 @@
+{
+  "argv": [
+    "dmg-verify-mounted/CreatorOS.app/Contents/MacOS/creatoros-server",
+    "--version"
+  ],
+  "exitCode": -6,
+  "logSha256": "a3e67ac0c9ec11b67e498116c9b71751dcf85e9e4fa9e1f3616455dea69fabf3",
+  "context": "未设置原生启动器的动态库路径；失败保留，不代签启动。",
+  "productModified": false
+}

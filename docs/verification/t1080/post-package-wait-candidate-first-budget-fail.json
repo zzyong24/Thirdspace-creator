@@ -1,0 +1,9 @@
+{
+  "path": "backend/src/modules/execution/worker-supervisor.test.ts",
+  "baseSha256": "0bb7be7b3d6c2616e1d4577518b58ee62ebdeba9940e3d3f8b0f5777a7f6cbce",
+  "candidateSha256": "f9df5e1d135110d0379588129f7914fbaf7e2f448a0ec5503a0c002361d4dcdd",
+  "scope": "只有末尾真实子进程取消测试，先真实ready分离启动/运行，两个正向有限观察默认1秒改明确2分钟，运行正预算2分钟，外层10分钟包含串行清理。",
+  "productionChanges": 0,
+  "assertionsRemoved": 0,
+  "originalFailLog": "post-package-resource-compatible-green.log"
+}

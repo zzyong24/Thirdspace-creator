@@ -191,7 +191,7 @@ async function reproduce(mode: Mode, flow: 'radar' | 'transcribe' = 'radar') {
       expect(result).toMatchObject({ requests: 1, savedResults: [], runtimeStatus: 'unknown_result', errorCode: 'MODEL_RESULT_UNKNOWN', errorMessage: '服务尚未返回完整结果，任务已暂停，已完成内容保留', callStatuses: ['unknown'], stopReason: 'unknown_result' });
       expect(await tasks.claimTask({ taskId: task.id, workerId: 'no-blind-retry' })).toBeNull();
     } else if (mode !== 'success' && mode !== 'json-instead-of-sse') {
-      expect(result).toMatchObject({ requests: 1, savedResults: [], runtimeStatus: mode === 'http-401' ? 'waiting_user' : 'retry_wait', callStatuses: ['rejected'] });
+      expect(result).toMatchObject({ requests: 1, savedResults: [], runtimeStatus: mode === 'http-401' ? 'waiting_user' : 'retry_wait', callStatuses: [mode === 'http-401' ? 'rejected' : 'superseded'] });
     } else {
       expect(result).toMatchObject({ requests: 1, savedResults: ['checkpoint', 'result'], runtimeStatus: 'succeeded', callStatuses: ['settled'] });
       if (mode === 'json-instead-of-sse') expect(servedResponses).toEqual([{ status: 200, format: 'json-completion', fullContent: true }]);

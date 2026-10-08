@@ -1,0 +1,37 @@
+{
+  "builtSourceHEAD": "0480ebe17717bd426e083709fc22ccbdb9eb7840",
+  "trackedChangesAfterBuild": [
+    "BACKLOG.md",
+    "PROJECT.md",
+    "backend/src/modules/execution/radar-model-result-unknown.repro.test.ts",
+    "backend/src/modules/execution/worker-supervisor.test.ts",
+    "docs/features/t1080-local-main-worktree-consolidation.md",
+    "docs/verification/t1080/INTEGRATION.md",
+    "frontend/src/server/persistence-client.lifecycle.test.ts",
+    "orchestrator/.lessons-stats.json",
+    "orchestrator/process/modules.config.json",
+    "orchestrator/progress.json"
+  ],
+  "productCodeChangesAfterBuild": 0,
+  "testOnlyFiles": [
+    "backend/src/modules/execution/radar-model-result-unknown.repro.test.ts",
+    "backend/src/modules/execution/worker-supervisor.test.ts",
+    "frontend/src/server/persistence-client.lifecycle.test.ts"
+  ],
+  "historicalIpcSourceRestored": true,
+  "artifact": "/Users/zyongzhu/Downloads/CreatorOS-1.2.0.dmg",
+  "artifactSha256": "7fae2a0736891a6b6cb321cfd79966734b665821ad745baee53cc9f61df8396f",
+  "publicRegressions": {
+    "transcriptionTestsPassed": 40,
+    "resourceTestsPassed": 344,
+    "timeoutTestsPassed": 165,
+    "timeoutStaticFlags": 27
+  },
+  "globalGreen": false,
+  "fullReconcileOriginal": {
+    "exitCode": 1,
+    "errors": 44,
+    "warnings": 1
+  },
+  "newInstalledAppTested": false
+}

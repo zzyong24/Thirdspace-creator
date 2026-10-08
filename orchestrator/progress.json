@@ -5472,7 +5472,18 @@
         "orchestrator/process/timeout-budget.mjs",
         "tools/windows-closure-rat/build-production-closure.mjs",
         "tools/windows-closure-rat/build-production-closure.test.mjs",
-        "tools/windows-closure-rat/package-build-only.test.mjs"
+        "tools/windows-closure-rat/package-build-only.test.mjs",
+        "BACKLOG-details.md",
+        "BACKLOG-archive.md",
+        "backend/src/modules/execution/execution-call-ledger.service.test.ts",
+        "frontend/src/server/chat-execution-stream.test.ts",
+        "frontend/src/server/ai-runtime/live-chat-session.test.ts",
+        "frontend/src/server/ai-runtime/live-chat-session.consumer.test.tsx",
+        "docs/verification/t1073/verify-resource-lifecycle.mjs",
+        "backend/src/modules/execution/worker-supervisor.test.ts",
+        "frontend/src/server/persistence-client.lifecycle.test.ts",
+        "backend/src/modules/execution/radar-model-result-unknown.repro.test.ts",
+        "docs/features/t1082-source-receipt-revalidation.md"
       ],
       "read_set": [
         "BACKLOG.md",

@@ -1,0 +1,50 @@
+{
+  "build": {
+    "head": "0480ebe17717bd426e083709fc22ccbdb9eb7840",
+    "branch": "main",
+    "argv": [
+      "pnpm",
+      "-C",
+      "frontend",
+      "desktop:package-local"
+    ],
+    "skipInstall": true,
+    "appOrDataBackup": false,
+    "outerExecutionTimeout": null,
+    "exitCode": 0,
+    "seconds": 365.6355469226837
+  },
+  "artifact": "/Users/zyongzhu/Downloads/CreatorOS-1.2.0.dmg",
+  "bytes": 840142728,
+  "sha256": "7fae2a0736891a6b6cb321cfd79966734b665821ad745baee53cc9f61df8396f",
+  "notarized": false,
+  "signatureKind": "ad-hoc",
+  "dmg-verify": {
+    "argv": [
+      "hdiutil",
+      "verify",
+      "/Users/zyongzhu/Downloads/CreatorOS-1.2.0.dmg"
+    ],
+    "exitCode": 0,
+    "seconds": 2.3210840225219727
+  },
+  "built-app-signature": {
+    "argv": [
+      "codesign",
+      "--verify",
+      "--deep",
+      "--strict",
+      "--verbose=2",
+      "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src-tauri/target/release-fast/bundle/macos/CreatorOS.app"
+    ],
+    "exitCode": 0,
+    "seconds": 0.4530208110809326
+  },
+  "bundle": {
+    "CFBundleIdentifier": "cloud.aitongban.creatoros",
+    "CFBundleShortVersionString": "1.2.0",
+    "CFBundleVersion": "1.2.0",
+    "CFBundleExecutable": "CreatorOS"
+  },
+  "gitStatusAfterBuild": ""
+}

@@ -1,0 +1,1087 @@
+{
+  "schema": "t1080-post-package-data-only-control-receipt-review/v1",
+  "createdAt": "2026-10-08T13:57:17.359527+00:00",
+  "head": "0480ebe17717bd426e083709fc22ccbdb9eb7840",
+  "scope": "仅当前导出 metadata APIs 的完整控制/receipt 错误及来源归因；不执行 reconcile、lesson、产品测试，不修改 repo/Git/用户数据。",
+  "verdict": "全局仍 FAIL；18 既有 review 旧债 + 7 整合 receipt 归属缺口 + 19 最近 lesson fired，计数闭合44。",
+  "apiResults": {
+    "root": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+    "createdAt": "2026-10-08T13:51:56.235Z",
+    "review": [
+      "T-1073: review receipt 缺少任务 T-1073 的 hash-chained event",
+      "T-1072-owned-devices: review receipt 缺少任务 T-1072-owned-devices 的 hash-chained event",
+      "T-1069-completion-json: review receipt 缺少任务 T-1069-completion-json 的 hash-chained event",
+      "T-1070-transcript-reliability: review receipt 缺少任务 T-1070-transcript-reliability 的 hash-chained event",
+      "T-1063-release-pipeline: review receipt 缺少任务 T-1063-release-pipeline 的 hash-chained event",
+      "T-1021: review receipt 已过期：SPEC hash 1ca8392b4d5e != 242b25c4f83f",
+      "T-915: BACKLOG review receipt 692283b8bace 与 snapshot ad76cf555129 不一致",
+      "T-859: BACKLOG review receipt 9895a91a63a8 与 snapshot 5818394813ca 不一致",
+      "T-858: BACKLOG review receipt 2521be715a0a 与 snapshot c76009a5586c 不一致",
+      "T-824: BACKLOG review receipt 18361dc8c3c3 与 snapshot f0e215103ddf 不一致",
+      "T-819: BACKLOG review receipt 0425ab7b87b8 与 snapshot a8879edf798f 不一致",
+      "T-816: BACKLOG review receipt fb03de3a57d7 与 snapshot 7896d566ccf8 不一致",
+      "T-768: BACKLOG review receipt 3eb18966ea59 与 snapshot 64f8010b2045 不一致",
+      "T-726: BACKLOG review receipt 2809820bf64a 与 snapshot 39e3f41ca866 不一致",
+      "T-707: BACKLOG review receipt 06867c4bf60c 与 snapshot 87de34262527 不一致",
+      "T-703: BACKLOG review receipt c1a3920aea71 与 snapshot 0662dafac8fa 不一致",
+      "T-691: BACKLOG review receipt 9444ca5b32a9 与 snapshot 2f2a131519e7 不一致",
+      "T-694: BACKLOG review receipt 2c7be136aea0 与 snapshot 171b7c9ad2f2 不一致",
+      "T-656: BACKLOG review receipt 5f6970ac76f2 与 snapshot bd8a6ac135f0 不一致",
+      "T-652: 审核列为「待审」；存在未销账问题，不得开工",
+      "T-645: BACKLOG review receipt 5dfe24b42eb7 与 snapshot 7ff0c3cb1906 不一致",
+      "T-642: BACKLOG review receipt 7728c9ed44bd 与 snapshot 9002b8dbeb4d 不一致",
+      "T-635: BACKLOG review receipt b8add273a494 与 snapshot 84661017fde5 不一致"
+    ],
+    "frontend": [
+      "T-1023-agent-recovery: PASS 验收缺 taskctl completion event",
+      "T-1022-agent-recovery: PASS 验收缺 taskctl completion event"
+    ],
+    "governance": [],
+    "governanceDebt": [],
+    "autonomy": [],
+    "watchdog": [],
+    "delivery": {
+      "ok": true,
+      "phase": "maintenance",
+      "source": "legacy-compat",
+      "errors": []
+    },
+    "research": {
+      "ok": true,
+      "errors": [],
+      "open": []
+    }
+  },
+  "all44ErrorReconstruction": [
+    {
+      "kind": "review",
+      "message": "T-1021: review receipt 已过期：SPEC hash 1ca8392b4d5e != 242b25c4f83f",
+      "classification": "既有 client 升级旧债；原 client 与资源合并前 BACKLOG 交叉审计逐条一致"
+    },
+    {
+      "kind": "review",
+      "message": "T-915: BACKLOG review receipt 692283b8bace 与 snapshot ad76cf555129 不一致",
+      "classification": "既有 client 升级旧债；原 client 与资源合并前 BACKLOG 交叉审计逐条一致"
+    },
+    {
+      "kind": "review",
+      "message": "T-859: BACKLOG review receipt 9895a91a63a8 与 snapshot 5818394813ca 不一致",
+      "classification": "既有 client 升级旧债；原 client 与资源合并前 BACKLOG 交叉审计逐条一致"
+    },
+    {
+      "kind": "review",
+      "message": "T-858: BACKLOG review receipt 2521be715a0a 与 snapshot c76009a5586c 不一致",
+      "classification": "既有 client 升级旧债；原 client 与资源合并前 BACKLOG 交叉审计逐条一致"
+    },
+    {
+      "kind": "review",
+      "message": "T-824: BACKLOG review receipt 18361dc8c3c3 与 snapshot f0e215103ddf 不一致",
+      "classification": "既有 client 升级旧债；原 client 与资源合并前 BACKLOG 交叉审计逐条一致"
+    },
+    {
+      "kind": "review",
+      "message": "T-819: BACKLOG review receipt 0425ab7b87b8 与 snapshot a8879edf798f 不一致",
+      "classification": "既有 client 升级旧债；原 client 与资源合并前 BACKLOG 交叉审计逐条一致"
+    },
+    {
+      "kind": "review",
+      "message": "T-816: BACKLOG review receipt fb03de3a57d7 与 snapshot 7896d566ccf8 不一致",
+      "classification": "既有 client 升级旧债；原 client 与资源合并前 BACKLOG 交叉审计逐条一致"
+    },
+    {
+      "kind": "review",
+      "message": "T-768: BACKLOG review receipt 3eb18966ea59 与 snapshot 64f8010b2045 不一致",
+      "classification": "既有 client 升级旧债；原 client 与资源合并前 BACKLOG 交叉审计逐条一致"
+    },
+    {
+      "kind": "review",
+      "message": "T-726: BACKLOG review receipt 2809820bf64a 与 snapshot 39e3f41ca866 不一致",
+      "classification": "既有 client 升级旧债；原 client 与资源合并前 BACKLOG 交叉审计逐条一致"
+    },
+    {
+      "kind": "review",
+      "message": "T-707: BACKLOG review receipt 06867c4bf60c 与 snapshot 87de34262527 不一致",
+      "classification": "既有 client 升级旧债；原 client 与资源合并前 BACKLOG 交叉审计逐条一致"
+    },
+    {
+      "kind": "review",
+      "message": "T-703: BACKLOG review receipt c1a3920aea71 与 snapshot 0662dafac8fa 不一致",
+      "classification": "既有 client 升级旧债；原 client 与资源合并前 BACKLOG 交叉审计逐条一致"
+    },
+    {
+      "kind": "review",
+      "message": "T-691: BACKLOG review receipt 9444ca5b32a9 与 snapshot 2f2a131519e7 不一致",
+      "classification": "既有 client 升级旧债；原 client 与资源合并前 BACKLOG 交叉审计逐条一致"
+    },
+    {
+      "kind": "review",
+      "message": "T-694: BACKLOG review receipt 2c7be136aea0 与 snapshot 171b7c9ad2f2 不一致",
+      "classification": "既有 client 升级旧债；原 client 与资源合并前 BACKLOG 交叉审计逐条一致"
+    },
+    {
+      "kind": "review",
+      "message": "T-656: BACKLOG review receipt 5f6970ac76f2 与 snapshot bd8a6ac135f0 不一致",
+      "classification": "既有 client 升级旧债；原 client 与资源合并前 BACKLOG 交叉审计逐条一致"
+    },
+    {
+      "kind": "review",
+      "message": "T-652: 审核列为「待审」；存在未销账问题，不得开工",
+      "classification": "既有 client 升级旧债；原 client 与资源合并前 BACKLOG 交叉审计逐条一致"
+    },
+    {
+      "kind": "review",
+      "message": "T-645: BACKLOG review receipt 5dfe24b42eb7 与 snapshot 7ff0c3cb1906 不一致",
+      "classification": "既有 client 升级旧债；原 client 与资源合并前 BACKLOG 交叉审计逐条一致"
+    },
+    {
+      "kind": "review",
+      "message": "T-642: BACKLOG review receipt 7728c9ed44bd 与 snapshot 9002b8dbeb4d 不一致",
+      "classification": "既有 client 升级旧债；原 client 与资源合并前 BACKLOG 交叉审计逐条一致"
+    },
+    {
+      "kind": "review",
+      "message": "T-635: BACKLOG review receipt b8add273a494 与 snapshot 84661017fde5 不一致",
+      "classification": "既有 client 升级旧债；原 client 与资源合并前 BACKLOG 交叉审计逐条一致"
+    },
+    {
+      "kind": "review",
+      "message": "T-1073: review receipt 缺少任务 T-1073 的 hash-chained event",
+      "classification": "T1080 来源整合新增当前 receipt 归属缺口；source event 保留，当前精确 task event 缺失"
+    },
+    {
+      "kind": "review",
+      "message": "T-1072-owned-devices: review receipt 缺少任务 T-1072-owned-devices 的 hash-chained event",
+      "classification": "T1080 来源整合新增当前 receipt 归属缺口；source event 保留，当前精确 task event 缺失"
+    },
+    {
+      "kind": "review",
+      "message": "T-1069-completion-json: review receipt 缺少任务 T-1069-completion-json 的 hash-chained event",
+      "classification": "T1080 来源整合新增当前 receipt 归属缺口；source event 保留，当前精确 task event 缺失"
+    },
+    {
+      "kind": "review",
+      "message": "T-1070-transcript-reliability: review receipt 缺少任务 T-1070-transcript-reliability 的 hash-chained event",
+      "classification": "T1080 来源整合新增当前 receipt 归属缺口；source event 保留，当前精确 task event 缺失"
+    },
+    {
+      "kind": "review",
+      "message": "T-1063-release-pipeline: review receipt 缺少任务 T-1063-release-pipeline 的 hash-chained event",
+      "classification": "T1080 来源整合新增当前 receipt 归属缺口；source event 保留，当前精确 task event 缺失"
+    },
+    {
+      "kind": "frontend",
+      "message": "T-1023-agent-recovery: PASS 验收缺 taskctl completion event",
+      "classification": "T1080 首次 main 合并新增 alias completion 归属缺口；source 原 task completion 保留，当前 alias 无 completion"
+    },
+    {
+      "kind": "frontend",
+      "message": "T-1022-agent-recovery: PASS 验收缺 taskctl completion event",
+      "classification": "T1080 首次 main 合并新增 alias completion 归属缺口；source 原 task completion 保留，当前 alias 无 completion"
+    },
+    {
+      "kind": "lesson-telemetry",
+      "message": "lesson LED-006 RECURRED — 桌面启动门回归：必须保留静态 splash、显式 sidecar cwd、runtime 失败可见且落日志，并在 Windows 安装后真启动 GUI 等待 MAIN_PAGE_LOAD_FINISHED。",
+      "classification": "既有 guard 与既有 fired 证据；本次仅遥测，不推定具体产品根因",
+      "lastFiredAt": "2026-10-08T13:45:28.128Z",
+      "checkSha256": "8fba483eabd963fc9252beadc5863fe51e88539bd4137b49592dada24d5d4a87",
+      "sameCheckSourceNames": [
+        "main",
+        "client",
+        "resource",
+        "device",
+        "pipeline",
+        "preResource"
+      ],
+      "priorFiredEvidence": [
+        {
+          "source": "main",
+          "sourceLed": "LED-006",
+          "fireCount": 7,
+          "lastFiredAt": "2026-09-20T17:26:45.642Z"
+        },
+        {
+          "source": "client",
+          "sourceLed": "LED-006",
+          "fireCount": 203,
+          "lastFiredAt": "2026-10-08T05:09:12.319Z"
+        },
+        {
+          "source": "resource",
+          "sourceLed": "LED-006",
+          "fireCount": 228,
+          "lastFiredAt": "2026-10-08T09:02:01.559Z"
+        },
+        {
+          "source": "device",
+          "sourceLed": "LED-006",
+          "fireCount": 199,
+          "lastFiredAt": "2026-10-06T08:05:47.695Z"
+        },
+        {
+          "source": "pipeline",
+          "sourceLed": "LED-006",
+          "fireCount": 6,
+          "lastFiredAt": "2026-10-06T09:48:55.755Z"
+        },
+        {
+          "source": "preResource",
+          "sourceLed": "LED-006",
+          "fireCount": 204,
+          "lastFiredAt": "2026-10-08T11:43:38.850Z"
+        }
+      ]
+    },
+    {
+      "kind": "lesson-telemetry",
+      "message": "lesson LED-014 RECURRED — 局部改稿门回归：脚本写入必须持久化稳定段落 ID，存量无 ID 版本须用稿面同一兼容锚点并在新版本自愈；技术锚点必须由稿面点击时可信绑定；模型只产新段落正文；未保存稿先自动保存；采纳只替换目标段；冲突不得静默覆盖，也不得让失效锚点污染后续普通对话。",
+      "classification": "既有 guard 与既有 fired 证据；本次仅遥测，不推定具体产品根因",
+      "lastFiredAt": "2026-10-08T13:45:28.128Z",
+      "checkSha256": "0b1acc57d31e69b74b1daa77d42e5ed20c958b714861a1f43d2f50962a84522e",
+      "sameCheckSourceNames": [
+        "main",
+        "client",
+        "resource",
+        "device",
+        "pipeline",
+        "preResource"
+      ],
+      "priorFiredEvidence": [
+        {
+          "source": "main",
+          "sourceLed": "LED-014",
+          "fireCount": 10,
+          "lastFiredAt": "2026-09-23T10:31:51.831Z"
+        },
+        {
+          "source": "client",
+          "sourceLed": "LED-014",
+          "fireCount": 201,
+          "lastFiredAt": "2026-10-08T05:09:12.319Z"
+        },
+        {
+          "source": "resource",
+          "sourceLed": "LED-014",
+          "fireCount": 226,
+          "lastFiredAt": "2026-10-08T09:02:01.559Z"
+        },
+        {
+          "source": "device",
+          "sourceLed": "LED-014",
+          "fireCount": 197,
+          "lastFiredAt": "2026-10-06T08:05:47.695Z"
+        },
+        {
+          "source": "pipeline",
+          "sourceLed": "LED-014",
+          "fireCount": 4,
+          "lastFiredAt": "2026-10-06T09:48:55.755Z"
+        },
+        {
+          "source": "preResource",
+          "sourceLed": "LED-014",
+          "fireCount": 202,
+          "lastFiredAt": "2026-10-08T11:43:38.850Z"
+        }
+      ]
+    },
+    {
+      "kind": "lesson-telemetry",
+      "message": "lesson LED-017 RECURRED — 逐字保真门回归：必须从本轮受信 sourceRef 恢复精确原文、校验长度和 SHA-256，并由确定性 runner 生成待采纳候选；恢复失败不得退回 extraBrief 摘要或模型生成。",
+      "classification": "既有 guard 与既有 fired 证据；本次仅遥测，不推定具体产品根因",
+      "lastFiredAt": "2026-10-08T13:45:28.128Z",
+      "checkSha256": "ec25d362586db22dda62f57dcdf06031bee9f6e2285bbaa4689ae31ad6686af2",
+      "sameCheckSourceNames": [
+        "main",
+        "client",
+        "resource",
+        "device",
+        "pipeline",
+        "preResource"
+      ],
+      "priorFiredEvidence": [
+        {
+          "source": "main",
+          "sourceLed": "LED-017",
+          "fireCount": 10,
+          "lastFiredAt": "2026-09-23T10:31:51.831Z"
+        },
+        {
+          "source": "client",
+          "sourceLed": "LED-017",
+          "fireCount": 201,
+          "lastFiredAt": "2026-10-08T05:09:12.319Z"
+        },
+        {
+          "source": "resource",
+          "sourceLed": "LED-017",
+          "fireCount": 226,
+          "lastFiredAt": "2026-10-08T09:02:01.559Z"
+        },
+        {
+          "source": "device",
+          "sourceLed": "LED-017",
+          "fireCount": 197,
+          "lastFiredAt": "2026-10-06T08:05:47.695Z"
+        },
+        {
+          "source": "pipeline",
+          "sourceLed": "LED-017",
+          "fireCount": 4,
+          "lastFiredAt": "2026-10-06T09:48:55.755Z"
+        },
+        {
+          "source": "preResource",
+          "sourceLed": "LED-017",
+          "fireCount": 202,
+          "lastFiredAt": "2026-10-08T11:43:38.850Z"
+        }
+      ]
+    },
+    {
+      "kind": "lesson-telemetry",
+      "message": "lesson LED-018 RECURRED — 桌面浏览器交付门回归：壳层注入目录必须覆盖宿主机残留环境；入口先系统 Chrome、再随包 Chromium；正式桌面态不得依赖 CLI/npm/联网下载；安装校验必须看到真实 chrome.exe。",
+      "classification": "既有 guard 与既有 fired 证据；本次仅遥测，不推定具体产品根因",
+      "lastFiredAt": "2026-10-08T13:45:28.128Z",
+      "checkSha256": "ecc9826a6d3fa9921418d91a6ad87edaab6044094f494614fd53e4ef2ebf60f6",
+      "sameCheckSourceNames": [
+        "main",
+        "client",
+        "resource",
+        "device",
+        "pipeline",
+        "preResource"
+      ],
+      "priorFiredEvidence": [
+        {
+          "source": "main",
+          "sourceLed": "LED-018",
+          "fireCount": 24,
+          "lastFiredAt": "2026-09-20T18:36:26.895Z"
+        },
+        {
+          "source": "client",
+          "sourceLed": "LED-018",
+          "fireCount": 215,
+          "lastFiredAt": "2026-10-08T05:09:12.319Z"
+        },
+        {
+          "source": "resource",
+          "sourceLed": "LED-018",
+          "fireCount": 240,
+          "lastFiredAt": "2026-10-08T09:02:01.559Z"
+        },
+        {
+          "source": "device",
+          "sourceLed": "LED-018",
+          "fireCount": 211,
+          "lastFiredAt": "2026-10-06T08:05:47.695Z"
+        },
+        {
+          "source": "pipeline",
+          "sourceLed": "LED-018",
+          "fireCount": 18,
+          "lastFiredAt": "2026-10-06T09:48:55.755Z"
+        },
+        {
+          "source": "preResource",
+          "sourceLed": "LED-018",
+          "fireCount": 216,
+          "lastFiredAt": "2026-10-08T11:43:38.850Z"
+        }
+      ]
+    },
+    {
+      "kind": "lesson-telemetry",
+      "message": "lesson LED-020 RECURRED — 封面工具链回归：生成封面入口必须绑定 cover.generate；发布参考候选只含真实已发布且有封面的作品；模型按相关性优先、时间次序选择后必须传真实 coverAssetId；组合回合禁止 local.tools 且不得静默纯文降级。",
+      "classification": "既有 guard 与既有 fired 证据；本次仅遥测，不推定具体产品根因",
+      "lastFiredAt": "2026-10-08T13:45:28.128Z",
+      "checkSha256": "ef4405e4365fc0f06c3faa9d3629b3cc5ae35be80b0d3b6cdc98da801fa08a78",
+      "sameCheckSourceNames": [
+        "main",
+        "client",
+        "resource",
+        "device",
+        "pipeline",
+        "preResource"
+      ],
+      "priorFiredEvidence": [
+        {
+          "source": "main",
+          "sourceLed": "LED-020",
+          "fireCount": 9,
+          "lastFiredAt": "2026-09-23T10:31:51.831Z"
+        },
+        {
+          "source": "client",
+          "sourceLed": "LED-020",
+          "fireCount": 200,
+          "lastFiredAt": "2026-10-08T05:09:12.319Z"
+        },
+        {
+          "source": "resource",
+          "sourceLed": "LED-020",
+          "fireCount": 225,
+          "lastFiredAt": "2026-10-08T09:02:01.559Z"
+        },
+        {
+          "source": "device",
+          "sourceLed": "LED-020",
+          "fireCount": 196,
+          "lastFiredAt": "2026-10-06T08:05:47.695Z"
+        },
+        {
+          "source": "pipeline",
+          "sourceLed": "LED-020",
+          "fireCount": 3,
+          "lastFiredAt": "2026-10-06T09:48:55.755Z"
+        },
+        {
+          "source": "preResource",
+          "sourceLed": "LED-020",
+          "fireCount": 201,
+          "lastFiredAt": "2026-10-08T11:43:38.850Z"
+        }
+      ]
+    },
+    {
+      "kind": "lesson-telemetry",
+      "message": "lesson LED-022 RECURRED — 跨平台文件定位门回归：win32/darwin/linux 必须各有 command/API、shell-free argv/path、completion 和中性 user copy；route 必须消费 plan + launcher，禁止直接执行单平台命令。",
+      "classification": "既有 guard 与既有 fired 证据；本次仅遥测，不推定具体产品根因",
+      "lastFiredAt": "2026-10-08T13:45:28.128Z",
+      "checkSha256": "814843f39f6380a3ace05b1c40cfe7274bb5df9f0bfd7250ae79cc7d1325030a",
+      "sameCheckSourceNames": [
+        "main",
+        "client",
+        "resource",
+        "device",
+        "pipeline",
+        "preResource"
+      ],
+      "priorFiredEvidence": [
+        {
+          "source": "client",
+          "sourceLed": "LED-022",
+          "fireCount": 12,
+          "lastFiredAt": "2026-10-08T05:09:12.319Z"
+        },
+        {
+          "source": "resource",
+          "sourceLed": "LED-022",
+          "fireCount": 1,
+          "lastFiredAt": "2026-10-02T12:13:28.249Z"
+        },
+        {
+          "source": "device",
+          "sourceLed": "LED-022",
+          "fireCount": 1,
+          "lastFiredAt": "2026-10-02T12:13:28.249Z"
+        },
+        {
+          "source": "preResource",
+          "sourceLed": "LED-022",
+          "fireCount": 13,
+          "lastFiredAt": "2026-10-08T11:43:38.850Z"
+        }
+      ]
+    },
+    {
+      "kind": "lesson-telemetry",
+      "message": "lesson LED-032 RECURRED — 竖屏编导落地门回归：人物 beat 保持全画布，card/B-roll 辅助窗保持固定左下人脸常驻；direction 的 B-roll ref 必须随沙箱物化文件同步改名；字幕强调只执行 AI 给出的 Unicode 范围与时间窗，禁止代码猜重点。",
+      "classification": "既有 guard 与既有 fired 证据；本次仅遥测，不推定具体产品根因",
+      "lastFiredAt": "2026-10-08T13:45:28.128Z",
+      "checkSha256": "ec886f83233f99b82144c0929fc46ce2e08b4d87845d2bc34a95c30621532397",
+      "sameCheckSourceNames": [
+        "main",
+        "client",
+        "resource",
+        "device",
+        "pipeline",
+        "preResource"
+      ],
+      "priorFiredEvidence": [
+        {
+          "source": "main",
+          "sourceLed": "LED-032",
+          "fireCount": 4,
+          "lastFiredAt": "2026-09-20T17:26:45.642Z"
+        },
+        {
+          "source": "client",
+          "sourceLed": "LED-032",
+          "fireCount": 85,
+          "lastFiredAt": "2026-10-08T05:09:12.319Z"
+        },
+        {
+          "source": "resource",
+          "sourceLed": "LED-032",
+          "fireCount": 78,
+          "lastFiredAt": "2026-10-04T11:23:49.599Z"
+        },
+        {
+          "source": "device",
+          "sourceLed": "LED-032",
+          "fireCount": 78,
+          "lastFiredAt": "2026-10-04T11:23:49.599Z"
+        },
+        {
+          "source": "pipeline",
+          "sourceLed": "LED-032",
+          "fireCount": 3,
+          "lastFiredAt": "2026-10-06T09:48:55.755Z"
+        },
+        {
+          "source": "preResource",
+          "sourceLed": "LED-032",
+          "fireCount": 86,
+          "lastFiredAt": "2026-10-08T11:43:38.850Z"
+        }
+      ]
+    },
+    {
+      "kind": "lesson-telemetry",
+      "message": "lesson LED-040 RECURRED — B-roll 删除版本门回归：删除必须先写新 editing-plan revision 并清 decisions/render props/inventory/direction；runner 失败回退只保留当前 inventory；旧 sourceRenderTaskId 解绑，晚到旧任务不得覆盖当前成片。",
+      "classification": "既有 guard 与既有 fired 证据；本次仅遥测，不推定具体产品根因",
+      "lastFiredAt": "2026-10-08T13:45:28.128Z",
+      "checkSha256": "d0cda79d2e64471803c8d1de75cc3f0e3d1654be291672390aba89c02f93f817",
+      "sameCheckSourceNames": [
+        "main",
+        "client",
+        "resource",
+        "device",
+        "pipeline",
+        "preResource"
+      ],
+      "priorFiredEvidence": [
+        {
+          "source": "client",
+          "sourceLed": "LED-040",
+          "fireCount": 22,
+          "lastFiredAt": "2026-10-08T05:09:12.319Z"
+        },
+        {
+          "source": "resource",
+          "sourceLed": "LED-040",
+          "fireCount": 47,
+          "lastFiredAt": "2026-10-08T09:02:01.559Z"
+        },
+        {
+          "source": "device",
+          "sourceLed": "LED-040",
+          "fireCount": 18,
+          "lastFiredAt": "2026-10-06T08:05:47.695Z"
+        },
+        {
+          "source": "preResource",
+          "sourceLed": "LED-040",
+          "fireCount": 23,
+          "lastFiredAt": "2026-10-08T11:43:38.850Z"
+        }
+      ]
+    },
+    {
+      "kind": "lesson-telemetry",
+      "message": "lesson LED-042 RECURRED — 分页真相门回归：可见总数必须消费同一服务端查询的 meta.total；items.length 只表示已显示；超过首批必须能继续加载并保持筛选、排序、账号上下文一致。",
+      "classification": "既有 guard 与既有 fired 证据；本次仅遥测，不推定具体产品根因",
+      "lastFiredAt": "2026-10-08T13:45:28.128Z",
+      "checkSha256": "965a8350bb02e2ac4fe42572bcf3e2431b3067fb86c9e61d979d97f67a75960d",
+      "sameCheckSourceNames": [
+        "main",
+        "client",
+        "resource",
+        "device",
+        "pipeline",
+        "preResource"
+      ],
+      "priorFiredEvidence": [
+        {
+          "source": "main",
+          "sourceLed": "LED-042",
+          "fireCount": 5,
+          "lastFiredAt": "2026-09-20T17:55:55.141Z"
+        },
+        {
+          "source": "client",
+          "sourceLed": "LED-042",
+          "fireCount": 114,
+          "lastFiredAt": "2026-10-04T11:23:49.599Z"
+        },
+        {
+          "source": "resource",
+          "sourceLed": "LED-042",
+          "fireCount": 114,
+          "lastFiredAt": "2026-10-04T11:23:49.599Z"
+        },
+        {
+          "source": "device",
+          "sourceLed": "LED-042",
+          "fireCount": 114,
+          "lastFiredAt": "2026-10-04T11:23:49.599Z"
+        },
+        {
+          "source": "pipeline",
+          "sourceLed": "LED-042",
+          "fireCount": 3,
+          "lastFiredAt": "2026-10-06T09:48:55.755Z"
+        },
+        {
+          "source": "preResource",
+          "sourceLed": "LED-042",
+          "fireCount": 115,
+          "lastFiredAt": "2026-10-08T11:43:38.850Z"
+        }
+      ]
+    },
+    {
+      "kind": "lesson-telemetry",
+      "message": "lesson LED-048 RECURRED — 保留原执行与成功进度，修复独立优先调度、按账号资源管理及各源计数；禁止总时长误杀、TTL抢锁、关闭开关后自动新建任务或盲目重试。",
+      "classification": "既有 guard 与既有 fired 证据；本次仅遥测，不推定具体产品根因",
+      "lastFiredAt": "2026-10-08T13:45:28.128Z",
+      "checkSha256": "5a914787e030556d448df62def2550730c2bb649226c63f468a681a372bc0e7d",
+      "sameCheckSourceNames": [
+        "main",
+        "client",
+        "resource",
+        "device",
+        "pipeline",
+        "preResource"
+      ],
+      "priorFiredEvidence": [
+        {
+          "source": "client",
+          "sourceLed": "LED-048",
+          "fireCount": 26,
+          "lastFiredAt": "2026-10-08T05:09:12.319Z"
+        },
+        {
+          "source": "resource",
+          "sourceLed": "LED-048",
+          "fireCount": 51,
+          "lastFiredAt": "2026-10-08T09:02:01.559Z"
+        },
+        {
+          "source": "device",
+          "sourceLed": "LED-048",
+          "fireCount": 22,
+          "lastFiredAt": "2026-10-06T08:05:47.695Z"
+        },
+        {
+          "source": "preResource",
+          "sourceLed": "LED-048",
+          "fireCount": 27,
+          "lastFiredAt": "2026-10-08T11:43:38.850Z"
+        }
+      ]
+    },
+    {
+      "kind": "lesson-telemetry",
+      "message": "lesson LED-049 RECURRED — 修复有界读取与同用户账号缓存失效，保留日历/运行真值及稀疏趋势口径；禁止删除历史或统一长TTL提速。",
+      "classification": "既有 guard 与既有 fired 证据；本次仅遥测，不推定具体产品根因",
+      "lastFiredAt": "2026-10-08T13:45:28.128Z",
+      "checkSha256": "4d5c2e544cf2b99d26f4f121284cb60fbfa2364055f021ca9f8e97197fdcb28d",
+      "sameCheckSourceNames": [
+        "main",
+        "client",
+        "resource",
+        "device",
+        "pipeline",
+        "preResource"
+      ],
+      "priorFiredEvidence": [
+        {
+          "source": "client",
+          "sourceLed": "LED-049",
+          "fireCount": 16,
+          "lastFiredAt": "2026-10-08T05:09:12.319Z"
+        },
+        {
+          "source": "resource",
+          "sourceLed": "LED-049",
+          "fireCount": 2,
+          "lastFiredAt": "2026-10-04T12:48:17.748Z"
+        },
+        {
+          "source": "device",
+          "sourceLed": "LED-049",
+          "fireCount": 2,
+          "lastFiredAt": "2026-10-04T12:48:17.748Z"
+        },
+        {
+          "source": "preResource",
+          "sourceLed": "LED-049",
+          "fireCount": 17,
+          "lastFiredAt": "2026-10-08T11:43:38.850Z"
+        }
+      ]
+    },
+    {
+      "kind": "lesson-telemetry",
+      "message": "lesson LED-050 RECURRED — 按真实过渡完成token合并同目标、先筛选再展开；保留不同导航与失败重试，不缓存整页动态待办。",
+      "classification": "既有 guard 与既有 fired 证据；本次仅遥测，不推定具体产品根因",
+      "lastFiredAt": "2026-10-08T13:45:28.128Z",
+      "checkSha256": "e5e1bad03c265eacc48ba1b6c953ffece1dbd8ab557d8fb05518ea396a06da0b",
+      "sameCheckSourceNames": [
+        "main",
+        "client",
+        "resource",
+        "device",
+        "pipeline",
+        "preResource"
+      ],
+      "priorFiredEvidence": [
+        {
+          "source": "client",
+          "sourceLed": "LED-050",
+          "fireCount": 24,
+          "lastFiredAt": "2026-10-08T05:09:12.319Z"
+        },
+        {
+          "source": "resource",
+          "sourceLed": "LED-050",
+          "fireCount": 49,
+          "lastFiredAt": "2026-10-08T09:02:01.559Z"
+        },
+        {
+          "source": "device",
+          "sourceLed": "LED-050",
+          "fireCount": 20,
+          "lastFiredAt": "2026-10-06T08:05:47.695Z"
+        },
+        {
+          "source": "preResource",
+          "sourceLed": "LED-050",
+          "fireCount": 25,
+          "lastFiredAt": "2026-10-08T11:43:38.850Z"
+        }
+      ]
+    },
+    {
+      "kind": "lesson-telemetry",
+      "message": "lesson LED-058 RECURRED — 恢复模型候选的 superseded→retry_wait→同任务重试链；保留预算、检查点和原对话。只有无模型配置进入设置引导；用户取消与外部副作用 unknown 继续禁止自动重放。",
+      "classification": "既有 guard 与既有 fired 证据；本次仅遥测，不推定具体产品根因",
+      "lastFiredAt": "2026-10-08T13:45:28.128Z",
+      "checkSha256": "e1a233d373dc79eabb84c4700ff2db5e6ea96619b7c20b6760b7cf1a07d0fbbb",
+      "sameCheckSourceNames": [
+        "preResource"
+      ],
+      "priorFiredEvidence": [
+        {
+          "source": "preResource",
+          "sourceLed": "LED-058",
+          "fireCount": 1,
+          "lastFiredAt": "2026-10-08T11:43:38.850Z"
+        }
+      ]
+    },
+    {
+      "kind": "lesson-telemetry",
+      "message": "lesson LED-059 RECURRED — 恢复真实内置工具装配回归与有限恢复预算：已支持约束必须实际校验，未知约束 fail-closed；没有持久任务时连续三次无进展即停止自动请求并保留同轮继续入口。",
+      "classification": "既有 guard 与既有 fired 证据；本次仅遥测，不推定具体产品根因",
+      "lastFiredAt": "2026-10-08T13:45:28.128Z",
+      "checkSha256": "5644c4362b046451fd75832f86ea17de1664b96b7b412b8ca202f98dde8e4690",
+      "sameCheckSourceNames": [
+        "preResource"
+      ],
+      "priorFiredEvidence": [
+        {
+          "source": "preResource",
+          "sourceLed": "LED-059",
+          "fireCount": 1,
+          "lastFiredAt": "2026-10-08T11:43:38.850Z"
+        }
+      ]
+    },
+    {
+      "kind": "lesson-telemetry",
+      "message": "lesson LED-054 RECURRED — 恢复短事务读取可信身份→事务外 I/O→短事务复核租约；对象存储回读必须在租约事务外完成；外部副作用按原键对账后自动续跑同一任务。",
+      "classification": "既有 guard 与既有 fired 证据；本次仅遥测，不推定具体产品根因",
+      "lastFiredAt": "2026-10-08T13:45:28.128Z",
+      "checkSha256": "84a551041e91b03d2443200d2c09ad0ead236f5abbe717adba15a1204f9ebbe8",
+      "sameCheckSourceNames": [
+        "main",
+        "preResource"
+      ],
+      "priorFiredEvidence": [
+        {
+          "source": "main",
+          "sourceLed": "LED-054",
+          "fireCount": 3,
+          "lastFiredAt": "2026-09-23T08:42:20.236Z"
+        },
+        {
+          "source": "preResource",
+          "sourceLed": "LED-054",
+          "fireCount": 4,
+          "lastFiredAt": "2026-10-08T11:43:38.850Z"
+        }
+      ]
+    },
+    {
+      "kind": "lesson-telemetry",
+      "message": "lesson LED-056 RECURRED — 必须经正式selector、公开capabilities、prepareChatReply冻结与真实工具端口验收；精确声明各工具当前版本，保留旧任务冻结定义，不用直接注入host目录代替生产装配。",
+      "classification": "既有 guard 与既有 fired 证据；本次仅遥测，不推定具体产品根因",
+      "lastFiredAt": "2026-10-08T13:45:28.128Z",
+      "checkSha256": "60f1137decc91fdbb71e499b7206075ac29f59351adea82f93e0c0889d49ead6",
+      "sameCheckSourceNames": [
+        "main",
+        "preResource"
+      ],
+      "priorFiredEvidence": [
+        {
+          "source": "preResource",
+          "sourceLed": "LED-056",
+          "fireCount": 1,
+          "lastFiredAt": "2026-10-08T11:43:38.850Z"
+        }
+      ]
+    },
+    {
+      "kind": "lesson-telemetry",
+      "message": "lesson LED-053 RECURRED — 超时预算回归：正执行最低两分钟；独立外层覆盖完整内部预算；原绝对期限/continuous/即时取消保持；前端保留原任务ID；HyperFrames同版本补丁与实际CLI配置必须一致。公共链回归失败不能用词法扫描替代。",
+      "classification": "来源既有两分钟 guard 本次新 fired；旧 main/client 短预算根因已登记 T1081，不判该任务已修",
+      "lastFiredAt": "2026-10-08T13:45:28.128Z",
+      "checkSha256": "753546cc37b53aa74b48c899e81eb2f727ec6a217834aefc5e0ec7ba12b7f2a3",
+      "sameCheckSourceNames": [
+        "resource",
+        "device"
+      ],
+      "priorFiredEvidence": []
+    },
+    {
+      "kind": "lesson-telemetry",
+      "message": "lesson LED-060 RECURRED — 核对同一次完整响应的结束事实、无损映射与真实usage，补共享validator并验证实际后端回放/工件；保留真实断流未知和原任务，不重复付费调用。",
+      "classification": "来源新增 guard（原 LED-054/055 别名）本次首次 fired；其他独立 agent 正复核，不判旧债或 GREEN",
+      "lastFiredAt": "2026-10-08T13:45:28.128Z",
+      "checkSha256": "4a422f95d824ff39cb919e135c39093ba120230f65c9ed118eee561bfdbcd8a2",
+      "sameCheckSourceNames": [
+        "resource",
+        "device"
+      ],
+      "priorFiredEvidence": []
+    },
+    {
+      "kind": "lesson-telemetry",
+      "message": "lesson LED-061 RECURRED — 资源生命周期回归：修复实际消费者的释放、背压、单在途和停止屏障；保留原任务/attempt/fence/deadline、审批、完整历史与合法大输出。等待状态按真实任务ID保护；取消接受仅释放原turn本地关联，最终终态由原租约确认。禁止删历史、重发任务或伪造释放/成功。",
+      "classification": "来源新增 guard（原 LED-054/055 别名）本次首次 fired；其他独立 agent 正复核，不判旧债或 GREEN",
+      "lastFiredAt": "2026-10-08T13:45:28.128Z",
+      "checkSha256": "a005635e4a54e0a6c6b68d78d820a86b93a1b373749395d5ccabb06c544331a5",
+      "sameCheckSourceNames": [
+        "resource"
+      ],
+      "priorFiredEvidence": []
+    }
+  ],
+  "warning": {
+    "count": 1,
+    "classification": "原 --concise 隐藏警告全文；本次 metadata API 无 warning。未执行子 guard，不伪造具体 warning 归因。"
+  },
+  "comparisonWithUpgrade63": {
+    "originalLog": "/Users/zyongzhu/CreatorOS-local-acceptance/worktree-main-integration-20261008/engine-adopt-update-3.29.log",
+    "actualTotalErrors": 63,
+    "actualWarnings": 0,
+    "visibleHistoricalErrors": [
+      "BACKLOG RUNAWAY",
+      "T-1021: review receipt 已过期：SPEC hash 1ca8392b4d5e != 242b25c4f83f",
+      "T-915: BACKLOG review receipt 692283b8bace 与 snapshot ad76cf555129 不一致",
+      "T-859: BACKLOG review receipt 9895a91a63a8 与 snapshot 5818394813ca 不一致",
+      "T-858: BACKLOG review receipt 2521be715a0a 与 snapshot c76009a5586c 不一致"
+    ],
+    "current18OldReviewByteExactErrorListMatch": true,
+    "proof": "当前 API 对原 main-conflict-packet/BACKLOG.md.client 以及资源合并前 BACKLOG.md.current 的交叉审计均输出相同18条；这不是当时完整 reconcile 的历史重放。",
+    "limits": "旧63日志只保留前5错误；不能补拍或声称已知另外58条完整历史错误。不得把44下降为63自动当作19项修复。"
+  },
+  "sourceReceiptFacts": [
+    {
+      "currentTask": "T-1073",
+      "sourceTask": "T-1073",
+      "sourceName": "resource",
+      "sourceCommit": "6b1322af71cbdf55f52e9f37c5cde76e06b56e48",
+      "sourceRow": "| T-1073 | 修复全面排查确认的8处资源浪费与内存泄漏 | ✅ 待办 | PASS[REV:3b0b0c1dc9ce] | — | [SPEC](docs/features/t1073-resource-memory-fixes.md) | 8处源码修复已本地整合提交，生命周期301/301及独立复核通过，原任务/幂等/跨页回复和合法输出保留；最终reconcile仍34个既有错误/1告警、逐行无新增，根因T916/T1015/T1018保留；正式安装版与像素未验，不安装/推送/发布。详[修复报告](docs/verification/t1073/REPORT.md)。 |",
+      "currentRow": "| T-1073 | 修复全面排查确认的8处资源浪费与内存泄漏 | ✅ 待办 | PASS[REV:3b0b0c1dc9ce] | — | [SPEC](docs/features/t1073-resource-memory-fixes.md) [详情](BACKLOG-details.md#t-1073) | 见详情。 |",
+      "sourceEventExists": true,
+      "currentExactTaskEventExists": false,
+      "sourceEventHash": "658a1b8ab6f2d0af86e257097787c410085fd49511543004ed66a4be89a867f3",
+      "sourceEventsFileSha256": "7785cb8b089d8e65a94d2ddd9c7e98aab66de6bb8a8cec7b133ccdce48873526",
+      "classification": "整合新增收据归属缺口；来源历史证据保留不等于当前任务可校验收据",
+      "sourceReviewPath": "docs/features/t1073-resource-memory-fixes.review.md",
+      "sourceReviewSha256": "56604d3c26277bf1c4dd8cdf927b421b517766271f9593f645f7cc0564c5c539",
+      "sourceSpecSha256": "28714bb4aa2250952b2d709343e5bf9f4bc17683c0ba48cbb668509281f39af3",
+      "currentSpecSha256": "28714bb4aa2250952b2d709343e5bf9f4bc17683c0ba48cbb668509281f39af3"
+    },
+    {
+      "currentTask": "T-1072-owned-devices",
+      "sourceTask": "T-1072",
+      "sourceName": "device",
+      "sourceCommit": "40a5eaf480c1347a9eadf4bf86a36971ce547874",
+      "sourceRow": "| T-1072 | 配合 Growth 轻量手机号账号与正式双设备，补齐新电脑连接与已激活账号入口 | 🔨 待办 | PASS[REV:eb8de221287b] | 待验 | [SPEC](docs/features/t1072-owned-devices.md) | 用户已采纳并授权与Growth T-188一起实施；仅隔离本地改造，原码首台不变，第二电脑本人确认后登记同一授权，不重复期限或额度；保留本机素材与项目，正式包双电脑验收与生产操作尚未授权。 |",
+      "currentRow": "| T-1072-owned-devices | 配合 Growth 轻量手机号账号与正式双设备，补齐新电脑连接与已激活账号入口 | 🔨 待办 | PASS[REV:eb8de221287b] | 待验 | [SPEC](docs/features/t1072-owned-devices.md) | 原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-aed1560bebc24ab1)。 |",
+      "sourceEventExists": true,
+      "currentExactTaskEventExists": false,
+      "sourceEventHash": "0b5902901a901ff1e780f6e30ebd46d4ea7e0227b11a1e774bb11b08cf5c1a77",
+      "sourceEventsFileSha256": "58588cd14317e96a6f5cf141b17d3687087e3f40e2d5a84067647c6676fc7d77",
+      "classification": "整合新增收据归属缺口；来源历史证据保留不等于当前任务可校验收据",
+      "sourceReviewPath": "docs/features/t1072-owned-devices.review.md",
+      "sourceReviewSha256": "7e240ac09c6b9846c89f956ca73ff05c6c58dded3e9ebf19bc91b87766c4381c",
+      "sourceSpecSha256": "cec17b34e426622aa6a32aef24d219a109f364ff9ed7cddc84f3795e3bca0aff",
+      "currentSpecSha256": "cec17b34e426622aa6a32aef24d219a109f364ff9ed7cddc84f3795e3bca0aff"
+    },
+    {
+      "currentTask": "T-1069-completion-json",
+      "sourceTask": "T-1069",
+      "sourceName": "resource",
+      "sourceCommit": "6b1322af71cbdf55f52e9f37c5cde76e06b56e48",
+      "sourceRow": "| T-1069 | 修复雷达文本模型完整非流式JSON回执被流式解析误判未知 | ✅ 待办 | PASS[REV:020bbb5c97fa] | — | [SPEC](docs/features/t1069-completion-json-compat.md) | 用户2026-10-07授权根治T-1068复现缺陷；同一请求完整JSON兼容，保留断流未知与幂等，不重发原任务、不改安装版。 |",
+      "currentRow": "| T-1069-completion-json | 修复雷达文本模型完整非流式JSON回执被流式解析误判未知 | ✅ 待办 | PASS[REV:020bbb5c97fa] | — | [SPEC](docs/features/t1069-completion-json-compat.md) | 原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-32643c4cf546ed76)。 |",
+      "sourceEventExists": true,
+      "currentExactTaskEventExists": false,
+      "sourceEventHash": "76e903c3eb2ac165debae413a8d181a7e35a6cf2605470e5538c651c51fd90a7",
+      "sourceEventsFileSha256": "7785cb8b089d8e65a94d2ddd9c7e98aab66de6bb8a8cec7b133ccdce48873526",
+      "classification": "整合新增收据归属缺口；来源历史证据保留不等于当前任务可校验收据",
+      "sourceReviewPath": "docs/features/t1069-completion-json-compat.review.md",
+      "sourceReviewSha256": "15b3bd7a8599fc948282e85d8e387f81e9e16306288458327a8f33ff23bf951b",
+      "sourceSpecSha256": "b248b250c35538fab662e08b32a3b9bb262e0c8cb6903da73934c200ea66c64e",
+      "currentSpecSha256": "b248b250c35538fab662e08b32a3b9bb262e0c8cb6903da73934c200ea66c64e"
+    },
+    {
+      "currentTask": "T-1070-transcript-reliability",
+      "sourceTask": "T-1070",
+      "sourceName": "resource",
+      "sourceCommit": "6b1322af71cbdf55f52e9f37c5cde76e06b56e48",
+      "sourceRow": "| T-1070 | 修复通用转录整理文本兼容模式缺少schema校验器与保存阻断 | ✅ 待办 | PASS[REV:5b690995d15b] | — | [SPEC](docs/features/t1070-transcript-postprocess-reliability.md) | 用户2026-10-07授权同轮修复；共享validator与实际后端保存回归，确认的原文安全降级，未知账本不伪造成功。 |",
+      "currentRow": "| T-1070-transcript-reliability | 修复通用转录整理文本兼容模式缺少schema校验器与保存阻断 | ✅ 待办 | PASS[REV:5b690995d15b] | — | [SPEC](docs/features/t1070-transcript-postprocess-reliability.md) | 原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-e05ce3185fe7853c)。 |",
+      "sourceEventExists": true,
+      "currentExactTaskEventExists": false,
+      "sourceEventHash": "6de7f8a10a0067af0f327fa1b2e2d418000851f2cd63f7bd0900203b69669687",
+      "sourceEventsFileSha256": "7785cb8b089d8e65a94d2ddd9c7e98aab66de6bb8a8cec7b133ccdce48873526",
+      "classification": "整合新增收据归属缺口；来源历史证据保留不等于当前任务可校验收据",
+      "sourceReviewPath": "docs/features/t1070-transcript-postprocess-reliability.review.md",
+      "sourceReviewSha256": "3af531cec72964e36daeb3d7043a59cc0f2f2b5ac4adb250114afd1333c7ce16",
+      "sourceSpecSha256": "9102e7f28c0c7001064bae15daebaf55a9f1b145acaf11ef6294ab82e48da13f",
+      "currentSpecSha256": "9102e7f28c0c7001064bae15daebaf55a9f1b145acaf11ef6294ab82e48da13f"
+    },
+    {
+      "currentTask": "T-1063-release-pipeline",
+      "sourceTask": "T-1063",
+      "sourceName": "pipeline",
+      "sourceCommit": "6636e4faf506dcdd417004354637feb7801ee020",
+      "sourceRow": "| T-1063 | 取消双端出包人为超时与阻断检查并重跑 Windows 流水线 | ✅ 待办 | PASS[REV:245946205971] | — | [SPEC](docs/features/t1063-release-pipeline.md) | 用户2026-10-06独立委派；先核对“1.12版本”真实失败运行；仅修改流水线和必要打包脚本，生成制品与额外验证分离；重跑Windows并核实安装包，不新增版本/tag/Release，不触碰T-1062与真实用户数据。 |",
+      "currentRow": "| T-1063-release-pipeline | 取消双端出包人为超时与阻断检查并重跑 Windows 流水线 | ✅ 待办 | PASS[REV:245946205971] | — | [SPEC](docs/features/t1063-release-pipeline.md) | 原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-b6ea894360489899)。 |",
+      "sourceEventExists": true,
+      "currentExactTaskEventExists": false,
+      "sourceEventHash": "b6f68b061a15927f9274b831b70db94d34af58338b4d6b117f80e4fbb2f405c3",
+      "sourceEventsFileSha256": "92df6859e8ca211e47121f9b92c627f30db670df1fbb98f073a6cabcc770e872",
+      "classification": "整合新增收据归属缺口；来源历史证据保留不等于当前任务可校验收据",
+      "sourceReviewPath": "docs/features/t1063-release-pipeline.review.md",
+      "sourceReviewSha256": "59265335a76c44f5b4a5d2a25278a63a62c6b08f258c8894369b75317df75132",
+      "sourceSpecSha256": "bb48270e4c18c5f0886e078c1b42ea2bc0e606281705df00839bf605e5cff54d",
+      "currentSpecSha256": "bb48270e4c18c5f0886e078c1b42ea2bc0e606281705df00839bf605e5cff54d"
+    }
+  ],
+  "frontendReceiptFacts": [
+    {
+      "currentTask": "T-1023-agent-recovery",
+      "sourceTask": "T-1023",
+      "sourceCommit": "12288cefdd43544478ea8f67a648798f43e813df",
+      "sourceCompletionExists": true,
+      "sourceLatestReportSha": "87c802e61bbe",
+      "sourceLatestCommit": null,
+      "currentExactTaskCompletionExists": false,
+      "sourceEventsSha256": "64bc04054b8623081c723091b305c0985666c25aefbb943ebcdf218bf5efebff",
+      "classification": "首个 main 合并已出现的 alias completion 归属缺口；不是初始 client 升级旧18 receipt 错误"
+    },
+    {
+      "currentTask": "T-1022-agent-recovery",
+      "sourceTask": "T-1022",
+      "sourceCommit": "12288cefdd43544478ea8f67a648798f43e813df",
+      "sourceCompletionExists": true,
+      "sourceLatestReportSha": "06eb90bb86b5",
+      "sourceLatestCommit": null,
+      "currentExactTaskCompletionExists": false,
+      "sourceEventsSha256": "64bc04054b8623081c723091b305c0985666c25aefbb943ebcdf218bf5efebff",
+      "classification": "首个 main 合并已出现的 alias completion 归属缺口；不是初始 client 升级旧18 receipt 错误"
+    }
+  ],
+  "originalChainArchives": [
+    {
+      "path": "docs/verification/t1080/main-original-review-events.ndjson",
+      "sourceCommit": "12288cefdd43544478ea8f67a648798f43e813df",
+      "archiveSha256": "c255b19197425fb9b04ac048e3c831b513c435401ccc01e72a63cea259c72608",
+      "sourceSha256": "c255b19197425fb9b04ac048e3c831b513c435401ccc01e72a63cea259c72608",
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1080/resource-original-review-events.ndjson",
+      "sourceCommit": "6b1322af71cbdf55f52e9f37c5cde76e06b56e48",
+      "archiveSha256": "7785cb8b089d8e65a94d2ddd9c7e98aab66de6bb8a8cec7b133ccdce48873526",
+      "sourceSha256": "7785cb8b089d8e65a94d2ddd9c7e98aab66de6bb8a8cec7b133ccdce48873526",
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1080/device-original-review-events.ndjson",
+      "sourceCommit": "40a5eaf480c1347a9eadf4bf86a36971ce547874",
+      "archiveSha256": "58588cd14317e96a6f5cf141b17d3687087e3f40e2d5a84067647c6676fc7d77",
+      "sourceSha256": "58588cd14317e96a6f5cf141b17d3687087e3f40e2d5a84067647c6676fc7d77",
+      "byteEqual": true
+    },
+    {
+      "path": "docs/verification/t1080/pipeline-original-review-events.ndjson",
+      "sourceCommit": "6636e4faf506dcdd417004354637feb7801ee020",
+      "archiveSha256": "92df6859e8ca211e47121f9b92c627f30db670df1fbb98f073a6cabcc770e872",
+      "sourceSha256": "92df6859e8ca211e47121f9b92c627f30db670df1fbb98f073a6cabcc770e872",
+      "byteEqual": true
+    }
+  ],
+  "taskClosureAssessment": {
+    "verifiedScopePreservation": "main/source 历史与27清理/build成果可独立报告；本审计不重复或代签这些已记录真实构建/包核验。",
+    "globalGreen": false,
+    "unconditionalT1080CompleteSupported": false,
+    "reason": "新增7条当前收据归属缺口不是初始18旧债，来源整合后的 task alias/当前 event 归属未闭合；不能在完成 evidence 中把全部44写为既有全局失败。",
+    "boundedCompletionRule": "若根会话证明/登记这些新增控制失败属于范围外且本轮 SPEC Gate 已通过，才可按既定 AGENTS 规则限定完成并明确保留完整44error1warning；若属于T1080控制来源保留验收，应先修闭包或 taskctl block。T1081 只覆盖短预算，不能替代新增7条来源收据根因记录。",
+    "prohibitedClaims": [
+      "不代签源任务原 PASS 当前仍有效。",
+      "不以归档原链当当前可校验 event。",
+      "不重hash原链或改原日志来清错。",
+      "不据 telemetry 断言全部 lesson 具体失败根因或产品已坏/已绿。"
+    ]
+  },
+  "evidence": [
+    {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/worktree-main-integration-20261008/post-package-reconcile.log",
+      "sha256": "2a7a3cc04346288925236158b1822b13c3426187bfef15cddcdd2e46116ed87c"
+    },
+    {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/worktree-main-integration-20261008/post-package-reconcile.result.json",
+      "sha256": "5a901412d6d6027e48344d73438b6ac037aaf2460681319870440fcb8801baae"
+    },
+    {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/worktree-main-integration-20261008/engine-adopt-update-3.29.log",
+      "sha256": "699858ca0819e915c730ecd3afd68f9e491000fd98cc263905ace297f3cffa2b"
+    },
+    {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/worktree-main-integration-20261008/post-package-metadata-audit-raw.json",
+      "sha256": "c87bcb25c2b8fbe061e14b2c52bfe55bc076426fc296bb3145a0ea88b2d6284d"
+    },
+    {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/worktree-main-integration-20261008/post-package-original-backlog-cross-audit.json",
+      "sha256": "88fb60d331f7d784fdec950c044f6c7c728e4def5c5b42e0288a5c28ed6a2863"
+    },
+    {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/worktree-main-integration-20261008/post-package-metadata-source-comparison.json",
+      "sha256": "fdf0c5dcfc30af109f98bb82da6fd2d7d81cccca19ec4089eff01353dd4a6105"
+    }
+  ],
+  "currentControlSha256": {
+    "BACKLOG.md": "aeb4e1ae50fedd19269bb6c9034eea01d9ed45b48029afa611a5d7760e63ae59",
+    "docs/features/t1080-local-main-worktree-consolidation.md": "30f5160bde7b25a47cc43536ab49ecdf5f5110ba98ca0d3879bc459be73fae83",
+    "orchestrator/process/reconcile.config.json": "a2c053a86a919f401ff6f73c74598cff9e5df37be9316e864897b8e3855800af",
+    "orchestrator/review-events.ndjson": "56fc48691a34b61649c3fee7d1065b1de36901d8d30667bc03226131eca17277",
+    "orchestrator/events.ndjson": "dd79ae0a762afa05fe092652144974cda9c2c7d60b665fc18111f8e260c3192f",
+    "orchestrator/.lessons-stats.json": "77eefaba89a9a84a3deb22c33c7e769f174d3172e12b985f1226b7d26d0c1947",
+    "orchestrator/ARTIFACT_MANIFEST.yaml": "b6d36f09002159fd0ca2bbbc936c8c98e9aa3f553b1ba272fd6de640d9f4e1d3"
+  },
+  "repoMutation": false,
+  "gitMutation": false,
+  "userDataAccess": false,
+  "fullReconcileExecuted": false,
+  "lessonTestsExecuted": false,
+  "productionTestsExecuted": false
+}

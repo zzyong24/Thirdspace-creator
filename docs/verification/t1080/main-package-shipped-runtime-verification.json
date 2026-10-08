@@ -1,0 +1,147 @@
+{
+  "sourceHead": "0480ebe17717bd426e083709fc22ccbdb9eb7840",
+  "realUserDataTouched": false,
+  "installedOrLaunchedApp": false,
+  "nativeEnvironmentSource": "frontend/src-tauri/src/lib.rs:2856-2857",
+  "earlierBareProbeFailurePreserved": true,
+  "steps": [
+    {
+      "name": "actual-shipped-node",
+      "argv": [
+        "/Users/zyongzhu/CreatorOS-local-acceptance/worktree-main-integration-20261008/shipped-runtime-probe/server.app/Contents/MacOS/creatoros-server",
+        "--version"
+      ],
+      "exitCode": 0,
+      "seconds": 15.409618139266968
+    },
+    {
+      "name": "actual-shipped-ffmpeg",
+      "argv": [
+        "/Users/zyongzhu/CreatorOS-local-acceptance/worktree-main-integration-20261008/shipped-runtime-probe/frontend/bin/ffmpeg",
+        "-version"
+      ],
+      "exitCode": 0,
+      "seconds": 1.286163091659546
+    },
+    {
+      "name": "actual-shipped-ffprobe",
+      "argv": [
+        "/Users/zyongzhu/CreatorOS-local-acceptance/worktree-main-integration-20261008/shipped-runtime-probe/frontend/bin/ffprobe",
+        "-version"
+      ],
+      "exitCode": 0,
+      "seconds": 0.7935950756072998
+    }
+  ],
+  "extractedMembers": [
+    {
+      "path": "./lib/libsimdjson.33.dylib",
+      "bytes": 112704
+    },
+    {
+      "path": "./lib/libbrotlidec.1.dylib",
+      "bytes": 87728
+    },
+    {
+      "path": "./lib/libbrotlicommon.1.dylib",
+      "bytes": 167264
+    },
+    {
+      "path": "./lib/libllhttp.9.3.dylib",
+      "bytes": 95008
+    },
+    {
+      "path": "./lib/libnbytes.dylib",
+      "bytes": 52944
+    },
+    {
+      "path": "./lib/libbrotlienc.1.dylib",
+      "bytes": 653328
+    },
+    {
+      "path": "./lib/libuv.1.dylib",
+      "bytes": 206320
+    },
+    {
+      "path": "./lib/libmerve.1.dylib",
+      "bytes": 95328
+    },
+    {
+      "path": "./lib/libssl.3.dylib",
+      "bytes": 884992
+    },
+    {
+      "path": "./lib/libnode.141.dylib",
+      "bytes": 65894560
+    },
+    {
+      "path": "./lib/libngtcp2.16.dylib",
+      "bytes": 366128
+    },
+    {
+      "path": "./lib/libcares.2.dylib",
+      "bytes": 243456
+    },
+    {
+      "path": "./lib/libcrypto.3.dylib",
+      "bytes": 4846032
+    },
+    {
+      "path": "./lib/libhdr_histogram.6.dylib",
+      "bytes": 75600
+    },
+    {
+      "path": "./lib/libada.3.dylib",
+      "bytes": 613248
+    },
+    {
+      "path": "./lib/libicudata.78.dylib",
+      "bytes": 33195120
+    },
+    {
+      "path": "./lib/libnghttp2.14.dylib",
+      "bytes": 201232
+    },
+    {
+      "path": "./lib/libsimdutf.34.dylib",
+      "bytes": 238768
+    },
+    {
+      "path": "./lib/libzstd.1.dylib",
+      "bytes": 649648
+    },
+    {
+      "path": "./lib/libicui18n.78.dylib",
+      "bytes": 3168272
+    },
+    {
+      "path": "./lib/libsqlite3.dylib",
+      "bytes": 1270496
+    },
+    {
+      "path": "./lib/libnghttp3.9.dylib",
+      "bytes": 200688
+    },
+    {
+      "path": "./lib/libicuuc.78.dylib",
+      "bytes": 1866592
+    },
+    {
+      "path": "./lib/libuvwasi.dylib",
+      "bytes": 83232
+    },
+    {
+      "path": "./server.app/Contents/MacOS/creatoros-server",
+      "bytes": 68416
+    },
+    {
+      "path": "./frontend/bin/ffmpeg",
+      "bytes": 45568216
+    },
+    {
+      "path": "./frontend/bin/ffprobe",
+      "bytes": 45528808
+    }
+  ],
+  "probeExtractionCleaned": true
+}

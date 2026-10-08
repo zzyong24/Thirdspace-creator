@@ -1,0 +1,11 @@
+{
+  "argv": [
+    "node",
+    "orchestrator/process/reconcile.mjs",
+    "--concise"
+  ],
+  "exitCode": 1,
+  "seconds": 992.1485238075256,
+  "isolatedPostgresPort": 55422,
+  "outerExecutionTimeout": null
+}

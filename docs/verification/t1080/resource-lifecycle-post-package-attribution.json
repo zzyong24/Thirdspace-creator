@@ -1,0 +1,244 @@
+{
+  "verdict": "FAIL",
+  "scope": "只复跑原 LED-061 资源生命周期 verifier 并对 3 个实际失败作限定归因；不代签安装版、全部功能、其他 Gate 或新包运行时。",
+  "head": "0480ebe17717bd426e083709fc22ccbdb9eb7840",
+  "createdAt": "2026-10-08T13:56:07.686923+00:00",
+  "execution": {
+    "argv": [
+      "node",
+      "docs/verification/t1073/verify-resource-lifecycle.mjs"
+    ],
+    "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+    "startedAt": "2026-10-08T13:51:38.046606+00:00",
+    "finishedAt": "2026-10-08T13:53:29.013249+00:00",
+    "seconds": 110.96714170800988,
+    "exitCode": 1,
+    "outerExecutionTimeoutSeconds": 3600,
+    "outerTimedOut": false,
+    "retry": 0,
+    "logPath": "/Users/zyongzhu/CreatorOS-local-acceptance/worktree-main-integration-20261008/resource-lifecycle-post-package-actual.log",
+    "logSha256": "d0cb1e8931770d8fb9c7504d1b1c307d0a828d5fa399604d47802a72744e34c2",
+    "sourceHashesBefore": {
+      "docs/verification/t1073/verify-resource-lifecycle.mjs": "b883364d11dd09932a82dfdb6389a2b92c836920d575b99a36a3b7f6fe97dd1d",
+      "docs/verification/t1073/worker/ipc-memory-serial-observation.json": "57d30f5c9695edc12911f1dfb35aefdd47028a3024d9bd227010216d0c33c7f3",
+      "docs/verification/t1073/worker/ipc-memory-parallel-observation.json": "39efc8ebffdf474ba78374d4e142c0be6c7a2a3533412c0883e6c1991f8ae800"
+    },
+    "sourceHashesAfter": {
+      "docs/verification/t1073/verify-resource-lifecycle.mjs": "b883364d11dd09932a82dfdb6389a2b92c836920d575b99a36a3b7f6fe97dd1d",
+      "docs/verification/t1073/worker/ipc-memory-serial-observation.json": "57d30f5c9695edc12911f1dfb35aefdd47028a3024d9bd227010216d0c33c7f3",
+      "docs/verification/t1073/worker/ipc-memory-parallel-observation.json": "39efc8ebffdf474ba78374d4e142c0be6c7a2a3533412c0883e6c1991f8ae800"
+    },
+    "historicalEvidenceRestored": true,
+    "scriptBytesUnchanged": true,
+    "isolatedSyntheticObservationsOnly": true,
+    "productionOrUserDatabaseOperationsExecuted": false
+  },
+  "groups": [
+    {
+      "argv": [
+        "pnpm",
+        "--dir",
+        "contract",
+        "exec",
+        "vitest",
+        "run",
+        "--config",
+        "../docs/verification/t1073/worker/contract-vitest.config.mjs",
+        "src/internal/execution-worker.test.ts",
+        "--testTimeout",
+        "120000",
+        "--hookTimeout",
+        "120000",
+        "--retry",
+        "0"
+      ],
+      "passed": 7,
+      "failed": 0,
+      "skipped": 0,
+      "summary": "7 passed (7)"
+    },
+    {
+      "argv": [
+        "pnpm",
+        "--dir",
+        "ai-worker",
+        "exec",
+        "vitest",
+        "run",
+        "src/execution/worker-runtime.test.ts",
+        "src/execution/transcribe-worker-run.test.ts",
+        "src/execution/transcribe-asr-run.test.ts",
+        "src/execution/transcribe-postprocess-run.test.ts",
+        "src/runtime/multimodal-whisper-local.test.ts",
+        "src/runtime/multimodal-whisper-local.cancel.test.ts",
+        "--testTimeout",
+        "120000",
+        "--hookTimeout",
+        "120000",
+        "--retry",
+        "0"
+      ],
+      "passed": 113,
+      "failed": 0,
+      "skipped": 0,
+      "summary": "113 passed (113)"
+    },
+    {
+      "argv": [
+        "pnpm",
+        "--dir",
+        "backend",
+        "exec",
+        "vitest",
+        "run",
+        "src/modules/execution/worker-supervisor.memory.test.ts",
+        "src/modules/execution/worker-supervisor.test.ts",
+        "src/modules/execution/execution-stream.service.test.ts",
+        "src/modules/ai-runtime/automation-driver.test.ts",
+        "src/modules/intelligence/source-sync-runner.test.ts",
+        "src/application/scheduling/automation.test.ts",
+        "--testTimeout",
+        "120000",
+        "--hookTimeout",
+        "120000",
+        "--retry",
+        "0"
+      ],
+      "passed": 62,
+      "failed": 2,
+      "skipped": 0,
+      "summary": "2 failed | 62 passed (64)"
+    },
+    {
+      "argv": [
+        "pnpm",
+        "--dir",
+        "frontend",
+        "exec",
+        "vitest",
+        "run",
+        "src/server/ai-runtime/live-chat-session.test.ts",
+        "src/server/ai-runtime/live-chat-session.consumer.test.tsx",
+        "src/features/copilot/chat-script-draft-card.test.tsx",
+        "src/features/copilot/chat-thesis-card.test.tsx",
+        "src/features/copilot/chat-publish-package-card.test.tsx",
+        "src/features/copilot/ai-copilot-interactions.test.tsx",
+        "src/features/draft-workbench/use-latest-script-review.test.tsx",
+        "src/features/intelligence/use-project-upgrade-queue.test.tsx",
+        "src/features/intelligence/intelligence-workbench-api.test.ts",
+        "src/components/resources/asset-preview-url.test.ts",
+        "--testTimeout",
+        "120000",
+        "--hookTimeout",
+        "120000",
+        "--retry",
+        "0"
+      ],
+      "passed": 132,
+      "failed": 0,
+      "skipped": 0,
+      "summary": "132 passed (132)"
+    },
+    {
+      "argv": [
+        "pnpm",
+        "--dir",
+        "frontend",
+        "exec",
+        "vitest",
+        "run",
+        "src/server/chat-execution-stream.test.ts",
+        "src/server/persistence-client.lifecycle.test.ts",
+        "src/server/browser-host-dispose.test.ts",
+        "--testTimeout",
+        "120000",
+        "--hookTimeout",
+        "120000",
+        "--retry",
+        "0"
+      ],
+      "passed": 27,
+      "failed": 1,
+      "skipped": 0,
+      "summary": "1 failed | 27 passed (28)"
+    }
+  ],
+  "totals": {
+    "passed": 341,
+    "failed": 3,
+    "skipped": 0,
+    "testFiles": 26
+  },
+  "findings": [
+    {
+      "id": "RLF-001",
+      "status": "FAIL",
+      "kind": "继承旧测试夹具期望欠债",
+      "path": "backend/src/modules/execution/worker-supervisor.test.ts",
+      "lines": [
+        63,
+        207
+      ],
+      "observed": "两处 supervisor.start() 精确数组期待 10 项，真实新 Worker 返回 11 项，多出已实际装配的 asset.asr。",
+      "sourceEvidence": "client04ca/c531 的 worker-entry 已注册 runAssetAsr、runtime 已声明 capability，原04ca 测试也保留两个遗漏 asset.asr 的精确数组；当前 entry 字节与04ca完全一致，当前测试字节与resource6b一致。不是本次生产三方合并新增缺陷。",
+      "limits": "第一例在首次 start() 数组断言即停，其后的完成/提交/单次调用断言本轮未执行；第二例取消、断连、不commit与unknown结算均先执行，末尾重启能力数组失败。",
+      "recommendation": "仅在两处完整数组 model.generate 之后补入 asset.asr，保留精确全数组顺序、其余真实供应商/取消/复用断言；原失败保留，按同 verifier 重跑。",
+      "implemented": false
+    },
+    {
+      "id": "RLF-002",
+      "status": "FAIL",
+      "kind": "三方整合后的纯测试 mock 兼容缺口",
+      "path": "frontend/src/server/persistence-client.lifecycle.test.ts",
+      "lines": [
+        8,
+        10,
+        35
+      ],
+      "consumer": "frontend/src/server/persistence-client.ts:6192",
+      "observed": "构建真实隔离持久层时，完整 execution-worker-path mock 无 resolveCodexStatusWorkerPath，Vitest missing export 阻断 getIdentityService，dispose/停止后的强断言尚未执行。",
+      "sourceEvidence": "resource6b 引入的 lifecycle 夹具完整 mock 未包含该导出；client04ca 已有真实 resolveCodexStatusWorkerPath 导出和 localCodexStatus 构造消费者。",
+      "recommendation": "仅把 resolveCodexStatusWorkerPath 名称加入当前 Object.fromEntries 的原 missing-throw 数组，保持所有 Worker 路径在隔离夹具中拒绝启动。不要用真实模块 partial mock，不删除 cron/sweep/timer/closed-db 断言。",
+      "implemented": false
+    }
+  ],
+  "sourceHashes": {
+    "frontend/src/server/persistence-client.lifecycle.test.ts": "6f728c5b810d1f5f6f389c169dda74b0ebc9da2f0230a8816265968923c342cb",
+    "frontend/src/server/execution-worker-path.ts": "628942c78737f55959ab0c1944941057d7dfa051cc31da6c6d3cdcf332b93ae5",
+    "frontend/src/server/persistence-client.ts": "6f31afb254a97756fa54402e248a6036ca5c7995ce0f50d90b276ad2db928384",
+    "backend/src/modules/ai-runtime/local-codex-status.service.ts": "72561068bfef0eb9d06b671dfb53076de55a1973a6cce6f66733707eb7d59b57",
+    "ai-worker/src/execution/worker-entry.ts": "0f2e22bb34e58787e7992998d3dc5e5f084bf344c094897a044fefbfddb43427",
+    "ai-worker/src/execution/worker-runtime.ts": "6a94a83baa504f3d5d7c0e230fd5656b6ecf9bb978044d132d5e6cf5e288c74a",
+    "backend/src/modules/execution/worker-supervisor.test.ts": "5c1e10f897f9247fdbb55a661bff0c2fdd19a6e6ea3b59eec99c152838704b86",
+    "backend/src/modules/execution/worker-supervisor.memory.test.ts": "a9e8f0c3d47093cacd2a3d092a03fff54a20652f0a1917c9c10cd5124da9f0e8",
+    "docs/verification/t1073/verify-resource-lifecycle.mjs": "b883364d11dd09932a82dfdb6389a2b92c836920d575b99a36a3b7f6fe97dd1d"
+  },
+  "evidenceHashes": {
+    "/Users/zyongzhu/CreatorOS-local-acceptance/worktree-main-integration-20261008/resource-lifecycle-post-package-actual.log": "d0cb1e8931770d8fb9c7504d1b1c307d0a828d5fa399604d47802a72744e34c2",
+    "/Users/zyongzhu/CreatorOS-local-acceptance/worktree-main-integration-20261008/resource-lifecycle-post-package-actual.result.json": "a5de12a90f2f25774a3eb0b9d99de5c11d9fb2f878f65b22403ec4296b35cc95",
+    "/Users/zyongzhu/CreatorOS-local-acceptance/worktree-main-integration-20261008/resource-lifecycle-post-package-source-proof.json": "8aa02078b23ae18951da1cb1e7346661b87e9d916cde09f327cb24b48aa39243",
+    "/Users/zyongzhu/CreatorOS-local-acceptance/worktree-main-integration-20261008/resource-lifecycle-post-package-codex-source-proof.json": "ec6b9f380b26f2acc2fcae4842c4f642505c999d667d6073e8b9252132cc09c2"
+  },
+  "historicalIpcEvidence": {
+    "restoredByteIdentical": true,
+    "serialSha256": "57d30f5c9695edc12911f1dfb35aefdd47028a3024d9bd227010216d0c33c7f3",
+    "parallelSha256": "39efc8ebffdf474ba78374d4e142c0be6c7a2a3533412c0883e6c1991f8ae800",
+    "printedSnapshots": "原脚本因 backend 组非零而保留“失败后文件快照”标注，不将该标注改为独立新观测 PASS。"
+  },
+  "mutations": {
+    "production": 0,
+    "testSource": 0,
+    "assertions": 0,
+    "Git": 0,
+    "control": 0,
+    "userData": 0,
+    "realUserDatabase": 0,
+    "historicalEvidenceFinalChange": 0
+  },
+  "limits": [
+    "只执行这一个 verifier；无重试、无跳过、无业务模型调用。",
+    "使用原 test 的临时/内存隔离夹具；未访问真实安装数据或用户数据库。",
+    "仅 worker build 和隔离合成 IPC/本地测试供应商属于本次验证授权。",
+    "其他全局 reconcile 44 错误/1告警原记录保留；本报告不重新运行或洗绿它们。"
+  ]
+}

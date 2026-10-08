@@ -1,0 +1,10 @@
+{
+  "command": "pnpm --dir ai-worker run build && pnpm --dir ai-worker exec vitest run src/runtime/pi-provider-json-compat.test.ts --retry=0 && pnpm --dir backend exec vitest run src/modules/execution/radar-model-result-unknown.repro.test.ts src/modules/execution/transcribe-postprocess.integration.test.ts --maxWorkers=1 --retry=0",
+  "exitCode": 0,
+  "elapsedSeconds": 19.075154499994824,
+  "log": "/Users/zyongzhu/CreatorOS-local-acceptance/worktree-main-integration-20261008/post-package-led060-compatible-green.log",
+  "logSha256": "6c730ecadfc8709395a6a6eb95265439679c1202f6adf6e587c266aa3af75a75",
+  "baseHEAD": "0480ebe17717bd426e083709fc22ccbdb9eb7840",
+  "testOnlyCandidate": "/Users/zyongzhu/CreatorOS-local-acceptance/worktree-main-integration-20261008/post-package-fixture-candidate/candidate.json",
+  "originalFail": "led060-focus/execution-receipt.json"
+}

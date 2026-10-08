@@ -1,0 +1,10 @@
+{
+  "path": "backend/src/modules/execution/worker-supervisor.test.ts",
+  "baseSha256": "0bb7be7b3d6c2616e1d4577518b58ee62ebdeba9940e3d3f8b0f5777a7f6cbce",
+  "candidateSha256": "dc7f0677b133cbbf941a49f8f93de3e50e2d0f46425b2def498591b649a4549f",
+  "scope": "只有末尾取消例：先真实ready，运行与两个正观察各120000，外层1200000覆盖完整串行启动/观察/取消结算/停止/再启动/最终停止及整树清理。立即给原result附只观察的reject handler，下方原await result精确cancelled及全部其他断言保留。",
+  "productionChanges": 0,
+  "assertionsRemoved": 0,
+  "originalFailLog": "post-package-resource-compatible-green.log",
+  "priorBudgetReviewFailed": true
+}

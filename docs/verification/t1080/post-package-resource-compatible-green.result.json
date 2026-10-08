@@ -1,0 +1,13 @@
+{
+  "command": [
+    "node",
+    "docs/verification/t1073/verify-resource-lifecycle.mjs"
+  ],
+  "exitCode": 1,
+  "elapsedSeconds": 122.59076458300115,
+  "log": "/Users/zyongzhu/CreatorOS-local-acceptance/worktree-main-integration-20261008/post-package-resource-compatible-green.log",
+  "logSha256": "95a15527e636db5e799ed148c24b2c3acda093a1fde37e061ca47acd94e26dd9",
+  "baseHEAD": "0480ebe17717bd426e083709fc22ccbdb9eb7840",
+  "historicalIpcEvidenceUnchanged": true,
+  "originalFail": "resource-lifecycle-post-package-actual.result.json"
+}

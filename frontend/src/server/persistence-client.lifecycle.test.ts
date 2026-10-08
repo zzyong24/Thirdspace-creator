@@ -7,7 +7,7 @@ const fixture = vi.hoisted(() => ({closed: false, sweeps: 0, close: async () => 
 vi.mock('node-cron', () => ({validate: () => true, schedule: (_expression: string, callback: () => void) => {fixture.cronCallback = callback; return {stop: fixture.cronStop, destroy: fixture.cronDestroy};}}));
 vi.mock('./execution-worker-path', () => {
  const missing = () => {throw Error('隔离夹具无外部 Worker');};
- return Object.fromEntries(['resolveExecutionWorkerPath','resolveAgenticWorkerPath','resolveIntelligenceGenerationWorkerPath','resolveIntelligenceTranscriptWorkerPath','resolveEmbeddingWorkerPath','resolveFlywheelWorkerPath','resolveModelProbeWorkerPath'].map(name => [name, missing]));
+ return Object.fromEntries(['resolveExecutionWorkerPath','resolveAgenticWorkerPath','resolveIntelligenceGenerationWorkerPath','resolveIntelligenceTranscriptWorkerPath','resolveEmbeddingWorkerPath','resolveFlywheelWorkerPath','resolveModelProbeWorkerPath','resolveCodexStatusWorkerPath'].map(name => [name, missing]));
 });
 vi.mock('@creatoros/backend', async originalImport => {
  const original = await originalImport<typeof import('@creatoros/backend')>();

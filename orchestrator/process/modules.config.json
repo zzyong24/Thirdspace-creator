@@ -4877,7 +4877,11 @@
         "frontend/src/server/chat-execution-stream.test.ts",
         "frontend/src/server/ai-runtime/live-chat-session.test.ts",
         "frontend/src/server/ai-runtime/live-chat-session.consumer.test.tsx",
-        "docs/verification/t1073/verify-resource-lifecycle.mjs"
+        "docs/verification/t1073/verify-resource-lifecycle.mjs",
+        "backend/src/modules/execution/worker-supervisor.test.ts",
+        "frontend/src/server/persistence-client.lifecycle.test.ts",
+        "backend/src/modules/execution/radar-model-result-unknown.repro.test.ts",
+        "docs/features/t1082-source-receipt-revalidation.md"
       ],
       "verify_commands": {
         "implementation": [

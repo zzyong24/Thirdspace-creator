@@ -1,0 +1,35 @@
+{
+  "HEAD": "0480ebe17717bd426e083709fc22ccbdb9eb7840",
+  "write_set": [
+    "backend/src/modules/execution/worker-supervisor.test.ts",
+    "frontend/src/server/persistence-client.lifecycle.test.ts",
+    "backend/src/modules/execution/radar-model-result-unknown.repro.test.ts"
+  ],
+  "changes": [
+    {
+      "path": "backend/src/modules/execution/worker-supervisor.test.ts",
+      "baseSha256": "5c1e10f897f9247fdbb55a661bff0c2fdd19a6e6ea3b59eec99c152838704b86",
+      "candidateSha256": "fd4aeec564d9b063e97a26d3d4e1903bfeb03f4a2bb48c5ee8f1f7886ba6448d",
+      "replacementCount": 2,
+      "inverseExact": true
+    },
+    {
+      "path": "frontend/src/server/persistence-client.lifecycle.test.ts",
+      "baseSha256": "6f728c5b810d1f5f6f389c169dda74b0ebc9da2f0230a8816265968923c342cb",
+      "candidateSha256": "53d5d47e2394bde593aad4d3d75649be7182c156613b9dd1201d96bdc5461e41",
+      "replacementCount": 1,
+      "inverseExact": true
+    },
+    {
+      "path": "backend/src/modules/execution/radar-model-result-unknown.repro.test.ts",
+      "baseSha256": "29b148d073f8383973837d9156a8172a1e2ea10631396e565f46710eff6f1c73",
+      "candidateSha256": "c13f386703d8d8822411412e691b1057756922afb65e1cf164bc54fe9b46c7b3",
+      "replacementCount": 1,
+      "inverseExact": true
+    }
+  ],
+  "productionChanges": 0,
+  "assertionsRemoved": 0,
+  "timeoutChanges": 0,
+  "sources": "resource-lifecycle-post-package-attribution.json; led060-focus/cause-review.json; T1022 model superseded confirmed contract"
+}
