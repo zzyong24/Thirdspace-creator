@@ -1,5 +1,5 @@
 {
-  "recordedAt": "2026-10-08T17:30:38.766202+00:00",
+  "recordedAt": "2026-10-08T17:38:00.257972+00:00",
   "sourceBase": "3a60fafc4fd299d2a0d2efc403ee6a24691075de",
   "commands": [
     {
@@ -642,6 +642,43 @@
       "exitCode": 1,
       "elapsedSeconds": 110.35137375001796,
       "logSha256": "b75e079b3d66722b9faf5db6d0d988740e3b39e2afa94fbedcec21257c753bd3"
+    },
+    {
+      "argv": [
+        "node",
+        "orchestrator/process/reconcile.mjs"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-08T17:14:25.462665+00:00",
+      "finishedAt": "2026-10-08T17:33:01.480454+00:00",
+      "exitCode": 1,
+      "elapsedSeconds": 1116.0075352499844,
+      "logSha256": "5a7dc597bbef244902c857fc708f2a8e4fbfe10583fb9d46624d709b7079ea5a",
+      "evidence": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1084/reconcile-current.json"
+    },
+    {
+      "argv": [
+        "pnpm",
+        "-C",
+        "backend",
+        "exec",
+        "vitest",
+        "run",
+        "src/integration/durable-chat-tool-ledger.test.ts",
+        "--config",
+        "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1085/t1088-adjacent-baseline-harness/vitest.baseline.config.mjs",
+        "--retry=0",
+        "--no-file-parallelism",
+        "--testTimeout=120000",
+        "--hookTimeout=120000"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-08T17:37:04.824205+00:00",
+      "finishedAt": "2026-10-08T17:37:34.365639+00:00",
+      "exitCode": 1,
+      "elapsedSeconds": 29.54112583299866,
+      "logSha256": "91cb4f8f1d8c02565266a0bfc5cdf5b735586d33bd64b097c5e2c126e491b674",
+      "evidence": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1085/t1088-adjacent-two-module-baseline.json"
     }
   ],
   "independentReviews": [
@@ -693,5 +730,22 @@
   "baselineRegistryComparison": {
     "path": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1084/contract-registry-baseline-source-comparison.json",
     "sha256": "77d40176d0f5605db50cd6f3af65b70521d2b6dd19e0ad564dc31ba9a3881719"
+  },
+  "currentReconcile": {
+    "exitCode": 1,
+    "errors": 42,
+    "warnings": 0,
+    "fullRun": true,
+    "claim": "当前实际全局失败保留；不将旧来源评审、旧教训与已准入任务合并为全绿。"
+  },
+  "adjacentTwoModuleBaseline": {
+    "sourceBase": "3a60fafc4fd299d2a0d2efc403ee6a24691075de",
+    "actual": {
+      "passed": 3,
+      "failed": 5,
+      "skipped": 0
+    },
+    "shaMarkersLoaded": 2,
+    "claim": "只替换原completion/plan两个完整模块，原8例及共用当前依赖不改；五失败与当前相邻回归相同。不是完整基点checkout测试。"
   }
 }

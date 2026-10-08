@@ -29,7 +29,7 @@ flowchart LR
 
 完整合同仍有 43 FAIL / 370 PASS：原 42 个入口检查写死注册数 404，但真实为 420；原路由 allowlist 缺四个已存在 assistant/canvas 路由。实际比较 `index.ts / endpoints.ts / operations/*.ts` 共 44 个注册源与基点字节完全相同，证明 T1086 没有新增公共 ENDPOINTS，不冒称整体合同通过。完整超时 Gate exit1 保留原 27 条静态记录，动态 165 PASS，继续由 T1081 承接。
 
-最后一次相邻五文件回归是 42 PASS / 5 FAIL，原四项 dispatcher 及五项截断兼容已恢复；剩余为 durable-chat-tool-ledger 的旧卡确认/length 断言，保留日志并核基点，不借本次三生产文件放宽卡或完成校验。完整 reconcile 本轮实际运行中，完成后补真实结果；既有 T1081/T1082/T1083 与全局来源评审欠债不代签全绿。
+最后一次相邻五文件回归是 42 PASS / 5 FAIL，原四项 dispatcher 及五项截断兼容已恢复；剩余为 durable-chat-tool-ledger 的旧卡确认/length 断言。外置独立对照仅加载3a60的原completion与plan两个模块，两条源码SHA标记实际出现；原文件8例完整运行，3 PASS / 5 FAIL，五个失败名称、原卡确认拒绝及length断言与当前相同。此为两模块反事实对照，不冒称完整3a60 checkout回归，不借本次三生产文件放宽卡或完成校验。本轮完整 reconcile 已实际结束：exit1，42 error / 0 warning，耗时1116.008秒。保留全部原日志；既有 T1081/T1082/T1083、来源评审、历史教训及看板健康失败不代签全绿。
 
 ## 新包与验收边界
 
