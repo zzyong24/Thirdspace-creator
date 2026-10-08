@@ -9,28 +9,28 @@
 
 | ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
 | --- | --- | --- | --- | --- | --- | --- |
+| T-1080 | 汇总全部本地worktree代码到main并清理闲置目录后构建 | 🔨 待办 | — | — | [SPEC](docs/features/t1080-local-main-worktree-consolidation.md) | 用户2026-10-08明确授权全部代码本地合并至主分支、清理不用的worktree再构建，构建无需备份。先逐树核HEAD/未提交/使用情况并保留Git来源，解决冲突和验证后只删除已保留代码且未占用的目录；保留活跃会话、真实数据与既有备份，不push/tag/发布。 |
 | T-1026 | 补齐新增 Agent 功能的公开 CLI 并逐项验收安装版 | 🔨 | — | — | [SPEC](docs/features/t1026-agent-cli-acceptance.md) | 用户要求所有新增功能通过 CLI 实测；核对计划、工具、文件、命令、浏览器、Skill、产物、恢复与旧功能；修复已实测的取消/跳过步骤被误报完成，再安装版复验。 |
 | T-1027 | 修复评论采集完成统计与失败诊断 | 🔨 | — | — | [SPEC](docs/features/t1027-comment-collection-evidence.md) | T1026真实评论回归failed却提示全量完成；统一完成统计并补公开未完成原因，不把零新增冒充成功。 |
 | T-1025 | 重新核验 constitution 变更后的历史评审与前端验收回执 | 📋 | — | — | [SPEC](docs/features/t1025-receipt-drift-revalidation.md) | reconcile 已确认运行门全部通过，但 T-703/T-691/T-656/T-645/T-635 的旧评审回执和 T-1022 前端验收回执已因当前真相变化失效；按现状重新评审，禁止补拍历史 PASS。 |
 | T-1024-runtime-liveness | 根治聊天生成占用数据通道与重启后 unknown_result 卡死 | ✅ | — | — | [SPEC](docs/features/t1024-chat-runtime-liveness.md) | 真实安装版生成期间查询被阻塞，重启后原任务停在 unknown_result；释放长调用期间的数据通道，并让 agent loop 沿原任务安全恢复或明确收口。 本地main原任务T-1024的来源别名，原事件/验收证据不改写。 |
 | T-1023-agent-recovery | 根治 AI 助手自动恢复无限卡死并证明后台进展 | ✅ | — | PASS:87c802e61bbe | [SPEC](docs/features/t1023-agent-recovery-liveness.md) | 区分已持久化任务续跑与提交前网络失败；恢复必须有进展证据，持续无进展自动收口为可继续操作的状态，禁止永久转圈。 本地main原任务T-1023的来源别名，原事件/验收证据不改写。 |
 | T-1022-agent-recovery | 禁止模型超时或不完整输出阻断生成，统一由 Agent loop 恢复 | ✅ | — | PASS:06eb90bb86b5 | [SPEC](docs/features/t1022-nonblocking-agent-recovery.md) | 覆盖内容雷达与 AI 助手；仅无可用模型时引导配置，其他可恢复失败沿原任务自动续跑、修复或降级。 本地main原任务T-1022的来源别名，原事件/验收证据不改写。 |
-| T-1080 | 汇总全部本地worktree代码到main并清理闲置目录后构建 | 🔨 待办 | — | — | [SPEC](docs/features/t1080-local-main-worktree-consolidation.md) | 用户2026-10-08明确授权全部代码本地合并至主分支、清理不用的worktree再构建，构建无需备份。先逐树核HEAD/未提交/使用情况并保留Git来源，解决冲突和验证后只删除已保留代码且未占用的目录；保留活跃会话、真实数据与既有备份，不push/tag/发布。 |
-| T-1077 | 修复采纳与作品素材读取的项目返回值 | 🔨 待办 | PASS[REV:a36209c19783] | 待验 | [SPEC](docs/features/t1077-material-parent-port.md) | 新b640原401保留404项目不存在；真实项目可读，三个MaterialLinks私有适配丢弃Projects返回值。先精确独评、公共链RED→GREEN，保留原事务/归属/文件和原401，不重发生图；继续打包安装恢复，不push发布。 当前仅3产品行修复、正确owner公共RED4/2→GREEN6、原素材真实隔离PG18/0skip和最终类型0，独立实施限定PASS；错误同组账号拒绝断言与旧全局红如实保留。新包、原401保留/放画布和完整功能仍待验，不完成。 |
+| T-1077 | 修复采纳与作品素材读取的项目返回值 | 🔨 待办 | PASS[REV:a36209c19783] | 待验 | [SPEC](docs/features/t1077-material-parent-port.md) [详情](BACKLOG-details.md#t-1077) | 见详情。 |
 | T-1076 | 清理旧安装包与本轮临时构建垃圾 | ✅ 待办 | — | — | [SPEC](docs/features/t1076-clean-obsolete-local-packages.md) | 用户明确授权清理旧包/垃圾以释放新包安装空间；只删本会话确认过期的DMG与未占用可重建缓存，保留新b640包、当前App、全部回滚备份/素材/原证据；记录精确SHA清单与实际空间，维护不改产品、不push发布。 |
 | T-1072 | 修复全局Git钩子误用失效Lefthook路径 | ✅ 待办 | — | — | [SPEC](docs/features/t1072-global-git-hook.md) | 用户2026-10-08授权修复；先备份当前全局钩子并核对归属，按真实仓库配置运行项目钩子，保留检查失败语义；验证CreatorOS真实提交及隔离配置仓库成功/失败，不改客户端、不push、不发布。 |
-| T-1075 | 修复安装验收发现的素材标签观察与纯组生图证明 | 🔨 待办 | PASS[REV:73a6052db08f] | — | [SPEC](docs/features/t1075-installed-ai-observation-gaps.md) | 用户全功能可用性稳定性验证的实际缺陷；真实Pi391缺标签版本观察，画布401纯组NULL被证明读取误拒；先精确独评，再RED→GREEN，沿原任务恢复，不重发生图、不改真实内容。 当前8路径源码独评PASS、真实RED及87私有PG通过保留；b640新DMG实际构建44基本/镜像/签名通过。T1076清理后原完整新鲜备份9步/安装12步均0，Native82283/CLI full；新Pi170真实标签候选→正式采纳→读回、原401证明available/原PNG全解码与剪辑rev5深等通过。原401保留操作404项目不存在，仍pending未放画布、不重发生图；完整功能仍待验，不完成。 |
-| T-1074 | 全面验收与补齐AI助手系统操作、工具开放性和功能提示词 | 🔨 待办 | PASS[REV:b19144c34cab] | 待验 | [SPEC](docs/features/t1074-ai-system-operations.md) | 用户2026-10-08要求深度调研Coze X/Coze Code及优秀开源实践，并落地全功能AI操作，重点画布创建、生图、自然语言剪辑；先核真实工具/权限/提示词与公共调用链，记录具体缺口并补精确范围独评后实现，不以泛称“不支持”结束；保留真实归属、用户采纳、合法任务和原保存导出，不push或发布。  9文件补充复核已获用户明确授权并通过b19144c34cab；四API组登记、原编辑器正式来源桥接/脏稿/新输入保护、选题行锁和有父雷达纯读已实现。真实私有PG最新66通过含3项两连接行锁竞态及7个分页族，来源/host176通过，前端67/LED047167通过，前端/contract/worker/mcp类型通过；后端仅原2测试错误。1366/1024实际输入保留；核心独评原CORE-001分页已修复并复核关闭，原FAIL保留；源码cacf4d26/冻结74883948新DMG实际出包并备份安装0；Native81735/CLI full与409目录、5组3账号/原稿工程深等、旧8.16成片下载解码通过。新安装版真实Pi画布候选→采纳→精确读回/原source幂等/跨组及摘要拒绝通过；Codex右栏、生图、7视频及全功能原生仍待验，不完成任务。 用户追加“全功能可用性稳定性验证”，本轮沿T1074/T1062原完整范围扩展当前安装版中性公共读写、取消/恢复/回放、素材持久化与性能观察；不改真实内容或代签原生验收。 当前安装748新增中性output133真实导入/手工分段裁切删段重排/8秒预览/render195原执行确认/1080p30fps240帧全解码/来源时标核对/历史restore至rev5/同key回放及跨组拒绝通过；这是公共手工链，不代签右侧Codex/七类AI剪辑或原生。b640包随后经原完整新鲜备份已实际安装；最新15类公开读取全通过、工程rev5深等、标签Pi候选采纳/读回及原401证明恢复通过；原图保留404、原生/两引擎全功能仍待验，不完成。 旧748公共手工视频链限定独评PASS/0开放问题，506引用；不代签新包、AI剪辑或全功能。 新b640真实Pi文章/图文局部精调task205完成但工具参数空数组/null填错，最后文章占位候选未采纳；原221/242完整DTO深等不变。9次内存HTTP codec穿透probe未见空值/换行变形，下一步用原typed_patch精调公共链补验，不签模型成功。 |
-| T-1071 | 修复账号绑定和页面Tab切换卡顿 | 🔨 待办 | PASS[REV:a53e25bf48df] | 待验 | [SPEC](docs/features/t1071-navigation-latency.md) | 用户2026-10-07反馈点击账号组与绑定账号以及任何Tab都特别卡；优先只读测量当前安装版及当前源的点击、请求、查询和渲染，确定共同慢点后补精确范围独评，保留未保存稿件/剪辑、组隔离和原丰富UI；修复验证后纳入新本地包，不push或发布。 当前四前端窄修真实RED5→GREEN35、LED047162/类型通过；实际native切四Tab与账号管理保持同句柄/X11，六步工程GET12→0，Undo/Redo/保存rev9/5秒MP4解码通过；原生200%按钮、安装版和新冻结包仍待验，后台未改。 源修复a2b803ed已提交；全局实际37错误/1告警与824原ERROR集合完全一致、原T1018/T1015保留；尚不完成任务。 新冻结5e6d025c本地DMG真实exit0、44打包/镜像/双签/1082资源核验通过；新包经dntvfwhr新备份和独评0eb2f安装器实际安装0，CLI恢复full，5组/3账号深等、工程rev6/文章233/图文258及8.16秒原成片下载解码通过；浏览器来源403与桌面自动化权限缺失保留，原生首页/切页待用户实际反馈，不完成任务。 |
-| T-1070 | 打通Codex执行与编导精调，脚本一键生成文章和图文 | 🔨 待办 | PASS[REV:b195ac203ec0] | 待验 | [SPEC](docs/features/t1070-director-script-workflow.md) | 用户2026-10-07实际验收反馈：Codex引擎不能执行、编导不能自然语言剪辑；对照ChatCut，用户随后明确不做自动视频初稿；确认脚本后按钮一键生成文章/图文，再用编导持续调整；视频只导入录像并自然语言精剪；移除偏离主链的快剪集成/快速转换入口，保留既有作品和合法保存导出；先只读复现与契约盘点，补精确范围并独评后实现，不push或发布。 2026-10-07核心修复已提交f25c0098及原生纹理版本cdd3b1dc；真实Codex分镜联合5章/5卡和文章/图文指定字段精调、预览/CAS/刷新/HTML或4页ZIP通过；原持久native候选97实际warm首frame24、一次CAS/Undo/Redo/手工保存/切Tab刷新/5秒MP4解码通过，保留原AAC尾minor；53原生回归/710重建/双build独评通过。新本地包及安装版逐项验收继续，不代签字幕/变速/替换真模型或整个任务。 |
+| T-1075 | 修复安装验收发现的素材标签观察与纯组生图证明 | 🔨 待办 | PASS[REV:73a6052db08f] | — | [SPEC](docs/features/t1075-installed-ai-observation-gaps.md) [详情](BACKLOG-details.md#t-1075) | 见详情。 |
+| T-1074 | 全面验收与补齐AI助手系统操作、工具开放性和功能提示词 | 🔨 待办 | PASS[REV:b19144c34cab] | 待验 | [SPEC](docs/features/t1074-ai-system-operations.md) [详情](BACKLOG-details.md#t-1074) | 见详情。 |
+| T-1071 | 修复账号绑定和页面Tab切换卡顿 | 🔨 待办 | PASS[REV:a53e25bf48df] | 待验 | [SPEC](docs/features/t1071-navigation-latency.md) [详情](BACKLOG-details.md#t-1071) | 见详情。 |
+| T-1070 | 打通Codex执行与编导精调，脚本一键生成文章和图文 | 🔨 待办 | PASS[REV:b195ac203ec0] | 待验 | [SPEC](docs/features/t1070-director-script-workflow.md) [详情](BACKLOG-details.md#t-1070) | 见详情。 |
 | T-1069 | 修复安装版素材导入慢与跨Tab丢失，重设计素材选择并补多平台绑定入口 | 🔨 待办 | PASS[REV:19bad8ef6f93] | 待验 | [SPEC](docs/features/t1069-installed-media-and-binding.md) | 用户2026-10-06实际截图验收；查分段性能和素材持久化；用户追加模板照片选择，同类入口共用缩略图/搜索/预览选择器，保留原版紫色丰富布局并使用oil-ui-pro；核对已装配小红书登录与组绑定，其他平台按真实能力；先只读核因，精确实现补充独评后开工，不push/发布。 |
 | T-1068 | 排查并修复本地客户端启动超时，交付可启动测试包 | ✅ 待办 | PASS[REV:8abc34b1f775] | — | [SPEC](docs/features/t1068-local-client-startup.md) | 用户2026-10-06启动超时报错已定位本机probe经过代理502；专用client.no_proxy窄修69b6be8f及17回归独评通过。1.2.0新包实际构建/镜像/深签名/277资源0，新鲜备份7i4su后固定入口自动安装（非planned installer）；安装内容精确核同源，两次原生HTTP首页加载+公开CLI/首页200/粗剪工程及已导出任务资产深等成功；用户已明确已显示正常首页。T734旧合同及全局旧红保留，不代签T1062完整功能。仅宿主逻辑无UI重设计，独评纠正验收类型—；未push或发布。
 | T-1067 | 落实本地客户端优先出包并移除人为构建超时 | ✅ 待办 | PASS[REV:ebe1b789bc56] | — | [SPEC](docs/features/t1067-local-package-build-only.md) | 用户已授权双端优先出包；并行会话T-1066同号后本地8路径补充单独使用本编号，原本地评审/事件保留；T-1062原18和候选提交后顺序实施，不push、不发布。 |
 | T-1066 | 落实本地客户端优先出包并移除人为构建超时 | ⏸️ 待办 | PASS[REV:0d40d8466937] | — | [SPEC](docs/features/t1066-local-package-build-only.md) | 用户2026-10-06明确Windows和Mac均优先生成安装包；精确移植本地打包8路径，独立执行额外质量验证，保留真实编译、资源、凭证和路径校验；不push、不发布、不改变T-1062粗剪与原18验收。 |
-| T-1062 | 汇总各会话改动统一提交并打包本地客户端，逐项验收含Skill粗剪 | 🔨 待办 | PASS[REV:5912ba60da16] | 待验 | [SPEC](docs/features/t1062-consolidated-local-client-acceptance.md) · [测试预算补充](docs/features/t1062-backend-test-harness.md) · [安装渲染修复补充](docs/features/t1062-installed-render-skill-owner.md) | 用户2026-10-05授权汇总提交、本地打包及逐功能验证；盘点账号组、画布模板、文章图文、Codex与剪辑分支，核对ChatCut粗剪流程；不push或公开发布，不代签用户验收。 用户随后确认使用当前 macOS 登录用户与现有 App 直接验收；先备份应用和当前数据，再安装本地候选，只创建中性验收夹具，不重置激活或自动归组真实资料。 | 安装实测首页/列表500，已定位4条真实旧迁移身份；备份副本公共升级/双启及21迁移回归实际通过，原库与原0128保留；修复新包已安装，旧账号/组列表成功；真实页面暴露contract注册循环TDZ，44精确源修复独评/367合同回归/类型通过；228dd08a新包已备份安装，公开中性主脚本/文章/图文/画布保存版本与组隔离实际通过；纯组剪辑保存3成功但preview/render428，自动Skill仅review_only无可采用删留；CLI失败回放六路径d68dfbcf已独评及62测试/类型通过，叠层归属3754e07f已独评、44+1公开回归通过且旧全局红保留；98c新包2a3ef710实际构建/镜像/签名/277资源核验0；前次预安装工作目录漂移拒绝安装，重备份ee3293ea后真实安装0。CLI旧失败回放409/exit4/原139及preview7.5成功；render111实际Skill归属失败无MP4，进入真实任务冻owner窄口独评修复。Whisper128真实word44/timingReceipt通过并保存到中性工程4，原模型全恢复深等；全片工程5上MiniMax/Skill167产生可执行删试讲0–6.76及保完整重录/结尾，用户已明确采用s1，实际adopt/get工程6、preview8.16无警告成功，原片e6不变；停顿/MP4/原生全功能仍待验。用户随后要求先快包/优先启动，T-1068已登记，其他修复后置。
+| T-1062 | 汇总各会话改动统一提交并打包本地客户端，逐项验收含Skill粗剪 | 🔨 待办 | PASS[REV:5912ba60da16] | 待验 | [SPEC](docs/features/t1062-consolidated-local-client-acceptance.md) · [测试预算补充](docs/features/t1062-backend-test-harness.md) · [安装渲染修复补充](docs/features/t1062-installed-render-skill-owner.md) [详情](BACKLOG-details.md#t-1062) | 见详情。 |
 | T-1063 | 修正流程工具误拒合法字面方括号文件路径 | 🔨 待办 | PASS[REV:4d99824da112] | 待验 | [SPEC](docs/features/t1063-orchestrator-literal-path-boundary.md) | T-1062已准入前端范围含7个Next动态路由文件；3.27.2的progress及candidate校验误将字面方括号当glob，阻断必要整合。保持精确路径及原隔离边界，经独立评审、公共工具回归和受支持技能升级后解除，不扩目录通配符、不公开发布。 |
 | T-1024 | 紧急排查充值50元后Growth受管Omni模型仍报余额不足 | 🔨 待办 | — | 待验 | [排查范围](docs/verification/t1024-managed-credit-diagnosis.md) | 充值及Omni额度同步已实证正常；两份Windows日志定位21:08/21:11/21:15选题聊天约352万粗估且未收敛、约1.5秒报AI_CREDIT_EXHAUSTED；已验证单轮裁剪缺口与图片base64粗估歧义，原始供应商错误/模型/附件类型仍待对齐，不改账、不重发原大请求。 |
-| T-1022 | 按账号组统一多平台工作区、绑定管理、首页与复盘 | ⏸️ 待办 | PASS[REV:2f179f8d9380] | 待验 | [SPEC](docs/features/t1022-account-group-workspace.md) | 用户2026-10-04要求先调研并全面设计；全局切换账号组、组内筛选抖音/快手/视频号/公众号/小红书，共享内容分发与数据可见；使用用户提供的oil-ui-pro 0.10.0并纳入页面规范；用户否定A/B并明确保留原版丰富布局，只补总览和多平台切换；用户已认可原版增补，追加要求图表更美观；用户再次指出图表缺坐标；保留布局，补数值/日期轴与单位，缺明细不画日折线，用户已回复ok开始执行；正式接入已评审的显式归组与迁移预览方案，真实库执行先备份校验。2026-10-05正式组工作区及原版页面已接入，1366/1024真实保存/冲突/切组旅程通过；启动/调度及归档执行增量已独立复核关闭；后台362条、真实18检查点再次通过。receipt因混合工作树不能绑定HEAD，真实平台及安装版仍待验。 |
+| T-1022 | 按账号组统一多平台工作区、绑定管理、首页与复盘 | ⏸️ 待办 | PASS[REV:2f179f8d9380] | 待验 | [SPEC](docs/features/t1022-account-group-workspace.md) [详情](BACKLOG-details.md#t-1022) | 见详情。 |
 | T-1023 | 修正既有任务绑定glob导致的progress生成阻断 | 📋 待办 | — | — | [证据](docs/features/t1022-account-group-workspace/VERIFICATION.md) | T-1022注册时progress generate被既有T-1003的非terminal wildcard write_set拒绝；核对安全范围并按真实文件或terminal目录规则校准，不扩大写集，不丢其他任务和lease。 |
 | T-1021 | CreatorOS封面与小红书图文双模板库、行业分类及私人收藏 | 🔨 待办 | PASS[REV:f0f3fa0ff91b] | 待验 | [SPEC](docs/features/t1021-cover-template-library.md) | 用户认可复用发布链，补充宿主为无限画布；补画板/图文页组、固定工具面板、比例与缩放分离及发布引用方案；当前分支尚未定位画布入口，已询问位置。旧SPEC评审不覆盖本补充，生产未接入。 |
 | T-1019 | 按观众具体任务与双九宫格持续生成可实测选题 | ⏸️ 待办 | PASS[REV:3a0362412b23] | 待验 | [SPEC](docs/features/audience-task-topics/README.md) | 用户委派；复用定位/雷达/候选/反馈，观众入口与作者实测分流，保留 T-1017 首稿；不发布或 push。 |
@@ -39,7 +39,7 @@
 | T-1018 | 清理本轮测试暴露的全局类型与边界欠债 | 📋 待办 | — | 待验 | [实测证据](docs/verification/t1017-rewrite-first.md) | 后端旧测试 API/类型漂移、contract旧快照/资产/cover断言、live-chat-session SDK 边界与 video-decisions-runner 语义门仍失败；与 T-1015 历史教训对账联动，不混入 T-1017。 本轮T-1022再次实测原12项后端类型、3项契约及边界/语义旧失败，见docs/features/t1022-account-group-workspace/VERIFICATION.md。 2026-10-06 T1068收尾全局37错误/1告警，原36保留，另LED-027稿件并发检查此次失败；相关产品/测试未变，根因待查，原始与比较记录见本地验收根t1068-post-startup-reconcile，T1068启动独立验收不代签此项。 | 2026-10-07 T1070实测保留原boundary7（含未改live-chat-session旧2）、semantic缺material.match及MAIN缺tools/timeout-policy/verify.mjs；规定命令MODULE_NOT_FOUND，详情docs/verification/t1070/CURRENT_VALIDATION.md，不以其他checkout代签。 2026-10-07 T1070收尾完整对账37错误/1告警，当前原始日志docs/verification/t1070/root-prefreeze-reconcile.log；其它历史receipt与boundary/语义/LED仍失败，未逐项核因，不签全仓通过。 |
 | T-1016 | 调研 CreatorOS 连接本地 Codex、WorkBuddy 与外部 Agent | ✅ 待办 | — | — | [SPEC](docs/features/t1016-external-agent-research.md) | 参考 ChatCut 和公开协议，核实双向接入、现有执行边界与可落地方案；本轮仅调研设计。 |
 | T-1014 | 核对并清理233项历史对账失败 | ✅ 待办 | — | — | [范围](docs/verification/t1014-reconcile-triage.md) | 按真实证据关闭过期治理项，保留有效缺陷与历史回执；不修改产品运行时。 |
-| T-1015 | 核实剩余教训失败并校准过期回归断言 | 📋 待办 | — | — | [实测清单](docs/verification/t1014-reconcile-triage.md) | 从19条失败命令定位旧版本/源码字符串断言与实际重试、消费、交互差异；保留有效检查，修正后重验。 本轮T-1022收尾reconcile仍15项既有LED失败，日志docs/verification/t1022/logs/reconcile-final.log；新增LED-052及LED-047通过。 本轮T-1063按受支持方式升级至3.27.3后，原对账实测35错误/1警告；完整结果及原失败见[维护证据](docs/verification/t1063/tool-upgrade-result.json)。LED-052缺显式隔离PG环境不得skip，LED-049需按原命令继续核因；范围内问题由T-1062修复验收，未改基线或旧回执。 2026-10-06 T-1067 收尾实际36错误/1告警，完整原始记录见T-1062验收表；T-734旧字符串断言在67b基点同样失败，六输入字节相同，未删断言；T-1067固定8路径之外，全局各失败保留核因。 |
+| T-1015 | 核实剩余教训失败并校准过期回归断言 | 📋 待办 | — | — | [实测清单](docs/verification/t1014-reconcile-triage.md) [详情](BACKLOG-details.md#t-1015) | 见详情。 |
 | T-1004 | 冻结共享能力协议与 NomiFun 迁移依赖 | 📋 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) | T-1003 评审；固定依赖闭包、宿主端口、协议与架构门卫。 |
 | T-1005 | 实现多步计划、连续执行与原任务续跑 | 📋 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) | 依赖 T-1004；模型规划与重规划，保留回执和成本，停止恢复可核验。 |
 | T-1006 | 接入统一工具网关与长结果回读 | 📋 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) | 依赖 T-1004；工具发现、进度、取消、错误和费用共用原执行链。 |
@@ -74,13 +74,13 @@
 | T-933 | 安装并验收本轮Agent Runtime桌面版【用户要求自行检查】 | 🔨 待办 | — | — | [T-932交付](docs/verification/t932-runtime-alignment.md) | 核对已安装候选与签名、启动及实际页面/Skill/聊天链路；通过公开CLI操作，未获本次启动授权前不绕过访问；保留真实验收结果。 |
 | T-919 | 定位并修复本地包主导航卡顿、助手通知刷屏与搜索停滞【用户运行反馈】 | 🔨 待办 | — | — | 复用 T-912/T-909 导航契约与 [T-915 SPEC](docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md) | 读取最新本机日志与运行进程，定位导航阻塞和资源争用；补充切换项目 Tab 丢失在途回复：保留账号/项目隔离的窗口级消息与订阅，避免恢复历史覆；[原说明](BACKLOG-details.md#t-919-triage-description)。 |
 | T-915 | 根治 AI 卡慢、失败不重试与搜索/浏览器缺少自主循环，收敛架构与执行能力【T-914 审查承接·用户 2026-09-04】 | 🔨 待办 | PASS[REV:692283b8bace] | — | [SPEC](docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md) | 保留原执行/恢复改造任务；剩余登录资源迁移、备用模型和运行验收，详见 [历史说明](BACKLOG-details.md#t-915-triage-history)。 |
-| T-916 | 修复工程对账与历史任务证据漂移，恢复可信重构基线【T-914 实测根因·2026-09-04】 | 🔨 待办 | — | — | [审计 A-13](docs/research/2026-09-04-architecture-agent-audit.md) | reconcile 实测 210 errors：模块 write_set/verify、自治声明、旧看板和 receipt 漂移；LED-0；[原说明](BACKLOG-details.md#t-916-triage-description)。 本轮T-1022收尾对账33错误/1告警，其中17项历史回执/链接漂移，见docs/verification/t1022/logs/reconcile-final.log。 |
+| T-916 | 修复工程对账与历史任务证据漂移，恢复可信重构基线【T-914 实测根因·2026-09-04】 | 🔨 待办 | — | — | [审计 A-13](docs/research/2026-09-04-architecture-agent-audit.md) [详情](BACKLOG-details.md#t-916) | 见详情。 |
 | T-917 | 记录 T-915 媒体测试事故并防止测试再次访问真实媒体根【用户接受数据清理，解除恢复前置】 | 📋 待办 | — | — | [事故记录](docs/research/evidence/t915/2026-09-06-media-test-incident.md) | 用户明确要求继续重构，数据恢复不再作为 T-915 阻塞；数据未恢复的事实保留；[原说明](BACKLOG-details.md#t-917-triage-description)。 |
 | T-908 | 真实复测 douyin-transcribe Skill，并对照 CreatorOS 当前抖音抓取链路判断是否需要兼容修复【用户截图与压缩包·2026-08-23】 | 📋 待办 | — | — | — | 隔离检查用户提供的 Skill 压缩包与当前已安装版本，以公开抖音链接实际验证短链解析、作品元数据、视频直链、下载和转写前置链路；同时审计 ；[原说明](BACKLOG-details.md#t-908-triage-description)。 |
 | T-906 | 放大 AI 助手默认窗口并支持拖拽缩放与跨启动尺寸记忆【用户反馈·2026-08-20】 | ⏸️ 待办 | — | 待验 | — | AI 助手默认窗口应明显大于当前尺寸，用户可从右下角手柄拖拽调整大小；每次调整后的宽高保存在本机，下次启动自动恢复，并受最小尺寸与当前屏幕可见范围约束，避免内容不可用或换屏后窗口超出视口。 |
 | T-905 | 调研独立的极简手机口播创作产品，以人设选稿、灵感写稿、实拍与“123321”真人换口型为核心【产品可能性探索·用户 2026-08-20】 | 📋 待办 | — | — | — | 这是独立于 CreatorOS 的新产品探索，不是 CreatorOS 手机版，也不把核心能力定义为传统数字人：用户首次录入行业、人设与对标；[原说明](BACKLOG-details.md#t-905-triage-description)。 |
 | T-884 | 只读诊断用户加密日志中的 ASR 转写失败【用户日志·2026-08-18】 | ⏸️ 待办 | — | — | 复用 T-768 ASR 通用回退、T-639 MiMo ASR 与 T-676 逐字稿队列契约 | 解析用户提供的 `sidecar-2026-08-18.log.enc`，对齐同一次转写任务、输入媒体、ASR provider/模型、配置；[原说明](BACKLOG-details.md#t-884-triage-description)。 |
-| T-883 | 提交并推送 T-881/T-882 候选，触发 GitHub macOS 与 Windows 官方安装包流水线【用户明确授权·2026-08-18】 | ⏸️ 待办 | — | — | 复用 [T-881 验收](orchestrator/T881-FRONTEND-VALIDATION.md)、[T-882 本地包验收](orchestrator/T882-BUILD-VALIDATION.md) | 只提交并发布已通过验收的 B-roll 删除修复候选；冻结检查后将候选安全同步到 `main`，触发 `desktop-release.ym；[原说明](BACKLOG-details.md#t-883-triage-description)。 |
+| T-883 | 提交并推送 T-881/T-882 候选，触发 GitHub macOS 与 Windows 官方安装包流水线【用户明确授权·2026-08-18】 | ⏸️ 待办 | — | — | 复用 [T-881 验收](orchestrator/T881-FRONTEND-VALIDATION.md)、[T-882 本地包验收](orchestrator/T882-BUILD-VALIDATION.md) [详情](BACKLOG-details.md#t-883) | 见详情。 |
 | T-878 | 让生图模型连接测试正确识别并提示 401/403 鉴权失败【T-877 诊断承接·2026-08-17】 | 📋 待办 | — | — | [T-877 脱敏诊断](docs/research/2026-08-17-dudu-image-auth-failure-diagnosis.md) | 当前真实生图适配器已把 401 分类为 authentication，但 `settings.models.test` 的 `image.g；[原说明](BACKLOG-details.md#t-878-triage-description)。 |
 | T-867 | 恢复 AI 对项目素材与分镜场景的自动语义匹配【用户真机截图·2026-08-17】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-867) | 详情见外置记录。 |
 | T-860 | 修复竖屏素材底边与左下人物框边界重合【用户截图·2026-08-16】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-860) | 详情见外置记录。 |
@@ -191,86 +191,86 @@
 
 > 只保留任务索引；暂停原因与恢复条件见 `orchestrator/events.ndjson` 和详情文档。恢复必须使用 `taskctl start`。
 
-| ID | 状态 | 验收 | 文档 |
-| --- | --- | --- | --- |
-| T-626 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-626) |
-| T-577 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-577) |
-| T-565 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-565) |
-| T-524 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-524) |
-| T-519 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-519) |
-| T-525 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-525) |
-| T-517 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-517) |
-| T-516 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-516) |
-| T-510 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-510) |
-| T-506 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-506) |
-| T-502 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-502) |
-| T-497 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-497) |
-| T-451 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-451) |
-| T-449 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-449) |
-| T-448 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-448) |
-| T-433 S2 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-433-s2) |
-| T-433 S4 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-433-s4) |
-| T-433 S5 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-433-s5) |
-| T-426 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-426) |
-| T-425W | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-425w) |
-| T-413 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-413) |
-| T-417 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-417) |
-| T-418 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-418) |
-| T-420 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-420) |
-| T-399 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-399) |
-| T-399c | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-399c) |
-| T-409 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-409) |
-| T-372 W-spike | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-372-w-spike) |
-| T-372 W-ci | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-372-w-ci) |
-| T-391 H-econ | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-391-h-econ) |
-| T-393 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-393) |
-| T-401 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-401) |
-| T-406 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-406) |
-| T-407 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-407) |
-| T-396 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-396) |
-| T-398 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-398) |
-| T-366c | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-366c) |
-| T-361 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-361) |
-| T-352 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-352) |
-| T-320c | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-320c) |
-| T-350c | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-350c) |
-| T-351 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-351) |
-| T-349d | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-349d) |
-| T-339 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-339) |
-| T-328 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-328) |
-| T-332R | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-332r) |
-| T-336 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-336) |
-| T-335 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-335) |
-| T-337 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-337) |
-| T-337a | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-337a) |
-| T-337b | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-337b) |
-| T-337c | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-337c) |
-| T-337d | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-337d) |
-| T-337e | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-337e) |
-| T-337f | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-337f) |
-| T-337g | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-337g) |
-| T-334 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-334) |
-| T-324 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-324) |
-| T-340 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-340) |
-| T-315 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-315) |
-| T-316 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-316) |
-| T-317 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-317) |
-| T-318 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-318) |
-| T-319 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-319) |
-| T-312 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-312) |
-| T-307 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-307) |
-| T-306 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-306) |
-| T-301 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-301) |
-| T-302 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-302) |
-| T-261 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-261) |
-| T-249 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-249) |
-| T-250 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-250) |
-| T-255b | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-255b) |
-| T-185R | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-185r) |
-| T-136R | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-136r) |
-| T-100 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-100) |
-| T-087 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-087) |
-| T-045 | ⏸️ | 待验 | [详情](BACKLOG-details.md#t-045) |
+|ID|状态|审核|验收|文档|
+|---|---|---|---|---|
+| T-626 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-626) |
+| T-577 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-577) |
+| T-565 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-565) |
+| T-524 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-524) |
+| T-519 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-519) |
+| T-525 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-525) |
+| T-517 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-517) |
+| T-516 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-516) |
+| T-510 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-510) |
+| T-506 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-506) |
+| T-502 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-502) |
+| T-497 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-497) |
+| T-451 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-451) |
+| T-449 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-449) |
+| T-448 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-448) |
+| T-433 S2 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-433-s2) |
+| T-433 S4 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-433-s4) |
+| T-433 S5 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-433-s5) |
+| T-426 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-426) |
+| T-425W | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-425w) |
+| T-413 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-413) |
+| T-417 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-417) |
+| T-418 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-418) |
+| T-420 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-420) |
+| T-399 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-399) |
+| T-399c | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-399c) |
+| T-409 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-409) |
+| T-372 W-spike | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-372-w-spike) |
+| T-372 W-ci | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-372-w-ci) |
+| T-391 H-econ | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-391-h-econ) |
+| T-393 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-393) |
+| T-401 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-401) |
+| T-406 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-406) |
+| T-407 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-407) |
+| T-396 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-396) |
+| T-398 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-398) |
+| T-366c | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-366c) |
+| T-361 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-361) |
+| T-352 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-352) |
+| T-320c | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-320c) |
+| T-350c | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-350c) |
+| T-351 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-351) |
+| T-349d | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-349d) |
+| T-339 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-339) |
+| T-328 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-328) |
+| T-332R | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-332r) |
+| T-336 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-336) |
+| T-335 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-335) |
+| T-337 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-337) |
+| T-337a | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-337a) |
+| T-337b | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-337b) |
+| T-337c | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-337c) |
+| T-337d | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-337d) |
+| T-337e | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-337e) |
+| T-337f | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-337f) |
+| T-337g | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-337g) |
+| T-334 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-334) |
+| T-324 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-324) |
+| T-340 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-340) |
+| T-315 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-315) |
+| T-316 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-316) |
+| T-317 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-317) |
+| T-318 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-318) |
+| T-319 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-319) |
+| T-312 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-312) |
+| T-307 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-307) |
+| T-306 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-306) |
+| T-301 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-301) |
+| T-302 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-302) |
+| T-261 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-261) |
+| T-249 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-249) |
+| T-250 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-250) |
+| T-255b | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-255b) |
+| T-185R | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-185r) |
+| T-136R | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-136r) |
+| T-100 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-100) |
+| T-087 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-087) |
+| T-045 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-045) |
 
 ## ✅ 已完成
 
