@@ -4,10 +4,10 @@
     "work_branch": "main"
   },
   "summary": {
-    "verticals": 94,
+    "verticals": 95,
     "tasks_done": 62,
-    "tasks_total": 196,
-    "tasks_pending": 134,
+    "tasks_total": 197,
+    "tasks_pending": 135,
     "verticals_complete": 18
   },
   "verticals": [
@@ -6841,6 +6841,68 @@
       "step_read_set": {},
       "step_exclusive_resources": {},
       "commits": {}
+    },
+    {
+      "id": "T-1089",
+      "task_id": "T-1089",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1089-legacy-source-ownership-repair.md",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "PROJECT_CONTEXT.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "backend/src/**",
+        "backend/drizzle/**",
+        "frontend/src/server/**",
+        "frontend/src/lib/request-context.server.ts",
+        "contract/src/**",
+        "ai-worker/src/**"
+      ],
+      "write_set": [
+        "backend/drizzle/0130_legacy_source_ownership.sql",
+        "backend/drizzle/meta/_journal.json",
+        "backend/src/migration-convergence.ts",
+        "backend/src/legacy-source-migration.test.ts",
+        "frontend/src/server/legacy-frozen-source-read.integration.test.ts",
+        "docs/features/t1089-legacy-source-ownership-repair.md",
+        "docs/features/t1089-legacy-source-ownership-repair.review.md",
+        "docs/features/t1089-legacy-source-ownership-repair.review-input.json",
+        "docs/features/t1089-legacy-source-ownership-repair.independent-review.md",
+        "docs/features/t1089-legacy-frozen-source-read.md",
+        "docs/verification/t1089/**",
+        "docs/verification/t1062/assistant-fixes-20261009.md",
+        "docs/verification/t1062/assistant-fixes-20261009-evidence.json",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "orchestrator/DECISION_LOG.md",
+        "orchestrator/events.ndjson",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/progress.json"
+      ],
+      "blocked_reason": null,
+      "step_depends_on": {},
+      "verify_commands": {
+        "implementation": [
+          "git diff --check",
+          "pnpm -C backend exec vitest run src/legacy-source-migration.test.ts src/migration-convergence.test.ts src/workbench-main-migration.test.ts src/db.creative-canvas-lineage.test.ts --retry=0 --no-file-parallelism --testTimeout=180000 --hookTimeout=180000",
+          "pnpm -C frontend exec vitest run src/server/legacy-frozen-source-read.integration.test.ts src/server/assistant-native-editor-read.integration.test.ts --retry=0 --no-file-parallelism --testTimeout=1200000 --hookTimeout=1200000",
+          "pnpm -C backend typecheck",
+          "pnpm -C frontend typecheck",
+          "node orchestrator/process/boundary-scan.mjs",
+          "node orchestrator/process/semantic-boundary-scan.mjs",
+          "node orchestrator/process/reconcile.mjs"
+        ]
+      }
     }
   ],
   "leases": {
