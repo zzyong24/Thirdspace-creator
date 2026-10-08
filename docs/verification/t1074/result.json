@@ -1,6 +1,6 @@
 {
   "taskId": "T-1074",
-  "updatedAt": "2026-10-08T08:09:37.734122+00:00",
+  "updatedAt": "2026-10-08T08:54:43.633344+00:00",
   "taskComplete": false,
   "sourceBaseBeforeCommit": "fbb861d433eae12b5824709916a669c7a0400aa5",
   "specSHA256": "c33f1a6a06bcb5a4782abda16153c0877654f707a733612d3773060e251ed411",
@@ -626,28 +626,25 @@
       "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1075-install-preparation-b64061ab/literal-adaptation-review.json",
       "sha256": "8fdcefb632755765cb80a9ea926e3bc8e2eaf73faa00ddafebd9e9ad389b753f"
     },
-    "freshBackupStarted": false,
-    "stageCreated": false,
-    "installed": false,
-    "startupForNewPackageVerified": false
+    "freshBackupStarted": true,
+    "stageCreated": true,
+    "installed": true,
+    "startupForNewPackageVerified": true
   },
   "currentInstalled": {
-    "head": "74883948432b87f73ea464fb029bf2f5554ac47f",
-    "nativePID": 6790,
-    "publicListenerPID": 6894,
+    "head": "b64061ab6bee213c939bf97ad19f423c7090a5ef",
+    "nativePID": 82283,
+    "publicListenerPID": 82477,
     "connected": true,
     "access": "full",
-    "sourceMirrorMatchesOriginalArtifact": true,
-    "resumeReceipt": {
-      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1075-install-preparation-b64061ab/resume-current-for-testing/result.json",
-      "sha256": "8483a24126009ac8c2ef24419c3696f619059bf1513451b15f47ff56e11fe9ea"
-    },
-    "publicStatusReceipt": {
-      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1075-install-preparation-b64061ab/resume-current-for-testing/cli-status.receipt.json",
-      "sha256": "d848690e1eaa744cb4d47ae42a37a3d9602ed87b13ff519d4710df898fd32c0d"
-    },
-    "newPackageInstalled": false,
-    "nativeVisibleHomeVerified": false
+    "fullAppMirrorVerified": true,
+    "newPackageInstalled": true,
+    "nativeVisibleHomeVerified": false,
+    "actualObservation": {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1074-installed/t1075-b640-installed-observation.json",
+      "sha256": "e70013233665d3b03c53faae7dd683ec3f2519e44d69d4b4fc58e1069029a470",
+      "bytes": 6984
+    }
   },
   "installedPiCanvas": {
     "status": "PASS_BOUNDED_PUBLIC_MODEL_SOURCE_ADOPTION_READBACK",
@@ -777,7 +774,8 @@
     "画布节点生图确认/产物放置、Codex右栏、七类视频调整与文章图文持续精调的新安装版仍待逐项。",
     "原8.16秒产物仅重新下载/解码验证字节保持，不是本轮新render或导出。",
     "强制关闭旧孤儿只证明进程结束，未证明flush；新鲜备份完整闭包与正式对象读回分别记录。",
-    "全局37错误1告警及原后端两个测试类型错误保留，未签全绿或任务完成。"
+    "全局37错误1告警及原后端两个测试类型错误保留，未签全绿或任务完成。",
+    "新b640实际安装、公开读取15/15、剪辑rev5深等和标签真实Pi采纳/读回通过；原401证明available但保留404，编导发现/表达与两引擎原生完整矩阵仍待验。"
   ],
   "historyLimitationsBeforeCurrentInstallation": [
     "真实两引擎模型矩阵、19类完整异常矩阵与安装版功能验收未完成",
@@ -951,24 +949,6 @@
     "flush_confirmed": false,
     "visible_home_user_confirmation": "PENDING"
   },
-  "installationPendingDiskSpace": {
-    "initialObservation": {
-      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1075-install-preparation-b64061ab/disk-space-install-pending.json",
-      "sha256": "57704f6c08465e524a17874de022ca7534494cb82b7d2c4d0687fd9b2c5d7d74"
-    },
-    "latestObservation": {
-      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1075-install-preparation-b64061ab/disk-space-observation-final.json",
-      "sha256": "72c383f223447c0e9bbb1ca42e52431d572d17aaf3cb40681899c933b8dc05ae"
-    },
-    "requiredTotalFreeGiB": 10,
-    "freshBackupStarted": false,
-    "installerExecuted": false,
-    "latestControlObservation": {
-      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1074-installed/t1075-validation-control-observation-20261008.json",
-      "sha256": "942bc8c936440294346dd511c1eb1cad33ecc2cb02a6efed7da0e165f926a1a7",
-      "bytes": 1610
-    }
-  },
   "latestReconcileObservation": {
     "errors": 37,
     "warnings": 1,
@@ -982,5 +962,90 @@
     "sha256": "5d35ccaf7198195d5f7ab8530d81321a058a93e3481fcc4732b66d5ec35fd0e6",
     "bytes": 1966
   },
-  "currentSpaceAfterCleanupGiB": 15.132926940917969
+  "historyPackageAndPendingBeforeActualB640Install": {
+    "localPackage": {
+      "candidateCommit": "b64061ab6bee213c939bf97ad19f423c7090a5ef",
+      "path": "/Users/zyongzhu/Downloads/CreatorOS-1.2.0.dmg",
+      "preservedPath": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1075-local-package-b64061ab/CreatorOS-1.2.0.dmg",
+      "sha256": "7060b1732a433148ce722df7b0e6f2f18de971f11cebb9a5d8a77d71efb3543d",
+      "bytes": 667061735,
+      "signature": "local-ad-hoc-not-notarized",
+      "basicTests": {
+        "files": 4,
+        "passed": 44
+      },
+      "dmgVerifyExit": 0,
+      "signatureVerifyExit": 0,
+      "fullAppMirrorFiles": 7,
+      "fullAppMirrorMatchesBuildRecord": true,
+      "backendResourceCount": 791,
+      "rawBackendSourceHashesVerified": false,
+      "artifactVerification": {
+        "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1075-local-package-b64061ab/artifact-verification.json",
+        "sha256": "d8e70bfd6cf0797223550fc5e4d087de7cfc23ed76da4fc09c9cf87f637a052c"
+      },
+      "buildResult": {
+        "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1075-local-package-b64061ab/build.result.json",
+        "sha256": "a3012e5834f3e12fd5781dfb821be39f408f3a0545c0e1b257a6cbe8f5a676ea"
+      },
+      "literalInstallerReview": {
+        "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1075-install-preparation-b64061ab/literal-adaptation-review.json",
+        "sha256": "8fdcefb632755765cb80a9ea926e3bc8e2eaf73faa00ddafebd9e9ad389b753f"
+      },
+      "freshBackupStarted": false,
+      "stageCreated": false,
+      "installed": false,
+      "startupForNewPackageVerified": false
+    },
+    "installationPendingDiskSpace": {
+      "initialObservation": {
+        "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1075-install-preparation-b64061ab/disk-space-install-pending.json",
+        "sha256": "57704f6c08465e524a17874de022ca7534494cb82b7d2c4d0687fd9b2c5d7d74"
+      },
+      "latestObservation": {
+        "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1075-install-preparation-b64061ab/disk-space-observation-final.json",
+        "sha256": "72c383f223447c0e9bbb1ca42e52431d572d17aaf3cb40681899c933b8dc05ae"
+      },
+      "requiredTotalFreeGiB": 10,
+      "freshBackupStarted": false,
+      "installerExecuted": false,
+      "latestControlObservation": {
+        "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1074-installed/t1075-validation-control-observation-20261008.json",
+        "sha256": "942bc8c936440294346dd511c1eb1cad33ecc2cb02a6efed7da0e165f926a1a7",
+        "bytes": 1610
+      }
+    },
+    "currentInstalled": {
+      "head": "74883948432b87f73ea464fb029bf2f5554ac47f",
+      "nativePID": 6790,
+      "publicListenerPID": 6894,
+      "connected": true,
+      "access": "full",
+      "sourceMirrorMatchesOriginalArtifact": true,
+      "resumeReceipt": {
+        "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1075-install-preparation-b64061ab/resume-current-for-testing/result.json",
+        "sha256": "8483a24126009ac8c2ef24419c3696f619059bf1513451b15f47ff56e11fe9ea"
+      },
+      "publicStatusReceipt": {
+        "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1075-install-preparation-b64061ab/resume-current-for-testing/cli-status.receipt.json",
+        "sha256": "d848690e1eaa744cb4d47ae42a37a3d9602ed87b13ff519d4710df898fd32c0d"
+      },
+      "newPackageInstalled": false,
+      "nativeVisibleHomeVerified": false
+    }
+  },
+  "installedB640ActualObservation": {
+    "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1074-installed/t1075-b640-installed-observation.json",
+    "sha256": "e70013233665d3b03c53faae7dd683ec3f2519e44d69d4b4fc58e1069029a470",
+    "bytes": 6984
+  },
+  "installedB640EvidenceIndex": {
+    "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1074-installed/t1075-b640-installed-index.json",
+    "sha256": "0741a7e24b04d4784c73c362478000eac636276d4b195df7ed39624ae91e26b5",
+    "bytes": 33133
+  },
+  "cleanupSpaceObservationHistorical": {
+    "freeGiB": 15.132926940917969,
+    "note": "清理后、备份安装前的历史空间；当前值见installedB640ActualObservation"
+  }
 }
