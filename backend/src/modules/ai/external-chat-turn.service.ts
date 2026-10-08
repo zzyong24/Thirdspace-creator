@@ -8,6 +8,7 @@ import { createAiRepository } from "./ai.repository";
 import {createPendingGeneratedAssetService,type ObjectStorageForCtx} from "../assets";
 import {readCommittedGeneratedAssetFile} from "../assets/generated-asset-candidate.service";
 import { chatHistoryDigest, chatInputDigest } from "./chat-turn-submission.service";
+import { selectFrozenChatHistory } from "./chat-turn-history";
 import {workspaceFilter} from "../../workspace-scope";
 import {applyChatToolOutcome} from "./chat-receipt-projection";
 import {z} from "zod";
@@ -30,7 +31,7 @@ export function createExternalChatTurnService(db:Db,deps:{now?:()=>string;budget
   const [conversation]=await tx.select().from(aiConversations).where(and(eq(aiConversations.id,frozen.conversationId),eq(aiConversations.userId,context.userId),workspaceFilter(aiConversations,context))).for("update");
   if(!conversation||conversation.projectId!==business.projectId)throw new ConflictError("外部聊天会话归属已变化");
   const messages=await tx.select().from(aiMessages).where(eq(aiMessages.conversationId,conversation.id)).orderBy(asc(aiMessages.createdAt));
-  const sourceIndex=messages.findIndex(message=>message.id===frozen.sourceMessageId),source=messages[sourceIndex],history=messages.slice(0,sourceIndex+1);
+  const {sourceMessage:source,messages:history}=selectFrozenChatHistory(conversation,messages,frozen.sourceMessageId,sourceInput.historyMessageIds);
   if(!source||source.role!=="user"||object(source.modelMetadata).chatTaskId!==business.id||JSON.stringify(history.map(message=>message.id))!==JSON.stringify(sourceInput.historyMessageIds)||chatHistoryDigest({conversation,messages:history,sourceMessage:source})!==sourceInput.historyDigest)throw new ConflictError("外部聊天会话来源已变化");
   return {frozen,engine,business,conversation,messages,source};
  }

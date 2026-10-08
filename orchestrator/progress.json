@@ -4,10 +4,10 @@
     "work_branch": "main"
   },
   "summary": {
-    "verticals": 95,
+    "verticals": 96,
     "tasks_done": 62,
-    "tasks_total": 197,
-    "tasks_pending": 135,
+    "tasks_total": 198,
+    "tasks_pending": 136,
     "verticals_complete": 18
   },
   "verticals": [
@@ -6903,6 +6903,58 @@
           "node orchestrator/process/reconcile.mjs"
         ]
       }
+    },
+    {
+      "id": "T-1090",
+      "task_id": "T-1090",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1090-frozen-chat-history-replay.md",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "PROJECT_CONTEXT.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "backend/src/modules/ai/**",
+        "backend/src/modules/execution/**",
+        "backend/src/workspace-scope.ts",
+        "contract/src/**",
+        "frontend/src/server/legacy-frozen-source-read.integration.test.ts",
+        "frontend/src/server/assistant-native-editor-read.integration.test.ts"
+      ],
+      "write_set": [
+        "backend/src/modules/ai/chat-turn-history.ts",
+        "backend/src/modules/ai/chat-turn-submission.service.ts",
+        "backend/src/modules/ai/chat-turn-completion.service.ts",
+        "backend/src/modules/ai/external-chat-turn.service.ts",
+        "backend/src/modules/ai/frozen-chat-history.service.test.ts",
+        "docs/features/t1090-frozen-chat-history-replay.md",
+        "docs/features/t1090-frozen-chat-history-replay.review.md",
+        "docs/features/t1090-frozen-chat-history-replay.review-input.json",
+        "docs/features/t1090-frozen-chat-history-replay.independent-review.md",
+        "docs/features/t1090-chat-completion-replay-diagnosis.md",
+        "docs/verification/t1090/**",
+        "docs/verification/t1062/assistant-fixes-20261009.md",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "orchestrator/DECISION_LOG.md",
+        "orchestrator/events.ndjson",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/progress.json"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
     }
   ],
   "leases": {

@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "未发现阻断或需在实现前澄清的问题。SPEC 将修复限定为已绑定任务按可信 historyMessageIds 恢复真实同会话消息，并保留旧 historyDigest、owner、lease、fence、冻结输入和回执校验；未绑定首次历史与 UI 排序明确不在本次重排。四个产品路径和一个新增真实服务测试足以覆盖 submission、host/proposal 共享读取、Pi completion 与 external completion，不引入 schema、迁移、模型判断或新写权限。",
+  "findings": []
+}

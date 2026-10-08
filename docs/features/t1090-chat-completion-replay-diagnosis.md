@@ -18,3 +18,5 @@ flowchart LR
 这是诊断任务，没有页面改动；未发生独评、RED修复、安装验收或完成证据。
 
 2026-10-09实际对照：当前原60例再跑59PASS/1FAIL（日志SHA `59e8f5391da430b3860d8d85e1422007b4130476c56a5709e30fb224090b2f9e`）；b75全backend归档的原60例也59PASS/同tools1FAIL，日志SHA `abd7b17d4b77cac748b19a0e82803e5465120b1fd0f97d85e19f5c4b46b98e9a`。Node自引用到归档source，Vite加载trace拒当前backend（traceSHA `bb2cdc89b5981cf467e6c7ed7ff2269b89a7c0fc6ec0ab1a3716e685e0f20efa`）；合同233/worker520追踪文件与b75逐字相同。证明T1089差异不是该失败的必要条件；尚不证明同时间排序的精确根因或全仓基线通过。
+
+机制已由原60例和外部日志确认，原FAIL继续保留。2026-10-09沿本任务进入[正式修复候选](t1090-frozen-chat-history-replay.md)及独评；本诊断不代签后续实施。

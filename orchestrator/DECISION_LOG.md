@@ -4958,3 +4958,7 @@ T-1063-release-pipeline验收分类复核：独立review_spec只读确认它是w
 ## DEC-T1089 — 真实初始账号组三来源归属修复（2026-10-09）
 
 用户持续授权全功能可用性验证与及时修复、main整合和无备份本地构建。真实resolver/正式transport诊断证明已登记账号只选账号的合法入口遗漏会话/文章/图文归属；独立SPEC初审REV:ecf84d18be49确认仅0130版本三来源trigger与可证明旧NULL的精确回填，不新增authority或改旧任务/payload/digest/消息/账本/状态。正常版本与实际PG NOWAIT整轮回滚/锁后重采验收保持严格边界；原T1086测试不改。非UI分类独评确认仅更正验收元数据为—，不代签父T1062UI/Codex/全部功能。context-compile缺绑定，按已审SPEC只追加T1089精确pending项；原T1083不兼容glob不迁移，不重写旧状态。本记录不授权发布或图401采纳。
+
+## DEC-T1090 — 按原冻结历史恢复完成与候选来源（2026-10-09）
+
+用户持续授权全面可用性/稳定性验证和及时修复缺口、本地main提交、无备份出包；原T1090诊断实际确认同时间消息排序导致原回执replay来源冲突。正式SPEC仅恢复可信业务task的原historyMessageIds顺序，保留当前owner、全部历史内容摘要、冻结execution映射、lease/fence和原账本，不改变contract/schema、原任务输入或权限，不以任意ID排序重写旧冻结历史。任务沿原T1090进入精确修复与独评，新增绑定只记pending，不改变旧模块状态或glob。此记录不授权图401采纳、发布、私有cookie旁路或更改用户稿件。

@@ -10,6 +10,7 @@ import type { RequestContext } from "@creatoros/contract";
 import { chatWorkerInputSchema,codexAcpBinding } from "@creatoros/contract/execution-worker";
 import { createPersistentTaskService } from "../execution/persistent-task.service";
 import { ConflictError } from "../execution/execution.errors";
+import { selectFrozenChatHistory } from "./chat-turn-history";
 type ChatInput=z.infer<typeof chatWorkerInputSchema>;
 type Message=typeof aiMessages.$inferSelect;
 export type ChatTurnSnapshot={conversation:typeof aiConversations.$inferSelect;messages:Message[];sourceMessage:Message};
@@ -30,6 +31,15 @@ export async function readChatTurnSnapshot(store:Db,ctx:RequestContext,request:{
     const history=await store.select().from(aiMessages).where(eq(aiMessages.conversationId,conversation.id)).orderBy(asc(aiMessages.createdAt));
     const index=history.findIndex(message=>message.id===request.sourceMessageId);
     if(index<0 || history[index]!.role!=="user")throw new ConflictError("源消息不是当前会话的用户消息");
+    const taskId=object(history[index]!.modelMetadata).chatTaskId;
+    if(taskId!==undefined){
+      if(typeof taskId!=="string" || !taskId)throw new ConflictError("源消息执行绑定无效");
+      const [task]=await store.select().from(aiTasks).where(and(eq(aiTasks.id,taskId),eq(aiTasks.userId,ctx.userId),workspaceFilter(aiTasks,ctx)));
+      const input=object(task?.inputData);
+      if(!task || task.taskType!=="copilot.assist" || task.projectId!==conversation.projectId || input.kind!=="chat.run" || input.conversationId!==conversation.id || input.sourceMessageId!==request.sourceMessageId)throw new ConflictError("聊天任务来源已变化或映射无效");
+      // 已绑定历史不能再次按时间截取；后来完成的同毫秒回复可能排到 source 前。
+      return {conversation,...selectFrozenChatHistory(conversation,history,request.sourceMessageId,input.historyMessageIds)};
+    }
     return {conversation,messages:history.slice(0,index+1),sourceMessage:history[index]!};
   }
 

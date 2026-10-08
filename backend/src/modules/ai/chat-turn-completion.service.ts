@@ -7,6 +7,7 @@ import { createExecutionLeaseService } from "../execution/execution-lease.servic
 import { ConflictError } from "../execution/execution.errors";
 import { createAiRepository } from "./ai.repository";
 import { chatHistoryDigest, chatInputDigest } from "./chat-turn-submission.service";
+import { selectFrozenChatHistory } from "./chat-turn-history";
 import { projectChatReceipts,readChatApprovalFacts } from "./chat-receipt-projection";
 import { restoreHistoricalChatToolCards } from "./chat-historical-tool-stream.service";
 import type { TerminalPlanIssue, TerminalToolFailure } from "../execution/workbench-plan.service";
@@ -32,8 +33,7 @@ export function createChatTurnCompletionService(db: Db, deps: {
                 if (!conversation || conversation.projectId !== business.projectId)
                     throw new ConflictError("会话归属已改变");
                 const messages = await tx.select().from(aiMessages).where(eq(aiMessages.conversationId, conversation.id)).orderBy(asc(aiMessages.createdAt));
-                const sourceIndex = messages.findIndex(message => message.id === frozen.sourceMessageId), source = messages[sourceIndex];
-                const history = messages.slice(0, sourceIndex + 1);
+                const {sourceMessage:source,messages:history} = selectFrozenChatHistory(conversation,messages,frozen.sourceMessageId,sourceInput.historyMessageIds);
                 if (!source || source.role !== "user" || object(source.modelMetadata).chatTaskId !== business.id || JSON.stringify(history.map(message => message.id)) !== JSON.stringify(sourceInput.historyMessageIds) || chatHistoryDigest({ conversation, messages: history, sourceMessage: source }) !== sourceInput.historyDigest)
                     throw new ConflictError("会话来源已变化");
                 const calls = await tx.select().from(executionCalls).where(eq(executionCalls.executionTaskId, task.id)).orderBy(asc(executionCalls.sequence));
