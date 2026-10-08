@@ -1,0 +1,1 @@
+{"argv": ["pnpm", "-C", "frontend", "typecheck"], "exitCode": 0, "seconds": 15.588559865951538}

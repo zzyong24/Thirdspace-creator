@@ -1,0 +1,100 @@
+{
+  "schema": "t1080-ledger-fixture-independent-limited-review-v1",
+  "observed_at": "2026-10-08T12:55:48.009761+00:00",
+  "verdict": "PASS_LIMITED_FIXTURE_ONLY_PENDING_ACTUAL_SERVICE_GREEN",
+  "checks": [
+    {
+      "name": "candidate_and_diff_sha_exact",
+      "pass": true,
+      "evidence": {
+        "manifest_sha256": "9a2688d0a0fd1fb09effc61b95149a4ab1a8595f04af211254ccc3bdc7008333",
+        "source_sha256": "98f31857806c6a2849642c250cd1cd736298c251aca0c8bab3f6fad3790ab7c2",
+        "candidate_sha256": "b76cb85c4c35fe24a7e0ecf355bccd97a991ede5004b15f06e54f6ec6269487c",
+        "diff_sha256": "d416ea9a2a0451837d5c5cc85b948373929252b926e347efd56fa8ab7e7516e5"
+      }
+    },
+    {
+      "name": "three_literal_reverse_restores_entire_main_source",
+      "pass": true,
+      "evidence": {
+        "main_head": "12288cefdd43544478ea8f67a648798f43e813df",
+        "new_literals": [
+          "nested-cancel:cancel",
+          "nested-old-parent:pause",
+          "nested-old-parent:resume"
+        ],
+        "occurrences": [
+          1,
+          1,
+          1
+        ]
+      }
+    },
+    {
+      "name": "current_receipt_namespace_strict_digest_guard_retained",
+      "pass": true,
+      "evidence": "严格user/account命令receipt门继承04ca client；原25case/nested测试继承122main。6b资源与122main原service都无receipt。当前3e8门保持，main不同task fixture共用常量键触发真实ConflictError；正确三方归因已核。"
+    },
+    {
+      "name": "production_sha_exact_unchanged",
+      "pass": true,
+      "evidence": {
+        "path": "backend/src/modules/execution/persistent-task.service.ts",
+        "sha256": "3e8cf47382c7c7db7ea77166c28a9f04c069256f17c5b9ebaaeb56d9a50f1475",
+        "production_candidate_paths": []
+      }
+    },
+    {
+      "name": "all_assertions_budgets_and_execution_semantics_original_bytes",
+      "pass": true,
+      "evidence": "整字节逆变换证明所有ConflictError/迟到回执/父子归属/取消/暂停恢复/attempt/fence/预算原断言未删改。仅为不同task独立request键，不放宽同键digest准入。"
+    },
+    {
+      "name": "actual_public_service_red_kept",
+      "pass": true,
+      "evidence": "原backend3服务suite35项33PASS/2FAIL；nested取消与pause在生产restore同一命令请求号对应不同输入处失败，原日志保留，不算预算14既有短窗口根因。"
+    }
+  ],
+  "nonblocking_evidence_notes": [
+    {
+      "name": "resource_blob_receipt_attribution",
+      "note": "decisions.sourceProof.resourceServiceHasExecutionControlReceipts若指refs中的6b1322 Git blob，独立实读该blob无该符号；当前整合生产3e8有receipt/strictdigest是已验证事实。本评审不将单commit归因当作证明，也不阻断精确三literal夹具修复。",
+      "resource_head": "6b1322af71cbdf55f52e9f37c5cde76e06b56e48",
+      "resource_service_sha256": "2c0dd4dc93d601c641c25777976edfcf9b394e81ed5b51211cf05c33e9331e4d",
+      "resource_blob_has_executionControlReceipts": false
+    }
+  ],
+  "repository_or_git_mutated": false,
+  "product_or_control_mutated": false,
+  "tests_run_by_reviewer": false,
+  "required_followup": "root仅按候选SHA采用测试3literal，再沿原3service公共suite实证；此review不重跑suite。",
+  "scope_limits": [
+    "仅execution-call-ledger.service.test.ts三处夹具独立request key，不改生产ConflictError/receipt/digest拒绝。",
+    "timeout14既有短budget问题与原失败均保留，不扩大根因修复/不跑全量测试。",
+    "限定静态兼容通过不是main完整冻结/实际安装验收。"
+  ],
+  "correct_source_attribution": {
+    "strict_control_receipts_from": "04ca6d27 client",
+    "client_head": "04ca6d27eb593c8ba174133c3aa7b456abe09c1f",
+    "client_service_sha256": "003cc317c78b4a7d7300a06a62d52fb85e1ded155007ad4d6d14ade8a5e3ce7e",
+    "client_has_strict_receipt_digest": true,
+    "main_nested_test_source": "12288cef main",
+    "resource6b_has_receipts": false,
+    "root_and_core_corrigendum_confirmed": true,
+    "old_wrong_metadata_preserved": {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/worktree-main-integration-20261008/timeout-ledger-compatibility-candidate/decisions.json",
+      "sha256": "9a2688d0a0fd1fb09effc61b95149a4ab1a8595f04af211254ccc3bdc7008333",
+      "field": "sourceProof.resourceServiceHasExecutionControlReceipts=true",
+      "original_file_rewritten_by_reviewer": false
+    },
+    "core_corrigendum": {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/worktree-main-integration-20261008/timeout-ledger-compatibility-candidate/source-attribution-correction.json",
+      "sha256": "3f4310e6517861d9e6d9a81fc5e891b8e50500f7f1754f50bb46d7d4f4431a18",
+      "wrong_report_preserved_and_referenced": true
+    },
+    "corrected_copy_sha256": {
+      "decisions-corrected.json": "63aa4b43f66f6fe416e93a4cafe63bd60389f3143c673ab47da33b0819792778",
+      "static-dispositions-corrected.json": "db02159a9a75bd0d7e80d85c58f34e4935f8e455d240fd959708ab6da3135db3"
+    }
+  }
+}

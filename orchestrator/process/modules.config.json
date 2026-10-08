@@ -4870,7 +4870,14 @@
         "orchestrator/process/timeout-budget.mjs",
         "tools/windows-closure-rat/build-production-closure.mjs",
         "tools/windows-closure-rat/build-production-closure.test.mjs",
-        "tools/windows-closure-rat/package-build-only.test.mjs"
+        "tools/windows-closure-rat/package-build-only.test.mjs",
+        "BACKLOG-details.md",
+        "BACKLOG-archive.md",
+        "backend/src/modules/execution/execution-call-ledger.service.test.ts",
+        "frontend/src/server/chat-execution-stream.test.ts",
+        "frontend/src/server/ai-runtime/live-chat-session.test.ts",
+        "frontend/src/server/ai-runtime/live-chat-session.consumer.test.tsx",
+        "docs/verification/t1073/verify-resource-lifecycle.mjs"
       ],
       "verify_commands": {
         "implementation": [
@@ -5743,8 +5750,8 @@
         "frontend/src/features/copilot/chat-task-control.ts",
         "frontend/src/features/copilot/chat-thesis-card.test.tsx",
         "frontend/src/features/copilot/chat-thesis-card.tsx",
-        "frontend/src/features/copilot/live-chat-session.consumer.test.tsx",
-        "frontend/src/features/copilot/live-chat-session.test.ts",
+        "frontend/src/server/ai-runtime/live-chat-session.consumer.test.tsx",
+        "frontend/src/server/ai-runtime/live-chat-session.test.ts",
         "frontend/src/features/copilot/live-chat-session.ts",
         "frontend/src/features/draft-workbench/use-latest-script-review.test.tsx",
         "frontend/src/features/draft-workbench/use-latest-script-review.ts",

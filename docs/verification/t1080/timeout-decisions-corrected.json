@@ -1,0 +1,64 @@
+{
+  "schema": "creatoros.external-minimal-fixture-compatibility.v1",
+  "task": "T-1080",
+  "reviewer": "assistant_core_implementation_review",
+  "createdAtUtc": "2026-10-08T12:53:04.218276+00:00",
+  "refs": {
+    "HEAD": "a91aa045fac14031c166e03e6bae8b52deeef780",
+    "04ca6d27": "04ca6d27eb593c8ba174133c3aa7b456abe09c1f",
+    "12288cef": "12288cefdd43544478ea8f67a648798f43e813df",
+    "6b1322af": "6b1322af71cbdf55f52e9f37c5cde76e06b56e48"
+  },
+  "path": "backend/src/modules/execution/execution-call-ledger.service.test.ts",
+  "sourceSha256": "98f31857806c6a2849642c250cd1cd736298c251aca0c8bab3f6fad3790ab7c2",
+  "candidateSha256": "b76cb85c4c35fe24a7e0ecf355bccd97a991ede5004b15f06e54f6ec6269487c",
+  "diffSha256": "d416ea9a2a0451837d5c5cc85b948373929252b926e347efd56fa8ab7e7516e5",
+  "decision": "仅3个不同task命令意图改用确定性独立request key；同账号命名空间及生产输入digest/严格拒绝完整保留。反向仅替换3字符串可恢复整个source字节，所有断言/预算/父调用/取消/恢复行为不变。",
+  "classification": "真实main/client组合兼容夹具：main nested新增测试与client既有严格命令回执发生键碰撞，不是当前生产安全门缺陷。",
+  "sourceProof": {
+    "mainTestEntireFileMatchesSource": true,
+    "mainServiceHasExecutionControlReceipts": false,
+    "resourceServiceHasExecutionControlReceipts": false,
+    "currentProductionPath": "backend/src/modules/execution/persistent-task.service.ts",
+    "currentProductionSha256": "3e8cf47382c7c7db7ea77166c28a9f04c069256f17c5b9ebaaeb56d9a50f1475",
+    "productionModified": false,
+    "clientServiceHasExecutionControlReceipts": true
+  },
+  "actualRed": [
+    {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/worktree-main-integration-20261008/timeout-policy-combined-green.log",
+      "sha256": "aaa10b9e1a56942ed4f136129c83d8ece21bbda00dcf5332e50858cd0487be86",
+      "result": "backend3文件35项33PASS/2FAIL，同一命令请求号对应不同输入，取消及恢复nested目标分别与更早不同task冲突。"
+    },
+    {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/worktree-main-integration-20261008/timeout-policy-combined-green.result.json",
+      "sha256": "6b7aca184cf9e839466d2996642c08693d5fe2387938cee3b699d34db2896cdd"
+    }
+  ],
+  "recommendedArgv": [
+    "pnpm",
+    "--dir",
+    "backend",
+    "exec",
+    "vitest",
+    "run",
+    "src/modules/execution/new-execution-budget.test.ts",
+    "src/modules/execution/run-execution-task.test.ts",
+    "src/modules/execution/execution-call-ledger.service.test.ts",
+    "--retry=0"
+  ],
+  "limits": [
+    "只写外部candidate/diff/report；0repo/Git/control/生产修改。",
+    "当前未应用，候选GREEN需root按SHA应用后沿原真实service suite运行。",
+    "静态27项原source诊断失败单独保留，不以该fixture候选清洗总体timeout-policy。",
+    "不运行真实用户数据库/业务/模型/App/build。"
+  ],
+  "sourceAttributionCorrection": {
+    "path": "/Users/zyongzhu/CreatorOS-local-acceptance/worktree-main-integration-20261008/timeout-ledger-compatibility-candidate/source-attribution-correction.json",
+    "sha256": "3f4310e6517861d9e6d9a81fc5e891b8e50500f7f1754f50bb46d7d4f4431a18"
+  },
+  "supersedesMetadataOnly": {
+    "path": "/Users/zyongzhu/CreatorOS-local-acceptance/worktree-main-integration-20261008/timeout-ledger-compatibility-candidate/decisions.json",
+    "sha256": "9a2688d0a0fd1fb09effc61b95149a4ab1a8595f04af211254ccc3bdc7008333"
+  }
+}

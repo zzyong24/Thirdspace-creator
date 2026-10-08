@@ -1,0 +1,101 @@
+{
+  "verdict": "PASS（仅三文件七字符串静态独核）",
+  "createdAt": "2026-10-08T13:09:59.992333+00:00",
+  "manifest": {
+    "path": "/Users/zyongzhu/CreatorOS-local-acceptance/worktree-main-integration-20261008/session-sdk-boundary-candidate/decisions.json",
+    "sha256": "670007e8286e155ebdad118e1a897025dbdc79db1127f6b0957eb3b285a63781"
+  },
+  "sourceCommit": "446b143c4ed954ffa2016bb545fa7c4347395c75",
+  "files": [
+    {
+      "sourcePath": "frontend/src/features/copilot/live-chat-session.test.ts",
+      "targetPath": "frontend/src/server/ai-runtime/live-chat-session.test.ts",
+      "sourceCommit": "446b143c4ed954ffa2016bb545fa7c4347395c75",
+      "sourceSha256": "81b7b9cd2fb13d254036656fc3b03c5a1867879a467a032ccd98e8c64ede72dd",
+      "currentSourceByteEqual": true,
+      "candidateSha256": "83596e481049a4badf48feb2006adf00731d582c88c1ecd1ba9822529aff1da3",
+      "diffSha256": "b7711c4094dc60656ac4b1bd1d5335ae7280894548e06a6236bcd3e7ae3c7482",
+      "exactReplacements": [
+        {
+          "before": "from \"./live-chat-session\"",
+          "after": "from \"@/features/copilot/live-chat-session\"",
+          "count": 2,
+          "observedCount": 2
+        }
+      ],
+      "inverseCompleteFileByteEqual": true,
+      "importStrippedBodyByteEqual": true,
+      "importStrippedBodySha256": "aeec0fd717b5779c5b1b0957f976be2b42e5e5f120c2b7f89c03cce346dbc9db",
+      "fixtureAndAssertionsUnchanged": true
+    },
+    {
+      "sourcePath": "frontend/src/features/copilot/live-chat-session.consumer.test.tsx",
+      "targetPath": "frontend/src/server/ai-runtime/live-chat-session.consumer.test.tsx",
+      "sourceCommit": "446b143c4ed954ffa2016bb545fa7c4347395c75",
+      "sourceSha256": "3f87ccd8fd51e83d1c1752a7bebcf7b4a226c19730a03928e1468a81e22d42c8",
+      "currentSourceByteEqual": true,
+      "candidateSha256": "c5b7b304f495f5688d1e3618b29e415c61224cce12428fbb44b8016dcafe3791",
+      "diffSha256": "3c7ffa7ce10d99b2c662b7ae5f5051f4c32347c7d9700f7fa0afde7cf4ca21d7",
+      "exactReplacements": [
+        {
+          "before": "from './ai-copilot-content'",
+          "after": "from '@/features/copilot/ai-copilot-content'",
+          "count": 1,
+          "observedCount": 1
+        },
+        {
+          "before": "from './live-chat-session'",
+          "after": "from '@/features/copilot/live-chat-session'",
+          "count": 1,
+          "observedCount": 1
+        },
+        {
+          "before": "from './conversation-persistence'",
+          "after": "from '@/features/copilot/conversation-persistence'",
+          "count": 1,
+          "observedCount": 1
+        }
+      ],
+      "inverseCompleteFileByteEqual": true,
+      "importStrippedBodyByteEqual": true,
+      "importStrippedBodySha256": "dcd3ac7da7539280b7e576d03e751ea93e1aad186bbace14761fd89d792a7788",
+      "fixtureAndAssertionsUnchanged": true
+    },
+    {
+      "sourcePath": "docs/verification/t1073/verify-resource-lifecycle.mjs",
+      "targetPath": "docs/verification/t1073/verify-resource-lifecycle.mjs",
+      "sourceCommit": "446b143c4ed954ffa2016bb545fa7c4347395c75",
+      "sourceSha256": "ce9e066260e018d2d76e1e5f04ad21fb7aa8ebea94f08219c807cea636269836",
+      "currentSourceByteEqual": true,
+      "candidateSha256": "b883364d11dd09932a82dfdb6389a2b92c836920d575b99a36a3b7f6fe97dd1d",
+      "diffSha256": "468fdd179113a9d5c926932bf464f3f38508632b1afbc4e643db2c39f0a06986",
+      "exactReplacements": [
+        {
+          "before": "src/features/copilot/live-chat-session.test.ts",
+          "after": "src/server/ai-runtime/live-chat-session.test.ts",
+          "count": 1,
+          "observedCount": 1
+        },
+        {
+          "before": "src/features/copilot/live-chat-session.consumer.test.tsx",
+          "after": "src/server/ai-runtime/live-chat-session.consumer.test.tsx",
+          "count": 1,
+          "observedCount": 1
+        }
+      ],
+      "inverseCompleteFileByteEqual": true
+    }
+  ],
+  "findings": [
+    "两测试五处导入、当前 verifier 两处 argv 路径严格替换；逆替换后三个整文件与冻结 commit 和当前 main 来源完全相等。",
+    "两测试去 import 后正文逐字节相等，SDK fixture、原断言、预算不变；verifier 其他 argv 不变。"
+  ],
+  "limits": [
+    "未执行迁移后 suite 或 boundary，不代签实际 GREEN。",
+    "只写本外部收据；repo/Git/control/guard/baseline/旧证据未改。"
+  ],
+  "repoMutation": false,
+  "gitMutation": false,
+  "testsExecuted": false,
+  "oldEvidenceModified": false
+}

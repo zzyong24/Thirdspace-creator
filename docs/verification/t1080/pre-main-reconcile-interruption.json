@@ -1,0 +1,15 @@
+{
+  "reason": "优先用户授权main本地出包；全局53教训含额外Rust debug测试构建，基础45项目标检查已通过。此轮按真实中断记，不称全绿，出包后继续完整reconcile。",
+  "ownReconcilePid": 3715,
+  "ownedDescendantPidsStopped": [
+    "3715",
+    "9647",
+    "9708",
+    "9709",
+    "9715",
+    "9717",
+    "9718",
+    "9747"
+  ],
+  "userOrOtherAgentProcessesStopped": false
+}

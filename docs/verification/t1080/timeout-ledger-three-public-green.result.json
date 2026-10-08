@@ -1,0 +1,46 @@
+{
+  "argv": [
+    "pnpm",
+    "--dir",
+    "backend",
+    "exec",
+    "vitest",
+    "run",
+    "src/modules/execution/new-execution-budget.test.ts",
+    "src/modules/execution/run-execution-task.test.ts",
+    "src/modules/execution/execution-call-ledger.service.test.ts",
+    "--retry=0",
+    "--testTimeout=180000",
+    "--hookTimeout=180000",
+    "--maxWorkers=1"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAtUtc": "2026-10-08T12:57:53.618262+00:00",
+  "finishedAtUtc": "2026-10-08T12:58:12.001861+00:00",
+  "elapsedSeconds": 18.382228166999994,
+  "exitCode": 0,
+  "outerTimeoutSeconds": 1200,
+  "timedOut": false,
+  "logSha256": "f12482e4f86af97551b0e48f85e800ef44cf37d336439af2bf6e00667bff9b2a",
+  "sourceHashesBefore": {
+    "backend/src/modules/execution/execution-call-ledger.service.test.ts": "b76cb85c4c35fe24a7e0ecf355bccd97a991ede5004b15f06e54f6ec6269487c",
+    "backend/src/modules/execution/new-execution-budget.test.ts": "31532893afb9470b07442637cbf3d88f479c175e6fba1bb9e8dd3e38e9c66de9",
+    "backend/src/modules/execution/run-execution-task.test.ts": "d751a5f096cf27c77140d309355b2975049a1d5bddd1577f2c07a015a5dbf02c",
+    "backend/src/modules/execution/persistent-task.service.ts": "3e8cf47382c7c7db7ea77166c28a9f04c069256f17c5b9ebaaeb56d9a50f1475",
+    "backend/src/modules/execution/execution-call-ledger.service.ts": "f6e5a8ed5223ed9e12078a795ee89649724a1b269e557e0d9aabc0b9078c90ab",
+    "backend/src/modules/execution/run-execution-task.ts": "22312cc3bf506638d05b4d5daddb4fa1c9cdb4b73f1ecab7da71820a2d723957"
+  },
+  "sourceHashesAfter": {
+    "backend/src/modules/execution/execution-call-ledger.service.test.ts": "b76cb85c4c35fe24a7e0ecf355bccd97a991ede5004b15f06e54f6ec6269487c",
+    "backend/src/modules/execution/new-execution-budget.test.ts": "31532893afb9470b07442637cbf3d88f479c175e6fba1bb9e8dd3e38e9c66de9",
+    "backend/src/modules/execution/run-execution-task.test.ts": "d751a5f096cf27c77140d309355b2975049a1d5bddd1577f2c07a015a5dbf02c",
+    "backend/src/modules/execution/persistent-task.service.ts": "3e8cf47382c7c7db7ea77166c28a9f04c069256f17c5b9ebaaeb56d9a50f1475",
+    "backend/src/modules/execution/execution-call-ledger.service.ts": "f6e5a8ed5223ed9e12078a795ee89649724a1b269e557e0d9aabc0b9078c90ab",
+    "backend/src/modules/execution/run-execution-task.ts": "22312cc3bf506638d05b4d5daddb4fa1c9cdb4b73f1ecab7da71820a2d723957"
+  },
+  "candidateReportSha256": "63aa4b43f66f6fe416e93a4cafe63bd60389f3143c673ab47da33b0819792778",
+  "limits": [
+    "仅原3service真实测试入口，未跑全types/整体timeout/static/build/模型/安装/App。",
+    "原budget/父deadline继承及所有断言不变；只3独立意图fixture请求键。"
+  ]
+}

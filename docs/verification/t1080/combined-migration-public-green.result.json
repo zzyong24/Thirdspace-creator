@@ -1,0 +1,1 @@
+{"argv": ["pnpm", "-C", "backend", "exec", "vitest", "run", "src/migration-convergence.test.ts", "src/workbench-main-migration.test.ts", "--retry=0", "--maxWorkers=1", "--testTimeout=180000", "--hookTimeout=180000"], "exitCode": 0, "seconds": 168.91478514671326}

@@ -1,0 +1,651 @@
+{
+  "task": "T-1080",
+  "kind": "最终来源历史闭包限定只读复核",
+  "requestedAnchor": "7d7624f3070755c8753158f3392d6ac33400f8e5",
+  "observedHEAD": "a91aa045fac14031c166e03e6bae8b52deeef780",
+  "sourceEvidence": [
+    {
+      "path": "source-review.json",
+      "sha256": "064a67f07f2771e0bccc9cb73089e6537ffe2a574451841cadff3e08f83993c5"
+    },
+    {
+      "path": "dirty-disposition-review.json",
+      "sha256": "8fe9f3873f37ef4bbb257e930bd8c0ced59a06ab200555a859e07fc9b88482ed"
+    },
+    {
+      "path": "source-snapshot-commits.json",
+      "sha256": "5afc3b5492a860af38ffaef657fea12f5bf72ea6a8d8a5d0e9e9060067fbdf95"
+    },
+    {
+      "path": "additional-source-snapshot-commits.json",
+      "sha256": "144783b9475f7fbd23da12775a7e7dabb889ae98232753aa39f7701d565cf472"
+    }
+  ],
+  "verdict": "具名已审来源允许明确纯历史保留merge；不得回灌或回退生产文件；不准扩到未列/未审来源",
+  "uniqueHeadsIncludingSnapshotPriors": 45,
+  "nonAncestorCount": 39,
+  "nonAncestorHeads": [
+    "492a1624a479f450e839e262e549d5dcdd7a59e0",
+    "57a547a05bdbdfd9bd7bb1798c7bea11735285e3",
+    "b86104d406c45dd5ec58b00d3af62f7c82984f8d",
+    "edeb09f2c0c1d1afd54d94c21e594c3262d56050",
+    "fa0f602b416fc3cd386814b250e7e191430d49f8",
+    "6403379d6942194201809099217a065f0d6e738f",
+    "99a3dc5b47d6861bd11cbfaa9334019480b74f04",
+    "5393c17d976039ae12a6f1cefa2c0a7202c5d81d",
+    "dbfde24ff63bf210d39c4f4a9fd7dc625a95aa71",
+    "8d44917b90b495f9109e6879ed4d6b9f8f9e9d39",
+    "118e75ef67a7de66295ef9a4ed1f83ca14b307f7",
+    "ce7035b3221553b290fae59452aacec67287d6db",
+    "2e7e44219756b160bd517a8be9fde7c5db9fb6c5",
+    "23eb181d5e826c225f0852d140c562f3de736333",
+    "98e12d4f14f87396f3569a344f82e143070d901d",
+    "8f6311a130f2ad3bfea9bce59c9404da8182e31c",
+    "871e7209db6773eefcbc09636279341b1de2069c",
+    "18ca31c8933e05c2730d04f948a0b3a745adf7d3",
+    "8b8ee2cdbe78f45974b9fec44923da9a9919e5bb",
+    "5e29be9727d3a5a22f7c89334aa4adb68921e43e",
+    "5fd4d63e76a49543f7141a82788940d16eac952a",
+    "00835827e81dc8885fc95d8917f35a490d0a7cf3",
+    "9a6f5594155b2ba82d50f6d998e088389b10107c",
+    "81db8c19eb4dfa59f37a9360bd23e115b43d1d5e",
+    "4a1a7752ada2fb54e939c8105ad595b01cd15a33",
+    "7a45ad30adc53bcfac065fb789d75821156ab1d8",
+    "eab9a280a6b0c4c515909c3a0f9c48303ef408bb",
+    "c926a5b320ddf5d540b38f86e63c61571dfe363e",
+    "c4f4bd79eb3b6726076329cc46ff45d8c020d943",
+    "dda4ef6b9076892f1c865465d6d41e0e72127f49",
+    "ccb47a0faf6370d9a5fe8f4502ee25e8a3fe0b47",
+    "5e0d81a4b349c93cfb5ad74381d8dabd262a5f6b",
+    "119ca6f0a9b087b0582619fa44d4435b05b218f2",
+    "46f047cad4922f91069634747591373220f68aee",
+    "844b26656eede888a5c85b133b8901007f178c1f",
+    "ff8dfcdc59501f18dd9b51960d8402025d982c6b",
+    "339f042700a9c4d75fb482dd6436d0e9b66f0786",
+    "4c767cc20a0f957089a6d5934d6eb8257c9a0f51",
+    "b4356246ed4efc5def535aed774be5b227cea4e7"
+  ],
+  "minimalHistoryParentFrontier": [
+    "492a1624a479f450e839e262e549d5dcdd7a59e0",
+    "57a547a05bdbdfd9bd7bb1798c7bea11735285e3",
+    "b86104d406c45dd5ec58b00d3af62f7c82984f8d",
+    "edeb09f2c0c1d1afd54d94c21e594c3262d56050",
+    "fa0f602b416fc3cd386814b250e7e191430d49f8",
+    "6403379d6942194201809099217a065f0d6e738f",
+    "5393c17d976039ae12a6f1cefa2c0a7202c5d81d",
+    "dbfde24ff63bf210d39c4f4a9fd7dc625a95aa71",
+    "8d44917b90b495f9109e6879ed4d6b9f8f9e9d39",
+    "118e75ef67a7de66295ef9a4ed1f83ca14b307f7",
+    "ce7035b3221553b290fae59452aacec67287d6db",
+    "2e7e44219756b160bd517a8be9fde7c5db9fb6c5",
+    "23eb181d5e826c225f0852d140c562f3de736333",
+    "98e12d4f14f87396f3569a344f82e143070d901d",
+    "8f6311a130f2ad3bfea9bce59c9404da8182e31c",
+    "871e7209db6773eefcbc09636279341b1de2069c",
+    "18ca31c8933e05c2730d04f948a0b3a745adf7d3",
+    "8b8ee2cdbe78f45974b9fec44923da9a9919e5bb",
+    "5e29be9727d3a5a22f7c89334aa4adb68921e43e",
+    "5fd4d63e76a49543f7141a82788940d16eac952a",
+    "00835827e81dc8885fc95d8917f35a490d0a7cf3",
+    "9a6f5594155b2ba82d50f6d998e088389b10107c",
+    "81db8c19eb4dfa59f37a9360bd23e115b43d1d5e",
+    "4a1a7752ada2fb54e939c8105ad595b01cd15a33",
+    "7a45ad30adc53bcfac065fb789d75821156ab1d8",
+    "eab9a280a6b0c4c515909c3a0f9c48303ef408bb",
+    "ccb47a0faf6370d9a5fe8f4502ee25e8a3fe0b47",
+    "5e0d81a4b349c93cfb5ad74381d8dabd262a5f6b",
+    "119ca6f0a9b087b0582619fa44d4435b05b218f2",
+    "46f047cad4922f91069634747591373220f68aee",
+    "844b26656eede888a5c85b133b8901007f178c1f",
+    "ff8dfcdc59501f18dd9b51960d8402025d982c6b",
+    "339f042700a9c4d75fb482dd6436d0e9b66f0786",
+    "4c767cc20a0f957089a6d5934d6eb8257c9a0f51",
+    "b4356246ed4efc5def535aed774be5b227cea4e7"
+  ],
+  "frontierCount": 35,
+  "anchorAndObservedHeadNonAncestorListIdentical": true,
+  "actualProductionCarrierAncestors": [
+    "12288cefdd43544478ea8f67a648798f43e813df",
+    "04ca6d27eb593c8ba174133c3aa7b456abe09c1f",
+    "6b1322af71cbdf55f52e9f37c5cde76e06b56e48",
+    "40a5eaf480c1347a9eadf4bf86a36971ce547874",
+    "6636e4faf506dcdd417004354637feb7801ee020"
+  ],
+  "perSourceDispositions": [
+    {
+      "kind": "branchMatrix",
+      "ref": "refs/heads/codex/t1005-file-plan-proof",
+      "head": "492a1624a479f450e839e262e549d5dcdd7a59e0",
+      "ancestor": false,
+      "disposition": "PATCH_EQUIVALENT_IN_MAIN",
+      "evidence": "source-review.json#branchMatrix/0/checks/main",
+      "detail": "已审git cherry对main无+，1个补丁等价；main基线为当前祖先。"
+    },
+    {
+      "kind": "branchMatrix",
+      "ref": "refs/heads/codex/t1005-plan-recovery",
+      "head": "57a547a05bdbdfd9bd7bb1798c7bea11735285e3",
+      "ancestor": false,
+      "disposition": "PATCH_EQUIVALENT_IN_MAIN",
+      "evidence": "source-review.json#branchMatrix/1/checks/main",
+      "detail": "已审git cherry对main无+，2个补丁等价；main基线为当前祖先。"
+    },
+    {
+      "kind": "branchMatrix",
+      "ref": "refs/heads/codex/t1006-gateway",
+      "head": "b86104d406c45dd5ec58b00d3af62f7c82984f8d",
+      "ancestor": false,
+      "disposition": "PATCH_EQUIVALENT_IN_MAIN",
+      "evidence": "source-review.json#branchMatrix/2/checks/main",
+      "detail": "已审git cherry对main无+，2个补丁等价；main基线为当前祖先。"
+    },
+    {
+      "kind": "branchMatrix",
+      "ref": "refs/heads/codex/t1006-integration",
+      "head": "edeb09f2c0c1d1afd54d94c21e594c3262d56050",
+      "ancestor": false,
+      "disposition": "PATCH_EQUIVALENT_IN_MAIN",
+      "evidence": "source-review.json#branchMatrix/3/checks/main",
+      "detail": "已审git cherry对main无+，2个补丁等价；main基线为当前祖先。"
+    },
+    {
+      "kind": "branchMatrix",
+      "ref": "refs/heads/codex/t1006-progress",
+      "head": "fa0f602b416fc3cd386814b250e7e191430d49f8",
+      "ancestor": false,
+      "disposition": "PATCH_EQUIVALENT_IN_MAIN",
+      "evidence": "source-review.json#branchMatrix/4/checks/main",
+      "detail": "已审git cherry对main无+，2个补丁等价；main基线为当前祖先。"
+    },
+    {
+      "kind": "branchMatrix",
+      "ref": "refs/heads/codex/t1007-command",
+      "head": "6403379d6942194201809099217a065f0d6e738f",
+      "ancestor": false,
+      "disposition": "PATCH_EQUIVALENT_IN_MAIN",
+      "evidence": "source-review.json#branchMatrix/5/checks/main",
+      "detail": "已审git cherry对main无+，2个补丁等价；main基线为当前祖先。"
+    },
+    {
+      "kind": "branchMatrix",
+      "ref": "refs/heads/codex/t1007-desktop",
+      "head": "99a3dc5b47d6861bd11cbfaa9334019480b74f04",
+      "ancestor": false,
+      "disposition": "PATCH_EQUIVALENT_IN_MAIN",
+      "evidence": "source-review.json#branchMatrix/6/checks/main",
+      "detail": "已审git cherry对main无+，2个补丁等价；main基线为当前祖先。"
+    },
+    {
+      "kind": "branchMatrix",
+      "ref": "refs/heads/codex/t1007-files-command",
+      "head": "5393c17d976039ae12a6f1cefa2c0a7202c5d81d",
+      "ancestor": false,
+      "disposition": "PATCH_EQUIVALENT_IN_MAIN",
+      "evidence": "source-review.json#branchMatrix/7/checks/main",
+      "detail": "已审git cherry对main无+，2个补丁等价；main基线为当前祖先。"
+    },
+    {
+      "kind": "branchMatrix",
+      "ref": "refs/heads/codex/t1007-html-files",
+      "head": "dbfde24ff63bf210d39c4f4a9fd7dc625a95aa71",
+      "ancestor": false,
+      "disposition": "PATCH_EQUIVALENT_IN_MAIN",
+      "evidence": "source-review.json#branchMatrix/8/checks/main",
+      "detail": "已审git cherry对main无+，1个补丁等价；main基线为当前祖先。"
+    },
+    {
+      "kind": "branchMatrix",
+      "ref": "refs/heads/codex/t1007-ipc",
+      "head": "8d44917b90b495f9109e6879ed4d6b9f8f9e9d39",
+      "ancestor": false,
+      "disposition": "ADAPTED_IN_MAIN",
+      "evidence": "source-review.json#nonEquivalentCommitDispositions/0",
+      "detail": "range-diff 已绑定对应 main 提交；IPC Cargo context、mod.rs context、隔离候选文档不同，浏览器 range-diff =。原 source 内容未作为新增功能遗漏。"
+    },
+    {
+      "kind": "branchMatrix",
+      "ref": "refs/heads/codex/t1007-windows",
+      "head": "118e75ef67a7de66295ef9a4ed1f83ca14b307f7",
+      "ancestor": false,
+      "disposition": "PATCH_EQUIVALENT_IN_MAIN",
+      "evidence": "source-review.json#branchMatrix/10/checks/main",
+      "detail": "已审git cherry对main无+，3个补丁等价；main基线为当前祖先。"
+    },
+    {
+      "kind": "branchMatrix",
+      "ref": "refs/heads/codex/t1007-windows-command",
+      "head": "ce7035b3221553b290fae59452aacec67287d6db",
+      "ancestor": false,
+      "disposition": "ADAPTED_IN_MAIN",
+      "evidence": "source-review.json#nonEquivalentCommitDispositions/0",
+      "detail": "range-diff 已绑定对应 main 提交；IPC Cargo context、mod.rs context、隔离候选文档不同，浏览器 range-diff =。原 source 内容未作为新增功能遗漏。"
+    },
+    {
+      "kind": "branchMatrix",
+      "ref": "refs/heads/codex/t1007-windows-command-isolation",
+      "head": "2e7e44219756b160bd517a8be9fde7c5db9fb6c5",
+      "ancestor": false,
+      "disposition": "ADAPTED_IN_MAIN",
+      "evidence": "source-review.json#nonEquivalentCommitDispositions/0",
+      "detail": "range-diff 已绑定对应 main 提交；IPC Cargo context、mod.rs context、隔离候选文档不同，浏览器 range-diff =。原 source 内容未作为新增功能遗漏。"
+    },
+    {
+      "kind": "branchMatrix",
+      "ref": "refs/heads/codex/t1007-windows-command-wire",
+      "head": "23eb181d5e826c225f0852d140c562f3de736333",
+      "ancestor": false,
+      "disposition": "PATCH_EQUIVALENT_IN_MAIN",
+      "evidence": "source-review.json#branchMatrix/13/checks/main",
+      "detail": "已审git cherry对main无+，1个补丁等价；main基线为当前祖先。"
+    },
+    {
+      "kind": "branchMatrix",
+      "ref": "refs/heads/codex/t1007-windows-ipc",
+      "head": "98e12d4f14f87396f3569a344f82e143070d901d",
+      "ancestor": false,
+      "disposition": "PATCH_EQUIVALENT_IN_MAIN",
+      "evidence": "source-review.json#branchMatrix/14/checks/main",
+      "detail": "已审git cherry对main无+，1个补丁等价；main基线为当前祖先。"
+    },
+    {
+      "kind": "branchMatrix",
+      "ref": "refs/heads/codex/t1008-rust-browser",
+      "head": "8f6311a130f2ad3bfea9bce59c9404da8182e31c",
+      "ancestor": false,
+      "disposition": "ADAPTED_IN_MAIN",
+      "evidence": "source-review.json#nonEquivalentCommitDispositions/0",
+      "detail": "range-diff 已绑定对应 main 提交；IPC Cargo context、mod.rs context、隔离候选文档不同，浏览器 range-diff =。原 source 内容未作为新增功能遗漏。"
+    },
+    {
+      "kind": "branchMatrix",
+      "ref": "refs/heads/codex/t1008-screenshot-pi",
+      "head": "871e7209db6773eefcbc09636279341b1de2069c",
+      "ancestor": false,
+      "disposition": "PATCH_EQUIVALENT_IN_MAIN",
+      "evidence": "source-review.json#branchMatrix/16/checks/main",
+      "detail": "已审git cherry对main无+，1个补丁等价；main基线为当前祖先。"
+    },
+    {
+      "kind": "branchMatrix",
+      "ref": "refs/heads/codex/t1008-vendor",
+      "head": "18ca31c8933e05c2730d04f948a0b3a745adf7d3",
+      "ancestor": false,
+      "disposition": "PATCH_EQUIVALENT_IN_MAIN",
+      "evidence": "source-review.json#branchMatrix/17/checks/main",
+      "detail": "已审git cherry对main无+，1个补丁等价；main基线为当前祖先。"
+    },
+    {
+      "kind": "branchMatrix",
+      "ref": "refs/heads/codex/t1009-blob-port",
+      "head": "8b8ee2cdbe78f45974b9fec44923da9a9919e5bb",
+      "ancestor": false,
+      "disposition": "SOURCE_PLUS_ENHANCEMENT_IN_MAIN",
+      "evidence": "source-review.json#nonEquivalentCommitDispositions/1",
+      "detail": "assets index 相同；service 与测试相对 source 仅新增 inspect 三态和相应验证。"
+    },
+    {
+      "kind": "branchMatrix",
+      "ref": "refs/heads/codex/t1009-host-chain",
+      "head": "5e29be9727d3a5a22f7c89334aa4adb68921e43e",
+      "ancestor": false,
+      "disposition": "SOURCE_CHAIN_PRESENT_IN_MAIN",
+      "evidence": "source-review.json#nonEquivalentCommitDispositions/2",
+      "detail": "main 原测试保留真实 Mac socket+租约+双版本 Blob+跨账号/fence 拒绝，并增加真实模型可选入口；不能从旧整文件覆盖。"
+    },
+    {
+      "kind": "branchMatrix",
+      "ref": "refs/heads/codex/t1009-html-export-chain",
+      "head": "5fd4d63e76a49543f7141a82788940d16eac952a",
+      "ancestor": false,
+      "disposition": "PATCH_EQUIVALENT_IN_MAIN",
+      "evidence": "source-review.json#branchMatrix/20/checks/main",
+      "detail": "已审git cherry对main无+，1个补丁等价；main基线为当前祖先。"
+    },
+    {
+      "kind": "branchMatrix",
+      "ref": "refs/heads/codex/t1009-html-render",
+      "head": "00835827e81dc8885fc95d8917f35a490d0a7cf3",
+      "ancestor": false,
+      "disposition": "PATCH_EQUIVALENT_IN_MAIN",
+      "evidence": "source-review.json#branchMatrix/21/checks/main",
+      "detail": "已审git cherry对main无+，1个补丁等价；main基线为当前祖先。"
+    },
+    {
+      "kind": "branchMatrix",
+      "ref": "refs/heads/codex/t1009-native-export",
+      "head": "9a6f5594155b2ba82d50f6d998e088389b10107c",
+      "ancestor": false,
+      "disposition": "FINAL_API_PRESENT_IN_MAIN",
+      "evidence": "source-review.json#nonEquivalentCommitDispositions/3",
+      "detail": "两个旧提交最终 export_workbench_artifact(bytes_base64,mime,suggested_name)、格式/大小/选址/取消校验及注册/测试均已在 main 实际源码。"
+    },
+    {
+      "kind": "branchMatrix",
+      "ref": "refs/heads/codex/t1009-preview",
+      "head": "4b6cc194245a6e98ad9e130fa387ad69d90ba22b",
+      "ancestor": true,
+      "disposition": "ALREADY_ANCESTOR_IN_MAIN",
+      "evidence": "source-review.json#branchMatrix/23/checks/main",
+      "detail": "原main基线已是祖先，当前实际普通merge包含该main基线。"
+    },
+    {
+      "kind": "branchMatrix",
+      "ref": "refs/heads/codex/t1009-preview-read",
+      "head": "81db8c19eb4dfa59f37a9360bd23e115b43d1d5e",
+      "ancestor": false,
+      "disposition": "SOURCE_PLUS_LINEAGE_FIXES_IN_MAIN",
+      "evidence": "source-review.json#nonEquivalentCommitDispositions/4",
+      "detail": "preview-frame与policy字节相同；read/route已有相同原能力并受 main 后续 ff1bc4b8/8718370e/235888df/f5382741 的产物交付/lineage/存活/复制增强，不能覆盖为旧 source。"
+    },
+    {
+      "kind": "branchMatrix",
+      "ref": "refs/heads/codex/t1009-relative-assets",
+      "head": "4a1a7752ada2fb54e939c8105ad595b01cd15a33",
+      "ancestor": false,
+      "disposition": "PATCH_EQUIVALENT_IN_MAIN",
+      "evidence": "source-review.json#branchMatrix/25/checks/main",
+      "detail": "已审git cherry对main无+，1个补丁等价；main基线为当前祖先。"
+    },
+    {
+      "kind": "branchMatrix",
+      "ref": "refs/heads/codex/t1062-template-backend-candidate",
+      "head": "7a45ad30adc53bcfac065fb789d75821156ab1d8",
+      "ancestor": false,
+      "disposition": "SOURCE_CAPABILITY_IN_INTEGRATED",
+      "evidence": "source-review.json#nonEquivalentCommitDispositions/5",
+      "detail": "e8d79d4a 统一模板整合及模板历史已在 integrated。publication-draft-adoption 字节相同；其余读到差异为后续锁/历史file/assistant等增强，模板装配端口均真实存在；前端 switcher 候选只加一注释，正式性能改进需保留。"
+    },
+    {
+      "kind": "branchMatrix",
+      "ref": "refs/heads/codex/t1062-template-frontend-candidate",
+      "head": "eab9a280a6b0c4c515909c3a0f9c48303ef408bb",
+      "ancestor": false,
+      "disposition": "SOURCE_CAPABILITY_IN_INTEGRATED",
+      "evidence": "source-review.json#nonEquivalentCommitDispositions/5",
+      "detail": "e8d79d4a 统一模板整合及模板历史已在 integrated。publication-draft-adoption 字节相同；其余读到差异为后续锁/历史file/assistant等增强，模板装配端口均真实存在；前端 switcher 候选只加一注释，正式性能改进需保留。"
+    },
+    {
+      "kind": "branchMatrix",
+      "ref": "refs/heads/codex/t1070-backend-candidate",
+      "head": "c926a5b320ddf5d540b38f86e63c61571dfe363e",
+      "ancestor": false,
+      "disposition": "CORE_SOURCE_PRESENT_IN_INTEGRATED",
+      "evidence": "source-review.json#nonEquivalentCommitDispositions/7",
+      "detail": "36个原改动路径中，work-editor candidate/host/test、production原owner/合同等实际字节相同；其余差异保留后续 system tools、typed参数提示、assistant engine精确门，不重复拣选两提交。"
+    },
+    {
+      "kind": "branchMatrix",
+      "ref": "refs/heads/codex/t1070-frontend-candidate",
+      "head": "c4f4bd79eb3b6726076329cc46ff45d8c020d943",
+      "ancestor": false,
+      "disposition": "PATCH_EQUIVALENT_IN_INTEGRATED",
+      "evidence": "source-review.json#nonEquivalentCommitDispositions/6",
+      "detail": "git cherry 分别十个/五个 -，无 +。"
+    },
+    {
+      "kind": "branchMatrix",
+      "ref": "refs/heads/codex/t1070-native-candidate",
+      "head": "dda4ef6b9076892f1c865465d6d41e0e72127f49",
+      "ancestor": false,
+      "disposition": "PATCH_EQUIVALENT_IN_INTEGRATED",
+      "evidence": "source-review.json#nonEquivalentCommitDispositions/6",
+      "detail": "git cherry 分别十个/五个 -，无 +。"
+    },
+    {
+      "kind": "namedDirtySnapshot",
+      "ref": "codex/t1080-retain-t1062-aac-v2-r6-candidate-6bb4bd15",
+      "head": "ccb47a0faf6370d9a5fe8f4502ee25e8a3fe0b47",
+      "priorHead": "6bb4bd152db4a3565cb87ee2b96d6f494a59d140",
+      "ancestor": false,
+      "disposition": "REVIEWED_HISTORICAL_SUPERSEDED_OR_COVERED",
+      "evidence": "dirty-disposition-review.json#trees/0",
+      "detail": "禁止将旧候选六文件覆盖现有R6.1；保留六文件作为失败/中间实现来源commit。旧v1和R5形状仍是合同兼容族，不删除当前已存在实现。",
+      "sourceFiles": 6
+    },
+    {
+      "kind": "namedDirtySnapshot",
+      "ref": "codex/t1080-retain-t1062-aac-v2-candidate-cbf9a9f6",
+      "head": "5e0d81a4b349c93cfb5ad74381d8dabd262a5f6b",
+      "priorHead": "9615f124b9a45056568ec6c8aed92388dbfff870",
+      "ancestor": false,
+      "disposition": "REVIEWED_HISTORICAL_SUPERSEDED_OR_COVERED",
+      "evidence": "dirty-disposition-review.json#trees/1",
+      "detail": "禁止将旧候选六文件覆盖现有R6.1；保留六文件作为失败/中间实现来源commit。旧v1和R5形状仍是合同兼容族，不删除当前已存在实现。",
+      "sourceFiles": 6
+    },
+    {
+      "kind": "namedDirtySnapshot",
+      "ref": "codex/t1080-retain-t1022-charts",
+      "head": "119ca6f0a9b087b0582619fa44d4435b05b218f2",
+      "priorHead": "ebd63d9891d162b1bd8bf518bc1b9f573fa9146f",
+      "ancestor": false,
+      "disposition": "REVIEWED_HISTORICAL_SUPERSEDED_OR_COVERED",
+      "evidence": "dirty-disposition-review.json#trees/2",
+      "detail": "没有识别到应从这个旧候选回灌的新生产功能；保留当前已审后继，来源commit用于历史审计，不逐文件覆盖MAIN。",
+      "sourceFiles": 369
+    },
+    {
+      "kind": "namedDirtySnapshot",
+      "ref": "codex/t1080-retain-t1022-project-root",
+      "head": "46f047cad4922f91069634747591373220f68aee",
+      "priorHead": "ebd63d9891d162b1bd8bf518bc1b9f573fa9146f",
+      "ancestor": false,
+      "disposition": "REVIEWED_HISTORICAL_SUPERSEDED_OR_COVERED",
+      "evidence": "dirty-disposition-review.json#trees/3",
+      "detail": "没有识别到应从这个旧候选回灌的新生产功能；保留当前已审后继，来源commit用于历史审计，不逐文件覆盖MAIN。",
+      "sourceFiles": 403
+    },
+    {
+      "kind": "namedDirtySnapshot",
+      "ref": "codex/t1080-retain-t1022-shared-domains",
+      "head": "844b26656eede888a5c85b133b8901007f178c1f",
+      "priorHead": "ebd63d9891d162b1bd8bf518bc1b9f573fa9146f",
+      "ancestor": false,
+      "disposition": "REVIEWED_HISTORICAL_SUPERSEDED_OR_COVERED",
+      "evidence": "dirty-disposition-review.json#trees/4",
+      "detail": "没有识别到应从这个旧候选回灌的新生产功能；保留当前已审后继，来源commit用于历史审计，不逐文件覆盖MAIN。",
+      "sourceFiles": 404
+    },
+    {
+      "kind": "namedDirtySnapshot",
+      "ref": "codex/t1080-retain-t1022-task-scope",
+      "head": "ff8dfcdc59501f18dd9b51960d8402025d982c6b",
+      "priorHead": "ebd63d9891d162b1bd8bf518bc1b9f573fa9146f",
+      "ancestor": false,
+      "disposition": "REVIEWED_HISTORICAL_SUPERSEDED_OR_COVERED",
+      "evidence": "dirty-disposition-review.json#trees/5",
+      "detail": "没有识别到应从这个旧候选回灌的新生产功能；保留当前已审后继，来源commit用于历史审计，不逐文件覆盖MAIN。",
+      "sourceFiles": 469
+    },
+    {
+      "kind": "namedDirtySnapshot",
+      "ref": "codex/t1080-retain-t1070-native-intermediates",
+      "head": "339f042700a9c4d75fb482dd6436d0e9b66f0786",
+      "priorHead": "dda4ef6b9076892f1c865465d6d41e0e72127f49",
+      "ancestor": false,
+      "disposition": "REVIEWED_HISTORICAL_SUPERSEDED_OR_COVERED",
+      "evidence": "dirty-disposition-review.json#trees/6",
+      "detail": "最终T1070 pixel-version方案已在dda4ef6b及MAIN生产闭包；本清理没有新增生产功能。三个独有CJS探针建议作为测试/来源证据保留在main可追溯历史，不能冒充当前完整browser验收或自动列入生产包。",
+      "sourceFiles": 53
+    },
+    {
+      "kind": "additionalNamedDirtySnapshot",
+      "ref": "refs/heads/codex/t188-creator-owned-devices",
+      "head": "40a5eaf480c1347a9eadf4bf86a36971ce547874",
+      "priorHead": "6855ba140184cf443124e81583d584bdf157a518",
+      "ancestor": true,
+      "disposition": "ACTUAL_ORDINARY_MERGE_ANCESTOR",
+      "evidence": "additional-source-snapshot-commits.json;本报告additionalSnapshotProofs",
+      "detail": "device具名配置快照已在当前真实普通merge父链，不需额外历史merge。"
+    },
+    {
+      "kind": "additionalNamedDirtySnapshot",
+      "ref": "refs/heads/codex/t1070-backend-candidate",
+      "head": "4c767cc20a0f957089a6d5934d6eb8257c9a0f51",
+      "priorHead": "c926a5b320ddf5d540b38f86e63c61571dfe363e",
+      "ancestor": false,
+      "disposition": "DIRTY_SOURCE_EXACTLY_COVERED_IN_INTEGRATION",
+      "evidence": "additional-source-snapshot-commits.json;本报告additionalSnapshotProofs",
+      "detail": "本次限定核对：新增源码逐字节与7d7624f相同；index新增3出口已全部存在，当前保留更多后继出口。无新增未审产品。"
+    },
+    {
+      "kind": "additionalNamedDirtySnapshot",
+      "ref": "refs/heads/codex/t1070-frontend-candidate",
+      "head": "b4356246ed4efc5def535aed774be5b227cea4e7",
+      "priorHead": "c4f4bd79eb3b6726076329cc46ff45d8c020d943",
+      "ancestor": false,
+      "disposition": "DIRTY_SOURCE_EXACTLY_COVERED_IN_INTEGRATION",
+      "evidence": "additional-source-snapshot-commits.json;本报告additionalSnapshotProofs",
+      "detail": "本次限定核对：新增源码逐字节与7d7624f相同；index新增3出口已全部存在，当前保留更多后继出口。无新增未审产品。"
+    }
+  ],
+  "snapshotFrozenContentProofs": [
+    {
+      "head": "ccb47a0faf6370d9a5fe8f4502ee25e8a3fe0b47",
+      "sourceFiles": 6,
+      "snapshotChangedFiles": 6,
+      "unreviewedChanged": [],
+      "frozenBlobMismatch": [],
+      "actions": {
+        "covered_do_not_reapply": 2,
+        "historical_failed_candidate_keep_origin_commit_do_not_reapply": 4
+      }
+    },
+    {
+      "head": "5e0d81a4b349c93cfb5ad74381d8dabd262a5f6b",
+      "sourceFiles": 6,
+      "snapshotChangedFiles": 6,
+      "unreviewedChanged": [],
+      "frozenBlobMismatch": [],
+      "actions": {
+        "covered_do_not_reapply": 4,
+        "historical_failed_candidate_keep_origin_commit_do_not_reapply": 2
+      }
+    },
+    {
+      "head": "119ca6f0a9b087b0582619fa44d4435b05b218f2",
+      "sourceFiles": 369,
+      "snapshotChangedFiles": 369,
+      "unreviewedChanged": [],
+      "frozenBlobMismatch": [],
+      "actions": {
+        "historical_superseded_source_keep_in_origin_commit_do_not_reapply": 78,
+        "covered_do_not_reapply": 291
+      }
+    },
+    {
+      "head": "46f047cad4922f91069634747591373220f68aee",
+      "sourceFiles": 403,
+      "snapshotChangedFiles": 403,
+      "unreviewedChanged": [],
+      "frozenBlobMismatch": [],
+      "actions": {
+        "covered_do_not_reapply": 385,
+        "historical_superseded_source_keep_in_origin_commit_do_not_reapply": 18
+      }
+    },
+    {
+      "head": "844b26656eede888a5c85b133b8901007f178c1f",
+      "sourceFiles": 404,
+      "snapshotChangedFiles": 404,
+      "unreviewedChanged": [],
+      "frozenBlobMismatch": [],
+      "actions": {
+        "covered_do_not_reapply": 378,
+        "historical_superseded_source_keep_in_origin_commit_do_not_reapply": 26
+      }
+    },
+    {
+      "head": "ff8dfcdc59501f18dd9b51960d8402025d982c6b",
+      "sourceFiles": 469,
+      "snapshotChangedFiles": 469,
+      "unreviewedChanged": [],
+      "frozenBlobMismatch": [],
+      "actions": {
+        "covered_do_not_reapply": 456,
+        "historical_superseded_source_keep_in_origin_commit_do_not_reapply": 13
+      }
+    },
+    {
+      "head": "339f042700a9c4d75fb482dd6436d0e9b66f0786",
+      "sourceFiles": 53,
+      "snapshotChangedFiles": 53,
+      "unreviewedChanged": [],
+      "frozenBlobMismatch": [],
+      "actions": {
+        "source_historical_only_no_production_archive_merge": 74
+      }
+    }
+  ],
+  "additionalSnapshotProofs": [
+    {
+      "head": "40a5eaf480c1347a9eadf4bf86a36971ce547874",
+      "paths": []
+    },
+    {
+      "head": "4c767cc20a0f957089a6d5934d6eb8257c9a0f51",
+      "paths": [
+        {
+          "path": "backend/src/modules/ai-runtime/chat-work-creation-tool-host.ts",
+          "sourceSha256": "5d69de433fdd87a657094cb0356332b4c274b4b5d81a357cd2854d2317f287d9",
+          "targetSha256": "5d69de433fdd87a657094cb0356332b4c274b4b5d81a357cd2854d2317f287d9",
+          "identical": true
+        },
+        {
+          "path": "contract/src/resources/work-creation.ts",
+          "sourceSha256": "33e71b0ab7b944e73e1c2f8431d87af44bfc7cbc603fb2b697bbb4b74f53593b",
+          "targetSha256": "33e71b0ab7b944e73e1c2f8431d87af44bfc7cbc603fb2b697bbb4b74f53593b",
+          "identical": true
+        }
+      ]
+    },
+    {
+      "head": "b4356246ed4efc5def535aed774be5b227cea4e7",
+      "paths": [
+        {
+          "path": "contract/src/index.ts",
+          "sourceSha256": "ee8ec41bfc8b60f815c5515f733f0922cd58cbc1020406597c84d3caf958be73",
+          "targetSha256": "02529da33d400e72c13c2696f1e16cc873f3623d33b49906025fac9a79e9e990",
+          "identical": false,
+          "sourceAddedExportsCovered": true
+        },
+        {
+          "path": "contract/src/resources/production-editor.ts",
+          "sourceSha256": "eda919052eeab995b1a743dc0296bdb598d43f4fd8ed3d374d5d49958e82d0cc",
+          "targetSha256": "eda919052eeab995b1a743dc0296bdb598d43f4fd8ed3d374d5d49958e82d0cc",
+          "identical": true
+        },
+        {
+          "path": "contract/src/resources/production-native-document.ts",
+          "sourceSha256": "5404771bf43a3ac4a51cd1dc6f698d0f10b115fb81ba7f3a749654c34c073b2b",
+          "targetSha256": "5404771bf43a3ac4a51cd1dc6f698d0f10b115fb81ba7f3a749654c34c073b2b",
+          "identical": true
+        },
+        {
+          "path": "contract/src/resources/work-creation.ts",
+          "sourceSha256": "33e71b0ab7b944e73e1c2f8431d87af44bfc7cbc603fb2b697bbb4b74f53593b",
+          "targetSha256": "33e71b0ab7b944e73e1c2f8431d87af44bfc7cbc603fb2b697bbb4b74f53593b",
+          "identical": true
+        },
+        {
+          "path": "contract/src/resources/work-editor.ts",
+          "sourceSha256": "cdb72233b401b845adca70b569024316e804a1b713f0606e24311336d6775a2c",
+          "targetSha256": "cdb72233b401b845adca70b569024316e804a1b713f0606e24311336d6775a2c",
+          "identical": true
+        }
+      ]
+    }
+  ],
+  "unreviewedUniqueProductSources": [],
+  "historicalMergeConditions": [
+    "仅此精确列表（或其最小frontier）与绑定证据；明确提交是历史保留，不是旧生产代码再次合并。",
+    "冻结最终已验证production tree OID；历史merge前后tree OID相同，逐来源head全部is-ancestor为真；保留具名source refs、失败证据及旧控制面自身历史。",
+    "main/resource/device/pipeline真实普通merge已进入当前父链；不可用纯历史merge代替这类有新产品内容的普通merge。",
+    "历史接入只是provenance/可追溯性，不代表旧候选成功或模型/安装/构建验收。"
+  ],
+  "limits": [
+    "仅复用已有限定审查，额外精确核对2个新脏源码快照的2+5路径；未重做全面产品review或test。",
+    "未修改repo/Git/控制面、worktree、原数据，未运行模型/构建。",
+    "27闲置worktree已清理/2active保留为root本轮事实，不由本报告代签删除操作；本报告只核Git对象来源。"
+  ]
+}

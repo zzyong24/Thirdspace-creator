@@ -1,0 +1,1 @@
+{"argv": ["pnpm", "-C", "frontend", "exec", "vitest", "run", "src/features/copilot/live-chat-session.consumer.test.tsx", "src/server/chat-execution-stream.test.ts", "src/features/copilot/chat-task-control.test.ts", "--retry=0", "--maxWorkers=1", "--testTimeout=180000", "--hookTimeout=180000"], "exitCode": 0, "seconds": 26.173163890838623}

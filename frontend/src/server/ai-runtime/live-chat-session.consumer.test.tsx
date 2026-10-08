@@ -1,11 +1,11 @@
 import * as React from 'react';
 import {act,cleanup,fireEvent,render,screen,waitFor} from '@testing-library/react';
 import {afterEach,expect,it,vi} from 'vitest';
-import {AICopilotContent} from './ai-copilot-content';
-import {getLiveChatSession as getLiveChatSessionWithFactory} from './live-chat-session';
+import {AICopilotContent} from '@/features/copilot/ai-copilot-content';
+import {getLiveChatSession as getLiveChatSessionWithFactory} from '@/features/copilot/live-chat-session';
 import {Chat} from '@ai-sdk/react';
 import type {ChatTransport,UIMessage} from 'ai';
-import {readStoredConversationId,writeStoredConversationId} from './conversation-persistence';
+import {readStoredConversationId,writeStoredConversationId} from '@/features/copilot/conversation-persistence';
 import {CURRENT_GROUP_KEY} from '@/lib/http-transport';
 import {ENDPOINTS,executionTaskResourceV2} from '@creatoros/contract';
 // 测试沿产品原 factory 端口注入真实 SDK；现有会话仍按原 key 复用，断言不变。

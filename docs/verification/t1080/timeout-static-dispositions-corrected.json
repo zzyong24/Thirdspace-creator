@@ -1,0 +1,613 @@
+{
+  "schema": "creatoros.timeout-static-source-dispositions.v1",
+  "task": "T-1080",
+  "reviewer": "assistant_core_implementation_review",
+  "createdAtUtc": "2026-10-08T12:55:06.335692+00:00",
+  "verdict": "FAIL_RETAINED",
+  "meaning": "实际timeout-policy整体exit1保留；本文只归因新合并必要兼容与已有静态清单，不是全功能或发布签字。",
+  "actualEvidence": [
+    {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/worktree-main-integration-20261008/timeout-policy-combined-green.log",
+      "sha256": "aaa10b9e1a56942ed4f136129c83d8ece21bbda00dcf5332e50858cd0487be86"
+    },
+    {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/worktree-main-integration-20261008/timeout-policy-combined-green.result.json",
+      "sha256": "6b7aca184cf9e839466d2996642c08693d5fe2387938cee3b699d34db2896cdd",
+      "exitCode": 1
+    }
+  ],
+  "staticCounts": {
+    "INHERITED_SHORT_EXECUTION_OR_FINITE_OBSERVATION": 14,
+    "CANCELLATION_GRACE": 1,
+    "NORMALIZED_AT_REAL_CONSUMER": 1,
+    "VENDOR_UI_FALSE_POSITIVE": 10,
+    "IDLE_TTL": 1
+  },
+  "staticItems": [
+    {
+      "file": "ai-worker/src/execution/codex-acp-worker-run.ts",
+      "line": 56,
+      "kind": "timeoutMs",
+      "valueMs": 10000,
+      "source": "timeoutMs:10_000",
+      "currentSha256": "65a79c7461bf43396341b38945d99a7964501364f75aecab797030e94f69e986",
+      "byteEqualTo": [
+        "04ca6d27"
+      ],
+      "disposition": "保留真实静态FAIL；登记既有源根因，不在本轮出包扩大修复",
+      "class": "INHERITED_SHORT_EXECUTION_OR_FINITE_OBSERVATION",
+      "reason": "原04ca ACP通知排空timeoutMs10秒，实际vendor drain会在尚未排空时抛错；不是idleMs0或轮询间隔。"
+    },
+    {
+      "file": "ai-worker/src/execution/codex-acp-worker-run.ts",
+      "line": 69,
+      "kind": "timeoutMs",
+      "valueMs": 10000,
+      "source": "timeoutMs:10_000",
+      "currentSha256": "65a79c7461bf43396341b38945d99a7964501364f75aecab797030e94f69e986",
+      "byteEqualTo": [
+        "04ca6d27"
+      ],
+      "disposition": "保留真实静态FAIL；登记既有源根因，不在本轮出包扩大修复",
+      "class": "INHERITED_SHORT_EXECUTION_OR_FINITE_OBSERVATION",
+      "reason": "原04ca ACP通知排空timeoutMs10秒，实际vendor drain会在尚未排空时抛错；不是idleMs0或轮询间隔。"
+    },
+    {
+      "file": "ai-worker/src/execution/codex-app-server-protocol.ts",
+      "line": 79,
+      "kind": "abort/reject/kill timer",
+      "valueMs": 1000,
+      "source": "setTimeout(()=>{try{process.kill(-pid,'SIGKILL');}catch{/* Already stopped. */}},1000)",
+      "currentSha256": "64950294d748300bdf9c8235c3d2988ae23288862b889a26f3307ab87c5e2e88",
+      "byteEqualTo": [
+        "04ca6d27"
+      ],
+      "disposition": "保留原即时取消和回收宽限；逐项记录",
+      "reason": "close已置closed并拒绝在途请求后SIGTERM，1000ms unref定时SIGKILL只回收原子进程组；close没有等待该timer，不是创作/请求上限。",
+      "class": "CANCELLATION_GRACE"
+    },
+    {
+      "file": "ai-worker/src/execution/codex-app-server.ts",
+      "line": 57,
+      "kind": "timeout",
+      "valueMs": 15000,
+      "source": "timeout:15000",
+      "currentSha256": "8c12e5cdd41dd3db175e3dd01cf0cd2c77b12302226edf38b23cc327e076e7c7",
+      "byteEqualTo": [
+        "04ca6d27"
+      ],
+      "disposition": "保留真实静态FAIL；登记既有源根因，不在本轮出包扩大修复",
+      "class": "INHERITED_SHORT_EXECUTION_OR_FINITE_OBSERVATION",
+      "reason": "原04ca execFile --version 15秒实际终止探针；单次执行预算需后续按原消费者整改。"
+    },
+    {
+      "file": "backend/src/modules/ai-runtime/local-codex-status.service.ts",
+      "line": 7,
+      "kind": "timeoutMs",
+      "valueMs": 25000,
+      "source": "timeoutMs:deps.timeoutMs??25000",
+      "currentSha256": "72561068bfef0eb9d06b671dfb53076de55a1973a6cce6f66733707eb7d59b57",
+      "byteEqualTo": [
+        "04ca6d27"
+      ],
+      "disposition": "保留跨层已归一事实；静态误报",
+      "reason": "25000仅传给createRequestIoService；真实consumer首行executionTimeoutMs(deps.timeoutMs)归一至至少120000，外层completionWaitMs覆盖启动/FIFO/执行，不构成25秒正执行帽子。内部Codex原短探针仍另列。",
+      "class": "NORMALIZED_AT_REAL_CONSUMER"
+    },
+    {
+      "file": "frontend/public/reference-editors/doocs-md/native/chunks/codemirror-C3tEDw1q.js",
+      "line": 10081,
+      "kind": "timeout",
+      "valueMs": 400,
+      "source": "timeout: 400",
+      "currentSha256": "d95348207c70e7067e2111e70831323b054063a72f1fff28006875b320eb3e00",
+      "byteEqualTo": [
+        "04ca6d27"
+      ],
+      "disposition": "保留冻结vendor；静态误报/非执行预算",
+      "reason": "requestIdleCallback的调度截止（3处）或popover/modal动画卸载宽限（6处），不是请求执行上限。",
+      "class": "VENDOR_UI_FALSE_POSITIVE"
+    },
+    {
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-codemirror-CzoyEQLj.js",
+      "line": 11,
+      "kind": "timeout",
+      "valueMs": 400,
+      "source": "timeout:400",
+      "currentSha256": "2459be44482e57531dc4be8d0d51275d8025d27d51048cff14664d6444576536",
+      "byteEqualTo": [
+        "04ca6d27"
+      ],
+      "disposition": "保留冻结vendor；静态误报/非执行预算",
+      "reason": "requestIdleCallback的调度截止（3处）或popover/modal动画卸载宽限（6处），不是请求执行上限。",
+      "class": "VENDOR_UI_FALSE_POSITIVE"
+    },
+    {
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-index-D9fKRfoA.js",
+      "line": 12,
+      "kind": "timeout",
+      "valueMs": 2000,
+      "source": "timeout:2e3",
+      "currentSha256": "5b601c49f654a23b1d116180ba47145edbe71129c9173e274d389956c26e5315",
+      "byteEqualTo": [
+        "04ca6d27"
+      ],
+      "disposition": "保留冻结vendor；静态误报/非执行预算",
+      "reason": "requestIdleCallback的调度截止（3处）或popover/modal动画卸载宽限（6处），不是请求执行上限。",
+      "class": "VENDOR_UI_FALSE_POSITIVE"
+    },
+    {
+      "file": "frontend/public/reference-editors/kuaitu/js/index.770609ce.js",
+      "line": 63,
+      "kind": "abort/reject/kill timer",
+      "valueMs": 300,
+      "source": "setTimeout(()=>{this.popper&&!this.popperStatus&&(this.popper.popper.style.display=\"none\",this.popper.destroy(),this.popper=null),this.popperStatus=!1},300)",
+      "currentSha256": "a95f1a410d9e534c33900f53439da21d22f42eebcd982c5e52cc04ea0fcc576c",
+      "byteEqualTo": [
+        "04ca6d27"
+      ],
+      "disposition": "保留冻结vendor；静态误报/非执行预算",
+      "reason": "requestIdleCallback的调度截止（3处）或popover/modal动画卸载宽限（6处），不是请求执行上限。",
+      "class": "VENDOR_UI_FALSE_POSITIVE"
+    },
+    {
+      "file": "frontend/public/reference-editors/kuaitu/js/index.770609ce.js",
+      "line": 92,
+      "kind": "abort/reject/kill timer",
+      "valueMs": 300,
+      "source": "setTimeout(()=>{this.destroy(),this.onRemove()},300)",
+      "currentSha256": "a95f1a410d9e534c33900f53439da21d22f42eebcd982c5e52cc04ea0fcc576c",
+      "byteEqualTo": [
+        "04ca6d27"
+      ],
+      "disposition": "保留冻结vendor；静态误报/非执行预算",
+      "reason": "requestIdleCallback的调度截止（3处）或popover/modal动画卸载宽限（6处），不是请求执行上限。",
+      "class": "VENDOR_UI_FALSE_POSITIVE"
+    },
+    {
+      "file": "frontend/public/reference-editors/kuaitu/js/index.770609ce.js",
+      "line": 92,
+      "kind": "abort/reject/kill timer",
+      "valueMs": 300,
+      "source": "setTimeout(()=>{this.closing=!1,this.destroy()},300)",
+      "currentSha256": "a95f1a410d9e534c33900f53439da21d22f42eebcd982c5e52cc04ea0fcc576c",
+      "byteEqualTo": [
+        "04ca6d27"
+      ],
+      "disposition": "保留冻结vendor；静态误报/非执行预算",
+      "reason": "requestIdleCallback的调度截止（3处）或popover/modal动画卸载宽限（6处），不是请求执行上限。",
+      "class": "VENDOR_UI_FALSE_POSITIVE"
+    },
+    {
+      "file": "frontend/public/reference-editors/kuaitu/native/native.js",
+      "line": 38974,
+      "kind": "timeout",
+      "valueMs": 1,
+      "source": "timeout: y",
+      "currentSha256": "f67b3668caee708e44cf22b50181ebd1a74ee602c2872a9d46e3acc7a5e975a2",
+      "byteEqualTo": [
+        "04ca6d27"
+      ],
+      "disposition": "保留冻结vendor；静态误报/非执行预算",
+      "reason": "Axios合并策略timeout:y，y是本函数局部function，不是1ms数值；静态全文件同名绑定误判。",
+      "class": "VENDOR_UI_FALSE_POSITIVE"
+    },
+    {
+      "file": "frontend/public/reference-editors/kuaitu/native/native.js",
+      "line": 53491,
+      "kind": "abort/reject/kill timer",
+      "valueMs": 300,
+      "source": "setTimeout(() => {\n          this.popper && !this.popperStatus && (this.popper.popper.style.display = \"none\", this.popper.destroy(), this.popper = null), this.popperStatus = !1;\n        }, 300)",
+      "currentSha256": "f67b3668caee708e44cf22b50181ebd1a74ee602c2872a9d46e3acc7a5e975a2",
+      "byteEqualTo": [
+        "04ca6d27"
+      ],
+      "disposition": "保留冻结vendor；静态误报/非执行预算",
+      "reason": "requestIdleCallback的调度截止（3处）或popover/modal动画卸载宽限（6处），不是请求执行上限。",
+      "class": "VENDOR_UI_FALSE_POSITIVE"
+    },
+    {
+      "file": "frontend/public/reference-editors/kuaitu/native/native.js",
+      "line": 59840,
+      "kind": "abort/reject/kill timer",
+      "valueMs": 300,
+      "source": "setTimeout(() => {\n            this.destroy(), this.onRemove();\n          }, 300)",
+      "currentSha256": "f67b3668caee708e44cf22b50181ebd1a74ee602c2872a9d46e3acc7a5e975a2",
+      "byteEqualTo": [
+        "04ca6d27"
+      ],
+      "disposition": "保留冻结vendor；静态误报/非执行预算",
+      "reason": "requestIdleCallback的调度截止（3处）或popover/modal动画卸载宽限（6处），不是请求执行上限。",
+      "class": "VENDOR_UI_FALSE_POSITIVE"
+    },
+    {
+      "file": "frontend/public/reference-editors/kuaitu/native/native.js",
+      "line": 60642,
+      "kind": "abort/reject/kill timer",
+      "valueMs": 300,
+      "source": "setTimeout(() => {\n            this.closing = !1, this.destroy();\n          }, 300)",
+      "currentSha256": "f67b3668caee708e44cf22b50181ebd1a74ee602c2872a9d46e3acc7a5e975a2",
+      "byteEqualTo": [
+        "04ca6d27"
+      ],
+      "disposition": "保留冻结vendor；静态误报/非执行预算",
+      "reason": "requestIdleCallback的调度截止（3处）或popover/modal动画卸载宽限（6处），不是请求执行上限。",
+      "class": "VENDOR_UI_FALSE_POSITIVE"
+    },
+    {
+      "file": "frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.ts",
+      "line": 194,
+      "kind": "abort/reject/kill timer",
+      "valueMs": 90000,
+      "source": "setTimeout(()=>{s.abort.abort();void serial(s,()=>close(s,true)).catch(()=>{});},ports.idleMs??90_000)",
+      "currentSha256": "fc881cfe39b9d2eba198f3712d3ababdd61122698e13f9ad4a3f383e841b78ff",
+      "byteEqualTo": [
+        "12288cef"
+      ],
+      "disposition": "保留原idle TTL；静态误报/非执行上限",
+      "reason": "闲置诊断会话TTL每次活动重新touch，90秒只回收未使用会话；TTL不等于单操作budget。",
+      "class": "IDLE_TTL"
+    },
+    {
+      "file": "frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.ts",
+      "line": 203,
+      "kind": "abort/reject/kill timer",
+      "valueMs": 1000,
+      "source": "setTimeout(()=>{timedOut=true;reject(observationDeadline);},1000)",
+      "currentSha256": "fc881cfe39b9d2eba198f3712d3ababdd61122698e13f9ad4a3f383e841b78ff",
+      "byteEqualTo": [
+        "12288cef"
+      ],
+      "disposition": "保留真实静态FAIL；登记既有源根因，不在本轮出包扩大修复",
+      "class": "INHERITED_SHORT_EXECUTION_OR_FINITE_OBSERVATION",
+      "reason": "原main checkout5秒、goto15秒、click5秒或两段1秒有限UI观察；观察超时冻结observationFailure/不可用，不得冒充成功。"
+    },
+    {
+      "file": "frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.ts",
+      "line": 240,
+      "kind": "abort/reject/kill timer",
+      "valueMs": 1000,
+      "source": "setTimeout(()=>{active=false;reject(observationDeadline);},1000)",
+      "currentSha256": "fc881cfe39b9d2eba198f3712d3ababdd61122698e13f9ad4a3f383e841b78ff",
+      "byteEqualTo": [
+        "12288cef"
+      ],
+      "disposition": "保留真实静态FAIL；登记既有源根因，不在本轮出包扩大修复",
+      "class": "INHERITED_SHORT_EXECUTION_OR_FINITE_OBSERVATION",
+      "reason": "原main checkout5秒、goto15秒、click5秒或两段1秒有限UI观察；观察超时冻结observationFailure/不可用，不得冒充成功。"
+    },
+    {
+      "file": "frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.ts",
+      "line": 322,
+      "kind": "abort/reject/kill timer",
+      "valueMs": 5000,
+      "source": "setTimeout(()=>s.abort.abort(),ports.checkoutMs??5000)",
+      "currentSha256": "fc881cfe39b9d2eba198f3712d3ababdd61122698e13f9ad4a3f383e841b78ff",
+      "byteEqualTo": [
+        "12288cef"
+      ],
+      "disposition": "保留真实静态FAIL；登记既有源根因，不在本轮出包扩大修复",
+      "class": "INHERITED_SHORT_EXECUTION_OR_FINITE_OBSERVATION",
+      "reason": "原main checkout5秒、goto15秒、click5秒或两段1秒有限UI观察；观察超时冻结observationFailure/不可用，不得冒充成功。"
+    },
+    {
+      "file": "frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.ts",
+      "line": 324,
+      "kind": "timeout",
+      "valueMs": 15000,
+      "source": "timeout:15_000",
+      "currentSha256": "fc881cfe39b9d2eba198f3712d3ababdd61122698e13f9ad4a3f383e841b78ff",
+      "byteEqualTo": [
+        "12288cef"
+      ],
+      "disposition": "保留真实静态FAIL；登记既有源根因，不在本轮出包扩大修复",
+      "class": "INHERITED_SHORT_EXECUTION_OR_FINITE_OBSERVATION",
+      "reason": "原main checkout5秒、goto15秒、click5秒或两段1秒有限UI观察；观察超时冻结observationFailure/不可用，不得冒充成功。"
+    },
+    {
+      "file": "frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.ts",
+      "line": 354,
+      "kind": "timeout",
+      "valueMs": 5000,
+      "source": "timeout:5000",
+      "currentSha256": "fc881cfe39b9d2eba198f3712d3ababdd61122698e13f9ad4a3f383e841b78ff",
+      "byteEqualTo": [
+        "12288cef"
+      ],
+      "disposition": "保留真实静态FAIL；登记既有源根因，不在本轮出包扩大修复",
+      "class": "INHERITED_SHORT_EXECUTION_OR_FINITE_OBSERVATION",
+      "reason": "原main checkout5秒、goto15秒、click5秒或两段1秒有限UI观察；观察超时冻结observationFailure/不可用，不得冒充成功。"
+    },
+    {
+      "file": "frontend/src/server/workbench-artifact-render.ts",
+      "line": 98,
+      "kind": "timeout",
+      "valueMs": 15000,
+      "source": "timeout:15_000",
+      "currentSha256": "d6fa9a3dc8c9086e2bc80bf436d87a6448642708836d9a8e3b9ae7a1866af124",
+      "byteEqualTo": [
+        "12288cef"
+      ],
+      "disposition": "保留真实静态FAIL；登记既有源根因，不在本轮出包扩大修复",
+      "class": "INHERITED_SHORT_EXECUTION_OR_FINITE_OBSERVATION",
+      "reason": "原main browser launch15秒、page.goto15秒、screenshot20秒实际离线渲染调用上限；不能简单将所有原渲染任务总期限改成120秒。"
+    },
+    {
+      "file": "frontend/src/server/workbench-artifact-render.ts",
+      "line": 112,
+      "kind": "timeout",
+      "valueMs": 15000,
+      "source": "timeout:15_000",
+      "currentSha256": "d6fa9a3dc8c9086e2bc80bf436d87a6448642708836d9a8e3b9ae7a1866af124",
+      "byteEqualTo": [
+        "12288cef"
+      ],
+      "disposition": "保留真实静态FAIL；登记既有源根因，不在本轮出包扩大修复",
+      "class": "INHERITED_SHORT_EXECUTION_OR_FINITE_OBSERVATION",
+      "reason": "原main browser launch15秒、page.goto15秒、screenshot20秒实际离线渲染调用上限；不能简单将所有原渲染任务总期限改成120秒。"
+    },
+    {
+      "file": "frontend/src/server/workbench-artifact-render.ts",
+      "line": 115,
+      "kind": "timeout",
+      "valueMs": 20000,
+      "source": "timeout:20_000",
+      "currentSha256": "d6fa9a3dc8c9086e2bc80bf436d87a6448642708836d9a8e3b9ae7a1866af124",
+      "byteEqualTo": [
+        "12288cef"
+      ],
+      "disposition": "保留真实静态FAIL；登记既有源根因，不在本轮出包扩大修复",
+      "class": "INHERITED_SHORT_EXECUTION_OR_FINITE_OBSERVATION",
+      "reason": "原main browser launch15秒、page.goto15秒、screenshot20秒实际离线渲染调用上限；不能简单将所有原渲染任务总期限改成120秒。"
+    },
+    {
+      "file": "frontend/src/server/workbench-browser-host.ts",
+      "line": 168,
+      "kind": "timeout",
+      "valueMs": 10000,
+      "source": "AbortSignal.timeout(10_000)",
+      "currentSha256": "fe1fe8d382804282900113b88113fe6dab739e9721e6b68e44000829dfc5f903",
+      "byteEqualTo": [
+        "12288cef"
+      ],
+      "disposition": "保留真实静态FAIL；登记既有源根因，不在本轮出包扩大修复",
+      "class": "INHERITED_SHORT_EXECUTION_OR_FINITE_OBSERVATION",
+      "reason": "原main恢复profile resolve10秒/cleanup proof15秒有限请求；后续必须一并核原30秒native admission与真实stop proof，不能扩大权限或提前释放物理lease。"
+    },
+    {
+      "file": "frontend/src/server/workbench-browser-host.ts",
+      "line": 180,
+      "kind": "timeout",
+      "valueMs": 15000,
+      "source": "AbortSignal.timeout(15_000)",
+      "currentSha256": "fe1fe8d382804282900113b88113fe6dab739e9721e6b68e44000829dfc5f903",
+      "byteEqualTo": [
+        "12288cef"
+      ],
+      "disposition": "保留真实静态FAIL；登记既有源根因，不在本轮出包扩大修复",
+      "class": "INHERITED_SHORT_EXECUTION_OR_FINITE_OBSERVATION",
+      "reason": "原main恢复profile resolve10秒/cleanup proof15秒有限请求；后续必须一并核原30秒native admission与真实stop proof，不能扩大权限或提前释放物理lease。"
+    },
+    {
+      "file": "frontend/src/server/workbench-native-client.ts",
+      "line": 47,
+      "kind": "request timer",
+      "valueMs": 10000,
+      "source": "socket.setTimeout(10_000)",
+      "currentSha256": "7328a49d2823930dd2497bc3b882a9e59e8c4c6617732577a8efb01174c840bc",
+      "byteEqualTo": [
+        "12288cef"
+      ],
+      "disposition": "保留真实静态FAIL；登记既有源根因，不在本轮出包扩大修复",
+      "class": "INHERITED_SHORT_EXECUTION_OR_FINITE_OBSERVATION",
+      "reason": "原main native socket读写/观察10秒无回复会断开；写入派发后保留NATIVE_RESULT_UNKNOWN，后续须保留receipt恢复与原服务owner。"
+    }
+  ],
+  "sourceOrigins": {
+    "ai-worker/src/execution/codex-acp-worker-run.ts": {
+      "currentSha256": "65a79c7461bf43396341b38945d99a7964501364f75aecab797030e94f69e986",
+      "sourceRefs": {
+        "04ca6d27": "65a79c7461bf43396341b38945d99a7964501364f75aecab797030e94f69e986",
+        "12288cef": null,
+        "6b1322af": null
+      },
+      "byteEqualTo": [
+        "04ca6d27"
+      ]
+    },
+    "ai-worker/src/execution/codex-app-server-protocol.ts": {
+      "currentSha256": "64950294d748300bdf9c8235c3d2988ae23288862b889a26f3307ab87c5e2e88",
+      "sourceRefs": {
+        "04ca6d27": "64950294d748300bdf9c8235c3d2988ae23288862b889a26f3307ab87c5e2e88",
+        "12288cef": null,
+        "6b1322af": null
+      },
+      "byteEqualTo": [
+        "04ca6d27"
+      ]
+    },
+    "ai-worker/src/execution/codex-app-server.ts": {
+      "currentSha256": "8c12e5cdd41dd3db175e3dd01cf0cd2c77b12302226edf38b23cc327e076e7c7",
+      "sourceRefs": {
+        "04ca6d27": "8c12e5cdd41dd3db175e3dd01cf0cd2c77b12302226edf38b23cc327e076e7c7",
+        "12288cef": null,
+        "6b1322af": null
+      },
+      "byteEqualTo": [
+        "04ca6d27"
+      ]
+    },
+    "backend/src/modules/ai-runtime/local-codex-status.service.ts": {
+      "currentSha256": "72561068bfef0eb9d06b671dfb53076de55a1973a6cce6f66733707eb7d59b57",
+      "sourceRefs": {
+        "04ca6d27": "72561068bfef0eb9d06b671dfb53076de55a1973a6cce6f66733707eb7d59b57",
+        "12288cef": null,
+        "6b1322af": null
+      },
+      "byteEqualTo": [
+        "04ca6d27"
+      ]
+    },
+    "frontend/public/reference-editors/doocs-md/native/chunks/codemirror-C3tEDw1q.js": {
+      "currentSha256": "d95348207c70e7067e2111e70831323b054063a72f1fff28006875b320eb3e00",
+      "sourceRefs": {
+        "04ca6d27": "d95348207c70e7067e2111e70831323b054063a72f1fff28006875b320eb3e00",
+        "12288cef": null,
+        "6b1322af": null
+      },
+      "byteEqualTo": [
+        "04ca6d27"
+      ]
+    },
+    "frontend/public/reference-editors/doocs-md/static/js/md-codemirror-CzoyEQLj.js": {
+      "currentSha256": "2459be44482e57531dc4be8d0d51275d8025d27d51048cff14664d6444576536",
+      "sourceRefs": {
+        "04ca6d27": "2459be44482e57531dc4be8d0d51275d8025d27d51048cff14664d6444576536",
+        "12288cef": null,
+        "6b1322af": null
+      },
+      "byteEqualTo": [
+        "04ca6d27"
+      ]
+    },
+    "frontend/public/reference-editors/doocs-md/static/js/md-index-D9fKRfoA.js": {
+      "currentSha256": "5b601c49f654a23b1d116180ba47145edbe71129c9173e274d389956c26e5315",
+      "sourceRefs": {
+        "04ca6d27": "5b601c49f654a23b1d116180ba47145edbe71129c9173e274d389956c26e5315",
+        "12288cef": null,
+        "6b1322af": null
+      },
+      "byteEqualTo": [
+        "04ca6d27"
+      ]
+    },
+    "frontend/public/reference-editors/kuaitu/js/index.770609ce.js": {
+      "currentSha256": "a95f1a410d9e534c33900f53439da21d22f42eebcd982c5e52cc04ea0fcc576c",
+      "sourceRefs": {
+        "04ca6d27": "a95f1a410d9e534c33900f53439da21d22f42eebcd982c5e52cc04ea0fcc576c",
+        "12288cef": null,
+        "6b1322af": null
+      },
+      "byteEqualTo": [
+        "04ca6d27"
+      ]
+    },
+    "frontend/public/reference-editors/kuaitu/native/native.js": {
+      "currentSha256": "f67b3668caee708e44cf22b50181ebd1a74ee602c2872a9d46e3acc7a5e975a2",
+      "sourceRefs": {
+        "04ca6d27": "f67b3668caee708e44cf22b50181ebd1a74ee602c2872a9d46e3acc7a5e975a2",
+        "12288cef": null,
+        "6b1322af": null
+      },
+      "byteEqualTo": [
+        "04ca6d27"
+      ]
+    },
+    "frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.ts": {
+      "currentSha256": "fc881cfe39b9d2eba198f3712d3ababdd61122698e13f9ad4a3f383e841b78ff",
+      "sourceRefs": {
+        "04ca6d27": null,
+        "12288cef": "fc881cfe39b9d2eba198f3712d3ababdd61122698e13f9ad4a3f383e841b78ff",
+        "6b1322af": null
+      },
+      "byteEqualTo": [
+        "12288cef"
+      ]
+    },
+    "frontend/src/server/workbench-artifact-render.ts": {
+      "currentSha256": "d6fa9a3dc8c9086e2bc80bf436d87a6448642708836d9a8e3b9ae7a1866af124",
+      "sourceRefs": {
+        "04ca6d27": null,
+        "12288cef": "d6fa9a3dc8c9086e2bc80bf436d87a6448642708836d9a8e3b9ae7a1866af124",
+        "6b1322af": null
+      },
+      "byteEqualTo": [
+        "12288cef"
+      ]
+    },
+    "frontend/src/server/workbench-browser-host.ts": {
+      "currentSha256": "fe1fe8d382804282900113b88113fe6dab739e9721e6b68e44000829dfc5f903",
+      "sourceRefs": {
+        "04ca6d27": null,
+        "12288cef": "fe1fe8d382804282900113b88113fe6dab739e9721e6b68e44000829dfc5f903",
+        "6b1322af": null
+      },
+      "byteEqualTo": [
+        "12288cef"
+      ]
+    },
+    "frontend/src/server/workbench-native-client.ts": {
+      "currentSha256": "7328a49d2823930dd2497bc3b882a9e59e8c4c6617732577a8efb01174c840bc",
+      "sourceRefs": {
+        "04ca6d27": null,
+        "12288cef": "7328a49d2823930dd2497bc3b882a9e59e8c4c6617732577a8efb01174c840bc",
+        "6b1322af": null
+      },
+      "byteEqualTo": [
+        "12288cef"
+      ]
+    }
+  },
+  "consumerProofs": [
+    {
+      "path": "backend/src/modules/ai-runtime/request-io.service.ts",
+      "sha256": "6e575f497348a24f427ee15e974d18bd9ea1cf96e822371e8373796c80a8dfad"
+    },
+    {
+      "path": "ai-worker/vendor/acpx/src/acp/client.ts",
+      "sha256": "ab138af49f86bb632d10c14488c949fb4a961875394ce7e6d50b586624d19978"
+    },
+    {
+      "path": "frontend/src/features/copilot/conversation-persistence.ts",
+      "sha256": "158eb5da7b57e8c0559b10c6b6c9d33cc6f17da71abed90b81fdabc9347ddaf2"
+    },
+    {
+      "path": "backend/src/modules/execution/persistent-task.service.ts",
+      "sha256": "3e8cf47382c7c7db7ea77166c28a9f04c069256f17c5b9ebaaeb56d9a50f1475"
+    },
+    {
+      "path": "backend/src/modules/execution/execution-call-ledger.service.test.ts",
+      "sha256": "98f31857806c6a2849642c250cd1cd736298c251aca0c8bab3f6fad3790ab7c2"
+    },
+    {
+      "path": "tools/timeout-policy/check.mjs",
+      "sha256": "4494050c66783e1a583259366a0adcb6506b441376f3073be45b3c7fff88cd24"
+    },
+    {
+      "path": "docs/engineering/timeout-policy.md",
+      "sha256": "94385308b37926c3f1b81cf3c8bf0533983025bfc539cac7c914770c112604cf"
+    }
+  ],
+  "additionalSameFileLimit": {
+    "path": "ai-worker/src/execution/codex-app-server-protocol.ts",
+    "line": 54,
+    "fact": "request默认timeoutMs=15000，同04ca原源码；静态名单没有枚举这个参数默认，不把teardown timer误报处置解释成该RPC全链满足两分钟。",
+    "disposition": "既有源进一步消费者限制，当前不改，不增加新的本轮Gate。"
+  },
+  "ledgerClassification": {
+    "verdict": "三方夹具兼容",
+    "mainTestSha256": "98f31857806c6a2849642c250cd1cd736298c251aca0c8bab3f6fad3790ab7c2",
+    "mainServiceOriginalHasCommandReceipt": false,
+    "resourceServiceOriginalHasCommandReceipt": false,
+    "currentServiceStrictDigestPreserved": true,
+    "minimumCandidateReport": "/Users/zyongzhu/CreatorOS-local-acceptance/worktree-main-integration-20261008/timeout-ledger-compatibility-candidate/decisions-corrected.json",
+    "minimumCandidateReportSha256": "63aa4b43f66f6fe416e93a4cafe63bd60389f3143c673ab47da33b0819792778",
+    "assertionsRemoved": false,
+    "productionChanges": 0,
+    "clientServiceOriginalHasCommandReceipt": true
+  },
+  "limits": [
+    "主main/04ca源码字节继承由git show直接核，不冒充曾经运行旧版本timeout Gate；历史执行基线未在此重跑。",
+    "未修改产品、vendor、static guard、Git、控制面或正式任务状态；根因登记由root负责。",
+    "本轮只有3 fixture request-key候选；保留父deadline继承及所有原测试预算/强断言。",
+    "不把static27源码事实扩成全部真实模型/安装/nativeUI验证，也不将有限报告PASS变整体timeout-policy PASS。"
+  ],
+  "sourceAttributionCorrection": {
+    "path": "/Users/zyongzhu/CreatorOS-local-acceptance/worktree-main-integration-20261008/timeout-ledger-compatibility-candidate/source-attribution-correction.json",
+    "sha256": "3f4310e6517861d9e6d9a81fc5e891b8e50500f7f1754f50bb46d7d4f4431a18"
+  },
+  "supersedesMetadataOnly": {
+    "path": "/Users/zyongzhu/CreatorOS-local-acceptance/worktree-main-integration-20261008/timeout-ledger-compatibility-candidate/static-dispositions.json",
+    "sha256": "5b76e2dbd7021db4aa7672ff00d02d758939e170ece48080ccae0504b71f0b26"
+  }
+}

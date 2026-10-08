@@ -1,0 +1,1 @@
+{"argv": ["pnpm", "-C", "frontend", "exec", "vitest", "run", "src/lib/owned-devices.test.ts", "src/app/activate/owned-device-panel.test.tsx", "src/features/settings/owned-device-connection.test.tsx", "--retry=0", "--maxWorkers=1", "--testTimeout=180000", "--hookTimeout=180000"], "exitCode": 0, "seconds": 4.743240118026733}

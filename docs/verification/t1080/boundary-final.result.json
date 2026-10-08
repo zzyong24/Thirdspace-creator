@@ -1,0 +1,1 @@
+{"argv": ["node", "orchestrator/process/boundary-scan.mjs", "--quiet"], "exitCode": 1, "seconds": 0.4357478618621826}

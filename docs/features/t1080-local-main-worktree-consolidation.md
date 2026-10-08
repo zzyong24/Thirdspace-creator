@@ -35,3 +35,13 @@ flowchart LR
 合并迁移真实25项首跑22PASS/3FAIL只因旧测试期待workbench表不存在；正式0129已按本SPEC保留main两表四索引，独立复核后仅更新这三族workbench表存在期望为true，其他legacy字段不存在、旧值/账本深等、未知/损坏拒绝仍保留。原失败不补签，按同25项命令重新验证。
 
 前端两份资源消费者测试仍调用旧单参getLiveChatSession，但本次三方保留客户端泛型factory接口；限定2测试沿已验证同型真实Chat SDK工厂接入第二参数，原压力/metadata/流/会话scope断言不删，产品容器不引SDK业务依赖。工作台readCurrentAccountId缺import导致原60项交互失败，仅导入既有真实helper并保留历史/产物卡3处消费者，原67项同命令已通过。
+
+## 最后会话兼容与来源闭包实证
+
+真实消费者回归发现两处三方组合缺口：旧账号组仍在准备发送时阻止新scope发送，停止后旧回执ID被当成有效观察导致无法回收。采用限定独评3文件候选：准备状态按真实liveSession隔离，迟到旧scope不改新输入；成功取消仅释放当前轮观察，原任务回执ID不丢。原main三次恢复及公开继续按钮行为保留。3条真实消费者/服务流/控制回归41项通过；不代签模型或安装版验收。
+
+完整超时门另发现main新增nested账本测试沿用同账号其他任务的cancel/pause/resume请求键，与client04ca原持久命令receipt严格digest门冲突。仅经独评改3个测试fixture键，反向替换能恢复原整文件；生产门、原取消/恢复/父期限/断言均不改，重新跑原3条service suite。原错误来源metadata已单独纠正且不覆盖原报告/失败。静态27项逐条原SHA对照：14原短执行/有限观察及13非执行上限或已floor误报，登记T1081，不冒称完整timeout-policy通过。
+
+main、client、resource、owned-device及pipeline已普通三方合并。39个另已逐来源审核覆盖/适配/替代的旧头，用35个最小历史父显式保留历史；合并前后tree OID完全相同，39头全部可达，未把未经审核独有产品用ours丢弃。27闲置worktree逐个普通remove，2个实际活跃目录保留；来源分支和原日志不删除。
+
+真实boundary初扫4新增仅两份SDK测试位于features。限定独评后将两套原SDK协议/消费者测试搬至frontend/src/server/ai-runtime，5处相对导入改原模块alias，当前资源verifier只更新2个argv，逆替换后三个来源文件全文相同。全部测试body/断言/fixture/预算不变，原生产baseline/guard/旧证据不改；T1080写集保留旧删除路径并增加新路径，T1073将实际当前suite声明同步。再次实跑迁移后的原会话/流/控制回归与边界，不以移动文件代替测试通过。

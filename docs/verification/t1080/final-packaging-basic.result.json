@@ -1,0 +1,1 @@
+{"argv": ["pnpm", "-C", "frontend", "exec", "vitest", "run", "scripts/desktop/package-local.test.mjs", "scripts/desktop/desktop-release-workflow.test.mjs", "scripts/desktop/notarize.test.mjs", "scripts/desktop/tauri-signing-config.test.mjs", "--retry=0", "--testTimeout=180000", "--hookTimeout=180000"], "exitCode": 0, "seconds": 2.137202262878418}

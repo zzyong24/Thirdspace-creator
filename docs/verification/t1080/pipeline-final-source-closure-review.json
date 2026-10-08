@@ -1,0 +1,420 @@
+{
+  "schema": "t1080-pipeline-final-limited-source-closure-review-v1",
+  "observed_at": "2026-10-08T12:39:54.871147+00:00",
+  "verdict": "PASS_LIMITED_SOURCE_CLOSURE",
+  "control_resolution_sha256": "80ef375cb7f9ac23f2e10a1f36b5cd906c40aaa034e9a6a9d39e6b1822a76e78",
+  "product_application_record_sha256": "3730dad2ab4bd99aa4f5bc8fcb29e71421f04ed648fbdc2c016d87ca48e61a07",
+  "namespace_correction": "93=92+原T1065 timeout-audit module/vertical；T1065 BACKLOG/SPEC此前存在且不在8撞号alias内。T1063 literal与release alias仅已有看板来源，不虚构modules entry。",
+  "checks": [
+    {
+      "name": "actual_module_namespace_92_to_93",
+      "pass": true,
+      "evidence": "唯一新增原超时审计T1065，不是T1063-release-pipeline；按实际源码纠正口述。"
+    },
+    {
+      "name": "new_T1065_binding_source_exact",
+      "pass": true,
+      "evidence": {
+        "task_id": "T-1065",
+        "archetype": [
+          "orchestration"
+        ],
+        "tasks": [
+          "audit"
+        ],
+        "read_set": [
+          "docs/features/t1065-timeout-audit.md",
+          "frontend/**",
+          "backend/**",
+          "ai-worker/**",
+          "contract/**",
+          "mcp-server/**",
+          "tools/**",
+          ".github/**"
+        ],
+        "write_set": [
+          "docs/research/t1065/**"
+        ],
+        "verify_commands": {
+          "audit": [
+            "python3 docs/research/t1065/scan_timeouts.py --verify"
+          ]
+        },
+        "depends_on": []
+      }
+    },
+    {
+      "name": "no_fabricated_T1063_module",
+      "pass": true,
+      "evidence": "两条看板任务均没有modules entry，维持来源实际结构。"
+    },
+    {
+      "name": "old_modules_preserved_except_T1080_additive_write_set",
+      "pass": true,
+      "evidence": [
+        {
+          "id": "T-1080",
+          "only_write_set": true,
+          "removed": [],
+          "added": [
+            ".github/workflows/desktop-release.yml",
+            "docs/assets/commit-activity-dark.svg",
+            "docs/assets/commit-activity.svg",
+            "docs/features/t1063-release-pipeline.md",
+            "docs/features/t1063-release-pipeline.review.md",
+            "docs/features/t1065-timeout-audit.md",
+            "docs/research/t1065/REPORT.md",
+            "docs/research/t1065/scan_timeouts.py",
+            "docs/research/t1065/search-candidates.json",
+            "docs/research/t1065/timeout-inventory.csv",
+            "docs/research/t1065/timeout-inventory.json",
+            "docs/verification/t1063/VERIFICATION.md",
+            "docs/verification/t1063/acceptance-classification.json",
+            "docs/verification/t1063/authorization.json",
+            "docs/verification/t1063/frozen-candidate.json",
+            "docs/verification/t1063/inspect-installer.py",
+            "docs/verification/t1063/logs/closure-build-only-tests.log",
+            "docs/verification/t1063/logs/creatoros-t1063-official-freeze-tests.log",
+            "docs/verification/t1063/logs/creatoros-t1063-skill-update-3.27.4.log",
+            "docs/verification/t1063/logs/extended-packaging-tests.log",
+            "docs/verification/t1063/logs/final-reconcile.log",
+            "docs/verification/t1063/logs/post-artifact-reconcile.log",
+            "docs/verification/t1063/logs/windows-run-watch.log",
+            "docs/verification/t1063/resume-preflight.json",
+            "docs/verification/t1063/spec-review-round.json",
+            "docs/verification/t1063/windows-artifacts.json",
+            "docs/verification/t1063/windows-build-evidence/build-timings.json",
+            "docs/verification/t1063/windows-build-evidence/build-timings.package.json",
+            "docs/verification/t1063/windows-build-evidence/validation-status.json",
+            "docs/verification/t1063/windows-installer.json",
+            "docs/verification/t1063/windows-job-log.json",
+            "docs/verification/t1063/windows-run.json",
+            "docs/verification/t1064-aborterror-diagnosis.md",
+            "frontend/next.config.ts",
+            "frontend/scripts/desktop/build-frontend.mjs",
+            "frontend/scripts/desktop/desktop-release-workflow.test.mjs",
+            "frontend/scripts/desktop/fetch-ffmpeg.mjs",
+            "frontend/scripts/desktop/release.mjs",
+            "orchestrator/ARTIFACT_MANIFEST.yaml",
+            "orchestrator/process/parallel-isolation.mjs",
+            "orchestrator/process/progress.mjs",
+            "orchestrator/process/timeout-budget.mjs",
+            "tools/windows-closure-rat/build-production-closure.mjs",
+            "tools/windows-closure-rat/build-production-closure.test.mjs",
+            "tools/windows-closure-rat/package-build-only.test.mjs"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "device_aliased_binding_unchanged",
+      "pass": true,
+      "evidence": "92基线已有设备绑定不回退。"
+    },
+    {
+      "name": "vertical_namespace_93_source_audit_exact",
+      "pass": true,
+      "evidence": {
+        "summary": {
+          "verticals": 93,
+          "tasks_done": 62,
+          "tasks_total": 195,
+          "tasks_pending": 133,
+          "verticals_complete": 18
+        },
+        "source_audit": {
+          "id": "T-1065",
+          "archetype": [
+            "orchestration"
+          ],
+          "task_id": "T-1065",
+          "tasks": [
+            {
+              "step": "audit",
+              "status": "done"
+            }
+          ],
+          "blocked_reason": null,
+          "depends_on": [],
+          "step_depends_on": {},
+          "write_set": [
+            "docs/research/t1065/**"
+          ],
+          "read_set": [
+            "docs/features/t1065-timeout-audit.md",
+            "frontend/**",
+            "backend/**",
+            "ai-worker/**",
+            "contract/**",
+            "mcp-server/**",
+            "tools/**",
+            ".github/**"
+          ],
+          "exclusive_resources": [],
+          "step_write_set": {},
+          "step_read_set": {},
+          "step_exclusive_resources": {},
+          "commits": {}
+        }
+      }
+    },
+    {
+      "name": "old_verticals_kept_except_T1080_write_set",
+      "pass": true,
+      "evidence": [
+        {
+          "id": "T-1080",
+          "only_write_set": true,
+          "removed": [],
+          "added": [
+            ".github/workflows/desktop-release.yml",
+            "docs/assets/commit-activity-dark.svg",
+            "docs/assets/commit-activity.svg",
+            "docs/features/t1063-release-pipeline.md",
+            "docs/features/t1063-release-pipeline.review.md",
+            "docs/features/t1065-timeout-audit.md",
+            "docs/research/t1065/REPORT.md",
+            "docs/research/t1065/scan_timeouts.py",
+            "docs/research/t1065/search-candidates.json",
+            "docs/research/t1065/timeout-inventory.csv",
+            "docs/research/t1065/timeout-inventory.json",
+            "docs/verification/t1063/VERIFICATION.md",
+            "docs/verification/t1063/acceptance-classification.json",
+            "docs/verification/t1063/authorization.json",
+            "docs/verification/t1063/frozen-candidate.json",
+            "docs/verification/t1063/inspect-installer.py",
+            "docs/verification/t1063/logs/closure-build-only-tests.log",
+            "docs/verification/t1063/logs/creatoros-t1063-official-freeze-tests.log",
+            "docs/verification/t1063/logs/creatoros-t1063-skill-update-3.27.4.log",
+            "docs/verification/t1063/logs/extended-packaging-tests.log",
+            "docs/verification/t1063/logs/final-reconcile.log",
+            "docs/verification/t1063/logs/post-artifact-reconcile.log",
+            "docs/verification/t1063/logs/windows-run-watch.log",
+            "docs/verification/t1063/resume-preflight.json",
+            "docs/verification/t1063/spec-review-round.json",
+            "docs/verification/t1063/windows-artifacts.json",
+            "docs/verification/t1063/windows-build-evidence/build-timings.json",
+            "docs/verification/t1063/windows-build-evidence/build-timings.package.json",
+            "docs/verification/t1063/windows-build-evidence/validation-status.json",
+            "docs/verification/t1063/windows-installer.json",
+            "docs/verification/t1063/windows-job-log.json",
+            "docs/verification/t1063/windows-run.json",
+            "docs/verification/t1064-aborterror-diagnosis.md",
+            "frontend/next.config.ts",
+            "frontend/scripts/desktop/build-frontend.mjs",
+            "frontend/scripts/desktop/desktop-release-workflow.test.mjs",
+            "frontend/scripts/desktop/fetch-ffmpeg.mjs",
+            "frontend/scripts/desktop/release.mjs",
+            "orchestrator/ARTIFACT_MANIFEST.yaml",
+            "orchestrator/process/parallel-isolation.mjs",
+            "orchestrator/process/progress.mjs",
+            "orchestrator/process/timeout-budget.mjs",
+            "tools/windows-closure-rat/build-production-closure.mjs",
+            "tools/windows-closure-rat/build-production-closure.test.mjs",
+            "tools/windows-closure-rat/package-build-only.test.mjs"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "progress_summary_actual_arithmetic",
+      "pass": true,
+      "evidence": {
+        "tasks": 195,
+        "done": 62,
+        "pending": 133
+      }
+    },
+    {
+      "name": "orchestrator/process/.skill-version_current_exact",
+      "pass": true,
+      "evidence": {
+        "sha256": "059101410c6bd35df37979a7fc91d59aa840a79aa794736772fe04c45a43838d"
+      }
+    },
+    {
+      "name": "orchestrator/process/.vendor-manifest.json_current_exact",
+      "pass": true,
+      "evidence": {
+        "sha256": "bbb77d2a0f29d32e7cf21593472d89f37e27f2ce7424d98c91371b7306f25607"
+      }
+    },
+    {
+      "name": "orchestrator/ARTIFACT_MANIFEST.yaml_current_exact",
+      "pass": true,
+      "evidence": {
+        "sha256": "b6d36f09002159fd0ca2bbbc936c8c98e9aa3f553b1ba272fd6de640d9f4e1d3"
+      }
+    },
+    {
+      "name": "canonical_literal_T1063_and_T1065_rows_exact",
+      "pass": true,
+      "evidence": {
+        "literal_T1063_has_no_module": true,
+        "T1065_already_existed_in_backlog": true,
+        "new_backlog_ids": []
+      }
+    },
+    {
+      "name": "release_alias_still_present",
+      "pass": true,
+      "evidence": "source原T1063 release映射到已有alias；历史已完成状态与PASS245946仅来源证据，不代签本轮。"
+    },
+    {
+      "name": "current_chain_exact_bytes",
+      "pass": true,
+      "evidence": {
+        "sha256": "56fc48691a34b61649c3fee7d1065b1de36901d8d30667bc03226131eca17277",
+        "events": 128
+      }
+    },
+    {
+      "name": "pipeline_original_chain_exact_bytes",
+      "pass": true,
+      "evidence": {
+        "sha256": "92df6859e8ca211e47121f9b92c627f30db670df1fbb98f073a6cabcc770e872",
+        "events": 91
+      }
+    },
+    {
+      "name": "both_chain_hash_link_valid",
+      "pass": true,
+      "evidence": [
+        {
+          "file": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/orchestrator/review-events.ndjson",
+          "count": 128,
+          "errors": 0,
+          "tip": "9063d3cd638fb9a2016a8995f7dd7f770feaa47804170978d8fc8657e6cd92f7"
+        },
+        {
+          "file": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1080/pipeline-original-review-events.ndjson",
+          "count": 91,
+          "errors": 0,
+          "tip": "b6f68b061a15927f9274b831b70db94d34af58338b4d6b117f80e4fbb2f405c3"
+        }
+      ]
+    },
+    {
+      "name": "current_spec_review_original_bytes",
+      "pass": true,
+      "evidence": {
+        "sha256": "9f481e6e3ab4b90f9056a08a4dc1492c37671509216bda6e096b5a748b3610bd"
+      }
+    },
+    {
+      "name": "source_archive_spec_review_original_bytes",
+      "pass": true,
+      "evidence": {
+        "sha256": "59265335a76c44f5b4a5d2a25278a63a62c6b08f258c8894369b75317df75132"
+      }
+    },
+    {
+      "name": "existing_resource_original_archive_preserved",
+      "pass": true,
+      "evidence": {
+        "sha256": "9d9ff2c2554c438fb57a9e18f11e300a559415c3d5a5a0791e5429dd2fbdb709",
+        "reference_source_head": "6b1322af71cbdf55f52e9f37c5cde76e06b56e48",
+        "path": "docs/verification/t1063/import-original/release-pipeline.review.original.md",
+        "identity_note": "原始评审为旧receipt4a57899fa70d；当前线性historical-import receipt fad55dd1ffd9文件是另一份既有导入记录，二者本来不同。current live9f481e…与pipeline packetcurrent原字节另项已验证。"
+      }
+    },
+    {
+      "name": "five_reviewed_pipeline_shas_and_combined_native_exact",
+      "pass": true,
+      "evidence": [
+        {
+          "path": ".github/workflows/desktop-release.yml",
+          "expected_sha256": "6b9d7cf660f92d14fbad412a406f847f2af93066228e6ae87d6410fff841e0a6",
+          "actual_sha256": "6b9d7cf660f92d14fbad412a406f847f2af93066228e6ae87d6410fff841e0a6",
+          "matches": true
+        },
+        {
+          "path": "frontend/scripts/desktop/build-sidecar.mjs",
+          "expected_sha256": "07c50a94e1d23e3ce2f601c19255071049ca3d4b31c4bca3b2bb12d5639ed112",
+          "actual_sha256": "07c50a94e1d23e3ce2f601c19255071049ca3d4b31c4bca3b2bb12d5639ed112",
+          "matches": true
+        },
+        {
+          "path": "frontend/scripts/desktop/fetch-ffmpeg.mjs",
+          "expected_sha256": "14d86a849a53886c066eb461f8089b8f07386c259aa326ad82dd32da9f6fc6cb",
+          "actual_sha256": "14d86a849a53886c066eb461f8089b8f07386c259aa326ad82dd32da9f6fc6cb",
+          "matches": true
+        },
+        {
+          "path": "frontend/scripts/desktop/node-runtime.mjs",
+          "expected_sha256": "f341572d12cc2cb6a30cc18ec4bb2a85978a9e09476c91b05b4882a3c3c816fe",
+          "actual_sha256": "f341572d12cc2cb6a30cc18ec4bb2a85978a9e09476c91b05b4882a3c3c816fe",
+          "matches": true
+        },
+        {
+          "path": "frontend/scripts/desktop/package.mjs",
+          "expected_sha256": "801aebc3f3f6de331e2413be82bf3a3edcf6fd6bf940db5aec6bcef34511feda",
+          "actual_sha256": "801aebc3f3f6de331e2413be82bf3a3edcf6fd6bf940db5aec6bcef34511feda",
+          "matches": true
+        },
+        {
+          "path": "frontend/src-tauri/src/lib.rs",
+          "expected_sha256": "b85d52ffce43dd10f3e6e82c242b9987ee0820ee5100abdc17f02e0d81f335eb",
+          "actual_sha256": "b85d52ffce43dd10f3e6e82c242b9987ee0820ee5100abdc17f02e0d81f335eb",
+          "matches": true
+        }
+      ]
+    },
+    {
+      "name": "session_three_accepted_shas_and_real_41green",
+      "pass": true,
+      "evidence": {
+        "result": {
+          "argv": [
+            "pnpm",
+            "-C",
+            "frontend",
+            "exec",
+            "vitest",
+            "run",
+            "src/features/copilot/live-chat-session.consumer.test.tsx",
+            "src/server/chat-execution-stream.test.ts",
+            "src/features/copilot/chat-task-control.test.ts",
+            "--retry=0",
+            "--maxWorkers=1",
+            "--testTimeout=180000",
+            "--hookTimeout=180000"
+          ],
+          "exitCode": 0,
+          "seconds": 26.173163890838623
+        },
+        "result_sha256": "48d177c0ecd628d0485e9af744552d9adfaf24021687aceca5d2d9e806bb5054",
+        "log_sha256": "12f4832f9b5800b173c07695e82fcedb19be53a284f03559a2422aa94afa07df",
+        "sources": [
+          {
+            "path": "frontend/src/features/copilot/ai-copilot-content.tsx",
+            "actual_sha256": "c2802e726d3a9d9412a0525d2b8f66a5cd7b4f2b42becfd906f104145e2d1959",
+            "candidate_sha256": "c2802e726d3a9d9412a0525d2b8f66a5cd7b4f2b42becfd906f104145e2d1959",
+            "matches": true
+          },
+          {
+            "path": "frontend/src/features/copilot/chat-task-control.ts",
+            "actual_sha256": "c69f5df1488a43ac48602ab0833f66f4009534262961e5e8f8339a37d0967830",
+            "candidate_sha256": "c69f5df1488a43ac48602ab0833f66f4009534262961e5e8f8339a37d0967830",
+            "matches": true
+          },
+          {
+            "path": "frontend/src/features/copilot/live-chat-session.consumer.test.tsx",
+            "actual_sha256": "3f87ccd8fd51e83d1c1752a7bebcf7b4a226c19730a03928e1468a81e22d42c8",
+            "candidate_sha256": "3f87ccd8fd51e83d1c1752a7bebcf7b4a226c19730a03928e1468a81e22d42c8",
+            "matches": true
+          }
+        ]
+      }
+    }
+  ],
+  "repository_or_git_mutated": false,
+  "tests_run": false,
+  "scope_limits": [
+    "仅schema/namespace/控制来源/已独评候选SHA，未重新全面评产品。",
+    "Source4/三宿主/有效有限budget保留来自产品5+combined-native精确SHA匹配，不假造本轮运行验收。",
+    "41GREEN为真实3条public consumer/control/server stream，非完整frontend/device/打包验收。",
+    "T1065 source audit已完成状态和pipeline旧Windows制品原回执仅保留来源，不能代签本轮main冻结/出包。",
+    "root后续frontend types/device/basic4/policy真实结果另计，本报告未代运行。"
+  ]
+}

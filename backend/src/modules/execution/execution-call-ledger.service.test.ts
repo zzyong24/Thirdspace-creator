@@ -250,7 +250,7 @@ describe("T-915 持久调用账本", () => {
     const parent=await f.ledger.reserve(f.ref,{...input,kind:"tool",operationKey:"parent",reservedTokens:0});await f.ledger.start(f.ref,parent.id);
     const child=await f.ledger.reserve(f.ref,{...input,parentCallId:parent.id});await f.ledger.start(f.ref,child.id);
     const reserved=await f.ledger.reserve(f.ref,{...input,operationKey:"reserved",parentCallId:parent.id});
-    await f.tasks.command(ctx,{taskIds:[f.task.id],command:"cancel",idempotencyKey:"cancel"});
+    await f.tasks.command(ctx,{taskIds:[f.task.id],command:"cancel",idempotencyKey:"nested-cancel:cancel"});
     await expect(f.ledger.start(f.ref,reserved.id)).rejects.toMatchObject({name:"ConflictError"});
     await expect(f.ledger.reserve(f.ref,{...input,operationKey:"new",parentCallId:parent.id})).rejects.toMatchObject({name:"ConflictError"});
     await f.ledger.settle(f.ref,child.id,{status:"settled",usage:{},providerResult:{content:[],finishReason:{unified:"stop"},usage:{inputTokens:{total:4},outputTokens:{total:2}},warnings:[]}});
@@ -260,9 +260,9 @@ describe("T-915 持久调用账本", () => {
     const f=await fixture("nested-old-parent",{maxCalls:4,maxTokens:100,deadlineMs:60000});
     const parent=await f.ledger.reserve(f.ref,{...input,kind:"tool",operationKey:"parent",reservedTokens:0});await f.ledger.start(f.ref,parent.id);
     const child=await f.ledger.reserve(f.ref,{...input,parentCallId:parent.id});
-    await f.tasks.command(ctx,{taskIds:[f.task.id],command:"pause",idempotencyKey:"pause"});
+    await f.tasks.command(ctx,{taskIds:[f.task.id],command:"pause",idempotencyKey:"nested-old-parent:pause"});
     await f.tasks.acknowledgeControl({taskId:f.task.id,workerId:"worker",attempt:f.ref.attempt});
-    await f.tasks.command(ctx,{taskIds:[f.task.id],command:"resume",idempotencyKey:"resume"});
+    await f.tasks.command(ctx,{taskIds:[f.task.id],command:"resume",idempotencyKey:"nested-old-parent:resume"});
     const claim=await f.tasks.claimTask({taskId:f.task.id,workerId:"worker"});if(!claim)throw new Error("claim missing");
     const ref={...f.ref,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken};
     await expect(f.ledger.start(ref,child.id)).rejects.toMatchObject({name:"ConflictError"});

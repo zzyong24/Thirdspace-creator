@@ -1628,3 +1628,455 @@ T-1014仅迁移看板原说明，状态和验收未改：
 - 原文档：复用 [T-881 验收](orchestrator/T881-FRONTEND-VALIDATION.md)、[T-882 本地包验收](orchestrator/T882-BUILD-VALIDATION.md)
 - 任务详情：只提交并发布已通过验收的 B-roll 删除修复候选；冻结检查后将候选安全同步到 `main`，触发 `desktop-release.ym；[原说明](BACKLOG-details.md#t-883-triage-description)。
 
+<a id="t-1073"></a>
+### T-1073 · 修复全面排查确认的8处资源浪费与内存泄漏
+
+- 原文档：[SPEC](docs/features/t1073-resource-memory-fixes.md)
+- 任务详情：8处源码修复已本地整合提交，生命周期301/301及独立复核通过，原任务/幂等/跨页回复和合法输出保留；最终reconcile仍34个既有错误/1告警、逐行无新增，根因T916/T1015/T1018保留；正式安装版与像素未验，不安装/推送/发布。详[修复报告](docs/verification/t1073/REPORT.md)。
+
+<a id="t-1071-resource-audit"></a>
+### T-1071-resource-audit · 全系统排查资源浪费与内存泄漏并隔离复现
+
+- 原文档：[排查范围](docs/verification/t1071-resource-memory-audit.md)
+- 任务详情：已隔离复现8项资源缺陷并登记6个根因整改任务；成功Whisper线程1→2→3、IPC50MiB回执保留、SSE缓冲及前端/后台重复工作，详[报告](docs/verification/t1071/REPORT.md)；本轮只诊断，未修改产品代码/安装版或真实数据，UI交付验收不适用。 来源workbase原T-1071-resource-audit，历史状态与原回执仅保留来源，不冒称本轮验收。
+
+<a id="t-1068-radar-transcription"></a>
+### T-1068-radar-transcription · 隔离复现内容雷达转录 MODEL_RESULT_UNKNOWN 暂停并定位原因
+
+- 原文档：[诊断范围](docs/verification/t1068-radar-transcription.md)
+- 任务详情：用户2026-10-07明确不考虑真实账号，直接复现；使用隔离数据与本地HTTP故障服务跑实际Worker/模型链，核对已识别原文、后处理、账本与暂停状态，不重发用户任务，未实证不声称根治。 来源workbase原T-1068-radar-transcription，历史状态与原回执仅保留来源，不冒称本轮验收。
+
+<a id="t-1066-timeout-policy"></a>
+### T-1066-timeout-policy · 全系统统一两分钟超时下限、嵌套预算与Skill防复发
+
+- 原文档：[SPEC](docs/features/t1066-timeout-policy.md)
+- 任务详情：用户2026-10-06授权按T-1065完整清单修复全部超时策略，单次执行/结果等待最低2分钟，外层预算覆盖内层及清理余量，长任务继承持久任务预算；规范与Skill沉淀并加回归门，不推送发布或改真实数据。 来源workbase原T-1066-timeout-policy，历史状态与原回执仅保留来源，不冒称本轮验收。
+
+<a id="t-1067-skill-verification"></a>
+### T-1067-skill-verification · 清理通用产品流程Skill既有公开分发校验债务
+
+- 原文档：[根因证据](docs/verification/t1066/SKILL_VERIFICATION.md)
+- 任务详情：本轮实际复测3.27.3与3.27.4均6错误31告警，涉及历史个人路径、宿主旧文字及README安装说明；新增超时规则及selfcheck通过，不删除历史或把旧失败标绿，不属于本轮超时行为整改。 来源workbase原T-1067-skill-verification，历史状态与原回执仅保留来源，不冒称本轮验收。
+
+<a id="t-1018"></a>
+### T-1018 · 清理本轮测试暴露的全局类型与边界欠债
+
+- 原文档：[实测证据](docs/verification/t1017-rewrite-first.md)
+- 任务详情：后端旧测试 API/类型漂移、contract旧快照/资产/cover断言、live-chat-session SDK 边界与 video-decisions-runner 语义门仍失败；与 T-1015 历史教训对账联动，不混入 T-1017。 本轮T-1022再次实测原12项后端类型、3项契约及边界/语义旧失败，见docs/features/t1022-account-group-workspace/VERIFICATION.md。 本轮T-1066-timeout-policy隔离树再次实测同12个后端类型/3个契约/2个live-chat SDK边界既有失败，详docs/verification/t1066/REPORT.md。 T-1069-completion-json/T-1070-transcript-reliability保留同12类型/2边界旧失败，generation-replay旧断言在HEAD归档基线与当前均9/10通过；见docs/verification/t1069/generation-replay-baseline.log。
+
+
+<a id="t1080-retained-row-80e4d3ffb5f9172c"></a>
+
+### 本轮保留的 T-1068 完整原行
+
+```text
+| T-1068 | 排查并修复本地客户端启动超时，交付可启动测试包 | ✅ 待办 | PASS[REV:8abc34b1f775] | — | [SPEC](docs/features/t1068-local-client-startup.md) | 用户2026-10-06启动超时报错已定位本机probe经过代理502；专用client.no_proxy窄修69b6be8f及17回归独评通过。1.2.0新包实际构建/镜像/深签名/277资源0，新鲜备份7i4su后固定入口自动安装（非planned installer）；安装内容精确核同源，两次原生HTTP首页加载+公开CLI/首页200/粗剪工程及已导出任务资产深等成功；用户已明确已显示正常首页。T734旧合同及全局旧红保留，不代签T1062完整功能。仅宿主逻辑无UI重设计，独评纠正验收类型—；未push或发布。
+```
+
+<a id="t1080-retained-row-c9ebcc41ffd59f36"></a>
+
+### 本轮保留的 T-1024 完整原行
+
+```text
+| T-1024 | 紧急排查充值50元后Growth受管Omni模型仍报余额不足 | 🔨 待办 | — | 待验 | [排查范围](docs/verification/t1024-managed-credit-diagnosis.md) | 充值及Omni额度同步已实证正常；两份Windows日志定位21:08/21:11/21:15选题聊天约352万粗估且未收敛、约1.5秒报AI_CREDIT_EXHAUSTED；已验证单轮裁剪缺口与图片base64粗估歧义，原始供应商错误/模型/附件类型仍待对齐，不改账、不重发原大请求。 |
+```
+
+<a id="t1080-retained-row-32643c4cf546ed76"></a>
+
+### 本轮保留的 T-1069-completion-json 完整原行
+
+```text
+| T-1069-completion-json | 修复雷达文本模型完整非流式JSON回执被流式解析误判未知 | ✅ 待办 | PASS[REV:020bbb5c97fa] | — | [SPEC](docs/features/t1069-completion-json-compat.md) | 用户2026-10-07授权根治T-1068-radar-transcription复现缺陷；同一请求完整JSON兼容，保留断流未知与幂等，不重发原任务、不改安装版。 来源workbase原T-1069-completion-json，历史状态与原回执仅保留来源，不冒称本轮验收。 |
+```
+
+<a id="t1080-retained-row-e350e6053e05749b"></a>
+
+### 本轮保留的 T-1069 完整原行
+
+```text
+| T-1069 | 修复安装版素材导入慢与跨Tab丢失，重设计素材选择并补多平台绑定入口 | 🔨 待办 | PASS[REV:19bad8ef6f93] | 待验 | [SPEC](docs/features/t1069-installed-media-and-binding.md) | 用户2026-10-06实际截图验收；查分段性能和素材持久化；用户追加模板照片选择，同类入口共用缩略图/搜索/预览选择器，保留原版紫色丰富布局并使用oil-ui-pro；核对已装配小红书登录与组绑定，其他平台按真实能力；先只读核因，精确实现补充独评后开工，不push/发布。 |
+```
+
+<a id="t1080-retained-row-ef8386b2a0a060cc"></a>
+
+### 本轮保留的 T-1063 完整原行
+
+```text
+| T-1063 | 修正流程工具误拒合法字面方括号文件路径 | 🔨 待办 | PASS[REV:4d99824da112] | 待验 | [SPEC](docs/features/t1063-orchestrator-literal-path-boundary.md) | T-1062已准入前端范围含7个Next动态路由文件；3.27.2的progress及candidate校验误将字面方括号当glob，阻断必要整合。保持精确路径及原隔离边界，经独立评审、公共工具回归和受支持技能升级后解除，不扩目录通配符、不公开发布。 |
+```
+
+<a id="t1080-retained-row-e05ce3185fe7853c"></a>
+
+### 本轮保留的 T-1070-transcript-reliability 完整原行
+
+```text
+| T-1070-transcript-reliability | 修复通用转录整理文本兼容模式缺少schema校验器与保存阻断 | ✅ 待办 | PASS[REV:5b690995d15b] | — | [SPEC](docs/features/t1070-transcript-postprocess-reliability.md) | 用户2026-10-07授权同轮修复；共享validator与实际后端保存回归，确认的原文安全降级，未知账本不伪造成功。 来源workbase原T-1070-transcript-reliability，历史状态与原回执仅保留来源，不冒称本轮验收。 |
+```
+
+<a id="t1080-retained-row-ab507299fb3fcd91"></a>
+
+### 本轮保留的 T-878 完整原行
+
+```text
+| T-878 | 让生图模型连接测试正确识别并提示 401/403 鉴权失败【T-877 诊断承接·2026-08-17】 | 📋 待办 | — | — | [T-877 脱敏诊断](docs/research/2026-08-17-dudu-image-auth-failure-diagnosis.md) | 当前真实生图适配器已把 401 分类为 authentication，但 `settings.models.test` 的 `image.g；[原说明](BACKLOG-details.md#t-878-triage-description)。 |
+```
+
+<a id="t1080-retained-row-15d0c7dabac4150e"></a>
+
+### 本轮保留的 T-884 完整原行
+
+```text
+| T-884 | 只读诊断用户加密日志中的 ASR 转写失败【用户日志·2026-08-18】 | ⏸️ 待办 | — | — | 复用 T-768 ASR 通用回退、T-639 MiMo ASR 与 T-676 逐字稿队列契约 | 解析用户提供的 `sidecar-2026-08-18.log.enc`，对齐同一次转写任务、输入媒体、ASR provider/模型、配置；[原说明](BACKLOG-details.md#t-884-triage-description)。 |
+```
+
+<a id="t1080-retained-row-916d71382f9f6b24"></a>
+
+### 本轮保留的 T-905 完整原行
+
+```text
+| T-905 | 调研独立的极简手机口播创作产品，以人设选稿、灵感写稿、实拍与“123321”真人换口型为核心【产品可能性探索·用户 2026-08-20】 | 📋 待办 | — | — | — | 这是独立于 CreatorOS 的新产品探索，不是 CreatorOS 手机版，也不把核心能力定义为传统数字人：用户首次录入行业、人设与对标；[原说明](BACKLOG-details.md#t-905-triage-description)。 |
+```
+
+<a id="t1080-retained-row-0d6e5afae67dc6b3"></a>
+
+### 本轮保留的 T-908 完整原行
+
+```text
+| T-908 | 真实复测 douyin-transcribe Skill，并对照 CreatorOS 当前抖音抓取链路判断是否需要兼容修复【用户截图与压缩包·2026-08-23】 | 📋 待办 | — | — | — | 隔离检查用户提供的 Skill 压缩包与当前已安装版本，以公开抖音链接实际验证短链解析、作品元数据、视频直链、下载和转写前置链路；同时审计 ；[原说明](BACKLOG-details.md#t-908-triage-description)。 |
+```
+
+<a id="t1080-retained-row-125af640cc5d45f9"></a>
+
+### 本轮保留的 T-919 完整原行
+
+```text
+| T-919 | 定位并修复本地包主导航卡顿、助手通知刷屏与搜索停滞【用户运行反馈】 | 🔨 待办 | — | — | 复用 T-912/T-909 导航契约与 [T-915 SPEC](docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md) | 读取最新本机日志与运行进程，定位导航阻塞和资源争用；补充切换项目 Tab 丢失在途回复：保留账号/项目隔离的窗口级消息与订阅，避免恢复历史覆；[原说明](BACKLOG-details.md#t-919-triage-description)。 |
+```
+
+<a id="t1080-retained-row-2eb38b106511cdb8"></a>
+
+### 本轮保留的 T-997 完整原行
+
+```text
+| T-997 | 修复 ai→ai-runtime 反向依赖边界违反 | 📋 待办 | — | — | [T-914 审计](docs/research/2026-09-04-architecture-agent-audit.md) | ai/script-partial-adoption.service.ts 反向 import ai-runtime，打破 ai 与 ai-；[原说明](BACKLOG-details.md#t-997-triage-description)。 |
+```
+
+<a id="t1080-retained-row-43eab6d6e3e39443"></a>
+
+### 本轮保留的 T-906 完整原行
+
+```text
+| T-906 | 放大 AI 助手默认窗口并支持拖拽缩放与跨启动尺寸记忆【用户反馈·2026-08-20】 | ⏸️ 待办 | — | 待验 | — | AI 助手默认窗口应明显大于当前尺寸，用户可从右下角手柄拖拽调整大小；每次调整后的宽高保存在本机，下次启动自动恢复，并受最小尺寸与当前屏幕可见范围约束，避免内容不可用或换屏后窗口超出视口。 |
+```
+
+<a id="t1080-retained-row-0808de95d80d8a23"></a>
+
+### 本轮保留的 T-1076 完整原行
+
+```text
+| T-1076 | 清理旧安装包与本轮临时构建垃圾 | ✅ 待办 | — | — | [SPEC](docs/features/t1076-clean-obsolete-local-packages.md) | 用户明确授权清理旧包/垃圾以释放新包安装空间；只删本会话确认过期的DMG与未占用可重建缓存，保留新b640包、当前App、全部回滚备份/素材/原证据；记录精确SHA清单与实际空间，维护不改产品、不push发布。 |
+```
+
+<a id="t1080-retained-row-e5c1f0d53099b701"></a>
+
+### 本轮保留的 T-1064 完整原行
+
+```text
+| T-1064 | 只读诊断本机作品升级/提取 AbortError | ✅ 待办 | — | — | [排查记录](docs/verification/t1064-aborterror-diagnosis.md) | 用户2026-10-06提供王温特“做数字人，你到底要不要花钱”卡片截图；对齐最新本机日志、真实版本与原请求，查明中止来源；不重发任务、不改用户数据或安装版，流水线T-1063-release-pipeline仍待推送授权。 |
+```
+
+<a id="t1080-retained-row-e2b40696b7cb6d4c"></a>
+
+### 本轮保留的 T-1024-runtime-liveness 完整原行
+
+```text
+| T-1024-runtime-liveness | 根治聊天生成占用数据通道与重启后 unknown_result 卡死 | ✅ | — | — | [SPEC](docs/features/t1024-chat-runtime-liveness.md) | 真实安装版生成期间查询被阻塞，重启后原任务停在 unknown_result；释放长调用期间的数据通道，并让 agent loop 沿原任务安全恢复或明确收口。 本地main原任务T-1024的来源别名，原事件/验收证据不改写。 |
+```
+
+<a id="t1080-retained-row-d0c6d059440fcd70"></a>
+
+### 本轮保留的 T-1021 完整原行
+
+```text
+| T-1021 | CreatorOS封面与小红书图文双模板库、行业分类及私人收藏 | 🔨 待办 | PASS[REV:f0f3fa0ff91b] | 待验 | [SPEC](docs/features/t1021-cover-template-library.md) | 用户认可复用发布链，补充宿主为无限画布；补画板/图文页组、固定工具面板、比例与缩放分离及发布引用方案；当前分支尚未定位画布入口，已询问位置。旧SPEC评审不覆盖本补充，生产未接入。 |
+```
+
+<a id="t1080-retained-row-b6ea894360489899"></a>
+
+### 本轮保留的 T-1063-release-pipeline 完整原行
+
+```text
+| T-1063-release-pipeline | 取消双端出包人为超时与阻断检查并重跑 Windows 流水线 | ✅ 待办 | PASS[REV:245946205971] | — | [SPEC](docs/features/t1063-release-pipeline.md) | 用户2026-10-06独立委派；先核对“1.12版本”真实失败运行；仅修改流水线和必要打包脚本，生成制品与额外验证分离；重跑Windows并核实安装包，不新增版本/tag/Release，不触碰T-1062与真实用户数据。 |
+```
+
+<a id="t1080-retained-row-aed1560bebc24ab1"></a>
+
+### 本轮保留的 T-1072-owned-devices 完整原行
+
+```text
+| T-1072-owned-devices | 配合 Growth 轻量手机号账号与正式双设备，补齐新电脑连接与已激活账号入口 | 🔨 待办 | PASS[REV:eb8de221287b] | 待验 | [SPEC](docs/features/t1072-owned-devices.md) | 用户已采纳并授权与Growth T-188一起实施；仅隔离本地改造，原码首台不变，第二电脑本人确认后登记同一授权，不重复期限或额度；保留本机素材与项目，正式包双电脑验收与生产操作尚未授权。 |
+```
+
+<a id="t1080-retained-row-f6abe467486ee90c"></a>
+
+### 本轮保留的 T-1072 完整原行
+
+```text
+| T-1072 | 修复全局Git钩子误用失效Lefthook路径 | ✅ 待办 | — | — | [SPEC](docs/features/t1072-global-git-hook.md) | 用户2026-10-08授权修复；先备份当前全局钩子并核对归属，按真实仓库配置运行项目钩子，保留检查失败语义；验证CreatorOS真实提交及隔离配置仓库成功/失败，不改客户端、不push、不发布。 |
+```
+
+<a id="t1080-retained-row-d6ce9166621c4243"></a>
+
+### 本轮保留的 T-1066 完整原行
+
+```text
+| T-1066 | 落实本地客户端优先出包并移除人为构建超时 | ⏸️ 待办 | PASS[REV:0d40d8466937] | — | [SPEC](docs/features/t1066-local-package-build-only.md) | 用户2026-10-06明确Windows和Mac均优先生成安装包；精确移植本地打包8路径，独立执行额外质量验证，保留真实编译、资源、凭证和路径校验；不push、不发布、不改变T-1062粗剪与原18验收。 |
+```
+
+<a id="t1080-retained-row-6b5c0536610c48a8"></a>
+
+### 本轮保留的 T-1023-agent-recovery 完整原行
+
+```text
+| T-1023-agent-recovery | 根治 AI 助手自动恢复无限卡死并证明后台进展 | ✅ | — | PASS:87c802e61bbe | [SPEC](docs/features/t1023-agent-recovery-liveness.md) | 区分已持久化任务续跑与提交前网络失败；恢复必须有进展证据，持续无进展自动收口为可继续操作的状态，禁止永久转圈。 本地main原任务T-1023的来源别名，原事件/验收证据不改写。 |
+```
+
+<a id="t1080-retained-row-00c1555a12c0e894"></a>
+
+### 本轮保留的 T-1017 完整原行
+
+```text
+| T-1017 | 简化内容雷达：按账号定位一键生成可编辑改写稿 | 🔨 待办 | PASS[REV:d2fb4541c82d] | 待验 | [SPEC](docs/features/t1017-content-radar-rewrite-first.md) | 把“基于对标文案与当前定位快速改写”作为主结果；拆解、策略和选题卡字段改为可选补充，不得阻断首稿；[自动化实测](docs/verification/t1017-rewrite-first.md)，真实桌面/供应商待验。 |
+```
+
+<a id="t1080-retained-row-37095e929dd176d6"></a>
+
+### 本轮保留的 T-1065 完整原行
+
+```text
+| T-1065 | 全盘审计系统所有超时限制与固定30秒上限 | ✅ 待办 | — | — | [范围](docs/features/t1065-timeout-audit.md) | 用户2026-10-06要求覆盖全部系统逻辑；只读盘点生产代码、桌面层、模型/浏览器/IPC及构建脚本，统计真实超时策略与30秒上限，不混入延时、轮询或测试，不修改真实任务和安装版。 |
+```
+
+<a id="t1080-retained-row-6ad5b71dceb239e1"></a>
+
+### 本轮保留的 T-954 完整原行
+
+```text
+| T-954 | 接入抖音流量来源并以专家方法改进编导交互【用户要求小改动】 | 🔨 待办 | — | — | [SPEC](docs/features/t954-director-content-loop.md) | 已落实来源方法、稿面诊断和独立流量队列；1005 条隔离恢复与真实页面 smoke 通过。真实模型效果对照、保留样本迁移和安装版验收待完成；明细失败不阻断基础采集。 |
+```
+
+<a id="t1080-retained-row-67204c9b2c9efc87"></a>
+
+### 本轮保留的 T-1026 完整原行
+
+```text
+| T-1026 | 补齐新增 Agent 功能的公开 CLI 并逐项验收安装版 | 🔨 | — | — | [SPEC](docs/features/t1026-agent-cli-acceptance.md) | 用户要求所有新增功能通过 CLI 实测；核对计划、工具、文件、命令、浏览器、Skill、产物、恢复与旧功能；修复已实测的取消/跳过步骤被误报完成，再安装版复验。 |
+```
+
+<a id="t1080-retained-row-eee9f25319e1abe5"></a>
+
+### 本轮保留的 T-1022-agent-recovery 完整原行
+
+```text
+| T-1022-agent-recovery | 禁止模型超时或不完整输出阻断生成，统一由 Agent loop 恢复 | ✅ | — | PASS:06eb90bb86b5 | [SPEC](docs/features/t1022-nonblocking-agent-recovery.md) | 覆盖内容雷达与 AI 助手；仅无可用模型时引导配置，其他可恢复失败沿原任务自动续跑、修复或降级。 本地main原任务T-1022的来源别名，原事件/验收证据不改写。 |
+```
+
+<a id="t1080-retained-row-fbe6a3f4e58bcafa"></a>
+
+### 本轮保留的 T-1025 完整原行
+
+```text
+| T-1025 | 重新核验 constitution 变更后的历史评审与前端验收回执 | 📋 | — | — | [SPEC](docs/features/t1025-receipt-drift-revalidation.md) | reconcile 已确认运行门全部通过，但 T-703/T-691/T-656/T-645/T-635 的旧评审回执和 T-1022 前端验收回执已因当前真相变化失效；按现状重新评审，禁止补拍历史 PASS。 |
+```
+
+<a id="t1080-retained-row-3eba29be37ce0174"></a>
+
+### 本轮保留的 T-1023 完整原行
+
+```text
+| T-1023 | 修正既有任务绑定glob导致的progress生成阻断 | 📋 待办 | — | — | [证据](docs/features/t1022-account-group-workspace/VERIFICATION.md) | T-1022注册时progress generate被既有T-1003的非terminal wildcard write_set拒绝；核对安全范围并按真实文件或terminal目录规则校准，不扩大写集，不丢其他任务和lease。 |
+```
+
+<a id="t1080-retained-row-25094b544f740169"></a>
+
+### 本轮保留的 T-1067 完整原行
+
+```text
+| T-1067 | 落实本地客户端优先出包并移除人为构建超时 | ✅ 待办 | PASS[REV:ebe1b789bc56] | — | [SPEC](docs/features/t1067-local-package-build-only.md) | 用户已授权双端优先出包；并行会话T-1066同号后本地8路径补充单独使用本编号，原本地评审/事件保留；T-1062原18和候选提交后顺序实施，不push、不发布。 |
+```
+
+<a id="t1080-retained-row-9b2048cb81450808"></a>
+
+### 本轮保留的 T-934 完整原行
+
+```text
+| T-934 | 统一 CLI 与页面的持久聊天工具入口【T-933 真机验收发现】 | 🔨 待办 | — | — | [实现与验收](docs/verification/t934-cli-chat-unification.md) | CLI 仍走通用回复任务，实际没有搜索和正文回执；复用页面持久聊天装配与 Pi 工具循环，保留归属、幂等和历史，真实搜集复验后方可验收。 |
+```
+
+<a id="t1080-retained-row-d8c8c522ea52c213"></a>
+
+### 本轮保留的 T-957 完整原行
+
+```text
+| T-957 | 排查 AI 失败、全场景验收并优化 Agent 提示词【用户截图】 | 🔨 待办 | — | — | [SPEC](docs/features/t957-ai-real-acceptance.md) | d18b44d2第五包已安装；双账号同站点等待48.5秒后均读全，隔离/数据保留通过；模型计算、数量稳定性和内部参数表达仍待整改，不标完成。 |
+```
+
+<a id="t1080-retained-row-e6765fb61ec296f6"></a>
+
+### 本轮保留的 T-1020 完整原行
+
+```text
+| T-1020 | 统一可视化推荐、作品承接与科学运营观测 | 📋 待办 | 待审 | 待验 | [SPEC](docs/features/creator-operations/README.md) | 用户2026-10-02补充；依赖T-1019验收，复用采集/analytics/review及独立本地投影后台，不复制UI/调度；逐平台区分发布/草稿，null与未关联保真。 |
+```
+
+<a id="t1080-retained-row-e3d09dce7e422bbe"></a>
+
+### 本轮保留的 T-933 完整原行
+
+```text
+| T-933 | 安装并验收本轮Agent Runtime桌面版【用户要求自行检查】 | 🔨 待办 | — | — | [T-932交付](docs/verification/t932-runtime-alignment.md) | 核对已安装候选与签名、启动及实际页面/Skill/聊天链路；通过公开CLI操作，未获本次启动授权前不绕过访问；保留真实验收结果。 |
+```
+
+<a id="t1080-retained-row-20ca3c0dceb6f8f4"></a>
+
+### 本轮保留的 T-917 完整原行
+
+```text
+| T-917 | 记录 T-915 媒体测试事故并防止测试再次访问真实媒体根【用户接受数据清理，解除恢复前置】 | 📋 待办 | — | — | [事故记录](docs/research/evidence/t915/2026-09-06-media-test-incident.md) | 用户明确要求继续重构，数据恢复不再作为 T-915 阻塞；数据未恢复的事实保留；[原说明](BACKLOG-details.md#t-917-triage-description)。 |
+```
+
+<a id="t1080-retained-row-6da40b9d211687ae"></a>
+
+### 本轮保留的 T-943 完整原行
+
+```text
+| T-943 | 拉取并跑通 JY_IPAgent，调研数字人 API 与 CreatorOS 接入【用户指定仓库】 | ⏸️ 待办 | — | — | [SPEC](docs/features/t943-jy-ipagent-research.md) | 独立部署参考项目，确认数字人实际供应商与本地模型依赖；优先 API 路径，以真实启动和生成证据区分已验证与待凭据。 |
+```
+
+<a id="t1080-retained-row-b9b5a6896b2aaf0b"></a>
+
+### 本轮保留的 T-998 完整原行
+
+```text
+| T-998 | 收敛业务代码硬编码模型名 | 📋 待办 | — | — | [T-914 审计](docs/research/2026-09-04-architecture-agent-audit.md) | 区分 provider 适配器(合理)与业务逻辑硬编码(抽配置)；cover-runner、channel-model-config、prompt 模板里散落的模型名收敛为可配。 |
+```
+
+<a id="t1080-retained-row-e93a45cb55075893"></a>
+
+### 本轮保留的 T-915 完整原行
+
+```text
+| T-915 | 根治 AI 卡慢、失败不重试与搜索/浏览器缺少自主循环，收敛架构与执行能力【T-914 审查承接·用户 2026-09-04】 | 🔨 待办 | PASS[REV:692283b8bace] | — | [SPEC](docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md) | 保留原执行/恢复改造任务；剩余登录资源迁移、备用模型和运行验收，详见 [历史说明](BACKLOG-details.md#t-915-triage-history)。 |
+```
+
+<a id="t1080-retained-row-5172365e85a2cee2"></a>
+
+### 本轮保留的 T-986 完整原行
+
+```text
+| T-986 | 修复新绑定账号默认采集任务系统标记透传 | 📋 待办 | — | — | [SPEC](docs/features/t986-bind-collection-flag.md) | 只读审查发现绑定装配丢失 systemManaged，可能导致流量和内容任务待重启才补齐；本轮不扩大改动，待隔离复现与修复。 |
+```
+
+<a id="t1080-retained-row-9f66fc6ba1d2a7e1"></a>
+
+### 本轮保留的 T-979 完整原行
+
+```text
+| T-979 | 自动化页面慢轮询与切换对象回写防护 | ⬜ 待办 | — | — | [SPEC](docs/features/t979-automation-polling.md) | T-978 排查发现运行历史、步骤和列表轮询未限制在途请求；补慢网与切换对象回归，修复请求堆积及旧响应覆盖风险。 |
+```
+
+<a id="t1080-retained-row-6f28905ece9e4a7b"></a>
+
+### 本轮保留的 T-993 完整原行
+
+```text
+| T-993 | 同步 main 分支到最新(落后 origin/main 573 提交) | 📋 待办 | — | — | — | 本地 main=f330473f 落后 origin/main(77eabca3)573 提交；核清原因后同步，保留 codex/t793-local-package 进行中未提交改动。 |
+```
+
+<a id="t1080-retained-row-d62221da75f2c693"></a>
+
+### 本轮保留的 T-1071-scheduler 完整原行
+
+```text
+| T-1071-scheduler | 修复后台调度重叠并补停止清理与心跳在途防护 | ✅ 待办 | — | — | [同轮修复SPEC](docs/features/t1073-resource-memory-fixes.md) | T-1073已审范围的实现归属；统一在父任务核验8处资源生命周期及兼容性，原T-1071-resource-audit缺陷证据保留。 |
+```
+
+<a id="t1080-retained-row-2052423e231a8ccf"></a>
+
+### 本轮保留的 T-1071-polling 完整原行
+
+```text
+| T-1071-polling | 修复稿面慢读取叠加、雷达空闲扫描与历史卡终态观察 | ✅ 待办 | — | — | [同轮修复SPEC](docs/features/t1073-resource-memory-fixes.md) | T-1073已审范围的实现归属；统一在父任务核验8处资源生命周期及兼容性，原T-1071-resource-audit缺陷证据保留。 |
+```
+
+<a id="t1080-retained-row-9ee728d6794951d7"></a>
+
+### 本轮保留的 T-1071-cache 完整原行
+
+```text
+| T-1071-cache | 为完成聊天会话和预览元数据增加安全淘汰 | ✅ 待办 | — | — | [同轮修复SPEC](docs/features/t1073-resource-memory-fixes.md) | T-1073已审范围的实现归属；统一在父任务核验8处资源生命周期及兼容性，原T-1071-resource-audit缺陷证据保留。 |
+```
+
+<a id="t1080-retained-row-3e6fddab175311d1"></a>
+
+### 本轮保留的 T-1071-worker-memory 完整原行
+
+```text
+| T-1071-worker-memory | 收敛宿主IPC历史回执与音频字节保留 | ✅ 待办 | — | — | [同轮修复SPEC](docs/features/t1073-resource-memory-fixes.md) | T-1073已审范围的实现归属；统一在父任务核验8处资源生命周期及兼容性，原T-1071-resource-audit缺陷证据保留。 |
+```
+
+<a id="t1080-retained-row-b61a9e0e1e4b28e3"></a>
+
+### 本轮保留的 T-1071-stream 完整原行
+
+```text
+| T-1071-stream | 补齐聊天响应背压与缓冲容量策略 | ✅ 待办 | — | — | [同轮修复SPEC](docs/features/t1073-resource-memory-fixes.md) | T-1073已审范围的实现归属；统一在父任务核验8处资源生命周期及兼容性，原T-1071-resource-audit缺陷证据保留。 |
+```
+
+<a id="t1080-retained-row-a99ff608d0b49e76"></a>
+
+### 本轮保留的 T-1071-whisper 完整原行
+
+```text
+| T-1071-whisper | 修复本地转录成功后遗留Whisper线程 | ✅ 待办 | — | — | [同轮修复SPEC](docs/features/t1073-resource-memory-fixes.md) | T-1073已审范围的实现归属；统一在父任务核验8处资源生命周期及兼容性，原T-1071-resource-audit缺陷证据保留。 |
+```
+
+<a id="t1080-retained-row-0e3dd393b702a707"></a>
+
+### 本轮保留的 T-940 完整原行
+
+```text
+| T-940 | 补齐应用内签名远程更新闭环【糯米饭对标待落地】 | 📋 待办 | — | — | [缺口与范围](docs/features/t939-positioning-release.md) | 接通包级签名制品托管、下载验签、安装重启与双端升级验收；不把全量更新称为差分，不擅自公开发布。 |
+```
+
+<a id="t1080-retained-row-79f5cc742488451b"></a>
+
+### 本轮保留的 T-1066-tooling 完整原行
+
+```text
+| T-1066-tooling | 构建CI及运维工具超时修复 | ✅ 待办 | — | — | [已评审父SPEC](docs/features/t1066-timeout-policy.md) | T-1066-timeout-policy同一确认范围的并行实现分区，不形成分期验收；独立工作树、互斥写集，由主会话集成。 |
+```
+
+<a id="t1080-retained-row-00e46835d1567ae8"></a>
+
+### 本轮保留的 T-1066-frontend 完整原行
+
+```text
+| T-1066-frontend | 前端与桌面原生层超时修复 | ✅ 待办 | — | — | [已评审父SPEC](docs/features/t1066-timeout-policy.md) | T-1066-timeout-policy同一确认范围的并行实现分区，不形成分期验收；独立工作树、互斥写集，由主会话集成。 |
+```
+
+<a id="t1080-retained-row-7ac9ae31a324c3ee"></a>
+
+### 本轮保留的 T-1066-worker 完整原行
+
+```text
+| T-1066-worker | 执行Worker及后端超时修复 | ✅ 待办 | — | — | [已评审父SPEC](docs/features/t1066-timeout-policy.md) | T-1066-timeout-policy同一确认范围的并行实现分区，不形成分期验收；独立工作树、互斥写集，由主会话集成。 |
+```
+
+<a id="t1080-retained-row-f9f6ea5f8246191a"></a>
+
+### 本轮保留的 T-633 完整原行
+
+```text
+| T-633 | 恢复创作者中心自动扫码登录【线上阻断·用户 2026-07-30】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-633) | 内容雷达改写可用性由 T-1017 收口；本任务仅保留首次扫码直达创作者中心二维码页及账号登录态复用。 |
+```

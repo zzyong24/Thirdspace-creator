@@ -1,0 +1,55 @@
+{
+  "schema": "creatoros.evidence-metadata-correction.v1",
+  "task": "T-1080",
+  "createdAtUtc": "2026-10-08T12:56:20.823934+00:00",
+  "reviewer": "assistant_core_implementation_review",
+  "verdict": "CORRECTED",
+  "originalReports": [
+    {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/worktree-main-integration-20261008/timeout-ledger-compatibility-candidate/decisions.json",
+      "sha256": "9a2688d0a0fd1fb09effc61b95149a4ab1a8595f04af211254ccc3bdc7008333"
+    },
+    {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/worktree-main-integration-20261008/timeout-ledger-compatibility-candidate/static-dispositions.json",
+      "sha256": "5b76e2dbd7021db4aa7672ff00d02d758939e170ece48080ccae0504b71f0b26"
+    }
+  ],
+  "withdrawnClaim": "资源6b新增executionControlReceipts/严格digest",
+  "correctClaim": "严格账号命令回执及输入digest来自04ca client；原main122、resource6b都没有。当前整合service保留该client安全门；main25项测试加入nested调用案例时不同task复用了账号请求键。",
+  "cause": "前次多个git show串行输出未标记，04ca输出误归6b；独立审核当场指出并重新逐ref读取。",
+  "actualGitBlobs": [
+    {
+      "ref": "04ca6d27eb593c8ba174133c3aa7b456abe09c1f",
+      "path": "backend/src/modules/execution/persistent-task.service.ts",
+      "blobSha256": "003cc317c78b4a7d7300a06a62d52fb85e1ded155007ad4d6d14ade8a5e3ce7e",
+      "executionControlReceiptsPresent": true,
+      "strictInputDigestPresent": true
+    },
+    {
+      "ref": "12288cefdd43544478ea8f67a648798f43e813df",
+      "path": "backend/src/modules/execution/persistent-task.service.ts",
+      "blobSha256": "a0880b1e7fe1894593136e7c0bd16ffc42a79f8c6890747a3a33d11a5ecb5016",
+      "executionControlReceiptsPresent": false,
+      "strictInputDigestPresent": false
+    },
+    {
+      "ref": "6b1322af71cbdf55f52e9f37c5cde76e06b56e48",
+      "path": "backend/src/modules/execution/persistent-task.service.ts",
+      "blobSha256": "2c0dd4dc93d601c641c25777976edfcf9b394e81ed5b51211cf05c33e9331e4d",
+      "executionControlReceiptsPresent": false,
+      "strictInputDigestPresent": false
+    }
+  ],
+  "actualCurrentProduction": {
+    "path": "backend/src/modules/execution/persistent-task.service.ts",
+    "sha256": "3e8cf47382c7c7db7ea77166c28a9f04c069256f17c5b9ebaaeb56d9a50f1475",
+    "strictInputDigestPresent": true,
+    "modifiedByReviewer": false
+  },
+  "candidateUnchanged": {
+    "path": "backend/src/modules/execution/execution-call-ledger.service.test.ts",
+    "sha256": "b76cb85c4c35fe24a7e0ecf355bccd97a991ede5004b15f06e54f6ec6269487c",
+    "diffSha256": "d416ea9a2a0451837d5c5cc85b948373929252b926e347efd56fa8ab7e7516e5"
+  },
+  "disposition": "三方夹具兼容结论与3literal候选不变；所有预算/断言/生产安全门不动，原错误报告/原Gate失败留存。"
+}

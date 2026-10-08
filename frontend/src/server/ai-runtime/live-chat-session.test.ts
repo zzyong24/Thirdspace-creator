@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, expect, it, vi } from "vitest";
-import { getLiveChatSession } from "./live-chat-session";
+import { getLiveChatSession } from "@/features/copilot/live-chat-session";
 
 it("keeps the same window chat across remounts and isolates account scopes", () => {
   const makeChat = vi.fn(() => ({ token: Symbol("chat") }));
@@ -20,7 +20,7 @@ it("keeps the same window chat across remounts and isolates account scopes", () 
 
 import { Chat } from "@ai-sdk/react";
 import type { ChatTransport, UIMessage } from "ai";
-import * as sessions from "./live-chat-session";
+import * as sessions from "@/features/copilot/live-chat-session";
 function resourceSession(key: string) {
   return sessions.getLiveChatSession<Chat<UIMessage>,ChatTransport<UIMessage>,UIMessage>(key, session => new Chat<UIMessage>({
     id: key,

@@ -1,0 +1,100 @@
+{
+  "verdict": "PASS",
+  "scope": "T1080 必要测试边界闭包的外部候选，2 个真实 SDK suite 搬位 + 当前 verifier 2 个 argv；不代签实际 boundary 或测试执行。",
+  "createdAt": "2026-10-08T13:06:58.423797+00:00",
+  "head": "446b143c4ed954ffa2016bb545fa7c4347395c75",
+  "repoMutation": false,
+  "testsExecuted": false,
+  "files": [
+    {
+      "sourcePath": "frontend/src/features/copilot/live-chat-session.test.ts",
+      "targetPath": "frontend/src/server/ai-runtime/live-chat-session.test.ts",
+      "sourceSha256": "81b7b9cd2fb13d254036656fc3b03c5a1867879a467a032ccd98e8c64ede72dd",
+      "candidateSha256": "83596e481049a4badf48feb2006adf00731d582c88c1ecd1ba9822529aff1da3",
+      "sourceBytes": 4765,
+      "candidateBytes": 4799,
+      "candidatePath": "/Users/zyongzhu/CreatorOS-local-acceptance/worktree-main-integration-20261008/session-sdk-boundary-candidate/frontend/src/server/ai-runtime/live-chat-session.test.ts",
+      "diffPath": "/Users/zyongzhu/CreatorOS-local-acceptance/worktree-main-integration-20261008/session-sdk-boundary-candidate/frontend/src/features/copilot/live-chat-session.test.ts.diff",
+      "diffSha256": "b7711c4094dc60656ac4b1bd1d5335ae7280894548e06a6236bcd3e7ae3c7482",
+      "exactAllowedReplacements": [
+        {
+          "before": "from \"./live-chat-session\"",
+          "after": "from \"@/features/copilot/live-chat-session\"",
+          "count": 2
+        }
+      ],
+      "inverseImportOrArgvReplacementByteIdentical": true,
+      "testBodyAndAssertionsUnchanged": true,
+      "sourceStillCurrent": true
+    },
+    {
+      "sourcePath": "frontend/src/features/copilot/live-chat-session.consumer.test.tsx",
+      "targetPath": "frontend/src/server/ai-runtime/live-chat-session.consumer.test.tsx",
+      "sourceSha256": "3f87ccd8fd51e83d1c1752a7bebcf7b4a226c19730a03928e1468a81e22d42c8",
+      "candidateSha256": "c5b7b304f495f5688d1e3618b29e415c61224cce12428fbb44b8016dcafe3791",
+      "sourceBytes": 17260,
+      "candidateBytes": 17311,
+      "candidatePath": "/Users/zyongzhu/CreatorOS-local-acceptance/worktree-main-integration-20261008/session-sdk-boundary-candidate/frontend/src/server/ai-runtime/live-chat-session.consumer.test.tsx",
+      "diffPath": "/Users/zyongzhu/CreatorOS-local-acceptance/worktree-main-integration-20261008/session-sdk-boundary-candidate/frontend/src/features/copilot/live-chat-session.consumer.test.tsx.diff",
+      "diffSha256": "3c7ffa7ce10d99b2c662b7ae5f5051f4c32347c7d9700f7fa0afde7cf4ca21d7",
+      "exactAllowedReplacements": [
+        {
+          "before": "from './ai-copilot-content'",
+          "after": "from '@/features/copilot/ai-copilot-content'",
+          "count": 1
+        },
+        {
+          "before": "from './live-chat-session'",
+          "after": "from '@/features/copilot/live-chat-session'",
+          "count": 1
+        },
+        {
+          "before": "from './conversation-persistence'",
+          "after": "from '@/features/copilot/conversation-persistence'",
+          "count": 1
+        }
+      ],
+      "inverseImportOrArgvReplacementByteIdentical": true,
+      "testBodyAndAssertionsUnchanged": true,
+      "sourceStillCurrent": true
+    },
+    {
+      "sourcePath": "docs/verification/t1073/verify-resource-lifecycle.mjs",
+      "targetPath": "docs/verification/t1073/verify-resource-lifecycle.mjs",
+      "sourceSha256": "ce9e066260e018d2d76e1e5f04ad21fb7aa8ebea94f08219c807cea636269836",
+      "candidateSha256": "b883364d11dd09932a82dfdb6389a2b92c836920d575b99a36a3b7f6fe97dd1d",
+      "sourceBytes": 3113,
+      "candidateBytes": 3115,
+      "candidatePath": "/Users/zyongzhu/CreatorOS-local-acceptance/worktree-main-integration-20261008/session-sdk-boundary-candidate/docs/verification/t1073/verify-resource-lifecycle.mjs",
+      "diffPath": "/Users/zyongzhu/CreatorOS-local-acceptance/worktree-main-integration-20261008/session-sdk-boundary-candidate/docs/verification/t1073/verify-resource-lifecycle.mjs.diff",
+      "diffSha256": "468fdd179113a9d5c926932bf464f3f38508632b1afbc4e643db2c39f0a06986",
+      "exactAllowedReplacements": [
+        {
+          "before": "src/features/copilot/live-chat-session.test.ts",
+          "after": "src/server/ai-runtime/live-chat-session.test.ts",
+          "count": 1
+        },
+        {
+          "before": "src/features/copilot/live-chat-session.consumer.test.tsx",
+          "after": "src/server/ai-runtime/live-chat-session.consumer.test.tsx",
+          "count": 1
+        }
+      ],
+      "inverseImportOrArgvReplacementByteIdentical": true,
+      "testBodyAndAssertionsUnchanged": null,
+      "sourceStillCurrent": true
+    }
+  ],
+  "rootApplication": [
+    "删除两个旧 features 测试路径，并将候选放到对应 server/ai-runtime 新路径；不要保留重复 suite。",
+    "按候选 SHA 更新当前 verifier。",
+    "modules.config.json 的这两个旧路径各出现 2 次（总计 4 个 write_set），由 root 同步更新；本候选不写控制面。"
+  ],
+  "evidencePreservation": "旧日志、旧证据、历史命令、guard、baseline、生产代码均未改。",
+  "environment": "frontend/vitest.config.ts 已全局 jsdom 且 include 为 src/**/*.{test,spec}.{ts,tsx}，新目录仍被发现；无须新增 pragma 或配置。",
+  "reconcile": "reconcile.config.json 无这两个旧 suite 路径，当前 verifier 消费保留。",
+  "limits": [
+    "候选尚未应用，迁移后的真实 suite 与 boundary 由 root 按原 argv 实跑。",
+    "本报告不证明生产 baseline 或全功能通过。"
+  ]
+}
