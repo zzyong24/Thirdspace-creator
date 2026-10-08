@@ -17,6 +17,8 @@ const mockRouter = { refresh: vi.fn(), push: vi.fn(), replace: vi.fn() };
 vi.mock("next/navigation", () => ({ useRouter: () => mockRouter }));
 
 const mockClient = {
+  listAccountGroups: vi.fn((_i: unknown): Promise<unknown> => Promise.resolve([])),
+  listAccounts: vi.fn((_i: unknown): Promise<unknown> => Promise.resolve([])),
   archiveAccount: vi.fn((i: unknown): Promise<unknown> => Promise.resolve(i)),
   // 扫码绑定复用设置页同款 loginDouyin;默认 mock 成功登录。
   loginDouyin: vi.fn(
@@ -25,6 +27,8 @@ const mockClient = {
 };
 vi.mock("@/lib/contract-client", () => ({
   client: {
+    listAccountGroups: (i: unknown) => mockClient.listAccountGroups(i),
+    listAccounts: (i: unknown) => mockClient.listAccounts(i),
     archiveAccount: (i: unknown) => mockClient.archiveAccount(i),
     loginDouyin: (i: unknown) => mockClient.loginDouyin(i),
   },
@@ -78,6 +82,11 @@ describe("account-manager 极简版 island wiring", () => {
     const arg = mockClient.loginDouyin.mock.calls[0]![0] as { body: unknown };
     expect(arg.body).toEqual({ forceNew: true });
     await waitFor(() => expect(mockRouter.refresh).toHaveBeenCalled());
+  });
+
+  it("扫码响应在卸载后不会写回反馈或刷新工作区", async () => {
+    let resolve!:(value:unknown)=>void;mockClient.loginDouyin.mockReturnValueOnce(new Promise(result=>{resolve=result;}));
+    const mounted=render(<CreateAccountForm/>);fireEvent.click(screen.getByTestId("bind-douyin-scan"));mounted.unmount();resolve({loggedIn:true});await Promise.resolve();expect(mockRouter.refresh).not.toHaveBeenCalled();
   });
 
   // [T-330] 后端诚实失败(如「扫码成功但读不回账号身份」)→ 错误 message 内联透传给用户,
@@ -208,38 +217,25 @@ describe("account-manager 极简版 island wiring", () => {
   });
 });
 
-describe("account-manager 极简版 view", () => {
-  // 删了平台筛选 tab(全部/抖音):整页无 tab 按钮。
-  it("无平台筛选 tab(全部/抖音)", () => {
-    render(<AccountManagerView viewModel={{ accounts: [DOUYIN] }} />);
-    expect(screen.queryByTestId("account-platform-filter")).toBeNull();
-    expect(screen.queryByRole("button", { name: "全部" })).toBeNull();
-    expect(screen.queryByRole("button", { name: "B站" })).toBeNull();
-  });
-
-  // [T-201c] 只显活跃号:archived 的不进列表(隐藏即消失,可逆)。
-  it("只显活跃号,已隐藏(archived)的不显", () => {
-    render(
-      <AccountManagerView viewModel={{ accounts: [DOUYIN, ARCHIVED] }} />,
-    );
-    const rows = screen.getAllByTestId("account-row");
-    expect(rows).toHaveLength(1);
-    expect(rows[0]).toHaveAttribute("data-account-id", "acct-d");
-    expect(screen.queryByText("@已隐藏的号")).toBeNull();
-  });
-
-  // [⑥][T-201c] 只有一个 active 号 → 该行隐藏按钮禁用(末号保护,视图侧传 isOnlyAccount）。
-  it("只有一个号时,该号隐藏按钮禁用", () => {
-    render(<AccountManagerView viewModel={{ accounts: [DOUYIN] }} />);
-    const btn = screen.getByTestId("account-remove") as HTMLButtonElement;
-    expect(btn.disabled).toBe(true);
-  });
-
-  it("无号时显空态引导扫码", () => {
-    render(<AccountManagerView viewModel={{ accounts: [] }} />);
-    const empty = screen.getByTestId("account-empty-state");
-    expect(empty.textContent).toContain("扫码绑定新抖音号");
-    // 扫码主按钮仍在(空态也能扫码绑定)。
-    expect(screen.getByTestId("bind-douyin-scan")).toBeTruthy();
-  });
+describe("account-manager 组管理视图", () => {
+ const groups=(accounts:PlatformAccountResource[])=>[{id:"group",userId:"user-a",name:"创作者工作区",status:"active" as const,version:1,createdAt:DOUYIN.createdAt,updatedAt:DOUYIN.updatedAt,members:accounts.map((account,index)=>({id:`member-${index}`,accountId:account.id,groupId:"group",platform:account.platform,accountHandle:account.accountHandle,status:account.status,version:1,joinedAt:account.createdAt,leftAt:null}))}];
+ it("显示实际组成员和隐藏状态，提供恢复入口", async () => {
+  const all=[DOUYIN,ARCHIVED];mockClient.listAccountGroups.mockResolvedValue(groups(all));mockClient.listAccounts.mockResolvedValue(all);
+  render(<AccountManagerView viewModel={{accounts:all,groups:groups(all)}}/>);
+  fireEvent.click(screen.getAllByText("账号管理与能力")[1]!);
+  expect(await screen.findByRole("button",{name:"恢复平台账号"})).toBeVisible();
+  expect(screen.getAllByTestId("account-row")).toHaveLength(2);
+ });
+ it("现有最后一个平台账号的隐藏保护仍生效", () => {
+  mockClient.listAccountGroups.mockResolvedValue(groups([DOUYIN]));mockClient.listAccounts.mockResolvedValue([DOUYIN]);
+  render(<AccountManagerView viewModel={{accounts:[DOUYIN],groups:groups([DOUYIN])}}/>);
+  expect(screen.getByTestId("account-remove")).toBeDisabled();
+ });
+ it("没有组时先允许创建工作区，未绑定不阻止创作", () => {
+  mockClient.listAccountGroups.mockResolvedValue([]);mockClient.listAccounts.mockResolvedValue([]);
+  render(<AccountManagerView viewModel={{accounts:[],groups:[]}}/>);
+  expect(screen.getByRole("button",{name:"创建账号组"})).toBeVisible();
+  expect(screen.getByText(/没有平台账号也可以创建项目/)).toBeVisible();
+  expect(screen.queryByTestId("bind-douyin-scan")).not.toBeInTheDocument();
+ });
 });

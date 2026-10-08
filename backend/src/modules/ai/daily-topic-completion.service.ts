@@ -1,3 +1,4 @@
+import {requireWorkspace,workspaceFilter,assertWritableWorkspace} from "../../workspace-scope";
 import { assessAudienceTask } from "../candidate";
 import { topicSourceRead } from "@creatoros/contract";
 import { z } from 'zod';
@@ -43,7 +44,7 @@ export function createDailyTopicCompletionService(db: Db, deps: {
         return leases.withLease(ref, 'settlement', async ({ tx, task, context }) => {
             if (task.kind !== 'ai_task' || task.ownerType !== 'ai_task')
                 throw new ConflictError('每日选题执行归属无效');
-            const [business] = await tx.select().from(aiTasks).where(and(eq(aiTasks.id, task.ownerId), eq(aiTasks.executionTaskId, task.id), eq(aiTasks.userId, context.userId), eq(aiTasks.accountId, context.accountId!))).for('update');
+            const [business] = await tx.select().from(aiTasks).where(and(eq(aiTasks.id, task.ownerId), eq(aiTasks.executionTaskId, task.id), eq(aiTasks.userId, context.userId), workspaceFilter(aiTasks,context))).for('update');
             if (!business || business.taskType !== 'scheduled.topic.daily' || (task.payload as {
                 aiTaskId?: unknown;
             }).aiTaskId !== business.id)

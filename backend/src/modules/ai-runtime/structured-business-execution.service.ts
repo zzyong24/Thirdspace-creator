@@ -1,3 +1,4 @@
+import {workspaceFilter} from "../../workspace-scope";
 import type {BoundedExecutionBudget,ExecutionBudget} from "@creatoros/contract/execution-worker";
 import {awaitPreparation} from "../execution/await-preparation";
 import { and,eq,isNull,asc,inArray,sql,aiTasks,executionTasks,OwnershipError,type Db } from "@creatoros/backend";
@@ -31,20 +32,20 @@ export function createStructuredBusinessExecutionService(db:Db,deps:{adapters:St
     },
     async prepare(ctx:RequestContext,taskId:string,signal?:AbortSignal,inheritedBudget?:ExecutionBudget){
       signal?.throwIfAborted();
-      const [task]=await db.select().from(aiTasks).where(and(eq(aiTasks.id,taskId),eq(aiTasks.userId,ctx.userId),eq(aiTasks.accountId,ctx.accountId ?? "")));
+      const [task]=await db.select().from(aiTasks).where(and(eq(aiTasks.id,taskId),eq(aiTasks.userId,ctx.userId),workspaceFilter(aiTasks,ctx)));
       if(!task)throw new OwnershipError("生成任务不存在");
       const adapter=adapterFor(task.taskType);
       if(!adapter)throw new Error("STRUCTURED_TASK_ADAPTER_UNAVAILABLE");
       if(task.executionTaskId){
-        const [execution]=await db.select().from(executionTasks).where(and(eq(executionTasks.id,task.executionTaskId),eq(executionTasks.ownerId,task.id),eq(executionTasks.userId,task.userId),eq(executionTasks.accountId,task.accountId)));
+        const [execution]=await db.select().from(executionTasks).where(and(eq(executionTasks.id,task.executionTaskId),eq(executionTasks.ownerId,task.id),eq(executionTasks.userId,task.userId),workspaceFilter(executionTasks,task)));
         const input=structuredGenerationInputSchema.parse((execution?.payload as {modelInput?:unknown}|undefined)?.modelInput);
         if(input.skillId!==adapter.skillId || input.capability!==adapter.capability)throw new Error("STRUCTURED_EXECUTION_MISMATCH");
         return authority.bindAiTask(ctx,task.id);
       }
       const runtime=task.runtimeData as Record<string,unknown>;
       const skillSnapshot=workerSkillSnapshotSchema.parse(runtime.skillSnapshot);
-      if(skillSnapshot.userId!==ctx.userId || skillSnapshot.accountId!==ctx.accountId)throw new OwnershipError("Skill snapshot owner mismatch");
-      const facets=await awaitPreparation(()=>adapter.prepare(ctx,{id:task.id,retryOfTaskId:task.retryOfTaskId,projectId:task.projectId,inputData:task.inputData as Record<string,unknown>,skillSnapshot}),signal);
+      if(skillSnapshot.userId!==task.userId || skillSnapshot.accountId !== task.accountId || (skillSnapshot.groupId??null)!==task.groupId)throw new OwnershipError("Skill snapshot owner mismatch");
+      const facets=await awaitPreparation(()=>adapter.prepare({...ctx,accountId:task.accountId,groupId:task.groupId,groupVersion:task.groupVersion??undefined,membershipVersion:task.membershipVersion??undefined},{id:task.id,retryOfTaskId:task.retryOfTaskId,projectId:task.projectId,inputData:task.inputData as Record<string,unknown>,skillSnapshot}),signal);
       signal?.throwIfAborted();
       const additionalCalls=adapter.additionalCalls?.(Object.freeze({...facets}))??0;
       if(!Number.isSafeInteger(additionalCalls)||additionalCalls<0||deps.budget.maxCalls+additionalCalls>10000)throw new Error("STRUCTURED_CALL_BUDGET_INVALID");
@@ -61,7 +62,7 @@ export function createStructuredBusinessExecutionService(db:Db,deps:{adapters:St
         let unresolved=0;
         for(const task of rows){
           if(shouldStop())return;
-          const context:RequestContext={userId:task.userId,accountId:task.accountId,requestId:`recover:${task.id}`,source:"user"};
+          const context:RequestContext={userId:task.userId,accountId:task.accountId,groupId:task.groupId,groupVersion:task.groupVersion??undefined,membershipVersion:task.membershipVersion??undefined,requestId:`recover:${task.id}`,source:"user"};
           try{await service.prepare(context,task.id);}
           catch{await onFailure(context,task.id);const [current]=await db.select().from(aiTasks).where(eq(aiTasks.id,task.id));if(current?.status==="queued" && !current.executionTaskId)unresolved++;}
         }

@@ -1,3 +1,5 @@
+import type {MembershipTransaction,FrozenWorkspace} from "../platform-account/membership-lock.service";
+import {requireWorkspace,assertWritableWorkspace} from "../../workspace-scope";
 import { adoptPublicationDraft,type AdoptPublicationDraftInput } from "./publication-draft-adoption.service";
 import type { RequestContext } from "@creatoros/contract";
 import type { Db } from "@creatoros/backend";
@@ -50,6 +52,8 @@ const PLATFORMS = new Set([
   "douyin",
   "xiaohongshu",
   "wechatVideo",
+  "wechatOfficial",
+  "kuaishou",
   "x",
 ]);
 
@@ -73,6 +77,9 @@ export type NotifyPublished = (
 ) => Promise<unknown>;
 
 export interface ServiceDeps {
+  membership?: {lock(tx:MembershipTransaction,ctx:RequestContext,options?:{allowArchived?:boolean}):Promise<FrozenWorkspace>;assertFrozen(tx:MembershipTransaction,frozen:FrozenWorkspace,options?:{allowArchived?:boolean}):Promise<void>};
+  assertTargetAccount?(ctx:RequestContext,target:{accountId:string;platform:string}):Promise<unknown>;
+  retainUnassignedDraft?(ctx:RequestContext,input:AdoptPublicationDraftInput):Promise<unknown>;
   db: Db;
   now: () => string;
   nextId: (prefix: string) => string;
@@ -127,7 +134,10 @@ export interface ServiceDeps {
 }
 
 export interface PublishingService {
-  adoptDraft(ctx:RequestContext,input:AdoptPublicationDraftInput):Promise<PublicationRow>;
+  adoptDraft(ctx:RequestContext,input:AdoptPublicationDraftInput):Promise<PublicationRow|{kind:"unassigned";outputId:string;platform:string}>;
+  /** 内部采集端口；重验真实当前成员后仅按该账号+external ID取冻结历史事实。 */
+  resolveCollectedPublication(ctx:RequestContext,ref:{platform:string;externalId:string}):Promise<PublicationRow|null>;
+  listCollectedExternalIds(ctx:RequestContext,platform:string):Promise<string[]>;
   listPublications(
     ctx: RequestContext,
     outputId: string,
@@ -149,7 +159,7 @@ export interface PublishingService {
   createPublication(
     ctx: RequestContext,
     outputId: string,
-    body: { platform: string; accountReference: string },
+    body: { platform: string; accountReference: string;accountId?:string;expectedMembershipVersion?:number },
   ): Promise<PublicationRow>;
   getPublication(
     ctx: RequestContext,
@@ -216,6 +226,8 @@ export interface PublishingService {
       platform: string;
       externalId: string;
       accountReference?: string;
+      accountId?:string;
+      expectedMembershipVersion?:number;
       externalUrl?: string | null;
       publishedAt?: string | null;
       // [B-02] 新建 pub 时原子补铸的 revision-1 标题(缺省空)。
@@ -297,6 +309,8 @@ export interface PublishingService {
       platform: string;
       externalId: string;
       accountReference?: string;
+      accountId?:string;
+      expectedMembershipVersion?:number;
       externalUrl?: string | null;
       publishedAt?: string | null;
       // [B-02] 新建分支下原子补铸的 revision-1 标题(登记用户项目标题;缺省空)。
@@ -307,14 +321,30 @@ export interface PublishingService {
 
 export function createPublishingService(deps: ServiceDeps): PublishingService {
   const publisher = deps.publisher ?? createUnavailablePublisher();
-  function repoFor(ctx: RequestContext): PublishingRepository {
-    return createPublishingRepository(deps.db, {
+  function repoFor(ctx: RequestContext,db:Db=deps.db,frozen?:FrozenWorkspace): PublishingRepository {
+    requireWorkspace(ctx);
+    return createPublishingRepository(db, {
       now: deps.now,
       nextId: deps.nextId,
       userId: ctx.userId,
       // [T-332 S2] strict 按号:未选号 ctx → AccountRequiredError(SPEC §4.2 引导态,
       //   读写同门);写路径 stamp / 读路径 eq 都用这一个断言后的号。
-      accountId: requireAccountId(ctx.accountId, "publishing"),
+      accountId: ctx.accountId ?? null,
+      groupId: ctx.groupId ?? null,
+      groupVersion:frozen?.groupVersion??null,
+      membershipVersion:frozen?.membershipVersion??null,
+    });
+  }
+
+  async function withTarget<T>(ctx:RequestContext,platform:string,body:(repo:PublishingRepository,tx:MembershipTransaction|null,frozen?:FrozenWorkspace)=>Promise<T>,allowArchived=false):Promise<T>{
+    const accountId=requireAccountId(ctx.accountId,"真实发布/采集账号");
+    if(!ctx.groupId&&!deps.membership)return body(repoFor(ctx),null);
+    if(!deps.membership||(ctx.groupId&&!deps.assertTargetAccount))throw new OwnershipError("真实账号归属校验不可用");
+    // 平台枚举是账号不可变身份；先验端口可读库，成员版本仍在同锁内重验。
+    await deps.assertTargetAccount?.(ctx,{accountId,platform});
+    return deps.db.transaction(async tx=>{
+      const frozen=await deps.membership!.lock(tx,ctx,{allowArchived});
+      return body(repoFor(ctx,tx as unknown as Db,frozen),tx,frozen);
     });
   }
 
@@ -388,7 +418,7 @@ export function createPublishingService(deps: ServiceDeps): PublishingService {
     ctx: RequestContext,
     outputId: string,
   ): Promise<void> {
-    if (!deps.resolveOutputOwner) return; // 端口未注入 → 无法校验,降级放行(生产已接线)
+    if (!deps.resolveOutputOwner) {if(ctx.groupId)throw new OwnershipError("内容产物归属校验不可用");return;} // 端口未注入 → 无法校验,降级放行(生产已接线)
     const owner = await deps.resolveOutputOwner(ctx, outputId);
     if (!owner) {
       // 跨用户 / 不存在 → OwnershipError(→404,不泄露行存在性,与本模块所有权门一致)。
@@ -412,6 +442,322 @@ export function createPublishingService(deps: ServiceDeps): PublishingService {
       outputId: pub.contentOutputId,
       publicationId: pub.id,
     });
+  }
+
+  async function transitionInRepo(ctx:RequestContext,publicationId:string,body:{status:string},repo:PublishingRepository,afterCommit:Array<()=>Promise<void>>){
+      const pub = await repo.getPublication(publicationId); // ownership gate
+      const current = pub.status;
+      const next = body.status;
+
+      // 2. Idempotency (SPEC §17/§22): same-status transition is a no-op —— 但重进
+      //    published 时必须补跑属主项目 rollup 对账([DATA-H04]:上一次发布可能落了平台事实
+      //    却在 rollup 前中断,项目永久未跃迁;markOutputPublished 幂等,重跑安全)。
+      if (next === current) {
+        if (next === "published") {
+          afterCommit.push(()=>reconcilePublishedRollup(ctx,pub));
+        }
+        return pub;
+      }
+      // Entering published: if a published row already carries that external key,
+      // return it (re-submission returns the original — partial-unique anchor).
+      if (next === "published" && pub.externalId) {
+        const existing = await repo.findByExternalKey(
+          pub.platform,
+          pub.externalId,
+        );
+        if (existing && existing.status === "published") {
+          // [DATA-H04] 同上:命中既有 published 行 → 补跑 rollup 对账再返回。
+          afterCommit.push(()=>reconcilePublishedRollup(ctx,existing));
+          return existing;
+        }
+      }
+
+      // 3. Machine guard (§12) — illegal move → ConflictError (→409).
+      if (!ALLOWED[current]?.includes(next)) {
+        throw new ConflictError(
+          `ConflictError: publication ${publicationId} cannot transition ${current} → ${next}`,
+        );
+      }
+
+      // 4. Side-effects per target status, behind PlatformPublisherPort.
+      let updated: PublicationRow;
+      if (next === "scheduled") {
+        updated = await repo.updatePublicationStatus(publicationId, {
+          status: "scheduled",
+          scheduledAt: deps.now(),
+        });
+      } else if (next === "published") {
+        const revision = await repo.getCurrentRevision(publicationId);
+        const result = await publisher.publish(ctx, {
+          publicationId,
+          platform: pub.platform,
+          accountReference: pub.accountReference,
+          revision: revision
+            ? {
+                title: revision.title,
+                description: revision.description,
+                coverAssetId: revision.coverAssetId,
+                platformTags: (revision.platformTags ?? []) as string[],
+                platformSettings: (revision.platformSettings ??
+                  {}) as Record<string, unknown>,
+              }
+            : null,
+        });
+        updated = await repo.updatePublicationStatus(publicationId, {
+          status: "published",
+          externalId: result.externalId,
+          externalUrl: result.externalUrl,
+          publishedAt: deps.now(),
+        });
+      } else if (next === "removed") {
+        await publisher.remove(ctx, { externalId: pub.externalId });
+        // Retain externalId / metrics history (SPEC §13.3) — only stamp removedAt.
+        updated = await repo.updatePublicationStatus(publicationId, {
+          status: "removed",
+          removedAt: deps.now(),
+        });
+      } else {
+        // failed
+        updated = await repo.updatePublicationStatus(publicationId, {
+          status: "failed",
+        });
+      }
+
+      // 5. Cross-module fan-out via PUBLIC service seams (no repo import). On
+      //    → published: drive the ContentOutput active→published rollup, then the
+      //    best-effort post-commit side-effects (search / activity / notify).
+      if (next === "published") afterCommit.push(async()=>{
+        if (deps.markOutputPublished) {
+          await deps.markOutputPublished(ctx, {
+            outputId: pub.contentOutputId,
+            publicationId,
+          });
+        }
+        if (deps.searchIndex) {
+          try {
+            await deps.searchIndex(ctx, {
+              entityType: "publication",
+              entityId: publicationId,
+              title: `${pub.platform} 发布`,
+              body: pub.accountReference,
+            });
+          } catch {
+            // swallow — derived index is retryable, never fatal to the publish fact.
+          }
+        }
+        if (deps.recordActivity) {
+          try {
+            await deps.recordActivity(ctx, {
+              outputId: pub.contentOutputId,
+              publicationId,
+              platform: pub.platform,
+            });
+          } catch {
+            // swallow — the activity log is derived, retryable.
+          }
+        }
+        if (deps.notify) {
+          try {
+            await deps.notify(ctx, {
+              publicationId,
+              platform: pub.platform,
+            });
+          } catch {
+            // swallow — the notification is derived, retryable.
+          }
+        }
+      });
+
+      return updated;
+  }
+
+  async function createImportedPublicationInRepo(ctx:RequestContext,outputId:string,input:Parameters<PublishingService["createImportedPublication"]>[2],repo:PublishingRepository){
+      // 数据底座(SPEC §1.3)。平台白名单同 createPublication;幂等于 (platform,
+      //   externalId)——命中既有则直接返回(不重复建)。accountReference 缺省取
+      //   "<platform> 导入"(导入作品无显式账号引用)。
+      if (!PLATFORMS.has(input.platform)) {
+        throw new ValidationError(
+          `ValidationError: unknown platform: ${input.platform}`,
+        );
+      }
+      const existing = await repo.findByExternalKey(
+        input.platform,
+        input.externalId,
+      );
+      if (existing) {
+        // T-400:重复采集是修复历史空元数据的机会。只补空值，绝不覆盖用户已经
+        // 修改过的标题/链接；revision 仍保持 append-only。
+        let reconciled = existing;
+        const incomingUrl = input.externalUrl?.trim() ?? "";
+        if (!(existing.externalUrl?.trim() ?? "") && incomingUrl) {
+          reconciled = await repo.updatePublicationStatus(existing.id, {
+            status: existing.status,
+            externalUrl: incomingUrl,
+          });
+        }
+        const incomingTitle = input.title?.trim() ?? "";
+        if (incomingTitle) {
+          const current = await repo.getCurrentRevision(existing.id);
+          if (!(current?.title?.trim() ?? "")) {
+            const revision = await repo.createRevision(existing.id, {
+              title: incomingTitle,
+              description: current?.description ?? "",
+              coverAssetId: current?.coverAssetId ?? null,
+              category: current?.category ?? "",
+              series: current?.series ?? "",
+              platformTags: (current?.platformTags ?? []) as string[],
+              platformSettings: (current?.platformSettings ?? {}) as Record<
+                string,
+                unknown
+              >,
+            });
+            reconciled = await repo.setCurrentRevision(existing.id, revision.id);
+          }
+        }
+        return reconciled;
+      }
+      try {
+        return await repo.createImportedPublication(outputId, {
+          platform: input.platform,
+          accountReference: input.accountReference ?? `${input.platform} 导入`,
+          externalId: input.externalId,
+          externalUrl: input.externalUrl?.trim() || null,
+          publishedAt: input.publishedAt ?? null,
+          title: input.title?.trim(),
+        });
+      } catch (error) {
+        // 两个自动化/登记请求都在 pre-read 后 INSERT 时，唯一索引决定 canonical。
+        // 竞争失败者回读真实 winner，而不是把幂等竞争冒充成批次失败。
+        const raced = await repo.findByExternalKey(
+          input.platform,
+          input.externalId,
+        );
+        if (raced) return raced;
+        throw error;
+      }
+  }
+
+  async function registerOwnerPublicationInRepo(ctx:RequestContext,outputId:string,input:Parameters<PublishingService["registerOwnerPublication"]>[2],repo:PublishingRepository,owners:Map<string,Awaited<ReturnType<typeof resolveOwner>>>,afterCommit:Array<()=>Promise<void>>){
+      // T-724：publication 是唯一外部作品事实；登记只允许 imported→用户项目或孤儿修复，
+      // 两个用户项目之间绝不静默抢锚。Projects 投影归档是可重试补偿，不是假跨模块事务。
+      if (!PLATFORMS.has(input.platform)) {
+        throw new ValidationError(
+          `ValidationError: unknown platform: ${input.platform}`,
+        );
+      }
+      const ownerNew = owners.get(outputId)??null;
+      if (deps.resolveOutputOwner && !ownerNew) {
+        throw new OwnershipError(
+          `OwnershipError: content output not found: ${outputId}`,
+        );
+      }
+      if (ownerNew?.status === "archived") {
+        throw new ConflictError(
+          "ConflictError: archived project cannot register a publication",
+          {
+            reason: "target_project_archived",
+            canonicalProjectId: ownerNew.projectId,
+            canonicalProjectTitle: ownerNew.title,
+          },
+        );
+      }
+      let existing = await repo.findByExternalKey(
+        input.platform,
+        input.externalId,
+      );
+
+      // 无 existing → 创建；若唯一索引竞争失败，回读 winner 后继续同一判定矩阵。
+      if (!existing) {
+        try {
+          const created = await repo.createImportedPublication(outputId, {
+            platform: input.platform,
+            accountReference:
+              input.accountReference ?? `${input.platform} 导入`,
+            externalId: input.externalId,
+            externalUrl: input.externalUrl?.trim() || null,
+            publishedAt: input.publishedAt ?? null,
+            title: input.title?.trim(),
+          });
+          afterCommit.push(()=>markOwnerPublishedBestEffort(ctx, outputId));
+          if (ownerNew) {
+            afterCommit.push(()=>reconcileImportedBestEffort(ctx, {
+              platform: input.platform,
+              externalId: input.externalId,
+              canonicalProjectId: ownerNew.projectId,
+            }));
+          }
+          return created;
+        } catch (error) {
+          existing = await repo.findByExternalKey(
+            input.platform,
+            input.externalId,
+          );
+          if (!existing) throw error;
+        }
+      }
+
+      // same-output 幂等成功也必须重进补偿，修复上一次换锚成功但归档失败的残留。
+      if (existing.contentOutputId === outputId) {
+        afterCommit.push(()=>markOwnerPublishedBestEffort(ctx, outputId));
+        if (ownerNew) {
+          afterCommit.push(()=>reconcileImportedBestEffort(ctx, {
+            platform: input.platform,
+            externalId: input.externalId,
+            canonicalProjectId: ownerNew.projectId,
+          }));
+        }
+        return existing;
+      }
+
+      if(deps.resolveOutputOwner&&!owners.has(existing.contentOutputId))throw new ConflictError("发布归属在登记期间改变，请重试");
+      const ownerOld = owners.get(existing.contentOutputId)??null;
+
+      // 同一项目的另一个 output 已持有作品：项目身份没有冲突，保持现锚并补跑收口。
+      if (ownerNew && ownerOld?.projectId === ownerNew.projectId) {
+        afterCommit.push(()=>markOwnerPublishedBestEffort(ctx, existing.contentOutputId));
+        afterCommit.push(()=>reconcileImportedBestEffort(ctx, {
+          platform: input.platform,
+          externalId: input.externalId,
+          canonicalProjectId: ownerNew.projectId,
+        }));
+        return existing;
+      }
+
+      // 只有 orphan repair 或 imported→非 imported 才自动换锚。
+      if (
+        ownerNew &&
+        (!ownerOld ||
+          (ownerOld.source === "imported" && ownerNew.source !== "imported"))
+      ) {
+        const reAnchored = await repo.reAnchorPublicationOutput(
+          existing.id,
+          outputId,
+        );
+        afterCommit.push(()=>markOwnerPublishedBestEffort(ctx, outputId));
+        afterCommit.push(()=>reconcileImportedBestEffort(ctx, {
+          platform: input.platform,
+          externalId: input.externalId,
+          canonicalProjectId: ownerNew.projectId,
+        }));
+        return reAnchored;
+      }
+
+      // 生产 owner 已知时，manual/manual 或 imported/imported 争抢都明确 409，不能返回
+      // existing 让调用端误以为当前项目登记成功。同租户 owner 信息由 Projects 门验证后才返回。
+      if (ownerOld && ownerNew) {
+        throw new ConflictError(
+          "ConflictError: external work is already owned by another project",
+          {
+            reason: "external_work_owned_by_another_project",
+            canonicalProjectId: ownerOld.projectId,
+            canonicalProjectTitle: ownerOld.title,
+          },
+        );
+      }
+
+      // 仅兼容未注入 owner 端口的旧最小单测组合：不抢、不谎称换锚。
+      afterCommit.push(()=>markOwnerPublishedBestEffort(ctx, existing.contentOutputId));
+      return existing;
   }
 
   return {
@@ -477,7 +823,13 @@ export function createPublishingService(deps: ServiceDeps): PublishingService {
     async adoptDraft(ctx,input){
       if(!PLATFORMS.has(input.platform))throw new ValidationError(`ValidationError: unknown platform: ${input.platform}`);
       await assertOutputOwned(ctx,input.outputId);
-      return adoptPublicationDraft(deps.db,ctx,input,deps);
+      if(ctx.groupId&&!ctx.accountId){
+        await assertWritableWorkspace(deps.db,ctx);
+        if(!deps.retainUnassignedDraft)throw new OwnershipError("候选物料保存端口不可用");
+        await deps.retainUnassignedDraft(ctx,input);
+        return {kind:"unassigned" as const,outputId:input.outputId,platform:input.platform};
+      }
+      return withTarget(ctx,input.platform,(_repo,tx,frozen)=>adoptPublicationDraft((tx??deps.db) as Db,ctx,input,{...deps,frozen}));
     },
 
     async createPublication(ctx, outputId, body) {
@@ -488,7 +840,8 @@ export function createPublishingService(deps: ServiceDeps): PublishingService {
       }
       // [DATA-H03] 建 pub 前校验 output 归属(不建跨属主 / 悬空行)。
       await assertOutputOwned(ctx, outputId);
-      const repo = repoFor(ctx);
+      const targetCtx={...ctx,accountId:body.accountId??ctx.accountId,membershipVersion:body.expectedMembershipVersion??ctx.membershipVersion};
+      return withTarget(targetCtx,body.platform,async repo=>{
       const pub = await repo.createPublication(outputId, body);
       // OQ4 (b-auto): auto-mint an empty revision-1 and set it current so the DTO
       // always serializes a real currentRevisionId (the contract `id` is a
@@ -498,6 +851,7 @@ export function createPublishingService(deps: ServiceDeps): PublishingService {
         description: "",
       });
       return repo.setCurrentRevision(pub.id, rev.id);
+      });
     },
 
     async getPublication(ctx, publicationId) {
@@ -505,6 +859,7 @@ export function createPublishingService(deps: ServiceDeps): PublishingService {
     },
 
     async createRevision(ctx, publicationId, body) {
+      await assertWritableWorkspace(deps.db,ctx);
       const repo = repoFor(ctx);
       await repo.getPublication(publicationId); // ownership gate
       // Cover validation (SPEC §15 "Publishing 校验封面") — only when a coverAssetId
@@ -529,132 +884,15 @@ export function createPublishingService(deps: ServiceDeps): PublishingService {
       return repo.listRevisions(publicationId, pagination);
     },
 
-    async transition(ctx, publicationId, body) {
-      const repo = repoFor(ctx);
-      const pub = await repo.getPublication(publicationId); // ownership gate
-      const current = pub.status;
-      const next = body.status;
-
-      // 2. Idempotency (SPEC §17/§22): same-status transition is a no-op —— 但重进
-      //    published 时必须补跑属主项目 rollup 对账([DATA-H04]:上一次发布可能落了平台事实
-      //    却在 rollup 前中断,项目永久未跃迁;markOutputPublished 幂等,重跑安全)。
-      if (next === current) {
-        if (next === "published") {
-          await reconcilePublishedRollup(ctx, pub);
-        }
-        return pub;
-      }
-      // Entering published: if a published row already carries that external key,
-      // return it (re-submission returns the original — partial-unique anchor).
-      if (next === "published" && pub.externalId) {
-        const existing = await repo.findByExternalKey(
-          pub.platform,
-          pub.externalId,
-        );
-        if (existing && existing.status === "published") {
-          // [DATA-H04] 同上:命中既有 published 行 → 补跑 rollup 对账再返回。
-          await reconcilePublishedRollup(ctx, existing);
-          return existing;
-        }
-      }
-
-      // 3. Machine guard (§12) — illegal move → ConflictError (→409).
-      if (!ALLOWED[current]?.includes(next)) {
-        throw new ConflictError(
-          `ConflictError: publication ${publicationId} cannot transition ${current} → ${next}`,
-        );
-      }
-
-      // 4. Side-effects per target status, behind PlatformPublisherPort.
-      let updated: PublicationRow;
-      if (next === "scheduled") {
-        updated = await repo.updatePublicationStatus(publicationId, {
-          status: "scheduled",
-          scheduledAt: deps.now(),
-        });
-      } else if (next === "published") {
-        const revision = await repo.getCurrentRevision(publicationId);
-        const result = await publisher.publish(ctx, {
-          publicationId,
-          platform: pub.platform,
-          accountReference: pub.accountReference,
-          revision: revision
-            ? {
-                title: revision.title,
-                description: revision.description,
-                coverAssetId: revision.coverAssetId,
-                platformTags: (revision.platformTags ?? []) as string[],
-                platformSettings: (revision.platformSettings ??
-                  {}) as Record<string, unknown>,
-              }
-            : null,
-        });
-        updated = await repo.updatePublicationStatus(publicationId, {
-          status: "published",
-          externalId: result.externalId,
-          externalUrl: result.externalUrl,
-          publishedAt: deps.now(),
-        });
-      } else if (next === "removed") {
-        await publisher.remove(ctx, { externalId: pub.externalId });
-        // Retain externalId / metrics history (SPEC §13.3) — only stamp removedAt.
-        updated = await repo.updatePublicationStatus(publicationId, {
-          status: "removed",
-          removedAt: deps.now(),
-        });
-      } else {
-        // failed
-        updated = await repo.updatePublicationStatus(publicationId, {
-          status: "failed",
-        });
-      }
-
-      // 5. Cross-module fan-out via PUBLIC service seams (no repo import). On
-      //    → published: drive the ContentOutput active→published rollup, then the
-      //    best-effort post-commit side-effects (search / activity / notify).
-      if (next === "published") {
-        if (deps.markOutputPublished) {
-          await deps.markOutputPublished(ctx, {
-            outputId: pub.contentOutputId,
-            publicationId,
-          });
-        }
-        if (deps.searchIndex) {
-          try {
-            await deps.searchIndex(ctx, {
-              entityType: "publication",
-              entityId: publicationId,
-              title: `${pub.platform} 发布`,
-              body: pub.accountReference,
-            });
-          } catch {
-            // swallow — derived index is retryable, never fatal to the publish fact.
-          }
-        }
-        if (deps.recordActivity) {
-          try {
-            await deps.recordActivity(ctx, {
-              outputId: pub.contentOutputId,
-              publicationId,
-              platform: pub.platform,
-            });
-          } catch {
-            // swallow — the activity log is derived, retryable.
-          }
-        }
-        if (deps.notify) {
-          try {
-            await deps.notify(ctx, {
-              publicationId,
-              platform: pub.platform,
-            });
-          } catch {
-            // swallow — the notification is derived, retryable.
-          }
-        }
-      }
-
-      return updated;
+    async transition(ctx,publicationId,body){
+      const pub=await repoFor(ctx).getPublication(publicationId),afterCommit:Array<()=>Promise<void>>=[];
+      const targetCtx={...ctx,accountId:pub.accountId};
+      const result=await withTarget(targetCtx,pub.platform,async(repo,tx)=>{
+        if(tx && pub.groupId)await deps.membership!.assertFrozen(tx,{userId:ctx.userId,groupId:pub.groupId,accountId:pub.accountId,groupVersion:pub.groupVersion??null,membershipVersion:pub.membershipVersion??null});
+        return transitionInRepo(targetCtx,publicationId,body,repo,afterCommit);
+      });
+      for(const effect of afterCommit)await effect();
+      return result;
     },
 
     async getRecentPublications(ctx, opts) {
@@ -705,6 +943,14 @@ export function createPublishingService(deps: ServiceDeps): PublishingService {
       );
     },
 
+    async resolveCollectedPublication(ctx,ref){
+      if(ctx.source!=="ingestion")throw new OwnershipError("此入口仅用于已验证的平台采集");
+      return withTarget(ctx,ref.platform,repo=>repo.findCollectedByExternalKey(ref.platform,ref.externalId),true);
+    },
+    async listCollectedExternalIds(ctx,platform){
+      if(ctx.source!=="ingestion")throw new OwnershipError("此入口仅用于已验证的平台采集");
+      return withTarget(ctx,platform,repo=>repo.listCollectedExternalIds(platform),true);
+    },
     async resolvePublication(ctx, externalSourceRef) {
       // Ingestion-wave hook (SPEC §11) — thin scoped external-key lookup.
       return repoFor(ctx).findByExternalKey(
@@ -713,194 +959,23 @@ export function createPublishingService(deps: ServiceDeps): PublishingService {
       );
     },
 
-    async createImportedPublication(ctx, outputId, input) {
-      // 数据底座(SPEC §1.3)。平台白名单同 createPublication;幂等于 (platform,
-      //   externalId)——命中既有则直接返回(不重复建)。accountReference 缺省取
-      //   "<platform> 导入"(导入作品无显式账号引用)。
-      if (!PLATFORMS.has(input.platform)) {
-        throw new ValidationError(
-          `ValidationError: unknown platform: ${input.platform}`,
-        );
-      }
-      const repo = repoFor(ctx);
-      const existing = await repo.findByExternalKey(
-        input.platform,
-        input.externalId,
-      );
-      if (existing) {
-        // T-400:重复采集是修复历史空元数据的机会。只补空值，绝不覆盖用户已经
-        // 修改过的标题/链接；revision 仍保持 append-only。
-        let reconciled = existing;
-        const incomingUrl = input.externalUrl?.trim() ?? "";
-        if (!(existing.externalUrl?.trim() ?? "") && incomingUrl) {
-          reconciled = await repo.updatePublicationStatus(existing.id, {
-            status: existing.status,
-            externalUrl: incomingUrl,
-          });
-        }
-        const incomingTitle = input.title?.trim() ?? "";
-        if (incomingTitle) {
-          const current = await repo.getCurrentRevision(existing.id);
-          if (!(current?.title?.trim() ?? "")) {
-            const revision = await repo.createRevision(existing.id, {
-              title: incomingTitle,
-              description: current?.description ?? "",
-              coverAssetId: current?.coverAssetId ?? null,
-              category: current?.category ?? "",
-              series: current?.series ?? "",
-              platformTags: (current?.platformTags ?? []) as string[],
-              platformSettings: (current?.platformSettings ?? {}) as Record<
-                string,
-                unknown
-              >,
-            });
-            reconciled = await repo.setCurrentRevision(existing.id, revision.id);
-          }
-        }
-        return reconciled;
-      }
-      try {
-        return await repo.createImportedPublication(outputId, {
-          platform: input.platform,
-          accountReference: input.accountReference ?? `${input.platform} 导入`,
-          externalId: input.externalId,
-          externalUrl: input.externalUrl?.trim() || null,
-          publishedAt: input.publishedAt ?? null,
-          title: input.title?.trim(),
-        });
-      } catch (error) {
-        // 两个自动化/登记请求都在 pre-read 后 INSERT 时，唯一索引决定 canonical。
-        // 竞争失败者回读真实 winner，而不是把幂等竞争冒充成批次失败。
-        const raced = await repo.findByExternalKey(
-          input.platform,
-          input.externalId,
-        );
-        if (raced) return raced;
-        throw error;
-      }
+    async createImportedPublication(ctx,outputId,input){
+      if(!PLATFORMS.has(input.platform))throw new ValidationError(`ValidationError: unknown platform: ${input.platform}`);
+      await assertOutputOwned(ctx,outputId);
+      const targetCtx={...ctx,accountId:input.accountId??ctx.accountId,membershipVersion:input.expectedMembershipVersion??ctx.membershipVersion};
+      return withTarget(targetCtx,input.platform,repo=>createImportedPublicationInRepo(targetCtx,outputId,input,repo),ctx.source==="ingestion");
     },
 
-    async registerOwnerPublication(ctx, outputId, input) {
-      // T-724：publication 是唯一外部作品事实；登记只允许 imported→用户项目或孤儿修复，
-      // 两个用户项目之间绝不静默抢锚。Projects 投影归档是可重试补偿，不是假跨模块事务。
-      if (!PLATFORMS.has(input.platform)) {
-        throw new ValidationError(
-          `ValidationError: unknown platform: ${input.platform}`,
-        );
-      }
-      const ownerNew = await resolveOwner(ctx, outputId);
-      if (deps.resolveOutputOwner && !ownerNew) {
-        throw new OwnershipError(
-          `OwnershipError: content output not found: ${outputId}`,
-        );
-      }
-      if (ownerNew?.status === "archived") {
-        throw new ConflictError(
-          "ConflictError: archived project cannot register a publication",
-          {
-            reason: "target_project_archived",
-            canonicalProjectId: ownerNew.projectId,
-            canonicalProjectTitle: ownerNew.title,
-          },
-        );
-      }
-      const repo = repoFor(ctx);
-      let existing = await repo.findByExternalKey(
-        input.platform,
-        input.externalId,
-      );
-
-      // 无 existing → 创建；若唯一索引竞争失败，回读 winner 后继续同一判定矩阵。
-      if (!existing) {
-        try {
-          const created = await repo.createImportedPublication(outputId, {
-            platform: input.platform,
-            accountReference:
-              input.accountReference ?? `${input.platform} 导入`,
-            externalId: input.externalId,
-            externalUrl: input.externalUrl?.trim() || null,
-            publishedAt: input.publishedAt ?? null,
-            title: input.title?.trim(),
-          });
-          await markOwnerPublishedBestEffort(ctx, outputId);
-          if (ownerNew) {
-            await reconcileImportedBestEffort(ctx, {
-              platform: input.platform,
-              externalId: input.externalId,
-              canonicalProjectId: ownerNew.projectId,
-            });
-          }
-          return created;
-        } catch (error) {
-          existing = await repo.findByExternalKey(
-            input.platform,
-            input.externalId,
-          );
-          if (!existing) throw error;
-        }
-      }
-
-      // same-output 幂等成功也必须重进补偿，修复上一次换锚成功但归档失败的残留。
-      if (existing.contentOutputId === outputId) {
-        await markOwnerPublishedBestEffort(ctx, outputId);
-        if (ownerNew) {
-          await reconcileImportedBestEffort(ctx, {
-            platform: input.platform,
-            externalId: input.externalId,
-            canonicalProjectId: ownerNew.projectId,
-          });
-        }
-        return existing;
-      }
-
-      const ownerOld = await resolveOwner(ctx, existing.contentOutputId);
-
-      // 同一项目的另一个 output 已持有作品：项目身份没有冲突，保持现锚并补跑收口。
-      if (ownerNew && ownerOld?.projectId === ownerNew.projectId) {
-        await markOwnerPublishedBestEffort(ctx, existing.contentOutputId);
-        await reconcileImportedBestEffort(ctx, {
-          platform: input.platform,
-          externalId: input.externalId,
-          canonicalProjectId: ownerNew.projectId,
-        });
-        return existing;
-      }
-
-      // 只有 orphan repair 或 imported→非 imported 才自动换锚。
-      if (
-        ownerNew &&
-        (!ownerOld ||
-          (ownerOld.source === "imported" && ownerNew.source !== "imported"))
-      ) {
-        const reAnchored = await repo.reAnchorPublicationOutput(
-          existing.id,
-          outputId,
-        );
-        await markOwnerPublishedBestEffort(ctx, outputId);
-        await reconcileImportedBestEffort(ctx, {
-          platform: input.platform,
-          externalId: input.externalId,
-          canonicalProjectId: ownerNew.projectId,
-        });
-        return reAnchored;
-      }
-
-      // 生产 owner 已知时，manual/manual 或 imported/imported 争抢都明确 409，不能返回
-      // existing 让调用端误以为当前项目登记成功。同租户 owner 信息由 Projects 门验证后才返回。
-      if (ownerOld && ownerNew) {
-        throw new ConflictError(
-          "ConflictError: external work is already owned by another project",
-          {
-            reason: "external_work_owned_by_another_project",
-            canonicalProjectId: ownerOld.projectId,
-            canonicalProjectTitle: ownerOld.title,
-          },
-        );
-      }
-
-      // 仅兼容未注入 owner 端口的旧最小单测组合：不抢、不谎称换锚。
-      await markOwnerPublishedBestEffort(ctx, existing.contentOutputId);
-      return existing;
+    async registerOwnerPublication(ctx,outputId,input){
+      if(!PLATFORMS.has(input.platform))throw new ValidationError(`ValidationError: unknown platform: ${input.platform}`);
+      await assertOutputOwned(ctx,outputId);
+      const targetCtx={...ctx,accountId:input.accountId??ctx.accountId,membershipVersion:input.expectedMembershipVersion??ctx.membershipVersion};
+      const existing=await repoFor(targetCtx).findByExternalKey(input.platform,input.externalId);
+      const owners=new Map<string,Awaited<ReturnType<typeof resolveOwner>>>([[outputId,await resolveOwner(ctx,outputId)]]);
+      if(existing&&existing.contentOutputId!==outputId)owners.set(existing.contentOutputId,await resolveOwner(ctx,existing.contentOutputId));
+      const afterCommit:Array<()=>Promise<void>>=[];
+      const result=await withTarget(targetCtx,input.platform,repo=>registerOwnerPublicationInRepo(targetCtx,outputId,input,repo,owners,afterCommit));
+      for(const effect of afterCommit)await effect();return result;
     },
 
     async listPublicationIdsByProject(ctx, projectId) {
@@ -936,6 +1011,7 @@ export function createPublishingService(deps: ServiceDeps): PublishingService {
     },
 
     async setCover(ctx, publicationId, coverAssetId) {
+      if(ctx.source!=="ingestion")await assertWritableWorkspace(deps.db,ctx);
       const repo = repoFor(ctx);
       await repo.getPublication(publicationId); // ownership gate(cross-user → 404)
       const current = await repo.getCurrentRevision(publicationId);

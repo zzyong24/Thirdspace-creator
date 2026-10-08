@@ -28,7 +28,7 @@ export async function createChatHostToolAdapter(prototypes: ToolSet, resolve: Re
     };
     async function current(ctx: RequestContext, execution: ExecutionRef, signal?: AbortSignal) {
       signal?.throwIfAborted();
-      if (!ctx.userId || !ctx.accountId) throw new Error("宿主工具缺少真实账号上下文");
+      if (!ctx.userId || (!ctx.accountId&&!ctx.groupId)) throw new Error("宿主工具缺少真实账号上下文");
       const available = await resolve(ctx, execution, signal);
       signal?.throwIfAborted();
       const tool = Object.hasOwn(available, definition.name) ? available[definition.name] : undefined;

@@ -1,3 +1,4 @@
+import {workspaceKey,workspaceFilter,workspaceStamp,assertWritableWorkspace} from "@creatoros/backend";
 import { and, asc, desc, eq, type Db } from "@creatoros/backend";
 import {
   rubrics,
@@ -31,7 +32,8 @@ export interface RepoDeps {
   // [T-332 S2 · ISO-02/03] 第二所有权维度,**必填 strict**:逐个 list/get/count 读门恒叠
   // eq(table.accountId),写路径盖章当前号。未选号在 service 入口 requireAccountId 即被拒
   // (SPEC §4.2 引导态),无「null → 退化全量」分支。
-  accountId: string;
+  accountId?: string | null;
+  groupId?: string | null;
 }
 
 export interface RubricDimension {
@@ -150,6 +152,9 @@ export function createCalibrationRepository(
   db: Db,
   deps: RepoDeps,
 ): CalibrationRepository {
+  const scope = workspaceKey(deps);
+  const stamp = workspaceStamp(scope);
+  const writable = () => assertWritableWorkspace(db, {userId:deps.userId,...stamp,requestId:"shared-domain-write",source:"user"});
   async function getRubricRow(rubricId: string): Promise<RubricRow> {
     const rows = await db
       .select()
@@ -158,7 +163,7 @@ export function createCalibrationRepository(
         and(
           eq(rubrics.userId, deps.userId),
           // [T-332 S2 · ISO-02] 号维度 strict 恒叠。
-          eq(rubrics.accountId, deps.accountId),
+          workspaceFilter(rubrics, scope),
           eq(rubrics.id, rubricId),
         ),
       );
@@ -179,7 +184,7 @@ export function createCalibrationRepository(
         and(
           eq(rubricVersions.userId, deps.userId),
           // [T-332 S2 · ISO-02] 号维度 strict 恒叠。
-          eq(rubricVersions.accountId, deps.accountId),
+          workspaceFilter(rubricVersions, scope),
           eq(rubricVersions.id, versionId),
         ),
       );
@@ -200,7 +205,7 @@ export function createCalibrationRepository(
         and(
           eq(predictions.userId, deps.userId),
           // [T-332 S2 · ISO-02] 号维度 strict 恒叠。
-          eq(predictions.accountId, deps.accountId),
+          workspaceFilter(predictions, scope),
           eq(predictions.id, predictionId),
         ),
       );
@@ -243,13 +248,14 @@ export function createCalibrationRepository(
     },
 
     async createRubric({ name }) {
+      await writable();
       const inserted = await db
         .insert(rubrics)
         .values({
           id: deps.nextId("rubric"),
           userId: deps.userId,
           // [T-332 S2 · ISO-03] 号维度盖章(必填,无 null 兜底)。
-          accountId: deps.accountId,
+          ...stamp,
           name,
           currentVersionId: null,
           createdAt: deps.now(),
@@ -259,6 +265,9 @@ export function createCalibrationRepository(
     },
 
     async insertRubricVersion(input) {
+      await writable();
+      const parent=await getRubricRow(input.rubricId);
+      if(parent.groupId)await assertWritableWorkspace(db,{userId:deps.userId,groupId:parent.groupId,requestId:"parent-write",source:"user"});
       // Never an update — each call is a NEW immutable row (data-model 约束 6).
       const inserted = await db
         .insert(rubricVersions)
@@ -266,7 +275,7 @@ export function createCalibrationRepository(
           id: deps.nextId("rubricver"),
           userId: deps.userId,
           // [T-332 S2 · ISO-03] 号维度盖章(与父 rubric 同号;必填)。
-          accountId: deps.accountId,
+          ...stamp, groupId: parent.groupId ?? stamp.groupId,
           rubricId: input.rubricId,
           versionNumber: input.versionNumber,
           dimensions: input.dimensions,
@@ -278,12 +287,15 @@ export function createCalibrationRepository(
     },
 
     async setRubricCurrentVersion(rubricId, versionId) {
+      await writable();
+      const version=await getRubricVersionRow(versionId);
+      if(version.rubricId!==rubricId)throw new OwnershipError("Rubric version not found");
       await getRubricRow(rubricId); // scoped ownership gate
       // The ONLY rubric mutation — re-points the pointer; version rows stay immutable.
       const updated = await db
         .update(rubrics)
         .set({ currentVersionId: versionId })
-        .where(and(eq(rubrics.userId, deps.userId), eq(rubrics.id, rubricId)))
+        .where(and(eq(rubrics.userId, deps.userId), workspaceFilter(rubrics, scope), eq(rubrics.id, rubricId)))
         .returning();
       return updated[0]!;
     },
@@ -304,7 +316,7 @@ export function createCalibrationRepository(
           and(
             eq(rubricVersions.userId, deps.userId),
             // [T-332 S2 · ISO-02] 号维度 strict 恒叠。
-            eq(rubricVersions.accountId, deps.accountId),
+            workspaceFilter(rubricVersions, scope),
             eq(rubricVersions.rubricId, rubricId),
           ),
         )
@@ -319,7 +331,7 @@ export function createCalibrationRepository(
           and(
             eq(rubricVersions.userId, deps.userId),
             // [T-332 S2 · ISO-02] 号维度 strict 恒叠。
-            eq(rubricVersions.accountId, deps.accountId),
+            workspaceFilter(rubricVersions, scope),
             eq(rubricVersions.rubricId, rubricId),
           ),
         );
@@ -327,13 +339,16 @@ export function createCalibrationRepository(
     },
 
     async createPrediction(input) {
+      await writable();
+      const parent=await getRubricVersionRow(input.rubricVersionId);
+      if(parent.groupId)await assertWritableWorkspace(db,{userId:deps.userId,groupId:parent.groupId,requestId:"parent-write",source:"user"});
       const inserted = await db
         .insert(predictions)
         .values({
           id: deps.nextId("pred"),
           userId: deps.userId,
           // [T-332 S2 · ISO-03] 号维度盖章(必填,无 null 兜底)。
-          accountId: deps.accountId,
+          ...stamp, groupId: parent.groupId ?? stamp.groupId,
           subjectType: input.subjectType,
           subjectId: input.subjectId,
           rubricVersionId: input.rubricVersionId,
@@ -350,6 +365,7 @@ export function createCalibrationRepository(
     },
 
     async lockPrediction(predictionId) {
+      await writable();
       await getPredictionRow(predictionId); // scoped ownership gate
       // The SQL `status='draft'` guard backs the immutability invariant at the DB layer
       // (a re-lock of an already-locked prediction matches 0 rows). The service enforces
@@ -360,6 +376,7 @@ export function createCalibrationRepository(
         .where(
           and(
             eq(predictions.userId, deps.userId),
+            workspaceFilter(predictions, scope),
             eq(predictions.id, predictionId),
             eq(predictions.status, "draft"),
           ),
@@ -376,7 +393,7 @@ export function createCalibrationRepository(
       // [T-332 S2 · ISO-02] 号维度 strict 恒叠(无「无号全量」退化)。
       const where = and(
         eq(predictions.userId, deps.userId),
-        eq(predictions.accountId, deps.accountId),
+        workspaceFilter(predictions, scope),
       );
       const rows = await db
         .select()
@@ -393,6 +410,9 @@ export function createCalibrationRepository(
     },
 
     async createResult(input) {
+      await writable();
+      const parent=await getPredictionRow(input.predictionId);
+      if(parent.groupId)await assertWritableWorkspace(db,{userId:deps.userId,groupId:parent.groupId,requestId:"parent-write",source:"user"});
       // Idempotent on UNIQUE prediction_id: a re-submit inserts nothing and the
       // read-back returns the existing row (never double-feeds the rubric/Learning).
       await db
@@ -401,7 +421,7 @@ export function createCalibrationRepository(
           id: deps.nextId("calibres"),
           userId: deps.userId,
           // [T-332 S2 · ISO-03] 号维度盖章(与父 prediction 同号;必填)。
-          accountId: deps.accountId,
+          ...stamp, groupId: parent.groupId ?? stamp.groupId,
           predictionId: input.predictionId,
           ingestionRunId: input.ingestionRunId,
           actualMetrics: input.actualMetrics,
@@ -416,7 +436,7 @@ export function createCalibrationRepository(
           and(
             eq(calibrationResults.userId, deps.userId),
             // [T-332 S2 · ISO-02] 号维度 strict 恒叠。
-            eq(calibrationResults.accountId, deps.accountId),
+            workspaceFilter(calibrationResults, scope),
             eq(calibrationResults.predictionId, input.predictionId),
           ),
         );
@@ -431,7 +451,7 @@ export function createCalibrationRepository(
           and(
             eq(calibrationResults.userId, deps.userId),
             // [T-332 S2 · ISO-02] 号维度 strict 恒叠。
-            eq(calibrationResults.accountId, deps.accountId),
+            workspaceFilter(calibrationResults, scope),
             eq(calibrationResults.predictionId, predictionId),
           ),
         );
@@ -446,7 +466,7 @@ export function createCalibrationRepository(
           and(
             eq(predictions.userId, deps.userId),
             // [T-332 S2 · ISO-02] 号维度 strict 恒叠。
-            eq(predictions.accountId, deps.accountId),
+            workspaceFilter(predictions, scope),
           ),
         )
         .orderBy(desc(predictions.createdAt));
@@ -460,13 +480,14 @@ export function createCalibrationRepository(
           and(
             eq(calibrationResults.userId, deps.userId),
             // [T-332 S2 · ISO-02] 号维度 strict 恒叠。
-            eq(calibrationResults.accountId, deps.accountId),
+            workspaceFilter(calibrationResults, scope),
           ),
         )
         .orderBy(desc(calibrationResults.createdAt));
     },
 
     async createRuleSuggestion(input) {
+      await writable();
       // Idempotent reflow: if a PENDING suggestion already exists for this
       // (learning, rubric), return it instead of inserting a duplicate — re-clicking
       // 回流到校准 never spawns a second pending row.
@@ -477,7 +498,7 @@ export function createCalibrationRepository(
           and(
             eq(calibrationRuleSuggestions.userId, deps.userId),
             // [T-332 S2 · ISO-02] 号维度 strict 恒叠。
-            eq(calibrationRuleSuggestions.accountId, deps.accountId),
+            workspaceFilter(calibrationRuleSuggestions, scope),
             eq(calibrationRuleSuggestions.learningId, input.learningId),
             eq(calibrationRuleSuggestions.rubricId, input.rubricId),
             eq(calibrationRuleSuggestions.status, "pending"),
@@ -490,7 +511,7 @@ export function createCalibrationRepository(
           id: deps.nextId("calibsug"),
           userId: deps.userId,
           // [T-332 S2 · ISO-03] 号维度盖章(必填,无 null 兜底)。
-          accountId: deps.accountId,
+          ...stamp,
           learningId: input.learningId,
           rubricId: input.rubricId,
           status: "pending",
@@ -512,7 +533,7 @@ export function createCalibrationRepository(
           and(
             eq(calibrationRuleSuggestions.userId, deps.userId),
             // [T-332 S2 · ISO-02] 号维度 strict 恒叠。
-            eq(calibrationRuleSuggestions.accountId, deps.accountId),
+            workspaceFilter(calibrationRuleSuggestions, scope),
             eq(calibrationRuleSuggestions.id, suggestionId),
           ),
         );
@@ -529,7 +550,7 @@ export function createCalibrationRepository(
       // [T-332 S2 · ISO-02] 号维度 strict 恒叠(无「无号全量」退化)。
       const where = and(
         eq(calibrationRuleSuggestions.userId, deps.userId),
-        eq(calibrationRuleSuggestions.accountId, deps.accountId),
+        workspaceFilter(calibrationRuleSuggestions, scope),
         eq(calibrationRuleSuggestions.status, "pending"),
       );
       const rows = await db
@@ -547,6 +568,7 @@ export function createCalibrationRepository(
     },
 
     async markRuleSuggestionAdopted(suggestionId, input) {
+      await writable();
       // SQL `status='pending'` guard backs the terminal invariant (a re-adopt of an
       // already-terminal suggestion matches 0 rows). The service enforces the state
       // machine + ownership on top.
@@ -560,6 +582,7 @@ export function createCalibrationRepository(
         .where(
           and(
             eq(calibrationRuleSuggestions.userId, deps.userId),
+            workspaceFilter(calibrationRuleSuggestions, scope),
             eq(calibrationRuleSuggestions.id, suggestionId),
             eq(calibrationRuleSuggestions.status, "pending"),
           ),

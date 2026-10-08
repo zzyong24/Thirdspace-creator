@@ -407,7 +407,7 @@ function RecentPublicationsCard({
                     {row.title}
                   </span>
                   <span className="text-xs text-muted-foreground tabular-nums">
-                    {row.views.toLocaleString()} 次播放
+                    {row.views === null ? "尚未采集" : `${row.views.toLocaleString()} ${row.platform === "wechatOfficial" ? "次阅读" : "次播放"}`}
                   </span>
                 </div>
               </div>

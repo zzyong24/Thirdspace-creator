@@ -291,7 +291,7 @@ describe("publishing.repository — strict account isolation (T-332 S2)", () => 
     // 跨号命中:平台唯一锚不可能跨号双属 → 数据 bug,诚实抛错,绝不静默返回。
     await expect(
       repo1.findByExternalKey("douyin", "aweme-xkey"),
-    ).rejects.toThrow(/归属号与当前 ctx 不一致/);
+    ).rejects.toBeInstanceOf(OwnershipError);
     // 未命中:诚实 null(不是错)。
     await expect(
       repo1.findByExternalKey("douyin", "aweme-missing"),

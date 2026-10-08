@@ -23,6 +23,7 @@ import { positioningOperations } from "./operations/positioning";
 // [T-052 裁决③] monetizationOperations 已随变现中心物理删除(宪法 §8「变现中心移除」)。
 import { candidateOperations } from "./operations/candidate";
 import { calibrationOperations } from "./operations/calibration";
+import { accountGroupOperations } from "./operations/account-groups";
 import { platformAccountOperations } from "./operations/platform-accounts";
 import { contentCalendarOperations } from "./operations/content-calendar";
 import { materialLinksOperations } from "./operations/material-links";
@@ -116,6 +117,7 @@ export const ENDPOINTS = {
   ...candidateOperations,
   ...calibrationOperations,
   ...platformAccountOperations,
+  ...accountGroupOperations,
   ...contentCalendarOperations,
   ...materialLinksOperations,
   // [T-212a] 对标源 CRUD(选题/对标强化，SPEC 2026-07-11 §2.1)。

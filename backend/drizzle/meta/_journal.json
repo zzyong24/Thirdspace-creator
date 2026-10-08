@@ -710,10 +710,143 @@
       "breakpoints": true
     },
     {
+      "idx": 101,
+      "version": "7",
+      "when": 1790761007000,
+      "tag": "0101_topic_rewrite_only",
+      "breakpoints": true
+    },
+    {
       "idx": 102,
       "version": "7",
       "when": 1790942400000,
       "tag": "0102_audience_task_workspace",
+      "breakpoints": true
+    },
+    {
+      "idx": 103,
+      "version": "7",
+      "when": 1790942400001,
+      "tag": "0102_account_groups",
+      "breakpoints": true
+    },
+    {
+      "idx": 104,
+      "version": "7",
+      "when": 1790942400002,
+      "tag": "0103_group_projects",
+      "breakpoints": true
+    },
+    {
+      "idx": 105,
+      "version": "7",
+      "when": 1790942400003,
+      "tag": "0104_group_knowledge_positioning",
+      "breakpoints": true
+    },
+    {
+      "idx": 106,
+      "version": "7",
+      "when": 1790942400004,
+      "tag": "0107_group_resources",
+      "breakpoints": true
+    },
+    {
+      "idx": 107,
+      "version": "7",
+      "when": 1790942400005,
+      "tag": "0108_group_platform_facts",
+      "breakpoints": true
+    },
+    {
+      "idx": 108,
+      "version": "7",
+      "when": 1790942400006,
+      "tag": "0105_group_shared_domains",
+      "breakpoints": true
+    },
+    {
+      "idx": 109,
+      "version": "7",
+      "when": 1790942400007,
+      "tag": "0106_group_tasks_intelligence",
+      "breakpoints": true
+    },
+    {
+      "idx": 110,
+      "version": "7",
+      "when": 1790942400008,
+      "tag": "0110_group_migration_ledger",
+      "breakpoints": true
+    },
+    {
+      "idx": 111,
+      "version": "7",
+      "when": 1790942400009,
+      "tag": "0111_group_skill_overlays",
+      "breakpoints": true
+    },
+    {
+      "idx": 112,
+      "version": "7",
+      "when": 1790942400010,
+      "tag": "0109_group_calendar",
+      "breakpoints": true
+    },
+    {
+      "idx": 113,
+      "version": "7",
+      "when": 1790942400011,
+      "tag": "0112_group_pending_assets",
+      "breakpoints": true
+    },
+    {
+      "idx": 114,
+      "version": "7",
+      "when": 1790942400012,
+      "tag": "0114_legacy_shared_group_stamp",
+      "breakpoints": true
+    },
+    {
+      "idx": 115,
+      "version": "7",
+      "when": 1790942400013,
+      "tag": "0115_group_grant_uses",
+      "breakpoints": true
+    },
+    {
+      "idx": 116,
+      "version": "7",
+      "when": 1790942400014,
+      "tag": "0113_group_research_sources",
+      "breakpoints": true
+    },
+    {
+      "idx": 117,
+      "version": "7",
+      "when": 1790942400015,
+      "tag": "0117_group_project_derived",
+      "breakpoints": true
+    },
+    {
+      "idx": 118,
+      "version": "7",
+      "when": 1790942400016,
+      "tag": "0119_group_transcription_knowledge_adoption",
+      "breakpoints": true
+    },
+    {
+      "idx": 119,
+      "version": "7",
+      "when": 1790942400017,
+      "tag": "0118_group_audience_facts",
+      "breakpoints": true
+    },
+    {
+      "idx": 120,
+      "version": "7",
+      "when": 1790942400018,
+      "tag": "0120_group_onboarding_state",
       "breakpoints": true
     }
   ]

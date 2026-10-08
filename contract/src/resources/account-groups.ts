@@ -1,0 +1,11 @@
+import { z } from "zod";
+import { id, iso8601, platformId } from "../primitives";
+export const groupMemberResource=z.object({id,accountId:id,groupId:id,platform:platformId,accountHandle:z.string(),status:z.enum(["active","archived"]),version:z.number().int().positive(),joinedAt:iso8601,leftAt:iso8601.nullable()});
+export const accountGroupResource=z.object({id,userId:id,name:z.string().min(1),status:z.enum(["active","archived"]),version:z.number().int().positive(),createdAt:iso8601,updatedAt:iso8601,members:z.array(groupMemberResource)});
+export const groupTransferPreview=z.object({accountId:id,fromGroupId:id,toGroupId:id,expectedMembershipVersion:z.number().int().positive(),digest:z.string(),activeTaskCount:z.number().int().min(0),impact:z.object({historyPublicationCount:z.number().int().min(0),pendingPublicationTargetCount:z.number().int().min(0),sharedProjectCount:z.number().int().min(0),positioningCount:z.number().int().min(0),assetReferenceCount:z.number().int().min(0)}).optional(),historyPolicy:z.literal("keep_original_group")});
+export type AccountGroupResource=z.infer<typeof accountGroupResource>;
+export type GroupMemberResource=z.infer<typeof groupMemberResource>;
+export type GroupTransferPreview=z.infer<typeof groupTransferPreview>;
+export const groupMigrationSelection=z.object({fromGroupId:id,toGroupId:id,projectIds:z.array(id).default([]),knowledgeIds:z.array(id).default([]),conversationIds:z.array(id).default([])});
+export const groupMigrationPreview=z.object({fromGroupId:id,toGroupId:id,digest:z.string(),sourceVersion:z.number().int(),targetVersion:z.number().int(),projects:z.array(z.object({id,title:z.string()})),counts:z.record(z.string(),z.number().int()),grants:z.array(z.object({resourceType:z.enum(['asset','knowledge']),resourceId:id,originGroupId:id})),requiredKnowledgeIds:z.array(id).optional(),requiredProjectIds:z.array(id)});
+export const groupMigrationResource=z.object({id,fromGroupId:id,toGroupId:id,status:z.enum(['applied','undone']),createdAt:iso8601,undoneAt:iso8601.nullable()});

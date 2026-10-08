@@ -1,3 +1,4 @@
+import {requireWorkspace} from "../../workspace-scope";
 import {z} from "zod";
 import type {RequestContext} from "@creatoros/contract";
 import {requireAccountId,type Db} from "@creatoros/backend";
@@ -19,7 +20,7 @@ export interface PreparedAiTaskCommit {
 /** 配置读取与数据库提交分离；准备阶段不创建任务或执行模型。 */
 export async function prepareAiTaskCommit(deps:ServiceDeps,ctx:RequestContext,input:CreateTaskInput & {attemptId:string}):Promise<PreparedAiTaskCommit>{
  const context=structuredClone(ctx),body=structuredClone(input);
- const accountId=requireAccountId(context.accountId,"ai.prepareTaskCommit");
+ requireWorkspace(context);const accountId=context.accountId??null;
  if(typeof body.attemptId!=="string" || body.attemptId.length<16 || body.attemptId.length>128)throw new AttemptIdInvalidError();
  const inputData=body.inputData??{};
  const reserved=["skillSnapshot","platformPolicy"].filter(key=>Object.prototype.hasOwnProperty.call(inputData,key));
@@ -30,7 +31,7 @@ export async function prepareAiTaskCommit(deps:ServiceDeps,ctx:RequestContext,in
   const txDb=tx as unknown as Db;
   const service=createAiService({...deps,db:txDb,resolveTaskRuntimeData:async()=>({...structuredClone(runtimeData),hostTaskSubmission:binding})});
   const task=await service.createTask(context,structuredClone(body));
-  const row=await createAiRepository(txDb,{now:deps.now,nextId:deps.nextId,userId:context.userId,accountId}).requireTask(task.id);
+  const row=await createAiRepository(txDb,{now:deps.now,nextId:deps.nextId,userId:context.userId,accountId,groupId:context.groupId,membershipVersion:context.membershipVersion}).requireTask(task.id);
   // SEMANTIC_BOUNDARY_ALLOW:提交来源精确相等是事务幂等校验，不判断内容语义。
   if(canonicalJson((row.runtimeData as Record<string,unknown>).hostTaskSubmission)!==canonicalJson(binding))throw new ConflictError("任务提交来源与父调用不符，不能接管原任务");
   return task;

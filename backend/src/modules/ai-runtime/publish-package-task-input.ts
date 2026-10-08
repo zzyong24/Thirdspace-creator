@@ -5,7 +5,7 @@ export async function preparePublishPackageTaskInput(ctx:RequestContext,input:{p
  listOutputIdsByProject(ctx:RequestContext,projectId:string):Promise<string[]>;
 }){
  const context=structuredClone(ctx),request=structuredClone(input);
- if(!context.userId || !context.accountId)throw new Error("发布物料准备缺少真实账号");
+ if(!context.userId || (!context.accountId&&!context.groupId))throw new Error("发布物料准备缺少真实账号");
  const scriptText=await deps.getScript(context,request.projectId);
  if(scriptText.trim().length<40)throw new Error("当前项目还没有可用的整稿(稿面为空或太短)—— 先生成整稿并采纳写入稿面,再来生成发布物料,别给空稿打包。");
  const outputId=(await deps.listOutputIdsByProject(context,request.projectId))[0];

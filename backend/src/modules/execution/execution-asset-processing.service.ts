@@ -1,3 +1,4 @@
+import {workspaceFilter} from "../../workspace-scope";
 import { createHash } from 'node:crypto';
 import { isDeepStrictEqual } from 'node:util';
 import { and, eq, asc, aiTasks, aiTaskResults, executionTasks, executionCalls, type Db } from '@creatoros/backend';
@@ -15,7 +16,7 @@ export function createExecutionAssetProcessingService(db: Db, deps: {
     const now = deps.now ?? (() => new Date().toISOString()), leases = createExecutionLeaseService(db, { now }), domain = createAssetProcessingService();
     type Scope = Parameters<Parameters<typeof leases.withLease>[2]>[0];
     const bind = async ({ tx, task, context }: Scope) => {
-        const [business] = await tx.select().from(aiTasks).where(and(eq(aiTasks.id, task.ownerId), eq(aiTasks.executionTaskId, task.id), eq(aiTasks.userId, context.userId), eq(aiTasks.accountId, context.accountId!))).for('update');
+        const [business] = await tx.select().from(aiTasks).where(and(eq(aiTasks.id, task.ownerId), eq(aiTasks.executionTaskId, task.id), eq(aiTasks.userId, context.userId), workspaceFilter(aiTasks,context))).for('update');
         const model = structuredGenerationInputSchema.parse((task.payload as {
             modelInput?: unknown;
         }).modelInput), target = assetProcessingInputSchema.parse(JSON.parse(model.facets.__assetProcessing ?? 'null'));

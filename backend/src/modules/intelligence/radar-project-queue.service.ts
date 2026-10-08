@@ -56,7 +56,7 @@ export function createRadarProjectQueueService(deps: RadarProjectQueueDeps) {
       await deps.tasks.recoverExpiredLeases({kinds: ["radar_project_upgrade"]});
       const claim = await deps.tasks.claimNext({kinds: ["radar_project_upgrade"], workerId: `radar-project:${Date.now()}`, leaseSeconds: 60});
       if (!claim) return;
-      const ctx: RequestContext = {userId: claim.task.userId, accountId: claim.task.accountId, requestId: `radar:${claim.task.id}`, source: "user"};
+      const ctx: RequestContext = {userId: claim.task.userId, accountId: claim.task.accountId,groupId:claim.task.groupId,groupVersion:claim.task.groupVersion??undefined,membershipVersion:claim.task.membershipVersion??undefined, requestId: `radar:${claim.task.id}`, source: "user"};
       const lease = {taskId: claim.task.id, workerId: claim.lease.workerId, attempt: claim.lease.attempt, fenceToken: claim.lease.fenceToken};
       let checkpoint: Checkpoint = {stage: "queued", ...claim.task.checkpoint as Partial<Checkpoint>};
       const live = async () => {
@@ -119,7 +119,7 @@ export function createRadarProjectQueueService(deps: RadarProjectQueueDeps) {
           const sourceSnapshotId = detail.snapshots[0]?.id;
           if (!sourceSnapshotId) throw new Error("作品缺少来源快照");
           if (!await live()) return;
-          const preview = await deps.intelligence.startTopicPreview(ctx, {itemId, sourceSnapshotId, positioningVersionId: String(claim.payload.positioningVersionId), idempotencyKey: `${claim.task.id}:preview`});
+          const preview = await deps.intelligence.startTopicPreview(ctx, {itemId, sourceSnapshotId, positioningVersionId: String(claim.payload.positioningVersionId), strategyBacked: true, idempotencyKey: `${claim.task.id}:preview`});
           await save({stage: "generating", topicTaskId: preview.task.id, transformId: preview.transform.id});
         }
         if (!await childReady(checkpoint.topicTaskId!)) return;

@@ -554,3 +554,7 @@ describe("ProjectsPage", () => {
     ).toBeNull();
   });
 });
+
+it("账号组空项目口径允许继续创作，不再声称按抖音号隔离",async()=>{
+ const {buildProjectsViewModel}=await import("@/fixtures/selectors");await renderProjects({viewModel:buildProjectsViewModel([]),groupId:"real-group"});expect(screen.getByText("这个账号组还没有项目")).toBeInTheDocument();expect(screen.getByText(/项目属于当前账号组/)).toBeInTheDocument();expect(screen.queryByText(/项目按抖音号隔离/)).toBeNull();
+});

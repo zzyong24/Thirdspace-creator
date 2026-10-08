@@ -525,7 +525,7 @@ function overlayView(
   const errors = compatibilityErrors(base, overlay);
   return {
     skillId: base.skillId,
-    accountId: row?.accountId ?? ctx.accountId ?? null,
+    accountId:ctx.groupId?null:row?.accountId ?? ctx.accountId ?? null,groupId:row?.groupId??ctx.groupId??null,
     baseVersion: base.baseVersion,
     editableFields: [...base.editableFields],
     completionPolicySupported: Boolean(base.completionPolicyAdapter),
@@ -777,7 +777,7 @@ export function createSettingsService(
       // A fresh channel install may not have a selected account yet; in that
       // state there is simply no account overlay to merge. Mutating and
       // single-overlay operations remain account-scoped below.
-      const rows = ctx.accountId?.trim()
+      const rows = ctx.groupId?.trim()||ctx.accountId?.trim()
         ? await repoForCtx(ctx).listAccountSkillOverlays(ctx)
         : [];
       const bySkill = new Map(rows.map((row) => [row.skillId, row]));
@@ -832,7 +832,7 @@ export function createSettingsService(
           return {
             id: row.id,
             skillId: row.skillId,
-            accountId: row.accountId,
+            accountId: row.accountId,groupId:row.groupId,
             rowRevision: row.rowRevision,
             observedBaseVersion: row.observedBaseVersion,
             overlayVersion: row.overlayVersion,

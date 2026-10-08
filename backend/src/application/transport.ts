@@ -20,7 +20,7 @@ import {INTELLIGENCE_OP_IDS} from "../modules/intelligence";
 import {POSITIONING_OP_IDS} from "../modules/positioning";
 import {CANDIDATE_OP_IDS} from "../modules/candidate";
 import {CALIBRATION_OP_IDS} from "../modules/calibration";
-import {PLATFORM_ACCOUNT_OP_IDS} from "../modules/platform-account";
+import {ACCOUNT_GROUP_OP_IDS,PLATFORM_ACCOUNT_OP_IDS} from "../modules/platform-account";
 import {SCHEDULING_OP_IDS} from "../modules/scheduling";
 import {CONTENT_CALENDAR_OP_IDS} from "../modules/content-calendar";
 import {MATERIAL_LINKS_OP_IDS} from "../modules/material-links";
@@ -54,6 +54,7 @@ const operations = {
   candidate: CANDIDATE_OP_IDS,
   calibration: CALIBRATION_OP_IDS,
   platformAccount: PLATFORM_ACCOUNT_OP_IDS,
+  accountGroup: ACCOUNT_GROUP_OP_IDS,
   scheduling: SCHEDULING_OP_IDS,
   contentCalendar: CONTENT_CALENDAR_OP_IDS,
   materialLinks: MATERIAL_LINKS_OP_IDS,

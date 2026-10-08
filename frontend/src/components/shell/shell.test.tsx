@@ -171,6 +171,7 @@ describe("AppShell", () => {
     // under it (定位→选题→项目 upstream order: 定位约束选题, 选题落地为项目).
     expect(labels).toEqual([
       "首页",
+      "创作者总览",
       "定位中心",
       "内容雷达",
       "选题",
@@ -188,7 +189,7 @@ describe("AppShell", () => {
     await renderShell();
     const assertLinks = () => {
       const links = within(screen.getByRole("navigation", { name: "主要导航" })).getAllByRole("link");
-      expect(links).toHaveLength(11);
+      expect(links).toHaveLength(12);
       for (const link of links) {
         expect(link).toHaveAttribute("data-prefetch", "false");
         expect(link.getAttribute("href")).toMatch(/^\//);

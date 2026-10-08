@@ -1,3 +1,5 @@
+import {requireWorkspace,assertWritableWorkspace} from "../../workspace-scope";
+import {assertFrozenWorkspaceMembership} from "../platform-account/membership-lock.service";
 import { calendarDate, type RequestContext } from "@creatoros/contract";
 import { requireAccountId, type Db } from "@creatoros/backend";
 import {
@@ -189,6 +191,7 @@ export interface CreateEntryInput {
   contentOutputId?: string | null;
   candidateId?: string | null;
   note?: string;
+  targetAccountId?: string | null;
 }
 export interface UpdateEntryInput {
   plannedAt?: string;
@@ -217,15 +220,21 @@ export interface LaggingAccount {
 }
 
 export interface ContentCalendarService {
+  listGroupCalendar(ctx:RequestContext,groupId:string,window:WindowQuery,pagination:Pagination):Promise<{rows:ContentCalendarEntryResource[];total:number}>;
+  createGroupEntry(ctx:RequestContext,groupId:string,body:CreateEntryInput):Promise<ContentCalendarEntryResource>;
+  getGroupCadence(ctx:RequestContext,groupId:string):Promise<PublishingCadenceResource|null>;
+  upsertGroupCadence(ctx:RequestContext,groupId:string,body:UpsertCadenceInput):Promise<PublishingCadenceResource>;
+  groupAttainment(ctx:RequestContext,groupId:string,window:WindowQuery):Promise<CadenceAttainmentResource>;
+  setEntryTarget(ctx:RequestContext,entryId:string,targetAccountId:string|null):Promise<ContentCalendarEntryResource>;
   listCalendar(
     ctx: RequestContext,
-    accountId: string,
+    accountId: string | null,
     window: WindowQuery,
     pagination: Pagination,
   ): Promise<{ rows: ContentCalendarEntryResource[]; total: number }>;
   createEntry(
     ctx: RequestContext,
-    accountId: string,
+    accountId: string | null,
     body: CreateEntryInput,
   ): Promise<ContentCalendarEntryResource>;
   updateEntry(
@@ -244,16 +253,16 @@ export interface ContentCalendarService {
   ): Promise<{ id: string; deleted: true }>;
   getCadence(
     ctx: RequestContext,
-    accountId: string,
+    accountId: string | null,
   ): Promise<PublishingCadenceResource | null>;
   upsertCadence(
     ctx: RequestContext,
-    accountId: string,
+    accountId: string | null,
     body: UpsertCadenceInput,
   ): Promise<PublishingCadenceResource>;
   attainment(
     ctx: RequestContext,
-    accountId: string,
+    accountId: string | null,
     window: WindowQuery,
   ): Promise<CadenceAttainmentResource>;
 
@@ -267,7 +276,7 @@ export interface ContentCalendarService {
   ): Promise<LaggingAccount[]>;
   listActiveProjectSchedules(
     ctx: RequestContext,
-    accountId: string,
+    accountId: string | null,
   ): Promise<ContentCalendarEntryResource[]>;
   reconcileProjectSchedule(
     ctx: RequestContext,
@@ -290,20 +299,46 @@ export function createContentCalendarService(
   // 工作区写 B 号日历」的绕过)。
   function repoFor(
     ctx: RequestContext,
-    currentAccountId: string,
+    currentAccountId: string | null,
   ): ContentCalendarRepository {
     const repoDeps: RepoDeps = {
       now,
       nextId,
       userId: ctx.userId,
-      accountId: currentAccountId,
+      accountId: ctx.groupId ? null : currentAccountId,
+      groupId: ctx.groupId,
+      ctx: ctx.groupId ? {...ctx,accountId:null,membershipVersion:undefined} : ctx,
     };
     return createContentCalendarRepository(db, repoDeps);
   }
 
+  function groupContext(ctx:RequestContext, groupId:string):RequestContext {
+    if (!ctx.groupId || ctx.groupId!==groupId) throw new OwnershipError("账号组不存在");
+    return {...ctx,accountId:null,membershipVersion:undefined};
+  }
+  async function scope(ctx:RequestContext,accountId:string|null,write=false):Promise<string|null> {
+    requireWorkspace(ctx);
+    if (write) await assertWritableWorkspace(db,ctx);
+    if (ctx.groupId) {
+      if (accountId!==null) throw new OwnershipError("请使用账号组日历入口");
+      return null;
+    }
+    const current=requireAccountId(ctx.accountId,"contentCalendar");
+    if (current!==accountId) throw new OwnershipError("平台账号不存在");
+    await deps.platformAccounts.getAccount(ctx,current);
+    return current;
+  }
+  async function entryDto(row:Parameters<typeof toContentCalendarEntryDto>[0]):Promise<ContentCalendarEntryResource> {
+    const dto=toContentCalendarEntryDto(row);
+    if (row.groupId && row.accountId) {
+      try { await db.transaction(tx=>assertFrozenWorkspaceMembership(tx,{userId:row.userId,groupId:row.groupId,accountId:row.accountId,groupVersion:null,membershipVersion:row.membershipVersion},{allowArchived:true})); }
+      catch { dto.targetStatus="needs_reselection"; }
+    }
+    return dto;
+  }
   // 显式 accountId 参数与 ctx 当前号的一致性门(§4.5 同语义,404 不泄露存在)。
   function assertCurrentAccount(
-    currentAccountId: string,
+    currentAccountId: string | null,
     paramAccountId: string,
   ): void {
     if (paramAccountId !== currentAccountId) {
@@ -415,7 +450,7 @@ export function createContentCalendarService(
   // attainment re-reads the rows after.
   async function reconcile(
     ctx: RequestContext,
-    accountId: string,
+    accountId: string | null,
     window: WindowQuery,
     cadence: PublishingCadenceResource | null,
   ): Promise<void> {
@@ -469,7 +504,7 @@ export function createContentCalendarService(
         await repo.setEntryStatus(entry.id, { status: "missed" });
         await deps.notifications.notify(ctx, {
           type: "cadence_gap",
-          accountId,
+          accountId: accountId!,
           message: `账号断更：计划 ${entry.plannedAt} 未发布`,
         });
       }
@@ -478,15 +513,25 @@ export function createContentCalendarService(
 
   async function attainmentFor(
     ctx: RequestContext,
-    accountId: string,
+    accountId: string | null,
     window: WindowQuery,
   ): Promise<CadenceAttainmentResource> {
     // 调用链上游已断言 accountId === ctx 当前号(assertCurrentAccount)。
     const repo = repoFor(ctx, accountId);
     const cadence = await repo.getCadence(accountId);
     const cadenceDto = cadence ? toPublishingCadenceDto(cadence) : null;
-    await reconcile(ctx, accountId, window, cadenceDto);
+    if (!ctx.groupId) await reconcile(ctx, accountId!, window, cadenceDto);
     const entries = await repo.entriesForAttainment(accountId, window);
+    // 组读侧按真实发布事实派生状态；归档历史可读，不在读请求里落库。
+    if (ctx.groupId) {
+      const {today}=await calendarContext(ctx);
+      for (const entry of entries) {
+        if (!entry.projectId) continue;
+        const fact=await deps.schedulePublishing.getProjectPublicationFact(ctx,entry.projectId);
+        if(fact){entry.status="published";entry.publishedAt=fact.publishedAt;}
+        else if(entry.status!=="published"&&entry.plannedDate<today)entry.status="missed";
+      }
+    }
 
     let plannedCount = 0;
     let publishedCount = 0;
@@ -521,6 +566,7 @@ export function createContentCalendarService(
 
     return {
       accountId,
+      groupId:ctx.groupId ?? null,
       from: window.from,
       to: window.to,
       plannedCount,
@@ -533,24 +579,36 @@ export function createContentCalendarService(
     };
   }
 
-  return {
+  const api:ContentCalendarService = {
+    async listGroupCalendar(ctx,groupId,window,pagination) { return api.listCalendar(groupContext(ctx,groupId),null,window,pagination); },
+    async createGroupEntry(ctx,groupId,body) {
+      if (!body.projectId || !body.plannedDate) throw new ValidationError("组排期需要项目和日期");
+      return api.createEntry(groupContext(ctx,groupId),null,body);
+    },
+    async getGroupCadence(ctx,groupId) { return api.getCadence(groupContext(ctx,groupId),null); },
+    async upsertGroupCadence(ctx,groupId,body) { return api.upsertCadence(groupContext(ctx,groupId),null,body); },
+    async groupAttainment(ctx,groupId,window) { return api.attainment(groupContext(ctx,groupId),null,window); },
+    async setEntryTarget(ctx,entryId,targetAccountId) {
+      requireWorkspace(ctx);await assertWritableWorkspace(db,ctx);
+      if(!ctx.groupId)throw new ValidationError("请使用账号组入口选择目标");
+      const repo=repoFor(groupContext(ctx,ctx.groupId),null),entry=await repo.getEntry(entryId);
+      if(entry.status==="published")throw new ConflictError("已发布排期不能修改目标");
+      if(entry.projectId)await assertProjectSchedulable(groupContext(ctx,ctx.groupId),entry.projectId);
+      return entryDto(await repo.setTarget(entryId,targetAccountId));
+    },
     async listCalendar(ctx, accountId, window, pagination) {
-      const acc = requireAccountId(ctx.accountId, "contentCalendar.listCalendar");
-      assertCurrentAccount(acc, accountId); // 号一致性门(§4.5)
-      await deps.platformAccounts.getAccount(ctx, accountId); // ownership gate
+      const acc = await scope(ctx,accountId,false);
       const { rows, total } = await repoFor(ctx, acc).listEntries(accountId, {
         from: window.from,
         to: window.to,
         limit: pagination.limit,
         offset: pagination.offset,
       });
-      return { rows: rows.map(toContentCalendarEntryDto), total };
+      return { rows: await Promise.all(rows.map(entryDto)), total };
     },
 
     async createEntry(ctx, accountId, body) {
-      const acc = requireAccountId(ctx.accountId, "contentCalendar.createEntry");
-      assertCurrentAccount(acc, accountId); // 写路径 stamp 必须来自 ctx 当前号(§4.6)
-      await deps.platformAccounts.getAccount(ctx, accountId); // ownership gate
+      const acc = await scope(ctx,accountId,true);
       if (body.projectId !== undefined || body.plannedDate !== undefined) {
         if (!body.projectId || !body.plannedDate) {
           throw new ValidationError(
@@ -577,8 +635,9 @@ export function createContentCalendarService(
         const repo = repoFor(ctx, acc);
         const existing = await repo.findActiveProjectSchedule(body.projectId);
         if (existing) {
+          if (ctx.groupId && existing.accountId !== (body.targetAccountId ?? null)) throw new ConflictError("项目已有排期，请在原计划中重新选择目标");
           if (existing.plannedDate === body.plannedDate) {
-            return toContentCalendarEntryDto(existing);
+            return entryDto(existing);
           }
           throw new ConflictError(
             `ConflictError: project ${body.projectId} already has an active schedule`,
@@ -586,6 +645,7 @@ export function createContentCalendarService(
         }
         try {
           const row = await repo.createEntry(accountId, {
+            targetAccountId: body.targetAccountId,
             projectId: body.projectId,
             plannedDate: body.plannedDate,
             plannedAt: `${body.plannedDate}T12:00:00.000Z`,
@@ -593,14 +653,14 @@ export function createContentCalendarService(
             candidateId: null,
             note: body.note,
           });
-          return toContentCalendarEntryDto(row);
+          return entryDto(row);
         } catch (error) {
           // The partial unique index closes the race between the pre-read and
           // insert. Re-read to preserve same-day idempotency under concurrency.
           const raced = await repo.findActiveProjectSchedule(body.projectId);
           if (raced) {
             if (raced.plannedDate === body.plannedDate) {
-              return toContentCalendarEntryDto(raced);
+              return entryDto(raced);
             }
             throw new ConflictError(
               `ConflictError: project ${body.projectId} already has an active schedule`,
@@ -622,11 +682,13 @@ export function createContentCalendarService(
         candidateId: body.candidateId ?? null,
         note: body.note,
       });
-      return toContentCalendarEntryDto(row);
+      return entryDto(row);
     },
 
     async updateEntry(ctx, entryId, patch) {
-      const acc = requireAccountId(ctx.accountId, "contentCalendar.updateEntry");
+      requireWorkspace(ctx);
+      await assertWritableWorkspace(db,ctx);
+      const acc=ctx.groupId ? null : requireAccountId(ctx.accountId);
       const repo = repoFor(ctx, acc);
       const existing = await repo.getEntry(entryId); // ownership gate
       if (existing.status === "published") {
@@ -646,9 +708,9 @@ export function createContentCalendarService(
         }
         if (patch.plannedDate === undefined) {
           if (patch.note === undefined) {
-            return toContentCalendarEntryDto(existing);
+            return entryDto(existing);
           }
-          return toContentCalendarEntryDto(
+          return entryDto(
             await repo.updateEntry(entryId, { note: patch.note }),
           );
         }
@@ -661,7 +723,7 @@ export function createContentCalendarService(
         }
         await assertProjectSchedulable(ctx, existing.projectId);
         if (patch.plannedDate === existing.plannedDate) {
-          return toContentCalendarEntryDto(existing);
+          return entryDto(existing);
         }
         const row = await repo.updateEntry(entryId, {
           plannedDate: patch.plannedDate,
@@ -670,7 +732,7 @@ export function createContentCalendarService(
           status: existing.status === "missed" ? "planned" : undefined,
           publishedAt: existing.status === "missed" ? null : undefined,
         });
-        return toContentCalendarEntryDto(row);
+        return entryDto(row);
       }
       if (patch.plannedDate !== undefined) {
         throw new ValidationError(
@@ -695,7 +757,7 @@ export function createContentCalendarService(
         note: patch.note,
         status: statusReset,
       });
-      return toContentCalendarEntryDto(row);
+      return entryDto(row);
     },
 
     async transition(ctx, entryId, body) {
@@ -705,7 +767,9 @@ export function createContentCalendarService(
           `ValidationError: unknown calendar entry status '${next}'`,
         );
       }
-      const acc = requireAccountId(ctx.accountId, "contentCalendar.transition");
+      requireWorkspace(ctx);
+      await assertWritableWorkspace(db,ctx);
+      const acc=ctx.groupId ? null : requireAccountId(ctx.accountId);
       const repo = repoFor(ctx, acc);
       const existing = await repo.getEntry(entryId); // ownership gate
       if (next === "published") {
@@ -721,7 +785,7 @@ export function createContentCalendarService(
       const current = existing.status;
       // Idempotency: same-status transition is a no-op (returns existing DTO).
       if (next === current) {
-        return toContentCalendarEntryDto(existing);
+        return entryDto(existing);
       }
       if (!ALLOWED[current]?.includes(next)) {
         throw new ConflictError(
@@ -731,11 +795,13 @@ export function createContentCalendarService(
       const row = await repo.setEntryStatus(entryId, {
         status: next,
       });
-      return toContentCalendarEntryDto(row);
+      return entryDto(row);
     },
 
     async deleteEntry(ctx, entryId) {
-      const acc = requireAccountId(ctx.accountId, "contentCalendar.deleteEntry");
+      requireWorkspace(ctx);
+      await assertWritableWorkspace(db,ctx);
+      const acc=ctx.groupId ? null : requireAccountId(ctx.accountId);
       const repo = repoFor(ctx, acc);
       const existing = await repo.getEntry(entryId);
       if (existing.status === "published") {
@@ -752,17 +818,13 @@ export function createContentCalendarService(
     },
 
     async getCadence(ctx, accountId) {
-      const acc = requireAccountId(ctx.accountId, "contentCalendar.getCadence");
-      assertCurrentAccount(acc, accountId); // 号一致性门(§4.5)
-      await deps.platformAccounts.getAccount(ctx, accountId); // ownership gate
+      const acc = await scope(ctx,accountId,false);
       const row = await repoFor(ctx, acc).getCadence(accountId);
       return row ? toPublishingCadenceDto(row) : null;
     },
 
     async upsertCadence(ctx, accountId, body) {
-      const acc = requireAccountId(ctx.accountId, "contentCalendar.upsertCadence");
-      assertCurrentAccount(acc, accountId); // 写路径 stamp 必须来自 ctx 当前号(§4.6)
-      await deps.platformAccounts.getAccount(ctx, accountId); // ownership gate
+      const acc = await scope(ctx,accountId,true);
       if (!VALID_FREQUENCIES.has(body.frequency)) {
         throw new ValidationError(
           `ValidationError: unknown cadence frequency '${body.frequency}'`,
@@ -788,9 +850,7 @@ export function createContentCalendarService(
     },
 
     async attainment(ctx, accountId, window) {
-      const acc = requireAccountId(ctx.accountId, "contentCalendar.attainment");
-      assertCurrentAccount(acc, accountId); // 号一致性门(§4.5;reconcile 会写状态)
-      await deps.platformAccounts.getAccount(ctx, accountId); // ownership gate
+      const acc = await scope(ctx,accountId,false);
       return attainmentFor(ctx, accountId, window);
     },
 
@@ -820,21 +880,15 @@ export function createContentCalendarService(
     },
 
     async listActiveProjectSchedules(ctx, accountId) {
-      const acc = requireAccountId(
-        ctx.accountId,
-        "contentCalendar.listActiveProjectSchedules",
-      );
-      assertCurrentAccount(acc, accountId);
-      await deps.platformAccounts.getAccount(ctx, accountId);
+      const acc=await scope(ctx,accountId);
       const rows = await repoFor(ctx, acc).listActiveProjectSchedules(accountId);
-      return rows.map(toContentCalendarEntryDto);
+      return Promise.all(rows.map(entryDto));
     },
 
     async reconcileProjectSchedule(ctx, entryId) {
-      const acc = requireAccountId(
-        ctx.accountId,
-        "contentCalendar.reconcileProjectSchedule",
-      );
+      requireWorkspace(ctx);
+      await assertWritableWorkspace(db,ctx);
+      const acc=ctx.groupId ? null : requireAccountId(ctx.accountId);
       const repo = repoFor(ctx, acc);
       const existing = await repo.getEntry(entryId);
       if (!existing.projectId) {
@@ -843,7 +897,7 @@ export function createContentCalendarService(
         );
       }
       if (existing.status === "published") {
-        return toContentCalendarEntryDto(existing);
+        return entryDto(existing);
       }
       const fact =
         await deps.schedulePublishing.getProjectPublicationFact(
@@ -851,7 +905,7 @@ export function createContentCalendarService(
           existing.projectId,
         );
       if (fact) {
-        return toContentCalendarEntryDto(
+        return entryDto(
           await repo.setEntryStatus(entryId, {
             status: "published",
             publishedAt: fact.publishedAt,
@@ -860,24 +914,22 @@ export function createContentCalendarService(
       }
       const { today } = await calendarContext(ctx);
       if (existing.status === "planned" && existing.plannedDate < today) {
-        return toContentCalendarEntryDto(
+        return entryDto(
           await repo.setEntryStatus(entryId, {
             status: "missed",
             publishedAt: null,
           }),
         );
       }
-      return toContentCalendarEntryDto(existing);
+      return entryDto(existing);
     },
 
     async getCalendarRequestContext(ctx) {
-      requireAccountId(
-        ctx.accountId,
-        "contentCalendar.getCalendarRequestContext",
-      );
+      requireWorkspace(ctx);
       return calendarContext(ctx);
     },
   };
+  return api;
 }
 
 export { OwnershipError, ConflictError, ValidationError };

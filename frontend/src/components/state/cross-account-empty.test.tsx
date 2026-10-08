@@ -55,3 +55,5 @@ describe("EmptyState action 位(§6.2 引导动作)", () => {
     ).toBeNull();
   });
 });
+
+it("真实组深链空态解释账号组归属并保留回列表入口",()=>{render(<CrossAccountEmptyState groupId="real-group" entityLabel="项目" backHref="/projects" backLabel="回项目列表"/>);expect(screen.getByText("未找到该项目,或它不属于当前账号组")).toBeVisible();expect(screen.getByText(/切换账号组会切换工作区/)).toBeVisible();expect(screen.queryByText(/切换抖音号/)).toBeNull();});

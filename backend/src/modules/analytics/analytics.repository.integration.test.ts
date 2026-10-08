@@ -150,7 +150,7 @@ describe("analytics repository (user+account-scoped, append-idempotent)", () => 
     expect(empty.rows).toEqual([]);
   });
 
-  it("getDashboardRollup: sums across pubs, takes each pub's latest, averages ctr/finish (user-scoped)", async () => {
+  it("getDashboardRollup: sums across pubs, takes each pub's latest, weights ctr/finish (user-scoped)", async () => {
     const repo = makeRepo(db);
     await repo.seedSnapshots([
       // pub-1: older snapshot (should be IGNORED in favor of the newer one)
@@ -167,7 +167,7 @@ describe("analytics repository (user+account-scoped, append-idempotent)", () => 
         userId: "user-a",
         publicationId: "pub-1",
         capturedAt: "2026-06-12T10:00:00.000Z",
-        rawMetrics: { plays: 100, likes: 10, comments: 5, shares: 2, favorites: 4, follower_gain: 3, ctr: 0.2, finish_rate: 0.6 },
+        rawMetrics: { plays: 100, likes: 10, comments: 5, shares: 2, favorites: 4, follower_gain: 3, ctr: 0.2, finish_rate: 0.6,ctr_denominator:100,finish_rate_denominator:100,ctr_definition:"test",finish_rate_definition:"test" },
       }),
       // pub-2: single snapshot
       snapshotRow({
@@ -175,7 +175,7 @@ describe("analytics repository (user+account-scoped, append-idempotent)", () => 
         userId: "user-a",
         publicationId: "pub-2",
         capturedAt: "2026-06-11T10:00:00.000Z",
-        rawMetrics: { plays: 50, likes: 4, comments: 1, shares: 0, favorites: 6, follower_gain: 7, ctr: 0.4, finish_rate: 0.8 },
+        rawMetrics: { plays: 50, likes: 4, comments: 1, shares: 0, favorites: 6, follower_gain: 7, ctr: 0.4, finish_rate: 0.8,ctr_denominator:50,finish_rate_denominator:50,ctr_definition:"test",finish_rate_definition:"test" },
       }),
       // user-b: must NOT leak into user-a's rollup
       snapshotRow({
@@ -197,8 +197,8 @@ describe("analytics repository (user+account-scoped, append-idempotent)", () => 
     expect(r.favorites).toBe(10);
     expect(r.followerGain).toBe(10);
     // averages: ctr (0.2+0.4)/2, finish (0.6+0.8)/2
-    expect(r.ctrAvg).toBeCloseTo(0.3, 10);
-    expect(r.finishAvg).toBeCloseTo(0.7, 10);
+    expect(r.ctrAvg).toBeCloseTo((0.2*100+0.4*50)/150, 10);
+    expect(r.finishAvg).toBeCloseTo((0.6*100+0.8*50)/150, 10);
   });
 
   it("getDashboardRollup: numeric-string detail metrics still count as detail snapshots", async () => {
@@ -215,7 +215,7 @@ describe("analytics repository (user+account-scoped, append-idempotent)", () => 
           comments: "5",
           shares: "2",
           follower_gain: "3",
-          ctr: "20.5",
+          ctr: "20.5",ctr_denominator:"100",finish_rate_denominator:"100",ctr_definition:"test",finish_rate_definition:"test",
           finish_rate: "12.5",
         },
       }),
@@ -227,7 +227,7 @@ describe("analytics repository (user+account-scoped, append-idempotent)", () => 
         rawMetrics: {
           views: "50",
           follower_gain: "7",
-          ctr: "40.5",
+          ctr: "40.5",ctr_denominator:"50",finish_rate_denominator:"50",ctr_definition:"test",finish_rate_definition:"test",
           finish_rate: "17.5",
         },
       }),
@@ -239,22 +239,22 @@ describe("analytics repository (user+account-scoped, append-idempotent)", () => 
     expect(r.likes).toBe(10);
     expect(r.followerGain).toBe(10);
     expect(r.finishCount).toBe(2);
-    expect(r.ctrAvg).toBeCloseTo(30.5, 10);
-    expect(r.finishAvg).toBeCloseTo(15, 10);
+    expect(r.ctrAvg).toBeCloseTo((20.5*100+40.5*50)/150, 10);
+    expect(r.finishAvg).toBeCloseTo((12.5*100+17.5*50)/150, 10);
   });
 
-  it("getDashboardRollup: no snapshots → all-zero rollup, snapshotCount 0 (no throw)", async () => {
+  it("getDashboardRollup: no snapshots → unknown metrics rollup, snapshotCount 0 (no throw)", async () => {
     const repo = makeRepo(db);
     const r = await repo.getDashboardRollup("user-empty", ACCT);
-    expect(r).toEqual({
-      plays: 0,
-      likes: 0,
-      comments: 0,
-      shares: 0,
-      favorites: 0,
-      followerGain: 0,
-      ctrAvg: 0,
-      finishAvg: 0,
+    expect(r).toMatchObject({
+      plays: null,
+      likes: null,
+      comments: null,
+      shares: null,
+      favorites: null,
+      followerGain: null,
+      ctrAvg: null,
+      finishAvg: null,
       finishCount: 0,
       snapshotCount: 0,
     });
@@ -374,15 +374,15 @@ describe("analytics repository (user+account-scoped, append-idempotent)", () => 
       const repo = makeRepo(db);
       await seedTwoAccounts(repo);
       const r = await repo.getDashboardRollup("user-a", "acct-empty");
-      expect(r).toEqual({
-        plays: 0,
-        likes: 0,
-        comments: 0,
-        shares: 0,
-        favorites: 0,
-        followerGain: 0,
-        ctrAvg: 0,
-        finishAvg: 0,
+      expect(r).toMatchObject({
+        plays: null,
+        likes: null,
+        comments: null,
+        shares: null,
+        favorites: null,
+        followerGain: null,
+        ctrAvg: null,
+        finishAvg: null,
         finishCount: 0,
         snapshotCount: 0,
       });

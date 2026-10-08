@@ -1,3 +1,4 @@
+import {assertWritableWorkspace} from "../../workspace-scope";
 import { createScheduledRunIntentService } from "./daily-topic-run-intent.service";
 import type { RequestContext } from "@creatoros/contract";
 import type { Db } from "@creatoros/backend";
@@ -159,7 +160,7 @@ export function createSchedulingService(deps: ServiceDeps): SchedulingService {
       now,
       nextId,
       userId: ctx.userId,
-      accountId: ctx.accountId ?? null,
+      accountId: ctx.accountId ?? null,groupId:ctx.groupId,membershipVersion:ctx.membershipVersion,
     };
     return createSchedulingRepository(db, repoDeps);
   }
@@ -171,6 +172,7 @@ export function createSchedulingService(deps: ServiceDeps): SchedulingService {
     },
 
     async createJob(ctx, input) {
+      await assertWritableWorkspace(db,ctx);
       if (retiredSourceKinds.has(input.sourceKind)&&!(input.systemManaged===true&&isBackfill(input.sourceKind,input.target))) {
         throw new ValidationError(
           "该兼容任务已退役，请使用作品数据同步或内容雷达",
@@ -209,6 +211,7 @@ export function createSchedulingService(deps: ServiceDeps): SchedulingService {
     },
 
     async updateJob(ctx, jobId, patch) {
+      await assertWritableWorkspace(db,ctx);
       const current = await repoFor(ctx).getJob(jobId);
       if ((current.target as Record<string,unknown>)?.mergedIntoSelfMetrics === true)throw new ValidationError("此任务已合并，请在作品自动同步中编辑对应能力");
       if (retiredSourceKinds.has(current.sourceKind)&&!isBackfill(current.sourceKind,current.target as Record<string,unknown>)) {
@@ -237,6 +240,7 @@ export function createSchedulingService(deps: ServiceDeps): SchedulingService {
     },
 
     async setEnabled(ctx, jobId, enabled) {
+      await assertWritableWorkspace(db,ctx);
       const current=await repoFor(ctx).getJob(jobId);
       if(enabled&&(current.target as Record<string,unknown>)?.mergedIntoSelfMetrics === true)throw new ValidationError("此任务已合并，请在作品自动同步中开启对应能力");
       if (enabled) {
@@ -250,6 +254,7 @@ export function createSchedulingService(deps: ServiceDeps): SchedulingService {
     },
 
     async createRun(ctx, input) {
+      await assertWritableWorkspace(db,ctx);
       if (input.aiTaskId && (await repoFor(ctx).getJob(input.jobId)).sourceKind === "self.traffic") {
         // 与崩溃恢复共用 task→job 行锁，两个同时触发只产生原 task 的一条 run。
         const row = await createScheduledRunIntentService(db, { now, nextId }, ["self.traffic"]).ensureRunForTask(ctx, input.aiTaskId);
@@ -284,6 +289,7 @@ export function createSchedulingService(deps: ServiceDeps): SchedulingService {
     },
 
     async updateRun(ctx, runId, patch) {
+      await assertWritableWorkspace(db,ctx);
       const row = await repoFor(ctx).updateRun(runId, patch);
       return toJobRunDto(row);
     },

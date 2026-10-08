@@ -24,7 +24,7 @@ import { EChart, useChartTokens } from "@/components/analytics/echarts-base";
 
 export interface TrendPoint {
   readonly label: string;
-  readonly value: number;
+  readonly value: number | null;
 }
 
 export type ViewsTrendMode = "daily" | "single" | "empty";
@@ -35,6 +35,8 @@ export interface ViewsTrendChartProps {
   readonly summary: string;
   readonly slot?: string;
   readonly testId?: string;
+  readonly unit?: string;
+  readonly valueLabel?: string;
 }
 
 export function ViewsTrendChart({
@@ -43,15 +45,19 @@ export function ViewsTrendChart({
   summary,
   slot = "views-trend-chart",
   testId = "views-trend-chart",
+  unit = "次",
+  valueLabel = "播放量",
 }: ViewsTrendChartProps) {
   const tokens = useChartTokens();
-  const isSingle = mode === "single" || data.length <= 1;
+  const validCount = data.filter((point) => typeof point.value === "number" && Number.isFinite(point.value)).length;
+  const isSingle = mode === "single" || validCount <= 1;
 
   const option = React.useMemo<EChartsOption>(() => {
     const labels = data.map((d) => d.label);
-    const values = data.map((d) => d.value);
+    const values = data.map((d) => typeof d.value === "number" && Number.isFinite(d.value) ? d.value : null);
+    const minimum = Math.min(0, ...values.filter((value): value is number => value !== null));
     return {
-      grid: { left: 8, right: 12, top: 16, bottom: 20, containLabel: true },
+      grid: { left: 8, right: 12, top: 32, bottom: 40, containLabel: true },
       tooltip: {
         trigger: "axis" as const,
         backgroundColor: tokens.surface,
@@ -59,22 +65,30 @@ export function ViewsTrendChart({
         borderWidth: 1,
         textStyle: { color: tokens.foreground, fontSize: 12 },
         valueFormatter: (v) =>
-          typeof v === "number" ? v.toLocaleString("zh-CN") : String(v),
+          typeof v === "number" ? `${v.toLocaleString("zh-CN")} ${unit}` : "暂无数据",
       },
       xAxis: {
         type: "category" as const,
+        name: "日期",
+        nameLocation: "middle",
+        nameGap: 28,
+        nameTextStyle: { color: tokens.mutedForeground, fontSize: 12 },
         data: labels,
         boundaryGap: false,
         axisLine: { lineStyle: { color: tokens.border } },
         axisTick: { show: false },
-        axisLabel: { color: tokens.mutedForeground, fontSize: 11 },
+        axisLabel: { color: tokens.mutedForeground, fontSize: 12 },
       },
       yAxis: {
         type: "value" as const,
+        name: `${valueLabel}（${unit}）`,
+        nameTextStyle: { color: tokens.mutedForeground, fontSize: 12 },
+        min: minimum < 0 ? undefined : 0,
+        axisLine: { show: true, lineStyle: { color: tokens.border } },
         splitLine: { lineStyle: { color: tokens.border, opacity: 0.5 } },
         axisLabel: {
           color: tokens.mutedForeground,
-          fontSize: 11,
+          fontSize: 12,
           formatter: (v: number) =>
             typeof v === "number" && v >= 10000
               ? `${(v / 10000).toFixed(1)}万`
@@ -83,13 +97,14 @@ export function ViewsTrendChart({
       },
       series: [
         {
-          name: "播放量",
+          name: valueLabel,
           type: "line" as const,
           data: values,
-          smooth: true,
+          smooth: false,
+          connectNulls: false,
           // Single point → show the symbol (a lone point reads as data, not a
           // flat line pretending to be a trend).
-          showSymbol: isSingle ? true : false,
+          showSymbol: isSingle || values.some((value) => value === null),
           symbolSize: isSingle ? 9 : 6,
           lineStyle: { color: tokens.brand, width: 2 },
           itemStyle: { color: tokens.brand },
@@ -111,7 +126,7 @@ export function ViewsTrendChart({
         },
       ],
     };
-  }, [data, isSingle, tokens]);
+  }, [data, isSingle, tokens, unit, valueLabel]);
 
   return (
     <figure
@@ -119,19 +134,19 @@ export function ViewsTrendChart({
       data-slot={slot}
       data-shape="line"
       data-trend-mode={mode}
-      aria-label="播放趋势"
+      aria-label={`${valueLabel}趋势`}
       className="flex flex-col gap-1"
     >
-      <EChart
+      {validCount === 0 ? <p className="flex min-h-40 items-center justify-center rounded-control border border-dashed border-border text-sm text-muted-foreground">暂无趋势数据</p> : <EChart
         option={option}
         testId={testId}
         className="h-40 w-full"
         style={{ height: "10rem", width: "100%" }}
-      />
-      {isSingle ? (
+      />}
+      {isSingle && validCount > 0 ? (
         <p
           data-slot="views-trend-single-note"
-          className="text-[11px] leading-relaxed text-muted-foreground"
+          className="text-xs leading-relaxed text-muted-foreground"
         >
           数据刚更新了一次,还画不出走势;过几天再来看趋势。
         </p>

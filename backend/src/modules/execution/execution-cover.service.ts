@@ -1,3 +1,4 @@
+import {workspaceFilter} from "../../workspace-scope";
 import {createHash} from "node:crypto";
 import {isDeepStrictEqual} from "node:util";
 import {and,aiTasks,asc,eq,executionCalls,executionTasks,type Db} from "@creatoros/backend";
@@ -111,8 +112,8 @@ export function createExecutionCoverService(db:Db,deps:Parameters<typeof createE
    });
   },
   async resolveCredential(ctx:RequestContext,owner:{aiTaskId:string;executionTaskId:string}){
-   const [business]=await db.select().from(aiTasks).where(and(eq(aiTasks.id,owner.aiTaskId),eq(aiTasks.executionTaskId,owner.executionTaskId),eq(aiTasks.userId,ctx.userId),eq(aiTasks.accountId,ctx.accountId??"")));
-   const [execution]=await db.select().from(executionTasks).where(and(eq(executionTasks.id,owner.executionTaskId),eq(executionTasks.ownerId,owner.aiTaskId),eq(executionTasks.userId,ctx.userId),eq(executionTasks.accountId,ctx.accountId??"")));
+   const [business]=await db.select().from(aiTasks).where(and(eq(aiTasks.id,owner.aiTaskId),eq(aiTasks.executionTaskId,owner.executionTaskId),eq(aiTasks.userId,ctx.userId),workspaceFilter(aiTasks,ctx)));
+   const [execution]=await db.select().from(executionTasks).where(and(eq(executionTasks.id,owner.executionTaskId),eq(executionTasks.ownerId,owner.aiTaskId),eq(executionTasks.userId,ctx.userId),workspaceFilter(executionTasks,ctx)));
    if(business?.taskType!=="cover.generate"||!execution)throw new ConflictError("封面图片任务不存在");
    const image=coverImagePreparationSchema.parse((execution.payload as {coverImage?:{value?:unknown}}).coverImage?.value);
    return deps.resolveImageSpec(ctx,image.reference?"image.edit":"image.generate",business.id);

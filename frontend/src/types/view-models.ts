@@ -135,8 +135,8 @@ export interface PublicationCompactRow {
   readonly title: string;
   readonly platform: PlatformId;
   readonly status: PublicationStatus;
-  readonly views: number;
-  readonly engagement: number;
+  readonly views: number | null;
+  readonly engagement: number | null;
   readonly publishedAt: Iso8601;
 }
 

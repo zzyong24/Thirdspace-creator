@@ -7,7 +7,7 @@ describe("发布草稿原子采纳",()=>{
   let db:Db;let close:()=>Promise<void>;let sequence=0;
   beforeAll(async()=>{const c=await createDb();db=c.db;close=()=>c.client.close();});afterAll(async()=>close?.());
   function service(failRevision=false){
-    return createPublishingService({
+    const port=createPublishingService({
       db, now:()=>new Date().toISOString(),
       nextId(prefix){
         if(failRevision && prefix==="pub-rev")throw new Error("REVISION_INTERRUPTED");
@@ -18,6 +18,7 @@ describe("发布草稿原子采纳",()=>{
         async remove(){throw new Error("NOT_AUTHORIZED");},
       },
     });
+    return {...port,adoptDraft:async(...args:Parameters<typeof port.adoptDraft>)=>{const row=await port.adoptDraft(...args);if("kind" in row)throw new Error("测试须使用真实账号目标");return row;}};
   }
 
   it("创建首版失败时草稿也回滚，重试只创建完整的一份",async()=>{

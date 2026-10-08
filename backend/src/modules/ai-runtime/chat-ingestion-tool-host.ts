@@ -18,7 +18,7 @@ const names=new Set(['material.screenshot','project.transcribe','intelligence.do
 export function createChatIngestionTaskToolHost(reader:Pick<ReturnType<typeof createChatHostContextReader>,'read'>,ports:ChatIngestionToolPorts):NonNullable<ChatWorkerDispatcherDeps['resolveTools']>{
  async function current(ctx:RequestContext,execution:ExecutionRef,signal?:AbortSignal){
   signal?.throwIfAborted();const restored=await reader.read(execution);signal?.throwIfAborted();
-  if(!ctx.accountId||restored.context.userId!==ctx.userId||restored.context.accountId!==ctx.accountId)throw Error('采集工具归属已变化');
+  if((!ctx.accountId&&!ctx.groupId)||restored.context.userId!==ctx.userId||(restored.context.accountId??null)!==(ctx.accountId??null)||(restored.context.groupId??null)!==(ctx.groupId??null))throw Error('采集工具归属已变化');
   return restored;
  }
  return async(ctx,_input,execution,signal)=>{

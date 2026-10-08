@@ -1,3 +1,5 @@
+import {assertFrozenWorkspaceMembership} from "../platform-account/membership-lock.service";
+import {requireWorkspace,workspaceFilter,assertWritableWorkspace} from "../../workspace-scope";
 import {
   and,
   eq,
@@ -52,10 +54,7 @@ export function createCalibrationPositioningAdoptionService(
 ) {
   return {
     async confirmTask(ctx: RequestContext, id: string) {
-      const accountId = requireAccountId(
-        ctx.accountId,
-        "ai.confirmCalibrationPositioning",
-      );
+      await assertWritableWorkspace(db,ctx);requireWorkspace(ctx);const accountId=ctx.accountId??null;
       await db.transaction(async (tx) => {
         const [task] = await tx
           .select()
@@ -64,11 +63,12 @@ export function createCalibrationPositioningAdoptionService(
             and(
               eq(aiTasks.id, id),
               eq(aiTasks.userId, ctx.userId),
-              eq(aiTasks.accountId, accountId),
+              workspaceFilter(aiTasks,ctx),
             ),
           )
           .for("update");
         if (!task) throw new OwnershipError("候选任务不存在");
+        await assertFrozenWorkspaceMembership(tx,{userId:task.userId,groupId:task.groupId,accountId:task.accountId,groupVersion:task.groupVersion,membershipVersion:task.membershipVersion});
         if (
           !["calibration.diagnose", "positioning.generate"].includes(
             task.taskType,
@@ -118,7 +118,7 @@ export function createCalibrationPositioningAdoptionService(
                 and(
                   eq(executionTasks.id, task.executionTaskId),
                   eq(executionTasks.userId, ctx.userId),
-                  eq(executionTasks.accountId, accountId),
+                  workspaceFilter(executionTasks,ctx),
                 ),
               );
             if (

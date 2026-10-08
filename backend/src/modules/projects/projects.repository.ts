@@ -1,3 +1,4 @@
+import {workspaceFilter,workspaceStamp,assertWritableWorkspace} from "@creatoros/backend";
 import { and, eq, or, asc, inArray, sql, type Db } from "@creatoros/backend";
 import {
   projects,
@@ -65,7 +66,7 @@ import { OwnershipError, requireAccountId } from "./projects.errors";
 // existence leak). The repository executes only service-approved writes — it owns
 // no state machine (SPEC §12 last line).
 
-export type ProjectRow = typeof projects.$inferSelect;
+export type ProjectRow = Omit<typeof projects.$inferSelect,"groupId"> & {groupId?:string|null};
 export type ActivityRow = typeof projectActivities.$inferSelect;
 export type StageRow = typeof projectStages.$inferSelect;
 export type TargetPlatformRow = typeof projectTargetPlatforms.$inferSelect;
@@ -241,12 +242,7 @@ export function createProjectRepository(db: Db): ProjectRepository {
   // 禁读写)—— 不再有「无号退化为该 user 全量」的 lenient 分支(拍板 ② 已废除存量兜底)。
   // projects 是唯一 owned-root(有自身 account_id 列)的表;子表(activities/stages/
   // platforms/outputs/output_stages/tasks 无 account_id 列)经父 project 门透传(SPEC §9)。
-  function accountGate(ctx: RequestContext) {
-    return eq(
-      projects.accountId,
-      requireAccountId(ctx.accountId, "projects.accountGate"),
-    );
-  }
+  function accountGate(ctx: RequestContext) { return workspaceFilter(projects,ctx); }
 
   // Resolve + ownership-check a project; cross-user/missing is indistinguishable
   // (foundation §2: 404, never reveal existence) → OwnershipError.
@@ -373,6 +369,7 @@ export function createProjectRepository(db: Db): ProjectRepository {
     get,
 
     async insertProject(ctx, row) {
+      await assertWritableWorkspace(db,ctx);
       // Stamp ownership on the root row regardless of what the caller passed.
       // [T-332 S2] accountId 同样只信 ctx(SPEC §4.6:repo 不接受调用方显式传号,防绕过);
       // 未选号 → AccountRequiredError(写路径禁 stamp null,ISO-03)。
@@ -381,7 +378,7 @@ export function createProjectRepository(db: Db): ProjectRepository {
         .values({
           ...row,
           userId: ctx.userId,
-          accountId: requireAccountId(ctx.accountId, "projects.insertProject"),
+          ...workspaceStamp(ctx),
         })
         .returning();
       return inserted[0]!;
@@ -461,6 +458,7 @@ export function createProjectRepository(db: Db): ProjectRepository {
     },
 
     async updateProjectRow(ctx, projectId, set) {
+      await assertWritableWorkspace(db,ctx);
       await get(ctx, projectId); // re-assert ownership (含账号门) before the write
       const updated = await db
         .update(projects)

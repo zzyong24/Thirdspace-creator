@@ -1,3 +1,7 @@
+import {createHash} from "node:crypto";
+import {accountGroupCommands} from "../../schema/account-groups";
+import {ConflictError} from "./platform-account.errors";
+import {createAccountGroupService} from "./account-group.service";
 import type { RequestContext } from "@creatoros/contract";
 import {and,eq,type Db} from "@creatoros/backend";
 import {platformAccounts} from "./platform-account.db-schema";
@@ -31,10 +35,13 @@ const VALID_PLATFORMS = new Set([
   "douyin",
   "xiaohongshu",
   "wechatVideo",
+  "wechatOfficial",
+  "kuaishou",
   "x",
 ]);
 
 export interface ServiceDeps {
+  bindingCapabilities?: (ctx:RequestContext)=>Promise<import("@creatoros/contract").PlatformAccountCapabilitiesResource[]>;
   db: Db;
   now: () => string;
   nextId: (prefix: string) => string;
@@ -43,6 +50,7 @@ export interface ServiceDeps {
 export interface CreateAccountInput {
   platform: string;
   accountHandle: string;
+  idempotencyKey?:string;
   externalAccountId?: string | null; // [T-201b] 稳定身份锚(sec_uid)
   secretReference?: string | null;
   followerBaseline?: number;
@@ -63,6 +71,7 @@ export interface ListAccountsQuery {
 }
 
 export interface PlatformAccountService {
+  getBindingCapabilities(ctx:RequestContext):Promise<import("@creatoros/contract").PlatformAccountCapabilitiesResource[]>;
   listAccounts(
     ctx: RequestContext,
     query: ListAccountsQuery,
@@ -158,6 +167,7 @@ export function createPlatformAccountService(
   }
 
   return {
+    async getBindingCapabilities(ctx){return deps.bindingCapabilities?.(ctx)??[];},
     async listAccounts(ctx, query) {
       const { rows, total } = await repoFor(ctx).listAccounts(query);
       return { rows: rows.map(toPlatformAccountDto), total };
@@ -165,14 +175,29 @@ export function createPlatformAccountService(
 
     async createAccount(ctx, input) {
       guardCreateInput(input);
-      const row = await repoFor(ctx).createAccount({
+      const command={...input,groupId:ctx.groupId??null};
+      const inputHash=createHash("sha256").update(JSON.stringify(command)).digest("hex");
+      const cached=async()=>{
+        if(!input.idempotencyKey)return null;
+        const [r]=await db.select().from(accountGroupCommands).where(and(eq(accountGroupCommands.userId,ctx.userId),eq(accountGroupCommands.key,input.idempotencyKey)));
+        if(r&&(r.kind!=="create-account"||r.inputHash!==inputHash))throw new ConflictError("提交内容已改变，请重新登记");
+        return r?.result as PlatformAccountResource|null;
+      };
+      const previous=await cached();if(previous)return previous;
+      try{const row = await db.transaction(async tx=>{
+        const row = await createPlatformAccountRepository(tx as unknown as Db,{now,nextId,userId:ctx.userId}).createAccount({
         platform: input.platform,
         accountHandle: input.accountHandle,
         externalAccountId: input.externalAccountId ?? null, // [T-201b]
         secretReference: input.secretReference ?? null,
         followerBaseline: input.followerBaseline,
       });
+        await createAccountGroupService({db,now,nextId}).registerAccount(ctx,row.id,tx);
+        if(input.idempotencyKey)await tx.insert(accountGroupCommands).values({userId:ctx.userId,key:input.idempotencyKey,kind:"create-account",inputHash,result:toPlatformAccountDto(row),createdAt:now()});
+        return row;
+      });
       return toPlatformAccountDto(row);
+      }catch(error){const previous=await cached();if(previous)return previous;throw error;}
     },
 
     async getAccount(ctx, accountId) {
@@ -187,19 +212,7 @@ export function createPlatformAccountService(
 
     async archiveAccount(ctx, accountId) {
       const repo = repoFor(ctx);
-      // [T-136§D-bind ⑥] 末号保护:不准移除最后一个 active 号。移除了就没号可切、
-      // ctx.accountId 落 NULL → 读门退化把所有 NULL 数据全显(用户误以为"隔离失效");
-      // 且该号名下作品/定位/项目会失去归属锚点。至少保留一个号。
-      const target = await repo.getAccount(accountId); // ownership gate + 拿当前状态
-      if (target.status === "active") {
-        const { rows } = await repo.listAccounts({ limit: 1000, offset: 0 });
-        const activeCount = rows.filter((r) => r.status === "active").length;
-        if (activeCount <= 1) {
-          throw new ValidationError(
-            "ValidationError: 不能移除最后一个抖音号——至少保留一个号,否则作品/定位/项目将失去归属。",
-          );
-        }
-      }
+      await repo.getAccount(accountId); // 归属验证；组允许无账号，隐藏不删除历史。
       const row = await repo.archiveAccount(accountId);
       return toPlatformAccountDto(row);
     },
@@ -214,6 +227,7 @@ export function createPlatformAccountService(
           `ValidationError: platform account ${accountId} is archived (cannot bind)`,
         );
       }
+      if(ctx.groupId){const m=await createAccountGroupService({db,now,nextId}).forAccount(ctx,accountId);if(m.groupId!==ctx.groupId)throw new OwnershipError("账号不属于当前账号组");}
       if (row.platform !== platform) {
         throw new ValidationError(
           `ValidationError: platform account ${accountId} is ${row.platform}, not ${platform}`,

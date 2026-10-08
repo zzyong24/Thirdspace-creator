@@ -1,0 +1,21 @@
+import * as React from "react";
+import {render,screen,within,cleanup} from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import {afterEach,describe,it,expect,vi} from "vitest";
+import {GroupWorkspaceFilters} from "./group-workspace-filters";
+import {GroupOverview} from "./group-overview";
+import {workspaceQueryFromSearch,workspaceFilterHref,type GroupWorkspace} from "./workspace-query";
+const push=vi.fn();
+let queryString="platform=douyin&accountId=a1&copilot=open";
+vi.mock("next/navigation",()=>({useRouter:()=>({push}),usePathname:()=>"/overview",useSearchParams:()=>new URLSearchParams(queryString)}));
+vi.mock("@/features/daily-report/report-date-range",()=>({ReportDateRange:({onChange}:{onChange:(r:{startDate:string;endDate:string})=>void})=><button onClick={()=>onChange({startDate:"2026-09-01",endDate:"2026-09-30"})}>改日期</button>}));
+export const workspace:GroupWorkspace={groupId:"g1",groupName:"月明账号组",status:"active",platform:"douyin",accountId:"a1",startDate:"2026-09-01",endDate:"2026-09-30",generatedAt:"2026-10-01T01:00:00Z",contentCount:2,publicationCount:3,pendingCount:1,collectedAccounts:1,totalAccounts:2,videoViews:90,articleReads:20,followers:null,latestCapturedAt:null,coverage:"1 / 2 个账号已采集",metricMode:"published_in_period_cumulative",accounts:[{id:"a1",name:"月明视频",platform:"douyin",historical:false,archived:false},{id:"a2",name:"月明文章",platform:"wechatOfficial",historical:true,archived:false}],platforms:[{platform:"douyin",publicationCount:2,sampleCount:2,views:90,reads:null,likes:2,shares:null,capturedAt:null},{platform:"wechatOfficial",publicationCount:1,sampleCount:1,views:null,reads:20,likes:null,shares:null,capturedAt:null}]};
+afterEach(()=>{cleanup();push.mockClear();queryString="platform=douyin&accountId=a1&copilot=open";});
+describe("账号组筛选真实行为",()=>{
+ it("五平台可见，切平台清具体账号而保留其他查询",async()=>{render(<GroupWorkspaceFilters workspace={workspace}/>);await userEvent.click(screen.getByRole("button",{name:"公众号"}));expect(push).toHaveBeenCalledWith("/overview?platform=wechatOfficial&copilot=open",{scroll:false});expect(screen.getByRole("button",{name:"快手"})).toBeVisible();});
+ it("同平台多账号与历史成员用真实ID局部选择",async()=>{queryString="";render(<GroupWorkspaceFilters workspace={{...workspace,platform:null,accountId:null}}/>);await userEvent.click(screen.getByRole("combobox",{name:"平台账号"}));await userEvent.click(screen.getByRole("option",{name:"公众号 · 月明文章 · 历史归属"}));expect(push).toHaveBeenCalledWith("/overview?accountId=a2",{scroll:false});expect(window.localStorage.getItem("creatoros:current-account")).toBeNull();});
+ it("日期变更保留平台账号",async()=>{render(<GroupWorkspaceFilters workspace={workspace}/>);await userEvent.click(screen.getByRole("button",{name:"改日期"}));expect(push.mock.calls[0]?.[0]).toContain("accountId=a1");expect(push.mock.calls[0]?.[0]).toContain("startDate=2026-09-01");});
+ it("只读取安全查询，合法日期成对校验",()=>{expect(workspaceQueryFromSearch({platform:"invented",accountId:"a1",startDate:"2026-02-30",endDate:"2026-03-01"})).toEqual({accountId:"a1"});expect(workspaceFilterHref("/",new URLSearchParams("accountId=a1&platform=douyin"),{platform:null})).toBe("/");});
+ it("总览拆分播放阅读，未知粉丝保留空值，不伪造曲线",()=>{const {container}=render(<GroupOverview workspace={workspace}/>);expect(screen.getByText("视频累计播放（次）")).toBeVisible();expect(screen.getByText("文章累计阅读（次）")).toBeVisible();expect(within(screen.getByLabelText("账号组指标")).getByText("—")).toBeVisible();expect(container.querySelector('[data-slot="group-video-axis"]')).toBeTruthy();expect(container.querySelector('[data-slot="group-article-axis"]')).toBeTruthy();});
+ it("空组不产生虚假条形，保留真实创建/绑定入口",()=>{const {container}=render(<GroupOverview workspace={{...workspace,totalAccounts:0,accounts:[],platforms:[],videoViews:null,articleReads:null,followers:null,publicationCount:0,collectedAccounts:0}}/>);expect(container.querySelector("svg")).toBeNull();expect(screen.getByRole("link",{name:"管理账号组"})).toHaveAttribute("href","/accounts");expect(screen.getByText("尚未绑定平台账号，可继续创建内容。" )).toBeVisible();});
+});

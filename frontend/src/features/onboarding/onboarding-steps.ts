@@ -12,6 +12,8 @@ export type StepBranch = "all" | "existing";
 
 export interface OnboardingState {
   readonly accountId?: string | null;
+  readonly groupId?: string | null;
+  readonly memberCount?: number;
   readonly completedSteps?: readonly StepKey[];
   readonly preferences?: import("./onboarding-data").OnboardingRecord;
   readonly persistenceError?: string;
@@ -155,7 +157,7 @@ export function deriveGuidedSteps(state: OnboardingState): GuidedStep[] {
   );
   const out: GuidedStep[] = [];
   for (const spec of visible) {
-    const done = state.completedSteps?.includes(spec.key) === true || spec.isDone(state);
+    const done = state.completedSteps?.includes(spec.key) === true || (state.groupId&&spec.key==="import-account"?typeof state.memberCount==="number"&&state.memberCount>0:spec.isDone(state));
     // 引导只建议下一步，不代替业务权限或阻断用户直接访问功能。
     const blocked = false;
     out.push({
@@ -163,8 +165,8 @@ export function deriveGuidedSteps(state: OnboardingState): GuidedStep[] {
       // 分支过滤后重新编号，避免新号看到 1、2、4、5 这种断号。
       order: out.length + 1,
       branch: spec.branch,
-      title: spec.title,
-      why: spec.why,
+      title:state.groupId?({"import-account":"将平台账号加入账号组","confirm-origin":"确认创作起点","positioning-profile":"确定账号组的内容定位"} as Record<string,string>)[spec.key]??spec.title:spec.title,
+      why:state.groupId?({"import-account":"可以先创建项目，分发时再添加平台账号。扫码与自动采集以各平台实际能力为准。","confirm-origin":"选择从零开始，或先整理已有内容。历史资料可在绑定账号中显式归组。"} as Record<string,string>)[spec.key]??spec.why:spec.why,
       ctaLabel: spec.ctaLabel,
       done,
       blocked,

@@ -9,8 +9,8 @@ export interface ChatSkillLibrary {
 }
 const PAGE_CHARS = 6000;
 /** 只从当前账号不可变快照读取方法；不加载文件、可变注册表或其它账号。 */
-export function createChatSkillLibrary(snapshot: EffectiveSkillSnapshotV1, ctx: Pick<RequestContext,"userId"|"accountId">): ChatSkillLibrary {
-  if (snapshot.userId !== ctx.userId || snapshot.accountId !== ctx.accountId) throw Error("SKILL_SNAPSHOT_ACCOUNT_MISMATCH");
+export function createChatSkillLibrary(snapshot: EffectiveSkillSnapshotV1, ctx: Pick<RequestContext,"userId"|"accountId"|"groupId">): ChatSkillLibrary {
+  if (snapshot.userId !== ctx.userId || snapshot.accountId !== (ctx.accountId??null) || (snapshot.groupId??null)!==(ctx.groupId??null)) throw Error("SKILL_SNAPSHOT_ACCOUNT_MISMATCH");
   // SEMANTIC_BOUNDARY_ALLOW: method.* 是注册的纯方法命名空间，非业务语义分类。
   const entries = snapshot.skills.filter(item => item.skillId.startsWith("method.") || item.skillId === "research.plan").map(item => ({
     id:item.skillId, version:item.baseVersion, overlayRevision:item.overlayRevision,

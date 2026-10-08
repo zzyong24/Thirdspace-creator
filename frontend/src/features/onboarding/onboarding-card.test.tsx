@@ -4,7 +4,7 @@ import {render,screen,fireEvent,waitFor,cleanup} from '@testing-library/react';
 vi.mock('next/link',()=>({default:({children,...props}:React.AnchorHTMLAttributes<HTMLAnchorElement>)=><a {...props}>{children}</a>}));
 const loadState=vi.hoisted(()=>vi.fn());const saveOnboarding=vi.hoisted(()=>vi.fn());const current=vi.hoisted(()=>vi.fn(()=> 'a'));
 vi.mock('./onboarding-data',()=>({loadState,saveOnboarding}));
-vi.mock('@/lib/http-transport',()=>({readCurrentAccountId:current}));
+vi.mock('@/lib/http-transport',()=>({readCurrentAccountId:current,readCurrentGroupId:()=>null}));
 import {OnboardingCard,requestOnboardingReopen} from './onboarding-card';
 const keys=['import-account','confirm-origin','review-imported-projects','positioning-profile','benchmark-monitor','benchmark-topic','first-project'];
 const pref=()=>({accountId:'a',origin:'existing' as const,hidden:false,collapsed:true,completedSteps:['import-account','confirm-origin'],updatedAt:'2026-09-13'});

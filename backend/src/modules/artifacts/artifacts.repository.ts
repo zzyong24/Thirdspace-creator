@@ -1,3 +1,4 @@
+import {workspaceKey,workspaceFilter,workspaceStamp,assertWritableWorkspace} from "@creatoros/backend";
 import { and, asc, eq, desc, type Db } from "@creatoros/backend";
 import {
   artifacts,
@@ -41,7 +42,8 @@ export interface RepoDeps {
   // 恒叠 `eq(artifacts.accountId, …)`,create 盖章当前号。未选号在 service 入口
   // requireAccountId 即被拒(SPEC §4.2 引导态)。子表(versions / relations /
   // script_sections / timeline_segments)经 requireArtifact 父锚门透传继承号维。
-  accountId: string;
+  accountId?: string | null;
+  groupId?: string | null;
 }
 
 export interface StructuredContent {
@@ -133,11 +135,14 @@ export function createArtifactRepository(
   db: Db,
   deps: RepoDeps,
 ): ArtifactRepository {
+  const scope = workspaceKey(deps);
+  const stamp = workspaceStamp(scope);
+  const writable = () => assertWritableWorkspace(db, {userId:deps.userId,...stamp,requestId:"shared-domain-write",source:"user"});
   const userId = deps.userId;
 
   // [T-332 S2 · ISO-02] 按号隔离条件门:strict 恒开(无「null → 退化全量」分支)。
   // 所有 owned-root 读/更新点复用它;子表经 requireArtifact 透传继承。
-  const accountGate = eq(artifacts.accountId, deps.accountId);
+  const accountGate = workspaceFilter(artifacts, scope);
 
   async function requireArtifact(artifactId: string): Promise<ArtifactRow> {
     const rows = await db
@@ -229,6 +234,7 @@ export function createArtifactRepository(
     requireArtifact,
 
     async create(input) {
+      await writable();
       const now = deps.now();
       const artifactId = deps.nextId("artifact");
 
@@ -238,7 +244,7 @@ export function createArtifactRepository(
         id: artifactId,
         userId,
         // [T-332 S2 · ISO-03] create stamp:落库把行归到当前号(必填,列 NOT NULL)。
-        accountId: deps.accountId,
+        ...stamp,
         projectId: input.projectId,
         contentOutputId: input.contentOutputId ?? null,
         currentVersionId: null,
@@ -272,6 +278,7 @@ export function createArtifactRepository(
     },
 
     async createVersion(artifactId, input) {
+      await writable();
       if((input.adoptionKey===undefined)!==(input.adoptionSourceDigest===undefined) ||
         (input.adoptionKey!==undefined && (!input.adoptionKey || input.adoptionKey.length>200 || !/^sha256:[a-f0-9]{64}$/.test(input.adoptionSourceDigest!))))throw new ConflictError("采纳来源无效");
       return db.transaction(async (tx) => {
@@ -387,6 +394,7 @@ export function createArtifactRepository(
     },
 
     async restore(artifactId, versionId, expectedCurrentVersionId) {
+      await writable();
       return db.transaction(async (tx) => {
         const artifactRows = await tx
           .select()
@@ -437,6 +445,7 @@ export function createArtifactRepository(
     },
 
     async createRelation(sourceArtifactId, input) {
+      await writable();
       // Both ends must be owned (cross-user link → OwnershipError, no leak).
       await requireArtifact(sourceArtifactId);
       await requireArtifact(input.targetArtifactId);
@@ -457,6 +466,7 @@ export function createArtifactRepository(
     },
 
     async replaceStructuredContent(artifactVersionId, payload) {
+      await writable();
       // Internal — only ever called when minting a NEW version (the service
       // guards that). Delete-then-insert the structured rows for this version id;
       // version-scoped, so the immutable-plan rule holds (we mutate the just-made

@@ -1,3 +1,5 @@
+import {assertFrozenWorkspaceMembership} from "../platform-account/membership-lock.service";
+import {requireWorkspace,workspaceFilter,assertWritableWorkspace} from "../../workspace-scope";
 import {
   and,
   eq,
@@ -31,10 +33,7 @@ export function createStructuredTargetAdoptionService(
 ) {
   return {
     async confirmTask(ctx: RequestContext, taskId: string) {
-      const accountId = requireAccountId(
-        ctx.accountId,
-        "ai.confirmStructuredTarget",
-      );
+      await assertWritableWorkspace(db,ctx);requireWorkspace(ctx);const accountId=ctx.accountId??null;
       await db.transaction(async (tx) => {
         const [task] = await tx
           .select()
@@ -43,11 +42,12 @@ export function createStructuredTargetAdoptionService(
             and(
               eq(aiTasks.id, taskId),
               eq(aiTasks.userId, ctx.userId),
-              eq(aiTasks.accountId, accountId),
+              workspaceFilter(aiTasks,ctx),
             ),
           )
           .for("update");
         if (!task) throw new OwnershipError("候选任务不存在");
+        await assertFrozenWorkspaceMembership(tx,{userId:task.userId,groupId:task.groupId,accountId:task.accountId,groupVersion:task.groupVersion,membershipVersion:task.membershipVersion});
         if (!["topic.enrich", "material.match"].includes(task.taskType))
           throw new ConflictError("任务类型不支持此采纳入口");
         if (task.status === "succeeded") return;

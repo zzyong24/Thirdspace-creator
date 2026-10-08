@@ -161,6 +161,7 @@ function PrimaryNavContents({icon:Icon,label,collapsed,pending}:{icon:LucideIcon
 
 const PRIMARY_NAV: ReadonlyArray<NavEntry> = [
   { id: "dashboard", label: "首页", href: "/", icon: creatorIcons.dashboard, match: matchExact("/") },
+  { id: "overview", label: "创作者总览", href: "/overview", icon: creatorIcons.operations, match: matchExact("/overview") },
   // 定位中心 — the upstream constraint source (七步①②, SPEC §3.4): 排在「项目」前.
   { id: "positioning", label: "定位中心", href: "/positioning", icon: creatorIcons.positioning, match: matchExact("/positioning") },
   // T-482 内容雷达：定位之后先观察真实信源，再由用户转为选题。

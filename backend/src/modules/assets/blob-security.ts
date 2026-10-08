@@ -167,3 +167,17 @@ export function rootPathLegalityReason(rootPath: string): string | null {
   }
   return null;
 }
+
+export interface WorkspaceBlobScope {userId:string;groupId?:string|null;accountId?:string|null}
+export function encodeWorkspaceBlobScope(scope:WorkspaceBlobScope):string {
+ return Buffer.from(JSON.stringify({userId:scope.userId,groupId:scope.groupId??null,accountId:scope.accountId??null})).toString("base64url");
+}
+export function decodeWorkspaceBlobScope(value:string):WorkspaceBlobScope|null {
+ try{const s=JSON.parse(Buffer.from(value,"base64url").toString("utf8"));return typeof s.userId==="string" && (s.groupId===null||typeof s.groupId==="string") && (s.accountId===null||typeof s.accountId==="string") ? s : null;}catch{return null;}
+}
+export function signWorkspaceBlobToken(method:BlobMethod,key:string,exp:number,scope:string):string {
+ return signBlobToken(method,`${scope}:${key}`,exp);
+}
+export function verifyWorkspaceBlobToken(method:BlobMethod,key:string,exp:number,token:string|null,scope:string):VerifyResult {
+ return verifyBlobToken(method,`${scope}:${key}`,exp,token);
+}

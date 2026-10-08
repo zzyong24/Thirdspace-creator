@@ -31,13 +31,13 @@ export function createDailyReportApplication(ports: DailyReportPorts) {
     const startDate = query.startDate ?? query.date ?? yesterdayBeijing(generatedAt).date;
     const endDate = query.endDate ?? startDate;
     const window = {date:startDate, start:Date.parse(startDate + "T00:00:00+08:00"), end:Date.parse(endDate + "T00:00:00+08:00") + DAY};
-    const report: DailyReportPage = { date: window.date, startDate, endDate, timeZone: "Asia/Shanghai", generatedAt, accountId: ctx.accountId ?? null, accountName: null, accountProfileUrl: null, positioningOneLiner: null, positioning: null, warnings: [], works: [], recentWorks: [] };
-    if (!ctx.accountId) return report;
+    const report: DailyReportPage = { date: window.date, startDate, endDate, timeZone: "Asia/Shanghai", generatedAt, groupId:ctx.groupId??null,platform:query.platform??null,selectedAccountId:query.accountId??null, accountId: ctx.groupId ? query.accountId??null : ctx.accountId ?? null, accountName: null, accountProfileUrl: null, positioningOneLiner: null, positioning: null, warnings: [], works: [], recentWorks: [] };
+    if (!ctx.groupId && !ctx.accountId) return report;
     const recentStart = window.end - 7 * DAY;
     const queryStart = Math.min(window.start, recentStart);
     // 一次查询所选范围与截至结束日最近七天的并集，避免读取账号全部项目与产物。
     const pubs = await ports.publishingService.listPublishedInWindow(ctx, { start: new Date(queryStart).toISOString(), end: new Date(window.end).toISOString() });
-    const visible = pubs.filter(p => p.accountId === ctx.accountId && p.status === "published" && !p.hiddenAt && !p.removedAt && p.publishedAt && Date.parse(p.publishedAt) >= queryStart && Date.parse(p.publishedAt) < window.end);
+    const visible = pubs.filter(p => (!ctx.accountId || p.accountId === ctx.accountId) && (!query.platform||p.platform===query.platform) && (!query.accountId||p.accountId===query.accountId) && p.status === "published" && !p.hiddenAt && !p.removedAt && p.publishedAt && Date.parse(p.publishedAt) >= queryStart && Date.parse(p.publishedAt) < window.end);
     const refs = await ports.projectsService.listOutputRefsByOutputIds(ctx, [...new Set(visible.map(p => p.contentOutputId))]);
     const byOutput = new Map(refs.map(r => [r.outputId, r]));
     const selected = visible.filter(p => byOutput.has(p.contentOutputId));
@@ -69,7 +69,7 @@ export function createDailyReportApplication(ports: DailyReportPorts) {
     for (const pub of selected) {
       const ref = byOutput.get(pub.contentOutputId)!, snapshot = byPublication.get(pub.id), metrics: Record<string, number> = {};
       for (const [key, value] of Object.entries(snapshot?.rawMetrics ?? {})) if (typeof value === "number" && Number.isFinite(value)) metrics[key] = value;
-      const work = { publicationId: pub.id, projectId: ref.projectId, title: ref.title || "未命名作品", publishedAt: pub.publishedAt!, capturedAt: snapshot?.capturedAt ?? null, metrics };
+      const work = { platform: pub.platform,accountId:pub.accountId,publicationId: pub.id, projectId: ref.projectId, title: ref.title || "未命名作品", publishedAt: pub.publishedAt!, capturedAt: snapshot?.capturedAt ?? null, metrics };
       if (Date.parse(pub.publishedAt!) >= recentStart) report.recentWorks.push(work);
       if (Date.parse(pub.publishedAt!) >= window.start) {
         const detail = projectData.get(ref.projectId)!;

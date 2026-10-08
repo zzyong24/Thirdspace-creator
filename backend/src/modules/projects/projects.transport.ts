@@ -182,6 +182,23 @@ function toActivity(row: ActivityRow): ProjectActivityResource {
 
 type Input = { params?: unknown; query?: unknown; body?: unknown };
 
+function publicBriefDetailWrite(
+  raw: unknown,
+  trustedContentRadarEvidence?: unknown,
+): BriefDetail | undefined {
+  if (raw == null || typeof raw !== "object" || Array.isArray(raw)) {
+    return raw as BriefDetail | undefined;
+  }
+  const value = { ...(raw as Record<string, unknown>) };
+  // Provenance is written by the server-side Candidate promotion seam only.
+  // Public project create/patch payloads cannot invent or replace it.
+  delete value.contentRadarEvidence;
+  if (trustedContentRadarEvidence !== undefined) {
+    value.contentRadarEvidence = trustedContentRadarEvidence;
+  }
+  return value as BriefDetail;
+}
+
 export interface ProjectsTransportDeps {
   service: ProjectsService;
   repo: ProjectRepository;
@@ -221,7 +238,7 @@ export function createProjectsTransport(
           const row = await service.createProject(ctx, {
             title: String(b.title ?? ""),
             brief: b.brief as string | undefined,
-            briefDetail: b.briefDetail as BriefDetail | undefined,
+            briefDetail: publicBriefDetailWrite(b.briefDetail),
             contentType: b.contentType as string | undefined,
             creationMode: b.creationMode as string | undefined,
             targetPlatforms: b.targetPlatforms as string[] | undefined,
@@ -247,21 +264,32 @@ export function createProjectsTransport(
             data: toProject(await repo.get(ctx, p.projectId ?? "")),
             meta: singleMeta,
           };
-        case "projects.patch":
+        case "projects.patch": {
+          let briefDetail: BriefDetail | undefined;
+          if ("briefDetail" in b) {
+            const current = await repo.get(ctx, p.projectId ?? "");
+            const currentBrief =
+              (current as { briefDetail?: unknown }).briefDetail;
+            const trustedEvidence =
+              currentBrief &&
+              typeof currentBrief === "object" &&
+              !Array.isArray(currentBrief)
+                ? (currentBrief as Record<string, unknown>).contentRadarEvidence
+                : undefined;
+            briefDetail = publicBriefDetailWrite(b.briefDetail, trustedEvidence);
+          }
           return {
             data: toProject(
               await service.patchProject(ctx, p.projectId ?? "", {
                 title: b.title as string | undefined,
                 brief: b.brief as string | undefined,
-                briefDetail:
-                  "briefDetail" in b
-                    ? (b.briefDetail as Record<string, unknown> | undefined)
-                    : undefined,
+                briefDetail,
                 starred: b.starred as boolean | undefined,
               }),
             ),
             meta: singleMeta,
           };
+        }
         case "projects.archive":
           return {
             data: toProject(await service.archiveProject(ctx, p.projectId ?? "")),

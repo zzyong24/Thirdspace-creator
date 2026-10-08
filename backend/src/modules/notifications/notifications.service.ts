@@ -1,3 +1,4 @@
+import {workspaceKey} from "../../workspace-scope";
 import type { RequestContext } from "@creatoros/contract";
 import type {
   NotificationRepository,
@@ -60,7 +61,7 @@ export function createNotificationsService(
       const { rows, total } = await repo.list(
         ctx.userId,
         // [T-332 S2] 号可见集:有号 → 当前号 + 系统级;无号 → 只见系统级。
-        ctx.accountId ?? null,
+        ctx.groupId ? workspaceKey(ctx) : ctx.accountId ?? null,
         page,
         pageSize,
       );
@@ -73,7 +74,7 @@ export function createNotificationsService(
       // unswallowed (the dispatch route maps it to 404).
       return repo.markRead(
         ctx.userId,
-        ctx.accountId ?? null,
+        ctx.groupId ? workspaceKey(ctx) : ctx.accountId ?? null,
         notificationId,
         deps.now(),
       );
@@ -89,6 +90,7 @@ export function createNotificationsService(
       return repo.create({
         id: deps.nextId("notif"),
         userId: ctx.userId,
+        groupId: ctx.groupId ?? null,
         accountId: ctx.accountId ?? null,
         notificationType: input.notificationType,
         title: input.title,

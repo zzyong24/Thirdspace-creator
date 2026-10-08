@@ -47,3 +47,9 @@ export {
 export {lockAccountForSupply} from "./platform-account.service";
 
 export {createBrowserProfileAuthority} from "./browser-profile-authority.service";
+
+export {createAccountGroupService,type AccountGroupService} from "./account-group.service";
+export {createAccountGroupTransport,ACCOUNT_GROUP_OP_IDS} from "./account-group.transport";
+
+export {createGroupMigrationService,type GroupMigrationService} from "./group-migration.service";
+export {createMembershipLockService,lockWorkspaceMembership,assertFrozenWorkspaceMembership,activeAccountTaskCount} from "./membership-lock.service";

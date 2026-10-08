@@ -264,7 +264,7 @@ export async function runAutomationDriverTick(
     if (!claim) break;
     const taskCtx: RequestContext = {
       userId: claim.task.userId,
-      accountId: claim.task.accountId,
+      accountId: claim.task.accountId,groupId:claim.task.groupId,groupVersion:claim.task.groupVersion??undefined,membershipVersion:claim.task.membershipVersion??undefined,
       requestId: `automation:${claim.task.id}`,
       source: "ingestion",
     };

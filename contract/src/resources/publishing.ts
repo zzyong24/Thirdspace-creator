@@ -8,6 +8,8 @@ const timestamps = { createdAt: iso8601, updatedAt: iso8601 };
 export const publicationResource = z.object({
   id,
   contentOutputId: id,
+  accountId:id.nullable().optional(),
+  groupId:id.nullable().optional(),
   platform: platformId,
   accountReference: z.string(),
   status: publicationStatus,

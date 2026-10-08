@@ -58,6 +58,9 @@ export function creatorApiHeaders(
   input?: HeadersInit,
 ): Record<string, string> {
   const headers = Object.fromEntries(new Headers(input).entries());
+  const currentGroupId=readCurrentGroupId();
+  syncCurrentGroupCookie(currentGroupId);
+  if(currentGroupId)headers["x-group-id"]=currentGroupId;
   const currentAccountId = readCurrentAccountId();
   syncCurrentAccountCookie(currentAccountId);
   Object.assign(headers, handshakeHeaders());
@@ -178,4 +181,18 @@ export function createHttpTransport(baseUrl = "/api/v1"): Transport {
       return res.json();
     },
   };
+}
+
+export const CURRENT_GROUP_KEY="creatoros:current-group";
+export const CURRENT_GROUP_COOKIE="creatoros_current_group";
+export function readCurrentGroupId():string|null{
+ try{return typeof window==="undefined"?null:window.localStorage.getItem(CURRENT_GROUP_KEY);}catch{return null;}
+}
+export function syncCurrentGroupCookie(groupId:string|null):void{
+ if(typeof document==="undefined")return;
+ document.cookie=`${CURRENT_GROUP_COOKIE}=${groupId?encodeURIComponent(groupId):""}; Path=/; SameSite=Lax; Max-Age=${groupId?31536000:0}`;
+}
+export function writeCurrentGroupId(groupId:string|null):void{
+ try{if(groupId)window.localStorage.setItem(CURRENT_GROUP_KEY,groupId);else window.localStorage.removeItem(CURRENT_GROUP_KEY);window.localStorage.removeItem(CURRENT_ACCOUNT_KEY);}catch{/* cookie remains usable */}
+ syncCurrentGroupCookie(groupId);syncCurrentAccountCookie(null);
 }

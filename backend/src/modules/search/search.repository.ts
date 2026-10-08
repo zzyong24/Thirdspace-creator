@@ -1,3 +1,4 @@
+import {workspaceFilter,workspaceStamp,assertWritableWorkspace} from "../../workspace-scope";
 import {
   and,
   eq,
@@ -26,10 +27,11 @@ export interface RepoDeps {
   // [T-332 S2 · ISO-02/03] 搜索索引按号隔离维度(防跨号串味),**必填 strict**:
   // service 入口已 requireAccountId(未选号 = 引导态,禁读写,SPEC §4.2),不存在
   // 「无号 → 退化全量」分支。search_history 是 user 级查询日志,不按号隔离。
-  accountId: string;
+  accountId: string|null;
+  groupId?: string|null;
 }
 
-export type SearchDocumentRow = typeof searchDocuments.$inferSelect;
+export type SearchDocumentRow = Omit<typeof searchDocuments.$inferSelect,"groupId"> & {groupId?:string|null};
 export type SearchHistoryRow = typeof searchHistory.$inferSelect;
 
 export interface UpsertDocumentInput {
@@ -90,13 +92,13 @@ function escapeLike(value: string): string {
 
 export function createSearchRepository(db: Db, deps: RepoDeps): SearchRepository {
   // [T-332 S2 · ISO-02] scopedDoc = 「userId + strict 按号门」复合条件:accountId 必填,
-  // 恒叠 `eq(searchDocuments.accountId, deps.accountId)`(跨号文档在本号搜不到)。原
+  // 恒叠 `workspaceFilter(searchDocuments, deps)`(跨号文档在本号搜不到)。原
   // 「null → 退化只按 userId」分支已随 SPEC §4.2 裁决(未选号 = 引导态)收掉。所有
   // search_documents owned-root 读/删点(search/facetMatches/listByEntityType/
   // removeDocument/deleteAllDocuments)复用它。search_history 不按号隔离,scopedHist 不变。
   const scopedDoc = and(
     eq(searchDocuments.userId, deps.userId),
-    eq(searchDocuments.accountId, deps.accountId),
+    workspaceFilter(searchDocuments, deps),
   );
   const scopedHist = eq(searchHistory.userId, deps.userId);
 
@@ -122,6 +124,7 @@ export function createSearchRepository(db: Db, deps: RepoDeps): SearchRepository
       });
     },
     async upsertDocument(input) {
+      await assertWritableWorkspace(db,{...deps,requestId:"search-index",source:"user"});
       const indexedAt = deps.now();
       const inserted = await db
         .insert(searchDocuments)
@@ -131,7 +134,7 @@ export function createSearchRepository(db: Db, deps: RepoDeps): SearchRepository
           // [T-332 S2 · ISO-03/§4.6] create stamp:投影索引归到当前号(必填,无 null 兜底)。
           // 唯一键 (user_id, entity_type, entity_id) 不含 account_id 是安全的:源实体本身
           // per-account(一个 entity 只属一个号),同 entity 不存在跨号双份索引。
-          accountId: deps.accountId,
+          ...workspaceStamp(deps),
           entityType: input.entityType,
           entityId: input.entityId,
           title: input.title,
@@ -148,7 +151,7 @@ export function createSearchRepository(db: Db, deps: RepoDeps): SearchRepository
           ],
           set: {
             // conflict 时刷新归属号(重建/重索引把 stale 号纠正到当前号;strict 必填)。
-            accountId: deps.accountId,
+            ...workspaceStamp(deps),
             title: input.title,
             body: input.body,
             searchText: input.searchText,

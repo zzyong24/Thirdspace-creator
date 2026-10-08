@@ -1,3 +1,4 @@
+import {requireWorkspace,workspaceStamp} from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
 import type {
   ProjectRepository,
@@ -143,34 +144,60 @@ export interface BriefDetail {
     可借鉴点?: string[];
     适配本账号建议?: string;
   };
-  contentRadarEvidence?: {
-    sourceReferences: Array<{
-      kind: "original_video" | "source_page";
-      platform: string;
-      label: string;
-      url: string;
-      intelligenceItemId?: string;
-    }>;
-    decomposition: {
-      hook: string;
-      structureSteps: string[];
-      coreClaims: string[];
-      reusablePattern: string;
-      factRisks: string[];
-    };
-    strategy: {
-      keep: string[];
-      replace: string[];
-      add: string[];
-      avoid: string[];
-    };
-    adaptedDraftSeed: {
-      contentText: string;
-      generatedFromTranscriptHash: string;
-      strategyHash: string;
-      templateVersion: string;
-    };
-  };
+  contentRadarEvidence?:
+    | {
+        generationMode: "rewrite_only";
+        sourceReferences: Array<{
+          kind: "original_video" | "source_page";
+          platform: string;
+          label: string;
+          url: string;
+          intelligenceItemId?: string;
+        }>;
+        sourceSnapshotId: string;
+        generatedFromTranscriptHash: string;
+        adaptedDraftSeed: {
+          generationMode: "rewrite_only";
+          contentText: string;
+          sourceSnapshotId: string;
+          generatedFromTranscriptHash: string;
+          aiTaskId?: string;
+          positioningVersionId?: string;
+          personalizationStatus: "applied" | "not_applied";
+          templateVersion: string;
+        };
+        positioningVersionId?: string;
+        personalizationStatus?: "applied" | "not_applied";
+        aiTaskId?: string;
+      }
+    | {
+        sourceReferences: Array<{
+          kind: "original_video" | "source_page";
+          platform: string;
+          label: string;
+          url: string;
+          intelligenceItemId?: string;
+        }>;
+        decomposition: {
+          hook: string;
+          structureSteps: string[];
+          coreClaims: string[];
+          reusablePattern: string;
+          factRisks: string[];
+        };
+        strategy: {
+          keep: string[];
+          replace: string[];
+          add: string[];
+          avoid: string[];
+        };
+        adaptedDraftSeed: {
+          contentText: string;
+          generatedFromTranscriptHash: string;
+          strategyHash: string;
+          templateVersion: string;
+        };
+      };
 }
 
 // 数据底座(宪法 §7 / SPEC §1.2)—— 导入项目的平台引用。装在 projects.platform_ref
@@ -603,8 +630,6 @@ export function parseContentRadarEvidence(
 ): BriefDetail["contentRadarEvidence"] | undefined {
   if (raw == null || typeof raw !== "object") return undefined;
   const value = raw as Record<string, unknown>;
-  const decomposition = value.decomposition as Record<string, unknown> | undefined;
-  const strategy = value.strategy as Record<string, unknown> | undefined;
   const strings = (input: unknown, max: number) =>
     Array.isArray(input)
       ? input
@@ -612,16 +637,6 @@ export function parseContentRadarEvidence(
           .filter(Boolean)
           .slice(0, max)
       : [];
-  const hook = typeof decomposition?.hook === "string" ? decomposition.hook.trim() : "";
-  const reusablePattern =
-    typeof decomposition?.reusablePattern === "string"
-      ? decomposition.reusablePattern.trim()
-      : "";
-  const structureSteps = strings(decomposition?.structureSteps, 8);
-  const coreClaims = strings(decomposition?.coreClaims, 8);
-  if (!hook || !reusablePattern || structureSteps.length < 2 || coreClaims.length < 1) {
-    return undefined;
-  }
   const sourceReferences = Array.isArray(value.sourceReferences)
     ? value.sourceReferences.flatMap((rawReference) => {
         if (rawReference == null || typeof rawReference !== "object") return [];
@@ -650,6 +665,92 @@ export function parseContentRadarEvidence(
         }];
       }).slice(0, 10)
     : [];
+
+  if (value.generationMode === "rewrite_only") {
+    const draft = value.adaptedDraftSeed as Record<string, unknown> | undefined;
+    const sourceSnapshotId =
+      typeof value.sourceSnapshotId === "string" ? value.sourceSnapshotId.trim() : "";
+    const generatedFromTranscriptHash =
+      typeof value.generatedFromTranscriptHash === "string"
+        ? value.generatedFromTranscriptHash.trim()
+        : "";
+    const contentText = typeof draft?.contentText === "string" ? draft.contentText.trim() : "";
+    const draftSnapshotId =
+      typeof draft?.sourceSnapshotId === "string" ? draft.sourceSnapshotId.trim() : "";
+    const draftTranscriptHash =
+      typeof draft?.generatedFromTranscriptHash === "string"
+        ? draft.generatedFromTranscriptHash.trim()
+        : "";
+    const draftAiTaskId =
+      typeof draft?.aiTaskId === "string" ? draft.aiTaskId.trim() : "";
+    const evidenceAiTaskId =
+      typeof value.aiTaskId === "string" ? value.aiTaskId.trim() : "";
+    const templateVersion =
+      typeof draft?.templateVersion === "string" ? draft.templateVersion.trim() : "";
+    const draftPositioningVersionId =
+      typeof draft?.positioningVersionId === "string"
+        ? draft.positioningVersionId.trim()
+        : "";
+    const positioningVersionId =
+      typeof value.positioningVersionId === "string"
+        ? value.positioningVersionId.trim()
+        : "";
+    const draftPersonalizationStatus = draft?.personalizationStatus;
+    const personalizationStatus = value.personalizationStatus;
+    if (
+      sourceReferences.length === 0 ||
+      !sourceSnapshotId ||
+      !generatedFromTranscriptHash ||
+      draft?.generationMode !== "rewrite_only" ||
+      !contentText ||
+      draftSnapshotId !== sourceSnapshotId ||
+      draftTranscriptHash !== generatedFromTranscriptHash ||
+      !templateVersion ||
+      (draftPersonalizationStatus !== "applied" &&
+        draftPersonalizationStatus !== "not_applied") ||
+      (personalizationStatus !== undefined &&
+        personalizationStatus !== draftPersonalizationStatus) ||
+      (positioningVersionId &&
+        draftPositioningVersionId &&
+        positioningVersionId !== draftPositioningVersionId) ||
+      (evidenceAiTaskId && draftAiTaskId && evidenceAiTaskId !== draftAiTaskId)
+    ) return undefined;
+    const aiTaskId = evidenceAiTaskId || draftAiTaskId;
+    return {
+      generationMode: "rewrite_only",
+      sourceReferences,
+      sourceSnapshotId,
+      generatedFromTranscriptHash,
+      adaptedDraftSeed: {
+        generationMode: "rewrite_only",
+        contentText: contentText.slice(0, 50_000),
+        sourceSnapshotId,
+        generatedFromTranscriptHash,
+        ...(draftAiTaskId ? { aiTaskId: draftAiTaskId } : {}),
+        ...(draftPositioningVersionId ? { positioningVersionId: draftPositioningVersionId } : {}),
+        personalizationStatus: draftPersonalizationStatus,
+        templateVersion,
+      },
+      ...(positioningVersionId ? { positioningVersionId } : {}),
+      ...(personalizationStatus === "applied" || personalizationStatus === "not_applied"
+        ? { personalizationStatus }
+        : {}),
+      ...(aiTaskId ? { aiTaskId } : {}),
+    };
+  }
+
+  const decomposition = value.decomposition as Record<string, unknown> | undefined;
+  const strategy = value.strategy as Record<string, unknown> | undefined;
+  const hook = typeof decomposition?.hook === "string" ? decomposition.hook.trim() : "";
+  const reusablePattern =
+    typeof decomposition?.reusablePattern === "string"
+      ? decomposition.reusablePattern.trim()
+      : "";
+  const structureSteps = strings(decomposition?.structureSteps, 8);
+  const coreClaims = strings(decomposition?.coreClaims, 8);
+  if (!hook || !reusablePattern || structureSteps.length < 2 || coreClaims.length < 1) {
+    return undefined;
+  }
   const draft = value.adaptedDraftSeed as Record<string, unknown> | undefined;
   const contentText = typeof draft?.contentText === "string" ? draft.contentText.trim() : "";
   const generatedFromTranscriptHash =
@@ -935,7 +1036,7 @@ export function createProjectsService(
     getProject: (ctx, projectId) => repo.get(ctx, projectId),
     getOutput: (ctx, outputId) => repo.getOutput(ctx, outputId),
     async createProject(ctx, cmd) {
-      requireAccountId(ctx.accountId, "projects.createProject");
+      requireWorkspace(ctx);
       const ts = deps.now();
       const projectId = deps.nextId("project");
       // 数据底座(SPEC §1.2/§1.3):source 默认 manual;imported 是真实采集导入的历史
@@ -970,7 +1071,7 @@ export function createProjectsService(
         userId: ctx.userId,
         // [T-332 S2] 写 stamp 一律来自断言后的 ctx.accountId(ISO-03,不再有 null 兜底);
         //   repo.insertProject 会再次以 ctx 为准覆盖(SPEC §4.6 防绕过)。
-        accountId: requireAccountId(ctx.accountId, "projects.createProject"),
+        ...workspaceStamp(ctx),
         title: cmd.title,
         brief: cmd.brief ?? "",
         briefDetail: briefDetailMirror,
@@ -1082,7 +1183,7 @@ export function createProjectsService(
     },
 
     async getProjectIdByOutput(ctx, outputId) {
-      requireAccountId(ctx.accountId, "projects.getProjectIdByOutput"); // [T-332 S2] 未选号=引导态禁读写
+      requireWorkspace(ctx); // [T-332 S2] 未选号=引导态禁读写
       // T-724：只有真实不存在/不可见才能回退 null；数据库故障时 fail closed，
       // 避免自动化把一次读失败扩大成永久重复项目。
       try {
@@ -1095,7 +1196,7 @@ export function createProjectsService(
     },
 
     async getOutputOwnerSummary(ctx, outputId) {
-      requireAccountId(ctx.accountId, "projects.getOutputOwnerSummary"); // [T-332 S2] 未选号=引导态禁读写
+      requireWorkspace(ctx); // [T-332 S2] 未选号=引导态禁读写
       // T-724: null 只代表 output/project 确实不存在或不可见；数据库/驱动故障必须
       // 原样上抛。否则暂时性读故障会被误判成“孤儿锚”，进而错误换绑 publication。
       try {
@@ -1287,7 +1388,7 @@ export function createProjectsService(
     },
 
     async patchProject(ctx, projectId, patch) {
-      requireAccountId(ctx.accountId, "projects.patchProject"); // [T-332 S2] 未选号=引导态禁读写
+      requireWorkspace(ctx); // [T-332 S2] 未选号=引导态禁读写
       const current = await repo.get(ctx, projectId);
       if (current.status === "archived") {
         throw new ProjectStateError("Project is archived (read-only)");
@@ -1323,7 +1424,7 @@ export function createProjectsService(
     },
 
     async archiveProject(ctx, projectId) {
-      requireAccountId(ctx.accountId, "projects.archiveProject"); // [T-332 S2] 未选号=引导态禁读写
+      requireWorkspace(ctx); // [T-332 S2] 未选号=引导态禁读写
       const current = await repo.get(ctx, projectId);
       if (current.status === "archived") {
         throw new ProjectStateError("Project already archived");
@@ -1347,7 +1448,7 @@ export function createProjectsService(
     },
 
     async deleteProject(ctx, projectId) {
-      requireAccountId(ctx.accountId, "projects.deleteProject"); // [T-332 S2] 未选号=引导态禁读写
+      requireWorkspace(ctx); // [T-332 S2] 未选号=引导态禁读写
       // ownership 校验在 repo.deleteProjectCascade 内(删前 get());这里不再另守 archived
       // 态 —— 物理删除是终极下线,归档项目照样可删(与 archive 的 already-archived 409
       // 守卫正交)。级联清理 + 删根一个事务包裹(见 repository.deleteProjectCascade)。
@@ -1356,7 +1457,7 @@ export function createProjectsService(
     },
 
     async transitionProjectStage(ctx, projectId, stage, cmd) {
-      requireAccountId(ctx.accountId, "projects.transitionProjectStage"); // [T-332 S2] 未选号=引导态禁读写
+      requireWorkspace(ctx); // [T-332 S2] 未选号=引导态禁读写
       const project = await repo.get(ctx, projectId);
       if (project.status === "archived") {
         throw new ProjectStateError("Project is archived (read-only)");
@@ -1433,13 +1534,13 @@ export function createProjectsService(
     },
 
     async validateStageGate(ctx, projectId, fromStage) {
-      requireAccountId(ctx.accountId, "projects.validateStageGate"); // [T-332 S2] 未选号=引导态禁读写
+      requireWorkspace(ctx); // [T-332 S2] 未选号=引导态禁读写
       await repo.get(ctx, projectId); // ownership before reading peer deliverables
       return validateStageGate(ctx, projectId, fromStage);
     },
 
     async createOutput(ctx, projectId, cmd) {
-      requireAccountId(ctx.accountId, "projects.createOutput"); // [T-332 S2] 未选号=引导态禁读写
+      requireWorkspace(ctx); // [T-332 S2] 未选号=引导态禁读写
       await repo.get(ctx, projectId); // ownership before the UoW
       const ts = deps.now();
       const outputId = deps.nextId("output");
@@ -1481,7 +1582,7 @@ export function createProjectsService(
     },
 
     async patchOutput(ctx, outputId, patch) {
-      requireAccountId(ctx.accountId, "projects.patchOutput"); // [T-332 S2] 未选号=引导态禁读写
+      requireWorkspace(ctx); // [T-332 S2] 未选号=引导态禁读写
       const current = await repo.getOutput(ctx, outputId);
       const set: Partial<ContentOutputRow> = { updatedAt: deps.now() };
       if (patch.title !== undefined) set.title = patch.title;
@@ -1506,7 +1607,7 @@ export function createProjectsService(
     },
 
     async transitionOutputStage(ctx, outputId, stage, cmd) {
-      requireAccountId(ctx.accountId, "projects.transitionOutputStage"); // [T-332 S2] 未选号=引导态禁读写
+      requireWorkspace(ctx); // [T-332 S2] 未选号=引导态禁读写
       const output = await repo.getOutput(ctx, outputId);
       const row = await repo.getOutputStage(ctx, outputId, stage);
       const target = nextStageStatus(row.status as StageStatus, cmd.reason);
@@ -1549,7 +1650,7 @@ export function createProjectsService(
     },
 
     async createTask(ctx, projectId, cmd) {
-      requireAccountId(ctx.accountId, "projects.createTask"); // [T-332 S2] 未选号=引导态禁读写
+      requireWorkspace(ctx); // [T-332 S2] 未选号=引导态禁读写
       await repo.get(ctx, projectId); // ownership
       const task = await repo.insertTask(ctx, {
         id: deps.nextId("task"),
@@ -1571,7 +1672,7 @@ export function createProjectsService(
     },
 
     async patchTask(ctx, taskId, patch) {
-      requireAccountId(ctx.accountId, "projects.patchTask"); // [T-332 S2] 未选号=引导态禁读写
+      requireWorkspace(ctx); // [T-332 S2] 未选号=引导态禁读写
       const current = await repo.getTask(ctx, taskId);
       const set: Partial<TaskRow> = {};
       if (patch.title !== undefined) set.title = patch.title;
@@ -1591,7 +1692,7 @@ export function createProjectsService(
     },
 
     async listOutputIdsByProject(ctx, projectId) {
-      requireAccountId(ctx.accountId, "projects.listOutputIdsByProject"); // [T-332 S2] 未选号=引导态禁读写
+      requireWorkspace(ctx); // [T-332 S2] 未选号=引导态禁读写
       // repo.listOutputs gates the parent project's ownership (cross-user /
       // unknown → OwnershipError) then returns the user-scoped outputs; we expose
       // only the ids so downstream resolvers never see the full row.
@@ -1600,7 +1701,7 @@ export function createProjectsService(
     },
 
     async getProjectOverviewCore(ctx, projectId) {
-      requireAccountId(ctx.accountId, "projects.getProjectOverviewCore");
+      requireWorkspace(ctx);
       // Read the root first so unknown/cross-account ids fail closed before any
       // child query. Child repository reads repeat the same parent ownership gate.
       const project = await repo.get(ctx, projectId);
@@ -1613,16 +1714,16 @@ export function createProjectsService(
     },
 
     async listOutputRefsByOutputIds(ctx, outputIds) {
-      requireAccountId(ctx.accountId, "projects.listOutputRefsByOutputIds");
+      requireWorkspace(ctx);
       return repo.listOutputRefsByOutputIds(ctx, outputIds);
     },
     async listOutputRefsByProjects(ctx, projectIds) {
-      requireAccountId(ctx.accountId, "projects.listOutputRefsByProjects");
+      requireWorkspace(ctx);
       return repo.listOutputRefsByProjects(ctx, projectIds);
     },
 
     async getScheduleProject(ctx, projectId) {
-      requireAccountId(ctx.accountId, "projects.getScheduleProject");
+      requireWorkspace(ctx);
       const project = await repo.get(ctx, projectId);
       const outputs = await repo.listOutputs(ctx, projectId);
       return {
@@ -1640,12 +1741,12 @@ export function createProjectsService(
     },
 
     async listProjectsForComposition(ctx) {
-      requireAccountId(ctx.accountId, "projects.listProjectsForComposition");
+      requireWorkspace(ctx);
       return repo.list(ctx);
     },
 
     async hasImportedProjects(ctx) {
-      requireAccountId(ctx.accountId, "projects.hasImportedProjects"); // [T-332 S2] 未选号=引导态禁读写
+      requireWorkspace(ctx); // [T-332 S2] 未选号=引导态禁读写
       // 数据底座(SPEC §1.4)单一判据:存在 ≥1 个 source='imported' 项目。repo.listImported
       //   已 user-scoped + source 过滤,故 length>0 即"该用户拉过真账号"。
       const imported = await repo.listImported(ctx);
@@ -1653,13 +1754,13 @@ export function createProjectsService(
     },
 
     async listImportedProjectIds(ctx) {
-      requireAccountId(ctx.accountId, "projects.listImportedProjectIds"); // [T-332 S2] 未选号=引导态禁读写
+      requireWorkspace(ctx); // [T-332 S2] 未选号=引导态禁读写
       const imported = await repo.listImported(ctx);
       return imported.map((p) => p.id);
     },
 
     async listImportedWorks(ctx) {
-      requireAccountId(ctx.accountId, "projects.listImportedWorks"); // [T-332 S2] 未选号=引导态禁读写
+      requireWorkspace(ctx); // [T-332 S2] 未选号=引导态禁读写
       // [T-151 / T-037 缺口 A] imported 项目 → { projectId, platform, externalId }。externalId 从
       //   platformRef(JSON {platform, externalId})取;无锚(异常行)诚实过滤掉(无法触发逐字稿/重建)。
       const imported = await repo.listImported(ctx);
@@ -1680,7 +1781,7 @@ export function createProjectsService(
     },
 
     async getDashboardSummary(ctx) {
-      requireAccountId(ctx.accountId, "projects.getDashboardSummary"); // [T-332 S2] 未选号=引导态禁读写
+      requireWorkspace(ctx); // [T-332 S2] 未选号=引导态禁读写
       // continueCreating = most-recently-updated non-archived project (in-module
       // read only; repo.list is already user-scoped).
       const projectRows = await repo.list(ctx);

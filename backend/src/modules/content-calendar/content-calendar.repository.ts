@@ -1,3 +1,7 @@
+import {accountGroups} from "../../schema/account-groups";
+import {workspaceFilter, workspaceStamp} from "../../workspace-scope";
+import type {RequestContext} from "@creatoros/contract";
+import {lockWorkspaceMembership} from "../platform-account/membership-lock.service";
 import type { Db } from "@creatoros/backend";
 import {
   and,
@@ -7,6 +11,7 @@ import {
   inArray,
   isNotNull,
   lte,
+  ne,
 } from "drizzle-orm";
 import {
   contentCalendarEntries,
@@ -47,10 +52,13 @@ export interface RepoDeps {
   userId: string; // the ownership boundary, baked in at construction
   // [T-332 S2] ctx 当前号(service 已断言非空)。by-id 读写的号一致性门用它叠号
   // (§4.5:跨号 by-id → 404);列表/节奏路径仍走显式 accountId 参数(strict eq)。
-  accountId: string;
+  accountId: string | null;
+  groupId?: string | null;
+  ctx?: RequestContext;
 }
 
 export interface CreateEntryInput {
+  targetAccountId?: string | null;
   plannedAt: string;
   plannedDate?: string;
   projectId?: string | null;
@@ -94,19 +102,20 @@ export interface ContentCalendarRepository {
   seedCadences(rows: PublishingCadenceRow[]): Promise<void>;
 
   createEntry(
-    accountId: string,
+    accountId: string | null,
     input: CreateEntryInput,
   ): Promise<ContentCalendarEntryRow>;
   listEntries(
-    accountId: string,
+    accountId: string | null,
     query: ListEntriesQuery,
   ): Promise<{ rows: ContentCalendarEntryRow[]; total: number }>;
   getEntry(entryId: string): Promise<ContentCalendarEntryRow>;
+  setTarget(entryId: string, targetAccountId: string | null): Promise<ContentCalendarEntryRow>;
   findActiveProjectSchedule(
     projectId: string,
   ): Promise<ContentCalendarEntryRow | null>;
   listActiveProjectSchedules(
-    accountId: string,
+    accountId: string | null,
   ): Promise<ContentCalendarEntryRow[]>;
   updateEntry(
     entryId: string,
@@ -118,15 +127,15 @@ export interface ContentCalendarRepository {
   ): Promise<ContentCalendarEntryRow>;
   deleteEntry(entryId: string): Promise<{ id: string; deleted: true }>;
   entriesForAttainment(
-    accountId: string,
+    accountId: string | null,
     window: { from: string; to: string },
   ): Promise<ContentCalendarEntryRow[]>;
 
   upsertCadence(
-    accountId: string,
+    accountId: string | null,
     input: UpsertCadenceInput,
   ): Promise<PublishingCadenceRow>;
-  getCadence(accountId: string): Promise<PublishingCadenceRow | null>;
+  getCadence(accountId: string | null): Promise<PublishingCadenceRow | null>;
 }
 
 // Reject an entry that binds BOTH a ContentOutput and a Candidate (§7.2 — exactly one,
@@ -146,6 +155,11 @@ export function createContentCalendarRepository(
   db: Db,
   deps: RepoDeps,
 ): ContentCalendarRepository {
+  async function lockWritableGroup(tx:Parameters<Parameters<Db["transaction"]>[0]>[0]):Promise<void> {
+    if (!deps.groupId) return;
+    const [group]=await tx.select({id:accountGroups.id}).from(accountGroups).where(and(eq(accountGroups.userId,deps.userId),eq(accountGroups.id,deps.groupId),eq(accountGroups.status,"active"))).for("update");
+    if(!group)throw new OwnershipError("账号组已归档或不可用");
+  }
   async function getEntryRowById(
     entryId: string,
   ): Promise<ContentCalendarEntryRow> {
@@ -157,7 +171,7 @@ export function createContentCalendarRepository(
           eq(contentCalendarEntries.userId, deps.userId),
           // [T-332 S2] 号一致性门(§4.5):by-id 叠当前号;跨号与跨 user 同语义
           // (404,不泄露存在)。
-          eq(contentCalendarEntries.accountId, deps.accountId),
+          workspaceFilter(contentCalendarEntries, deps),
           eq(contentCalendarEntries.id, entryId),
         ),
       );
@@ -188,12 +202,17 @@ export function createContentCalendarRepository(
       const contentOutputId = input.contentOutputId ?? null;
       const candidateId = input.candidateId ?? null;
       assertNotBothBound(contentOutputId, candidateId);
-      const inserted = await db
+      return db.transaction(async tx => {
+      const frozen = deps.groupId && deps.ctx ? await lockWorkspaceMembership(tx, {...deps.ctx, accountId:input.targetAccountId ?? null, membershipVersion:undefined}) : null;
+      await lockWritableGroup(tx);
+      const inserted = await tx
         .insert(contentCalendarEntries)
         .values({
           id: deps.nextId("cal"),
           userId: deps.userId,
-          accountId,
+          ...workspaceStamp(deps),
+          accountId: deps.groupId ? (input.targetAccountId ?? null) : accountId,
+          membershipVersion: frozen?.membershipVersion ?? null,
           projectId: input.projectId ?? null,
           plannedDate: input.plannedDate ?? input.plannedAt.slice(0, 10),
           plannedAt: input.plannedAt,
@@ -207,12 +226,13 @@ export function createContentCalendarRepository(
         })
         .returning();
       return inserted[0]!;
+      });
     },
 
     async listEntries(accountId, { from, to, limit = 100, offset = 0 }) {
       const where = and(
         eq(contentCalendarEntries.userId, deps.userId),
-        eq(contentCalendarEntries.accountId, accountId),
+        workspaceFilter(contentCalendarEntries, deps),
         gte(contentCalendarEntries.plannedDate, from.slice(0, 10)),
         lte(contentCalendarEntries.plannedDate, to.slice(0, 10)),
       );
@@ -235,6 +255,17 @@ export function createContentCalendarRepository(
     },
 
     getEntry: getEntryRowById,
+    async setTarget(entryId, targetAccountId) {
+      await getEntryRowById(entryId);
+      if (!deps.groupId || !deps.ctx) throw new ValidationError("请使用账号组入口选择发布目标");
+      return db.transaction(async tx => {
+        const frozen = await lockWorkspaceMembership(tx, {...deps.ctx!, accountId:targetAccountId, membershipVersion:undefined});
+        await lockWritableGroup(tx);
+        const [row] = await tx.update(contentCalendarEntries).set({accountId:targetAccountId,membershipVersion:frozen.membershipVersion,updatedAt:deps.now()}).where(and(eq(contentCalendarEntries.userId,deps.userId),workspaceFilter(contentCalendarEntries,deps),eq(contentCalendarEntries.id,entryId),ne(contentCalendarEntries.status,"published"))).returning();
+        if (!row) throw new OwnershipError("排期不存在");
+        return row;
+      });
+    },
 
     async findActiveProjectSchedule(projectId) {
       const rows = await db
@@ -243,7 +274,7 @@ export function createContentCalendarRepository(
         .where(
           and(
             eq(contentCalendarEntries.userId, deps.userId),
-            eq(contentCalendarEntries.accountId, deps.accountId),
+            workspaceFilter(contentCalendarEntries, deps),
             eq(contentCalendarEntries.projectId, projectId),
             inArray(contentCalendarEntries.status, ["planned", "missed"]),
           ),
@@ -264,7 +295,7 @@ export function createContentCalendarRepository(
         .where(
           and(
             eq(contentCalendarEntries.userId, deps.userId),
-            eq(contentCalendarEntries.accountId, accountId),
+            workspaceFilter(contentCalendarEntries, deps),
             isNotNull(contentCalendarEntries.projectId),
             inArray(contentCalendarEntries.status, ["planned", "missed"]),
           ),
@@ -298,19 +329,22 @@ export function createContentCalendarRepository(
           ? patch.candidateId
           : existing.candidateId;
       assertNotBothBound(resultingOutputId, resultingCandidateId);
-      const updated = await db
+      return db.transaction(async tx=>{
+      await lockWritableGroup(tx);
+      const updated = await tx
         .update(contentCalendarEntries)
         .set(set)
         .where(
           and(
             eq(contentCalendarEntries.userId, deps.userId),
             // [T-332 S2] 写 WHERE 同步叠号(与门一致,防 TOCTOU 漂移)。
-            eq(contentCalendarEntries.accountId, deps.accountId),
+            workspaceFilter(contentCalendarEntries, deps),
             eq(contentCalendarEntries.id, entryId),
           ),
         )
         .returning();
       return updated[0]!;
+      });
     },
 
     async setEntryStatus(entryId, { status, publishedAt }) {
@@ -320,34 +354,40 @@ export function createContentCalendarRepository(
         updatedAt: deps.now(),
       };
       if (publishedAt !== undefined) set.publishedAt = publishedAt;
-      const updated = await db
+      return db.transaction(async tx=>{
+      await lockWritableGroup(tx);
+      const updated = await tx
         .update(contentCalendarEntries)
         .set(set)
         .where(
           and(
             eq(contentCalendarEntries.userId, deps.userId),
             // [T-332 S2] 写 WHERE 同步叠号(与门一致)。
-            eq(contentCalendarEntries.accountId, deps.accountId),
+            workspaceFilter(contentCalendarEntries, deps),
             eq(contentCalendarEntries.id, entryId),
           ),
         )
         .returning();
       return updated[0]!;
+      });
     },
 
     async deleteEntry(entryId) {
       await getEntryRowById(entryId); // ownership gate
-      await db
+      return db.transaction(async tx=>{
+      await lockWritableGroup(tx);
+      await tx
         .delete(contentCalendarEntries)
         .where(
           and(
             eq(contentCalendarEntries.userId, deps.userId),
             // [T-332 S2] 删除 WHERE 同步叠号(与门一致)。
-            eq(contentCalendarEntries.accountId, deps.accountId),
+            workspaceFilter(contentCalendarEntries, deps),
             eq(contentCalendarEntries.id, entryId),
           ),
         );
-      return { id: entryId, deleted: true };
+      return { id: entryId, deleted: true as const };
+      });
     },
 
     async entriesForAttainment(accountId, { from, to }) {
@@ -357,7 +397,7 @@ export function createContentCalendarRepository(
         .where(
           and(
             eq(contentCalendarEntries.userId, deps.userId),
-            eq(contentCalendarEntries.accountId, accountId),
+            workspaceFilter(contentCalendarEntries, deps),
             gte(contentCalendarEntries.plannedDate, from.slice(0, 10)),
             lte(contentCalendarEntries.plannedDate, to.slice(0, 10)),
           ),
@@ -370,18 +410,20 @@ export function createContentCalendarRepository(
     },
 
     async upsertCadence(accountId, input) {
-      const existing = await db
+      return db.transaction(async tx=>{
+      await lockWritableGroup(tx);
+      const existing = await tx
         .select()
         .from(publishingCadences)
         .where(
           and(
             eq(publishingCadences.userId, deps.userId),
-            eq(publishingCadences.accountId, accountId),
+            workspaceFilter(publishingCadences, deps),
           ),
         )
         .limit(1);
       if (existing[0]) {
-        const updated = await db
+        const updated = await tx
           .update(publishingCadences)
           .set({
             frequency: input.frequency,
@@ -391,18 +433,19 @@ export function createContentCalendarRepository(
           .where(
             and(
               eq(publishingCadences.userId, deps.userId),
-              eq(publishingCadences.accountId, accountId),
+              workspaceFilter(publishingCadences, deps),
             ),
           )
           .returning();
         return updated[0]!;
       }
-      const inserted = await db
+      const inserted = await tx
         .insert(publishingCadences)
         .values({
           id: deps.nextId("cad"),
           userId: deps.userId,
-          accountId,
+          ...workspaceStamp(deps),
+          accountId: deps.groupId ? null : accountId,
           frequency: input.frequency,
           preferredSlots: input.preferredSlots,
           createdAt: deps.now(),
@@ -410,6 +453,7 @@ export function createContentCalendarRepository(
         })
         .returning();
       return inserted[0]!;
+      });
     },
 
     async getCadence(accountId) {
@@ -419,7 +463,7 @@ export function createContentCalendarRepository(
         .where(
           and(
             eq(publishingCadences.userId, deps.userId),
-            eq(publishingCadences.accountId, accountId),
+            workspaceFilter(publishingCadences, deps),
           ),
         )
         .limit(1);

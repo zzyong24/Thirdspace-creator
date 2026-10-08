@@ -1,3 +1,5 @@
+import {or} from "drizzle-orm";
+import {workspaceFilter,workspaceStamp,assertWritableWorkspace,type WorkspaceKey} from "../../workspace-scope";
 import { and, asc, eq, desc, inArray, sql, type Db } from "@creatoros/backend";
 import { materialLinks } from "@creatoros/backend";
 import { assets, assetFiles, assetUploads } from "./assets.db-schema";
@@ -79,21 +81,21 @@ export interface AssetRepository {
   commitPendingAsset(
     userId: string,
     assetId: string,
-    accountId: string,
+    accountId: string|WorkspaceKey,
   ): Promise<AssetRow | null>;
   // [T-332 S2] owned-root(assets)方法的 accountId 收紧为**必填 string**(strict 门,
   // SPEC §4.1):service 层断言 requireAccountId 后传入,repo 不再有 undefined 退化全量
   // 的分支。repo 是单例、userId 随调用传,故 accountId 也随调用传(不能 baked 进 deps)。
-  searchAssets(userId:string,accountId:string,input:{query:string;limit:number;after?:{createdAt:string;id:string}}):Promise<AssetRow[]>;
+  searchAssets(userId:string,accountId:string|WorkspaceKey,input:{query:string;limit:number;after?:{createdAt:string;id:string}}):Promise<AssetRow[]>;
   listAssets(
     userId: string,
     query: ListAssetsQuery,
-    accountId: string,
+    accountId: string|WorkspaceKey,
   ): Promise<AssetRow[]>;
   getAsset(
     userId: string,
     assetId: string,
-    accountId: string,
+    accountId: string|WorkspaceKey,
   ): Promise<AssetRow | null>;
   /**
    * [T-251] 按来源 URL 反查最近一条 document 类 asset(web.read 落库时把 sourceUrl 存进
@@ -104,7 +106,7 @@ export interface AssetRepository {
   findAssetBySourceUrl(
     userId: string,
     sourceUrl: string,
-    accountId: string,
+    accountId: string|WorkspaceKey,
   ): Promise<AssetRow | null>;
   insertAsset(
     userId: string,
@@ -117,7 +119,7 @@ export interface AssetRepository {
       //   才进素材库(list 按 active 过滤,pending 天然不显示)。
       status?: string;
     },
-    accountId: string,
+    accountId: string|WorkspaceKey,
   ): Promise<AssetRow>;
   updateAssetStatus(
     userId: string,
@@ -128,7 +130,7 @@ export interface AssetRepository {
       currentFileId?: string;
       isFavorite?: boolean;
     },
-    accountId: string,
+    accountId: string|WorkspaceKey,
   ): Promise<AssetRow | null>;
   // 用料反查 (mirror material-links list, inverse direction): the user-scoped 用料链
   // edges whose entity_type='asset' AND entity_id=assetId — i.e. which 创作 use
@@ -140,7 +142,7 @@ export interface AssetRepository {
   listAssetFiles(
     userId: string,
     assetId: string,
-    accountId: string,
+    accountId: string|WorkspaceKey,
   ): Promise<AssetFileRow[]>;
   /**
    * [T-061] Batch-read asset_files by id — the list/get 投影 join(current file
@@ -154,7 +156,7 @@ export interface AssetRepository {
     userId: string,
     assetId: string,
     patch: Record<string, unknown>,
-    accountId: string,
+    accountId: string|WorkspaceKey,
   ): Promise<void>;
   // [T-146 切片 a] 落文档抽取结果到 current file:extractedText(全文,可空)+ extractStatus
   // (done/failed/unsupported)。文件不存在 → no-op(诚实静默,抽取是增强)。要点卡 materialSummary
@@ -163,7 +165,7 @@ export interface AssetRepository {
     userId: string,
     assetId: string,
     patch: { extractedText?: string | null; extractStatus?: string },
-    accountId: string,
+    accountId: string|WorkspaceKey,
   ): Promise<void>;
   /**
    * [T-298] 条件回填旧 local-fs 视频占位元信息。repository 再做一次父资产
@@ -180,17 +182,17 @@ export interface AssetRepository {
       height: number;
       backfilledAt: string;
     },
-    accountId: string,
+    accountId: string|WorkspaceKey,
   ): Promise<boolean>;
   insertAssetFile(
     userId: string,
     input: InsertAssetFileInput,
-    accountId: string,
+    accountId: string|WorkspaceKey,
   ): Promise<AssetFileRow>;
   createUploadSession(
     userId: string,
     input: {
-      accountId: string;
+      accountId: string|WorkspaceKey;
       assetId: string;
       assetType: string;
       mimeType: string;
@@ -202,7 +204,7 @@ export interface AssetRepository {
   getUploadSession(
     userId: string,
     uploadId: string,
-    accountId: string,
+    accountId: string|WorkspaceKey,
   ): Promise<AssetUploadRow | null>;
   /**
    * 把上传凭证、首个文件版本与稳定 assetId 在同一事务内物化。重复调用返回同一
@@ -211,7 +213,7 @@ export interface AssetRepository {
   completeUploadSession(
     userId: string,
     uploadId: string,
-    accountId: string,
+    accountId: string|WorkspaceKey,
     input: { name: string; head: HeadObjectResult },
   ): Promise<AssetRow | null>;
 }
@@ -224,11 +226,16 @@ export function createAssetRepository(
   db: Db,
   deps: RepoDeps,
 ): AssetRepository {
-  // [T-332 S2] 按号隔离 strict 门:一律 `eq(assets.accountId, accountId)`,参数必填
+  // [T-332 S2] 按号隔离 strict 门:一律 `workspaceFilter(assets, accountId)`,参数必填
   // string(service 层 requireAccountId 断言后传入)—— 不再有 undefined 退化全量的
   // lenient 分支(拍板 ② 废除存量兜底)。asset 出生即带号(ISO-03),读侧永不放宽。
-  function accountGate(accountId: string) {
-    return eq(assets.accountId, accountId);
+  function accountGate(accountId: string|WorkspaceKey) {
+    return workspaceFilter(assets, accountId);
+  }
+
+  function readableGate(scope:string|WorkspaceKey) {
+    if(typeof scope==="string"||scope.kind!=="group")return accountGate(scope);
+    return or(accountGate(scope),sql`EXISTS(SELECT 1 FROM resource_access_grants g WHERE g.user_id=${assets.userId} AND g.target_group_id=${scope.id} AND g.resource_type='asset' AND g.resource_id=${assets.id} AND g.revoked_at IS NULL)`)!;
   }
 
   // Internal ownership gate reused by the file methods (cross-user / unknown id
@@ -238,7 +245,7 @@ export function createAssetRepository(
   async function requireOwnedAsset(
     userId: string,
     assetId: string,
-    accountId: string,
+    accountId: string|WorkspaceKey,
   ): Promise<AssetRow> {
     const rows = await db
       .select()
@@ -247,7 +254,7 @@ export function createAssetRepository(
         and(
           eq(assets.id, assetId),
           eq(assets.userId, userId),
-          accountGate(accountId),
+          readableGate(accountId),
         ),
       );
     const row = rows[0];
@@ -257,6 +264,7 @@ export function createAssetRepository(
 
   return {
     async commitPendingAsset(userId, assetId, accountId) {
+      await assertWritableWorkspace(db,{userId,...workspaceStamp(accountId),requestId:"asset-write",source:"user"});
       // 只翻 pending → active(WHERE status='pending' 保证幂等 + 不误动其他态)。
       // [T-332 S2] WHERE 叠账号门:pending 出生即带号(ISO-03),确认时二次校验与当前
       // ctx 一致(SPEC §4.6)—— 换号后确认别号的 pending → 不命中 → null(service 404)。
@@ -303,7 +311,7 @@ export function createAssetRepository(
       // SEMANTIC_BOUNDARY_ALLOW: 用户明确的字面名称检索，不做语义分类或素材选择。
       const pattern="%"+input.query.replace(/[\\%_]/g,"\\$&")+"%";
       return db.select().from(assets).where(and(
-        eq(assets.userId,userId),accountGate(accountId),eq(assets.status,"active"),
+        eq(assets.userId,userId),readableGate(accountId),eq(assets.status,"active"),
         sql`${assets.name} ILIKE ${pattern}`,
         input.after ? sql`(${assets.createdAt} < ${input.after.createdAt} OR (${assets.createdAt} = ${input.after.createdAt} AND ${assets.id} > ${input.after.id}))` : undefined,
       )).orderBy(desc(assets.createdAt),asc(assets.id)).limit(input.limit);
@@ -322,7 +330,7 @@ export function createAssetRepository(
           and(
             eq(assets.userId, userId),
             eq(assets.status, query.status ?? "active"),
-            accountGate(accountId),
+            readableGate(accountId),
           ),
         )
         .orderBy(desc(assets.createdAt), asc(assets.id));
@@ -341,7 +349,7 @@ export function createAssetRepository(
           and(
             eq(assets.id, assetId),
             eq(assets.userId, userId),
-            accountGate(accountId),
+            readableGate(accountId),
           ),
         );
       return rows[0] ?? null;
@@ -359,7 +367,7 @@ export function createAssetRepository(
             eq(assets.userId, userId),
             eq(assets.assetType, "document"),
             inArray(assets.status, ["pending", "active"]),
-            accountGate(accountId),
+            readableGate(accountId),
           ),
         )
         .orderBy(desc(assets.createdAt), asc(assets.id));
@@ -382,6 +390,7 @@ export function createAssetRepository(
     },
 
     async insertAsset(userId, input, accountId) {
+      await assertWritableWorkspace(db,{userId,...workspaceStamp(accountId),requestId:"asset-write",source:"user"});
       const now = deps.now();
       const id = deps.nextId("asset");
       await db.insert(assets).values({
@@ -389,7 +398,7 @@ export function createAssetRepository(
         userId,
         // [T-332 S2] create stamp:归到当前号(必填 string,service 断言后传入;ISO-03
         //   出生即带号,不再有 null 兜底)。
-        accountId,
+        ...workspaceStamp(accountId),
         currentFileId: input.currentFileId,
         assetType: input.assetType,
         name: input.name,
@@ -405,6 +414,7 @@ export function createAssetRepository(
     },
 
     async updateAssetStatus(userId, assetId, patch, accountId) {
+      await assertWritableWorkspace(db,{userId,...workspaceStamp(accountId),requestId:"asset-write",source:"user"});
       const set: Record<string, unknown> = { updatedAt: deps.now() };
       if (patch.status !== undefined) set.status = patch.status;
       if (patch.deletedAt !== undefined) set.deletedAt = patch.deletedAt;
@@ -470,6 +480,9 @@ export function createAssetRepository(
     },
 
     async mergeFileMetadata(userId, assetId, patch, accountId) {
+      const owned = await db.select({id:assets.id}).from(assets).where(and(eq(assets.userId,userId),eq(assets.id,assetId),accountGate(accountId)));
+      if(!owned.length)throw new OwnershipError("素材引用只允许读取，请另存为组内副本");
+      await assertWritableWorkspace(db,{userId,...workspaceStamp(accountId),requestId:"asset-write",source:"user"});
       const files = await this.listAssetFiles(userId, assetId, accountId);
       const current = files[files.length - 1];
       if (!current) return;
@@ -485,6 +498,9 @@ export function createAssetRepository(
     },
 
     async updateFileExtraction(userId, assetId, patch, accountId) {
+      const owned = await db.select({id:assets.id}).from(assets).where(and(eq(assets.userId,userId),eq(assets.id,assetId),accountGate(accountId)));
+      if(!owned.length)throw new OwnershipError("素材引用只允许读取，请另存为组内副本");
+      await assertWritableWorkspace(db,{userId,...workspaceStamp(accountId),requestId:"asset-write",source:"user"});
       // [T-146 切片 a] 写 current file 的抽取列。文件不存在 → 静默(与 mergeFileMetadata 一致)。
       const files = await this.listAssetFiles(userId, assetId, accountId);
       const current = files[files.length - 1];
@@ -547,6 +563,9 @@ export function createAssetRepository(
     },
 
     async insertAssetFile(userId, input, accountId) {
+      const owned = await db.select({id:assets.id}).from(assets).where(and(eq(assets.userId,userId),eq(assets.id,input.assetId),accountGate(accountId)));
+      if(!owned.length)throw new OwnershipError("素材引用只允许读取，请另存为组内副本");
+      await assertWritableWorkspace(db,{userId,...workspaceStamp(accountId),requestId:"asset-write",source:"user"});
       // Caller must own the asset (cross-user/跨号 → OwnershipError, no leak)。
       await requireOwnedAsset(userId, input.assetId, accountId);
       const existing = await db
@@ -578,11 +597,12 @@ export function createAssetRepository(
     },
 
     async createUploadSession(userId, input) {
+      await assertWritableWorkspace(db,{userId,...workspaceStamp(input.accountId),requestId:"asset-upload",source:"user"});
       const id = deps.nextId("upload");
       await db.insert(assetUploads).values({
         id,
         userId,
-        accountId: input.accountId,
+        ...workspaceStamp(input.accountId),
         assetId: input.assetId,
         assetType: input.assetType,
         mimeType: input.mimeType,
@@ -607,13 +627,14 @@ export function createAssetRepository(
           and(
             eq(assetUploads.id, uploadId),
             eq(assetUploads.userId, userId),
-            eq(assetUploads.accountId, accountId),
+            workspaceFilter(assetUploads, accountId),
           ),
         );
       return rows[0] ?? null;
     },
 
     async completeUploadSession(userId, uploadId, accountId, input) {
+      await assertWritableWorkspace(db,{userId,...workspaceStamp(accountId),requestId:"asset-write",source:"user"});
       return db.transaction(async (tx) => {
         const sessionRows = await tx
           .select()
@@ -622,7 +643,7 @@ export function createAssetRepository(
             and(
               eq(assetUploads.id, uploadId),
               eq(assetUploads.userId, userId),
-              eq(assetUploads.accountId, accountId),
+              workspaceFilter(assetUploads, accountId),
             ),
           );
         const session = sessionRows[0];
@@ -636,7 +657,7 @@ export function createAssetRepository(
               and(
                 eq(assets.id, session.assetId),
                 eq(assets.userId, userId),
-                eq(assets.accountId, accountId),
+                workspaceFilter(assets, accountId),
               ),
             );
           return existing[0] ?? null;
@@ -662,7 +683,7 @@ export function createAssetRepository(
               .where(
                 and(
                   eq(assets.userId, userId),
-                  eq(assets.accountId, accountId),
+                  workspaceFilter(assets, accountId),
                   eq(assets.assetType, session.assetType),
                   eq(assets.status, "active"),
                 ),
@@ -679,7 +700,7 @@ export function createAssetRepository(
               and(
                 eq(assets.id, duplicateAssetId),
                 eq(assets.userId, userId),
-                eq(assets.accountId, accountId),
+                workspaceFilter(assets, accountId),
               ),
             );
           const duplicate = duplicateAssets[0];
@@ -695,7 +716,7 @@ export function createAssetRepository(
               and(
                 eq(assetUploads.id, uploadId),
                 eq(assetUploads.userId, userId),
-                eq(assetUploads.accountId, accountId),
+                workspaceFilter(assetUploads, accountId),
                 eq(assetUploads.status, "created"),
               ),
             );
@@ -707,7 +728,7 @@ export function createAssetRepository(
         await tx.insert(assets).values({
           id: session.assetId,
           userId,
-          accountId,
+          ...workspaceStamp(accountId),
           currentFileId: fileId,
           assetType: session.assetType,
           name: input.name,
@@ -736,7 +757,7 @@ export function createAssetRepository(
             and(
               eq(assetUploads.id, uploadId),
               eq(assetUploads.userId, userId),
-              eq(assetUploads.accountId, accountId),
+              workspaceFilter(assetUploads, accountId),
               eq(assetUploads.status, "created"),
             ),
           );

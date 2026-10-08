@@ -88,3 +88,9 @@ export function requireAccountId(
   }
   return accountId;
 }
+
+/** 工作区版本/迁移冲突；由共同基础设施返回统一409。 */
+export class ConflictError extends Error {
+ readonly code=ErrorCode.ConflictError;
+ constructor(message:string){super(message);this.name='ConflictError';}
+}

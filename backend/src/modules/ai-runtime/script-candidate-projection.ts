@@ -18,7 +18,8 @@ export interface ScriptDraftProjectionInput {
     attempts: Array<Record<string, unknown>>;
   };
   validation: WorkerStructuredResult["validation"];
-  accountId: string;
+  accountId: string | null;
+  groupId?:string|null;
   effectiveSkill: Pick<
     EffectiveSkill,
     "skillId" | "baseVersion" | "overlayRevision" | "overlayVersion"
@@ -118,7 +119,7 @@ export function projectScriptDraftCandidate(
           ? []
           : validation.errors.map((error) => error.message),
       canAdopt: true,
-      accountId,
+      accountId,groupId:input.groupId??null,
       skillSnapshot: {
         skillId: effectiveSkill.skillId,
         baseVersion: effectiveSkill.baseVersion,
