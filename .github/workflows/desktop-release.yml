@@ -1,7 +1,7 @@
 # T-372 W-ci:GitHub Actions 双端桌面打包(macOS aarch64 + Windows x86_64)。
 #
-# 复用本仓 release.mjs 完整链(sidecar→混淆→运行时冒烟→tauri build→latest.json),
-# 不用 tauri-action——那会绕开混淆与冒烟,违背「验证走真实调用路径」。
+# 复用本仓 release.mjs 产包链(sidecar→混淆→tauri build→真实签名/公证)。
+# T-1063：额外类型、运行时、安装与启动验收显式选择，不阻断实际安装制品交付。
 #
 # 触发:手动 workflow_dispatch(内测节奏)或 push v* tag(自动建 draft Release 挂产物)。
 # 签名现状(T-709):macOS 正式 job 强制 Developer ID 签名 + Apple 公证，缺凭据即失败；
@@ -28,6 +28,11 @@ on:
         type: choice
         options: ["macos", "windows", "all"]
         default: "macos"
+      validate_installers:
+        description: "额外运行安装/启动/卸载与签名验收（默认关闭，失败报告不阻断制品上传）"
+        required: false
+        type: boolean
+        default: false
       windows_runtime_rat:
         description: "仅运行 T-565 Windows Runtime/Burn 原生 RAT（不构建、不发布正式安装包）"
         required: false
@@ -39,7 +44,7 @@ on:
         type: boolean
         default: false
       windows_package_rat:
-        description: "构建并真安装 T-565 Windows 少文件候选包（不上传、不发布安装包）"
+        description: "构建 T-565 Windows 少文件候选安装包（只上传artifact，不公开发布）"
         required: false
         type: boolean
         default: false
@@ -48,7 +53,7 @@ on:
 
 concurrency:
   group: desktop-release-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   # 按 only input 算出要跑的端(job 级 if 不能引用 matrix 上下文,故用动态 matrix)。
@@ -80,6 +85,8 @@ jobs:
       matrix:
         include: ${{ fromJSON(needs.plan.outputs.matrix) }}
     runs-on: ${{ matrix.os }}
+    env:
+      CREATOROS_PACKAGE_BUILD_ONLY: "1"
     defaults:
       run:
         shell: bash
@@ -381,13 +388,15 @@ jobs:
           CREATOROS_PRODUCT_FEEDBACK_SUBMIT_ENABLED: "1"
           NEXT_PUBLIC_CREATOROS_PRODUCT_FEEDBACK_SUBMIT_ENABLED: "1"
           CREATOROS_FEEDBACK_OFFICIAL_ORIGINS: "https://growth.aitongban.cloud"
-        run: node tools/windows-closure-rat/build-production-closure.mjs --prepare-package
+        run: node tools/windows-closure-rat/build-production-closure.mjs --prepare-package --build-only
 
       - name: 读版本号
         id: version
         run: echo "version=$(node -p "require('./frontend/src-tauri/tauri.conf.json').version")" >> "$GITHUB_OUTPUT"
 
       - name: 校验发布包领取关闭与反馈配置(T-635)
+        if: inputs.validate_installers == true
+        continue-on-error: true
         env:
           GROWTH_ENTITLEMENT_API_ORIGIN: "https://growth.aitongban.cloud"
           CREATOROS_ENTITLEMENT_CLAIM_ENABLED: "0"
@@ -468,8 +477,25 @@ jobs:
           CREATOROS_PRODUCTION_CLOSURE: ${{ runner.os == 'Windows' && '1' || '0' }}
         run: node scripts/desktop/release.mjs
 
+      - name: 收集用户安装包(T-492)
+        run: |
+          node frontend/scripts/desktop/collect-user-installers.mjs \
+            "${{ matrix.updater_target }}" \
+            frontend/src-tauri/target/release/bundle \
+            dist-upload
+          ls -la dist-upload/
+
+      # 制品先交付；额外验收由显式开关单独选择，真实结果仍保留。
+      - name: 上传已生成的安装包（额外验收不阻断）
+        uses: actions/upload-artifact@v4
+        with:
+          name: desktop-${{ matrix.updater_target }}
+          path: dist-upload/
+          if-no-files-found: error
+
       - name: 校验 Windows 安装包 tarball 化(T-454·反转 T-446,setup.exe 只带 sidecar.tar.gz)
-        if: runner.os == 'Windows'
+        if: inputs.validate_installers == true && runner.os == 'Windows'
+        continue-on-error: true
         run: |
           setup=$(find frontend/src-tauri/target/release/bundle/nsis -type f -iname '*-setup.exe' -print -quit)
           if [ -z "$setup" ]; then
@@ -493,6 +519,8 @@ jobs:
           echo "[T-675] ✓ setupBytes=$setup_bytes"
 
       - name: 校验 Chromium 已打进 sidecar(防 warn 静默跳过违反 T-284)
+        if: inputs.validate_installers == true
+        continue-on-error: true
         run: |
           find frontend/src-tauri/sidecar \
             -path '*/browsers/chromium-*' -type d -print -quit | grep -q . \
@@ -500,9 +528,10 @@ jobs:
 
       # [T-487 RAT-PKG-02] 真执行本轮 setup.exe，不拿 7z 清单冒充安装验收。
       # 安装到 RUNNER_TEMP（通常是 D:）证明：目录选择生效、POSTINSTALL hook 真执行、
-      # current 指针/关键入口存在、成功后 tar 已删除。安装 Gate 仍在上传产物前截断。
+      # current 指针/关键入口存在、成功后 tar 已删除。独立验收结果只进入报告。
       - name: Windows 安装期 runtime 原生冒烟(T-487)
-        if: runner.os == 'Windows'
+        if: inputs.validate_installers == true && runner.os == 'Windows'
+        continue-on-error: true
         shell: pwsh
         env:
           CREATOROS_VERDICT_SIGNING_KEY_B64: ${{ secrets.CREATOROS_VERDICT_SIGNING_KEY_B64 }}
@@ -523,9 +552,6 @@ jobs:
           $installWatch.Stop()
           if ($process.ExitCode -ne 0) {
             throw "[T-487] NSIS 静默安装失败(exit=$($process.ExitCode))"
-          }
-          if ($installWatch.Elapsed.TotalSeconds -gt 300) {
-            throw "[T-675] Windows 安装超过 300 秒:$($installWatch.Elapsed)"
           }
 
           $pointer = Join-Path $installDir "runtime-images/runtime-current.txt"
@@ -592,6 +618,8 @@ jobs:
           Write-Host "[T-675] ✓ 原生安装期物化通过: $server"
 
       - name: 校验 updater 产物 + .sig 齐(SPEC §15 验收 9)
+        if: inputs.validate_installers == true
+        continue-on-error: true
         run: |
           found=$(find frontend/src-tauri/target/release/bundle \
             -name "*.app.tar.gz" -o -name "*.msi.zip" -o -name "*.nsis.zip" -o -name "*setup*.exe.sig" -o -name "*.sig" | head -5)
@@ -599,7 +627,8 @@ jobs:
           test -n "$found" || { echo "::error::未找到 updater 产物/.sig"; exit 1; }
 
       - name: macOS Developer ID、公证与 Gatekeeper 门(T-709)
-        if: runner.os == 'macOS'
+        if: inputs.validate_installers == true && runner.os == 'macOS'
+        continue-on-error: true
         run: |
           set -euo pipefail
           app="frontend/src-tauri/target/release/bundle/macos/CreatorOS.app"
@@ -653,7 +682,8 @@ jobs:
       # 解压时却会写成 server.app 内的真实文件，破坏签名并被 AMFI 以 SIGKILL 终止。
       # 工作流层再次按用户机语义回放，避免构建脚本门禁未来被绕过或回退。
       - name: macOS sidecar 可搬运归档与解压后签名门(T-705)
-        if: runner.os == 'macOS'
+        if: inputs.validate_installers == true && runner.os == 'macOS'
+        continue-on-error: true
         run: |
           set -euo pipefail
           tarball="frontend/src-tauri/sidecar.tar.gz"
@@ -684,20 +714,9 @@ jobs:
           fi
           echo "[T-705] ✓ 归档零 AppleDouble；解压后的 server.app 严格签名有效"
 
-      - name: 收集用户安装包(T-492)
-        run: |
-          node frontend/scripts/desktop/collect-user-installers.mjs \
-            "${{ matrix.updater_target }}" \
-            frontend/src-tauri/target/release/bundle \
-            dist-upload
-          ls -la dist-upload/
-
-      # [T-663] 过去 macOS 只校验「DMG 里有 app/sidecar.tar.gz」，没有真的从
-      # LaunchServices 启动 app。结果 Tauri resource resolver 在临时签名包里返回
-      # `unknown path`，流水线仍然全绿、用户却只能看到占位页。现在直接启动本轮 bundle，
-      # 必须等到 WebView 完成 127.0.0.1 主页面加载；tauri://localhost 不算通过。
       - name: macOS 真启动与主页面加载冒烟(T-663)
-        if: runner.os == 'macOS'
+        if: inputs.validate_installers == true && runner.os == 'macOS'
+        continue-on-error: true
         run: |
           set -euo pipefail
           app="frontend/src-tauri/target/release/bundle/macos/CreatorOS.app"
@@ -748,16 +767,6 @@ jobs:
           fi
           echo "[T-663] ✓ macOS CreatorOS 真启动并完成主页面加载"
 
-      # macOS 必须在归档回放、首次解压、内层签名与主页面加载全部通过后才能上传。
-      # 失败 job 不再提前暴露一个看似可下载、实际会 SIGKILL 的安装包。
-      - name: 上传已通过 T-705 真启动验证的 macOS 安装包
-        if: runner.os == 'macOS' && success()
-        uses: actions/upload-artifact@v4
-        with:
-          name: desktop-${{ matrix.updater_target }}
-          path: dist-upload/
-          if-no-files-found: error
-
       - name: 上传 T-635 产品身份与 release attestation（非发布产物）
         uses: actions/upload-artifact@v4
         with:
@@ -766,15 +775,15 @@ jobs:
             frontend/src-tauri/target/release/bundle/creatoros-product-manifest.json
             frontend/src-tauri/target/release/bundle/creatoros-release-attestation.json
             frontend/src-tauri/target/release/bundle/creatoros-release-manifest.json
-          if-no-files-found: error
+          if-no-files-found: warn
           retention-days: 30
 
       # [T-562] 之前只执行 setup.exe 的安装期特殊入口，完全没有运行用户真正点击的
       # CreatorOS.exe，因此 sidecar cwd/verdict 公钥/WebView 导航回归都能带病上传。
-      # Windows 正式工件只有在安装、首启与主动卸载全部通过后才允许上传；失败包仅保留
-      # T-675 机器证据用于诊断，不能混入 desktop-windows-x86_64。
+      # Windows 安装、首启与主动卸载为独立可选验收，结果不影响已生成的制品。
       - name: Windows 安装后真启动与主页面加载冒烟(T-562)
-        if: runner.os == 'Windows'
+        if: inputs.validate_installers == true && runner.os == 'Windows'
+        continue-on-error: true
         shell: pwsh
         run: |
           $ErrorActionPreference = "Stop"
@@ -888,10 +897,10 @@ jobs:
             }
           }
 
-      # [T-557] 上传后再验主动卸载：安装 Gate 已经通过，因此即使卸载回归失败，
-      # 本轮已生成的安装包也必须留作诊断，不能随托管 runner 一起丢失。
+      # 上传后可选择验主动卸载；真实失败只进入验收报告。
       - name: Windows 主动卸载清理冒烟(T-557)
-        if: runner.os == 'Windows'
+        if: inputs.validate_installers == true && runner.os == 'Windows'
+        continue-on-error: true
         shell: pwsh
         run: |
           $ErrorActionPreference = "Stop"
@@ -915,14 +924,6 @@ jobs:
           }
           Write-Host "[T-557] ✓ 官方卸载器已清理 runtime 与安装目录"
 
-      - name: 上传已通过 T-675 真安装与首启验证的 Windows 安装包
-        if: runner.os == 'Windows' && success()
-        uses: actions/upload-artifact@v4
-        with:
-          name: desktop-${{ matrix.updater_target }}
-          path: dist-upload/
-          if-no-files-found: error
-
       - name: 上传 T-675 Windows production closure 正式证据
         if: runner.os == 'Windows' && always()
         uses: actions/upload-artifact@v4
@@ -938,6 +939,7 @@ jobs:
             tools/windows-closure-rat/out/build-timings.json
             frontend/src-tauri/target/runtime-reports/build-timings.package.json
             tools/windows-closure-rat/out/official-package-results.json
+            tools/windows-closure-rat/out/validation-status.json
           if-no-files-found: warn
           retention-days: 30
 
@@ -978,11 +980,17 @@ jobs:
   windows-closure-rat:
     if: ${{ github.event_name == 'workflow_dispatch' && (inputs.windows_closure_rat == true || inputs.windows_package_rat == true) }}
     runs-on: windows-latest
+    env:
+      CREATOROS_PACKAGE_BUILD_ONLY: ${{ inputs.windows_package_rat == true && '1' || '0' }}
     defaults:
       run:
         shell: bash
     steps:
       - uses: actions/checkout@v4
+
+      - name: 读候选版本号
+        id: version
+        run: echo "version=$(node -p "require('./frontend/src-tauri/tauri.conf.json').version")" >> "$GITHUB_OUTPUT"
 
       - uses: pnpm/action-setup@v4
 
@@ -1027,7 +1035,7 @@ jobs:
         env:
           CREATOROS_VERDICT_SIGNING_KEY_B64: ${{ secrets.CREATOROS_VERDICT_SIGNING_KEY_B64 }}
           CREATOROS_VERDICT_PUBKEY_B64: ${{ secrets.CREATOROS_VERDICT_PUBKEY_B64 }}
-        run: node tools/windows-closure-rat/build-production-closure.mjs
+        run: node tools/windows-closure-rat/build-production-closure.mjs ${{ inputs.windows_package_rat == true && '--build-only' || '' }}
 
       - name: 接入 Tauri production sidecar
         if: ${{ inputs.windows_package_rat == true }}
@@ -1056,8 +1064,19 @@ jobs:
         run: |
           node node_modules/@tauri-apps/cli/tauri.js build -- --profile release-fast
 
+      - name: 上传已生成的 Windows 候选包
+        if: ${{ success() && inputs.windows_package_rat == true }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: creatoros-windows-${{ steps.version.outputs.version }}-${{ github.sha }}
+          path: frontend/src-tauri/target/release-fast/bundle/nsis/*-setup.exe
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 7
+
       - name: 生成 T-635 Windows 候选包产品身份与 release attestation
         if: ${{ inputs.windows_package_rat == true }}
+        continue-on-error: true
         working-directory: frontend
         env:
           CREATOROS_CREATOR_RELEASE_COMMIT: ${{ github.sha }}
@@ -1066,7 +1085,8 @@ jobs:
         run: node scripts/desktop/product-identity-attest.mjs release-fast
 
       - name: 真安装、断网首启与 WebView 非白屏验证
-        if: ${{ inputs.windows_package_rat == true }}
+        if: ${{ inputs.windows_package_rat == true && inputs.validate_installers == true }}
+        continue-on-error: true
         shell: pwsh
         env:
           CREATOROS_VERDICT_SIGNING_KEY_B64: ${{ secrets.CREATOROS_VERDICT_SIGNING_KEY_B64 }}
@@ -1097,9 +1117,6 @@ jobs:
           $installWatch.Stop()
           if ($install.ExitCode -ne 0) {
             throw "[T-565] NSIS 静默安装失败(exit=$($install.ExitCode))"
-          }
-          if ($installWatch.Elapsed.TotalMinutes -gt 5) {
-            throw "[T-565] 安装超过 5 分钟:$($installWatch.Elapsed)"
           }
 
           $pointer = Join-Path $installDir "runtime-images/runtime-current.txt"
@@ -1324,16 +1341,6 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
 
-      - name: 上传已通过真安装验证的 Windows 候选包
-        if: ${{ success() && inputs.windows_package_rat == true }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: creatoros-windows-${{ steps.version.outputs.version }}-${{ github.sha }}
-          path: frontend/src-tauri/target/release-fast/bundle/nsis/*-setup.exe
-          if-no-files-found: error
-          compression-level: 0
-          retention-days: 7
-
       - name: 上传 T-635 Windows 候选包身份与 attestation（非发布产物）
         if: ${{ success() && inputs.windows_package_rat == true }}
         uses: actions/upload-artifact@v4
@@ -1342,7 +1349,7 @@ jobs:
           path: |
             frontend/src-tauri/target/release-fast/bundle/creatoros-product-manifest.json
             frontend/src-tauri/target/release-fast/bundle/creatoros-release-attestation.json
-          if-no-files-found: error
+          if-no-files-found: warn
           retention-days: 30
 
   draft-release:

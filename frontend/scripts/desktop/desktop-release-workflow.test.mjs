@@ -8,6 +8,25 @@ const workflow = readFileSync(
 );
 
 describe("桌面正式构建的 Runtime Image 缓存契约", () => {
+  it("T-1063 两端出包无项目超时，额外验收显式选择且不阻断上传", () => {
+    expect(workflow).not.toMatch(/^\s+timeout-minutes:/m);
+    expect(workflow).toContain('cancel-in-progress: false');
+    expect(workflow).toContain('CREATOROS_PACKAGE_BUILD_ONLY: "1"');
+    expect(workflow).toContain('build-production-closure.mjs --prepare-package --build-only');
+    expect(workflow).toMatch(/validate_installers:[\s\S]*?default: false/);
+    const build = workflow.slice(workflow.indexOf("  build:"), workflow.indexOf("  windows-runtime-rat:"));
+    const steps = build.split(/(?=^      - name:)/m);
+    const upload = steps.find(step => step.startsWith("      - name: 上传已生成的安装包"));
+    expect(upload).toContain("if-no-files-found: error");
+    expect(upload).not.toContain("continue-on-error");
+    for (const name of ["校验 Windows 安装包", "校验 Chromium", "Windows 安装期", "校验 updater", "macOS Developer ID、公证", "macOS sidecar", "macOS 真启动", "Windows 安装后真启动", "Windows 主动卸载"]) {
+      const step = steps.find(item => item.startsWith(`      - name: ${name}`));
+      expect(step, name).toContain("inputs.validate_installers == true");
+      expect(step, name).toContain("continue-on-error: true");
+      expect(build.indexOf(upload)).toBeLessThan(build.indexOf(step));
+    }
+  });
+
   it("桌面版本权威统一为 1.2.0，且不直接覆盖公共更新清单", () => {
     const frontendPackage = JSON.parse(
       readFileSync(join(process.cwd(), "package.json"), "utf8"),
@@ -401,7 +420,7 @@ describe("桌面正式构建的 Runtime Image 缓存契约", () => {
     expect(packageSource).toContain("本次不生成 updater 制品");
   });
 
-  it("Windows 上传产物前执行安装冒烟，上传后执行卸载冒烟", () => {
+  it("Windows 安装包先上传，安装与卸载为可选验收", () => {
     expect(workflow).toContain("Windows 安装期 runtime 原生冒烟(T-487)");
     expect(workflow).toContain('Start-Process -FilePath $setup.FullName');
     expect(workflow).toContain("runtime-current.txt");
@@ -422,7 +441,7 @@ describe("桌面正式构建的 Runtime Image 缓存契约", () => {
     expect(workflow).toContain("Windows 主动卸载清理冒烟(T-557)");
     expect(workflow).toContain('$uninstaller = Join-Path $installDir "uninstall.exe"');
     expect(workflow).toContain("主动卸载后仍残留 runtime-images");
-    expect(workflow.indexOf("Windows 安装期 runtime 原生冒烟(T-487)")).toBeLessThan(
+    expect(workflow.indexOf("Windows 安装期 runtime 原生冒烟(T-487)")).toBeGreaterThan(
       workflow.indexOf("actions/upload-artifact@v4"),
     );
     expect(workflow.indexOf("actions/upload-artifact@v4")).toBeLessThan(
@@ -449,7 +468,7 @@ describe("桌面正式构建的 Runtime Image 缓存契约", () => {
     expect(workflow).toContain("runtime-current.txt 仍指向旧 runtime");
   });
 
-  it("macOS 按用户机语义回放 sidecar 归档，真启动通过后才允许上传", () => {
+  it("macOS 安装包先上传，可单独选择归档回放和真启动验收", () => {
     const archiveGate = workflow.indexOf(
       "macOS sidecar 可搬运归档与解压后签名门(T-705)",
     );
@@ -457,11 +476,12 @@ describe("桌面正式构建的 Runtime Image 缓存契约", () => {
       "macOS 真启动与主页面加载冒烟(T-663)",
     );
     const uploadGate = workflow.indexOf(
-      "上传已通过 T-705 真启动验证的 macOS 安装包",
+      "上传已生成的安装包（额外验收不阻断）",
     );
     expect(archiveGate).toBeGreaterThan(-1);
     expect(startupGate).toBeGreaterThan(archiveGate);
-    expect(uploadGate).toBeGreaterThan(startupGate);
+    expect(uploadGate).toBeGreaterThan(-1);
+    expect(uploadGate).toBeLessThan(archiveGate);
     expect(workflow).toContain("COPYFILE_DISABLE=1 tar -tzf");
     expect(workflow).toContain("COPYFILE_DISABLE=1 tar -xzf");
     expect(workflow).toContain(
@@ -473,7 +493,7 @@ describe("桌面正式构建的 Runtime Image 缓存契约", () => {
     expect(workflow).toContain(
       'codesign --verify --deep --strict --verbose=2 "$extracted_app"',
     );
-    expect(workflow).toContain("runner.os == 'macOS' && success()");
+    expect(workflow).toContain("inputs.validate_installers == true && runner.os == 'macOS'");
   });
 
   it("macOS 正式 job 从 Secrets 建一次性钥匙串，签名公证验收后清理", () => {
@@ -485,7 +505,7 @@ describe("桌面正式构建的 Runtime Image 缓存契约", () => {
       "macOS Developer ID、公证与 Gatekeeper 门(T-709)",
     );
     const uploadGate = workflow.indexOf(
-      "上传已通过 T-705 真启动验证的 macOS 安装包",
+      "上传已生成的安装包（额外验收不阻断）",
     );
     const cleanupStep = workflow.indexOf(
       "清理 macOS 一次性签名钥匙串(T-709)",
@@ -493,7 +513,8 @@ describe("桌面正式构建的 Runtime Image 缓存契约", () => {
     expect(credentialStep).toBeGreaterThan(-1);
     expect(releaseStep).toBeGreaterThan(credentialStep);
     expect(trustGate).toBeGreaterThan(releaseStep);
-    expect(uploadGate).toBeGreaterThan(trustGate);
+    expect(uploadGate).toBeGreaterThan(releaseStep);
+    expect(uploadGate).toBeLessThan(trustGate);
     expect(cleanupStep).toBeGreaterThan(uploadGate);
     for (const secret of [
       "secrets.APPLE_CERTIFICATE_P12_B64",
@@ -518,7 +539,7 @@ describe("桌面正式构建的 Runtime Image 缓存契约", () => {
     expect(workflow).not.toContain("must-not-leak");
   });
 
-  it("T-565 候选包必须真安装、断网首启、读取 WebView DOM，通过后才上传 setup", () => {
+  it("T-565 候选制品先上传，可单独选择真安装与 WebView DOM 验收", () => {
     const shellSource = readFileSync(
       join(process.cwd(), "src-tauri", "src", "lib.rs"),
       "utf8",
@@ -552,7 +573,7 @@ describe("桌面正式构建的 Runtime Image 缓存契约", () => {
     expect(nextConfigSource).toContain("isrFlushToDisk: false");
     expect(packageRat).not.toContain("dist-upload");
     expect(packageRat).toContain(
-      "上传已通过真安装验证的 Windows 候选包",
+      "上传已生成的 Windows 候选包",
     );
     expect(packageRat).toContain(
       "if: ${{ success() && inputs.windows_package_rat == true }}",
@@ -562,8 +583,8 @@ describe("桌面正式构建的 Runtime Image 缓存契约", () => {
     );
     expect(
       packageRat.indexOf("真安装、断网首启与 WebView 非白屏验证"),
-    ).toBeLessThan(
-      packageRat.indexOf("上传已通过真安装验证的 Windows 候选包"),
+    ).toBeGreaterThan(
+      packageRat.indexOf("上传已生成的 Windows 候选包"),
     );
   });
 

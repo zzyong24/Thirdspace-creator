@@ -505,7 +505,7 @@ step("tauri build(含 updater 签名/占位)", process.execPath, tauriBuildArgs,
   CREATOROS_ALLOW_VERDICT_SIGNING_KEY: "1",
 });
 
-await measuredAsync("T-656 verdict 最终产物泄漏扫描", async () => {
+if (!buildOnly) await measuredAsync("T-656 verdict 最终产物泄漏扫描", async () => {
   if (platform !== "darwin" && platform !== "win32") return;
   const targetDir = join(FRONTEND, "src-tauri", "target", CARGO_PROFILE_DIR);
   const bundleDir = join(targetDir, "bundle");
@@ -541,7 +541,7 @@ if (buildOnly) {
   const manifest = readManifest(manifestPathForProfile(CARGO_PROFILE_DIR));
   manifest.validation = { status: "not-run", reason: "T-1063 制品生成与额外质量验证分开" };
   writeManifest(manifest, manifestPathForProfile(CARGO_PROFILE_DIR));
-  console.log("[desktop:package] 额外冒烟与 TLS 未运行；安装包继续构建，不声明已验收。");
+  console.log("[desktop:package] 额外冒烟、TLS 与产物扫描未运行；安装包继续构建，不声明已验收。");
 }
 
 // 4) [T-164 P6 / T-640] 代码签名(未配 env → skip 退 0 + 标 signed:false)。

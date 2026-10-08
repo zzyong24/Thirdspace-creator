@@ -1,0 +1,19 @@
+{
+  "schema": "frozen-actions-candidate/v1",
+  "candidate_sha": "67437998bb18b5b18ceb4be95ff1a270756de182",
+  "remote_main_sha": "d84d10af5857262620388fc0d0d15ab84a3649e0",
+  "branch": "codex/t1063-release-pipeline",
+  "run_id": 37440775757,
+  "run_url": "https://github.com/zzyong24/Thirdspace-creator/actions/runs/37440775757",
+  "event": "workflow_dispatch",
+  "inputs": {
+    "only": "windows",
+    "validate_installers": false,
+    "windows_runtime_rat": false,
+    "windows_closure_rat": false,
+    "windows_package_rat": false
+  },
+  "version": "1.2.0",
+  "runtime_t1066_included": false,
+  "recorded_at": "2026-10-06T09:20:02.658020+00:00"
+}

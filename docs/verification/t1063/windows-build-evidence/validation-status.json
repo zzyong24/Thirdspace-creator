@@ -1,0 +1,5 @@
+{
+  "status": "not-run",
+  "reason": "用户要求制品生成与额外质量验证分开",
+  "target": "windows-x86_64"
+}

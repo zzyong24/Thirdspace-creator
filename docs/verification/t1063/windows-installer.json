@@ -1,0 +1,24 @@
+{
+  "path": "/Users/zyongzhu/Downloads/CreatorOS-t1063-windows-37440775757/installer/CreatorOS_1.2.0_x64-setup.exe",
+  "size_bytes": 555841160,
+  "sha256": "5369d92e9e841f4e94f5366c2126028832fb4f3cb6a040241312de12b9576bf2",
+  "format": "PE",
+  "machine": "0x14c",
+  "fixed_version_info": [
+    {
+      "file_version": "1.2.0.0",
+      "product_version": "1.2.0.0",
+      "structure_version": 0,
+      "offset": 52592
+    }
+  ],
+  "authenticode_certificate_table": {
+    "offset": 0,
+    "size": 0,
+    "present": false
+  },
+  "version_strings": {
+    "FileVersion": "1.2.0",
+    "ProductVersion": "1.2.0"
+  }
+}

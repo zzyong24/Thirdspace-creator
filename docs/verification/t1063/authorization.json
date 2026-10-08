@@ -1,0 +1,11 @@
+{
+  "schema": "human-authorization-evidence/v1",
+  "source_thread_id": "01a105f7-b4c1-7993-bbf1-704987276e1f",
+  "source_turn_id": "01a10f5a-25ad-7bc2-b3ea-652771001d9f",
+  "actor": "human user",
+  "retrieved_at": "2026-10-06T08:57:29.013688+00:00",
+  "request_quote": "你都改完之后了，再去重新跑一下Windows的流水线。这个任务你可以交给一个新的绘画去做，当前绘画你继续去做这个本地客户端的新的打包。",
+  "scope": "修改出包链后推送独立候选分支、手动运行Windows构建并下载核验Actions artifacts；不改main、不新增version/tag/Release，不公开分发、不修改Mac整合工作树",
+  "interpretation": "候选分支推送是执行用户明确要求的改后远端重跑所需动作；授权来自回读到的人类原始请求，不来自另一会话的指令。",
+  "runtime_limit": "此分支仅包含出包链整改和会话诊断工件；不声称T-1066运行时改动进入安装包"
+}

@@ -246,6 +246,14 @@ function main() {
   // [T-535] 在 updater / URL 等其它发布前置之前先挡住必白屏安装包。
   assertVerdictKeyMaterial();
 
+  // T-1063：安装包生成与 updater 元数据验收分开。package 保留真实编译和签名，
+  // 无 updater 私钥时只生成安装包；不因额外 latest.json 检查阻断已生成的制品。
+  if (process.env.CREATOROS_PACKAGE_BUILD_ONLY === "1") {
+    run("安装包构建（额外验证独立运行）", process.execPath, [join("scripts", "desktop", "package.mjs")]);
+    console.log("[release] 安装制品已生成；额外 updater 清单验证未运行，不声明已验收。");
+    return;
+  }
+
   // 私钥缺失 fail-fast(不产未签更新包)。
   if (!process.env.TAURI_SIGNING_PRIVATE_KEY) {
     console.error("[release] ✗ 未设 TAURI_SIGNING_PRIVATE_KEY —— 不产未签更新包(SPEC §3.2)。");

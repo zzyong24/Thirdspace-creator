@@ -1,0 +1,23 @@
+{
+  "schema": "independent-acceptance-classification/v1",
+  "task_id": "T-1063",
+  "reviewer": "/root/review_spec",
+  "verdict": "non-UI",
+  "basis": [
+    "product-to-code-orchestrator/templates/BACKLOG_TEMPLATE.md:18：非UI任务为—，UI/桌面页面组为待验",
+    "docs/features/t1063-release-pipeline.md:7：仅workflow和构建脚本，无页面交互或frontend-journey-contract",
+    "orchestrator/process/taskctl.mjs:257/271：待验触发前端旅程，无旅程契约的非UI任务允许—"
+  ],
+  "metadata_change": "仅纠正T-1063验收列待验→—；未转换状态，未改变SPEC安装包验收要求",
+  "still_required": [
+    "本轮候选SHA对应真实run终态",
+    "非空setup.exe、版本、体积及SHA256",
+    "打包相关检查、真实失败及工程对账说明"
+  ],
+  "not_claimed": [
+    "Windows安装、GUI启动、卸载",
+    "Mac实跑、签名公证验收",
+    "用户功能验收或生产发布"
+  ],
+  "scope": "不用于T-1066等实际UI行为任务，不能以本记录绕过前端旅程门"
+}

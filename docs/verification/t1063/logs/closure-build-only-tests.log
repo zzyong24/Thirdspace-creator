@@ -1,0 +1,26 @@
+✔ heap budget reserves host memory and stays bounded (1.1985ms)
+✔ only Next build requests memory configuration; installed runtime stays unchanged (0.220125ms)
+✔ real Next typecheck Worker inherits heap budget and retains other Node options (530.328334ms)
+✔ official and RAT closure use one deterministic build plan (2.354459ms)
+✔ packaged runtime stages CreatorOS CLI before copying the closure into Tauri (0.6525ms)
+✔ production closure pins target and adapter evidence (0.189709ms)
+✔ channel closure forwards one trusted package brand input into Next and verifies final closure (0.171666ms)
+✔ official runtime smoke keeps the official brand default (0.125584ms)
+✔ runtime smoke uses a real short-lived verdict instead of the removed bypass (0.73225ms)
+✔ T-845 production HyperFrames spawn and Windows RAT preload the same layered resolver (0.453833ms)
+✔ T-886 Windows closure smoke loads Xenova from a real worker consumer (0.765042ms)
+✔ official Windows release and RAT are wired to the same guarded closure (1.016125ms)
+✔ closure and packaged runtime share one verdict-key baker (0.629208ms)
+✔ materializer physically excludes traced engineering inputs without changing budgets (0.490959ms)
+✔ Windows 分层入口必须装配 Worker 并由公共 smoke 真握手 (0.505791ms)
+✔ 出包计划不运行额外冒烟和品牌验收，但保留编译、资源组装和真实公钥 (1.098208ms)
+✔ 单独验证入口仍保留真实冒烟，不伪报出包已经验收 (0.147083ms)
+✔ Windows 路径不影响 Next build 参数，Worker 编译先于 Next (0.873792ms)
+ℹ tests 18
+ℹ suites 0
+ℹ pass 18
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 722.6435

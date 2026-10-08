@@ -4,11 +4,11 @@
     "work_branch": "main"
   },
   "summary": {
-    "verticals": 92,
-    "tasks_done": 61,
-    "tasks_total": 194,
+    "verticals": 93,
+    "tasks_done": 62,
+    "tasks_total": 195,
     "tasks_pending": 133,
-    "verticals_complete": 17
+    "verticals_complete": 18
   },
   "verticals": [
     {
@@ -5427,7 +5427,52 @@
         "frontend/src/lib/owned-devices.test.ts",
         "frontend/src/lib/owned-devices.ts",
         "orchestrator/context/T-1072.md",
-        "orchestrator/context/T-1072-owned-devices.md"
+        "orchestrator/context/T-1072-owned-devices.md",
+        ".github/workflows/desktop-release.yml",
+        "docs/assets/commit-activity-dark.svg",
+        "docs/assets/commit-activity.svg",
+        "docs/features/t1063-release-pipeline.md",
+        "docs/features/t1063-release-pipeline.review.md",
+        "docs/features/t1065-timeout-audit.md",
+        "docs/research/t1065/REPORT.md",
+        "docs/research/t1065/scan_timeouts.py",
+        "docs/research/t1065/search-candidates.json",
+        "docs/research/t1065/timeout-inventory.csv",
+        "docs/research/t1065/timeout-inventory.json",
+        "docs/verification/t1063/VERIFICATION.md",
+        "docs/verification/t1063/acceptance-classification.json",
+        "docs/verification/t1063/authorization.json",
+        "docs/verification/t1063/frozen-candidate.json",
+        "docs/verification/t1063/inspect-installer.py",
+        "docs/verification/t1063/logs/closure-build-only-tests.log",
+        "docs/verification/t1063/logs/creatoros-t1063-official-freeze-tests.log",
+        "docs/verification/t1063/logs/creatoros-t1063-skill-update-3.27.4.log",
+        "docs/verification/t1063/logs/extended-packaging-tests.log",
+        "docs/verification/t1063/logs/final-reconcile.log",
+        "docs/verification/t1063/logs/post-artifact-reconcile.log",
+        "docs/verification/t1063/logs/windows-run-watch.log",
+        "docs/verification/t1063/resume-preflight.json",
+        "docs/verification/t1063/spec-review-round.json",
+        "docs/verification/t1063/windows-artifacts.json",
+        "docs/verification/t1063/windows-build-evidence/build-timings.json",
+        "docs/verification/t1063/windows-build-evidence/build-timings.package.json",
+        "docs/verification/t1063/windows-build-evidence/validation-status.json",
+        "docs/verification/t1063/windows-installer.json",
+        "docs/verification/t1063/windows-job-log.json",
+        "docs/verification/t1063/windows-run.json",
+        "docs/verification/t1064-aborterror-diagnosis.md",
+        "frontend/next.config.ts",
+        "frontend/scripts/desktop/build-frontend.mjs",
+        "frontend/scripts/desktop/desktop-release-workflow.test.mjs",
+        "frontend/scripts/desktop/fetch-ffmpeg.mjs",
+        "frontend/scripts/desktop/release.mjs",
+        "orchestrator/ARTIFACT_MANIFEST.yaml",
+        "orchestrator/process/parallel-isolation.mjs",
+        "orchestrator/process/progress.mjs",
+        "orchestrator/process/timeout-budget.mjs",
+        "tools/windows-closure-rat/build-production-closure.mjs",
+        "tools/windows-closure-rat/build-production-closure.test.mjs",
+        "tools/windows-closure-rat/package-build-only.test.mjs"
       ],
       "read_set": [
         "BACKLOG.md",
@@ -6698,6 +6743,40 @@
       "exclusive_resources": [
         "creator-owned-device-native"
       ],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "T-1065",
+      "archetype": [
+        "orchestration"
+      ],
+      "task_id": "T-1065",
+      "tasks": [
+        {
+          "step": "audit",
+          "status": "done"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "docs/research/t1065/**"
+      ],
+      "read_set": [
+        "docs/features/t1065-timeout-audit.md",
+        "frontend/**",
+        "backend/**",
+        "ai-worker/**",
+        "contract/**",
+        "mcp-server/**",
+        "tools/**",
+        ".github/**"
+      ],
+      "exclusive_resources": [],
       "step_write_set": {},
       "step_read_set": {},
       "step_exclusive_resources": {},

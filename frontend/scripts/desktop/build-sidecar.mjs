@@ -454,7 +454,9 @@ function packSidecarTarball() {
   assertNoPackagedBuildArtifacts(SIDECAR_RUNTIME);
   assertCreatorOsCliRuntime(SIDECAR_RUNTIME);
   assertExecutionWorkerRuntime(SIDECAR_RUNTIME);
-  assertWorkerExternalPackages(SIDECAR_RUNTIME);
+  if (process.env.CREATOROS_PACKAGE_BUILD_ONLY !== "1") {
+    assertWorkerExternalPackages(SIDECAR_RUNTIME);
+  }
   const prunedPortableMetadata = prunePortableMetadataFiles(SIDECAR_RUNTIME);
   if (prunedPortableMetadata.length > 0) {
     console.log(

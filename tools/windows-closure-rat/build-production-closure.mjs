@@ -16,17 +16,19 @@ const PACKAGE_BRAND_PROOF = resolve(OUT_ROOT, "package-brand-closure-proof.json"
 
 export function productionClosurePlan({
   preparePackage = false,
+  buildOnly = false,
   packageBrandInputPath,
   packageBrandBuildEnv = {},
 } = {}) {
   const steps = [
     {
       name: "Next adapter production build",
-      buildMemory: true,
-      command: "pnpm",
-      args: ["-C", "frontend", "build"],
+      buildMemory: !buildOnly,
+      command: buildOnly ? process.execPath : "pnpm",
+      args: buildOnly ? [resolve(REPO_ROOT, "frontend/scripts/desktop/build-frontend.mjs")] : ["-C", "frontend", "build"],
       env: {
         CREATOROS_DESKTOP: "1",
+        ...(buildOnly ? { CREATOROS_PACKAGE_BUILD_ONLY: "1" } : {}),
         NEXT_ADAPTER_PATH: resolve(SCRIPT_DIR, "next-output-adapter.mjs"),
         CREATOROS_NEXT_OUTPUT_REPORT: NEXT_REPORT,
         ...packageBrandBuildEnv,
@@ -93,7 +95,7 @@ export function productionClosurePlan({
         CREATOROS_TARGET_ARCH: "x64",
       },
     },
-    ...(packageBrandInputPath
+    ...(packageBrandInputPath && !buildOnly
       ? [{
           name: "verify packaged WebView brand",
           command: process.execPath,
@@ -119,7 +121,7 @@ export function productionClosurePlan({
       args: [resolve(SCRIPT_DIR, "runtime-diagnostics.mjs"), "--root", CLOSURE_ROOT,
         "--out", resolve(OUT_ROOT, "runtime-diagnostics.json")],
     },
-    {
+    ...(!buildOnly ? [{
       name: "runtime consumer smoke",
       command: resolve(
         CLOSURE_ROOT,
@@ -137,7 +139,7 @@ export function productionClosurePlan({
           packageBrandBuildEnv.NEXT_PUBLIC_CREATOROS_PACKAGE_BRAND_NAME ??
           "CreatorOS",
       },
-    },
+    }] : []),
   ];
 
   if (preparePackage) {
@@ -150,7 +152,10 @@ export function productionClosurePlan({
       ],
     });
   }
-  return steps;
+  // 额外清单报告不影响编译/资源组装；build-only 明确传播给后续打包子进程。
+  return buildOnly ? steps
+    .filter(step => step.name !== "runtime file inventory")
+    .map(step => ({ ...step, env: { ...step.env, CREATOROS_PACKAGE_BUILD_ONLY: "1" } })) : steps;
 }
 
 function runStep(step) {
@@ -191,7 +196,7 @@ function loadPackageBrandInput(pathValue) {
   return { inputPath, buildEnv: readPackageBrandBuildEnv(input) };
 }
 
-export function buildProductionClosure({ preparePackage = false } = {}) {
+export function buildProductionClosure({ preparePackage = false, buildOnly = false } = {}) {
   if (process.platform !== "win32" || process.arch !== "x64") {
     throw new Error(
       `[T-675] Windows production closure 只能在 win32-x64 构建，当前=${process.platform}-${process.arch}`,
@@ -205,6 +210,7 @@ export function buildProductionClosure({ preparePackage = false } = {}) {
   const timings = [];
   for (const step of productionClosurePlan({
     preparePackage,
+    buildOnly,
     packageBrandInputPath: packageBrand?.inputPath,
     packageBrandBuildEnv: packageBrand?.buildEnv,
   })) {
@@ -216,9 +222,14 @@ export function buildProductionClosure({ preparePackage = false } = {}) {
       writeFileSync(resolve(OUT_ROOT,"build-timings.json"), JSON.stringify({schemaVersion:1,steps:timings},null,2)+"\n");
     }
   }
-  if (!existsSync(resolve(CLOSURE_ROOT, "runtime-smoke-results.json")) ||
-      JSON.parse(readFileSync(resolve(CLOSURE_ROOT, "runtime-smoke-results.json"), "utf8")).status !== "passed") {
+  if (!buildOnly && (!existsSync(resolve(CLOSURE_ROOT, "runtime-smoke-results.json")) ||
+      JSON.parse(readFileSync(resolve(CLOSURE_ROOT, "runtime-smoke-results.json"), "utf8")).status !== "passed")) {
     throw new Error("[T-675] production closure 缺 runtime smoke 证据");
+  }
+  if (buildOnly) {
+    writeFileSync(resolve(OUT_ROOT, "validation-status.json"), JSON.stringify({
+      status: "not-run", reason: "用户要求制品生成与额外质量验证分开", target: "windows-x86_64",
+    }, null, 2) + "\n");
   }
   if (
     preparePackage &&
@@ -238,6 +249,7 @@ if (isMain) {
       JSON.stringify(
         productionClosurePlan({
           preparePackage: process.argv.includes("--prepare-package"),
+          buildOnly: process.argv.includes("--build-only"),
         }),
         null,
         2,
@@ -246,6 +258,7 @@ if (isMain) {
   } else {
     buildProductionClosure({
       preparePackage: process.argv.includes("--prepare-package"),
+      buildOnly: process.argv.includes("--build-only"),
     });
   }
 }
