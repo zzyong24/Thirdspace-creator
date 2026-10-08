@@ -1,6 +1,6 @@
 {
   "task": "T-1090",
-  "capturedAt": "2026-10-08T19:38:17.507501+00:00",
+  "capturedAt": "2026-10-08T20:02:33.087702+00:00",
   "base": "9828f8c9",
   "commands": {
     "frozen-history-red": {
@@ -191,6 +191,170 @@
       "logSha256": "bba59da585bf27c61e37f837780ba76d846507a4d3f4680d3aeec68d39b59ddc",
       "recordPath": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1090/pmem-before-freeze.json",
       "recordSha256": "8f2797fdc93a5cddd38208bebd0bf369299d11ca20b0bc95c2ad1328428af0ae"
+    },
+    "package-basic-freeze": {
+      "argv": [
+        "pnpm",
+        "-C",
+        "frontend",
+        "exec",
+        "vitest",
+        "run",
+        "scripts/desktop/package-local.test.mjs",
+        "scripts/desktop/desktop-release-workflow.test.mjs",
+        "scripts/desktop/notarize.test.mjs",
+        "scripts/desktop/tauri-signing-config.test.mjs",
+        "--retry=0",
+        "--no-file-parallelism",
+        "--testTimeout=180000",
+        "--hookTimeout=180000"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-08T19:40:55.133069+00:00",
+      "finishedAt": "2026-10-08T19:40:58.620219+00:00",
+      "exitCode": 0,
+      "elapsedSeconds": 3.4870385829999577,
+      "logSha256": "9a5d1cea23ccc2293098bc4e557ec40e32b7deda47bf251d5249a0bba5cd36de",
+      "recordPath": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1090/package-basic-freeze.json",
+      "recordSha256": "327670461a37f7b8ffb0380c572e7adc1210ebd54c8ddee80762b3bd6e3f238e"
+    },
+    "package-local-build": {
+      "argv": [
+        "env",
+        "CREATOROS_LOCAL_SKIP_INSTALL=1",
+        "pnpm",
+        "-C",
+        "frontend",
+        "desktop:package-local"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-08T19:40:58.850519+00:00",
+      "finishedAt": "2026-10-08T19:47:44.175483+00:00",
+      "exitCode": 0,
+      "elapsedSeconds": 405.3212464590033,
+      "logSha256": "e4636b58272e66465fbb53730b6b209160eabfac6c12d0d961547b19b8e4a23f",
+      "recordPath": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1090/package-local-build.json",
+      "recordSha256": "d9d8f895290440a187fd1b5e5e54f0dcac6eb50420ae744ac890b54f229700ad"
+    },
+    "package-verification": {
+      "argv": [
+        "python3",
+        "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1090/verify-package.py"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-08T19:50:57.496741+00:00",
+      "finishedAt": "2026-10-08T19:51:10.324468+00:00",
+      "exitCode": 0,
+      "elapsedSeconds": 12.827516708988696,
+      "logSha256": "a3e78225a47eec6cb814781da1f712f3eb1ad95d4ba3079b8c4f20c74a623727",
+      "recordPath": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1090/package-verification.json",
+      "recordSha256": "5cb5c1bdd08b661565f2788d5d007a59c74266baa19c593038005284f161c4c4"
+    },
+    "app-installation": {
+      "argv": [
+        "node",
+        "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1090/install-verified-app.mjs"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-08T19:51:15.245481+00:00",
+      "finishedAt": "2026-10-08T19:51:17.176001+00:00",
+      "exitCode": 0,
+      "elapsedSeconds": 1.9303235420084093,
+      "logSha256": "a920e7afa9dfa4ef52695ba1e1516859d3c47bc9ef0101e77e2c0543d1c26892",
+      "recordPath": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1090/app-installation.json",
+      "recordSha256": "2ff1628d21190e18e53234983fa45c3ba38f986ea402db6eb1741ce3638e543b"
+    },
+    "installed-startup-run": {
+      "argv": [
+        "python3",
+        "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1090/observe-installed-startup.py"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-08T19:51:25.275232+00:00",
+      "finishedAt": "2026-10-08T19:52:34.729006+00:00",
+      "exitCode": 0,
+      "elapsedSeconds": 69.45306920900475,
+      "logSha256": "2a71f2e0a14b6e2148dc2df2dfef308b5f1cd8798ab442baa92928f1ce2bdf40",
+      "recordPath": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1090/installed-startup-run.json",
+      "recordSha256": "c30f6a275d356f22278b48e94f2d7eed1e407b103098a63ba967e31d2ac0c55b"
+    },
+    "installed-read-run": {
+      "argv": [
+        "python3",
+        "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1090/verify-installed-read.py"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-08T19:52:36.792299+00:00",
+      "finishedAt": "2026-10-08T19:53:50.693488+00:00",
+      "exitCode": 0,
+      "elapsedSeconds": 73.90010008399258,
+      "logSha256": "2192b223aaf10923b059207e423ee8509b556e31d73ea3d01760608cfd59d6f3",
+      "recordPath": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1090/installed-read-run.json",
+      "recordSha256": "684ff38d02f34e6f670b9c3a78b79182444a02f58f2cf146f0e4d50e20208c23"
+    },
+    "reconcile-current": {
+      "argv": [
+        "env",
+        "CREATOROS_TEST_POSTGRES_URL=postgresql://creatoros_test@127.0.0.1:55422/postgres",
+        "node",
+        "orchestrator/process/reconcile.mjs"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-08T19:37:05.980652+00:00",
+      "finishedAt": "2026-10-08T19:56:51.095765+00:00",
+      "exitCode": 1,
+      "elapsedSeconds": 1185.1039312090143,
+      "logSha256": "5a7dc597bbef244902c857fc708f2a8e4fbfe10583fb9d46624d709b7079ea5a",
+      "recordPath": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1090/reconcile-current.json",
+      "recordSha256": "8c3f295331c38c7fedc9e4c7158ce7e63eac3ae2b88f57bd78102b9625766d47"
+    },
+    "pmem-before-complete": {
+      "argv": [
+        "node",
+        "orchestrator/process/pmem.mjs",
+        "sync"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-08T20:01:51.021414+00:00",
+      "finishedAt": "2026-10-08T20:01:51.976070+00:00",
+      "exitCode": 0,
+      "elapsedSeconds": 0.9544822919997387,
+      "logSha256": "96b3d18adce65cee8415092f66cb5250ffccd8ce3f2deb9b34aea308111a86cd",
+      "recordPath": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1090/pmem-before-complete.json",
+      "recordSha256": "ce81cca39ef583e5f939dde858c4f100d6a5e78286051d9f9498781bfe20fba3"
+    },
+    "task-complete": {
+      "argv": [
+        "node",
+        "orchestrator/process/taskctl.mjs",
+        "complete",
+        "T-1090",
+        "--evidence",
+        "main 5915784cc691db140177e3520187d2da3182bb51；五文件139 PASS、完整Worker8 PASS、双端类型及boundary/semantic/orphan exit0；冻结打包基本45 PASS；DMG SHA256 6ccb5876f7ecad44decded655b66c2e46fcdd55f0abfb37fdd75d8cf9d2f11c9，无备份安装字节一致、真实HTTP首页MAIN_PAGE_LOAD_FINISHED；公开Pi ai-task-af716e53-244 succeeded，三read DTO一致、同CLI key回放同消息/task/execution且稿件不变；两次numeric versionId invalid_input严格拒绝且同原任务恢复；独立最终复核4bb944a51e0cab690703bc8591bd89eda1987cd912d808781fa9f963dc9d5cb0允许本SPEC范围收尾；完整reconcile实际exit1、42 error/0 warning、日志5a7dc597bbef244902c857fc708f2a8e4fbfe10583fb9d46624d709b7079ea5a与T1089逐字相同，无新增错误，旧全局债仍由T1081/T1082/T1083/T1015/T1018承接，不签全仓全功能/live Codex/原生UI/配置同步/公证；详见docs/verification/t1090/evidence.json及INSTALLED_FINAL_REVIEW.md"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-08T20:02:02.404218+00:00",
+      "finishedAt": "2026-10-08T20:02:02.534134+00:00",
+      "exitCode": 0,
+      "elapsedSeconds": 0.1298564579919912,
+      "logSha256": "33d78473946935a853b6f73f71007d278f6f0aacf690fe1d234330b821724b68",
+      "recordPath": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1090/task-complete.json",
+      "recordSha256": "681c574deec12b8436da3aad84579d155cbc9942123bf0ad2c5c07365dfb5488"
+    },
+    "pmem-after-complete": {
+      "argv": [
+        "node",
+        "orchestrator/process/pmem.mjs",
+        "sync"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-08T20:02:10.023343+00:00",
+      "finishedAt": "2026-10-08T20:02:10.640409+00:00",
+      "exitCode": 0,
+      "elapsedSeconds": 0.6169322500063572,
+      "logSha256": "f86b8447ced450b082d262162c5c02a1d6f67917ffe9d89da6c2d7a4429d784e",
+      "recordPath": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1090/pmem-after-complete.json",
+      "recordSha256": "a937e7b424215afc7407ba554ede1ada8926c188cf74f3622d3b945bd19151c7"
     }
   },
   "sources": {
@@ -205,10 +369,7 @@
     "sha256": "5b6fe4aa7a6512824f154de4a5390f270e1d0bc4f19001fb93c9f22029604955",
     "scope": "PASS_STATIC，完整Gate尚未签"
   },
-  "pending": [
-    "完整reconcile",
-    "打包安装公开验收"
-  ],
+  "pending": [],
   "historicalRed": "docs/verification/t1089/ADJACENT_REPLAY_DIAGNOSIS.md 原60例59PASS/同1FAIL与b75对照不抹除",
   "scopeBoundary": "新21例为真实PGlite service组合，非模型或Worker；不代签live Codex/UI/全功能",
   "workerBoundary": "原T1089三族恢复及T1086四scope，2文件8PASS，真实WorkerSupervisor子进程及PGlite/SSE协议；不代签真实模型或live Codex",
@@ -216,5 +377,74 @@
     "path": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1090/implementation-final-gate-review.md",
     "sha256": "54f5e3256111f675732741d982a24e3e7ba537cca2cd24fc12cbb93066f696be",
     "conclusion": "PASS_IMPLEMENTATION_GATES，可提交进入打包，未代签完整reconcile或安装"
+  },
+  "sourceFreeze": {
+    "path": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1090/source-freeze.json",
+    "sha256": "5ea28605c6e551846a3c7f2d3ce243da09f827d302fced23f051c70cbe9758ed"
+  },
+  "package": {
+    "path": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1090/new-package-verification.json",
+    "sha256": "afda973c19aa6ee229ab6db6b32a4c23753869635ec08e5f82a9b2475e6d04ce"
+  },
+  "installation": {
+    "path": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1090/new-app-installation.json",
+    "sha256": "215551c03100a2b77daf23e88665b445ce2d39e6af51c87779b6545b42f309db"
+  },
+  "startup": {
+    "path": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1090/new-startup-verification.json",
+    "sha256": "a057b5adc800b3cb09cf6f1787e53e287281c1e45d892d145e58c579ca4c0a61"
+  },
+  "publicPiReadAndSameKeyReplay": {
+    "path": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1090/installed-legacy-verification.json",
+    "sha256": "cfc60d94c80f24709b728855cdea15e565fe33a4e017c26b584d24b49033c602"
+  },
+  "actualToolCrossCheck": {
+    "path": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1090/installed-read-tool-crosscheck.json",
+    "sha256": "c5d2e84e5166a46517ec74e5e52b4606c90903992266a8eb915f404bbdc7e153"
+  },
+  "startupWarningBoundary": {
+    "path": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1090/startup-warning-comparison.json",
+    "sha256": "26fcdcd319fe9eb1ea62b2c7cfed59eb6dfaa9ba3ad6a45bf8be68e7c989a40a"
+  },
+  "worktreeInventory": {
+    "path": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1090/worktree-current.json",
+    "sha256": "b311811de10450fe68355a69ba84eac319b4795d1f5b8db529dac346a1eaabfc"
+  },
+  "installedBoundary": "真实HTTP首页加载/已连接CLI/公开Pi原任务三read与同key回放；两次模型numeric versionId参数错误严格拒绝后同原任务恢复，保留真实错误；不代签live Codex、backend completion安装私请求或全原生UI。",
+  "reconcileComparison": {
+    "path": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1090/reconcile-comparison.json",
+    "sha256": "ed73d9563f9cb73835f3c467ff0f4c48e9425489b36487a5fd59b42e2dce57bb"
+  },
+  "ownedIsolatedPostgresCleanup": {
+    "path": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1090/pg-owned-stop.json",
+    "sha256": "34c2602f841dc33c348cb44461aea5b65a349e1109f956c3f8f39740d082f388"
+  },
+  "installedFinalReview": {
+    "path": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1090/installed-final-review.md",
+    "sha256": "4bb944a51e0cab690703bc8591bd89eda1987cd912d808781fa9f963dc9d5cb0",
+    "conclusion": "T1090 SPEC范围完成，可在completion evidence明确保留reconcile既有42错误后taskctl complete；不代签全功能/live Codex/原生UI/激活配置同步"
+  },
+  "globalFailureBoundary": {
+    "exitCode": 1,
+    "errors": 42,
+    "warnings": 0,
+    "logSha256": "5a7dc597bbef244902c857fc708f2a8e4fbfe10583fb9d46624d709b7079ea5a",
+    "byteIdenticalToPreviousT1089": true,
+    "newErrors": [],
+    "retainedRootTasks": [
+      "T-1081",
+      "T-1082",
+      "T-1083",
+      "T-1015",
+      "T-1018"
+    ],
+    "notWholeRepositoryPass": true
+  },
+  "completion": {
+    "via": "node orchestrator/process/taskctl.mjs complete T-1090",
+    "actualRecord": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1090/task-complete.json",
+    "status": "complete",
+    "productSourceBytesUnchangedAfterBuild": true,
+    "retainsFullGlobalFailure": true
   }
 }
