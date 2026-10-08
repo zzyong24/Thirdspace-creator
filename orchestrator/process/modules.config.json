@@ -2151,7 +2151,7 @@
       ],
       "verify_commands": {
         "implementation": [
-          "pnpm --filter @creatoros/frontend test",
+          "pnpm --dir frontend test",
           "cargo test --manifest-path frontend/src-tauri/Cargo.toml owned_devices"
         ]
       }
