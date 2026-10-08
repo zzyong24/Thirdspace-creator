@@ -7,8 +7,8 @@
     "deterrence": false
   },
   "LED-003": {
-    "fireCount": 197,
-    "lastFiredAt": "2026-10-06T08:05:47.695Z",
+    "fireCount": 226,
+    "lastFiredAt": "2026-10-08T09:02:01.559Z",
     "firstRedAt": "2026-09-05T19:44:16.255Z",
     "registeredAt": "2026-07-15T18:26:37.060Z",
     "deterrence": false
@@ -21,29 +21,29 @@
     "deterrence": false
   },
   "LED-006": {
-    "fireCount": 199,
-    "lastFiredAt": "2026-10-06T08:05:47.695Z",
+    "fireCount": 228,
+    "lastFiredAt": "2026-10-08T09:02:01.559Z",
     "firstRedAt": "2026-08-09T04:49:41.879Z",
     "registeredAt": "2026-07-27T10:00:39.028Z",
     "deterrence": false
   },
   "LED-007": {
-    "fireCount": 197,
-    "lastFiredAt": "2026-10-06T08:05:47.695Z",
+    "fireCount": 226,
+    "lastFiredAt": "2026-10-08T09:02:01.559Z",
     "firstRedAt": "2026-08-09T04:49:41.879Z",
     "registeredAt": "2026-07-27T11:13:42.552Z",
     "deterrence": false
   },
   "LED-008": {
-    "fireCount": 197,
-    "lastFiredAt": "2026-10-06T08:05:47.695Z",
+    "fireCount": 226,
+    "lastFiredAt": "2026-10-08T09:02:01.559Z",
     "firstRedAt": "2026-08-14T01:22:21.967Z",
     "registeredAt": "2026-08-05T13:08:57.724Z",
     "deterrence": false
   },
   "LED-009": {
-    "fireCount": 197,
-    "lastFiredAt": "2026-10-06T08:05:47.695Z",
+    "fireCount": 226,
+    "lastFiredAt": "2026-10-08T09:02:01.559Z",
     "firstRedAt": "2026-08-24T06:55:12.840Z",
     "registeredAt": "2026-08-06T07:34:25.651Z",
     "deterrence": false
@@ -70,15 +70,15 @@
     "deterrence": false
   },
   "LED-013": {
-    "fireCount": 3,
-    "lastFiredAt": "2026-10-04T11:23:49.599Z",
+    "fireCount": 4,
+    "lastFiredAt": "2026-10-07T11:27:17.743Z",
     "firstRedAt": "2026-08-07T17:14:45.220Z",
     "registeredAt": "2026-08-06T15:00:32.124Z",
     "deterrence": false
   },
   "LED-014": {
-    "fireCount": 197,
-    "lastFiredAt": "2026-10-06T08:05:47.695Z",
+    "fireCount": 226,
+    "lastFiredAt": "2026-10-08T09:02:01.559Z",
     "firstRedAt": "2026-08-11T13:22:19.099Z",
     "registeredAt": "2026-08-07T04:32:02.587Z",
     "deterrence": false
@@ -98,22 +98,22 @@
     "deterrence": false
   },
   "LED-017": {
-    "fireCount": 197,
-    "lastFiredAt": "2026-10-06T08:05:47.695Z",
+    "fireCount": 226,
+    "lastFiredAt": "2026-10-08T09:02:01.559Z",
     "firstRedAt": "2026-08-11T13:22:19.099Z",
     "registeredAt": "2026-08-09T04:29:39.765Z",
     "deterrence": false
   },
   "LED-018": {
-    "fireCount": 211,
-    "lastFiredAt": "2026-10-06T08:05:47.695Z",
+    "fireCount": 240,
+    "lastFiredAt": "2026-10-08T09:02:01.559Z",
     "firstRedAt": "2026-08-12T06:10:15.204Z",
     "registeredAt": "2026-08-09T15:10:13.259Z",
     "deterrence": false
   },
   "LED-020": {
-    "fireCount": 196,
-    "lastFiredAt": "2026-10-06T08:05:47.695Z",
+    "fireCount": 225,
+    "lastFiredAt": "2026-10-08T09:02:01.559Z",
     "firstRedAt": "2026-09-09T08:18:14.908Z",
     "registeredAt": "2026-08-12T03:08:38.432Z",
     "deterrence": false
@@ -126,15 +126,15 @@
     "deterrence": false
   },
   "LED-023": {
-    "fireCount": 78,
-    "lastFiredAt": "2026-10-02T12:13:28.249Z",
+    "fireCount": 79,
+    "lastFiredAt": "2026-10-07T11:27:17.743Z",
     "firstRedAt": "2026-09-09T08:18:14.908Z",
     "registeredAt": "2026-08-12T12:34:10.320Z",
     "deterrence": false
   },
   "LED-024": {
-    "fireCount": 349,
-    "lastFiredAt": "2026-10-06T08:05:47.695Z",
+    "fireCount": 378,
+    "lastFiredAt": "2026-10-08T09:02:01.559Z",
     "firstRedAt": "2026-08-13T04:45:58.831Z",
     "registeredAt": "2026-08-13T02:34:11.202Z",
     "deterrence": false
@@ -147,15 +147,15 @@
     "deterrence": false
   },
   "LED-027": {
-    "fireCount": 5,
-    "lastFiredAt": "2026-10-04T12:38:14.256Z",
+    "fireCount": 6,
+    "lastFiredAt": "2026-10-07T11:27:17.743Z",
     "firstRedAt": "2026-08-17T01:39:31.991Z",
     "registeredAt": "2026-08-14T15:50:44.091Z",
     "deterrence": false
   },
   "LED-028": {
-    "fireCount": 196,
-    "lastFiredAt": "2026-10-06T08:05:47.695Z",
+    "fireCount": 225,
+    "lastFiredAt": "2026-10-08T09:02:01.559Z",
     "firstRedAt": "2026-09-09T08:18:14.908Z",
     "registeredAt": "2026-08-14T17:10:02.706Z",
     "deterrence": false
@@ -210,8 +210,8 @@
     "deterrence": false
   },
   "LED-038": {
-    "fireCount": 196,
-    "lastFiredAt": "2026-10-06T08:05:47.695Z",
+    "fireCount": 225,
+    "lastFiredAt": "2026-10-08T09:02:01.559Z",
     "firstRedAt": "2026-09-09T08:18:14.908Z",
     "registeredAt": "2026-08-17T12:46:37.969Z",
     "deterrence": false
@@ -224,8 +224,8 @@
     "deterrence": false
   },
   "LED-040": {
-    "fireCount": 18,
-    "lastFiredAt": "2026-10-06T08:05:47.695Z",
+    "fireCount": 47,
+    "lastFiredAt": "2026-10-08T09:02:01.559Z",
     "firstRedAt": "2026-10-02T12:13:28.249Z",
     "registeredAt": "2026-08-18T04:32:05.741Z",
     "deterrence": false
@@ -280,8 +280,8 @@
     "deterrence": false
   },
   "LED-048": {
-    "fireCount": 22,
-    "lastFiredAt": "2026-10-06T08:05:47.695Z",
+    "fireCount": 51,
+    "lastFiredAt": "2026-10-08T09:02:01.559Z",
     "firstRedAt": "2026-09-14T16:07:50.443Z",
     "registeredAt": "2026-09-14T16:07:50.443Z",
     "deterrence": false
@@ -294,8 +294,8 @@
     "deterrence": false
   },
   "LED-050": {
-    "fireCount": 20,
-    "lastFiredAt": "2026-10-06T08:05:47.695Z",
+    "fireCount": 49,
+    "lastFiredAt": "2026-10-08T09:02:01.559Z",
     "firstRedAt": "2026-10-02T12:13:28.249Z",
     "registeredAt": "2026-09-15T04:20:39.605Z",
     "deterrence": false
@@ -308,8 +308,8 @@
     "deterrence": false
   },
   "LED-052": {
-    "fireCount": 10,
-    "lastFiredAt": "2026-10-06T08:05:47.695Z",
+    "fireCount": 39,
+    "lastFiredAt": "2026-10-08T09:02:01.559Z",
     "firstRedAt": "2026-10-04T19:15:46.254Z",
     "registeredAt": "2026-10-04T19:01:56.494Z",
     "deterrence": false
@@ -319,6 +319,20 @@
     "lastFiredAt": null,
     "firstRedAt": null,
     "registeredAt": "2026-10-06T08:05:06.035Z",
+    "deterrence": false
+  },
+  "LED-054": {
+    "fireCount": 0,
+    "lastFiredAt": null,
+    "firstRedAt": null,
+    "registeredAt": "2026-10-07T12:40:01.834Z",
+    "deterrence": false
+  },
+  "LED-055": {
+    "fireCount": 0,
+    "lastFiredAt": null,
+    "firstRedAt": null,
+    "registeredAt": "2026-10-07T17:22:43.503Z",
     "deterrence": false
   }
 }
