@@ -4655,6 +4655,49 @@
         ]
       },
       "scope_note": "精确3私有MaterialLinks适配，根串行实现，独评只写review；原图401不重发，原权限与事务、原失败保留。"
+    },
+    "T-1080": {
+      "task_id": "T-1080",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "BACKLOG.md",
+        "PROJECT.md",
+        "PROJECT_CONTEXT.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "docs/features/t1080-local-main-worktree-consolidation.md",
+        "backend/**",
+        "contract/**",
+        "frontend/**",
+        "worker/**",
+        "mcp-server/**",
+        "orchestrator/**",
+        "tools/**",
+        "docs/**",
+        ".github/**"
+      ],
+      "write_set": [
+        "BACKLOG.md",
+        "docs/features/t1080-local-main-worktree-consolidation.md",
+        "docs/verification/t1080/**",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/events.ndjson",
+        "orchestrator/DECISION_LOG.md",
+        "orchestrator/context/T-1080.md"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "git diff --check",
+          "git status --porcelain=v1",
+          "git worktree list --porcelain"
+        ]
+      },
+      "scope_note": "用户明确全部注册worktree本地整合main和闲置目录清理后构建且不做构建备份；根独写Git合并并按实际冲突增补精确兼容写集，独评只读来源与占用，既有日志/失败/备份/用户数据不删除。"
     }
   }
 }

@@ -5272,6 +5272,54 @@
       "step_read_set": {},
       "step_exclusive_resources": {},
       "commits": {}
+    },
+    {
+      "id": "T-1080",
+      "archetype": [
+        "orchestration"
+      ],
+      "task_id": "T-1080",
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "BACKLOG.md",
+        "docs/features/t1080-local-main-worktree-consolidation.md",
+        "docs/verification/t1080/**",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/events.ndjson",
+        "orchestrator/DECISION_LOG.md",
+        "orchestrator/context/T-1080.md"
+      ],
+      "read_set": [
+        "BACKLOG.md",
+        "PROJECT.md",
+        "PROJECT_CONTEXT.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "docs/features/t1080-local-main-worktree-consolidation.md",
+        "backend/**",
+        "contract/**",
+        "frontend/**",
+        "worker/**",
+        "mcp-server/**",
+        "orchestrator/**",
+        "tools/**",
+        "docs/**",
+        ".github/**"
+      ],
+      "exclusive_resources": [
+        "creatoros-local-git-integration"
+      ],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
     }
   ],
   "leases": {
